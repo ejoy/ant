@@ -56,4 +56,5 @@ return {
 	button = "BUTTON,PRESSED,_,_,STATUS",	-- button, pressed, x,y, status
 	motion = "_,_,STATUS", -- x,y,status
 	keypress = "KEY,PRESSED",	-- keycode, pressed
+	resize = "_,_",	-- width, height
 }

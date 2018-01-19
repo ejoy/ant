@@ -120,8 +120,10 @@ end
 
 -- config.modules
 -- config.update_order
+-- config.args
 function ecs.new_world(config)
 	local w = setmetatable({
+		args = config.args,
 		_component_type = {},	-- component type objects
 		update = nil,	-- update systems
 		notify = nil,

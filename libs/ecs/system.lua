@@ -26,10 +26,12 @@ end
 
 local function gen_proxy(sto, c, singletons)
 	local inst = {}
-	for _, singleton_name in ipairs(sto.singleton) do
-		inst[singleton_name] = singletons[singleton_name]
-		for method_name, f in pairs(c[singleton_name].method) do
-			inst[method_name] = f
+	if sto.singleton then
+		for _, singleton_name in ipairs(sto.singleton) do
+			inst[singleton_name] = singletons[singleton_name]
+			for method_name, f in pairs(c[singleton_name].method) do
+				inst[method_name] = f
+			end
 		end
 	end
 	return inst
