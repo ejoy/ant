@@ -28,10 +28,15 @@ iup_message.singleton "window"
 local message = {}
 
 function message:resize(w,h)
+	print("RESIZE", w,h)
 	self.window.width = w
 	self.window.height = h
 	bgfx.set_view_rect(0, 0, 0, w, h)
 	bgfx.reset(w,h, "v")
+end
+
+function message:button(...)
+	print("BUTTON", ...)
 end
 
 function iup_message:update()

@@ -1,0 +1,98 @@
+ECS Entity-Component-System 框架
+
+引擎及编辑器基于 ECS 框架构建，依赖 libs/ecs 目录下的框架模块。
+
+Entity
+======
+
+Entity 用唯一数字 id 表示，从 1 开始编码。在运行期间，同一个 world 内所有 id 均不复用，单调递增。entity id 可以被持久化，从持久化文件中加载的 entity 的 id 保持和过去一致。
+
+利用 id 可以从 world 中获得 entity 对象。如果为 nil 则对象无效。注意，不要直接引用该对象，如果需要引用，一律使用 id 。
+
+entity 对象是一个 lua table ，它由若干 Component 构成。每个 Component 都可以用其名字直接取到。entity 本身没有固定的方法，但是在不同 system 中，会绑定不同的方法组，具体见 system 的说明。
+
+Component
+======
+
+Component 为一结构化数据块，在运行期通常表现为 lua table ，某些主要从 C 中高频操作的数据，可以为 C 结构，呈现为 lua 中的 userdata 。因为需要支持数据持久化，所以需要对 Component 做数据类型定义，定义语法基于 lua ：
+
+Component （及 System ）应定义在 .lua 文件中，每个文件可描述一个或多个 Component 。该文件由 ecs 框架加载，而不能简单的 require 或 dofile 。下面示范了语法：
+
+local ecs = ...	-- Component 注册模块，由框架传入注册器。
+
+-- 定义一个叫 foobar 的 Component 需要持久化的数据结构
+local foobar = ecs.component "foobar" {
+	a = 0,	-- a 属性，类型为整数，初始化默认值为 0 。
+	b = 0.0,	-- b 属性，类型为浮点数，初始化默认值为 0.0 。
+	c = "hello",	-- c 属性，类型为字符串，初始化默认值为 "hello" 。
+	d = false,	-- d 属性, 类型为布尔量，初始化默认值为 false 。
+	-- 以下还有第二种描述方法，并支持非 lua 原生数据类型。
+	e = { type = "resource" , default = "path/filename.ext" },	-- e 属性，类型为资源，默认值为资源路径。
+	f = { type = "entity" }, -- f 属性，类型为 entity id ，默认值未指定，为 0 即无效 id 。此处可以指定一个同一文件被持久化的 id 。
+	g = { type = "userdata" , default = { x = 1, y = 2 } } , -- g 属性，类型为自定义 lua table ，默认值会做一次拷贝。这个 default 可以为一个 function 用来生成默认值。
+}
+
+-- 定义构造函数，用来构造一些不必持久化的数据结构
+function foobar:new()
+	-- 此处在 self 中加入了一个自定义属性 temp ，temp 不被外部可见，所以无法持久化，也不能反射到编辑器中。仅用于内部工作。
+	self.temp = "temp"
+end
+
+-- 可额外定义一些辅助函数，方便 system 调用。（可选）
+
+function foobar:print()
+	print(self.temp)
+end
+
+-- 可选自定义序列化函数，用来自定义序列化过程。它会覆盖默认的序列化流程。注：目前版本尚未实现。
+
+function foobar:encode(s)
+	-- 把 self 内容序列化为若干字符串，依次放在 s 中。
+end
+
+function foobar:decode(s)
+	-- 把 s 数组中的一系列字符串，反序列化到 self 中。decode 被调用前，会执行构造流程。
+end
+
+System
+======
+
+System 是 ECS 框架的核心。一个业务流程为若干 System 构成，System 被封装在 world 对象内，在 world 构建的时候加入。和 Component 一样，通常会把 System 定义在 .lua 文件中。world 对象初始化时，会加载入一系列的 System 。
+
+System 的定义文件范例如下：
+
+local ecs = ...
+local world = ecs.world	-- 取出 system 归属的 world 对象；如果创建多个 world ，这个 system 模块会被加载多次。
+
+local dummy = ecs.system "dummy"	-- 创建一个名字叫 dummy 的 system
+dummy.depend "init"	-- 可选项，定义 dummy 需要在 init 初始化后再初始化。
+dummy.singleton "singleton"	-- 定义会用到的 singleton ，singleton 是一种特殊的 component。
+dummy.import "foobar"	-- 定义可能用到的 Component 的名字。
+
+-- 注： depend singleton import 都可以一次传入多个名字，{ name1, name2, ... }
+
+-- system 的初始化函数，singleton 在 init 之前已经构造好。
+function dummy:init()
+	print ("Dummy init")
+	self:singleton_print()	-- 调用 singleton 的方法 print
+	world:new_entity "foobar"
+end
+
+-- dummy 的 update 函数，这里可以通过 self. 访问 singleton 对象。
+function dummy:update()
+	print ("Dummy update", self.singleton.temp)
+end
+
+-- dummy 针对 foobar 这种 component 的 notify 函数，当 foobar 组件新建、销毁、变更的时候会调用这个函数
+
+function dummy.notify:foobar(set)
+	for _, eid in ipairs(set) do
+		print ("Notify", eid)
+		local e = world[eid]
+		if e then
+			e:foobar_print()	-- 调用 foobar 的 print 方法
+		else
+			print ( eid , "is removed")
+		end
+	end
+end
