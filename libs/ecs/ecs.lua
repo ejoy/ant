@@ -62,6 +62,21 @@ function world:new_entity(...)
 	return entity_id
 end
 
+function world:remove_entity(eid)
+	local e = assert(self[eid])
+	self[eid] = nil
+	self._entity[eid] = nil
+
+	-- notify all components of this entity
+	local _changecomponent = self._changecomponent
+	for component_type in pairs(e) do
+		local cc = _changecomponent[component_type]
+		if cc then
+			cc[eid] = true
+		end
+	end
+end
+
 local function component_next(set, index)
 	local n = #set
 	index = index + 1

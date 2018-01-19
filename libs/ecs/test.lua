@@ -1,5 +1,4 @@
-package.path = "?.lua;../../winlibs/?.lua"
-package.cpath = "../../?.dll"
+package.cpath = "../../bin/?.dll"
 
 function log(name)
 	local tag = "[" .. name .. "] "
@@ -36,5 +35,10 @@ local m = modules "test/system;test/component"
 
 local w = ecs.new_world { modules = m , update_order = { "init" } }
 
-w.notify()
+print("Step 1")
 w.update()
+w.notify()
+
+print("Step 2")
+w.update()
+w.notify()
