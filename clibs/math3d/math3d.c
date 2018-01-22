@@ -3,10 +3,20 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <inttypes.h>
+#include <string.h>
 #include <assert.h>
 #include "linalg.h"
+#include "math3d.h"
 
 #define LINALG "LINALG"
+
+static inline int64_t
+pop(lua_State *L, struct lastack *LS) {
+	int64_t v = lastack_pop(LS);
+	if (v == 0)
+		luaL_error(L, "pop empty stack");
+	return v;
+}
 
 struct boxpointer {
 	struct lastack *LS;
@@ -34,12 +44,62 @@ delLS(lua_State *L) {
 }
 
 static void
+push_srt(lua_State *L, struct lastack *LS, int index) {
+	union matrix44 m;
+	if (lua_getfield(L, index, "s") == LUA_TNUMBER) {
+		float s = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+		matrix44_scalemat(&m, s,s,s);
+	} else if (lua_getfield(L, index, "sx") == LUA_TNUMBER) {
+		float sx = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+		lua_getfield(L, index, "sy");
+		float sy = luaL_optnumber(L, -1, 1.0f);
+		lua_pop(L, 1);
+		lua_getfield(L, index, "sz");
+		float sz = luaL_optnumber(L, -1, 1.0f);
+		lua_pop(L, 1);
+		matrix44_scalemat(&m, sx,sy,sz);
+	} else {
+		matrix44_identity(&m);
+	}
+	if (lua_getfield(L, index, "rx") == LUA_TNUMBER) {
+		float rx = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+		lua_getfield(L, index, "ry");
+		float ry = luaL_optnumber(L, -1, 0);
+		lua_pop(L, 1);
+		lua_getfield(L, index, "rz");
+		float rz = luaL_optnumber(L, -1, 0);
+		lua_pop(L, 1);
+		matrix44_rot(&m, rx,ry,rz);
+	}
+
+	if (lua_getfield(L, index, "tx") == LUA_TNUMBER) {
+		float tx = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+		lua_getfield(L, index, "ty");
+		float ty = luaL_optnumber(L, -1, 0);
+		lua_pop(L, 1);
+		lua_getfield(L, index, "tz");
+		float tz = luaL_optnumber(L, -1, 0);
+		lua_pop(L, 1);
+		matrix44_trans(&m, tx,ty,tz);
+	}
+	lastack_pushmatrix(LS, m.x);
+}
+
+static void
 push_value(lua_State *L, struct lastack *LS, int index) {
 	int n = lua_rawlen(L, index);
 	int i;
 	float v[16];
 	if (n > 16) {
 		luaL_error(L, "Invalid value %d", n);
+	}
+	if (n == 0) {
+		push_srt(L, LS, index);
+		return;
 	}
 	luaL_checkstack(L, n, NULL);
 	for (i=0;i<n;i++) {
@@ -71,62 +131,167 @@ pushid(lua_State *L, int64_t v) {
 	}
 }
 
-static void
-add_value(lua_State *L, struct lastack *LS) {
-	int64_t v1 = lastack_pop(LS);
-	int64_t v2 = lastack_pop(LS);
-	if (v1 == 0 || v2 == 0)
-		luaL_error(L, "No 2 values");
+static inline void
+pop2_vector4(lua_State *L, struct lastack *LS, float *val[2]) {
+	int64_t v1 = pop(L, LS);
+	int64_t v2 = pop(L, LS);
 	int s1,s2;
-	float *val1 = lastack_value(LS, v1, &s1);
-	float *val2 = lastack_value(LS, v2, &s2);
-	if (s1 != s2)
-		luaL_error(L, "type mismatch");
-	if (s1 == 4) {
-		float ret[4];
-		ret[0] = val1[0] + val2[0];
-		ret[1] = val1[1] + val2[1];
-		ret[2] = val1[2] + val2[2];
-		ret[3] = val1[3] + val2[3];
-		lastack_pushvector(LS, ret);
-	} else {
-		assert(s1 == 16);
-		float ret[16];
-		int i;
-		for (i=0;i<16;i++) {
-			ret[i] = val1[i] + val2[i];
+	val[1] = lastack_value(LS, v1, &s1);
+	val[0] = lastack_value(LS, v2, &s2);
+	if (s1 != 4 || s2 != 4)
+		luaL_error(L, "type mismatch (Need vector)");
+}
+
+static void
+add_vector4(lua_State *L, struct lastack *LS) {
+	float *val[2];
+	pop2_vector4(L, LS, val);
+	float ret[4];
+	ret[0] = val[0][0] + val[1][0];
+	ret[1] = val[0][1] + val[1][1];
+	ret[2] = val[0][2] + val[1][2];
+	ret[3] = val[0][3] + val[1][3];
+	lastack_pushvector(LS, ret);
+}
+
+static void
+sub_vector4(lua_State *L, struct lastack *LS) {
+	float *val[2];
+	pop2_vector4(L, LS, val);
+	float ret[4];
+	ret[0] = val[0][0] - val[1][0];
+	ret[1] = val[0][1] - val[1][1];
+	ret[2] = val[0][2] - val[1][2];
+	ret[3] = val[0][3] - val[1][3];
+	lastack_pushvector(LS, ret);
+}
+
+static float *
+pop_vector(lua_State *L, struct lastack *LS) {
+	int64_t v = pop(L, LS);
+	int sz = 0;
+	float * r = lastack_value(LS, v, &sz);
+	if (sz != 4) {
+		luaL_error(L, "type mismatch, need vector");
+	}
+	return r;
+}
+
+static float *
+pop_matrix(lua_State *L, struct lastack *LS) {
+	int64_t v = pop(L, LS);
+	int sz = 0;
+	float * r = lastack_value(LS, v, &sz);
+	if (sz != 16) {
+		luaL_error(L, "type mismatch, need matrix");
+	}
+	return r;
+}
+
+static void
+normalize_vector3(lua_State *L, struct lastack *LS) {
+	float *v = pop_vector(L, LS);
+	float r[4];
+	float invLen = 1.0f / vector3_length((struct vector3 *)v);
+	r[0] = v[0] * invLen;
+	r[1] = v[1] * invLen;
+	r[2] = v[2] * invLen;
+	r[3] = 1.0f;
+	lastack_pushvector(LS, r);
+}
+
+static void
+mul_2values(lua_State *L, struct lastack *LS) {
+	int64_t v1 = pop(L, LS);
+	int64_t v0 = pop(L, LS);
+	int s0,s1;
+	float * val1 = lastack_value(LS, v1, &s1);
+	float * val0 = lastack_value(LS, v0, &s0);
+	if (s0 == 4) {
+		if (s1 == 16) {
+			float r[4];
+			vector4_mul_matrix44(r, val0, (union matrix44 *)val1);
+			lastack_pushvector(LS, r);
+			return;
+		} else {
+			// vec4 * vec4
+			luaL_error(L, "Don't support vector4 * vector4");
 		}
-		lastack_pushmatrix(LS, ret);
+	} else {
+		if (s1 == 16) {
+			union matrix44 m;
+			matrix44_mul(&m, (union matrix44 *)val0, (union matrix44 *)val1);
+			lastack_pushmatrix(LS, m.x);
+			return;
+		} else {
+			// matrix * vec4
+			luaL_error(L, "Don't support matrix * vector4");
+		}
+	}
+}
+
+static void
+transposed_matrix(lua_State *L, struct lastack *LS) {
+	float *mat = pop_matrix(L, LS);
+	union matrix44 m;
+	memcpy(&m, mat, sizeof(m));
+	matrix44_transposed(&m);
+	lastack_pushmatrix(LS, m.x);
+}
+
+static void
+inverted_matrix(lua_State *L, struct lastack *LS) {
+	float *mat = pop_matrix(L, LS);
+	union matrix44 r;
+	matrix44_inverted(&r, (union matrix44 *)mat);
+	lastack_pushmatrix(LS, r.x);
+}
+
+static void
+top_tostring(lua_State *L, struct lastack *LS) {
+	int64_t v = lastack_top(LS);
+	if (v == 0)
+		luaL_error(L, "top empty stack");
+	int sz = 0;
+	float * r = lastack_value(LS, v, &sz);
+	if (sz == 4) {
+		lua_pushfstring(L, "VEC (%f,%f,%f,%f)", r[0],r[1],r[2],r[3]);
+	} else {
+		lua_pushfstring(L, "MAT (%f,%f,%f,%f : %f,%f,%f,%f : %f,%f,%f,%f : %f,%f,%f,%f)",
+			r[0],r[1],r[2],r[3],
+			r[4],r[5],r[6],r[7],
+			r[8],r[9],r[10],r[11],
+			r[12],r[13],r[14],r[15]
+		);
 	}
 }
 
 /*
 	P : pop and return id
-	V : pop and return pointer
+	v : pop and return vector4 pointer
+	m : pop and return matrix pointer
+	V : top to string for debug
 	D : dup stack top
 	R : remove stack top
 	M : mark stack top and pop
  */
 static int
 do_command(lua_State *L, struct lastack *LS, char cmd) {
-	int64_t v = 0;
 	switch (cmd) {
 	case 'P':
-		v = lastack_pop(LS);
-		if (v == 0)
-			luaL_error(L, "pop empty stack");
-		pushid(L, v);
+		pushid(L, pop(L, LS));
 		return 1;
-	case 'V':
-		v = lastack_pop(LS);
-		if (v == 0)
-			luaL_error(L, "pop empty stack");
-		lua_pushlightuserdata(L, lastack_value(LS, v, NULL));
+	case 'f':
+		lua_pushnumber(L, pop_vector(L,LS)[0]);
+		return 1;
+	case 'v':
+		lua_pushlightuserdata(L, pop_vector(L, LS));
+		return 1;
+	case 'm':
+		lua_pushlightuserdata(L, pop_matrix(L, LS));
 		return 1;
 	case 'T': {
-		v = lastack_pop(LS);
-		if (v == 0)
-			luaL_error(L, "pop empty stack");
+		int64_t v = pop(L, LS);
 		int sz;
 		float * val = lastack_value(LS, v, &sz);
 		lua_createtable(L, sz, 0);
@@ -137,25 +302,66 @@ do_command(lua_State *L, struct lastack *LS, char cmd) {
 		}
 		return 1;
 	}
-	case 'D':
-		v = lastack_dup(LS);
-		if (v == 0)
-			luaL_error(L, "dup empty stack");
-		break;
-	case 'R':
-		v = lastack_pop(LS);
-		if (v == 0)
-			luaL_error(L, "remove empty stack");
-		break;
-	case 'M':
-		v = lastack_mark(LS);
+	case 'V':
+		top_tostring(L, LS);
+		return 1;
+	case 'M': {
+		int64_t v = lastack_mark(LS);
 		if (v == 0)
 			luaL_error(L, "mark empty stack or too many marked values");
 		pushid(L, v);
 		return 1;
+	}
+	case 'D': {
+		int64_t v = lastack_dup(LS);
+		if (v == 0)
+			luaL_error(L, "dup empty stack");
+		break;
+	}
+	case 'S': {
+		int64_t v = lastack_swap(LS);
+		if (v == 0)
+			luaL_error(L, "dup empty stack");
+		break;
+	}
+	case 'R':
+		pop(L, LS);
+		break;
+	case '.': {
+		float r[4] = { 0,0,0,1 };
+		float * vec1 = pop_vector(L, LS);
+		float * vec2 = pop_vector(L, LS);
+		r[0] = vector3_dot((struct vector3 *)vec1, (struct vector3 *)vec2);
+		lastack_pushvector(LS, r);
+		break;
+	}
+	case 'x': {
+		float r[4];
+		float * vec2 = pop_vector(L, LS);
+		float * vec1 = pop_vector(L, LS);
+		vector3_cross((struct vector3 *)r, (struct vector3 *)vec1, (struct vector3 *)vec2);
+		r[3] = 1.0f;
+		lastack_pushvector(LS, r);
+		break;
+	}
+	case '*':
+		mul_2values(L, LS);
+		break;
+	case 'n':
+		normalize_vector3(L, LS);
+		break;
+	case 't':
+		transposed_matrix(L, LS);
+		break;
+	case 'i':
+		inverted_matrix(L, LS);
+		break;
+	case '-':
+		sub_vector4(L, LS);
+		break;
 	case '+':
-		add_value(L, LS);
-		return 0;
+		add_vector4(L, LS);
+		break;
 	}
 	return 0;
 }

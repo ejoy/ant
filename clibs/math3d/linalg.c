@@ -360,6 +360,8 @@ lastack_pushref(struct lastack *LS, int64_t ref) {
 				lastack_pushmatrix(LS, address);
 				blob_dealloc(LS->per_mat, id.s.id, id.s.version);
 			}
+		} else {
+			push_id(LS, id);
 		}
 	} else {
 		push_id(LS, id);
@@ -402,12 +404,31 @@ lastack_pop(struct lastack *LS) {
 }
 
 int64_t
+lastack_top(struct lastack *LS) {
+	if (LS->stack_top <= 0)
+		return 0;
+	union stackid sid = LS->stack[LS->stack_top-1];
+	return sid.i;
+}
+
+int64_t
 lastack_dup(struct lastack *LS) {
 	if (LS->stack_top <= 0)
 		return 0;
 	union stackid sid = LS->stack[LS->stack_top-1];
 	push_id(LS, sid);
 	return sid.i;
+}
+
+int64_t
+lastack_swap(struct lastack *LS) {
+	if (LS->stack_top <= 1)
+		return 0;
+	union stackid top = LS->stack[LS->stack_top-1];
+	union stackid newtop = LS->stack[LS->stack_top-2];
+	LS->stack[LS->stack_top-2] = top;
+	LS->stack[LS->stack_top-1] = newtop;
+	return newtop.i;
 }
 
 void
