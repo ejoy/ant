@@ -1,0 +1,7 @@
+*.o
+*.a
+*.exe
+*.dll
+*.so
+*.dSYM
+bin
