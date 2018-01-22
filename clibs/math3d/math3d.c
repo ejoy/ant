@@ -5,10 +5,13 @@
 #include <inttypes.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 #include "linalg.h"
 #include "math3d.h"
 
 #define LINALG "LINALG"
+#define MAT_PROJ 0
+#define MAT_ORTHO 1
 
 static inline int64_t
 pop(lua_State *L, struct lastack *LS) {
@@ -90,6 +93,56 @@ push_srt(lua_State *L, struct lastack *LS, int index) {
 }
 
 static void
+push_mat(lua_State *L, struct lastack *LS, int index, int type) {
+	float left,right,top,bottom;
+	lua_getfield(L, index, "n");
+	float near = luaL_optnumber(L, -1, 0.1f);
+	lua_pop(L, 1);
+	lua_getfield(L, index, "f");
+	float far = luaL_optnumber(L, -1, 100.0f);
+	lua_pop(L, 1);
+	if (type == MAT_PROJ) {
+		if (lua_getfield(L, index, "fov") == LUA_TNUMBER) {
+			float fov = lua_tonumber(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, index, "aspect");
+			float aspect = luaL_checknumber(L, -1);
+			lua_pop(L, 1);
+			float ymax = near * tanf(fov * (M_PI / 360));
+			float xmax = ymax * aspect;
+			left = -xmax;
+			right = xmax;
+			bottom = -ymax;
+			top = ymax;
+		}
+	} else {
+		lua_getfield(L, index, "l");
+		left = luaL_checknumber(L, -1);
+		lua_pop(L, 1);
+		lua_getfield(L, index, "r");
+		right = luaL_checknumber(L, -1);
+		lua_pop(L, 1);
+		lua_getfield(L, index, "b");
+		bottom = luaL_checknumber(L, -1);
+		lua_pop(L, 1);
+		lua_getfield(L, index, "t");
+		top = luaL_checknumber(L, -1);
+		lua_pop(L, 1);
+	}
+	lua_getfield(L, index, "h");
+	int homogeneousDepth = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+
+	union matrix44 m;
+	if (type == MAT_PROJ) {
+		matrix44_perspective(&m, left, right, bottom, top, near, far, homogeneousDepth);
+	} else {
+		matrix44_ortho(&m, left, right, bottom, top, near, far, homogeneousDepth);
+	}
+	lastack_pushmatrix(LS, m.x);
+}
+
+static void
 push_value(lua_State *L, struct lastack *LS, int index) {
 	int n = lua_rawlen(L, index);
 	int i;
@@ -98,7 +151,20 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 		luaL_error(L, "Invalid value %d", n);
 	}
 	if (n == 0) {
-		push_srt(L, LS, index);
+		const char * type = NULL;
+		if (lua_getfield(L, index, "type") == LUA_TSTRING) {
+			type = lua_tostring(L, -1);
+			lua_pop(L, 1);
+		}
+		if (type == NULL || strcmp(type, "srt") == 0) {
+			push_srt(L, LS, index);
+		} else if (strcmp(type, "proj") == 0) {
+			push_mat(L, LS, index, MAT_PROJ);
+		} else if (strcmp(type, "ortho") == 0) {
+			push_mat(L, LS, index, MAT_ORTHO);
+		} else {
+			luaL_error(L, "Invalid matrix type %s", type);
+		}
 		return;
 	}
 	luaL_checkstack(L, n, NULL);
@@ -266,6 +332,15 @@ top_tostring(lua_State *L, struct lastack *LS) {
 	}
 }
 
+static void
+lookat_matrix(lua_State *L, struct lastack *LS) {
+	float *at = pop_vector(L, LS);
+	float *eye = pop_vector(L, LS);
+	union matrix44 m;
+	matrix44_lookat(&m, (struct vector3 *)eye, (struct vector3 *)at, NULL);
+	lastack_pushmatrix(LS, m.x);
+}
+
 /*
 	P : pop and return id
 	v : pop and return vector4 pointer
@@ -361,6 +436,9 @@ do_command(lua_State *L, struct lastack *LS, char cmd) {
 		break;
 	case '+':
 		add_vector4(L, LS);
+		break;
+	case 'l':
+		lookat_matrix(L, LS);
 		break;
 	}
 	return 0;

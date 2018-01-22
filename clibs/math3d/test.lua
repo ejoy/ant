@@ -18,6 +18,8 @@ local math3d = require "math3d"
 	{ rx = 1, ry = 0, rz = 0 }
 	{ tx = 0, ty = 0 , tz = 1 }
 
+	{ type = "proj", fov = 60, aspect = 1024/768 , n = 0.1, f = 100 }	-- proj mat
+	{ type = "ortho", l = 0, r = 1, b = 1, t = 0, n = 0, f = 100, h = false } -- ortho mat
 	* matrix mul ( ..., 1,2 - > ..., 1*2 )
 	* vector4 * matrix4x4
 	+ vector4 + vector4 ( ..., 1,2 - > ..., 1+2 )
@@ -31,6 +33,8 @@ local math3d = require "math3d"
 
 local stack = math3d.new()
 
+local v = stack( { type = "proj", fov = 60, aspect = 1024/768 } , "VR")	-- make a proj mat
+print(v)
 local v1,m1 = stack( { s = 2 } , "VP" )	-- push scale 2x matrix
 print(v1,m1)
 local v2,m2 = stack( { rx = 1 } , "VP" )	-- push rot (1,0,0) matrix
