@@ -412,10 +412,10 @@ lastack_top(struct lastack *LS) {
 }
 
 int64_t
-lastack_dup(struct lastack *LS) {
-	if (LS->stack_top <= 0)
+lastack_dup(struct lastack *LS, int index) {
+	if (LS->stack_top < index)
 		return 0;
-	union stackid sid = LS->stack[LS->stack_top-1];
+	union stackid sid = LS->stack[LS->stack_top-index];
 	push_id(LS, sid);
 	return sid.i;
 }
