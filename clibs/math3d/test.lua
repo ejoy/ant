@@ -5,7 +5,12 @@ local math3d = require "math3d"
 	m : pop and return matrix pointer ( ... , 1 -> ... )
 	f : pop and return the first float of a vector4 ( ... , 1 -> ... )
 	V : top to string for debug ( ... -> ... )
-	D : dup stack top (..., 1 -> ..., 1,1)
+	1-9 : dup stack index (..., 1 -> ..., 1,1)
+		1 : (..., 1 -> ..., 1,1)
+		2 : (..., 2, 1 -> ..., 2, 1, 2)
+		...
+		9 : (...,9,8,7,6,5,4,3,2,1 -> ... , 9,8,7,6,5,4,3,2,1,9)
+		22 means ( ..., a, b -> ..., a, b, a, b)
 	S : swap stack top (..., 1,2 -> ..., 2,1 )
 	R : remove stack top ( ..., 1 -> ... )
 	M : mark stack top and pop ( ..., 1 -> ...)
@@ -43,7 +48,7 @@ print(v2,m2)
 local m = stack(m1,m2,"*V")
 print(m)
 
-local t = stack( { 1,2,3,4 } , "D+M")	-- dup {1,2,3,4} add self and mark result
+local t = stack( { 1,2,3,4 } , "1+M")	-- dup {1,2,3,4} add self and mark result
 
 local vv = stack({1, 2, 3, 1}, {2, 2, 2, 1}, "*V")
 print("vec4 mul : " .. vv)

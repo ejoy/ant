@@ -1,18 +1,27 @@
 BIN = .
-LIBS = lua53 math3d
+LIBS = math3d lsocket
+PLAT = mingw
 
-TARGETS = $(foreach v, $(LIBS), $(BIN)/$(v).dll)
+DLLS = $(foreach v, $(LIBS), $(v)/$(v).dll)
+TARS = $(foreach v, $(LIBS), $(BIN)/$(v).dll)
 
-all : $(TARGETS)
+all : $(TARS) $(BIN)/lua53.dll
 
 lua/lua53.dll :
-	cd lua && $(MAKE) mingw
+	cd lua && $(MAKE) $(PLAT)
 
 $(BIN)/lua53.dll : lua/lua53.dll
 	cp $< $@
 
-math3d/math3d.dll :
-	cd math3d && $(MAKE)
+$(DLLS) : %.dll :
+	cd $(dir $@) && $(MAKE) $(PLAT)
 
-$(BIN)/math3d.dll : math3d/math3d.dll
-	cp $< $@
+define COPY_temp
+$(BIN)/$(1).dll : $(1)/$(1).dll
+	cp $$< $$@
+endef
+
+$(foreach v, $(LIBS), $(eval $(call COPY_temp,$(v))))
+
+clean :
+	rm -f *.dll

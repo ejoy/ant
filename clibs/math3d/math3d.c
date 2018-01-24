@@ -390,10 +390,13 @@ do_command(lua_State *L, struct lastack *LS, char cmd) {
 		pushid(L, v);
 		return 1;
 	}
-	case 'D': {
-		int64_t v = lastack_dup(LS);
+	case '1':	case '2':	case '3':	case '4':	case '5':
+	case '6':	case '7':	case '8':	case '9':
+	{
+		int index = cmd-'1'+1;
+		int64_t v = lastack_dup(LS, index);
 		if (v == 0)
-			luaL_error(L, "dup empty stack");
+			luaL_error(L, "dup invalid stack index (%d)", index);
 		break;
 	}
 	case 'S': {
