@@ -16,6 +16,8 @@ struct thread_args {
 struct pipe_ud {
 	HANDLE oldstdout;
 	HANDLE thread;
+	int stdfd;
+	DWORD stdhandle;
 };
 
 static DWORD WINAPI
@@ -44,9 +46,9 @@ lclosepipe(lua_State *L) {
 		if (oso != NULL) {
 			// restore stdout
 			int fd = _open_osfhandle((intptr_t)closepipe->oldstdout, 0);
-			_dup2(fd, STDOUT_FILENO);
+			_dup2(fd, closepipe->stdfd);
 			_close(fd);
-			SetStdHandle(STD_OUTPUT_HANDLE, closepipe->oldstdout);
+			SetStdHandle(closepipe->stdhandle, closepipe->oldstdout);
 			closepipe->oldstdout = NULL;
 		}
 		WaitForSingleObject(closepipe->thread, INFINITE);
@@ -55,9 +57,23 @@ lclosepipe(lua_State *L) {
 	return 0;
 }
 
+static DWORD
+get_stdhandle(lua_State *L, int stdfd) {
+	switch(stdfd) {
+	case STDOUT_FILENO:
+		return STD_OUTPUT_HANDLE;
+	case STDERR_FILENO:
+		return STD_ERROR_HANDLE;
+	default:
+		luaL_error(L, "Invalid stdfd %d", stdfd);
+	}
+	return 0;
+}
+
 static void
-redirect(lua_State *L, int fd) {
+redirect(lua_State *L, int fd, int stdfd) {
 	HANDLE rp, wp;
+	DWORD stdhandle = get_stdhandle(L, stdfd);
 
 	BOOL succ = CreatePipe(&rp, &wp, NULL, 0);
 	if (!succ) {
@@ -72,7 +88,7 @@ redirect(lua_State *L, int fd) {
 	HANDLE thread = CreateThread(NULL, 4096, redirect_thread, (LPVOID)ta, 0, NULL);
 
 	int wpfd = _open_osfhandle((intptr_t)wp, 0);
-	if (_dup2(wpfd, STDOUT_FILENO) != 0) {
+	if (_dup2(wpfd, stdfd) != 0) {
 		close(fd);
 		luaL_error(L, "dup2() failed");
 	}
@@ -80,21 +96,23 @@ redirect(lua_State *L, int fd) {
 	struct pipe_ud * closepipe = (struct pipe_ud *)lua_newuserdata(L, sizeof(*closepipe));
 	closepipe->oldstdout = NULL;
 	closepipe->thread = thread;
+	closepipe->stdfd = stdfd;
+	closepipe->stdhandle = stdhandle;
 	lua_createtable(L, 0, 1);
 	lua_pushcfunction(L, lclosepipe);
 	lua_setfield(L, -2, "__gc");
 	lua_setmetatable(L, -2);
 	lua_setfield(L, LUA_REGISTRYINDEX, "STDOUT_PIPE");
-	closepipe->oldstdout = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetStdHandle(STD_OUTPUT_HANDLE, wp);
+	closepipe->oldstdout = GetStdHandle(closepipe->stdhandle);
+	SetStdHandle(closepipe->stdhandle, wp);
 }
 
 
 #else
 
 static void
-redirect(lua_State *L, SOCKET fd) {
-	int r =dup2(fd, STDOUT_FILENO);
+redirect(lua_State *L, SOCKET fd, int stdfd) {
+	int r =dup2(fd, stdfd);
 	close(fd);
 	if (r != 0) {
 		luaL_error(L, "dup2() failed");
@@ -106,7 +124,8 @@ redirect(lua_State *L, SOCKET fd) {
 static int
 linit(lua_State *L) {
 	int sock = luaL_checkinteger(L, 1);
-	redirect(L, sock);
+	int stdfd = luaL_optinteger(L, 2, STDOUT_FILENO);
+	redirect(L, sock, stdfd);
 	return 0;
 }
 

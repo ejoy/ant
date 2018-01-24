@@ -26,9 +26,11 @@ local ifd,ofd = create_pipe()
 
 redirectfd.init(ofd:info().fd)
 
-print ("Hello World")
+print "Hello World"
 
 lsocket.select {ifd}
 
--- output to stderr
-io.stderr:write("STDOUT:" .. ifd:recv())
+-- redirect stderr to stdout (by print)
+io.stderr:write("STDOUT:", ifd:recv())
+
+
