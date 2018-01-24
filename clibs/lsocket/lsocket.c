@@ -11,9 +11,20 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <string.h>
+#include "lua.h"
+#include "lauxlib.h"
 
 #if (defined _WIN32 ) || (defined _WIN64)
 #include "win_compat.h"
+
+// winsock do not need check select fd
+static void
+check_select_fd(lua_State *L, int fd, int index) {
+	if (index >= FD_SETSIZE) {
+		luaL_error(L, "bad argument to 'select' (socket file descriptor too many)");
+	}
+}
+
 #else
 #define SOCKET int
 
@@ -33,6 +44,13 @@
 
 #define init_socketlib(L)
 
+static void
+check_select_fd(lua_State *L, int fd, int index) {
+	if (fd >= FD_SETSIZE) {
+		luaL_error(L, "bad argument to 'select' (socket file descriptor too big)");
+	}
+}
+
 #endif
 
 #ifndef IPV6_ADD_MEMBERSHIP
@@ -48,9 +66,6 @@
 #ifdef __linux__
 	#define HAVE_ABSTRACT_UDSOCKETS
 #endif
-
-#include "lua.h"
-#include "lauxlib.h"
 
 #define LSOCKET_VERSION "1.4.1"
 
@@ -1180,10 +1195,7 @@ static int _table2fd_set(lua_State *L, int idx, fd_set *s)
 	lua_rawgeti(L, idx, i++);
 	while (lsocket_islSocket(L, -1)) {
 		lSocket *sock = lsocket_checklSocket(L, -1);
-		if (sock->sockfd > FD_SETSIZE) {
-			lua_pop(L, 1);
-			return luaL_error(L, "bad argument to 'select' (socket file descriptor too big)");
-		}
+		check_select_fd(L, sock->sockfd, i-1);
 		if (sock->sockfd >= 0) {
 			FD_SET(sock->sockfd, s);
 			if (sock->sockfd > maxfd) maxfd = sock->sockfd;
