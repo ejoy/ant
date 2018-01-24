@@ -21,7 +21,7 @@ local math3d = require "math3d"
 	{ type = "proj", fov = 60, aspect = 1024/768 , n = 0.1, f = 100 }	-- proj mat
 	{ type = "ortho", l = 0, r = 1, b = 1, t = 0, n = 0, f = 100, h = false } -- ortho mat
 	* matrix mul ( ..., 1,2 - > ..., 1*2 )
-	* vector4 * matrix4x4
+	* vector4 * matrix4x4 / vec4 * vec4
 	+ vector4 + vector4 ( ..., 1,2 - > ..., 1+2 )
 	- vec4 - vec4 ( ..., 1,2 - > ..., 1-2 )
 	. vec3 * vec3  ( ..., 1,2 -> ..., { dot(1,2) , 0 , 0 ,1 } )
@@ -29,6 +29,7 @@ local math3d = require "math3d"
 	i inverted matrix  ( ..., 1 -> ..., invert(1) )
 	t transposed matrix ( ..., 1 -> ..., transpose(1) )
 	n normalize vector3 ( ..., 1 -> ..., {normalize(1) , 1} )
+	l generate lootat matrix
 ]]
 
 local stack = math3d.new()
@@ -43,6 +44,14 @@ local m = stack(m1,m2,"*V")
 print(m)
 
 local t = stack( { 1,2,3,4 } , "D+M")	-- dup {1,2,3,4} add self and mark result
+
+local vv = stack({1, 2, 3, 1}, {2, 2, 2, 1}, "*V")
+print("vec4 mul : " .. vv)
+
+--lookat
+local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "lV")
+print("lookat matrix : " .. lookat)
+--
 
 math3d.reset(stack)
 
