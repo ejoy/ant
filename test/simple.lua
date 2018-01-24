@@ -1,18 +1,46 @@
 dofile "libs/init.lua"
 
+require "scintilla"
 local lbgfx = require "lbgfx"
 local bgfx = require "bgfx"
 local ecs = require "ecs"
 local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
+local redirect = require "filesystem.redirect"
 
-local canvas = iup.canvas {}
+iup.SetGlobal("UTF8MODE", "YES")
+
+local canvas = iup.canvas {
+	rastersize = "1024x768",
+--	size = "HALFxHALF",
+}
+local logger = iup.scintilla {
+	MARGINWIDTH0 = "20",
+	STYLEFONT33 = "Consolas",
+	STYLEFONTSIZE33 = "11",
+	STYLEVISIBLE33 = "NO",
+	expand = "YES",
+	WORDWRAP = "CHAR",
+	APPENDNEWLINE = "NO",
+	READONLY = "YES",
+}
 
 local dlg = iup.dialog {
-	canvas,
+	iup.split {
+		canvas,
+		logger,
+		SHOWGRIP = "NO",
+	},
 	title = "simple",
-	size = "HALFxHALF",
 }
+
+redirect.callback("stdout", function(txt)
+	logger.READONLY = "NO"
+	logger.append = txt
+	logger.READONLY = "YES"
+	logger.SCROLLBY = logger.LINECOUNT
+end)
+
 
 local input_queue = inputmgr.queue(mapiup)
 local world
@@ -20,6 +48,7 @@ local world
 input_queue:register_iup(canvas)
 
 local function mainloop()
+	redirect.dispatch()
 	world.update()
 end
 
@@ -40,6 +69,7 @@ function canvas:resize_cb(w,h)
 		init = nil
 	end
 	input_queue:push("resize", w, h)
+	print("RESIZE",w,h)
 end
 
 
