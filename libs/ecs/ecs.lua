@@ -16,7 +16,7 @@ local function new_component(w, eid, c, ...)
 		if nc then
 			table.insert(nc, eid)
 		end
-		new_component(w, entity, ...)
+		new_component(w, eid, ...)
 	end
 end
 
