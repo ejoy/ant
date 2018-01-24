@@ -1,5 +1,5 @@
 BIN = .
-LIBS = lua53 math3d
+LIBS = lua53 math3d lsocket
 
 TARGETS = $(foreach v, $(LIBS), $(BIN)/$(v).dll)
 
@@ -15,4 +15,10 @@ math3d/math3d.dll :
 	cd math3d && $(MAKE)
 
 $(BIN)/math3d.dll : math3d/math3d.dll
+	cp $< $@
+
+lsocket/lsocket.dll :
+	cd lsocket && $(MAKE) mingw
+
+$(BIN)/lsocket.dll : lsocket/lsocket.dll
 	cp $< $@
