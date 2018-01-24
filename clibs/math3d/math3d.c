@@ -10,7 +10,7 @@
 #include "math3d.h"
 
 #define LINALG "LINALG"
-#define MAT_PROJ 0
+#define MAT_PERSPECTIVE 0
 #define MAT_ORTHO 1
 
 static inline int64_t
@@ -101,7 +101,7 @@ push_mat(lua_State *L, struct lastack *LS, int index, int type) {
 	lua_getfield(L, index, "f");
 	float far = luaL_optnumber(L, -1, 100.0f);
 	lua_pop(L, 1);
-	if (type == MAT_PROJ) {
+	if (type == MAT_PERSPECTIVE) {
 		if (lua_getfield(L, index, "fov") == LUA_TNUMBER) {
 			float fov = lua_tonumber(L, -1);
 			lua_pop(L, 1);
@@ -134,7 +134,7 @@ push_mat(lua_State *L, struct lastack *LS, int index, int type) {
 	lua_pop(L, 1);
 
 	union matrix44 m;
-	if (type == MAT_PROJ) {
+	if (type == MAT_PERSPECTIVE) {
 		matrix44_perspective(&m, left, right, bottom, top, near, far, homogeneousDepth);
 	} else {
 		matrix44_ortho(&m, left, right, bottom, top, near, far, homogeneousDepth);
@@ -159,9 +159,9 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 		if (type == NULL || strcmp(type, "srt") == 0) {
 			push_srt(L, LS, index);
 		} else if (strcmp(type, "proj") == 0) {
-			push_mat(L, LS, index, MAT_PROJ);
+			push_mat(L, LS, index, MAT_PERSPECTIVE);
 		} else if (strcmp(type, "ortho") == 0) {
-			push_mat(L, LS, index, MAT_ORTHO);
+			push_mat(L, LS, index, MAT_ORTHO);		
 		} else {
 			luaL_error(L, "Invalid matrix type %s", type);
 		}
@@ -173,7 +173,7 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 		v[i] = lua_tonumber(L, -1);
 		lua_pop(L,1);
 	}
-	switch (n) {
+	switch (n) {	
 	case 3:
 		// vector 3
 		v[3] = 1.0f;
@@ -274,14 +274,17 @@ mul_2values(lua_State *L, struct lastack *LS) {
 	float * val1 = lastack_value(LS, v1, &s1);
 	float * val0 = lastack_value(LS, v0, &s0);
 	if (s0 == 4) {
-		if (s1 == 16) {
-			float r[4];
+		float r[4];
+		if (s1 == 16) {			
 			vector4_mul_matrix44(r, val0, (union matrix44 *)val1);
 			lastack_pushvector(LS, r);
 			return;
 		} else {
 			// vec4 * vec4
-			luaL_error(L, "Don't support vector4 * vector4");
+			//luaL_error(L, "Don't support vector4 * vector4");			
+			vector4_mul_vector4(r, val0, val1);
+			lastack_pushvector(LS, r);
+			return;
 		}
 	} else {
 		if (s1 == 16) {
