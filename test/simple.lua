@@ -14,8 +14,9 @@ local canvas = iup.canvas {
 	rastersize = "1024x768",
 --	size = "HALFxHALF",
 }
+
 local logger = iup.scintilla {
-	MARGINWIDTH0 = "20",
+	MARGINWIDTH0 = "30",	-- line number
 	STYLEFONT33 = "Consolas",
 	STYLEFONTSIZE33 = "11",
 	STYLEVISIBLE33 = "NO",
@@ -32,6 +33,7 @@ local dlg = iup.dialog {
 		SHOWGRIP = "NO",
 	},
 	title = "simple",
+	shrink="yes",	-- logger box should be allow shrink
 }
 
 redirect.callback("stdout", function(txt)
@@ -71,7 +73,6 @@ function canvas:resize_cb(w,h)
 	input_queue:push("resize", w, h)
 	print("RESIZE",w,h)
 end
-
 
 function canvas:action(x,y)
 	mainloop()
