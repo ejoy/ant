@@ -1,0 +1,57 @@
+local lsocket = require "lsocket"
+local redirectfd = require "redirectfd"
+
+local function create_pipe()
+	local port = 10000
+	local socket
+
+	repeat
+		socket = assert(lsocket.bind( "127.0.0.1", port))
+		if not socket then
+			port = port + 1
+		end
+	until socket
+
+	local ofd = assert(lsocket.connect("127.0.0.1", port))
+	lsocket.select {socket}
+	local ifd = socket:accept()
+	socket:close()
+	lsocket.select({}, {ofd})
+	return ifd,ofd
+end
+
+
+local redirect = {}
+
+local stdhandle = {
+	stdout = 1,
+	stderr = 2,
+}
+
+local handle = {}
+local handle_set = {}
+function redirect.callback(what, f)
+	local h = handle[what]
+	if not h then
+		local sfd = assert(stdhandle[what])
+		local ifd,ofd = create_pipe()
+		redirectfd.init(ofd:info().fd, sfd)
+		handle[what] = { input = ifd, output = ofd }
+		h = ifd
+		table.insert(handle_set, ifd)
+	end
+	handle_set[h] = assert(f)
+end
+
+function redirect.dispatch()
+	local r, err = lsocket.select(handle_set, 0)
+	if r then
+		for _, fd in ipairs(r) do
+			handle_set[fd](fd:recv())
+		end
+	elseif r == nil then
+		error(err)
+	end
+end
+
+return redirect

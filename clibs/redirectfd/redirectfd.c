@@ -2,6 +2,8 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
 
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
 
@@ -11,13 +13,6 @@
 struct thread_args {
 	HANDLE readpipe;
 	SOCKET sock;
-};
-
-struct pipe_ud {
-	HANDLE oldstdout;
-	HANDLE thread;
-	int stdfd;
-	DWORD stdhandle;
 };
 
 static DWORD WINAPI
@@ -38,42 +33,32 @@ redirect_thread(LPVOID lpParam) {
 	return 0;
 }
 
-static int
-lclosepipe(lua_State *L) {
-	struct pipe_ud *closepipe = (struct pipe_ud *)lua_touserdata(L, 1);
-	if (closepipe) {
-		HANDLE oso = closepipe->oldstdout;
-		if (oso != NULL) {
-			// restore stdout
-			int fd = _open_osfhandle((intptr_t)closepipe->oldstdout, 0);
-			_dup2(fd, closepipe->stdfd);
-			_close(fd);
-			SetStdHandle(closepipe->stdhandle, closepipe->oldstdout);
-			closepipe->oldstdout = NULL;
-		}
-		WaitForSingleObject(closepipe->thread, INFINITE);
-		CloseHandle(closepipe->thread);
-	}
-	return 0;
-}
-
-static DWORD
-get_stdhandle(lua_State *L, int stdfd) {
-	switch(stdfd) {
+static FILE *
+get_stdfile(lua_State *L, int stdfd) {
+	switch (stdfd) {
 	case STDOUT_FILENO:
-		return STD_OUTPUT_HANDLE;
+		return stdout;
 	case STDERR_FILENO:
-		return STD_ERROR_HANDLE;
+		return stderr;
 	default:
-		luaL_error(L, "Invalid stdfd %d", stdfd);
+		luaL_error(L, "Invalid std fd %d", stdfd);
 	}
-	return 0;
+	return NULL;
 }
 
 static void
 redirect(lua_State *L, int fd, int stdfd) {
+	FILE * stdfile = get_stdfile(L, stdfd);
+	if (_fileno(stdfile) != stdfd) {
+		freopen(tmpnam(NULL), "w", stdfile);
+		int fno = stdfd;
+		stdfd = _fileno(stdfile);
+		if (stdfd != fno) {
+			_dup2(_dup(stdfd), fno);
+		}
+	}
+
 	HANDLE rp, wp;
-	DWORD stdhandle = get_stdhandle(L, stdfd);
 
 	BOOL succ = CreatePipe(&rp, &wp, NULL, 0);
 	if (!succ) {
@@ -84,8 +69,9 @@ redirect(lua_State *L, int fd, int stdfd) {
 	struct thread_args * ta = malloc(sizeof(*ta));
 	ta->readpipe = rp;
 	ta->sock = fd;
+
 	// thread don't need large stack
-	HANDLE thread = CreateThread(NULL, 4096, redirect_thread, (LPVOID)ta, 0, NULL);
+	CreateThread(NULL, 4096, redirect_thread, (LPVOID)ta, 0, NULL);
 
 	int wpfd = _open_osfhandle((intptr_t)wp, 0);
 	if (_dup2(wpfd, stdfd) != 0) {
@@ -93,20 +79,7 @@ redirect(lua_State *L, int fd, int stdfd) {
 		luaL_error(L, "dup2() failed");
 	}
 	_close(wpfd);
-	struct pipe_ud * closepipe = (struct pipe_ud *)lua_newuserdata(L, sizeof(*closepipe));
-	closepipe->oldstdout = NULL;
-	closepipe->thread = thread;
-	closepipe->stdfd = stdfd;
-	closepipe->stdhandle = stdhandle;
-	lua_createtable(L, 0, 1);
-	lua_pushcfunction(L, lclosepipe);
-	lua_setfield(L, -2, "__gc");
-	lua_setmetatable(L, -2);
-	lua_setfield(L, LUA_REGISTRYINDEX, "STDOUT_PIPE");
-	closepipe->oldstdout = GetStdHandle(closepipe->stdhandle);
-	SetStdHandle(closepipe->stdhandle, wp);
 }
-
 
 #else
 

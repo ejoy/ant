@@ -2,7 +2,7 @@
 
 local root = os.getenv "ANTGE" or "."
 
-package.cpath = root .. "/bin/?.dll"
+package.cpath = root .. "/bin/?.dll;" .. root .. "/clibs/?.dll"
 package.path = root .. "/libs/?.lua;" .. root .. "/libs/?/?.lua"
 
 require "common/import"
