@@ -6,6 +6,7 @@ local bgfx = require "bgfx"
 local ecs = require "ecs"
 local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
+local elog = require "editor.log"
 local redirect = require "filesystem.redirect"
 
 iup.SetGlobal("UTF8MODE", "YES")
@@ -15,34 +16,15 @@ local canvas = iup.canvas {
 --	size = "HALFxHALF",
 }
 
-local logger = iup.scintilla {
-	MARGINWIDTH0 = "30",	-- line number
-	STYLEFONT33 = "Consolas",
-	STYLEFONTSIZE33 = "11",
-	STYLEVISIBLE33 = "NO",
-	expand = "YES",
-	WORDWRAP = "CHAR",
-	APPENDNEWLINE = "NO",
-	READONLY = "YES",
-}
-
 local dlg = iup.dialog {
 	iup.split {
 		canvas,
-		logger,
+		elog.window,
 		SHOWGRIP = "NO",
 	},
 	title = "simple",
 	shrink="yes",	-- logger box should be allow shrink
 }
-
-redirect.callback("stdout", function(txt)
-	logger.READONLY = "NO"
-	logger.append = txt
-	logger.READONLY = "YES"
-	logger.SCROLLBY = logger.LINECOUNT
-end)
-
 
 local input_queue = inputmgr.queue(mapiup)
 local world
@@ -88,6 +70,3 @@ if (iup.MainLoopLevel()==0) then
 	iup.Close()
 	lbgfx.shutdown()
 end
-
-
-

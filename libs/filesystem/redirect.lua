@@ -30,6 +30,18 @@ local stdhandle = {
 
 local handle = {}
 local handle_set = {}
+
+local function dispatch()
+	local r, err = lsocket.select(handle_set, 0)
+	if r then
+		for _, fd in ipairs(r) do
+			handle_set[fd](fd:recv())
+		end
+	elseif r == nil then
+		error(err)
+	end
+end
+
 function redirect.callback(what, f)
 	local h = handle[what]
 	if not h then
@@ -41,17 +53,11 @@ function redirect.callback(what, f)
 		table.insert(handle_set, ifd)
 	end
 	handle_set[h] = assert(f)
+
+	redirect.dispatch = dispatch
 end
 
 function redirect.dispatch()
-	local r, err = lsocket.select(handle_set, 0)
-	if r then
-		for _, fd in ipairs(r) do
-			handle_set[fd](fd:recv())
-		end
-	elseif r == nil then
-		error(err)
-	end
 end
 
 return redirect
