@@ -47,7 +47,7 @@ end
 
 return function(c)
 	return {
-		struct = datatype(c.struct),
+		struct = c.struct and datatype(c.struct),
 		new = gen_new(c),
 		method = copy_method(c),
 	}
