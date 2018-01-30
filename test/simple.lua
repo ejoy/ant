@@ -41,7 +41,11 @@ local function init()
 		nwh = iup.GetAttributeData(canvas,"HWND"),
 	}
 	world = ecs.new_world {
-		modules = { assert(loadfile "test/simple_system.lua") },
+		modules = { 
+			assert(loadfile "test/cameratest/camera_component.lua"),
+			assert(loadfile "test/cameratest/camera_system.lua"),
+			assert(loadfile "test/simple_system.lua"),
+		},
 		args = { mq = input_queue },
 	}
 	lbgfx.mainloop(mainloop)

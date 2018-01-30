@@ -24,11 +24,9 @@ function camera_init_system:init()
 			entity.view_transform then
 
 			local vt = entity.view_transform
-			vt.eye = self.math3d({0, 0, 0, 1}, "M")
-			vt.direction = self.math3d({0, 0, 1, 0}, "M")
-
-			local frustum = entity.frustum
-			frustum.projMatMat = self.math3d({type = "projMat", fov = 90, aspect = 1024/768, n = 0.1, f = 10000}, "M")
+			vt.eye 			= self.math3d({0, 0, 0, 1}, "M")
+			vt.direction 	= self.math3d({0, 0, 1, 0}, "M")
+			entity.frustum.projMat = self.math3d({type = "proj", fov = 90, aspect = 1024/768, n = 0.1, f = 10000}, "M")
 		end
 	end
 end
@@ -47,10 +45,8 @@ function camera_system:update()
 		local frustum = e.frustum
 		if frustum ~= nil then
 			local ct = assert(e.view_transform)
-			local viewMat = stack(ct.eye, ct.direction, "lm")
-			print("viewMat type : " .. type(viewMat))
-			local projMat = stack(frustum.projMat, "Dm")
-			print("projMat type : " .. type(projMat))
+			local viewMat = self.math3d(ct.eye, ct.direction, "lm")
+			local projMat = self.math3d(frustum.projMat, "1m")
 
 			bgfx.set_view_transform(0, view, projMat)
 		end
