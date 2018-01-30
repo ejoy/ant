@@ -62,3 +62,6 @@ math3d.reset(stack)
 
 t = stack( t,"V")	-- read
 print(t)
+
+print(stack(math3d.constant "identvec", "VD"))
+print(stack(math3d.constant "identmat", "VD"))

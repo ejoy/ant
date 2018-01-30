@@ -2,11 +2,32 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "linalg.h"
 
 #define MINCAP 128
 
 #define VECTOR4 4
 #define MATRIX 16
+
+// Constant: version should be 0, id is the constant id, persistent should be 1
+
+static float c_ident_vec[4] = { 0,0,0,1 };
+static float c_ident_mat[16] = {
+	1,0,0,0,
+	0,1,0,0,
+	0,0,1,0,
+	0,0,0,1,
+};
+
+struct constant {
+	float * ptr;
+	int size;
+};
+
+static struct constant c_constant_table[LINEAR_CONSTANT_NUM] = {
+	{ c_ident_vec, VECTOR4 },
+	{ c_ident_mat, MATRIX },
+};
 
 struct stackid_ {
 	uint32_t version:25;
@@ -19,6 +40,23 @@ union stackid {
 	struct stackid_ s;
 	int64_t i;
 };
+
+int64_t
+lastack_constant(int cons) {
+	if (cons < 0 || cons >= LINEAR_CONSTANT_NUM)
+		return 0;
+	union stackid sid;
+	struct constant *c = &c_constant_table[cons];
+	sid.s.version = 0;
+	sid.s.id = cons;
+	sid.s.persistent = 1;
+	if (c->size == VECTOR4) {
+		sid.s.vector = 1;
+	} else {
+		sid.s.vector = 0;
+	}
+	return sid.i;
+}
 
 struct lastack {
 	int temp_vector_cap;
@@ -307,13 +345,24 @@ lastack_value(struct lastack *LS, int64_t ref, int *size) {
 	int ver = sid.s.version;
 	void * address = NULL;
 	if (sid.s.persistent) {
+		if (sid.s.version == 0) {
+			// constant
+			int id = sid.s.id;
+			if (id < 0 || id >= LINEAR_CONSTANT_NUM)
+				return NULL;
+			struct constant * c = &c_constant_table[id];
+			if (size) {
+				*size = c->size;
+			}
+			return c->ptr;
+		}
 		if (sid.s.vector) {
 			if (size)
-				*size = 4;
+				*size = VECTOR4;
 			address = blob_address( LS->per_vec , id, ver);
 		} else {
 			if (size)
-				*size = 16;
+				*size = MATRIX;
 			address = blob_address( LS->per_mat , id, ver);
 		}
 		return address;
@@ -324,14 +373,14 @@ lastack_value(struct lastack *LS, int64_t ref, int *size) {
 		}
 		if (sid.s.vector) {
 			if (size)
-				*size = 4;
+				*size = VECTOR4;
 			if (id >= LS->temp_vector_top) {
 				return NULL;
 			}
 			return LS->temp_vec + id * VECTOR4;
 		} else {
 			if (size)
-				*size = 16;
+				*size = MATRIX;
 			if (id >= LS->temp_matrix_top) {
 				return NULL;
 			}
@@ -352,7 +401,7 @@ lastack_pushref(struct lastack *LS, int64_t ref) {
 	if (address == NULL)
 		return 1;
 	if (ref > 0) {
-		if (id.s.persistent) {
+		if (id.s.persistent && id.s.version != 0) {
 			if (id.s.vector) {
 				lastack_pushvector(LS, address);
 				blob_dealloc(LS->per_vec, id.s.id, id.s.version);

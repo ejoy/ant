@@ -1,3 +1,5 @@
+local math3d = require "math3d"
+
 local available_type = {
 	integer = 0,
 	float = 0.0,
@@ -6,6 +8,8 @@ local available_type = {
 	entity = 0,	-- entity id
 	resource = "", -- resource path
 	userdata = function() return {} end,
+	vector = math3d.constant "identvec",
+	matrix = math3d.constant "identmat",
 }
 
 return function (t)

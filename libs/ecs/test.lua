@@ -1,4 +1,4 @@
-package.cpath = "../../bin/?.dll"
+package.cpath = "../../bin/?.dll;../../clibs/?.dll"
 
 function log(name)
 	local tag = "[" .. name .. "] "

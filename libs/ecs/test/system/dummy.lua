@@ -1,9 +1,18 @@
 local ecs = ...
 local world = ecs.world
 
+local math3d = require "math3d"
+
+local math = ecs.component "math"
+
+function math.new()
+	return math3d.new()
+end
+
 local dummy = ecs.system "dummy"
 
 dummy.singleton "init"
+dummy.singleton "math"
 dummy.depend "init"
 dummy.import "foobar"	-- import foobar methods
 
@@ -26,6 +35,7 @@ function dummy.notify:foobar(set)
 		local e = world[eid]
 		if e then
 			e:foobar_print()
+			print(self.math(e.foobar.v, "VD"))
 			world:remove_entity(eid)
 		else
 			print ("Notify removed", eid)

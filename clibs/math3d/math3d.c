@@ -6,6 +6,7 @@
 #include <string.h>
 #include <assert.h>
 #include <math.h>
+#include <string.h>
 #include "linalg.h"
 #include "math3d.h"
 
@@ -527,12 +528,28 @@ lprint(lua_State *L) {
 	return 0;
 }
 
+static int
+lconstant(lua_State *L) {
+	const char *what = luaL_checkstring(L, 1);
+	int cons;
+	if (strcmp(what, "identvec") == 0) {
+		cons = LINEAR_CONSTANT_IVEC;
+	} else if (strcmp(what, "identmat") == 0) {
+		cons = LINEAR_CONSTANT_IMAT;
+	} else {
+		return luaL_error(L, "Invalid constant %s", what);
+	}
+	pushid(L, lastack_constant(cons));
+	return 1;
+}
+
 LUAMOD_API int
 luaopen_math3d(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "new", lnew },
 		{ "reset", lreset },
+		{ "constant", lconstant },
 		{ "print", lprint },	// for debug
 		{ NULL, NULL },
 	};

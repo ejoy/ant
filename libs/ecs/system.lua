@@ -171,7 +171,7 @@ function system.notify_list(sys, proxy, methods)
 	local notify = {}
 	for sname, sobject in pairs(sys) do
 		for cname, f in pairs(sobject.notify) do
-			local functor = { f, proxy[cname], methods[sname] }
+			local functor = { f, proxy[sname], methods[sname] }
 			local list = notify[cname]
 			if list == nil then
 				notify[cname] = { functor }

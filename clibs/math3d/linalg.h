@@ -3,8 +3,13 @@
 
 #include <stdint.h>
 
+#define LINEAR_CONSTANT_IVEC 0
+#define LINEAR_CONSTANT_IMAT 1
+#define LINEAR_CONSTANT_NUM 2
+
 struct lastack;
 
+int64_t lastack_constant(int cons);
 struct lastack * lastack_new();
 void lastack_delete(struct lastack *LS);
 void lastack_pushvector(struct lastack *LS, float *vec4);
