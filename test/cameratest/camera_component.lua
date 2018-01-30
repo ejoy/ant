@@ -1,10 +1,11 @@
 local ecs = ...
+local world = ecs.world
 
 --{@
 local math3d = require "math3d"
 local math3d_comp = ecs.component "math3d"
 
-function math3d_comp:new()    
+function math3d_comp.new()    
 	return math3d.new()
 end
 --@}
@@ -16,8 +17,11 @@ function check_comp_creation(comp, errMsg)
 end
 
 local camera_transform = ecs.component "view_transform" {
-
+    eye = {type = "vec"},
+    dir = math3d({}, "M"),
 }
+
+init()
 
 check_comp_creation(camera_transform)
 
