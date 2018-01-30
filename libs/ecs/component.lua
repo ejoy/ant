@@ -4,8 +4,12 @@ local log = log and log(...) or print
 local datatype = require "datatype"
 
 local function gen_new(c)
-	local new = c.method.new
 	if c.struct then
+		if c.method.new then
+			error(string.format("Type %s defined at %s has a struct. It defines new at %s, use init instead",
+				c.name, c.defined, c.source.new))
+		end
+		local init = c.method.init
 		return function()
 			local ret = {}
 			for k,v in pairs(c.struct) do
@@ -16,18 +20,23 @@ local function gen_new(c)
 					ret[k] = v.default_func()
 				end
 			end
-			if new then
-				new(ret)
+			if init then
+				init(ret)
 			end
 			return ret
 		end
 	else
-		-- c type
+		-- user type
+		local new = c.method.new
+		if new == nil then
+			error(string.format("Type %s defined at %s has no struct without new",
+				c.name, c.defined))
+		end
 		return new
 	end
 end
 
-local reserved_method = { new = true }
+local reserved_method = { new = true, init = true }
 
 local function copy_method(c)
 	local methods = c.method
