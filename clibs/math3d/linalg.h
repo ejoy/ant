@@ -10,6 +10,8 @@
 struct lastack;
 
 int64_t lastack_constant(int cons);
+int lastack_marked(int64_t id, int *size);
+
 struct lastack * lastack_new();
 void lastack_delete(struct lastack *LS);
 void lastack_pushvector(struct lastack *LS, float *vec4);

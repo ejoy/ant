@@ -444,6 +444,20 @@ lastack_mark(struct lastack *LS) {
 	return sid.i;
 }
 
+int
+lastack_marked(int64_t id, int *size) {
+	union stackid sid;
+	sid.i = id;
+	if (size) {
+		if (sid.s.vector) {
+			*size = VECTOR4;
+		} else {
+			*size = MATRIX;
+		}
+	}
+	return sid.s.persistent;
+}
+
 int64_t
 lastack_pop(struct lastack *LS) {
 	if (LS->stack_top <= 0)

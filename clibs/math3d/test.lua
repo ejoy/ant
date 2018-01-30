@@ -55,11 +55,13 @@ print("vec4 mul : " .. vv)
 
 --lookat
 local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "lV")
-print("lookat matrix : " .. lookat)
+print("lookat matrix : " , lookat)
+print(math3d.type(stack "P"))	-- matrix false (false means not marked)
 --
 
 math3d.reset(stack)
 
+print(math3d.type(t))	-- vector true
 t = stack( t,"V")	-- read
 print(t)
 

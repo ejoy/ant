@@ -461,6 +461,17 @@ do_command(lua_State *L, struct lastack *LS, char cmd) {
 	return 0;
 }
 
+static inline int64_t
+get_id(lua_State *L, int index) {
+	int64_t v;
+	if (sizeof(lua_Integer) >= sizeof(int64_t)) {
+		v = lua_tointeger(L, index);
+	} else {
+		v = (int64_t)lua_tonumber(L, index);
+	}
+	return v;
+}
+
 static int
 push_command(lua_State *L, struct lastack *LS, int index) {
 	int type = lua_type(L, index);
@@ -468,18 +479,11 @@ push_command(lua_State *L, struct lastack *LS, int index) {
 	case LUA_TTABLE:
 		push_value(L, LS, index);
 		break;
-	case LUA_TNUMBER: {
-		int64_t v;
-		if (sizeof(lua_Integer) >= sizeof(int64_t)) {
-			v = lua_tointeger(L, index);
-		} else {
-			v = (int64_t)lua_tonumber(L, index);
-		}
-		if (lastack_pushref(LS, v)) {
-			return luaL_error(L, "Invalid id %I", v);
+	case LUA_TNUMBER:
+		if (lastack_pushref(LS, get_id(L, index))) {
+			return luaL_error(L, "Invalid id %I", get_id(L, index));
 		}
 		break;
-	}
 	case LUA_TSTRING: {
 		size_t sz;
 		const char * cmd = luaL_checklstring(L, index, &sz);
@@ -553,6 +557,23 @@ lconstant(lua_State *L) {
 	return 1;
 }
 
+static int
+ltype(lua_State *L) {
+	int64_t id = get_id(L, 1);
+	if (id < 0)
+		id = -id;
+	int size;
+	int marked = lastack_marked(id, &size);
+	if (size == 4) {
+		lua_pushstring(L, "vector");
+	} else {
+		lua_pushstring(L, "matrix");
+	}
+	lua_pushboolean(L, marked);
+
+	return 2;
+}
+
 LUAMOD_API int
 luaopen_math3d(lua_State *L) {
 	luaL_checkversion(L);
@@ -561,6 +582,7 @@ luaopen_math3d(lua_State *L) {
 		{ "reset", lreset },
 		{ "constant", lconstant },
 		{ "print", lprint },	// for debug
+		{ "type", ltype },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
