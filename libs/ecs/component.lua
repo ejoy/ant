@@ -32,6 +32,10 @@ local function gen_new(c)
 			error(string.format("Type %s defined at %s has no struct without new",
 				c.name, c.defined))
 		end
+		if c.method.init then
+			error(string.format("Usertype %s defined at %s defines new at %s, init at %s has no effect",
+				c.name, c.defined, c.source.new, c.source.init))
+		end
 		return new
 	end
 end
