@@ -350,7 +350,6 @@ lookat_matrix(lua_State *L, struct lastack *LS) {
 	v : pop and return vector4 pointer
 	m : pop and return matrix pointer
 	V : top to string for debug
-	D : dup stack top
 	R : remove stack top
 	M : mark stack top and pop
  */
@@ -447,6 +446,8 @@ do_command(lua_State *L, struct lastack *LS, char cmd) {
 	case 'l':
 		lookat_matrix(L, LS);
 		break;
+	default:
+		luaL_error(L, "Unknown command %c", cmd);
 	}
 	return 0;
 }

@@ -35,7 +35,7 @@ function dummy.notify:foobar(set)
 		local e = world[eid]
 		if e then
 			e:foobar_print()
-			print(self.math(e.foobar.v, "VD"))
+			print(self.math(e.foobar.v, "VR"))
 			world:remove_entity(eid)
 		else
 			print ("Notify removed", eid)
