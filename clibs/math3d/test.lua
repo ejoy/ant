@@ -61,7 +61,10 @@ print(math3d.type(stack "P"))	-- matrix false (false means not marked)
 
 math3d.reset(stack)
 
+assert(math3d.pointer(stack,lookat) == nil)
+
 print(math3d.type(t))	-- vector true
+print(math3d.pointer(stack, t))	-- address vector
 t = stack( t,"V")	-- read
 print(t)
 

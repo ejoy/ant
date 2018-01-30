@@ -574,6 +574,26 @@ ltype(lua_State *L) {
 	return 2;
 }
 
+static int
+lpointer(lua_State *L) {
+	struct lastack *LS = getLS(L, 1);
+	int64_t id = get_id(L, 2);
+	if (id < 0)
+		id = -id;
+	int size;
+	float * ptr = lastack_value(LS, id, &size);
+	if (ptr == NULL) {
+		return 0;
+	}
+	lua_pushlightuserdata(L, (void *)ptr);
+	if (size == 4) {
+		lua_pushstring(L, "vector");
+	} else {
+		lua_pushstring(L, "matrix");
+	}
+	return 2;
+}
+
 LUAMOD_API int
 luaopen_math3d(lua_State *L) {
 	luaL_checkversion(L);
@@ -583,6 +603,7 @@ luaopen_math3d(lua_State *L) {
 		{ "constant", lconstant },
 		{ "print", lprint },	// for debug
 		{ "type", ltype },
+		{ "pointer", lpointer },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
