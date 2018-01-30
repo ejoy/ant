@@ -175,6 +175,9 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 		lua_pop(L,1);
 	}
 	switch (n) {	
+	case 1:
+		// float
+		v[1] = v[2] = v[0];
 	case 3:
 		// vector 3
 		v[3] = 1.0f;
@@ -345,6 +348,14 @@ lookat_matrix(lua_State *L, struct lastack *LS) {
 	lastack_pushmatrix(LS, m.x);
 }
 
+static inline void
+push_float(struct lastack *LS, float v) {
+	float t[4];
+	t[0] = t[1] = t[2] = v;
+	t[3] = 1.0f;
+	lastack_pushvector(LS, t);
+}
+
 /*
 	P : pop and return id
 	v : pop and return vector4 pointer
@@ -409,11 +420,9 @@ do_command(lua_State *L, struct lastack *LS, char cmd) {
 		pop(L, LS);
 		break;
 	case '.': {
-		float r[4] = { 0,0,0,1 };
 		float * vec1 = pop_vector(L, LS);
 		float * vec2 = pop_vector(L, LS);
-		r[0] = vector3_dot((struct vector3 *)vec1, (struct vector3 *)vec2);
-		lastack_pushvector(LS, r);
+		push_float(LS, vector3_dot((struct vector3 *)vec1, (struct vector3 *)vec2));
 		break;
 	}
 	case 'x': {

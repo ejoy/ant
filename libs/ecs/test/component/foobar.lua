@@ -3,7 +3,8 @@ local ecs = ...
 local foobar = ecs.component "foobar" {
 	x = 0.0,
 	y = 0.0,
-	v = { type = "vector" }
+	v = { type = "vector" },
+	m = { type = "matrix" },
 }
 
 function foobar:init()
