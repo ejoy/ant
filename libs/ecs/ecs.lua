@@ -110,6 +110,28 @@ function world:each(component_type)
 	return component_next, s, 0
 end
 
+local function component_filter(world, minor_type)
+	return function(set, index)
+		local eid
+		while true do
+			index, eid = component_next(set, index)
+			if eid then
+				local e = world[eid]
+				if e[minor_type] then
+					return index, eid
+				end
+			else
+				return
+			end
+		end
+	end
+end
+
+function world:each2(ct1, ct2)
+	local _,s = self:each(ct1)
+	return component_filter(self, ct2), s, 0
+end
+
 local function init_notify(w, notifies)
 	for cname in pairs(notifies) do
 		w._notifycomponent[cname] = {}

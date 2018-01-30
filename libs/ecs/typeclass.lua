@@ -78,7 +78,7 @@ return function(world)
 			local r = class_set[name]
 			if r == nil then
 				log("Register %s %s", what, name)
-				local c = { name = name, method = {}, source = {} }
+				local c = { name = name, method = {}, source = {}, defined = sourceinfo() }
 				class_data[name] = c
 				r = {}
 				if args.submethod then

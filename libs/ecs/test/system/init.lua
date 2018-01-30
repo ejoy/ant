@@ -1,10 +1,13 @@
 local ecs = ...
 local world = ecs.world
 
-local init = ecs.component "init" {} -- single object
+local init = ecs.component "init" -- single object
 
-function init:new()
-	self.foobar = ""
+function init.new()
+	-- return singleton object
+	return {
+		foobar = ""
+	}
 end
 
 function init:print()
