@@ -1,5 +1,5 @@
 BIN = .
-LIBS = math3d lsocket redirectfd
+LIBS = math3d lsocket redirectfd winfile
 PLAT = mingw
 
 DLLS = $(foreach v, $(LIBS), $(v)/$(v).dll)
