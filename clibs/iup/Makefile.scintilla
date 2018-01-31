@@ -1,0 +1,110 @@
+include common.mk
+
+CXXFLAGS = --std=c++11 $(CFLAGS)
+
+#  SCINTILLA
+
+DEFINES += STATIC_BUILD SCI_LEXER SCI_NAMESPACE
+
+SCINTILLA := $(IUPSRC)/srcscintilla/scintilla375
+
+INCLUDES := $(SCINTILLA)/lexlib $(SCINTILLA)/src $(SCINTILLA)/include
+INCLUDES += $(IUPSRC)/srcscintilla/win32
+
+LIBS += imm32
+DEFINES += UNICODE
+DEFINES += _WIN32 DISABLE_D2D NO_CXX11_REGEX
+
+SRCSCINTILLA_SRC = AutoComplete.cxx CallTip.cxx Catalogue.cxx CellBuffer.cxx CharClassify.cxx \
+               ContractionState.cxx Decoration.cxx Document.cxx Editor.cxx ExternalLexer.cxx \
+               Indicator.cxx KeyMap.cxx LineMarker.cxx PerLine.cxx PositionCache.cxx \
+               RESearch.cxx RunStyles.cxx ScintillaBase.cxx Selection.cxx Style.cxx \
+               UniConversion.cxx ViewStyle.cxx XPM.cxx CaseConvert.cxx CaseFolder.cxx \
+               EditModel.cxx EditView.cxx MarginView.cxx
+
+SRCSCINTILLA_LEXERS += LexA68k.cxx LexAbaqus.cxx LexAda.cxx LexAPDL.cxx \
+				LexAsn1.cxx LexASY.cxx LexAU3.cxx LexAVE.cxx LexAVS.cxx \
+				LexBaan.cxx LexBash.cxx LexBasic.cxx LexBullant.cxx LexCaml.cxx \
+				LexCLW.cxx LexCmake.cxx LexCOBOL.cxx LexCoffeeScript.cxx \
+				LexConf.cxx LexCPP.cxx LexCrontab.cxx LexCsound.cxx LexCSS.cxx \
+				LexD.cxx LexECL.cxx LexEiffel.cxx LexErlang.cxx LexEScript.cxx \
+				LexFlagship.cxx LexForth.cxx LexFortran.cxx LexGAP.cxx \
+				LexGui4Cli.cxx LexHaskell.cxx LexHTML.cxx LexInno.cxx \
+				LexKix.cxx LexLisp.cxx LexLout.cxx LexLua.cxx LexMagik.cxx \
+				LexMarkdown.cxx LexMatlab.cxx LexMetapost.cxx LexMMIXAL.cxx \
+				LexModula.cxx LexMPT.cxx LexMSSQL.cxx LexMySQL.cxx \
+				LexNimrod.cxx LexNsis.cxx LexOpal.cxx LexOScript.cxx \
+				LexPascal.cxx LexPB.cxx LexPerl.cxx \
+				LexPLM.cxx LexPO.cxx LexPOV.cxx LexPowerPro.cxx \
+				LexPowerShell.cxx LexProgress.cxx LexPS.cxx LexPython.cxx \
+				LexR.cxx LexRebol.cxx LexRuby.cxx LexScriptol.cxx \
+				LexSmalltalk.cxx LexSML.cxx LexSorcus.cxx LexSpecman.cxx \
+				LexSpice.cxx LexSQL.cxx LexTACL.cxx LexTADS3.cxx LexTAL.cxx \
+				LexTCL.cxx LexTCMD.cxx LexTeX.cxx LexTxt2tags.cxx LexVB.cxx \
+				LexVerilog.cxx LexVHDL.cxx LexVisualProlog.cxx LexYAML.cxx \
+				LexKVIrc.cxx LexLaTeX.cxx LexSTTXT.cxx LexRust.cxx \
+				LexDMAP.cxx LexDMIS.cxx LexBibTeX.cxx LexHex.cxx LexAsm.cxx \
+				LexRegistry.cxx
+
+SRCSCINTILLA_LEXERS += LexBatch.cxx LexDiff.cxx LexErrorList.cxx \
+				LexMake.cxx LexNull.cxx LexProps.cxx LexJSON.cxx
+
+SRCSCINTILLA_LEXERS += LexEDIFACT.cxx LexIndent.cxx
+
+SRCSCINTILLA_LEXLIB = Accessor.cxx CharacterSet.cxx LexerBase.cxx LexerModule.cxx \
+                LexerNoExceptions.cxx LexerSimple.cxx PropSetSimple.cxx \
+                StyleContext.cxx WordList.cxx CharacterCategory.cxx
+
+SRCSCINTILLA_WIN32 = PlatWin.cxx ScintillaWin.cxx HanjaDic.cxx
+
+#IUP SCI
+
+IUPSCI := iupsci_clipboard.c iupsci_folding.c iupsci_lexer.c iupsci_margin.c \
+      iupsci_overtype.c iupsci_scrolling.c iupsci_selection.c iupsci_style.c iupsci_tab.c \
+      iupsci_text.c iupsci_wordwrap.c iupsci_markers.c iupsci_bracelight.c iupsci_cursor.c \
+      iupsci_whitespace.c iupsci_annotation.c iupsci_autocompletion.c iupsci_searching.c  \
+      iupsci_print.c iupsci_indicator.c iup_scintilla.c iup_scintilladlg.c 
+
+IUPSCI += iup_scintilla_win.c
+
+ILO = $(ODIR)/il_scintilla.o $(ODIR)/il_scintilladlg.o
+
+OBJIUPSCI := $(patsubst %.c,$(ODIR)/%.o,$(IUPSCI))
+
+INCLUDES := $(addprefix -I, $(INCLUDES))
+OBJSCINTILLA := $(patsubst %.cxx,$(ODIR)/%.o,$(SRCSCINTILLA_SRC))
+OBJSCI_LEXERS := $(patsubst %.cxx,$(ODIR)/%.o,$(SRCSCINTILLA_LEXERS))
+OBJSCI_LEXLIB := $(patsubst %.cxx,$(ODIR)/%.o,$(SRCSCINTILLA_LEXLIB))
+OBJSCI_WIN := $(patsubst %.cxx,$(ODIR)/%.o,$(SRCSCINTILLA_WIN32))
+DEFINES := $(addprefix -D, $(DEFINES))
+
+COMPILE = $(CXX) $(CXXFLAGS) -c -o $@ $< $(INCLUDES) $(DEFINES)
+
+all : scintilla.dll
+
+scintilla.dll :  $(OBJSCINTILLA) $(OBJSCI_LEXERS) $(OBJSCI_LEXLIB) $(OBJSCI_WIN) $(OBJIUPSCI) $(ILO) $(ODIR)/luascintilla.o
+	$(CXX) --shared -o $@ $^ -lstdc++ -lgdi32 -lmsimg32 -limm32 -lole32 -luuid -lcomdlg32 -loleaut32 -L. -lluaiup $(LUALIB)
+
+$(ODIR) :
+	mkdir $@
+
+$(OBJSCINTILLA) : $(ODIR)/%.o : $(SCINTILLA)/src/%.cxx  | $(ODIR) 
+	$(COMPILE)
+
+$(OBJSCI_LEXERS) : $(ODIR)/%.o : $(SCINTILLA)/lexers/%.cxx  | $(ODIR) 
+	$(COMPILE)
+
+$(OBJSCI_LEXLIB) : $(ODIR)/%.o : $(SCINTILLA)/lexlib/%.cxx  | $(ODIR) 
+	$(COMPILE)
+
+$(OBJSCI_WIN) : $(ODIR)/%.o : $(SCINTILLA)/win32/%.cxx  | $(ODIR) 
+	$(COMPILE)
+
+$(OBJIUPSCI) : $(ODIR)/%.o : $(IUPSRC)/srcscintilla/%.c | $(ODIR)
+	$(CC) $(CFLAGS) -c -o $@ $< $(INCLUDES) $(DEFINES) -I$(IUPSRC)/src -I$(IUPSRC)/src/win -I$(IUPSRC)/include $(LUAINC)
+
+$(ILO) : $(ODIR)/il_%.o : $(IUPSRC)/srclua5/ctrl/il_%.c $(IUPSRC)/srclua5/lh/%.lh
+	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC) -I$(IUPSRC)/include -I$(IUPSRC)/srclua5 -I$(IUPSRC)/srclua5/lh -DIUPLUA_USELH
+
+$(ODIR)/luascintilla.o : luascintilla.c
+	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC)
