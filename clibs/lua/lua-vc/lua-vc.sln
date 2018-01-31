@@ -6,8 +6,14 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "luadll", "luadll\luadll.vcxproj", "{AF8C0252-364F-4D3B-B35E-F3392EEA620B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "luac", "luac\luac.vcxproj", "{ACCEC92B-28A3-43FC-A898-7AD4E7421D26}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AF8C0252-364F-4D3B-B35E-F3392EEA620B} = {AF8C0252-364F-4D3B-B35E-F3392EEA620B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua", "lua\lua.vcxproj", "{82554349-BF8D-4ECE-B2A3-883B13DA48AB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AF8C0252-364F-4D3B-B35E-F3392EEA620B} = {AF8C0252-364F-4D3B-B35E-F3392EEA620B}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
