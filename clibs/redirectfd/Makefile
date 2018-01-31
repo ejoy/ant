@@ -8,4 +8,4 @@ redirectfd.dll : redirectfd.c
 	gcc --shared $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC) -lws2_32
 
 clean :
-	rm redirectfd.dll
+	rm -f redirectfd.dll

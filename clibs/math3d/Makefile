@@ -7,4 +7,4 @@ math3d.dll : linalg.c math3d.c
 	gcc --shared -g -Wall -o $@ $^ $(LUALIB) $(LUAINC)
 
 clean :
-	rm math3d.dll
+	rm -f math3d.dll

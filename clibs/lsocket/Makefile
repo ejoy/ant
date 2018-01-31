@@ -67,5 +67,5 @@ clean:
 mingw: lsocket.dll
 
 lsocket.dll : lsocket.c win_compat.c
-	$(CC) -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $^ $(LDFLAGS) -lws2_32 -I $(LUA_INCDIR) -L $(INST_LIBDIR) -llua53
+	$(CC) -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $^ $(LDFLAGS) -lws2_32 -I $(LUA_INCDIR) -L $(LUA_DIR) -llua53
 
