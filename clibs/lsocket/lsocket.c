@@ -7,9 +7,19 @@
  */
 
 #include <stdlib.h>
+#if _WINDOWS && _MSC_VER > 0
+#include <io.h>
+
+#define strncasecmp _strnicmp
+#define strcasecmp _stricmp
+
+#else
 #include <unistd.h>
+#endif // _WINDOWS && _MSC_VER > 0
+
 #include <stdio.h>
 #include <fcntl.h>
+
 #include <string.h>
 #include "lua.h"
 #include "lauxlib.h"
