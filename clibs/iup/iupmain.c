@@ -157,12 +157,15 @@ main (int argc, char **argv) {
 	status = lua_pcall(L, 1, 1, 0);  /* do the call */
 	result = lua_toboolean(L, -1);  /* get result */
 	report(L, status, argv[0], &a);
-	lua_close(L);
+
+	IupSetFunction ("IDLE_ACTION", (Icallback) NULL);	// turn off the idle function
 
 	if (a.debug) {
 		IupMainLoop();
 		IupClose();
 	}
+
+	lua_close(L);
 
 	return (result && status == LUA_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
