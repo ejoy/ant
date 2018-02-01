@@ -158,7 +158,7 @@ main (int argc, char **argv) {
 	result = lua_toboolean(L, -1);  /* get result */
 	report(L, status, argv[0], &a);
 
-	IupSetFunction ("IDLE_ACTION", (Icallback) NULL);	// turn off the idle function
+//	IupSetFunction ("IDLE_ACTION", (Icallback) NULL);	// turn off the idle function
 
 	if (a.debug) {
 		IupMainLoop();
