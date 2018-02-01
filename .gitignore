@@ -9,10 +9,4 @@ bin
 .vscode
 .vs
 
-clibs/*/*-vc/Debug
-clibs/*/*-vc/Release
-clibs/*/*-vc/*/Debug
-clibs/*/*-vc/*/Release
-clibs/*/*-vc/*/x64
-
 *.user
