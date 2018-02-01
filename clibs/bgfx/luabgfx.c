@@ -12,6 +12,23 @@
 #include <bgfx/c99/platform.h>
 #include "luabgfx.h"
 
+#if _MSC_VER > 0
+#include <malloc.h>
+
+#	ifdef USING_ALLOCA_FOR_VLA
+#		define VLA(_TYPE, _VAR, _SIZE)	_TYPE _VAR = (_TYPE*)_alloca(sizeof(_TYPE) * (_SIZE))
+#	else//!USING_ALLOCA_FOR_VLA
+#		define V(_SIZE)	4096
+#	endif //USING_ALLOCA_FOR_VLA
+#else //!(_MSC_VER > 0)
+#	ifdef USING_ALLOCA_FOR_VLA
+#		define VLA(_TYPE, _VAR, _SIZE) _TYPE _VAR[(_SIZE)]
+#	else //!USING_ALLOCA_FOR_VLA
+#		define V(_SIZE)	(_SIZE)
+#	endif //USING_ALLOCA_FOR_VLA
+
+#endif //_MSC_VER > 0
+
 static void *
 getfield(lua_State *L, const char *key) {
 	lua_getfield(L, 1, key);
@@ -2399,7 +2416,7 @@ lsetUniform(lua_State *L) {
 		default:
 			return luaL_error(L, "Invalid uniform type %d", info.type);
 		}
-		uint8_t buffer[sz * n];
+		uint8_t buffer[V(sz * n)];
 		if (info.type == BGFX_UNIFORM_TYPE_INT1) {
 			int i;
 			int32_t * data = (int32_t *)buffer;
@@ -2756,7 +2773,7 @@ create_fb_mrt(lua_State *L) {
 		luaL_error(L, "At lease one frame buffer");
 	}
 	int destroy = lua_toboolean(L, 2);
-	bgfx_texture_handle_t handles[n];
+	bgfx_texture_handle_t handles[V(n)];
 	int i;
 	for (i=0;i<n;i++) {
 		if (lua_geti(L, 1, i+1) != LUA_TNUMBER) {
@@ -2958,7 +2975,7 @@ lsetViewOrder(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	// todo: set first view not 0
 	int n = lua_rawlen(L, 1);
-	bgfx_view_id_t order[n];
+	bgfx_view_id_t order[V(n)];
 	int i;
 	for (i=0;i<n;i++) {
 		if (lua_geti(L, 1, i+1) != LUA_TNUMBER) {
@@ -3496,7 +3513,7 @@ lgetShaderUniforms(lua_State *L) {
 	bgfx_shader_handle_t shader = { sid };
 	uint16_t n = bgfx_get_shader_uniforms(shader, NULL, 0);
 	lua_createtable(L, n, 0);
-	bgfx_uniform_handle_t u[n];
+	bgfx_uniform_handle_t u[V(n)];
 	bgfx_get_shader_uniforms(shader, u, n);
 	int i;
 	for (i=0;i<n;i++) {
