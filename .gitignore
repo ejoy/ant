@@ -9,4 +9,10 @@ bin
 .vscode
 .vs
 
+projects/msvc/vs_bin
+projects/msvc/x64
+projects/msvc/Debug
+projects/msvc/Release
+
+
 *.user
