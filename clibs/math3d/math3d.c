@@ -145,8 +145,8 @@ push_mat(lua_State *L, struct lastack *LS, int index, int type) {
 
 static void
 push_value(lua_State *L, struct lastack *LS, int index) {
-	int n = lua_rawlen(L, index);
-	int i;
+	size_t n = lua_rawlen(L, index);
+	size_t i;
 	float v[16];
 	if (n > 16) {
 		luaL_error(L, "Invalid value %d", n);
@@ -168,7 +168,7 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 		}
 		return;
 	}
-	luaL_checkstack(L, n, NULL);
+	luaL_checkstack(L, (int)n, NULL);
 	for (i=0;i<n;i++) {
 		lua_geti(L, index, i+1);
 		v[i] = lua_tonumber(L, -1);
@@ -487,7 +487,7 @@ push_command(lua_State *L, struct lastack *LS, int index) {
 	case LUA_TSTRING: {
 		size_t sz;
 		const char * cmd = luaL_checklstring(L, index, &sz);
-		luaL_checkstack(L, sz + 20, NULL);
+		luaL_checkstack(L, (int)(sz + 20), NULL);
 		int i;
 		int ret = 0;
 		for (i=0;i<(int)sz;i++) {

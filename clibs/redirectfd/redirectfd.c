@@ -10,6 +10,13 @@
 #include <windows.h>
 #include <io.h>
 
+#if defined(_MSC_VER)
+#define fileno _fileno
+#define close _close
+#define STDOUT_FILENO fileno(stdout)
+#define STDERR_FILENO fileno(stderr)
+#endif
+
 struct thread_args {
 	HANDLE readpipe;
 	SOCKET sock;
@@ -35,14 +42,21 @@ redirect_thread(LPVOID lpParam) {
 
 static FILE *
 get_stdfile(lua_State *L, int stdfd) {
-	switch (stdfd) {
-	case STDOUT_FILENO:
+	if (stdfd == STDOUT_FILENO)
 		return stdout;
-	case STDERR_FILENO:
+	if (stdfd == STDERR_FILENO) 
 		return stderr;
-	default:
-		luaL_error(L, "Invalid std fd %d", stdfd);
-	}
+
+	luaL_error(L, "Invalid std fd %d", stdfd);
+
+	//switch (stdfd) {
+	//case STDOUT_FILENO:
+	//	return stdout;
+	//case STDERR_FILENO:
+	//	return stderr;
+	//default:
+	//	luaL_error(L, "Invalid std fd %d", stdfd);
+	//}
 	return NULL;
 }
 
