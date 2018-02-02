@@ -41,7 +41,7 @@ local function init()
 		nwh = iup.GetAttributeData(canvas,"HWND"),
 	}
 	world = ecs.new_world {
-		modules = { 
+		modules = {
 			assert(loadfile "test/cameratest/camera_component.lua"),
 			assert(loadfile "test/cameratest/camera_system.lua"),
 			assert(loadfile "test/simple_system.lua"),

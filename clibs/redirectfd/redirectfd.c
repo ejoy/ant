@@ -50,12 +50,13 @@ static void
 redirect(lua_State *L, int fd, int stdfd) {
 	FILE * stdfile = get_stdfile(L, stdfd);
 	if (_fileno(stdfile) != stdfd) {
-		freopen(tmpnam(NULL), "w", stdfile);
+		freopen(tmpnam(NULL), "wb", stdfile);
 		int fno = stdfd;
 		stdfd = _fileno(stdfile);
 		if (stdfd != fno) {
 			_dup2(_dup(stdfd), fno);
 		}
+		setvbuf(stdfile, (char *) NULL, _IONBF, 0);
 	}
 
 	HANDLE rp, wp;

@@ -17,7 +17,7 @@ local function new_logger(name)
 	}
 end
 
-local log_tabs = {}
+local log_tabs = { value = "error" }
 
 local function append_text(ctrl)
 	return function(txt)
@@ -28,12 +28,30 @@ local function append_text(ctrl)
 	end
 end
 
-for _, v in ipairs { "stdout", "stderr" } do
+for _, v in ipairs {
+	"stdout",
+	"stderr",
+	} do
 	log[v] = new_logger(v)
 	table.insert(log_tabs, log[v])
 	redirect.callback(v, append_text(log[v]))
 end
 
+do
+	local err_log = new_logger "error"
+	table.insert(log_tabs, err_log)
+	local append_error = append_text(err_log)
+	function log.print(...)
+		local tmp = table.pack(...)
+		local text = table.concat(tmp, "\t", 1, tmp.n)
+		append_error(text)
+	end
+	function log.active_error()
+		log.window.VALUE = err_log
+	end
+end
+
 log.window =  iup.tabs(log_tabs)
+
 
 return log

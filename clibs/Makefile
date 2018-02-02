@@ -1,5 +1,5 @@
 BIN = .
-LIBS = math3d lsocket redirectfd winfile bgfx
+LIBS = math3d lsocket redirectfd winfile bgfx remotedebug
 PLAT = mingw
 
 IUPLIBS = luaiup scintilla iupluaimglib
@@ -24,10 +24,9 @@ clean_iup : build_lua
 build_lsocket : build_lua
 
 define COPY_iup
-$(BIN)/$(1).dll : iup/$(1).dll
-	cp $$< $$@
+$(BIN)/$(1).dll : build_iup
+	cp iup/$(1).dll $$@
 
-iup/$(1).dll :  build_iup
 endef
 
 $(foreach v, $(IUPLIBS), $(eval $(call COPY_iup,$(v))))
@@ -38,10 +37,8 @@ $(BIN)/lua53.dll : lua/lua53.dll
 	cp $< $@
 
 define COPY_temp
-$(BIN)/$(1).dll : $(1)/$(1).dll
-	cp $$< $$@
-
-$(1)/$(1).dll : build_$(1)
+$(BIN)/$(1).dll : build_$(1)
+	cp $(1)/$(1).dll $$@
 
 build_$(1) : build_lua
 	cd $(1) && $(MAKE) $(PLAT)
