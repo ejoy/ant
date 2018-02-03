@@ -16,6 +16,10 @@ local function new_component(w, eid, c, ...)
 		if nc then
 			table.insert(nc, eid)
 		end
+		local set = w._set[c]
+		if set then
+			set[#set+1] = eid
+		end
 		new_component(w, eid, ...)
 	end
 end

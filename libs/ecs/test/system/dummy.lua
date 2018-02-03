@@ -25,7 +25,11 @@ end
 function dummy:update()
 	print ("Dummy update")
 	for eid in world:each "foobar" do
-		print("Dummy foobar", eid)
+		print("1. Dummy foobar", eid)
+	end
+	world:new_entity "foobar"
+	for eid in world:each "foobar" do
+		print("2. Dummy foobar", eid)
 	end
 end
 

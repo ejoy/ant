@@ -44,7 +44,7 @@ local function init()
 		modules = {
 			assert(loadfile "test/cameratest/camera_component.lua"),
 			assert(loadfile "test/cameratest/camera_system.lua"),
-			assert(loadfile "test/simple_system.lua"),
+			assert(loadfile "test/system/simple_system.lua"),
 		},
 		args = { mq = input_queue },
 	}
