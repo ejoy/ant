@@ -4,7 +4,7 @@ local ecs = ...
 local render_util = require "ant.util"
 local bgfx = require "bgfx"
 
-local rs_hw = {
+local materil = {
     RGB_WRITE = true,   --acutally we should provide r, g, b write
     ALPHA_WRITE = true,
     ALPHA_REF = 0,
@@ -23,14 +23,14 @@ local rs_hw = {
     --POINT_SIZE
 }
 
-function rs_hw.new()
+function materil.new()
     local tt = {}
-    setmetatable(tt, {__index = rs_hw})
+    setmetatable(tt, {__index = materil})
     return tt
 end
 
-function get_rs_hw()
-    return rs_hw.new()
+function create_render_state()
+    return materil.new()
 end
 --@]
 
@@ -51,7 +51,7 @@ function texture_res_mapper.new()
     return tt
 end
 
-function get_tex_res_mapper()
+function create_tex_res_mapper()
     return texture_res_mapper.new()
 end
 --@]
@@ -95,18 +95,18 @@ end
 
 
 --[@    render state component
-local render_state = ecs.component "render_state" {
-    state = get_rs_hw(),
-    tex_res_mapper = texture_res_mapper(),
-    shader = shader_res.new(),
-    uniforms = {},
+local materil = ecs.component "materil" {
+    state           = create_render_state(),
+    tex_res_mapper  = create_tex_res_mapper(),
+    shader          = shader_res.new(),
+    uniforms        = {},
 }
 
-local render_state_system = ecs.component "render_state_system"
-render_state_system.singleton "render_state"
+local materil_sys = ecs.system "materil_system"
+materil_sys.singleton "materil"
 
-function render_state_system:init()
-    local shader = self.render_state.shader
+function materil_sys:init()
+    local shader = self.materil.shader
 
     --[@    to do, wiil read from file. hard code here
     shader.vs.path = "vs_mesh"  
@@ -115,7 +115,7 @@ function render_state_system:init()
     
     shader.prog = render_util.programLoad(shader.vs.path, shader.ps.path)
 
-    local uniforms = self.render_state.uniforms
+    local uniforms = self.materil.uniforms
     local uniform = create_uniform_data()
     uniform.name = "u_time"
     uniform.type = "v4"
@@ -123,7 +123,7 @@ function render_state_system:init()
     table.insert(uniforms, #uniforms, uniform)
 end
 
-function render_state_system:update()
+function materil_sys:update()
 
 end
 
