@@ -78,6 +78,7 @@ end
 local uniform = {
     name = "",
     type = "v4",
+    value_calculator = function () return {} end,
     uniform_id = 0,
 }
 
@@ -103,15 +104,15 @@ local materil = ecs.component "materil" {
 }
 
 local materil_sys = ecs.system "materil_system"
-materil_sys.singleton "materil"
+materil_sys.singleton("materil", "math3d")
 
 function materil_sys:init()
+    -- all this init should read from file
+
     local shader = self.materil.shader
 
-    --[@    to do, wiil read from file. hard code here
     shader.vs.path = "vs_mesh"  
     shader.ps.path = "ps_mesh"
-    --@]
     
     shader.prog = render_util.programLoad(shader.vs.path, shader.ps.path)
 
@@ -119,11 +120,20 @@ function materil_sys:init()
     local uniform = create_uniform_data()
     uniform.name = "u_time"
     uniform.type = "v4"
+    local time = 0
+    uniform.value_calculator = function ()
+        time = time + 1
+        return {time}
+    end
     uniform.uniform_id = bgfx.create_uniform(uniform.name, unifrom.type)
-    table.insert(uniforms, #uniforms, uniform)
+    table.insert(uniforms, uniform.name, uniform)
 end
 
-function materil_sys:update()
+
+local materail_unfirom_update_sys = ecs.system "materail_unfirom_update_system"
+materail_unfirom_update_sys.singleton("material", "math3d")
+
+function materail_unfirom_update_sys:update()
 
 end
 

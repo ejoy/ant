@@ -42,8 +42,11 @@ local function init()
 	}
 	world = ecs.new_world {
 		modules = { 
-			assert(loadfile "test/cameratest/camera_component.lua"),
-			assert(loadfile "test/cameratest/camera_system.lua"),
+			assert(loadfile "libs/render/math3d/math_component.lua"),
+			assert(loadfile "libs/render/material_compone")
+			assert(loadfile "libs/render/camera/camera_component.lua"),
+			assert(loadfile "libs/render/camera/camera_system.lua"),
+			assert(loadfile "libs/render/renderpipeline.lua"),
 			assert(loadfile "test/simple_system.lua"),
 		},
 		args = { mq = input_queue },
