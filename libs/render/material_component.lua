@@ -1,6 +1,8 @@
 local ecs = ...
 
+--[@    render state
 local render_util = require "ant.util"
+local bgfx = require "bgfx"
 
 local rs_hw = {
     RGB_WRITE = true,   --acutally we should provide r, g, b write
@@ -30,7 +32,9 @@ end
 function get_rs_hw()
     return rs_hw.new()
 end
+--@]
 
+--[@    textures
 local texture_res_mapper = {
     texArray = {
         "",
@@ -50,7 +54,9 @@ end
 function get_tex_res_mapper()
     return texture_res_mapper.new()
 end
+--@]
 
+--[@    shader
 local shader_res = {
     vs = {  
         path = "",
@@ -66,21 +72,41 @@ function shader_res.new()
     setmetatable(tt, {__index = shader_res})
     return tt
 end
+--@]
+
+--[@    uniforms
+local uniform = {
+    name = "",
+    type = "v4",
+    uniform_id = 0,
+}
+
+function uniform.new()
+    local tt = {}
+    setmetatable(tt, {__index = uniform})
+    return tt
+end
+
+function create_uniform_data()
+    return uniform.new()
+end
+
+--@]
 
 
+--[@    render state component
 local render_state = ecs.component "render_state" {
     state = get_rs_hw(),
     tex_res_mapper = texture_res_mapper(),
-    shader = shader_res.new()
+    shader = shader_res.new(),
+    uniforms = {},
 }
 
-local render_state_init_system = ecs.component "rs_init_system"
-render_state_init_system.singleton "render_state"
+local render_state_system = ecs.component "render_state_system"
+render_state_system.singleton "render_state"
 
-function render_state_init_system:init()
-    --self.render_state.state
-    --print("default render state")
-    local shader = self.shader
+function render_state_system:init()
+    local shader = self.render_state.shader
 
     --[@    to do, wiil read from file. hard code here
     shader.vs.path = "vs_mesh"  
@@ -88,4 +114,19 @@ function render_state_init_system:init()
     --@]
     
     shader.prog = render_util.programLoad(shader.vs.path, shader.ps.path)
+
+    local uniforms = self.render_state.uniforms
+    local uniform = create_uniform_data()
+    uniform.name = "u_time"
+    uniform.type = "v4"
+    uniform.uniform_id = bgfx.create_uniform(uniform.name, unifrom.type)
+    table.insert(uniforms, #uniforms, uniform)
 end
+
+function render_state_system:update()
+
+end
+
+--local render_state_update_sys = ecs.system "render_state_update_system"
+
+--@]
