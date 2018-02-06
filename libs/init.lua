@@ -8,4 +8,4 @@ package.path = root .. "/libs/?.lua;" .. root .. "/libs/?/?.lua"
 require "common/import"
 require "common/log"
 
-
+print_r = require "common/print_r"
