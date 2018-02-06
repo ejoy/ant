@@ -5,25 +5,8 @@ local ant = require "lbgfx"
 local util = require "lbgfx.util"
 
 local world_mat_comp = ecs.component "worldmat_comp" {
-    mat = {type = "mat"}
+    mat = {type = "matrix"}
 }
-
-local view_rect_comp = ecs.component "view_rect" {
-    x = 0, y = 0, width = 1, height = 1,
-}
-
-local backgraound_comp = ecs.component "bg_comp" {
-    bgColor = {r = 255, g = 255, b = 255, a = 255},
-    clearBits = {depth = true, color = true, stencil = true},
-}
-
-local view_rect_init_system = ecs.system "view_rect_init_system"
-view_rect_init_system.singleton("view_rect", "math3d")
-
-function view_rect_init_system:init()
-    --self.view_rect
-end
-
 
 local function for_each_comp_in_world(compNames, op)
     for eid in world:each(compNames[0]) do
@@ -48,19 +31,8 @@ end
 
 
 --[@
-local background_clear_system = ecs.system "bg_clear_system"
-
-function background_clear_system:update()
-
-end
---@]
-
---[@
-
-
 local rpl_system = ecs.system "render_pipeline"
 
-rpl_system.depend "bg_clear_system"
 function rpl_system:init()
 
 end
@@ -93,11 +65,13 @@ function auto_rotate_worldmat_sys:update()
 
     for_each_comp_in_world({"worldmat_comp"},
     function (entity)
-        entity.world_mat_comp.mat = entity.math3d(entity.world_mat_comp, {time}, "*M") 
+        --entity.world_mat_comp.mat = entity.math3d(entity.world_mat_comp, {time}, "*M") 
     end)
 end
 
 function rpl_system:update()
+    bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
+    bgfx.touch(0)
     for_each_comp_in_world({"mesh", "worldmat_comp", "material"},
     function (entity)        
         --bgfx.set_transfrom(entity.worldmat_comp.mat)    
@@ -109,7 +83,7 @@ function rpl_system:update()
         draw_mesh(entity.mesh, material.shader)
     end)
 
-    
+    bgfx.frame()
 end
 
 --@]

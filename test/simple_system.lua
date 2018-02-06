@@ -10,12 +10,12 @@ function init_bgfx:init()
 	bgfx.set_debug "T"
 end
 
-local render_frame = ecs.system "render_frame"
+-- local render_frame = ecs.system "render_frame"
 
-function render_frame:update()
-	bgfx.touch(0)
-	bgfx.frame()
-end
+-- function render_frame:update()
+-- 	bgfx.touch(0)
+-- 	bgfx.frame()
+-- end
 
 local window = ecs.component "window" {
 	width = 0,
