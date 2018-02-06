@@ -19,7 +19,7 @@ function framework.init()
 		OPENGLES   = "essl",
 		VULKAN     = "spirv",
 	}
-	shader_path = "shaders/".. (assert(path[ant.caps.rendererType])) .."/"
+	shader_path = "assets/shaders/".. (assert(path[ant.caps.rendererType])) .."/"
 end
 
 local util = {}
