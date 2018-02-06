@@ -1,122 +1,89 @@
 local ecs = ...
 
 --[@    render state
-local render_util = require "ant.util"
+local render_util = require "lbgfx.util"
 local bgfx = require "bgfx"
 
-local materil = {
-    RGB_WRITE = true,   --acutally we should provide r, g, b write
-    ALPHA_WRITE = true,
-    ALPHA_REF = 0,
-    CULL = "CCW",
-    MSAA = true,
-    PT = "TRISTRIP",    --
-
-    BLEND_ENABLE = false,
-    --BLEND = "ADD",
-    --BLEND_FUNC,
-    --BLEND_FUNC_RT,
-    --BLEND_EQUATION,
-
-    DEPTH_WRITE = true,
-    DEPTH_TEST = "LESS",
-    --POINT_SIZE
-}
-
-function materil.new()
-    local tt = {}
-    setmetatable(tt, {__index = materil})
-    return tt
-end
 
 function create_render_state()
-    return materil.new()
+    return {
+        RGB_WRITE = true,   --acutally we should provide r, g, b write
+        ALPHA_WRITE = true,
+        ALPHA_REF = 0,
+        CULL = "CCW",
+        MSAA = true,
+        PT = "TRISTRIP",    --
+    
+        BLEND_ENABLE = false,
+        --BLEND = "ADD",
+        --BLEND_FUNC,
+        --BLEND_FUNC_RT,
+        --BLEND_EQUATION,
+    
+        DEPTH_WRITE = true,
+        DEPTH_TEST = "LESS",
+        --POINT_SIZE
+    }
 end
 --@]
 
 --[@    textures
-local texture_res_mapper = {
-    texArray = {
-        "",
-    }, -- texture path
-    remapper = {    
-        --vs = {0},   -- vertex stage  
-        fs = {0},     -- fragment stage  
-    }
-}
-
-function texture_res_mapper.new()
-    local tt = {}
-    setmetatable(tt, {__index = texture_res_mapper})
-    return tt
-end
-
 function create_tex_res_mapper()
-    return texture_res_mapper.new()
+    return {
+        texArray = {
+            "",
+        }, -- texture path
+        remapper = {    
+            --vs = {0},   -- vertex stage  
+            fs = {0},     -- fragment stage  
+        }
+    }
 end
 --@]
 
---[@    shader
-local shader_res = {
-    vs = {  
-        path = "",
-    },
-    ps = {
-        path = "",
-    },
-    prog = 0
-}
-
-function shader_res.new()
-    local tt = {}
-    setmetatable(tt, {__index = shader_res})
-    return tt
+function create_shader_data()
+    return {
+        vs_path = "",
+        ps_path = "",
+        prog    = 0
+    }
 end
---@]
 
 --[@    uniforms
-local uniform = {
-    name = "",
-    type = "v4",
-    value_calculator = function () return {} end,
-    uniform_id = 0,
-}
-
-function uniform.new()
-    local tt = {}
-    setmetatable(tt, {__index = uniform})
-    return tt
-end
-
 function create_uniform_data()
-    return uniform.new()
+    return {
+        name = "",
+        type = "v4",
+        value_calculator = function () return {} end,
+        uniform_id = 0,
+    }
 end
-
 --@]
 
-
 --[@    render state component
-local materil = ecs.component "materil" {
-    state           = create_render_state(),
-    tex_res_mapper  = create_tex_res_mapper(),
-    shader          = shader_res.new(),
-    uniforms        = {},
+local material = ecs.component "material" {
+    state           = {type = "userdata", create_render_state},
+    tex_res_mapper  = {type = "userdata", create_tex_res_mapper},
+    shader          = {type = "userdata", create_shader_data},
+    uniforms        = {type = "userdata", {}},
 }
 
-local materil_sys = ecs.system "materil_system"
-materil_sys.singleton("materil", "math3d")
+local material_sys = ecs.system "material_system"
 
-function materil_sys:init()
+material_sys.singleton "material"
+material_sys.singleton "math3d"
+
+function material_sys:init()
     -- all this init should read from file
-
-    local shader = self.materil.shader
-
-    shader.vs.path = "vs_mesh"  
-    shader.ps.path = "ps_mesh"
     
-    shader.prog = render_util.programLoad(shader.vs.path, shader.ps.path)
+    local shader = self.material.shader
 
-    local uniforms = self.materil.uniforms
+    shader.vs_path = "vs_mesh"  
+    shader.ps_path = "ps_mesh"
+    
+    shader.prog = render_util.programLoad(shader.vs_path, shader.ps_path)
+
+    local uniforms = self.material.uniforms
     local uniform = create_uniform_data()
     uniform.name = "u_time"
     uniform.type = "v4"
@@ -130,12 +97,12 @@ function materil_sys:init()
 end
 
 
-local materail_unfirom_update_sys = ecs.system "materail_unfirom_update_system"
-materail_unfirom_update_sys.singleton("material", "math3d")
+-- local materail_unfirom_update_sys = ecs.system "materail_unfirom_update_system"
+-- materail_unfirom_update_sys.singleton("material", "math3d")
 
-function materail_unfirom_update_sys:update()
+-- function materail_unfirom_update_sys:update()
 
-end
+-- end
 
 --local render_state_update_sys = ecs.system "render_state_update_system"
 
