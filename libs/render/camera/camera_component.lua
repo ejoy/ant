@@ -1,6 +1,6 @@
 local ecs = ...
 
-function check_comp_creation(comp, errMsg)
+local function check_comp_creation(comp, errMsg)
     if comp == nil then
         error(errMsg)
     end
