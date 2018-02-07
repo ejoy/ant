@@ -6,7 +6,6 @@ local db = require "debugger"
 --{@	must be the first system to call
 local add_camera_entity_system = ecs.system "add_camera_entity"
 function add_camera_entity_system:init()
-	print("add_camera_entity_system:init()")
 	world:new_entity("view_transform", "frustum")
 end
 --@}
@@ -18,9 +17,7 @@ camera_init_system.singleton "math3d"
 camera_init_system.depend "add_camera_entity"
 
 function camera_init_system:init()
-	print("camera_init_system:init()")
 	for eid in world:each("view_transform") do
-		print("found transform")
 		local entity = world[eid]
 		if entity and 
 			entity.frustum and
