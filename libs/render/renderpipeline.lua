@@ -51,8 +51,7 @@ local function update_uniform(uniforms)
     end
 end
 
-function rpl_system:update()
-    print("in update")
+function rpl_system:update()    
     bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
     bgfx.touch(0)
 

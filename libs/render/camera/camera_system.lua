@@ -1,11 +1,10 @@
 local ecs = ...
 local world = ecs.world
-local bgfx = require "bgfx"
 local math3d = require "math3d"
 
 local render_util = require "render.render_util"
 
---{@
+--[@
 local camera_system = ecs.system "camera_system"
 camera_system.singleton "math3d"
 
@@ -22,4 +21,4 @@ function camera_system:update()
 	end)
 	
 end
---@}
+--@]

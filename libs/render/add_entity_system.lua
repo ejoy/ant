@@ -59,8 +59,11 @@ function add_entity_sys:init()
         local camera_eid = world:new_entity("view_transform", "frustum")
         local camera = world[camera_eid]
         local vt = camera.view_transform
-        vt.eye 			= self.math3d({0, 0, 0, 1}, "M")
-        vt.direction 	= self.math3d({0, 0, 1, 0}, "M")
+        vt.eye 			= self.math3d({0, 10, -10, 1}, "M")
+        vt.direction 	= self.math3d({0, 1, 1, 0}, "M")
+
+        -- vt.eye 			= self.math3d({0, 0, 0, 1}, "M")
+        -- vt.direction 	= self.math3d({0, 0, 1, 0}, "M")
 
         camera.frustum.projMat = self.math3d({type = "proj", fov = 90, aspect = 1024/768, n = 0.1, f = 10000}, "M")
     end
