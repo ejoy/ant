@@ -79,7 +79,7 @@ function material_sys:init()
     local shader = self.material.shader
 
     shader.vs_path = "vs_mesh"  
-    shader.ps_path = "ps_mesh"
+    shader.ps_path = "fs_mesh"
     
     shader.prog = render_util.programLoad(shader.vs_path, shader.ps_path)
 
@@ -92,8 +92,8 @@ function material_sys:init()
         time = time + 1
         return {time}
     end
-    uniform.uniform_id = bgfx.create_uniform(uniform.name, unifrom.type)
-    table.insert(uniforms, uniform.name, uniform)
+    uniform.uniform_id = bgfx.create_uniform(uniform.name, uniform.type)
+    uniforms[uniform.name] = uniform
 end
 
 
