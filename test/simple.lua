@@ -8,6 +8,7 @@ local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
 local elog = require "editor.log"
 local redirect = require "filesystem.redirect"
+local db = require "debugger"
 
 iup.SetGlobal("UTF8MODE", "YES")
 
@@ -18,7 +19,7 @@ local canvas = iup.canvas {
 
 local dlg = iup.dialog {
 	iup.split {
-		canvas,
+		canvas,		
 		elog.window,
 		SHOWGRIP = "NO",
 	},
@@ -36,12 +37,26 @@ local function mainloop()
 	world.update()
 end
 
+local function set_mainloop(f)
+	iup.SetIdle(function ()
+		local ok , err = xpcall(f, db.traceback)
+		if not ok then
+			elog.print(err)
+			elog.active_error()
+			iup.SetIdle(redirect.dispatch)
+		end
+		return iup.DEFAULT
+	end)
+end
+
+
 local function init()
 	lbgfx.init {
 		nwh = iup.GetAttributeData(canvas,"HWND"),
-	}
+	}	
 	world = ecs.new_world {
 		modules = { 
+			assert(loadfile "libs/render/add_entity_system.lua"),	
 			assert(loadfile "libs/render/math3d/math_component.lua"),
 			assert(loadfile "libs/render/material_component.lua"),
 			assert(loadfile "libs/render/mesh_component.lua"),
@@ -52,7 +67,7 @@ local function init()
 		},
 		args = { mq = input_queue },
 	}
-	lbgfx.mainloop(mainloop)
+	set_mainloop(mainloop)	
 end
 
 function canvas:resize_cb(w,h)
