@@ -41,8 +41,8 @@ function camera_system:update()
 		local frustum = e.frustum
 		if frustum ~= nil then
 			local ct = assert(e.view_transform)			
-			local viewMat = self.math3d(ct.eye, ct.direction, "lm")
-			local projMat = self.math3d(frustum.projMat, "1m")
+			local viewMat = self.math3d(-ct.eye, -ct.direction, "lm")
+			local projMat = self.math3d(-frustum.projMat, "1m")
 
 			bgfx.set_view_transform(0, view, projMat)
 		end
