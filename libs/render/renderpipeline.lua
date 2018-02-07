@@ -29,6 +29,7 @@ end
 local rpl_system = ecs.system "render_pipeline"
 
 rpl_system.depend "add_entities_system"
+rpl_system.depend "camera_system"
 
 function rpl_system:init()
 
