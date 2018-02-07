@@ -1,14 +1,8 @@
 local ecs = ...
 local world = ecs.world
 local bgfx = require "bgfx"
-local db = require "debugger"
+local math3d = require "math3d"
 
---{@	must be the first system to call
-local add_camera_entity_system = ecs.system "add_camera_entity"
-function add_camera_entity_system:init()
-	world:new_entity("view_transform", "frustum")
-end
---@}
 
 --{@
 local camera_init_system = ecs.system "camera_init_system"
@@ -25,7 +19,7 @@ function camera_init_system:init()
 
 			local vt = entity.view_transform
 			vt.eye 			= self.math3d({0, 0, 0, 1}, "M")
-			vt.direction 	= self.math3d({0, 0, 1, 0}, "M")			
+			vt.direction 	= self.math3d({0, 0, 1, 0}, "M")
 
 			entity.frustum.projMat = self.math3d({type = "proj", fov = 90, aspect = 1024/768, n = 0.1, f = 10000}, "M")
 		end
