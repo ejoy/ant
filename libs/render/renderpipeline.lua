@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local bgfx = require "bgfx"
-local util = require "lbgfx.util"
+
 local render_uril = require "render.render_util"
 
 local world_mat_comp = ecs.component "worldmat_comp" {
