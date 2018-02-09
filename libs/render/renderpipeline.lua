@@ -30,6 +30,7 @@ local rpl_system = ecs.system "render_pipeline"
 
 rpl_system.depend "add_entities_system"
 rpl_system.depend "camera_system"
+rpl_system.depend "viewport_system"
 
 function rpl_system:init()
 
@@ -52,8 +53,7 @@ local function update_uniform(uniforms)
     end
 end
 
-function rpl_system:update()    
-    bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
+function rpl_system:update() 
     bgfx.touch(0)
 
     --print("rpl_system:update")

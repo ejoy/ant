@@ -56,14 +56,15 @@ local function init()
 	}	
 	world = ecs.new_world {
 		modules = { 
+			assert(loadfile "libs/inputmgr/message_system.lua"),
 			assert(loadfile "libs/render/add_entity_system.lua"),	
-			assert(loadfile "libs/render/math3d/math_component.lua"),
+			assert(loadfile "libs/render/math3d/math_component.lua"),			
 			assert(loadfile "libs/render/material_component.lua"),
 			assert(loadfile "libs/render/mesh_component.lua"),
+			assert(loadfile "libs/render/viewport_component.lua"),
 			assert(loadfile "libs/render/camera/camera_component.lua"),
-			assert(loadfile "libs/render/camera/camera_system.lua"),			
+			assert(loadfile "libs/render/camera/camera_system.lua"),
 			assert(loadfile "libs/render/renderpipeline.lua"),
-			assert(loadfile "test/system/simple_system.lua"),
 		},
 		args = { mq = input_queue },
 	}
