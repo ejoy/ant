@@ -1,32 +1,32 @@
 local require = import and import(...) or require
 
 local bgfx = require "bgfx"
-local ant = require "lbgfx"
+local hw_caps = require "render.hardware_caps"
 
 -- init
-local framework = require "framework"
 local shader_path
-
-function framework.init()
-	print("lbgfx framework.init")
-	local path = {
-		NOOP       = "dx9",
-		DIRECT3D9  = "dx9",
-		DIRECT3D11 = "dx11",
-		DIRECT3D12 = "dx11",
-		GNM        = "pssl",
-		METAL      = "metal",
-		OPENGL     = "glsl",
-		OPENGLES   = "essl",
-		VULKAN     = "spirv",
-	}
-	shader_path = "assets/shaders/".. (assert(path[ant.caps.rendererType])) .."/"
-end
 
 local util = {}
 
 do
+	--we need a shader manager. this shader_path should not expose here
 	local function load_shader(name)
+		if shader_path == nil then
+			local path = {
+				NOOP       = "dx9",
+				DIRECT3D9  = "dx9",
+				DIRECT3D11 = "dx11",
+				DIRECT3D12 = "dx11",
+				GNM        = "pssl",
+				METAL      = "metal",
+				OPENGL     = "glsl",
+				OPENGLES   = "essl",
+				VULKAN     = "spirv",
+			}
+			
+			local caps = hw_caps.get()
+			shader_path = "assets/shaders/".. (assert(path[caps.rendererType])) .."/"
+		end
 		local filename = shader_path .. name .. ".bin"
 		local f = assert(io.open(filename, "rb"))
 		local data = f:read "a"

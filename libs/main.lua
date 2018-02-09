@@ -1,7 +1,7 @@
 dofile "libs/init.lua"
 
 require "scintilla"
-local lbgfx = require "lbgfx"
+
 local bgfx = require "bgfx"
 local ecs = require "ecs"
 local inputmgr = require "inputmgr"
@@ -9,6 +9,7 @@ local mapiup = require "inputmgr.mapiup"
 local elog = require "editor.log"
 local redirect = require "filesystem.redirect"
 local db = require "debugger"
+local hw_caps = require "render.hardware_caps"
 
 iup.SetGlobal("UTF8MODE", "YES")
 
@@ -49,12 +50,24 @@ local function set_mainloop(f)
 	end)
 end
 
+local init_flag = nil
+
+local function bgfx_init()
+	assert(init_flag == nil)
+
+	local args = {
+		nwh = iup.GetAttributeData(canvas,"HWND"),
+		renderer = nil	-- use default
+	}
+	bgfx.set_platform_data(args)
+	bgfx.init(args.renderer)
+
+	hw_caps.init()
+end
 
 local function init()
-	print("main.init")
-	lbgfx.init {
-		nwh = iup.GetAttributeData(canvas,"HWND"),
-	}	
+	bgfx_init()
+	
 	world = ecs.new_world {
 		modules = { 
 			assert(loadfile "libs/inputmgr/message_system.lua"),
@@ -93,5 +106,7 @@ dlg.usersize = nil
 if (iup.MainLoopLevel()==0) then
 	iup.MainLoop()
 	iup.Close()
-	lbgfx.shutdown()
+	if init_flag then
+		bgfx.shutdown()
+	end
 end

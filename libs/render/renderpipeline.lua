@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 local bgfx = require "bgfx"
-local ant = require "lbgfx"
 local util = require "lbgfx.util"
 local render_uril = require "render.render_util"
 
