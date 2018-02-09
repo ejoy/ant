@@ -38,7 +38,10 @@ local function path_edit(name, what)
 	end
 
 	local ctrl = iup.hbox {
-		iup.label { title = what or name },
+		iup.label {
+			title = what or name,
+			size = "50",
+		},
 		editor,
 		button,
 	}
@@ -68,6 +71,7 @@ dlg = iup.dialog {
 		iup.frame {
 			iup.vbox {
 				path_edit "lua",
+				path_edit "shaderc",
 			},
 			title = "Path",
 		},
@@ -79,6 +83,7 @@ dlg = iup.dialog {
 	},
 	margin = "4x4",
 	size = "HALFxHALF",
+	shrink="yes",
 }
 
 touch_dlg()

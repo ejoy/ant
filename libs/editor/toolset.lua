@@ -6,6 +6,7 @@ local toolset = {}
 
 local default_toolset = {
 	lua = "lua.exe",
+	shaderc = "shadercRelease.exe",
 }
 
 function toolset.load_config()
@@ -15,7 +16,6 @@ function toolset.load_config()
 	local f,err = loadfile(toolset_path, "t", ret)
 	if f then
 		f()
-		print(ret.lua)
 	end
 	return ret
 end
