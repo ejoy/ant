@@ -2,7 +2,7 @@ local ecs = ...
 
 --[@    render state
 
-local material_util = require "render.material_data_def"
+local material_util = require "render.material.material_data_def"
 
 --[@    render state component
 local material = ecs.component "material" {

@@ -1,8 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local bgfx = require "bgfx"
-local ant = require "lbgfx"
-local util = require "lbgfx.util"
+
 local render_uril = require "render.render_util"
 
 local world_mat_comp = ecs.component "worldmat_comp" {
@@ -30,6 +29,7 @@ local rpl_system = ecs.system "render_pipeline"
 
 rpl_system.depend "add_entities_system"
 rpl_system.depend "camera_system"
+rpl_system.depend "viewport_system"
 
 function rpl_system:init()
 
@@ -52,8 +52,7 @@ local function update_uniform(uniforms)
     end
 end
 
-function rpl_system:update()    
-    bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
+function rpl_system:update() 
     bgfx.touch(0)
 
     --print("rpl_system:update")

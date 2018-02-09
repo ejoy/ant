@@ -1,14 +1,14 @@
 local ecs = ...
 local world = ecs.world
-local render_util = require "render.render_util"
-local ant_util = require "lbgfx.util"
-local material_util = require "render.material_data_def"
-local bgfx = require "bgfx"
+local render_util   = require "render.render_util"
+local mesh_util     = require "render.resources.mesh_util"
+local shader_mgr    = require "render.resources.shader_mgr"
+
+local material_util = require "render.material.material_data_def"
+local bgfx          = require "bgfx"
 
 local add_entity_sys = ecs.system "add_entities_system"
 add_entity_sys.singleton "math3d"
-
-
 
 function add_entity_sys:init()
     print("add_entity_sys:init")
@@ -20,7 +20,7 @@ function add_entity_sys:init()
         local function mesh_init(mesh)
             local mesh_path = "assets/meshes/bunny.bin"
             mesh.path = mesh_path
-            mesh.mesh_ref = ant_util.meshLoad(mesh_path)
+            mesh.mesh_ref = mesh_util.meshLoad(mesh_path)
     
             assert(mesh.mesh_ref ~= nil and mesh.mesh_ref.group and #mesh.mesh_ref.group >0)
         end
@@ -31,7 +31,7 @@ function add_entity_sys:init()
             shader.vs_path = "vs_mesh"  
             shader.ps_path = "fs_mesh"
             
-            shader.prog = ant_util.programLoad(shader.vs_path, shader.ps_path)
+            shader.prog = shader_mgr.programLoad(shader.vs_path, shader.ps_path)
             if shader.prog == nil then
                 print("create shader failed")
             end
