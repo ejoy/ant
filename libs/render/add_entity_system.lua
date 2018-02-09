@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local render_util = require "render.render_util"
 local ant_util = require "lbgfx.util"
-local material_util = require "render.material_data_def"
+local material_util = require "render.material.material_data_def"
 local bgfx = require "bgfx"
 
 local add_entity_sys = ecs.system "add_entities_system"
