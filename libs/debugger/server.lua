@@ -4,10 +4,11 @@ local rdb = require "remotedebug"
 local lsocket = require "lsocket"
 local pack = require "debugger.pack"
 local aux = require "debugger.debugaux"
+local toolset = require "editor.toolset"
 
 local lua_command = {
 	"start",
-	"lua.exe",
+	toolset.path.lua,
 	"-E",
 	"-i",
 	filename:gsub("[^/\\]+$","client.lua"),
