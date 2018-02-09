@@ -8,6 +8,7 @@ local ant = {}
 local init_flag
 
 function ant.init(args)
+	print("lbgfx ant.init")
 	assert(init_flag == nil)
 	bgfx.set_platform_data(args)
 	bgfx.init(args.renderer)

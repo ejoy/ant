@@ -8,6 +8,7 @@ local framework = require "framework"
 local shader_path
 
 function framework.init()
+	print("lbgfx framework.init")
 	local path = {
 		NOOP       = "dx9",
 		DIRECT3D9  = "dx9",
