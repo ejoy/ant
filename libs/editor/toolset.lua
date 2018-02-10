@@ -23,11 +23,11 @@ end
 local function home_path()
 	local home = fs.personaldir()
 	local home_path = home .. "/" .. PATH
-	local attrib = fs.attributes(home_path)
+	local attrib = fs.attributes(home_path, "mode")
 	if not attrib then
 		assert(fs.mkdir(home_path))
 	end
-	assert(attrib.mode == "directory")
+	assert(attrib == "directory")
 	return home_path
 end
 

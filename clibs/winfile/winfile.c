@@ -805,6 +805,54 @@ lgetenv(lua_State *L) {
 	return 1;
 }
 
+static void
+get_vol_names(lua_State *L, int index) {
+	lua_geti(L, -1, index);
+	size_t sz;
+	const char * root = lua_tolstring(L, -1, &sz);
+	wchar_t tmp[V(sz+1)];
+	windows_filename(L, root, sz+1, tmp, sz+1);
+	wchar_t volname[MAX_PATH] = {0};
+	if (!GetVolumeInformationW(tmp, volname, MAX_PATH, NULL, NULL, NULL, NULL, 0)) {
+		system_error(L, GetLastError());
+		lua_error(L);
+	}
+	size_t wlen = wcsnlen(volname, MAX_PATH);
+	if (wlen) {
+		char name[V(wlen*3)];
+		int name_sz = utf8_filename(L, volname, wlen, name, wlen*3);
+		lua_pushlstring(L, name, name_sz);
+		lua_settable(L, -3);
+	} else {
+		lua_pop(L, 1);
+	}
+}
+
+static int
+ldrives(lua_State *L) {
+	DWORD sz = GetLogicalDriveStringsW(0,NULL);
+	wchar_t wbuffer[V(sz)];
+	char buffer[V(sz*3)];
+	sz = GetLogicalDriveStringsW(sz, wbuffer);
+	int usz = utf8_filename(L, wbuffer, sz, buffer, sz*3);
+	int i;
+	int from=0;
+	int index = 1;
+	lua_newtable(L);
+	for (i=0;i<usz;i++) {
+		if (buffer[i] == ' ' || buffer[i] == '\0') {
+			lua_pushlstring(L, &buffer[from], i-from);
+			lua_seti(L, -2, index);
+			from = i+1;
+			index++;
+		}
+	}
+	for (i=1;i<index;i++) {
+		get_vol_names(L, i);
+	}
+	return 1;
+}
+
 LUAMOD_API int
 luaopen_winfile(lua_State *L) {
 	luaL_checkversion(L);
@@ -826,6 +874,7 @@ luaopen_winfile(lua_State *L) {
 		{ "execute", lexecute },
 		{ "getenv", lgetenv },
 		{ "popen", lpopen },
+		{ "drives", ldrives },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
