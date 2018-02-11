@@ -62,7 +62,7 @@ function seri.save(filename, data)
 		table.insert(keys, k)
 	end
 	table.sort(keys)
-	local f = io.open(filename, "wb")
+	local f = assert(io.open(filename, "wb"))
 	for _, key in ipairs(keys) do
 		local value = serialize(data[key])
 		f:write(string.format("%s = %s\n", key, value))

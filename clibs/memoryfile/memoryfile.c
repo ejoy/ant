@@ -151,8 +151,7 @@ memfile_open (lua_State *L) {
         data = NULL;
         data_len = 0;
     } else {
-        if (memfilet == LUA_TBOOLEAN ||
-            (memfilet == LUA_TSTRING && modechar != 'r')) {
+        if (memfilet == LUA_TBOOLEAN) {
             lua_pushnil(L);
             lua_pushfstring(L, "Memfile %s locked", lua_tostring(L, 1));
             return 2;
