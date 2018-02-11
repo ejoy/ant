@@ -5,7 +5,7 @@ CULL = "CCW"
 MSAA = true
 PT = "TRISTRIP"
 
-BLEND_ENABLE = false
+--BLEND_ENABLE = "i"
 --BLEND = "ADD"
 --BLEND_FUNC
 --BLEND_FUNC_RT
