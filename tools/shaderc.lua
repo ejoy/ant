@@ -201,6 +201,7 @@ local function filetree(filter, message)
 				file_view,
 				ORIENTATION = "HORIZONTAL",
 				SHOWGRIP = "NO",
+				value = "500",
 			},
 		},
 		rebuild = function()
@@ -221,6 +222,16 @@ local function filebuilder()
 		WORDWRAP = "CHAR",
 		APPENDNEWLINE = "NO",
 		READONLY = "YES",
+		LEXERLANGUAGE = "cpp",
+		STYLEFGCOLOR1 = "192 192 192", -- 1-C comment
+		STYLEFGCOLOR2 = "192 192 192", -- 2-C++ comment line
+		STYLEFGCOLOR4 = "0 192 0", -- 4-Number
+		STYLEFGCOLOR5 = "0 0 128", -- 5-Keyword
+		STYLEFGCOLOR6 = "160 20 20", -- 6-String
+		STYLEFGCOLOR7 = "64 0 0", -- 7-Character
+		STYLEFGCOLOR9 = "0 0 255", -- 9-Preprocessor block
+		STYLEFGCOLOR10 = "128 0 128", -- 10-Operator
+		KEYWORDS0 = "void $input $output vec4 mul",
 	}
 	local filename = iup.label { expand =  "HORIZONTAL" }
 	local compile = iup.button { title = "Compile" }
@@ -312,6 +323,7 @@ local dlg = iup.dialog {
 		tree.view,
 		file.view,
 		SHOWGRIP = "NO",
+		value = "300",	-- 30% left
 	},
 	margin = "4x4",
 	size = "HALFxHALF",
