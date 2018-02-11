@@ -2,10 +2,10 @@ local ecs = ...
 local world = ecs.world
 
 local mesh_comp = ecs.component "mesh" {
-    path = "",     
+    attributes = {type = "asset", "libs/render/material/data_def/default.mesh"} 
 }
 
 function mesh_comp:init()
-    self.mesh_ref = -1
+    self.handle = -1
 end
 

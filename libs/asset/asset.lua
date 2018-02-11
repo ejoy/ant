@@ -2,6 +2,9 @@ local require = import and import(...) or require
 
 local support_list = {
 	"shader",
+	"mesh",
+	"state",
+	"uniform",
 }
 
 local loader = setmetatable({} , {

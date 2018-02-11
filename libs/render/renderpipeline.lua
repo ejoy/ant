@@ -37,17 +37,20 @@ end
 
 local function draw_mesh(mesh, shader)
     local prog = shader.prog
-    for _, g in ipairs(mesh.group) do        
+    local num = #mesh.group
+
+    for i=1, num do        
+        local g = mesh.group[i]
         bgfx.set_index_buffer(g.ib)
         bgfx.set_vertex_buffer(g.vb)
-        bgfx.submit(0, prog, 0, true)
+        bgfx.submit(0, prog, 0, i ~= num)
     end
 end
 
 local function update_uniform(uniforms) 
     --for i = 1, #uniforms do
-    for u in ipairs(uniforms) do
-        local value = u:value_calculator()
+    for _, u in ipairs(uniforms) do
+        local value = u:update()
         bgfx.set_uniform(u.uniform_id, value)
     end
 end
@@ -63,7 +66,7 @@ function rpl_system:update()
         bgfx.set_state(material.state_str)
         
         update_uniform(material.uniforms)
-        draw_mesh(entity.mesh.mesh_ref, material.shader)
+        draw_mesh(entity.mesh.handle, material.shader)
     end)
 
     bgfx.frame()
