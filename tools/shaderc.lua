@@ -1,5 +1,6 @@
 dofile "libs/init.lua"
 require "iupluaimglib"
+require "scintilla"
 iup.SetGlobal("UTF8MODE", "YES")
 iup.SetGlobal("UTF8MODE_FILE", "YES")
 
@@ -8,7 +9,7 @@ local toolset = require "editor.toolset"
 local path = toolset.load_config()
 local seri = require "filesystem.serialize"
 
-local function filetree(filter)
+local function filetree(filter, message)
 	local dir_view = iup.tree {
 		HIDEBUTTONS = "yes",
 		HIDELINES = "yes",
@@ -71,6 +72,13 @@ local function filetree(filter)
 		table.sort(filelist)
 		for k, v in ipairs(filelist) do
 			file_view[k] = v
+		end
+
+		function file_view:dblclick_cb(id, name)
+			local f = message.choosefile
+			if f then
+				f(current_path.drive .. table.concat(current_path.path, "/") .. "/" .. name)
+			end
 		end
 	end
 
@@ -203,19 +211,110 @@ end
 
 ----------- fileview & output ------
 
+local function filebuilder()
+	local source = iup.scintilla {
+		MARGINWIDTH0 = "30",	-- line number
+		STYLEFONT33 = "Consolas",
+		STYLEFONTSIZE33 = "11",
+		STYLEVISIBLE33 = "NO",
+		expand = "YES",
+		WORDWRAP = "CHAR",
+		APPENDNEWLINE = "NO",
+		READONLY = "YES",
+	}
+	local filename = iup.label { expand =  "HORIZONTAL" }
+	local compile = iup.button { title = "Compile" }
+	local output = iup.text {
+		multiline = "yes",
+		wordwrap = "yes",
+		readonly = "yes",
+		expand = "yes",
+	}
 
+	function compile.action()
+		local fn = filename.title
+		if fn then
+			local tbl = {
+				shaderc = path.shaderc,
+				src = fn,
+				dest = fn .. ".bin",
+				inc = "",
+				stype = nil,
+				smodel = nil
+			}
+			if path.shaderinc then
+				tbl.inc = '-i "' .. path.shaderinc .. '"'
+			end
+			local vf = fn:match "[/\\]([fv])s_[^/\\]+.sc$"
+			if vf == "f" then
+				tbl.smodel = "ps_4_0"
+				tbl.stype = "fragment"
+			elseif vf == "v" then
+				tbl.smodel = "vs_4_0"
+				tbl.stype = "vertex"
+			else
+				output.append = "shader name should be fs_*.sc or vs_*.sc"
+				return
+			end
 
+			local command = string.gsub('$shaderc --platform windows --type $stype -p $smodel -O 3 -f "$src" -o "$dest" $inc',
+				"%$(%w+)", tbl)
 
+			output.append = command
 
+			local prog, err = io.popen(command .. "  2>&1")
+
+			if not prog then
+				output.append = err
+			else
+				local ret = prog:read "a"
+				prog:close()
+				output.append = ret
+			end
+		end
+	end
+
+	local ctrl = iup.vbox {
+		source,
+		iup.hbox {
+			filename,
+			compile,
+		},
+		output,
+	}
+	local function update_file(name)
+		source.readonly = "NO"
+		local f = assert(io.open(name, "rb"))
+		source.value = f:read "a"
+		f:close()
+		filename.title = name
+		source.readonly = "yes"
+	end
+	return {
+		view = ctrl,
+		update = update_file,
+	}
+end
 
 ------------------------------------
 
-local tree = filetree "sc"
+local message = {}
+
+local tree = filetree("sc", message)
+local file = filebuilder()
+
+function message.choosefile(name)
+	file.update(name)
+end
 
 local dlg = iup.dialog {
-	tree.view,
+	iup.split {
+		tree.view,
+		file.view,
+		SHOWGRIP = "NO",
+	},
 	margin = "4x4",
-	size = "QUARTERxHALF",
+	size = "HALFxHALF",
 	shrink="yes",
 	title = "Shader Compiler",
 }
