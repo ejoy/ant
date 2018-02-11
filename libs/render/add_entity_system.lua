@@ -4,7 +4,7 @@ local render_util   = require "render.render_util"
 local mesh_util     = require "render.resources.mesh_util"
 local shader_mgr    = require "render.resources.shader_mgr"
 
-local material_util = require "render.material.material_data_def"
+local asset_lib     = require "asset"
 local bgfx          = require "bgfx"
 
 local add_entity_sys = ecs.system "add_entities_system"
@@ -17,42 +17,34 @@ function add_entity_sys:init()
         local bunny_eid = world:new_entity("worldmat_comp", "material", "mesh")
         local bunny = world[bunny_eid]
 
-        local function mesh_init(mesh)
-            local mesh_path = "assets/meshes/bunny.bin"
-            mesh.path = mesh_path
-            mesh.mesh_ref = mesh_util.meshLoad(mesh_path)
+        --we should add a lib path for finding file
+        bunny.mesh = asset_lib["test/simplerender/bunny.mesh"]
+        assert(bunny.mesh.handle)
+
+        local material = bunny.material        
+        material.shader = asset_lib["test/simplerender/bunny.shader"]
+        assert(material.shader.prog)
     
-            assert(mesh.mesh_ref ~= nil and mesh.mesh_ref.group and #mesh.mesh_ref.group >0)
-        end
+        material.state = asset_lib["libs/render/material/data_def/default.state"]
 
-        mesh_init(bunny.mesh)
+        -- we need to put in shader_mgr
+        local uniforms = asset_lib["libs/render/material/data_def/global.uniform"]
 
-        local function shader_init(shader)
-            shader.vs_path = "vs_mesh"  
-            shader.ps_path = "fs_mesh"
-            
-            shader.prog = shader_mgr.programLoad(shader.vs_path, shader.ps_path)
-            if shader.prog == nil then
-                print("create shader failed")
+        -- bind the update function. this update should add by material editor
+        local u_time = uniforms.u_time
+        assert(u_time, "need define u_time uniform")
+
+        u_time.update = function (self)
+            if self.value == nil then
+                self.value = 0
             end
+
+            self.value = self.value + 1
+            return self.value
         end
 
-        shader_init(bunny.material.shader)
-
-        local function uniform_init(uniforms)
-            local uniform = material_util.create_uniform_data()
-            uniform.name = "u_time"
-            uniform.type = "v4"
-            local time = 0
-            uniform.value_calculator = function ()
-                time = time + 1
-                return {time}
-            end
-            uniform.uniform_id = bgfx.create_uniform(uniform.name, uniform.type)
-            uniforms[uniform.name] = uniform
-        end
-
-        uniform_init(bunny.material.uniforms)
+        assert(type(material.uniforms) == "table")
+        material.uniforms.u_time = u_time
     end
     
     do
