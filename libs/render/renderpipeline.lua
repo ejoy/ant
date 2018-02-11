@@ -36,7 +36,7 @@ function rpl_system:init()
 end
 
 local function draw_mesh(mesh, shader)
-    local prog = shader.prog
+    local prog = assert(shader.prog)
     local num = #mesh.group
 
     for i=1, num do        
@@ -49,9 +49,9 @@ end
 
 local function update_uniform(uniforms) 
     --for i = 1, #uniforms do    
-    for _, u in ipairs(uniforms) do
+    for _, u in pairs(uniforms) do
         local value = u:update()
-        bgfx.set_uniform(u.uniform_id, value)
+        bgfx.set_uniform(u.id, value)
     end
 end
 
