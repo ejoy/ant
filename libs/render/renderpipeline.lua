@@ -48,7 +48,7 @@ local function draw_mesh(mesh, shader)
 end
 
 local function update_uniform(uniforms) 
-    --for i = 1, #uniforms do
+    --for i = 1, #uniforms do    
     for _, u in ipairs(uniforms) do
         local value = u:update()
         bgfx.set_uniform(u.uniform_id, value)
@@ -62,8 +62,8 @@ function rpl_system:update()
     render_uril.for_each_comp_in_world(world, {"mesh", "worldmat_comp", "material"},
     function (entity)        
         --bgfx.set_transfrom(entity.worldmat_comp.mat)
-        local material = entity.material
-        bgfx.set_state(material.state_str)
+        local material = entity.material        
+        bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
         
         update_uniform(material.uniforms)
         draw_mesh(entity.mesh.handle, material.shader)
