@@ -14,7 +14,7 @@ local function touch_dlg(touch)
 	end
 end
 
-local function path_edit(name, what)
+local function path_edit(name, dir)
 	local editor = iup.text {
 		value = path[name] or "",
 		expand="HORIZONTAL",
@@ -28,7 +28,9 @@ local function path_edit(name, what)
 	}
 
 	function button:action()
-		local file = iup.filedlg {}
+		local file = iup.filedlg {
+			DIALOGTYPE = dir and "DIR" or "OPEN",
+		}
 		iup.Popup(file)
 		if file.status ~= "-1" then
 			path[name] = file.value
@@ -39,7 +41,7 @@ local function path_edit(name, what)
 
 	local ctrl = iup.hbox {
 		iup.label {
-			title = what or name,
+			title = name,
 			size = "50",
 		},
 		editor,
@@ -72,6 +74,7 @@ dlg = iup.dialog {
 			iup.vbox {
 				path_edit "lua",
 				path_edit "shaderc",
+				path_edit ("shaderinc", true),	-- dir
 			},
 			title = "Path",
 		},
