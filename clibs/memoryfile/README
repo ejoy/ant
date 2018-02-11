@@ -1,0 +1,15 @@
+Lua-memoryfile allows you to manipulate strings in memory as if they were
+files.  It can be used to create strings from many parts (like a
+stringbuffer), or to read strings a line at a time, or to simulate real files.
+
+When you unpack the source code everything should already be ready for
+compilation.  Doing "make install" as root will compile everything, and
+install the compiled library and a man page describing it.
+
+See lua-memoryfile(3) for information about how to use the library.  The
+same documentation is available on the website, where you can also get the
+latest packages:
+
+    http://www.daizucms.org/lua/library/memoryfile/
+
+Send bug reports, suggestions, etc. to Geoff Richards <geoff@laxan.com>

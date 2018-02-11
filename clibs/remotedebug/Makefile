@@ -2,7 +2,7 @@ PLAT= none
 
 LUAINC = -I ../lua
 LUALIB = -L ../lua -llua53
-CFLAGS = -g -Wall
+CFLAGS = -O2 -Wall
 
 all:  $(PLAT)
 

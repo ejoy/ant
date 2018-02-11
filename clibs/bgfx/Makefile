@@ -9,7 +9,7 @@ ODIR = o
 
 CC= gcc
 CXX = g++
-CFLAGS = -g -Wall
+CFLAGS = -O2 -Wall
 
 mingw : bgfx.dll
 

@@ -2,10 +2,10 @@ LUAINC = -I ../lua
 LUALIB = -L ../lua -llua53
 CFLAGS = -O2 -Wall
 
-mingw : math3d.dll
+mingw : memoryfile.dll
 
-math3d.dll : linalg.c math3d.c
+memoryfile.dll : memoryfile.c
 	gcc --shared $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC)
 
 clean :
-	rm -f math3d.dll
+	rm -f memoryfile.dll
