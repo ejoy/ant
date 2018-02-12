@@ -1,7 +1,7 @@
 local util = {}
 
 function util.for_each_comp_in_world(w, comp_names, op)
-    for eid in w:each(comp_names[1]) do
+    for _, eid in w:each(comp_names[1]) do
         local entity = w[eid]
         if entity ~= nil then
             local function is_entity_have_components(beg_idx, end_idx)
