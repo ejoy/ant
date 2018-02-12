@@ -34,18 +34,6 @@ local world
 
 input_queue:register_iup(canvas)
 
-local function mainloop()
-	redirect.dispatch()
-	world.update()
-end
-
-task.loop(mainloop,
-function ()
-	local trace = db.traceback()
-	elog.print(trace)
-	elog.active_error()
-end)
-
 local init_flag = nil
 
 local function bgfx_init()
@@ -79,6 +67,13 @@ local function init()
 		},
 		args = { mq = input_queue },
 	}
+
+	task.loop(world.update,
+	function ()
+		local trace = db.traceback()
+		elog.print(trace)
+		elog.active_error()
+	end)
 end
 
 function canvas:resize_cb(w,h)
@@ -89,11 +84,6 @@ function canvas:resize_cb(w,h)
 	input_queue:push("resize", w, h)
 	print("RESIZE",w,h)
 end
-
-function canvas:action(x,y)
-	mainloop()
-end
-
 
 dlg:showxy(iup.CENTER,iup.CENTER)
 dlg.usersize = nil
