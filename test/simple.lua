@@ -7,7 +7,6 @@ local ecs = require "ecs"
 local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
 local elog = require "editor.log"
-local redirect = require "filesystem.redirect"
 local db = require "debugger"
 local hw_caps = require "render.hardware_caps"
 local task = require "editor.task"
@@ -21,7 +20,7 @@ local canvas = iup.canvas {
 
 local dlg = iup.dialog {
 	iup.split {
-		canvas,		
+		canvas,
 		elog.window,
 		SHOWGRIP = "NO",
 	},
@@ -34,18 +33,6 @@ local world
 
 input_queue:register_iup(canvas)
 
-local function mainloop()
-	redirect.dispatch()
-	world.update()
-end
-
-task.loop(mainloop,
-function ()
-	local trace = db.traceback()
-	elog.print(trace)
-	elog.active_error()
-end)
-
 local function init()
 	local function bgfx_init()
 		local args = {
@@ -54,17 +41,23 @@ local function init()
 		}
 		bgfx.set_platform_data(args)
 		bgfx.init(args.renderer)
-	
+
 		hw_caps.init()
 	end
 	bgfx_init()
-	
+
 	world = ecs.new_world {
-		modules = { 			
+		modules = {
 			assert(loadfile "test/system/simple_system.lua"),
 		},
 		args = { mq = input_queue },
-	}	
+	}
+	task.loop(world.update,
+	function ()
+		local trace = db.traceback()
+		elog.print(trace)
+		elog.active_error()
+	end)
 end
 
 function canvas:resize_cb(w,h)
@@ -76,18 +69,9 @@ function canvas:resize_cb(w,h)
 	print("RESIZE",w,h)
 end
 
-function canvas:action(x,y)
-	print(debug.traceback())
-	mainloop()
-end
-
-
 dlg:showxy(iup.CENTER,iup.CENTER)
 dlg.usersize = nil
 
--- to be able to run this script inside another context
-if (iup.MainLoopLevel()==0) then
-	iup.MainLoop()
-	iup.Close()
-	bgfx.shutdown()	
-end
+iup.MainLoop()
+iup.Close()
+bgfx.shutdown()

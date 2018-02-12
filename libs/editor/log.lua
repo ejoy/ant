@@ -1,5 +1,6 @@
 require "scintilla"
 local redirect = require "filesystem.redirect"
+local task = require "editor.task"
 
 local log = {}
 
@@ -53,5 +54,10 @@ end
 
 log.window =  iup.tabs(log_tabs)
 
+task.loop(redirect.dispatch, function(co)
+	local trace = debug.traceback(co)
+	log.print(trace)
+	log.active_error()
+end)
 
 return log
