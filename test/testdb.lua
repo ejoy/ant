@@ -5,6 +5,7 @@ local elog = require "editor.log"
 local debugger = require "debugger"
 local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
+local task = require "editor.task"
 
 local canvas = iup.canvas { RASTERSIZE = "640x480" }
 local input_queue = inputmgr.queue(mapiup)
@@ -20,32 +21,26 @@ local dlg = iup.dialog {
 	shrink="yes",
 }
 
-local function mainloop(f)
-	iup.SetIdle(function ()
-		local ok , err = xpcall(f, debugger.traceback)
-		if not ok then
-			elog.print(err)
-			elog.active_error()
-			iup.SetIdle(redirect.dispatch)
-		end
-		return iup.DEFAULT
-	end)
-end
+task.loop(redirect.dispatch, function(co)
+	local trace = debug.traceback(co)
+	elog.print(trace)
+	elog.active_error()
+end)
 
-dlg:showxy(iup.CENTER,iup.CENTER)
-dlg.usersize = nil
-mainloop(function()
+task.loop(function()
 	for _,cmd,v2,v3 in pairs(input_queue) do
+		print(cmd, v2,v3)
 		if cmd == "button" then
-			print(cmd, v2,v3)
 			error "TEST"
 		end
 	end
-	redirect.dispatch()
+end, function(co)
+	local trace = debugger.traceback(co)
+	elog.print(trace)
 end)
 
--- to be able to run this script inside another context
-if (iup.MainLoopLevel()==0) then
-	iup.MainLoop()
-	iup.Close()
-end
+dlg:showxy(iup.CENTER,iup.CENTER)
+dlg.usersize = nil
+
+iup.MainLoop()
+iup.Close()

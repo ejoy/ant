@@ -19,7 +19,8 @@ local function path_edit(name, dir)
 		value = path[name] or "",
 		expand="HORIZONTAL",
 	}
-	function editor:action()
+	function editor:action(c, value)
+		path[name] = value
 		touch_dlg(true)
 	end
 
