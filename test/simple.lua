@@ -1,7 +1,7 @@
 dofile "libs/init.lua"
 
 require "scintilla"
-local lbgfx = require "lbgfx"
+
 local bgfx = require "bgfx"
 local ecs = require "ecs"
 local inputmgr = require "inputmgr"
@@ -9,6 +9,8 @@ local mapiup = require "inputmgr.mapiup"
 local elog = require "editor.log"
 local redirect = require "filesystem.redirect"
 local db = require "debugger"
+local hw_caps = require "render.hardware_caps"
+local task = require "editor.task"
 
 iup.SetGlobal("UTF8MODE", "YES")
 
@@ -37,37 +39,32 @@ local function mainloop()
 	world.update()
 end
 
-local function set_mainloop(f)
-	iup.SetIdle(function ()
-		local ok , err = xpcall(f, db.traceback)
-		if not ok then
-			elog.print(err)
-			elog.active_error()
-			iup.SetIdle(redirect.dispatch)
-		end
-		return iup.DEFAULT
-	end)
-end
-
+task.loop(mainloop,
+function ()
+	local trace = db.traceback()
+	elog.print(trace)
+	elog.active_error()
+end)
 
 local function init()
-	lbgfx.init {
-		nwh = iup.GetAttributeData(canvas,"HWND"),
-	}	
+	local function bgfx_init()
+		local args = {
+			nwh = iup.GetAttributeData(canvas,"HWND"),
+			renderer = nil	-- use default
+		}
+		bgfx.set_platform_data(args)
+		bgfx.init(args.renderer)
+	
+		hw_caps.init()
+	end
+	bgfx_init()
+	
 	world = ecs.new_world {
-		modules = { 
-			assert(loadfile "libs/render/add_entity_system.lua"),	
-			assert(loadfile "libs/render/math3d/math_component.lua"),
-			assert(loadfile "libs/render/material_component.lua"),
-			assert(loadfile "libs/render/mesh_component.lua"),
-			assert(loadfile "libs/render/camera/camera_component.lua"),
-			assert(loadfile "libs/render/camera/camera_system.lua"),			
-			assert(loadfile "libs/render/renderpipeline.lua"),
+		modules = { 			
 			assert(loadfile "test/system/simple_system.lua"),
 		},
 		args = { mq = input_queue },
-	}
-	set_mainloop(mainloop)	
+	}	
 end
 
 function canvas:resize_cb(w,h)
@@ -80,6 +77,7 @@ function canvas:resize_cb(w,h)
 end
 
 function canvas:action(x,y)
+	print(debug.traceback())
 	mainloop()
 end
 
@@ -91,5 +89,5 @@ dlg.usersize = nil
 if (iup.MainLoopLevel()==0) then
 	iup.MainLoop()
 	iup.Close()
-	lbgfx.shutdown()
+	bgfx.shutdown()	
 end
