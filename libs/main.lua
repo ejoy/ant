@@ -10,6 +10,7 @@ local elog = require "editor.log"
 local redirect = require "filesystem.redirect"
 local db = require "debugger"
 local hw_caps = require "render.hardware_caps"
+local task = require "editor.task"
 
 iup.SetGlobal("UTF8MODE", "YES")
 
@@ -38,17 +39,12 @@ local function mainloop()
 	world.update()
 end
 
-local function set_mainloop(f)
-	iup.SetIdle(function ()
-		local ok , err = xpcall(f, db.traceback)
-		if not ok then
-			elog.print(err)
-			elog.active_error()
-			iup.SetIdle(redirect.dispatch)
-		end
-		return iup.DEFAULT
-	end)
-end
+task.loop(mainloop,
+function ()
+	local trace = db.traceback()
+	elog.print(trace)
+	elog.active_error()
+end)
 
 local init_flag = nil
 
@@ -63,6 +59,7 @@ local function bgfx_init()
 	bgfx.init(args.renderer)
 
 	hw_caps.init()
+	init_flag = true
 end
 
 local function init()
@@ -82,7 +79,6 @@ local function init()
 		},
 		args = { mq = input_queue },
 	}
-	set_mainloop(mainloop)	
 end
 
 function canvas:resize_cb(w,h)
