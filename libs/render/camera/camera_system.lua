@@ -10,7 +10,7 @@ local camera_system = ecs.system "camera_system"
 camera_system.singleton "math3d"
 
 function camera_system:update()
-	render_util.for_each_comp_in_world(world, {"view_transform", "frustum"},
+	render_util.for_each_comp(world, {"view_transform", "frustum"},
 	function (entity)		
 		local ct = assert(entity.view_transform)
 		local frustum = assert(entity.frustum)

@@ -1,6 +1,6 @@
 local util = {}
 
-function util.for_each_comp_in_world(w, comp_names, op)
+function util.for_each_comp(w, comp_names, op)
     for _, eid in w:each(comp_names[1]) do
         local entity = w[eid]
         if entity ~= nil then

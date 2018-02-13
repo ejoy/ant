@@ -17,7 +17,7 @@ function auto_rotate_worldmat_sys:update()
     local speed = 1
     time = time + speed
 
-    render_uril.for_each_comp_in_world(world, {"worldmat_comp"},
+    render_uril.for_each_comp(world, {"worldmat_comp"},
     function (entity)
         --entity.world_mat_comp.mat = entity.math3d(entity.world_mat_comp, {time}, "*M") 
     end)
@@ -59,7 +59,7 @@ function rpl_system:update()
     bgfx.touch(0)
 
     --print("rpl_system:update")
-    render_uril.for_each_comp_in_world(world, {"mesh", "worldmat_comp", "material"},
+    render_uril.for_each_comp(world, {"mesh", "worldmat_comp", "material"},
     function (entity)        
         --bgfx.set_transfrom(entity.worldmat_comp.mat)
         local material = entity.material        
