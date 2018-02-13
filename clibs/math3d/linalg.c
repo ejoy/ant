@@ -284,7 +284,7 @@ lastack_delete(struct lastack *LS) {
 	free(LS);
 }
 
-static void
+static inline void
 push_id(struct lastack *LS, union stackid id) {
 	if (LS->stack_top >= LS->stack_cap) {
 		LS->stack = realloc(LS->stack, (LS->stack_cap *= 2) * sizeof(*LS->stack));
@@ -392,40 +392,43 @@ lastack_value(struct lastack *LS, int64_t ref, int *size) {
 int
 lastack_pushref(struct lastack *LS, int64_t ref) {
 	union stackid id;
-	if (ref > 0) {
-		id.i = ref;
-	} else {
-		id.i = -ref;
-	}
+	id.i = ref;
+	// check alive
 	void *address = lastack_value(LS, id.i, NULL);
 	if (address == NULL)
 		return 1;
-	if (ref > 0) {
-		if (id.s.persistent && id.s.version != 0) {
-			if (id.s.vector) {
-				lastack_pushvector(LS, address);
-				blob_dealloc(LS->per_vec, id.s.id, id.s.version);
-			} else {
-				lastack_pushmatrix(LS, address);
-				blob_dealloc(LS->per_mat, id.s.id, id.s.version);
-			}
-		} else {
-			push_id(LS, id);
-		}
-	} else {
-		push_id(LS, id);
-	}
+	push_id(LS, id);
 	return 0;
 }
 
 int64_t
-lastack_mark(struct lastack *LS) {
-	if (LS->stack_top <= 0)
-		return 0;	// 0 is always a invalid id
-	union stackid sid = LS->stack[--LS->stack_top];
-	float *address = lastack_value(LS, sid.i, NULL);
+lastack_unmark(struct lastack *LS, int64_t markid) {
+	union stackid id;
+	id.i = markid;
+	if (id.s.persistent && id.s.version != 0) {
+		if (id.s.vector) {
+			blob_dealloc(LS->per_vec, id.s.id, id.s.version);
+		} else {
+			blob_dealloc(LS->per_mat, id.s.id, id.s.version);
+		}
+	}
+	if (id.s.vector) {
+		return lastack_constant(LINEAR_CONSTANT_IVEC);
+	} else {
+		return lastack_constant(LINEAR_CONSTANT_IMAT);
+	}
+}
+
+int64_t
+lastack_mark(struct lastack *LS, int64_t tempid) {
+	int sz;
+	float *address = lastack_value(LS, tempid, &sz);
+	if (address == NULL)
+		return 0;
 	int id;
-	if (sid.s.vector) {
+	union stackid sid;
+	sid.s.version = LS->version;
+	if (sz == VECTOR4) {
 		id = blob_alloc(LS->per_vec, LS->version);
 		void * dest = blob_address(LS->per_vec, id, LS->version);
 		memcpy(dest, address, sizeof(float) * VECTOR4);
@@ -458,6 +461,14 @@ lastack_marked(int64_t id, int *size) {
 	return sid.s.persistent;
 }
 
+int
+lastack_sametype(int64_t id1, int64_t id2) {
+	union stackid sid1,sid2;
+	sid1.i = id1;
+	sid2.i = id2;
+	return sid1.s.vector == sid2.s.vector;
+}
+
 int64_t
 lastack_pop(struct lastack *LS) {
 	if (LS->stack_top <= 0)
@@ -476,7 +487,7 @@ lastack_top(struct lastack *LS) {
 
 int64_t
 lastack_dup(struct lastack *LS, int index) {
-	if (LS->stack_top < index)
+	if (LS->stack_top < index || index <= 0)
 		return 0;
 	union stackid sid = LS->stack[LS->stack_top-index];
 	push_id(LS, sid);
@@ -535,6 +546,23 @@ lastack_print(struct lastack *LS) {
 	blob_print(LS->per_vec);
 	printf("Persistent Matrix ");
 	blob_print(LS->per_mat);
+}
+
+char *
+lastack_idstring(int64_t id, char tmp[64]) {
+	union stackid sid;
+	sid.i = id;
+	char flags[3] = { 0,0,0 };
+	if (sid.s.vector) {
+		flags[0] = 'V';
+	} else {
+		flags[0] = 'M';
+	}
+	if (sid.s.persistent) {
+		flags[1] = 'P';
+	}
+	snprintf(tmp, 64, "id=%d version=%d %s",sid.s.id, sid.s.version, flags);
+	return tmp;
 }
 
 #if 0

@@ -1,5 +1,10 @@
 local math3d = require "math3d"
 --[[
+	local vec = math3d.ref "vector"	-- new vector ref object
+	local mat = math3d.ref "matrix"	-- new matrix ref object
+
+	= : assign an object to a ref object
+
 	P : pop and return id ( ... , 1 -> ... )
 	v : pop and return vector4 pointer ( ... , 1 -> ... )
 	m : pop and return matrix pointer ( ... , 1 -> ... )
@@ -13,7 +18,6 @@ local math3d = require "math3d"
 		22 means ( ..., a, b -> ..., a, b, a, b)
 	S : swap stack top (..., 1,2 -> ..., 2,1 )
 	R : remove stack top ( ..., 1 -> ... )
-	M : mark stack top and pop ( ..., 1 -> ...)
 
 	{ 1,2,3,4 }	  push vector4(1,2,3,4)
 	{ 1,2,3,4, .... 16 } push matrix4x4
@@ -34,10 +38,14 @@ local math3d = require "math3d"
 	i inverted matrix  ( ..., 1 -> ..., invert(1) )
 	t transposed matrix ( ..., 1 -> ..., transpose(1) )
 	n normalize vector3 ( ..., 1 -> ..., {normalize(1) , 1} )
-	l generate lootat matrix
+	l generate lootat matrix ( ..., eye, at -> ..., lookat(eye,at) )
 ]]
 
+local vec = math3d.ref "vector"
+local mat = math3d.ref "matrix"	-- matrix ref
+
 local stack = math3d.new()
+
 
 local v = stack( { type = "proj", fov = 60, aspect = 1024/768 } , "VR")	-- make a proj mat
 print(v)
@@ -48,25 +56,26 @@ print(v2,m2)
 local m = stack(m1,m2,"*V")
 print(m)
 
-local t = stack( { 1,2,3,4 } , "1+M")	-- dup {1,2,3,4} add self and mark result
+stack( vec, { 1,2,3,4 } , "1+=")	-- dup {1,2,3,4} add self and then assign to vec
 
 local vv = stack({1, 2, 3, 1}, {2, 2, 2, 1}, "*V")
 print("vec4 mul : " .. vv)
 
 --lookat
-local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "lV")
-print("lookat matrix : " , lookat)
-print(math3d.type(stack "P"))	-- matrix false (false means not marked)
---
+stack(mat, "1=")	-- init mat to an indentity matrix (dup self and assign)
+
+local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "lP")	-- calc lookat matrix
+mat(lookat) -- assign lookat matrix to mat
+print("lookat matrix : " , mat)
+print(math3d.type(mat))	-- matrix true (true means marked)
 
 math3d.reset(stack)
+print(vec, ~vec)	-- string and lightuserdata
+mat()	-- clear mat
 
-assert(math3d.pointer(stack,lookat) == nil)
-
+local t = stack(vec, "P")
 print(math3d.type(t))	-- vector true
-print(math3d.pointer(stack, t))	-- address vector
-t = stack( t,"V")	-- read
-print(t)
+print(stack( t,"Vv"))	-- string lightuserdata
 
 print(stack(math3d.constant "identvec", "VR"))
 print(stack(math3d.constant "identmat", "VR"))	-- R: remove top

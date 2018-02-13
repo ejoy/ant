@@ -9,8 +9,10 @@
 #include <string.h>
 #include "linalg.h"
 #include "math3d.h"
+#include "refstack.h"
 
 #define LINALG "LINALG"
+#define LINALG_REF "LINALG_REF"
 #define MAT_PERSPECTIVE 0
 #define MAT_ORTHO 1
 
@@ -24,6 +26,11 @@ pop(lua_State *L, struct lastack *LS) {
 
 struct boxpointer {
 	struct lastack *LS;
+};
+
+struct refobject {
+	struct lastack *LS;
+	int64_t id;
 };
 
 static struct lastack *
@@ -45,6 +52,138 @@ delLS(lua_State *L) {
 		bp->LS = NULL;
 	}
 	return 0;
+}
+
+static void
+value_tostring(lua_State *L, const char * prefix, float *r, int size) {
+	if (size == 4) {
+		lua_pushfstring(L, "%sVEC (%f,%f,%f,%f)", prefix, r[0],r[1],r[2],r[3]);
+	} else {
+		lua_pushfstring(L, "%sMAT (%f,%f,%f,%f : %f,%f,%f,%f : %f,%f,%f,%f : %f,%f,%f,%f)",
+			prefix,
+			r[0],r[1],r[2],r[3],
+			r[4],r[5],r[6],r[7],
+			r[8],r[9],r[10],r[11],
+			r[12],r[13],r[14],r[15]
+		);
+	}
+}
+
+static int
+lreftostring(lua_State *L) {
+	struct refobject * ref = lua_touserdata(L, 1);
+	int sz;
+	float * v = lastack_value(ref->LS, ref->id, &sz);
+	if (v == NULL) {
+		char tmp[64];
+		return luaL_error(L, "Invalid ref object [%s]", lastack_idstring(ref->id, tmp));
+	}
+	value_tostring(L, "&", v, sz);
+	return 1;
+}
+
+static inline void
+release_ref(lua_State *L, struct refobject *ref) {
+	if (ref->LS) {
+		ref->id = lastack_unmark(ref->LS, ref->id);
+	}
+}
+
+static inline int64_t
+get_id(lua_State *L, int index) {
+	int64_t v;
+	if (sizeof(lua_Integer) >= sizeof(int64_t)) {
+		v = lua_tointeger(L, index);
+	} else {
+		v = (int64_t)lua_tonumber(L, index);
+	}
+	return v;
+}
+
+static int
+lassign(lua_State *L) {
+	struct refobject * ref = lua_touserdata(L, 1);
+	int type = lua_type(L, 2);
+	switch(type) {
+	case LUA_TNIL:
+	case LUA_TNONE:
+		release_ref(L, ref);
+		break;
+	case LUA_TNUMBER: {
+		if (ref->LS == NULL) {
+			return luaL_error(L, "Init ref object first : use stack(ref, id, '=')");
+		}
+		int64_t rid = get_id(L, 2);
+		if (!lastack_sametype(rid, ref->id)) {
+			return luaL_error(L, "type mismatch");
+		}
+
+		int64_t markid = lastack_mark(ref->LS, rid);
+		if (markid == 0) {
+			return luaL_error(L, "Invalid object id");
+		}
+		lastack_unmark(ref->LS, ref->id);
+		ref->id = markid;
+		break;
+	}
+	case LUA_TUSERDATA: {
+		struct refobject *rv = lua_touserdata(L, 2);
+		if (lua_rawlen(L,2) != sizeof(*rv)) {
+			return luaL_error(L, "Assign Invalid ref object");
+		}
+		if (!lastack_sametype(ref->id, rv->id)) {
+			return luaL_error(L, "type mismatch");
+		}
+		if (ref->LS == NULL) {
+			ref->LS = rv->LS;
+			if (ref->LS) {
+				ref->id = lastack_mark(ref->LS, rv->id);
+			}
+		} else {
+			if (rv->LS == NULL) {
+				lastack_unmark(ref->LS, ref->id);
+				ref->id = rv->id;
+			} else {
+				if (ref->LS != rv->LS) {
+					return luaL_error(L, "Not the same stack");
+				}
+				lastack_unmark(ref->LS, ref->id);
+				ref->id = lastack_mark(ref->LS, rv->id);
+			}
+		}
+		break;
+	}
+	default:
+		return luaL_error(L, "Invalid lua type %s", lua_typename(L, type));
+	}
+	return 0;
+}
+
+static int
+lpointer(lua_State *L) {
+	struct refobject * ref = lua_touserdata(L, 1);
+	float * v = lastack_value(ref->LS, ref->id, NULL);
+	lua_pushlightuserdata(L, (void *)v);
+	return 1;
+}
+
+static int
+lref(lua_State *L) {
+	const char * t = luaL_checkstring(L, 1);
+	int cons;
+	if (strcmp(t, "vector") == 0) {
+		cons = LINEAR_CONSTANT_IVEC;
+	} else if (strcmp(t, "matrix") == 0) {
+		cons = LINEAR_CONSTANT_IMAT;
+	} else {
+		return luaL_error(L, "Unsupport type %s", t);
+	}
+	struct refobject * ref = lua_newuserdata(L, sizeof(*ref));
+	ref->LS = NULL;
+	ref->id = lastack_constant(cons);
+
+	luaL_setmetatable(L, LINALG_REF);
+	return 1;
 }
 
 static void
@@ -327,16 +466,7 @@ top_tostring(lua_State *L, struct lastack *LS) {
 		luaL_error(L, "top empty stack");
 	int sz = 0;
 	float * r = lastack_value(LS, v, &sz);
-	if (sz == 4) {
-		lua_pushfstring(L, "VEC (%f,%f,%f,%f)", r[0],r[1],r[2],r[3]);
-	} else {
-		lua_pushfstring(L, "MAT (%f,%f,%f,%f : %f,%f,%f,%f : %f,%f,%f,%f : %f,%f,%f,%f)",
-			r[0],r[1],r[2],r[3],
-			r[4],r[5],r[6],r[7],
-			r[8],r[9],r[10],r[11],
-			r[12],r[13],r[14],r[15]
-		);
-	}
+	value_tostring(L, "", r, sz);
 }
 
 static void
@@ -365,13 +495,16 @@ push_float(struct lastack *LS, float v) {
 	M : mark stack top and pop
  */
 static int
-do_command(lua_State *L, struct lastack *LS, char cmd) {
+do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
+	lua_State *L = RS->L;
 	switch (cmd) {
 	case 'P':
 		pushid(L, pop(L, LS));
+		refstack_pop(RS);
 		return 1;
 	case 'f':
 		lua_pushnumber(L, pop_vector(L,LS)[0]);
+		refstack_pop(RS);
 		return 1;
 	case 'v':
 		lua_pushlightuserdata(L, pop_vector(L, LS));
@@ -389,17 +522,24 @@ do_command(lua_State *L, struct lastack *LS, char cmd) {
 			lua_pushnumber(L, val[i]);
 			lua_seti(L, -2, i+1);
 		}
+		refstack_pop(RS);
 		return 1;
 	}
 	case 'V':
 		top_tostring(L, LS);
 		return 1;
-	case 'M': {
-		int64_t v = lastack_mark(LS);
-		if (v == 0)
-			luaL_error(L, "mark empty stack or too many marked values");
-		pushid(L, v);
-		return 1;
+	case '=': {
+		int64_t id = pop(L, LS);
+		refstack_pop(RS);
+		pop(L, LS);
+		int index = refstack_topid(RS);
+		if (index < 0) {
+			luaL_error(L, "need a ref object for assign");
+		}
+		struct refobject * ref = lua_touserdata(L, index);
+		ref->id = lastack_mark(LS, id);
+		refstack_pop(RS);
+		break;
 	}
 	case '1':	case '2':	case '3':	case '4':	case '5':
 	case '6':	case '7':	case '8':	case '9':
@@ -408,21 +548,25 @@ do_command(lua_State *L, struct lastack *LS, char cmd) {
 		int64_t v = lastack_dup(LS, index);
 		if (v == 0)
 			luaL_error(L, "dup invalid stack index (%d)", index);
+		refstack_dup(RS, index);
 		break;
 	}
 	case 'S': {
 		int64_t v = lastack_swap(LS);
 		if (v == 0)
 			luaL_error(L, "dup empty stack");
+		refstack_swap(RS);
 		break;
 	}
 	case 'R':
 		pop(L, LS);
+		refstack_pop(RS);
 		break;
 	case '.': {
 		float * vec1 = pop_vector(L, LS);
 		float * vec2 = pop_vector(L, LS);
 		push_float(LS, vector3_dot((struct vector3 *)vec1, (struct vector3 *)vec2));
+		refstack_2_1(RS);
 		break;
 	}
 	case 'x': {
@@ -432,28 +576,36 @@ do_command(lua_State *L, struct lastack *LS, char cmd) {
 		vector3_cross((struct vector3 *)r, (struct vector3 *)vec1, (struct vector3 *)vec2);
 		r[3] = 1.0f;
 		lastack_pushvector(LS, r);
+		refstack_2_1(RS);
 		break;
 	}
 	case '*':
 		mul_2values(L, LS);
+		refstack_2_1(RS);
 		break;
 	case 'n':
 		normalize_vector3(L, LS);
+		refstack_1_1(RS);
 		break;
 	case 't':
 		transposed_matrix(L, LS);
+		refstack_1_1(RS);
 		break;
 	case 'i':
 		inverted_matrix(L, LS);
+		refstack_1_1(RS);
 		break;
 	case '-':
 		sub_vector4(L, LS);
+		refstack_2_1(RS);
 		break;
 	case '+':
 		add_vector4(L, LS);
+		refstack_2_1(RS);
 		break;
 	case 'l':
 		lookat_matrix(L, LS);
+		refstack_2_1(RS);
 		break;
 	default:
 		luaL_error(L, "Unknown command %c", cmd);
@@ -461,29 +613,39 @@ do_command(lua_State *L, struct lastack *LS, char cmd) {
 	return 0;
 }
 
-static inline int64_t
-get_id(lua_State *L, int index) {
-	int64_t v;
-	if (sizeof(lua_Integer) >= sizeof(int64_t)) {
-		v = lua_tointeger(L, index);
-	} else {
-		v = (int64_t)lua_tonumber(L, index);
-	}
-	return v;
-}
-
 static int
-push_command(lua_State *L, struct lastack *LS, int index) {
+push_command(struct ref_stack *RS, struct lastack *LS, int index) {
+	lua_State *L = RS->L;
 	int type = lua_type(L, index);
+
 	switch(type) {
 	case LUA_TTABLE:
 		push_value(L, LS, index);
+		refstack_push(RS);
 		break;
 	case LUA_TNUMBER:
 		if (lastack_pushref(LS, get_id(L, index))) {
-			return luaL_error(L, "Invalid id %I", get_id(L, index));
+			char tmp[64];
+			return luaL_error(L, "Invalid id [%s]", lastack_idstring(get_id(L, index), tmp));
 		}
+		refstack_push(RS);
 		break;
+	case LUA_TUSERDATA: {
+		struct refobject * ref = lua_touserdata(L, index);
+		if (lua_rawlen(L, index) != sizeof(*ref)) {
+			luaL_error(L, "The userdata is not a ref object");
+		}
+		if (ref->LS == NULL) {
+			ref->LS = LS;
+		} else if (ref->LS != LS) {
+			luaL_error(L, "ref object not belongs this stack");
+		}
+		if (lastack_pushref(LS,  ref->id)) {
+			luaL_error(L, "Push invalid ref object");
+		}
+		refstack_pushref(RS, index);
+		break;
+	}
 	case LUA_TSTRING: {
 		size_t sz;
 		const char * cmd = luaL_checklstring(L, index, &sz);
@@ -491,7 +653,7 @@ push_command(lua_State *L, struct lastack *LS, int index) {
 		int i;
 		int ret = 0;
 		for (i=0;i<(int)sz;i++) {
-			ret += do_command(L, LS, cmd[i]);
+			ret += do_command(RS, LS, cmd[i]);
 		}
 		return ret;
 	}
@@ -508,8 +670,10 @@ commandLS(lua_State *L) {
 	int top = lua_gettop(L);
 	int i;
 	int ret = 0;
+	struct ref_stack RS;
+	refstack_init(&RS, L);
 	for (i=1;i<=top;i++) {
-		ret += push_command(L, LS, i);
+		ret += push_command(&RS, LS, i);
 	}
 	return ret;
 }
@@ -559,9 +723,22 @@ lconstant(lua_State *L) {
 
 static int
 ltype(lua_State *L) {
-	int64_t id = get_id(L, 1);
-	if (id < 0)
-		id = -id;
+	int64_t id;
+	switch(lua_type(L, 1)) {
+	case LUA_TNUMBER:
+		id = get_id(L, 1);
+		break;
+	case LUA_TUSERDATA: {
+		struct refobject * ref = lua_touserdata(L, 1);
+		if (lua_rawlen(L,1) != sizeof(*ref)) {
+			return luaL_error(L, "Get invalid ref object type");
+		}
+		id = ref->id;
+		break;
+	}
+	default:
+		return luaL_error(L, "Invalid lua type %s", lua_typename(L, 1));
+	}
 	int size;
 	int marked = lastack_marked(id, &size);
 	if (size == 4) {
@@ -574,36 +751,26 @@ ltype(lua_State *L) {
 	return 2;
 }
 
-static int
-lpointer(lua_State *L) {
-	struct lastack *LS = getLS(L, 1);
-	int64_t id = get_id(L, 2);
-	if (id < 0)
-		id = -id;
-	int size;
-	float * ptr = lastack_value(LS, id, &size);
-	if (ptr == NULL) {
-		return 0;
-	}
-	lua_pushlightuserdata(L, (void *)ptr);
-	if (size == 4) {
-		lua_pushstring(L, "vector");
-	} else {
-		lua_pushstring(L, "matrix");
-	}
-	return 2;
-}
-
 LUAMOD_API int
 luaopen_math3d(lua_State *L) {
 	luaL_checkversion(L);
+	luaL_Reg ref[] = {
+		{ "__tostring", lreftostring },
+		{ "__call", lassign },
+		{ "__bnot", lpointer },
+		{ NULL, NULL },
+	};
+	luaL_newmetatable(L, LINALG_REF);
+	luaL_setfuncs(L, ref, 0);
+	lua_pop(L, 1);
+
 	luaL_Reg l[] = {
 		{ "new", lnew },
 		{ "reset", lreset },
 		{ "constant", lconstant },
 		{ "print", lprint },	// for debug
 		{ "type", ltype },
-		{ "pointer", lpointer },
+		{ "ref", lref },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
