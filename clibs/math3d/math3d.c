@@ -241,20 +241,18 @@ push_mat(lua_State *L, struct lastack *LS, int index, int type) {
 	lua_getfield(L, index, "f");
 	float far = luaL_optnumber(L, -1, 100.0f);
 	lua_pop(L, 1);
-	if (type == MAT_PERSPECTIVE) {
-		if (lua_getfield(L, index, "fov") == LUA_TNUMBER) {
-			float fov = lua_tonumber(L, -1);
-			lua_pop(L, 1);
-			lua_getfield(L, index, "aspect");
-			float aspect = luaL_checknumber(L, -1);
-			lua_pop(L, 1);
-			float ymax = near * tanf(fov * (M_PI / 360));
-			float xmax = ymax * aspect;
-			left = -xmax;
-			right = xmax;
-			bottom = -ymax;
-			top = ymax;
-		}
+	if (type == MAT_PERSPECTIVE && lua_getfield(L, index, "fov") == LUA_TNUMBER) {
+		float fov = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+		lua_getfield(L, index, "aspect");
+		float aspect = luaL_checknumber(L, -1);
+		lua_pop(L, 1);
+		float ymax = near * tanf(fov * (M_PI / 360));
+		float xmax = ymax * aspect;
+		left = -xmax;
+		right = xmax;
+		bottom = -ymax;
+		top = ymax;
 	} else {
 		lua_getfield(L, index, "l");
 		left = luaL_checknumber(L, -1);
