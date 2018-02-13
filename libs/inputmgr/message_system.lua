@@ -4,11 +4,11 @@ local world = ecs.world
 local bgfx = require "bgfx"
 
 --[@ message_component
-local msg_comp = ecs.component "message_component"
+local msg_comp = ecs.component "message_component"{}
 
 function msg_comp:init()
 	local message_observers = {}
-	
+	message_observers.__index = message_observers
 	function message_observers:add(observer)
 		table.insert(self, observer)
 	end
@@ -47,7 +47,10 @@ iup_message.singleton "viewport"
 iup_message.singleton "message_component"
 
 function iup_message:init()
-	self.message_component.msg_observers:add(message)		
+	print("iup_message:init()")
+	local observers = self.message_component.msg_observers
+	assert(observers)
+	observers:add(message)
 end
 
 function iup_message:update()

@@ -15,10 +15,10 @@ function camera_system:update()
 		local ct = assert(entity.view_transform)
 		local frustum = assert(entity.frustum)
 
-		local viewMat = self.math3d(-ct.eye, -ct.direction, "lm")
-		local projMat = self.math3d(-frustum.projMat, "1m")
+		local view_mat = self.math3d(ct.eye, ct.direction, "lm")
 
-		bgfx.set_view_transform(0, viewMat, projMat)
+		local proj_mat = frustum.proj_mat
+		bgfx.set_view_transform(0, view_mat, ~proj_mat)
 	end)
 	
 end

@@ -69,6 +69,9 @@ mat(lookat) -- assign lookat matrix to mat
 print("lookat matrix : " , mat)
 print(math3d.type(mat))	-- matrix true (true means marked)
 
+local vec0 = math3d.ref "vector"
+stack(vec0, {1, 2, 3, 4}, "=")	-- assign value to vec0
+
 math3d.reset(stack)
 print(vec, ~vec)	-- string and lightuserdata
 mat()	-- clear mat

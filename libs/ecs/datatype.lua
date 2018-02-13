@@ -8,8 +8,8 @@ local available_type = {
 	entity = 0,	-- entity id
 	asset = "", -- asset file path
 	userdata = function() return {} end,
-	vector = math3d.constant "identvec",
-	matrix = math3d.constant "identmat",
+	vector = function() return math3d.ref "vector" end,
+	matrix = function() return math3d.ref "matrix" end,
 }
 
 return function (t)
