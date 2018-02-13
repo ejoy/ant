@@ -26,6 +26,10 @@ rdebug.sethook(function(event, line)
 		print("c=>", f.c)
 		print("d=>", f.d)
 		print("d[c]=>", f.d[f.c])
+		assert(rdebug.type(f.co) == "thread")
+		rdebug.switch(f.co)	-- switch to co
+		print(aux.frame(1))	-- co's frame 1
+		rdebug.switch()	-- switch back to current thread
 		rdebug.hookmask "cr"
 	elseif event == "ABC" then
 		print(rdebug.getinfo(1).source, line)

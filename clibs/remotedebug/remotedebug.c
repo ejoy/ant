@@ -7,6 +7,7 @@
 #include "debugvar.h"
 
 static int DEBUG_HOST = 0;	// host L in client VM
+static int DEBUG_HOST_CONTEXT = 0;	// host L in client/debugger VM (original)
 static int DEBUG_CLIENT = 0;	// client L in host VM for hook
 
 static int DEBUG_HOOK = 0;	// hook function in client VM (void * in host VM)
@@ -272,6 +273,41 @@ hook_loop(lua_State *L) {
 }
 
 static int
+lclient_switch(lua_State *L) {
+	struct lua_State *hL = get_host(L);
+	lua_settop(L, 1);
+	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST_CONTEXT) == LUA_TNIL) {
+		lua_pop(L, 1);
+		lua_pushlightuserdata(L, (void *)hL);
+		lua_rawsetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST_CONTEXT);
+		if (lua_isnil(L, 1)) {
+			return 0;
+		}
+	} else {
+		if (lua_isnil(L, 1)) {
+			lua_rawsetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST);
+			return 0;
+		} else {
+			lua_pop(L, 1);
+		}
+	}
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	int ct = eval_value(L, hL);
+	if (ct == LUA_TNONE) {
+		return luaL_error(L, "Invalid thread");
+	}
+	if (ct != LUA_TTHREAD) {
+		lua_pop(hL, 1);
+		return luaL_error(L, "Need coroutine, Is %s", lua_typename(hL, ct));
+	}
+	lua_State *co = lua_tothread(hL, -1);
+	lua_pop(hL, 1);
+	lua_pushlightuserdata(L, (void *)co);
+	lua_rawsetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST);
+	return 0;
+}
+
+static int
 lclient_sethook(lua_State *L) {
 	luaL_checktype(L,1,LUA_TFUNCTION);
 	lua_State *cL = lua_newthread(L);
@@ -519,6 +555,7 @@ luaopen_remotedebug(lua_State *L) {
 	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST) != LUA_TNIL) {
 		// It's client
 		luaL_Reg l[] = {
+			{ "switch", lclient_switch },
 			{ "sethook", lclient_sethook },
 			{ "hookmask", lclient_hookmask },
 			{ "getlocal", lclient_getlocal },

@@ -6,6 +6,12 @@ local function foo(...)
 	print(...)	-- line 6, look debugmain.lua
 end
 
+local function foo2()
+	local a = 1
+	coroutine.yield()
+	return a
+end
+
 local b = { a = 2 }
 
 local function abc(a, ...)
@@ -14,6 +20,9 @@ local function abc(a, ...)
 
 	local c = {}
 	local d = { [c] = { e = 1 }, 3, a = {4,5} }
+
+	local co = coroutine.create(foo2)
+	coroutine.resume(co)
 
 	rdebug.probe "abc"
 	local c = 2
