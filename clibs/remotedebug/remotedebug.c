@@ -136,14 +136,22 @@ lhost_probe(lua_State *L) {
 		return 0;
 	}
 	lua_State *cL = lua_touserdata(L, -1);
-	if (lua_type(L, 1) == LUA_TSTRING) {
-		const char * p = lua_tostring(L, 1);
+	lua_State *debugL = L;
+	int index = 1;
+	int t = lua_type(L, index);
+	if (t == LUA_TTHREAD) {
+		debugL = lua_tothread(L, index);
+		index ++;
+		t = lua_type(L, index);
+	}
+	if (t == LUA_TSTRING) {
+		const char * p = lua_tostring(L, index);
 		lua_pushlightuserdata(cL, (void *)p);
 	} else {
 		lua_pushnil(cL);
 	}
 	lua_pushinteger(cL, ar.currentline);
-	lua_pushlightuserdata(cL, L);
+	lua_pushlightuserdata(cL, debugL);
 	if (lua_resume(cL, NULL, 3) == LUA_YIELD) {
 		return 0;
 	}
