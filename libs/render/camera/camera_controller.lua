@@ -21,50 +21,86 @@ local function rotate(transform, step, speed)
 
 end
 
-local function clear_message(m)
-	m.button_event = nil
-	m.motion_event = nil
-	m.keypress_event = nil
+local function update_camera_trans(camera, m, speed)
+	--[@ rotate camera
+	local btn = assert(m.button_event)
+	local last_btn = m.button_last_event
+
+	local motion = assert(m.motion_event)
+	local last_motion = m.motion_last_event
+
+	local keys = assert(m.keypress_event)
+	local last_keys = m.keypress_last_event
+
+
+	if btn.type == "LEFT" then
+		local deltaX = last_motion and (motion.x - last_motion.x) or 0
+		local deltaY = last_motion and (motion.y - last_motion.y) or 0
+
+		if deltaX ~= 0 or deltaY ~= 0 then
+			
+		end
+	end
+	--@]
 end
 
 local message = {}
 
 function message:button(b, p, x, y)
-	--print(debug.traceback())
-	print(string.format("button b = %d, is_press = %d, x = %d, y = %d", b, is_press, x, y))
-	message.button_event = {
-		btn_type = b,
-		is_press = p,
-		x = x,
-		y = y,
-	}
+	message.cb.button = function (msg_comp, camera)
+		if b == "LEFT" then
+			
+		end
+	end
 end
 
 function message:motion(x, y)
 	print(string.format("motion x = %d, y = %d", x, y))
-	message.motion_event = {
-		x = x, 
-		y = y,
-	}
+	local last_x = message.motion_x
+	local last_y = message.motion_y
+
+	message.motion_xy = {x = x, y = y}
+	message.cb.motion = function (msg_comp, camera)
+		local states = msg_comp.states
+		if states.buttons.LEFT then
+			local delta_x = x - last_x
+			local delta_y = y - last_y
+		end
+	end
+
+	message.motion_x = x
+	message.motion_y = y
+	message.motion_last_x = last_x
+	message.motion_last_y = last_y
 end
 
 function message:keypress(c, p)
 	print(string.format("keypress, char = %d, press = %d", char, is_press))
-	message.keypress_event = {
-		char = c,
-		is_press = p,
-	}
+	message.cb.keypress = function()
+
+	end
 end
+
+--[@
+local cb_comp = ecs.component "cb_comp"{}
+
+function cb_comp:init()
+	cb_comp.cb = {}
+end
+
+--@]
 
 --[@
 local camera_controller_system = ecs.system "camera_controller"
 camera_controller_system.singleton "math3d"
 camera_controller_system.singleton "message_component"
+camera_controller_system.singleton "cb_comp"
 
 camera_controller_system.depend "iup_message"
 
 function camera_controller_system:init()
 	self.message_component.msg_observers:add(message)
+	message.cb = self.cb_comp.cb
 end
 
 function camera_controller_system:update()
@@ -78,7 +114,5 @@ function camera_controller_system:update()
 		end
 		
 	end)
-
-	clear_message(message)
 end
 --@]
