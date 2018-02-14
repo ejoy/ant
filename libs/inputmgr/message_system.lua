@@ -22,22 +22,21 @@ function msg_comp:init()
 	end
 
 	self.msg_observers = setmetatable({}, message_observers)
+	self.states = {
+		button = function (self, b, p, x, y) self.buttons[b] = p end,
+		keypress = function(self, c, p) self.keys[c] = p end,
+	}
 end
 --@]
 
 --[@
 local message = {}
 
-function message:resize(w, h)
-	print("RESIZE", w, h)
+function message:resize(w, h)	
 	self.viewport.width = w
 	self.viewport.height = h
 	bgfx.set_view_rect(0, 0, 0, w, h)
 	bgfx.reset(w, h, "v")
-end
-
-function message:button(...)
-	print("BUTTON", ...)
 end
 --@]
 
@@ -56,11 +55,17 @@ end
 function iup_message:update()
 	for idx, msg, v1,v2,v3,v4 in pairs(world.args.mq) do
 		print("iup_message receive message : " .. msg)
+		local states = self.message_component.states
+		local cb = states[msg]
+		if cb then
+			cb(states, v1, v2, v3, v4)
+		end
+
 		local observers = self.message_component.msg_observers
 		for idx, observer in ipairs(observers) do
-			local action_cb = observer[msg]
-			if action_cb then
-				action_cb(self,v1,v2,v3,v4)
+			local action = observer[msg]
+			if action then
+				action(self,v1,v2,v3,v4)
 			end
 		end
 
