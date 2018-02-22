@@ -399,6 +399,7 @@ push_limits(lua_State *L, const bgfx_caps_limits_t *lim) {
 	PUSH_LIMIT(maxDrawCalls)
 	PUSH_LIMIT(maxBlits)
 	PUSH_LIMIT(maxTextureSize)
+	PUSH_LIMIT(maxTextureLayers)
 	PUSH_LIMIT(maxViews)
 	PUSH_LIMIT(maxFrameBuffers)
 	PUSH_LIMIT(maxFBAttachments)
@@ -970,21 +971,31 @@ combine_state(lua_State *L, uint64_t *state) {
 			*state |= BGFX_STATE_MSAA; 
 		else 
 			*state &= ~BGFX_STATE_MSAA;
-	} else if CASE(ALPHA_WRITE) {
-		if (lua_toboolean(L, -1))
-			*state |= BGFX_STATE_ALPHA_WRITE; 
-		else 
-			*state &= ~BGFX_STATE_ALPHA_WRITE;
-	} else if CASE(DEPTH_WRITE) {
-		if (lua_toboolean(L, -1))
-			*state |= BGFX_STATE_DEPTH_WRITE; 
-		else 
-			*state &= ~BGFX_STATE_DEPTH_WRITE;
-	} else if CASE(RGB_WRITE) {
-		if (lua_toboolean(L, -1))
-			*state |= BGFX_STATE_RGB_WRITE; 
-		else 
-			*state &= ~BGFX_STATE_RGB_WRITE;
+	} else if CASE(WRITE_MASK) {
+		*state &= ~BGFX_STATE_WRITE_MASK;
+		const char * mask = luaL_checkstring(L, -1);
+		int i;
+		for (i=0;mask[i];i++) {
+			switch (mask[i]) {
+			case 'R':
+				*state |= BGFX_STATE_WRITE_R;
+				break;
+			case 'G':
+				*state |= BGFX_STATE_WRITE_G;
+				break;
+			case 'B':
+				*state |= BGFX_STATE_WRITE_B;
+				break;
+			case 'A':
+				*state |= BGFX_STATE_WRITE_A;
+				break;
+			case 'Z':
+				*state |= BGFX_STATE_WRITE_Z;
+				break;
+			default:
+				return luaL_error(L, "Invalid WRITE_MASK %s", mask);
+			}
+		}
 	} else if CASE(DEPTH_TEST) {
 		*state &= ~BGFX_STATE_DEPTH_TEST_MASK;
 		const char * what = luaL_checkstring(L, -1);
@@ -1059,11 +1070,11 @@ get_state(lua_State *L, int idx, uint64_t *pstate, uint32_t *prgba) {
 static int
 lmakeState(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
-/*#define BGFX_STATE_DEFAULT (0            \
-			| BGFX_STATE_RGB_WRITE       \
-			| BGFX_STATE_ALPHA_WRITE     \
+/*#define BGFX_STATE_DEFAULT (0          \
+			| BGFX_STATE_WRITE_RGB       \
+			| BGFX_STATE_WRITE_A         \
 			| BGFX_STATE_DEPTH_TEST_LESS \
-			| BGFX_STATE_DEPTH_WRITE     \
+			| BGFX_STATE_WRITE_Z         \
 			| BGFX_STATE_CULL_CW         \
 			| BGFX_STATE_MSAA            \
 			)
@@ -2233,7 +2244,7 @@ lsetIDB(lua_State *L) {
 			return luaL_error(L, "Invalid instance data buffer num %d/%d",num, v->num);
 		}
 	}
-	bgfx_set_instance_data_buffer(&v->idb, num);
+	bgfx_set_instance_data_buffer(&v->idb, 0, num);
 	v->num = 0;
 	return 0;
 }
