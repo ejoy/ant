@@ -60,6 +60,7 @@ stack( vec, { 1,2,3,4 } , "1+=")	-- dup {1,2,3,4} add self and then assign to ve
 
 local vv = stack({1, 2, 3, 1}, {2}, "*V")
 print("vec4 mul : " .. vv)
+print("unpack", stack(">VRVRVRVR"))	-- unpack top {1*2,2*2,3*2,1*2} -> 2,4,6,2
 
 --lookat
 stack(mat, "1=")	-- init mat to an indentity matrix (dup self and assign)
@@ -81,4 +82,5 @@ print(math3d.type(t))	-- vector true
 print(stack( t,"Vv"))	-- string lightuserdata
 
 print(stack(math3d.constant "identvec", "VR"))
-print(stack(math3d.constant "identmat", "VR"))	-- R: remove top
+print(stack(math3d.constant "identmat", "V"))	-- R: remove top
+print(stack(">RRSRV"))	-- unpack ident mat, get 2st line, 1: RRR 2: RRSR 3:RSRSR 4:SRSRSR

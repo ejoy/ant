@@ -562,6 +562,29 @@ lookat_matrix(lua_State *L, struct lastack *LS) {
 	lastack_pushmatrix(LS, m.x);
 }
 
+static void
+unpack_top(lua_State *L, struct lastack *LS) {
+	int64_t v = pop(L, LS);
+	int t = 0;
+	float * r = lastack_value(LS, v, &t);
+	switch(t) {
+	case LINEAR_TYPE_VEC4:
+		lastack_pushnumber(LS, r[0]);
+		lastack_pushnumber(LS, r[1]);
+		lastack_pushnumber(LS, r[2]);
+		lastack_pushnumber(LS, r[3]);
+		break;
+	case LINEAR_TYPE_MAT:
+		lastack_pushvec4(LS, r+0);
+		lastack_pushvec4(LS, r+4);
+		lastack_pushvec4(LS, r+8);
+		lastack_pushvec4(LS, r+12);
+		break;
+	default:
+		luaL_error(L, "Unpack invalid type %s", get_typename(t));
+	}
+}
+
 /*
 	P : pop and return id
 	v : pop and return vector4 pointer
@@ -690,6 +713,14 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 	case 'l':
 		lookat_matrix(L, LS);
 		refstack_2_1(RS);
+		break;
+	case '>':
+		unpack_top(L, LS);
+		refstack_pop(RS);
+		refstack_push(RS);
+		refstack_push(RS);
+		refstack_push(RS);
+		refstack_push(RS);
 		break;
 	default:
 		luaL_error(L, "Unknown command %c", cmd);
