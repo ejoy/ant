@@ -16,6 +16,20 @@
 #define MAT_PERSPECTIVE 0
 #define MAT_ORTHO 1
 
+static const char *
+get_typename(int t) {
+	static const char * typename[] = {
+		"matrix",
+		"vector4",
+		"vector3",
+		"quaternion",
+		"number",
+	};
+	if (t < 0 || t >= sizeof(typename)/sizeof(typename[0]))
+		return "unknown";
+	return typename[t];
+}
+
 static inline int64_t
 pop(lua_State *L, struct lastack *LS) {
 	int64_t v = lastack_pop(LS);
@@ -55,10 +69,9 @@ delLS(lua_State *L) {
 }
 
 static void
-value_tostring(lua_State *L, const char * prefix, float *r, int size) {
-	if (size == 4) {
-		lua_pushfstring(L, "%sVEC (%f,%f,%f,%f)", prefix, r[0],r[1],r[2],r[3]);
-	} else {
+value_tostring(lua_State *L, const char * prefix, float *r, int type) {
+	switch (type) {
+	case LINEAR_TYPE_MAT:
 		lua_pushfstring(L, "%sMAT (%f,%f,%f,%f : %f,%f,%f,%f : %f,%f,%f,%f : %f,%f,%f,%f)",
 			prefix,
 			r[0],r[1],r[2],r[3],
@@ -66,6 +79,22 @@ value_tostring(lua_State *L, const char * prefix, float *r, int size) {
 			r[8],r[9],r[10],r[11],
 			r[12],r[13],r[14],r[15]
 		);
+		break;
+	case LINEAR_TYPE_VEC4:
+		lua_pushfstring(L, "%sVEC4 (%f,%f,%f,%f)", prefix, r[0],r[1],r[2],r[3]);
+		break;
+	case LINEAR_TYPE_VEC3:
+		lua_pushfstring(L, "%sVEC3 (%f,%f,%f,%f)", prefix, r[0],r[1],r[2]);
+		break;
+	case LINEAR_TYPE_QUAT:
+		lua_pushfstring(L, "%sQUAT (%f,%f,%f,%f)", prefix, r[0],r[1],r[2],r[3]);
+		break;
+	case LINEAR_TYPE_NUM:
+		lua_pushfstring(L, "%sNUMBER (%f)", prefix, r[0]);
+		break;
+	default:
+		lua_pushfstring(L, "%sUNKNOWN", prefix);
+		break;
 	}
 }
 
@@ -313,13 +342,13 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 	}
 	switch (n) {	
 	case 1:
-		// float
-		v[1] = v[2] = v[0];
+		lastack_pushnumber(LS, v[0]);
+		break;
 	case 3:
-		// vector 3
-		v[3] = 1.0f;
+		lastack_pushvec3(LS, v);
+		break;
 	case 4:
-		lastack_pushvector(LS, v);
+		lastack_pushvec4(LS, v);
 		break;
 	case 16:
 		lastack_pushmatrix(LS, v);
@@ -338,105 +367,162 @@ pushid(lua_State *L, int64_t v) {
 	}
 }
 
-static inline void
-pop2_vector4(lua_State *L, struct lastack *LS, float *val[2]) {
+static inline int
+pop2_vector(lua_State *L, struct lastack *LS, float *val[2]) {
 	int64_t v1 = pop(L, LS);
 	int64_t v2 = pop(L, LS);
-	int s1,s2;
-	val[1] = lastack_value(LS, v1, &s1);
-	val[0] = lastack_value(LS, v2, &s2);
-	if (s1 != 4 || s2 != 4)
-		luaL_error(L, "type mismatch (Need vector)");
+	int t1,t2;
+	val[1] = lastack_value(LS, v1, &t1);
+	val[0] = lastack_value(LS, v2, &t2);
+	if (t1 != t2)
+		luaL_error(L, "type mismatch");
+	return t1;
 }
 
 static void
-add_vector4(lua_State *L, struct lastack *LS) {
+add_vector(lua_State *L, struct lastack *LS) {
 	float *val[2];
-	pop2_vector4(L, LS, val);
+	int t = pop2_vector(L, LS, val);
 	float ret[4];
-	ret[0] = val[0][0] + val[1][0];
-	ret[1] = val[0][1] + val[1][1];
-	ret[2] = val[0][2] + val[1][2];
-	ret[3] = val[0][3] + val[1][3];
-	lastack_pushvector(LS, ret);
+	switch (t) {
+	case LINEAR_TYPE_NUM:
+		ret[0] = val[0][0] + val[1][0];
+		lastack_pushnumber(LS, ret[0]);
+		break;
+	case LINEAR_TYPE_VEC3:
+		ret[0] = val[0][0] + val[1][0];
+		ret[1] = val[0][1] + val[1][1];
+		ret[2] = val[0][2] + val[1][2];
+		lastack_pushvec3(LS, ret);
+		break;
+	case LINEAR_TYPE_VEC4:
+		ret[0] = val[0][0] + val[1][0];
+		ret[1] = val[0][1] + val[1][1];
+		ret[2] = val[0][2] + val[1][2];
+		ret[3] = val[0][3] + val[1][3];
+		lastack_pushvec4(LS, ret);
+		break;
+	default:
+		luaL_error(L, "Invalid type %d to add", t);
+	}
 }
 
 static void
-sub_vector4(lua_State *L, struct lastack *LS) {
+sub_vector(lua_State *L, struct lastack *LS) {
 	float *val[2];
-	pop2_vector4(L, LS, val);
+	int t = pop2_vector(L, LS, val);
 	float ret[4];
-	ret[0] = val[0][0] - val[1][0];
-	ret[1] = val[0][1] - val[1][1];
-	ret[2] = val[0][2] - val[1][2];
-	ret[3] = val[0][3] - val[1][3];
-	lastack_pushvector(LS, ret);
+	switch (t) {
+	case LINEAR_TYPE_NUM:
+		ret[0] = val[0][0] - val[1][0];
+		lastack_pushnumber(LS, ret[0]);
+		break;
+	case LINEAR_TYPE_VEC3:
+		ret[0] = val[0][0] - val[1][0];
+		ret[1] = val[0][1] - val[1][1];
+		ret[2] = val[0][2] - val[1][2];
+		lastack_pushvec3(LS, ret);
+	case LINEAR_TYPE_VEC4:
+		ret[0] = val[0][0] - val[1][0];
+		ret[1] = val[0][1] - val[1][1];
+		ret[2] = val[0][2] - val[1][2];
+		ret[3] = val[0][3] - val[1][3];
+		lastack_pushvec4(LS, ret);
+	default:
+		luaL_error(L, "Invalid type %d to add", t);
+	}
 }
 
 static float *
-pop_vector(lua_State *L, struct lastack *LS) {
+pop_value(lua_State *L, struct lastack *LS, int nt) {
 	int64_t v = pop(L, LS);
-	int sz = 0;
-	float * r = lastack_value(LS, v, &sz);
-	if (sz != 4) {
-		luaL_error(L, "type mismatch, need vector");
+	int t = 0;
+	float * r = lastack_value(LS, v, &t);
+	if (t != nt) {
+		luaL_error(L, "type mismatch, %s/%s", get_typename(t), get_typename(nt));
 	}
 	return r;
 }
 
 static float *
 pop_matrix(lua_State *L, struct lastack *LS) {
+	return pop_value(L, LS, LINEAR_TYPE_MAT);
+}
+
+static float *
+pop_vector34(lua_State *L, struct lastack *LS, int *type) {
 	int64_t v = pop(L, LS);
-	int sz = 0;
-	float * r = lastack_value(LS, v, &sz);
-	if (sz != 16) {
-		luaL_error(L, "type mismatch, need matrix");
+	int t = 0;
+	float * r = lastack_value(LS, v, &t);
+	if (t != LINEAR_TYPE_VEC3 && t != LINEAR_TYPE_VEC4) {
+		luaL_error(L, "type mismatch, need vector. It's %s", get_typename(t));
 	}
+	if (type)
+		*type = t;
 	return r;
 }
 
 static void
 normalize_vector3(lua_State *L, struct lastack *LS) {
-	float *v = pop_vector(L, LS);
+	int t;
+	float *v = pop_vector34(L, LS, &t);
 	float r[4];
 	float invLen = 1.0f / vector3_length((struct vector3 *)v);
 	r[0] = v[0] * invLen;
 	r[1] = v[1] * invLen;
 	r[2] = v[2] * invLen;
-	r[3] = 1.0f;
-	lastack_pushvector(LS, r);
+	if (t == LINEAR_TYPE_VEC4) {
+		r[3] = v[3];
+		lastack_pushvec4(LS, r);
+	} else {
+		lastack_pushvec3(LS, r);
+	}
 }
+
+#define BINTYPE(v1, v2) ((v1) * 8 + (v2))
 
 static void
 mul_2values(lua_State *L, struct lastack *LS) {
 	int64_t v1 = pop(L, LS);
 	int64_t v0 = pop(L, LS);
-	int s0,s1;
-	float * val1 = lastack_value(LS, v1, &s1);
-	float * val0 = lastack_value(LS, v0, &s0);
-	if (s0 == 4) {
+	int t0,t1;
+	float * val1 = lastack_value(LS, v1, &t1);
+	float * val0 = lastack_value(LS, v0, &t0);
+	int type = BINTYPE(t0,t1);
+	switch (type) {
+	case BINTYPE(LINEAR_TYPE_MAT,LINEAR_TYPE_MAT): {
+		union matrix44 m;
+		matrix44_mul(&m, (union matrix44 *)val0, (union matrix44 *)val1);
+		lastack_pushmatrix(LS, m.x);
+		break;
+	}
+	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_MAT): {
 		float r[4];
-		if (s1 == 16) {			
-			vector4_mul_matrix44(r, val0, (union matrix44 *)val1);
-			lastack_pushvector(LS, r);
-			return;
-		} else {
-			// vec4 * vec4
-			//luaL_error(L, "Don't support vector4 * vector4");			
-			vector4_mul_vector4(r, val0, val1);
-			lastack_pushvector(LS, r);
-			return;
-		}
-	} else {
-		if (s1 == 16) {
-			union matrix44 m;
-			matrix44_mul(&m, (union matrix44 *)val0, (union matrix44 *)val1);
-			lastack_pushmatrix(LS, m.x);
-			return;
-		} else {
-			// matrix * vec4
-			luaL_error(L, "Don't support matrix * vector4");
-		}
+		vector4_mul_matrix44(r, val0, (union matrix44 *)val1);
+		lastack_pushvec4(LS, r);
+		break;
+	}
+	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_NUM): {
+		float r[4] = {
+			val0[0] * val1[0],
+			val0[1] * val1[0],
+			val0[2] * val1[0],
+			val0[3] * val1[0],
+		};
+		lastack_pushvec4(LS, r);
+		break;
+	}
+	case BINTYPE(LINEAR_TYPE_VEC3, LINEAR_TYPE_NUM): {
+		float r[3] = {
+			val0[0] * val1[0],
+			val0[1] * val1[0],
+			val0[2] * val1[0],
+		};
+		lastack_pushvec3(LS, r);
+		break;
+	}
+	default:
+		luaL_error(L, "Need support type %s * type %s", get_typename(t0),get_typename(t1));
 	}
 }
 
@@ -462,26 +548,18 @@ top_tostring(lua_State *L, struct lastack *LS) {
 	int64_t v = lastack_top(LS);
 	if (v == 0)
 		luaL_error(L, "top empty stack");
-	int sz = 0;
-	float * r = lastack_value(LS, v, &sz);
-	value_tostring(L, "", r, sz);
+	int t = 0;
+	float * r = lastack_value(LS, v, &t);
+	value_tostring(L, "", r, t);
 }
 
 static void
 lookat_matrix(lua_State *L, struct lastack *LS) {
-	float *at = pop_vector(L, LS);
-	float *eye = pop_vector(L, LS);
+	float *at = pop_vector34(L, LS, NULL);
+	float *eye = pop_vector34(L, LS, NULL);
 	union matrix44 m;
 	matrix44_lookat(&m, (struct vector3 *)eye, (struct vector3 *)at, NULL);
 	lastack_pushmatrix(LS, m.x);
-}
-
-static inline void
-push_float(struct lastack *LS, float v) {
-	float t[4];
-	t[0] = t[1] = t[2] = v;
-	t[3] = 1.0f;
-	lastack_pushvector(LS, t);
 }
 
 /*
@@ -501,11 +579,11 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		refstack_pop(RS);
 		return 1;
 	case 'f':
-		lua_pushnumber(L, pop_vector(L,LS)[0]);
+		lua_pushnumber(L, pop_value(L,LS,LINEAR_TYPE_NUM)[0]);
 		refstack_pop(RS);
 		return 1;
 	case 'v':
-		lua_pushlightuserdata(L, pop_vector(L, LS));
+		lua_pushlightuserdata(L, pop_vector34(L, LS, NULL));
 		return 1;
 	case 'm':
 		lua_pushlightuserdata(L, pop_matrix(L, LS));
@@ -561,19 +639,27 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		refstack_pop(RS);
 		break;
 	case '.': {
-		float * vec1 = pop_vector(L, LS);
-		float * vec2 = pop_vector(L, LS);
-		push_float(LS, vector3_dot((struct vector3 *)vec1, (struct vector3 *)vec2));
+		float * vec1 = pop_vector34(L, LS, NULL);
+		float * vec2 = pop_vector34(L, LS, NULL);
+		lastack_pushnumber(LS, vector3_dot((struct vector3 *)vec1, (struct vector3 *)vec2));
 		refstack_2_1(RS);
 		break;
 	}
 	case 'x': {
 		float r[4];
-		float * vec2 = pop_vector(L, LS);
-		float * vec1 = pop_vector(L, LS);
+		int t1,t2;
+		float * vec2 = pop_vector34(L, LS, &t1);
+		float * vec1 = pop_vector34(L, LS, &t2);
+		if (t1 != t2) {
+			luaL_error(L, "cross type mismatch");
+		}
 		vector3_cross((struct vector3 *)r, (struct vector3 *)vec1, (struct vector3 *)vec2);
-		r[3] = 1.0f;
-		lastack_pushvector(LS, r);
+		if (t1 == LINEAR_TYPE_VEC3) {
+			lastack_pushvec3(LS, r);
+		} else {
+			r[3] = 1.0f;
+			lastack_pushvec4(LS, r);
+		}
 		refstack_2_1(RS);
 		break;
 	}
@@ -594,11 +680,11 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		refstack_1_1(RS);
 		break;
 	case '-':
-		sub_vector4(L, LS);
+		sub_vector(L, LS);
 		refstack_2_1(RS);
 		break;
 	case '+':
-		add_vector4(L, LS);
+		add_vector(L, LS);
 		refstack_2_1(RS);
 		break;
 	case 'l':
@@ -737,13 +823,9 @@ ltype(lua_State *L) {
 	default:
 		return luaL_error(L, "Invalid lua type %s", lua_typename(L, 1));
 	}
-	int size;
-	int marked = lastack_marked(id, &size);
-	if (size == 4) {
-		lua_pushstring(L, "vector");
-	} else {
-		lua_pushstring(L, "matrix");
-	}
+	int t;
+	int marked = lastack_marked(id, &t);
+	lua_pushstring(L, get_typename(t));
 	lua_pushboolean(L, marked);
 
 	return 2;

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 #include "linalg.h"
 
 #define MINCAP 128
@@ -30,9 +31,9 @@ static struct constant c_constant_table[LINEAR_CONSTANT_NUM] = {
 };
 
 struct stackid_ {
-	uint32_t version:25;
-	uint32_t id:25;
-	uint32_t vector:1;	// 0: vector 1:matrix
+	uint32_t version:24;
+	uint32_t id:24;
+	uint32_t type:3;	// 0:matrix 1:vector4 2:vector3 3:quaternion 4:float
 	uint32_t persistent:1;	// 0: persisent 1: temp
 };
 
@@ -51,9 +52,9 @@ lastack_constant(int cons) {
 	sid.s.id = cons;
 	sid.s.persistent = 1;
 	if (c->size == VECTOR4) {
-		sid.s.vector = 1;
+		sid.s.type = LINEAR_TYPE_VEC4;
 	} else {
-		sid.s.vector = 0;
+		sid.s.type = LINEAR_TYPE_MAT;
 	}
 	return sid.i;
 }
@@ -301,22 +302,43 @@ new_page(struct lastack *LS, void *page) {
 	return page;
 }
 
-void
-lastack_pushvector(struct lastack *LS, float *vec4) {
+static void
+lastack_pushvector(struct lastack *LS, float *vec4, int type, int size) {
+	assert(type != LINEAR_TYPE_MAT);
 	if (LS->temp_vector_top >= LS->temp_vector_cap) {
 		void * p = new_page(LS, LS->temp_vec);
 		LS->temp_vec = malloc(LS->temp_vector_cap * 2 * sizeof(float) * VECTOR4);
 		memcpy(LS->temp_vec, p, LS->temp_vector_cap * sizeof(float) * VECTOR4);
 		LS->temp_vector_cap *= 2;
 	}
-	memcpy(LS->temp_vec + LS->temp_vector_top * VECTOR4, vec4, sizeof(float) * VECTOR4);
+	memcpy(LS->temp_vec + LS->temp_vector_top * VECTOR4, vec4, sizeof(float) * size);
 	union stackid sid;
-	sid.s.vector = 1;
+	sid.s.type = type;
 	sid.s.persistent = 0;
 	sid.s.version = LS->version;
 	sid.s.id = LS->temp_vector_top;
 	push_id(LS, sid);
 	++ LS->temp_vector_top;
+}
+
+void
+lastack_pushvec4(struct lastack *LS, float *vec4) {
+	lastack_pushvector(LS, vec4, LINEAR_TYPE_VEC4, 4);
+}
+
+void
+lastack_pushvec3(struct lastack *LS, float *vec3) {
+	lastack_pushvector(LS, vec3, LINEAR_TYPE_VEC3, 3);
+}
+
+void
+lastack_pushquat(struct lastack *LS, float *v) {
+	lastack_pushvector(LS, v, LINEAR_TYPE_QUAT, 4);
+}
+
+void
+lastack_pushnumber(struct lastack *LS, float n) {
+	lastack_pushvector(LS, &n, LINEAR_TYPE_NUM, 1);
 }
 
 void
@@ -329,7 +351,7 @@ lastack_pushmatrix(struct lastack *LS, float *mat) {
 	}
 	memcpy(LS->temp_mat + LS->temp_matrix_top * MATRIX, mat, sizeof(float) * MATRIX);
 	union stackid sid;
-	sid.s.vector = 0;
+	sid.s.type = LINEAR_TYPE_MAT;
 	sid.s.persistent = 0;
 	sid.s.version = LS->version;
 	sid.s.id = LS->temp_matrix_top;
@@ -338,12 +360,14 @@ lastack_pushmatrix(struct lastack *LS, float *mat) {
 }
 
 float *
-lastack_value(struct lastack *LS, int64_t ref, int *size) {
+lastack_value(struct lastack *LS, int64_t ref, int *type) {
 	union stackid sid;
 	sid.i = ref;
 	int id = sid.s.id;
 	int ver = sid.s.version;
 	void * address = NULL;
+	if (type)
+		*type = sid.s.type;
 	if (sid.s.persistent) {
 		if (sid.s.version == 0) {
 			// constant
@@ -351,19 +375,12 @@ lastack_value(struct lastack *LS, int64_t ref, int *size) {
 			if (id < 0 || id >= LINEAR_CONSTANT_NUM)
 				return NULL;
 			struct constant * c = &c_constant_table[id];
-			if (size) {
-				*size = c->size;
-			}
 			return c->ptr;
 		}
-		if (sid.s.vector) {
-			if (size)
-				*size = VECTOR4;
-			address = blob_address( LS->per_vec , id, ver);
-		} else {
-			if (size)
-				*size = MATRIX;
+		if (sid.s.type == LINEAR_TYPE_MAT) {
 			address = blob_address( LS->per_mat , id, ver);
+		} else {
+			address = blob_address( LS->per_vec , id, ver);
 		}
 		return address;
 	} else {
@@ -371,20 +388,16 @@ lastack_value(struct lastack *LS, int64_t ref, int *size) {
 			// version expired
 			return NULL;
 		}
-		if (sid.s.vector) {
-			if (size)
-				*size = VECTOR4;
-			if (id >= LS->temp_vector_top) {
-				return NULL;
-			}
-			return LS->temp_vec + id * VECTOR4;
-		} else {
-			if (size)
-				*size = MATRIX;
+		if (sid.s.type == LINEAR_TYPE_MAT) {
 			if (id >= LS->temp_matrix_top) {
 				return NULL;
 			}
 			return LS->temp_mat + id * MATRIX;
+		} else {
+			if (id >= LS->temp_vector_top) {
+				return NULL;
+			}
+			return LS->temp_vec + id * VECTOR4;
 		}
 	}
 }
@@ -406,13 +419,13 @@ lastack_unmark(struct lastack *LS, int64_t markid) {
 	union stackid id;
 	id.i = markid;
 	if (id.s.persistent && id.s.version != 0) {
-		if (id.s.vector) {
+		if (id.s.type != LINEAR_TYPE_MAT) {
 			blob_dealloc(LS->per_vec, id.s.id, id.s.version);
 		} else {
 			blob_dealloc(LS->per_mat, id.s.id, id.s.version);
 		}
 	}
-	if (id.s.vector) {
+	if (id.s.type != LINEAR_TYPE_MAT) {
 		return lastack_constant(LINEAR_CONSTANT_IVEC);
 	} else {
 		return lastack_constant(LINEAR_CONSTANT_IMAT);
@@ -421,23 +434,22 @@ lastack_unmark(struct lastack *LS, int64_t markid) {
 
 int64_t
 lastack_mark(struct lastack *LS, int64_t tempid) {
-	int sz;
-	float *address = lastack_value(LS, tempid, &sz);
+	int t;
+	float *address = lastack_value(LS, tempid, &t);
 	if (address == NULL)
 		return 0;
 	int id;
 	union stackid sid;
 	sid.s.version = LS->version;
-	if (sz == VECTOR4) {
+	sid.s.type = t;
+	if (t != LINEAR_TYPE_MAT) {
 		id = blob_alloc(LS->per_vec, LS->version);
 		void * dest = blob_address(LS->per_vec, id, LS->version);
 		memcpy(dest, address, sizeof(float) * VECTOR4);
-		sid.s.vector = 1;
 	} else {
 		id = blob_alloc(LS->per_mat, LS->version);
 		void * dest = blob_address(LS->per_mat, id, LS->version);
 		memcpy(dest, address, sizeof(float) * MATRIX);
-		sid.s.vector = 0;
 	}
 	sid.s.id = id;
 	if (sid.s.id != id) {
@@ -448,15 +460,11 @@ lastack_mark(struct lastack *LS, int64_t tempid) {
 }
 
 int
-lastack_marked(int64_t id, int *size) {
+lastack_marked(int64_t id, int *type) {
 	union stackid sid;
 	sid.i = id;
-	if (size) {
-		if (sid.s.vector) {
-			*size = VECTOR4;
-		} else {
-			*size = MATRIX;
-		}
+	if (type) {
+		*type = sid.s.type;
 	}
 	return sid.s.persistent;
 }
@@ -466,7 +474,7 @@ lastack_sametype(int64_t id1, int64_t id2) {
 	union stackid sid1,sid2;
 	sid1.i = id1;
 	sid2.i = id2;
-	return sid1.s.vector == sid2.s.vector;
+	return sid1.s.type == sid2.s.type;
 }
 
 int64_t
@@ -553,10 +561,25 @@ lastack_idstring(int64_t id, char tmp[64]) {
 	union stackid sid;
 	sid.i = id;
 	char flags[3] = { 0,0,0 };
-	if (sid.s.vector) {
-		flags[0] = 'V';
-	} else {
+	switch(sid.s.type) {
+	case LINEAR_TYPE_MAT:
 		flags[0] = 'M';
+		break;
+	case LINEAR_TYPE_VEC4:
+		flags[0] = 'V';
+		break;
+	case LINEAR_TYPE_VEC3:
+		flags[0] = 'v';
+		break;
+	case LINEAR_TYPE_QUAT:
+		flags[0] = 'Q';
+		break;
+	case LINEAR_TYPE_NUM:
+		flags[0] = 'N';
+		break;
+	default:
+		flags[0] = '?';
+		break;
 	}
 	if (sid.s.persistent) {
 		flags[1] = 'P';
@@ -576,7 +599,7 @@ test_main() {
 		0,0,1,0,
 		0,0,0,1
 	};
-	lastack_pushvector(LS, v);
+	lastack_pushvector(LS, v, LINEAR_TYPE_VEC4);
 	int64_t c = lastack_mark(LS);
 	lastack_pushmatrix(LS, m);
 	lastack_pushref(LS, -c);

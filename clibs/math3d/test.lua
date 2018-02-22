@@ -58,7 +58,7 @@ print(m)
 
 stack( vec, { 1,2,3,4 } , "1+=")	-- dup {1,2,3,4} add self and then assign to vec
 
-local vv = stack({1, 2, 3, 1}, {2, 2, 2, 1}, "*V")
+local vv = stack({1, 2, 3, 1}, {2}, "*V")
 print("vec4 mul : " .. vv)
 
 --lookat

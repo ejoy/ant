@@ -450,12 +450,6 @@ vector4_mul_matrix44(float * r, const float *v, const union matrix44 *m) {
 	r[3] = v[0] * C[0][3] + v[1] * C[1][3] + v[2] * C[2][3] + v[3] * C[3][3];
 }
 
-static inline void
-vector4_mul_vector4(float * r, const float * lhs, const float * rhs) {
-	for (int ii = 0; ii < 4; ++ii)
-		r[ii] = lhs[ii] * rhs[ii];
-}
-
 static inline union matrix44 *
 matrix44_mul(union matrix44 *m, const union matrix44 *m1, const union matrix44 *m2) {
 	union matrix44 mf;
