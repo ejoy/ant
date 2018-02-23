@@ -309,6 +309,17 @@ push_mat(lua_State *L, struct lastack *LS, int index, int type) {
 	lastack_pushmatrix(LS, m.x);
 }
 
+static inline const char * 
+get_type_field(lua_State *L, int index) {
+	const char* type = NULL;
+	if (lua_getfield(L, index, "type") == LUA_TSTRING) {
+		type = lua_tostring(L, -1);
+		lua_pop(L, 1);
+	}
+
+	return type;
+}
+
 static void
 push_value(lua_State *L, struct lastack *LS, int index) {
 	size_t n = lua_rawlen(L, index);
@@ -318,27 +329,23 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 		luaL_error(L, "Invalid value %d", n);
 	}
 	if (n == 0) {
-		const char * type = NULL;
-		if (lua_getfield(L, index, "type") == LUA_TSTRING) {
-			type = lua_tostring(L, -1);
-			lua_pop(L, 1);
-		}
+		const char * type = get_type_field(L, index);
 		if (type == NULL || strcmp(type, "srt") == 0) {
 			push_srt(L, LS, index);
 		} else if (strcmp(type, "proj") == 0) {
 			push_mat(L, LS, index, MAT_PERSPECTIVE);
 		} else if (strcmp(type, "ortho") == 0) {
-			push_mat(L, LS, index, MAT_ORTHO);		
+			push_mat(L, LS, index, MAT_ORTHO);
 		} else {
 			luaL_error(L, "Invalid matrix type %s", type);
 		}
 		return;
 	}
 	luaL_checkstack(L, (int)n, NULL);
-	for (i=0;i<n;i++) {
-		lua_geti(L, index, i+1);
+	for (i = 0; i < n; ++i) {
+		lua_geti(L, index, i + 1);
 		v[i] = lua_tonumber(L, -1);
-		lua_pop(L,1);
+		lua_pop(L, 1);
 	}
 	switch (n) {	
 	case 1:
@@ -347,9 +354,14 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 	case 3:
 		lastack_pushvec3(LS, v);
 		break;
-	case 4:
-		lastack_pushvec4(LS, v);
+	case 4:	{
+		const char* type = get_type_field(L, index);
+		if (strcmp(type, "quat") == 0)
+			lastack_pushquat(LS, v);
+		else
+			lastack_pushvec4(LS, v);				
 		break;
+	}		
 	case 16:
 		lastack_pushmatrix(LS, v);
 		break;
