@@ -308,10 +308,10 @@ quaternion_inverted(struct quaternion * q) {
 }
 
 static inline void
-quaternion_rotate_vec4(struct quaternion *q, struct vector4 *v){
+quaternion_rotate_vec4(struct vector4 *r, const struct quaternion *q, const struct vector4 *v){
 	// to do, we need a more efficient version for this method
 	struct quaternion p;
-	quaternion_init(&p, 0, v->x, v->y, v->z);
+	quaternion_init(&p, 0, v->x, v->y, v->z);	// to pure quaternion
 
 	struct quaternion inv_q = *q;
 	quaternion_inverse(&inv_q);
@@ -319,13 +319,13 @@ quaternion_rotate_vec4(struct quaternion *q, struct vector4 *v){
 	struct quaternion prefix;
 	quaternion_mul(&prefix, q, &p);
 	struct quaternion result;
-	quaternion_mul(&result, &prefix, &inv_q);
+	quaternion_mul(&result, &prefix, &inv_q);	// result is pure quaternion
 
 	assert(is_zero(result.w));
 
-	v->x = result.x;
-	v->y = result.y;
-	v->z = result.z;
+	r->x = result.x;
+	r->y = result.y;
+	r->z = result.z;
 }
 
 // matrix 4*4

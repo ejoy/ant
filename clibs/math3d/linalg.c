@@ -33,7 +33,7 @@ static struct constant c_constant_table[LINEAR_CONSTANT_NUM] = {
 struct stackid_ {
 	uint32_t version:24;
 	uint32_t id:24;
-	uint32_t type:3;	// 0:matrix 1:vector4 2:vector3 3:quaternion 4:float
+	uint32_t type : LINEAR_TYPE_BITS_NUM;	// 0:matrix 1:vector4 2:vector3 3:quaternion 4:float
 	uint32_t persistent:1;	// 0: persisent 1: temp
 };
 

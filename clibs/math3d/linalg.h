@@ -13,6 +13,8 @@
 #define LINEAR_TYPE_QUAT 3
 #define LINEAR_TYPE_NUM 4
 
+#define	LINEAR_TYPE_BITS_NUM 3
+
 struct lastack;
 
 int64_t lastack_constant(int cons);

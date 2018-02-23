@@ -31,7 +31,7 @@ local math3d = require "math3d"
 	{ type = "ortho", l = 0, r = 1, b = 1, t = 0, n = 0, f = 100, h = false } -- ortho mat
 	{ type = "quat", 0, 0, 0, 1}	-> quaternion, for x, y, z, w
 	* matrix mul ( ..., 1,2 - > ..., 1*2 )
-	* vector4 * matrix4x4 / vec4 * vec4
+	* vector4 * matrix4x4 / vec4 * vec4 / quat * quat / quat * vec4
 	+ vector4 + vector4 ( ..., 1,2 - > ..., 1+2 )
 	- vec4 - vec4 ( ..., 1,2 - > ..., 1-2 )
 	. vec3 * vec3  ( ..., 1,2 -> ..., { dot(1,2) , 0 , 0 ,1 } )
@@ -65,7 +65,12 @@ print("unpack", stack(">VRVRVRVR"))	-- unpack top {1*2,2*2,3*2,1*2} -> 2,4,6,2
 
 
 --quaternion
-stack({type = "quat", 0, 0, 0, 1})	-- define an indentity quaternion
+local quat_mul = stack({type = "quat", 0, 1, 0, 1}, {type = "quat", 1, 0, 0, 0.5}, "*V")	-- define an indentity quaternion
+print("q * q : " .. quat_mul)
+
+local quat_vec_mul = stack({1, 2, 3, 0}, {type = "quat", 0, 1, 0, 0.5}, "*V")
+print("q * v : " .. quat_vec_mul)
+
 
 --lookat
 stack(mat, "1=")	-- init mat to an indentity matrix (dup self and assign)

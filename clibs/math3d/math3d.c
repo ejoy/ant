@@ -491,7 +491,7 @@ normalize_vector3(lua_State *L, struct lastack *LS) {
 	}
 }
 
-#define BINTYPE(v1, v2) ((v1) * 8 + (v2))
+#define BINTYPE(v1, v2) (((v1) << LINEAR_TYPE_BITS_NUM) + (v2))
 
 static void
 mul_2values(lua_State *L, struct lastack *LS) {
@@ -533,6 +533,26 @@ mul_2values(lua_State *L, struct lastack *LS) {
 		lastack_pushvec3(LS, r);
 		break;
 	}
+	case BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_QUAT): {
+		struct quaternion result;
+		quaternion_mul(&result, (const struct quaternion*)val0, (const struct quaternion*)val1);
+		lastack_pushquat(LS, &(result.x));
+		break;
+	}
+	case BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_VEC4): 
+	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_QUAT): {
+		const int typeQuatVec = BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_VEC4);
+
+		const struct quaternion * q = ((const struct quaternion *)(type == typeQuatVec ? val0 : val1));
+		const struct vector4 * v = ((const struct vector4 *) (type == typeQuatVec ? val1 : val0));
+
+		struct vector4 result;
+		result.w = v->w;
+		quaternion_rotate_vec4(&result, q, v);
+		lastack_pushquat(LS, &(result.x));
+		break;
+	}
+
 	default:
 		luaL_error(L, "Need support type %s * type %s", get_typename(t0),get_typename(t1));
 	}
