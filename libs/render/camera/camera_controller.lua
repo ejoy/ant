@@ -56,22 +56,28 @@ end
 
 function message:motion(x, y)
 	print(string.format("motion x = %d, y = %d", x, y))
-	local last_x = message.motion_x
-	local last_y = message.motion_y
 
-	message.motion_xy = {x = x, y = y}
-	message.cb.motion = function (msg_comp, camera)
+	local point = {}; point.__index = point
+	function point.new(x, y) setmetatable({x = x, y = y}, point) end
+	function point:__add(o) return point.new(self.x + o.x, self.y + o.y) end
+	function point:__sub(o) return point.new(self.x - o.x, self.y - o.y) end
+
+
+	local last_xy = message.motion_xy
+	message.last_xy = last_xy
+
+	local xy = point.new(x, y)
+	message.xy = xy
+
+	message.cb.motion = function (msg_comp, vt, math3d)
+		assert(math3d)
 		local states = msg_comp.states
-		if states.buttons.LEFT then
-			local delta_x = x - last_x
-			local delta_y = y - last_y
+		if states.buttons.LEFT and last_xy then
+			local delta = xy - last_xy
+			
+			--local camera_up = 
 		end
 	end
-
-	message.motion_x = x
-	message.motion_y = y
-	message.motion_last_x = last_x
-	message.motion_last_y = last_y
 end
 
 function message:keypress(c, p)
@@ -82,37 +88,28 @@ function message:keypress(c, p)
 end
 
 --[@
-local cb_comp = ecs.component "cb_comp"{}
-
-function cb_comp:init()
-	cb_comp.cb = {}
-end
-
---@]
-
---[@
 local camera_controller_system = ecs.system "camera_controller"
 camera_controller_system.singleton "math3d"
 camera_controller_system.singleton "message_component"
-camera_controller_system.singleton "cb_comp"
 
 camera_controller_system.depend "iup_message"
 
 function camera_controller_system:init()
 	self.message_component.msg_observers:add(message)
-	message.cb = self.cb_comp.cb
+	message.cb = {}
 end
 
 function camera_controller_system:update()
 	ru.for_each_comp(world, {"view_tranfrosm"},
 	function (entity)
 		local vt = entity.view_tranfrosm
-		if message.button_event ~= nil then
-		end
 		
-		if message.motion_event ~= nil then
+		for name, cb in message.cb do
+			cb(self.message_component, vt, self.math3d)
 		end
 		
 	end)
+
+	message.cb = {}
 end
 --@]
