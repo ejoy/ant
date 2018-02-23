@@ -133,7 +133,7 @@ quaternion_mul(struct quaternion *q, const struct quaternion *a, const struct qu
 }
 
 static inline struct quaternion *
-quaternion_init(struct quaternion *q, float x, float y, float z) {
+quaternion_init_from_euler(struct quaternion *q, float x, float y, float z) {
 	struct quaternion roll = { sinf( x * 0.5f ), 0, 0, cosf( x * 0.5f ) };
 	struct quaternion pitch = { 0, sinf( y * 0.5f ), 0, cosf( y * 0.5f ) };
 	struct quaternion yaw = { 0, 0, sinf( z * 0.5f ), cosf( z * 0.5f ) };
@@ -145,6 +145,95 @@ quaternion_init(struct quaternion *q, float x, float y, float z) {
 	return q;
 }
 
+#define TO_RADIAN(_DEGREE)	(_DEGREE) * (180 / M_PI)
+
+static inline struct quaternion *
+quaternion_init_from_axis_angle(struct quaternion *q, float axis[3], float angle){
+
+	const float halfRadian = TO_RADIAN(angle) * 0.5f;
+	const float sinValue = sinf(halfRadian);
+	const float cosValue = cosf(halfRadian);
+
+	float squareLen = axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2];
+	if (squareLen == 0)
+		squareLen = 0.0001f;
+	
+	float inverseLen = 1 / sqrtf(squareLen);
+
+	q->w = cosValue;
+	q->x = sinValue * axis[0] * inverseLen;
+	q->y = sinValue * axis[1] * inverseLen;
+	q->z = sinValue * axis[2] * inverseLen;
+
+	return q;
+}
+
+static inline float
+quaternion_square_length(const struct quaternion * q){
+	return q->w * q->w + q->x * q->x + q->y * q->y + q->z * q->z;
+}
+
+static inline float
+quaternion_length(const struct quaternion * q){
+	const float sLen = quaternion_square_length(q);
+	return sLen == 0 ? 0 : 1 / sqrtf(sLen);
+}
+
+#define MIN_THRESHOLD 0.00001f
+
+static inline int is_zero_with_threshold(float value, float threshold){
+	return -threshold <= value && value <= threshold;
+}
+
+static inline int is_zero(float value){
+	return is_zero_with_threshold(value, MIN_THRESHOLD);
+}
+
+static inline int is_equal_with_threshold(float lhs, float rhs, float threshold){
+	return is_zero_with_threshold(lhs - rhs, threshold);
+}
+
+static inline int is_equal(float lhs, float rhs){
+	return is_equal_with_threshold(lhs, rhs, MIN_THRESHOLD);
+}
+
+static inline int
+quaternion_is_unit(const struct quaternion * q){
+	return is_equal(quaternion_length(q), 1);	
+}
+
+static inline struct quaternion *
+quaternion_normalize(struct quaternion *q){
+	float square_len = quaternion_square_length(q);
+	if (square_len == 0)
+		return q;
+	
+	float inv_len = 1.f / sqrtf(square_len);
+	q->w *= inv_len;
+	q->x *= inv_len;
+	q->y *= inv_len;
+	q->z *= inv_len;
+	return q;
+}
+
+
+static inline struct quaternion *
+quaternion_init(struct quaternion *q, float w, float x, float y, float z){
+	q->w = w;
+	q->x = x;
+	q->y = y;
+	q->z = z;
+
+	return q;
+}
+
+static inline struct quaternion * 
+quaternion_inverse(struct quaternion * q){
+	q->x = -q->x;
+	q->y = -q->y;
+	q->z = -q->z;
+	return q;
+}
 static inline struct quaternion *
 quaternion_slerp(struct quaternion *q, const struct quaternion *a, const struct quaternion *b, float t) {
 	float cosTheta = a->x * b->x + a->y * b->y + a->z * b->z + a->w * b->w;
@@ -201,6 +290,7 @@ quaternion_nslerp(struct quaternion *q, const struct quaternion *a, const struct
 	return q;
 }
 
+// reverse and normalize
 static inline struct quaternion *
 quaternion_inverted(struct quaternion * q) {
 	float len = q->x * q->x + q->y * q->y + q->z * q->z + q->w * q->w;
@@ -324,7 +414,7 @@ static inline union matrix44 *
 matrix44_rotmat(union matrix44 *m, float x, float y, float z) {
 	// Rotation order: YXZ [* Vector]
 	struct quaternion q;
-	quaternion_init(&q, x, y, z);
+	quaternion_init_from_euler(&q, x, y, z);
 
 	return matrix44_from_quaternion(m, &q);
 }
@@ -468,7 +558,7 @@ static inline union matrix44 *
 matrix44_rot(union matrix44 *m, float x, float y, float z) {
 	// Rotation order: YXZ [* Vector]
 	struct quaternion q;
-	quaternion_init(&q, x, y, z);
+	quaternion_init_from_euler(&q, x, y, z);
 
 	union matrix44 tmp;
 	matrix44_from_quaternion(&tmp, &q);
