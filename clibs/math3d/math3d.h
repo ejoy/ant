@@ -320,7 +320,12 @@ quaternion_rotate_vec4(struct quaternion *q, struct vector4 *v){
 	quaternion_mul(&prefix, q, &p);
 	struct quaternion result;
 	quaternion_mul(&result, &prefix, &inv_q);
-	*q = result;
+
+	assert(is_zero(result.w));
+
+	v->x = result.x;
+	v->y = result.y;
+	v->z = result.z;
 }
 
 // matrix 4*4
