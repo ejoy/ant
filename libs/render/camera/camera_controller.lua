@@ -21,39 +21,70 @@ local function rotate(transform, step, speed)
 
 end
 
-local function clear_message(m)
-	m.button_event = nil
-	m.motion_event = nil
-	m.keypress_event = nil
+local function update_camera_trans(camera, m, speed)
+	--[@ rotate camera
+	local btn = assert(m.button_event)
+	local last_btn = m.button_last_event
+
+	local motion = assert(m.motion_event)
+	local last_motion = m.motion_last_event
+
+	local keys = assert(m.keypress_event)
+	local last_keys = m.keypress_last_event
+
+
+	if btn.type == "LEFT" then
+		local deltaX = last_motion and (motion.x - last_motion.x) or 0
+		local deltaY = last_motion and (motion.y - last_motion.y) or 0
+
+		if deltaX ~= 0 or deltaY ~= 0 then
+			
+		end
+	end
+	--@]
 end
 
 local message = {}
 
 function message:button(b, p, x, y)
-	--print(debug.traceback())
-	print(string.format("button b = %d, is_press = %d, x = %d, y = %d", b, is_press, x, y))
-	message.button_event = {
-		btn_type = b,
-		is_press = p,
-		x = x,
-		y = y,
-	}
+	message.cb.button = function (msg_comp, camera)
+		if b == "LEFT" then
+			
+		end
+	end
 end
 
 function message:motion(x, y)
 	print(string.format("motion x = %d, y = %d", x, y))
-	message.motion_event = {
-		x = x, 
-		y = y,
-	}
+
+	local point = {}; point.__index = point
+	function point.new(x, y) setmetatable({x = x, y = y}, point) end
+	function point:__add(o) return point.new(self.x + o.x, self.y + o.y) end
+	function point:__sub(o) return point.new(self.x - o.x, self.y - o.y) end
+
+
+	local last_xy = message.motion_xy
+	message.last_xy = last_xy
+
+	local xy = point.new(x, y)
+	message.xy = xy
+
+	message.cb.motion = function (msg_comp, vt, math3d)
+		assert(math3d)
+		local states = msg_comp.states
+		if states.buttons.LEFT and last_xy then
+			local delta = xy - last_xy
+			
+			--local camera_up = 
+		end
+	end
 end
 
 function message:keypress(c, p)
 	print(string.format("keypress, char = %d, press = %d", char, is_press))
-	message.keypress_event = {
-		char = c,
-		is_press = p,
-	}
+	message.cb.keypress = function()
+
+	end
 end
 
 --[@
@@ -65,20 +96,20 @@ camera_controller_system.depend "iup_message"
 
 function camera_controller_system:init()
 	self.message_component.msg_observers:add(message)
+	message.cb = {}
 end
 
 function camera_controller_system:update()
 	ru.for_each_comp(world, {"view_tranfrosm"},
 	function (entity)
 		local vt = entity.view_tranfrosm
-		if message.button_event ~= nil then
-		end
 		
-		if message.motion_event ~= nil then
+		for name, cb in message.cb do
+			cb(self.message_component, vt, self.math3d)
 		end
 		
 	end)
 
-	clear_message(message)
+	message.cb = {}
 end
 --@]
