@@ -356,7 +356,7 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 		break;
 	case 4:	{
 		const char* type = get_type_field(L, index);
-		if (strcmp(type, "quat") == 0)
+		if (type != NULL && strcmp(type, "quat") == 0)
 			lastack_pushquat(LS, v);
 		else
 			lastack_pushvec4(LS, v);				
