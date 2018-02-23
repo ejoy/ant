@@ -148,7 +148,7 @@ quaternion_init_from_euler(struct quaternion *q, float x, float y, float z) {
 #define TO_RADIAN(_DEGREE)	(_DEGREE) * (180 / M_PI)
 
 static inline struct quaternion *
-quaternion_init_from_axis_angle(struct quaternion *q, float axis[3], float angle){
+quaternion_init_from_axis_angle(struct quaternion *q, const float axis[3], float angle){
 
 	const float halfRadian = TO_RADIAN(angle) * 0.5f;
 	const float sinValue = sinf(halfRadian);
@@ -305,6 +305,22 @@ quaternion_inverted(struct quaternion * q) {
 		q->x = q->y = q->z = q->w = 0;
 	}
 	return q;
+}
+
+static inline void
+quaternion_rotate_vec4(struct quaternion *q, struct vector4 *v){
+	// to do, we need a more efficient version for this method
+	struct quaternion p;
+	quaternion_init(&p, 0, v->x, v->y, v->z);
+
+	struct quaternion inv_q = *q;
+	quaternion_inverse(&inv_q);
+
+	struct quaternion prefix;
+	quaternion_mul(&prefix, q, &p);
+	struct quaternion result;
+	quaternion_mul(&result, &prefix, &inv_q);
+	*q = result;
 }
 
 // matrix 4*4
