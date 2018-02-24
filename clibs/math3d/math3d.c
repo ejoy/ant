@@ -320,6 +320,30 @@ get_type_field(lua_State *L, int index) {
 	return type;
 }
 
+static inline void 
+push_quat_with_axis_angle(lua_State* L, struct lastack *LS, int index) {
+	// get axis
+	lua_getfield(L, index, "axis");
+	assert(lua_istable(L, -1));
+	
+	float axis[3];
+	for (int i = 0; i < 3; ++i) {
+		lua_geti(L, -1, i + 1);
+		axis[i] = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+	}
+	lua_pop(L, 1);
+	
+	// get angle
+	lua_getfield(L, index, "angle");
+	float angle = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	struct quaternion q;
+	quaternion_init_from_axis_angle(&q, axis, angle);
+	lastack_pushquat(LS, &q.x);
+}
+
 static void
 push_value(lua_State *L, struct lastack *LS, int index) {
 	size_t n = lua_rawlen(L, index);
@@ -336,6 +360,8 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 			push_mat(L, LS, index, MAT_PERSPECTIVE);
 		} else if (strcmp(type, "ortho") == 0) {
 			push_mat(L, LS, index, MAT_ORTHO);
+		} else if (strcmp(type, "quat") == 0) {
+			push_quat_with_axis_angle(L, LS, index);
 		} else {
 			luaL_error(L, "Invalid matrix type %s", type);
 		}

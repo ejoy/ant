@@ -30,6 +30,7 @@ local math3d = require "math3d"
 	{ type = "proj", fov = 60, aspect = 1024/768 , n = 0.1, f = 100 }	-- proj mat
 	{ type = "ortho", l = 0, r = 1, b = 1, t = 0, n = 0, f = 100, h = false } -- ortho mat
 	{ type = "quat", 0, 0, 0, 1}	-> quaternion, for x, y, z, w
+	{ type = "quat", axis = {0, 0, 0}, angle = 60} -> quaternion from axis and angle
 	* matrix mul ( ..., 1,2 - > ..., 1*2 )
 	* vector4 * matrix4x4 / vec4 * vec4 / quat * quat / quat * vec4
 	+ vector4 + vector4 ( ..., 1,2 - > ..., 1+2 )
@@ -65,6 +66,9 @@ print("unpack", stack(">VRVRVRVR"))	-- unpack top {1*2,2*2,3*2,1*2} -> 2,4,6,2
 
 
 --quaternion
+local quat_aa = stack({type = "quat", axis = {0, 1, 0}, angle = 60}, "V")	--
+print("quaternion with axis and angle : " .. quat_aa)
+
 local quat_mul = stack({type = "quat", 0, 1, 0, 1}, {type = "quat", 1, 0, 0, 0.5}, "*V")	-- define an indentity quaternion
 print("q * q : " .. quat_mul)
 
