@@ -1,10 +1,8 @@
-RGB_WRITE = true
-ALPHA_WRITE = true
+WRITE_MASK = "RGBAZ"
 ALPHA_REF = 0
 CULL = "CCW"
 MSAA = true
 
-DEPTH_WRITE = true
 DEPTH_TEST = "LESS"
 
 --PT = "TRISTRIP"
