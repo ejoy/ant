@@ -1,7 +1,5 @@
 dofile "libs/init.lua"
 
-require "scintilla"
-
 local bgfx = require "bgfx"
 local ecs = require "ecs"
 local inputmgr = require "inputmgr"

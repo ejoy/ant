@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\iup\iupmain.c">
+    <ClCompile Include="..\..\clibs\iup\luascintilla.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
