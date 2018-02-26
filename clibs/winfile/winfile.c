@@ -591,7 +591,7 @@ static int skipcomment (LoadF *lf, int *cp) {
 }
 
 static int
-wloadfilex (lua_State *L, const wchar_t *filename, const char *mode) {
+wloadfilex (lua_State *L, const wchar_t *filename, const char * debugname, const char *mode) {
 	LoadF lf;
 	int status, readstatus;
 	int c;
@@ -601,7 +601,7 @@ wloadfilex (lua_State *L, const wchar_t *filename, const char *mode) {
 		lf.f = stdin;
 	}
 	else {
-		lua_pushfstring(L, "@%s", filename);
+		lua_pushfstring(L, "@%s", debugname);
 		lf.f = _wfopen(filename, (const wchar_t *)"r\0\0");
 		if (lf.f ==	NULL) return errfile(L,	"open",	fnameindex);
 	}
@@ -653,9 +653,9 @@ lloadfile(lua_State *L) {
 		wchar_t path[V(sz+1)];
 		int winsz = windows_filename(L, fname, sz, path, sz);
 		path[winsz] = 0;
-		status = wloadfilex(L, path, mode);
+		status = wloadfilex(L, path, fname, mode);
 	} else {
-		status = wloadfilex(L, NULL, mode);
+		status = wloadfilex(L, NULL, NULL, mode);
 	}
 	return load_aux(L, status, env);
 }
@@ -674,10 +674,10 @@ static int ldofile (lua_State *L) {
 	if (fname) {
 		int winsz = windows_filename(L, fname, sz, path, sz);
 		path[winsz] = 0;
-		if (wloadfilex(L, path, NULL) != LUA_OK)
+		if (wloadfilex(L, path, fname, NULL) != LUA_OK)
 			return lua_error(L);
 	} else {
-		if (wloadfilex(L, NULL, NULL) != LUA_OK)
+		if (wloadfilex(L, NULL, NULL, NULL) != LUA_OK)
 			return lua_error(L);
 	}
 
