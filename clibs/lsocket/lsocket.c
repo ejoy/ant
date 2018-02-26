@@ -5,7 +5,7 @@
  * Gunnar Zötl <gz@tset.de>, 2013-2015
  * Released under the terms of the MIT license. See file LICENSE for details.
  */
-
+#define LUA_LIB
 #include <stdlib.h>
 #if _WINDOWS && _MSC_VER > 0
 #include <io.h>
@@ -1511,7 +1511,8 @@ static int lsocket_ignore(lua_State *L)
  * 
  * open and initialize this library
  */
-int luaopen_lsocket(lua_State *L)
+LUAMOD_API int 
+luaopen_lsocket(lua_State *L)
 {
 	init_socketlib(L);
 	luaL_newlib(L, lsocket);
