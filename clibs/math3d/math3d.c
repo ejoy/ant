@@ -324,19 +324,42 @@ static inline void
 push_quat_with_axis_angle(lua_State* L, struct lastack *LS, int index) {
 	// get axis
 	lua_getfield(L, index, "axis");
-	assert(lua_istable(L, -1));
-	
+
 	float axis[3];
-	for (int i = 0; i < 3; ++i) {
-		lua_geti(L, -1, i + 1);
-		axis[i] = lua_tonumber(L, -1);
-		lua_pop(L, 1);
+	int axis_type = lua_type(L, -1);
+	switch (axis_type){
+		case LUA_TTABLE:{
+			for (int i = 0; i < 3; ++i) {
+				lua_geti(L, -1, i + 1);
+				axis[i] = lua_tonumber(L, -1);
+				lua_pop(L, 1);
+			}
+			break;
+		}
+		case LUA_TNUMBER:{
+			int64_t stackid = get_id(L, -1);
+			int t;
+			const float *address = lastack_value(LS, stackid, &t);
+			memcpy(axis, address, sizeof(float) * 3);
+			lua_pop(L, 1);
+			break;
+		}
+		default:
+			luaL_error(L, "quaternion axis angle init, only support table and number, type is : %d", axis_type);
 	}
+
 	lua_pop(L, 1);
 	
 	// get angle
 	lua_getfield(L, index, "angle");
+	int angle_type = lua_type(L, -1);
+	if (angle_type != LUA_TTABLE){
+		luaL_error(L, "angle should define as angle = {xx}");
+	}	
+	lua_geti(L, -1, 1);
 	float angle = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
 	lua_pop(L, 1);
 
 	struct quaternion q;

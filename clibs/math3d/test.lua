@@ -66,7 +66,7 @@ print("unpack", stack(">VRVRVRVR"))	-- unpack top {1*2,2*2,3*2,1*2} -> 2,4,6,2
 
 
 --quaternion
-local quat_aa = stack({type = "quat", axis = {0, 1, 0}, angle = 60}, "V")	--
+local quat_aa = stack({type = "quat", axis = {0, 1, 0}, angle = {60}}, "V")	--
 print("quaternion with axis and angle : " .. quat_aa)
 
 local quat_mul = stack({type = "quat", 0, 1, 0, 1}, {type = "quat", 1, 0, 0, 0.5}, "*V")	-- define an indentity quaternion
@@ -74,6 +74,11 @@ print("q * q : " .. quat_mul)
 
 local quat_vec_mul = stack({1, 2, 3, 0}, {type = "quat", 0, 1, 0, 0.5}, "*V")
 print("q * v : " .. quat_vec_mul)
+
+local axisid = stack({1, 0, 0}, "P")
+print("axisid : ", id)
+local qq = stack({type = "quat", axis = axisid, angle = {60}}, "V")
+print("quaternion axis angle : ", qq)
 
 
 --lookat
