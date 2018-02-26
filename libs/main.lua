@@ -67,8 +67,8 @@ local function init()
 	}
 
 	task.loop(world.update,
-	function ()
-		local trace = db.traceback()
+	function (co)
+		local trace = db.traceback(co)
 		elog.print(trace)
 		elog.active_error()
 	end)
