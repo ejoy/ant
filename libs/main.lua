@@ -66,9 +66,11 @@ local function init()
 		args = { mq = input_queue },
 	}
 
-	task.loop(world.update,
-	function ()
-		local trace = db.traceback()
+	task.loop(my_update,
+	function (co, status)
+		local trace = db.traceback(co)
+		elog.print(status)
+		elog.print("\n")
 		elog.print(trace)
 		elog.active_error()
 	end)

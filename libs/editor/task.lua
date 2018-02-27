@@ -14,7 +14,7 @@ local function idlefunc()
 		if not succ then
 			local tb = tasktraceback[co]
 			if tb then
-				tb(co)
+				tb(co, status)
 			end
 			table.insert(exit_coroutines, index)
 		elseif status == "EXIT" then
