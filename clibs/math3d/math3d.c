@@ -760,7 +760,7 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		if (t1 == LINEAR_TYPE_VEC3) {
 			lastack_pushvec3(LS, r);
 		} else {
-			r[3] = 1.0f;
+			r[3] = 0.0f;
 			lastack_pushvec4(LS, r);
 		}
 		refstack_2_1(RS);
