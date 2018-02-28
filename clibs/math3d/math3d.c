@@ -634,11 +634,14 @@ top_tostring(lua_State *L, struct lastack *LS) {
 }
 
 static void
-lookat_matrix(lua_State *L, struct lastack *LS) {
+lookat_matrix(lua_State *L, struct lastack *LS, int direction) {
 	float *at = pop_vector34(L, LS, NULL);
 	float *eye = pop_vector34(L, LS, NULL);
 	union matrix44 m;
-	matrix44_lookat(&m, (struct vector3 *)eye, (struct vector3 *)at, NULL);
+	if (direction)
+		matrix44_lookat_eye_direction(&m, (struct vector3*)eye, (struct vector3 *)at, NULL);
+	else
+		matrix44_lookat(&m, (struct vector3 *)eye, (struct vector3 *)at, NULL);
 	lastack_pushmatrix(LS, m.x);
 }
 
@@ -791,9 +794,12 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		refstack_2_1(RS);
 		break;
 	case 'l':
-		lookat_matrix(L, LS);
+	case 'L': {
+		int direction = cmd == 'L' ? 1 : 0;
+		lookat_matrix(L, LS, direction);
 		refstack_2_1(RS);
 		break;
+	}
 	case '>':
 		unpack_top(L, LS);
 		refstack_pop(RS);

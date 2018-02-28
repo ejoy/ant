@@ -486,8 +486,9 @@ matrix44_ortho(union matrix44 *m, float l, float r, float b, float t, float n, f
 	return m;
 }
 
-static inline union matrix44 *
-matrix44_lookat(union matrix44 *m, struct vector3 *eye, struct vector3 *at, struct vector3 *up_) {
+// Left hand
+static inline union matrix44 * 
+matrix44_lookat_eye_direction(union matrix44 *m, struct vector3 *eye, struct vector3 *direction, struct vector3 *up_) {
 	struct vector3 view, right;
 	struct vector3 up;
 	if (up_) {
@@ -497,7 +498,8 @@ matrix44_lookat(union matrix44 *m, struct vector3 *eye, struct vector3 *at, stru
 		up.y = 1.0f;
 		up.z = 0;
 	}
-	vector3_normalize(vector3_vector(&view, at, eye));
+	view = *direction;
+	vector3_normalize(&view);
 	vector3_normalize(vector3_cross(&right, &up, &view));
 	vector3_cross(&up, &view, &right);
 
@@ -520,6 +522,12 @@ matrix44_lookat(union matrix44 *m, struct vector3 *eye, struct vector3 *at, stru
 	mx[14] = -vector3_dot(&view, eye);
 
 	return m;
+}
+
+static inline union matrix44 *
+matrix44_lookat(union matrix44 *m, struct vector3 *eye, struct vector3 *at, struct vector3 *up_) {
+	struct vector3 view;	
+	return matrix44_lookat_eye_direction(m, eye, vector3_vector(&view, at, eye), up_);
 }
 
 static inline union matrix44 *
