@@ -340,8 +340,7 @@ push_quat_with_axis_angle(lua_State* L, struct lastack *LS, int index) {
 			int64_t stackid = get_id(L, -1);
 			int t;
 			const float *address = lastack_value(LS, stackid, &t);
-			memcpy(axis, address, sizeof(float) * 3);
-			lua_pop(L, 1);
+			memcpy(axis, address, sizeof(float) * 3);			
 			break;
 		}
 		default:
@@ -598,7 +597,7 @@ mul_2values(lua_State *L, struct lastack *LS) {
 		struct vector4 result;
 		result.w = v->w;
 		quaternion_rotate_vec4(&result, q, v);
-		lastack_pushquat(LS, &(result.x));
+		lastack_pushvec4(LS, &(result.x));
 		break;
 	}
 
