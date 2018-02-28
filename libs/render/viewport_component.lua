@@ -7,6 +7,7 @@
 
 local ecs = ...
 local bgfx = require "bgfx"
+local asset_lib     = require "asset"
 
 -- the viewport can have multi instance in one scene
 local vp = ecs.component "viewport" { --may call viewport?
@@ -24,6 +25,8 @@ function vp:init()
     self.need_clear_color = true
     self.need_clear_depth = true
     self.need_clear_stencil = true
+
+    self.camera_info = asset_lib["assets/config/default.camera"]
 end
 
 local viewport_sys = ecs.system "viewport_system"

@@ -9,6 +9,7 @@ local bgfx          = require "bgfx"
 
 local add_entity_sys = ecs.system "add_entities_system"
 add_entity_sys.singleton "math_stack"
+add_entity_sys.singleton "viewport"
 
 function add_entity_sys:init()
     do
@@ -49,13 +50,15 @@ function add_entity_sys:init()
         local camera_eid = world:new_entity("view_transform", "frustum")
         local camera = world[camera_eid]
         local vt = camera.view_transform
-        
-        self.math_stack(vt.eye,         {0, 0, -5, 1}, "=")
-        self.math_stack(vt.direction,   {0, 0, 1, 0},   "=")
+        local vp = self.viewport
 
+        local ci = vp.camera_info
+    
+        self.math_stack(vt.eye,         assert(ci.default.eye),         "=")
+        self.math_stack(vt.direction,   assert(ci.default.direction),   "=")
 
         self.math_stack(camera.frustum.proj_mat, 
-                    {type = "proj", fov = 90, aspect = 1024/768, n = 0.1, f = 10000}, "=")
+                    {type = "proj", fov = ci.fov, aspect = vp.width/vp.height, n = ci.near, f = ci.far}, "=")
 
     end
 end

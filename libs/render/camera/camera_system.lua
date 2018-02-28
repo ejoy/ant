@@ -19,7 +19,8 @@ function camera_system:update()
 		local vp = self.viewport
 		local ci = vp.camera_info
 		local frustum = assert(entity.frustum)
-		frustum.proj_mat = self.math_stack({type = "proj", fov = ci.fov, aspect = vp.width/vp.height, n = ci.near, f = ci.far})
+		self.math_stack(frustum.proj_mat, 
+				{type = "proj", fov = ci.fov, aspect = vp.width/vp.height, n = ci.near, f = ci.far}, "=")
 		local proj_mat = frustum.proj_mat
 		bgfx.set_view_transform(0, view_mat, ~proj_mat)
 	end)

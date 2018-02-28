@@ -5,6 +5,7 @@ local support_list = {
 	"mesh",
 	"state",
 	"uniform",
+	"camera",
 }
 
 local loader = setmetatable({} , {
