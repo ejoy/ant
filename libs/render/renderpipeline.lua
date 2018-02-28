@@ -10,7 +10,7 @@ local world_mat_comp = ecs.component "worldmat_comp" {
 
 --[@
 local auto_rotate_worldmat_sys = ecs.system "rotate_worldmat_system"
-auto_rotate_worldmat_sys.singleton "math3d"
+auto_rotate_worldmat_sys.singleton "math_stack"
 
 local time = 0
 function auto_rotate_worldmat_sys:update()
@@ -19,7 +19,7 @@ function auto_rotate_worldmat_sys:update()
 
     render_uril.for_each_comp(world, {"worldmat_comp"},
     function (entity)
-        --entity.world_mat_comp.mat = entity.math3d(entity.world_mat_comp, {time}, "*M") 
+        --entity.world_mat_comp.mat = entity.math_stack(entity.world_mat_comp, {time}, "*M") 
     end)
 end
 --@]

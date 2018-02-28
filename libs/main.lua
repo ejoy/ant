@@ -61,6 +61,7 @@ local function init()
 			assert(loadfile "libs/render/viewport_component.lua"),
 			assert(loadfile "libs/render/camera/camera_component.lua"),
 			assert(loadfile "libs/render/camera/camera_system.lua"),
+			assert(loadfile "libs/render/camera/camera_controller.lua"),
 			assert(loadfile "libs/render/renderpipeline.lua"),
 		},
 		args = { mq = input_queue },

@@ -1,6 +1,7 @@
 local ecs = ...
 local ru = require "render.render_util"
-
+local world = ecs.world
+local math3d = require "math3d"
 
 local function move_along_direction(transform, step, speed)
 	speed = speed or 1
@@ -46,7 +47,9 @@ end
 
 local message = {}
 
-function message:button(b, p, x, y)
+function message:button(b, p, x, y, s)
+	print("btn : ", b, ", pressed : ", p, ", x : ", x, ", y : ", y, ", status : ", s)
+
 	message.cb.button = function (msg_comp, camera)
 		if b == "LEFT" then
 			
@@ -54,42 +57,106 @@ function message:button(b, p, x, y)
 	end
 end
 
-function message:motion(x, y)
-	print(string.format("motion x = %d, y = %d", x, y))
+function message:motion(x, y, status)
+	--print(string.format("motion x = %d, y = %d", x, y))
 
 	local point = {}; point.__index = point
-	function point.new(x, y) setmetatable({x = x, y = y}, point) end
+	function point.new(x, y) return setmetatable({x = x, y = y}, point) end
 	function point:__add(o) return point.new(self.x + o.x, self.y + o.y) end
 	function point:__sub(o) return point.new(self.x - o.x, self.y - o.y) end
 
 
-	local last_xy = message.motion_xy
+	local last_xy = message.xy
 	message.last_xy = last_xy
 
 	local xy = point.new(x, y)
 	message.xy = xy
 
-	message.cb.motion = function (msg_comp, vt, math3d)
-		assert(math3d)
-		local states = msg_comp.states
-		if states.buttons.LEFT and last_xy then
-			local delta = xy - last_xy
+	-- message.cb.motion = function (msg_comp, vt, math_stack)
+	-- 	assert(math_stack)
+	-- 	local states = msg_comp.states
+
+	-- 	if states.buttons.LEFT and last_xy then
+	-- 		local delta = xy - last_xy
+
+	-- 		local zdir = vt.direction
+		
+	-- 		local xdir_id = math_stack(zdir, {0, 1, 0, 0}, "xP")
+	-- 		assert(xdir_id ~= nil and xdir_id ~= 0)
+	-- 		print("xdir : ", math_stack(xdir_id, "V"))
+
+	-- 		local ydir_id = math_stack(xdir_id, zdir, "xP")
+	-- 		assert(ydir_id ~= nil and ydir_id ~= 0)
+	-- 		print("ydir : ", math_stack(ydir_id, "V"))
+
+	-- 		--we need to define how many pixel in screen relate to angle
+	-- 		local h_angle = delta.x				
+	-- 		math_stack(zdir, zdir, {type = "quat", axis = ydir_id, angle = {h_angle}}, "*=")
+	-- 		print("after horizontal rotate zdir : ", zdir)
+
+	-- 		local v_angle = delta.y
+	-- 		math_stack(zdir, zdir, {type = "quat", axis = xdir_id, angle = {v_angle}}, "*=")
+	-- 		print("after vertical rotate zdir : ", zdir)
 			
-			--local camera_up = 
-		end
-	end
+	-- 	end
+	-- end
 end
 
 function message:keypress(c, p)
-	print(string.format("keypress, char = %d, press = %d", char, is_press))
-	message.cb.keypress = function()
+	if c == nil then return end
 
+	message.cb.keypress = function(msg_comp, vt, math_stack)
+		if p then
+			local function rotate_vec(v, axis, angle)
+				math_stack(v, v, {type = "quat", axis = axis, angle = {angle}}, "*=")
+			end
+
+			local function generate_basic_axis(zdir, up)
+				up = up or {0, 1, 0, 0}
+
+				local xdir = math_stack(zdir, up, "xP")
+				local ydir = math_stack(xdir, zdir, "xP")
+
+				return xdir, ydir
+			end
+
+			local move_step = 1
+			local zdir = vt.direction
+			local eye = vt.eye
+
+			-- if c == "q" or c == "Q" then				
+			-- 	local xdir, ydir = generate_basic_axis(zdir)
+			-- 	rotate_vec(zdir, ydir, 60)
+
+			-- 	print("ydir : ", math_stack(ydir, "V"), ", zdir : ", zdir)
+			-- elseif c == "e" or c == "E" then
+			-- 	local xdir, ydir = generate_basic_axis(zdir)
+			-- 	rotate_vec(zdir, xdir, -30)
+			-- 	print("ydir : ", math_stack(ydir, "V"), ", zdir : ", zdir)
+			-- else
+			
+			if c == "a" or c == "A" then
+				local xdir = generate_basic_axis(zdir)
+				math_stack(eye, eye, xdir, {move_step}, "*+=")				
+			elseif c == "d" or c == "D" then
+				local xdir = generate_basic_axis(zdir)		
+				math_stack(eye, eye, xdir, {-move_step}, "*+=")								
+			elseif c == "w" or c == "W" then
+				local _, ydir = generate_basic_axis(zdir)
+				math_stack(eye, eye, ydir, {move_step}, "*+=")
+			elseif c == "s" or c == "S" then
+				local _, ydir = generate_basic_axis(zdir)
+				math_stack(eye, eye, ydir, {-move_step}, "*+=")
+			end
+
+			print(eye)
+		end
 	end
 end
 
 --[@
 local camera_controller_system = ecs.system "camera_controller"
-camera_controller_system.singleton "math3d"
+camera_controller_system.singleton "math_stack"
 camera_controller_system.singleton "message_component"
 
 camera_controller_system.depend "iup_message"
@@ -100,12 +167,11 @@ function camera_controller_system:init()
 end
 
 function camera_controller_system:update()
-	ru.for_each_comp(world, {"view_tranfrosm"},
+	ru.for_each_comp(world, {"view_transform", "frustum"},
 	function (entity)
-		local vt = entity.view_tranfrosm
-		
-		for name, cb in message.cb do
-			cb(self.message_component, vt, self.math3d)
+		local vt = entity.view_transform		
+		for name, cb in pairs(message.cb) do
+			cb(self.message_component, vt, self.math_stack)
 		end
 		
 	end)

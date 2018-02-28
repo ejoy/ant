@@ -8,7 +8,7 @@ local asset_lib     = require "asset"
 local bgfx          = require "bgfx"
 
 local add_entity_sys = ecs.system "add_entities_system"
-add_entity_sys.singleton "math3d"
+add_entity_sys.singleton "math_stack"
 
 function add_entity_sys:init()
     do
@@ -50,10 +50,11 @@ function add_entity_sys:init()
         local camera = world[camera_eid]
         local vt = camera.view_transform
         
-        self.math3d(vt.eye,         {0, 0, -10, 1}, "=")
-        self.math3d(vt.direction,   {0, 0, 1, 0},   "=")
+        self.math_stack(vt.eye,         {0, 0, -5, 1}, "=")
+        self.math_stack(vt.direction,   {0, 0, 1, 0},   "=")
 
-        self.math3d(camera.frustum.proj_mat, 
+
+        self.math_stack(camera.frustum.proj_mat, 
                     {type = "proj", fov = 90, aspect = 1024/768, n = 0.1, f = 10000}, "=")
 
     end

@@ -9,12 +9,12 @@ local msg_comp = ecs.component "message_component"{}
 function msg_comp:init()
 	local message_observers = {}
 	message_observers.__index = message_observers
-	function message_observers:add(observer)
-		table.insert(self, observer)
+	function message_observers:add(ob)
+		table.insert(self, ob)
 	end
-	function message_observers:remove(observer)
+	function message_observers:remove(ob)
 		for i, v in ipairs(self) do
-			if v == observer then
+			if v == ob then
 				table.remove(i)
 				return
 			end
@@ -23,8 +23,13 @@ function msg_comp:init()
 
 	self.msg_observers = setmetatable({}, message_observers)
 	self.states = {
+		buttons = {},
+		keys = {},
 		button = function (self, b, p, x, y) self.buttons[b] = p end,
-		keypress = function(self, c, p) self.keys[c] = p end,
+		keypress = function(self, c, p) 
+			if c == nil then return end
+			self.keys[c] = p 
+		end,
 	}
 end
 --@]
@@ -53,19 +58,19 @@ function iup_message:init()
 end
 
 function iup_message:update()
-	for idx, msg, v1,v2,v3,v4 in pairs(world.args.mq) do
-		print("iup_message receive message : " .. msg)
+	for _, msg, v1,v2,v3,v4,v5 in pairs(world.args.mq) do
+		--print("iup_message receive message : " .. msg)
 		local states = self.message_component.states
-		local cb = states[msg]
+		local cb = states[msg]		
 		if cb then
-			cb(states, v1, v2, v3, v4)
+			cb(states,v1,v2,v3,v4,v5)
 		end
 
 		local observers = self.message_component.msg_observers
-		for idx, observer in ipairs(observers) do
-			local action = observer[msg]
+		for _, ob in ipairs(observers) do
+			local action = ob[msg]
 			if action then
-				action(self,v1,v2,v3,v4)
+				action(self,v1,v2,v3,v4,v5)
 			end
 		end
 
