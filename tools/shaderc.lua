@@ -245,10 +245,11 @@ local function filebuilder()
 	function compile.action()
 		local fn = filename.title
 		if fn then
+			local dest = fn:gsub("(%w+).sc", "%1") .. ".bin"			
 			local tbl = {
 				shaderc = path.shaderc,
 				src = fn,
-				dest = fn .. ".bin",
+				dest = dest,
 				inc = "",
 				stype = nil,
 				smodel = nil
