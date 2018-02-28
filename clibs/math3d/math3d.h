@@ -145,7 +145,7 @@ quaternion_init_from_euler(struct quaternion *q, float x, float y, float z) {
 	return q;
 }
 
-#define TO_RADIAN(_DEGREE)	(_DEGREE) * (180 / M_PI)
+#define TO_RADIAN(_DEGREE)	(_DEGREE) * (M_PI / 180)
 
 static inline struct quaternion *
 quaternion_init_from_axis_angle(struct quaternion *q, const float axis[3], float angle){
