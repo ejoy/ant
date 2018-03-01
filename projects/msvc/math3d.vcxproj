@@ -178,6 +178,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\clibs\math3d\linalg.h" />
     <ClInclude Include="..\..\clibs\math3d\math3d.h" />
+    <ClInclude Include="..\..\clibs\math3d\refstack.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

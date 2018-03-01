@@ -29,5 +29,8 @@
     <ClInclude Include="..\..\clibs\math3d\linalg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\clibs\math3d\refstack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

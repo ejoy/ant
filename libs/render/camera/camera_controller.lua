@@ -22,54 +22,55 @@ local function move_position(ms, p, dir, speed)
 	ms(p, p, dir, {speed}, "*+=")
 end
 
-function message:motion(x, y, status)
+local point = {}; point.__index = point
+function point.new(x, y) return setmetatable({x = x, y = y}, point) end
+function point:__add(o) return point.new(self.x + o.x, self.y + o.y) end
+function point:__sub(o) return point.new(self.x - o.x, self.y - o.y) end
+function point:__mul(s) return point.new(self.x*s, self.y*s) end
+
+function message:button(btn, p, x, y)
+	message.xy = point.new(x, y)
+
+end
+
+function message:motion(x, y)
 	--print(string.format("motion x = %d, y = %d", x, y))
 
-	local point = {}; point.__index = point
-	function point.new(x, y) return setmetatable({x = x, y = y}, point) end
-	function point:__add(o) return point.new(self.x + o.x, self.y + o.y) end
-	function point:__sub(o) return point.new(self.x - o.x, self.y - o.y) end
-	function point:__mul(s) return point.new(self.x*s, self.y*s) end
-
-
-	local last_xy = message.xy
-	message.last_xy = last_xy
-
+	local last_xy = message.xy	
 	local xy = point.new(x, y)
 	message.xy = xy
 
 	message.cb.motion = function (msg_comp, vt, math_stack, vp)
 		local states = msg_comp.states
 		local bs = states.buttons
-		local ci = assert(vp.camera_info)
 
 		if (bs.LEFT or bs.RIGHT) and last_xy then
 			local delta = (xy - last_xy)
 			local zdir = vt.direction
-			-- local xdir, ydir = generate_basic_axis(math_stack, zdir)
-			-- print("xdir = %s, ydir = %s", 
-			-- 		math_stack(xdir, "V"),
-			-- 		math_stack(ydir, "V"))
 
-			local xmove_speed = delta.x > 0 and -ci.move_speed or ci.move_speed
-			local ymove_speed = delta.y > 0 and -ci.move_speed or ci.move_speed
+			if message.yaw == nil then
+				message.yaw = 90
+				message.pitch = 0
+			end
 
-			local ydir = {0, 1, 0, 0}
-			local xdir = {1, 0, 0, 0}
+			local speed = 0.1
+			message.yaw = message.yaw + (delta.x * speed)
+			message.pitch = message.pitch + (delta.y * speed)
 
-			math_stack(zdir, zdir, {type = "quat", axis = ydir, angle = {xmove_speed}}, "*=")
-			math_stack(zdir, zdir, {type = "quat", axis = xdir, angle = {ymove_speed}}, "*=")
+			if message.pitch > 89.9 then
+				message.pitch = 89.9
+			end
 
-			--rotate_vec(math_stack, zdir, ydir, xmove_speed)
+			if message.pitch < -89.9 then
+				message.pitch = -89.9
+			end
 
-			-- if bs.LEFT then
-			-- 	move_position(math_stack, eye, zdir, ymove_speed)
-			-- end
+			-- print("yaw : ", message.yaw)
+			-- print("pitch : ", message.pitch)
 
-			-- if bs.RIGHT then
-			-- 	rotate_vec(math_stack, zdir, xdir, ymove_speed)
-			-- end
-			
+			-- print("before : ", zdir)
+			math_stack(zdir, {0, message.pitch, message.yaw}, "e=")
+			-- print("after : ", zdir)
 		end
 	end
 end
@@ -90,8 +91,6 @@ function message:keypress(c, p)
 
 				print("eye : ", vt.eye)
 				print("zdir : ", vt.direction)
-				print("default eye = ", table.concat(ci.default.eye, ","), 
-					", default direction = ", table.concat(ci.default.direction, ","))
 			end
 
 			local states = assert(msg_comp.states)
@@ -100,14 +99,14 @@ function message:keypress(c, p)
 				local xdir, ydir = generate_basic_axis(math_stack, zdir)
 
 				if c == "a" or c == "A" then					
-					move_position(eye, xdir, move_step)
+					move_position(math_stack, eye, xdir, move_step)
 				elseif c == "d" or c == "D" then					
-					move_position(eye, xdir, -move_step)
+					move_position(math_stack, eye, xdir, -move_step)
 				elseif c == "w" or c == "W" then					
-					move_position(eye, zdir, move_step)
+					move_position(math_stack, eye, zdir, move_step)
 				elseif c == "s" or c == "S" then					
-					move_position(eye, zdir, -move_step)
-				end
+					move_position(math_stack, eye, zdir, -move_step)
+				end			
 			end
 
 			local ydir = {0, 1, 0, 0}
