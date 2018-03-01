@@ -442,12 +442,8 @@ matrix44_rotmat(union matrix44 *m, float x, float y, float z) {
 
 static inline union matrix44 *
 matrix44_rot_axis(union matrix44 *m, const struct vector3 *axis, float angle) {
-	float t = sinf( angle * 0.5f);
-	float x = axis->x * t;
-	float y = axis->y * t;
-	float z = axis->z * t;
-	struct quaternion q = {	x,y,z, cosf( angle * 0.5f ) };
-
+	struct quaternion q;
+	quaternion_init_from_axis_angle(&q, &axis->x, TO_RADIAN(angle));
 	return matrix44_from_quaternion(m, &q);
 }
 
