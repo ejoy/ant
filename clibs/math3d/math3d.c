@@ -740,6 +740,46 @@ construct_dir_from_euler(lua_State *L, struct lastack *LS) {
 	lastack_pushvec4(LS, vector4_array(&v));
 }
 
+static inline void
+push_data_to_lua(struct lastack *LS, struct ref_stack *RS) {
+	struct lua_State *L = RS->L;
+
+	int64_t v = pop(L, LS);
+	int type;
+	float * val = lastack_value(LS, v, &type);
+	lua_newtable(L);
+
+#define TO_LUA_STACK(_VV, _LUA_STACK_IDX) lua_pushnumber(L, _VV);	lua_seti(L, -2, _LUA_STACK_IDX)
+	switch (type)
+	{
+	case LINEAR_TYPE_MAT:
+		for (int i = 0; i < 16; ++i) {
+			TO_LUA_STACK(val[i], i + 1);
+		}
+		break;
+	case LINEAR_TYPE_QUAT:
+	case LINEAR_TYPE_VEC4:
+		TO_LUA_STACK(val[3], 3 + 1);
+	case LINEAR_TYPE_VEC3:
+		for (int i = 0; i < 3; ++i) {
+			TO_LUA_STACK(val[i], i + 1);
+		}
+		break;
+	case LINEAR_TYPE_NUM:
+		TO_LUA_STACK(val[0], 0 + 1);
+		break;
+	default:
+		break;
+	}
+#undef TO_LUA_STACK
+
+	// push type to table
+	lua_pushstring(L, "type");
+	lua_pushnumber(L, type);
+	lua_settable(L, -3);
+	refstack_pop(RS);
+}
+
 /*
 	P : pop and return id
 	v : pop and return vector4 pointer
@@ -766,20 +806,9 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 	case 'm':
 		lua_pushlightuserdata(L, pop_matrix(L, LS));
 		return 1;
-	case 'T': {
-		assert(0 && "after using type system, this function is not working");
-		int64_t v = pop(L, LS);
-		int sz;
-		float * val = lastack_value(LS, v, &sz);
-		lua_createtable(L, sz, 0);
-		int i;
-		for (i=0;i<sz;i++) {
-			lua_pushnumber(L, val[i]);
-			lua_seti(L, -2, i+1);
-		}
-		refstack_pop(RS);
+	case 'T': 	
+		push_data_to_lua(LS, RS);
 		return 1;
-	}
 	case 'V':
 		top_tostring(L, LS);
 		return 1;

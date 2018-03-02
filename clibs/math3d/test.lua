@@ -10,6 +10,7 @@ local math3d = require "math3d"
 	m : pop and return matrix pointer ( ... , 1 -> ... )
 	f : pop and return the first float of a vector4 ( ... , 1 -> ... )
 	V : top to string for debug ( ... -> ... )
+	T : pop stack elem to lua
 	1-9 : dup stack index (..., 1 -> ..., 1,1)
 		1 : (..., 1 -> ..., 1,1)
 		2 : (..., 2, 1 -> ..., 2, 1, 2)
@@ -67,6 +68,15 @@ local vv = stack({1, 2, 3, 1}, {2}, "*V")
 print("vec4 mul : " .. vv)
 print("unpack", stack(">VRVRVRVR"))	-- unpack top {1*2,2*2,3*2,1*2} -> 2,4,6,2
 
+-- pop to lua
+stack({1, 2, 3, 1})
+local data = stack("T")
+assert(type(data) == "table")
+assert(data.type ~= nil)
+print("data.type : ", data.type)
+for k,v in ipairs(data) do
+	print("k : ", k, ", v : ", v)
+end
 
 --quaternion
 local quat_aa = stack({type = "quat", axis = {0, 1, 0}, angle = {60}}, "V")	--
@@ -79,7 +89,7 @@ local quat_vec_mul = stack({1, 2, 3, 0}, {type = "quat", 0, 1, 0, 0.5}, "*V")
 print("q * v : " .. quat_vec_mul)
 
 local axisid = stack({1, 0, 0}, "P")
-print("axisid : ", id)
+print("axisid : ", axisid)
 local qq = stack({type = "quat", axis = axisid, angle = {60}}, "V")
 print("quaternion axis angle : ", qq)
 
