@@ -99,21 +99,26 @@ struct blob {
 	struct oldpage *old;
 };
 
+static inline void
+init_blod_slots(struct blob * B, int slot_beg, int slot_end) {	
+	for (int i = slot_beg; i < slot_end; ++i) {
+		B->s[i].tag = TAG_FREE;
+		B->s[i].id = i + 2;
+	}
+	
+	B->s[slot_end - 1].id = 0;
+	B->freeslot = slot_beg + 1;
+}
+
 static struct blob *
 blob_new(int size, int cap) {
 	struct blob * B = malloc(sizeof(*B));
 	B->size = size;
 	B->cap = cap;
-	B->freeslot = 1;	// base 1
 	B->freelist = 0;	// empty list
 	B->buffer = malloc(size * cap);
 	B->s = malloc(cap * sizeof(*B->s));
-	int i;
-	for (i=0;i<cap;i++) {
-		B->s[i].tag = TAG_FREE;
-		B->s[i].id = i+2;
-	}
-	B->s[cap-1].id = 0;
+	init_blod_slots(B, 0, cap);
 	B->old = NULL;
 	return B;
 }
@@ -134,21 +139,24 @@ free_oldpage(struct oldpage *p) {
 static int
 blob_alloc(struct blob *B, int version) {
 	if (SLOT_EMPTY(B->freeslot)) {
-		int cap = B->cap;
 		struct oldpage * p = malloc(sizeof(*p));
-		B->cap *= 2;
 		p->next = B->old;
 		p->page = B->buffer;
+
+		int cap = B->cap;	
+		B->cap *= 2;
 		B->buffer = malloc(B->size * B->cap);
 		memcpy(B->buffer, p->page, B->size * cap);
 		B->s = realloc(B->s, B->cap * sizeof(*B->s));
-		int i;
-		for (i=0;i<cap;i++) {
-			B->s[cap+i].tag = TAG_FREE;
-			B->s[cap+i].id = cap+i+2;
-		}
-		B->s[cap*2-1].id = 0;
-		B->freeslot = cap + 1;
+		//int i;
+		//for (i=0;i<cap;i++) {
+		//	B->s[cap+i].tag = TAG_FREE;
+		//	B->s[cap+i].id = cap+i+2;
+		//}
+		//B->s[cap*2-1].id = 0;
+		//B->freeslot = cap + 1;
+
+		init_blod_slots(B, cap, B->cap);
 	}
 	int ret = SLOT_INDEX(B->freeslot);
 	struct slot *s = &B->s[ret];
