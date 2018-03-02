@@ -145,7 +145,7 @@ blob_alloc(struct blob *B, int version) {
 		int i;
 		for (i=0;i<cap;i++) {
 			B->s[cap+i].tag = TAG_FREE;
-			B->s[cap+i].id = cap+2;
+			B->s[cap+i].id = cap+i+2;
 		}
 		B->s[cap*2-1].id = 0;
 		B->freeslot = cap + 1;

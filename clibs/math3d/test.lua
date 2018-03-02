@@ -48,20 +48,6 @@ local mat = math3d.ref "matrix"	-- matrix ref
 
 local stack = math3d.new()
 
---[[	will cause eye and dir point to same memory
--- local eye =math3d.ref "vector"
--- local dir = math3d.ref "vector"
-
--- for i=0, 80 do
--- 	stack(eye, {0, 0, -5, 1}, "=")
--- 	stack(dir, {0, 0, 1, 0}, "=")	
--- 	print("time : ", i)
--- 	print("eye : ", eye, ~eye)
--- 	print("dir : ", dir, ~dir)
--- end
-]]
-
-
 local v = stack( { type = "proj", fov = 60, aspect = 1024/768 } , "VR")	-- make a proj mat
 print(v)
 local v1,m1 = stack( { s = 2 } , "VP" )	-- push scale 2x matrix
