@@ -7,6 +7,14 @@
 #include <float.h>
 #include <stddef.h>
 
+/*	all this math lib we use is Left Hand coordinate
+	where:
+		z-axis is pointer to screen
+		x-axis is pointer to right
+		y-axis is pointer to up
+
+*/
+
 struct vector3 {
 	float x,y,z;
 };
@@ -89,30 +97,26 @@ vector3_normalize(struct vector3 *v) {
 	return v;
 }
 
-static inline struct vector3 *
-vector3_to_rotation(struct vector3 *v, const struct vector3 *r) {
-	// Assumes that the unrotated view vector is (0, 0, -1)
-	v->x = v->y = v->z = 0;
+static inline struct euler *
+vector3_to_rotation(struct euler *e, const struct vector3 *r) {
+	// Assumes that the unrotated view vector is (0, 0, 1)
 	if (r->y != 0) {
-		v->x = atan2f( r->y, sqrtf( r->x*r->x + r->z*r->z ) );
+		e->pitch = atan2f( r->y, sqrtf( r->x*r->x + r->z*r->z ) );
 	}
 	if (r->x != 0 || r->z != 0) {
-		v->y = atan2f( -r->x, -r->z );
+		e->yaw = atan2f( r->x, r->z );
 	}
 
-	return v;
+	e->roll = 0;
+
+	return e;
 }
 
 static inline struct vector3 *
 vector3_lerp(struct vector3 *v, const struct vector3 *a, const struct vector3 *b, float f) {
-	float x = a->x + (b->x - a->x) * f;
-	float y = a->y + (b->y - a->y) * f;
-	float z = a->z + (b->z - a->z) * f;
-
-	v->x = x;
-	v->y = y;
-	v->z = z;
-
+	v->x = a->x + (b->x - a->x) * f;
+	v->y = a->y + (b->y - a->y) * f;
+	v->z = a->z + (b->z - a->z) * f;
 	return v;
 }
 
@@ -130,28 +134,39 @@ quaternion_mul(struct quaternion *q, const struct quaternion *a, const struct qu
 	const float bz = b->z;
 	const float bw = b->w;
 
+	q->w = aw * bw - ax * bx - ay * by - az * bz;
 	q->x = aw * bx + ax * bw + ay * bz - az * by;
 	q->y = aw * by - ax * bz + ay * bw + az * bx;
 	q->z = aw * bz + ax * by - ay * bx + az * bw;
-	q->w = aw * bw - ax * bx - ay * by - az * bz;
-
-	return q;
-}
-
-static inline struct quaternion *
-quaternion_init_from_euler(struct quaternion *q, const struct euler *e) {
-	struct quaternion roll = { sinf( e->roll * 0.5f ), 0, 0, cosf( e->roll * 0.5f ) };
-	struct quaternion pitch = { 0, sinf( e->pitch * 0.5f ), 0, cosf( e->pitch * 0.5f ) };
-	struct quaternion yaw = { 0, 0, sinf( e->yaw * 0.5f ), cosf( e->yaw * 0.5f ) };
-
-	// Order: y * x * z
-	quaternion_mul(q, &pitch, &roll);
-	quaternion_mul(q, q, &yaw);
 
 	return q;
 }
 
 #define TO_RADIAN(_DEGREE)	(_DEGREE) * (M_PI / 180)
+
+static inline struct quaternion *
+quaternion_init_from_euler(struct quaternion *q, const struct euler *e) {
+	//struct quaternion roll = { sinf( e->roll * 0.5f ), 0, 0, cosf( e->roll * 0.5f ) };
+	//struct quaternion pitch = { 0, sinf( e->pitch * 0.5f ), 0, cosf( e->pitch * 0.5f ) };
+	//struct quaternion yaw = { 0, 0, sinf( e->yaw * 0.5f ), cosf( e->yaw * 0.5f ) };
+
+	//quaternion_mul(q, &pitch, &roll);
+	//quaternion_mul(q, q, &yaw);
+
+	const float yaw = TO_RADIAN(e->yaw * 0.5f);
+	const float pitch = TO_RADIAN(e->pitch * 0.5f);
+	const float roll = TO_RADIAN(e->roll * 0.5f);
+	const float sy = sinf(yaw), cy = cosf(yaw);
+	const float sp = sinf(pitch), cp = cosf(pitch);
+	const float sr = sinf(roll), cr = cosf(roll);
+	
+	q->w = cy * cp * cr - sy * sp * sr;
+	q->x = sy * sp * cr + cy * cp * sr;
+	q->y = sy * cp * cr + cy * sp * sr;
+	q->z = cy * sp * cr - sy * cp * sr;
+
+	return q;
+}
 
 static inline struct quaternion *
 quaternion_init_from_axis_angle(struct quaternion *q, const float axis[3], float angle){
@@ -323,15 +338,21 @@ quaternion_rotate_vec4(struct vector4 *r, const struct quaternion *q, const stru
 	quaternion_inverse(&inv_q);
 
 	struct quaternion prefix;
-	quaternion_mul(&prefix, q, &p);
+	quaternion_mul(&prefix, &inv_q, &p);
 	struct quaternion result;
-	quaternion_mul(&result, &prefix, &inv_q);	// result is pure quaternion
+	quaternion_mul(&result, &prefix, q);	// result is pure quaternion
 
 	assert(is_zero(result.w));
 
 	r->x = result.x;
 	r->y = result.y;
 	r->z = result.z;
+}
+static inline void
+vec4_rotate_quaternion(struct vector4 *r, const struct vector4 *v, const struct quaternion *q) {
+	struct quaternion p = *q;
+	quaternion_inverse(&p);
+	quaternion_rotate_vec4(r, &p, v);
 }
 
 // matrix 4*4
@@ -973,30 +994,30 @@ static inline void
 euler_to_matrix(const struct euler *e, union matrix44 *mat) {
 	const float cp = cosf(e->pitch);
 	const float sp = sinf(e->pitch);
-	union matrix44 mx = {
+	union matrix44 mx = { .x = {
 		1, 0, 0, 0,
 		0, cp, sp, 0,
 		0, -sp, cp, 0,
 		0, 0, 0, 1,
-	};
+	}};
 
 	const float cy = cosf(e->yaw);
 	const float sy = sinf(e->yaw);
-	union matrix44 my = {
+	union matrix44 my = { .x = {
 		cy, 0, -sy, 0,
 		0, 1, 0, 0,
 		sy, 0, cy, 0,
 		0, 0, 0, 1,
-	};
+	} };
 
 	const float cr = cosf(e->roll);
 	const float sr = sinf(e->roll);
-	union matrix44 mz = {
+	union matrix44 mz = { .x = {
 		cr, sr, 0, 0,
 		-sr, cr, 0, 0,
 		0, 0, 1, 0,
 		0, 0, 0, 1,
-	};
+	} };
 
 	// we have a more efficient way to do this
 	matrix44_mul(mat, &mx, &my);

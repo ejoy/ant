@@ -641,16 +641,23 @@ mul_2values(lua_State *L, struct lastack *LS) {
 		lastack_pushquat(LS, &(result.x));
 		break;
 	}
-	case BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_VEC4): 
-	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_QUAT): {
-		const int typeQuatVec = BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_VEC4);
-
-		const struct quaternion * q = ((const struct quaternion *)(type == typeQuatVec ? val0 : val1));
-		const struct vector4 * v = ((const struct vector4 *) (type == typeQuatVec ? val1 : val0));
+	case BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_VEC4): {
+		const struct quaternion * q = (const struct quaternion *)val0;
+		const struct vector4 * v = (const struct vector4*)val1;
 
 		struct vector4 result;
 		result.w = v->w;
 		quaternion_rotate_vec4(&result, q, v);
+		lastack_pushvec4(LS, &(result.x));
+		break;
+	}
+	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_QUAT): {	
+		const struct quaternion * q = (const struct quaternion *)val1;
+		const struct vector4 * v = (const struct vector4 *)val0;
+		
+		struct vector4 result;
+		result.w = v->w;
+		vec4_rotate_quaternion(&result, v, q);
 		lastack_pushvec4(LS, &(result.x));
 		break;
 	}
@@ -717,6 +724,21 @@ unpack_top(lua_State *L, struct lastack *LS) {
 		lastack_pushvec4(LS, r+8);
 		lastack_pushvec4(LS, r+12);
 		break;
+	case LINEAR_TYPE_QUAT: {
+		float s = asinf(r[3]);
+		if (is_zero(s))
+			s = 0.00001f;
+
+		float v[4] = {
+			acosf(r[3]) * 2,
+			r[0] / s,
+			r[1] / s,
+			r[2] / s,
+		};
+
+		lastack_pushvec4(LS, v);
+		break;
+	}		
 	default:
 		luaL_error(L, "Unpack invalid type %s", get_typename(t));
 	}

@@ -57,27 +57,21 @@ function message:motion(x, y)
 			message.yaw = message.yaw + (delta.x * speed)
 			message.pitch = message.pitch + (delta.y * speed)
 
-			if message.pitch > 89.9 then
-				message.pitch = 89.9
+			local function limit(v, min, max)
+				if v > max then v = max end
+				if v < min then v = min end
+				return v
 			end
 
-			if message.pitch < -89.9 then
-				message.pitch = -89.9
-			end
+			message.pitch = limit(message.pitch, -89.9, 89.9)
 
-			print("yaw : ", message.yaw)
-			print("pitch : ", message.pitch)
-
-			-- print("before : ", zdir)
 			local xdir = {1, 0, 0, 0}
 			local ydir = {0, 1, 0, 0}			
 			local zdir_tmp = {0, 0, 1, 0}
-			math_stack(zdir, {0, 0, 1, 0}, 
+			math_stack(zdir, 
 						{type = "quat", axis = ydir, angle = {message.yaw}}, 
-						{type = "quat", axis = xdir, angle = {message.pitch}}, "**=")
-						
-			--math_stack(zdir, {0, message.pitch, message.yaw}, "e=")
-			-- print("after : ", zdir)
+						{type = "quat", axis = xdir, angle = {message.pitch}}, "*", 
+						{0, 0, 1, 0}, "*=")			
 		end
 	end
 end
@@ -117,13 +111,13 @@ function message:keypress(c, p)
 			local xdir = {1, 0, 0, 0}
 
 			if c == "LEFT" then
-				math_stack(zdir, zdir, {type = "quat", axis = ydir, angle = {1}}, "*=")				
+				math_stack(zdir, {type = "quat", axis = ydir, angle = {-1}}, zdir, "*=")				
 			elseif c == "RIGHT" then
-				math_stack(zdir, zdir, {type = "quat", axis = ydir, angle = {-1}}, "*=")
+				math_stack(zdir, {type = "quat", axis = ydir, angle = {1}}, zdir, "*=")
 			elseif c == "UP" then
-				math_stack(zdir, zdir, {type = "quat", axis = xdir, angle = {1}}, "*=")
+				math_stack(zdir, {type = "quat", axis = xdir, angle = {-1}}, zdir, "*=")
 			elseif c == "DOWN" then
-				math_stack(zdir, zdir, {type = "quat", axis = xdir, angle = {-1}}, "*=")
+				math_stack(zdir, {type = "quat", axis = xdir, angle = {1}}, zdir, "*=")
 			end
 		end
 	end
