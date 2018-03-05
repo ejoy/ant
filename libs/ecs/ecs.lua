@@ -32,7 +32,13 @@ function world:remove_component(eid, component_type)
 	local e = assert(self[eid])
 	assert(e[component_type] ~= nil)
 	self._set[component_type] = nil
+	local c = assert(e[component_type])
+	local del = self._component_type[component_type].delete
+	if del then
+		del(c)
+	end
 	e[component_type] = nil
+	self:change_component(eid, component_type)
 end
 
 function world:change_component(eid, component_type)
@@ -73,7 +79,12 @@ function world:remove_entity(eid)
 
 	-- notify all components of this entity
 	local _changecomponent = self._changecomponent
-	for component_type in pairs(e) do
+	local typeclass = self._component_type
+	for component_type, c in pairs(e) do
+		local del = typeclass[component_type].delete
+		if del then
+			del(c)
+		end
 		local cc = _changecomponent[component_type]
 		if cc then
 			cc[eid] = true
