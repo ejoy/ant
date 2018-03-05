@@ -244,7 +244,8 @@ push_srt(lua_State *L, struct lastack *LS, int index) {
 		lua_getfield(L, index, "rz");
 		float rz = luaL_optnumber(L, -1, 0);
 		lua_pop(L, 1);
-		matrix44_rot(&m, rx,ry,rz);
+		struct euler e = { rx, ry, rz };
+		matrix44_rot(&m, &e);
 	}
 
 	if (lua_getfield(L, index, "tx") == LUA_TNUMBER) {
@@ -388,10 +389,10 @@ push_quat_with_euler(lua_State* L, struct lastack *LS, int index) {
 		float *value = lastack_value(LS, stackid, &type);
 		if (type == LINEAR_TYPE_VEC3 || type == LINEAR_TYPE_VEC4) {			
 			memcpy(rpy, value, sizeof(float) * 3);
-			struct quaternion q;
-			quaternion_init_from_euler(&q, rpy[0], rpy[1], rpy[2]);
-			lastack_pushquat(LS, &(q.x));
+		} else {
+			luaL_error(L, "using vec3/vec4 to define roll(z) pitch(x) yaw(y), type define is : %d", type);
 		}
+
 		break;
 	}
 	default:
@@ -401,7 +402,8 @@ push_quat_with_euler(lua_State* L, struct lastack *LS, int index) {
 	lua_pop(L, 1);
 
 	struct quaternion q;
-	quaternion_init_from_euler(&q, rpy[0], rpy[1], rpy[2]);
+	struct euler e = { rpy[1], rpy[0], rpy[2] };
+	quaternion_init_from_euler(&q, &e);
 	lastack_pushquat(LS, &(q.x));
 }
 
@@ -720,26 +722,6 @@ unpack_top(lua_State *L, struct lastack *LS) {
 	}
 }
 
-static void 
-construct_dir_from_euler(lua_State *L, struct lastack *LS) {
-	int etype;
-	float* euler = pop_vector34(L, LS, &etype);
-
-	//float roll	= euler[0];	// rotate z-axis
-	float pitch = euler[1];	// rotate x-axis
-	float yaw	= euler[2];	// rotate y-axis
-
-	struct vector4 v;
-
-	v.x = cosf(TO_RADIAN(yaw)) * cosf(TO_RADIAN(pitch));
-	v.y = sinf(TO_RADIAN(pitch));
-	v.z = sinf(TO_RADIAN(yaw)) * cosf(TO_RADIAN(pitch));
-	v.w = 0;
-
-	vector3_normalize((struct vector3*)&v);
-	lastack_pushvec4(LS, vector4_array(&v));
-}
-
 static inline void
 push_data_to_lua(struct lastack *LS, struct ref_stack *RS) {
 	struct lua_State *L = RS->L;
@@ -778,6 +760,36 @@ push_data_to_lua(struct lastack *LS, struct ref_stack *RS) {
 	lua_pushnumber(L, type);
 	lua_settable(L, -3);
 	refstack_pop(RS);
+}
+
+struct lnametype_pairs {
+	const char* name;
+	const char* alias;
+	int type;
+};
+
+static inline void
+get_lnametype_pairs(struct lnametype_pairs *p) {
+#define SET(_P, _NAME, _ALIAS, _TYPE) (_P)->name = _NAME; (_P)->alias = _ALIAS; (_P)->type = _TYPE
+	SET(p, "mat4x4",	"m",	LINEAR_TYPE_MAT);
+	SET(p, "vec4",		"v",	LINEAR_TYPE_VEC4);
+	SET(p, "vec3",		"v3",	LINEAR_TYPE_VEC3);
+	SET(p, "quat",		"q",	LINEAR_TYPE_QUAT);
+	SET(p, "num",		"n",	LINEAR_TYPE_NUM);	
+}
+
+static inline int
+linear_name_to_type(const char* name) {
+	struct lnametype_pairs pairs[LINEAR_TYPE_COUNT];
+	get_lnametype_pairs(pairs);
+	for (int i = 0; i < LINEAR_TYPE_COUNT; ++i) {
+		const struct lnametype_pairs *p = pairs + i;
+		if (strcmp(name, p->alias) == 0 || strcmp(name, p->name) == 0) {
+			return p->type;
+		}
+	}
+
+	return LINEAR_TYPE_NONE;
 }
 
 /*
@@ -909,10 +921,8 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		refstack_push(RS);
 		refstack_push(RS);
 		refstack_push(RS);
-		break;
-	case 'e':
-		construct_dir_from_euler(L, LS);
-		refstack_1_1(RS);
+		break;	
+	case 'c':		
 		break;
 	default:
 		luaL_error(L, "Unknown command %c", cmd);

@@ -19,6 +19,12 @@ struct quaternion {
 	float x,y,z,w;
 };
 
+struct euler {
+	float pitch;	// rotate x-axis
+	float yaw;		// rotate y-axis
+	float roll;		// rotate z-axis
+};
+
 union matrix44 {
 	float c[4][4];
 	float x[16];
@@ -133,10 +139,10 @@ quaternion_mul(struct quaternion *q, const struct quaternion *a, const struct qu
 }
 
 static inline struct quaternion *
-quaternion_init_from_euler(struct quaternion *q, float x, float y, float z) {
-	struct quaternion roll = { sinf( x * 0.5f ), 0, 0, cosf( x * 0.5f ) };
-	struct quaternion pitch = { 0, sinf( y * 0.5f ), 0, cosf( y * 0.5f ) };
-	struct quaternion yaw = { 0, 0, sinf( z * 0.5f ), cosf( z * 0.5f ) };
+quaternion_init_from_euler(struct quaternion *q, const struct euler *e) {
+	struct quaternion roll = { sinf( e->roll * 0.5f ), 0, 0, cosf( e->roll * 0.5f ) };
+	struct quaternion pitch = { 0, sinf( e->pitch * 0.5f ), 0, cosf( e->pitch * 0.5f ) };
+	struct quaternion yaw = { 0, 0, sinf( e->yaw * 0.5f ), cosf( e->yaw * 0.5f ) };
 
 	// Order: y * x * z
 	quaternion_mul(q, &pitch, &roll);
@@ -432,10 +438,10 @@ matrix44_scale(union matrix44 *m, float x, float y, float z) {
 }
 
 static inline union matrix44 *
-matrix44_rotmat(union matrix44 *m, float x, float y, float z) {
+matrix44_rotmat(union matrix44 *m, const struct euler *e) {
 	// Rotation order: YXZ [* Vector]
 	struct quaternion q;
-	quaternion_init_from_euler(&q, x, y, z);
+	quaternion_init_from_euler(&q, e);
 
 	return matrix44_from_quaternion(m, &q);
 }
@@ -580,10 +586,10 @@ matrix44_mul(union matrix44 *m, const union matrix44 *m1, const union matrix44 *
 }
 
 static inline union matrix44 *
-matrix44_rot(union matrix44 *m, float x, float y, float z) {
+matrix44_rot(union matrix44 *m, const struct euler *e) {
 	// Rotation order: YXZ [* Vector]
 	struct quaternion q;
-	quaternion_init_from_euler(&q, x, y, z);
+	quaternion_init_from_euler(&q, e);
 
 	union matrix44 tmp;
 	matrix44_from_quaternion(&tmp, &q);
@@ -959,6 +965,58 @@ vector3_distAABB(const struct vector3 *pos, const struct vector3 *mins, const st
 	
 	return vector3_length(&nearestVec);
 }
+
+
+//--- Rotation representation Convert
+
+static inline void
+euler_to_matrix(const struct euler *e, union matrix44 *mat) {
+	const float cp = cosf(e->pitch);
+	const float sp = sinf(e->pitch);
+	union matrix44 mx = {
+		1, 0, 0, 0,
+		0, cp, sp, 0,
+		0, -sp, cp, 0,
+		0, 0, 0, 1,
+	};
+
+	const float cy = cosf(e->yaw);
+	const float sy = sinf(e->yaw);
+	union matrix44 my = {
+		cy, 0, -sy, 0,
+		0, 1, 0, 0,
+		sy, 0, cy, 0,
+		0, 0, 0, 1,
+	};
+
+	const float cr = cosf(e->roll);
+	const float sr = sinf(e->roll);
+	union matrix44 mz = {
+		cr, sr, 0, 0,
+		-sr, cr, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1,
+	};
+
+	// we have a more efficient way to do this
+	matrix44_mul(mat, &mx, &my);
+	matrix44_mul(mat, mat, &mz);
+
+	//mat->c[0][0] = ;
+}
+
+static inline void
+matrix44_to_euler(const union  matrix44 * mat, struct euler *e) {
+	e->pitch = asinf(-mat->c[2][1]);
+	e->yaw = atan2f(mat->c[2][0], mat->c[2][2]);
+	e->roll = atan2f(mat->c[0][1], mat->c[1][1]);
+}
+
+static inline void 
+euler_to_quaternion(const struct euler *e, struct quaternion *q) {
+
+}
+
 
 #endif
 
