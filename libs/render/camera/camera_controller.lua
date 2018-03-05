@@ -49,7 +49,7 @@ function message:motion(x, y)
 			local zdir = vt.direction
 
 			if message.yaw == nil then
-				message.yaw = 90
+				message.yaw = 0
 				message.pitch = 0
 			end
 
@@ -65,11 +65,18 @@ function message:motion(x, y)
 				message.pitch = -89.9
 			end
 
-			-- print("yaw : ", message.yaw)
-			-- print("pitch : ", message.pitch)
+			print("yaw : ", message.yaw)
+			print("pitch : ", message.pitch)
 
 			-- print("before : ", zdir)
-			math_stack(zdir, {0, message.pitch, message.yaw}, "e=")
+			local xdir = {1, 0, 0, 0}
+			local ydir = {0, 1, 0, 0}			
+			local zdir_tmp = {0, 0, 1, 0}
+			math_stack(zdir, {0, 0, 1, 0}, 
+						{type = "quat", axis = ydir, angle = {message.yaw}}, 
+						{type = "quat", axis = xdir, angle = {message.pitch}}, "**=")
+						
+			--math_stack(zdir, {0, message.pitch, message.yaw}, "e=")
 			-- print("after : ", zdir)
 		end
 	end
@@ -88,9 +95,6 @@ function message:keypress(c, p)
 				local ci = vp.camera_info
 				math_stack(	vt.eye, ci.default.eye, "=")
 				math_stack( vt.direction, ci.default.direction, "=")
-
-				print("eye : ", vt.eye)
-				print("zdir : ", vt.direction)
 			end
 
 			local states = assert(msg_comp.states)
