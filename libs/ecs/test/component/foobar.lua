@@ -12,6 +12,10 @@ function foobar:init()
 	self.temp = 0
 end
 
+function foobar:delete()
+	print("Delete", self.x, self.y)
+end
+
 function foobar:print()
 	print(self.x, self.y, self.temp)
 end
