@@ -64,6 +64,7 @@ function message:motion(x, y)
 			end
 
 			message.pitch = limit(message.pitch, -89.9, 89.9)
+			message.yaw = limit(message.yaw, -179.9, 179.9)
 
 			local xdir = {1, 0, 0, 0}
 			local ydir = {0, 1, 0, 0}			
