@@ -55,9 +55,35 @@ vector4_array(struct vector4 *v) {
 	return (float *)v;
 }
 
+static inline struct vector3*
+to_vector3(struct vector4* v) {
+	return (struct vector3*)v;
+}
+
+static inline const struct vector3*
+to_cvector3(const struct vector4* v) {
+	return (const struct vector3*)v;
+}
+
 static inline float
 vector3_dot(const struct vector3 *a, const struct vector3 *b) {
 	return a->x * b->x + a->y * b->y + a->z * b->z;
+}
+
+static inline struct vector3*
+vector3_add(struct vector3* r, const struct vector3* v0, const struct vector3* v1) {
+	r->x = v0->x + v1->x;
+	r->y = v0->y + v1->y;
+	r->z = v0->z + v1->z;
+	return r;
+}
+
+static inline struct vector3*
+vector3_mul_number(struct vector3 *v, float n) {
+	v->x *= n;
+	v->y *= n;
+	v->z *= n;
+	return v;
 }
 
 static inline struct vector3 *
@@ -171,20 +197,19 @@ quaternion_init_from_euler(struct quaternion *q, const struct euler *e) {
 static inline struct quaternion *
 quaternion_init_from_axis_angle(struct quaternion *q, const float axis[3], float angle){
 
-	const float halfRadian = TO_RADIAN(angle) * 0.5f;
-	const float sinValue = sinf(halfRadian);
-	const float cosValue = cosf(halfRadian);
+	const float rad = TO_RADIAN(angle) * 0.5f;
+	const float s = sinf(rad);
 
-	float squareLen = axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2];
-	if (squareLen == 0)
-		squareLen = 0.0001f;
+	float sLen = axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2];
+	if (sLen == 0)
+		sLen = 0.0001f;
 	
-	float inverseLen = 1 / sqrtf(squareLen);
+	float invL = 1 / sqrtf(sLen);
 
-	q->w = cosValue;
-	q->x = sinValue * axis[0] * inverseLen;
-	q->y = sinValue * axis[1] * inverseLen;
-	q->z = sinValue * axis[2] * inverseLen;
+	q->w = cosf(rad);
+	q->x = s * axis[0] * invL;
+	q->y = s * axis[1] * invL;
+	q->z = s * axis[2] * invL;
 
 	return q;
 }
@@ -196,8 +221,7 @@ quaternion_square_length(const struct quaternion * q){
 
 static inline float
 quaternion_length(const struct quaternion * q){
-	const float sLen = quaternion_square_length(q);
-	return sLen == 0 ? 0 : 1 / sqrtf(sLen);
+	return sqrtf(quaternion_square_length(q));
 }
 
 #define MIN_THRESHOLD 0.00001f
@@ -225,15 +249,15 @@ quaternion_is_unit(const struct quaternion * q){
 
 static inline struct quaternion *
 quaternion_normalize(struct quaternion *q){
-	float square_len = quaternion_square_length(q);
-	if (square_len == 0)
+	float sLen = quaternion_square_length(q);
+	if (sLen == 0)
 		return q;
 	
-	float inv_len = 1.f / sqrtf(square_len);
-	q->w *= inv_len;
-	q->x *= inv_len;
-	q->y *= inv_len;
-	q->z *= inv_len;
+	float invLen = 1.f / sqrtf(sLen);
+	q->w *= invLen;
+	q->x *= invLen;
+	q->y *= invLen;
+	q->z *= invLen;
 	return q;
 }
 
@@ -330,7 +354,17 @@ quaternion_inverted(struct quaternion * q) {
 
 static inline void
 quaternion_rotate_vec4(struct vector4 *r, const struct quaternion *q, const struct vector4 *v){
-	// to do, we need a more efficient version for this method
+	/*
+		the formula is : 
+		q' = q * p * q^
+		where:
+			q is the rotating quaternion with unit length
+			q^ is the reverse rotating quaternion
+			p is a pure quaternion, it construct from a position where w need to set as 0
+
+		the quaternion multiplication order should always perform from [right to left].
+		so q * p * q^, we need to perform perfix = q^ * p, result = prefix * q
+	*/
 	struct quaternion p;
 	quaternion_init(&p, 0, v->x, v->y, v->z);	// to pure quaternion
 
@@ -341,7 +375,6 @@ quaternion_rotate_vec4(struct vector4 *r, const struct quaternion *q, const stru
 	quaternion_mul(&prefix, &inv_q, &p);
 	struct quaternion result;
 	quaternion_mul(&result, &prefix, q);	// result is pure quaternion
-
 	assert(is_zero(result.w));
 
 	r->x = result.x;
