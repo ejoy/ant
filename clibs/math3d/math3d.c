@@ -344,6 +344,18 @@ push_quat_with_axis_angle(lua_State* L, struct lastack *LS, int index) {
 		memcpy(axis, address, sizeof(float) * 3);
 		break;
 	}
+	case LUA_TSTRING: {
+		const char* t = lua_tostring(L, -1);
+		axis[0] = 0; axis[1] = 0; axis[2] = 0;
+		if (strcmp(t, "x") == 0 || strcmp(t, "X") == 0)
+			axis[0] = 1;
+		else if (strcmp(t, "y") == 0 || strcmp(t, "Y") == 0)
+			axis[1] = 1;
+		else if (strcmp(t, "z") == 0 || strcmp(t, "X") == 0)
+			axis[2] = 1;
+		else
+			luaL_error(L, "not support this string type : %s", t);
+	}
 	default:
 		luaL_error(L, "quaternion axis angle init, only support table and number, type is : %d", axis_type);
 	}
@@ -436,7 +448,7 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 			push_mat(L, LS, index, MAT_PERSPECTIVE);
 		} else if (strcmp(type, "ortho") == 0) {
 			push_mat(L, LS, index, MAT_ORTHO);
-		} else if (strcmp(type, "quat") == 0) {
+		} else if (strcmp(type, "quat") == 0 || strcmp(type, "q") == 0) {
 			push_quat(L, LS, index);
 		} else {
 			luaL_error(L, "Invalid matrix type %s", type);

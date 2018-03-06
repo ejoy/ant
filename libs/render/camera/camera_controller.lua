@@ -53,7 +53,7 @@ function message:motion(x, y)
 				message.pitch = 0
 			end
 
-			local speed = 0.1
+			local speed = vp.camera_info.move_speed * 0.2
 			message.yaw = message.yaw + (delta.x * speed)
 			message.pitch = message.pitch + (delta.y * speed)
 
@@ -66,13 +66,11 @@ function message:motion(x, y)
 			message.pitch = limit(message.pitch, -89.9, 89.9)
 			message.yaw = limit(message.yaw, -179.9, 179.9)
 
-			local xdir = {1, 0, 0, 0}
-			local ydir = {0, 1, 0, 0}			
 			local zdir_tmp = {0, 0, 1, 0}
 			math_stack(zdir, 
-						{type = "quat", axis = ydir, angle = {message.yaw}}, 
-						{type = "quat", axis = xdir, angle = {message.pitch}}, "*", 
-						{0, 0, 1, 0}, "*=")			
+						{type = "q", axis = "y", angle = {message.yaw}}, 
+						{type = "q", axis = "x", angle = {message.pitch}}, "*", 
+						zdir_tmp, "*=")
 		end
 	end
 end
