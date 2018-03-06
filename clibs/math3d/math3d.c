@@ -355,6 +355,7 @@ push_quat_with_axis_angle(lua_State* L, struct lastack *LS, int index) {
 			axis[2] = 1;
 		else
 			luaL_error(L, "not support this string type : %s", t);
+		break;
 	}
 	default:
 		luaL_error(L, "quaternion axis angle init, only support table and number, type is : %d", axis_type);
