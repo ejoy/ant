@@ -3535,6 +3535,24 @@ lgetShaderUniforms(lua_State *L) {
 	return 1;
 }
 
+static int
+lsetViewMode(lua_State *L) {
+	bgfx_view_id_t viewid = luaL_checkinteger(L, 1);
+	if (lua_isnoneornil(L, 2)) {
+		bgfx_set_view_mode(viewid, BGFX_VIEW_MODE_DEFAULT);
+	} else {
+		const char* mode = luaL_checkstring(L, 2);
+		switch(mode[0]) {
+		case 'd': bgfx_set_view_mode(viewid, BGFX_VIEW_MODE_DEPTH_ASCENDING); break;
+		case 'D': bgfx_set_view_mode(viewid, BGFX_VIEW_MODE_DEPTH_DESCENDING); break;
+		case 's': bgfx_set_view_mode(viewid, BGFX_VIEW_MODE_SEQUENTIAL); break;
+		default:
+			return luaL_error(L, "Invalid view mode %s", mode);
+		}
+	}
+	return 0;
+}
+
 LUAMOD_API int
 luaopen_bgfx(lua_State *L) {
 	luaL_checkversion(L);
@@ -3615,6 +3633,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "update_dynamic_vertex_buffer", lupdateDynamicVertexBuffer },
 		{ "update_dynamic_index_buffer", lupdateDynamicIndexBuffer },
 		{ "get_shader_uniforms", lgetShaderUniforms },
+		{ "set_view_mode", lsetViewMode },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
