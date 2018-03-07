@@ -55,7 +55,7 @@ function add_entity_sys:init()
         local ci = vp.camera_info
     
         self.math_stack(vt.eye,         assert(ci.default.eye),         "=")
-        self.math_stack(vt.direction,   assert(ci.default.direction),   "=")
+        self.math_stack(vt.direction,   assert(ci.default.direction),   "n=")
 
         self.math_stack(camera.frustum.proj_mat, 
                     {type = "proj", fov = ci.fov, aspect = vp.width/vp.height, n = ci.near, f = ci.far}, "=")

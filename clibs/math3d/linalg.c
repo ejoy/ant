@@ -345,6 +345,11 @@ lastack_pushquat(struct lastack *LS, float *v) {
 }
 
 void
+lastack_pusheuler(struct lastack *LS, float *v) {
+	lastack_pushvector(LS, v, LINEAR_TYPE_EULER, 3);
+}
+
+void
 lastack_pushnumber(struct lastack *LS, float n) {
 	lastack_pushvector(LS, &n, LINEAR_TYPE_NUM, 1);
 }

@@ -28,8 +28,8 @@ struct quaternion {
 };
 
 struct euler {
-	float pitch;	// rotate x-axis
 	float yaw;		// rotate y-axis
+	float pitch;	// rotate x-axis	
 	float roll;		// rotate z-axis
 };
 
@@ -42,6 +42,9 @@ struct plane {
 	struct vector3 normal;
 	float dist;
 };
+
+#define TO_RADIAN(_DEGREE)	(_DEGREE) * (M_PI / 180)
+#define TO_DEGREE(_RADIAN)	(_RADIAN) *(180 / M_PI)
 
 // vector
 
@@ -127,7 +130,8 @@ static inline struct euler *
 vector3_to_rotation(struct euler *e, const struct vector3 *r) {
 	// Assumes that the unrotated view vector is (0, 0, 1)
 	if (r->y != 0) {
-		e->pitch = atan2f( r->y, sqrtf( r->x*r->x + r->z*r->z ) );
+		//e->pitch = atan2f( r->y, sqrtf( r->x*r->x + r->z*r->z ) );
+		e->pitch = -asinf(r->y);	// left hand coordinate, need negative the asinf result
 	}
 	if (r->x != 0 || r->z != 0) {
 		e->yaw = atan2f( r->x, r->z );
@@ -168,29 +172,17 @@ quaternion_mul(struct quaternion *q, const struct quaternion *a, const struct qu
 	return q;
 }
 
-#define TO_RADIAN(_DEGREE)	(_DEGREE) * (M_PI / 180)
-
 static inline struct quaternion *
 quaternion_init_from_euler(struct quaternion *q, const struct euler *e) {
-	//struct quaternion roll = { sinf( e->roll * 0.5f ), 0, 0, cosf( e->roll * 0.5f ) };
-	//struct quaternion pitch = { 0, sinf( e->pitch * 0.5f ), 0, cosf( e->pitch * 0.5f ) };
-	//struct quaternion yaw = { 0, 0, sinf( e->yaw * 0.5f ), cosf( e->yaw * 0.5f ) };
+	const float yawRad = TO_RADIAN(e->yaw * 0.5f);
+	const float pitchRad = TO_RADIAN(e->pitch * 0.5f);
+	const float rollRad = TO_RADIAN(e->roll * 0.5f);
 
-	//quaternion_mul(q, &pitch, &roll);
-	//quaternion_mul(q, q, &yaw);
-
-	const float yaw = TO_RADIAN(e->yaw * 0.5f);
-	const float pitch = TO_RADIAN(e->pitch * 0.5f);
-	const float roll = TO_RADIAN(e->roll * 0.5f);
-	const float sy = sinf(yaw), cy = cosf(yaw);
-	const float sp = sinf(pitch), cp = cosf(pitch);
-	const float sr = sinf(roll), cr = cosf(roll);
-	
-	q->w = cy * cp * cr - sy * sp * sr;
-	q->x = sy * sp * cr + cy * cp * sr;
-	q->y = sy * cp * cr + cy * sp * sr;
-	q->z = cy * sp * cr - sy * cp * sr;
-
+	struct quaternion roll	= { 0, 0, sinf(rollRad),	cosf(rollRad) };
+	struct quaternion pitch = { sinf(pitchRad), 0, 0,	cosf(pitchRad) };
+	struct quaternion yaw	= { 0, sinf(yawRad), 0,		cosf( yawRad) };
+	quaternion_mul(q, &yaw, &pitch);
+	quaternion_mul(q, q, &roll);
 	return q;
 }
 
@@ -362,8 +354,27 @@ quaternion_rotate_vec4(struct vector4 *r, const struct quaternion *q, const stru
 			q^ is the reverse rotating quaternion
 			p is a pure quaternion, it construct from a position where w need to set as 0
 
-		the quaternion multiplication order should always perform from [right to left].
-		so q * p * q^, we need to perform perfix = q^ * p, result = prefix * q
+		we using left hand coordinate(z to screen, x to right, y to up)
+		so quaternion multiplication from [left to right]
+		actually, we have a more efficient way to multi quaternion and rotate vector
+		we can derive from quaternion multiplication formula :
+		q0 = [w0, v0] = [w0 + x0i + y0j + z0j]
+		q1 = [w1, v1] = [w1 + x1i + y1j + z1j]
+		q2 = q0 * q1 = [w0*w1 + v0 dot v1, w0*v1 + w1*v0 + v0 cross v1]
+		so:
+			q4 = q2 * q3
+		the code is :
+		{
+			struct vector3 qv = {q->x, q->y, q->z};	// the pure quaternion
+			struct vector3 uv, uuv;
+			vector3_cross(&uv, qv, (const struct vector3*)v);			
+			vector3_cross(&uuv, qv, &uv);
+			struct vector3 result;
+			vector3_add(&result, 
+						vector3_mul_number(
+							vector3_add(&result, vector3_mul_number(&uv, q->w), &uuv),
+							2);	//v + ((uv * q.w) + uuv) * 2.f;
+		}
 	*/
 	struct quaternion p;
 	quaternion_init(&p, 0, v->x, v->y, v->z);	// to pure quaternion
@@ -372,9 +383,9 @@ quaternion_rotate_vec4(struct vector4 *r, const struct quaternion *q, const stru
 	quaternion_inverse(&inv_q);
 
 	struct quaternion prefix;
-	quaternion_mul(&prefix, &inv_q, &p);
+	quaternion_mul(&prefix, q, &p);
 	struct quaternion result;
-	quaternion_mul(&result, &prefix, q);	// result is pure quaternion
+	quaternion_mul(&result, &prefix, &inv_q);	// result is pure quaternion
 	assert(is_zero(result.w));
 
 	r->x = result.x;
@@ -1018,6 +1029,22 @@ vector3_distAABB(const struct vector3 *pos, const struct vector3 *mins, const st
 	nearestVec.z = maxf( 0, fabsf( pos->z - center.z ) - extent.z );
 	
 	return vector3_length(&nearestVec);
+}
+
+//--Euler
+static inline float* 
+euler_array(struct euler *e) {
+	return &e->yaw;
+}
+
+static inline void
+euler_to_degree(struct euler *e) {
+	if (e->yaw)
+		e->yaw = TO_DEGREE(e->yaw);
+	if (e->pitch)
+		e->pitch = TO_DEGREE(e->pitch);
+	if (e->roll)
+		e->roll = TO_DEGREE(e->roll);
 }
 
 

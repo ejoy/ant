@@ -24,6 +24,22 @@ local function move_position(ms, p, dir, speed)
 	ms(p, p, dir, {speed}, "*+=")
 end
 
+local function calc_rotate_angle_from_view_direction(ms, vr)
+	-- the default view direction is (0, 0, 1, 0)
+	local dir = ms(vr, "nT")
+	assert(dir.type == 1 or dir.type == 2)	-- 1 for vec4, 2 for vec3
+
+	local x, y, z = dir[1], dir[2], dir[3]
+	local pitch = -math.asin(y)	
+	local yaw = z ~= 0 and math.atan2(x, z) or 0	
+
+	local function to_angle(rad)
+		return rad * (180 / 3.1415926)
+	end
+	
+	return to_angle(pitch), to_angle(yaw)
+end
+
 function message:motion(x, y)
 	local last_xy = message.xy	
 	local xy = point2d(x, y)
@@ -34,23 +50,27 @@ function message:motion(x, y)
 		local bs = states.buttons
 
 		if (bs.LEFT or bs.RIGHT) and last_xy then
-			local delta = (xy - last_xy)
-			local zdir = vt.direction
+			local speed = vp.camera_info.move_speed * 0.1
+			local delta = (last_xy - xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
+			local zdir = vt.direction	
 
-			if message.yaw == nil then
-				message.yaw = 0
-				message.pitch = 0
-			end
+			local euler = math_stack(zdir, "e", {type="e", delta.x, delta.y, 0}, "+T")
+			assert(euler.type == 5)	--LINEAR_TYPE_EULER			
+			local yaw, pitch, roll = euler[1], euler[2], euler[3]
+			yaw = mu.limit(yaw, -179.9, 179.9)
+			pitch = mu.limit(pitch, -89.9, 89.9)
+			
+			math_stack(zdir, {0, 0, 1, 0}, {type="e", yaw, pitch, roll}, "*=")
 
-			local speed = vp.camera_info.move_speed * 0.2
-			message.pitch = mu.limit(message.pitch + (delta.y * speed), -89.9, 89.9)
-			message.yaw = mu.limit(message.yaw + (delta.x * speed), -179.9, 179.9)
+			-- local pitch, yaw = calc_rotate_angle_from_view_direction(math_stack, zdir)
+			-- local speed = vp.camera_info.move_speed * 0.2	
+			-- pitch = mu.limit(pitch + delta.y * speed, -89.9, 89.9)
+			-- yaw = mu.limit(yaw + delta.x * speed, -179.9, 179.9)
 
-			local zdir_tmp = {0, 0, 1, 0}
-			math_stack(zdir, 
-						{type = "q", axis = "y", angle = {message.yaw}}, 
-						{type = "q", axis = "x", angle = {message.pitch}}, "*", 
-						zdir_tmp, "*=")
+			-- math_stack(zdir, 
+			-- 			{type = "q", axis = "y", angle = {yaw}},
+			-- 			{type = "q", axis = "x", angle = {pitch}},  "*",
+			-- 			{0, 0, 1, 0}, "*=")
 		end
 	end
 end
@@ -118,7 +138,10 @@ function camera_controller_system:update()
 		local vt = entity.view_transform		
 		for name, cb in pairs(message.cb) do
 			cb(self.message_component, vt, self.math_stack, self.viewport)
+			
 		end
+
+		--print("direction : ", vt.direction)
 		
 	end)
 
