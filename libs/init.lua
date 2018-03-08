@@ -1,8 +1,11 @@
 -- dofile this file first to init env
 
 local root = os.getenv "ANTGE" or "."
+local local_binpath = (os.getenv "BIN_PATH" or "clibs")
 
-package.cpath = root .. "/clibs/?.dll;" .. root .. "/bin/?.dll"
+package.cpath = root .. "/" .. local_binpath .. "/?.dll;" .. 
+                root .. "/bin/?.dll"
+
 package.path = root .. "/libs/?.lua;" .. root .. "/libs/?/?.lua"
 
 require "common/import"
