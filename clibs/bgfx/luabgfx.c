@@ -1171,6 +1171,7 @@ vertex_decl_add(lua_State *L, bgfx_vertex_decl_t *vd) {
 	else if CASE(TEXCOORD0) attrib = BGFX_ATTRIB_TEXCOORD0;
 	else if CASE(TEXCOORD1) attrib = BGFX_ATTRIB_TEXCOORD1;
 	else if CASE(TEXCOORD2) attrib = BGFX_ATTRIB_TEXCOORD2;
+	else if CASE(TEXCOORD3) attrib = BGFX_ATTRIB_TEXCOORD3;
 	else if CASE(TEXCOORD4) attrib = BGFX_ATTRIB_TEXCOORD4;
 	else if CASE(TEXCOORD5) attrib = BGFX_ATTRIB_TEXCOORD5;
 	else if CASE(TEXCOORD6) attrib = BGFX_ATTRIB_TEXCOORD6;
@@ -2521,6 +2522,7 @@ get_texture_flags(lua_State *L, const char *format) {
 			switch(format[i+1]) {
 			case 'r' : flags |= BGFX_TEXTURE_READ_BACK; break;
 			case 'w' : flags |= BGFX_TEXTURE_BLIT_DST; break;
+			case 'c' : flags |= BGFX_TEXTURE_COMPUTE_WRITE; break;
 			default:
 				luaL_error(L, "Invalid BLIT %c", format[i+1]);
 			}
@@ -3359,13 +3361,8 @@ lcreateIndirectBuffer(lua_State *L) {
 	return 1;
 }
 
-static int
-lsetBuffer(lua_State *L) {
-	int stage = luaL_checkinteger(L, 1);
-	int idx = luaL_checkinteger(L, 2);
-	int type = idx >> 16;
-	int id = idx & 0xffff;
-	const char * access = luaL_checkstring(L, 3);
+static bgfx_access_t
+access_string(lua_State *L, const char * access) {
 	bgfx_access_t a;
 	if (access[0] == 'r') {
 		a = BGFX_ACCESS_READ;
@@ -3378,8 +3375,19 @@ lsetBuffer(lua_State *L) {
 		if ((a == BGFX_ACCESS_READ && access[1] == 'w') || (a == BGFX_ACCESS_WRITE && access[1] == 'r'))
 			a = BGFX_ACCESS_READWRITE;
 		else
-			return luaL_error(L, "Invalid buffer access %s", access);
+			luaL_error(L, "Invalid buffer access %s", access);
 	}
+	return a;
+}
+
+static int
+lsetBuffer(lua_State *L) {
+	int stage = luaL_checkinteger(L, 1);
+	int idx = luaL_checkinteger(L, 2);
+	int type = idx >> 16;
+	int id = idx & 0xffff;
+	const char * access = luaL_checkstring(L, 3);
+	bgfx_access_t a = access_string(L, access);
 	switch(type) {
 	case BGFX_HANDLE_VERTEX_BUFFER: {
 		bgfx_vertex_buffer_handle_t handle = { id };
@@ -3553,6 +3561,23 @@ lsetViewMode(lua_State *L) {
 	return 0;
 }
 
+static int
+lsetImage(lua_State *L) {
+	int stage = luaL_checkinteger(L, 1);
+	int tid = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 2));
+	bgfx_texture_handle_t handle = { tid };
+	int mip = luaL_checkinteger(L, 3);
+	bgfx_access_t access = access_string(L, luaL_checkstring(L, 4));
+	bgfx_texture_format_t format = 0;
+	if (lua_isnoneornil(L, 5)) {
+		format = BGFX_TEXTURE_FORMAT_COUNT;
+	} else {
+		format = texture_format_from_string(L, 5);
+	}
+	bgfx_set_image(stage, handle, mip, access, format);
+	return 0;
+}
+
 LUAMOD_API int
 luaopen_bgfx(lua_State *L) {
 	luaL_checkversion(L);
@@ -3634,6 +3659,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "update_dynamic_index_buffer", lupdateDynamicIndexBuffer },
 		{ "get_shader_uniforms", lgetShaderUniforms },
 		{ "set_view_mode", lsetViewMode },
+		{ "set_image", lsetImage },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
