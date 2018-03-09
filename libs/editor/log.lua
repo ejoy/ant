@@ -1,4 +1,4 @@
-if from_msvc == nil then
+if static_sci == nil then
 	require "scintilla"
 end
 
