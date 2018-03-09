@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\iup\srclua5\ctrl\il_scintilla.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_array.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_callback.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_dlglist.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_attrib.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_focus.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_font.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_globalattrib.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_object.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_key.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_layout.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_ledlex.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_names.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_ledparse.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_predialogs.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_register.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_scanf.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_show.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_str.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_func.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_childtree.c" />
+    <ClCompile Include="..\..\..\iup\src\iup.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_classattrib.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_dialog.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_assert.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_messagedlg.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_timer.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_image.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_label.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_fill.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_zbox.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_colordlg.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_fontdlg.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_filedlg.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_strmessage.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_menu.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_frame.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_user.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_button.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_radio.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_toggle.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_progressbar.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_text.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_val.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_box.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_hbox.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_vbox.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_cbox.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_class.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_classbase.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_maskmatch.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_mask.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_maskparse.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_tabs.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_spin.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_list.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_getparam.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_link.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_sbox.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_scrollbox.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_normalizer.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_tree.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_split.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_layoutdlg.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_recplay.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_progressdlg.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_expander.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_open.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_table.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_canvas.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_gridbox.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_detachbox.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_backgroundbox.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_linefile.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_config.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_flatbutton.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_animatedlabel.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_draw.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_flatframe.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_flattabs.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_flatscrollbar.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_flatscrollbox.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_dial.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_gauge.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_colorbar.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_colorbrowser.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_colorhsi.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_common.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_brush.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_focus.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_font.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_globalattrib.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_handle.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_key.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_str.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_loop.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_open.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_tips.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_info.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_dialog.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_messagedlg.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_timer.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_image.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_label.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_canvas.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_frame.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_fontdlg.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_filedlg.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_dragdrop.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_button.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_draw.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_toggle.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_clipboard.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_progressbar.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_text.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_val.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_touch.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_tabs.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_menu.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_list.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_tree.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_calendar.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwin_datepick.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwindows_main.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwindows_help.c" />
+    <ClCompile Include="..\..\..\iup\src\win\iupwindows_info.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\iuplua.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\iuplua_api.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\iuplua_draw.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\iuplua_tree_aux.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\iuplua_scanf.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\iuplua_getparam.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\iuplua_getcolor.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\iuplua_config.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_button.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_canvas.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_dialog.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_colordlg.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_clipboard.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_filedlg.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_fill.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_frame.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_hbox.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_normalizer.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_gridbox.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_item.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_image.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_imagergb.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_imagergba.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_label.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_expander.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_link.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_menu.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_multiline.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_list.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_separator.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_user.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_submenu.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_text.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_toggle.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_vbox.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_zbox.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_timer.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_sbox.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_scrollbox.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_split.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_spin.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_spinbox.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_cbox.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_radio.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_val.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_tabs.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_fontdlg.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_tree.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_progressbar.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_messagedlg.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_progressdlg.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_backgroundbox.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_flatbutton.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_animatedlabel.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_calendar.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_datepick.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_param.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_parambox.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_detachbox.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_flatframe.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_flattabs.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_flatscrollbox.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_dial.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_gauge.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_colorbar.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_colorbrowser.c" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{ac64b03c-a872-47e2-abf7-482885728047}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>iuplua</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)vs_bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vs_bin\obj\$(PlatformTarget)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)vs_bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vs_bin\obj\$(PlatformTarget)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)vs_bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vs_bin\obj\$(PlatformTarget)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)vs_bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vs_bin\obj\$(PlatformTarget)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>IUPLUA_USELH;IUP_DLL;_CRT_SECURE_NO_WARNINGS;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../../iup/include;../../../iup/src;../../../iup/srclua5;../../../iup/srclua5/lh</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;gdi32.lib;comdlg32.lib;comctl32.lib;ole32.lib;uuid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>IUPLUA_USELH;IUP_DLL;_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../../iup/include;../../../iup/src;../../../iup/srclua5;../../../iup/srclua5/lh</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;gdi32.lib;comdlg32.lib;comctl32.lib;ole32.lib;uuid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>IUPLUA_USELH;IUP_DLL;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../../iup/include;../../../iup/src;../../../iup/srclua5;../../../iup/srclua5/lh</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;gdi32.lib;comdlg32.lib;comctl32.lib;ole32.lib;uuid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>IUPLUA_USELH;IUP_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../../iup/include;../../../iup/src;../../../iup/srclua5;../../../iup/srclua5/lh</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;gdi32.lib;comdlg32.lib;comctl32.lib;ole32.lib;uuid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

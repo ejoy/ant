@@ -1,4 +1,7 @@
-require "scintilla"
+if from_msvc == nil then
+	require "scintilla"
+end
+
 local redirect = require "filesystem.redirect"
 local task = require "editor.task"
 
