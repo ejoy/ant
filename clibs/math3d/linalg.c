@@ -590,6 +590,9 @@ lastack_idstring(int64_t id, char tmp[64]) {
 	case LINEAR_TYPE_NUM:
 		flags[0] = 'N';
 		break;
+	case LINEAR_TYPE_EULER:
+		flags[0] = 'E';
+		break;
 	default:
 		flags[0] = '?';
 		break;

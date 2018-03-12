@@ -93,7 +93,7 @@ value_tostring(lua_State *L, const char * prefix, float *r, int type) {
 		lua_pushfstring(L, "%sNUMBER (%f)", prefix, r[0]);
 		break;
 	case LINEAR_TYPE_EULER:
-		lua_pushfstring(L, "%sEULER (%f, %f, %f)", prefix, r[0], r[1], r[2]);
+		lua_pushfstring(L, "%sEULER (yaw(y) = %f, pitch(x) = %f, roll(z) = %f)", prefix, r[0], r[1], r[2]);
 		break;
 	default:
 		lua_pushfstring(L, "%sUNKNOWN", prefix);
