@@ -218,50 +218,126 @@ lref(lua_State *L) {
 	return 1;
 }
 
+static inline float
+get_table_value(lua_State *L, int idx) {
+	lua_geti(L, -1, idx);
+	float s = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+	return s;
+}
+
+static inline int64_t
+get_ref_id(lua_State *L, struct lastack *LS, int index) {
+	struct refobject * ref = lua_touserdata(L, index);
+	if (lua_rawlen(L, index) != sizeof(*ref)) {
+		luaL_error(L, "The userdata is not a ref object");
+	}
+	if (ref->LS == NULL) {
+		ref->LS = LS;
+	}
+	else if (ref->LS != LS) {
+		luaL_error(L, "ref object not belongs this stack");
+	}
+
+	return ref->id;
+}
+
 static void
 push_srt(lua_State *L, struct lastack *LS, int index) {
 	union matrix44 m;
-	if (lua_getfield(L, index, "s") == LUA_TNUMBER) {
-		float s = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-		matrix44_scalemat(&m, s,s,s);
-	} else if (lua_getfield(L, index, "sx") == LUA_TNUMBER) {
-		float sx = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-		lua_getfield(L, index, "sy");
-		float sy = luaL_optnumber(L, -1, 1.0f);
-		lua_pop(L, 1);
-		lua_getfield(L, index, "sz");
-		float sz = luaL_optnumber(L, -1, 1.0f);
-		lua_pop(L, 1);
-		matrix44_scalemat(&m, sx,sy,sz);
+	int stype = lua_getfield(L, index, "s");	
+	if (stype == LUA_TNUMBER || stype == LUA_TUSERDATA) {
+		int64_t id = stype == LUA_TNUMBER ? get_id(L, -1) : get_ref_id(L, LS, -1);
+		int type;
+		float *value = lastack_value(LS, id, &type);
+		switch (type)
+		{
+		case LINEAR_TYPE_VEC4:
+		case LINEAR_TYPE_VEC3:
+			matrix44_scalemat(&m, value[0], value[1], value[2]);
+			break;
+		default:
+			luaL_error(L, "linear type should be vec3/vec4, type is : %d", type);
+			break;
+		}
+	} else if (stype == LUA_TTABLE) {
+		size_t len = lua_rawlen(L, -1);
+		float v[3];
+		if (len == 1) {
+			float s = get_table_value(L, 1);
+			v[0] = v[1] = v[2] = s;
+		} else if (len == 3) {
+			for (int i = 0; i < 3; ++i)
+				v[i] = get_table_value(L, i+1);
+		} else {
+			luaL_error(L, "using table for s element, format must be s = {1}/{1, 2, 3}, give number : %d", len);
+		}
+		matrix44_scalemat(&m, v[0], v[1], v[2]);
 	} else {
 		matrix44_identity(&m);
 	}
-	if (lua_getfield(L, index, "rx") == LUA_TNUMBER) {
-		float rx = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-		lua_getfield(L, index, "ry");
-		float ry = luaL_optnumber(L, -1, 0);
-		lua_pop(L, 1);
-		lua_getfield(L, index, "rz");
-		float rz = luaL_optnumber(L, -1, 0);
-		lua_pop(L, 1);
-		struct euler e = { rx, ry, rz };
+	lua_pop(L, 1);
+
+	int rtype = lua_getfield(L, index, "r");
+
+	if (rtype == LUA_TNUMBER || rtype == LUA_TUSERDATA) {
+		int64_t id = stype == LUA_TNUMBER ? get_id(L, -1) : get_ref_id(L, LS, -1);
+		int type;
+		float *value = lastack_value(LS, id, &type);
+
+		struct euler e;
+		switch (type)
+		{
+		case LINEAR_TYPE_VEC4:
+		case LINEAR_TYPE_VEC3:
+			vector3_to_rotation(&e, (const struct vector3*)(value));
+			break;
+		case LINEAR_TYPE_EULER:
+			memcpy(&e, value, sizeof(struct euler));
+			break;
+		default:
+			luaL_error(L, "linear type should be vec3/vec4, type is : %d", type);
+			break;
+		}
+
 		matrix44_rot(&m, &e);
+	} else if (rtype == LUA_TTABLE) {
+		size_t len = lua_rawlen(L, -1);
+		if (len != 3)
+			luaL_error(L, "r field should : r={1, 2, 3}, only accept 3 value, %d is give", len);
+		struct euler e = { get_table_value(L, 1), get_table_value(L, 2), get_table_value(L, 3) };		
+		matrix44_rot(&m, &e);
+	} else {
+		luaL_error(L, "r field type is not support");
 	}
 
-	if (lua_getfield(L, index, "tx") == LUA_TNUMBER) {
-		float tx = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-		lua_getfield(L, index, "ty");
-		float ty = luaL_optnumber(L, -1, 0);
-		lua_pop(L, 1);
-		lua_getfield(L, index, "tz");
-		float tz = luaL_optnumber(L, -1, 0);
-		lua_pop(L, 1);
-		matrix44_trans(&m, tx,ty,tz);
+	lua_pop(L, 1);
+
+	const int ttype = lua_getfield(L, index, "t");
+	if (ttype == LUA_TNUMBER || ttype == LUA_TUSERDATA) {
+		int64_t id = stype == LUA_TNUMBER ? get_id(L, -1) : get_ref_id(L, LS, -1);
+		int type;
+		float *value = lastack_value(LS, id, &type);
+		if (type != LINEAR_TYPE_VEC3 && type != LINEAR_TYPE_VEC4)
+			luaL_error(L, "t field should provide vec3/vec4, provide type is : %d", type);
+
+		if (value == NULL)
+			luaL_error(L, "invalid id : %ld, get NULL value", id);
+		matrix44_trans(&m, value[0], value[1], value[2]);
+	} else if (ttype == LUA_TTABLE) {
+		size_t len = lua_rawlen(L, -1);
+		if (len != 3)
+			luaL_error(L, "r field should : t={1, 2, 3}, only accept 3 value, %d is give", len);
+
+		float v[3];
+		for (int i = 0; i < 3; ++i)
+			v[i] = get_table_value(L, i + 1);
+		matrix44_trans(&m, v[0], v[1], v[2]);
+	} else {
+		luaL_error(L, "t field type is not support");
 	}
+
+	lua_pop(L, 1);
 	lastack_pushmatrix(LS, m.x);
 }
 
@@ -1078,16 +1154,8 @@ push_command(struct ref_stack *RS, struct lastack *LS, int index) {
 		refstack_push(RS);
 		break;
 	case LUA_TUSERDATA: {
-		struct refobject * ref = lua_touserdata(L, index);
-		if (lua_rawlen(L, index) != sizeof(*ref)) {
-			luaL_error(L, "The userdata is not a ref object");
-		}
-		if (ref->LS == NULL) {
-			ref->LS = LS;
-		} else if (ref->LS != LS) {
-			luaL_error(L, "ref object not belongs this stack");
-		}
-		if (lastack_pushref(LS,  ref->id)) {
+		int64_t id = get_ref_id(L, LS, index);
+		if (lastack_pushref(LS, id)) {
 			luaL_error(L, "Push invalid ref object");
 		}
 		refstack_pushref(RS, index);

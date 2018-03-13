@@ -32,8 +32,7 @@ end
 local viewport_sys = ecs.system "viewport_system"
 viewport_sys.singleton "viewport"
 
-local function clear_framebuffer(vp_comp)
-    -- todo: bgfx should privide clear color/depth/stencil methods
+local function clear_framebuffer(vp_comp)    
     bgfx.set_view_clear(0, "CD", vp_comp.clear_color, vp_comp.clear_depth, vp_comp.clear_stencil)	
 end
 

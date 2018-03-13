@@ -54,6 +54,7 @@ local function init()
 	world = ecs.new_world {
 		modules = { 
 			assert(loadfile "libs/inputmgr/message_system.lua"),
+			assert(loadfile "libs/render/components/general.lua"),
 			assert(loadfile "libs/render/add_entity_system.lua"),	
 			assert(loadfile "libs/render/math3d/math_component.lua"),			
 			assert(loadfile "libs/render/material/material_component.lua"),

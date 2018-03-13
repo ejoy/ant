@@ -8,3 +8,9 @@ assert(s == s2)
 print(s.vs)
 print(s.fs)
 print(s.foobar[1])
+
+
+local render = asset["test/bunny.render"]
+for k, v in pairs(render) do
+    print(k, v)
+end

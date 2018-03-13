@@ -11,5 +11,27 @@ end
 function math3d_comp:constant(id, value)
 	return self(id,value,"MR")
 end
+
+function math3d_comp:lookat(is_persistent)
+end
+
+function math3d_comp:perspective(is_persistent)
+end
+
+function math3d_comp:ortho(is_persistent)
+end
+
+function math3d_comp:vector(is_persistent)
+end
+
+function math3d_comp:quat(is_persistent)
+end
+
+function math3d_comp:euler(is_persistent)
+end
+
+function math3d_comp:matrix(is_persistent)
+end
+
 --@}
 

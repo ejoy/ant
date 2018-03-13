@@ -1,5 +1,6 @@
 local ecs = ...
 local ru = require "render.render_util"
+local cu = require "render.components.util"
 local world = ecs.world
 local math3d = require "math3d"
 local mu = require "math.util"
@@ -45,29 +46,34 @@ function message:motion(x, y)
 	local xy = point2d(x, y)
 	message.xy = xy
 
-	message.cb.motion = function (msg_comp, vt, math_stack, vp)
+	message.cb.motion = function (entity)
+		local msg_comp = message.msg_comp
+		local vp = message.vp
+		local ms = message.ms
+
 		local states = msg_comp.states
 		local bs = states.buttons
+
 
 		if (bs.LEFT or bs.RIGHT) and last_xy then
 			local speed = vp.camera_info.move_speed * 0.1
 			local delta = (last_xy - xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
-			local zdir = vt.direction	
+			local zdir = entity.direction.v
 
-			local euler = math_stack(zdir, "e", {type="e", delta.x, delta.y, 0}, "+T")
+			local euler = message.ms(zdir, "e", {type="e", delta.x, delta.y, 0}, "+T")
 			assert(euler.type == 5)	--LINEAR_TYPE_EULER			
 			local yaw, pitch, roll = euler[1], euler[2], euler[3]
 			yaw = mu.limit(yaw, -179.9, 179.9)
 			pitch = mu.limit(pitch, -89.9, 89.9)
 			
-			math_stack(zdir, {0, 0, 1, 0}, {type="e", yaw, pitch, roll}, "*=")
+			ms(zdir, {0, 0, 1, 0}, {type="e", yaw, pitch, roll}, "*=")
 
-			-- local pitch, yaw = calc_rotate_angle_from_view_direction(math_stack, zdir)
+			-- local pitch, yaw = calc_rotate_angle_from_view_direction(ms, zdir)
 			-- local speed = vp.camera_info.move_speed * 0.2	
 			-- pitch = mu.limit(pitch + delta.y * speed, -89.9, 89.9)
 			-- yaw = mu.limit(yaw + delta.x * speed, -179.9, 179.9)
 
-			-- math_stack(zdir, 
+			-- ms(zdir, 
 			-- 			{type = "q", axis = "y", angle = {yaw}},
 			-- 			{type = "q", axis = "x", angle = {pitch}},  "*",
 			-- 			{0, 0, 1, 0}, "*=")
@@ -78,43 +84,47 @@ end
 function message:keypress(c, p)
 	if c == nil then return end
 
-	message.cb.keypress = function(msg_comp, vt, math_stack, vp)
+	message.cb.keypress = function(entity)
 		if p then
+			local msg_comp = message.msg_comp
+			local vp = message.vp
+			local ms = message.ms
+
 			local move_step = vp.camera_info.move_speed
-			local zdir = vt.direction
-			local eye = vt.eye
+			local zdir = entity.direction.v
+			local eye = entity.position.v
 
 			if c == "r" or c == "R" then
 				local ci = vp.camera_info
-				math_stack(	vt.eye, ci.default.eye, "=")
-				math_stack( vt.direction, ci.default.direction, "=")
+				ms(	vt.eye, ci.default.eye, "=")
+				ms( vt.direction, ci.default.direction, "=")
 			end
 
 			local states = assert(msg_comp.states)
 
 			if states.buttons.RIGHT then
-				local xdir, ydir = generate_basic_axis(math_stack, zdir)
+				local xdir, ydir = generate_basic_axis(ms, zdir)
 
 				if c == "a" or c == "A" then					
-					move_position(math_stack, eye, xdir, move_step)
+					move_position(ms, eye, xdir, move_step)
 				elseif c == "d" or c == "D" then					
-					move_position(math_stack, eye, xdir, -move_step)
+					move_position(ms, eye, xdir, -move_step)
 				elseif c == "w" or c == "W" then					
-					move_position(math_stack, eye, zdir, move_step)
+					move_position(ms, eye, zdir, move_step)
 				elseif c == "s" or c == "S" then					
-					move_position(math_stack, eye, zdir, -move_step)
+					move_position(ms, eye, zdir, -move_step)
 				end			
 			end
 
-			if c == "LEFT" then
-				rotate_vec(math_stack, zdir, "y", -1)				
-			elseif c == "RIGHT" then
-				rotate_vec(math_stack, zdir, "y", 1)				
-			elseif c == "UP" then
-				rotate_vec(math_stack, zdir, "x", -1)				
-			elseif c == "DOWN" then
-				rotate_vec(math_stack, zdir, "x", 1)				
-			end
+			-- if c == "LEFT" then
+			-- 	rotate_vec(ms, zdir, "y", -1)				
+			-- elseif c == "RIGHT" then
+			-- 	rotate_vec(ms, zdir, "y", 1)				
+			-- elseif c == "UP" then
+			-- 	rotate_vec(ms, zdir, "x", -1)				
+			-- elseif c == "DOWN" then
+			-- 	rotate_vec(ms, zdir, "x", 1)
+			-- end
 		end
 	end
 end
@@ -130,19 +140,17 @@ camera_controller_system.depend "iup_message"
 function camera_controller_system:init()
 	self.message_component.msg_observers:add(message)
 	message.cb = {}
+	message.msg_comp = self.message_component
+	message.ms = self.math_stack
+	message.vp = self.viewport
 end
 
 function camera_controller_system:update()
-	ru.for_each_comp(world, {"view_transform", "frustum"},
-	function (entity)
-		local vt = entity.view_transform		
+	ru.foreach_comp(world, cu.get_camera_component_names(),
+	function (entity)		
 		for name, cb in pairs(message.cb) do
-			cb(self.message_component, vt, self.math_stack, self.viewport)
-			
-		end
-
-		--print("direction : ", vt.direction)
-		
+			cb(entity)
+		end		
 	end)
 
 	message.cb = {}
