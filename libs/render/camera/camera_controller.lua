@@ -1,5 +1,5 @@
 local ecs = ...
-local ru = require "render.render_util"
+local ru = require "render.util"
 local cu = require "render.components.util"
 local world = ecs.world
 local math3d = require "math3d"
@@ -146,7 +146,7 @@ function camera_controller_system:init()
 end
 
 function camera_controller_system:update()
-	ru.foreach_comp(world, cu.get_camera_component_names(),
+	ru.foreach_entity(world, cu.get_camera_component_names(),
 	function (entity)		
 		for name, cb in pairs(message.cb) do
 			cb(entity)

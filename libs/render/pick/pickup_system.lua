@@ -4,37 +4,31 @@ local world = ecs.world
 local point2d = require "math.point2d"
 local bgfx = require "bgfx"
 local math3d = require "math3d"
+local ru = require "render.util"
 
 -- pickup component
-local pickup_comp = ecs.component "pickup_component" {
-    pickmat_near = 0.1,
-    pickmat_far = 100,
-    pickmat_fov = 1,
+local pickup_comp = ecs.component "pickup" {    
     pick_buffer_w = 8,
-    pick_buffer_h = 8,
+    pick_buffer_h = 8,    
 }
 
 function pickup_comp:init()
-    self.pick_objlist = {}
-    self.pick_fb = 0
-    self.pick_viewid = 1    
+    self.select_objlist = {}
+    self.fb = 0
 end
 
---  pickup material component
-local pickup_material = ecs.component "pickup_material_component"{
-    shader = {type="asset", "assets/material/pickup/pickup.shader"},
-    state = {type="asset", "assets/material/pickup/pickup.state"},
-    uniform = {type="asset", "assets/material/pickup/pickup.uniform"},
-}
+local function add_pick_entity()
+    local eid = world:new_entity("position", "direction", "frustum", "viewid", "pickup")
+    local pickup = assert(world[eid])
+    pickup.viewid.id = 1
+end
 
 -- system
 local pickup_sys = ecs.system "pickup_system"
 
 pickup_sys.singleton "math_stack"
 pickup_sys.singleton "message_component"
-pickup_sys.singleton "pickup_component"
 pickup_sys.singleton "viewport"
-pickup_sys.singleton "pickup_material_component"
 
 pickup_sys.depend "iup_message"
 pickup_sys.depend "add_entities_system"
@@ -76,9 +70,10 @@ function pickup:init()
     --@]
 end
 
-function pickup:render_to_pickup_buffer()
+function pickup:render_to_pickup_buffer(pickup_entity)
     local comp = self.pickup_comp
     bgfx.set_view_frame_buffer(comp.pick_viewid, comp.pick_fb)
+    bgfx.touch(pickup_entity.viewid.id)
 
     ru.foreach_sceneobj(world, 
     function (entity)
@@ -97,19 +92,7 @@ function pickup:readback_render_data()
 end
 
 function pickup:pick_object(objlist, clickpt, selectrange)
-    self:update_pickup_matrix()
-end
-
-function pickup:update_pickup_matrix()
-    if self.projmat_changed then
-        local comp = self.comp    
-        comp.pick_projmat = math3d.ref "matrix"
-        ms(comp.pick_projmat, {type="proj", 
-                                fov=comp.pickmat_fov, 
-                                aspect=comp.pick_buffer_w/comp.pick_buffer_h, 
-                                n=comp.pickmat_near, f=comp.pickmat_far}, "=")
-        self.projmat_changed = false
-    end
+    
 end
 
 function pickup:pick()
@@ -126,16 +109,22 @@ function pickup_sys:init()
     observers:add(msg)
     --@]
 
+    add_pick_entity()
+
     pickup.comp = self.pu_comp
-    pickup.ms = self.math_stack
-    pickup.material = self.pickup_material_component
-    pickup.projmat_changed = true
-    pickup:init(self.pickup_component, 8, 8)
+    pickup.ms = self.math_stack        
+    pickup:init(self.pickup, 8, 8)
 end
 
 function pickup_sys:update()
-    local clickpt = self.clickpt
-    if clickpt then
-        pickup:pick(clickpt)
+    ru.foreach_entity(world, {"pickup", "position", "direction", "frustum"},
+    function (entity)
+        local clickpt = self.clickpt
+        if clickpt then
+            pickup:pick(entity, clickpt)
+        end
     end
+    )
+
+
 end

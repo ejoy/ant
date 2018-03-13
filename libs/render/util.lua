@@ -1,8 +1,9 @@
 local bgfx = require "bgfx"
-
+local cu = require "render.components.util"
+local mu = require "math.util"
 local util = {}
 
-function util.foreach_comp(w, comp_names, op)
+function util.foreach_entity(w, comp_names, op)
     for _, eid in w:each(comp_names[1]) do
         local meshentity = w[eid]
         if meshentity ~= nil then
@@ -25,7 +26,14 @@ end
 
 function util.foreach_sceneobj(w, op)
     local comps = util.get_scene_objcompoent_names()
-    util.foreach_comp(w, comps, op)
+    util.foreach_entity(w, comps, op)
+end
+
+function util.draw_scene(world, ms)
+    util.foreach_entity(world, cu.get_sceneobj_compoent_names(),
+    function (entity)        
+        util.draw_entity(entity, mu.srt_address(ms, entity.scale.v, entity.direction.v, entity.position.v))
+    end)
 end
 
 function util.submit_mesh(mesh, shader)
