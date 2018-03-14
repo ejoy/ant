@@ -11,7 +11,7 @@ end
 
 local function read_render_elem(ff, rootfile, assetlib)
     assert(type(ff) == "string")
-    return assetlib[check_append_dir(ff, rootfile)]
+    return assetlib[check_append_dir(ff, rootfile)]    
 end
 
 function recurse_read(source, src_filename, recurse_elems, assetlib)
@@ -22,7 +22,7 @@ function recurse_read(source, src_filename, recurse_elems, assetlib)
 
     local t = {}
     for k, v in pairs(source) do
-        if e[k] then
+        if e[k] and type(v) == "string" then
             t[k] = read_render_elem(v, src_filename, assetlib)
         else
             t[k] = v

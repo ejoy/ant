@@ -5,11 +5,11 @@ local util = {}
 
 function util.foreach_entity(w, comp_names, op)
     for _, eid in w:each(comp_names[1]) do
-        local meshentity = w[eid]
-        if meshentity ~= nil then
+        local entity = w[eid]
+        if entity ~= nil then
             local function is_entity_have_components(beg_idx, end_idx)
                 while beg_idx <= end_idx do
-                    if meshentity[comp_names[beg_idx]] == nil then
+                    if entity[comp_names[beg_idx]] == nil then
                         return false
                     end
                     beg_idx = beg_idx + 1
@@ -18,25 +18,25 @@ function util.foreach_entity(w, comp_names, op)
             end
         
             if is_entity_have_components(2, #comp_names) then
-                op(meshentity)
+                op(entity, eid)
             end
         end
     end
 end
 
 function util.foreach_sceneobj(w, op)
-    local comps = util.get_scene_objcompoent_names()
+    local comps = cu.get_sceneobj_compoent_names()
     util.foreach_entity(w, comps, op)
 end
 
-function util.draw_scene(world, ms)
-    util.foreach_entity(world, cu.get_sceneobj_compoent_names(),
-    function (entity)        
-        util.draw_entity(entity, mu.srt_address(ms, entity.scale.v, entity.direction.v, entity.position.v))
+function util.draw_scene(vid, world, ms)
+    util.foreach_sceneobj(world,
+    function (entity)
+        util.draw_entity(vid, entity, mu.srt_from_entity(ms, entity))
     end)
 end
 
-function util.submit_mesh(mesh, shader)
+function util.submit_mesh(vid, mesh, shader)
     local prog = assert(shader.prog)
     local num = #mesh.group
 
@@ -44,7 +44,7 @@ function util.submit_mesh(mesh, shader)
         local g = mesh.group[i]
         bgfx.set_index_buffer(g.ib)
         bgfx.set_vertex_buffer(g.vb)
-        bgfx.submit(0, prog, 0, i ~= num)
+        bgfx.submit(vid, prog, 0, i ~= num)
     end
 end
 
@@ -56,17 +56,17 @@ function util.update_uniforms(uniforms)
     end
 end
 
-function util.draw_entity(meshentity, worldmat)    
-    bgfx.set_transform(worldmat)
-    local render = meshentity.render
-    util.draw_mesh(render.mesh, render.material)
+function util.draw_entity(vid, entity, worldmat)    
+    local render = entity.render
+    util.draw_mesh(vid, render.mesh, render.material, worldmat)
 end
 
-function util.draw_mesh(mesh, material)
+function util.draw_mesh(vid, mesh, material, worldmat)
+    bgfx.set_transform(worldmat)
     bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
     
     util.update_uniforms(material.uniform)
-    util.submit_mesh(mesh.handle, material.shader)
+    util.submit_mesh(vid, mesh.handle, material.shader)
 end
 
 return util

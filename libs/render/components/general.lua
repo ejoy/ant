@@ -12,6 +12,7 @@ ecs.component "scale" {
 }
 
 ecs.component "frustum" {
+    isortho = falses,
     near = 0.1,
     far = 10000,
     fov = 90,

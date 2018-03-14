@@ -41,7 +41,10 @@ function add_entity_sys:init()
     
     do
         local camera_eid = world:new_entity(table.unpack(cu.get_camera_component_names()))
-        local camera = world[camera_eid]        
+        local camera = world[camera_eid]
+
+        camera.viewid.id = 0
+
         local vp = self.viewport
 
         local ci = vp.camera_info

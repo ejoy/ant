@@ -3,6 +3,7 @@ local world = ecs.world
 
 local ru = require "render.util"
 local cu = require "render.components.util"
+local mu = require "math.util"
 local bgfx = require "bgfx"
 
 --[@
@@ -20,7 +21,7 @@ function view_sys:update()
 		local ci = vp.camera_info
 		local frustum = assert(entity.frustum)
 
-		local proj_mat = self.math_stack({type = "proj", fov=frustum.fov, aspect = vp.width/vp.height, n=frustum.near, f=frustum.far}, "m")
+		local proj_mat = mu.proj_v(self.math_stack, frustum)
 		
 		bgfx.set_view_transform(entity.viewid.id, view_mat, proj_mat)
 	end)

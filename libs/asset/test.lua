@@ -1,5 +1,7 @@
 local asset = require "asset"
 
+local ss = asset["test/pickup.material"]
+
 local s = asset["test/foobar.shader"]
 local s2 = asset["test/foobar.shader"]
 
