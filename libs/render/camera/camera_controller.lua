@@ -62,8 +62,8 @@ function message:motion(x, y)
 
 			local euler = message.ms(zdir, "e", {type="e", delta.x, delta.y, 0}, "+T")
 			assert(euler.type == 5)	--LINEAR_TYPE_EULER			
-			local yaw, pitch, roll = euler[1], euler[2], euler[3]
-			yaw = mu.limit(yaw, -179.9, 179.9)
+			local yaw, pitch, roll = euler[1], euler[2], euler[3]			
+			
 			pitch = mu.limit(pitch, -89.9, 89.9)
 			
 			ms(zdir, {0, 0, 1, 0}, {type="e", yaw, pitch, roll}, "*=")
@@ -113,7 +113,11 @@ function message:keypress(c, p)
 					move_position(ms, eye, zdir, move_step)
 				elseif c == "s" or c == "S" then					
 					move_position(ms, eye, zdir, -move_step)
-				end			
+				elseif c == "q" or c == "Q" then
+					move_position(ms, eye, ydir, -move_step)
+				elseif c == "e" or c == "E" then
+					move_position(ms, eye, ydir, move_step)
+				end
 			end
 
 			-- if c == "LEFT" then
