@@ -28,17 +28,7 @@ local function add_pick_entity()
     return pickup_entity
 end
 
--- system
-local pickup_sys = ecs.system "pickup_system"
-
-pickup_sys.singleton "math_stack"
-pickup_sys.singleton "message_component"
-pickup_sys.singleton "viewport"
-pickup_sys.singleton "frame_num"
-
-pickup_sys.depend "iup_message"
-pickup_sys.depend "add_entities_system"
-
+-- pickup helper
 local pickup = {} 
 pickup.__index = pickup
 
@@ -48,7 +38,6 @@ function pickup:init_material()
     local u_id = uniforms.u_id
     u_id.update = function ()
         assert(self.current_eid)
-        print("calling u_id update function")
         return self.current_eid
     end
 end
@@ -93,38 +82,55 @@ function pickup:readback_render_data(pickup_entity)
     self.reading_frame = bgfx.read_texture(comp.rb_buffer, comp.blitdata)
 end
 
-function pickup:which_entity_hit(ptVS)
-    local comp = self.comp
+function pickup:which_entity_hit(pickup_entity)
+    local comp = pickup_entity.pickup
     local w, h = comp.pick_buffer_w, comp.pick_buffer_w
 
     for x = 1, w * h do
-        local rgba = self.comp.blitdata[x]
+        local rgba = comp.blitdata[x]
         if rgba ~= 0 then
             return rgba
         end
     end
 end
 
-function pickup:pick(pickup_entity, ptVS, current_frame_num)
+function pickup:pick(pickup_entity, need_readback, current_frame_num)
     self:render_to_pickup_buffer(pickup_entity)
 
-    if ptVS ~= nil then
+    if need_readback then
+        print("readback data")
         self:readback_render_data(pickup_entity)
     end
 
     if self.reading_frame == current_frame_num then
-        local comp = self.comp
-        comp.last_eid_hit = self:which_entity_hit(ptVS)
+        print("try to found which hit")
+        local comp = pickup_entity.pickup
+        comp.last_eid_hit = self:which_entity_hit(pickup_entity)
         print("last eid : ", comp.last_eid_hit)
         self.reading_frame = nil
     end
 end
 
-function pickup_sys:init()
+-- update view system
+-- separate this system from pickup_system is because the view info used in view_system
+-- depend on this system to finish. we need a dependby method in ecs framework to make view_system know that 
+-- it should depend this system
+local pickup_view_update_sys = ecs.system "pickup_view"
+
+pickup_view_update_sys.singleton "math_stack"
+pickup_view_update_sys.singleton "viewport"
+pickup_view_update_sys.singleton "message_component"
+
+pickup_view_update_sys.depend "iup_message"
+pickup_view_update_sys.depend "add_entities_system"
+
+function pickup_view_update_sys:init()
     --[@    for message callback
     local msg = {}
-    function msg:button(x, y)
-        pickup_sys.clickpt = point2d(x, y)
+    function msg:button(b, p, x, y)
+        if b == "LEFT" and p then
+            pickup.clickpt = point2d(x, y)
+        end
     end
     local observers = self.message_component.msg_observers
     observers:add(msg)
@@ -132,8 +138,7 @@ function pickup_sys:init()
 
     local pickup_entity = add_pick_entity()
 
-    pickup.comp = self.pu_comp
-    pickup.ms = self.math_stack        
+    pickup.ms = self.math_stack
     pickup:init(pickup_entity)
 end
 
@@ -152,22 +157,58 @@ local function get_main_camera_viewproj_mat(ms)
     end
 end
 
-local function clickpt_to_viewspace(ms, clickpt, vp_w, wp_h, invVP)
+local function extract_clickpt_to_eys_and_dir_in_worldspace(ms, clickpt, vp_w, wp_h, invVP)
     local ndcW =  (clickpt.x / vp_w) * 2.0 - 1.0
     local ndcH = ((vp_h - clickpt.y) / vp_h) * 2.0 - 1.0
-    return ms({ndcW, ndcH, 0, 1}, invVP, "*P")
+    local eye = ms({ndcW, ndcH, 0, 1}, invVP, "*P")
+    local at = ms({ndcW, ndcH, 1, 1}, invVP, "*P")
+    local dir = ms(at, eye, "-nP")
+    return eye, dir
 end
 
+local function update_pickup_entity_viewinfo(ms, e, clickpt, vp_w, vp_h)
+    local invVP = get_main_camera_viewproj_mat(ms)    
+    local ptWS, dirWS = nil, nil
+    if clickpt then
+        ptWS, dirWS = extract_clickpt_to_eys_and_dir_in_worldspace(ms, clickpt, vp_w, vp_h, invVP)
+        assert(e.position)
+        assert(e.direction)
+        self.math_stack(e.position.v, assert(ptWS), "=")       
+        self.math_stack(e.direction.v, assert(dirWS), "=")
+    end
+end
+
+function pickup_view_update_sys:update()    
+    print("pickup_view_update_sys:update()")
+    local clickpt = pickup.clickpt
+    if clickpt == nil then return end
+    for _, eid in world:each("pickup") do        
+        local e = assert(world[eid])
+        if clickpt then
+            local vp = self.viewport
+            print("update pickup mat")
+            update_pickup_entity_viewinfo(self.math_stack, e, clickpt, vp.width, vp.height)
+        end
+        break
+    end   
+end
+
+-- system
+local pickup_sys = ecs.system "pickup_system"
+
+pickup_sys.singleton "math_stack"
+pickup_sys.singleton "frame_num"
+
+pickup_sys.depend "pickup_view"
+
 function pickup_sys:update()
-    local invVP = get_main_camera_viewproj_mat(self.math_stack)
-    local vp = self.viewport
-    local clickpt = self.clickpt
-    local ptVS = clickpt and clickpt_to_viewspace(ms, clickpt, vp.width, vp.height, invVP) or nil
+    print("function pickup_sys:update()")
+    for _, eid in world:each("pickup") do
+        local e = assert(world[eid])        
+        local clickpt = pickup.clickpt
+        pickup:pick(e, clickpt ~= nil, self.frame_num.current)
+        break   --only one pickup object in the scene
+    end
 
-    ru.foreach_entity(world, {"pickup", "position", "direction", "frustum"},
-    function (entity)
-        pickup:pick(entity, ptVS, self.frame_num.current)
-    end)
-
-    self.clickpt = nil
+    pickup.clickpt = nil
 end
