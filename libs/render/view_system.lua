@@ -9,22 +9,14 @@ local bgfx = require "bgfx"
 --[@
 local view_sys = ecs.system "view_system"
 view_sys.singleton "math_stack"
-view_sys.singleton "viewport"
-
 function view_sys:update()
 	ru.foreach_entity(world, cu.get_view_entity_components(),
 	function (entity)
 		local view_mat = self.math_stack(entity.position.v, entity.direction.v, "Lm")
-	
-		-- we should cache this by checking whether aspect is changed
-		local vp = self.viewport
-		local ci = vp.camera_info
-		local frustum = assert(entity.frustum)
-
-		local proj_mat = mu.proj_v(self.math_stack, frustum)
 		
+		local frustum = assert(entity.frustum)
+		local proj_mat = mu.proj_v(self.math_stack, frustum)
 		bgfx.set_view_transform(entity.viewid.id, view_mat, proj_mat)
 	end)
-	
 end
 --@]

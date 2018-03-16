@@ -13,7 +13,7 @@ local task = require "editor.task"
 iup.SetGlobal("UTF8MODE", "YES")
 
 local canvas = iup.canvas {
-	rastersize = "1024x768",
+	rastersize = "1280x720",
 --	size = "HALFxHALF",
 }
 

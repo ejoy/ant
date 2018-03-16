@@ -10,22 +10,12 @@ local assetlib = require "asset"
 
 -- pickup component
 local pickup_comp = ecs.component "pickup" {    
-    pick_buffer_w = 8,
-    pick_buffer_h = 8,    
+    width = 8,
+    height = 8,
 }
 
-function pickup_comp:init()
-    self.select_objlist = {}
-    self.fb = 0
-
-    self.blitdata = bgfx.memory_texture(self.pick_buffer_w*self.pick_buffer_h * 4)
-end
-
-local function add_pick_entity()
-    local eid = world:new_entity("position", "direction", "frustum", "viewid", "pickup")
-    local pickup_entity = assert(world[eid])
-    pickup_entity.viewid.id = 1
-    return pickup_entity
+function pickup_comp:init()    
+    self.blitdata = bgfx.memory_texture(self.width*self.height * 4)
 end
 
 -- pickup helper
@@ -42,71 +32,81 @@ function pickup:init_material()
     end
 end
 
+local function update_view_state(pickup_entity)
+    local comp = pickup_entity.pickup
+
+    local vid = pickup_entity.viewid.id
+    bgfx.set_view_frame_buffer(vid, assert(comp.pick_fb))
+    bgfx.set_view_rect(vid, 0, 0, comp.width, comp.height)
+end
+
 function pickup:init(pickup_entity)
     self:init_material()
     local comp = pickup_entity.pickup
-    --[@ render hardware resource    
-    local w, h = comp.pick_buffer_w, comp.pick_buffer_h
+    --[@ init hardware resource
+    local w, h = comp.width, comp.height
     comp.pick_buffer = bgfx.create_texture2d(w, h, false, 1, "RGBA8", "rt-p+p*pucvc")
     comp.pick_dbuffer = bgfx.create_texture2d(w, h, false, 1, "D24S8", "rt-p+p*pucvc")
 
     comp.pick_fb = bgfx.create_frame_buffer({comp.pick_buffer, comp.pick_dbuffer}, true)
     comp.rb_buffer = bgfx.create_texture2d(w, h, false, 1, "RGBA8", "bwbr-p+p*pucvc")
-
-    local vid = pickup_entity.viewid.id
-    bgfx.set_view_frame_buffer(vid, comp.pick_fb)
-    bgfx.set_view_rect(vid, 0, 0, w, h)
     --@]
+
+    update_view_state(pickup_entity)
 end
 
-function pickup:render_to_pickup_buffer(pickup_entity)
-    local vid = pickup_entity.viewid.id
-    bgfx.touch(vid)
-
+function pickup:render_to_pickup_buffer(pickup_entity)    
     ru.foreach_sceneobj(world, 
     function (entity, eid)
-        assert(eid < 100000)
         self.current_eid = eid
-        ru.draw_mesh(vid, entity.render.mesh, self.material, mu.srt_from_entity(self.ms, entity))
+        ru.draw_mesh(pickup_entity.viewid.id, entity.render.mesh, self.material, mu.srt_from_entity(self.ms, entity))
     end)
     self.current_eid = nil
 end
 
 function pickup:readback_render_data(pickup_entity)
     local pickup_blit_viewid = 2
-    bgfx.touch(pickup_blit_viewid)
-
     local comp = pickup_entity.pickup
     
     bgfx.blit(pickup_blit_viewid, assert(comp.rb_buffer), 0, 0, assert(comp.pick_buffer))
+    assert(self.reading_frame == nil)
     self.reading_frame = bgfx.read_texture(comp.rb_buffer, comp.blitdata)
 end
 
-function pickup:which_entity_hit(pickup_entity)
+function pickup:which_entity_hitted(pickup_entity)
     local comp = pickup_entity.pickup
-    local w, h = comp.pick_buffer_w, comp.pick_buffer_w
+    local w, h = comp.width, comp.width
 
     for x = 1, w * h do
         local rgba = comp.blitdata[x]
-        if rgba ~= 0 then
+        if rgba ~= 0 then            
             return rgba
         end
     end
 end
 
+local function clear_buffer(id)
+    bgfx.set_view_clear(id, "CD", 0x00000000, 1, 0)	
+end
+
 function pickup:pick(pickup_entity, need_readback, current_frame_num)
+    clear_buffer(pickup_entity.viewid.id)
+    update_view_state(pickup_entity)
     self:render_to_pickup_buffer(pickup_entity)
 
-    if need_readback then
-        print("readback data")
+    if need_readback and self.reading_frame == nil then
         self:readback_render_data(pickup_entity)
     end
 
     if self.reading_frame == current_frame_num then
-        print("try to found which hit")
         local comp = pickup_entity.pickup
-        comp.last_eid_hit = self:which_entity_hit(pickup_entity)
-        print("last eid : ", comp.last_eid_hit)
+        local eid = self:which_entity_hitted(pickup_entity)
+        if eid then
+            print("pick entity id : ", eid)
+            comp.last_eid_hit = eid
+        else
+            print("not found any eid")
+        end
         self.reading_frame = nil
     end
 end
@@ -135,62 +135,49 @@ function pickup_view_update_sys:init()
     local observers = self.message_component.msg_observers
     observers:add(msg)
     --@]
-
-    local pickup_entity = add_pick_entity()
-
-    pickup.ms = self.math_stack
-    pickup:init(pickup_entity)
 end
 
 local function get_main_camera_viewproj_mat(ms)   
     for _, eid in world:each("main_camera") do 
         local me = world[eid]
-
-        assert(me.position)
-        assert(me.direction)
-        assert(me.frustum)
-
-        local proj = mu.proj(ms, me.frustum)
-
-        -- there must be only one main camera
-        return ms(proj, me.position.v, me.direction.v, "L*iP")
+        local proj = mu.proj(ms, assert(me.frustum))
+        -- [pos, dir] ==> viewmat --> viewmat * projmat ==> viewprojmat
+        -- --> invert(viewprojmat) ==>invViewProjMat
+        return ms(assert(me.position).v, assert(me.direction).v, "L", proj, "*iP")  
     end
 end
 
-local function extract_clickpt_to_eys_and_dir_in_worldspace(ms, clickpt, vp_w, wp_h, invVP)
-    local ndcW =  (clickpt.x / vp_w) * 2.0 - 1.0
-    local ndcH = ((vp_h - clickpt.y) / vp_h) * 2.0 - 1.0
-    local eye = ms({ndcW, ndcH, 0, 1}, invVP, "*P")
-    local at = ms({ndcW, ndcH, 1, 1}, invVP, "*P")
+local db = require "debugger"
+
+local function click_to_eye_and_dir(ms, clickpt, vp_w, vp_h, invVP)
+    local ndcX =  (clickpt.x / vp_w) * 2.0 - 1.0
+    local ndcY = ((vp_h - clickpt.y) / vp_h) * 2.0 - 1.0
+
+    local eye = ms({ndcX, ndcY, 0, 1}, invVP, "*P")
+    local at = ms({ndcX, ndcY, 1, 1}, invVP, "*P")    
     local dir = ms(at, eye, "-nP")
     return eye, dir
 end
 
-local function update_pickup_entity_viewinfo(ms, e, clickpt, vp_w, vp_h)
-    local invVP = get_main_camera_viewproj_mat(ms)    
-    local ptWS, dirWS = nil, nil
+local function update_viewinfo(ms, e, clickpt, vp_w, vp_h)
     if clickpt then
-        ptWS, dirWS = extract_clickpt_to_eys_and_dir_in_worldspace(ms, clickpt, vp_w, vp_h, invVP)
-        assert(e.position)
-        assert(e.direction)
-        self.math_stack(e.position.v, assert(ptWS), "=")       
-        self.math_stack(e.direction.v, assert(dirWS), "=")
+        local invVP = get_main_camera_viewproj_mat(ms)    
+        local ptWS, dirWS = click_to_eye_and_dir(ms, clickpt, vp_w, vp_h, invVP)
+        ms( assert(e.position).v, assert(ptWS),     "=", 
+            assert(e.direction).v, assert(dirWS),   "=")
     end
 end
 
 function pickup_view_update_sys:update()    
-    print("pickup_view_update_sys:update()")
     local clickpt = pickup.clickpt
     if clickpt == nil then return end
-    for _, eid in world:each("pickup") do        
-        local e = assert(world[eid])
-        if clickpt then
-            local vp = self.viewport
-            print("update pickup mat")
-            update_pickup_entity_viewinfo(self.math_stack, e, clickpt, vp.width, vp.height)
-        end
+
+    for _, eid in world:each("pickup") do                
+        local vp = self.viewport
+        update_viewinfo(self.math_stack, assert(world[eid]), clickpt, vp.width, vp.height)
         break
-    end   
+    end
+    pickup.clickpt_can_clean = true
 end
 
 -- system
@@ -201,8 +188,34 @@ pickup_sys.singleton "frame_num"
 
 pickup_sys.depend "pickup_view"
 
+function pickup_sys:init()
+    local function add_pick_entity(ms)
+        local eid = world:new_entity("position", "direction", "frustum", "viewid", "pickup")
+        local pickup_entity = assert(world[eid])
+        pickup_entity.viewid.id = 1
+    
+        local comp = pickup_entity.pickup
+        local frustum = pickup_entity.frustum
+        frustum.fov = 1 -- tight fov make pickup more accurate
+        frustum.aspect = comp.width / comp.height
+        frustum.near = 0.1
+        frustum.far = 100
+    
+        local pos = pickup_entity.position.v
+        local dir = pickup_entity.direction.v
+        ms(pos, {0, 0, 0, 1}, "=")
+        ms(dir, {0, 0, 1, 0}, "=")
+        
+        return pickup_entity
+    end
+
+    local pickup_entity = add_pick_entity(self.math_stack)
+
+    pickup.ms = self.math_stack
+    pickup:init(pickup_entity)
+end
+
 function pickup_sys:update()
-    print("function pickup_sys:update()")
     for _, eid in world:each("pickup") do
         local e = assert(world[eid])        
         local clickpt = pickup.clickpt
@@ -210,5 +223,9 @@ function pickup_sys:update()
         break   --only one pickup object in the scene
     end
 
-    pickup.clickpt = nil
+    -- work around for no update function call depend
+    if pickup.clickpt_can_clean ~= nil and pickup.clickpt_can_clean then
+        pickup.clickpt = nil
+        pickup.clickpt_can_clean = false
+    end    
 end
