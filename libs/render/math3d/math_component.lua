@@ -4,7 +4,7 @@ local ecs = ...
 local math3d = require "math3d"
 local math3d_comp = ecs.component "math_stack"
 
-function math3d_comp.new()    
+function math3d_comp.new()
 	return math3d.new()
 end
 

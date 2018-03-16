@@ -6,6 +6,9 @@ local support_list = {
 	"state",
 	"uniform",
 	"camera",
+	"render",
+	"tex_mapper",
+	"material",
 }
 
 local loader = setmetatable({} , {
@@ -22,8 +25,9 @@ local asset_cache = setmetatable({}, {
 	__mode = "kv",
 	__index = function (t, filename)
 		assert(type(filename) == "string")
-		local ext = assert(filename:match "%.(%w+)$")
-		local v = loader[ext](filename)
+		print(filename)
+		local ext = assert(filename:match "%.([%w_]+)$")
+		local v = loader[ext](filename, t)
 		t[filename] = v
 		return v
 	end,

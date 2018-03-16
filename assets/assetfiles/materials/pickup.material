@@ -1,0 +1,5 @@
+shader = "pickup.shader"
+
+state = "default.state"
+
+uniform = "pickup.uniform"

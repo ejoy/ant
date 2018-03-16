@@ -1,0 +1,4 @@
+shader = "bunny.shader"
+state = "assets/assetfiles/materials/default.state"
+tex_mapper = "assets/assetfiles/materials/default.tex_mapper"
+uniform = "assets/assetfiles/materials/global.uniform"

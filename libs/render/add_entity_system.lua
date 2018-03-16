@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local render_util   = require "render.render_util"
+local cu = require "render.components.util"
 local mesh_util     = require "render.resources.mesh_util"
 local shader_mgr    = require "render.resources.shader_mgr"
 
@@ -13,23 +13,19 @@ add_entity_sys.singleton "viewport"
 
 function add_entity_sys:init()
     do
-        local bunny_eid = world:new_entity("worldmat_comp", "material", "mesh")
+        local bunny_eid = world:new_entity(table.unpack(cu.get_sceneobj_compoent_names()))
         local bunny = world[bunny_eid]
 
-        --we should add a lib path for finding file
-        bunny.mesh = asset_lib["test/simplerender/bunny.mesh"]
-        assert(bunny.mesh.handle)
+        -- should read from serialize file
+        local ms = self.math_stack
+        ms(bunny.scale.v, {1, 1, 1}, "=")
+        ms(bunny.position.v, {0, 0, 0, 1}, "=")
+        ms(bunny.direction.v, {0, 0, 1, 0}, "=")
 
-        local material = bunny.material        
-        material.shader = asset_lib["test/simplerender/bunny.shader"]
-        assert(material.shader.prog)
+        bunny.render = asset_lib["test/simplerender/bunny.render"]
     
-        material.state = asset_lib["libs/render/material/data_def/default.state"]
-
-        -- we need to put in shader_mgr
-        local uniforms = asset_lib["libs/render/material/data_def/global.uniform"]
-
         -- bind the update function. this update should add by material editor
+        local uniforms = bunny.render.material.uniform
         local u_time = uniforms.u_time
         assert(u_time, "need define u_time uniform")
 
@@ -41,24 +37,25 @@ function add_entity_sys:init()
             self.value = self.value + 1
             return self.value
         end
-
-        assert(type(material.uniforms) == "table")
-        material.uniforms.u_time = u_time
     end
     
     do
-        local camera_eid = world:new_entity("view_transform", "frustum")
+        local camera_eid = world:new_entity(table.unpack(cu.get_camera_component_names()))
         local camera = world[camera_eid]
-        local vt = camera.view_transform
+
+        camera.viewid.id = 0
+
         local vp = self.viewport
 
         local ci = vp.camera_info
     
-        self.math_stack(vt.eye,         assert(ci.default.eye),         "=")
-        self.math_stack(vt.direction,   assert(ci.default.direction),   "n=")
+        self.math_stack(camera.position.v,    assert(ci.default.eye),         "=")
+        self.math_stack(camera.direction.v,   assert(ci.default.direction),   "n=")
 
-        self.math_stack(camera.frustum.proj_mat, 
-                    {type = "proj", fov = ci.fov, aspect = vp.width/vp.height, n = ci.near, f = ci.far}, "=")
-
+        local frustum = camera.frustum
+        frustum.near = ci.near
+        frustum.far = ci.far
+        frustum.fov = ci.fov
+        frustum.aspect = vp.width / vp.height
     end
 end

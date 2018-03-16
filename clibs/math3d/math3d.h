@@ -129,14 +129,8 @@ vector3_normalize(struct vector3 *v) {
 static inline struct euler *
 vector3_to_rotation(struct euler *e, const struct vector3 *r) {
 	// Assumes that the unrotated view vector is (0, 0, 1)
-	if (r->y != 0) {
-		//e->pitch = atan2f( r->y, sqrtf( r->x*r->x + r->z*r->z ) );
-		e->pitch = -asinf(r->y);	// left hand coordinate, need negative the asinf result
-	}
-	if (r->x != 0 || r->z != 0) {
-		e->yaw = atan2f( r->x, r->z );
-	}
-
+	e->pitch = -asinf(r->y);	// left hand coordinate, need negative the asinf result
+	e->yaw = (r->x != 0 || r->z != 0) ? atan2f(r->x, r->z) : 0;
 	e->roll = 0;
 
 	return e;

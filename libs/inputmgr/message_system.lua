@@ -40,7 +40,16 @@ local message = {}
 function message:resize(w, h)	
 	self.viewport.width = w
 	self.viewport.height = h
-	bgfx.set_view_rect(0, 0, 0, w, h)
+
+	local function update_main_camera_aspect(w, h)
+		for _, eid in world:each("main_camera") do
+			local camera = assert(world[eid])
+			camera.frustum.aspect = w / h
+			return camera.viewid.id
+		end
+	end
+	local mc_vid = update_main_camera_aspect(w, h)
+	bgfx.set_view_rect(mc_vid, 0, 0, w, h)
 	bgfx.reset(w, h, "v")
 end
 --@]

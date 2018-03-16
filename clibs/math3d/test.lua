@@ -42,89 +42,80 @@ local math3d = require "math3d"
 	t transposed matrix ( ..., 1 -> ..., transpose(1) )
 	n normalize vector3 ( ..., 1 -> ..., {normalize(1) , 1} )
 	l generate lootat matrix ( ..., eye, at -> ..., lookat(eye,at) )
+	e vec4/vec3 to euler angle (v, "e")
 ]]
 
 local vec = math3d.ref "vector"
 local mat = math3d.ref "matrix"	-- matrix ref
 
 local stack = math3d.new()
-local pitch = -45
-local yaw = 0
-local zdir = math3d.ref "vector"
 
-stack(zdir, {0, 1, 1, 0}, "=")
-local euler = stack(zdir, "e", {type="e", pitch, yaw, 0}, "+T")
-assert(euler.type == 5)	--LINEAR_TYPE_EULER
--- euler[1] = mu.limit(euler[1], -89.9, 89.9)
--- euler[2] = mu.limit(euler[2], -179.9, 179.9)
+local v = stack( { type = "proj", fov = 60, aspect = 1024/768 } , "VR")	-- make a proj mat
+print(v)
+local v1,m1 = stack( { s = 2 } , "VP" )	-- push scale 2x matrix
+print(v1,m1)
+local v2,m2 = stack( { rx = 1 } , "VP" )	-- push rot (1,0,0) matrix
+print(v2,m2)
+local m = stack(m1,m2,"*V")
+print(m)
 
-stack(zdir, {0, 0, 1, 0}, {type="e", euler[1], euler[2], euler[3]}, "*=")
-print(zdir)
+stack( vec, { 1,2,3,4 } , "1+=")	-- dup {1,2,3,4} add self and then assign to vec
 
--- local zdir_rotate = stack(zdir, {type="q", axis="y", angle={45}}, "*P")
--- print("before : ", stack(zdir, "V"),
--- 		"after : ", stack(zdir_rotate, "V"))
+local vv = stack({1, 2, 3, 1}, {2}, "*V")
+print("vec4 mul : " .. vv)
+print("unpack", stack(">VRVRVRVR"))	-- unpack top {1*2,2*2,3*2,1*2} -> 2,4,6,2
 
--- local v = stack( { type = "proj", fov = 60, aspect = 1024/768 } , "VR")	-- make a proj mat
--- print(v)
--- local v1,m1 = stack( { s = 2 } , "VP" )	-- push scale 2x matrix
--- print(v1,m1)
--- local v2,m2 = stack( { rx = 1 } , "VP" )	-- push rot (1,0,0) matrix
--- print(v2,m2)
--- local m = stack(m1,m2,"*V")
--- print(m)
+-- pop to lua
+stack({1, 2, 3, 1})
+local data = stack("T")
+assert(type(data) == "table")
+assert(data.type ~= nil)
+print("data.type : ", data.type)
+for k,v in ipairs(data) do
+	print("k : ", k, ", v : ", v)
+end
 
--- stack( vec, { 1,2,3,4 } , "1+=")	-- dup {1,2,3,4} add self and then assign to vec
+--quaternion
+local quat_aa = stack({type = "quat", axis = {0, 1, 0}, angle = {60}}, "V")	--
+print("quaternion with axis and angle : " .. quat_aa)
 
--- local vv = stack({1, 2, 3, 1}, {2}, "*V")
--- print("vec4 mul : " .. vv)
--- print("unpack", stack(">VRVRVRVR"))	-- unpack top {1*2,2*2,3*2,1*2} -> 2,4,6,2
+local quat_mul = stack({type = "quat", 0, 1, 0, 1}, {type = "quat", 1, 0, 0, 0.5}, "*V")	-- define an indentity quaternion
+print("q * q : " .. quat_mul)
 
--- -- pop to lua
--- stack({1, 2, 3, 1})
--- local data = stack("T")
--- assert(type(data) == "table")
--- assert(data.type ~= nil)
--- print("data.type : ", data.type)
--- for k,v in ipairs(data) do
--- 	print("k : ", k, ", v : ", v)
--- end
+local quat_vec_mul = stack({1, 2, 3, 0}, {type = "quat", 0, 1, 0, 0.5}, "*V")
+print("q * v : " .. quat_vec_mul)
 
--- --quaternion
--- local quat_aa = stack({type = "quat", axis = {0, 1, 0}, angle = {60}}, "V")	--
--- print("quaternion with axis and angle : " .. quat_aa)
+local axisid = stack({1, 0, 0}, "P")
+print("axisid : ", axisid)
+local qq = stack({type = "quat", axis = axisid, angle = {60}}, "V")
+print("quaternion axis angle : ", qq)
 
--- local quat_mul = stack({type = "quat", 0, 1, 0, 1}, {type = "quat", 1, 0, 0, 0.5}, "*V")	-- define an indentity quaternion
--- print("q * q : " .. quat_mul)
+--euler
+local zdir = stack({0, 0, 1, 0}, "P")
+local e0  = stack(zdir, "eP")
+local e1 = stack(e0, {type="e", pitch=-45, yaw=10, 0}, "+P")
+zdir = stack(e1, zdir, "*P")
+print("zdir after rotate : ", stack(zdir, "V"))				
 
--- local quat_vec_mul = stack({1, 2, 3, 0}, {type = "quat", 0, 1, 0, 0.5}, "*V")
--- print("q * v : " .. quat_vec_mul)
+--lookat
+stack(mat, "1=")	-- init mat to an indentity matrix (dup self and assign)
 
--- local axisid = stack({1, 0, 0}, "P")
--- print("axisid : ", axisid)
--- local qq = stack({type = "quat", axis = axisid, angle = {60}}, "V")
--- print("quaternion axis angle : ", qq)
+local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "lP")	-- calc lookat matrix
+mat(lookat) -- assign lookat matrix to mat
+print("lookat matrix : " , mat)
+print(math3d.type(mat))	-- matrix true (true means marked)
 
+local vec0 = math3d.ref "vector"
+stack(vec0, {1, 2, 3, 4}, "=")	-- assign value to vec0
 
--- --lookat
--- stack(mat, "1=")	-- init mat to an indentity matrix (dup self and assign)
+math3d.reset(stack)
+print(vec, ~vec)	-- string and lightuserdata
+mat()	-- clear mat
 
--- local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "lP")	-- calc lookat matrix
--- mat(lookat) -- assign lookat matrix to mat
--- print("lookat matrix : " , mat)
--- print(math3d.type(mat))	-- matrix true (true means marked)
+local t = stack(vec, "P")
+print(math3d.type(t))	-- vector true
+print(stack( t,"Vv"))	-- string lightuserdata
 
--- local vec0 = math3d.ref "vector"
--- stack(vec0, {1, 2, 3, 4}, "=")	-- assign value to vec0
-
--- math3d.reset(stack)
--- print(vec, ~vec)	-- string and lightuserdata
--- mat()	-- clear mat
-
--- local t = stack(vec, "P")
--- print(math3d.type(t))	-- vector true
--- print(stack( t,"Vv"))	-- string lightuserdata
-
--- print(stack(math3d.constant "identvec", "VR"))
--- print(stack(math3d.constant "identmat", "V"))	-- R: remove top
--- print(stack(">RRSRV"))	-- unpack ident mat, get 2st line, 1: RRR 2: RRSR 3:RSRSR 4:SRSRSR
+print(stack(math3d.constant "identvec", "VR"))
+print(stack(math3d.constant "identmat", "V"))	-- R: remove top
+print(stack(">RRSRV"))	-- unpack ident mat, get 2st line, 1: RRR 2: RRSR 3:RSRSR 4:SRSRSR

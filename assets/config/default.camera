@@ -5,8 +5,8 @@ default = {
 }
 
 -- will change
-fov = 90
-near = 0.001
+fov = 60
+near = 0.1
 far = 10000
 
 move_speed = 1
