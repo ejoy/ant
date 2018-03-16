@@ -1,8 +1,9 @@
 local require = import and import(...) or require
 local rawtable = require "rawtable"
-local bgfx = require "bgfx"
+
 
 return function (filename)
+    local bgfx = require "bgfx"
     local uniforms = rawtable(filename)
     for u_name, u_value in pairs(uniforms) do
         local uniform = uniforms[u_name]        

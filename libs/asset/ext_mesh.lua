@@ -1,8 +1,9 @@
 local require = import and import(...) or require
 local rawtable = require "rawtable"
-local mesh_util = require "render.resources.mesh_util"
+
 
 return function (filename)
+    local mesh_util = require "render.resources.mesh_util"
     local mesh = rawtable(filename)
     local mesh_path = mesh.mesh_path
     assert(mesh_path ~= nil)

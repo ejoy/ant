@@ -1,18 +1,3 @@
 local ecs = ...
 
-local camera_transform = ecs.component "view_transform" {
-    eye         = {type = "vector"},
-    direction   = {type = "vector"}
-}
-
-local camera_frustum = ecs.component "frustum" {
-    proj_mat = {type = "matrix"}
-}
-
-
-
-
-
-
-
-
+ecs.component "main_camera" {}

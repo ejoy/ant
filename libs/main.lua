@@ -13,7 +13,7 @@ local task = require "editor.task"
 iup.SetGlobal("UTF8MODE", "YES")
 
 local canvas = iup.canvas {
-	rastersize = "1024x768",
+	rastersize = "1280x720",
 --	size = "HALFxHALF",
 }
 
@@ -54,15 +54,16 @@ local function init()
 	world = ecs.new_world {
 		modules = { 
 			assert(loadfile "libs/inputmgr/message_system.lua"),
+			assert(loadfile "libs/render/components/general.lua"),
 			assert(loadfile "libs/render/add_entity_system.lua"),	
-			assert(loadfile "libs/render/math3d/math_component.lua"),			
-			assert(loadfile "libs/render/material/material_component.lua"),
-			assert(loadfile "libs/render/mesh_component.lua"),
-			assert(loadfile "libs/render/viewport_component.lua"),
+			assert(loadfile "libs/render/math3d/math_component.lua"),
+			assert(loadfile "libs/render/viewport_component.lua"),			
 			assert(loadfile "libs/render/camera/camera_component.lua"),
-			assert(loadfile "libs/render/camera/camera_system.lua"),
 			assert(loadfile "libs/render/camera/camera_controller.lua"),
-			assert(loadfile "libs/render/renderpipeline.lua"),
+			assert(loadfile "libs/render/view_system.lua"),
+			assert(loadfile "libs/render/entity_rendering_system.lua"),
+			assert(loadfile "libs/render/pick/pickup_system.lua"),
+			assert(loadfile "libs/render/end_frame_system.lua"),
 		},
 		args = { mq = input_queue },
 	}
