@@ -75,6 +75,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iuplua", "iuplua.vcxproj", 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iupluaimglib", "iupluaimglib.vcxproj", "{0C66FA6C-4B74-43DC-B6E8-165F8DD673BE}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lanes", "lanes.vcxproj", "{EF116D60-7C1D-4C7E-AE87-B3CF2B97012E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AF8C0252-364F-4D3B-B35E-F3392EEA620B} = {AF8C0252-364F-4D3B-B35E-F3392EEA620B}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -195,6 +200,14 @@ Global
 		{0C66FA6C-4B74-43DC-B6E8-165F8DD673BE}.Release|x64.Build.0 = Release|x64
 		{0C66FA6C-4B74-43DC-B6E8-165F8DD673BE}.Release|x86.ActiveCfg = Release|Win32
 		{0C66FA6C-4B74-43DC-B6E8-165F8DD673BE}.Release|x86.Build.0 = Release|Win32
+		{EF116D60-7C1D-4C7E-AE87-B3CF2B97012E}.Debug|x64.ActiveCfg = Debug|x64
+		{EF116D60-7C1D-4C7E-AE87-B3CF2B97012E}.Debug|x64.Build.0 = Debug|x64
+		{EF116D60-7C1D-4C7E-AE87-B3CF2B97012E}.Debug|x86.ActiveCfg = Debug|Win32
+		{EF116D60-7C1D-4C7E-AE87-B3CF2B97012E}.Debug|x86.Build.0 = Debug|Win32
+		{EF116D60-7C1D-4C7E-AE87-B3CF2B97012E}.Release|x64.ActiveCfg = Release|x64
+		{EF116D60-7C1D-4C7E-AE87-B3CF2B97012E}.Release|x64.Build.0 = Release|x64
+		{EF116D60-7C1D-4C7E-AE87-B3CF2B97012E}.Release|x86.ActiveCfg = Release|Win32
+		{EF116D60-7C1D-4C7E-AE87-B3CF2B97012E}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
