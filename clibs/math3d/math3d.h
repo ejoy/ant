@@ -564,23 +564,26 @@ matrix44_lookat_eye_direction(union matrix44 *m, struct vector3 *eye, struct vec
 	vector3_normalize(vector3_cross(&right, &up, &view));
 	vector3_cross(&up, &view, &right);
 
-	matrix44_identity(m);
 	float *mx = m->x;
 	mx[0] = right.x;
 	mx[1] = up.x;
 	mx[2] = view.x;
+	mx[3] = 0.0f;
 
 	mx[4] = right.y;
 	mx[5] = up.y;
 	mx[6] = view.y;
+	mx[7] = 0.0f;
 
 	mx[8] = right.z;
 	mx[9] = up.z;
 	mx[10] = view.z;
+	mx[11] = 0.0f;
 
 	mx[12] = -vector3_dot(&right, eye);
 	mx[13] = -vector3_dot(&up, eye);
 	mx[14] = -vector3_dot(&view, eye);
+	mx[15] = 1.f;
 
 	return m;
 }

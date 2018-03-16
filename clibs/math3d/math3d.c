@@ -40,6 +40,7 @@ pop(lua_State *L, struct lastack *LS) {
 
 struct boxpointer {
 	struct lastack *LS;
+	int defautlHomogeneousDepth;
 };
 
 struct refobject {
@@ -377,7 +378,14 @@ push_mat(lua_State *L, struct lastack *LS, int index, int type) {
 		lua_pop(L, 1);
 	}
 	lua_getfield(L, index, "h");
-	int homogeneousDepth = lua_toboolean(L, -1);
+	int homogeneousDepth = 0;
+	if (lua_isnil(L, -1)) {
+		struct boxpointer *p = lua_touserdata(L, lua_upvalueindex(1));
+		homogeneousDepth = p->defautlHomogeneousDepth;
+	} else {
+		homogeneousDepth = lua_toboolean(L, -1);
+	}
+
 	lua_pop(L, 1);
 
 	union matrix44 m;
@@ -655,7 +663,7 @@ add_2values(lua_State *L, struct lastack *LS) {
 }
 
 static void
-sub_vector(lua_State *L, struct lastack *LS) {
+sub_2values(lua_State *L, struct lastack *LS) {
 	float *val[2];
 	int types[2];
 	pop2_values(L, LS, val, types);
@@ -1105,7 +1113,7 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		refstack_1_1(RS);
 		break;
 	case '-':
-		sub_vector(L, LS);
+		sub_2values(L, LS);
 		refstack_2_1(RS);
 		break;
 	case '+':
@@ -1195,12 +1203,20 @@ commandLS(lua_State *L) {
 
 static int
 lnew(lua_State *L) {
+	int homogeneousDepth = 0;
+	if (!lua_isnil(L, 1)) {
+		homogeneousDepth = lua_toboolean(L, 1);
+		lua_pop(L, 1);
+	}
 	struct boxpointer *bp = lua_newuserdata(L, sizeof(*bp));
+	bp->defautlHomogeneousDepth = homogeneousDepth;	
+
 	bp->LS = NULL;
 	if (luaL_newmetatable(L, LINALG)) {
 		lua_pushcfunction(L, delLS);
 		lua_setfield(L, -2, "__gc");
 	}
+
 	lua_setmetatable(L, -2);
 	lua_pushcclosure(L, commandLS, 1);
 	bp->LS = lastack_new();
