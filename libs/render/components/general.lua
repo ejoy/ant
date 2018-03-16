@@ -12,11 +12,13 @@ ecs.component "scale" {
 }
 
 ecs.component "frustum" {
-    isortho = falses,
-    near = 0.1,
-    far = 10000,
-    fov = 90,
-    aspect = 4/3,
+    isortho = false,
+    n = 0.1,
+    f = 10000,
+    l = -1,
+    r = 1,
+    t = -1,
+    b = 1,
 }
 
 ecs.component "viewid"{

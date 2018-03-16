@@ -46,7 +46,7 @@ function util.srt_from_entity(ms, entity)
 end
 
 function util.proj(ms, frustum, ispersistent)
-	local t = {type = "proj", fov=frustum.fov, aspect = frustum.aspect, n=frustum.near, f=frustum.far}
+	local t = {type = "proj", n=frustum.n, f=frustum.f, l=frustum.l, r=frustum.r, t=frustum.t, b=frustum.b}
 	if frustum.isortho then
 		t.type = "ortho"
 	end
@@ -62,16 +62,23 @@ function util.proj_v(ms, frustum, ispersistent)
 	return to_v(ms, util.proj(ms, frustum, ispersistent))
 end
 
--- function util.lookat(ms, eye, dir, ispersistent)
--- 	if ispersistent then
--- 		local v = math3d
--- 	end
+function util.degree_to_radian(angle)
+	return (angle / 180) * math.pi
+end
 
--- 	return ms(eye, dir, )
--- end
+function util.radian_to_degree(radian)
+	return (radian / math.pi) * 180
+end
 
--- function util.lookat_v(ms, eye, dir)
-
--- end
+function util.frustum_from_fov(frustum, n, f, fov, aspect)
+	local hh = math.tan(util.degree_to_radian(fov * 0.5)) * n
+	local hw = aspect * hh
+	frustum.n = n
+	frustum.f = f
+	frustum.l = -hw
+	frustum.r = hw
+	frustum.t = hh
+	frustum.b = -hh
+end
 
 return util

@@ -196,11 +196,8 @@ function pickup_sys:init()
     
         local comp = pickup_entity.pickup
         local frustum = pickup_entity.frustum
-        frustum.fov = 1 -- tight fov make pickup more accurate
-        frustum.aspect = comp.width / comp.height
-        frustum.near = 0.1
-        frustum.far = 100
-    
+        mu.frustum_from_fov(frustum, 0.1, 100, 1, comp.width / comp.height)
+        
         local pos = pickup_entity.position.v
         local dir = pickup_entity.direction.v
         ms(pos, {0, 0, 0, 1}, "=")

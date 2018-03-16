@@ -44,7 +44,14 @@ function message:resize(w, h)
 	local function update_main_camera_aspect(w, h)
 		for _, eid in world:each("main_camera") do
 			local camera = assert(world[eid])
-			camera.frustum.aspect = w / h
+			local frustum = camera.frustum
+			local aspect = w / h
+
+			local tmp_h = frustum.t - frustum.b
+			local tmp_hw = aspect * tmp_h * 0.5
+			frustum.l = -tmp_hw
+			frustum.r = tmp_hw
+			
 			return camera.viewid.id
 		end
 	end

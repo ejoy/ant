@@ -1,6 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local cu = require "render.components.util"
+local mu = require "math.util"
 local mesh_util     = require "render.resources.mesh_util"
 local shader_mgr    = require "render.resources.shader_mgr"
 
@@ -42,20 +43,15 @@ function add_entity_sys:init()
     do
         local camera_eid = world:new_entity(table.unpack(cu.get_camera_component_names()))
         local camera = world[camera_eid]
-
         camera.viewid.id = 0
 
         local vp = self.viewport
-
         local ci = vp.camera_info
     
         self.math_stack(camera.position.v,    assert(ci.default.eye),         "=")
         self.math_stack(camera.direction.v,   assert(ci.default.direction),   "n=")
 
         local frustum = camera.frustum
-        frustum.near = ci.near
-        frustum.far = ci.far
-        frustum.fov = ci.fov
-        frustum.aspect = vp.width / vp.height
+        mu.frustum_from_fov(frustum, ci.near, ci.far, ci.fov, vp.width/vp.height)
     end
 end
