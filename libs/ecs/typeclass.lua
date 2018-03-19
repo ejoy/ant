@@ -106,7 +106,7 @@ return function(world)
 	}
 	register {
 		type = "system",
-		setter = { "depend" , "singleton", "import" },
+		setter = { "depend" , "dependby", "singleton", "import" },
 		submethod = { "notify" },
 		callback = { "init", "update" },
 	}

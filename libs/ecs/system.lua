@@ -75,6 +75,23 @@ local function solve_depend(graph)
 		S[k] = true
 	end
 	for k,v in pairs(graph) do
+		local dependby = v.dependby
+		if dependby then
+			assert(type(dependby) == "table", k)
+			for _, key in pairs(dependby) do
+				local s = graph[key]
+				if s == nil then
+					error(key .. " not exist")
+				end
+				if s.depend == nil then
+					s.depend = {}
+				end
+				table.insert(s.depend, k)
+			end
+		end
+	end
+
+	for k,v in pairs(graph) do
 		local depend = v.depend
 		if depend then
 			assert(type(depend) == "table", k)

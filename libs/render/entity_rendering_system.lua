@@ -9,6 +9,7 @@ local draw_entity_sys = ecs.system "entity_rendering"
 draw_entity_sys.depend "add_entities_system"
 draw_entity_sys.depend "view_system"
 draw_entity_sys.depend "camera_controller"
+draw_entity_sys.dependby "end_frame"
 
 draw_entity_sys.singleton "math_stack"
 

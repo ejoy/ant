@@ -147,8 +147,6 @@ local function get_main_camera_viewproj_mat(ms)
     end
 end
 
-local db = require "debugger"
-
 local function click_to_eye_and_dir(ms, clickpt, vp_w, vp_h, invVP)    
     local ndcX =  (clickpt.x / vp_w) * 2.0 - 1.0
     local ndcY = ((vp_h - clickpt.y) / vp_h) * 2.0 - 1.0
@@ -187,6 +185,7 @@ pickup_sys.singleton "math_stack"
 pickup_sys.singleton "frame_num"
 
 pickup_sys.depend "pickup_view"
+pickup_sys.dependby "end_frame"
 
 function pickup_sys:init()
     local function add_pick_entity(ms)

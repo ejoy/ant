@@ -46,3 +46,10 @@ function dummy.notify:foobar(set)
 		end
 	end
 end
+
+local dby = ecs.system "dependby"
+dby.dependby "dummy"
+
+function dby:init()
+	print("in dby:init()")
+end
