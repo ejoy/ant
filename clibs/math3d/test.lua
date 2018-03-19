@@ -37,6 +37,7 @@ local math3d = require "math3d"
 	+ vector4 + vector4 ( ..., 1,2 - > ..., 1+2 )
 	- vec4 - vec4 ( ..., 1,2 - > ..., 1-2 )
 	. vec3 * vec3  ( ..., 1,2 -> ..., { dot(1,2) , 0 , 0 ,1 } )
+	% vec4 * matrix4x4 -> vec4 /= vec4.w
 	x cross (vec3 , vec3) ( ..., 1, 2, -> ... , cross(1,2) )
 	i inverted matrix  ( ..., 1 -> ..., invert(1) )
 	t transposed matrix ( ..., 1 -> ..., transpose(1) )
@@ -99,6 +100,9 @@ print("zdir after rotate : ", stack(zdir, "V"))
 
 --lookat
 stack(mat, "1=")	-- init mat to an indentity matrix (dup self and assign)
+
+local vH = stack({2, 4, 5, 1}, mat, "%P")
+print("vector homogeneous divide : ", stack(vH, "%"))
 
 local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "lP")	-- calc lookat matrix
 mat(lookat) -- assign lookat matrix to mat
