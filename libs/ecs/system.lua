@@ -74,25 +74,38 @@ local function solve_depend(graph)
 		table.insert(ret, k)
 		S[k] = true
 	end
+	-- combine depend and dependby
+	local dp_table = {}
 	for k,v in pairs(graph) do
+		local function get_dp(t, k)
+			local dp = t[k]
+			if dp == nil then
+				t[k] = {}
+				dp = t[k]
+			end
+			return dp
+		end
+		
+		local depend = v.depend
+		if depend then
+			assert(type(depend) == "table", k)
+			local dp = get_dp(dp_table, k)		
+			table.move(depend, 1, #depend, #dp+1, dp)
+		end
+	
 		local dependby = v.dependby
 		if dependby then
-			assert(type(dependby) == "table", k)
-			for _, key in pairs(dependby) do
-				local s = graph[key]
-				if s == nil then
-					error(key .. " not exist")
-				end
-				if s.depend == nil then
-					s.depend = {}
-				end
-				table.insert(s.depend, k)
+			for _, n in ipairs(dependby) do
+				assert(type(dependby) == "table", k)
+				local dpby = get_dp(dp_table, n)			
+				table.insert(dpby, k)
 			end
 		end
 	end
 
 	for k,v in pairs(graph) do
-		local depend = v.depend
+		-- local depend = v.depend
+		local depend = dp_table[k]
 		if depend then
 			assert(type(depend) == "table", k)
 			local depend_keys = {}
@@ -154,7 +167,7 @@ function system.init_list(sys)
 	return init_list
 end
 
-function system.update_list(sys, order)
+function system.update_list(sys, order, obydp)
 	local update_list = {}
 	local norder = {}
 	for sname in pairs(sys) do
@@ -168,12 +181,33 @@ function system.update_list(sys, order)
 			end
 		end
 	end
+
+	if obydp then
+		local dp_list = solve_depend(sys)
+		for _, n in ipairs(dp_list) do
+			if norder[n] then
+				table.insert(update_list, n)
+				norder[n] = nil
+			end
+		end
+		print("depend list")
+		for _, n in ipairs(dp_list) do
+			print(n)
+		end
+
+		print("update_list")
+		for _, n in ipairs(dp_list) do
+			print(n)
+		end
+	end
+
 	local norder_list = {}
 	for sname in pairs(norder) do
 		table.insert(norder_list, sname)
 	end
 	table.sort(norder_list)
 	table.move(norder_list, 1, #norder_list, #update_list+1,update_list)
+
 	local ret = {}
 	for _, sname in ipairs(update_list) do
 		local update = sys[sname].method.update

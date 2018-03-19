@@ -192,7 +192,7 @@ function ecs.new_world(config)
 	local init_list = system.init_list(class.system, proxy)
 	local meta = w._entity_meta
 
-	local update_list = system.update_list(class.system, config.update_order)
+	local update_list = system.update_list(class.system, config.update_order, config.update_bydepend)
 	function w.update ()
 		for _, v in ipairs(update_list) do
 			local name, f = v[1], v[2]

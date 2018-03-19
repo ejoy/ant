@@ -70,7 +70,7 @@ function pickup:readback_render_data(pickup_entity)
     
     bgfx.blit(pickup_blit_viewid, assert(comp.rb_buffer), 0, 0, assert(comp.pick_buffer))
     assert(self.reading_frame == nil)
-    self.reading_frame = bgfx.read_texture(comp.rb_buffer, comp.blitdata)
+    return bgfx.read_texture(comp.rb_buffer, comp.blitdata)
 end
 
 function pickup:which_entity_hitted(pickup_entity)
@@ -89,13 +89,13 @@ local function clear_buffer(id)
     bgfx.set_view_clear(id, "CD", 0x00000000, 1, 0)	
 end
 
-function pickup:pick(pickup_entity, need_readback, current_frame_num)
+function pickup:pick(pickup_entity, current_frame_num)
     clear_buffer(pickup_entity.viewid.id)
     update_view_state(pickup_entity)
     self:render_to_pickup_buffer(pickup_entity)
 
-    if need_readback and self.reading_frame == nil then
-        self:readback_render_data(pickup_entity)
+    if self.reading_frame == nil then
+        self.reading_frame = self:readback_render_data(pickup_entity)        
     end
 
     if self.reading_frame == current_frame_num then
@@ -109,22 +109,20 @@ function pickup:pick(pickup_entity, need_readback, current_frame_num)
         end
         self.reading_frame = nil
     end
+    self.is_picking = self.reading_frame ~= nil
 end
 
--- update view system
--- separate this system from pickup_system is because the view info used in view_system
--- depend on this system to finish. we need a dependby method in ecs framework to make view_system know that 
--- it should depend this system
-local pickup_view_update_sys = ecs.system "pickup_view"
+local pickup_view_sys = ecs.system "pickup_view"
 
-pickup_view_update_sys.singleton "math_stack"
-pickup_view_update_sys.singleton "viewport"
-pickup_view_update_sys.singleton "message_component"
+pickup_view_sys.singleton "math_stack"
+pickup_view_sys.singleton "viewport"
+pickup_view_sys.singleton "message_component"
 
-pickup_view_update_sys.depend "iup_message"
-pickup_view_update_sys.depend "add_entities_system"
+pickup_view_sys.depend "iup_message"
+pickup_view_sys.depend "add_entities_system"
+pickup_view_sys.dependby "view_system"
 
-function pickup_view_update_sys:init()
+function pickup_view_sys:init()
     --[@    for message callback
     local msg = {}
     function msg:button(b, p, x, y)
@@ -158,24 +156,23 @@ local function click_to_eye_and_dir(ms, clickpt, vp_w, vp_h, invVP)
 end
 
 local function update_viewinfo(ms, e, clickpt, vp_w, vp_h)
-    if clickpt then
-        local invVP = get_main_camera_viewproj_mat(ms)    
-        local ptWS, dirWS = click_to_eye_and_dir(ms, clickpt, vp_w, vp_h, invVP)
-        ms( assert(e.position).v, assert(ptWS),     "=", 
-            assert(e.direction).v, assert(dirWS),   "=")
-    end
+    local invVP = get_main_camera_viewproj_mat(ms)    
+    local ptWS, dirWS = click_to_eye_and_dir(ms, clickpt, vp_w, vp_h, invVP)
+    ms( assert(e.position).v, assert(ptWS),     "=", 
+        assert(e.direction).v, assert(dirWS),   "=")
 end
 
-function pickup_view_update_sys:update()    
+function pickup_view_sys:update()
     local clickpt = pickup.clickpt
-    if clickpt == nil then return end
-
-    for _, eid in world:each("pickup") do                
-        local vp = self.viewport
-        update_viewinfo(self.math_stack, assert(world[eid]), clickpt, vp.width, vp.height)
-        break
+    if clickpt ~= nil then
+        for _, eid in world:each("pickup") do                
+            local vp = self.viewport
+            update_viewinfo(self.math_stack, assert(world[eid]), clickpt, vp.width, vp.height)
+            break
+        end
+        pickup.is_picking = true
+        pickup.clickpt = nil
     end
-    pickup.clickpt_can_clean = true
 end
 
 -- system
@@ -212,16 +209,11 @@ function pickup_sys:init()
 end
 
 function pickup_sys:update()
-    for _, eid in world:each("pickup") do
-        local e = assert(world[eid])        
-        local clickpt = pickup.clickpt
-        pickup:pick(e, clickpt ~= nil, self.frame_num.current)
-        break   --only one pickup object in the scene
+    if pickup.is_picking then        
+        for _, eid in world:each("pickup") do
+            local e = assert(world[eid])
+            pickup:pick(e, self.frame_num.current)
+            break   --only one pickup object in the scene
+        end
     end
-
-    -- work around for no update function call depend
-    if pickup.clickpt_can_clean ~= nil and pickup.clickpt_can_clean then
-        pickup.clickpt = nil
-        pickup.clickpt_can_clean = false
-    end    
 end

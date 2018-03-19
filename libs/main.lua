@@ -65,6 +65,7 @@ local function init()
 			assert(loadfile "libs/render/pick/pickup_system.lua"),
 			assert(loadfile "libs/render/end_frame_system.lua"),
 		},
+		update_bydepend = true,
 		args = { mq = input_queue },
 	}
 
