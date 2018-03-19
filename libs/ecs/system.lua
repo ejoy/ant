@@ -189,16 +189,7 @@ function system.update_list(sys, order, obydp)
 				table.insert(update_list, n)
 				norder[n] = nil
 			end
-		end
-		print("depend list")
-		for _, n in ipairs(dp_list) do
-			print(n)
-		end
-
-		print("update_list")
-		for _, n in ipairs(dp_list) do
-			print(n)
-		end
+		end		
 	end
 
 	local norder_list = {}
