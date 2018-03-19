@@ -149,12 +149,12 @@ end
 
 local db = require "debugger"
 
-local function click_to_eye_and_dir(ms, clickpt, vp_w, vp_h, invVP)
+local function click_to_eye_and_dir(ms, clickpt, vp_w, vp_h, invVP)    
     local ndcX =  (clickpt.x / vp_w) * 2.0 - 1.0
     local ndcY = ((vp_h - clickpt.y) / vp_h) * 2.0 - 1.0
 
-    local eye = ms({ndcX, ndcY, 0, 1}, invVP, "*P")
-    local at = ms({ndcX, ndcY, 1, 1}, invVP, "*P")    
+    local eye = ms({ndcX, ndcY, 0, 1}, invVP, "%P")
+    local at = ms({ndcX, ndcY, 1, 1}, invVP, "%P")
     local dir = ms(at, eye, "-nP")
     return eye, dir
 end
