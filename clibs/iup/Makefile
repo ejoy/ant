@@ -24,7 +24,7 @@ SRCIUP = iup_array.c iup_callback.c iup_dlglist.c iup_attrib.c iup_focus.c iup_f
       iup_gridbox.c iup_detachbox.c iup_backgroundbox.c iup_linefile.c iup_config.c \
       iup_flatbutton.c iup_animatedlabel.c iup_draw.c iup_flatframe.c iup_flattabs.c \
       iup_flatscrollbar.c iup_flatscrollbox.c iup_dial.c iup_gauge.c iup_colorbar.c \
-      iup_colorbrowser.c iup_colorhsi.c
+      iup_colorbrowser.c iup_colorhsi.c iup_flatlabel.c
 
 SRCWIN += iupwin_common.c iupwin_brush.c iupwin_focus.c iupwin_font.c \
       iupwin_globalattrib.c iupwin_handle.c iupwin_key.c iupwin_str.c \
@@ -56,7 +56,7 @@ CTRLUA = button.lua canvas.lua dialog.lua colordlg.lua clipboard.lua \
        messagedlg.lua progressdlg.lua backgroundbox.lua flatbutton.lua \
        animatedlabel.lua calendar.lua datepick.lua param.lua parambox.lua \
        detachbox.lua flatframe.lua flattabs.lua flatscrollbox.lua \
-       dial.lua gauge.lua colorbar.lua colorbrowser.lua
+       dial.lua gauge.lua colorbar.lua colorbrowser.lua flatlabel.lua
 
 SRCLUA = iuplua.lua constants.lua iup_config.lua
 
