@@ -853,6 +853,19 @@ ldrives(lua_State *L) {
 	return 1;
 }
 
+static int 
+lexist(lua_State *L){
+	const char* name = lua_tostring(L, -1);
+#ifdef _MSC_VER
+	#define F_OK 0
+	#define R_OK 0x2
+	#define W_OK 0x4	
+#endif //_MSC_VER
+
+	lua_pushboolean(L, access(name, F_OK) == 0);
+	return 1;
+}
+
 LUAMOD_API int
 luaopen_winfile(lua_State *L) {
 	luaL_checkversion(L);
@@ -875,6 +888,7 @@ luaopen_winfile(lua_State *L) {
 		{ "getenv", lgetenv },
 		{ "popen", lpopen },
 		{ "drives", ldrives },
+		{ "exist", lexist },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

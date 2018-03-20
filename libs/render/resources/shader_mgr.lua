@@ -2,35 +2,104 @@ local require = import and import(...) or require
 
 local bgfx = require "bgfx"
 local hw_caps = require "render.hardware_caps"
+local fs = require "filesystem"
 
 -- init
-local shader_path
-local vs_shaders = {}
-local fs_shaders = {}
-local programs = {}
+local function get_caps_path()
+    local caps = hw_caps.get()
+    local paths = {
+        NOOP       = "dx9",
+        DIRECT3D9  = "dx9",
+        DIRECT3D11 = "dx11",
+        DIRECT3D12 = "dx11",
+        GNM        = "pssl",
+        METAL      = "metal",
+        OPENGL     = "glsl",
+        OPENGLES   = "essl",
+        VULKAN     = "spirv",
+    }
 
-local shader_mgr = {
-      
-}
+    return assert(paths[caps.rendererType])
+end
+
+local shader_asset_path = "assets/shaders"
+local caps_bin_path = get_caps_path()
+local src_path = "src"
+local shader_path = shader_asset_path .. "/" .. caps_bin_path .. "/"
+local shader_mgr = {}
+
+local function compile_shader(filename, outfile)
+    local toolset = require "editor.toolset"
+    local config = toolset.load_config()
+
+    if next(config) == nil then
+        return false, "load_config file failed, 'bin/iup.exe tools/config.lua' need to run first"
+    end
+
+    config.dest = outfile    
+    return toolset.compile(filename, config)
+end
+
+local function check_compile_shader(name, outfile)
+    local _, ext = name:match("([%w_/\\]+)%.(sc)")
+    if ext ~= nil then
+        local fullname = shader_asset_path .. "/" .. src_path .. "/" .. name        
+        local success, msg = compile_shader(fullname, outfile)
+        if not success then
+            log(string.format("try compile from file %s, but failed, error message : \n%s", filename, msg))
+            return false
+        end
+    end
+
+    return true
+end
+
+local function remove_ext(name)
+    local path, ext = name:match("([%w_/\\]+)%.([%w_]+)$")
+    if ext ~= nil then
+        return path
+    end
+
+    return name
+end
+
+local function parent_path(fullname)
+    local path = fullname:match("^([%w_/\\]+)[/\\][%w_.]+")
+    return path
+end
+
+local function join_path(p0, p1)
+    local lastchar = p0[-1]
+
+    if lastchar ~= '/' and lastchar ~= '\\' then
+        return string.format("%s/%s", p0, p1)
+    end
+    return p0 .. p1
+end
+
+local function trim_slash(fullpath)
+    return fullpath:match("^%s*[/\\]*([%w_/\\]+)[/\\]")
+end
+
+local function create_dirs(fullpath)    
+    fullpath = trim_slash(fullpath)
+    local cwd = fs.currentdir()
+    for m in fullpath:gmatch("[%w_]+") do
+        cwd = join_path(cwd, m)
+        if not fs.exist(cwd) then        
+            fs.mkdir(cwd)
+        end
+    end
+end
 
 local function load_shader(name)
-    if shader_path == nil then
-        local path = {
-            NOOP       = "dx9",
-            DIRECT3D9  = "dx9",
-            DIRECT3D11 = "dx11",
-            DIRECT3D12 = "dx11",
-            GNM        = "pssl",
-            METAL      = "metal",
-            OPENGL     = "glsl",
-            OPENGLES   = "essl",
-            VULKAN     = "spirv",
-        }
-        
-        local caps = hw_caps.get()
-        shader_path = "assets/shaders/".. (assert(path[caps.rendererType])) .."/"
+    create_dirs(join_path(shader_path, parent_path(name)))
+
+    local filename = shader_path .. remove_ext(name) .. ".bin"    
+    if not check_compile_shader(name, filename) then
+        return nil
     end
-    local filename = shader_path .. name .. ".bin"
+
     local f = assert(io.open(filename, "rb"))
     local data = f:read "a"
     f:close()

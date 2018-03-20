@@ -243,48 +243,10 @@ local function filebuilder()
 	}
 
 	function compile.action()
-		local fn = filename.title
-		if fn then
-			local dest = fn:gsub("(%w+).sc", "%1") .. ".bin"			
-			local tbl = {
-				shaderc = path.shaderc,
-				src = fn,
-				dest = dest,
-				inc = "",
-				stype = nil,
-				smodel = nil
-			}
-			if path.shaderinc then
-				tbl.inc = '-i "' .. path.shaderinc .. '"'
-			end
-			local vf = fn:match "[/\\]([fv])s_[^/\\]+.sc$"
-			if vf == "f" then
-				tbl.smodel = "ps_4_0"
-				tbl.stype = "fragment"
-			elseif vf == "v" then
-				tbl.smodel = "vs_4_0"
-				tbl.stype = "vertex"
-			else
-				output.append = "shader name should be fs_*.sc or vs_*.sc"
-				return
-			end
-
-			local command = string.gsub('$shaderc --platform windows --type $stype -p $smodel -O 3 -f "$src" -o "$dest" $inc',
-				"%$(%w+)", tbl)
-
-			output.append = command
-
-			local prog, err = io.popen(command .. "  2>&1")
-
-			if not prog then
-				output.append = err
-			else
-				local ret = prog:read "a"
-				prog:close()
-				output.append = ret
-			end
-		end
+		local success, msg = toolset.compile(filename.title, path)
+		output.append = msg
 	end
+
 
 	local ctrl = iup.vbox {
 		source,
