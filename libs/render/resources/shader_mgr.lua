@@ -40,20 +40,6 @@ local function compile_shader(filename, outfile)
     return toolset.compile(filename, config)
 end
 
-local function check_compile_shader(name, outfile)
-    local _, ext = name:match("([%w_/\\]+)%.(sc)")
-    if ext ~= nil then
-        local fullname = shader_asset_path .. "/" .. src_path .. "/" .. name        
-        local success, msg = compile_shader(fullname, outfile)
-        if not success then
-            log(string.format("try compile from file %s, but failed, error message : \n%s", filename, msg))
-            return false
-        end
-    end
-
-    return true
-end
-
 local function remove_ext(name)
     local path, ext = name:match("([%w_/\\]+)%.([%w_]+)$")
     if ext ~= nil then
@@ -92,9 +78,22 @@ local function create_dirs(fullpath)
     end
 end
 
-local function load_shader(name)
-    create_dirs(join_path(shader_path, parent_path(name)))
+local function check_compile_shader(name, outfile)
+    local _, ext = name:match("([%w_/\\]+)%.(sc)")
+    if ext ~= nil then
+        local fullname = shader_asset_path .. "/" .. src_path .. "/" .. name        
+        create_dirs(parent_path(outfile))
+        local success, msg = compile_shader(fullname, outfile)
+        if not success then
+            log(string.format("try compile from file %s, but failed, error message : \n%s", filename, msg))
+            return false
+        end
+    end
 
+    return true
+end
+
+local function load_shader(name)
     local filename = shader_path .. remove_ext(name) .. ".bin"    
     if not check_compile_shader(name, filename) then
         return nil
