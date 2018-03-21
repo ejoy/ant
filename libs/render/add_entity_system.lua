@@ -10,7 +10,7 @@ local bgfx          = require "bgfx"
 
 local add_entity_sys = ecs.system "add_entities_system"
 add_entity_sys.singleton "math_stack"
-add_entity_sys.singleton "viewport"
+add_entity_sys.dependby "iup_message"
 
 function add_entity_sys:init()
     do
@@ -41,17 +41,14 @@ function add_entity_sys:init()
     end
     
     do
-        local camera_eid = world:new_entity(table.unpack(cu.get_camera_component_names()))
+        local camera_eid = world:new_entity("main_camera", "viewid", "direction", "position", "frustum", "view_rect", "clear_component")
         local camera = world[camera_eid]
         camera.viewid.id = 0
-
-        local vp = self.viewport
-        local ci = vp.camera_info
     
-        self.math_stack(camera.position.v,    assert(ci.default.eye),         "=")
-        self.math_stack(camera.direction.v,   assert(ci.default.direction),   "n=")
+        self.math_stack(camera.position.v,    {0, 0, -5, 1},  "=")
+        self.math_stack(camera.direction.v,   {0, 0, 1, 0},   "=")
 
         local frustum = camera.frustum
-        mu.frustum_from_fov(frustum, ci.near, ci.far, ci.fov, vp.width/vp.height)
+        mu.frustum_from_fov(frustum, 0.1, 10000, 60, 1)
     end
 end

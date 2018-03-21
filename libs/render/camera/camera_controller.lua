@@ -1,7 +1,9 @@
 local ecs = ...
+local world = ecs.world
+
 local ru = require "render.util"
 local cu = require "render.components.util"
-local world = ecs.world
+
 local math3d = require "math3d"
 local mu = require "math.util"
 local point2d = require "math.point2d"
@@ -47,8 +49,7 @@ function message:motion(x, y)
 	message.xy = xy
 
 	message.cb.motion = function (entity)
-		local msg_comp = message.msg_comp
-		local vp = message.vp
+		local msg_comp = message.msg_comp		
 		local ms = message.ms
 
 		local states = msg_comp.states
@@ -56,7 +57,7 @@ function message:motion(x, y)
 
 
 		if (bs.LEFT or bs.RIGHT) and last_xy then
-			local speed = vp.camera_info.move_speed * 0.1
+			local speed = message.move_speed * 0.1
 			local delta = (last_xy - xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
 			local zdir = entity.direction.v
 
@@ -87,10 +88,10 @@ function message:keypress(c, p)
 	message.cb.keypress = function(entity)
 		if p then
 			local msg_comp = message.msg_comp
-			local vp = message.vp
+			
 			local ms = message.ms
 
-			local move_step = vp.camera_info.move_speed
+			local move_step = message.move_speed
 			local zdir = entity.direction.v
 			local eye = entity.position.v
 
@@ -137,7 +138,6 @@ end
 local camera_controller_system = ecs.system "camera_controller"
 camera_controller_system.singleton "math_stack"
 camera_controller_system.singleton "message_component"
-camera_controller_system.singleton "viewport"
 
 camera_controller_system.depend "iup_message"
 
@@ -146,7 +146,7 @@ function camera_controller_system:init()
 	message.cb = {}
 	message.msg_comp = self.message_component
 	message.ms = self.math_stack
-	message.vp = self.viewport
+	message.move_speed = 1
 end
 
 function camera_controller_system:update()
