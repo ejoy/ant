@@ -4,11 +4,8 @@ local math3d = require "math3d"
 	local mat = math3d.ref "matrix"	-- new matrix ref object
 
 	= : assign an object to a ref object
-
-	P : pop and return id ( ... , 1 -> ... )
-	v : pop and return vector4 pointer ( ... , 1 -> ... )
-	m : pop and return matrix pointer ( ... , 1 -> ... )
-	f : pop and return the first float of a vector4 ( ... , 1 -> ... )
+	P : pop and return id ( ... , 1 -> ... )	
+	m : pop and return matrix pointer ( ... , 1 -> ... )	
 	V : top to string for debug ( ... -> ... )
 	T : pop stack elem to lua
 	1-9 : dup stack index (..., 1 -> ..., 1,1)
@@ -118,7 +115,6 @@ mat()	-- clear mat
 
 local t = stack(vec, "P")
 print(math3d.type(t))	-- vector true
-print(stack( t,"Vv"))	-- string lightuserdata
 
 print(stack(math3d.constant "identvec", "VR"))
 print(stack(math3d.constant "identmat", "V"))	-- R: remove top

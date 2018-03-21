@@ -697,30 +697,22 @@ sub_2values(lua_State *L, struct lastack *LS) {
 	}
 }
 
-static float *
-pop_value(lua_State *L, struct lastack *LS, int nt) {
-	int64_t v = pop(L, LS);
-	int t = 0;
-	float * r = lastack_value(LS, v, &t);
-	if (t != nt) {
-		luaL_error(L, "type mismatch, %s/%s", get_typename(t), get_typename(nt));
-	}
-	return r;
-}
+//static float *
+//pop_value(lua_State *L, struct lastack *LS, int nt) {
+//	int64_t v = pop(L, LS);
+//	int t = 0;
+//	float * r = lastack_value(LS, v, &t);
+//	if (t != nt) {
+//		luaL_error(L, "type mismatch, %s/%s", get_typename(t), get_typename(nt));
+//	}
+//	return r;
+//}
 
 static float *
-pop_matrix(lua_State *L, struct lastack *LS) {
-	return pop_value(L, LS, LINEAR_TYPE_MAT);
-}
-
-static float *
-pop_vector34(lua_State *L, struct lastack *LS, int *type) {
+pop_value(lua_State *L, struct lastack *LS, int *type) {
 	int64_t v = pop(L, LS);
 	int t = 0;
-	float * r = lastack_value(LS, v, &t);
-	if (t != LINEAR_TYPE_VEC3 && t != LINEAR_TYPE_VEC4) {
-		luaL_error(L, "type mismatch, need vector. It's %s", get_typename(t));
-	}
+	float * r = lastack_value(LS, v, &t);	
 	if (type)
 		*type = t;
 	return r;
@@ -729,7 +721,7 @@ pop_vector34(lua_State *L, struct lastack *LS, int *type) {
 static void
 normalize_vector3(lua_State *L, struct lastack *LS) {
 	int t;
-	float *v = pop_vector34(L, LS, &t);
+	float *v = pop_value(L, LS, &t);
 	float r[4];
 	float invLen = 1.0f / vector3_length((struct vector3 *)v);
 	r[0] = v[0] * invLen;
@@ -866,7 +858,10 @@ static void mulH_2values(lua_State *L, struct lastack *LS){
 
 static void
 transposed_matrix(lua_State *L, struct lastack *LS) {
-	float *mat = pop_matrix(L, LS);
+	int t;
+	float *mat = pop_value(L, LS, &t);
+	if (t != LINEAR_TYPE_MAT)
+		luaL_error(L, "transposed_matrix need mat4 type, type is : %d", t);
 	union matrix44 m;
 	memcpy(&m, mat, sizeof(m));
 	matrix44_transposed(&m);
@@ -875,7 +870,11 @@ transposed_matrix(lua_State *L, struct lastack *LS) {
 
 static void
 inverted_matrix(lua_State *L, struct lastack *LS) {
-	float *mat = pop_matrix(L, LS);
+	int t;
+	float *mat = pop_value(L, LS, &t);
+	if (t != LINEAR_TYPE_MAT)
+		luaL_error(L, "inverted_matrix need mat4 type, type is : %d", t);
+	
 	union matrix44 r;
 	matrix44_inverted(&r, (union matrix44 *)mat);
 	lastack_pushmatrix(LS, r.x);
@@ -893,8 +892,14 @@ top_tostring(lua_State *L, struct lastack *LS) {
 
 static void
 lookat_matrix(lua_State *L, struct lastack *LS, int direction) {
-	float *at = pop_vector34(L, LS, NULL);
-	float *eye = pop_vector34(L, LS, NULL);
+	int t0, t1;
+	float *at = pop_value(L, LS, &t0);
+	float *eye = pop_value(L, LS, &t1);
+	if (t0 != LINEAR_TYPE_VEC3 && t0 != LINEAR_TYPE_VEC4)
+		luaL_error(L, "lookat_matrix, arg0 need vec3/vec4, arg0 is : %d", t0);
+	if (t0 != t1)
+		luaL_error(L, "lookat_matrix, arg0 and arg1 type mismatch, arg0 is : %d, arg1 is : %d", t0, t1);
+	
 	union matrix44 m;
 	if (direction)
 		matrix44_lookat_eye_direction(&m, (struct vector3*)eye, (struct vector3 *)at, NULL);
@@ -1044,16 +1049,14 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		pushid(L, pop(L, LS));
 		refstack_pop(RS);
 		return 1;
-	case 'f':
-		lua_pushnumber(L, pop_value(L,LS,LINEAR_TYPE_NUM)[0]);
-		refstack_pop(RS);
+	//case 'f':
+	//	lua_pushnumber(L, pop_value(L,LS,LINEAR_TYPE_NUM)[0]);
+	//	refstack_pop(RS);
+	//	return 1;	
+	case 'm':		
+		lua_pushlightuserdata(L, pop_value(L, LS, NULL));
 		return 1;
-	case 'v':
-		lua_pushlightuserdata(L, pop_vector34(L, LS, NULL));
-		return 1;
-	case 'm':
-		lua_pushlightuserdata(L, pop_matrix(L, LS));
-		return 1;
+
 	case 'T': 	
 		push_data_to_lua(LS, RS);
 		return 1;
@@ -1095,8 +1098,14 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		refstack_pop(RS);
 		break;
 	case '.': {
-		float * vec1 = pop_vector34(L, LS, NULL);
-		float * vec2 = pop_vector34(L, LS, NULL);
+		int t0, t1;
+		float * vec1 = pop_value(L, LS, &t0);
+		float * vec2 = pop_value(L, LS, &t1);
+		if (t0 != LINEAR_TYPE_VEC3 && t0 != LINEAR_TYPE_VEC4)
+			luaL_error(L, "arg0 need vec3/vec4, t0 is : %d", t0);
+		if (t0 != t1)
+			luaL_error(L, "dot operation with type mismatch");
+		
 		lastack_pushnumber(LS, vector3_dot((struct vector3 *)vec1, (struct vector3 *)vec2));
 		refstack_2_1(RS);
 		break;
@@ -1104,8 +1113,8 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 	case 'x': {
 		float r[4];
 		int t1,t2;
-		float * vec2 = pop_vector34(L, LS, &t1);
-		float * vec1 = pop_vector34(L, LS, &t2);
+		float * vec2 = pop_value(L, LS, &t1);
+		float * vec1 = pop_value(L, LS, &t2);
 		if (t1 != t2) {
 			luaL_error(L, "cross type mismatch");
 		}
