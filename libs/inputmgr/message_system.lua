@@ -42,18 +42,16 @@ function message:resize(w, h)
 	self.viewport.height = h
 
 	local function update_main_camera_aspect(w, h)
-		for _, eid in world:each("main_camera") do
-			local camera = assert(world[eid])
-			local frustum = camera.frustum
-			local aspect = w / h
+		local camera = world:first_entity("main_camera")
+		local frustum = camera.frustum
+		local aspect = w / h
 
-			local tmp_h = frustum.t - frustum.b
-			local tmp_hw = aspect * tmp_h * 0.5
-			frustum.l = -tmp_hw
-			frustum.r = tmp_hw
-			
-			return camera.viewid.id
-		end
+		local tmp_h = frustum.t - frustum.b
+		local tmp_hw = aspect * tmp_h * 0.5
+		frustum.l = -tmp_hw
+		frustum.r = tmp_hw
+		
+		return camera.viewid.id
 	end
 	local mc_vid = update_main_camera_aspect(w, h)
 	bgfx.set_view_rect(mc_vid, 0, 0, w, h)

@@ -153,14 +153,12 @@ function pickup_view_sys:init()
     --@]
 end
 
-local function get_main_camera_viewproj_mat(ms)   
-    for _, eid in world:each("main_camera") do 
-        local me = world[eid]
-        local proj = mu.proj(ms, assert(me.frustum))
-        -- [pos, dir] ==> viewmat --> viewmat * projmat ==> viewprojmat
-        -- --> invert(viewprojmat) ==>invViewProjMat
-        return ms(assert(me.position).v, assert(me.direction).v, "L", proj, "*iP")  
-    end
+local function get_main_camera_viewproj_mat(ms)
+    local maincamera = world:first_entity("main_camera")    
+    local proj = mu.proj(ms, assert(me.frustum))
+    -- [pos, dir] ==> viewmat --> viewmat * projmat ==> viewprojmat
+    -- --> invert(viewprojmat) ==>invViewProjMat
+    return ms(assert(me.position).v, assert(me.direction).v, "L", proj, "*iP")
 end
 
 local function click_to_eye_and_dir(ms, clickpt, vp_w, vp_h, invVP)    
@@ -183,11 +181,10 @@ end
 function pickup_view_sys:update()
     local clickpt = pickup.clickpt
     if clickpt ~= nil then
-        for _, eid in world:each("pickup") do                
-            local vp = self.viewport
-            update_viewinfo(self.math_stack, assert(world[eid]), clickpt, vp.width, vp.height)
-            break
-        end
+        local pu_entity = world:first_entity("pickup")
+        local vp = self.viewport
+        update_viewinfo(self.math_stack, pu_entity, clickpt, vp.width, vp.height)
+
         pickup.is_picking = true
         pickup.clickpt = nil
     end
@@ -228,10 +225,7 @@ end
 
 function pickup_sys:update()
     if pickup.is_picking then        
-        for _, eid in world:each("pickup") do
-            local e = assert(world[eid])
-            pickup:pick(e, self.frame_num.current)
-            break   --only one pickup object in the scene
-        end
+        local e = assert(world:first_entity("pickup"))    
+        pickup:pick(e, self.frame_num.current)
     end
 end

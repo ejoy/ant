@@ -125,6 +125,12 @@ function world:each(component_type)
 	return component_next, s, 0
 end
 
+function world:first_entity(c_type)
+	for _, eid in self:each(c_type) do
+		return self[eid]
+	end
+end
+
 local function component_filter(world, minor_type)
 	return function(set, index)
 		local eid
