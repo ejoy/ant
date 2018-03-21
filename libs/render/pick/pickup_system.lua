@@ -22,13 +22,30 @@ end
 local pickup = {} 
 pickup.__index = pickup
 
+local function packeid_as_rgba(eid)
+    return {(eid & 0x000000ff) / 0xff,
+            ((eid & 0x0000ff00) >> 8) / 0xff,
+            ((eid & 0x00ff0000) >> 16) / 0xff,
+            ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
+end
+
+local function unpackrgba_to_eid(rgba)
+    local r =  rgba & 0x000000ff
+    local g = (rgba & 0x0000ff00) >> 8
+    local b = (rgba & 0x00ff0000) >> 16
+    local a = (rgba & 0xff000000) >> 24
+    
+    return r + g + b + a
+end
+
 function pickup:init_material()
     self.material = assetlib["assets/assetfiles/materials/pickup.material"]
     local uniforms = assert(self.material.uniform, "pickup system need to define id uniform")
     local u_id = uniforms.u_id
+    local ms = pickup.ms
     u_id.update = function ()
         assert(self.current_eid)
-        return self.current_eid
+        return {ms(packeid_as_rgba(self.current_eid), "m")}
     end
 end
 
@@ -38,7 +55,7 @@ local function update_view_state(pickup_entity)
     local vid = pickup_entity.viewid.id
     bgfx.set_view_frame_buffer(vid, assert(comp.pick_fb))
     bgfx.set_view_rect(vid, 0, 0, comp.width, comp.height)
-end
+end 
 
 function pickup:init(pickup_entity)
     self:init_material()
@@ -80,7 +97,8 @@ function pickup:which_entity_hitted(pickup_entity)
     for x = 1, w * h do
         local rgba = comp.blitdata[x]
         if rgba ~= 0 then            
-            return rgba
+            local eid = unpackrgba_to_eid(rgba)
+            return eid
         end
     end
 end

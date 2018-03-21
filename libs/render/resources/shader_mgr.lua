@@ -3,6 +3,7 @@ local require = import and import(...) or require
 local bgfx = require "bgfx"
 local hw_caps = require "render.hardware_caps"
 local fs = require "filesystem"
+local toolset = require "editor.toolset"
 
 -- init
 local function get_caps_path()
@@ -29,7 +30,6 @@ local shader_path = shader_asset_path .. "/" .. caps_bin_path .. "/"
 local shader_mgr = {}
 
 local function compile_shader(filename, outfile)
-    local toolset = require "editor.toolset"
     local config = toolset.load_config()
 
     if next(config) == nil then
@@ -82,10 +82,10 @@ local function check_compile_shader(name, outfile)
     local _, ext = name:match("([%w_/\\]+)%.(sc)")
     if ext ~= nil then
         local fullname = shader_asset_path .. "/" .. src_path .. "/" .. name        
-        create_dirs(parent_path(outfile))
-        local success, msg = compile_shader(fullname, outfile)
+        create_dirs(parent_path(outfile))        
+        local success, msg = compile_shader(fullname, outfile)        
         if not success then
-            log(string.format("try compile from file %s, but failed, error message : \n%s", filename, msg))
+            print(string.format("try compile from file %s, but failed, error message : \n%s", filename, msg))
             return false
         end
     end
@@ -95,7 +95,7 @@ end
 
 local function load_shader(name)
     local filename = shader_path .. remove_ext(name) .. ".bin"    
-    if not check_compile_shader(name, filename) then
+    if not check_compile_shader(name, filename) then        
         return nil
     end
 

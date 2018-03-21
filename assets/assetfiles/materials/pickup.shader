@@ -1,2 +1,2 @@
-vs = "vs_picking_shaded"
-fs = "fs_picking_id"
+vs = "picking/vs_picking.sc"
+fs = "picking/fs_picking.sc"

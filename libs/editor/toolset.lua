@@ -77,12 +77,13 @@ function toolset.compile(filename, paths, stype, smodel)
 
 		local prog, err = io.popen(command .. "  2>&1")
 
-		if not prog then
+		if not prog then			
 			return false, err
 		else
 			local ret = prog:read "a"
 			prog:close()
-			return true, command .. "\n" .. ret
+			local success = ret and ret:find("error", 1, true) == nil or false
+			return success, command .. "\n" .. ret
 		end
 	end
 end
