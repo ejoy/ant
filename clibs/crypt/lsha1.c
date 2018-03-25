@@ -234,13 +234,6 @@ static void sat_SHA1_Final(SHA1_CTX* context, uint8_t digest[SHA1_DIGEST_SIZE])
 		digest[i] =	(uint8_t)
 		 ((context->state[i>>2]	>> ((3-(i &	3))	* 8) ) & 255);
 	}
-
-	/* Wipe	variables */
-	i =	0;
-	memset(context->buffer,	0, 64);
-	memset(context->state, 0, 20);
-	memset(context->count, 0, 8);
-	memset(finalcount, 0, 8);	/* SWR */
 }
 
 #include <lua.h>
@@ -261,6 +254,14 @@ lsha1(lua_State *L) {
 }
 
 static int
+lsha1_init(lua_State *L) {
+	SHA1_CTX * ctx = luaL_checkudata(L, 1, "SHA1ENCODER");
+	sat_SHA1_Init(ctx);
+	lua_settop(L, 1);
+	return 1;
+}
+
+static int
 lsha1_update(lua_State *L) {
 	SHA1_CTX * ctx = luaL_checkudata(L, 1, "SHA1ENCODER");
 	size_t sz;
@@ -275,7 +276,6 @@ lsha1_final(lua_State *L) {
 	SHA1_CTX * ctx = luaL_checkudata(L, 1, "SHA1ENCODER");
 	uint8_t digest[SHA1_DIGEST_SIZE];
 	sat_SHA1_Final(ctx, digest);
-	sat_SHA1_Init(ctx);
 	lua_pushlstring(L, (const char *)digest, SHA1_DIGEST_SIZE);
 	return 1;
 }
@@ -284,6 +284,8 @@ int
 lsha1_encoder(lua_State *L) {
 	SHA1_CTX * ctx = lua_newuserdata(L, sizeof(*ctx));
 	if (luaL_newmetatable(L, "SHA1ENCODER")) {
+		lua_pushcfunction(L, lsha1_init);
+		lua_setfield(L, -2, "init");
 		lua_pushcfunction(L, lsha1_update);
 		lua_setfield(L, -2, "update");
 		lua_pushcfunction(L, lsha1_final);
