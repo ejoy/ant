@@ -260,6 +260,42 @@ lsha1(lua_State *L) {
 	return 1;
 }
 
+static int
+lsha1_update(lua_State *L) {
+	SHA1_CTX * ctx = luaL_checkudata(L, 1, "SHA1ENCODER");
+	size_t sz;
+	const uint8_t * buffer = (const uint8_t *)luaL_checklstring(L, 2, &sz);
+	sat_SHA1_Update(ctx, buffer, sz);
+	lua_settop(L, 1);
+	return 1;
+}
+
+static int
+lsha1_final(lua_State *L) {
+	SHA1_CTX * ctx = luaL_checkudata(L, 1, "SHA1ENCODER");
+	uint8_t digest[SHA1_DIGEST_SIZE];
+	sat_SHA1_Final(ctx, digest);
+	sat_SHA1_Init(ctx);
+	lua_pushlstring(L, (const char *)digest, SHA1_DIGEST_SIZE);
+	return 1;
+}
+
+int
+lsha1_encoder(lua_State *L) {
+	SHA1_CTX * ctx = lua_newuserdata(L, sizeof(*ctx));
+	if (luaL_newmetatable(L, "SHA1ENCODER")) {
+		lua_pushcfunction(L, lsha1_update);
+		lua_setfield(L, -2, "update");
+		lua_pushcfunction(L, lsha1_final);
+		lua_setfield(L, -2, "final");
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
+	}
+	lua_setmetatable(L, -2);
+	sat_SHA1_Init(ctx);
+	return 1;
+}
+
 #define BLOCKSIZE 64
 
 static inline void
