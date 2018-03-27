@@ -1,6 +1,5 @@
 local asset = require "asset"
-
-local ss = asset["test/pickup.material"]
+print_r = require "../common/print_r"
 
 local s = asset["test/foobar.shader"]
 local s2 = asset["test/foobar.shader"]
@@ -13,6 +12,4 @@ print(s.foobar[1])
 
 
 local render = asset["test/bunny.render"]
-for k, v in pairs(render) do
-    print(k, v)
-end
+print_r(render)

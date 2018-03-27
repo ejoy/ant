@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 local cu = require "render.components.util"
 local mu = require "math.util"
-local mesh_util     = require "render.resources.mesh_util"
 local shader_mgr    = require "render.resources.shader_mgr"
 
 local asset_lib     = require "asset"
@@ -26,17 +25,23 @@ function add_entity_sys:init()
         bunny.render = asset_lib["test/simplerender/bunny.render"]
     
         -- bind the update function. this update should add by material editor
-        local uniforms = bunny.render.material.uniform
-        local u_time = uniforms.u_time
-        assert(u_time, "need define u_time uniform")
-
-        u_time.update = function (self)
-            if self.value == nil then
-                self.value = 0
+        local materials = bunny.render.materials
+    
+        function utime_update (uniform)
+            if uniform.value == nil then
+                uniform.value = 0
             end
 
-            self.value = self.value + 1
-            return self.value
+            uniform.value = uniform.value + 1
+            return uniform.value
+        end
+
+        -- actully, these materials are the same material. we need to manager the materials, and only use material id to replace
+        for _, material in ipairs(materials) do            
+            local uniforms = material.uniform
+            local u_time = uniforms.u_time
+            assert(u_time, "need define u_time uniform")
+            u_time.update = utime_update
         end
     end
     

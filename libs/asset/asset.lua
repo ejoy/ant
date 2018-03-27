@@ -24,11 +24,10 @@ end
 local asset_cache = setmetatable({}, {
 	__mode = "kv",
 	__index = function (t, filename)
-		assert(type(filename) == "string")
-		print(filename)
+		assert(type(filename) == "string")		
 		local ext = assert(filename:match "%.([%w_]+)$")
 		local v = loader[ext](filename, t)
-		t[filename] = v
+		t[filename] = v		
 		return v
 	end,
 })

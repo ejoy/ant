@@ -58,15 +58,30 @@ end
 
 function util.draw_entity(vid, entity, worldmat)    
     local render = entity.render
-    util.draw_mesh(vid, render.mesh, render.material, worldmat)
+    util.draw_mesh(vid, render.mesh, render.materials, worldmat)
 end
 
-function util.draw_mesh(vid, mesh, material, worldmat)
+function util.draw_mesh(vid, mesh, materials, worldmat)
     bgfx.set_transform(worldmat)
-    bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
-    
+
+    local mgroups = mesh.handle.group
+
+    local num_elems = #mgroups
+    assert(num_elems == #materials)
+
+    -- need put these code to below for loop, we need to sort mesh submit by material id, by material id does not implement right now
+    local material = materials[1]
     util.update_uniforms(material.uniform)
-    util.submit_mesh(vid, mesh.handle, material.shader)
+
+    for i=1, num_elems do
+        --local material = materials[i]
+        bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
+        
+        local g = mgroups[i]
+        bgfx.set_index_buffer(g.ib)
+        bgfx.set_vertex_buffer(g.vb)
+        bgfx.submit(vid, assert(material.shader.prog), 0, true)--i ~= num_elems)
+    end
 end
 
 return util

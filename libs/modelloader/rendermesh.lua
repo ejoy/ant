@@ -1,7 +1,8 @@
 --存放渲染参数
 local bgfx = require "bgfx"
 local shader_mgr = require "render.resources.shader_mgr"
-local mesh_util = require "render.resources.mesh_util"
+local mesh_loader = require "render.resources.mesh_loader"
+local ru = require "renader.util"
 
 local render_mesh = {}
 local ctx = {stats = {}}
@@ -18,7 +19,7 @@ function render_mesh:InitRenderContext(file_path, shader)
     print("Rendering mesh: " .. file_path)
 
     ctx.prog = shader_mgr.programLoad(shader.vs, shader.fs)
-    ctx.mesh = mesh_util.meshLoad(file_path)
+    ctx.mesh = mesh_loader.load(file_path)
     ctx.u_time = bgfx.create_uniform("u_time", "v4")
     ctx.state = bgfx.make_state{
         WRITE_MASK = "RGBAZ",
@@ -28,8 +29,16 @@ function render_mesh:InitRenderContext(file_path, shader)
 end
 
 function render_mesh:SubmitRenderMesh()
-    if(ctx.mesh ~= nil and ctx.prog ~= nil) then
-        mesh_util.meshSubmit(ctx.mesh, 0, ctx.prog)
+    if(ctx.mesh ~= nil and ctx.prog ~= nil) then        
+        local mesh = ctx.mesh
+        local num = #mesh.group
+    
+        for i=1, num do
+            local g = mesh.group[i]
+            bgfx.set_index_buffer(g.ib)
+            bgfx.set_vertex_buffer(g.vb)
+            bgfx.submit(0, ctx.prog, 0, i ~= num)
+        end
     end
 end
 

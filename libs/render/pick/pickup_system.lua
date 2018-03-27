@@ -67,8 +67,14 @@ end
 function pickup:render_to_pickup_buffer(pickup_entity)    
     ru.foreach_sceneobj(world, 
     function (entity, eid)
-        self.current_eid = eid
-        ru.draw_mesh(pickup_entity.viewid.id, entity.render.mesh, self.material, mu.srt_from_entity(self.ms, entity))
+        self.current_eid = eid        
+        
+        local mesh = entity.render.mesh
+        local materials = {}        
+        for i=1, #mesh.handle.group do
+            table.insert(materials, self.material)
+        end
+        ru.draw_mesh(pickup_entity.viewid.id, mesh, materials, mu.srt_from_entity(self.ms, entity))
     end)
     self.current_eid = nil
 end
@@ -119,6 +125,7 @@ function pickup:pick(pickup_entity, current_frame_num)
     self.is_picking = self.reading_frame ~= nil
 end
 
+-- pickup view
 local pickup_view_sys = ecs.system "pickup_view"
 
 pickup_view_sys.singleton "math_stack"

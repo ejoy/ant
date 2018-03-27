@@ -1,2 +1,12 @@
-material = "bunny.material"
+materials = {
+    "bunny.material",
+    {
+        shader = {
+            vs = "vs_mesh",
+            fs = "fs_mesh"
+        },
+        state = "assets/assetfiles/materials/default.state",
+        uniform = "assets/assetfiles/materials/global.uniform"
+    }
+}
 mesh = "bunny.mesh"

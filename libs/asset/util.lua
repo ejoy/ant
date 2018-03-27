@@ -1,33 +1,43 @@
-local function check_append_dir(src, ref)
-    local dir, file = src:match("(.*/)(.*)")
-    if dir == nil then
-        local r_dir = ref:match(".*/")
-        if r_dir then 
-            return r_dir .. src
+local path = require "filesystem.path"
+
+local util = {}
+util.__index = util
+
+
+
+function util.parse_elem(value, memfile_creator, insert_op)        
+    local t = type(value)
+    if t == "string" then
+        insert_op(value)
+    elseif t == "table" then
+        local seri = require "filesystem.serialize"
+        local fn = memfile_creator()
+        seri.save(fn, value)
+        insert_op(fn)
+    end
+end
+
+function util.parse_elems(value, cb)
+    for k, v in pairs(value) do
+        local func = cb[k]
+        if func == nil then
+            error "not support this type"
         end
+        func(k, v)
     end
-    return src
 end
 
-local function read_render_elem(ff, rootfile, assetlib)
-    assert(type(ff) == "string")
-    return assetlib[check_append_dir(ff, rootfile)]    
-end
+local db = require "debugger"
 
-function recurse_read(source, src_filename, recurse_elems, assetlib)
-    local e = {}
-    for _, v in ipairs(recurse_elems) do
-        e[v] = true
+function util.check_join_parent_path(fn, parent)
+    if not path.has_parent(fn) then
+        local pp = path.parent(parent)
+        local nomem_pp = pp:match("mem://(.+)")    
+        local ff = nomem_pp and nomem_pp or pp        
+        return path.join(ff, fn)
     end
 
-    local t = {}
-    for k, v in pairs(source) do
-        if e[k] and type(v) == "string" then
-            t[k] = read_render_elem(v, src_filename, assetlib)
-        else
-            t[k] = v
-        end
-    end
-
-    return t
+    return fn
 end
+
+return util
