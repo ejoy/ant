@@ -150,13 +150,13 @@ function camera_controller_system:init()
 end
 
 function camera_controller_system:update()
-	ru.foreach_entity(world, cu.get_camera_component_names(),
-	function (entity)		
+	local camera = world:first_entity("main_camera")
+	if camera then
 		for name, cb in pairs(message.cb) do
-			cb(entity)
-		end		
-	end)
-
+			cb(camera)
+		end
+	end
+	
 	message.cb = {}
 end
 --@]

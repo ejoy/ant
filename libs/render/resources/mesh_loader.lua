@@ -20,13 +20,13 @@ do
 
 	mesh_decode["VB \1"] = function(mesh, group, data, offset)
 		offset = read_mesh_header(mesh, data, offset)
-		local stride, numVertices
+		local stride, numVertices		
 		mesh.vdecl, stride, offset = bgfx.vertex_decl(data, offset)
 		numVertices, offset = string.unpack("<I2", data, offset)
 		vb_data[2] = data
 		vb_data[3] = offset
 		offset = offset + stride * numVertices
-		vb_data[4] =  offset - 1
+		vb_data[4] =  offset - 1		
 		group.vb = bgfx.create_vertex_buffer(vb_data, mesh.vdecl)
 		return offset
 	end
@@ -69,7 +69,7 @@ do
 		return offset
 	end
 
-	function util.meshLoad(filename)
+	function util.load(filename)
 		local f = assert(io.open(filename,"rb"))
 		local data = f:read "a"
 		f:close()
@@ -85,6 +85,7 @@ do
 			if not decoder then
 				error ("Invalid tag " .. tag)
 			end
+
 			offset = decoder(mesh, group, data, offset + 4)
 		end
 
@@ -92,49 +93,49 @@ do
 	end
 end
 
-function util.meshUnload(mesh)
+function util.unload(mesh)
 	for _,group in ipairs(mesh.group) do
 		bgfx.destroy(group.ib)
 		bgfx.destroy(group.vb)
 	end
 end
 
-function util.meshSubmit(mesh, id, prog)
-	local g = mesh.group
-	local n = #g
-	for i=1,n do
-		local group = g[i]
-		bgfx.set_index_buffer(group.ib)
-		bgfx.set_vertex_buffer(group.vb)
-		bgfx.submit(id, prog, 0, i ~= n)
-	end
-end
+-- function util.meshSubmit(mesh, id, prog)
+-- 	local g = mesh.group
+-- 	local n = #g
+-- 	for i=1,n do
+-- 		local group = g[i]
+-- 		bgfx.set_index_buffer(group.ib)
+-- 		bgfx.set_vertex_buffer(group.vb)
+-- 		bgfx.submit(id, prog, 0, i ~= n)
+-- 	end
+-- end
 
-function util.meshSubmitState(mesh, state, mtx)
-	bgfx.set_transform(mtx)
-	bgfx.set_state(state.state)
+-- function util.meshSubmitState(mesh, state, mtx)
+-- 	bgfx.set_transform(mtx)
+-- 	bgfx.set_state(state.state)
 
-	for _, texture in ipairs(state.textures) do
-		bgfx.set_texture(texture.stage,texture.sampler,texture.texture,texture.flags)
-	end
+-- 	for _, texture in ipairs(state.textures) do
+-- 		bgfx.set_texture(texture.stage,texture.sampler,texture.texture,texture.flags)
+-- 	end
 
-	local g = mesh.group
-	local n = #g
-	for i=1,n do
-		local group = g[i]
-		bgfx.set_index_buffer(group.ib)
-		bgfx.set_vertex_buffer(group.vb)
-		bgfx.submit(state.viewId, state.program, 0, i ~= n)
-	end
-end
+-- 	local g = mesh.group
+-- 	local n = #g
+-- 	for i=1,n do
+-- 		local group = g[i]
+-- 		bgfx.set_index_buffer(group.ib)
+-- 		bgfx.set_vertex_buffer(group.vb)
+-- 		bgfx.submit(state.viewId, state.program, 0, i ~= n)
+-- 	end
+-- end
 
-function util.textureLoad(filename, info)
-	local f = assert(io.open(filename, "rb"))
-	local imgdata = f:read "a"
-	f:close()
-	local h = bgfx.create_texture(imgdata, info)
-	bgfx.set_name(h, filename)
-	return h
-end
+-- function util.textureLoad(filename, info)
+-- 	local f = assert(io.open(filename, "rb"))
+-- 	local imgdata = f:read "a"
+-- 	f:close()
+-- 	local h = bgfx.create_texture(imgdata, info)
+-- 	bgfx.set_name(h, filename)
+-- 	return h
+-- end
 
 return util

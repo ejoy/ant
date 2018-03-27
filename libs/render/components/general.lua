@@ -26,8 +26,10 @@ ecs.component "viewid"{
 }
 
 ecs.component "render" {
-    material = {type="asset", "assets/assetfiles/material/default.material"},
-    mesh = {type="asset", "assets/assetfiles/mesh/default.mesh"},
+    materials = {type="userdata", {""}},
+    mesh = {type="asset", ""},
+
+    visible = true,
 }
 
 

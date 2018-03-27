@@ -14,3 +14,5 @@ require "common/log"
 
 print_r = require "common/print_r"
 require "filesystem"
+
+function dprint(...) print(...) end
