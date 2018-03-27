@@ -24,8 +24,6 @@ for _, mname in ipairs(support_list) do
 	loader[mname] = require("ext_" .. mname)
 end
 
-local asset_default_path = "assets/assetfiles/materials"
-
 local assetmgr = {}
 assetmgr.__index = assetmgr
 
@@ -35,27 +33,41 @@ local resources = setmetatable({}, {__mode="kv"})
 -- 	return loader
 -- end
 
+local searchdirs = {"assets/assetfiles/materials"}
+local function find_valid_path(fn)
+	if path.is_mem_file(fn) or fs.exist(fn) then
+		return fn
+	end
 
+	for _, p in ipairs(searchdirs) do
+		local defaultpath = path.join(p, fn)
+		if fs.exist(defaultpath) then
+			return defaultpath
+		end
+	end
+
+	error(string.format("file not exist : %s, tried : %s", fn, defaultpath))
+	return nil
+end
+
+function assetmgr.get_searchdirs()
+	return searchdirs
+end
+
+function assetmgr.insert_searchdir(idx, dir)
+	assert(idx <= #searchdirs)
+	table.insert(searchdirs, idx, dir)
+end
+
+function assetmgr.remove_searchdir(idx)
+	assert(idx <= #searchdirs)
+	table.remove(searchdirs, idx)
+end
 
 function assetmgr.load(filename)
 	assert(type(filename) == "string")		
 	local ext = assert(path.ext(filename))
-
-	local function check_use_default_path(fn)
-		if path.is_mem_file(fn) or fs.exist(fn) then
-			return fn
-		end
-
-		local defaultpath = path.join(asset_default_path, fn)
-		if not fs.exist(defaultpath) then
-			error(string.format("file not exist : %s, tried : %s", fn, defaultpath))
-			return nil
-		end
-
-		return defaultpath
-	end
-
-	local fn = check_use_default_path(filename)
+	local fn = find_valid_path(filename)
 	
 	local v = loader[ext](fn)
 	resources[fn] = v
