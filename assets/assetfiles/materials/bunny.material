@@ -1,0 +1,16 @@
+shader = {
+    vs = "vs_mesh",
+    fs = "fs_mesh",
+}
+
+state = "default.state"
+
+uniform = {
+    references = {},    
+    defines = {
+        u_time = {
+            name = "u_time",
+            type = "v4",
+        }
+    }
+}

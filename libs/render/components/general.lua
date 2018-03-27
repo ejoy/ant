@@ -26,7 +26,7 @@ ecs.component "viewid"{
 }
 
 ecs.component "render" {
-    materials = {type="userdata", {""}},
+    binding = {type="userdata", ""},
     mesh = {type="asset", ""},
 
     visible = true,

@@ -3,23 +3,24 @@ local require = import and import(...) or require
 local rawtable = require "rawtable"
 local util = require "util"
 local path = require "filesystem.path"
+local seri = require "filesystem.serialize"
 
-return function(filename, assetlib)    
-    print(filename)
+return function(filename)
+    local asset = require "asset"
+
     local material = assert(rawtable(filename))
-    local function parse_elem(k, v)        
-        util.parse_elem(v,
-            function ()return string.format("mem://%s.%s", path.remove_ext(filename), k) end,
-            function (fn) 
-                local pp = util.check_join_parent_path(fn, filename)                
-                material[k] = assetlib[pp]
-            end)
+
+    local material_info = {}
+    for k, v in pairs(material) do
+        local t = type(v)
+        if t == "string" then
+            material_info[k] = asset.load(v)
+        elseif t == "table" then
+            local mempath = string.format("mem://%s.%s", path.remove_ext(filename), k)
+            seri.save(mempath, v)
+            material_info[k] = asset.load(mempath)
+        end
     end
 
-    util.parse_elems(material, 
-                    setmetatable({},{
-                        __index = function () return parse_elem end
-                    }))
-
-    return material
+    return material_info
 end
