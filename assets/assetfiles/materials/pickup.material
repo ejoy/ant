@@ -3,10 +3,12 @@ shader = {
     fs = "picking/fs_picking.sc",
 }
 
-uniform = {
-    u_id = {
-        name = "u_id",
-        type = "v4",    
+uniform = {    
+    defines = {
+        u_id = {
+            name = "u_id",
+            type = "v4",    
+        }
     }
 }
 

@@ -6,7 +6,7 @@ local bgfx = require "bgfx"
 local math3d = require "math3d"
 local ru = require "render.util"
 local mu = require "math.util"
-local assetlib = require "asset"
+local asset = require "asset"
 
 -- pickup component
 ecs.component "pickup"{}
@@ -32,11 +32,11 @@ local function unpackrgba_to_eid(rgba)
 end
 
 function pickup:init_material()
-    self.material = assetlib["assets/assetfiles/materials/pickup.material"]
-    local uniforms = assert(self.material.uniform, "pickup system need to define id uniform")
+    self.material = asset.load "pickup.material"
+    local uniforms = assert(self.material.uniform.defines, "pickup system need to define id uniform")
     local u_id = uniforms.u_id
     local ms = pickup.ms
-    u_id.update = function ()
+    u_id.update = function ()      
         assert(self.current_eid)
         return {ms(packeid_as_rgba(self.current_eid), "m")}
     end
@@ -68,13 +68,23 @@ function pickup:render_to_pickup_buffer(pickup_entity)
     ru.foreach_sceneobj(world, 
     function (entity, eid)
         self.current_eid = eid        
-        
-        local mesh = entity.render.mesh
-        local materials = {}        
-        for i=1, #mesh.handle.group do
-            table.insert(materials, self.material)
+
+        local function create_bingdings(erender)
+            local mesh = erender.mesh
+            local mgroups = mesh.handle.group
+            local groupids = {}            
+            local num = #mgroups
+            for i=1, num do
+                table.insert(groupids, i)
+            end
+
+            return {{
+                    material = self.material,
+                    groupids = groupids,
+                }}            
         end
-        ru.draw_mesh(pickup_entity.viewid.id, mesh, materials, mu.srt_from_entity(self.ms, entity))
+
+        ru.draw_mesh(pickup_entity.viewid.id, entity.render.mesh, create_bingdings(entity.render), mu.srt_from_entity(self.ms, entity))        
     end)
     self.current_eid = nil
 end

@@ -3,37 +3,26 @@ local rawtable = require "rawtable"
 local path = require "filesystem.path"
 local util = require "util"
 
-return function(filename, assetlib)
-    local render = rawtable(filename)
+return function(filename, assetmgr)
+    local assetmgr = require "asset"
+
+    local render = assert(rawtable(filename))
+    local mesh = assetmgr.load(render.mesh_name)
     
-    local cb = {
-        materials = function (key, vv)
-            assert(type(vv) == "table")
-            
-            local materials = {}
-            for idx, v in pairs(vv) do
-                util.parse_elem(v, 
-                                function ()
-                                    return string.format("mem://%s-%d.material", path.remove_ext(filename), idx)                    
-                                end, 
-                                function (fn)                    
-                                    local pp = util.check_join_parent_path(fn, filename)                                    
-                                    table.insert(materials, assetlib[pp])
-                                end)
+    local binding = render.binding
+    local binding_info = {}
+    for _, v in ipairs(binding) do
+        local material = assetmgr.load(v.material_name)
+        local groupids = v.mesh_groupids
+        for _, id in ipairs(groupids) do
+            local mgroups = mesh.handle.group
+            if mgroups[id] == nil then
+                error(string.format("id = %d not exist in mesh groups. in render file : %s", id, filename))
             end
-
-            render.materials = materials
-        end,
-        mesh = function (_, v)
-            util.parse_elem(v,
-                        function() return string.format("mem://%s.mesh", path.remove_ext(filename)) end, 
-                        function (fn) 
-                            local pp = util.check_join_parent_path(fn, filename)                            
-                            render.mesh = assetlib[pp] 
-                        end)
         end
-    }
 
-    util.parse_elems(render, cb)
-    return render
+        table.insert(binding_info, {material= material, groupids=groupids})        
+    end
+
+    return { mesh = mesh, binding = binding_info }
 end

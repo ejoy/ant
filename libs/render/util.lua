@@ -49,7 +49,7 @@ function util.submit_mesh(vid, mesh, shader)
 end
 
 function util.update_uniforms(uniforms) 
-    --for i = 1, #uniforms do    
+    --for i = 1, #uniforms do
     for _, u in pairs(uniforms) do
         local value = u:update()
         bgfx.set_uniform(u.id, value)
@@ -58,29 +58,31 @@ end
 
 function util.draw_entity(vid, entity, worldmat)    
     local render = entity.render
-    util.draw_mesh(vid, render.mesh, render.materials, worldmat)
+    util.draw_mesh(vid, render.mesh, render.binding, worldmat)
 end
 
-function util.draw_mesh(vid, mesh, materials, worldmat)
+function util.draw_mesh(vid, mesh, bindings, worldmat)
     bgfx.set_transform(worldmat)
 
     local mgroups = mesh.handle.group
 
-    local num_elems = #mgroups
-    assert(num_elems == #materials)
+    for _, binding in ipairs(bindings) do
+        local material = binding.material
+        local prog = assert(material.shader.prog)
 
-    -- need put these code to below for loop, we need to sort mesh submit by material id, by material id does not implement right now
-    local material = materials[1]
-    util.update_uniforms(material.uniform)
-
-    for i=1, num_elems do
-        --local material = materials[i]
         bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
-        
-        local g = mgroups[i]
-        bgfx.set_index_buffer(g.ib)
-        bgfx.set_vertex_buffer(g.vb)
-        bgfx.submit(vid, assert(material.shader.prog), 0, true)--i ~= num_elems)
+        util.update_uniforms(material.uniform.defines)
+
+        local groupids = binding.groupids
+        local num = #groupids
+
+        for i=1, num do
+            local id = groupids[i]
+            local g = assert(mgroups[id])
+            bgfx.set_index_buffer(g.ib)
+            bgfx.set_vertex_buffer(g.vb)
+            bgfx.submit(vid, prog, 0, i ~= num)
+        end
     end
 end
 

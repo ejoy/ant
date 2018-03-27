@@ -952,6 +952,7 @@ lxor_str(lua_State *L) {
 // defined in lsha1.c
 int lsha1(lua_State *L);
 int lhmac_sha1(lua_State *L);
+int lsha1_encoder(lua_State *L);
 
 static int
 luaopen_skynet_crypt(lua_State *L) {
@@ -976,6 +977,7 @@ luaopen_skynet_crypt(lua_State *L) {
 		{ "base64encode", lb64encode },
 		{ "base64decode", lb64decode },
 		{ "sha1", lsha1 },
+		{ "sha1_encoder", lsha1_encoder },
 		{ "hmac_sha1", lhmac_sha1 },
 		{ "hmac_hash", lhmac_hash },
 		{ "xor_str", lxor_str },
