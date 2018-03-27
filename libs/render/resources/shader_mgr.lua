@@ -4,6 +4,7 @@ local bgfx = require "bgfx"
 local hw_caps = require "render.hardware_caps"
 local fs = require "filesystem"
 local toolset = require "editor.toolset"
+local path = require "filesystem.path"
 
 -- init
 local function get_caps_path()
@@ -40,49 +41,11 @@ local function compile_shader(filename, outfile)
     return toolset.compile(filename, config)
 end
 
-local function remove_ext(name)
-    local path, ext = name:match("([%w_/\\]+)%.([%w_]+)$")
-    if ext ~= nil then
-        return path
-    end
-
-    return name
-end
-
-local function parent_path(fullname)
-    local path = fullname:match("^([%w_/\\]+)[/\\][%w_.]+")
-    return path
-end
-
-local function join_path(p0, p1)
-    local lastchar = p0[-1]
-
-    if lastchar ~= '/' and lastchar ~= '\\' then
-        return string.format("%s/%s", p0, p1)
-    end
-    return p0 .. p1
-end
-
-local function trim_slash(fullpath)
-    return fullpath:match("^%s*[/\\]*([%w_/\\]+)[/\\]")
-end
-
-local function create_dirs(fullpath)    
-    fullpath = trim_slash(fullpath)
-    local cwd = fs.currentdir()
-    for m in fullpath:gmatch("[%w_]+") do
-        cwd = join_path(cwd, m)
-        if not fs.exist(cwd) then        
-            fs.mkdir(cwd)
-        end
-    end
-end
-
 local function check_compile_shader(name, outfile)
     local _, ext = name:match("([%w_/\\]+)%.(sc)")
-    if ext ~= nil then
-        local fullname = shader_asset_path .. "/" .. src_path .. "/" .. name        
-        create_dirs(parent_path(outfile))        
+    if ext ~= nil then        
+        path.create_dirs(path.parent(outfile))
+        local fullname = path.join(shader_asset_path, src_path, name)
         local success, msg = compile_shader(fullname, outfile)        
         if not success then
             print(string.format("try compile from file %s, but failed, error message : \n%s", filename, msg))
@@ -94,7 +57,7 @@ local function check_compile_shader(name, outfile)
 end
 
 local function load_shader(name)
-    local filename = shader_path .. remove_ext(name) .. ".bin"    
+    local filename = shader_path .. path.remove_ext(name) .. ".bin"    
     if not check_compile_shader(name, filename) then        
         return nil
     end
