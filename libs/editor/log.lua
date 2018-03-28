@@ -1,4 +1,4 @@
-if static_sci == nil then
+if static_link_iup == nil then
 	require "scintilla"
 end
 

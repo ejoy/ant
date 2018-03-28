@@ -25,10 +25,15 @@ local function get_caps_path()
 end
 
 local shader_asset_path = "assets/shaders"
-local caps_bin_path = get_caps_path()
 local src_path = "src"
-local shader_path = shader_asset_path .. "/" .. caps_bin_path .. "/"
+
+local function get_shader_path()
+    local caps_bin_path = get_caps_path()
+    return path.join(shader_asset_path, caps_bin_path)
+end
+
 local shader_mgr = {}
+shader_mgr.__index = shader_mgr
 
 local function compile_shader(filename, outfile)
     local config = toolset.load_config()
@@ -57,8 +62,8 @@ local function check_compile_shader(name, outfile)
 end
 
 local function load_shader(name)
-    local filename = shader_path .. path.remove_ext(name) .. ".bin"    
-    if not check_compile_shader(name, filename) then        
+    local filename = path.join(get_shader_path(), path.remove_ext(name)) .. ".bin"
+    if not check_compile_shader(name, filename) then
         return nil
     end
 

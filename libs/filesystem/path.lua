@@ -18,6 +18,16 @@ function path.ext(name)
     return ext
 end
 
+function path.replace_ext(name, ext)
+    local pp = path.remove_ext(name)
+    local firstchar = ext[1]
+    if firstchar ~= '.' then
+        pp = pp .. '.'
+    end
+
+    return pp .. ext
+end
+
 function path.has_parent(pp)
     return pp:match("^[%w_.]+$") == nil
 end
