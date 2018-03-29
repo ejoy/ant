@@ -36,7 +36,7 @@ function pickup:init_material()
     local uniforms = assert(self.material.uniform.defines, "pickup system need to define id uniform")
     local u_id = uniforms.u_id
     local ms = pickup.ms
-    u_id.update = function ()      
+    u_id.update = function ()              
         assert(self.current_eid)
         return {ms(packeid_as_rgba(self.current_eid), "m")}
     end
@@ -69,22 +69,24 @@ function pickup:render_to_pickup_buffer(pickup_entity)
     function (entity, eid)
         self.current_eid = eid        
 
-        local function create_bingdings(erender)
-            local mesh = erender.mesh
-            local mgroups = mesh.handle.group
-            local groupids = {}            
-            local num = #mgroups
-            for i=1, num do
-                table.insert(groupids, i)
+        local function create_pickup_render_entity(entity)
+            local r = {}
+            for _, elem in ipairs(assert(entity.render)) do
+                local mesh = elem.mesh
+                local mgroups = mesh.handle.group
+                local meshids = {}
+                local num = #mgroups
+                for i=1, num do
+                    table.insert(meshids, i)
+                end
+                table.insert(r, {mesh=mesh, binding={{material=self.material, meshids=meshids}}, srt=elem.srt})
             end
 
-            return {{
-                    material = self.material,
-                    groupids = groupids,
-                }}            
+            return {render=r, scale=entity.scale, direction=entity.direction, position=entity.position}
         end
 
-        ru.draw_mesh(pickup_entity.viewid.id, entity.render.mesh, create_bingdings(entity.render), mu.srt_from_entity(self.ms, entity))        
+        local e = create_pickup_render_entity(entity)
+        ru.draw_entity(pickup_entity.viewid.id, e, self.ms)        
     end)
     self.current_eid = nil
 end

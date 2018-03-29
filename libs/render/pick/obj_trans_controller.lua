@@ -21,7 +21,7 @@ end
 
 function obj_trans_sys:init()
     local ot = self.object_transform
-    ot.obj_entity = entity 
+    ot.obj_entity = add_trans_entity() 
     ot.selected_mode = "pos_transform"
 end
 
@@ -48,7 +48,7 @@ obj_controller_sys.depend "obj_transform_system"
 function obj_controller_sys:init()
     local message = {}
     function message:button(btn, p, x, y)
-
+        
     end
     function message:motion(x, y)
 

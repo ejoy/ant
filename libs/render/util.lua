@@ -32,20 +32,8 @@ end
 function util.draw_scene(vid, world, ms)
     util.foreach_sceneobj(world,
     function (entity)
-        util.draw_entity(vid, entity, mu.srt_from_entity(ms, entity))
+        util.draw_entity(vid, entity, ms)
     end)
-end
-
-function util.submit_mesh(vid, mesh, shader)
-    local prog = assert(shader.prog)
-    local num = #mesh.group
-
-    for i=1, num do
-        local g = mesh.group[i]
-        bgfx.set_index_buffer(g.ib)
-        bgfx.set_vertex_buffer(g.vb)
-        bgfx.submit(vid, prog, 0, i ~= num)
-    end
 end
 
 function util.update_uniforms(uniforms) 
@@ -56,15 +44,20 @@ function util.update_uniforms(uniforms)
     end
 end
 
-function util.draw_entity(vid, entity, worldmat)    
-    local render = entity.render
-    util.draw_mesh(vid, render.mesh, render.binding, worldmat)
+function util.draw_entity(vid, entity, ms)
+    for idx, elem in ipairs(entity.render) do
+        local esrt= elem.srt
+        local mat = ms({type="srt", s=esrt.s, r=esrt.r, t=esrt.t}, 
+                        {type="sdt", s=entity.scale.v, d=entity.direction.v, t=entity.position.v}, 
+                        "*m")
+        util.draw_mesh(vid, elem.mesh, elem.binding, mat)
+    end
 end
 
 function util.draw_mesh(vid, mesh, bindings, worldmat)
     bgfx.set_transform(worldmat)
 
-    local mgroups = mesh.handle.group
+    local mgroups = mesh.handle.group    
 
     for _, binding in ipairs(bindings) do
         local material = binding.material
@@ -73,11 +66,11 @@ function util.draw_mesh(vid, mesh, bindings, worldmat)
         bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
         util.update_uniforms(material.uniform.defines)
 
-        local groupids = binding.groupids
-        local num = #groupids
+        local meshids = binding.meshids
+        local num = #meshids
 
         for i=1, num do
-            local id = groupids[i]
+            local id = meshids[i]
             local g = assert(mgroups[id])
             bgfx.set_index_buffer(g.ib)
             bgfx.set_vertex_buffer(g.vb)

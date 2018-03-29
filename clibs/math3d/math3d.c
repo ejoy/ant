@@ -243,19 +243,23 @@ get_ref_id(lua_State *L, struct lastack *LS, int index) {
 	return ref->id;
 }
 
-static void
-push_srt(lua_State *L, struct lastack *LS, int index) {
-	union matrix44 m;
+static inline int64_t
+get_id_by_type(lua_State *L, struct lastack *LS, int lType, int index){
+	return lType == LUA_TNUMBER ? get_id(L, index) : get_ref_id(L, LS, index);
+}
+
+static inline void
+extract_scale_mat(lua_State *L, struct lastack *LS, int index, union matrix44 *m){	
 	int stype = lua_getfield(L, index, "s");	
 	if (stype == LUA_TNUMBER || stype == LUA_TUSERDATA) {
-		int64_t id = stype == LUA_TNUMBER ? get_id(L, -1) : get_ref_id(L, LS, -1);
+		int64_t id = get_id_by_type(L, LS, stype, -1);
 		int type;
 		float *value = lastack_value(LS, id, &type);
 		switch (type)
 		{
 		case LINEAR_TYPE_VEC4:
 		case LINEAR_TYPE_VEC3:
-			matrix44_scalemat(&m, value[0], value[1], value[2]);
+			matrix44_scalemat(m, value[0], value[1], value[2]);
 			break;
 		default:
 			luaL_error(L, "linear type should be vec3/vec4, type is : %d", type);
@@ -273,50 +277,18 @@ push_srt(lua_State *L, struct lastack *LS, int index) {
 		} else {
 			luaL_error(L, "using table for s element, format must be s = {1}/{1, 2, 3}, give number : %d", len);
 		}
-		matrix44_scalemat(&m, v[0], v[1], v[2]);
+		matrix44_scalemat(m, v[0], v[1], v[2]);
 	} else {
-		matrix44_identity(&m);
+		matrix44_identity(m);
 	}
 	lua_pop(L, 1);
+}
 
-	int rtype = lua_getfield(L, index, "r");
-
-	if (rtype == LUA_TNUMBER || rtype == LUA_TUSERDATA) {
-		int64_t id = stype == LUA_TNUMBER ? get_id(L, -1) : get_ref_id(L, LS, -1);
-		int type;
-		float *value = lastack_value(LS, id, &type);
-
-		struct euler e;
-		switch (type)
-		{
-		case LINEAR_TYPE_VEC4:
-		case LINEAR_TYPE_VEC3:
-			vector3_to_rotation(&e, (const struct vector3*)(value));
-			break;
-		case LINEAR_TYPE_EULER:
-			memcpy(&e, value, sizeof(struct euler));
-			break;
-		default:
-			luaL_error(L, "linear type should be vec3/vec4, type is : %d", type);
-			break;
-		}
-
-		matrix44_rot(&m, &e);
-	} else if (rtype == LUA_TTABLE) {
-		size_t len = lua_rawlen(L, -1);
-		if (len != 3)
-			luaL_error(L, "r field should : r={1, 2, 3}, only accept 3 value, %d is give", len);
-		struct euler e = { get_table_value(L, 1), get_table_value(L, 2), get_table_value(L, 3) };		
-		matrix44_rot(&m, &e);
-	} else {
-		luaL_error(L, "r field type is not support");
-	}
-
-	lua_pop(L, 1);
-
+static inline void
+extract_translate_mat(lua_State *L, struct lastack *LS, int index, union matrix44 *m){
 	const int ttype = lua_getfield(L, index, "t");
 	if (ttype == LUA_TNUMBER || ttype == LUA_TUSERDATA) {
-		int64_t id = stype == LUA_TNUMBER ? get_id(L, -1) : get_ref_id(L, LS, -1);
+		int64_t id = get_id_by_type(L, LS, ttype, -1);
 		int type;
 		float *value = lastack_value(LS, id, &type);
 		if (type != LINEAR_TYPE_VEC3 && type != LINEAR_TYPE_VEC4)
@@ -324,7 +296,7 @@ push_srt(lua_State *L, struct lastack *LS, int index) {
 
 		if (value == NULL)
 			luaL_error(L, "invalid id : %ld, get NULL value", id);
-		matrix44_trans(&m, value[0], value[1], value[2]);
+		matrix44_trans(m, value[0], value[1], value[2]);
 	} else if (ttype == LUA_TTABLE) {
 		size_t len = lua_rawlen(L, -1);
 		if (len != 3)
@@ -333,13 +305,83 @@ push_srt(lua_State *L, struct lastack *LS, int index) {
 		float v[3];
 		for (int i = 0; i < 3; ++i)
 			v[i] = get_table_value(L, i + 1);
-		matrix44_trans(&m, v[0], v[1], v[2]);
+		matrix44_trans(m, v[0], v[1], v[2]);
 	} else {
 		luaL_error(L, "t field type is not support");
 	}
 
 	lua_pop(L, 1);
-	lastack_pushmatrix(LS, m.x);
+}
+
+static inline void
+extract_rotation_mat(lua_State *L, struct lastack *LS, int index, const char* name, union matrix44 *m){
+	int rtype = lua_getfield(L, index, name);
+	int isdirection = strcmp(name, "d") == 0;
+
+	if (rtype == LUA_TNUMBER || rtype == LUA_TUSERDATA) {
+		int64_t id = get_id_by_type(L, LS, rtype, -1);
+		int type;
+		float *value = lastack_value(LS, id, &type);
+
+		struct euler e;
+		switch (type)
+		{
+		case LINEAR_TYPE_VEC4:
+		case LINEAR_TYPE_VEC3:
+			if (isdirection){
+				vector3_to_rotation(&e, (const struct vector3*)value);
+			} else{
+				e.pitch = value[0];
+				e.yaw = value[1];
+				e.roll = value[2];
+			}
+			break;
+		case LINEAR_TYPE_EULER:
+			memcpy(&e, value, sizeof(struct euler));
+			break;
+		default:
+			luaL_error(L, "linear type should be vec3/vec4/euler, type is : %d", type);
+			break;
+		}
+
+		matrix44_rot(m, &e);
+	} else if (rtype == LUA_TTABLE) {
+		size_t len = lua_rawlen(L, -1);
+		if (len != 3)
+			luaL_error(L, "r field should : r={1, 2, 3}, only accept 3 value, %d is give", len);
+		//the table is define as : rotate x-axis(pitch), rotate y-axis(yaw), rotate z-axis(roll)
+		struct euler e = { get_table_value(L, 2), get_table_value(L, 1), get_table_value(L, 3) };	// x -> pitch, y -> yaw, z -> roll
+		matrix44_rot(m, &e);
+	} else {		
+		luaL_error(L, "r field type is not support");
+	}
+
+	lua_pop(L, 1);
+}
+
+static void inline 
+push_srt_or_sdt(lua_State *L, struct lastack *LS, int index, int isdirection) {
+	union matrix44 s, r, t;
+	matrix44_identity(&s);
+	matrix44_identity(&r);
+	matrix44_identity(&t);
+	extract_scale_mat(L, LS, index, &s);
+	extract_rotation_mat(L, LS, index, isdirection ? "d" : "r", &r);
+	extract_translate_mat(L, LS, index, &t);
+	union matrix44 srt;
+	matrix44_mul(&srt, &s, &r);
+	matrix44_mul(&srt, &srt, &t);
+	lastack_pushmatrix(LS, srt.x);
+}
+
+static void inline
+push_sdt(lua_State *L, struct lastack *LS, int index) {
+	push_srt_or_sdt(L, LS, index, 1);
+}
+
+static void
+push_srt(lua_State *L, struct lastack *LS, int index) {
+	push_srt_or_sdt(L, LS, index, 0);
 }
 
 static void
@@ -560,6 +602,8 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 		const char * type = get_type_field(L, index);
 		if (type == NULL || strcmp(type, "srt") == 0) {
 			push_srt(L, LS, index);
+		} else if (strcmp(type, "sdt") == 0){
+			push_sdt(L, LS, index);
 		} else if (strcmp(type, "proj") == 0) {
 			push_mat(L, LS, index, MAT_PERSPECTIVE);
 		} else if (strcmp(type, "ortho") == 0) {

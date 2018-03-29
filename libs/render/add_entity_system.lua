@@ -20,14 +20,16 @@ function add_entity_sys:init()
 
         -- should read from serialize file
         
-        ms(bunny.scale.v, {0.01, 0.01, 0.01}, "=")
+        ms(bunny.scale.v, {1, 1, 1, 1}, "=")
         ms(bunny.position.v, {0, 0, 0, 1}, "=")
         ms(bunny.direction.v, {0, 0, 1, 0}, "=")
 
-        bunny.render = asset.load("bunny.render")        
-        local u_time = assert(bunny.render:get_uniform(1, "u_time"))
-        u_time.update = function (uniform)
-            return 1
+        bunny.render = asset.load("bunny.render")
+        for i=1, #bunny.render do
+            local u_time = assert(bunny.render:get_uniform(i, 1, "u_time"))
+            u_time.update = function (uniform)
+                return 1
+            end
         end
     end
 
@@ -35,8 +37,8 @@ function add_entity_sys:init()
         local cube_eid = world:new_entity("direction", "position", "scale", "render")
         local cube = world[cube_eid]
         
-        ms(cube.scale.v, {0.01, 0.01, 0.01}, "=")  -- meter to cm
-        ms(cube.position.v, {2, 0, 0, 1}, "=") 
+        ms(cube.scale.v, {1, 1, 1}, "=")  -- meter to cm
+        ms(cube.position.v, {0, 0, 0, 1}, "=") 
         ms(cube.direction.v, {0, 0, 1, 0}, "=")
 
         local function write_to_memfile(fn, content)
@@ -47,16 +49,16 @@ function add_entity_sys:init()
 
         local cuberender_fn = "mem://cube.render"
         write_to_memfile(cuberender_fn, [[
-            mesh_name = "cube.mesh"
+            mesh = "cube.mesh"
             binding = {
                 {
-                    material_name = "obj_trans/obj_trans.material",
-                    mesh_groupids = {1},
+                    material = "obj_trans/obj_trans.material",                
                 },
             }
+            srt = {s={0.01}}
         ]])
         cube.render = asset.load(cuberender_fn)        
-        local u_color = cube.render:get_uniform(1, "u_color")
+        local u_color = cube.render:get_uniform(1, 1, "u_color")
         u_color.update = function ()
             return {ms({1, 0, 0, 1}, "m")}
         end
