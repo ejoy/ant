@@ -68,7 +68,8 @@ function path.join(...)
 end
 
 function path.trim_slash(fullpath)
-    return fullpath:match("^%s*[/\\]*(.+)[/\\]")
+    local m = fullpath:match("^%s*[/\\]*(.+)[/\\]%s*$")
+    return m and m or fullpath
 end
 
 function path.create_dirs(fullpath)    

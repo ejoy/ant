@@ -53,7 +53,7 @@ local function check_compile_shader(name, outfile)
         local fullname = path.join(shader_asset_path, src_path, name)
         local success, msg = compile_shader(fullname, outfile)        
         if not success then
-            print(string.format("try compile from file %s, but failed, error message : \n%s", filename, msg))
+            print(string.format("try compile from file %s, but failed, error message : \n%s", fullname, msg))
             return false
         end
     end

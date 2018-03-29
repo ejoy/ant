@@ -2,6 +2,6 @@ mesh_name = "bunny.mesh"
 binding = {
     {
         material_name = "bunny.material",
-        mesh_groupids = {1, 2},
+        mesh_groupids = {1},
     },
 }

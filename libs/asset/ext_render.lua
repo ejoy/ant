@@ -3,6 +3,26 @@ local rawtable = require "rawtable"
 local path = require "filesystem.path"
 local util = require "util"
 
+local render_metatable = {}
+render_metatable.__index = render_metatable
+function render_metatable:get_material(b_idx)
+    local bindings = self.binding
+    local bnum = #bindings
+    assert(bnum >= b_idx)
+    return bindings[b_idx].material
+end
+
+function render_metatable:get_uniform(b_idx, uname)
+    local material = self:get_material(b_idx)
+    local uniform = material.uniform
+    if uniform then
+        local defines = uniform.defines
+        return defines and defines[uname] or nil
+    end
+
+    return nil
+end
+
 return function(filename, assetmgr)
     local assetmgr = require "asset"
 
@@ -24,5 +44,6 @@ return function(filename, assetmgr)
         table.insert(binding_info, {material= material, groupids=groupids})        
     end
 
-    return { mesh = mesh, binding = binding_info }
+    return setmetatable({ mesh = mesh, binding = binding_info },
+                        render_metatable)
 end

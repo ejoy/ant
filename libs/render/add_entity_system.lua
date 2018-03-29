@@ -12,24 +12,53 @@ add_entity_sys.singleton "math_stack"
 add_entity_sys.dependby "iup_message"
 
 function add_entity_sys:init()
+    local ms = self.math_stack
+
     do
         local bunny_eid = world:new_entity(table.unpack(cu.get_sceneobj_compoent_names()))
         local bunny = world[bunny_eid]
 
         -- should read from serialize file
-        local ms = self.math_stack
-        ms(bunny.scale.v, {1, 1, 1}, "=")
+        
+        ms(bunny.scale.v, {0.01, 0.01, 0.01}, "=")
         ms(bunny.position.v, {0, 0, 0, 1}, "=")
         ms(bunny.direction.v, {0, 0, 1, 0}, "=")
 
-        bunny.render = asset.load("bunny.render")
-        local bindings = bunny.render.binding        
-        assert(#bindings > 0)
-        local material = assert(bindings[1].material)
-        local uniforms = material.uniform.defines
-        local u_time = uniforms.u_time
+        bunny.render = asset.load("bunny.render")        
+        local u_time = assert(bunny.render:get_uniform(1, "u_time"))
         u_time.update = function (uniform)
             return 1
+        end
+    end
+
+    do
+        local cube_eid = world:new_entity("direction", "position", "scale", "render")
+        local cube = world[cube_eid]
+        
+        ms(cube.scale.v, {0.01, 0.01, 0.01}, "=")  -- meter to cm
+        ms(cube.position.v, {2, 0, 0, 1}, "=") 
+        ms(cube.direction.v, {0, 0, 1, 0}, "=")
+
+        local function write_to_memfile(fn, content)
+            local f = io.open(fn, "w")
+            f:write(content)
+            f:close()
+        end
+
+        local cuberender_fn = "mem://cube.render"
+        write_to_memfile(cuberender_fn, [[
+            mesh_name = "cube.mesh"
+            binding = {
+                {
+                    material_name = "obj_trans/obj_trans.material",
+                    mesh_groupids = {1},
+                },
+            }
+        ]])
+        cube.render = asset.load(cuberender_fn)        
+        local u_color = cube.render:get_uniform(1, "u_color")
+        u_color.update = function ()
+            return {ms({1, 0, 0, 1}, "m")}
         end
     end
     

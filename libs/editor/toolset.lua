@@ -44,7 +44,6 @@ function toolset.compile(filename, paths, stype, smodel)
 	paths = paths or toolset.path
 
 	if filename then
-		print("dest : ", paths.dest)
 		local dest = paths.dest or filename:gsub("(%w+).sc", "%1") .. ".bin"		
 		local tbl = {
 			shaderc = paths.shaderc,
