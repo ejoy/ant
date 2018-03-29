@@ -462,29 +462,47 @@ lgetStats(lua_State *L) {
 	}
 	const bgfx_stats_t * stat = bgfx_get_stats();
 	int i;
-#define PUSHSTAT(v) lua_pushinteger(L, stat->v); lua_setfield(L, 2, #v); break
+#define PUSHSTAT(v) lua_pushinteger(L, stat->v); lua_setfield(L, 2, #v)
 	for (i=0;what[i];++i) {
 	switch(what[i]) {
-	case 'w': PUSHSTAT(width);
-	case 'h': PUSHSTAT(height);
-	case 'W': PUSHSTAT(textWidth);
-	case 'H': PUSHSTAT(textHeight);
-	case 'd': PUSHSTAT(numDraw);
-	case 'c': PUSHSTAT(numCompute);
-	case 'l': PUSHSTAT(maxGpuLatency);
-	case 's': PUSHSTAT(waitSubmit);
-	case 'r': PUSHSTAT(waitRender);
-	case 'C':  {
+	case 's':	// back buffer size
+		PUSHSTAT(width);
+		PUSHSTAT(height);
+		break;
+	case 'd': // debug size
+		PUSHSTAT(textWidth);
+		PUSHSTAT(textHeight);
+		break;
+	case 'c':	// draw calls
+		PUSHSTAT(numDraw);
+		PUSHSTAT(numCompute);
+		PUSHSTAT(maxGpuLatency);
+		break;
+	case 'n':	// numbers
+		PUSHSTAT(numDynamicIndexBuffers);
+		PUSHSTAT(numDynamicVertexBuffers);
+		PUSHSTAT(numFrameBuffers);
+		PUSHSTAT(numIndexBuffers);
+		PUSHSTAT(numOcclusionQueries);
+		PUSHSTAT(numPrograms);
+		PUSHSTAT(numShaders);
+		PUSHSTAT(numTextures);
+		PUSHSTAT(numUniforms);
+		PUSHSTAT(numVertexBuffers);
+		PUSHSTAT(numVertexDecls);
+	case 'm': // memories
+		PUSHSTAT(textureMemoryUsed);
+		PUSHSTAT(rtMemoryUsed);
+		break;
+	case 't':	// timers
+		PUSHSTAT(waitSubmit); break;
+		PUSHSTAT(waitRender); break;
 		lua_pushnumber(L, (stat->cpuTimeEnd - stat->cpuTimeBegin)*1000.0/stat->cpuTimerFreq);
 		lua_setfield(L, 2, "cpu");
-		break;
-	}
-	case 'G': {
 		lua_pushnumber(L, (stat->gpuTimeEnd - stat->gpuTimeBegin)*1000.0/stat->gpuTimerFreq);
 		lua_setfield(L, 2, "gpu");
 		break;
-	}
-	case 'v': {
+	case 'v': {	// views
 		if (lua_getfield(L, 2, "view") != LUA_TTABLE) {
 			lua_pop(L, 1);
 			lua_createtable(L, stat->numViews, 0);
