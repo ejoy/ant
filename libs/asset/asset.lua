@@ -33,7 +33,7 @@ local resources = setmetatable({}, {__mode="kv"})
 -- 	return loader
 -- end
 
-local searchdirs = {"assets/assetfiles/materials"}
+local searchdirs = {"assets/assetfiles"}
 local function find_valid_path(fn)
 	if path.is_mem_file(fn) or fs.exist(fn) then
 		return fn

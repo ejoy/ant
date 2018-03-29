@@ -37,7 +37,7 @@ function add_entity_sys:init()
         local cube_eid = world:new_entity("direction", "position", "scale", "render")
         local cube = world[cube_eid]
         
-        ms(cube.scale.v, {1, 1, 1}, "=")  -- meter to cm
+        ms(cube.scale.v, {1, 1, 1}, "=")
         ms(cube.position.v, {0, 0, 0, 1}, "=") 
         ms(cube.direction.v, {0, 0, 1, 0}, "=")
 
