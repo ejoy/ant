@@ -81,17 +81,16 @@ local function update_frustum_from_aspect(rt, frustum)
 end
 
 function view_sys:update()	
-	ru.foreach_entity(world, {"position", "direction", "frustum", "view_rect"},
+	ru.foreach_entity(world, {"viewid"},
 	function (entity)
-		local view_mat = self.math_stack(entity.position.v, entity.direction.v, "Lm")
-
+		local vid = entity.viewid.id
+		local ms = self.math_stack		
+		local view_mat = ms(entity.position.v, entity.rotation.v, "dLm")
 		local vr = entity.view_rect
 		local frustum = assert(entity.frustum)
 		update_frustum_from_aspect(vr, frustum)
 		
-		local proj_mat = mu.proj_v(self.math_stack, frustum)
-
-		--local proj_mat = mu.proj_v(self.math_stack, frustum)
+		local proj_mat = mu.proj_v(ms, frustum)
 		bgfx.set_view_transform(entity.viewid.id, view_mat, proj_mat)
 	end)
 end

@@ -48,7 +48,7 @@ function util.draw_entity(vid, entity, ms)
     for idx, elem in ipairs(entity.render) do
         local esrt= elem.srt
         local mat = ms({type="srt", s=esrt.s, r=esrt.r, t=esrt.t}, 
-                        {type="sdt", s=entity.scale.v, d=entity.direction.v, t=entity.position.v}, 
+                        {type="srt", s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}, 
                         "*m")
         util.draw_mesh(vid, elem.mesh, elem.binding, mat)
     end

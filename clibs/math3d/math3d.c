@@ -314,9 +314,8 @@ extract_translate_mat(lua_State *L, struct lastack *LS, int index, union matrix4
 }
 
 static inline void
-extract_rotation_mat(lua_State *L, struct lastack *LS, int index, const char* name, union matrix44 *m){
-	int rtype = lua_getfield(L, index, name);
-	int isdirection = strcmp(name, "d") == 0;
+extract_rotation_mat(lua_State *L, struct lastack *LS, int index, union matrix44 *m){
+	int rtype = lua_getfield(L, index, "r");
 
 	if (rtype == LUA_TNUMBER || rtype == LUA_TUSERDATA) {
 		int64_t id = get_id_by_type(L, LS, rtype, -1);
@@ -327,14 +326,10 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index, const char* na
 		switch (type)
 		{
 		case LINEAR_TYPE_VEC4:
-		case LINEAR_TYPE_VEC3:
-			if (isdirection){
-				vector3_to_rotation(&e, (const struct vector3*)value);
-			} else{
-				e.pitch = value[0];
-				e.yaw = value[1];
-				e.roll = value[2];
-			}
+		case LINEAR_TYPE_VEC3:		
+			e.pitch = value[0];
+			e.yaw = value[1];
+			e.roll = value[2];
 			break;
 		case LINEAR_TYPE_EULER:
 			memcpy(&e, value, sizeof(struct euler));
@@ -353,35 +348,25 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index, const char* na
 		struct euler e = { get_table_value(L, 2), get_table_value(L, 1), get_table_value(L, 3) };	// x -> pitch, y -> yaw, z -> roll
 		matrix44_rot(m, &e);
 	} else {		
-		luaL_error(L, "r field type is not support");
+		luaL_error(L, "r field type is not support, type given : %d", rtype);
 	}
 
 	lua_pop(L, 1);
 }
 
 static void inline 
-push_srt_or_sdt(lua_State *L, struct lastack *LS, int index, int isdirection) {
+push_srt(lua_State *L, struct lastack *LS, int index) {
 	union matrix44 s, r, t;
 	matrix44_identity(&s);
 	matrix44_identity(&r);
 	matrix44_identity(&t);
 	extract_scale_mat(L, LS, index, &s);
-	extract_rotation_mat(L, LS, index, isdirection ? "d" : "r", &r);
+	extract_rotation_mat(L, LS, index, &r);
 	extract_translate_mat(L, LS, index, &t);
 	union matrix44 srt;
 	matrix44_mul(&srt, &s, &r);
 	matrix44_mul(&srt, &srt, &t);
 	lastack_pushmatrix(LS, srt.x);
-}
-
-static void inline
-push_sdt(lua_State *L, struct lastack *LS, int index) {
-	push_srt_or_sdt(L, LS, index, 1);
-}
-
-static void
-push_srt(lua_State *L, struct lastack *LS, int index) {
-	push_srt_or_sdt(L, LS, index, 0);
 }
 
 static void
@@ -601,9 +586,7 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 	if (n == 0) {
 		const char * type = get_type_field(L, index);
 		if (type == NULL || strcmp(type, "srt") == 0) {
-			push_srt(L, LS, index);
-		} else if (strcmp(type, "sdt") == 0){
-			push_sdt(L, LS, index);
+			push_srt(L, LS, index);		
 		} else if (strcmp(type, "proj") == 0) {
 			push_mat(L, LS, index, MAT_PERSPECTIVE);
 		} else if (strcmp(type, "ortho") == 0) {
@@ -1077,6 +1060,66 @@ convert_vec_to_euler(lua_State *L, struct lastack*LS) {
 	lastack_pusheuler(LS, euler_array(&e));
 }
 
+static inline void
+convert_rotation_to_view_dir(lua_State *L, struct lastack *LS){
+	int64_t id = pop(L, LS);
+	int type;
+	float *v = lastack_value(LS, id, &type);
+	switch (type){
+		case LINEAR_TYPE_EULER:
+		case LINEAR_TYPE_VEC3:
+		case LINEAR_TYPE_VEC4:{
+			struct euler e;
+			if (type != LINEAR_TYPE_EULER){
+				e.yaw = v[1], e.pitch = v[0], e.roll = v[2];
+			} else {
+				memcpy(&e, v, sizeof(e));
+			}
+
+			struct vector4 v4 = {0, 0, 1, 0};			
+			if (!euler_is_identity(&e)){
+				struct quaternion q;
+				quaternion_init_from_euler(&q, &e);
+				struct vector4 t = v4;
+				quaternion_rotate_vec4(&v4, &q, &t);
+				vector3_normalize(to_vector3(&v4));
+			}
+			lastack_pushvec4(LS, vector4_array(&v4));
+			break;
+		}
+		default:
+		luaL_error(L, "convect rotation to dir need euler/vec3/vec4 type, type given is : %d", type);
+		break;
+	}
+}
+
+static inline void
+convert_view_dir_to_rotation(lua_State *L, struct lastack *LS){
+	int64_t id = pop(L, LS);
+	int type;
+	float *v = lastack_value(LS, id, &type);
+	switch (type){
+		case LINEAR_TYPE_EULER:
+		case LINEAR_TYPE_VEC3:
+		case LINEAR_TYPE_VEC4: {
+			struct euler e;
+			if (type == LINEAR_TYPE_EULER){
+				memcpy(&e, v, sizeof(e));
+			} else {
+				vector3_to_rotation(&e, (const struct vector3*)v);
+				euler_to_degree(&e);
+			}
+			 
+			struct vector4 v4 = {e.pitch, e.yaw, e.roll, 0};
+			lastack_pushvec4(LS, vector4_array(&v4));
+			break;
+		}
+	default:
+		luaL_error(L, "view dir to rotation only accept vec3/vec4/euler, type given : %d", type);
+		break;
+	}
+}
+
 /*
 	P : pop and return id
 	v : pop and return vector4 pointer
@@ -1218,6 +1261,12 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		break;	
 	case 'e':
 		convert_vec_to_euler(L, LS);
+		break;
+	case 'd':
+		convert_rotation_to_view_dir(L, LS);
+		break;
+	case 'D':
+		convert_view_dir_to_rotation(L, LS);
 		break;
 	default:
 		luaL_error(L, "Unknown command %c", cmd);

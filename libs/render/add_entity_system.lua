@@ -22,7 +22,7 @@ function add_entity_sys:init()
         
         ms(bunny.scale.v, {1, 1, 1, 1}, "=")
         ms(bunny.position.v, {0, 0, 0, 1}, "=")
-        ms(bunny.direction.v, {0, 0, 1, 0}, "=")
+        ms(bunny.rotation.v, {0, 0, 0, 0}, "=")
 
         bunny.render = asset.load("bunny.render")
         for i=1, #bunny.render do
@@ -34,12 +34,12 @@ function add_entity_sys:init()
     end
 
     do
-        local cube_eid = world:new_entity("direction", "position", "scale", "render")
+        local cube_eid = world:new_entity("rotation", "position", "scale", "render")
         local cube = world[cube_eid]
         
         ms(cube.scale.v, {1, 1, 1}, "=")
         ms(cube.position.v, {0, 0, 0, 1}, "=") 
-        ms(cube.direction.v, {0, 0, 1, 0}, "=")
+        ms(cube.rotation.v, {0, 0, 1, 0}, "=")
 
         local function write_to_memfile(fn, content)
             local f = io.open(fn, "w")
@@ -65,12 +65,12 @@ function add_entity_sys:init()
     end
     
     do
-        local camera_eid = world:new_entity("main_camera", "viewid", "direction", "position", "frustum", "view_rect", "clear_component")
+        local camera_eid = world:new_entity("main_camera", "viewid", "rotation", "position", "frustum", "view_rect", "clear_component")
         local camera = world[camera_eid]
         camera.viewid.id = 0
     
         self.math_stack(camera.position.v,    {0, 0, -5, 1},  "=")
-        self.math_stack(camera.direction.v,   {0, 0, 1, 0},   "=")
+        self.math_stack(camera.rotation.v,   {0, 0, 0, 0},   "=")
 
         local frustum = camera.frustum
         mu.frustum_from_fov(frustum, 0.1, 10000, 60, 1)

@@ -82,7 +82,7 @@ function pickup:render_to_pickup_buffer(pickup_entity)
                 table.insert(r, {mesh=mesh, binding={{material=self.material, meshids=meshids}}, srt=elem.srt})
             end
 
-            return {render=r, scale=entity.scale, direction=entity.direction, position=entity.position}
+            return {render=r, scale=entity.scale, rotation=entity.rotation, position=entity.position}
         end
 
         local e = create_pickup_render_entity(entity)
@@ -164,7 +164,8 @@ local function get_main_camera_viewproj_mat(ms, maincamera)
     local proj = mu.proj(ms, assert(maincamera.frustum))
     -- [pos, dir] ==> viewmat --> viewmat * projmat ==> viewprojmat
     -- --> invert(viewprojmat) ==>invViewProjMat
-    return ms(assert(maincamera.position).v, assert(maincamera.direction).v, "L", proj, "*iP")
+    local dir = ms(assert(maincamera.rotation).v, "dP")
+    return ms(assert(maincamera.position).v, dir, "L", proj, "*iP")
 end
 
 local function click_to_eye_and_dir(ms, ndcX, ndcY, invVP)    
@@ -184,9 +185,9 @@ local function update_viewinfo(ms, e, clickpt)
     local ndcX =  (clickpt.x / w) * 2.0 - 1.0
     local ndcY = ((h - clickpt.y) / h) * 2.0 - 1.0
 
-    local ptWS, dirWS = click_to_eye_and_dir(ms, ndcX, ndcY, invVP)
-    ms( assert(e.position).v, assert(ptWS),     "=", 
-        assert(e.direction).v, assert(dirWS),   "=")
+    local ptWS, dirWS = click_to_eye_and_dir(ms, ndcX, ndcY, invVP)    
+    ms(assert(e.position).v, assert(ptWS),     "=")
+    ms(assert(e.rotation).v, dirWS, "D=")
 end
 
 function pickup_view_sys:update()
@@ -211,7 +212,7 @@ pickup_sys.dependby "end_frame"
 
 function pickup_sys:init()
     local function add_pick_entity(ms)
-        local eid = world:new_entity("pickup", "viewid", "position", "direction", "frustum", "view_rect", "clear_component")
+        local eid = world:new_entity("pickup", "viewid", "position", "rotation", "frustum", "view_rect", "clear_component")
         local entity = assert(world[eid])
         entity.viewid.id = 1
 
@@ -229,9 +230,9 @@ function pickup_sys:init()
         mu.frustum_from_fov(frustum, 0.1, 100, 1, vr.w / vr.h)
         
         local pos = entity.position.v
-        local dir = entity.direction.v
+        local rot = entity.rotation.v
         ms(pos, {0, 0, 0, 1}, "=")
-        ms(dir, {0, 0, 1, 0}, "=")
+        ms(rot, {0, 0, 0, 0}, "=")
         
         return entity
     end

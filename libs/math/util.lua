@@ -41,23 +41,6 @@ function util.srt_v(ms, s, r, t, ispersistent)
 	return to_v(ms, util.srt(ms, s, r, t, ispersistent))
 end
 
-function util.sdt(ms, s, d, t, ispersistent)
-	local t = {type="sdt", s=s, d=d, t=t}
-	if ispersistent then
-		return create_persistent_type("matrix", t)
-	end
-
-	return ms(t, "P")
-end
-
-function util.sdt_v(ms, s, d, t, ispersistent)
-	return to_v(ms, util.sdt(ms, s, d, t, ispersistent))
-end
-
-function util.sdt_from_entity(ms, entity)
-	return util.srt_v(ms, entity.scale.v, entity.direction.v, entity.position.v)
-end
-
 function util.proj(ms, frustum, ispersistent)
 	local t = {type = "proj", n=frustum.n, f=frustum.f, l=frustum.l, r=frustum.r, t=frustum.t, b=frustum.b}
 	if frustum.isortho then

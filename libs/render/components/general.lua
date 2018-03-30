@@ -3,7 +3,7 @@ ecs.component "position"{
     v = {type="vector"}
 }
 
-ecs.component "direction"{
+ecs.component "rotation"{
     v = {type="vector"}
 }
 

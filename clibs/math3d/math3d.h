@@ -1044,6 +1044,11 @@ euler_to_degree(struct euler *e) {
 		e->roll = TO_DEGREE(e->roll);
 }
 
+static inline int
+euler_is_identity(const struct euler *e){
+	return e->yaw == 0 && e->pitch == 0 && e->roll == 0;
+}
+
 
 //--- Rotation representation Convert
 

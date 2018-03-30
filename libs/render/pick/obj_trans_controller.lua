@@ -13,7 +13,7 @@ obj_trans_sys.singleton "object_transform"
 obj_trans_sys.singleton "math3d"
 
 local function add_trans_entity()
-    local entity = world:new_entity("position", "scale", "direction", "render")
+    local entity = world:new_entity("position", "scale", "rotation", "render")
 
     entity.render.visible = false
     return entity
@@ -33,7 +33,7 @@ function obj_trans_sys:update()
             -- found hit transform controller
             local selected_entity = assert(world[pu.last_eid_hit])
             self.math_stack(ot.obj_entity.position.v, selected_entity.position.v, "=")
-            self.math_stack(ot.obj_entity.direction.v, selected_entity.direction.v, "=")
+            self.math_stack(ot.obj_entity.rotation.v, selected_entity.rotation.v, "=")
         end         
     end   
 end

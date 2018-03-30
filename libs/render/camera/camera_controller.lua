@@ -27,21 +27,21 @@ local function move_position(ms, p, dir, speed)
 	ms(p, p, dir, {speed}, "*+=")
 end
 
-local function calc_rotate_angle_from_view_direction(ms, vr)
-	-- the default view direction is (0, 0, 1, 0)
-	local dir = ms(vr, "nT")
-	assert(dir.type == 1 or dir.type == 2)	-- 1 for vec4, 2 for vec3
+-- local function calc_rotate_angle_from_view_direction(ms, vr)
+-- 	-- the default view direction is (0, 0, 1, 0)
+-- 	local dir = ms(vr, "nT")
+-- 	assert(dir.type == 1 or dir.type == 2)	-- 1 for vec4, 2 for vec3
 
-	local x, y, z = dir[1], dir[2], dir[3]
-	local pitch = -math.asin(y)	
-	local yaw = z ~= 0 and math.atan2(x, z) or 0	
+-- 	local x, y, z = dir[1], dir[2], dir[3]
+-- 	local pitch = -math.asin(y)	
+-- 	local yaw = z ~= 0 and math.atan2(x, z) or 0	
 
-	local function to_angle(rad)
-		return rad * (180 / 3.1415926)
-	end
+-- 	local function to_angle(rad)
+-- 		return rad * (180 / 3.1415926)
+-- 	end
 	
-	return to_angle(pitch), to_angle(yaw)
-end
+-- 	return to_angle(pitch), to_angle(yaw)
+-- end
 
 function message:motion(x, y)
 	local last_xy = message.xy	
@@ -59,15 +59,12 @@ function message:motion(x, y)
 		if (bs.LEFT or bs.RIGHT) and last_xy then
 			local speed = message.move_speed * 0.1
 			local delta = (last_xy - xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
-			local zdir = entity.direction.v
+			local rot = entity.rotation.v
 
-			local euler = message.ms(zdir, "e", {type="e", delta.x, delta.y, 0}, "+T")
-			assert(euler.type == 5)	--LINEAR_TYPE_EULER			
-			local yaw, pitch, roll = euler[1], euler[2], euler[3]			
-			
-			pitch = mu.limit(pitch, -89.9, 89.9)
-			
-			ms(zdir, {0, 0, 1, 0}, {type="e", yaw, pitch, roll}, "*=")
+			local rot_result = ms(rot, {delta.y, delta.x, 0, 0}, "+T")			
+		
+			rot_result[1] = mu.limit(rot_result[1], -89.9, 89.9)			
+			ms(rot, rot_result, "=")
 
 			-- local pitch, yaw = calc_rotate_angle_from_view_direction(ms, zdir)
 			-- local speed = vp.camera_info.move_speed * 0.2	
@@ -85,25 +82,28 @@ end
 function message:keypress(c, p)
 	if c == nil then return end
 
-	message.cb.keypress = function(entity)
+	message.cb.keypress = function(camera)
 		if p then
 			local msg_comp = message.msg_comp
 			
 			local ms = message.ms
 
 			local move_step = message.move_speed
-			local zdir = entity.direction.v
-			local eye = entity.position.v
-
-			if c == "r" or c == "R" then
-				local ci = vp.camera_info
-				ms(	vt.eye, ci.default.eye, "=")
-				ms( vt.direction, ci.default.direction, "=")
-			end
+			local rot = camera.rotation
+			local eye = camera.position.v
 
 			local states = assert(msg_comp.states)
 
+			local btn_st = states.buttons
+			local nomouse = btn_st.RIGHT == nil and btn_st.LEFT == nil
+			if nomoust and (c == "r" or c == "R") then
+				ms(	eye, {0, 0, -10}, "=")
+				ms( vt.rotation, {0, 0, 0}, "=")
+				return 
+			end
+
 			if states.buttons.RIGHT then
+				local zdir = ms(rot, "dP")
 				local xdir, ydir = generate_basic_axis(ms, zdir)
 
 				if c == "a" or c == "A" then					
