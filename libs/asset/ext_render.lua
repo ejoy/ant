@@ -63,7 +63,7 @@ return function(filename, assetmgr)
                 return {material=material, meshids=meshids}
             end
 
-            local num = #binding
+            local num = #b
             if num ~= 0 then
                 for _, v in ipairs(b) do
                     local e_binding = load_binding_elem(v)
