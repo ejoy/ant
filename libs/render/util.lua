@@ -45,12 +45,15 @@ function util.update_uniforms(uniforms)
 end
 
 function util.draw_entity(vid, entity, ms)
-    for idx, elem in ipairs(entity.render) do
-        local esrt= elem.srt
-        local mat = ms({type="srt", s=esrt.s, r=esrt.r, t=esrt.t}, 
-                        {type="srt", s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}, 
-                        "*m")
-        util.draw_mesh(vid, elem.mesh, elem.binding, mat)
+    local render = entity.render
+    if render.visable then
+        for idx, elem in ipairs(entity.render) do
+            local esrt= elem.srt
+            local mat = ms({type="srt", s=esrt.s, r=esrt.r, t=esrt.t}, 
+                            {type="srt", s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}, 
+                            "*m")
+            util.draw_mesh(vid, elem.mesh, elem.binding, mat)
+        end
     end
 end
 
@@ -72,7 +75,9 @@ function util.draw_mesh(vid, mesh, bindings, worldmat)
         for i=1, num do
             local id = meshids[i]
             local g = assert(mgroups[id])
-            bgfx.set_index_buffer(g.ib)
+            if g.ib then
+                bgfx.set_index_buffer(g.ib)
+            end
             bgfx.set_vertex_buffer(g.vb)
             bgfx.submit(vid, prog, 0, i ~= num)
         end
