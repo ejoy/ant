@@ -41,10 +41,10 @@ return function(filename, assetmgr)
         local binding = {}
         do
             local b = elem.binding
-            
-            for _, v in ipairs(b) do
-                local material = assetmgr.load(v.material)
-                local meshids = v.meshids
+
+            local function load_binding_elem(b_elem)
+                local material = assetmgr.load(b_elem.material)
+                local meshids = b_elem.meshids
                 if meshids then
                     for _, id in ipairs(meshids) do
                         local mgroups = mesh.handle.group
@@ -59,9 +59,20 @@ return function(filename, assetmgr)
                         table.insert(meshids, i)
                     end
                 end
-        
-                table.insert(binding, {material= material, meshids=meshids}) 
+
+                return {material=material, meshids=meshids}
             end
+
+            local num = #binding
+            if num ~= 0 then
+                for _, v in ipairs(b) do
+                    local e_binding = load_binding_elem(v)
+                    table.insert(binding, e_binding)
+                end
+            else
+                table.insert(binding, load_binding_elem(b))
+            end
+
         end
 
         -- read srt
