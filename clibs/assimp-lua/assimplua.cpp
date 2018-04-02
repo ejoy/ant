@@ -306,9 +306,12 @@ static const struct luaL_Reg myLib[] =
 };
 
 extern "C"
-LUAMOD_API int 
-luaopen_assimplua(lua_State *L)
 {
-	luaL_newlib(L, myLib);
-	return 1;     
+	LUAMOD_API int 
+	luaopen_assimplua(lua_State *L)
+	{
+		luaL_newlib(L, myLib);
+		return 1;     
+	}
 }
+
