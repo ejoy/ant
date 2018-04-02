@@ -26,10 +26,12 @@ ecs.component "viewid"{
 }
 
 ecs.component "render" {
-    binding = {type="userdata", ""},
-    mesh = {type="asset", ""},
-
+    info = {type = "userdata", ""},
     visible = true,
+}
+
+ecs.component "name" {
+    n = ""
 }
 
 

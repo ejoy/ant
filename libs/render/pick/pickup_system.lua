@@ -32,14 +32,16 @@ local function unpackrgba_to_eid(rgba)
 end
 
 function pickup:init_material()
-    self.material = asset.load "pickup.material"
-    local uniforms = assert(self.material.uniform.defines, "pickup system need to define id uniform")
-    local u_id = uniforms.u_id
-    local ms = pickup.ms
-    u_id.update = function ()              
-        assert(self.current_eid)
-        return {ms(packeid_as_rgba(self.current_eid), "m")}
-    end
+    local mname = "pickup.material"
+    self.material = asset.load(mname) 
+    self.material.name = mname
+
+    local uniforms = {}
+    uniforms[mname] = {
+        u_id = ru.create_uniform("u_id", "v4", 0),
+    }
+
+    self.uniforms = uniforms
 end
 
 local function bind_frame_buffer(e)
@@ -64,31 +66,46 @@ function pickup:init(pickup_entity)
     bind_frame_buffer(pickup_entity)
 end
 
+local function create_pickup_render_entity(entity, eid, pu_material, pu_uniforms, ms)
+    local visable = entity.render.visable
+    local info = {}
+    for _, elem in ipairs(entity.render.info) do
+        local mesh = elem.mesh
+        local mgroups = mesh.handle.group
+        local meshids = {}
+        local num = #mgroups
+        for i=1, num do
+            table.insert(meshids, i)
+        end
+        table.insert(info, {mesh=mesh, binding={{material=pu_material, meshids=meshids}}, srt=elem.srt})
+    end
+
+    local uniforms = pu_uniforms
+    local u_id = uniforms[pu_material.name].u_id
+    u_id.update = function (uniform)
+        uniform.value = ms(packeid_as_rgba(eid), "m") 
+    end
+
+    return { 
+        render = {
+            info=info, 
+            uniforms=uniforms, 
+            visable=true
+        }, 
+        scale=entity.scale, rotation=entity.rotation, position=entity.position, 
+        name=entity.name
+    }
+end
+
+
 function pickup:render_to_pickup_buffer(pickup_entity)    
     ru.foreach_sceneobj(world, 
     function (entity, eid)
-        self.current_eid = eid        
-
-        local function create_pickup_render_entity(entity)
-            local r = {}
-            for _, elem in ipairs(assert(entity.render)) do
-                local mesh = elem.mesh
-                local mgroups = mesh.handle.group
-                local meshids = {}
-                local num = #mgroups
-                for i=1, num do
-                    table.insert(meshids, i)
-                end
-                table.insert(r, {mesh=mesh, binding={{material=self.material, meshids=meshids}}, srt=elem.srt})
-            end
-
-            return {render=r, scale=entity.scale, rotation=entity.rotation, position=entity.position}
-        end
-
         local e = create_pickup_render_entity(entity)
-        ru.draw_entity(pickup_entity.viewid.id, e, self.ms)        
-    end)
-    self.current_eid = nil
+        if e then
+            ru.draw_entity(pickup_entity.viewid.id, e, self.ms)             
+        end
+    end)    
 end
 
 function pickup:readback_render_data(pickup_entity)
@@ -112,6 +129,7 @@ function pickup:which_entity_hitted(pickup_entity)
             return eid
         end
     end
+    return nil
 end
 
 function pickup:pick(pickup_entity, current_frame_num)
@@ -175,7 +193,7 @@ local function click_to_eye_and_dir(ms, ndcX, ndcY, invVP)
     return eye, dir
 end
 
-local function update_viewinfo(ms, e, clickpt)
+local function update_viewinfo(ms, e, clickpt)    
     local maincamera = world:first_entity("main_camera")  
     local invVP = get_main_camera_viewproj_mat(ms, maincamera)
 
@@ -212,9 +230,10 @@ pickup_sys.dependby "end_frame"
 
 function pickup_sys:init()
     local function add_pick_entity(ms)
-        local eid = world:new_entity("pickup", "viewid", "position", "rotation", "frustum", "view_rect", "clear_component")
+        local eid = world:new_entity("pickup", "viewid", "position", "rotation", "frustum", "view_rect", "clear_component", "name")        
         local entity = assert(world[eid])
         entity.viewid.id = 1
+        entity.name.n = "pickup"
 
         local cc = entity.clear_component
         cc.color = 0

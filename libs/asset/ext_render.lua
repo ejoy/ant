@@ -5,9 +5,8 @@ local util = require "util"
 
 local render_mt = {}
 render_mt.__index = render_mt
-function render_mt:get_elem(eidx)
-    local mnum = #self
-    assert(eidx <= mnum)
+function render_mt:get_elem(eidx)    
+    assert(eidx <= #self)
     return self[eidx]
 end
 function render_mt:get_material(midx, bidx)
@@ -17,15 +16,9 @@ function render_mt:get_material(midx, bidx)
     assert(bnum >= bidx)
     return bindings[bidx].material
 end
-function render_mt:get_uniform(midx, bidx, uname)
+function render_mt:get_uniforms(midx, bidx)
     local material = self:get_material(midx, bidx)
-    local uniform = material.uniform
-    if uniform then
-        local defines = uniform.defines
-        return defines and defines[uname] or nil
-    end
-
-    return nil
+    return material.uniform    
 end
 
 return function(filename, assetmgr)
@@ -44,6 +37,7 @@ return function(filename, assetmgr)
 
             local function load_binding_elem(b_elem)
                 local material = assetmgr.load(b_elem.material)
+                material.name = b_elem.material
                 local meshids = b_elem.meshids
                 if meshids then
                     for _, id in ipairs(meshids) do
@@ -64,9 +58,10 @@ return function(filename, assetmgr)
             end
 
             local num = #b
-            if num ~= 0 then
+            if num ~= 0 then                
                 for _, v in ipairs(b) do
                     local e_binding = load_binding_elem(v)
+                    assert(e_binding)
                     table.insert(binding, e_binding)
                 end
             else

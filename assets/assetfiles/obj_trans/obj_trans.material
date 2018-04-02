@@ -13,12 +13,4 @@ shader = {
 
 state = "default.state"
 
-uniform = {
-    references = {},    
-    defines = {
-        u_color = {
-            name = "u_color",
-            type = "v4",
-        }
-    }
-}
+uniform = {"u_color",}

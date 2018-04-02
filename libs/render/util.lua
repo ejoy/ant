@@ -36,38 +36,51 @@ function util.draw_scene(vid, world, ms)
     end)
 end
 
-function util.update_uniforms(uniforms) 
-    --for i = 1, #uniforms do
-    for _, u in pairs(uniforms) do
-        local value = u:update()
-        bgfx.set_uniform(u.id, value)
+function util.update_uniform(u) 
+    if u.update then
+        u:update()
     end
+    local id = assert(u.id)
+    local value = assert(u.value)    
+    bgfx.set_uniform(id, value)
 end
 
-function util.draw_entity(vid, entity, ms)
+function util.draw_entity(vid, entity, ms)    
     local render = entity.render
-    if render.visable then
-        for idx, elem in ipairs(entity.render) do
+    if 1 then
+        local rinfo = render.info
+        local uniforms = assert(render.uniforms)
+        for idx, elem in ipairs(rinfo) do
             local esrt= elem.srt
             local mat = ms({type="srt", s=esrt.s, r=esrt.r, t=esrt.t}, 
                             {type="srt", s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}, 
-                            "*m")
-            util.draw_mesh(vid, elem.mesh, elem.binding, mat)
+                            "*m")            
+            util.draw_mesh(vid, elem.mesh, elem.binding, uniforms, mat)
         end
     end
 end
 
-function util.draw_mesh(vid, mesh, bindings, worldmat)
+function util.draw_mesh(vid, mesh, bindings, uniforms, worldmat)
     bgfx.set_transform(worldmat)
 
-    local mgroups = mesh.handle.group    
-
+    local mgroups = mesh.handle.group
     for _, binding in ipairs(bindings) do
         local material = binding.material
-        local prog = assert(material.shader.prog)
 
         bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
-        util.update_uniforms(material.uniform.defines)
+
+        local prog = assert(material.shader.prog)        
+        local muniforms = assert(uniforms[material.name])
+
+        local uniform_names = material.uniform        
+        for _, n in ipairs(uniform_names) do
+            local u = muniforms[n]
+            if u == nil then
+                print(string.format("material : %s need uniform : %s, but not define", material.name, n))
+            else
+                util.update_uniform(u)
+            end
+        end
 
         local meshids = binding.meshids
         local num = #meshids
@@ -82,6 +95,11 @@ function util.draw_mesh(vid, mesh, bindings, worldmat)
             bgfx.submit(vid, prog, 0, i ~= num)
         end
     end
+end
+
+function util.create_uniform(name, type, value, update)    
+    local id = bgfx.create_uniform(name, type)
+    return {id=assert(id), name=name, type=type, value=value, update=update}
 end
 
 return util
