@@ -9,10 +9,14 @@ local bgfx = require "bgfx"
 local hw_caps = require "render.hardware_caps"
 local assimplua = require"assimplua"
 local render_mesh = require "modelloader.rendermesh"
+local path = require "filesystem.path"
 
-require "iupluaimglib"
-require "iuplua"
-require "scintilla"
+
+if not static_link_iup then
+    require "iupluaimglib"
+    require "iuplua"
+    require "scintilla"
+end
 
 local filetree = require "modelloader.filetree"
 --先测试bgfx的使用
@@ -61,8 +65,9 @@ function item_export:action()
     if(tonumber(export_dlg.status) ~= -1) then
         local in_path = export_dlg.value
         if(in_path) then
-            --导出路径暂时不可自定义,放在导入目录里面
-            local out_path = string.gsub(in_path, ".fbx", function(s) return ".bin" end)
+            --导出路径暂时不可自定义,放在导入目录里面            
+            --local out_path = string.gsub(in_path, ".fbx", function(s) return ".bin" end)
+            local out_path = path.replace_ext(in_path, "bin")
             assimplua.assimp_import(in_path, out_path)
 
             print("Export file to: " .. out_path)

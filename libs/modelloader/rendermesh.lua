@@ -2,7 +2,7 @@
 local bgfx = require "bgfx"
 local shader_mgr = require "render.resources.shader_mgr"
 local mesh_loader = require "render.resources.mesh_loader"
-local ru = require "renader.util"
+local ru = require "render.util"
 
 local render_mesh = {}
 local ctx = {stats = {}}

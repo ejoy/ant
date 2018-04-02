@@ -16,6 +16,8 @@ local math3d = require "math3d"
 		22 means ( ..., a, b -> ..., a, b, a, b)
 	S : swap stack top (..., 1,2 -> ..., 2,1 )
 	R : remove stack top ( ..., 1 -> ... )
+	d : convert rotation vec to view direcion	-- rotation vec is vec4 and x for rotating x-axis, y for rotatiing y-axis, z for rotatiing z-axis
+	D : convert view direction to rotation vec	
 
 	{ 1,2,3,4 }	  push vector4(1,2,3,4)
 	{ 1,2,3,4, .... 16 } push matrix4x4
@@ -71,6 +73,14 @@ assert(data.type ~= nil)
 print("data.type : ", data.type)
 for k,v in ipairs(data) do
 	print("k : ", k, ", v : ", v)
+end
+
+--rotation view vector
+do
+	local zdir = stack({60, 30, 0, 0}, "dP")
+	print("zdir : ", stack(zdir, "V"))
+	local rot = stack(zdir, "DP")
+	print("rot : ", stack(rot, "V"))
 end
 
 --quaternion

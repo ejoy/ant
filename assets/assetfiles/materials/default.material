@@ -1,4 +1,0 @@
-shader = "default.shader"
-state = "default.state"
-tex_mapper = "default.tex_mapper"
-uniform = "global.uniform"

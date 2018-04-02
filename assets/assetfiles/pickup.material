@@ -1,0 +1,8 @@
+shader = {
+    vs = "picking/vs_picking.sc",
+    fs = "picking/fs_picking.sc",
+}
+
+uniform = {"u_id"}
+
+state = "default.state"

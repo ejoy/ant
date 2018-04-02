@@ -1,3 +1,5 @@
+#define LUA_LIB
+
 #include <stdio.h>  
 extern "C"
 {
@@ -22,7 +24,7 @@ extern "C"
 #include <common.h>
 #include <bounds.h>
 
-extern "C" int luaopen_assimplua(lua_State *L);
+//extern "C" int luaopen_assimplua(lua_State *L);
 
 #define BGFX_CHUNK_MAGIC_VB  BX_MAKEFOURCC('V', 'B', ' ', 0x1)
 #define BGFX_CHUNK_MAGIC_IB  BX_MAKEFOURCC('I', 'B', ' ', 0x0)
@@ -303,8 +305,13 @@ static const struct luaL_Reg myLib[] =
 	{ NULL, NULL }      
 };
 
-int luaopen_assimplua(lua_State *L)
+extern "C"
 {
-	luaL_newlib(L, myLib);
-	return 1;     
+	LUAMOD_API int 
+	luaopen_assimplua(lua_State *L)
+	{
+		luaL_newlib(L, myLib);
+		return 1;     
+	}
 }
+

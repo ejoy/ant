@@ -3,7 +3,7 @@ ecs.component "position"{
     v = {type="vector"}
 }
 
-ecs.component "direction"{
+ecs.component "rotation"{
     v = {type="vector"}
 }
 
@@ -26,10 +26,12 @@ ecs.component "viewid"{
 }
 
 ecs.component "render" {
-    binding = {type="userdata", ""},
-    mesh = {type="asset", ""},
-
+    info = {type = "userdata", ""},
     visible = true,
+}
+
+ecs.component "name" {
+    n = ""
 }
 
 

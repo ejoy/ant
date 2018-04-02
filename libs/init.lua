@@ -2,7 +2,7 @@
 
 local root = os.getenv "ANTGE" or "."
 local local_binpath = (os.getenv "BIN_PATH" or "clibs")
-static_sci = os.getenv "STATIC_LINKING_SCI"
+static_link_iup = os.getenv "STATIC_LINKING_IUP"
 
 package.cpath = root .. "/" .. local_binpath .. "/?.dll;" .. 
                 root .. "/bin/?.dll"

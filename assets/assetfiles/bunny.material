@@ -1,0 +1,8 @@
+shader = {
+    vs = "vs_mesh",
+    fs = "fs_mesh",
+}
+
+state = "default.state"
+
+uniform = {"u_time",}
