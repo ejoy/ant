@@ -47,7 +47,7 @@ end
 
 function util.draw_entity(vid, entity, ms)    
     local render = entity.render    
-    if 1 then
+    if render.visible then
         local rinfo = render.info        
         for idx, elem in ipairs(rinfo) do
             local esrt= elem.srt

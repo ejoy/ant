@@ -67,7 +67,11 @@ function pickup:init(pickup_entity)
 end
 
 local function create_pickup_render_entity(entity, eid, pu_material, pu_uniforms, ms)
-    local visable = entity.render.visable
+    local visible = entity.render.visible
+    if not visible then
+        return nil
+    end
+    
     local info = {}
     for _, elem in ipairs(entity.render.info) do
         local mesh = elem.mesh
@@ -90,7 +94,7 @@ local function create_pickup_render_entity(entity, eid, pu_material, pu_uniforms
         render = {
             info=info, 
             uniforms=uniforms, 
-            visable=true
+            visible=true
         }, 
         scale=entity.scale, rotation=entity.rotation, position=entity.position, 
         name=entity.name
