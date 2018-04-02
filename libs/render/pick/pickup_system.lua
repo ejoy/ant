@@ -101,7 +101,7 @@ end
 function pickup:render_to_pickup_buffer(pickup_entity)    
     ru.foreach_sceneobj(world, 
     function (entity, eid)
-        local e = create_pickup_render_entity(entity)
+        local e = create_pickup_render_entity(entity, eid, self.material, self.uniforms, self.ms)
         if e then
             ru.draw_entity(pickup_entity.viewid.id, e, self.ms)             
         end
@@ -133,11 +133,9 @@ function pickup:which_entity_hitted(pickup_entity)
 end
 
 function pickup:pick(pickup_entity, current_frame_num)
-    bind_frame_buffer(pickup_entity)
-
-    self:render_to_pickup_buffer(pickup_entity)
-
     if self.reading_frame == nil then
+        bind_frame_buffer(pickup_entity)
+        self:render_to_pickup_buffer(pickup_entity)
         self.reading_frame = self:readback_render_data(pickup_entity)        
     end
 
