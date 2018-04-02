@@ -89,7 +89,7 @@ function message:keypress(c, p)
 			local ms = message.ms
 
 			local move_step = message.move_speed
-			local rot = camera.rotation
+			local rot = camera.rotation.v
 			local eye = camera.position.v
 
 			local states = assert(msg_comp.states)
@@ -102,7 +102,7 @@ function message:keypress(c, p)
 				return 
 			end
 
-			if states.buttons.RIGHT then
+			if states.buttons.RIGHT then				
 				local zdir = ms(rot, "dP")
 				local xdir, ydir = generate_basic_axis(ms, zdir)
 

@@ -82,14 +82,54 @@ function add_entity_sys:init()
         camera.viewid.id = 0
         camera.name.n = "main_camera"
     
-        self.math_stack(camera.position.v,    {0, 0, -5, 1},  "=")
-        self.math_stack(camera.rotation.v,   {0, 0, 0, 0},   "=")
+        ms(camera.position.v,    {10, 10, -10, 1},  "=")
+        ms(camera.rotation.v,   {45, -45, 0, 0},   "=")
 
         local frustum = camera.frustum
         mu.frustum_from_fov(frustum, 0.1, 10000, 60, 1)
     end
 
     do
-        --local trans_gizmo = world:new_entity()
+        local axisid = world:new_entity("rotation", "position", "scale", "render", "name")
+        local axis = world[axisid]
+
+        ms(axis.rotation.v, {0, 0, 0, 0}, "=")
+        ms(axis.position.v, {0, 0, 0, 1}, "=")
+        ms(axis.scale.v, {1, 1, 1}, "=")
+
+        axis.name.n = "axis-tips"
+        local material_name = "line.material"
+
+        local vdecl = bgfx.vertex_decl {
+                { "POSITION", 3, "FLOAT" },
+                { "COLOR0", 4, "UINT8", true }
+            }
+
+        local render = axis.render
+        render.info = {
+            {
+                mesh = {
+                    handle = {
+                        group = {
+                            {
+                                vdecl = vdecl,
+                                vb = bgfx.create_vertex_buffer({"fffd",
+                                0.0, 0.0, 0.0, 0xff0000ff,  -- x-axis
+                                1.0, 0.0, 0.0, 0xff0000ff,
+                                0.0, 0.0, 0.0, 0xff00ff00,  -- y-axis
+                                0.0, 1.0, 0.0, 0xff00ff00,
+                                0.0, 0.0, 0.0, 0xffff0000,  -- z-axis
+                                0.0, 0.0, 1.0, 0xffff0000}, vdecl)
+                            },
+                        }
+                    }
+                },
+                binding = {{
+                    material = asset.load(material_name),
+                    meshids = {1}
+                }},
+                srt = {s={0.2, 0.2, 0.2}, r={0, 0, 0}, t={0, 0, 0}}
+            },
+        }
     end
 end

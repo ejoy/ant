@@ -31,7 +31,7 @@ end
 
 function util.draw_scene(vid, world, ms)
     util.foreach_sceneobj(world,
-    function (entity)
+    function (entity)        
         util.draw_entity(vid, entity, ms)
     end)
 end
@@ -46,46 +46,48 @@ function util.update_uniform(u)
 end
 
 function util.draw_entity(vid, entity, ms)    
-    local render = entity.render
+    local render = entity.render    
     if 1 then
-        local rinfo = render.info
-        local uniforms = assert(render.uniforms)
+        local rinfo = render.info        
         for idx, elem in ipairs(rinfo) do
             local esrt= elem.srt
             local mat = ms({type="srt", s=esrt.s, r=esrt.r, t=esrt.t}, 
                             {type="srt", s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}, 
                             "*m")            
-            util.draw_mesh(vid, elem.mesh, elem.binding, uniforms, mat)
+            util.draw_mesh(vid, elem.mesh, elem.binding, render.uniforms, mat)
         end
     end
 end
 
 function util.draw_mesh(vid, mesh, bindings, uniforms, worldmat)
     bgfx.set_transform(worldmat)
-
     local mgroups = mesh.handle.group
     for _, binding in ipairs(bindings) do
         local material = binding.material
 
         bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
 
-        local prog = assert(material.shader.prog)        
-        local muniforms = assert(uniforms[material.name])
+        local prog = assert(material.shader.prog)
 
-        local uniform_names = material.uniform        
-        for _, n in ipairs(uniform_names) do
-            local u = muniforms[n]
-            if u == nil then
-                print(string.format("material : %s need uniform : %s, but not define", material.name, n))
-            else
-                util.update_uniform(u)
-            end
+        -- check and update uniforms
+        if uniforms then
+            local muniforms = uniforms[material.name]
+
+            local uniform_names = material.uniform        
+            for _, n in ipairs(uniform_names) do
+                local u = muniforms[n]
+                if u == nil then
+                    print(string.format("material : %s need uniform : %s, but not define", material.name, n))
+                else
+                    util.update_uniform(u)
+                end
+            end        
         end
 
         local meshids = binding.meshids
         local num = #meshids
 
-        for i=1, num do
+        for i=1, num do            
             local id = meshids[i]
             local g = assert(mgroups[id])
             if g.ib then
