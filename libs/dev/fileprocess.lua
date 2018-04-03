@@ -1,3 +1,7 @@
+package.path = "../?/?.lua;" .. package.path
+local lanes = require "lanes"
+if lanes.configure then lanes.configure() end
+
 local fileprocess = {}
 
 function fileprocess.GetFileSize(file)
@@ -7,10 +11,23 @@ function fileprocess.GetFileSize(file)
     return size
 end
 
-local MAX_CALC_CHUNK = 2 * 1024 --2k
 
+--for now just put it here
+fileprocess.hashfile = "hashtable"
+fileprocess.dir_path = "ServerFiles"
+
+fileprocess.time_stamp_table = {}
+fileprocess.file_hash_table = {}
+
+function fileprocess.GetFileHash(path)
+    return fileprocess.file_hash_table[path]
+end
+
+--use stream from crypt module
+local MAX_CALC_CHUNK = 64 * 1024 --64K
+local crypt_encoder = nil
 function fileprocess.CalculateHash(file_path)
-    --if haa local copy, hash calculation needed
+    --if have local copy, hash calculation needed
     local file = io.open(file_path, "rb")
     if not file then
         return nil
@@ -18,69 +35,28 @@ function fileprocess.CalculateHash(file_path)
 
     --file is the handle
     local crypt = require "crypt"
+    if not crypt_encoder then
+        crypt_encoder = crypt.sha1_encoder():init()
+    end
+
     local file_size = fileprocess.GetFileSize(file)
 
     --file can be calculate only once
-    if file_size <= MAX_CALC_CHUNK then
-        local file_data = file:read_size(file_size)
-        local sha1 = crypt.sha1(file_data)
-        return crypt.hexencode(sha1)
-    else
-        --file too big, need multiple calculate
-        --put the result into a temp file, than calculate them and get new hash value
-        --read write between files
-        local read_handle = file
+    repeat
+        local read_size = 0
+        if file_size < MAX_CALC_CHUNK then
+            read_size = file_size
+        else
+            read_size = MAX_CALC_CHUNK
+        end
 
-        local cal_hash = true
-        --the first time read data from target file
-        --the second time and after read from temp file
+        local file_data = file:read(read_size)
+        crypt_encoder:update(file_data)
 
-        local final_hash = 0
-        repeat
-            local write_handle = io.tmpfile()
+        file_size = file_size - read_size
+    until file_size <= 0
 
-            file_size = fileprocess.GetFileSize(read_handle)
-            --last calculation
-            if file_size < MAX_CALC_CHUNK then
-                cal_hash = false
-            end
-
-            local offset = 0
-
-            --in this loop, cal all the data chunk(s)'s hash
-            --put them in a file or return it
-            repeat
-                local remain_size = file_size - offset
-                local read_size = 0
-                if remain_size > MAX_CALC_CHUNK then
-                    read_size = MAX_CALC_CHUNK
-                else
-                    read_size = remain_size
-                end
-
-                read_handle:seek("set", offset);
-                local file_data = read_handle:read(read_size);
-                local sha1 = crypt.sha1(file_data)
-                sha1 = crypt.hexencode(sha1)
-
-                if cal_hash then
-               --     print("data chunk hash is", sha1)
-                    write_handle:write(sha1)
-                else
-                    final_hash = sha1
-                end
-
-                offset = offset + MAX_CALC_CHUNK
-
-            until offset >= file_size
-
-            io.close(read_handle)
-            read_handle = write_handle
-        until cal_hash == false
-
-        io.close(read_handle)
-        return final_hash
-    end
+    return crypt.hexencode(crypt_encoder:final())
 end
 
 function fileprocess.GetDirectoryList(path)
@@ -104,4 +80,55 @@ function fileprocess.GetLastModificationTime(path)
     --print(os.date("%c", last_modification))
     return last_modification
 end
+
+local function WriteHashFile(path)
+    local file_hash = io.open(fileprocess.hashfile, "w+")
+    io.output(file_hash)
+    for filename, time_stamp in pairs(fileprocess.time_stamp_table) do
+
+        io.write(filename.."\n")
+        io.write(time_stamp.."\n")
+        local hash_value = fileprocess.file_hash_table[filename]
+
+        --directory use nil as hash value
+        if not hash_value then
+            io.write("nil\n")
+        else
+            io.write(hash_value.."\n")
+        end
+
+    end
+
+    io.close(file_hash)
+end
+
+fileprocess.hashfile_writer = lanes.gen("io",
+function (file_path, time_stamp_table, file_hash_table)
+    local file_hash = io.open(file_path, "w+")
+    io.output(file_hash)
+    for filename, time_stamp in pairs(time_stamp_table) do
+
+        io.write(filename.."\n")
+        io.write(time_stamp.."\n")
+        local hash_value = file_hash_table[filename]
+
+        --directory use nil as hash value
+        if not hash_value then
+            io.write("nil\n")
+        else
+            io.write(hash_value.."\n")
+        end
+
+    end
+    io.close(file_hash)
+end
+)
+
+function fileprocess:UpdateHashFile()
+    local file_path = self.hashfile
+    local time_stamp = self.time_stamp_table
+    local hash_table = self.file_hash_table
+    return fileprocess.hashfile_writer(file_path, time_stamp, hash_table)[1]
+end
+
 return fileprocess

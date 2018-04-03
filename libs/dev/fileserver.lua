@@ -34,12 +34,12 @@ function fileserver.GET(req)
     print("client hash:", client_hash)
 
     local file_process = require "fileprocess"
-    local server_hash = file_process.CalculateHash(file_path)
+    local server_hash = file_process.GetFileHash(file_path)
 
     if server_hash == client_hash then
         print("server hash", server_hash)
         print("client hash", client_hash)
-    --    return {"You are OK, Bro"}
+        --return {"You are OK, Bro"}
     end
 
 	local file = io.open(file_path, "rb")
