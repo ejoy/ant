@@ -14,7 +14,7 @@ CFLAGS = -O2 -Wall
 ODIR = o
 CXX = g++
 
-mingw : assimp-lua.dll
+mingw : assimplua.dll
 
 BUILD_CFG = Release
 BGFXLIB = -L$(BGFXSRC)/.build/win64_mingw-gcc/bin -lbgfx$(BUILD_CFG) -lbimg$(BUILD_CFG) -lbimg_decode$(BUILD_CFG) -lbx$(BUILD_CFG) -lstdc++ -lgdi32 -lpsapi -luuid \
@@ -30,8 +30,8 @@ $(ODIR) :
 $(ODIR)/luaassimplua.o : assimplua.cpp  | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $^ -L. $(LUAINC) $(ASSIMPINC) $(BGFXINC)
 	
-assimp-lua.dll : $(ODIR)/luaassimplua.o
+assimplua.dll : $(ODIR)/luaassimplua.o
 	$(CXX) $(CFLAGS) --shared -o $@ $^ -L. $(LUALIB) $(ASSIMPLIB) $(BGFXLIB) $(BGFXUTILLIB) $(BXLIB)
 	
 clean :
-	rm -f assimp-lua.dll
+	rm -f assimplua.dll
