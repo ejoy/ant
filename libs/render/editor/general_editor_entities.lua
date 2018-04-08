@@ -84,11 +84,11 @@ function general_editor_entites:init()
             local color = 0x88c0c0c0
 
             -- center lines
-            add_point(-hh_len, 0, 0x88ff0000)
-            add_point(hh_len, 0, 0x88ff0000)
+            add_point(-hh_len, 0, 0x8800ff)
+            add_point(hh_len, 0, 0x880000ff)
 
-            add_point(0, -hw_len, 0x880000ff)
-            add_point(0, hw_len, 0x8800000ff)
+            add_point(0, -hw_len, 0x88ff0000)
+            add_point(0, hw_len, 0x88ff0000)
 
             -- column lines
             for i=0, w do
@@ -115,7 +115,7 @@ function general_editor_entites:init()
                             {
                                 vdecl = vdecl,
                                 vb = bgfx.create_vertex_buffer(
-                                    create_grid_line_points(128, 128, 1),
+                                    create_grid_line_points(64, 64, 1),
                                     vdecl)
                             }
                         }
