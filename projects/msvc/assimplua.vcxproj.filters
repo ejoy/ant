@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\assimp-lua\assimplua.cpp">
+    <ClCompile Include="..\..\clibs\assimplua\assimplua.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
