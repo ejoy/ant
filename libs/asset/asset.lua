@@ -65,13 +65,17 @@ function assetmgr.remove_searchdir(idx)
 end
 
 function assetmgr.load(filename)
-	assert(type(filename) == "string")		
-	local ext = assert(path.ext(filename))
-	local fn = find_valid_path(filename)
-	
-	local v = loader[ext](fn)
-	resources[fn] = v
-	return v
+	assert(type(filename) == "string")
+	local res = resources[filename]
+	if res == nil then
+		local ext = assert(path.ext(filename))
+		local fn = find_valid_path(filename)
+		
+		res = loader[ext](fn)
+		resources[filename] = res		
+	end
+
+	return res
 end
 
 function assetmgr.has_res(filename)
