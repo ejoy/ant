@@ -97,10 +97,10 @@ $(OBJWIN): $(ODIR)/%.o: $(IUPSRC)/src/win/%.c | $(ODIR)
 $(ODIR)/libiup.a : $(OBJIUP) $(OBJWIN) $(OBJIUPLUA) $(OBJCTRL)
 	$(AR) $@ $^
 
-scintilla.dll :
+scintilla.dll : luaiup.dll
 	$(MAKE) -f Makefile.scintilla
 
-iupluaimglib.dll :
+iupluaimglib.dll : luaiup.dll
 	$(MAKE) -f Makefile.imglib
 
 luaiup.dll : $(OBJIUP) $(OBJWIN) $(OBJIUPLUA) $(OBJCTRL) 
