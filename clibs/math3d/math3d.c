@@ -307,7 +307,7 @@ extract_translate_mat(lua_State *L, struct lastack *LS, int index, union matrix4
 			v[i] = get_table_value(L, i + 1);
 		matrix44_trans(m, v[0], v[1], v[2]);
 	} else {
-		luaL_error(L, "t field type is not support");
+		matrix44_identity(m);
 	}
 
 	lua_pop(L, 1);
@@ -348,7 +348,7 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index, union matrix44
 		struct euler e = { get_table_value(L, 2), get_table_value(L, 1), get_table_value(L, 3) };	// x -> pitch, y -> yaw, z -> roll
 		matrix44_rot(m, &e);
 	} else {		
-		luaL_error(L, "r field type is not support, type given : %d", rtype);
+		matrix44_identity(m);
 	}
 
 	lua_pop(L, 1);
@@ -1120,6 +1120,64 @@ convert_view_dir_to_rotation(lua_State *L, struct lastack *LS){
 	}
 }
 
+static inline void
+split_mat_to_srt(lua_State *L, struct lastack *LS){
+	int64_t id = pop(L, LS);
+	int type;
+	float* v = lastack_value(LS, id, &type);
+	if (type != LINEAR_TYPE_MAT)
+		luaL_error(L, "split operation '~' is only valid for mat4 type, type is : %d", type);
+	
+	const union matrix44 *mat = (const union matrix44*)v;
+
+	// struct vector3 scale = {
+	// 	vector3_length((const struct vector3*)(mat->c[0])),
+	// 	vector3_length((const struct vector3*)(mat->c[1])),
+	// 	vector3_length((const struct vector3*)(mat->c[2]))
+	// };
+
+	// struct vector3 rotation;
+	// struct vector3 normalize_columns[3] = {
+	// 	(*(const struct vector3*)(mat->c[0])),
+	// 	(*(const struct vector3*)(mat->c[1])),
+	// 	(*(const struct vector3*)(mat->c[2])),
+	// };
+	// for (int ii=0; ii<sizeof(normalize_columns)/sizeof(normalize_columns[0]); ++ii)
+	// 	vector3_normalize(&normalize_columns[ii]);
+
+
+	// rotation.y = asin(-normalize_columns[0].z);
+	// if (is_zero(cos(rotation.y))){
+	// 	rotation.x = atan2(-normalize_columns[2].x, normalize_columns[1].y);
+	// 	rotation.z = 0;		
+	// } else {
+	// 	rotation.x = atan2(normalize_columns[1].z, normalize_columns[2].z);
+	// 	rotation.z = atan2(normalize_columns[0].y, normalize_columns[0].x);
+	// }
+
+	// rotation.x = TO_DEGREE(rotation.x);
+	// rotation.y = TO_DEGREE(rotation.y);
+	// rotation.z = TO_DEGREE(rotation.z);
+
+	// struct vector4 translate = {
+	// 	mat->c[3][0],
+	// 	mat->c[3][1],
+	// 	mat->c[3][2],
+	// 	1,
+	// };
+
+	struct vector3 scale, rotation, translate;
+	matrix44_decompose2(mat, &translate, &rotation, &scale);
+
+	rotation.x = TO_DEGREE(rotation.x);
+	rotation.y = TO_DEGREE(rotation.y);
+	rotation.z = TO_DEGREE(rotation.z);
+
+	lastack_pushvec3(LS, vector3_array(&translate));
+	lastack_pushvec3(LS, vector3_array(&rotation));
+	lastack_pushvec3(LS, vector3_array(&scale));
+}
+
 /*
 	P : pop and return id
 	v : pop and return vector4 pointer
@@ -1261,12 +1319,22 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		break;	
 	case 'e':
 		convert_vec_to_euler(L, LS);
+		refstack_1_1(RS);
 		break;
 	case 'd':
 		convert_rotation_to_view_dir(L, LS);
+		refstack_1_1(RS);
 		break;
 	case 'D':
 		convert_view_dir_to_rotation(L, LS);
+		refstack_1_1(RS);
+		break;
+	case '~':
+		split_mat_to_srt(L, LS);
+		refstack_pop(RS);
+		refstack_push(RS);
+		refstack_push(RS);
+		refstack_push(RS);
 		break;
 	default:
 		luaL_error(L, "Unknown command %c", cmd);
