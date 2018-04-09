@@ -20,10 +20,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\iup\srclua5\ctrl\il_scintilla.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_dropbutton.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_flatlabel.c" />
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_flattoggle.c" />
     <ClCompile Include="..\..\..\iup\src\iup_array.c" />
     <ClCompile Include="..\..\..\iup\src\iup_callback.c" />
     <ClCompile Include="..\..\..\iup\src\iup_dlglist.c" />
     <ClCompile Include="..\..\..\iup\src\iup_attrib.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_dropbutton.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_flatlabel.c" />
+    <ClCompile Include="..\..\..\iup\src\iup_flattoggle.c" />
     <ClCompile Include="..\..\..\iup\src\iup_focus.c" />
     <ClCompile Include="..\..\..\iup\src\iup_font.c" />
     <ClCompile Include="..\..\..\iup\src\iup_globalattrib.c" />

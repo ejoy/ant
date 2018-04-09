@@ -1,0 +1,16 @@
+root = {
+    {
+        mesh = "cylinder.mesh",
+        binding = {
+            material = "obj_trans/obj_trans.material", 
+        },
+        srt = {s={0.001, 0.001, 0.01}, t={0, 0, 0.5}},
+    },
+    {
+        mesh = "cone.mesh",
+        binding = {
+            material = "obj_trans/obj_trans.material"
+        },        
+        srt = {s={0.002}, t={0, 0, 1.1}}
+    }
+}

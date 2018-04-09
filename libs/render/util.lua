@@ -40,6 +40,7 @@ function util.update_uniform(u)
     if u.update then
         u:update()
     end
+    
     local id = assert(u.id)
     local value = assert(u.value)    
     bgfx.set_uniform(id, value)
@@ -47,13 +48,14 @@ end
 
 function util.draw_entity(vid, entity, ms)    
     local render = entity.render    
+    --local name = entity.name.n   
+
     if render.visible then
         local rinfo = render.info        
         for idx, elem in ipairs(rinfo) do
             local esrt= elem.srt
             local mat = ms({type="srt", s=esrt.s, r=esrt.r, t=esrt.t}, 
-                            {type="srt", s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}, 
-                            "*m")            
+                            {type="srt", s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}, "*m")            
             util.draw_mesh(vid, elem.mesh, elem.binding, render.uniforms, mat)
         end
     end

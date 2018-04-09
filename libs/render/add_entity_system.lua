@@ -21,9 +21,9 @@ function add_entity_sys:init()
 
         -- should read from serialize file
         
-        ms(bunny.scale.v, {1, 1, 1, 1}, "=")
-        ms(bunny.position.v, {0, 0, 0, 1}, "=")
-        ms(bunny.rotation.v, {0, 0, 0, 0}, "=")
+        ms(bunny.scale.v, {0.2, 0.2, 0.2, 0}, "=")
+        ms(bunny.position.v, {0, 0, 3, 1}, "=")
+        ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
 
         local rinfo = asset.load("bunny.render")
         local uniforms = {}
@@ -74,18 +74,6 @@ function add_entity_sys:init()
         local uniforms = {}
         uniforms[material.name] = {u_color = ru.create_uniform("u_color", "v4", nil, function (uniform) uniform.value = ms({1, 0, 0, 1}, "m") end)}
         cube.render.uniforms = uniforms
-    end
-    
-    do
-        local camera_eid = world:new_entity("main_camera", "viewid", "rotation", "position", "frustum", "view_rect", "clear_component", "name")        
-        local camera = world[camera_eid]
-        camera.viewid.id = 0
-        camera.name.n = "main_camera"
-    
-        ms(camera.position.v,    {10, 10, -10, 1},  "=")
-        ms(camera.rotation.v,   {45, -45, 0, 0},   "=")
-
-        local frustum = camera.frustum
-        mu.frustum_from_fov(frustum, 0.1, 10000, 60, 1)
+        cube.render.visible = false
     end
 end

@@ -58,7 +58,7 @@ function message:motion(x, y)
 
 		if (bs.LEFT or bs.RIGHT) and last_xy then
 			local speed = message.move_speed * 0.1
-			local delta = (last_xy - xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
+			local delta = (xy - last_xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
 			local rot = entity.rotation.v
 
 			local rot_result = ms(rot, {delta.y, delta.x, 0, 0}, "+T")			
@@ -81,7 +81,6 @@ end
 
 function message:keypress(c, p)
 	if c == nil then return end
-
 	message.cb.keypress = function(camera)
 		if p then
 			local msg_comp = message.msg_comp

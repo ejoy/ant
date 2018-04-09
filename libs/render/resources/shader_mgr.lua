@@ -47,8 +47,8 @@ local function compile_shader(filename, outfile)
 end
 
 local function check_compile_shader(name, outfile)
-    local _, ext = name:match("([%w_/\\]+)%.(sc)")
-    if ext ~= nil then        
+    local ext = path.ext(name)    
+    if ext and ext:lower() == "sc" then
         path.create_dirs(path.parent(outfile))
         local fullname = path.join(shader_asset_path, src_path, name)
         local success, msg = compile_shader(fullname, outfile)        
@@ -108,7 +108,7 @@ function shader_mgr.programLoad(vs,fs, uniform)
         return programLoadEx(vs,fs, uniform)
     else
         local vsid = load_shader(vs)
-        local fsid = fs and load_shader(fs)
+        local fsid = fs and load_shader(fs)        
         return bgfx.create_program(vsid, fsid, true)
     end
 end

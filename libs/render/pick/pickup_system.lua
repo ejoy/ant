@@ -86,9 +86,7 @@ local function create_pickup_render_entity(entity, eid, pu_material, pu_uniforms
 
     local uniforms = pu_uniforms
     local u_id = uniforms[pu_material.name].u_id
-    u_id.update = function (uniform)
-        uniform.value = ms(packeid_as_rgba(eid), "m") 
-    end
+    u_id.value = ms(packeid_as_rgba(eid), "m")    
 
     return { 
         render = {
@@ -101,12 +99,13 @@ local function create_pickup_render_entity(entity, eid, pu_material, pu_uniforms
     }
 end
 
+local db = require "debugger"
 
 function pickup:render_to_pickup_buffer(pickup_entity)    
     ru.foreach_sceneobj(world, 
     function (entity, eid)
         local e = create_pickup_render_entity(entity, eid, self.material, self.uniforms, self.ms)
-        if e then
+        if e then            
             ru.draw_entity(pickup_entity.viewid.id, e, self.ms)             
         end
     end)    
@@ -147,11 +146,12 @@ function pickup:pick(pickup_entity, current_frame_num)
         local comp = pickup_entity.pickup
         local eid = self:which_entity_hitted(pickup_entity)
         if eid then
-            print("pick entity id : ", eid)
-            comp.last_eid_hit = eid
+            print("pick entity id : ", eid)            
         else
             print("not found any eid")
         end
+
+        comp.last_eid_hit = eid        
         self.reading_frame = nil
     end
     self.is_picking = self.reading_frame ~= nil
@@ -164,13 +164,12 @@ pickup_view_sys.singleton "math_stack"
 pickup_view_sys.singleton "message_component"
 
 pickup_view_sys.depend "iup_message"
-pickup_view_sys.depend "add_entities_system"
 pickup_view_sys.dependby "view_system"
 
 function pickup_view_sys:init()
     --[@    for message callback
     local msg = {}
-    function msg:button(b, p, x, y)
+    function msg:button(b, p, x, y)        
         if b == "LEFT" and p then
             pickup.clickpt = point2d(x, y)
         end

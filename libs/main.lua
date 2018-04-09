@@ -55,7 +55,7 @@ local function init()
 		modules = { 
 			assert(loadfile "libs/inputmgr/message_system.lua"),
 			assert(loadfile "libs/render/add_entity_system.lua"),	-- for test
-			assert(loadfile "libs/render/editor/general_editor_entities.lua"),	-- editor
+			assert(loadfile "libs/render/editor/general_editor_entities.lua"),	-- editor			
 			assert(loadfile "libs/render/window_component.lua"),
 			assert(loadfile "libs/render/components/general.lua"),			
 			assert(loadfile "libs/render/math3d/math_component.lua"),			
@@ -64,6 +64,7 @@ local function init()
 			assert(loadfile "libs/render/view_system.lua"),
 			assert(loadfile "libs/render/entity_rendering_system.lua"),
 			assert(loadfile "libs/render/pick/pickup_system.lua"),
+			assert(loadfile "libs/render/pick/obj_trans_controller.lua"),
 			assert(loadfile "libs/render/end_frame_system.lua"),
 		},
 		update_bydepend = true,

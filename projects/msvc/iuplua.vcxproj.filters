@@ -595,5 +595,23 @@
     <ClCompile Include="..\..\..\iup\srclua5\ctrl\il_scintilla.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\iup\src\iup_flatlabel.c">
+      <Filter>iup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_flattoggle.c">
+      <Filter>iupctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_flatlabel.c">
+      <Filter>iupctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\iup\srclua5\elem\il_dropbutton.c">
+      <Filter>iupctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\iup\src\iup_flattoggle.c">
+      <Filter>iup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\iup\src\iup_dropbutton.c">
+      <Filter>iup</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
