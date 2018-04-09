@@ -172,13 +172,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\clibs\math3d\conversion.c" />
     <ClCompile Include="..\..\clibs\math3d\linalg.c" />
     <ClCompile Include="..\..\clibs\math3d\math3d.c" />
+    <ClCompile Include="..\..\clibs\math3d\matrix44.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\clibs\math3d\conversion.h" />
+    <ClInclude Include="..\..\clibs\math3d\datadef.h" />
+    <ClInclude Include="..\..\clibs\math3d\euler.h" />
+    <ClInclude Include="..\..\clibs\math3d\intersection.h" />
     <ClInclude Include="..\..\clibs\math3d\linalg.h" />
     <ClInclude Include="..\..\clibs\math3d\math3d.h" />
+    <ClInclude Include="..\..\clibs\math3d\matrix44.h" />
+    <ClInclude Include="..\..\clibs\math3d\plane.h" />
+    <ClInclude Include="..\..\clibs\math3d\quaternion.h" />
     <ClInclude Include="..\..\clibs\math3d\refstack.h" />
+    <ClInclude Include="..\..\clibs\math3d\util.h" />
+    <ClInclude Include="..\..\clibs\math3d\vector3.h" />
+    <ClInclude Include="..\..\clibs\math3d\vector4.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

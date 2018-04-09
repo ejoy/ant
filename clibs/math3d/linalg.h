@@ -48,7 +48,7 @@ void lastack_reset(struct lastack *LS);
 void lastack_print(struct lastack *LS);	// for debug
 
 
-inline int lastack_is_vec_type(int type) {
+static inline int lastack_is_vec_type(int type) {
 	return (type == LINEAR_TYPE_VEC3 || type == LINEAR_TYPE_VEC4) ? 1 : 0;
 }
 

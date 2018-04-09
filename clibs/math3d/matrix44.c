@@ -1,6 +1,4 @@
 #include "matrix44.h"
-#include "quaternion.h"
-#include "euler.h"
 #include "conversion.h"
 
 union matrix44 *

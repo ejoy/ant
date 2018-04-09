@@ -1045,7 +1045,7 @@ linear_name_to_type(const char* name) {
 }
 
 static inline void
-convert_vec_to_euler(lua_State *L, struct lastack*LS) {
+convert_to_euler(lua_State *L, struct lastack*LS) {
 	int64_t id = pop(L, LS);
 	int type;
 	float *value = lastack_value(LS, id, &type);
@@ -1055,6 +1055,11 @@ convert_vec_to_euler(lua_State *L, struct lastack*LS) {
 		vector3_normalize(&v);
 		vector3_to_rotation(&e, &v);
 		euler_to_degree(&e);
+	} else if (type == LINEAR_TYPE_MAT){
+		const union matrix44 *mat = (const union matrix44*)value;
+		matrix44_to_euler(mat, &e);
+	} else {
+		luaL_error(L, "not support for converting to euler, type is : %d", type);
 	}
 
 	lastack_pusheuler(LS, euler_array(&e));
@@ -1167,7 +1172,7 @@ split_mat_to_srt(lua_State *L, struct lastack *LS){
 	// };
 
 	struct vector3 scale, rotation, translate;
-	matrix44_decompose2(mat, &translate, &rotation, &scale);
+	matrix44_decompose(mat, &translate, &rotation, &scale);
 
 	rotation.x = TO_DEGREE(rotation.x);
 	rotation.y = TO_DEGREE(rotation.y);
@@ -1318,7 +1323,7 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		refstack_push(RS);
 		break;	
 	case 'e':
-		convert_vec_to_euler(L, LS);
+		convert_to_euler(L, LS);
 		refstack_1_1(RS);
 		break;
 	case 'd':

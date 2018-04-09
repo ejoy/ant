@@ -47,22 +47,31 @@ local math3d = require "math3d"
 
 local stack = math3d.new()
 
-local srt = stack({type="srt", s={2}, r={90, 0, 0}, t={100, 0, 0}}, "P")
-local scale = stack({type="srt", s={2}}, "P")
-local rot = stack({type="srt", r={90, 0, 0}}, "P")
-local translate = stack({type="srt", t={100, 0, 0}}, "P")
+local srt = stack({type="srt", s={1}, r={60, 60, -30}, t={0, 0, 0}}, "P")
+-- stack(srt, "~")
+-- local s = stack("P")
+-- local r = stack("P")
+-- local t = stack("P")
+-- print("s : ", stack(s, "V"))
+-- print("r : ", stack(r, "V"))
+-- print("t : ", stack(t, "V"))
 
-local pt = stack({1, 2, 3, 1}, "P")
+local v = stack({0, 0, 1, 0}, "P")
+local vT = stack(v, srt, "*P")
 
-local st = stack(scale, translate, "*P")
-local stPt = stack(pt, st, "*P")
-print("stPt", stack(stPt, "V"))
+print("vT : ", stack(vT, "V"))
 
-local strPt = stack(stPt, rot, "*P")
-print("strPt", stack(strPt, "V"))
+local e = stack(srt, "eP")
+print("e : ", stack(e, "V"))
 
-local srtPt = stack(pt, srt, "*P")
-print("srtPt", stack(srtPt, "V"))
+local ev =stack(e, "T")
+ev[1], ev[2] = ev[2], ev[1]
+local srt2 = stack({type="srt", r=ev}, "P")
+print("srt : ", stack(srt, "V"))
+print("srt2 : ", stack(srt2, "V"))
+
+local vT1 = stack(v, srt2, "*P")
+print("vT1 : ", stack(vT1, "V"))
 
 
 -- local vec = math3d.ref "vector"
