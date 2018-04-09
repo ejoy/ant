@@ -300,7 +300,7 @@ extract_translate_mat(lua_State *L, struct lastack *LS, int index, union matrix4
 	} else if (ttype == LUA_TTABLE) {
 		size_t len = lua_rawlen(L, -1);
 		if (len != 3)
-			luaL_error(L, "r field should : t={1, 2, 3}, only accept 3 value, %d is give", len);
+			luaL_error(L, "t field should : t={1, 2, 3}, only accept 3 value, %d is give", len);
 
 		float v[3];
 		for (int i = 0; i < 3; ++i)
@@ -1173,10 +1173,6 @@ split_mat_to_srt(lua_State *L, struct lastack *LS){
 
 	struct vector3 scale, rotation, translate;
 	matrix44_decompose(mat, &translate, &rotation, &scale);
-
-	rotation.x = TO_DEGREE(rotation.x);
-	rotation.y = TO_DEGREE(rotation.y);
-	rotation.z = TO_DEGREE(rotation.z);
 
 	lastack_pushvec3(LS, vector3_array(&translate));
 	lastack_pushvec3(LS, vector3_array(&rotation));

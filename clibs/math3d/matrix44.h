@@ -390,47 +390,8 @@ matrix44_getscale(const union matrix44 *m, struct vector3 *scale) {
 	return scale;
 }
 
-static inline void
-matrix44_decompose(const union matrix44 *m, struct vector3 *trans, struct vector3 *rot, struct vector3 *scale ) {
-	matrix44_gettrans(m, trans);
-	matrix44_getscale(m, scale);
-
-	if( scale->x == 0 || scale->y == 0 || scale->z == 0 ) {
-		rot->x = 0;
-		rot->y = 0;
-		rot->z = 0;
-		return;
-	}
-
-	// Detect negative scale with determinant and flip one arbitrary axis
-	if( matrix44_determinant(m) < 0) 
-		scale->x = -scale->x;
-
-	// // Combined rotation matrix YXZ
-	// //
-	// // Cos[y]*Cos[z]+Sin[x]*Sin[y]*Sin[z]   Cos[z]*Sin[x]*Sin[y]-Cos[y]*Sin[z]  Cos[x]*Sin[y]	
-	// // Cos[x]*Sin[z]                        Cos[x]*Cos[z]                       -Sin[x]
-	// // -Cos[z]*Sin[y]+Cos[y]*Sin[x]*Sin[z]  Cos[y]*Cos[z]*Sin[x]+Sin[y]*Sin[z]  Cos[x]*Cos[y]
-
-	// rot->x = asinf( -C[2][1] / scale->z );
-		
-	// // Special case: Cos[x] == 0 (when Sin[x] is +/-1)
-	// float f = fabsf( C[2][1] / scale->z );
-
-	// if( f > 0.999f && f < 1.001f ) {
-	// 	// Pin arbitrarily one of y or z to zero
-	// 	// Mathematical equivalent of gimbal lock
-	// 	rot->y = 0;
-			
-	// 	// Now: Cos[x] = 0, Sin[x] = +/-1, Cos[y] = 1, Sin[y] = 0
-	// 	// => m[0][0] = Cos[z] and m[1][0] = Sin[z]
-	// 	rot->z = atan2f( -C[1][0] / scale->y, C[0][0] / scale->x );
-	// } else {
-	// 	// Standard case
-	// 	rot->y = atan2f( C[2][0] / scale->z, C[2][2] / scale->z );
-	// 	rot->z = atan2f( C[0][1] / scale->x, C[1][1] / scale->y );
-	// }
-}
+extern void
+matrix44_decompose(const union matrix44 *m, struct vector3 *trans, struct vector3 *rot, struct vector3 *scale );
 
 static inline float *
 matrix44_to33(const union matrix44 *m, float m33[9]) {
