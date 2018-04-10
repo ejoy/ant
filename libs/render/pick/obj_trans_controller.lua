@@ -11,7 +11,7 @@ ecs.component "rotator_transform" {}
 ecs.component "object_transform" {
     translate_speed = 0.05,
     scale_speed = 0.005,
-    rotation_speed = 0.05,
+    rotation_speed = 0.5,
 }
 
 
@@ -52,7 +52,7 @@ local function add_transform_entities(ms, basename, renderfile)
     }
 
     local function create_entity(ms, renderfile, name, color)
-        local eid = world:new_entity("position", "scale", "rotation", "render", "name", "pos_transform", "can_select")
+        local eid = world:new_entity("position", "scale", "rotation", "render", "name", "can_select")
         local obj = world[eid]
         obj.name.n = name
     
@@ -110,10 +110,19 @@ local function add_scale_entities(ms)
 end
 
 local function add_rotator_entities(ms)
-    
-    return nil
-
-    --return add_transform_entities(ms, "rotation")
+    local renderfile = "mem://rotator_transform_entities.render"
+    local f = io.open(renderfile, "w")
+    f:write [[
+        mesh = "rotator.mesh"
+        binding = {
+            material = "obj_trans/obj_trans.material", 
+        }
+        srt = {s={0.01},r={0, 0, 90}}
+    ]]
+    f:close()
+    local controller = add_transform_entities(ms, "rotation", renderfile)
+    controller[1].srt.r = {0, 0, 90}
+    return controller
 end
 
 function obj_trans_sys:init()
@@ -125,7 +134,7 @@ function obj_trans_sys:init()
         rotator_transform = add_rotator_entities(ms),
     }
     
-    ot.selected_mode = "scale_transform"
+    ot.selected_mode = "rotator_transform"
     ot.selected_eid = nil
     ot.sceneobj_eid = nil
 end
@@ -329,6 +338,30 @@ function obj_controller_sys:init()
                     scale_by_axis(zdir, 3)
                 else
                     error("scale entity axis not found, axis_name : " .. axis_name)
+                end
+            end
+        elseif mode == "rotator_transform" then
+            if selected_axis then
+                dprint("in rotator")
+                local rotation = ms(sceneobj.rotation.v, "T")
+
+                local function rotate(dir, idx)
+                    local speed = ot.rotation_speed
+                    local v = select_step_value(dir) > 0 and speed or -speed
+                    rotation[idx] = rotation[idx] + v
+                    ms(sceneobj.rotation.v, rotation, "=")
+
+                    dprint("rotation : ", sceneobj.rotation.v)
+                end
+
+                if axis_name == "x" then
+                    rotate(xdir, 1)
+                elseif axis_name == "y" then
+                    rotate(ydir, 2)
+                elseif axis_name == "z" then
+                    rotate(zdir, 3)
+                else
+                    error("rotation entity axis not found, axis_name : " .. axis_name)
                 end
             end
         end
