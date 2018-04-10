@@ -53,7 +53,7 @@ function general_editor_entites:init()
                     material = asset.load(material_name),
                     meshids = {1}
                 }},
-                srt = {s={0.2, 0.2, 0.2}, r={0, 0, 0}, t={0, 0, 0}}
+                srt = {s={0.2, 0.2, 0.2}, r={0, 0, 0}, t={0, 1, 0}}
             },
         }
     end

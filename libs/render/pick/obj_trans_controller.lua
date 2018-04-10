@@ -8,7 +8,11 @@ ecs.component "pos_transform" {}
 ecs.component "scale_transform" {}
 ecs.component "rotator_transform" {}
 
-ecs.component "object_transform" {}
+ecs.component "object_transform" {
+    translate_speed = 0.05,
+    scale_speed = 0.05,
+    rotation_speed = 0.05,
+}
 
 
 local obj_trans_sys = ecs.system "obj_transform_system"
@@ -54,7 +58,7 @@ local function add_trans_entity(ms)
     local arg = {
         {
             name = "translate-x",
-            srt = {r={0, 0, 0}},
+            srt = {r={0, 90, 0}},
             color = {1, 0, 0, 1},
         },
         {
@@ -64,7 +68,7 @@ local function add_trans_entity(ms)
         },
         {
             name = "translate-z",
-            srt = {r={0, 90, 0}},
+            srt = {r={0, 0, 0}},
             color = {0, 0, 1, 1},
         }
     }
@@ -88,10 +92,20 @@ function obj_trans_sys:init()
     ot.sceneobj_eid = nil
 end
 
-local function get_selected_obj()
-    local pu_entity = assert(world:first_entity("pickup"))
-    local eid = pu_entity.pickup.last_eid_hit
-    return eid and world[eid] or nil
+local function update_controller_transform(ms, controller, obj_eid)
+    local obj = assert(world[obj_eid])
+    local objsrt = ms({type="srt", r=obj.rotation.v}, "P")
+    for _, v in ipairs(controller) do
+        local eid = v.eid
+        local e = assert(world[eid])
+        local srt = v.srt
+        local s, r = ms({type="srt", s=srt.s, r=srt.r, t=srt.t}, 
+                        objsrt, "*~PP")
+
+        ms(assert(e.position).v, assert(obj.position).v, "=")
+        ms(assert(e.rotation).v, r, "=")
+        ms(assert(e.scale).v, s, "=")
+    end
 end
 
 function obj_trans_sys:update()
@@ -106,43 +120,31 @@ function obj_trans_sys:update()
     local obj_eid = ot.sceneobj_eid
     local st_eid = ot.selected_eid
 
+    local ms = self.math_stack
+
     if is_controller_id(ot.controllers, st_eid) then
         return 
     end
-    
-    local function hide_controller(controller)
+
+    local function show_controller(controller, show)
         for _, elem in ipairs(controller) do
             local e = assert(world[elem.eid])
-            e.render.visible = false
+            e.render.visible = show
         end
     end
 
-    local function show_controller(controller)
-        local sceneobj = assert(world[obj_eid])
-        for _, v in ipairs(controller) do
-            local eid = v.eid
-            local e = assert(world[eid])
-            local ms = self.math_stack
-
-            local srt = v.srt
-            local s, r = ms({type="srt", s=srt.s, r=srt.r, t=srt.t}, 
-                            {type="srt", r=sceneobj.rotation.v}, "*~PP")
-
-            ms(assert(e.position).v, assert(sceneobj.position).v, "=")
-            ms(assert(e.rotation).v, r, "=")
-            ms(assert(e.scale).v, s, "=")
-
-            e.render.visible = true
-        end
+    local function update_contorller(controller)
+        update_controller_transform(ms, controller, obj_eid)
+        show_controller(controller, true)
     end
 
     local mode = ot.selected_mode  
 
     for m, controller in pairs(ot.controllers) do
         if obj_eid and obj_eid == st_eid and mode == m then
-            show_controller(controller)            
+            update_contorller(controller)
         else
-            hide_controller(controller)
+            show_controller(controller, false)
         end
     end
 end
@@ -156,12 +158,22 @@ obj_controller_sys.singleton "control_state"
 
 obj_controller_sys.depend "obj_transform_system"
 
+local function print_select_object_transform(eid)
+    local obj = assert(world[eid])
+    dprint("select object name : ", obj.name.n)
+    dprint("scale : ", obj.scale.v)
+    dprint("position : ", obj.position.v)
+    dprint("rotation : ", obj.rotation.v)
+end
+
 function obj_controller_sys:init()
     local ot = self.object_transform
-    local ms = self.math_stack    
+    local ms = self.math_stack
+    local states = self.message_component.states
+
     local message = {}
 
-    function message:keypress(c, p)
+    function message:keypress(c, p)        
         if c == nil then return end
 
         if p then 
@@ -176,24 +188,43 @@ function obj_controller_sys:init()
                 local mode = ot.selected_mode 
                 ot.selected_mode = map[mode]
             else
-                local isLSHIFT = states.keys["LSHIFT"]
-                if isLSHIFT then
-                    local upC = string.upper(c)
-                    if c == "T" then   -- shift + T
-                        ot.selected_mode = "pos_transform"
-                    elseif c == "R" then   -- shift + R
-                        ot.selected_mode = "rotator_transform"
-                    elseif c == "S" then   -- shift + S
-                        ot.selected_mode = "scale_transform"
+                
+                local upC = string.upper(c)
+                dprint("c : ", upC)
+                if upC == "CT" then   -- shift + T
+                    ot.selected_mode = "pos_transform"
+                elseif upC == "CR" then   -- shift + R
+                    ot.selected_mode = "rotator_transform"
+                elseif upC == "CS" then   -- shift + S
+                    ot.selected_mode = "scale_transform"
+                elseif upC == "CP" then
+                    dprint("in P")
+                    if ot.selected_eid then
+                        print_select_object_transform(ot.selected_eid)
                     end
                 end
+            
             end
 
-            print("select mode : ", ot.selected_mode)
+            dprint("select mode : ", ot.selected_mode)
         end
 
     end
+    local lastX, lastY
     function message:motion(x, y)
+        local leftBtnDown = states.buttons["LEFT"]
+        if not leftBtnDown then
+            return 
+        end
+
+        if lastX == nil or lastY == nil then
+            lastX, lastY = x, y
+            return 
+        end
+
+        local deltaX, deltaY = x - lastX, (lastY - y)  -- y value is from up to down, need flip
+        lastX, lastY = x, y
+
         if  ot.sceneobj_eid == nil or             
             ot.selected_eid == nil or
             ot.sceneobj_eid == ot.selected_eid then -- mean no axis selected
@@ -207,29 +238,28 @@ function obj_controller_sys:init()
         end
 
         local sceneobj = assert(world[ot.sceneobj_eid])
-        local select_axis = assert(world[ot.selected_eid])
+        local selected_axis = assert(world[ot.selected_eid])
         local name = selected_axis.name.n
         local axis_name = name:match(".+-([xyz])$")
 
         local function select_step_value(dir)
-            local dirInVS = ms(dir, view_mat, "*P")
-            local dotX = ms(dirInVS, {1, 0, 0, 0}, ".T")
-            local dotY = ms(dirInVS, {0, 1, 0, 0}, ".T")
-            return (dotX > dotY) and x or y
+            local camera = world:first_entity("main_camera")
+            local view_mat = ms(camera.position.v, camera.rotation.v, "dLP")                
+
+            local dirInVS = ms(dir, view_mat, "*T")
+            local dx, dy = dirInVS[1], dirInVS[2]            
+            return (dx > dy) and deltaX or deltaY
         end
 
         if mode == "pos_transform" then            
             if selected_axis then
                 local pos = sceneobj.position.v
-                local zdir = ms(sceneobj.rotation.v, "DP")
-                local xdir = ms({0, 1, 0, 0}, zdir, "xP")
-                local ydir = ms(zdir, xdir, "xP")
-
-                local camera = world:first_entity("main_camera")
-                local view_mat = ms(camera.position.v, camera.rotation.v, "dLP")                
-                --local proj_mat = mu.proj(ms, camera.frustum)
+                local zdir = ms(sceneobj.rotation.v, "dnP")
+                local xdir = ms({0, 1, 0, 0}, zdir, "xnP")
+                local ydir = ms(zdir, xdir, "xnP")
                 local function move(dir)
-                    local v = step_value(dir)
+                    local speed = ot.translate_speed
+                    local v = select_step_value(dir) > 0 and speed or -speed
                     ms(pos, pos, dir, {v}, "*+=")
                 end
 
@@ -242,6 +272,12 @@ function obj_controller_sys:init()
                 else
                     error("move entity axis not found, axis_name : " .. axis_name)
                 end
+
+                local controller = assert(ot.controllers[mode])
+                for _, elem in ipairs(controller) do
+                    local e = assert(world[elem.eid])
+                    ms(e.position.v, pos, "=")
+                end                
             end
         end
     end
