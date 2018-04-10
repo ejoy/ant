@@ -175,7 +175,7 @@ function ecs.new_world(config)
 		_entity_id = 0,
 		_entity_meta = { __index = nil },
 		_notifycomponent = {},	-- component_name : { eid_list }
-		_changecomponent = {},	-- component_name : { eid_list }
+		_changecomponent = {},	-- component_name : { eid_set }
 		_notifyset = {},	-- component_name : { n = number, eid_list }
 		_set = setmetatable({}, { __mode = "kv" }),
 	}, world)
