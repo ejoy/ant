@@ -125,10 +125,15 @@ function world:each(component_type)
 	return component_next, s, 0
 end
 
-function world:first_entity(c_type)
+function world:first_entity_id(c_type)
 	for _, eid in self:each(c_type) do
-		return self[eid]
+		return eid
 	end
+end
+
+function world:first_entity(c_type)
+	local eid = self:first_entity_id(c_type)
+	return self[assert(eid)]
 end
 
 local function component_filter(world, minor_type)
