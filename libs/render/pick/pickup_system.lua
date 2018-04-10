@@ -137,7 +137,8 @@ function pickup:which_entity_hitted(pickup_entity)
     return nil
 end
 
-function pickup:pick(pickup_entity, current_frame_num)
+function pickup:pick(p_eid, current_frame_num)
+    local pickup_entity = world[p_eid]
     if self.reading_frame == nil then
         bind_frame_buffer(pickup_entity)
         self:render_to_pickup_buffer(pickup_entity)
@@ -154,7 +155,9 @@ function pickup:pick(pickup_entity, current_frame_num)
             print("not found any eid")
         end
 
-        comp.last_eid_hit = eid        
+        comp.last_eid_hit = eid
+        world:change_component(p_eid, "pickup")
+        world.notify()
         self.reading_frame = nil
     end
     self.is_picking = self.reading_frame ~= nil
@@ -268,7 +271,8 @@ end
 
 function pickup_sys:update()
     if pickup.is_picking then        
-        local e = assert(world:first_entity("pickup"))    
-        pickup:pick(e, self.frame_num.current)
+        local eid = assert(world:first_entity_id("pickup"))    
+        pickup:pick(eid, self.frame_num.current)
     end
 end
+

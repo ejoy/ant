@@ -65,7 +65,7 @@ end
 
 function obj_trans_sys:init()
     local ot = self.object_transform    
-    ot.elems = {
+    ot.controllers = {
         pos_transform = add_trans_entity(self.math_stack),        
     }
     
@@ -89,19 +89,19 @@ function obj_trans_sys:update()
 
     ot.select_changed = false
 
-    local s_eid = ot.sceneobj_eid
+    local obj_eid = ot.sceneobj_eid
     local st_eid = ot.selected_eid
 
-    local function hide_controller(controller_elems)
-        for _, elem in ipairs(controller_elems) do
+    local function hide_controller(controller)
+        for _, elem in ipairs(controller) do
             local e = assert(world[elem.eid])
             e.render.visible = false
         end
     end
 
-    local function show_controller(controller_elems)
-        local sceneobj = assert(world[s_eid])
-        for _, v in ipairs(controller_elems) do
+    local function show_controller(controller)
+        local sceneobj = assert(world[obj_eid])
+        for _, v in ipairs(controller) do
             local eid = v.eid
             local e = assert(world[eid])
             local ms = self.math_stack
@@ -119,11 +119,11 @@ function obj_trans_sys:update()
     end
 
     local mode = ot.selected_mode
-    for m, elems in pairs(ot.elems) do
-        if s_eid and s_eid == st_eid and mode == m then
-            show_controller(elems)
+    for m, controller in pairs(ot.controllers) do
+        if obj_eid and obj_eid == st_eid and mode == m then
+            show_controller(controller)
         else
-            hide_controller(elems)
+            hide_controller(controller)
         end
     end
 end
@@ -136,74 +136,29 @@ obj_controller_sys.singleton "math_stack"
 
 obj_controller_sys.depend "obj_transform_system"
 
-
--- local function get_selected_mode()
---     local selectobj = get_selected_obj()
---     if selectobj then
---         local objname = selectobj.name.n
-
---         if objname:find("translate", 0, true) then
---             return "pos_transform"
---         elseif objname:find("rotation", 0, true) then
---             return ""
---         else
---             return nil
---         end
---     end
-
---     return nil
--- end
-
-
-function obj_controller_sys:init()
-    local ot = self.object_transform
-    local ms = self.math_stack
-    local states = self.message_component.states
-    local message = {}
-    function message:button(btn, p, x, y)
-        if not p then
-            if btn == "LEFT" then
-                local mode = ot.selected_mode                
-                local pu_e = assert(world:first_entity("pickup"))
-                local pickup_eid = assert(pu_e.pickup).last_eid_hit                
-                local last_eid = ot.selected_eid
-                if pickup_eid then                    
-                    local function is_controller_id(controller_eids)
-                        for _, eeid in ipairs(controller_eids) do
-                            for _, eid in ipairs(ee) do
-                                if eid == pickup_eid then
-                                    return true
-                                end
-                            end
-                        end
-
-                        return false
-                    end
-
-                    if mode == "" or not is_controller_id(ot.elems) then
-                        ot.sceneobj_eid = pickup_eid                        
-                    end
-
-                    ot.selected_eid = pickup_eid
-                    
-                else
-                    ot.sceneobj_eid = nil
-                    ot.selected_eid = nil                    
-                end
-
-                ot.select_changed = ot.selected_eid ~= last_eid
-
-                if ot.select_changed then
-                    dprint("select change, scene obj eid : ", ot.sceneobj_eid, ", selected eid : ", ot.selected_eid)
-                end
+local function is_controller_id(controllers, p_eid)
+    for _, controller in ipairs(controllers) do
+        for _, elem in ipairs(controller) do
+            local eid = elem.eid
+            if eid == p_eid then
+                return true
             end
         end
     end
 
+    return false
+end
+
+
+function obj_controller_sys:init()
+    local ot = self.object_transform
+    local ms = self.math_stack    
+    local message = {}
+
     function message:keypress(c, p)
         if c == nil then return end
 
-        if not p then 
+        if p then 
             if c == "SP" then
                 local map = {
                     [""] = "pos_transform",
@@ -240,7 +195,7 @@ function obj_controller_sys:init()
         end
 
         local mode = ot.selected_mode
-        local elems = ot.elems[mode]
+        local elems = ot.controllers[mode]
         if elems == nil then
             return 
         end
@@ -291,4 +246,32 @@ end
 
 function obj_controller_sys:update()
     
+end
+
+local function update_select_state(ot)
+    local mode = ot.selected_mode
+    local pu_e = assert(world:first_entity("pickup"))
+    local pickup_eid = assert(pu_e.pickup).last_eid_hit                
+    local last_eid = ot.selected_eid
+    if pickup_eid then
+        if mode == "" or not is_controller_id(ot.controllers, pickup_eid) then
+            ot.sceneobj_eid = pickup_eid                        
+        end
+
+        ot.selected_eid = pickup_eid
+        
+    else
+        ot.sceneobj_eid = nil
+        ot.selected_eid = nil                    
+    end
+
+    ot.select_changed = ot.selected_eid ~= last_eid
+
+    if ot.select_changed then
+        dprint("select change, scene obj eid : ", ot.sceneobj_eid, ", selected eid : ", ot.selected_eid)
+    end
+end
+
+function obj_controller_sys.notify:pickup(set)
+    update_select_state(self.object_transform)
 end
