@@ -92,36 +92,39 @@ function obj_trans_sys:update()
     local s_eid = ot.sceneobj_eid
     local st_eid = ot.selected_eid
 
-    if s_eid and s_eid == st_eid then -- make sure the transform object is the first time to appear
-        local mode = ot.selected_mode
-        for m, elems in pairs(ot.elems) do
-            if mode == m and onetime == nil then                
-                local sceneobj = assert(world[s_eid])
-                for _, v in ipairs(elems) do
-                    local eid = v.eid
-                    local e = assert(world[eid])
-                    local ms = self.math_stack
-
-                    local objsrt = ms({type="srt", r=sceneobj.rotation.v}, "P")
-
-                    local srt = v.srt
-                    local localsrt = ms({type="srt", s=srt.s, r=srt.r, t=srt.t}, "P")
-                    local s, r = ms(localsrt, objsrt, "*~PP")
-
-                    ms(assert(e.position).v, assert(sceneobj.position).v, "=")
-                    ms(assert(e.rotation).v, r, "=")
-                    ms(assert(e.scale).v, s, "=")
-
-                    e.render.visible = true
-                end
-            else
-                for _, elem in ipairs(elems) do
-                    local e = assert(world[elem.eid])
-                    e.render.visible = false
-                end
-            end
+    local function hide_controller(controller_elems)
+        for _, elem in ipairs(controller_elems) do
+            local e = assert(world[elem.eid])
+            e.render.visible = false
         end
+    end
 
+    local function show_controller(controller_elems)
+        local sceneobj = assert(world[s_eid])
+        for _, v in ipairs(controller_elems) do
+            local eid = v.eid
+            local e = assert(world[eid])
+            local ms = self.math_stack
+
+            local srt = v.srt
+            local s, r = ms({type="srt", s=srt.s, r=srt.r, t=srt.t}, 
+                            {type="srt", r=sceneobj.rotation.v}, "*~PP")
+
+            ms(assert(e.position).v, assert(sceneobj.position).v, "=")
+            ms(assert(e.rotation).v, r, "=")
+            ms(assert(e.scale).v, s, "=")
+
+            e.render.visible = true
+        end
+    end
+
+    local mode = ot.selected_mode
+    for m, elems in pairs(ot.elems) do
+        if s_eid and s_eid == st_eid and mode == m then
+            show_controller(elems)
+        else
+            hide_controller(elems)
+        end
     end
 end
 
