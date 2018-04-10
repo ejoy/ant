@@ -10,7 +10,7 @@ ecs.component "rotator_transform" {}
 
 ecs.component "object_transform" {
     translate_speed = 0.05,
-    scale_speed = 0.05,
+    scale_speed = 0.005,
     rotation_speed = 0.05,
 }
 
@@ -32,62 +32,100 @@ local function is_controller_id(controllers, p_eid)
     return false
 end
 
-
-local function create_translate_entity(ms, name, color)
-    local eid = world:new_entity("position", "scale", "rotation", "render", "name", "pos_transform", "can_select")
-    local translate = world[eid]
-    translate.name.n = name
-
-    ms(translate.position.v, {0, 0, 0, 1}, "=")
-    ms(translate.rotation.v, {0, 0, 0}, "=")
-    ms(translate.scale.v, {1, 1, 1}, "=")
-
-    translate.render.info = asset.load "obj_trans/obj_trans.render"
-    
-    translate.render.uniforms = {
-        ["obj_trans/obj_trans.material"] = {
-            u_color = ru.create_uniform("u_color", "v4", nil, function(u) u.value = ms(color, "m") end)
-        }
-    }
-
-    translate.render.visible = false
-    return eid
-end
-
-local function add_trans_entity(ms)
-    local arg = {
+local function add_transform_entities(ms, basename, renderfile)
+    local arg = {        
         {
-            name = "translate-x",
+            name = basename .. "-x",
             srt = {r={0, 90, 0}},
             color = {1, 0, 0, 1},
         },
         {
-            name = "translate-y",
+            name = basename .. "-y",
             srt = {r={-90, 0, 0}},
             color = {0, 1, 0, 1},
         },
         {
-            name = "translate-z",
+            name = basename .. "-z",
             srt = {r={0, 0, 0}},
             color = {0, 0, 1, 1},
         }
     }
 
-    local translate_elems = {}
-    for _, v in ipairs(arg) do
-        table.insert(translate_elems, {eid = create_translate_entity(ms, v.name, v.color), srt=v.srt})
+    local function create_entity(ms, renderfile, name, color)
+        local eid = world:new_entity("position", "scale", "rotation", "render", "name", "pos_transform", "can_select")
+        local obj = world[eid]
+        obj.name.n = name
+    
+        ms(obj.position.v, {0, 0, 0, 1}, "=")
+        ms(obj.rotation.v, {0, 0, 0}, "=")
+        ms(obj.scale.v, {1, 1, 1}, "=")
+    
+        obj.render.info = asset.load(renderfile)
+        
+        obj.render.uniforms = {
+            ["obj_trans/obj_trans.material"] = {
+                u_color = ru.create_uniform("u_color", "v4", nil, function(u) u.value = ms(color, "m") end)
+            }
+        }
+    
+        obj.render.visible = false
+        return eid
     end
 
-    return translate_elems
+    local controller = {}
+    for _, v in ipairs(arg) do
+        table.insert(controller, {eid = create_entity(ms, renderfile, v.name, v.color), srt=v.srt})
+    end
+
+    return controller
+end
+
+local function add_translate_entities(ms)
+    return add_transform_entities(ms, "translate", "obj_trans/obj_trans.render")
+end
+
+local function add_scale_entities(ms)
+    local scalerenderfile = "mem://scale_tranform_entities.render"
+    local f = io.open(scalerenderfile, "w")
+    f:write [[
+        root = {
+            {
+                mesh = "cylinder.mesh",
+                binding = {
+                    material = "obj_trans/obj_trans.material", 
+                },
+                srt = {s={0.001, 0.001, 0.01}, t={0, 0, 0.5}},
+            },
+            {
+                mesh = "cube.mesh",
+                binding = {
+                    material = "obj_trans/obj_trans.material", 
+                },
+                srt = {s={0.002}, t={0, 0, 1.1}}
+            }
+        }
+    ]]
+    f:close()
+    return add_transform_entities(ms, "scale", scalerenderfile)
+end
+
+local function add_rotator_entities(ms)
+    
+    return nil
+
+    --return add_transform_entities(ms, "rotation")
 end
 
 function obj_trans_sys:init()
     local ot = self.object_transform    
+    local ms = self.math_stack
     ot.controllers = {
-        pos_transform = add_trans_entity(self.math_stack),        
+        pos_transform = add_translate_entities(ms),        
+        scale_transform = add_scale_entities(ms),
+        rotator_transform = add_rotator_entities(ms),
     }
     
-    ot.selected_mode = "pos_transform"
+    ot.selected_mode = "scale_transform"
     ot.selected_eid = nil
     ot.sceneobj_eid = nil
 end
@@ -110,21 +148,19 @@ end
 
 function obj_trans_sys:update()
     local ot = self.object_transform
-
     if not ot.select_changed then
         return 
     end
 
     ot.select_changed = false
-
-    local obj_eid = ot.sceneobj_eid
     local st_eid = ot.selected_eid
-
-    local ms = self.math_stack
-
     if is_controller_id(ot.controllers, st_eid) then
         return 
     end
+
+    local obj_eid = ot.sceneobj_eid
+    local ms = self.math_stack
+    local mode = ot.selected_mode 
 
     local function show_controller(controller, show)
         for _, elem in ipairs(controller) do
@@ -133,19 +169,13 @@ function obj_trans_sys:update()
         end
     end
 
-    local function update_contorller(controller)
-        update_controller_transform(ms, controller, obj_eid)
-        show_controller(controller, true)
-    end
-
-    local mode = ot.selected_mode  
-
     for m, controller in pairs(ot.controllers) do
-        if obj_eid and obj_eid == st_eid and mode == m then
-            update_contorller(controller)
-        else
-            show_controller(controller, false)
+        local bshow = obj_eid and obj_eid == st_eid and mode == m
+        if bshow then
+            dprint("mode : ", mode)
+            update_controller_transform(ms, controller, obj_eid)
         end
+        show_controller(controller, bshow)
     end
 end
 
@@ -232,8 +262,8 @@ function obj_controller_sys:init()
         end
 
         local mode = ot.selected_mode
-        local elems = ot.controllers[mode]
-        if elems == nil then
+        local controller = ot.controllers[mode]
+        if controller == nil then
             return 
         end
 
@@ -251,12 +281,14 @@ function obj_controller_sys:init()
             return (dx > dy) and deltaX or deltaY
         end
 
+        local zdir = ms(sceneobj.rotation.v, "dnP")
+        local xdir = ms({0, 1, 0, 0}, zdir, "xnP")
+        local ydir = ms(zdir, xdir, "xnP")
+
         if mode == "pos_transform" then            
             if selected_axis then
                 local pos = sceneobj.position.v
-                local zdir = ms(sceneobj.rotation.v, "dnP")
-                local xdir = ms({0, 1, 0, 0}, zdir, "xnP")
-                local ydir = ms(zdir, xdir, "xnP")
+
                 local function move(dir)
                     local speed = ot.translate_speed
                     local v = select_step_value(dir) > 0 and speed or -speed
@@ -273,11 +305,31 @@ function obj_controller_sys:init()
                     error("move entity axis not found, axis_name : " .. axis_name)
                 end
 
-                local controller = assert(ot.controllers[mode])
                 for _, elem in ipairs(controller) do
                     local e = assert(world[elem.eid])
                     ms(e.position.v, pos, "=")
                 end                
+            end
+        elseif mode == "scale_transform" then
+            if selected_axis then                
+                local scale = ms(sceneobj.scale.v, "T")
+
+                local function scale_by_axis(dir, idx)
+                    local speed = ot.scale_speed
+                    local v = select_step_value(dir) > 0 and speed or -speed
+                    scale[idx] = scale[idx] + v
+                    ms(sceneobj.scale.v, scale, "=")
+                end
+
+                if axis_name == "x" then
+                    scale_by_axis(xdir, 1)
+                elseif axis_name == "y" then
+                    scale_by_axis(ydir, 2)
+                elseif axis_name == "z" then
+                    scale_by_axis(zdir, 3)
+                else
+                    error("scale entity axis not found, axis_name : " .. axis_name)
+                end
             end
         end
     end
