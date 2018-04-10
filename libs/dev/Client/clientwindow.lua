@@ -14,7 +14,7 @@ file_mgr:ReadFilePathData("file.txt")
 --io thread
 local function CreateIOThread(linda)
     local client = require "client"
-    local c = client.new("127.0.0.1", 8888, linda, file_mgr)
+    local c = client.new("127.0.0.1", 8888, linda)
     --c:send("GET", "ServerFiles/building.mp4")
     while true do
         c:mainloop(1)

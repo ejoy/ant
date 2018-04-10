@@ -15,7 +15,9 @@ local mem_file_status = {}
 local current_reading = ""
 
 local _linda = nil
-local _filemanager = nil
+--TODO this is not the same as file_mgr in clientwindow.lua
+--they are in two different threads
+local filemanager = require "filemanager"
 ---------------------------------------------------
 local clientcommand = {}
 --cmd while recieving data from server
@@ -63,9 +65,7 @@ function clientcommand.FILE(resp)
 
         if offset <= fileprocess.MAX_CALC_CHUNK then
             _linda:send("new file", {hash, file_path})
-            --TODO _filemanager is diff from file_mgr in clientwindow.lua
-            --TODO study this
-            _filemanager:AddFileRecord(hash, file_path)
+            filemanager:AddFileRecord(hash, file_path)
 
             local filesystem = require "winfile"
             filesystem.mkdir(folder)
@@ -153,11 +153,10 @@ do
     end
 end
 
-function client.new(address, port, init_linda, filemanager)
+function client.new(address, port, init_linda)
 	local fd = lsocket.connect(address, port)
     _linda = init_linda
-    _filemanager = filemanager
-	return setmetatable( { fd = { fd }, sending = {}, resp = {}, reading = "", linda = init_linda , file_mgr = filemanager}, client)
+	return setmetatable( { fd = { fd }, sending = {}, resp = {}, reading = ""}, client)
 end
 
 function client:send(...)
@@ -169,7 +168,7 @@ function client:send(...)
 		local file_path = client_req[2]
 
         print("file path", file_path)
-        file_path = _filemanager:GetRealPath(file_path)
+        file_path = filemanager:GetRealPath(file_path)
         print("get real path", file_path)
         --client does have it
         if file_path then
