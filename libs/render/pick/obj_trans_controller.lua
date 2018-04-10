@@ -15,8 +15,22 @@ local obj_trans_sys = ecs.system "obj_transform_system"
 obj_trans_sys.singleton "object_transform"
 obj_trans_sys.singleton "math_stack"
 
+local function is_controller_id(controllers, p_eid)
+    for _, controller in pairs(controllers) do
+        for _, elem in ipairs(controller) do
+            local eid = elem.eid
+            if eid == p_eid then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+
 local function create_translate_entity(ms, name, color)
-    local eid = world:new_entity("position", "scale", "rotation", "render", "name", "pos_transform")
+    local eid = world:new_entity("position", "scale", "rotation", "render", "name", "pos_transform", "can_select")
     local translate = world[eid]
     translate.name.n = name
 
@@ -92,6 +106,10 @@ function obj_trans_sys:update()
     local obj_eid = ot.sceneobj_eid
     local st_eid = ot.selected_eid
 
+    if is_controller_id(ot.controllers, st_eid) then
+        return 
+    end
+    
     local function hide_controller(controller)
         for _, elem in ipairs(controller) do
             local e = assert(world[elem.eid])
@@ -118,10 +136,11 @@ function obj_trans_sys:update()
         end
     end
 
-    local mode = ot.selected_mode
+    local mode = ot.selected_mode  
+
     for m, controller in pairs(ot.controllers) do
         if obj_eid and obj_eid == st_eid and mode == m then
-            show_controller(controller)
+            show_controller(controller)            
         else
             hide_controller(controller)
         end
@@ -133,22 +152,9 @@ local obj_controller_sys = ecs.system "obj_controller"
 obj_controller_sys.singleton "message_component"
 obj_controller_sys.singleton "object_transform"
 obj_controller_sys.singleton "math_stack"
+obj_controller_sys.singleton "control_state"
 
 obj_controller_sys.depend "obj_transform_system"
-
-local function is_controller_id(controllers, p_eid)
-    for _, controller in ipairs(controllers) do
-        for _, elem in ipairs(controller) do
-            local eid = elem.eid
-            if eid == p_eid then
-                return true
-            end
-        end
-    end
-
-    return false
-end
-
 
 function obj_controller_sys:init()
     local ot = self.object_transform
@@ -273,5 +279,14 @@ local function update_select_state(ot)
 end
 
 function obj_controller_sys.notify:pickup(set)
-    update_select_state(self.object_transform)
+    local ot = self.object_transform
+    update_select_state(ot)
+    if is_controller_id(ot.controllers, ot.selected_eid) then
+        self.control_state.state = "object"
+    else
+        self.control_state.state = "default"
+    end
+
+    dprint("state : ", self.control_state.state)
+
 end

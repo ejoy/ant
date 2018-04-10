@@ -137,6 +137,7 @@ end
 local camera_controller_system = ecs.system "camera_controller"
 camera_controller_system.singleton "math_stack"
 camera_controller_system.singleton "message_component"
+camera_controller_system.singleton "control_state"
 
 camera_controller_system.depend "iup_message"
 
@@ -151,8 +152,11 @@ end
 function camera_controller_system:update()
 	local camera = world:first_entity("main_camera")
 	if camera then
-		for name, cb in pairs(message.cb) do
-			cb(camera)
+		local cs = self.control_state.state
+		if cs == "camera" or cs == "default" then
+			for name, cb in pairs(message.cb) do
+				cb(camera)
+			end
 		end
 	end
 	

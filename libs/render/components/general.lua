@@ -35,8 +35,10 @@ ecs.component "name" {
 }
 
 ecs.component "can_select" {
-    
+
 }
 
-
+ecs.component "control_state" {
+    state = "camera"
+}
 
