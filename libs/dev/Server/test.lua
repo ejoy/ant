@@ -1,5 +1,5 @@
-package.cpath = "../../clibs/?.dll"
-
+package.cpath = "../../../clibs/?.dll"
+package.path = "../Common/?.lua;" .. "../../?/?.lua;".. package.path
 function log(name)
 	local tag = "[" .. name .. "] "
 	local write = io.write

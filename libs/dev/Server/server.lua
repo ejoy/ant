@@ -99,7 +99,7 @@ local function HandlePackage(response_pkg, fd)
             return "RUNNING"
         end
         --return directory
-    elseif cmd_type == "FILE" then
+    elseif cmd_type == "FILE"  or cmd_type == "EXIST_CHECK" then
         local pack_l = pack.pack(response_pkg)
         local nbytes = fd:send(pack_l)
         if not nbytes then
@@ -124,10 +124,10 @@ local function HandlePackage(response_pkg, fd)
 
             --for now, send one each loop
             --TODO:add hash
-            local package = {cmd_type, list_path, progress, file_name}
+            local client_package = {cmd_type, list_path, progress, file_name}
 
-            local package = pack.pack(package)
-            local nbytes = fd:send(package)
+            local pack_l = pack.pack(client_package)
+            local nbytes = fd:send(pack_l)
             --if fd write is full
             if not nbytes then
                 break
@@ -249,6 +249,7 @@ end
 local function response(self, req)
 	local cmd = req[1]
 	local func = dispatch[cmd]
+
 	if not func then
 		local obj = self.clients[req.fd]
 		log("Unknown command from %s:%s", obj.ip, obj.port)
@@ -351,13 +352,14 @@ function server:mainloop(timeout)
 
     self:PackageHandleUpdate()
     --check/update file hash every 10 ticks
+    --[[
     if hash_update_counter % 10 == 0 then
         UpdateFileHash()
         hash_update_counter = 0
     end
 
     hash_update_counter = hash_update_counter + 1
-
+    --]]
 end
 
 return server

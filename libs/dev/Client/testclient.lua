@@ -1,6 +1,6 @@
 package.remote_searchpath = "ServerFiles"
-package.cpath = "../../clibs/?.dll"
-package.path = "../?/?.lua;" .. package.path
+package.cpath = "../../../clibs/?.dll"
+package.path = "../Common/?.lua;" .. "../../?/?.lua;".. package.path
 local lanes = require "lanes"
 if lanes.configure then lanes.configure() end
 local linda = lanes.linda()

@@ -4,6 +4,7 @@ local log = log and log(...) or print
 local lsocket = require "lsocket"
 local pack = require "pack"
 local crypt = require "crypt"
+local fileprocess = require "fileprocess"
 
 local client = {}; client.__index = client
 
@@ -14,6 +15,7 @@ local mem_file_status = {}
 local current_reading = ""
 
 local _linda = nil
+local _filemanager = nil
 ---------------------------------------------------
 local clientcommand = {}
 --cmd while recieving data from server
@@ -30,16 +32,13 @@ function clientcommand.FILE(resp)
     assert(resp[1] == "FILE")
 
     local progress = resp[4]
+
     local slash = string.find(progress, "%/")
     local offset = tonumber(string.sub(progress, 1, slash - 1))
     local total_pack = tonumber(string.sub(progress, slash+1, -1))
-
     local file_path = resp[2]
 
-    --TODO: clean this
-    local mem_path = string.gsub(file_path, "Client", "Server")
-
-    if not mem_file_status[mem_path] then
+    if not mem_file_status[file_path] then
         --store in file
 
         local hash = resp[3]
@@ -49,20 +48,36 @@ function clientcommand.FILE(resp)
             return
         end
         --use temp name
-        local file_path_hash = file_path.."-"..tostring(hash)
+        --local temp_path_hash = "temp-" .. file_path
 
+        local folder = "Files/"..string.sub(hash, 1,3)
+
+        local real_path = folder .. "/" .. hash
         print("received", resp[1],resp[2],resp[4])
-
+        print("--", folder)
         --print("package info", resp[1], resp[2],resp[4], resp[5])
         --if is the first package, will delete the origin file
         --if is other package, will add to the existing file
         --TODO: consider if the order is not correct
         local file  = nil
-        if offset == 1 then
-            --we should use a temp file, for now is file_path+hash value
-            file = io.open(file_path_hash, "wb")
+
+        if offset <= fileprocess.MAX_CALC_CHUNK then
+            _linda:send("new file", {hash, file_path})
+            --TODO _filemanager is diff from file_mgr in clientwindow.lua
+            --TODO study this
+            _filemanager:AddFileRecord(hash, file_path)
+
+            local filesystem = require "winfile"
+            filesystem.mkdir(folder)
+            --we should use a temp file, for now is "temp-" string combine with hash value
+            --file = io.open(temp_path_hash, "wb")
+            file = io.open(real_path, "wb")
+            print("create new file", real_path)
         else
-            file = io.open(file_path_hash, "ab")
+            --file = io.open(temp_path_hash, "ab")
+            --print("write to file", temp_path_hash)
+            file = io.open(real_path, "ab")
+            print("write to file", real_path)
         end
 
         if file == nil then
@@ -78,22 +93,22 @@ function clientcommand.FILE(resp)
             --the final package, the file is complete, change the name to normal name
             --for now, just remove the old file
             --TODO version management/control
-            os.remove(file_path)
-            os.rename(file_path_hash, file_path)
+            --os.remove(file_path)
+            --os.rename(temp_path_hash, file_path)
         end
     else
         --store in mem
-        mem_file[mem_path] = mem_file[mem_path]..resp[5]
+        mem_file[file_path] = mem_file[file_path]..resp[5]
 
         if offset >= total_pack then
-            mem_file_status[mem_path] = "FINISHED"
+            mem_file_status[file_path] = "FINISHED"
             --send the data back
-            if mem_path == current_reading then
-                _linda:send("mem_data", mem_file[mem_path])
+            if file_path == current_reading then
+                _linda:send("mem_data", mem_file[file_path])
                 current_reading = ""
             end
         else
-            mem_file_status[mem_path] = "RECEIVING"
+            mem_file_status[file_path] = "RECEIVING"
         end
     end
 end
@@ -107,8 +122,14 @@ function clientcommand.ERROR(resp)
 end
 
 function clientcommand.EXIST_CHECK(resp)
-    for k, v in pairs(resp) do
-        print(k, v)
+    assert(resp[1] == "EXIST_CHECK", "COMMAND: "..resp[1].." invalid, shoule be EXIST_CHECK")
+    local result = resp[2]
+    if result == "true" then
+        print("File exists on the server")
+    elseif result == "false" then
+        print("File does not exist on the server")
+    else
+        print("EXIST CHECK result invalid: "..result)
     end
 end
 
@@ -132,29 +153,31 @@ do
     end
 end
 
-function client.new(address, port, init_linda)
+function client.new(address, port, init_linda, filemanager)
 	local fd = lsocket.connect(address, port)
     _linda = init_linda
-	return setmetatable( { fd = { fd }, sending = {}, resp = {}, reading = "", linda = init_linda }, client)
+    _filemanager = filemanager
+	return setmetatable( { fd = { fd }, sending = {}, resp = {}, reading = "", linda = init_linda , file_mgr = filemanager}, client)
 end
 
 function client:send(...)
 	local client_req = { ...}
 
 	local cmd = client_req[1]
-	if cmd == "GET" then
+	if cmd == "GET" or cmd == "EXIST" then
 		--check if we have local copy
 		local file_path = client_req[2]
-		local child_path = string.gsub(file_path, "ServerFiles", "ClientFiles")
 
-        local file_process = require "fileprocess"
-        local hash = file_process.CalculateHash(child_path)
-        client_req[3] = hash
-    elseif cmd == "EXIST" then
-        local file_path = client_req[2]
-        local file_process = require "fileprocess"
-        local hash = file_process.CalculateHash(file_path)
-        client_req[3] = hash
+        print("file path", file_path)
+        file_path = _filemanager:GetRealPath(file_path)
+        print("get real path", file_path)
+        --client does have it
+        if file_path then
+            file_path = "Files/"..file_path
+            print("real path", file_path)
+            local hash = fileprocess.CalculateHash(file_path)
+            client_req[3] = hash
+        end
     elseif cmd == "OPEN" then
         --TODO add hash check?
         --cmd for server should be the same
@@ -222,8 +245,7 @@ function client:mainloop(timeout)
     self.CollectRequest()
     for _, req in pairs(logic_request) do
         local cmd = req[1]
-        --for now need manually change the folder name
-        local file_name = string.gsub(req[2], "Server", "Client")
+        local file_name = req[2]
 
         if cmd == "OPEN" then
             local cache_status = mem_file_status[file_name]
@@ -236,7 +258,7 @@ function client:mainloop(timeout)
             end
             --other in status like "RUNNING", do nothing but wait
 
-        elseif cmd == "GET" or cmd == "LIST" then
+        else --if cmd == "GET" or cmd == "LIST" then
             --simply send the request, does not bother if it already had it
             --or it need to load the file
             self:send(table.unpack(req))

@@ -2,6 +2,8 @@ package.path = "../?/?.lua;" .. package.path
 local lanes = require "lanes"
 if lanes.configure then lanes.configure() end
 
+local filesystem = require "winfile"
+
 local fileprocess = {}
 
 function fileprocess.GetFileSize(file)
@@ -19,12 +21,8 @@ fileprocess.dir_path = "ServerFiles"
 fileprocess.time_stamp_table = {}
 fileprocess.file_hash_table = {}
 
-function fileprocess.GetFileHash(path)
-    return fileprocess.file_hash_table[path]
-end
-
 --use stream from crypt module
-local MAX_CALC_CHUNK = 64 * 1024 --64K
+fileprocess.MAX_CALC_CHUNK = 64 * 1024 --64K
 local crypt_encoder = nil
 function fileprocess.CalculateHash(file_path)
     --if have local copy, hash calculation needed
@@ -35,19 +33,17 @@ function fileprocess.CalculateHash(file_path)
 
     --file is the handle
     local crypt = require "crypt"
-    if not crypt_encoder then
-        crypt_encoder = crypt.sha1_encoder():init()
-    end
+    crypt_encoder = crypt.sha1_encoder():init()
 
     local file_size = fileprocess.GetFileSize(file)
-
+    print(file_size)
     --file can be calculate only once
     repeat
         local read_size = 0
-        if file_size < MAX_CALC_CHUNK then
+        if file_size < fileprocess.MAX_CALC_CHUNK then
             read_size = file_size
         else
-            read_size = MAX_CALC_CHUNK
+            read_size = fileprocess.MAX_CALC_CHUNK
         end
 
         local file_data = file:read(read_size)
@@ -56,21 +52,36 @@ function fileprocess.CalculateHash(file_path)
         file_size = file_size - read_size
     until file_size <= 0
 
-    return crypt.hexencode(crypt_encoder:final())
+    local result = crypt.hexencode(crypt_encoder:final())
+    return result
+end
+
+function fileprocess.GetFileHash(path)
+
+    local file_hash = fileprocess.file_hash_table[path]
+    if not file_hash then
+        file_hash = fileprocess.CalculateHash(path)
+        fileprocess.file_hash_table[path] = file_hash
+    end
+    return file_hash
 end
 
 function fileprocess.GetDirectoryList(path)
-    local myfile = io.popen("dir "..path .. [[ /b ]], "r")
-    if not myfile then
-        print("open file for dir failed")
-        return
+    local dir_table = {}
+    local iter, dir_obj = filesystem.dir(path)
+
+    while true do
+        local dir_name = iter(dir_obj)
+        if not dir_name then
+            break
+        end
+
+        --not including these two
+        if dir_name ~= "." and dir_name ~=".." then
+            table.insert(dir_table, dir_name)
+        end
     end
 
-    local dir_table = {}
-    for cnt in myfile:lines() do
-        table.insert(dir_table, cnt)
-    end
-    myfile:close()
     return dir_table
 end
 
@@ -123,6 +134,7 @@ function (file_path, time_stamp_table, file_hash_table)
     io.close(file_hash)
 end
 )
+
 
 function fileprocess:UpdateHashFile()
     local file_path = self.hashfile
