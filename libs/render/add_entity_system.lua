@@ -15,7 +15,7 @@ function add_entity_sys:init()
     local ms = self.math_stack
 
     do
-        local bunny_eid = world:new_entity("position", "rotation", "scale", "render", "name")        
+        local bunny_eid = world:new_entity("position", "rotation", "scale", "render", "name", "can_select")        
         local bunny = world[bunny_eid]
         bunny.name.n = "bunny"
 
@@ -46,7 +46,7 @@ function add_entity_sys:init()
     end
 
     do
-        local cube_eid = world:new_entity("rotation", "position", "scale", "render", "name")
+        local cube_eid = world:new_entity("rotation", "position", "scale", "render", "name", "can_select")
         local cube = world[cube_eid]
         cube.name.n = "cube"
         

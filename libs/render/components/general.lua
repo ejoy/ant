@@ -34,5 +34,9 @@ ecs.component "name" {
     n = ""
 }
 
+ecs.component "can_select" {
+    
+}
+
 
 

@@ -94,7 +94,9 @@ local function create_pickup_render_entity(entity, eid, pu_material, pu_uniforms
             uniforms=uniforms, 
             visible=true
         }, 
-        scale=entity.scale, rotation=entity.rotation, position=entity.position, 
+        scale=assert(entity.scale), 
+        rotation=assert(entity.rotation), 
+        position=assert(entity.position), 
         name=entity.name
     }
 end
@@ -102,13 +104,13 @@ end
 local db = require "debugger"
 
 function pickup:render_to_pickup_buffer(pickup_entity)    
-    ru.foreach_sceneobj(world, 
-    function (entity, eid)
+    for _, eid in world:each("can_select") do        
+        local entity = assert(world[eid])
         local e = create_pickup_render_entity(entity, eid, self.material, self.uniforms, self.ms)
-        if e then            
+        if e then
             ru.draw_entity(pickup_entity.viewid.id, e, self.ms)             
         end
-    end)    
+    end
 end
 
 function pickup:readback_render_data(pickup_entity)
@@ -146,7 +148,8 @@ function pickup:pick(pickup_entity, current_frame_num)
         local comp = pickup_entity.pickup
         local eid = self:which_entity_hitted(pickup_entity)
         if eid then
-            print("pick entity id : ", eid)            
+            local name = assert(world[eid]).name.n
+            print("pick entity id : ", eid, ", name : ", name)
         else
             print("not found any eid")
         end
