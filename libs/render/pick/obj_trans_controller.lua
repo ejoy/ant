@@ -2,7 +2,9 @@ local ecs = ...
 local world = ecs.world
 
 local asset = require "asset"
+local au = require "asset.util"
 local ru = require "render.util"
+
 
 ecs.component "pos_transform" {}
 ecs.component "scale_transform" {}
@@ -32,6 +34,27 @@ local function is_controller_id(controllers, p_eid)
     return false
 end
 
+local function create_entity(ms, renderfile, name, color)
+    local eid = world:new_entity("position", "scale", "rotation", "render", "name", "can_select")
+    local obj = world[eid]
+    obj.name.n = name
+
+    ms(obj.position.v, {0, 0, 0, 1}, "=")
+    ms(obj.rotation.v, {0, 0, 0}, "=")
+    ms(obj.scale.v, {1, 1, 1}, "=")
+
+    obj.render.info = asset.load(renderfile)
+    
+    obj.render.uniforms = {
+        ["obj_trans/obj_trans.material"] = {
+            u_color = ru.create_uniform("u_color", "v4", nil, function(u) u.value = ms(color, "m") end)
+        }
+    }
+
+    obj.render.visible = false
+    return eid
+end
+
 local function add_transform_entities(ms, basename, renderfile)
     local arg = {        
         {
@@ -51,27 +74,6 @@ local function add_transform_entities(ms, basename, renderfile)
         }
     }
 
-    local function create_entity(ms, renderfile, name, color)
-        local eid = world:new_entity("position", "scale", "rotation", "render", "name", "can_select")
-        local obj = world[eid]
-        obj.name.n = name
-    
-        ms(obj.position.v, {0, 0, 0, 1}, "=")
-        ms(obj.rotation.v, {0, 0, 0}, "=")
-        ms(obj.scale.v, {1, 1, 1}, "=")
-    
-        obj.render.info = asset.load(renderfile)
-        
-        obj.render.uniforms = {
-            ["obj_trans/obj_trans.material"] = {
-                u_color = ru.create_uniform("u_color", "v4", nil, function(u) u.value = ms(color, "m") end)
-            }
-        }
-    
-        obj.render.visible = false
-        return eid
-    end
-
     local controller = {}
     for _, v in ipairs(arg) do
         table.insert(controller, {eid = create_entity(ms, renderfile, v.name, v.color), srt=v.srt})
@@ -86,8 +88,8 @@ end
 
 local function add_scale_entities(ms)
     local scalerenderfile = "mem://scale_tranform_entities.render"
-    local f = io.open(scalerenderfile, "w")
-    f:write [[
+    au.write_to_file(scalerenderfile, 
+    [[
         root = {
             {
                 mesh = "cylinder.mesh",
@@ -104,24 +106,65 @@ local function add_scale_entities(ms)
                 srt = {s={0.002}, t={0, 0, 1.1}}
             }
         }
-    ]]
-    f:close()
+    ]])
+    
     return add_transform_entities(ms, "scale", scalerenderfile)
 end
 
 local function add_rotator_entities(ms)
     local renderfile = "mem://rotator_transform_entities.render"
-    local f = io.open(renderfile, "w")
-    f:write [[
+    
+    au.write_to_file(renderfile,
+    [[
         mesh = "rotator.mesh"
         binding = {
             material = "obj_trans/obj_trans.material", 
         }
         srt = {s={0.01},r={0, 0, 90}}
-    ]]
-    f:close()
+    ]])    
+
     local controller = add_transform_entities(ms, "rotation", renderfile)
     controller[1].srt.r = {0, 0, 90}
+    controller[2].srt.r = {0, 0, 0}
+    controller[3].srt.r = {-90, 0, 0}
+
+    local axisrenderfile = "mem://rotator_transform_axis_entity.render"
+    au.write_to_file(axisrenderfile, [[
+        root = {
+            {
+                mesh = "cylinder.mesh",
+                binding = {
+                    material = "obj_trans/obj_trans.material",
+                },
+                srt = {s={0.001, 0.001, 0.01}, r={0, 90, 0}, t={0.5, 0, 0}},
+            },
+            {
+                mesh = "cylinder.mesh",
+                binding = {
+                    material = "obj_trans/obj_trans.material",
+                },
+                srt = {s={0.001, 0.001, 0.01}, r={0, -90, 0}, t={0, 0.5, 0}},
+            },
+            {
+                mesh = "cylinder.mesh",
+                binding = {
+                    material = "obj_trans/obj_trans.material",
+                },
+                srt = {s={0.001, 0.001, 0.01}, t={0, 0, 0.5}},
+            }
+        }
+    ]])
+    -- local axis_eid = create_entity(ms, axisrenderfile, "rotationaxis", nil)
+    -- local axis = assert(world[axis_eid])
+    -- local uniforms = axis.render.uniforms
+    -- for k, v in pairs(uniforms) do
+
+    -- end
+
+
+    -- table.insert(controller, axis_eid)
+
+
     return controller
 end
 
@@ -134,41 +177,48 @@ function obj_trans_sys:init()
         rotator_transform = add_rotator_entities(ms),
     }
     
-    ot.selected_mode = "rotator_transform"
+    ot.selected_mode = "pos_transform"
     ot.selected_eid = nil
     ot.sceneobj_eid = nil
 end
 
-local function update_controller_transform(ms, controller, obj_eid)
+local function update_controller_transform(ms, controller, obj_eid, follow_objrotation)
     local obj = assert(world[obj_eid])
-    local objsrt = ms({type="srt", r=obj.rotation.v}, "P")
+    local objsrt = nil
+    if follow_objrotation then
+        objsrt = ms({type="srt", r=obj.rotation.v}, "P")
+    end
+
     for _, v in ipairs(controller) do
         local eid = v.eid
         local e = assert(world[eid])
         local srt = v.srt
-        local s, r = ms({type="srt", s=srt.s, r=srt.r, t=srt.t}, 
+
+        local s, r = srt.s, srt.r
+        if objsrt then
+            s, r = ms(  {type="srt", s=s, r=r, t=srt.t}, 
                         objsrt, "*~PP")
+        end
 
         ms(assert(e.position).v, assert(obj.position).v, "=")
-        ms(assert(e.rotation).v, r, "=")
-        ms(assert(e.scale).v, s, "=")
+
+        if r then
+            ms(assert(e.rotation).v, r, "=")
+        end
+
+        if s then
+            ms(assert(e.scale).v, s, "=")
+        end
     end
 end
 
-function obj_trans_sys:update()
-    local ot = self.object_transform
-    if not ot.select_changed then
-        return 
-    end
-
-    ot.select_changed = false
+local function update_contorller(ot, ms)
     local st_eid = ot.selected_eid
     if is_controller_id(ot.controllers, st_eid) then
         return 
     end
 
-    local obj_eid = ot.sceneobj_eid
-    local ms = self.math_stack
+    local obj_eid = ot.sceneobj_eid    
     local mode = ot.selected_mode 
 
     local function show_controller(controller, show)
@@ -181,11 +231,21 @@ function obj_trans_sys:update()
     for m, controller in pairs(ot.controllers) do
         local bshow = obj_eid and obj_eid == st_eid and mode == m
         if bshow then
-            dprint("mode : ", mode)
-            update_controller_transform(ms, controller, obj_eid)
+            update_controller_transform(ms, controller, obj_eid, mode ~= "rotator_transform")
         end
         show_controller(controller, bshow)
     end
+end
+
+function obj_trans_sys:update()
+    local ot = self.object_transform
+    if not ot.select_changed then
+        return 
+    end
+
+    ot.select_changed = false
+
+    update_contorller(ot, self.math_stack)
 end
 
 -- controller system
@@ -226,18 +286,17 @@ function obj_controller_sys:init()
 
                 local mode = ot.selected_mode 
                 ot.selected_mode = map[mode]
+
+                update_contorller(ot, ms)
             else
-                
-                local upC = string.upper(c)
-                dprint("c : ", upC)
+                local upC = string.upper(c)                
                 if upC == "CT" then   -- shift + T
                     ot.selected_mode = "pos_transform"
                 elseif upC == "CR" then   -- shift + R
                     ot.selected_mode = "rotator_transform"
                 elseif upC == "CS" then   -- shift + S
                     ot.selected_mode = "scale_transform"
-                elseif upC == "CP" then
-                    dprint("in P")
+                elseif upC == "CP" then                
                     if ot.selected_eid then
                         print_select_object_transform(ot.selected_eid)
                     end

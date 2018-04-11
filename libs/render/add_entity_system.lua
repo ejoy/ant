@@ -3,6 +3,7 @@ local world = ecs.world
 local cu = require "render.components.util"
 local mu = require "math.util"
 local ru = require "render.util"
+local au = require "asset.util"
 
 local asset     = require "asset"
 local bgfx          = require "bgfx"
@@ -54,14 +55,10 @@ function add_entity_sys:init()
         ms(cube.position.v, {0, 0, 0, 1}, "=") 
         ms(cube.rotation.v, {0, 0, 1, 0}, "=")
 
-        local function write_to_memfile(fn, content)
-            local f = io.open(fn, "w")
-            f:write(content)
-            f:close()
-        end
+
 
         local cuberender_fn = "mem://cube.render"
-        write_to_memfile(cuberender_fn, [[
+        au.write_to_file(cuberender_fn, [[
             mesh = "cube.mesh"
             binding ={material = "obj_trans/obj_trans.material",}
             srt = {s={0.01}}
