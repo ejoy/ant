@@ -54,6 +54,7 @@ local function init()
 	world = ecs.new_world {
 		modules = { 
 			assert(loadfile "libs/inputmgr/message_system.lua"),
+			assert(loadfile "libs/render/constant_system.lua"),
 			assert(loadfile "libs/render/add_entity_system.lua"),	-- for test
 			assert(loadfile "libs/render/editor/general_editor_entities.lua"),	-- editor			
 			assert(loadfile "libs/render/window_component.lua"),
@@ -66,7 +67,7 @@ local function init()
 			assert(loadfile "libs/render/pick/pickup_system.lua"),
 			assert(loadfile "libs/render/pick/obj_trans_controller.lua"),
 			assert(loadfile "libs/render/end_frame_system.lua"),
-		},
+		},		
 		update_bydepend = true,
 		args = { mq = input_queue },
 	}

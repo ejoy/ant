@@ -11,6 +11,9 @@ local bgfx          = require "bgfx"
 
 local add_entity_sys = ecs.system "add_entities_system"
 add_entity_sys.singleton "math_stack"
+add_entity_sys.singleton "constant"
+
+add_entity_sys.depend "constant_init_sys"
 add_entity_sys.dependby "iup_message"
 
 function add_entity_sys:init()
@@ -29,7 +32,7 @@ function add_entity_sys:init()
 
         local rinfo = asset.load("bunny.render")
 
-        local utime_setter_tb = {shadermgr.create_uniform_setter("u_time", ~mu.create_persistent_vector(ms, {1, 0, 0, 1}))}
+        local utime_setter_tb = {shadermgr.create_uniform_setter("u_time", ~self.constant.colors.red)}
     
         bunny.render.info = rinfo
         bunny.render.uniforms = {utime_setter, utime_setter}
@@ -56,7 +59,7 @@ function add_entity_sys:init()
 
         local material = rinfo[1].binding[1].material
         local uniforms = {}
-        local color_setter_tb = {shadermgr.create_uniform_setter("u_color", ~mu.create_persistent_vector(ms, {1, 0, 0, 1}))}
+        local color_setter_tb = {shadermgr.create_uniform_setter("u_color", ~self.constant.colors.red)}
         cube.render.uniforms = {color_setter_tb}
         cube.render.visible = true
     end

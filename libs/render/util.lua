@@ -45,17 +45,13 @@ function util.update_uniform(u)
     local uniform = shadermgr.get_uniform(assert(u.name))
     local setter = u.setter
     local value = setter and setter(u) or u.value     
-    
-    dprint("update uniform, name : ", u.name)
-
     bgfx.set_uniform(assert(uniform.handle), assert(value))
 end
 
 function util.draw_entity(vid, entity, ms)    
     local render = entity.render    
     local name = entity.name.n   
-    if render.visible then        
-        dprint("entity name : ", name)
+    if render.visible then                
         local rinfo = render.info        
         for idx, elem in ipairs(rinfo) do
             local esrt= elem.srt

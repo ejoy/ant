@@ -18,10 +18,12 @@ ecs.component "object_transform" {
     rotation_speed = 0.5,
 }
 
-
 local obj_trans_sys = ecs.system "obj_transform_system"
 obj_trans_sys.singleton "object_transform"
 obj_trans_sys.singleton "math_stack"
+obj_trans_sys.singleton "constant"
+
+obj_trans_sys.depend "constant_init_sys"
 
 local function is_controller_id(controllers, p_eid)
     for _, controller in pairs(controllers) do
@@ -36,7 +38,7 @@ local function is_controller_id(controllers, p_eid)
     return false
 end
 
-local function create_entity(ms, renderfile, name, color)
+local function create_entity(ms, renderfile, name, color_name, color_constants)
     local eid = world:new_entity("position", "scale", "rotation", "render", "name", "can_select")
     local obj = world[eid]
     obj.name.n = name
@@ -46,8 +48,8 @@ local function create_entity(ms, renderfile, name, color)
     ms(obj.scale.v, {1, 1, 1}, "=")
 
     obj.render.info = asset.load(renderfile)
-    
-    local color_setter = {shadermgr.create_uniform_setter("u_color", ~mu.create_persistent_vector(ms, color))}
+
+    local color_setter = {shadermgr.create_uniform_setter("u_color", ~(color_constants[color_name]))}
     obj.render.uniforms = {
         color_setter,
         color_setter,
@@ -57,39 +59,58 @@ local function create_entity(ms, renderfile, name, color)
     return eid
 end
 
-local function add_transform_entities(ms, basename, renderfile)
+local function add_transform_entities(ms, basename, renderfile, color_constants)
     local arg = {        
         {
             name = basename .. "-x",
             srt = {r={0, 90, 0}},
-            color = {1, 0, 0, 1},
+            color = "red",
         },
         {
             name = basename .. "-y",
             srt = {r={-90, 0, 0}},
-            color = {0, 1, 0, 1},
+            color = "green",
         },
         {
             name = basename .. "-z",
             srt = {r={0, 0, 0}},
-            color = {0, 0, 1, 1},
+            color = "blue",
         }
     }
 
     local controller = {}
     for _, v in ipairs(arg) do
-        table.insert(controller, {eid = create_entity(ms, renderfile, v.name, v.color), srt=v.srt})
+        table.insert(controller, {eid = create_entity(ms, renderfile, v.name, v.color, color_constants), srt=v.srt})
     end
 
     return controller
 end
 
-local function add_translate_entities(ms)
-    return add_transform_entities(ms, "translate", "obj_trans/obj_trans.render")
+local function add_translate_entities(ms, color_constants)
+    local translaterenderfile = "mem://transalte_transform_entities.render"
+    au.write_to_file(translaterenderfile, [[
+        root = {
+            {
+                mesh = "cylinder.mesh",
+                binding = {
+                    material = "obj_trans/obj_trans.material", 
+                },
+                srt = {s={0.001, 0.001, 0.01}, t={0, 0, 0.5}},
+            },
+            {
+                mesh = "cone.mesh",
+                binding = {
+                    material = "obj_trans/obj_trans.material"
+                },        
+                srt = {s={0.002}, t={0, 0, 1.1}}
+            }
+        }
+    ]])
+    return add_transform_entities(ms, "translate", translaterenderfile, color_constants)
 end
 
-local function add_scale_entities(ms)
-    local scalerenderfile = "mem://scale_tranform_entities.render"
+local function add_scale_entities(ms, color_constants)
+    local scalerenderfile = "mem://scale_transform_entities.render"
     au.write_to_file(scalerenderfile, 
     [[
         root = {
@@ -110,10 +131,10 @@ local function add_scale_entities(ms)
         }
     ]])
     
-    return add_transform_entities(ms, "scale", scalerenderfile)
+    return add_transform_entities(ms, "scale", scalerenderfile, color_constants)
 end
 
-local function add_rotator_entities(ms)
+local function add_rotator_entities(ms, color_constants)
     local renderfile = "mem://rotator_transform_entities.render"
     
     au.write_to_file(renderfile,
@@ -125,7 +146,7 @@ local function add_rotator_entities(ms)
         srt = {s={0.01},r={0, 0, 90}}
     ]])    
 
-    local controller = add_transform_entities(ms, "rotation", renderfile)
+    local controller = add_transform_entities(ms, "rotation", renderfile, color_constants)
     controller[1].srt.r = {0, 0, 90}
     controller[2].srt.r = {0, 0, 0}
     controller[3].srt.r = {-90, 0, 0}
@@ -145,7 +166,7 @@ local function add_rotator_entities(ms)
                 binding = {
                     material = "obj_trans/obj_trans.material",
                 },
-                srt = {s={0.001, 0.001, 0.01}, r={0, -90, 0}, t={0, 0.5, 0}},
+                srt = {s={0.001, 0.001, 0.01}, r={-90, 0, 0}, t={0, 0.5, 0}},
             },
             {
                 mesh = "cylinder.mesh",
@@ -156,27 +177,28 @@ local function add_rotator_entities(ms)
             }
         }
     ]])
-    -- local axis_eid = create_entity(ms, axisrenderfile, "rotationaxis", nil)
-    -- local axis = assert(world[axis_eid])
-    -- local uniforms = axis.render.uniforms
-    -- for k, v in pairs(uniforms) do
+    local axis_eid = create_entity(ms, axisrenderfile, "rotationaxis", "red", color_constants)
+    local axis = assert(world[axis_eid])
+    local uniforms = axis.render.uniforms
 
-    -- end
+    local clr_names = {"red", "green", "blue"}
+    for idx, cn in ipairs(clr_names) do
+        local setter = shadermgr.create_uniform_setter("u_color", ~color_constants[cn])
+        uniforms[idx] = {setter}
+    end
 
-
-    -- table.insert(controller, axis_eid)
-
-
+    table.insert(controller, {eid=axis_eid, srt={}})
     return controller
 end
 
 function obj_trans_sys:init()
     local ot = self.object_transform    
     local ms = self.math_stack
+    local cc = assert(self.constant.colors)
     ot.controllers = {
-        pos_transform = add_translate_entities(ms),        
-        scale_transform = add_scale_entities(ms),
-        rotator_transform = add_rotator_entities(ms),
+        pos_transform = add_translate_entities(ms, cc),        
+        scale_transform = add_scale_entities(ms, cc),
+        rotator_transform = add_rotator_entities(ms, cc),
     }
     
     ot.selected_mode = "pos_transform"
