@@ -4,6 +4,7 @@ local cu = require "render.components.util"
 local mu = require "math.util"
 local ru = require "render.util"
 local au = require "asset.util"
+local shadermgr = require "render.resources.shader_mgr"
 
 local asset     = require "asset"
 local bgfx          = require "bgfx"
@@ -27,23 +28,11 @@ function add_entity_sys:init()
         ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
 
         local rinfo = asset.load("bunny.render")
-        local uniforms = {}
-        for i=1, #rinfo do           
-            local binding = rinfo[i].binding            
-            for j=1, #binding do
-                local material = binding[j].material
-                -- we need to share the uniform
-                local mname = material.name                
-                if uniforms[mname] == nil then
-                    uniforms[mname] = {
-                        u_time = ru.create_uniform("u_time", "v4", 1)
-                    }
-                end                
-            end
-        end
+
+        local utime_setter_tb = {shadermgr.create_uniform_setter("u_time", ~mu.create_persistent_vector(ms, {1, 0, 0, 1}))}
     
         bunny.render.info = rinfo
-        bunny.render.uniforms = uniforms
+        bunny.render.uniforms = {utime_setter, utime_setter}
     end
 
     do
@@ -54,8 +43,6 @@ function add_entity_sys:init()
         ms(cube.scale.v, {1, 1, 1}, "=")
         ms(cube.position.v, {0, 0, 0, 1}, "=") 
         ms(cube.rotation.v, {0, 0, 1, 0}, "=")
-
-
 
         local cuberender_fn = "mem://cube.render"
         au.write_to_file(cuberender_fn, [[
@@ -69,8 +56,8 @@ function add_entity_sys:init()
 
         local material = rinfo[1].binding[1].material
         local uniforms = {}
-        uniforms[material.name] = {u_color = ru.create_uniform("u_color", "v4", nil, function (uniform) uniform.value = ms({1, 0, 0, 1}, "m") end)}
-        cube.render.uniforms = uniforms
-        cube.render.visible = false
+        local color_setter_tb = {shadermgr.create_uniform_setter("u_color", ~mu.create_persistent_vector(ms, {1, 0, 0, 1}))}
+        cube.render.uniforms = {color_setter_tb}
+        cube.render.visible = true
     end
 end

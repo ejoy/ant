@@ -4,6 +4,8 @@ local world = ecs.world
 local asset = require "asset"
 local au = require "asset.util"
 local ru = require "render.util"
+local mu = require "math.util"
+local shadermgr = require "render.resources.shader_mgr"
 
 
 ecs.component "pos_transform" {}
@@ -45,10 +47,10 @@ local function create_entity(ms, renderfile, name, color)
 
     obj.render.info = asset.load(renderfile)
     
+    local color_setter = {shadermgr.create_uniform_setter("u_color", ~mu.create_persistent_vector(ms, color))}
     obj.render.uniforms = {
-        ["obj_trans/obj_trans.material"] = {
-            u_color = ru.create_uniform("u_color", "v4", nil, function(u) u.value = ms(color, "m") end)
-        }
+        color_setter,
+        color_setter,
     }
 
     obj.render.visible = false

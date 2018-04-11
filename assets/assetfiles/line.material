@@ -11,5 +11,3 @@ state = {
     DEPTH_TEST = "LESS",
     PT = "LINES"
 }
-
-uniform = {"u_color"}

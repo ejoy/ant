@@ -7,6 +7,7 @@ local math3d = require "math3d"
 local ru = require "render.util"
 local mu = require "math.util"
 local asset = require "asset"
+local shadermgr = require "render.resources.shader_mgr"
 
 -- pickup component
 ecs.component "pickup"{}
@@ -35,13 +36,6 @@ function pickup:init_material()
     local mname = "pickup.material"
     self.material = asset.load(mname) 
     self.material.name = mname
-
-    local uniforms = {}
-    uniforms[mname] = {
-        u_id = ru.create_uniform("u_id", "v4", 0),
-    }
-
-    self.uniforms = uniforms
 end
 
 local function bind_frame_buffer(e)
@@ -66,13 +60,15 @@ function pickup:init(pickup_entity)
     bind_frame_buffer(pickup_entity)
 end
 
-local function create_pickup_render_entity(entity, eid, pu_material, pu_uniforms, ms)
+local function create_pickup_render_entity(entity, eid, pu_material, ms)
     local visible = entity.render.visible
     if not visible then
         return nil
     end
     
     local info = {}
+    local uid_setter = shadermgr.create_uniform_setter("u_id", ms(packeid_as_rgba(eid), "m"))
+    local uniforms = {}
     for _, elem in ipairs(entity.render.info) do
         local mesh = elem.mesh
         local mgroups = mesh.handle.group
@@ -82,11 +78,8 @@ local function create_pickup_render_entity(entity, eid, pu_material, pu_uniforms
             table.insert(meshids, i)
         end
         table.insert(info, {mesh=mesh, binding={{material=pu_material, meshids=meshids}}, srt=elem.srt})
+        table.insert(uniforms, {uid_setter})
     end
-
-    local uniforms = pu_uniforms
-    local u_id = uniforms[pu_material.name].u_id
-    u_id.value = ms(packeid_as_rgba(eid), "m")    
 
     return { 
         render = {
@@ -106,9 +99,9 @@ local db = require "debugger"
 function pickup:render_to_pickup_buffer(pickup_entity)    
     for _, eid in world:each("can_select") do        
         local entity = assert(world[eid])
-        local e = create_pickup_render_entity(entity, eid, self.material, self.uniforms, self.ms)
-        if e then
-            ru.draw_entity(pickup_entity.viewid.id, e, self.ms)             
+        local e = create_pickup_render_entity(entity, eid, self.material, self.ms)
+        if e then                        
+            ru.draw_entity(pickup_entity.viewid.id, e, self.ms)            
         end
     end
 end
@@ -139,7 +132,7 @@ end
 
 function pickup:pick(p_eid, current_frame_num)
     local pickup_entity = world[p_eid]
-    if self.reading_frame == nil then
+    if self.reading_frame == nil then        
         bind_frame_buffer(pickup_entity)
         self:render_to_pickup_buffer(pickup_entity)
         self.reading_frame = self:readback_render_data(pickup_entity)        

@@ -1,7 +1,12 @@
+local log = log and log(...) or print
+
 local bgfx = require "bgfx"
 local cu = require "render.components.util"
 local mu = require "math.util"
+local shadermgr = require "render.resources.shader_mgr"
+
 local util = {}
+util.__index = util
 
 function util.foreach_entity(w, comp_names, op)
     for _, eid in w:each(comp_names[1]) do
@@ -36,27 +41,39 @@ function util.draw_scene(vid, world, ms)
     end)
 end
 
-function util.update_uniform(u) 
-    if u.update then
-        u:update()
-    end
+function util.update_uniform(u)    
+    local uniform = shadermgr.get_uniform(assert(u.name))
+    local setter = u.setter
+    local value = setter and setter(u) or u.value     
     
-    local id = assert(u.id)
-    local value = assert(u.value)    
-    bgfx.set_uniform(id, value)
+    dprint("update uniform, name : ", u.name)
+
+    bgfx.set_uniform(assert(uniform.handle), assert(value))
 end
 
 function util.draw_entity(vid, entity, ms)    
     local render = entity.render    
-    --local name = entity.name.n   
-
-    if render.visible then
+    local name = entity.name.n   
+    if render.visible then        
+        dprint("entity name : ", name)
         local rinfo = render.info        
         for idx, elem in ipairs(rinfo) do
             local esrt= elem.srt
             local mat = ms({type="srt", s=esrt.s, r=esrt.r, t=esrt.t}, 
                             {type="srt", s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}, "*m")            
-            util.draw_mesh(vid, elem.mesh, elem.binding, render.uniforms, mat)
+            local uniforms = render.uniforms and render.uniforms[idx] or nil
+            util.draw_mesh(vid, elem.mesh, elem.binding, uniforms, mat)
+        end
+    end
+end
+
+local function check_uniform_is_match_with_shader(shader, uniforms)
+    local su = shader.uniforms
+    for _, u in ipairs(uniforms) do
+        local name = u.name
+        local s = su[name]
+        if s == nil then
+            log(string.format("uniform : %s, not privided, but shader program needed", name))
         end
     end
 end
@@ -70,20 +87,12 @@ function util.draw_mesh(vid, mesh, bindings, uniforms, worldmat)
         bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
 
         local prog = assert(material.shader.prog)
-
         -- check and update uniforms
-        if uniforms then
-            local muniforms = uniforms[material.name]
-
-            local uniform_names = material.uniform        
-            for _, n in ipairs(uniform_names) do
-                local u = muniforms[n]
-                if u == nil then
-                    print(string.format("material : %s need uniform : %s, but not define", material.name, n))
-                else
-                    util.update_uniform(u)
-                end
-            end        
+        if uniforms then            
+            check_uniform_is_match_with_shader(material.shader, uniforms)
+            for _, u in ipairs(uniforms) do
+                util.update_uniform(u)
+            end               
         end
 
         local meshids = binding.meshids
@@ -99,11 +108,6 @@ function util.draw_mesh(vid, mesh, bindings, uniforms, worldmat)
             bgfx.submit(vid, prog, 0, i ~= num)
         end
     end
-end
-
-function util.create_uniform(name, type, value, update)    
-    local id = bgfx.create_uniform(name, type)
-    return {id=assert(id), name=name, type=type, value=value, update=update}
 end
 
 return util

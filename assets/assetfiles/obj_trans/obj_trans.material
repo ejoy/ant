@@ -12,5 +12,3 @@ shader = {
 -- }
 
 state = "default.state"
-
-uniform = {"u_color",}

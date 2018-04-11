@@ -1,4 +1,5 @@
 local require = import and import(...) or require
+local log = log and log(...) or print
 
 local bgfx = require "bgfx"
 local hw_caps = require "render.hardware_caps"
@@ -31,6 +32,9 @@ local function get_shader_path()
     local caps_bin_path = get_caps_path()
     return path.join(shader_asset_path, caps_bin_path)
 end
+
+
+local uniforms = {}
 
 local shader_mgr = {}
 shader_mgr.__index = shader_mgr
@@ -105,7 +109,19 @@ end
 
 function shader_mgr.programLoad(vs,fs, uniform)
     if uniform then
-        return programLoadEx(vs,fs, uniform)
+        local prog = programLoadEx(vs,fs, uniform)
+        if prog then
+            for k, v in pairs(uniform) do
+                local old_u = uniforms[k]
+                if old_u then
+                    log(string.format("previous has been defined uniform, nameis : %s, type=%s, num=%d, replace as : type=%s, num=%d",
+                                    old_u.name, old_u.type, old_u.num, v.type, v.num))
+                end
+
+                uniforms[k] = v
+            end
+        end
+        return prog
     else
         local vsid = load_shader(vs)
         local fsid = fs and load_shader(fs)        
@@ -118,5 +134,12 @@ function shader_mgr.computeLoad(cs)
     return bgfx.create_program(csid, true)
 end
 
+function shader_mgr.get_uniform(name)
+    return uniforms[name]
+end
+
+function shader_mgr.create_uniform_setter(name, value, setter)
+    return {name=name, value=value, setter=setter}
+end
 
 return shader_mgr

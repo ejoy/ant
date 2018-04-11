@@ -1,3 +1,5 @@
+local math3d = require "math3d"
+
 local util = {}
 util.__index = util
 
@@ -75,6 +77,18 @@ function util.frustum_from_fov(frustum, n, f, fov, aspect)
 	frustum.r = hw
 	frustum.t = hh
 	frustum.b = -hh
+end
+
+function util.create_persistent_vector(ms, value)
+	local v = math3d.ref "vector"
+	ms(v, value, "=")
+	return v
+end
+
+function util.create_persistent_matrix(ms, value)
+	local m = math3d.ref "matrix"
+	ms(m, value, "=")
+	return m
 end
 
 return util
