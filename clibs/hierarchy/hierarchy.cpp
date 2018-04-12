@@ -96,8 +96,8 @@ change_addr(lua_State *L, int cache_index, RawSkeleton::Joint *old_ptr, RawSkele
 }
 
 static void
-expand_children(lua_State *L, int index, RawSkeleton::Joint::Children *c, int n) {
-	int old_size = c->size();
+expand_children(lua_State *L, int index, RawSkeleton::Joint::Children *c, size_t n) {
+	size_t old_size = c->size();
 	if (old_size == 0) {
 		c->resize(n);
 		return;
@@ -112,7 +112,7 @@ expand_children(lua_State *L, int index, RawSkeleton::Joint::Children *c, int n)
 		luaL_error(L, "Missing cache");
 	}
 	int cache_index = lua_gettop(L);
-	int i;
+	size_t i;
 	for (i=0;i<old_size;i++) {
 		change_addr(L, cache_index, old_ptr+i, new_ptr+i);
 	}
@@ -120,7 +120,7 @@ expand_children(lua_State *L, int index, RawSkeleton::Joint::Children *c, int n)
 }
 
 static void
-remove_child(lua_State *L, int index, RawSkeleton::Joint::Children * c, int child) {
+remove_child(lua_State *L, int index, RawSkeleton::Joint::Children * c, size_t child) {
 	if (lua_getuservalue(L, index) != LUA_TTABLE) {
 		luaL_error(L, "Missing cache");
 	}
@@ -136,8 +136,8 @@ remove_child(lua_State *L, int index, RawSkeleton::Joint::Children * c, int chil
 	lua_pushnil(L);
 	lua_rawsetp(L, cache_index, (void *)node);
 
-	int size = c->size();
-	int i;
+	size_t size = c->size();
+	size_t i;
 	for (i=child+1;i<size;i++) {
 		node = &c->at(i);
 		change_addr(L, cache_index, node, node-1);
@@ -150,12 +150,12 @@ lhnodeset(lua_State *L) {
 	int key = lua_type(L, 2);
 	if (key == LUA_TNUMBER) {
 		// new child or change child
-		int n = (int)lua_tointeger(L, 2);
+		size_t n = (int)lua_tointeger(L, 2);
 		if (n <= 0) {
 			return luaL_error(L, "Invalid children index %f", lua_tonumber(L, 2));
 		}
 		RawSkeleton::Joint::Children * c = get_children(L, 1);
-		int size = c->size();
+		size_t size = c->size();
 		if (n > size) {
 			if (n == size + 1) {
 				// new child
@@ -198,12 +198,12 @@ lhnodeget(lua_State *L) {
 		const char * p = luaL_checkstring(L, 2);
 		return get_property(L, node, p);
 	} else if (keytype == LUA_TNUMBER) {
-		int n = (int)lua_tointeger(L, 2);
+		size_t n = (int)lua_tointeger(L, 2);
 		if (n <= 0) {
 			return luaL_error(L, "Invalid children index %f", lua_tonumber(L, 2));
 		}
 		RawSkeleton::Joint::Children * c = get_children(L, 1);
-		int size = c->size();
+		size_t size = c->size();
 		if (n > size) {
 			return 0;
 		}

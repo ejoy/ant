@@ -1,0 +1,246 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="include\ozz">
+      <UniqueIdentifier>{de7f99bf-367e-403a-94d9-8a25cdeb5069}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ozz\animation">
+      <UniqueIdentifier>{cf88241b-ab76-4601-958a-de0f73b77e26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ozz\base">
+      <UniqueIdentifier>{b8569334-613c-458f-ab68-4ac8df61b8ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ozz\geometry">
+      <UniqueIdentifier>{f0459c72-2a90-4a41-abf1-a176b23c27df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ozz\options">
+      <UniqueIdentifier>{1c3b44c0-cebd-4d6b-968b-51e8dfba5d14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ozz\animation\offline">
+      <UniqueIdentifier>{0a6134d4-fbff-4719-892d-a7f917f6abf7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ozz\animation\runtime">
+      <UniqueIdentifier>{d6cec8e2-7ef1-4931-a6f7-90c0807d24d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ozz\base\containers">
+      <UniqueIdentifier>{29f470e2-2bdb-4d8f-bd4e-f370fcb7ddd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ozz\base\io">
+      <UniqueIdentifier>{0c812b56-3002-456e-aae5-8cec05d84a87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ozz\base\maths">
+      <UniqueIdentifier>{7906b2fb-d3a8-49a4-a757-fb94b62027b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ozz\base\memory">
+      <UniqueIdentifier>{9963063e-5f12-4d20-a2bc-bed7631c7c91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ozz\base\maths\internal">
+      <UniqueIdentifier>{34f39f9b-8b10-48e6-a68e-ad1809537c23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ozz\animation\offline\fbx">
+      <UniqueIdentifier>{6332e9d3-cae1-42ed-965b-cdbce1f88210}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ozz\animation\offline\tools">
+      <UniqueIdentifier>{171cc823-e3e6-47e1-9149-f678ddaac935}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ozz\geometry\runtime">
+      <UniqueIdentifier>{5d617a04-669b-4cd6-9796-d2deb1c17c53}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\clibs\ozz-animation\src\animation\offline\raw_skeleton.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\ozz-animation\src\base\memory\allocator.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\containers\deque.h">
+      <Filter>include\ozz\base\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\containers\intrusive_list.h">
+      <Filter>include\ozz\base\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\containers\list.h">
+      <Filter>include\ozz\base\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\containers\map.h">
+      <Filter>include\ozz\base\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\containers\queue.h">
+      <Filter>include\ozz\base\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\containers\set.h">
+      <Filter>include\ozz\base\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\containers\stack.h">
+      <Filter>include\ozz\base\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\containers\std_allocator.h">
+      <Filter>include\ozz\base\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\containers\string.h">
+      <Filter>include\ozz\base\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\containers\string_archive.h">
+      <Filter>include\ozz\base\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\containers\vector.h">
+      <Filter>include\ozz\base\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\containers\vector_archive.h">
+      <Filter>include\ozz\base\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\io\archive.h">
+      <Filter>include\ozz\base\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\io\archive_traits.h">
+      <Filter>include\ozz\base\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\io\stream.h">
+      <Filter>include\ozz\base\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\box.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\gtest_math_helper.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\math_archive.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\math_constant.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\math_ex.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\quaternion.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\rect.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\simd_math.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\simd_math_archive.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\soa_float.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\soa_float4x4.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\soa_math_archive.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\soa_quaternion.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\soa_transform.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\transform.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\vec_float.h">
+      <Filter>include\ozz\base\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\internal\simd_math_config.h">
+      <Filter>include\ozz\base\maths\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\internal\simd_math_ref-inl.h">
+      <Filter>include\ozz\base\maths\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\maths\internal\simd_math_sse-inl.h">
+      <Filter>include\ozz\base\maths\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\memory\allocator.h">
+      <Filter>include\ozz\base\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\endianness.h">
+      <Filter>include\ozz\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\gtest_helper.h">
+      <Filter>include\ozz\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\log.h">
+      <Filter>include\ozz\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\platform.h">
+      <Filter>include\ozz\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\offline\additive_animation_builder.h">
+      <Filter>include\ozz\animation\offline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\offline\animation_builder.h">
+      <Filter>include\ozz\animation\offline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\offline\animation_optimizer.h">
+      <Filter>include\ozz\animation\offline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\offline\raw_animation.h">
+      <Filter>include\ozz\animation\offline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\offline\raw_animation_utils.h">
+      <Filter>include\ozz\animation\offline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\offline\raw_skeleton.h">
+      <Filter>include\ozz\animation\offline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\offline\skeleton_builder.h">
+      <Filter>include\ozz\animation\offline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\runtime\animation.h">
+      <Filter>include\ozz\animation\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\runtime\blending_job.h">
+      <Filter>include\ozz\animation\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\runtime\local_to_model_job.h">
+      <Filter>include\ozz\animation\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\runtime\sampling_job.h">
+      <Filter>include\ozz\animation\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\runtime\skeleton.h">
+      <Filter>include\ozz\animation\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\runtime\skeleton_utils.h">
+      <Filter>include\ozz\animation\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\offline\fbx\fbx.h">
+      <Filter>include\ozz\animation\offline\fbx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\offline\fbx\fbx_base.h">
+      <Filter>include\ozz\animation\offline\fbx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\offline\tools\convert2anim.h">
+      <Filter>include\ozz\animation\offline\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\animation\offline\tools\convert2skel.h">
+      <Filter>include\ozz\animation\offline\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\geometry\runtime\skinning_job.h">
+      <Filter>include\ozz\geometry\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\options\options.h">
+      <Filter>include\ozz\options</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
