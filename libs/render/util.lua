@@ -65,10 +65,18 @@ end
 
 local function check_uniform_is_match_with_shader(shader, uniforms)
     local su = shader.uniforms
-    for _, u in ipairs(uniforms) do
-        local name = u.name
-        local s = su[name]
-        if s == nil then
+    for name in pairs(su) do
+        local function has_uniform(name)
+            for _, u in ipairs(uniforms) do
+                if u.name == name then
+                    return true
+                end
+            end
+
+            return false
+        end
+    
+        if not has_uniform(name) then
             log(string.format("uniform : %s, not privided, but shader program needed", name))
         end
     end

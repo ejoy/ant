@@ -47,10 +47,19 @@ function add_entity_sys:init()
         ms(cube.position.v, {0, 0, 0, 1}, "=") 
         ms(cube.rotation.v, {0, 0, 1, 0}, "=")
 
+        local cubematerial_fn = "mem://cube_material.material"
+        au.write_to_file(cubematerial_fn, [[
+            shader = {
+                vs = "vs_mesh",
+                fs = "fs_mesh",
+            }
+            state = "default.state"
+        ]])
+
         local cuberender_fn = "mem://cube.render"
         au.write_to_file(cuberender_fn, [[
             mesh = "cube.mesh"
-            binding ={material = "obj_trans/obj_trans.material",}
+            binding ={material = "mem://cube_material.material",}
             srt = {s={0.01}}
         ]])
 
@@ -59,7 +68,7 @@ function add_entity_sys:init()
 
         local material = rinfo[1].binding[1].material
         local uniforms = {}
-        local color_setter_tb = {shadermgr.create_uniform_setter("u_color", ~self.constant.colors.red)}
+        local color_setter_tb = {shadermgr.create_uniform_setter("u_color", ~self.constant.colors.red), shadermgr.create_uniform_setter("u_time", ~self.constant.colors.green)}
         cube.render.uniforms = {color_setter_tb}
         cube.render.visible = true
     end
