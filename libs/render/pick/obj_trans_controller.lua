@@ -441,16 +441,16 @@ function obj_trans_sys:init()
     register_message(self.message_component, ot, ms)
 end
 
-function obj_trans_sys:update()
-    local ot = self.object_transform
-    if not ot.select_changed then
-        return 
-    end
+-- function obj_trans_sys:update()
+--     local ot = self.object_transform
+--     if not ot.select_changed then
+--         return 
+--     end
 
-    ot.select_changed = false
+--     ot.select_changed = false
 
-    update_contorller(ot, self.math_stack)
-end
+--     update_contorller(ot, self.math_stack)
+-- end
 
 local function update_select_state(ot)
     local mode = ot.selected_mode
@@ -469,22 +469,20 @@ local function update_select_state(ot)
         ot.selected_eid = nil                    
     end
 
-    ot.select_changed = ot.selected_eid ~= last_eid
+    local select_changed = ot.selected_eid ~= last_eid
 
-    if ot.select_changed then
+    if select_changed then
         dprint("select change, scene obj eid : ", ot.sceneobj_eid, ", selected eid : ", ot.selected_eid)
     end
+
+    return select_changed
 end
 
 function obj_trans_sys.notify:pickup(set)
     local ot = self.object_transform
-    update_select_state(ot)
-    if is_controller_id(ot.controllers, ot.selected_eid) then
-        self.control_state.state = "object"
-    else
-        self.control_state.state = "default"
+    if update_select_state(ot) then
+        update_contorller(ot, self.math_stack)
     end
 
-    dprint("state : ", self.control_state.state)
-
+    self.control_state.state = is_controller_id(ot.controllers, ot.selected_eid) and "object" or "default"
 end
