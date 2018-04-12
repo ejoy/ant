@@ -22,6 +22,8 @@ local obj_trans_sys = ecs.system "obj_transform_system"
 obj_trans_sys.singleton "object_transform"
 obj_trans_sys.singleton "math_stack"
 obj_trans_sys.singleton "constant"
+obj_trans_sys.singleton "control_state"
+obj_trans_sys.singleton "message_component"
 
 obj_trans_sys.depend "constant_init_sys"
 
@@ -191,19 +193,117 @@ local function add_rotator_entities(ms, color_constants)
     return controller
 end
 
-function obj_trans_sys:init()
-    local ot = self.object_transform    
-    local ms = self.math_stack
-    local cc = assert(self.constant.colors)
-    ot.controllers = {
-        pos_transform = add_translate_entities(ms, cc),        
-        scale_transform = add_scale_entities(ms, cc),
-        rotator_transform = add_rotator_entities(ms, cc),
-    }
-    
-    ot.selected_mode = "pos_transform"
-    ot.selected_eid = nil
-    ot.sceneobj_eid = nil
+local function play_object_transform(ms, ot, dx, dy)
+    if  ot.sceneobj_eid == nil or             
+        ot.selected_eid == nil or
+        ot.sceneobj_eid == ot.selected_eid then -- mean no axis selected
+        return
+    end
+
+    local mode = ot.selected_mode
+    local controller = ot.controllers[mode]
+    if controller == nil then
+        return 
+    end
+
+    local sceneobj = assert(world[ot.sceneobj_eid])
+    local selected_axis = assert(world[ot.selected_eid])
+    local name = selected_axis.name.n
+    local axis_name = name:match(".+-([xyz])$")
+
+    local function select_step_value(dir)
+        local camera = world:first_entity("main_camera")
+        local view_mat = ms(camera.position.v, camera.rotation.v, "dLP")                
+
+        local dirInVS = ms(dir, view_mat, "*T")
+        local dirX, dirY = dirInVS[1], dirInVS[2]            
+        return (dirX > dirY) and dx or dy
+    end
+
+    local zdir = ms(sceneobj.rotation.v, "dnP")
+    local xdir = ms({0, 1, 0, 0}, zdir, "xnP")
+    local ydir = ms(zdir, xdir, "xnP")
+
+    if mode == "pos_transform" then            
+        if selected_axis then
+            local pos = sceneobj.position.v
+
+            local function move(dir)
+                local speed = ot.translate_speed
+                local v = select_step_value(dir) > 0 and speed or -speed
+                ms(pos, pos, dir, {v}, "*+=")
+            end
+
+            if axis_name == "x" then
+                move(xdir)
+            elseif axis_name == "y" then
+                move(ydir)
+            elseif axis_name == "z" then
+                move(zdir)
+            else
+                error("move entity axis not found, axis_name : " .. axis_name)
+            end
+
+            for _, elem in ipairs(controller) do
+                local e = assert(world[elem.eid])
+                ms(e.position.v, pos, "=")
+            end                
+        end
+    elseif mode == "scale_transform" then
+        if selected_axis then                
+            local scale = ms(sceneobj.scale.v, "T")
+
+            local function scale_by_axis(dir, idx)
+                local speed = ot.scale_speed
+                local v = select_step_value(dir) > 0 and speed or -speed
+                scale[idx] = scale[idx] + v
+                ms(sceneobj.scale.v, scale, "=")
+            end
+
+            if axis_name == "x" then
+                scale_by_axis(xdir, 1)
+            elseif axis_name == "y" then
+                scale_by_axis(ydir, 2)
+            elseif axis_name == "z" then
+                scale_by_axis(zdir, 3)
+            else
+                error("scale entity axis not found, axis_name : " .. axis_name)
+            end
+        end
+    elseif mode == "rotator_transform" then
+        if selected_axis then
+            dprint("in rotator")
+            local rotation = ms(sceneobj.rotation.v, "T")
+
+            local function rotate(dir, idx)
+                local speed = ot.rotation_speed
+                local v = select_step_value(dir) > 0 and speed or -speed
+                rotation[idx] = rotation[idx] + v
+                ms(sceneobj.rotation.v, rotation, "=")
+
+                dprint("rotation : ", sceneobj.rotation.v)
+            end
+
+            if axis_name == "x" then
+                rotate(xdir, 1)
+            elseif axis_name == "y" then
+                rotate(ydir, 2)
+            elseif axis_name == "z" then
+                rotate(zdir, 3)
+            else
+                error("rotation entity axis not found, axis_name : " .. axis_name)
+            end
+        end
+    end
+end
+
+
+local function print_select_object_transform(eid)
+    local obj = assert(world[eid])
+    dprint("select object name : ", obj.name.n)
+    dprint("scale : ", obj.scale.v)
+    dprint("position : ", obj.position.v)
+    dprint("rotation : ", obj.rotation.v)
 end
 
 local function update_controller_transform(ms, controller, obj_eid, follow_objrotation)
@@ -261,38 +361,8 @@ local function update_contorller(ot, ms)
     end
 end
 
-function obj_trans_sys:update()
-    local ot = self.object_transform
-    if not ot.select_changed then
-        return 
-    end
-
-    ot.select_changed = false
-
-    update_contorller(ot, self.math_stack)
-end
-
--- controller system
-local obj_controller_sys = ecs.system "obj_controller"
-obj_controller_sys.singleton "message_component"
-obj_controller_sys.singleton "object_transform"
-obj_controller_sys.singleton "math_stack"
-obj_controller_sys.singleton "control_state"
-
-obj_controller_sys.depend "obj_transform_system"
-
-local function print_select_object_transform(eid)
-    local obj = assert(world[eid])
-    dprint("select object name : ", obj.name.n)
-    dprint("scale : ", obj.scale.v)
-    dprint("position : ", obj.position.v)
-    dprint("rotation : ", obj.rotation.v)
-end
-
-function obj_controller_sys:init()
-    local ot = self.object_transform
-    local ms = self.math_stack
-    local states = self.message_component.states
+local function register_message(msg_comp, ot, ms)
+    local states = msg_comp.states
 
     local message = {}
 
@@ -347,115 +417,39 @@ function obj_controller_sys:init()
         local deltaX, deltaY = x - lastX, (lastY - y)  -- y value is from up to down, need flip
         lastX, lastY = x, y
 
-        if  ot.sceneobj_eid == nil or             
-            ot.selected_eid == nil or
-            ot.sceneobj_eid == ot.selected_eid then -- mean no axis selected
-            return
-        end
-
-        local mode = ot.selected_mode
-        local controller = ot.controllers[mode]
-        if controller == nil then
-            return 
-        end
-
-        local sceneobj = assert(world[ot.sceneobj_eid])
-        local selected_axis = assert(world[ot.selected_eid])
-        local name = selected_axis.name.n
-        local axis_name = name:match(".+-([xyz])$")
-
-        local function select_step_value(dir)
-            local camera = world:first_entity("main_camera")
-            local view_mat = ms(camera.position.v, camera.rotation.v, "dLP")                
-
-            local dirInVS = ms(dir, view_mat, "*T")
-            local dx, dy = dirInVS[1], dirInVS[2]            
-            return (dx > dy) and deltaX or deltaY
-        end
-
-        local zdir = ms(sceneobj.rotation.v, "dnP")
-        local xdir = ms({0, 1, 0, 0}, zdir, "xnP")
-        local ydir = ms(zdir, xdir, "xnP")
-
-        if mode == "pos_transform" then            
-            if selected_axis then
-                local pos = sceneobj.position.v
-
-                local function move(dir)
-                    local speed = ot.translate_speed
-                    local v = select_step_value(dir) > 0 and speed or -speed
-                    ms(pos, pos, dir, {v}, "*+=")
-                end
-
-                if axis_name == "x" then
-                    move(xdir)
-                elseif axis_name == "y" then
-                    move(ydir)
-                elseif axis_name == "z" then
-                    move(zdir)
-                else
-                    error("move entity axis not found, axis_name : " .. axis_name)
-                end
-
-                for _, elem in ipairs(controller) do
-                    local e = assert(world[elem.eid])
-                    ms(e.position.v, pos, "=")
-                end                
-            end
-        elseif mode == "scale_transform" then
-            if selected_axis then                
-                local scale = ms(sceneobj.scale.v, "T")
-
-                local function scale_by_axis(dir, idx)
-                    local speed = ot.scale_speed
-                    local v = select_step_value(dir) > 0 and speed or -speed
-                    scale[idx] = scale[idx] + v
-                    ms(sceneobj.scale.v, scale, "=")
-                end
-
-                if axis_name == "x" then
-                    scale_by_axis(xdir, 1)
-                elseif axis_name == "y" then
-                    scale_by_axis(ydir, 2)
-                elseif axis_name == "z" then
-                    scale_by_axis(zdir, 3)
-                else
-                    error("scale entity axis not found, axis_name : " .. axis_name)
-                end
-            end
-        elseif mode == "rotator_transform" then
-            if selected_axis then
-                dprint("in rotator")
-                local rotation = ms(sceneobj.rotation.v, "T")
-
-                local function rotate(dir, idx)
-                    local speed = ot.rotation_speed
-                    local v = select_step_value(dir) > 0 and speed or -speed
-                    rotation[idx] = rotation[idx] + v
-                    ms(sceneobj.rotation.v, rotation, "=")
-
-                    dprint("rotation : ", sceneobj.rotation.v)
-                end
-
-                if axis_name == "x" then
-                    rotate(xdir, 1)
-                elseif axis_name == "y" then
-                    rotate(ydir, 2)
-                elseif axis_name == "z" then
-                    rotate(zdir, 3)
-                else
-                    error("rotation entity axis not found, axis_name : " .. axis_name)
-                end
-            end
-        end
+        play_object_transform(ms, ot, deltaX, deltaY)
     end
 
-    local observers = self.message_component.msg_observers
+    local observers = msg_comp.msg_observers
     observers:add(message)
 end
 
-function obj_controller_sys:update()
+function obj_trans_sys:init()
+    local ot = self.object_transform    
+    local ms = self.math_stack
+    local cc = assert(self.constant.colors)
+    ot.controllers = {
+        pos_transform = add_translate_entities(ms, cc),        
+        scale_transform = add_scale_entities(ms, cc),
+        rotator_transform = add_rotator_entities(ms, cc),
+    }
     
+    ot.selected_mode = "pos_transform"
+    ot.selected_eid = nil
+    ot.sceneobj_eid = nil
+
+    register_message(self.message_component, ot, ms)
+end
+
+function obj_trans_sys:update()
+    local ot = self.object_transform
+    if not ot.select_changed then
+        return 
+    end
+
+    ot.select_changed = false
+
+    update_contorller(ot, self.math_stack)
 end
 
 local function update_select_state(ot)
@@ -482,7 +476,7 @@ local function update_select_state(ot)
     end
 end
 
-function obj_controller_sys.notify:pickup(set)
+function obj_trans_sys.notify:pickup(set)
     local ot = self.object_transform
     update_select_state(ot)
     if is_controller_id(ot.controllers, ot.selected_eid) then
