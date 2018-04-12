@@ -38,6 +38,10 @@ ecs.component "can_select" {
 
 }
 
+ecs.component "last_render"{
+    enable = true
+}
+
 ecs.component "control_state" {
     state = "camera"
 }

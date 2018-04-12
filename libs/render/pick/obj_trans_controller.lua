@@ -41,7 +41,7 @@ local function is_controller_id(controllers, p_eid)
 end
 
 local function create_entity(ms, renderfile, name, color_name, color_constants)
-    local eid = world:new_entity("position", "scale", "rotation", "render", "name", "can_select")
+    local eid = world:new_entity("position", "scale", "rotation", "render", "name", "can_select", "last_render")
     local obj = world[eid]
     obj.name.n = name
 

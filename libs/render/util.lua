@@ -36,9 +36,16 @@ end
 
 function util.draw_scene(vid, world, ms)
     util.foreach_sceneobj(world,
-    function (entity)        
-        util.draw_entity(vid, entity, ms)
+    function (entity)
+        if not entity.last_render then
+            util.draw_entity(vid, entity, ms)
+        end
     end)
+
+    for _, eid in world:each("last_render") do
+        local entity = world[eid]
+        util.draw_entity(vid, entity, ms)
+    end
 end
 
 function util.update_uniform(u)    
