@@ -3,12 +3,12 @@ shader = {
     fs = "objtrans/fs_objtrans.sc",
 }
 
--- state = {
---     WRITE_MASK = "RGBA",    -- no write to Z
---     ALPHA_REF = 0,
---     CULL = "CCW",
---     MSAA = true,
---     DEPTH_TEST = "NEVER"    -- no depth test
--- }
+state = {
+    WRITE_MASK = "RGBA",    -- no write to Z
+    ALPHA_REF = 0,
+    CULL = "CCW",
+    MSAA = true,
+    DEPTH_TEST = "ALWAYS"    -- no depth test
+}
 
-state = "default.state"
+--state = "default.state"
