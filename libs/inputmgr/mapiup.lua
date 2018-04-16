@@ -6,8 +6,8 @@ for k,v in pairs(iup) do
 	end
 end
 
-local iup_status = { __mode = "kv" }
-setmetatable(iup_status, iup_status)
+local iup_status_mt = { __mode = "kv" }
+local iup_status = setmetatable({}, iup_status_mt)
 
 local status_map = {
 	["1"] = "LEFT",
@@ -24,10 +24,10 @@ local status_map = {
 
 local status_meta = { __tostring = function(self) return self.name end }
 
-function iup_status:__index(status)
+function iup_status_mt:__index(status)
 	local s = setmetatable({}, status_meta)
 	local str = {}
-	for i = 1, #status do
+	for i = 1, #status do		
 		local v = status_map[status:sub(i,i)]
 		if v then
 			s[v] = true
@@ -35,7 +35,7 @@ function iup_status:__index(status)
 		end
 	end
 	s.name = table.concat(str, "+")
-	self[status] = s
+	self[status] = s	
 	return s
 end
 
