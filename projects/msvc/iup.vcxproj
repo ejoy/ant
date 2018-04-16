@@ -104,7 +104,7 @@
       <AdditionalIncludeDirectories>../../clibs/lua;../../../iup/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>../../../iup/lib/$(Configuration)_64;$(OutDir)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;iuplua.lib;iupluaimglib.lib;scintilla.lib;gdi32.lib;comdlg32.lib;comctl32.lib;ole32.lib;uuid.lib;imm32.lib;msimg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -121,7 +121,7 @@
       <AdditionalIncludeDirectories>../../clibs/lua;../../../iup/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;iuplua.lib;iupluaimglib.lib;scintilla.lib;gdi32.lib;comdlg32.lib;comctl32.lib;ole32.lib;uuid.lib;imm32.lib;msimg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -140,7 +140,7 @@
       <AdditionalIncludeDirectories>../../clibs/lua;../../../iup/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -161,7 +161,7 @@
       <AdditionalIncludeDirectories>../../clibs/lua;../../../iup/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>

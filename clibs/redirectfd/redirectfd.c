@@ -42,9 +42,9 @@ redirect_thread(LPVOID lpParam) {
 
 static FILE *
 get_stdfile(lua_State *L, int stdfd) {
-	if (stdfd == STDOUT_FILENO)
+	if (stdfd == 1)
 		return stdout;
-	if (stdfd == STDERR_FILENO) 
+	if (stdfd == 2) 
 		return stderr;
 
 	luaL_error(L, "Invalid std fd %d", stdfd);
