@@ -21,16 +21,7 @@ function msg_comp:init()
 		end
 	end
 
-	self.msg_observers = setmetatable({}, message_observers)
-	self.states = {
-		buttons = {},
-		keys = {},
-		button = function (self, b, p, x, y) self.buttons[b] = p end,
-		keypress = function(self, c, p) 
-			if c == nil then return end
-			self.keys[c] = p 
-		end,
-	}
+	self.msg_observers = setmetatable({}, message_observers)	
 end
 --@]
 
@@ -78,13 +69,7 @@ function iup_message:init()
 end
 
 function iup_message:update()
-	for _, msg, v1,v2,v3,v4,v5 in pairs(world.args.mq) do		
-		local states = self.message_component.states
-		local cb = states[msg]		
-		if cb then
-			cb(states,v1,v2,v3,v4,v5)
-		end
-
+	for _, msg, v1,v2,v3,v4,v5 in pairs(world.args.mq) do
 		local observers = self.message_component.msg_observers
 		for _, ob in ipairs(observers) do
 			local action = ob[msg]

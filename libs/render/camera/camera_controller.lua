@@ -35,20 +35,20 @@ end
 -- 	return to_angle(pitch), to_angle(yaw)
 -- end
 
-function message:motion(x, y)
+local button_status = {}
+function message:button(btn, p, x, y, status)
+	button_status[btn] = p
+end
+
+function message:motion(x, y, status)
 	local last_xy = message.xy	
 	local xy = point2d(x, y)
 	message.xy = xy
 
-	message.cb.motion = function (entity)
-		local msg_comp = message.msg_comp		
+	message.cb.motion = function (entity)		
 		local ms = message.ms
 
-		local states = msg_comp.states
-		local bs = states.buttons
-
-
-		if (bs.LEFT or bs.RIGHT) and last_xy then
+		if (status.LEFT or status.RIGHT) and last_xy then
 			local speed = message.move_speed * 0.1
 			local delta = (xy - last_xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
 			local rot = entity.rotation.v
@@ -71,28 +71,28 @@ function message:motion(x, y)
 	end
 end
 
-function message:keypress(c, p)
+function message:keypress(c, p, status)
 	if c == nil then return end
+	dprint("char : ", c)
 	message.cb.keypress = function(camera)
-		if p then
-			local msg_comp = message.msg_comp
+		if p then			
 			local ms = message.ms
 
 			local move_step = message.move_speed
 			local rot = camera.rotation.v
 			local eye = camera.position.v
 
-			local states = assert(msg_comp.states)
+			local rightbtn_down = button_status.RIGHT
+			local leftbtn_down = button_status.LEFT
 
-			local btn_st = states.buttons
-			local nomouse = btn_st.RIGHT == nil and btn_st.LEFT == nil
-			if nomouse and (c == "r" or c == "R") then
+			local nomouse_down = not (rightbtn_down or leftbtn_down)
+			if nomouse_down and (c == "r" or c == "R") then
 				ms(	eye, {0, 0, -10}, "=")
 				ms( rot.rotation, {0, 0, 0}, "=")
 				return 
 			end
 
-			if states.buttons.RIGHT then				
+			if rightbtn_down then
 				local zdir = ms(rot, "dP")
 				local xdir, ydir = generate_basic_axis(ms, zdir)
 

@@ -362,8 +362,6 @@ local function update_contorller(ot, ms)
 end
 
 local function register_message(msg_comp, ot, ms)
-    local states = msg_comp.states
-
     local message = {}
 
     function message:keypress(c, p)        
@@ -403,8 +401,8 @@ local function register_message(msg_comp, ot, ms)
 
     end
     local lastX, lastY
-    function message:motion(x, y)
-        local leftBtnDown = states.buttons["LEFT"]
+    function message:motion(x, y, status)
+        local leftBtnDown = status.LEFT
         if not leftBtnDown then
             return 
         end
