@@ -14,7 +14,7 @@ struct hierarchy_tree {
 };
 
 struct hierarchy {
-	RawSkeleton::Joint *node;
+	RawSkeleton::Joint *joint;
 };
 
 static int
@@ -27,11 +27,11 @@ ldelhtree(lua_State *L) {
 
 RawSkeleton::Joint::Children *
 get_children(lua_State *L, int index) {
-	struct hierarchy * node = (struct hierarchy *)lua_touserdata(L, index);
-	if (node->node == NULL) {
+	struct hierarchy * hnode = (struct hierarchy *)lua_touserdata(L, index);
+	if (hnode->joint == NULL) {
 		// It's root
 		if (lua_getuservalue(L, 1) != LUA_TTABLE) {
-			luaL_error(L, "Missing cache");
+			luaL_error(L, "Missing cache get_children");
 		}
 		if (lua_geti(L, -1, 0) != LUA_TUSERDATA) {
 			luaL_error(L, "Missing root in the cache");
@@ -40,7 +40,7 @@ get_children(lua_State *L, int index) {
 		lua_pop(L, 2);
 		return &tree->skl->roots;
 	} else {
-		return &node->node->children;
+		return &hnode->joint->children;
 	}
 }
 
@@ -86,7 +86,7 @@ static void
 change_addr(lua_State *L, int cache_index, RawSkeleton::Joint *old_ptr, RawSkeleton::Joint *new_ptr) {
 	if (lua_rawgetp(L, cache_index, (void *)old_ptr) == LUA_TUSERDATA) {
 		struct hierarchy *h = (struct hierarchy *)lua_touserdata(L, -1);
-		h->node = new_ptr;
+		h->joint = new_ptr;
 		lua_rawsetp(L, cache_index, (void *)new_ptr);
 		lua_pushnil(L);
 		lua_rawsetp(L, cache_index, (void *)old_ptr);
@@ -109,7 +109,7 @@ expand_children(lua_State *L, int index, RawSkeleton::Joint::Children *c, size_t
 		return;
 	}
 	if (lua_getuservalue(L, index) != LUA_TTABLE) {
-		luaL_error(L, "Missing cache");
+		luaL_error(L, "Missing cache expand_children");
 	}
 	int cache_index = lua_gettop(L);
 	size_t i;
@@ -128,7 +128,7 @@ remove_child(lua_State *L, int index, RawSkeleton::Joint::Children * c, size_t c
 	RawSkeleton::Joint *node = &c->at(child);
 	if (lua_rawgetp(L, cache_index, (void *)node) == LUA_TUSERDATA) {
 		struct hierarchy *h = (struct hierarchy *)lua_touserdata(L, -1);
-		h->node = NULL;
+		h->joint = NULL;
 		lua_pushnil(L);
 		lua_setuservalue(L, -2);
 	}
@@ -175,7 +175,7 @@ lhnodeset(lua_State *L) {
 		// change name or transform
 		struct hierarchy * h = (struct hierarchy *)lua_touserdata(L,1);
 		const char * property = lua_tostring(L, 2);
-		RawSkeleton::Joint * node = h->node;
+		RawSkeleton::Joint * node = h->joint;
 		if (node == NULL) {
 			return luaL_error(L, "Root has no property");
 		}
@@ -186,17 +186,34 @@ lhnodeset(lua_State *L) {
 	return 0;	
 }
 
+static inline void
+push_hierarchy_node(lua_State *L, RawSkeleton::Joint *joint){
+	struct hierarchy * h = (struct hierarchy *)lua_newuserdata(L, sizeof(*joint)); // stack : hnode
+	h->joint = joint;
+	
+	luaL_getmetatable(L, "HIERARCHY_NODE");		// stack : hnode, HIERARCHY_NODE, 
+	lua_setmetatable(L, -2);					// stack : hnode,
+
+	lua_pushvalue(L, -1);						// stack : hnode, hnode
+	lua_rawsetp(L, -3, (const void *)joint);	// stack : hnode
+
+	luaL_getmetatable(L, "HIERARCHY_CACHE");	// stack : hnode, HIERARCHY_CACHE
+	lua_setuservalue(L, -2);					// stack : hnode ---> HIERARCHY_CACHE as hnode's user value
+
+}
+
 static int
 lhnodeget(lua_State *L) {
-	struct hierarchy * h = (struct hierarchy *)lua_touserdata(L,1);
-	RawSkeleton::Joint * node = h->node;
+	assert(lua_type(L, 1) == LUA_TUSERDATA);
 	int keytype = lua_type(L, 2);
 	if (keytype == LUA_TSTRING) {
-		if (node == NULL) {
+		struct hierarchy * h = (struct hierarchy *)lua_touserdata(L, 1);
+		RawSkeleton::Joint * joint = h->joint;
+		if (joint == NULL) {
 			return luaL_error(L, "Invalid node");
 		}
 		const char * p = luaL_checkstring(L, 2);
-		return get_property(L, node, p);
+		return get_property(L, joint, p);
 	} else if (keytype == LUA_TNUMBER) {
 		size_t n = (int)lua_tointeger(L, 2);
 		if (n <= 0) {
@@ -207,21 +224,17 @@ lhnodeget(lua_State *L) {
 		if (n > size) {
 			return 0;
 		}
-		RawSkeleton::Joint *node = &c->at(n-1);
+		RawSkeleton::Joint *joint = &c->at(n-1);
 		if (lua_getuservalue(L, 1) != LUA_TTABLE) {
-			return luaL_error(L, "Missing cache");
+			return luaL_error(L, "Missing cache lhnodeget");
 		}
-		if (lua_rawgetp(L, -1, (void *)node) == LUA_TUSERDATA) {
+		if (lua_rawgetp(L, -1, (const void *)joint) == LUA_TUSERDATA) {
 			return 1;
 		}
 		lua_pop(L, 1);
-		struct hierarchy * h = (struct hierarchy *)lua_newuserdata(L, sizeof(*node));
-		h->node = node;
-		luaL_getmetatable(L, "HIERARCHY_NODE");
-		lua_setmetatable(L, -2);
-		lua_pushvalue(L, -1);
-		// HIERARCHY_CACHE, HIERARCHY_NODE, HIERARCHY_NODE
-		lua_rawsetp(L, -3, (void *)node);
+
+		push_hierarchy_node(L, joint);
+
 		return 1;
 	} else {
 		return luaL_error(L, "Invalid key type %s", lua_typename(L, keytype));
@@ -231,7 +244,7 @@ lhnodeget(lua_State *L) {
 static int
 lnewhierarchy(lua_State *L) {
 	struct hierarchy * node = (struct hierarchy *)lua_newuserdata(L, sizeof(*node));
-	node->node = NULL;
+	node->joint = NULL;
 	luaL_getmetatable(L, "HIERARCHY_NODE");
 	lua_setmetatable(L, -2);
 
