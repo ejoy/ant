@@ -17,6 +17,7 @@
 
 
 ### 附上launch模型具体的设置
+使用iup调试
 >        
     {
         "name": "launch_vs_debug",
@@ -34,3 +35,16 @@
         }        
     },
 
+单个文件调试
+>   
+    {
+        "name": "launch_test",
+        "type": "lua",
+        "request": "launch",
+        //"stopOnEntry": true,            
+        "cwd": "${workspaceRoot}",  
+        "path": "./?.lua",
+        "cpath": "./?.dll;${workspaceRoot}/project/msvc/vs_bin/x64/Debug/?.dll",                        
+        "runtimeExecutable" : "${workspaceRoot}/projects/msvc/vs_bin/x64/Debug/lua.exe",
+        "runtimeArgs": "${file}",            
+    },
