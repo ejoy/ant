@@ -87,40 +87,21 @@ lhbuilddata_get(lua_State *L){
 			char buffer[4 * sizeof(float) + 15];	// 4 float and 16 bytes align
 #define STACK_ALIGN(_ADDRESS) (float*)(((size_t)((char*)(_ADDRESS) + 15)) & ~0x0f)
 			float *a_buffer = STACK_ALIGN(buffer);
-			//{@	scale
-			lua_createtable(L, 3, 0);
-			auto s = &(pose.scale.x);
+			
+			auto create_transform_elem = [=](auto name, auto num, auto v){
+				lua_createtable(L, num, 0);			
 
-			for (auto ii = 0; ii < 3; ++ii){				
-				ozz::math::StorePtr(s[ii], a_buffer);
-				lua_pushnumber(L, a_buffer[subidx]);
-				lua_seti(L, -2, ii + 1);
-			}
-			lua_setfield(L, -2, "s");
-			//@}
+				for (int ii = 0; ii < num; ++ii){
+					ozz::math::StorePtr(v[ii], a_buffer);
+					lua_pushnumber(L, a_buffer[subidx]);
+					lua_seti(L, -2, ii + 1);
+				}
+				lua_setfield(L, -2, name);
+			};
 
-			//{@	rotation
-			lua_createtable(L, 4, 0);
-			auto r = &(pose.rotation.x);
-			for (auto ii = 0; ii < 4; ++ii){
-				ozz::math::StorePtr(r[ii], a_buffer);
-				lua_pushnumber(L, a_buffer[subidx]);
-				lua_seti(L, -2, ii + 1);
-			}
-			lua_setfield(L, -2, "r");
-			//@}
-
-			//{@	translation
-			lua_createtable(L, 3, 0);
-			auto t = &(pose.translation.x);
-			for (auto ii = 0; ii < 3; ++ii){
-				ozz::math::StorePtr(t[ii], a_buffer);
-				lua_pushnumber(L, a_buffer[subidx]);
-				lua_seti(L, -2, ii + 1);
-			}
-
-			lua_setfield(L, -2, "t");
-			//@}
+			create_transform_elem("s", 3, &(pose.scale.x));
+			create_transform_elem("r", 4, &(pose.rotation.x));
+			create_transform_elem("t", 3, &(pose.translation.x));
 			break;
 		}
 
@@ -193,6 +174,22 @@ change_property(lua_State *L, RawSkeleton::Joint * joint, const char * p, int va
 	if (strcmp(p, "name") == 0) {
 		const char * v = luaL_checkstring(L, value_index);
 		joint->name = v;
+	} else if (strcmp(p, "transform") == 0) {
+		luaL_checktype(L, value_index, LUA_TTABLE);
+		auto fetch_transform = [=](auto name, auto num, auto v) {
+			int type = lua_getfield(L, -1, name);
+			if (type == LUA_TTABLE){
+				for (int ii = 0; ii < num; ++ii) {
+					lua_geti(L, -1, ii + 1);
+					v[ii] = (float)lua_tonumber(L, -1);
+					lua_pop(L, 1);
+				}			
+			}
+			lua_pop(L, 1);
+		};
+		fetch_transform("s", 3, &joint->transform.scale.x);
+		fetch_transform("r", 4, &joint->transform.rotation.x);
+		fetch_transform("t", 3, &joint->transform.translation.x);
 	} else {
 		luaL_error(L, "Invalid property %s", p);
 	}
@@ -202,6 +199,21 @@ static int
 get_property(lua_State *L, RawSkeleton::Joint * joint, const char * p) {
 	if (strcmp(p, "name") == 0) {
 		lua_pushstring(L, joint->name.c_str());
+		return 1;
+	} else if (strcmp(p, "transform") == 0) {
+		lua_createtable(L, 0, 3);
+
+		auto push_transform = [=](auto name, auto num, auto v){
+			lua_createtable(L, num, 0);
+			for (int ii=0; ii < num; ++ii){
+				lua_pushnumber(L, v[ii]);
+				lua_seti(L, -2, ii+1);
+			}
+			lua_setfield(L, -2, name);
+		};
+		push_transform("s", 3, &joint->transform.scale.x);
+		push_transform("r", 4, &joint->transform.rotation.x);
+		push_transform("t", 3, &joint->transform.translation.x);
 		return 1;
 	} else {
 		return luaL_error(L, "Invalid property %s", p);

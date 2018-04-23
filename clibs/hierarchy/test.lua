@@ -2,7 +2,13 @@ local hierarchy = require "hierarchy"
 
 local root = hierarchy.new()
 
-root[1] = { name = "child" }
+root[1] = { 
+    name = "child",     
+    transform = {
+        s={2, 1, 0.5}, 
+        r={math.cos(45), 0, 0, math.sin(45)}
+    } 
+}
 
 print(root[1].name)
 
@@ -14,7 +20,14 @@ print(child.name)
 print(root[1].name)
 local old = root[1]
 
-root[2] = { name = "child2" }
+root[2] = { 
+    name = "child2",
+    transform = {
+        s={1, 3, 0.1}, 
+        r={math.cos(45), 0, 0, math.sin(45)},   -- quaternion
+        t={2, 2, 1}
+    } 
+}
 
 local new = root[2]
 
@@ -58,6 +71,10 @@ local function print_tree(tr, offset_pr)
         local child_num = #child
 
         print(offset_pr .. child.name)
+        local transform = child.transform
+        print(offset_pr .. "transform, scale : ", transform.s, 
+            ", rotation : ", transform.r, 
+            ", translation : ", transform.t)
 
         if child_num ~= 0 then            
             print_tree(child, offset_pr .. "\t")
