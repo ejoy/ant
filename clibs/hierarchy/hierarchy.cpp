@@ -5,6 +5,12 @@ extern "C" {
 }
 
 #include <ozz/animation/offline/raw_skeleton.h>
+#include <ozz/animation/offline/skeleton_builder.h>
+#include <ozz/animation/runtime/skeleton.h>
+#include <ozz/animation/runtime/local_to_model_job.h>
+#include <ozz/base/maths/soa_transform.h>
+#include <ozz/base/io/archive.h>
+
 #include <cstring>
 
 using namespace ozz::animation::offline;
@@ -16,6 +22,144 @@ struct hierarchy_tree {
 struct hierarchy {
 	RawSkeleton::Joint *joint;
 };
+
+struct hierarchy_build_data {
+	ozz::animation::Skeleton *skeleton;
+	std::vector<ozz::math::Float4x4> matrices;
+};
+
+static int
+ldelhbuild_data(lua_State *L){
+	struct hierarchy_build_data *builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
+	ozz::memory::default_allocator()->Delete(builddata->skeleton);	
+	builddata->skeleton = NULL;
+	return 0;
+}
+
+static inline struct hierarchy_tree*
+get_tree(lua_State *L, int index){
+	if (lua_getuservalue(L, index) != LUA_TTABLE) {
+		luaL_error(L, "Missing cache get_tree");
+	}
+
+	if (lua_geti(L, -1, 0) != LUA_TUSERDATA) {
+		luaL_error(L, "Missing root in the cache");
+	}
+
+	struct hierarchy_tree * tree = (struct hierarchy_tree *)lua_touserdata(L, -1);
+	lua_pop(L, 2);
+
+	return tree;
+}
+
+static int
+lhbuilddata_len(lua_State *L){
+	struct hierarchy_build_data* buildata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
+	lua_pushinteger(L, buildata->skeleton->bind_pose().Count());
+	return 0;
+}
+
+static int
+lhbuilddata_get(lua_State *L){
+	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
+	switch (lua_type(L, 2)){
+		case LUA_TNUMBER:{
+			auto skeleton = builddata->skeleton;
+			int idx = (int)lua_tointeger(L, 2);
+
+			auto joints_num = skeleton->num_joints();
+			if (idx >= joints_num)
+				luaL_error(L, "index out of range, idx is : %d, range is : %d", idx, joints_num);
+
+			auto poses = skeleton->bind_pose();
+			auto names = skeleton->joint_names();
+			assert(names.Count() == poses.Count() * 4);
+
+			auto pose = poses[idx / 4];
+			
+			lua_createtable(L, 0, 4);
+			
+			lua_pushstring(L, names[idx]);
+			lua_setfield(L, -2, "name");
+
+			auto subidx = idx % 4;
+
+			char buffer[4 * sizeof(float) + 15];	// 4 float and 16 bytes align
+#define STACK_ALIGN(_ADDRESS) (float*)(((size_t)((char*)(_ADDRESS) + 15)) & ~0x0f)
+			float *a_buffer = STACK_ALIGN(buffer);
+			//{@	scale
+			lua_createtable(L, 3, 0);
+			auto s = &(pose.scale.x);
+
+			for (auto ii = 0; ii < 3; ++ii){				
+				ozz::math::StorePtr(s[ii], a_buffer);
+				lua_pushnumber(L, a_buffer[subidx]);
+				lua_seti(L, -2, ii + 1);
+			}
+			lua_setfield(L, -2, "s");
+			//@}
+
+			//{@	rotation
+			lua_createtable(L, 4, 0);
+			auto r = &(pose.rotation.x);
+			for (auto ii = 0; ii < 4; ++ii){
+				ozz::math::StorePtr(r[ii], a_buffer);
+				lua_pushnumber(L, a_buffer[subidx]);
+				lua_seti(L, -2, ii + 1);
+			}
+			lua_setfield(L, -2, "r");
+			//@}
+
+			//{@	translation
+			lua_createtable(L, 3, 0);
+			auto t = &(pose.translation.x);
+			for (auto ii = 0; ii < 3; ++ii){
+				ozz::math::StorePtr(t[ii], a_buffer);
+				lua_pushnumber(L, a_buffer[subidx]);
+				lua_seti(L, -2, ii + 1);
+			}
+
+			lua_setfield(L, -2, "t");
+			//@}
+			break;
+		}
+
+		case LUA_TSTRING:{
+			luaL_error(L, "will support if need");
+			break;
+		}
+		default:
+		break;
+	}
+
+	return 1;
+}
+
+static int 
+lhbuild(lua_State *L){
+	struct hierarchy * hnode = (struct hierarchy *)lua_touserdata(L, 1);
+	if (hnode->joint != NULL){
+		luaL_error(L, "Not root node!");
+	}
+
+	struct hierarchy_tree * tree = get_tree(L, 1);
+	lua_pop(L, 1); // pop userdata
+
+	struct hierarchy_build_data *builddata = (struct hierarchy_build_data*)lua_newuserdata(L, sizeof(*builddata));
+
+	if (luaL_newmetatable(L, "HIERARCHY_BUILD_DATA")){
+		lua_pushcfunction(L, ldelhbuild_data);
+		lua_setfield(L, -2, "__gc");
+		lua_pushcfunction(L, lhbuilddata_get);
+		lua_setfield(L, -2, "__index");
+		lua_pushcfunction(L, lhbuilddata_len);
+		lua_setfield(L, -2, "__len");
+	}
+	lua_setmetatable(L, -2);
+	SkeletonBuilder builder;
+	builddata->skeleton = builder(*(tree->skl));	
+	return 1;
+}
 
 static int
 ldelhtree(lua_State *L) {
@@ -29,15 +173,8 @@ RawSkeleton::Joint::Children *
 get_children(lua_State *L, int index) {
 	struct hierarchy * hnode = (struct hierarchy *)lua_touserdata(L, index);
 	if (hnode->joint == NULL) {
-		// It's root
-		if (lua_getuservalue(L, 1) != LUA_TTABLE) {
-			luaL_error(L, "Missing cache get_children");
-		}
-		if (lua_geti(L, -1, 0) != LUA_TUSERDATA) {
-			luaL_error(L, "Missing root in the cache");
-		}
-		struct hierarchy_tree * tree = (struct hierarchy_tree *)lua_touserdata(L, -1);
-		lua_pop(L, 2);
+		struct hierarchy_tree *tree = get_tree(L, 1);
+		assert(tree);
 		return &tree->skl->roots;
 	} else {
 		return &hnode->joint->children;
@@ -52,19 +189,19 @@ lhnodechildren(lua_State *L) {
 }
 
 static void
-change_property(lua_State *L, RawSkeleton::Joint * node, const char * p, int value_index) {
+change_property(lua_State *L, RawSkeleton::Joint * joint, const char * p, int value_index) {
 	if (strcmp(p, "name") == 0) {
 		const char * v = luaL_checkstring(L, value_index);
-		node->name = v;
+		joint->name = v;
 	} else {
 		luaL_error(L, "Invalid property %s", p);
 	}
 }
 
 static int
-get_property(lua_State *L, RawSkeleton::Joint * node, const char * p) {
+get_property(lua_State *L, RawSkeleton::Joint * joint, const char * p) {
 	if (strcmp(p, "name") == 0) {
-		lua_pushstring(L, node->name.c_str());
+		lua_pushstring(L, joint->name.c_str());
 		return 1;
 	} else {
 		return luaL_error(L, "Invalid property %s", p);
@@ -72,12 +209,12 @@ get_property(lua_State *L, RawSkeleton::Joint * node, const char * p) {
 }
 
 static void
-set_properties(lua_State *L, RawSkeleton::Joint * node, int values) {
+set_properties(lua_State *L, RawSkeleton::Joint * joint, int values) {
 	luaL_checktype(L, values, LUA_TTABLE);
 	lua_pushnil(L);
 	while (lua_next(L, values) != 0) {
 		const char * p = luaL_checkstring(L, -2);
-		change_property(L, node, p, -1);
+		change_property(L, joint, p, -1);
 		lua_pop(L, 1);
 	}
 }
@@ -247,7 +384,6 @@ lnewhierarchy(lua_State *L) {
 	node->joint = NULL;
 	luaL_getmetatable(L, "HIERARCHY_NODE");
 	lua_setmetatable(L, -2);
-
 	// stack: HIERARCHY_NODE
 
 	struct hierarchy_tree * tree = (struct hierarchy_tree *)lua_newuserdata(L, sizeof(*tree));
@@ -273,6 +409,7 @@ lnewhierarchy(lua_State *L) {
 	lua_seti(L, -2, 0);	// ref tree object
 
 	lua_pushvalue(L, -1);
+
 	lua_setuservalue(L, -3);	// HIERARCHY_CACHE -> uv of HIERARCHY_TREE
 	lua_setuservalue(L, -3);	// HIERARCHY_CACHE -> uv of HIERARCHY_NODE
 
@@ -296,9 +433,10 @@ luaopen_hierarchy(lua_State *L) {
 	lua_setfield(L, -2, "__index");
 	lua_pushcfunction(L, lhnodechildren);
 	lua_setfield(L, -2, "__len");
-	
+
 	luaL_Reg l[] = {
 		{ "new", lnewhierarchy },
+		{ "build", lhbuild},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

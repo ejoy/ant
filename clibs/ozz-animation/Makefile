@@ -12,7 +12,15 @@ $(OBJDIR) :
 
 SRC = \
  src/animation/offline/raw_skeleton.cc \
+ src/animation/offline/skeleton_builder.cc \
+ src/animation/runtime/skeleton.cc \
  src/base/memory/allocator.cc \
+ src/base/io/archive.cc \
+ src/base/log.cc \
+ src/base/maths/math_archive.cc \
+ src/base/maths/simd_math.cc \
+ src/base/maths/simd_math_archive.cc \
+ src/base/maths/soa_math_archive.cc \
 # animation/runtime/animation.cc \
 # animation/runtime/blending_job.cc \
 # animation/runtime/local_to_model_job.cc \
@@ -20,13 +28,7 @@ SRC = \
 # animation/runtime/skeleton.cc \
 # animation/runtime/skeleton_utils.cc \
 # geometry/skinning_job.cc \
-# base/archive.cc \
 # base/box.cc \
-# base/log.cc \
-# base/math_archive.cc \
-# base/simd_math.cc \
-# base/simd_math_archive.cc \
-# base/soa_math_archive.cc \
 # base/stream.cc \
 # base/string_archive.cc \
 

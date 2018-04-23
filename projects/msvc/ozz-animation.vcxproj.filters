@@ -66,6 +66,30 @@
     <ClCompile Include="..\..\clibs\ozz-animation\src\base\memory\allocator.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\ozz-animation\src\animation\offline\skeleton_builder.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\ozz-animation\src\animation\runtime\skeleton.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\ozz-animation\src\base\log.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\ozz-animation\src\base\io\archive.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\ozz-animation\src\base\maths\math_archive.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\ozz-animation\src\base\maths\simd_math.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\ozz-animation\src\base\maths\simd_math_archive.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\ozz-animation\src\base\maths\soa_math_archive.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\ozz-animation\include\ozz\base\containers\deque.h">

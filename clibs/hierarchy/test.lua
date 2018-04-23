@@ -67,3 +67,19 @@ end
 
 print('-------------------------------')
 print_tree(root, "")
+
+
+print('===============================')
+
+local function print_build(tr)
+    local result = hierarchy.build(tr);
+    for idx, vv in ipairs(result) do
+        print("idx in result : ", idx)
+        print("value ");
+        for k, v in pairs(vv) do
+            print(k, v)
+        end
+    end
+end
+
+print_build(root)
