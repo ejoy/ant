@@ -50,7 +50,7 @@ function add_entity_sys:init()
 
     local sphererender_fn = "mem://sphere.render"
     au.write_to_file(sphererender_fn, [[
-        mesh = "cube.mesh"
+        mesh = "sphere.mesh"
         binding ={material = "mem://cube_material.material",}
         srt = {s={0.01}}
     ]])
@@ -62,7 +62,7 @@ function add_entity_sys:init()
         
         ms(cube.scale.v, {1, 1, 1}, "=")
         ms(cube.position.v, {0, 0, 0, 1}, "=") 
-        ms(cube.rotation.v, {0, 0, 1, 0}, "=")
+        ms(cube.rotation.v, {0, 0, 0}, "=")
 
         local rinfo = asset.load(renderfile) 
         cube.render.info = rinfo
@@ -117,7 +117,7 @@ function add_entity_sys:init()
         local cube_eid = create_entity("h1_cube", cuberender_fn)
         local cube_eid_1 = create_entity("h1_h1_cube", cuberender_fn)
         do
-            local e = world[cube_eid_1]
+            local e = world[cube_eid_1] 
             ms(e.scale.v, {0.5, 0.5, 0.5}, "=")
         end
 

@@ -12,6 +12,7 @@ local support_list = {
 	"render",
 	"tex_mapper",
 	"material",
+	"hierarchy",
 }
 
 local loader = setmetatable({} , {

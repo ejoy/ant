@@ -1,0 +1,12 @@
+root = {
+    {name="root", transform = {}},
+    cube_1 = {
+        {name = "cube_1", transform = {},}
+    },
+    sphere_1 = {
+        
+    },
+    cylinder_1 = {
+
+    }
+}

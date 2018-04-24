@@ -38,10 +38,9 @@ local function bgfx_init()
 
 	local args = {
 		nwh = iup.GetAttributeData(canvas,"HWND"),
-		renderer = nil	-- use default
 	}
 	bgfx.set_platform_data(args)
-	bgfx.init(args.renderer)
+	bgfx.init(args)
 
 	hw_caps.init()
 	init_flag = true
