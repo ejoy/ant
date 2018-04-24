@@ -42,7 +42,7 @@ get_tree(lua_State *L, int index){
 		luaL_error(L, "Missing cache in get_tree");
 	}
 
-	if (lua_geti(L, -1, 0) != LUA_TUSERDATA) {
+	if (lua_geti(L, -1, 1) != LUA_TUSERDATA) {
 		luaL_error(L, "Missing root in get_tree");
 	}
 
@@ -151,24 +151,10 @@ ldelhtree(lua_State *L) {
 
 RawSkeleton::Joint::Children *
 get_children(lua_State *L, int index) {
-<<<<<<< HEAD
 	struct hierarchy * hnode = (struct hierarchy *)lua_touserdata(L, index);
 	if (hnode->joint == NULL) {
 		struct hierarchy_tree *tree = get_tree(L, 1);
 		assert(tree);
-=======
-	struct hierarchy * node = (struct hierarchy *)lua_touserdata(L, index);
-	if (node->node == NULL) {
-		// It's root
-		if (lua_getuservalue(L, 1) != LUA_TTABLE) {
-			luaL_error(L, "Missing cache");
-		}
-		if (lua_rawgeti(L, -1, 1) != LUA_TUSERDATA) {
-			luaL_error(L, "Missing root in the cache");
-		}
-		struct hierarchy_tree * tree = (struct hierarchy_tree *)lua_touserdata(L, -1);
-		lua_pop(L, 2);
->>>>>>> master
 		return &tree->skl->roots;
 	} else {
 		return &hnode->joint->children;
@@ -368,7 +354,7 @@ push_hierarchy_node(lua_State *L, RawSkeleton::Joint *joint){
 static int
 linvalidnode(lua_State *L) {
 	struct hierarchy * h = (struct hierarchy *)luaL_checkudata(L,1,"HIERARCHY_NODE");
-	lua_pushboolean(L, h->node == NULL);
+	lua_pushboolean(L, h->joint == NULL);
 	return 1;
 }
 
@@ -464,11 +450,8 @@ luaopen_hierarchy(lua_State *L) {
 
 	luaL_Reg l[] = {
 		{ "new", lnewhierarchy },
-<<<<<<< HEAD
-		{"build", lbuild},
-=======
 		{ "invalid", linvalidnode },
->>>>>>> master
+		{ "build", lbuild},		
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
