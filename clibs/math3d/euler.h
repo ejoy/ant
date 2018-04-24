@@ -13,7 +13,7 @@ euler_array(struct euler *e) {
 	return &e->yaw;
 }
 
-static inline void
+static inline struct euler *
 euler_to_degree(struct euler *e) {
 	if (e->yaw)
 		e->yaw = TO_DEGREE(e->yaw);
@@ -21,6 +21,19 @@ euler_to_degree(struct euler *e) {
 		e->pitch = TO_DEGREE(e->pitch);
 	if (e->roll)
 		e->roll = TO_DEGREE(e->roll);
+	return e;
+}
+
+static inline struct euler *
+euler_to_radian(struct euler *e) {
+	if (e->yaw)
+		e->yaw = TO_RADIAN(e->yaw);
+	if (e->pitch)
+		e->pitch = TO_RADIAN(e->pitch);
+	if (e->roll)
+		e->roll = TO_RADIAN(e->roll);
+
+	return e;
 }
 
 static inline int

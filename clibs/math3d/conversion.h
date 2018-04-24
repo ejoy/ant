@@ -13,4 +13,7 @@ matrix44_to_euler(const union matrix44 *m, struct euler *e);
 extern struct quaternion*
 euler_to_quaternion(const struct euler *e, struct quaternion *q);
 
+extern struct euler*
+quaternion_to_euler(const struct quaternion *q, struct euler *e);
+
 #endif //ejoy_conversion_h

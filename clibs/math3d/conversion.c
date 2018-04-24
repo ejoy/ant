@@ -7,7 +7,8 @@
 #define C m->c
 union matrix44*
 euler_to_matrix44(const struct euler *e, union matrix44 *m) {
-    
+	// the actually order is : 
+	// roll -> pitch -> yaw	
 	const float p = TO_RADIAN(e->pitch);
 	const float y = TO_RADIAN(e->yaw);
 	const float r = TO_RADIAN(e->roll);
@@ -65,9 +66,9 @@ matrix44_to_euler(const union matrix44 *m, struct euler *e) {
 	//float sp = -C[2][1];
     float sp = -row2.y;
 	if (sp <= -1.f)
-		e->pitch = -1.57076f;
+		e->pitch = -M_PI_2;
 	else if (sp >= 1.f)
-		e->pitch = 1.57076f;
+		e->pitch = M_PI_2;
 	else
 		e->pitch = asinf(sp);
 
@@ -103,5 +104,37 @@ matrix44_to_euler(const union matrix44 *m, struct euler *e) {
 
 struct quaternion*
 euler_to_quaternion(const struct euler *e, struct quaternion *q) {
+	// same with euler_to_matrix, the order is : 
+	// roll -> pitch -> yaw
+	const float p = TO_RADIAN(e->pitch) * 0.5f;
+	const float y = TO_RADIAN(e->yaw) * 0.5f;
+	const float r = TO_RADIAN(e->roll) * 0.5f;
+
+	const float cr = cosf(r), sr = sinf(r);
+	const float cy = cosf(y), sy = sinf(y);
+	const float cp = cosf(p), sp = sinf(p);
+
+	q->x = cy * cp * cr + sy * sp * sr;
+	q->y = cy * sp * cr + sy * cp * sr;
+	q->z = sy * cp * cr - cy * sp * cr;
+	q->w = cy * cp * sr - sy * sp * cr;
+
     return q;
 }
+
+ extern struct euler*
+ quaternion_to_euler(const struct quaternion *q, struct euler *e){
+	float sp = -2.f * (q->y * q->z - q->w * q->x);
+	if (fabs(sp) > 0.9999f){
+		e->pitch = M_PI_2 * sp;
+		e->yaw = atan2f(-q->x * q->z + q->w * q->y, 0.5f - q->y * q->y - q->z * q->z);
+		e->roll = 0.f;
+	} else {
+		e->pitch 	= asinf(sp);
+		e->yaw 		= atan2f(q->x * q->z + q->w * q->y, 0.5f - q->x * q->x - q->y * q->y);
+		e->roll 	= atan2f(q->x * q->y + q->w * q->z, 0.5f - q->x * q->x - q->z * q->z);
+	}
+
+	return euler_to_degree(e);
+	 
+ }

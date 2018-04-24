@@ -620,10 +620,10 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 	}
 	case 4:	{
 		const char* type = get_type_field(L, index);
-		if (type != NULL && strcmp(type, "quat") == 0)
+		if (type != NULL && (strcmp(type, "quat") == 0 || strcmp(type, "q") == 0))
 			lastack_pushquat(LS, v);
 		else
-			lastack_pushvec4(LS, v);				
+			lastack_pushvec4(LS, v);
 		break;
 	}		
 	case 16:
@@ -1050,18 +1050,29 @@ convert_to_euler(lua_State *L, struct lastack*LS) {
 	int type;
 	float *value = lastack_value(LS, id, &type);
 	struct euler e = { 0 };
-	if (lastack_is_vec_type(type)) {
-		struct vector3 v = { value[0], value[1], value[2] };
-		vector3_normalize(&v);
-		vector3_to_rotation(&e, &v);
-		euler_to_degree(&e);
-	} else if (type == LINEAR_TYPE_MAT){
-		const union matrix44 *mat = (const union matrix44*)value;
-		matrix44_to_euler(mat, &e);
-	} else {
-		luaL_error(L, "not support for converting to euler, type is : %d", type);
+	switch (type) {
+		case LINEAR_TYPE_VEC3:
+		case LINEAR_TYPE_VEC4:{
+			struct vector3 v = { value[0], value[1], value[2] };
+			vector3_normalize(&v);
+			vector3_to_rotation(&e, &v);
+			euler_to_degree(&e);
+			break;
+		}
+		case LINEAR_TYPE_MAT:{
+			const union matrix44 *mat = (const union matrix44*)value;
+			matrix44_to_euler(mat, &e);
+			break;
+		}
+		case LINEAR_TYPE_QUAT:{
+			quaternion_to_euler((const struct quaternion *)value, &e);
+			break;
+		}
+		default:
+			luaL_error(L, "not support for converting to euler, type is : %d", type);
+			break;
 	}
-
+	
 	lastack_pusheuler(LS, euler_array(&e));
 }
 
