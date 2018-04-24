@@ -4,6 +4,8 @@ local root = hierarchy.new()
 
 root[1] = { name = "child" }
 
+collectgarbage "collect"
+
 print(root[1])
 
 root[1].name = "foobar"
@@ -22,5 +24,4 @@ for i, v in ipairs(root) do
 end
 
 print(new.name)
-print(old)	-- Invalid node
-print(old.name)	-- Invalid node
+assert(hierarchy.invalid(old))	-- Invalid node
