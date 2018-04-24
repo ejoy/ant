@@ -3,10 +3,9 @@ local elog = require "editor.log"
 local ecs = require "ecs"
 local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
-local db = require "debugger"
-local task = require "editor.task"
 local bgfx = require "bgfx"
-local hw_caps = require "render.hardware_caps"
+local rhwi = require "render.hardware_interface"
+local scene = require "scene.util"
 local assimplua = require"assimplua"
 local render_mesh = require "modelloader.rendermesh"
 local path = require "filesystem.path"
@@ -21,8 +20,9 @@ end
 local filetree = require "modelloader.filetree"
 --先测试bgfx的使用
 --画布,渲染模型场景
+local fb_width, fb_height = 1024, 768
 local canvas = iup.canvas{
-    rastersize = "1024x768"
+    rastersize = fb_width .. "x" .. fb_height
 }
 
 --菜单栏,用于基本文件操作
@@ -122,50 +122,9 @@ local world
 
 --初始化系统
 local function init()
-    --初始化bgfx
-    --todo：深入研究bgfx-lua binding
-    local function bgfx_init()
-        local args = {
-            nwh = iup.GetAttributeData(canvas,"HWND"),
-            renderer = nil	-- use default
-        }
-        bgfx.set_platform_data(args)
-        bgfx.init(args)
-
-        hw_caps.init()
-    end
-    bgfx_init()
-
-
-    --在ecs系统中添加新的世界
-    --todo: 深入研究ecs这段的含义
-    world = ecs.new_world {
-        modules = {
-            assert(loadfile "libs/modelloader/renderworld.lua"),
-            --[[
-            assert(loadfile "libs/inputmgr/message_system.lua"),
-            assert(loadfile "libs/render/add_entity_system.lua"),
-            assert(loadfile "libs/render/math3d/math_component.lua"),
-            assert(loadfile "libs/render/material/material_component.lua"),
-            assert(loadfile "libs/render/mesh_component.lua"),
-            assert(loadfile "libs/render/viewport_component.lua"),
-            assert(loadfile "libs/render/camera/camera_component.lua"),
-            assert(loadfile "libs/render/camera/camera_system.lua"),
-            assert(loadfile "libs/render/camera/camera_controller.lua"),
-            assert(loadfile "libs/render/renderpipeline.lua"),
-            --]]
-        },
-        args = { mq = input_queue },
-    }
-
-    --将新的系统加入给task管理,后面是回调
-    task.loop(world.update,
-            function ()
-                local trace = db.traceback()
-                elog.print(trace)
-                elog.active_error()
-            end)
-    --]]]
+    rhwi.init(iup.GetAttributeData(canvas,"HWND"), fb_width, fb_height)
+    local module_description_file = ""
+    scene.start_new_world(input_queue, module_description_file)
 end
 
 --画布大小改变

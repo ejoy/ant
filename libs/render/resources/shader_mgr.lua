@@ -2,14 +2,13 @@ local require = import and import(...) or require
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
-local hw_caps = require "render.hardware_caps"
-local fs = require "filesystem"
+local rhwi = require "render.hardware_interface"
 local toolset = require "editor.toolset"
 local path = require "filesystem.path"
 
 -- init
 local function get_caps_path()
-    local caps = hw_caps.get()
+    local caps = rhwi.get_caps()
     local paths = {
         NOOP       = "dx9",
         DIRECT3D9  = "dx9",
