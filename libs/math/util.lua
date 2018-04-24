@@ -31,12 +31,16 @@ local function to_v(ms, math_id)
 end
 
 function util.srt(ms, s, r, t, ispersistent)
-	local t = {type="srt", s=s, r=r, t=t}
+	local srt = {type="srt", s=s, r=r, t=t}
 	if ispersistent then
-		return create_persistent_type("matrix", t)
+		return create_persistent_type("matrix", srt)
 	end
 
-	return ms(t, "P")
+	return ms(srt, "P")
+end
+
+function util.srt_from_entity(ms, entity)
+	return util.srt(ms, entity.scale.v, entity.rotation.v, entity.position.v)
 end
 
 function util.srt_v(ms, s, r, t, ispersistent)

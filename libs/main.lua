@@ -5,7 +5,6 @@ local ecs = require "ecs"
 local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
 local elog = require "editor.log"
-local redirect = require "filesystem.redirect"
 local db = require "debugger"
 local hw_caps = require "render.hardware_caps"
 local task = require "editor.task"
@@ -54,6 +53,9 @@ local function init()
 	world = ecs.new_world {
 		modules = { 
 			assert(loadfile "libs/inputmgr/message_system.lua"),
+			assert(loadfile "libs/scene/hierarchy.lua"),
+			assert(loadfile "libs/scene/filter_component.lua"),
+			assert(loadfile "libs/scene/filter_system.lua"),
 			assert(loadfile "libs/render/constant_system.lua"),
 			assert(loadfile "libs/render/add_entity_system.lua"),	-- for test
 			assert(loadfile "libs/render/editor/general_editor_entities.lua"),	-- editor			
