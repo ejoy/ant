@@ -107,6 +107,7 @@
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_DEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua;$(BGFX_DIR)/bgfx/include;$(BGFX_DIR)/bx/include;$(BGFX_DIR)/bgfx/3rdparty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -124,6 +125,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua;$(BGFX_DIR)/bgfx/include;$(BGFX_DIR)/bx/include;$(BGFX_DIR)/bgfx/3rdparty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -143,6 +145,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua;$(BGFX_DIR)/bgfx/include;$(BGFX_DIR)/bx/include;$(BGFX_DIR)/bgfx/3rdparty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -164,6 +167,7 @@
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;NDEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua;$(BGFX_DIR)/bgfx/include;$(BGFX_DIR)/bx/include;$(BGFX_DIR)/bgfx/3rdparty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -139,6 +139,51 @@ static void
 cb_capture_frame(bgfx_callback_interface_t* self, const void* _data, uint32_t _size) {
 }
 
+static uint32_t
+reset_flags(lua_State *L, int index) {
+	const char * flags = lua_tostring(L, index);
+	uint32_t f = BGFX_RESET_NONE;
+	if (flags) {
+		int i;
+		for (i=0;flags[i];i++) {
+			switch(flags[i]) {
+			case 'f' : f |= BGFX_RESET_FULLSCREEN; break;
+			case 'v' : f |= BGFX_RESET_VSYNC; break;
+			case 'a' : f |= BGFX_RESET_MAXANISOTROPY; break;
+			case 'c' : f |= BGFX_RESET_CAPTURE; break;
+			case 'h' : f |= BGFX_RESET_HMD; break;
+			case 'd' : f |= BGFX_RESET_HMD_DEBUG; break;
+			case 'r' : f |= BGFX_RESET_HMD_RECENTER; break;
+			case 'u' : f |= BGFX_RESET_FLUSH_AFTER_RENDER; break;
+			case 'i' : f |= BGFX_RESET_FLIP_AFTER_RENDER; break;
+			case 's' : f |= BGFX_RESET_SRGB_BACKBUFFER; break;
+			case 'm' :
+				++i;
+				switch (flags[i]) {
+				case '2' : f |= BGFX_RESET_MSAA_X2; break;
+				case '4' : f |= BGFX_RESET_MSAA_X4; break;
+				case '8' : f |= BGFX_RESET_MSAA_X8; break;
+				case 'x' : f |= BGFX_RESET_MSAA_X16; break;
+				default:
+					return luaL_error(L, "Invalid MSAA %c", flags[i]);
+				}
+				break;
+			default:
+				return luaL_error(L, "Invalid reset flag %c", flags[i]);
+			}
+		}
+	}
+	return f;
+}
+
+static void
+read_uint32(lua_State *L, int index, const char * key, uint32_t *v) {
+	if (lua_getfield(L, index, key) == LUA_TNUMBER) {
+		*v = luaL_checkinteger(L, -1);
+	}
+	lua_pop(L, 1);
+}
+
 static int
 linit(lua_State *L) {
 	static bgfx_callback_vtbl_t vtbl = {
@@ -160,16 +205,45 @@ linit(lua_State *L) {
 	cb->base.vtbl = &vtbl;
 	cb->L = luaL_newstate();
 
-	bgfx_renderer_type_t id = BGFX_RENDERER_TYPE_COUNT;
+	bgfx_init_t init;
+
+	init.type = BGFX_RENDERER_TYPE_COUNT;
+	init.vendorId = BGFX_PCI_ID_NONE;
+	init.deviceId = 0;
+
+	init.resolution.width = 1280;
+	init.resolution.height = 720;
+	init.resolution.reset = BGFX_RESET_NONE;	// reset flags
+
+	init.limits.maxEncoders     = 8;	// BGFX_CONFIG_DEFAULT_MAX_ENCODERS;
+	init.limits.transientVbSize = (6<<20);	// BGFX_CONFIG_TRANSIENT_VERTEX_BUFFER_SIZE
+	init.limits.transientIbSize = (2<<20);	// BGFX_CONFIG_TRANSIENT_INDEX_BUFFER_SIZE;
+
+	init.callback = &cb->base;
+	init.allocator = NULL;
+
 	if (!lua_isnoneornil(L, 1)) {
-		id = renderer_type_id(L, 1);
+		luaL_checktype(L, 1, LUA_TTABLE);
+		lua_settop(L, 1);
+		if (lua_getfield(L, 1, "renderer") == LUA_TSTRING) {
+			init.type = renderer_type_id(L, 2);
+		}
+		lua_pop(L, 1);
+		read_uint32(L, 1, "width", &init.resolution.width);
+		read_uint32(L, 1, "height", &init.resolution.height);
+		if (lua_getfield(L, 1, "reset") == LUA_TSTRING) {
+			init.resolution.reset = reset_flags(L, -1);
+		}
+		lua_pop(L, 1);
+		if (lua_getfield(L, 1, "maxEncoders") == LUA_TNUMBER) {
+			init.limits.maxEncoders = luaL_checkinteger(L, -1);
+		}
+		lua_pop(L, 1);
+		read_uint32(L, 1, "transientVbSize", &init.limits.transientVbSize);
+		read_uint32(L, 1, "transientIbSize", &init.limits.transientIbSize);
 	}
-	if (!bgfx_init(id
-			, BGFX_PCI_ID_NONE
-			, 0
-			, &cb->base
-			, NULL
-			)) {
+
+	if (!bgfx_init(&init)) {
 		lua_close(cb->L);
 		return luaL_error(L, "bgfx init failed");
 	}
@@ -393,7 +467,7 @@ push_texture_formats(lua_State *L, const uint16_t *formats) {
 
 static void
 push_limits(lua_State *L, const bgfx_caps_limits_t *lim) {
-	lua_createtable(L, 0, 18);
+	lua_createtable(L, 0, 22);
 #define PUSH_LIMIT(what) lua_pushinteger(L, lim->what); lua_setfield(L, -2, #what);
 
 	PUSH_LIMIT(maxDrawCalls)
@@ -415,6 +489,9 @@ push_limits(lua_State *L, const bgfx_caps_limits_t *lim) {
 	PUSH_LIMIT(maxDynamicVertexBuffers)
 	PUSH_LIMIT(maxUniforms)
 	PUSH_LIMIT(maxOcclusionQueries)
+	PUSH_LIMIT(maxEncoders)
+	PUSH_LIMIT(transientVbSize)
+	PUSH_LIMIT(transientIbSize)
 }
 
 static int
@@ -493,6 +570,8 @@ lgetStats(lua_State *L) {
 	case 'm': // memories
 		PUSHSTAT(textureMemoryUsed);
 		PUSHSTAT(rtMemoryUsed);
+		PUSHSTAT(transientVbUsed);
+		PUSHSTAT(transientIbUsed);
 		break;
 	case 't':	// timers
 		PUSHSTAT(waitSubmit); break;
@@ -558,38 +637,7 @@ static int
 lreset(lua_State *L) {
 	int width = luaL_checkinteger(L, 1);
 	int height = luaL_checkinteger(L, 2);
-	const char * flags = lua_tostring(L, 3);
-	uint32_t f = BGFX_RESET_NONE;
-	if (flags) {
-		int i;
-		for (i=0;flags[i];i++) {
-			switch(flags[i]) {
-			case 'f' : f |= BGFX_RESET_FULLSCREEN; break;
-			case 'v' : f |= BGFX_RESET_VSYNC; break;
-			case 'a' : f |= BGFX_RESET_MAXANISOTROPY; break;
-			case 'c' : f |= BGFX_RESET_CAPTURE; break;
-			case 'h' : f |= BGFX_RESET_HMD; break;
-			case 'd' : f |= BGFX_RESET_HMD_DEBUG; break;
-			case 'r' : f |= BGFX_RESET_HMD_RECENTER; break;
-			case 'u' : f |= BGFX_RESET_FLUSH_AFTER_RENDER; break;
-			case 'i' : f |= BGFX_RESET_FLIP_AFTER_RENDER; break;
-			case 's' : f |= BGFX_RESET_SRGB_BACKBUFFER; break;
-			case 'm' :
-				++i;
-				switch (flags[i]) {
-				case '2' : f |= BGFX_RESET_MSAA_X2; break;
-				case '4' : f |= BGFX_RESET_MSAA_X4; break;
-				case '8' : f |= BGFX_RESET_MSAA_X8; break;
-				case 'x' : f |= BGFX_RESET_MSAA_X16; break;
-				default:
-					return luaL_error(L, "Invalid MSAA %c", flags[i]);
-				}
-				break;
-			default:
-				return luaL_error(L, "Invalid reset flag %c", flags[i]);
-			}
-		}
-	}
+	uint32_t f = reset_flags(L, 3);
 	bgfx_reset(width, height, f); 
 	return 0;
 }
@@ -1591,7 +1639,7 @@ NORMALIZE(float v[3]) {
 static void
 calc_targent_vb(lua_State *L, const bgfx_memory_t *mem, bgfx_vertex_decl_t *vd, int index) {
 	void *vertices = mem->data;
-	int numVertices = mem->size / vd->stride;
+	uint32_t numVertices = mem->size / vd->stride;
 	const uint16_t *indices;
 	uint32_t numIndices;
 	float *tangents;
@@ -1605,7 +1653,7 @@ calc_targent_vb(lua_State *L, const bgfx_memory_t *mem, bgfx_vertex_decl_t *vd, 
 		numIndices = lua_rawlen(L, index);
 		uint8_t * tmp = lua_newuserdata(L, 6*numVertices + numIndices * 2);
 		uint16_t * ind = (uint16_t *)(tmp + 6*numVertices);
-		int i;
+		uint32_t i;
 		for (i=0;i<numIndices;i++) {
 			if (lua_geti(L, index, i+1) != LUA_TNUMBER) {
 				luaL_error(L, "Invalid index buffer data table");
@@ -2259,7 +2307,7 @@ lsetIDB(lua_State *L) {
 	uint32_t num = UINT32_MAX;
 	if (lua_isnumber(L, 2)) {
 		num = lua_tointeger(L, 2);
-		if (num >= v->num) {
+		if (num >= (uint32_t)v->num) {
 			return luaL_error(L, "Invalid instance data buffer num %d/%d",num, v->num);
 		}
 	}

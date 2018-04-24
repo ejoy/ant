@@ -14,6 +14,7 @@ print(root[1].name)
 
 local child = root[1]
 child.name = "foobar"
+collectgarbage "collect"
 
 print(child.name)
 
@@ -100,3 +101,4 @@ local function print_build(tr)
 end
 
 print_build(root)
+assert(hierarchy.invalid(old))	-- Invalid node

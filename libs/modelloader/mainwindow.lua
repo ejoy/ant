@@ -65,7 +65,7 @@ function item_export:action()
     if(tonumber(export_dlg.status) ~= -1) then
         local in_path = export_dlg.value
         if(in_path) then
-            --导出路径暂时不可自定义,放在导入目录里面            
+            --导出路径暂时不可自定义,放在导入目录里面
             --local out_path = string.gsub(in_path, ".fbx", function(s) return ".bin" end)
             local out_path = path.replace_ext(in_path, "bin")
             assimplua.assimp_import(in_path, out_path)
@@ -130,7 +130,7 @@ local function init()
             renderer = nil	-- use default
         }
         bgfx.set_platform_data(args)
-        bgfx.init(args.renderer)
+        bgfx.init(args)
 
         hw_caps.init()
     end

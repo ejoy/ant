@@ -151,10 +151,24 @@ ldelhtree(lua_State *L) {
 
 RawSkeleton::Joint::Children *
 get_children(lua_State *L, int index) {
+<<<<<<< HEAD
 	struct hierarchy * hnode = (struct hierarchy *)lua_touserdata(L, index);
 	if (hnode->joint == NULL) {
 		struct hierarchy_tree *tree = get_tree(L, 1);
 		assert(tree);
+=======
+	struct hierarchy * node = (struct hierarchy *)lua_touserdata(L, index);
+	if (node->node == NULL) {
+		// It's root
+		if (lua_getuservalue(L, 1) != LUA_TTABLE) {
+			luaL_error(L, "Missing cache");
+		}
+		if (lua_rawgeti(L, -1, 1) != LUA_TUSERDATA) {
+			luaL_error(L, "Missing root in the cache");
+		}
+		struct hierarchy_tree * tree = (struct hierarchy_tree *)lua_touserdata(L, -1);
+		lua_pop(L, 2);
+>>>>>>> master
 		return &tree->skl->roots;
 	} else {
 		return &hnode->joint->children;
@@ -278,6 +292,7 @@ remove_child(lua_State *L, int index, RawSkeleton::Joint::Children * c, size_t c
 		struct hierarchy *h = (struct hierarchy *)lua_touserdata(L, -1);
 		h->joint = NULL;
 		lua_pushnil(L);
+		// HIERARCHY_NODE nil
 		lua_setuservalue(L, -2);
 	}
 	lua_pop(L, 1);
@@ -351,6 +366,13 @@ push_hierarchy_node(lua_State *L, RawSkeleton::Joint *joint){
 }
 
 static int
+linvalidnode(lua_State *L) {
+	struct hierarchy * h = (struct hierarchy *)luaL_checkudata(L,1,"HIERARCHY_NODE");
+	lua_pushboolean(L, h->node == NULL);
+	return 1;
+}
+
+static int
 lhnodeget(lua_State *L) {
 	assert(lua_type(L, 1) == LUA_TUSERDATA);
 	int keytype = lua_type(L, 2);
@@ -397,6 +419,15 @@ lnewhierarchy(lua_State *L) {
 	lua_setmetatable(L, -2);
 	// stack: HIERARCHY_NODE
 
+	lua_createtable(L,1,0);
+	if (luaL_newmetatable(L, "HIERARCHY_CACHE")) {
+		lua_pushstring(L, "v");
+		lua_setfield(L, -2, "__mode");
+	}
+	lua_setmetatable(L, -2);
+
+	// stack: HIERARCHY_NODE HIERARCHY_CACHE
+
 	struct hierarchy_tree * tree = (struct hierarchy_tree *)lua_newuserdata(L, sizeof(*tree));
 	tree->skl = new RawSkeleton;
 	if (luaL_newmetatable(L, "HIERARCHY_TREE")) {
@@ -405,28 +436,14 @@ lnewhierarchy(lua_State *L) {
 	}
 	lua_setmetatable(L, -2);
 
-	// stack: HIERARCHY_NODE HIERARCHY_TREE
-
-	lua_newtable(L);
-	if (luaL_newmetatable(L, "HIERARCHY_CACHE")) {
-		lua_pushstring(L, "kv");
-		lua_setfield(L, -2, "__mode");
-	}
-	lua_setmetatable(L, -2);
-
-	// stack: HIERARCHY_NODE HIERARCHY_TREE HIERARCHY_CACHE
-
-	lua_pushvalue(L, -2);
-	lua_seti(L, -2, 0);	// ref tree object
-
 	lua_pushvalue(L, -1);
+	lua_pushboolean(L, 1);
+	// stack: HIERARCHY_NODE HIERARCHY_CACHE HIERARCHY_TREE HIERARCHY_TREE true
+	lua_rawset(L, -4);	// HIERARCHY_CACHE[HIERARCHY_TREE] = true
+	// stack: HIERARCHY_NODE HIERARCHY_CACHE HIERARCHY_TREE
+	lua_rawseti(L, -2, 1);	// HIERARCHY_CACHE[1] = HIERARCHY_TREE
 
-	lua_setuservalue(L, -3);	// HIERARCHY_CACHE -> uv of HIERARCHY_TREE
-	lua_setuservalue(L, -3);	// HIERARCHY_CACHE -> uv of HIERARCHY_NODE
-
-	// stack: HIERARCHY_NODE HIERARCHY_TREE
-
-	lua_pop(L, 1);
+	lua_setuservalue(L, -2);	// HIERARCHY_CACHE -> uv of HIERARCHY_NODE
 	
 	// return HIERARCHY_NODE
 	return 1;
@@ -447,7 +464,11 @@ luaopen_hierarchy(lua_State *L) {
 
 	luaL_Reg l[] = {
 		{ "new", lnewhierarchy },
+<<<<<<< HEAD
 		{"build", lbuild},
+=======
+		{ "invalid", linvalidnode },
+>>>>>>> master
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
