@@ -213,7 +213,7 @@ linit(lua_State *L) {
 
 	init.resolution.width = 1280;
 	init.resolution.height = 720;
-	init.resolution.flags = BGFX_RESET_NONE;	// reset flags
+	init.resolution.reset = BGFX_RESET_NONE;	// reset flags
 
 	init.limits.maxEncoders     = 8;	// BGFX_CONFIG_DEFAULT_MAX_ENCODERS;
 	init.limits.transientVbSize = (6<<20);	// BGFX_CONFIG_TRANSIENT_VERTEX_BUFFER_SIZE
@@ -232,7 +232,7 @@ linit(lua_State *L) {
 		read_uint32(L, 1, "width", &init.resolution.width);
 		read_uint32(L, 1, "height", &init.resolution.height);
 		if (lua_getfield(L, 1, "reset") == LUA_TSTRING) {
-			init.resolution.flags = reset_flags(L, -1);
+			init.resolution.reset = reset_flags(L, -1);
 		}
 		lua_pop(L, 1);
 		if (lua_getfield(L, 1, "maxEncoders") == LUA_TNUMBER) {
@@ -1639,7 +1639,7 @@ NORMALIZE(float v[3]) {
 static void
 calc_targent_vb(lua_State *L, const bgfx_memory_t *mem, bgfx_vertex_decl_t *vd, int index) {
 	void *vertices = mem->data;
-	int numVertices = mem->size / vd->stride;
+	uint32_t numVertices = mem->size / vd->stride;
 	const uint16_t *indices;
 	uint32_t numIndices;
 	float *tangents;
@@ -1653,7 +1653,7 @@ calc_targent_vb(lua_State *L, const bgfx_memory_t *mem, bgfx_vertex_decl_t *vd, 
 		numIndices = lua_rawlen(L, index);
 		uint8_t * tmp = lua_newuserdata(L, 6*numVertices + numIndices * 2);
 		uint16_t * ind = (uint16_t *)(tmp + 6*numVertices);
-		int i;
+		uint32_t i;
 		for (i=0;i<numIndices;i++) {
 			if (lua_geti(L, index, i+1) != LUA_TNUMBER) {
 				luaL_error(L, "Invalid index buffer data table");
@@ -2307,7 +2307,7 @@ lsetIDB(lua_State *L) {
 	uint32_t num = UINT32_MAX;
 	if (lua_isnumber(L, 2)) {
 		num = lua_tointeger(L, 2);
-		if (num >= v->num) {
+		if (num >= (uint32_t)v->num) {
 			return luaL_error(L, "Invalid instance data buffer num %d/%d",num, v->num);
 		}
 	}
