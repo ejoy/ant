@@ -1,18 +1,19 @@
 dofile "libs/init.lua"
 
 local bgfx = require "bgfx"
-local ecs = require "ecs"
 local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
+local rhwi = require "render.hardware_interface"
 local elog = require "editor.log"
-local db = require "debugger"
-local hw_caps = require "render.hardware_caps"
-local task = require "editor.task"
+local scene = require "scene.util"
 
 iup.SetGlobal("UTF8MODE", "YES")
 
+local fb_width = 1280
+local fb_height = 720
+
 local canvas = iup.canvas {
-	rastersize = "1280x720",
+	rastersize = fb_width .. "x" .. fb_height
 --	size = "HALFxHALF",
 }
 
@@ -27,61 +28,12 @@ local dlg = iup.dialog {
 }
 
 local input_queue = inputmgr.queue(mapiup)
-local world
 
 input_queue:register_iup(canvas)
 
-local init_flag = nil
-
-local function bgfx_init()
-	assert(init_flag == nil)
-
-	local args = {
-		nwh = iup.GetAttributeData(canvas,"HWND"),
-	}
-	bgfx.set_platform_data(args)
-	bgfx.init(args)
-
-	hw_caps.init()
-	init_flag = true
-end
-
 local function init()
-	bgfx_init()
-	
-	world = ecs.new_world {
-		modules = { 
-			assert(loadfile "libs/inputmgr/message_system.lua"),
-			assert(loadfile "libs/scene/hierarchy.lua"),
-			assert(loadfile "libs/scene/filter_component.lua"),
-			assert(loadfile "libs/scene/filter_system.lua"),
-			assert(loadfile "libs/render/constant_system.lua"),
-			assert(loadfile "libs/render/add_entity_system.lua"),	-- for test
-			assert(loadfile "libs/render/editor/general_editor_entities.lua"),	-- editor			
-			assert(loadfile "libs/render/window_component.lua"),
-			assert(loadfile "libs/render/components/general.lua"),			
-			assert(loadfile "libs/render/math3d/math_component.lua"),			
-			assert(loadfile "libs/render/camera/camera_component.lua"),
-			assert(loadfile "libs/render/camera/camera_controller.lua"),
-			assert(loadfile "libs/render/view_system.lua"),
-			assert(loadfile "libs/render/entity_rendering_system.lua"),
-			assert(loadfile "libs/render/pick/pickup_system.lua"),
-			assert(loadfile "libs/render/pick/obj_trans_controller.lua"),
-			assert(loadfile "libs/render/end_frame_system.lua"),
-		},		
-		update_bydepend = true,
-		args = { mq = input_queue },
-	}
-
-
-	task.loop(world.update,	
-	function (co, status)
-		local trace = db.traceback(co)
-		elog.print(status)
-		elog.print("\n")
-		elog.print(trace)
-		elog.active_error()
-	end)
+	rhwi.init(iup.GetAttributeData(canvas,"HWND"), fb_width, fb_height)	
+	scene.start_new_world(input_queue, "test_world.module")
 end
 
 function canvas:resize_cb(w,h)

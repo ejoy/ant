@@ -8,13 +8,17 @@ local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
 local elog = require "editor.log"
 local db = require "debugger"
-local hw_caps = require "render.hardware_caps"
+local rhwi = require "render.hardware_interface"
+local scene = require "scene.util"
 local task = require "editor.task"
+local au = require "asset.util"
 
 iup.SetGlobal("UTF8MODE", "YES")
 
+local fb_width, fb_height = 1024, 768
+
 local canvas = iup.canvas {
-	rastersize = "1024x768",
+	rastersize = fb_width .. "x" .. fb_height
 --	size = "HALFxHALF",
 }
 
@@ -34,30 +38,10 @@ local world
 input_queue:register_iup(canvas)
 
 local function init()
-	local function bgfx_init()
-		local args = {
-			nwh = iup.GetAttributeData(canvas,"HWND"),
-			renderer = nil	-- use default
-		}
-		bgfx.set_platform_data(args)
-		bgfx.init(args)
-
-		hw_caps.init()
-	end
-	bgfx_init()
-
-	world = ecs.new_world {
-		modules = {
-			assert(loadfile "test/system/simple_system.lua"),
-		},
-		args = { mq = input_queue },
-	}
-	task.loop(world.update,
-	function ()
-		local trace = db.traceback()
-		elog.print(trace)
-		elog.active_error()
-	end)
+	rhwi.init(iup.GetAttributeData(canvas,"HWND"), 1280, 720)
+	local module_description_file = "mem://simple.module"
+	au.write_to_file([[module = {"test/system/simple_system.lua"}]])
+	scene.start_new_world(input_queue, module_description_file)
 end
 
 function canvas:resize_cb(w,h)
