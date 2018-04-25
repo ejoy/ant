@@ -1,5 +1,8 @@
 modules = {
     "libs/inputmgr/message_system.lua",
+    "libs/scene/hierarchy.lua",
+    "libs/scene/filter_component.lua",
+    "libs/scene/filter_system.lua",
     "libs/render/constant_system.lua",
     "libs/render/add_entity_system.lua",	-- for test
     "libs/render/editor/general_editor_entities.lua",	-- editor			

@@ -48,26 +48,11 @@ function util.draw_scene(vid, world, ms)
     end
 end
 
-function util.update_uniform(u)    
+local function update_uniform(u)    
     local uniform = shadermgr.get_uniform(assert(u.name))
     local setter = u.setter
     local value = setter and setter(u) or u.value     
     bgfx.set_uniform(assert(uniform.handle), assert(value))
-end
-
-function util.draw_entity(vid, entity, ms)    
-    local render = entity.render    
-    local name = entity.name.n   
-    if render.visible then                
-        local rinfo = render.info        
-        for idx, elem in ipairs(rinfo) do
-            local esrt= elem.srt
-            local mat = ms({type="srt", s=esrt.s, r=esrt.r, t=esrt.t}, 
-                            {type="srt", s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}, "*m")            
-            local uniforms = render.uniforms and render.uniforms[idx] or nil
-            util.draw_mesh(vid, elem.mesh, elem.binding, uniforms, mat)
-        end
-    end
 end
 
 local function check_uniform_is_match_with_shader(shader, uniforms)
@@ -89,6 +74,30 @@ local function check_uniform_is_match_with_shader(shader, uniforms)
     end
 end
 
+local function update_uniforms(shader, uniforms)
+    if uniforms then
+        check_uniform_is_match_with_shader(shader, uniforms)
+        for _, u in ipairs(uniforms) do
+            update_uniform(u)
+        end               
+    end
+end
+
+function util.draw_entity(vid, entity, ms)    
+    local render = entity.render    
+    local name = entity.name.n   
+    if render.visible then                
+        local rinfo = render.info        
+        for idx, elem in ipairs(rinfo) do
+            local esrt= elem.srt
+            local mat = ms({type="srt", s=esrt.s, r=esrt.r, t=esrt.t}, 
+                            {type="srt", s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}, "*m")            
+            local uniforms = render.uniforms and render.uniforms[idx] or nil
+            util.draw_mesh(vid, elem.mesh, elem.binding, uniforms, mat)
+        end
+    end
+end
+
 function util.draw_mesh(vid, mesh, bindings, uniforms, worldmat)
     bgfx.set_transform(worldmat)
     local mgroups = mesh.handle.group
@@ -99,12 +108,7 @@ function util.draw_mesh(vid, mesh, bindings, uniforms, worldmat)
 
         local prog = assert(material.shader.prog)
         -- check and update uniforms
-        if uniforms then            
-            check_uniform_is_match_with_shader(material.shader, uniforms)
-            for _, u in ipairs(uniforms) do
-                util.update_uniform(u)
-            end               
-        end
+        update_uniforms(material.shader, uniforms)
 
         local meshids = binding.meshids
         local num = #meshids
@@ -119,6 +123,35 @@ function util.draw_mesh(vid, mesh, bindings, uniforms, worldmat)
             bgfx.submit(vid, prog, 0, i ~= num)
         end
     end
+end
+
+
+local material_cache = nil
+local function need_commit(material)
+    local need = false
+    if material_cache then
+        need = material ~= material_cache
+    end
+
+    material_cache = material
+    return need
+end
+
+
+function util.draw_primitive(vid, prim, mat)
+    bgfx.set_transform(mat)
+
+    local material = prim.material
+    bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
+    update_uniforms(material.shader, prim.uniforms)
+
+    local mg = assert(prim.mgroup)
+    local prog = material.shader.prog
+    if mg.ib then
+        bgfx.set_index_buffer(mg.ib)
+    end
+    bgfx.set_vertex_buffer(mg.vb)
+    bgfx.submit(vid, prog, 0, false) --not need_commit(material))
 end
 
 return util
