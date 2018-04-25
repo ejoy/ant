@@ -1,14 +1,10 @@
 dofile "libs/init.lua"
 
 local bgfx = require "bgfx"
-
 local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
-
 local rhwi = require "render.hardware_interface"
 local elog = require "editor.log"
-local redirect = require "filesystem.redirect"
-
 local scene = require "scene.util"
 
 iup.SetGlobal("UTF8MODE", "YES")
@@ -36,9 +32,8 @@ local input_queue = inputmgr.queue(mapiup)
 input_queue:register_iup(canvas)
 
 local function init()
-	rhwi.init(iup.GetAttributeData(canvas,"HWND"), fb_width, fb_height)
-	local module_description_file = ""
-	scene.start_new_world(input_queue, module_description_file)
+	rhwi.init(iup.GetAttributeData(canvas,"HWND"), fb_width, fb_height)	
+	scene.start_new_world(input_queue, "test_world.module")
 end
 
 function canvas:resize_cb(w,h)

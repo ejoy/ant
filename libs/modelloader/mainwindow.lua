@@ -9,6 +9,7 @@ local scene = require "scene.util"
 local assimplua = require"assimplua"
 local render_mesh = require "modelloader.rendermesh"
 local path = require "filesystem.path"
+local au = require "asset.util"
 
 
 if not static_link_iup then
@@ -118,12 +119,15 @@ local dlg = iup.dialog{
 local input_queue = inputmgr.queue(mapiup)
 input_queue:register_iup(canvas)
 
-local world
-
 --初始化系统
 local function init()
     rhwi.init(iup.GetAttributeData(canvas,"HWND"), fb_width, fb_height)
-    local module_description_file = ""
+    local module_description_file = "mem://model_main_window.module"
+    au.write_to_file([[
+        modules = {
+            "libs/modelloader/renderworld.lua"
+        }
+    ]])
     scene.start_new_world(input_queue, module_description_file)
 end
 
