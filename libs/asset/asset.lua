@@ -48,7 +48,7 @@ local function find_valid_path(fn)
 		end
 	end
 
-	error(string.format("file not exist : %s, tried : %s", fn, defaultpath))
+	error(string.format("file not exist : %s", fn))
 	return nil
 end
 
