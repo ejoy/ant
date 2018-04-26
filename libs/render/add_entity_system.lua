@@ -78,7 +78,9 @@ function add_entity_sys:init()
     end
 
     do
-        local hierarchy_eid = world:new_entity("hierarchy", "scale", "rotation", "position", "name")
+        local hierarchy_eid = world:new_entity("editable_hierarchy", "hierarchy_name_mapper",
+            "scale", "rotation", "position", 
+            "name")
         local hierarchy_e = world[hierarchy_eid]
 
         hierarchy_e.name.n = "hierarchy_test"
@@ -87,7 +89,7 @@ function add_entity_sys:init()
         ms(hierarchy_e.rotation.v, {0, 60, 0}, "=")
         ms(hierarchy_e.position.v, {10, 0, 0, 1}, "=")
 
-        local hierarchy = hierarchy_e.hierarchy.root
+        local hierarchy = hierarchy_e.editable_hierarchy.root
 
         hierarchy[1] = {
             name = "h1_cube",
@@ -122,7 +124,7 @@ function add_entity_sys:init()
         end
 
         local sphere_eid = create_entity("h1_sphere", sphererender_fn)
-        local name_mapper = assert(hierarchy_e.hierarchy.name_mapper)
+        local name_mapper = assert(hierarchy_e.hierarchy_name_mapper.v)
 
         name_mapper.h1_cube     = cube_eid
         name_mapper.h1_h1_cube  = cube_eid_1

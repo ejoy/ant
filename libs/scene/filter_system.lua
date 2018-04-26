@@ -54,6 +54,16 @@ end
 
 local hierarchy_build_cache = {}
 
+local function update_child_srt(ms, e, srt, node)
+    local rot = ms({type="q", table.unpack(node.r)}, "eT")
+    rot[1], rot[2] = rot[2], rot[1]
+
+    local localsrt = mu.srt(ms, node.s, rot, node.t);
+    local s, r, t = ms(localsrt, srt, "*~PPP");
+
+    ms(e.scale.v, s, "=", e.rotation.v, r, "=", e.position.v, t, "=")
+end
+
 function scene_filter_sys:update()
     --{@    for render filter
     local ms = self.math_stack
@@ -64,31 +74,22 @@ function scene_filter_sys:update()
         local h_entity = assert(world[h_eid])
         local rootsrt = mu.srt_from_entity(ms, h_entity)
 
-        local function hierarchy_to_primitive(h_eid, h_entity, filter)
-            local hierarchy_build_result = hierarchy_build_cache[h_eid]
-            if hierarchy_build_result == nil then
-                hierarchy_build_result = hierarchy_module.build(h_entity.hierarchy.root)
-                hierarchy_build_cache[h_eid] = hierarchy_build_result
-            end
-            
-            local mapper = h_entity.hierarchy.name_mapper
-            for _, node in ipairs(hierarchy_build_result) do
-                local name = node.name                
+        local function hierarchy_to_primitive(h_entity, filter)            
+            local hierarchy = h_entity.hierarchy
+            local builddata = hierarchy.builddata
+            local srt_dirty = hierarchy.dirty
+            hierarchy.dirty = false
+            local mapper = h_entity.hierarchy_name_mapper.v
+            for _, node in ipairs(builddata) do
+                local name = node.name
                 local c_eid = mapper[name]
                 marks[c_eid] = true
                 local c_entity = world[c_eid]
                 if c_entity then
-                    local function update_child_srt(e, srt, node)
-                        local rot = ms({type="q", table.unpack(node.r)}, "eT")
-                        rot[1], rot[2] = rot[2], rot[1]
-    
-                        local localsrt = mu.srt(ms, node.s, rot, node.t);
-                        local s, r, t = ms(localsrt, srt, "*~PPP");
-
-                        ms(e.scale.v, s, "=", e.rotation.v, r, "=", e.position.v, t, "=")
+                    if srt_dirty then
+                        update_child_srt(ms, c_entity, rootsrt, node)
                     end
-
-                    update_child_srt(c_entity, rootsrt, node)
+                    
                     push_primitive_in_filter(ms, c_entity, filter)
                 else
                     error(string.format("not found entity by hierarchy name mapper, name is : %s", name))
@@ -96,7 +97,7 @@ function scene_filter_sys:update()
             end
         end
 
-        hierarchy_to_primitive(h_eid, h_entity, filter)
+        hierarchy_to_primitive(h_entity, filter)
     end    
 
     for _, eid in world:each("render") do

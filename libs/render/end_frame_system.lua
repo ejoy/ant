@@ -30,7 +30,7 @@ function end_frame_sys:update()
     local stat = self.frame_stat
     stat.frame_num = bgfx.frame()
 
-    stat.fps = fps()
+    stat.fps = fps()    -- we should call this function one time per second
     stat.ms = 1 / stat.fps
     --dprint("fps : ", stat.fps, ", ms : ", stat.ms)
 end

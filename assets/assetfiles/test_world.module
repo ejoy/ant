@@ -6,6 +6,8 @@ modules = {
     "libs/render/constant_system.lua",
     "libs/render/add_entity_system.lua",	-- for test
     "libs/render/editor/general_editor_entities.lua",	-- editor			
+    "libs/render/editor/editable_hierarchy.lua",
+    "libs/render/editor/build_hierarchy_system.lua",
     "libs/render/window_component.lua",
     "libs/render/components/general.lua",			
     "libs/render/math3d/math_component.lua",			
