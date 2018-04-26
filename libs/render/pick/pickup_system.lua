@@ -223,7 +223,7 @@ end
 local pickup_sys = ecs.system "pickup_system"
 
 pickup_sys.singleton "math_stack"
-pickup_sys.singleton "frame_num"
+pickup_sys.singleton "frame_stat"
 
 pickup_sys.depend "pickup_view"
 pickup_sys.dependby "end_frame"
@@ -265,7 +265,7 @@ end
 function pickup_sys:update()
     if pickup.is_picking then        
         local eid = assert(world:first_entity_id("pickup"))    
-        pickup:pick(eid, self.frame_num.current)
+        pickup:pick(eid, self.frame_stat.frame_num)
     end
 end
 
