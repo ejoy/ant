@@ -4,8 +4,8 @@ local math3d = require "math3d"
 	local mat = math3d.ref "matrix"	-- new matrix ref object
 
 	= : assign an object to a ref object
-	P : pop and return id ( ... , 1 -> ... )	
-	m : pop and return matrix pointer ( ... , 1 -> ... )	
+	P : pop and return id ( ... , 1 -> ... )
+	m : pop and return matrix pointer ( ... , 1 -> ... )
 	V : top to string for debug ( ... -> ... )
 	T : pop stack elem to lua
 	1-9 : dup stack index (..., 1 -> ..., 1,1)
@@ -17,7 +17,7 @@ local math3d = require "math3d"
 	S : swap stack top (..., 1,2 -> ..., 2,1 )
 	R : remove stack top ( ..., 1 -> ... )
 	d : convert rotation vec to view direcion	-- rotation vec is vec4 and x for rotating x-axis, y for rotatiing y-axis, z for rotatiing z-axis
-	D : convert view direction to rotation vec	
+	D : convert view direction to rotation vec
 
 	{ 1,2,3,4 }	  push vector4(1,2,3,4)
 	{ 1,2,3,4, .... 16 } push matrix4x4
@@ -98,7 +98,7 @@ local zdir = stack({0, 0, 1, 0}, "P")
 local e0  = stack(zdir, "eP")
 local e1 = stack(e0, {type="e", pitch=-45, yaw=10, roll=0}, "+P")
 zdir = stack(e1, zdir, "*P")
-print("zdir after rotate : ", stack(zdir, "V"))				
+print("zdir after rotate : ", stack(zdir, "V"))
 
 --lookat
 stack(mat, "1=")	-- init mat to an indentity matrix (dup self and assign)

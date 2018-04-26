@@ -16,5 +16,5 @@ local encoder = crypt.sha1_encoder():init()	-- init can be omit
 encoder:update(str)
 encoder:update(str)
 assert(crypt.sha1(str..str) == encoder:final())
-
+print("uuid", crypt.uuid())
 

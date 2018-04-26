@@ -3,10 +3,30 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+#include <unistd.h>
 #include <time.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+
+#ifdef _WIN32
+
+#include <windows.h>
+
+static int
+getcomputername(char *buffer, int sz) {
+	DWORD s = sz;
+	return GetComputerNameA(buffer, &s);
+}
+
+#else
+
+static int
+getcomputername(char *buffer, int sz) {
+	return gethostname(buffer, sz) == 0;
+}
+
+#endif
 
 #define SMALL_CHUNK 256
 
@@ -949,6 +969,66 @@ lxor_str(lua_State *L) {
 	return 1;
 }
 
+static uint8_t uuid_header[5];
+static uint32_t uuid_counter;
+
+static void
+init_uuid_header() {
+	if (uuid_counter) {
+		// already init
+		return;
+	}
+	pid_t pid = getpid();
+	uint32_t h = 0;
+	char hostname[256];
+	if (getcomputername(hostname, sizeof(hostname))) {
+		int i;
+		for (i=0;i<sizeof(hostname) && hostname[i];i++) {
+			h = h ^ ((h<<5)+(h>>2)+hostname[i]);
+ 		}
+		h ^= i;
+	}
+	uuid_header[0] = h & 0xff;
+	uuid_header[1] = (h>>8) & 0xff;
+	uuid_header[2] = (h>>16) & 0xff;
+	uuid_header[3] = pid & 0xff;
+	uuid_header[4] = (pid >> 8) & 0xff;
+	
+	uint32_t c = h ^ time(NULL) ^ (uintptr_t)&h;
+	if (c == 0) {
+		c = 1;
+	}
+	uuid_counter = c;
+}
+
+static int
+luuid(lua_State *L) {
+	uint8_t uuid[12];
+	time_t ti = time(NULL);
+	uint32_t id = ++uuid_counter;	// NOTICE: not thread safe
+
+	uuid[0] = (ti>>24) & 0xff;
+	uuid[1] = (ti>>16) & 0xff;
+	uuid[2] = (ti>>8) & 0xff;
+	uuid[3] = ti & 0xff;
+	memcpy(uuid+4 , uuid_header, 5);
+	uuid[9] = (id>>16) & 0xff; 
+	uuid[10] = (id>>8) & 0xff; 
+	uuid[11] = id & 0xff;
+
+	static char hex[] = "0123456789abcdef";
+	char tmp[sizeof(uuid)*2];
+	char *buffer = tmp;
+	int i;
+	for (i=0;i<sizeof(uuid);i++) {
+		buffer[i*2] = hex[uuid[i] >> 4];
+		buffer[i*2+1] = hex[uuid[i] & 0xf];
+	}
+	lua_pushlstring(L, buffer, sizeof(uuid) * 2);
+
+	return 1;
+}
+
 // defined in lsha1.c
 int lsha1(lua_State *L);
 int lhmac_sha1(lua_State *L);
@@ -961,6 +1041,7 @@ luaopen_skynet_crypt(lua_State *L) {
 	if (!init) {
 		// Don't need call srandom more than once.
 		init = 1 ;
+		init_uuid_header();
 		srand(time(NULL));
 	}
 	luaL_Reg l[] = {
@@ -981,6 +1062,7 @@ luaopen_skynet_crypt(lua_State *L) {
 		{ "hmac_sha1", lhmac_sha1 },
 		{ "hmac_hash", lhmac_hash },
 		{ "xor_str", lxor_str },
+		{ "uuid", luuid },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
