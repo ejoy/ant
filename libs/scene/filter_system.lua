@@ -58,6 +58,7 @@ function scene_filter_sys:update()
     --{@    for render filter
     local ms = self.math_stack
     local filter = self.primitive_filter
+    filter.result = {}
     local marks = {}
     for _, h_eid in world:each("hierarchy") do
         local h_entity = assert(world[h_eid])
