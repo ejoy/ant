@@ -22,6 +22,7 @@
     <ClCompile Include="..\..\clibs\bgfx\ibcompress.cpp" />
     <ClCompile Include="..\..\clibs\bgfx\luabgfx.c" />
     <ClCompile Include="..\..\clibs\bgfx\luabgfxutil.c" />
+    <ClCompile Include="..\..\clibs\bgfx\timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\bgfx\luabgfx.h" />
@@ -104,10 +105,11 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_DEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;LUA_BUILD_AS_DLL;_DEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;$(BGFX_DIR)/bgfx/include;$(BGFX_DIR)/bx/include;$(BGFX_DIR)/bgfx/3rdparty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;$(BGFX_DIR)/bgfx/include;$(BGFX_DIR)/bx/include;$(BGFX_DIR)/bgfx/3rdparty;$(BGFX_DIR)/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -122,9 +124,9 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;WIN32;_DEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;$(BGFX_DIR)/bgfx/include;$(BGFX_DIR)/bx/include;$(BGFX_DIR)/bgfx/3rdparty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;$(BGFX_DIR)/bgfx/include;$(BGFX_DIR)/bx/include;$(BGFX_DIR)/bgfx/3rdparty;$(BGFX_DIR)/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -142,9 +144,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;WIN32;NDEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;$(BGFX_DIR)/bgfx/include;$(BGFX_DIR)/bx/include;$(BGFX_DIR)/bgfx/3rdparty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;$(BGFX_DIR)/bgfx/include;$(BGFX_DIR)/bx/include;$(BGFX_DIR)/bgfx/3rdparty;$(BGFX_DIR)/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -164,9 +166,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;NDEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;LUA_BUILD_AS_DLL;NDEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;$(BGFX_DIR)/bgfx/include;$(BGFX_DIR)/bx/include;$(BGFX_DIR)/bgfx/3rdparty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;$(BGFX_DIR)/bgfx/include;$(BGFX_DIR)/bx/include;$(BGFX_DIR)/bgfx/3rdparty;$(BGFX_DIR)/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
