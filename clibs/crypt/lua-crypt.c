@@ -2,12 +2,20 @@
 
 #include <lua.h>
 #include <lauxlib.h>
-
+#ifndef _MSC_VER
 #include <unistd.h>
+#else
+#include <process.h>
+#endif //_MSC_VER
 #include <time.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+
+#if _MSC_VER > 0
+typedef size_t pid_t;
+#define getpid _getpid
+#endif //_MSC_VER
 
 #ifdef _WIN32
 
