@@ -123,7 +123,6 @@ lbuild(lua_State *L){
 	}
 
 	struct hierarchy_tree * tree = get_tree(L, 1);
-	lua_pop(L, 1); // pop userdata
 
 	struct hierarchy_build_data *builddata = (struct hierarchy_build_data*)lua_newuserdata(L, sizeof(*builddata));
 
