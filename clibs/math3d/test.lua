@@ -51,6 +51,16 @@ local stack = math3d.new()
 local vec = math3d.ref "vector"
 local mat = math3d.ref "matrix"	-- matrix ref
 
+stack(vec, {1, 0, 1, 1}, "=")
+do
+	local refvalue = vec:tovalue()
+	for _, v in ipairs(refvalue) do
+		print(v)
+	end	
+
+	print(assert(refvalue.type))
+end
+
 local v = stack( { type = "proj", fov = 60, aspect = 1024/768 } , "VR")	-- make a proj mat
 print(v)
 

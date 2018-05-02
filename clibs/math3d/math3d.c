@@ -116,6 +116,73 @@ lreftostring(lua_State *L) {
 }
 
 static inline void
+push_obj_to_lua_table(lua_State *L, struct lastack *LS, int64_t id){
+	int type;
+	float * val = lastack_value(LS, id, &type);
+	lua_newtable(L);
+
+#define TO_LUA_STACK(_VV, _LUA_STACK_IDX) lua_pushnumber(L, _VV);	lua_seti(L, -2, _LUA_STACK_IDX)
+	switch (type)
+	{
+	case LINEAR_TYPE_MAT:
+		for (int i = 0; i < 16; ++i) {
+			TO_LUA_STACK(val[i], i + 1);
+		}
+		break;
+	case LINEAR_TYPE_QUAT:
+	case LINEAR_TYPE_VEC4:
+		TO_LUA_STACK(val[3], 3 + 1);
+	case LINEAR_TYPE_VEC3:
+	case LINEAR_TYPE_EULER:
+		for (int i = 0; i < 3; ++i) {
+			TO_LUA_STACK(val[i], i + 1);
+		}
+		break;
+	case LINEAR_TYPE_NUM:
+		TO_LUA_STACK(val[0], 0 + 1);
+		break;
+	default:
+		break;
+	}
+#undef TO_LUA_STACK
+
+	// push type to table
+	lua_pushstring(L, "type");
+	lua_pushnumber(L, type);
+	lua_settable(L, -3);	
+}
+
+static int
+ref_to_value(lua_State *L) {
+	size_t si = lua_rawlen(L, 1);
+	if (si != sizeof(struct refobject)){
+		luaL_error(L, "arg 1 is not a math3d refobject!");
+	}
+
+	struct refobject *ref = lua_touserdata(L, 1);
+	push_obj_to_lua_table(L, ref->LS, ref->id);
+
+	return 1;
+}
+
+static int 
+lref_get(lua_State *L){
+	int ltype = lua_type(L, 2);
+	if (ltype != LUA_TSTRING){
+		luaL_error(L, "ref object __index meta function only support index as string, type given is : %d", ltype);
+	}
+
+	const char* name = lua_tostring(L, 2);
+	if (strcmp(name, "tovalue") == 0){
+		lua_pushcfunction(L, ref_to_value);
+		return 1;
+	}
+
+	luaL_error(L, "not support index : %s", name);
+	return 0;
+}
+
+static inline void
 release_ref(lua_State *L, struct refobject *ref) {
 	if (ref->LS) {
 		ref->id = lastack_unmark(ref->LS, ref->id);
@@ -141,7 +208,7 @@ lassign(lua_State *L) {
 	case LUA_TNIL:
 	case LUA_TNONE:
 		release_ref(L, ref);
-		break;
+		break;	
 	case LUA_TNUMBER: {
 		if (ref->LS == NULL) {
 			return luaL_error(L, "Init ref object first : use stack(ref, id, '=')");
@@ -973,47 +1040,6 @@ unpack_top(lua_State *L, struct lastack *LS) {
 	}
 }
 
-static inline void
-push_data_to_lua(struct lastack *LS, struct ref_stack *RS) {
-	struct lua_State *L = RS->L;
-
-	int64_t v = pop(L, LS);
-	int type;
-	float * val = lastack_value(LS, v, &type);
-	lua_newtable(L);
-
-#define TO_LUA_STACK(_VV, _LUA_STACK_IDX) lua_pushnumber(L, _VV);	lua_seti(L, -2, _LUA_STACK_IDX)
-	switch (type)
-	{
-	case LINEAR_TYPE_MAT:
-		for (int i = 0; i < 16; ++i) {
-			TO_LUA_STACK(val[i], i + 1);
-		}
-		break;
-	case LINEAR_TYPE_QUAT:
-	case LINEAR_TYPE_VEC4:
-		TO_LUA_STACK(val[3], 3 + 1);
-	case LINEAR_TYPE_VEC3:
-	case LINEAR_TYPE_EULER:
-		for (int i = 0; i < 3; ++i) {
-			TO_LUA_STACK(val[i], i + 1);
-		}
-		break;
-	case LINEAR_TYPE_NUM:
-		TO_LUA_STACK(val[0], 0 + 1);
-		break;
-	default:
-		break;
-	}
-#undef TO_LUA_STACK
-
-	// push type to table
-	lua_pushstring(L, "type");
-	lua_pushnumber(L, type);
-	lua_settable(L, -3);
-	refstack_pop(RS);
-}
-
 struct lnametype_pairs {
 	const char* name;
 	const char* alias;
@@ -1214,9 +1240,15 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		lua_pushlightuserdata(L, pop_value(L, LS, NULL));
 		return 1;
 
-	case 'T': 	
-		push_data_to_lua(LS, RS);
+	case 'T': {
+		struct lua_State *L = RS->L;
+
+		int64_t id = pop(L, LS);
+		push_obj_to_lua_table(L, LS, id);
+		refstack_pop(RS);
 		return 1;
+	}
+
 	case 'V':
 		top_tostring(L, LS);
 		return 1;
@@ -1495,6 +1527,7 @@ luaopen_math3d(lua_State *L) {
 		{ "__tostring", lreftostring },
 		{ "__call", lassign },
 		{ "__bnot", lpointer },
+		{ "__index", lref_get},
 		{ NULL, NULL },
 	};
 	luaL_newmetatable(L, LINALG_REF);
