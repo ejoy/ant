@@ -8,45 +8,26 @@ local shadermgr = require "render.resources.shader_mgr"
 local util = {}
 util.__index = util
 
-function util.foreach_entity(w, comp_names, op)
-    for _, eid in w:each(comp_names[1]) do
-        local entity = w[eid]
-        if entity ~= nil then
-            local function is_entity_have_components(beg_idx, end_idx)
-                while beg_idx <= end_idx do
-                    if entity[comp_names[beg_idx]] == nil then
-                        return false
-                    end
-                    beg_idx = beg_idx + 1
-                end
-                return true
-            end
+-- function util.foreach_entity(w, comp_names, op)
+--     for _, eid in w:each(comp_names[1]) do
+--         local entity = w[eid]
+--         if entity ~= nil then
+--             local function is_entity_have_components(beg_idx, end_idx)
+--                 while beg_idx <= end_idx do
+--                     if entity[comp_names[beg_idx]] == nil then
+--                         return false
+--                     end
+--                     beg_idx = beg_idx + 1
+--                 end
+--                 return true
+--             end
         
-            if is_entity_have_components(2, #comp_names) then
-                op(entity, eid)
-            end
-        end
-    end
-end
-
-function util.foreach_sceneobj(w, op)
-    local comps = cu.get_sceneobj_compoent_names()
-    util.foreach_entity(w, comps, op)
-end
-
-function util.draw_scene(vid, world, ms)
-    util.foreach_sceneobj(world,
-    function (entity)
-        if not entity.last_render then
-            util.draw_entity(vid, entity, ms)
-        end
-    end)
-
-    for _, eid in world:each("last_render") do
-        local entity = world[eid]
-        util.draw_entity(vid, entity, ms)
-    end
-end
+--             if is_entity_have_components(2, #comp_names) then
+--                 op(entity, eid)
+--             end
+--         end
+--     end
+-- end
 
 local function update_uniform(u)    
     local uniform = shadermgr.get_uniform(assert(u.name))

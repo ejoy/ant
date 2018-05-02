@@ -173,7 +173,7 @@ lref_get(lua_State *L){
 	}
 
 	const char* name = lua_tostring(L, 2);
-	if (strcmp(name, "tovalue") == 0){
+	if (strcmp(name, "value") == 0){
 		lua_pushcfunction(L, ref_to_value);
 		return 1;
 	}

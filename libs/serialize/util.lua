@@ -13,7 +13,7 @@ function seri.load(filename)
 	return data
 end
 
-local function serialize(v)
+function seri.serialize(v)
 	local dup = {}
 	local function seri_value(v)
 		local function seri_table(t)
@@ -64,7 +64,7 @@ function seri.save(filename, data)
 	table.sort(keys)
 	local f = assert(io.open(filename, "wb"))
 	for _, key in ipairs(keys) do
-		local value = serialize(data[key])
+		local value = seri.serialize(data[key])
 		f:write(string.format("%s = %s\n", key, value))
 	end
 	f:close()

@@ -3,7 +3,7 @@ local require = import and import(...) or require
 local rawtable = require "rawtable"
 local util = require "util"
 local path = require "filesystem.path"
-local seri = require "filesystem.serialize"
+local seri = require "serialize.util"
 
 return function(filename)
     local asset = require "asset"

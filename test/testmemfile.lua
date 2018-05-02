@@ -1,6 +1,6 @@
 dofile "libs/init.lua"
 
-local seri = require "filesystem.serialize"
+local seri = require "serialize.util"
 
 local f = assert(io.open("mem://test.lua", "w"))
 f:write[[

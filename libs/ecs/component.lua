@@ -94,10 +94,36 @@ local function copy_method(c)
 	return m
 end
 
+local function gen_save(struct)	
+	return function (c)
+		local t = {}
+		for k, v in pairs(c) do
+			local vclass = struct[k]
+			if vclass then
+				local save = vclass.save
+				t[k] = save(v)
+			end
+		end
+		return t
+	end
+end
+
+local function gen_load(struct)	
+	return function(c, v)		
+		for k, _ in pairs(c) do
+			local load = struct[k].load
+			c[k] = load(v)
+		end
+	end
+end
+
 return function(c)
+	local struct = c.struct and datatype(c.struct)
 	return {
-		struct = c.struct and datatype(c.struct),
+		struct = struct,
 		new = gen_new(c),
+		save = gen_save(struct),
+		load = gen_load(struct),
 		delete = gen_delete(c),
 		method = copy_method(c),
 	}

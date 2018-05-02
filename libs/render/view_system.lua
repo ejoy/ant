@@ -17,13 +17,14 @@ local view_rect_comp = ecs.component "view_rect"{
 local view_rect_sys = ecs.system "view_rect_system"
 
 function view_rect_sys:update()
-	
-	ru.foreach_entity(world, {"viewid", "view_rect"},
-	function (entity)
-		local id = entity.viewid.id
-		local vr = entity.view_rect
-		bgfx.set_view_rect(id, vr.x, vr.y, vr.w, vr.h)
-	end)
+	for _, eid in world:each("view_rect") do
+		local entity = world[eid]
+		local vid = entity.viewid
+		if vid then
+			local vr = entity.view_rect
+			bgfx.set_view_rect(vid.id, vr.x, vr.y, vr.w, vr.h)
+		end
+	end
 end
 --@]
 
@@ -44,23 +45,29 @@ end
 --[@	clear system
 local vp_clear_sys = ecs.system "clear_system"
 function vp_clear_sys:update()
-    ru.foreach_entity(world, {"viewid", "clear_component"},
-	function (entity) 
-        local id = entity.viewid.id
-        local cc = entity.clear_component
-        local state = ""
-        if cc.clear_color then
-            state = state .. "C"
-        end
-        if cc.clear_depth then
-            state = state .. "D"
-        end
+	for _, eid in world:each("clear_component") do
+		local entity = world[eid]
+		local vid = entity.viewid
+		if vid then
+			local id = vid.id
+			local cc = entity.clear_component
+			local state = ""
+			if cc.clear_color then
+				state = state .. "C"
+			end
+			if cc.clear_depth then
+				state = state .. "D"
+			end
+	
+			if cc.clear_stencil then
+				state = state .. "S"
+			end
 
-        if cc.clear_stencil then
-            state = state .. "S"
+			if state ~= "" then
+				bgfx.set_view_clear(id, state, cc.color, cc.depth, cc.stencil)
+			end
 		end
-        bgfx.set_view_clear(id, state, cc.color, cc.depth, cc.stencil)
-    end)
+    end
 end
 --@]
 
@@ -81,10 +88,10 @@ local function update_frustum_from_aspect(rt, frustum)
 end
 
 function view_sys:update()	
-	ru.foreach_entity(world, {"viewid"},
-	function (entity)
+	for _, eid in world:each("viewid") do
+		local entity = world[eid]
 		local vid = entity.viewid.id
-		local ms = self.math_stack		
+		local ms = self.math_stack
 		local view_mat = ms(entity.position.v, entity.rotation.v, "dLm")
 		local vr = entity.view_rect
 		local frustum = assert(entity.frustum)
@@ -92,6 +99,6 @@ function view_sys:update()
 		
 		local proj_mat = mu.proj_v(ms, frustum)
 		bgfx.set_view_transform(entity.viewid.id, view_mat, proj_mat)
-	end)
+	end
 end
 --@]

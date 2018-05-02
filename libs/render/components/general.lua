@@ -21,12 +21,12 @@ ecs.component "frustum" {
     b = 1,
 }
 
-ecs.component "viewid"{
+ecs.component "viewid" {
     id = 0
 }
 
 ecs.component "render" {
-    info = {type = "userdata", ""},
+    info = {type = "asset", default = ""},
     visible = true,
 }
 

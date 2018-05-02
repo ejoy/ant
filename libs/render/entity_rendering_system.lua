@@ -16,16 +16,14 @@ draw_entity_sys.singleton "math_stack"
 draw_entity_sys.singleton "primitive_filter"
 
 function draw_entity_sys:update()
-    local main_viewid = 0
+    local camera = world:first_entity("main_camera")
+    local main_viewid = camera.viewid.id
     bgfx.touch(main_viewid)
     local ms = self.math_stack
-
-    --ru.draw_scene(main_viewid, world, ms)
-
     local result = self.primitive_filter.result
     for _, prim in ipairs(result) do
         local srt = prim.srt
         local mat = ms({type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
         ru.draw_primitive(main_viewid, prim, mat)
-    end    
+    end
 end

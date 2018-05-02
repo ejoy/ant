@@ -14,7 +14,9 @@ function add_entity_sys:init()
     local ms = self.math_stack
 
     do
-        local bunny_eid = world:new_entity("position", "rotation", "scale", "render", "name", "can_select")        
+        local bunny_eid = world:new_entity("position", "rotation", "scale", 
+            "render", "name", "serialize",
+            "can_select")
         local bunny = world[bunny_eid]
         bunny.name.n = "bunny"
 
@@ -56,7 +58,9 @@ function add_entity_sys:init()
     ]])
     
     local function create_entity(name, renderfile)
-        local cube_eid = world:new_entity("rotation", "position", "scale", "render", "name", "can_select")
+        local cube_eid = world:new_entity("rotation", "position", "scale", 
+        "render", "name", "serialize",
+        "can_select")
         local cube = world[cube_eid]
         cube.name.n = name
         
@@ -80,7 +84,7 @@ function add_entity_sys:init()
     do
         local hierarchy_eid = world:new_entity("editable_hierarchy", "hierarchy_name_mapper",
             "scale", "rotation", "position", 
-            "name")
+            "name", "serialize")
         local hierarchy_e = world[hierarchy_eid]
 
         hierarchy_e.name.n = "hierarchy_test"

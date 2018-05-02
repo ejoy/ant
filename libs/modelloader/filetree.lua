@@ -12,7 +12,7 @@ iup.SetGlobal("UTF8MODE_FILE", "YES")
 local fs = require "filesystem"
 local toolset = require "editor.toolset"
 local path = toolset.load_config()
-local seri = require "filesystem.serialize"
+local seri = require "serialize.util"
 
 local function filetree(filter, message)
     local dir_view = iup.tree {

@@ -2,6 +2,7 @@ local require = import and import(...) or require
 
 local path = require "filesystem.path"
 local fs = require "filesystem"
+local seri = require "serialize.util"
 
 local support_list = {
 	"shader",
@@ -78,6 +79,11 @@ function assetmgr.load(filename)
 	end
 
 	return res
+end
+
+function assetmgr.save(tree, filename)
+	assert(type(filename) == "string")
+	seri.save(filename, tree)
 end
 
 function assetmgr.has_res(filename)
