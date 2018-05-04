@@ -10,9 +10,13 @@ function seria_comp:init()
     self.uuid = crypt.uuid()
 end
 
-local seri_tree = ecs.component "serialize_tree" {    
+local seri_tree = ecs.component "serialization_tree" {    
 }
 
 function seri_tree:init()
     self.root = {}
+    self.name = ""
+
+    self.luatext = true
+    self.binary = true
 end

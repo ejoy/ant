@@ -1,7 +1,6 @@
 local require = import and import(...) or require
 local rawtable = require "rawtable"
 local path = require "filesystem.path"
-local util = require "util"
 
 local render_mt = {}
 render_mt.__index = render_mt
@@ -118,6 +117,8 @@ return function(filename, assetmgr)
     else
         table.insert(result, load_render_elem(render))
     end
+
+    result.res_path = filename
 
     return setmetatable(result, render_mt)
 end

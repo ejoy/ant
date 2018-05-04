@@ -9,7 +9,7 @@ local scene = require "scene.util"
 local assimplua = require"assimplua"
 local render_mesh = require "modelloader.rendermesh"
 local path = require "filesystem.path"
-local au = require "asset.util"
+local fs_util = require "filesystem.util"
 
 
 if not static_link_iup then
@@ -123,7 +123,7 @@ input_queue:register_iup(canvas)
 local function init()
     rhwi.init(iup.GetAttributeData(canvas,"HWND"), fb_width, fb_height)
     local module_description_file = "mem://model_main_window.module"
-    au.write_to_file([[
+    fs_util.write_to_file([[
         modules = {
             "libs/modelloader/renderworld.lua"
         }

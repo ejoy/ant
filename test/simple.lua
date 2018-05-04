@@ -11,7 +11,7 @@ local db = require "debugger"
 local rhwi = require "render.hardware_interface"
 local scene = require "scene.util"
 local task = require "editor.task"
-local au = require "asset.util"
+local fs_util = require "filesystem.util"
 
 iup.SetGlobal("UTF8MODE", "YES")
 
@@ -40,7 +40,7 @@ input_queue:register_iup(canvas)
 local function init()
 	rhwi.init(iup.GetAttributeData(canvas,"HWND"), 1280, 720)
 	local module_description_file = "mem://simple.module"
-	au.write_to_file([[module = {"test/system/simple_system.lua"}]])
+	fs_util.write_to_file([[module = {"test/system/simple_system.lua"}]])
 	scene.start_new_world(input_queue, module_description_file)
 end
 

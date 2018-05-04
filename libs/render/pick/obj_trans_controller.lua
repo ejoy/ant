@@ -2,9 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local asset = require "asset"
-local au = require "asset.util"
-local ru = require "render.util"
-local mu = require "math.util"
+local fs_util = require "filesystem.util"
 local shadermgr = require "render.resources.shader_mgr"
 
 
@@ -90,7 +88,7 @@ end
 
 local function add_translate_entities(ms, color_constants)
     local translaterenderfile = "mem://transalte_transform_entities.render"
-    au.write_to_file(translaterenderfile, [[
+    fs_util.write_to_file(translaterenderfile, [[
         root = {
             {
                 mesh = "cylinder.mesh",
@@ -113,7 +111,7 @@ end
 
 local function add_scale_entities(ms, color_constants)
     local scalerenderfile = "mem://scale_transform_entities.render"
-    au.write_to_file(scalerenderfile, 
+    fs_util.write_to_file(scalerenderfile, 
     [[
         root = {
             {
@@ -139,7 +137,7 @@ end
 local function add_rotator_entities(ms, color_constants)
     local renderfile = "mem://rotator_transform_entities.render"
     
-    au.write_to_file(renderfile,
+    fs_util.write_to_file(renderfile,
     [[
         mesh = "rotator.mesh"
         binding = {
@@ -154,7 +152,7 @@ local function add_rotator_entities(ms, color_constants)
     controller[3].srt.r = {-90, 0, 0}
 
     local axisrenderfile = "mem://rotator_transform_axis_entity.render"
-    au.write_to_file(axisrenderfile, [[
+    fs_util.write_to_file(axisrenderfile, [[
         root = {
             {
                 mesh = "cylinder.mesh",

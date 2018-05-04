@@ -74,8 +74,8 @@ function assetmgr.load(filename)
 		local ext = assert(path.ext(filename))
 		local fn = find_valid_path(filename)
 		
-		res = loader[ext](fn)
-		resources[filename] = res		
+		res = loader[ext](fn)				
+		resources[filename] = res
 	end
 
 	return res

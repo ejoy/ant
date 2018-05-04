@@ -2,7 +2,7 @@ modules = {
     "libs/inputmgr/message_system.lua",
     "libs/serialize/serialize_component.lua",
     "libs/serialize/serialize_system.lua",
-    "libs/serialize/serialize_to_luatable.lua",    
+    "libs/serialize/serialize_luatabletext.lua",
     "libs/scene/hierarchy.lua",
     "libs/scene/filter_component.lua",
     "libs/scene/filter_system.lua",

@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local au = require "asset.util"
+local fs_util = require "filesystem.util"
 local shadermgr = require "render.resources.shader_mgr"
 local asset     = require "asset"
 local add_entity_sys = ecs.system "add_entities_system"
@@ -35,7 +35,7 @@ function add_entity_sys:init()
     end
 
     local cubematerial_fn = "mem://cube_material.material"
-    au.write_to_file(cubematerial_fn, [[
+    fs_util.write_to_file(cubematerial_fn, [[
         shader = {
             vs = "vs_mesh",
             fs = "fs_mesh",
@@ -44,14 +44,14 @@ function add_entity_sys:init()
     ]])
 
     local cuberender_fn = "mem://cube.render"
-    au.write_to_file(cuberender_fn, [[
+    fs_util.write_to_file(cuberender_fn, [[
         mesh = "cube.mesh"
         binding ={material = "mem://cube_material.material",}
         srt = {s={0.01}}
     ]])
 
     local sphererender_fn = "mem://sphere.render"
-    au.write_to_file(sphererender_fn, [[
+    fs_util.write_to_file(sphererender_fn, [[
         mesh = "sphere.mesh"
         binding ={material = "mem://cube_material.material",}
         srt = {s={0.01}}
