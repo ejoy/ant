@@ -235,6 +235,7 @@ local function filebuilder()
 	}
 	local filename = iup.label { expand =  "HORIZONTAL" }
 	local compile = iup.button { title = "Compile" }
+	local clear = iup.button { title = "Clear" }
 	local output = iup.text {
 		multiline = "yes",
 		wordwrap = "yes",
@@ -247,11 +248,15 @@ local function filebuilder()
 		output.append = msg
 	end
 
+	function clear.action()
+		output.value = ""
+	end
 
 	local ctrl = iup.vbox {
 		source,
 		iup.hbox {
 			filename,
+			clear,
 			compile,
 		},
 		output,
