@@ -73,7 +73,7 @@ end
 
 function message:keypress(c, p, status)
 	if c == nil then return end
-	dprint("char : ", c)
+	
 	message.cb.keypress = function(camera)
 		if p then			
 			local ms = message.ms
