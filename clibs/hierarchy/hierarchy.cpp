@@ -115,15 +115,8 @@ lbuilddata_get(lua_State *L){
 	}
 }
 
-static int 
-lbuild(lua_State *L){
-	struct hierarchy * hnode = (struct hierarchy *)lua_touserdata(L, 1);
-	if (hnode->joint != NULL){
-		luaL_error(L, "Not root node!");
-	}
-
-	struct hierarchy_tree * tree = get_tree(L, 1);
-
+static struct hierarchy_build_data*
+create_builddata_userdata(lua_State *L){
 	struct hierarchy_build_data *builddata = (struct hierarchy_build_data*)lua_newuserdata(L, sizeof(*builddata));
 
 	if (luaL_newmetatable(L, "HIERARCHY_BUILD_DATA")){
@@ -135,9 +128,65 @@ lbuild(lua_State *L){
 		lua_setfield(L, -2, "__len");
 	}
 	lua_setmetatable(L, -2);
-	SkeletonBuilder builder;
-	builddata->skeleton = builder(*(tree->skl));	
-	return 1;
+
+	return builddata;
+}
+
+static int 
+lbuild(lua_State *L){
+	int type = lua_type(L, 1);
+
+	if (type == LUA_TUSERDATA){
+		struct hierarchy * hnode = (struct hierarchy *)lua_touserdata(L, 1);
+		if (hnode->joint != NULL){
+			luaL_error(L, "Not root node!");
+		}
+
+		struct hierarchy_tree * tree = get_tree(L, 1);
+		struct hierarchy_build_data *builddata = create_builddata_userdata(L);
+
+		ozz::animation::offline::SkeletonBuilder builder;
+		builddata->skeleton = builder(*(tree->skl));	
+		return 1;
+	}
+
+	if (type == LUA_TTABLE){
+		struct hierarchy_build_data *builddata = create_builddata_userdata(L);
+		auto tlen = lua_rawlen(L, 1);
+
+		ozz::animation::offline::RawSkeleton rawskeleton;
+		rawskeleton.roots.resize(tlen);
+		for (size_t ii = 0; ii < tlen; ++ii){
+			auto &joint = rawskeleton.roots[ii];
+			lua_geti(L, 1, ii+1);{
+				lua_getfield(L, -1, "name");
+				joint.name = lua_tostring(L, -1);
+				lua_pop(L, 1);
+
+				auto get_table_value = [](lua_State *L, const char* name, float *v, int num){					
+					lua_getfield(L, -1, name);
+					for (int ii = 0; ii < num; ++ii){
+						lua_geti(L, -1, ii+1);
+						v[ii] = (float)lua_tonumber(L, -1);
+						lua_pop(L, 1);
+					}
+					lua_pop(L, 1);
+				};
+
+				get_table_value(L, "s", &joint.transform.scale.x, 3);
+				get_table_value(L, "r", &joint.transform.rotation.x, 4);
+				get_table_value(L, "t", &joint.transform.translation.x, 3);		
+			}
+			lua_pop(L, 1);
+		}
+
+		ozz::animation::offline::SkeletonBuilder builder;
+		builddata->skeleton = builder(rawskeleton);
+		return 1;
+	}
+
+	luaL_error(L, "not support type, %d", type);
+	return 0;
 }
 
 static int
