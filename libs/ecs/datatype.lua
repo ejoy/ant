@@ -1,15 +1,15 @@
 local math3d = require "math3d"
 
-local function math3d_value_save(v)
+local function math3d_value_save(v, arg)
 	assert(type(v) == "userdata")
-	local tree = {}
-	local t = v:value()	
+	local ms = arg.math_stack
+	local t = ms(v, "T")
 	assert(type(t) == "table" and t.type ~= nil)
-	return t	
+	return t
 end
 
 local function get_math3d_value_load(typename)
-	return function(s)
+	return function(s, arg)
 		if s.type == nil then
 			error "vector load function invalid format"
 		end
@@ -18,13 +18,18 @@ local function get_math3d_value_load(typename)
 			error "vector load function need vector type"
 		end
 
+
 		local v = math3d.ref(typename)
-		assert(false, "need math_stack")
+		local ms = arg.math_stack
+		ms(v, s, "=")
 		return v
 	end
 end
 
-local function empty_func() return nil end
+local function empty_func() 
+	assert(false) 
+	return nil 
+end
 
 local function default_save(v) return v end
 local function default_load(v) return v end
@@ -35,7 +40,7 @@ local available_type = {
 	boolean = {default = false,},
 	string 	= {default = ""},				
 	entity 	= {default = 0},	-- entity id
-	asset 	= {default = ""}, -- asset file path
+	asset 	= {default = "", save = default_save, load = default_load}, -- asset file path
 	userdata = { default = function() return {} end,
 				save = empty_func,
 				load = empty_func,},
@@ -50,24 +55,30 @@ local available_type = {
 local function gen_value(v)
 	local ttype = type(v)
 	local typename = nil
-	local default = nil	
+	local default = nil
+	local save = nil
+	local load = nil
 	
 	if ttype == "table" then
 		typename = v.type
 		default = v.default
+		save = v.save
+		load = v.load
 	else
 		typename = ttype == "number" and math.type(v) or ttype				
 		default = v
+		save = default_save
+		load = default_load
 	end
 
 	local default_value = available_type[typename]
 	assert(default_value ~= nil, "Invaild type!")
 
 	return { 
-		type = typename, 
+		type 	= typename, 
 		default = default and default or default_value.default, 
-		save = default_value.save and default_value.save or default_save, 
-		load = default_value.load and default_value.load or default_load
+		save 	= save and save or default_value.save,
+		load 	= load and load or default_value.load,
 	}	
 end
 
@@ -77,7 +88,7 @@ return function (t)
 		v = gen_value(v)
 		t[k] = v
 
-		ttype = type(v.default)
+		local ttype = type(v.default)
 		if ttype == "function" then
 			v.default_func = v.default
 			v.default = nil

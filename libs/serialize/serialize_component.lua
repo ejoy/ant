@@ -1,9 +1,18 @@
 local ecs = ...
 
-ecs.component "serialize" {
+local crypt = require "crypt"
+
+local seria_comp = ecs.component "serialize" {
     uuid = ""
 }
 
-ecs.component "serialize_intermediate_format" {
-    tree = {type="userdata", }
+function seria_comp:init()
+    self.uuid = crypt.uuid()
+end
+
+local seri_tree = ecs.component "serialize_tree" {    
 }
+
+function seri_tree:init()
+    self.root = {}
+end
