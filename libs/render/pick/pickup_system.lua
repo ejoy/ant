@@ -67,8 +67,8 @@ local function create_pickup_render_entity(entity, eid, pu_material, ms)
     end
     
     local info = {}
-    local uid_setter = shadermgr.create_uniform_setter("u_id", ms(packeid_as_rgba(eid), "m"))
-    local uniforms = {}
+    local uid_property = {name="u_id", type="color", value=packeid_as_rgba(eid)}
+    local properties = {}
     for _, elem in ipairs(entity.render.info) do
         local mesh = elem.mesh
         local mgroups = mesh.handle.group
@@ -78,13 +78,13 @@ local function create_pickup_render_entity(entity, eid, pu_material, ms)
             table.insert(meshids, i)
         end
         table.insert(info, {mesh=mesh, binding={{material=pu_material, meshids=meshids}}, srt=elem.srt})
-        table.insert(uniforms, {uid_setter})
+        table.insert(properties, {uid_property})
     end
 
     return { 
         render = {
             info=info, 
-            uniforms=uniforms, 
+            properties=properties,
             visible=true
         }, 
         scale=assert(entity.scale), 
@@ -96,13 +96,23 @@ end
 
 local db = require "debugger"
 
-function pickup:render_to_pickup_buffer(pickup_entity)    
-    for _, eid in world:each("can_select") do        
-        local entity = assert(world[eid])
-        local e = create_pickup_render_entity(entity, eid, self.material, self.ms)
-        if e then                        
-            ru.draw_entity(pickup_entity.viewid.id, e, self.ms)            
+function pickup:render_to_pickup_buffer(pickup_entity, select_filter)
+    local result = select_filter.result    
+    local ms = self.ms
+    for _, r in ipairs(result) do
+        local nr = {}
+        for k, v in pairs(r) do
+            nr[k] = v
         end
+
+        nr.material = self.material
+        nr.properties = {
+            u_id = {type="color", value=packeid_as_rgba(assert(r.eid))}
+        }
+        
+        local srt = nr.srt
+        local mat = ms({type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
+        ru.draw_primitive(pickup_entity.viewid.id, nr, mat)
     end
 end
 
@@ -130,11 +140,11 @@ function pickup:which_entity_hitted(pickup_entity)
     return nil
 end
 
-function pickup:pick(p_eid, current_frame_num)
+function pickup:pick(p_eid, current_frame_num, select_filter)
     local pickup_entity = world[p_eid]
     if self.reading_frame == nil then        
         bind_frame_buffer(pickup_entity)
-        self:render_to_pickup_buffer(pickup_entity)
+        self:render_to_pickup_buffer(pickup_entity, select_filter)
         self.reading_frame = self:readback_render_data(pickup_entity)        
     end
 
@@ -224,13 +234,18 @@ local pickup_sys = ecs.system "pickup_system"
 
 pickup_sys.singleton "math_stack"
 pickup_sys.singleton "frame_stat"
+pickup_sys.singleton "select_filter"
 
 pickup_sys.depend "pickup_view"
 pickup_sys.dependby "end_frame"
 
 function pickup_sys:init()
     local function add_pick_entity(ms)
-        local eid = world:new_entity("pickup", "viewid", "position", "rotation", "frustum", "view_rect", "clear_component", "name")        
+        local eid = world:new_entity("pickup", "viewid", 
+        "view_rect", "clear_component", 
+        "position", "rotation", 
+        "frustum", 
+        "name")        
         local entity = assert(world[eid])
         entity.viewid.id = 1
         entity.name.n = "pickup"
@@ -265,7 +280,7 @@ end
 function pickup_sys:update()
     if pickup.is_picking then        
         local eid = assert(world:first_entity_id("pickup"))    
-        pickup:pick(eid, self.frame_stat.frame_num)
+        pickup:pick(eid, self.frame_stat.frame_num, self.select_filter)
     end
 end
 

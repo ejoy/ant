@@ -92,6 +92,15 @@ ecs.component "render" {
             return asset.load(render_res_path)
         end
         },
+    properties = {
+        type = "userdata",
+        save = function(v, arg)
+            assert(type(v) == "table")
+            
+        end,
+        load = function(v, arg)
+        end
+    },
     visible = true,
 }
 

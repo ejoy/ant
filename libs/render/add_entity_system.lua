@@ -28,10 +28,11 @@ function add_entity_sys:init()
 
         local rinfo = asset.load("bunny.render")
 
-        local utime_setter_tb = {shadermgr.create_uniform_setter("u_time", ~self.constant.colors.red)}
-    
         bunny.render.info = rinfo
-        bunny.render.uniforms = {utime_setter_tb, utime_setter_tb}
+        local utime = {
+            u_time = {type="v4", value={1, 0, 0, 1}}
+        }
+        bunny.render.properties = {utime, utime,}
     end
 
     local cubematerial_fn = "mem://cube_material.material"
@@ -68,14 +69,14 @@ function add_entity_sys:init()
         ms(cube.position.v, {0, 0, 0, 1}, "=") 
         ms(cube.rotation.v, {0, 0, 0}, "=")
 
-        local rinfo = asset.load(renderfile) 
-        cube.render.info = rinfo
+        cube.render.info = asset.load(renderfile)
 
-        local color_setter_tb = {
-            shadermgr.create_uniform_setter("u_color", ~self.constant.colors.red), 
-            shadermgr.create_uniform_setter("u_time", ~self.constant.colors.green),
+        cube.render.properties = {
+            {
+                u_color = {type="color", value={1, 0, 0, 1}},
+                u_time = {type="v4", value={0, 1, 0, 1}},
+            }
         }
-        cube.render.uniforms = {color_setter_tb}
         cube.render.visible = true
 
         return cube_eid

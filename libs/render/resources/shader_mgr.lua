@@ -113,7 +113,8 @@ function shader_mgr.programLoad(vs,fs, uniform)
             for k, v in pairs(uniform) do
                 local old_u = uniforms[k]
                 if old_u and old_u.type ~= v.type and old_u.num ~= v.num then
-                    log(string.format("previous has been defined uniform, nameis : %s, type=%s, num=%d, replace as : type=%s, num=%d",
+                    log(string.format([[previous has been defined uniform, 
+                                    nameis : %s, type=%s, num=%d, replace as : type=%s, num=%d]],
                                     old_u.name, old_u.type, old_u.num, v.type, v.num))
                 end
 
@@ -135,10 +136,6 @@ end
 
 function shader_mgr.get_uniform(name)
     return uniforms[name]
-end
-
-function shader_mgr.create_uniform_setter(name, value, setter)
-    return {name=name, value=value, setter=setter}
 end
 
 return shader_mgr

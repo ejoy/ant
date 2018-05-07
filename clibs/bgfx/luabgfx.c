@@ -2478,47 +2478,80 @@ lsetUniform(lua_State *L) {
 	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
 	bgfx_uniform_handle_t uh = { uniformid };
 	int t = lua_type(L, 2);
-	if (t == LUA_TTABLE) {
-		// multi set
+	if (t == LUA_TTABLE) {		
 		int n = lua_rawlen(L, 2);
-		bgfx_uniform_info_t info;
-		bgfx_get_uniform_info(uh, &info);
-		if (info.num < n) {
-			return luaL_error(L, "Too many uniforms %d/%d", n, (int)info.num);
-		}
+		if (n <= 0)
+			luaL_error(L, "Not enough uniforms to set %d", n);
+		
+		bgfx_uniform_info_t uinfo;
+		bgfx_get_uniform_info(uh, &uinfo);
+
 		int sz;
-		switch (info.type) {
+		switch (uinfo.type) {
 		case BGFX_UNIFORM_TYPE_INT1: sz = 4; break;	// 1 int32
 		case BGFX_UNIFORM_TYPE_VEC4: sz = 4*4; break;	// 4 float
 		case BGFX_UNIFORM_TYPE_MAT3: sz = 3*4*4; break;	// 3*4 float
 		case BGFX_UNIFORM_TYPE_MAT4: sz = 4*4*4; break;	// 4*4 float
 		default:
-			return luaL_error(L, "Invalid uniform type %d", info.type);
+			return luaL_error(L, "Invalid uniform type %d", uinfo.type);
 		}
-		uint8_t buffer[V(sz * n)];
-		if (info.type == BGFX_UNIFORM_TYPE_INT1) {
-			int i;
-			int32_t * data = (int32_t *)buffer;
-			for (i=0;i<n;i++) {
-				if (lua_geti(L, 2, i+1) != LUA_TNUMBER) {
-					return luaL_error(L, "Uniform is int1, need number");
-				}
-				data[i] = lua_tointeger(L, -1);
-				lua_pop(L, 1);
+
+		lua_geti(L, 2, 1);
+		const int elemtype = lua_type(L, -1);		
+		lua_pop(L, 1);
+
+		// multi set
+		if (elemtype == LUA_TTABLE){
+			if (uinfo.num < n) {
+				return luaL_error(L, "Too many uniforms %d/%d", n, (int)uinfo.num);
 			}
+
+			uint8_t buffer[V(sz * n)];
+			if (uinfo.type == BGFX_UNIFORM_TYPE_INT1) {
+				int i;
+				int32_t * data = (int32_t *)buffer;
+				for (i=0;i<n;i++) {
+					if (lua_geti(L, 2, i+1) != LUA_TNUMBER) {
+						return luaL_error(L, "Uniform is int1, need number");
+					}
+					data[i] = lua_tointeger(L, -1);
+					lua_pop(L, 1);
+				}
+			} else {
+				int i;
+				for (i=0;i<n;i++) {
+					lua_geti(L, 2, i+1);
+					void * ud = lua_touserdata(L, -1);
+					if (ud == NULL) {
+						return luaL_error(L, "Uniform need userdata");
+					}
+					lua_pop(L, 1);
+					memcpy(buffer + i * sz, ud, sz);
+				}
+			}
+			bgfx_set_uniform(uh, buffer, n);
 		} else {
-			int i;
-			for (i=0;i<n;i++) {
-				lua_geti(L, 2, i+1);
-				void * ud = lua_touserdata(L, -1);
-				if (ud == NULL) {
-					return luaL_error(L, "Uniform need userdata");
-				}
-				lua_pop(L, 1);
-				memcpy(buffer + i * sz, ud, sz);
+			if (elemtype != LUA_TNUMBER){
+				luaL_error(L, "Only support number type");
 			}
+			if (uinfo.num != 1){
+				luaL_error(L, "Uniform need more than 1 data");
+			}
+
+			if (uinfo.type == BGFX_UNIFORM_TYPE_INT1){
+				luaL_error(L, "Uniform is int1 type, using bgfx.set_uniform(handle, int_value) format");
+			}
+
+			float buffer[4];
+			for (int ii = 0; ii < n; ++ii){
+				lua_geti(L, 2, ii+1);
+				buffer[ii] = lua_tonumber(L, -1);
+				lua_pop(L, 1);
+			}
+
+			bgfx_set_uniform(uh, buffer, 1);
 		}
-		bgfx_set_uniform(uh, buffer, n);
+
 	} else if (t == LUA_TNUMBER) {
 		int32_t v = lua_tointeger(L, 2);
 		bgfx_set_uniform(uh, &v, 1);

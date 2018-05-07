@@ -38,7 +38,7 @@ local function is_controller_id(controllers, p_eid)
     return false
 end
 
-local function create_entity(ms, renderfile, name, color_name, color_constants)
+local function create_entity(ms, renderfile, name, color)
     local eid = world:new_entity("position", "scale", "rotation", "render", "name", "can_select", "last_render")
     local obj = world[eid]
     obj.name.n = name
@@ -49,10 +49,12 @@ local function create_entity(ms, renderfile, name, color_name, color_constants)
 
     obj.render.info = asset.load(renderfile)
 
-    local color_setter = {shadermgr.create_uniform_setter("u_color", ~(color_constants[color_name]))}
-    obj.render.uniforms = {
-        color_setter,
-        color_setter,
+    assert(type(color) == "table")
+    local ucolor = {
+        u_color = {type="color", value=color}
+    }
+    obj.render.properties = {
+        ucolor, ucolor
     }
 
     obj.render.visible = false
@@ -64,23 +66,23 @@ local function add_transform_entities(ms, basename, renderfile, color_constants)
         {
             name = basename .. "-x",
             srt = {r={0, 90, 0}},
-            color = "red",
+            color = color_constants["red"]
         },
         {
             name = basename .. "-y",
             srt = {r={-90, 0, 0}},
-            color = "green",
+            color = color_constants["green"]
         },
         {
             name = basename .. "-z",
             srt = {r={0, 0, 0}},
-            color = "blue",
+            color = color_constants["blue"]
         }
     }
 
     local controller = {}
     for _, v in ipairs(arg) do
-        table.insert(controller, {eid = create_entity(ms, renderfile, v.name, v.color, color_constants), srt=v.srt})
+        table.insert(controller, {eid = create_entity(ms, renderfile, v.name, v.color), srt=v.srt})
     end
 
     return controller
@@ -177,15 +179,18 @@ local function add_rotator_entities(ms, color_constants)
             }
         }
     ]])
-    local axis_eid = create_entity(ms, axisrenderfile, "rotationaxis", "red", color_constants)
+    local axis_eid = create_entity(ms, axisrenderfile, "rotationaxis", color_constants["red"])
     local axis = assert(world[axis_eid])
-    local uniforms = axis.render.uniforms
-
+    
+    local properties = {}
     local clr_names = {"red", "green", "blue"}
-    for idx, cn in ipairs(clr_names) do
-        local setter = shadermgr.create_uniform_setter("u_color", ~color_constants[cn])
-        uniforms[idx] = {setter}
+    for _, cn in ipairs(clr_names) do
+        table.insert(properties, {
+            u_color ={type="color", value=color_constants[cn]}
+        })
     end
+
+    axis.render.properties = properties
 
     table.insert(controller, {eid=axis_eid, srt={}})
     return controller
@@ -423,7 +428,7 @@ end
 function obj_trans_sys:init()
     local ot = self.object_transform    
     local ms = self.math_stack
-    local cc = assert(self.constant.colors)
+    local cc = assert(self.constant.tcolors)
     ot.controllers = {
         pos_transform = add_translate_entities(ms, cc),        
         scale_transform = add_scale_entities(ms, cc),
