@@ -96,9 +96,37 @@ ecs.component "render" {
         type = "userdata",
         save = function(v, arg)
             assert(type(v) == "table")
-            
+            local t = {}
+            for _, e in ipairs(v) do
+                local ee = {}
+                for k, v in pairs(e) do
+                    local type = v.type
+                    if type == "texture" then                        
+                        ee[k] = {path=v.path, type=type}
+                    else
+                        ee[k] = v
+                    end
+                end
+
+                table.insert(t, ee)
+            end
+            return t
         end,
         load = function(v, arg)
+            assert(type(v) == "table")
+            local t = {}
+            for _, e in ipairs(v) do
+                local ee = {}
+                for k, v in pairs(e) do
+                    local type = v.type
+                    if type == "texture" then
+                        assert(false, "Not implement")
+                    else
+                        ee[k] = v
+                    end
+                end
+            end
+            return t
         end
     },
     visible = true,
