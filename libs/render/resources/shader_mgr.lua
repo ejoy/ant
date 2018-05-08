@@ -7,7 +7,7 @@ local toolset = require "editor.toolset"
 local path = require "filesystem.path"
 
 -- init
-local function get_caps_path()
+local function get_shader_subpath()
     local caps = rhwi.get_caps()
     local paths = {
         NOOP       = "dx9",
@@ -28,8 +28,25 @@ local shader_asset_path = "assets/shaders"
 local src_path = "src"
 
 local function get_shader_path()
-    local caps_bin_path = get_caps_path()
+    local caps_bin_path = get_shader_subpath()
     return path.join(shader_asset_path, caps_bin_path)
+end
+
+local function get_compile_renderer_name()
+    local caps = rhwi.get_caps()
+    local rendertype = caps.rendererType
+    local platform = bgfx.get_platform_name()
+
+    if  rendertype == "DIRECT3D9" then
+        return "d3d9"
+    end
+
+    if  rendertype == "DIRECT3D11" or
+        rendertype == "DIRECT3D12" then
+        return "d3d11"
+    end
+
+    return platform
 end
 
 
@@ -45,8 +62,8 @@ local function compile_shader(filename, outfile)
         return false, "load_config file failed, 'bin/iup.exe tools/config.lua' need to run first"
     end
 
-    config.dest = outfile    
-    return toolset.compile(filename, config)
+    config.dest = outfile
+    return toolset.compile(filename, config, get_compile_renderer_name())
 end
 
 local function check_compile_shader(name, outfile)

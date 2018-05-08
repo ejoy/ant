@@ -3696,6 +3696,12 @@ lgetHPFrequency(lua_State *L){
 	return 1;
 }
 
+static int
+lgetPlatformName(lua_State *L){
+	lua_pushstring(L, BX_PLATFORM_NAME);
+	return 1;
+}
+
 LUAMOD_API int
 luaopen_bgfx(lua_State *L) {
 	luaL_checkversion(L);
@@ -3780,6 +3786,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "set_image", lsetImage },
 		{ "get_HP_counter", lgetHPCounter},
 		{ "get_HP_frequency", lgetHPFrequency},
+		{ "get_platform_name", lgetPlatformName},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
