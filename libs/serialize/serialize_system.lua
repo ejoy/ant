@@ -11,7 +11,6 @@ local serialize_save_sys = ecs.system "serialize_save_system"
 serialize_save_sys.singleton "serialization_tree"
 serialize_save_sys.singleton "save_world"
 serialize_save_sys.singleton "math_stack"
-serialize_save_sys.singleton "serialize_test_component"
 
 serialize_save_sys.depend "end_frame"
 
@@ -33,34 +32,25 @@ local function save_entity(eid, ms)
     return e_tree
 end
 
-function serialize_save_sys:update()
-    local test_state = self.serialize_test_component.state
-    if test_state == "save" then
-        local children = {}
-        for _, eid in world:each("serialize") do        
-            local tr = save_entity(eid, self.math_stack)
-            table.insert(children, tr)
-        end
-    
-        self.serialization_tree.root = children
-        self.serialization_tree.name = "test_world"
+function serialize_save_sys.notify:save()
+    local children = {}
+    for _, eid in world:each("serialize") do        
+        local tr = save_entity(eid, self.math_stack)
+        table.insert(children, tr)
     end
+
+    world:change_component(-1, "save_tofile")
+    world:notify()
+
+    self.serialization_tree.root = children
+    self.serialization_tree.name = "test_world"
 end
 
 --- load system
-
-local load_world = ecs.component "load_world"{}
-function load_world:init()
-    self.dirty = true
-end
-
 local serialize_load_sys = ecs.system "serialize_load_system"
 
 serialize_load_sys.singleton "math_stack"
 serialize_load_sys.singleton "serialization_tree"
-serialize_load_sys.singleton "load_world"
-
-serialize_load_sys.singleton "serialize_test_component"
 
 serialize_load_sys.depend "end_frame"
 
@@ -113,18 +103,9 @@ local function post_load(loaded_eids)
     end
 end
 
-function serialize_load_sys:update()
-    local test_state = self.serialize_test_component.state
-
-    if test_state ~= "load" then
-        return
-    end
-
-    local children = self.serialization_tree.root
-    if #children == 0 then
-        return 
-    end
-
+function serialize_load_sys.notify:load_from_seri_tree()
+    local children = assert(self.serialization_tree.root)
+    assert(#children ~= 0)
     local loaded_eids = {}
     for _, tr in ipairs(children) do
         local eid = load_entity(tr, self.math_stack)
@@ -132,38 +113,24 @@ function serialize_load_sys:update()
     end
 
     post_load(loaded_eids)
-
-    self.serialize_test_component.state = ""
-    dprint("finish load")
 end
 
 --- test save&load system, only for test purpose
-local serialize_test_comp = ecs.component "serialize_test_component" {
-
-}
-function serialize_test_comp:init()
-    self.state = ""
-end
-
 local serialize_test_sys = ecs.system "serialize_test_system"
 serialize_test_sys.singleton "message_component"
-serialize_test_sys.singleton "serialize_test_component"
-
-serialize_test_sys.dependby "serialize_save_system"
-serialize_test_sys.dependby "serialize_load_system"
 
 function serialize_test_sys:init()
-    local seri_test = self.serialize_test_component
-
     local message = {}
     function message:keypress(c, p)
         if c == nil then return end
 
         if p then
             if c == "cS" then
-                seri_test.state = "save"
+                world:change_component(-1, "save")
+                world:notify()
             elseif c == "cL" then
-                seri_test.state = "load"
+                world:change_component(-1, "load_from_luatext")
+                world:notify()
             end
         end
 

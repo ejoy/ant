@@ -91,49 +91,6 @@ local function update_properties(shader, properties)
     end
 end
 
-function util.draw_entity(vid, entity, ms)    
-    local render = entity.render    
-    local name = entity.name.n   
-    if render.visible then
-        local rinfo = render.info        
-        for idx, elem in ipairs(rinfo) do
-            local esrt= elem.srt
-            local mat = ms({type="srt", s=esrt.s, r=esrt.r, t=esrt.t}, 
-                            {type="srt", s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}, "*m")            
-            local uniforms = render.uniforms and render.uniforms[idx] or nil
-            util.draw_mesh(vid, elem.mesh, elem.binding, uniforms, mat)
-        end
-    end
-end
-
-function util.draw_mesh(vid, mesh, bindings, uniforms, worldmat)
-    bgfx.set_transform(worldmat)
-    local mgroups = mesh.handle.group
-    for _, binding in ipairs(bindings) do
-        local material = binding.material
-
-        bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
-
-        local prog = assert(material.shader.prog)
-        -- check and update uniforms
-        update_properties(material.shader, uniforms)
-
-        local meshids = binding.meshids
-        local num = #meshids
-
-        for i=1, num do            
-            local id = meshids[i]
-            local g = assert(mgroups[id])
-            if g.ib then
-                bgfx.set_index_buffer(g.ib)
-            end
-            bgfx.set_vertex_buffer(g.vb)
-            bgfx.submit(vid, prog, 0, i ~= num)
-        end
-    end
-end
-
-
 local material_cache = nil
 local function need_commit(material)
     local need = false

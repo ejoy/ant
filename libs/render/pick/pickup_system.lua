@@ -60,42 +60,6 @@ function pickup:init(pickup_entity)
     bind_frame_buffer(pickup_entity)
 end
 
-local function create_pickup_render_entity(entity, eid, pu_material, ms)
-    local visible = entity.render.visible
-    if not visible then
-        return nil
-    end
-    
-    local info = {}
-    local uid_property = {name="u_id", type="color", value=packeid_as_rgba(eid)}
-    local properties = {}
-    for _, elem in ipairs(entity.render.info) do
-        local mesh = elem.mesh
-        local mgroups = mesh.handle.group
-        local meshids = {}
-        local num = #mgroups
-        for i=1, num do
-            table.insert(meshids, i)
-        end
-        table.insert(info, {mesh=mesh, binding={{material=pu_material, meshids=meshids}}, srt=elem.srt})
-        table.insert(properties, {uid_property})
-    end
-
-    return { 
-        render = {
-            info=info, 
-            properties=properties,
-            visible=true
-        }, 
-        scale=assert(entity.scale), 
-        rotation=assert(entity.rotation), 
-        position=assert(entity.position), 
-        name=entity.name
-    }
-end
-
-local db = require "debugger"
-
 function pickup:render_to_pickup_buffer(pickup_entity, select_filter)
     local result = select_filter.result    
     local ms = self.ms
