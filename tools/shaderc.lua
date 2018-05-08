@@ -9,6 +9,20 @@ local toolset = require "editor.toolset"
 local path = toolset.load_config()
 local seri = require "serialize.util"
 
+local function load_config()
+	local config_name = toolset.homedir .. "/shaderc.lua"
+	return seri.load(config_name) or {}
+end
+
+local function save_config(item)
+	local config_name = toolset.homedir .. "/shaderc.lua"
+	local config = seri.load(config_name) or {}
+	for k,v in pairs(item) do
+		config[k] = v
+	end
+	seri.save(config_name, config)
+end
+
 local function filetree(filter, message)
 	local dir_view = iup.tree {
 		HIDEBUTTONS = "yes",
@@ -22,8 +36,7 @@ local function filetree(filter, message)
 	local current_info = {}
 
 	local function load_path()
-		local config_name = toolset.homedir .. "/shaderc.lua"
-		local config = seri.load(config_name) or {}
+		local config = load_config()
 		if not config.drive then
 			return
 		end
@@ -40,11 +53,10 @@ local function filetree(filter, message)
 	end
 
 	local function save_path()
-		local config_name = toolset.homedir .. "/shaderc.lua"
-		seri.save(config_name, {
+		save_config {
 			drive = current_path.drive,
 			path = current_path.path,
-		})
+		}
 	end
 
 	local function switch_drive(name)
@@ -234,7 +246,18 @@ local function filebuilder()
 		KEYWORDS0 = "void $input $output vec4 mul",
 	}
 	local filename = iup.label { expand =  "HORIZONTAL" }
+	local renderer = iup.list {
+		"d3d9",
+		"d3d11",
+		"glsl",
+		"ios",
+		"android",
+		DROPDOWN = "yes",
+	}
+	renderer.valuestring = load_config().renderer or "d3d11"	-- default setting
+
 	local compile = iup.button { title = "Compile" }
+	local clear = iup.button { title = "Clear" }
 	local output = iup.text {
 		multiline = "yes",
 		wordwrap = "yes",
@@ -242,16 +265,27 @@ local function filebuilder()
 		expand = "yes",
 	}
 
+	function renderer:valuechanged_cb(v)
+		save_config {
+			renderer = renderer.valuestring
+		}
+	end
+
 	function compile.action()
-		local success, msg = toolset.compile(filename.title, path)
+		local success, msg = toolset.compile(filename.title, path, renderer.valuestring)
 		output.append = msg
 	end
 
+	function clear.action()
+		output.value = ""
+	end
 
 	local ctrl = iup.vbox {
 		source,
 		iup.hbox {
 			filename,
+			renderer,
+			clear,
 			compile,
 		},
 		output,

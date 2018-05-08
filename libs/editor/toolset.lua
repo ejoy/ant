@@ -10,7 +10,7 @@ local default_toolset = {
 }
 
 function toolset.load_config()
-	local home = fs.personaldir()	
+	local home = fs.personaldir()
 	local toolset_path = string.format("%s/%s/toolset.lua", home, PATH)
 	local ret = {}
 	local f,err = loadfile(toolset_path, "t", ret)
@@ -40,43 +40,63 @@ function toolset.save_config(path)
 	f:close()
 end
 
-function toolset.compile(filename, paths, stype, smodel)
+local shader_type = {
+	f = "fragment",
+	v = "vertex",
+	c = "compute",
+}
+
+local shader_opt = {
+	d3d9 = "windows",
+	d3d9_v = "-p vs_3_0 -O 3",
+	d3d9_f = "-p ps_3_0 -O 3",
+	d3d11 = "windows",
+	d3d11_v = "-p vs_4_0 -O 3",
+	d3d11_f = "-p ps_4_0 -O 3",
+	d3d11_c = "-p cs_5_0 -O 1",
+	glsl = "linux",
+	glsl_v ="-p 120",
+	glsl_f ="-p 120",
+	glsl_c ="-p 430",
+	ios = "ios",
+	ios_v = "",
+	ios_f = "",
+	android = "android",
+	android_v = "",
+	android_f = "",
+	android_c = "",
+}
+
+function toolset.compile(filename, paths, renderer)
 	paths = paths or toolset.path
 
 	if filename then
-		local dest = paths.dest or filename:gsub("(%w+).sc", "%1") .. ".bin"		
+		local dest = paths.dest or filename:gsub("(%w+).sc", "%1") .. ".bin"
 		local tbl = {
 			shaderc = paths.shaderc,
 			src = filename,
 			dest = dest,
 			inc = "",
 			stype = nil,
-			smodel = nil
+			sopt = nil,
+			splat = nil,
 		}
 		if paths.shaderinc then
 			tbl.inc = '-i "' .. paths.shaderinc .. '"'
 		end
 
-		local vf = filename:match "[/\\]([fv])s_[^/\\]+.sc$"
-		local t = {
-			f={t="fragment", m="ps_4_0"}, 
-			v={t="vertex", m="vs_4_0"}
-		}
-		local c = t[vf]
-		
-		tbl.stype = stype or (c and c.t)
-		tbl.smodel = smodel or (c and c.m)
+		local vfc = filename:match "[/\\]([fvc])s_[^/\\]+.sc$"
 
-		if tbl.stype == nil or tbl.smodel == nil then
-			return false, "stype or smodel is nil or shader name should be fs_*.sc or vs_*.sc"
-		end
+		tbl.stype = assert(shader_type[vfc], vfc)
+		tbl.splat = assert(shader_opt[renderer], renderer)
+		tbl.sopt = assert(shader_opt[renderer .. "_" .. vfc])
 
-		local command = string.gsub('$shaderc --platform windows --type $stype -p $smodel -O 3 -f "$src" -o "$dest" $inc',
+		local command = string.gsub('$shaderc --platform $splat --type $stype $sopt -f "$src" -o "$dest" $inc',
 			"%$(%w+)", tbl)
 
 		local prog, err = io.popen(command .. "  2>&1")
 
-		if not prog then			
+		if not prog then
 			return false, err
 		else
 			local ret = prog:read "a"
