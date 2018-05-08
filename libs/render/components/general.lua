@@ -56,9 +56,9 @@ ecs.component "render" {
         
             local materials = {}
             local material_path_dup = {}
-            for r in render_content:gmatch("material%s*=%s*\"(mem://[^%w_.]+)\"") do
+            for r in render_content:gmatch("material%s*=%s*\"(mem://[%w_.]+)\"") do
                 if material_path_dup[r] == nil then
-                    local content = read_file_content(r)
+                    local content = fs_util.read_from_file(r)
                     if content == nil then
                         error(string.format("read from memory file failed, memory file is : %s", r))
                     end
@@ -84,7 +84,7 @@ ecs.component "render" {
                 local render_content = v.render.value
                 if render_content then                
                     if not asset.has_res(render_res_path) then
-                        fs_util.write_to_file(p, render_content)
+                        fs_util.write_to_file(render_res_path, render_content)
                     end
                 end                
             end
@@ -125,6 +125,7 @@ ecs.component "render" {
                         ee[k] = v
                     end
                 end
+                table.insert(t, ee)
             end
             return t
         end

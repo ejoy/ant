@@ -44,7 +44,7 @@ function seri.serialize(v)
 			return table.concat(st)
 		end
 		if type(v) == "table" then
-			assert(dup[v] == nil)
+			--assert(dup[v] == nil)
 			dup[v] = true
 			return seri_table(v)
 		else

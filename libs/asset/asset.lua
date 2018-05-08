@@ -75,7 +75,7 @@ function assetmgr.load(filename)
 		local fn = find_valid_path(filename)
 		
 		res = loader[ext](fn)				
-		resources[filename] = res
+		resources[fn] = res
 	end
 
 	return res

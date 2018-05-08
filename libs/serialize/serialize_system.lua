@@ -88,8 +88,8 @@ local function post_load(loaded_eids)
     for _, eid in world:each("hierarchy_name_mapper") do
         if loaded_eids[eid] then
             local e = world[eid]
-            local name_mapper = e.hierarchy_name_mapper
-            for n, uuid in ipairs(name_mapper.v) do
+            local name_mapper = e.hierarchy_name_mapper.v
+            for n, uuid in pairs(name_mapper) do
                 local function find_eid(uuid)
                     for _, eid in world:each("serialize") do
                         local e = world[eid]
@@ -116,18 +116,25 @@ end
 function serialize_load_sys:update()
     local test_state = self.serialize_test_component.state
 
-    if test_state == "load" then
-        local children = self.serialization_tree.root
-        local loaded_eids = {}
-        for _, tr in ipairs(children) do
-            local eid = load_entity(tr, self.math_stack)
-            loaded_eids[eid] = true
-        end
-
-        post_load(loaded_eids)
-
-        self.serialize_test_component.state = ""
+    if test_state ~= "load" then
+        return
     end
+
+    local children = self.serialization_tree.root
+    if #children == 0 then
+        return 
+    end
+
+    local loaded_eids = {}
+    for _, tr in ipairs(children) do
+        local eid = load_entity(tr, self.math_stack)
+        loaded_eids[eid] = true
+    end
+
+    post_load(loaded_eids)
+
+    self.serialize_test_component.state = ""
+    dprint("finish load")
 end
 
 --- test save&load system, only for test purpose

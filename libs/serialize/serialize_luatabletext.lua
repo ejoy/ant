@@ -32,6 +32,7 @@ function to_luatabletext:update()
         end
 
         self.serialize_test_component.state = ""
+        dprint("finish save, file : ", filename)
     end
 end
 
@@ -48,7 +49,7 @@ function from_luatabletext:update()
         local s_tree = self.serialization_tree
         local enable = s_tree.luatext
         if enable then
-            local filename = get_map_filename(s_tree.name)
+            local filename = get_map_filename("test_world")
             local wrapper = seri_util.load(filename)
             s_tree.root = wrapper.root
             s_tree.luatext = false
