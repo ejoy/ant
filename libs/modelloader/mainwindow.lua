@@ -116,33 +116,20 @@ local dlg = iup.dialog{
 
 
 --注册设备输入
-local input_queue = inputmgr.queue(mapiup)
-input_queue:register_iup(canvas)
+local input_queue = inputmgr.queue(mapiup, canvas)
 
 --初始化系统
 local function init()
     rhwi.init(iup.GetAttributeData(canvas,"HWND"), fb_width, fb_height)
     local module_description_file = "mem://model_main_window.module"
-    fs_util.write_to_file([[
-        modules = {
-            "libs/modelloader/renderworld.lua"
-        }
-    ]])
+    fs_util.write_to_file(module_description_file, [[modules = {"libs/modelloader/renderworld.lua"}]])
     scene.start_new_world(input_queue, fb_width, fb_height, module_description_file)
-end
-
---画布大小改变
-function canvas:resize_cb(w, h)
-    if init then
-        init(self)
-        init = nil
-    end
-
-    input_queue:push("resize", w, h)
 end
 
 dlg:showxy(iup.CENTER, iup.CENTER)
 dlg.usersize = nil
+
+init()
 
 -- to be able to run this script inside another context
 if (iup.MainLoopLevel()==0) then

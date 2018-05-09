@@ -8,8 +8,7 @@ local mapiup = require "inputmgr.mapiup"
 local task = require "editor.task"
 
 local canvas = iup.canvas { RASTERSIZE = "640x480" }
-local input_queue = inputmgr.queue(mapiup)
-input_queue:register_iup(canvas)
+local input_queue = inputmgr.queue(mapiup, canvas)
 
 local dlg = iup.dialog {
 	iup.split {
