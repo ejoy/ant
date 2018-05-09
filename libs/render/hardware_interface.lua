@@ -16,7 +16,8 @@ function hw.init(nwh, fb_w, fb_h)
         height = fb_h,
 	}
 	bgfx.set_platform_data(args)
-	bgfx.init(args)
+    bgfx.init(args)
+    bgfx.reset(fb_w, fb_h, "v")
 
 	assert(caps == nil)
     caps = bgfx.get_caps()    

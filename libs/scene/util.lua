@@ -9,12 +9,12 @@ util.__index = util
 
 local world = nil
 
-function util.start_new_world(input_queue, module_descripiton_file)
+function util.start_new_world(input_queue, fbw, fbh, module_descripiton_file)
 	local modules = asset.load(module_descripiton_file)
 	world = ecs.new_world {
 		modules = modules,
 		update_bydepend = true,
-		args = { mq = input_queue },
+		args = { mq = input_queue, fb_size={w=fbw, h=fbh} },
     }
     
 	task.loop(world.update,	

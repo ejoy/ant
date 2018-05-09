@@ -128,7 +128,7 @@ local function init()
             "libs/modelloader/renderworld.lua"
         }
     ]])
-    scene.start_new_world(input_queue, module_description_file)
+    scene.start_new_world(input_queue, fb_width, fb_height, module_description_file)
 end
 
 --画布大小改变

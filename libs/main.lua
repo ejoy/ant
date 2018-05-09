@@ -14,12 +14,11 @@ local fb_height = 720
 
 local canvas = iup.canvas {
 	rastersize = fb_width .. "x" .. fb_height
---	size = "HALFxHALF",
 }
 
 local dlg = iup.dialog {
 	iup.split {
-		canvas,		
+		canvas,
 		elog.window,
 		SHOWGRIP = "NO",
 	},
@@ -27,32 +26,21 @@ local dlg = iup.dialog {
 	shrink="yes",	-- logger box should be allow shrink
 }
 
-local input_queue = inputmgr.queue(mapiup)
-
-input_queue:register_iup(canvas)
-
-local function init()
-	rhwi.init(iup.GetAttributeData(canvas,"HWND"), fb_width, fb_height)	
-	scene.start_new_world(input_queue, "test_world.module")
-end
-
-function canvas:resize_cb(w,h)
-	if init then
-		init(self)
-		init = nil
-	end
-	input_queue:push("resize", w, h)
-	print("RESIZE",w,h)
-end
-
 dlg:showxy(iup.CENTER,iup.CENTER)
 dlg.usersize = nil
+
+local function init(nwh, fbw, fbh, iq)
+	rhwi.init(nwh, fbw, fbh)
+	scene.start_new_world(iq, fbw, fbh, "test_world.module")
+end
+
+init(iup.GetAttributeData(canvas,"HWND"), 
+	fb_width, fb_height,
+	inputmgr.queue(mapiup, canvas))
 
 -- to be able to run this script inside another context
 if (iup.MainLoopLevel()==0) then
 	iup.MainLoop()
 	iup.Close()
-	if init_flag then
-		bgfx.shutdown()
-	end
+	bgfx.shutdown()	
 end

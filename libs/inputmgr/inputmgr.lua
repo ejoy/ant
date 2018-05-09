@@ -106,6 +106,7 @@ local ctrl_cb = {
 	"button",
 	"motion",
 	"keypress",
+	"resize",
 }
 
 function queue:register_iup(ctrl)
@@ -116,13 +117,15 @@ function queue:register_iup(ctrl)
 	end
 end
 
-function im.queue(config)
+function im.queue(config, msgwnd)
 	if type(config) == "string" then
 		config = require(config)
 	end
 	local q = {}
 	init_map(q, config)
-	return setmetatable(q, queue)
+	setmetatable(q, queue)
+	q:register_iup(msgwnd)
+	return q
 end
 
 return im
