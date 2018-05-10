@@ -9,18 +9,24 @@ local id_table = {}
 id_table[0] = {}
 local file_table = {}
 
-local next_dir_id = 0
+--root is 0, next dir id start at 1
+local next_dir_id = 1
 
 function filemanager:ReadDirStructure(path)
+
     local structure_file = io.open(path, "r")
     if not structure_file then
-        --no file here
+        --no file then create a new one
+      --  print("dir file path", path)
+        local dir_path = io.open(path, "w")
+
+        io.close(dir_path)
         return
     end
 
     local current_id = -1
     for line in structure_file:lines() do
-        local id = tonumber(line, 10)
+        local id = tonumber(line)
         --print("id",id)
         if id then
             --got the id of a new dir table
@@ -39,7 +45,7 @@ function filemanager:ReadDirStructure(path)
         end
     end
 
-    --root is 0, if need create new dir, the id will be next_dir_id
+    --next dir id will be 1 bigger than the current max id
     next_dir_id = next_dir_id + 1
 
     --if no root, create one
@@ -55,9 +61,9 @@ function filemanager:WriteDirStructure(path)
     io.output(file)
     for id, file_table in pairs(id_table) do
         io.write(id.."\n")
-        --print("id:", id)
+     --   print("id:", id)
         for name, hash in pairs(file_table) do
-            --print("name",name, hash)
+      --      print("name",name, hash)
             io.write(name .." "..hash.."\n")
         end
     end
@@ -67,6 +73,8 @@ end
 function filemanager:ReadFilePathData(path)
     local file = io.open(path, "r")
     if not file then
+        local file_path = io.open(path, "w")
+        io.close(file_path)
         return
     end
 
@@ -86,12 +94,14 @@ function filemanager:WriteFilePathData(path)
     io.output(file)
     for hash, real_path in pairs(file_table) do
         io.write(hash.." "..real_path.."\n")
+   --     print("hash real_path:", hash .. " " .. real_path)
     end
     file:close()
 end
 
 function filemanager:GetRealPath(path)
-    local start_pos = 1
+    --1 is the "/" most likely
+    local start_pos = 2
     local search_id = 0 --root
     while true do
         local slash_pos = string.find(path, "/", start_pos)
@@ -102,16 +112,16 @@ function filemanager:GetRealPath(path)
         else
             dir = string.sub(path, start_pos, slash_pos-1)
         end
-        print("dir ", dir)
-        print("id_table", search_id, id_table[0])
+        --print("dir ", dir)
         local hash_id = id_table[search_id][dir]
 
+       -- print("id_table", search_id, id_table[search_id], hash_id)
         if not hash_id then
             return nil
         end
 
-        local id = tonumber(tostring(hash_id), 10)
-        print("id ", id)
+        local id = tonumber(tostring(hash_id))
+       -- print("id ", id)
         if not id then
             --not a number, means found the file
             --print("found file", hash_id, file_table[hash_id])
@@ -126,7 +136,7 @@ end
 
 --add a file, update the id_table and file_table
 function filemanager:AddFileRecord(hash, path)
-    local start_pos = 1
+    local start_pos = 2
     --start from root
     local search_id = 0
     while true do
@@ -142,6 +152,7 @@ function filemanager:AddFileRecord(hash, path)
         --id_table[search_id] must be valid, it starts with root 0
         --the file_id may be nil, then we need to create new dir/file id
         if not file_id then
+            --print("not found ",search_id, dir)
             if slash_pos then
                 --dir is a directory, not the filename
                 id_table[search_id][dir] = next_dir_id
@@ -154,7 +165,8 @@ function filemanager:AddFileRecord(hash, path)
                 break
             end
         else
-            local id = tonumber(tostring(file_id), 10)
+            --print("found", search_id, dir, file_id)
+            local id = tonumber(tostring(file_id))
             if not id then
                 --already have a hash value here, then it will be covered by the new one
                 id_table[search_id][dir] = hash

@@ -30,7 +30,8 @@ local function load_shader(name)
         local caps = hw_caps.get()
         shader_path = "assets/shaders/".. (assert(path[caps.rendererType])) .."/"
     end
-    local filename = shader_path .. name .. ".bin"
+    --local filename = shader_path .. name .. ".bin"
+    local filename = name .. ".bin"
     local f = assert(io.open(filename, "rb"))
     local data = f:read "a"
     f:close()

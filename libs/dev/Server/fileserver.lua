@@ -7,7 +7,7 @@ function fileserver.LIST(req)
         return
     end
 
-
+    print("path", path)
     local dir_table = fileprocess.GetDirectoryList(path)
 
     --no nil value between, should be OK
@@ -35,7 +35,6 @@ function fileserver.GET(req)
     print("client hash:", client_hash)
 
     local server_hash = fileprocess.GetFileHash(file_path)
-
     if not server_hash then
         print("File not exist on server")
         return
@@ -47,13 +46,11 @@ function fileserver.GET(req)
         print("file "..file_path.." is up to date")
         return
     end
-
 	local file = io.open(file_path, "rb")
 	if not file then
         --file does not exist, reture a FILE command with nil hash
 		return {"FILE", file_path}
 	end
-
 	local file_size = fileprocess.GetFileSize(file)
 
 	print("Pulling file", file_path, "filesize", file_size)
@@ -103,6 +100,17 @@ function fileserver.EXIST(req)
         return {"EXIST_CHECK", "false"}
 
     end
+end
+
+--this is the log client sends back
+function fileserver.LOG(req)
+    --req[1] is the command "LOG"
+    --req[2] is the id of the client
+    --req[3] is the label of the log TODO:(use for filtering, and such, leave it for now)
+    --req[4] is the log text
+
+    --for now, don't do any thing
+    return req
 end
 
 return fileserver

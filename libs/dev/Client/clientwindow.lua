@@ -1,9 +1,8 @@
 package.cpath = "../../../clibs/?.dll"
-package.path = "../Common/?.lua;" .. "../../?/?.lua;".. package.path
+package.path = "../Common/?.lua;../../?/?.lua;".. package.path
 local lanes = require "lanes"
 if lanes.configure then lanes.configure() end
 local linda = lanes.linda()
-
 
 local filemanager = require "filemanager"
 local file_mgr = filemanager.new()
@@ -14,7 +13,7 @@ file_mgr:ReadFilePathData("file.txt")
 --io thread
 local function CreateIOThread(linda)
     local client = require "client"
-    local c = client.new("127.0.0.1", 8888, linda)
+    local c = client.new("127.0.0.1", 9999, linda)
     --c:send("GET", "ServerFiles/building.mp4")
     while true do
         c:mainloop(1)

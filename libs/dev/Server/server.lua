@@ -2,12 +2,21 @@ local require = import and import(...) or require
 local log = log and log(...) or print
 
 local pack = require "pack"
+
 local lsocket = require "lsocket"
 local command_cache = {}
 
-local packing_cache = {}
+--give every socket a id(string), and server will only know the id not the socket itself
+--if server use an id that can't be found in socket table, it should be device's udid
+local socket_table = {}
+local socket_count = 0
+
+
+local connected_devices = {}
 
 local dispatch = {}
+
+local libimobiledevicelua = require "libimobiledevicelua"
 
 -- register command
 for _, svr in ipairs { "pingserver", "fileserver" } do
@@ -22,13 +31,31 @@ end
 
 local server = {}; server.__index = server
 
+local function SendData(fd, pack_l)
+    --print("send data",string.format("%q", pack_l))
+    if type(fd) == "string" then
+        if fd == "all" then
+            local byte_sent = 0
+            for k, v in pairs(connected_devices) do
+                if v == true then
+                    byte_sent = byte_sent + libimobiledevicelua.Send(k, pack_l)
+                end
+            end
+
+            return byte_sent
+        else
+            return libimobiledevicelua.Send(fd, pack_l)
+        end
+
+    else
+        return fd:send(pack_l)
+    end
+end
+
 local file_server = require "fileserver"
 -------------------------------------------------------------
-local function HandlePackage(response_pkg, fd)
-    if not packing_cache[fd] then
-        packing_cache[fd] = {}
-    end
-
+local function HandlePackage(response_pkg, id, self)
+    --fd may be a socket, also can be a string represent the udid, treat them differently
     local cmd_type = response_pkg[1]
     if cmd_type == "MULTI_PACKAGE" then
         local file_path = response_pkg[2]
@@ -74,16 +101,17 @@ local function HandlePackage(response_pkg, fd)
             print("read size", read_size, progress)
             --put it on a lanes, store the handle
             local pack_l = pack.pack(client_package)
-            local nbytes = fd:send(pack_l)
+
+            local nbytes = SendData(id, pack_l)
+
+            --local nbytes = fd:send(pack_l)
             --if fd write queue is full
             if not nbytes then
                 break;
             end
             print("sending", file_path, "remaining", file_size - offset)
 
-            --table.insert(packing_cache[fd],pack_l)
-
-            offset = offset + read_size
+            offset = offset + nbytes    --should be the data size that actually sent
             if offset >= file_size then
                 break
             end
@@ -99,9 +127,10 @@ local function HandlePackage(response_pkg, fd)
             return "RUNNING"
         end
         --return directory
-    elseif cmd_type == "FILE"  or cmd_type == "EXIST_CHECK" then
+    elseif cmd_type == "FILE"  or cmd_type == "EXIST_CHECK" or cmd_type == "RUN" then
         local pack_l = pack.pack(response_pkg)
-        local nbytes = fd:send(pack_l)
+        --local nbytes = fd:send(pack_l)
+        local nbytes = SendData(id, pack_l)
         if not nbytes then
             return "RUNNING"
         else
@@ -127,12 +156,12 @@ local function HandlePackage(response_pkg, fd)
             local client_package = {cmd_type, list_path, progress, file_name}
 
             local pack_l = pack.pack(client_package)
-            local nbytes = fd:send(pack_l)
+            --local nbytes = fd:send(pack_l)
+            local nbytes = SendData(id, pack_l)
             --if fd write is full
             if not nbytes then
                 break
             end
-            --table.insert(packing_cache[fd], package)
 
             offset = offset + 1
 
@@ -148,6 +177,10 @@ local function HandlePackage(response_pkg, fd)
         else
             return "RUNNING"
         end
+    elseif cmd_type == "LOG" then
+        --do nothing for now
+        table.insert(self.log, response_pkg[2])
+        return "DONE"
     else
         print("cmd: " .. cmd_type .." not support yet")
         return "DONE"
@@ -162,8 +195,8 @@ function server:PackageHandleUpdate()
     local remove_list ={}
     for k,v in ipairs(command_cache) do
         local a_cmd = v[1]
-        local fd = v[2]
-        local status = HandlePackage(a_cmd, fd)
+        local id = v[2]
+        local status = HandlePackage(a_cmd, id, self)
         if status == "DONE" then
             table.insert(remove_list, k)
         end
@@ -177,93 +210,104 @@ function server:PackageHandleUpdate()
 end
 
 --------------------------------------------------------------
-function server.new(config)
-	local fd = assert(lsocket.bind("tcp", config.address, config.port))
-	return setmetatable({ host = fd, fds = { fd }, clients = {}, request = {}, resp = {}}, server)
+function server.new(config, linda)
+    local var_table = {ids = {}, clients = {}, request = {} ,resp = {}, log = {}, linda = linda, address = config.address, port = config.port}
+    return setmetatable(var_table, server)
 end
 
-function server:new_client(fd, ip, port)
-	log("%s:%s connected", ip, port)
-	table.insert(self.fds, fd)
-	self.clients[fd] = { ip = ip, port = port, reading = "" }
+function server:new_client(id, ip, port)
+    table.insert(self.ids, id)
+    self.clients[id] = {ip = ip, port = port, reading = ""}
 end
 
-function server:client_request(fd)
-	local obj = self.clients[fd]
-    --recv() reads data from a socket
-	local str = fd:recv()
-	if not str then
-        --if nil,means the client is shutdown
-		self:kick_client(fd)
-		return
-	end
-	local reading = obj.reading .. str
-	local off = 1
-	local len = #reading
-	while off < len do
+
+local function GetIdData(id)
+    if socket_table[id] then
+        return socket_table[id]:recv()
+    else
+        return libimobiledevicelua.Recv(id)
+    end
+end
+
+function server:client_request(id)
+    local str = GetIdData(id)
+    if not str then
+        local fd = socket_table[id]
+        if fd then
+            --if nil,means the client is shutdown
+            self:kick_client(id)
+        end
+
+        return
+    end
+
+    local obj = self.clients[id]
+    local reading = obj.reading .. str
+    local off = 1
+    local len = #reading
+    while off < len do
         --unpack the string
         --<s2 meaning:
         --s[n]: a string preceded by its length coded as an unsigned integer with n bytes (default is a size_t)
-		local ok, pack, idx = pcall(string.unpack,"<s2", reading, off)
-		if ok then
-			self:queue_request(fd, pack)
-			off = idx
-		else
-			break
-		end
-	end
-	obj.reading = reading:sub(off)
+        local ok, pack, idx = pcall(string.unpack,"<s2", reading, off)
+        if ok then
+            self:queue_request(id, pack)
+            off = idx
+        else
+            break
+        end
+    end
+    obj.reading = reading:sub(off)
 end
-
 
 --put request from client in queue
-function server:queue_request(fd, str)
-	local req = pack.unpack(str, { fd = fd })
-	if not req then
-		-- invalid package
-		self:kick_client(fd)
-	else
-		log("recv req %d", #req)
-		for k,v in ipairs(req) do
-			log("recv req %d %s", k,v)
-		end
-		table.insert(self.request, req)
-	end
+function server:queue_request(id, str)
+    local req = pack.unpack(str, {id = id})
+    if not req then
+        self:kick_client(id)
+    else
+        table.insert(self.request, req)
+    end
 end
 
-function server:kick_client(client)
-	for k, fd in ipairs(self.fds) do
-		if fd == client then
-			table.remove(self.fds, k)
-			client:close()
-			local obj = self.clients[client]
-			log("kick %s:%s", obj.ip, obj.port)
-			self.clients[client] = nil
-			self.resp[client] = nil
-			break
-		end
-	end
+function server:kick_client(client_id)
+    print("kick id", client_id)
+    for k, id in ipairs(self.ids) do
+        if id == client_id then
+            table.remove(self.ids, k)
+            local fd = socket_table[client_id]
+            if fd then
+                fd:close()
+            else
+                connected_devices[client_id] = nil
+            end
+            self.clients[client_id] = nil
+         --   self.request[client_id] = nil
+            self.resp[client_id] = nil
+
+            return
+        end
+    end
 end
 
 --store handle of lanes, check the result periodically
 local function response(self, req)
-	local cmd = req[1]
-	local func = dispatch[cmd]
+    print("cmd", req[1], req[2])
+    local cmd = req[1]
+    local func = dispatch[cmd]
 
-	if not func then
-		local obj = self.clients[req.fd]
-		log("Unknown command from %s:%s", obj.ip, obj.port)
-		self:kick_client(req.fd)
-	else
-		local resp = { func(req) }
+    if not func then
+        self:kick_client(req.id)
+    else
+        local resp = { func(req) }
         --handle the resp
         --collect command
         for _, a_cmd in ipairs(resp) do
 
-            local command_package = {a_cmd, req.fd}
+            local command_package = {a_cmd, req.id}
             table.insert(command_cache, command_package)
         end
-	end
+    end
 end
 
 local function UpdateFileHash()
@@ -328,27 +372,59 @@ local function UpdateFileHash()
     file_process:UpdateHashFile()
 end
 
+
+function server:CheckNewDevice()
+    --check devices every update
+    --TODO: find a way to trigger c function call back
+
+    for k, _ in pairs(connected_devices) do
+        connected_devices[k] = false
+    end
+
+    local current_devices = libimobiledevicelua.GetDevices()
+
+    for k, udid in pairs(current_devices) do
+        --new device
+        if connected_devices[udid] == nil then
+            local result = libimobiledevicelua.Connect(udid, self.port)
+            if  result then
+                --   print("failed to create connection with", udid)
+                print("connect to ".. udid .." successful")
+                self:new_client(udid, nil, self.port)
+
+                connected_devices[udid] = true --means device "v" is connected now
+
+                table.insert(self.log, "connect to "..udid)
+            end
+        else
+            connected_devices[udid] = true
+        end
+
+    end
+
+    --if device no longer connected, kick the device
+    for k, v in pairs(connected_devices) do
+        if v == false then
+            self:kick_client(k)
+        end
+    end
+end
+
 local hash_update_counter = 0
 function server:mainloop(timeout)
-	local rd, err = lsocket.select(self.fds, timeout)
-	if rd then
-        --collect the data sent from clients
-		for _, fd in ipairs(rd) do
-            if fd == self.host then
-                --new client connected
-                local newfd, ip, port = fd:accept()
-                self:new_client(newfd, ip, port)
-            else
-                --collect requests from clients
-                self:client_request(fd)
-            end
-		end
-        --base on the valid request of the clients, response to their request
-		for k,req in ipairs(self.request) do
-			self.request[k] = nil
-			response(self, req)
-		end
-	end
+
+    self:GetLindaMsg()
+    self:CheckNewDevice()
+    --TODO: currently no use of lsocket connection, implement later (for wifi connection)
+
+    for _, id in ipairs(self.ids) do
+        self:client_request(id)
+    end
+
+    for k,req in ipairs(self.request) do
+        self.request[k] = nil
+        response(self, req)
+    end
 
     self:PackageHandleUpdate()
     --check/update file hash every 10 ticks
@@ -360,6 +436,64 @@ function server:mainloop(timeout)
 
     hash_update_counter = hash_update_counter + 1
     --]]
+    self:SendLog()
+end
+
+function server:SendLog()
+    for _, v in ipairs(self.log) do
+        self.linda:send("log", v)
+    end
+
+    self.log = {}
+end
+
+function server:GetLindaMsg()
+    while true do
+        local key, value = self.linda:receive(0.05, "command")
+        if value then
+            self:HandleIupWindowRequest(value.udid, value.cmd, value.cmd_data)
+        else
+            break
+        end
+    end
+end
+
+--[[
+function server:RecvLog()
+    --self.log
+    local log_table = {}
+
+    for _, v in ipairs(self.log) do
+        table.insert(log_table, v)
+    end
+
+    self.log = {}
+
+    return log_table
+end
+--]]
+function server:HandleIupWindowRequest(udid, cmd, cmd_data)
+    --handle request create from iup window
+    --if udid is "all", means is for all devices
+    if cmd == "TRANSIT_DIR" then
+        local full_path_table = cmd_data
+        if not full_path_table or type(full_path_table) ~= "table" then
+            print("no path table found")
+            return
+        end
+
+        for _, v in ipairs(full_path_table) do
+            --is equal to client sends "GET" command to server
+            local request = {"GET", v, id = udid}
+            table.insert(self.request, request)
+        end
+    elseif cmd == "RUN" then
+        local entrance_path = cmd_data[1]
+        local request = {{"RUN", entrance_path}, udid}
+        table.insert(command_cache, request)
+    else
+        print("Iup Window Request not support yet")
+    end
 end
 
 return server

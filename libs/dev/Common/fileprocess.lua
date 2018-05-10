@@ -1,8 +1,11 @@
-package.path = "../?/?.lua;" .. package.path
-local lanes = require "lanes"
-if lanes.configure then lanes.configure() end
+--package.path = "../?/?.lua;" .. package.path
+--local lanes = require "lanes"
+--if lanes.configure then lanes.configure() end
 
-local filesystem = require "winfile"
+--local filesystem = require "winfile"
+--TODO:
+
+local filesystem = require "lfs"
 
 local fileprocess = {}
 
@@ -15,9 +18,6 @@ end
 
 
 --for now just put it here
-fileprocess.hashfile = "hashtable"
-fileprocess.dir_path = "ServerFiles"
-
 fileprocess.time_stamp_table = {}
 fileprocess.file_hash_table = {}
 
@@ -113,6 +113,7 @@ local function WriteHashFile(path)
     io.close(file_hash)
 end
 
+--[[
 fileprocess.hashfile_writer = lanes.gen("io",
 function (file_path, time_stamp_table, file_hash_table)
     local file_hash = io.open(file_path, "w+")
@@ -134,13 +135,13 @@ function (file_path, time_stamp_table, file_hash_table)
     io.close(file_hash)
 end
 )
-
+--]]
 
 function fileprocess:UpdateHashFile()
     local file_path = self.hashfile
     local time_stamp = self.time_stamp_table
     local hash_table = self.file_hash_table
-    return fileprocess.hashfile_writer(file_path, time_stamp, hash_table)[1]
+    return --fileprocess.hashfile_writer(file_path, time_stamp, hash_table)[1]
 end
 
 return fileprocess
