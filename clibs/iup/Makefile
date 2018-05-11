@@ -24,7 +24,8 @@ SRCIUP = iup_array.c iup_callback.c iup_dlglist.c iup_attrib.c iup_focus.c iup_f
       iup_gridbox.c iup_detachbox.c iup_backgroundbox.c iup_linefile.c iup_config.c \
       iup_flatbutton.c iup_animatedlabel.c iup_draw.c iup_flatframe.c iup_flattabs.c \
       iup_flatscrollbar.c iup_flatscrollbox.c iup_dial.c iup_gauge.c iup_colorbar.c \
-      iup_colorbrowser.c iup_colorhsi.c iup_flatlabel.c iup_flattoggle.c iup_dropbutton.c
+      iup_colorbrowser.c iup_colorhsi.c iup_flatlabel.c iup_flatseparator.c iup_flattoggle.c \
+      iup_dropbutton.c iup_space.c
 
 SRCWIN += iupwin_common.c iupwin_brush.c iupwin_focus.c iupwin_font.c \
       iupwin_globalattrib.c iupwin_handle.c iupwin_key.c iupwin_str.c \
@@ -35,7 +36,7 @@ SRCWIN += iupwin_common.c iupwin_brush.c iupwin_focus.c iupwin_font.c \
       iupwin_button.c iupwin_draw.c iupwin_toggle.c iupwin_clipboard.c \
       iupwin_progressbar.c iupwin_text.c iupwin_val.c iupwin_touch.c \
       iupwin_tabs.c iupwin_menu.c iupwin_list.c iupwin_tree.c \
-      iupwin_calendar.c iupwin_datepick.c
+      iupwin_calendar.c iupwin_datepick.c iupwin_draw_gdi.c
  
 SRCWIN += iupwindows_main.c iupwindows_help.c iupwindows_info.c
 
@@ -57,7 +58,7 @@ CTRLUA = button.lua canvas.lua dialog.lua colordlg.lua clipboard.lua \
        animatedlabel.lua calendar.lua datepick.lua param.lua parambox.lua \
        detachbox.lua flatframe.lua flattabs.lua flatscrollbox.lua \
        dial.lua gauge.lua colorbar.lua colorbrowser.lua flatlabel.lua \
-       flattoggle.lua dropbutton.lua
+       flatseparator.lua flattoggle.lua dropbutton.lua space.lua
 
 SRCLUA = iuplua.lua constants.lua iup_config.lua
 
