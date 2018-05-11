@@ -6,7 +6,7 @@ local function create_pipe()
 	local socket
 
 	repeat
-		socket = assert(lsocket.bind( "127.0.0.1", port))
+		socket = lsocket.bind( "127.0.0.1", port)
 		if not socket then
 			port = port + 1
 		end
