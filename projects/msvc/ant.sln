@@ -81,8 +81,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lanes", "lanes.vcxproj", "{
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crypt", "crypt.vcxproj", "{45CAB35B-9A30-4657-93C1-4E676E4EA412}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AF8C0252-364F-4D3B-B35E-F3392EEA620B} = {AF8C0252-364F-4D3B-B35E-F3392EEA620B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "assimplua", "assimplua.vcxproj", "{6941669E-1992-4F61-8F0E-C0617175597C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AF8C0252-364F-4D3B-B35E-F3392EEA620B} = {AF8C0252-364F-4D3B-B35E-F3392EEA620B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ozz-animation", "ozz-animation.vcxproj", "{630CDB5F-8C88-4150-AE7B-A79BCA4C9C79}"
 EndProject

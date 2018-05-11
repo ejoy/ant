@@ -17,6 +17,9 @@
     <Filter Include="iupctrl">
       <UniqueIdentifier>{4cfd4759-f89a-489c-9bd1-d0b4c20080ed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="iup_luaelem">
+      <UniqueIdentifier>{42d53e88-e457-4023-87eb-0e194206eb99}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\iup\src\iup_callback.c">
@@ -613,5 +616,190 @@
     <ClCompile Include="..\..\..\iup\src\iup_dropbutton.c">
       <Filter>iup</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\iup\srclua5\elem\animatedlabel.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\zbox.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\vbox.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\val.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\user.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\tree.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\toggle.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\timer.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\text.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\tabs.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\submenu.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\split.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\spinbox.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\spin.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\separator.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\scrollbox.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\sbox.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\radio.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\progressdlg.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\progressbar.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\parambox.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\param.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\normalizer.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\multiline.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\messagedlg.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\menu.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\list.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\link.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\label.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\item.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\imagergba.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\imagergb.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\image.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\hbox.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\gridbox.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\gauge.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\frame.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\fontdlg.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\flattoggle.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\flattabs.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\flatscrollbox.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\flatlabel.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\flatframe.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\flatbutton.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\fill.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\filedlg.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\expander.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\dropbutton.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\dialog.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\dial.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\detachbox.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\datepick.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\colordlg.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\colorbrowser.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\colorbar.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\clipboard.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\cbox.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\canvas.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\calendar.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\button.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
+    <None Include="..\..\..\iup\srclua5\elem\backgroundbox.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
   </ItemGroup>
 </Project>
