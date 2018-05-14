@@ -24,7 +24,7 @@ BGFX3RDINC = -I$(BGFXSRC)/3rdparty
 $(ODIR)/ibcompress.o : ibcompress.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -std=c++11 -c -o $@ $^ $(BGFXINC) $(BGFX3RDINC)
 
-$(ODIR)/timer.o : timer.cpp | $(ODIR)
+$(ODIR)/baselib.o : baselib.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -std=c++11 -c -DLUA_BUILD_AS_DLL -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC)
 
 $(ODIR)/luabgfx.o : luabgfx.c  | $(ODIR)
@@ -33,7 +33,7 @@ $(ODIR)/luabgfx.o : luabgfx.c  | $(ODIR)
 $(ODIR)/luabgfxutil.o : luabgfxutil.c  | $(ODIR)
 	$(CC) $(CFLAGS) -c -DLUA_BUILD_AS_DLL -o $@ $^ $(LUAINC) $(BGFXINC)
 
-bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/ibcompress.o $(ODIR)/luabgfxutil.o $(ODIR)/timer.o
+bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/ibcompress.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o
 	$(CC) $(CFLAGS) --shared -o $@ $^ $(LUALIB) $(BGFXUTILLIB) $(BIMGLIB) $(BGFXLIB)
 
 # all
