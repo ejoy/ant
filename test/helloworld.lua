@@ -1,7 +1,8 @@
 dofile "libs/init.lua"
 
-local ant = require "lbgfx"
 local bgfx = require "bgfx"
+local rhwi = require "render.hardware_interface"
+local task = require "editor.task"
 
 local s_logo = "\z
 	\xdc\x03\xdc\x03\xdc\x03\xdc\x03\x20\x0f\x20\x0f\x20\x0f\x20\x0f\z
@@ -260,7 +261,7 @@ canvas = iup.canvas{}
 
 dlg = iup.dialog {
   canvas,
-  title = "01-helloworld",
+  title = "helloworld",
   size = "HALFxHALF",
 }
 
@@ -278,7 +279,7 @@ local function mainloop()
 				)
 
 	bgfx.dbg_text_print(0, 1, 0xf, "Color can be changed with ANSI \x1b[9;me\x1b[10;ms\x1b[11;mc\x1b[12;ma\x1b[13;mp\x1b[14;me\x1b[0m code too.");
-	local stats = bgfx.get_stats("whWH",ctx.stats)
+	local stats = bgfx.get_stats("sd",ctx.stats)
 	bgfx.dbg_text_print(0, 2, 0x0f, string.format("Backbuffer %dW x %dH in pixels, debug text %dW x %dH in characters."
 				, stats.width
 				, stats.height
@@ -288,19 +289,17 @@ local function mainloop()
 	bgfx.frame()
 end
 
-local function init(canvas)
-	ant.init {
-		nwh = iup.GetAttributeData(canvas,"HWND"),
-	}
+local function init(canvas, fbw, fbh)
+	rhwi.init(iup.GetAttributeData(canvas,"HWND"), fbw, fbh)
 	bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
 	bgfx.set_debug "T"
 
-	ant.mainloop(mainloop)
+	task.loop(mainloop)
 end
 
 function canvas:resize_cb(w,h)
 	if init then
-		init(self)
+		init(self, w, h)
 		init = nil
 	end
 	bgfx.set_view_rect(0, 0, 0, w, h)
@@ -320,5 +319,4 @@ dlg.usersize = nil
 if (iup.MainLoopLevel()==0) then
 	iup.MainLoop()
 	iup.Close()
-	ant.shutdown()
 end
