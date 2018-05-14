@@ -22,14 +22,19 @@ extern "C" {
 
 static float s_version	 =	 1.0f;
 
-static lua_State *			 s_L;
+static lua_State *			 s_L;	// TODO: 不应使用全局变量 s_L, L 必须通过 API 传递。因为不同的虚拟机（不可以假设只有一个虚拟机）或 coroutine 都有不同的 L 。
+
+// TODO: 所有全局变量应该放在 L 中。
+// 使用一个 struct nk_confiure {} 包含所有的全局变量
+// 使用 lua_(get/set)field(L, LUA_REGISTRYINDEX, "NKLUA") 来读写这个结构，每个 VM 一份。
+
 static struct device         device;
  	   struct nk_context     context;
 
 // simple font manager ,optimize in future 
 static struct nk_font_atlas  g_atlas;
 static 
-std::vector<struct nk_font*> g_fonts;
+std::vector<struct nk_font*> g_fonts;	// TODO: 使用固定长度数组，设定上限个数，去掉 vector 后，改用 .c 。
 static int    	     		 g_font_count = 0 ;
 
 static struct nk_cursor      g_cursors[NK_CURSOR_COUNT];
@@ -96,6 +101,7 @@ device_upload_atlas( struct device *dev, const void *image, int width, int heigh
 #endif 
 }
 
+// TODO: 不要直接使用文件名调用文件系统，通过 bgfx id 和 bgfx 交互。因为文件将被统一管理。
 static struct nk_ui_image 
 device_loadimage(const char *filename)
 {
@@ -184,6 +190,7 @@ void nk_fonts_mgr_shutdown()
 	g_fonts.clear();
 }
 
+// TODO: 避免用文件名直接操作文件读取 font ，建议暂时换成文件内容，在 lua 打开文件，读入，并传入。
 nk_font* load_chinese_font( const char *fontname,int fontsize) 
 {
 	struct nk_font *font = NULL;
