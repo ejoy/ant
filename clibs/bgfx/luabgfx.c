@@ -3679,29 +3679,6 @@ lsetImage(lua_State *L) {
 	return 0;
 }
 
-extern int64_t get_HP_counter();
-extern int64_t get_HP_frequency();
-
-static int
-lgetHPCounter(lua_State *L){
-	int64_t i64 = get_HP_counter();
-	lua_pushinteger(L, i64);
-	return 1;
-}
-
-static int
-lgetHPFrequency(lua_State *L){
-	int64_t i64 = get_HP_frequency();
-	lua_pushinteger(L, i64);
-	return 1;
-}
-
-static int
-lgetPlatformName(lua_State *L){
-	lua_pushstring(L, BX_PLATFORM_NAME);
-	return 1;
-}
-
 LUAMOD_API int
 luaopen_bgfx(lua_State *L) {
 	luaL_checkversion(L);
@@ -3784,9 +3761,6 @@ luaopen_bgfx(lua_State *L) {
 		{ "get_shader_uniforms", lgetShaderUniforms },
 		{ "set_view_mode", lsetViewMode },
 		{ "set_image", lsetImage },
-		{ "get_HP_counter", lgetHPCounter},
-		{ "get_HP_frequency", lgetHPFrequency},
-		{ "get_platform_name", lgetPlatformName},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

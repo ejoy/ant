@@ -25,7 +25,7 @@ $(ODIR)/ibcompress.o : ibcompress.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -std=c++11 -c -o $@ $^ $(BGFXINC) $(BGFX3RDINC)
 
 $(ODIR)/timer.o : timer.cpp | $(ODIR)
-	$(CXX) $(CFLAGS) -std=c++11 -c -o $@ $^ $(BGFXINC) $(BGFX3RDINC)
+	$(CXX) $(CFLAGS) -std=c++11 -c -DLUA_BUILD_AS_DLL -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC)
 
 $(ODIR)/luabgfx.o : luabgfx.c  | $(ODIR)
 	$(CC) $(CFLAGS) -c -DLUA_BUILD_AS_DLL -o $@ $^ $(LUAINC) $(BGFXINC)
