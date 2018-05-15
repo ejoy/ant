@@ -11,12 +11,12 @@ local command_cache = {}
 local socket_table = {}
 local socket_count = 0
 
-
 local connected_devices = {}
 
 local dispatch = {}
 
 local libimobiledevicelua = require "libimobiledevicelua"
+local project_directory = ""
 
 -- register command
 for _, svr in ipairs { "pingserver", "fileserver" } do
@@ -294,6 +294,12 @@ end
 local function response(self, req)
     print("cmd", req[1], req[2])
     local cmd = req[1]
+    --if is require command, need project_directory
+    if cmd == "REQUIRE" or cmd == "GET" then
+        --table.insert(req, project_directory)
+        req.project_dir = project_directory
+    end
+
     local func = dispatch[cmd]
 
     if not func then
@@ -452,6 +458,16 @@ function server:GetLindaMsg()
         local key, value = self.linda:receive(0.05, "command")
         if value then
             self:HandleIupWindowRequest(value.udid, value.cmd, value.cmd_data)
+        else
+            break
+        end
+    end
+
+    while true do
+        local key, value = self.linda:receive(0.05, "proj dir")
+        if value then
+            project_directory = value
+            print("change project directory to", project_directory)
         else
             break
         end

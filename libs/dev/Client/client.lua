@@ -9,7 +9,7 @@ local fileprocess = require "fileprocess"
 local client = {}; client.__index = client
 
 --the dir hold the files
-local app_doc_path = nil
+local app_doc_path = ""
 
 local logic_request = {}
 --file data stored in mem, e.g. remote required file
@@ -67,14 +67,10 @@ function clientcommand.FILE(resp)
         local file  = nil
 
         if offset <= fileprocess.MAX_CALC_CHUNK then
-            _linda:send("new file", {hash, file_path})
-            filemanager:AddFileRecord(hash, file_path)
-
             --TODO mac/ios file instead of winfile
             --local filesystem = require "winfile"
             local filesystem = require "lfs"
             filesystem.mkdir(folder)
-            --we should use a temp file, for now is "temp-" string combine with hash value
             --file = io.open(temp_path_hash, "wb")
             file = io.open(real_path, "wb")
             print("create new file", real_path)
@@ -86,6 +82,7 @@ function clientcommand.FILE(resp)
         end
 
         if file == nil then
+            print("create file error", real_path)
             return
         end
 
@@ -96,11 +93,10 @@ function clientcommand.FILE(resp)
 
 
         if offset >= total_pack then
-            --the final package, the file is complete, change the name to normal name
-            --for now, just remove the old file
             --TODO version management/control
-            --os.remove(file_path)
-            --os.rename(temp_path_hash, file_path)
+            --the file is complete, inform out side
+            _linda:send("new file", {hash, file_path})
+            filemanager:AddFileRecord(hash, file_path)
         end
     else
         --store in mem
@@ -170,6 +166,7 @@ function client.new(address, port, init_linda, home_dir)
     local fd = assert(lsocket.bind("tcp", address, port))
     _linda = init_linda
     app_doc_path = home_dir .. "/Documents/"
+    --print("app_doc_path", app_doc_path)
 	return setmetatable( { host = fd, fd = { fd }, fds = {fd}, sending = {}, resp = {}, reading = ""}, client)
 end
 
@@ -191,11 +188,11 @@ function client:send(...)
             local hash = fileprocess.CalculateHash(file_path)
             client_req[3] = hash
         end
-    elseif cmd == "OPEN" then
+    elseif cmd == "REQUIRE" then
         --TODO add hash check?
         --cmd for server should be the same
         --however, the client may handle differently
-        client_req[1] = "GET"
+        --client_req[1] = "GET"
         local file_path = client_req[2]
         mem_file_status[file_path] = "pending"
         mem_file[file_path] = ""
@@ -263,11 +260,13 @@ end
 
 function client:mainloop(timeout)
     self:CollectRequest()
-    for _, req in pairs(logic_request) do
+    for key, req in pairs(logic_request) do
         local cmd = req[1]
-        local file_name = req[2]
 
-        if cmd == "OPEN" then
+        if cmd == "REQUIRE" then
+
+            local file_name = req[2]
+
             local cache_status = mem_file_status[file_name]
             --if the cache does not exist, then send the request info
             --TODO: hash check??
@@ -275,6 +274,7 @@ function client:mainloop(timeout)
                 self:send(table.unpack(req))
             elseif cache_status == "FINISHED" then
                 _linda:send("mem_data", mem_file[file_name])
+                logic_request[key] = nil
             end
             --other in status like "RUNNING", do nothing but wait
 

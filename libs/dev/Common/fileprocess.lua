@@ -25,6 +25,12 @@ fileprocess.file_hash_table = {}
 fileprocess.MAX_CALC_CHUNK = 64 * 1024 --64K
 local crypt_encoder = nil
 function fileprocess.CalculateHash(file_path)
+    print("calc hash", file_path)
+    local mode_of_file = filesystem.attributes(file_path, "mode")
+    if mode_of_file == "directory" or mode_of_file == nil then
+        return nil
+    end
+
     --if have local copy, hash calculation needed
     local file = io.open(file_path, "rb")
     if not file then

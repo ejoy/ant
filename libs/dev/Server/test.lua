@@ -39,7 +39,6 @@ end
 
 local server_ins = {s = nil}
 
-print("!!!linda!!!", linda)
 function server_ins:init(address, port)
     --self.s = server.new{address = address, port = port}
 
@@ -66,6 +65,11 @@ function server_ins:HandleCommand(udid, cmd, ...)
     if udid ~= nil and cmd ~= nil then
         linda:send("command", {udid = udid, cmd = cmd, cmd_data = {...}})
     end
+end
+
+function server_ins:SetProjectDirectoryPath(path)
+    print("project directory set to", path)
+    linda:send("proj dir", path)
 end
 
 return server_ins
