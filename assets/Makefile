@@ -18,7 +18,7 @@ endif
 .PHONY : copy_bin
 .PHONY : clean
 
-all : compileshader copy_bin
+all : copy_bin
 	
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 SHADER_FILES := $(call rwildcard,$(SHADER_SRC)/,*.sc)
@@ -46,9 +46,19 @@ endif
 compileshader : $(TARGET_SHADERFILES)
 
 # copy other files
-# copy_bin:
-# 	@echo copy binary files
 
+BIN_RESOURCE_DIRS := meshes assetfiles
+ALL_BIN_FILES := $(foreach p,$(BIN_RESOURCE_DIRS),$(call rwildcard,$p/,*))
+TARGET_ALL_BIN_FILES := $(addprefix $(OUT_DIR)/,$(ALL_BIN_FILES))
+TARGET_BIN_DIRS := $(sort $(dir $(TARGET_ALL_BIN_FILES)))
 
+$(TARGET_BIN_DIRS) : | $(OUT_DIR)
+	mkdir -p $@
+
+$(TARGET_ALL_BIN_FILES) : $(OUT_DIR)/% : % | $(TARGET_BIN_DIRS)
+	cp $^ $@
+
+copy_bin: $(TARGET_ALL_BIN_FILES)
+	
 clean :
 	rm -Rf $(OUT_DIR)
