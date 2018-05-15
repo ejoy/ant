@@ -1,5 +1,4 @@
 OUT_DIR 	= ./build
-SHADER_SRC 	= shaders/src
 LUABIN 		= ../clibs/lua/lua.exe
 RENDERTYPE 	= d3d11
 
@@ -21,6 +20,8 @@ endif
 all : copy_bin
 	
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
+
+SHADER_SRC 	:= shaders/src
 SHADER_FILES := $(call rwildcard,$(SHADER_SRC)/,*.sc)
 #SHADER_FILES := $(shell find $(SHADER_SRC) -name '*.sc')
 
@@ -32,7 +33,7 @@ TARGET_SHADERDIRS := $(addprefix $(OUT_DIR)/,$(SHADER_DIRS))
 TARGET_SHADERFILES := $(patsubst %.sc,$(OUT_DIR)/%.bin,$(SHADER_FILES))
 
 $(OUT_DIR):
-	mkdir $(OUT_DIR)
+	mkdir -p $(OUT_DIR)
 
 $(TARGET_SHADERDIRS) : | $(OUT_DIR)
 	mkdir -p $@
