@@ -42,7 +42,7 @@ local math3d = require "math3d"
 	i inverted matrix  ( ..., 1 -> ..., invert(1) )
 	t transposed matrix ( ..., 1 -> ..., transpose(1) )
 	n normalize vector3 ( ..., 1 -> ..., {normalize(1) , 1} )
-	l generate lootat matrix ( ..., eye, at -> ..., lookat(eye,at) )
+	l generate lookat matrix ( ..., eye, at -> ..., lookat(eye,at) )
 	e vec4/vec3/matrix to euler angle (v, "e")
 ]]
 
@@ -56,7 +56,7 @@ do
 	local refvalue = vec:tovalue()
 	for _, v in ipairs(refvalue) do
 		print(v)
-	end	
+	end
 
 	print(assert(refvalue.type))
 end

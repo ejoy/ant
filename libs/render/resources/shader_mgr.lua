@@ -2,6 +2,7 @@ local require = import and import(...) or require
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
+local baselib = require "bgfx.baselib"
 local rhwi = require "render.hardware_interface"
 local toolset = require "editor.toolset"
 local path = require "filesystem.path"
@@ -35,7 +36,7 @@ end
 local function get_compile_renderer_name()
     local caps = rhwi.get_caps()
     local rendertype = caps.rendererType
-    local platform = bgfx.get_platform_name()
+    local platform = baselib.platform_name
 
     if  rendertype == "DIRECT3D9" then
         return "d3d9"
@@ -67,11 +68,11 @@ local function compile_shader(filename, outfile)
 end
 
 local function check_compile_shader(name, outfile)
-    local ext = path.ext(name)    
+    local ext = path.ext(name)
     if ext and ext:lower() == "sc" then
         path.create_dirs(path.parent(outfile))
         local fullname = path.join(shader_asset_path, src_path, name)
-        local success, msg = compile_shader(fullname, outfile)        
+        local success, msg = compile_shader(fullname, outfile)
         if not success then
             print(string.format("try compile from file %s, but failed, error message : \n%s", fullname, msg))
             return false
@@ -130,7 +131,7 @@ function shader_mgr.programLoad(vs,fs, uniform)
             for k, v in pairs(uniform) do
                 local old_u = uniforms[k]
                 if old_u and old_u.type ~= v.type and old_u.num ~= v.num then
-                    log(string.format([[previous has been defined uniform, 
+                    log(string.format([[previous has been defined uniform,
                                     nameis : %s, type=%s, num=%d, replace as : type=%s, num=%d]],
                                     old_u.name, old_u.type, old_u.num, v.type, v.num))
                 end
@@ -141,7 +142,7 @@ function shader_mgr.programLoad(vs,fs, uniform)
         return prog
     else
         local vsid = load_shader(vs)
-        local fsid = fs and load_shader(fs)        
+        local fsid = fs and load_shader(fs)
         return bgfx.create_program(vsid, fsid, true)
     end
 end
