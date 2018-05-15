@@ -52,6 +52,8 @@ struct lnk_context {
 	struct nk_convert_config cfg;
 
 	// bgfx handles
+	uint64_t state;
+	uint32_t rgba;
 	int view;	// bgfx view id
 	bgfx_program_handle_t		prog;
 	bgfx_uniform_handle_t		tid;
@@ -219,8 +221,12 @@ lnk_context_init(lua_State *L) {
 	// todo:  if init raise error, bgfx handles may leak.
 	luaL_checktype(L, 1, LUA_TTABLE);
 	lc->view = getint(L, 1, "view");
-	// todo : background color
-	bgfx_set_view_clear(lc->view, BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH, 0x202020ff, 1.0f, 0);
+
+	if (lua_getfield(L, 1, "state") != LUA_TSTRING) {
+		luaL_error(L, "Need state as string");
+	}
+	get_state(L, -1, &lc->state, &lc->rgba);
+	lua_pop(L, 1);
 
 	int w = getint(L, 1, "width");
 	int h = getint(L, 1, "height");
@@ -2378,9 +2384,6 @@ lnk_update(lua_State *L) {
 
 	uint32_t offset = 0;
 
-	uint64_t state = BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A |
-		BGFX_STATE_BLEND_FUNC( BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA );
-
 	bgfx_update_dynamic_vertex_buffer(lc->vb, 0, make_memory(vbuf));
 	bgfx_update_dynamic_index_buffer(lc->ib, 0, make_memory(ibuf));
 
@@ -2390,7 +2393,7 @@ lnk_update(lua_State *L) {
 	nk_draw_foreach(cmd,&lc->context,&lc->cmds) {
 		if(!cmd->elem_count) continue;
 
-		bgfx_set_state(state, 0);
+		bgfx_set_state(lc->state, lc->rgba);
 		bgfx_texture_handle_t tex = {cmd->texture.id};
 
 		bgfx_set_texture(0, lc->tid, tex, UINT32_MAX);

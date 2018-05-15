@@ -38,8 +38,15 @@ local function init(canvas, fbw, fbh)
 			{ "COLOR0", 4, "UINT8", true },
 		},
 		texture = "s_texColor",
+		state = bgfx.make_state {
+			WRITE_MASK = "RGBA",
+			BLEND = "ALPHA",
+		},
 		prog = sm.programLoad("ui/vs_nuklear_texture.sc","ui/fs_nuklear_texture.sc")
 	}
+
+	bgfx.set_view_clear(UI_VIEW, "C", 0x303030ff, 1, 0)
+
 	task.loop(mainloop)
 end
 
