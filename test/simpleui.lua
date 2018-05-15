@@ -5,6 +5,9 @@ local rhwi = require "render.hardware_interface"
 local sm = require "render.resources.shader_mgr"
 local task = require "editor.task"
 local nk = require "bgfx.nuklear"
+local inputmgr = require "inputmgr"
+local mapiup = require "inputmgr.mapiup"
+local nkmsg = require "inputmgr.nuklear"
 
 local canvas = iup.canvas {}
 
@@ -14,10 +17,17 @@ local miandlg = iup.dialog {
 	size = "HALFxHALF",
 }
 
+local input_queue = inputmgr.queue(mapiup, canvas)
+
 local UI_VIEW = 0
 
 local ctx = {}
+local message = {}
 local function mainloop()
+	for _, msg,x,y,z,w,u in pairs(input_queue) do
+		nkmsg.push(message, msg, x,y,z,w,u)
+	end
+	nk.input(message)
 	nk.windowBegin( "Test","Test Window", 0, 0, 400, 60,
 		"border", "movable", "title", "scalable")
 	nk.windowEnd()

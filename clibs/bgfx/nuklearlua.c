@@ -2276,6 +2276,70 @@ extern "C" {
 
 */
 
+static int
+getmessage_int(lua_State *L, int index) {
+	lua_geti(L, -1, index);
+	int ret = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+	return ret;
+}
+
+static int
+getmessage_bool(lua_State *L, int index) {
+	lua_geti(L, -1, index);
+	int ret = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	return ret;
+}
+
+static int
+lnk_input(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	int n = lua_rawlen(L, 1);
+	struct lnk_context *lc = get_context(L);
+	struct nk_context *ctx = &lc->context;
+	if (n == 0) {
+		// no new message
+		nk_input_begin(ctx);
+		nk_input_end(ctx);
+		return 0;
+	}
+	int i;
+	nk_input_begin(ctx);
+	for (i=0;i<n;i++) {
+		if (lua_geti(L, 1, i+1) != LUA_TTABLE ||
+			lua_geti(L, -1, 1) != LUA_TSTRING) {
+			nk_input_end(ctx);
+			return luaL_error(L, "Invalid message at index %d", i+1);
+		}
+		const char * type = lua_tostring(L, -1);
+		lua_pop(L, 1);
+		int x,y,pressed,btnid;
+		switch (type[0]) {
+		case 'm' :
+			x = getmessage_int(L, 2);
+			y = getmessage_int(L, 3);
+			nk_input_motion(ctx, x, y);
+			break;
+		case 'b' :
+			btnid = getmessage_int(L, 2);
+			pressed = getmessage_bool(L, 3);
+			x = getmessage_int(L, 4);
+			y = getmessage_int(L, 5);
+			nk_input_button(ctx, btnid, x, y, pressed);
+			break;
+		default:
+			// ignore
+			break;
+		}
+		lua_pop(L, 1);
+		lua_pushnil(L);
+		lua_seti(L, 1, i+1);
+	}
+	nk_input_end(ctx);
+	return 0;
+}
+
 static nk_flags 
 nk_parse_window_flags(lua_State *L,int flags_begin) {
 	int argc = lua_gettop(L);
@@ -2366,10 +2430,6 @@ static int
 lnk_update(lua_State *L) {
 	struct lnk_context *lc = get_context(L);
 
-	// todo: input
-	nk_input_begin(&lc->context);
-	nk_input_end(&lc->context);
-
 	struct nk_buffer *vbuf = new_buffer();
 	struct nk_buffer *ibuf = new_buffer();
 
@@ -2424,6 +2484,7 @@ luaopen_bgfx_nuklear(lua_State *L) {
 		{ "init", lnk_context_init },
 		{ "resize", lnk_resize },
 		{ "update", lnk_update },
+		{ "input", lnk_input },
 		// nk api
 		{"windowBegin",lnk_windowBegin},
 		{"windowEnd",lnk_windowEnd},
