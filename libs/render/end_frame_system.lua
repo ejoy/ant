@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 local ru = require "render.util"
 local bgfx = require "bgfx"
+local baselib = require "bgfx.baselib"
 
 --[@
 ecs.component "frame_stat" {}
@@ -14,7 +15,7 @@ end_frame_sys.singleton "frame_stat"
 
 local lastcounter = nil
 local function fps()
-    local counter = bgfx.get_HP_counter()
+    local counter = baselib.HP_counter()
     local delta = 0
     if lastcounter then
         delta = counter - lastcounter 
@@ -22,7 +23,7 @@ local function fps()
 
     lastcounter = counter
 
-    local frequency = bgfx.get_HP_frequency()
+    local frequency = baselib.HP_frequency
     return delta and frequency / delta or 0
 end
 
