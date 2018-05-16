@@ -2,6 +2,7 @@ local require = import and import(...) or require
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
+local baselib = require "bgfx.baselib"
 local rhwi = require "render.hardware_interface"
 local toolset = require "editor.toolset"
 local path = require "filesystem.path"
@@ -28,7 +29,7 @@ end
 local function get_compile_renderer_name()
     local caps = rhwi.get_caps()
     local rendertype = caps.rendererType
-    local platform = bgfx.get_platform_name()
+    local platform = bgfx.platform_name
 
     if  rendertype == "DIRECT3D9" then
         return "d3d9"
@@ -159,4 +160,3 @@ function shader_mgr.get_uniform(name)
     return uniforms[name]
 end
 
-return shader_mgr
