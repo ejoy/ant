@@ -24,7 +24,10 @@
     <ClCompile Include="..\..\clibs\bgfx\luabgfxutil.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\bgfx\timer.cpp">
+    <ClCompile Include="..\..\clibs\bgfx\baselib.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\bgfx\nuklearlua.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
