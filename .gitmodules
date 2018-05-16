@@ -1,6 +1,3 @@
 [submodule "bin"]
 	path = bin
 	url = https://tea.ejoy.com/git/Ant/binary.git
-[submodule "assets/build"]
-	path = assets/build
-	url = https://tea.ejoy.com/git/Ant/assets.git
