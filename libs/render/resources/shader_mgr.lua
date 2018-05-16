@@ -5,9 +5,10 @@ local bgfx = require "bgfx"
 local rhwi = require "render.hardware_interface"
 local toolset = require "editor.toolset"
 local path = require "filesystem.path"
+local assetmgr = require "asset"
 
 -- init
-local function get_shader_subpath()
+local function get_shader_rendertype_path()
     local caps = rhwi.get_caps()
     local paths = {
         NOOP       = "dx9",
@@ -22,14 +23,6 @@ local function get_shader_subpath()
     }
 
     return assert(paths[caps.rendererType])
-end
-
-local shader_asset_path = "assets/shaders"
-local src_path = "src"
-
-local function get_shader_path()
-    local caps_bin_path = get_shader_subpath()
-    return path.join(shader_asset_path, caps_bin_path)
 end
 
 local function get_compile_renderer_name()
@@ -66,37 +59,48 @@ local function compile_shader(filename, outfile)
     return toolset.compile(filename, config, get_compile_renderer_name())
 end
 
-local function check_compile_shader(name, outfile)
-    local ext = path.ext(name)    
+local function check_compile_shader(name)
+    local rt_path = get_shader_rendertype_path()
+    local shader_subpath = path.join("shaders", rt_path, name)
+    shader_subpath = path.remove_ext(shader_subpath) .. ".bin"
+
+    local ext = path.ext(name)
     if ext and ext:lower() == "sc" then
-        path.create_dirs(path.parent(outfile))
-        local fullname = path.join(shader_asset_path, src_path, name)
-        local success, msg = compile_shader(fullname, outfile)        
-        if not success then
-            print(string.format("try compile from file %s, but failed, error message : \n%s", fullname, msg))
-            return false
+        local srcdir = path.join("shaders/src", name)
+        local srcpath = assetmgr.find_valid_asset_path(srcdir)
+        if srcpath then
+            local assetdir = assetmgr.assetdir()
+            local outfile = path.join(assetdir, shader_subpath)
+    
+            path.create_dirs(path.parent(outfile))            
+            local success, msg = compile_shader(srcpath, outfile)
+            if not success then
+                print(string.format("try compile from file %s, but failed, error message : \n%s", srcpath, msg))
+                return nil
+            end
+            return outfile
         end
     end
 
-    return true
+    return assetmgr.find_valid_asset_path(shader_subpath)
 end
 
 local function load_shader(name)
-    local filename = path.join(get_shader_path(), path.remove_ext(name)) .. ".bin"
-    if not check_compile_shader(name, filename) then
-        return nil
+    local filename = check_compile_shader(name)
+    if filename then
+        local f = assert(io.open(filename, "rb"))
+        local data = f:read "a"
+        f:close()
+        local h = bgfx.create_shader(data)
+        bgfx.set_name(h, filename)
+        return h
     end
-
-    local f = assert(io.open(filename, "rb"))
-    local data = f:read "a"
-    f:close()
-    local h = bgfx.create_shader(data)
-    bgfx.set_name(h, filename)
-    return h
+    return nil
 end
 
 local function load_shader_uniforms(name)
     local h = load_shader(name)
+    assert(h)
     local uniforms = bgfx.get_shader_uniforms(h)
     return h, uniforms
 end

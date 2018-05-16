@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 local bgfx = require "bgfx"
 local init_bgfx = ecs.system "init_bgfx"
+local assetmgr = require "asset"
 
 local ctx = { stats = {}}
 
@@ -11,7 +12,13 @@ function init_bgfx:init()
     bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
     bgfx.set_debug "T"
 
-    render_mesh:InitRenderContext("assets/meshes/bunny.bin")
+    local mesh_subpath = "meshes/bunny.bin"
+    local meshpath = assetmgr.find_valid_asset_path(mesh_subpath)
+    if meshpath then
+        render_mesh:InitRenderContext(meshpath)
+    else
+        error(string.format("not found mesh : %s", mesh_subpath))
+    end    
 end
 
 local render_frame = ecs.system "render_frame"

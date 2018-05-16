@@ -1,6 +1,7 @@
 local require = import and import(...) or require
 local rawtable = require "rawtable"
 local path = require "filesystem.path"
+local seri = require "serialize.util"
 
 local render_mt = {}
 render_mt.__index = render_mt
@@ -20,14 +21,24 @@ function render_mt:get_uniforms(midx, bidx)
     return material.uniform    
 end
 
-return function(filename, assetmgr)
+return function(filename)
     local assetmgr = require "asset"
 
     local render = assert(rawtable(filename))
     
     local function load_render_elem(elem)
         -- load mesh
-        local mesh = assetmgr.load(elem.mesh)
+        local function load_mesh(mesh_content)
+            local meshpath = mesh_content
+            if type(mesh_content) == "table" then
+                meshpath = string.format("mem://%s.mesh", path.remove_ext(filename))
+                seri.save(path, mesh_content)
+            end
+            assert(type(meshpath) == "string")            
+            return assetmgr.load(meshpath)
+        end
+
+        local mesh = load_mesh(elem.mesh)
 
         -- load materail binding
         local binding = {}
