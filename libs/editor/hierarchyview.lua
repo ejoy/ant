@@ -12,6 +12,14 @@ function hierarchyview:build(world)
     local eidin_hierarchy = {}
     local htree = {}
 
+    for _, eid in world:each("main_camera") do
+        assert(not eidin_hierarchy[eid])
+        eidin_hierarchy[eid] = true
+        local e = world[eid]
+        local ename = e.name
+        table.insert(htree, ename and ename.n or "main_camera")
+    end
+
     htree.branchname = world.name or "World"
 
     for _, eid in world:each("editable_hierarchy") do
