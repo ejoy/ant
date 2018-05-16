@@ -7,25 +7,21 @@ local hierarchyview = require "editor.hierarchyview"
 local editor_mainwindow = {}
 editor_mainwindow.__index = editor_mainwindow
 
-editor_mainwindow.hierarchyview = hierarchyview
+function editor_mainwindow:build_window(fbw, fbh)
+    self.hierarchyview = hierarchyview
 
-editor_mainwindow.assetview = iup.list {
-    expand = "YES",
-}
+    self.assetview = iup.list {
+        expand = "YES",
+    }
 
-editor_mainwindow.propertyview = iup.tree {
-    hidebuttons="NO",
-    expand = "YES",
-    title = "components",
-}
+    self.propertyview = iup.tree {
+        hidebuttons="NO",
+        expand = "YES",
+        title = "components",
+    }
 
-function editor_mainwindow:run(config)
-    iup.SetGlobal("UTF8MODE", "YES")
-
-    local fb_width, fb_height = config.fbw, config.fbh
-
-    local canvas = iup.canvas {
-        rastersize = fb_width .. "x" .. fb_height
+    self.canvas = iup.canvas {
+        rastersize = fbw .. "x" .. fbh
     }
 
     self.dlg = iup.dialog {
@@ -33,10 +29,10 @@ function editor_mainwindow:run(config)
             iup.split {
                 iup.split {
                     iup.frame {
-                        hierarchyview.window,
+                        self.hierarchyview.window,
                         title = "hierarchy",
                     },
-                    canvas,                
+                    self.canvas,                
                     showgrip = "NO",
                 },
                 elog.window,
@@ -44,12 +40,12 @@ function editor_mainwindow:run(config)
             },
             iup.split {
                 iup.frame {
-                    assetview,
+                    self.assetview,
                     title = "asset",
                     size = "HALFxHALF",
                 },                
                 iup.frame {
-                    propertyview,
+                    self.propertyview,
                     title = "property",
                     size = "HALFxHALF",
                 },
@@ -64,13 +60,21 @@ function editor_mainwindow:run(config)
         title = "Editor",
         shrink="YES",	-- logger box should be allow shrink
     }
+end
 
-    dlg:showxy(iup.CENTER,iup.CENTER)
-    dlg.usersize = nil
+function editor_mainwindow:run(config)
+    iup.SetGlobal("UTF8MODE", "YES")
 
-    local world = config.init_op(iup.GetAttributeData(canvas,"HWND"), 
+    local fb_width, fb_height = config.fbw, config.fbh
+
+    self:build_window(fb_width, fb_height)
+
+    self.dlg:showxy(iup.CENTER,iup.CENTER)
+    self.dlg.usersize = nil
+
+    local world = config.init_op(iup.GetAttributeData(self.canvas,"HWND"), 
         fb_width, fb_height,
-        inputmgr.queue(mapiup, canvas))
+        inputmgr.queue(mapiup, self.canvas))
         
     -- to be able to run this script inside another context
     if (iup.MainLoopLevel()==0) then

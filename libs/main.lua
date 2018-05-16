@@ -5,7 +5,7 @@ local rhwi = require "render.hardware_interface"
 local bgfx = require "bgfx"
 local scene = require "scene.util"
 
-editor_mainwindow.run {
+editor_mainwindow:run {
 	init_op = function (nwh, fbw, fbh, iq)
 		rhwi.init(nwh, fbw, fbh)
 		return scene.start_new_world(iq, fbw, fbh, "test_world.module")
