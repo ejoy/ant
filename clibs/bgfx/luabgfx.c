@@ -1098,43 +1098,6 @@ byte2hex(uint8_t c, uint8_t *t) {
 	t[1] = hex[c&0xf];
 }
 
-static int inline
-hex2n(lua_State *L, char c) {
-	if (c>='0' && c<='9')
-		return c-'0';
-	else if (c>='A' && c<='F')
-		return c-'A' + 10;
-	else if (c>='a' && c<='f')
-		return c-'a' + 10;
-	return luaL_error(L, "Invalid state %c", c);
-}
-
-static inline void
-get_state(lua_State *L, int idx, uint64_t *pstate, uint32_t *prgba) {
-	size_t sz;
-	const uint8_t * data = (const uint8_t *)luaL_checklstring(L, idx, &sz);
-	if (sz != 16 && sz != 24) {
-		luaL_error(L, "Invalid state length %d", sz);
-	}
-	uint64_t state = 0;
-	uint32_t rgba = 0;
-	int i;
-	for (i=0;i<15;i++) {
-		state |= hex2n(L,data[i]);
-		state <<= 4;
-	}
-	state |= hex2n(L,data[15]);
-	if (sz == 24) {
-		for (i=0;i<7;i++) {
-			rgba |= hex2n(L,data[16+i]);
-			rgba <<= 4;
-		}
-		rgba |= hex2n(L,data[23]);
-	}
-	*pstate = state;
-	*prgba = rgba;
-}
-
 static int
 lmakeState(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
@@ -3679,29 +3642,6 @@ lsetImage(lua_State *L) {
 	return 0;
 }
 
-extern int64_t get_HP_counter();
-extern int64_t get_HP_frequency();
-
-static int
-lgetHPCounter(lua_State *L){
-	int64_t i64 = get_HP_counter();
-	lua_pushinteger(L, i64);
-	return 1;
-}
-
-static int
-lgetHPFrequency(lua_State *L){
-	int64_t i64 = get_HP_frequency();
-	lua_pushinteger(L, i64);
-	return 1;
-}
-
-static int
-lgetPlatformName(lua_State *L){
-	lua_pushstring(L, BX_PLATFORM_NAME);
-	return 1;
-}
-
 LUAMOD_API int
 luaopen_bgfx(lua_State *L) {
 	luaL_checkversion(L);
@@ -3784,9 +3724,6 @@ luaopen_bgfx(lua_State *L) {
 		{ "get_shader_uniforms", lgetShaderUniforms },
 		{ "set_view_mode", lsetViewMode },
 		{ "set_image", lsetImage },
-		{ "get_HP_counter", lgetHPCounter},
-		{ "get_HP_frequency", lgetHPFrequency},
-		{ "get_platform_name", lgetPlatformName},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

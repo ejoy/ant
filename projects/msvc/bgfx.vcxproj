@@ -19,10 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\clibs\bgfx\baselib.cpp" />
     <ClCompile Include="..\..\clibs\bgfx\ibcompress.cpp" />
     <ClCompile Include="..\..\clibs\bgfx\luabgfx.c" />
     <ClCompile Include="..\..\clibs\bgfx\luabgfxutil.c" />
-    <ClCompile Include="..\..\clibs\bgfx\timer.cpp" />
+    <ClCompile Include="..\..\clibs\bgfx\nuklearlua.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\bgfx\luabgfx.h" />

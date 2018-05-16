@@ -36,25 +36,34 @@ local resources = setmetatable({}, {__mode="kv"})
 -- 	return loader
 -- end
 
-local searchdirs = {"assets/assetfiles"}
-local function find_valid_path(fn)
-	if path.is_mem_file(fn) or fs.exist(fn) then
-		return fn
-	end
+local asset_rootdir = "assets"
 
-	for _, p in ipairs(searchdirs) do
-		local defaultpath = path.join(p, fn)
-		if fs.exist(defaultpath) then
-			return defaultpath
-		end
-	end
-
-	error(string.format("file not exist : %s", fn))
-	return nil
-end
+local searchdirs = {
+	asset_rootdir,
+	asset_rootdir .. "/build"
+}
 
 function assetmgr.get_searchdirs()
 	return searchdirs
+end
+
+function assetmgr.find_valid_asset_path(asset_subpath)
+	if path.is_mem_file(asset_subpath) or fs.exist(asset_subpath) then
+		return asset_subpath
+	end
+
+	for _, d in ipairs(searchdirs) do
+		local p = path.join(d, asset_subpath)
+		if fs.exist(p) then
+			return p
+		end
+	end
+
+	return nil
+end
+
+function assetmgr.assetdir()
+	return asset_rootdir
 end
 
 function assetmgr.insert_searchdir(idx, dir)
@@ -72,9 +81,12 @@ function assetmgr.load(filename)
 	local res = resources[filename]
 	if res == nil then
 		local ext = assert(path.ext(filename))
-		local fn = find_valid_path(filename)
+		local fn = assetmgr.find_valid_asset_path(filename)
+		if fn == nil then
+			fn = assetmgr.find_valid_asset_path(path.join("assetfiles", filename))
+		end		
 		
-		res = loader[ext](fn)				
+		res = loader[ext](fn)
 		resources[fn] = res
 	end
 

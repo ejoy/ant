@@ -2,298 +2,279 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <vector>
-using namespace std;
+#include <stdlib.h>
 
-extern "C" {
-	#include <lua.h>
-	#include <lualib.h>
-	#include <lauxlib.h>
-}
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 
+#include <bgfx/c99/bgfx.h>
 
-//#define PLATFORM_GL 
-#define PLATFORM_BGFX 
+#include "luabgfx.h"
 
-//#define FONT_ATLAS_DEBUG
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
 
-#include "device.h"
-#include "imageutl.h"
+#define NK_IMPLEMENTATION
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_PRIVATE
 
-static float s_version	 =	 1.0f;
+// nuklear global stack 
+#define NK_BUTTON_BEHAVIOR_STACK_SIZE   32
+#define NK_FONT_STACK_SIZE              32
+#define NK_STYLE_ITEM_STACK_SIZE        256
+#define NK_FLOAT_STACK_SIZE             256
+#define NK_VECTOR_STACK_SIZE            128
+#define NK_FLAGS_STACK_SIZE             64
+#define NK_COLOR_STACK_SIZE             256
 
-static lua_State *			 s_L;	// TODO: 不应使用全局变量 s_L, L 必须通过 API 传递。因为不同的虚拟机（不可以假设只有一个虚拟机）或 coroutine 都有不同的 L 。
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
 
-// TODO: 所有全局变量应该放在 L 中。
-// 使用一个 struct nk_confiure {} 包含所有的全局变量
-// 使用 lua_(get/set)field(L, LUA_REGISTRYINDEX, "NKLUA") 来读写这个结构，每个 VM 一份。
+#include "nuklear/nuklear.h"
 
-static struct device         device;
- 	   struct nk_context     context;
+struct lnk_ui_vertex {
+	float position[2];
+	float uv[2];
+	nk_byte col[4];
+};
 
-// simple font manager ,optimize in future 
-static struct nk_font_atlas  g_atlas;
-static 
-std::vector<struct nk_font*> g_fonts;	// TODO: 使用固定长度数组，设定上限个数，去掉 vector 后，改用 .c 。
-static int    	     		 g_font_count = 0 ;
+struct lnk_context {
+	int init;
+	int width;
+	int height;
+	struct nk_font **fonts;
 
-static struct nk_cursor      g_cursors[NK_CURSOR_COUNT];
+	struct nk_buffer cmds;	// draw commands
+	struct nk_font_atlas atlas;
+	struct nk_context context;
+	struct nk_convert_config cfg;
 
-// for ui control 
-static char *	     		 g_sys_edit_buffer;
-static char ** 		 		 g_combobox_items;
-// for style setting 
-static float *		 		 g_floats = 0;                
-static int    	     		 g_layout_ratio_count = 0;   
+	// bgfx handles
+	uint64_t state;
+	uint32_t rgba;
+	int view;	// bgfx view id
+	bgfx_program_handle_t		prog;
+	bgfx_uniform_handle_t		tid;
+	bgfx_texture_handle_t		fontexture;
+	bgfx_dynamic_vertex_buffer_handle_t	vb;
+	bgfx_dynamic_index_buffer_handle_t	ib;
+};
 
+static int
+lnk_context_delete(lua_State *L) {
+	struct lnk_context *lc = lua_touserdata(L, 1);
+	if (lc->init) {
+		nk_buffer_free(&lc->cmds);
+		nk_font_atlas_clear(&lc->atlas);
+		nk_free(&lc->context);
 
-//---- platform device ----
+		bgfx_destroy_dynamic_vertex_buffer(lc->vb);
+		bgfx_destroy_dynamic_index_buffer(lc->ib);
+		bgfx_destroy_texture(lc->fontexture);
+		bgfx_destroy_uniform(lc->tid);
+		bgfx_destroy_program(lc->prog);
+		free(lc->fonts);
 
-static void
-device_draw( struct device *dev, struct nk_context *ctx, int width, int height,
-    enum nk_anti_aliasing AA)
-{
-#ifdef PLATFORM_GL
-	Platform_GL_draw(dev,ctx,width,height,AA);
-#endif 
-
-#ifdef PLATFORM_BGFX
-	Platform_Bgfx_draw(dev,ctx,width,height,AA);
-#endif 
+		lc->init = 0;
+	}
+	return 0;
 }
 
 static int
-device_init( struct device *dev ) 
-{
-	dev->device_draw  = device_draw;
-	dev->nk_ctx = &context;
-	dev->nk_update_cb = NULL;
-
-#ifdef PLATFORM_GL	
-    Platform_GL_init(dev);
-#endif 	
-
-#ifdef PLATFORM_BGFX
-	Platform_Bgfx_init(dev);
-#endif
-    return 1;
+lnk_context_new(lua_State *L) {
+	struct lnk_context * lc = lua_newuserdata(L, sizeof(*lc));
+	lc->init = 0;	// not init
+	lua_createtable(L, 0, 1);
+	lua_pushcfunction(L, lnk_context_delete);
+	lua_setfield(L, -2, "__gc");
+	lua_setmetatable(L, -2);
+	return 1;
 }
 
-static int 
-device_shutdown( struct device *dev  ) {
-#ifdef PLATFORM_GL	
-	Platform_GL_shutdown(dev);
-#endif	
-#ifdef PLATFORM_BGFX
-	Platform_Bgfx_shutdown(dev);
-#endif
-    return 1;
-}
-
-static void  
-device_upload_atlas( struct device *dev, const void *image, int width, int height)
-{
-#ifdef PLATFORM_GL	
-	Platform_GL_upload_atlas(dev,image,width,height);
-#endif
-#ifdef PLATFORM_BGFX
-	Platform_Bgfx_upload_atlas(dev,image,width,height);
-#endif 
-}
-
-// TODO: 不要直接使用文件名调用文件系统，通过 bgfx id 和 bgfx 交互。因为文件将被统一管理。
-static struct nk_ui_image 
-device_loadimage(const char *filename)
-{
-#ifdef PLATFORM_GL
-	return Platform_GL_loadImage( filename);
-#endif 
-
-#ifdef PLATFORM_BGFX
-	return Platform_Bgfx_loadImage( filename);
-#endif 
-}
-
-void device_freeimage(int texId) 
-{
-#ifdef PLATFORM_GL
-	return Platform_GL_freeImage( texId );
-#endif 
-
-#ifdef PLATFORM_BGFX
-	return Platform_Bgfx_freeImage( texId );
-#endif 
-}
-
-// atlas 图集纹理等与 platform 相关桥接函数
-// atlas 图集创建初始化,清除之前创建的 glyph 和 pixel 内存
-void device_font_stash_begin(struct nk_font_atlas *atlas)
-{
-	//nk_font_atlas_init_default(atlas);     // clear atlas, only init once this time
-	nk_font_atlas_begin(atlas);
-}
-
-void device_font_stash_end(struct nk_font_atlas *atlas)
-{
-	const void* image;
-	int 		w,h;
-	image = nk_font_atlas_bake( atlas,&w,&h,NK_FONT_ATLAS_RGBA32);
-	device_upload_atlas( &device,image,w,h );
-
-#ifdef FONT_ATLAS_DEBUG	
-	saveImage("msyh.bmp",w,h, 4, image);
-#endif 
-
-#ifdef PLATFORM_GL 
-	nk_font_atlas_end(atlas,nk_handle_id(device.font_tex),&device.null);
-#endif 
-
-#ifdef PLATFORM_BGFX 
-	nk_font_atlas_end(atlas, nk_handle_id(device.tex.idx), &device.null);
-#endif  
-	//printf_s("\n === msyh.ttf :size =%.f, glyh count=%d,atlas (w=%d,h=%d)=== \n",
-	//								g_atlas.config->size,g_atlas.glyph_count,w,h);
-}
-
-
-// font utility
-/*
-// simple sample 
-nk_font* load_font( const char *fontname,int fontsize) 
-{
-	const void *font_image; int w, h;
-	struct nk_font	*font;
-	nk_font_atlas_init_default(&g_atlas);   // only once 
-	nk_font_atlas_begin(&g_atlas);
-	font  = nk_font_atlas_add_from_file(&g_atlas,fontname,fontsize,0);  
-	font_image = nk_font_atlas_bake(&g_atlas,&w,&h,NK_FONT_ATLAS_RGBA32);
-
-	device_upload_atlas(&device,font_image,w,h);   					  // binding atlas to gpu 
-
-	nk_font_atlas_end(&g_atlas,nk_handle_id((int)device.font_tex),&device.null);
-	return font;
-}
-*/
-
-void nk_fonts_mgr_init()
-{
-	// clear atlas, only init once this time
-	nk_font_atlas_init_default(&g_atlas);     
-	g_fonts.reserve(5);
-	g_font_count = 0;
-}
-
-void nk_fonts_mgr_shutdown()
-{
-	for(int i=0;i<g_fonts.size();i++)
-		free(g_fonts[i]);
-	g_fonts.clear();
-}
-
-// TODO: 避免用文件名直接操作文件读取 font ，建议暂时换成文件内容，在 lua 打开文件，读入，并传入。
-nk_font* load_chinese_font( const char *fontname,int fontsize) 
-{
-	struct nk_font *font = NULL;
-
-	device_font_stash_begin( &g_atlas );
-
-	struct nk_font_config cfg = nk_font_config( fontsize );     // cfg : font size 
-	//cfg.merge_mode = nk_true;    							    // cfg : merge to last font ?
-	cfg.oversample_v =1;
-	cfg.oversample_h =1;
-	cfg.range = nk_font_chinese_glyph_ranges();   				// cfg : unicode range list
-	font      = nk_font_atlas_add_from_file(&g_atlas,fontname,fontsize,&cfg);
-
-	device_font_stash_end( &g_atlas );
-
-	return  font;
-}
-
-// load font common function 
-// rune = nk_font_chinese_glyph_ranges() or nk_font_korean_glyph_ranges() 
-nk_font* load_font( const char *fontname,int fontsize,const nk_rune *rune)
-{
-	struct nk_font *font = NULL;
-
-	device_font_stash_begin( &g_atlas );
-
-	struct nk_font_config cfg = nk_font_config( fontsize );     // cfg : font size 
-	cfg.oversample_v =1;
-	cfg.oversample_h =1;
-	cfg.range = rune;   				// cfg : unicode range list
-	//cfg.merge_mode = nk_true;    		// cfg : merge to last font ?	
-
-	if(fontname)
-		font   =  nk_font_atlas_add_from_file(&g_atlas,fontname,fontsize,&cfg);
-	else if( g_font_count == 0 ) 
-		font   =  nk_font_atlas_add_default(&g_atlas, 13.0f, NULL);
-
-	device_font_stash_end( &g_atlas );
-
-	return font;
-}
-// lua 使用者以font id 引用识别，可以简单些
-int load_font_id( const char *fontname,int fontsize) 
-{
-	// return 0 means default font，where g_font_count >= NK_ANT_MAX_FONTS or font name equals nil. 
-	if(g_font_count >= NK_ANT_MAX_FONTS)
-		return 0;         
-
-	printf_s("--prepare to load %s font--\n",fontname);
-	const nk_rune *rune = nk_font_chinese_glyph_ranges();
-
-	struct nk_font *font = load_font( fontname,fontsize, rune );
-	if( font == nullptr ) {
-		return 0;
+static struct lnk_context *
+get_context(lua_State *L) {
+	struct lnk_context *lc = lua_touserdata(L, lua_upvalueindex(1));
+	if (!lc->init) {
+		luaL_error(L, "Init context first");
 	}
-
-	if(g_font_count >= g_fonts.capacity()) 
-		g_fonts.resize( g_font_count +5 );
-    g_fonts[ g_font_count++ ] = font;
-
-	printf_s("\n g_font_count = %d \n",g_font_count);
-	return g_font_count -1;
+	return lc;
 }
 
-
-
-// --- gui ---
-// inner support mainloop
-
-static int 
-lnk_mainloop(lua_State *L) 
-{
-#ifdef PLATFORM_GL 
-    Platform_GL_run(&device, &context );
-#endif 
-#ifdef PLATFORM_BGFX
-	Platform_Bgfx_run(&device,&context );
-#endif
+static struct lnk_context *
+get_context_uninit(lua_State *L) {
+	struct lnk_context *lc = lua_touserdata(L, lua_upvalueindex(1));
+	if (lc->init) {
+		luaL_error(L, "Can't init context more than once");
+	}
+	return lc;
 }
 
-
-
-//--- gui ---
-
-// ---- nk lua utility ---
-
-static struct nk_image load_image(const char *filename) 
-{
-	// load image 与 platform 相关，so use device_loadImage
-	struct nk_ui_image  ui_image  = device_loadimage(filename);
-	struct nk_image     image 	  = nk_image_id( ui_image.handle );
-
-	image.w = ui_image.w;
-	image.h = ui_image.h;
-
-	image.region[0] = ui_image.region[0];
-	image.region[1] = ui_image.region[1];
-	image.region[2] = ui_image.region[2];
-	image.region[3] = ui_image.region[3];
-
-	return image;
+static int
+getint(lua_State *L, int table, const char *key) {
+	if (lua_getfield(L, table, key) != LUA_TNUMBER) {
+		luaL_error(L, "Need %s as number", key);
+	}
+	if (!lua_isinteger(L, -1)) {
+		luaL_error(L, "%s should be integer", key);
+	}
+	int n = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+	return n;
 }
 
+static int
+getintopt(lua_State *L, int table, const char *key, int opt) {
+	if (lua_getfield(L, table, key) == LUA_TNIL) {
+		lua_pop(L, 1);
+		return opt;
+	}
+	int n = luaL_checkinteger(L, -1);
+	lua_pop(L, 1);
+	return n;
+}
+
+static const char *
+getstring(lua_State *L, int table, const char *key) {
+	if (lua_getfield(L, table, key) != LUA_TSTRING) {
+		luaL_error(L, "Need %s as string", key);
+	}
+	const char * s = lua_tostring(L, -1);
+	lua_pop(L, 1);
+	return s;
+}
+
+static void
+bake_default(lua_State *L, struct lnk_context *lc) {
+	lc->fonts = malloc(sizeof(lc->fonts[0]) * 1);
+	lc->fonts[0] =  nk_font_atlas_add_default(&lc->atlas, 13.0f, NULL);
+}
+
+static void
+gen_fontexture(lua_State *L, struct lnk_context *lc) {
+	int w=0,h=0;
+	const void* image = nk_font_atlas_bake(&lc->atlas,&w,&h,NK_FONT_ATLAS_RGBA32);	// todo: use ALPHA8
+	int size = w * h *4;
+	const bgfx_memory_t *m = bgfx_alloc(size);
+	memcpy(m->data,image,size);
+	lc->fontexture = bgfx_create_texture_2d(w,h,0,1,BGFX_TEXTURE_FORMAT_RGBA8,0,m);
+}
+
+static void
+init_config(lua_State *L, struct lnk_context *lc) {
+	struct nk_convert_config *config = &lc->cfg;
+	NK_MEMSET(config, 0, sizeof(*config));
+
+	static const struct nk_draw_vertex_layout_element vertex_layout[] = {
+		{NK_VERTEX_POSITION, NK_FORMAT_FLOAT, NK_OFFSETOF(struct lnk_ui_vertex, position)},
+		{NK_VERTEX_TEXCOORD, NK_FORMAT_FLOAT, NK_OFFSETOF(struct lnk_ui_vertex, uv)},
+		{NK_VERTEX_COLOR, NK_FORMAT_R8G8B8A8, NK_OFFSETOF(struct lnk_ui_vertex, col)},
+		{NK_VERTEX_LAYOUT_END}
+	};
+
+	config->vertex_layout = vertex_layout;
+	config->vertex_size = sizeof(struct lnk_ui_vertex);
+	config->vertex_alignment = NK_ALIGNOF(struct lnk_ui_vertex);
+	// init config->null from atlas later
+
+	config->circle_segment_count = getintopt(L, 1, "circle", 22);
+	config->curve_segment_count = getintopt(L, 1, "curve", 22);
+	config->arc_segment_count = getintopt(L, 1, "arc", 22);
+
+	// todo: read etc from config table
+	config->global_alpha = 1.0f;
+	config->shape_AA = NK_ANTI_ALIASING_ON;
+	config->line_AA = NK_ANTI_ALIASING_ON;
+}
+
+static void
+context_resize(lua_State *L, struct lnk_context *lc, int w, int h) {
+	lc->width = w;
+	lc->height = h;
+	if (w == 0 || h == 0)
+		luaL_error(L, "Width %d or Height %d can't be zero", w, h);
+	float ortho[4][4] = {
+		{2.0f, 0.0f, 0.0f, 0.0f},
+		{0.0f,-2.0f, 0.0f, 0.0f},
+		{0.0f, 0.0f,-1.0f, 0.0f},
+		{-1.0f,1.0f, 0.0f, 1.0f},
+	};
+	ortho[0][0] /= w;
+	ortho[1][1] /= h;
+	bgfx_set_view_rect(lc->view, 0, 0, w, h);
+	bgfx_set_view_transform(0, 0, ortho);
+}
+
+static int
+lnk_resize(lua_State *L) {
+	struct lnk_context *lc = get_context(L);
+	int w = luaL_checkinteger(L, 1);
+	int h = luaL_checkinteger(L, 2);
+	context_resize(L, lc, w, h);
+	return 0;
+}
+
+static int
+lnk_context_init(lua_State *L) {
+	struct lnk_context *lc = get_context_uninit(L);
+	// todo:  if init raise error, bgfx handles may leak.
+	luaL_checktype(L, 1, LUA_TTABLE);
+	lc->view = getint(L, 1, "view");
+
+	if (lua_getfield(L, 1, "state") != LUA_TSTRING) {
+		luaL_error(L, "Need state as string");
+	}
+	get_state(L, -1, &lc->state, &lc->rgba);
+	lua_pop(L, 1);
+
+	int w = getint(L, 1, "width");
+	int h = getint(L, 1, "height");
+	context_resize(L, lc, w, h);
+	int prog = BGFX_LUAHANDLE_ID(PROGRAM, getint(L, 1, "prog"));
+	lc->prog.idx = prog;
+	const char * tid_uniform = getstring(L, 1, "texture");
+	lc->tid = bgfx_create_uniform(tid_uniform, BGFX_UNIFORM_TYPE_INT1, 1);
+
+	if (lua_getfield(L, 1, "decl") != LUA_TUSERDATA) {
+		luaL_error(L, "Need decl as userdata");
+	}
+	bgfx_vertex_decl_t *decl = lua_touserdata(L, -1);
+	lua_pop(L, 1);
+
+	lc->vb = bgfx_create_dynamic_vertex_buffer(0, decl, BGFX_BUFFER_ALLOW_RESIZE);
+	lc->ib = bgfx_create_dynamic_index_buffer(0, BGFX_BUFFER_ALLOW_RESIZE);
+
+	nk_buffer_init_default(&lc->cmds);
+	
+	// init config
+	init_config(L, lc);
+
+	nk_font_atlas_init_default(&lc->atlas);
+	nk_font_atlas_begin(&lc->atlas);
+
+	if (lua_getfield(L, 1, "fonts") == LUA_TNIL) {
+		bake_default(L, lc);
+	} else {
+		// todo: bake_fonts
+		luaL_error(L, "TODO: bake fonts");
+//		bake_fonts(L, lc);
+	}
+	lua_pop(L, 1);
+
+	gen_fontexture(L, lc);
+
+	nk_font_atlas_end(&lc->atlas, nk_handle_id(lc->fontexture.idx), &lc->cfg.null);
+	nk_font_atlas_cleanup(&lc->atlas);
+
+	nk_init_default(&lc->context,&lc->fonts[0]->handle);
+
+	lc->init = 1;
+
+	return 0;
+}
+
+/*
 // lua 5.1 后舍弃的函数
 LUALIB_API int 
 luaL_typerror (lua_State *L, int narg, const char *tname) 
@@ -473,7 +454,7 @@ static int nk_lua_is_active(struct nk_context *ctx)
 	if (!ctx) return 0;
 	iter = ctx->begin;
 	while (iter) {
-		/* check if window is being hovered */
+		// check if window is being hovered 
 		if (iter->flags & NK_WINDOW_MINIMIZED) {
 			struct nk_rect header = iter->bounds;
 			header.h = ctx->style.font->height + 2 * ctx->style.window.header.padding.y;
@@ -482,7 +463,7 @@ static int nk_lua_is_active(struct nk_context *ctx)
 		} else if (nk_input_is_mouse_hovering_rect(&ctx->input, iter->bounds)) {
 			return 1;
 		}
-		/* check if window popup is being hovered */
+		// check if window popup is being hovered 
 		if (iter->popup.active && iter->popup.win && nk_input_is_mouse_hovering_rect(&ctx->input, iter->popup.win->bounds))
 			return 1;
 		if (iter->edit.active & NK_EDIT_ACTIVE)
@@ -540,30 +521,6 @@ void nk_lua_default_ui_cache_shutdown()
   	nk_lua_free( g_sys_edit_buffer );
   	nk_lua_free( g_combobox_items);
 }
-
-/*
-void default_font_init(int fontsize)
-{
-	const void *font_image; int w, h;
-	struct nk_font *font;
-
-	nk_font_atlas_init_default( &g_atlas);
-	nk_font_atlas_begin( &g_atlas);
-	font  = nk_font_atlas_add_default( &g_atlas, fontsize, 0);
-	font_image = nk_font_atlas_bake( &g_atlas, &w, &h, NK_FONT_ATLAS_RGBA32);
-
-	// create texture id from platform gl
-	device_upload_atlas( &device, font_image, w, h);    				
-	// link atlas and texture id
-	nk_font_atlas_end( &g_atlas, nk_handle_id((int)device.font_tex), &device.null);  
-	
-	// we need a defaut font handle
-	int result =  nk_init_default(&context,&font->handle);     		
-	if( result ) {
-			printf_s("nk font atlas image: w = %d,h=%d \n",w,h);
-	}
-}
-*/
 
 // for setStyle,unsetStyle 
 void nk_lua_stack_init()
@@ -895,7 +852,7 @@ lnk_set_style_default(lua_State *L)
 	// 在默认外额外的测试设置 -- 展示手工设置方法
 	// my default
 	struct nk_context &ctx = context;
- /* window */
+ // window 
  	struct nk_color background_color = nk_rgb(250,250,250);
 	ctx.style.window.background = nk_rgb(204,204,204);
 	//ctx.style.window.fixed_background = nk_style_item_image(media.window);      //image 
@@ -910,7 +867,7 @@ lnk_set_style_default(lua_State *L)
 	ctx.style.window.border_color = nk_rgba(250,0,0,128);
 	ctx.style.window.padding = nk_vec2(8,14);
 	ctx.style.window.border = 3;
-/* button */
+// button 
 	ctx.style.button.text_background  = nk_rgb(20,120,20);
 	ctx.style.button.text_hover       = nk_rgb(120,120,20);
 
@@ -2317,3 +2274,225 @@ extern "C" {
     }
 }
 
+*/
+
+static int
+getmessage_int(lua_State *L, int index) {
+	lua_geti(L, -1, index);
+	int ret = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+	return ret;
+}
+
+static int
+getmessage_bool(lua_State *L, int index) {
+	lua_geti(L, -1, index);
+	int ret = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	return ret;
+}
+
+static int
+lnk_input(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	int n = lua_rawlen(L, 1);
+	struct lnk_context *lc = get_context(L);
+	struct nk_context *ctx = &lc->context;
+	if (n == 0) {
+		// no new message
+		nk_input_begin(ctx);
+		nk_input_end(ctx);
+		return 0;
+	}
+	int i;
+	nk_input_begin(ctx);
+	for (i=0;i<n;i++) {
+		if (lua_geti(L, 1, i+1) != LUA_TTABLE ||
+			lua_geti(L, -1, 1) != LUA_TSTRING) {
+			nk_input_end(ctx);
+			return luaL_error(L, "Invalid message at index %d", i+1);
+		}
+		const char * type = lua_tostring(L, -1);
+		lua_pop(L, 1);
+		int x,y,pressed,btnid;
+		switch (type[0]) {
+		case 'm' :
+			x = getmessage_int(L, 2);
+			y = getmessage_int(L, 3);
+			nk_input_motion(ctx, x, y);
+			break;
+		case 'b' :
+			btnid = getmessage_int(L, 2);
+			pressed = getmessage_bool(L, 3);
+			x = getmessage_int(L, 4);
+			y = getmessage_int(L, 5);
+			nk_input_button(ctx, btnid, x, y, pressed);
+			break;
+		default:
+			// ignore
+			break;
+		}
+		lua_pop(L, 1);
+		lua_pushnil(L);
+		lua_seti(L, 1, i+1);
+	}
+	nk_input_end(ctx);
+	return 0;
+}
+
+static nk_flags 
+nk_parse_window_flags(lua_State *L,int flags_begin) {
+	int argc = lua_gettop(L);
+	nk_flags flags = NK_WINDOW_NO_SCROLLBAR;
+	int i;
+	for (i = flags_begin; i <= argc; ++i) {
+		const char *flag = luaL_checkstring(L, i);
+		if (!strcmp(flag, "border"))
+			flags |= NK_WINDOW_BORDER;
+		else if (!strcmp(flag, "movable"))
+			flags |= NK_WINDOW_MOVABLE;
+		else if (!strcmp(flag, "scalable"))
+			flags |= NK_WINDOW_SCALABLE;
+		else if (!strcmp(flag, "closable"))
+			flags |= NK_WINDOW_CLOSABLE;
+		else if (!strcmp(flag, "minimizable"))
+			flags |= NK_WINDOW_MINIMIZABLE;
+		else if (!strcmp(flag, "scrollbar"))
+			flags &= ~NK_WINDOW_NO_SCROLLBAR;
+		else if (!strcmp(flag, "title"))
+			flags |= NK_WINDOW_TITLE;
+		else if (!strcmp(flag, "scroll auto hide"))
+			flags |= NK_WINDOW_SCROLL_AUTO_HIDE;
+		else if (!strcmp(flag, "background"))
+			flags |= NK_WINDOW_BACKGROUND;
+		else {
+			const char *msg = lua_pushfstring(L, "unrecognized window flag '%s'", flag);
+			return luaL_argerror(L, i, msg);
+		}
+	}
+	return flags;
+}
+
+static int 
+lnk_windowBegin(lua_State *L) {
+	struct lnk_context *lc = get_context(L);
+	const char *name, *title;
+	int bounds_begin;
+	if (lua_isnumber(L, 2)) {
+		// 5 parameters ,2 = number 
+		name = title = luaL_checkstring(L, 1);
+		bounds_begin = 2;
+	} else {
+		// name ,title 
+		name = luaL_checkstring(L, 1);
+		title = luaL_checkstring(L, 2);
+		bounds_begin = 3;
+	}
+	nk_flags flags = nk_parse_window_flags(L,bounds_begin + 4);
+	float x = luaL_checknumber(L, bounds_begin);
+	float y = luaL_checknumber(L, bounds_begin + 1);
+	float width = luaL_checknumber(L, bounds_begin + 2);
+	float height = luaL_checknumber(L, bounds_begin + 3);
+	int open = nk_begin_titled(&lc->context, name, title, nk_rect(x, y, width, height), flags);
+	lua_pushboolean(L, open);
+
+	return 1;
+}
+
+static int 
+lnk_windowEnd(lua_State* L) {
+	struct lnk_context *lc = get_context(L);
+	nk_end(&lc->context);
+
+	return 1;
+}
+
+static struct nk_buffer *
+new_buffer(void) {
+	struct nk_buffer * buf = malloc(sizeof(struct nk_buffer));
+	nk_buffer_init_default(buf);
+	return buf;
+}
+
+static void
+release_buf(void *ptr, void * buf) {
+	(void)ptr;
+	nk_buffer_free((struct nk_buffer *)buf);
+	free(buf);
+}
+
+static const bgfx_memory_t *
+make_memory(struct nk_buffer *buf) {
+	return bgfx_make_ref_release(nk_buffer_memory(buf), buf->needed, release_buf, buf);
+}
+
+static int
+lnk_update(lua_State *L) {
+	struct lnk_context *lc = get_context(L);
+
+	struct nk_buffer *vbuf = new_buffer();
+	struct nk_buffer *ibuf = new_buffer();
+
+	int ret = nk_convert(&lc->context, &lc->cmds, vbuf, ibuf,&lc->cfg);
+
+	if (ret != NK_CONVERT_SUCCESS || vbuf->needed == 0) {
+		bgfx_touch(lc->view);
+		release_buf(NULL, vbuf);
+		release_buf(NULL, ibuf);
+		return 0;
+	}
+
+	uint32_t offset = 0;
+
+	bgfx_update_dynamic_vertex_buffer(lc->vb, 0, make_memory(vbuf));
+	bgfx_update_dynamic_index_buffer(lc->ib, 0, make_memory(ibuf));
+
+	const struct nk_draw_command *cmd;
+	struct nk_rect nrect = nk_get_null_rect();
+
+	nk_draw_foreach(cmd,&lc->context,&lc->cmds) {
+		if(!cmd->elem_count) continue;
+
+		bgfx_set_state(lc->state, lc->rgba);
+		bgfx_texture_handle_t tex = {cmd->texture.id};
+
+		bgfx_set_texture(0, lc->tid, tex, UINT32_MAX);
+
+		if (memcmp(&cmd->clip_rect, &nrect, sizeof(nrect))!=0) {
+			bgfx_set_scissor(
+				(cmd->clip_rect.x), (cmd->clip_rect.y),
+				(cmd->clip_rect.w), (cmd->clip_rect.h));
+		}
+
+		bgfx_set_dynamic_vertex_buffer(0, lc->vb, 0, UINT32_MAX);
+		bgfx_set_dynamic_index_buffer(lc->ib, offset, cmd->elem_count);
+
+		bgfx_submit(lc->view, lc->prog, 0, 0);
+		offset += cmd->elem_count;
+	}
+
+	nk_clear(&lc->context);
+
+	return 0;
+}
+
+LUAMOD_API int
+luaopen_bgfx_nuklear(lua_State *L) {
+	luaL_checkversion(L);
+	luaL_Reg l[] = {
+		// device api
+		{ "init", lnk_context_init },
+		{ "resize", lnk_resize },
+		{ "update", lnk_update },
+		{ "input", lnk_input },
+		// nk api
+		{"windowBegin",lnk_windowBegin},
+		{"windowEnd",lnk_windowEnd},
+		{ NULL, NULL },
+	};
+	luaL_newlibtable(L, l);
+	lnk_context_new(L);
+	luaL_setfuncs(L, l, 1);
+	
+	return 1;
+}

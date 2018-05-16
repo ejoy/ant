@@ -1,8 +1,0 @@
-textures = {
-    "",
-}
-
-remapper = {    
-    --vs = {0},   -- vertex stage  
-    fs = {0},     -- fragment stage  
-}
