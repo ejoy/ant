@@ -5,11 +5,12 @@
 // platform device would be opengl, bgfx etc.
 // struct device describes all context what gl or bgfx needed
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-
 #include <bgfx/c99/bgfx.h>
 #include <bgfx/c99/platform.h>
+
+#ifdef PLATFORM_GL
+#include <gl/gl.h>
+#endif
 
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
@@ -58,7 +59,7 @@ typedef int (*Icallback)(void *);
 typedef int (*nk_update_func)(void); 
 
 
-static nk_update_func nk_update_cb = NULL;   // ui create & run main function 
+//static nk_update_func nk_update_cb = NULL;   // ui create & run main function 
                                  
 
 struct device {
@@ -130,45 +131,45 @@ struct nk_ui_font {
 
 extern struct nk_context context;
 
-
-extern void window_size(GLFWwindow *win,int w,int h);
-extern void text_input(GLFWwindow *win, unsigned int codepoint);
+extern void device_input_keycode(unsigned int codepoint);
 extern unsigned int keycode_text[];
 extern int          keycode_text_len;
 
 
 #ifdef PLATFORM_GL 
-
+extern void Platform_GL_reset_window( struct device *dev,int w,int h);
 extern void Platform_GL_init( struct device *dev );
 extern void Platform_GL_run( struct device *dev,struct nk_context *ctx);
 extern void Platform_GL_input(struct nk_context *ctx,void *win);
 extern void Platform_GL_draw( struct device *dev, struct nk_context *ctx, 
 							  int width, int height,enum nk_anti_aliasing AA);							 
+extern void Platform_GL_frame(struct device *dev,struct nk_context *ctx);                              
 extern void Platform_GL_shutdown(struct device *dev);
+
+extern void Platform_GL_upload_atlas( struct device *dev, const void *image, int width, int height);
 
 extern struct nk_ui_image Platform_GL_loadImage(const char *filename);
 extern void Platform_GL_freeImage(int texId);
-extern void Platform_GL_upload_atlas( struct device *dev, const void *image, int width, int height);
-
-extern void stbi_save(const char *filename,int w,int h,int comp,const void *image);
+extern void device_input_keycode(unsigned int codepoint);
 #endif
 
 #ifdef PLATFORM_BGFX
 
 extern void Platform_Bgfx_set_window(struct device *dev,void *win);
+extern void Platform_Bgfx_reset_window(struct device *dev,int w,int h);
+
 extern void Platform_Bgfx_init( struct device *dev );
 extern void Platform_Bgfx_run( struct device *dev,struct nk_context *ctx);
 extern void Platform_Bgfx_input( struct nk_context *ctx,void *win);
 extern void Platform_Bgfx_draw( struct device *dev,struct nk_context *ctx,
                                 int width,int height,enum nk_anti_aliasing AA);
+extern void Platform_Bgfx_frame(struct device *dev,struct nk_context *ctx);
 extern void Platform_Bgfx_shutdown( struct device *dev);
 
 extern void Platform_Bgfx_upload_atlas( struct device *dev, const void *image, int width, int height);
-extern void Platform_Bgfx_reset_window(struct device *dev,int w,int h);
 
 extern struct nk_ui_image  Platform_Bgfx_loadImage(const char* filename);
 extern void Platform_Bgfx_freeImage( int texId); 
-
 
 #endif
 

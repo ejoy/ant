@@ -4,37 +4,180 @@
 #include <bgfx/c99/platform.h>
 
 #include <bgfx/bgfx.h>
+#include <string.h>
 
 #include "device.h"
 #include "imageutl.h"
 
-#define GLFW_EXPOSE_NATIVE_WIN32
+#define WINDOW_OWN_CREATE          // 注释，可以去掉glfw 自创建窗口相关依赖
+
+#ifdef  WINDOW_OWN_CREATE
+#define  GLFW_EXPOSE_NATIVE_WIN32
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
+#endif 
 
-static void* g_win_handle = nullptr;
+#ifdef  WINDOW_OWN_CREATE
 
-static GLFWwindow *glfwWin;
+// 内部窗口相关函数组
+static GLFWwindow *g_glfw_bgfx_win  = NULL;
 
-// const bgfx_memory_t *m = bgfx_alloc(size);
-// ** bgfx_memory_t *m 在哪里释放?!  free inside bgfx.
+void bgfx_text_input(GLFWwindow *win, unsigned int codepoint) {
+    device_input_keycode(codepoint);
+}
+
+// 键盘输入回掉函数,内部创建的窗口所需要的
+void Platform_Bgfx_own_window_rest(GLFWwindow *win,int w,int h) {
+    // todo ...
+    bgfx_reset(w,h,BGFX_RESET_VSYNC);
+}
+
+void Platform_Bgfx_own_window_create(struct device *dev,char *vs,char *fs)
+{
+    // create window 
+    if (!glfwInit()) {
+        fprintf(stdout, "[GFLW] failed to init!\n");
+        exit(1);
+    }
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    int width = DEFAULT_WINDOW_WIDTH, height = DEFAULT_WINDOW_HEIGHT;
+    
+    g_glfw_bgfx_win= glfwCreateWindow( width, height, "NuklearLua", NULL, NULL);
+    glfwMakeContextCurrent(g_glfw_bgfx_win);
+
+    // setup text input for edit control 
+    glfwSetWindowUserPointer(g_glfw_bgfx_win, dev->nk_ctx );
+    glfwSetCharCallback(g_glfw_bgfx_win, bgfx_text_input);
+    glfwSetWindowSizeCallback(g_glfw_bgfx_win,Platform_Bgfx_own_window_rest );
+
+    glfwSetWindowTitle(g_glfw_bgfx_win,"ant project' ui engine v0.01");    
+
+    glewExperimental = 1;
+    if (glewInit() != GLEW_OK) {
+        fprintf(stderr, "Failed to setup GLEW\n");
+        exit(1);
+    }
+
+    void* hWnd = (void*)(uintptr_t) glfwGetWin32Window ( g_glfw_bgfx_win);
+    Platform_Bgfx_set_window(dev, hWnd);
+    
+    // 自己拥有创建bgfx ( c99 )
+    bgfx_init_t init;
+    bgfx_init_ctor(&init);
+    init.type     = BGFX_RENDERER_TYPE_DIRECT3D11; //BGFX_RENDERER_TYPE_OPENGL; //BGFX_RENDERER_TYPE_DIRECT3D11;    
+    init.vendorId = BGFX_PCI_ID_NONE;
+    init.resolution.width  = width;
+    init.resolution.height = height;
+    init.resolution.reset  = BGFX_RESET_VSYNC; 
+
+    bgfx_init(&init);
+    bgfx_reset(width, height, BGFX_RESET_VSYNC);
+    bgfx_set_debug(BGFX_DEBUG_TEXT);
+    bgfx_set_view_clear(0, BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH, 0x303030ff, 1.0f, 0);
+
+    if( init.type  == BGFX_RENDERER_TYPE_DIRECT3D11 ) {
+        strcpy(vs,"shader/dx-vs_nuklear_texture.bin");
+        strcpy(fs,"shader/dx-fs_nuklear_texture.bin");
+    }        
+}
+
+void Platform_Bgfx_own_window_input(struct device *dev,struct nk_context *ctx)
+{
+    glfwPollEvents();
+    double x,y;
+    glfwGetCursorPos( (GLFWwindow *)g_glfw_bgfx_win, &x, &y);
+    GLFWwindow *win = (GLFWwindow *)g_glfw_bgfx_win;
+
+    nk_input_begin(ctx);
+    // keyboard
+    for (int i = 0; i < keycode_text_len; ++i)
+        nk_input_unicode(ctx, keycode_text[i]);
+    
+    // mouse
+    nk_input_motion(ctx, (int)x, (int)y);
+    nk_input_button(ctx, NK_BUTTON_LEFT, (int)x, (int)y, glfwGetMouseButton( (GLFWwindow *)win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+    nk_input_button(ctx, NK_BUTTON_MIDDLE, (int)x, (int)y, glfwGetMouseButton( (GLFWwindow *)win, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS);
+    nk_input_button(ctx, NK_BUTTON_RIGHT, (int)x, (int)y, glfwGetMouseButton( (GLFWwindow *)win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
+    
+    nk_input_key(ctx, NK_KEY_DEL, glfwGetKey(win, GLFW_KEY_DELETE) == GLFW_PRESS);
+    nk_input_key(ctx, NK_KEY_ENTER, glfwGetKey(win, GLFW_KEY_ENTER) == GLFW_PRESS);
+    nk_input_key(ctx, NK_KEY_TAB, glfwGetKey(win, GLFW_KEY_TAB) == GLFW_PRESS);
+    nk_input_key(ctx, NK_KEY_BACKSPACE, glfwGetKey(win, GLFW_KEY_BACKSPACE) == GLFW_PRESS);
+    nk_input_key(ctx, NK_KEY_LEFT, glfwGetKey(win, GLFW_KEY_LEFT) == GLFW_PRESS);
+    nk_input_key(ctx, NK_KEY_RIGHT, glfwGetKey(win, GLFW_KEY_RIGHT) == GLFW_PRESS);
+    nk_input_key(ctx, NK_KEY_UP, glfwGetKey(win, GLFW_KEY_UP) == GLFW_PRESS);
+    nk_input_key(ctx, NK_KEY_DOWN, glfwGetKey(win, GLFW_KEY_DOWN) == GLFW_PRESS);
+
+    if (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
+        glfwGetKey(win, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) {
+        nk_input_key(ctx, NK_KEY_COPY, glfwGetKey(win, GLFW_KEY_C) == GLFW_PRESS);
+        nk_input_key(ctx, NK_KEY_PASTE, glfwGetKey(win, GLFW_KEY_P) == GLFW_PRESS);
+        nk_input_key(ctx, NK_KEY_CUT, glfwGetKey(win, GLFW_KEY_X) == GLFW_PRESS);
+        nk_input_key(ctx, NK_KEY_CUT, glfwGetKey(win, GLFW_KEY_E) == GLFW_PRESS);
+        nk_input_key(ctx, NK_KEY_SHIFT, 1);
+    } else {
+        nk_input_key(ctx, NK_KEY_COPY, 0);
+        nk_input_key(ctx, NK_KEY_PASTE, 0);
+        nk_input_key(ctx, NK_KEY_CUT, 0);
+        nk_input_key(ctx, NK_KEY_SHIFT, 0);
+    }
+    nk_input_end(ctx);
+
+    keycode_text_len = 0;
+}
+
+void Platform_Bgfx_own_window_run(struct device *dev,struct nk_context *ctx)
+{
+  GLFWwindow* win = (GLFWwindow*)g_glfw_bgfx_win;
+  while (!glfwWindowShouldClose( win ) )
+  {
+        // input 
+        Platform_Bgfx_own_window_input(dev,ctx);
+
+        // Platform Draw init 
+        int width,height;
+        glfwGetWindowSize(win, &width, &height);
+
+		bgfx_touch(0);
+        
+        // tested inside
+        if( nk_begin_titled(ctx, "Status","Status Window", nk_rect(1200-375, 10, 370, 60),
+               NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_TITLE|NK_WINDOW_SCALABLE) )   {
+        }
+        nk_end(ctx);
+
+        if( nk_begin_titled(ctx, "Test","Test Window", nk_rect(1200-375, 70, 370, 60),
+               NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_TITLE|NK_WINDOW_SCALABLE) )   {
+        }
+        nk_end(ctx);
+                
+        // draw 
+        dev->device_draw(dev, ctx, width, height, NK_ANTI_ALIASING_ON);  
+
+        bgfx_frame(0);
+  }
+}
+
+#endif 
+
 
 const bgfx_memory_t *load_file(char *path);
+
 
 int  Platform_Bgfx_Nk_init( struct device *dev,const char *vs,const char *fs);
 
 void Platform_Bgfx_set_window(struct device *dev,void *win) {
 
     if(win) {
-        g_win_handle = win;
         dev->win = nk_handle_ptr( win );
     }else {
-        g_win_handle = NULL;
         dev->win = nk_handle_id(0);
     }
     
-
 	bgfx_platform_data_t bpd;
 	bpd.ndt = NULL;
 	bpd.nwh = win;
@@ -55,63 +198,20 @@ void Platform_Bgfx_reset_window(struct device *dev,int w,int h)
 
 void Platform_Bgfx_init( struct device *dev )
 {
-    // 外部没有提供窗口，内部创建
     dev->view  = 0;
 
     char vs[256] = "shader/vs_nuklear_texture.bin";
     char fs[256] = "shader/fs_nuklear_texture.bin";
 
-    if( !dev->win.id ) 
+    // 外部没有提供窗口，内部创建
+    if( !dev->win.id )  
     {
         dev->ownCreate = true; 
-        // create window 
-        if (!glfwInit()) {
-            fprintf(stdout, "[GFLW] failed to init!\n");
-            exit(1);
-        }
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-        int width = DEFAULT_WINDOW_WIDTH, height = DEFAULT_WINDOW_HEIGHT;
-        
-        glfwWin = glfwCreateWindow( width, height, "NuklearLua", NULL, NULL);
-        glfwMakeContextCurrent(glfwWin);
-
-        // setup text input for edit control 
-        glfwSetWindowUserPointer(glfwWin, dev->nk_ctx );
-        glfwSetCharCallback(glfwWin, text_input);
-        glfwSetWindowSizeCallback(glfwWin,window_size);
-
-        glfwSetWindowTitle(glfwWin,"ant project' ui engine v0.01");    
-
-        glewExperimental = 1;
-        if (glewInit() != GLEW_OK) {
-            fprintf(stderr, "Failed to setup GLEW\n");
-            exit(1);
-        }
-    
-        void* hWnd = (void*)(uintptr_t) glfwGetWin32Window ( glfwWin );
-        Platform_Bgfx_set_window(dev, hWnd);
-      
-        // 自己拥有创建bgfx ( c99 )
-        bgfx_init_t init;
-   	    bgfx_init_ctor(&init);
-		init.type     = BGFX_RENDERER_TYPE_OPENGL;   //BGFX_RENDERER_TYPE_DIRECT3D11; //
-		init.vendorId = BGFX_PCI_ID_NONE;
-		init.resolution.width  = width;
-		init.resolution.height = height;
-		init.resolution.reset  = BGFX_RESET_VSYNC; 
-
-    	bgfx_init(&init);
-	    bgfx_reset(width, height, BGFX_RESET_VSYNC);
-	    bgfx_set_debug(BGFX_DEBUG_TEXT);
-        bgfx_set_view_clear(0, BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH, 0x303030ff, 1.0f, 0);
-
-        if( init.type  == BGFX_RENDERER_TYPE_DIRECT3D11 ) {
-            strcpy(vs,"shader/dx-vs_nuklear_texture.bin");
-            strcpy(fs,"shader/dx-fs_nuklear_texture.bin");
-        }        
+        //printf_s(" bgfx own create window .\n");
+        //while(1) {};
+#ifdef  WINDOW_OWN_CREATE
+        Platform_Bgfx_own_window_create(dev,vs,fs);
+#endif
     }
     else {
         dev->ownCreate = false;
@@ -179,7 +279,6 @@ int Platform_Bgfx_Nk_init( struct device *dev,const char *vs,const char *fs)
     printf_s("uniform tex = %d\n",dev->unif.idx);
     
     bgfx_vertex_decl_t *decl = &dev->decl;
-
        
     nk_convert_config  *config = &dev->cfg;
     NK_MEMSET(config, 0, sizeof(config));
@@ -216,63 +315,28 @@ void Platform_Bgfx_shutdown(struct device *dev)
     nk_buffer_free(&dev->cmds);    
 }
 
-void Platform_Bgfx_input_own(struct device *dev,struct nk_context *ctx)
-{
-    glfwPollEvents();
-    double x,y;
-    glfwGetCursorPos( (GLFWwindow *)glfwWin, &x, &y);
-    GLFWwindow *win = (GLFWwindow *)glfwWin;
 
-    nk_input_begin(ctx);
-    // keyboard
-    for (int i = 0; i < keycode_text_len; ++i)
-        nk_input_unicode(ctx, keycode_text[i]);
-    
-    // mouse
-    nk_input_motion(ctx, (int)x, (int)y);
-    nk_input_button(ctx, NK_BUTTON_LEFT, (int)x, (int)y, glfwGetMouseButton( (GLFWwindow *)win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
-    nk_input_button(ctx, NK_BUTTON_MIDDLE, (int)x, (int)y, glfwGetMouseButton( (GLFWwindow *)win, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS);
-    nk_input_button(ctx, NK_BUTTON_RIGHT, (int)x, (int)y, glfwGetMouseButton( (GLFWwindow *)win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
-    
-    nk_input_key(ctx, NK_KEY_DEL, glfwGetKey(win, GLFW_KEY_DELETE) == GLFW_PRESS);
-    nk_input_key(ctx, NK_KEY_ENTER, glfwGetKey(win, GLFW_KEY_ENTER) == GLFW_PRESS);
-    nk_input_key(ctx, NK_KEY_TAB, glfwGetKey(win, GLFW_KEY_TAB) == GLFW_PRESS);
-    nk_input_key(ctx, NK_KEY_BACKSPACE, glfwGetKey(win, GLFW_KEY_BACKSPACE) == GLFW_PRESS);
-    nk_input_key(ctx, NK_KEY_LEFT, glfwGetKey(win, GLFW_KEY_LEFT) == GLFW_PRESS);
-    nk_input_key(ctx, NK_KEY_RIGHT, glfwGetKey(win, GLFW_KEY_RIGHT) == GLFW_PRESS);
-    nk_input_key(ctx, NK_KEY_UP, glfwGetKey(win, GLFW_KEY_UP) == GLFW_PRESS);
-    nk_input_key(ctx, NK_KEY_DOWN, glfwGetKey(win, GLFW_KEY_DOWN) == GLFW_PRESS);
-
-    if (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
-        glfwGetKey(win, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) {
-        nk_input_key(ctx, NK_KEY_COPY, glfwGetKey(win, GLFW_KEY_C) == GLFW_PRESS);
-        nk_input_key(ctx, NK_KEY_PASTE, glfwGetKey(win, GLFW_KEY_P) == GLFW_PRESS);
-        nk_input_key(ctx, NK_KEY_CUT, glfwGetKey(win, GLFW_KEY_X) == GLFW_PRESS);
-        nk_input_key(ctx, NK_KEY_CUT, glfwGetKey(win, GLFW_KEY_E) == GLFW_PRESS);
-        nk_input_key(ctx, NK_KEY_SHIFT, 1);
-    } else {
-        nk_input_key(ctx, NK_KEY_COPY, 0);
-        nk_input_key(ctx, NK_KEY_PASTE, 0);
-        nk_input_key(ctx, NK_KEY_CUT, 0);
-        nk_input_key(ctx, NK_KEY_SHIFT, 0);
-    }
-    nk_input_end(ctx);
-
-    keycode_text_len = 0;
-}
 void Platform_Bgfx_input_env(struct device *dev,struct nk_context *ctx) 
 {
-
+    // how to do 
 }
 void Platform_Bgfx_input(struct device *dev,struct nk_context *ctx) 
 {
-    if( dev->ownCreate) 
-       Platform_Bgfx_input_own(dev,ctx);
-    else
+    if( dev->ownCreate) {
+#ifdef OWN_WINDOW_CREATE 
+       Platform_Bgfx_own_window_input(dev,ctx);
+#endif 
+    } else {
        Platform_Bgfx_input_env(dev,ctx);
+    }
 }
 
+void Platform_Bgfx_frame(struct device *dev,struct nk_context *ctx) 
+{
+    bgfx_frame(0);   
+}
 
+// for own mainloop
 void Platform_Bgfx_run(struct device *dev,struct nk_context *ctx) {
 
   if( ! dev->ownCreate  ) {
@@ -291,51 +355,17 @@ void Platform_Bgfx_run(struct device *dev,struct nk_context *ctx) {
         }
         nk_end(ctx);
         
-        
-        /* ui */
-        if(dev->nk_update_cb) {
-            dev->nk_update_cb();
-        }        
-
         /* draw */
         dev->device_draw(dev, ctx, dev->width, dev->height, NK_ANTI_ALIASING_ON);  
 
         return; 
   }
 
-  GLFWwindow* win = (GLFWwindow*)glfwWin;
-  while (!glfwWindowShouldClose( win ) )
-  {
-        /* input */
-        Platform_Bgfx_input( dev,ctx );
-
-        /* Platform Draw init */
-        int width,height;
-        glfwGetWindowSize(win, &width, &height);
-
-		bgfx_touch(0);
-        
-        // tested inside
-        if( nk_begin_titled(ctx, "Status","Status Window", nk_rect(1200-375, 10, 370, 60),
-               NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_TITLE|NK_WINDOW_SCALABLE) )   {
-        }
-        nk_end(ctx);
-
-        if( nk_begin_titled(ctx, "Test","Test Window", nk_rect(1200-375, 70, 370, 60),
-               NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_TITLE|NK_WINDOW_SCALABLE) )   {
-        }
-        nk_end(ctx);
-        
-        
-        /* ui */
-        if(dev->nk_update_cb) {
-            dev->nk_update_cb();
-        }        
-
-        /* draw */
-        dev->device_draw(dev, ctx, width, height, NK_ANTI_ALIASING_ON);  
-  }
+#ifdef WINDOW_OWN_CREATE 
+    Platform_Bgfx_own_window_run( dev,ctx);
+#endif
 }
+
 
 int get_transient_buf(uint32_t vc, bgfx_vertex_decl_t *dcl, uint32_t ic)
 {
@@ -346,16 +376,28 @@ int get_transient_buf(uint32_t vc, bgfx_vertex_decl_t *dcl, uint32_t ic)
 void Platform_Bgfx_draw(struct device *dev, struct nk_context *ctx, int width, int height,enum nk_anti_aliasing AA)
 {
     /* fill convert configuration */
-    dev->cfg.null = dev->null; 
+    //dev->cfg.null = dev->null;     //important
     nk_buffer_init_default(&dev->vbuf);
     nk_buffer_init_default(&dev->ibuf);
+
+#ifdef MY_DEBUG
+    printf("v allocated =%d; needed =%d\n",dev->vbuf.allocated,dev->vbuf.needed);
+    printf("i allocated =%d; needed =%d\n",dev->ibuf.allocated,dev->ibuf.needed);
+    printf("begin convert\n");
+#endif 
+
     nk_convert( ctx, &dev->cmds, &dev->vbuf, &dev->ibuf,&dev->cfg); 
 
 	void *vd = dev->vbuf.memory.ptr;
 	void *id = dev->ibuf.memory.ptr;
-	size_t vds = dev->vbuf.allocated;
-	size_t ids = dev->ibuf.allocated;
-	
+	size_t vds = dev->vbuf.needed; //.allocated;
+	size_t ids = dev->ibuf.needed; //.allocated;
+
+#ifdef MY_DEBUG
+    printf("v allocated =%d; needed =%d\n",dev->vbuf.allocated,dev->vbuf.needed);
+    printf("i allocated =%d; needed =%d\n",dev->ibuf.allocated,dev->ibuf.needed);
+#endif 
+
 	uint32_t offset = 0;
 	uint32_t vc = vds / dev->decl.stride;
 
@@ -401,44 +443,55 @@ void Platform_Bgfx_draw(struct device *dev, struct nk_context *ctx, int width, i
                
 				if(cmd->texture.id)	{	
                     tex.idx =  (uint16_t)(cmd->texture.id);
-                    bgfx_set_texture(1, dev->unif, tex, UINT32_MAX);   
-                }
-				else {
-					bgfx_set_texture(0, dev->unif,  dev->tex, UINT32_MAX);
+                    bgfx_set_texture(0, dev->unif, tex, UINT32_MAX);   
                 }
 
-               if( cmd->clip_rect.x >=0 && cmd->clip_rect.y >=0 && cmd->clip_rect.w>=0 &&cmd->clip_rect.h>=0) 
+               //if( cmd->clip_rect.x  && cmd->clip_rect.y  && cmd->clip_rect.w>0 &&cmd->clip_rect.h>0) 
+               struct nk_vec2 clip_size = nk_rect_size( cmd->clip_rect );
+               if( clip_size.x<16384 && clip_size.y<16384 )
                {
                   //printf_s("clip rect = (%f,%f,%f,%f)",cmd->clip_rect.x,cmd->clip_rect.y,
                   //                                   cmd->clip_rect.w,cmd->clip_rect.h);
-                
+                  float sx =  cmd->clip_rect.x<0? 0: cmd->clip_rect.x;
+                  float sy =  cmd->clip_rect.y<0? 0: cmd->clip_rect.y;
+                  //sy =  - (cmd->clip_rect.y + cmd->clip_rect.h);
                   bgfx_set_scissor(
-                  //bgfx_set_view_scissor (0,
-                                        (cmd->clip_rect.x), 
-                                        (cmd->clip_rect.y),
-                                        (cmd->clip_rect.w), (cmd->clip_rect.h));
+                  //bgfx_set_view_scissor( 0,
+                                    sx, sy,
+                                    (cmd->clip_rect.w), (cmd->clip_rect.h) );
+                  //printf_s("x =%.02f,y = %.02f,w=%.02f,h=%.02f\n",cmd->clip_rect.x,cmd->clip_rect.y,
+                  //              cmd->clip_rect.w,cmd->clip_rect.h);
                }
 
 				bgfx_set_transient_vertex_buffer(0, &tvb, 0, vc);
 				bgfx_set_transient_index_buffer(&tib, offset, cmd->elem_count);
 				bgfx_submit(dev->view, dev->bgfx_prog, 0, 0);
-				offset += cmd->elem_count;				
+				offset += cmd->elem_count;			
+
+                //if( cmd->clip_rect.x >=0 && cmd->clip_rect.y >=0 && cmd->clip_rect.w>=0 &&cmd->clip_rect.h>=0) 
+                //   bgfx_set_view_scissor(0,0,0,width,height);
 			}
 		}
 	}    
 
     nk_clear(ctx);
-
-    bgfx_frame(0);
+    nk_buffer_free(&dev->vbuf);
+    nk_buffer_free(&dev->ibuf);
+ 
+    //bgfx_frame(0);
 }
 
 
 void Platform_Bgfx_upload_atlas( struct device *dev, const void *image, int width, int height)
 {
-    int size = width * height *4;
+    bgfx_texture_format_t type = BGFX_TEXTURE_FORMAT_RGBA8;      // BGFX_TEXTURE_FORMAT_A8;
+    int c = 4;
+    int size = width * height *c;
     const bgfx_memory_t *m = bgfx_alloc(size);
     memcpy(m->data,image,size);
-    dev->tex = bgfx_create_texture_2d(width,height,0,1,BGFX_TEXTURE_FORMAT_RGBA8,0,m);
+    printf_s("upload bgfx begin...\n");
+    dev->tex = bgfx_create_texture_2d(width,height,0,1,type,0,m);
+    printf_s("upload bgfx end...\n");
 }
 
 
@@ -453,7 +506,6 @@ struct nk_ui_image  Platform_Bgfx_loadImage(const char* filename)
 
     if (!data) 
         printf_s("can not laod image %s.\n",filename);
-
 
     int size = w * h *n;
     const bgfx_memory_t *m = bgfx_alloc(size);
