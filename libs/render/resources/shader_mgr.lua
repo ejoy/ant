@@ -160,3 +160,4 @@ function shader_mgr.get_uniform(name)
     return uniforms[name]
 end
 
+return shader_mgr
