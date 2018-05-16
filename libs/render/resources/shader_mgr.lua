@@ -29,7 +29,7 @@ end
 local function get_compile_renderer_name()
     local caps = rhwi.get_caps()
     local rendertype = caps.rendererType
-    local platform = bgfx.platform_name
+    local platform = baselib.platform_name
 
     if  rendertype == "DIRECT3D9" then
         return "d3d9"
