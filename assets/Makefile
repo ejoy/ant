@@ -58,7 +58,7 @@ compileshader : $(TARGET_SHADERFILES)
 
 # copy other files
 
-BIN_RESOURCE_DIRS := meshes assetfiles maps
+BIN_RESOURCE_DIRS := meshes assetfiles maps shaders/dx11 shaders/glsl
 ALL_BIN_FILES := $(foreach p,$(BIN_RESOURCE_DIRS),$(call rwildcard,$p/,*))
 TARGET_ALL_BIN_FILES := $(addprefix $(OUT_DIR)/,$(ALL_BIN_FILES))
 TARGET_BIN_DIRS := $(sort $(dir $(TARGET_ALL_BIN_FILES)))
