@@ -14,3 +14,7 @@ projects/msvc/vs_bin
 projects/msvc/x64
 projects/msvc/Debug
 projects/msvc/Release
+
+assets
+~assets/build
+~assets/shaders/src

@@ -11,7 +11,6 @@ extern "C" {
 	#include <lauxlib.h>
 }
 
-
 //#define PLATFORM_GL 
 #define PLATFORM_BGFX 
 
@@ -22,19 +21,20 @@ extern "C" {
 
 static float s_version	 =	 1.0f;
 
-static lua_State *			 s_L;	// TODO: 不应使用全局变量 s_L, L 必须通过 API 传递。因为不同的虚拟机（不可以假设只有一个虚拟机）或 coroutine 都有不同的 L 。
+// 需要调整修改的地方
+// 不能假设，只有一份虚拟机 ！
+// 新旧 api 
+// Global 函数表注册的相关函数(未确定使用)
 
-// TODO: 所有全局变量应该放在 L 中。
-// 使用一个 struct nk_confiure {} 包含所有的全局变量
-// 使用 lua_(get/set)field(L, LUA_REGISTRYINDEX, "NKLUA") 来读写这个结构，每个 VM 一份。
-
+// userdata 
+static lua_State *			 s_L;
 static struct device         device;
  	   struct nk_context     context;
 
 // simple font manager ,optimize in future 
 static struct nk_font_atlas  g_atlas;
 static 
-std::vector<struct nk_font*> g_fonts;	// TODO: 使用固定长度数组，设定上限个数，去掉 vector 后，改用 .c 。
+std::vector<struct nk_font*> g_fonts;
 static int    	     		 g_font_count = 0 ;
 
 static struct nk_cursor      g_cursors[NK_CURSOR_COUNT];
@@ -48,11 +48,23 @@ static int    	     		 g_layout_ratio_count = 0;
 
 
 //---- platform device ----
+#define MAX_TEXT_LEN 512
+unsigned int keycode_text[ MAX_TEXT_LEN ];
+int          keycode_text_len = 0;
+void 
+device_input_keycode(unsigned int codepoint) 
+{
+    if( keycode_text_len < MAX_TEXT_LEN )
+        keycode_text[ keycode_text_len++] = codepoint; 
+}
 
 static void
 device_draw( struct device *dev, struct nk_context *ctx, int width, int height,
     enum nk_anti_aliasing AA)
 {
+    if(dev->nk_update_cb) {    // lua ui update 
+            dev->nk_update_cb();
+    }        
 #ifdef PLATFORM_GL
 	Platform_GL_draw(dev,ctx,width,height,AA);
 #endif 
@@ -101,7 +113,7 @@ device_upload_atlas( struct device *dev, const void *image, int width, int heigh
 #endif 
 }
 
-// TODO: 不要直接使用文件名调用文件系统，通过 bgfx id 和 bgfx 交互。因为文件将被统一管理。
+
 static struct nk_ui_image 
 device_loadimage(const char *filename)
 {
@@ -125,6 +137,7 @@ void device_freeimage(int texId)
 #endif 
 }
 
+
 // atlas 图集纹理等与 platform 相关桥接函数
 // atlas 图集创建初始化,清除之前创建的 glyph 和 pixel 内存
 void device_font_stash_begin(struct nk_font_atlas *atlas)
@@ -137,7 +150,7 @@ void device_font_stash_end(struct nk_font_atlas *atlas)
 {
 	const void* image;
 	int 		w,h;
-	image = nk_font_atlas_bake( atlas,&w,&h,NK_FONT_ATLAS_RGBA32);
+	image = nk_font_atlas_bake( atlas,&w,&h,NK_FONT_ATLAS_RGBA32); //
 	device_upload_atlas( &device,image,w,h );
 
 #ifdef FONT_ATLAS_DEBUG	
@@ -150,7 +163,9 @@ void device_font_stash_end(struct nk_font_atlas *atlas)
 
 #ifdef PLATFORM_BGFX 
 	nk_font_atlas_end(atlas, nk_handle_id(device.tex.idx), &device.null);
+	device.cfg.null = device.null;
 #endif  
+    
 	//printf_s("\n === msyh.ttf :size =%.f, glyh count=%d,atlas (w=%d,h=%d)=== \n",
 	//								g_atlas.config->size,g_atlas.glyph_count,w,h);
 }
@@ -188,9 +203,9 @@ void nk_fonts_mgr_shutdown()
 	for(int i=0;i<g_fonts.size();i++)
 		free(g_fonts[i]);
 	g_fonts.clear();
+	nk_font_atlas_cleanup(&g_atlas);
 }
 
-// TODO: 避免用文件名直接操作文件读取 font ，建议暂时换成文件内容，在 lua 打开文件，读入，并传入。
 nk_font* load_chinese_font( const char *fontname,int fontsize) 
 {
 	struct nk_font *font = NULL;
@@ -258,22 +273,6 @@ int load_font_id( const char *fontname,int fontsize)
 
 
 // --- gui ---
-// inner support mainloop
-
-static int 
-lnk_mainloop(lua_State *L) 
-{
-#ifdef PLATFORM_GL 
-    Platform_GL_run(&device, &context );
-#endif 
-#ifdef PLATFORM_BGFX
-	Platform_Bgfx_run(&device,&context );
-#endif
-}
-
-
-
-//--- gui ---
 
 // ---- nk lua utility ---
 
@@ -323,26 +322,6 @@ void nk_assert(int ignore,const char *msg) {
 	if(ld.name == NULL)
 	   ld.name = "?";
 	luaL_error(s_L,msg,ld.name);
-}
-
-static int nk_is_type(int index,const char *type)
-{
-	if(index<0)
-		index += lua_gettop(s_L) + 1;
-	if(lua_isuserdata(s_L,index)) {
-		lua_getfield(s_L,index,"typeOf");
-		if(lua_isfunction(s_L,-1)) {   // func
-			lua_pushvalue(s_L,index);  // arg1
-			lua_pushstring(s_L,type);  // arg2
-			lua_call(s_L,2,1);         // call(func,num args,num ret)
-			if(lua_isboolean(s_L,-1)) {
-				int is_type = lua_toboolean(s_L,-1);
-				lua_pop(s_L,1);
-				return is_type;
-			}
-		}
-	}
-	return 0;
 }
 
 static int nk_is_hex(char c)
@@ -452,20 +431,6 @@ nk_parse_window_flags(lua_State *L,int flags_begin) {
 	return flags;
 }
 
-// copy & paste
-static void nk_lua_clipbard_paste(nk_handle usr, struct nk_text_edit *edit)
-{
-	// 需要另外提供paste clipboard 功能
-	(void)usr;
-	lua_getglobal(s_L, "ant");
-	lua_getfield(s_L, -1, "system");
-	lua_getfield(s_L, -1, "getClipboardText");
-	lua_call(s_L, 0, 1);
-	const char *text = lua_tostring(s_L, -1);
-	if (text) nk_textedit_paste(edit, text, nk_strlen(text));
-	lua_pop(s_L, 3);
-}
-
 static int nk_lua_is_active(struct nk_context *ctx)
 {
 	struct nk_window *iter;
@@ -492,6 +457,65 @@ static int nk_lua_is_active(struct nk_context *ctx)
 	return 0;
 }
 
+//-------------------------------
+// tested 
+static int nk_is_type(int index,const char *type)
+{
+	if(index<0)
+		index += lua_gettop(s_L) + 1;
+	if(lua_isuserdata(s_L,index)) {
+		lua_getfield(s_L,index,"typeOf");
+		if(lua_isfunction(s_L,-1)) {   // func
+			lua_pushvalue(s_L,index);  // arg1
+			lua_pushstring(s_L,type);  // arg2
+			lua_call(s_L,2,1);         // call(func,num args,num ret)
+			if(lua_isboolean(s_L,-1)) {
+				int is_type = lua_toboolean(s_L,-1);
+				lua_pop(s_L,1);
+				return is_type;
+			}
+		}
+	}
+	return 0;
+}
+// tested
+// 使用 image() 函数，取得 nk_image 的信息
+void nk_lua_checkimage(int index,struct nk_image *image) {
+	if(index<0)
+		index += lua_gettop(s_L) + 1;
+	if(!nk_is_type(index,"Image"))
+		luaL_typerror(s_L,index,"Image");
+    lua_getfield(s_L,LUA_REGISTRYINDEX,"nuklear");
+	lua_getfield(s_L,-1,"image");    // func push stack
+	lua_pushvalue(s_L,index);        // arg push stack
+	int ref = luaL_ref(s_L,-2);
+	lua_getfield(s_L,index,"getDimensions"); // func
+	lua_pushvalue(s_L,index);             // arg
+	lua_call(s_L,1,2);          	 // return 2 values
+	int width = lua_tointeger(s_L,1);
+	int height = lua_tointeger(s_L,2);
+	image->handle = nk_handle_id( ref);
+	image->w = width;
+	image->h = height;
+	image->region[0] = image->region[1] = 0;
+	image->region[2] = width;
+	image->region[3] = height;
+	lua_pop(s_L,4);
+}
+// tested
+// copy & paste
+static void nk_lua_clipbard_paste(nk_handle usr, struct nk_text_edit *edit)
+{
+	// 需要另外提供paste clipboard 功能
+	(void)usr;
+	lua_getglobal(s_L, "ant");
+	lua_getfield(s_L, -1, "system");
+	lua_getfield(s_L, -1, "getClipboardText");
+	lua_call(s_L, 0, 1);
+	const char *text = lua_tostring(s_L, -1);
+	if (text) nk_textedit_paste(edit, text, nk_strlen(text));
+	lua_pop(s_L, 3);
+}
 
 static void nk_lua_clipbard_copy(nk_handle usr, const char *text, int len)
 {
@@ -511,8 +535,11 @@ static void nk_lua_clipbard_copy(nk_handle usr, const char *text, int len)
 	lua_call(s_L, 1, 0);
 	lua_pop(s_L, 2);
 }
+//-------------------------------
 
 
+
+// tested
 // textinput unicode decode
 static int nk_lua_textinput_event(const char *text)
 {
@@ -570,7 +597,7 @@ void nk_lua_stack_init()
 {
    //  注册 nuklear 的全局属性表,font,image,stack   
    //  LUA_REGISTRYINDEX 
-   //  nuklear = { font  = { } , image = { } , stack = { }   
+   //  nuklear = { font  = { } , image = { } , stack = { }  }
    {
 	   lua_newtable(s_L);
 	   lua_pushvalue(s_L,-1);      					 // copy stack top table and push stack 
@@ -615,8 +642,8 @@ lnk_set_window(lua_State *L) {
 		printf_s(" we got a window handle \n" ) ;
 	else 
 	    printf_s(" this is not a window handle \n");
-  
 
+	printf_s(" we got a window handle \n" ) ;
 #ifdef PLATFORM_BGFX 
 	Platform_Bgfx_set_window(&device, lnwh );
 #endif
@@ -631,6 +658,10 @@ static int lnk_set_window_size(lua_State *L)
 
 	device.width = w;
 	device.height = h;
+
+#ifdef PLATFORM_GL
+	Platform_GL_reset_window(&device,w,h);
+#endif
 	
 #ifdef PLATFORM_BGFX
 	Platform_Bgfx_reset_window(&device,w,h);
@@ -647,7 +678,9 @@ static int
 lnk_init(lua_State *L) {
 
    s_L = L;
-   
+
+	printf_s("nk init ok\n");
+
    // platform init
    device_init(&device); 
 
@@ -656,6 +689,7 @@ lnk_init(lua_State *L) {
 
    // edit & ui behavior init
    nk_lua_default_ui_cache_init();
+
 
    // init fonts array
    // must init before load any font
@@ -670,6 +704,7 @@ lnk_init(lua_State *L) {
    if(g_atlas.default_font) {
 	  nk_style_set_font(&context,&g_atlas.default_font->handle);
    }
+   
 
 }
 
@@ -681,12 +716,43 @@ lnk_shutdown(lua_State *L) {
   nk_lua_stack_shutdown();
 }
 
+//----------------------------
+
 static int 
 lnk_draw(lua_State *L) {
-  int width  = luaL_checkinteger(L,1);
-  int height = luaL_checkinteger(L,2);
-  device_draw(&device,&context,width,height,NK_ANTI_ALIASING_ON);
+  //int width  = luaL_checkinteger(L,1);
+  //int height = luaL_checkinteger(L,2);
+  int width = device.width;
+  int height = device.height;
+  device_draw( &device,&context,width,height,NK_ANTI_ALIASING_ON );
+  return 0;
 }
+// outside control swap if needed 
+static int
+lnk_frame(lua_State *L) 
+{
+#ifdef PLATFORM_GL
+    Platform_GL_frame(&device, &context );
+#endif 
+#ifdef PLATFORM_BGFX
+	Platform_Bgfx_frame(&device,&context );
+#endif
+	return 0;
+}
+
+//---------------------------
+// inner support mainloop
+static int 
+lnk_mainloop(lua_State *L) 
+{
+#ifdef PLATFORM_GL 
+    Platform_GL_run(&device, &context );
+#endif 
+#ifdef PLATFORM_BGFX
+	Platform_Bgfx_run(&device,&context );
+#endif
+}
+
 
 static int 
 lnk_mouse(lua_State *L) 
@@ -750,9 +816,10 @@ lnk_keyboard(lua_State *L)
 
 //-----------------------------------
 // nk callback function
+static nk_update_func nk_update_cb = NULL; // ui create & run main function  
 void nk_setupdatefunction(Icallback f)
 {
-	nk_update_cb = ( nk_update_func ) f;    // update_cb 
+	nk_update_cb = (nk_update_func) f;   
 	device.nk_update_cb = nk_update_cb; 
 }
 
@@ -796,7 +863,9 @@ lnk_setUpdate(lua_State* L) {
 	return 1;
 }
 
-
+//usage: must be
+// if nk.windowBegin then .... end 
+// nk.windowEnd
 static int 
 lnk_windowBegin(lua_State *L) {
 	const char *name, *title;
@@ -829,6 +898,8 @@ lnk_windowEnd(lua_State* L) {
 	return 1;
 }
 
+
+// tested 
 static int 
 lnk_frameBegin(lua_State* L){
 	context.delta_time_seconds =  0.01;
@@ -836,9 +907,8 @@ lnk_frameBegin(lua_State* L){
 
 static int 
 lnk_frameEnd(lua_State* L) {
-	nk_input_begin(&context);
+	//nk_input_begin(&context);
 }
-
 
 // "dynamic",height,cols
 //  nk: nk_layout_row_dynamic
@@ -926,9 +996,9 @@ nk_flags nk_lua_checkalign(int index)
 	nk_flags 	flags ;
 	if(!strcmp(align_s,"left")) {
 		flags = NK_TEXT_LEFT;
-	} else if(!strcmp(align_s,"right")) {
+	} else if(!strcmp(align_s,"right")) {  
 		flags = NK_TEXT_RIGHT;
-	} else if(!strcmp(align_s,"centered")) {
+	} else if(!strcmp(align_s,"centered")) { 
 		flags = NK_TEXT_CENTERED;
 	} else if(!strcmp(align_s,"top left")) {
 		flags = NK_TEXT_ALIGN_TOP | NK_TEXT_ALIGN_LEFT;
@@ -940,7 +1010,7 @@ nk_flags nk_lua_checkalign(int index)
 		flags = NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_LEFT;
 	} else if(!strcmp(align_s,"bottom centered")) {
 		flags = NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED;
-	} else if(!strcmp(align_s,"bottom_right")) {
+	} else if(!strcmp(align_s,"bottom right")) {
 		flags = NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_RIGHT;
 	} else {
 	   const char *msg = lua_pushfstring(s_L,"unrecognized aligenment word '%s'.\n ",align_s);
@@ -949,29 +1019,7 @@ nk_flags nk_lua_checkalign(int index)
 	return flags;
 }
 
-// 使用 image() 函数，取得 nk_image 的信息
-void nk_lua_checkimage(int index,struct nk_image *image) {
-	if(index<0)
-		index += lua_gettop(s_L) + 1;
-	if(!nk_is_type(index,"Image"))
-		luaL_typerror(s_L,index,"Image");
-    lua_getfield(s_L,LUA_REGISTRYINDEX,"nuklear");
-	lua_getfield(s_L,-1,"image");    // func push stack
-	lua_pushvalue(s_L,index);        // arg push stack
-	int ref = luaL_ref(s_L,-2);
-	lua_getfield(s_L,index,"getDimensions"); // func
-	lua_pushvalue(s_L,index);             // arg
-	lua_call(s_L,1,2);          	 // return 2 values
-	int width = lua_tointeger(s_L,1);
-	int height = lua_tointeger(s_L,2);
-	image->handle = nk_handle_id( ref);
-	image->w = width;
-	image->h = height;
-	image->region[0] = image->region[1] = 0;
-	image->region[2] = width;
-	image->region[3] = height;
-	lua_pop(s_L,4);
-}
+
 
 static void *
 getfield_touserdata(lua_State *L, const char *key) {
@@ -992,7 +1040,6 @@ getfield_tointeger(lua_State *L,int index,const char *key) {
 }
 
 // struct nk_image {nk_handle handle;unsigned short w,h;unsigned short region[4];};
-
 
 // 从栈顶 table(nk_image),解码所有参数,填写返回*image 
 void nk_checkimage(int index,struct nk_image *image) 
@@ -1015,7 +1062,6 @@ void nk_checkimage(int index,struct nk_image *image)
 	//printf_s("checkImage:handle.id =%d,w=%d,h=%d,(%d,%d,%d,%d)\n",image->handle.id,image->w,image->h,
 	//	image->region[0],image->region[1],image->region[2],image->region[3]);
 }
-
 
 enum nk_symbol_type nk_lua_checksymbol(int index)
 {
@@ -1660,6 +1706,10 @@ static int nk_lua_set_style_combobox( struct nk_style_combo *style)
 	NK_SET_STYLE("spacing", vec2, &style->spacing);	
 }
 
+// tree
+
+
+
 // 设置新风格
 static int 
 lnk_set_style(lua_State *L)
@@ -1681,7 +1731,7 @@ lnk_set_style(lua_State *L)
     NK_SET_STYLE("edit",edit,&context.style.edit);
 	NK_SET_STYLE("combobox",combobox,&context.style.combo);
 
-
+	//NK_SET_STYLE("tree",tree,&context.style.combo);
 
 
 	lua_pop(L,1);       			// pop parameters
@@ -2272,6 +2322,7 @@ luaL_Reg nuklear_Libs [] = {
     {"mainloop",lnk_mainloop},
 	{"setUpdate",lnk_setUpdate},
     {"draw",lnk_draw},
+	{"frame",lnk_frame},
 	{"mouse",lnk_mouse},
 	{"motion",lnk_mouse_motion},
 
