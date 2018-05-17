@@ -18,7 +18,7 @@ function map.button(btn, pressed, x, y, status)
 		return
 	end
 	if btn == "LEFT" and status.DOUBLE then
-		return 3, pressed, x, y	-- NK_BUTTON_DOUBLE
+		return 'b', 3, pressed, x, y	-- NK_BUTTON_DOUBLE
 	end
 	return 'b', id, pressed, x, y
 end
