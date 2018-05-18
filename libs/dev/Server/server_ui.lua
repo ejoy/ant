@@ -15,13 +15,29 @@ function log(name)
 	end
 end
 
-local log_table = {}
+local resp_table = {}
 local function HandleMessage()
     while true do
         local key, value = linda:receive(0.05, "log")
         if value then
             --do something here
-            table.insert(log_table, value)
+            table.insert(resp_table, value)
+        else
+            break
+        end
+    end
+
+    while true do
+        local key, value = linda:receive(0.05, "response")
+        if value then
+            -- 0 means disconnect, 1 means connect
+            if value[1] == "CONNECT" then
+                print("~~CONNECT", value[1], value[2])
+                table.insert(resp_table, {"device", 1, value[2]})
+            elseif value[1] == "DISCONNECT" then
+                print("~~DISCONNECT", value[1], value[2])
+                table.insert(resp_table, {"device", 0, value[2]})
+            end
         else
             break
         end
@@ -30,14 +46,33 @@ end
 
 local function CreateServerThread(config, linda)
 
-    local server = require "server"
-    local s = server.new(config, linda)
+    local server_io = require "server_io"
+    local s = server_io.new(config, linda)
     while true do
         s:mainloop(0.05)
     end
 end
 
+--handle devices names, send connect, disconnect command to IO
+local current_devices = {}
+--local connected_devices = {}
+local libimobiledevicelua = require "libimobiledevicelua"
+
 local server_ins = {s = nil}
+
+function server_ins.GetNewDeviceInfo()
+    local devices = libimobiledevicelua.GetDevices()
+    local new_devices = {}
+    for k, v in ipairs(devices) do
+        if current_devices[v] == nil then
+            current_devices[v] = true
+            table.insert(new_devices, v);
+        end
+    end
+
+    return new_devices
+end
+
 
 function server_ins:init(address, port)
     --self.s = server.new{address = address, port = port}
@@ -49,15 +84,15 @@ function server_ins:update()
     HandleMessage()
 end
 
-function server_ins:recvlog()
-    local return_log = {}
+function server_ins:RecvResponse()
+    local return_resp = {}
 
-    for _, v in ipairs(log_table) do
-        table.insert(return_log, v)
+    for _, v in ipairs(resp_table) do
+        table.insert(return_resp, v)
     end
 
-    log_table = {}
-    return return_log
+    resp_table = {}
+    return return_resp
 end
 
 function server_ins:HandleCommand(udid, cmd, ...)

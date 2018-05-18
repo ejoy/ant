@@ -203,8 +203,21 @@ function client:send(...)
 	table.insert(self.sending, pack.pack(client_req))
 end
 
-local function recv(fd, resp, reading)
-	reading = reading .. fd:recv()
+function client:recv(fd, resp, reading)
+    local fd_recv = fd:recv()
+    if not fd_recv then
+        --disconnect
+        for k,v in ipairs(self.fds) do
+            if v == fd then
+                table.remove(self.fds, k)
+                break
+            end
+        end
+
+        return reading
+    end
+
+	reading = reading .. fd_recv
 	local off = 1
 	local len = #reading
 	while off < len do
@@ -294,11 +307,10 @@ function client:mainloop(timeout)
                 table.insert(self.fds, newfd)
             else
                 --local str = fd:recv()
-                self.reading = recv(fd, self.resp, self.reading)
+                self.reading = self:recv(fd, self.resp, self.reading)
             end
         end
 	end
-
     if wt then
         for _,fd in pairs(wt) do
             if fd then
@@ -306,6 +318,9 @@ function client:mainloop(timeout)
                 pack.send(fd, self.sending)
             end
         end
+    else
+        --clear the sending buffer
+        self.sending = {}
     end
 
     for i,_ in pairs(logic_request) do

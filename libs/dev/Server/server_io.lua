@@ -127,7 +127,7 @@ local function HandlePackage(response_pkg, id, self)
             return "RUNNING"
         end
         --return directory
-    elseif cmd_type == "FILE"  or cmd_type == "EXIST_CHECK" or cmd_type == "RUN" then
+    elseif cmd_type == "FILE"  or cmd_type == "EXIST_CHECK" or cmd_type == "RUN" or cmd_type == "ERROR" then
         local pack_l = pack.pack(response_pkg)
         --local nbytes = fd:send(pack_l)
         local nbytes = SendData(id, pack_l)
@@ -420,7 +420,7 @@ local hash_update_counter = 0
 function server:mainloop(timeout)
 
     self:GetLindaMsg()
-    self:CheckNewDevice()
+    --self:CheckNewDevice()
     --TODO: currently no use of lsocket connection, implement later (for wifi connection)
 
     for _, id in ipairs(self.ids) do
@@ -500,13 +500,36 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
 
         for _, v in ipairs(full_path_table) do
             --is equal to client sends "GET" command to server
-            local request = {"GET", v, id = udid}
+            local request = {{"GET", v}, id = udid}
             table.insert(self.request, request)
         end
     elseif cmd == "RUN" then
         local entrance_path = cmd_data[1]
         local request = {{"RUN", entrance_path}, udid}
+
         table.insert(command_cache, request)
+    elseif cmd == "CONNECT" then
+        --connect to device
+        local result = libimobiledevicelua.Connect(udid, self.port)
+        if  result then
+            --   print("failed to create connection with", udid)
+            print("connect to ".. udid .." successful")
+            self:new_client(udid, nil, self.port)
+            table.insert(self.log, "connect to "..udid)
+            self.linda:send("response", {"CONNECT", udid})
+            connected_devices[udid] = true
+        end
+
+    elseif cmd == "DISCONNECT" then
+        --disconnect device
+
+        table.insert(command_cache, request)
+        local result = libimobiledevicelua.Disconnect(udid)
+        if result then
+            table.insert(command_cache, request)
+            self:kick_client(udid)
+            self.linda:send("response", {"DISCONNECT", udid})
+        end
     else
         print("Iup Window Request not support yet")
     end

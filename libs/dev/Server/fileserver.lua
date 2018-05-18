@@ -33,7 +33,7 @@ local fileprocess = require "fileprocess"
 function fileserver.LIST(req)
     local path = req[2]
     if not path then
-        return
+        return {"ERROR", "LIST", "path not found"}
     end
 
     print("path", path)
@@ -57,8 +57,8 @@ function fileserver.GET(req)
     local project_dir = req.project_dir
 	local file_path = req[2]
 	if not file_path then
-		print("No file path found! Must input a file path")
-        return
+		--print("No file path found! Must input a file path")
+        return {"ERROR", "GET", "path not found"}
 	end
 
     local client_hash = req[3]
@@ -73,8 +73,9 @@ function fileserver.GET(req)
     end
     --still can't find it, return
     if not server_hash then
-        print("File not exist on server")
-        return
+        --print("File not exist on server")
+
+        return {"ERROR", "GET", "file:"..req[2].." not found"}
     end
 
     --print("server_hash", server_hash)
@@ -83,13 +84,14 @@ function fileserver.GET(req)
         print("client hash", client_hash)
         --no need to send file
         print("file "..file_path.." is up to date")
-        return
+        return --ignore it
     end
+
 	local file = io.open(file_path, "rb")
 	if not file then
-        --file does not exist, reture a FILE command with nil hash
-		return {"FILE", file_path}
+        return {"ERROR", "GET", "file:"..req[2].."not found"}
 	end
+
 	local file_size = fileprocess.GetFileSize(file)
 
 	print("Pulling file", file_path, "filesize", file_size)
@@ -116,7 +118,7 @@ function fileserver.EXIST(req)
     --req[3] is the hash value of the client
     local file_path = req[2]
     if not file_path then
-        return {"ERROR","No file path found! Must input a file path"}
+        return {"ERROR", "EXIST", "No file path found! Must input a file path"}
     end
 
     local file = io.open(file_path, "r")
@@ -145,7 +147,7 @@ end
 function fileserver.LOG(req)
     --req[1] is the command "LOG"
     --req[2] is the id of the client
-    --req[3] is the label of the log TODO:(use for filtering, and such, leave it for now)
+    --req[3] is the label of the log TODO:(use for filtering etc. , leave it for now)
     --req[4] is the log text
 
     --for now, don't do any thing
@@ -163,17 +165,16 @@ function fileserver.REQUIRE(req)
 
     local file_name = req[2]
     if not file_name then
-        print("No file name found! Must input a file name")
-        return
+        return {"ERROR", "REQUIRE", "No file name found! Must input a file name"}
     end
 
     local package_path = req[3]
     local project_dir = req.project_dir
     print("file name", file_name)
     print("package path", package_path)
-    print("project_dir_name", project_dir)
+    print("project_dir", project_dir)
 
-    --replace "." to "/"
+    --replace "." with "/"
     local file_path = string.gsub(file_name,"%.", "/")
     local full_file_path = "" --the path we get
 
@@ -222,8 +223,7 @@ function fileserver.REQUIRE(req)
 
     if not file then
         --file does not exist, reture a FILE command with nil hash
-        print("file does not exist")
-        return {"FILE", file_path}
+        return {"ERROR", "REQUIRE", "file:"..full_file_path.." does not exist"}
     end
 
     local file_size = fileprocess.GetFileSize(file)
@@ -231,8 +231,7 @@ function fileserver.REQUIRE(req)
     print("Pulling file", full_file_path, "filesize", file_size)
     local server_hash = fileprocess.GetFileHash(full_file_path)
     if not server_hash then
-        print("File not exist on server")
-        return
+        return {"ERROR", "REQUIRE", "file:"..full_file_path.." does not exist"}
     end
 
     --TODO server hash?
