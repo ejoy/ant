@@ -85,19 +85,19 @@ local function solve_depend(graph)
 			end
 			return dp
 		end
-		
+
 		local depend = v.depend
 		if depend then
 			assert(type(depend) == "table", k)
-			local dp = get_dp(dp_table, k)		
+			local dp = get_dp(dp_table, k)
 			table.move(depend, 1, #depend, #dp+1, dp)
 		end
-	
+
 		local dependby = v.dependby
 		if dependby then
 			for _, n in ipairs(dependby) do
 				assert(type(dependby) == "table", k)
-				local dpby = get_dp(dp_table, n)			
+				local dpby = get_dp(dp_table, n)
 				table.insert(dpby, k)
 			end
 		end
@@ -189,7 +189,7 @@ function system.update_list(sys, order, obydp)
 				table.insert(update_list, n)
 				norder[n] = nil
 			end
-		end		
+		end
 	end
 
 	local norder_list = {}
@@ -213,7 +213,7 @@ function system.notify_list(sys, proxy, methods)
 	local notify = {}
 	for sname, sobject in pairs(sys) do
 		for cname, f in pairs(sobject.notify) do
-			local functor = { f, proxy[sname], methods[sname] }
+			local functor = { sname, f, proxy[sname], methods[sname] }
 			local list = notify[cname]
 			if list == nil then
 				notify[cname] = { functor }
@@ -223,6 +223,49 @@ function system.notify_list(sys, proxy, methods)
 		end
 	end
 	return notify
+end
+
+local switch_mt = {}; switch_mt.__index = switch_mt
+
+function switch_mt:enable(name, enable)
+	if enable ~= false then
+		enable = nil
+	end
+	if self[name] ~= enable then
+		self.__needupdate = true
+		self[name] = enable
+	end
+end
+
+function switch_mt:update()
+	if self.__needupdate then
+		local index = 1
+		local all = self.__all
+		local list = self.__list
+		for i = 1, #all do
+			local name = all[i][1]
+			if self[name] ~= false then
+				-- enable it
+				list[index] = all[i]
+				index = index + 1
+			end
+		end
+		for i = index, #list do
+			list[i] = nil
+		end
+		self.__needupdate = nil
+	end
+end
+
+function system.list_switch(list)
+	local all_list = {}
+	for k,v in pairs(list) do
+		all_list[k] = v
+	end
+	return setmetatable({
+		__list = list,
+		__all = all_list,
+	} , switch_mt )
 end
 
 if TEST then
