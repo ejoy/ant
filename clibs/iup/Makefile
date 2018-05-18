@@ -8,7 +8,7 @@ WIN32VER = 0x0501
 
 DEFINES = _WIN32_WINNT=$(WIN32VER) _WIN32_IE=0x600 WINVER=$(WIN32VER) UNICODE IUP_DLL
 
-all : iup.exe | scintilla.dll iupluaimglib.dll
+all : iup.exe | scintilla.dll iupluaimglib.dll iupluacontrols.dll
 
 SRCIUP = iup_array.c iup_callback.c iup_dlglist.c iup_attrib.c iup_focus.c iup_font.c \
       iup_globalattrib.c iup_object.c iup_key.c iup_layout.c iup_ledlex.c iup_names.c \
@@ -58,7 +58,7 @@ CTRLUA = button.lua canvas.lua dialog.lua colordlg.lua clipboard.lua \
        animatedlabel.lua calendar.lua datepick.lua param.lua parambox.lua \
        detachbox.lua flatframe.lua flattabs.lua flatscrollbox.lua \
        dial.lua gauge.lua colorbar.lua colorbrowser.lua flatlabel.lua \
-       flatseparator.lua flattoggle.lua dropbutton.lua space.lua
+       flatseparator.lua flattoggle.lua dropbutton.lua space.lua 
 
 SRCLUA = iuplua.lua constants.lua iup_config.lua
 
@@ -82,7 +82,7 @@ $(OBJIUPLUA) : $(ODIR)/%.o : $(IUPSRC)/srclua5/%.c $(LH)  | $(ODIR)
 	$(CC) $(CFLAGS) -c -o $@ $< -DIUPLUA_USELH -I$(IUPSRC)/include -I$(IUPSRC)/src -I$(ODIR) -I$(IUPSRC)/srclua5 $(LUAINC)
 
 $(OBJCTRL) : %.o : %.c  | $(ODIR)
-	$(CC) $(CFLAGS) -c -o $@ $< -I$(IUPSRC)/include -I$(IUPSRC)/srclua5 $(LUAINC)
+	$(CC) $(CFLAGS) -c -o $@ $< -I$(IUPSRC)/include -I$(IUPSRC)/srclua5 $(LUAINC)						
 
 # all
 
@@ -103,6 +103,9 @@ scintilla.dll : luaiup.dll
 
 iupluaimglib.dll : luaiup.dll
 	$(MAKE) -f Makefile.imglib
+
+iupluacontrols.dll : luaiup.dll
+	$(MAKE) -f Makefile.controls
 
 luaiup.dll : $(OBJIUP) $(OBJWIN) $(OBJIUPLUA) $(OBJCTRL) 
 	$(CC) --shared -o $@ $^ -lgdi32 -lcomdlg32 -lcomctl32 -lole32 -luuid $(LUALIB)

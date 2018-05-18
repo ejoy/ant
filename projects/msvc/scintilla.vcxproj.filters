@@ -542,4 +542,7 @@
       <Filter>iupsci\ctrl</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="iup_def_files\scintilla.def" />
+  </ItemGroup>
 </Project>
