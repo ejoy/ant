@@ -11,12 +11,10 @@ local render_mesh = require "modelloader.rendermesh"
 local path = require "filesystem.path"
 local fs_util = require "filesystem.util"
 
+require "iupluaimglib"
+require "iuplua"
+require "scintilla"
 
-if not static_link_iup then
-    require "iupluaimglib"
-    require "iuplua"
-    require "scintilla"
-end
 
 local filetree = require "modelloader.filetree"
 --先测试bgfx的使用
