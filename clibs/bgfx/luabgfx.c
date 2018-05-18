@@ -556,6 +556,12 @@ lgetStats(lua_State *L) {
 		PUSHSTAT(numDraw);
 		PUSHSTAT(numCompute);
 		PUSHSTAT(maxGpuLatency);
+#define PUSHPRIM(v,name) if (stat->numPrims[v] > 0) { lua_pushinteger(L, stat->numPrims[v]); lua_setfield(L, 2, name); }
+		PUSHPRIM(BGFX_TOPOLOGY_TRI_LIST, "numTriList");
+		PUSHPRIM(BGFX_TOPOLOGY_TRI_STRIP, "numTriStrip");
+		PUSHPRIM(BGFX_TOPOLOGY_LINE_LIST, "numLineList");
+		PUSHPRIM(BGFX_TOPOLOGY_LINE_STRIP, "numLineStrip");
+		PUSHPRIM(BGFX_TOPOLOGY_POINT_LIST, "numPointList");
 		break;
 	case 'n':	// numbers
 		PUSHSTAT(numDynamicIndexBuffers);
