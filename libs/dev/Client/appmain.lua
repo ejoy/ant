@@ -113,7 +113,7 @@ local function run(path)
 
         entrance = dofile(real_path)
         --must have this function and these variables for init
-        entrance.init(g_WindowHandle, g_Width, g_Height, app_home_dir, bundle_home_dir)
+        entrance.init(g_Width, g_Height, app_home_dir, bundle_home_dir)
     else
         --not in local, need require from distance
         --get file name
@@ -193,8 +193,6 @@ function init(window_handle, width, height, app_dir, bundle_dir)
     bgfx.set_view_rect(0, 0, 0, width, height)
     bgfx.reset(width, height, "v")
 
-    --local bgfx_cb = bgfx.bgfx_cb
-    print("yoyoyo, bgfx_cb", bgfx._G)
     init_flag = true
 
     local client_io = lanes.gen("*",{package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateIOThread)(linda, bundle_home_dir)
