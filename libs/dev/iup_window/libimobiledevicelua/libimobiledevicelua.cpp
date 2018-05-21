@@ -24,14 +24,20 @@ std::map<std::string, idevice_t> g_device_map;
 std::map<std::string, idevice_connection_t> g_connection_map;
 bool is_init = false;
 
-void DisconnectDevice(const char* udid)
+bool DisconnectDevice(const char* udid)
 {
     auto iter = g_connection_map.find(udid);
     if(iter == g_connection_map.end())
-        return;
+        return true;
     
-    idevice_disconnect(iter->second);
-    g_connection_map.erase(udid);
+    idevice_error_t err = idevice_disconnect(iter->second);
+    if(err == IDEVICE_E_SUCCESS)
+    {
+        g_connection_map.erase(udid);
+        return true;
+    }
+    
+    return false;
 }
 
 void EventCallback(const idevice_event_t* event, void* user_data)
@@ -101,6 +107,10 @@ void Init()
             {
                 printf("fail to create new device with udid %s\n", device_names[i]);
                 continue;
+            }
+            else
+            {
+                printf("device name %s\n", device_names[i]);
             }
             
  //           printf("create new device NO.%d, udid: %s\n", i, device_names[i]);
@@ -197,14 +207,22 @@ static int Disconnect(lua_State* L)
     if(lua_isstring(L, 1))
     {
         udid = lua_tostring(L, 1);
-        DisconnectDevice(udid.data());
+        if(DisconnectDevice(udid.data()))
+        {
+            lua_pushboolean(L, true);
+        }
+        else
+        {
+            lua_pushboolean(L, false);
+        }
     }
     else
     {
+        lua_pushboolean(L, false);
         printf("input invalid, arg should be string\n");
     }
     
-    return 0;
+    return 1;
 }
 
 //send data to specific udid/device
@@ -325,6 +343,21 @@ static int Release(lua_State* L)
     return 0;
 }
 
+static int FreeDevices(lua_State* L)
+{
+    char **device_names = nullptr;
+    int device_count = 0;
+    
+    idevice_error_t err = idevice_get_device_list(&device_names, &device_count);
+    if(err == IDEVICE_E_SUCCESS)
+    {
+        idevice_device_list_free(device_names);
+        printf("free device %s\n", device_names[0]);
+    }
+    
+    return 0;
+}
+
 static const struct luaL_Reg lua_lib[] =
 {
     {"GetDevices", GetDevices},
@@ -333,6 +366,7 @@ static const struct luaL_Reg lua_lib[] =
     {"Send", Send},
     {"Recv", Recv},
     {"Release", Release},
+    {"FreeDevices", FreeDevices},
     {NULL, NULL},
 };
 

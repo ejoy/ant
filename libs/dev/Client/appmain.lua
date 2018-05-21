@@ -170,8 +170,8 @@ local function HandleMsg()
     end
 end
 
-
-
+local bgfx = require "bgfx"
+local init_flag = false
 function init(window_handle, width, height, app_dir, bundle_dir)
     bundle_home_dir = bundle_dir
     app_home_dir = app_dir
@@ -182,6 +182,20 @@ function init(window_handle, width, height, app_dir, bundle_dir)
 
     file_mgr:ReadDirStructure(bundle_home_dir.."/Documents/dir.txt")
     file_mgr:ReadFilePathData(bundle_home_dir.."/Documents/file.txt")
+
+    bgfx.set_platform_data({nwh = window_handle})
+    bgfx.init()
+
+
+    bgfx.set_debug "T"
+    bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
+
+    bgfx.set_view_rect(0, 0, 0, width, height)
+    bgfx.reset(width, height, "v")
+
+    --local bgfx_cb = bgfx.bgfx_cb
+    print("yoyoyo, bgfx_cb", bgfx._G)
+    init_flag = true
 
     local client_io = lanes.gen("*",{package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateIOThread)(linda, bundle_home_dir)
 end
@@ -199,6 +213,11 @@ function terminate()
     if entrance then
         entrance.terminate()
     end
+
+    if init_flag then
+        bgfx.shutdown()
+    end
+
     --time to save files
     file_mgr:WriteDirStructure(bundle_home_dir.."/Documents/dir.txt")
     file_mgr:WriteFilePathData(bundle_home_dir.."/Documents/file.txt")
