@@ -8,67 +8,30 @@ hierarchyview.window = iup.tree {
     title = "World",
 }
 
-function hierarchyview:build(world)
-    local eidin_hierarchy = {}
-    local htree = {}
-
-    for _, eid in world:each("main_camera") do
-        assert(not eidin_hierarchy[eid])
-        eidin_hierarchy[eid] = true
-        local e = world[eid]
-        local ename = e.name
-        table.insert(htree, ename and ename.n or "main_camera")
-    end
-
-    htree.branchname = world.name or "World"
-
-    for _, eid in world:each("editable_hierarchy") do
-        eidin_hierarchy[eid] = true
-        local e = world[eid]
+function hierarchyview.window:selection_cb(id, status)
     
-        local hierarchy_tree = e.editable_hierarchy.root
-        local name_mapper = e.hierarchy_name_mapper.v
-        local function build_hierarchy_entity_tree(ehierarchy, name_mapper)
-            local t = {}
-            local num = #ehierarchy
-            for i=1, num do
-                local child = ehierarchy[i]
-                local childnum = #child
-                local ceid = name_mapper[child.name]
-                if ceid then
-                    eidin_hierarchy[ceid] = true
+end
 
-                    if childnum ~= 0 then
-                        local ct = build_hierarchy_entity_tree(child, name_mapper)
-                        ct.branchname = child.name
-                        table.insert(t, ct)
-                    else
-                        table.insert(t, child.name)
-                    end
-                end
+function hierarchyview:build(htree)
+	local function build_hierarchy_view(htree)
+		local r = {}
+		for k, v in pairs(htree) do
+			local vtype = type(v)
+			if vtype == "table" then
+				local t = build_hierarchy_view(v)
+				t.branchname = k
+				table.insert(r, t)
+			elseif vtype == "string" then
+				table.insert(r, v)
+			end
+		end
 
-            end
-            return t
-        end
+		return r
+	end
 
-        local t = build_hierarchy_entity_tree(hierarchy_tree, name_mapper)        
-        local ename = e.name
-        t.branchname = ename and ename.n or "hierarchy_entity"
-
-        table.insert(htree, t)
-    end
-
-    for _, eid in world:each("render") do
-        if not eidin_hierarchy[eid] then
-            local e = world[eid]
-            if e.render.visible then
-                local ename = e.name                   
-                table.insert(htree, ename and ename.n or "entity")
-            end
-        end
-    end
-
-    iup.TreeAddNodes(self.window, htree)
+	local uitree = build_hierarchy_view(htree)
+	uitree.branchname = "root"
+    iup.TreeAddNodes(self.window, uitree)
 end
 
 return hierarchyview
