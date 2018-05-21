@@ -21,9 +21,43 @@ local input_queue = inputmgr.queue(mapiup, canvas)
 
 local UI_VIEW = 0
 
+
+local function save_ppm(filename, data, width, height, pitch)
+	local f = assert(io.open(filename, "wb"))
+	f:write(string.format("P3\n%d %d\n255\n",width, height))
+	local line = 0
+	for i = 0, height-1 do
+		for j = 0, width-1 do
+			local r,g,b,a = string.unpack("BBBB",data,i*pitch+j*4+1)
+			f:write(r," ",g," ",b," ")
+			line = line + 1
+			if line > 8 then
+				f:write "\n"
+				line = 0
+			end
+		end
+	end
+	f:close()
+end
+
+function save_screenshot(filename)
+	local name , width, height, pitch, data = bgfx.get_screenshot()
+	if name then
+		local size = #data
+		if size < width * height * 4 then
+			-- not RGBA
+			return
+		end
+		print("Save screenshot to ", filename)
+		save_ppm(filename, data, width, height, pitch)
+	end
+end
+
+
 local ctx = {}
 local message = {}
 local function mainloop()
+	save_screenshot "screenshot.ppm"
 	for _, msg,x,y,z,w,u in pairs(input_queue) do
 		nkmsg.push(message, msg, x,y,z,w,u)
 	end
@@ -80,6 +114,9 @@ function canvas:keypress_cb(key, press)
 	if key ==  iup.K_F1 and press == 1 then
 		ctx.debug = not ctx.debug
 		bgfx.set_debug( ctx.debug and "S" or "")
+	end
+	if key == iup.K_F12 and press == 1 then
+		bgfx.request_screenshot()
 	end
 end
 
