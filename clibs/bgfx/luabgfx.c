@@ -220,8 +220,7 @@ linit(lua_State *L) {
 	init.limits.transientVbSize = (6<<20);	// BGFX_CONFIG_TRANSIENT_VERTEX_BUFFER_SIZE
 	init.limits.transientIbSize = (2<<20);	// BGFX_CONFIG_TRANSIENT_INDEX_BUFFER_SIZE;
 
-//	init.callback = &cb->base;
-	init.callback = NULL;	// todo: bgfx has a bug for C99 interface now, see issue #1383
+	init.callback = &cb->base;
 	init.allocator = NULL;
 
 	if (!lua_isnoneornil(L, 1)) {
