@@ -1,3 +1,3 @@
 LIBRARY scintilla
 EXPORTS
-	iup_scintillalua_open
+	luaopen_scintilla

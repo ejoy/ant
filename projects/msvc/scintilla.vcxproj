@@ -190,6 +190,7 @@
     <ClCompile Include="..\..\..\iup\srcscintilla\iup_scintilla.c" />
     <ClCompile Include="..\..\..\iup\srcscintilla\iup_scintilladlg.c" />
     <ClCompile Include="..\..\..\iup\srcscintilla\iup_scintilla_win.c" />
+    <ClCompile Include="..\..\clibs\iup\luascintilla.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="iup_def_files\scintilla.def" />
