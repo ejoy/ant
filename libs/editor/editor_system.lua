@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 
 local editor_mainwin = require "editor.window"
-local su = require "serialize.util"
 
 local editor_sys = ecs.system "editor_system"
 editor_sys.singleton "math_stack"
@@ -127,9 +126,9 @@ function editor_sys:init()
 	local pv = editor_mainwin.propertyview
 	pv.world = world
 	local ms = self.math_stack
-	function hv:selection_cb(id, status)
+	function hv.window:selection_cb(id, status)
 		if status == 1 then
-			local node = self.window:find_node(id)
+			local node = self:find_node(id)
 			if node then
 				local eid = node.eid
 				local ptree = build_entity_tree(eid)
@@ -137,17 +136,4 @@ function editor_sys:init()
 			end
 		end
 	end
-end
-
-function editor_sys.notify:hierarchyview_selection(set)
-	local hv = editor_mainwin.hierarchyview
-	local htreeview = hv.window
-	local selid = htreeview.value
-	if selid then
-		local eid = assert(set[1])
-	end   
-end
-
-function editor_sys.notify:hierarchyview_deselection(set)
-
 end

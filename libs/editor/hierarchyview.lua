@@ -12,15 +12,8 @@ tree.view.title 		= "World"
 
 hierarchyview.window = tree
 
-function tree.view:selection_cb(id, status)
-	local cb = hierarchyview.selection_cb
-	if cb then
-		cb(hierarchyview, id, status)
-	end
-end
-
 function hierarchyview:build(htree, ud_table)	
-	local treeview = self.window
+	local treeview = self.window	
 	local function constrouct_treeview(tr, parent)
 		for k, v in pairs(tr) do
 			local ktype = type(k)
@@ -45,8 +38,9 @@ function hierarchyview:build(htree, ud_table)
 	
 		end
 	end
-	
+
 	constrouct_treeview(htree, nil)
+	treeview:clear_selections()
 end
 
 return hierarchyview

@@ -3,7 +3,16 @@ local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
 local elog = require "editor.log"
 local hierarchyview = require "editor.hierarchyview"
-local propertyview = require "editor.propertyview"
+local propertycontrol = require "editor.propertyview"
+
+local propertyview = propertycontrol.new {
+	tree = {
+		ADDEXPANDED = "NO",
+		HIDEBUTTONS = "NO",
+		HIDELINES = "NO",		
+	}
+}
+
 
 local editor_mainwindow = {}
 editor_mainwindow.__index = editor_mainwindow

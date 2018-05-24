@@ -164,17 +164,51 @@ function tree:del(item)
 	end
 end
 
-function tree.new()
-	local view = iup.tree {
---		SHOWDRAGDROP = "yes",
---		SHOWRENAME = "yes",
-		ADDROOT = "no",
-	}
+function tree:clear()
+	self.view.DELNODE0 = "ALL"
+	
+	local count = #self
+	for i=1, count do
+		self[i] = nil
+	end
+end
 
-	return setmetatable({
-		view = view,
+function tree:clear_selections()
+	local view = self.view
+	if view.MARKMODE == "MULTIPLE" then
+		view.MARK = "CLEARALL"
+	else
+		view.VALUE = "CLEAR"
+	end
+end
+
+local function create_view(config, container)
+	local param = {ADDROOT = "NO"}
+	if config then
+		for k, v in pairs(config) do
+			param[k] = v
+		end
+	end
+	local view = iup.tree(param)
+
+	-- callback
+	function view:selection_cb(id, status)
+		local cb = container.selection_cb
+		if cb then
+			cb(container, id, status)
+		end
+	end
+
+	return view
+end
+
+function tree.new(config)
+	local t = {		
 		id = -1,
-	}, tree)
+	}
+	local view = create_view(config, t)
+	t.view = view
+	return setmetatable(t, tree)
 end
 
 return tree
