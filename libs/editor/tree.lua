@@ -27,7 +27,8 @@ local function add_child(self, parent, child, n)
 	if n == 0 then
 		-- no children
 		local lastid = assert(parent.id)
-		if view["KIND" .. lastid] == "LEAF" then
+		local kind = view["KIND" .. lastid]
+		if kind == "LEAF" then
 			-- change leaf to branch
 			view["INSERTBRANCH" .. lastid] = parent.name
 			view["DELNODE" .. lastid] = "SELECTED"
@@ -35,9 +36,9 @@ local function add_child(self, parent, child, n)
 		view["ADDLEAF" .. lastid] = child.name
 		child.id = lastid + 1
 	else
-		local lastid = assert(parent[n].id)
+		local lastid = assert(parent[n].id)		
 		view["INSERTLEAF" .. lastid] = child.name
-		child.id = view["NEXT" .. lastid]
+		child.id = view["NEXT" .. lastid]		
 	end
 
 	child.parent = parent
@@ -56,14 +57,30 @@ function tree:print()
 	end
 end
 
+function tree:find_by_viewid(id)
+	local function find_ex(node, id)
+		for _, child in pairs(node) do
+			if child.id == id then
+				return child
+			end
+
+			local r = find_ex(child, id)
+			if r then
+				return r
+			end
+		end
+
+		return nil
+	end
+
+	return find_ex(self, id)
+end
+
 local function remap(view, root, id)
 	for _,node in ipairs(root) do
 		view["USERDATA" .. id] = node
-		node.id = id
-		id = id + 1
-		for _, child in ipairs(node) do
-			id = remap(view, node, id)
-		end
+		node.id = id		
+		id = remap(view, node, id + 1)		
 	end
 	return id
 end
@@ -72,11 +89,15 @@ local function remap_tree(self)
 	remap(self.view, self, 0)
 end
 
-function tree:add_child(parent, name)
-	if name == nil then
+function tree:add_child(parent, name)	
+	if parent == nil then
+		parent = self
+	end
+	if name == nil then   
 		name = parent
 		parent = self
 	end
+
 	local child = new_item(name)
 	-- already map to tree
 	if not mapped(self, parent) then
