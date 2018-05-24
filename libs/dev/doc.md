@@ -10,6 +10,7 @@ Client端可以发送指令给Server端,实现不同的需求.
 - LIST: 传入一个路径,服务器返回该路径下的所有文件和目录名称.若路径不合法则会返回空
 - GET: 传入文件名称和文件hash值(可选),获取Server上该文件, 若Server上没有该文件则什么都不返回. 若传入hash值,则会对Server上的对应文件计算hash,并和client传入的hash比较, 若相同则不返回文件, 不相同则返回Server上的文件
 - EXIST: 传入文件名称和文件hash值(可选),判断Server上是否存在相同的文件, 返回结果true或者false
+- REQUIRE: 和GET类似,不过主要是针对Lua文件.从Server上获取并保存到内存当中,会根据Client的package.path针对性的搜索多个路径,以后会考虑合并
 
 Client端分为逻辑线程和IO线程, 通过lanes模块生成IO线程, 利用linda object在两个线程中利用消息交互
 

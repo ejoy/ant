@@ -507,6 +507,7 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
         local entrance_path = cmd_data[1]
         local request = {{"RUN", entrance_path}, udid}
 
+        print("RUN cmd sent", udid, entrance_path)
         table.insert(command_cache, request)
     elseif cmd == "CONNECT" then
         --connect to device
@@ -522,11 +523,8 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
 
     elseif cmd == "DISCONNECT" then
         --disconnect device
-
-        table.insert(command_cache, request)
         local result = libimobiledevicelua.Disconnect(udid)
         if result then
-            table.insert(command_cache, request)
             self:kick_client(udid)
             self.linda:send("response", {"DISCONNECT", udid})
         end

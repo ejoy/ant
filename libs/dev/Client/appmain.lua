@@ -206,7 +206,6 @@ function mainloop()
     HandleMsg()
 end
 
-
 function terminate()
     if entrance then
         entrance.terminate()

@@ -270,6 +270,7 @@ function testlua.mainloop()
 
     bgfx.dbg_text_print(0, 1, 0xf, "Color can be changed with ANSI \x1b[9;me\x1b[10;ms\x1b[11;mc\x1b[12;ma\x1b[13;mp\x1b[14;me\x1b[0m code too.");
 
+--[[
     local stats = bgfx.get_stats("whWH",ctx.stats)
 
     bgfx.dbg_text_print(0, 2, 0x0f, string.format("Backbuffer %dW x %dH in pixels, debug text %dW x %dH in characters."
@@ -278,6 +279,7 @@ function testlua.mainloop()
     , stats.textWidth
     , stats.textHeight
     ))
+    --]]
     bgfx.frame()
 end
 
