@@ -14,11 +14,11 @@ local next_dir_id = 1
 
 function filemanager:ReadDirStructure(path)
 
-    local structure_file = io.open(path, "r")
+    local structure_file = io.open(path, "r", true)
     if not structure_file then
         --no file then create a new one
       --  print("dir file path", path)
-        local dir_path = io.open(path, "w")
+        local dir_path = io.open(path, "w", true)
 
         io.close(dir_path)
         return
@@ -71,9 +71,9 @@ function filemanager:WriteDirStructure(path)
 end
 
 function filemanager:ReadFilePathData(path)
-    local file = io.open(path, "r")
+    local file = io.open(path, "r", true)
     if not file then
-        local file_path = io.open(path, "w")
+        local file_path = io.open(path, "w", true)
         io.close(file_path)
         return
     end

@@ -15,6 +15,18 @@ function log(name)
     end
 end
 
+local pack = require "pack"
+function sendlog(...)
+    linda:send("log", pack.pack({...}))
+end
+
+local origin_print = print
+print = function(...)
+    origin_print(...)
+    local str = ...
+    sendlog(...)
+end
+
 local filemanager = require "filemanager"
 local file_mgr = filemanager.new()
 
@@ -130,7 +142,9 @@ local function run(path)
         --local rr, vv = pcall(require, reverse_path)
         --print("aabb",rr,vv)
         entrance = require(reverse_path)
-        entrance.init(g_WindowHandle, g_Width, g_Height, app_home_dir, bundle_home_dir)
+        if entrance then
+            entrance.init(g_Width, g_Height, app_home_dir, bundle_home_dir)
+        end
     end
 
 end
@@ -203,6 +217,7 @@ function mainloop()
         entrance.mainloop()
     end
 
+
     HandleMsg()
 end
 
@@ -218,9 +233,5 @@ function terminate()
     --time to save files
     file_mgr:WriteDirStructure(bundle_home_dir.."/Documents/dir.txt")
     file_mgr:WriteFilePathData(bundle_home_dir.."/Documents/file.txt")
-end
-
-function sendlog(str)
-    linda:send("log", str)
 end
 
