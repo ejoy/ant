@@ -70,4 +70,36 @@ function seri.save(filename, data)
 	f:close()
 end
 
+function seri.save_entity(w, eid, ms)
+	local e = assert(w[eid])
+    local e_tree = {}
+
+    local arg = {world=w, math_stack = ms, eid = eid}
+
+	for cn, cv in pairs(e) do
+        local save_comp = assert(w._component_type[cn].save)        
+        arg.comp = cn
+        local s = save_comp(cv, arg)
+        e_tree[cv] = s
+    end
+    
+    return e_tree
+end
+
+function seri.load_entity(w, tree, ms)
+	local eid = w:new_entity()
+	local entity = w[eid]
+	local args = {world = w, math_stack = ms, eid = eid}
+
+	for k, v in pairs(tree) do
+		local load_comp = assert(w._component_type[k].load)
+		w:add_component(eid, k)
+		args.comp = k
+		load_comp(entity[k], v, args)
+	end
+
+	return eid
+end
+	
+
 return seri

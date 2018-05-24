@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+local su = require "serialize.util"
+
 local save_world = ecs.component "save_world"{}
 
 function save_world:init()
@@ -14,28 +16,10 @@ serialize_save_sys.singleton "math_stack"
 
 serialize_save_sys.depend "end_frame"
 
-local function save_entity(eid, ms)
-    local cl = world:component_list(eid)
-    local e = assert(world[eid])
-    local e_tree = {}
-
-    local arg = {world=world, math_stack = ms, eid = eid}
-
-	for _, v in ipairs(cl) do
-        local save_comp = assert(world._component_type[v].save)
-        local c = e[v]
-        arg.comp = v
-        local s = save_comp(c, arg)
-        e_tree[v] = s
-    end
-    
-    return e_tree
-end
-
 function serialize_save_sys.notify:save()
     local children = {}
     for _, eid in world:each("serialize") do        
-        local tr = save_entity(eid, self.math_stack)
+        local tr = su.save_entity(world, eid, self.math_stack)
         table.insert(children, tr)
     end
 
@@ -53,26 +37,6 @@ serialize_load_sys.singleton "math_stack"
 serialize_load_sys.singleton "serialization_tree"
 
 serialize_load_sys.depend "end_frame"
-
-
-local function load_entity(tree, ms)
-    local eid = world:new_entity()
-    local entity = world[eid]
-    local arg = {
-        world = world, 
-        math_stack = ms, 
-        eid = eid
-    }
-
-	for k, v in pairs(tree) do
-        local load_comp = assert(world._component_type[k].load)
-        world:add_component(eid, k)
-        arg.comp = k
-        load_comp(entity[k], v, arg)
-    end
-    
-    return eid
-end
 
 local function post_load(loaded_eids)
     for _, eid in world:each("hierarchy_name_mapper") do
@@ -108,7 +72,7 @@ function serialize_load_sys.notify:load_from_seri_tree()
     assert(#children ~= 0)
     local loaded_eids = {}
     for _, tr in ipairs(children) do
-        local eid = load_entity(tr, self.math_stack)
+        local eid = su.load_entity(tr, self.math_stack)
         loaded_eids[eid] = true
     end
 

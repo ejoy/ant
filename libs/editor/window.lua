@@ -3,21 +3,17 @@ local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
 local elog = require "editor.log"
 local hierarchyview = require "editor.hierarchyview"
+local propertyview = require "editor.propertyview"
 
 local editor_mainwindow = {}
 editor_mainwindow.__index = editor_mainwindow
 
 function editor_mainwindow:build_window(fbw, fbh)
     self.hierarchyview = hierarchyview
+    self.propertyview = propertyview
 
     self.assetview = iup.list {
         expand = "YES",
-    }
-
-    self.propertyview = iup.tree {
-        hidebuttons="NO",
-        expand = "YES",
-        title = "components",
     }
 
     self.canvas = iup.canvas {
@@ -29,7 +25,7 @@ function editor_mainwindow:build_window(fbw, fbh)
             iup.split {
                 iup.split {
                     iup.frame {
-                        self.hierarchyview.window,
+                        self.hierarchyview.window.view,
                         title = "hierarchy",
                     },
                     self.canvas,                
@@ -45,7 +41,7 @@ function editor_mainwindow:build_window(fbw, fbh)
                     size = "HALFxHALF",
                 },                
                 iup.frame {
-                    self.propertyview,
+                    self.propertyview.window,
                     title = "property",
                     size = "HALFxHALF",
                 },

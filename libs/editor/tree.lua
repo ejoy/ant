@@ -57,9 +57,9 @@ function tree:print()
 	end
 end
 
-function tree:find_by_viewid(id)
+function tree:find_node(ctrlid)
 	local function find_ex(node, id)
-		for _, child in pairs(node) do
+		for _, child in ipairs(node) do
 			if child.id == id then
 				return child
 			end
@@ -73,7 +73,11 @@ function tree:find_by_viewid(id)
 		return nil
 	end
 
-	return find_ex(self, id)
+	if ctrlid == self.id then
+		return self
+	end
+
+	return find_ex(self, ctrlid)
 end
 
 local function remap(view, root, id)
