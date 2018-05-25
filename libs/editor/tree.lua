@@ -57,7 +57,7 @@ function tree:print()
 	end
 end
 
-function tree:find_node(ctrlid)
+function tree:findchild_byid(ctrlid)
 	local function find_ex(node, id)
 		for _, child in ipairs(node) do
 			if child.id == id then
@@ -80,7 +80,13 @@ function tree:find_node(ctrlid)
 	return find_ex(self, ctrlid)
 end
 
-function tree:find_child(parent, name)
+function tree:isbranch(node)
+	local id = node.id
+	local kind = self.view["KIND" .. id]
+	return kind:upper() == "BRANCH"
+end
+
+function tree:findchild_byname(parent, name)
 	for _, n in ipairs(parent) do
 		if n.name == name then
 			return n
@@ -198,7 +204,7 @@ function tree:selection_node(node)
 	view["MARKED" .. id] = "YES"
 end
 
-local function create_view(config, container)
+local function create_view(config, inst)
 	local param = {ADDROOT = "NO"}
 	if config then
 		for k, v in pairs(config) do
@@ -209,9 +215,16 @@ local function create_view(config, container)
 
 	-- callback
 	function view:selection_cb(id, status)
-		local cb = container.selection_cb
+		local cb = inst.selection_cb
 		if cb then
-			cb(container, id, status)
+			cb(inst, id, status)
+		end
+	end
+
+	function view:executeleaf_cb(id)
+		local cb = inst.executeleaf_cb
+		if cb then
+			cb(inst, id)
 		end
 	end
 

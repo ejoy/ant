@@ -128,7 +128,7 @@ function editor_sys:init()
 	local ms = self.math_stack
 	function hv.window:selection_cb(id, status)
 		if status == 1 then
-			local node = self:find_node(id)
+			local node = self:findchild_byid(id)
 			if node then
 				local eid = node.eid
 				local ptree = build_entity_tree(eid)
