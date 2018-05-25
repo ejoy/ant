@@ -2740,6 +2740,7 @@ lcreateTexture(lua_State *L) {
 	}
 	lua_pushinteger(L, BGFX_LUAHANDLE(TEXTURE, h));
 
+
 	return 1;
 }
 
