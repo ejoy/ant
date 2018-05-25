@@ -1446,7 +1446,7 @@ commandLS(lua_State *L) {
 static int
 lnew(lua_State *L) {
 	int homogeneousDepth = 0;
-	if (!lua_isnil(L, 1)) {
+	if (!lua_isnoneornil(L, 1)) {
 		homogeneousDepth = lua_toboolean(L, 1);
 		lua_pop(L, 1);
 	}

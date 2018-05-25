@@ -12,6 +12,7 @@
 #include <bgfx/c99/platform.h>
 
 #include "luabgfx.h"
+#include "simplelock.h"
 
 #if _MSC_VER > 0
 #include <malloc.h>
@@ -29,6 +30,30 @@
 #	endif //USING_ALLOCA_FOR_VLA
 
 #endif //_MSC_VER > 0
+
+// screenshot queue length
+#define MAX_SCREENSHOT 16
+
+struct screenshot {
+	uint32_t width;
+	uint32_t height;
+	uint32_t pitch;
+	uint32_t size;
+	void *data;
+	char *name;
+};
+
+struct screenshot_queue {
+	spinlock_t lock;
+	unsigned int head;
+	unsigned int tail;
+	struct screenshot *q[MAX_SCREENSHOT];
+};
+
+struct callback {
+	bgfx_callback_interface_t base;
+	struct screenshot_queue ss;
+};
 
 static void *
 getfield(lua_State *L, const char *key) {
@@ -76,11 +101,6 @@ renderer_type_id(lua_State *L, int index) {
 	return id;
 }
 
-struct callback {
-	bgfx_callback_interface_t base;
-	lua_State *L;
-};
-
 static void
 cb_fatal(bgfx_callback_interface_t *self, bgfx_fatal_t code, const char *str) {
 	fprintf(stderr, "Fatal error: 0x%08x: %s", code, str);
@@ -124,8 +144,70 @@ static void
 cb_cache_write(bgfx_callback_interface_t *self, uint64_t id, const void *data, uint32_t size) {
 }
 
+static struct screenshot *
+ss_pop(struct screenshot_queue *queue) {
+	struct screenshot *r;
+	spin_lock(queue);
+	if (queue->head == queue->tail) {
+		r = NULL;
+	} else {
+		r = queue->q[queue->tail % MAX_SCREENSHOT];
+		++queue->tail;
+	}
+	spin_unlock(queue);
+	return r;
+}
+
+// succ return NULL
+static struct screenshot *
+ss_push(struct screenshot_queue *queue, struct screenshot *s) {
+	spin_lock(queue);
+	if ((queue->head - queue->tail) != MAX_SCREENSHOT) {
+		queue->q[queue->head % MAX_SCREENSHOT] = s;
+		++queue->head;
+		s = NULL;
+	}
+	spin_unlock(queue);
+	return s;
+}
+
+static void
+ss_free(struct screenshot * s) {
+	if (s == NULL)
+		return;
+	free(s->name);
+	free(s->data);
+	free(s);
+}
+
 static void
 cb_screen_shot(bgfx_callback_interface_t *self, const char* file, uint32_t width, uint32_t height, uint32_t pitch, const void* data, uint32_t size, bool yflip) {
+	struct screenshot *s = malloc(sizeof(*s));
+	size_t fn_sz = strlen(file);
+	s->name = malloc(fn_sz + 1);
+	memcpy(s->name, file, fn_sz+1);
+	s->data = malloc(size);
+	s->width = width;
+	s->height = height;
+	s->pitch = pitch;
+	s->size = size;
+	uint8_t * dst = (uint8_t *)s->data;
+	const uint8_t * src = (const uint8_t *)data;
+	int line_pitch = pitch;
+	if (yflip) {
+		src += (height-1) * pitch;
+		line_pitch = - pitch;
+	}
+	uint32_t pixwidth = size / height;
+	uint32_t i;
+	for (i=0;i<height;i++) {
+		memcpy(dst, src, pixwidth);
+		dst += pixwidth;
+		src += line_pitch;
+	}
+	struct callback *cb = (struct callback *)self;
+	s = ss_push(&cb->ss, s);
+	ss_free(s);
 }
 
 static void
@@ -202,9 +284,9 @@ linit(lua_State *L) {
 		cb_capture_frame,
 	};
 	struct callback *cb = lua_newuserdata(L, sizeof(*cb));
+	memset(cb, 0, sizeof(*cb));
 	lua_setfield(L, LUA_REGISTRYINDEX, "bgfx_cb");
 	cb->base.vtbl = &vtbl;
-	cb->L = luaL_newstate();
 
 	bgfx_init_t init;
 
@@ -220,8 +302,7 @@ linit(lua_State *L) {
 	init.limits.transientVbSize = (6<<20);	// BGFX_CONFIG_TRANSIENT_VERTEX_BUFFER_SIZE
 	init.limits.transientIbSize = (2<<20);	// BGFX_CONFIG_TRANSIENT_INDEX_BUFFER_SIZE;
 
-//	init.callback = &cb->base;
-	init.callback = NULL;	// todo: bgfx has a bug for C99 interface now, see issue #1383
+	init.callback = &cb->base;
 	init.allocator = NULL;
 
 	if (!lua_isnoneornil(L, 1)) {
@@ -246,7 +327,6 @@ linit(lua_State *L) {
 	}
 
 	if (!bgfx_init(&init)) {
-		lua_close(cb->L);
 		return luaL_error(L, "bgfx init failed");
 	}
 	return 0;
@@ -556,6 +636,12 @@ lgetStats(lua_State *L) {
 		PUSHSTAT(numDraw);
 		PUSHSTAT(numCompute);
 		PUSHSTAT(maxGpuLatency);
+#define PUSHPRIM(v,name) if (stat->numPrims[v] > 0) { lua_pushinteger(L, stat->numPrims[v]); lua_setfield(L, 2, name); }
+		PUSHPRIM(BGFX_TOPOLOGY_TRI_LIST, "numTriList");
+		PUSHPRIM(BGFX_TOPOLOGY_TRI_STRIP, "numTriStrip");
+		PUSHPRIM(BGFX_TOPOLOGY_LINE_LIST, "numLineList");
+		PUSHPRIM(BGFX_TOPOLOGY_LINE_STRIP, "numLineStrip");
+		PUSHPRIM(BGFX_TOPOLOGY_POINT_LIST, "numPointList");
 		break;
 	case 'n':	// numbers
 		PUSHSTAT(numDynamicIndexBuffers);
@@ -648,11 +734,11 @@ static int
 lshutdown(lua_State *L) {
 	bgfx_shutdown();
 	if (lua_getfield(L, LUA_REGISTRYINDEX, "bgfx_cb") == LUA_TUSERDATA) {
-		struct callback *cb = lua_touserdata(L, -1);
-		if (cb->L) {
-			lua_close(cb->L);
-			cb->L = NULL;
-		}
+//		struct callback *cb = lua_touserdata(L, -1);
+//		if (cb->L) {
+//			lua_close(cb->L);
+//			cb->L = NULL;
+//		}
 	}
 
 	return 0;
@@ -3643,6 +3729,43 @@ lsetImage(lua_State *L) {
 	return 0;
 }
 
+static int
+lrequestScreenshot(lua_State *L) {
+	bgfx_frame_buffer_handle_t handle = { UINT16_MAX };	// Invalid handle (main window)
+	if (lua_type(L,1) == LUA_TNUMBER) {
+		int id = BGFX_LUAHANDLE_ID(FRAME_BUFFER, luaL_checkinteger(L, 1));
+		handle.idx = id;
+	}
+	const char * file = luaL_optstring(L, 2, "");
+	bgfx_request_screen_shot(handle, file);
+	return 0;
+}
+
+static int
+lgetScreenshot(lua_State *L) {
+	int memptr = lua_toboolean(L, 1);
+	if (lua_getfield(L, LUA_REGISTRYINDEX, "bgfx_cb") != LUA_TUSERDATA) {
+		return luaL_error(L, "init first");
+	}
+	struct callback *cb = lua_touserdata(L, -1);
+	struct screenshot * s = ss_pop(&cb->ss);
+	if (s == NULL)
+		return 0;
+	lua_pushstring(L, s->name);
+	lua_pushinteger(L, s->width);
+	lua_pushinteger(L, s->height);
+	lua_pushinteger(L, s->pitch);
+	if (memptr) {
+		lua_pushlightuserdata(L, s->data);
+		lua_pushinteger(L, s->size);
+		s->data = NULL;
+	} else {
+		lua_pushlstring(L, (const char *)s->data, s->size);
+	}
+	ss_free(s);
+	return memptr ? 6 : 5;
+}
+
 LUAMOD_API int
 luaopen_bgfx(lua_State *L) {
 	luaL_checkversion(L);
@@ -3725,6 +3848,8 @@ luaopen_bgfx(lua_State *L) {
 		{ "get_shader_uniforms", lgetShaderUniforms },
 		{ "set_view_mode", lsetViewMode },
 		{ "set_image", lsetImage },
+		{ "request_screenshot", lrequestScreenshot },
+		{ "get_screenshot", lgetScreenshot },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
