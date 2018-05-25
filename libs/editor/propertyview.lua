@@ -13,7 +13,15 @@ local function create_tree_branch(node, parent, ptree)
 		return
 	end
 
-	for k, v in pairs(node) do
+	local keys = {}
+	for k in pairs(node) do
+		table.insert(keys, k)
+	end
+
+	table.sort(keys, function (lhs, rhs) return tostring(lhs) > tostring(rhs) end)
+
+	for _, k in ipairs(keys) do
+		local v = node[k]
 		local child = ptree:add_child(parent, k)
 		child.userdata = v
 	end
