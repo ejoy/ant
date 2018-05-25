@@ -9,7 +9,8 @@ local propertyview = propertycontrol.new {
 	tree = {
 		ADDEXPANDED = "NO",
 		HIDEBUTTONS = "NO",
-		HIDELINES = "NO",		
+		HIDELINES = "NO",
+		IMAGELEAF = "IMGCOLLAPSED",
 	}
 }
 

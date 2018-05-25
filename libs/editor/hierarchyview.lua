@@ -5,10 +5,13 @@ local eu = require "editor.util"
 
 local hierarchyview = {}
 
-local tree = treecontrol.new()
-tree.view.hidebuttons ="YES"
-tree.view.hidelines   ="YES"
-tree.view.title 		= "World"
+local tree = treecontrol.new {
+	HIDEBUTTONS ="YES",
+	HIDELINES   ="YES",	
+	IMAGELEAF	="IMGLEAF",
+	IMAGEBRANCHCOLLAPSED = "IMGLEAF",
+	IMAGEBRANCHEXPANDED = "IMGLEAF"
+}
 
 hierarchyview.window = tree
 
@@ -22,7 +25,7 @@ function hierarchyview:build(htree, ud_table)
 				local function add_child(parent, name)
 					local child = treeview:add_child(parent, name)
 					local eid = assert(ud_table[name])
-					child.eid = eid
+					child.eid = eid					
 					return child
 				end
 				
@@ -39,7 +42,7 @@ function hierarchyview:build(htree, ud_table)
 		end
 	end
 
-	constrouct_treeview(htree, nil)
+	constrouct_treeview(htree, nil)	
 	treeview:clear_selections()
 end
 
