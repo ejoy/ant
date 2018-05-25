@@ -44,6 +44,7 @@
 
 #define IMAGE_LIB
 
+// 工具库
 #ifdef  IMAGE_LIB 
 #define  STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
