@@ -11,6 +11,7 @@ Client端可以发送指令给Server端,实现不同的需求.
 - GET: 传入文件名称和文件hash值(可选),获取Server上该文件, 若Server上没有该文件则什么都不返回. 若传入hash值,则会对Server上的对应文件计算hash,并和client传入的hash比较, 若相同则不返回文件, 不相同则返回Server上的文件
 - EXIST: 传入文件名称和文件hash值(可选),判断Server上是否存在相同的文件, 返回结果true或者false
 - REQUIRE: 和GET类似,不过主要是针对Lua文件.从Server上获取并保存到内存当中,会根据Client的package.path针对性的搜索多个路径,以后会考虑合并
+- SCREENSHOT: 一般是由Server发起，要求Client传回当前的截屏，Client返回数据时也使用SCREENSHOT指令告诉Server这是截屏数据
 
 Client端分为逻辑线程和IO线程, 通过lanes模块生成IO线程, 利用linda object在两个线程中利用消息交互
 
@@ -38,5 +39,8 @@ Server端接收Client端传来的指令,返回对应指令和数据, 包括:
 - DIR: 针对Client的LIST指令, 返回指定文件目录下文件和子目录的名称, 包括路径, 传送角度, 以及文件名
 - EXIST_CHECK: 针对Client的EXIST指令, 若文件存在则返回true, 不存在则返回false
 - FILE: 针对Client的GET指令, 返回文件数据. 由于每个数据包的大小不会超过64k, 因此对体积比较大的文件会采取分包的措施. 返回的包括路径, 文件hash值, 传送进度以及文件数据
+- ERROR：一般用于返回错误信息
+- RUN：命令Client运行某文件，一般是入口脚本，如果Client本地没有该脚本，会尝试在Server上找
+- SCREENSHOT：命令Client截屏并返回，Client返回时也会使用SCREENSHOT指令
 
 

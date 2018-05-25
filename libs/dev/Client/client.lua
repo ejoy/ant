@@ -145,6 +145,16 @@ function clientcommand.RUN(resp)
     print("get run command", resp[1], resp[2])
     _linda:send("run", resp[2])
 end
+
+function clientcommand.SCREENSHOT(resp)
+    print("get screenshot command")
+
+    --resp[1] is "SCREENSHOT"
+    --resp[2] screenshot id
+    --todo maybe more later
+
+    _linda:send("screenshot", resp)
+end
 ---------------------------------------------------
 
 local recieve_cmd = {}
@@ -233,6 +243,8 @@ function client:recv(fd, resp, reading)
 	return reading:sub(off)
 end
 
+
+local max_screenshot_pack = 64*1024 - 100
 function client:CollectRequest()
     local count = 0
     while true do
@@ -268,6 +280,38 @@ function client:CollectRequest()
         else
             break
         end
+    end
+
+    while true do
+        local key, value = _linda:receive(0.05, "screenshot")
+        if value then
+            --table.insert(self.sending, pack,pack({"SCREENSHOT", value}))
+            --value[6] is data
+            --pack into small packages and send to server
+            local name = value[1]
+            local size = value[2]
+            local width = value[3]
+            local height = value[4]
+            local pitch = value[5]
+
+            --print("recv ss", name, size, width, height,pitch)
+
+            local offset = 1
+            while offset < size do
+                --print("add a pack", offset)
+                local rest_size = size - offset
+                local pack_data_size = math.min(rest_size, max_screenshot_pack)
+                local pack_str = string.sub(value[6], offset, pack_data_size + offset)
+
+                offset = offset + pack_data_size
+                table.insert(self.sending, pack.pack({"SCREENSHOT", name, size, offset, width, height, pitch, pack_str}))
+
+            end
+
+        else
+            break
+        end
+
     end
 end
 

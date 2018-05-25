@@ -30,6 +30,9 @@ end
 local filemanager = require "filemanager"
 local file_mgr = filemanager.new()
 
+local bgfx = require "bgfx"
+local init_flag = false
+
 local bundle_home_dir = ""
 local app_home_dir = ""
 local g_WindowHandle = nil
@@ -150,7 +153,7 @@ local function run(path)
 end
 
 local hw_caps_init = false
-
+local screenshot_cache_num = 0
 local function HandleMsg()
     while true do
         local key, value = linda:receive(0.05, "new file")
@@ -182,10 +185,41 @@ local function HandleMsg()
             break
         end
     end
+
+    while true do
+        local key, value = linda:receive(0.05, "screenshot")
+        if value then
+            if init_flag then
+
+                bgfx.request_screenshot()
+                screenshot_cache_num = screenshot_cache_num + 1
+                print("request screenshot: "..value[2].." num: "..screenshot_cache_num)
+            end
+        else
+            break;
+        end
+    end
 end
 
-local bgfx = require "bgfx"
-local init_flag = false
+local function HandleCacheScreenShot()
+    --if screenshot_cache_num
+    --for i = 1, screenshot_cache_num do
+    if screenshot_cache_num > 0 then
+        local name, width, height, pitch, data = bgfx.get_screenshot()
+        if name then
+           -- print(type(name), type(pitch), type(data))
+           -- print("screenshot name is "..name)
+            local size =#data
+           -- print("screenshot size is "..size)
+
+            screenshot_cache_num = screenshot_cache_num - 1
+            --todo compress here
+            linda:send("screenshot", {name, size, width, height, pitch, data})
+        end
+    end
+    --end
+end
+
 function init(window_handle, width, height, app_dir, bundle_dir)
     bundle_home_dir = bundle_dir
     app_home_dir = app_dir
@@ -209,6 +243,11 @@ function init(window_handle, width, height, app_dir, bundle_dir)
 
     init_flag = true
 
+    --bgfx.request_screenshot()
+    --screenshot_cache_num = 1
+
+    --entrance = require "testlua"
+    --entrance.init(width, height, app_dir, bundle_dir)
     local client_io = lanes.gen("*",{package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateIOThread)(linda, bundle_home_dir)
 end
 
@@ -219,6 +258,7 @@ function mainloop()
 
 
     HandleMsg()
+    HandleCacheScreenShot()
 end
 
 function terminate()
