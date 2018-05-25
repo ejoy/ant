@@ -80,6 +80,16 @@ function tree:find_node(ctrlid)
 	return find_ex(self, ctrlid)
 end
 
+function tree:find_child(parent, name)
+	for _, n in ipairs(parent) do
+		if n.name == name then
+			return n
+		end
+	end
+
+	return nil
+end
+
 local function remap(view, root, id)
 	for _,node in ipairs(root) do
 		view["USERDATA" .. id] = node
@@ -180,6 +190,12 @@ function tree:clear_selections()
 	else
 		view.VALUE = "CLEAR"
 	end
+end
+
+function tree:selection_node(node)
+	local id = node.id
+	local view = self.view	
+	view["MARKED" .. id] = "YES"
 end
 
 local function create_view(config, container)

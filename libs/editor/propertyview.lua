@@ -3,20 +3,62 @@ local log = log and log(...) or print
 require "iupluacontrols"
 
 local treecontrol = require "editor.tree"
+local mv_control = require "editor.matrixview"
 
 local propertyview = {}; propertyview.__index = propertyview
 
-function propertyview:build(htree)		
+local function create_tree_branch(node, parent, ptree)
+	for k, v in pairs(node) do
+		local child = ptree:add_child(parent, k)
+		child.userdata = v
+	end
+end
+
+function propertyview:build(htree)
 	local ptree = self.tree
 	ptree:clear()
 
-	for k, v in pairs(htree) do
-		local child = ptree:add_child(k)
-		child.userdata = v
-	end
-
+	create_tree_branch(htree, nil, ptree)
 	ptree:clear_selections()
 end
+
+local function fill_matrixview(detail, node)
+	local nodevalue = node.userdata
+	if nodevalue then
+		local ctype = type(nodevalue)
+		local titleidx = 0		
+		if ctype == "table" then
+			local numlin = 0
+			for _ in pairs(nodevalue) do
+				numlin = numlin + 1
+			end
+
+			detail:resize(2, numlin)
+			
+			detail:setcell(titleidx, 1, "key")
+			detail:setcell(titleidx, 2, "value")
+
+			local ridx = 1
+			for k, v in pairs(nodevalue) do								
+				detail:setcell(ridx, 1, k)
+				local vtype = type(v)
+				if vtype == "table" then
+					detail:setuserdata(ridx, 2, {node=node, name=k})					
+					detail:setcell(ridx, 2, "...table...")					
+				else
+					detail:setcell(ridx, 2, tostring(v))					
+				end
+				ridx = ridx + 1
+			end
+		else
+			detail.NUMCOL = 1
+			detail:setcell(titleidx, 1, "value")				
+			
+			detail:setcell(1, 1, tostring(nodevalue))
+		end
+	end
+end
+
 
 local function create_property_tree(config)
 	local tree = treecontrol.new(config)	
@@ -26,57 +68,39 @@ local function create_property_tree(config)
 		end
 	
 		local node = self:find_node(id)
-		local nodevalue = node.userdata
-		if nodevalue then
-			local ctype = type(nodevalue)
-			local titleidx = 0
-			local detail = self.detail.view
-			if ctype == "table" then
-				detail.NUMCOL = 2
-				local numlin = 0
-				for _ in pairs(nodevalue) do
-					numlin = numlin + 1
-				end
-
-				detail.NUMLIN = numlin
-				detail:setcell(titleidx, 1, "key")
-				detail:setcell(titleidx, 2, "value")
-
-				local ridx = 1
-				for k, v in pairs(nodevalue) do								
-					detail:setcell(ridx, 1, k)
-					local c = type(v) == "table" and "...table..." or tostring(v)
-					detail:setcell(ridx, 2, c)
-					ridx = ridx + 1
-				end
-			else
-				detail.NUMCOL = 1
-				detail:setcell(titleidx, 1, "value")				
-				
-				detail:setcell(1, 1, tostring(nodevalue))
-			end
-		end
+		fill_matrixview(self.detail, node)
 	end
 
 	return tree
 end
 
 local function create_detailview(config)
-	local param = {
-		numcol=1, numlin=1,
-		TITLE="Detail",
-	}
-	if config then
-		for k, v in pairs(config) do
-			param[k] = v
-		end
-	end
+	local detail = mv_control.new(config)
 
-	local detail = {}
-	detail.view = iup.matrix(param)
-	
-	function detail.view:click_cb(lin, col, status)
+	function detail:click_cb(lin, col, status)			
+		local isleftbtn = status:sub(3, 3) == '1'
+		local isdbclick = status:sub(6, 6) == 'D'
+
+		if not isleftbtn or not isdbclick then
+			return 
+		end
 		
+		local tree = self.tree
+		if tree == nil then
+			return 
+		end
+
+		local ud = self:getuserdata(lin, col)
+		if ud then
+			local node = ud.node
+			create_tree_branch(node.userdata, node, tree)
+
+			tree:clear_selections()
+			local selectnode = tree:find_child(node, ud.name)
+			tree:selection_node(selectnode)
+
+			fill_matrixview(self, selectnode)
+		end
 	end
 
 	return detail
@@ -86,9 +110,10 @@ function propertyview.new(config)
 	local detailview = create_detailview(config.detail)
 	local tree = create_property_tree(config.tree)
 	tree.detail = detailview
+	detailview.tree = tree
 
 	local tabs = iup.tabs {
-		detailview.view,			
+		detailview.view,
 	}
 
 	tabs.TABTITLE0 = "Detail"
