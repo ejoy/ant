@@ -249,4 +249,8 @@ function fileserver.REQUIRE(req)
     end
 end
 
+--get client sent screenshot
+function fileserver.SCREENSHOT(req)
+    return req
+end
 return fileserver

@@ -23,7 +23,6 @@ end
 local origin_print = print
 print = function(...)
     origin_print(...)
-    local str = ...
     sendlog(...)
 end
 

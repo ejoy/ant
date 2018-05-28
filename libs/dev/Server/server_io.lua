@@ -127,7 +127,12 @@ local function HandlePackage(response_pkg, id, self)
             return "RUNNING"
         end
         --return directory
-    elseif cmd_type == "FILE"  or cmd_type == "EXIST_CHECK" or cmd_type == "RUN" or cmd_type == "ERROR" then
+    elseif cmd_type == "FILE"  or
+            cmd_type == "EXIST_CHECK" or
+            cmd_type == "RUN" or
+            cmd_type == "ERROR" or
+            cmd_type == "SCREENSHOT" then
+
         local pack_l = pack.pack(response_pkg)
         --local nbytes = fd:send(pack_l)
         local nbytes = SendData(id, pack_l)
@@ -179,6 +184,7 @@ local function HandlePackage(response_pkg, id, self)
         end
     elseif cmd_type == "LOG" then
         --do nothing for now
+        print("funcer")
         table.insert(self.log, response_pkg[2])
         return "DONE"
     else
@@ -290,9 +296,29 @@ function server:kick_client(client_id)
     end
 end
 
+local function save_ppm(filename, data, width, height, pitch)
+    local f = assert(io.open(filename, "wb"))
+    f:write(string.format("P3\n%d %d\n255\n",width, height))
+    local line = 0
+    for i = 0, height-1 do
+        for j = 0, width-1 do
+            local r,g,b,a = string.unpack("BBBB",data,i*pitch+j*4+1)
+            f:write(r," ",g," ",b," ")
+            line = line + 1
+            if line > 8 then
+                f:write "\n"
+                line = 0
+            end
+        end
+    end
+    f:close()
+end
+
+local screenshot_cache = nil
+local max_screenshot_pack = 64*1024 - 100
 --store handle of lanes, check the result periodically
 local function response(self, req)
-    print("cmd", req[1], req[2])
+    print("cmd and second is ", req[1], req[2])
     local cmd = req[1]
     --if is require command, need project_directory
     if cmd == "REQUIRE" or cmd == "GET" then
@@ -308,10 +334,42 @@ local function response(self, req)
         local resp = { func(req) }
         --handle the resp
         --collect command
-        for _, a_cmd in ipairs(resp) do
+        if resp then
+            for _, a_cmd in ipairs(resp) do
+                if a_cmd[1] == "SCREENSHOT" then
 
-            local command_package = {a_cmd, req.id}
-            table.insert(command_cache, command_package)
+                     ---[[
+                    local name = a_cmd[2]
+                    local size = a_cmd[3]
+                    local offset = a_cmd[4]
+                    local width = a_cmd[5]
+                    local height = a_cmd[6]
+                    local pitch = a_cmd[7]
+                    local data = a_cmd[8]
+
+                  --  print("whahthath", offset, type(offset), max_screenshot_pack, tonumber(offset) <= max_screenshot_pack+1)
+
+                    if tonumber(offset) <= max_screenshot_pack + 1 then
+                        screenshot_cache = nil
+                        screenshot_cache = {"SCREEN_SHOT", name, width, height, pitch, data}
+
+                    else
+                        print("length before", #screenshot_cache[6], #data)
+                        screenshot_cache[6] = screenshot_cache[6]..data
+                        print("length after", #screenshot_cache[6])
+                    end
+
+                    if offset == size then
+                        local filename = "D:\\Engine\\ant\\libs\\dev\\ScreenShot.ppm"
+                        print("save file", filename, #screenshot_cache[6])
+                        save_ppm(filename, screenshot_cache[6], screenshot_cache[3], screenshot_cache[4], screenshot_cache[5])
+                    end
+                    --]]
+                else
+                    local command_package = {a_cmd, req.id}
+                    table.insert(command_cache, command_package)
+                end
+            end
         end
     end
 end
@@ -528,6 +586,11 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
             self:kick_client(udid)
             self.linda:send("response", {"DISCONNECT", udid})
         end
+    elseif cmd == "SCREENSHOT" then
+        --todo unique id 1, for now just use 1
+        local request = {{"SCREENSHOT", 1}, udid}
+        print("send SCREENSHOT cmd")
+        table.insert(command_cache, request)
     else
         print("Iup Window Request not support yet")
     end

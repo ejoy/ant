@@ -125,6 +125,8 @@ function open_close_simpad_btn:action()
     else
 
         --local dlg = iup.dialog{main_split, title = "ANT ENGINE", size = "HALFxHALF"}
+        server_framework:HandleCommand("all", "SCREENSHOT")
+
         local canvas = iup.canvas{rastersize = "640x480", bgcolor = "255 0 128 255"}
         simpad_dlg = iup.dialog{canvas, title = "sim pad", size = "QUARTERxQUARTER"}
 
@@ -133,19 +135,33 @@ function open_close_simpad_btn:action()
     end
 end
 
+local pack = require "pack"
 local function HandleResponse(resp_table)
+
     for _,v in ipairs(resp_table) do
+        print(v, type(v))
         if type(v) == "string" then
             --this is just log
             --for now, just show on the multitext
-            multitext.value = multitext.value .. "\n" .. v
-            --print("linecount", multitext.linecount)
+            --need to unpack twice, because the text is packed too
+            local vv = pack.unpack(v)
+            if vv then
+                for aa, bb in pairs(vv) do
+                    if bb then
+
+                        local vvv = pack.unpack(bb)
+                        for aaa, bbb in pairs(vvv) do
+
+                            multitext.value = multitext.value .. "\n" .. bbb
+                        end
+
+                    end
+                end
+            end
+
             local pos = iup.TextConvertLinColToPos(multitext,  multitext.linecount, 0)
             multitext.caretpos = pos
             multitext.scrolltopos = pos
-
-            --multitext.scrolltopos =multitext.linecount
-            --append_error(v.."\n")
 
         elseif type(v) == "table" then
             if v[1] == "device" then
