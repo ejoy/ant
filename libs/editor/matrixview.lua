@@ -26,12 +26,43 @@ function matrixview:setuserdata(col, lin, data)
 	c[lin] = data
 end
 
-function matrixview:getcell(col, lin)
-	return self.view:getcell(col, lin)
+function matrixview:setcolwidth(col, size)
+	self.view["RASTERWIDTH" .. col] = size
 end
 
-function matrixview:setcell(col, lin, v)
-	self.view:setcell(col, lin, v)
+function matrixview:setlinwith(lin, size)
+	self.view["RASTERHEIGHT" .. lin] = size
+end
+
+function matrixview:fit_col_content_size(col, gap)
+	gap = gap or 0
+
+	local view = self.view
+	local sizew = {}
+	local numlin = view["NUMLIN"]
+	local cellsize = view["CELLSIZE1:1"]
+	print(cellsize)
+	for i=1, numlin do
+		local c = view:getcell(i, col)
+		--local w, h = iup.DrawGetTextSize(c)
+		if c then
+			local w = iup.DrawGetTextSize(view, c)
+			table.insert(sizew, w)		
+		end
+	end
+
+	if next(sizew) then
+		local rw = math.max(table.unpack(sizew))
+		self:setcolwidth(col, rw + gap)
+	end
+end
+
+function matrixview:getcell(lin, col)
+	return self.view:getcell(lin, col)
+end
+
+function matrixview:setcell(lin, col, v)
+	self.view:setcell(lin, col, v)
 end
 
 local function create_view(config, inst)
