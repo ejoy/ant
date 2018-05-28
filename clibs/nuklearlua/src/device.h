@@ -108,6 +108,14 @@ struct device {
    	struct nk_draw_vertex_layout_element	layout[4];
     #endif 
     // todo... 
+
+	struct nk_font_atlas  	     atlas;
+	struct nk_font**             fonts;
+	int 						 num_fonts;
+	char *						 edit_buf;
+	char **						 combobox_items;
+	float *						 layout_ratios;
+	int 						 num_layout_ratios;  
 };
 
 
