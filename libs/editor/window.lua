@@ -11,6 +11,10 @@ local propertyview = propertycontrol.new {
 		HIDEBUTTONS = "NO",
 		HIDELINES = "NO",
 		IMAGELEAF = "IMGCOLLAPSED",
+	},
+	detail ={
+		RASTERWIDTH2 = "150",
+		FITTOTEXT = "C2"
 	}
 }
 

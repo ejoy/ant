@@ -64,6 +64,7 @@ local function fill_matrixview(detail, node)
 				ridx = ridx + 1
 			end
 		else
+			detail:resize(1, 1)
 			detail.NUMCOL = 1
 			detail:setcell(titleidx, 1, "value")				
 			
