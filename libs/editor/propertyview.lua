@@ -38,21 +38,10 @@ end
 local function fill_matrixview(detail, node)
 	local nodevalue = node.userdata
 	if nodevalue then
-		local ctype = type(nodevalue)
-		local titleidx = 0
+		local ctype = type(nodevalue)		
 
-		if ctype == "table" then
-			local numlin = 0
-			for _ in pairs(nodevalue) do
-				numlin = numlin + 1
-			end
-
-			detail:resize(2, numlin)
-			
-			detail:setcell(titleidx, 1, "key")
-			detail:setcell(titleidx, 2, "value")
-
-			local ridx = 1
+		local ridx = 1
+		if ctype == "table" then			
 			for k, v in pairs(nodevalue) do
 				detail:setcell(ridx, 1, k)
 				local vtype = type(v)
@@ -64,13 +53,15 @@ local function fill_matrixview(detail, node)
 				end
 				ridx = ridx + 1
 			end
-			detail:fit_col_content_size(2, 10)
+			detail:fit_col_content_size(1)
+
 		else
-			detail:resize(1, 1)
-			detail:setcell(titleidx, 1, "value")
+			detail:setcolwidth(1, 0)	-- hiden first col
 			detail:setcell(1, 1, tostring(nodevalue) or "nil")
 		end
-		detail:fit_col_content_size(1)
+
+		detail:shrink(ridx, nil)
+		detail:fit_col_content_size(2, 10)
 	end
 end
 
@@ -129,6 +120,9 @@ local function create_detailview(config)
 		end
 	end
 
+	local titleidx = 0
+	detail:setcell(titleidx, 1, "key")
+	detail:setcell(titleidx, 2, "value")
 	return detail
 end
 

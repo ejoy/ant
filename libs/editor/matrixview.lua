@@ -42,7 +42,7 @@ function matrixview:fit_col_content_size(col, gap)
 	local numlin = view["NUMLIN"]
 	local cellsize = view["CELLSIZE1:1"]
 	print(cellsize)
-	for i=1, numlin do
+	for i=0, numlin do
 		local c = view:getcell(i, col)
 		--local w, h = iup.DrawGetTextSize(c)
 		if c then
@@ -57,11 +57,41 @@ function matrixview:fit_col_content_size(col, gap)
 	end
 end
 
+function matrixview:shrink(linnum, colnum)
+	local view = self.view	
+	if colnum then
+		local cn = tonumber(view["NUMCOL"])
+		if cn > colnum then
+			view["DELCOL"] = colnum .. "-" .. (cn - colnum)
+		end
+	end
+
+	if linnum then
+		local ln = tonumber(view["NUMLIN"])
+		if ln > linnum then
+			view["DELLIN"] = linnum .. "-" .. (ln - linnum)
+		end
+	end
+end
+
 function matrixview:getcell(lin, col)
 	return self.view:getcell(lin, col)
 end
 
+function matrixview:grow_size(lsize, csize)
+	local view = self.view
+	local ln, cn = tonumber(view["NUMLIN"]), tonumber(view["NUMCOL"])
+	if lsize > ln then
+		view["ADDLIN"] = ln .. "-" .. (lsize - ln)
+	end
+
+	if csize > cn then
+		view["ADDCOL"] = cn .. "-" .. (csize - cn)
+	end
+end
+
 function matrixview:setcell(lin, col, v)
+	self:grow_size(lin, col)
 	self.view:setcell(lin, col, v)
 end
 
