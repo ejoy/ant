@@ -1,6 +1,7 @@
 local log = log and log(...) or print
 
 require "iupluacontrols"
+local eu = require "editor.util"
 
 local treecontrol = require "editor.tree"
 local mv_control = require "editor.matrixview"
@@ -13,12 +14,7 @@ local function create_tree_branch(node, parent, ptree)
 		return
 	end
 
-	local keys = {}
-	for k in pairs(node) do
-		table.insert(keys, k)
-	end
-
-	table.sort(keys, function (lhs, rhs) return tostring(lhs) > tostring(rhs) end)
+	local keys = eu.get_sort_keys(node)
 
 	for _, k in ipairs(keys) do
 		local v = node[k]
@@ -37,32 +33,33 @@ end
 
 local function fill_matrixview(detail, node)
 	local nodevalue = node.userdata
-	if nodevalue then
-		local ctype = type(nodevalue)		
-
-		local ridx = 1
-		if ctype == "table" then			
-			for k, v in pairs(nodevalue) do
-				detail:setcell(ridx, 1, k)
-				local vtype = type(v)
-				if vtype == "table" then
-					detail:setuserdata(ridx, 2, {node=node, name=k})					
-					detail:setcell(ridx, 2, tostring(v) or "...table...")					
-				else
-					detail:setcell(ridx, 2, tostring(v))
-				end
-				ridx = ridx + 1
-			end
-			detail:fit_col_content_size(1)
-
-		else
-			detail:setcolwidth(1, 0)	-- hiden first col
-			detail:setcell(1, 1, tostring(nodevalue) or "nil")
-		end
-
-		detail:shrink(ridx, nil)
-		detail:fit_col_content_size(2, 10)
+	if nodevalue == nil then
+		return 
 	end
+
+	local ridx = 1
+	if type(nodevalue) == "table" then
+		local keys = eu.get_sort_keys(nodevalue)
+
+		for _, k in ipairs(keys) do
+			local v = nodevalue[k]
+			detail:setcell(ridx, 1, k)				
+			if type(v) == "table" then
+				detail:setuserdata(ridx, 2, {node=node, name=k})					
+			end
+
+			detail:setcell(ridx, 2, tostring(v) or "nil")
+			ridx = ridx + 1
+		end
+		detail:fit_col_content_size(1)
+
+	else
+		detail:setcolwidth(1, 0)	-- hiden first col
+		detail:setcell(1, 1, tostring(nodevalue) or "nil")
+	end
+
+	detail:shrink(ridx, nil)
+	detail:fit_col_content_size(2, 10)
 end
 
 

@@ -18,13 +18,7 @@ hierarchyview.window = tree
 function hierarchyview:build(htree, ud_table)	
 	local treeview = self.window	
 	local function constrouct_treeview(tr, parent)
-		local keys = {}
-		for k in pairs(tr) do
-			table.insert(keys, k)
-		end
-
-
-		table.sort(keys, function (lhs, rhs) return tostring(lhs) > tostring(rhs) end)
+		local keys = eu.get_sort_keys(tr)
 
 		for _, k in ipairs(keys) do
 			local v = tr[k]
