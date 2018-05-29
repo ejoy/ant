@@ -121,7 +121,7 @@ end
 
 function editor_sys:init()
 	local hv = editor_mainwin.hierarchyview
-	hv.world = world
+	
 	local function build_hv()
 		local htree, ud_table = build_hierarchy_tree()
 		hv:build(htree, ud_table)
@@ -130,15 +130,59 @@ function editor_sys:init()
 	build_hv()
 
 	local pv = editor_mainwin.propertyview
-	pv.world = world
-	local ms = self.math_stack
+	local function build_pv(eid)
+		local ptree = build_entity_tree(eid)
+		pv:build(ptree)
+
+		function pv.tree:rightclick_cb(id, status)			
+			local addsubmenu = {name="Add", type="submenu",}
+	
+			local function get_hv_selnode()
+				local hvtree = hv.window
+				local selid = hvtree.view["VALUE"]
+				return selid and hvtree:findchild_byid(tonumber(selid)) or nil
+			end
+	
+			local add_action =  function(menuitem)
+				local cname = menuitem.TITLE
+				local node = get_hv_selnode()
+				if node then
+					local eid = node.eid
+					world:add_component(eid, cname)
+					build_pv(eid)
+				else
+					log("add component failed, component is : ", cname, 
+					", but could not get hierarchy view select node, return nil")
+				end
+
+			end
+
+			for cname in pairs(world._component_type) do
+				table.insert(addsubmenu, {name=cname, type="item", action=add_action})
+			end
+	
+			local m = menu.new {
+				recipe = {
+					addsubmenu,
+					{name="Delete", type="item", action=function ()
+						local hvnode = get_hv_selnode()						
+						local eid = hvnode.eid
+						local cname = self.view["TITLE"..id]
+						world:remove_component(eid, cname)
+						build_pv(eid)
+					end},
+				}
+			}
+	
+			local x, y = eu.get_cursor_pos()
+			m:show(x, y)
+		end
+	end
 	function hv.window:selection_cb(id, status)
 		if status == 1 then
 			local node = self:findchild_byid(id)
 			if node then
-				local eid = node.eid
-				local ptree = build_entity_tree(eid)
-				pv:build(ptree)
+				build_pv(node.eid)
 			end
 		end
 	end
@@ -146,7 +190,7 @@ function editor_sys:init()
 	function hv.window:rightclick_cb(id, status)
 		local m = menu.new {
 			recipe = {
-				{name="CreateEntity", action=function () 
+				{name="CreateEntity", type="item", action=function () 
 				local eid = world:new_entity("name", "render")
 				local e = world[eid]
 				e.name.n = "NewEntity" .. eu.get_new_entity_counter()
