@@ -1,3 +1,5 @@
+local eu = require "editor.util"
+
 local matrixview = {}; matrixview.__index = matrixview
 
 function matrixview:resize(cnum, lnum)
@@ -39,9 +41,7 @@ function matrixview:fit_col_content_size(col, gap)
 
 	local view = self.view
 	local sizew = {}
-	local numlin = view["NUMLIN"]
-	local cellsize = view["CELLSIZE1:1"]
-	print(cellsize)
+	local numlin = view["NUMLIN"]		
 	for i=0, numlin do
 		local c = view:getcell(i, col)
 		--local w, h = iup.DrawGetTextSize(c)
@@ -59,17 +59,17 @@ end
 
 function matrixview:shrink(linnum, colnum)
 	local view = self.view	
-	if colnum then
-		local cn = tonumber(view["NUMCOL"])
+	if colnum then		
+		local cn = tonumber(view["NUMCOL"] or 0)
 		if cn > colnum then
-			view["DELCOL"] = colnum .. "-" .. (cn - colnum)
+			view["DELCOL"] = (colnum + 1) .. "-" .. (cn - colnum)
 		end
 	end
 
 	if linnum then
-		local ln = tonumber(view["NUMLIN"])
+		local ln = tonumber(view["NUMLIN"] or 0)
 		if ln > linnum then
-			view["DELLIN"] = linnum .. "-" .. (ln - linnum)
+			view["DELLIN"] = (linnum + 1) .. "-" .. (ln - linnum)
 		end
 	end
 end
@@ -82,11 +82,13 @@ function matrixview:grow_size(lsize, csize)
 	local view = self.view
 	local ln, cn = tonumber(view["NUMLIN"]), tonumber(view["NUMCOL"])
 	if lsize > ln then
-		view["ADDLIN"] = ln .. "-" .. (lsize - ln)
+		local s = ln or 0
+		view["ADDLIN"] = s .. "-" .. (lsize - s)
 	end
 
 	if csize > cn then
-		view["ADDCOL"] = cn .. "-" .. (csize - cn)
+		local s = cn or 0
+		view["ADDCOL"] = s .. "-" .. (csize - s)
 	end
 end
 
@@ -106,13 +108,10 @@ local function create_view(config, inst)
 	end
 
 	local view = iup.matrix(param)
-	function view:click_cb(col, lin, status)
-		local cb = inst.click_cb
-		if cb then
-			return cb(inst, col, lin, status)
-		end
-	end
-
+	
+	eu.add_callbacks(view, inst, {
+		"click_cb", "map_cb"
+	})
 	return view
 end
 

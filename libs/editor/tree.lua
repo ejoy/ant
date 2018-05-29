@@ -1,3 +1,5 @@
+
+local eu = require "editor.util"
 local tree = {}	; tree.__index = tree
 
 local function new_item(name)
@@ -213,21 +215,10 @@ local function create_view(config, inst)
 	end
 	local view = iup.tree(param)
 
-	-- callback
-	local function add_callbacks(funcs)
-		for _, name in ipairs(funcs) do
-			view[name] = function (ih, ...)
-				local cb = inst[name]
-				if cb then
-					cb(inst, ...)
-				end
-			end
-		end
-	end
-	add_callbacks {
+	eu.add_callbacks(view, inst, {
 		"selection_cb", "executeleaf_cb", 
 		"rightclick_cb", "button_cb"
-	}
+	})
 	return view
 end
 
