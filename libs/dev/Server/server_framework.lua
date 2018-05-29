@@ -21,7 +21,7 @@ local function HandleMessage()
         local key, value = linda:receive(0.05, "log")
         if value then
             --do something here
-            print("log", value)
+            --print("log", value)
             table.insert(resp_table, value)
         else
             break

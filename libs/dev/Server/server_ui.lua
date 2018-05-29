@@ -2,34 +2,10 @@ package.cpath = "../../../clibs/?.dll;../../../clibs/lib?.so;../../../clibs/?.so
 package.path = "../Common/?.lua;../../?/?.lua;../../?.lua;".. package.path
 
 local iup = require "iuplua"
-local scintilla = require "scintilla"
 local mobiledevice = require "libimobiledevicelua"
 local server_framework = require "server_framework"
 server_framework:init("127.0.0.1", 8888)
 
-
---[[
-local log_interface = iup.scintilla{tabtilte = "device log",
-                                    MARGINWIDTH0 = "30",	-- line number
-                                    STYLEFONT33 = "Consolas",
-                                    STYLEFONTSIZE33 = "11",
-                                    STYLEVISIBLE33 = "NO",
-                                    expand = "YES",
-                                    WORDWRAP = "CHAR",
-                                    APPENDNEWLINE = "NO",
-                                    READONLY = "YES",}
-
-local function append_text(ctrl)
-    return function(txt)
-        ctrl.READONLY = "NO"
-        ctrl.append = txt
-        ctrl.READONLY = "YES"
-        ctrl.SCROLLBY = ctrl.LINECOUNT
-    end
-end
-
-local append_error = append_text(log_interface)
---]]
 --todo store in a file
 local default_proj_dir = "D:/Engine/ant/libs/dev"
 --ui layout
@@ -53,12 +29,66 @@ local connect_frame = iup.frame{connect_list, title = "connected"}
 local connect_btn = iup.button{title = "connect"}
 local disconnect_btn = iup.button{title = "disconnect"}
 local open_close_simpad_btn = iup.button{title = "open/close sim pad"}
-local simpad_dlg = nil
 
 local connect_btn_hbox = iup.hbox{connect_btn, disconnect_btn, open_close_simpad_btn}
 local device_vbox = iup.vbox{device_frame, connect_frame, connect_btn_hbox}
 
 local main_split = iup.split{main_vbox, device_vbox}
+
+--simpad related stuff
+local bgfx = require "bgfx"
+local hw_caps = require "render.hardware_caps"
+local shader_mgr = require "render.resources.shader_mgr"
+local nk = require "bgfx.nuklear"
+
+local UI_VIEW = 0
+local width = 420
+local height = 360
+local simpad_canvas = iup.canvas{rastersize = "420x360"}
+local simpad_dlg = iup.dialog{simpad_canvas, title = "sim pad", size = "420x360"}
+local simpad_show = false
+
+
+local function loadtexture(texname,info)
+    local image = nk.loadImage( texname );
+
+    return image
+end
+
+local function init_bgfx()
+    local args = {nwh = iup.GetAttributeData(simpad_canvas, "HWND"), renderer = nil}
+
+    bgfx.set_platform_data(args)
+    bgfx.init(args.renderer)
+    hw_caps.init()
+
+    nk.init{
+        view = UI_VIEW,
+        width = width,
+        height = height,
+        decl = bgfx.vertex_decl {
+            { "POSITION", 2, "FLOAT" },
+            { "TEXCOORD0", 2, "FLOAT" },
+            { "COLOR0", 4, "UINT8", true },
+        },
+        texture = "s_texColor",
+        state = bgfx.make_state {
+            WRITE_MASK = "RGBA",
+            BLEND = "ALPHA",
+        },
+        prog = shader_mgr.programLoad("ui/vs_nuklear_texture.sc","ui/fs_nuklear_texture.sc"),
+    }
+
+    local nkatlas = loadtexture( "assets/textures/gwen.png") --button.png" )
+
+    local nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h
+    --nkim   = nk.makeImageMem( data,w,h)
+    print("---id("..nkimage.handle..")"..' w'..nkimage.w..' h'..nkimage.h)
+    nk.image( nkimage )  --test nested lua
+
+    bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
+    bgfx.set_debug "T"
+end
 
 --call back
 function proj_dir_btn:action()
@@ -118,20 +148,25 @@ function disconnect_btn:action()
     server_framework:HandleCommand(udid, "DISCONNECT")
 end
 
+function simpad_dlg:close_cb()
+    simpad_show = false
+end
+
 function open_close_simpad_btn:action()
-    if simpad_dlg then
-        simpad_dlg:destroy()
-        simpad_dlg = nil
+    if simpad_show then
+        simpad_dlg:hide()
+
+        simpad_show = false
     else
-
-        --local dlg = iup.dialog{main_split, title = "ANT ENGINE", size = "HALFxHALF"}
-        server_framework:HandleCommand("all", "SCREENSHOT")
-
-        local canvas = iup.canvas{rastersize = "640x480", bgcolor = "255 0 128 255"}
-        simpad_dlg = iup.dialog{canvas, title = "sim pad", size = "QUARTERxQUARTER"}
-
-        simpad_dlg:showxy(iup.ANYWHERE,iup.ANYWHERE)
+        simpad_dlg:showxy(iup.ANYWHERE, iup.ANYWHERE)
         simpad_dlg.usersize = nil
+
+        if init_bgfx then
+            init_bgfx()
+            init_bgfx = nil
+        end
+
+        simpad_show = true
     end
 end
 
@@ -139,20 +174,19 @@ local pack = require "pack"
 local function HandleResponse(resp_table)
 
     for _,v in ipairs(resp_table) do
-        print(v, type(v))
         if type(v) == "string" then
             --this is just log
             --for now, just show on the multitext
             --need to unpack twice, because the text is packed too
-            local vv = pack.unpack(v)
-            if vv then
-                for aa, bb in pairs(vv) do
-                    if bb then
+            local log_pack = pack.unpack(v)
+            if log_pack then
+                for _, log_string in pairs(log_pack) do
+                    if log_string then
 
-                        local vvv = pack.unpack(bb)
-                        for aaa, bbb in pairs(vvv) do
+                        local log_line = pack.unpack(log_string)
+                        for _, log_line_value in pairs(log_line) do
 
-                            multitext.value = multitext.value .. "\n" .. bbb
+                            multitext.value = multitext.value .. "\n" .. log_line_value
                         end
 
                     end
@@ -202,6 +236,8 @@ end
 
 
 local dlg = iup.dialog{main_split, title = "ANT ENGINE", size = "HALFxHALF"}
+
+
 
 dlg:showxy(iup.CENTER,iup.CENTER)
 dlg.usersize = nil

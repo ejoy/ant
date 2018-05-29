@@ -184,7 +184,6 @@ local function HandlePackage(response_pkg, id, self)
         end
     elseif cmd_type == "LOG" then
         --do nothing for now
-        print("funcer")
         table.insert(self.log, response_pkg[2])
         return "DONE"
     else
