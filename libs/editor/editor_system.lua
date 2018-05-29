@@ -2,6 +2,8 @@ local ecs = ...
 local world = ecs.world
 
 local editor_mainwin = require "editor.window"
+local menu = require "editor.menu"
+local eu = require "editor.util"
 
 local editor_sys = ecs.system "editor_system"
 editor_sys.singleton "math_stack"
@@ -120,8 +122,12 @@ end
 function editor_sys:init()
 	local hv = editor_mainwin.hierarchyview
 	hv.world = world
-	local htree, ud_table = build_hierarchy_tree()
-	hv:build(htree, ud_table)
+	local function build_hv()
+		local htree, ud_table = build_hierarchy_tree()
+		hv:build(htree, ud_table)
+	end
+
+	build_hv()
 
 	local pv = editor_mainwin.propertyview
 	pv.world = world
@@ -135,5 +141,23 @@ function editor_sys:init()
 				pv:build(ptree)
 			end
 		end
+	end
+
+	function hv.window:rightclick_cb(id, status)
+		local m = menu.new {
+			recipe = {
+				{name="CreateEntity", action=function () 
+				local eid = world:new_entity("name", "render")
+				local e = world[eid]
+				e.name.n = "NewEntity" .. eu.get_new_entity_counter()
+
+				build_hv()
+			end}
+			},
+			open_cb = nil,
+			menclose_cb = nil,
+		}
+		local x, y = eu.get_cursor_pos()
+		m:show(x, y)
 	end
 end

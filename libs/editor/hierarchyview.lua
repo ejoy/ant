@@ -16,7 +16,7 @@ local tree = treecontrol.new {
 hierarchyview.window = tree
 
 function hierarchyview:build(htree, ud_table)	
-	local treeview = self.window	
+	local treeview = self.window
 	local function constrouct_treeview(tr, parent)
 		local keys = eu.get_sort_keys(tr)
 
@@ -45,6 +45,7 @@ function hierarchyview:build(htree, ud_table)
 		end
 	end
 
+	treeview:clear()
 	constrouct_treeview(htree, nil)	
 	treeview:clear_selections()
 end

@@ -214,20 +214,20 @@ local function create_view(config, inst)
 	local view = iup.tree(param)
 
 	-- callback
-	function view:selection_cb(id, status)
-		local cb = inst.selection_cb
-		if cb then
-			cb(inst, id, status)
+	local function add_callbacks(funcs)
+		for _, name in ipairs(funcs) do
+			view[name] = function (ih, ...)
+				local cb = inst[name]
+				if cb then
+					cb(inst, ...)
+				end
+			end
 		end
 	end
-
-	function view:executeleaf_cb(id)
-		local cb = inst.executeleaf_cb
-		if cb then
-			cb(inst, id)
-		end
-	end
-
+	add_callbacks {
+		"selection_cb", "executeleaf_cb", 
+		"rightclick_cb", "button_cb"
+	}
 	return view
 end
 
