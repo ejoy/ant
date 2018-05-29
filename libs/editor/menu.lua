@@ -23,7 +23,7 @@ local function create_menu(config)
 		return iup.submenu { iup.menu(sitems), title = recipe.name}
 	end
 	type_ops.separator = function () return iup.separator {} end
-	type_ops.item = function (item) return iup.item {title=item.name, action=item.action} end
+	type_ops.item = function (item) return iup.item {title=item.name, action=item.action, active=item.active} end
 
 	local items = build_menu(recipe)
 

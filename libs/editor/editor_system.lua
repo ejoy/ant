@@ -157,8 +157,15 @@ function editor_sys:init()
 
 			end
 
+			local added_components = {}
+			for i=0, self.view.COUNT-1 do
+				local name = self.view["TITLE" .. i]
+				added_components[name] = true
+			end
+
 			for cname in pairs(world._component_type) do
-				table.insert(addsubmenu, {name=cname, type="item", action=add_action})
+				local active = added_components[cname] and "NO" or "YES"
+				table.insert(addsubmenu, {name=cname, type="item", action=add_action, active=active})
 			end
 	
 			local m = menu.new {
