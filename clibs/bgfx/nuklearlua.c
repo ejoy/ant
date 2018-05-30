@@ -44,6 +44,20 @@
 
 #define IMAGE_LIB
 
+static inline int 
+getfield_tointeger(lua_State *L,int table,const char *key) {
+	if( lua_getfield(L,table,key) != LUA_TNUMBER) {
+		luaL_error(L,"Need %s as number",key );
+	}
+	//if (!lua_isinteger(L, -1)) {
+	//	luaL_error(L, "%s should be integer", key);
+	//}
+	int ivalue = luaL_checkinteger(L,-1);
+	lua_pop(L,1);
+	return ivalue;
+}
+
+
 // 工具库
 #ifdef  IMAGE_LIB 
 
@@ -72,10 +86,6 @@ lnk_load_image(lua_State *L)
     bgfx_texture_handle_t tex = bgfx_create_texture_2d(w,h,0,1,BGFX_TEXTURE_FORMAT_RGBA8,0,m);
     freeImage(data);
 
-#ifdef MY_DEBUG 
-	printf("std bgfx load =%d (%d,%d)\n",tex.idx,w,h);
-#endif 
-
 	struct nk_image image; 
     image.handle.id = (tex.idx);   //int
     image.w = w;
@@ -83,10 +93,6 @@ lnk_load_image(lua_State *L)
     image.region[0] = image.region[1] = 0;
     image.region[2] = w;
     image.region[3] = h;
-
-#ifdef MY_DEBUG 
-	printf("return image id = %d(%d,%d)\n",image.handle.id,w,h);
-#endif 
 
 	lua_newtable(L);
 	lua_pushnumber(L,image.handle.id);
@@ -132,21 +138,8 @@ lnk_load_image_data(lua_State *L)
 static int
 lnk_free_image_data(lua_State *L)
 {
-	if(!lua_istable(L,1))
-		luaL_argerror(L,1,"must a table\n");
-	
-	size_t len;
-	lua_geti(L,1,1);     							// image raw data
-	const char *data = luaL_checklstring(L, -1, &len);
-	lua_pop(L,1);
-	int w = luaL_checkinteger(L,2);
-	int h = luaL_checkinteger(L,3);
-	int c = luaL_checkinteger(L,4);
-
-	if( len >= w*h*c)
-		printf("data correct.\n");
-
-	freeImage( (void*) data);
+	// 使用 userdata,register gc ？
+	// c alloc -> lua -> c free  // 无效,这个 c 思路不对
 	return 0;
 }
 
@@ -975,18 +968,6 @@ getfield_touserdata(lua_State *L,int table, const char *key) {
 	return ud;
 }
 */
-static inline int 
-getfield_tointeger(lua_State *L,int table,const char *key) {
-	if( lua_getfield(L,table,key) != LUA_TNUMBER) {
-		luaL_error(L,"Need %s as number",key );
-	}
-	//if (!lua_isinteger(L, -1)) {
-	//	luaL_error(L, "%s should be integer", key);
-	//}
-	int ivalue = luaL_checkinteger(L,-1);
-	lua_pop(L,1);
-	return ivalue;
-}
 
 // struct nk_image {nk_handle handle;unsigned short w,h;unsigned short region[4];};
 // 从栈顶 table(nk_image),解码所有参数,填写返回*image 
@@ -2784,7 +2765,7 @@ luaopen_bgfx_nuklear(lua_State *L) {
 		{"subImage",lnk_sub_image},
 		{"subImageId",lnk_sub_image_id},
 		{"loadImageFromMemory",lnk_load_image_from_memory},
-		
+
 		{"loadImage",lnk_load_image},   // image lib
 		{"loadImageData",lnk_load_image_data}, // image lib 
 		{"freeImageData",lnk_free_image_data}, // image lib
