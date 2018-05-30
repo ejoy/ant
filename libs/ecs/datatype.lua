@@ -76,9 +76,9 @@ local function gen_value(v)
 
 	return { 
 		type 	= typename, 
-		default = default and default or default_value.default, 
-		save 	= save and save or default_value.save,
-		load 	= load and load or default_value.load,
+		default = default or default_value.default, 
+		save 	= save or default_value.save,
+		load 	= load or default_value.load,
 	}	
 end
 
