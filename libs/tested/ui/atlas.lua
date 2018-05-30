@@ -1,5 +1,5 @@
 local nk = require "bgfx.nuklear"
-
+-- 风格表使用样例，未来应该提供更具atlas texture 自动化生成的这种表的功能
 local atlas = {
     ['window'] = {
         ['header'] = { },

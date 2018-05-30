@@ -46,6 +46,7 @@
 
 // 工具库
 #ifdef  IMAGE_LIB 
+
 #define  STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 unsigned char *
@@ -342,8 +343,8 @@ hex2dec(char *hex_s) {
 }
 
 
-struct nk_rune *
-get_charset_rune(struct lnk_context *lc,char *name) {
+nk_rune *
+get_charset_rune(struct lnk_context *lc,const char *name) {
 	for(int i=0;i<lc->num_charsets;i++)
 		if(!strncmp(lc->charsets[i].name,name,64))
 			return lc->charsets[i].rune;
@@ -351,8 +352,8 @@ get_charset_rune(struct lnk_context *lc,char *name) {
 	return NULL;
 }
 
-static nk_rune* 
-add_charset_rune(struct lnk_context *lc,char *name,nk_rune *rune ) {
+nk_rune* 
+add_charset_rune(struct lnk_context *lc,const char *name,nk_rune *rune ) {
 	strncpy(lc->charsets[ lc->num_charsets ].name,name,64);
 	lc->charsets[ lc->num_charsets ++].rune  = rune;
 
@@ -363,7 +364,7 @@ add_charset_rune(struct lnk_context *lc,char *name,nk_rune *rune ) {
 }
 
 
-static int 
+static nk_rune* 
 get_charset(lua_State *L,struct lnk_context *lc) {
 	if(lua_geti(L,-1,1)!=LUA_TSTRING) {  //charset name
 		luaL_error(L,"Need charset name.");
@@ -474,7 +475,7 @@ add_font(lua_State *L,struct lnk_context *lc) {
 			//lc->fonts = malloc( sizeof(lc->fonts[0]) * NK_ANT_MAX_FONTS);  
 			lc->fonts = malloc( sizeof(struct nk_font*) * NK_ANT_MAX_FONTS);  
 		}
-		lc->fonts[ lc->num_fonts ] = nk_font_atlas_add_from_memory(&lc->atlas,ttf_m,ttf_len,fontsize,&cfg);
+		lc->fonts[ lc->num_fonts ] = nk_font_atlas_add_from_memory(&lc->atlas,(void*)ttf_m,ttf_len,fontsize,&cfg);
 		lc->num_fonts ++;
 
 		#ifdef MY_DEBUG 
@@ -553,7 +554,7 @@ gen_fontexture(lua_State *L, struct lnk_context *lc) {
 	memcpy(m->data,image,size);
 	lc->fontexture = bgfx_create_texture_2d(w,h,0,1, bgfx_fmt ,0,m);   //BGFX_TEXTURE_FORMAT_RGBA8,A8,R8,R1
 	#ifdef MY_DEBUG 
-	printf("bake size(w,h) = %d(%d,%d),texid =%d \n",size,w,h,lc->fontexture);
+	printf("bake size(w,h) = %d(%d,%d),texid =%d \n",size,w,h,lc->fontexture.idx);
 	#endif 
 }
 
@@ -700,7 +701,7 @@ lnk_assert(lua_State *L,int ignore,const char *msg) {
 		level++;
 	}
 	if(!level)
-		return 0; // can't catch error
+		return ; // can't catch error
 
 	lua_getstack(L,level,&debug);
 	lua_getinfo(L,"Sln",&debug);   //src ,line ,name
@@ -794,6 +795,7 @@ lnk_checkformat(lua_State*L,int index) {
 }
 
 // staging ，check status 
+/*
 static int 
 lnk_is_active(struct nk_context *ctx)
 {
@@ -820,7 +822,7 @@ lnk_is_active(struct nk_context *ctx)
 	}
 	return 0;
 }
-
+*/
 nk_flags lnk_checkalign(lua_State *L,int index)
 {
 	index = lua_absindex(L,index); 
@@ -920,6 +922,7 @@ enum nk_symbol_type lnk_checksymbol(lua_State *L,int index)
 	return symbol_flags;
 }
 
+/*
 static void *
 getfield_touserdata(lua_State *L,int table, const char *key) {
 	lua_getfield(L, table, key);
@@ -927,7 +930,7 @@ getfield_touserdata(lua_State *L,int table, const char *key) {
 	lua_pop(L, 1);
 	return ud;
 }
-
+*/
 static inline int 
 getfield_tointeger(lua_State *L,int table,const char *key) {
 	if( lua_getfield(L,table,key) != LUA_TNUMBER) {
@@ -1030,6 +1033,103 @@ lnk_spacing(lua_State *L) {
 	return 1;
 }
 
+static int
+lnk_layout_space_begin(lua_State *L) {
+
+	enum  nk_layout_format format = lnk_checkformat(L,1);
+	float height = luaL_checknumber(L, 2);
+	int   ec = luaL_optinteger(L,3,-1);
+	if( ec == -1 )
+		ec = INT_MAX;
+	struct lnk_context *lc = get_context(L);
+	nk_layout_space_begin(&lc->context,format,height,ec);
+	return 0;
+}
+
+static int 
+lnk_layout_space_push(lua_State *L) {   // or space_pos easy to use,understand
+	float x = luaL_checknumber(L,1);	
+	float y = luaL_checknumber(L,2);
+	float w = luaL_checknumber(L,3);
+	float h = luaL_checknumber(L,4);
+	struct lnk_context *lc = get_context(L);
+	nk_layout_space_push(&lc->context,nk_rect(x,y,w,h));
+	printf("pos (%.02f,%.02f,%.02f,%.02f)\n",x,y,w,h);
+	return 0;
+}
+
+static int
+lnk_layout_space_end(lua_State *L) {
+	struct lnk_context *lc = get_context(L);
+	nk_layout_space_end(&lc->context);
+	return 0;
+}
+
+static int 
+lnk_layout_space_bounds(lua_State *L) {
+	struct lnk_context *lc = get_context(L);
+	struct nk_rect bounds = nk_layout_space_bounds(&lc->context);
+	lua_pushnumber(L,bounds.x);
+	lua_pushnumber(L,bounds.y);
+	lua_pushnumber(L,bounds.w);
+	lua_pushnumber(L,bounds.h);
+	return 4;
+}
+
+static int 
+lnk_layout_space_to_screen(lua_State *L) {
+	struct lnk_context *lc = get_context(L);
+	struct nk_vec2 sp,sc;
+	sp.x = luaL_checknumber(L,1);
+	sp.y = luaL_checknumber(L,2);
+	sc = nk_layout_space_to_screen(&lc->context,sp);
+	lua_pushnumber(L,sc.x);
+	lua_pushnumber(L,sc.y);
+	return 2;
+}
+static int 
+lnk_layout_space_to_local(lua_State *L) {
+	struct lnk_context *lc = get_context(L);
+	struct nk_vec2 s,l;
+	s.x = luaL_checknumber(L,1);
+	s.y = luaL_checknumber(L,2);
+	l = nk_layout_space_to_local(&lc->context,s);
+	lua_pushnumber(L,l.x);
+	lua_pushnumber(L,l.y);
+	return 2;
+}
+
+static int 
+lnk_layout_space_rect_to_screen(lua_State *L) {
+	struct lnk_context *lc = get_context(L);
+	struct nk_rect spr,scr;
+	spr.x = luaL_checknumber(L,1);
+	spr.y = luaL_checknumber(L,2);
+	spr.w = luaL_checknumber(L,3);
+	spr.h = luaL_checknumber(L,4);
+	scr = nk_layout_space_rect_to_screen(&lc->context,spr);
+	lua_pushnumber(L,scr.x);
+	lua_pushnumber(L,scr.y);
+	lua_pushnumber(L,scr.w);
+	lua_pushnumber(L,scr.h);
+	return 4;
+}
+static int 
+lnk_layout_space_rect_to_local(lua_State *L) {
+	struct lnk_context *lc = get_context(L);
+	struct nk_rect spr,lcr;
+	spr.x = luaL_checknumber(L,1);
+	spr.y = luaL_checknumber(L,2);
+	spr.w = luaL_checknumber(L,3);
+	spr.h = luaL_checknumber(L,4);
+	lcr = nk_layout_space_rect_to_local(&lc->context,spr);
+	lua_pushnumber(L,lcr.x);
+	lua_pushnumber(L,lcr.y);
+	lua_pushnumber(L,lcr.w);
+	lua_pushnumber(L,lcr.h);
+	return 4;
+}
+
 
 // 默认传入图象的rgba memory block
 // parameters:image,w,h,c
@@ -1098,7 +1198,7 @@ lnk_convert_image(lua_State *L) {
 	texid = texid&0xffff;
 	int w = luaL_checkinteger(L,2);
 	int h = luaL_checkinteger(L,3);
-	int c = luaL_optinteger(L,4,4);   //not need 
+	//int c = luaL_optinteger(L,4,4);   //not need 
 
 	struct nk_image image;
     image.handle.id = (texid);        
@@ -1710,7 +1810,7 @@ lnk_set_style_window(lua_State *L,struct lnk_context *lc,struct nk_style_window 
 }
 
 // slider 
-static int 
+static void 
 lnk_set_style_slider(lua_State *L,struct lnk_context *lc,struct nk_style_slider *style)
 {
 	lnk_assert(L, lua_istable(L,-1),"%s: slider style must be a table.\n");
@@ -1739,7 +1839,7 @@ lnk_set_style_slider(lua_State *L,struct lnk_context *lc,struct nk_style_slider 
 }
 
 // progress
-static int 
+static void 
 lnk_set_style_progress(lua_State *L,struct lnk_context *lc,struct nk_style_progress *style)
 {
 	lnk_assert( L,lua_istable(L,-1),"%s: progress style must be a table.\n");
@@ -1763,7 +1863,7 @@ lnk_set_style_progress(lua_State *L,struct lnk_context *lc,struct nk_style_progr
 	NK_SET_STYLE(L,lc,"padding", vec2, &style->padding);
 }
 // edit 
-static int 
+static void 
 lnk_set_style_edit(lua_State *L,struct lnk_context *lc,struct nk_style_edit *style)
 {
 	lnk_assert(L,lua_istable( L, -1), "%s: edit style must be a table.\n");
@@ -1797,7 +1897,7 @@ lnk_set_style_edit(lua_State *L,struct lnk_context *lc,struct nk_style_edit *sty
 	NK_SET_STYLE(L,lc,"scrollbar size", vec2, &style->scrollbar_size);
 }
 // property 
-static int 
+static void 
 lnk_set_style_property(lua_State *L,struct lnk_context *lc,struct nk_style_property *style)
 {
 	lnk_assert(L, lua_istable(L,-1),"%s: property style must be a table.\n");
@@ -1820,7 +1920,7 @@ lnk_set_style_property(lua_State *L,struct lnk_context *lc,struct nk_style_prope
 	NK_SET_STYLE(L,lc,"dec button", button, &style->dec_button);
 }
 // radio option
-static int 
+static void 
 lnk_set_style_radio(lua_State *L,struct lnk_context *lc,struct nk_style_toggle *style)
 {
 	lnk_assert(L, lua_istable( L,-1),"%s: radio style must be a table.\n");
@@ -1844,7 +1944,7 @@ lnk_set_style_radio(lua_State *L,struct lnk_context *lc,struct nk_style_toggle *
 
 
 // combobox
-static int 
+static void 
 lnk_set_style_combobox(lua_State *L,struct lnk_context *lc, struct nk_style_combo *style)
 {
 	lnk_assert(L,lua_istable(L, -1), "%s: combobox style must be a table.\n");
@@ -2283,8 +2383,6 @@ lnk_combobox(lua_State *L)
 // name, value,
 static int 
 lnk_radio(lua_State* L) {
-	int nargs = lua_gettop(L);
-
 	struct lnk_context *lc = get_context(L);
 	const char *radio_name = luaL_checkstring(L,1);
 	if(lua_istable(L,2)) {    // table 
@@ -2598,6 +2696,26 @@ luaopen_bgfx_nuklear(lua_State *L) {
 		{"useFont",lnk_set_font},
 		{"layoutRow",lnk_layout_row},
 		{"spacing",lnk_spacing},
+		// free space layout,directly pos and size inside window
+		{"layoutSpaceBegin",lnk_layout_space_begin},
+		{"layout_space_begin",lnk_layout_space_begin},
+		{"layout_space_push",lnk_layout_space_push},
+		{"layoutSpacePos",lnk_layout_space_push},
+		{"layout_space_pos",lnk_layout_space_push},
+		{"layout_space_set",lnk_layout_space_push},
+		{"layoutSpaceEnd",lnk_layout_space_end},
+		{"layout_space_end",lnk_layout_space_end},
+		{"layoutSpaceBounds",lnk_layout_space_bounds},
+		{"layout_space_bounds",lnk_layout_space_bounds},
+		{"layoutSpaceToScreen",lnk_layout_space_to_screen},
+		{"layout_space_to_screen",lnk_layout_space_to_screen},
+		{"layoutSpaceToLocal",lnk_layout_space_to_local},
+		{"layout_space_to_local",lnk_layout_space_to_local},
+		{"layoutSpaceRectToScreen",lnk_layout_space_rect_to_screen},
+		{"layout_space_rect_to_screen",lnk_layout_space_rect_to_screen},
+		{"layoutSpaceRectToLocal",lnk_layout_space_rect_to_local},
+		{"layout_space_rect_to_local",lnk_layout_space_rect_to_local},
+
 		// nk control
 		{"label",lnk_label},
 		{"button",lnk_button},

@@ -26,7 +26,7 @@ local property = require "tested.ui.property"
 local colorStyle = require "tested.ui.styleColors"
 local skinStyle = require "tested.ui.styleSkin"
 local area = require "tested.ui.areaWindow"
-
+local ir_btn = require "tested.ui.buttonIrregular"
 
 
 local canvas = iup.canvas {}
@@ -41,12 +41,12 @@ local input_queue = inputmgr.queue(mapiup, canvas)
 
 local UI_VIEW = 0
 
-<<<<<<< HEAD
+
 local nkatlas = {}
 local nkbtn = {}
 local nkimage = {} 
-local nkb_images = { button= {} }
-=======
+local nkb_images = { button = {} }
+local ir_images = { button = {} }
 
 local function save_ppm(filename, data, width, height, pitch)
 	local f = assert(io.open(filename, "wb"))
@@ -66,6 +66,7 @@ local function save_ppm(filename, data, width, height, pitch)
 	f:close()
 end
 
+
 function save_screenshot(filename)
 	local name , width, height, pitch, data = bgfx.get_screenshot()
 	if name then
@@ -79,7 +80,7 @@ function save_screenshot(filename)
 	end
 end
 
->>>>>>> c45ae1e70730e6dd015021a1f27b8bacbade872c
+
 
 local ctx = {}
 local message = {}
@@ -87,7 +88,7 @@ local message = {}
 local btn_func = {
 	LABEL = 1, BUTTON = 2, IMAGE = 3, WIDGET = 4 ,EDIT = 5,
 	PROGRESS = 6, SLIDER = 7, CHECKBOX = 8, COMBOBOX = 9,
-	PROPERTY = 10, RADIO =11, SKIN = 12, AREA = 13,
+	PROPERTY = 10, RADIO =11, SKIN = 12, AREA = 13,IRREGULAR=14
 }
 
  
@@ -111,6 +112,7 @@ local function mainloop()
 		if nk.button( "button","triangle right" ) then
 			btn_ac = btn_func.BUTTON 
 		end 
+		--image 
 		if nk.button(nil, nk.subImage(nkbtn,0,0,69,52)   ) then 
 			btn_ac = btn_func.IMAGE 
 		end 
@@ -144,7 +146,7 @@ local function mainloop()
 			btn_ac = btn_func.PROPERTY 
 		end 
 		
-		nk.layoutRow("dynamic",32,{0.05,0.05,0.05,0.05,0.05,0.2,0.2})
+		nk.layoutRow("dynamic",32,{0.05,0.05,0.05,0.05,0.05,0.2,0.2,0.05})
 		if nk.button(nil,"#ff0000") then
 			nk.themeStyle("theme red")
 		end 
@@ -166,6 +168,9 @@ local function mainloop()
 		end 
 		if nk.button("area","plus") then 
 			btn_ac = btn_func.AREA
+		end 
+		if nk.button("irregular") then
+			btn_ac = btn_func.IRREGULAR
 		end 
 		
 		--nk.layoutRow('dynamic',30,{1/6,1/6,1/6,1/6,1/6,1/6} )
@@ -199,6 +204,8 @@ local function mainloop()
 			skinStyle(nkb_images,nkatlas )
 		elseif btn_ac == btn_func.AREA then
 			area(nkbtn)
+		elseif btn_ac == btn_func.IRREGULAR then
+			ir_btn( ir_images )
 		end 
 
 	end 
@@ -243,7 +250,6 @@ end
 
 local function init(canvas, fbw, fbh)
 	rhwi.init(iup.GetAttributeData(canvas,"HWND"), fbw, fbh)
-	--nk.init ( nkimage1 )
     ---[[
 	nk.init {
 		view = UI_VIEW,
@@ -272,14 +278,16 @@ local function init(canvas, fbw, fbh)
 	--]]
 	-- tested 	
 	nkbtn = loadtexture( "assets/textures/button_active.png" )
-	nkatlas = loadtexture( "assets/textures/gwen.png") --button.png" )
-
+	nkatlas = loadtexture( "assets/textures/gwen.png")
 
 	--nkb_images.n =
 	nkb_images.button.n =  loadtexture("assets/textures/button.png")
 	nkb_images.button.h =  loadtexture("assets/textures/button_hover.png")
 	nkb_images.button.c =  loadtexture("assets/textures/button_active.png")
-
+	--irregular button 
+	ir_images.button.n = loadtexture("assets/textures/irbtn_normal.png")
+	ir_images.button.h = loadtexture("assets/textures/irbtn_hover.png")
+	ir_images.button.c = loadtexture("assets/textures/irbtn_active.png")
 
 	nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h 
 	--nkim   = nk.makeImageMem( data,w,h)

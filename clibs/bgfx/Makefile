@@ -9,7 +9,7 @@ ODIR = o
 
 CC= gcc
 CXX = g++
-CFLAGS = -O2 -Wall
+CFLAGS = -O2 -Wall -Wno-misleading-indentation -Wno-unused-but-set-variable
 
 mingw : bgfx.dll
 
