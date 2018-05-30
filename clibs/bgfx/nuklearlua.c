@@ -1054,7 +1054,6 @@ lnk_layout_space_push(lua_State *L) {   // or space_pos easy to use,understand
 	float h = luaL_checknumber(L,4);
 	struct lnk_context *lc = get_context(L);
 	nk_layout_space_push(&lc->context,nk_rect(x,y,w,h));
-	printf("pos (%.02f,%.02f,%.02f,%.02f)\n",x,y,w,h);
 	return 0;
 }
 
