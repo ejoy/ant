@@ -80,7 +80,7 @@ function seri.save_entity(w, eid, ms)
         local save_comp = assert(w._component_type[cn].save)        
         arg.comp = cn
         local s = save_comp(cv, arg)
-        e_tree[cv] = s
+        e_tree[cn] = s
     end
     
     return e_tree
