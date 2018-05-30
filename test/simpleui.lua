@@ -278,8 +278,7 @@ local function init(canvas, fbw, fbh)
 	--]]
 	-- tested 	
 	nkbtn = loadtexture( "assets/textures/button_active.png" )
-	nkatlas = loadtexture( "assets/textures/gwen.png")
-
+	
 	--nkb_images.n =
 	nkb_images.button.n =  loadtexture("assets/textures/button.png")
 	nkb_images.button.h =  loadtexture("assets/textures/button_hover.png")
@@ -288,6 +287,15 @@ local function init(canvas, fbw, fbh)
 	ir_images.button.n = loadtexture("assets/textures/irbtn_normal.png")
 	ir_images.button.h = loadtexture("assets/textures/irbtn_hover.png")
 	ir_images.button.c = loadtexture("assets/textures/irbtn_active.png")
+
+	-- image tools tested
+	-- return image directly
+	--nkatlas = loadtexture( "assets/textures/gwen.png") 
+	-- return raw data
+	local raw_data = nk.loadImageData("assets/textures/gwen.png"); 
+	-- makeImage from memory
+	nkatlas = nk.loadImageFromMemory(raw_data.data,raw_data.w,raw_data.h,raw_data.c)
+
 
 	nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h 
 	--nkim   = nk.makeImageMem( data,w,h)

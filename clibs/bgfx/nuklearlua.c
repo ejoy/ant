@@ -106,6 +106,50 @@ lnk_load_image(lua_State *L)
 
 	return 1;
 }
+
+// only for test 
+static int  
+lnk_load_image_data(lua_State *L) 
+{
+	const char *filename = luaL_checkstring(L,1);
+	int w,h,n;
+    unsigned char *data = loadImage(filename, &w, &h, &n, 0);
+    if (!data) 
+        printf_s("can not load image %s.\n",filename);
+
+	lua_newtable(L);
+	lua_pushlstring(L,(const char*)data,w*h*n);
+	lua_setfield(L,-2,"data");
+	lua_pushnumber(L,w);
+	lua_setfield(L,-2,"w");
+	lua_pushnumber(L,h);
+	lua_setfield(L,-2,"h");
+	lua_pushnumber(L,n);
+	lua_setfield(L,-2,"c");
+
+	return 1;
+}
+static int
+lnk_free_image_data(lua_State *L)
+{
+	if(!lua_istable(L,1))
+		luaL_argerror(L,1,"must a table\n");
+	
+	size_t len;
+	lua_geti(L,1,1);     							// image raw data
+	const char *data = luaL_checklstring(L, -1, &len);
+	lua_pop(L,1);
+	int w = luaL_checkinteger(L,2);
+	int h = luaL_checkinteger(L,3);
+	int c = luaL_checkinteger(L,4);
+
+	if( len >= w*h*c)
+		printf("data correct.\n");
+
+	freeImage( (void*) data);
+	return 0;
+}
+
 #endif 
 
 
@@ -1133,9 +1177,9 @@ lnk_layout_space_rect_to_local(lua_State *L) {
 // 默认传入图象的rgba memory block
 // parameters:image,w,h,c
 // not used 预留
-/*
+
 static int 
-lnk_load_image(lua_State *L)
+lnk_load_image_from_memory(lua_State *L)
 {
 	if(!lua_isstring(L,1)) 
 		luaL_typerror(L,1,"%s: must be a string .\n");
@@ -1178,6 +1222,7 @@ lnk_load_image(lua_State *L)
 	lua_setfield(L,-2,"y1");
 	return 1;	
 }
+/*
 static int 
 lnk_free_image(lua_State *L) {
   // not need ,case texture hanlde managed by outside 
@@ -2738,7 +2783,12 @@ luaopen_bgfx_nuklear(lua_State *L) {
 		{"makeImage",lnk_convert_image},
 		{"subImage",lnk_sub_image},
 		{"subImageId",lnk_sub_image_id},
-		{"loadImage",lnk_load_image},
+		{"loadImageFromMemory",lnk_load_image_from_memory},
+		
+		{"loadImage",lnk_load_image},   // image lib
+		{"loadImageData",lnk_load_image_data}, // image lib 
+		{"freeImageData",lnk_free_image_data}, // image lib
+
 		{ NULL, NULL },
 	};
 	luaL_newlibtable(L, l);
