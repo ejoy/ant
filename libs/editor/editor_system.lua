@@ -4,6 +4,7 @@ local world = ecs.world
 local editor_mainwin = require "editor.window"
 local menu = require "editor.menu"
 local eu = require "editor.util"
+local su = require "serialize.util"
 
 local editor_sys = ecs.system "editor_system"
 editor_sys.singleton "math_stack"
@@ -75,48 +76,50 @@ local function build_hierarchy_tree()
 	return htree, ud_table
 end
 
-local function build_entity_tree(eid)
-	local e = assert(world[eid])
+local function build_entity_tree(eid, ms)
+	-- local e = assert(world[eid])
 
-	local function build_elem_tree(tr, filter)
-		local t = {}
-		for k, v in pairs(tr) do
-			local ignore = filter and filter[k] or nil
-			if not ignore then
-				local ktype = type(k)
-				if ktype == "string" or ktype == "number" then
-					local vtype = type(v)
-					if vtype == "table" then
-						local r = build_elem_tree(v, filter)
-						t[k] = r
-					elseif vtype == "function" or vtype == "cfunction" then
-						t[k] = "...function..."
-					elseif vtype == "userdata" or vtype == "luserdata" then						
-						t[k] = tostring(v) or "...userdata..."
-					elseif vtype == "string" then
-						t[k] = v
-					elseif vtype == "number" or  vtype == "boolean" then
-						t[k] = tostring(v)
-					else
-						dprint("not support value type : ", vtype, ", key is : ", k)
-					end
-				else
-					dprint("not support key type : ", ktype)
-				end
-			else
-				t[k] = v
-			end
-		end
+	-- local function build_elem_tree(tr, filter)
+	-- 	local t = {}
+	-- 	for k, v in pairs(tr) do
+	-- 		local ignore = filter and filter[k] or nil
+	-- 		if not ignore then
+	-- 			local ktype = type(k)
+	-- 			if ktype == "string" or ktype == "number" then
+	-- 				local vtype = type(v)
+	-- 				if vtype == "table" then
+	-- 					local r = build_elem_tree(v, filter)
+	-- 					t[k] = r
+	-- 				elseif vtype == "function" or vtype == "cfunction" then
+	-- 					t[k] = "...function..."
+	-- 				elseif vtype == "userdata" or vtype == "luserdata" then						
+	-- 					t[k] = tostring(v) or "...userdata..."
+	-- 				elseif vtype == "string" then
+	-- 					t[k] = v
+	-- 				elseif vtype == "number" or  vtype == "boolean" then
+	-- 					t[k] = tostring(v)
+	-- 				else
+	-- 					dprint("not support value type : ", vtype, ", key is : ", k)
+	-- 				end
+	-- 			else
+	-- 				dprint("not support key type : ", ktype)
+	-- 			end
+	-- 		else
+	-- 			t[k] = v
+	-- 		end
+	-- 	end
 
-		return t
-	end
-	local tr = {}
-	for cname, v in pairs(e) do
-		local etr = build_elem_tree(v)
-		tr[cname] = etr
-	end
+	-- 	return t
+	-- end
 
-	return tr
+	-- local tr = {}
+	-- for cname, v in pairs(e) do
+	-- 	local etr = build_elem_tree(v)
+	-- 	tr[cname] = etr
+	-- end
+	-- return tr
+
+	return su.save_entity(world, eid, ms)	
 end
 
 function editor_sys:init()
@@ -130,8 +133,9 @@ function editor_sys:init()
 	build_hv()
 
 	local pv = editor_mainwin.propertyview
+	local ms = self.math_stack
 	local function build_pv(eid)
-		local ptree = build_entity_tree(eid)
+		local ptree = build_entity_tree(eid, ms)
 		pv:build(ptree)
 
 		function pv.tree:rightclick_cb(id, status)			
@@ -197,7 +201,7 @@ function editor_sys:init()
 	function hv.window:rightclick_cb(id, status)
 		local m = menu.new {
 			recipe = {
-				{name="CreateEntity", type="item", action=function () 
+				{name="create entity...", type="item", action=function () 
 				local eid = world:new_entity("name", "render")
 				local e = world[eid]
 				e.name.n = "NewEntity" .. eu.get_new_entity_counter()
