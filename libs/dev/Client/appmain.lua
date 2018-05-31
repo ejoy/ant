@@ -32,7 +32,7 @@ local file_mgr = filemanager.new()
 local bgfx = require "bgfx"
 local init_flag = false
 
-local lodepng = require "lodepng"
+local lodepng = require "lodepnglua"
 
 local bundle_home_dir = ""
 local app_home_dir = ""
@@ -188,13 +188,13 @@ local function HandleMsg()
     end
 
     while true do
-        local key, value = linda:receive(0.05, "screenshot")
+        local key, value = linda:receive(0.05, "screenshot_req")
         if value then
             if init_flag then
 
                 bgfx.request_screenshot()
                 screenshot_cache_num = screenshot_cache_num + 1
-                print("request screenshot: "..value[2].." num: "..screenshot_cache_num)
+                print("request screenshot: ".. value[2].." num: "..screenshot_cache_num)
             end
         else
             break;

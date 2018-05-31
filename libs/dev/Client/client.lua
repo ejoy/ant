@@ -153,7 +153,7 @@ function clientcommand.SCREENSHOT(resp)
     --resp[2] screenshot id
     --todo maybe more later
 
-    _linda:send("screenshot", resp)
+    _linda:send("screenshot_req", resp)
 end
 ---------------------------------------------------
 

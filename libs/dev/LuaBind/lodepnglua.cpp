@@ -87,7 +87,7 @@ static const struct luaL_Reg lib[] = {
 
 extern "C"
 {
-    LUAMOD_API int luaopen_lodepng(lua_State *L)
+    LUAMOD_API int luaopen_lodepnglua(lua_State *L)
     {
         luaL_newlib(L, lib);
         return 1;
