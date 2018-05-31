@@ -35,26 +35,17 @@ function add_entity_sys:init()
         bunny.render.properties = {utime, utime,}
     end
 
-    local cubematerial_fn = "mem://cube_material.material"
-    fs_util.write_to_file(cubematerial_fn, [[
-        shader = {
-            vs = "vs_mesh",
-            fs = "fs_mesh",
-        }
-        state = "default.state"
-    ]])
-
     local cuberender_fn = "mem://cube.render"
     fs_util.write_to_file(cuberender_fn, [[
         mesh = "cube.mesh"
-        binding ={material = "mem://cube_material.material",}
+        binding ={material = "test.material",}
         srt = {s={0.01}}
     ]])
 
     local sphererender_fn = "mem://sphere.render"
     fs_util.write_to_file(sphererender_fn, [[
         mesh = "sphere.mesh"
-        binding ={material = "mem://cube_material.material",}
+        binding ={material = "test.material",}
         srt = {s={0.01}}
     ]])
     
