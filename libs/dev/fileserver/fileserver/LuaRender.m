@@ -19,6 +19,7 @@ LUAMOD_API int luaopen_bgfx(lua_State *L);
 LUAMOD_API int luaopen_bgfx_util(lua_State *L);
 LUAMOD_API int luaopen_math3d(lua_State *L);
 LUAMOD_API int luaopen_lfs(lua_State *L);
+LUAMOD_API int luaopen_lodepng(lua_State *L);
 
 void luaopen_lanes_embedded( lua_State* L, lua_CFunction _luaopen_lanes);
 
@@ -94,6 +95,7 @@ lua_State *L = nil;
     luaL_requiref(L, "bgfx_util", luaopen_bgfx_util, 0);
     luaL_requiref(L, "math3d", luaopen_math3d, 0);
     luaL_requiref(L, "lfs", luaopen_lfs, 0);
+    luaL_requiref(L, "lodepng", luaopen_lodepng, 0);
     luaopen_lanes_embedded(L, default_luaopen_lanes);
     
     custom_on_state_create(L);

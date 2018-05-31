@@ -285,15 +285,10 @@ function client:CollectRequest()
     while true do
         local key, value = _linda:receive(0.05, "screenshot")
         if value then
-            --table.insert(self.sending, pack,pack({"SCREENSHOT", value}))
-            --value[6] is data
-            --pack into small packages and send to server
+            --after compression, only have name and data string
+            --value[2] is data
             local name = value[1]
-            local size = value[2]
-            local width = value[3]
-            local height = value[4]
-            local pitch = value[5]
-
+            local size = #value[2]
             --print("recv ss", name, size, width, height,pitch)
 
             local offset = 1
@@ -301,11 +296,10 @@ function client:CollectRequest()
                 --print("add a pack", offset)
                 local rest_size = size - offset
                 local pack_data_size = math.min(rest_size, max_screenshot_pack)
-                local pack_str = string.sub(value[6], offset, pack_data_size + offset)
+                local pack_str = string.sub(value[2], offset, pack_data_size + offset)
 
                 offset = offset + pack_data_size
-                table.insert(self.sending, pack.pack({"SCREENSHOT", name, size, offset, width, height, pitch, pack_str}))
-
+                table.insert(self.sending, pack.pack({"SCREENSHOT", name, size, offset, pack_str}))
             end
 
         else

@@ -32,6 +32,8 @@ local file_mgr = filemanager.new()
 local bgfx = require "bgfx"
 local init_flag = false
 
+local lodepng = require "lodepng"
+
 local bundle_home_dir = ""
 local app_home_dir = ""
 local g_WindowHandle = nil
@@ -212,8 +214,13 @@ local function HandleCacheScreenShot()
            -- print("screenshot size is "..size)
 
             screenshot_cache_num = screenshot_cache_num - 1
-            --todo compress here
-            linda:send("screenshot", {name, size, width, height, pitch, data})
+
+            --compress to png format
+            --default is bgra format
+            local data_string = lodepng.encode_png(data, width, height);
+
+            linda:send("screenshot", {name, data_string})
+            --linda:send("screenshot", {name, size, width, height, pitch, data})
         end
     end
     --end
