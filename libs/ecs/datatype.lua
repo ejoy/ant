@@ -94,17 +94,32 @@ return function (t)
 			v.default = nil
 		elseif ttype == "table" then
 			local defobj = v.default
-			for k,v in pairs(defobj) do
-				assert(type(k) ~= "table" and type(v) ~= "table")
+			local function check_defobj(defobj)
+				for k,v in pairs(defobj) do
+					if type(v) == "table" then
+						check_defobj(v)
+					end
+					assert(type(k) ~= "table")
+				end
 			end
+			check_defobj(defobj)
+
+			local function deep_copy(obj)
+				local t = {}
+				for k, v in pairs(obj) do
+					if type(v) == "table" then
+						local tt = deep_copy(v)
+						t[k] = tt
+					else
+						t[k] = v
+					end
+				end
+				return t
+			end
+
 			v.default = nil
 			v.default_func = function()
-				local ret = {}
-				-- deepcopy default object
-				for k,v in pairs(defobj) do
-					ret[k] = v
-				end
-				return ret
+				return deep_copy(defobj)
 			end
 		end
 	end
