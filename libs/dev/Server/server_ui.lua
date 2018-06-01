@@ -1,5 +1,7 @@
-package.cpath = "../../../clibs/?.dll;../../../clibs/lib?.so;../../../clibs/?.so;" .. package.cpath
-package.path = "../Common/?.lua;../../?/?.lua;../../?.lua;".. package.path
+dofile("libs/init.lua")
+
+package.cpath = "clibs/?.dll; clibs/lib?.so; clibs/?.so;" .. package.cpath
+package.path = "libs/dev/Common/?.lua;libs/dev/Server/?.lua;libs/dev/?.lua;".. package.path
 
 local iup = require "iuplua"
 local mobiledevice = require "libimobiledevicelua"
@@ -37,14 +39,14 @@ local main_split = iup.split{main_vbox, device_vbox}
 
 --simpad related stuff
 local bgfx = require "bgfx"
-local hw_caps = require "render.hardware_caps"
+local rhwi = require "render.hardware_interface"
 local shader_mgr = require "render.resources.shader_mgr"
 local nk = require "bgfx.nuklear"
 
 local UI_VIEW = 0
 local width = 420
 local height = 360
-local simpad_canvas = iup.canvas{rastersize = "420x360"}
+local simpad_canvas = iup.canvas{rastersize = "420x360", bgcolor = "255 0 123"}
 local simpad_dlg = iup.dialog{simpad_canvas, title = "sim pad", size = "420x360"}
 local simpad_show = false
 
@@ -55,12 +57,10 @@ local function loadtexture(texname,info)
     return image
 end
 
-local function init_bgfx()
-    local args = {nwh = iup.GetAttributeData(simpad_canvas, "HWND"), renderer = nil}
+local nkimage = nil
 
-    bgfx.set_platform_data(args)
-    bgfx.init(args.renderer)
-    hw_caps.init()
+local function init_bgfx()
+    rhwi.init(iup.GetAttributeData(simpad_canvas, "HWND"), width, height)
 
     nk.init{
         view = UI_VIEW,
@@ -76,18 +76,19 @@ local function init_bgfx()
             WRITE_MASK = "RGBA",
             BLEND = "ALPHA",
         },
-        prog = shader_mgr.programLoad("ui/vs_nuklear_texture.sc","ui/fs_nuklear_texture.sc"),
+        prog = shader_mgr.programLoad("ui/vs_nuklear_texture.sc",
+                "ui/fs_nuklear_texture.sc"),
     }
 
-    local nkatlas = loadtexture( "assets/textures/gwen.png") --button.png" )
+    local nkatlas = loadtexture( "assets/textures/ScreenShot.png") --button.png" )
 
-    local nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h
-    --nkim   = nk.makeImageMem( data,w,h)
+    nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h
+--    nkim   = nk.makeImageMem( data,w,h)
     print("---id("..nkimage.handle..")"..' w'..nkimage.w..' h'..nkimage.h)
-    nk.image( nkimage )  --test nested lua
+   -- nk.image( nkimage )  --test nested lua
 
-    bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
-    bgfx.set_debug "T"
+    bgfx.set_view_clear(UI_VIEW, "C", 0x303030ff, 1, 0)
+
 end
 
 --call back
@@ -158,6 +159,8 @@ function open_close_simpad_btn:action()
 
         simpad_show = false
     else
+        server_framework:HandleCommand("all", "SCREENSHOT")
+
         simpad_dlg:showxy(iup.ANYWHERE, iup.ANYWHERE)
         simpad_dlg.usersize = nil
 
@@ -170,6 +173,7 @@ function open_close_simpad_btn:action()
     end
 end
 
+local lodepng = require "lodepnglua"
 local pack = require "pack"
 local function HandleResponse(resp_table)
 
@@ -218,6 +222,17 @@ local function HandleResponse(resp_table)
                         end
                     end
                 end
+            elseif v[1] == "screenshot" then
+                local screenshot = v[2]
+                local name = screenshot[1]
+                local data = screenshot[2]
+
+                --decompress it and show the image
+                local data, width, height = lodepng.decode_png(data)
+                assert(width > 0 and height > 0)
+
+                print("get screenshot", width, height, #data)
+
             else
                 print("resp " .. v[1] .. " not support yet")
             end
@@ -238,9 +253,24 @@ end
 local dlg = iup.dialog{main_split, title = "ANT ENGINE", size = "HALFxHALF"}
 
 
-
 dlg:showxy(iup.CENTER,iup.CENTER)
 dlg.usersize = nil
+
+local function UpdateSimpad()
+
+    if nk.windowBegin( "Test","Test Window ui", 0, 0, 720, 460,
+            "border", "movable", "title", "scalable",'scrollbar') then
+        --image(nkimage)
+
+        nk.layoutRow('dynamic',310,{0.15,0.7,0.15} )
+        nk.spacing(1)
+        nk.image( nkimage )
+    end
+    nk.windowEnd()
+    nk.update()
+
+    bgfx.frame()
+end
 
 -- to be able to run this script inside another context
 while true do
@@ -253,6 +283,10 @@ while true do
     local resp_table = server_framework:RecvResponse()
     HandleResponse(resp_table)
     --handle response here
+
+    if simpad_dlg and simpad_show then
+        UpdateSimpad()
+    end
 
 end
 

@@ -39,6 +39,8 @@ local function HandleMessage()
             elseif value[1] == "DISCONNECT" then
                 print("~~DISCONNECT", value[1], value[2])
                 table.insert(resp_table, {"device", 0, value[2]})
+            elseif value[1] == "SCREENSHOT" then
+                table.insert(resp_table, {"screenshot", value[2]})
             end
         else
             break

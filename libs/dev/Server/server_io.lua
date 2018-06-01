@@ -341,27 +341,21 @@ local function response(self, req)
                     local name = a_cmd[2]
                     local size = a_cmd[3]
                     local offset = a_cmd[4]
-                    local width = a_cmd[5]
-                    local height = a_cmd[6]
-                    local pitch = a_cmd[7]
-                    local data = a_cmd[8]
-
-                  --  print("whahthath", offset, type(offset), max_screenshot_pack, tonumber(offset) <= max_screenshot_pack+1)
+                    local data = a_cmd[5]
 
                     if tonumber(offset) <= max_screenshot_pack + 1 then
                         screenshot_cache = nil
-                        screenshot_cache = {"SCREEN_SHOT", name, width, height, pitch, data}
+                        screenshot_cache = {name, data}
 
                     else
-                        print("length before", #screenshot_cache[6], #data)
-                        screenshot_cache[6] = screenshot_cache[6]..data
-                        print("length after", #screenshot_cache[6])
+                        --print("length before", #screenshot_cache[2], #data)
+                        screenshot_cache[2] = screenshot_cache[2]..data
+                        --print("length after", #screenshot_cache[2])
                     end
 
-                    if offset == size then
-                        local filename = "D:\\Engine\\ant\\libs\\dev\\ScreenShot.ppm"
-                        print("save file", filename, #screenshot_cache[6])
-                        save_ppm(filename, screenshot_cache[6], screenshot_cache[3], screenshot_cache[4], screenshot_cache[5])
+                    if offset >= size then
+                        --send data to ui screen
+                        self.linda:send("response", {"SCREENSHOT", screenshot_cache})
                     end
                     --]]
                 else
