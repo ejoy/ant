@@ -17,10 +17,11 @@ LUAMOD_API int luaopen_crypt(lua_State *L);
 LUAMOD_API int luaopen_lsocket(lua_State *L);
 LUAMOD_API int luaopen_bgfx(lua_State *L);
 LUAMOD_API int luaopen_bgfx_util(lua_State *L);
+LUAMOD_API int luaopen_bgfx_baselib(lua_State *L);
 LUAMOD_API int luaopen_math3d(lua_State *L);
 LUAMOD_API int luaopen_lfs(lua_State *L);
 LUAMOD_API int luaopen_lodepnglua(lua_State *L);
-
+LUAMOD_API int luaopen_memoryfile (lua_State *L);
 void luaopen_lanes_embedded( lua_State* L, lua_CFunction _luaopen_lanes);
 
 static int default_luaopen_lanes( lua_State* L)
@@ -54,7 +55,7 @@ static int custom_on_state_create(lua_State *L)
             lua_setfield(L, -2, "crypt");
             
             lua_pushcfunction(L, luaopen_lfs);
-            lua_setfield(L, -2, "lfs");
+            lua_setfield(L, -2, "winfile");
             lua_pop(L, 1);
         }
         
@@ -93,9 +94,11 @@ lua_State *L = nil;
     luaL_requiref(L, "lsocket", luaopen_lsocket, 0);
     luaL_requiref(L, "bgfx", luaopen_bgfx, 0);
     luaL_requiref(L, "bgfx_util", luaopen_bgfx_util, 0);
+    luaL_requiref(L, "bgfx.baselib", luaopen_bgfx_baselib, 0);
     luaL_requiref(L, "math3d", luaopen_math3d, 0);
-    luaL_requiref(L, "lfs", luaopen_lfs, 0);
+    luaL_requiref(L, "winfile", luaopen_lfs, 0);
     luaL_requiref(L, "lodepnglua", luaopen_lodepnglua, 0);
+    luaL_requiref(L, "memoryfile", luaopen_memoryfile, 0);
     luaopen_lanes_embedded(L, default_luaopen_lanes);
     
     custom_on_state_create(L);

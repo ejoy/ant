@@ -1,6 +1,6 @@
 package.path = "../Common/?.lua;../?.lua;" .. package.path  --path for the app
 --TODO: find a way to set this
-package.remote_search_path = "../?.lua;?.lua" --path for the remote script
+package.remote_search_path = "../?.lua;?.lua;../?/?.lua;../asset/?.lua" --path for the remote script
 
 local lanes = require "lanes"
 if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
@@ -30,7 +30,6 @@ local filemanager = require "filemanager"
 local file_mgr = filemanager.new()
 
 local bgfx = require "bgfx"
-local init_flag = false
 
 local lodepng = require "lodepnglua"
 
@@ -153,7 +152,7 @@ local function run(path)
 
 end
 
-local hw_caps_init = false
+local bgfx_init = false
 local screenshot_cache_num = 0
 local function HandleMsg()
     while true do
@@ -173,13 +172,19 @@ local function HandleMsg()
     while true do
         local key, value = linda:receive(0.05, "run")
         if value then
-            --init when need to run something
-            if not hw_caps_init then
-                local hw_caps = require "render.hardware_caps"
-                hw_caps.init()
-                hw_caps_init = true
+            if not bgfx_init then
+                local rhwi = require "render.hardware_interface"
+                rhwi.init(g_WindowHandle, g_Width, g_Height)
+
+
+                bgfx.set_debug "T"
+                bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
+
+                bgfx.set_view_rect(0, 0, 0, g_Width, g_Height)
+                bgfx_init = true
             end
 
+            --init when need to run something
             print("run", value)
             run(value)
         else
@@ -237,22 +242,37 @@ function init(window_handle, width, height, app_dir, bundle_dir)
     file_mgr:ReadDirStructure(bundle_home_dir.."/Documents/dir.txt")
     file_mgr:ReadFilePathData(bundle_home_dir.."/Documents/file.txt")
 
-    bgfx.set_platform_data({nwh = window_handle})
-    bgfx.init()
+
+    package.loaded["winfile"].personaldir = function()
+        return bundle_home_dir.."/Documents"
+    end
+    package.loaded["winfile"].shortname = function()
+        return "fileserver"
+    end
+    package.loaded["winfile"].exist = function(path)
+        if winfile.attributes(path) then
+            return true
+        end
+
+        return false
+    end
+
+    if not bgfx_init then
+        local rhwi = require "render.hardware_interface"
+        rhwi.init(g_WindowHandle, g_Width, g_Height)
 
 
-    bgfx.set_debug "T"
-    bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
+        bgfx.set_debug "T"
+        bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
 
-    bgfx.set_view_rect(0, 0, 0, width, height)
-    bgfx.reset(width, height, "v")
-
-    init_flag = true
+        bgfx.set_view_rect(0, 0, 0, g_Width, g_Height)
+        bgfx_init = true
+    end
 
     --bgfx.request_screenshot()
     --screenshot_cache_num = 1
 
-    --entrance = require "testlua"
+    --entrance = require "testlua_cube"
     --entrance.init(width, height, app_dir, bundle_dir)
     local client_io = lanes.gen("*",{package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateIOThread)(linda, bundle_home_dir)
 end
@@ -272,7 +292,7 @@ function terminate()
         entrance.terminate()
     end
 
-    if init_flag then
+    if bgfx_init then
         bgfx.shutdown()
     end
 

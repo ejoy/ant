@@ -17,14 +17,14 @@ function testcube.init(width, height, app_dir, bundle_path)
     local projmat = stack({type = "proj", fov = 60, aspect = ctx.width/ctx.height, n=0.1, f=100}, "m")
     local viewmat = stack({0,0,-35},{0,0,0}, "lm")
 
+    print("math", type(projmat))
     bgfx.set_view_transform(0, viewmat, projmat)
 
-    local vs_path = "/shaders/essl/vs_cubes"
-    local fs_path = "/shaders/essl/fs_cubes"
+    local vs_path = "vs_cubes"
+    local fs_path = "fs_cubes"
 
     --load shaders
-    ctx.prog = shader_mgr.programLoad(vs_path, fs_path)
-
+    ctx.prog = shader_mgr.programLoad(vs_path, fs_path, nil, app_dir.."/Common")
 
     ctx.state = bgfx.make_state({ PT = "TRISTRIP" } , nil)	-- from BGFX_STATE_DEFAULT
     ctx.vdecl = bgfx.vertex_decl {
@@ -44,6 +44,7 @@ function testcube.init(width, height, app_dir, bundle_path)
         1.0, -1.0, -1.0, 0xffffffff,
     },
             ctx.vdecl)
+
     ctx.ib = bgfx.create_index_buffer{
         0, 1, 2, 3, 7, 1, 5, 0, 4, 2, 6, 7, 4, 5,
     }
