@@ -39,6 +39,8 @@ local function fill_matrixview(detail, node)
 
 	local ridx = 1
 	if type(nodevalue) == "table" then
+		detail:setcell(0, 1, "key")
+		detail:setcell(0, 2, "value")
 		local keys = eu.get_sort_keys(nodevalue)
 		for _, k in ipairs(keys) do
 			local v = nodevalue[k]
@@ -52,13 +54,17 @@ local function fill_matrixview(detail, node)
 		end
 		detail:fit_col_content_size(1)
 		ridx = ridx - 1
+
+		detail:shrink(ridx, nil)
+		detail:fit_col_content_size(2, 10)
 	else
-		detail:setcolwidth(1, 0)	-- hiden first col
+		detail:setcell(0, 1, "value")
+		detail:shrink(1, 1)
 		detail:setcell(1, 1, tostring(nodevalue) or "nil")
+		detail:fit_col_content_size(1, 10)
 	end
 
-	detail:shrink(ridx, nil)
-	detail:fit_col_content_size(2, 10)
+
 end
 
 
@@ -115,13 +121,6 @@ local function create_detailview(config)
 			fill_matrixview(self, selectnode)
 		end
 	end
-
-	function detail:map_cb()
-		local titleidx = 0
-		self:setcell(titleidx, 1, "key")
-		self:setcell(titleidx, 2, "value")
-	end
-
 	return detail
 end
 
