@@ -45,7 +45,18 @@ local function custom_open(filename, mode, search_local_only)
     --default we don't search local only
     search_local_only = search_local_only or false
 
+
     local file = origin_open(filename, mode)
+
+
+    if not file then
+        local local_path = file_mgr:GetRealPath(filename)
+        if local_path then
+            local_path = bundle_home_dir .. "/Documents/" ..local_path
+            file = origin_open(local_path, mode)
+        end
+    end
+
     if not file and not search_local_only then
         --search online
         local request = {"GET", filename}
@@ -56,7 +67,7 @@ local function custom_open(filename, mode, search_local_only)
         while true do
             local key, value = linda:receive(0.05, "new file")
             if value then
-                print("received msg", value[1], value[2])
+                print("received msg", filename)
                 --put into the id_table and file_table
                 file_mgr:AddFileRecord(value[1], value[2])
 
@@ -65,9 +76,8 @@ local function custom_open(filename, mode, search_local_only)
 
                 print("file name", filename)
                 local real_path = file_mgr:GetRealPath(value[2])
-                real_path = bundle_home_dir .. "/Documents/" ..real_path
                 file = origin_open(real_path, mode)
-                print("real path",real_path, file)
+                print("real path",real_path)
                 return file
             end
         end
@@ -88,7 +98,7 @@ local function remote_searcher (name)
     while true do
         local key, value = linda:receive(0.05, "mem_data")
         if value~=nil then
-            print("receive data",type(value))
+            --print("receive data",type(value))
             return load(value)
         end
     end
@@ -249,24 +259,28 @@ function init(window_handle, width, height, app_dir, bundle_dir)
     package.loaded["winfile"].shortname = function()
         return "fileserver"
     end
+
     package.loaded["winfile"].exist = function(path)
-        if winfile.attributes(path) then
+        if package.loaded["winfile"].attributes(path) then
             return true
+        else
+            --search on the server
+            local request = {"EXIST", path}
+            linda:send("request", request)
+
+            --TODO file not exist
+            --wait here
+            while true do
+                local key, value = linda:receive(0.05, "file exist")
+                if value then
+                    --value is a bool
+                    print("check if exist", tostring(value))
+                    return value
+                end
+            end
         end
 
         return false
-    end
-
-    if not bgfx_init then
-        local rhwi = require "render.hardware_interface"
-        rhwi.init(g_WindowHandle, g_Width, g_Height)
-
-
-        bgfx.set_debug "T"
-        bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
-
-        bgfx.set_view_rect(0, 0, 0, g_Width, g_Height)
-        bgfx_init = true
     end
 
     --bgfx.request_screenshot()

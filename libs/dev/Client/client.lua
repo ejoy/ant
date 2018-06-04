@@ -18,6 +18,7 @@ local mem_file_status = {}
 local current_reading = ""
 
 local _linda = nil
+
 --TODO this is not the same as file_mgr in clientwindow.lua
 --they are in two different threads
 local filemanager = require "filemanager"
@@ -35,7 +36,8 @@ function clientcommand.FILE(resp)
     --resp[4] is the progress "current/total"
     --resp[5] is the file data
     assert(resp[1] == "FILE")
-
+    print("get file", resp[2])
+    _linda:send("log", "receive file "..resp[2])
     local progress = resp[4]
 
     local slash = string.find(progress, "%/")
@@ -45,7 +47,6 @@ function clientcommand.FILE(resp)
 
     if not mem_file_status[file_path] then
         --store in file
-
         local hash = resp[3]
         --file dose not exist on server
         if not hash then
@@ -69,7 +70,7 @@ function clientcommand.FILE(resp)
         if offset <= fileprocess.MAX_CALC_CHUNK then
             --TODO mac/ios file instead of winfile
             --local filesystem = require "winfile"
-            local filesystem = require "lfs"
+            local filesystem = require "winfile"
             filesystem.mkdir(folder)
             --file = io.open(temp_path_hash, "wb")
             file = io.open(real_path, "wb")
@@ -124,12 +125,15 @@ function clientcommand.ERROR(resp)
 end
 
 function clientcommand.EXIST_CHECK(resp)
+    print("get exist check result")
     assert(resp[1] == "EXIST_CHECK", "COMMAND: "..resp[1].." invalid, shoule be EXIST_CHECK")
     local result = resp[2]
     if result == "true" then
         print("File exists on the server")
+        _linda:send("file exist", true)
     elseif result == "false" then
         print("File does not exist on the server")
+        _linda:send("file exist", false)
     else
         print("EXIST CHECK result invalid: "..result)
     end
@@ -372,6 +376,7 @@ end
 
 function client:process_response(resp)
     local cmd = resp[1]
+    _linda:send("log", "handle cmd ".. cmd)
     local func = recieve_cmd[cmd]
     if not func then
         log("Unknown command from server %s",cmd)
