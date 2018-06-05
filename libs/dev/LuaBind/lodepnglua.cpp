@@ -18,7 +18,8 @@ extern "C"
 
 static int EncodePng(lua_State *L)
 {
-    std::string data;
+    const char* data = nullptr;
+    size_t data_length = 0;
     unsigned int width = 0;
     unsigned int height = 0;
     //inputs are image raw data, width, height
@@ -38,19 +39,28 @@ static int EncodePng(lua_State *L)
     
     if(lua_isstring(L, -1))
     {
-        data = lua_tostring(L, -1);
+        //data = lua_tostring(L, -1);
+        data = lua_tolstring(L, -1, &data_length);
+        
         lua_pop(L, 1);
     }
 
-    std::string test_string(data.begin(), data.begin() + width * 4);
-
-    const std::vector<unsigned char> png_in(data.begin(), data.end());
+    const std::vector<unsigned char> png_in(data, data + data_length);
     std::vector<unsigned char> png_out;
     
-    lodepng::encode(png_out, png_in, width, height);
-    std::string out_data(png_out.begin(), png_out.end());
-
-    lua_pushlstring(L, out_data.data(), out_data.size());
+    unsigned error = lodepng::encode(png_out, png_in, width, height);
+  
+    if(error)
+    {
+        printf("png encode error: %d\n", error);
+        lua_pushnumber(L, 0);
+    }
+    else
+    {
+        std::string out_data(png_out.begin(), png_out.end());
+        lua_pushlstring(L, out_data.data(), out_data.size());
+    }
+    
     return 1;
 }
 

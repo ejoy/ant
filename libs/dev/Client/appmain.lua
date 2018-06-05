@@ -205,7 +205,7 @@ local function HandleMsg()
     while true do
         local key, value = linda:receive(0.05, "screenshot_req")
         if value then
-            if init_flag then
+            if bgfx_init then
 
                 bgfx.request_screenshot()
                 screenshot_cache_num = screenshot_cache_num + 1
@@ -223,17 +223,17 @@ local function HandleCacheScreenShot()
     if screenshot_cache_num > 0 then
         local name, width, height, pitch, data = bgfx.get_screenshot()
         if name then
-           -- print(type(name), type(pitch), type(data))
-           -- print("screenshot name is "..name)
+            --print(type(name), type(pitch), type(data))
+            --print("screenshot name is "..name)
             local size =#data
-           -- print("screenshot size is "..size)
+            --print("screenshot size is "..size)
 
             screenshot_cache_num = screenshot_cache_num - 1
 
             --compress to png format
             --default is bgra format
             local data_string = lodepng.encode_png(data, width, height);
-
+            print("screenshot encode size ",#data_string)
             linda:send("screenshot", {name, data_string})
             --linda:send("screenshot", {name, size, width, height, pitch, data})
         end
@@ -283,11 +283,25 @@ function init(window_handle, width, height, app_dir, bundle_dir)
         return false
     end
 
-    --bgfx.request_screenshot()
-    --screenshot_cache_num = 1
+    --[[
+    if not bgfx_init then
+        local rhwi = require "render.hardware_interface"
+        rhwi.init(g_WindowHandle, g_Width, g_Height)
 
-    --entrance = require "testlua_cube"
-    --entrance.init(width, height, app_dir, bundle_dir)
+
+        bgfx.set_debug "T"
+        bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
+
+        bgfx.set_view_rect(0, 0, 0, g_Width, g_Height)
+        bgfx_init = true
+    end
+
+    bgfx.request_screenshot()
+    screenshot_cache_num = 1
+
+    entrance = require "testlua_cube"
+    entrance.init(width, height, app_dir, bundle_dir)
+    --]]
     local client_io = lanes.gen("*",{package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateIOThread)(linda, bundle_home_dir)
 end
 
