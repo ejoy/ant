@@ -295,12 +295,12 @@ function client:CollectRequest()
             local size = #value[2]
             --print("recv ss", name, size, width, height,pitch)
 
-            local offset = 1
+            local offset = 0
             while offset < size do
                 --print("add a pack", offset)
                 local rest_size = size - offset
                 local pack_data_size = math.min(rest_size, max_screenshot_pack)
-                local pack_str = string.sub(value[2], offset, pack_data_size + offset)
+                local pack_str = string.sub(value[2], offset + 1, pack_data_size + offset)
 
                 offset = offset + pack_data_size
                 table.insert(self.sending, pack.pack({"SCREENSHOT", name, size, offset, pack_str}))
