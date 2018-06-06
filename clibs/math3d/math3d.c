@@ -1103,6 +1103,29 @@ convert_to_euler(lua_State *L, struct lastack*LS) {
 }
 
 static inline void
+convert_to_quaternion(lua_State *L, struct lastack *LS){
+	int64_t id = pop(L, LS);
+	int type;
+	float *value = lastack_value(LS, id, &type);
+	struct quaternion q = {0};
+
+	switch (type){
+		case LINEAR_TYPE_VEC3:
+		case LINEAR_TYPE_VEC4:{			
+			struct euler e = { value[1], value[1], value[2] };			
+			euler_to_quaternion(&e, &q);
+			break;
+		default:
+			luaL_error(L, "not support for converting to quaternion, type is : %d", type);
+			break;
+		}
+	}
+
+	lastack_pushquat(LS, &q.x);
+}
+
+
+static inline void
 convert_rotation_to_view_dir(lua_State *L, struct lastack *LS){
 	int64_t id = pop(L, LS);
 	int type;
@@ -1171,42 +1194,6 @@ split_mat_to_srt(lua_State *L, struct lastack *LS){
 		luaL_error(L, "split operation '~' is only valid for mat4 type, type is : %d", type);
 	
 	const union matrix44 *mat = (const union matrix44*)v;
-
-	// struct vector3 scale = {
-	// 	vector3_length((const struct vector3*)(mat->c[0])),
-	// 	vector3_length((const struct vector3*)(mat->c[1])),
-	// 	vector3_length((const struct vector3*)(mat->c[2]))
-	// };
-
-	// struct vector3 rotation;
-	// struct vector3 normalize_columns[3] = {
-	// 	(*(const struct vector3*)(mat->c[0])),
-	// 	(*(const struct vector3*)(mat->c[1])),
-	// 	(*(const struct vector3*)(mat->c[2])),
-	// };
-	// for (int ii=0; ii<sizeof(normalize_columns)/sizeof(normalize_columns[0]); ++ii)
-	// 	vector3_normalize(&normalize_columns[ii]);
-
-
-	// rotation.y = asin(-normalize_columns[0].z);
-	// if (is_zero(cos(rotation.y))){
-	// 	rotation.x = atan2(-normalize_columns[2].x, normalize_columns[1].y);
-	// 	rotation.z = 0;		
-	// } else {
-	// 	rotation.x = atan2(normalize_columns[1].z, normalize_columns[2].z);
-	// 	rotation.z = atan2(normalize_columns[0].y, normalize_columns[0].x);
-	// }
-
-	// rotation.x = TO_DEGREE(rotation.x);
-	// rotation.y = TO_DEGREE(rotation.y);
-	// rotation.z = TO_DEGREE(rotation.z);
-
-	// struct vector4 translate = {
-	// 	mat->c[3][0],
-	// 	mat->c[3][1],
-	// 	mat->c[3][2],
-	// 	1,
-	// };
 
 	struct vector3 scale, rotation, translate;
 	matrix44_decompose(mat, &translate, &rotation, &scale);
@@ -1365,6 +1352,10 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		convert_to_euler(L, LS);
 		refstack_1_1(RS);
 		break;
+	case 'q':
+		convert_to_quaternion(L, LS);
+		refstack_1_1(RS);
+		break;		
 	case 'd':
 		convert_rotation_to_view_dir(L, LS);
 		refstack_1_1(RS);

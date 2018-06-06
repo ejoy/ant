@@ -51,16 +51,6 @@ local stack = math3d.new()
 local vec = math3d.ref "vector"
 local mat = math3d.ref "matrix"	-- matrix ref
 
-stack(vec, {1, 0, 1, 1}, "=")
-do
-	local refvalue = vec:tovalue()
-	for _, v in ipairs(refvalue) do
-		print(v)
-	end
-
-	print(assert(refvalue.type))
-end
-
 local v = stack( { type = "proj", fov = 60, aspect = 1024/768 } , "VR")	-- make a proj mat
 print(v)
 
@@ -137,14 +127,39 @@ print(stack(">RRSRV"))	-- unpack ident mat, get 2st line, 1: RRR 2: RRSR 3:RSRSR
 
 
 -- matrix to srt
-local srt = stack({type="srt", s={0.01}, r={60, 60, -30}, t={0, 0, 0}}, "P")
-stack(srt, "~")
-local s = stack("P")
-local r = stack("P")
-local t = stack("P")
-print("s : ", stack(s, "V"))
-print("r : ", stack(r, "V"))
-print("t : ", stack(t, "V"))
+do
+	local srt = stack({type="srt", s={0.01}, r={60, 60, -30}, t={0, 0, 0}}, "P")
+	stack(srt, "~")
+	local s = stack("P")
+	local r = stack("P")
+	local t = stack("P")
+	print("s : ", stack(s, "V"))
+	print("r : ", stack(r, "V"))
+	print("t : ", stack(t, "V"))
 
-local e = stack(srt, "eP")
-print("e : ", stack(e, "V"))
+	local e = stack(srt, "eP")
+	print("e : ", stack(e, "V"))
+
+	local e1 = stack({type="q", math.cos(math.pi * 0.25), 0, 0, math.sin(math.pi * 0.25)}, "eP")
+	print("q to e : ", stack(e1, "V"))
+
+	local q = stack(e1, "qP")
+	print("e to q : ", stack(q, "V"))
+
+
+end
+
+
+
+--euler to quaternion
+do
+	local q = stack({0, 90, 0}, "qP")
+	print("quaternion", stack(q, "V"))
+
+	local q1 = stack({type="q", axis={0, 1, 0}, angle={90}}, "P")
+	print("quaternion 1 : ", stack(q1, "V"))
+
+	local e = stack(q, "eP")
+	print("euler : ", stack(e, "V"))
+end
+
