@@ -204,8 +204,6 @@ local function register_message(msg_comp, ot, ms)
                 end
             
             end
-
-            dprint("select mode : ", ot.selected_mode)
         end
 
     end

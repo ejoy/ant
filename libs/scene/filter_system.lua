@@ -56,8 +56,6 @@ local primitive_filter_sys = ecs.system "primitive_filter_system"
 primitive_filter_sys.singleton "primitive_filter"
 primitive_filter_sys.singleton "math_stack"
 
-primitive_filter_sys.depend "hierarchy_update_system"
-
 function primitive_filter_sys:update()
     local ms = self.math_stack
     local filter = self.primitive_filter
@@ -72,8 +70,6 @@ local select_filter_sys = ecs.system "select_filter_system"
 
 select_filter_sys.singleton "math_stack"
 select_filter_sys.singleton "select_filter"
-
-primitive_filter_sys.depend "hierarchy_update_system"
 
 function select_filter_sys:update()
     local ms = self.math_stack
