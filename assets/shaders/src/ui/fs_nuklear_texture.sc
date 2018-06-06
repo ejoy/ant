@@ -9,7 +9,7 @@ SAMPLER2D(s_texColor, 0);
 void main()
 {
 	vec4 color = texture2D(s_texColor, v_texcoord0);
-	vec4 t_c = color;       //vec4(color.xyz,1); 
-	vec4 v_c = v_color0;    //vec4(v_color0.xyz,1);
-	gl_FragColor = t_c*v_c; // color*v_color0;
+	vec4 t_c = color;        
+	vec4 v_c = v_color0;     
+	gl_FragColor = t_c*v_c;  //color*v_color0;
 }

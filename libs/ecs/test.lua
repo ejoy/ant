@@ -1,4 +1,4 @@
-package.cpath = "../../bin/?.dll;../../clibs/?.dll"
+package.cpath = "../../clibs/?.dll;../../bin/?.dll"
 
 function log(name)
 	local tag = "[" .. name .. "] "
@@ -35,9 +35,13 @@ local m = modules "test/system;test/component"
 
 local w = ecs.new_world { modules = m , update_order = { "init" } }
 
+w.enable_system("dummy", false)
+
 print("Step 1")
 w.update()
 w.notify()
+
+w.enable_system("dummy", true)
 
 print("Step 2")
 w.update()

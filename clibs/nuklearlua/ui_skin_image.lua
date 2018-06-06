@@ -8,7 +8,7 @@ local check_sel = {
 local windowHeader = nk.loadImage("skin/window_header.png")
 font_msyh_idx = nk.loadFont("font/msyh.ttf",16)
 
-local quadSkinStyle =
+local quadSkinStyle = 
 {
 	['window'] = {
 		['header'] = {
@@ -38,7 +38,7 @@ return function()
 	nk.setFont( font_msyh_idx )
     nk.setStyle( quadSkinStyle )
 
-	nk.windowBegin("Quad Image Window Sample",800,500,400,200, 'title',"movable")
+	if nk.windowBegin("Quad Image Window Sample",800,500,400,200, 'title',"movable") then
 		nk.layoutRow('dynamic',30,1)
 		nk.button("image button")
 		nk.button("微软雅黑")
@@ -46,6 +46,7 @@ return function()
 		nk.layoutRow('dynamic',30,3)
 		nk.spacing(1)
 		nk.button("ok")
+	end 
     nk.windowEnd()
 	nk.unsetStyle()
 	nk.setFont(0)

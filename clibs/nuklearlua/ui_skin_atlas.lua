@@ -20,7 +20,7 @@ local style = {
            ['label padding'] = { x=1,y=1},
            ['text background'] = '#00000000',
         },
-        ['background'] = '#7f7f7f',
+        --['background'] = '#7f7f7f',
         ['fixed background'] = nk.subImage( winskin,128,23,127,104),
     },
     ['button'] = {
@@ -159,8 +159,7 @@ local style = {
     --]]
     },
 
-    ["edit"] = 
-    {
+    ["edit"] =  {
         ['normal'] = '#D8D8D8',
         ['hover'] = '#D8D8D8',
         ['active'] = '#D8D8D8',
@@ -265,7 +264,8 @@ return function ()
         ---[[
         nk.layoutRow('dynamic',30,3)
         nk.spacing(1);
-        nk.button("apply")
+        nk.button("apply",nk.subImage( winskin,128,0,127,24) )
+        --nk.button("apply","triangle down" )
         --]]
         ---[[
         --nk.spacing(2);

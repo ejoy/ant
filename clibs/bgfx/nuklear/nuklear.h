@@ -18518,6 +18518,7 @@ NK_API int
 nk_group_scrolled_offset_begin(struct nk_context *ctx,
     nk_uint *x_offset, nk_uint *y_offset, const char *title, nk_flags flags)
 {
+
     struct nk_rect bounds;
     struct nk_window panel;
     struct nk_window *win;
@@ -18538,6 +18539,9 @@ nk_group_scrolled_offset_begin(struct nk_context *ctx,
     panel.flags = flags;
     panel.scrollbar.x = *x_offset;
     panel.scrollbar.y = *y_offset;
+
+    
+
     panel.buffer = win->buffer;
     panel.layout = (struct nk_panel*)nk_create_panel(ctx);
     ctx->current = &panel;

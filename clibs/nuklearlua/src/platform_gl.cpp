@@ -1,29 +1,29 @@
+#define PLATFORM_GL 
+
+//#ifdef PLATFORM_GL 
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#define PLATFORM_GL 
-
 #include "device.h"
 #include "imageutl.h"
 
-#define MAX_TEXT_LEN 512
-unsigned int keycode_text[ MAX_TEXT_LEN ];
-int          keycode_text_len = 0;
-void text_input(GLFWwindow *win, unsigned int codepoint)
+static GLFWwindow *g_glfw_gl_win;
+
+// 键盘输入回掉函数,内部创建的窗口所需要的
+void gl_text_input(GLFWwindow *win, unsigned int codepoint)
 {
-    if( keycode_text_len < MAX_TEXT_LEN )
-        keycode_text[ keycode_text_len++] = codepoint; 
+    device_input_keycode(codepoint);
 }
 
-void window_size(GLFWwindow *win,int w,int h)
+void Platform_GL_reset_window( struct device *dev,int w,int h)
 {
     //todo ...
 }
 
 void Platform_Gl_Nk_init( struct device *dev);
 
-static GLFWwindow *win;
+
 void Platform_GL_init( struct device *dev ) {
 
     int width = 0, height = 0;
@@ -38,14 +38,14 @@ void Platform_GL_init( struct device *dev ) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     //glfwMakeContextCurrent(window). You have to do that before calling glewInit()
-    win = glfwCreateWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, "Demo", NULL, NULL);
-    glfwMakeContextCurrent(win);
+    g_glfw_gl_win = glfwCreateWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, "Demo", NULL, NULL);
+    glfwMakeContextCurrent(g_glfw_gl_win);
 
     // setup text input for edit control 
-    glfwSetWindowUserPointer(win, dev->nk_ctx );
-    glfwSetCharCallback(win, text_input);
+    glfwSetWindowUserPointer(g_glfw_gl_win, dev->nk_ctx );
+    glfwSetCharCallback(g_glfw_gl_win, gl_text_input);
 
-    glfwSetWindowTitle(win,"ant project' ui engine v0.01");    
+    glfwSetWindowTitle(g_glfw_gl_win,"ant project' ui engine v0.01");    
 
     glewExperimental = 1;
     if (glewInit() != GLEW_OK) {
@@ -84,7 +84,6 @@ void Platform_Gl_Nk_init( struct device *dev) {
         "void main(){\n"
         "   Out_Color = Frag_Color * texture(Texture, Frag_UV.st);\n"
         "}\n";
-
 
 
     dev->gl_prog = glCreateProgram();
@@ -144,15 +143,14 @@ void Platform_Gl_Nk_init( struct device *dev) {
 }
 
 
-void Platform_GL_input(struct nk_context *ctx,void *in_win) {
+void Platform_GL_input(struct nk_context *ctx,void *_win) {
     glfwPollEvents();
     double x,y;
+
+    GLFWwindow *win = (GLFWwindow *)_win;    
     glfwGetCursorPos( (GLFWwindow *)win, &x, &y);
 
-    GLFWwindow *win = (GLFWwindow *)in_win;
-
     nk_input_begin(ctx);
-
     // keyboard
     for (int i = 0; i < keycode_text_len; ++i)
         nk_input_unicode(ctx, keycode_text[i]);
@@ -185,15 +183,20 @@ void Platform_GL_input(struct nk_context *ctx,void *in_win) {
         nk_input_key(ctx, NK_KEY_CUT, 0);
         nk_input_key(ctx, NK_KEY_SHIFT, 0);
     }
-    
 
     nk_input_end(ctx);
 
     keycode_text_len = 0;
 }
 
-void Platform_GL_run(struct device *dev,struct nk_context *ctx) {
+void Platform_GL_frame(struct device *dev,struct nk_context *ctx) 
+{
+    glfwSwapBuffers(g_glfw_gl_win); 
+}
 
+void Platform_GL_run(struct device *dev,struct nk_context *ctx) 
+{
+  GLFWwindow *win = (GLFWwindow *)g_glfw_gl_win;
   while (!glfwWindowShouldClose(win))
   {
         /* input */
@@ -215,11 +218,12 @@ void Platform_GL_run(struct device *dev,struct nk_context *ctx) {
         }
         nk_end(ctx);
         
-
         /* ui */
+        /*
         if(dev->nk_update_cb) {
             dev->nk_update_cb();
-        }        
+        } 
+        */       
 
         /* draw */
         dev->device_draw(dev, ctx, width, height, NK_ANTI_ALIASING_ON);
@@ -399,3 +403,4 @@ void Platform_GL_upload_atlas( struct device *dev, const void *image, int width,
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0,
                   GL_RGBA, GL_UNSIGNED_BYTE, image);    
 }
+//#endif 

@@ -204,7 +204,9 @@ function ecs.new_world(config)
 	local meta = w._entity_meta
 
 	local update_list = system.update_list(class.system, config.update_order, config.update_bydepend)
+	local update_switch = system.list_switch(update_list)
 	function w.update ()
+		update_switch:update()
 		for _, v in ipairs(update_list) do
 			local name, f = v[1], v[2]
 			meta.__index = system_methods[name]
@@ -214,8 +216,15 @@ function ecs.new_world(config)
 
 	local notify_list = system.notify_list(class.system, proxy, system_methods)
 	init_notify(w, notify_list)
+	local notify_switch = system.list_switch(notify_list)
+
+	function w.enable_system(name, enable)
+		update_switch:enable(name, enable)
+		notify_switch:enable(name, enable)
+	end
 
 	function w.notify()
+		notify_switch:update()
 		local _changecomponent = w._changecomponent
 		local _notifyset = w._notifyset
 
@@ -244,7 +253,7 @@ function ecs.new_world(config)
 
 			if n > 0 then
 				for _, functor in ipairs(notify_list[c]) do
-					local f, inst, methods = functor[1],functor[2],functor[3]
+					local f, inst, methods = functor[2],functor[3],functor[4]
 					-- binding apis
 					meta.__index = methods
 					f(inst, notifyset)
