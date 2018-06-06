@@ -3,15 +3,8 @@ local world = ecs.world
 
 local su = require "serialize.util"
 
-local save_world = ecs.component "save_world"{}
-
-function save_world:init()
-    self.dirty = true
-end
-
 local serialize_save_sys = ecs.system "serialize_save_system"
 serialize_save_sys.singleton "serialization_tree"
-serialize_save_sys.singleton "save_world"
 serialize_save_sys.singleton "math_stack"
 
 serialize_save_sys.depend "end_frame"

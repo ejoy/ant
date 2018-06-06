@@ -72,7 +72,7 @@ local function gen_value(v)
 	end
 
 	local default_value = available_type[typename]
-	assert(default_value ~= nil, "Invaild type!")
+	assert(default_value ~= nil, string.format("Invaild type! typename : %s", typename))
 
 	return { 
 		type 	= typename, 

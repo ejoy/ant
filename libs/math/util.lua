@@ -95,4 +95,27 @@ function util.create_persistent_matrix(ms, value)
 	return m
 end
 
+function util.identify_transform(ms, entity)
+	ms(	entity.scale.v, {1, 1, 1}, "=",
+	entity.rotation.v, {0, 0, 0}, "=",
+	entity.position.v, {0, 0, 0, 1}, "=")
+end
+
+function util.print_srt(e, numtab)
+	local tab = ""
+	if numtab then
+		for i=1, numtab do
+			tab = tab .. '\t'
+		end		
+	end
+	
+	local s_str = tostring(e.scale.v)
+	local r_str = tostring(e.rotation.v)
+	local t_str = tostring(e.position.v)
+
+	print(tab .. "scale : ", s_str)
+	print(tab .. "rotation : ", r_str)
+	print(tab .. "position : ", t_str)
+end
+
 return util
