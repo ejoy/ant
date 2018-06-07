@@ -89,10 +89,7 @@ local function play_object_transform(ms, ot, dx, dy)
                 error("move entity axis not found, axis_name : " .. axis_name)
             end
 
-            for _, elem in ipairs(controller) do
-                local e = assert(world[elem.eid])
-                ms(e.position.v, pos, "=")
-            end                
+			controller:update_transform(ot.sceneobj_eid)            
         end
     elseif mode == "scale_transform" then
         if selected_axis then                
@@ -117,7 +114,6 @@ local function play_object_transform(ms, ot, dx, dy)
         end
     elseif mode == "rotator_transform" then
         if selected_axis then
-            dprint("in rotator")
             local rotation = ms(sceneobj.rotation.v, "T")
 
             local function rotate(dir, idx)
@@ -125,8 +121,6 @@ local function play_object_transform(ms, ot, dx, dy)
                 local v = select_step_value(dir) > 0 and speed or -speed
                 rotation[idx] = rotation[idx] + v
                 ms(sceneobj.rotation.v, rotation, "=")
-
-                dprint("rotation : ", sceneobj.rotation.v)
             end
 
             if axis_name == "x" then
@@ -163,7 +157,7 @@ local function update_contorller(ot, ms)
     for m, controller in pairs(ot.controllers) do
         local bshow = obj_eid and obj_eid == st_eid and mode == m
 		if bshow then
-			controller:update_transform(ms, obj_eid)            
+			controller:update_transform(obj_eid)            
 		end
 
 		controller:show(bshow)
@@ -322,7 +316,7 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 		root = rootaxis_eid,
 	}
 
-	function controllers:update_transform(ms, objeid)
+	function controllers:update_transform(objeid)
 		local obj = world[objeid]
 
 		local root_eid = self.root
@@ -459,7 +453,7 @@ local function add_rotator_entities(ms, colors)
 		controllers[k] = ids
 	end
 
-	function controllers:update_transform(ms, objeid)
+	function controllers:update_transform(objeid)
 		local obj = world[objeid]
 		local objsrt = mu.srt_from_entity(ms, obj)
 
