@@ -399,23 +399,23 @@ local function add_rotator_entities(ms, colors)
 	local elems = {
 		x = {
 			name = "rotate-x",
-			rotation = {0, 0, 90},
+			rotation = {-90, 0, 0},
 			axis_name = "rotate-axis-x",
-			axis_srt = {s={0.001, 0.001, 0.01}, r={0, 90, 0}, t={0.5, 0, 0}},
+			axis_srt = {s={0.001, 0.001, 0.01}, r={0, 90, 0}, t={2.5, 0, 0}},
 			color_name = "red",
 		},
 		y = {
 			name = "rotate-y",
-			rotation = {0, 0, 0},
+			rotation = {0, 0, 90},
 			axis_name = "rotate-axis-y",
-			axis_srt = {s={0.001, 0.001, 0.01}, r={-90, 0, 0}, t={0, 0.5, 0}},
+			axis_srt = {s={0.001, 0.001, 0.01}, r={-90, 0, 0}, t={0, 2.5, 0}},
 			color_name = "green",
 		},
 		z = {
 			name = "rotate-z",
-			rotation = {-90, 0, 0},
+			rotation = {-90, 90, 0},
 			axis_name = "rotate-axis-z",
-			axis_srt = {s={0.001, 0.001, 0.01}, r={0, 0, 0}, t={0, 0, 0.5}},
+			axis_srt = {s={0.001, 0.001, 0.01}, r={0, 0, 0}, t={0, 0, 2.5}},
 			color_name = "blue",
 		},
 	}
@@ -425,9 +425,10 @@ local function add_rotator_entities(ms, colors)
 		local eid = components_util.create_render_entity(ms, world, elem.name, "rotator.mesh",
 													"obj_trans/obj_trans.material")
 		local entity = world[eid]
+		ms(entity.scale.v, {0.01, 0.01, 0.01}, "=")
 		ms(entity.rotation.v, elem.rotation, "=")
 		local properties = assert(entity.material.content[1].properties)
-		properties.color = colors[elem.color_name]
+		properties.u_color = {type="color", name="color", value=cu.deep_copy(colors[elem.color_name])}
 
 		entity.can_render.visible = false
 
@@ -458,16 +459,14 @@ local function add_rotator_entities(ms, colors)
 		local objsrt = mu.srt_from_entity(ms, obj)
 
 		for _, n in ipairs {"x", "y", "z"} do
-			local axis_ids = self[n]
+			local axis_ids = self[n]			
 			for _, ctrleid in ipairs(axis_ids) do
 				local ctrl = world[ctrleid]
 				local srt = mu.srt_from_entity(ms, ctrl)
 				local s, r, t = ms(srt, objsrt, "*~PPP")
-				ms(	ctrl.position.v, t, "=",
-					ctrl.scale.v, s, "=")
-
-				-- not following rotation
-				--ms(ctrl.rotation.v, r, "=")
+				ms(ctrl.position.v, t, "=")
+				ms(ctrl.rotation.v, r, "=")
+					
 			end
 		end
 	end
