@@ -56,11 +56,29 @@ getfield_tointeger(lua_State *L,int table,const char *key) {
 	lua_pop(L,1);
 	return ivalue;
 }
+static inline float
+getfield_tonumber(lua_State *L,int table,const char *key) {
+	if( lua_getfield(L,table,key)!=LUA_TNUMBER) {
+		luaL_error(L,"Need %s as number",key);
+	}
+	float value = luaL_checknumber(L,-1);
+	lua_pop(L,1);
+	return value;
+} 
+
+/*
+static void *
+getfield_touserdata(lua_State *L,int table, const char *key) {
+	lua_getfield(L, table, key);
+	void * ud = lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	return ud;
+}
+*/
 
 
 // 工具库
-#ifdef  IMAGE_LIB 
-
+#ifdef   IMAGE_LIB 
 #define  STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 unsigned char *
@@ -133,16 +151,18 @@ lnk_load_image_data(lua_State *L)
 	lua_pushnumber(L,n);
 	lua_setfield(L,-2,"c");
 
+    // pushlstring 已经做了内存拷贝，这里直接释放
+	freeImage( (void*) data );
+
 	return 1;
 }
 static int
 lnk_free_image_data(lua_State *L)
-{
+{   //not need 
 	// 使用 userdata,register gc ？
-	// c alloc -> lua -> c free  // 无效,这个 c 思路不对
+	// 假设有不是 string copy 方式，有哪些方法可以采用
 	return 0;
 }
-
 #endif 
 
 
@@ -959,16 +979,6 @@ enum nk_symbol_type lnk_checksymbol(lua_State *L,int index)
 	return symbol_flags;
 }
 
-/*
-static void *
-getfield_touserdata(lua_State *L,int table, const char *key) {
-	lua_getfield(L, table, key);
-	void * ud = lua_touserdata(L, -1);
-	lua_pop(L, 1);
-	return ud;
-}
-*/
-
 // struct nk_image {nk_handle handle;unsigned short w,h;unsigned short region[4];};
 // 从栈顶 table(nk_image),解码所有参数,填写返回*image 
 void lnk_checkimage(lua_State *L,int index,struct nk_image *image) 
@@ -990,16 +1000,63 @@ void lnk_checkimage(lua_State *L,int index,struct nk_image *image)
 	image->region[3] = getfield_tointeger( L,index,"y1");
 }
 
-/*
-static void *
-getfield(lua_State *L,const char *key)
-{
-	lua_getfield(L,1,key);
-	void *ud = lua_touserdata(L,-1);
-	lua_pop(L,1);
-	return ud;
+void lnk_checkrect(lua_State *L,int index,struct nk_rect *rc) {
+	if(!rc)
+		return ;
+	memset(rc,0,sizeof(struct nk_rect));
+	index = lua_absindex(L,index);
+	luaL_checktype(L,index,LUA_TTABLE);
+
+	rc->x = getfield_tonumber(L,index,"x");
+	rc->y = getfield_tonumber(L,index,"y");
+	rc->w = getfield_tonumber(L,index,"w");
+	rc->h = getfield_tonumber(L,index,"h");
 }
-*/
+
+void lnk_checkvec2(lua_State *L,int index,struct nk_vec2 *vec) {
+	if(!vec)
+		return ;
+	vec->x = vec->y = 0;
+	index = lua_absindex(L,index);
+	luaL_checktype(L,index,LUA_TTABLE);
+
+	vec->x = getfield_tonumber(L,index,"x");
+	vec->y = getfield_tonumber(L,index,"y");
+}
+
+static nk_flags 
+nk_parse_window_flags(lua_State *L,int flags_begin) {
+	int argc = lua_gettop(L);
+	nk_flags flags = NK_WINDOW_NO_SCROLLBAR;
+	int i;
+	for (i = flags_begin; i <= argc; ++i) {
+		const char *flag = luaL_checkstring(L, i);
+		if (!strcmp(flag, "border"))
+			flags |= NK_WINDOW_BORDER;
+		else if (!strcmp(flag, "movable"))
+			flags |= NK_WINDOW_MOVABLE;
+		else if (!strcmp(flag, "scalable"))
+			flags |= NK_WINDOW_SCALABLE;
+		else if (!strcmp(flag, "closable"))
+			flags |= NK_WINDOW_CLOSABLE;
+		else if (!strcmp(flag, "minimizable"))
+			flags |= NK_WINDOW_MINIMIZABLE;
+		else if (!strcmp(flag, "scrollbar"))
+			flags &= ~NK_WINDOW_NO_SCROLLBAR;
+		else if (!strcmp(flag, "title"))
+			flags |= NK_WINDOW_TITLE;
+		else if (!strcmp(flag, "scroll auto hide"))
+			flags |= NK_WINDOW_SCROLL_AUTO_HIDE;
+		else if (!strcmp(flag, "background"))
+			flags |= NK_WINDOW_BACKGROUND;
+		else {
+			const char *msg = lua_pushfstring(L, "unrecognized window flag '%s'", flag);
+			return luaL_argerror(L, i, msg);
+		}
+	}
+	return flags;
+}
+
 
 // "dynamic",height,cols
 //  nk: nk_layout_row_dynamic
@@ -2073,23 +2130,6 @@ lnk_unset_style(lua_State *L)
 	return 0;
 }
 
-/*
-//-------------
-static int lnk_load_font(lua_State *L) 
-{
-	if(!lua_isstring(L,1)) {
-		luaL_typerror(L,1,"must be font path name.\n");
-	}
-	const char *font_name = luaL_checkstring(L,1);
-	int 		font_size = luaL_checkinteger(L,2);
-	int font_id = load_font_id( font_name,font_size );
-	lua_pushnumber(L,font_id);
-	return 1;
-}
-
-*/
-
-
 //-------- control prototype ---
 static int
 lnk_label(lua_State *L) {
@@ -2133,6 +2173,7 @@ lnk_label(lua_State *L) {
 }
 
 // 是否增加button 的align 外接参数? 
+// params: [name] or [nil], ["color"]["symbol"][image]
 static int 
 lnk_button(lua_State *L) 
 {
@@ -2146,12 +2187,12 @@ lnk_button(lua_State *L)
 
 	struct nk_color color;
 	struct nk_image image;
-	int user_color = 0;   // user special 
+	int user_color = 0;   								// user special 
 	int user_image = 0;
 	enum nk_symbol_type symbol = NK_SYMBOL_NONE;
 
 	if(nargs>=2 && !lua_isnil(L,2)) {
-		if(lua_isstring(L,2)) {     // color or symbol string type
+		if(lua_isstring(L,2)) {     					// color or symbol string type
 			if(lnk_is_color(L,2)) {
 				user_color = 1;
 				color = lnk_checkcolor(L,2);	
@@ -2159,7 +2200,7 @@ lnk_button(lua_State *L)
 				symbol = lnk_checksymbol(L,2);
 			}
 		} else {
-			lnk_checkimage(L,2,&image);  // image userdata
+			lnk_checkimage(L,2,&image);  				// image userdata
 			user_image = 1;
 		}
 	}
@@ -2475,6 +2516,713 @@ lnk_property(lua_State *L) {
 	}
 	return 1;
 }
+/*=================================================
+*
+*   canvas panel  
+*
+*=================================================*/
+// 如果修改ctx 保存bounds.h ,或者修改各函数组添加参数，总是入侵式修改
+// 这里使用拷贝复制分支，一个测试方法，需要验证合适时在提交nk的功能增加.
+// 结束nk_end..nk_panel_end
+NK_LIB int
+nk_canvas_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type panel_type)
+{
+    struct nk_input *in;
+    struct nk_window *win;
+    struct nk_panel *layout;
+    struct nk_command_buffer *out;
+    const struct nk_style *style;
+    const struct nk_user_font *font;
+
+    struct nk_vec2 scrollbar_size;
+    struct nk_vec2 panel_padding;
+
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
+    if (!ctx || !ctx->current || !ctx->current->layout) return 0;
+    nk_zero(ctx->current->layout, sizeof(*ctx->current->layout));
+    if ((ctx->current->flags & NK_WINDOW_HIDDEN) || (ctx->current->flags & NK_WINDOW_CLOSED)) {
+        nk_zero(ctx->current->layout, sizeof(struct nk_panel));
+        ctx->current->layout->type = panel_type;
+        return 0;
+    }
+    /* pull state into local stack */
+    style = &ctx->style;
+    font = style->font;
+    win = ctx->current;
+    layout = win->layout;
+    out = &win->buffer;
+    in = (win->flags & NK_WINDOW_NO_INPUT) ? 0: &ctx->input;
+#ifdef NK_INCLUDE_COMMAND_USERDATA
+    win->buffer.userdata = ctx->userdata;
+#endif
+    /* pull style configuration into local stack */
+    scrollbar_size = style->window.scrollbar_size;
+    panel_padding = nk_panel_get_padding(style, panel_type);
+
+    /* window movement */
+    if ((win->flags & NK_WINDOW_MOVABLE) && !(win->flags & NK_WINDOW_ROM)) {
+        int left_mouse_down;
+        int left_mouse_click_in_cursor;
+
+        /* calculate draggable window space */
+        struct nk_rect header;
+        header.x = win->bounds.x;
+        header.y = win->bounds.y;
+        header.w = win->bounds.w;
+        if (nk_panel_has_header(win->flags, title)) {
+            header.h = font->height + 2.0f * style->window.header.padding.y;
+            header.h += 2.0f * style->window.header.label_padding.y;
+        } else header.h = panel_padding.y;
+
+        header.h = win->bounds.h; // tested 
+
+        /* window movement by dragging */
+        left_mouse_down = in->mouse.buttons[NK_BUTTON_LEFT].down;
+        left_mouse_click_in_cursor = nk_input_has_mouse_click_down_in_rect(in,
+            NK_BUTTON_LEFT, header, nk_true);
+        if (left_mouse_down && left_mouse_click_in_cursor) {
+            win->bounds.x = win->bounds.x + in->mouse.delta.x;
+            win->bounds.y = win->bounds.y + in->mouse.delta.y;
+            in->mouse.buttons[NK_BUTTON_LEFT].clicked_pos.x += in->mouse.delta.x;
+            in->mouse.buttons[NK_BUTTON_LEFT].clicked_pos.y += in->mouse.delta.y;
+            ctx->style.cursor_active = ctx->style.cursors[NK_CURSOR_MOVE];
+        }
+    }
+
+    /* setup panel */
+    layout->type = panel_type;
+    layout->flags = win->flags;
+    layout->bounds = win->bounds;
+    layout->bounds.x += panel_padding.x;     // here,must remove or not define panel_padding 
+    layout->bounds.w -= 2*panel_padding.x;
+    if (win->flags & NK_WINDOW_BORDER) {
+        layout->border = nk_panel_get_border(style, win->flags, panel_type);
+        layout->bounds = nk_shrink_rect(layout->bounds, layout->border);
+    } else layout->border = 0;
+    layout->at_y = layout->bounds.y;
+    layout->at_x = layout->bounds.x;
+    layout->max_x = 0;
+    layout->header_height = 0;
+    layout->footer_height = 0;
+    nk_layout_reset_min_row_height(ctx);
+    layout->row.index = 0;
+    layout->row.columns = 0;
+    layout->row.ratio = 0;
+    layout->row.item_width = 0;
+    layout->row.tree_depth = 0;
+    layout->row.height = panel_padding.y;
+    layout->has_scrolling = nk_true;
+    if (!(win->flags & NK_WINDOW_NO_SCROLLBAR))
+        layout->bounds.w -= scrollbar_size.x;
+    if (!nk_panel_is_nonblock(panel_type)) {
+        layout->footer_height = 0;
+        if (!(win->flags & NK_WINDOW_NO_SCROLLBAR) || win->flags & NK_WINDOW_SCALABLE)
+            layout->footer_height = scrollbar_size.y;
+        layout->bounds.h -= layout->footer_height;
+    }
+
+    /* panel header */
+    if (nk_panel_has_header(win->flags, title))
+    {
+        struct nk_text text;
+        struct nk_rect header;
+        const struct nk_style_item *background = 0;
+
+        /* calculate header bounds */
+        header.x = win->bounds.x;
+        header.y = win->bounds.y;
+        header.w = win->bounds.w;
+        header.h = font->height + 2.0f * style->window.header.padding.y;
+        header.h += (2.0f * style->window.header.label_padding.y);
+
+        /* shrink panel by header */
+        layout->header_height = header.h;
+        layout->bounds.y += header.h;
+        layout->bounds.h -= header.h;
+        layout->at_y += header.h;
+
+        /* select correct header background and text color */
+        if (ctx->active == win) {
+            background = &style->window.header.active;
+            text.text = style->window.header.label_active;
+        } else if (nk_input_is_mouse_hovering_rect(&ctx->input, header)) {
+            background = &style->window.header.hover;
+            text.text = style->window.header.label_hover;
+        } else {
+            background = &style->window.header.normal;
+            text.text = style->window.header.label_normal;
+        }
+
+        /* draw header background */
+        header.h += 1.0f;
+        if (background->type == NK_STYLE_ITEM_IMAGE) {
+            text.background = nk_rgba(0,0,0,0);
+            nk_draw_image(&win->buffer, header, &background->data.image, nk_white);
+        } else {
+            text.background = background->data.color;
+            nk_fill_rect(out, header, 0, background->data.color);
+        }
+
+        /* window close button */
+        {struct nk_rect button;
+        button.y = header.y + style->window.header.padding.y;
+        button.h = header.h - 2 * style->window.header.padding.y;
+        button.w = button.h;
+        if (win->flags & NK_WINDOW_CLOSABLE) {
+            nk_flags ws = 0;
+            if (style->window.header.align == NK_HEADER_RIGHT) {
+                button.x = (header.w + header.x) - (button.w + style->window.header.padding.x);
+                header.w -= button.w + style->window.header.spacing.x + style->window.header.padding.x;
+            } else {
+                button.x = header.x + style->window.header.padding.x;
+                header.x += button.w + style->window.header.spacing.x + style->window.header.padding.x;
+            }
+
+            if (nk_do_button_symbol(&ws, &win->buffer, button,
+                style->window.header.close_symbol, NK_BUTTON_DEFAULT,
+                &style->window.header.close_button, in, style->font) && !(win->flags & NK_WINDOW_ROM))
+            {
+                layout->flags |= NK_WINDOW_HIDDEN;
+                layout->flags &= (nk_flags)~NK_WINDOW_MINIMIZED;
+            }
+        }
+
+        /* window minimize button */
+        if (win->flags & NK_WINDOW_MINIMIZABLE) {
+            nk_flags ws = 0;
+            if (style->window.header.align == NK_HEADER_RIGHT) {
+                button.x = (header.w + header.x) - button.w;
+                if (!(win->flags & NK_WINDOW_CLOSABLE)) {
+                    button.x -= style->window.header.padding.x;
+                    header.w -= style->window.header.padding.x;
+                }
+                header.w -= button.w + style->window.header.spacing.x;
+            } else {
+                button.x = header.x;
+                header.x += button.w + style->window.header.spacing.x + style->window.header.padding.x;
+            }
+            if (nk_do_button_symbol(&ws, &win->buffer, button, (layout->flags & NK_WINDOW_MINIMIZED)?
+                style->window.header.maximize_symbol: style->window.header.minimize_symbol,
+                NK_BUTTON_DEFAULT, &style->window.header.minimize_button, in, style->font) && !(win->flags & NK_WINDOW_ROM))
+                layout->flags = (layout->flags & NK_WINDOW_MINIMIZED) ?
+                    layout->flags & (nk_flags)~NK_WINDOW_MINIMIZED:
+                    layout->flags | NK_WINDOW_MINIMIZED;
+        }}
+
+        {/* window header title */
+        int text_len = nk_strlen(title);
+        struct nk_rect label = {0,0,0,0};
+        float t = font->width(font->userdata, font->height, title, text_len);
+        text.padding = nk_vec2(0,0);
+
+        label.x = header.x + style->window.header.padding.x;
+        label.x += style->window.header.label_padding.x;
+        label.y = header.y + style->window.header.label_padding.y;
+        label.h = font->height + 2 * style->window.header.label_padding.y;
+        label.w = t + 2 * style->window.header.spacing.x;
+        label.w = NK_CLAMP(0, label.w, header.x + header.w - label.x);
+        nk_widget_text(out, label,(const char*)title, text_len, &text, NK_TEXT_LEFT, font);}
+    }
+
+    /* draw window background */
+    if (!(layout->flags & NK_WINDOW_MINIMIZED) && !(layout->flags & NK_WINDOW_DYNAMIC)) {
+        struct nk_rect body;
+        body.x = win->bounds.x;
+        body.w = win->bounds.w;
+        body.y = (win->bounds.y + layout->header_height);
+        body.h = (win->bounds.h - layout->header_height);
+        if (style->window.fixed_background.type == NK_STYLE_ITEM_IMAGE)
+            nk_draw_image(out, body, &style->window.fixed_background.data.image, nk_white);
+        else nk_fill_rect(out, body, 0, style->window.fixed_background.data.color);
+    }
+
+    /* set clipping rectangle */
+    {struct nk_rect clip;
+    layout->clip = layout->bounds;
+    nk_unify(&clip, &win->buffer.clip, layout->clip.x, layout->clip.y,
+        layout->clip.x + layout->clip.w, layout->clip.y + layout->clip.h);
+    nk_push_scissor(out, clip);
+    layout->clip = clip;}
+    return !(layout->flags & NK_WINDOW_HIDDEN) && !(layout->flags & NK_WINDOW_MINIMIZED);
+}
+/*==================================================
+ * 
+ *     irregular movable button canvas
+ * 
+ *==================================================*/
+NK_API void
+nk_group_canvas_root_end(struct nk_context *ctx)
+{
+    struct nk_window *win;
+    struct nk_panel *parent;
+    struct nk_panel *g;
+
+    struct nk_rect clip;
+    struct nk_window pan;
+    struct nk_vec2 panel_padding;
+
+    NK_ASSERT(ctx);
+    NK_ASSERT(ctx->current);
+    if (!ctx || !ctx->current)
+        return;
+
+    /* make sure nk_group_begin was called correctly */
+    NK_ASSERT(ctx->current);
+    win = ctx->current;
+    NK_ASSERT(win->layout);
+    g = win->layout;
+    NK_ASSERT(g->parent);
+    parent = g->parent;
+
+    /* dummy window */
+    nk_zero_struct(pan);
+    panel_padding = nk_panel_get_padding(&ctx->style, NK_PANEL_GROUP);
+    pan.bounds.y = g->bounds.y - (g->header_height + g->menu.h);
+    pan.bounds.x = g->bounds.x - panel_padding.x;
+    pan.bounds.w = g->bounds.w + 2 * panel_padding.x;
+    pan.bounds.h = g->bounds.h + g->header_height + g->menu.h;
+    if (g->flags & NK_WINDOW_BORDER) {
+        pan.bounds.x -= g->border;
+        pan.bounds.y -= g->border;
+        pan.bounds.w += 2*g->border;
+        pan.bounds.h += 2*g->border;
+    }
+    if (!(g->flags & NK_WINDOW_NO_SCROLLBAR)) {
+        pan.bounds.w += ctx->style.window.scrollbar_size.x;
+        pan.bounds.h += ctx->style.window.scrollbar_size.y;
+    }
+    pan.scrollbar.x = *g->offset_x;
+    pan.scrollbar.y = *g->offset_y;
+    pan.flags = g->flags;
+    pan.buffer = win->buffer;
+    pan.layout = g;
+    pan.parent = win;
+    ctx->current = &pan;
+
+    /* make sure group has correct clipping rectangle */
+    nk_unify(&clip, &parent->clip, pan.bounds.x, pan.bounds.y,
+        pan.bounds.x + pan.bounds.w, pan.bounds.y + pan.bounds.h + panel_padding.x);
+    nk_push_scissor(&pan.buffer, clip);
+    nk_end(ctx);
+
+    win->buffer = pan.buffer;
+    nk_push_scissor(&win->buffer, parent->clip);
+    ctx->current = win;
+    win->layout = parent;
+    g->bounds = pan.bounds;
+    return;
+}
+
+NK_API void
+nk_group_canvas_end(struct nk_context *ctx)
+{
+    nk_group_canvas_root_end(ctx);
+}
+
+
+NK_API int
+nk_group_canvas_root_begin(struct nk_context *ctx,
+    nk_uint *x_offset, nk_uint *y_offset, const char *title, nk_flags flags)
+{
+    struct nk_rect bounds;
+    struct nk_window panel;
+    struct nk_window *win;
+
+    win = ctx->current;
+    nk_panel_alloc_space(&bounds, ctx); 
+    {
+		const struct nk_rect *c = &win->layout->clip;
+		if (!NK_INTERSECT(c->x, c->y, c->w, c->h, bounds.x, bounds.y, bounds.w, bounds.h) &&
+			!(flags & NK_WINDOW_MOVABLE)) {
+			// printf("found no movable style\n");
+			// nk 貌似存在遗漏，当不做movable这里直接返回，则后续的贴图状态等内容，出现错误，无法恢复，程序崩溃
+			// 需要查看，后续还做了那么状态设置
+			// 这里临时的调整，让其继续往下执行
+			//return 0;
+	    }
+	}
+    if (win->flags & NK_WINDOW_ROM)
+        flags |= NK_WINDOW_ROM;
+
+    // initialize a fake window to create the panel from 
+    nk_zero(&panel, sizeof(panel));
+    panel.bounds = bounds;
+    panel.flags = flags;
+    panel.scrollbar.x = *x_offset;
+    panel.scrollbar.y = *y_offset;
+
+    panel.buffer = win->buffer;
+    panel.layout = (struct nk_panel*)nk_create_panel(ctx);
+
+    ctx->current = &panel;   // make panel as current window
+
+    nk_flags tf = panel.flags; 
+    panel.flags = flags; 
+
+	// disable style window background,group size 
+	{
+		
+	}
+
+    nk_canvas_panel_begin(ctx, (flags & NK_WINDOW_TITLE) ? title: 0, NK_PANEL_GROUP);
+
+	panel.flags = tf;
+
+    win->buffer = panel.buffer;
+    win->buffer.clip = panel.layout->clip;
+    panel.layout->offset_x = x_offset;
+    panel.layout->offset_y = y_offset;
+    panel.layout->parent = win->layout;
+    win->layout = panel.layout;
+
+	bounds = panel.layout->bounds;
+
+    ctx->current = win;
+    if ((panel.layout->flags & NK_WINDOW_CLOSED) ||
+        (panel.layout->flags & NK_WINDOW_MINIMIZED))
+    {
+        nk_flags f = panel.layout->flags;
+        nk_group_canvas_end(ctx);
+        if (f & NK_WINDOW_CLOSED)
+            return NK_WINDOW_CLOSED;
+        if (f & NK_WINDOW_MINIMIZED)
+            return NK_WINDOW_MINIMIZED;
+    }
+    return 1;
+}
+
+NK_API int
+nk_group_canvas_begin_titled(struct nk_context *ctx, const char *id,
+    const char *title, nk_flags flags)
+{
+    int id_len;
+    nk_hash id_hash;
+    struct nk_window *win;
+    nk_uint *x_offset;
+    nk_uint *y_offset;
+
+    NK_ASSERT(ctx);
+    NK_ASSERT(id);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
+    if (!ctx || !ctx->current || !ctx->current->layout || !id)
+        return 0;
+
+    /* find persistent group scrollbar value */
+    win = ctx->current;
+    id_len = (int)nk_strlen(id);
+    id_hash = nk_murmur_hash(id, (int)id_len, NK_PANEL_GROUP);
+    x_offset = nk_find_value(win, id_hash);
+    if (!x_offset) {
+        x_offset = nk_add_value(ctx, win, id_hash, 0);
+        y_offset = nk_add_value(ctx, win, id_hash+1, 0);
+		// todo: scale should be here too.
+        NK_ASSERT(x_offset);
+        NK_ASSERT(y_offset);
+        if (!x_offset || !y_offset) return 0;
+        *x_offset = *y_offset = 0;
+    } else y_offset = nk_find_value(win, id_hash+1);
+    return nk_group_canvas_root_begin(ctx, x_offset, y_offset, title, flags);
+}
+
+NK_API int
+nk_group_canvas_begin(struct nk_context *ctx, const char *title, nk_flags flags)
+{
+    return nk_group_canvas_begin_titled(ctx, title, title, flags);
+}
+
+//------ try to do movable irregular button ---- 
+// 创建画布
+NK_API int nk_irrbutton_begin(struct nk_context *ctx,const char *name,struct nk_rect *rc,bool use_flag,nk_flags flags) 
+{
+	struct  nk_style  *style;
+	int     ret = 0;
+
+	NK_ASSERT(ctx);
+	NK_ASSERT(ctx->current);
+	NK_ASSERT(ctx->current->layout);
+	if(!ctx || !ctx->current || !ctx->current->layout)
+		return 0;
+
+	style = &ctx->style;
+
+	nk_layout_space_push( ctx,*rc );              	 	 				   // 设置当前 widget's pos & size 
+
+	// todo: 设置 group 透明,无边框风格
+	struct  nk_vec2 vec= {0,0};
+	struct  nk_style_item item;
+	item.type = NK_STYLE_ITEM_COLOR;
+	item.data.color = nk_rgba(0,0,0,0);
+	nk_style_push_style_item(ctx,&style->window.fixed_background,item);    // push window fixed background transparency
+	nk_style_push_vec2(ctx,&style->window.group_padding,vec);			   // push group padding
+    // create canvas , 动态注册画布名字	
+	flags |= NK_WINDOW_NO_SCROLLBAR; 
+	ret = nk_group_canvas_begin( ctx,name, flags );                   
+	return ret;
+}
+
+// 结束画布
+// return new position & changed state 
+void nk_irrbutton_end(struct nk_context *ctx,struct nk_rect *rc,int *changed) 
+{  	
+	struct nk_panel *pw = nk_window_get_panel(ctx);            
+	nk_group_canvas_end(ctx);
+
+	nk_style_pop_style_item(ctx);										   // pop window fixed background 
+	nk_style_pop_vec2(ctx);												   // pop group padding 
+
+	struct nk_rect new_rc = nk_layout_space_rect_to_local(ctx,pw->bounds);  
+	if( memcmp(rc,&new_rc,sizeof(struct nk_rect))!=0 ) {
+		*rc = new_rc;
+		*changed = 1;
+	}
+}
+
+// own draw irregular button
+// 实现思路1：
+//     借用 nk_space_pos 自由布局, 使用 group 保存状态
+int nk_irrbutton(struct nk_context *ctx,const char *text,struct nk_rect *rc,int *changed,
+				 int user_image, struct nk_image image,int use_flag,nk_flags flags) 
+{
+	const struct nk_style *style;
+	const struct nk_input *input;
+	int    ret = 0;
+
+	// todo: style window 背景应该风格化,透明隐藏 
+	style = &ctx->style;
+	input = &ctx->input;
+
+	*changed = 0;
+	
+	// rc = 外部期望的持续位置和大小，需要跟踪维护
+	if( nk_irrbutton_begin(ctx,text,rc,use_flag,flags) ) {  				// 移动的画布，构建新的 widget space
+	    // 在画布上绘制控件
+		struct nk_panel *draw_panel = nk_window_get_panel(ctx);    			// 获取当前画布内的 layout 信息
+																   			// 包括最新画布bounds 信息 
+
+	    // use default alignment
+		nk_flags align = ctx->style.button.text_alignment;
+		nk_layout_row_dynamic(ctx, draw_panel->bounds.h, 1);			   // 填充整个 widget space
+
+		if(user_image) {
+			float   border_size = 0;
+			struct  nk_style_item item;
+			item.type = NK_STYLE_ITEM_COLOR;
+			item.data.color = nk_rgba(0,0,0,0);
+			nk_style_push_style_item(ctx,(struct nk_style_item*) &style->button.normal,item);     // push button style,normal 
+			nk_style_push_style_item(ctx,(struct nk_style_item*) &style->button.hover,item);      // normal 
+			nk_style_push_style_item(ctx,(struct nk_style_item*) &style->button.active,item);     // active 
+			nk_style_push_float( ctx,(float*)&style->button.border,border_size);             // disable border 
+
+			// image_label 实现已经显示，外部image + 文本，只能左对齐或右对齐 
+			// 没有居中实现,无需再修改做增强
+			ret = nk_button_image_label(ctx,image,text,align);            // use input image
+
+			nk_style_pop_style_item(ctx);    							  // restore button status 
+			nk_style_pop_style_item(ctx);
+			nk_style_pop_style_item(ctx);
+			nk_style_pop_float(ctx);
+		} else {
+			
+			ret = nk_button_label(ctx,text);                         	   // use style image
+		}
+		// 可以考虑，在这里细分扩充功能
+		// or scale time,need more state 
+
+		// return new pos & state
+		nk_irrbutton_end(ctx,rc,changed);
+        if( *changed ) {
+			ret = 0; 													   // 鼠标移动，则忽略点击事件
+		}
+	}
+	return ret;
+}
+
+// name  : button name
+// rc    : pos & size
+// image : opt,button has a addition image,not like style button has three status
+// flags : opt,move flags string ,default = no movable
+//         only "movable"
+static int 
+lnk_irrbutton(lua_State *L)  {
+	int    	ret,changed;
+	struct 	nk_image image;
+	struct 	nk_rect  rect;
+
+	int 	 user_image = 0;							    // if input single image
+	int      user_flag = 0;
+
+	nk_flags flags = NK_WINDOW_NO_SCROLLBAR;                // default ，not movable
+
+	int 	 nargs = lua_gettop(L);
+
+	const char *name = luaL_checkstring(L,1);           	// name, need unique string name 
+	lnk_checkrect(L,2,&rect);                           	// pos & size
+
+	if(nargs>=3 && !lua_isnil(L,3)) {                   	// image if use single image
+	    if(lua_isstring(L,3)) {                             // get button style 
+		  	flags |= nk_parse_window_flags(L,3);
+			user_flag = 1;
+		} else {
+		    lnk_checkimage(L,3,&image);  				  	// or  get image 
+			user_image = 1;
+		}
+	}
+	if(nargs>=4 && !lua_isnil(L,4) ) {                  	// get button style flags, if prev image exist
+	    if(lua_isstring(L,4)) {
+		  	flags = nk_parse_window_flags(L,4);
+			user_flag = 1;
+		}
+	}
+
+	struct lnk_context *lc = get_context(L);
+    changed = 0;
+	ret = nk_irrbutton(&lc->context,name,&rect,&changed,user_image,image,user_flag,flags );
+	if( changed ) {  									// if irrbutton rect changed,return it  										
+		lua_pushnumber(L,rect.x);
+		lua_setfield(L,2,"x");
+		lua_pushnumber(L,rect.y);
+		lua_setfield(L,2,"y");
+		lua_pushnumber(L,rect.w);
+		lua_setfield(L,2,"w");
+		lua_pushnumber(L,rect.h);
+		lua_setfield(L,2,"h");
+	}
+
+	lua_pushboolean(L,ret);   						   // return button state 
+
+	return 1;
+}
+
+struct nk_vec2 normalize(const struct nk_vec2 *in) 
+{
+	struct nk_vec2 n;
+	float len = sqrt(in->x*in->x + in->y*in->y);
+	if(len == 0) 
+		len = 1;
+	n.x = in->x/len;
+	n.y = in->y/len;
+	return n;
+}
+struct nk_vec2 scale(const struct nk_vec2 *in,float scale) 
+{
+	struct nk_vec2 n;
+	n.x = in->x * scale;
+	n.y = in->y * scale;
+	return n;
+}
+
+
+int nk_joystick(struct nk_context *ctx,const char *text,struct nk_rect *rc,float inner_size,float radius,
+				struct nk_vec2 *dir,struct nk_image im_base,struct nk_image im_joy)
+{
+	const struct   nk_style *style;
+	const struct   nk_input *input;
+	struct nk_rect bounds;
+	struct nk_vec2 delta;
+	struct nk_vec2 center; 
+
+	float r = 0;
+
+	style = &ctx->style;
+	input = &ctx->input;
+	
+	delta.x = delta.y = 0;
+	dir->x  = dir->y = 0;
+
+	// draw joystick base 
+
+	// set local space 
+	nk_layout_space_push(ctx,*rc);
+	nk_image(ctx,im_base);
+
+	// get screen space 
+	nk_widget(&bounds,ctx); 
+	center.x = bounds.x + bounds.w *0.5;
+	center.y = bounds.y + bounds.h *0.5;
+	
+	r =  rc->w > rc->h ? rc->w : rc->h;
+	r =  r*0.5*radius;
+    // calc in screen space 
+	if( nk_input_has_mouse_click_down_in_rect(input,NK_BUTTON_LEFT,bounds,nk_true) )	
+	{   // 鼠标点中 joystick button
+		delta.x = input->mouse.pos.x - center.x;
+		delta.y = input->mouse.pos.y - center.y;
+		
+		if( (delta.x*delta.x + delta.y*delta.y) > r*r )	{
+			 delta = normalize(&delta);
+			 *dir  = delta;
+			 delta = scale(&delta,r );
+		} else {
+			*dir   = scale(&delta ,1/r);
+		}
+	} 
+
+	// draw joystick 
+	struct nk_vec2 pos = center;
+	pos.x = center.x + delta.x;
+	pos.y = center.y + delta.y;
+
+	// 如果想不显示joystick，可以使用 0，吃鸡模式
+	if(inner_size<0 || inner_size>=1)
+		inner_size = 0.7;
+
+	struct nk_rect inner_rc;
+	int w = rc->w *inner_size;
+	int h = rc->h *inner_size;
+	inner_rc.x = pos.x - w*0.5;
+	inner_rc.y = pos.y - h*0.5;
+	inner_rc.w = w;
+	inner_rc.h = h;
+
+	//screen to local space 
+    inner_rc = nk_layout_space_rect_to_local(ctx,inner_rc);
+	nk_layout_space_push(ctx,inner_rc);
+	nk_image(ctx,im_joy);
+
+	// ajust delta & return dir 
+	// if want joystick status, return value expand 
+	return 0;
+}
+
+// name       : for control name 
+// rc         : position & size 
+// inner_size : joystick size ,ratio of rc (0.5-0.7) 
+// radius     : radius, ratio of rc radius (0.1-1.0-n)
+// dir        : vec2  return normalize direction 
+// im_base    : image background for joystick
+// im_joy     : image joystick 
+static int
+lnk_joystick(lua_State *L) {
+	int ret = 0;
+	struct nk_image im_base,im_joy;
+	struct nk_rect  rc;
+	struct nk_vec2  dir;
+
+
+	const char *name = luaL_checkstring(L,1);
+	float inner_size = luaL_checknumber(L,3);
+	float radius = luaL_checknumber(L,4);
+	lnk_checkrect(L,2,&rc);
+	lnk_checkvec2(L,5,&dir);
+	lnk_checkimage(L,6,&im_base);
+	lnk_checkimage(L,7,&im_joy);
+
+    dir.x = dir.y = 0;
+	struct lnk_context *lc = get_context(L);
+	nk_joystick(&lc->context,name,&rc,inner_size,radius,&dir,im_base,im_joy);
+
+	// return joystick direction 
+	lua_pushnumber(L,dir.x);
+	lua_setfield(L,5,"x");
+	lua_pushnumber(L,dir.y);
+	lua_setfield(L,5,"y");
+
+	return ret;
+}
+
 
 //---- window frame,sub rect -----------------
 
@@ -2544,38 +3292,6 @@ lnk_input(lua_State *L) {
 	return 0;
 }
 
-static nk_flags 
-nk_parse_window_flags(lua_State *L,int flags_begin) {
-	int argc = lua_gettop(L);
-	nk_flags flags = NK_WINDOW_NO_SCROLLBAR;
-	int i;
-	for (i = flags_begin; i <= argc; ++i) {
-		const char *flag = luaL_checkstring(L, i);
-		if (!strcmp(flag, "border"))
-			flags |= NK_WINDOW_BORDER;
-		else if (!strcmp(flag, "movable"))
-			flags |= NK_WINDOW_MOVABLE;
-		else if (!strcmp(flag, "scalable"))
-			flags |= NK_WINDOW_SCALABLE;
-		else if (!strcmp(flag, "closable"))
-			flags |= NK_WINDOW_CLOSABLE;
-		else if (!strcmp(flag, "minimizable"))
-			flags |= NK_WINDOW_MINIMIZABLE;
-		else if (!strcmp(flag, "scrollbar"))
-			flags &= ~NK_WINDOW_NO_SCROLLBAR;
-		else if (!strcmp(flag, "title"))
-			flags |= NK_WINDOW_TITLE;
-		else if (!strcmp(flag, "scroll auto hide"))
-			flags |= NK_WINDOW_SCROLL_AUTO_HIDE;
-		else if (!strcmp(flag, "background"))
-			flags |= NK_WINDOW_BACKGROUND;
-		else {
-			const char *msg = lua_pushfstring(L, "unrecognized window flag '%s'", flag);
-			return luaL_argerror(L, i, msg);
-		}
-	}
-	return flags;
-}
 
 //area = sub rect window in windowBein/End pairs
 // title,window flags 
@@ -2753,6 +3469,9 @@ luaopen_bgfx_nuklear(lua_State *L) {
 		{"radio",lnk_radio},
 		{"property",lnk_property},
 
+		{"irrbutton",lnk_irrbutton},
+		{"joystick",lnk_joystick},
+
 		//nk style
 		{"defaultStyle",lnk_set_style_default},
 		{"themeStyle",lnk_set_style_theme},
@@ -2766,9 +3485,10 @@ luaopen_bgfx_nuklear(lua_State *L) {
 		{"subImageId",lnk_sub_image_id},
 		{"loadImageFromMemory",lnk_load_image_from_memory},
 
-		{"loadImage",lnk_load_image},   // image lib
-		{"loadImageData",lnk_load_image_data}, // image lib 
-		{"freeImageData",lnk_free_image_data}, // image lib
+		// image toolset
+		{"loadImage",lnk_load_image},   
+		{"loadImageData",lnk_load_image_data}, 
+		{"freeImageData",lnk_free_image_data}, 
 
 		{ NULL, NULL },
 	};

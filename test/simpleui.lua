@@ -26,7 +26,8 @@ local property = require "tested.ui.property"
 local colorStyle = require "tested.ui.styleColors"
 local skinStyle = require "tested.ui.styleSkin"
 local area = require "tested.ui.areaWindow"
-local ir_btn = require "tested.ui.buttonIrregular"
+local irr_btn = require "tested.ui.buttonIrregular"
+local joystick = require "tested.ui.joystick"
 
 
 local canvas = iup.canvas {}
@@ -47,6 +48,10 @@ local nkbtn = {}
 local nkimage = {} 
 local nkb_images = { button = {} }
 local ir_images = { button = {} }
+
+local joy_image = {}
+local joy_base = {}
+local joy_attack = { button= {} } 
 
 local function save_ppm(filename, data, width, height, pitch)
 	local f = assert(io.open(filename, "wb"))
@@ -86,25 +91,19 @@ local ctx = {}
 local message = {}
 
 local btn_func = {
-	LABEL = 1, BUTTON = 2, IMAGE = 3, WIDGET = 4 ,EDIT = 5,
-	PROGRESS = 6, SLIDER = 7, CHECKBOX = 8, COMBOBOX = 9,
-	PROPERTY = 10, RADIO =11, SKIN = 12, AREA = 13,IRREGULAR=14
+	LABEL    = 1,  BUTTON = 2, IMAGE = 3,    WIDGET = 4,   EDIT = 5,
+	PROGRESS = 6,  SLIDER = 7, CHECKBOX = 8, COMBOBOX = 9, PROPERTY = 10, 
+	RADIO =11,     SKIN = 12,  AREA = 13,    IRREGULAR=14, JOYSTICK = 15,
 }
 
- 
 local btn_ac = 0
-local function mainloop()
-	save_screenshot "screenshot.ppm"
-	for _, msg,x,y,z,w,u in pairs(input_queue) do
-		nkmsg.push(message, msg, x,y,z,w,u)
-	end
-	nk.input(message)
 
+local function nk_samples()
     nk.setFont(1)
 	if nk.windowBegin( "Test","Test Window 汉字 ui 特性展示", 0, 0, 720, 460,
 					   "border", "movable", "title", "scalable",'scrollbar') then 
-
-		nk.layoutRow('static',30,{120,120,32,140,120,140} ) -- layout row 1
+		-- layout row 1
+		nk.layoutRow('static',30,{120,120,32,140,120,140} ) 
 		nk.setFont(2)
 		if nk.button("label","triangle left") then
 			btn_ac  = btn_func.LABEL 
@@ -125,8 +124,9 @@ local function mainloop()
 		if nk.button("progress","rect solid") then
 			btn_ac = btn_func.PROGRESS
 		end 
-		 
-		nk.layoutRow('static',30,{120,120,32,140,140,120} )  -- layout row 2
+
+		-- layout row 2 
+		nk.layoutRow('static',30,{120,120,32,140,140,120} )  
 		if nk.button("slider","rect solid") then
 			btn_ac = btn_func.SLIDER
 		end 
@@ -145,8 +145,9 @@ local function mainloop()
 		if nk.button("property","plus") then 
 			btn_ac = btn_func.PROPERTY 
 		end 
-		
-		nk.layoutRow("dynamic",32,{0.05,0.05,0.05,0.05,0.05,0.2,0.2,0.05})
+
+		---- layout row 3
+		nk.layoutRow("dynamic",32,{0.05,0.05,0.05,0.05,0.05,0.18,0.18,0.1,0.1}) 
 		if nk.button(nil,"#ff0000") then
 			nk.themeStyle("theme red")
 		end 
@@ -169,14 +170,17 @@ local function mainloop()
 		if nk.button("area","plus") then 
 			btn_ac = btn_func.AREA
 		end 
-		if nk.button("irregular") then
+		if nk.button("irrbtn") then
 			btn_ac = btn_func.IRREGULAR
 		end 
+		if nk.button("joystick")  then 
+			btn_ac = btn_func.JOYSTICK
+		end 
 		
-		--nk.layoutRow('dynamic',30,{1/6,1/6,1/6,1/6,1/6,1/6} )
-		--nk.layoutRow("dynamic",30,1)
-
+		-- nk.layoutRow('dynamic',30,{1/6,1/6,1/6,1/6,1/6,1/6} )
+		-- nk.layoutRow("dynamic",30,1)
 		-- print("---id("..nkimage.handle..")"..' w'..nkimage.w..' h'..nkimage.h)
+
 		-- do action 
 		if btn_ac == btn_func.LABEL  then 
 			label() 
@@ -205,11 +209,25 @@ local function mainloop()
 		elseif btn_ac == btn_func.AREA then
 			area(nkbtn)
 		elseif btn_ac == btn_func.IRREGULAR then
-			ir_btn( ir_images )
+			irr_btn( ir_images )
+		elseif btn_ac == btn_func.JOYSTICK then
+			joystick( joy_image,joy_base,joy_attack )
 		end 
-
 	end 
-	nk.windowEnd()
+
+	nk.windowEnd()	
+
+end 
+
+local function mainloop()
+	save_screenshot "screenshot.ppm"
+	for _, msg,x,y,z,w,u in pairs(input_queue) do
+		nkmsg.push(message, msg, x,y,z,w,u)
+	end
+	nk.input(message)
+ 
+	nk_samples();
+
 	nk.update()
 	bgfx.frame()
 end
@@ -248,9 +266,39 @@ function loadtexture(texname,info)
 	return image
 end 
 
+function loadTestedTextures()
+	-- tested load images 	
+	--nkb_images.n =
+	nkb_images.button.n =  loadtexture("assets/textures/button.png")
+	nkb_images.button.h =  loadtexture("assets/textures/button_hover.png")
+	nkb_images.button.c =  loadtexture("assets/textures/button_active.png")
+	--irregular button 
+	ir_images.button.n = loadtexture("assets/textures/irbtn_normal.png")
+	ir_images.button.h = loadtexture("assets/textures/irbtn_hover.png")
+	ir_images.button.c = loadtexture("assets/textures/irbtn_active.png")
+
+	-- 单张图
+	joy_image = loadtexture("assets/textures/yaogan.tga")
+	joy_base  = loadtexture("assets/textures/yaogandi.tga")
+    -- 三张状态图
+	joy_attack.button.n = loadtexture("assets/textures/pugong.tga")
+	joy_attack.button.h = loadtexture("assets/textures/pugong.tga")
+	joy_attack.button.c = loadtexture("assets/textures/pugong_ac.tga")
+	-- image tools tested
+	local raw_data = nk.loadImageData("assets/textures/gwen.png");  -- return raw data
+	-- makeImage from memory
+	nkatlas = nk.loadImageFromMemory(raw_data.data,raw_data.w,raw_data.h,raw_data.c)
+	-- return image directly
+	nkatlas = loadtexture( "assets/textures/gwen.png") 
+	nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h 
+	nkbtn = loadtexture( "assets/textures/button_active.png" )
+    -- tested load images	
+end
+
 local function init(canvas, fbw, fbh)
+
 	rhwi.init(iup.GetAttributeData(canvas,"HWND"), fbw, fbh)
-    ---[[
+
 	nk.init {
 		view = UI_VIEW,
 		width = fbw,
@@ -275,34 +323,10 @@ local function init(canvas, fbw, fbh)
 		},
 
 	}
-	--]]
-	-- tested 	
-	nkbtn = loadtexture( "assets/textures/button_active.png" )
-	
-	--nkb_images.n =
-	nkb_images.button.n =  loadtexture("assets/textures/button.png")
-	nkb_images.button.h =  loadtexture("assets/textures/button_hover.png")
-	nkb_images.button.c =  loadtexture("assets/textures/button_active.png")
-	--irregular button 
-	ir_images.button.n = loadtexture("assets/textures/irbtn_normal.png")
-	ir_images.button.h = loadtexture("assets/textures/irbtn_hover.png")
-	ir_images.button.c = loadtexture("assets/textures/irbtn_active.png")
 
-	-- image tools tested
-	-- return image directly
-	--nkatlas = loadtexture( "assets/textures/gwen.png") 
-	-- return raw data
-	local raw_data = nk.loadImageData("assets/textures/gwen.png"); 
-	-- makeImage from memory
-	nkatlas = nk.loadImageFromMemory(raw_data.data,raw_data.w,raw_data.h,raw_data.c)
+	-- tested load images for all controls
+	loadTestedTextures()
 
-
-	nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h 
-	--nkim   = nk.makeImageMem( data,w,h)
-	--print("---id("..nkimage.handle..")"..' w'..nkimage.w..' h'..nkimage.h)
-	--nk.image( nkimage )  --test nested lua
-	--nk.edit("editor",test)
-	 
 	bgfx.set_view_clear(UI_VIEW, "C", 0x303030ff, 1, 0)
 
 	task.loop(mainloop)
