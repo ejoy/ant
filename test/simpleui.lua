@@ -269,29 +269,29 @@ end
 function loadTestedTextures()
 	-- tested load images 	
 	--nkb_images.n =
-	nkb_images.button.n =  loadtexture("assets/textures/button.png")
-	nkb_images.button.h =  loadtexture("assets/textures/button_hover.png")
-	nkb_images.button.c =  loadtexture("assets/textures/button_active.png")
+	nkb_images.button.n =  loadtexture("assets/build/textures/button.png")
+	nkb_images.button.h =  loadtexture("assets/build/textures/button_hover.png")
+	nkb_images.button.c =  loadtexture("assets/build/textures/button_active.png")
 	--irregular button 
-	ir_images.button.n = loadtexture("assets/textures/irbtn_normal.png")
-	ir_images.button.h = loadtexture("assets/textures/irbtn_hover.png")
-	ir_images.button.c = loadtexture("assets/textures/irbtn_active.png")
+	ir_images.button.n = loadtexture("assets/build/textures/irbtn_normal.png")
+	ir_images.button.h = loadtexture("assets/build/textures/irbtn_hover.png")
+	ir_images.button.c = loadtexture("assets/build/textures/irbtn_active.png")
 
 	-- 单张图
-	joy_image = loadtexture("assets/textures/yaogan.tga")
-	joy_base  = loadtexture("assets/textures/yaogandi.tga")
+	joy_image = loadtexture("assets/build/textures/yaogan.tga")
+	joy_base  = loadtexture("assets/build/textures/yaogandi.tga")
     -- 三张状态图
-	joy_attack.button.n = loadtexture("assets/textures/pugong.tga")
-	joy_attack.button.h = loadtexture("assets/textures/pugong.tga")
-	joy_attack.button.c = loadtexture("assets/textures/pugong_ac.tga")
+	joy_attack.button.n = loadtexture("assets/build/textures/pugong.tga")
+	joy_attack.button.h = loadtexture("assets/build/textures/pugong.tga")
+	joy_attack.button.c = loadtexture("assets/build/textures/pugong_ac.tga")
 	-- image tools tested
-	local raw_data = nk.loadImageData("assets/textures/gwen.png");  -- return raw data
+	local raw_data = nk.loadImageData("assets/build/textures/gwen.png");  -- return raw data
 	-- makeImage from memory
 	nkatlas = nk.loadImageFromMemory(raw_data.data,raw_data.w,raw_data.h,raw_data.c)
 	-- return image directly
-	nkatlas = loadtexture( "assets/textures/gwen.png") 
+	nkatlas = loadtexture( "assets/build/textures/gwen.png") 
 	nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h 
-	nkbtn = loadtexture( "assets/textures/button_active.png" )
+	nkbtn = loadtexture( "assets/build/textures/button_active.png" )
     -- tested load images	
 end
 
@@ -318,8 +318,8 @@ local function init(canvas, fbw, fbh)
 		prog = sm.programLoad("ui/vs_nuklear_texture.sc","ui/fs_nuklear_texture.sc"),
 
 		fonts = {
-			{ "宋体行楷", loadfonts("fonts/stxingka.ttf",50, ch_charset()  ), },
-			{ "微软雅黑", loadfonts("fonts/msyh.ttf",20, ch_charset() ), },
+			{ "宋体行楷", loadfonts("build/fonts/stxingka.ttf",50, ch_charset()  ), },
+			{ "微软雅黑", loadfonts("build/fonts/stxingka.ttf",20, ch_charset() ), },
 		},
 
 	}
