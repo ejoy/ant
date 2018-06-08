@@ -1,10 +1,9 @@
 --把shaderc.lua的树形文件结构抽离出来使用
 
 dofile "libs/init.lua"
-if not static_link_iup then
-    require "iupluaimglib"
-    require "scintilla"
-end
+
+require "iupluaimglib"
+require "scintilla"
 
 iup.SetGlobal("UTF8MODE", "YES")
 iup.SetGlobal("UTF8MODE_FILE", "YES")

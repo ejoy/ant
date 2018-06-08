@@ -1,8 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local fs_util = require "filesystem.util"
-local shadermgr = require "render.resources.shader_mgr"
-local asset     = require "asset"
+local component_util = require "render.components.util"
 local add_entity_sys = ecs.system "add_entities_system"
 add_entity_sys.singleton "math_stack"
 add_entity_sys.singleton "constant"
@@ -15,71 +14,42 @@ function add_entity_sys:init()
 
     do
         local bunny_eid = world:new_entity("position", "rotation", "scale", 
-            "render", "name", "serialize",
+			"can_render", "mesh", "material",
+			"name", "serialize",
             "can_select")
         local bunny = world[bunny_eid]
         bunny.name.n = "bunny"
 
-        -- should read from serialize file
-        
+        -- should read from serialize file        
         ms(bunny.scale.v, {0.2, 0.2, 0.2, 0}, "=")
         ms(bunny.position.v, {0, 0, 3, 1}, "=")
-        ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
+		ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
 
-        local rinfo = asset.load("bunny.render")
-
-        bunny.render.info = rinfo
-        local utime = {
-            u_time = {type="v4", value={1, 0, 0, 1}}
-        }
-        bunny.render.properties = {utime, utime,}
-    end
-
-    local cubematerial_fn = "mem://cube_material.material"
-    fs_util.write_to_file(cubematerial_fn, [[
-        shader = {
-            vs = "vs_mesh",
-            fs = "fs_mesh",
-        }
-        state = "default.state"
-    ]])
-
-    local cuberender_fn = "mem://cube.render"
-    fs_util.write_to_file(cuberender_fn, [[
-        mesh = "cube.mesh"
-        binding ={material = "mem://cube_material.material",}
-        srt = {s={0.01}}
-    ]])
-
-    local sphererender_fn = "mem://sphere.render"
-    fs_util.write_to_file(sphererender_fn, [[
-        mesh = "sphere.mesh"
-        binding ={material = "mem://cube_material.material",}
-        srt = {s={0.01}}
-    ]])
-    
-    local function create_entity(name, renderfile)
-        local cube_eid = world:new_entity("rotation", "position", "scale", 
-        "render", "name", "serialize",
-        "can_select")
-        local cube = world[cube_eid]
-        cube.name.n = name
+		bunny.mesh.path = "bunny.mesh"
+		component_util.load_mesh(bunny)
+		
+		bunny.material.content[1] = {path = "bunny.material", properties = {}}
+		component_util.load_material(bunny)
+	end
+	
+    local function create_entity(name, meshfile, materialfile)
+        local eid = world:new_entity("rotation", "position", "scale", 
+		"mesh", "material", 
+		"name", "serialize",
+		"can_select", "can_render")
+		
+        local entity = world[eid]
+        entity.name.n = name
         
-        ms(cube.scale.v, {1, 1, 1}, "=")
-        ms(cube.position.v, {0, 0, 0, 1}, "=") 
-        ms(cube.rotation.v, {0, 0, 0}, "=")
+        ms(entity.scale.v, {1, 1, 1}, "=")
+        ms(entity.position.v, {0, 0, 0, 1}, "=") 
+        ms(entity.rotation.v, {0, 0, 0}, "=")
 
-        cube.render.info = asset.load(renderfile)
-
-        cube.render.properties = {
-            {
-                u_color = {type="color", value={1, 0, 0, 1}},
-                u_time = {type="v4", value={0, 1, 0, 1}},
-            }
-        }
-        cube.render.visible = true
-
-        return cube_eid
+		entity.mesh.path = meshfile
+		component_util.load_mesh(entity)
+		entity.material.content[1] = {path=materialfile, properties={}}
+		component_util.load_material(entity)
+        return eid
     end
 
     do
@@ -100,7 +70,7 @@ function add_entity_sys:init()
             name = "h1_cube",
             transform = {
                 t = {3, 4, 5},
-                s = {1, 1, 1},
+                s = {0.01, 0.01, 0.01},
             }
         }
 
@@ -108,7 +78,7 @@ function add_entity_sys:init()
             name = "h1_sphere",
             transform = {
                 t = {1, 2, 3},
-                s = {1, 1, 1},
+                s = {0.01, 0.01, 0.01},
             }
         }
 
@@ -116,23 +86,37 @@ function add_entity_sys:init()
             name = "h1_h1_cube",
             transform = {
                 t = {3, 3, 3},
-                s = {1, 1, 1},
+                s = {0.01, 0.01, 0.01},
             }
-        }
+		}
+		
+		local material_path = "mem://hierarchy.material"
+		fs_util.write_to_file(material_path, [[
+			shader = {
+				vs = "vs_mesh",
+				fs = "fs_mesh",
+			}
+			state = "default.state"
+			properties = {
+				u_time = {name="u_time", type="v4", default={1, 0, 0, 1}}
+			}
+		]])
 
-
-        local cube_eid = create_entity("h1_cube", cuberender_fn)
-        local cube_eid_1 = create_entity("h1_h1_cube", cuberender_fn)
+        local cube_eid = create_entity("h1_cube", "cube.mesh", material_path)
+        local cube_eid_1 = create_entity("h1_h1_cube", "cube.mesh", material_path)
         do
             local e = world[cube_eid_1] 
             ms(e.scale.v, {0.5, 0.5, 0.5}, "=")
         end
 
-        local sphere_eid = create_entity("h1_sphere", sphererender_fn)
+        local sphere_eid = create_entity("h1_sphere", "sphere.mesh", material_path)
         local name_mapper = assert(hierarchy_e.hierarchy_name_mapper.v)
 
         name_mapper.h1_cube     = cube_eid
         name_mapper.h1_h1_cube  = cube_eid_1
-        name_mapper.h1_sphere   = sphere_eid
+		name_mapper.h1_sphere   = sphere_eid
+		
+		world:change_component(hierarchy_eid, "rebuild_hierarchy")
+		world:notify()
     end
 end

@@ -2,8 +2,9 @@ local ecs = ...
 local world = ecs.world
 
 local asset = require "asset"
-local fs_util = require "filesystem.util"
-local shadermgr = require "render.resources.shader_mgr"
+local mu = require "math.util"
+local cu = require "common.util"
+local components_util = require "render.components.util"
 
 
 ecs.component "pos_transform" {}
@@ -25,175 +26,16 @@ obj_trans_sys.singleton "message_component"
 
 obj_trans_sys.depend "constant_init_sys"
 
-local function is_controller_id(controllers, p_eid)
-    for _, controller in pairs(controllers) do
-        for _, elem in ipairs(controller) do
-            local eid = elem.eid
-            if eid == p_eid then
-                return true
-            end
-        end
-    end
 
-    return false
-end
-
-local function create_entity(ms, renderfile, name, color)
-    local eid = world:new_entity("position", "scale", "rotation", "render", "name", "can_select", "last_render")
-    local obj = world[eid]
-    obj.name.n = name
-
-    ms(obj.position.v, {0, 0, 0, 1}, "=")
-    ms(obj.rotation.v, {0, 0, 0}, "=")
-    ms(obj.scale.v, {1, 1, 1}, "=")
-
-    obj.render.info = asset.load(renderfile)
-
-    assert(type(color) == "table")
-    local ucolor = {
-        u_color = {type="color", value=color}
-    }
-    obj.render.properties = {
-        ucolor, ucolor
-    }
-
-    obj.render.visible = false
-    return eid
-end
-
-local function add_transform_entities(ms, basename, renderfile, color_constants)
-    local arg = {        
-        {
-            name = basename .. "-x",
-            srt = {r={0, 90, 0}},
-            color = color_constants["red"]
-        },
-        {
-            name = basename .. "-y",
-            srt = {r={-90, 0, 0}},
-            color = color_constants["green"]
-        },
-        {
-            name = basename .. "-z",
-            srt = {r={0, 0, 0}},
-            color = color_constants["blue"]
-        }
-    }
-
-    local controller = {}
-    for _, v in ipairs(arg) do
-        table.insert(controller, {eid = create_entity(ms, renderfile, v.name, v.color), srt=v.srt})
-    end
-
-    return controller
-end
-
-local function add_translate_entities(ms, color_constants)
-    local translaterenderfile = "mem://transalte_transform_entities.render"
-    fs_util.write_to_file(translaterenderfile, [[
-        root = {
-            {
-                mesh = "cylinder.mesh",
-                binding = {
-                    material = "obj_trans/obj_trans.material", 
-                },
-                srt = {s={0.001, 0.001, 0.01}, t={0, 0, 0.5}},
-            },
-            {
-                mesh = "cone.mesh",
-                binding = {
-                    material = "obj_trans/obj_trans.material"
-                },        
-                srt = {s={0.002}, t={0, 0, 1.1}}
-            }
-        }
-    ]])
-    return add_transform_entities(ms, "translate", translaterenderfile, color_constants)
-end
-
-local function add_scale_entities(ms, color_constants)
-    local scalerenderfile = "mem://scale_transform_entities.render"
-    fs_util.write_to_file(scalerenderfile, 
-    [[
-        root = {
-            {
-                mesh = "cylinder.mesh",
-                binding = {
-                    material = "obj_trans/obj_trans.material", 
-                },
-                srt = {s={0.001, 0.001, 0.01}, t={0, 0, 0.5}},
-            },
-            {
-                mesh = "cube.mesh",
-                binding = {
-                    material = "obj_trans/obj_trans.material", 
-                },
-                srt = {s={0.002}, t={0, 0, 1.1}}
-            }
-        }
-    ]])
-    
-    return add_transform_entities(ms, "scale", scalerenderfile, color_constants)
-end
-
-local function add_rotator_entities(ms, color_constants)
-    local renderfile = "mem://rotator_transform_entities.render"
-    
-    fs_util.write_to_file(renderfile,
-    [[
-        mesh = "rotator.mesh"
-        binding = {
-            material = "obj_trans/obj_trans.material", 
-        }
-        srt = {s={0.01},r={0, 0, 90}}
-    ]])    
-
-    local controller = add_transform_entities(ms, "rotation", renderfile, color_constants)
-    controller[1].srt.r = {0, 0, 90}
-    controller[2].srt.r = {0, 0, 0}
-    controller[3].srt.r = {-90, 0, 0}
-
-    local axisrenderfile = "mem://rotator_transform_axis_entity.render"
-    fs_util.write_to_file(axisrenderfile, [[
-        root = {
-            {
-                mesh = "cylinder.mesh",
-                binding = {
-                    material = "obj_trans/obj_trans.material",
-                },
-                srt = {s={0.001, 0.001, 0.01}, r={0, 90, 0}, t={0.5, 0, 0}},
-            },
-            {
-                mesh = "cylinder.mesh",
-                binding = {
-                    material = "obj_trans/obj_trans.material",
-                },
-                srt = {s={0.001, 0.001, 0.01}, r={-90, 0, 0}, t={0, 0.5, 0}},
-            },
-            {
-                mesh = "cylinder.mesh",
-                binding = {
-                    material = "obj_trans/obj_trans.material",
-                },
-                srt = {s={0.001, 0.001, 0.01}, t={0, 0, 0.5}},
-            }
-        }
-    ]])
-    local axis_eid = create_entity(ms, axisrenderfile, "rotationaxis", color_constants["red"])
-    local axis = assert(world[axis_eid])
-    
-    local properties = {}
-    local clr_names = {"red", "green", "blue"}
-    for _, cn in ipairs(clr_names) do
-        table.insert(properties, {
-            u_color ={type="color", value=color_constants[cn]}
-        })
-    end
-
-    axis.render.properties = properties
-
-    table.insert(controller, {eid=axis_eid, srt={}})
-    return controller
+local function is_controller_id(controllers, eid)
+	if controllers then
+		for _, controller in pairs(controllers) do
+			if controller:is_controller_id(eid) then
+				return true
+			end
+		end
+	end
+	return false
 end
 
 local function play_object_transform(ms, ot, dx, dy)
@@ -247,10 +89,7 @@ local function play_object_transform(ms, ot, dx, dy)
                 error("move entity axis not found, axis_name : " .. axis_name)
             end
 
-            for _, elem in ipairs(controller) do
-                local e = assert(world[elem.eid])
-                ms(e.position.v, pos, "=")
-            end                
+			controller:update_transform(ot.sceneobj_eid)            
         end
     elseif mode == "scale_transform" then
         if selected_axis then                
@@ -275,7 +114,6 @@ local function play_object_transform(ms, ot, dx, dy)
         end
     elseif mode == "rotator_transform" then
         if selected_axis then
-            dprint("in rotator")
             local rotation = ms(sceneobj.rotation.v, "T")
 
             local function rotate(dir, idx)
@@ -283,8 +121,6 @@ local function play_object_transform(ms, ot, dx, dy)
                 local v = select_step_value(dir) > 0 and speed or -speed
                 rotation[idx] = rotation[idx] + v
                 ms(sceneobj.rotation.v, rotation, "=")
-
-                dprint("rotation : ", sceneobj.rotation.v)
             end
 
             if axis_name == "x" then
@@ -309,36 +145,6 @@ local function print_select_object_transform(eid)
     dprint("rotation : ", obj.rotation.v)
 end
 
-local function update_controller_transform(ms, controller, obj_eid, follow_objrotation)
-    local obj = assert(world[obj_eid])
-    local objsrt = nil
-    if follow_objrotation then
-        objsrt = ms({type="srt", r=obj.rotation.v}, "P")
-    end
-
-    for _, v in ipairs(controller) do
-        local eid = v.eid
-        local e = assert(world[eid])
-        local srt = v.srt
-
-        local s, r = srt.s, srt.r
-        if objsrt then
-            s, r = ms(  {type="srt", s=s, r=r, t=srt.t}, 
-                        objsrt, "*~PP")
-        end
-
-        ms(assert(e.position).v, assert(obj.position).v, "=")
-
-        if r then
-            ms(assert(e.rotation).v, r, "=")
-        end
-
-        if s then
-            ms(assert(e.scale).v, s, "=")
-        end
-    end
-end
-
 local function update_contorller(ot, ms)
     local st_eid = ot.selected_eid
     if is_controller_id(ot.controllers, st_eid) then
@@ -346,21 +152,15 @@ local function update_contorller(ot, ms)
     end
 
     local obj_eid = ot.sceneobj_eid    
-    local mode = ot.selected_mode 
-
-    local function show_controller(controller, show)
-        for _, elem in ipairs(controller) do
-            local e = assert(world[elem.eid])
-            e.render.visible = show
-        end
-    end
-
+	local mode = ot.selected_mode 
+	
     for m, controller in pairs(ot.controllers) do
         local bshow = obj_eid and obj_eid == st_eid and mode == m
-        if bshow then
-            update_controller_transform(ms, controller, obj_eid, mode ~= "rotator_transform")
-        end
-        show_controller(controller, bshow)
+		if bshow then
+			controller:update_transform(obj_eid)            
+		end
+
+		controller:show(bshow)
     end
 end
 
@@ -398,8 +198,6 @@ local function register_message(msg_comp, ot, ms)
                 end
             
             end
-
-            dprint("select mode : ", ot.selected_mode)
         end
 
     end
@@ -423,6 +221,279 @@ local function register_message(msg_comp, ot, ms)
 
     local observers = msg_comp.msg_observers
     observers:add(message)
+end
+
+local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axismeshfile, materialfile, color)
+	local hie_eid = components_util.create_hierarchy_entity(ms, world, 
+						"hierarchy-" .. prefixname .. "-" .. suffixname)
+
+	local hie_entity = world[hie_eid]
+
+	local hie = hie_entity.editable_hierarchy.root
+	hie[1] = {
+		name = "head",
+		transform = {
+			s={0.002}, 
+			t={0, 0, 1.1},
+		}
+	}
+	hie[2] = {
+		name = "axis",
+		transform = {
+			s={0.001, 0.001, 0.01}, 
+			t={0, 0, 0.5},
+		}
+	}
+
+	local namemapper = hie_entity.hierarchy_name_mapper.v
+
+	local fullaxis_config = {
+		head = {
+			name = "head-",
+			meshfile = headmeshfile,
+		},
+		axis = {
+			name = "axis-",
+			meshfile = axismeshfile,
+		}
+	}
+
+	for k, v in pairs(fullaxis_config) do
+		local eid = components_util.create_render_entity(ms, world, prefixname .. v.name .. suffixname,		
+							v.meshfile, materialfile)
+		world:add_component(eid, "hierarchy_parent")		
+		local obj = world[eid]
+		obj.hierarchy_parent.eid = hie_eid
+
+		local properties = assert(obj.material.content[1].properties)
+		properties.u_color = {type="color", name="color", value=cu.deep_copy(color)}
+		obj.can_render.visible = false
+		namemapper[k] = eid
+	end
+	return hie_eid
+end
+
+local function add_axis_base_transform_entites(ms, basename, headmeshfile, axismeshfile, colors)
+	local xaxis_eid = add_axis_entites(ms, basename, "x", 
+										headmeshfile, axismeshfile,
+										"obj_trans/obj_trans.material", colors["red"])
+	mu.print_srt(world[xaxis_eid])
+
+	local yaxis_eid = add_axis_entites(ms, basename, "y", 
+										headmeshfile, axismeshfile,
+										"obj_trans/obj_trans.material", colors["green"])
+
+	--ms(yaxis.rotation.v, {-90, 0, 0}, "=")	
+
+	local zaxis_eid = add_axis_entites(ms, basename, "z", 
+										headmeshfile, axismeshfile,
+										"obj_trans/obj_trans.material", colors["blue"])
+
+	local rootaxis_eid = components_util.create_hierarchy_entity(ms, world, basename)
+
+	local axis_root = world[rootaxis_eid]	
+
+	local eh = axis_root.editable_hierarchy.root
+	eh[1] = {name = "xaxis", 
+		transform = {
+			--r = ms({0, 90, 0}, "qT")
+			r = {0, math.cos(math.pi * 0.25), 0, math.sin(math.pi * 0.25)}
+		}
+	}
+	eh[2] = {name = "yaxis", 
+		transform = {
+			r = {math.cos(-math.pi * 0.25), 0, 0, math.sin(-math.pi * 0.25)}
+		}
+	}
+	eh[3] = {name = "zaxis", }
+	
+	local namemapper = axis_root.hierarchy_name_mapper.v
+	namemapper.xaxis = xaxis_eid
+	namemapper.yaxis = yaxis_eid
+	namemapper.zaxis = zaxis_eid
+	
+	local controllers = {		
+		root = rootaxis_eid,
+	}
+
+	function controllers:update_transform(objeid)
+		local obj = world[objeid]
+
+		local root_eid = self.root
+		local root = world[root_eid]
+		
+		ms(root.rotation.v, obj.rotation.v, "=")
+		ms(root.position.v, obj.position.v, "=")
+
+		world:change_component(root_eid, "rebuild_hierarchy")
+		world:notify()
+	end
+
+	function controllers:iter_axis()
+		local root_eid = self.root
+		local root = world[root_eid]
+		local namemapper = root.hierarchy_name_mapper.v
+		return next, namemapper, nil
+	end
+
+	local function iter_axiselem(entity)
+		local namemapper = entity.hierarchy_name_mapper.v
+		return next, namemapper, nil
+	end
+
+	function controllers:print()
+		local root_eid = self.root
+		local root = world[root_eid]
+		print("root name : ", root.name.n)
+
+		mu.print_srt(root, 1)
+		for axis_name, axis_eid in pairs(root.hierarchy_name_mapper.v) do
+			print("\n\taxis name : ", axis_name, ", axis eid : ", axis_eid)
+			local axis = world[axis_eid]
+			mu.print_srt(axis, 2)
+			for elemname, elemeid in pairs(axis.hierarchy_name_mapper.v) do
+				print("\n\t\taxis elem name : ", elemname, "axis eid : ", elemeid)
+				mu.print_srt(axis, 3)
+			end
+		end
+	end
+
+	function controllers:show(visible)
+		for _, axis_eid in self:iter_axis() do
+			local axisentity = world[axis_eid]
+			for _, eid in iter_axiselem(axisentity) do
+				local e = world[eid]
+				e.can_render.visible = visible
+			end
+		end
+	end
+
+	function controllers:is_controller_id(check_eid)
+		for _, axis_eid in self:iter_axis() do
+			local axisentity = world[axis_eid]
+			for _, eid in iter_axiselem(axisentity) do
+				if eid == check_eid then
+					return true
+				end
+			end
+		end
+
+		return false
+	end
+
+	world:change_component(rootaxis_eid, "rebuild_hierarchy")
+	world:notify()
+	return controllers
+end
+
+local function add_translate_entities(ms, colors)
+	return add_axis_base_transform_entites(ms, "translate", "cone.mesh", "cylinder.mesh", colors)
+end
+
+local function add_scale_entities(ms, colors)
+	return add_axis_base_transform_entites(ms, "scale", "cube.mesh", "cylinder.mesh", colors)
+end
+
+local function add_rotator_entities(ms, colors)
+
+	local elems = {
+		x = {
+			name = "rotate-x",
+			rotation = {-90, 0, 0},
+			axis_name = "rotate-axis-x",
+			axis_srt = {s={0.001, 0.001, 0.01}, r={0, 90, 0}, t={2.5, 0, 0}},
+			color_name = "red",
+		},
+		y = {
+			name = "rotate-y",
+			rotation = {0, 0, 90},
+			axis_name = "rotate-axis-y",
+			axis_srt = {s={0.001, 0.001, 0.01}, r={-90, 0, 0}, t={0, 2.5, 0}},
+			color_name = "green",
+		},
+		z = {
+			name = "rotate-z",
+			rotation = {-90, 90, 0},
+			axis_name = "rotate-axis-z",
+			axis_srt = {s={0.001, 0.001, 0.01}, r={0, 0, 0}, t={0, 0, 2.5}},
+			color_name = "blue",
+		},
+	}
+
+	local controllers = {}
+	for k, elem in pairs(elems) do
+		local eid = components_util.create_render_entity(ms, world, elem.name, "rotator.mesh",
+													"obj_trans/obj_trans.material")
+		local entity = world[eid]
+		ms(entity.scale.v, {0.01, 0.01, 0.01}, "=")
+		ms(entity.rotation.v, elem.rotation, "=")
+		local properties = assert(entity.material.content[1].properties)
+		properties.u_color = {type="color", name="color", value=cu.deep_copy(colors[elem.color_name])}
+
+		entity.can_render.visible = false
+
+		local ids = {}
+		table.insert(ids, eid)
+
+		local axis_eid = components_util.create_render_entity(ms, world, elem.axis_name, "cylinder.mesh",
+																"obj_trans/obj_trans.material")
+		world:remove_component(axis_eid, "can_select")											
+
+		local axis_entity = world[axis_eid]		
+		local axis_srt = elem.axis_srt
+		ms(	axis_entity.scale.v, axis_srt.s, "=",
+			axis_entity.rotation.v, axis_srt.r, "=",
+			axis_entity.position.v, axis_srt.t, "=")
+		local axis_properties = assert(axis_entity.material.content[1].properties)
+		axis_properties.u_color = {type="color", name="color", value=cu.deep_copy(colors[elem.color_name])}
+
+		axis_entity.can_render.visible = false
+
+		table.insert(ids, axis_eid)
+
+		controllers[k] = ids
+	end
+
+	function controllers:update_transform(objeid)
+		local obj = world[objeid]
+		local objsrt = mu.srt_from_entity(ms, obj)
+
+		for _, n in ipairs {"x", "y", "z"} do
+			local axis_ids = self[n]			
+			for _, ctrleid in ipairs(axis_ids) do
+				local ctrl = world[ctrleid]
+				local srt = mu.srt_from_entity(ms, ctrl)
+				local s, r, t = ms(srt, objsrt, "*~PPP")
+				ms(ctrl.position.v, t, "=")
+				ms(ctrl.rotation.v, r, "=")
+					
+			end
+		end
+	end
+
+	function controllers:show(visible)
+		for _, n in ipairs {"x", "y", "z"} do
+			local axis_ids = self[n]
+			for _, eid in ipairs(axis_ids) do
+				local e = world[eid]
+				e.can_render.visible = visible
+			end
+		end
+	end
+
+	function controllers:is_controller_id(check_eid)
+		for _, n in ipairs {"x", "y", "z"} do
+			local axis_ids = self[n]
+			for _, eid in ipairs(axis_ids) do
+				if eid == check_eid then
+					return true
+				end
+			end
+		end
+		return false
+	end
+
+	return controllers
 end
 
 function obj_trans_sys:init()

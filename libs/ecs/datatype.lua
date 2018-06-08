@@ -72,13 +72,13 @@ local function gen_value(v)
 	end
 
 	local default_value = available_type[typename]
-	assert(default_value ~= nil, "Invaild type!")
+	assert(default_value ~= nil, string.format("Invaild type! typename : %s", typename))
 
 	return { 
 		type 	= typename, 
-		default = default and default or default_value.default, 
-		save 	= save and save or default_value.save,
-		load 	= load and load or default_value.load,
+		default = default or default_value.default, 
+		save 	= save or default_value.save,
+		load 	= load or default_value.load,
 	}	
 end
 
@@ -94,17 +94,32 @@ return function (t)
 			v.default = nil
 		elseif ttype == "table" then
 			local defobj = v.default
-			for k,v in pairs(defobj) do
-				assert(type(k) ~= "table" and type(v) ~= "table")
+			local function check_defobj(defobj)
+				for k,v in pairs(defobj) do
+					if type(v) == "table" then
+						check_defobj(v)
+					end
+					assert(type(k) ~= "table")
+				end
 			end
+			check_defobj(defobj)
+
+			local function deep_copy(obj)
+				local t = {}
+				for k, v in pairs(obj) do
+					if type(v) == "table" then
+						local tt = deep_copy(v)
+						t[k] = tt
+					else
+						t[k] = v
+					end
+				end
+				return t
+			end
+
 			v.default = nil
 			v.default_func = function()
-				local ret = {}
-				-- deepcopy default object
-				for k,v in pairs(defobj) do
-					ret[k] = v
-				end
-				return ret
+				return deep_copy(defobj)
 			end
 		end
 	end

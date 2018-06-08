@@ -32,9 +32,10 @@ assetmgr.__index = assetmgr
 
 local resources = setmetatable({}, {__mode="kv"})
 
--- function assetmgr.get_loaders()
--- 	return loader
--- end
+function assetmgr.add_loader(n, l)
+	--assert(loader[n] == nil)
+	loader[n] = l
+end
 
 local asset_rootdir = "assets"
 
@@ -67,7 +68,11 @@ function assetmgr.assetdir()
 end
 
 function assetmgr.insert_searchdir(idx, dir)
-	assert(idx <= #searchdirs)
+	if idx then
+		assert(idx <= #searchdirs)
+	else
+		idx = idx or (#searchdirs + 1)
+	end
 	table.insert(searchdirs, idx, dir)
 end
 

@@ -1,0 +1,75 @@
+include common.mk
+
+CD_DIR =$(IUPSRC)/../cd
+OCDDIR = $(ODIR)/iupcd
+
+IUPCD_SRC := iup_cd.c iup_cdutil.c iup_draw_cd.c
+IUPCD_OBJ := $(patsubst %.c,$(OCDDIR)/%.o,$(IUPCD_SRC))
+
+IUPCD_DIR := $(IUPSRC)/srccd
+
+
+INCLUDES := $(IUPSRC)/include $(IUPSRC)/src $(CD_DIR)/include
+
+IUPCD_INCLUDES := $(addprefix -I,$(INCLUDES))
+IUPCD_DEFINES := $(addprefix -D,CD_NO_OLD_INTERFACE)
+
+.PHONY : all
+
+all : iupcd.dll iupluacontrols.dll
+
+$(OCDDIR):
+	mkdir -p $@
+
+$(IUPCD_OBJ) : $(OCDDIR)/%.o : $(IUPCD_DIR)/%.c | $(OCDDIR)
+	$(CC) -c -o $@ $< $(CFLAGS) $(IUPCD_INCLUDES) $(IUPCD_DEFINES)
+
+iupcd.dll: $(IUPCD_OBJ)
+	$(CC) --shared -o $@ $^ -L. -lcd -lluaiup $(LUALIB)
+
+IUPCONTROLS_DIR := $(IUPSRC)/srccontrols
+
+IUPCONTROLS_INCLUDES := $(addprefix -I,$(INCLUDES) $(IUPCD_DIR) $(IUPCONTROLS_DIR) $(IUPSRC)/srclua5/lh)
+IUPCONTROLS_MATRIX_SRC := iupmat_key.c iupmat_mark.c iupmat_aux.c iupmat_mem.c iupmat_mouse.c iupmat_numlc.c \
+							iupmat_colres.c iupmat_draw.c iupmat_getset.c iupmatrix.c \
+            				iupmat_scroll.c iupmat_edit.c iupmat_ex.c
+IUPCONTROLS_MATRIXEX_SRC := iup_matrixex.c iupmatex_clipboard.c iupmatex_busy.c \
+              iupmatex_export.c iupmatex_visible.c iupmatex_copy.c \
+              iupmatex_units.c iupmatex_find.c iupmatex_undo.c \
+              iupmatex_sort.c
+
+IUPCONTROLS_SRC := iup_cells.c iup_controls.c iup_matrixlist.c
+
+IUPCONTROLS_MATRIX_OBJ := $(patsubst %.c,$(OCDDIR)/%.o,$(IUPCONTROLS_MATRIX_SRC))
+IUPCONTROLS_MATRIXEX_OBJ := $(patsubst %.c,$(OCDDIR)/%.o,$(IUPCONTROLS_MATRIXEX_SRC))
+IUPCONTROLS_OBJ := $(patsubst %.c,$(OCDDIR)/%.o,$(IUPCONTROLS_SRC))
+
+$(IUPCONTROLS_MATRIX_OBJ) : $(OCDDIR)/%.o : $(IUPCONTROLS_DIR)/matrix/%.c | $(OCDDIR)
+	$(CC) -c -o $@ $< $(CFLAGS) $(IUPCONTROLS_INCLUDES)
+
+$(IUPCONTROLS_MATRIXEX_OBJ) : $(OCDDIR)/%.o : $(IUPCONTROLS_DIR)/matrixex/%.c | $(OCDDIR)
+	$(CC) -c -o $@ $< $(CFLAGS) $(IUPCONTROLS_INCLUDES)
+
+$(IUPCONTROLS_OBJ) : $(OCDDIR)/%.o : $(IUPCONTROLS_DIR)/%.c | $(OCDDIR)
+	$(CC) -c -o $@ $< $(CFLAGS) $(IUPCONTROLS_INCLUDES)
+
+#additional control
+SRCLUA_DIR := $(IUPSRC)/srclua5
+ADDITIONALCONTROLS_DIR := $(SRCLUA_DIR)/ctrl
+
+ADDITIONALCONTROLS_SRC := il_cells.c il_matrix.c il_matrixex.c il_matrixlist.c iuplua_matrix_aux.c iuplua_controls.c
+ADDITIONALCONTROLS_OBJ := $(patsubst %.c,$(OCDDIR)/%.o,$(ADDITIONALCONTROLS_SRC))
+
+$(ADDITIONALCONTROLS_OBJ) : $(OCDDIR)/%.o : $(ADDITIONALCONTROLS_DIR)/%.c | $(OCDDIR)
+	$(CC) -c -o $@ $< $(CFLAGS) -DIUPLUA_USELH $(IUPCONTROLS_INCLUDES) -I$(SRCLUA_DIR) -I../lua
+
+iupluacontrols.dll: $(IUPCONTROLS_OBJ) $(IUPCONTROLS_MATRIXEX_OBJ) $(IUPCONTROLS_MATRIX_OBJ) $(ADDITIONALCONTROLS_OBJ) | iupcd.dll
+	$(CC) --shared -o $@ $^ -L. -lcd -lcdlua53 -liupcd -lluaiup $(LUALIB)
+
+.PHONY : clean
+clean:
+	rm -Rf iupluacontrols.dll iupcd.dll && rm -Rf $(OCDDIR)
+
+
+
+

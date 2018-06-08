@@ -51,7 +51,3 @@ local eh = ecs.component "editable_hierarchy"{
     }
 }
 
-function eh:init()
-    self.dirty = true
-end
-

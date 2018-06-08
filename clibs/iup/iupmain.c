@@ -110,13 +110,7 @@ dummy_iuplua(lua_State *L) {
 	lua_getglobal(L, "iup");
 	return 1;
 }
-#ifdef LINK_SCINTILLA_LIB_STATIC
-int iup_scintillalua_open(lua_State* L);
-static void init_iup_scinilla(lua_State *L) {
-	iup_scintillalua_open(L);
-	lua_getglobal(L, "iup");
-}
-#endif //LINK_SCINTILLA_LIB_STATIC
+
 static int
 pmain (lua_State *L) {
 	int i;
@@ -127,11 +121,6 @@ pmain (lua_State *L) {
 	int from;
 	luaL_openlibs(L);
 	iuplua_open(L);
-
-#ifdef LINK_SCINTILLA_LIB_STATIC
-	init_iup_scinilla(L);
-#endif //LINK_SCINTILLA_LIB_STATIC
-
 	luaL_requiref(L, "iuplua", dummy_iuplua, 0);
 	lua_settop(L, 0);
 	lua_pushcfunction(L, msghandler);
@@ -180,3 +169,16 @@ main (int argc, char **argv) {
 
 	return (result && status == LUA_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
+
+#if (_MSC_VER > 0) && !_CONSOLE
+#include <windows.h>
+int WINAPI WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int ncmdshow)
+{
+	(void)hinst;  /* NOT used */
+	(void)hprev;
+	(void)cmdline;
+	(void)ncmdshow;
+
+	return main(__argc, __argv);
+}
+#endif

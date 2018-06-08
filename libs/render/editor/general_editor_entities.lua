@@ -3,6 +3,7 @@ local world = ecs.world
 
 local mu = require "math.util"
 local ru = require "render.util"
+local cu = require "render.components.util"
 
 local asset     = require "asset"
 local bgfx          = require "bgfx"
@@ -20,46 +21,44 @@ function general_editor_entites:init()
     }
 
     do
-        local axisid = world:new_entity("rotation", "position", "scale", "render", "name")
+		local axisid = world:new_entity("rotation", "position", "scale", 
+		"can_render", 
+		"mesh", "material",
+		"name")
         local axis = world[axisid]
 
         ms(axis.rotation.v, {0, 0, 0, 0}, "=")
         ms(axis.position.v, {0, 0, 0, 1}, "=")
         ms(axis.scale.v, {1, 1, 1}, "=")
 
-        axis.name.n = "axis-tips"
-        local material_name = "line.material"
+		axis.name.n = "axis-tips"
+		
+		axis.mesh.path = ""	-- runtime mesh info
+		axis.mesh.assetinfo = {
+			handle = {
+				group = {
+					{
+						vdecl = vdecl,
+						vb = bgfx.create_vertex_buffer({"fffd",
+						0.0, 0.0, 0.0, 0xff0000ff,  -- x-axis
+						1.0, 0.0, 0.0, 0xff0000ff,
+						0.0, 0.0, 0.0, 0xff00ff00,  -- y-axis
+						0.0, 1.0, 0.0, 0xff00ff00,
+						0.0, 0.0, 0.0, 0xffff0000,  -- z-axis
+						0.0, 0.0, 1.0, 0xffff0000}, vdecl)
+					},
+				}
+			}
+		}
 
-        local render = axis.render
-        render.info = {
-            {
-                mesh = {
-                    handle = {
-                        group = {
-                            {
-                                vdecl = vdecl,
-                                vb = bgfx.create_vertex_buffer({"fffd",
-                                0.0, 0.0, 0.0, 0xff0000ff,  -- x-axis
-                                1.0, 0.0, 0.0, 0xff0000ff,
-                                0.0, 0.0, 0.0, 0xff00ff00,  -- y-axis
-                                0.0, 1.0, 0.0, 0xff00ff00,
-                                0.0, 0.0, 0.0, 0xffff0000,  -- z-axis
-                                0.0, 0.0, 1.0, 0xffff0000}, vdecl)
-                            },
-                        }
-                    }
-                },
-                binding = {{
-                    material = asset.load(material_name),
-                    meshids = {1}
-                }},
-                srt = {s={0.2, 0.2, 0.2}, r={0, 0, 0}, t={0, 1, 0}}
-            },
-        }
+		axis.material.content[1] = {path="line.material", properties={}}
+		cu.load_material(axis)
     end
 
     do
-        local gridid = world:new_entity("rotation", "position", "scale", "render", "name")
+		local gridid = world:new_entity("rotation", "position", "scale", 
+		"can_render", "mesh", "material",
+		"name")
         local grid = world[gridid]
         grid.name.n = "grid"
         ms(grid.rotation.v, {0, 0, 0}, "=")        
@@ -106,30 +105,21 @@ function general_editor_entites:init()
             return t
         end
 
-        local render = grid.render
-        render.info = {            
-            {
-                mesh = {
-                    handle = {
-                        group = {
-                            {
-                                vdecl = vdecl,
-                                vb = bgfx.create_vertex_buffer(
-                                    create_grid_line_points(64, 64, 1),
-                                    vdecl)
-                            }
-                        }
-                    }
-                },
-                binding = {
-                    {
-                        material = asset.load "line.material",
-                        meshids = {1}
-                    }
-                },
-                srt = {s={1, 1, 1}, r={0, 0, 0}, t={0, 0, 0}}
-            },
-        }
+		grid.mesh.path = ""
+        grid.mesh.assetinfo = {
+			handle = {
+				group = {
+					{
+						vdecl = vdecl,
+						vb = bgfx.create_vertex_buffer(
+							create_grid_line_points(64, 64, 1),
+							vdecl)
+					}
+				}
+			}
+		}
 
+		grid.material.content[1] = {path="line.material", properties={}}
+		cu.load_material(grid)
     end
 end

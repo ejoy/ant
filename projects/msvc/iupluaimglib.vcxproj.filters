@@ -36,5 +36,16 @@
     <ClCompile Include="..\..\..\iup\srcimglib\iup_imglib_logos48x48.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\iup\srcimglib\iup_imglib_basegtk24x24.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\iup\srcimglib\iup_imglib_iconsgtk48x48.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="iup_def_files\iupluaimglib.def">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

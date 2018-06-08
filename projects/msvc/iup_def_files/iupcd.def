@@ -1,0 +1,16 @@
+LIBRARY iupcd
+EXPORTS
+	cdContextIup
+	cdContextIupDBuffer
+	cdContextIupDBufferRGB
+	cdContextIupDraw
+
+	cdIupCalcShadows
+	cdIupConvertColor
+	cdIupDrawSunkenRect
+	cdIupDrawRaiseRect
+	cdIupDrawVertSunkenMark
+	cdIupDrawHorizSunkenMark
+	cdIupDrawImage
+	cdIupDrawFocusRect
+	IupCdSetFont

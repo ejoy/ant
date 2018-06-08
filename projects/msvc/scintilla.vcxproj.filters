@@ -541,5 +541,11 @@
     <ClCompile Include="..\..\..\iup\srclua5\ctrl\il_scintilladlg.c">
       <Filter>iupsci\ctrl</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\iup\luascintilla.c">
+      <Filter>scintilla</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="iup_def_files\scintilla.def" />
   </ItemGroup>
 </Project>

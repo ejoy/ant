@@ -1,6 +1,5 @@
-if static_link_iup == nil then
-	require "scintilla"
-end
+
+require "scintilla"
 
 local redirect = require "filesystem.redirect"
 local task = require "editor.task"

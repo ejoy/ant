@@ -223,20 +223,43 @@ change_property(lua_State *L, RawSkeleton::Joint * joint, const char * p, int va
 		joint->name = v;
 	} else if (strcmp(p, "transform") == 0) {
 		luaL_checktype(L, value_index, LUA_TTABLE);
-		auto fetch_transform = [=](auto name, auto num, auto v) {
+
+		joint->transform.identity();
+
+		auto fetch_transform = [=](auto name, auto num, auto v, auto def_v) {
 			int type = lua_getfield(L, -1, name);
 			if (type == LUA_TTABLE){
-				for (int ii = 0; ii < num; ++ii) {
-					lua_geti(L, -1, ii + 1);
-					v[ii] = (float)lua_tonumber(L, -1);
+				size_t tlen = lua_rawlen(L, -1);
+				if (tlen == 1) {
+					lua_geti(L, -1, 1);
+					float n = (float)lua_tonumber(L, -1);
 					lua_pop(L, 1);
-				}			
+					v[0] = v[1] = v[2] = n;
+				}else{
+					if (tlen != num){
+						luaL_error(L, "array len is %d, is not equal request len %d", tlen, num);
+					}
+					for (int ii = 0; ii < num; ++ii) {
+						lua_geti(L, -1, ii + 1);
+						v[ii] = (float)lua_tonumber(L, -1);
+						lua_pop(L, 1);
+					}	
+				}		
+			} else if (type == LUA_TNIL) {
+				for (int ii = 0; ii < num; ++ii){
+					v[ii] = def_v[ii];
+				}				
 			}
+
 			lua_pop(L, 1);
 		};
-		fetch_transform("s", 3, &joint->transform.scale.x);
-		fetch_transform("r", 4, &joint->transform.rotation.x);
-		fetch_transform("t", 3, &joint->transform.translation.x);
+
+		auto scaledef = ozz::math::Float3::one();
+		fetch_transform("s", 3, &joint->transform.scale.x, &scaledef.x);
+		auto quaterniondef = ozz::math::Quaternion::identity();
+		fetch_transform("r", 4, &joint->transform.rotation.x, &quaterniondef.x);
+		auto translationdef = ozz::math::Float4::zero();
+		fetch_transform("t", 3, &joint->transform.translation.x, &translationdef.x);
 	} else {
 		luaL_error(L, "Invalid property %s", p);
 	}
@@ -291,15 +314,24 @@ change_addr(lua_State *L, int cache_index, RawSkeleton::Joint *old_ptr, RawSkele
 	}
 }
 
+static void init_transform(RawSkeleton::Joint::Children *c, size_t beg, size_t end) {
+	for (auto b = beg; b < end; ++b) {
+		c->at(b).transform = ozz::math::Transform::identity();
+	}
+}
+
+
 static void
 expand_children(lua_State *L, int index, RawSkeleton::Joint::Children *c, size_t n) {
 	size_t old_size = c->size();
 	if (old_size == 0) {
 		c->resize(n);
+		init_transform(c, 0, old_size);
 		return;
 	}
 	RawSkeleton::Joint *old_ptr = &c->at(0);
 	c->resize(n);
+	init_transform(c, old_size, n);
 	RawSkeleton::Joint *new_ptr = &c->at(0);
 	if (old_ptr == new_ptr) {
 		return;

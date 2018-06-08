@@ -3,87 +3,51 @@ local world = ecs.world
 
 local mu = require "math.util"
 
---- hierarchy update system -----------------------------
-local hierarchy_update_sys = ecs.system "hierarchy_update_system"
-
-hierarchy_update_sys.singleton "math_stack"
-
-local function update_child_srt(ms, e, srt, node)
-    local rot = ms({type="q", table.unpack(node.r)}, "eT")
-    rot[1], rot[2] = rot[2], rot[1]
-
-    local localsrt = mu.srt(ms, node.s, rot, node.t);
-    local s, r, t = ms(localsrt, srt, "*~PPP");
-
-    ms(e.scale.v, s, "=", e.rotation.v, r, "=", e.position.v, t, "=")
-end
-
-function hierarchy_update_sys:update()
-    local ms = self.math_stack
-    for _, h_eid in world:each("hierarchy") do
-        local h_entity = assert(world[h_eid])
-        local hierarchy = h_entity.hierarchy
-        
-        if not hierarchy.dirty then
-            return 
-        end            
-        hierarchy.dirty = false
-
-        local rootsrt = mu.srt_from_entity(ms, h_entity)
-        local builddata = hierarchy.builddata
-
-        local mapper = h_entity.hierarchy_name_mapper.v
-        for _, node in ipairs(builddata) do
-            local name = node.name
-            local c_eid = mapper[name]                
-            local c_entity = world[c_eid]
-            if c_entity then
-                update_child_srt(ms, c_entity, rootsrt, node)
-            else
-                error(string.format("not found entity by hierarchy name mapper, name is : %s", name))
-            end
-        end
-    end  
-end
-
 local function push_primitive_in_filter(ms, eid, filter)
     local e = world[eid]
-    local render = e.render
+    local can_render = e.can_render
 
-    if render == nil or not render.visible then
+    if can_render == nil or not can_render.visible then
         return 
-    end
+	end
+	
+	local meshcomp = e.mesh	
+	if meshcomp == nil then
+		return 
+	end
 
-    local rinfo = render.info
-    local properties = render.properties
-    local result = filter.result
+	local mesh = assert(meshcomp.assetinfo)
+	
+	local materialcontent = e.material.content
+	assert(#materialcontent >= 1)
 
-    for idx, elem in ipairs(rinfo) do
-        local esrt = elem.srt
-        local srt = {}
-        srt.s, srt.r, srt.t = ms(
-            {type="srt", s=esrt.s, r=esrt.r, t=esrt.t}, 
-            {type="srt", s=e.scale.v, r=e.rotation.v, t=e.position.v}, 
-            "*~TTT")
-        local elem_properties  = properties and properties[idx] or nil
+	local srt ={s=e.scale.v, r=e.rotation.v, t=e.position.v}
 
-        for _, binding in ipairs(elem.binding) do
-            local material = assert(binding.material)
-            local meshids = binding.meshids
-            local mgroups = elem.mesh.handle.group
-            
-            for _, mid in ipairs(meshids) do
-                local g = mgroups[mid]
-                table.insert(result, {
-                    eid = eid,
-                    mgroup = g,
-                    material = material,
-                    properties = elem_properties,
-                    srt = srt,
-                })
-            end
-        end
-    end
+	do
+		if e.name.n:match("translatehead-[xyz]") then
+			local s = ms(srt.s, "T")
+			local r = ms(srt.r, "T")
+			local t = ms(srt.t, "T")
+			print(s, r, t)
+		end	
+	end
+
+	local result = filter.result
+	local mgroups = mesh.handle.group
+	for i=1, #mgroups do
+		local g = mgroups[i]
+		local mc = materialcontent[i] or materialcontent[1]
+		local materialinfo = mc.materialinfo
+		local properties = mc.properties
+
+		table.insert(result, {
+			eid = eid,
+			mgroup = g,
+			material = materialinfo,
+			properties = properties,
+			srt = srt,
+		})
+	end
 end
 
 --- scene filter system----------------------------------
@@ -92,13 +56,11 @@ local primitive_filter_sys = ecs.system "primitive_filter_system"
 primitive_filter_sys.singleton "primitive_filter"
 primitive_filter_sys.singleton "math_stack"
 
-primitive_filter_sys.depend "hierarchy_update_system"
-
 function primitive_filter_sys:update()
     local ms = self.math_stack
     local filter = self.primitive_filter
     filter.result = {}    
-    for _, eid in world:each("render") do        
+    for _, eid in world:each("can_render") do
         push_primitive_in_filter(ms, eid, filter)
     end
 end
@@ -108,8 +70,6 @@ local select_filter_sys = ecs.system "select_filter_system"
 
 select_filter_sys.singleton "math_stack"
 select_filter_sys.singleton "select_filter"
-
-primitive_filter_sys.depend "hierarchy_update_system"
 
 function select_filter_sys:update()
     local ms = self.math_stack

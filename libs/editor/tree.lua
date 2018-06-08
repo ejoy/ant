@@ -1,3 +1,5 @@
+
+local eu = require "editor.util"
 local tree = {}	; tree.__index = tree
 
 local function new_item(name)
@@ -27,7 +29,8 @@ local function add_child(self, parent, child, n)
 	if n == 0 then
 		-- no children
 		local lastid = assert(parent.id)
-		if view["KIND" .. lastid] == "LEAF" then
+		local kind = view["KIND" .. lastid]
+		if kind == "LEAF" then
 			-- change leaf to branch
 			view["INSERTBRANCH" .. lastid] = parent.name
 			view["DELNODE" .. lastid] = "SELECTED"
@@ -35,9 +38,9 @@ local function add_child(self, parent, child, n)
 		view["ADDLEAF" .. lastid] = child.name
 		child.id = lastid + 1
 	else
-		local lastid = assert(parent[n].id)
+		local lastid = assert(parent[n].id)		
 		view["INSERTLEAF" .. lastid] = child.name
-		child.id = view["NEXT" .. lastid]
+		child.id = view["NEXT" .. lastid]		
 	end
 
 	child.parent = parent
@@ -56,14 +59,50 @@ function tree:print()
 	end
 end
 
+function tree:findchild_byid(ctrlid)
+	local function find_ex(node, id)
+		for _, child in ipairs(node) do
+			if child.id == id then
+				return child
+			end
+
+			local r = find_ex(child, id)
+			if r then
+				return r
+			end
+		end
+
+		return nil
+	end
+
+	if ctrlid == self.id then
+		return self
+	end
+
+	return find_ex(self, ctrlid)
+end
+
+function tree:isbranch(node)
+	local id = node.id
+	local kind = self.view["KIND" .. id]
+	return kind:upper() == "BRANCH"
+end
+
+function tree:findchild_byname(parent, name)
+	for _, n in ipairs(parent) do
+		if n.name == name then
+			return n
+		end
+	end
+
+	return nil
+end
+
 local function remap(view, root, id)
 	for _,node in ipairs(root) do
 		view["USERDATA" .. id] = node
-		node.id = id
-		id = id + 1
-		for _, child in ipairs(node) do
-			id = remap(view, node, id)
-		end
+		node.id = id		
+		id = remap(view, node, id + 1)		
 	end
 	return id
 end
@@ -72,11 +111,15 @@ local function remap_tree(self)
 	remap(self.view, self, 0)
 end
 
-function tree:add_child(parent, name)
-	if name == nil then
+function tree:add_child(parent, name)	
+	if parent == nil then
+		parent = self
+	end
+	if name == nil then   
 		name = parent
 		parent = self
 	end
+
 	local child = new_item(name)
 	-- already map to tree
 	if not mapped(self, parent) then
@@ -139,17 +182,53 @@ function tree:del(item)
 	end
 end
 
-function tree.new()
-	local view = iup.tree {
---		SHOWDRAGDROP = "yes",
---		SHOWRENAME = "yes",
-		ADDROOT = "no",
-	}
+function tree:clear()
+	self.view.DELNODE0 = "ALL"
+	
+	local count = #self
+	for i=1, count do
+		self[i] = nil
+	end
+end
 
-	return setmetatable({
-		view = view,
+function tree:clear_selections()
+	local view = self.view
+	if view.MARKMODE == "MULTIPLE" then
+		view.MARK = "CLEARALL"
+	else
+		view.VALUE = "CLEAR"
+	end
+end
+
+function tree:selection_node(node)
+	local id = node.id
+	local view = self.view	
+	view["MARKED" .. id] = "YES"
+end
+
+local function create_view(config, inst)
+	local param = {ADDROOT = "NO"}
+	if config then
+		for k, v in pairs(config) do
+			param[k] = v
+		end
+	end
+	local view = iup.tree(param)
+
+	eu.add_callbacks(view, inst, {
+		"selection_cb", "executeleaf_cb", 
+		"rightclick_cb", "button_cb"
+	})
+	return view
+end
+
+function tree.new(config)
+	local t = {		
 		id = -1,
-	}, tree)
+	}
+	local view = create_view(config, t)
+	t.view = view
+	return setmetatable(t, tree)
 end
 
 return tree

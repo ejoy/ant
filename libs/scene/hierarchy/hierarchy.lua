@@ -1,6 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local hierarchy_module = require "hierarchy"
+local mu = require "math.util"
 
 local h = ecs.component "hierarchy" {
     --init from serialize or build from editable_hierarchy component in runtime
@@ -23,11 +24,7 @@ local h = ecs.component "hierarchy" {
     }  
 }
 
-function h:init()
-    self.dirty = true
-end
-
-local n = ecs.component "hierarchy_name_mapper"{
+ecs.component "hierarchy_name_mapper"{
     v = {
         type = "userdata", 
         save = function(v, arg)
@@ -49,7 +46,3 @@ local n = ecs.component "hierarchy_name_mapper"{
         end
     }
 }
-
-function n:init()
-    self.dirty = true
-end
