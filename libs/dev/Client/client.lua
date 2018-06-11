@@ -7,6 +7,7 @@ local lsocket = require "lsocket"
 local pack = require "pack"
 local fileprocess = require "fileprocess"
 local client = {}; client.__index = client
+local filesystem = require "winfile"
 
 --the dir hold the files
 local app_doc_path = ""
@@ -36,8 +37,6 @@ function clientcommand.FILE(resp)
     --resp[4] is the progress "current/total"
     --resp[5] is the file data
     assert(resp[1] == "FILE")
-    print("get file", resp[2])
-    _linda:send("log", "receive file "..resp[2])
     local progress = resp[4]
 
     local slash = string.find(progress, "%/")
@@ -46,6 +45,7 @@ function clientcommand.FILE(resp)
     local file_path = resp[2]
 
     if not mem_file_status[file_path] then
+
         --store in file
         local hash = resp[3]
         --file dose not exist on server
@@ -69,8 +69,6 @@ function clientcommand.FILE(resp)
 
         if offset <= fileprocess.MAX_CALC_CHUNK then
             --TODO mac/ios file instead of winfile
-            --local filesystem = require "winfile"
-            local filesystem = require "winfile"
             filesystem.mkdir(folder)
             --file = io.open(temp_path_hash, "wb")
             file = io.open(real_path, "wb")
@@ -100,6 +98,7 @@ function clientcommand.FILE(resp)
             filemanager:AddFileRecord(hash, file_path)
         end
     else
+
         --store in mem
         mem_file[file_path] = mem_file[file_path]..resp[5]
 
@@ -146,7 +145,7 @@ function clientcommand.DIR(resp)
 end
 
 function clientcommand.RUN(resp)
-    print("get run command", resp[1], resp[2])
+    --_linda:send("log", {"Bgfx", "get run command", resp[1], resp[2]})
     _linda:send("run", resp[2])
 end
 
@@ -280,7 +279,7 @@ function client:CollectRequest()
     while true do
         local key, value = _linda:receive(0.05, "log")
         if value then
-            table.insert(self.sending, pack.pack({"LOG", value}))
+            table.insert(self.sending, pack.pack({"LOG", table.unpack(value)}))
         else
             break
         end
@@ -314,6 +313,7 @@ function client:CollectRequest()
 end
 
 function client:mainloop(timeout)
+    _linda:send("log", {"Time", "Time: "..tostring(os.clock())})
     self:CollectRequest()
     for key, req in pairs(logic_request) do
         local cmd = req[1]
@@ -376,7 +376,6 @@ end
 
 function client:process_response(resp)
     local cmd = resp[1]
-    _linda:send("log", "handle cmd ".. cmd)
     local func = recieve_cmd[cmd]
     if not func then
         log("Unknown command from server %s",cmd)

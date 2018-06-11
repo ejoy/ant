@@ -159,8 +159,9 @@ lua_State *L = nil;
     lua_getglobal(L, "sendlog");
     if(lua_isfunction(L, -1))
     {
+        lua_pushstring(L, "Device");
         lua_pushstring(L, [log_str UTF8String]);
-        lua_pcall(L, 1, 0, 0);
+        lua_pcall(L, 2, 0, 0);
     }
 }
 

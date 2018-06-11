@@ -5,30 +5,27 @@ package.remote_search_path = "../?.lua;?.lua;../?/?.lua;../asset/?.lua" --path f
 local lanes = require "lanes"
 if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
 local linda = lanes.linda()
-function log(name)
-    local tag = "[" .. name .. "] "
-    local write = io.write
-    return function(fmt, ...)
-        write(tag)
-        write(string.format(fmt, ...))
-        write("\n")
-    end
-end
 
 local pack = require "pack"
-function sendlog(...)
-    linda:send("log", pack.pack({...}))
-end
+--"cat" means categories for different log
+--for now we have "Script" for lua script log
+--and "Bgfx" for bgfx log
+--"Device" for deivce msg
 
 local origin_print = print
+
+function sendlog(cat, ...)
+    linda:send("log", {cat, ...})
+    --origin_print(cat, ...)
+end
 print = function(...)
     origin_print(...)
-    sendlog(...)
+    sendlog("Script", ...)
 end
 
 local filemanager = require "filemanager"
 local file_mgr = filemanager.new()
-
+local winfile = require "winfile"
 local bgfx = require "bgfx"
 
 local lodepng = require "lodepnglua"
@@ -45,9 +42,7 @@ local function custom_open(filename, mode, search_local_only)
     --default we don't search local only
     search_local_only = search_local_only or false
 
-
     local file = origin_open(filename, mode)
-
 
     if not file then
         local local_path = file_mgr:GetRealPath(filename)
@@ -68,6 +63,7 @@ local function custom_open(filename, mode, search_local_only)
             local key, value = linda:receive(0.05, "new file")
             if value then
                 print("received msg", filename)
+
                 --put into the id_table and file_table
                 file_mgr:AddFileRecord(value[1], value[2])
 
@@ -76,8 +72,8 @@ local function custom_open(filename, mode, search_local_only)
 
                 print("file name", filename)
                 local real_path = file_mgr:GetRealPath(value[2])
-                file = origin_open(real_path, mode)
-                print("real path",real_path)
+                file = origin_open(bundle_home_dir .. "/Documents/" .. real_path, mode)
+
                 return file
             end
         end
@@ -91,14 +87,13 @@ io.open = custom_open
 local function remote_searcher (name)
     --local full_path = name..".lua"
     --need to send the package search path
-    print("remote requiring", name)
+    --print("remote requiring".. name)
     local request = {"REQUIRE", name, package.remote_search_path}
     linda:send("request", request)
 
     while true do
         local key, value = linda:receive(0.05, "mem_data")
-        if value~=nil then
-            --print("receive data",type(value))
+        if value then
             return load(value)
         end
     end
@@ -151,9 +146,7 @@ local function run(path)
         --get rid of .lua
         reverse_path = string.sub(reverse_path, 1, -5)
 
-        print("filename", reverse_path)
-        --local rr, vv = pcall(require, reverse_path)
-        --print("aabb",rr,vv)
+        --print("filename", reverse_path)
         entrance = require(reverse_path)
         if entrance then
             entrance.init(g_Width, g_Height, app_home_dir, bundle_home_dir)
@@ -163,6 +156,18 @@ local function run(path)
 end
 
 local bgfx_init = false
+local function InitBgfx()
+    local rhwi = require "render.hardware_interface"
+    rhwi.init(g_WindowHandle, g_Width, g_Height)
+
+
+    bgfx.set_debug "T"
+    bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
+
+    bgfx.set_view_rect(0, 0, 0, g_Width, g_Height)
+    bgfx_init = true
+end
+
 local screenshot_cache_num = 0
 local function HandleMsg()
     while true do
@@ -182,20 +187,12 @@ local function HandleMsg()
     while true do
         local key, value = linda:receive(0.05, "run")
         if value then
+
             if not bgfx_init then
-                local rhwi = require "render.hardware_interface"
-                rhwi.init(g_WindowHandle, g_Width, g_Height)
-
-
-                bgfx.set_debug "T"
-                bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
-
-                bgfx.set_view_rect(0, 0, 0, g_Width, g_Height)
-                bgfx_init = true
+                InitBgfx()
             end
 
             --init when need to run something
-            print("run", value)
             run(value)
         else
             break
@@ -253,6 +250,10 @@ function init(window_handle, width, height, app_dir, bundle_dir)
     file_mgr:ReadFilePathData(bundle_home_dir.."/Documents/file.txt")
 
 
+    package.loaded["winfile"].loadfile = loadfile
+    package.loaded["winfile"].dofile = dofile
+    package.loaded["winfile"].open = io.open
+
     package.loaded["winfile"].personaldir = function()
         return bundle_home_dir.."/Documents"
     end
@@ -285,21 +286,13 @@ function init(window_handle, width, height, app_dir, bundle_dir)
 
     --[[
     if not bgfx_init then
-        local rhwi = require "render.hardware_interface"
-        rhwi.init(g_WindowHandle, g_Width, g_Height)
-
-
-        bgfx.set_debug "T"
-        bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
-
-        bgfx.set_view_rect(0, 0, 0, g_Width, g_Height)
-        bgfx_init = true
+        InitBgfx()
     end
 
     bgfx.request_screenshot()
     screenshot_cache_num = 1
 
-    entrance = require "testlua_cube"
+    entrance = require "testlua"
     entrance.init(width, height, app_dir, bundle_dir)
     --]]
     local client_io = lanes.gen("*",{package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateIOThread)(linda, bundle_home_dir)
@@ -310,7 +303,18 @@ function mainloop()
         entrance.mainloop()
     end
 
+    if bgfx_init then
+        local log_string = bgfx.get_log()
+        if #log_string > 0 then
+            sendlog("Bgfx", log_string)
+        end
 
+        local timer = bgfx.get_stats("t")
+        if timer then
+            sendlog("Fps", timer.gpu, timer.cpu)
+        end
+
+    end
     HandleMsg()
     HandleCacheScreenShot()
 end
