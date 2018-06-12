@@ -24,7 +24,7 @@ function testcube.init(width, height, app_dir, bundle_path)
     local fs_path = "fs_cubes"
 
     --load shaders
-    ctx.prog = shader_mgr.programLoad(vs_path, fs_path, nil, app_dir.."/Common")
+    ctx.prog = shader_mgr.programLoad(vs_path, fs_path)
 
     ctx.state = bgfx.make_state({ PT = "TRISTRIP" } , nil)	-- from BGFX_STATE_DEFAULT
     ctx.vdecl = bgfx.vertex_decl {

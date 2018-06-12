@@ -78,11 +78,22 @@ static int DecodePng(lua_State *L)
     std::vector<unsigned char> raw_pixels;
     
     unsigned width, height;
-    lodepng::decode(raw_pixels, width, height, png_vec);
+    unsigned error = lodepng::decode(raw_pixels, width, height, png_vec);
     
+	printf("decode error code : %d %d\n", error, raw_pixels.size());
+
+	//bgfx screenshot format is bgra, we need rgba to display
+	//for now, just put it here
+	for (int i = 0; i < raw_pixels.size(); i += 4)
+	{
+		char b = raw_pixels[i];
+		raw_pixels[i] = raw_pixels[i + 2];
+		raw_pixels[i + 2] = b;
+	}
+
     std::string pixel_string(raw_pixels.begin(), raw_pixels.end());
     
-    lua_pushstring(L, pixel_string.data());
+    lua_pushlstring(L, pixel_string.data(), pixel_string.size());
     lua_pushnumber(L, width);
     lua_pushnumber(L, height);
     

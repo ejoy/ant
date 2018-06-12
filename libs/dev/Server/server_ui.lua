@@ -11,7 +11,15 @@ server_framework:init("127.0.0.1", 8888)
 --todo store in a file
 local default_proj_dir = "D:/Engine/ant/libs/dev"
 --ui layout
-local multitext = iup.text{ multiline = "YES", expand = "YES" }
+
+local script_text = iup.text{ multiline = "YES", expand = "YES" }
+local bgfx_text = iup.text{multiline = "YES", expand = "Yes"}
+local device_text = iup.text{multiline = "YES", expand = "YES"}
+
+script_text.tabtitle = "Script"
+bgfx_text.tabtitle = "Bgfx"
+device_text.tabtitle = "Device"
+local text_tabs = iup.tabs{script_text, bgfx_text, device_text}
 
 --project directory and run file
 local run_file_btn = iup.button{title = "run file"}
@@ -20,7 +28,7 @@ local proj_dir_text = iup.text{expand = "HORIZONTAL", value = default_proj_dir}
 server_framework:SetProjectDirectoryPath(default_proj_dir)
 
 local proj_dir_hbox = iup.hbox{run_file_btn, proj_dir_btn, proj_dir_text}
-local main_vbox = iup.vbox{multitext, proj_dir_hbox}
+local main_vbox = iup.vbox{text_tabs, proj_dir_hbox}
 
 --device select and connect/disconnect
 local device_list = iup.list{expand = "YES", spacing = 1}
@@ -44,21 +52,14 @@ local shader_mgr = require "render.resources.shader_mgr"
 local nk = require "bgfx.nuklear"
 
 local UI_VIEW = 0
-local width = 420
-local height = 360
-local simpad_canvas = iup.canvas{rastersize = "420x360", bgcolor = "255 0 123"}
-local simpad_dlg = iup.dialog{simpad_canvas, title = "sim pad", size = "420x360"}
+local width = 375
+local height = 667
+local simpad_canvas = iup.canvas{rastersize = "375x667", bgcolor = "255 0 123"}
+local simpad_dlg = iup.dialog{simpad_canvas, title = "sim pad", size = "375x667"}
 local simpad_show = false
 
-
-local function loadtexture(texname,info)
-    local image = nk.loadImage( texname );
-
-    return image
-end
-
 local nkimage = nil
-
+local fps_label = ""
 local function init_bgfx()
     rhwi.init(iup.GetAttributeData(simpad_canvas, "HWND"), width, height)
 
@@ -79,13 +80,6 @@ local function init_bgfx()
         prog = shader_mgr.programLoad("ui/vs_nuklear_texture.sc",
                 "ui/fs_nuklear_texture.sc"),
     }
-
-    local nkatlas = loadtexture( "assets/textures/ScreenShot.png") --button.png" )
-
-    nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h
---    nkim   = nk.makeImageMem( data,w,h)
-    print("---id("..nkimage.handle..")"..' w'..nkimage.w..' h'..nkimage.h)
-   -- nk.image( nkimage )  --test nested lua
 
     bgfx.set_view_clear(UI_VIEW, "C", 0x303030ff, 1, 0)
 
@@ -174,71 +168,95 @@ function open_close_simpad_btn:action()
 end
 
 local lodepng = require "lodepnglua"
-local pack = require "pack"
 local function HandleResponse(resp_table)
 
     for _,v in ipairs(resp_table) do
-        if type(v) == "string" then
-            --this is just log
-            --for now, just show on the multitext
-            --need to unpack twice, because the text is packed too
-            local log_pack = pack.unpack(v)
-            if log_pack then
-                for _, log_string in pairs(log_pack) do
-                    if log_string then
+        --this is just log
+        --for now, just show on the multitext
+        --need to unpack twice, because the text is packed too
 
-                        local log_line = pack.unpack(log_string)
-                        for _, log_line_value in pairs(log_line) do
+        if v[1] == "log" then
+            --unpack the log data
+            local log_table = v[2]
 
-                            multitext.value = multitext.value .. "\n" .. log_line_value
-                        end
+            local cat = log_table[1]
 
-                    end
-                end
-            end
+            if cat == "Script" then
+                local new_log_value = log_table[2]
+                new_log_value = new_log_value .. "\n"
 
-            local pos = iup.TextConvertLinColToPos(multitext,  multitext.linecount, 0)
-            multitext.caretpos = pos
-            multitext.scrolltopos = pos
+                script_text.value = script_text.value .. new_log_value
+                local pos = iup.TextConvertLinColToPos(script_text,  script_text.linecount, 0)
+                script_text.caretpos = pos
+                script_text.scrolltopos = pos
 
-        elseif type(v) == "table" then
-            if v[1] == "device" then
-                --device connection and disconnection
-                if v[2] == 1 then
-                    --connected
-                    local idx = connect_list.count
-                    connect_list[idx+1] = v[3]
-                else
-                    --disconnected
-                    local list_count = connect_list.count
-                    for i = 1, list_count do
-                        if connect_list[i] == v[3] then
-                            --remove the item
-                            for j = i, list_count-1 do
-                                connect_list[j] = connect_list[j+1]
-                            end
-                            connect_list[list_count] = nil
-                            break
-                        end
-                    end
-                end
-            elseif v[1] == "screenshot" then
-                local screenshot = v[2]
-                local name = screenshot[1]
-                local data = screenshot[2]
+            elseif cat == "Bgfx" then
+                local new_log_value = log_table[2]
+                new_log_value = new_log_value .. "\n"
 
-                --decompress it and show the image
-                local data, width, height = lodepng.decode_png(data)
-                assert(width > 0 and height > 0)
+                bgfx_text.value = bgfx_text.value .. new_log_value
+                local pos = iup.TextConvertLinColToPos(bgfx_text,  bgfx_text.linecount, 0)
+                bgfx_text.caretpos = pos
+                bgfx_text.scrolltopos = pos
 
-                print("get screenshot", width, height, #data)
+            elseif cat == "Device" then
+                local new_log_value = log_table[2]
+                new_log_value = new_log_value .. "\n"
 
+                device_text.value = device_text.value .. new_log_value
+                local pos = iup.TextConvertLinColToPos(device_text,  device_text.linecount, 0)
+                device_text.caretpos = pos
+                device_text.scrolltopos = pos
+            elseif cat == "Fps" then
+                local gpu_timer = log_table[2]
+                local cpu_timer = log_table[3]
+
+                fps_label = "cpu time: "..cpu_timer
+                --print("Get fps", gpu_timer, cpu_timer)
             else
-                print("resp " .. v[1] .. " not support yet")
+                --for now ignore other category
             end
+
+
+        elseif v[1] == "connect" then
+            --device connection and disconnection
+            if v[2] == 1 then
+                --connected
+                local idx = connect_list.count
+                connect_list[idx+1] = v[3]
+            else
+                --disconnected
+                local list_count = connect_list.count
+                for i = 1, list_count do
+                    if connect_list[i] == v[3] then
+                        --remove the item
+                        for j = i, list_count-1 do
+                            connect_list[j] = connect_list[j+1]
+                        end
+                        connect_list[list_count] = nil
+                        break
+                    end
+                end
+            end
+        elseif v[1] == "screenshot" then
+            local screenshot = v[2]
+            local name = screenshot[1]
+            local encode_data = screenshot[2]
+            print("screenshot data size", #encode_data)
+            --decompress it and show the image
+            local data, width, height = lodepng.decode_png(encode_data)
+
+            assert(width > 0 and height > 0 and #data > 0)
+
+            print("get screenshot", width, height, #data)
+
+            local nkatlas = nk.loadImageFromMemory(data,width,height,#data/width/height)
+            nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h
+
         else
-            print("resp type: " .. type(v) .. " not support yet")
+            print("resp " .. v[1] .. " not support yet")
         end
+
     end
 end
 
@@ -249,22 +267,32 @@ for i = 1, #devices do
     device_list[i] = devices[i]
 end
 
-
 local dlg = iup.dialog{main_split, title = "ANT ENGINE", size = "HALFxHALF"}
 
 
 dlg:showxy(iup.CENTER,iup.CENTER)
 dlg.usersize = nil
 
+local time_stamp = 0.0
 local function UpdateSimpad()
 
-    if nk.windowBegin( "Test","Test Window ui", 0, 0, 720, 460,
-            "border", "movable", "title", "scalable",'scrollbar') then
+    local time_now = os.clock()
+    local time_step = time_now - time_stamp;
+    if time_step > 1.0 then
+        time_stamp = time_now
+
+        server_framework:HandleCommand("all", "SCREENSHOT")
+    end
+
+    if nk.windowBegin( "Test",fps_label, 0, 0, 375, 667,
+            "movable", "title", "scrollbar") then
         --image(nkimage)
 
         nk.layoutRow('dynamic',310,{0.15,0.7,0.15} )
         nk.spacing(1)
-        nk.image( nkimage )
+        if nkimage then
+            nk.image( nkimage )
+        end
     end
     nk.windowEnd()
     nk.update()

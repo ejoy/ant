@@ -21,8 +21,7 @@ local function HandleMessage()
         local key, value = linda:receive(0.05, "log")
         if value then
             --do something here
-            --print("log", value)
-            table.insert(resp_table, value)
+            table.insert(resp_table, {"log", value})
         else
             break
         end
@@ -35,10 +34,10 @@ local function HandleMessage()
             --value 2 is the udid
             if value[1] == "CONNECT" then
                 print("~~CONNECT", value[1], value[2])
-                table.insert(resp_table, {"device", 1, value[2]})
+                table.insert(resp_table, {"connect", 1, value[2]})
             elseif value[1] == "DISCONNECT" then
                 print("~~DISCONNECT", value[1], value[2])
-                table.insert(resp_table, {"device", 0, value[2]})
+                table.insert(resp_table, {"connect", 0, value[2]})
             elseif value[1] == "SCREENSHOT" then
                 table.insert(resp_table, {"screenshot", value[2]})
             end

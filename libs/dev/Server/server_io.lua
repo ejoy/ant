@@ -184,7 +184,9 @@ local function HandlePackage(response_pkg, id, self)
         end
     elseif cmd_type == "LOG" then
         --do nothing for now
-        table.insert(self.log, response_pkg[2])
+        --response_pkg[2] is category info
+        --response_pkg[3] is log data
+        table.insert(self.log, {table.unpack(response_pkg, 2)})
         return "DONE"
     else
         print("cmd: " .. cmd_type .." not support yet")
@@ -320,7 +322,7 @@ local function response(self, req)
     print("cmd and second is ", req[1], req[2])
     local cmd = req[1]
     --if is require command, need project_directory
-    if cmd == "REQUIRE" or cmd == "GET" then
+    if cmd == "REQUIRE" or cmd == "GET" or cmd == "EXIST" then
         --table.insert(req, project_directory)
         req.project_dir = project_directory
     end
@@ -348,9 +350,9 @@ local function response(self, req)
                         screenshot_cache = {name, data}
 
                     else
-                        --print("length before", #screenshot_cache[2], #data)
+                    --    print("length before", #screenshot_cache[2], offset, #data)
                         screenshot_cache[2] = screenshot_cache[2]..data
-                        --print("length after", #screenshot_cache[2])
+                    --    print("length after", #screenshot_cache[2], offset)
                     end
 
                     if offset >= size then

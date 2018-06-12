@@ -65,15 +65,16 @@ function fileserver.GET(req)
     --print("client hash:", client_hash)
 
     local server_hash = fileprocess.GetFileHash(file_path)
+    local absolute_path = file_path
     if not server_hash then
         --try under project_dir
-        file_path =  CalculateAbsolutePath(project_dir, file_path)
-        --print("try this path", file_path)
-        server_hash = fileprocess.GetFileHash(file_path)
+        absolute_path =  CalculateAbsolutePath(project_dir, file_path)
+        print("try this path", absolute_path)
+        server_hash = fileprocess.GetFileHash(absolute_path)
     end
     --still can't find it, return
     if not server_hash then
-        --print("File not exist on server")
+        print("File not exist on server")
 
         return {"ERROR", "GET", "file:"..req[2].." not found"}
     end
@@ -87,7 +88,7 @@ function fileserver.GET(req)
         return --ignore it
     end
 
-	local file = io.open(file_path, "rb")
+	local file = io.open(absolute_path, "rb")
 	if not file then
         return {"ERROR", "GET", "file:"..req[2].."not found"}
 	end
@@ -123,10 +124,14 @@ function fileserver.EXIST(req)
 
     local file = io.open(file_path, "r")
     if not file then
-        return {"EXIST_CHECK", "false"}
+        --try path with project directory path
+        file = io.open(req.project_dir.."/"..file_path, "r")
+        if not file then
+            return {"EXIST_CHECK", "false"}
+        end
     end
-    io.close(file)
 
+    io.close(file)
     --client does not have the file, return if the server has it
     if not req[3] then
         return {"EXIST_CHECK", "true"}
@@ -234,6 +239,7 @@ function fileserver.REQUIRE(req)
         return {"ERROR", "REQUIRE", "file:"..full_file_path.." does not exist"}
     end
 
+    file_path = file_path .. ".lua"
     --TODO server hash?
     if file_size < fileserver.MAX_PACKAGE_SIZE  then
         --if file is small enough to fit in one package, just return the file data
@@ -242,6 +248,8 @@ function fileserver.REQUIRE(req)
         local file_data = io.read(file_size)
         io.close(file)
         --use file name correspond to the mem_file table keeps on client siede
+        --print("FILE XX", file_name, server_hash, file_size)
+        --use file path, from "render.hardware_interface" to "render/hardware_interface.lua
         return {"FILE", file_name, server_hash, file_size.."/"..file_size, file_data}
     else
         --otherwise, return a cmd tell the server to send multiple packages
