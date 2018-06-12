@@ -41,12 +41,10 @@ local input_queue = inputmgr.queue(mapiup, canvas)
 
 local UI_VIEW = 0
 
-<<<<<<< HEAD
 local nkatlas = {}
 local nkbtn = {}
 local nkimage = {} 
 local nkb_images = { button= {} }
-=======
 
 local function save_ppm(filename, data, width, height, pitch)
 	local f = assert(io.open(filename, "wb"))
@@ -78,8 +76,6 @@ function save_screenshot(filename)
 		save_ppm(filename, data, width, height, pitch)
 	end
 end
-
->>>>>>> c45ae1e70730e6dd015021a1f27b8bacbade872c
 
 local ctx = {}
 local message = {}
