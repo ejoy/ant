@@ -1,4 +1,4 @@
-#define LUA_LIB
+﻿#define LUA_LIB
 
 #include <stdio.h>
 #include <string.h>

@@ -196,7 +196,7 @@ cb_screen_shot(bgfx_callback_interface_t *self, const char* file, uint32_t width
 	int line_pitch = pitch;
 	if (yflip) {
 		src += (height-1) * pitch;
-		line_pitch = - pitch;
+		line_pitch = - (int32_t)pitch;
 	}
 	uint32_t pixwidth = size / height;
 	uint32_t i;
@@ -2134,8 +2134,11 @@ lsetTransform(lua_State *L) {
 static int
 ldbgTextClear(lua_State *L) {
 	int attrib = luaL_optinteger(L, 1, 0);
-	int small = lua_toboolean(L, 2);
-	bgfx_dbg_text_clear(attrib, small);
+//#ifdef small
+//#error small is defined
+//#endif //small
+	int s = lua_toboolean(L, 2);
+	bgfx_dbg_text_clear(attrib, s);
 	return 0;
 }
 
