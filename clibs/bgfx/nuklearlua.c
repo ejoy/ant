@@ -44,6 +44,13 @@
 
 #define IMAGE_LIB
 
+
+#if _MSC_VER
+#	ifndef stricmp
+#	define stricmp _stricmp
+#	endif //stricmp
+#endif //_MSC_VER
+
 static inline int 
 getfield_tointeger(lua_State *L,int table,const char *key) {
 	if( lua_getfield(L,table,key) != LUA_TNUMBER) {
@@ -58,7 +65,7 @@ getfield_tointeger(lua_State *L,int table,const char *key) {
 }
 
 
-// å·¥å…·åº“
+// ¹¤¾ß¿â
 #ifdef  IMAGE_LIB 
 
 #define  STB_IMAGE_IMPLEMENTATION
@@ -138,11 +145,10 @@ lnk_load_image_data(lua_State *L)
 static int
 lnk_free_image_data(lua_State *L)
 {
-	// ä½¿ç”¨ userdata,register gc ï¼Ÿ
-	// c alloc -> lua -> c free  // æ— æ•ˆ,è¿™ä¸ª c æ€è·¯ä¸å¯¹
+	// Ê¹ÓÃ userdata,register gc £¿
+	// c alloc -> lua -> c free  // ÎÞÐ§,Õâ¸ö c Ë¼Â·²»¶Ô
 	return 0;
 }
-
 #endif 
 
 
@@ -192,7 +198,7 @@ struct lnk_context {
 
 static struct lnk_context *get_context(lua_State *L);
 
-// charset manager ç®¡ç†æœ€å¤š NK_ANT_MAX_CHARSET ä¸ªå­—ç¬¦é›†åˆï¼Œè¶…è¿‡çš„å°†è¢«èˆå¼ƒ
+// charset manager ¹ÜÀí×î¶à NK_ANT_MAX_CHARSET ¸ö×Ö·û¼¯ºÏ£¬³¬¹ýµÄ½«±»ÉáÆú
 void 
 lnk_charset_init(struct lnk_context *lc) {
 	lc->num_charsets = 0;
@@ -212,10 +218,10 @@ lnk_charset_shutdown(struct lnk_context *lc) {
 }
 
 // control buffer
-// ç¼–è¾‘æŽ§ä»¶ï¼Œç»„åˆæ¡†ç­‰ç¼“å†²åŒº
+// ±à¼­¿Ø¼þ£¬×éºÏ¿òµÈ»º³åÇø
 static void 
 lnk_uicache_init(lua_State *L,struct lnk_context *lc )  {
-	// editor cache system , æ³¨æ„è¿›ä¸€æ­¥ç¡®å®šä½¿ç”¨æ–¹æ³•!
+	// editor cache system , ×¢Òâ½øÒ»²½È·¶¨Ê¹ÓÃ·½·¨!
 	lc->edit_buf = (char *) malloc( NK_ANT_EDIT_BUFFER_LEN );
 	lc->combobox_items = (char **) malloc(sizeof(char*)*NK_ANT_COMBOBOX_MAX_ITEMS);
 	lc->layout_ratios = (float*) malloc(sizeof(float)*NK_ANT_MAX_RATIOS);
@@ -229,9 +235,9 @@ lnk_uicache_shutdown(lua_State *L,struct lnk_context *lc) {
 	free(lc->layout_ratios);
 }
 
-// é£Žæ ¼è®¾ç½®çš„æ ˆ
+// ·ç¸ñÉèÖÃµÄÕ»
 // for setStyle,unsetStyle 
-// æ³¨å†Œ nuklear çš„å…¨å±€å±žæ€§è¡¨,font,image,stack,ä¿ç•™luaä½¿ç”¨è€…çš„é£Žæ ¼ï¼Œå­—ä½“ï¼Œå›¾è±¡ä¿¡æ¯   
+// ×¢²á nuklear µÄÈ«¾ÖÊôÐÔ±í,font,image,stack,±£ÁôluaÊ¹ÓÃÕßµÄ·ç¸ñ£¬×ÖÌå£¬Í¼ÏóÐÅÏ¢   
 void 
 lnk_stack_init(lua_State *L,struct lnk_context *lc) {
    //  nuklear = { font  = { } , image = { } , stack = { }   
@@ -252,7 +258,7 @@ lnk_stack_init(lua_State *L,struct lnk_context *lc) {
 }
 void 
 lnk_stack_shutdown(lua_State* L,struct lnk_context *lc) {
-	// é€€å‡ºvmï¼Œæ˜¯å¦å­˜åœ¨é‡Šæ”¾ä¸€è¯´?
+	// ÍË³övm£¬ÊÇ·ñ´æÔÚÊÍ·ÅÒ»Ëµ?
 	lua_pushnil(L);
 	lua_setfield(L, LUA_REGISTRYINDEX, "nuklear");
 }
@@ -264,7 +270,7 @@ lnk_context_delete(lua_State *L) {
 	struct lnk_context *lc = lua_touserdata(L, 1);
 	if (lc->init) {
 		nk_buffer_free(&lc->cmds);
-		nk_font_atlas_clear(&lc->atlas);   // delete fonts,delete own ttf mem,delete glyphsï¼Œ åˆ›å»ºçš„å­—ä½“ä»Žç›®å‰çœ‹æ—¶åœ¨è¿™é‡Œåˆ é™¤çš„
+		nk_font_atlas_clear(&lc->atlas);   // delete fonts,delete own ttf mem,delete glyphs£¬ ´´½¨µÄ×ÖÌå´ÓÄ¿Ç°¿´Ê±ÔÚÕâÀïÉ¾³ýµÄ
 		nk_free(&lc->context);
 
 		bgfx_destroy_dynamic_vertex_buffer(lc->vb);
@@ -485,7 +491,7 @@ add_font(lua_State *L,struct lnk_context *lc) {
 	const char *ttf_m = luaL_checklstring(L, -1, &ttf_len);
 	lua_pop(L,1);
 	#ifdef MY_DEBUG
-	printf_s("ttf mem size = %dk\n",ttf_len/1024);
+	printf_s("ttf mem size = %zuk\n", ttf_len/1024);
 	#endif 
 
 	lua_geti(L,-1,3);     							// font size
@@ -494,7 +500,7 @@ add_font(lua_State *L,struct lnk_context *lc) {
 	    fontsize = 16;
 	lua_pop(L,1);
 													
-	if(lua_geti(L,-1,4)!=LUA_TTABLE) {             // charset - table éœ€è¦çœŸæ­£ä½¿ç”¨!
+	if(lua_geti(L,-1,4)!=LUA_TTABLE) {             // charset - table ÐèÒªÕæÕýÊ¹ÓÃ!
 		luaL_error(L,"Charset must be range table");
 	}
 	nk_rune *charset_range = get_charset(L,lc);
@@ -718,7 +724,7 @@ lnk_context_init(lua_State *L) {
 
 
 
-// lua 5.1 åŽèˆå¼ƒçš„å‡½æ•°
+// lua 5.1 ºóÉáÆúµÄº¯Êý
 LUALIB_API int 
 luaL_typerror (lua_State *L, int narg, const char *typename) {
   const char *msg = lua_pushfstring(L, "%s expected, got %s",
@@ -768,7 +774,7 @@ static int lnk_is_hex(char c)
 			|| (c >= 'A' && c <= 'F');
 }
 
-// åˆ¤æ–­å­—ç¬¦ä¸²æ˜¯å¦æ˜¯æœ‰æ•ˆçš„é¢œè‰²å€¼æ ¼å¼,"#2d2d2d00"
+// ÅÐ¶Ï×Ö·û´®ÊÇ·ñÊÇÓÐÐ§µÄÑÕÉ«Öµ¸ñÊ½,"#2d2d2d00"
 static int lnk_is_color(lua_State *L,int index)
 {
 	index = lua_absindex(L,index);
@@ -808,7 +814,7 @@ lnk_checkedittype(lua_State *L,int index)
 	else if(!strcmp(edit_s,"editor"))
 		flags = NK_EDIT_EDITOR;
 	else {
-		// ä¸å­˜åœ¨çš„ç¼–è¾‘ç±»åž‹å€¼
+		// ²»´æÔÚµÄ±à¼­ÀàÐÍÖµ
 		const char *err_msg = lua_pushfstring(L,"wrong edit type:'%s'",edit_s);
 		return (nk_flags) luaL_argerror(L,index,err_msg);
 	}
@@ -831,7 +837,7 @@ lnk_checkformat(lua_State*L,int index) {
     }
 }
 
-// staging ï¼Œcheck status 
+// staging £¬check status 
 /*
 static int 
 lnk_is_active(struct nk_context *ctx)
@@ -970,7 +976,7 @@ getfield_touserdata(lua_State *L,int table, const char *key) {
 */
 
 // struct nk_image {nk_handle handle;unsigned short w,h;unsigned short region[4];};
-// ä»Žæ ˆé¡¶ table(nk_image),è§£ç æ‰€æœ‰å‚æ•°,å¡«å†™è¿”å›ž*image 
+// ´ÓÕ»¶¥ table(nk_image),½âÂëËùÓÐ²ÎÊý,ÌîÐ´·µ»Ø*image 
 void lnk_checkimage(lua_State *L,int index,struct nk_image *image) 
 {
 	if(!image)
@@ -1155,9 +1161,9 @@ lnk_layout_space_rect_to_local(lua_State *L) {
 }
 
 
-// é»˜è®¤ä¼ å…¥å›¾è±¡çš„rgba memory block
+// Ä¬ÈÏ´«ÈëÍ¼ÏóµÄrgba memory block
 // parameters:image,w,h,c
-// not used é¢„ç•™
+// not used Ô¤Áô
 
 static int 
 lnk_load_image_from_memory(lua_State *L)
@@ -1340,7 +1346,7 @@ lnk_image(lua_State *L) {
 }
 
 
-// é£Žæ ¼åŒ–ç›¸å…³
+// ·ç¸ñ»¯Ïà¹Ø
 // default Style
 static int 
 lnk_set_style_default(lua_State *L)
@@ -1348,7 +1354,7 @@ lnk_set_style_default(lua_State *L)
 	struct lnk_context *lc = get_context(L);
 	nk_style_default(&lc->context);
 
-	// åœ¨é»˜è®¤å¤–é¢å¤–çš„æµ‹è¯•è®¾ç½® 
+	// ÔÚÄ¬ÈÏÍâ¶îÍâµÄ²âÊÔÉèÖÃ 
 	// my default
 	/*
 	#ifdef MY_BUG 
@@ -1997,7 +2003,7 @@ lnk_set_style_combobox(lua_State *L,struct lnk_context *lc, struct nk_style_comb
 }
 
 
-// è®¾ç½®æ–°é£Žæ ¼ image skin
+// ÉèÖÃÐÂ·ç¸ñ image skin
 static int 
 lnk_set_style(lua_State *L)
 {
@@ -2035,7 +2041,7 @@ lnk_set_style(lua_State *L)
 	return 0;
 }
 
-// æ¢å¤åˆ°ä¸Šä¸€ä¸ªé£Žæ ¼
+// »Ö¸´µ½ÉÏÒ»¸ö·ç¸ñ
 static int 
 lnk_unset_style(lua_State *L)
 {
@@ -2132,7 +2138,7 @@ lnk_label(lua_State *L) {
    return 1;
 }
 
-// æ˜¯å¦å¢žåŠ button çš„align å¤–æŽ¥å‚æ•°? 
+// ÊÇ·ñÔö¼Óbutton µÄalign Íâ½Ó²ÎÊý? 
 static int 
 lnk_button(lua_State *L) 
 {
@@ -2163,7 +2169,7 @@ lnk_button(lua_State *L)
 			user_image = 1;
 		}
 	}
-    // åº”è¯¥åœ¨å¢žåŠ ä¸€ä¸ªæ–‡æœ¬å¯¹é½å‚æ•° ï¼
+    // Ó¦¸ÃÔÚÔö¼ÓÒ»¸öÎÄ±¾¶ÔÆë²ÎÊý £¡
 	nk_flags align = ctx->style.button.text_alignment;
 	int ac = 0;
 	if( btn_name != NULL ) {
