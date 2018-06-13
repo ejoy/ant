@@ -10,7 +10,7 @@ return function( nkimage )
 	nk.button("image",nk.subImage(nkimage,32,25,64,52))  -- label + image  maybe need align parameter
 	nk.layoutRow('static',40,40,1)
     nk.button(nil,nk.subImage(nkimage,32,25,64,52) )     -- only image 
-    nk.button(nil,"triangle up" )          -- only symbol
-    nk.button(nil,"triangle down" )         -- only symbol
+    nk.button(nil,"triangle up" )          		-- only symbol
+    nk.button(nil,"triangle down" )         	-- only symbol
 
 end

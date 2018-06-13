@@ -1,5 +1,5 @@
 local nk = require "bgfx.nuklear"
--- 风格表使用样例，未来应该提供更具atlas texture 自动化生成的这种表的功能
+-- 风格表使用样例，未来应该提供 atlas texture 工具,自动化生成的这种风格配置表
 local atlas = {
     ['window'] = {
         ['header'] = { },
@@ -85,8 +85,6 @@ return function ( image )
       atlas.scrollv['cursor normal']   = '#DCDCDC'
       atlas.scrollv['cursor hover']    = '#EAEAEA'
       atlas.scrollv['cursor active']   = '#63CAFF'
-
-
       
       print("init atlas once")
       init = true

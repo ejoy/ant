@@ -1850,17 +1850,6 @@ lcreateVertexBuffer(lua_State *L) {
 }
 
 static int
-lupdateDynamicVertexBuffer(lua_State *L) {
-	int hid = BGFX_LUAHANDLE_ID(DYNAMIC_VERTEX_BUFFER, luaL_checkinteger(L, 1));
-	uint32_t start = luaL_checkinteger(L, 2);
-	const bgfx_memory_t *mem = create_from_table_decl(L, 3);
-	bgfx_dynamic_vertex_buffer_handle_t handle = { hid };
-	bgfx_update_dynamic_vertex_buffer(handle, start, mem);
-
-	return 0;
-}
-
-static int
 lcreateDynamicVertexBuffer(lua_State *L) {
 	bgfx_vertex_decl_t *vd = lua_touserdata(L, 2);
 	if (vd == NULL)
@@ -1953,12 +1942,18 @@ lcreateIndexBuffer(lua_State *L) {
 }
 
 static int
-lupdateDynamicIndexBuffer(lua_State *L) {
+lupdate(lua_State *L) {
 	int id = luaL_checkinteger(L, 1);
 	int idtype = id >> 16;
 	int idx = id & 0xffff;
-	bgfx_dynamic_index_buffer_handle_t handle = { idx };
 	uint32_t start = luaL_checkinteger(L, 2);
+	if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER) {
+		const bgfx_memory_t *mem = create_from_table_decl(L, 3);
+		bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
+		bgfx_update_dynamic_vertex_buffer(handle, start, mem);
+		return 0;
+	}
+	bgfx_dynamic_index_buffer_handle_t handle = { idx };
 	const bgfx_memory_t *mem;
 	if (idtype == BGFX_HANDLE_DYNAMIC_INDEX_BUFFER) {
 		mem = create_from_table_int16(L, 3);
@@ -2830,7 +2825,6 @@ lcreateTexture(lua_State *L) {
 		return luaL_error(L, "create texture failed");
 	}
 	lua_pushinteger(L, BGFX_LUAHANDLE(TEXTURE, h));
-
 
 	return 1;
 }
@@ -3848,8 +3842,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "dispatch_indirect", ldispatchIndirect },
 		{ "set_instance_data_buffer", lsetInstanceDataBuffer },
 		{ "submit_indirect", lsubmitIndirect },
-		{ "update_dynamic_vertex_buffer", lupdateDynamicVertexBuffer },
-		{ "update_dynamic_index_buffer", lupdateDynamicIndexBuffer },
+		{ "update", lupdate },
 		{ "get_shader_uniforms", lgetShaderUniforms },
 		{ "set_view_mode", lsetViewMode },
 		{ "set_image", lsetImage },
