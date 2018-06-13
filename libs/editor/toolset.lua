@@ -1,4 +1,5 @@
 local fs = require "filesystem"
+local fspath = require "filesystem.path"
 
 local PATH = "ant"
 
@@ -81,8 +82,17 @@ function toolset.compile(filename, paths, renderer)
 			sopt = nil,
 			splat = nil,
 		}
-		if paths.shaderinc then
-			tbl.inc = '-i "' .. paths.shaderinc .. '"'
+		if paths.shaderinc then			
+			local function gen_incpath(pp)
+				return '-i "' .. pp .. '"'
+			end
+			local incpath = gen_incpath(paths.shaderinc)
+			if paths.not_include_examples_common == nil then 
+				local incexamplepath = fspath.join(paths.shaderinc, "../examples/common")
+				incpath = incpath .. " " .. gen_incpath(incexamplepath)
+			end
+
+			tbl.inc = incpath
 		end
 
 		local vfc = filename:match "[/\\]([fvc])s_[^/\\]+.sc$"

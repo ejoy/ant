@@ -7,14 +7,10 @@ local seri = require "serialize.util"
 local support_list = {
 	"shader",
 	"mesh",
-	"state",
-	"uniform",
-	"camera",
-	"render",
-	"tex_mapper",
+	"state",			
 	"material",
-	"hierarchy",
 	"module",
+	"texture",
 }
 
 local loader = setmetatable({} , {

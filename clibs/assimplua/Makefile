@@ -4,7 +4,7 @@ LUAINC = -I../lua
 LUALIB = -L../lua -llua53
 ASSIMP_BUILD_SUBPATH=""
 ASSIMPINC = -I$(ASSIMPROOT)/assimp/include -I$(ASSIMPROOT)/assimp/$(ASSIMP_BUILD_SUBPATH)/include
-ASSIMPLIB = -L$(ASSIMPROOT)/assimp/bin -llibassimp
+ASSIMPLIB = -L$(ASSIMPROOT)/assimp/bin -L$(ASSIMPROOT)/assimp/$(ASSIMP_BUILD_SUBPATH)/code -llibassimp
 
 BGFXSRC = $(BGFXROOT)/bgfx
 BXSRC = $(BGFXROOT)/bx

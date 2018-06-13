@@ -32,28 +32,25 @@ util.__index = util
 local property_type_description = {
     color = {type="v4", },
     v4 = {type="v4",},
-    texture = {
-        type="",
-    }
+    texture = {type="i1",}
 }
 
 local function update_property(name, property)
-    if property.type == "texture" then
-        assert(false, "not implement texture property")
-    else
-        local uniform = shadermgr.get_uniform(name)        
-        -- if uniform.name ~= property.name then
-        --     log(string.format("we assume property name is equal to uniform internal name, 
-        --                 uniform name : %s, property name : %s", uniform.name, property.name))
-        --     return 
-        -- end
+	local uniform = shadermgr.get_uniform(name)        
+	if uniform == nil  then
+		log("property name : ", name, ", is needed, but shadermgr not found!")
+		return 
+	end
+	-- if uniform.name ~= property.name then
+	--     log(string.format("we assume property name is equal to uniform internal name, 
+	--                 uniform name : %s, property name : %s", uniform.name, property.name))
+	--     return 
+	-- end
 
-        assert(uniform.name == name)
-        assert(property_type_description[property.type].type == uniform.type)
+	assert(uniform.name == name)
+	assert(property_type_description[property.type].type == uniform.type)
 
-        bgfx.set_uniform(assert(uniform.handle), assert(property.value))
-    end
-    
+	bgfx.set_uniform(assert(uniform.handle), assert(property.value))
 
 end
 

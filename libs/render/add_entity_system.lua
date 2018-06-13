@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 local fs_util = require "filesystem.util"
 local component_util = require "render.components.util"
+local mu = require "math.util"
 local add_entity_sys = ecs.system "add_entities_system"
 add_entity_sys.singleton "math_stack"
 add_entity_sys.singleton "constant"
@@ -30,6 +31,22 @@ function add_entity_sys:init()
 		
 		bunny.material.content[1] = {path = "bunny.material", properties = {}}
 		component_util.load_material(bunny)
+	end
+
+	do
+		local stone_eid = world:new_entity("position", "rotation", "scale",
+		"can_render", "mesh", "material",
+		"name", "serialize", "can_select")
+
+		local stone = world[stone_eid]
+		stone.name.n = "texture_stone"
+
+		mu.identify_transform(ms, stone)
+		stone.mesh.path = "cube.mesh"
+		component_util.load_mesh(stone)
+
+		stone.material.content[1] = {path = "stone.material", properties={}}
+		component_util.load_material(stone)
 	end
 	
     local function create_entity(name, meshfile, materialfile)
@@ -102,18 +119,18 @@ function add_entity_sys:init()
 			}
 		]])
 
-        local cube_eid = create_entity("h1_cube", "cube.mesh", material_path)
-        local cube_eid_1 = create_entity("h1_h1_cube", "cube.mesh", material_path)
+        local stone_eid = create_entity("h1_cube", "cube.mesh", material_path)
+        local stone_eid_1 = create_entity("h1_h1_cube", "cube.mesh", material_path)
         do
-            local e = world[cube_eid_1] 
+            local e = world[stone_eid_1] 
             ms(e.scale.v, {0.5, 0.5, 0.5}, "=")
         end
 
         local sphere_eid = create_entity("h1_sphere", "sphere.mesh", material_path)
         local name_mapper = assert(hierarchy_e.hierarchy_name_mapper.v)
 
-        name_mapper.h1_cube     = cube_eid
-        name_mapper.h1_h1_cube  = cube_eid_1
+        name_mapper.h1_cube     = stone_eid
+        name_mapper.h1_h1_cube  = stone_eid_1
 		name_mapper.h1_sphere   = sphere_eid
 		
 		world:change_component(hierarchy_eid, "rebuild_hierarchy")
