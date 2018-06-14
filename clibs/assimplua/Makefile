@@ -3,7 +3,7 @@ ASSIMPROOT = $(ANT3RD)
 BGFXROOT = $(ANT3RD)
 LUAINC = -I../lua
 LUALIB = -L../lua -llua53
-ASSIMPINC = -I$(ASSIMPROOT)/assimp/include
+ASSIMPINC = -I$(ASSIMPROOT)/assimp/include -I$(ANT3RD)/build/assimp/include
 ASSIMPLIB = -L$(ASSIMPROOT)/build/assimp/code -llibassimp
 
 BGFXSRC = $(BGFXROOT)/bgfx
