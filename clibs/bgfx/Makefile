@@ -1,5 +1,5 @@
 # Use make BGFXROOT=your_bgfx_path
-BGFXROOT = ../../..
+BGFXROOT = ../../../ant3rd
 BGFXSRC = $(BGFXROOT)/bgfx
 BXSRC = $(BGFXROOT)/bx
 BIMGSRC = $(BGFXROOT)/bimg

@@ -1,5 +1,5 @@
 ODIR = o
-IUPSRC = ../../../iup
+ANT3RD = ../../../ant3rd
 LUAINC = -I ../lua
 LUALIB = -L ../lua -llua53
 LUABIN = ../lua/lua.exe
