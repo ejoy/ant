@@ -10,7 +10,7 @@ function util.load_mesh(entity)
 	local filename = mesh_comp.path
 
 	local assetinfo = asset.load(filename)
-	mesh_comp.assetinfo = assetinfo			
+	mesh_comp.assetinfo = assetinfo
 end
 
 local function load_texture(tex)
@@ -18,7 +18,7 @@ local function load_texture(tex)
 	assert(type(texpath) == "string", "texture type's default value should be path to texture file")
 	dprint("loading texture, path : ", texpath)
 	local assetinfo = asset.load(texpath)
-	return {name=tex.name, type=tex.type, value=assetinfo.handle}
+	return {name=tex.name, type=tex.type, stage=tex.stage, value=assetinfo.handle}
 end
 
 function util.load_material(entity)			

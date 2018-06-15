@@ -41,17 +41,16 @@ local function update_property(name, property)
 		log("property name : ", name, ", is needed, but shadermgr not found!")
 		return 
 	end
-	-- if uniform.name ~= property.name then
-	--     log(string.format("we assume property name is equal to uniform internal name, 
-	--                 uniform name : %s, property name : %s", uniform.name, property.name))
-	--     return 
-	-- end
 
 	assert(uniform.name == name)
 	assert(property_type_description[property.type].type == uniform.type)
-
-	bgfx.set_uniform(assert(uniform.handle), assert(property.value))
-
+	
+	if property.type == "texture" then
+		local stage = assert(property.stage)
+		bgfx.set_texture(stage, assert(uniform.handle), assert(property.value))
+	else	
+		bgfx.set_uniform(assert(uniform.handle), assert(property.value))
+	end
 end
 
 local function check_uniform_is_match_with_shader(shader, properties)

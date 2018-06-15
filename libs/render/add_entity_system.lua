@@ -3,7 +3,10 @@ local world = ecs.world
 local fs_util = require "filesystem.util"
 local component_util = require "render.components.util"
 local mu = require "math.util"
+local bgfx = require "bgfx"
+
 local add_entity_sys = ecs.system "add_entities_system"
+
 add_entity_sys.singleton "math_stack"
 add_entity_sys.singleton "constant"
 
@@ -41,9 +44,34 @@ function add_entity_sys:init()
 		local stone = world[stone_eid]
 		stone.name.n = "texture_stone"
 
-		mu.identify_transform(ms, stone)
-		stone.mesh.path = "cube.mesh"
-		component_util.load_mesh(stone)
+		mu.identify_transform(ms, stone)		
+
+		local function create_plane_mesh()
+			local vdecl = bgfx.vertex_decl {
+				{ "POSITION", 3, "FLOAT" },
+				{ "COLOR0", 4, "UINT8", true },
+				{ "TEXCOORD0", 2, "FLOAT"},				
+			}
+
+			return {
+				handle = {
+					group = {
+						{
+							vdecl = vdecl,
+							vb = bgfx.create_vertex_buffer({"fffdff",
+							-1.0, 1.0, 0.0, 0xff0000ff, 0.0, 0.0,
+							-1.0, -1.0, 0.0, 0xff0000ff, 0.0, 1.0,
+							1.0, 1.0, 0.0, 0xff00ff00, 1.0, 1.0,
+							1.0, -1.0, 1.0, 0xff00ff00, 1.0, 0.0}, vdecl)
+						},
+					}
+				}
+			}
+		end
+
+		stone.mesh.path = ""	-- runtime mesh info
+		stone.mesh.assetinfo = create_plane_mesh()
+		
 
 		stone.material.content[1] = {path = "stone.material", properties={}}
 		component_util.load_material(stone)
