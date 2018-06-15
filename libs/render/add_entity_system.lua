@@ -58,11 +58,13 @@ function add_entity_sys:init()
 					group = {
 						{
 							vdecl = vdecl,
-							vb = bgfx.create_vertex_buffer({"fffdff",
-							-1.0, 1.0, 0.0, 0xff0000ff, 0.0, 0.0,
-							-1.0, -1.0, 0.0, 0xff0000ff, 0.0, 1.0,
+							vb = bgfx.create_vertex_buffer(
+								{"fffdff",
+							1.0, -1.0, 0.0, 0xff0000ff, 1.0, 0.0,
 							1.0, 1.0, 0.0, 0xff00ff00, 1.0, 1.0,
-							1.0, -1.0, 1.0, 0xff00ff00, 1.0, 0.0}, vdecl)
+							-1.0, -1.0, 0.0, 0xffff0000, 0.0, 0.0,
+							-1.0, 1.0, 0.0, 0xffffffff, 0.0, 1.0,
+							}, vdecl)
 						},
 					}
 				}
