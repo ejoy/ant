@@ -140,9 +140,7 @@ end
 local function print_select_object_transform(eid)
     local obj = assert(world[eid])
     dprint("select object name : ", obj.name.n)
-    dprint("scale : ", obj.scale.v)
-    dprint("position : ", obj.position.v)
-    dprint("rotation : ", obj.rotation.v)
+    mu.print_srt(ms, obj)
 end
 
 local function update_contorller(ot, ms)
@@ -277,8 +275,7 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 	local xaxis_eid = add_axis_entites(ms, basename, "x", 
 										headmeshfile, axismeshfile,
 										"obj_trans/obj_trans.material", colors["red"])
-	mu.print_srt(world[xaxis_eid])
-
+	
 	local yaxis_eid = add_axis_entites(ms, basename, "y", 
 										headmeshfile, axismeshfile,
 										"obj_trans/obj_trans.material", colors["green"])
