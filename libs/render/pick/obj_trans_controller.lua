@@ -137,7 +137,7 @@ local function play_object_transform(ms, ot, dx, dy)
 end
 
 
-local function print_select_object_transform(eid)
+local function print_select_object_transform(ms, eid)
     local obj = assert(world[eid])
     dprint("select object name : ", obj.name.n)
     mu.print_srt(ms, obj)
@@ -191,7 +191,7 @@ local function register_message(msg_comp, ot, ms)
                     ot.selected_mode = "scale_transform"
                 elseif upC == "CP" then                
                     if ot.selected_eid then
-                        print_select_object_transform(ot.selected_eid)
+                        print_select_object_transform(ms, ot.selected_eid)
                     end
                 end
             
