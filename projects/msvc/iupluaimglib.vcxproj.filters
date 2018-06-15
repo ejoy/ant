@@ -15,31 +15,31 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\iup\srclua5\iuplua_imglib.c">
+    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\iuplua_imglib.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\iup\srcimglib\iup_image_library.c">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcimglib\iup_image_library.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\iup\srcimglib\iup_imglib_basewin32x32.c">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcimglib\iup_imglib_basewin32x32.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\iup\srcimglib\iup_imglib_circleprogress.c">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcimglib\iup_imglib_circleprogress.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\iup\srcimglib\iup_imglib_iconswin48x48.c">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcimglib\iup_imglib_iconswin48x48.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\iup\srcimglib\iup_imglib_logos32x32.c">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcimglib\iup_imglib_logos32x32.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\iup\srcimglib\iup_imglib_logos48x48.c">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcimglib\iup_imglib_logos48x48.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\iup\srcimglib\iup_imglib_basegtk24x24.c">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcimglib\iup_imglib_basegtk24x24.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\iup\srcimglib\iup_imglib_iconsgtk48x48.c">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcimglib\iup_imglib_iconsgtk48x48.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

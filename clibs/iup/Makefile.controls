@@ -1,13 +1,18 @@
 include common.mk
 
-CD_DIR =$(IUPSRC)/../cd
+IUPSRC = $(ANT3RD)/iup
+CD_DIR =$(ANT3RD)/cd
 OCDDIR = $(ODIR)/iupcd
 
 IUPCD_SRC := iup_cd.c iup_cdutil.c iup_draw_cd.c
 IUPCD_OBJ := $(patsubst %.c,$(OCDDIR)/%.o,$(IUPCD_SRC))
 
-IUPCD_DIR := $(IUPSRC)/srccd
+CD_LUASRC := cdlua5.c cdvoid5.c cdlua5_active.c cdlua5_canvas.c cdlua5ctx.c # cdluacontextplus5.c
+CD_LIB := -L$(CD_DIR)/lib/mingw6_64 -lcd
+FREETYPE_LIB := -L$(ANT3RD)/build/freetype -lfreetype
+ZLIB_LIB := -L$(ANT3RD)/build/zlib -lzlibstatic
 
+IUPCD_DIR := $(IUPSRC)/srccd
 
 INCLUDES := $(IUPSRC)/include $(IUPSRC)/src $(CD_DIR)/include
 
@@ -16,16 +21,22 @@ IUPCD_DEFINES := $(addprefix -D,CD_NO_OLD_INTERFACE)
 
 .PHONY : all
 
-all : iupcd.dll iupluacontrols.dll
+all : iupluacontrols.dll
+
+#canvas draw
+
+CD_LUAOBJS := $(patsubst %.c,$(OCDDIR)/%.o,$(CD_LUASRC))
+
+CD_ALLOBJS := $(CD_LUAOBJS)
+
+$(CD_LUAOBJS) : $(OCDDIR)/%.o : $(CD_DIR)/src/lua5/%.c | $(OCDDIR)
+	$(CC) -c -o $@ $< $(CFLAGS) $(IUPCD_INCLUDES) $(LUAINC)
 
 $(OCDDIR):
 	mkdir -p $@
 
 $(IUPCD_OBJ) : $(OCDDIR)/%.o : $(IUPCD_DIR)/%.c | $(OCDDIR)
 	$(CC) -c -o $@ $< $(CFLAGS) $(IUPCD_INCLUDES) $(IUPCD_DEFINES)
-
-iupcd.dll: $(IUPCD_OBJ)
-	$(CC) --shared -o $@ $^ -L. -lcd -lluaiup $(LUALIB)
 
 IUPCONTROLS_DIR := $(IUPSRC)/srccontrols
 
@@ -61,14 +72,14 @@ ADDITIONALCONTROLS_SRC := il_cells.c il_matrix.c il_matrixex.c il_matrixlist.c i
 ADDITIONALCONTROLS_OBJ := $(patsubst %.c,$(OCDDIR)/%.o,$(ADDITIONALCONTROLS_SRC))
 
 $(ADDITIONALCONTROLS_OBJ) : $(OCDDIR)/%.o : $(ADDITIONALCONTROLS_DIR)/%.c | $(OCDDIR)
-	$(CC) -c -o $@ $< $(CFLAGS) -DIUPLUA_USELH $(IUPCONTROLS_INCLUDES) -I$(SRCLUA_DIR) -I../lua
+	$(CC) -c -o $@ $< $(CFLAGS) -DIUPLUA_USELH $(IUPCONTROLS_INCLUDES) -I$(SRCLUA_DIR) $(LUAINC)
 
-iupluacontrols.dll: $(IUPCONTROLS_OBJ) $(IUPCONTROLS_MATRIXEX_OBJ) $(IUPCONTROLS_MATRIX_OBJ) $(ADDITIONALCONTROLS_OBJ) | iupcd.dll
-	$(CC) --shared -o $@ $^ -L. -lcd -lcdlua53 -liupcd -lluaiup $(LUALIB)
+iupluacontrols.dll: $(IUPCONTROLS_OBJ) $(IUPCONTROLS_MATRIXEX_OBJ) $(IUPCONTROLS_MATRIX_OBJ) $(ADDITIONALCONTROLS_OBJ) $(IUPCD_OBJ) $(CD_ALLOBJS)
+	$(CC) --shared -o $@ $^ -Wl,--export-all-symbols -L. -lluaiup $(FREETYPE_LIB) $(CD_LIB) $(ZLIB_LIB) -lgdi32 -lcomdlg32 -lwinspool $(LUALIB)
 
 .PHONY : clean
 clean:
-	rm -Rf iupluacontrols.dll iupcd.dll && rm -Rf $(OCDDIR)
+	rm -Rf iupluacontrols.dll && rm -Rf $(OCDDIR)
 
 
 

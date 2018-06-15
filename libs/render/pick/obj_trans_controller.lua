@@ -137,12 +137,10 @@ local function play_object_transform(ms, ot, dx, dy)
 end
 
 
-local function print_select_object_transform(eid)
+local function print_select_object_transform(ms, eid)
     local obj = assert(world[eid])
     dprint("select object name : ", obj.name.n)
-    dprint("scale : ", obj.scale.v)
-    dprint("position : ", obj.position.v)
-    dprint("rotation : ", obj.rotation.v)
+    mu.print_srt(ms, obj)
 end
 
 local function update_contorller(ot, ms)
@@ -193,7 +191,7 @@ local function register_message(msg_comp, ot, ms)
                     ot.selected_mode = "scale_transform"
                 elseif upC == "CP" then                
                     if ot.selected_eid then
-                        print_select_object_transform(ot.selected_eid)
+                        print_select_object_transform(ms, ot.selected_eid)
                     end
                 end
             
@@ -277,8 +275,7 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 	local xaxis_eid = add_axis_entites(ms, basename, "x", 
 										headmeshfile, axismeshfile,
 										"obj_trans/obj_trans.material", colors["red"])
-	mu.print_srt(world[xaxis_eid])
-
+	
 	local yaxis_eid = add_axis_entites(ms, basename, "y", 
 										headmeshfile, axismeshfile,
 										"obj_trans/obj_trans.material", colors["green"])
