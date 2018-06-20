@@ -316,7 +316,7 @@ linit(lua_State *L) {
 	init.callback = &cb->base;
 	init.allocator = NULL;
 	init.debug = false;
-	init.profiling = false;
+	init.profile = false;
 
 	if (!lua_isnoneornil(L, 1)) {
 		luaL_checktype(L, 1, LUA_TTABLE);
@@ -338,7 +338,7 @@ linit(lua_State *L) {
 		read_uint32(L, 1, "transientVbSize", &init.limits.transientVbSize);
 		read_uint32(L, 1, "transientIbSize", &init.limits.transientIbSize);
 		read_boolean(L, 1, "debug", &init.debug);
-		read_boolean(L, 1, "profile", &init.profiling);
+		read_boolean(L, 1, "profile", &init.profile);
 	}
 
 	if (!bgfx_init(&init)) {
