@@ -3,7 +3,7 @@ local world = ecs.world
 
 local mu = require "math.util"
 
-local function push_primitive_in_filter(ms, eid, filter)
+local function push_primitive_in_filter(eid, filter)
     local e = world[eid]
     local can_render = e.can_render
 
@@ -22,15 +22,6 @@ local function push_primitive_in_filter(ms, eid, filter)
 	assert(#materialcontent >= 1)
 
 	local srt ={s=e.scale.v, r=e.rotation.v, t=e.position.v}
-
-	do
-		if e.name.n:match("translatehead-[xyz]") then
-			local s = ms(srt.s, "T")
-			local r = ms(srt.r, "T")
-			local t = ms(srt.t, "T")
-			print(s, r, t)
-		end	
-	end
 
 	local result = filter.result
 	local mgroups = mesh.handle.group
@@ -57,11 +48,10 @@ primitive_filter_sys.singleton "primitive_filter"
 primitive_filter_sys.singleton "math_stack"
 
 function primitive_filter_sys:update()
-    local ms = self.math_stack
     local filter = self.primitive_filter
-    filter.result = {}    
+    filter.result = {}
     for _, eid in world:each("can_render") do
-        push_primitive_in_filter(ms, eid, filter)
+        push_primitive_in_filter(eid, filter)
     end
 end
 
@@ -72,10 +62,9 @@ select_filter_sys.singleton "math_stack"
 select_filter_sys.singleton "select_filter"
 
 function select_filter_sys:update()
-    local ms = self.math_stack
     local filter = self.select_filter
     filter.result = {}
     for _, eid in world:each("can_select") do        
-        push_primitive_in_filter(ms, eid, filter)
+        push_primitive_in_filter(eid, filter)
     end
 end
