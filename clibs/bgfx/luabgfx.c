@@ -2846,16 +2846,17 @@ lsetName(lua_State *L) {
 	int idx = luaL_checkinteger(L, 1);
 	int type = idx >> 16;
 	int id = idx & 0xffff;
-	const char *name = lua_tostring(L, 2);
+	size_t sz;
+	const char *name = luaL_checklstring(L, 2, &sz);
 	switch(type) {
 	case BGFX_HANDLE_SHADER: {
 		bgfx_shader_handle_t handle = { id };
-		bgfx_set_shader_name(handle, name);
+		bgfx_set_shader_name(handle, name, sz);
 		break;
 	}
 	case BGFX_HANDLE_TEXTURE : {
 		bgfx_texture_handle_t handle = { id };
-		bgfx_set_texture_name(handle, name);
+		bgfx_set_texture_name(handle, name, sz);
 		break;
 	}
 	default:
