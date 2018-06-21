@@ -261,8 +261,19 @@ reset_flags(lua_State *L, int index) {
 
 static void
 read_uint32(lua_State *L, int index, const char * key, uint32_t *v) {
-	if (lua_getfield(L, index, key) == LUA_TNUMBER) {
+	if (lua_getfield(L, index, key) != LUA_TNIL) {
 		*v = luaL_checkinteger(L, -1);
+	}
+	lua_pop(L, 1);
+}
+
+static void
+read_boolean(lua_State *L, int index, const char *key, bool *v) {
+	int t = lua_getfield(L, index, key);
+	if (t == LUA_TBOOLEAN || t == LUA_TNIL) {
+		*v = lua_toboolean(L, -1);
+	} else {
+		luaL_error(L, ".%s need boolean, it's %s", key, lua_typename(L, t));
 	}
 	lua_pop(L, 1);
 }
@@ -304,6 +315,8 @@ linit(lua_State *L) {
 
 	init.callback = &cb->base;
 	init.allocator = NULL;
+	init.debug = false;
+	init.profile = false;
 
 	if (!lua_isnoneornil(L, 1)) {
 		luaL_checktype(L, 1, LUA_TTABLE);
@@ -324,6 +337,8 @@ linit(lua_State *L) {
 		lua_pop(L, 1);
 		read_uint32(L, 1, "transientVbSize", &init.limits.transientVbSize);
 		read_uint32(L, 1, "transientIbSize", &init.limits.transientIbSize);
+		read_boolean(L, 1, "debug", &init.debug);
+		read_boolean(L, 1, "profile", &init.profile);
 	}
 
 	if (!bgfx_init(&init)) {
@@ -2147,9 +2162,6 @@ lsetTransform(lua_State *L) {
 static int
 ldbgTextClear(lua_State *L) {
 	int attrib = luaL_optinteger(L, 1, 0);
-//#ifdef small
-//#error small is defined
-//#endif //small
 	int s = lua_toboolean(L, 2);
 	bgfx_dbg_text_clear(attrib, s);
 	return 0;
@@ -2535,94 +2547,83 @@ lgetUniformInfo(lua_State *L) {
 }
 
 static int
+uniform_size(lua_State *L, bgfx_uniform_handle_t uh) {
+	int sz;
+	bgfx_uniform_info_t uinfo;
+	bgfx_get_uniform_info(uh, &uinfo);
+
+	switch (uinfo.type) {
+//	case BGFX_UNIFORM_TYPE_INT1: sz = 4; break;	// 1 int32 never be INT1
+	case BGFX_UNIFORM_TYPE_VEC4: sz = 4; break;	// 4 float
+	case BGFX_UNIFORM_TYPE_MAT3: sz = 3*4; break;	// 3*4 float
+	case BGFX_UNIFORM_TYPE_MAT4: sz = 4*4; break;	// 4*4 float
+	default:
+		return luaL_error(L, "Invalid uniform type %d", uinfo.type);
+	}
+	return sz;
+}
+
+static int
 lsetUniform(lua_State *L) {
 	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
 	bgfx_uniform_handle_t uh = { uniformid };
-	int t = lua_type(L, 2);
-	if (t == LUA_TTABLE) {		
-		int n = lua_rawlen(L, 2);
-		if (n <= 0)
-			luaL_error(L, "Not enough uniforms to set %d", n);
-		
-		bgfx_uniform_info_t uinfo;
-		bgfx_get_uniform_info(uh, &uinfo);
-
-		int sz;
-		switch (uinfo.type) {
-		case BGFX_UNIFORM_TYPE_INT1: sz = 4; break;	// 1 int32
-		case BGFX_UNIFORM_TYPE_VEC4: sz = 4*4; break;	// 4 float
-		case BGFX_UNIFORM_TYPE_MAT3: sz = 3*4*4; break;	// 3*4 float
-		case BGFX_UNIFORM_TYPE_MAT4: sz = 4*4*4; break;	// 4*4 float
-		default:
-			return luaL_error(L, "Invalid uniform type %d", uinfo.type);
-		}
-
-		lua_geti(L, 2, 1);
-		const int elemtype = lua_type(L, -1);		
-		lua_pop(L, 1);
-
-		// multi set
-		if (elemtype == LUA_TTABLE){
-			if (uinfo.num < n) {
-				return luaL_error(L, "Too many uniforms %d/%d", n, (int)uinfo.num);
-			}
-
-			uint8_t buffer[V(sz * n)];
-			if (uinfo.type == BGFX_UNIFORM_TYPE_INT1) {
-				int i;
-				int32_t * data = (int32_t *)buffer;
-				for (i=0;i<n;i++) {
-					if (lua_geti(L, 2, i+1) != LUA_TNUMBER) {
-						return luaL_error(L, "Uniform is int1, need number");
-					}
-					data[i] = lua_tointeger(L, -1);
-					lua_pop(L, 1);
+	int number = lua_gettop(L) - 1;
+	int t = lua_type(L, 2);	// the first value type
+	switch(t) {
+	case LUA_TTABLE: {
+		// vector or matrix
+		int sz = uniform_size(L, uh);
+		float buffer[V(sz * number)];
+		int i,j;
+		for (i=0;i<number;i++) {
+			luaL_checktype(L, 2+i, LUA_TTABLE);
+			for (j=0;j<sz;j++) {
+				if (lua_geti(L, 2+i, j+1) != LUA_TNUMBER) {
+					return luaL_error(L, "[%d,%d] should be number", i+2,j+1);
 				}
-			} else {
-				int i;
-				for (i=0;i<n;i++) {
-					lua_geti(L, 2, i+1);
-					void * ud = lua_touserdata(L, -1);
-					if (ud == NULL) {
-						return luaL_error(L, "Uniform need userdata");
-					}
-					lua_pop(L, 1);
-					memcpy(buffer + i * sz, ud, sz);
-				}
-			}
-			bgfx_set_uniform(uh, buffer, n);
-		} else {
-			if (elemtype != LUA_TNUMBER){
-				luaL_error(L, "Only support number type");
-			}
-			if (uinfo.num != 1){
-				luaL_error(L, "Uniform need more than 1 data");
-			}
-
-			if (uinfo.type == BGFX_UNIFORM_TYPE_INT1){
-				luaL_error(L, "Uniform is int1 type, using bgfx.set_uniform(handle, int_value) format");
-			}
-
-			float buffer[4];
-			for (int ii = 0; ii < n; ++ii){
-				lua_geti(L, 2, ii+1);
-				buffer[ii] = lua_tonumber(L, -1);
+				buffer[i*sz+j] = lua_tonumber(L, -1);
 				lua_pop(L, 1);
 			}
-
-			bgfx_set_uniform(uh, buffer, 1);
 		}
-
-	} else if (t == LUA_TNUMBER) {
-		int32_t v = lua_tointeger(L, 2);
-		bgfx_set_uniform(uh, &v, 1);
-	} else {
-		void *data = lua_touserdata(L, 2);
-		if (data == NULL)
-			return luaL_error(L, "Uniform can't be NULL");
-		bgfx_set_uniform(uh, data, 1);
+		bgfx_set_uniform(uh, buffer, number);
+		break;
 	}
-
+	case LUA_TNUMBER: {
+		// int1
+		uint32_t ints[V(number)];
+		int i;
+		for (i=0;i<number;i++) {
+			ints[i] = luaL_checkinteger(L, i+2);
+		}
+		bgfx_set_uniform(uh, ints, number);
+		break;
+	}
+	case LUA_TUSERDATA:
+	case LUA_TLIGHTUSERDATA:
+		// vectir or matrix
+		if (number == 1) {
+			// only one
+			void *data = lua_touserdata(L, 2);
+			if (data == NULL)
+				return luaL_error(L, "Uniform can't be NULL");
+			bgfx_set_uniform(uh, data, 1);
+		} else {
+			int sz = uniform_size(L, uh);
+			float buffer[V(sz * number)];
+			int i;
+			for (i=0;i<number;i++) {
+				void * ud = lua_touserdata(L, 2+i);
+				if (ud == NULL) {
+					return luaL_error(L, "Uniform need userdata at index %d", i+2);
+				}
+				memcpy(buffer + i * sz, ud, sz*sizeof(float));
+			}
+			bgfx_set_uniform(uh, buffer, number);
+		}
+		break;
+	default:
+		return luaL_error(L, "Invalid value type : %s", lua_typename(L, t));
+	}
 	return 0;
 }
 
@@ -2845,16 +2846,17 @@ lsetName(lua_State *L) {
 	int idx = luaL_checkinteger(L, 1);
 	int type = idx >> 16;
 	int id = idx & 0xffff;
-	const char *name = lua_tostring(L, 2);
+	size_t sz;
+	const char *name = luaL_checklstring(L, 2, &sz);
 	switch(type) {
 	case BGFX_HANDLE_SHADER: {
 		bgfx_shader_handle_t handle = { id };
-		bgfx_set_shader_name(handle, name);
+		bgfx_set_shader_name(handle, name, sz);
 		break;
 	}
 	case BGFX_HANDLE_TEXTURE : {
 		bgfx_texture_handle_t handle = { id };
-		bgfx_set_texture_name(handle, name);
+		bgfx_set_texture_name(handle, name, sz);
 		break;
 	}
 	default:
