@@ -442,6 +442,17 @@ static const char * c_texture_formats[] = {
 	TFNAME(PTC14A)
 	TFNAME(PTC22)
 	TFNAME(PTC24)
+
+	TFNAME(ATC)
+	TFNAME(ATCE)
+	TFNAME(ATCI)
+	TFNAME(ASTC4x4)
+	TFNAME(ASTC5x5)
+	TFNAME(ASTC6x6)
+	TFNAME(ASTC8x5)
+	TFNAME(ASTC8x6)
+	TFNAME(ASTC10x5)
+
 	TFNAME(UNKNOWN)
 	TFNAME(R1)
 	TFNAME(A8)
@@ -501,6 +512,8 @@ static const char * c_texture_formats[] = {
 	TFNAME(D24F)
 	TFNAME(D32F)
 	TFNAME(D0S8)
+
+
 };
 
 static void
@@ -2134,11 +2147,9 @@ lsetTransform(lua_State *L) {
 static int
 ldbgTextClear(lua_State *L) {
 	int attrib = luaL_optinteger(L, 1, 0);
-	// small have been define in msvc
 //#ifdef small
-//#error small is used
-//#endif 
-
+//#error small is defined
+//#endif //small
 	int s = lua_toboolean(L, 2);
 	bgfx_dbg_text_clear(attrib, s);
 	return 0;

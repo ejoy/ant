@@ -1,4 +1,4 @@
-LIBRARY iupcontrols
+LIBRARY iupluacontrols
 EXPORTS
 	iupcontrolslua_open
 	luaopen_iupluacontrols

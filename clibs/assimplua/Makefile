@@ -1,10 +1,10 @@
-ASSIMPROOT = ../../..
-BGFXROOT = $(ASSIMPROOT)
+ANT3RD = ../../../ant3rd
+ASSIMPROOT = $(ANT3RD)
+BGFXROOT = $(ANT3RD)
 LUAINC = -I../lua
 LUALIB = -L../lua -llua53
-ASSIMP_BUILD_SUBPATH=""
-ASSIMPINC = -I$(ASSIMPROOT)/assimp/include -I$(ASSIMPROOT)/assimp/$(ASSIMP_BUILD_SUBPATH)/include
-ASSIMPLIB = -L$(ASSIMPROOT)/assimp/bin -llibassimp
+ASSIMPINC = -I$(ASSIMPROOT)/assimp/include -I$(ANT3RD)/build/assimp/include
+ASSIMPLIB = -L$(ASSIMPROOT)/build/assimp/code -llibassimp
 
 BGFXSRC = $(BGFXROOT)/bgfx
 BXSRC = $(BGFXROOT)/bx

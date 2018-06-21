@@ -1,4 +1,4 @@
-#define LUA_LIB
+﻿#define LUA_LIB
 
 #include <stdio.h>
 #include <string.h>
@@ -63,6 +63,26 @@ getfield_tointeger(lua_State *L,int table,const char *key) {
 	lua_pop(L,1);
 	return ivalue;
 }
+static inline float
+getfield_tonumber(lua_State *L,int table,const char *key) {
+	if( lua_getfield(L,table,key)!=LUA_TNUMBER) {
+		luaL_error(L,"Need %s as number",key);
+	}
+	float value = luaL_checknumber(L,-1);
+	lua_pop(L,1);
+	return value;
+} 
+
+/*
+static void *
+getfield_touserdata(lua_State *L,int table, const char *key) {
+	lua_getfield(L, table, key);
+	void * ud = lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	return ud;
+}
+*/
+
 
 // 工具库
 #ifdef   IMAGE_LIB 

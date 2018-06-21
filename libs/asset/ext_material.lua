@@ -9,7 +9,7 @@ return function(filename)
 
     local material = assert(rawtable(filename))
     local material_info = {}
-    local need_parse_keys = {state = true, shader = true, tex_mapper = true}
+    local need_parse_keys = {state = true, shader = true}
     for k, v in pairs(material) do
         if need_parse_keys[k] then
             local t = type(v)

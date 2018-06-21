@@ -15,18 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\iup\srccd\iup_cd.c">
+    <ClCompile Include="..\..\..\ant3rd\iup\srccd\iup_cd.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\iup\srccd\iup_cdutil.c">
+    <ClCompile Include="..\..\..\ant3rd\iup\srccd\iup_cdutil.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\iup\srccd\iup_draw_cd.c">
+    <ClCompile Include="..\..\..\ant3rd\iup\srccd\iup_draw_cd.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\iup\srccd\iup_cdutil.h">
+    <ClInclude Include="..\..\..\ant3rd\iup\srccd\iup_cdutil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
