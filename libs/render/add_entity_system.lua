@@ -14,7 +14,9 @@ add_entity_sys.depend "constant_init_sys"
 add_entity_sys.dependby "iup_message"
 
 function add_entity_sys:init()
-    local ms = self.math_stack
+	local ms = self.math_stack
+	
+	component_util.create_directional_light_entity(world)
 
     do
         local bunny_eid = world:new_entity("position", "rotation", "scale", 

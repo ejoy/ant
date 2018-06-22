@@ -2,6 +2,8 @@ local ecs = ...
 local world = ecs.world
 
 local mu = require "math.util"
+local bgfx = require "bgfx"
+local shadermgr = require "render.resources.shader_mgr"
 
 local function push_primitive_in_filter(eid, filter)
     local e = world[eid]
@@ -21,9 +23,9 @@ local function push_primitive_in_filter(eid, filter)
 	local materialcontent = e.material.content
 	assert(#materialcontent >= 1)
 
-	local srt ={s=e.scale.v, r=e.rotation.v, t=e.position.v}
-
 	local result = filter.result
+
+	local srt ={s=e.scale.v, r=e.rotation.v, t=e.position.v}
 	local mgroups = mesh.handle.group
 	for i=1, #mgroups do
 		local g = mgroups[i]
@@ -38,6 +40,48 @@ local function push_primitive_in_filter(eid, filter)
 			properties = properties,
 			srt = srt,
 		})
+	end
+end
+
+--- scene lighting fitler system ------------------------
+local lighting_primitive_filter_sys = ecs.system "lighting_primitive_filter_system"
+lighting_primitive_filter_sys.singleton "lighting_primitive_filter"
+lighting_primitive_filter_sys.singleton "math_stack"
+
+function lighting_primitive_filter_sys:update()
+	local filter = self.lighting_primitive_filter
+	filter.result = {}
+
+	local ms = self.math_stack
+
+	local function gen_directional_light_properties()
+		local properties = {}
+
+		local dlight_info = {
+			dir = {},
+			color = {},
+			intensity = {}
+		}
+
+		for _, l_eid in world:each("directional_light") do
+			local dlight = world[l_eid]
+			local l = dlight.light.v
+			table.insert(dlight_info.dir, ms(l.rot, "dm"))
+			table.insert(dlight_info.color, l.color)
+			table.insert(dlight_info.intensity, l.intensity)
+		end
+
+		properties["directional_lightdir"] = {name="Light Direction", type="v4", value = dlight_info.dir}
+		properties["directional_color"] = {name="Light Color", type="color", value = dlight_info.color}
+		properties["directional_intensity"] = {name="Light Intensity", type="i1", value = dlight_info.intensity}
+
+		return properties
+	end
+
+	local properties = gen_directional_light_properties()
+
+	for _, eid in world:each("can_render") do
+		push_primitive_in_filter(eid, filter)
 	end
 end
 

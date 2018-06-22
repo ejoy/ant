@@ -44,7 +44,7 @@ local function get_compile_renderer_name()
 end
 
 
-local uniforms = {}
+local alluniforms = {}
 
 local shader_mgr = {}
 shader_mgr.__index = shader_mgr
@@ -133,14 +133,14 @@ function shader_mgr.programLoad(vs,fs, uniform)
         local prog = programLoadEx(vs,fs, uniform)
         if prog then
             for k, v in pairs(uniform) do
-                local old_u = uniforms[k]
+                local old_u = alluniforms[k]
                 if old_u and old_u.type ~= v.type and old_u.num ~= v.num then
                     log(string.format([[previous has been defined uniform, 
                                     nameis : %s, type=%s, num=%d, replace as : type=%s, num=%d]],
                                     old_u.name, old_u.type, old_u.num, v.type, v.num))
                 end
 
-                uniforms[k] = v
+                alluniforms[k] = v
             end
         end
         return prog
@@ -157,7 +157,17 @@ function shader_mgr.computeLoad(cs)
 end
 
 function shader_mgr.get_uniform(name)
-    return uniforms[name]
+    return alluniforms[name]
 end
+
+-- function shader_mgr.add_uniform(name, type, num)
+-- 	local uh = alluniforms[name]
+-- 	if uh == nil then
+-- 		num = num or 1
+-- 		uh = bgfx.create_uniform(name, type, num)
+-- 		alluniforms[name] = { handle = uh, name = name, type = type, num = num }
+-- 	end
+-- 	return uh
+-- end
 
 return shader_mgr
