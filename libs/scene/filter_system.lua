@@ -1,9 +1,31 @@
 local ecs = ...
 local world = ecs.world
 
-local mu = require "math.util"
-local bgfx = require "bgfx"
-local shadermgr = require "render.resources.shader_mgr"
+local function insert_primitive(eid, result)
+	local entity = world[eid]
+
+	local mesh = assert(entity.mesh.assetinfo)
+	
+	local materialcontent = entity.material.content
+	assert(#materialcontent >= 1)
+
+	local srt ={s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}
+	local mgroups = mesh.handle.group
+	for i=1, #mgroups do
+		local g = mgroups[i]
+		local mc = materialcontent[i] or materialcontent[1]
+		local material = mc.materialinfo
+		local properties = mc.properties
+
+		table.insert(result, {
+			eid = eid,
+			mgroup = g,
+			material = material,
+			properties = properties,
+			srt = srt,
+		})
+	end
+end
 
 local function push_primitive_in_filter(eid, filter)
     local e = world[eid]
@@ -18,29 +40,7 @@ local function push_primitive_in_filter(eid, filter)
 		return 
 	end
 
-	local mesh = assert(meshcomp.assetinfo)
-	
-	local materialcontent = e.material.content
-	assert(#materialcontent >= 1)
-
-	local result = filter.result
-
-	local srt ={s=e.scale.v, r=e.rotation.v, t=e.position.v}
-	local mgroups = mesh.handle.group
-	for i=1, #mgroups do
-		local g = mgroups[i]
-		local mc = materialcontent[i] or materialcontent[1]
-		local materialinfo = mc.materialinfo
-		local properties = mc.properties
-
-		table.insert(result, {
-			eid = eid,
-			mgroup = g,
-			material = materialinfo,
-			properties = properties,
-			srt = srt,
-		})
-	end
+	insert_primitive(e, filter.result)
 end
 
 --- scene lighting fitler system ------------------------
@@ -71,33 +71,51 @@ function lighting_primitive_filter_sys:update()
 			table.insert(dlight_info.intensity, l.intensity)
 		end
 
-		properties["directional_lightdir"] = {name="Light Direction", type="v4", value = dlight_info.dir}
-		properties["directional_color"] = {name="Light Color", type="color", value = dlight_info.color}
+		properties["directional_lightdir"] 	= {name="Light Direction", type="v4", value = dlight_info.dir}
+		properties["directional_color"] 	= {name="Light Color", type="color", value = dlight_info.color}
 		properties["directional_intensity"] = {name="Light Intensity", type="i1", value = dlight_info.intensity}
 
 		return properties
 	end
 
-	local properties = gen_directional_light_properties()
+	local lighting_properties = gen_directional_light_properties()
 
+	filter.result = {}
+	local result = filter.result	
 	for _, eid in world:each("can_render") do
-		push_primitive_in_filter(eid, filter)
+		insert_primitive(eid, result)
+	end
+
+	for _, r in ipairs(result) do
+		local material = r.material
+		local properties = r.properties
+		local surface_type = material.surface_type
+		if surface_type.lighting == "on" then
+			for k, v in pairs(lighting_properties) do
+				if properties[k] then
+					print("found lighting property define in material file, property : ", k, 
+							", will overwrite by cureent lighting property")
+				end
+
+				properties[k] = v
+			end			
+		end
 	end
 end
 
 --- scene filter system----------------------------------
-local primitive_filter_sys = ecs.system "primitive_filter_system"
+-- local primitive_filter_sys = ecs.system "primitive_filter_system"
 
-primitive_filter_sys.singleton "primitive_filter"
-primitive_filter_sys.singleton "math_stack"
+-- primitive_filter_sys.singleton "primitive_filter"
+-- primitive_filter_sys.singleton "math_stack"
 
-function primitive_filter_sys:update()
-    local filter = self.primitive_filter
-    filter.result = {}
-    for _, eid in world:each("can_render") do
-        push_primitive_in_filter(eid, filter)
-    end
-end
+-- function primitive_filter_sys:update()
+--     local filter = self.primitive_filter
+--     filter.result = {}
+--     for _, eid in world:each("can_render") do
+--         push_primitive_in_filter(eid, filter)
+--     end
+-- end
 
 ----for select filter system-------------------------------
 local select_filter_sys = ecs.system "select_filter_system"

@@ -3,6 +3,7 @@ local require = import and import(...) or require
 local rawtable = require "rawtable"
 local path = require "filesystem.path"
 local seri = require "serialize.util"
+local ru = require "render.util"
 
 return function(filename)
     local asset = require "asset"
@@ -24,7 +25,11 @@ return function(filename)
             material_info[k] = v
         end
 
-    end
+	end
+	
+	if material_info.surface_type == nil then
+		material_info.surface_type = ru.default_surface_type()
+	end
 
     return material_info
 end

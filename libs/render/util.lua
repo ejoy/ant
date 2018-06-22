@@ -115,4 +115,16 @@ function util.draw_primitive(vid, prim, mat)
     bgfx.submit(vid, prog, 0, false) --not need_commit(material))
 end
 
+function util.default_surface_type()
+	return {
+		lighting = "on",			-- "on"/"off"
+		transparency = "opaticy",	-- "opaticy"/"transparent"
+		shadow	= {
+			cast = "on",			-- "on"/"off"
+			receive = "on",			-- "on"/"off"
+		},
+		subsurface = "off",			-- "on"/"off"? maybe has other setting
+	}
+end
+
 return util

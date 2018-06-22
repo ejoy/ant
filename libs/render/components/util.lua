@@ -16,7 +16,6 @@ end
 local function load_texture(tex)
 	local texpath = tex.default
 	assert(type(texpath) == "string", "texture type's default value should be path to texture file")
-	dprint("loading texture, path : ", texpath)
 	local assetinfo = asset.load(texpath)
 	return {name=tex.name, type=tex.type, stage=tex.stage, value=assetinfo.handle}
 end
