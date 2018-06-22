@@ -158,9 +158,6 @@ lnk_load_image_data(lua_State *L)
 	lua_pushnumber(L,n);
 	lua_setfield(L,-2,"c");
 
-    // pushlstring 已经做了内存拷贝，这里直接释放
-	freeImage( (void*) data );
-
 	return 1;
 }
 static int
