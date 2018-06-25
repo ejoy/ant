@@ -7,13 +7,12 @@ function primitive_filter:init()
     self.result = {}
 end
 
-local lighting_primitive_fiter = ecs.component "lighting_primitive_fiter" {
+local lighting_primitive_filter = ecs.component "lighting_primitive_filter" {
 
 }
 
-function lighting_primitive_fiter:init()
-	self.result = {}
-	self.lighting = true
+function lighting_primitive_filter:init()
+	self.result = {}	
 end
 
 local select_filter_comp = ecs.component "select_filter" {

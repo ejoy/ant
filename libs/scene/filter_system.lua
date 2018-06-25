@@ -40,7 +40,7 @@ local function push_primitive_in_filter(eid, filter)
 		return 
 	end
 
-	insert_primitive(e, filter.result)
+	insert_primitive(eid, filter.result)
 end
 
 --- scene lighting fitler system ------------------------
@@ -73,12 +73,16 @@ function lighting_primitive_filter_sys:update()
 
 		properties["directional_lightdir"] 	= {name="Light Direction", type="v4", value = dlight_info.dir}
 		properties["directional_color"] 	= {name="Light Color", type="color", value = dlight_info.color}
-		properties["directional_intensity"] = {name="Light Intensity", type="i1", value = dlight_info.intensity}
+		properties["directional_intensity"] = {name="Light Intensity", type="v4", value = dlight_info.intensity}
 
 		return properties
 	end
 
 	local lighting_properties = gen_directional_light_properties()
+
+	local camera = world:first_entity("main_camera")
+	local viewdir = ms(camera.rotation.v, "dm")
+	lighting_properties["viewdir"] = {name = "View Direction", type="v4", value=viewdir}
 
 	filter.result = {}
 	local result = filter.result	
@@ -92,10 +96,10 @@ function lighting_primitive_filter_sys:update()
 		local surface_type = material.surface_type
 		if surface_type.lighting == "on" then
 			for k, v in pairs(lighting_properties) do
-				if properties[k] then
-					print("found lighting property define in material file, property : ", k, 
-							", will overwrite by cureent lighting property")
-				end
+				-- if properties[k] then
+				-- 	print("found lighting property define in material file, property : ", k, 
+				-- 			", will overwrite by cureent lighting property")
+				-- end
 
 				properties[k] = v
 			end			

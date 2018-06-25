@@ -15,10 +15,10 @@ local ecs = ...
 -- 	return true, nil
 -- end
 
-ecs.component "directional_light"
-ecs.component "point_light"
-ecs.component "spot_light"
-ecs.component "ambient_light"
+ecs.component "directional_light" {}
+ecs.component "point_light" {}
+ecs.component "spot_light" {}
+ecs.component "ambient_light" {}
 
 ecs.component "light" {
 	v = {
