@@ -57,8 +57,7 @@ function add_entity_sys:init()
 		local function create_plane_mesh()
 			local vdecl = bgfx.vertex_decl {
 				{ "POSITION", 3, "FLOAT" },
-				{ "NORMAL", 3, "FLOAT"},
-				{ "COLOR0", 4, "UINT8", true },
+				{ "NORMAL", 3, "FLOAT"},				
 				{ "TEXCOORD0", 2, "FLOAT"},				
 			}
 
@@ -70,22 +69,22 @@ function add_entity_sys:init()
 						{
 							vdecl = vdecl,
 							vb = bgfx.create_vertex_buffer(
-								{"ffffffdff",
+								{"ffffffff",
 							lensize, -lensize, 0.0, 
 							0.0, 0.0, -1.0, 
-							0xff0000ff, 1.0, 0.0,
+							1.0, 0.0,
 
 							lensize, lensize, 0.0, 
 							0.0, 0.0, -1.0, 
-							0xff00ff00, 1.0, 1.0,
+							1.0, 1.0,
 
 							-lensize, -lensize, 0.0, 
 							0.0, 0.0, -1.0, 
-							0xffff0000, 0.0, 0.0,
+							0.0, 0.0,
 
 							-lensize, lensize, 0.0, 
 							0.0, 0.0, -1.0, 
-							0xffffffff, 0.0, 1.0,
+							0.0, 1.0,
 							}, vdecl)
 						},
 					}
