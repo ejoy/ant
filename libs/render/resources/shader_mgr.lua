@@ -7,6 +7,8 @@ local rhwi = require "render.hardware_interface"
 local toolset = require "editor.toolset"
 local path = require "filesystem.path"
 local assetmgr = require "asset"
+local fs = require "filesystem"
+local fu = require "filesystem.util"
 
 -- init
 local function get_shader_rendertype_path()
@@ -71,14 +73,17 @@ local function check_compile_shader(name)
         local srcpath = assetmgr.find_valid_asset_path(srcdir)
         if srcpath then
             local assetdir = assetmgr.assetdir()
-            local outfile = path.join(assetdir, shader_subpath)
-    
-            path.create_dirs(path.parent(outfile))            
-            local success, msg = compile_shader(srcpath, outfile)
-            if not success then
-                print(string.format("try compile from file %s, but failed, error message : \n%s", srcpath, msg))
-                return nil
-            end
+			local outfile = path.join(assetdir, shader_subpath)
+			
+			if not fs.exist(outfile) or fu.file_is_newer(srcpath, outfile) then
+				path.create_dirs(path.parent(outfile))            
+				local success, msg = compile_shader(srcpath, outfile)
+				if not success then
+					print(string.format("try compile from file %s, but failed, error message : \n%s", srcpath, msg))
+					return nil
+				end
+			end 
+
             return outfile
         end
     end
