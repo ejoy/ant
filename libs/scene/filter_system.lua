@@ -73,7 +73,7 @@ function lighting_primitive_filter_sys:update()
 
 		properties["directional_lightdir"] 	= {name="Light Direction", type="v4", value = dlight_info.dir}
 		properties["directional_color"] 	= {name="Light Color", type="color", value = dlight_info.color}
-		properties["directional_intensity"] = {name="Light Intensity", type="v4", value = dlight_info.intensity}
+		properties["directional_intensity"] = {name="Light Intensity", type="v4", value = {dlight_info.intensity}}
 
 		return properties
 	end
@@ -81,16 +81,15 @@ function lighting_primitive_filter_sys:update()
 	local lighting_properties = gen_directional_light_properties()
 
 	local camera = world:first_entity("main_camera")
-	local viewdir = ms(camera.rotation.v, "dm")
-	lighting_properties["viewdir"] = {name = "View Direction", type="v4", value=viewdir}
+	local eyepos = ms(camera.position.v, "m")
+	lighting_properties["eyepos"] = {name = "Eye Position", type="v4", value=eyepos}
 
-	filter.result = {}
-	local result = filter.result	
+	filter.result = {}	
 	for _, eid in world:each("can_render") do
-		insert_primitive(eid, result)
+		push_primitive_in_filter(eid, filter)
 	end
 
-	for _, r in ipairs(result) do
+	for _, r in ipairs(filter.result) do
 		local material = r.material
 		local properties = r.properties
 		local surface_type = material.surface_type

@@ -38,7 +38,7 @@ local property_type_description = {
 local function update_property(name, property)
 	local uniform = shadermgr.get_uniform(name)        
 	if uniform == nil  then
-		log("property name : ", name, ", is needed, but shadermgr not found!")
+		-- log(string.format("property name : %s, is needed, but shadermgr not found!", name))
 		return 
 	end
 
@@ -48,8 +48,25 @@ local function update_property(name, property)
 	if property.type == "texture" then
 		local stage = assert(property.stage)
 		bgfx.set_texture(stage, assert(uniform.handle), assert(property.value))
-	else	
-		bgfx.set_uniform(assert(uniform.handle), assert(property.value))
+	else
+		local val = assert(property.value)
+
+		local function need_unpack(val)
+			if type(val) == "table" then
+				local elemtype = type(val[1])
+				if elemtype == "table" or elemtype == "userdata" or elemtype == "luserdata" then
+					return true
+				end
+			end
+			return false
+		end
+		
+		if need_unpack(val) then
+			bgfx.set_uniform(assert(uniform.handle), table.unpack(val))
+		else
+			bgfx.set_uniform(assert(uniform.handle), val)
+		end
+		
 	end
 end
 

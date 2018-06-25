@@ -17,7 +17,12 @@ add_entity_sys.dependby "iup_message"
 function add_entity_sys:init()
 	local ms = self.math_stack
 	
-	lu.create_directional_light_entity(world)
+	do
+		local leid = lu.create_directional_light_entity(world)
+		local lentity = world[leid]
+		local light = lentity.light.v
+		light.rot = {135, 0, 0}		
+	end
 
     do
         local bunny_eid = world:new_entity("position", "rotation", "scale", 
@@ -57,26 +62,28 @@ function add_entity_sys:init()
 				{ "TEXCOORD0", 2, "FLOAT"},				
 			}
 
+			local lensize = 5
+
 			return {
 				handle = {
 					group = {
 						{
 							vdecl = vdecl,
 							vb = bgfx.create_vertex_buffer(
-								{"fffdff",
-							1.0, -1.0, 0.0, 
+								{"ffffffdff",
+							lensize, -lensize, 0.0, 
 							0.0, 0.0, -1.0, 
 							0xff0000ff, 1.0, 0.0,
 
-							1.0, 1.0, 0.0, 
+							lensize, lensize, 0.0, 
 							0.0, 0.0, -1.0, 
 							0xff00ff00, 1.0, 1.0,
 
-							-1.0, -1.0, 0.0, 
+							-lensize, -lensize, 0.0, 
 							0.0, 0.0, -1.0, 
 							0xffff0000, 0.0, 0.0,
 
-							-1.0, 1.0, 0.0, 
+							-lensize, lensize, 0.0, 
 							0.0, 0.0, -1.0, 
 							0xffffffff, 0.0, 1.0,
 							}, vdecl)
