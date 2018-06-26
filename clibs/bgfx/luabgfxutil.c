@@ -5,8 +5,6 @@
 #include <stdint.h>
 #include <math.h>
 
-#include "examples/common/bgfx_util.h"
-
 static inline float
 fclamp(float _a, float _min, float _max) {
 	return fmin(fmax(_a, _min), _max);
@@ -53,11 +51,6 @@ lencodeNormalRgba8(lua_State *L) {
 	packRgba8(&dst, src);
 	lua_pushinteger(L, dst);
 	return 1;
-}
-
-static int
-lcalcTangents(lua_State *L){
-
 }
 
 LUAMOD_API int
