@@ -1516,7 +1516,15 @@ lnewVertexDecl(lua_State *L) {
 }
 
 static const bgfx_memory_t *
-create_mem_from_table(lua_State *L, int idx, int n) {
+convert_by_decl(const void * data, size_t sz, bgfx_vertex_decl_t *src_vd, bgfx_vertex_decl_t *desc_vd) {
+	int n = sz / src_vd->stride;
+	const bgfx_memory_t *mem = bgfx_alloc(n * desc_vd->stride);
+	bgfx_vertex_convert(desc_vd, mem->data, src_vd, data, n);
+	return mem;
+}
+
+static const bgfx_memory_t *
+create_mem_from_table(lua_State *L, int idx, int n, bgfx_vertex_decl_t *src_vd, bgfx_vertex_decl_t *desc_vd) {
 	// binary data
 	int t = lua_geti(L, idx, n);
 	if (t == LUA_TLIGHTUSERDATA || t == LUA_TUSERDATA) {
@@ -1531,8 +1539,12 @@ create_mem_from_table(lua_State *L, int idx, int n) {
 			sz = lua_rawlen(L, -2);
 		}
 		lua_pop(L, 2);
-		const bgfx_memory_t *mem = bgfx_make_ref(data, sz);
-		return mem;
+		if (src_vd) {
+			return convert_by_decl(data, sz, src_vd, desc_vd);
+		} else {
+			const bgfx_memory_t *mem = bgfx_make_ref(data, sz);
+			return mem;
+		}
 	}
 
 	if (t != LUA_TSTRING) {
@@ -1558,9 +1570,13 @@ create_mem_from_table(lua_State *L, int idx, int n) {
 	if (end < start)
 		luaL_error(L, "empty data");
 	int s = end - start + 1;
-	const bgfx_memory_t *mem = bgfx_alloc(s);
-	memcpy(mem->data, data + start - 1, s);
-	return mem;
+	if (src_vd) {
+		return convert_by_decl(data + start - 1, s, src_vd, desc_vd);
+	} else {
+		const bgfx_memory_t *mem = bgfx_alloc(s);
+		memcpy(mem->data, data + start - 1, s);
+		return mem;
+	}
 }
 
 static int
@@ -1594,16 +1610,25 @@ get_stride(lua_State *L, const char *format) {
 	b : uint8
  */
 static const bgfx_memory_t *
-create_from_table_decl(lua_State *L, int idx) {
+create_from_table_decl(lua_State *L, int idx, bgfx_vertex_decl_t *vd) {
 	luaL_checktype(L, idx, LUA_TTABLE);
 	if (lua_geti(L, idx, 1) != LUA_TSTRING) {
 		luaL_error(L, "Missing layout");
+	}
+	if (lua_type(L, -1) == LUA_TUSERDATA) {
+		// it's vd
+		bgfx_vertex_decl_t *src_vd = lua_touserdata(L, -1);
+		if (vd != NULL && memcmp(src_vd, vd, sizeof(*vd)) == 0) {
+			return create_mem_from_table(L, idx, 2, NULL, NULL);
+		} else {
+			return create_mem_from_table(L, idx, 2, src_vd, vd);
+		}
 	}
 	size_t sz;
 	const char * layout = lua_tolstring(L, -1, &sz);
 	lua_pop(L, 1);
 	if (layout[0] == '!') {
-		return create_mem_from_table(L, idx, 2);
+		return create_mem_from_table(L, idx, 2, NULL, NULL);
 	}
 	int n = lua_rawlen(L, idx) - 1;
 	int stride = get_stride(L, layout);
@@ -1656,7 +1681,7 @@ create_from_table_int16(lua_State *L, int idx) {
 	luaL_checktype(L, idx, LUA_TTABLE);
 	if (lua_geti(L, idx, 1) != LUA_TNUMBER) {
 		lua_pop(L, 1);
-		return create_mem_from_table(L, idx, 1);
+		return create_mem_from_table(L, idx, 1, NULL, NULL);
 	}
 	int n = lua_rawlen(L, idx);
 	const bgfx_memory_t *mem = bgfx_alloc(n * sizeof(uint16_t));
@@ -1675,7 +1700,7 @@ create_from_table_int32(lua_State *L, int idx) {
 	luaL_checktype(L, idx, LUA_TTABLE);
 	if (lua_geti(L, idx, 1) != LUA_TNUMBER) {
 		lua_pop(L, 1);
-		return create_mem_from_table(L, idx, 1);
+		return create_mem_from_table(L, idx, 1, NULL, NULL);
 	}
 	int n = lua_rawlen(L, idx);
 	const bgfx_memory_t *mem = bgfx_alloc(n * sizeof(uint32_t));
@@ -1841,10 +1866,10 @@ calc_targent_vb(lua_State *L, const bgfx_memory_t *mem, bgfx_vertex_decl_t *vd, 
  */
 static int
 lcreateVertexBuffer(lua_State *L) {
-	const bgfx_memory_t *mem = create_from_table_decl(L, 1);
 	bgfx_vertex_decl_t *vd = lua_touserdata(L, 2);
 	if (vd == NULL)
 		return luaL_error(L, "Invalid vertex decl");
+	const bgfx_memory_t *mem = create_from_table_decl(L, 1, vd);
 	uint16_t flags = BGFX_BUFFER_NONE;
 	int calc_targent = 0;
 	if (lua_isstring(L, 3)) {
@@ -1908,7 +1933,7 @@ lcreateDynamicVertexBuffer(lua_State *L) {
 		uint32_t num = luaL_checkinteger(L, 1);
 		handle = bgfx_create_dynamic_vertex_buffer(num, vd, flags);
 	} else {
-		const bgfx_memory_t *mem = create_from_table_decl(L, 1);
+		const bgfx_memory_t *mem = create_from_table_decl(L, 1, vd);
 		handle = bgfx_create_dynamic_vertex_buffer_mem(mem, vd, flags);
 	}
 
@@ -1976,7 +2001,7 @@ lupdate(lua_State *L) {
 	int idx = id & 0xffff;
 	uint32_t start = luaL_checkinteger(L, 2);
 	if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER) {
-		const bgfx_memory_t *mem = create_from_table_decl(L, 3);
+		const bgfx_memory_t *mem = create_from_table_decl(L, 3, NULL);
 		bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
 		bgfx_update_dynamic_vertex_buffer(handle, start, mem);
 		return 0;
