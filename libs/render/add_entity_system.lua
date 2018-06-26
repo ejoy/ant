@@ -37,11 +37,23 @@ function add_entity_sys:init()
         ms(bunny.position.v, {0, 0, 3, 1}, "=")
 		ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
 
-		bunny.mesh.path = "bunny.mesh"
+		bunny.mesh.path = "bunny.mesh"		
 		component_util.load_mesh(bunny)
 		
 		bunny.material.content[1] = {path = "bunny.material", properties = {}}
 		component_util.load_material(bunny)
+	end
+
+	do	-- pochuan
+		local pochuan_eid = world:new_entity("position", "rotation", "scale", 
+		"can_render", "mesh", "material",
+		"name", "serialize",
+		"can_select")
+		local pochuan = world[pochuan_eid]
+		pochuan.name.n = "PoChuan"
+
+		component_util.load_mesh(pochuan, "pochuan.mesh", {calctangent=true})
+		component_util.load_material(pochuan, {"pochuan.material"})
 	end
 
 	do

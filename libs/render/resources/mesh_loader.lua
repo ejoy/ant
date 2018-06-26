@@ -18,7 +18,19 @@ do
 		return tmp[27]
 	end
 
-	mesh_decode["VB \1"] = function(mesh, group, data, offset)
+	local function gen_vc_flag(param)
+		if param == nil then
+			return nil
+		end
+		local flag = ""
+		if param.calctangent then
+			flag = flag .. "t"
+		end
+
+		return flag
+	end
+	
+	mesh_decode["VB \1"] = function(mesh, group, data, offset, param)
 		offset = read_mesh_header(mesh, data, offset)
 		local stride, numVertices		
 		mesh.vdecl, stride, offset = bgfx.vertex_decl(data, offset)
@@ -26,8 +38,9 @@ do
 		vb_data[2] = data
 		vb_data[3] = offset
 		offset = offset + stride * numVertices
-		vb_data[4] =  offset - 1		
-		group.vb = bgfx.create_vertex_buffer(vb_data, mesh.vdecl)
+		vb_data[4] =  offset - 1
+		local flag = gen_vc_flag(param)
+		group.vb = bgfx.create_vertex_buffer(vb_data, mesh.vdecl, flag)
 		return offset
 	end
 
@@ -69,13 +82,13 @@ do
 		return offset
 	end
 
-	function util.load(filename)
+	function util.load(filename, param)
 		local f = assert(io.open(filename,"rb"))
 		local data = f:read "a"
 		f:close()
 		local mesh = { group = {} }
 		local offset = 1
-		local group = {}
+		local group = {}		
 		while true do
 			local tag = data:sub(offset, offset+3)
 			if tag == "" then
@@ -86,7 +99,7 @@ do
 				error ("Invalid tag " .. tag)
 			end
 
-			offset = decoder(mesh, group, data, offset + 4)
+			offset = decoder(mesh, group, data, offset + 4, param)
 		end
 
 		return mesh
