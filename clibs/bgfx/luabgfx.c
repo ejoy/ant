@@ -1618,7 +1618,7 @@ create_from_table_decl(lua_State *L, int idx, bgfx_vertex_decl_t *vd) {
 	if (lua_type(L, -1) == LUA_TUSERDATA) {
 		// it's vd
 		bgfx_vertex_decl_t *src_vd = lua_touserdata(L, -1);
-		if (vd != NULL && memcmp(src_vd, vd, sizeof(*vd)) == 0) {
+		if (vd == NULL || memcmp(src_vd, vd, sizeof(*vd)) == 0) {
 			return create_mem_from_table(L, idx, 2, NULL, NULL);
 		} else {
 			return create_mem_from_table(L, idx, 2, src_vd, vd);
