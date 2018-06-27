@@ -10,6 +10,7 @@
 #include <lauxlib.h>
 #include <bgfx/c99/bgfx.h>
 #include <bgfx/c99/platform.h>
+#include <assert.h>
 
 #include "luabgfx.h"
 #include "simplelock.h"
@@ -1296,32 +1297,141 @@ lsetState(lua_State *L) {
 	return 0;
 }
 
+struct AttribNamePairs {
+	const char* name;
+	bgfx_attrib_t attrib;
+};
+
+static struct AttribNamePairs attrib_name_pairs[BGFX_ATTRIB_COUNT] = {
+		"POSITION", BGFX_ATTRIB_POSITION,
+		"NORMAL", BGFX_ATTRIB_NORMAL,
+		"TANGENT", BGFX_ATTRIB_TANGENT,
+		"BITANGENT", BGFX_ATTRIB_BITANGENT,
+		"COLOR0", BGFX_ATTRIB_COLOR0,
+		"COLOR1", BGFX_ATTRIB_COLOR1,
+		"COLOR2", BGFX_ATTRIB_COLOR2,
+		"COLOR3", BGFX_ATTRIB_COLOR3,
+		"INDICES", BGFX_ATTRIB_INDICES,
+		"WEIGHT", BGFX_ATTRIB_WEIGHT,
+		"TEXCOORD0", BGFX_ATTRIB_TEXCOORD0,
+		"TEXCOORD1", BGFX_ATTRIB_TEXCOORD1,
+		"TEXCOORD2", BGFX_ATTRIB_TEXCOORD2,
+		"TEXCOORD3", BGFX_ATTRIB_TEXCOORD3,
+		"TEXCOORD4", BGFX_ATTRIB_TEXCOORD4,
+		"TEXCOORD5", BGFX_ATTRIB_TEXCOORD5,
+		"TEXCOORD6", BGFX_ATTRIB_TEXCOORD6,
+		"TEXCOORD7", BGFX_ATTRIB_TEXCOORD7,		
+};
+
+struct AttribTypeNamePairs{
+	const char* name;
+	bgfx_attrib_type_t type;
+};
+
+static struct AttribTypeNamePairs attrib_type_name_pairs[BGFX_ATTRIB_TYPE_COUNT] = {
+	"UINT8", BGFX_ATTRIB_TYPE_UINT8,
+	"UINT10", BGFX_ATTRIB_TYPE_UINT10,
+	"INT16", BGFX_ATTRIB_TYPE_INT16,
+	"HALF", BGFX_ATTRIB_TYPE_HALF,
+	"FLOAT", BGFX_ATTRIB_TYPE_FLOAT,
+};
+
+#define ARRAY_COUNT(_ARRAY) sizeof(_ARRAY) / sizeof(_ARRAY[0])
+
+
+static int
+lexportVertexDecl(lua_State *L) {
+	bgfx_vertex_decl_t *decl = (bgfx_vertex_decl_t *)lua_touserdata(L, 1);
+
+	if (decl == NULL)
+		luaL_error(L, "Invalid decl data!");
+
+	lua_newtable(L);
+	int num_attrib = 1;
+	for (int attrib = BGFX_ATTRIB_POSITION; attrib < BGFX_ATTRIB_COUNT; ++attrib) {
+		if (bgfx_vertex_decl_has(decl, (bgfx_attrib_t)attrib)) {
+			lua_newtable(L);
+
+			uint8_t num;
+			bool nomalized, as_int;
+			bgfx_attrib_type_t attrib_type;
+			bgfx_vertex_decl_decode(decl, (bgfx_attrib_t)attrib, &num, &attrib_type, &nomalized, &as_int);
+			assert(attrib_type < BGFX_ATTRIB_TYPE_COUNT);
+
+			lua_pushstring(L, attrib_name_pairs[attrib].name);
+			lua_seti(L, -2, 1);
+
+			lua_pushnumber(L, num);
+			lua_seti(L, -2, 2);
+
+			lua_pushstring(L, attrib_type_name_pairs[attrib_type].name);
+			lua_seti(L, -2, 3);
+
+			lua_pushboolean(L, nomalized ? 1 : 0);
+			lua_seti(L, -2, 4);
+
+			lua_pushboolean(L, as_int ? 1 : 0);
+			lua_seti(L, -2, 5);
+
+			lua_seti(L, -2, num_attrib++);	// push this table
+		}
+	}
+
+	luaL_checktype(L, -1, LUA_TTABLE);
+
+	return 1;
+}
+
+static inline bgfx_attrib_t find_attrib(const char* what) {
+	for (int ii = 0; ii < ARRAY_COUNT(attrib_name_pairs); ++ii) {
+		if (strcmp(what, attrib_name_pairs[ii].name) == 0)
+			return attrib_name_pairs[ii].attrib;
+	}
+
+	return BGFX_ATTRIB_COUNT;
+}
+
+static inline bgfx_attrib_type_t find_attrib_type(const char* what) {
+	for (int ii = 0; ii < ARRAY_COUNT(attrib_type_name_pairs); ++ii) {
+		if (strcmp(what, attrib_type_name_pairs[ii].name) == 0)
+			return attrib_type_name_pairs[ii].type;
+	}
+
+	return BGFX_ATTRIB_TYPE_COUNT;
+}
+
 static void
 vertex_decl_add(lua_State *L, bgfx_vertex_decl_t *vd) {
 	if (lua_geti(L, -1, 1) != LUA_TSTRING) {
 		luaL_error(L, "Invalid attrib enum");
 	}
-	bgfx_attrib_t attrib;
+	
 	const char * what = lua_tostring(L, -1);
-	if CASE(POSITION) attrib = BGFX_ATTRIB_POSITION;
-	else if CASE(NORMAL) attrib = BGFX_ATTRIB_NORMAL;
-	else if CASE(TANGENT) attrib = BGFX_ATTRIB_TANGENT;
-	else if CASE(BITANGENT) attrib = BGFX_ATTRIB_BITANGENT;
-	else if CASE(COLOR0) attrib = BGFX_ATTRIB_COLOR0;
-	else if CASE(COLOR1) attrib = BGFX_ATTRIB_COLOR1;
-	else if CASE(COLOR2) attrib = BGFX_ATTRIB_COLOR2;
-	else if CASE(COLOR3) attrib = BGFX_ATTRIB_COLOR3;
-	else if CASE(INDICES) attrib = BGFX_ATTRIB_INDICES;
-	else if CASE(WEIGHT) attrib = BGFX_ATTRIB_WEIGHT;
-	else if CASE(TEXCOORD0) attrib = BGFX_ATTRIB_TEXCOORD0;
-	else if CASE(TEXCOORD1) attrib = BGFX_ATTRIB_TEXCOORD1;
-	else if CASE(TEXCOORD2) attrib = BGFX_ATTRIB_TEXCOORD2;
-	else if CASE(TEXCOORD3) attrib = BGFX_ATTRIB_TEXCOORD3;
-	else if CASE(TEXCOORD4) attrib = BGFX_ATTRIB_TEXCOORD4;
-	else if CASE(TEXCOORD5) attrib = BGFX_ATTRIB_TEXCOORD5;
-	else if CASE(TEXCOORD6) attrib = BGFX_ATTRIB_TEXCOORD6;
-	else if CASE(TEXCOORD7) attrib = BGFX_ATTRIB_TEXCOORD7;
-	else { luaL_error(L, "Invalid arrtib enum : %s", what); return; }
+	const bgfx_attrib_t attrib = find_attrib(what);
+	if (attrib == BGFX_ATTRIB_COUNT) {
+		luaL_error(L, "Invalid arrtib enum : %s", what); return;
+	}
+
+	
+	//if CASE(POSITION) attrib = BGFX_ATTRIB_POSITION;
+	//else if CASE(NORMAL) attrib = BGFX_ATTRIB_NORMAL;
+	//else if CASE(TANGENT) attrib = BGFX_ATTRIB_TANGENT;
+	//else if CASE(BITANGENT) attrib = BGFX_ATTRIB_BITANGENT;
+	//else if CASE(COLOR0) attrib = BGFX_ATTRIB_COLOR0;
+	//else if CASE(COLOR1) attrib = BGFX_ATTRIB_COLOR1;
+	//else if CASE(COLOR2) attrib = BGFX_ATTRIB_COLOR2;
+	//else if CASE(COLOR3) attrib = BGFX_ATTRIB_COLOR3;
+	//else if CASE(INDICES) attrib = BGFX_ATTRIB_INDICES;
+	//else if CASE(WEIGHT) attrib = BGFX_ATTRIB_WEIGHT;
+	//else if CASE(TEXCOORD0) attrib = BGFX_ATTRIB_TEXCOORD0;
+	//else if CASE(TEXCOORD1) attrib = BGFX_ATTRIB_TEXCOORD1;
+	//else if CASE(TEXCOORD2) attrib = BGFX_ATTRIB_TEXCOORD2;
+	//else if CASE(TEXCOORD3) attrib = BGFX_ATTRIB_TEXCOORD3;
+	//else if CASE(TEXCOORD4) attrib = BGFX_ATTRIB_TEXCOORD4;
+	//else if CASE(TEXCOORD5) attrib = BGFX_ATTRIB_TEXCOORD5;
+	//else if CASE(TEXCOORD6) attrib = BGFX_ATTRIB_TEXCOORD6;
+	//else if CASE(TEXCOORD7) attrib = BGFX_ATTRIB_TEXCOORD7;
+	//else { luaL_error(L, "Invalid arrtib enum : %s", what); return; }
 	lua_pop(L, 1);
 
 	lua_geti(L, -1, 2);
@@ -1332,16 +1442,23 @@ vertex_decl_add(lua_State *L, bgfx_vertex_decl_t *vd) {
 	lua_pop(L, 1);
 
 	if (lua_geti(L, -1, 3) != LUA_TSTRING) {
-		luaL_error(L, "Invalid attrib type enum");
+		luaL_error(L, "Invalid attrib type enum");	
 	}
-	bgfx_attrib_type_t attrib_type;
+
 	what = lua_tostring(L, -1);
-	if CASE(FLOAT) attrib_type = BGFX_ATTRIB_TYPE_FLOAT;
-	else if CASE(UINT8) attrib_type = BGFX_ATTRIB_TYPE_UINT8;
-	else if CASE(INT16) attrib_type = BGFX_ATTRIB_TYPE_INT16;
-	else if CASE(UINT10) attrib_type = BGFX_ATTRIB_TYPE_UINT10;
-	else if CASE(HALF) attrib_type = BGFX_ATTRIB_TYPE_HALF;
-	else { luaL_error(L, "Invalid arrtib type enum : %s", what); return; }
+	
+	bgfx_attrib_type_t attrib_type = find_attrib_type(what);
+	if (attrib_type == BGFX_ATTRIB_TYPE_COUNT) {
+		luaL_error(L, "Invalid arrtib type enum : %s", what); return;
+	}
+	
+	//if CASE(FLOAT) attrib_type = BGFX_ATTRIB_TYPE_FLOAT;
+	//else if CASE(UINT8) attrib_type = BGFX_ATTRIB_TYPE_UINT8;
+	//else if CASE(INT16) attrib_type = BGFX_ATTRIB_TYPE_INT16;
+	//else if CASE(UINT10) attrib_type = BGFX_ATTRIB_TYPE_UINT10;
+	//else if CASE(HALF) attrib_type = BGFX_ATTRIB_TYPE_HALF;
+	//else { luaL_error(L, "Invalid arrtib type enum : %s", what); return; }
+
 	lua_pop(L, 1);
 
 	lua_geti(L, -1, 4);
@@ -1523,6 +1640,43 @@ convert_by_decl(const void * data, size_t sz, bgfx_vertex_decl_t *src_vd, bgfx_v
 	return mem;
 }
 
+struct BufferDataStream {
+	const uint8_t *data;
+	uint32_t size;
+};
+
+static void 
+extract_buffer_stream(lua_State* L, int idx, int n, struct BufferDataStream *stream) {
+	luaL_checktype(L, idx, LUA_TTABLE);
+	int datatype = lua_geti(L, idx, n);
+	assert(datatype == LUA_TSTRING);
+
+	size_t sz = 0;
+	const char* data = lua_tolstring(L, -1, &sz);
+	lua_pop(L, 1);
+	int start = 1;
+	if (lua_geti(L, idx, n + 1) == LUA_TNUMBER) {
+		start = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+	}
+	if (start < 0)
+		start = sz + start + 1;
+
+	stream->data = data + start - 1;
+
+	int end = -1;
+	if (lua_geti(L, idx, n + 2) == LUA_TNUMBER) {
+		end = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+	}
+	if (end < 0)
+		end = sz + end + 1;
+	if (end < start)
+		luaL_error(L, "extract stream data : empty data");
+
+	stream->size = end - start + 1;
+}
+
 static const bgfx_memory_t *
 create_mem_from_table(lua_State *L, int idx, int n, bgfx_vertex_decl_t *src_vd, bgfx_vertex_decl_t *desc_vd) {
 	// binary data
@@ -1550,31 +1704,15 @@ create_mem_from_table(lua_State *L, int idx, int n, bgfx_vertex_decl_t *src_vd, 
 	if (t != LUA_TSTRING) {
 		luaL_error(L, "Missing data string");
 	}
-	size_t sz = 0;
-	const char * data = lua_tolstring(L, -1, &sz);
-	lua_pop(L, 1);
-	int start = 1;
-	if (lua_geti(L, idx, n+1) == LUA_TNUMBER) {
-		start = lua_tointeger(L, -1);
-		lua_pop(L, 1);
-	}
-	if (start < 0)
-		start = sz + start + 1;
-	int end = -1;
-	if (lua_geti(L, idx, n+2) == LUA_TNUMBER) {
-		end = lua_tointeger(L, -1);
-		lua_pop(L, 1);
-	}
-	if (end < 0)
-		end = sz + end + 1;
-	if (end < start)
-		luaL_error(L, "empty data");
-	int s = end - start + 1;
+	
+	struct BufferDataStream stream;
+	extract_buffer_stream(L, idx, n, &stream);
+
 	if (src_vd) {
-		return convert_by_decl(data + start - 1, s, src_vd, desc_vd);
+		return convert_by_decl(stream.data, stream.size, src_vd, desc_vd);
 	} else {
-		const bgfx_memory_t *mem = bgfx_alloc(s);
-		memcpy(mem->data, data + start - 1, s);
+		const bgfx_memory_t *mem = bgfx_alloc(stream.size);
+		memcpy(mem->data, stream.data, stream.size);
 		return mem;
 	}
 }
@@ -1612,10 +1750,8 @@ get_stride(lua_State *L, const char *format) {
 static const bgfx_memory_t *
 create_from_table_decl(lua_State *L, int idx, bgfx_vertex_decl_t *vd) {
 	luaL_checktype(L, idx, LUA_TTABLE);
-	if (lua_geti(L, idx, 1) != LUA_TSTRING) {
-		luaL_error(L, "Missing layout");
-	}
-	if (lua_type(L, -1) == LUA_TUSERDATA) {
+	const int elemtype = lua_geti(L, idx, 1);
+	if (elemtype == LUA_TUSERDATA) {
 		// it's vd
 		bgfx_vertex_decl_t *src_vd = lua_touserdata(L, -1);
 		if (vd == NULL || memcmp(src_vd, vd, sizeof(*vd)) == 0) {
@@ -1623,6 +1759,9 @@ create_from_table_decl(lua_State *L, int idx, bgfx_vertex_decl_t *vd) {
 		} else {
 			return create_mem_from_table(L, idx, 2, src_vd, vd);
 		}
+	}
+	if (elemtype != LUA_TSTRING) {
+		luaL_error(L, "Missing layout");
 	}
 	size_t sz;
 	const char * layout = lua_tolstring(L, -1, &sz);
@@ -1741,17 +1880,18 @@ NORMALIZE(float v[3]) {
 }
 
 static void
-calc_targent_vb(lua_State *L, const bgfx_memory_t *mem, bgfx_vertex_decl_t *vd, int index) {
+calc_tangent_vb(lua_State *L, const bgfx_memory_t *mem, bgfx_vertex_decl_t *vd, int index) {
 	void *vertices = mem->data;
 	uint32_t numVertices = mem->size / vd->stride;
 	const uint16_t *indices;
 	uint32_t numIndices;
 	float *tangents;
 	if (lua_geti(L, index, 1) == LUA_TSTRING) {
-		size_t sz;
-		indices = (const uint16_t *)lua_tolstring(L, -1, &sz);
-		lua_pop(L, 1);
-		numIndices = sz / 2;
+		struct BufferDataStream stream;
+		extract_buffer_stream(L, index, 1, &stream);
+		numIndices = stream.size / 2; // assume 16 bits per index
+		assert(numIndices <= 65535);
+		indices = (const uint16_t*)stream.data;
 		tangents = lua_newuserdata(L, 6*numVertices);
 	} else {
 		numIndices = lua_rawlen(L, index);
@@ -1892,7 +2032,7 @@ lcreateVertexBuffer(lua_State *L) {
 		}
 	}
 	if (calc_targent) {
-		calc_targent_vb(L, mem, vd, 4);	// todo
+		calc_tangent_vb(L, mem, vd, 4);	// todo
 	}
 	bgfx_vertex_buffer_handle_t handle = bgfx_create_vertex_buffer(mem, vd, flags);
 	if (invalid_handle(handle)) {
@@ -3886,6 +4026,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "set_image", lsetImage },
 		{ "request_screenshot", lrequestScreenshot },
 		{ "get_screenshot", lgetScreenshot },
+		{ "export_vertex_decl", lexportVertexDecl },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
