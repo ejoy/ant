@@ -38,9 +38,12 @@ local function savefile(filename, content)
 	return true
 end
 
-return function (path)
+return function (path, mode)
+    if mode:match 'w' then
+        return rawopen(path, mode)
+    end
     if winfile.exist(path) then
-        return rawopen(path)
+        return rawopen(path, mode)
     end
     local packer_path = find_packer(path)
     if not packer_path then
@@ -48,7 +51,7 @@ return function (path)
     end
     local cache_path = 'cache/' .. path
     if winfile.exist(cache_path) then
-        return rawopen(cache_path)
+        return rawopen(cache_path, mode)
     end
     local packer = require(packer_path)
     local res = packer(path .. '.lnk')
@@ -56,5 +59,5 @@ return function (path)
     if not ok then
         return nil, err
     end
-    return rawopen(cache_path)
+    return rawopen(cache_path, mode)
 end
