@@ -1705,6 +1705,7 @@ create_mem_from_table(lua_State *L, int idx, int n, bgfx_vertex_decl_t *src_vd, 
 		luaL_error(L, "Missing data string");
 	}
 	
+	lua_pop(L, 1);
 	struct BufferDataStream stream;
 	extract_buffer_stream(L, idx, n, &stream);
 
@@ -2009,6 +2010,7 @@ lcreateVertexBuffer(lua_State *L) {
 	bgfx_vertex_decl_t *vd = lua_touserdata(L, 2);
 	if (vd == NULL)
 		return luaL_error(L, "Invalid vertex decl");
+	
 	const bgfx_memory_t *mem = create_from_table_decl(L, 1, vd);
 	uint16_t flags = BGFX_BUFFER_NONE;
 	int calc_targent = 0;
