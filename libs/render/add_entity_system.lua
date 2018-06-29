@@ -21,7 +21,10 @@ function add_entity_sys:init()
 		local leid = lu.create_directional_light_entity(world)
 		local lentity = world[leid]
 		local light = lentity.light.v
-		light.rot = {135, 0, 0}		
+
+		local rot = ms({1, 1, -1}, "nDT")
+		local lrot = light.rot
+		lrot[1], lrot[2], lrot[3] = rot[1], rot[2], rot[3]
 	end
 
     do

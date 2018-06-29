@@ -18,7 +18,7 @@ do
 		return tmp[27]
 	end
 
-	local function gen_vc_flag(param)
+	local function gen_vb_flag(param)
 		if param == nil then
 			return nil
 		end
@@ -44,7 +44,7 @@ do
 		vb_data[4] =  offset - 1
 
 		local function decode()
-			local flag = gen_vc_flag(param)
+			local flag = gen_vb_flag(param)
 			local decl = mesh.vdecl
 			if param and param.calctangent then
 				vb_data[1] = decl
@@ -52,7 +52,9 @@ do
 				table.insert(t_decl, {"TANGENT", 3, "FLOAT"})
 				decl = bgfx.vertex_decl(t_decl)
 			end			
-			group.vb = bgfx.create_vertex_buffer(vb_data, decl, flag, ib_data)
+
+			local vb = bgfx.create_vertex_buffer(vb_data, decl, flag, ib_data)
+			group.vb = vb
 		end
 
 		local function need_delay_decode()
@@ -101,6 +103,10 @@ do
 			offset = read_mesh_header(p, data, offset)
 			table.insert(group.prim, p)
 		end
+
+		if vb_decode then
+			vb_decode()
+		end
 		local tmp = {}
 		for k,v in pairs(group) do
 			group[k] = nil
@@ -128,10 +134,6 @@ do
 			end
 
 			offset = decoder(mesh, group, data, offset + 4, param)
-		end
-
-		if vb_decode then
-			vb_decode()
 		end
 
 		return mesh

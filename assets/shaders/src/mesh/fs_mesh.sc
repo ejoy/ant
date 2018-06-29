@@ -24,7 +24,7 @@ float specular_blinn(vec3 lightdir, vec3 normal, vec3 viewdir)
 vec3 calc_light(vec3 normal, vec3 pos, vec3 basecolor)
 {
 	float ndotl = dot(normal, directional_lightdir[0]);
-	vec3 diffuse = basecolor * max(0.0, ndotl);
+	vec3 diffuse = max(0.0, ndotl);
 
 	vec3 viewdir = normalize(eyepos - pos);
 	
@@ -32,7 +32,7 @@ vec3 calc_light(vec3 normal, vec3 pos, vec3 basecolor)
 	float fres = fresnel(ndotl, 0.2, 5);	
 	float specular = step(0, ndotl) * fres * specular_blinn(directional_lightdir[0], normal, viewdir);
 
-	return diffuse + specular;
+	return directional_lightdir[0]; //diffuse;// + specular;
 }
 
 void main()

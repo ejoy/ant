@@ -143,10 +143,18 @@ do
 	local e1 = stack({type="q", math.cos(math.pi * 0.25), 0, 0, math.sin(math.pi * 0.25)}, "eP")
 	print("q to e : ", stack(e1, "V"))
 
-	local q = stack(e1, "qP")
-	print("e to q : ", stack(q, "V"))
+	-- local q = stack(e1, "qP")
+	-- print("e to q : ", stack(q, "V"))
 
 
+end
+
+-- direction to euler
+do
+	local rot = stack({1, 1, 1}, "nDT")
+	local dir = stack(rot, "dT")
+	print(rot)
+	print(dir)
 end
 
 

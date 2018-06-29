@@ -310,8 +310,16 @@ new_page(struct lastack *LS, void *page) {
 	return page;
 }
 
-static void
-lastack_pushvector(struct lastack *LS, float *vec4, int type, int size) {
+static inline int
+get_type_size(int type) {
+	const int sizes[LINEAR_TYPE_COUNT] = { 16, 4, 3, 4, 1, 3 };
+	assert(LINEAR_TYPE_MAT <= type && type < LINEAR_TYPE_COUNT);
+	return sizes[type];
+}
+
+void
+lastack_pushvector(struct lastack *LS, float *vec4, int type) {
+	const int size = get_type_size(type);
 	assert(type != LINEAR_TYPE_MAT);
 	if (LS->temp_vector_top >= LS->temp_vector_cap) {
 		void * p = new_page(LS, LS->temp_vec);
@@ -331,27 +339,27 @@ lastack_pushvector(struct lastack *LS, float *vec4, int type, int size) {
 
 void
 lastack_pushvec4(struct lastack *LS, float *vec4) {
-	lastack_pushvector(LS, vec4, LINEAR_TYPE_VEC4, 4);
+	lastack_pushvector(LS, vec4, LINEAR_TYPE_VEC4);
 }
 
 void
 lastack_pushvec3(struct lastack *LS, float *vec3) {
-	lastack_pushvector(LS, vec3, LINEAR_TYPE_VEC3, 3);
+	lastack_pushvector(LS, vec3, LINEAR_TYPE_VEC3);
 }
 
 void
 lastack_pushquat(struct lastack *LS, float *v) {
-	lastack_pushvector(LS, v, LINEAR_TYPE_QUAT, 4);
+	lastack_pushvector(LS, v, LINEAR_TYPE_QUAT);
 }
 
 void
 lastack_pusheuler(struct lastack *LS, float *v) {
-	lastack_pushvector(LS, v, LINEAR_TYPE_EULER, 3);
+	lastack_pushvector(LS, v, LINEAR_TYPE_EULER);
 }
 
 void
 lastack_pushnumber(struct lastack *LS, float n) {
-	lastack_pushvector(LS, &n, LINEAR_TYPE_NUM, 1);
+	lastack_pushvector(LS, &n, LINEAR_TYPE_NUM);
 }
 
 void
