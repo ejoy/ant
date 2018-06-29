@@ -1,0 +1,11 @@
+shader = {
+	vs = "mesh/vs_mesh_bump.sc",
+	fs = "mesh/fs_mesh_bump.sc",
+}
+
+state = "default.state"
+
+properties = {
+	s_basecolor = {type="texture", name="base color", stage=0, default="pochuan_d.texture"},
+	s_normal = {type="texture", name="normal", stage=0, default="pochuan_n.texture"},
+}

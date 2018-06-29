@@ -21,20 +21,25 @@ float specular_blinn(vec3 lightdir, vec3 normal, vec3 viewdir)
 	return pow(hdotn, shiness);
 }
 
-void main()
+vec3 calc_light(vec3 normal, vec3 pos, vec3 basecolor)
 {
-	vec3 normal = normalize(v_normal);
+	float ndotl = dot(normal, directional_lightdir[0]);
+	vec3 diffuse = basecolor * max(0.0, ndotl);
 
-	vec4 color = toLinear(texture2D(s_basecolor, v_tex0));
-
-	float ndotl = dot(normal, directional_lightdir[0]);	
-	vec3 diffuse = color.xyz * max(0.0, ndotl);
-
-	vec3 viewdir = normalize(eyepos - v_pos);
+	vec3 viewdir = normalize(eyepos - pos);
 	
 	//vec3 specular_color = vec3(1.0, 1.0, 1.0);
 	float fres = fresnel(ndotl, 0.2, 5);	
 	float specular = step(0, ndotl) * fres * specular_blinn(directional_lightdir[0], normal, viewdir);
-	gl_FragColor.xyz = diffuse + specular;
+
+	return diffuse + specular;
+}
+
+void main()
+{
+	vec3 normal = normalize(v_normal);
+	vec4 color = toLinear(texture2D(s_basecolor, v_tex0));
+
+	gl_FragColor.xyz = calc_light(normal, v_pos, color);
 	gl_FragColor.w = 1.0;
 }

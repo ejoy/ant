@@ -44,17 +44,18 @@ function add_entity_sys:init()
 		component_util.load_material(bunny)
 	end
 
-	do	-- pochuan
-		local pochuan_eid = world:new_entity("position", "rotation", "scale", 
-		"can_render", "mesh", "material",
-		"name", "serialize",
-		"can_select")
-		local pochuan = world[pochuan_eid]
-		pochuan.name.n = "PoChuan"
+	-- do	-- pochuan
+	-- 	local pochuan_eid = world:new_entity("position", "rotation", "scale", 
+	-- 	"can_render", "mesh", "material",
+	-- 	"name", "serialize",
+	-- 	"can_select")
+	-- 	local pochuan = world[pochuan_eid]
+	-- 	pochuan.name.n = "PoChuan"
 
-		component_util.load_mesh(pochuan, "pochuan.mesh", {calctangent=true})
-		component_util.load_material(pochuan, {"pochuan.material"})
-	end
+	-- 	component_util.load_mesh(pochuan, "pochuan.mesh", {calctangent=true})
+	-- 	--component_util.load_material(pochuan, {"pochuan.material"})
+	-- 	component_util.load_material(pochuan, {"bunny.material"})
+	-- end
 
 	do
 		local stone_eid = world:new_entity("position", "rotation", "scale",

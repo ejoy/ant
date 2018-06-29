@@ -1889,10 +1889,10 @@ calc_tangent_vb(lua_State *L, const bgfx_memory_t *mem, bgfx_vertex_decl_t *vd, 
 	if (lua_geti(L, index, 1) == LUA_TSTRING) {
 		struct BufferDataStream stream;
 		extract_buffer_stream(L, index, 1, &stream);
-		numIndices = stream.size / 2; // assume 16 bits per index
+		numIndices = stream.size / sizeof(uint16_t); // assume 16 bits per index
 		assert(numIndices <= 65535);
 		indices = (const uint16_t*)stream.data;
-		tangents = lua_newuserdata(L, 6*numVertices);
+		tangents = lua_newuserdata(L, 6*numVertices*sizeof(float));
 	} else {
 		numIndices = lua_rawlen(L, index);
 		uint8_t * tmp = lua_newuserdata(L, 6*numVertices + numIndices * 2);
