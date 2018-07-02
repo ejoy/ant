@@ -65,17 +65,11 @@ function lighting_primitive_filter_sys:update()
 
 		for _, l_eid in world:each("directional_light") do
 			local dlight = world[l_eid]
-			local l = dlight.light.v
-			-- make light dir from vertex position to light position
-			-- so we need 'i' command to revert the light dir
-			--[[
-				"dim" mean : 
-					1. d: convert rotation to vector; 
-					2. i: revert vector; 
-					3. m: pop memory pointer as light userdata;
-			]] 
-			table.insert(dlight_info.dir, ms(l.rot, "dim"))	
-
+			local l = dlight.light.v	
+			local pos = l.pos
+			-- point from vertex position to light position
+			local dir = pos --{pos[1] - 0, pos[2] - 0, pos[3] - 0}
+			table.insert(dlight_info.dir, ms(dir, "nm"))
 			table.insert(dlight_info.color, l.color)
 			table.insert(dlight_info.intensity, l.intensity)
 		end

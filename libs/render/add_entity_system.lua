@@ -21,10 +21,7 @@ function add_entity_sys:init()
 		local leid = lu.create_directional_light_entity(world)
 		local lentity = world[leid]
 		local light = lentity.light.v
-
-		local rot = ms({1, 1, -1}, "nDT")
-		local lrot = light.rot
-		lrot[1], lrot[2], lrot[3] = rot[1], rot[2], rot[3]
+		light.pos = {-1, 1, -1}
 	end
 
     do
@@ -40,7 +37,7 @@ function add_entity_sys:init()
         ms(bunny.position.v, {0, 0, 3, 1}, "=")
 		ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
 
-		bunny.mesh.path = "bunny.mesh"		
+		bunny.mesh.path = "bunny.mesh"
 		component_util.load_mesh(bunny)
 		
 		bunny.material.content[1] = {path = "bunny.material", properties = {}}

@@ -15,16 +15,16 @@ float fresnel(float _ndotl, float _bias, float _pow)
 float specular_blinn(vec3 lightdir, vec3 normal, vec3 viewdir)
 {
 	vec3 half = normalize(lightdir + viewdir);
-	float hdotn = dot(half, normal);
 
-	float shiness = 128.0;
+	float hdotn = dot(half, normal);	// Phong need check dot result, but Blinn-Phong not
+	float shiness = 8.0;
 	return pow(hdotn, shiness);
 }
 
-vec3 calc_light(vec3 normal, vec3 pos, vec3 basecolor)
+vec3 calc_directional_light(vec3 normal, vec3 pos)
 {
 	float ndotl = dot(normal, directional_lightdir[0]);
-	vec3 diffuse = max(0.0, ndotl);
+	float diffuse = max(0.0, ndotl);
 
 	vec3 viewdir = normalize(eyepos - pos);
 	
@@ -32,7 +32,7 @@ vec3 calc_light(vec3 normal, vec3 pos, vec3 basecolor)
 	float fres = fresnel(ndotl, 0.2, 5);	
 	float specular = step(0, ndotl) * fres * specular_blinn(directional_lightdir[0], normal, viewdir);
 
-	return directional_lightdir[0]; //diffuse;// + specular;
+	return specular;
 }
 
 void main()
@@ -40,6 +40,6 @@ void main()
 	vec3 normal = normalize(v_normal);
 	vec4 color = toLinear(texture2D(s_basecolor, v_tex0));
 
-	gl_FragColor.xyz = calc_light(normal, v_pos, color);
+	gl_FragColor.xyz = calc_directional_light(normal, v_pos) * color; 
 	gl_FragColor.w = 1.0;
 }
