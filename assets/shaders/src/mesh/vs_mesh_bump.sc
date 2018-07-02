@@ -11,7 +11,7 @@ void main()
 
 	v_tex0 = a_tex0;
 
-	v_normal = normalize(mul(u_modelView, a_normal.xyz));
-	v_tangent = normalize(mul(u_modelView, a_tangent.xyz));
+	v_normal = normalize(mul(u_model[0], a_normal.xyz));
+	v_tangent = normalize(mul(u_model[0], a_tangent.xyz));
 	v_bitangent = cross(v_normal, v_tangent) * a_tangent.w;
 }
