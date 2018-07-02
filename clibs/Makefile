@@ -1,8 +1,8 @@
 BIN = .
-LIBS = math3d lsocket redirectfd winfile bgfx remotedebug memoryfile lanes crypt assimplua
+LIBS = math3d lsocket redirectfd winfile bgfx remotedebug memoryfile lanes crypt assimplua hierarchy cppfs
 PLAT = mingw
 
-IUPLIBS = luaiup scintilla iupluaimglib iupluacontrols iupcd
+IUPLIBS = luaiup scintilla iupluaimglib iupluacontrols
 IUPTARS = $(foreach v, $(IUPLIBS), $(BIN)/$(v).dll)
 
 TARS = $(foreach v, $(LIBS), $(BIN)/$(v).dll)

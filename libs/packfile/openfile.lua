@@ -1,6 +1,8 @@
 local require = import and import(...) or require
 
 local winfile =  require "winfile"
+local fs =  require "cppfs"
+
 local rawopen = winfile.open
 
 local rules = {}
@@ -38,8 +40,18 @@ local function savefile(filename, content)
 	return true
 end
 
+local function need_update(lnk_path, cache_path)
+    if winfile.exist(lnk_path) and winfile.exist(cache_path) then
+        local util =  require "filesystem.util"
+        if util.file_is_newer(lnk_path, cache_path) then
+            return true
+        end
+    end
+    return not winfile.exist(cache_path)
+end
+
 return function (path, mode)
-    if mode:match 'w' then
+    if mode and mode:match 'w' then
         return rawopen(path, mode)
     end
     if winfile.exist(path) then
@@ -50,14 +62,17 @@ return function (path, mode)
         return nil, path .. ': No such file or directory'
     end
     local cache_path = 'cache/' .. path
-    if winfile.exist(cache_path) then
-        return rawopen(cache_path, mode)
+    local lnk_path = path .. '.lnk'
+    if not need_update(lnk_path, cache_path) then
+        return rawopen(path, mode)
     end
     local packer = require(packer_path)
-    local res = packer(path .. '.lnk')
+    local res = packer(lnk_path)
     local ok, err = savefile(cache_path, res)
     if not ok then
         return nil, err
     end
+    local time = fs.last_write_time(fs.path(lnk_path))
+    fs.last_write_time(fs.path(cache_path), time)
     return rawopen(cache_path, mode)
 end
