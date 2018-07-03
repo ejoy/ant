@@ -33,7 +33,7 @@ local server = {}; server.__index = server
 
 local function SendData(fd, pack_l)
     --print("send data",string.format("%q", pack_l))
-    if type(fd) == "string" then
+    if not socket_table[fd] then
         if fd == "all" then
             local byte_sent = 0
             for k, v in pairs(connected_devices) do
@@ -218,7 +218,12 @@ end
 
 --------------------------------------------------------------
 function server.new(config, linda)
-    local var_table = {ids = {}, clients = {}, request = {} ,resp = {}, log = {}, linda = linda, address = config.address, port = config.port}
+    local fd = assert(lsocket.connect(config.address, config.port))
+    local fd_name = config.address .. ":" .. config.port
+    --print("fd", fd_name)
+    socket_table[fd_name] = fd
+    local new_client = {ip = config.address, port = config.port, reading = ""}
+    local var_table = {ids = {fd_name}, clients = {[fd_name] = new_client}, request = {} ,resp = {}, log = {}, linda = linda, address = config.address, port = config.port}
     return setmetatable(var_table, server)
 end
 
@@ -238,9 +243,10 @@ end
 
 function server:client_request(id)
     local str = GetIdData(id)
+
     if not str then
         local fd = socket_table[id]
-        if fd then
+        if not fd then
             --if nil,means the client is shutdown
             self:kick_client(id)
         end
@@ -248,6 +254,7 @@ function server:client_request(id)
         return
     end
 
+    print("data", str)
     local obj = self.clients[id]
     local reading = obj.reading .. str
     local off = 1
@@ -527,20 +534,6 @@ function server:GetLindaMsg()
     end
 end
 
---[[
-function server:RecvLog()
-    --self.log
-    local log_table = {}
-
-    for _, v in ipairs(self.log) do
-        table.insert(log_table, v)
-    end
-
-    self.log = {}
-
-    return log_table
-end
---]]
 function server:HandleIupWindowRequest(udid, cmd, cmd_data)
     --handle request create from iup window
     --if udid is "all", means is for all devices

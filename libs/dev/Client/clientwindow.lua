@@ -13,7 +13,7 @@ file_mgr:ReadFilePathData("file.txt")
 --io thread
 local function CreateIOThread(linda)
     local client = require "client"
-    local c = client.new("127.0.0.1", 9999, linda)
+    local c = client.new("127.0.0.1", 8888, linda)
     --c:send("GET", "ServerFiles/building.mp4")
     while true do
         c:mainloop(1)
@@ -50,6 +50,9 @@ end
 
 local function send_ping_cmd()
     print("PING")
+    local request = {"PING"}
+
+    linda:send("request", request)
 end
 
 local function send_get_cmd()
@@ -106,8 +109,6 @@ local dlg = iup.dialog{
     size = "320x120"
 }
 
-local remotestuff = require "remotestuff"
-print("remotestuff", remotestuff)
 dlg:showxy(iup.CENTER, iup.CENTER)
 
 local function HandleMsg()
@@ -124,7 +125,6 @@ end
 
 --logic thread
 if (iup.MainLoopLevel() == 0) then
-    remotestuff.run()
     --iup.MainLoop()
     while true do
         HandleMsg()
