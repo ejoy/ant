@@ -6,6 +6,41 @@ local lu = require "render.light.util"
 local mu = require "math.util"
 local bgfx = require "bgfx"
 
+
+-- local update_direction_light_sys = ecs.system "direction_light_system"
+-- update_direction_light_sys.singleton "math_stack"
+
+-- function update_direction_light_sys:update()
+-- 	local ms = self.math_stack
+
+-- 	local function get_delta_time_op()
+-- 		local baselib = require "bgfx.baselib"
+-- 		local lasttime = baselib.HP_time("s")
+-- 		return function()
+-- 			local curtime = baselib.HP_time("s")
+-- 			local delta = curtime - lasttime
+-- 			lasttime = curtime
+-- 			return delta
+-- 		end
+-- 	end
+
+-- 	local angleXpresecond = 20
+-- 	local angleYpresecond = 15
+
+-- 	local deltatime_op = get_delta_time_op()
+-- 	for _, eid in world:each("directional_light") do		
+-- 		local e = world[eid]
+
+-- 		local delta = deltatime_op()
+
+-- 		local rot = ms(e.rotation.v, "T")
+-- 		rot[1] = rot[1] + delta * angleXpresecond
+-- 		rot[2] = rot[2] + delta * angleYpresecond
+
+-- 		ms(e.rotation.v, rot, "=")
+-- 	end
+-- end
+
 local add_entity_sys = ecs.system "add_entities_system"
 
 add_entity_sys.singleton "math_stack"
@@ -34,7 +69,7 @@ function add_entity_sys:init()
 				vs = "simple/light_bulb/vs_bulb.sc",
 				fs = "simple/light_bulb/fs_bulb.sc",
 			}
-			state = "default.state"			
+			state = "default.state"
 			properties = {
 				u_color = {type="color", name = "color", default={1, 1, 1, 1}}
 			}
