@@ -13,16 +13,23 @@ editor_sys.depend "end_frame"
 local function build_hierarchy_tree()
 	local htree = {}
 	local ud_table = {}
-	local eidin_hierarchy = {}   
+	local eidin_hierarchy = {}
 
-    for _, eid in world:each("main_camera") do
+	local function add_entity(eid, defname)
         assert(not eidin_hierarchy[eid])
         eidin_hierarchy[eid] = true
         local e = world[eid]
 		local ename = e.name
-		local name = ename and ename.n or "main_camera"
+		local name = ename and ename.n or defname
 		ud_table[name] = eid
         table.insert(htree, name)
+	end
+
+	for _, maincomp in ipairs {"main_camera", } do
+		for _, eid in world:each(maincomp) do
+			local defname = maincomp
+			add_entity(eid, defname)
+		end
 	end
 	
 	local function is_obj_transform(e)

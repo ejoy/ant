@@ -1,7 +1,7 @@
 local util = {}; util.__index = util
 
 local function create_light_entity(world, tag_comp, name)
-	local l_eid = world:new_entity("name", "serialize", "light", tag_comp)
+	local l_eid = world:new_entity("position", "rotation", "name", "serialize", "light", tag_comp)
 	local l_entity = assert(world[l_eid])
 
 	l_entity.name.n = name
@@ -17,7 +17,6 @@ function util.create_directional_light_entity(world, name)
 	l.type = "directional"
 	l.angle = nil
 	l.range = nil
-	l.pos = nil
 
 	return l_eid
 end
