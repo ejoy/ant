@@ -21,7 +21,32 @@ function add_entity_sys:init()
 		local leid = lu.create_directional_light_entity(world)
 		local lentity = world[leid]
 		local light = lentity.light.v
-		light.pos = {-1, 1, -1}
+		light.pos = {-1, 1, -1, 1}
+
+		local light_sphere_eid = world:new_entity("position", "rotation", "scale", 
+		"can_render", "mesh", "material",
+		"name")
+		
+		local lsphere = world[light_sphere_eid]
+		lsphere.name.n = "directional_light_sphere"
+
+		mu.identify_transform(ms, lsphere)
+		ms(lsphere.scale.v, {0.01, 0.01, 0.01}, "=")
+		ms(lsphere.position.v, light.pos, "=")
+
+		component_util.load_mesh(lsphere, "sphere.mesh")
+		local sphere_fn = "mem://light_bulb.material"		
+		fs_util.write_to_file(sphere_fn, [[
+			shader = {
+				vs = "simple/light_bulb/vs_bulb.sc",
+				fs = "simple/light_bulb/fs_bulb.sc",
+			}
+			state = "default.state"			
+			properties = {
+				u_color = {type="color", name = "color", default={1, 1, 1, 1}}
+			}
+		]])	
+		component_util.load_material(lsphere, {sphere_fn})
 	end
 
     do
