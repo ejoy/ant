@@ -18,22 +18,65 @@ do
 		return tmp[27]
 	end
 
-	mesh_decode["VB \1"] = function(mesh, group, data, offset)
+	local function gen_vb_flag(param)
+		if param == nil then
+			return nil
+		end
+		local flag = ""
+		if param.calctangent then
+			flag = flag .. "t"
+		end
+
+		return flag
+	end
+
+	local vb_decode = nil
+	
+	mesh_decode["VB \1"] = function(mesh, group, data, offset, param)
 		offset = read_mesh_header(mesh, data, offset)
 		local stride, numVertices		
 		mesh.vdecl, stride, offset = bgfx.vertex_decl(data, offset)
 		numVertices, offset = string.unpack("<I2", data, offset)
+
 		vb_data[2] = data
 		vb_data[3] = offset
 		offset = offset + stride * numVertices
-		vb_data[4] =  offset - 1		
-		group.vb = bgfx.create_vertex_buffer(vb_data, mesh.vdecl)
+		vb_data[4] =  offset - 1
+
+		local function decode()
+			local flag = gen_vb_flag(param)
+			local decl = mesh.vdecl
+			if param and param.calctangent then
+				vb_data[1] = decl
+				local t_decl = bgfx.export_vertex_decl(decl)
+				table.insert(t_decl, {"TANGENT", 3, "FLOAT"})
+				decl = bgfx.vertex_decl(t_decl)
+			end			
+
+			local vb = bgfx.create_vertex_buffer(vb_data, decl, flag, ib_data)
+			group.vb = vb
+		end
+
+		local function need_delay_decode()
+			if param and param.calctangent then
+				return group.ib == nil
+			end
+			return false
+		end
+		
+
+		if need_delay_decode() then
+			vb_data[1] = mesh.vdecl
+			vb_decode = decode			
+		else
+			decode()
+		end
 		return offset
 	end
 
 	mesh_decode["IB \0"] = function(mesh, group, data, offset)
 		local numIndices
-		numIndices, offset = string.unpack("<I4", data, offset)
+		numIndices, offset = string.unpack("<I4", data, offset)		
 		ib_data[1] = data
 		ib_data[2] = offset
 		offset = offset + numIndices * 2
@@ -60,6 +103,10 @@ do
 			offset = read_mesh_header(p, data, offset)
 			table.insert(group.prim, p)
 		end
+
+		if vb_decode then
+			vb_decode()
+		end
 		local tmp = {}
 		for k,v in pairs(group) do
 			group[k] = nil
@@ -69,13 +116,13 @@ do
 		return offset
 	end
 
-	function util.load(filename)
+	function util.load(filename, param)
 		local f = assert(io.open(filename,"rb"))
 		local data = f:read "a"
 		f:close()
 		local mesh = { group = {} }
 		local offset = 1
-		local group = {}
+		local group = {}		
 		while true do
 			local tag = data:sub(offset, offset+3)
 			if tag == "" then
@@ -86,7 +133,7 @@ do
 				error ("Invalid tag " .. tag)
 			end
 
-			offset = decoder(mesh, group, data, offset + 4)
+			offset = decoder(mesh, group, data, offset + 4, param)
 		end
 
 		return mesh

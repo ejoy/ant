@@ -1,0 +1,11 @@
+path = "textures/BH-ChiBi-Chuan-04-D.dds"
+
+sampler = {
+	U = "CLAMP",
+	V = "CLAMP",
+	MIN = "LINEAR",
+	MAG = "LINEAR",	
+}
+
+sRGB 		= true
+normalmap 	= false

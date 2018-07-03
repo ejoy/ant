@@ -12,7 +12,7 @@ local function texture_load(filename, info)
 	return h
 end
 
-local function generate_texture_flag(sampler)
+local function generate_sampler_flag(sampler)
 	if sampler == nil then
 		return nil
 	end
@@ -81,7 +81,7 @@ return function (filename)
 	
 	local sampler = tex.sampler
 
-	local flag = generate_texture_flag(sampler)
+	local flag = generate_sampler_flag(sampler)
 	
 	local handle = texture_load(pp, flag)
 	return {handle=handle, sampler=fill_default_sampler(sampler), path=tex.path}

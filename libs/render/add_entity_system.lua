@@ -6,6 +6,41 @@ local lu = require "render.light.util"
 local mu = require "math.util"
 local bgfx = require "bgfx"
 
+
+-- local update_direction_light_sys = ecs.system "direction_light_system"
+-- update_direction_light_sys.singleton "math_stack"
+
+-- function update_direction_light_sys:update()
+-- 	local ms = self.math_stack
+
+-- 	local function get_delta_time_op()
+-- 		local baselib = require "bgfx.baselib"
+-- 		local lasttime = baselib.HP_time("s")
+-- 		return function()
+-- 			local curtime = baselib.HP_time("s")
+-- 			local delta = curtime - lasttime
+-- 			lasttime = curtime
+-- 			return delta
+-- 		end
+-- 	end
+
+-- 	local angleXpresecond = 20
+-- 	local angleYpresecond = 15
+
+-- 	local deltatime_op = get_delta_time_op()
+-- 	for _, eid in world:each("directional_light") do		
+-- 		local e = world[eid]
+
+-- 		local delta = deltatime_op()
+
+-- 		local rot = ms(e.rotation.v, "T")
+-- 		rot[1] = rot[1] + delta * angleXpresecond
+-- 		rot[2] = rot[2] + delta * angleYpresecond
+
+-- 		ms(e.rotation.v, rot, "=")
+-- 	end
+-- end
+
 local add_entity_sys = ecs.system "add_entities_system"
 
 add_entity_sys.singleton "math_stack"
@@ -19,9 +54,27 @@ function add_entity_sys:init()
 	
 	do
 		local leid = lu.create_directional_light_entity(world)
+		world:add_component(leid, "mesh", "material", "can_render", "scale", "name")
 		local lentity = world[leid]
-		local light = lentity.light.v
-		light.rot = {135, 0, 0}		
+		ms(lentity.rotation.v, {45, 0, 0}, "=")
+		ms(lentity.position.v, {10, 10, 10}, "=")
+		ms(lentity.scale.v, {0.005, 0.005, 0.005}, "=")
+
+		lentity.name.n = "directional_light"
+
+		component_util.load_mesh(lentity, "sphere.mesh")
+		local sphere_fn = "mem://light_bulb.material"		
+		fs_util.write_to_file(sphere_fn, [[
+			shader = {
+				vs = "simple/light_bulb/vs_bulb.sc",
+				fs = "simple/light_bulb/fs_bulb.sc",
+			}
+			state = "default.state"
+			properties = {
+				u_color = {type="color", name = "color", default={1, 1, 1, 1}}
+			}
+		]])	
+		component_util.load_material(lentity, {sphere_fn})
 	end
 
     do
@@ -44,6 +97,19 @@ function add_entity_sys:init()
 		component_util.load_material(bunny)
 	end
 
+	-- do	-- pochuan
+	-- 	local pochuan_eid = world:new_entity("position", "rotation", "scale", 
+	-- 	"can_render", "mesh", "material",
+	-- 	"name", "serialize",
+	-- 	"can_select")
+	-- 	local pochuan = world[pochuan_eid]
+	-- 	pochuan.name.n = "PoChuan"
+
+	-- 	component_util.load_mesh(pochuan, "pochuan.mesh", {calctangent=true})
+	-- 	--component_util.load_material(pochuan, {"pochuan.material"})
+	-- 	component_util.load_material(pochuan, {"bunny.material"})
+	-- end
+
 	do
 		local stone_eid = world:new_entity("position", "rotation", "scale",
 		"can_render", "mesh", "material",
@@ -57,7 +123,8 @@ function add_entity_sys:init()
 		local function create_plane_mesh()
 			local vdecl = bgfx.vertex_decl {
 				{ "POSITION", 3, "FLOAT" },
-				{ "NORMAL", 3, "FLOAT"},				
+				{ "NORMAL", 3, "FLOAT"},
+				{ "TANGENT", 4, "FLOAT"},
 				{ "TEXCOORD0", 2, "FLOAT"},				
 			}
 
@@ -69,21 +136,25 @@ function add_entity_sys:init()
 						{
 							vdecl = vdecl,
 							vb = bgfx.create_vertex_buffer(
-								{"ffffffff",
+								{"ffffffffffff",
 							lensize, -lensize, 0.0, 
 							0.0, 0.0, -1.0, 
+							0.0, 1.0, 0.0, 1.0,
 							1.0, 0.0,
 
 							lensize, lensize, 0.0, 
 							0.0, 0.0, -1.0, 
+							0.0, 1.0, 0.0, 1.0,
 							1.0, 1.0,
 
-							-lensize, -lensize, 0.0, 
+							-lensize, -lensize, 0.0, 							
 							0.0, 0.0, -1.0, 
+							0.0, 1.0, 0.0, 1.0,
 							0.0, 0.0,
 
-							-lensize, lensize, 0.0, 
+							-lensize, lensize, 0.0, 							
 							0.0, 0.0, -1.0, 
+							0.0, 1.0, 0.0, 1.0,
 							0.0, 1.0,
 							}, vdecl)
 						},

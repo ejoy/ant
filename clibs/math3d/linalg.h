@@ -30,6 +30,7 @@ char * lastack_idstring(int64_t id, char tmp[64]);	// for debug
 
 struct lastack * lastack_new();
 void lastack_delete(struct lastack *LS);
+void lastack_pushvector(struct lastack *LS, float *vec4, int type);
 void lastack_pushvec4(struct lastack *LS, float *v);
 void lastack_pushvec3(struct lastack *LS, float *v);
 void lastack_pushquat(struct lastack *LS, float *v);

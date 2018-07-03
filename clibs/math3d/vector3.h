@@ -18,6 +18,15 @@ vector3_dot(const struct vector3 *a, const struct vector3 *b) {
 	return a->x * b->x + a->y * b->y + a->z * b->z;
 }
 
+static inline struct vector3 *
+vector3_invert(struct vector3 * v) {
+	v->x = -v->x;
+	v->y = -v->y;
+	v->z = -v->z;
+	return v;
+}
+
+
 static inline struct vector3*
 vector3_add(struct vector3* r, const struct vector3* v0, const struct vector3* v1) {
 	r->x = v0->x + v1->x;

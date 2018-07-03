@@ -4,7 +4,7 @@ local log = log and log(...) or print
 local rawtable = require "rawtable"
 
 
-return function (filename)        
+return function (filename, param)
     local mesh = rawtable(filename)
     
     local mesh_path = mesh.mesh_path
@@ -13,8 +13,8 @@ return function (filename)
         local assetmgr = require "asset"
         local p = assetmgr.find_valid_asset_path(mesh_path)
         if p then
-            local mesh_loader = require "render.resources.mesh_loader"
-            mesh.handle = mesh_loader.load(p)
+			local mesh_loader = require "render.resources.mesh_loader"			
+            mesh.handle = mesh_loader.load(p, param)
         else
             log(string.format("load mesh path %s failed", mesh_path))
         end 
