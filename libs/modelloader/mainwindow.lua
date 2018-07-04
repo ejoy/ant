@@ -10,6 +10,7 @@ local assimplua = require"assimplua"
 local render_mesh = require "modelloader.rendermesh"
 local path = require "filesystem.path"
 local fs_util = require "filesystem.util"
+local winfile = require "winfile"
 
 require "iupluaimglib"
 require "iuplua"
@@ -17,17 +18,22 @@ require "scintilla"
 
 
 local filetree = require "modelloader.filetree"
---先测试bgfx的使用
---画布,渲染模型场景
+
 local fb_width, fb_height = 1024, 768
 local canvas = iup.canvas{
     rastersize = fb_width .. "x" .. fb_height
 }
 
---菜单栏,用于基本文件操作
-local item_open = iup.item{title = "Open"}      --打开bin文件
+--open bin file
+local item_open = iup.item{title = "Open"}
+--export fbx to bin
 local item_export = iup.item{title = "Export"}  --将fbx导出为bin文件
-local item_exit = iup.item{title = "Exit"}      --退出窗口
+--export all fbx file under directory to bin
+local item_export_dir = iup.item{title = "Export Dir"}
+
+local item_exit = iup.item{title = "Exit"}
+
+local item_test_parser = iup.item{title = "test parser"}
 
 function item_open:action()
     local file_dlg = iup.filedlg{
@@ -64,7 +70,6 @@ function item_export:action()
     if(tonumber(export_dlg.status) ~= -1) then
         local in_path = export_dlg.value
         if(in_path) then
-            --导出路径暂时不可自定义,放在导入目录里面
             --local out_path = string.gsub(in_path, ".fbx", function(s) return ".bin" end)
             local out_path = path.replace_ext(in_path, "bin")
             assimplua.assimp_import(in_path, out_path)
@@ -78,20 +83,63 @@ function item_export:action()
     export_dlg:destroy()
 end
 
+function item_export_dir:action()
+    local export_dir_dlg = iup.filedlg{
+        dialogtype = "DIR",
+        parentdialog = iup.GetDialog(self),
+    }
 
+    export_dir_dlg:popup(iup.ANYWHERE, iup.ANYWHERE)
+
+    if(tonumber(export_dir_dlg.status) ~= -1) then
+        local in_path = export_dir_dlg.value
+
+        if in_path then
+            local test_file = nil
+            for file in winfile.dir(in_path) do
+                --print("found file:", path.ext(file))
+                if file then
+                    local file_ext = path.ext(file)
+
+                    if file_ext and string.lower(file_ext) == "fbx" then
+                        print("found file:", file)
+                        local in_file = in_path .. "/" .. file
+                        local out_file = path.replace_ext(in_file, "bin")
+                        assimplua.assimp_import(in_file, out_file)
+
+                        print("Export file to: ".. out_file)
+                        test_file = out_file
+                    end
+                end
+            end
+
+            if test_file then
+                --render_mesh:initRenderContext(test_file)
+            end
+        end
+
+    end
+end
 
 function item_exit:action()
     return iup.CLOSE
 end
 
-file_menu = iup.menu{item_open, item_export, iup.separator{}, item_exit}
+
+function item_test_parser:action()
+
+
+
+
+end
+
+file_menu = iup.menu{item_open, item_export, item_export_dir, iup.separator{}, item_exit, item_test_parser}
 sub_menu = iup.submenu{file_menu, title = "File"}
 main_meun = iup.menu{sub_menu}
 
 local tree = filetree.tree
---主界面
+
 local dlg = iup.dialog{
-    --分隔成两部分
     iup.split
     {
         iup.split

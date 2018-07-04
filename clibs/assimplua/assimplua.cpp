@@ -7,11 +7,11 @@ extern "C"
 #include <lualib.h>
 #include <lauxlib.h>
 }
-
+#include <vector>
 #include <string>
 #include <array>
 //assimp include
-#include <assimp\Importer.hpp>
+#include <assimp\importer.hpp>
 #include <assimp\postprocess.h>
 #include <assimp\scene.h>
 
@@ -41,7 +41,18 @@ struct Vertex {
 	Vector3 texcoord0;
 };
 
+struct SMaterial 
+{
+	aiString name;
+	aiColor3D diffuse;
+	aiColor3D specular;
+
+	//...
+};
+
 struct Primitive {
+	Primitive() : m_startIndex(0), m_numIndices(0), m_startVertex(0), m_numVertices(0) {}
+
 	std::string name;
 	uint32_t m_startIndex;
 	uint32_t m_numIndices;
@@ -53,6 +64,20 @@ struct Primitive {
 	Obb m_obb;
 };
 
+struct SMesh {
+	std::vector<aiVector3D> node_position;
+	std::vector<aiVector3D> node_normal;
+	std::vector<aiVector3D> node_texcoord0;
+	std::vector<unsigned> node_idx;
+};
+
+struct SNode {
+	std::string node_name;
+	aiMatrix4x4 node_transform;
+	std::vector<SMesh> node_mesh;
+	std::vector<SNode*> children;
+};
+
 //最大的顶点数和索引数
 const int MAX_VERTEX_SIZE = 16 * 1024 * 1024;
 const int MAX_TRIANGLE_SIZE = 16 * 1024 * 1024;
@@ -60,6 +85,8 @@ const int MAX_TRIANGLE_SIZE = 16 * 1024 * 1024;
 std::array<Vertex, MAX_VERTEX_SIZE> g_VertexArray;
 std::array<uint16_t, MAX_TRIANGLE_SIZE> g_TriangleArray;
 std::array<Primitive, 1024> g_PrimitiveArray;
+std::vector<SMaterial> g_Material;
+
 void PrintNodeHierarchy(aiNode* node, int space_count)
 {
 	aiString& node_name = node->mName;
@@ -82,6 +109,413 @@ void PrintNodeHierarchy(aiNode* node, int space_count)
 	}
 }
 
+uint16_t vertex_count = 0;
+uint32_t triangle_count = 0;
+uint16_t primitive_count = 0;
+
+int start_vertex = 0;
+int start_triangle = 0;
+
+void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_transform)
+{
+	int mesh_count = node->mNumMeshes;
+	for(int i = 0; i < mesh_count; ++i)
+	{
+		//process mesh info
+		aiMesh* a_mesh = scene->mMeshes[node->mMeshes[i]];
+
+		int vertex_size = a_mesh->mNumVertices;
+		int face_size = a_mesh->mNumFaces;
+
+		auto& prim = g_PrimitiveArray[primitive_count];
+
+		prim.name = std::string(a_mesh->mName.C_Str());
+		prim.m_startIndex = start_triangle * 3;
+		prim.m_startVertex = start_vertex;
+		prim.m_numIndices = face_size * 3;
+		prim.m_numVertices = vertex_size;
+
+		vertex_count += vertex_size;
+		triangle_count += face_size;
+
+		printf("mesh no.%d, vertex size: %d, face size: %d\n", i, vertex_size, face_size);
+
+
+		for (int j = 0; j < vertex_size; ++j)
+		{
+			const aiVector3D& vert = a_mesh->mVertices[j];
+			const aiVector3D& norm = a_mesh->mNormals[j];
+
+			aiVector3D trans_vert = parent_transform * vert;
+			aiVector3D trans_norm = parent_transform * norm;
+
+			auto& vertex = g_VertexArray[start_vertex + j];
+			vertex.position.x = trans_vert.x;
+			vertex.position.y = trans_vert.y;
+			vertex.position.z = trans_vert.z;
+
+			printf("this vert %f, %f, %f\n", trans_vert.x, trans_vert.y, trans_vert.z);
+
+			vertex.normal.x = trans_norm.x;
+			vertex.normal.y = trans_norm.y;
+			vertex.normal.z = trans_norm.z;
+
+			if (a_mesh->HasTextureCoords(0))
+			{
+				vertex.texcoord0.x = a_mesh->mTextureCoords[0][j].x;
+				vertex.texcoord0.y = a_mesh->mTextureCoords[0][j].y;
+				vertex.texcoord0.z = a_mesh->mTextureCoords[0][j].z;
+			}
+			else
+			{
+				vertex.texcoord0.x = 0;
+				vertex.texcoord0.y = 0;
+				vertex.texcoord0.z = 0;
+			}
+		}
+
+		for (int j = 0; j < face_size; ++j)
+		{
+			const aiFace& face = a_mesh->mFaces[j];
+
+		//	BX_CHECK(face.mNumIndices == 3, "Mesh must be triangulated");
+			if (face.mNumIndices != 3)
+			{
+				continue;
+			}
+
+			g_TriangleArray[start_triangle * 3 + j * 3] = face.mIndices[0] + start_vertex;
+			g_TriangleArray[start_triangle * 3 + j * 3 + 1] = face.mIndices[1] + start_vertex;
+			g_TriangleArray[start_triangle * 3 + j * 3 + 2] = face.mIndices[2] + start_vertex;
+
+		}
+
+		start_vertex += vertex_size;
+		start_triangle += face_size;
+		++primitive_count;
+
+	}
+
+	int child_count = node->mNumChildren;
+	for(int i = 0; i < child_count; ++i)
+	{
+		//calculate child node
+		aiNode* child_node = node->mChildren[i];
+		ProcessNode(child_node, scene, parent_transform*node->mTransformation);
+	}
+}
+
+//write node information into lua table
+void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene)
+{
+	if (!node)
+	{
+		return;
+	}
+
+	lua_newtable(L);
+	
+	//set name
+	const char* node_name = node->mName.C_Str();
+	lua_pushstring(L, "name");
+	lua_pushstring(L, node_name);
+	lua_settable(L, -3);
+
+	//set transform
+	aiMatrix4x4 node_transform = node->mTransformation;
+	lua_pushstring(L, "transform");
+
+	lua_newtable(L);
+	lua_pushnumber(L, 1);
+	lua_pushnumber(L, node_transform.a1);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 2);
+	lua_pushnumber(L, node_transform.a2);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 3);
+	lua_pushnumber(L, node_transform.a3);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 4);
+	lua_pushnumber(L, node_transform.a4);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 5);
+	lua_pushnumber(L, node_transform.b1);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 6);
+	lua_pushnumber(L, node_transform.b2);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 7);
+	lua_pushnumber(L, node_transform.b3);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 8);
+	lua_pushnumber(L, node_transform.b4);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 9);
+	lua_pushnumber(L, node_transform.c1);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 10);
+	lua_pushnumber(L, node_transform.c2);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 11);
+	lua_pushnumber(L, node_transform.c3);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 12);
+	lua_pushnumber(L, node_transform.c4);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 13);
+	lua_pushnumber(L, node_transform.d1);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 14);
+	lua_pushnumber(L, node_transform.d2);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 15);
+	lua_pushnumber(L, node_transform.d3);
+	lua_settable(L, -3);
+
+	lua_pushnumber(L, 16);
+	lua_pushnumber(L, node_transform.d4);
+	lua_settable(L, -3);
+
+	//set transofrm table
+	lua_settable(L, -3);
+
+	//set mesh
+	lua_pushstring(L, "mesh");
+	lua_newtable(L);
+
+	scene->mMaterials[0]->mProperties[0]->mType;
+
+	for (unsigned i = 0; i < node->mNumMeshes; ++i)
+	{
+		//start from 1
+		lua_pushnumber(L, i+1);
+		lua_newtable(L);
+
+		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		unsigned mat_idx = mesh->mMaterialIndex;
+		aiMaterial* material = scene->mMaterials[mat_idx];
+		printf("material index %d, %s\n", mat_idx, material->mProperties[1]->mKey.C_Str());
+
+		//parse mesh data
+		if (mesh->HasPositions())
+		{
+			lua_pushstring(L, "positions");
+			lua_newtable(L);
+
+			for (unsigned j = 0; j < mesh->mNumVertices; ++j)
+			{
+				lua_pushnumber(L, j * 3+1);
+				lua_pushnumber(L, mesh->mVertices[j].x);
+				lua_settable(L, -3);
+
+				lua_pushnumber(L, j * 3+2);
+				lua_pushnumber(L, mesh->mVertices[j].y);
+				lua_settable(L, -3);
+
+				lua_pushnumber(L, j * 3+3);
+				lua_pushnumber(L, mesh->mVertices[j].z);
+				lua_settable(L, -3);
+
+			}
+
+			lua_settable(L, -3);
+		}
+
+		if (mesh->HasNormals())
+		{
+			lua_pushstring(L, "normals");
+			lua_newtable(L);
+
+			for (unsigned j = 0; j < mesh->mNumVertices; ++j)
+			{
+				lua_pushnumber(L, j * 3+1);
+				lua_pushnumber(L, mesh->mNormals[j].x);
+				lua_settable(L, -3);
+
+				lua_pushnumber(L, j * 3+2);
+				lua_pushnumber(L, mesh->mNormals[j].y);
+				lua_settable(L, -3);
+
+				lua_pushnumber(L, j * 3+3);
+				lua_pushnumber(L, mesh->mNormals[j].z);
+				lua_settable(L, -3);
+			}
+
+			lua_settable(L, -3);
+		}
+
+		//for now, only texcoord0
+		if (mesh->HasTextureCoords(0))
+		{
+			lua_pushstring(L, "texcoord0");
+			lua_newtable(L);
+
+			for (unsigned j = 0; j < mesh->mNumVertices; ++j)
+			{
+				lua_pushnumber(L, j * 3+1);
+				lua_pushnumber(L, mesh->mTextureCoords[0][j].x);
+				lua_settable(L, -3);
+
+				lua_pushnumber(L, j * 3+2);
+				lua_pushnumber(L, mesh->mTextureCoords[0][j].y);
+				lua_settable(L, -3);
+
+				lua_pushnumber(L, j * 3+3);
+				lua_pushnumber(L, mesh->mTextureCoords[0][j].z);
+				lua_settable(L, -3);
+			}
+
+			lua_settable(L, -3);		
+		}
+
+		if (mesh->HasFaces())
+		{
+			lua_pushstring(L, "indices");
+			lua_newtable(L);
+
+			int index_count = 1;
+			for (unsigned j = 0; j < mesh->mNumFaces; ++j)
+			{
+				const aiFace& face = mesh->mFaces[j];
+
+				for (unsigned k = 0; k < face.mNumIndices; ++k)
+				{
+					lua_pushnumber(L, index_count);
+					lua_pushnumber(L, face.mIndices[k]);
+					lua_settable(L, -3);
+					++index_count;
+				}					
+			}
+
+			lua_settable(L, -3);
+		}
+
+		lua_settable(L, -3);
+	}
+
+	lua_settable(L, -3);
+	
+
+	lua_pushstring(L, "children");
+	lua_newtable(L);
+	//set children
+	for(unsigned i =0; i < node->mNumChildren; ++i)
+	{
+		lua_pushnumber(L, i + 1);
+		WriteNodeToLua(L, node->mChildren[i], scene);
+		lua_settable(L, -3);
+		
+	}
+	lua_settable(L, -3);
+}
+
+void ProcessMaterial(const aiScene* scene)
+{
+	unsigned mat_count = scene->mNumMaterials;
+	for (int i = 0; i < mat_count; ++i)
+	{
+		auto& prim = g_PrimitiveArray[primitive_count];
+		aiMaterial* mat = scene->mMaterials[i];
+		aiString name;
+		_ASSERT(AI_SUCCESS == mat->Get(AI_MATKEY_NAME, name));
+
+		SMaterial new_mat;
+		new_mat.name = name;
+
+		aiColor3D diffuse;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse))
+		{
+			new_mat.diffuse = diffuse;
+		}
+
+		aiColor3D specular;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_SPECULAR, specular))
+		{
+			new_mat.specular = specular;
+		}
+	
+
+		prim.name = name.C_Str();
+
+		++primitive_count;
+	}
+}
+
+static int LoadFBXTest(lua_State *L)
+{
+	Assimp::Importer importer;
+
+	std::string fbx_path;
+	if (lua_isstring(L, -1))
+	{
+		fbx_path = lua_tostring(L, -1);
+		lua_pop(L, 1);
+	}
+	else
+	{
+		return 0;
+	}
+
+	unsigned import_flags =
+		aiProcess_CalcTangentSpace |
+		aiProcess_Triangulate |
+		aiProcess_SortByPType |
+		aiProcess_OptimizeMeshes;
+		
+	const aiScene* scene = importer.ReadFile(fbx_path, import_flags);
+	if (!scene)
+	{
+		printf("Error loading");
+		return 0;
+	}
+
+	ProcessMaterial(scene);
+
+	aiNode* root_node = scene->mRootNode;
+
+	if (!root_node)
+	{
+		return 0;
+	}
+
+	ProcessNode(root_node, scene, aiMatrix4x4());
+}
+
+static int LoadFBX(lua_State *L)
+{
+	Assimp::Importer importer;
+
+	std::string fbx_path;
+	if (lua_isstring(L, -1))
+	{
+		fbx_path = lua_tostring(L, -1);
+		lua_pop(L, 1);
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+static int SerializeBIN(lua_State *L)
+{
+	return 0;
+}
+
 static int AssimpImport(lua_State * L)
 {
 	Assimp::Importer importer;
@@ -102,14 +536,13 @@ static int AssimpImport(lua_State * L)
 //	printf("\n inpath: %s\n", in_path.data());
 //	printf("outpath: %s\n", out_path.data());
 
-	const aiScene* scene = importer.ReadFile(in_path, 
-		aiProcess_CalcTangentSpace		| 
+	unsigned import_flags = 
+		aiProcess_CalcTangentSpace		|
 		aiProcess_Triangulate			|
-		aiProcess_JoinIdenticalVertices |
-		aiProcess_SortByPType
-		);
-		
-	
+		aiProcess_SortByPType			|
+		aiProcess_OptimizeMeshes;
+
+	const aiScene* scene = importer.ReadFile(in_path, import_flags);
 	if (!scene)
 	{
 		printf("Error loading");
@@ -117,95 +550,29 @@ static int AssimpImport(lua_State * L)
 	}
 
 	aiNode* root_node = scene->mRootNode;
-	if (root_node)
+	
+	if(!root_node)
 	{
-		PrintNodeHierarchy(root_node, 0);
+		return 0;
 	}
+	
+	vertex_count = 0;
+	triangle_count = 0;
+	primitive_count = 0;
 
-	uint16_t vertex_count = 0;
-	uint32_t triangle_count = 0;
-	uint16_t primitive_count = 0;
+	start_vertex = 0;
+	start_triangle = 0;
 
-	int start_vertex = 0;
-	int start_triangle = 0;
-
-	if (scene->HasMeshes())
+	//do a trick for unity here
+	//todo: undo it later
+	if(root_node->mNumChildren == 1)
 	{
-		int mesh_count = scene->mNumMeshes;
-		printf("\n");
-
-		for (int i = 0; i < mesh_count; ++i)
-		{
-			aiMesh* a_mesh = scene->mMeshes[i];
-
-			int vertex_size = a_mesh->mNumVertices;
-			int face_size = a_mesh->mNumFaces;
-
-			auto& prim = g_PrimitiveArray[primitive_count];
-
-			prim.name = std::string(a_mesh->mName.C_Str());
-			prim.m_startIndex = start_triangle * 3;
-			prim.m_startVertex = start_vertex;
-			prim.m_numIndices = face_size * 3;
-			prim.m_numVertices = vertex_size;
-
-			vertex_count += vertex_size;
-			triangle_count += face_size;
-
-			printf("mesh no.%d, vertex size: %d, face size: %d\n", i, vertex_size, face_size);
-
-
-			for (int j = 0; j < vertex_size; ++j)
-			{
-				const aiVector3D& vert = a_mesh->mVertices[j];
-				const aiVector3D& norm = a_mesh->mNormals[j];
-
-				auto& vertex = g_VertexArray[start_vertex + j];
-				vertex.position.x = vert.x;
-				vertex.position.y = vert.y;
-				vertex.position.z = vert.z;
-
-				vertex.normal.x = norm.x;
-				vertex.normal.y = norm.y;
-				vertex.normal.z = norm.z;
-
-				if (a_mesh->HasTextureCoords(0))
-				{
-					vertex.texcoord0.x = a_mesh->mTextureCoords[0][j].x;
-					vertex.texcoord0.y = a_mesh->mTextureCoords[0][j].y;
-					vertex.texcoord0.z = a_mesh->mTextureCoords[0][j].z;
-				}
-				else
-				{
-					vertex.texcoord0.x = 0;
-					vertex.texcoord0.y = 0;
-					vertex.texcoord0.z = 0;
-				}
-			}
-
-			for (int j = 0; j < face_size; ++j)
-			{
-				const aiFace& face = a_mesh->mFaces[j];
-
-			//	BX_CHECK(face.mNumIndices == 3, "Mesh must be triangulated");
-				if (face.mNumIndices != 3)
-				{
-					continue;
-				}
-
-				g_TriangleArray[start_triangle * 3 + j * 3] = face.mIndices[0] + start_vertex;
-				g_TriangleArray[start_triangle * 3 + j * 3 + 1] = face.mIndices[1] + start_vertex;
-				g_TriangleArray[start_triangle * 3 + j * 3 + 2] = face.mIndices[2] + start_vertex;
-
-			}
-
-
-			start_vertex += vertex_size;
-			start_triangle += face_size;
-			++primitive_count;
-		}
-
+		root_node = root_node->mChildren[0];
+		root_node = root_node->mChildren[0];
+		root_node = root_node->mChildren[0];
 	}
+	
+	ProcessNode(root_node, scene, aiMatrix4x4());
 
 	//暂时先只导出顶点位置和面信息
 	printf("vertex count: %d, triangle count: %d", vertex_count, triangle_count);
@@ -302,6 +669,9 @@ static int AssimpImport(lua_State * L)
 static const struct luaL_Reg myLib[] =
 {
 	{"assimp_import", AssimpImport},
+	{"LoadFBX", LoadFBX},
+	{"LoadFBXTest", LoadFBXTest},
+	{"SerializeBIN", SerializeBIN},
 	{ NULL, NULL }      
 };
 

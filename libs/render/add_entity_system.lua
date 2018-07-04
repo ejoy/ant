@@ -14,15 +14,17 @@ add_entity_sys.singleton "constant"
 add_entity_sys.depend "constant_init_sys"
 add_entity_sys.dependby "iup_message"
 
+
 function add_entity_sys:init()
-	local ms = self.math_stack
-	
+    local ms = self.math_stack
+--[[
 	do
 		local leid = lu.create_directional_light_entity(world)
 		local lentity = world[leid]
 		local light = lentity.light.v
 		light.rot = {135, 0, 0}		
 	end
+--]]
 
     do
         local bunny_eid = world:new_entity("position", "rotation", "scale", 
@@ -43,7 +45,7 @@ function add_entity_sys:init()
 		bunny.material.content[1] = {path = "bunny.material", properties = {}}
 		component_util.load_material(bunny)
 	end
-
+--[[
 	do
 		local stone_eid = world:new_entity("position", "rotation", "scale",
 		"can_render", "mesh", "material",
@@ -99,7 +101,7 @@ function add_entity_sys:init()
 		stone.material.content[1] = {path = "stone.material", properties={}}
 		component_util.load_material(stone)
 	end
-	
+	--]]
     local function create_entity(name, meshfile, materialfile)
         local eid = world:new_entity("rotation", "position", "scale", 
 		"mesh", "material", 
