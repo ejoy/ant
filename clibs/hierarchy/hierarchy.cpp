@@ -55,7 +55,7 @@ get_tree(lua_State *L, int index){
 static int
 lbuilddata_len(lua_State *L){
 	struct hierarchy_build_data* buildata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
-	lua_pushinteger(L, buildata->skeleton->bind_pose().Count());
+	lua_pushinteger(L, buildata->skeleton->bind_pose().count());
 	return 0;
 }
 
@@ -236,7 +236,7 @@ change_property(lua_State *L, RawSkeleton::Joint * joint, const char * p, int va
 					lua_pop(L, 1);
 					v[0] = v[1] = v[2] = n;
 				}else{
-					if (tlen != num){
+					if (tlen != (size_t)num){
 						luaL_error(L, "array len is %d, is not equal request len %d", tlen, num);
 					}
 					for (int ii = 0; ii < num; ++ii) {
