@@ -561,6 +561,17 @@ lclient_activeline(lua_State *L) {
 	return 0;
 }
 
+static int
+lclient_stacklevel(lua_State *L) {
+	lua_State *hL = get_host(L);
+	lua_Debug ar;
+	int n;
+	for (n = 0; lua_getstack(hL, n + 1, &ar) != 0; ++n)
+	{ }
+	lua_pushinteger(L, n);
+	return 1;
+}
+
 LUAMOD_API int
 luaopen_remotedebug(lua_State *L) {
 	luaL_checkversion(L);
@@ -583,6 +594,7 @@ luaopen_remotedebug(lua_State *L) {
 			{ "type", lclient_type },
 			{ "getinfo", lclient_getinfo },
 			{ "activeline", lclient_activeline },
+			{ "stacklevel", lclient_stacklevel },
 			{ NULL, NULL },
 		};
 		luaL_newlib(L,l);
