@@ -82,14 +82,20 @@ function toolset.compile(filename, paths, renderer)
 			sopt = nil,
 			splat = nil,
 		}
-		if paths.shaderinc then			
+		
+		local includes = paths.includes
+		if includes then
 			local function gen_incpath(pp)
 				return '-i "' .. pp .. '"'
 			end
-			local incpath = gen_incpath(paths.shaderinc)
+
+			local incpath = ""
+			for _, p in ipairs(includes) do
+				incpath = incpath .. gen_incpath(p) .. " "
+			end
 			if paths.not_include_examples_common == nil then 
 				local incexamplepath = fspath.join(paths.shaderinc, "../examples/common")
-				incpath = incpath .. " " .. gen_incpath(incexamplepath)
+				incpath = incpath .. gen_incpath(incexamplepath)
 			end
 
 			tbl.inc = incpath

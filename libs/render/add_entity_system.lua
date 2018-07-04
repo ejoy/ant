@@ -97,79 +97,83 @@ function add_entity_sys:init()
 		component_util.load_material(bunny)
 	end
 
-	-- do	-- pochuan
-	-- 	local pochuan_eid = world:new_entity("position", "rotation", "scale", 
-	-- 	"can_render", "mesh", "material",
-	-- 	"name", "serialize",
-	-- 	"can_select")
-	-- 	local pochuan = world[pochuan_eid]
-	-- 	pochuan.name.n = "PoChuan"
-
-	-- 	component_util.load_mesh(pochuan, "pochuan.mesh", {calctangent=true})
-	-- 	--component_util.load_material(pochuan, {"pochuan.material"})
-	-- 	component_util.load_material(pochuan, {"bunny.material"})
-	-- end
-
-	do
-		local stone_eid = world:new_entity("position", "rotation", "scale",
+	do	-- pochuan
+		local pochuan_eid = world:new_entity("position", "rotation", "scale", 
 		"can_render", "mesh", "material",
-		"name", "serialize", "can_select")
+		"name", "serialize",
+		"can_select")
+		local pochuan = world[pochuan_eid]
+		pochuan.name.n = "PoChuan"
 
-		local stone = world[stone_eid]
-		stone.name.n = "texture_stone"
+		--mu.identify_transform(ms, pochuan)
+		ms(pochuan.scale.v, {0.1, 0.1, 0.1}, "=")
+		ms(pochuan.rotation.v, {-90, 0, 0,}, "=")
 
-		mu.identify_transform(ms, stone)		
+		component_util.load_mesh(pochuan, "pochuan.mesh", {calctangent=true})
+		component_util.load_material(pochuan, {"pochuan.material"})
+		--component_util.load_material(pochuan, {"bunny.material"})
+	end
 
-		local function create_plane_mesh()
-			local vdecl = bgfx.vertex_decl {
-				{ "POSITION", 3, "FLOAT" },
-				{ "NORMAL", 3, "FLOAT"},
-				{ "TANGENT", 4, "FLOAT"},
-				{ "TEXCOORD0", 2, "FLOAT"},				
-			}
+	-- do
+	-- 	local stone_eid = world:new_entity("position", "rotation", "scale",
+	-- 	"can_render", "mesh", "material",
+	-- 	"name", "serialize", "can_select")
 
-			local lensize = 5
+	-- 	local stone = world[stone_eid]
+	-- 	stone.name.n = "texture_stone"
 
-			return {
-				handle = {
-					group = {
-						{
-							vdecl = vdecl,
-							vb = bgfx.create_vertex_buffer(
-								{"ffffffffffff",
-							lensize, -lensize, 0.0, 
-							0.0, 0.0, -1.0, 
-							0.0, 1.0, 0.0, 1.0,
-							1.0, 0.0,
+	-- 	mu.identify_transform(ms, stone)		
 
-							lensize, lensize, 0.0, 
-							0.0, 0.0, -1.0, 
-							0.0, 1.0, 0.0, 1.0,
-							1.0, 1.0,
+	-- 	local function create_plane_mesh()
+	-- 		local vdecl = bgfx.vertex_decl {
+	-- 			{ "POSITION", 3, "FLOAT" },
+	-- 			{ "NORMAL", 3, "FLOAT"},
+	-- 			{ "TANGENT", 4, "FLOAT"},
+	-- 			{ "TEXCOORD0", 2, "FLOAT"},				
+	-- 		}
 
-							-lensize, -lensize, 0.0, 							
-							0.0, 0.0, -1.0, 
-							0.0, 1.0, 0.0, 1.0,
-							0.0, 0.0,
+	-- 		local lensize = 5
 
-							-lensize, lensize, 0.0, 							
-							0.0, 0.0, -1.0, 
-							0.0, 1.0, 0.0, 1.0,
-							0.0, 1.0,
-							}, vdecl)
-						},
-					}
-				}
-			}
-		end
+	-- 		return {
+	-- 			handle = {
+	-- 				group = {
+	-- 					{
+	-- 						vdecl = vdecl,
+	-- 						vb = bgfx.create_vertex_buffer(
+	-- 							{"ffffffffffff",
+	-- 						lensize, -lensize, 0.0, 
+	-- 						0.0, 0.0, -1.0, 
+	-- 						0.0, 1.0, 0.0, 1.0,
+	-- 						1.0, 0.0,
 
-		stone.mesh.path = ""	-- runtime mesh info
-		stone.mesh.assetinfo = create_plane_mesh()
+	-- 						lensize, lensize, 0.0, 
+	-- 						0.0, 0.0, -1.0, 
+	-- 						0.0, 1.0, 0.0, 1.0,
+	-- 						1.0, 1.0,
+
+	-- 						-lensize, -lensize, 0.0, 							
+	-- 						0.0, 0.0, -1.0, 
+	-- 						0.0, 1.0, 0.0, 1.0,
+	-- 						0.0, 0.0,
+
+	-- 						-lensize, lensize, 0.0, 							
+	-- 						0.0, 0.0, -1.0, 
+	-- 						0.0, 1.0, 0.0, 1.0,
+	-- 						0.0, 1.0,
+	-- 						}, vdecl)
+	-- 					},
+	-- 				}
+	-- 			}
+	-- 		}
+	-- 	end
+
+	-- 	stone.mesh.path = ""	-- runtime mesh info
+	-- 	stone.mesh.assetinfo = create_plane_mesh()
 		
 
-		stone.material.content[1] = {path = "stone.material", properties={}}
-		component_util.load_material(stone)
-	end
+	-- 	stone.material.content[1] = {path = "stone.material", properties={}}
+	-- 	component_util.load_material(stone)
+	-- end
 	
     local function create_entity(name, meshfile, materialfile)
         local eid = world:new_entity("rotation", "position", "scale", 

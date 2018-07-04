@@ -56,8 +56,10 @@ local function compile_shader(filename, outfile)
 
     if next(config) == nil then
         return false, "load_config file failed, 'bin/iup.exe tools/config.lua' need to run first"
-    end
-
+	end
+	
+	local cwd = fs.currentdir()
+	config.includes = {config.shaderinc, path.join(cwd, "assets/shaders/src")}
     config.dest = outfile
     return toolset.compile(filename, config, get_compile_renderer_name())
 end
