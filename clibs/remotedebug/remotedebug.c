@@ -309,6 +309,13 @@ lclient_switch(lua_State *L) {
 }
 
 static int
+lclient_context(lua_State *L) {
+	lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST);
+	lua_pushfstring(L, "[thread: %p]", lua_topointer(L, -1));
+	return 1;
+}
+
+static int
 lclient_sethook(lua_State *L) {
 	luaL_checktype(L,1,LUA_TFUNCTION);
 	lua_State *cL = lua_newthread(L);
@@ -561,6 +568,7 @@ luaopen_remotedebug(lua_State *L) {
 		// It's client
 		luaL_Reg l[] = {
 			{ "switch", lclient_switch },
+			{ "context", lclient_context },
 			{ "sethook", lclient_sethook },
 			{ "hookmask", lclient_hookmask },
 			{ "getlocal", lclient_getlocal },
