@@ -43,4 +43,9 @@ Server端接收Client端传来的指令,返回对应指令和数据, 包括:
 - RUN：命令Client运行某文件，一般是入口脚本，如果Client本地没有该脚本，会尝试在Server上找
 - SCREENSHOT：命令Client截屏并返回，Client返回时也会使用SCREENSHOT指令
 
-
+## iOS
+和iOS端通讯需要libimobiledevice库的支持, 需要下载iTunes
+另外还需要编译以下三个库的dll, 编译libimobiledevicelua.dll, cpp文件放在LuaBind下
+https://github.com/libimobiledevice/libusbmuxd.git
+https://github.com/libimobiledevice/libimobiledevice.git
+https://github.com/libimobiledevice/libplist.git
