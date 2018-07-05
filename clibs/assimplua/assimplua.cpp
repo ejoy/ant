@@ -620,9 +620,12 @@ static int AssimpImport(lua_State *L)
 	//todo: undo it later
 	if (root_node->mNumChildren == 1)
 	{
-		root_node = root_node->mChildren[0];
-		root_node = root_node->mChildren[0];
-		root_node = root_node->mChildren[0];
+		std::string node_name;
+		do
+		{
+			root_node = root_node->mChildren[0];
+			node_name = root_node->mName.C_Str();
+		} while (node_name.find("_$AssimpFbx$_") != std::string::npos && node_name.find("Geometric") == std::string::npos);
 	}
 
 	ProcessNode(root_node, scene, aiMatrix4x4());
