@@ -1,5 +1,8 @@
 package.cpath = "../../../clibs/?.dll"
-package.path = "../Common/?.lua;../../?/?.lua;".. package.path
+package.path = "../Common/?.lua;../../?.lua;../../?/?.lua;".. package.path
+
+
+local debugger = require 'new-debugger'
 local lanes = require "lanes"
 if lanes.configure then lanes.configure() end
 local linda = lanes.linda()
@@ -24,6 +27,16 @@ local function CreateIOThread(linda)
     end
 end
 local client_io = lanes.gen("*", CreateIOThread)(linda)
+
+local function CreateDbgThread()
+    package.path = "../../?.lua;".. package.path
+    local debugger = require 'new-debugger'
+    local DbgUpdate = debugger:initialize()
+    while true do
+        DbgUpdate()
+    end
+end
+lanes.gen("*", CreateDbgThread)()
 
 local function remote_searcher (name)
     local full_path = name..".lua"
@@ -123,10 +136,13 @@ local function HandleMsg()
     end
 end
 
+debugger:start()
+
 --logic thread
 if (iup.MainLoopLevel() == 0) then
     --iup.MainLoop()
     while true do
+        debugger:update()
         HandleMsg()
         --remotestuff.run()
         local msg = iup.LoopStep()
