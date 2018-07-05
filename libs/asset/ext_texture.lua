@@ -76,7 +76,7 @@ return function (filename)
 	local tex = rawtable(filename)
 	local pp = assetmgr.find_valid_asset_path(assert(tex.path))
 	if pp == nil then
-		error("texture path is not valid, path is : ", tex.path)
+		error("texture path is not valid, path is : " .. tex.path)
 	end
 	
 	local sampler = tex.sampler

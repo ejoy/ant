@@ -21,7 +21,7 @@ build_iup :
 clean_iup : build_lua
 	cd iup && $(MAKE) clean
 
-copy_iup_exe: | iup.exe
+copy_iup_exe :
 	cd iup && cp iup.exe ../iup.exe
 
 build_lsocket : build_lua
