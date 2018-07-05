@@ -1,5 +1,6 @@
 local winfile =  require "winfile"
 local memoryfile = require "memoryfile"
+local packfile_open = require "packfile.openfile"
 
 local memopen = memoryfile.open
 
@@ -7,7 +8,7 @@ local filesystem = {
 	file = {
 		loadfile = winfile.loadfile,
 		dofile = winfile.dofile,
-		open = winfile.open,
+		open = packfile_open,
 	},
 	mem = {
 		loadfile = function(filename, ...)

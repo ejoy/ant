@@ -1,5 +1,5 @@
 BIN = .
-LIBS = math3d lsocket redirectfd winfile bgfx remotedebug memoryfile lanes crypt assimplua hierarchy
+LIBS = math3d lsocket redirectfd winfile bgfx remotedebug memoryfile lanes crypt assimplua hierarchy cppfs
 PLAT = mingw
 
 IUPLIBS = luaiup scintilla iupluaimglib iupluacontrols
