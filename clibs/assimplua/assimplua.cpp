@@ -50,8 +50,8 @@ struct SMaterial
 	//...
 };
 
-struct Primitive {
-	Primitive() : m_startIndex(0), m_numIndices(0), m_startVertex(0), m_numVertices(0) {}
+struct SPrimitive {
+	SPrimitive() : m_startIndex(0), m_numIndices(0), m_startVertex(0), m_numVertices(0) {}
 
 	std::string name;
 	uint32_t m_startIndex;
@@ -63,6 +63,23 @@ struct Primitive {
 	Aabb m_aabb;
 	Obb m_obb;
 };
+
+struct SChunk
+{
+	SMaterial material;
+	std::vector<SPrimitive> primitives;
+
+
+	std::array<Vertex, MAX_VERTEX_SIZE> g_VertexArray;
+	std::array<uint16_t, MAX_TRIANGLE_SIZE> g_TriangleArray;
+
+	unsigned vertex_count = 0;
+	unsigned triangle_count = 0;
+	
+	int start_vertex = 0;
+	int start_triangle = 0;
+};
+uint16_t chunk_count = 0;
 
 struct SMesh {
 	std::vector<aiVector3D> node_position;
@@ -79,12 +96,11 @@ struct SNode {
 };
 
 //最大的顶点数和索引数
-const int MAX_VERTEX_SIZE = 16 * 1024 * 1024;
-const int MAX_TRIANGLE_SIZE = 16 * 1024 * 1024;
+const int MAX_VERTEX_SIZE = 64 * 1024;
+const int MAX_TRIANGLE_SIZE = 128 * 1024;
 
-std::array<Vertex, MAX_VERTEX_SIZE> g_VertexArray;
-std::array<uint16_t, MAX_TRIANGLE_SIZE> g_TriangleArray;
-std::array<Primitive, 1024> g_PrimitiveArray;
+std::array<SChunk, 128>  g_ChunkArray;
+
 std::vector<SMaterial> g_Material;
 
 void PrintNodeHierarchy(aiNode* node, int space_count)
@@ -111,7 +127,6 @@ void PrintNodeHierarchy(aiNode* node, int space_count)
 
 uint16_t vertex_count = 0;
 uint32_t triangle_count = 0;
-uint16_t primitive_count = 0;
 
 int start_vertex = 0;
 int start_triangle = 0;
@@ -123,15 +138,17 @@ void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_t
 	{
 		//process mesh info
 		aiMesh* a_mesh = scene->mMeshes[node->mMeshes[i]];
+		unsigned mat_idx = a_mesh->mMaterialIndex;
+		auto& chunk = g_ChunkArray[mat_idx];
 
 		int vertex_size = a_mesh->mNumVertices;
 		int face_size = a_mesh->mNumFaces;
 
-		auto& prim = g_PrimitiveArray[primitive_count];
+		SPrimitive prim;
 
 		prim.name = std::string(a_mesh->mName.C_Str());
-		prim.m_startIndex = start_triangle * 3;
-		prim.m_startVertex = start_vertex;
+		prim.m_startIndex = chunk.start_triangle * 3;
+		prim.m_startVertex = chunk.start_vertex;
 		prim.m_numIndices = face_size * 3;
 		prim.m_numVertices = vertex_size;
 
@@ -190,10 +207,10 @@ void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_t
 
 		}
 
-		start_vertex += vertex_size;
-		start_triangle += face_size;
-		++primitive_count;
-
+		chunk.start_vertex += vertex_size;
+		chunk.start_triangle += face_size;
+		
+		chunk.primitives.push_back(prim);
 	}
 
 	int child_count = node->mNumChildren;
@@ -423,12 +440,13 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene)
 	lua_settable(L, -3);
 }
 
+//one material for one chunk
 void ProcessMaterial(const aiScene* scene)
 {
 	unsigned mat_count = scene->mNumMaterials;
 	for (int i = 0; i < mat_count; ++i)
 	{
-		auto& prim = g_PrimitiveArray[primitive_count];
+		auto& chunk = g_ChunkArray[chunk_count];
 		aiMaterial* mat = scene->mMaterials[i];
 		aiString name;
 		_ASSERT(AI_SUCCESS == mat->Get(AI_MATKEY_NAME, name));
@@ -449,9 +467,9 @@ void ProcessMaterial(const aiScene* scene)
 		}
 	
 
-		prim.name = name.C_Str();
+		chunk.material = new_mat;
 
-		++primitive_count;
+		++chunk_count;
 	}
 }
 
