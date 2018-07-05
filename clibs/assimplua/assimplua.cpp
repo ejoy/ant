@@ -75,8 +75,8 @@ struct SChunk
 	std::array<Vertex, MAX_VERTEX_SIZE> vertexArray;
 	std::array<uint16_t, MAX_TRIANGLE_SIZE> triangleArray;
 
-	unsigned vertex_count = 0;
-	unsigned triangle_count = 0;
+	uint16_t vertex_count = 0;
+	uint16_t triangle_count = 0;
 	
 	int start_vertex = 0;
 	int start_triangle = 0;
@@ -96,8 +96,6 @@ struct SNode {
 	std::vector<SMesh> node_mesh;
 	std::vector<SNode*> children;
 };
-
-
 
 std::array<SChunk, 128>  g_ChunkArray;
 
@@ -505,7 +503,7 @@ void WriteChunkToBGFX(const std::string& out_path)
 	{
 		auto& chunk = g_ChunkArray[chunk_idx];
 		bx::write(&file_writer, BGFX_CHUNK_MAGIC_VB);
-
+	
 		Sphere max_sphere;
 		calcMaxBoundingSphere(max_sphere, &chunk.vertexArray[0], chunk.vertex_count, stride);
 		Sphere min_sphere;
@@ -529,7 +527,7 @@ void WriteChunkToBGFX(const std::string& out_path)
 		bx::write(&file_writer, chunk.vertex_count);		//顶点数量
 
 													//然后是文件顶点array
-		int vertex_size = sizeof(Vertex) * chunk.vertex_count;
+		uint32_t vertex_size = sizeof(Vertex) * chunk.vertex_count;
 		bx::write(&file_writer, &chunk.vertexArray[0], vertex_size);
 
 		//这边就是index了
@@ -542,9 +540,9 @@ void WriteChunkToBGFX(const std::string& out_path)
 		uint16_t len = chunk.material.name.length;	//文件路径当作其名字
 		bx::write(&file_writer, len);
 		bx::write(&file_writer, chunk.material.name.C_Str());
-
-		unsigned primitive_count = chunk.primitives.size();
-		printf("prim coount: %d\n", primitive_count);
+	
+		//must be uint16_t!!
+		uint16_t primitive_count = chunk.primitives.size();
 
 		bx::write(&file_writer, primitive_count);
 		for (uint32_t ii = 0; ii < primitive_count; ++ii)
@@ -558,19 +556,19 @@ void WriteChunkToBGFX(const std::string& out_path)
 			bx::write(&file_writer, prim.m_numIndices);
 			bx::write(&file_writer, prim.m_startVertex);
 			bx::write(&file_writer, prim.m_numVertices);
-
+			
 			bx::write(&file_writer, surround_sphere);	//暂时随便弄一个
 			bx::write(&file_writer, aabb);
 			bx::write(&file_writer, obb);
 		}
 	}
-	
-	bx::close(&file_writer);
+
 	printf("\nWriting finished\n");
+	bx::close(&file_writer);
 
 }
 
-static int LoadFBXTest(lua_State *L)
+static int AssimpImport(lua_State *L)
 {
 	Assimp::Importer importer;
 
@@ -618,6 +616,15 @@ static int LoadFBXTest(lua_State *L)
 		return 0;
 	}
 
+	//do a trick for unity here
+	//todo: undo it later
+	if (root_node->mNumChildren == 1)
+	{
+		root_node = root_node->mChildren[0];
+		root_node = root_node->mChildren[0];
+		root_node = root_node->mChildren[0];
+	}
+
 	ProcessNode(root_node, scene, aiMatrix4x4());
 
 	WriteChunkToBGFX(out_path);
@@ -625,152 +632,9 @@ static int LoadFBXTest(lua_State *L)
 	return 0;
 }
 
-static int AssimpImport(lua_State * L)
-{
-	/*
-	Assimp::Importer importer;
-	
-	std::string in_path;	//输入路径
-	std::string out_path;	//输出路径
-
-	if (lua_isstring(L, 1))
-	{
-		in_path = lua_tostring(L, 1);
-	}
-
-	if (lua_isstring(L, 1))
-	{
-		out_path = lua_tostring(L, 2);
-	}
-
-//	printf("\n inpath: %s\n", in_path.data());
-//	printf("outpath: %s\n", out_path.data());
-
-	unsigned import_flags = 
-		aiProcess_CalcTangentSpace		|
-		aiProcess_Triangulate			|
-		aiProcess_SortByPType			|
-		aiProcess_OptimizeMeshes;
-
-	const aiScene* scene = importer.ReadFile(in_path, import_flags);
-	if (!scene)
-	{
-		printf("Error loading");
-		return 0;
-	}
-
-	aiNode* root_node = scene->mRootNode;
-	
-	if(!root_node)
-	{
-		return 0;
-	}
-
-	//do a trick for unity here
-	//todo: undo it later
-	if(root_node->mNumChildren == 1)
-	{
-		root_node = root_node->mChildren[0];
-		root_node = root_node->mChildren[0];
-		root_node = root_node->mChildren[0];
-	}
-	
-	ProcessNode(root_node, scene, aiMatrix4x4());
-
-		
-	//转换成bgfx的格式
-	bgfx::VertexDecl decl;
-	decl.begin();
-
-	decl.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float);						//顶点位置
-	decl.add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float, true, false);			//顶点法线
-	decl.add(bgfx::Attrib::TexCoord0, 3, bgfx::AttribType::Float);
-	decl.end();
-
-	printf("\nStart Writing");
-
-	bx::FileWriter file_writer;
-	bx::Error b_error;
-
-	//写文件
-	bx::open(&file_writer, out_path.data(), false, &b_error);	//注意append(第三个参数选false,要不然不会覆盖前一个文件,而是写在后面)
-
-																//现在按照bgfx标准的读取形式
-	int stride = decl.getStride();
-	//表示传入数据的类型
-	//这个表示的是vertex buffer数据
-	
-	bx::write(&file_writer, BGFX_CHUNK_MAGIC_VB);
-
-	Sphere max_sphere;
-	calcMaxBoundingSphere(max_sphere, &g_VertexArray[0], vertex_count, stride);
-	Sphere min_sphere;
-	calcMinBoundingSphere(min_sphere, &g_VertexArray[0], vertex_count, stride);
-
-	Sphere surround_sphere;
-	//包围球
-	min_sphere.m_radius < max_sphere.m_radius ? surround_sphere = max_sphere : surround_sphere = min_sphere;
-	bx::write(&file_writer, surround_sphere);
-	//aabb
-	Aabb aabb;
-	toAabb(aabb, &g_VertexArray[0], vertex_count, stride);
-	bx::write(&file_writer, aabb);
-	//obb
-	Obb obb;
-	calcObb(obb, &g_VertexArray[0], vertex_count, stride);
-	bx::write(&file_writer, obb);
-	//vertexdecl
-	bgfx::write(&file_writer, decl);
-
-	bx::write(&file_writer, vertex_count);		//顶点数量
-
-												//然后是文件顶点array
-	int vertex_size = sizeof(Vertex) * vertex_count;
-	bx::write(&file_writer, &g_VertexArray[0], vertex_size);
-
-	//这边就是index了
-	bx::write(&file_writer, BGFX_CHUNK_MAGIC_IB);
-	bx::write(&file_writer, triangle_count * 3);		//三角形数量
-														//索引array
-	bx::write(&file_writer, &g_TriangleArray[0], sizeof(uint16_t)*triangle_count * 3);
-
-	bx::write(&file_writer, BGFX_CHUNK_MAGIC_PRI); //primitive,基本信息?
-												   //暂时不管material
-												   //只存储一个material,就是路径
-	uint16_t len = out_path.size();	//文件路径当作其名字
-	bx::write(&file_writer, len);
-	bx::write(&file_writer, out_path.data());
-
-	bx::write(&file_writer, primitive_count);
-	for (uint32_t ii = 0; ii < primitive_count; ++ii)
-	{
-		auto& prim = g_PrimitiveArray[ii];
-		uint16_t name_len = prim.name.size();
-		bx::write(&file_writer, name_len);
-		bx::write(&file_writer, prim.name.data());
-
-		bx::write(&file_writer, prim.m_startIndex);
-		bx::write(&file_writer, prim.m_numIndices);
-		bx::write(&file_writer, prim.m_startVertex);
-		bx::write(&file_writer, prim.m_numVertices);
-
-		bx::write(&file_writer, surround_sphere);	//暂时随便弄一个
-		bx::write(&file_writer, aabb);
-		bx::write(&file_writer, obb);
-
-	}
-
-	bx::close(&file_writer);
-	printf("\nWriting finished\n");
-
-	*/
-	return 0;
-}
-
 static const struct luaL_Reg myLib[] =
 {
-	{"assimp_import", LoadFBXTest},
-	{"LoadFBXTest", LoadFBXTest},
+	{"assimp_import", AssimpImport},
 	{ NULL, NULL }      
 };
 
