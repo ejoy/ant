@@ -536,8 +536,10 @@ lclient_activeline(lua_State *L) {
 	lua_Debug ar;
 	if (lua_getstack(hL, 1, &ar) == 0)
 		return 0;
-	if (lua_getinfo(hL, "SL", &ar) == 0)
+	if (lua_getinfo(hL, "SL", &ar) == 0) {
+		lua_pop(hL, 1);
 		return 0;
+	}
 
 	if (line < ar.linedefined)
 		line = ar.linedefined;
