@@ -64,14 +64,16 @@ struct SPrimitive {
 	Obb m_obb;
 };
 
+//最大的顶点数和索引数
+const int MAX_VERTEX_SIZE = 64 * 1024;
+const int MAX_TRIANGLE_SIZE = 128 * 1024;
 struct SChunk
 {
 	SMaterial material;
 	std::vector<SPrimitive> primitives;
 
-
-	std::array<Vertex, MAX_VERTEX_SIZE> g_VertexArray;
-	std::array<uint16_t, MAX_TRIANGLE_SIZE> g_TriangleArray;
+	std::array<Vertex, MAX_VERTEX_SIZE> vertexArray;
+	std::array<uint16_t, MAX_TRIANGLE_SIZE> triangleArray;
 
 	unsigned vertex_count = 0;
 	unsigned triangle_count = 0;
@@ -95,9 +97,7 @@ struct SNode {
 	std::vector<SNode*> children;
 };
 
-//最大的顶点数和索引数
-const int MAX_VERTEX_SIZE = 64 * 1024;
-const int MAX_TRIANGLE_SIZE = 128 * 1024;
+
 
 std::array<SChunk, 128>  g_ChunkArray;
 
@@ -125,11 +125,13 @@ void PrintNodeHierarchy(aiNode* node, int space_count)
 	}
 }
 
+/*
 uint16_t vertex_count = 0;
 uint32_t triangle_count = 0;
 
 int start_vertex = 0;
 int start_triangle = 0;
+*/
 
 void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_transform)
 {
@@ -138,6 +140,7 @@ void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_t
 	{
 		//process mesh info
 		aiMesh* a_mesh = scene->mMeshes[node->mMeshes[i]];
+		//find chunk/material
 		unsigned mat_idx = a_mesh->mMaterialIndex;
 		auto& chunk = g_ChunkArray[mat_idx];
 
@@ -152,10 +155,10 @@ void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_t
 		prim.m_numIndices = face_size * 3;
 		prim.m_numVertices = vertex_size;
 
-		vertex_count += vertex_size;
-		triangle_count += face_size;
+		chunk.vertex_count += vertex_size;
+		chunk.triangle_count += face_size;
 
-		printf("mesh no.%d, vertex size: %d, face size: %d\n", i, vertex_size, face_size);
+		//printf("mesh no.%d, vertex size: %d, face size: %d\n", i, vertex_size, face_size);
 
 
 		for (int j = 0; j < vertex_size; ++j)
@@ -166,12 +169,12 @@ void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_t
 			aiVector3D trans_vert = parent_transform * vert;
 			aiVector3D trans_norm = parent_transform * norm;
 
-			auto& vertex = g_VertexArray[start_vertex + j];
+			auto& vertex = chunk.vertexArray[chunk.start_vertex + j];
 			vertex.position.x = trans_vert.x;
 			vertex.position.y = trans_vert.y;
 			vertex.position.z = trans_vert.z;
 
-			printf("this vert %f, %f, %f\n", trans_vert.x, trans_vert.y, trans_vert.z);
+			//printf("this vert %f, %f, %f\n", trans_vert.x, trans_vert.y, trans_vert.z);
 
 			vertex.normal.x = trans_norm.x;
 			vertex.normal.y = trans_norm.y;
@@ -201,9 +204,9 @@ void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_t
 				continue;
 			}
 
-			g_TriangleArray[start_triangle * 3 + j * 3] = face.mIndices[0] + start_vertex;
-			g_TriangleArray[start_triangle * 3 + j * 3 + 1] = face.mIndices[1] + start_vertex;
-			g_TriangleArray[start_triangle * 3 + j * 3 + 2] = face.mIndices[2] + start_vertex;
+			chunk.triangleArray[chunk.start_triangle * 3 + j * 3] = face.mIndices[0] + chunk.start_vertex;
+			chunk.triangleArray[chunk.start_triangle * 3 + j * 3 + 1] = face.mIndices[1] + chunk.start_vertex;
+			chunk.triangleArray[chunk.start_triangle * 3 + j * 3 + 2] = face.mIndices[2] + chunk.start_vertex;
 
 		}
 
@@ -313,8 +316,6 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene)
 	//set mesh
 	lua_pushstring(L, "mesh");
 	lua_newtable(L);
-
-	scene->mMaterials[0]->mProperties[0]->mType;
 
 	for (unsigned i = 0; i < node->mNumMeshes; ++i)
 	{
@@ -444,15 +445,16 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene)
 void ProcessMaterial(const aiScene* scene)
 {
 	unsigned mat_count = scene->mNumMaterials;
-	for (int i = 0; i < mat_count; ++i)
+	for (unsigned i = 0; i < mat_count; ++i)
 	{
 		auto& chunk = g_ChunkArray[chunk_count];
+		SMaterial new_mat;
 		aiMaterial* mat = scene->mMaterials[i];
 		aiString name;
-		_ASSERT(AI_SUCCESS == mat->Get(AI_MATKEY_NAME, name));
-
-		SMaterial new_mat;
-		new_mat.name = name;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_NAME, name))
+		{
+			new_mat.name = name;
+		}
 
 		aiColor3D diffuse;
 		if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse))
@@ -473,9 +475,115 @@ void ProcessMaterial(const aiScene* scene)
 	}
 }
 
+void WriteChunkToBGFX(const std::string& out_path)
+{
+
+	//转换成bgfx的格式
+	bgfx::VertexDecl decl;
+	decl.begin();
+
+	decl.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float);						//顶点位置
+	decl.add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float, true, false);			//顶点法线
+	decl.add(bgfx::Attrib::TexCoord0, 3, bgfx::AttribType::Float);
+	decl.end();
+
+	printf("\nStart Writing\n");
+
+	bx::FileWriter file_writer;
+	bx::Error b_error;
+
+	//写文件
+	bx::open(&file_writer, out_path.data(), false, &b_error);	//注意append(第三个参数选false,要不然不会覆盖前一个文件,而不是写在后面)
+
+	//现在按照bgfx标准的读取形式
+	int stride = decl.getStride();
+	//表示传入数据的类型
+	//这个表示的是vertex buffer数据
+
+	printf("chunk count: %d\n", chunk_count);
+	for (int chunk_idx = 0; chunk_idx < chunk_count; ++chunk_idx)
+	{
+		auto& chunk = g_ChunkArray[chunk_idx];
+		bx::write(&file_writer, BGFX_CHUNK_MAGIC_VB);
+
+		Sphere max_sphere;
+		calcMaxBoundingSphere(max_sphere, &chunk.vertexArray[0], chunk.vertex_count, stride);
+		Sphere min_sphere;
+		calcMinBoundingSphere(min_sphere, &chunk.vertexArray[0], chunk.vertex_count, stride);
+
+		Sphere surround_sphere;
+		//包围球
+		min_sphere.m_radius < max_sphere.m_radius ? surround_sphere = max_sphere : surround_sphere = min_sphere;
+		bx::write(&file_writer, surround_sphere);
+		//aabb
+		Aabb aabb;
+		toAabb(aabb, &chunk.vertexArray[0], chunk.vertex_count, stride);
+		bx::write(&file_writer, aabb);
+		//obb
+		Obb obb;
+		calcObb(obb, &chunk.vertexArray[0], chunk.vertex_count, stride);
+		bx::write(&file_writer, obb);
+		//vertexdecl
+		bgfx::write(&file_writer, decl);
+
+		bx::write(&file_writer, chunk.vertex_count);		//顶点数量
+
+													//然后是文件顶点array
+		int vertex_size = sizeof(Vertex) * chunk.vertex_count;
+		bx::write(&file_writer, &chunk.vertexArray[0], vertex_size);
+
+		//这边就是index了
+		bx::write(&file_writer, BGFX_CHUNK_MAGIC_IB);
+		bx::write(&file_writer, chunk.triangle_count * 3);		//三角形数量
+															//索引array
+		bx::write(&file_writer, &chunk.triangleArray[0], sizeof(uint16_t)*chunk.triangle_count * 3);
+
+		bx::write(&file_writer, BGFX_CHUNK_MAGIC_PRI); 
+		uint16_t len = chunk.material.name.length;	//文件路径当作其名字
+		bx::write(&file_writer, len);
+		bx::write(&file_writer, chunk.material.name.C_Str());
+
+		unsigned primitive_count = chunk.primitives.size();
+		printf("prim coount: %d\n", primitive_count);
+
+		bx::write(&file_writer, primitive_count);
+		for (uint32_t ii = 0; ii < primitive_count; ++ii)
+		{
+			auto& prim = chunk.primitives[ii];
+			uint16_t name_len = prim.name.size();
+			bx::write(&file_writer, name_len);
+			bx::write(&file_writer, prim.name.data());
+
+			bx::write(&file_writer, prim.m_startIndex);
+			bx::write(&file_writer, prim.m_numIndices);
+			bx::write(&file_writer, prim.m_startVertex);
+			bx::write(&file_writer, prim.m_numVertices);
+
+			bx::write(&file_writer, surround_sphere);	//暂时随便弄一个
+			bx::write(&file_writer, aabb);
+			bx::write(&file_writer, obb);
+		}
+	}
+	
+	bx::close(&file_writer);
+	printf("\nWriting finished\n");
+
+}
+
 static int LoadFBXTest(lua_State *L)
 {
 	Assimp::Importer importer;
+
+	std::string out_path;
+	if (lua_isstring(L, -1))
+	{
+		out_path = lua_tostring(L, -1);
+		lua_pop(L, 1);
+	}
+	else
+	{
+		return 0;
+	}
 
 	std::string fbx_path;
 	if (lua_isstring(L, -1))
@@ -497,7 +605,7 @@ static int LoadFBXTest(lua_State *L)
 	const aiScene* scene = importer.ReadFile(fbx_path, import_flags);
 	if (!scene)
 	{
-		printf("Error loading");
+		printf("Error loading: %s\n %s\n", fbx_path.data(), out_path.data());
 		return 0;
 	}
 
@@ -511,31 +619,15 @@ static int LoadFBXTest(lua_State *L)
 	}
 
 	ProcessNode(root_node, scene, aiMatrix4x4());
-}
 
-static int LoadFBX(lua_State *L)
-{
-	Assimp::Importer importer;
+	WriteChunkToBGFX(out_path);
 
-	std::string fbx_path;
-	if (lua_isstring(L, -1))
-	{
-		fbx_path = lua_tostring(L, -1);
-		lua_pop(L, 1);
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-static int SerializeBIN(lua_State *L)
-{
 	return 0;
 }
 
 static int AssimpImport(lua_State * L)
 {
+	/*
 	Assimp::Importer importer;
 	
 	std::string in_path;	//输入路径
@@ -573,13 +665,6 @@ static int AssimpImport(lua_State * L)
 	{
 		return 0;
 	}
-	
-	vertex_count = 0;
-	triangle_count = 0;
-	primitive_count = 0;
-
-	start_vertex = 0;
-	start_triangle = 0;
 
 	//do a trick for unity here
 	//todo: undo it later
@@ -592,9 +677,7 @@ static int AssimpImport(lua_State * L)
 	
 	ProcessNode(root_node, scene, aiMatrix4x4());
 
-	//暂时先只导出顶点位置和面信息
-	printf("vertex count: %d, triangle count: %d", vertex_count, triangle_count);
-	
+		
 	//转换成bgfx的格式
 	bgfx::VertexDecl decl;
 	decl.begin();
@@ -680,16 +763,14 @@ static int AssimpImport(lua_State * L)
 	bx::close(&file_writer);
 	printf("\nWriting finished\n");
 
-	
+	*/
 	return 0;
 }
 
 static const struct luaL_Reg myLib[] =
 {
-	{"assimp_import", AssimpImport},
-	{"LoadFBX", LoadFBX},
+	{"assimp_import", LoadFBXTest},
 	{"LoadFBXTest", LoadFBXTest},
-	{"SerializeBIN", SerializeBIN},
 	{ NULL, NULL }      
 };
 
