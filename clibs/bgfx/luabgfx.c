@@ -54,7 +54,8 @@ struct screenshot_queue {
 struct log_cache{
     spinlock_t lock;
     const char* log;
-}
+};
+
 struct callback {
 	bgfx_callback_interface_t base;
 	struct screenshot_queue ss;
@@ -111,7 +112,8 @@ static void
 cb_fatal(bgfx_callback_interface_t *self, bgfx_fatal_t code, const char *str) {
 	fprintf(stderr, "Fatal error: 0x%08x: %s", code, str);
 	fflush(stderr);
-    
+
+    struct callback *cb = (struct callback *)self;
     struct log_cache *lc = &cb->lc;
     spin_lock(lc);
     //test
@@ -126,7 +128,8 @@ cb_trace_vargs(bgfx_callback_interface_t *self, const char *file, uint16_t line,
 	fprintf(stderr, "%s (%d): ", file, line);
 	vfprintf(stderr, format, ap);
 	fflush(stderr);
-    
+	
+    struct callback *cb = (struct callback *)self;
     struct log_cache *lc = &cb->lc;
     spin_lock(lc);
     //test
