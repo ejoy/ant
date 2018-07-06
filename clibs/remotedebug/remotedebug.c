@@ -453,9 +453,30 @@ lclient_value(lua_State *L) {
 static int
 lclient_type(lua_State *L) {
 	lua_State *hL = get_host(L);
-	lua_pushstring(L, get_type(L, hL));
 
-	return 1;
+	int t = eval_value(L, hL);
+	lua_pushstring(L, lua_typename(L, t));
+	switch (t) {
+	case LUA_TFUNCTION:
+		if (lua_iscfunction(hL, -1)) {
+			lua_pushstring(L, "c");
+		} else {
+			lua_pushstring(L, "lua");
+		}
+		break;
+	case LUA_TNUMBER:
+		if (lua_isinteger(hL, -1)) {
+			lua_pushstring(L, "integer");
+		} else {
+			lua_pushstring(L, "float");
+		}
+		break;
+	default:
+		lua_pop(hL, 1);
+		return 1;
+	}
+	lua_pop(hL, 1);
+	return 2;
 }
 
 static int

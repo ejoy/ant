@@ -285,13 +285,6 @@ get_value(lua_State *L, lua_State *cL) {
 }
 
 static const char *
-get_type(lua_State *L, lua_State *cL) {
-	int t = eval_value(L, cL);
-	lua_pop(cL,1);
-	return lua_typename(L, t);
-}
-
-static const char *
 get_frame_local(lua_State *L, lua_State *cL, int frame, int index) {
 	lua_Debug ar;
 	if (lua_getstack(cL, frame, &ar) == 0) {
