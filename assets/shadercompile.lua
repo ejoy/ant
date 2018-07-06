@@ -20,9 +20,14 @@ local toolset = require "editor.toolset"
 
 local function compile(filename, outfilename, rendertype)
     local config = toolset.load_config()
-    if next(config) then
+	if next(config) then
+		config.includes = {config.shaderinc, rootdir .. "/assets/shaders/src"}
         config.dest = outfilename
-        toolset.compile(filename, config, rendertype)
+		local success, msg = toolset.compile(filename, config, rendertype)
+		if not success then
+			print(string.format("compile failed!\nsource file : %s, dest file : %s\nerror message : %s", 
+				filename, outfile, msg))
+		end
     end    
 end
 
