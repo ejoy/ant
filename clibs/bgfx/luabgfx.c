@@ -51,9 +51,15 @@ struct screenshot_queue {
 	struct screenshot *q[MAX_SCREENSHOT];
 };
 
+struct log_cache{
+    spinlock_t lock;
+    const char* log;
+};
+
 struct callback {
 	bgfx_callback_interface_t base;
 	struct screenshot_queue ss;
+    struct log_cache lc;
 };
 
 static void *
@@ -106,6 +112,14 @@ static void
 cb_fatal(bgfx_callback_interface_t *self, bgfx_fatal_t code, const char *str) {
 	fprintf(stderr, "Fatal error: 0x%08x: %s", code, str);
 	fflush(stderr);
+
+    struct callback *cb = (struct callback *)self;
+    struct log_cache *lc = &cb->lc;
+    spin_lock(lc);
+    //test
+    strcat(lc->log, str);
+    spin_unlock(lc);
+    
 	abort();
 }
 
@@ -114,6 +128,13 @@ cb_trace_vargs(bgfx_callback_interface_t *self, const char *file, uint16_t line,
 	fprintf(stderr, "%s (%d): ", file, line);
 	vfprintf(stderr, format, ap);
 	fflush(stderr);
+	
+    struct callback *cb = (struct callback *)self;
+    struct log_cache *lc = &cb->lc;
+    spin_lock(lc);
+    //test
+    strcat(lc->log, file);
+    spin_unlock(lc);
 }
 
 // todo: bgfx callback
@@ -3945,6 +3966,22 @@ lgetScreenshot(lua_State *L) {
 	return memptr ? 6 : 5;
 }
 
+static int
+lgetLog(lua_State *L)
+{
+    struct callback *cb = lua_touserdata(L, -1);
+    struct log_cache *lc = &cb->lc;
+    const char * log = NULL;
+    spin_lock(lc);
+    log = lc->log;
+    lc->log = NULL;
+    spin_unlock(lc);
+    
+    lua_pushstring(L, log);
+    free(log);
+    return 1;
+}
+
 LUAMOD_API int
 luaopen_bgfx(lua_State *L) {
 	luaL_checkversion(L);
@@ -4029,6 +4066,8 @@ luaopen_bgfx(lua_State *L) {
 		{ "request_screenshot", lrequestScreenshot },
 		{ "get_screenshot", lgetScreenshot },
 		{ "export_vertex_decl", lexportVertexDecl },
+        { "get_log", lgetLog },
+
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

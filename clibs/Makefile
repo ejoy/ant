@@ -1,5 +1,5 @@
 BIN = .
-LIBS = math3d lsocket redirectfd winfile bgfx remotedebug memoryfile lanes crypt assimplua hierarchy
+LIBS = math3d lsocket redirectfd winfile bgfx remotedebug memoryfile lanes crypt assimplua hierarchy cppfs debugger cjson
 PLAT = mingw
 
 IUPLIBS = luaiup scintilla iupluaimglib iupluacontrols
@@ -21,7 +21,7 @@ build_iup :
 clean_iup : build_lua
 	cd iup && $(MAKE) clean
 
-copy_iup_exe: | iup.exe
+copy_iup_exe :
 	cd iup && cp iup.exe ../iup.exe
 
 build_lsocket : build_lua

@@ -1,5 +1,5 @@
 ### 环境
-1. 使用msvc版本（理论上mingw版本都是可以的，目前还没有完全测试过）
+1. 使用msvc版本（mingw版本参考后面的launch.json配置）
 2. 下载vscode，并安装插件vscode-lua-debug插件，命令为：ext install lua-debug，github地址：[vscode-lua-debug](https://github.com/actboy168/vscode-lua-debug)
 3. 配置vscode debug选项，使用launch直接启动(见下面解析）；
 4. 按F5进行调试；
@@ -21,7 +21,7 @@
 使用iup调试
 >        
     {
-        "name": "launch_vs_debug",
+        "name": "launch (msvc)",
         "type": "lua",
         "request": "launch",
         //"stopOnEntry": true,            
@@ -34,6 +34,15 @@
             "STATIC_LINKING_IUP" : "1",
             "BIN_PATH" : "projects/msvc/vs_bin/x64/Debug"
         }        
+    },
+    {
+        "type": "lua",
+        "request": "launch",
+        "name": "launch (mingw)",
+        "runtimeExecutable": "${workspaceRoot}\\bin\\iup.exe",
+        "runtimeArgs": "${workspaceRoot}\\libs\\main.lua",
+        "cwd": "${workspaceRoot}",
+        "stopOnEntry": false
     },
 
 单个文件调试

@@ -18,3 +18,5 @@ projects/msvc/Release
 assets
 ~assets/build
 ~assets/shaders/src
+libs/dev/Client/file.txt
+libs/dev/Client/dir.txt
