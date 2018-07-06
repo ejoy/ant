@@ -50,4 +50,28 @@ function CMD.stackTrace(w, req)
     })
 end
 
+function CMD.scopes(w, req)
+    for _, scope in ipairs(req.scopes) do
+        scope.variablesReference = (w << 32) | scope.variablesReference
+    end
+    response.success(req, {
+        scopes = req.scopes
+    }) 
+end
+
+function CMD.variables(w, req)
+    if not req.success then
+        response.error(req, req.message)
+        return
+    end
+    for _, var in ipairs(req.variables) do
+        if var.variablesReference then
+            var.variablesReference = (w << 32) | var.variablesReference
+        end
+    end
+    response.success(req, {
+        variables = req.variables
+    })
+end
+
 return CMD
