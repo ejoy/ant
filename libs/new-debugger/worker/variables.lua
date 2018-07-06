@@ -383,7 +383,7 @@ extand[VAR_VARARG] = function(frameId)
 		if name == nil then
 			break
         end
-        vars[#vars + 1] = varCreate(frameId, name, value)
+        vars[#vars + 1] = varCreate(frameId, ('[%d]'):format(-i), value)
         i = i - 1
     end
     table.sort(vars, function(a, b) return a.name < b.name end)
