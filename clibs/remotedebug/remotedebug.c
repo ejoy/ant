@@ -471,6 +471,12 @@ lclient_type(lua_State *L) {
 			lua_pushstring(L, "float");
 		}
 		break;
+	case LUA_TUSERDATA:
+		lua_pushstring(L, "full");
+		break;
+	case LUA_TLIGHTUSERDATA:
+		lua_pushstring(L, "light");
+		break;
 	default:
 		lua_pop(hL, 1);
 		return 1;
