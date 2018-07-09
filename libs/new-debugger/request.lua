@@ -238,4 +238,21 @@ function request.stepIn(req)
     return false
 end
 
+function request.source(req)
+    local args = req.arguments
+    local threadId = args.sourceReference >> 32
+    if not mgr.hasThread(threadId) then
+        response.error(req, "Not found thread " .. threadId)
+        return false
+    end
+    local sourceReference = args.sourceReference & 0xFFFFFFFF
+    mgr.sendToWorker(threadId, {
+        cmd = 'source',
+        command = req.command,
+        seq = req.seq,
+        sourceReference = sourceReference,
+    })
+    return false
+end
+
 return request

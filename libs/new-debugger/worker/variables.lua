@@ -1,4 +1,6 @@
 local rdebug = require 'remotedebug'
+local source = require 'new-debugger.worker.source'
+local fs = require 'cppfs'
 
 local varCache = {}
 
@@ -52,7 +54,7 @@ for _, v in ipairs{
     standard[v] = true
 end
 
-function hasLocal(frameId)
+local function hasLocal(frameId)
     local i = 1
 	while true do
 		local name = rdebug.getlocal(frameId, i)
@@ -66,16 +68,16 @@ function hasLocal(frameId)
 	end
 end
 
-function hasVararg(frameId)
+local function hasVararg(frameId)
     return rdebug.getlocal(frameId, -1) ~= nil
 end
 
-function hasUpvalue(frameId)
+local function hasUpvalue(frameId)
     local f = rdebug.getfunc(frameId)
     return rdebug.getupvalue(f, 1) ~= nil
 end
 
-function hasGlobal(frameId)
+local function hasGlobal(frameId)
     local gt = rdebug._G
 	local key, value
 	while true do
@@ -89,7 +91,7 @@ function hasGlobal(frameId)
 	end
 end
 
-function hasStandard()
+local function hasStandard()
     return true
 end
 
@@ -233,6 +235,47 @@ local function varGetTableValue(t, maxlen)
     return ("{%s}"):format(str)
 end
 
+local function getLineStart(str, pos, n)
+    for _ = 1, n - 1 do
+        local f, _, nl1, nl2 = str:find('([\n\r])([\n\r]?)', pos)
+        if not f then
+            return
+        end
+        if nl1 == nl2 then
+            pos = f + 1
+        elseif nl2 == '' then
+            pos = f + 1
+        else
+            pos = f + 2
+        end
+    end
+    return pos
+end
+
+local function getLineEnd(str, pos, n)
+    local pos = getLineStart(str, pos, n)
+    if not pos then
+        return
+    end
+    local pos = str:find('[\n\r]', pos)
+    if not pos then
+        return
+    end
+    return pos - 1
+end
+
+local function getFunctionCode(str, startLn, endLn)
+    local startPos = getLineStart(str, 1, startLn)
+    if not startPos then
+        return str
+    end
+    local endPos = getLineEnd(str, startPos, endLn - startLn + 1)
+    if not endPos then
+        return str:sub(startPos)
+    end
+    return str:sub(startPos, endPos)
+end
+
 local function varGetValue(type, subtype, value)
     if type == 'string' then
         local str = rdebug.value(value)
@@ -258,8 +301,20 @@ local function varGetValue(type, subtype, value)
         if subtype == 'c' then
             return 'C function'
         end
-        -- TODO： 需要指定函数的getinfo
-        return 'function'
+        local info = rdebug.getinfo(value)
+        if not info then
+            return tostring(rdebug.value(value))
+        end
+        local src = source.create(info.source)
+        if not source.valid(src) then
+            return tostring(rdebug.value(value))
+        end
+        if src.path then
+            -- TODO: fs.relative
+            return ("%s:%d"):format(src.path, info.linedefined)
+        end
+        local code = source.getCode(src.ref)
+        return getFunctionCode(code, info.linedefined, info.lastlinedefined)
     elseif type == 'table' then
         return varGetTableValue(value)
     elseif type == 'userdata' then
@@ -487,7 +542,7 @@ end
 
 function m.variables(frameId, valueId)
     if not varCache[frameId] then
-        return nil, 'Error retrieving stack frame'
+        return nil, 'Error retrieving stack frame ' .. frameId
     end
     if extand[valueId] then
         return extand[valueId](frameId)

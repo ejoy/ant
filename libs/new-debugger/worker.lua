@@ -2,6 +2,7 @@ local rdebug = require 'remotedebug'
 local cdebug = require 'debugger.core'
 local json = require 'cjson'
 local variables = require 'new-debugger.worker.variables'
+local source = require 'new-debugger.worker.source'
 
 local state = 'running'
 local stopReason = 'unknown'
@@ -55,13 +56,24 @@ function CMD.stackTrace(pkg)
                 presentationHint = 'label',
             }
         else
-            res[#res + 1] = {
-                id = depth,
-                name = info.what == 'main' and "[main chunk]" or info.name,
-                line = info.currentline,
-                column = 1,
-                source = info.source,
-            }
+            local src = source.create(info.source)
+            if source.valid(src) then
+                res[#res + 1] = {
+                    id = depth,
+                    name = info.what == 'main' and "[main chunk]" or info.name,
+                    line = info.currentline,
+                    column = 1,
+                    source = source.output(src),
+                }
+            else 
+                res[#res + 1] = {
+                    id = depth,
+                    name = info.what == 'main' and "[main chunk]" or info.name,
+                    line = info.currentline,
+                    column = 1,
+                    presentationHint = 'label',
+                }
+            end
         end
         depth = depth + 1
         ::continue::
@@ -72,6 +84,15 @@ function CMD.stackTrace(pkg)
         seq = pkg.seq,
         stackFrames = res,
         totalFrames = curFrame
+    }
+end
+
+function CMD.source(pkg)
+    sendToMaster {
+        cmd = 'source',
+        command = pkg.command,
+        seq = pkg.seq,
+        content = source.getCode(pkg.sourceReference),
     }
 end
 
