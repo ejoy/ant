@@ -133,7 +133,10 @@ cb_trace_vargs(bgfx_callback_interface_t *self, const char *file, uint16_t line,
     struct log_cache *lc = &cb->lc;
     spin_lock(lc);
     //test
-    strcat(lc->log, file);
+	if (lc->log != NULL) {
+		strcat(lc->log, file);
+	}
+    
     spin_unlock(lc);
 }
 

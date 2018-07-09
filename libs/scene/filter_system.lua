@@ -70,12 +70,12 @@ function lighting_primitive_filter_sys:update()
 			-- point from vertex position to light position			
 			table.insert(dlight_info.dir, ms(dlight.rotation.v, "dim"))
 			table.insert(dlight_info.color, l.color)
-			table.insert(dlight_info.intensity, l.intensity)
+			table.insert(dlight_info.intensity, {l.intensity, 0, 0, 0})
 		end
 
 		properties["directional_lightdir"] 	= {name="Light Direction", type="v4", value = dlight_info.dir}
 		properties["directional_color"] 	= {name="Light Color", type="color", value = dlight_info.color}
-		properties["directional_intensity"] = {name="Light Intensity", type="v4", value = {dlight_info.intensity}}
+		properties["directional_intensity"] = {name="Light Intensity", type="v4", value = dlight_info.intensity}
 
 		return properties
 	end
@@ -84,7 +84,7 @@ function lighting_primitive_filter_sys:update()
 
 	local camera = world:first_entity("main_camera")
 	local eyepos = ms(camera.position.v, "m")
-	lighting_properties["eyepos"] = {name = "Eye Position", type="v4", value=eyepos}
+	lighting_properties["u_eyepos"] = {name = "Eye Position", type="v4", value=eyepos}
 
 	filter.result = {}	
 	for _, eid in world:each("can_render") do
