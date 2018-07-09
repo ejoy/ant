@@ -15,8 +15,11 @@ projects/msvc/x64
 projects/msvc/Debug
 projects/msvc/Release
 
-assets
-~assets/build
-~assets/shaders/src
+assets/map
+assets/textures
+assets/assetfiles
+assets/shaders/dx11
+assets/shaders/glsl
+assets/meshes
 libs/dev/Client/file.txt
 libs/dev/Client/dir.txt
