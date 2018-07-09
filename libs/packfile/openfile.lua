@@ -5,15 +5,17 @@ local fs =  require "cppfs"
 
 local rawopen = winfile.open
 
-local rules = {}
-for str in io.lines '.antpack' do
-    local f, l = str:find ' '
-    if f then
-        local pattern = str:sub(1, f - 1)
-        local packer =  str:sub(l + 1)
-        pattern = pattern:gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*')
-        rules[#rules+1] = { pattern, packer }
-    end
+if winfile.exist(".antpack") then
+	local rules = {}
+	for str in io.lines '.antpack' do
+		local f, l = str:find ' '
+		if f then
+			local pattern = str:sub(1, f - 1)
+			local packer =  str:sub(l + 1)
+			pattern = pattern:gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*')
+			rules[#rules+1] = { pattern, packer }
+		end
+	end
 end
     
 local function glob_match(pattern, target)
