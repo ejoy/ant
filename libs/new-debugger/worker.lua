@@ -197,8 +197,7 @@ hook['call'] = function()
     if currentContext == stepContext then
         stepCurrentLevel = stepCurrentLevel + 1
     end
-    bp_list = nil
-    rdebug.hookmask "crl"
+    breakpoint.reset()
 end
 
 hook['return'] = function ()
@@ -206,13 +205,11 @@ hook['return'] = function ()
     if currentContext == stepContext then
         stepCurrentLevel = rdebug.stacklevel() - 1
     end
-    bp_list = nil
-    rdebug.hookmask "crl"
+    breakpoint.reset()
 end
 
 hook['tail call'] = function ()
-    bp_list = nil
-    rdebug.hookmask "crl"
+    breakpoint.reset()
 end
 
 hook['line'] = function(line)
@@ -243,9 +240,9 @@ end
 rdebug.hookmask "cr"
 
 rdebug.sethook(function(event, line)
-    xpcall(function()
+    assert(xpcall(function()
         if hook[event] then
             hook[event](line)
         end
-    end, debug.traceback)
+    end, debug.traceback))
 end)

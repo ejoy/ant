@@ -5,10 +5,15 @@ local source = require 'new-debugger.worker.source'
 local breakpoints = {}
 
 local info = {}
-local currentBP
 local emitEvent
+local currentBP
 
 local m = {}
+
+function m.reset()
+    currentBP = nil
+    rdebug.hookmask "crl"
+end
 
 function m.find(currentline)
 	if not currentBP then
@@ -26,28 +31,6 @@ function m.find(currentline)
 		if not currentBP then
 			rdebug.hookmask "cr"
 			return
-		else
-            local linedefined = s.linedefined
-            local lastlinedefined = s.lastlinedefined
-			local capture = false
-			for line, func in pairs(currentBP) do
-				if line >= linedefined and line <= lastlinedefined then
-					local activeline = rdebug.activeline(line)
-					if activeline == nil then
-						currentBP[line] = nil
-					else
-						if activeline ~= line then
-							currentBP[line] = nil
-							currentBP[activeline] = func
-						end
-						capture = true
-					end
-				end
-			end
-			if not capture then
-				rdebug.hookmask "cr"
-				return
-			end
 		end
 	end
 	return currentBP[currentline]
@@ -67,7 +50,7 @@ function m.update(src, bps)
     end
     local normalizePath = path.normalize(src.path, '/', string.lower)
     if currentBP and currentBP == breakpoints[normalizePath] then
-        currentBP = nil
+        m.reset()
     end
     breakpoints[normalizePath] = res
 end
