@@ -34,4 +34,16 @@ function event.stopped(threadId, msg)
     }
 end
 
+function event.breakpoint(reason, breakpoint)
+    mgr.sendToClient {
+        type = 'event',
+        seq = mgr.newSeq(),
+        event = 'breakpoint',
+        body = {
+            reason = reason,
+            breakpoint = breakpoint,
+        }
+    }
+end
+
 return event

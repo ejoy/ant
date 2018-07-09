@@ -49,8 +49,15 @@ function request.configurationDone(req)
 end
 
 function request.setBreakpoints(req)
-    response.success(req)
-    -- TODO
+    local args = req.arguments
+    response.success(req, {
+        breakpoints = {}
+    })
+    mgr.broadcastToWorker {
+        cmd = 'setBreakpoints',
+        source = args.source,
+        breakpoints = args.breakpoints,
+    }
     return false
 end
 
@@ -128,6 +135,11 @@ function request.variables(req)
         frameId = frameId,
         valueId = valueId & 0xFFFF,
     })
+    return false
+end
+
+function request.evaluate(req)
+    response.success(req)
     return false
 end
 

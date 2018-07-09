@@ -59,4 +59,8 @@ function CMD.variables(w, req)
     })
 end
 
+function CMD.eventBreakpoint(w, req)
+    event.breakpoint(req.reason, req.breakpoint)
+end
+
 return CMD

@@ -3,6 +3,7 @@ local cdebug = require 'debugger.core'
 local json = require 'cjson'
 local variables = require 'new-debugger.worker.variables'
 local source = require 'new-debugger.worker.source'
+local breakpoint = require 'new-debugger.worker.breakpoint'
 
 local state = 'running'
 local stopReason = 'unknown'
@@ -22,6 +23,14 @@ end)
 local function sendToMaster(msg)
     masterThread:send(assert(json.encode(msg)))
 end
+
+breakpoint.event(function(reason, bp)
+    sendToMaster {
+        cmd = 'eventBreakpoint',
+        reason = reason,
+        breakpoint = bp,
+    }
+end)
 
 function CMD.stackTrace(pkg)
     local startFrame = pkg.startFrame
@@ -126,6 +135,13 @@ function CMD.variables(pkg)
     }
 end
 
+function CMD.setBreakpoints(pkg)
+    if not source.valid(pkg.source) then
+        return
+    end
+    breakpoint.update(pkg.source, pkg.breakpoints)
+end
+
 function CMD.stop(pkg)
     state = 'stopped'
     stopReason = pkg.reason
@@ -154,24 +170,10 @@ function CMD.stepOut(pkg)
     stepCurrentLevel = stepLevel
 end
 
-local function Loop(currentContext)
-    masterThread:update()
-    if state == 'running' then
-        return
-    elseif state == 'stepOver' or state == 'stepOut' then
-        if currentContext ~= stepContext or stepCurrentLevel > stepLevel then
-            return
-        end
-        state = 'stopped'
-    elseif state == 'stepIn' then
-        state = 'stopped'
-    end
-    if state ~= 'stopped' then
-        return
-    end
+local function runLoop(reason)
     sendToMaster {
         cmd = 'eventStop',
-        reason = stopReason,
+        reason = reason,
     }
 
     while true do
@@ -184,22 +186,66 @@ local function Loop(currentContext)
     end
 end
 
-rdebug.hookmask "crl"
+local hook = {}
+
+hook['update'] = function()
+    masterThread:update()
+end
+
+hook['call'] = function()
+    local currentContext = rdebug.context()
+    if currentContext == stepContext then
+        stepCurrentLevel = stepCurrentLevel + 1
+    end
+    bp_list = nil
+    rdebug.hookmask "crl"
+end
+
+hook['return'] = function ()
+    local currentContext = rdebug.context()
+    if currentContext == stepContext then
+        stepCurrentLevel = rdebug.stacklevel() - 1
+    end
+    bp_list = nil
+    rdebug.hookmask "crl"
+end
+
+hook['tail call'] = function ()
+    bp_list = nil
+    rdebug.hookmask "crl"
+end
+
+hook['line'] = function(line)
+    local bp = breakpoint.find(line)
+    if bp then
+        state = 'stopped'
+        runLoop('breakpoint')
+        return
+    end
+
+    masterThread:update()
+    if state == 'running' then
+        return
+    elseif state == 'stepOver' or state == 'stepOut' then
+        local currentContext = rdebug.context()
+        if currentContext ~= stepContext or stepCurrentLevel > stepLevel then
+            return
+        end
+        state = 'stopped'
+    elseif state == 'stepIn' then
+        state = 'stopped'
+    end
+    if state == 'stopped' then
+        runLoop(stopReason)
+    end
+end
+
+rdebug.hookmask "cr"
 
 rdebug.sethook(function(event, line)
-    local currentContext = rdebug.context()
-    if event == 'update' then
-        masterThread:update()
-    elseif event == 'call' then
-        if currentContext == stepContext then
-            stepCurrentLevel = stepCurrentLevel + 1
+    xpcall(function()
+        if hook[event] then
+            hook[event](line)
         end
-    elseif event == 'return' then
-        if currentContext == stepContext then
-            stepCurrentLevel = rdebug.stacklevel() - 1
-        end
-    elseif event == 'tail call' then
-    elseif event == 'line' then
-        Loop(currentContext)
-    end
+    end, debug.traceback)
 end)
