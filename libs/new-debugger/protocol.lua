@@ -42,7 +42,7 @@ end
 
 function m.send(cmd)
     if cmd.type == 'response' and cmd.success == false then
-        error(cmd.message)
+        error(debug.traceback(cmd.message))
     end
     local pkg = assert(json.encode(cmd))
     --print('[send]', pkg)

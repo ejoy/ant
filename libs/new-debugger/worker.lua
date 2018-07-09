@@ -1,6 +1,7 @@
 local rdebug = require 'remotedebug'
 local cdebug = require 'debugger.core'
 local json = require 'cjson'
+local variables = require 'new-debugger.worker.variables'
 
 local state = 'running'
 local stopReason = 'unknown'
@@ -74,6 +75,36 @@ function CMD.stackTrace(pkg)
     }
 end
 
+function CMD.scopes(pkg)
+    sendToMaster {
+        cmd = 'scopes',
+        command = pkg.command,
+        seq = pkg.seq,
+        scopes = variables.scopes(pkg.frameId),
+    }
+end
+
+function CMD.variables(pkg)
+    local vars, err = variables.variables(pkg.frameId, pkg.valueId)
+    if not vars then
+        sendToMaster {
+            cmd = 'variables',
+            command = pkg.command,
+            seq = pkg.seq,
+            success = false,
+            message = err,
+        }
+        return
+    end
+    sendToMaster {
+        cmd = 'variables',
+        command = pkg.command,
+        seq = pkg.seq,
+        success = true,
+        variables = vars,
+    }
+end
+
 function CMD.stop(pkg)
     state = 'stopped'
     stopReason = pkg.reason
@@ -126,6 +157,7 @@ local function Loop(currentContext)
         cdebug.sleep(10)
         masterThread:update()
         if state ~= 'stopped' then
+            variables.clean()
             return
         end
     end

@@ -34,6 +34,8 @@
 
 // screenshot queue length
 #define MAX_SCREENSHOT 16
+// 64K log ring buffer
+#define MAX_LOGBUFFER (64*1024)
 
 struct screenshot {
 	uint32_t width;
@@ -51,15 +53,17 @@ struct screenshot_queue {
 	struct screenshot *q[MAX_SCREENSHOT];
 };
 
-struct log_cache{
-    spinlock_t lock;
-    const char* log;
+struct log_cache {
+	spinlock_t lock;
+	uint64_t head;
+	uint64_t tail;
+	char log[MAX_LOGBUFFER];
 };
 
 struct callback {
 	bgfx_callback_interface_t base;
 	struct screenshot_queue ss;
-    struct log_cache lc;
+	struct log_cache lc;
 };
 
 static void *
@@ -109,35 +113,50 @@ renderer_type_id(lua_State *L, int index) {
 }
 
 static void
-cb_fatal(bgfx_callback_interface_t *self, bgfx_fatal_t code, const char *str) {
-	fprintf(stderr, "Fatal error: 0x%08x: %s", code, str);
-	fflush(stderr);
+append_log(struct log_cache *lc, const char * buffer, int n) {
+	spin_lock(lc);
+	int sz = (int)(lc->tail - lc->head);	// sz must less than MAX_LOGBUFFER
+	if (sz + n > MAX_LOGBUFFER)
+		n = MAX_LOGBUFFER - sz;
+	int offset = lc->tail % MAX_LOGBUFFER;
+	int part = MAX_LOGBUFFER - offset;
+	if (part >= n) {
+		// only one part
+		memcpy(lc->log + offset, buffer, n);
+	} else {
+		// ring buffer rewind
+		memcpy(lc->log + offset, buffer, part);
+		memcpy(lc->log, buffer + part, n - part);
+	}
+	lc->tail += n;
+	spin_unlock(lc);
+}
 
-    struct callback *cb = (struct callback *)self;
-    struct log_cache *lc = &cb->lc;
-    spin_lock(lc);
-    //test
-    strcat(lc->log, str);
-    spin_unlock(lc);
-    
-	abort();
+static void
+cb_fatal(bgfx_callback_interface_t *self, bgfx_fatal_t code, const char *str) {
+	char tmp[MAX_LOGBUFFER];
+	int n = snprintf(tmp, sizeof(tmp), "Fatal error: 0x%08x: %s", code, str);
+	if (n > MAX_LOGBUFFER) {
+		// truncated
+		n = MAX_LOGBUFFER;
+	}
+
+	append_log(&(((struct callback *)self)->lc), tmp, n);
 }
 
 static void
 cb_trace_vargs(bgfx_callback_interface_t *self, const char *file, uint16_t line, const char *format, va_list ap) {
-	fprintf(stderr, "%s (%d): ", file, line);
-	vfprintf(stderr, format, ap);
-	fflush(stderr);
-	
-    struct callback *cb = (struct callback *)self;
-    struct log_cache *lc = &cb->lc;
-    spin_lock(lc);
-    //test
-	if (lc->log != NULL) {
-		strcat(lc->log, file);
+	char tmp[MAX_LOGBUFFER];
+	int n = sprintf(tmp, "%s (%d): ", file, line);
+
+	n += vsnprintf(tmp+n, sizeof(tmp)-n, format, ap);
+
+	if (n > MAX_LOGBUFFER) {
+		// truncated
+		n = MAX_LOGBUFFER;
 	}
-    
-    spin_unlock(lc);
+
+	append_log(&(((struct callback *)self)->lc), tmp, n);
 }
 
 // todo: bgfx callback
@@ -1327,24 +1346,24 @@ struct AttribNamePairs {
 };
 
 static struct AttribNamePairs attrib_name_pairs[BGFX_ATTRIB_COUNT] = {
-		"POSITION", BGFX_ATTRIB_POSITION,
-		"NORMAL", BGFX_ATTRIB_NORMAL,
-		"TANGENT", BGFX_ATTRIB_TANGENT,
-		"BITANGENT", BGFX_ATTRIB_BITANGENT,
-		"COLOR0", BGFX_ATTRIB_COLOR0,
-		"COLOR1", BGFX_ATTRIB_COLOR1,
-		"COLOR2", BGFX_ATTRIB_COLOR2,
-		"COLOR3", BGFX_ATTRIB_COLOR3,
-		"INDICES", BGFX_ATTRIB_INDICES,
-		"WEIGHT", BGFX_ATTRIB_WEIGHT,
-		"TEXCOORD0", BGFX_ATTRIB_TEXCOORD0,
-		"TEXCOORD1", BGFX_ATTRIB_TEXCOORD1,
-		"TEXCOORD2", BGFX_ATTRIB_TEXCOORD2,
-		"TEXCOORD3", BGFX_ATTRIB_TEXCOORD3,
-		"TEXCOORD4", BGFX_ATTRIB_TEXCOORD4,
-		"TEXCOORD5", BGFX_ATTRIB_TEXCOORD5,
-		"TEXCOORD6", BGFX_ATTRIB_TEXCOORD6,
-		"TEXCOORD7", BGFX_ATTRIB_TEXCOORD7,		
+	{ "POSITION", BGFX_ATTRIB_POSITION },
+	{ "NORMAL", BGFX_ATTRIB_NORMAL },
+	{ "TANGENT", BGFX_ATTRIB_TANGENT },
+	{ "BITANGENT", BGFX_ATTRIB_BITANGENT },
+	{ "COLOR0", BGFX_ATTRIB_COLOR0 },
+	{ "COLOR1", BGFX_ATTRIB_COLOR1 },
+	{ "COLOR2", BGFX_ATTRIB_COLOR2 },
+	{ "COLOR3", BGFX_ATTRIB_COLOR3 },
+	{ "INDICES", BGFX_ATTRIB_INDICES},
+	{ "WEIGHT", BGFX_ATTRIB_WEIGHT},
+	{ "TEXCOORD0", BGFX_ATTRIB_TEXCOORD0},
+	{ "TEXCOORD1", BGFX_ATTRIB_TEXCOORD1},
+	{ "TEXCOORD2", BGFX_ATTRIB_TEXCOORD2},
+	{ "TEXCOORD3", BGFX_ATTRIB_TEXCOORD3},
+	{ "TEXCOORD4", BGFX_ATTRIB_TEXCOORD4},
+	{ "TEXCOORD5", BGFX_ATTRIB_TEXCOORD5},
+	{ "TEXCOORD6", BGFX_ATTRIB_TEXCOORD6},
+	{ "TEXCOORD7", BGFX_ATTRIB_TEXCOORD7},
 };
 
 struct AttribTypeNamePairs{
@@ -1353,11 +1372,11 @@ struct AttribTypeNamePairs{
 };
 
 static struct AttribTypeNamePairs attrib_type_name_pairs[BGFX_ATTRIB_TYPE_COUNT] = {
-	"UINT8", BGFX_ATTRIB_TYPE_UINT8,
-	"UINT10", BGFX_ATTRIB_TYPE_UINT10,
-	"INT16", BGFX_ATTRIB_TYPE_INT16,
-	"HALF", BGFX_ATTRIB_TYPE_HALF,
-	"FLOAT", BGFX_ATTRIB_TYPE_FLOAT,
+	{"UINT8", BGFX_ATTRIB_TYPE_UINT8},
+	{"UINT10", BGFX_ATTRIB_TYPE_UINT10},
+	{"INT16", BGFX_ATTRIB_TYPE_INT16},
+	{"HALF", BGFX_ATTRIB_TYPE_HALF},
+	{"FLOAT", BGFX_ATTRIB_TYPE_FLOAT},
 };
 
 #define ARRAY_COUNT(_ARRAY) sizeof(_ARRAY) / sizeof(_ARRAY[0])
@@ -1686,7 +1705,7 @@ extract_buffer_stream(lua_State* L, int idx, int n, struct BufferDataStream *str
 	if (start < 0)
 		start = sz + start + 1;
 
-	stream->data = data + start - 1;
+	stream->data = (const uint8_t *)data + start - 1;
 
 	int end = -1;
 	if (lua_geti(L, idx, n + 2) == LUA_TNUMBER) {
@@ -3970,19 +3989,28 @@ lgetScreenshot(lua_State *L) {
 }
 
 static int
-lgetLog(lua_State *L)
-{
-    struct callback *cb = lua_touserdata(L, -1);
-    struct log_cache *lc = &cb->lc;
-    const char * log = NULL;
-    spin_lock(lc);
-    log = lc->log;
-    lc->log = NULL;
-    spin_unlock(lc);
-    
-    lua_pushstring(L, log);
-    free(log);
-    return 1;
+lgetLog(lua_State *L) {
+	struct callback *cb = lua_touserdata(L, -1);
+	struct log_cache *lc = &cb->lc;
+	spin_lock(lc);
+	int offset = lc->head % MAX_LOGBUFFER;
+	int sz = (int)(lc->tail - lc->head);
+
+	int part = MAX_LOGBUFFER - offset;
+
+	if (part >= sz) {
+		// only one part
+		lua_pushlstring(L, lc->log + offset, sz);
+	} else {
+		char tmp[MAX_LOGBUFFER];
+		memcpy(tmp, lc->log + offset, part);
+		memcpy(tmp + part, lc->log, sz - part);
+		lua_pushlstring(L, tmp, sz);
+	}
+	lc->head = lc->tail;
+
+	spin_unlock(lc);
+	return 1;
 }
 
 LUAMOD_API int
