@@ -28,6 +28,10 @@ rdebug.sethook(function(event, line)
 		print("d=>", f.d)
 		print("d[c]=>", f.d[f.c])
 		print("_ENV.print=>", rdebug.value(f._ENV.print), rdebug.type(f._ENV.print))
+		local print_info = rdebug.getinfo(f._ENV.print)
+		for k,v in pairs(print_info) do
+			print("_ENV.print:",k,v)
+		end
 		assert(rdebug.type(f.co) == "thread")
 		rdebug.switch(f.co)	-- switch to co
 		print(aux.frame(1))	-- co's frame 1
