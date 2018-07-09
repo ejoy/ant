@@ -1,4 +1,5 @@
 local path = require 'new-debugger.path'
+local parser = require 'new-debugger.worker.parser'
 
 local sourcePool = {}
 local codePool = {}
@@ -21,16 +22,27 @@ end
 local function create(source)
     local h = source:sub(1, 1)
     if h == '@' then
-        return {
-            path = serverPathToClientPatn(source:sub(2))
+        local serverPath = source:sub(2)
+        local src = {
+            path = serverPathToClientPatn(serverPath)
         }
+        local f = loadfile(serverPath)
+        if f then
+            parser(src, f)
+        end
+        return src
     elseif h == '=' then
         -- TODO
         return {}
     else
-        return {
+        local src = {
             ref = codeReference(source)
         }
+        local f = load(source)
+        if f then
+            parser(src, f)
+        end
+        return src
     end
 end
 
