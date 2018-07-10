@@ -91,9 +91,13 @@ function m.complie(str)
     return load(str, str, 't', setmetatable({}, mt))
 end
 
-function m.execute(frameId, f)
+function m.execute(frameId, f, ...)
     frame = frameGet(frameId)
-    return pcall(f)
+    return pcall(f, ...)
+end
+
+function m.clean()
+    framePool = {}
 end
 
 return m

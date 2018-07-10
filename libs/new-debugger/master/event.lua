@@ -46,4 +46,19 @@ function event.breakpoint(reason, breakpoint)
     }
 end
 
+function event.output(category, output, source, line)
+    mgr.sendToClient {
+        type = 'event',
+        seq = mgr.newSeq(),
+        event = 'output',
+        body = {
+            category = category,
+            output = output,
+            source = source,
+            line = line,
+            column = line and 1 or nil,
+        }
+    }
+end
+
 return event

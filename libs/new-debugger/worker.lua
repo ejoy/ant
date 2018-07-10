@@ -35,6 +35,16 @@ ev.on('breakpoint', function(reason, bp)
     }
 end)
 
+ev.on('output', function(category, output, source, line)
+    sendToMaster {
+        cmd = 'eventOutput',
+        category = category,
+        output = output,
+        source = source,
+        line = line,
+    }
+end)
+
 function CMD.stackTrace(pkg)
     local startFrame = pkg.startFrame
     local endFrame = pkg.endFrame
@@ -231,17 +241,12 @@ local function runLoop(reason)
         cdebug.sleep(10)
         masterThread:update()
         if state ~= 'stopped' then
-            variables.clean()
             return
         end
     end
 end
 
 local hook = {}
-
-hook['update'] = function()
-    masterThread:update()
-end
 
 hook['call'] = function()
     local currentContext = rdebug.context()
@@ -266,9 +271,11 @@ end
 hook['line'] = function(line)
     local bp = breakpoint.find(line)
     if bp then
-        state = 'stopped'
-        runLoop('breakpoint')
-        return
+        if breakpoint.exec(bp) then
+            state = 'stopped'
+            runLoop('breakpoint')
+            return
+        end
     end
 
     masterThread:update()
@@ -290,8 +297,14 @@ end
 
 rdebug.sethook(function(event, line)
     assert(xpcall(function()
+        if event == 'update' then
+            masterThread:update()
+            return
+        end
         if hook[event] then
             hook[event](line)
         end
+        variables.clean()
+        evaluate.clean()
     end, debug.traceback))
 end)

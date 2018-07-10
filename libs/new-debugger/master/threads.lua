@@ -77,4 +77,8 @@ function CMD.eventBreakpoint(w, req)
     event.breakpoint(req.reason, req.breakpoint)
 end
 
+function CMD.eventOutput(w, req)
+    event.output(req.category, req.output, req.source, req.line)
+end
+
 return CMD

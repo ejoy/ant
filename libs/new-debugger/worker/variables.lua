@@ -415,6 +415,7 @@ end
 local extand = {}
 
 extand[VAR_LOCAL] = function(frameId)
+    local maps = {}
     local vars = {}
     local i = 1
 	while true do
@@ -423,7 +424,12 @@ extand[VAR_LOCAL] = function(frameId)
 			break
         end
         if name ~= '(*temporary)' then
-            vars[#vars + 1] = varCreate(frameId, name, value)
+            if maps[name] then
+                vars[maps[name]] = varCreate(frameId, name, value)
+            else
+                vars[#vars + 1] = varCreate(frameId, name, value)
+                maps[name] = #vars
+            end
         end
         i = i + 1
     end
@@ -447,6 +453,7 @@ extand[VAR_VARARG] = function(frameId)
 end
 
 extand[VAR_UPVALUE] = function(frameId)
+    local maps = {}
     local vars = {}
     local i = 1
     local f = rdebug.getfunc(frameId)
@@ -455,7 +462,12 @@ extand[VAR_UPVALUE] = function(frameId)
 		if name == nil then
 			break
         end
-        vars[#vars + 1] = varCreate(frameId, name, value)
+        if maps[name] then
+            vars[maps[name]] = varCreate(frameId, name, value)
+        else
+            vars[#vars + 1] = varCreate(frameId, name, value)
+            maps[name] = #vars
+        end
         i = i + 1
     end
     table.sort(vars, function(a, b) return a.name < b.name end)
