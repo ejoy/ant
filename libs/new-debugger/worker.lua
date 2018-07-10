@@ -4,6 +4,7 @@ local json = require 'cjson'
 local variables = require 'new-debugger.worker.variables'
 local source = require 'new-debugger.worker.source'
 local breakpoint = require 'new-debugger.worker.breakpoint'
+local evaluate = require 'new-debugger.worker.evaluate'
 local hookmgr = require 'new-debugger.worker.hookmgr'
 local ev = require 'new-debugger.event'
 
@@ -134,6 +135,50 @@ function CMD.variables(pkg)
         seq = pkg.seq,
         success = true,
         variables = vars,
+    }
+end
+
+function CMD.evaluate(pkg)
+    local f, err = evaluate.complie('return ' .. pkg.expression)
+    if not f then
+        sendToMaster {
+            cmd = 'evaluate',
+            command = pkg.command,
+            seq = pkg.seq,
+            success = false,
+            message = err,
+        }
+        return
+    end
+    local ok, res = evaluate.execute(pkg.frameId, f)
+    if not ok then
+        sendToMaster {
+            cmd = 'evaluate',
+            command = pkg.command,
+            seq = pkg.seq,
+            success = false,
+            message = res,
+        }
+        return
+    end
+    if type(res) == 'table' and res.__ref ~= nil then
+        local text, _, ref = variables.createRef(pkg.frameId, res.__ref)
+        sendToMaster {
+            cmd = 'evaluate',
+            command = pkg.command,
+            seq = pkg.seq,
+            success = true,
+            result = text,
+            variablesReference = ref,
+        }
+        return
+    end
+    sendToMaster {
+        cmd = 'evaluate',
+        command = pkg.command,
+        seq = pkg.seq,
+        success = true,
+        result = tostring(res) or '',
     }
 end
 

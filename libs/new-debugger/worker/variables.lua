@@ -330,23 +330,24 @@ local function varGetValue(type, subtype, value)
     return tostring(rdebug.value(value))
 end
 
-local function varCreate(frameId, name, value)
+local function varCreateReference(frameId, value)
     local type, subtype = rdebug.type(value)
-    if not varCanExtand(type, subtype, value) then
-        return {
-            name = name,
-            type = type,
-            value = varGetValue(type, subtype, value),
-        }
+    local text = varGetValue(type, subtype, value)
+    if varCanExtand(type, subtype, value) then
+        local cache = varCache[frameId]
+        cache[#cache + 1] = value
+        return text, type, (frameId << 16) | #cache
     end
+    return text, type
+end
 
-    local cache = varCache[frameId]
-    cache[#cache + 1] = value
+local function varCreate(frameId, name, value)
+    local text, type, ref = varCreateReference(frameId, value)
     return {
-        variablesReference = (frameId << 16) | #cache,
         name = name,
         type = type,
-        value = varGetValue(type, subtype, value),
+        value = text,
+        variablesReference = ref,
     }
 end
 
@@ -556,6 +557,13 @@ end
 
 function m.clean()
     varCache = {}
+end
+
+function m.createRef(frameId, value)
+    if not varCache[frameId] then
+        varCache[frameId] = {}
+    end
+    return varCreateReference(frameId, value)
 end
 
 return m

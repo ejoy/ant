@@ -21,6 +21,20 @@ function CMD.stackTrace(w, req)
     })
 end
 
+function CMD.evaluate(w, req)
+    if not req.success then
+        response.error(req, req.message)
+        return
+    end
+    if req.variablesReference then
+        req.variablesReference = (w << 32) | req.variablesReference
+    end
+    response.success(req, {
+        result = req.result,
+        variablesReference = req.variablesReference,
+    })
+end
+
 function CMD.source(w, req)
     if not req.content then
         response.success(req, {

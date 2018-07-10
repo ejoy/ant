@@ -149,7 +149,30 @@ function request.variables(req)
 end
 
 function request.evaluate(req)
-    response.success(req)
+    local args = req.arguments
+    if type(args.frameId) ~= 'number' then
+        response.error(req, "Not found frame")
+        return false
+    end
+    if type(args.expression) ~= 'string' then
+        response.error(req, "Error expression")
+        return false
+    end
+	local threadAndFrameId = args.frameId
+    local threadId = threadAndFrameId >> 16
+    local frameId = threadAndFrameId & 0xFFFF
+    if not mgr.hasThread(threadId) then
+        response.error(req, "Not found thread")
+        return false
+    end
+    mgr.sendToWorker(threadId, {
+        cmd = 'evaluate',
+        command = req.command,
+        seq = req.seq,
+        frameId = frameId,
+        context = args.context,
+        expression = args.expression,
+    })
     return false
 end
 
