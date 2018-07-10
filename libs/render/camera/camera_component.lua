@@ -58,7 +58,7 @@ function camera_init_sys:init()
     ms(camera.rotation.v,   {45, -45, 0, 0},   "=")
 
     local frustum = camera.frustum
-    mu.frustum_from_fov(frustum, 0.1, 10000, 60, 1)
+    mu.frustum_from_fov(frustum, 0.1, 10000000, 60, 1)
 
     local function update_camera_viewrect(w, h)
         local vr = camera.view_rect

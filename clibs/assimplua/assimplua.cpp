@@ -62,6 +62,11 @@ struct SPrimitive {
 	Sphere m_sphere;
 	Aabb m_aabb;
 	Obb m_obb;
+
+	//srt
+	aiVector3D m_scale;
+	aiVector3D m_translation;
+	aiVector3D m_rotation;
 };
 
 //最大的顶点数和索引数
@@ -101,36 +106,6 @@ std::array<SChunk, 128>  g_ChunkArray;
 
 std::vector<SMaterial> g_Material;
 
-void PrintNodeHierarchy(aiNode* node, int space_count)
-{
-	aiString& node_name = node->mName;
-
-	//打印名称
-	printf_s("\n");
-	for (int i = 0; i < space_count; ++i)
-	{
-		printf_s("\t");		//打印空格，方便看出顶点层级结构
-	}
-	printf_s("%s", node_name.C_Str());	//打印顶点名称
-
-	int child_count = node->mNumChildren;
-	if (child_count > 0)
-	{
-		for (int i = 0; i < child_count; ++i)
-		{
-			PrintNodeHierarchy(node->mChildren[i], space_count + 1);
-		}
-	}
-}
-
-/*
-uint16_t vertex_count = 0;
-uint32_t triangle_count = 0;
-
-int start_vertex = 0;
-int start_triangle = 0;
-*/
-
 void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_transform)
 {
 	int mesh_count = node->mNumMeshes;
@@ -168,11 +143,11 @@ void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_t
 			aiVector3D trans_norm = parent_transform * norm;
 
 			auto& vertex = chunk.vertexArray[chunk.start_vertex + j];
-			vertex.position.x = trans_vert.x;
+			vertex.position.x = -trans_vert.x;
 			vertex.position.y = trans_vert.y;
-			vertex.position.z = trans_vert.z;
+			vertex.position.z = -trans_vert.z;
 
-			//printf("this vert %f, %f, %f\n", trans_vert.x, trans_vert.y, trans_vert.z);
+			//printf("this vert %f, %f, %f\n", vertex.position.x, vertex.position.y, vertex.position.z);
 
 			vertex.normal.x = trans_norm.x;
 			vertex.normal.y = trans_norm.y;
@@ -208,6 +183,9 @@ void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_t
 
 		}
 
+		aiMatrix4x4 transformation = parent_transform * node->mTransformation;
+		transformation.Decompose(prim.m_scale, prim.m_rotation, prim.m_translation) ;
+
 		chunk.start_vertex += vertex_size;
 		chunk.start_triangle += face_size;
 		
@@ -217,9 +195,104 @@ void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_t
 	int child_count = node->mNumChildren;
 	for(int i = 0; i < child_count; ++i)
 	{
-		//calculate child node
 		aiNode* child_node = node->mChildren[i];
-		ProcessNode(child_node, scene, parent_transform*node->mTransformation);
+		//calculate child node
+		std::string node_name = node->mName.C_Str();
+		//if (node_name.find("Geometric") == std::string::npos)
+		{
+			ProcessNode(child_node, scene, parent_transform*node->mTransformation);
+		}
+		//else
+		{
+			//ignore geometric translation
+		//	ProcessNode(child_node, scene, parent_transform);
+		}
+		
+	}
+}
+
+void WriteMaterialToLua(lua_State *L, const aiScene* scene)
+{
+	luaL_checkstack(L, 10, "");
+	lua_newtable(L);
+
+	unsigned mat_count = scene->mNumMaterials;
+	for (unsigned i = 0; i < mat_count; ++i)
+	{
+		aiMaterial* mat = scene->mMaterials[i];
+		lua_pushnumber(L, i+1);
+		lua_newtable(L);
+		
+		aiString name;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_NAME, name))
+		{
+			//new_mat.name = name;
+			lua_pushstring(L, "name");
+			lua_pushstring(L, name.C_Str());
+			lua_settable(L, -3);
+		}
+
+		aiColor3D ambient;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_AMBIENT, ambient))
+		{
+			lua_pushstring(L, "ambient");
+			lua_newtable(L);
+			lua_pushstring(L, "r");
+			lua_pushnumber(L, ambient.r);
+			lua_settable(L, -3);
+
+			lua_pushstring(L, "g");
+			lua_pushnumber(L, ambient.g);
+			lua_settable(L, -3);
+
+			lua_pushstring(L, "b");
+			lua_pushnumber(L, ambient.b);
+			lua_settable(L, -3);
+
+			lua_settable(L, -3);
+		}
+
+		aiColor3D diffuse;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse))
+		{
+			lua_pushstring(L, "diffuse");
+			lua_newtable(L);
+			lua_pushstring(L, "r");
+			lua_pushnumber(L, diffuse.r);
+			lua_settable(L, -3);
+
+			lua_pushstring(L, "g");
+			lua_pushnumber(L, diffuse.g);
+			lua_settable(L, -3);
+
+			lua_pushstring(L, "b");
+			lua_pushnumber(L, diffuse.b);
+			lua_settable(L, -3);
+
+			lua_settable(L, -3);
+		}
+
+		aiColor3D specular;
+		if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_SPECULAR, specular))
+		{
+			lua_pushstring(L, "specular");
+			lua_newtable(L);
+			lua_pushstring(L, "r");
+			lua_pushnumber(L, specular.r);
+			lua_settable(L, -3);
+
+			lua_pushstring(L, "g");
+			lua_pushnumber(L, specular.g);
+			lua_settable(L, -3);
+
+			lua_pushstring(L, "b");
+			lua_pushnumber(L, specular.b);
+			lua_settable(L, -3);
+
+			lua_settable(L, -3);
+		}
+
+		lua_settable(L, -3);
 	}
 }
 
@@ -231,6 +304,7 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene)
 		return;
 	}
 
+	luaL_checkstack(L, 10, "stack not big enough");
 	lua_newtable(L);
 	
 	//set name
@@ -323,79 +397,57 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene)
 
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		unsigned mat_idx = mesh->mMaterialIndex;
-		aiMaterial* material = scene->mMaterials[mat_idx];
-		printf("material index %d, %s\n", mat_idx, material->mProperties[1]->mKey.C_Str());
+
+		lua_pushstring(L, "material_idx");
+		lua_pushnumber(L, mat_idx+1);
+		lua_settable(L, -3);
 
 		//parse mesh data
 		if (mesh->HasPositions())
 		{
-			lua_pushstring(L, "positions");
+			lua_pushstring(L, "vertices");
 			lua_newtable(L);
 
 			for (unsigned j = 0; j < mesh->mNumVertices; ++j)
 			{
-				lua_pushnumber(L, j * 3+1);
+				lua_pushnumber(L, j * 9+1);
 				lua_pushnumber(L, mesh->mVertices[j].x);
 				lua_settable(L, -3);
 
-				lua_pushnumber(L, j * 3+2);
+				lua_pushnumber(L, j * 9+2);
 				lua_pushnumber(L, mesh->mVertices[j].y);
 				lua_settable(L, -3);
 
-				lua_pushnumber(L, j * 3+3);
+				lua_pushnumber(L, j * 9+3);
 				lua_pushnumber(L, mesh->mVertices[j].z);
 				lua_settable(L, -3);
 
-			}
-
-			lua_settable(L, -3);
-		}
-
-		if (mesh->HasNormals())
-		{
-			lua_pushstring(L, "normals");
-			lua_newtable(L);
-
-			for (unsigned j = 0; j < mesh->mNumVertices; ++j)
-			{
-				lua_pushnumber(L, j * 3+1);
+				lua_pushnumber(L, j * 9+4);
 				lua_pushnumber(L, mesh->mNormals[j].x);
 				lua_settable(L, -3);
 
-				lua_pushnumber(L, j * 3+2);
+				lua_pushnumber(L, j * 9+5);
 				lua_pushnumber(L, mesh->mNormals[j].y);
 				lua_settable(L, -3);
 
-				lua_pushnumber(L, j * 3+3);
+				lua_pushnumber(L, j * 9+6);
 				lua_pushnumber(L, mesh->mNormals[j].z);
 				lua_settable(L, -3);
-			}
 
-			lua_settable(L, -3);
-		}
-
-		//for now, only texcoord0
-		if (mesh->HasTextureCoords(0))
-		{
-			lua_pushstring(L, "texcoord0");
-			lua_newtable(L);
-
-			for (unsigned j = 0; j < mesh->mNumVertices; ++j)
-			{
-				lua_pushnumber(L, j * 3+1);
+				lua_pushnumber(L, j * 9+7);
 				lua_pushnumber(L, mesh->mTextureCoords[0][j].x);
 				lua_settable(L, -3);
 
-				lua_pushnumber(L, j * 3+2);
+				lua_pushnumber(L, j * 9+8);
 				lua_pushnumber(L, mesh->mTextureCoords[0][j].y);
 				lua_settable(L, -3);
 
-				lua_pushnumber(L, j * 3+3);
+				lua_pushnumber(L, j * 9+9);
 				lua_pushnumber(L, mesh->mTextureCoords[0][j].z);
 				lua_settable(L, -3);
 			}
 
-			lua_settable(L, -3);		
+			lua_settable(L, -3);
 		}
 
 		if (mesh->HasFaces())
@@ -446,6 +498,12 @@ void ProcessMaterial(const aiScene* scene)
 	for (unsigned i = 0; i < mat_count; ++i)
 	{
 		auto& chunk = g_ChunkArray[chunk_count];
+		chunk.start_triangle = 0;
+		chunk.start_vertex = 0;
+		chunk.triangle_count = 0;
+		chunk.vertex_count = 0;
+		chunk.primitives.clear();
+
 		SMaterial new_mat;
 		aiMaterial* mat = scene->mMaterials[i];
 		aiString name;
@@ -466,7 +524,6 @@ void ProcessMaterial(const aiScene* scene)
 			new_mat.specular = specular;
 		}
 	
-
 		chunk.material = new_mat;
 
 		++chunk_count;
@@ -598,15 +655,18 @@ static int AssimpImport(lua_State *L)
 		aiProcess_CalcTangentSpace |
 		aiProcess_Triangulate |
 		aiProcess_SortByPType |
-		aiProcess_OptimizeMeshes;
-		
+		aiProcess_FlipWindingOrder |
+		aiProcess_MakeLeftHanded;
+
 	const aiScene* scene = importer.ReadFile(fbx_path, import_flags);
+	
 	if (!scene)
 	{
 		printf("Error loading: %s\n %s\n", fbx_path.data(), out_path.data());
 		return 0;
 	}
 
+	chunk_count = 0;
 	ProcessMaterial(scene);
 
 	aiNode* root_node = scene->mRootNode;
@@ -635,9 +695,54 @@ static int AssimpImport(lua_State *L)
 	return 0;
 }
 
+static int LoadFBX(lua_State *L)
+{
+	Assimp::Importer importer;
+	
+	std::string fbx_path;
+	if (lua_isstring(L, -1))
+	{
+		fbx_path = lua_tostring(L, -1);
+		lua_pop(L, 1);
+	}
+	else
+	{
+		return 0;
+	}
+
+	unsigned import_flags =
+		aiProcess_CalcTangentSpace |
+		aiProcess_Triangulate |
+		aiProcess_SortByPType |
+		aiProcess_OptimizeMeshes |
+		aiProcess_ValidateDataStructure;
+
+	const aiScene* scene = importer.ReadFile(fbx_path, import_flags);
+
+	if (!scene)
+	{
+		printf("Error loading: %s\n", fbx_path.data());
+		return 0;
+	}
+
+	aiNode* root_node = scene->mRootNode;
+
+	if (!root_node)
+	{
+		printf("Root node Invalid\n");
+		return 0;
+	}
+
+	WriteMaterialToLua(L, scene);
+	WriteNodeToLua(L, root_node, scene);
+
+	return 2;
+}
+
 static const struct luaL_Reg myLib[] =
 {
 	{"assimp_import", AssimpImport},
+	{"LoadFBX", LoadFBX},
 	{ NULL, NULL }      
 };
 

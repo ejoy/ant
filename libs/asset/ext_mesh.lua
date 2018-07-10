@@ -13,8 +13,15 @@ return function (filename)
         local assetmgr = require "asset"
         local p = assetmgr.find_valid_asset_path(mesh_path)
         if p then
-            local mesh_loader = require "render.resources.mesh_loader"
-            mesh.handle = mesh_loader.load(p)
+
+            local fbx_p = string.gsub(p, ".bin", ".fbx")
+            local fbx_mesh_loader = require "modelloader.fbxloader"
+            mesh.handle = fbx_mesh_loader.load(fbx_p)
+
+            if not mesh.handle then
+                local mesh_loader = require "render.resources.mesh_loader"
+                mesh.handle = mesh_loader.load(p)
+            end
         else
             log(string.format("load mesh path %s failed", mesh_path))
         end 

@@ -54,8 +54,10 @@ do
 		local material, num
 		material, num, offset = string.unpack("<s2I2", data, offset)	-- no used
 		group.prim = {}
-		for i=1,num do
+        for i=1,num do
 			local p = {}
+
+
 			p.name, p.startIndex, p.numIndices, p.startVertex, p.numVertices, offset = string.unpack("<s2I4I4I4I4", data, offset)
 			offset = read_mesh_header(p, data, offset)
 			table.insert(group.prim, p)
@@ -82,6 +84,7 @@ do
 				break
 			end
 			local decoder = mesh_decode[tag]
+
 			if not decoder then
 				error ("Invalid tag " .. tag)
 			end

@@ -99,6 +99,7 @@ function item_export_dir:action()
             for file in winfile.dir(in_path) do
                 --print("found file:", path.ext(file))
                 if file then
+                    print("export file ", file)
                     local file_ext = path.ext(file)
 
                     if file_ext and string.lower(file_ext) == "fbx" then

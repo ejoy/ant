@@ -16,7 +16,7 @@ local function generate_basic_axis(ms, zdir, up)
 end
 
 local function move_position(ms, p, dir, speed)
-	ms(p, p, dir, {speed}, "*+=")
+	ms(p, p, dir, {speed*50}, "*+=")
 end
 
 -- local function calc_rotate_angle_from_view_direction(ms, vr)
