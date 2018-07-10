@@ -98,7 +98,7 @@ function view_sys:update()
 		update_frustum_from_aspect(vr, frustum)
 		
 		local proj_mat = mu.proj_v(ms, frustum)
-		bgfx.set_view_transform(entity.viewid.id, view_mat, proj_mat)
+		bgfx.set_view_transform(vid, view_mat, proj_mat)
 	end
 end
 --@]

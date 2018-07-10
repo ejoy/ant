@@ -3,11 +3,12 @@ local world = ecs.world
 
 local point2d = require "math.point2d"
 local bgfx = require "bgfx"
-local math3d = require "math3d"
 local ru = require "render.util"
 local mu = require "math.util"
 local asset = require "asset"
-local shadermgr = require "render.resources.shader_mgr"
+
+local pickup_fb_viewid = 2
+local pickup_blit_viewid = pickup_fb_viewid + 1
 
 -- pickup component
 ecs.component "pickup"{}
@@ -80,10 +81,8 @@ function pickup:render_to_pickup_buffer(pickup_entity, select_filter)
     end
 end
 
-function pickup:readback_render_data(pickup_entity)
-    local pickup_blit_viewid = 2
-    local comp = pickup_entity.pickup
-    
+function pickup:readback_render_data(pickup_entity)    
+    local comp = pickup_entity.pickup    
     bgfx.blit(pickup_blit_viewid, assert(comp.rb_buffer), 0, 0, assert(comp.pick_buffer))
     assert(self.reading_frame == nil)
     return bgfx.read_texture(comp.rb_buffer, comp.blitdata)
@@ -97,25 +96,33 @@ function pickup:which_entity_hitted(pickup_entity)
 	local cw, ch = 2, 2	
 	local startidx = ((h - ch) * w + (w - cw)) * 0.5
 
+
+	local found_eid = nil
 	for ix = 1, cw do		
 		for iy = 1, ch do 
 			local cidx = startidx + (ix - 1) + (iy - 1) * w
 			local rgba = comp.blitdata[cidx]
 			if rgba ~= 0 then
-				local eid = unpackrgba_to_eid(rgba)
-				return eid
+				found_eid = unpackrgba_to_eid(rgba)
+				break
 			end
 		end
 	end
 
-    -- for x = 1, w * h do
-    --     local rgba = comp.blitdata[x]
-    --     if rgba ~= 0 then            
-    --         local eid = unpackrgba_to_eid(rgba)
-    --         return eid
-    --     end
-    -- end
-    return nil
+	-- dprint("pick buffer : ")
+	-- for ih=0, h - 1 do
+	-- 	local t = {}
+	-- 	for iw=1, w do
+	-- 		local idx = ih * w + iw
+	-- 		local rgba = comp.blitdata[idx]
+	-- 		local eid = unpackrgba_to_eid(rgba)
+	-- 		table.insert(t, eid)
+	-- 		table.insert(t, " ")
+	-- 	end
+	-- 	dprint(table.concat(t))
+	-- end
+	
+    return found_eid
 end
 
 function pickup:pick(p_eid, current_frame_num, select_filter)
@@ -227,7 +234,7 @@ function pickup_sys:init()
         "frustum", 
         "name")        
         local entity = assert(world[eid])
-        entity.viewid.id = 1
+        entity.viewid.id = pickup_fb_viewid
         entity.name.n = "pickup"
 
         local cc = entity.clear_component
