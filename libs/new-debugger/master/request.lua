@@ -1,6 +1,6 @@
-local mgr = require 'new-debugger.mgr'
-local response = require 'new-debugger.response'
-local event = require 'new-debugger.event'
+local mgr = require 'new-debugger.master.mgr'
+local response = require 'new-debugger.master.response'
+local event = require 'new-debugger.master.event'
 
 local request = {}
 
@@ -48,9 +48,26 @@ function request.configurationDone(req)
     return not stopOnEntry
 end
 
+local breakpointID = 0
+local function genBreakpointID()
+    breakpointID = breakpointID + 1
+    return breakpointID
+end
+
 function request.setBreakpoints(req)
-    response.success(req)
-    -- TODO
+    local args = req.arguments
+    for _, bp in ipairs(args.breakpoints) do
+        bp.id = genBreakpointID()
+        bp.verified = false
+    end
+    response.success(req, {
+        breakpoints = args.breakpoints
+    })
+    mgr.broadcastToWorker {
+        cmd = 'setBreakpoints',
+        source = args.source,
+        breakpoints = args.breakpoints,
+    }
     return false
 end
 
@@ -128,6 +145,11 @@ function request.variables(req)
         frameId = frameId,
         valueId = valueId & 0xFFFF,
     })
+    return false
+end
+
+function request.evaluate(req)
+    response.success(req)
     return false
 end
 
@@ -235,6 +257,23 @@ function request.stepIn(req)
         cmd = 'stepIn',
     })
     response.success(req)
+    return false
+end
+
+function request.source(req)
+    local args = req.arguments
+    local threadId = args.sourceReference >> 32
+    if not mgr.hasThread(threadId) then
+        response.error(req, "Not found thread " .. threadId)
+        return false
+    end
+    local sourceReference = args.sourceReference & 0xFFFFFFFF
+    mgr.sendToWorker(threadId, {
+        cmd = 'source',
+        command = req.command,
+        seq = req.seq,
+        sourceReference = sourceReference,
+    })
     return false
 end
 

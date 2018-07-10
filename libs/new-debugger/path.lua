@@ -2,7 +2,7 @@ local fs = require 'cppfs'
 
 local path = {}
 
-local sep = package.config:sub(1, 1)
+local default_sep = package.config:sub(1, 1)
 
 local function split(str)
     local r = {}
@@ -10,7 +10,7 @@ local function split(str)
     return r
 end
 
-function path.normalize(p)
+function path.normalize(p, sep, convert)
     p = fs.absolute(fs.path(p))
     local stack = {}
     for _, elem in ipairs(split(p:string())) do
@@ -18,12 +18,15 @@ function path.normalize(p)
         elseif elem == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
             stack[#stack] = nil
         elseif elem ~= '.' then
-            stack[#stack + 1] = elem
+            stack[#stack + 1] = convert and convert(elem) or elem
         end
     end
-    return table.concat(stack, sep)
+    return table.concat(stack, sep or default_sep)
 end
 
+function path.normalize_native(p)
+    return path.normalize(p, '/', string.lower)
+end
 
 function path.filename(p)
     local paths = split(p)

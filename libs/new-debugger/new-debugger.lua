@@ -1,7 +1,7 @@
 local rdebug = require 'remotedebug'
 
 local function initialize()
-    return require 'new-debugger.main'
+    return require 'new-debugger.master'
 end
 
 local function start()
