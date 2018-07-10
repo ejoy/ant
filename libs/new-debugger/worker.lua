@@ -4,6 +4,7 @@ local json = require 'cjson'
 local variables = require 'new-debugger.worker.variables'
 local source = require 'new-debugger.worker.source'
 local breakpoint = require 'new-debugger.worker.breakpoint'
+local hookmgr = require 'new-debugger.worker.hookmgr'
 local ev = require 'new-debugger.event'
 
 local state = 'running'
@@ -150,6 +151,7 @@ end
 
 function CMD.run(pkg)
     state = 'running'
+    hookmgr.closeStep()
 end
 
 function CMD.stepOver(pkg)
@@ -157,11 +159,13 @@ function CMD.stepOver(pkg)
     stepContext = rdebug.context()
     stepLevel = rdebug.stacklevel()
     stepCurrentLevel = stepLevel
+    hookmgr.openStep()
 end
 
 function CMD.stepIn(pkg)
     state = 'stepIn'
     stepContext = ''
+    hookmgr.openStep()
 end
 
 function CMD.stepOut(pkg)
@@ -169,6 +173,7 @@ function CMD.stepOut(pkg)
     stepContext = rdebug.context()
     stepLevel = rdebug.stacklevel() - 1
     stepCurrentLevel = stepLevel
+    hookmgr.openStep()
 end
 
 local function runLoop(reason)
@@ -238,7 +243,6 @@ hook['line'] = function(line)
     end
 end
 
-rdebug.hookmask 'cr'
 rdebug.sethook(function(event, line)
     assert(xpcall(function()
         if hook[event] then

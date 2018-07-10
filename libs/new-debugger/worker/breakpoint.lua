@@ -1,6 +1,7 @@
 local rdebug = require 'remotedebug'
 local path = require 'new-debugger.path'
 local source = require 'new-debugger.worker.source'
+local hookmgr = require 'new-debugger.worker.hookmgr'
 local ev = require 'new-debugger.event'
 
 local breakpoints = {}
@@ -49,14 +50,13 @@ local function verifyBreakpoint(src, bps)
         breakpoints[normalizePath] = res
     end
     if enable then
-        if next(breakpoints) == nil then
-            --TODO rdebug.hookmask ''
-            rdebug.hookmask 'cr'
+        if next(breakpoints) == nil and next(waitverify) == nil then
+            hookmgr.closeBP()
             enable = false
         end
     else
-        if next(breakpoints) ~= nil then
-            rdebug.hookmask 'cr'
+        if next(breakpoints) ~= nil or next(waitverify) ~= nil then
+            hookmgr.openBP()
             enable = true
         end
     end
@@ -67,7 +67,7 @@ end
 
 function m.reset()
     currentBP = nil
-    rdebug.hookmask 'crl'
+    hookmgr.openLineBP()
 end
 
 function m.find(currentline)
@@ -75,7 +75,7 @@ function m.find(currentline)
         local s = rdebug.getinfo(1, info)
         local src = source.create(s.source)
         if not source.valid(src) then
-			rdebug.hookmask 'cr'
+            hookmgr.closeLineBP()
 			return
         end
         if src.path then
@@ -84,7 +84,7 @@ function m.find(currentline)
             currentBP = breakpoints[src.ref]
         end
 		if not currentBP then
-			rdebug.hookmask 'cr'
+            hookmgr.closeLineBP()
 			return
         end
 	end
@@ -100,23 +100,27 @@ function m.update(clientsrc, bps)
         verifyBreakpoint(src, bps)
         return
     end
+    hookmgr.openBP()
+    enable = true
+
     local res = {}
     for _, bp in ipairs(bps) do
         bp.source = clientsrc
         res[bp.line] = bp
     end
-    waitverify[clientsrc.path] = bps
+    waitverify[path.normalize_native(clientsrc.path)] = bps
 end
 
 ev.on('source-create', function(src)
     if not src.path then
         return
     end
-    if not waitverify[src.path] then
+    local nativepath = path.normalize_native(src.path)
+    local bps = waitverify[nativepath]
+    if not bps then
         return
     end
-    local bps = waitverify[src.path]
-    waitverify[src.path] = nil
+    waitverify[nativepath] = nil
 
     verifyBreakpoint(src, bps)
 end)
