@@ -9,28 +9,28 @@ local func_mt = {}
 local ud_mt = {}
 
 local function wrap_v(v)
-	local t = rdebug.type(v)
-	if t == 'table' then
-		return setmetatable({ __ref = v }, table_mt)
+    local t = rdebug.type(v)
+    if t == 'table' then
+        return setmetatable({ __ref = v }, table_mt)
     elseif t == 'function' then
-		return setmetatable({ __ref = v }, func_mt)
+        return setmetatable({ __ref = v }, func_mt)
     elseif t == 'userdata' then
-		return setmetatable({ __ref = v }, ud_mt)
+        return setmetatable({ __ref = v }, ud_mt)
     end
-	return rdebug.value(v)
+    return rdebug.value(v)
 end
 
 function table_mt:__index(k)
-	local key = k
-	if type(k) == 'table' then
-		k = k.__ref
-	end
-	local v = rdebug.index(self.__ref, k)
-	if v then
-		v = wrap_v(v)
-		self[key] = v
-		return v
-	end
+    local key = k
+    if type(k) == 'table' then
+        k = k.__ref
+    end
+    local v = rdebug.index(self.__ref, k)
+    if v then
+        v = wrap_v(v)
+        self[key] = v
+        return v
+    end
 end
 
 local function frameCreate(frameId)
@@ -38,20 +38,20 @@ local function frameCreate(frameId)
 
     local i = 1
     local f = rdebug.getfunc(frameId)
-	while true do
-		local name, value = rdebug.getupvalue(f, i)
-		if name == nil then
-			break
+    while true do
+        local name, value = rdebug.getupvalue(f, i)
+        if name == nil then
+            break
         end
         frame[name] = wrap_v(value)
         i = i + 1
     end
 
     local i = 1
-	while true do
-		local name, value = rdebug.getlocal(frameId, i)
-		if name == nil then
-			break
+    while true do
+        local name, value = rdebug.getlocal(frameId, i)
+        if name == nil then
+            break
         end
         if name:sub(1,1) ~= '(' then
             frame[name] = wrap_v(value)

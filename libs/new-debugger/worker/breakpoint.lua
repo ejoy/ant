@@ -119,24 +119,24 @@ function m.reset()
 end
 
 function m.find(currentline)
-	if not currentBP then
+    if not currentBP then
         local s = rdebug.getinfo(1, info)
         local src = source.create(s.source)
         if not source.valid(src) then
             hookmgr.closeLineBP()
-			return
+            return
         end
         if src.path then
             currentBP = breakpoints[path.normalize_native(src.path)]
         else
             currentBP = breakpoints[src.ref]
         end
-		if not currentBP then
+        if not currentBP then
             hookmgr.closeLineBP()
-			return
+            return
         end
-	end
-	return currentBP[currentline]
+    end
+    return currentBP[currentline]
 end
 
 function m.update(clientsrc, bps)

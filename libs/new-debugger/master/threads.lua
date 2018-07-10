@@ -46,7 +46,7 @@ function CMD.source(w, req)
     response.success(req, {
         content = req.content,
         mimeType = 'text/x-lua',
-    }) 
+    })
 end
 
 function CMD.scopes(w, req)
@@ -55,7 +55,7 @@ function CMD.scopes(w, req)
     end
     response.success(req, {
         scopes = req.scopes
-    }) 
+    })
 end
 
 function CMD.variables(w, req)

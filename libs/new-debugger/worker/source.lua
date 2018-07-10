@@ -71,7 +71,7 @@ function m.open(clientpath)
 end
 
 function m.valid(s)
-    return s.path ~= nil or s.ref ~= nil 
+    return s.path ~= nil or s.ref ~= nil
 end
 
 function m.output(s)

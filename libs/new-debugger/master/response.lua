@@ -37,12 +37,12 @@ function response.initialize(req)
         success = true,
         body = {
             supportsConfigurationDoneRequest = true,
-		    --supportsSetVariable = true,
-		    supportsConditionalBreakpoints = true,
-		    supportsHitConditionalBreakpoints = true,
-		    supportsDelayedStackTraceLoading = true,
-		    --supportsExceptionInfoRequest = true,
-		    supportsLogPoints = true,
+            --supportsSetVariable = true,
+            supportsConditionalBreakpoints = true,
+            supportsHitConditionalBreakpoints = true,
+            supportsDelayedStackTraceLoading = true,
+            --supportsExceptionInfoRequest = true,
+            supportsLogPoints = true,
             --supportsEvaluateForHovers = true,
             --exceptionBreakpointFilters = {
             --    {
@@ -74,7 +74,7 @@ function response.threads(req, threads)
     local thds = {}
     for _, id in ipairs(threads) do
         thds[#thds + 1] = {
-            name = ('Thread %d'):format(id), 
+            name = ('Thread %d'):format(id),
             id = id,
         }
     end

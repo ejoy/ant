@@ -87,7 +87,7 @@ function CMD.stackTrace(pkg)
                     column = 1,
                     source = source.output(src),
                 }
-            else 
+            else
                 res[#res + 1] = {
                     id = depth,
                     name = info.what == 'main' and "[main chunk]" or info.name,

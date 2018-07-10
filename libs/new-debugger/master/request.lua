@@ -111,7 +111,7 @@ function request.scopes(req)
         return false
     end
     
-	local threadAndFrameId = args.frameId
+    local threadAndFrameId = args.frameId
     local threadId = threadAndFrameId >> 16
     local frameId = threadAndFrameId & 0xFFFF
     if not mgr.hasThread(threadId) then
@@ -158,7 +158,7 @@ function request.evaluate(req)
         response.error(req, "Error expression")
         return false
     end
-	local threadAndFrameId = args.frameId
+    local threadAndFrameId = args.frameId
     local threadId = threadAndFrameId >> 16
     local frameId = threadAndFrameId & 0xFFFF
     if not mgr.hasThread(threadId) then
