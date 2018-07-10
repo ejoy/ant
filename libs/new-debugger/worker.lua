@@ -4,6 +4,7 @@ local json = require 'cjson'
 local variables = require 'new-debugger.worker.variables'
 local source = require 'new-debugger.worker.source'
 local breakpoint = require 'new-debugger.worker.breakpoint'
+local ev = require 'new-debugger.event'
 
 local state = 'running'
 local stopReason = 'unknown'
@@ -24,7 +25,7 @@ local function sendToMaster(msg)
     masterThread:send(assert(json.encode(msg)))
 end
 
-breakpoint.event(function(reason, bp)
+ev.on('breakpoint', function(reason, bp)
     sendToMaster {
         cmd = 'eventBreakpoint',
         reason = reason,

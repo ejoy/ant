@@ -1,6 +1,6 @@
-local mgr = require 'new-debugger.mgr'
-local response = require 'new-debugger.response'
-local event = require 'new-debugger.event'
+local mgr = require 'new-debugger.master.mgr'
+local response = require 'new-debugger.master.response'
+local event = require 'new-debugger.master.event'
 
 local request = {}
 
@@ -48,10 +48,19 @@ function request.configurationDone(req)
     return not stopOnEntry
 end
 
+local breakpointID = 0
+local function genBreakpointID()
+    breakpointID = breakpointID + 1
+    return breakpointID
+end
+
 function request.setBreakpoints(req)
     local args = req.arguments
+    for _, bp in ipairs(args.breakpoints) do
+        bp.id = genBreakpointID()
+    end
     response.success(req, {
-        breakpoints = {}
+        breakpoints = args.breakpoints
     })
     mgr.broadcastToWorker {
         cmd = 'setBreakpoints',

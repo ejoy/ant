@@ -24,6 +24,10 @@ function path.normalize(p, sep, convert)
     return table.concat(stack, sep or default_sep)
 end
 
+function path.normalize_native(p)
+    return path.normalize(p, '/', string.lower)
+end
+
 function path.filename(p)
     local paths = split(p)
     return paths[#paths]

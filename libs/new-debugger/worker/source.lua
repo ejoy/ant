@@ -1,5 +1,6 @@
 local path = require 'new-debugger.path'
 local parser = require 'new-debugger.worker.parser'
+local ev = require 'new-debugger.event'
 
 local sourcePool = {}
 local codePool = {}
@@ -49,10 +50,24 @@ end
 local m = {}
 
 function m.create(source)
-    if not sourcePool[source] then
-        sourcePool[source] = create(source)
+    local src = sourcePool[source]
+    if src then
+        return src
     end
-    return sourcePool[source]
+    local newSource = create(source)
+    sourcePool[source] = newSource
+    ev.emit('source-create', newSource)
+    return newSource
+end
+
+function m.open(clientpath)
+    -- TODO: 不遍历？
+    local nativepath = path.normalize_native(clientpath)
+    for _, source in pairs(sourcePool) do
+        if source.path and path.normalize_native(source.path) == nativepath then
+            return source
+        end
+    end
 end
 
 function m.valid(s)

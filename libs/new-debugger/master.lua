@@ -1,7 +1,7 @@
-local srv = require 'new-debugger.server'
-local request = require 'new-debugger.request'
-local response = require 'new-debugger.response'
-local mgr = require 'new-debugger.mgr'
+local srv = require 'new-debugger.master.server'
+local request = require 'new-debugger.master.request'
+local response = require 'new-debugger.master.response'
+local mgr = require 'new-debugger.master.mgr'
 
 local function runIdle()
     mgr.update()

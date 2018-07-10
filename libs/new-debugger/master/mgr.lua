@@ -1,9 +1,9 @@
-local srv = require 'new-debugger.server'
+local srv = require 'new-debugger.master.server'
 local json = require 'cjson'
 local cdebug = require 'debugger.core'
 
 local workerThreads = cdebug.start('master', function(w, msg)
-    local threads = require 'new-debugger.threads'
+    local threads = require 'new-debugger.master.threads'
     local pkg = assert(json.decode(msg))
     if threads[pkg.cmd] then
         threads[pkg.cmd](w, pkg)

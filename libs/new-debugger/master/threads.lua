@@ -1,5 +1,5 @@
-local event = require 'new-debugger.event'
-local response = require 'new-debugger.response'
+local event = require 'new-debugger.master.event'
+local response = require 'new-debugger.master.response'
 local path = require 'new-debugger.path'
 
 local CMD = {}

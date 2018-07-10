@@ -1,4 +1,4 @@
-local mgr = require 'new-debugger.mgr'
+local mgr = require 'new-debugger.master.mgr'
 
 local response = {}
 
