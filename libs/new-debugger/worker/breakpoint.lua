@@ -4,32 +4,70 @@ local source = require 'new-debugger.worker.source'
 local ev = require 'new-debugger.event'
 
 local breakpoints = {}
-
-local info = {}
 local currentBP
-local realBP
+local waitverify = {}
+local info = {}
 local m = {}
+local enable = false
 
-local ID = 0
-local function generateID()
-    ID = ID + 1
-    return ID
-end
-
-function m.reset()
-    realBP = nil
-    currentBP = nil
-    rdebug.hookmask "crl"
-end
-
-local function nextActiveLine(actives, line)
-    if line > actives.max then
+local function nextActiveLine(src, line)
+    if line > src.maxline then
         return
     end
+    local defines = src.definelines
+    local actives = src.activelines
+    local fn = defines[line]
     while actives[line] ~= true do
+        if fn ~= defines[line] then
+            return
+        end
         line = line + 1
     end
     return line
+end
+
+local function verifyBreakpoint(src, bps)
+    local res = {}
+    for _, bp in ipairs(bps) do
+        local activeline = nextActiveLine(src, bp.line)
+        if activeline then
+            bp.source = src
+            bp.line = activeline
+            res[bp.line] = bp
+            ev.emit('breakpoint', 'changed', {
+                id = bp.id,
+                line = bp.line,
+                verified = true,
+            })
+        end
+    end
+    local normalizePath = path.normalize_native(src.path)
+    local oldBP = breakpoints[normalizePath]
+    if next(res) == nil then
+        breakpoints[normalizePath] = nil
+    else
+        breakpoints[normalizePath] = res
+    end
+    if enable then
+        if next(breakpoints) == nil then
+            --TODO rdebug.hookmask ''
+            rdebug.hookmask 'cr'
+            enable = false
+        end
+    else
+        if next(breakpoints) ~= nil then
+            rdebug.hookmask 'cr'
+            enable = true
+        end
+    end
+    if currentBP and currentBP == oldBP then
+        m.reset()
+    end
+end
+
+function m.reset()
+    currentBP = nil
+    rdebug.hookmask 'crl'
 end
 
 function m.find(currentline)
@@ -37,40 +75,21 @@ function m.find(currentline)
         local s = rdebug.getinfo(1, info)
         local src = source.create(s.source)
         if not source.valid(src) then
-			rdebug.hookmask "cr"
+			rdebug.hookmask 'cr'
 			return
         end
         if src.path then
-            realBP = breakpoints[path.normalize(src.path, '/', string.lower)]
+            currentBP = breakpoints[path.normalize_native(src.path)]
         else
-            realBP = breakpoints[src.ref]
+            currentBP = breakpoints[src.ref]
         end
-		if not realBP then
-			rdebug.hookmask "cr"
+		if not currentBP then
+			rdebug.hookmask 'cr'
 			return
-        end
-        currentBP = {}
-        local capture = false
-		local linedefined = s.linedefined
-		local lastlinedefined = s.lastlinedefined
-        for line, func in pairs(realBP) do
-            if linedefined == 0 or (line >= linedefined and line <= lastlinedefined) then
-                local activeline = nextActiveLine(src.activelines, line)
-                if activeline then
-                    currentBP[activeline] = func
-                    capture = true
-                end
-            end
-        end
-        if not capture then
-            rdebug.hookmask "cr"
-            return false
         end
 	end
 	return currentBP[currentline]
 end
-
-local waitverify = {}
 
 function m.update(clientsrc, bps)
     if not clientsrc.path then
@@ -78,37 +97,13 @@ function m.update(clientsrc, bps)
     end
     local src = source.open(clientsrc.path)
     if src then
-        local res = {}
-        for _, bp in ipairs(bps) do
-            local activeline = nextActiveLine(src.activelines, bp.line)
-            if activeline then
-                bp.source = src
-                bp.line = activeline
-                res[bp.line] = bp
-                bp.verified = true
-                bp.id = generateID()
-                ev.emit('breakpoint', 'changed', bp)
-            else
-                bp.source = src
-                bp.verified = false
-                bp.id = generateID()
-                res[bp.line] = bp
-                ev.emit('breakpoint', 'changed', bp)
-            end
-        end
-        local normalizePath = path.normalize_native(src.path)
-        if realBP and realBP == breakpoints[normalizePath] then
-            m.reset()
-        end
-        breakpoints[normalizePath] = res
+        verifyBreakpoint(src, bps)
         return
     end
     local res = {}
     for _, bp in ipairs(bps) do
-        res[bp.line] = bp
-        bp.verified = false
         bp.source = clientsrc
-        ev.emit('breakpoint', 'new', bp)
+        res[bp.line] = bp
     end
     waitverify[clientsrc.path] = bps
 end
@@ -123,25 +118,7 @@ ev.on('source-create', function(src)
     local bps = waitverify[src.path]
     waitverify[src.path] = nil
 
-    local res = {}
-    for _, bp in ipairs(bps) do
-        local activeline = nextActiveLine(src.activelines, bp.line)
-        if activeline then
-            bp.line = activeline
-            res[bp.line] = bp
-            bp.verified = true
-            ev.emit('breakpoint', 'changed', {
-                id = bp.id,
-                line = bp.line,
-                verified = true,
-            })
-        end
-    end
-    local normalizePath = path.normalize_native(src.path)
-    if realBP and realBP == breakpoints[normalizePath] then
-        m.reset()
-    end
-    breakpoints[normalizePath] = res
+    verifyBreakpoint(src, bps)
 end)
 
 return m

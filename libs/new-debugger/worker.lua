@@ -238,8 +238,7 @@ hook['line'] = function(line)
     end
 end
 
-rdebug.hookmask "cr"
-
+rdebug.hookmask 'cr'
 rdebug.sethook(function(event, line)
     assert(xpcall(function()
         if hook[event] then

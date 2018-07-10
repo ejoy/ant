@@ -58,6 +58,7 @@ function request.setBreakpoints(req)
     local args = req.arguments
     for _, bp in ipairs(args.breakpoints) do
         bp.id = genBreakpointID()
+        bp.verified = false
     end
     response.success(req, {
         breakpoints = args.breakpoints
