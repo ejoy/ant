@@ -1,0 +1,28 @@
+
+{
+	raw = "terrain/pvp.raw",
+	grid_width  = 513,
+	grid_length = 513,
+	bits   = 16,
+	width  = 400,
+	length = 400,
+	height = 300,
+	
+	uv0_scale  = 80*0.625,
+	uv1_scale  = 1,
+
+	numlayers = 4,
+	
+	textures = {
+	   "terrain/grass.jpg",
+	   "terrain/grass1.jpg",
+	   "terrain/grass2.jpg",
+	   "terrain/grass3.jpg",
+	},
+	masks = {
+	   "terrain/mask_a.png",
+	   "terrain/mask_r.png",
+	   "terrain/mask_g.png",
+	   "terrain/mask_b.png",
+	}
+}

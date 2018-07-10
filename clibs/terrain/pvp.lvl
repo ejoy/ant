@@ -1,0 +1,47 @@
+
+{
+	raw = "terrain/pvp.raw",
+	grid_width  = 513,
+	grid_length = 513,
+	bits   = 16,
+	width  = 400,
+	length = 400,
+	height = 300,
+	
+	uv0_scale  = 80*0.625,
+	uv1_scale  = 1,
+
+	numlayers = 4,
+	
+	textures = {
+	   "assets/build/textures/terrain/Ground_099-512.dds",
+	   "assets/build/textures/terrain/Scene_Texture_Terrain_BD_SOIL_0070_1.dds",
+	   "assets/build/textures/terrain/BH-Scene-JiangJunZong-Wall-02-D.dds",
+	   "assets/build/textures/terrain/Scene_Texture_Terrain_BD_ROCK_040_1.dds",
+	},
+	masks = {
+	   "clibs/terrain/terrain/pvp2_mask_a.png",
+	   "clibs/terrain/terrain/pvp2_mask_r.png",
+	   "clibs/terrain/terrain/pvp2_mask_g.png",
+	   "clibs/terrain/terrain/pvp2_mask_b.png",
+	}
+}
+
+
+--[[
+print ('grid_width = '..terrainLevel.grid_width)
+print ('grid_lenght = '..terrainLevel.grid_length)
+print ('bits = '..terrainLevel.bits)
+print ('width = '..terrainLevel.width)
+print ('height = '..terrainLevel.height)
+print ('uv0 = '..terrainLevel.uv0_scale)
+print ('uv1 = '..terrainLevel.uv1_scale)
+print ('')
+print ('numlayrs = '..terrainLevel.numlayers)
+print ("raw = "..terrainLevel.raw) 
+
+for i=1,terrainLevel.numlayers,1  do
+	print( 'tex'..i..'= '..terrainLevel.textures[i])
+	print( 'mask'..i..'= '..terrainLevel.mask[i])
+end 
+--]]
