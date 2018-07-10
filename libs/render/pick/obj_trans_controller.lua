@@ -259,8 +259,7 @@ local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axisme
 	for k, v in pairs(fullaxis_config) do
 		local eid = components_util.create_render_entity(ms, world, prefixname .. v.name .. suffixname,		
 							v.meshfile, materialfile)
-		world:add_component(eid, "hierarchy_parent")
-		world:add_component(eid, tag_comp)
+		world:add_component(eid, "hierarchy_parent", tag_comp, "editor")
 		local obj = world[eid]
 		obj.hierarchy_parent.eid = hie_eid
 

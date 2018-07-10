@@ -85,4 +85,15 @@ function util.create_hierarchy_entity(ms, world, name)
 	return h_eid
 end
 
+function util.is_entity_visible(entity)
+	local can_render = entity.can_render
+	if can_render then
+		if can_render.visible then
+			return entity.mesh ~= nil
+		end		
+	end
+
+	return false
+end
+
 return util

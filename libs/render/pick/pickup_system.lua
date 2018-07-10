@@ -92,22 +92,38 @@ end
 function pickup:which_entity_hitted(pickup_entity)
     local comp = pickup_entity.pickup
     local vr = pickup_entity.view_rect
-    local w, h = vr.w, vr.h
+	local w, h = vr.w, vr.h
+	
+	local cw, ch = 2, 2	
+	local startidx = ((h - ch) * w + (w - cw)) * 0.5
 
-    for x = 1, w * h do
-        local rgba = comp.blitdata[x]
-        if rgba ~= 0 then            
-            local eid = unpackrgba_to_eid(rgba)
-            return eid
-        end
-    end
+	for ix = 1, cw do		
+		for iy = 1, ch do 
+			local cidx = startidx + (ix - 1) + (iy - 1) * w
+			local rgba = comp.blitdata[cidx]
+			if rgba ~= 0 then
+				local eid = unpackrgba_to_eid(rgba)
+				return eid
+			end
+		end
+	end
+
+    -- for x = 1, w * h do
+    --     local rgba = comp.blitdata[x]
+    --     if rgba ~= 0 then            
+    --         local eid = unpackrgba_to_eid(rgba)
+    --         return eid
+    --     end
+    -- end
     return nil
 end
 
 function pickup:pick(p_eid, current_frame_num, select_filter)
     local pickup_entity = world[p_eid]
     if self.reading_frame == nil then        
-        bind_frame_buffer(pickup_entity)
+		bind_frame_buffer(pickup_entity)
+		world:change_component(-1, "create_selection_filter")
+		world:notify()
         self:render_to_pickup_buffer(pickup_entity, select_filter)
         self.reading_frame = self:readback_render_data(pickup_entity)        
     end

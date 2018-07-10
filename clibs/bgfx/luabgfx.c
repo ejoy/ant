@@ -3927,6 +3927,7 @@ lsetViewMode(lua_State *L) {
 		case 'd': bgfx_set_view_mode(viewid, BGFX_VIEW_MODE_DEPTH_ASCENDING); break;
 		case 'D': bgfx_set_view_mode(viewid, BGFX_VIEW_MODE_DEPTH_DESCENDING); break;
 		case 's': bgfx_set_view_mode(viewid, BGFX_VIEW_MODE_SEQUENTIAL); break;
+		case '\0':bgfx_set_view_mode(viewid, BGFX_VIEW_MODE_DEFAULT); break;
 		default:
 			return luaL_error(L, "Invalid view mode %s", mode);
 		}
