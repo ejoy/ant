@@ -1,13 +1,13 @@
 BIN = .
-LIBS = math3d lsocket redirectfd winfile bgfx remotedebug memoryfile lanes crypt assimplua
+LIBS = math3d lsocket redirectfd winfile bgfx remotedebug memoryfile lanes crypt assimplua hierarchy cppfs debugger cjson clonefunc
 PLAT = mingw
 
-IUPLIBS = luaiup scintilla iupluaimglib iupluacontrols iupcd
+IUPLIBS = luaiup scintilla iupluaimglib iupluacontrols
 IUPTARS = $(foreach v, $(IUPLIBS), $(BIN)/$(v).dll)
 
 TARS = $(foreach v, $(LIBS), $(BIN)/$(v).dll)
 
-all : $(TARS) $(BIN)/lua53.dll $(IUPTARS)
+all : $(TARS) $(BIN)/lua53.dll $(IUPTARS) copy_iup_exe
 
 build_lua :
 	cd lua && $(MAKE) $(PLAT)
@@ -20,6 +20,9 @@ build_iup :
 
 clean_iup : build_lua
 	cd iup && $(MAKE) clean
+
+copy_iup_exe :
+	cd iup && cp iup.exe ../iup.exe
 
 build_lsocket : build_lua
 

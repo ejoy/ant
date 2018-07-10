@@ -7,6 +7,7 @@ iup.SetGlobal("UTF8MODE_FILE", "YES")
 local fs = require "filesystem"
 local toolset = require "editor.toolset"
 local path = toolset.load_config()
+path.includes = {path.shaderinc}
 local seri = require "serialize.util"
 
 local function load_config()

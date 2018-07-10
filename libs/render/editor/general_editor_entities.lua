@@ -1,12 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
-local mu = require "math.util"
-local ru = require "render.util"
-local cu = require "render.components.util"
-
-local asset     = require "asset"
-local bgfx          = require "bgfx"
+local cu 	= require "render.components.util"
+local bgfx  = require "bgfx"
 
 local general_editor_entites = ecs.system "general_editor_entites"
 
@@ -21,10 +17,11 @@ function general_editor_entites:init()
     }
 
     do
-		local axisid = world:new_entity("rotation", "position", "scale", 
-		"can_render", 
-		"mesh", "material",
-		"name")
+		local axisid = world:new_entity(
+			"rotation", "position", "scale", 
+			"can_render", "editor",
+			"mesh", "material",
+			"name")
         local axis = world[axisid]
 
         ms(axis.rotation.v, {0, 0, 0, 0}, "=")
@@ -57,7 +54,7 @@ function general_editor_entites:init()
 
     do
 		local gridid = world:new_entity("rotation", "position", "scale", 
-		"can_render", "mesh", "material",
+		"can_render", "mesh", "material", "editor",
 		"name")
         local grid = world[gridid]
         grid.name.n = "grid"

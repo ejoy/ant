@@ -27,8 +27,6 @@ ecs.component "light" {
 			type = "point", 	-- "spot", "directional", "ambient"
 			intensity = 50, 
 			color = {1, 1, 1, 1},
-			rot = {0, 0, 0}, 
-			pos = {0, 0, 0}, 
 			angle = 360,
 			range = 100,
 		},

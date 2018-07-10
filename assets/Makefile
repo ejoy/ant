@@ -35,20 +35,30 @@ SHADER_DIRS := $(sort $(dir $(SHADER_FILES)))
 TARGET_SHADERFILES := $(patsubst $(SHADER_SRC_PATH)/%.sc,$(OUT_SHADER_PATH)/%.bin,$(SHADER_FILES))
 TARGET_SHADERDIRS := $(sort $(dir $(TARGET_SHADERFILES)))
 
+BIN_RESOURCE_DIRS := meshes assetfiles maps textures
+ALL_BIN_FILES := $(foreach p,$(BIN_RESOURCE_DIRS),$(call rwildcard,$p/,*.*))
+TARGET_ALL_BIN_FILES := $(addprefix $(OUT_DIR)/,$(ALL_BIN_FILES))
+TARGET_BIN_DIRS := $(sort $(dir $(TARGET_ALL_BIN_FILES)))
+
+TARGET_DIRS := $(TARGET_SHADERDIRS) $(TARGET_BIN_DIRS)
+TARGET_DIRS := $(sort $(TARGET_DIRS))
+
 ifeq ($(VERBOSE), ON)
 $(info "OUTPUT SHADER PATH : " $(OUT_SHADER_PATH))
 $(info "SHADER SC FILES : " $(SHADER_FILES))
 $(info "TARGET SHADERFILES : " $(TARGET_SHADERFILES))
-$(info "TARGET DIRS : " $(TARGET_SHADERDIRS))
+$(info "TARGET SHADER DIRS : " $(TARGET_SHADERDIRS))
+$(info "TARGET BIN FILES : " $(TARGET_ALL_BIN_FILES))
+$(info "TARGET BIN DIRS : " $(TARGET_BIN_DIRS))
 endif
 
 $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
-$(TARGET_SHADERDIRS) : | $(OUT_DIR)
+$(TARGET_DIRS) : | $(OUT_DIR)
 	mkdir -p $@
 
-$(TARGET_SHADERFILES) : $(OUT_SHADER_PATH)/%.bin : $(SHADER_SRC_PATH)/%.sc | $(TARGET_SHADERDIRS)
+$(TARGET_SHADERFILES) : $(OUT_SHADER_PATH)/%.bin : $(SHADER_SRC_PATH)/%.sc | $(TARGET_DIRS)
 ifeq ($(VERBOSE), ON)
 	@echo LUABIN: $(LUABIN), input file : $<, output file : $@, render type : $(SHADER_TYPE_PATH)	
 endif	
@@ -58,15 +68,7 @@ compileshader : $(TARGET_SHADERFILES)
 
 # copy other files
 
-BIN_RESOURCE_DIRS := meshes assetfiles maps shaders/dx11 shaders/glsl
-ALL_BIN_FILES := $(foreach p,$(BIN_RESOURCE_DIRS),$(call rwildcard,$p/,*))
-TARGET_ALL_BIN_FILES := $(addprefix $(OUT_DIR)/,$(ALL_BIN_FILES))
-TARGET_BIN_DIRS := $(sort $(dir $(TARGET_ALL_BIN_FILES)))
-
-$(TARGET_BIN_DIRS) : | $(OUT_DIR)
-	mkdir -p $@
-
-$(TARGET_ALL_BIN_FILES) : $(OUT_DIR)/% : % | $(TARGET_BIN_DIRS)
+$(TARGET_ALL_BIN_FILES) : $(OUT_DIR)/% : % | $(TARGET_DIRS)
 	cp $^ $@
 
 copy_bin: $(TARGET_ALL_BIN_FILES)

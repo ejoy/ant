@@ -221,10 +221,10 @@ local function register_message(msg_comp, ot, ms)
     observers:add(message)
 end
 
-local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axismeshfile, materialfile, color)
+local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axismeshfile, materialfile, tag_comp, color)
 	local hie_eid = components_util.create_hierarchy_entity(ms, world, 
 						"hierarchy-" .. prefixname .. "-" .. suffixname)
-
+	world:add_component(hie_eid, tag_comp)
 	local hie_entity = world[hie_eid]
 
 	local hie = hie_entity.editable_hierarchy.root
@@ -259,7 +259,7 @@ local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axisme
 	for k, v in pairs(fullaxis_config) do
 		local eid = components_util.create_render_entity(ms, world, prefixname .. v.name .. suffixname,		
 							v.meshfile, materialfile)
-		world:add_component(eid, "hierarchy_parent")		
+		world:add_component(eid, "hierarchy_parent", tag_comp, "editor")
 		local obj = world[eid]
 		obj.hierarchy_parent.eid = hie_eid
 
@@ -271,24 +271,24 @@ local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axisme
 	return hie_eid
 end
 
-local function add_axis_base_transform_entites(ms, basename, headmeshfile, axismeshfile, colors)
+local function add_axis_base_transform_entites(ms, basename, headmeshfile, axismeshfile, tag_comp, colors)
 	local xaxis_eid = add_axis_entites(ms, basename, "x", 
 										headmeshfile, axismeshfile,
-										"obj_trans/obj_trans.material", colors["red"])
+										"obj_trans/obj_trans.material", tag_comp, colors["red"])
 	
 	local yaxis_eid = add_axis_entites(ms, basename, "y", 
 										headmeshfile, axismeshfile,
-										"obj_trans/obj_trans.material", colors["green"])
+										"obj_trans/obj_trans.material", tag_comp, colors["green"])
 
 	--ms(yaxis.rotation.v, {-90, 0, 0}, "=")	
 
 	local zaxis_eid = add_axis_entites(ms, basename, "z", 
 										headmeshfile, axismeshfile,
-										"obj_trans/obj_trans.material", colors["blue"])
+										"obj_trans/obj_trans.material", tag_comp, colors["blue"])
 
 	local rootaxis_eid = components_util.create_hierarchy_entity(ms, world, basename)
-
-	local axis_root = world[rootaxis_eid]	
+	world:add_component(rootaxis_eid, tag_comp)
+	local axis_root = world[rootaxis_eid]
 
 	local eh = axis_root.editable_hierarchy.root
 	eh[1] = {name = "xaxis", 
@@ -384,15 +384,14 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 end
 
 local function add_translate_entities(ms, colors)
-	return add_axis_base_transform_entites(ms, "translate", "cone.mesh", "cylinder.mesh", colors)
+	return add_axis_base_transform_entites(ms, "translate", "cone.mesh", "cylinder.mesh", "pos_transform", colors)
 end
 
 local function add_scale_entities(ms, colors)
-	return add_axis_base_transform_entites(ms, "scale", "cube.mesh", "cylinder.mesh", colors)
+	return add_axis_base_transform_entites(ms, "scale", "cube.mesh", "cylinder.mesh", "scale_transform", colors)	
 end
 
 local function add_rotator_entities(ms, colors)
-
 	local elems = {
 		x = {
 			name = "rotate-x",
@@ -421,6 +420,7 @@ local function add_rotator_entities(ms, colors)
 	for k, elem in pairs(elems) do
 		local eid = components_util.create_render_entity(ms, world, elem.name, "rotator.mesh",
 													"obj_trans/obj_trans.material")
+		world:add_component(eid, "rotator_transform")
 		local entity = world[eid]
 		ms(entity.scale.v, {0.01, 0.01, 0.01}, "=")
 		ms(entity.rotation.v, elem.rotation, "=")
@@ -434,6 +434,7 @@ local function add_rotator_entities(ms, colors)
 
 		local axis_eid = components_util.create_render_entity(ms, world, elem.axis_name, "cylinder.mesh",
 																"obj_trans/obj_trans.material")
+		world:add_component(axis_eid, "rotator_transform")
 		world:remove_component(axis_eid, "can_select")											
 
 		local axis_entity = world[axis_eid]		

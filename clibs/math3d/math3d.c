@@ -963,15 +963,26 @@ transposed_matrix(lua_State *L, struct lastack *LS) {
 }
 
 static void
-inverted_matrix(lua_State *L, struct lastack *LS) {
+inverted_value(lua_State *L, struct lastack *LS) {
 	int t;
-	float *mat = pop_value(L, LS, &t);
-	if (t != LINEAR_TYPE_MAT)
-		luaL_error(L, "inverted_matrix need mat4 type, type is : %d", t);
-	
-	union matrix44 r;
-	matrix44_inverted(&r, (union matrix44 *)mat);
-	lastack_pushmatrix(LS, r.x);
+	float *value = pop_value(L, LS, &t);
+	switch (t)
+	{
+	case LINEAR_TYPE_MAT: {
+		union matrix44 r;
+		matrix44_inverted(&r, (union matrix44 *)value);
+		lastack_pushmatrix(LS, r.x);
+		break;
+	}
+	case LINEAR_TYPE_VEC3:
+	case LINEAR_TYPE_VEC4: {
+		struct vector3 *v3 = vector3_invert((struct vector3*)value);
+		lastack_pushvector(LS, vector3_array(v3), t);
+		break;
+	}
+	default:
+		luaL_error(L, "inverted_value only support mat/vec3/vec4, type is : %d", t);
+	}		
 }
 
 static void
@@ -1322,7 +1333,7 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		refstack_1_1(RS);
 		break;
 	case 'i':
-		inverted_matrix(L, LS);
+		inverted_value(L, LS);
 		refstack_1_1(RS);
 		break;
 	case '-':

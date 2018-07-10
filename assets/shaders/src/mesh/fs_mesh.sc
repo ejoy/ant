@@ -15,26 +15,31 @@ float fresnel(float _ndotl, float _bias, float _pow)
 float specular_blinn(vec3 lightdir, vec3 normal, vec3 viewdir)
 {
 	vec3 half = normalize(lightdir + viewdir);
-	float hdotn = dot(half, normal);
 
-	float shiness = 128.0;
+	float hdotn = dot(half, normal);	// Phong need check dot result, but Blinn-Phong not
+	float shiness = 8.0;
 	return pow(hdotn, shiness);
+}
+
+vec3 calc_directional_light(vec3 normal, vec3 lightdir, vec3 viewdir)
+{
+	float ndotl = dot(normal, lightdir);
+	float diffuse = max(0.0, ndotl);
+
+	//vec3 specular_color = vec3(1.0, 1.0, 1.0);
+	float fres = fresnel(ndotl, 0.2, 5);	
+	float specular = step(0, ndotl) * fres * specular_blinn(lightdir, normal, viewdir);
+
+	return diffuse + specular;
 }
 
 void main()
 {
 	vec3 normal = normalize(v_normal);
-
 	vec4 color = toLinear(texture2D(s_basecolor, v_tex0));
 
-	float ndotl = dot(normal, directional_lightdir[0]);	
-	vec3 diffuse = color.xyz * max(0.0, ndotl);
-
 	vec3 viewdir = normalize(eyepos - v_pos);
-	
-	//vec3 specular_color = vec3(1.0, 1.0, 1.0);
-	float fres = fresnel(ndotl, 0.2, 5);	
-	float specular = step(0, ndotl) * fres * specular_blinn(directional_lightdir[0], normal, viewdir);
-	gl_FragColor.xyz = diffuse + specular;
+
+	gl_FragColor.xyz = calc_directional_light(normal, directional_lightdir[0], viewdir) * color; 
 	gl_FragColor.w = 1.0;
 }

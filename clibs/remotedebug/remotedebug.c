@@ -309,6 +309,13 @@ lclient_switch(lua_State *L) {
 }
 
 static int
+lclient_context(lua_State *L) {
+	lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST);
+	lua_pushfstring(L, "[thread: %p]", lua_topointer(L, -1));
+	return 1;
+}
+
+static int
 lclient_sethook(lua_State *L) {
 	luaL_checktype(L,1,LUA_TFUNCTION);
 	lua_State *cL = lua_newthread(L);
@@ -446,9 +453,36 @@ lclient_value(lua_State *L) {
 static int
 lclient_type(lua_State *L) {
 	lua_State *hL = get_host(L);
-	lua_pushstring(L, get_type(L, hL));
 
-	return 1;
+	int t = eval_value(L, hL);
+	lua_pushstring(L, lua_typename(L, t));
+	switch (t) {
+	case LUA_TFUNCTION:
+		if (lua_iscfunction(hL, -1)) {
+			lua_pushstring(L, "c");
+		} else {
+			lua_pushstring(L, "lua");
+		}
+		break;
+	case LUA_TNUMBER:
+		if (lua_isinteger(hL, -1)) {
+			lua_pushstring(L, "integer");
+		} else {
+			lua_pushstring(L, "float");
+		}
+		break;
+	case LUA_TUSERDATA:
+		lua_pushstring(L, "full");
+		break;
+	case LUA_TLIGHTUSERDATA:
+		lua_pushstring(L, "light");
+		break;
+	default:
+		lua_pop(hL, 1);
+		return 1;
+	}
+	lua_pop(hL, 1);
+	return 2;
 }
 
 static int
@@ -489,18 +523,39 @@ lclient_getuservalue(lua_State *L) {
 
 static int
 lclient_getinfo(lua_State *L) {
-	int level = luaL_checkinteger(L, 1);
 	lua_settop(L, 2);
 	if (lua_type(L, 2) != LUA_TTABLE) {
 		lua_pop(L, 1);
-		lua_createtable(L, 0, 5);
+		lua_createtable(L, 0, 7);
 	}
 	lua_State *hL = get_host(L);
 	lua_Debug ar;
-	if (lua_getstack(hL, level, &ar) == 0)
-		return 0;
-	if (lua_getinfo(hL, "Sl", &ar) == 0)
-		return 0;
+
+	switch (lua_type(L, 1)) {
+	case LUA_TNUMBER:
+		if (lua_getstack(hL, luaL_checkinteger(L, 1), &ar) == 0)
+			return 0;
+		if (lua_getinfo(hL, "Sln", &ar) == 0)
+			return 0;
+		break;
+	case LUA_TUSERDATA: {
+		lua_pushvalue(L, 1);
+		int t = eval_value(L, hL);
+		if (t != LUA_TFUNCTION) {
+			if (t != LUA_TNONE) {
+				lua_pop(hL, 1);	// remove none function
+			}
+			return luaL_error(L, "Need a function ref, It's %s", lua_typename(L, t));
+		}
+		lua_pop(L, 1);
+		if (lua_getinfo(hL, ">Sln", &ar) == 0)
+			return 0;
+		break;
+	}
+	default:
+		return luaL_error(L, "Need stack level (integer) or function ref, It's %s", lua_typename(L, lua_type(L, 1)));
+	}
+
 	lua_pushstring(L, ar.source);
 	lua_setfield(L, 2, "source");
 	lua_pushstring(L, ar.short_src);
@@ -511,6 +566,10 @@ lclient_getinfo(lua_State *L) {
 	lua_setfield(L, 2, "linedefined");
 	lua_pushinteger(L, ar.lastlinedefined);
 	lua_setfield(L, 2, "lastlinedefined");
+	lua_pushstring(L, ar.name? ar.name : "?");
+	lua_setfield(L, 2, "name");
+	lua_pushstring(L, ar.what? ar.what : "?");
+	lua_setfield(L, 2, "what");
 
 	return 1;
 }
@@ -525,8 +584,10 @@ lclient_activeline(lua_State *L) {
 	lua_Debug ar;
 	if (lua_getstack(hL, 1, &ar) == 0)
 		return 0;
-	if (lua_getinfo(hL, "SL", &ar) == 0)
+	if (lua_getinfo(hL, "SL", &ar) == 0) {
+		lua_pop(hL, 1);
 		return 0;
+	}
 
 	if (line < ar.linedefined)
 		line = ar.linedefined;
@@ -550,6 +611,17 @@ lclient_activeline(lua_State *L) {
 	return 0;
 }
 
+static int
+lclient_stacklevel(lua_State *L) {
+	lua_State *hL = get_host(L);
+	lua_Debug ar;
+	int n;
+	for (n = 0; lua_getstack(hL, n + 1, &ar) != 0; ++n)
+	{ }
+	lua_pushinteger(L, n);
+	return 1;
+}
+
 LUAMOD_API int
 luaopen_remotedebug(lua_State *L) {
 	luaL_checkversion(L);
@@ -557,6 +629,7 @@ luaopen_remotedebug(lua_State *L) {
 		// It's client
 		luaL_Reg l[] = {
 			{ "switch", lclient_switch },
+			{ "context", lclient_context },
 			{ "sethook", lclient_sethook },
 			{ "hookmask", lclient_hookmask },
 			{ "getlocal", lclient_getlocal },
@@ -571,6 +644,7 @@ luaopen_remotedebug(lua_State *L) {
 			{ "type", lclient_type },
 			{ "getinfo", lclient_getinfo },
 			{ "activeline", lclient_activeline },
+			{ "stacklevel", lclient_stacklevel },
 			{ NULL, NULL },
 		};
 		luaL_newlib(L,l);

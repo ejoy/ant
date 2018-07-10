@@ -42,7 +42,6 @@ local input_queue = inputmgr.queue(mapiup, canvas)
 
 local UI_VIEW = 0
 
-
 local nkatlas = {}
 local nkbtn = {}
 local nkimage = {} 
@@ -84,8 +83,6 @@ function save_screenshot(filename)
 		save_ppm(filename, data, width, height, pitch)
 	end
 end
-
-
 
 local ctx = {}
 local message = {}

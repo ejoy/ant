@@ -4,12 +4,15 @@ util.__index = util
 local asset = require "asset"
 local common_util = require "common.util"
 local mu = require "math.util"
+local bgfxutil = require "bgfx.util"
 
-function util.load_mesh(entity)
+function util.load_mesh(entity, meshpath, param)
 	local mesh_comp = entity.mesh
-	local filename = mesh_comp.path
+	if meshpath then
+		mesh_comp.path = meshpath
+	end
 
-	local assetinfo = asset.load(filename)
+	local assetinfo = asset.load(mesh_comp.path, param)
 	mesh_comp.assetinfo = assetinfo
 end
 
@@ -20,15 +23,21 @@ local function load_texture(tex)
 	return {name=tex.name, type=tex.type, stage=tex.stage, value=assetinfo.handle}
 end
 
-function util.load_material(entity)			
+function util.load_material(entity, material_filenames)
+	if material_filenames then
+		for idx, f in ipairs(material_filenames) do
+			entity.material.content[idx] = {path = f, properties = {}}
+		end
+	end
+
 	local material_comp = entity.material
 
 	local content = material_comp.content
 	for _, m in ipairs(content) do
-		local filename = m.path
+		local filename = m.path		
 		local materialinfo = asset.load(filename)
 		m.materialinfo = materialinfo
-
+	
 		--
 		local properties = assert(m.properties)	
 		local asset_properties = materialinfo.properties
@@ -74,6 +83,17 @@ function util.create_hierarchy_entity(ms, world, name)
 
 	mu.identify_transform(ms, obj)
 	return h_eid
+end
+
+function util.is_entity_visible(entity)
+	local can_render = entity.can_render
+	if can_render then
+		if can_render.visible then
+			return entity.mesh ~= nil
+		end		
+	end
+
+	return false
 end
 
 return util

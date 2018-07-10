@@ -77,7 +77,7 @@ function assetmgr.remove_searchdir(idx)
 	table.remove(searchdirs, idx)
 end
 
-function assetmgr.load(filename)
+function assetmgr.load(filename, param)
 	assert(type(filename) == "string")
 	local res = resources[filename]
 	if res == nil then
@@ -87,7 +87,7 @@ function assetmgr.load(filename)
 			fn = assetmgr.find_valid_asset_path(path.join("assetfiles", filename))
 		end		
 		
-		res = loader[ext](fn)
+		res = loader[ext](fn, param)
 		resources[fn] = res
 	end
 

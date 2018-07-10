@@ -22,10 +22,16 @@ rdebug.sethook(function(event, line)
 		print("a=>",f.a)
 		print("a.b=>",f.a.b)
 		print("a.b.c=>",f.a.b.c)
-		print("a.b.c.d=>",f.a.b.c.d)
+		print("a.b.c.d=>",f.a.b.c.d, rdebug.type(f.a.b.c.d))
+		print("foo2=>", rdebug.value(f.foo2), rdebug.type(f.foo2))
 		print("c=>", f.c)
 		print("d=>", f.d)
 		print("d[c]=>", f.d[f.c])
+		print("_ENV.print=>", rdebug.value(f._ENV.print), rdebug.type(f._ENV.print))
+		local print_info = rdebug.getinfo(f._ENV.print)
+		for k,v in pairs(print_info) do
+			print("_ENV.print:",k,v)
+		end
 		assert(rdebug.type(f.co) == "thread")
 		rdebug.switch(f.co)	-- switch to co
 		print(aux.frame(1))	-- co's frame 1
