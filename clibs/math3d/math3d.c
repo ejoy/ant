@@ -1389,10 +1389,13 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 }
 
 static int
-push_command(struct ref_stack *RS, struct lastack *LS, int index) {
+push_command(struct ref_stack *RS, struct lastack *LS, int index, int *log) {
 	lua_State *L = RS->L;
 	int type = lua_type(L, index);
-
+	int pushlog = -1;
+	if (*log >= 0) {
+		pushlog = lastack_gettop(LS);
+	}
 	switch(type) {
 	case LUA_TTABLE:
 		push_value(L, LS, index);
@@ -1416,16 +1419,39 @@ push_command(struct ref_stack *RS, struct lastack *LS, int index) {
 	case LUA_TSTRING: {
 		size_t sz;
 		const char * cmd = luaL_checklstring(L, index, &sz);
+		pushlog = -1;
 		luaL_checkstack(L, (int)(sz + 20), NULL);
 		int i;
 		int ret = 0;
 		for (i=0;i<(int)sz;i++) {
-			ret += do_command(RS, LS, cmd[i]);
+			int c = cmd[i];
+			switch(c) {
+			case '#':
+				*log = lastack_gettop(LS);
+				break;
+			default:
+				if (*log >= 0) {
+					printf("MATHLOG [%c]: ", c);
+					lastack_dump(LS, *log);
+					ret += do_command(RS, LS, c);
+					printf(" -> ");
+					lastack_dump(LS, *log);
+					printf("\n");
+				} else {
+					ret += do_command(RS, LS, c);
+				}
+				break;
+			}
 		}
 		return ret;
 	}
 	default:
 		return luaL_error(L, "Invalid command type %s at %d", lua_typename(L, type), index);
+	}
+	if (pushlog >= 0) {
+		printf("MATHLOG [push]: ");
+		lastack_dump(LS, pushlog);
+		printf("\n");
 	}
 	return 0;
 }
@@ -1434,13 +1460,14 @@ static int
 commandLS(lua_State *L) {
 	struct boxpointer *bp = lua_touserdata(L, lua_upvalueindex(1));
 	struct lastack *LS = bp->LS;
+	int log = -1;	// turn off log
 	int top = lua_gettop(L);
 	int i;
 	int ret = 0;
 	struct ref_stack RS;
 	refstack_init(&RS, L);
 	for (i=1;i<=top;i++) {
-		ret += push_command(&RS, LS, i);
+		ret += push_command(&RS, LS, i, &log);
 	}
 	return ret;
 }

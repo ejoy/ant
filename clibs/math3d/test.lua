@@ -51,14 +51,15 @@ local stack = math3d.new()
 local vec = math3d.ref "vector"
 local mat = math3d.ref "matrix"	-- matrix ref
 
-local v = stack( { type = "proj", fov = 60, aspect = 1024/768 } , "VR")	-- make a proj mat
+-- # turn on log
+local v = stack("#", { type = "proj", fov = 60, aspect = 1024/768 } , "VR")	-- make a proj mat
 print(v)
 
-stack( vec, { 1,2,3,4 } , "1+=")	-- dup {1,2,3,4} add self and then assign to vec
+stack( "#", vec, { 1,2,3,4 } , "1+=")	-- dup {1,2,3,4} add self and then assign to vec
 
 local vv = stack({1, 2, 3, 1}, {2}, "*V")
 print("vec4 mul : " .. vv)
-print("unpack", stack(">VRVRVRVR"))	-- unpack top {1*2,2*2,3*2,1*2} -> 2,4,6,2
+print("unpack", stack("#>VRVRVRVR"))	-- unpack top {1*2,2*2,3*2,1*2} -> 2,4,6,2
 
 -- pop to lua
 stack({1, 2, 3, 1})
