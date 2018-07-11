@@ -1,5 +1,4 @@
 local setmetatable = setmetatable
-local ipairs = ipairs
 local tbl_remove = table.remove
 
 local trg = {}
