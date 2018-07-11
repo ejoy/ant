@@ -21,6 +21,20 @@ function CMD.stackTrace(w, req)
     })
 end
 
+function CMD.evaluate(w, req)
+    if not req.success then
+        response.error(req, req.message)
+        return
+    end
+    if req.variablesReference then
+        req.variablesReference = (w << 32) | req.variablesReference
+    end
+    response.success(req, {
+        result = req.result,
+        variablesReference = req.variablesReference,
+    })
+end
+
 function CMD.source(w, req)
     if not req.content then
         response.success(req, {
@@ -32,7 +46,7 @@ function CMD.source(w, req)
     response.success(req, {
         content = req.content,
         mimeType = 'text/x-lua',
-    }) 
+    })
 end
 
 function CMD.scopes(w, req)
@@ -41,7 +55,7 @@ function CMD.scopes(w, req)
     end
     response.success(req, {
         scopes = req.scopes
-    }) 
+    })
 end
 
 function CMD.variables(w, req)
@@ -61,6 +75,10 @@ end
 
 function CMD.eventBreakpoint(w, req)
     event.breakpoint(req.reason, req.breakpoint)
+end
+
+function CMD.eventOutput(w, req)
+    event.output(req.category, req.output, req.source, req.line)
 end
 
 return CMD

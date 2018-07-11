@@ -4,6 +4,8 @@ local json = require 'cjson'
 local variables = require 'new-debugger.worker.variables'
 local source = require 'new-debugger.worker.source'
 local breakpoint = require 'new-debugger.worker.breakpoint'
+local evaluate = require 'new-debugger.worker.evaluate'
+local hookmgr = require 'new-debugger.worker.hookmgr'
 local ev = require 'new-debugger.event'
 
 local state = 'running'
@@ -30,6 +32,16 @@ ev.on('breakpoint', function(reason, bp)
         cmd = 'eventBreakpoint',
         reason = reason,
         breakpoint = bp,
+    }
+end)
+
+ev.on('output', function(category, output, source, line)
+    sendToMaster {
+        cmd = 'eventOutput',
+        category = category,
+        output = output,
+        source = source,
+        line = line,
     }
 end)
 
@@ -75,7 +87,7 @@ function CMD.stackTrace(pkg)
                     column = 1,
                     source = source.output(src),
                 }
-            else 
+            else
                 res[#res + 1] = {
                     id = depth,
                     name = info.what == 'main' and "[main chunk]" or info.name,
@@ -136,6 +148,50 @@ function CMD.variables(pkg)
     }
 end
 
+function CMD.evaluate(pkg)
+    local f, err = evaluate.complie('return ' .. pkg.expression)
+    if not f then
+        sendToMaster {
+            cmd = 'evaluate',
+            command = pkg.command,
+            seq = pkg.seq,
+            success = false,
+            message = err,
+        }
+        return
+    end
+    local ok, res = evaluate.execute(pkg.frameId, f)
+    if not ok then
+        sendToMaster {
+            cmd = 'evaluate',
+            command = pkg.command,
+            seq = pkg.seq,
+            success = false,
+            message = res,
+        }
+        return
+    end
+    if type(res) == 'table' and res.__ref ~= nil then
+        local text, _, ref = variables.createRef(pkg.frameId, res.__ref)
+        sendToMaster {
+            cmd = 'evaluate',
+            command = pkg.command,
+            seq = pkg.seq,
+            success = true,
+            result = text,
+            variablesReference = ref,
+        }
+        return
+    end
+    sendToMaster {
+        cmd = 'evaluate',
+        command = pkg.command,
+        seq = pkg.seq,
+        success = true,
+        result = tostring(res) or '',
+    }
+end
+
 function CMD.setBreakpoints(pkg)
     if not source.valid(pkg.source) then
         return
@@ -150,6 +206,7 @@ end
 
 function CMD.run(pkg)
     state = 'running'
+    hookmgr.closeStep()
 end
 
 function CMD.stepOver(pkg)
@@ -157,11 +214,13 @@ function CMD.stepOver(pkg)
     stepContext = rdebug.context()
     stepLevel = rdebug.stacklevel()
     stepCurrentLevel = stepLevel
+    hookmgr.openStep()
 end
 
 function CMD.stepIn(pkg)
     state = 'stepIn'
     stepContext = ''
+    hookmgr.openStep()
 end
 
 function CMD.stepOut(pkg)
@@ -169,6 +228,7 @@ function CMD.stepOut(pkg)
     stepContext = rdebug.context()
     stepLevel = rdebug.stacklevel() - 1
     stepCurrentLevel = stepLevel
+    hookmgr.openStep()
 end
 
 local function runLoop(reason)
@@ -181,17 +241,12 @@ local function runLoop(reason)
         cdebug.sleep(10)
         masterThread:update()
         if state ~= 'stopped' then
-            variables.clean()
             return
         end
     end
 end
 
 local hook = {}
-
-hook['update'] = function()
-    masterThread:update()
-end
 
 hook['call'] = function()
     local currentContext = rdebug.context()
@@ -216,9 +271,11 @@ end
 hook['line'] = function(line)
     local bp = breakpoint.find(line)
     if bp then
-        state = 'stopped'
-        runLoop('breakpoint')
-        return
+        if breakpoint.exec(bp) then
+            state = 'stopped'
+            runLoop('breakpoint')
+            return
+        end
     end
 
     masterThread:update()
@@ -238,11 +295,16 @@ hook['line'] = function(line)
     end
 end
 
-rdebug.hookmask 'cr'
 rdebug.sethook(function(event, line)
     assert(xpcall(function()
+        if event == 'update' then
+            masterThread:update()
+            return
+        end
         if hook[event] then
             hook[event](line)
         end
+        variables.clean()
+        evaluate.clean()
     end, debug.traceback))
 end)

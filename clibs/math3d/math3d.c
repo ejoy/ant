@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <math.h>
 #include <string.h>
+#include <stdbool.h>
 #include "linalg.h"
 #include "math3d.h"
 #include "refstack.h"
@@ -1255,6 +1256,7 @@ split_mat_to_srt(lua_State *L, struct lastack *LS){
 	lastack_pushvec3(LS, vector3_array(&scale));
 }
 
+
 static inline void
 rotation_to_base_axis(lua_State *L, struct lastack *LS){
 	int64_t id = pop(L, LS);
@@ -1281,6 +1283,50 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 	lastack_pushvec3(LS, vector3_array(&zdir));
 	lastack_pushvec3(LS, vector3_array(&ydir));
 	lastack_pushvec3(LS, vector3_array(&xdir));	
+}
+
+static const char * s_command_desc[256];
+
+static void 
+init_command_desc() {
+	s_command_desc['P'] = "pop as id";
+	s_command_desc['m'] = "pop as pointer";
+	s_command_desc['T'] = "pop as table";
+	s_command_desc['V'] = "top as string";
+	s_command_desc['='] = "assign to ref";
+	s_command_desc['1'] = "dup 1";
+	s_command_desc['2'] = "dup 2";
+	s_command_desc['3'] = "dup 3";
+	s_command_desc['4'] = "dup 4";
+	s_command_desc['5'] = "dup 5";
+	s_command_desc['6'] = "dup 6";
+	s_command_desc['7'] = "dup 7";
+	s_command_desc['8'] = "dup 8";
+	s_command_desc['9'] = "dup 9";
+	s_command_desc['S'] = "swap";
+	s_command_desc['R'] = "remove";
+	s_command_desc['.'] = "dot";
+	s_command_desc['x'] = "cross";
+	s_command_desc['*'] = "mul";
+	s_command_desc['%'] = "mulH";
+	s_command_desc['n'] = "normalize";
+	s_command_desc['t'] = "transposed";
+	s_command_desc['i'] = "inverted";
+	s_command_desc['-'] = "sub";
+	s_command_desc['+'] = "add";
+	s_command_desc['l'] = "look at";
+	s_command_desc['L'] = "look from";
+	s_command_desc['>'] = "extract";
+	s_command_desc['e'] = "to euler";
+	s_command_desc['q'] = "to quaternion";
+	s_command_desc['d'] = "to rotation";
+	s_command_desc['~'] = "to srt";
+	int i;
+	for (i=0;i<256;i++) {
+		if (s_command_desc[i] == NULL) {
+			s_command_desc[i] = "undefined";
+		}
+	}
 }
 
 /*
@@ -1466,10 +1512,13 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 }
 
 static int
-push_command(struct ref_stack *RS, struct lastack *LS, int index) {
+push_command(struct ref_stack *RS, struct lastack *LS, int index, bool *log) {
 	lua_State *L = RS->L;
 	int type = lua_type(L, index);
-
+	int pushlog = -1;
+	if (*log) {
+		pushlog = lastack_gettop(LS);
+	}
 	switch(type) {
 	case LUA_TTABLE:
 		push_value(L, LS, index);
@@ -1493,16 +1542,39 @@ push_command(struct ref_stack *RS, struct lastack *LS, int index) {
 	case LUA_TSTRING: {
 		size_t sz;
 		const char * cmd = luaL_checklstring(L, index, &sz);
+		pushlog = -1;
 		luaL_checkstack(L, (int)(sz + 20), NULL);
 		int i;
 		int ret = 0;
 		for (i=0;i<(int)sz;i++) {
-			ret += do_command(RS, LS, cmd[i]);
+			int c = cmd[i];
+			switch(c) {
+			case '#':
+				*log = true;
+				break;
+			default:
+				if (*log) {
+					printf("MATHLOG [%c %s]: ", c, s_command_desc[c]);
+					lastack_dump(LS, 0);
+					ret += do_command(RS, LS, c);
+					printf(" -> ");
+					lastack_dump(LS, 0);
+					printf("\n");
+				} else {
+					ret += do_command(RS, LS, c);
+				}
+				break;
+			}
 		}
 		return ret;
 	}
 	default:
 		return luaL_error(L, "Invalid command type %s at %d", lua_typename(L, type), index);
+	}
+	if (pushlog >= 0) {
+		printf("MATHLOG [push]: ");
+		lastack_dump(LS, pushlog);
+		printf("\n");
 	}
 	return 0;
 }
@@ -1511,13 +1583,14 @@ static int
 commandLS(lua_State *L) {
 	struct boxpointer *bp = lua_touserdata(L, lua_upvalueindex(1));
 	struct lastack *LS = bp->LS;
+	bool log = false;
 	int top = lua_gettop(L);
 	int i;
 	int ret = 0;
 	struct ref_stack RS;
 	refstack_init(&RS, L);
 	for (i=1;i<=top;i++) {
-		ret += push_command(&RS, LS, i);
+		ret += push_command(&RS, LS, i, &log);
 	}
 	return ret;
 }
@@ -1601,6 +1674,7 @@ ltype(lua_State *L) {
 
 LUAMOD_API int
 luaopen_math3d(lua_State *L) {
+	init_command_desc();
 	luaL_checkversion(L);
 	luaL_Reg ref[] = {
 		{ "__tostring", lreftostring },

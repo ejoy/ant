@@ -9,7 +9,7 @@ local function start()
 end
 
 local function update()
-	rdebug.probe 'update'
+    rdebug.probe 'update'
 end
 
 return {
