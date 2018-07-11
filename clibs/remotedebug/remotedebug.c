@@ -535,7 +535,7 @@ lclient_getinfo(lua_State *L) {
 	case LUA_TNUMBER:
 		if (lua_getstack(hL, luaL_checkinteger(L, 1), &ar) == 0)
 			return 0;
-		if (lua_getinfo(hL, "Sln", &ar) == 0)
+		if (lua_getinfo(hL, "Slnt", &ar) == 0)
 			return 0;
 		break;
 	case LUA_TUSERDATA: {
@@ -548,7 +548,7 @@ lclient_getinfo(lua_State *L) {
 			return luaL_error(L, "Need a function ref, It's %s", lua_typename(L, t));
 		}
 		lua_pop(L, 1);
-		if (lua_getinfo(hL, ">Sln", &ar) == 0)
+		if (lua_getinfo(hL, ">Slnt", &ar) == 0)
 			return 0;
 		break;
 	}
@@ -570,6 +570,14 @@ lclient_getinfo(lua_State *L) {
 	lua_setfield(L, 2, "name");
 	lua_pushstring(L, ar.what? ar.what : "?");
 	lua_setfield(L, 2, "what");
+	if (ar.namewhat) {
+		lua_pushstring(L, ar.namewhat);
+	} else {
+		lua_pushnil(L);
+	}
+	lua_setfield(L, 2, "namewhat");
+	lua_pushboolean(L, ar.istailcall? 1 : 0);
+	lua_setfield(L, 2, "istailcall");
 
 	return 1;
 }
