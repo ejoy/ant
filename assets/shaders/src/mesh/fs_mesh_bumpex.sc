@@ -51,6 +51,6 @@ void main()
 	vec3 viewdir = mul(normalize(u_eyepos - v_pos), tbn);
 
 	float gloss = ntexdata.z;
-	vec4 lightcolor = directional_color[0] * directional_intensity[0];
+	vec4 lightcolor = directional_color[0] * directional_intensity[0].x;
 	gl_FragColor = calc_lighting_BH(normal, lightdir, viewdir, lightcolor, color, u_specularColor, gloss);
 }
