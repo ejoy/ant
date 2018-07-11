@@ -43,7 +43,7 @@ function response.initialize(req)
             supportsDelayedStackTraceLoading = true,
             --supportsExceptionInfoRequest = true,
             supportsLogPoints = true,
-            --supportsEvaluateForHovers = true,
+            supportsEvaluateForHovers = true,
             --exceptionBreakpointFilters = {
             --    {
             --        default = false,

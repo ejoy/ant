@@ -110,7 +110,7 @@ function request.scopes(req)
         response.error(req, "Not found frame")
         return false
     end
-    
+
     local threadAndFrameId = args.frameId
     local threadId = threadAndFrameId >> 16
     local frameId = threadAndFrameId & 0xFFFF
@@ -118,7 +118,7 @@ function request.scopes(req)
         response.error(req, "Not found thread")
         return false
     end
-    
+
     mgr.sendToWorker(threadId, {
         cmd = 'scopes',
         command = req.command,
@@ -137,7 +137,7 @@ function request.variables(req)
         response.error(req, "Not found thread")
         return false
     end
-    
+
     mgr.sendToWorker(threadId, {
         cmd = 'variables',
         command = req.command,

@@ -149,37 +149,14 @@ function CMD.variables(pkg)
 end
 
 function CMD.evaluate(pkg)
-    local f, err = evaluate.complie('return ' .. pkg.expression)
-    if not f then
-        sendToMaster {
-            cmd = 'evaluate',
-            command = pkg.command,
-            seq = pkg.seq,
-            success = false,
-            message = err,
-        }
-        return
-    end
-    local ok, res = evaluate.execute(pkg.frameId, f)
+    local ok, result, ref = evaluate.run(pkg.frameId, pkg.expression, pkg.context)
     if not ok then
         sendToMaster {
             cmd = 'evaluate',
             command = pkg.command,
             seq = pkg.seq,
             success = false,
-            message = res,
-        }
-        return
-    end
-    if type(res) == 'table' and res.__ref ~= nil then
-        local text, _, ref = variables.createRef(pkg.frameId, res.__ref)
-        sendToMaster {
-            cmd = 'evaluate',
-            command = pkg.command,
-            seq = pkg.seq,
-            success = true,
-            result = text,
-            variablesReference = ref,
+            message = result,
         }
         return
     end
@@ -188,7 +165,8 @@ function CMD.evaluate(pkg)
         command = pkg.command,
         seq = pkg.seq,
         success = true,
-        result = tostring(res) or '',
+        result = result,
+        variablesReference = ref,
     }
 end
 
@@ -204,12 +182,12 @@ function CMD.stop(pkg)
     stopReason = pkg.reason
 end
 
-function CMD.run(pkg)
+function CMD.run()
     state = 'running'
     hookmgr.closeStep()
 end
 
-function CMD.stepOver(pkg)
+function CMD.stepOver()
     state = 'stepOver'
     stepContext = rdebug.context()
     stepLevel = rdebug.stacklevel()
@@ -217,13 +195,13 @@ function CMD.stepOver(pkg)
     hookmgr.openStep()
 end
 
-function CMD.stepIn(pkg)
+function CMD.stepIn()
     state = 'stepIn'
     stepContext = ''
     hookmgr.openStep()
 end
 
-function CMD.stepOut(pkg)
+function CMD.stepOut()
     state = 'stepOut'
     stepContext = rdebug.context()
     stepLevel = rdebug.stacklevel() - 1
