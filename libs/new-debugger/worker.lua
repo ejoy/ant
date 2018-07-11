@@ -45,6 +45,10 @@ ev.on('output', function(category, output, source, line)
     }
 end)
 
+function CMD.initialized(pkg)
+    ev.emit('update-config', pkg.config)
+end
+
 function CMD.stackTrace(pkg)
     local startFrame = pkg.startFrame
     local endFrame = pkg.endFrame
@@ -180,11 +184,13 @@ end
 function CMD.stop(pkg)
     state = 'stopped'
     stopReason = pkg.reason
+    hookmgr.openStepIn()
 end
 
 function CMD.run()
     state = 'running'
     hookmgr.closeStep()
+    hookmgr.closeStepIn()
 end
 
 function CMD.stepOver()
@@ -198,7 +204,7 @@ end
 function CMD.stepIn()
     state = 'stepIn'
     stepContext = ''
-    hookmgr.openStep()
+    hookmgr.openStepIn()
 end
 
 function CMD.stepOut()
@@ -247,7 +253,14 @@ hook['tail call'] = function ()
 end
 
 hook['line'] = function(line)
-    local bp = breakpoint.find(line)
+    local s = rdebug.getinfo(1, info)
+    local src = source.create(s.source)
+    if not source.valid(src) then
+        hookmgr.closeLineBP()
+        return
+    end
+
+    local bp = breakpoint.find(src, line)
     if bp then
         if breakpoint.exec(bp) then
             state = 'stopped'
@@ -273,16 +286,41 @@ hook['line'] = function(line)
     end
 end
 
+local function hook_stdout()
+    local res = {}
+    local i = -1
+    while true do
+        local name, value = rdebug.getlocal(1, i)
+        if name == nil then
+            break
+        end
+        res[#res + 1] = tostring(rdebug.value(value))
+        i = i - 1
+    end
+
+    local info = {}
+    local s = rdebug.getinfo(2, info)
+    local src = source.create(s.source)
+    if source.valid(src) then
+        ev.emit('output', 'stdout', table.concat(res, '\t'), src, s.currentline)
+    else
+        ev.emit('output', 'stdout', table.concat(res, '\t'))
+    end
+end
+
 rdebug.sethook(function(event, line)
     assert(xpcall(function()
         if event == 'update' then
             masterThread:update()
             return
+        elseif event == 'stdout' then
+            hook_stdout()
+            return
         end
         if hook[event] then
             hook[event](line)
+            variables.clean()
+            evaluate.clean()
         end
-        variables.clean()
-        evaluate.clean()
     end, debug.traceback))
 end)

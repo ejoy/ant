@@ -118,14 +118,8 @@ function m.reset()
     hookmgr.openLineBP()
 end
 
-function m.find(currentline)
+function m.find(src, currentline)
     if not currentBP then
-        local s = rdebug.getinfo(1, info)
-        local src = source.create(s.source)
-        if not source.valid(src) then
-            hookmgr.closeLineBP()
-            return
-        end
         if src.path then
             currentBP = breakpoints[path.normalize_native(src.path)]
         else

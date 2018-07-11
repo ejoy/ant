@@ -12,6 +12,12 @@ local function update()
     rdebug.probe 'update'
 end
 
+local _print = print
+function print(...)
+    rdebug.probe 'stdout'
+    --return _print(...)
+end
+
 return {
     initialize = initialize,
     start = start,

@@ -1,11 +1,12 @@
 local rdebug = require 'remotedebug'
 
+local stepin = false
 local step = false
 local bp = false
 local linebp = false
 
 local function update()
-    if linebp then
+    if linebp or stepin then
         rdebug.hookmask 'crl'
         return
     end
@@ -25,6 +26,16 @@ end
 
 function m.closeStep()
     step = false
+    update()
+end
+
+function m.openStepIn()
+    stepin = true
+    update()
+end
+
+function m.closeStepIn()
+    stepin = false
     update()
 end
 
