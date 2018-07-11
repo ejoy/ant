@@ -118,4 +118,21 @@ function util.print_srt(e, numtab)
 	print(tab .. "position : ", t_str)
 end
 
+local function update_frustum_from_aspect(rt, frustum)
+	local aspect = rt.w / rt.h
+	local tmp_h = frustum.t - frustum.b
+	local tmp_hw = aspect * tmp_h * 0.5
+	frustum.l = -tmp_hw
+	frustum.r = tmp_hw
+end
+
+function util.view_proj_matrix(ms, camera_entity)	
+	local view = ms(camera_entity.position.v, camera_entity.rotation.v, "dLP")
+	local vr = camera_entity.view_rect
+	local frustum = assert(camera_entity.frustum)
+	update_frustum_from_aspect(vr, frustum)
+	
+	return view, util.proj(ms, frustum)
+end
+
 return util

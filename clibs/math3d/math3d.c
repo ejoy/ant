@@ -213,9 +213,9 @@ lassign(lua_State *L) {
 		if (ref->LS == NULL) {
 			return luaL_error(L, "Init ref object first : use stack(ref, id, '=')");
 		}
-		int64_t rid = get_id(L, 2);
+		int64_t rid = get_id(L, 2);		
 		if (!lastack_sametype(rid, ref->id)) {
-			return luaL_error(L, "type mismatch");
+			return luaL_error(L, "assign operation : type mismatch");
 		}
 
 		int64_t markid = lastack_mark(ref->LS, rid);
@@ -717,8 +717,10 @@ pop2_values(lua_State *L, struct lastack *LS, float *val[2], int types[2]) {
 
 	val[1] = lastack_value(LS, v1, types);
 	val[0] = lastack_value(LS, v2, types + 1);
-	if (types[0] != types[1])
-		luaL_error(L, "type mismatch");
+	if (types[0] != types[1]) {
+		if (!lastack_is_vec_type(types[0]) && !lastack_is_vec_type(types[1]))
+			luaL_error(L, "pop2_values : type mismatch, type0 = %d, type1 = %d", types[0], types[1]);
+	}		
 }
 
 static void
@@ -736,16 +738,22 @@ add_2values(lua_State *L, struct lastack *LS) {
 		ret[0] = val[0][0] + val[1][0];
 		ret[1] = val[0][1] + val[1][1];
 		ret[2] = val[0][2] + val[1][2];
-		lastack_pushvec3(LS, ret);
+		if (types[1] == LINEAR_TYPE_VEC4) 
+			lastack_pushvec4(LS, ret);
+		else
+			lastack_pushvec3(LS, ret);
 		break;
 	case LINEAR_TYPE_VEC4:
 		ret[0] = val[0][0] + val[1][0];
 		ret[1] = val[0][1] + val[1][1];
 		ret[2] = val[0][2] + val[1][2];
-		ret[3] = val[0][3] + val[1][3];
+		if (types[1] == LINEAR_TYPE_VEC4)
+			ret[3] = val[0][3] + val[1][3];
 		lastack_pushvec4(LS, ret);
 		break;
 	case LINEAR_TYPE_EULER:
+		if (types[1] != LINEAR_TYPE_EULER)
+			luaL_error(L, "Invalid type for euler to add, only support euler + euler, type0 = %d, type1 = %d", types[0], types[1]);
 		ret[0] = val[0][0] + val[1][0];
 		ret[1] = val[0][1] + val[1][1];
 		ret[2] = val[0][2] + val[1][2];
@@ -771,12 +779,16 @@ sub_2values(lua_State *L, struct lastack *LS) {
 		ret[0] = val[0][0] - val[1][0];
 		ret[1] = val[0][1] - val[1][1];
 		ret[2] = val[0][2] - val[1][2];
-		lastack_pushvec3(LS, ret);
+		if (types[1] == LINEAR_TYPE_VEC4)
+			lastack_pushvec4(LS, ret);
+		else
+			lastack_pushvec3(LS, ret);
 	case LINEAR_TYPE_VEC4:
 		ret[0] = val[0][0] - val[1][0];
 		ret[1] = val[0][1] - val[1][1];
 		ret[2] = val[0][2] - val[1][2];
-		ret[3] = val[0][3] - val[1][3];
+		if (types[1] == LINEAR_TYPE_VEC4)
+			ret[3] = val[0][3] - val[1][3];
 		lastack_pushvec4(LS, ret);
 		break;
 	case LINEAR_TYPE_EULER:
@@ -899,7 +911,7 @@ mul_2values(lua_State *L, struct lastack *LS) {
 	}
 
 	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_EULER):
-	case BINTYPE(LINEAR_TYPE_EULER, LINEAR_TYPE_VEC4):{
+	case BINTYPE(LINEAR_TYPE_EULER, LINEAR_TYPE_VEC4): {
 		const struct euler *e = (const struct euler*)(type == BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_EULER) ? val1 : val0);
 		const struct vector4 *v = (const struct vector4*)(type == BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_EULER) ? val0 : val1);
 
@@ -920,8 +932,27 @@ mul_2values(lua_State *L, struct lastack *LS) {
 		lastack_pushvec4(LS, vector4_array(&r));
 		break;
 	}
+	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_VEC3):
+	case BINTYPE(LINEAR_TYPE_VEC3, LINEAR_TYPE_VEC4): {
+		const struct vector3 *v0 = (const struct vector3 *)val0;
+		const struct vector3 *v1 = (const struct vector3 *)val1;
+		struct vector4 v4;
+		vector3_mulvec3(to_vec3(&v4), v0, v1);
+		v4.w = 0;
+		lastack_pushvec4(LS, vector4_array(&v4));
+		break;
+	}
+	case BINTYPE(LINEAR_TYPE_MAT, LINEAR_TYPE_VEC3):
+	case BINTYPE(LINEAR_TYPE_VEC3, LINEAR_TYPE_MAT): {
+		const union matrix44 *m = (const union matrix44*)(type == BINTYPE(LINEAR_TYPE_VEC3, LINEAR_TYPE_MAT) ? val1 : val0);
+		const struct vector3 *v = (const struct vector3*)(type == BINTYPE(LINEAR_TYPE_MAT, LINEAR_TYPE_VEC3) ? val0 : val1);
 
+		struct vector3 r = *v;
 
+		vector3_mul(&r, m);
+		lastack_pushvec3(LS, vector3_array(&r));
+		break;
+	}
 	default:
 		luaL_error(L, "Need support type %s * type %s", get_typename(t0),get_typename(t1));
 	}
@@ -1002,7 +1033,7 @@ lookat_matrix(lua_State *L, struct lastack *LS, int direction) {
 	float *eye = pop_value(L, LS, &t1);
 	if (t0 != LINEAR_TYPE_VEC3 && t0 != LINEAR_TYPE_VEC4)
 		luaL_error(L, "lookat_matrix, arg0 need vec3/vec4, arg0 is : %d", t0);
-	if (t0 != t1)
+	if (t1 != LINEAR_TYPE_VEC3 && t1 != LINEAR_TYPE_VEC4)
 		luaL_error(L, "lookat_matrix, arg0 and arg1 type mismatch, arg0 is : %d, arg1 is : %d", t0, t1);
 	
 	union matrix44 m;
@@ -1135,9 +1166,24 @@ convert_to_quaternion(lua_State *L, struct lastack *LS){
 	lastack_pushquat(LS, &q.x);
 }
 
+static inline struct vector3* 
+to_viewdir(const struct euler *e, struct vector3 *v3){
+	if (!euler_is_identity(e)){
+		struct quaternion q;
+		quaternion_init_from_euler(&q, e);
+		struct vector4 v4 = {v3->x, v3->y, v3->z, 0};
+		struct vector4 t = v4;
+
+		quaternion_rotate_vec4(&v4, &q, &t);
+		v3->x = v4.x, v3->y = v4.y, v3->z = v4.z;
+		vector3_normalize(v3);
+	}
+
+	return v3;
+}
 
 static inline void
-convert_rotation_to_view_dir(lua_State *L, struct lastack *LS){
+convert_rotation_to_viewdir(lua_State *L, struct lastack *LS){
 	int64_t id = pop(L, LS);
 	int type;
 	float *v = lastack_value(LS, id, &type);
@@ -1152,15 +1198,10 @@ convert_rotation_to_view_dir(lua_State *L, struct lastack *LS){
 				memcpy(&e, v, sizeof(e));
 			}
 
-			struct vector4 v4 = {0, 0, 1, 0};			
-			if (!euler_is_identity(&e)){
-				struct quaternion q;
-				quaternion_init_from_euler(&q, &e);
-				struct vector4 t = v4;
-				quaternion_rotate_vec4(&v4, &q, &t);
-				vector3_normalize(to_vector3(&v4));
-			}
-			lastack_pushvec4(LS, vector4_array(&v4));
+			struct vector3 v3 = Z_v3;
+			to_viewdir(&e, &v3);
+
+			lastack_pushvec3(LS, vector3_array(&v3));
 			break;
 		}
 		default:
@@ -1170,7 +1211,7 @@ convert_rotation_to_view_dir(lua_State *L, struct lastack *LS){
 }
 
 static inline void
-convert_view_dir_to_rotation(lua_State *L, struct lastack *LS){
+convert_viewdir_to_rotation(lua_State *L, struct lastack *LS){
 	int64_t id = pop(L, LS);
 	int type;
 	float *v = lastack_value(LS, id, &type);
@@ -1212,6 +1253,34 @@ split_mat_to_srt(lua_State *L, struct lastack *LS){
 	lastack_pushvec3(LS, vector3_array(&translate));
 	lastack_pushvec3(LS, vector3_array(&rotation));
 	lastack_pushvec3(LS, vector3_array(&scale));
+}
+
+static inline void
+rotation_to_base_axis(lua_State *L, struct lastack *LS){
+	int64_t id = pop(L, LS);
+	int type;
+	float* v = lastack_value(LS, id, &type);
+	if (!lastack_is_vec_type(type))
+		luaL_error(L, "convert to base axis, only support vec3/vec4");
+	
+	struct euler e = vector3_to_euler((const struct vector3*)v);
+	struct vector3 zdir = Z_v3;
+	to_viewdir(&e, &zdir);
+
+	struct vector3 xdir, ydir;
+	if (vector3_equal(&zdir, &Y_v3)){
+		ydir.x = 0, ydir.y = 0, ydir.z = -1;		
+		xdir.x = 1, xdir.y = 0, xdir.z = 0;
+	} else {
+		vector3_cross(&xdir, &zdir, &Y_v3);
+		vector3_normalize(&xdir);
+		vector3_cross(&ydir, &zdir, &xdir);
+		vector3_normalize(&ydir);
+	}
+
+	lastack_pushvec3(LS, vector3_array(&zdir));
+	lastack_pushvec3(LS, vector3_array(&ydir));
+	lastack_pushvec3(LS, vector3_array(&xdir));	
 }
 
 /*
@@ -1368,15 +1437,23 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		refstack_1_1(RS);
 		break;		
 	case 'd':
-		convert_rotation_to_view_dir(L, LS);
+		convert_rotation_to_viewdir(L, LS);
 		refstack_1_1(RS);
 		break;
 	case 'D':
-		convert_view_dir_to_rotation(L, LS);
+		convert_viewdir_to_rotation(L, LS);
 		refstack_1_1(RS);
 		break;
 	case '~':
 		split_mat_to_srt(L, LS);
+		refstack_pop(RS);
+		refstack_push(RS);
+		refstack_push(RS);
+		refstack_push(RS);
+		break;
+
+	case 'b':
+		rotation_to_base_axis(L, LS);
 		refstack_pop(RS);
 		refstack_push(RS);
 		refstack_push(RS);
