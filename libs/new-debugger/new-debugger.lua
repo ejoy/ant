@@ -14,7 +14,7 @@ end
 
 local _print = print
 function print(...)
-    rdebug.probe 'stdout'
+    rdebug.probe 'print'
     --return _print(...)
 end
 

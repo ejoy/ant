@@ -8,6 +8,7 @@ local evaluate = require 'new-debugger.worker.evaluate'
 local hookmgr = require 'new-debugger.worker.hookmgr'
 local ev = require 'new-debugger.event'
 
+local info = {}
 local state = 'running'
 local stopReason = 'unknown'
 local stepLevel = -1
@@ -225,9 +226,11 @@ local function runLoop(reason)
         cdebug.sleep(10)
         masterThread:update()
         if state ~= 'stopped' then
-            return
+            break
         end
     end
+    variables.clean()
+    evaluate.clean()
 end
 
 local hook = {}
@@ -286,7 +289,11 @@ hook['line'] = function(line)
     end
 end
 
-local function hook_stdout()
+hook['update'] = function()
+    masterThread:update()
+end
+
+hook['print'] = function()
     local res = {}
     local i = -1
     while true do
@@ -298,7 +305,6 @@ local function hook_stdout()
         i = i - 1
     end
 
-    local info = {}
     local s = rdebug.getinfo(2, info)
     local src = source.create(s.source)
     if source.valid(src) then
@@ -310,17 +316,8 @@ end
 
 rdebug.sethook(function(event, line)
     assert(xpcall(function()
-        if event == 'update' then
-            masterThread:update()
-            return
-        elseif event == 'stdout' then
-            hook_stdout()
-            return
-        end
         if hook[event] then
             hook[event](line)
-            variables.clean()
-            evaluate.clean()
         end
     end, debug.traceback))
 end)
