@@ -35,6 +35,10 @@ function request.configurationDone(req)
     if not args then
         return false
     end
+    mgr.broadcastToWorker {
+        cmd = 'initialized',
+        config = args,
+    }
     local stopOnEntry = true
     if type(args.stopOnEntry) == 'boolean' then
         stopOnEntry = args.stopOnEntry

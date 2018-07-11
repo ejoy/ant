@@ -4,11 +4,28 @@ local ev = require 'new-debugger.event'
 
 local sourcePool = {}
 local codePool = {}
+local skipFiles = {}
+
+ev.on('update-config', function(config)
+    skipFiles = {}
+    for _, pattern in ipairs(config.skipFiles) do
+        skipFiles[#skipFiles + 1] = path.normalize_native(pattern):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*')
+    end
+end)
+
+local function glob_match(pattern, target)
+    return target:match(pattern) ~= nil
+end
 
 local function serverPathToClientPatn(p)
     -- TODO: utf8 or ansi
-    -- TODO: skipFiles
     -- TODO: sourceMap
+    local nativePath = path.normalize_native(p)
+    for _, pattern in ipairs(skipFiles) do
+        if glob_match(pattern, nativePath) then
+            return
+        end
+    end
     return path.normalize(p)
 end
 
@@ -24,9 +41,11 @@ local function create(source)
     local h = source:sub(1, 1)
     if h == '@' then
         local serverPath = source:sub(2)
-        local src = {
-            path = serverPathToClientPatn(serverPath)
-        }
+        local clientPath = serverPathToClientPatn(serverPath)
+        if not clientPath then
+            return {}
+        end
+        local src = { path = clientPath }
         local f = loadfile(serverPath)
         if f then
             parser(src, f)
