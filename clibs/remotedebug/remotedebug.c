@@ -450,6 +450,39 @@ lclient_value(lua_State *L) {
 	return 1;
 }
 
+// userdata ref
+// any value
+// ref = value
+static int
+lclient_assign(lua_State *L) {
+	lua_State *hL = get_host(L);
+	if (lua_checkstack(hL, 2) == 0)
+		return luaL_error(L, "stack overflow");
+	int vtype = lua_type(L, 2);
+	switch (vtype) {
+	case LUA_TNUMBER:
+	case LUA_TNIL:
+	case LUA_TBOOLEAN:
+	case LUA_TLIGHTUSERDATA:
+	case LUA_TSTRING:
+		copy_value(L, hL);
+		break;
+	case LUA_TUSERDATA:
+		if (eval_value(L, hL) == LUA_TNONE) {
+			lua_pushnil(hL);
+		}
+		break;
+	default:
+		return luaL_error(L, "Invalid value type %s", lua_typename(L, vtype));
+	}
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	struct value * ref = lua_touserdata(L, 1);
+	lua_getuservalue(L, 1);
+	int r = assign_value(L, ref, hL);
+	lua_pushboolean(L, r);
+	return 1;
+}
+
 static int
 lclient_type(lua_State *L) {
 	lua_State *hL = get_host(L);
@@ -641,6 +674,7 @@ luaopen_remotedebug(lua_State *L) {
 			{ "index", lclient_index },
 			{ "next", lclient_next },
 			{ "value", lclient_value },
+			{ "assign", lclient_assign },
 			{ "type", lclient_type },
 			{ "getinfo", lclient_getinfo },
 			{ "activeline", lclient_activeline },
