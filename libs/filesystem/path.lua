@@ -50,6 +50,18 @@ function path.is_mem_file(name)
     return name:match("^mem://.+") ~= nil
 end
 
+function path.is_absolute_path(p)
+	if p:sub(1, 1) == '/' then
+		return true
+	end
+
+	if p:find(":", 1, true) then
+		return true
+	end
+
+	return false
+end
+
 function path.join(...)
     local function join_ex(tb, p0, ...)
         if p0 then            
