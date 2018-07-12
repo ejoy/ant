@@ -389,6 +389,7 @@ hook['exception'] = function()
     local _, msg = getEventArgs(2)
     local level = getEventLevel()
     local trace = traceback(nil, level)
+    -- TODO: 路径转换？
     exceptionMsg = msg
     exceptionTrace = trace
     state = 'stopped'
