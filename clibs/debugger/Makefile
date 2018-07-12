@@ -4,7 +4,7 @@ CFLAGS = -O2 -Wall
 
 mingw : debugger.dll
 
-debugger.dll : dbg_core.cpp
+debugger.dll : debugger.cpp
 	g++ --shared $(CFLAGS) $(LUAINC) -o $@ $^ $(LUALIB)
 
 clean :

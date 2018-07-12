@@ -80,4 +80,12 @@ function CMD.eventOutput(_, req)
     event.output(req.category, req.output, req.source, req.line)
 end
 
+function CMD.exceptionInfo(w, req)
+    response.success(req, {
+        breakMode = req.breakMode,
+        exceptionId = req.exceptionId,
+        details = req.details,
+    })
+end
+
 return CMD

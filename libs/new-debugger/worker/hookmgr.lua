@@ -59,4 +59,12 @@ function m.closeLineBP()
     update()
 end
 
+function m.reset()
+    stepin = false
+    step = false
+    bp = false
+    linebp = false
+    update()
+end
+
 return m
