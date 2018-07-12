@@ -421,10 +421,12 @@ get_frame_local(lua_State *L, lua_State *cL, int frame, int index) {
 	const char * name = lua_getlocal(cL, &ar, index);
 	if (name == NULL)
 		return NULL;
-	if (copy_value(cL, L) != LUA_TNONE) {
-		lua_pop(cL, 1);
-		return name;
-	}
+// always return reference
+
+//	if (copy_value(cL, L) != LUA_TNONE) {
+//		lua_pop(cL, 1);
+//		return name;
+//	}
 	lua_pop(cL, 1);
 	struct value *v = lua_newuserdata(L, sizeof(struct value));
 	v->type = VAR_FRAME_LOCAL;
@@ -579,13 +581,15 @@ table_key(lua_State *L, lua_State *cL) {
 
 static void
 combine_tk(lua_State *L, lua_State *cL, int type) {
-	if (copy_value(cL, L) != LUA_TNONE) {
-		lua_pop(cL, 2);
-		// L : t, k, v
-		lua_replace(L, -3);
-		lua_pop(L, 1);
-		return;
-	}
+// always return reference
+
+//	if (copy_value(cL, L) != LUA_TNONE) {
+//		lua_pop(cL, 2);
+//		// L : t, k, v
+//		lua_replace(L, -3);
+//		lua_pop(L, 1);
+//		return;
+//	}
 	lua_pop(cL, 2);	// pop t v from cL
 	// L : t, k
 	if (lua_type(L, -1) == LUA_TUSERDATA) {
@@ -644,11 +648,13 @@ get_upvalue(lua_State *L, lua_State *cL, int index) {
 		lua_pop(cL, 1);	// remove function
 		return NULL;
 	}
-	if (copy_value(cL, L) != LUA_TNONE) {
-		lua_replace(L, -2);	// remove function object
-		lua_pop(cL, 1);
-		return name;
-	}
+// always return reference
+
+//	if (copy_value(cL, L) != LUA_TNONE) {
+//		lua_replace(L, -2);	// remove function object
+//		lua_pop(cL, 1);
+//		return name;
+//	}
 	lua_pop(cL, 2);	// remove func / upvalue
 	struct value *f = lua_touserdata(L, -1);
 	int sz = sizeof_value(f);
@@ -731,11 +737,15 @@ get_uservalue(lua_State *L, lua_State *cL) {
 		return 0;
 	}
 	lua_getuservalue(cL, -1);
-	if (copy_value(cL, L) != LUA_TNONE) {
-		lua_pop(cL, 2);	// pop userdata / uservalue
-		lua_replace(L, -2);
-		return 1;
-	}
+
+// always return reference
+
+//	if (copy_value(cL, L) != LUA_TNONE) {
+//		lua_pop(cL, 2);	// pop userdata / uservalue
+//		lua_replace(L, -2);
+//		return 1;
+//	}
+
 	// L : value
 	// cL : value uservalue
 	struct value *u = lua_touserdata(L, -1);
