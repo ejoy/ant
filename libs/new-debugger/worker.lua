@@ -22,12 +22,20 @@ local exceptionTrace = ''
 
 local CMD = {}
 
-local masterThread = cdebug.start('worker', function(msg)
-    local pkg = assert(json.decode(msg))
-    if CMD[pkg.cmd] then
-        CMD[pkg.cmd](pkg)
+local masterThread = cdebug.start 'worker'
+
+local function masterThreadUpdate()
+    while true do
+        local msg = masterThread:recv()
+        if not msg then
+            break
+        end
+        local pkg = assert(json.decode(msg))
+        if CMD[pkg.cmd] then
+            CMD[pkg.cmd](pkg)
+        end
     end
-end)
+end
 
 local function sendToMaster(msg)
     masterThread:send(assert(json.encode(msg)))
@@ -265,7 +273,7 @@ local function runLoop(reason)
 
     while true do
         cdebug.sleep(10)
-        masterThread:update()
+        masterThreadUpdate()
         if state ~= 'stopped' then
             break
         end
@@ -313,7 +321,7 @@ hook['line'] = function(line)
         end
     end
 
-    masterThread:update()
+    masterThreadUpdate()
     if state == 'running' then
         return
     elseif state == 'stepOver' or state == 'stepOut' then
@@ -331,7 +339,7 @@ hook['line'] = function(line)
 end
 
 hook['update'] = function()
-    masterThread:update()
+    masterThreadUpdate()
 end
 
 local function getEventLevel()
