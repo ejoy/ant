@@ -1,6 +1,5 @@
 local event = require 'new-debugger.master.event'
 local response = require 'new-debugger.master.response'
-local path = require 'new-debugger.path'
 
 local CMD = {}
 
@@ -35,7 +34,7 @@ function CMD.evaluate(w, req)
     })
 end
 
-function CMD.source(w, req)
+function CMD.source(_, req)
     if not req.content then
         response.success(req, {
             content = 'Source not available',
@@ -73,12 +72,20 @@ function CMD.variables(w, req)
     })
 end
 
-function CMD.eventBreakpoint(w, req)
+function CMD.eventBreakpoint(_, req)
     event.breakpoint(req.reason, req.breakpoint)
 end
 
-function CMD.eventOutput(w, req)
+function CMD.eventOutput(_, req)
     event.output(req.category, req.output, req.source, req.line)
+end
+
+function CMD.exceptionInfo(w, req)
+    response.success(req, {
+        breakMode = req.breakMode,
+        exceptionId = req.exceptionId,
+        details = req.details,
+    })
 end
 
 return CMD

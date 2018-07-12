@@ -60,7 +60,7 @@ local function verifyBreakpoint(src, bps)
             bp.realLine = bp.line
             bp.line = activeline
             res[bp.line] = bp
-            
+
             bp.statHit = hits[bp.realLine] or 0
             if bp.condition then
                 local f, err = evaluate.complie('return ' .. bp.condition)
@@ -84,7 +84,7 @@ local function verifyBreakpoint(src, bps)
                 bp.statLog[1] = bp.logMessage:gsub('%b{}', function(str)
                     n = n + 1
                     local key = ('{%d}'):format(n)
-                    local f, err = evaluate.complie('return ' .. str:sub(2,-2))
+                    local f = evaluate.complie('return ' .. str:sub(2,-2))
                     if not f then
                         bp.statLog[key] = { str }
                     else
@@ -118,14 +118,8 @@ function m.reset()
     hookmgr.openLineBP()
 end
 
-function m.find(currentline)
+function m.find(src, currentline)
     if not currentBP then
-        local s = rdebug.getinfo(1, info)
-        local src = source.create(s.source)
-        if not source.valid(src) then
-            hookmgr.closeLineBP()
-            return
-        end
         if src.path then
             currentBP = breakpoints[path.normalize_native(src.path)]
         else
@@ -148,10 +142,8 @@ function m.update(clientsrc, bps)
         verifyBreakpoint(src, bps)
         return
     end
-    local res = {}
     for _, bp in ipairs(bps) do
         bp.source = clientsrc
-        res[bp.line] = bp
     end
     waitverify[path.normalize_native(clientsrc.path)] = bps
     updateHook()

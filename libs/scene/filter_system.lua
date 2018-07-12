@@ -111,13 +111,11 @@ transparency_filter_sys.singleton "primitive_filter"
 
 transparency_filter_sys.depend "lighting_primitive_filter_system"
 
-function transparency_filter_sys:update()
-	local filter = self.primitive_filter
-	
+local function split_transparent_filter_result(result)
 	local opacity_result = {}
 	local transparent_result = {}
 
-	for _, r in ipairs(filter.result) do
+	for _, r in ipairs(result) do
 		local material = r.material
 		local surface_type = material.surface_type
 		if surface_type.transparency == "transparent" then
@@ -128,8 +126,12 @@ function transparency_filter_sys:update()
 		end
 	end
 
-	filter.result = opacity_result
-	filter.transparent_result = transparent_result
+	return opacity_result, transparent_result
+end
+
+function transparency_filter_sys:update()
+	local filter = self.primitive_filter	
+	filter.result, filter.transparent_result = split_transparent_filter_result(filter.result)
 end
 
 ----for select filter system-------------------------------
@@ -146,5 +148,7 @@ function select_filter_sys.notify:create_selection_filter()
 		if cu.is_entity_visible(e) then
 			insert_primitive(eid, filter.result)
 		end
-    end
+	end
+	
+	filter.result, filter.transparent_result = split_transparent_filter_result(filter.result)
 end

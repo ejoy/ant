@@ -79,26 +79,13 @@ view_sys.depend "clear_system"
 view_sys.depend "view_rect_system"
 
 
-local function update_frustum_from_aspect(rt, frustum)
-	local aspect = rt.w / rt.h
-	local tmp_h = frustum.t - frustum.b
-	local tmp_hw = aspect * tmp_h * 0.5
-	frustum.l = -tmp_hw
-	frustum.r = tmp_hw
-end
-
 function view_sys:update()	
 	for _, eid in world:each("viewid") do
 		local entity = world[eid]
 		local vid = entity.viewid.id
 		local ms = self.math_stack
-		local view_mat = ms(entity.position.v, entity.rotation.v, "dLm")
-		local vr = entity.view_rect
-		local frustum = assert(entity.frustum)
-		update_frustum_from_aspect(vr, frustum)
-		
-		local proj_mat = mu.proj_v(ms, frustum)
-		bgfx.set_view_transform(entity.viewid.id, view_mat, proj_mat)
+		local view, proj = mu.view_proj_matrix(ms, entity)
+		bgfx.set_view_transform(vid, ms(view, "m"), ms(proj, "m"))
 	end
 end
 --@]

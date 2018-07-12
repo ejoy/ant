@@ -36,14 +36,9 @@ end
 
 srv.start(4278)
 
-local listen = true
-
 return function()
-    if listen then
-        if not srv.select(200) then
-            return
-        end
-        listen = false
+    if not srv.update(200) then
+        return
     end
 
     while true do

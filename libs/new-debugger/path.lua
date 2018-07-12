@@ -1,7 +1,5 @@
 local fs = require 'cppfs'
 
-local path = {}
-
 local default_sep = package.config:sub(1, 1)
 
 local function split(str)
@@ -10,7 +8,7 @@ local function split(str)
     return r
 end
 
-function path.normalize(p, sep, convert)
+local function normalize(p)
     p = fs.absolute(fs.path(p))
     local stack = {}
     for _, elem in ipairs(split(p:string())) do
@@ -18,19 +16,59 @@ function path.normalize(p, sep, convert)
         elseif elem == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
             stack[#stack] = nil
         elseif elem ~= '.' then
-            stack[#stack + 1] = convert and convert(elem) or elem
+            stack[#stack + 1] = elem
         end
     end
-    return table.concat(stack, sep or default_sep)
+    return stack
 end
 
-function path.normalize_native(p)
-    return path.normalize(p, '/', string.lower)
+local function normalize_native(p)
+    p = fs.absolute(fs.path(p))
+    local stack = {}
+    for _, elem in ipairs(split(p:string())) do
+        if #elem == 0 then
+        elseif elem == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
+            stack[#stack] = nil
+        elseif elem ~= '.' then
+            stack[#stack + 1] = elem:lower()
+        end
+    end
+    return stack
 end
 
-function path.filename(p)
-    local paths = split(p)
+local m = {}
+
+function m.normalize(path, sep)
+    return table.concat(normalize(path), sep or default_sep)
+end
+
+function m.normalize_native(path)
+    return table.concat(normalize_native(path), '/')
+end
+
+function m.relative(path, base, sep)
+    local rpath = normalize(path)
+    local rbase = normalize(base)
+    while #rpath > 0 and #rbase > 0 and rpath[1] == rbase[1] do
+        table.remove(rpath, 1)
+        table.remove(rbase, 1)
+    end
+    if #rpath == 0 and #rbase== 0 then
+        return "." .. sep
+    end
+    local s = {}
+    for _ in ipairs(rbase) do
+        s[#s+1] = '..'
+    end
+    for _, e in ipairs(rpath) do
+        s[#s+1] = e
+    end
+    return table.concat(s, sep)
+end
+
+function m.filename(path)
+    local paths = split(path)
     return paths[#paths]
 end
 
-return path
+return m

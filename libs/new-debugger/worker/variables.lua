@@ -1,8 +1,9 @@
 local rdebug = require 'remotedebug'
 local source = require 'new-debugger.worker.source'
-local fs = require 'cppfs'
+local path = require 'new-debugger.path'
+local ev = require 'new-debugger.event'
 
-local varCache = {}
+local varPool = {}
 
 local VAR_LOCAL = 0xFFFF
 local VAR_VARARG = 0xFFFE
@@ -54,6 +55,11 @@ for _, v in ipairs{
     standard[v] = true
 end
 
+local workspaceFolder = nil
+ev.on('update-config', function(config)
+    workspaceFolder = config.workspaceFolder
+end)
+
 local function hasLocal(frameId)
     local i = 1
     while true do
@@ -77,11 +83,11 @@ local function hasUpvalue(frameId)
     return rdebug.getupvalue(f, 1) ~= nil
 end
 
-local function hasGlobal(frameId)
+local function hasGlobal()
     local gt = rdebug._G
-    local key, value
+    local key
     while true do
-        key, value = rdebug.next(gt, key)
+        key = rdebug.next(gt, key)
         if key == nil then
             return false
         end
@@ -190,7 +196,7 @@ local function varGetShortValue(value)
 end
 
 local TABLE_VALUE_MAXLEN = 32
-local function varGetTableValue(t, maxlen)
+local function varGetTableValue(t)
     local str = ''
     local mark = {}
     local i = 1
@@ -199,7 +205,11 @@ local function varGetTableValue(t, maxlen)
         if v == nil then
             break
         end
-        str = str .. varGetShortValue(v) .. ","
+        if str == '' then
+            str = varGetShortValue(v)
+        else
+            str = str .. "," .. varGetShortValue(v)
+        end
         mark[i] = true
         if #str >= TABLE_VALUE_MAXLEN then
             return ("{%s...}"):format(str)
@@ -213,7 +223,7 @@ local function varGetTableValue(t, maxlen)
         if key == nil then
             break
         end
-        local type, subtype = rdebug.type(key)
+        local _, subtype = rdebug.type(key)
         if subtype == 'integer' and mark[rdebug.value(key)] then
             goto continue
         end
@@ -225,9 +235,13 @@ local function varGetTableValue(t, maxlen)
         ::continue::
     end
     table.sort(kvs, function(a, b) return a[1] < b[1] end)
-    
+
     for _, kv in ipairs(kvs) do
-        str = str .. kv[1] .. '=' .. varGetShortValue(kv[2]) .. ','
+        if str == '' then
+            str = kv[1] .. '=' .. varGetShortValue(kv[2])
+        else
+            str = str .. ',' .. kv[1] .. '=' .. varGetShortValue(kv[2])
+        end
         if #str >= TABLE_VALUE_MAXLEN then
             return ("{%s...}"):format(str)
         end
@@ -310,8 +324,7 @@ local function varGetValue(type, subtype, value)
             return tostring(rdebug.value(value))
         end
         if src.path then
-            -- TODO: fs.relative
-            return ("%s:%d"):format(src.path, info.linedefined)
+            return ("%s:%d"):format(path.relative(src.path, workspaceFolder, '/'), info.linedefined)
         end
         local code = source.getCode(src.ref)
         return getFunctionCode(code, info.linedefined, info.lastlinedefined)
@@ -330,28 +343,44 @@ local function varGetValue(type, subtype, value)
     return tostring(rdebug.value(value))
 end
 
-local function varCreateReference(frameId, value)
+local function varCreateReference(frameId, value, evaluateName)
     local type, subtype = rdebug.type(value)
     local text = varGetValue(type, subtype, value)
     if varCanExtand(type, subtype, value) then
-        local cache = varCache[frameId]
-        cache[#cache + 1] = value
-        return text, type, (frameId << 16) | #cache
+        local pool = varPool[frameId]
+        pool[#pool + 1] = { value, evaluateName }
+        return text, type, (frameId << 16) | #pool
     end
     return text, type
 end
 
-local function varCreate(frameId, name, value)
-    local text, type, ref = varCreateReference(frameId, value)
+local function varCreate(frameId, name, value, evaluateName)
+    local text, type, ref = varCreateReference(frameId, value, evaluateName)
     return {
         name = name,
         type = type,
         value = text,
         variablesReference = ref,
+        evaluateName = evaluateName,
     }
 end
 
-local function extandTable(frameId, t)
+local function getTabelKey(key)
+    local type = rdebug.type(key)
+    if type == 'string' then
+        local str = rdebug.value(key)
+        if str:match '^[_%a][_%w]*$' then
+            return ('.%s'):format(str)
+        end
+        return ('[%q]'):format(str)
+    elseif type == 'boolean' then
+        return ('[%s]'):format(tostring(rdebug.value(key)))
+    elseif type == 'number' then
+        return ('[%s]'):format(tostring(rdebug.value(key)))
+    end
+end
+
+local function extandTable(frameId, t, evaluateName)
     local vars = {}
     local key, value
     while true do
@@ -359,55 +388,54 @@ local function extandTable(frameId, t)
         if key == nil then
             break
         end
-        vars[#vars + 1] = varCreate(frameId, varGetName(key), value)
+        vars[#vars + 1] = varCreate(frameId, varGetName(key), value, ('%s%s'):format(evaluateName, getTabelKey(key)))
     end
     table.sort(vars, function(a, b) return a.name < b.name end)
 
     local meta = rdebug.getmetatable(t)
     if meta then
-        table.insert(vars, 1, varCreate(frameId, '[metatable]', meta))
+        table.insert(vars, 1, varCreate(frameId, '[metatable]', meta, ('debug.getmetatable(%s)'):format(evaluateName)))
     end
     return vars
 end
 
-local function extandFunction(frameId, f)
+local function extandFunction(frameId, f, evaluateName)
     local vars = {}
     local i = 1
-    local f = rdebug.getfunc(frameId)
     while true do
         local name, value = rdebug.getupvalue(f, i)
         if name == nil then
             break
         end
-        vars[#vars + 1] = varCreate(frameId, name, value)
+        vars[#vars + 1] = varCreate(frameId, name, value, ('debug.getupvalue(%s,%d)'):format(evaluateName, i))
         i = i + 1
     end
     table.sort(vars, function(a, b) return a.name < b.name end)
     return vars
 end
 
-local function extandUserdata(frameId, u)
+local function extandUserdata(frameId, u, evaluateName)
     local vars = {}
     --TODO
     local uv = rdebug.getuservalue(u)
     if uv then
-        table.insert(vars, 1, varCreate(frameId, '[uservalue]', uv))
+        table.insert(vars, 1, varCreate(frameId, '[uservalue]', uv, ('debug.getuservalue(%s)'):format(evaluateName)))
     end
     local meta = rdebug.getmetatable(u)
     if meta then
-        table.insert(vars, 1, varCreate(frameId, '[metatable]', meta))
+        table.insert(vars, 1, varCreate(frameId, '[metatable]', meta, ('debug.getmetatable(%s)'):format(evaluateName)))
     end
     return vars
 end
 
-local function extandValue(frameId, value)
-    local type, subtype = rdebug.type(value)
+local function extandValue(frameId, value, evaluateName)
+    local type = rdebug.type(value)
     if type == 'table' then
-        return extandTable(frameId, value)
+        return extandTable(frameId, value, evaluateName)
     elseif type == 'function' then
-        return extandFunction(frameId, value)
+        return extandFunction(frameId, value, evaluateName)
     elseif type == 'userdata' then
-        return extandUserdata(frameId, value)
+        return extandUserdata(frameId, value, evaluateName)
     end
     return {}
 end
@@ -425,9 +453,9 @@ extand[VAR_LOCAL] = function(frameId)
         end
         if name ~= '(*temporary)' then
             if maps[name] then
-                vars[maps[name]] = varCreate(frameId, name, value)
+                vars[maps[name]] = varCreate(frameId, name, value, ('debug.getlocal(%d,%d,%q)'):format(frameId, i, name))
             else
-                vars[#vars + 1] = varCreate(frameId, name, value)
+                vars[#vars + 1] = varCreate(frameId, name, value, ('debug.getlocal(%d,%d,%q)'):format(frameId, i, name))
                 maps[name] = #vars
             end
         end
@@ -445,7 +473,7 @@ extand[VAR_VARARG] = function(frameId)
         if name == nil then
             break
         end
-        vars[#vars + 1] = varCreate(frameId, ('[%d]'):format(-i), value)
+        vars[#vars + 1] = varCreate(frameId, ('[%d]'):format(-i), value, ('debug.getlocal(%d,%d)'):format(frameId, -i))
         i = i - 1
     end
     table.sort(vars, function(a, b) return a.name < b.name end)
@@ -463,9 +491,9 @@ extand[VAR_UPVALUE] = function(frameId)
             break
         end
         if maps[name] then
-            vars[maps[name]] = varCreate(frameId, name, value)
+            vars[maps[name]] = varCreate(frameId, name, value, ('debug.getupvalue(%d,%d,%q)'):format(frameId, i, name))
         else
-            vars[#vars + 1] = varCreate(frameId, name, value)
+            vars[#vars + 1] = varCreate(frameId, name, value, ('debug.getupvalue(%d,%d,%q)'):format(frameId, i, name))
             maps[name] = #vars
         end
         i = i + 1
@@ -485,7 +513,7 @@ extand[VAR_GLOBAL] = function(frameId)
         end
         local name = varGetName(key)
         if not standard[name] then
-            vars[#vars + 1] = varCreate(frameId, name, value)
+            vars[#vars + 1] = varCreate(frameId, name, value, ('_G%s'):format(getTabelKey(key)))
         end
     end
     table.sort(vars, function(a, b) return a.name < b.name end)
@@ -503,7 +531,7 @@ extand[VAR_STANDARD] = function(frameId)
         end
         local name = varGetName(key)
         if standard[name] then
-            vars[#vars + 1] = varCreate(frameId, name, value)
+            vars[#vars + 1] = varCreate(frameId, name, value, ('_G%s'):format(getTabelKey(key)))
         end
     end
     table.sort(vars, function(a, b) return a.name < b.name end)
@@ -549,33 +577,35 @@ function m.scopes(frameId)
             expensive = true,
         }
     end
-    varCache[frameId] = {}
+    if not varPool[frameId] then
+        varPool[frameId] = {}
+    end
     return scopes
 end
 
 function m.variables(frameId, valueId)
-    if not varCache[frameId] then
+    if not varPool[frameId] then
         return nil, 'Error retrieving stack frame ' .. frameId
     end
     if extand[valueId] then
         return extand[valueId](frameId)
     end
-    local cache = varCache[frameId]
-    if not cache[valueId] then
+    local pool = varPool[frameId]
+    if not pool then
         return nil, 'Error variablesReference'
     end
-    return extandValue(frameId, cache[valueId])
+    return extandValue(frameId, pool[valueId][1], pool[valueId][2])
 end
 
 function m.clean()
-    varCache = {}
+    varPool = {}
 end
 
-function m.createRef(frameId, value)
-    if not varCache[frameId] then
-        varCache[frameId] = {}
+function m.createRef(frameId, value, evaluateName)
+    if not varPool[frameId] then
+        varPool[frameId] = {}
     end
-    return varCreateReference(frameId, value)
+    return varCreateReference(frameId, value, evaluateName)
 end
 
 return m

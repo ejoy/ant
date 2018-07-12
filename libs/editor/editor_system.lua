@@ -212,7 +212,11 @@ function editor_sys:init()
 		if status == 1 then
 			local node = self:findchild_byid(id)
 			if node then
+				local eid = node.eid
 				build_pv(node.eid)
+
+				world:change_component(eid, "focus_selected_obj")
+				world:notify()
 			end
 		end
 	end

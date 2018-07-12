@@ -4,6 +4,16 @@
 #include "matrix44.h"
 #include "conversion.h"
 
+
+struct vector3 X_v3 = {1, 0, 0};
+struct vector3 Y_v3 = {0, 1, 0};
+struct vector3 Z_v3 = {0, 0, 1};
+
+struct vector4 X_v4 = {1, 0, 0, 0};
+struct vector4 Y_v4 = {0, 1, 0, 0};
+struct vector4 Z_v4 = {0, 0, 1, 0};
+struct vector4 W_v4 = {0, 0, 0, 1};
+
 #define C m->c
 union matrix44*
 euler_to_matrix44(const struct euler *e, union matrix44 *m) {
@@ -66,9 +76,9 @@ matrix44_to_euler(const union matrix44 *m, struct euler *e) {
 	//float sp = -C[2][1];
     float sp = -row2.y;
 	if (sp <= -1.f)
-		e->pitch = -M_PI_2;
+		e->pitch = -(float)(M_PI_2);
 	else if (sp >= 1.f)
-		e->pitch = M_PI_2;
+		e->pitch = (float)(M_PI_2);
 	else
 		e->pitch = asinf(sp);
 

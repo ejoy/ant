@@ -4,11 +4,69 @@ local ev = require 'new-debugger.event'
 
 local sourcePool = {}
 local codePool = {}
+local skipFiles = {}
+local sourceMaps = {}
+
+ev.on('update-config', function(config)
+    skipFiles = {}
+    sourceMaps = {}
+    if config.skipFiles then
+        for _, pattern in ipairs(config.skipFiles) do
+            skipFiles[#skipFiles + 1] = ('^%s$'):format(path.normalize_native(pattern):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*'))
+        end
+    end
+    if config.sourceMaps then
+        for _, pattern in ipairs(config.sourceMaps) do
+            local sm = {}
+            sm[1] = ('^%s$'):format(path.normalize_native(pattern[1]):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'))
+            if sm[1]:find '%*' then
+                sm[1]:gsub('%*', '(.*)')
+                local r = {}
+                path.normalize(pattern[2]):gsub('[^%*]+', function (w) r[#r+1] = w end)
+                sm[2] = r
+            else
+                sm[2] = path.normalize(pattern[2])
+            end
+            sourceMaps[#sourceMaps + 1] = sm
+        end
+    end
+end)
+
+local function glob_match(pattern, target)
+    return target:match(pattern) ~= nil
+end
+
+local function glob_replace(pattern, target)
+    local res = table.pack(target:match(pattern[1]))
+    if res[1] == nil then
+        return false
+    end
+    if type(pattern[2]) == 'string' then
+        return pattern[2]
+    end
+    local s = {}
+    for i, p in ipairs(pattern[2]) do
+        s[#s + 1] = p
+        s[#s + 1] = res[1]
+    end
+    return table.concat(s)
+end
 
 local function serverPathToClientPatn(p)
     -- TODO: utf8 or ansi
-    -- TODO: skipFiles
-    -- TODO: sourceMap
+    local nativePath = path.normalize_native(p)
+    for _, pattern in ipairs(skipFiles) do
+        if glob_match(pattern, nativePath) then
+            return
+        end
+    end
+    for _, pattern in ipairs(sourceMaps) do
+        local res = glob_replace(pattern, nativePath)
+        if res then
+            return res
+        end
+    end
+    -- TODO: 忽略没有映射的source？
     return path.normalize(p)
 end
 
@@ -24,9 +82,11 @@ local function create(source)
     local h = source:sub(1, 1)
     if h == '@' then
         local serverPath = source:sub(2)
-        local src = {
-            path = serverPathToClientPatn(serverPath)
-        }
+        local clientPath = serverPathToClientPatn(serverPath)
+        if not clientPath then
+            return {}
+        end
+        local src = { path = clientPath }
         local f = loadfile(serverPath)
         if f then
             parser(src, f)

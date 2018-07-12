@@ -8,9 +8,19 @@ struct vector3 {
 	float x, y, z;
 };
 
+extern struct vector3 X_v3;
+extern struct vector3 Y_v3;
+extern struct vector3 Z_v3;
+
 static inline float *
 vector3_array(struct vector3 *v) {
 	return (float *)v;
+}
+
+static inline struct euler
+vector3_to_euler(const struct vector3 *v){
+	struct euler e = {v->y, v->x, v->z};
+	return e;
 }
 
 static inline float
@@ -41,6 +51,14 @@ vector3_mul_number(struct vector3 *v, float n) {
 	v->y *= n;
 	v->z *= n;
 	return v;
+}
+
+static inline struct vector3*
+vector3_mulvec3(struct vector3 *r, const struct vector3 *lhs, const struct vector3 *rhs){
+	r->x = lhs->x * rhs->x;
+	r->y = lhs->y * rhs->y;
+	r->z = lhs->z * rhs->z;
+	return r;
 }
 
 static inline struct vector3 *
@@ -96,6 +114,13 @@ vector3_to_rotation(struct euler *e, const struct vector3 *r) {
 	e->roll = 0;
 
 	return e;
+}
+
+static inline int
+vector3_equal(const struct vector3* lhs, const struct vector3* rhs){
+	return 	is_equal(lhs->x, rhs->x) && 
+			is_equal(lhs->y, rhs->y) &&
+			is_equal(lhs->z, rhs->z);
 }
 
 #endif //ejoy_vector3_h
