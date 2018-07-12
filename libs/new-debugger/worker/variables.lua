@@ -1,5 +1,7 @@
 local rdebug = require 'remotedebug'
 local source = require 'new-debugger.worker.source'
+local path = require 'new-debugger.path'
+local ev = require 'new-debugger.event'
 
 local varPool = {}
 
@@ -52,6 +54,11 @@ for _, v in ipairs{
 } do
     standard[v] = true
 end
+
+local workspaceFolder = nil
+ev.on('update-config', function(config)
+    workspaceFolder = config.workspaceFolder
+end)
 
 local function hasLocal(frameId)
     local i = 1
@@ -317,8 +324,7 @@ local function varGetValue(type, subtype, value)
             return tostring(rdebug.value(value))
         end
         if src.path then
-            -- TODO: fs.relative
-            return ("%s:%d"):format(src.path, info.linedefined)
+            return ("%s:%d"):format(path.relative(src.path, workspaceFolder, '/'), info.linedefined)
         end
         local code = source.getCode(src.ref)
         return getFunctionCode(code, info.linedefined, info.lastlinedefined)
