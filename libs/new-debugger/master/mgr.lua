@@ -59,4 +59,8 @@ function mgr.setState(s)
     state = s
 end
 
+function mgr.close()
+    srv.close()
+end
+
 return mgr

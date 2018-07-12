@@ -183,7 +183,13 @@ end
 
 function request.disconnect(req)
     response.success(req)
-    -- TODO
+    mgr.broadcastToWorker {
+        cmd = 'terminated',
+    }
+    mgr.setState 'terminated'
+    event.terminated()
+    mgr.close()
+    return true
 end
 
 function request.pause(req)

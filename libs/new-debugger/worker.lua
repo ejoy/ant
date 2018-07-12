@@ -56,6 +56,12 @@ function CMD.initialized(pkg)
     initialized = true
 end
 
+function CMD.terminated(pkg)
+    initialized = false
+    state = 'running'
+    hookmgr.reset()
+end
+
 function CMD.stackTrace(pkg)
     local startFrame = pkg.startFrame
     local endFrame = pkg.endFrame

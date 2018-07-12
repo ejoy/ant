@@ -23,7 +23,9 @@ local function runIdle()
         else
             local f = request[req.command]
             if f then
-                f(req)
+                if f(req) then
+                    return true
+                end
             else
                 response.error(req, ("`%s` not yet implemented.(idle)"):format(req.command))
             end
@@ -34,14 +36,9 @@ end
 
 srv.start(4278)
 
-local listen = true
-
 return function()
-    if listen then
-        if not srv.select(200) then
-            return
-        end
-        listen = false
+    if not srv.update(200) then
+        return
     end
 
     while true do
