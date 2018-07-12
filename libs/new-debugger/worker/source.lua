@@ -8,8 +8,10 @@ local skipFiles = {}
 
 ev.on('update-config', function(config)
     skipFiles = {}
-    for _, pattern in ipairs(config.skipFiles) do
-        skipFiles[#skipFiles + 1] = path.normalize_native(pattern):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*')
+    if config.skipFiles then
+        for _, pattern in ipairs(config.skipFiles) do
+            skipFiles[#skipFiles + 1] = path.normalize_native(pattern):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*')
+        end
     end
 end)
 

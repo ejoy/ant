@@ -6,14 +6,18 @@ local source = require 'new-debugger.worker.source'
 local breakpoint = require 'new-debugger.worker.breakpoint'
 local evaluate = require 'new-debugger.worker.evaluate'
 local hookmgr = require 'new-debugger.worker.hookmgr'
+local traceback = require 'new-debugger.worker.traceback'
 local ev = require 'new-debugger.event'
 
+local initialized = false
 local info = {}
 local state = 'running'
 local stopReason = 'unknown'
 local stepLevel = -1
 local stepContext = ''
 local stepCurrentLevel = -1
+local exceptionMsg = ''
+local exceptionTrace = ''
 
 local CMD = {}
 
@@ -48,6 +52,7 @@ end)
 
 function CMD.initialized(pkg)
     ev.emit('update-config', pkg.config)
+    initialized = true
 end
 
 function CMD.stackTrace(pkg)
@@ -64,9 +69,18 @@ function CMD.stackTrace(pkg)
             curFrame = curFrame + 1
             goto continue
         end
-        if info.what == 'C' and curFrame == 0 then
-            depth = depth + 1
-            goto continue
+        local src
+        if curFrame == 0 then
+            if info.what == 'C' then
+                depth = depth + 1
+                goto continue
+            else
+                src = source.create(info.source)
+                if not source.valid(src) then
+                    depth = depth + 1
+                    goto continue
+                end
+            end
         end
         if (curFrame < startFrame) or (curFrame >= endFrame) then
             depth = depth + 1
@@ -92,7 +106,7 @@ function CMD.stackTrace(pkg)
                     column = 1,
                     source = source.output(src),
                 }
-            else
+            elseif curFrame ~= 0 then
                 res[#res + 1] = {
                     id = depth,
                     name = info.what == 'main' and "[main chunk]" or info.name,
@@ -180,6 +194,19 @@ function CMD.setBreakpoints(pkg)
         return
     end
     breakpoint.update(pkg.source, pkg.breakpoints)
+end
+
+function CMD.exceptionInfo(pkg)
+    sendToMaster {
+        cmd = 'exceptionInfo',
+        command = pkg.command,
+        seq = pkg.seq,
+        breakMode = 'always',
+        exceptionId = exceptionMsg,
+        details = {
+            stackTrace = exceptionTrace,
+        }
+    }
 end
 
 function CMD.stop(pkg)
@@ -293,25 +320,62 @@ hook['update'] = function()
     masterThread:update()
 end
 
-hook['print'] = function()
-    local res = {}
-    local i = -1
-    while true do
-        local name, value = rdebug.getlocal(1, i)
-        if name == nil then
-            break
+local function getEventLevel()
+    local level = 0
+    local name, value = rdebug.getlocal(1, 2)
+    if name ~= nil then
+        local type, subtype = rdebug.type(value)
+        if subtype == 'integer' then
+            level = rdebug.value(value)
         end
-        res[#res + 1] = tostring(rdebug.value(value))
-        i = i - 1
     end
+    return level + 1
+end
 
-    local s = rdebug.getinfo(2, info)
+local function getEventArgs(i)
+    local name, value = rdebug.getlocal(1, -i)
+    if name == nil then
+        return false
+    end
+    return true, value
+end
+
+local function pairsEventArgs()
+    return function(_, i)
+        local ok, value = getEventArgs(i)
+        if ok then
+            return i + 1, value
+        end
+    end, nil, 1
+end
+
+hook['print'] = function()
+    if not initialized then return end
+    local res = {}
+    for _, arg in pairsEventArgs() do
+        res[#res + 1] = tostring(rdebug.value(arg))
+    end
+    res = table.concat(res, '\t')
+    local s = rdebug.getinfo(1 + getEventLevel(), info)
     local src = source.create(s.source)
     if source.valid(src) then
-        ev.emit('output', 'stdout', table.concat(res, '\t'), src, s.currentline)
+        ev.emit('output', 'stdout', res, src, s.currentline)
     else
-        ev.emit('output', 'stdout', table.concat(res, '\t'))
+        ev.emit('output', 'stdout', res)
     end
+    -- TODO：skip
+end
+
+hook['exception'] = function()
+    if not initialized then return end
+    local _, type = getEventArgs(1)
+    local _, msg = getEventArgs(2)
+    local level = getEventLevel()
+    local trace = traceback(nil, level)
+    exceptionMsg = msg
+    exceptionTrace = trace
+    state = 'stopped'
+    runLoop('exception')
 end
 
 rdebug.sethook(function(event, line)

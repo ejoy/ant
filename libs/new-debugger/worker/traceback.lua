@@ -34,7 +34,7 @@ local function pushfuncname(f, info)
     local funcname = pushglobalfuncname(f)
     if funcname then
         return ("function '%s'"):format(funcname)
-    elseif info.namewhat then
+    elseif info.namewhat ~= '' then
         return ("%s '%s'"):format(info.namewhat, info.name)
     elseif info.what == 'main' then
         return 'main chunk'
@@ -47,7 +47,9 @@ end
 
 return function(msg, level)
     local s = {}
-    s[#s + 1] = msg .. '\n'
+    if msg then
+        s[#s + 1] = msg .. '\n'
+    end
     s[#s + 1] = 'stack traceback:'
     local last = rdebug.stacklevel()
     local n1 = last - level > 21 and 10 or -1

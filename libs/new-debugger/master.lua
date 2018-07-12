@@ -23,9 +23,7 @@ local function runIdle()
         else
             local f = request[req.command]
             if f then
-                if f(req) then
-                    return true
-                end
+                f(req)
             else
                 response.error(req, ("`%s` not yet implemented.(idle)"):format(req.command))
             end
