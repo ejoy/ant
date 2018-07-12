@@ -34,6 +34,12 @@ local function PrintMaterialInfo(material_info)
         print("ambient", v.ambient.r, v.ambient.g, v.ambient.b)
         print("diffuse", v.diffuse.r, v.diffuse.g, v.diffuse.b)
         print("specular", v.specular.r, v.specular.g, v.specular.b)
+
+        print("texture path: ambient", v.texture_path.ambient)
+        print("texture path: diffuse", v.texture_path.diffuse)
+        print("texture path: specular", v.texture_path.specular)
+        print("texture path: normals", v.texture_path.normals)
+
     end
 
 end
@@ -43,9 +49,11 @@ local fbx_loader = {}
 function fbx_loader.load(filepath)
     local material_info, mesh_info = assimp.LoadFBX(filepath)
 
-    PrintNodeInfo(mesh_info, 1)
+    --PrintNodeInfo(mesh_info, 1)
     PrintMaterialInfo(material_info)
 
+    --print(material_info, mesh_info)
 end
 
-return fbx_loader
+fbx_loader.load("D:/Engine/BnH/art/bnh/Assets/jingzhou/fbx/jingzhou_ta01.FBX")
+print("aaa")

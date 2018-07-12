@@ -213,6 +213,7 @@ void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_t
 
 void WriteMaterialToLua(lua_State *L, const aiScene* scene)
 {
+
 	luaL_checkstack(L, 10, "");
 	lua_newtable(L);
 
@@ -223,6 +224,56 @@ void WriteMaterialToLua(lua_State *L, const aiScene* scene)
 		lua_pushnumber(L, i+1);
 		lua_newtable(L);
 		
+
+		lua_pushstring(L, "texture_path");
+		lua_newtable(L);
+
+		aiString tex_path;
+		if (AI_SUCCESS == mat->Get(_AI_MATKEY_TEXTURE_BASE, aiTextureType_DIFFUSE, 0, tex_path))
+		{
+			if (tex_path.length > 0)
+			{
+				lua_pushstring(L, "diffuse");
+				lua_pushstring(L, tex_path.C_Str());
+				lua_settable(L, -3);
+			}
+			tex_path.Clear();
+		}
+
+		if (AI_SUCCESS == mat->Get(_AI_MATKEY_TEXTURE_BASE, aiTextureType_AMBIENT, 0, tex_path))
+		{
+			if (tex_path.length > 0)
+			{
+				lua_pushstring(L, "ambient");
+				lua_pushstring(L, tex_path.C_Str());
+				lua_settable(L, -3);
+			}
+			tex_path.Clear();
+		}
+
+		if (AI_SUCCESS == mat->Get(_AI_MATKEY_TEXTURE_BASE, aiTextureType_SPECULAR, 0, tex_path))
+		{
+			if (tex_path.length > 0)
+			{
+				lua_pushstring(L, "specular");
+				lua_pushstring(L, tex_path.C_Str());
+				lua_settable(L, -3);
+			}
+			tex_path.Clear();
+		}
+
+		if (AI_SUCCESS == mat->Get(_AI_MATKEY_TEXTURE_BASE, aiTextureType_NORMALS, 0, tex_path))
+		{
+			if (tex_path.length > 0)
+			{
+				lua_pushstring(L, "normals");
+				lua_pushstring(L, tex_path.C_Str());
+				lua_settable(L, -3);
+			}
+			tex_path.Clear();
+		}
+		lua_settable(L, -3);
+
 		aiString name;
 		if (AI_SUCCESS == mat->Get(AI_MATKEY_NAME, name))
 		{
@@ -495,6 +546,7 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene)
 void ProcessMaterial(const aiScene* scene)
 {
 	unsigned mat_count = scene->mNumMaterials;
+	printf("mat counst %d\n", mat_count);
 	for (unsigned i = 0; i < mat_count; ++i)
 	{
 		auto& chunk = g_ChunkArray[chunk_count];
@@ -506,6 +558,7 @@ void ProcessMaterial(const aiScene* scene)
 
 		SMaterial new_mat;
 		aiMaterial* mat = scene->mMaterials[i];
+
 		aiString name;
 		if (AI_SUCCESS == mat->Get(AI_MATKEY_NAME, name))
 		{
@@ -523,7 +576,7 @@ void ProcessMaterial(const aiScene* scene)
 		{
 			new_mat.specular = specular;
 		}
-	
+
 		chunk.material = new_mat;
 
 		++chunk_count;
@@ -735,7 +788,15 @@ static int LoadFBX(lua_State *L)
 
 	WriteMaterialToLua(L, scene);
 	WriteNodeToLua(L, root_node, scene);
+	
+	unsigned tex_count = scene->mNumTextures;
+	for (unsigned i = 0; i < tex_count; ++i)
+	{
+		aiTexture* texture = scene->mTextures[i];
+		printf("get textreureu %s\n", texture->mFilename.C_Str());
+	}
 
+	printf("load finished\n");
 	return 2;
 }
 
