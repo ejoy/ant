@@ -2,7 +2,7 @@ local require = import and import(...) or require
 
 local rawtable = require "rawtable"
 local bgfx = require "bgfx"
-local path = require "path"
+local path = require "filesystem.path"
 
 local function texture_load(filename, info)
 	local f = assert(io.open(filename, "rb"))
