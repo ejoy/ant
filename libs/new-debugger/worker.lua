@@ -16,6 +16,7 @@ local stopReason = 'unknown'
 local stepLevel = -1
 local stepContext = ''
 local stepCurrentLevel = -1
+local exceptionFilters = {}
 local exceptionMsg = ''
 local exceptionTrace = ''
 
@@ -196,6 +197,13 @@ function CMD.setBreakpoints(pkg)
     breakpoint.update(pkg.source, pkg.breakpoints)
 end
 
+function CMD.setExceptionBreakpoints(pkg)
+    exceptionFilters = {}
+    for _, filter in ipairs(pkg.filters) do
+        exceptionFilters[filter] = true
+    end
+end
+
 function CMD.exceptionInfo(pkg)
     sendToMaster {
         cmd = 'exceptionInfo',
@@ -369,6 +377,9 @@ end
 hook['exception'] = function()
     if not initialized then return end
     local _, type = getEventArgs(1)
+    if not type or not exceptionFilters[type] then
+        return
+    end
     local _, msg = getEventArgs(2)
     local level = getEventLevel()
     local trace = traceback(nil, level)
