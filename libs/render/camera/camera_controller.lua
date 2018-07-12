@@ -2,6 +2,8 @@ local ecs = ...
 local world = ecs.world
 
 local mu = require "math.util"
+local cu = require "render.components.util"
+
 local point2d = require "math.point2d"
 
 local message = {}
@@ -93,8 +95,7 @@ function message:keypress(c, p, status)
 			end
 
 			if rightbtn_down then
-				local zdir = ms(rot, "dP")
-				local xdir, ydir = generate_basic_axis(ms, zdir)
+				local xdir, ydir, zdir = ms(rot, "bPPP")				
 
 				if c == "a" or c == "A" then					
 					move_position(ms, eye, xdir, move_step)
@@ -152,5 +153,29 @@ function camera_controller_system:update()
 	end
 	
 	message.cb = {}
+end
+
+function camera_controller_system.notify:focus_selected_obj(objects)
+	--only using first obj
+	local eid = objects[1]
+	local e = world[eid]
+
+	if cu.is_entity_visible(e) then
+		local mesh = e.mesh
+		if mesh then
+			local handle = mesh.assetinfo.handle			
+			local sphere = handle.sphere
+			local scale = e.scale.v
+
+			local ms = self.math_stack
+			local s = ms(scale, "T")
+			local smax = math.max(s[1], s[2], s[3])
+			local radius = sphere[4]
+			local sradius = smax * radius
+			
+			
+
+		end
+	end
 end
 --@]
