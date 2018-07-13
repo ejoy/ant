@@ -6,8 +6,10 @@ local sourcePool = {}
 local codePool = {}
 local skipFiles = {}
 local sourceMaps = {}
+local workspaceFolder = nil
 
 ev.on('update-config', function(config)
+    workspaceFolder = config.workspaceFolder
     skipFiles = {}
     sourceMaps = {}
     if config.skipFiles then
@@ -52,22 +54,24 @@ local function glob_replace(pattern, target)
     return table.concat(s)
 end
 
-local function serverPathToClientPatn(p)
+local function serverPathToClientPath(p)
     -- TODO: utf8 or ansi
+    local skip = false
     local nativePath = path.normalize_native(p)
     for _, pattern in ipairs(skipFiles) do
         if glob_match(pattern, nativePath) then
-            return
+            skip = true
+            break
         end
     end
     for _, pattern in ipairs(sourceMaps) do
         local res = glob_replace(pattern, nativePath)
         if res then
-            return res
+            return skip, res
         end
     end
     -- TODO: 忽略没有映射的source？
-    return path.normalize(p)
+    return skip, path.normalize(p)
 end
 
 local function codeReference(s)
@@ -82,9 +86,9 @@ local function create(source)
     local h = source:sub(1, 1)
     if h == '@' then
         local serverPath = source:sub(2)
-        local clientPath = serverPathToClientPatn(serverPath)
-        if not clientPath then
-            return {}
+        local skip, clientPath = serverPathToClientPath(serverPath)
+        if skip then
+            return { skippath = clientPath }
         end
         local src = { path = clientPath }
         local f = loadfile(serverPath)
@@ -148,9 +152,12 @@ function m.output(s)
     end
 end
 
-
 function m.getCode(ref)
     return codePool[ref]
+end
+
+function m.clientPath(p)
+    return path.relative(p, workspaceFolder, '/')
 end
 
 return m
