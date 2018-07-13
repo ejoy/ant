@@ -381,7 +381,7 @@ local function getEventArgs(i)
     if name == nil then
         return false
     end
-    return true, value
+    return true, rdebug.value(value)
 end
 
 local function setEventRet(v)
@@ -426,10 +426,7 @@ hook['exception'] = function()
     end
     local _, msg = getEventArgs(2)
     local level = getEventLevel()
-    local trace = traceback(nil, level)
-    -- TODO: 路径转换？
-    exceptionMsg = msg
-    exceptionTrace = trace
+    exceptionMsg, exceptionTrace = traceback(msg, level)
     state = 'stopped'
     runLoop('exception')
 end

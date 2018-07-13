@@ -1,7 +1,6 @@
 local rdebug = require 'remotedebug'
 local source = require 'new-debugger.worker.source'
 local path = require 'new-debugger.path'
-local ev = require 'new-debugger.event'
 
 local varPool = {}
 
@@ -55,11 +54,6 @@ for _, v in ipairs{
     standard[v] = true
 end
 
-local workspaceFolder = nil
-ev.on('update-config', function(config)
-    workspaceFolder = config.workspaceFolder
-end)
-
 local function hasLocal(frameId)
     local i = 1
     while true do
@@ -88,10 +82,11 @@ local function hasGlobal()
     local key
     while true do
         key = rdebug.next(gt, key)
-        if key == nil then
+        local vkey = rdebug.value(key)
+        if vkey == nil then
             return false
         end
-        if not standard[rdebug.value(key)] then
+        if not standard[vkey] then
             return true
         end
     end
@@ -103,20 +98,20 @@ end
 
 local function varCanExtand(type, subtype, value)
     if type == 'function' then
-        return rdebug.getupvalue(value, 1) ~= nil
+        return rdebug.value(rdebug.getupvalue(value, 1)) ~= nil
     elseif type == 'table' then
-        if rdebug.next(value, nil) ~= nil then
+        if rdebug.value(rdebug.next(value, nil)) ~= nil then
             return true
         end
-        if rdebug.getmetatable(value) ~= nil then
+        if rdebug.value(rdebug.getmetatable(value)) ~= nil then
             return true
         end
         return false
     elseif type == 'userdata' then
-        if rdebug.getmetatable(value) ~= nil then
+        if rdebug.value(rdebug.getmetatable(value)) ~= nil then
             return true
         end
-        if subtype == 'full' and rdebug.getuservalue(value) ~= nil then
+        if subtype == 'full' and rdebug.value(rdebug.getuservalue(value)) ~= nil then
             return true
         end
         return false
@@ -220,11 +215,12 @@ local function varGetTableValue(t)
     local key, value
     while true do
         key, value = rdebug.next(t, key)
-        if key == nil then
+        local vkey = rdebug.value(key)
+        if vkey == nil then
             break
         end
         local _, subtype = rdebug.type(key)
-        if subtype == 'integer' and mark[rdebug.value(key)] then
+        if subtype == 'integer' and mark[vkey] then
             goto continue
         end
         local kn = varGetName(key)
@@ -324,7 +320,7 @@ local function varGetValue(type, subtype, value)
             return tostring(rdebug.value(value))
         end
         if src.path then
-            return ("%s:%d"):format(path.relative(src.path, workspaceFolder, '/'), info.linedefined)
+            return ("%s:%d"):format(source.clientPath(src.path), info.linedefined)
         end
         local code = source.getCode(src.ref)
         return getFunctionCode(code, info.linedefined, info.lastlinedefined)
@@ -413,7 +409,7 @@ local function extandTable(frameId, varRef)
     local key, value
     while true do
         key, value = rdebug.next(t, key)
-        if key == nil then
+        if rdebug.value(key) == nil then
             break
         end
         varCreate(vars, frameId, varRef, varGetName(key), value, ('%s%s'):format(evaluateName, getTabelKey(key)))
@@ -421,7 +417,7 @@ local function extandTable(frameId, varRef)
     table.sort(vars, function(a, b) return a.name < b.name end)
 
     local meta = rdebug.getmetatable(t)
-    if meta then
+    if rdebug.value(meta) ~= nil then
         varCreateInsert(vars, frameId, varRef, '[metatable]', meta, ('debug.getmetatable(%s)'):format(evaluateName))
     end
     return vars
@@ -452,11 +448,11 @@ local function extandUserdata(frameId, varRef)
     local vars = {}
     --TODO
     local uv = rdebug.getuservalue(u)
-    if uv then
+    if rdebug.value(uv) ~= nil then
         varCreateInsert(vars, frameId, varRef, '[uservalue]', uv, ('debug.getuservalue(%s)'):format(evaluateName))
     end
     local meta = rdebug.getmetatable(u)
-    if meta then
+    if rdebug.value(meta) ~= nil then
         varCreateInsert(vars, frameId, varRef, '[metatable]', meta, ('debug.getmetatable(%s)'):format(evaluateName))
     end
     return vars
@@ -499,7 +495,6 @@ local function setValue(frameId, varRef, name, value)
     if not rdebug.assign(rvalue, newvalue) then
         return nil, 'Failed set variable'
     end
-    
     local text, type, ref = varCreateReference(frameId, rvalue, maps[name][2])
     return {
         value = text,
@@ -575,7 +570,7 @@ extand[VAR_GLOBAL] = function(frameId)
     local key, value
     while true do
         key, value = rdebug.next(gt, key)
-        if key == nil then
+        if rdebug.value(key) == nil then
             break
         end
         local name = varGetName(key)
@@ -594,7 +589,7 @@ extand[VAR_STANDARD] = function(frameId)
     local key, value
     while true do
         key, value = rdebug.next(gt, key)
-        if key == nil then
+        if rdebug.value(key) == nil then
             break
         end
         local name = varGetName(key)
