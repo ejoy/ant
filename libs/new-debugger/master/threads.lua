@@ -88,4 +88,15 @@ function CMD.exceptionInfo(w, req)
     })
 end
 
+function CMD.setVariable(w, req)
+    if not req.success then
+        response.error(req, req.message)
+        return
+    end
+    response.success(req, {
+        value = req.value,
+        type = req.type,
+    })
+end
+
 return CMD

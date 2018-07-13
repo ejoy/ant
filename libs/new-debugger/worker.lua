@@ -162,7 +162,7 @@ function CMD.scopes(pkg)
 end
 
 function CMD.variables(pkg)
-    local vars, err = variables.variables(pkg.frameId, pkg.valueId)
+    local vars, err = variables.extand(pkg.frameId, pkg.valueId)
     if not vars then
         sendToMaster {
             cmd = 'variables',
@@ -179,6 +179,28 @@ function CMD.variables(pkg)
         seq = pkg.seq,
         success = true,
         variables = vars,
+    }
+end
+
+function CMD.setVariable(pkg)
+    local var, err = variables.set(pkg.frameId, pkg.valueId, pkg.name, pkg.value)
+    if not var then
+        sendToMaster {
+            cmd = 'setVariable',
+            command = pkg.command,
+            seq = pkg.seq,
+            success = false,
+            message = err,
+        }
+        return
+    end
+    sendToMaster {
+        cmd = 'setVariable',
+        command = pkg.command,
+        seq = pkg.seq,
+        success = true,
+        value = var.value,
+        type = var.type,
     }
 end
 
@@ -362,6 +384,14 @@ local function getEventArgs(i)
     return true, value
 end
 
+local function setEventRet(v)
+    local name, value = rdebug.getlocal(1, 3)
+    if name ~= nil then
+        return rdebug.assign(value, v)
+    end
+    return false
+end
+
 local function pairsEventArgs()
     return function(_, i)
         local ok, value = getEventArgs(i)
@@ -385,7 +415,7 @@ hook['print'] = function()
     else
         ev.emit('output', 'stdout', res)
     end
-    -- TODO：skip
+    setEventRet(true)
 end
 
 hook['exception'] = function()
