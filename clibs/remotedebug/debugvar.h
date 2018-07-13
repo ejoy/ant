@@ -371,6 +371,10 @@ assign_value(lua_State *L, struct value * v, lua_State *cL) {
 			}
 		}
 		lua_insert(cL, -2);
+		int metattype = lua_type(cL, -1);
+		if (metattype != LUA_TNIL && metattype != LUA_TTABLE) {
+			break;
+		}
 		lua_setmetatable(cL, -2);
 		lua_pop(cL, 1);
 		return 1;
