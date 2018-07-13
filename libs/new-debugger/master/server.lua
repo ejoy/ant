@@ -26,9 +26,18 @@ function m.recv()
     return proto.recv(channel:recv())
 end
 
+local function sendstring(s)
+    local from = 1
+    local len = #s
+    while from <= len do
+        lsocket.select(nil, {channel})
+        from = from + assert(channel:send(s:sub(from)))
+    end
+end
+
 function m.send(data)
     assert(channel)
-    channel:send(proto.send(data))
+    sendstring(proto.send(data))
 end
 
 function m.close()
