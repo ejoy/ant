@@ -82,7 +82,7 @@ G.debug = {}
 function G.debug.getmetatable(obj)
     if type(obj) == 'table' and obj.__ref then
         local v = rdebug.getmetatable(obj.__ref)
-        if v then
+        if rdebug.value(v) ~= nil then
             return wrap_v(v)
         end
     end
@@ -91,7 +91,7 @@ end
 function G.debug.getuservalue(obj)
     if type(obj) == 'table' and obj.__ref then
         local v = rdebug.getuservalue(obj.__ref)
-        if v then
+        if rdebug.value(v) ~= nil then
             return wrap_v(v)
         end
     end
@@ -113,7 +113,7 @@ function G.debug.getupvalue(f, i)
         return
     end
     local name, v = rdebug.getupvalue(f, i)
-    if name and v then
+    if name and rdebug.value(v) ~= nil then
         return wrap_v(v)
     end
 end
