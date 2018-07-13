@@ -693,12 +693,13 @@ get_metatable(lua_State *L, lua_State *cL) {
 		lua_pop(L, 1);
 		return NULL;
 	}
-	if (lua_getmetatable(cL,-1) == 0) {
-		lua_pop(L, 1);
-		lua_pop(cL, 1);
-		return NULL;
-	}
-	lua_pop(cL, 2);
+//	if (lua_getmetatable(cL,-1) == 0) {
+//		lua_pop(L, 1);
+//		lua_pop(cL, 1);
+//		return NULL;
+//	}
+//	lua_pop(cL, 2);
+	lua_pop(cL, 1);
 	if (t == LUA_TTABLE || t == LUA_TUSERDATA) {
 		struct value *t = lua_touserdata(L, -1);
 		int sz = sizeof_value(t);

@@ -459,6 +459,7 @@ lclient_assign(lua_State *L) {
 	lua_State *hL = get_host(L);
 	if (lua_checkstack(hL, 2) == 0)
 		return luaL_error(L, "stack overflow");
+	lua_settop(L, 2);
 	int vtype = lua_type(L, 2);
 	switch (vtype) {
 	case LUA_TNUMBER:
