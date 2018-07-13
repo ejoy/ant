@@ -446,6 +446,7 @@ lclient_next(lua_State *L) {
 static int
 lclient_value(lua_State *L) {
 	lua_State *hL = get_host(L);
+	lua_settop(L, 1);
 	get_value(L, hL);
 	return 1;
 }

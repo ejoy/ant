@@ -290,7 +290,6 @@ assign_value(lua_State *L, struct value * v, lua_State *cL) {
 		break;
 	case VAR_INDEX:
 	case VAR_INDEX_OBJ: {
-		// todo:
 		int t = eval_value_(L, cL, v+1);
 		if (t == LUA_TNONE)
 			break;
@@ -316,7 +315,7 @@ assign_value(lua_State *L, struct value * v, lua_State *cL) {
 		if (v->frame == 0) {
 			// index key
 			lua_pushvalue(cL, -3);	// value, key, table, value, ...
-			lua_rawget(cL, -3);	// table, value, ...
+			lua_rawset(cL, -3);	// table, value, ...
 			lua_pop(cL, 2);
 			return 1;
 		} else {
