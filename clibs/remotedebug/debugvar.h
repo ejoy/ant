@@ -240,7 +240,9 @@ eval_value_(lua_State *L, lua_State *cL, struct value *v) {
 			lua_pop(cL, 1);
 			break;
 		}
-		return lua_getuservalue(cL, -1);
+		t = lua_getuservalue(cL, -1);
+		lua_replace(cL, -2);
+		return t;
 	}
 	}
 	return LUA_TNONE;
@@ -371,6 +373,10 @@ assign_value(lua_State *L, struct value * v, lua_State *cL) {
 			}
 		}
 		lua_insert(cL, -2);
+		int metattype = lua_type(cL, -1);
+		if (metattype != LUA_TNIL && metattype != LUA_TTABLE) {
+			break;
+		}
 		lua_setmetatable(cL, -2);
 		lua_pop(cL, 1);
 		return 1;
@@ -731,15 +737,15 @@ get_uservalue(lua_State *L, lua_State *cL) {
 		lua_pop(L, 1);
 		return 0;
 	}
+	lua_pop(cL, 1);
+
 	if (t != LUA_TUSERDATA) {
-		lua_pop(cL, 1);
 		lua_pop(L, 1);
 		return 0;
 	}
-	lua_getuservalue(cL, -1);
-
 // always return reference
 
+//	lua_getuservalue(cL, -1);
 //	if (copy_value(cL, L) != LUA_TNONE) {
 //		lua_pop(cL, 2);	// pop userdata / uservalue
 //		lua_replace(L, -2);
