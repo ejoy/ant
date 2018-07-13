@@ -9,19 +9,18 @@ local function start()
 end
 
 local function event(name, level, ...)
+    local r
     rdebug.probe(name)
+    return r
 end
 
 local function update()
     event 'update'
 end
 
-
 local _print = print
 function print(...)
-    local skip = false
-    event('print', 1, ...)
-    if not skip then
+    if not event('print', 1, ...) then
         _print(...)
     end
 end

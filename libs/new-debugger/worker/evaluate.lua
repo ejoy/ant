@@ -26,7 +26,7 @@ function table_mt:__index(k)
         k = k.__ref
     end
     local v = rdebug.index(self.__ref, k)
-    if v then
+    if rdebug.value(v) ~= nil then
         v = wrap_v(v)
         self[key] = v
         return v
@@ -72,7 +72,7 @@ local G = {}
 
 G._G = setmetatable({}, {__index = function(_, name)
     local v = rdebug.index(rdebug._G, name)
-    if v then
+    if rdebug.value(v) ~= nil then
         return wrap_v(v)
     end
 end})
@@ -129,7 +129,7 @@ local function get(name)
         return value
     end
     local value = rdebug.index(rdebug._G, name)
-    if value then
+    if rdebug.value(value) ~= nil then
         return wrap_v(value)
     end
 end

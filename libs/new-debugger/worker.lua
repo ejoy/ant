@@ -162,7 +162,7 @@ function CMD.scopes(pkg)
 end
 
 function CMD.variables(pkg)
-    local vars, err = variables.variables(pkg.frameId, pkg.valueId)
+    local vars, err = variables.extand(pkg.frameId, pkg.valueId)
     if not vars then
         sendToMaster {
             cmd = 'variables',
@@ -179,6 +179,28 @@ function CMD.variables(pkg)
         seq = pkg.seq,
         success = true,
         variables = vars,
+    }
+end
+
+function CMD.setVariable(pkg)
+    local var, err = variables.set(pkg.frameId, pkg.valueId, pkg.name, pkg.value)
+    if not var then
+        sendToMaster {
+            cmd = 'setVariable',
+            command = pkg.command,
+            seq = pkg.seq,
+            success = false,
+            message = err,
+        }
+        return
+    end
+    sendToMaster {
+        cmd = 'setVariable',
+        command = pkg.command,
+        seq = pkg.seq,
+        success = true,
+        value = var.value,
+        type = var.type,
     }
 end
 
@@ -359,7 +381,15 @@ local function getEventArgs(i)
     if name == nil then
         return false
     end
-    return true, value
+    return true, rdebug.value(value)
+end
+
+local function setEventRet(v)
+    local name, value = rdebug.getlocal(1, 3)
+    if name ~= nil then
+        return rdebug.assign(value, v)
+    end
+    return false
 end
 
 local function pairsEventArgs()
@@ -385,7 +415,7 @@ hook['print'] = function()
     else
         ev.emit('output', 'stdout', res)
     end
-    -- TODO：skip
+    setEventRet(true)
 end
 
 hook['exception'] = function()
@@ -396,10 +426,7 @@ hook['exception'] = function()
     end
     local _, msg = getEventArgs(2)
     local level = getEventLevel()
-    local trace = traceback(nil, level)
-    -- TODO: 路径转换？
-    exceptionMsg = msg
-    exceptionTrace = trace
+    exceptionMsg, exceptionTrace = traceback(msg, level)
     state = 'stopped'
     runLoop('exception')
 end

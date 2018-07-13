@@ -313,4 +313,24 @@ function request.exceptionInfo(req)
     })
 end
 
+function request.setVariable(req)
+    local args = req.arguments
+    local valueId = args.variablesReference
+    local threadId = valueId >> 32
+    local frameId = (valueId >> 16) & 0xFFFF
+    if not mgr.hasThread(threadId) then
+        response.error(req, "Not found thread")
+        return
+    end
+    mgr.sendToWorker(threadId, {
+        cmd = 'setVariable',
+        command = req.command,
+        seq = req.seq,
+        frameId = frameId,
+        valueId = valueId & 0xFFFF,
+        name = args.name,
+        value = args.value,
+    })
+end
+
 return request

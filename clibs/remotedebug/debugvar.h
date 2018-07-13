@@ -266,6 +266,130 @@ eval_value(lua_State *L, lua_State *cL) {
 	return LUA_TNONE;
 }
 
+// assign cL top into ref object in L. pop cL.
+// return 0 failed
+static int
+assign_value(lua_State *L, struct value * v, lua_State *cL) {
+	int top = lua_gettop(cL);
+	switch (v->type) {
+	case VAR_FRAME_LOCAL: {
+		lua_Debug ar;
+		if (lua_getstack(cL, v->frame, &ar) == 0) {
+			break;
+		}
+		if (lua_setlocal(cL, &ar, v->index) != NULL) {
+			return 1;
+		}
+		break;
+	}
+	case VAR_GLOBAL:
+	case VAR_REGISTRY:
+	case VAR_MAINTHREAD:
+	case VAR_FRAME_FUNC:
+		// Can't assign frame func, etc.
+		break;
+	case VAR_INDEX:
+	case VAR_INDEX_OBJ: {
+		int t = eval_value_(L, cL, v+1);
+		if (t == LUA_TNONE)
+			break;
+		if (t != LUA_TTABLE) {
+			// only table can be index
+			break;
+		}
+		if (v->type == VAR_INDEX) {
+			if (v->index == 0) {
+				lua_pushnil(L);
+			} else {
+				lua_rawgeti(L, -1, v->index);
+			}
+			if (copy_value(L, cL) == LUA_TNONE) {
+				break;
+			}
+		} else {
+			if (eval_value_(L, cL, v+1+v->index) == LUA_TNONE) {
+				break;
+			}
+		}
+		// in cL : key, table, value, ...
+		if (v->frame == 0) {
+			// index key
+			lua_pushvalue(cL, -3);	// value, key, table, value, ...
+			lua_rawset(cL, -3);	// table, value, ...
+			lua_pop(cL, 2);
+			return 1;
+		} else {
+			// next key can't assign
+			break;
+		}
+	}
+	case VAR_UPVALUE: {
+		int t = eval_value_(L, cL, v+1);
+		if (t == LUA_TNONE)
+			break;
+		if (t != LUA_TFUNCTION) {
+			// only function has upvalue
+			break;
+		}
+		// swap function and value
+		lua_insert(cL, -2);
+		if (lua_setupvalue(cL, -2, v->index) != NULL) {
+			lua_pop(cL, 1);
+			return 1;
+		}
+		break;
+	}
+	case VAR_METATABLE:
+		if (v->frame == 1) {
+			switch(v->index) {
+			case LUA_TNIL:
+				lua_pushnil(cL);
+				break;
+			case LUA_TBOOLEAN:
+				lua_pushboolean(cL, 0);
+				break;
+			case LUA_TNUMBER:
+				lua_pushinteger(cL, 0);
+				break;
+			case LUA_TSTRING:
+				lua_pushstring(cL, "");
+				break;
+			case LUA_TLIGHTUSERDATA:
+				lua_pushlightuserdata(cL, NULL);
+				break;
+			case LUA_TTHREAD:
+				lua_rawgeti(cL, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+				break;
+			default:
+				// Invalid
+				return 0;
+			}
+		} else {
+			int t = eval_value_(L, cL, v+1);
+			if (t != LUA_TTABLE && t != LUA_TUSERDATA) {
+				break;
+			}
+		}
+		lua_insert(cL, -2);
+		lua_setmetatable(cL, -2);
+		lua_pop(cL, 1);
+		return 1;
+	case VAR_USERVALUE: {
+		int t = eval_value_(L, cL, v+1);
+		if (t != LUA_TUSERDATA) {
+			break;
+		}
+		lua_insert(cL, -2);
+		lua_setuservalue(cL, -2);
+		lua_pop(cL, 1);
+		return 1;
+	}
+	}
+	lua_settop(cL, top-1);
+	return 0;
+}
+
+
 static void
 get_value(lua_State *L, lua_State *cL) {
 	if (eval_value(L, cL) == LUA_TNONE) {
@@ -296,10 +420,12 @@ get_frame_local(lua_State *L, lua_State *cL, int frame, int index) {
 	const char * name = lua_getlocal(cL, &ar, index);
 	if (name == NULL)
 		return NULL;
-	if (copy_value(cL, L) != LUA_TNONE) {
-		lua_pop(cL, 1);
-		return name;
-	}
+// always return reference
+
+//	if (copy_value(cL, L) != LUA_TNONE) {
+//		lua_pop(cL, 1);
+//		return name;
+//	}
 	lua_pop(cL, 1);
 	struct value *v = lua_newuserdata(L, sizeof(struct value));
 	v->type = VAR_FRAME_LOCAL;
@@ -454,13 +580,15 @@ table_key(lua_State *L, lua_State *cL) {
 
 static void
 combine_tk(lua_State *L, lua_State *cL, int type) {
-	if (copy_value(cL, L) != LUA_TNONE) {
-		lua_pop(cL, 2);
-		// L : t, k, v
-		lua_replace(L, -3);
-		lua_pop(L, 1);
-		return;
-	}
+// always return reference
+
+//	if (copy_value(cL, L) != LUA_TNONE) {
+//		lua_pop(cL, 2);
+//		// L : t, k, v
+//		lua_replace(L, -3);
+//		lua_pop(L, 1);
+//		return;
+//	}
 	lua_pop(cL, 2);	// pop t v from cL
 	// L : t, k
 	if (lua_type(L, -1) == LUA_TUSERDATA) {
@@ -519,11 +647,13 @@ get_upvalue(lua_State *L, lua_State *cL, int index) {
 		lua_pop(cL, 1);	// remove function
 		return NULL;
 	}
-	if (copy_value(cL, L) != LUA_TNONE) {
-		lua_replace(L, -2);	// remove function object
-		lua_pop(cL, 1);
-		return name;
-	}
+// always return reference
+
+//	if (copy_value(cL, L) != LUA_TNONE) {
+//		lua_replace(L, -2);	// remove function object
+//		lua_pop(cL, 1);
+//		return name;
+//	}
 	lua_pop(cL, 2);	// remove func / upvalue
 	struct value *f = lua_touserdata(L, -1);
 	int sz = sizeof_value(f);
@@ -563,12 +693,13 @@ get_metatable(lua_State *L, lua_State *cL) {
 		lua_pop(L, 1);
 		return NULL;
 	}
-	if (lua_getmetatable(cL,-1) == 0) {
-		lua_pop(L, 1);
-		lua_pop(cL, 1);
-		return NULL;
-	}
-	lua_pop(cL, 2);
+//	if (lua_getmetatable(cL,-1) == 0) {
+//		lua_pop(L, 1);
+//		lua_pop(cL, 1);
+//		return NULL;
+//	}
+//	lua_pop(cL, 2);
+	lua_pop(cL, 1);
 	if (t == LUA_TTABLE || t == LUA_TUSERDATA) {
 		struct value *t = lua_touserdata(L, -1);
 		int sz = sizeof_value(t);
@@ -606,11 +737,15 @@ get_uservalue(lua_State *L, lua_State *cL) {
 		return 0;
 	}
 	lua_getuservalue(cL, -1);
-	if (copy_value(cL, L) != LUA_TNONE) {
-		lua_pop(cL, 2);	// pop userdata / uservalue
-		lua_replace(L, -2);
-		return 1;
-	}
+
+// always return reference
+
+//	if (copy_value(cL, L) != LUA_TNONE) {
+//		lua_pop(cL, 2);	// pop userdata / uservalue
+//		lua_replace(L, -2);
+//		return 1;
+//	}
+
 	// L : value
 	// cL : value uservalue
 	struct value *u = lua_touserdata(L, -1);

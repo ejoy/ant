@@ -43,7 +43,7 @@ local function gen_table_text(self)
 end
 
 function table_mt:__tostring()
-	self.__text = self.__text or gen_table_text(self)
+	self.__text = rawget(self, "__text") or gen_table_text(self)
 	return self.__text
 end
 
