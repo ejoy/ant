@@ -865,23 +865,28 @@ mul_2values(lua_State *L, struct lastack *LS) {
 		lastack_pushvec4(LS, r);
 		break;
 	}
-	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_NUM): {
+	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_NUM):
+	case BINTYPE(LINEAR_TYPE_NUM, LINEAR_TYPE_VEC4): {
+		const struct vector4 *v4 = (const struct vector4 *)(type == BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_NUM) ? val0 : val1);
+		const float *vv = type == BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_NUM) ? val1 : val0;
+
 		float r[4] = {
-			val0[0] * val1[0],
-			val0[1] * val1[0],
-			val0[2] * val1[0],
-			val0[3] * val1[0],
+			v4->x * *vv,
+			v4->y * *vv,
+			v4->z * *vv,
+			v4->w * *vv,
 		};
 		lastack_pushvec4(LS, r);
 		break;
 	}
-	case BINTYPE(LINEAR_TYPE_VEC3, LINEAR_TYPE_NUM): {
-		float r[3] = {
-			val0[0] * val1[0],
-			val0[1] * val1[0],
-			val0[2] * val1[0],
-		};
-		lastack_pushvec3(LS, r);
+	case BINTYPE(LINEAR_TYPE_VEC3, LINEAR_TYPE_NUM):
+	case BINTYPE(LINEAR_TYPE_NUM, LINEAR_TYPE_VEC3): {
+		const struct vector3 *v3 = (const struct vector3 *)(type == BINTYPE(LINEAR_TYPE_VEC3, LINEAR_TYPE_NUM) ? val0 : val1);
+		const float *vv = type == BINTYPE(LINEAR_TYPE_VEC3, LINEAR_TYPE_NUM) ? val1 : val0;
+
+		struct vector3 r = *v3;
+		vector3_mul_number(&r, *vv);		
+		lastack_pushvec3(LS, vector3_array(&r));
 		break;
 	}
 	case BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_QUAT): {
@@ -1320,6 +1325,7 @@ init_command_desc() {
 	s_command_desc['e'] = "to euler";
 	s_command_desc['q'] = "to quaternion";
 	s_command_desc['d'] = "to rotation";
+	s_command_desc['D'] = "to direction";
 	s_command_desc['~'] = "to srt";
 	int i;
 	for (i=0;i<256;i++) {
