@@ -49,9 +49,10 @@ add_entity_sys.singleton "constant"
 add_entity_sys.depend "constant_init_sys"
 add_entity_sys.dependby "iup_message"
 
+
 function add_entity_sys:init()
 	local ms = self.math_stack
-	
+
 	do
 		local leid = lu.create_directional_light_entity(world)
 		world:add_component(leid, "mesh", "material", "can_render", "scale", "name")
@@ -68,7 +69,7 @@ function add_entity_sys:init()
 		lentity.name.n = "directional_light"
 
 		component_util.load_mesh(lentity, "sphere.mesh")
-		local sphere_fn = "mem://light_bulb.material"		
+		local sphere_fn = "mem://light_bulb.material"
 		fs_util.write_to_file(sphere_fn, [[
 			shader = {
 				vs = "simple/light_bulb/vs_bulb.sc",
@@ -78,7 +79,7 @@ function add_entity_sys:init()
 			properties = {
 				u_color = {type="color", name = "color", default={1, 1, 1, 1}}
 			}
-		]])	
+		]])
 		component_util.load_material(lentity, {sphere_fn})
 	end
 
@@ -97,13 +98,13 @@ function add_entity_sys:init()
 
 	-- 	bunny.mesh.path = "bunny.mesh"
 	-- 	component_util.load_mesh(bunny)
-		
+
 	-- 	bunny.material.content[1] = {path = "bunny.material", properties = {}}
 	-- 	component_util.load_material(bunny)
 	-- end
 
 	do	-- pochuan
-		local pochuan_eid = world:new_entity("position", "rotation", "scale", 
+		local pochuan_eid = world:new_entity("position", "rotation", "scale",
 		"can_render", "mesh", "material",
 		"name", "serialize",
 		"can_select")
@@ -127,14 +128,14 @@ function add_entity_sys:init()
 	-- 	local stone = world[stone_eid]
 	-- 	stone.name.n = "texture_stone"
 
-	-- 	mu.identify_transform(ms, stone)		
+	-- 	mu.identify_transform(ms, stone)
 
 	-- 	local function create_plane_mesh()
 	-- 		local vdecl = bgfx.vertex_decl {
 	-- 			{ "POSITION", 3, "FLOAT" },
 	-- 			{ "NORMAL", 3, "FLOAT"},
 	-- 			{ "TANGENT", 4, "FLOAT"},
-	-- 			{ "TEXCOORD0", 2, "FLOAT"},				
+	-- 			{ "TEXCOORD0", 2, "FLOAT"},
 	-- 		}
 
 	-- 		local lensize = 5
@@ -146,23 +147,23 @@ function add_entity_sys:init()
 	-- 						vdecl = vdecl,
 	-- 						vb = bgfx.create_vertex_buffer(
 	-- 							{"ffffffffffff",
-	-- 						lensize, -lensize, 0.0, 
-	-- 						0.0, 0.0, -1.0, 
+	-- 						lensize, -lensize, 0.0,
+	-- 						0.0, 0.0, -1.0,
 	-- 						0.0, 1.0, 0.0, 1.0,
 	-- 						1.0, 0.0,
 
-	-- 						lensize, lensize, 0.0, 
-	-- 						0.0, 0.0, -1.0, 
+	-- 						lensize, lensize, 0.0,
+	-- 						0.0, 0.0, -1.0,
 	-- 						0.0, 1.0, 0.0, 1.0,
 	-- 						1.0, 1.0,
 
-	-- 						-lensize, -lensize, 0.0, 							
-	-- 						0.0, 0.0, -1.0, 
+	-- 						-lensize, -lensize, 0.0,
+	-- 						0.0, 0.0, -1.0,
 	-- 						0.0, 1.0, 0.0, 1.0,
 	-- 						0.0, 0.0,
 
-	-- 						-lensize, lensize, 0.0, 							
-	-- 						0.0, 0.0, -1.0, 
+	-- 						-lensize, lensize, 0.0,
+	-- 						0.0, 0.0, -1.0,
 	-- 						0.0, 1.0, 0.0, 1.0,
 	-- 						0.0, 1.0,
 	-- 						}, vdecl)
@@ -174,21 +175,21 @@ function add_entity_sys:init()
 
 	-- 	stone.mesh.path = ""	-- runtime mesh info
 	-- 	stone.mesh.assetinfo = create_plane_mesh()
-		
+
 
 	-- 	stone.material.content[1] = {path = "stone.material", properties={}}
 	-- 	component_util.load_material(stone)
 	-- end
-	
+
     -- local function create_entity(name, meshfile, materialfile)
     --     local eid = world:new_entity("rotation", "position", "scale", 
-	-- 	"mesh", "material", 
+	-- 	"mesh", "material",
 	-- 	"name", "serialize",
 	-- 	"can_select", "can_render")
-		
+
     --     local entity = world[eid]
     --     entity.name.n = name
-        
+
     --     ms(entity.scale.v, {1, 1, 1}, "=")
     --     ms(entity.position.v, {0, 0, 0, 1}, "=") 
     --     ms(entity.rotation.v, {0, 0, 0}, "=")
@@ -237,7 +238,7 @@ function add_entity_sys:init()
     --             s = {0.01, 0.01, 0.01},
     --         }
 	-- 	}
-		
+
 	-- 	local material_path = "mem://hierarchy.material"
 	-- 	fs_util.write_to_file(material_path, [[
 	-- 		shader = {
@@ -263,7 +264,7 @@ function add_entity_sys:init()
     --     name_mapper.h1_cube     = stone_eid
     --     name_mapper.h1_h1_cube  = stone_eid_1
 	-- 	name_mapper.h1_sphere   = sphere_eid
-		
+
 	-- 	world:change_component(hierarchy_eid, "rebuild_hierarchy")
 	-- 	world:notify()
     -- end
