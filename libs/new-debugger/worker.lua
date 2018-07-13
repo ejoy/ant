@@ -282,8 +282,8 @@ end
 function CMD.stepOut()
     state = 'stepOut'
     stepContext = rdebug.context()
-    stepLevel = rdebug.stacklevel() - 1
-    stepCurrentLevel = stepLevel
+    stepCurrentLevel = rdebug.stacklevel()
+    stepLevel = stepCurrentLevel - 1
     hookmgr.openStep()
 end
 
