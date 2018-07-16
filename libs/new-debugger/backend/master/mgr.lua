@@ -1,4 +1,4 @@
-local srv = require 'new-debugger.master.server'
+local srv = require 'new-debugger.backend.master.server'
 local json = require 'cjson'
 local cdebug = require 'debugger.core'
 
@@ -42,7 +42,7 @@ function mgr.hasThread(w)
 end
 
 function mgr.update()
-    local threads = require 'new-debugger.master.threads'
+    local threads = require 'new-debugger.backend.master.threads'
     for w in workerThreads:foreach() do
         while true do
             local msg = workerThreads:recv(w)
