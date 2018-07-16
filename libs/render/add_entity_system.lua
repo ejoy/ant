@@ -11,6 +11,10 @@ local update_direction_light_sys = ecs.system "direction_light_system"
 update_direction_light_sys.singleton "math_stack"
 
 function update_direction_light_sys:update()
+    if true then
+        return
+    end
+
 	local ms = self.math_stack
 
 	local function get_delta_time_op()
@@ -103,6 +107,7 @@ function add_entity_sys:init()
 	-- 	component_util.load_material(bunny)
 	-- end
 
+    --[[
 	do	-- pochuan
 		local pochuan_eid = world:new_entity("position", "rotation", "scale",
 		"can_render", "mesh", "material",
@@ -119,7 +124,10 @@ function add_entity_sys:init()
 		component_util.load_material(pochuan, {"pochuan.material"})
 		--component_util.load_material(pochuan, {"bunny.material"})
 	end
+--]]
 
+    local PVPScene = require "modelloader.PVPScene"
+    PVPScene.init(world, component_util, ms)
 	-- do
 	-- 	local stone_eid = world:new_entity("position", "rotation", "scale",
 	-- 	"can_render", "mesh", "material",
