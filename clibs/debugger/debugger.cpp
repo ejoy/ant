@@ -88,11 +88,12 @@ struct masterThread {
     std::map<int, workerThread*> workers;
     int handleSeed = 0;
     std::mutex mutex;
+    bool start = false;
 };
-masterThread* mThread = 0;
+masterThread mThread;
 
 static int master_recv(lua_State* L) {
-    masterThread& self = *(masterThread*)lua_touserdata(L, lua_upvalueindex(1));
+    masterThread& self = mThread;
     int r = 0;
     self.getWorker((int)luaL_checkinteger(L, 2), [&](workerThread& worker){
         if (!worker.output.empty()) {
@@ -105,7 +106,7 @@ static int master_recv(lua_State* L) {
 }
 
 static int master_send(lua_State* L) {
-    masterThread& self = *(masterThread*)lua_touserdata(L, lua_upvalueindex(1));
+    masterThread& self = mThread;
     self.getWorker((int)luaL_checkinteger(L, 2), [&](workerThread& worker){
         size_t len = 0;
         const char* str = luaL_checklstring(L, 3, &len);
@@ -115,7 +116,7 @@ static int master_send(lua_State* L) {
 }
 
 static int master_exists(lua_State* L) {
-    masterThread& self = *(masterThread*)lua_touserdata(L, lua_upvalueindex(1));
+    masterThread& self = mThread;
     bool res = false;
     self.getWorker((int)luaL_checkinteger(L, 2), [&](workerThread& worker){
         res = true;
@@ -133,7 +134,7 @@ static int ipairs(lua_State* L) {
 }
 
 static int master_foreach(lua_State* L) {
-    masterThread& self = *(masterThread*)lua_touserdata(L, lua_upvalueindex(1));
+    masterThread& self = mThread;
     lua_newtable(L);
     int n = 0;
     self.eachWorker([&](int handle, workerThread& worker){
@@ -146,14 +147,12 @@ static int master_foreach(lua_State* L) {
 }
 
 static int master_gc(lua_State* L) {
-    mThread = 0;
-    masterThread& self = *(masterThread*)lua_touserdata(L, lua_upvalueindex(1));
-    self.~masterThread();
+    mThread.start = false;
     return 0;
 }
 
 static int master_start(lua_State* L){
-    if (mThread) {
+    if (mThread.start) {
         return luaL_error(L, "Master thread has started.");
     }
     if (LUA_TNIL != lua_rawgetp(L, LUA_REGISTRYINDEX, &THREAD_TYPE)) {
@@ -162,8 +161,7 @@ static int master_start(lua_State* L){
     lua_pushvalue(L, 1);
     lua_rawsetp(L, LUA_REGISTRYINDEX, &THREAD_TYPE);
 
-    mThread = (masterThread*)lua_newuserdata(L, sizeof(masterThread));
-    new (mThread) masterThread;
+    lua_newuserdata(L, 1);
     
     static luaL_Reg lib[] = {
         { "recv", master_recv },
@@ -202,15 +200,12 @@ static int worker_send(lua_State* L) {
 
 static int worker_gc(lua_State* L) {
     workerThread& self = *(workerThread*)lua_touserdata(L, lua_upvalueindex(1));
-    if (mThread) mThread->delWorker(&self);
+    mThread.delWorker(&self);
     self.~workerThread();
     return 0;
 }
 
 static int worker_start(lua_State* L) {
-    if (!mThread) {
-        return luaL_error(L, "Must start master thread first.");
-    }
     if (LUA_TNIL != lua_rawgetp(L, LUA_REGISTRYINDEX, &THREAD_TYPE)) {
         return luaL_error(L, "Thread has started.");
     }
@@ -233,7 +228,7 @@ static int worker_start(lua_State* L) {
     lua_setfield(L, -2, "__index");
     lua_setmetatable(L, -2);
 
-    if (mThread) mThread->addWorker(thd);
+    mThread.addWorker(thd);
     return 1;
 }
 
