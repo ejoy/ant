@@ -1,27 +1,41 @@
 local rdebug = require 'remotedebug'
 local cdebug = require 'debugger.core'
 local json = require 'cjson'
-local variables = require 'new-debugger.worker.variables'
-local source = require 'new-debugger.worker.source'
-local breakpoint = require 'new-debugger.worker.breakpoint'
-local evaluate = require 'new-debugger.worker.evaluate'
-local hookmgr = require 'new-debugger.worker.hookmgr'
+local variables = require 'new-debugger.backend.worker.variables'
+local source = require 'new-debugger.backend.worker.source'
+local breakpoint = require 'new-debugger.backend.worker.breakpoint'
+local evaluate = require 'new-debugger.backend.worker.evaluate'
+local hookmgr = require 'new-debugger.backend.worker.hookmgr'
+local traceback = require 'new-debugger.backend.worker.traceback'
 local ev = require 'new-debugger.event'
 
+local initialized = false
+local info = {}
 local state = 'running'
 local stopReason = 'unknown'
 local stepLevel = -1
 local stepContext = ''
 local stepCurrentLevel = -1
+local exceptionFilters = {}
+local exceptionMsg = ''
+local exceptionTrace = ''
 
 local CMD = {}
 
-local masterThread = cdebug.start('worker', function(msg)
-    local pkg = assert(json.decode(msg))
-    if CMD[pkg.cmd] then
-        CMD[pkg.cmd](pkg)
+local masterThread = cdebug.start 'worker'
+
+local function masterThreadUpdate()
+    while true do
+        local msg = masterThread:recv()
+        if not msg then
+            break
+        end
+        local pkg = assert(json.decode(msg))
+        if CMD[pkg.cmd] then
+            CMD[pkg.cmd](pkg)
+        end
     end
-end)
+end
 
 local function sendToMaster(msg)
     masterThread:send(assert(json.encode(msg)))
@@ -45,6 +59,17 @@ ev.on('output', function(category, output, source, line)
     }
 end)
 
+function CMD.initialized(pkg)
+    ev.emit('update-config', pkg.config)
+    initialized = true
+end
+
+function CMD.terminated(pkg)
+    initialized = false
+    state = 'running'
+    hookmgr.reset()
+end
+
 function CMD.stackTrace(pkg)
     local startFrame = pkg.startFrame
     local endFrame = pkg.endFrame
@@ -59,9 +84,18 @@ function CMD.stackTrace(pkg)
             curFrame = curFrame + 1
             goto continue
         end
-        if info.what == 'C' and curFrame == 0 then
-            depth = depth + 1
-            goto continue
+        local src
+        if curFrame == 0 then
+            if info.what == 'C' then
+                depth = depth + 1
+                goto continue
+            else
+                src = source.create(info.source)
+                if not source.valid(src) then
+                    depth = depth + 1
+                    goto continue
+                end
+            end
         end
         if (curFrame < startFrame) or (curFrame >= endFrame) then
             depth = depth + 1
@@ -87,7 +121,7 @@ function CMD.stackTrace(pkg)
                     column = 1,
                     source = source.output(src),
                 }
-            else
+            elseif curFrame ~= 0 then
                 res[#res + 1] = {
                     id = depth,
                     name = info.what == 'main' and "[main chunk]" or info.name,
@@ -128,7 +162,7 @@ function CMD.scopes(pkg)
 end
 
 function CMD.variables(pkg)
-    local vars, err = variables.variables(pkg.frameId, pkg.valueId)
+    local vars, err = variables.extand(pkg.frameId, pkg.valueId)
     if not vars then
         sendToMaster {
             cmd = 'variables',
@@ -148,11 +182,11 @@ function CMD.variables(pkg)
     }
 end
 
-function CMD.evaluate(pkg)
-    local f, err = evaluate.complie('return ' .. pkg.expression)
-    if not f then
+function CMD.setVariable(pkg)
+    local var, err = variables.set(pkg.frameId, pkg.valueId, pkg.name, pkg.value)
+    if not var then
         sendToMaster {
-            cmd = 'evaluate',
+            cmd = 'setVariable',
             command = pkg.command,
             seq = pkg.seq,
             success = false,
@@ -160,26 +194,25 @@ function CMD.evaluate(pkg)
         }
         return
     end
-    local ok, res = evaluate.execute(pkg.frameId, f)
+    sendToMaster {
+        cmd = 'setVariable',
+        command = pkg.command,
+        seq = pkg.seq,
+        success = true,
+        value = var.value,
+        type = var.type,
+    }
+end
+
+function CMD.evaluate(pkg)
+    local ok, result, ref = evaluate.run(pkg.frameId, pkg.expression, pkg.context)
     if not ok then
         sendToMaster {
             cmd = 'evaluate',
             command = pkg.command,
             seq = pkg.seq,
             success = false,
-            message = res,
-        }
-        return
-    end
-    if type(res) == 'table' and res.__ref ~= nil then
-        local text, _, ref = variables.createRef(pkg.frameId, res.__ref)
-        sendToMaster {
-            cmd = 'evaluate',
-            command = pkg.command,
-            seq = pkg.seq,
-            success = true,
-            result = text,
-            variablesReference = ref,
+            message = result,
         }
         return
     end
@@ -188,7 +221,8 @@ function CMD.evaluate(pkg)
         command = pkg.command,
         seq = pkg.seq,
         success = true,
-        result = tostring(res) or '',
+        result = result,
+        variablesReference = ref,
     }
 end
 
@@ -199,17 +233,39 @@ function CMD.setBreakpoints(pkg)
     breakpoint.update(pkg.source, pkg.breakpoints)
 end
 
+function CMD.setExceptionBreakpoints(pkg)
+    exceptionFilters = {}
+    for _, filter in ipairs(pkg.filters) do
+        exceptionFilters[filter] = true
+    end
+end
+
+function CMD.exceptionInfo(pkg)
+    sendToMaster {
+        cmd = 'exceptionInfo',
+        command = pkg.command,
+        seq = pkg.seq,
+        breakMode = 'always',
+        exceptionId = exceptionMsg,
+        details = {
+            stackTrace = exceptionTrace,
+        }
+    }
+end
+
 function CMD.stop(pkg)
     state = 'stopped'
     stopReason = pkg.reason
+    hookmgr.openStepIn()
 end
 
-function CMD.run(pkg)
+function CMD.run()
     state = 'running'
     hookmgr.closeStep()
+    hookmgr.closeStepIn()
 end
 
-function CMD.stepOver(pkg)
+function CMD.stepOver()
     state = 'stepOver'
     stepContext = rdebug.context()
     stepLevel = rdebug.stacklevel()
@@ -217,17 +273,17 @@ function CMD.stepOver(pkg)
     hookmgr.openStep()
 end
 
-function CMD.stepIn(pkg)
+function CMD.stepIn()
     state = 'stepIn'
     stepContext = ''
-    hookmgr.openStep()
+    hookmgr.openStepIn()
 end
 
-function CMD.stepOut(pkg)
+function CMD.stepOut()
     state = 'stepOut'
     stepContext = rdebug.context()
-    stepLevel = rdebug.stacklevel() - 1
-    stepCurrentLevel = stepLevel
+    stepCurrentLevel = rdebug.stacklevel()
+    stepLevel = stepCurrentLevel - 1
     hookmgr.openStep()
 end
 
@@ -239,11 +295,13 @@ local function runLoop(reason)
 
     while true do
         cdebug.sleep(10)
-        masterThread:update()
+        masterThreadUpdate()
         if state ~= 'stopped' then
-            return
+            break
         end
     end
+    variables.clean()
+    evaluate.clean()
 end
 
 local hook = {}
@@ -269,7 +327,14 @@ hook['tail call'] = function ()
 end
 
 hook['line'] = function(line)
-    local bp = breakpoint.find(line)
+    local s = rdebug.getinfo(1, info)
+    local src = source.create(s.source)
+    if not source.valid(src) then
+        hookmgr.closeLineBP()
+        return
+    end
+
+    local bp = breakpoint.find(src, line)
     if bp then
         if breakpoint.exec(bp) then
             state = 'stopped'
@@ -278,7 +343,7 @@ hook['line'] = function(line)
         end
     end
 
-    masterThread:update()
+    masterThreadUpdate()
     if state == 'running' then
         return
     elseif state == 'stepOver' or state == 'stepOut' then
@@ -295,16 +360,81 @@ hook['line'] = function(line)
     end
 end
 
+hook['update'] = function()
+    masterThreadUpdate()
+end
+
+local function getEventLevel()
+    local level = 0
+    local name, value = rdebug.getlocal(1, 2)
+    if name ~= nil then
+        local type, subtype = rdebug.type(value)
+        if subtype == 'integer' then
+            level = rdebug.value(value)
+        end
+    end
+    return level + 1
+end
+
+local function getEventArgs(i)
+    local name, value = rdebug.getlocal(1, -i)
+    if name == nil then
+        return false
+    end
+    return true, rdebug.value(value)
+end
+
+local function setEventRet(v)
+    local name, value = rdebug.getlocal(1, 3)
+    if name ~= nil then
+        return rdebug.assign(value, v)
+    end
+    return false
+end
+
+local function pairsEventArgs()
+    return function(_, i)
+        local ok, value = getEventArgs(i)
+        if ok then
+            return i + 1, value
+        end
+    end, nil, 1
+end
+
+hook['print'] = function()
+    if not initialized then return end
+    local res = {}
+    for _, arg in pairsEventArgs() do
+        res[#res + 1] = tostring(rdebug.value(arg))
+    end
+    res = table.concat(res, '\t')
+    local s = rdebug.getinfo(1 + getEventLevel(), info)
+    local src = source.create(s.source)
+    if source.valid(src) then
+        ev.emit('output', 'stdout', res, src, s.currentline)
+    else
+        ev.emit('output', 'stdout', res)
+    end
+    setEventRet(true)
+end
+
+hook['exception'] = function()
+    if not initialized then return end
+    local _, type = getEventArgs(1)
+    if not type or not exceptionFilters[type] then
+        return
+    end
+    local _, msg = getEventArgs(2)
+    local level = getEventLevel()
+    exceptionMsg, exceptionTrace = traceback(msg, level)
+    state = 'stopped'
+    runLoop('exception')
+end
+
 rdebug.sethook(function(event, line)
     assert(xpcall(function()
-        if event == 'update' then
-            masterThread:update()
-            return
-        end
         if hook[event] then
             hook[event](line)
         end
-        variables.clean()
-        evaluate.clean()
     end, debug.traceback))
 end)

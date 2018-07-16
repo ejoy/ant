@@ -1,14 +1,8 @@
-local srv = require 'new-debugger.master.server'
+local srv = require 'new-debugger.backend.master.server'
 local json = require 'cjson'
 local cdebug = require 'debugger.core'
 
-local workerThreads = cdebug.start('master', function(w, msg)
-    local threads = require 'new-debugger.master.threads'
-    local pkg = assert(json.decode(msg))
-    if threads[pkg.cmd] then
-        threads[pkg.cmd](w, pkg)
-    end
-end)
+local workerThreads = cdebug.start 'master'
 
 local mgr = {}
 
@@ -48,7 +42,19 @@ function mgr.hasThread(w)
 end
 
 function mgr.update()
-    return workerThreads:update()
+    local threads = require 'new-debugger.backend.master.threads'
+    for w in workerThreads:foreach() do
+        while true do
+            local msg = workerThreads:recv(w)
+            if not msg then
+                break
+            end
+            local pkg = assert(json.decode(msg))
+            if threads[pkg.cmd] then
+                threads[pkg.cmd](w, pkg)
+            end
+        end
+    end
 end
 
 function mgr.isState(s)
@@ -57,6 +63,10 @@ end
 
 function mgr.setState(s)
     state = s
+end
+
+function mgr.close()
+    srv.close()
 end
 
 return mgr

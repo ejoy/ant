@@ -22,8 +22,8 @@ ecs.component "frustum" {
     f = 10000,
     l = -1,
     r = 1,
-    t = -1,
-    b = 1,
+    t = 1,
+    b = -1,
 }
 
 ecs.component "viewid" {

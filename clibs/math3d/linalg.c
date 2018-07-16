@@ -548,6 +548,52 @@ lastack_reset(struct lastack *LS) {
 	blob_flush(LS->per_mat);
 }
 
+static void
+print_float(const float *address, int n) {
+	int i;
+	for (i=0;i<n-1;i++) {
+		printf("%.3g ", address[i]);
+	}
+	printf("%.3g",address[i]);
+}
+
+static void
+print_object(const float *address, int id, int type) {
+	switch(type) {
+	case LINEAR_TYPE_NONE:
+		printf("(None");
+		break;
+	case LINEAR_TYPE_MAT:
+		printf("(M%d: ",id);
+		print_float(address, 16);
+		break;
+	case LINEAR_TYPE_VEC4:
+		printf("(V%d: ",id);
+		print_float(address, 4);
+		break;
+	case LINEAR_TYPE_VEC3:
+		printf("(V%d: ",id);
+		print_float(address, 3);
+		break;
+	case LINEAR_TYPE_QUAT:
+		printf("(Q%d: ",id);
+		print_float(address, 4);
+		break;
+	case LINEAR_TYPE_NUM:
+		printf("(N%d: ",id);
+		print_float(address, 1);
+		break;
+	case LINEAR_TYPE_EULER:
+		printf("(E%d: ",id);
+		print_float(address, 3);
+		break;
+	default:
+		printf("(Invalid");
+		break;
+	}
+	printf(")");
+}
+
 void
 lastack_print(struct lastack *LS) {
 	printf("version = %d\n", LS->version);
@@ -555,26 +601,45 @@ lastack_print(struct lastack *LS) {
 	int i;
 	for (i=0;i<LS->stack_top;i++) {
 		union stackid id = LS->stack[i];
-		int sz;
-		int j,k;
-		float *address = lastack_value(LS, id.i, &sz);
-		printf("\t[%d] id = %d ", i, id.s.id);
+		int type;
+		float *address = lastack_value(LS, id.i, &type);
+		printf("\t[%d]", i);
 		if (id.s.persistent) {
 			printf("version = %d ", id.s.version);
 		}
-		for (j=0;j<sz;j+=4) {
-			printf("(");
-			for (k=0;k<4;k++) {
-				printf("%f ",address[j+k]);
-			}
-			printf(") ");
-		}
+		print_object(address, id.s.id, type);
 		printf("\n");
 	}
 	printf("Persistent Vector ");
 	blob_print(LS->per_vec);
 	printf("Persistent Matrix ");
 	blob_print(LS->per_mat);
+}
+
+int
+lastack_gettop(struct lastack *LS) {
+	return LS->stack_top;
+}
+
+void
+lastack_dump(struct lastack *LS, int from) {
+	if (from < 0) {
+		from = LS->stack_top + from;
+		if (from < 0)
+			from = 0;
+	}
+	int i;
+	for (i=LS->stack_top-1;i>=from;i--) {
+		union stackid id = LS->stack[i];
+		int type;
+		float *address = lastack_value(LS, id.i, &type);
+		print_object(address, id.s.id, type);
+	}
+	if (from > 0) {
+		for (i=0;i<from;i++) {
+			printf(".");
+		}
+	}
 }
 
 char *

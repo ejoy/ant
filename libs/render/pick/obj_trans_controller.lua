@@ -58,25 +58,43 @@ local function play_object_transform(ms, ot, dx, dy)
 
     local function select_step_value(dir)
         local camera = world:first_entity("main_camera")
-        local view_mat = ms(camera.position.v, camera.rotation.v, "dLP")                
+        local view, proj = mu.view_proj_matrix(ms, camera)
 
-        local dirInVS = ms(dir, view_mat, "*T")
-        local dirX, dirY = dirInVS[1], dirInVS[2]            
-        return (dirX > dirY) and dx or dy
+		local originInWS = {0, 0, 0, 1}
+		local posInWS = ms(originInWS, dir, "+P")
+
+		local results = {}
+
+		for _, p in ipairs{originInWS, posInWS} do
+			local dirInCS = ms(p, view, proj, "**T")
+			local clipcoord = dirInCS[4]
+			local dirInNDC = {dirInCS[1]/clipcoord, dirInCS[2]/clipcoord}
+			local screenN = {(dirInNDC[1] + 1) * 0.5, (dirInNDC[2] + 1) * 0.5}
+			local vr = camera.view_rect
+			local screen = {screenN[1] * vr.w, vr.h * (1 - screenN[2])}
+			table.insert(results, screen)
+		end
+
+		local point1 = results[1]
+		local point2 = results[2]
+
+		local dirInScreen = {point2[1] - point1[1], point2[2] - point1[2]}
+		local len = math.sqrt(dirInScreen[1] * dirInScreen[1] + dirInScreen[2] * dirInScreen[2])
+		dirInScreen[1], dirInScreen[2] = dirInScreen[1] / len, dirInScreen[2] / len
+		local dot = dirInScreen[1] * dx + dirInScreen[2] * dy
+        return dot
     end
 
-    local zdir = ms(sceneobj.rotation.v, "dnP")
-    local xdir = ms({0, 1, 0, 0}, zdir, "xnP")
-    local ydir = ms(zdir, xdir, "xnP")
+	local xdir, ydir, zdir = ms(sceneobj.rotation.v, "bPPP")	
 
     if mode == "pos_transform" then            
         if selected_axis then
             local pos = sceneobj.position.v
 
             local function move(dir)
-                local speed = ot.translate_speed
-                local v = select_step_value(dir) > 0 and speed or -speed
-                ms(pos, pos, dir, {v}, "*+=")
+				local speed = ot.translate_speed
+				local v = select_step_value(dir) > 0 and speed or -speed
+				ms(pos, pos, dir, {v}, "*+=")
             end
 
             if axis_name == "x" then

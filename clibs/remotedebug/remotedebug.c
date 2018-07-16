@@ -446,7 +446,42 @@ lclient_next(lua_State *L) {
 static int
 lclient_value(lua_State *L) {
 	lua_State *hL = get_host(L);
+	lua_settop(L, 1);
 	get_value(L, hL);
+	return 1;
+}
+
+// userdata ref
+// any value
+// ref = value
+static int
+lclient_assign(lua_State *L) {
+	lua_State *hL = get_host(L);
+	if (lua_checkstack(hL, 2) == 0)
+		return luaL_error(L, "stack overflow");
+	lua_settop(L, 2);
+	int vtype = lua_type(L, 2);
+	switch (vtype) {
+	case LUA_TNUMBER:
+	case LUA_TNIL:
+	case LUA_TBOOLEAN:
+	case LUA_TLIGHTUSERDATA:
+	case LUA_TSTRING:
+		copy_value(L, hL);
+		break;
+	case LUA_TUSERDATA:
+		if (eval_value(L, hL) == LUA_TNONE) {
+			lua_pushnil(hL);
+		}
+		break;
+	default:
+		return luaL_error(L, "Invalid value type %s", lua_typename(L, vtype));
+	}
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	struct value * ref = lua_touserdata(L, 1);
+	lua_getuservalue(L, 1);
+	int r = assign_value(L, ref, hL);
+	lua_pushboolean(L, r);
 	return 1;
 }
 
@@ -535,7 +570,7 @@ lclient_getinfo(lua_State *L) {
 	case LUA_TNUMBER:
 		if (lua_getstack(hL, luaL_checkinteger(L, 1), &ar) == 0)
 			return 0;
-		if (lua_getinfo(hL, "Sln", &ar) == 0)
+		if (lua_getinfo(hL, "Slnt", &ar) == 0)
 			return 0;
 		break;
 	case LUA_TUSERDATA: {
@@ -548,7 +583,7 @@ lclient_getinfo(lua_State *L) {
 			return luaL_error(L, "Need a function ref, It's %s", lua_typename(L, t));
 		}
 		lua_pop(L, 1);
-		if (lua_getinfo(hL, ">Sln", &ar) == 0)
+		if (lua_getinfo(hL, ">Slnt", &ar) == 0)
 			return 0;
 		break;
 	}
@@ -570,6 +605,14 @@ lclient_getinfo(lua_State *L) {
 	lua_setfield(L, 2, "name");
 	lua_pushstring(L, ar.what? ar.what : "?");
 	lua_setfield(L, 2, "what");
+	if (ar.namewhat) {
+		lua_pushstring(L, ar.namewhat);
+	} else {
+		lua_pushnil(L);
+	}
+	lua_setfield(L, 2, "namewhat");
+	lua_pushboolean(L, ar.istailcall? 1 : 0);
+	lua_setfield(L, 2, "istailcall");
 
 	return 1;
 }
@@ -641,6 +684,7 @@ luaopen_remotedebug(lua_State *L) {
 			{ "index", lclient_index },
 			{ "next", lclient_next },
 			{ "value", lclient_value },
+			{ "assign", lclient_assign },
 			{ "type", lclient_type },
 			{ "getinfo", lclient_getinfo },
 			{ "activeline", lclient_activeline },

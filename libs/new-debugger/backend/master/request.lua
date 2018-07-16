@@ -1,6 +1,6 @@
-local mgr = require 'new-debugger.master.mgr'
-local response = require 'new-debugger.master.response'
-local event = require 'new-debugger.master.event'
+local mgr = require 'new-debugger.backend.master.mgr'
+local response = require 'new-debugger.backend.master.response'
+local event = require 'new-debugger.backend.master.event'
 
 local request = {}
 
@@ -9,32 +9,34 @@ local initProto = {}
 function request.initialize(req)
     if not mgr.isState 'birth' then
         response.error(req, 'already initialized')
-        return false
+        return
     end
     response.initialize(req)
     mgr.setState 'initialized'
     event.initialized()
     event.capabilities()
-    return false
 end
 
 function request.attach(req)
     initProto = {}
     if not mgr.isState 'initialized' then
         response.error(req, 'not initialized or unexpected state')
-        return false
+        return
     end
     response.success(req)
     initProto = req
-    return false
 end
 
 function request.configurationDone(req)
     response.success(req)
     local args = initProto.arguments
     if not args then
-        return false
+        return
     end
+    mgr.broadcastToWorker {
+        cmd = 'initialized',
+        config = args,
+    }
     local stopOnEntry = true
     if type(args.stopOnEntry) == 'boolean' then
         stopOnEntry = args.stopOnEntry
@@ -45,7 +47,6 @@ function request.configurationDone(req)
             reason = 'stepping',
         }
     end
-    return not stopOnEntry
 end
 
 local breakpointID = 0
@@ -68,25 +69,29 @@ function request.setBreakpoints(req)
         source = args.source,
         breakpoints = args.breakpoints,
     }
-    return false
 end
 
 function request.setExceptionBreakpoints(req)
+    local args = req.arguments
+    if type(args.filters) == 'table' then
+        mgr.broadcastToWorker {
+            cmd = 'setExceptionBreakpoints',
+            filters = args.filters,
+        }
+    end
     response.success(req)
-    -- TODO
-    return false
 end
 
 function request.stackTrace(req)
     local args = req.arguments
     if type(args.threadId) ~= 'number' then
         response.error(req, "Not found thread")
-        return false
+        return
     end
     local threadId = args.threadId
     if not mgr.hasThread(threadId) then
         response.error(req, "Not found thread")
-        return false
+        return
     end
 
     local levels = args.levels and args.levels or 200
@@ -101,31 +106,29 @@ function request.stackTrace(req)
         startFrame = startFrame,
         endFrame = endFrame,
     })
-    return false
 end
 
 function request.scopes(req)
     local args = req.arguments
     if type(args.frameId) ~= 'number' then
         response.error(req, "Not found frame")
-        return false
+        return
     end
-    
+
     local threadAndFrameId = args.frameId
     local threadId = threadAndFrameId >> 16
     local frameId = threadAndFrameId & 0xFFFF
     if not mgr.hasThread(threadId) then
         response.error(req, "Not found thread")
-        return false
+        return
     end
-    
+
     mgr.sendToWorker(threadId, {
         cmd = 'scopes',
         command = req.command,
         seq = req.seq,
         frameId = frameId,
     })
-    return false
 end
 
 function request.variables(req)
@@ -135,9 +138,9 @@ function request.variables(req)
     local frameId = (valueId >> 16) & 0xFFFF
     if not mgr.hasThread(threadId) then
         response.error(req, "Not found thread")
-        return false
+        return
     end
-    
+
     mgr.sendToWorker(threadId, {
         cmd = 'variables',
         command = req.command,
@@ -145,25 +148,24 @@ function request.variables(req)
         frameId = frameId,
         valueId = valueId & 0xFFFF,
     })
-    return false
 end
 
 function request.evaluate(req)
     local args = req.arguments
     if type(args.frameId) ~= 'number' then
         response.error(req, "Not found frame")
-        return false
+        return
     end
     if type(args.expression) ~= 'string' then
         response.error(req, "Error expression")
-        return false
+        return
     end
     local threadAndFrameId = args.frameId
     local threadId = threadAndFrameId >> 16
     local frameId = threadAndFrameId & 0xFFFF
     if not mgr.hasThread(threadId) then
         response.error(req, "Not found thread")
-        return false
+        return
     end
     mgr.sendToWorker(threadId, {
         cmd = 'evaluate',
@@ -173,30 +175,33 @@ function request.evaluate(req)
         context = args.context,
         expression = args.expression,
     })
-    return false
 end
 
 function request.threads(req)
     response.threads(req, mgr.threads())
-    return false
 end
 
 function request.disconnect(req)
     response.success(req)
-    -- TODO
-    return false
+    mgr.broadcastToWorker {
+        cmd = 'terminated',
+    }
+    mgr.setState 'terminated'
+    event.terminated()
+    mgr.close()
+    return true
 end
 
 function request.pause(req)
     local args = req.arguments
     if type(args.threadId) ~= 'number' then
         response.error(req, "Not found thread")
-        return false
+        return
     end
     local threadId = args.threadId
     if not mgr.hasThread(threadId) then
         response.error(req, "Not found thread")
-        return false
+        return
     end
 
     mgr.sendToWorker(threadId, {
@@ -204,83 +209,78 @@ function request.pause(req)
         reason = 'stepping',
     })
     response.success(req)
-    return false
 end
 
 function request.continue(req)
     local args = req.arguments
     if type(args.threadId) ~= 'number' then
         response.error(req, "Not found thread")
-        return false
+        return
     end
     local threadId = args.threadId
     if not mgr.hasThread(threadId) then
         response.error(req, "Not found thread")
-        return false
+        return
     end
 
     mgr.sendToWorker(threadId, {
         cmd = 'run',
     })
     response.success(req)
-    return false
 end
 
 function request.next(req)
     local args = req.arguments
     if type(args.threadId) ~= 'number' then
         response.error(req, "Not found thread")
-        return false
+        return
     end
     local threadId = args.threadId
     if not mgr.hasThread(threadId) then
         response.error(req, "Not found thread")
-        return false
+        return
     end
 
     mgr.sendToWorker(threadId, {
         cmd = 'stepOver',
     })
     response.success(req)
-    return false
 end
 
 function request.stepOut(req)
     local args = req.arguments
     if type(args.threadId) ~= 'number' then
         response.error(req, "Not found thread")
-        return false
+        return
     end
     local threadId = args.threadId
     if not mgr.hasThread(threadId) then
         response.error(req, "Not found thread")
-        return false
+        return
     end
 
     mgr.sendToWorker(threadId, {
         cmd = 'stepOut',
     })
     response.success(req)
-    return false
 end
 
 function request.stepIn(req)
     local args = req.arguments
     if type(args.threadId) ~= 'number' then
         response.error(req, "Not found thread")
-        return false
+        return
     end
     local threadId = args.threadId
     if not mgr.hasThread(threadId) then
         response.error(req, "Not found thread")
-        return false
+        return
     end
 
     mgr.sendToWorker(threadId, {
         cmd = 'stepIn',
     })
     response.success(req)
-    return false
 end
 
 function request.source(req)
@@ -288,7 +288,7 @@ function request.source(req)
     local threadId = args.sourceReference >> 32
     if not mgr.hasThread(threadId) then
         response.error(req, "Not found thread " .. threadId)
-        return false
+        return
     end
     local sourceReference = args.sourceReference & 0xFFFFFFFF
     mgr.sendToWorker(threadId, {
@@ -297,7 +297,40 @@ function request.source(req)
         seq = req.seq,
         sourceReference = sourceReference,
     })
-    return false
+end
+
+function request.exceptionInfo(req)
+    local args = req.arguments
+    local threadId = args.threadId
+    if not mgr.hasThread(threadId) then
+        response.error(req, "Not found thread " .. threadId)
+        return
+    end
+    mgr.sendToWorker(threadId, {
+        cmd = 'exceptionInfo',
+        command = req.command,
+        seq = req.seq,
+    })
+end
+
+function request.setVariable(req)
+    local args = req.arguments
+    local valueId = args.variablesReference
+    local threadId = valueId >> 32
+    local frameId = (valueId >> 16) & 0xFFFF
+    if not mgr.hasThread(threadId) then
+        response.error(req, "Not found thread")
+        return
+    end
+    mgr.sendToWorker(threadId, {
+        cmd = 'setVariable',
+        command = req.command,
+        seq = req.seq,
+        frameId = frameId,
+        valueId = valueId & 0xFFFF,
+        name = args.name,
+        value = args.value,
+    })
 end
 
 return request

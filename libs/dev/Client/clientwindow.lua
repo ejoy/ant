@@ -1,8 +1,7 @@
 package.cpath = "../../../clibs/?.dll"
 package.path = "../Common/?.lua;../../?.lua;../../?/?.lua;".. package.path
 
-
-local debugger = require 'new-debugger'
+local DbgUpdate = require 'new-debugger' .start_worker()
 local lanes = require "lanes"
 if lanes.configure then lanes.configure() end
 local linda = lanes.linda()
@@ -30,8 +29,7 @@ local client_io = lanes.gen("*", CreateIOThread)(linda)
 
 local function CreateDbgThread()
     package.path = "../../?.lua;".. package.path
-    local debugger = require 'new-debugger'
-    local DbgUpdate = debugger:initialize()
+    local DbgUpdate = require 'new-debugger' .start_master()
     while true do
         DbgUpdate()
     end
@@ -136,13 +134,11 @@ local function HandleMsg()
     end
 end
 
-debugger:start()
-
 --logic thread
 if (iup.MainLoopLevel() == 0) then
     --iup.MainLoop()
     while true do
-        debugger:update()
+        DbgUpdate()
         HandleMsg()
         --remotestuff.run()
         local msg = iup.LoopStep()

@@ -16,11 +16,10 @@ function util.load_mesh(entity, meshpath, param)
 	mesh_comp.assetinfo = assetinfo
 end
 
-local function load_texture(tex)
-	local texpath = tex.default
+function util.load_texture(name, stage, texpath)	
 	assert(type(texpath) == "string", "texture type's default value should be path to texture file")
 	local assetinfo = asset.load(texpath)
-	return {name=tex.name, type=tex.type, stage=tex.stage, value=assetinfo.handle}
+	return {name=name, type="texture", stage=stage, value=assetinfo.handle}
 end
 
 function util.load_material(entity, material_filenames)
@@ -44,7 +43,7 @@ function util.load_material(entity, material_filenames)
 		if asset_properties then
 			for k, v in pairs(asset_properties) do
 				if v.type == "texture" then
-					properties[k] = load_texture(v)
+					properties[k] = util.load_texture(v.name, v.stage, v.default)
 				else
 					properties[k] = {name=v.name, type=v.type, value=common_util.deep_copy(v.default)}
 				end
