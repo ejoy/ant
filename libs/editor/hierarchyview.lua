@@ -50,4 +50,8 @@ function hierarchyview:build(htree, ud_table)
 	treeview:clear_selections()
 end
 
+function hierarchyview:select_nodename()
+	return self.window["TITLE"]
+end
+
 return hierarchyview

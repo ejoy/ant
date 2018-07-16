@@ -8,7 +8,7 @@ local mv_control = require "editor.matrixview"
 
 local propertyview = {}; propertyview.__index = propertyview
 
-local function create_tree_branch(node, parent, ptree)
+local function create_tree_branch(node, parent, treeview)
 	local ntype = type(node)
 	if ntype ~= "table" then
 		return
@@ -18,17 +18,34 @@ local function create_tree_branch(node, parent, ptree)
 
 	for _, k in ipairs(keys) do
 		local v = node[k]
-		local child = ptree:add_child(parent, k)
+		local child = treeview:add_child(parent, k)
 		child.userdata = v
 	end
 end
 
-function propertyview:build(htree)
-	local ptree = self.tree
-	ptree:clear()
+function propertyview:build(properties, extend_trees)
+	local treeview = self.tree
+	treeview:clear()
 
-	create_tree_branch(htree, nil, ptree)
-	ptree:clear_selections()
+	local function init_property_tree(properties, treeview, extend_trees)
+		create_tree_branch(properties, nil, treeview)
+
+		if extend_trees then
+			local function create_branch(properties, etree, parentnode)
+				for k, v in pairs(etree) do
+					local property = properties[k]
+					local childnode = treeview:findchild_byname(parentnode or treeview, k)
+					create_tree_branch(property, childnode, treeview)					
+					create_branch(property, v, childnode)
+				end
+			end
+			create_branch(properties, extend_trees, nil)
+		end
+	end
+
+	init_property_tree(properties, treeview, extend_trees)
+	
+	treeview:clear_selections()
 end
 
 local function fill_matrixview(detail, node)

@@ -32,7 +32,7 @@ local function build_hierarchy_tree()
 		end
 	end
 	
-	local function is_obj_transform(e)
+	local function is_transform_obj(e)
 		local obj_transform_names = {"pos_transform", "scale_transform", "rotation_transform"}
 		for _, n in ipairs(obj_transform_names) do
 			if e[n] then
@@ -47,7 +47,7 @@ local function build_hierarchy_tree()
 		eidin_hierarchy[eid] = true		
 		local e = world[eid]
 		
-		if not is_obj_transform(e) then
+		if not is_transform_obj(e) then
 			local hierarchy_tree = e.editable_hierarchy.root
 			local name_mapper = e.hierarchy_name_mapper.v
 			local function build_hierarchy_entity_tree(ehierarchy, name_mapper)
@@ -83,7 +83,7 @@ local function build_hierarchy_tree()
     for _, eid in world:each("can_render") do
 		if not eidin_hierarchy[eid] then			
             local e = world[eid]
-            if not is_obj_transform(e) and e.can_render.visible then
+            if not is_transform_obj(e) and e.can_render.visible then
 				local ename = e.name
 				local name = ename and ename.n or "entity"
 				table.insert(htree, name)
@@ -151,28 +151,69 @@ function editor_sys:init()
 
 	build_hv()
 
+	hv.extend_trees = {}
+
+	local function get_extendtree(eid)
+		local extendtrees = hv.extend_trees
+		local e = extendtrees[eid]
+		if e then
+			return e
+		end
+
+		e = {}
+		extendtrees[eid] = e
+		return e
+	end
+
+	local function get_hv_selnode()
+		local hvtree = hv.window
+		local selid = hvtree.view["VALUE"]
+		return selid and hvtree:findchild_byid(tonumber(selid)) or nil
+	end
+
 	local pv = editor_mainwin.propertyview
 	local ms = self.math_stack
-	local function build_pv(eid)
+	local function build_pv(eid, extend_tree)
 		local ptree = build_entity_tree(eid, ms)
-		pv:build(ptree)
+		pv:build(ptree, extend_tree)
+
+		local origin_executeleaf_cb = pv.tree.executeleaf_cb		
+		pv.tree.executeleaf_cb = function (self, id)
+			origin_executeleaf_cb(self, id)
+			
+			local extend_tree = extend_tree
+	
+			local names = {}
+			local curid = id
+			repeat
+				local name = self:node_name(curid)
+				table.insert(names, name)
+				local parent = self:parent(curid)					
+				curid = parent and tonumber(parent) or nil		
+			until(curid == nil)
+			
+			local parent = extend_tree
+			for i=#names, 1, -1 do
+				local name = names[i]
+				local p = parent[name]
+				if p == nil then
+					parent[name] = {}
+				else
+					parent = p
+				end
+			end
+		end
 
 		function pv.tree:rightclick_cb(id, status)			
 			local addsubmenu = {name="Add", type="submenu",}
-	
-			local function get_hv_selnode()
-				local hvtree = hv.window
-				local selid = hvtree.view["VALUE"]
-				return selid and hvtree:findchild_byid(tonumber(selid)) or nil
-			end
-	
+		
 			local add_action =  function(menuitem)
 				local cname = menuitem.TITLE
 				local node = get_hv_selnode()
 				if node then
 					local eid = node.eid
 					world:add_component(eid, cname)
-					build_pv(eid)
+					build_pv(eid, get_extendtree(eid))
 				else
 					log("add component failed, component is : ", cname, 
 					", but could not get hierarchy view select node, return nil")
@@ -199,7 +240,7 @@ function editor_sys:init()
 						local eid = hvnode.eid
 						local cname = self.view["TITLE"..id]
 						world:remove_component(eid, cname)
-						build_pv(eid)
+						build_pv(eid, get_extendtree(eid))
 					end},
 				}
 			}
@@ -213,7 +254,7 @@ function editor_sys:init()
 			local node = self:findchild_byid(id)
 			if node then
 				local eid = node.eid
-				build_pv(node.eid)
+				build_pv(eid, get_extendtree(eid))
 
 				world:change_component(eid, "focus_selected_obj")
 				world:notify()

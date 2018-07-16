@@ -206,6 +206,16 @@ function tree:selection_node(node)
 	view["MARKED" .. id] = "YES"
 end
 
+function tree:node_name(id)
+	local view = self.view
+	return view["TITLE" .. id]
+end
+
+function tree:parent(id)
+	local view = self.view
+	return view["PARENT" .. id]
+end
+
 local function create_view(config, inst)
 	local param = {ADDROOT = "NO"}
 	if config then
