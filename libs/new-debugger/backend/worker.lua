@@ -1,12 +1,12 @@
 local rdebug = require 'remotedebug'
 local cdebug = require 'debugger.core'
 local json = require 'cjson'
-local variables = require 'new-debugger.worker.variables'
-local source = require 'new-debugger.worker.source'
-local breakpoint = require 'new-debugger.worker.breakpoint'
-local evaluate = require 'new-debugger.worker.evaluate'
-local hookmgr = require 'new-debugger.worker.hookmgr'
-local traceback = require 'new-debugger.worker.traceback'
+local variables = require 'new-debugger.backend.worker.variables'
+local source = require 'new-debugger.backend.worker.source'
+local breakpoint = require 'new-debugger.backend.worker.breakpoint'
+local evaluate = require 'new-debugger.backend.worker.evaluate'
+local hookmgr = require 'new-debugger.backend.worker.hookmgr'
+local traceback = require 'new-debugger.backend.worker.traceback'
 local ev = require 'new-debugger.event'
 
 local initialized = false
@@ -282,8 +282,8 @@ end
 function CMD.stepOut()
     state = 'stepOut'
     stepContext = rdebug.context()
-    stepLevel = rdebug.stacklevel() - 1
-    stepCurrentLevel = stepLevel
+    stepCurrentLevel = rdebug.stacklevel()
+    stepLevel = stepCurrentLevel - 1
     hookmgr.openStep()
 end
 

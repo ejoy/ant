@@ -1,5 +1,5 @@
 local path = require 'new-debugger.path'
-local parser = require 'new-debugger.worker.parser'
+local parser = require 'new-debugger.backend.worker.parser'
 local ev = require 'new-debugger.event'
 
 local sourcePool = {}

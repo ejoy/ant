@@ -1,5 +1,5 @@
 local rdebug = require 'remotedebug'
-local source = require 'new-debugger.worker.source'
+local source = require 'new-debugger.backend.worker.source'
 local path = require 'new-debugger.path'
 
 local varPool = {}
@@ -328,7 +328,7 @@ local function varGetValue(type, subtype, value)
         return varGetTableValue(value)
     elseif type == 'userdata' then
         local meta = rdebug.getmetatable(value)
-        if meta then
+        if rdebug.value(meta) ~= nil then
             local name = rdebug.index(meta, '__name')
             if rdebug.value(name) ~= nil then
                 return 'userdata: ' .. tostring(rdebug.value(name))
