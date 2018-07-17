@@ -121,7 +121,7 @@
     m_window = [ [UIWindow alloc] initWithFrame: rect];
     m_view = [ [View alloc] initWithFrame: rect];
     
-    [m_view setBackgroundColor:([UIColor blueColor])];
+    [m_view setBackgroundColor:([UIColor colorWithRed:0 green:0 blue:0 alpha:0])];
    // [m_window addSubview: m_view];
     
     UIViewController *viewController = [[ViewController alloc] init];

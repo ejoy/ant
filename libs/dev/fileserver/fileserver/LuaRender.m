@@ -18,10 +18,13 @@ LUAMOD_API int luaopen_lsocket(lua_State *L);
 LUAMOD_API int luaopen_bgfx(lua_State *L);
 LUAMOD_API int luaopen_bgfx_util(lua_State *L);
 LUAMOD_API int luaopen_bgfx_baselib(lua_State *L);
+LUAMOD_API int luaopen_bgfx_terrain(lua_State *L);
+
 LUAMOD_API int luaopen_math3d(lua_State *L);
 LUAMOD_API int luaopen_lfs(lua_State *L);
 LUAMOD_API int luaopen_lodepnglua(lua_State *L);
 LUAMOD_API int luaopen_memoryfile (lua_State *L);
+
 void luaopen_lanes_embedded( lua_State* L, lua_CFunction _luaopen_lanes);
 
 static int default_luaopen_lanes( lua_State* L)
@@ -95,6 +98,7 @@ lua_State *L = nil;
     luaL_requiref(L, "bgfx", luaopen_bgfx, 0);
     luaL_requiref(L, "bgfx_util", luaopen_bgfx_util, 0);
     luaL_requiref(L, "bgfx.baselib", luaopen_bgfx_baselib, 0);
+    luaL_requiref(L, "bgfx.terrain", luaopen_bgfx_terrain, 0);
     luaL_requiref(L, "math3d", luaopen_math3d, 0);
     luaL_requiref(L, "winfile", luaopen_lfs, 0);
     luaL_requiref(L, "lodepnglua", luaopen_lodepnglua, 0);
@@ -160,6 +164,7 @@ lua_State *L = nil;
     if(lua_isfunction(L, -1))
     {
         lua_pushstring(L, "Device");
+        NSLog(@"%@", log_str);
         lua_pushstring(L, [log_str UTF8String]);
         lua_pcall(L, 2, 0, 0);
     }
