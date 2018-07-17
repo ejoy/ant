@@ -226,6 +226,11 @@ function tree:parent(id)
 	return view["PARENT" .. id]
 end
 
+function tree:parent_node(id)
+	local pid = assert(tonumber(self:parent(id)))
+	return self:findchild_byid(pid)
+end
+
 local function create_view(config, inst)
 	local param = {ADDROOT = "NO"}
 	if config then

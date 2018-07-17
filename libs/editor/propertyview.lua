@@ -145,21 +145,35 @@ local function create_detailview(config)
 		local function get_ud()
 			local selnode = tree:get_selected_node()
 			local ud = selnode.userdata
-			if ud then
-				
+			if ud then				
+				if col == 1 then
+					local parentnode = tree:parent_node(selnode.id)
+					return parentnode.userdata, selnode.name
+				end
+				assert(col == 2)
 				return ud, self:getcell(lin, col - 1)
 			end
 
-			local pid = assert(tonumber(tree:parent(selnode.id)))
-			local parentnode = tree:findchild_byid(pid)
+			local parentnode = tree:parent_node(selnode.id)
 			return assert(parentnode.userdata), selnode.name
 		end
 
-		local ud = get_ud()
+		local ud, elemname = get_ud()
 
 		if ud then
-			local elemname = self:getcell(lin, math.max(1, col - 1))
-			local nodevaluetype = type(assert(ud[elemname]))
+			local function check_name_is_number(t, name)
+				if #t > 0 then
+					local n = tonumber(name)
+					if n then
+						return n
+					end
+				end
+				return name
+			end
+
+			elemname = check_name_is_number(ud, elemname)
+
+			local nodevaluetype = type(assert(ud[tonumber(elemname) or elemname]))
 			if nodevaluetype == "string" then
 				ud[elemname] = newstring
 			elseif nodevaluetype == "number" then
