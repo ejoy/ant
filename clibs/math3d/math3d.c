@@ -153,10 +153,15 @@ push_obj_to_lua_table(lua_State *L, struct lastack *LS, int64_t id){
 	lua_settable(L, -3);	
 }
 
+static inline int
+is_ref_obj(lua_State *L){
+	size_t si = lua_rawlen(L, 1);
+	return si == sizeof(struct refobject);
+}
+
 static int
 ref_to_value(lua_State *L) {
-	size_t si = lua_rawlen(L, 1);
-	if (si != sizeof(struct refobject)){
+	if (!is_ref_obj(L){
 		luaL_error(L, "arg 1 is not a math3d refobject!");
 	}
 
@@ -284,6 +289,22 @@ lref(lua_State *L) {
 	ref->id = lastack_constant(cons);
 
 	luaL_setmetatable(L, LINALG_REF);
+	return 1;
+}
+
+static int
+lisvalid(lua_State *L){
+	int type = lua_type(L, 1);
+	if (type == LUA_TNUMBER){
+		int number = lua_tonumber(L, -1);
+		struct boxpointer *p = lua_touserdata(L, lua_upvalueindex(1));
+		void *value = lastack_value(LS, number, NULL);
+		lua_pushboolean(L, value != NULL);
+	} else if (type == LUA_TUSERDATA or type == LUA_TLIGHTUSERDATA){
+		lua_pushboolean(L, is_ref_obj(L));
+	} else {
+		lua_pushboolean(L, 0);
+	}
 	return 1;
 }
 
@@ -1700,6 +1721,7 @@ luaopen_math3d(lua_State *L) {
 		{ "print", lprint },	// for debug
 		{ "type", ltype },
 		{ "ref", lref },
+		{ "isvalid", lisvalid},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

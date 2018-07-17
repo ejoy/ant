@@ -200,10 +200,20 @@ function tree:clear_selections()
 	end
 end
 
-function tree:selection_node(node)
+function tree:select_node(node)
 	local id = node.id
 	local view = self.view	
 	view["MARKED" .. id] = "YES"
+end
+
+function tree:get_selected_node()
+	local view = self.view
+	local id = view["VALUE"]
+	if id then
+		return self:findchild_byid(tonumber(id))
+	end
+
+	return nil
 end
 
 function tree:node_name(id)

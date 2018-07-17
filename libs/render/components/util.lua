@@ -22,6 +22,32 @@ function util.load_texture(name, stage, texpath)
 	return {name=name, type="texture", stage=stage, value=assetinfo.handle}
 end
 
+
+function util.update_properties(dst_properties, src_properties)		
+	for k, v in pairs(src_properties) do
+		if v.type == "texture" then
+			dst_properties[k] = util.load_texture(v.name, v.stage, v.default or v.path)
+		else
+			dst_properties[k] = {name=v.name, type=v.type, value=common_util.deep_copy(v.default or v.value)}
+		end
+	end
+end
+
+function util.load_materialex(content)
+	for _, m in ipairs(content) do		
+		local materialinfo = asset.load(m.path)
+		m.materialinfo = materialinfo
+	
+		--
+		local properties = materialinfo.properties
+		if properties then
+			util.update_properties(assert(m.properties), properties)
+		end
+	end
+	return content
+end
+
+-- todo : remove this function by load_materialex
 function util.load_material(entity, material_filenames)
 	if material_filenames then
 		for idx, f in ipairs(material_filenames) do
@@ -29,28 +55,7 @@ function util.load_material(entity, material_filenames)
 		end
 	end
 
-	local material_comp = entity.material
-
-	local content = material_comp.content
-	for _, m in ipairs(content) do
-		local filename = m.path		
-		local materialinfo = asset.load(filename)
-		m.materialinfo = materialinfo
-	
-		--
-		local properties = assert(m.properties)	
-		local asset_properties = materialinfo.properties
-		if asset_properties then
-			for k, v in pairs(asset_properties) do
-				if v.type == "texture" then
-					properties[k] = util.load_texture(v.name, v.stage, v.default)
-				else
-					properties[k] = {name=v.name, type=v.type, value=common_util.deep_copy(v.default)}
-				end
-				
-			end
-		end
-	end
+	util.load_materialex(entity.material.content)
 end
 
 function util.create_render_entity(ms, world, name, meshfile, materialfile)

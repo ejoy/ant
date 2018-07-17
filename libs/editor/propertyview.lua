@@ -133,9 +133,52 @@ local function create_detailview(config)
 
 			tree:clear_selections()
 			local selectnode = tree:findchild_byname(node, ud.name)
-			tree:selection_node(selectnode)
+			tree:select_node(selectnode)
 
 			fill_matrixview(self, selectnode)
+		end
+	end
+
+	function detail:value_edit_cb(lin, col, newstring)
+		local tree = self.tree
+		
+		local function get_ud()
+			local selnode = tree:get_selected_node()
+			local ud = selnode.userdata
+			if ud then
+				
+				return ud, self:getcell(lin, col - 1)
+			end
+
+			local pid = assert(tonumber(tree:parent(selnode.id)))
+			local parentnode = tree:findchild_byid(pid)
+			return assert(parentnode.userdata), selnode.name
+		end
+
+		local ud = get_ud()
+
+		if ud then
+			local elemname = self:getcell(lin, math.max(1, col - 1))
+			local nodevaluetype = type(assert(ud[elemname]))
+			if nodevaluetype == "string" then
+				ud[elemname] = newstring
+			elseif nodevaluetype == "number" then
+				ud[elemname] = tonumber(newstring)
+			elseif nodevaluetype == "boolean" then
+				local mm = {
+					['true'] = true,
+					['True'] = true,
+					['TRUE'] = true,
+					['false'] = false,
+					['False'] = false,
+					['FALSE'] = false,
+				}
+				local newvalue = mm[newstring]				
+				ud[elemname] = newvalue or (tonumber(newstring) ~= 0)				
+			else
+				iup.Message("Warning", 
+					string.format("only support modify string/number/boolean, current type is : ", nodevaluetype))
+			end
 		end
 	end
 	return detail
