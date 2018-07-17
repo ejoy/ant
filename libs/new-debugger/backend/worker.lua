@@ -1,5 +1,5 @@
 local rdebug = require 'remotedebug'
-local cdebug = require 'debugger.core'
+local cdebug = require 'debugger.backend'
 local json = require 'cjson'
 local variables = require 'new-debugger.backend.worker.variables'
 local source = require 'new-debugger.backend.worker.source'

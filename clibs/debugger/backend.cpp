@@ -5,50 +5,9 @@
 #include <mutex>
 #include <thread>
 #include <string.h>
-#include "queue.h"
+#include "msgqueue.h"
 
 static int THREAD_TYPE = 0;
-
-struct msg {
-    msg(char* s, size_t l)
-        : str(s)
-        , len(l)
-    { }
-
-    char*  str;
-    size_t len;
-};
-
-struct msgqueue : public base::queue<msg, 16> {
-    typedef base::queue<msg, 16> mybase;
-
-    struct autodelete_msg : public msg {
-        autodelete_msg(const msg& m)
-            : msg(m.str, m.len)
-        { }
-        autodelete_msg(autodelete_msg&& o)
-            : msg(o.str, o.len)
-        {
-            o.str = 0;
-            o. len = 0;
-        }
-        ~autodelete_msg() {
-            delete[] str;
-        }
-    };
-
-    void push(const char* str, size_t len) {
-        msg msg(new char[len], len);
-        memcpy(msg.str, str, len);
-        mybase::push(msg);
-    }
-
-    autodelete_msg pop() {
-        auto res = autodelete_msg(mybase::front());
-        mybase::pop();
-        return std::move(res);
-    }
-};
 
 struct workerThread {
     msgqueue input;
@@ -96,8 +55,8 @@ static int master_recv(lua_State* L) {
     masterThread& self = mThread;
     int r = 0;
     self.getWorker((int)luaL_checkinteger(L, 2), [&](workerThread& worker){
-        if (!worker.output.empty()) {
-            auto msg = worker.output.pop();
+        msgqueue::autodelete_msg msg;
+        if (worker.output.try_pop(msg)) {
             lua_pushlstring(L, msg.str, msg.len);
             r = 1;
         }
@@ -182,12 +141,12 @@ static int master_start(lua_State* L){
 
 static int worker_recv(lua_State* L) {
     workerThread& self = *(workerThread*)lua_touserdata(L, lua_upvalueindex(1));
-    if (self.input.empty()) {
-        return 0;
+    msgqueue::autodelete_msg msg;
+    if (self.input.try_pop(msg)) {
+        lua_pushlstring(L, msg.str, msg.len);
+        return 1;
     }
-    auto msg = self.input.pop();
-    lua_pushlstring(L, msg.str, msg.len);
-    return 1;
+    return 0;
 }
 
 static int worker_send(lua_State* L) {
@@ -249,10 +208,11 @@ static int sleep(lua_State* L) {
 }
 
 extern "C" __declspec(dllexport)
-int luaopen_debugger_core(lua_State* L) {
+int luaopen_debugger_backend(lua_State* L) {
     static luaL_Reg lib[] = {
         { "start", start },
         { "sleep", sleep },
+        { NULL, NULL },
     };    
     lua_newtable(L);
     luaL_setfuncs(L, lib, 0);
