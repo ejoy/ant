@@ -11,7 +11,7 @@ local nk = require "bgfx.nuklear"
 --local task = require "editor.task"
 
 
-local s_logo = require "logo"
+--local s_logo = require "logo"
 
 local nkmsg = require "inputmgr.nuklear"
 
@@ -23,7 +23,8 @@ local ch_charset = require "tested.charset_chinese_range"
 local shaderMgr = require "render.resources.shader_mgr"
 
 local terrainClass = require "terrain"
-local utilmath = require "utilmath"
+--local utilmath = require "utilmath"
+local camera_util = require "render.camera.util"
 
 
 local terrain = terrainClass.new()       	-- new terrain instance pvp
@@ -111,132 +112,143 @@ local function process_input(message)
 	-- 	nkmsg.push(message, msg, x,y,z,w,u)
 	-- end
 
-	local useJoy = false 
-	local use_rJoy = false 
+	-- local useJoy = false 
+	-- local use_rJoy = false 
 	local dirx,diry,r_dirx,r_diry = joystick_update()
-
+	local camera = world:first_entity("main_camera")
 	if dirx ~= 0 or diry ~= 0 then
-		 useJoy = true 
-	end   
-	if r_dirx ~= 0 or r_diry ~= 0 then 
-		use_rJoy = true
-	end 
-
-	-- for rotation 
-	if use_rJoy == true then 
-		print("r_dir:",r_diry,r_dirx)
-	  	dir[1]  = dir[1] + r_diry*3.5;
-		dir[2]  = dir[2] + r_dirx*3.5;
-		if(dir[1]>89) then dir[1] = 89 end 
-		if(dir[1]<-89) then dir[1] = -89 end 
-		print("dir:",dir[1],dir[2])
+		print("dirx : ", dirx, ", diry : ", diry)		
+		camera_util.move(math3d_stack, camera, -dirx, 0, -diry)
 	end
-	-- for movement 
-	if useJoy == true then 
-		-- local var feature
-		local direction = utilmath.dir(dir[2],dir[1]) 
-		local right = utilmath.side(dir[2],dir[1])
-		view[1] = view[1] + right[1]*-dirx + direction[1]* -diry
-		view[2] = view[2] + 0
-		view[3] = view[3] + right[3]*-dirx + direction[3]* -diry
-	end 
 
-	local x = 0
-	local y = 0 
-	for i=1, #message do 
-		local m = message[i]
-		if m[1] == 'b' and m[3] == true then   									-- b,[l|m|r],press,x,y
-			pressed = m[3]
-			last_x  = m[4]
-			last_y  = m[5]
-		elseif m[1] == 'b' and m[3] == false  then          					-- btn release
-			pressed = m[3]
-			last_x  = m[4]
-			last_y  = m[5]
-		elseif m[1] == 'm' and pressed == true and useJoy == false   then  		-- m,x,y  for rotation 
-			x = m[2]
-			y = m[3] 
-			local x_delta = x - last_x 
-			local y_delta = y - last_y 
-			dir[1] = dir[1] + y_delta*0.17    				
-			dir[2] = dir[2] + x_delta*0.17
-			last_x = x 
-			last_y = y 
-		elseif m[1] == 'k'  then --and m[3] == true then
-			local direction = {}
-			if m[2] == 'W' then 
-				utilmath.direction(direction,dir[2],dir[1]) 	
-				view[1] = view[1] + direction[1]
-				view[2] = view[2] + direction[2]
-				view[3] = view[3] + direction[3]
-			elseif m[2] == 'S' then 
-				utilmath.direction(direction,dir[2],dir[1]) 	
-				view[1] = view[1] - direction[1]
-				view[2] = view[2] - direction[2]
-				view[3] = view[3] - direction[3]
-			end 
-			if m[2] == 'A' then
-				direction = utilmath.side(dir[2],dir[1]) 	
-				view[1] = view[1] + direction[1]
-				view[2] = view[2] + direction[2]
-				view[3] = view[3] + direction[3]
-			elseif m[2] == 'D' then 
-				direction = utilmath.side(dir[2],dir[1]) 	
-				view[1] = view[1] - direction[1]
-				view[2] = view[2] - direction[2]
-				view[3] = view[3] - direction[3]
-			end 
-
-			if m[2] == 'F' then 
-				fly = true 
-			elseif m[2] == 'G' then 
-				fly = false 
-			elseif m[2] == 'F1' and m[3] == true then
-				ctx.debug = not ctx.debug
-				bgfx.set_debug( ctx.debug and "S" or "")
-			elseif m[2] == 'F2' and m[3] ==true  then
-				if prim_type == nil then prim_type = "LINES"
-				elseif prim_type ~= nil then prim_type = nil end 
-			elseif m[2] == 'F3' and m[3] == true then 
-				if show_mode == 0 then show_mode = 1 
-				elseif  show_mode == 1 then show_mode = 0 end 
-				terrain:set_uniform("u_showMode", show_mode )
-			end 
-
-			if m[2] == 'period' then
-				lightIntensity[1] = lightIntensity[1] +0.02
-				terrain:set_uniform("u_lightIntensity", lightIntensity )
-			elseif m[2] == 'comma' then 
-				lightIntensity[1] = lightIntensity[1] -0.02
-				terrain:set_uniform("u_lightIntensity",lightIntensity )
-			end 
-
-			if m[2] == "UP" then 
-				lightColor[1]  = lightColor[1] + 0.02
-			    terrain:set_uniform("u_lightColor", lightColor )
-			elseif m[2] == "DOWN" then 
-				lightColor[1]  = lightColor[1] - 0.02
-				terrain:set_uniform("u_lightColor", lightColor )
-			end 
-
-			if m[2] == "LEFT" then
-				lightColor[2]  = lightColor[2] + 0.02
-			    terrain:set_uniform("u_lightColor", lightColor )
-			elseif m[2] == "RIGHT" then 
-				lightColor[2]  = lightColor[2] - 0.02
-			    terrain:set_uniform("u_lightColor", lightColor )
-			end 
-
-			if m[2] == "minus" then
-				lightColor[4] = lightColor[4] -0.02
-				terrain:set_uniform("u_lightColor", lightColor )
-			elseif m[2] == "equal" then 
-				lightColor[4] = lightColor[4] +0.02
-				terrain:set_uniform("u_lightColor", lightColor )
-			end 
-
-		end  
+	if r_dirx ~= 0 or r_diry ~= 0 then
+		print("r_dirx : ", r_dirx, ", r_diry : ", r_diry)
+		local rotate_speed = 1.5
+		camera_util.rotate(math3d_stack, camera, r_dirx * rotate_speed, r_diry * rotate_speed)
 	end
+
+	-- if dirx ~= 0 or diry ~= 0 then
+	-- 	 useJoy = true 
+	-- end   
+	-- if r_dirx ~= 0 or r_diry ~= 0 then 
+	-- 	use_rJoy = true
+	-- end 
+
+	-- -- for rotation 
+	-- if use_rJoy == true then 
+	-- 	print("r_dir:",r_diry,r_dirx)
+	--   	dir[1]  = dir[1] + r_diry*3.5;
+	-- 	dir[2]  = dir[2] + r_dirx*3.5;
+	-- 	if(dir[1]>89) then dir[1] = 89 end 
+	-- 	if(dir[1]<-89) then dir[1] = -89 end 
+	-- 	print("dir:",dir[1],dir[2])
+	-- end
+	-- -- for movement 
+	-- if useJoy == true then 
+	-- 	-- local var feature
+	-- 	local direction = utilmath.dir(dir[2],dir[1]) 
+	-- 	local right = utilmath.side(dir[2],dir[1])
+	-- 	view[1] = view[1] + right[1]*-dirx + direction[1]* -diry
+	-- 	view[2] = view[2] + 0
+	-- 	view[3] = view[3] + right[3]*-dirx + direction[3]* -diry
+	-- end 
+
+	-- local x = 0
+	-- local y = 0 
+	-- for i=1, #message do 
+	-- 	local m = message[i]
+	-- 	if m[1] == 'b' and m[3] == true then   									-- b,[l|m|r],press,x,y
+	-- 		pressed = m[3]
+	-- 		last_x  = m[4]
+	-- 		last_y  = m[5]
+	-- 	elseif m[1] == 'b' and m[3] == false  then          					-- btn release
+	-- 		pressed = m[3]
+	-- 		last_x  = m[4]
+	-- 		last_y  = m[5]
+	-- 	elseif m[1] == 'm' and pressed == true and useJoy == false   then  		-- m,x,y  for rotation 
+	-- 		x = m[2]
+	-- 		y = m[3] 
+	-- 		local x_delta = x - last_x 
+	-- 		local y_delta = y - last_y 
+	-- 		dir[1] = dir[1] + y_delta*0.17    				
+	-- 		dir[2] = dir[2] + x_delta*0.17
+	-- 		last_x = x 
+	-- 		last_y = y 
+	-- 	elseif m[1] == 'k'  then --and m[3] == true then
+	-- 		local direction = {}
+	-- 		if m[2] == 'W' then 
+	-- 			utilmath.direction(direction,dir[2],dir[1]) 	
+	-- 			view[1] = view[1] + direction[1]
+	-- 			view[2] = view[2] + direction[2]
+	-- 			view[3] = view[3] + direction[3]
+	-- 		elseif m[2] == 'S' then 
+	-- 			utilmath.direction(direction,dir[2],dir[1]) 	
+	-- 			view[1] = view[1] - direction[1]
+	-- 			view[2] = view[2] - direction[2]
+	-- 			view[3] = view[3] - direction[3]
+	-- 		end 
+	-- 		if m[2] == 'A' then
+	-- 			direction = utilmath.side(dir[2],dir[1]) 	
+	-- 			view[1] = view[1] + direction[1]
+	-- 			view[2] = view[2] + direction[2]
+	-- 			view[3] = view[3] + direction[3]
+	-- 		elseif m[2] == 'D' then 
+	-- 			direction = utilmath.side(dir[2],dir[1]) 	
+	-- 			view[1] = view[1] - direction[1]
+	-- 			view[2] = view[2] - direction[2]
+	-- 			view[3] = view[3] - direction[3]
+	-- 		end 
+
+	-- 		if m[2] == 'F' then 
+	-- 			fly = true 
+	-- 		elseif m[2] == 'G' then 
+	-- 			fly = false 
+	-- 		elseif m[2] == 'F1' and m[3] == true then
+	-- 			ctx.debug = not ctx.debug
+	-- 			bgfx.set_debug( ctx.debug and "S" or "")
+	-- 		elseif m[2] == 'F2' and m[3] ==true  then
+	-- 			if prim_type == nil then prim_type = "LINES"
+	-- 			elseif prim_type ~= nil then prim_type = nil end 
+	-- 		elseif m[2] == 'F3' and m[3] == true then 
+	-- 			if show_mode == 0 then show_mode = 1 
+	-- 			elseif  show_mode == 1 then show_mode = 0 end 
+	-- 			terrain:set_uniform("u_showMode", show_mode )
+	-- 		end 
+
+	-- 		if m[2] == 'period' then
+	-- 			lightIntensity[1] = lightIntensity[1] +0.02
+	-- 			terrain:set_uniform("u_lightIntensity", lightIntensity )
+	-- 		elseif m[2] == 'comma' then 
+	-- 			lightIntensity[1] = lightIntensity[1] -0.02
+	-- 			terrain:set_uniform("u_lightIntensity",lightIntensity )
+	-- 		end 
+
+	-- 		if m[2] == "UP" then 
+	-- 			lightColor[1]  = lightColor[1] + 0.02
+	-- 		    terrain:set_uniform("u_lightColor", lightColor )
+	-- 		elseif m[2] == "DOWN" then 
+	-- 			lightColor[1]  = lightColor[1] - 0.02
+	-- 			terrain:set_uniform("u_lightColor", lightColor )
+	-- 		end 
+
+	-- 		if m[2] == "LEFT" then
+	-- 			lightColor[2]  = lightColor[2] + 0.02
+	-- 		    terrain:set_uniform("u_lightColor", lightColor )
+	-- 		elseif m[2] == "RIGHT" then 
+	-- 			lightColor[2]  = lightColor[2] - 0.02
+	-- 		    terrain:set_uniform("u_lightColor", lightColor )
+	-- 		end 
+
+	-- 		if m[2] == "minus" then
+	-- 			lightColor[4] = lightColor[4] -0.02
+	-- 			terrain:set_uniform("u_lightColor", lightColor )
+	-- 		elseif m[2] == "equal" then 
+	-- 			lightColor[4] = lightColor[4] +0.02
+	-- 			terrain:set_uniform("u_lightColor", lightColor )
+	-- 		end 
+
+	-- 	end  
+	-- end
 
 	nk.input(message)
 end 
