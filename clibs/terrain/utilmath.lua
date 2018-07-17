@@ -1,6 +1,7 @@
 
 local utilmath = {}
 
+-- tested
 function utilmath.direction(dir,ha,ca)
     local h = math.rad(ha)
     local c = math.rad(-ca)     -- inner transfer
@@ -10,6 +11,16 @@ function utilmath.direction(dir,ha,ca)
     dir[1] = math.cos(c) * math.sin(h)
     dir[2] = math.sin(c)
     dir[3] = math.cos(c) * math.cos(h)
+end 
+
+function utilmath.dir(ha,ca)
+    local h = math.rad(ha)
+    local c = math.rad(-ca)     
+    local dir = { 0,0,0 }
+    dir[1] = math.cos(c) * math.sin(h)
+    dir[2] = math.sin(c)
+    dir[3] = math.cos(c) * math.cos(h)
+    return dir 
 end 
 
 function utilmath.side(ha,ca)
