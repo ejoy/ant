@@ -5,8 +5,8 @@ local fs =  require "cppfs"
 
 local rawopen = winfile.open
 
-if winfile.exist(".antpack") then
-	local rules = {}
+local rules = {}
+if winfile.exist(".antpack") then	
 	for str in io.lines '.antpack' do
 		local f, l = str:find ' '
 		if f then
