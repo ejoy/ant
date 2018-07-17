@@ -16,18 +16,17 @@ vec4 calc_lighting_BH(vec3 normal, vec3 lightdir, vec3 viewdir,
 {
 	float ndotl = max(0, dot(normal, lightdir));
 	
-	float hdotn = dot(normalize(viewdir + lightdir), normal);
+	float hdotn = max(0, dot(normalize(viewdir + lightdir), normal));
 	float shininess = specularColor.w;
 	float specularFactor = pow(hdotn, shininess * 64);// * u_specularLight.x;
-
 
 	vec3 diffuse = diffuseColor * lightColor * ndotl;
 	float ss = specularColor * specularFactor * gloss;
 
-
 	vec3 specular = specularColor * specularFactor * gloss;
+	vec3 ambient = diffuseColor * lightColor * 0.12;
 
-	return vec4(diffuse + specular, 1.0);	
+	return vec4(diffuse + ambient + specular, 1.0);//vec4(diffuse + specular + ambient, 1.0);	
 }
 
 void main()
