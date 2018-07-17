@@ -1,5 +1,5 @@
 local lsocket = require 'lsocket'
-local proto = require 'new-debugger.backend.master.protocol'
+local proto = require 'new-debugger.protocol'
 
 local listen
 local channel

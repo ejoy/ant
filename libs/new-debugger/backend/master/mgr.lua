@@ -1,6 +1,6 @@
 local srv = require 'new-debugger.backend.master.server'
 local json = require 'cjson'
-local cdebug = require 'debugger.core'
+local cdebug = require 'debugger.backend'
 
 local workerThreads = cdebug.start 'master'
 

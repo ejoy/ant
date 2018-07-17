@@ -37,7 +37,7 @@ end
 srv.start(4278)
 
 return function()
-    if not srv.update(200) then
+    if not srv.update(0.05) then
         return
     end
 
