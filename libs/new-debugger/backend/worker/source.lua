@@ -8,7 +8,7 @@ local skipFiles = {}
 local sourceMaps = {}
 local workspaceFolder = nil
 
-ev.on('update-config', function(config)
+ev.on('initialized', function(config)
     workspaceFolder = config.workspaceFolder
     skipFiles = {}
     sourceMaps = {}
@@ -32,6 +32,14 @@ ev.on('update-config', function(config)
             sourceMaps[#sourceMaps + 1] = sm
         end
     end
+end)
+
+ev.on('terminated', function()
+    sourcePool = {}
+    codePool = {}
+    skipFiles = {}
+    sourceMaps = {}
+    workspaceFolder = nil
 end)
 
 local function glob_match(pattern, target)

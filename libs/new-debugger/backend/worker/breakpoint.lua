@@ -6,7 +6,7 @@ local evaluate = require 'new-debugger.backend.worker.evaluate'
 local ev = require 'new-debugger.event'
 
 local breakpoints = {}
-local currentBP
+local currentBP = nil
 local waitverify = {}
 local info = {}
 local m = {}
@@ -202,6 +202,15 @@ ev.on('source-create', function(src)
     waitverify[nativepath] = nil
 
     verifyBreakpoint(src, bps)
+end)
+
+ev.on('terminated', function()
+    breakpoints = {}
+    currentBP = nil
+    waitverify = {}
+    info = {}
+    m = {}
+    enable = false
 end)
 
 return m

@@ -706,4 +706,8 @@ function m.createRef(frameId, value, evaluateName)
     return varCreateReference(frameId, value, evaluateName)
 end
 
+ev.on('terminated', function()
+    m.clean()
+end)
+
 return m

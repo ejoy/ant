@@ -1,4 +1,5 @@
 local rdebug = require 'remotedebug'
+local ev = require 'new-debugger.event'
 
 local stepin = false
 local step = false
@@ -66,5 +67,9 @@ function m.reset()
     linebp = false
     update()
 end
+
+ev.on('terminated', function()
+    m.reset()
+end)
 
 return m
