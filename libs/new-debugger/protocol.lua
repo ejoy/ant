@@ -50,7 +50,7 @@ function m.send(cmd)
     --end
     local pkg = assert(json.encode(cmd))
     --print('[send]', pkg)
-    return ('Content-Length: %d\r\n\r\n'):format(#pkg) .. pkg
+    return ('Content-Length: %d\r\n\r\n%s'):format(#pkg, pkg)
 end
 
 return m
