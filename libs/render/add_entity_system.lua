@@ -110,26 +110,26 @@ function add_entity_sys:init()
 	-- end
 
     
-	do	-- pochuan
-		local pochuan_eid = world:new_entity("position", "rotation", "scale",
-		"can_render", "mesh", "material",
-		"name", "serialize",
-		"can_select")
-		local pochuan = world[pochuan_eid]
-		pochuan.name.n = "PoChuan"
+	-- do	-- pochuan
+	-- 	local pochuan_eid = world:new_entity("position", "rotation", "scale",
+	-- 	"can_render", "mesh", "material",
+	-- 	"name", "serialize",
+	-- 	"can_select")
+	-- 	local pochuan = world[pochuan_eid]
+	-- 	pochuan.name.n = "PoChuan"
 
-		--mu.identify_transform(ms, pochuan)
-		ms(pochuan.scale.v, {0.1, 0.1, 0.1}, "=")
-		ms(pochuan.rotation.v, {-90, 0, 0,}, "=")
+	-- 	--mu.identify_transform(ms, pochuan)
+	-- 	ms(pochuan.scale.v, {0.1, 0.1, 0.1}, "=")
+	-- 	ms(pochuan.rotation.v, {-90, 0, 0,}, "=")
 
-		component_util.load_mesh(pochuan, "pochuan.mesh")--, {calctangent=false})
-		component_util.load_material(pochuan, {"pochuan.material"})
-		--component_util.load_material(pochuan, {"bunny.material"})
-	end
+	-- 	component_util.load_mesh(pochuan, "pochuan.mesh")--, {calctangent=false})
+	-- 	component_util.load_material(pochuan, {"pochuan.material"})
+	-- 	--component_util.load_material(pochuan, {"bunny.material"})
+	-- end
 
 
-    -- local PVPScene = require "modelloader.PVPScene"
-    -- PVPScene.init(world, component_util, ms)
+    local PVPScene = require "modelloader.PVPScene"
+    PVPScene.init(world, component_util, ms)
 	-- do
 	-- 	local stone_eid = world:new_entity("position", "rotation", "scale",
 	-- 	"can_render", "mesh", "material",
