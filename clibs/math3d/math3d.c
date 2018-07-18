@@ -161,7 +161,7 @@ is_ref_obj(lua_State *L){
 
 static int
 ref_to_value(lua_State *L) {
-	if (!is_ref_obj(L){
+	if (!is_ref_obj(L)){
 		luaL_error(L, "arg 1 is not a math3d refobject!");
 	}
 
@@ -298,9 +298,9 @@ lisvalid(lua_State *L){
 	if (type == LUA_TNUMBER){
 		int number = lua_tonumber(L, -1);
 		struct boxpointer *p = lua_touserdata(L, lua_upvalueindex(1));
-		void *value = lastack_value(LS, number, NULL);
+		void *value = lastack_value(p->LS, number, NULL);
 		lua_pushboolean(L, value != NULL);
-	} else if (type == LUA_TUSERDATA or type == LUA_TLIGHTUSERDATA){
+	} else if (type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA){
 		lua_pushboolean(L, is_ref_obj(L));
 	} else {
 		lua_pushboolean(L, 0);
@@ -760,17 +760,22 @@ add_2values(lua_State *L, struct lastack *LS) {
 		ret[0] = val[0][0] + val[1][0];
 		ret[1] = val[0][1] + val[1][1];
 		ret[2] = val[0][2] + val[1][2];
-		if (types[1] == LINEAR_TYPE_VEC4) 
+		if (types[1] == LINEAR_TYPE_VEC4){
+			ret[3] = val[1][3];	// dir + point, result should be val[1].w
 			lastack_pushvec4(LS, ret);
-		else
+		} else {
+			ret[3] = 0.f;	// dir + dir
 			lastack_pushvec3(LS, ret);
+		}			
 		break;
 	case LINEAR_TYPE_VEC4:
 		ret[0] = val[0][0] + val[1][0];
 		ret[1] = val[0][1] + val[1][1];
 		ret[2] = val[0][2] + val[1][2];
 		if (types[1] == LINEAR_TYPE_VEC4)
-			ret[3] = val[0][3] + val[1][3];
+			ret[3] = val[0][3];	// dir/point + dir/point, result should be point[0].w
+		else
+			ret[3] = 1.f;	// point add dir, result is point
 		lastack_pushvec4(LS, ret);
 		break;
 	case LINEAR_TYPE_EULER:
