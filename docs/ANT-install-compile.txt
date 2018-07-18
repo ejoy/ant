@@ -124,7 +124,7 @@ ANT Project 开发环境安装及编译配置记录
 	 	 第三方库我们进行了统一管理, 放在公司使用的GitBucket上
 	 	 登陆https://tea.ejoy.com, 并登陆账号
 	 	 找到Ant/ant3rd的repository
-	 	 或者直接git clone https://tea.ejoy.com/git/Ant/ant3rd.git到ant的同级目录下,如最开始的目录样例所示
+	 	 或者直接git clone https://gz-tea.ejoy.com/git/Ant/ant3rd.git到ant的同级目录下,如最开始的目录样例所示
 	 	 运行命令:
 	 	 $git submodule update --init	//更新子仓库
 	 	 $make init						//构建各个子项目工程
