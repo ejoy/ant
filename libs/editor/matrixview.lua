@@ -110,7 +110,7 @@ local function create_view(config, inst)
 	local view = iup.matrix(param)
 	
 	eu.add_callbacks(view, inst, {
-		"click_cb", "map_cb"
+		"click_cb", "map_cb", "value_edit_cb", "valuechanged_cb"
 	})
 	return view
 end

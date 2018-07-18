@@ -1,7 +1,6 @@
 local ecs = ...
 
-local path = require "filesystem.path"
-local fs_util = require "filesystem.util"
+local component_util = require "render.components.util"
 local asset = require "asset"
 
 ecs.component "position"{
@@ -31,7 +30,33 @@ ecs.component "viewid" {
 }
 
 ecs.component "mesh" {
-	path = ""
+	path = {
+		type = "userdata",
+		default = "",
+		save = function (v, arg)
+			assert(type(v) == "string")
+			-- local world = arg.world
+			-- local e = assert(world[arg.eid])
+			-- local comp = assert(e[arg.comp])
+			-- assert(comp.assetinfo)
+			return v
+		end,
+
+		load = function (v, arg)
+			assert(type(v) == "string")
+			local world = arg.world
+			local e = assert(world[arg.eid])
+			local comp = assert(e[arg.comp])
+
+			if v ~= "" then
+				assert(comp.assetinfo == nil)
+				comp.assetinfo = asset.load(v)
+			else
+				dddddd = 0
+			end
+			return v
+		end
+	}
 }
 
 ecs.component "material" {
@@ -45,39 +70,46 @@ ecs.component "material" {
 		},
 		save = function (v, arg)
 			local t = {}
-			for _, e in ipairs(v) do
-				local tt = {}
-				tt.path = e.path
-				local properties = {}
-				for k, p in pairs(e.properties) do					
-					local type = v.type
-					if type == "texture" then                        
-						properties[k] = {path=v.path, type=type}
-					else
-						properties[k] = p
+			for _, e in ipairs(v) do				
+				local pp = assert(e.path)
+				assert(pp ~= "")
+				assert(e.materialinfo)
+
+				local assetcontent = asset.load(pp)
+				local src_properties = assetcontent.properties		
+				if src_properties then
+					local properties = {}
+					for k, v in pairs(src_properties) do
+						local p = e.properties[k]
+						local type = p.type
+						if type == "texture" then
+							properties[k] = {name=p.name, type=type, path=v.default, stage=p.stage}
+						else
+							properties[k] = p
+						end
 					end
 				end
-				tt.properties = properties
-				table.insert(t, tt)
+				table.insert(t, {path=pp, properties=properties})
+			
 			end
 			return t
 		end,
 		load = function (v, arg)
 			assert(type(v) == "table")
-            local t = {}
-            for _, e in ipairs(v) do
-                local ee = {}
-                for k, v in pairs(e) do
-                    local type = v.type
-                    if type == "texture" then
-                        assert(false, "Not implement")
-                    else
-                        ee[k] = v
-                    end
-                end
-                table.insert(t, ee)
-            end
-            return t
+			local content = {}
+			
+			for _, e in ipairs(v) do
+				local pp = e.path
+				local materialinfo = asset.load(pp)
+				local properties = nil
+				if e.properties then
+					properties = {}
+					component_util.update_properties(properties, e.properties)
+				end
+				table.insert(content, {path=pp, materialinfo=materialinfo, properties=properties})
+			end
+
+			return content
 		end
 	}
 }

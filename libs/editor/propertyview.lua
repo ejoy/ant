@@ -133,9 +133,66 @@ local function create_detailview(config)
 
 			tree:clear_selections()
 			local selectnode = tree:findchild_byname(node, ud.name)
-			tree:selection_node(selectnode)
+			tree:select_node(selectnode)
 
 			fill_matrixview(self, selectnode)
+		end
+	end
+
+	function detail:value_edit_cb(lin, col, newstring)
+		local tree = self.tree
+		
+		local function get_ud()
+			local selnode = tree:get_selected_node()
+			local ud = selnode.userdata
+			if ud then				
+				if col == 1 then
+					local parentnode = tree:parent_node(selnode.id)
+					return parentnode.userdata, selnode.name
+				end
+				assert(col == 2)
+				return ud, self:getcell(lin, col - 1)
+			end
+
+			local parentnode = tree:parent_node(selnode.id)
+			return assert(parentnode.userdata), selnode.name
+		end
+
+		local ud, elemname = get_ud()
+
+		if ud then
+			local function check_name_is_number(t, name)
+				if #t > 0 then
+					local n = tonumber(name)
+					if n then
+						return n
+					end
+				end
+				return name
+			end
+
+			elemname = check_name_is_number(ud, elemname)
+
+			local nodevaluetype = type(assert(ud[tonumber(elemname) or elemname]))
+			if nodevaluetype == "string" then
+				ud[elemname] = newstring
+			elseif nodevaluetype == "number" then
+				ud[elemname] = tonumber(newstring)
+			elseif nodevaluetype == "boolean" then
+				local mm = {
+					['true'] = true,
+					['True'] = true,
+					['TRUE'] = true,
+					['false'] = false,
+					['False'] = false,
+					['FALSE'] = false,
+				}
+				local newvalue = mm[newstring]				
+				ud[elemname] = newvalue or (tonumber(newstring) ~= 0)				
+			else
+				iup.Message("Warning", 
+					string.format("only support modify string/number/boolean, current type is : ", nodevaluetype))
+			end
 		end
 	end
 	return detail

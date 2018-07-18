@@ -86,8 +86,11 @@ function seri.save_entity(w, eid, ms)
     return e_tree
 end
 
-function seri.load_entity(w, tree, ms)
-	local eid = w:new_entity()
+function seri.load_entity(w, tree, ms, eid)
+	if eid == nil then
+		eid = w:new_entity()
+	end
+
 	local entity = w[eid]
 	local args = {world = w, math_stack = ms, eid = eid}
 

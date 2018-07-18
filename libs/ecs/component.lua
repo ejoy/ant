@@ -111,7 +111,12 @@ end
 
 local function gen_load(struct)	
 	return function(c, v, arg)
+		local keys = {}
 		for k in pairs(c) do
+			table.insert(keys, k)
+		end
+
+		for _, k in ipairs(keys) do
 			local vclass = struct[k]
 			if vclass then
 				arg.struct_type = k

@@ -138,7 +138,7 @@ local function build_entity_tree(eid, ms)
 	-- end
 	-- return tr
 
-	return su.save_entity(world, eid, ms)	
+	return su.save_entity(world, eid, ms)
 end
 
 function editor_sys:init()
@@ -174,11 +174,11 @@ function editor_sys:init()
 	local pv = editor_mainwin.propertyview
 	local ms = self.math_stack
 	local function build_pv(eid, extend_tree)
-		local ptree = build_entity_tree(eid, ms)
-		pv:build(ptree, extend_tree)
+		local properties = build_entity_tree(eid, ms)
+		pv:build(properties, extend_tree)
 
 		local origin_executeleaf_cb = pv.tree.executeleaf_cb		
-		pv.tree.executeleaf_cb = function (self, id)
+		function pv.tree:executeleaf_cb(id)
 			origin_executeleaf_cb(self, id)
 			
 			local extend_tree = extend_tree
@@ -204,7 +204,7 @@ function editor_sys:init()
 			end
 		end
 
-		function pv.tree:rightclick_cb(id, status)			
+		function pv.tree:rightclick_cb(id, status)
 			local addsubmenu = {name="Add", type="submenu",}
 		
 			local add_action =  function(menuitem)
@@ -247,6 +247,30 @@ function editor_sys:init()
 	
 			local x, y = eu.get_cursor_pos()
 			m:show(x, y)
+		end
+
+		function pv.detail:valuechanged_cb()
+			local function which_component()
+				local tree = self.tree
+				local selnode = tree:get_selected_node()	
+				local pid = selnode.id
+				local compname
+				repeat
+					compname = tree:node_name(pid)
+					pid = tonumber(tree:parent(pid))
+				until(pid==nil)
+
+				return compname
+			end
+
+			local edited_comp = which_component()
+			local entity = world[eid]
+			local load_comp_op = assert(world._component_type[edited_comp].load)
+
+			local args = {world = world, math_stack = ms, eid = eid}
+			world:remove_component(eid, edited_comp)
+			world:add_component(eid, edited_comp)
+			load_comp_op(entity[edited_comp], properties[edited_comp], args)
 		end
 	end
 	function hv.window:selection_cb(id, status)
