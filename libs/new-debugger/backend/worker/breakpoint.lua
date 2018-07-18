@@ -12,12 +12,12 @@ local info = {}
 local m = {}
 local enable = false
 
-local function nextActiveLine(src, line)
-    if line > src.maxline then
+local function nextActiveLine(si, line)
+    if line > si.maxline then
         return
     end
-    local defines = src.definelines
-    local actives = src.activelines
+    local defines = si.definelines
+    local actives = si.activelines
     local fn = defines[line]
     while actives[line] ~= true do
         if fn ~= defines[line] then
@@ -54,7 +54,7 @@ local function verifyBreakpoint(src, bps)
 
     local res = {}
     for _, bp in ipairs(bps) do
-        local activeline = nextActiveLine(src, bp.line)
+        local activeline = nextActiveLine(src.si, bp.line)
         if activeline then
             bp.source = src
             bp.realLine = bp.line
@@ -133,19 +133,20 @@ function m.find(src, currentline)
     return currentBP[currentline]
 end
 
-function m.update(clientsrc, bps)
-    if not clientsrc.path then
+function m.update(clientsrc, si, bps)
+    if not clientsrc.path or not si then
         return
     end
     local src = source.open(clientsrc.path)
     if src then
+        src.si = si
         verifyBreakpoint(src, bps)
         return
     end
     for _, bp in ipairs(bps) do
         bp.source = clientsrc
     end
-    waitverify[path.normalize_native(clientsrc.path)] = bps
+    waitverify[path.normalize_native(clientsrc.path)] = { bps, si }
     updateHook()
 end
 
@@ -195,13 +196,14 @@ ev.on('source-create', function(src)
         return
     end
     local nativepath = path.normalize_native(src.path)
-    local bps = waitverify[nativepath]
-    if not bps then
+    local bpssi = waitverify[nativepath]
+    if not bpssi then
         return
     end
     waitverify[nativepath] = nil
 
-    verifyBreakpoint(src, bps)
+    src.si = bpssi[2]
+    verifyBreakpoint(src, bpssi[1])
 end)
 
 ev.on('terminated', function()

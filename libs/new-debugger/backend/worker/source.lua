@@ -1,5 +1,5 @@
 local path = require 'new-debugger.path'
-local parser = require 'new-debugger.backend.worker.parser'
+local parser = require 'new-debugger.parser'
 local ev = require 'new-debugger.event'
 
 local sourcePool = {}
@@ -98,12 +98,7 @@ local function create(source)
         if skip then
             return { skippath = clientPath }
         end
-        local src = { path = clientPath }
-        local f = loadfile(serverPath)
-        if f then
-            parser(src, f)
-        end
-        return src
+        return { path = clientPath }
     elseif h == '=' then
         -- TODO
         return {}
@@ -113,7 +108,8 @@ local function create(source)
         }
         local f = load(source)
         if f then
-            parser(src, f)
+            src.si = {}
+            parser(src.si, f)
         end
         return src
     end

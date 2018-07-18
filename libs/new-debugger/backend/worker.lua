@@ -234,7 +234,7 @@ function CMD.setBreakpoints(pkg)
     if not source.valid(pkg.source) then
         return
     end
-    breakpoint.update(pkg.source, pkg.breakpoints)
+    breakpoint.update(pkg.source, pkg.source.si, pkg.breakpoints)
 end
 
 function CMD.setExceptionBreakpoints(pkg)
