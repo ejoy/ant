@@ -54,7 +54,11 @@ ev.on('output', function(category, output, source, line)
         cmd = 'eventOutput',
         category = category,
         output = output,
-        source = source,
+        source = {
+            name = source.name,
+            path = source.path,
+            sourceReference = source.sourceReference,
+        },
         line = line,
     }
 end)
