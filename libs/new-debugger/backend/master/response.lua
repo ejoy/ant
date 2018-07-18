@@ -36,7 +36,7 @@ function response.initialize(req)
         command = req.command,
         request_seq = req.seq,
         success = true,
-        body = event._capabilities,
+        body = require 'new-debugger.capabilities',
     }
 end
 

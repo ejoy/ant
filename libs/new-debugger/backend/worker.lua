@@ -54,20 +54,24 @@ ev.on('output', function(category, output, source, line)
         cmd = 'eventOutput',
         category = category,
         output = output,
-        source = source,
+        source = source and {
+            name = source.name,
+            path = source.path,
+            sourceReference = source.sourceReference,
+        } or nil,
         line = line,
     }
 end)
 
 function CMD.initialized(pkg)
-    ev.emit('update-config', pkg.config)
+    ev.emit('initialized', pkg.config)
     initialized = true
 end
 
-function CMD.terminated(pkg)
+function CMD.terminated()
     initialized = false
     state = 'running'
-    hookmgr.reset()
+    ev.emit('terminated')
 end
 
 function CMD.stackTrace(pkg)
@@ -230,7 +234,7 @@ function CMD.setBreakpoints(pkg)
     if not source.valid(pkg.source) then
         return
     end
-    breakpoint.update(pkg.source, pkg.breakpoints)
+    breakpoint.update(pkg.source, pkg.source.si, pkg.breakpoints)
 end
 
 function CMD.setExceptionBreakpoints(pkg)

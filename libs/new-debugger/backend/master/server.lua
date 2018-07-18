@@ -3,6 +3,7 @@ local proto = require 'new-debugger.protocol'
 
 local listen
 local channel
+local stat = {}
 
 local m = {}
 function m.start(port)
@@ -23,7 +24,7 @@ end
 
 function m.recv()
     assert(channel)
-    return proto.recv(channel:recv())
+    return proto.recv(channel:recv(), stat)
 end
 
 local function sendstring(s)
@@ -44,6 +45,7 @@ function m.close()
     assert(channel)
     channel:close()
     channel = nil
+    stat = {}
 end
 
 return m

@@ -1,8 +1,8 @@
 local rdebug = require 'remotedebug'
 local variables = require 'new-debugger.backend.worker.variables'
+local ev = require 'new-debugger.event'
 
 local framePool = {}
-
 
 local table_mt = {}
 local func_mt = {}
@@ -192,5 +192,9 @@ function m.run(frameId, expression, context)
     end
     return true, table.concat(res, ','), ref
 end
+
+ev.on('terminated', function()
+    m.clean()
+end)
 
 return m

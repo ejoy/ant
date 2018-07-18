@@ -1,39 +1,6 @@
 local mgr = require 'new-debugger.backend.master.mgr'
 local event = {}
 
-event._capabilities = {
-    supportsConfigurationDoneRequest = true,
-    --supportsSetVariable = true,
-    supportsConditionalBreakpoints = true,
-    supportsHitConditionalBreakpoints = true,
-    supportsDelayedStackTraceLoading = true,
-    supportsExceptionInfoRequest = true,
-    supportsLogPoints = true,
-    supportsEvaluateForHovers = true,
-    exceptionBreakpointFilters = {
-        {
-            default = false,
-            filter = 'pcall',
-            label = 'Exception: Lua pcall',
-        },
-        {
-            default = false,
-            filter = 'xpcall',
-            label = 'Exception: Lua xpcall',
-        },
-        {
-            default = true,
-            filter = 'lua_pcall',
-            label = 'Exception: C lua_pcall',
-        },
-        {
-            default = true,
-            filter = 'lua_panic',
-            label = 'Exception: C lua_panic',
-        }
-    }
-}
-
 function event.initialized()
     mgr.sendToClient {
         type = 'event',
@@ -48,7 +15,7 @@ function event.capabilities()
         seq = mgr.newSeq(),
         event = 'capabilities',
         body = {
-            capabilities = event._capabilities
+            capabilities = require 'new-debugger.capabilities'
         }
     }
 end

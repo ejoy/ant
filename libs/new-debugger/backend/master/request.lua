@@ -4,7 +4,7 @@ local event = require 'new-debugger.backend.master.event'
 
 local request = {}
 
-local initProto = {}
+local stopOnEntry = true
 
 function request.initialize(req)
     if not mgr.isState 'birth' then
@@ -24,23 +24,21 @@ function request.attach(req)
         return
     end
     response.success(req)
-    initProto = req
-end
 
-function request.configurationDone(req)
-    response.success(req)
-    local args = initProto.arguments
-    if not args then
-        return
-    end
+    local args = req.arguments
     mgr.broadcastToWorker {
         cmd = 'initialized',
         config = args,
     }
-    local stopOnEntry = true
+    stopOnEntry = true
     if type(args.stopOnEntry) == 'boolean' then
         stopOnEntry = args.stopOnEntry
     end
+end
+
+function request.configurationDone(req)
+    response.success(req)
+    -- TODO
     if stopOnEntry then
         mgr.broadcastToWorker {
             cmd = 'stop',
