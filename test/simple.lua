@@ -10,6 +10,7 @@ local elog = require "editor.log"
 
 local rhwi = require "render.hardware_interface"
 local scene = require "scene.util"
+local eu = require "editor.util"
 
 local fs_util = require "filesystem.util"
 
@@ -32,7 +33,8 @@ local dlg = iup.dialog {
 	shrink="yes",	-- logger box should be allow shrink
 }
 
-local input_queue = inputmgr.queue(mapiup, canvas)
+local input_queue = inputmgr.queue(mapiup)
+eu.regitster_iup(input_queue, canvas)
 
 local function init()
 	local fbw, fbh = 1280, 720

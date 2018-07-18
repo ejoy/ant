@@ -6,9 +6,11 @@ local debugger = require "debugger"
 local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
 local task = require "editor.task"
+local eu = require "editor.util"
 
 local canvas = iup.canvas { RASTERSIZE = "640x480" }
-local input_queue = inputmgr.queue(mapiup, canvas)
+local input_queue = inputmgr.queue(mapiup)
+eu.regitster_iup(input_queue, canvas)
 
 local dlg = iup.dialog {
 	iup.split {

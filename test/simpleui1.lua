@@ -34,6 +34,7 @@ local joystick = require "tested.ui.joystick"
 
 local terrainClass = require "terrain"
 local texLoad = require "utiltexture"
+local eu = require "editor.util"
 
 local terrain = terrainClass.new()       -- new terrain instance 
 
@@ -45,7 +46,8 @@ local miandlg = iup.dialog {
 	size = "HALFxHALF",
 }
 
-local input_queue = inputmgr.queue(mapiup, canvas)
+local input_queue = inputmgr.queue(mapiup)
+eu.regitster_iup(input_queue, canvas)
 
 local UI_VIEW = 0
 

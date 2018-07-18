@@ -11,6 +11,7 @@ local render_mesh = require "modelloader.rendermesh"
 local path = require "filesystem.path"
 local fs_util = require "filesystem.util"
 local winfile = require "winfile"
+local eu = require "editor.util"
 
 require "iupluaimglib"
 require "iuplua"
@@ -163,7 +164,8 @@ local dlg = iup.dialog{
 
 
 --注册设备输入
-local input_queue = inputmgr.queue(mapiup, canvas)
+local input_queue = inputmgr.queue(mapiup)
+eu.regitster_iup(input_queue, canvas)
 
 --初始化系统
 local function init()

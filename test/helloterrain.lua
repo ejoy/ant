@@ -24,6 +24,7 @@ local shaderMgr = require "render.resources.shader_mgr"
 
 local terrainClass = require "terrain"
 local utilmath = require "utilmath"
+local eu = require "editor.util"
 
 
 local terrain = terrainClass.new()       	-- new terrain instance pvp
@@ -33,7 +34,8 @@ local math3d_stack = math3d.new()
 
 canvas = iup.canvas{}
 
-local input_queue = inputmgr.queue(mapiup, canvas)
+local input_queue = inputmgr.queue(mapiup)
+eu.regitster_iup(input_queue, canvas)
 
 dlg = iup.dialog {
   canvas,

@@ -28,7 +28,7 @@ local skinStyle = require "tested.ui.styleSkin"
 local area = require "tested.ui.areaWindow"
 local irr_btn = require "tested.ui.buttonIrregular"
 local joystick = require "tested.ui.joystick"
-
+local eu = require "editor.util"
 
 local canvas = iup.canvas {}
 
@@ -38,7 +38,8 @@ local miandlg = iup.dialog {
 	size = "HALFxHALF",
 }
 
-local input_queue = inputmgr.queue(mapiup, canvas)
+local input_queue = inputmgr.queue(mapiup)
+eu.regitster_iup(input_queue, canvas)
 
 local UI_VIEW = 0
 

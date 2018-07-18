@@ -43,4 +43,20 @@ function util.add_callbacks(ctrl, inst, funcs)
 	end
 end
 
+
+local ctrl_cb = {
+	"button",
+	"motion",
+	"keypress",
+	"resize",
+}
+
+function util.regitster_iup(msgqueue, ctrl)
+	for _, cb in ipairs(ctrl_cb) do
+		ctrl[cb .. "_cb"] = function(_, ...)
+			msgqueue:push(cb, ...)
+		end
+	end
+end
+
 return util

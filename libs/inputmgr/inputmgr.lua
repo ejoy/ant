@@ -81,7 +81,7 @@ function queue:__pairs()
 	return queue.next, self, 0
 end
 
-function queue:push(msg, ...)
+function queue:push(msg, ...)	
 	local c = assert(self._message[msg], "Invalid message")
 	local n = self._n + 1
 	self._n = n
@@ -102,29 +102,13 @@ function queue:clear()
 	self._n = 0
 end
 
-local ctrl_cb = {
-	"button",
-	"motion",
-	"keypress",
-	"resize",
-}
-
-function queue:register_iup(ctrl)
-	for _, cb in ipairs(ctrl_cb) do
-		ctrl[cb .. "_cb"] = function(_, ...)
-			self:push(cb, ...)
-		end
-	end
-end
-
-function im.queue(config, msgwnd)
+function im.queue(config)
 	if type(config) == "string" then
 		config = require(config)
 	end
 	local q = {}
 	init_map(q, config)
 	setmetatable(q, queue)
-	q:register_iup(msgwnd)
 	return q
 end
 

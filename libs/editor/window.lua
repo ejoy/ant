@@ -4,6 +4,7 @@ local mapiup = require "inputmgr.mapiup"
 local elog = require "editor.log"
 local hierarchyview = require "editor.hierarchyview"
 local propertycontrol = require "editor.propertyview"
+local eu = require "editor.util"
 
 local propertyview = propertycontrol.new {
 	tree = {
@@ -80,11 +81,14 @@ function editor_mainwindow:run(config)
     self:build_window(fb_width, fb_height)
 
     self.dlg:showxy(iup.CENTER,iup.CENTER)
-    self.dlg.usersize = nil
+	self.dlg.usersize = nil
+	
+	local iq = inputmgr.queue(mapiup)
+	eu.regitster_iup(iq, self.canvas)
 
     local world = config.init_op(iup.GetAttributeData(self.canvas,"HWND"), 
-        fb_width, fb_height,
-        inputmgr.queue(mapiup, self.canvas))
+        fb_width, fb_height, iq)
+		
         
     -- to be able to run this script inside another context
     if (iup.MainLoopLevel()==0) then
