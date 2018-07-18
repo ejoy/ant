@@ -1,6 +1,5 @@
 local json = require 'cjson'
 
-local stat = {}
 local m = {}
 
 local function recv(s, bytes)
@@ -32,7 +31,7 @@ local function recv(s, bytes)
     end
 end
 
-function m.recv(bytes)
+function m.recv(bytes, stat)
     local pkg = recv(stat, bytes)
     if pkg then
         --print('[recv]', pkg)

@@ -67,6 +67,8 @@ end
 
 function mgr.close()
     srv.close()
+    seq = 0
+    state = 'birth'
 end
 
 return mgr
