@@ -63,10 +63,10 @@ function add_entity_sys:init()
 		local lentity = world[leid]
 
 		local lightcomp = lentity.light.v
-		lightcomp.color = {71/255, 56/255, 48/255, 1}
-		lightcomp.intensity = 5
+		lightcomp.color = {1, 1, 1, 1}
+		lightcomp.intensity = 1.2
 
-		ms(lentity.rotation.v, {35, -20, -29.5}, "=")
+		ms(lentity.rotation.v, {50, -30, 0}, "=")
 		ms(lentity.position.v, {2, 5, 2}, "=")
 		ms(lentity.scale.v, {0.01, 0.01, 0.01}, "=")
 
@@ -85,6 +85,8 @@ function add_entity_sys:init()
 			}
 		]])
 		component_util.load_material(lentity, {sphere_fn})
+
+		lentity.can_render.visible = false
 	end
 
     -- do
@@ -107,7 +109,7 @@ function add_entity_sys:init()
 	-- 	component_util.load_material(bunny)
 	-- end
 
-    --[[
+    
 	do	-- pochuan
 		local pochuan_eid = world:new_entity("position", "rotation", "scale",
 		"can_render", "mesh", "material",
@@ -124,10 +126,10 @@ function add_entity_sys:init()
 		component_util.load_material(pochuan, {"pochuan.material"})
 		--component_util.load_material(pochuan, {"bunny.material"})
 	end
---]]
 
-    local PVPScene = require "modelloader.PVPScene"
-    PVPScene.init(world, component_util, ms)
+
+    -- local PVPScene = require "modelloader.PVPScene"
+    -- PVPScene.init(world, component_util, ms)
 	-- do
 	-- 	local stone_eid = world:new_entity("position", "rotation", "scale",
 	-- 	"can_render", "mesh", "material",
