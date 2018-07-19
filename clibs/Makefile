@@ -7,7 +7,7 @@ IUPTARS = $(foreach v, $(IUPLIBS), $(BIN)/$(v).dll)
 
 TARS = $(foreach v, $(LIBS), $(BIN)/$(v).dll)
 
-all : $(TARS) $(BIN)/lua53.dll $(IUPTARS) copy_iup_exe
+all : $(TARS) $(BIN)/lua53.dll $(BIN)/lua.exe $(IUPTARS) copy_iup_exe
 
 build_lua :
 	cd lua && $(MAKE) $(PLAT)
@@ -38,6 +38,11 @@ lua/lua53.dll : build_lua
 
 $(BIN)/lua53.dll : lua/lua53.dll
 	cp $< $@
+
+lua/lua.exe : build_lua
+
+$(BIN)/lua.exe : lua/lua.exe
+	cp $< $$@
 
 define COPY_temp
 $(BIN)/$(1).dll : build_$(1)

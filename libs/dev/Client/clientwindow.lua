@@ -1,5 +1,5 @@
-package.cpath = "../../../clibs/?.dll"
-package.path = "../Common/?.lua;../../?.lua;../../?/?.lua;".. package.path
+package.cpath = "./clibs/?.dll"
+package.path = "./libs/dev/Common/?.lua;./libs/?.lua;./libs/?/?.lua;".. package.path
 
 local DbgUpdate = require 'new-debugger' .start_worker()
 local lanes = require "lanes"
@@ -29,7 +29,7 @@ local client_io = lanes.gen("*", CreateIOThread)(linda)
 
 local function CreateDbgThread()
     package.path = "../../?.lua;".. package.path
-    local DbgUpdate = require 'new-debugger' .start_master()
+    local DbgUpdate = require 'new-debugger' .start_master('tcp_server', '127.0.0.1', 4278)
     while true do
         DbgUpdate()
     end

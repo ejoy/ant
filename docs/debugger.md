@@ -20,7 +20,7 @@
 3. 启动client。windows下的方法为
 
 ```
-cd .\libs\dev\Client\ && .\..\..\..\bin\iup.exe clientwindow.lua
+.\bin\iup.exe .\libs\dev\Client\clientwindow.lua
 ```
 
 4. F5
