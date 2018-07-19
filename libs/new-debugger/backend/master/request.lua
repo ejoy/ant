@@ -1,10 +1,13 @@
 local mgr = require 'new-debugger.backend.master.mgr'
 local response = require 'new-debugger.backend.master.response'
 local event = require 'new-debugger.backend.master.event'
+local ev = require 'new-debugger.event'
 
 local request = {}
 
 local stopOnEntry = true
+local config = nil
+local readyTrg = nil
 
 function request.initialize(req)
     if not mgr.isState 'birth' then
@@ -25,15 +28,31 @@ function request.attach(req)
     end
     response.success(req)
 
-    local args = req.arguments
+    config = req.arguments
+    stopOnEntry = true
+    if type(config.stopOnEntry) == 'boolean' then
+        stopOnEntry = config.stopOnEntry
+    end
+
     mgr.broadcastToWorker {
         cmd = 'initialized',
-        config = args,
+        config = config,
     }
-    stopOnEntry = true
-    if type(args.stopOnEntry) == 'boolean' then
-        stopOnEntry = args.stopOnEntry
+    
+    if readyTrg then
+        readyTrg:remove()
+        readyTrg = nil
     end
+    readyTrg = ev.on('worker-ready', function(w)
+        mgr.sendToWorker(w, {
+            cmd = 'initialized',
+            config = config,
+        })
+    end)
+end
+
+function request.launch(req)
+    return request.attach(req)
 end
 
 function request.configurationDone(req)
@@ -184,6 +203,10 @@ function request.disconnect(req)
     mgr.broadcastToWorker {
         cmd = 'terminated',
     }
+    if readyTrg then
+        readyTrg:remove()
+        readyTrg = nil
+    end
     mgr.setState 'terminated'
     event.terminated()
     mgr.close()

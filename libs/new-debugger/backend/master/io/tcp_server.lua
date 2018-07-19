@@ -6,8 +6,8 @@ local channel
 local stat = {}
 
 local m = {}
-function m.start(port)
-    listen = assert(lsocket.bind("127.0.0.1", port))
+function m.start(ip, port)
+    listen = assert(lsocket.bind(ip, port))
 end
 
 function m.update(timeout)

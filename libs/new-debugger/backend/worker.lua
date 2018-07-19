@@ -442,3 +442,7 @@ rdebug.sethook(function(event, line)
         end
     end, debug.traceback))
 end)
+
+sendToMaster {
+    cmd = 'ready',
+}

@@ -6,8 +6,10 @@ local function event(name, level, ...)
     return r
 end
 
-local function start_master()
-    return require 'new-debugger.backend.master'
+local function start_master(...)
+    local master = require 'new-debugger.backend.master'
+    master.init(...)
+    return master.update
 end
 
 local function start_worker()

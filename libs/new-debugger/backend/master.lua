@@ -1,7 +1,8 @@
-local srv = require 'new-debugger.backend.master.server'
 local request = require 'new-debugger.backend.master.request'
 local response = require 'new-debugger.backend.master.response'
 local mgr = require 'new-debugger.backend.master.mgr'
+local io
+local m = {}
 
 local function runIdle()
     mgr.update()
@@ -9,7 +10,7 @@ local function runIdle()
         mgr.setState 'birth'
         return false
     end
-    local req = srv.recv()
+    local req = io.recv()
     if not req then
         return true
     end
@@ -34,10 +35,14 @@ local function runIdle()
     return false
 end
 
-srv.start(4278)
+function m.init(type, ...)
+    io = require('new-debugger.backend.master.io.' .. type)
+    io.start(...)
+    mgr.add_io(io)
+end
 
-return function()
-    if not srv.update(0.05) then
+function m.update()
+    if not io.update(0.05) then
         return
     end
 
@@ -48,3 +53,5 @@ return function()
         end
     end
 end
+
+return m

@@ -1,11 +1,10 @@
-local srv = require 'new-debugger.backend.master.server'
 local json = require 'cjson'
 local cdebug = require 'debugger.backend'
 
 local workerThreads = cdebug.start 'master'
 
 local mgr = {}
-
+local io
 local seq = 0
 local state = 'birth'
 
@@ -14,8 +13,12 @@ function mgr.newSeq()
     return seq
 end
 
+function mgr.add_io(io_)
+    io = io_
+end
+
 function mgr.sendToClient(pkg)
-    return srv.send(pkg)
+    io.send(pkg)
 end
 
 function mgr.sendToWorker(w, pkg)
@@ -66,7 +69,7 @@ function mgr.setState(s)
 end
 
 function mgr.close()
-    srv.close()
+    io.close()
     seq = 0
     state = 'birth'
 end
