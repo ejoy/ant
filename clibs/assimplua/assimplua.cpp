@@ -419,9 +419,7 @@ static void push_aabb(lua_State *L, const AABB &aabb, int32_t tblidx) {
 		lua_pushnumber(L, *p++);
 		lua_seti(L, -2, ii + 1);
 	}
-
-	lua_pushstring(L, "aabb");
-	lua_settable(L, tblidx);
+	lua_setfield(L, tblidx, "aabb");
 }
 
 static void push_sphere(lua_State *L, const BoundingSphere &sphere, int32_t tblidx) {
@@ -431,173 +429,129 @@ static void push_sphere(lua_State *L, const BoundingSphere &sphere, int32_t tbli
 		lua_pushnumber(L, *p1++);
 		lua_seti(L, -2, ii + 1);
 	}
-	lua_pushstring(L, "sphere");
-	lua_settable(L, tblidx);
+
+	lua_setfield(L, tblidx, "sphere");
 }
 
 //write node information into lua table
-void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene)
-{
-	if (!node)
-	{
+void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene) {
+	if (!node) {
 		return;
 	}
 
 	luaL_checkstack(L, 10, "stack not big enough");
+	// result table
 	lua_newtable(L);
 	
 	//set name
 	const char* node_name = node->mName.C_Str();
-	lua_pushstring(L, "name");
+	
 	lua_pushstring(L, node_name);
-	lua_settable(L, -3);
+	lua_setfield(L, -2, "name");	// ==> set to result table, result.name = node_name
 
 	//set transform
 	aiMatrix4x4 node_transform = node->mTransformation;
-	lua_pushstring(L, "transform");
 
+	// transform = {}
 	lua_newtable(L);
 
 	const ai_real *p = &node_transform.a1;
-	for (int ii = 0; ii < 16; ++ii) {
-		//lua_pushnumber(L, ii+1);
+	for (int ii = 0; ii < 16; ++ii) {		
 		lua_pushnumber(L, *p++);
-		lua_seti(L, -2, ii+1);
+		lua_seti(L, -2, ii+1);	// ==> transofrm[ii+1] = *p++
 	}
 
-	//set transofrm table
-	lua_settable(L, -3);
+	// ==> set to result table: transforsm = {}; result.transform = transform	
+	lua_setfield(L, -2, "transform");	
 
-	//set mesh
-	lua_pushstring(L, "mesh");
+	// mesh = {}
 	lua_newtable(L);
 
 	std::vector<Bounding>	boundings(node->mNumMeshes);
 
-	for (unsigned i = 0; i < node->mNumMeshes; ++i)
-	{
+	for (uint32_t i = 0; i < node->mNumMeshes; ++i) {
 		//start from 1
-		lua_pushnumber(L, i+1);
+		// group = {}
 		lua_newtable(L);
 
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		unsigned mat_idx = mesh->mMaterialIndex;
-
-		lua_pushstring(L, "material_idx");
-		lua_pushnumber(L, mat_idx+1);
-		lua_settable(L, -3);
+	
+		lua_pushnumber(L, mesh->mMaterialIndex+1);
+		lua_setfield(L, -2, "material_idx");	// 
 
 		//parse mesh data
-		if (mesh->HasPositions())
-		{
+		if (mesh->HasPositions()) {
 			AABB aabb;		
 
-			lua_pushstring(L, "vertices");
+			// vertices = {}
 			lua_newtable(L);
 
-			for (unsigned j = 0; j < mesh->mNumVertices; ++j)
-			{
-				lua_pushnumber(L, j * 9+1);
-				lua_pushnumber(L, mesh->mVertices[j].x);
-				lua_settable(L, -3);
+			for (uint32_t j = 0; j < mesh->mNumVertices; ++j){
+				uint32_t stackidx = 1;
+				auto push_vector = [L, j, &stackidx](const ai_real *p, uint32_t num){
+					for (uint32_t iv = 0; iv < num; ++iv) {
+						lua_pushnumber(L, *p++);
+						lua_seti(L, -2, j * 9 + (stackidx++));
+					}
+				};
 
-				lua_pushnumber(L, j * 9+2);
-				lua_pushnumber(L, mesh->mVertices[j].y);
-				lua_settable(L, -3);
-
-				lua_pushnumber(L, j * 9+3);
-				lua_pushnumber(L, mesh->mVertices[j].z);
-				lua_settable(L, -3);
-
-				lua_pushnumber(L, j * 9+4);
-				lua_pushnumber(L, mesh->mNormals[j].x);
-				lua_settable(L, -3);
-
-				lua_pushnumber(L, j * 9+5);
-				lua_pushnumber(L, mesh->mNormals[j].y);
-				lua_settable(L, -3);
-
-				lua_pushnumber(L, j * 9+6);
-				lua_pushnumber(L, mesh->mNormals[j].z);
-				lua_settable(L, -3);
-
-				lua_pushnumber(L, j * 9+7);
-				lua_pushnumber(L, mesh->mTextureCoords[0][j].x);
-				lua_settable(L, -3);
-
-				lua_pushnumber(L, j * 9+8);
-				lua_pushnumber(L, mesh->mTextureCoords[0][j].y);
-				lua_settable(L, -3);
-
-				lua_pushnumber(L, j * 9+9);
-				lua_pushnumber(L, mesh->mTextureCoords[0][j].z);
-				lua_settable(L, -3);
+				push_vector(&(mesh->mVertices[j].x), 3);
+				push_vector(&(mesh->mNormals[j].x), 3);
+				push_vector(&(mesh->mTextureCoords[0][j].x), 3);
 
 				aabb.Append(mesh->mVertices[j]);
 			}
 			
-			lua_settable(L, -3);
+			lua_setfield(L, -2, "vertices");	// mesh.vertices = vertices
 
-			//BoundingSphere sphere;
-			//sphere.Init(aabb);
+			BoundingSphere sphere;
+			sphere.Init(aabb);
 
-			//push_aabb(L, aabb, -3);
-			//push_sphere(L, sphere, -3);
+			push_aabb(L, aabb, -2);
+			push_sphere(L, sphere, -2);
 
-			//boundings[i].aabb = aabb;
-			//boundings[i].sphere = sphere;
+			boundings[i].aabb = aabb;
+			boundings[i].sphere = sphere;
 		}
 
-		if (mesh->HasFaces())
-		{
-			lua_pushstring(L, "indices");
+		if (mesh->HasFaces()) {
 			lua_newtable(L);
-
-			int index_count = 1;
-			for (unsigned j = 0; j < mesh->mNumFaces; ++j)
-			{
+			lua_Integer index_count = 1;
+			for (uint32_t j = 0; j < mesh->mNumFaces; ++j) {
 				const aiFace& face = mesh->mFaces[j];
-
-				for (unsigned k = 0; k < face.mNumIndices; ++k)
-				{
-					lua_pushnumber(L, index_count);
+				for (uint32_t k = 0; k < face.mNumIndices; ++k) {
 					lua_pushnumber(L, face.mIndices[k]);
-					lua_settable(L, -3);
-					++index_count;
-				}					
+					lua_seti(L, -2, index_count++);
+				}
 			}
 
-			lua_settable(L, -3);
+			lua_setfield(L, -2, "indices");
 		}
 
-		lua_settable(L, -3);
+		lua_seti(L, -2, i + 1);	// mesh[i+1] = group
 	}
 
-	lua_settable(L, -3);
-
+	lua_setfield(L, -2, "mesh");	// ==> set to result result table: mesh = {}; result.mesh = mesh
+	
 	AABB aabb;
 	for (const auto &b : boundings) {
 		aabb.Merge(b.aabb);
 	}
 
-	//BoundingSphere sphere;
-	//sphere.Init(aabb);
+	BoundingSphere sphere;
+	sphere.Init(aabb);
 
-	//push_aabb(L, aabb, -3);
-	//push_sphere(L, sphere, -3);
+	push_aabb(L, aabb, -2); // ==> aabb = {}; mesh.aabb = aabb
+	push_sphere(L, sphere, -2);	//==> sphere = {}; mesh.sphere = sphere
 	
-
-	lua_pushstring(L, "children");
+	// children = {}
 	lua_newtable(L);
 	//set children
-	for(unsigned i =0; i < node->mNumChildren; ++i)
-	{
-		lua_pushnumber(L, i + 1);
+	for(unsigned i =0; i < node->mNumChildren; ++i){ 
 		WriteNodeToLua(L, node->mChildren[i], scene);
-		lua_settable(L, -3);
-		
+		lua_seti(L, -2, i + 1);
 	}
-	lua_settable(L, -3);
+	lua_setfield(L, -2, "children");	// set to result table : children = {}; result.children = children
 }
 
 //one material for one chunk
