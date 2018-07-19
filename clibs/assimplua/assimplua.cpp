@@ -347,6 +347,94 @@ void WriteMaterialToLua(lua_State *L, const aiScene* scene)
 	}
 }
 
+struct AABB {
+	aiVector3D min;
+	aiVector3D max;
+
+	AABB() 
+		: min(-10e10, -10e10, -10e10)
+		, max(10e10, 10e10, 10e10)
+	{
+
+	}
+
+	bool IsValid() const {		
+		return min != aiVector3D(-10e10, -10e10, -10e10)
+			&& max != aiVector3D(10e10, 10e10, 10e10);		
+	}
+
+	void Init(const aiVector3D *vertiecs, uint32_t num) {
+		min = aiVector3D(-10e10, -10e10, -10e10);
+		max = aiVector3D(10e10, 10e10, 10e10);
+
+		for (uint32_t ii = 0; ii < num; ++ii) {
+			const aiVector3D &v = vertiecs[ii];
+			Append(v);
+		}
+	}
+
+	void Append(const aiVector3D &v) {
+		min.x = std::min(min.x, v.x);
+		max.x = std::max(max.x, v.x);
+
+		min.y = std::min(min.y, v.y);
+		max.y = std::max(max.y, v.y);
+
+		min.z = std::min(min.z, v.z);
+		max.z = std::max(max.z, v.z);
+	}
+
+
+	void Merge(const AABB &other) {
+		min.x = std::min(min.x, other.min.x);
+		min.y = std::min(min.y, other.min.y);
+		min.z = std::min(min.z, other.min.z);
+
+		max.x = std::max(max.x, other.max.x);
+		max.y = std::max(max.y, other.max.y);
+		max.z = std::max(max.z, other.max.z);
+	}
+};
+
+struct BoundingSphere {
+	aiVector3D center;
+	ai_real radius;
+
+	void Init(const AABB &bb) {
+		aiVector3D delta = bb.max - bb.min;
+		center = bb.min + delta * 0.5f;
+		radius = delta.Length();
+	}
+};
+
+struct Bounding {
+	AABB aabb;
+	BoundingSphere sphere;
+};
+
+static void push_aabb(lua_State *L, const AABB &aabb, int32_t tblidx) {
+	lua_createtable(L, 6, 0);
+	const ai_real *p = &aabb.min.x;
+	for (uint32_t ii = 0; ii < 6; ++ii) {
+		lua_pushnumber(L, *p++);
+		lua_seti(L, -2, ii + 1);
+	}
+
+	lua_pushstring(L, "aabb");
+	lua_settable(L, tblidx);
+}
+
+static void push_sphere(lua_State *L, const BoundingSphere &sphere, int32_t tblidx) {
+	lua_createtable(L, 4, 0);
+	const ai_real *p1 = &sphere.center.x;
+	for (uint32_t ii = 0; ii < 4; ++ii) {
+		lua_pushnumber(L, *p1++);
+		lua_seti(L, -2, ii + 1);
+	}
+	lua_pushstring(L, "sphere");
+	lua_settable(L, tblidx);
+}
+
 //write node information into lua table
 void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene)
 {
@@ -369,69 +457,13 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene)
 	lua_pushstring(L, "transform");
 
 	lua_newtable(L);
-	lua_pushnumber(L, 1);
-	lua_pushnumber(L, node_transform.a1);
-	lua_settable(L, -3);
 
-	lua_pushnumber(L, 2);
-	lua_pushnumber(L, node_transform.a2);
-	lua_settable(L, -3);
-
-	lua_pushnumber(L, 3);
-	lua_pushnumber(L, node_transform.a3);
-	lua_settable(L, -3);
-
-	lua_pushnumber(L, 4);
-	lua_pushnumber(L, node_transform.a4);
-	lua_settable(L, -3);
-
-	lua_pushnumber(L, 5);
-	lua_pushnumber(L, node_transform.b1);
-	lua_settable(L, -3);
-
-	lua_pushnumber(L, 6);
-	lua_pushnumber(L, node_transform.b2);
-	lua_settable(L, -3);
-
-	lua_pushnumber(L, 7);
-	lua_pushnumber(L, node_transform.b3);
-	lua_settable(L, -3);
-
-	lua_pushnumber(L, 8);
-	lua_pushnumber(L, node_transform.b4);
-	lua_settable(L, -3);
-
-	lua_pushnumber(L, 9);
-	lua_pushnumber(L, node_transform.c1);
-	lua_settable(L, -3);
-
-	lua_pushnumber(L, 10);
-	lua_pushnumber(L, node_transform.c2);
-	lua_settable(L, -3);
-
-	lua_pushnumber(L, 11);
-	lua_pushnumber(L, node_transform.c3);
-	lua_settable(L, -3);
-
-	lua_pushnumber(L, 12);
-	lua_pushnumber(L, node_transform.c4);
-	lua_settable(L, -3);
-
-	lua_pushnumber(L, 13);
-	lua_pushnumber(L, node_transform.d1);
-	lua_settable(L, -3);
-
-	lua_pushnumber(L, 14);
-	lua_pushnumber(L, node_transform.d2);
-	lua_settable(L, -3);
-
-	lua_pushnumber(L, 15);
-	lua_pushnumber(L, node_transform.d3);
-	lua_settable(L, -3);
-
-	lua_pushnumber(L, 16);
-	lua_pushnumber(L, node_transform.d4);
-	lua_settable(L, -3);
+	const ai_real *p = &node_transform.a1;
+	for (int ii = 0; ii < 16; ++ii) {
+		//lua_pushnumber(L, ii+1);
+		lua_pushnumber(L, *p++);
+		lua_seti(L, -2, ii+1);
+	}
 
 	//set transofrm table
 	lua_settable(L, -3);
@@ -439,6 +471,8 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene)
 	//set mesh
 	lua_pushstring(L, "mesh");
 	lua_newtable(L);
+
+	std::vector<Bounding>	boundings(node->mNumMeshes);
 
 	for (unsigned i = 0; i < node->mNumMeshes; ++i)
 	{
@@ -456,6 +490,8 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene)
 		//parse mesh data
 		if (mesh->HasPositions())
 		{
+			AABB aabb;		
+
 			lua_pushstring(L, "vertices");
 			lua_newtable(L);
 
@@ -496,9 +532,20 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene)
 				lua_pushnumber(L, j * 9+9);
 				lua_pushnumber(L, mesh->mTextureCoords[0][j].z);
 				lua_settable(L, -3);
-			}
 
+				aabb.Append(mesh->mVertices[j]);
+			}
+			
 			lua_settable(L, -3);
+
+			//BoundingSphere sphere;
+			//sphere.Init(aabb);
+
+			//push_aabb(L, aabb, -3);
+			//push_sphere(L, sphere, -3);
+
+			//boundings[i].aabb = aabb;
+			//boundings[i].sphere = sphere;
 		}
 
 		if (mesh->HasFaces())
@@ -527,6 +574,17 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene)
 	}
 
 	lua_settable(L, -3);
+
+	AABB aabb;
+	for (const auto &b : boundings) {
+		aabb.Merge(b.aabb);
+	}
+
+	//BoundingSphere sphere;
+	//sphere.Init(aabb);
+
+	//push_aabb(L, aabb, -3);
+	//push_sphere(L, sphere, -3);
 	
 
 	lua_pushstring(L, "children");
