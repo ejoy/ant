@@ -1424,6 +1424,21 @@ lexportVertexDecl(lua_State *L) {
 
 	return 1;
 }
+static inline int
+lvertexDeclStride(lua_State *L) {
+	int type = lua_type(L, 1);
+	if (type != LUA_TUSERDATA) {
+		luaL_error(L, "lvertexDeclStride : invalid input data");
+	}
+	size_t si = lua_rawlen(L, 1);
+	if (sizeof(bgfx_vertex_decl_t) != si) {
+		luaL_error(L, "bad vertex decl input");
+	}
+
+	bgfx_vertex_decl_t *decl = (bgfx_vertex_decl_t*)lua_touserdata(L, 1);
+	lua_pushnumber(L, decl->stride);
+	return 1;
+}
 
 static inline bgfx_attrib_t find_attrib(const char* what) {
 	for (int ii = 0; ii < ARRAY_COUNT(attrib_name_pairs); ++ii) {
@@ -4098,7 +4113,8 @@ luaopen_bgfx(lua_State *L) {
 		{ "request_screenshot", lrequestScreenshot },
 		{ "get_screenshot", lgetScreenshot },
 		{ "export_vertex_decl", lexportVertexDecl },
-        { "get_log", lgetLog },
+		{ "vertex_decl_stride", lvertexDeclStride },
+        { "get_log", lgetLog },		
 
 		{ NULL, NULL },
 	};
