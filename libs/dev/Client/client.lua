@@ -179,7 +179,7 @@ function client.new(address, port, init_linda, home_dir)
     local fd = assert(lsocket.bind("tcp", address, port))
     _linda = init_linda
     --todo:
-    --app_doc_path = home_dir .. "/Documents/"
+    app_doc_path = home_dir .. "/Documents/"
     --print("app_doc_path", app_doc_path)
 	return setmetatable( { host = fd, fd = { fd }, fds = {fd}, sending = {}, resp = {}, reading = ""}, client)
 end

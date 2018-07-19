@@ -1,4 +1,4 @@
-package.path = "../Common/?.lua;../?.lua;" .. package.path  --path for the app
+package.path = "../Common/?.lua;../Package/?.lua;../Package/?/?.lua;./?.lua;../?/?.lua;../?.lua;" .. package.path  --path for the app
 --TODO: find a way to set this
 package.remote_search_path = "../?.lua;?.lua;../?/?.lua;../asset/?.lua" --path for the remote script
 
@@ -12,12 +12,23 @@ local pack = require "pack"
 --and "Bgfx" for bgfx log
 --"Device" for deivce msg
 
+--project entrance
+local entrance = nil
+
 local origin_print = print
 
 function sendlog(cat, ...)
-    linda:send("log", {cat, ...})
+    --linda:send("log", {cat, ...})
     --origin_print(cat, ...)
+
+    if cat == "Device" then
+
+        if entrance then
+            entrance.ProcessInput(...)
+        end
+    end
 end
+
 print = function(...)
     origin_print(...)
     sendlog("Script", ...)
@@ -26,7 +37,6 @@ end
 local filemanager = require "filemanager"
 local file_mgr = filemanager.new()
 local winfile = require "winfile"
-local bgfx = require "bgfx"
 
 local lodepng = require "lodepnglua"
 
@@ -60,7 +70,7 @@ local function custom_open(filename, mode, search_local_only)
         --TODO file not exist
         --wait here
         while true do
-            local key, value = linda:receive(0.05, "new file")
+            local key, value = linda:receive(0.01, "new file")
             if value then
                 print("received msg", filename)
 
@@ -87,23 +97,21 @@ io.open = custom_open
 local function remote_searcher (name)
     --local full_path = name..".lua"
     --need to send the package search path
-    --print("remote requiring".. name)
+    print("remote requiring".. name)
     local request = {"REQUIRE", name, package.remote_search_path}
     linda:send("request", request)
 
     while true do
-        local key, value = linda:receive(0.05, "mem_data")
+        local key, value = linda:receive(0.01, "mem_data")
         if value then
             return load(value)
         end
     end
 end
-table.insert(package.searchers, remote_searcher)
+--table.insert(package.searchers, remote_searcher)
 
 
 
---project entrance
-local entrance = nil
 
 local lsocket = require "lsocket"
 lanes.register("lsocket", lsocket)
@@ -155,23 +163,10 @@ local function run(path)
 
 end
 
-local bgfx_init = false
-local function InitBgfx()
-    local rhwi = require "render.hardware_interface"
-    rhwi.init(g_WindowHandle, g_Width, g_Height)
-
-
-    bgfx.set_debug "T"
-    bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
-
-    bgfx.set_view_rect(0, 0, 0, g_Width, g_Height)
-    bgfx_init = true
-end
-
 local screenshot_cache_num = 0
 local function HandleMsg()
     while true do
-        local key, value = linda:receive(0.05, "new file")
+        local key, value = linda:receive(0.01, "new file")
         if value then
             --print("received msg", value)
             --put into the id_table and file_table
@@ -185,13 +180,8 @@ local function HandleMsg()
     end
 
     while true do
-        local key, value = linda:receive(0.05, "run")
+        local key, value = linda:receive(0.01, "run")
         if value then
-
-            if not bgfx_init then
-                InitBgfx()
-            end
-
             --init when need to run something
             run(value)
         else
@@ -200,14 +190,16 @@ local function HandleMsg()
     end
 
     while true do
-        local key, value = linda:receive(0.05, "screenshot_req")
+        local key, value = linda:receive(0.01, "screenshot_req")
         if value then
+            --[[
             if bgfx_init then
 
                 bgfx.request_screenshot()
                 screenshot_cache_num = screenshot_cache_num + 1
                 print("request screenshot: ".. value[2].." num: "..screenshot_cache_num)
             end
+            --]]
         else
             break;
         end
@@ -218,6 +210,8 @@ local function HandleCacheScreenShot()
     --if screenshot_cache_num
     --for i = 1, screenshot_cache_num do
     if screenshot_cache_num > 0 then
+        --todo handle screenshot
+        --[[
         local name, width, height, pitch, data = bgfx.get_screenshot()
         if name then
             --print(type(name), type(pitch), type(data))
@@ -234,6 +228,7 @@ local function HandleCacheScreenShot()
             linda:send("screenshot", {name, data_string})
             --linda:send("screenshot", {name, size, width, height, pitch, data})
         end
+        --]]
     end
     --end
 end
@@ -241,11 +236,14 @@ end
 function init(window_handle, width, height, app_dir, bundle_dir)
     bundle_home_dir = bundle_dir
     app_home_dir = app_dir
-
+    package.app_dir = app_dir
     g_WindowHandle = window_handle
     g_Width = width
     g_Height = height
 
+    local pack_path = app_dir .. "/Package/"
+    package.path = package.path .. ";"..pack_path .. "?.lua;" .. pack_path.."?/?.lua;"
+    package.path = package.path .. ";"..pack_path .. "ecs/?.lua;"
     file_mgr:ReadDirStructure(bundle_home_dir.."/Documents/dir.txt")
     file_mgr:ReadFilePathData(bundle_home_dir.."/Documents/file.txt")
 
@@ -289,12 +287,14 @@ function init(window_handle, width, height, app_dir, bundle_dir)
         InitBgfx()
     end
 
-    bgfx.request_screenshot()
-    screenshot_cache_num = 1
+    --bgfx.request_screenshot()
+    --screenshot_cache_num = 1
 
-    entrance = require "testlua"
+    entrance = require "test"
     entrance.init(width, height, app_dir, bundle_dir)
     --]]
+
+    entrance = require("test_entrance")
     local client_io = lanes.gen("*",{package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateIOThread)(linda, bundle_home_dir)
 end
 
@@ -303,6 +303,7 @@ function mainloop()
         entrance.mainloop()
     end
 
+--[[
     if bgfx_init then
         local log_string = bgfx.get_log()
         if #log_string > 0 then
@@ -313,8 +314,9 @@ function mainloop()
         if timer then
             sendlog("Fps", timer.gpu, timer.cpu)
         end
-
     end
+    --]]
+
     HandleMsg()
     HandleCacheScreenShot()
 end
@@ -324,12 +326,7 @@ function terminate()
         entrance.terminate()
     end
 
-    if bgfx_init then
-        bgfx.shutdown()
-    end
-
     --time to save files
     file_mgr:WriteDirStructure(bundle_home_dir.."/Documents/dir.txt")
     file_mgr:WriteFilePathData(bundle_home_dir.."/Documents/file.txt")
 end
-
