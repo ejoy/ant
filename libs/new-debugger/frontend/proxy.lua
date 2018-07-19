@@ -44,39 +44,46 @@ local function request_runinterminal(args)
 end
 
 local function create_terminal(args, port)
-    if not args.luaexe then
-        return
-    end
-    -- TODO
-    local utf8 = "utf8" == args.sourceCoding
-    local luaexe = fs.path(args.luaexe)
+    local utf8 = "utf8" == args.sourceCoding -- TODO
+
     local command = {}
-    command[#command + 1] = luaexe:string()
-    if args.path then
-        command[#command + 1] = '-e'
-        command[#command + 1] = ("package.path=[[%s]];"):format(args.path)
-    end
-    if args.cpath then
-        command[#command + 1] = '-e'
-        command[#command + 1] = ("package.cpath=[[%s]];"):format(args.cpath)
-    end
-    command[#command + 1] = '-e'
-    command[#command + 1] = ("_DBG_IOTYPE='tcp_client';_DBG_IOPORT=%d"):format(port)
-    if type(arg0) == 'string' then
-        command[#command + 1] = arg0
-    elseif type(arg0) == 'table' then
-        for _, v in ipairs(arg0) do
-            command[#command + 1] = v
+    if args.runtimeExecutable then
+        command[#command + 1] = args.runtimeExecutable
+        command[#command + 1] = args.runtimeArgs
+    elseif args.luaexe then
+        local luaexe = fs.path(args.luaexe)
+        command[#command + 1] = luaexe:string()
+        if args.path then
+            command[#command + 1] = '-e'
+            command[#command + 1] = ("package.path=[[%s]];"):format(args.path)
         end
-    end
-    command[#command + 1] = args.program
-    if type(arg) == 'string' then
-        command[#command + 1] = arg
-    elseif type(arg) == 'table' then
-        for _, v in ipairs(arg) do
-            command[#command + 1] = v
+        if args.cpath then
+            command[#command + 1] = '-e'
+            command[#command + 1] = ("package.cpath=[[%s]];"):format(args.cpath)
         end
+        if type(arg0) == 'string' then
+            command[#command + 1] = arg0
+        elseif type(arg0) == 'table' then
+            for _, v in ipairs(arg0) do
+                command[#command + 1] = v
+            end
+        end
+        command[#command + 1] = args.program
+        if type(arg) == 'string' then
+            command[#command + 1] = arg
+        elseif type(arg) == 'table' then
+            for _, v in ipairs(arg) do
+                command[#command + 1] = v
+            end
+        end
+    else
+        return false
     end
+    if not args.env then
+        args.env = {}
+    end
+    args.env._DBG_IOTYPE = 'tcp_client'
+    args.env._DBG_IOPORT = tostring(port)
     request_runinterminal {
         kind = args.console == 'integratedTerminal' and 'integrated' or 'external',
         title = 'Lua Debug',
@@ -84,6 +91,7 @@ local function create_terminal(args, port)
         env = args.env,
         args = command,
     }
+    return true
 end
 
 function m.send(pkg)
@@ -126,13 +134,12 @@ function m.send(pkg)
                 server.send(pkg)
             elseif pkg.command == 'launch' then
                 local args = pkg.arguments
-                if args.runtimeExecutable then
-                    response_error(pkg, 'not support')
-                    return
-                end
                 if args.console == 'integratedTerminal' or args.console == 'externalTerminal' then
                     local listen, port = server_factory.tcp_server(m, '127.0.0.1')
-                    create_terminal(args, port)
+                    if not create_terminal(args, port) then
+                        response_error(pkg, 'launch failed')
+                        return
+                    end
                     server = listen:accept(60)
                     if not server then
                         response_error(pkg, 'launch failed')

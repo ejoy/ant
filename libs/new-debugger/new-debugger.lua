@@ -8,7 +8,11 @@ end
 
 local function start_master(...)
     local master = require 'new-debugger.backend.master'
-    master.init(...)
+    master.init(
+        os.getenv('_DBG_IOTYPE') or 'tcp_server', 
+        '127.0.0.1', 
+        os.getenv('_DBG_IOPORT') and tonumber(os.getenv('_DBG_IOPORT')) or 4278
+    )
     return master.update
 end
 
