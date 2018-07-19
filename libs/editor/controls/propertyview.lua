@@ -3,8 +3,8 @@ local log = log and log(...) or print
 require "iupluacontrols"
 local eu = require "editor.util"
 
-local treecontrol = require "editor.tree"
-local mv_control = require "editor.matrixview"
+local treecontrol = require "editor.controls.tree"
+local mv_control = require "editor.controls.matrixview"
 
 local propertyview = {}; propertyview.__index = propertyview
 

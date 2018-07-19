@@ -2,8 +2,8 @@
 local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
 local elog = require "editor.log"
-local hierarchyview = require "editor.hierarchyview"
-local propertycontrol = require "editor.propertyview"
+local hierarchyview = require "editor.controls.hierarchyview"
+local propertycontrol = require "editor.controls.propertyview"
 local eu = require "editor.util"
 
 local propertyview = propertycontrol.new {

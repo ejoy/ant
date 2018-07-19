@@ -8,7 +8,6 @@ local draw_entity_sys = ecs.system "entity_rendering"
 
 --draw_entity_sys.depend "add_entities_system"
 draw_entity_sys.depend "view_system"
-draw_entity_sys.depend "camera_controller"
 draw_entity_sys.depend "lighting_primitive_filter_system"
 draw_entity_sys.depend "transparency_filter_system"
 

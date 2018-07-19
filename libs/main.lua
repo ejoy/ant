@@ -1,6 +1,6 @@
 dofile "libs/init.lua"
 
-local editor_mainwindow = require "editor.window"
+local editor_mainwindow = require "editor.controls.window"
 local rhwi = require "render.hardware_interface"
 local bgfx = require "bgfx"
 local scene = require "scene.util"

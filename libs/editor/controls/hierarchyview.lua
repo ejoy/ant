@@ -1,6 +1,6 @@
 local log = log and log(...) or print
 
-local treecontrol = require "editor.tree"
+local treecontrol = require "editor.controls.tree"
 local eu = require "editor.util"
 
 local hierarchyview = {}
