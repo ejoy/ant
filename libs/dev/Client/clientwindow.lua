@@ -29,7 +29,8 @@ local client_io = lanes.gen("*", CreateIOThread)(linda)
 
 local function CreateDbgThread()
     package.path = "../../?.lua;".. package.path
-    local DbgUpdate = require 'new-debugger' .start_master('tcp_server', '127.0.0.1', 4278)
+    local DbgUpdate = require 'new-debugger' .start_master()
+    
     while true do
         DbgUpdate()
     end
