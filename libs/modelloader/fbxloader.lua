@@ -42,19 +42,15 @@ local fbx_loader = {}
 
 local math3d = require "math3d"
 local stack = math3d.new()
-local mat = math3d.ref "matrix"
 
 local function HandleModelNode(material_info, model_node, parent_name, parent_transform)
 
     local name = model_node.name
     local transform
-    if parent_transform then
-        transform = parent_transform
-        local start_pos = string.find(name, "Geometric")
-        --if the node is "GeometricTranslation" or similar, ignore transform
-        if not start_pos then
-            transform = stack(parent_transform, model_node.transform, "*T")
-        end
+    if parent_transform then		
+		--if the node is "GeometricTranslation" or similar, ignore transform
+		transform = name:find("Geometric") and parent_transform 
+										or stack(parent_transform, model_node.transform, "*T")
     else
         transform = model_node.transform
     end
@@ -62,7 +58,7 @@ local function HandleModelNode(material_info, model_node, parent_name, parent_tr
     local mesh = model_node.mesh
 
     if mesh then
-        for k, v in ipairs(mesh) do
+        for _, v in ipairs(mesh) do
             local material_idx = v.material_idx
 
             local material = material_info[material_idx]
