@@ -1,7 +1,4 @@
 local json = require 'cjson'
-local cdebug = require 'debugger.backend'
-
-local workerThreads = cdebug.start 'master'
 
 local mgr = {}
 local io
@@ -13,8 +10,9 @@ function mgr.newSeq()
     return seq
 end
 
-function mgr.add_io(io_)
+function mgr.init(io_, masterThread_)
     io = io_
+    masterThread = masterThread_
 end
 
 function mgr.sendToClient(pkg)
@@ -22,33 +20,33 @@ function mgr.sendToClient(pkg)
 end
 
 function mgr.sendToWorker(w, pkg)
-    return workerThreads:send(w, assert(json.encode(pkg)))
+    return masterThread:send(w, assert(json.encode(pkg)))
 end
 
 function mgr.broadcastToWorker(pkg)
     local msg = assert(json.encode(pkg))
-    for w in workerThreads:foreach() do
-        workerThreads:send(w, msg)
+    for w in masterThread:foreach() do
+        masterThread:send(w, msg)
     end
 end
 
 function mgr.threads()
     local t = {}
-    for w in workerThreads:foreach() do
+    for w in masterThread:foreach() do
         t[#t + 1] = w
     end
     return t
 end
 
 function mgr.hasThread(w)
-    return workerThreads:exists(w)
+    return masterThread:exists(w)
 end
 
 function mgr.update()
     local threads = require 'new-debugger.backend.master.threads'
-    for w in workerThreads:foreach() do
+    for w in masterThread:foreach() do
         while true do
-            local msg = workerThreads:recv(w)
+            local msg = masterThread:recv(w)
             if not msg then
                 break
             end

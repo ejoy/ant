@@ -10,14 +10,16 @@ function m.start(ip, port)
     channel = assert(lsocket.connect(ip, port))
 end
 
-function m.update(timeout)
+function m.update()
     return true
 end
 
 function m.recv()
     assert(channel)
-    local data = proto.recv(channel:recv(), stat)
-    return data
+    if not lsocket.select({channel}, 0) then
+        return proto.recv('', stat)
+    end
+    return proto.recv(channel:recv(), stat)
 end
 
 local function sendstring(s)

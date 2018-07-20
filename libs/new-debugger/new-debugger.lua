@@ -6,17 +6,7 @@ local function event(name, level, ...)
     return r
 end
 
-local function start_master(...)
-    local master = require 'new-debugger.backend.master'
-    master.init(
-        os.getenv('_DBG_IOTYPE') or 'tcp_server', 
-        '127.0.0.1', 
-        os.getenv('_DBG_IOPORT') and tonumber(os.getenv('_DBG_IOPORT')) or 4278
-    )
-    return master.update
-end
-
-local function start_worker()
+local function start_hook()
     local _print = print
     function print(...)
         if not event('print', 1, ...) then
@@ -39,14 +29,33 @@ local function start_worker()
             return msg
         end, ...)
     end
+end
 
+local function start_master()
+    local master = require 'new-debugger.backend.master'
+    if master.init() then
+        return master.update
+    end
+end
+
+local function start_worker()
+    start_hook()
     rdebug.start 'new-debugger.backend.worker'
     return function()
         event 'update'
     end
 end
 
+local function start_all()
+    start_hook()
+    rdebug.start 'new-debugger.backend.worker'
+    return function()
+        event 'update_all'
+    end
+end
+
 return {
     start_master = start_master,
     start_worker = start_worker,
+    start_all = start_all,
 }

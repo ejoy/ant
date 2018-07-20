@@ -1,6 +1,8 @@
 local request = require 'new-debugger.backend.master.request'
 local response = require 'new-debugger.backend.master.response'
 local mgr = require 'new-debugger.backend.master.mgr'
+local cdebug = require 'debugger.backend'
+
 local io
 local m = {}
 
@@ -35,14 +37,20 @@ local function runIdle()
     return false
 end
 
-function m.init(type, ...)
+function m.init()
+    local master = cdebug.start 'master'
+    if not master then
+        return false
+    end
+    local type = os.getenv('_DBG_IOTYPE') or 'tcp_server'
     io = require('new-debugger.backend.master.io.' .. type)
-    io.start(...)
-    mgr.add_io(io)
+    io.start('127.0.0.1', os.getenv('_DBG_IOPORT') and tonumber(os.getenv('_DBG_IOPORT')) or 4278)
+    mgr.init(io, master)
+    return true
 end
 
 function m.update()
-    if not io.update(0.05) then
+    if not io.update() then
         return
     end
 

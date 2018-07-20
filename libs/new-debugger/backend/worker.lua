@@ -24,7 +24,7 @@ local CMD = {}
 
 local masterThread = cdebug.start 'worker'
 
-local function masterThreadUpdate()
+local function workerThreadUpdate()
     while true do
         local msg = masterThread:recv()
         if not msg then
@@ -299,7 +299,7 @@ local function runLoop(reason)
 
     while true do
         cdebug.sleep(10)
-        masterThreadUpdate()
+        workerThreadUpdate()
         if state ~= 'stopped' then
             break
         end
@@ -347,7 +347,7 @@ hook['line'] = function(line)
         end
     end
 
-    masterThreadUpdate()
+    workerThreadUpdate()
     if state == 'running' then
         return
     elseif state == 'stepOver' or state == 'stepOut' then
@@ -365,7 +365,7 @@ hook['line'] = function(line)
 end
 
 hook['update'] = function()
-    masterThreadUpdate()
+    workerThreadUpdate()
 end
 
 local function getEventLevel()
@@ -442,6 +442,23 @@ rdebug.sethook(function(event, line)
         end
     end, debug.traceback))
 end)
+
+local createMaster = true
+hook['update_all'] = function()
+    if createMaster then
+        createMaster = false
+        local master = require 'new-debugger.backend.master'
+        if master.init() then
+            local master = master.update
+            local worker = workerThreadUpdate
+            function workerThreadUpdate()
+                master()
+                worker()
+            end
+        end
+    end
+    workerThreadUpdate()
+end
 
 sendToMaster {
     cmd = 'ready',
