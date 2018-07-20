@@ -2,11 +2,13 @@
 
 1. 安装vscode。
 
-2. clone https://gz-tea.ejoy.com/zhengweijian.zwj/vscode-ant，和ant目录平行
+2. clone https://gz-tea.ejoy.com/zhengweijian.zwj/vscode-ant
+和ant目录平行
+```  
     |-D:/WORK
         |- ant
         |- vscode-ant
-
+```
 3. 用vscode打开vscode-ant目录，按F5，会启动一个新的vscode，在新的vscode里打开ant目录
 
 4. 添加调试配置launch.json
