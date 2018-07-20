@@ -11,6 +11,9 @@ function m.start(ip, port)
 end
 
 function m.update()
+    if not channel then
+        return false
+    end
     return true
 end
 
@@ -41,6 +44,7 @@ function m.close()
     channel:close()
     channel = nil
     stat = {}
+    os.exit(true, true)
 end
 
 return m

@@ -2,17 +2,29 @@
 
 1. 安装vscode。
 
-2. 安装vscode-ant插件
-https://gz-tea.ejoy.com/zhengweijian.zwj/vscode-ant
+2. clone https://gz-tea.ejoy.com/zhengweijian.zwj/vscode-ant，和ant目录平行
+    |-D:/WORK
+        |- ant
+        |- vscode-ant
 
-> 两种方法
+3. 用vscode打开vscode-ant目录，按F5，会启动一个新的vscode，在新的vscode里打开ant目录
 
-* 用vscode打开vscode-ant目录，按F5，会启动一个新的vscode，在新的vscode里调试ant
-* 将vscode-ant目录复制到vscode的插件目录，路径应该是%USERPROFILE%\.vscode\extensions\
-
-3. 添加调试配置launch.json
+4. 添加调试配置launch.json
 
 ```
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lua",
+            "request": "launch",
+            "name": "Editor",
+            "runtimeExecutable": "${workspaceRoot}\\bin\\iup.exe",
+            "runtimeArgs": "${workspaceRoot}\\libs\\main.lua",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "stopOnEntry": false,
+        },
         {
             "type": "lua",
             "request": "launch",
@@ -20,7 +32,7 @@ https://gz-tea.ejoy.com/zhengweijian.zwj/vscode-ant
             "stopOnEntry": true,
             "runtimeExecutable": "${workspaceRoot}\\bin\\iup.exe",
             "runtimeArgs": "${workspaceRoot}\\libs\\dev\\Client\\clientwindow.lua",
-            "console": "externalTerminal",
+            "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "skipFiles": [
                 "libs/new-debugger/*"
@@ -49,9 +61,11 @@ https://gz-tea.ejoy.com/zhengweijian.zwj/vscode-ant
                 ]
             ]
         }
+    ]
+}
 ```
 
-3. Attach调试。手动启动被调试目标，如
+5. Attach调试。手动启动被调试目标，如
 
 ```
 .\bin\iup.exe .\libs\dev\Client\clientwindow.lua
@@ -59,7 +73,11 @@ https://gz-tea.ejoy.com/zhengweijian.zwj/vscode-ant
 
 调试配置选择`Attach`，按F5
 
-4. Launch调试
+6. Launch调试
 
 调试配置选择`Launch`，按F5
 
+
+7. Editor调试
+
+调试配置选择`Editor`，按F5

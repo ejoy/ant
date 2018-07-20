@@ -5,6 +5,7 @@ local elog = require "editor.log"
 local hierarchyview = require "editor.controls.hierarchyview"
 local propertycontrol = require "editor.controls.propertyview"
 local eu = require "editor.util"
+local DbgUpdate = require 'new-debugger' .start_all()
 
 local propertyview = propertycontrol.new {
 	tree = {
@@ -92,6 +93,7 @@ function editor_mainwindow:run(config)
         
     -- to be able to run this script inside another context
     if (iup.MainLoopLevel()==0) then
+        DbgUpdate()
         iup.MainLoop()
         iup.Close()
 
