@@ -29,6 +29,12 @@ local function start_hook()
             return msg
         end, ...)
     end
+    
+    local _coroutine_resume = coroutine.resume
+    function coroutine.resume(co, ...)
+        event('coroutine', 1, co)
+        return _coroutine_resume(co, ...)
+    end
 end
 
 local function start_master()

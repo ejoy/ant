@@ -20,6 +20,18 @@ end
 
 local m = {}
 
+function m.updateCoroutine(co)
+    if linebp or stepin then
+        rdebug.hookmask(co, 'crl')
+        return
+    end
+    if bp or step then
+        rdebug.hookmask(co, 'cr')
+        return
+    end
+    rdebug.hookmask(co, '')
+end
+
 function m.openStep()
     step = true
     update()

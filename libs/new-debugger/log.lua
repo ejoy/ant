@@ -24,7 +24,7 @@ local function packstring(...)
     local t = {}
     for i = 1, select('#', ...) do
         local x = select(i, ...)
-        if type(x) == 'number' then
+        if math.type(x) == 'float' then
             x = round(x, 0.01)
         end
         t[#t + 1] = tostring(x)

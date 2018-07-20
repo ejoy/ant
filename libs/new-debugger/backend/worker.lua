@@ -337,7 +337,6 @@ hook['line'] = function(line)
         hookmgr.closeLineBP()
         return
     end
-
     local bp = breakpoint.find(src, line)
     if bp then
         if breakpoint.exec(bp) then
@@ -388,6 +387,14 @@ local function getEventArgs(i)
     return true, rdebug.value(value)
 end
 
+local function getEventArgsRaw(i)
+    local name, value = rdebug.getlocal(1, -i)
+    if name == nil then
+        return false
+    end
+    return true, value
+end
+
 local function setEventRet(v)
     local name, value = rdebug.getlocal(1, 3)
     if name ~= nil then
@@ -433,6 +440,11 @@ hook['exception'] = function()
     exceptionMsg, exceptionTrace = traceback(msg, level)
     state = 'stopped'
     runLoop('exception')
+end
+
+hook['coroutine'] = function()
+    local _, co = getEventArgsRaw(1)
+    hookmgr.updateCoroutine(co)
 end
 
 rdebug.sethook(function(event, line)
