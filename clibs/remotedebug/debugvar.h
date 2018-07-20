@@ -586,7 +586,6 @@ table_key(lua_State *L, lua_State *cL) {
 
 static void
 combine_tk(lua_State *L, lua_State *cL, int type, int getref) {
-// always return reference
 	if (!getref && copy_value(cL, L) != LUA_TNONE) {
 		lua_pop(cL, 2);
 		// L : t, k, v
