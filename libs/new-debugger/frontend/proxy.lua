@@ -61,18 +61,18 @@ local function create_terminal(args, port)
             command[#command + 1] = '-e'
             command[#command + 1] = ("package.cpath=[[%s]];"):format(args.cpath)
         end
-        if type(arg0) == 'string' then
-            command[#command + 1] = arg0
+        if type(args.arg0) == 'string' then
+            command[#command + 1] = args.arg0
         elseif type(arg0) == 'table' then
-            for _, v in ipairs(arg0) do
+            for _, v in ipairs(args.arg0) do
                 command[#command + 1] = v
             end
         end
         command[#command + 1] = args.program
-        if type(arg) == 'string' then
-            command[#command + 1] = arg
-        elseif type(arg) == 'table' then
-            for _, v in ipairs(arg) do
+        if type(args.arg) == 'string' then
+            command[#command + 1] = args.arg
+        elseif type(args.arg) == 'table' then
+            for _, v in ipairs(args.arg) do
                 command[#command + 1] = v
             end
         end
