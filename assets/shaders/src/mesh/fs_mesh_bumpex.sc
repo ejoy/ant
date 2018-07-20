@@ -1,4 +1,4 @@
-$input v_normal, v_tangent, v_bitangent, v_tex0, v_pos
+$input v_tex0, v_lightdir, v_viewdir
 
 #include <common.sh>
 
@@ -21,35 +21,30 @@ vec4 calc_lighting_BH(vec3 normal, vec3 lightdir, vec3 viewdir,
 	float specularFactor = pow(hdotn, shininess * 64);// * u_specularLight.x;
 
 	vec3 diffuse = diffuseColor * lightColor * ndotl;
-	float ss = specularColor * specularFactor * gloss;
 
-	vec3 specular = specularColor * specularFactor * gloss;
-	vec3 ambient = diffuseColor * lightColor * 0.12;
+	vec3 specular = specularColor.rbg * specularFactor * gloss;
+	vec3 ambient = (diffuseColor * lightColor * 0.12).rgb;
 
-	return vec4(diffuse + ambient + specular, 1.0);//vec4(diffuse + specular + ambient, 1.0);	
+	//return vec4(specularFactor * gloss, specularFactor * gloss, specularFactor * gloss, 1.0);
+	return vec4(diffuse + ambient + specular, 1.0);
 }
 
 void main()
 {
-	mat3 tbn = transpose(
-					mat3(normalize(v_tangent),
-					normalize(v_bitangent),
-					normalize(v_normal)));	
-
 	vec2 tt = vec2(v_tex0.x, 1-v_tex0.y);
 
 	vec4 ntexdata = texture2D(s_normal, tt);	
 	vec3 normal = vec3(ntexdata.xy, 0.0);
-	normal.xy = normal.xy * 2.0 - 1.0;	
+	normal.xy = normal.xy * 2.0 - 1.0;
 	normal.z = sqrt(1.0 - dot(normal.xy, normal.xy));
 
-	//vec4 color = toLinear(texture2D(s_basecolor, v_tex0) );
-	vec4 color = texture2D(s_basecolor, tt);
+	vec4 basecolor = toLinear(texture2D(s_basecolor, tt));
+	//vec4 basecolor = texture2D(s_basecolor, tt);
 
-	vec3 lightdir = mul(directional_lightdir[0], tbn);
-	vec3 viewdir = mul(normalize(u_eyepos - v_pos), tbn);
+	// vec3 lightdir = mul(directional_lightdir[0], tbn);
+	// vec3 viewdir = mul(normalize(u_eyepos - v_pos), tbn);
 
 	float gloss = ntexdata.z;
 	vec4 lightcolor = directional_color[0] * directional_intensity[0].x;
-	gl_FragColor = calc_lighting_BH(normal, lightdir, viewdir, lightcolor, color, u_specularColor, gloss);
+	gl_FragColor = calc_lighting_BH(normal, v_lightdir, v_viewdir, lightcolor, basecolor, u_specularColor, gloss);
 }
