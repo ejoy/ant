@@ -19,11 +19,20 @@
             "type": "lua",
             "request": "launch",
             "name": "Editor",
+            "stopOnEntry": true,
             "runtimeExecutable": "${workspaceRoot}\\bin\\iup.exe",
-            "runtimeArgs": "${workspaceRoot}\\libs\\main.lua",
+            "runtimeArgs": "${workspaceRoot}\\libs\\dbg_main.lua",
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
-            "stopOnEntry": false,
+            "skipFiles": [
+                "libs/new-debugger/*"
+            ],
+            "sourceMaps": [
+                [
+                    "./*",
+                    "${workspaceRoot}/*"
+                ]
+            ]
         },
         {
             "type": "lua",
