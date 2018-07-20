@@ -24,6 +24,10 @@ rdebug.sethook(function(event, line)
 		print("meta =>", rdebug.value(meta))
 		rdebug.assign(meta, nil)
 		print("meta =>", rdebug.value(meta))
+		local fa = rdebug.copytable(f.a.__ref)
+		for k,v in pairs(fa) do
+			print("a =>", k,v)
+		end
 		print("a.b=>",f.a.b)
 		print("a.none=>", rdebug.value(f.a.none))
 		print("a.b.c=>",f.a.b.c)

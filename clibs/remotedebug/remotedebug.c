@@ -379,13 +379,13 @@ lclient_hookmask(lua_State *L) {
 // frame, index
 // return value, name
 static int
-lclient_getlocal(lua_State *L) {
+client_getlocal(lua_State *L, int getref) {
 	int frame = luaL_checkinteger(L, 1);
 	int index = luaL_checkinteger(L, 2);
 
 	lua_State *hL = get_host(L);
 
-	const char *name = get_frame_local(L, hL, frame, index);
+	const char *name = get_frame_local(L, hL, frame, index, getref);
 	if (name) {
 		lua_pushstring(L, name);
 		lua_insert(L, -2);
@@ -393,6 +393,16 @@ lclient_getlocal(lua_State *L) {
 	}
 
 	return 0;
+}
+
+static int
+lclient_getlocal(lua_State *L) {
+	return client_getlocal(L, 1);
+}
+
+static int
+lclient_getlocalv(lua_State *L) {
+	return client_getlocal(L, 0);
 }
 
 // frame
@@ -461,6 +471,34 @@ lclient_next(lua_State *L) {
 static int
 lclient_nextv(lua_State *L) {
 	return client_next(L, 1);
+}
+
+static int
+lclient_copytable(lua_State *L) {
+	lua_State *hL = get_host(L);
+	lua_settop(L, 1);
+	if (lua_checkstack(hL, 4) == 0) {
+		return luaL_error(L, "stack overflow");
+	}
+	if (eval_value(L, hL) != LUA_TTABLE) {
+		lua_pop(hL, 1);	// pop table
+		return 0;
+	}
+	lua_newtable(L);
+	lua_insert(L, -2);
+	lua_pushnil(L);
+	// L : result tableref nil
+	lua_pushnil(hL);
+	// hL : table nil
+	while(next_kv(L, hL)) {
+		// L: result tableref nextkey value
+		lua_pushvalue(L, -2);
+		lua_insert(L, -2);
+		// L: result tableref nextkey nextkey value
+		lua_rawset(L, -5);
+		// L: result tableref nextkey
+	}
+	return 1;
 }
 
 static int
@@ -726,6 +764,7 @@ luaopen_remotedebug(lua_State *L) {
 			{ "sethook", lclient_sethook },
 			{ "hookmask", lclient_hookmask },
 			{ "getlocal", lclient_getlocal },
+			{ "getlocalv", lclient_getlocalv },
 			{ "getfunc", lclient_getfunc },
 			{ "getupvalue", lclient_getupvalue },
 			{ "getupvaluev", lclient_getupvaluev },
@@ -738,6 +777,7 @@ luaopen_remotedebug(lua_State *L) {
 			{ "indexv", lclient_indexv },
 			{ "next", lclient_next },
 			{ "nextv", lclient_nextv },
+			{ "copytable", lclient_copytable },
 			{ "value", lclient_value },
 			{ "assign", lclient_assign },
 			{ "type", lclient_type },
