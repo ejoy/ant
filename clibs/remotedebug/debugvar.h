@@ -585,16 +585,15 @@ table_key(lua_State *L, lua_State *cL) {
 }
 
 static void
-combine_tk(lua_State *L, lua_State *cL, int type) {
+combine_tk(lua_State *L, lua_State *cL, int type, int getref) {
 // always return reference
-
-//	if (copy_value(cL, L) != LUA_TNONE) {
-//		lua_pop(cL, 2);
-//		// L : t, k, v
-//		lua_replace(L, -3);
-//		lua_pop(L, 1);
-//		return;
-//	}
+	if (!getref && copy_value(cL, L) != LUA_TNONE) {
+		lua_pop(cL, 2);
+		// L : t, k, v
+		lua_replace(L, -3);
+		lua_pop(L, 1);
+		return;
+	}
 	lua_pop(cL, 2);	// pop t v from cL
 	// L : t, k
 	if (lua_type(L, -1) == LUA_TUSERDATA) {
@@ -609,17 +608,17 @@ combine_tk(lua_State *L, lua_State *cL, int type) {
 }
 
 static int
-get_index(lua_State *L, lua_State *cL) {
+get_index(lua_State *L, lua_State *cL, int getref) {
 	if (table_key(L, cL) == 0)
 		return 0;
 	lua_rawget(cL, -2);	// cL : table value
-	combine_tk(L, cL, 0);
+	combine_tk(L, cL, 0, getref);
 	return 1;
 }
 
 // table last_key
 static int
-next_key(lua_State *L, lua_State *cL) {
+next_key(lua_State *L, lua_State *cL, int getref) {
 	if (table_key(L, cL) == 0)
 		return 0;
 	if (lua_next(cL, -2) == 0) {
@@ -627,12 +626,12 @@ next_key(lua_State *L, lua_State *cL) {
 		return 0;
 	}
 	lua_pop(cL, 1);	// remove value
-	combine_tk(L, cL, 1);
+	combine_tk(L, cL, 1, getref);
 	return 1;
 }
 
 static const char *
-get_upvalue(lua_State *L, lua_State *cL, int index) {
+get_upvalue(lua_State *L, lua_State *cL, int index, int getref) {
 	if (lua_type(L, -1) != LUA_TUSERDATA) {
 		lua_pop(L, 1);
 		return NULL;
@@ -653,13 +652,12 @@ get_upvalue(lua_State *L, lua_State *cL, int index) {
 		lua_pop(cL, 1);	// remove function
 		return NULL;
 	}
-// always return reference
 
-//	if (copy_value(cL, L) != LUA_TNONE) {
-//		lua_replace(L, -2);	// remove function object
-//		lua_pop(cL, 1);
-//		return name;
-//	}
+	if (!getref && copy_value(cL, L) != LUA_TNONE) {
+		lua_replace(L, -2);	// remove function object
+		lua_pop(cL, 1);
+		return name;
+	}
 	lua_pop(cL, 2);	// remove func / upvalue
 	struct value *f = lua_touserdata(L, -1);
 	int sz = sizeof_value(f);
@@ -691,7 +689,7 @@ get_registry(lua_State *L, int type) {
 }
 
 static struct value *
-get_metatable(lua_State *L, lua_State *cL) {
+get_metatable(lua_State *L, lua_State *cL, int getref) {
 	if (lua_checkstack(cL, 2)==0)
 		luaL_error(L, "stack overflow");
 	int t = eval_value(L, cL);
@@ -699,13 +697,16 @@ get_metatable(lua_State *L, lua_State *cL) {
 		lua_pop(L, 1);
 		return NULL;
 	}
-//	if (lua_getmetatable(cL,-1) == 0) {
-//		lua_pop(L, 1);
-//		lua_pop(cL, 1);
-//		return NULL;
-//	}
-//	lua_pop(cL, 2);
-	lua_pop(cL, 1);
+	if (!getref) {
+		if (lua_getmetatable(cL,-1) == 0) {
+			lua_pop(L, 1);
+			lua_pop(cL, 1);
+			return NULL;
+		}
+		lua_pop(cL, 2);
+	} else {
+		lua_pop(cL, 1);
+	}
 	if (t == LUA_TTABLE || t == LUA_TUSERDATA) {
 		struct value *t = lua_touserdata(L, -1);
 		int sz = sizeof_value(t);
@@ -729,7 +730,7 @@ get_metatable(lua_State *L, lua_State *cL) {
 }
 
 static int
-get_uservalue(lua_State *L, lua_State *cL) {
+get_uservalue(lua_State *L, lua_State *cL, int getref) {
 	if (lua_checkstack(cL, 2)==0)
 		return luaL_error(L, "stack overflow");
 	int t = eval_value(L, cL);
@@ -743,14 +744,16 @@ get_uservalue(lua_State *L, lua_State *cL) {
 		lua_pop(L, 1);
 		return 0;
 	}
-// always return reference
 
-//	lua_getuservalue(cL, -1);
-//	if (copy_value(cL, L) != LUA_TNONE) {
-//		lua_pop(cL, 2);	// pop userdata / uservalue
-//		lua_replace(L, -2);
-//		return 1;
-//	}
+	if (!getref) {
+		lua_getuservalue(cL, -1);
+		if (copy_value(cL, L) != LUA_TNONE) {
+			lua_pop(cL, 2);	// pop userdata / uservalue
+			lua_replace(L, -2);
+			return 1;
+		}
+		lua_pop(cL,1);
+	}
 
 	// L : value
 	// cL : value uservalue
