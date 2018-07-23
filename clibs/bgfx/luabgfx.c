@@ -64,6 +64,7 @@ struct callback {
 	bgfx_callback_interface_t base;
 	struct screenshot_queue ss;
 	struct log_cache lc;
+	bool getlog;
 };
 
 static void *
@@ -140,8 +141,12 @@ cb_fatal(bgfx_callback_interface_t *self, bgfx_fatal_t code, const char *str) {
 		// truncated
 		n = MAX_LOGBUFFER;
 	}
-
-	append_log(&(((struct callback *)self)->lc), tmp, n);
+	struct callback * cb = (struct callback *)self;
+	if (cb->getlog) {
+		append_log(&(cb->lc), tmp, n);
+	} else {
+		fputs(tmp, stdout);
+	}
 }
 
 static void
@@ -155,8 +160,12 @@ cb_trace_vargs(bgfx_callback_interface_t *self, const char *file, uint16_t line,
 		// truncated
 		n = MAX_LOGBUFFER;
 	}
-
-	append_log(&(((struct callback *)self)->lc), tmp, n);
+	struct callback * cb = (struct callback *)self;
+	if (cb->getlog) {
+		append_log(&(cb->lc), tmp, n);
+	} else {
+		fputs(tmp, stdout);
+	}
 }
 
 // todo: bgfx callback
@@ -380,6 +389,7 @@ linit(lua_State *L) {
 		read_uint32(L, 1, "transientIbSize", &init.limits.transientIbSize);
 		read_boolean(L, 1, "debug", &init.debug);
 		read_boolean(L, 1, "profile", &init.profile);
+		read_boolean(L, 1, "getlog", &cb->getlog);
 	}
 
 	if (!bgfx_init(&init)) {
