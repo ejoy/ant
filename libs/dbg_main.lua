@@ -1,5 +1,3 @@
-dofile "libs/init.lua"
-
 local dbg = require 'new-debugger'
 local dbgupdate = dbg.start_all(true)
 local dbgtimer = iup.timer{time=100}
