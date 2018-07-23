@@ -44,17 +44,23 @@ local function start_master()
     end
 end
 
-local function start_worker()
+local function start_worker(wait)
     start_hook()
     rdebug.start 'new-debugger.backend.worker'
+    if wait then
+        event('wait_client', 1, false)
+    end
     return function()
         event 'update'
     end
 end
 
-local function start_all()
+local function start_all(wait)
     start_hook()
     rdebug.start 'new-debugger.backend.worker'
+    if wait then
+        event('wait_client', 1, true)
+    end
     return function()
         event 'update_all'
     end

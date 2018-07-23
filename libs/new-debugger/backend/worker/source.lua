@@ -8,7 +8,7 @@ local skipFiles = {}
 local sourceMaps = {}
 local workspaceFolder = nil
 
-ev.on('initialized', function(config)
+ev.on('initializing', function(config)
     workspaceFolder = config.workspaceFolder
     skipFiles = {}
     sourceMaps = {}

@@ -35,7 +35,7 @@ function request.attach(req)
     end
 
     mgr.broadcastToWorker {
-        cmd = 'initialized',
+        cmd = 'initializing',
         config = config,
     }
     
@@ -57,13 +57,15 @@ end
 
 function request.configurationDone(req)
     response.success(req)
-    -- TODO
     if stopOnEntry then
         mgr.broadcastToWorker {
             cmd = 'stop',
             reason = 'stepping',
         }
     end
+    mgr.broadcastToWorker {
+        cmd = 'initialized',
+    }
 end
 
 local breakpointID = 0

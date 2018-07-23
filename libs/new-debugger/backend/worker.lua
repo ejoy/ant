@@ -63,8 +63,11 @@ ev.on('output', function(category, output, source, line)
     }
 end)
 
+function CMD.initializing(pkg)
+    ev.emit('initializing', pkg.config)
+end
+
 function CMD.initialized(pkg)
-    ev.emit('initialized', pkg.config)
     initialized = true
 end
 
@@ -447,14 +450,6 @@ hook['coroutine'] = function()
     hookmgr.updateCoroutine(co)
 end
 
-rdebug.sethook(function(event, line)
-    assert(xpcall(function()
-        if hook[event] then
-            hook[event](line)
-        end
-    end, debug.traceback))
-end)
-
 local createMaster = true
 hook['update_all'] = function()
     if createMaster then
@@ -471,6 +466,26 @@ hook['update_all'] = function()
     end
     workerThreadUpdate()
 end
+
+hook['wait_client'] = function()
+    local _, all = getEventArgs(1)
+    while not initialized do
+        cdebug.sleep(10)
+        if all then
+            hook['update_all']()
+        else
+            hook['update']()
+        end
+    end
+end
+
+rdebug.sethook(function(event, line)
+    assert(xpcall(function()
+        if hook[event] then
+            hook[event](line)
+        end
+    end, debug.traceback))
+end)
 
 sendToMaster {
     cmd = 'ready',
