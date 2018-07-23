@@ -93,43 +93,83 @@ local function HandleModelNode(material_info, model_node, parent_name, parent_tr
 end
 
 function fbx_loader.load(filepath)
-    print(filepath)
     local path = require "filesystem.path"
     local ext = path.ext(filepath)
     if string.lower(ext) ~= "fbx" then
         return
-    end
+	end
 
-    local material_info, model_node = assimp.LoadFBX(filepath)
-    if not material_info or not model_node then
-        return
-    end
+	local meshgroup = assimp.LoadFBX(filepath, "p|n|T|b|t0|c0")
 
-    --PrintNodeInfo(model_node, 1)
-    --PrintMaterialInfo(material_info)
+	if meshgroup then
+		local function create_decl(vb_layout)
+			local decl = {}
+			for v in vb_layout:gmatch("%w+") do 
+				if v == "p" then
+					table.insert(decl, { "POSITION", 3, "FLOAT" })
+				elseif v == "n" then
+					table.insert(decl, { "NORMAL", 3, "FLOAT", true, false})
+				elseif v == "T" then
+					table.insert(decl, { "TANGENT", 3, "FLOAT", true, false})
+				elseif v == "b" then
+					table.insert(decl, { "BITANGENT", 3, "FLOAT", true, false})
+				elseif v == "t0" then
+					table.insert(decl, { "TEXCOORD0", 3, "FLOAT"})
+				elseif v == "t1" then
+					table.insert(decl, { "TEXCOORD1", 3, "FLOAT"})
+				elseif v == "c0" then
+					table.insert(decl, { "COLOR0", 4, "FLOAT"})
+				end
+			end
+		
+			return bgfx.vertex_decl(decl)
+		end
 
-    for _, v in ipairs(material_info) do
-        v.vb_raw = {}
-        v.ib_raw = {}
-        v.prim = {}
-    end
-
-    HandleModelNode(material_info, model_node)
-
-    for _, v in ipairs(material_info) do
-        --local data_string = string.pack("s", table.unpack(v.vb_raw))
-        local vdecl, stride = bgfx.vertex_decl {
-            { "POSITION", 3, "FLOAT" },
-            { "NORMAL", 3, "FLOAT", true, false},
-            { "TEXCOORD0", 3, "FLOAT"},
-        }
-
-        local vb_data = {"fffffffff", table.unpack(v.vb_raw)}
-        v.vb = bgfx.create_vertex_buffer(vb_data, vdecl)
-        v.ib = bgfx.create_index_buffer(v.ib_raw)
-    end
-
-    return {group = material_info}
+		local group = meshgroup.group
+		local decl, stride = create_decl(group.vb_layout)
+		group.vb = bgfx.create_vertex_buffer(decl, group.vb)
+		group.ib = bgfx.create_index_buffer(group.ib, group.ibFormat)
+	end
 end
+
+-- function fbx_loader.load(filepath)
+--     print(filepath)
+--     local path = require "filesystem.path"
+--     local ext = path.ext(filepath)
+--     if string.lower(ext) ~= "fbx" then
+--         return
+--     end
+
+--     local material_info, model_node = assimp.LoadFBX(filepath)
+--     if not material_info or not model_node then
+--         return
+--     end
+
+--     --PrintNodeInfo(model_node, 1)
+--     --PrintMaterialInfo(material_info)
+
+--     for _, v in ipairs(material_info) do
+--         v.vb_raw = {}
+--         v.ib_raw = {}
+--         v.prim = {}
+--     end
+
+--     HandleModelNode(material_info, model_node)
+
+--     for _, v in ipairs(material_info) do
+--         --local data_string = string.pack("s", table.unpack(v.vb_raw))
+--         local vdecl, stride = bgfx.vertex_decl {
+--             { "POSITION", 3, "FLOAT" },
+--             { "NORMAL", 3, "FLOAT", true, false},
+--             { "TEXCOORD0", 3, "FLOAT"},
+--         }
+
+--         local vb_data = {"fffffffff", table.unpack(v.vb_raw)}
+--         v.vb = bgfx.create_vertex_buffer(vb_data, vdecl)
+--         v.ib = bgfx.create_index_buffer(v.ib_raw)
+--     end
+
+--     return {group = material_info}
+-- end
 
 return fbx_loader
