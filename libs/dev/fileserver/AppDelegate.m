@@ -66,6 +66,17 @@
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
+    NSArray* touch_array = [[event allTouches] allObjects];
+    for (NSInteger i = 0; i < [touch_array count]; ++i) {
+        UITouch* touch = touch_array[i];
+        CGPoint touchLocation = [touch locationInView:self];
+        touchLocation.x *= self.contentScaleFactor;
+        touchLocation.y *= self.contentScaleFactor;
+        
+        [m_Render AddInputMessage:@"begin" x_pos:touchLocation.x y_pos:touchLocation.y];
+    }
+    
+    /*
     UITouch *touch = [[event allTouches] anyObject];
     CGPoint touchLocation = [touch locationInView:self];
     touchLocation.x *= self.contentScaleFactor;
@@ -73,10 +84,22 @@
     
     NSString *log = [NSString stringWithFormat:@"touches began x: %f, y: %f", touchLocation.x, touchLocation.y];
     [m_Render SendLog:log];
+     */
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
 {
+    NSArray* touch_array = [[event allTouches] allObjects];
+    for (NSInteger i = 0; i < [touch_array count]; ++i) {
+        UITouch* touch = touch_array[i];
+        CGPoint touchLocation = [touch locationInView:self];
+        touchLocation.x *= self.contentScaleFactor;
+        touchLocation.y *= self.contentScaleFactor;
+        
+        [m_Render AddInputMessage:@"end" x_pos:touchLocation.x y_pos:touchLocation.y];
+    }
+    
+    /*
     UITouch *touch = [[event allTouches] anyObject];
     CGPoint touchLocation = [touch locationInView:self];
     touchLocation.x *= self.contentScaleFactor;
@@ -84,10 +107,22 @@
     
     NSString *log = [NSString stringWithFormat:@"touches ended x: %f, y: %f", touchLocation.x, touchLocation.y];
     [m_Render SendLog:log];
+     */
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
 {
+    NSArray* touch_array = [[event allTouches] allObjects];
+    for (NSInteger i = 0; i < [touch_array count]; ++i) {
+        UITouch* touch = touch_array[i];
+        CGPoint touchLocation = [touch locationInView:self];
+        touchLocation.x *= self.contentScaleFactor;
+        touchLocation.y *= self.contentScaleFactor;
+        
+        [m_Render AddInputMessage:@"move" x_pos:touchLocation.x y_pos:touchLocation.y];
+    }
+    
+    /*
     UITouch *touch = [[event allTouches] anyObject];
     CGPoint touchLocation = [touch locationInView:self];
     touchLocation.x *= self.contentScaleFactor;
@@ -95,10 +130,22 @@
     
     NSString *log = [NSString stringWithFormat:@"touches moved x: %f, y: %f", touchLocation.x, touchLocation.y];
     [m_Render SendLog:log];
+     */
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
 {
+    NSArray* touch_array = [[event allTouches] allObjects];
+    for (NSInteger i = 0; i < [touch_array count]; ++i) {
+        UITouch* touch = touch_array[i];
+        CGPoint touchLocation = [touch locationInView:self];
+        touchLocation.x *= self.contentScaleFactor;
+        touchLocation.y *= self.contentScaleFactor;
+        
+        [m_Render AddInputMessage:@"cancel" x_pos:touchLocation.x y_pos:touchLocation.y];
+    }
+    
+    /*
     UITouch *touch = [[event allTouches] anyObject];
     CGPoint touchLocation = [touch locationInView:self];
     touchLocation.x *= self.contentScaleFactor;
@@ -106,6 +153,7 @@
     
     NSString *log = [NSString stringWithFormat:@"touches cancelled x: %f, y: %f", touchLocation.x, touchLocation.y];
     [m_Render SendLog:log];
+     */
 }
 
 @end

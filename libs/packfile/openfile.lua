@@ -1,12 +1,11 @@
 local require = import and import(...) or require
-
 local winfile =  require "winfile"
-local fs =  require "cppfs"
+--local fs =  require "cppfs"
 
 local rawopen = winfile.open
 
 local rules = {}
-if winfile.exist(".antpack") then	
+if winfile.exist(".antpack") then
 	for str in io.lines '.antpack' do
 		local f, l = str:find ' '
 		if f then
@@ -74,7 +73,7 @@ return function (path, mode)
     if not ok then
         return nil, err
     end
-    local time = fs.last_write_time(fs.path(lnk_path))
-    fs.last_write_time(fs.path(cache_path), time)
+  --  local time = fs.last_write_time(fs.path(lnk_path))
+  --  fs.last_write_time(fs.path(cache_path), time)
     return rawopen(cache_path, mode)
 end

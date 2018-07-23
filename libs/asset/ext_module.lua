@@ -6,7 +6,13 @@ return function(filename)
     local files = assert(t.modules)
     local modules = {}
     for _, v in ipairs(files) do
-        table.insert(modules, assert(loadfile(v)))
+
+        if package.app_dir then
+            local ios_path = package.app_dir .. "/" .. v
+            table.insert(modules, assert(loadfile(ios_path)))
+        else
+            table.insert(modules, assert(loadfile(v)))
+        end
     end
 
     return modules

@@ -76,8 +76,8 @@ function add_entity_sys:init()
 		local sphere_fn = "mem://light_bulb.material"
 		fs_util.write_to_file(sphere_fn, [[
 			shader = {
-				vs = "simple/light_bulb/vs_bulb.sc",
-				fs = "simple/light_bulb/fs_bulb.sc",
+				vs = "simple/light_bulb/vs_bulb",
+				fs = "simple/light_bulb/fs_bulb",
 			}
 			state = "default.state"
 			properties = {
@@ -86,28 +86,28 @@ function add_entity_sys:init()
 		]])
 		component_util.load_material(lentity, {sphere_fn})
 
-		lentity.can_render.visible = false
+		lentity.can_render.visible = true
 	end
 
-    -- do
-    --     local bunny_eid = world:new_entity("position", "rotation", "scale", 
-	-- 		"can_render", "mesh", "material",
-	-- 		"name", "serialize",
-    --         "can_select")
-    --     local bunny = world[bunny_eid]
-    --     bunny.name.n = "bunny"
+     do
+         local bunny_eid = world:new_entity("position", "rotation", "scale",
+	 		"can_render", "mesh", "material",
+	 		"name", "serialize",
+             "can_select")
+         local bunny = world[bunny_eid]
+         bunny.name.n = "bunny"
 
-    --     -- should read from serialize file        
-    --     ms(bunny.scale.v, {0.2, 0.2, 0.2, 0}, "=")
-    --     ms(bunny.position.v, {0, 0, 3, 1}, "=")
-	-- 	ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
+         -- should read from serialize file
+         ms(bunny.scale.v, {2, 2, 2, 0}, "=")
+         ms(bunny.position.v, {0, 0, 0, 1}, "=")
+	 	ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
 
-	-- 	bunny.mesh.path = "bunny.mesh"
-	-- 	component_util.load_mesh(bunny)
+	 	bunny.mesh.path = "bunny.mesh"
+	 	component_util.load_mesh(bunny)
 
-	-- 	bunny.material.content[1] = {path = "bunny.material", properties = {}}
-	-- 	component_util.load_material(bunny)
-	-- end
+	 	bunny.material.content[1] = {path = "bunny.material", properties = {}}
+	 	component_util.load_material(bunny)
+	 end
 
     
 	-- do	-- pochuan
@@ -130,6 +130,7 @@ function add_entity_sys:init()
 
     local PVPScene = require "modelloader.PVPScene"
     PVPScene.init(world, component_util, ms)
+
 	-- do
 	-- 	local stone_eid = world:new_entity("position", "rotation", "scale",
 	-- 	"can_render", "mesh", "material",

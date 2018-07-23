@@ -33,6 +33,7 @@ function PVPScene.init(world, component_util, ms)
         component_util.load_material(campsite_door_1, {"PVPScene/scene-mat.material"})
     end
 
+    --[[
     --campsite wall
     do
         local campsite_wall_eid = world:new_entity("position", "rotation", "scale",
@@ -608,6 +609,7 @@ function PVPScene.init(world, component_util, ms)
             component_util.load_material(woodother_34, {"PVPScene/scene-mat.material"})
         end
     end
+    --]]
 end
 
 return PVPScene

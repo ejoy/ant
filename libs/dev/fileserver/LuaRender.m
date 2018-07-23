@@ -19,18 +19,18 @@ LUAMOD_API int luaopen_bgfx(lua_State *L);
 LUAMOD_API int luaopen_bgfx_util(lua_State *L);
 LUAMOD_API int luaopen_bgfx_baselib(lua_State *L);
 LUAMOD_API int luaopen_bgfx_terrain(lua_State *L);
+LUAMOD_API int luaopen_bgfx_nuklear(lua_State *L);
 
 LUAMOD_API int luaopen_math3d(lua_State *L);
 LUAMOD_API int luaopen_lfs(lua_State *L);
 LUAMOD_API int luaopen_lodepnglua(lua_State *L);
 LUAMOD_API int luaopen_memoryfile (lua_State *L);
-//LUAMOD_API int luaopen_assimplua(lua_State *L);
+LUAMOD_API int luaopen_assimplua(lua_State *L);
 void luaopen_lanes_embedded( lua_State* L, lua_CFunction _luaopen_lanes);
 
-static int default_luaopen_lanes( lua_State* L)
-{
+static int default_luaopen_lanes( lua_State* L) {
     NSString *lanes_lua = [[NSBundle mainBundle] resourcePath];
-    lanes_lua = [lanes_lua stringByAppendingString:@"/Common/lanes.lua"];
+    lanes_lua = [lanes_lua stringByAppendingString:@"/libs/lanes/lanes.lua"];
     int rc = luaL_loadfile( L, [lanes_lua UTF8String]) || lua_pcall( L, 0, 1, 0);
     if( rc != LUA_OK) {
         return luaL_error( L, "failed to initialize embedded Lanes");
@@ -38,8 +38,7 @@ static int default_luaopen_lanes( lua_State* L)
     return 1;
 }
 
-static int custom_on_state_create(lua_State *L)
-{
+static int custom_on_state_create(lua_State *L) {
     lua_getglobal(L, "package");
     int top = lua_gettop(L);
     if(lua_istable(L, -1)) {
@@ -68,9 +67,9 @@ static int custom_on_state_create(lua_State *L)
             NSString* path_string = [NSString stringWithUTF8String:pkg_path];
             path_string = [path_string stringByAppendingString:@";"];
             NSString *app_path = [[NSBundle mainBundle] resourcePath];
-            path_string = [app_path stringByAppendingString:@"/Common/?.lua;"];
+            path_string = [app_path stringByAppendingString:@"/libs/dev/Common/?.lua;"];
             path_string = [path_string stringByAppendingString:app_path];
-            path_string = [path_string stringByAppendingString:@"/Client/?.lua"];
+            path_string = [path_string stringByAppendingString:@"/libs/dev/Client/?.lua"];
             lua_pushstring(L, [path_string UTF8String]);
             lua_setfield(L, -2, "path");
         }
@@ -82,13 +81,11 @@ static int custom_on_state_create(lua_State *L)
 }
 
 lua_State *L = nil;
-
-static int error_handle(lua_State* L)
-{
+static int error_handle(lua_State* L) {
     const char *msg = lua_tostring(L, -1);
     
     if(msg) {
-        printf("get message %s\n", msg);
+        printf("------- error!!! -------- \n %s\n", msg);
         luaL_traceback(L, L, msg, 1);
     }
     
@@ -97,8 +94,7 @@ static int error_handle(lua_State* L)
 
 @implementation LuaRender
 
-- (void) InitScript:(CALayer*)layer size:(CGSize)view_size
-{
+- (void) InitScript:(CALayer*)layer size:(CGSize)view_size {
     L = luaL_newstate();
     luaL_openlibs(L);
 
@@ -108,9 +104,10 @@ static int error_handle(lua_State* L)
     luaL_requiref(L, "bgfx.util", luaopen_bgfx_util, 0);
     luaL_requiref(L, "bgfx.baselib", luaopen_bgfx_baselib, 0);
     luaL_requiref(L, "bgfx.terrain", luaopen_bgfx_terrain, 0);
+    luaL_requiref(L, "bgfx.nuklear", luaopen_bgfx_nuklear, 0);
     luaL_requiref(L, "math3d", luaopen_math3d, 0);
     luaL_requiref(L, "winfile", luaopen_lfs, 0);
-  //  luaL_requiref(L, "assimplua", luaopen_assimplua, 0);
+    luaL_requiref(L, "assimplua", luaopen_assimplua, 0);
     luaL_requiref(L, "lodepnglua", luaopen_lodepnglua, 0);
     luaL_requiref(L, "memoryfile", luaopen_memoryfile, 0);
     luaopen_lanes_embedded(L, default_luaopen_lanes);
@@ -126,7 +123,7 @@ static int error_handle(lua_State* L)
     NSString *sandbox_dir = NSHomeDirectory();
     NSLog(app_dir, sandbox_dir);
     
-    NSString* file_dir = [app_dir stringByAppendingString:@"/Client/appmain.lua"];
+    NSString* file_dir = [app_dir stringByAppendingString:@"/libs/dev/Client/appmain.lua"];
     
     luaL_dofile(L, [file_dir UTF8String]);
     
@@ -147,11 +144,15 @@ static int error_handle(lua_State* L)
     else {
         assert(false);
     }
+    
+    //init msg array
+    self->MsgArray = [[NSMutableArray alloc] initWithCapacity:10];
+    
+    
 }
 
-
-- (void) Update
-{
+- (void) Update {
+    [self HandleInput];
     
 #ifdef DEBUG
     lua_pushcfunction(L, error_handle);
@@ -163,9 +164,7 @@ static int error_handle(lua_State* L)
     }
 }
 
-- (void) Terminate
-{
-    
+- (void) Terminate {
 #ifdef DEBUG
     lua_pushcfunction(L, error_handle);
 #endif
@@ -178,8 +177,7 @@ static int error_handle(lua_State* L)
     lua_close(L);
 }
 
-- (void) SendLog:(NSString *)log_str
-{
+- (void) SendLog:(NSString *)log_str {
     
 #ifdef DEBUG
     lua_pushcfunction(L, error_handle);
@@ -192,6 +190,55 @@ static int error_handle(lua_State* L)
         lua_pushstring(L, [log_str UTF8String]);
         lua_pcall(L, 2, 0, -4);
     }
+}
+
+
+- (void) HandleInput {
+#ifdef DEBUG
+    lua_pushcfunction(L, error_handle);
+#endif
+    if([self->MsgArray count] > 0) {
+        lua_getglobal(L, "handle_input");
+        if(lua_isfunction(L, -1)) {
+            lua_newtable(L);
+            for(NSInteger i = 0; i < [self->MsgArray count]; ++i) {
+                lua_newtable(L);
+                InputMsg* msg = self->MsgArray[i];
+                lua_pushstring(L, [msg->msg UTF8String]);
+                lua_setfield(L, -2, "msg");
+                
+                lua_pushnumber(L, msg->x_pos);
+                lua_setfield(L, -2, "x");
+                
+                lua_pushnumber(L, msg->y_pos);
+                lua_setfield(L, -2, "y");
+                
+                lua_seti(L, -2, i+1);
+            }
+            
+            lua_pcall(L, 1, 0, -3);
+        }
+        
+        [self->MsgArray removeAllObjects];
+    }
+}
+
+- (void) AddInputMessage:(NSString *)msg x_pos:(CGFloat)x y_pos:(CGFloat)y {
+    InputMsg* new_msg = [[InputMsg alloc] initWithArgs:msg x_pos:x y_pos:y];
+    [MsgArray addObject:new_msg];
+}
+@end
+
+@implementation InputMsg
+
+-(id) initWithArgs:(NSString*)in_msg x_pos:(CGFloat)in_x y_pos:(CGFloat)in_y {
+    if(self=[super init])
+    {
+        msg = in_msg;
+        x_pos = in_x;
+        y_pos = in_y;
+    }
+    return  self;
 }
 
 @end

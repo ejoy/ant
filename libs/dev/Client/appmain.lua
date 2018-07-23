@@ -1,4 +1,4 @@
-package.path = "../Common/?.lua;../Package/?.lua;../Package/?/?.lua;./?.lua;../?/?.lua;../?.lua;" .. package.path  --path for the app
+package.path = "../Common/?.lua;./?.lua;../?/?.lua;../?.lua;" .. package.path  --path for the app
 --TODO: find a way to set this
 package.remote_search_path = "../?.lua;?.lua;../?/?.lua;../asset/?.lua" --path for the remote script
 
@@ -20,13 +20,6 @@ local origin_print = print
 function sendlog(cat, ...)
     --linda:send("log", {cat, ...})
     --origin_print(cat, ...)
-
-    if cat == "Device" then
-
-        if entrance then
-            entrance.ProcessInput(...)
-        end
-    end
 end
 
 print = function(...)
@@ -109,8 +102,6 @@ local function remote_searcher (name)
     end
 end
 --table.insert(package.searchers, remote_searcher)
-
-
 
 
 local lsocket = require "lsocket"
@@ -233,17 +224,31 @@ local function HandleCacheScreenShot()
     --end
 end
 
+local function init_lua_search_path(app_dir)
+
+    package.path = package.path .. ";" .. app_dir .. "/libs/?.lua;" .. app_dir .. "/libs/?/?.lua;" .. app_dir .. "/libs/ecs/?.lua;"
+
+    require "common/import"
+    require "common/log"
+    require "filesystem"
+
+    print_r = require "common/print_r"
+
+    function dprint(...) print(...) end
+end
+
 function init(window_handle, width, height, app_dir, bundle_dir)
     bundle_home_dir = bundle_dir
     app_home_dir = app_dir
+
+    package.bundle_dir = bundle_dir
     package.app_dir = app_dir
+
     g_WindowHandle = window_handle
     g_Width = width
     g_Height = height
 
-    local pack_path = app_dir .. "/Package/"
-    package.path = package.path .. ";"..pack_path .. "?.lua;" .. pack_path.."?/?.lua;"
-    package.path = package.path .. ";"..pack_path .. "ecs/?.lua;"
+
     file_mgr:ReadDirStructure(bundle_home_dir.."/Documents/dir.txt")
     file_mgr:ReadFilePathData(bundle_home_dir.."/Documents/file.txt")
 
@@ -269,6 +274,7 @@ function init(window_handle, width, height, app_dir, bundle_dir)
 
             --TODO file not exist
             --wait here
+            --[[
             while true do
                 local key, value = linda:receive(0.05, "file exist")
                 if value then
@@ -277,24 +283,16 @@ function init(window_handle, width, height, app_dir, bundle_dir)
                     return value
                 end
             end
+            --]]
         end
 
         return false
     end
 
-    --[[
-    if not bgfx_init then
-        InitBgfx()
-    end
+    init_lua_search_path(app_dir)
 
-    --bgfx.request_screenshot()
-    --screenshot_cache_num = 1
-
-    entrance = require "test"
-    entrance.init(width, height, app_dir, bundle_dir)
-    --]]
-
-    entrance = require("test_entrance")
+    entrance = require "ios_main"
+    entrance.init(window_handle, width, height)
     local client_io = lanes.gen("*",{package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateIOThread)(linda, bundle_home_dir)
 end
 
@@ -302,20 +300,6 @@ function mainloop()
     if entrance then
         entrance.mainloop()
     end
-
---[[
-    if bgfx_init then
-        local log_string = bgfx.get_log()
-        if #log_string > 0 then
-            sendlog("Bgfx", log_string)
-        end
-
-        local timer = bgfx.get_stats("t")
-        if timer then
-            sendlog("Fps", timer.gpu, timer.cpu)
-        end
-    end
-    --]]
 
     HandleMsg()
     HandleCacheScreenShot()
@@ -330,3 +314,10 @@ function terminate()
     file_mgr:WriteDirStructure(bundle_home_dir.."/Documents/dir.txt")
     file_mgr:WriteFilePathData(bundle_home_dir.."/Documents/file.txt")
 end
+
+function handle_input(msg_table)
+    if entrance then
+        entrance.input(msg_table)
+    end
+end
+
