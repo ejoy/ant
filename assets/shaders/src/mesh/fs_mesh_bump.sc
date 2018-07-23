@@ -24,6 +24,6 @@ void main()
 	vec3 lightdir = mul(directional_lightdir[0], tbn);
 	vec3 viewdir = mul(normalize(eyepos - v_pos), tbn);
 
-	gl_FragColor.xyz = calc_directional_light(normal, lightdir, viewdir) * color;
+	gl_FragColor.xyz = calc_directional_light(normal, lightdir, viewdir, 64) * color;
 	gl_FragColor.w = 1.f;
 }
