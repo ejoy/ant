@@ -58,7 +58,7 @@ end
 local function hasLocal(frameId)
     local i = 1
     while true do
-        local name = rdebug.getlocal(frameId, i)
+        local name = rdebug.getlocalv(frameId, i)
         if name == nil then
             return false
         end
@@ -70,24 +70,23 @@ local function hasLocal(frameId)
 end
 
 local function hasVararg(frameId)
-    return rdebug.getlocal(frameId, -1) ~= nil
+    return rdebug.getlocalv(frameId, -1) ~= nil
 end
 
 local function hasUpvalue(frameId)
     local f = rdebug.getfunc(frameId)
-    return rdebug.getupvalue(f, 1) ~= nil
+    return rdebug.getupvaluev(f, 1) ~= nil
 end
 
 local function hasGlobal()
     local gt = rdebug._G
     local key
     while true do
-        key = rdebug.next(gt, key)
-        local vkey = rdebug.value(key)
-        if vkey == nil then
+        key = rdebug.nextv(gt, key)
+        if not key then
             return false
         end
-        if not standard[vkey] then
+        if not standard[key] then
             return true
         end
     end
@@ -99,20 +98,20 @@ end
 
 local function varCanExtand(type, subtype, value)
     if type == 'function' then
-        return rdebug.value(rdebug.getupvalue(value, 1)) ~= nil
+        return rdebug.getupvaluev(value, 1) ~= nil
     elseif type == 'table' then
-        if rdebug.value(rdebug.next(value, nil)) ~= nil then
+        if rdebug.nextv(value, nil) ~= nil then
             return true
         end
-        if rdebug.value(rdebug.getmetatable(value)) ~= nil then
+        if rdebug.getmetatablev(value) ~= nil then
             return true
         end
         return false
     elseif type == 'userdata' then
-        if rdebug.value(rdebug.getmetatable(value)) ~= nil then
+        if rdebug.getmetatablev(value) ~= nil then
             return true
         end
-        if subtype == 'full' and rdebug.value(rdebug.getuservalue(value)) ~= nil then
+        if subtype == 'full' and rdebug.getuservaluev(value) ~= nil then
             return true
         end
         return false
@@ -193,14 +192,10 @@ end
 
 local TABLE_VALUE_MAXLEN = 32
 local function varGetTableValue(t)
+    local loct = rdebug.copytable(t)
     local str = ''
     local mark = {}
-    local i = 1
-    while true do
-        local v = rdebug.index(t, i)
-        if rdebug.value(v) == nil then
-            break
-        end
+    for i, v in ipairs(loct) do
         if str == '' then
             str = varGetShortValue(v)
         else
@@ -213,15 +208,8 @@ local function varGetTableValue(t)
     end
 
     local kvs = {}
-    local key, value
-    while true do
-        key, value = rdebug.next(t, key)
-        local vkey = rdebug.value(key)
-        if vkey == nil then
-            break
-        end
-        local _, subtype = rdebug.type(key)
-        if subtype == 'integer' and mark[vkey] then
+    for key, value in pairs(loct) do
+        if mark[key] then
             goto continue
         end
         local kn = varGetName(key)
@@ -328,10 +316,10 @@ local function varGetValue(type, subtype, value)
     elseif type == 'table' then
         return varGetTableValue(value)
     elseif type == 'userdata' then
-        local meta = rdebug.getmetatable(value)
-        if rdebug.value(meta) ~= nil then
-            local name = rdebug.index(meta, '__name')
-            if rdebug.value(name) ~= nil then
+        local meta = rdebug.getmetatablev(value)
+        if meta ~= nil then
+            local name = rdebug.indexv(meta, '__name')
+            if name ~= nil then
                 return 'userdata: ' .. tostring(rdebug.value(name))
             end
         end
@@ -351,7 +339,7 @@ local function varCreateReference(frameId, value, evaluateName)
     return text, type
 end
 
-local function varCreate(vars, frameId, varRef, name, value, evaluateName)
+local function varCreate(vars, frameId, varRef, name, value, evaluateName, calcValue)
     local text, type, ref = varCreateReference(frameId, value, evaluateName)
     local var = {
         name = name,
@@ -363,14 +351,14 @@ local function varCreate(vars, frameId, varRef, name, value, evaluateName)
     local maps = varRef[3]
     if maps[name] then
         vars[maps[name][3]] = var
-        maps[name][1] = value
+        maps[name][1] = calcValue
     else
         vars[#vars + 1] = var
-        maps[name] = { value, evaluateName, #vars }
+        maps[name] = { calcValue, evaluateName, #vars }
     end
 end
 
-local function varCreateInsert(vars, frameId, varRef, name, value, evaluateName)
+local function varCreateInsert(vars, frameId, varRef, name, value, evaluateName, calcValue)
     local text, type, ref = varCreateReference(frameId, value, evaluateName)
     local var = {
         name = name,
@@ -384,7 +372,7 @@ local function varCreateInsert(vars, frameId, varRef, name, value, evaluateName)
         table.remove(vars, maps[name][3])
     end
     table.insert(vars, 1, var)
-    maps[name] = { value, evaluateName }
+    maps[name] = { calcValue, evaluateName }
 end
 
 local function getTabelKey(key)
@@ -407,19 +395,21 @@ local function extandTable(frameId, varRef)
     local t = varRef[1]
     local evaluateName = varRef[2]
     local vars = {}
-    local key, value
-    while true do
-        key, value = rdebug.next(t, key)
-        if rdebug.value(key) == nil then
-            break
-        end
-        varCreate(vars, frameId, varRef, varGetName(key), value, ('%s%s'):format(evaluateName, getTabelKey(key)))
+    local loct = rdebug.copytable(t)
+    for key, value in pairs(loct) do
+        varCreate(vars, frameId, varRef, varGetName(key), value
+            , ('%s%s'):format(evaluateName, getTabelKey(key))
+            , function() return rdebug.index(t, key) end
+        )
     end
     table.sort(vars, function(a, b) return a.name < b.name end)
 
-    local meta = rdebug.getmetatable(t)
-    if rdebug.value(meta) ~= nil then
-        varCreateInsert(vars, frameId, varRef, '[metatable]', meta, ('debug.getmetatable(%s)'):format(evaluateName))
+    local meta = rdebug.getmetatablev(t)
+    if meta ~= nil then
+        varCreateInsert(vars, frameId, varRef, '[metatable]', meta
+            , ('debug.getmetatable(%s)'):format(evaluateName)
+            , function() return rdebug.getmetatable(t) end
+        )
     end
     return vars
 end
@@ -431,11 +421,15 @@ local function extandFunction(frameId, varRef)
     local vars = {}
     local i = 1
     while true do
-        local name, value = rdebug.getupvalue(f, i)
+        local name, value = rdebug.getupvaluev(f, i)
         if name == nil then
             break
         end
-        varCreate(vars, frameId, varRef, name, value, ('debug.getupvalue(%s,%d)'):format(evaluateName, i))
+        local fi = i
+        varCreate(vars, frameId, varRef, name, value
+            , ('debug.getupvalue(%s,%d)'):format(evaluateName, i)
+            , function() local _, r = rdebug.getupvalue(f, fi) return r end
+        )
         i = i + 1
     end
     table.sort(vars, function(a, b) return a.name < b.name end)
@@ -448,13 +442,19 @@ local function extandUserdata(frameId, varRef)
     local evaluateName = varRef[2]
     local vars = {}
     --TODO
-    local uv = rdebug.getuservalue(u)
-    if rdebug.value(uv) ~= nil then
-        varCreateInsert(vars, frameId, varRef, '[uservalue]', uv, ('debug.getuservalue(%s)'):format(evaluateName))
+    local uv = rdebug.getuservaluev(u)
+    if uv ~= nil then
+        varCreateInsert(vars, frameId, varRef, '[uservalue]', uv
+            , ('debug.getuservalue(%s)'):format(evaluateName)
+            , function() return rdebug.getuservalue(t) end
+        )
     end
-    local meta = rdebug.getmetatable(u)
-    if rdebug.value(meta) ~= nil then
-        varCreateInsert(vars, frameId, varRef, '[metatable]', meta, ('debug.getmetatable(%s)'):format(evaluateName))
+    local meta = rdebug.getmetatablev(u)
+    if meta ~= nil then
+        varCreateInsert(vars, frameId, varRef, '[metatable]', meta
+            , ('debug.getmetatable(%s)'):format(evaluateName)
+            , function() return rdebug.getmetatable(t) end
+        )
     end
     return vars
 end
@@ -476,7 +476,7 @@ local function setValue(frameId, varRef, name, value)
     if not maps or not maps[name] then
         return nil, 'Failed set variable'
     end
-    local rvalue = maps[name][1]
+    local rvalue = maps[name][1]()
     local newvalue
     if value == 'nil' then
         newvalue = nil
@@ -518,12 +518,16 @@ extand[VAR_LOCAL] = function(frameId)
     local vars = {}
     local i = 1
     while true do
-        local name, value = rdebug.getlocal(frameId, i)
+        local name, value = rdebug.getlocalv(frameId, i)
         if name == nil then
             break
         end
         if name ~= '(*temporary)' then
-            varCreate(vars, frameId, children[VAR_LOCAL], name, value, ('debug.getlocal(%d,%d,%q)'):format(frameId, i, name))
+            local fi = i
+            varCreate(vars, frameId, children[VAR_LOCAL], name, value
+                , ('debug.getlocal(%d,%d,%q)'):format(frameId, i, name)
+                , function() local _, r = rdebug.getlocal(frameId, fi) return r end
+            )
         end
         i = i + 1
     end
@@ -536,11 +540,15 @@ extand[VAR_VARARG] = function(frameId)
     local vars = {}
     local i = -1
     while true do
-        local name, value = rdebug.getlocal(frameId, i)
+        local name, value = rdebug.getlocalv(frameId, i)
         if name == nil then
             break
         end
-        varCreate(vars, frameId, children[VAR_VARARG], ('[%d]'):format(-i), value, ('debug.getlocal(%d,%d)'):format(frameId, -i))
+        local fi = i
+        varCreate(vars, frameId, children[VAR_VARARG], ('[%d]'):format(-i), value
+            , ('debug.getlocal(%d,%d)'):format(frameId, -i)
+            , function() local _, r = rdebug.getlocal(frameId, fi) return r end
+        )
         i = i - 1
     end
     table.sort(vars, function(a, b) return a.name < b.name end)
@@ -553,11 +561,15 @@ extand[VAR_UPVALUE] = function(frameId)
     local i = 1
     local f = rdebug.getfunc(frameId)
     while true do
-        local name, value = rdebug.getupvalue(f, i)
+        local name, value = rdebug.getupvaluev(f, i)
         if name == nil then
             break
         end
-        varCreate(vars, frameId, children[VAR_UPVALUE], name, value, ('debug.getupvalue(%d,%d,%q)'):format(frameId, i, name))
+        local fi = i
+        varCreate(vars, frameId, children[VAR_UPVALUE], name, value
+            , ('debug.getupvalue(%d,%d,%q)'):format(frameId, i, name)
+            , function() local _, r = rdebug.getupvalue(f, fi) return r end
+        )
         i = i + 1
     end
     table.sort(vars, function(a, b) return a.name < b.name end)
@@ -567,16 +579,14 @@ end
 extand[VAR_GLOBAL] = function(frameId)
     children[VAR_GLOBAL][3] = {}
     local vars = {}
-    local gt = rdebug._G
-    local key, value
-    while true do
-        key, value = rdebug.next(gt, key)
-        if rdebug.value(key) == nil then
-            break
-        end
+    local loct = rdebug.copytable(rdebug._G)
+    for key, value in pairs(loct) do
         local name = varGetName(key)
         if not standard[name] then
-            varCreate(vars, frameId, children[VAR_GLOBAL], name, value, ('_G%s'):format(getTabelKey(key)))
+            varCreate(vars, frameId, children[VAR_GLOBAL], name
+                , value, ('_G%s'):format(getTabelKey(key))
+                , function() return rdebug.index(rdebug._G, key) end
+            )
         end
     end
     table.sort(vars, function(a, b) return a.name < b.name end)
@@ -586,16 +596,14 @@ end
 extand[VAR_STANDARD] = function(frameId)
     children[VAR_STANDARD][3] = {}
     local vars = {}
-    local gt = rdebug._G
-    local key, value
-    while true do
-        key, value = rdebug.next(gt, key)
-        if rdebug.value(key) == nil then
-            break
-        end
+    local loct = rdebug.copytable(rdebug._G)
+    for key, value in pairs(loct) do
         local name = varGetName(key)
         if standard[name] then
-            varCreate(vars, frameId, children[VAR_STANDARD], name, value, ('_G%s'):format(getTabelKey(key)))
+            varCreate(vars, frameId, children[VAR_STANDARD], name, value
+                , ('_G%s'):format(getTabelKey(key))
+                , function() return rdebug.index(rdebug._G, key) end
+            )
         end
     end
     table.sort(vars, function(a, b) return a.name < b.name end)
