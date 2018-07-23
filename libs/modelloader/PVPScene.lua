@@ -6,8 +6,7 @@ function PVPScene.init(world, component_util, ms)
     do
         local campsite_door_eid = world:new_entity("position", "rotation", "scale",
                 "can_render", "mesh", "material",
-                "name", "serialize",
-                "can_select")
+                "name")
         local campsite_door = world[campsite_door_eid]
         campsite_door.name.n = "CampsiteDoor"
 
@@ -18,22 +17,25 @@ function PVPScene.init(world, component_util, ms)
         component_util.load_mesh(campsite_door, "PVPScene/campsite-door.mesh")
         component_util.load_material(campsite_door, {"PVPScene/scene-mat.material"})
 
-        local campsite_door_1_eid = world:new_entity("position", "rotation", "scale",
-                "can_render", "mesh", "material",
-                "name", "serialize",
-                "can_select")
-        local campsite_door_1 = world[campsite_door_1_eid]
-        campsite_door_1.name.n = "CampsiteDoor_1"
 
-        ms(campsite_door_1.scale.v, {1, 1, 1}, "=")
-        ms(campsite_door_1.rotation.v, {-90, 90, 0,}, "=")
-        ms(campsite_door_1.position.v, {124.35, 0.7867187, -14.03104}, "=")
-
-        component_util.load_mesh(campsite_door_1, "PVPScene/campsite-door.mesh")
-        component_util.load_material(campsite_door_1, {"PVPScene/scene-mat.material"})
     end
 
     --[[
+    local campsite_door_1_eid = world:new_entity("position", "rotation", "scale",
+            "can_render", "mesh", "material",
+            "name")
+    local campsite_door_1 = world[campsite_door_1_eid]
+    campsite_door_1.name.n = "CampsiteDoor_1"
+
+    ms(campsite_door_1.scale.v, {1, 1, 1}, "=")
+    ms(campsite_door_1.rotation.v, {-90, 90, 0,}, "=")
+    ms(campsite_door_1.position.v, {124.35, 0.7867187, -14.03104}, "=")
+
+    component_util.load_mesh(campsite_door_1, "PVPScene/campsite-door.mesh")
+    component_util.load_material(campsite_door_1, {"PVPScene/scene-mat.material"})
+
+
+
     --campsite wall
     do
         local campsite_wall_eid = world:new_entity("position", "rotation", "scale",

@@ -12,9 +12,15 @@ local function PrintNodeInfo(node, level)
         print(space.."mesh: "..k, "mesh count: ",#v.vertices/9)
         print(space.."mat idx: ", v.material_idx)
 
-        print(space.."position", v.vertices[1],v.vertices[2],v.vertices[3])
-        print(space.."normal", v.vertices[4], v.vertices[5], v.vertices[6])
-        print(space.."texcoord0", v.vertices[7], v.vertices[8], v.vertices[9])
+        for i = 0, #v.vertices/9-1 do
+            print(space.."position", v.vertices[i*9+1],v.vertices[i*9+2],v.vertices[i*9+3])
+            print(space.."normal", v.vertices[i*9+4], v.vertices[i*9+5], v.vertices[i*9+6])
+            print(space.."texcoord0", v.vertices[i*9+7], v.vertices[i*9+8], v.vertices[i*9+9])
+            v.vertices[i*9+7] = 0.5
+            v.vertices[i*9+8] = 0.5
+            v.vertices[i*9+9] = 0.5
+        end
+
         print(space.."index", #v.indices, v.indices[1], v.indices[2], v.indices[3])
     end
 

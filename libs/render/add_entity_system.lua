@@ -11,10 +11,6 @@ local update_direction_light_sys = ecs.system "direction_light_system"
 update_direction_light_sys.singleton "math_stack"
 
 function update_direction_light_sys:update()
-    if true then
-        return
-    end
-
 	local ms = self.math_stack
 
 	local function get_delta_time_op()
