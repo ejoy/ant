@@ -278,9 +278,6 @@ reset_flags(lua_State *L, int index) {
 			case 'v' : f |= BGFX_RESET_VSYNC; break;
 			case 'a' : f |= BGFX_RESET_MAXANISOTROPY; break;
 			case 'c' : f |= BGFX_RESET_CAPTURE; break;
-			case 'h' : f |= BGFX_RESET_HMD; break;
-			case 'd' : f |= BGFX_RESET_HMD_DEBUG; break;
-			case 'r' : f |= BGFX_RESET_HMD_RECENTER; break;
 			case 'u' : f |= BGFX_RESET_FLUSH_AFTER_RENDER; break;
 			case 'i' : f |= BGFX_RESET_FLIP_AFTER_RENDER; break;
 			case 's' : f |= BGFX_RESET_SRGB_BACKBUFFER; break;
@@ -429,7 +426,6 @@ push_supported(lua_State *L, uint64_t supported) {
 		CAPSNAME(FRAGMENT_ORDERING)     // Fragment ordering is available in fragment shader.
 		CAPSNAME(GRAPHICS_DEBUGGER)     // Graphics debugger is present.
 		CAPSNAME(HIDPI)                 // HiDPI rendering is supported.
-		CAPSNAME(HMD)                   // Head Mounted Display is available.
 		CAPSNAME(INDEX32)               // 32-bit indices are supported.
 		CAPSNAME(INSTANCING)            // Instancing is supported.
 		CAPSNAME(OCCLUSION_QUERY)       // Occlusion query is supported.
@@ -786,9 +782,6 @@ lgetStats(lua_State *L) {
 	v        : BGFX_RESET_VSYNC - Enable V-Sync.
 	a        : BGFX_RESET_MAXANISOTROPY - Turn on/off max anisotropy.
 	c        : BGFX_RESET_CAPTURE - Begin screen capture.
-	h        : BGFX_RESET_HMD - HMD stereo rendering.
-	d        : BGFX_RESET_HMD_DEBUG - HMD stereo rendering debug mode.
-	r        : BGFX_RESET_HMD_RECENTER - HMD calibration.
 	u        : BGFX_RESET_FLUSH_AFTER_RENDER - Flush rendering after submitting to GPU.
 	i        : BGFX_RESET_FLIP_AFTER_RENDER - This flag specifies where flip occurs. Default behavior is that flip occurs before rendering new frame. This flag only has effect when BGFX_CONFIG_MULTITHREADED=0.
 	s        : BGFX_RESET_SRGB_BACKBUFFER - Enable sRGB backbuffer.
