@@ -99,7 +99,7 @@ function fbx_loader.load(filepath)
         return
 	end
 
-	local meshgroup = assimp.LoadFBX(filepath, "p|n|T|b|t0|c0")
+	local meshgroup = assimp.LoadFBX(filepath, "p|n|T|b|t0")
 
 	if meshgroup then
 		local function create_decl(vb_layout)
@@ -126,9 +126,15 @@ function fbx_loader.load(filepath)
 		end
 
 		local group = meshgroup.group
-		local decl, stride = create_decl(group.vb_layout)
-		group.vb = bgfx.create_vertex_buffer(decl, group.vb)
-		group.ib = bgfx.create_index_buffer(group.ib, group.ibFormat)
+		for _, g in ipairs(group) do
+			local decl, stride = create_decl(g.vbLayout)
+			g.vb = bgfx.create_vertex_buffer(g.vb, decl)
+			if g.ib then
+				g.ib = bgfx.create_index_buffer(g.ib, g.ibFormat == 32 and "d" or nil)
+			end
+		end
+
+		return meshgroup
 	end
 end
 

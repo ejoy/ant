@@ -338,6 +338,19 @@ struct AABB {
 		max.z = std::max(max.z, v.z);
 	}
 
+	void Transform(const aiMatrix4x4 &trans) {
+		aiVector3D tmin = trans * min;
+		aiVector3D tmax = trans * max;
+
+		min.x = std::min(tmin.x, tmax.x);
+		min.y = std::min(tmin.y, tmax.y);
+		min.z = std::min(tmin.z, tmax.z);
+
+		max.x = std::max(tmin.x, tmax.x);
+		max.y = std::max(tmin.y, tmax.y);
+		max.z = std::max(tmin.z, tmax.z);
+	}
+
 
 	void Merge(const AABB &other) {
 		min.x = std::min(min.x, other.min.x);
@@ -871,7 +884,7 @@ static void CalcBufferSize(const MeshArray &meshes, size_t &vertexSize, size_t &
 	indexSize = numIndices * (indexformat == 32 ? sizeof(uint32_t) : sizeof(uint16_t));
 }
 
-static void CopyMeshVertices(const aiMesh *mesh, float *vertices, const std::string &layout) {
+static void CopyMeshVertices(const aiMesh *mesh, const std::string &layout, float* &vertices) {
 	auto vv = Split(layout, '|');
 
 	for (uint32_t ii = 0; ii < mesh->mNumVertices; ++ii) {
@@ -879,22 +892,44 @@ static void CopyMeshVertices(const aiMesh *mesh, float *vertices, const std::str
 			const auto &elem = g_elemMap[v];
 			const float * value_ptr = elem.value_ptr(mesh, ii);
 			memcpy(vertices, value_ptr, elem.elemCount * sizeof(float));
+			vertices += elem.elemCount;
 		}
 	}
 
 }
 
-static size_t CopyMeshIndices(const aiMesh *mesh, uint32_t* indices) {
+static size_t CopyMeshIndices(const aiMesh *mesh, uint32_t* &indices) {
 	size_t numIndices = 0;
 	for (uint32_t ii = 0; ii < mesh->mNumFaces; ++ii) {
 		const auto& face = mesh->mFaces[ii];
-		memcpy(indices, face.mIndices, face.mNumIndices);
+		memcpy(indices, face.mIndices, face.mNumIndices * sizeof(uint32_t));
+		indices += face.mNumIndices;
 		numIndices += face.mNumIndices;
 	}
 
 	return numIndices;
 }
 
+static bool FindTransform(const aiScene *scene, const aiNode *node, const aiMesh *mesh, aiMatrix4x4 &mat) {
+	if (node) {
+		for (uint32_t ii = 0; ii < node->mNumMeshes; ++ii) {
+			const uint32_t meshIdx = node->mMeshes[ii];
+			if (scene->mMeshes[meshIdx] == mesh) {
+				for (const aiNode *parent = node; parent; parent = parent->mParent) {
+					mat *= parent->mTransformation;
+				}
+				return true;
+			}
+		}
+
+		for (uint32_t ii = 0; ii < node->mNumChildren; ++ii) {
+			if (FindTransform(scene, node->mChildren[ii], mesh, mat))
+				return true;
+		}
+	}
+
+	return false;
+}
 
 static int LoadFBX(lua_State *L)
 {
@@ -951,13 +986,13 @@ static int LoadFBX(lua_State *L)
 	lua_setfield(L, -2, "materials");
 
 
+	AABB aabbGroup;
 	// group = {}
-	lua_newtable(L);
+	lua_newtable(L);	
 	{
 		MeshMaterialArray mm;
 		SeparateMeshByMaterialID(scene, mm);
-		AABB aabbGroup;
-
+		
 		for (size_t ii = 0; ii < mm.size(); ++ii) {
 			AABB aabbMesh;
 			// group[ii+1] = {}
@@ -979,7 +1014,7 @@ static int LoadFBX(lua_State *L)
 			lua_pushnumber(L, (lua_Number)vertexSizeInBytes);
 			lua_setfield(L, -2, "numVertices");
 
-			lua_pushstring(L, "");
+			lua_pushstring(L, vlayout.c_str());
 			lua_setfield(L, -2, "vbLayout");
 
 			uint32_t *indices = (uint32_t*)(lua_newuserdata(L, indexSizeInBytes));
@@ -1000,6 +1035,20 @@ static int LoadFBX(lua_State *L)
 				lua_newtable(L);
 				
 				aiMesh *mesh = meshes[jj];
+
+				aiMatrix4x4 transform;
+				FindTransform(scene, scene->mRootNode, mesh, transform);
+				{
+					const ai_real *p = &transform.a1;
+					lua_createtable(L, 16, 0);
+					for (uint32_t ii = 0; ii < 16; ++ii) {
+						lua_pushnumber(L, *p++);
+						lua_seti(L, -2, ii + 1);
+					}
+
+					lua_setfield(L, -2, "transform");
+				}
+
 				lua_pushstring(L, mesh->mName.C_Str());
 				lua_setfield(L, -2, "name");
 
@@ -1007,7 +1056,7 @@ static int LoadFBX(lua_State *L)
 				lua_setfield(L, -2, "materialIdx");
 
 				// vertices
-				CopyMeshVertices(mesh, vertices, vlayout);
+				CopyMeshVertices(mesh, vlayout, vertices);
 
 				lua_pushnumber(L, (lua_Number)startVB);
 				lua_setfield(L, -2, "startVertex");
@@ -1048,13 +1097,15 @@ static int LoadFBX(lua_State *L)
 
 			aabbGroup.Merge(aabbMesh);
 		}
-
-		push_aabb(L, aabbGroup, -2);
-		push_sphere(L, aabbGroup, -2);
 	}
 	
 	// node.group = group
 	lua_setfield(L, -2, "group");
+
+	// node.aabb 
+	push_aabb(L, aabbGroup, -2);
+	// node.sphere
+	push_sphere(L, aabbGroup, -2);
 
 	//int num = lua_gettop(L);
 	//for (auto ii = 0; ii < num; ++ii) {
