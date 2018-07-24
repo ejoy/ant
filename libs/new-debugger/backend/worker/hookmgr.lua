@@ -33,43 +33,72 @@ function m.updateCoroutine(co)
 end
 
 function m.openStep()
+    if step then
+        return
+    end
     step = true
     update()
 end
 
 function m.closeStep()
+    if not step then
+        return
+    end
     step = false
     update()
 end
 
 function m.openStepIn()
+    if stepin then
+        return
+    end
     stepin = true
     update()
 end
 
 function m.closeStepIn()
+    if not stepin then
+        return
+    end
     stepin = false
     update()
 end
 
 function m.openBP()
+    if bp then
+        return
+    end
     bp = true
     update()
 end
 
 function m.closeBP()
+    if not bp then
+        return
+    end
     bp = false
+    linebp = false
     update()
 end
 
 function m.openLineBP()
-    linebp = true
-    update()
+    if linebp then
+        return
+    end
+    if bp then
+        linebp = true
+        update()
+    end
 end
 
 function m.closeLineBP()
-    linebp = false
-    update()
+    if not linebp then
+        return
+    end
+    if bp then
+        linebp = false
+        update()
+    end
 end
 
 function m.reset()

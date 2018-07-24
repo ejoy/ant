@@ -480,11 +480,9 @@ hook['wait_client'] = function()
 end
 
 rdebug.sethook(function(event, line)
-    assert(xpcall(function()
-        if hook[event] then
-            hook[event](line)
-        end
-    end, debug.traceback))
+    if hook[event] then
+        hook[event](line)
+    end
 end)
 
 sendToMaster {
