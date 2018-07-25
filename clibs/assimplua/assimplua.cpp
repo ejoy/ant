@@ -1088,7 +1088,7 @@ static int LoadFBX(lua_State *L)
 	LoadFBXConfig config;
 	ExtractLoadConfig(L, 2, config);
 
-	uint32_t import_flags = aiProcessPreset_TargetRealtime_MaxQuality;// | aiProcess_ConvertToLeftHanded;
+	uint32_t import_flags = aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_FlipUVs;
 	if (config.NeedCreateTangentSpaceData()) {
 		import_flags |= aiProcess_CalcTangentSpace;
 	}
