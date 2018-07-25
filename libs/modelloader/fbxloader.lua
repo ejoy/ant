@@ -99,26 +99,50 @@ function fbx_loader.load(filepath)
         return
 	end
 
-	local meshgroup = assimp.LoadFBX(filepath, "p|n|T|b|t0")
+	local loadfbx_config = {
+		--[[
+			p3 for position and need 3 element(x, y, z)
+			t20 for texcoord, need 2 element(u, v) and in channel 0
+			t31 for texcoord, need 3 element(u, v, w) and in channel 1
+			c30 for color, need 3 element(r,g,b) and in channel 0
+		]] 
+		layout = "p3|n|T|b|t20|c30",
+		flags = {
+			gen_normal = false,
+			tangentspace = true,
+		
+			invert_normal = false,
+			ib_32 = false,	-- if index num is lower than 65535
+		},
+		animation = {
+			load_skeleton = true,
+			ani_list = "all" -- or {"walk", "stand"}
+		},
+	}
+
+	local meshgroup = assimp.LoadFBX(filepath, loadfbx_config)
 
 	if meshgroup then
 		local function create_decl(vb_layout)
 			local decl = {}
 			for v in vb_layout:gmatch("%w+") do 
-				if v == "p" then
-					table.insert(decl, { "POSITION", 3, "FLOAT" })
-				elseif v == "n" then
-					table.insert(decl, { "NORMAL", 3, "FLOAT", true, false})
-				elseif v == "T" then
-					table.insert(decl, { "TANGENT", 3, "FLOAT", true, false})
-				elseif v == "b" then
-					table.insert(decl, { "BITANGENT", 3, "FLOAT", true, false})
-				elseif v == "t0" then
-					table.insert(decl, { "TEXCOORD0", 3, "FLOAT"})
-				elseif v == "t1" then
-					table.insert(decl, { "TEXCOORD1", 3, "FLOAT"})
-				elseif v == "c0" then
-					table.insert(decl, { "COLOR0", 4, "FLOAT"})
+				local type = v:sub(1, 1)
+				local count = tonumber(v:sub(2, 2))
+			
+				if type == "p" then
+					table.insert(decl, { "POSITION", count, "FLOAT" })
+				elseif type == "n" then
+					table.insert(decl, { "NORMAL", count, "FLOAT", true, false})
+				elseif type == "T" then
+					table.insert(decl, { "TANGENT", count, "FLOAT", true, false})
+				elseif type == "b" then
+					table.insert(decl, { "BITANGENT", count, "FLOAT", true, false})
+				elseif type == "t" then	
+					local channel = #v == 3 and v:sub(3, 3) or "0"
+					table.insert(decl, { "TEXCOORD" .. channel, count, "FLOAT"})				
+				elseif type == "c" then
+					local channel = #v == 3 and v:sub(3, 3) or "0"
+					table.insert(decl, { "COLOR" .. channel, count, "FLOAT"})
 				end
 			end
 		
@@ -128,9 +152,9 @@ function fbx_loader.load(filepath)
 		local group = meshgroup.group
 		for _, g in ipairs(group) do
 			local decl, stride = create_decl(g.vbLayout)
-			g.vb = bgfx.create_vertex_buffer(g.vb, decl)
-			if g.ib then
-				g.ib = bgfx.create_index_buffer(g.ib, g.ibFormat == 32 and "d" or nil)
+			g.vb = bgfx.create_vertex_buffer(g.vb_raw, decl)
+			if g.ib_raw then
+				g.ib = bgfx.create_index_buffer(g.ib_raw, g.ibFormat == 32 and "d" or nil)
 			end
 		end
 

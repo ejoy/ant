@@ -763,6 +763,33 @@ static int AssimpImport(lua_State *L)
 using MeshArray = std::vector<aiMesh*>;
 using MeshMaterialArray = std::vector<MeshArray>;
 
+
+struct LoadFBXConfig {
+	LoadFBXConfig()
+		: layout("p|n|T|b|t0|t1|t2|t3|t4|c0|c1|c2|c3")
+		, flags(0) {}
+
+	bool NeedCreateNormal() const {
+		return flags | CreateNormal;
+	}
+
+	bool NeedCreateTangentSpaceData() const {
+		return flags | CreateTangent | CreateBitangent;
+	}
+
+	std::string layout;
+
+	enum {
+		CreateNormal = 0x0001,
+		CreateTangent = 0x0002,
+		CreateBitangent = 0x0004,
+
+		InvertNormal = 0x0010,
+		IndexBuffer32Bit = 0x0020,
+	};
+	uint32_t flags;
+};
+
 static void SeparateMeshByMaterialID(const aiScene *scene, MeshMaterialArray &mm) {
 	mm.resize(scene->mNumMaterials);
 	for (uint32_t ii = 0; ii < scene->mNumMaterials; ++ii) {
@@ -788,87 +815,127 @@ static std::string CreateVertexLayout(aiMesh *mesh, const std::string &vertexEle
 	auto elems = Split(vertexElemNeeded, '|');
 
 	auto has_elem = [&elems](const std::string &e) {
-		return std::find(std::begin(elems), std::end(elems), e) != std::end(elems);
+		return std::find(std::begin(elems), std::end(elems), e);
 	};
 
 	std::string ss;
-	auto add_elem = [&ss](const std::string& e) {
-		if (!ss.empty())
-			ss += '|';
-		ss += e;
-	};
+	auto add_elem = [&ss, &elems](const auto &e) {
+		auto it = std::find_if(elems.begin(), elems.end(), [e](auto ename) {
+			const auto &name = std::get<0>(e);
 
-	if (has_elem("p") && mesh->HasPositions())
-		add_elem("p");
+			if (ename.length() == 3 && name.length() == 3) {
+				return ename[0] == name[0] && ename[2] == name[2];
+			}
 
-	if (has_elem("n") && mesh->HasNormals())
-		add_elem("n");
+			return (ename[0] == name[0]);				
+		});
+		auto op = std::get<2>(e);
+		if (it != elems.end() && op()) {
+			if (!ss.empty())
+				ss += '|';
 
-	if ((has_elem("T") || has_elem("b")) && mesh->HasTangentsAndBitangents()) {
-		add_elem("T");
-		add_elem("b");
-	}
-
-
-	auto add_array_elem = [&](const std::string &basename, auto check_array) {
-		for (auto ii = 0; ii < 4; ++ii) {
-			const std::string n = basename + std::to_string(ii);
-			if (has_elem(n) && check_array(ii))
-				add_elem(n);
+			std::string name = *it;
+			if (name.length() < 2){
+				const uint8_t default_count = std::get<1>(e);
+				name.append(std::to_string(default_count));
+			}
+			ss += name;
 		}
 	};
 
-	add_array_elem("t", [mesh](uint32_t idx) {return mesh->HasTextureCoords(idx);});
-	add_array_elem("c", [mesh](uint32_t idx) {return mesh->HasVertexColors(idx); });
+	std::vector<std::tuple<std::string, uint8_t, std::function<bool()>>>	check_array = {
+		std::make_tuple("p", 3, [mesh]() {return mesh->HasPositions(); }),
+		std::make_tuple("n", 3, [mesh]() {return mesh->HasNormals(); }),
+		std::make_tuple("T", 3, [mesh]() {return mesh->HasTangentsAndBitangents(); }),
+		std::make_tuple("b", 3, [mesh]() {return mesh->HasTangentsAndBitangents(); }),
+	};
+
+	for (const auto &p : check_array) {
+		add_elem(p);
+	}
+
+	auto add_array_elem = [&](const std::string &basename, uint8_t default_count, auto check_array) {
+		for (auto ii = 0; ii < 4; ++ii) {
+			const std::string n = basename + std::to_string(ii);
+			add_elem(std::make_tuple(n, default_count, [ii, check_array]() { return check_array(ii); }));
+		}
+	};
+
+	add_array_elem("t", 3, [mesh](uint32_t idx) {return mesh->HasTextureCoords(idx);});
+	add_array_elem("c", 4, [mesh](uint32_t idx) {return mesh->HasVertexColors(idx); });
 
 	return ss;
 }
 
-struct VertexElem {
-	uint32_t elemCount;
-	typedef std::function<float *(const aiMesh *mesh, uint32_t idx)> GenValueOp;
-	GenValueOp value_ptr;
-	VertexElem(uint32_t ss, GenValueOp op) : elemCount(ss), value_ptr(op){}
-	VertexElem() {}
-};
-
-using VertexElemMap = std::unordered_map<std::string, VertexElem>;
+using VertexElemMap = std::unordered_map<std::string, std::function<float *(const aiMesh *mesh, uint32_t idx)> >;
 
 VertexElemMap g_elemMap;
 static void InitElemMap() {
 	if (!g_elemMap.empty())
 		return;
 
-	g_elemMap["p"] = VertexElem(3, [](const aiMesh *mesh, uint32_t idx) {return &mesh->mVertices[idx].x; });
-	g_elemMap["n"] = VertexElem(3, [](const aiMesh *mesh, uint32_t idx) {return &mesh->mNormals[idx].x; });
-	g_elemMap["T"] = VertexElem(3, [](const aiMesh *mesh, uint32_t idx) {return &mesh->mTangents[idx].x; });
-	g_elemMap["b"] = VertexElem(3, [](const aiMesh *mesh, uint32_t idx) {return &mesh->mBitangents[idx].x; });
-	g_elemMap["t0"] = VertexElem(3, [](const aiMesh *mesh, uint32_t idx) {return &mesh->mTextureCoords[0][idx].x; });
-	g_elemMap["t1"] = VertexElem(3, [](const aiMesh *mesh, uint32_t idx) {return &mesh->mTextureCoords[1][idx].x; });
-	g_elemMap["t2"] = VertexElem(3, [](const aiMesh *mesh, uint32_t idx) {return &mesh->mTextureCoords[2][idx].x; });
-	g_elemMap["t3"] = VertexElem(3, [](const aiMesh *mesh, uint32_t idx) {return &mesh->mTextureCoords[3][idx].x; });
-	g_elemMap["c0"] = VertexElem(4, [](const aiMesh *mesh, uint32_t idx) {return &mesh->mColors[0][idx].r; });
-	g_elemMap["c1"] = VertexElem(4, [](const aiMesh *mesh, uint32_t idx) {return &mesh->mColors[1][idx].r; });
-	g_elemMap["c2"] = VertexElem(4, [](const aiMesh *mesh, uint32_t idx) {return &mesh->mColors[2][idx].r; });
-	g_elemMap["c3"] = VertexElem(4, [](const aiMesh *mesh, uint32_t idx) {return &mesh->mColors[3][idx].r; });
+	g_elemMap["p"] = [](const aiMesh *mesh, uint32_t idx) {return &mesh->mVertices[idx].x; };
+	g_elemMap["n"] = [](const aiMesh *mesh, uint32_t idx) {return &mesh->mNormals[idx].x; };
+	g_elemMap["T"] = [](const aiMesh *mesh, uint32_t idx) {return &mesh->mTangents[idx].x; };
+	g_elemMap["b"] = [](const aiMesh *mesh, uint32_t idx) {return &mesh->mBitangents[idx].x; };
+	
+	auto add_array_type = [](auto basename, auto totalnum, auto create_op) {
+		for (int ii = 0; ii < totalnum; ++ii) {
+			std::string name = basename + std::to_string(ii);
+			g_elemMap[name] = create_op(ii);
+		}
+	};
+
+	struct TexCoordValuePtrOp {
+		TexCoordValuePtrOp(uint32_t ii) : texIdx(ii) {}
+		uint32_t texIdx;
+		float * operator()(const aiMesh *mesh, uint32_t idx) {
+			return &(mesh->mTextureCoords[texIdx][idx].x);
+		}
+	};
+
+	add_array_type("t", 4, [](auto ii) { return TexCoordValuePtrOp(ii); });
+
+
+	struct ColorValuePtrOp {
+		ColorValuePtrOp(uint32_t ii) : colorIdx(ii) {}
+		uint32_t colorIdx;
+		float * operator()(const aiMesh *mesh, uint32_t idx) {
+			return &(mesh->mColors[colorIdx][idx].r);
+		}
+	};
+
+	add_array_type("c", 4, [](auto ii) { return ColorValuePtrOp(ii); });
+
 };
 
-static size_t CalcVertexSize(aiMesh *mesh, const std::string &layout) {
+static inline void extract_layout_elem_info(const std::string &le, std::string &type, uint8_t &count) {
+	type = le.substr(0, 1) + le.substr(2, 1);
+	count = static_cast<uint8_t>(std::stoi(le.substr(1, 1)));
+}
+
+static size_t CalcVertexSize(const std::string &layout, const LoadFBXConfig &config) {
 	size_t elemSizeInBytes = 0;
 	auto vv = Split(layout, '|');
 	
 	for (auto v : vv) {
-		elemSizeInBytes += g_elemMap[v].elemCount * sizeof(float);
+		const std::string type = v.substr(0, 1);		
+		const uint8_t elemCount = static_cast<uint8_t>(std::stoi(v.substr(1, 1)));
+	
+		elemSizeInBytes += elemCount * sizeof(float);
 	}
 
 	return elemSizeInBytes;
 };
 
-static void CalcBufferSize(const MeshArray &meshes, size_t &vertexSize, size_t &indexSize, const std::string &layout, uint32_t indexformat){
+static void CalcBufferSize(	const MeshArray &meshes, 
+							const std::string &layout, 
+							const LoadFBXConfig &config, 
+							size_t &vertexSizeInBytes, size_t &indexSizeInBytes, size_t &indexElemSizeInBytes){
 	if (meshes.empty())
 		return;
 	
-	const size_t elemsize = CalcVertexSize(meshes.back(), layout);
+	const size_t elemSizeInBytes = CalcVertexSize(layout, config);
 
 	size_t numVertices = 0, numIndices = 0;
 	for (auto mesh : meshes) {
@@ -876,34 +943,59 @@ static void CalcBufferSize(const MeshArray &meshes, size_t &vertexSize, size_t &
 		for (uint32_t ii = 0; ii < mesh->mNumFaces; ++ii) {
 			auto face = mesh->mFaces[ii];
 			numIndices += face.mNumIndices;
-		}
-		assert(elemsize == CalcVertexSize(mesh, layout));
+		}		
 	}
 
-	vertexSize = numVertices * elemsize;
-	indexSize = numIndices * (indexformat == 32 ? sizeof(uint32_t) : sizeof(uint16_t));
+	vertexSizeInBytes = numVertices * elemSizeInBytes;
+
+	indexElemSizeInBytes = sizeof(uint16_t);
+	if (numVertices > uint16_t(-1)) {
+		indexElemSizeInBytes = sizeof(uint32_t);
+	} else {
+		indexElemSizeInBytes = ((config.flags & LoadFBXConfig::IndexBuffer32Bit) ? sizeof(uint32_t) : sizeof(uint16_t));
+	}
+
+	indexSizeInBytes = numIndices * indexElemSizeInBytes;
 }
 
-static void CopyMeshVertices(const aiMesh *mesh, const std::string &layout, float* &vertices) {
+static void CopyMeshVertices(const aiMesh *mesh, const std::string &layout, const LoadFBXConfig &config, float * &vertices) {
 	auto vv = Split(layout, '|');
 
 	for (uint32_t ii = 0; ii < mesh->mNumVertices; ++ii) {
 		for (auto v : vv) {
-			const auto &elem = g_elemMap[v];
-			const float * value_ptr = elem.value_ptr(mesh, ii);
-			memcpy(vertices, value_ptr, elem.elemCount * sizeof(float));
-			vertices += elem.elemCount;
+			assert(v.length() >= 2);
+			std::string type;
+			uint8_t elemCount;
+			extract_layout_elem_info(v, type, elemCount);
+
+			const auto &value_ptr = g_elemMap[type];
+			const float * ptr = value_ptr(mesh, ii);
+			
+			memcpy(vertices, ptr, elemCount * sizeof(float));
+			vertices += elemCount;
 		}
 	}
 
 }
 
-static size_t CopyMeshIndices(const aiMesh *mesh, uint32_t* &indices) {
+static size_t CopyMeshIndices(const aiMesh *mesh, const LoadFBXConfig &config, uint8_t* &indices) {
 	size_t numIndices = 0;
 	for (uint32_t ii = 0; ii < mesh->mNumFaces; ++ii) {
 		const auto& face = mesh->mFaces[ii];
-		memcpy(indices, face.mIndices, face.mNumIndices * sizeof(uint32_t));
-		indices += face.mNumIndices;
+		if (config.flags & LoadFBXConfig::IndexBuffer32Bit) {
+			const size_t sizeInBytes = face.mNumIndices * sizeof(uint32_t);
+			memcpy(indices, face.mIndices, sizeInBytes);
+			indices += sizeInBytes;
+		} else {
+			const size_t sizeInBytes = face.mNumIndices * sizeof(uint16_t);
+			uint16_t *uint16Indices = reinterpret_cast<uint16_t*>(indices);
+			for (uint32_t ii = 0; ii < face.mNumIndices; ++ii) {
+				*uint16Indices++ = static_cast<uint16_t>(face.mIndices[ii]);
+			}
+
+			indices += sizeInBytes;
+		}
+
 		numIndices += face.mNumIndices;
 	}
 
@@ -931,6 +1023,58 @@ static bool FindTransform(const aiScene *scene, const aiNode *node, const aiMesh
 	return false;
 }
 
+static std::pair<std::string, bgfx::AttribType::Enum> attrib_type_name_pairs[bgfx::AttribType::Count] = {
+	{ "UINT8", bgfx::AttribType::Uint8 },
+	{ "UINT10", bgfx::AttribType::Uint10 },
+	{ "INT16", bgfx::AttribType::Int16 },
+	{ "HALF", bgfx::AttribType::Half },
+	{ "FLOAT", bgfx::AttribType::Float },
+};
+
+static inline bgfx::AttribType::Enum what_elem_type(const std::string &n) {
+	for (auto &pp : attrib_type_name_pairs) {
+		if (pp.first == n)
+			return pp.second;
+	}
+
+	return bgfx::AttribType::Count;
+}
+
+#if defined(DISABLE_ASSERTS)
+# define verify(expr) ((void)(expr))
+#else
+# define verify(expr) assert(expr)
+#endif	
+
+static void ExtractLoadConfig(lua_State *L, int idx, LoadFBXConfig &config) {
+	luaL_checktype(L, idx, LUA_TTABLE);
+		
+	verify(lua_getfield(L, idx, "layout") == LUA_TSTRING);
+
+	config.layout = lua_tostring(L, -1);
+	lua_pop(L, 1);
+	
+	verify(LUA_TTABLE == lua_getfield(L, -1, "flags"));	
+
+	auto extract_boolean = [&](auto name, auto bit) {
+		const int type = lua_getfield(L, -1, name);
+		const bool need = type == LUA_TBOOLEAN ? lua_toboolean(L, -1) != 0 : false;
+		if (need)
+			config.flags |= bit;
+		else
+			config.flags &= ~bit;
+		lua_pop(L, 1);
+	};
+
+	extract_boolean("gen_normal", LoadFBXConfig::CreateNormal);	
+	extract_boolean("tangentspace", LoadFBXConfig::CreateTangent);
+	extract_boolean("tangentspace", LoadFBXConfig::CreateBitangent);
+
+	extract_boolean("invert_normal", LoadFBXConfig::InvertNormal);
+	extract_boolean("ib_32", LoadFBXConfig::IndexBuffer32Bit);	
+}
+
+
 static int LoadFBX(lua_State *L)
 {
 	Assimp::Importer importer;
@@ -941,20 +1085,20 @@ static int LoadFBX(lua_State *L)
 	
 	fbx_path = lua_tostring(L, 1);	
 
-	std::string vertexElemNeeded("p|n|T|b|t0|t1|t2|t3|t4|c0|c1|c2|c3");
-	if (lua_isstring(L, 2)) {
-		vertexElemNeeded = lua_tostring(L, 2);
-		lua_pop(L, 1);
+	LoadFBXConfig config;
+	ExtractLoadConfig(L, 2, config);
+
+	uint32_t import_flags = aiProcessPreset_TargetRealtime_MaxQuality;// | aiProcess_ConvertToLeftHanded;
+	if (config.NeedCreateTangentSpaceData()) {
+		import_flags |= aiProcess_CalcTangentSpace;
 	}
 
-	lua_pop(L, 1);
-
-	uint32_t import_flags =
-		aiProcess_CalcTangentSpace |
-		aiProcess_Triangulate |
-		aiProcess_SortByPType |
-		aiProcess_OptimizeMeshes |
-		aiProcess_ValidateDataStructure;
+// 		aiProcess_CalcTangentSpace |
+// 		aiProcess_Triangulate |
+// 		aiProcess_SortByPType |
+// 		aiProcess_OptimizeMeshes |
+// 		aiProcess_ValidateDataStructure;
+		
 
 	const aiScene* scene = importer.ReadFile(fbx_path, import_flags);
 
@@ -1003,13 +1147,13 @@ static int LoadFBX(lua_State *L)
 			if (meshes.empty())
 				continue;
 
-			const std::string vlayout = CreateVertexLayout(meshes.back(), vertexElemNeeded);
+			const std::string vlayout = CreateVertexLayout(meshes.back(), config.layout);
 
-			size_t vertexSizeInBytes = 0, indexSizeInBytes = 0;
-			CalcBufferSize(meshes, vertexSizeInBytes, indexSizeInBytes, vlayout, 32);
+			size_t vertexSizeInBytes = 0, indexSizeInBytes = 0, indexElemSizeInBytes = 0;
+			CalcBufferSize(meshes, vlayout, config, vertexSizeInBytes, indexSizeInBytes, indexElemSizeInBytes);
 
 			float *vertices = (float*)(lua_newuserdata(L, vertexSizeInBytes));
-			lua_setfield(L, -2, "vb");
+			lua_setfield(L, -2, "vb_raw");
 
 			lua_pushnumber(L, (lua_Number)vertexSizeInBytes);
 			lua_setfield(L, -2, "numVertices");
@@ -1017,13 +1161,13 @@ static int LoadFBX(lua_State *L)
 			lua_pushstring(L, vlayout.c_str());
 			lua_setfield(L, -2, "vbLayout");
 
-			uint32_t *indices = (uint32_t*)(lua_newuserdata(L, indexSizeInBytes));
-			lua_setfield(L, -2, "ib");
+			uint8_t *indices = reinterpret_cast<uint8_t*>(lua_newuserdata(L, indexSizeInBytes));
+			lua_setfield(L, -2, "ib_raw");
 
 			lua_pushnumber(L, (lua_Number)indexSizeInBytes);
 			lua_setfield(L, -2, "numIndices");
 
-			lua_pushnumber(L, (lua_Number)32);
+			lua_pushnumber(L, (lua_Number)(indexElemSizeInBytes == 4 ? 32 : 16));
 			lua_setfield(L, -2, "ibFormat");
 
 			// prim = {}
@@ -1056,7 +1200,7 @@ static int LoadFBX(lua_State *L)
 				lua_setfield(L, -2, "materialIdx");
 
 				// vertices
-				CopyMeshVertices(mesh, vlayout, vertices);
+				CopyMeshVertices(mesh, vlayout, config, vertices);
 
 				lua_pushnumber(L, (lua_Number)startVB);
 				lua_setfield(L, -2, "startVertex");
@@ -1067,7 +1211,7 @@ static int LoadFBX(lua_State *L)
 				startVB += mesh->mNumVertices;
 
 				// indices
-				size_t meshIndicesCount = CopyMeshIndices(mesh, indices);
+				size_t meshIndicesCount = CopyMeshIndices(mesh, config, indices);
 				lua_pushnumber(L, (lua_Number)startIB);
 				lua_setfield(L, -2, "startIndex");
 
