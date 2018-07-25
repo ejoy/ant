@@ -16,9 +16,9 @@ local function PrintNodeInfo(node, level)
             print(space.."position", v.vertices[i*9+1],v.vertices[i*9+2],v.vertices[i*9+3])
             print(space.."normal", v.vertices[i*9+4], v.vertices[i*9+5], v.vertices[i*9+6])
             print(space.."texcoord0", v.vertices[i*9+7], v.vertices[i*9+8], v.vertices[i*9+9])
-            v.vertices[i*9+7] = 0.5
-            v.vertices[i*9+8] = 0.5
-            v.vertices[i*9+9] = 0.5
+        --    v.vertices[i*9+7] = 0.5
+        --    v.vertices[i*9+8] = 0.5
+         --   v.vertices[i*9+9] = 0.5
         end
 
         print(space.."index", #v.indices, v.indices[1], v.indices[2], v.indices[3])
@@ -135,6 +135,15 @@ function fbx_loader.load(filepath)
         }
 
         local vb_data = {"fffffffff", table.unpack(v.vb_raw)}
+
+       -- print(table.unpack(v.vb_raw))
+
+        --for i = 0, #v.vb_raw/9-1 do
+        --    print("position", v.vb_raw[i*9+1],v.vb_raw[i*9+2],v.vb_raw[i*9+3])
+        --    print("normal", v.vb_raw[i*9+4], v.vb_raw[i*9+5], v.vb_raw[i*9+6])
+        --    print("texcoord0", v.vb_raw[i*9+7], v.vb_raw[i*9+8], v.vb_raw[i*9+9])
+        --end
+
         v.vb = bgfx.create_vertex_buffer(vb_data, vdecl)
         v.ib = bgfx.create_index_buffer(v.ib_raw)
     end

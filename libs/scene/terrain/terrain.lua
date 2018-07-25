@@ -2,27 +2,22 @@
 local ecs = ...
 local world = ecs.world
 
-package.path = package.path..';../clibs/terrain/?.lua;./clibs/terrain/?.lua;./test/?.lua;' 
+package.path = package.path..';../clibs/terrain/?.lua;./clibs/terrain/?.lua;./test/?.lua;'
+package.path = package.path..";"..package.app_dir.."/clibs/terrain/?.lua;"
 package.cpath = package.cpath..';../clibs/terrain/?.dll;./clibs/terrain/?.dll;'
 
 local bgfx = require "bgfx"
---local rhwi = require "render.hardware_interface"
 local nk = require "bgfx.nuklear"
---local task = require "editor.task"
-
-
---local s_logo = require "logo"
 
 local nkmsg = require "inputmgr.nuklear"
 
---local math3d = require "math3d"
 
 local loadfile = require "tested.loadfile"
 local ch_charset = require "tested.charset_chinese_range"
 
 local shaderMgr = require "render.resources.shader_mgr"
 
-local terrainClass = require "terrain"
+local terrainClass = require "scene.terrain.terrainclass"
 --local utilmath = require "utilmath"
 local camera_util = require "render.camera.util"
 
@@ -31,16 +26,6 @@ local terrain = terrainClass.new()       	-- new terrain instance pvp
 local terrain_chibi = terrainClass.new()    -- chibi 
 
 local math3d_stack = nil --math3d.new()
-
--- canvas = iup.canvas{}
-
---local input_queue = inputmgr.queue(mapiup, canvas)
-
--- dlg = iup.dialog {
---   canvas,
---   title = "hello terrain world",
---   size = "HALFxHALF",
--- }
 
 local ctx = { stats = {} }
 
@@ -69,8 +54,8 @@ local joy_size = 0.7
 local UI_VIEW = 255
 
 local function joystick_init()
-	joy_image = nk.loadImage("assets/build/textures/yaogan.tga")
-	joy_base  = nk.loadImage("assets/build/textures/yaogandi.tga")
+	joy_image = nk.loadImage(package.app_dir.."/assets/build/textures/yaogan.TGA")
+	joy_base  = nk.loadImage(package.app_dir.."/assets/build/textures/yaogandi.TGA")
 end 
 
 local skinStyle = {
@@ -114,7 +99,8 @@ local function process_input(message)
 
 	-- local useJoy = false 
 	-- local use_rJoy = false 
-	local dirx,diry,r_dirx,r_diry = joystick_update()
+	---[[
+    local dirx,diry,r_dirx,r_diry = joystick_update()
 	local camera = world:first_entity("main_camera")
 	if dirx ~= 0 or diry ~= 0 then
 		print("dirx : ", dirx, ", diry : ", diry)		
@@ -126,7 +112,7 @@ local function process_input(message)
 		local rotate_speed = 1.5
 		camera_util.rotate(math3d_stack, camera, r_dirx * rotate_speed, r_diry * rotate_speed)
 	end
-
+--]]
 	-- if dirx ~= 0 or diry ~= 0 then
 	-- 	 useJoy = true 
 	-- end   
@@ -266,36 +252,13 @@ local function mainloop()
 	if result == true and fly == false then 
 		view[2] = height + 5  
 	end 
-	--print("view = ",view[1],view[2],view[3])
-	--result,height = terrain_chibi:get_height( view[1],view[3] )
-	--if result == true and fly == false then 
-	--	view[2] = height + 5  
-	--end 
-
-	-- do camera viewproject
-	-- local srt = { t= view or {0,130,-10,1},
-	--               r= dir or {25,45,0,0},
-	--  			  s= {1,1,1,1} }          								 -- for terrain ,eye,target
-	-- local srt = { t= {0,30,-10,1}, r={0,45,0,0}, s= {1,1,1,1} }       -- yaw = 45, pitch = 25
-	-- local proj_mtx = math3d_stack( { type = "proj",n=0.1, f = 1000, fov = 60, aspect = ctx.width/ctx.height } , "m")  
-	-- local view_mtx = math3d_stack( srt.t,srt.r,"dLm" )    			     -- math3d_statck( op data 1,2,..,"op code string")
-
-	-- bgfx.set_view_clear(0, "CD", 0x103030ff, 1, 0)
-	-- bgfx.set_view_rect(0, 0, 0, ctx.width, ctx.height )
-	-- bgfx.reset( ctx.width,ctx.height, "vmx")
-	-- bgfx.touch(0)
-
-	--bgfx.set_view_transform(0,view_mtx,proj_mtx)
 
     -- terrain chibi 
-	terrain_chibi:render( ctx.width,ctx.height)
+	-- terrain_chibi:render( ctx.width,ctx.height)
     -- terrain pvp 
 	terrain:update( view ,dir)                        -- for further anything 
 	terrain:render( ctx.width,ctx.height,prim_type)   --"POINT","LINES"  -- for debug 
 
-    ---[[
-	--bgfx_logo()
-	--]]           
 	-- ui input --
 	local ortho_mtx = math3d_stack( { type = "ortho", l = 0, r = ctx.width, b = ctx.height, t = 0, n = 0, f = 100, h = false }, "m")  
 	--local ortho_mtx = math3d_stack( { 2.0/ctx.width, 0.0, 0.0, 0.0,   0.0,-2.0/ctx.height, 0.0, 0.0,  0.0, 0.0,-1.0, 0.0,  -1.0, 1.0, 0.0, 1.0}, "m") 
@@ -307,40 +270,17 @@ local function mainloop()
 	--bgfx.frame()
 end
 
--- function bgfx_logo()
--- 	bgfx.dbg_text_clear()
--- 	bgfx.dbg_text_image(math.max(ctx.width //2//8 , 20)-20
--- 				, math.max(ctx.height//2//16, 6)-6
--- 				, 40
--- 				, 12
--- 				, s_logo
--- 				, 160
--- 				)
-
--- 	bgfx.dbg_text_print(0, 1, 0xf, "Color can be changed with ANSI \x1b[9;me\x1b[10;ms\x1b[11;mc\x1b[12;ma\x1b[13;mp\x1b[14;me\x1b[0m code too.");
--- 	local stats = bgfx.get_stats("sd",ctx.stats)
-
--- 	bgfx.dbg_text_print(0, 2, 0x0f, string.format("Backbuffer %dW x %dH in pixels, debug text %dW x %dH in characters."
--- 				, stats.width
--- 				, stats.height
--- 				, stats.textWidth
--- 				, stats.textHeight
---                 ))
--- end 
-
 local function init(fbw, fbh)
-	-- rhwi.init(iup.GetAttributeData(canvas,"HWND"), fbw, fbh)
-	-- bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
-	-- bgfx.set_debug "T"
-
-	ctx.width = fbw
-	ctx.height = fbh
+    --must be integer
+	ctx.width =  math.tointeger(fbw)
+	ctx.height = math.tointeger(fbh)
 
 	-- nk init
+    ---[[
 	nk.init {
 		view = UI_VIEW,
-		width = fbw,
-		height = fbh,
+		width = ctx.width,
+		height = ctx.height,
 		decl = bgfx.vertex_decl {
 			{ "POSITION", 2, "FLOAT" },
 			{ "TEXCOORD0", 2, "FLOAT" },
@@ -351,20 +291,20 @@ local function init(fbw, fbh)
 			WRITE_MASK = "RGBA",
 			BLEND = "ALPHA",
 		},
-		prog = shaderMgr.programLoad("ui/vs_nuklear_texture.sc","ui/fs_nuklear_texture.sc"),
+		prog = shaderMgr.programLoad("ui/vs_nuklear_texture","ui/fs_nuklear_texture"),
 
 		fonts = {
-			{ "宋体行楷", loadfonts("build/fonts/stxingka.ttf",50, ch_charset()  ), },
+			{ "宋体行楷", loadfonts(package.app_dir .. "/assets/build/fonts/stxingka.ttf",50, ch_charset()  ), },
 		},
 	}	
-
+--]]
 	print("nk init ok")
 	
 	local program_create_mode = 0
 
 	---[[
 	-- load terrain level 
-	terrain:load("assets/build/terrain/pvp1.lvl", 
+	terrain:load("assets/build/terrain/pvp1.lvl",
 					{
 						{ "POSITION", 3, "FLOAT" },
 						{ "TEXCOORD0", 2, "FLOAT" },
@@ -380,7 +320,7 @@ local function init(fbw, fbh)
 		terrain:load_meterial("assets/build/terrain/terrain.mtl")
 	else 
 		-- or create manually
-		terrain:load_program("terrain/vs_terrain.sc","terrain/fs_terrain.sc")
+		terrain:load_program("terrain/vs_terrain","terrain/fs_terrain")
 		terrain:create_uniform("u_mask","s_maskTexture","i1",1)
 		terrain:create_uniform("u_base","s_baseTexture","i1",0)
 		terrain:create_uniform("u_lightIntensity","s_lightIntensity","v4")
@@ -403,8 +343,6 @@ local function init(fbw, fbh)
 
 	-- ui init
 	joystick_init()
-
-	--task.loop(mainloop)
 end
 
 local terrain_sys = ecs.system "terrain_system"
@@ -417,7 +355,6 @@ terrain_sys.dependby "end_frame"
 function terrain_sys:init()
 	math3d_stack = self.math_stack
 	local fb = world.args.fb_size
-
 	init(fb.w, fb.h)
 
 	--
@@ -442,41 +379,3 @@ end
 function terrain_sys:update()
 	mainloop()
 end
-
--- function canvas:resize_cb(w,h)
--- 	if init then
--- 		init(self, w, h)
--- 		init = nil
--- 	else 
--- 		nk.resize(w,h)
--- 	end
--- 	bgfx.set_view_rect(0, 0, 0, w, h)
--- 	bgfx.reset(w,h, "v")
--- 	ctx.width = w
--- 	ctx.height = h
--- end
-
--- function canvas:keypress_cb(key, press)
--- 	if key ==  iup.K_F1 and press == 1 then
--- 		ctx.debug = not ctx.debug
--- 		bgfx.set_debug( ctx.debug and "S" or "")
--- 	end
--- 	if key == iup.K_F12 and press == 1 then
--- 		bgfx.request_screenshot()
--- 	end
--- end
-
-
-
--- function canvas:action(x,y)
--- 	mainloop()
--- end
-
--- dlg:showxy(iup.CENTER,iup.CENTER)
--- dlg.usersize = nil
-
--- -- to be able to run this script inside another context
--- if (iup.MainLoopLevel()==0) then
--- 	iup.MainLoop()
--- 	iup.Close()
--- end

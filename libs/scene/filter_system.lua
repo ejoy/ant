@@ -46,9 +46,11 @@ local function append_lighting_properties(ms, result)
 		
 			-- point from vertex position to light position			
 			table.insert(dlight_info.dir, ms(dlight.rotation.v, "dim"))
+
 			table.insert(dlight_info.color, l.color)
 			table.insert(dlight_info.intensity, {l.intensity, 0, 0, 0})
 		end
+
 
 		properties["directional_lightdir"] 	= {name="Light Direction", type="v4", value = dlight_info.dir}
 		properties["directional_color"] 	= {name="Light Color", type="color", value = dlight_info.color}
