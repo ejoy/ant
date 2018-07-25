@@ -531,7 +531,6 @@ extand[VAR_LOCAL] = function(frameId)
         end
         i = i + 1
     end
-    table.sort(vars, function(a, b) return a.name < b.name end)
     return vars
 end
 
@@ -551,7 +550,6 @@ extand[VAR_VARARG] = function(frameId)
         )
         i = i - 1
     end
-    table.sort(vars, function(a, b) return a.name < b.name end)
     return vars
 end
 
@@ -572,7 +570,6 @@ extand[VAR_UPVALUE] = function(frameId)
         )
         i = i + 1
     end
-    table.sort(vars, function(a, b) return a.name < b.name end)
     return vars
 end
 
