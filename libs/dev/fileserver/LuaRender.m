@@ -26,6 +26,8 @@ LUAMOD_API int luaopen_lfs(lua_State *L);
 LUAMOD_API int luaopen_lodepnglua(lua_State *L);
 LUAMOD_API int luaopen_memoryfile (lua_State *L);
 LUAMOD_API int luaopen_assimplua(lua_State *L);
+//LUAMOD_API int luaopen_cppfs(lua_State *L);
+
 void luaopen_lanes_embedded( lua_State* L, lua_CFunction _luaopen_lanes);
 
 static int default_luaopen_lanes( lua_State* L) {
@@ -86,6 +88,15 @@ static int error_handle(lua_State* L) {
     
     if(msg) {
         printf("------- error!!! -------- \n %s\n", msg);
+        
+        //send a log
+        lua_getglobal(L, "sendlog");
+        if(lua_isfunction(L, -1)) {
+            lua_pushstring(L, "Device");
+            lua_pushstring(L, msg);
+            lua_pcall(L, 2, 0, 0);
+        }
+        
         luaL_traceback(L, L, msg, 1);
     }
     
@@ -103,13 +114,15 @@ static int error_handle(lua_State* L) {
     luaL_requiref(L, "bgfx", luaopen_bgfx, 0);
     luaL_requiref(L, "bgfx.util", luaopen_bgfx_util, 0);
     luaL_requiref(L, "bgfx.baselib", luaopen_bgfx_baselib, 0);
-    luaL_requiref(L, "bgfx.terrain", luaopen_bgfx_terrain, 0);
+    luaL_requiref(L, "lterrain", luaopen_bgfx_terrain, 0);
     luaL_requiref(L, "bgfx.nuklear", luaopen_bgfx_nuklear, 0);
     luaL_requiref(L, "math3d", luaopen_math3d, 0);
     luaL_requiref(L, "winfile", luaopen_lfs, 0);
     luaL_requiref(L, "assimplua", luaopen_assimplua, 0);
     luaL_requiref(L, "lodepnglua", luaopen_lodepnglua, 0);
     luaL_requiref(L, "memoryfile", luaopen_memoryfile, 0);
+//    luaL_requiref(L, "cppfs", luaopen_cppfs, 0);
+    
     luaopen_lanes_embedded(L, default_luaopen_lanes);
     
     custom_on_state_create(L);
@@ -176,22 +189,6 @@ static int error_handle(lua_State* L) {
     
     lua_close(L);
 }
-
-- (void) SendLog:(NSString *)log_str {
-    
-#ifdef DEBUG
-    lua_pushcfunction(L, error_handle);
-#endif
-    
-    lua_getglobal(L, "sendlog");
-    if(lua_isfunction(L, -1)) {
-        lua_pushstring(L, "Device");
-        NSLog(@"%@", log_str);
-        lua_pushstring(L, [log_str UTF8String]);
-        lua_pcall(L, 2, 0, -4);
-    }
-}
-
 
 - (void) HandleInput {
 #ifdef DEBUG

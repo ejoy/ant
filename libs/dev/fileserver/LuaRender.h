@@ -18,7 +18,7 @@
 - (void) InitScript:(CALayer*) layer size:(CGSize)view_size;
 - (void) Update;
 - (void) Terminate;
-- (void) SendLog:(NSString*) log_str;
+
 - (void) HandleInput;
 - (void) AddInputMessage:(NSString*) msg x_pos:(CGFloat) x y_pos:(CGFloat) y;
 @end
