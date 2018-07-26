@@ -785,9 +785,9 @@ get_uservalue(lua_State *L, lua_State *cL, int getref) {
 		lua_pop(L, 1);
 		return 0;
 	}
-	lua_pop(cL, 1);
 
 	if (t != LUA_TUSERDATA) {
+		lua_pop(cL, 1);
 		lua_pop(L, 1);
 		return 0;
 	}
@@ -799,8 +799,10 @@ get_uservalue(lua_State *L, lua_State *cL, int getref) {
 			lua_replace(L, -2);
 			return 1;
 		}
-		lua_pop(cL,1);
 	}
+
+	// pop full userdata
+	lua_pop(cL, 1);
 
 	// L : value
 	// cL : value uservalue
