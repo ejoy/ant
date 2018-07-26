@@ -2056,6 +2056,15 @@ calc_tangent_vb(lua_State *L, const bgfx_memory_t *mem, bgfx_vertex_decl_t *vd, 
 	}
 }
 
+static inline const bgfx_memory_t* 
+copy_mem_from_userdata(lua_State *L, int idx) {
+	size_t rawlen = lua_rawlen(L, 1);
+	const bgfx_memory_t* mem = bgfx_alloc(rawlen);
+	uint8_t *data = (uint8_t*)lua_touserdata(L, 1);
+	memcpy(mem->data, data, rawlen);
+	return mem;
+}
+
 /*
 	table data / lightuserdata memory
 	desc
@@ -2072,7 +2081,10 @@ lcreateVertexBuffer(lua_State *L) {
 	if (vd == NULL)
 		return luaL_error(L, "Invalid vertex decl");
 	
-	const bgfx_memory_t *mem = create_from_table_decl(L, 1, vd);
+	const bgfx_memory_t *mem = (lua_type(L, 1) == LUA_TUSERDATA) ?
+		copy_mem_from_userdata(L, 1) : 	
+		create_from_table_decl(L, 1, vd);
+	
 	uint16_t flags = BGFX_BUFFER_NONE;
 	int calc_targent = 0;
 	if (lua_isstring(L, 3)) {
@@ -2184,11 +2196,20 @@ static int
 lcreateIndexBuffer(lua_State *L) {
 	const bgfx_memory_t *mem;
 	uint16_t flags = index_buffer_flags(L, 2);
-	if (flags & BGFX_BUFFER_INDEX32) {
-		mem = create_from_table_int32(L, 1);
+	const int index32 = flags & BGFX_BUFFER_INDEX32;
+
+	if (lua_type(L, 1) == LUA_TUSERDATA) {
+		mem = copy_mem_from_userdata(L, 1);
 	} else {
-		mem = create_from_table_int16(L, 1);
+		if (index32) {
+			mem = create_from_table_int32(L, 1);
+		}
+		else {
+			mem = create_from_table_int16(L, 1);
+		}
 	}
+
+
 	bgfx_index_buffer_handle_t handle = bgfx_create_index_buffer(mem, flags);
 	if (invalid_handle(handle)) {
 		return luaL_error(L, "create index buffer failed");
@@ -4009,6 +4030,9 @@ lgetScreenshot(lua_State *L) {
 
 static int
 lgetLog(lua_State *L) {
+	if (lua_getfield(L, LUA_REGISTRYINDEX, "bgfx_cb") != LUA_TUSERDATA) {
+		return luaL_error(L, "get_log failed!");
+	}
 	struct callback *cb = lua_touserdata(L, -1);
 	struct log_cache *lc = &cb->lc;
 	spin_lock(lc);
@@ -4117,7 +4141,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "get_screenshot", lgetScreenshot },
 		{ "export_vertex_decl", lexportVertexDecl },
 		{ "vertex_decl_stride", lvertexDeclStride },
-        { "get_log", lgetLog },		
+		{ "get_log", lgetLog },		
 
 		{ NULL, NULL },
 	};

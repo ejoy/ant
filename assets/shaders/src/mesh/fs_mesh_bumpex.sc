@@ -1,7 +1,7 @@
 $input v_tex0, v_lightdir, v_viewdir
 
 #include <common.sh>
-
+#include "common/lighting.sh"
 #include "common/uniforms.sh"
 
 SAMPLER2D(s_basecolor,  0);
@@ -31,15 +31,14 @@ vec4 calc_lighting_BH(vec3 normal, vec3 lightdir, vec3 viewdir,
 
 void main()
 {
-	vec2 tt = vec2(v_tex0.x, 1-v_tex0.y);
-
-	vec4 ntexdata = texture2D(s_normal, tt);	
+	vec4 ntexdata = texture2D(s_normal, v_tex0);	
 	vec3 normal = vec3(ntexdata.xy, 0.0);
 	normal.xy = normal.xy * 2.0 - 1.0;
 	normal.z = sqrt(1.0 - dot(normal.xy, normal.xy));
 
-	vec4 basecolor = toLinear(texture2D(s_basecolor, tt));
-	//vec4 basecolor = texture2D(s_basecolor, tt);
+	//vec4 color = toLinear(texture2D(s_basecolor, v_tex0) );
+	vec4 basecolor = texture2D(s_basecolor, v_tex0);
+
 
 	// vec3 lightdir = mul(directional_lightdir[0], tbn);
 	// vec3 viewdir = mul(normalize(u_eyepos - v_pos), tbn);
