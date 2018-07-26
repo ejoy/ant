@@ -610,9 +610,15 @@ static int lsocket_connect(lua_State *L)
 		if (ok < 0)
 			return lsocket_error(L, strerror(errno));
 	}
-	
-	if (connect(sock->sockfd, sa, slen) < 0 && errno != EINPROGRESS)
-		return lsocket_error(L, strerror(errno));
+	if (connect(sock->sockfd, sa, slen) < 0) {
+#if defined(WIN32)
+		if (errno != EAGAIN && errno != EWOULDBLOCK) {
+#else
+		if (errno != EINPROGRESS) {
+#endif
+			return lsocket_error(L, strerror(errno));
+		}
+	}
 
 	return 1;
 }
