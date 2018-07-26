@@ -112,6 +112,7 @@ function fbx_loader.load(filepath)
 			tangentspace = true,
 		
 			invert_normal = false,
+			flip_uv = true,
 			ib_32 = false,	-- if index num is lower than 65535
 		},
 		animation = {

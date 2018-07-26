@@ -770,22 +770,28 @@ struct LoadFBXConfig {
 		, flags(0) {}
 
 	bool NeedCreateNormal() const {
-		return flags | CreateNormal;
+		return flags & CreateNormal;
 	}
 
 	bool NeedCreateTangentSpaceData() const {
-		return flags | CreateTangent | CreateBitangent;
+		return flags & (CreateTangent | CreateBitangent);
+	}
+
+	bool NeedFlipUV()const {
+		return flags & FlipUV;
 	}
 
 	std::string layout;
 
 	enum {
-		CreateNormal = 0x0001,
-		CreateTangent = 0x0002,
-		CreateBitangent = 0x0004,
+		CreateNormal		= 0x00000001,
+		CreateTangent		= 0x00000002,
+		CreateBitangent		= 0x00000004,
 
-		InvertNormal = 0x0010,
-		IndexBuffer32Bit = 0x0020,
+		InvertNormal		= 0x00000010,
+		FlipUV				= 0x00000020,
+		IndexBuffer32Bit	= 0x00000040,
+
 	};
 	uint32_t flags;
 };
@@ -1071,6 +1077,7 @@ static void ExtractLoadConfig(lua_State *L, int idx, LoadFBXConfig &config) {
 	extract_boolean("tangentspace", LoadFBXConfig::CreateBitangent);
 
 	extract_boolean("invert_normal", LoadFBXConfig::InvertNormal);
+	extract_boolean("flip_uv", LoadFBXConfig::FlipUV);
 	extract_boolean("ib_32", LoadFBXConfig::IndexBuffer32Bit);	
 }
 
@@ -1088,17 +1095,14 @@ static int LoadFBX(lua_State *L)
 	LoadFBXConfig config;
 	ExtractLoadConfig(L, 2, config);
 
-	uint32_t import_flags = aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_FlipUVs;
+	uint32_t import_flags = aiProcessPreset_TargetRealtime_MaxQuality;
 	if (config.NeedCreateTangentSpaceData()) {
 		import_flags |= aiProcess_CalcTangentSpace;
 	}
 
-// 		aiProcess_CalcTangentSpace |
-// 		aiProcess_Triangulate |
-// 		aiProcess_SortByPType |
-// 		aiProcess_OptimizeMeshes |
-// 		aiProcess_ValidateDataStructure;
-		
+	if (config.NeedFlipUV()) {
+		import_flags |= aiProcess_FlipUVs;
+	}		
 
 	const aiScene* scene = importer.ReadFile(fbx_path, import_flags);
 
