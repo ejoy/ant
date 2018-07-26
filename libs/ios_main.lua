@@ -12,7 +12,7 @@ local iq = inputmgr.queue {
 local currentworld
 function init(nativewnd, fbw, fbh)
 	rhwi.init(nativewnd, fbw, fbh)
-	currentworld = scene.start_new_world(iq, fbw, fbh, "test_world.module")
+	currentworld = scene.start_new_world(iq, fbw, fbh, {"test_world.module"})
 end
 
 function input(msg, ...)

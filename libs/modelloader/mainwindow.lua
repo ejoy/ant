@@ -172,7 +172,7 @@ local function init()
     rhwi.init(iup.GetAttributeData(canvas,"HWND"), fb_width, fb_height)
     local module_description_file = "mem://model_main_window.module"
     fs_util.write_to_file(module_description_file, [[modules = {"libs/modelloader/renderworld.lua"}]])
-    scene.start_new_world(input_queue, fb_width, fb_height, module_description_file)
+    scene.start_new_world(input_queue, fb_width, fb_height, {module_description_file})
 end
 
 dlg:showxy(iup.CENTER, iup.CENTER)
