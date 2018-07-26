@@ -3,6 +3,7 @@ local world = ecs.world
 
 local cu 	= require "render.components.util"
 local bgfx  = require "bgfx"
+local mu  	= require "math.util"
 
 local general_editor_entites = ecs.system "general_editor_entites"
 
@@ -24,9 +25,7 @@ function general_editor_entites:init()
 			"name")
         local axis = world[axisid]
 
-        ms(axis.rotation.v, {0, 0, 0, 0}, "=")
-        ms(axis.position.v, {0, 0, 0, 1}, "=")
-        ms(axis.scale.v, {1, 1, 1}, "=")
+        mu.identify_transform(ms, axis)
 
 		axis.name.n = "axis-tips"
 		
@@ -58,9 +57,7 @@ function general_editor_entites:init()
 		"name")
         local grid = world[gridid]
         grid.name.n = "grid"
-        ms(grid.rotation.v, {0, 0, 0}, "=")        
-        ms(grid.scale.v, {1, 1, 1}, "=")
-        ms(grid.position.v, {0, 0, 0, 1}, "=")
+        mu.identify_transform(ms, grid)
 
         local function create_grid_line_points(w, h, unit)
             local t = {"fffd"}

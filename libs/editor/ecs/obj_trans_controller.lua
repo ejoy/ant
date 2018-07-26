@@ -49,7 +49,9 @@ local function play_object_transform(ms, ot, dx, dy)
     local controller = ot.controllers[mode]
     if controller == nil then
         return 
-    end
+	end
+	
+	local ctrlpos = controller:get_position()
 
     local sceneobj = assert(world[ot.sceneobj_eid])
     local selected_axis = assert(world[ot.selected_eid])
@@ -60,18 +62,18 @@ local function play_object_transform(ms, ot, dx, dy)
         local camera = world:first_entity("main_camera")
         local view, proj = mu.view_proj_matrix(ms, camera)
 
-		local originInWS = {0, 0, 0, 1}
+		local originInWS = ctrlpos
 		local posInWS = ms(originInWS, dir, "+P")
 
 		local results = {}
 
 		for _, p in ipairs{originInWS, posInWS} do
-			local dirInCS = ms(p, view, proj, "**T")
-			local clipcoord = dirInCS[4]
-			local dirInNDC = {dirInCS[1]/clipcoord, dirInCS[2]/clipcoord}
-			local screenN = {(dirInNDC[1] + 1) * 0.5, (dirInNDC[2] + 1) * 0.5}
+			local posInCS = ms(p, view, proj, "**T")
+			local clipcoord = posInCS[4]
+			local posInNDC = {posInCS[1]/clipcoord, posInCS[2]/clipcoord}
+			local posInSNS = {(posInNDC[1] + 1) * 0.5, (posInNDC[2] + 1) * 0.5}	-- screen normalize space
 			local vr = camera.view_rect
-			local screen = {screenN[1] * vr.w, vr.h * (1 - screenN[2])}
+			local screen = {posInSNS[1] * vr.w, vr.h * (1 - posInSNS[2])}
 			table.insert(results, screen)
 		end
 
@@ -81,20 +83,19 @@ local function play_object_transform(ms, ot, dx, dy)
 		local dirInScreen = {point2[1] - point1[1], point2[2] - point1[2]}
 		local len = math.sqrt(dirInScreen[1] * dirInScreen[1] + dirInScreen[2] * dirInScreen[2])
 		dirInScreen[1], dirInScreen[2] = dirInScreen[1] / len, dirInScreen[2] / len
-		local dot = dirInScreen[1] * dx + dirInScreen[2] * dy
-        return dot
+		return dirInScreen[1] * dx + dirInScreen[2] * dy        
     end
 
-	local xdir, ydir, zdir = ms(sceneobj.rotation.v, "bPPP")	
+	local xdir, ydir, zdir = ms(sceneobj.rotation.v, "bPPP")
 
     if mode == "pos_transform" then            
         if selected_axis then
             local pos = sceneobj.position.v
 
             local function move(dir)
-				local speed = ot.translate_speed
+				local speed = ot.translate_speed			
 				local v = select_step_value(dir) > 0 and speed or -speed
-				ms(pos, pos, dir, {v}, "*+=")
+				ms(pos, pos, dir, {v}, "*+=")			
             end
 
             if axis_name == "x" then
@@ -229,7 +230,7 @@ local function register_message(msg_comp, ot, ms)
             return 
         end
 
-        local deltaX, deltaY = x - lastX, (lastY - y)  -- y value is from up to down, need flip
+        local deltaX, deltaY = x - lastX, y - lastY  -- y value is from up to down, need flip
         lastX, lastY = x, y
 
         play_object_transform(ms, ot, deltaX, deltaY)
@@ -373,6 +374,11 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 		end
 	end
 
+	function controllers:get_position()
+		local root = world[self.root]
+		return root.position.v
+	end
+
 	function controllers:show(visible)
 		for _, axis_eid in self:iter_axis() do
 			local axisentity = world[axis_eid]
@@ -440,7 +446,7 @@ local function add_rotator_entities(ms, colors)
 													"obj_trans/obj_trans.material")
 		world:add_component(eid, "rotator_transform")
 		local entity = world[eid]
-		ms(entity.scale.v, {0.01, 0.01, 0.01}, "=")
+		ms(entity.scale.v, {0.01, 0.01, 0.01, 0}, "=")		
 		ms(entity.rotation.v, elem.rotation, "=")
 		local properties = assert(entity.material.content[1].properties)
 		properties.u_color = {type="color", name="color", value=cu.deep_copy(colors[elem.color_name])}
