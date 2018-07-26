@@ -763,8 +763,7 @@ add_2values(lua_State *L, struct lastack *LS) {
 		if (types[1] == LINEAR_TYPE_VEC4){
 			ret[3] = val[1][3];	// dir + point, result should be val[1].w
 			lastack_pushvec4(LS, ret);
-		} else {
-			ret[3] = 0.f;	// dir + dir
+		} else {			
 			lastack_pushvec3(LS, ret);
 		}			
 		break;
@@ -1305,7 +1304,7 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 		ydir.x = 0, ydir.y = 0, ydir.z = -1;		
 		xdir.x = 1, xdir.y = 0, xdir.z = 0;
 	} else {
-		vector3_cross(&xdir, &zdir, &Y_v3);
+		vector3_cross(&xdir, &Y_v3, &zdir);
 		vector3_normalize(&xdir);
 		vector3_cross(&ydir, &zdir, &xdir);
 		vector3_normalize(&ydir);
