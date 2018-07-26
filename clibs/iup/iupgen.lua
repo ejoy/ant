@@ -203,15 +203,18 @@ function bin2c(filename)
 	local function dump(str)
 		return (str:gsub(".", numtab):gsub(("."):rep(80), "%0\n"))
 	end
+	local f = assert(io.open(filename, 'rb'))
+	local code = f:read 'a'
+	f:close()
 
 	return [=[
 	{
 	static const unsigned char B1[]={
-	]=] .. dump(string.dump(loadfile(filename))) .. [=[
+	]=] .. dump(string.dump(load(code, '='  .. filename))) .. [=[
 
 	};
 
-	 iuplua_dobuffer(L,(const char*)B1,sizeof(B1),"]=] .. filename ..[=[");
+	 iuplua_dobuffer(L,(const char*)B1,sizeof(B1),"=]=] .. filename ..[=[");
 	}
 	]=]
 

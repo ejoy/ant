@@ -1,10 +1,12 @@
-dofile "libs/init.lua"
+package.cpath = "./clibs/?.dll;./bin/?.dll"
+package.path = "./libs/?.lua;./libs/?/?.lua"
 
-local DbgUpdate = require 'new-debugger' .start_all()
+local dbg = require 'new-debugger'
+local dbgupdate = dbg.start_all(true)
 local dbgtimer = iup.timer{time=100}
 dbgtimer.run = 'YES'
 function dbgtimer:action_cb()
-	DbgUpdate()
+	dbgupdate()
 end
 
 pcall(dofile, 'libs/main.lua')

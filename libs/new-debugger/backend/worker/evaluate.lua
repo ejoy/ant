@@ -25,8 +25,8 @@ function table_mt:__index(k)
     if type(k) == 'table' then
         k = k.__ref
     end
-    local v = rdebug.index(self.__ref, k)
-    if rdebug.value(v) ~= nil then
+    local v = rdebug.indexv(self.__ref, k)
+    if v ~= nil then
         v = wrap_v(v)
         self[key] = v
         return v
@@ -39,7 +39,7 @@ local function frameCreate(frameId)
     local i = 1
     local f = rdebug.getfunc(frameId)
     while true do
-        local name, value = rdebug.getupvalue(f, i)
+        local name, value = rdebug.getupvaluev(f, i)
         if name == nil then
             break
         end
@@ -49,7 +49,7 @@ local function frameCreate(frameId)
 
     local i = 1
     while true do
-        local name, value = rdebug.getlocal(frameId, i)
+        local name, value = rdebug.getlocalv(frameId, i)
         if name == nil then
             break
         end
@@ -71,8 +71,8 @@ end
 local G = {}
 
 G._G = setmetatable({}, {__index = function(_, name)
-    local v = rdebug.index(rdebug._G, name)
-    if rdebug.value(v) ~= nil then
+    local v = rdebug.indexv(rdebug._G, name)
+    if v ~= nil then
         return wrap_v(v)
     end
 end})
@@ -81,8 +81,8 @@ G.debug = {}
 
 function G.debug.getmetatable(obj)
     if type(obj) == 'table' and obj.__ref then
-        local v = rdebug.getmetatable(obj.__ref)
-        if rdebug.value(v) ~= nil then
+        local v = rdebug.getmetatablev(obj.__ref)
+        if v ~= nil then
             return wrap_v(v)
         end
     end
@@ -90,15 +90,15 @@ end
 
 function G.debug.getuservalue(obj)
     if type(obj) == 'table' and obj.__ref then
-        local v = rdebug.getuservalue(obj.__ref)
-        if rdebug.value(v) ~= nil then
+        local v = rdebug.getuservaluev(obj.__ref)
+        if v ~= nil then
             return wrap_v(v)
         end
     end
 end
 
 function G.debug.getlocal(frameId, i)
-    local name, v = rdebug.getlocal(frameId, i)
+    local name, v = rdebug.getlocalv(frameId, i)
     if name and v then
         return wrap_v(v)
     end
@@ -112,8 +112,8 @@ function G.debug.getupvalue(f, i)
     else
         return
     end
-    local name, v = rdebug.getupvalue(f, i)
-    if name and rdebug.value(v) ~= nil then
+    local name, v = rdebug.getupvaluev(f, i)
+    if name and v then
         return wrap_v(v)
     end
 end
@@ -128,8 +128,8 @@ local function get(name)
     if value then
         return value
     end
-    local value = rdebug.index(rdebug._G, name)
-    if rdebug.value(value) ~= nil then
+    local value = rdebug.indexv(rdebug._G, name)
+    if value ~= nil then
         return wrap_v(value)
     end
 end

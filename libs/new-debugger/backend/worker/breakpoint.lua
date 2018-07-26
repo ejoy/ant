@@ -13,10 +13,10 @@ local m = {}
 local enable = false
 
 local function nextActiveLine(si, line)
-    if line > si.maxline then
+    local defines = si.definelines
+    if line > #defines then
         return
     end
-    local defines = si.definelines
     local actives = si.activelines
     local fn = defines[line]
     while actives[line] ~= true do

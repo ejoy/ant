@@ -5,8 +5,9 @@ local function sendstring(fd, s)
     local from = 1
     local len = #s
     while from <= len do
-        lsocket.select(nil, {fd})
-        from = from + assert(fd:send(s:sub(from)))
+        if lsocket.select(nil, {fd}) then
+            from = from + assert(fd:send(s:sub(from)))
+        end
     end
 end
 

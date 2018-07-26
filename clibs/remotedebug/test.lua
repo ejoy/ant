@@ -16,7 +16,7 @@ local b = { a = 2 }
 
 local function abc(a, ...)
 	local a = b.a
-	local a = { b = { c = { d = 1 } } }
+	local a = { 1,2,3,b = { c = { d = 1 } } }
 	setmetatable(a, {})
 
 	local c = {}

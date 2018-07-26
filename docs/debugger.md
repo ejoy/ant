@@ -27,7 +27,8 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "skipFiles": [
-                "libs/new-debugger/*"
+                "libs/new-debugger/*",
+                "libs/dbg_main.lua"
             ],
             "sourceMaps": [
                 [

@@ -14,9 +14,9 @@ local function calc_lines(f, src, tmp)
     if endLn == 0 then
         startLn = 1
         endLn = maxn
-        src.maxline = math.max(src.maxline, maxn)
+        tmp.maxline = math.max(tmp.maxline, maxn)
     else
-        src.maxline = math.max(src.maxline, endLn)
+        tmp.maxline = math.max(tmp.maxline, endLn)
     end
     local n = tmp.n + 1
     tmp.n = n
@@ -32,11 +32,25 @@ local function calc_lines(f, src, tmp)
     end
 end
 
+local function normalize(src, maxline)
+    local actives = src.activelines
+    local defines = src.definelines
+    for i = 1, maxline do
+        if actives[i] == nil then
+            actives[i] = false
+        end
+        if defines[i] == nil then
+            defines[i] = 0
+        end
+    end
+end
+
 return function (src, f)
-    local tmp = { n = 0 }
+    local tmp = { n = 0, maxline = 0 }
     src.maxline = 0
     src.activelines = { }
     src.definelines = { }
     calc_lines(f, src, tmp)
+    normalize(src, tmp.maxline)
     return src
 end

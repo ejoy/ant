@@ -63,8 +63,11 @@ ev.on('output', function(category, output, source, line)
     }
 end)
 
+function CMD.initializing(pkg)
+    ev.emit('initializing', pkg.config)
+end
+
 function CMD.initialized(pkg)
-    ev.emit('initialized', pkg.config)
     initialized = true
 end
 
@@ -337,7 +340,6 @@ hook['line'] = function(line)
         hookmgr.closeLineBP()
         return
     end
-
     local bp = breakpoint.find(src, line)
     if bp then
         if breakpoint.exec(bp) then
@@ -388,6 +390,14 @@ local function getEventArgs(i)
     return true, rdebug.value(value)
 end
 
+local function getEventArgsRaw(i)
+    local name, value = rdebug.getlocal(1, -i)
+    if name == nil then
+        return false
+    end
+    return true, value
+end
+
 local function setEventRet(v)
     local name, value = rdebug.getlocal(1, 3)
     if name ~= nil then
@@ -435,13 +445,10 @@ hook['exception'] = function()
     runLoop('exception')
 end
 
-rdebug.sethook(function(event, line)
-    assert(xpcall(function()
-        if hook[event] then
-            hook[event](line)
-        end
-    end, debug.traceback))
-end)
+hook['coroutine'] = function()
+    local _, co = getEventArgsRaw(1)
+    hookmgr.updateCoroutine(co)
+end
 
 local createMaster = true
 hook['update_all'] = function()
@@ -459,6 +466,24 @@ hook['update_all'] = function()
     end
     workerThreadUpdate()
 end
+
+hook['wait_client'] = function()
+    local _, all = getEventArgs(1)
+    while not initialized do
+        cdebug.sleep(10)
+        if all then
+            hook['update_all']()
+        else
+            hook['update']()
+        end
+    end
+end
+
+rdebug.sethook(function(event, line)
+    if hook[event] then
+        hook[event](line)
+    end
+end)
 
 sendToMaster {
     cmd = 'ready',

@@ -69,8 +69,8 @@ $(GC) : $(ODIR)/il_%.c : $(IUPSRC)/srclua5/elem/%.lua iupgen.lua
 
 LH := $(patsubst %.lua,$(ODIR)/%.lh,$(SRCLUA))
 
-$(LH) : $(ODIR)/%.lh : $(IUPSRC)/srclua5/%.lua $(IUPSRC)/srclua5/bin2c.lua
-	$(LUABIN) $(IUPSRC)/srclua5/bin2c.lua $< > $@
+$(LH) : $(ODIR)/%.lh : $(IUPSRC)/srclua5/%.lua bin2c.lua
+	$(LUABIN) bin2c.lua $< > $@
 
 IUPLUASRC = iuplua.c iuplua_api.c iuplua_draw.c iuplua_tree_aux.c iuplua_scanf.c \
       iuplua_getparam.c iuplua_getcolor.c iuplua_config.c

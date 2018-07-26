@@ -379,13 +379,13 @@ lclient_hookmask(lua_State *L) {
 // frame, index
 // return value, name
 static int
-lclient_getlocal(lua_State *L) {
+client_getlocal(lua_State *L, int getref) {
 	int frame = luaL_checkinteger(L, 1);
 	int index = luaL_checkinteger(L, 2);
 
 	lua_State *hL = get_host(L);
 
-	const char *name = get_frame_local(L, hL, frame, index);
+	const char *name = get_frame_local(L, hL, frame, index, getref);
 	if (name) {
 		lua_pushstring(L, name);
 		lua_insert(L, -2);
@@ -393,6 +393,16 @@ lclient_getlocal(lua_State *L) {
 	}
 
 	return 0;
+}
+
+static int
+lclient_getlocal(lua_State *L) {
+	return client_getlocal(L, 1);
+}
+
+static int
+lclient_getlocalv(lua_State *L) {
+	return client_getlocal(L, 0);
 }
 
 // frame
@@ -411,36 +421,84 @@ lclient_getfunc(lua_State *L) {
 }
 
 static int
-lclient_index(lua_State *L) {
+client_index(lua_State *L, int getref) {
 	lua_State *hL = get_host(L);
 	if (lua_gettop(L) != 2)
 		return luaL_error(L, "need table key");
 
-	if (get_index(L, hL)) {
+	if (get_index(L, hL, getref)) {
 		return 1;
 	}
 	return 0;
 }
 
 static int
-lclient_next(lua_State *L) {
+lclient_index(lua_State *L) {
+	return client_index(L, 0);
+}
+
+static int
+lclient_indexv(lua_State *L) {
+	return client_index(L, 1);
+}
+
+static int
+client_next(lua_State *L, int getref) {
 	lua_State *hL = get_host(L);
 	lua_settop(L, 2);
 	lua_pushvalue(L, 1);
 	// table key table
 	lua_insert(L, -2);
 	// table table key
-	if (next_key(L, hL) == 0)
+	if (next_key(L, hL, getref) == 0)
 		return 0;
 	// table key_obj
 	lua_insert(L, 1);
 	// key_obj table
 	lua_pushvalue(L, 1);
 	// key_obj table key_obj
-	if (get_index(L, hL) == 0) {
+	if (get_index(L, hL, getref) == 0) {
 		return 0;
 	}
 	return 2;
+}
+
+static int
+lclient_next(lua_State *L) {
+	return client_next(L, 0);
+}
+
+static int
+lclient_nextv(lua_State *L) {
+	return client_next(L, 1);
+}
+
+static int
+lclient_copytable(lua_State *L) {
+	lua_State *hL = get_host(L);
+	lua_settop(L, 1);
+	if (lua_checkstack(hL, 4) == 0) {
+		return luaL_error(L, "stack overflow");
+	}
+	if (eval_value(L, hL) != LUA_TTABLE) {
+		lua_pop(hL, 1);	// pop table
+		return 0;
+	}
+	lua_newtable(L);
+	lua_insert(L, -2);
+	lua_pushnil(L);
+	// L : result tableref nil
+	lua_pushnil(hL);
+	// hL : table nil
+	while(next_kv(L, hL)) {
+		// L: result tableref nextkey value
+		lua_pushvalue(L, -2);
+		lua_insert(L, -2);
+		// L: result tableref nextkey nextkey value
+		lua_rawset(L, -5);
+		// L: result tableref nextkey
+	}
+	return 1;
 }
 
 static int
@@ -521,12 +579,12 @@ lclient_type(lua_State *L) {
 }
 
 static int
-lclient_getupvalue(lua_State *L) {
+client_getupvalue(lua_State *L, int getref) {
 	int index = luaL_checkinteger(L, 2);
 	lua_settop(L, 1);
 	lua_State *hL = get_host(L);
 
-	const char *name = get_upvalue(L, hL, index);
+	const char *name = get_upvalue(L, hL, index, getref);
 	if (name) {
 		lua_pushstring(L, name);
 		lua_insert(L, -2);
@@ -537,10 +595,40 @@ lclient_getupvalue(lua_State *L) {
 }
 
 static int
-lclient_getmetatable(lua_State *L) {
+lclient_getupvalue(lua_State *L) {
+	return client_getupvalue(L, 0);
+}
+
+static int
+lclient_getupvaluev(lua_State *L) {
+	return client_getupvalue(L, 1);
+}
+
+static int
+client_getmetatable(lua_State *L, int getref) {
 	lua_settop(L, 1);
 	lua_State *hL = get_host(L);
-	if (get_metatable(L, hL)) {
+	if (get_metatable(L, hL, getref)) {
+		return 1;
+	}
+	return 0;
+}
+
+static int
+lclient_getmetatable(lua_State *L) {
+	return client_getmetatable(L, 0);
+}
+
+static int
+lclient_getmetatablev(lua_State *L) {
+	return client_getmetatable(L, 1);
+}
+
+static int
+client_getuservalue(lua_State *L, int getref) {
+	lua_settop(L, 1);
+	lua_State *hL = get_host(L);
+	if (get_uservalue(L, hL, getref)) {
 		return 1;
 	}
 	return 0;
@@ -548,12 +636,12 @@ lclient_getmetatable(lua_State *L) {
 
 static int
 lclient_getuservalue(lua_State *L) {
-	lua_settop(L, 1);
-	lua_State *hL = get_host(L);
-	if (get_uservalue(L, hL)) {
-		return 1;
-	}
-	return 0;
+	return client_getuservalue(L, 0);
+}
+
+static int
+lclient_getuservaluev(lua_State *L) {
+	return client_getuservalue(L, 1);
 }
 
 static int
@@ -676,13 +764,20 @@ luaopen_remotedebug(lua_State *L) {
 			{ "sethook", lclient_sethook },
 			{ "hookmask", lclient_hookmask },
 			{ "getlocal", lclient_getlocal },
+			{ "getlocalv", lclient_getlocalv },
 			{ "getfunc", lclient_getfunc },
 			{ "getupvalue", lclient_getupvalue },
+			{ "getupvaluev", lclient_getupvaluev },
 			{ "getmetatable", lclient_getmetatable },
+			{ "getmetatablev", lclient_getmetatablev },
 			{ "getuservalue", lclient_getuservalue },
+			{ "getuservaluev", lclient_getuservaluev },
 			{ "detail", show_detail },
 			{ "index", lclient_index },
+			{ "indexv", lclient_indexv },
 			{ "next", lclient_next },
+			{ "nextv", lclient_nextv },
+			{ "copytable", lclient_copytable },
 			{ "value", lclient_value },
 			{ "assign", lclient_assign },
 			{ "type", lclient_type },
