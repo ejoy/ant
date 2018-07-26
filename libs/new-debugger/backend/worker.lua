@@ -5,17 +5,14 @@ local variables = require 'new-debugger.backend.worker.variables'
 local source = require 'new-debugger.backend.worker.source'
 local breakpoint = require 'new-debugger.backend.worker.breakpoint'
 local evaluate = require 'new-debugger.backend.worker.evaluate'
-local hookmgr = require 'new-debugger.backend.worker.hookmgr'
 local traceback = require 'new-debugger.backend.worker.traceback'
 local ev = require 'new-debugger.event'
+local hookmgr = require 'debugger.hookmgr'
 
 local initialized = false
 local info = {}
 local state = 'running'
 local stopReason = 'unknown'
-local stepLevel = -1
-local stepContext = ''
-local stepCurrentLevel = -1
 local exceptionFilters = {}
 local exceptionMsg = ''
 local exceptionTrace = ''
@@ -263,35 +260,27 @@ end
 function CMD.stop(pkg)
     state = 'stopped'
     stopReason = pkg.reason
-    hookmgr.openStepIn()
+    hookmgr.step_in()
 end
 
 function CMD.run()
     state = 'running'
-    hookmgr.closeStep()
-    hookmgr.closeStepIn()
+    hookmgr.step_cancel()
 end
 
 function CMD.stepOver()
     state = 'stepOver'
-    stepContext = rdebug.context()
-    stepLevel = rdebug.stacklevel()
-    stepCurrentLevel = stepLevel
-    hookmgr.openStep()
+    hookmgr.step_over()
 end
 
 function CMD.stepIn()
     state = 'stepIn'
-    stepContext = ''
-    hookmgr.openStepIn()
+    hookmgr.step_in()
 end
 
 function CMD.stepOut()
     state = 'stepOut'
-    stepContext = rdebug.context()
-    stepCurrentLevel = rdebug.stacklevel()
-    stepLevel = stepCurrentLevel - 1
-    hookmgr.openStep()
+    hookmgr.step_out()
 end
 
 local function runLoop(reason)
@@ -313,31 +302,11 @@ end
 
 local hook = {}
 
-hook['call'] = function()
-    local currentContext = rdebug.context()
-    if currentContext == stepContext then
-        stepCurrentLevel = stepCurrentLevel + 1
-    end
-    breakpoint.reset()
-end
-
-hook['return'] = function ()
-    local currentContext = rdebug.context()
-    if currentContext == stepContext then
-        stepCurrentLevel = rdebug.stacklevel() - 1
-    end
-    breakpoint.reset()
-end
-
-hook['tail call'] = function ()
-    breakpoint.reset()
-end
-
-hook['line'] = function(line)
-    local s = rdebug.getinfo(1, info)
+function hook.line(line)
+    local s = rdebug.getinfo(0, info)
     local src = source.create(s.source)
     if not source.valid(src) then
-        hookmgr.closeLineBP()
+        hookmgr.break_closeline()
         return
     end
     local bp = breakpoint.find(src, line)
@@ -352,22 +321,22 @@ hook['line'] = function(line)
     workerThreadUpdate()
     if state == 'running' then
         return
-    elseif state == 'stepOver' or state == 'stepOut' then
-        local currentContext = rdebug.context()
-        if currentContext ~= stepContext or stepCurrentLevel > stepLevel then
-            return
-        end
+    elseif state == 'stepOver' or state == 'stepOut' or state == 'stepIn' then
         state = 'stopped'
-    elseif state == 'stepIn' then
-        state = 'stopped'
+        hookmgr.step_cancel()
     end
     if state == 'stopped' then
         runLoop(stopReason)
     end
 end
 
-hook['update'] = function()
-    workerThreadUpdate()
+function hook.newproto(proto, level)
+    local s = rdebug.getinfo(level, info)
+    local src = source.create(s.source)
+    if not source.valid(src) then
+        return false
+    end
+    return breakpoint.newproto(proto, src, hookmgr.activeline(level))
 end
 
 local function getEventLevel()
@@ -415,7 +384,13 @@ local function pairsEventArgs()
     end, nil, 1
 end
 
-hook['print'] = function()
+local event = {}
+
+function event.update()
+    workerThreadUpdate()
+end
+
+function event.print()
     if not initialized then return end
     local res = {}
     for _, arg in pairsEventArgs() do
@@ -432,7 +407,7 @@ hook['print'] = function()
     setEventRet(true)
 end
 
-hook['exception'] = function()
+function event.exception()
     if not initialized then return end
     local _, type = getEventArgs(1)
     if not type or not exceptionFilters[type] then
@@ -445,13 +420,13 @@ hook['exception'] = function()
     runLoop('exception')
 end
 
-hook['coroutine'] = function()
+function event.coroutine()
     local _, co = getEventArgsRaw(1)
-    hookmgr.updateCoroutine(co)
+    hookmgr.setcoroutine(rdebug.getthread(co))
 end
 
 local createMaster = true
-hook['update_all'] = function()
+function event.update_all()
     if createMaster then
         createMaster = false
         local master = require 'new-debugger.backend.master'
@@ -467,22 +442,36 @@ hook['update_all'] = function()
     workerThreadUpdate()
 end
 
-hook['wait_client'] = function()
+function event.wait_client()
     local _, all = getEventArgs(1)
     while not initialized do
         cdebug.sleep(10)
         if all then
-            hook['update_all']()
+            event.update_all()
         else
-            hook['update']()
+            event.update()
         end
     end
 end
 
-rdebug.sethook(function(event, line)
-    if hook[event] then
-        hook[event](line)
-    end
+rdebug.sethook(function(name, line)
+    --local ok, e = xpcall(function()
+        if event[name] then
+            event[name](line)
+        end
+    --end, debug.traceback)
+    --if not ok then print(e) end
+end)
+
+hookmgr.start(rdebug.gethost())
+hookmgr.sethook(function(name, ...)
+    --local ok, e = xpcall(function(...)
+        if hook[name] then
+            return hook[name](...)
+        end
+    --end, debug.traceback, ...)
+    --if not ok then print(e) end
+    --return e
 end)
 
 sendToMaster {

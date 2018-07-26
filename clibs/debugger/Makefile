@@ -4,7 +4,7 @@ CFLAGS = -O2 -Wall
 
 mingw : debugger.dll
 
-debugger.dll : frontend.cpp backend.cpp
+debugger.dll : frontend.cpp backend.cpp hookmgr.cpp
 	g++ --shared $(CFLAGS) $(LUAINC) -o $@ $^ $(LUALIB)
 
 clean :
