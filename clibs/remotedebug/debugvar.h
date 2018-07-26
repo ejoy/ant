@@ -232,7 +232,8 @@ eval_value_(lua_State *L, lua_State *cL, struct value *v) {
 			return LUA_TTABLE;
 		} else {
 			lua_pop(cL, 1);
-			break;
+			lua_pushnil(cL);
+			return LUA_TNIL;
 		}
 	case VAR_USERVALUE: {
 		int t = eval_value_(L, cL, v+1);
