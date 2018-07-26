@@ -17,7 +17,7 @@ static int* DEBUG_HOST = 0;
 #endif
 
 #define LOG(...) do { \
-    FILE* f = fopen("dbg2.log", "a"); \
+    FILE* f = fopen("dbg.log", "a"); \
     fprintf(f, __VA_ARGS__); \
     fclose(f); \
 } while(0)
