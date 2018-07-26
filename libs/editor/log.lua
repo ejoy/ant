@@ -54,12 +54,29 @@ do
 	end
 end
 
-log.window =  iup.tabs(log_tabs)
-
-task.loop(redirect.dispatch, function(co)
+local function error_cb(co)
 	local trace = debug.traceback(co)
 	log.print(trace)
 	log.active_error()
-end)
+end
+
+do
+	local bgfx_log = new_logger "bgfx"
+	table.insert(log_tabs, bgfx_log)
+	local append_bgfxlog = append_text(bgfx_log)
+	local function fetch_bgfxlog()
+		local bgfx = require "bgfx"
+		local msg = bgfx.get_log()
+		if msg and #msg ~= 0 then
+			append_bgfxlog(msg)
+		end
+	end
+
+	task.loop(fetch_bgfxlog, error_cb)
+end
+
+log.window =  iup.tabs(log_tabs)
+
+task.loop(redirect.dispatch, error_cb)
 
 return log

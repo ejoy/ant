@@ -4030,6 +4030,9 @@ lgetScreenshot(lua_State *L) {
 
 static int
 lgetLog(lua_State *L) {
+	if (lua_getfield(L, LUA_REGISTRYINDEX, "bgfx_cb") != LUA_TUSERDATA) {
+		return luaL_error(L, "get_log failed!");
+	}
 	struct callback *cb = lua_touserdata(L, -1);
 	struct log_cache *lc = &cb->lc;
 	spin_lock(lc);
@@ -4138,7 +4141,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "get_screenshot", lgetScreenshot },
 		{ "export_vertex_decl", lexportVertexDecl },
 		{ "vertex_decl_stride", lvertexDeclStride },
-        { "get_log", lgetLog },		
+		{ "get_log", lgetLog },		
 
 		{ NULL, NULL },
 	};
