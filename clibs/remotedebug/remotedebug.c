@@ -434,12 +434,12 @@ client_index(lua_State *L, int getref) {
 
 static int
 lclient_index(lua_State *L) {
-	return client_index(L, 0);
+	return client_index(L, 1);
 }
 
 static int
 lclient_indexv(lua_State *L) {
-	return client_index(L, 1);
+	return client_index(L, 0);
 }
 
 static int
@@ -465,12 +465,12 @@ client_next(lua_State *L, int getref) {
 
 static int
 lclient_next(lua_State *L) {
-	return client_next(L, 0);
+	return client_next(L, 1);
 }
 
 static int
 lclient_nextv(lua_State *L) {
-	return client_next(L, 1);
+	return client_next(L, 0);
 }
 
 static int
@@ -596,12 +596,12 @@ client_getupvalue(lua_State *L, int getref) {
 
 static int
 lclient_getupvalue(lua_State *L) {
-	return client_getupvalue(L, 0);
+	return client_getupvalue(L, 1);
 }
 
 static int
 lclient_getupvaluev(lua_State *L) {
-	return client_getupvalue(L, 1);
+	return client_getupvalue(L, 0);
 }
 
 static int
@@ -616,12 +616,12 @@ client_getmetatable(lua_State *L, int getref) {
 
 static int
 lclient_getmetatable(lua_State *L) {
-	return client_getmetatable(L, 0);
+	return client_getmetatable(L, 1);
 }
 
 static int
 lclient_getmetatablev(lua_State *L) {
-	return client_getmetatable(L, 1);
+	return client_getmetatable(L, 0);
 }
 
 static int
@@ -636,12 +636,12 @@ client_getuservalue(lua_State *L, int getref) {
 
 static int
 lclient_getuservalue(lua_State *L) {
-	return client_getuservalue(L, 0);
+	return client_getuservalue(L, 1);
 }
 
 static int
 lclient_getuservaluev(lua_State *L) {
-	return client_getuservalue(L, 1);
+	return client_getuservalue(L, 0);
 }
 
 static int
