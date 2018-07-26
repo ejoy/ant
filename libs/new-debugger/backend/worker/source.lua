@@ -96,15 +96,21 @@ local function create(source)
         local serverPath = source:sub(2)
         local skip, clientPath = serverPathToClientPath(serverPath)
         if skip then
-            return { skippath = clientPath }
+            return {
+                skippath = clientPath,
+            }
         end
-        return { path = clientPath }
+        return {
+            path = clientPath,
+            protos = {},
+        }
     elseif h == '=' then
         -- TODO
         return {}
     else
         local src = {
-            ref = codeReference(source)
+            ref = codeReference(source),
+            protos = {},
         }
         local f = load(source)
         if f then
@@ -124,7 +130,6 @@ function m.create(source)
     end
     local newSource = create(source)
     sourcePool[source] = newSource
-    ev.emit('source-create', newSource)
     return newSource
 end
 
