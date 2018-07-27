@@ -4,7 +4,10 @@ CFLAGS = -O2 -Wall
 
 mingw : math3d.dll
 
-math3d.dll : linalg.c math3d.c matrix44.c conversion.c
+SRC_FILES = linalg.c math3d.cpp matrix44.c conversion.c
+
+
+math3d.dll : linalg.c math3d.cpp matrix44.c conversion.c
 	gcc --shared $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC)
 
 clean :

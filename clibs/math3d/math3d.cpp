@@ -1,15 +1,23 @@
 #define LUA_LIB
 
-#include <lua.h>
-#include <lauxlib.h>
+extern "C" {
+	#include <lua.h>
+	#include <lauxlib.h>
+}
+
 #include <inttypes.h>
 #include <string.h>
 #include <assert.h>
 #include <math.h>
 #include <string.h>
 #include <stdbool.h>
-#include "linalg.h"
-#include "math3d.h"
+
+extern "C" {
+	#include "linalg.h"
+	#include "math3d.h"
+}
+
+
 #include "refstack.h"
 
 #define LINALG "LINALG"
@@ -18,17 +26,17 @@
 #define MAT_ORTHO 1
 
 static const char *
-get_typename(int t) {
-	static const char * typename[] = {
+get_typename(uint32_t t) {
+	static const char * type_names[] = {
 		"matrix",
 		"vector4",
 		"vector3",
 		"quaternion",
 		"number",
 	};
-	if (t < 0 || t >= sizeof(typename)/sizeof(typename[0]))
+	if (t < 0 || t >= sizeof(type_names)/sizeof(type_names[0]))
 		return "unknown";
-	return typename[t];
+	return type_names[t];
 }
 
 static inline int64_t
@@ -55,14 +63,15 @@ getLS(lua_State *L, int index) {
 	if (lua_getupvalue(L, index, 1) == NULL) {
 		luaL_error(L, "Can't get linalg object");
 	}
-	struct boxpointer * ret = luaL_checkudata(L, -1, LINALG);
+	
+	struct boxpointer * ret =  (struct boxpointer *)luaL_checkudata(L, -1, LINALG);
 	lua_pop(L, 1);
 	return ret->LS;
 }
 
 static int
 delLS(lua_State *L) {
-	struct boxpointer *bp = lua_touserdata(L, 1);
+	struct boxpointer *bp = (struct boxpointer *)lua_touserdata(L, 1);
 	if (bp->LS) {
 		lastack_delete(bp->LS);
 		bp->LS = NULL;
@@ -102,7 +111,7 @@ value_tostring(lua_State *L, const char * prefix, float *r, int type) {
 
 static int
 lreftostring(lua_State *L) {
-	struct refobject * ref = lua_touserdata(L, 1);
+	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
 	int sz;
 	float * v = lastack_value(ref->LS, ref->id, &sz);
 	if (v == NULL) {
@@ -161,7 +170,7 @@ ref_to_value(lua_State *L) {
 		luaL_error(L, "arg 1 is not a math3d refobject!");
 	}
 
-	struct refobject *ref = lua_touserdata(L, 1);
+	struct refobject *ref = (struct refobject *)lua_touserdata(L, 1);
 	push_obj_to_lua_table(L, ref->LS, ref->id);
 
 	return 1;
@@ -204,7 +213,7 @@ get_id(lua_State *L, int index) {
 
 static int
 lassign(lua_State *L) {
-	struct refobject * ref = lua_touserdata(L, 1);
+	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
 	int type = lua_type(L, 2);
 	switch(type) {
 	case LUA_TNIL:
@@ -229,7 +238,7 @@ lassign(lua_State *L) {
 		break;
 	}
 	case LUA_TUSERDATA: {
-		struct refobject *rv = lua_touserdata(L, 2);
+		struct refobject *rv = (struct refobject *)lua_touserdata(L, 2);
 		if (lua_rawlen(L,2) != sizeof(*rv)) {
 			return luaL_error(L, "Assign Invalid ref object");
 		}
@@ -263,7 +272,7 @@ lassign(lua_State *L) {
 
 static int
 lpointer(lua_State *L) {
-	struct refobject * ref = lua_touserdata(L, 1);
+	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
 	float * v = lastack_value(ref->LS, ref->id, NULL);
 	lua_pushlightuserdata(L, (void *)v);
 	return 1;
@@ -280,7 +289,7 @@ lref(lua_State *L) {
 	} else {
 		return luaL_error(L, "Unsupport type %s", t);
 	}
-	struct refobject * ref = lua_newuserdata(L, sizeof(*ref));
+	struct refobject * ref = (struct refobject *)lua_newuserdata(L, sizeof(*ref));
 	ref->LS = NULL;
 	ref->id = lastack_constant(cons);
 
@@ -293,7 +302,7 @@ lisvalid(lua_State *L){
 	int type = lua_type(L, 1);
 	if (type == LUA_TNUMBER){
 		int number = lua_tonumber(L, -1);
-		struct boxpointer *p = lua_touserdata(L, lua_upvalueindex(1));
+		struct boxpointer *p = (struct boxpointer *)lua_touserdata(L, lua_upvalueindex(1));
 		void *value = lastack_value(p->LS, number, NULL);
 		lua_pushboolean(L, value != NULL);
 	} else if (type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA){
@@ -314,7 +323,7 @@ get_table_value(lua_State *L, int idx) {
 
 static inline int64_t
 get_ref_id(lua_State *L, struct lastack *LS, int index) {
-	struct refobject * ref = lua_touserdata(L, index);
+	struct refobject * ref = (struct refobject *)lua_touserdata(L, index);
 	if (lua_rawlen(L, index) != sizeof(*ref)) {
 		luaL_error(L, "The userdata is not a ref object");
 	}
@@ -490,7 +499,7 @@ push_mat(lua_State *L, struct lastack *LS, int index, int type) {
 	lua_getfield(L, index, "h");
 	int homogeneousDepth = 0;
 	if (lua_isnil(L, -1)) {
-		struct boxpointer *p = lua_touserdata(L, lua_upvalueindex(1));
+		struct boxpointer *p = (struct boxpointer *)lua_touserdata(L, lua_upvalueindex(1));
 		homogeneousDepth = p->defautlHomogeneousDepth;
 	} else {
 		homogeneousDepth = lua_toboolean(L, -1);
@@ -638,7 +647,7 @@ push_euler(lua_State *L, struct lastack *LS, int index) {
 	
 	if (n == 3) {
 		float *v = euler_array(&e);
-		for (int i = 0; i < n; ++i) {
+		for (size_t i = 0; i < n; ++i) {
 			lua_geti(L, index, i + 1);
 			v[i] = lua_tonumber(L, -1);
 			lua_pop(L, 1);
@@ -646,7 +655,7 @@ push_euler(lua_State *L, struct lastack *LS, int index) {
 	} else {
 		const char* names[] = { "yaw", "pitch", "roll" };
 		float *v = euler_array(&e);
-		for (int i = 0; i < (sizeof(names) / sizeof(names[0])); ++i) {
+		for (uint32_t i = 0; i < (sizeof(names) / sizeof(names[0])); ++i) {
 			lua_getfield(L, index, names[i]);
 			if (lua_type(L, -1) != LUA_TNIL) {
 				v[i] = lua_tonumber(L, -1);
@@ -1121,14 +1130,14 @@ convert_to_quaternion(lua_State *L, struct lastack *LS){
 	struct quaternion q = {0};
 
 	switch (type){		
-		case LINEAR_TYPE_VEC4:{			
+		case LINEAR_TYPE_VEC4: {
 			struct euler e = { value[1], value[0], value[2] };
 			euler_to_quaternion(&e, &q);
 			break;
+		}
 		default:
 			luaL_error(L, "not support for converting to quaternion, type is : %d", type);
 			break;
-		}
 	}
 
 	lastack_pushquat(LS, &q.x);
@@ -1339,7 +1348,7 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		if (index < 0) {
 			luaL_error(L, "need a ref object for assign");
 		}
-		struct refobject * ref = lua_touserdata(L, index);
+		struct refobject * ref = (struct refobject *)lua_touserdata(L, index);
 		ref->id = lastack_mark(LS, id);
 		refstack_pop(RS);
 		break;
@@ -1541,7 +1550,7 @@ push_command(struct ref_stack *RS, struct lastack *LS, int index, bool *log) {
 
 static int
 commandLS(lua_State *L) {
-	struct boxpointer *bp = lua_touserdata(L, lua_upvalueindex(1));
+	struct boxpointer *bp = (struct boxpointer *)lua_touserdata(L, lua_upvalueindex(1));
 	struct lastack *LS = bp->LS;
 	bool log = false;
 	int top = lua_gettop(L);
@@ -1562,7 +1571,7 @@ lnew(lua_State *L) {
 		homogeneousDepth = lua_toboolean(L, 1);
 		lua_pop(L, 1);
 	}
-	struct boxpointer *bp = lua_newuserdata(L, sizeof(*bp));
+	struct boxpointer *bp = (struct boxpointer *)lua_newuserdata(L, sizeof(*bp));
 	bp->defautlHomogeneousDepth = homogeneousDepth;	
 
 	bp->LS = NULL;
@@ -1614,7 +1623,7 @@ ltype(lua_State *L) {
 		id = get_id(L, 1);
 		break;
 	case LUA_TUSERDATA: {
-		struct refobject * ref = lua_touserdata(L, 1);
+		struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
 		if (lua_rawlen(L,1) != sizeof(*ref)) {
 			return luaL_error(L, "Get invalid ref object type");
 		}
