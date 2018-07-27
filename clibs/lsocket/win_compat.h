@@ -24,17 +24,22 @@
 #ifdef errno
 #undef errno
 #endif
-#define errno WSAGetLastError()
+#define errno wsa_errno()
 
-#define EAGAIN WSATRY_AGAIN
-#define EWOULDBLOCK WSAEWOULDBLOCK
-// In windows, connect returns WSAEWOULDBLOCK rather than WSAEINPROGRESS
-#define EINPROGRESS WSAEWOULDBLOCK
+
+#ifndef EAGAIN
+#define EAGAIN 11
+#endif
+
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK 140
+#endif
 
 #endif
 
 int win_getsockopt(SOCKET sockfd, int level, int optname, void *optval, socklen_t *optlen);
 int win_setsockopt(SOCKET sockfd, int level, int optname, const void *optval, socklen_t optlen);
+int wsa_errno();
 
 // only support fcntl(fd, F_SETFL, O_NONBLOCK)
 #define F_SETFL 0

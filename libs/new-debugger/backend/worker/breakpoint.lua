@@ -6,7 +6,6 @@ local ev = require 'new-debugger.event'
 local hookmgr = require 'debugger.hookmgr'
 
 local breakpoints = {}
-local currentBP = nil
 local waitverify = {}
 local info = {}
 local m = {}
@@ -133,23 +132,18 @@ local function verifyBreakpoint(src, bps)
         end
     end
     updateBreakpoint(normalizePath, src, res)
-    if currentBP and currentBP == oldBP then
-        currentBP = nil
-        --hookmgr.openLineBP()
-    end
 end
 
 function m.find(src, currentline)
+    local currentBP
+    if src.path then
+        currentBP = breakpoints[path.normalize_native(src.path)]
+    else
+        currentBP = breakpoints[src.ref]
+    end
     if not currentBP then
-        if src.path then
-            currentBP = breakpoints[path.normalize_native(src.path)]
-        else
-            currentBP = breakpoints[src.ref]
-        end
-        if not currentBP then
-            hookmgr.break_closeline()
-            return
-        end
+        hookmgr.break_closeline()
+        return
     end
     return currentBP[currentline]
 end

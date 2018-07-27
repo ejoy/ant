@@ -17,7 +17,7 @@ static int* DEBUG_HOST = 0;
 #endif
 
 #define LOG(...) do { \
-    FILE* f = fopen("dbg2.log", "a"); \
+    FILE* f = fopen("dbg.log", "a"); \
     fprintf(f, __VA_ARGS__); \
     fclose(f); \
 } while(0)
@@ -355,6 +355,12 @@ static int activeline(lua_State* L) {
     return 1;
 }
 
+static int stacklevel(lua_State* L) {
+    lua_State* hL = get_host(L);
+    lua_pushinteger(L, hookmgr::stacklevel(hL));
+    return 1;
+}
+
 #define hookmgr_s() (*hookmgr::get_self(L, lua_upvalueindex(1)))
 
 static int setcoroutine(lua_State* L) {
@@ -424,6 +430,7 @@ int luaopen_debugger_hookmgr(lua_State* L) {
         { "start", start },
         { "sethook", sethook },
         { "activeline", activeline },
+        { "stacklevel", stacklevel },
         { "setcoroutine", setcoroutine },
         { "break_add", break_add },
         { "break_del", break_del },
