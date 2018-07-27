@@ -15,6 +15,12 @@ ecs.component "scale" {
     v = {type="vector"}
 }
 
+ecs.component "relative_srt" {
+	s = {type="vector"},
+	r = {type="vector"},
+	t = {type="vector"},
+}
+
 ecs.component "frustum" {
     isortho = false,
     n = 0.1,

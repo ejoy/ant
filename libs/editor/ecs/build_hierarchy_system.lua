@@ -69,7 +69,8 @@ local function rebuild_hierarchy(ms, iterop)
 		build_hierarchy_update_tree(eid, tree, tree)
 	end
 
-	for _, eid in ipairs(tree) do	-- only first node
+	-- only first node, child node in build function will be called
+	for _, eid in ipairs(tree) do
 		build(ms, eid)
 	end
 end

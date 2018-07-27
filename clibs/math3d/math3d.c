@@ -1122,7 +1122,7 @@ convert_to_quaternion(lua_State *L, struct lastack *LS){
 
 	switch (type){		
 		case LINEAR_TYPE_VEC4:{			
-			struct euler e = { value[1], value[1], value[2] };			
+			struct euler e = { value[1], value[0], value[2] };
 			euler_to_quaternion(&e, &q);
 			break;
 		default:

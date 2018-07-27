@@ -8,6 +8,11 @@ local function update_child_srt(ms, e, srt, node)
 
 	local localsrt = mu.srt(ms, node.s, rot, node.t);
 	local s, r, t = ms(localsrt, srt, "*~PPP");
+	--[[
+		local r_srt = assert(e.relative_srt)
+		local s, r, t = ms(localsrt, relative_srt, "*~PPP")
+	]]
+	
 	ms(e.scale.v, s, "=", e.rotation.v, r, "=", e.position.v, t, "=")
 end
 
@@ -20,10 +25,10 @@ function util.update_hierarchy_entiy(ms, world, h_entity)
 	local mapper = h_entity.hierarchy_name_mapper.v
 	for _, node in ipairs(builddata) do
 		local name = node.name
-		local c_eid = mapper[name]                
+		local c_eid = mapper[name]
 		local c_entity = world[c_eid]
 
-		if c_entity then				
+		if c_entity then
 			update_child_srt(ms, c_entity, rootsrt, node)
 		else
 			error(string.format("not found entity by hierarchy name mapper, name is : %s", name))
