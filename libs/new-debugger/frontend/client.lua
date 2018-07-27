@@ -8,8 +8,10 @@ local m = {}
 
 io.stdin:setvbuf 'no'
 io.stdout:setvbuf 'no'
-cdebug.filemode(io.stdin, 'b')
-cdebug.filemode(io.stdout, 'b')
+if cdebug.os() == 'windows' then
+    cdebug.filemode(io.stdin, 'b')
+    cdebug.filemode(io.stdout, 'b')
+end
 
 local fd = stdin.fd
 select.read(fd, function()

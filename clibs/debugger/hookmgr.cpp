@@ -415,7 +415,10 @@ static int step_cancel(lua_State* L) {
 
 #undef hookmgr_s
 
-extern "C" __declspec(dllexport)
+extern "C" 
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
 int luaopen_debugger_hookmgr(lua_State* L) {
     lua_newtable(L);
     if (LUA_TUSERDATA != lua_rawgetp(L, LUA_REGISTRYINDEX, &HOOK_MGR)) {
