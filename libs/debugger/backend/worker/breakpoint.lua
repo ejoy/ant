@@ -50,14 +50,14 @@ local function hasActiveBreakpoint(bps, activeline)
     return false
 end
 
-local function updateBreakpoint(normalizePath, src, bps)
+local function updateBreakpoint(key, src, bps)
     if next(bps) == nil then
-        breakpoints[normalizePath] = nil
+        breakpoints[key] = nil
         for proto in pairs(src.protos) do
             hookmgr.break_del(proto)
         end
     else
-        breakpoints[normalizePath] = bps
+        breakpoints[key] = bps
         for proto, activeline in pairs(src.protos) do
             if hasActiveBreakpoint(bps, activeline) then
                 activeline.bp = true
@@ -71,9 +71,16 @@ local function updateBreakpoint(normalizePath, src, bps)
     updateHook()
 end
 
+local function bpKey(src)
+    if src.path then
+        return path.normalize_native(src.path)
+    end
+    return src.sourceReference
+end
+
 local function verifyBreakpoint(src, bps)
-    local normalizePath = path.normalize_native(src.path)
-    local oldBP = breakpoints[normalizePath]
+    local key = bpKey(src)
+    local oldBP = breakpoints[key]
     local hits = {}
     if oldBP then
         for _, bp in ipairs(oldBP) do
@@ -131,16 +138,11 @@ local function verifyBreakpoint(src, bps)
             })
         end
     end
-    updateBreakpoint(normalizePath, src, res)
+    updateBreakpoint(key, src, res)
 end
 
 function m.find(src, currentline)
-    local currentBP
-    if src.path then
-        currentBP = breakpoints[path.normalize_native(src.path)]
-    else
-        currentBP = breakpoints[src.ref]
-    end
+    local currentBP = breakpoints[bpKey(src)]
     if not currentBP then
         hookmgr.break_closeline()
         return
@@ -149,21 +151,28 @@ function m.find(src, currentline)
 end
 
 function m.update(clientsrc, si, bps)
-    -- TODO 内存代码的断点
-    if not clientsrc.path or not si then
-        return
+    if clientsrc.path then
+        if not si then
+            return
+        end
+        local src = source.c2s(clientsrc)
+        if src then
+            src.si = si
+            verifyBreakpoint(src, bps)
+            return
+        end
+        for _, bp in ipairs(bps) do
+            bp.source = clientsrc
+        end
+        waitverify[bpKey(clientsrc)] = { bps, si }
+        updateHook()
+    else
+        local src = source.c2s(clientsrc)
+        if src then
+            verifyBreakpoint(src, bps)
+            return
+        end
     end
-    local src = source.open(clientsrc.path)
-    if src then
-        src.si = si
-        verifyBreakpoint(src, bps)
-        return
-    end
-    for _, bp in ipairs(bps) do
-        bp.source = clientsrc
-    end
-    waitverify[path.normalize_native(clientsrc.path)] = { bps, si }
-    updateHook()
 end
 
 function m.exec(bp)
@@ -208,20 +217,19 @@ function m.exec(bp)
 end
 
 local function sourceUpdateBreakpoint(src)
-    if not src.path then
-        return
-    end
-    local nativepath = path.normalize_native(src.path)
-    local bpssi = waitverify[nativepath]
+    local key = bpKey(src)
+    local bpssi = waitverify[key]
     if bpssi then
-        waitverify[nativepath] = nil
-        src.si = bpssi[2]
+        waitverify[key] = nil
+        if src.path then
+            src.si = bpssi[2]
+        end
         verifyBreakpoint(src, bpssi[1])
         return
     end
-    local bps = breakpoints[nativepath]
+    local bps = breakpoints[key]
     if bps then
-        updateBreakpoint(nativepath, src, bps)
+        updateBreakpoint(key, src, bps)
         return
     end
 end

@@ -311,7 +311,7 @@ local function varGetValue(type, subtype, value)
         if src.path then
             return ("%s:%d"):format(source.clientPath(src.path), info.linedefined)
         end
-        local code = source.getCode(src.ref)
+        local code = source.getCode(src.sourceReference)
         return getFunctionCode(code, info.linedefined, info.lastlinedefined)
     elseif type == 'table' then
         return varGetTableValue(value)

@@ -98,10 +98,12 @@ function m.send(pkg)
     if server then
         if pkg.type == 'request' and pkg.command == 'setBreakpoints' then
             local source = pkg.arguments.source
-            local f = loadfile(source.path)
-            if f then
-                source.si = {}
-                parser(source.si, f)
+            if source.path then
+                local f = loadfile(source.path)
+                if f then
+                    source.si = {}
+                    parser(source.si, f)
+                end
             end
         end
         if pkg.type == 'response' and pkg.command == 'runInTerminal' then

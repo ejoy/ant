@@ -109,7 +109,7 @@ local function create(source)
         return {}
     else
         local src = {
-            ref = codeReference(source),
+            sourceReference = codeReference(source),
             protos = {},
         }
         local f = load(source)
@@ -133,18 +133,27 @@ function m.create(source)
     return newSource
 end
 
-function m.open(clientpath)
+function m.c2s(clientsrc)
     -- TODO: 不遍历？
-    local nativepath = path.normalize_native(clientpath)
-    for _, source in pairs(sourcePool) do
-        if source.path and path.normalize_native(source.path) == nativepath then
-            return source
+    if clientsrc.path then
+        local nativepath = path.normalize_native(clientsrc.path)
+        for _, source in pairs(sourcePool) do
+            if source.path and path.normalize_native(source.path) == nativepath then
+                return source
+            end
+        end
+    else
+        local ref = clientsrc.sourceReference
+        for _, source in pairs(sourcePool) do
+            if source.sourceReference == ref then
+                return source
+            end
         end
     end
 end
 
 function m.valid(s)
-    return s.path ~= nil or s.ref ~= nil
+    return s.path ~= nil or s.sourceReference ~= nil
 end
 
 function m.output(s)
@@ -153,10 +162,10 @@ function m.output(s)
             name = path.filename(s.path),
             path = path.normalize(s.path),
         }
-    elseif s.ref ~= nil then
+    elseif s.sourceReference ~= nil then
         return {
             name = '<Memory>',
-            sourceReference = s.ref,
+            sourceReference = s.sourceReference,
         }
     end
 end

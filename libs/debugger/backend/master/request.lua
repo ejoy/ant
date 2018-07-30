@@ -80,6 +80,9 @@ function request.setBreakpoints(req)
         bp.id = genBreakpointID()
         bp.verified = false
     end
+    if args.source.sourceReference then
+        args.source.sourceReference = args.source.sourceReference & 0xffffffff
+    end
     response.success(req, {
         breakpoints = args.breakpoints
     })
