@@ -24,7 +24,7 @@ end
 
 print = function(...)
     origin_print(...)
-    --sendlog("Script", ...)
+    sendlog("Script", ...)
 end
 
 local filemanager = require "filemanager"
@@ -35,7 +35,7 @@ local lodepng = require "lodepnglua"
 
 local bundle_home_dir = ""
 local app_home_dir = ""
-local g_WindowHandle = nil
+local g_WindowHandle
 local g_Width, g_Height = 0
 
 --overwrite the old io.open function, give it the ability to search resources from server
@@ -57,11 +57,15 @@ local function custom_open(filename, mode, search_local_only)
             --find out if it exist locally
             local local_path = file_mgr:GetRealPath(filename)
             if local_path then
-                print("bundle real path for: "..filename.." is "..local_path)
-                local_path = bundle_home_dir .. "/Documents/" ..local_path
-                file = origin_open(local_path, mode)
+                --check exist, mainly for camparing hash
+                local file_exist = winfile.exist(filename)
+                if file_exist then
+                    print("bundle real path for: "..filename.." is "..local_path)
+                    local_path = bundle_home_dir .. "/Documents/" ..local_path
+                    file = origin_open(local_path, mode)
 
-                return file
+                    return file
+                end
             end
         end
     end
