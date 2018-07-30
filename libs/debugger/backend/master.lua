@@ -1,6 +1,6 @@
-local request = require 'new-debugger.backend.master.request'
-local response = require 'new-debugger.backend.master.response'
-local mgr = require 'new-debugger.backend.master.mgr'
+local request = require 'debugger.backend.master.request'
+local response = require 'debugger.backend.master.response'
+local mgr = require 'debugger.backend.master.mgr'
 local cdebug = require 'debugger.backend'
 
 local io
@@ -43,7 +43,7 @@ function m.init()
         return false
     end
     local type = os.getenv('_DBG_IOTYPE') or 'tcp_server'
-    io = require('new-debugger.backend.master.io.' .. type)
+    io = require('debugger.backend.master.io.' .. type)
     io.start('127.0.0.1', os.getenv('_DBG_IOPORT') and tonumber(os.getenv('_DBG_IOPORT')) or 4278)
     mgr.init(io, master)
     return true

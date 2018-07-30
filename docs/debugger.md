@@ -27,7 +27,7 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "skipFiles": [
-                "libs/new-debugger/*",
+                "libs/debugger/*",
                 "libs/dbg_main.lua"
             ],
             "sourceMaps": [
@@ -47,7 +47,7 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "skipFiles": [
-                "libs/new-debugger/*"
+                "libs/debugger/*"
             ],
             "sourceMaps": [
                 [
@@ -64,7 +64,7 @@
             "ip": "localhost",
             "port": 4278,
             "skipFiles": [
-                "libs/new-debugger/*"
+                "libs/debugger/*"
             ],
             "sourceMaps": [
                 [

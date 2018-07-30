@@ -1,4 +1,4 @@
-local mgr = require 'new-debugger.backend.master.mgr'
+local mgr = require 'debugger.backend.master.mgr'
 local event = {}
 
 function event.initialized()
@@ -15,7 +15,7 @@ function event.capabilities()
         seq = mgr.newSeq(),
         event = 'capabilities',
         body = {
-            capabilities = require 'new-debugger.capabilities'
+            capabilities = require 'debugger.capabilities'
         }
     }
 end

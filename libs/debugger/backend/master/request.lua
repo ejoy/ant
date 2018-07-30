@@ -1,7 +1,7 @@
-local mgr = require 'new-debugger.backend.master.mgr'
-local response = require 'new-debugger.backend.master.response'
-local event = require 'new-debugger.backend.master.event'
-local ev = require 'new-debugger.event'
+local mgr = require 'debugger.backend.master.mgr'
+local response = require 'debugger.backend.master.response'
+local event = require 'debugger.backend.master.event'
+local ev = require 'debugger.event'
 
 local request = {}
 

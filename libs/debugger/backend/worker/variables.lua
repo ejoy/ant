@@ -1,7 +1,7 @@
 local rdebug = require 'remotedebug'
-local source = require 'new-debugger.backend.worker.source'
-local path = require 'new-debugger.path'
-local ev = require 'new-debugger.event'
+local source = require 'debugger.backend.worker.source'
+local path = require 'debugger.path'
+local ev = require 'debugger.event'
 
 local varPool = {}
 

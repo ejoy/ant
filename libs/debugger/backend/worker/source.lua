@@ -1,6 +1,6 @@
-local path = require 'new-debugger.path'
-local parser = require 'new-debugger.parser'
-local ev = require 'new-debugger.event'
+local path = require 'debugger.path'
+local parser = require 'debugger.parser'
+local ev = require 'debugger.event'
 
 local sourcePool = {}
 local codePool = {}

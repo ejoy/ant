@@ -1,7 +1,7 @@
 local cdebug = require 'debugger.frontend'
-local proto = require 'new-debugger.protocol'
-local stdin = require 'new-debugger.frontend.stdin'
-local select = require 'new-debugger.frontend.select'
+local proto = require 'debugger.protocol'
+local stdin = require 'debugger.frontend.stdin'
+local select = require 'debugger.frontend.select'
 local proxy = nil
 local stat = {}
 local m = {}
@@ -26,7 +26,7 @@ select.read(fd, function()
 end)
 
 function m.initialize()
-    proxy = require 'new-debugger.frontend.proxy'
+    proxy = require 'debugger.frontend.proxy'
 end
 
 function m.send(pkg)

@@ -1,5 +1,5 @@
 local lsocket = require 'lsocket'
-local proto = require 'new-debugger.protocol'
+local proto = require 'debugger.protocol'
 
 local listen
 local channel
@@ -7,18 +7,13 @@ local stat = {}
 
 local m = {}
 function m.start(ip, port)
-    listen = assert(lsocket.bind(ip, port))
+    channel = assert(lsocket.connect(ip, port))
 end
 
 function m.update()
-    if channel then
-        return true
-    end
-    assert(listen)
-    if not lsocket.select ({listen}, 0) then
+    if not channel then
         return false
     end
-    channel = assert(listen:accept())
     return true
 end
 
@@ -50,6 +45,7 @@ function m.close()
     channel:close()
     channel = nil
     stat = {}
+    os.exit(true, true)
 end
 
 return m

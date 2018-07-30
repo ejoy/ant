@@ -1,6 +1,6 @@
-local client = require 'new-debugger.frontend.client'
-local server_factory = require 'new-debugger.frontend.server'
-local parser = require 'new-debugger.parser'
+local client = require 'debugger.frontend.client'
+local server_factory = require 'debugger.frontend.server'
+local parser = require 'debugger.parser'
 local fs = require 'cppfs'
 local server
 local seq = 0
@@ -19,7 +19,7 @@ local function response_initialize(req)
         command = 'initialize',
         request_seq = req.seq,
         success = true,
-        body = require 'new-debugger.capabilities',
+        body = require 'debugger.capabilities',
     }
 end
 

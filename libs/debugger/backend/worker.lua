@@ -1,12 +1,12 @@
 local rdebug = require 'remotedebug'
 local cdebug = require 'debugger.backend'
 local json = require 'cjson'
-local variables = require 'new-debugger.backend.worker.variables'
-local source = require 'new-debugger.backend.worker.source'
-local breakpoint = require 'new-debugger.backend.worker.breakpoint'
-local evaluate = require 'new-debugger.backend.worker.evaluate'
-local traceback = require 'new-debugger.backend.worker.traceback'
-local ev = require 'new-debugger.event'
+local variables = require 'debugger.backend.worker.variables'
+local source = require 'debugger.backend.worker.source'
+local breakpoint = require 'debugger.backend.worker.breakpoint'
+local evaluate = require 'debugger.backend.worker.evaluate'
+local traceback = require 'debugger.backend.worker.traceback'
+local ev = require 'debugger.event'
 local hookmgr = require 'debugger.hookmgr'
 
 local initialized = false
@@ -429,7 +429,7 @@ local createMaster = true
 function event.update_all()
     if createMaster then
         createMaster = false
-        local master = require 'new-debugger.backend.master'
+        local master = require 'debugger.backend.master'
         if master.init() then
             local master = master.update
             local worker = workerThreadUpdate

@@ -1,8 +1,8 @@
 
 local lsocket = require 'lsocket'
 local cdebug = require 'debugger.frontend'
-local proto = require 'new-debugger.protocol'
-local select = require 'new-debugger.frontend.select'
+local proto = require 'debugger.protocol'
+local select = require 'debugger.frontend.select'
 
 local function tcpsend(fd, s)
     local from = 1

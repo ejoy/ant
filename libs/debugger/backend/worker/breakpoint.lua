@@ -1,8 +1,8 @@
 local rdebug = require 'remotedebug'
-local path = require 'new-debugger.path'
-local source = require 'new-debugger.backend.worker.source'
-local evaluate = require 'new-debugger.backend.worker.evaluate'
-local ev = require 'new-debugger.event'
+local path = require 'debugger.path'
+local source = require 'debugger.backend.worker.source'
+local evaluate = require 'debugger.backend.worker.evaluate'
+local ev = require 'debugger.event'
 local hookmgr = require 'debugger.hookmgr'
 
 local breakpoints = {}
