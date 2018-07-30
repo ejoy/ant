@@ -6,7 +6,9 @@ local asset = require "asset"
 
 asset.insert_searchdir(1, package.app_dir)
 asset.insert_searchdir(2, package.app_dir .. "/assets/")
-asset.insert_searchdir(3, package.bundle_dir .. "/assets/")
+--remote search
+--resource dir
+asset.insert_searchdir(3, "/Users/ejoy/Desktop/Engine/ant/assets/")
 
 local util = {}
 util.__index = util

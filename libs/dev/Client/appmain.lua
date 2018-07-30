@@ -1,7 +1,7 @@
 package.path = "../Common/?.lua;./?.lua;../?/?.lua;../?.lua;" .. package.path  --path for the app
 --TODO: find a way to set this
-package.remote_search_path = "../?.lua;?.lua;../?/?.lua;../asset/?.lua" --path for the remote script
-
+--path for the remote script
+package.remote_search_path = "../?.lua;?.lua;../?/?.lua;asset/?.lua;?/?.lua;ecs/?.lua;imputmgr/?.lua"
 local lanes = require "lanes"
 if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
 local linda = lanes.linda()
@@ -18,7 +18,7 @@ local entrance = nil
 local origin_print = print
 
 function sendlog(cat, ...)
-    --linda:send("log", {cat, ...})
+    linda:send("log", {cat, ...})
     --origin_print(cat, ...)
 end
 
@@ -47,15 +47,22 @@ local function custom_open(filename, mode, search_local_only)
 
     local file = origin_open(filename, mode)
 
+    --file may be in the bundle
     if not file then
+        print("searching file in bundle: "..filename)
+
         local local_path = file_mgr:GetRealPath(filename)
         if local_path then
             local_path = bundle_home_dir .. "/Documents/" ..local_path
             file = origin_open(local_path, mode)
+
+            return file
         end
     end
 
+    --file may be in the remote server
     if not file and not search_local_only then
+        print("searching file in server: "..filename)
         --search online
         local request = {"GET", filename}
         linda:send("request", request)
@@ -63,7 +70,7 @@ local function custom_open(filename, mode, search_local_only)
         --TODO file not exist
         --wait here
         while true do
-            local key, value = linda:receive(0.01, "new file")
+            local _, value = linda:receive(0.01, "new file")
             if value then
                 print("received msg", filename)
 
@@ -75,8 +82,10 @@ local function custom_open(filename, mode, search_local_only)
 
                 print("file name", filename)
                 local real_path = file_mgr:GetRealPath(value[2])
-                file = origin_open(bundle_home_dir .. "/Documents/" .. real_path, mode)
+                real_path = bundle_home_dir .. "/Documents/" .. real_path
+                file = origin_open(real_path, mode)
 
+                print("server real file path: "..real_path)
                 return file
             end
         end
@@ -90,7 +99,7 @@ io.open = custom_open
 local function remote_searcher (name)
     --local full_path = name..".lua"
     --need to send the package search path
-    print("remote requiring".. name)
+    print("remote requiring ".. name)
     local request = {"REQUIRE", name, package.remote_search_path}
     linda:send("request", request)
 
@@ -101,7 +110,7 @@ local function remote_searcher (name)
         end
     end
 end
---table.insert(package.searchers, remote_searcher)
+table.insert(package.searchers, remote_searcher)
 
 
 local lsocket = require "lsocket"
@@ -111,7 +120,7 @@ local function CreateIOThread(linda, home_dir)
     local client = require "client"
     local c = client.new("127.0.0.1", 8888, linda, home_dir)
     while true do
-        c:mainloop(0.1)
+        c:mainloop(0.01)
         --print("io mainloop updating")
         local resp = c:pop()
         if resp then
@@ -121,6 +130,7 @@ local function CreateIOThread(linda, home_dir)
 end
 
 local function run(path)
+    print("run file"..path)
     if entrance then
         entrance.terminate()
         entrance = nil
@@ -132,7 +142,7 @@ local function run(path)
 
         entrance = dofile(real_path)
         --must have this function and these variables for init
-        entrance.init(g_Width, g_Height, app_home_dir, bundle_home_dir)
+        entrance.init(g_WindowHandle, g_Width, g_Height, app_home_dir, bundle_home_dir)
     else
         --not in local, need require from distance
         --get file name
@@ -145,10 +155,9 @@ local function run(path)
         --get rid of .lua
         reverse_path = string.sub(reverse_path, 1, -5)
 
-        --print("filename", reverse_path)
         entrance = require(reverse_path)
         if entrance then
-            entrance.init(g_Width, g_Height, app_home_dir, bundle_home_dir)
+            entrance.init(g_WindowHandle, g_Width, g_Height, app_home_dir, bundle_home_dir)
         end
     end
 
@@ -269,18 +278,25 @@ function init(window_handle, width, height, app_dir, bundle_dir)
             return true
         else
             --search on the server
-            local request = {"EXIST", path}
+            local request = {"EXIST", path }
+            print("request file: "..path)
+
             linda:send("request", request)
 
-            --TODO file not exist
             --wait here
-            --[[
+            ---[[
             while true do
-                local key, value = linda:receive(0.05, "file exist")
-                if value then
-                    --value is a bool
-                    print("check if exist", tostring(value))
-                    return value
+                local key, value = linda:receive(0.01, "file exist")
+                if value ~= nil then
+                    if value then
+                        print(path .. " exist")
+                        return true
+                    else
+                        print(path .. " not exist!! " .. tostring(value))
+                        return false
+                    end
+
+                    break
                 end
             end
             --]]
@@ -289,10 +305,10 @@ function init(window_handle, width, height, app_dir, bundle_dir)
         return false
     end
 
-    init_lua_search_path(app_dir)
+    --init_lua_search_path(app_dir)
 
-    entrance = require "ios_main"
-    entrance.init(window_handle, width, height)
+    --entrance = require "ios_main"
+    --entrance.init(window_handle, width, height)
     local client_io = lanes.gen("*",{package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateIOThread)(linda, bundle_home_dir)
 end
 

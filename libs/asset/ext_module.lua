@@ -6,12 +6,20 @@ return function(filename)
     local files = assert(t.modules)
     local modules = {}
     for _, v in ipairs(files) do
+        --use open(with network function)
+        local file = io.open(v, "r")
 
-        if package.app_dir then
-            local ios_path = package.app_dir .. "/" .. v
-            table.insert(modules, assert(loadfile(ios_path)))
-        else
-            table.insert(modules, assert(loadfile(v)))
+        if file then
+            io.input(file)
+            local file_string = file:read("*a")
+
+            print("get module "..v)
+            --table.insert(modules, assert(loadfile(v)))
+            --print("------------")
+            --print(file_string)
+            --print("#############")
+            --print(load(file_string))
+            table.insert(modules, assert(load(file_string)))
         end
     end
 

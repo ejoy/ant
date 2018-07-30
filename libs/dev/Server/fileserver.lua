@@ -48,7 +48,7 @@ function fileserver.LIST(req)
 end
 
 --pull a file from server to client, maybe invisible to client in the future
-fileserver.MAX_PACKAGE_SIZE = 60*1024    --60k
+fileserver.MAX_PACKAGE_SIZE = 62*1024    --62k
 
 function fileserver.GET(req)
     --req[1] is the command "GET"
@@ -76,7 +76,7 @@ function fileserver.GET(req)
     if not server_hash then
         print("File not exist on server")
 
-        return {"ERROR", "GET", "file:"..req[2].." not found"}
+        return {"EXIST_CHECK", "false"}
     end
 
     --print("server_hash", server_hash)
@@ -90,7 +90,7 @@ function fileserver.GET(req)
 
 	local file = io.open(absolute_path, "rb")
 	if not file then
-        return {"ERROR", "GET", "file:"..req[2].."not found"}
+        return {"EXIST_CHECK", "false"}
 	end
 
 	local file_size = fileprocess.GetFileSize(file)
@@ -127,6 +127,7 @@ function fileserver.EXIST(req)
         --try path with project directory path
         file = io.open(req.project_dir.."/"..file_path, "r")
         if not file then
+            print("checking file path failed", req.project_dir.."/"..file_path)
             return {"EXIST_CHECK", "false"}
         end
     end
@@ -134,11 +135,13 @@ function fileserver.EXIST(req)
     io.close(file)
     --client does not have the file, return if the server has it
     if not req[3] then
+        print("file exist "..file_path)
         return {"EXIST_CHECK", "true"}
     end
 
     local server_hash = fileprocess.CalculateHash(file_path)
     if server_hash == req[3] then
+        print("file exist "..file_path)
         return {"EXIST_CHECK", "true"}
     else
         print("hash check fail")

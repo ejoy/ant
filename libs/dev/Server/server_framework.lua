@@ -2,7 +2,7 @@ package.cpath = "../../../clibs/?.dll;../../../clibs/lib?.so;../../../clibs/?.so
 package.path = "../Common/?.lua;" .. "../../?/?.lua;".. package.path
 
 local lanes = require "lanes"
-if lanes.configure then lanes.configure() end
+if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
 local linda = lanes.linda()
 
 function log(name)
@@ -48,7 +48,6 @@ local function HandleMessage()
 end
 
 local function CreateServerThread(config, linda)
-
     local server_io = require "server_io"
     local s = server_io.new(config, linda)
     while true do
@@ -80,7 +79,7 @@ end
 function server_ins:init(address, port)
     --self.s = server.new{address = address, port = port}
 
-    local server_io = lanes.gen("*", CreateServerThread)({address = address, port = port}, linda)
+    local server_io = lanes.gen("*", {package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateServerThread)({address = address, port = port}, linda)
 end
 
 function server_ins:update()

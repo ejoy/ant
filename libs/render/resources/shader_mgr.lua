@@ -4,7 +4,7 @@ local log = log and log(...) or print
 local bgfx = require "bgfx"
 local baselib = require "bgfx.baselib"
 local rhwi = require "render.hardware_interface"
-local toolset = require "editor.toolset"
+--local toolset = require "editor.toolset"
 local path = require "filesystem.path"
 local assetmgr = require "asset"
 local fs = require "filesystem"
@@ -52,6 +52,7 @@ local shader_mgr = {}
 shader_mgr.__index = shader_mgr
 
 local function compile_shader(filename, outfile)
+    --[[
     local config = toolset.load_config()
 
     if next(config) == nil then
@@ -62,6 +63,8 @@ local function compile_shader(filename, outfile)
 	config.includes = {config.shaderinc, path.join(cwd, "assets/shaders/src")}
     config.dest = outfile
     return toolset.compile(filename, config, get_compile_renderer_name())
+    --]]
+    return nil
 end
 
 local function check_compile_shader(name)

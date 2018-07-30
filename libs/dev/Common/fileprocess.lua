@@ -22,7 +22,7 @@ fileprocess.time_stamp_table = {}
 fileprocess.file_hash_table = {}
 
 --use stream from crypt module
-fileprocess.MAX_CALC_CHUNK = 64 * 1024 --64K
+fileprocess.MAX_CALC_CHUNK = 62 * 1024 --62K
 local crypt_encoder = nil
 function fileprocess.CalculateHash(file_path)
     print("calc hash", file_path)
@@ -42,9 +42,9 @@ function fileprocess.CalculateHash(file_path)
     crypt_encoder = crypt.sha1_encoder():init()
 
     local file_size = fileprocess.GetFileSize(file)
-    print(file_size)
     --file can be calculate only once
     repeat
+        print(file_size)
         local read_size = 0
         if file_size < fileprocess.MAX_CALC_CHUNK then
             read_size = file_size

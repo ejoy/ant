@@ -103,15 +103,30 @@ local function HandleModelNode(material_info, model_node, parent_name, parent_tr
 end
 
 function fbx_loader.load(filepath)
-    print(filepath)
+    print("fbx loading: "..filepath)
     local path = require "filesystem.path"
     local ext = path.ext(filepath)
     if string.lower(ext) ~= "fbx" then
         return
     end
 
-    local material_info, model_node = assimp.LoadFBX(filepath)
+    local fbx_file = io.open(filepath, "rb")
+    --local material_info, model_node = assimp.LoadFBX(filepath)
+    if not fbx_file then
+        print("fbx file does not exist: "..filepath)
+        return
+    end
+
+    io.input(fbx_file)
+    local file_data = fbx_file:read("*a")
+
+    print("fbx length: "..tostring(#file_data))
+    --read fbx file from memory
+    local material_info, model_node = assimp.LoadFBXFromMem(file_data)
+    io.close(fbx_file)
+
     if not material_info or not model_node then
+        print("fbx load failed: "..filepath)
         return
     end
 
@@ -135,14 +150,6 @@ function fbx_loader.load(filepath)
         }
 
         local vb_data = {"fffffffff", table.unpack(v.vb_raw)}
-
-       -- print(table.unpack(v.vb_raw))
-
-        --for i = 0, #v.vb_raw/9-1 do
-        --    print("position", v.vb_raw[i*9+1],v.vb_raw[i*9+2],v.vb_raw[i*9+3])
-        --    print("normal", v.vb_raw[i*9+4], v.vb_raw[i*9+5], v.vb_raw[i*9+6])
-        --    print("texcoord0", v.vb_raw[i*9+7], v.vb_raw[i*9+8], v.vb_raw[i*9+9])
-        --end
 
         v.vb = bgfx.create_vertex_buffer(vb_data, vdecl)
         v.ib = bgfx.create_index_buffer(v.ib_raw)

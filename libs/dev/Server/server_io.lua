@@ -109,9 +109,9 @@ local function HandlePackage(response_pkg, id, self)
             if not nbytes then
                 break;
             end
-            print("sending", file_path, "remaining", file_size - offset)
+            print("sending", file_path, "remaining", file_size - offset, #file_data)
 
-            offset = offset + nbytes    --should be the data size that actually sent
+            offset = offset + read_size
             if offset >= file_size then
                 break
             end
@@ -285,6 +285,7 @@ function server:queue_request(id, str)
 end
 
 function server:kick_client(client_id)
+    --[[
     print("kick id", client_id)
     for k, id in ipairs(self.ids) do
         if id == client_id then
@@ -302,6 +303,7 @@ function server:kick_client(client_id)
             return
         end
     end
+    --]]
 end
 
 local function save_ppm(filename, data, width, height, pitch)
@@ -515,7 +517,7 @@ end
 
 function server:GetLindaMsg()
     while true do
-        local key, value = self.linda:receive(0.05, "command")
+        local key, value = self.linda:receive(0.01, "command")
         if value then
             self:HandleIupWindowRequest(value.udid, value.cmd, value.cmd_data)
         else
@@ -524,7 +526,7 @@ function server:GetLindaMsg()
     end
 
     while true do
-        local key, value = self.linda:receive(0.05, "proj dir")
+        local key, value = self.linda:receive(0.01, "proj dir")
         if value then
             project_directory = value
             print("change project directory to", project_directory)
@@ -556,6 +558,7 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
         print("RUN cmd sent", udid, entrance_path)
         table.insert(command_cache, request)
     elseif cmd == "CONNECT" then
+        print("try connencting")
         --connect to device
         local result = libimobiledevicelua.Connect(udid, self.port)
         if  result then

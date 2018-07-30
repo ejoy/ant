@@ -1,0 +1,18 @@
+{   
+    vs = "terrain/vs_terrain.sc",
+    fs = "terrain/fs_terrain.sc",
+    
+    -- declare uniforms
+	uniforms = {
+		{ name = "u_mask",s_name ="s_maskTexture",type = "i1",texchannel = 1 },
+   		{ name = "u_base",s_name ="s_baseTexture",type = "i1",texchannel = 0 },
+		{ name = "u_lightIntensity", s_name = "s_lightIntensity",type = "v4"},
+		{ name = "u_lightColor",s_name = "s_lightColor",type="v4"}
+	},
+    -- set uniforms value as default value 
+    -- 当某个地形需要由自己的显示灯光配置时，可以创建一个自己的 参数值表，覆盖模板default 
+	uniform_values = {
+		u_lightIntensity = {1.316,0,0,1},
+		u_lightColor = { 1,1,1,0.625},
+	},
+}

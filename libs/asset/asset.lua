@@ -57,6 +57,8 @@ function assetmgr.find_valid_asset_path(asset_subpath)
 		end
 	end
 
+    local filemanager = require "filemanager"
+
 	return nil
 end
 
@@ -85,11 +87,9 @@ function assetmgr.load(filename, param)
 	if res == nil then
 		local ext = assert(path.ext(filename))
 		local fn = assetmgr.find_valid_asset_path(filename)
-   --     print("find valid path", fn)
 		if fn == nil then
 			fn = assetmgr.find_valid_asset_path(path.join("assetfiles", filename))
-   --         print("find valid path /assetsfiles/", fn)
-		end		
+		end
 		
 		res = loader[ext](fn, param)
 		resources[fn] = res

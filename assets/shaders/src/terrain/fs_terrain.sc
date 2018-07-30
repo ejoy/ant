@@ -1,7 +1,7 @@
 // terrain shader sample
 $input v_position, v_texcoord0,v_normal ,v_texcoord1
 
-#include "../common/common.sh"
+#include "common.sh"
 
 // only Int1,Vec4,Mat3,Mat4 supported 
 uniform vec4 s_lightIntensity;
@@ -22,7 +22,7 @@ void main()
     vec3  lightDirection = vec3(0,60,30);
 	lightDirection = normalize(lightDirection);
 	
-	float lightIntensity = saturate(dot(v_normal, lightDirection))*(1+s_lightIntensity[0]);
+	float lightIntensity = saturate(dot(v_normal, lightDirection))*(1.0+s_lightIntensity[0]);
 	if(lightIntensity<0.8)
 	   lightIntensity=0.8;
     vec4  color = saturate(diffuseColor * lightIntensity);

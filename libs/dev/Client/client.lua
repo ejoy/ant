@@ -68,7 +68,6 @@ function clientcommand.FILE(resp)
         local file  = nil
 
         if offset <= fileprocess.MAX_CALC_CHUNK then
-            --TODO mac/ios file instead of winfile
             filesystem.mkdir(folder)
             --file = io.open(temp_path_hash, "wb")
             file = io.open(real_path, "wb")
@@ -88,6 +87,7 @@ function clientcommand.FILE(resp)
         --output to client file directory
         io.output(file)
         io.write(resp[5])   --write the data into the client file
+        print("write data length "..tostring(#resp[5]))
         io.close(file)
 
 
@@ -145,7 +145,7 @@ function clientcommand.DIR(resp)
 end
 
 function clientcommand.RUN(resp)
-    --_linda:send("log", {"Bgfx", "get run command", resp[1], resp[2]})
+    _linda:send("log", {"Bgfx", "get run command", resp[1], resp[2]})
     _linda:send("run", resp[2])
 end
 
@@ -314,7 +314,7 @@ function client:CollectRequest()
 end
 
 function client:mainloop(timeout)
-    _linda:send("log", {"Time", "Time: "..tostring(os.clock())})
+    --_linda:send("log", {"Time", "Time: "..tostring(os.clock())})
     self:CollectRequest()
     for key, req in pairs(logic_request) do
         local cmd = req[1]
