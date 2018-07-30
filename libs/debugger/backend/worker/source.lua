@@ -1,6 +1,7 @@
 local path = require 'debugger.path'
 local parser = require 'debugger.parser'
 local ev = require 'debugger.event'
+local crc32 = require 'debugger.crc32'
 
 local sourcePool = {}
 local codePool = {}
@@ -83,11 +84,16 @@ local function serverPathToClientPath(p)
 end
 
 local function codeReference(s)
-    if not codePool[s] then
-        codePool[#codePool + 1] = s
-        codePool[s] = #codePool
+    local hash = crc32(s)
+    while codePool[hash] do
+        if codePool[hash] == s then
+            return hash
+        end
+        hash = hash + 1
     end
-    return codePool[s]
+    codePool[hash] = s
+    codePool[s] = hash
+    return hash
 end
 
 local function create(source)

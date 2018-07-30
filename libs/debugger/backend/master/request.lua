@@ -80,17 +80,28 @@ function request.setBreakpoints(req)
         bp.id = genBreakpointID()
         bp.verified = false
     end
-    if args.source.sourceReference then
-        args.source.sourceReference = args.source.sourceReference & 0xffffffff
-    end
     response.success(req, {
         breakpoints = args.breakpoints
     })
-    mgr.broadcastToWorker {
-        cmd = 'setBreakpoints',
-        source = args.source,
-        breakpoints = args.breakpoints,
-    }
+    if args.source.sourceReference then
+        local threadId = args.source.sourceReference >> 32
+        if not mgr.hasThread(threadId) then
+            response.error(req, "Not found thread " .. threadId)
+            return
+        end
+        args.source.sourceReference = args.source.sourceReference & 0xffffffff
+        mgr.sendToWorker(threadId, {
+            cmd = 'setBreakpoints',
+            source = args.source,
+            breakpoints = args.breakpoints,
+        })
+    else
+        mgr.broadcastToWorker {
+            cmd = 'setBreakpoints',
+            source = args.source,
+            breakpoints = args.breakpoints,
+        }
+    end
 end
 
 function request.setExceptionBreakpoints(req)

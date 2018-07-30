@@ -72,10 +72,10 @@ local function updateBreakpoint(key, src, bps)
 end
 
 local function bpKey(src)
-    if src.path then
-        return path.normalize_native(src.path)
+    if src.sourceReference then
+        return src.sourceReference
     end
-    return src.sourceReference
+    return path.normalize_native(src.path)
 end
 
 local function verifyBreakpoint(src, bps)
@@ -151,7 +151,7 @@ function m.find(src, currentline)
 end
 
 function m.update(clientsrc, si, bps)
-    if clientsrc.path then
+    if not clientsrc.sourceReference then
         if not si then
             return
         end
@@ -172,6 +172,11 @@ function m.update(clientsrc, si, bps)
             verifyBreakpoint(src, bps)
             return
         end
+        for _, bp in ipairs(bps) do
+            bp.source = clientsrc
+        end
+        waitverify[bpKey(clientsrc)] = { bps, si }
+        updateHook()
     end
 end
 
