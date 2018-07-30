@@ -14,11 +14,6 @@ return function(filename)
             local file_string = file:read("*a")
 
             print("get module "..v)
-            --table.insert(modules, assert(loadfile(v)))
-            --print("------------")
-            --print(file_string)
-            --print("#############")
-            --print(load(file_string))
             table.insert(modules, assert(load(file_string)))
         end
     end

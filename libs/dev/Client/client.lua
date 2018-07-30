@@ -193,8 +193,9 @@ function client:send(...)
 		local file_path = client_req[2]
 
 --        print("file path", file_path)
+        print("check real path: "..file_path)
         file_path = filemanager:GetRealPath(file_path)
---        print("get real path", file_path)
+        print("get real path ".. tostring(file_path))
         --client does have it
         if file_path then
             file_path = app_doc_path..file_path
@@ -251,10 +252,10 @@ end
 local max_screenshot_pack = 64*1024 - 100
 function client:CollectRequest()
     local count = 0
+    --this if for client request
     while true do
-        --this if for client request
-        local key, value = _linda:receive(0.05, "request")
-        if value then
+        local key, value = _linda:receive(0.001, "request", "log", "screenshot")
+        if key == "request" then
             --calculate sha1 value of the request
             --if the request is already exist, ignore the latter ones
             local pack_req = pack.pack(value)
@@ -272,23 +273,10 @@ function client:CollectRequest()
             if count == 10 then
                 break
             end
-        else
-            break
-        end
-    end
-
-    while true do
-        local key, value = _linda:receive(0.05, "log")
-        if value then
+        elseif key == "log" then
             table.insert(self.sending, pack.pack({"LOG", table.unpack(value)}))
-        else
-            break
-        end
-    end
 
-    while true do
-        local key, value = _linda:receive(0.05, "screenshot")
-        if value then
+        elseif key == "screenshot" then
             --after compression, only have name and data string
             --value[2] is data
             local name = value[1]
@@ -305,12 +293,11 @@ function client:CollectRequest()
                 offset = offset + pack_data_size
                 table.insert(self.sending, pack.pack({"SCREENSHOT", name, size, offset, pack_str}))
             end
-
         else
             break
         end
-
     end
+
 end
 
 function client:mainloop(timeout)

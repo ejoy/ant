@@ -18,20 +18,10 @@ end
 local resp_table = {}
 local function HandleMessage()
     while true do
-        local key, value = linda:receive(0.05, "log")
-        if value then
-            --do something here
+        local key, value = linda:receive(0.001, "log", "response")
+        if key == "log" then
             table.insert(resp_table, {"log", value})
-        else
-            break
-        end
-    end
-
-    while true do
-        local key, value = linda:receive(0.05, "response")
-        if value then
-            -- 0 means disconnect, 1 means connect
-            --value 2 is the udid
+        elseif key == "response" then
             if value[1] == "CONNECT" then
                 print("~~CONNECT", value[1], value[2])
                 table.insert(resp_table, {"connect", 1, value[2]})

@@ -14,7 +14,7 @@ local ios_main = {}
 local currentworld
 function ios_main.init(nativewnd, fbw, fbh)
 	rhwi.init(nativewnd, fbw, fbh)
-	currentworld = scene.start_new_world(iq, fbw, fbh, "test_world.module")
+	currentworld = scene.start_new_world(iq, fbw, fbh, "test_world_ios.module")
 end
 
 function ios_main.input(msg)

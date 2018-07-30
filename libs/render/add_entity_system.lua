@@ -131,6 +131,7 @@ function add_entity_sys:init()
     local PVPScene = require "modelloader.PVPScene"
     PVPScene.init(world, component_util, ms)
 
+    print("do pvp scene")
 	-- do
 	-- 	local stone_eid = world:new_entity("position", "rotation", "scale",
 	-- 	"can_render", "mesh", "material",

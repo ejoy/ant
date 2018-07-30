@@ -51,13 +51,22 @@ function assetmgr.find_valid_asset_path(asset_subpath)
 
 	for _, d in ipairs(searchdirs) do
 		local p = path.join(d, asset_subpath)
-        print("check exist", p)
+        print("check exist: ".. p)
 		if fs.exist(p) then
+            print("exist file path: "..p)
+            --find out if it has local copy
+        ---[[
+            local filemanager = require "filemanager"
+            local realpath = filemanager:GetRealPath(p)
+            if realpath then
+                local full_path = package.bundle_dir .. "/Documents/"..realpath
+                print("find local cache: "..full_path.." for path: "..p)
+                return full_path
+            end
+--]]
 			return p
 		end
 	end
-
-    local filemanager = require "filemanager"
 
 	return nil
 end

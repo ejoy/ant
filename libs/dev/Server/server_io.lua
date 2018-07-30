@@ -517,17 +517,10 @@ end
 
 function server:GetLindaMsg()
     while true do
-        local key, value = self.linda:receive(0.01, "command")
-        if value then
+        local key, value = self.linda:receive(0.001, "command", "proj dir")
+        if key == "command" then
             self:HandleIupWindowRequest(value.udid, value.cmd, value.cmd_data)
-        else
-            break
-        end
-    end
-
-    while true do
-        local key, value = self.linda:receive(0.01, "proj dir")
-        if value then
+        elseif key == "proj dir" then
             project_directory = value
             print("change project directory to", project_directory)
         else

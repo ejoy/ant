@@ -23,7 +23,8 @@ fileprocess.file_hash_table = {}
 
 --use stream from crypt module
 fileprocess.MAX_CALC_CHUNK = 62 * 1024 --62K
-local crypt_encoder = nil
+local crypt_encoder
+
 function fileprocess.CalculateHash(file_path)
     print("calc hash", file_path)
     local mode_of_file = filesystem.attributes(file_path, "mode")

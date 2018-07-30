@@ -24,7 +24,7 @@ end
 
 print = function(...)
     origin_print(...)
-    sendlog("Script", ...)
+    --sendlog("Script", ...)
 end
 
 local filemanager = require "filemanager"
@@ -48,15 +48,21 @@ local function custom_open(filename, mode, search_local_only)
     local file = origin_open(filename, mode)
 
     --file may be in the bundle
-    if not file then
-        print("searching file in bundle: "..filename)
+    --for now don't cache lua files
+    --todo deal with loadfile condition
+    local file_ext = string.sub(filename, -3)
+    if file_ext and string.lower(file_ext)~="lua" then
+        if not file then
+            print("searching file in bundle: "..filename)
+            --find out if it exist locally
+            local local_path = file_mgr:GetRealPath(filename)
+            if local_path then
+                print("bundle real path for: "..filename.." is "..local_path)
+                local_path = bundle_home_dir .. "/Documents/" ..local_path
+                file = origin_open(local_path, mode)
 
-        local local_path = file_mgr:GetRealPath(filename)
-        if local_path then
-            local_path = bundle_home_dir .. "/Documents/" ..local_path
-            file = origin_open(local_path, mode)
-
-            return file
+                return file
+            end
         end
     end
 
@@ -70,13 +76,13 @@ local function custom_open(filename, mode, search_local_only)
         --TODO file not exist
         --wait here
         while true do
-            local _, value = linda:receive(0.01, "new file")
+            local _, value = linda:receive(0.001, "new file")
             if value then
                 print("received msg", filename)
 
                 --put into the id_table and file_table
                 file_mgr:AddFileRecord(value[1], value[2])
-
+                print("add file recode: "..value[1] .. " and "..value[2])
                 file_mgr:WriteDirStructure(bundle_home_dir.."/Documents/dir.txt")
                 file_mgr:WriteFilePathData(bundle_home_dir.."/Documents/file.txt")
 
@@ -90,6 +96,7 @@ local function custom_open(filename, mode, search_local_only)
             end
         end
     else
+        print("use origin open: "..filename)
         return file
     end
 end
@@ -104,7 +111,7 @@ local function remote_searcher (name)
     linda:send("request", request)
 
     while true do
-        local key, value = linda:receive(0.01, "mem_data")
+        local key, value = linda:receive(0.001, "mem_data")
         if value then
             return load(value)
         end
@@ -120,7 +127,7 @@ local function CreateIOThread(linda, home_dir)
     local client = require "client"
     local c = client.new("127.0.0.1", 8888, linda, home_dir)
     while true do
-        c:mainloop(0.01)
+        c:mainloop(0.001)
         --print("io mainloop updating")
         local resp = c:pop()
         if resp then
@@ -166,32 +173,18 @@ end
 local screenshot_cache_num = 0
 local function HandleMsg()
     while true do
-        local key, value = linda:receive(0.01, "new file")
-        if value then
+        local key, value = linda:receive(0.001, "new file", "run", "screenshot_req")
+        if key == "new file" then
             --print("received msg", value)
             --put into the id_table and file_table
             file_mgr:AddFileRecord(value[1], value[2])
 
             file_mgr:WriteDirStructure(bundle_home_dir.."/Documents/dir.txt")
             file_mgr:WriteFilePathData(bundle_home_dir.."/Documents/file.txt")
-        else
-            break
-        end
-    end
 
-    while true do
-        local key, value = linda:receive(0.01, "run")
-        if value then
-            --init when need to run something
+        elseif key == "run" then
             run(value)
-        else
-            break
-        end
-    end
-
-    while true do
-        local key, value = linda:receive(0.01, "screenshot_req")
-        if value then
+        elseif key == "screenshot_req" then
             --[[
             if bgfx_init then
 
@@ -201,7 +194,7 @@ local function HandleMsg()
             end
             --]]
         else
-            break;
+            break
         end
     end
 end
@@ -286,7 +279,7 @@ function init(window_handle, width, height, app_dir, bundle_dir)
             --wait here
             ---[[
             while true do
-                local key, value = linda:receive(0.01, "file exist")
+                local _, value = linda:receive(0.001, "file exist")
                 if value ~= nil then
                     if value then
                         print(path .. " exist")

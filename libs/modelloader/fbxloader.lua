@@ -106,7 +106,7 @@ function fbx_loader.load(filepath)
     print("fbx loading: "..filepath)
     local path = require "filesystem.path"
     local ext = path.ext(filepath)
-    if string.lower(ext) ~= "fbx" then
+    if ext and string.lower(ext) ~= "fbx" then
         return
     end
 

@@ -9,13 +9,14 @@ local math3d = require "math3d"
 local mathu = require "math.util"
 
 local math3d_stack = math3d.new()
-
+local asset = require "asset"
 local readfile = function( fname )
-    if package.app_dir then
-        fname = package.app_dir .. "/" .. fname
-    end
+    local file_path = asset.find_valid_asset_path(fname)
+    assert(file_path)
 
-	local f = assert(io.open( fname,'rb'))
+    print("find path "..file_path)
+	local f = assert(io.open( file_path,'rb'))
+
 	local d = f:read('*a')
 	f:close()
 	return d 

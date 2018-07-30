@@ -1,3 +1,4 @@
+--terrain.lua
 --dofile "libs/init.lua"
 local ecs = ...
 local world = ecs.world
@@ -7,7 +8,7 @@ package.path = package.path..";"..package.app_dir.."/clibs/terrain/?.lua;"
 package.cpath = package.cpath..';../clibs/terrain/?.dll;./clibs/terrain/?.dll;'
 
 local bgfx = require "bgfx"
-local nk = require "bgfx.nuklear"
+--local nk = require "bgfx.nuklear"
 
 local nkmsg = require "inputmgr.nuklear"
 
@@ -88,6 +89,10 @@ local function joystick_update()
 end 
 
 function loadfonts(font,size,charset)
+    local file = io.open(font, "r")
+    --if file then
+
+
 	return loadfile(font),size,charset
 end 
 
@@ -99,7 +104,7 @@ local function process_input(message)
 
 	-- local useJoy = false 
 	-- local use_rJoy = false 
-	---[[
+	--[[
     local dirx,diry,r_dirx,r_diry = joystick_update()
 	local camera = world:first_entity("main_camera")
 	if dirx ~= 0 or diry ~= 0 then
@@ -236,7 +241,7 @@ local function process_input(message)
 	-- 	end  
 	-- end
 
-	nk.input(message)
+	--nk.input(message)
 end 
 
 local message_queue = {}
@@ -264,7 +269,7 @@ local function mainloop()
 	--local ortho_mtx = math3d_stack( { 2.0/ctx.width, 0.0, 0.0, 0.0,   0.0,-2.0/ctx.height, 0.0, 0.0,  0.0, 0.0,-1.0, 0.0,  -1.0, 1.0, 0.0, 1.0}, "m") 
 
 	bgfx.set_view_transform(UI_VIEW,nil,ortho_mtx)	
-	nk.update()
+	--nk.update()
 	
 	message_queue = {}
 	--bgfx.frame()
@@ -276,7 +281,7 @@ local function init(fbw, fbh)
 	ctx.height = math.tointeger(fbh)
 
 	-- nk init
-    ---[[
+    --[[
 	nk.init {
 		view = UI_VIEW,
 		width = ctx.width,
@@ -294,7 +299,7 @@ local function init(fbw, fbh)
 		prog = shaderMgr.programLoad("ui/vs_nuklear_texture","ui/fs_nuklear_texture"),
 
 		fonts = {
-			{ "宋体行楷", loadfonts(package.app_dir .. "/assets/build/fonts/stxingka.ttf",50, ch_charset()  ), },
+			{ "宋体行楷", loadfonts("/assets/build/fonts/stxingka.ttf",50, ch_charset()  ), },
 		},
 	}	
 --]]
@@ -304,7 +309,7 @@ local function init(fbw, fbh)
 
 	---[[
 	-- load terrain level 
-	terrain:load("assets/build/terrain/pvp1.lvl",
+	terrain:load("terrain/pvp1_ios.lvl",
 					{
 						{ "POSITION", 3, "FLOAT" },
 						{ "TEXCOORD0", 2, "FLOAT" },
@@ -313,11 +318,11 @@ local function init(fbw, fbh)
 					}
 				)
 	--]]
-	 terrain_chibi:load("assets/build/terrain/chibi16.lvl")
+	-- terrain_chibi:load("terrain/chibi16.lvl")
 
 	if program_create_mode == 1 then 
 		-- load from mtl setting 
-		terrain:load_meterial("assets/build/terrain/terrain.mtl")
+		terrain:load_meterial("terrain/terrain_ios.mtl")
 	else 
 		-- or create manually
 		terrain:load_program("terrain/vs_terrain","terrain/fs_terrain")
@@ -333,16 +338,16 @@ local function init(fbw, fbh)
 		terrain:set_uniform("u_showMode",0)  
 	end 
 
-	terrain_chibi:load_meterial("assets/build/terrain/terrain.mtl")
+	--terrain_chibi:load_meterial("terrain/terrain.mtl")
 	-- 手工增加调试，临时增加，可以放在关卡文件里
-	terrain_chibi:create_uniform("u_showMode","s_showMode","i1")   -- 0 default,1 = normal
-	terrain_chibi:set_uniform("u_showMode",0)   				   
+	--terrain_chibi:create_uniform("u_showMode","s_showMode","i1")   -- 0 default,1 = normal
+	--terrain_chibi:set_uniform("u_showMode",0)
 
 	terrain:set_transform { t= {140,0,200,1},r= {0,0,0},s={1,1,1,1}}
-	terrain_chibi:set_transform { t= {0,150,0,1},r= {0,0,0},s={1,1,1,1}}
+	--terrain_chibi:set_transform { t= {0,150,0,1},r= {0,0,0},s={1,1,1,1}}
 
 	-- ui init
-	joystick_init()
+	--joystick_init()
 end
 
 local terrain_sys = ecs.system "terrain_system"

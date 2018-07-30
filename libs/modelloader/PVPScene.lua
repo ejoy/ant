@@ -34,7 +34,7 @@ function PVPScene.init(world, component_util, ms)
 
     end
 
-    --[[
+    ---[[
 
 
     --campsite wall
