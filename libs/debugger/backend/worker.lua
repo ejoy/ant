@@ -302,7 +302,7 @@ end
 
 local hook = {}
 
-function hook.line(line)
+function hook.bp(line)
     local s = rdebug.getinfo(0, info)
     local src = source.create(s.source)
     if not source.valid(src) then
@@ -317,7 +317,14 @@ function hook.line(line)
             return
         end
     end
+end
 
+function hook.step()
+    local s = rdebug.getinfo(0, info)
+    local src = source.create(s.source)
+    if not source.valid(src) then
+        return
+    end
     workerThreadUpdate()
     if state == 'running' then
         return

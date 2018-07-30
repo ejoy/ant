@@ -272,11 +272,20 @@ struct hookmgr {
                 return;
             }
             set_host(cL, hL);
-            lua_pushstring(cL, "line");
-            lua_pushinteger(cL, ar->currentline);
-            if (lua_pcall(cL, 2, 0, 0) != LUA_OK) {
-                lua_pop(cL, 1);
-                return;
+            if (step_mask & LUA_MASKLINE) {
+                lua_pushstring(cL, "step");
+                if (lua_pcall(cL, 1, 0, 0) != LUA_OK) {
+                    lua_pop(cL, 1);
+                    return;
+                }
+            }
+            else {
+                lua_pushstring(cL, "bp");
+                lua_pushinteger(cL, ar->currentline);
+                if (lua_pcall(cL, 2, 0, 0) != LUA_OK) {
+                    lua_pop(cL, 1);
+                    return;
+                }
             }
         }
     }
