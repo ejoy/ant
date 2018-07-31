@@ -96,6 +96,18 @@ local function hasStandard()
     return true
 end
 
+
+local function normalizeNumber(str)
+    if str:find('.', 1, true) then
+        str = str:gsub('0+$', '')
+        if str:sub(-1) == '.' then
+            return str .. '0'
+        end
+    end
+    return str
+end
+
+
 local function varCanExtand(type, subtype, value)
     if type == 'function' then
         return rdebug.getupvaluev(value, 1) ~= nil
@@ -143,7 +155,7 @@ local function varGetName(value)
             end
             return ('%d'):format(rvalue)
         else
-            return ('%.4f'):format(rdebug.value(value))
+            return normalizeNumber(('%.4f'):format(rdebug.value(value)))
         end
     elseif type == 'function' then
         --TODO
@@ -175,7 +187,7 @@ local function varGetShortValue(value)
         if subtype == 'integer' then
             return ('%d'):format(rdebug.value(value))
         else
-            return ('%f'):format(rdebug.value(value))
+            return normalizeNumber(('%f'):format(rdebug.value(value)))
         end
     elseif type == 'function' then
         return 'func'
@@ -294,7 +306,7 @@ local function varGetValue(type, subtype, value)
         if subtype == 'integer' then
             return ('%d'):format(rdebug.value(value))
         else
-            return ('%f'):format(rdebug.value(value))
+            return normalizeNumber(('%f'):format(rdebug.value(value)))
         end
     elseif type == 'function' then
         if subtype == 'c' then
