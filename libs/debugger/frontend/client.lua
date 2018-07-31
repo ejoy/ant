@@ -1,7 +1,7 @@
 local cdebug = require 'debugger.frontend'
 local proto = require 'debugger.protocol'
 local stdin = require 'debugger.frontend.stdin'
-local select = require 'debugger.frontend.select'
+local socket = require 'debugger.socket'
 local proxy = nil
 local stat = {}
 local m = {}
@@ -14,7 +14,7 @@ if cdebug.os() == 'windows' then
 end
 
 local fd = stdin.fd
-select.read(fd, function()
+socket.init(fd, function()
     while true do
         local pkg = proto.recv(fd:recv() or '', stat)
         if pkg then

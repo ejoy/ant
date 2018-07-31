@@ -1,50 +1,48 @@
 local lsocket = require 'lsocket'
 local proto = require 'debugger.protocol'
+local socket = require 'debugger.socket'
 
 local listen
-local channel
+local fd
 local stat = {}
+local queue = {}
 
 local m = {}
 function m.start(ip, port)
-    channel = assert(lsocket.connect(ip, port))
+    fd = assert(lsocket.connect(ip, port))
+    socket.init(fd, function()
+        while true do
+            local msg = proto.recv(fd:recv(), stat)
+            if msg then
+                queue[#queue + 1] = msg
+            else
+                break
+            end
+        end
+    end)
 end
 
 function m.update()
-    if not channel then
-        return false
-    end
-    return true
+    socket.update()
+    return not not fd
 end
 
 function m.recv()
-    assert(channel)
-    if not lsocket.select({channel}, 0) then
-        return proto.recv('', stat)
+    if #queue == 0 then
+        return
     end
-    return proto.recv(channel:recv(), stat)
-end
-
-local function sendstring(s)
-    local from = 1
-    local len = #s
-    while from <= len do
-        if lsocket.select(nil, {channel}) then
-            from = from + assert(channel:send(s:sub(from)))
-        end
-    end
+    return table.remove(queue, 1)
 end
 
 function m.send(data)
-    assert(channel)
-    sendstring(proto.send(data))
+    socket.send(fd, proto.send(data))
 end
 
 function m.close()
-    assert(channel)
-    channel:close()
-    channel = nil
+    fd:close()
+    fd = nil
     stat = {}
+    queue = {}
     os.exit(true, true)
 end
 

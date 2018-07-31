@@ -7,7 +7,7 @@ end)()
 --log = require 'debugger.log'
 --log.file = 'dbg.log'
 
-local select = require 'debugger.frontend.select'
+local socket = require 'debugger.socket'
 local client = require 'debugger.frontend.client'
 
 print = nil
@@ -16,5 +16,5 @@ client.initialize()
 
 while true do
     client.update()
-    select.update()
+    socket.update()
 end
