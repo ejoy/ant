@@ -334,3 +334,10 @@ function handle_input(msg_table)
     end
 end
 
+function handle_bgfx_log()
+
+end
+
+function handle_bgfx_screenshot()
+
+end
