@@ -320,7 +320,7 @@ local function varGetValue(type, subtype, value)
         if not source.valid(src) then
             return tostring(rdebug.value(value))
         end
-        if src.path then
+        if not src.sourceReference then
             return ("%s:%d"):format(source.clientPath(src.path), info.linedefined)
         end
         local code = source.getCode(src.sourceReference)

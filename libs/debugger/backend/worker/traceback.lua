@@ -39,13 +39,13 @@ end
 
 local function getshortsrc(info)
     local src = source.create(info.source)
-    if src.path then
+    if src.sourceReference then
+        local code = source.getCode(src.sourceReference)
+        return shortsrc(code)
+    elseif src.path then
         return shortsrc('@' .. source.clientPath(src.path))
     elseif src.skippath then
         return shortsrc('@' .. source.clientPath(src.skippath))
-    elseif src.sourceReference then
-        local code = source.getCode(src.sourceReference)
-        return shortsrc(code)
     elseif info.source:sub(1,1) == '=' then
         return shortsrc(info.source)
     else

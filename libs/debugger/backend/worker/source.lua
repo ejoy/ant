@@ -141,17 +141,17 @@ end
 
 function m.c2s(clientsrc)
     -- TODO: 不遍历？
-    if clientsrc.path then
-        local nativepath = path.normalize_native(clientsrc.path)
+    if clientsrc.sourceReference then
+        local ref = clientsrc.sourceReference
         for _, source in pairs(sourcePool) do
-            if source.path and path.normalize_native(source.path) == nativepath then
+            if source.sourceReference == ref then
                 return source
             end
         end
     else
-        local ref = clientsrc.sourceReference
+        local nativepath = path.normalize_native(clientsrc.path)
         for _, source in pairs(sourcePool) do
-            if source.sourceReference == ref then
+            if source.path and not source.sourceReference and path.normalize_native(source.path) == nativepath then
                 return source
             end
         end
@@ -163,15 +163,15 @@ function m.valid(s)
 end
 
 function m.output(s)
-    if s.path ~= nil then
-        return {
-            name = path.filename(s.path),
-            path = path.normalize(s.path),
-        }
-    elseif s.sourceReference ~= nil then
+    if s.sourceReference ~= nil then
         return {
             name = '<Memory>',
             sourceReference = s.sourceReference,
+        }
+    elseif s.path ~= nil then
+        return {
+            name = path.filename(s.path),
+            path = path.normalize(s.path),
         }
     end
 end

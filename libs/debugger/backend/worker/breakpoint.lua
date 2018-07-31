@@ -226,7 +226,7 @@ local function sourceUpdateBreakpoint(src)
     local bpssi = waitverify[key]
     if bpssi then
         waitverify[key] = nil
-        if src.path then
+        if not src.sourceReference then
             src.si = bpssi[2]
         end
         verifyBreakpoint(src, bpssi[1])
