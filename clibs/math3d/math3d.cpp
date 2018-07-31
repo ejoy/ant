@@ -348,8 +348,9 @@ get_id_by_type(lua_State *L, struct lastack *LS, int lType, int index){
 	return lType == LUA_TNUMBER ? get_id(L, index) : get_ref_id(L, LS, index);
 }
 
-static inline void
-extract_scale_mat(lua_State *L, struct lastack *LS, int index, glm::mat4x4 &m){	
+static inline glm::vec3
+extract_scale(lua_State *L, struct lastack *LS, int index){	
+	glm::vec3 scale(1, 1, 1);
 	int stype = lua_getfield(L, index, "s");	
 	if (stype == LUA_TNUMBER || stype == LUA_TUSERDATA) {
 		int64_t id = get_id_by_type(L, LS, stype, -1);
@@ -358,34 +359,32 @@ extract_scale_mat(lua_State *L, struct lastack *LS, int index, glm::mat4x4 &m){
 		switch (type)
 		{
 		case LINEAR_TYPE_VEC4:
-			//matrix44_scalemat(m, value[0], value[1], value[2]);
-			m = glm::scale(glm::mat4x4(1.f), *((glm::vec3*)value));
+			scale = *(glm::vec3*)value;
 			break;
 		default:
 			luaL_error(L, "linear type should be vec3/vec4, type is : %d", type);
 			break;
 		}
 	} else if (stype == LUA_TTABLE) {
-		size_t len = lua_rawlen(L, -1);
-		glm::vec3 v;
+		size_t len = lua_rawlen(L, -1);		
 		if (len == 1) {
 			float s = get_table_value(L, 1);
-			v[0] = v[1] = v[2] = s;
+			scale[0] = scale[1] = scale[2] = s;
 		} else if (len == 3) {
 			for (int i = 0; i < 3; ++i)
-				v[i] = get_table_value(L, i+1);
+				scale[i] = get_table_value(L, i+1);
 		} else {
 			luaL_error(L, "using table for s element, format must be s = {1}/{1, 2, 3}, give number : %d", len);
-		}
-		m = glm::scale(glm::mat4x4(1.f), v);		
-	} else {
-		m = glm::mat4x4(1.f);
+		}		
 	}
 	lua_pop(L, 1);
+
+	return scale;
 }
 
-static inline void
-extract_translate_mat(lua_State *L, struct lastack *LS, int index, glm::mat4x4 &m){
+static inline glm::vec3
+extract_translate(lua_State *L, struct lastack *LS, int index){
+	glm::vec3 translate(0, 0, 0);
 	const int ttype = lua_getfield(L, index, "t");
 	if (ttype == LUA_TNUMBER || ttype == LUA_TUSERDATA) {
 		int64_t id = get_id_by_type(L, LS, ttype, -1);
@@ -397,23 +396,19 @@ extract_translate_mat(lua_State *L, struct lastack *LS, int index, glm::mat4x4 &
 		if (value == NULL)
 			luaL_error(L, "invalid id : %ld, get NULL value", id);
 		
-		m = glm::translate(glm::mat4x4(1.f), *((glm::vec3 *)value));
+		translate = *((glm::vec3*)value);
 	} else if (ttype == LUA_TTABLE) {
 		size_t len = lua_rawlen(L, -1);
 		if (len != 3)
 			luaL_error(L, "t field should : t={1, 2, 3}, only accept 3 value, %d is give", len);
 
-		glm::vec3 v;
 		for (int i = 0; i < 3; ++i)
-			v[i] = get_table_value(L, i + 1);
+			translate[i] = get_table_value(L, i + 1);
 
-		m = glm::translate(glm::mat4x4(1.f), v);
-		
-	} else {
-		m = glm::mat4x4(1.f);
 	}
 
 	lua_pop(L, 1);
+	return translate;
 }
 
 static inline void
@@ -428,7 +423,7 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index, glm::mat4x4 &m
 		if (type != LINEAR_TYPE_VEC4)
 			luaL_error(L, "ref object need should be vec4!, type is : %d", type);
 
-		m = glm::mat4x4(glm::quat(*(const glm::vec3*)value));
+		m = glm::mat4x4(glm::quat(glm::radians(*(const glm::vec3*)value)));
 	} else if (rtype == LUA_TTABLE) {
 		size_t len = lua_rawlen(L, -1);
 		if (len != 3)
@@ -447,11 +442,19 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index, glm::mat4x4 &m
 
 static void inline 
 push_srt(lua_State *L, struct lastack *LS, int index) {
-	glm::mat4x4 s(1), r(1), t(1);
-	extract_scale_mat(L, LS, index, s);
-	extract_rotation_mat(L, LS, index, r);
-	extract_translate_mat(L, LS, index, t);
-	glm::mat4x4 srt = s * r * t;	
+	glm::mat4x4 srt(1);
+
+	const glm::vec3 scale = extract_scale(L, LS, index);
+	srt[0][0] = scale[0];
+	srt[1][1] = scale[1];
+	srt[2][2] = scale[2];
+
+	glm::mat4x4 rotMat(1);
+	extract_rotation_mat(L, LS, index, rotMat);
+	srt = rotMat * srt;
+
+	const glm::vec3 translate = extract_translate(L, LS, index);	
+	srt[3] = glm::vec4(translate, 1);
 	lastack_pushmatrix(LS, &srt[0][0]);
 }
 
