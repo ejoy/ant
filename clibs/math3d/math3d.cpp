@@ -854,12 +854,12 @@ mul_2values(lua_State *L, struct lastack *LS) {
 	int type = BINTYPE(t0,t1);
 	switch (type) {
 	case BINTYPE(LINEAR_TYPE_MAT,LINEAR_TYPE_MAT): {
-		glm::mat4x4 m = *((glm::mat4x4*)val0) * *((glm::mat4x4*)val1);
+		glm::mat4x4 m = *((const glm::mat4x4*)val1) * *((const glm::mat4x4*)val0);
 		lastack_pushmatrix(LS, &m[0][0]);
 		break;
 	}
 	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_MAT): {
-		glm::vec4 r = *((glm::vec4*)val0) * *((glm::mat4x4*)val1);		
+		glm::vec4 r = *((const glm::mat4x4*)val1) * *((const glm::vec4*)val0);
 		lastack_pushvec4(LS, &r.x);
 		break;
 	}
@@ -873,7 +873,7 @@ mul_2values(lua_State *L, struct lastack *LS) {
 		break;
 	}
 	case BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_QUAT): {
-		glm::quat r = *((const glm::quat *)val0) * *((glm::quat*)val1);
+		glm::quat r = *((const glm::quat *)val0) * *((const glm::quat*)val1);
 		lastack_pushquat(LS, &r.x);
 		break;
 	}
@@ -910,7 +910,7 @@ static void mulH_2values(lua_State *L, struct lastack *LS){
 	if (t0 != LINEAR_TYPE_VEC4 && t1 != LINEAR_TYPE_MAT)
 		luaL_error(L, "'%' operator only support vec4 * mat, type0 is : %d, type1 is : %d", t0, t1);
 
-	glm::vec4 r = *v * *mat;
+	glm::vec4 r = *mat * *v;
 	if (r != glm::epsilon<glm::vec4>())
 	{
 		float invW = 1.f / fabs(r.w);
