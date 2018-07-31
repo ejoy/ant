@@ -1,15 +1,11 @@
 local ecs = require "ecs"
 local task = require "editor.task"
 local asset = require "asset"
+
 --local elog = require "editor.log"
 --local db = require "debugger"
 
-
-asset.insert_searchdir(1, "/Users/ejoy/Desktop/Engine/ant/assets/")
---asset.insert_searchdir(2, package.app_dir)
---asset.insert_searchdir(3, package.app_dir .. "/assets/")
---remote search
---resource dir
+asset.insert_searchdir(1, "D:/Engine/ant/assets")
 
 local util = {}
 util.__index = util
