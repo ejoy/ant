@@ -2,13 +2,12 @@ LUAINC = -I ../lua
 LUALIB = -L ../lua -llua53
 CFLAGS = -O2 -Wall
 
+GLM_INC = -I ../../../ant3rd/glm
+
 mingw : math3d.dll
 
-SRC_FILES = linalg.c math3d.cpp matrix44.c conversion.c
-
-
-math3d.dll : linalg.c math3d.cpp matrix44.c conversion.c
-	gcc --shared $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC)
+math3d.dll : linalg.c math3d.cpp
+	gcc --shared $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC) $(GLM_INC)
 
 clean :
 	rm -f math3d.dll

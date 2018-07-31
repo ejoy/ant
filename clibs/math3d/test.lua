@@ -105,7 +105,7 @@ print("zdir after rotate : ", stack(zdir, "V"))
 stack(mat, "1=")	-- init mat to an indentity matrix (dup self and assign)
 
 local vH = stack({2, 4, 5, 1}, mat, "%P")
-print("vector homogeneous divide : ", stack(vH, "%"))
+print("vector homogeneous divide : ", stack(vH, "%V"))
 
 local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "lP")	-- calc lookat matrix
 mat(lookat) -- assign lookat matrix to mat
