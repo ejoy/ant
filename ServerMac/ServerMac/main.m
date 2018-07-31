@@ -7,11 +7,15 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "LuaRender.h"
 
 int main(int argc, const char * argv[]) {
-    @autoreleasepool {
-        // insert code here...
-        NSLog(@"Hello, World!");
+    LuaRender *lua_render = [[LuaRender alloc] init];
+    [lua_render InitScript];
+    
+    while (true) {
+        [lua_render Update];
     }
+    
     return 0;
 }
