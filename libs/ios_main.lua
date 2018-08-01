@@ -12,11 +12,13 @@ local iq = inputmgr.queue {
 
 local ios_main = {}
 
+local init_ok = false
 local currentworld
 function ios_main.init(nativewnd, fbw, fbh)
 	rhwi.init(nativewnd, fbw, fbh)
 	currentworld = scene.start_new_world(iq, fbw, fbh, "test_world_ios.module")
-
+    print("world init finished !!")
+    init_ok = true
 end
 
 function ios_main.input(msg)
@@ -39,7 +41,9 @@ function ios_main.input(msg)
 end
 
 function ios_main.mainloop()
-	currentworld.update()
+    if init_ok then
+	    currentworld.update()
+    end
 end
 
 return ios_main

@@ -9,7 +9,7 @@ local server_framework = require "server_framework"
 server_framework:init("127.0.0.1", 8888)
 
 --todo store in a file
-local default_proj_dir = "D:/Engine/ant/libs/dev"
+local default_proj_dir = "D:/Engine/ant/libs"
 --ui layout
 
 local script_text = iup.text{ multiline = "YES", expand = "YES" }

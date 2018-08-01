@@ -328,7 +328,7 @@ local screenshot_cache = nil
 local max_screenshot_pack = 64*1024 - 100
 --store handle of lanes, check the result periodically
 local function response(self, req)
-    print("cmd and second is ", req[1], req[2])
+    --print("cmd and second is ", req[1], req[2])
     local cmd = req[1]
     --if is require command, need project_directory
     if cmd == "REQUIRE" or cmd == "GET" or cmd == "EXIST" then
