@@ -32,6 +32,8 @@ LUAMOD_API int luaopen_debugger_backend(lua_State *L);
 LUAMOD_API int luaopen_debugger_frontend(lua_State *L);
 LUAMOD_API int luaopen_clonefunc(lua_State *L);
 LUAMOD_API int luaopen_cjson_safe(lua_State *L);
+LUAMOD_API int luaopen_preloadc(lua_State *L);
+
 //LUAMOD_API int luaopen_cppfs(lua_State *L);
 
 void luaopen_lanes_embedded( lua_State* L, lua_CFunction _luaopen_lanes);
@@ -114,26 +116,7 @@ static int error_handle(lua_State* L) {
 - (void) InitScript:(CALayer*)layer size:(CGSize)view_size {
     L = luaL_newstate();
     luaL_openlibs(L);
-
-    luaL_requiref(L, "crypt", luaopen_crypt, 0);
-    luaL_requiref(L, "lsocket", luaopen_lsocket, 0);
-    luaL_requiref(L, "bgfx", luaopen_bgfx, 0);
-    luaL_requiref(L, "bgfx.util", luaopen_bgfx_util, 0);
-    luaL_requiref(L, "bgfx.baselib", luaopen_bgfx_baselib, 0);
-    luaL_requiref(L, "lterrain", luaopen_bgfx_terrain, 0);
-    luaL_requiref(L, "bgfx.nuklear", luaopen_bgfx_nuklear, 0);
-    luaL_requiref(L, "math3d", luaopen_math3d, 0);
-    luaL_requiref(L, "winfile", luaopen_lfs, 0);
-    luaL_requiref(L, "assimplua", luaopen_assimplua, 0);
-    luaL_requiref(L, "lodepnglua", luaopen_lodepnglua, 0);
-    luaL_requiref(L, "memoryfile", luaopen_memoryfile, 0);
-    
-    luaL_requiref(L, "debugger.hookmgr", luaopen_debugger_hookmgr, 0);
-    luaL_requiref(L, "debugger.backend", luaopen_debugger_backend, 0);
-    luaL_requiref(L, "debugger.frontend", luaopen_debugger_frontend, 0);
-    
-    luaL_requiref(L, "clonefunc", luaopen_clonefunc, 0);
-    luaL_requiref(L, "cjson.safe", luaopen_cjson_safe, 0);
+    luaL_requiref(L, "preloadc", luaopen_preloadc, 0);
 //    luaL_requiref(L, "cppfs", luaopen_cppfs, 0);
     
     luaopen_lanes_embedded(L, default_luaopen_lanes);

@@ -5,7 +5,10 @@ local asset = require "asset"
 --local elog = require "editor.log"
 --local db = require "debugger"
 
+--windows dir
 asset.insert_searchdir(1, "D:/Engine/ant/assets")
+--mac dir
+asset.insert_searchdir(2, "/Users/ejoy/Desktop/Engine/ant/assets")
 
 local util = {}
 util.__index = util
