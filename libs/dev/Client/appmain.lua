@@ -123,7 +123,6 @@ local function remote_searcher (name)
 end
 table.insert(package.searchers, remote_searcher)
 
-
 local lsocket = require "lsocket"
 lanes.register("lsocket", lsocket)
 
@@ -174,6 +173,7 @@ local function run(path)
 
 end
 
+local bgfx = require "bgfx"
 local screenshot_cache_num = 0
 local function HandleMsg()
     while true do
@@ -189,14 +189,11 @@ local function HandleMsg()
         elseif key == "run" then
             run(value)
         elseif key == "screenshot_req" then
-            --[[
-            if bgfx_init then
-
+            if entrance then
                 bgfx.request_screenshot()
                 screenshot_cache_num = screenshot_cache_num + 1
                 print("request screenshot: ".. value[2].." num: "..screenshot_cache_num)
             end
-            --]]
         else
             break
         end
@@ -207,31 +204,21 @@ local function HandleCacheScreenShot()
     --if screenshot_cache_num
     --for i = 1, screenshot_cache_num do
     if screenshot_cache_num > 0 then
-        --todo handle screenshot
-        --[[
         local name, width, height, pitch, data = bgfx.get_screenshot()
         if name then
-            --print(type(name), type(pitch), type(data))
-            --print("screenshot name is "..name)
             local size =#data
-            --print("screenshot size is "..size)
-
+            print("screenshot size is "..size)
             screenshot_cache_num = screenshot_cache_num - 1
-
             --compress to png format
             --default is bgra format
             local data_string = lodepng.encode_png(data, width, height);
             print("screenshot encode size ",#data_string)
             linda:send("screenshot", {name, data_string})
-            --linda:send("screenshot", {name, size, width, height, pitch, data})
         end
-        --]]
     end
-    --end
 end
 
 local function init_lua_search_path(app_dir)
-
     package.path = package.path .. ";" .. app_dir .. "/libs/?.lua;" .. app_dir .. "/libs/?/?.lua;" .. app_dir .. "/libs/ecs/?.lua;"
 
     require "common/import"
@@ -312,10 +299,17 @@ end
 function mainloop()
     if entrance then
         entrance.mainloop()
+
+        local log = bgfx.get_log()
+        if log and #log>0 then
+            print("get bgfx log")
+            print(log)
+        end
     end
 
     HandleMsg()
     HandleCacheScreenShot()
+
 end
 
 function terminate()
@@ -334,10 +328,3 @@ function handle_input(msg_table)
     end
 end
 
-function handle_bgfx_log()
-
-end
-
-function handle_bgfx_screenshot()
-
-end

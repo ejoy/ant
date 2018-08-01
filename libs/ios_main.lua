@@ -3,6 +3,7 @@
 local rhwi = require "render.hardware_interface"
 local scene = require "scene.util"
 local inputmgr = require "inputmgr"
+--local bgfx = require "bgfx"
 
 local iq = inputmgr.queue {
 	button = "_,_,_,_,_",
@@ -15,6 +16,7 @@ local currentworld
 function ios_main.init(nativewnd, fbw, fbh)
 	rhwi.init(nativewnd, fbw, fbh)
 	currentworld = scene.start_new_world(iq, fbw, fbh, "test_world_ios.module")
+
 end
 
 function ios_main.input(msg)

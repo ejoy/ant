@@ -301,7 +301,7 @@ function client:CollectRequest()
 end
 
 function client:mainloop(timeout)
-    --_linda:send("log", {"Time", "Time: "..tostring(os.clock())})
+    _linda:send("log", {"Time", "Time: "..tostring(os.clock())})
     self:CollectRequest()
     for key, req in pairs(logic_request) do
         local cmd = req[1]
