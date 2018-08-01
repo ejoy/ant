@@ -12,7 +12,7 @@ extern "C" {
 #include <glm/gtx/quaternion.hpp>
 
 #include <glm/gtx/euler_angles.hpp>
-#include <glm/gtx/matrix_decompose.hpp>
+
 
 extern "C" {
 	#include <lua.h>
@@ -420,8 +420,8 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index, glm::mat4x4 &m
 		int type;
 		float *value = lastack_value(LS, id, &type);
 
-		if (type != LINEAR_TYPE_VEC4)
-			luaL_error(L, "ref object need should be vec4!, type is : %d", type);
+		if (type != LINEAR_TYPE_VEC4 && type != LINEAR_TYPE_EULER)
+			luaL_error(L, "ref object need should be vec4/euler!, type is : %d", type);
 
 		m = glm::mat4x4(glm::quat(glm::radians(*(const glm::vec3*)value)));
 	} else if (rtype == LUA_TTABLE) {
@@ -430,9 +430,13 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index, glm::mat4x4 &m
 			luaL_error(L, "r field should : r={1, 2, 3}, only accept 3 value, %d is give", len);
 		//the table is define as : rotate x-axis(pitch), rotate y-axis(yaw), rotate z-axis(roll)
 
-		glm::vec3 e = glm::radians(glm::vec3(get_table_value(L, 1), get_table_value(L, 2), get_table_value(L, 3)));
-		m = glm::mat4x4(glm::quat(e));
-		
+		glm::vec3 e;
+		for (int ii = 0; ii < 3; ++ii)
+			e[ii] = get_table_value(L, ii + 1);		
+
+		// be careful here, glm::quat(euler_angles) result is different from eulerAngleXYZ()
+		// keep the same order with glm::quat
+		m = glm::mat4x4(glm::quat(glm::radians(e)));	
 	} else {
 		m = glm::mat4x4(1.f);
 	}
@@ -1149,6 +1153,29 @@ convert_viewdir_to_rotation(lua_State *L, struct lastack *LS){
 }
 
 static inline void
+matrix_decompose(const glm::mat4x4 &m, glm::vec4 &scale, glm::vec4 &rot, glm::vec4 &trans) {
+	trans = m[3];
+
+	for (int ii = 0; ii < 3; ++ii)
+		scale[ii] = glm::length(m[ii]);
+
+	if (scale.x == 0 || scale.y == 0 || scale.z == 0) {
+		rot.x = 0;
+		rot.y = 0;
+		rot.z = 0;
+		return;
+	}
+
+	glm::mat3x3 rotMat(m);
+	for (int ii = 0; ii < 3; ++ii) {
+		rotMat[ii] /= scale[ii];		
+	}
+
+
+	rot = glm::vec4(glm::degrees(glm::eulerAngles(glm::quat_cast(rotMat))), 0);
+}
+
+static inline void
 split_mat_to_srt(lua_State *L, struct lastack *LS){
 	int64_t id = pop(L, LS);
 	int type;
@@ -1157,19 +1184,12 @@ split_mat_to_srt(lua_State *L, struct lastack *LS){
 		luaL_error(L, "split operation '~' is only valid for mat4 type, type is : %d", type);
 	
 	const glm::mat4x4 *mat = (const glm::mat4x4 *)v;
-	glm::vec3 scale, translate, skew;
-	glm::vec4 prespective;
-	glm::quat rotation;
-
-	glm::decompose(*mat, scale, rotation, translate, skew, prespective);
-
-	glm::vec4 angles(glm::degrees(glm::eulerAngles(rotation)), 0);
-	glm::vec4 t(translate, 0);
-	glm::vec4 s(scale, 0);
-
-	lastack_pushvec4(LS, &t.x);
-	lastack_pushvec4(LS, &angles.x);
-	lastack_pushvec4(LS, &s.x);
+	glm::vec4 scale(1, 1, 1, 0), rotation(0, 0, 0, 0), translate(0, 0, 0, 0);
+	matrix_decompose(*mat, scale, rotation, translate);
+	
+	lastack_pushvec4(LS, &translate.x);
+	lastack_pushvec4(LS, &rotation.x);
+	lastack_pushvec4(LS, &scale.x);	
 }
 
 

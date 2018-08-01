@@ -189,7 +189,7 @@ local function update_contorller(ot, ms)
 			update_transform(controller, obj_eid)
 		end
 
-		controller:show(bshow)
+		controller:show(bshow)		
     end
 end
 
@@ -298,6 +298,9 @@ local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axisme
 		properties.u_color = {type="color", name="color", value=cu.deep_copy(color)}
 		obj.can_render.visible = false
 		namemapper[k] = eid
+
+		-- print("axis-base object : ", obj.name.n)
+		-- mu.print_srt(obj, 1)
 	end
 	return hie_eid
 end
@@ -497,6 +500,26 @@ local function add_rotator_entities(ms, colors)
 		
 		local e = world[self.root]
 		return next, e.hierarchy_name_mapper.v, nil
+	end
+
+	function controllers:print()
+		local rooteid = self.root
+		local root = world[rooteid]
+
+		print("name : ", root.name)
+		print("position : ", root.position.v)
+		print("rotation : ", root.rotation.v)
+
+		local mapper = root.hierarchy_name_mapper.v
+
+		for name, eid in ipairs(mapper) do
+			local e = world[eid]
+			print("\tchild name : ", e.name.n)
+			print("\tattach node name : ", name)
+
+			print("\ttransform : ")
+			mu.print_srt(e, 2)
+		end
 	end
 
 	function controllers:show(visible)		
