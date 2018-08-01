@@ -184,12 +184,13 @@ local function HandleResponse(resp_table)
             if cat == "Script" then
                 local new_log_value = log_table[2]
                 new_log_value = new_log_value .. "\n"
-
+            --todo temperary disable
+                --[[
                 script_text.value = script_text.value .. new_log_value
                 local pos = iup.TextConvertLinColToPos(script_text,  script_text.linecount, 0)
                 script_text.caretpos = pos
                 script_text.scrolltopos = pos
-
+--]]
             elseif cat == "Bgfx" then
                 local new_log_value = log_table[2]
                 new_log_value = new_log_value .. "\n"
@@ -212,7 +213,7 @@ local function HandleResponse(resp_table)
                 local cpu_timer = log_table[3]
 
                 fps_label = "cpu time: "..cpu_timer
-                --print("Get fps", gpu_timer, cpu_timer)
+                print("Get fps", gpu_timer, cpu_timer)
             else
                 --for now ignore other category
             end
@@ -246,13 +247,16 @@ local function HandleResponse(resp_table)
             --decompress it and show the image
             local data, width, height = lodepng.decode_png(encode_data)
 
-            assert(width > 0 and height > 0 and #data > 0)
+            print("decode screenshot data", width, height, #data)
+            if width > 0 and height > 0 and #data > 0 then
+                --assert(width > 0 and height > 0 and #data > 0)
+                print("get screenshot", width, height, #data)
 
-            print("get screenshot", width, height, #data)
-
-            local nkatlas = nk.loadImageFromMemory(data,width,height,#data/width/height)
-            nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h
-
+                local nkatlas = nk.loadImageFromMemory(data,width,height,#data/width/height)
+                nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h
+            else
+                --todo handle decode error
+            end
         else
             print("resp " .. v[1] .. " not support yet")
         end
@@ -275,7 +279,6 @@ dlg.usersize = nil
 
 local time_stamp = 0.0
 local function UpdateSimpad()
-
     local time_now = os.clock()
     local time_step = time_now - time_stamp;
     if time_step > 1.0 then

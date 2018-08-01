@@ -254,7 +254,7 @@ function server:client_request(id)
         return
     end
 
-    print("data", str)
+    --print("data", str)
     local obj = self.clients[id]
     local reading = obj.reading .. str
     local off = 1
