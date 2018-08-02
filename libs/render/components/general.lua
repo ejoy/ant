@@ -56,9 +56,7 @@ ecs.component "mesh" {
 
 			if v ~= "" then
 				assert(comp.assetinfo == nil)
-				comp.assetinfo = asset.load(v)
-			else
-				dddddd = 0
+				comp.assetinfo = asset.load(v)			
 			end
 			return v
 		end

@@ -5,7 +5,7 @@ path.__index = path
 
 
 function path.remove_ext(name)
-    local path, ext = name:match("(.+)%.([%w_]+)$")
+    local path, ext = name:match("(.+)%.([%w_-]+)$")
     if ext ~= nil then
         return path
     end
@@ -14,14 +14,13 @@ function path.remove_ext(name)
 end
 
 function path.ext(name)
-    local ext = name:match(".+%.([%w_]+)$")
+    local ext = name:match(".+%.([%w_-]+)$")
     return ext
 end
 
 function path.replace_ext(name, ext)
-    local pp = path.remove_ext(name)
-    local firstchar = ext[1]
-    if firstchar ~= '.' then
+    local pp = path.remove_ext(name)    
+    if ext:sub(1, 1) ~= '.' then
         pp = pp .. '.'
     end
 
@@ -29,21 +28,46 @@ function path.replace_ext(name, ext)
 end
 
 function path.has_parent(pp)
-    return pp:match("^[%w_.]+$") == nil
+    return pp:match("^[%w_.-]+$") == nil
 end
 
 function path.filename(name)
-    return name:match("[/\\]([%w_.]+)$")    
+    return name:match("[/\\]([%w_.-]+)$")    
 end
 
 function path.filename_without_ext(name)
-    local fn = name:match("[/\\]([%w_]+)%.[%w_]+$")
+    local fn = name:match("[/\\]([%w_]+)%.[%w_-]+$")
     return fn
 end
 
 function path.parent(fullname)
-    local path = fullname:match("(.+)[/\\][%w_.]+$")
+    local path = fullname:match("(.+)[/\\][%w_.-]+$")
     return path
+end
+
+function path.normalize(fullname)
+	local t = {}	
+	for m in fullname:gmatch("([^/\\]+)[/\\]?") do
+		if m == ".." and next(t) then
+			table.remove(t, #t)
+		elseif m ~= "." then
+			table.insert(t, m)
+		end		
+	end
+
+	return table.concat(t, "/")
+end
+
+function path.remove_filename(fullname)
+	if fullname:sub(1, 1) == '.' then
+		fullname = fullname:sub(2)
+	end
+
+	local idx = fullname:find('.', 1, true)
+	if idx == nil then
+		return fullname
+	end
+	return path.parent(fullname)
 end
 
 function path.is_mem_file(name)
@@ -81,13 +105,18 @@ end
 
 function path.trim_slash(fullpath)
     local m = fullpath:match("^%s*[/\\]*(.+)[/\\]%s*$")
-    return m and m or fullpath
+    return m or fullpath
 end
 
 function path.create_dirs(fullpath)    
-    fullpath = path.trim_slash(fullpath)
+	fullpath = path.normalize(
+		path.remove_filename(
+			path.trim_slash(fullpath)
+		)
+	)
+	
     local cwd = fs.currentdir()
-    for m in fullpath:gmatch("[%w_]+") do
+    for m in fullpath:gmatch("[%w_-]+") do
         cwd = path.join(cwd, m)
         if not fs.exist(cwd) then
             fs.mkdir(cwd)

@@ -10,8 +10,11 @@ extern "C" {
 #include <ozz/animation/runtime/local_to_model_job.h>
 #include <ozz/base/maths/soa_transform.h>
 #include <ozz/base/io/archive.h>
+#include <ozz/base/io/stream.h>
+
 
 #include <cstring>
+#include <functional>
 
 using namespace ozz::animation::offline;
 
@@ -25,7 +28,6 @@ struct hierarchy {
 
 struct hierarchy_build_data {
 	ozz::animation::Skeleton *skeleton;
-	std::vector<ozz::math::Float4x4> matrices;
 };
 
 static int
@@ -185,9 +187,58 @@ lbuild(lua_State *L){
 		return 1;
 	}
 
+	if (type == LUA_TSTRING) {
+		const char* filepath = lua_tostring(L, 1);
+		struct hierarchy_build_data *builddata = create_builddata_userdata(L);
+		builddata->skeleton = ozz::memory::default_allocator()->New<ozz::animation::Skeleton>();
+		ozz::io::File ff(filepath, "r");
+		ozz::io::IArchive ia(&ff);
+		ia >> *builddata->skeleton;
+
+		return 1;
+	}
+
 	luaL_error(L, "not support type, %d", type);
 	return 0;
 }
+
+using serialize_skeop = std::function<void(const char*, struct hierarchy_build_data*)>;
+
+static inline int 
+serialize_skeleton(lua_State *L, serialize_skeop op) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	luaL_checktype(L, 2, LUA_TSTRING);
+
+	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
+	if (builddata->skeleton == nullptr) {
+		luaL_error(L, "data not build!");
+	}
+
+	const char* filepath = lua_tostring(L, 2);
+	op(filepath, builddata);
+	return 0;
+}
+
+
+static int
+lsave_skeleton(lua_State *L) {
+	return serialize_skeleton(L, [](auto filepath, auto builddata) {
+		ozz::io::File ff(filepath, "w");
+
+		ozz::io::OArchive oa(&ff);
+		oa << *builddata->skeleton;
+	});
+}
+
+static int
+lload_skeleton(lua_State *L) {
+	return serialize_skeleton(L, [](auto filepath, auto builddata) {
+		ozz::io::File ff(filepath, "r");
+		ozz::io::IArchive ia(&ff);
+		ia >> *(builddata->skeleton);
+	});
+}
+
 
 static int
 ldelhtree(lua_State *L) {
@@ -477,6 +528,45 @@ lhnodeget(lua_State *L) {
 	}
 }
 
+using serialize_op = std::function<void(const char*, struct hierarchy_tree *tree)>;
+
+static inline int
+serialize_rawskeleton(lua_State *L, serialize_op op) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	luaL_checktype(L, 2, LUA_TSTRING);
+
+	struct hierarchy * hnode = (struct hierarchy *)lua_touserdata(L, 1);
+	if (hnode->joint != NULL) {
+		luaL_error(L, "save function need hierarchy root node");
+	}
+
+	struct hierarchy_tree * tree = get_tree(L, 1);
+
+	const char* filepath = lua_tostring(L, 2);
+	op(filepath, tree);
+	return 0;
+}
+
+static int
+lsave_rawskeleton(lua_State *L) {
+	return serialize_rawskeleton(L, [](const char* filepath, struct hierarchy_tree *tree) {
+		ozz::io::File ff(filepath, "w");
+		ozz::io::OArchive oa(&ff);
+		oa << *tree->skl;
+	});
+
+	return 0;
+}
+
+static int
+lload_rawskeleton(lua_State *L) {
+	return serialize_rawskeleton(L, [](const char* filepath, struct hierarchy_tree *tree) {
+		ozz::io::File ff(filepath, "r");
+		ozz::io::IArchive ia(&ff);
+		ia >> *tree->skl;
+	});
+}
+
 static int
 lnewhierarchy(lua_State *L) {
 	struct hierarchy * node = (struct hierarchy *)lua_newuserdata(L, sizeof(*node));
@@ -531,7 +621,11 @@ luaopen_hierarchy(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "new", lnewhierarchy },
 		{ "invalid", linvalidnode },
-		{ "build", lbuild},		
+		{ "build", lbuild},
+		{ "save", lsave_skeleton},
+		{ "load", lload_skeleton},
+		{ "save_editable", lsave_rawskeleton },
+		{ "load_editable", lload_rawskeleton },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
