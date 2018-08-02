@@ -52,14 +52,14 @@ vec4 get_ambient_color(float ambientMode,vec3 normal)
 
 void main()
 {
-	vec2 tc = vec2(v_tex0.x,1- v_tex0.y);
+	vec2 tc = vec2(v_tex0.x, v_tex0.y);
 
 	vec4 ntexdata = texture2D(s_normal, tc);	
 	vec3 normal = vec3(ntexdata.xy, 0.0);
 	normal.xy = normal.xy * 2.0 - 1.0;
 	normal.z = sqrt( (1.0- saturate(dot(normal.xy, normal.xy))) );
 	float gloss = ntexdata.z;	
-	
+
 	// projection back 
 	float pX = normal.x/(1.0 + normal.z);
 	float pY = normal.y/(1.0 + normal.z);
