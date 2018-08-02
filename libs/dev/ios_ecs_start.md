@@ -1,6 +1,6 @@
 ## ios_ecs启动
 
-+ iOS端通过USB线和PC通信是通过libimobiledevice来建立连接的,因此在PC上需要编译对应的dll库
++ iOS端通过USB线和PC通信是通过libimobiledevice来建立连接的,因此在PC上需要编译对应的dll库, 这几个库都放到了ant3rd中,需要同步一下
 	+ **libimobiledevice:** git clone https://github.com/libimobiledevice/libimobiledevice.git
 	+ **libplist:** git clone https://github.com/libimobiledevice/libplist.git
 	+ **libusbmuxd:** git clone https://github.com/libimobiledevice/libusbmuxd.git
@@ -11,11 +11,11 @@
 	+ 结果会保存在各个库文件目录下的src/.libs中
 	+ 将上面三个库编译完成后,编译ant/clibs/libimobiledevice
 		
-+ 另外还有一个库需要编译,是用于png格式encode和decode的库,叫做lodepng,放在ant/clib/lodepng中
++ 另外还有一个库需要编译,是用于png格式encode和decode的库lodepng,放在ant/clib/lodepng中
 
 **至此,需要的第三方库就编译完成了**
 
-在运行前,需要手动调整一些东西(后续会逐个进行清除)
+在运行前,目前需要手动调整一些东西,后续会进行调整和优化
 + 在libs/scene/util.lua中,需要利用asset.insert_searchdir()添加本地资源目录的路径
 
 + 所有用到的资源.material文件,如果shader是使用文本文件.sc格式的,需要改用bin格式的文件,即删掉".sc".如果该shader没有.bin格式的需要利用shaderc编译iOS格式. 编译好的文件放在shader资源下的essl目录. 
@@ -25,7 +25,7 @@
 	+ terrain
 	+ ui	
 	+ 其他的shader暂时需要自己编译
-+ 其他资源也需要注意路径,搜索会从上面添加的资源路径搜索(目前就是地形那块我把资源路径前面的assets/build都去除了,相关资源也需要修改)
++ 其他资源也需要注意路径,搜索会从上面添加的资源路径搜索(目前就是地形那块我把资源路径前面的assets/build都去除了,相关资源也修改了)
 
 
 + 使用流程
@@ -58,7 +58,7 @@
 
 + 后续优化
 	+ 文件系统针对已经cache的文件向server定时检查,并且更新
-	+ 优化exist检查,避免同一个文件重复去server做exist检查的操作,会送出很多消息,也会做很多hash计算.做一个cache把当此运行的所有检查过的文件缓存起来
+	+ 优化exist检查,避免同一个文件重复去server做exist检查的操作,会送出很多消息,也会做很多hash计算.考虑做一个cache把当此运行的所有检查过的文件缓存起来
 	+ 将上一次的状态缓存起来,包括工程目录的路径,自动打开上一次打开的项目等等
 	+ server上指定resource_dir,用于assets的搜寻路径
 	
