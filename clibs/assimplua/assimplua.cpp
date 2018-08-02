@@ -500,7 +500,7 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene, const char
 				if (mesh->HasTextureCoords(0))
 					elemsize += sizeof(aiVector3D);
 				if (mesh->HasTangentsAndBitangents())
-					elemsize += sizeof(aiVertor3D);
+					elemsize += sizeof(aiVector3D);
 				return elemsize * mesh->mNumVertices;
 			};
 
