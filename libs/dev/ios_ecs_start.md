@@ -1,6 +1,6 @@
 ## ios_ecs启动
 
-+ iOS端通过USB线和PC通信是通过libimobiledevice来建立连接的,因此在PC上需要编译对应的dll库, 这几个库都放到了ant3rd中,需要同步一下
++ iOS端通过USB线和PC通信是通过libimobiledevice来建立连接的,因此在PC上需要编译对应的dll库,**按顺序应该是libplist->libusbmuxd->libimobiledevice**, 这几个库都放到了ant3rd中,需要同步一下
 	+ **libimobiledevice:** git clone https://github.com/libimobiledevice/libimobiledevice.git
 	+ **libplist:** git clone https://github.com/libimobiledevice/libplist.git
 	+ **libusbmuxd:** git clone https://github.com/libimobiledevice/libusbmuxd.git
