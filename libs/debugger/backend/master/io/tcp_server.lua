@@ -10,16 +10,6 @@ local queue = {}
 local m = {}
 function m.start(ip, port)
     listen = assert(lsocket.bind(ip, port))
-    socket.init(fd, function()
-        while true do
-            local msg = proto.recv(fd:recv(), stat)
-            if msg then
-                queue[#queue + 1] = msg
-            else
-                break
-            end
-        end
-    end)
 end
 
 function m.update()
@@ -32,6 +22,16 @@ function m.update()
         return false
     end
     fd = assert(listen:accept())
+    socket.init(fd, function()
+        while true do
+            local msg = proto.recv(fd:recv(), stat)
+            if msg then
+                queue[#queue + 1] = msg
+            else
+                break
+            end
+        end
+    end)
     return true
 end
 
