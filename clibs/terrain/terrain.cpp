@@ -492,6 +492,7 @@ void update_terrain_mesh( struct TerrainData_t* terData )
 	printf("c terrain:%d,%d,begin create mesh",width,height);
 	// printf("c terrain: width = %d,height=%d\n",width,height);
     // terrain 本身具备最多的 ATTRIB，用户可以选则全部或部分，实现一定的可定制
+
 	for (uint32_t y = 0; y < height; y++)
 	{
 		for (uint32_t x = 0; x < width; x++)
@@ -502,9 +503,9 @@ void update_terrain_mesh( struct TerrainData_t* terData )
 				struct vec3* vert = (struct vec3*) &terData->vertices[ terData->vertexCount*stride + offset ];
 				vert->x = (float) x*xspace;
 				if( nBytes==1 )
-					vert->y = (float) *(uint8_t*)&terData->heightmap[ ( ( (height-1-y) * width) + ((width-1)-x))*nBytes];  //8 or bits
+					vert->y = (float) *(uint8_t*)&terData->heightmap[ ( ( ( /*height-1-*/ y) * width) + ( /*(width-1)-*/ x))*nBytes];  //8 or bits
 				else if( nBytes==2 ) {
-					vert->y = (float) *(uint16_t*)&terData->heightmap[ ( ( (height-1-y) * width) + ( (width-1)-x) )*nBytes];  //8 or bits
+					vert->y = (float) *(uint16_t*)&terData->heightmap[ ( ( ( /*height-1-*/ y) * width) + (/* (width-1)-*/x) )*nBytes];  //8 or bits
 					//vert->y = word_btol(vert->y);
 				}
 				vert->y *= yscale;
@@ -516,8 +517,8 @@ void update_terrain_mesh( struct TerrainData_t* terData )
 				int offset = terData->vdecl->offset[ BGFX_ATTRIB_TEXCOORD0 ];
 				struct vec2* vert = (struct vec2*) &terData->vertices[ terData->vertexCount*stride + offset ];
 
-				vert->u = (x + 0.5f) / width * -uv0scale;
-				vert->v = (y + 0.5f) / height * uv0scale;
+				vert->u = (x + 0.5f) / width * uv0scale;
+				vert->v = (y + 0.5f) / height * -uv0scale;
 			}
 			//uv1 - for mask,color maps
 		    if( terData->vdecl->attributes[ BGFX_ATTRIB_TEXCOORD1 ] != UINT16_MAX ) {
@@ -525,8 +526,8 @@ void update_terrain_mesh( struct TerrainData_t* terData )
 				int offset = terData->vdecl->offset[ BGFX_ATTRIB_TEXCOORD1 ];
 				struct vec2* vert = (struct vec2*) &terData->vertices[ terData->vertexCount*stride + offset ];
 
-				vert->u = (width-1-x + 0.01f) / width * uv1scale;
-				vert->v = (y + 0.01f) / height * uv1scale;
+				vert->u = ( /*width-1-*/ x + 0.01f) / width * uv1scale;
+				vert->v = (y + 0.01f) / height * -uv1scale;
 		    }
 			//normal
 		  	if( terData->vdecl->attributes[BGFX_ATTRIB_NORMAL] != UINT16_MAX ) {

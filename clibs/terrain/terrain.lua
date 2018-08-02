@@ -68,13 +68,12 @@ end
 
 function Terrain:set_uniform(name,value)
 	self.render_ctx.uniform_values[name] = value 
-	-- bgfx.set_uniform(self.render_ctx.uniforms[name],value )
 end 
 
+-- sample shader 
+-- shader src     D:\Work\ant\assets\shaders\src\terrain\*.sc
+-- shader dst bin  D:\Work\ant\assets\shaders\dx11\terrain\*.bin
 function Terrain:load_program( vs,fs )
-	-- sample shader 
-	-- shader src     D:\Work\ant\assets\shaders\src\terrain\*.sc
-	-- shader dst bin  D:\Work\ant\assets\shaders\dx11\terrain\*.bin
 	self.render_ctx.prog = shaderMgr.programLoad(vs,fs) 
 end 
 
@@ -498,6 +497,10 @@ end
 
 
 return Terrain
+
+
+
+
 
 
 
