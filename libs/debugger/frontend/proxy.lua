@@ -1,7 +1,7 @@
 local client = require 'debugger.frontend.client'
 local server_factory = require 'debugger.frontend.server'
 local parser = require 'debugger.parser'
-local fs = require 'cppfs'
+local fs = require 'debugger.filesystem'
 local server
 local seq = 0
 local initReq
@@ -51,8 +51,8 @@ local function create_terminal(args, port)
         command[#command + 1] = args.runtimeExecutable
         command[#command + 1] = args.runtimeArgs
     elseif args.luaexe then
-        local luaexe = fs.path(args.luaexe)
-        command[#command + 1] = luaexe:string()
+        command[#command + 1] = args.luaexe
+
         if args.path then
             command[#command + 1] = '-e'
             command[#command + 1] = ("package.path=[[%s]];"):format(args.path)
@@ -87,7 +87,7 @@ local function create_terminal(args, port)
     request_runinterminal {
         kind = args.console == 'integratedTerminal' and 'integrated' or 'external',
         title = 'Lua Debug',
-        cwd = args.cwd or luaexe:remove_filename():string(),
+        cwd = args.cwd or fs.remove_filename(command[1]),
         env = args.env,
         args = command,
     }
