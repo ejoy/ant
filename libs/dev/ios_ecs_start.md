@@ -4,7 +4,7 @@
 	+ **libimobiledevice:** git clone https://github.com/libimobiledevice/libimobiledevice.git
 	+ **libplist:** git clone https://github.com/libimobiledevice/libplist.git
 	+ **libusbmuxd:** git clone https://github.com/libimobiledevice/libusbmuxd.git
-	+ 将这三个库拉下来编译
+	+ 将这三个库拉下来编译.直接编译的话,可能会提示有些指令找不到,需要通过pacman安装一些包,大部分在base-devel里面都有,可以选择性的安装
 		+ ./autogen.sh
 		+ make
 		+ sudo make install
