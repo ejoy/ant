@@ -63,14 +63,34 @@ function add_entity_sys:init()
 		local lentity = world[leid]
 
 		local lightcomp = lentity.light.v
-		lightcomp.color = {1, 1, 1, 1}
-		lightcomp.intensity = 1.2
+		lightcomp.color = {1,1,1,1}
+		lightcomp.intensity = 2.0
 
-		ms(lentity.rotation.v, {50, -30, 0}, "=")
+		--ms(lentity.rotation.v, {50, -30, 0}, "=")
+		--ms(lentity.rotation.v, {123.4, 234.22,28.2}, "=")
+		ms(lentity.rotation.v, {123.4, -34.22,-28.2}, "=")
 		ms(lentity.position.v, {2, 5, 2}, "=")
-		ms(lentity.scale.v, {0.01, 0.01, 0.01}, "=")
+		ms(lentity.scale.v, {1, 1, 1}, "=")
 
 		lentity.name.n = "directional_light"
+
+
+		-- add tested for ambient 
+		local am_eid = lu.create_ambient_light_entity(world)
+		local am_entity = world[ am_eid]
+		local ambient_comp = am_entity.ambient_light.data
+		ambient_comp.mode = "color" -- "gradient"
+		ambient_comp.skycolor = {1,1,1,1}
+		ambient_comp.midcolor  = {0.9,0.9,1,1}
+		ambient_comp.groundcolor  = {0.60,0.74,0.68,1}
+		--ambient_comp.skycolor = {0.8,0.8,0.8,1} --{0.28,0,1,1}
+		--ambient_comp.midcolor = {0,1,0,1}
+		--ambient_comp.groundcolor = {0,0,1,1}
+		--ambient_comp.factor = 0.25
+		lentity.name.n = "ambient_light"
+		print("-------ambient entity  "..am_entity.name.n..'  '..am_eid)
+
+
 
 		component_util.load_mesh(lentity, "sphere.mesh")
 		local sphere_fn = "mem://light_bulb.material"
@@ -127,11 +147,10 @@ function add_entity_sys:init()
 	-- 	--component_util.load_material(pochuan, {"bunny.material"})
 	-- end
 
-
+    -- 测试场景时，打开 PVPScene 加载BnH模型
     local PVPScene = require "modelloader.PVPScene"
-    PVPScene.init(world, component_util, ms)
+	PVPScene.init(world, component_util, ms)
 
-    print("do pvp scene")
 	-- do
 	-- 	local stone_eid = world:new_entity("position", "rotation", "scale",
 	-- 	"can_render", "mesh", "material",

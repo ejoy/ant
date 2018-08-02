@@ -96,8 +96,8 @@ function util.create_persistent_matrix(ms, value)
 end
 
 function util.identify_transform(ms, entity)
-	ms(	entity.scale.v, {1, 1, 1}, "=",
-	entity.rotation.v, {0, 0, 0}, "=",
+	ms(	entity.scale.v, {1, 1, 1, 0}, "=",
+	entity.rotation.v, {0, 0, 0, 0}, "=",
 	entity.position.v, {0, 0, 0, 1}, "=")
 end
 

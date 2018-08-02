@@ -1,6 +1,6 @@
 #pragma once
 
-#include "readerwriterqueue.h"
+#include "queue.h"
 
 struct msg {
     msg(char* s, size_t l)
@@ -11,8 +11,8 @@ struct msg {
     size_t len;
 };
 
-struct msgqueue : public moodycamel::ReaderWriterQueue<msg, 16> {
-    typedef moodycamel::ReaderWriterQueue<msg, 16> mybase;
+struct msgqueue : public blocking_queue<msg> {
+    typedef blocking_queue<msg> mybase;
 
     struct autodelete_msg : public msg {
         autodelete_msg()
@@ -39,18 +39,14 @@ struct msgqueue : public moodycamel::ReaderWriterQueue<msg, 16> {
         if (str && len) {
             msg msg(new char[len], len);
             memcpy(msg.str, str, len);
-            if (!mybase::enqueue(msg)) {
-                throw std::bad_alloc();
-            }
+            mybase::push(msg);
         }
         else {
             msg msg(0, 0);
-            if (!mybase::enqueue(msg)) {
-                throw std::bad_alloc();
-            }
+            mybase::push(msg);
         }
     }
     bool try_pop(autodelete_msg& res) {
-        return mybase::try_dequeue(res);
+        return mybase::try_pop(res);
     }
 };

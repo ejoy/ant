@@ -2,25 +2,94 @@
 
 1. 安装vscode。
 
-2. 安装lua-debug插件（只是暂时借用它的调试前端）
+2. clone https://gz-tea.ejoy.com/zhengweijian.zwj/vscode-ant
+和ant目录平行
+```  
+    |-D:/WORK
+        |- ant
+        |- vscode-ant
+```
+3. 用vscode打开vscode-ant目录，按F5，会启动一个新的vscode，在新的vscode里打开ant目录
 
-3. 添加调试配置launch.json
+4. 添加调试配置launch.json
 
 ```
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lua",
+            "request": "launch",
+            "name": "Editor",
+            "stopOnEntry": true,
+            "runtimeExecutable": "${workspaceRoot}\\bin\\iup.exe",
+            "runtimeArgs": "${workspaceRoot}\\libs\\dbg_main.lua",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "skipFiles": [
+                "libs/debugger/*",
+                "libs/dbg_main.lua"
+            ],
+            "sourceMaps": [
+                [
+                    "./*",
+                    "${workspaceRoot}/*"
+                ]
+            ]
+        },
+        {
+            "type": "lua",
+            "request": "launch",
+            "name": "Launch",
+            "stopOnEntry": true,
+            "runtimeExecutable": "${workspaceRoot}\\bin\\iup.exe",
+            "runtimeArgs": "${workspaceRoot}\\libs\\dev\\Client\\clientwindow.lua",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "skipFiles": [
+                "libs/debugger/*"
+            ],
+            "sourceMaps": [
+                [
+                    "./*",
+                    "${workspaceRoot}/*"
+                ]
+            ]
+        },
         {
             "type": "lua",
             "request": "attach",
-            "name": "TestDebugger",
+            "name": "Attach",
             "stopOnEntry": true,
-            "ip": "localhost", // 调试目标的ip
-            "port": 4278
+            "ip": "localhost",
+            "port": 4278,
+            "skipFiles": [
+                "libs/debugger/*"
+            ],
+            "sourceMaps": [
+                [
+                    "./*",
+                    "${workspaceRoot}/*"
+                ]
+            ]
         }
+    ]
+}
 ```
 
-3. 启动client。windows下的方法为
+5. Attach调试。手动启动被调试目标，如
 
 ```
 .\bin\iup.exe .\libs\dev\Client\clientwindow.lua
 ```
 
-4. F5
+调试配置选择`Attach`，按F5
+
+6. Launch调试
+
+调试配置选择`Launch`，按F5
+
+
+7. Editor调试
+
+调试配置选择`Editor`，按F5

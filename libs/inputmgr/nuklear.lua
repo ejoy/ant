@@ -23,6 +23,11 @@ function map.button(btn, pressed, x, y, status)
 	return 'b', id, pressed, x, y
 end
 
+function map.keypress(x,pressed)
+    local keycode = x 
+	return 'k',keycode,pressed  
+end 
+
 function nkmsg.push(set, msg, ...)
 	local f = map[msg]
 	if f then

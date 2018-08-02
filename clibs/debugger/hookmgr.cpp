@@ -1,0 +1,460 @@
+#include <lua.hpp>
+#include <lstate.h>
+#include <assert.h>
+#include <stdint.h>
+#include <new>
+
+static int HOOK_MGR = 0;
+static int HOOK_CALLBACK = 0;
+static int* DEBUG_HOST = 0;
+
+#define USE_THUNK 1
+#define BPMAP_SIZE (1 << 16)
+
+#if defined(USE_THUNK)
+#include "thunk.h"
+#include "thunk.cpp"
+#endif
+
+#define LOG(...) do { \
+    FILE* f = fopen("dbg.log", "a"); \
+    fprintf(f, __VA_ARGS__); \
+    fclose(f); \
+} while(0)
+
+template <class T>
+static T* checklightudata(lua_State* L, int idx) {
+    luaL_checktype(L, idx, LUA_TLIGHTUSERDATA);
+    return (T*)lua_touserdata(L, idx);
+}
+
+static Proto* ci2proto(CallInfo* ci) {
+    StkId func = ci->func;
+    if (!ttisLclosure(func)) {
+        return 0;
+    }
+    return clLvalue(func)->p;
+}
+
+static lua_State* get_host(lua_State* cL) {
+    if (lua_rawgetp(cL, LUA_REGISTRYINDEX, DEBUG_HOST) != LUA_TLIGHTUSERDATA) {
+        luaL_error(cL, "Must call in debug client");
+    }
+    lua_State* hL = (lua_State*)lua_touserdata(cL, -1);
+    lua_pop(cL, 1);
+    return hL;
+}
+
+static void set_host(lua_State* cL, lua_State* hL) {
+    lua_pushlightuserdata(cL, hL);
+    lua_rawsetp(cL, LUA_REGISTRYINDEX, DEBUG_HOST);
+}
+
+struct hookmgr {
+    enum class BP : uint8_t {
+        None = 0,
+        Break,
+        Ignore,
+    };
+
+    // 
+    // break
+    //
+    BP     break_map[BPMAP_SIZE] = { BP::None };
+    Proto* break_proto[BPMAP_SIZE] = { 0 };
+    int    break_mask = 0;
+
+    size_t break_hash(Proto* p) {
+        return ((uintptr_t(p) >> 5) ^ uintptr_t(p)) % BPMAP_SIZE;
+    }
+    void break_add(lua_State* hL, Proto* p) {
+        int key = break_hash(p);
+        if (break_map[key] == BP::None) {
+            break_map[key] = BP::Break;
+            break_proto[key] = p;
+        }
+        else if (break_proto[key] == p) {
+            break_map[key] = BP::Break;
+        }
+    }
+    void break_del(lua_State* hL, Proto* p) {
+        int key = break_hash(p);
+        if (break_map[key] != BP::Ignore) {
+            break_map[key] = BP::Ignore;
+            break_proto[key] = p;
+        }
+    }
+    void break_open(lua_State* hL, lua_State* cL) {
+        break_update(hL, hL->ci, LUA_HOOKCALL);
+    }
+    void break_close(lua_State* hL) {
+        break_hookmask(hL, 0);
+    }
+    void break_closeline(lua_State* hL) {
+        break_hookmask(hL, LUA_MASKCALL | LUA_MASKRET);
+    }
+    bool break_has(lua_State* hL, Proto* p, int event) {
+        if (!p) {
+            return false;
+        }
+        int key = break_hash(p);
+        switch (break_map[key]) {
+        case BP::None: {
+            if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+                lua_pop(cL, 1);
+                return false;
+            }
+            set_host(cL, hL);
+            lua_pushstring(cL, "newproto");
+            lua_pushlightuserdata(cL, p);
+            lua_pushinteger(cL, event != LUA_HOOKRET? 0: 1);
+            if (lua_pcall(cL, 3, 1, 0) != LUA_OK) {
+                lua_pop(cL, 1);
+                return false;
+            }
+            if (!lua_toboolean(cL, -1)) {
+                break_del(hL, p);
+                return false;
+            }
+            break_add(hL, p);
+            return true;
+        }
+        case BP::Break:
+            return true;
+        default:
+        case BP::Ignore:
+            return break_proto[key] != p;
+        }
+    }
+    void break_update(lua_State* hL, CallInfo* ci, int event) {
+        if (break_has(hL, ci2proto(ci), event)) {
+            break_hookmask(hL, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE);
+        }
+        else {
+            break_hookmask(hL, LUA_MASKCALL | LUA_MASKRET);
+        }
+    }
+    void break_hook(lua_State* hL, lua_Debug* ar) {
+        if (!break_mask) {
+            return;
+        }
+        switch (ar->event) {
+        case LUA_HOOKCALL:
+        case LUA_HOOKTAILCALL:
+            break_update(hL, ar->i_ci, ar->event);
+            return;
+        case LUA_HOOKRET:
+            break_update(hL, ar->i_ci->previous, ar->event);
+            return;
+        }
+    }
+    void break_hookmask(lua_State* hL, int mask) {
+        if (break_mask != mask) {
+            break_mask = mask;
+            updatehookmask(hL);
+        }
+    }
+
+    // 
+    // step
+    //
+    lua_State* stepL = 0;
+    int step_current_level = 0;
+    int step_target_level = 0;
+    int step_mask = 0;
+    
+    // TODO
+    static int stacklevel(lua_State* L) {
+        lua_Debug ar;
+        int n;
+        for (n = 0; lua_getstack(L, n + 1, (lua_Debug*)&ar) != 0; ++n) {
+        }
+        return n;
+    }
+    static int stacklevel(lua_State* L, int pos) {
+        lua_Debug ar;
+        if (lua_getstack(L, pos, &ar) != 0) {
+            for (; lua_getstack(L, pos + 1, &ar) != 0; ++pos) {
+            }
+        }
+        else if (pos > 0) {
+            for (--pos; pos > 0 && lua_getstack(L, pos, &ar) == 0; --pos) {
+            }
+        }
+        return pos;
+    }
+    void step_in(lua_State* hL) {
+        step_current_level = 0;
+        step_target_level = 0;
+        stepL = 0;
+        step_hookmask(hL, LUA_MASKLINE);
+    }
+    void step_out(lua_State* hL) {
+        step_current_level = stacklevel(hL);
+        step_target_level = step_current_level - 1;
+        stepL = hL;
+        step_hookmask(hL, LUA_MASKCALL | LUA_MASKRET);
+    }
+    void step_over(lua_State* hL) {
+        step_current_level = stacklevel(hL);
+        step_target_level = step_current_level;
+        stepL = hL;
+        step_hookmask(hL, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE);
+    }
+    void step_cancel(lua_State* hL) {
+        step_current_level = 0;
+        step_target_level = 0;
+        stepL = 0;
+        step_hookmask(hL, 0);
+    }
+    void step_hook(lua_State* hL, lua_Debug* ar) {
+        if (stepL != hL) {
+            return;
+        }
+        switch (ar->event) {
+        case LUA_HOOKCALL:
+        case LUA_HOOKTAILCALL:
+            step_current_level++;
+            if (step_current_level > step_target_level) {
+                step_hookmask(hL, LUA_MASKCALL | LUA_MASKRET);
+            }
+            else {
+                step_hookmask(hL, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE);
+            }
+            return;
+        case LUA_HOOKRET:
+            step_current_level = stacklevel(hL, step_current_level) - 1;
+            if (step_current_level > step_target_level) {
+                step_hookmask(hL, LUA_MASKCALL | LUA_MASKRET);
+            }
+            else {
+                step_hookmask(hL, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE);
+            }
+            return;
+        default:
+            break;
+        }
+    }
+    void step_hookmask(lua_State* hL, int mask) {
+        if (step_mask != mask) {
+            step_mask = mask;
+            updatehookmask(hL);
+        }
+    }
+
+    //
+    // common
+    //
+    lua_State* cL = 0;
+#if defined(USE_THUNK)
+    shellcode sc_hook = { 0 };
+#endif
+    hookmgr(lua_State* L)
+        : cL(L)
+#if defined(USE_THUNK)
+        , sc_hook(thunk_create_hook(
+            reinterpret_cast<intptr_t>(this),
+            reinterpret_cast<intptr_t>(&hook_callback)
+        ))
+#endif
+    { }
+#if defined(USE_THUNK)
+    ~hookmgr() {
+        thunk_destory(sc_hook);
+    }
+#endif
+    void hook(lua_State* hL, lua_Debug* ar) {
+        step_hook(hL, ar);
+        break_hook(hL, ar);
+        if (ar->event == LUA_HOOKLINE) {
+            if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+                lua_pop(cL, 1);
+                return;
+            }
+            set_host(cL, hL);
+            if (step_mask & LUA_MASKLINE) {
+                lua_pushstring(cL, "step");
+                if (lua_pcall(cL, 1, 0, 0) != LUA_OK) {
+                    lua_pop(cL, 1);
+                    return;
+                }
+            }
+            else {
+                lua_pushstring(cL, "bp");
+                lua_pushinteger(cL, ar->currentline);
+                if (lua_pcall(cL, 2, 0, 0) != LUA_OK) {
+                    lua_pop(cL, 1);
+                    return;
+                }
+            }
+        }
+    }
+    void updatehookmask(lua_State* hL) {
+        int mask = break_mask | step_mask;
+        if (mask) {
+#if defined(USE_THUNK)
+            lua_sethook(hL, (lua_Hook)sc_hook.data, mask, 0);
+#else
+            lua_sethook(hL, hook_callback_raw, mask, 0);
+#endif
+        }
+        else {
+            lua_sethook(hL, NULL, 0, 0);
+        }
+    }
+    void setcoroutine(lua_State* hL) {
+        updatehookmask(hL);
+    }
+    static hookmgr* get_self(lua_State* L, int idx) {
+        return (hookmgr*)lua_touserdata(L, idx);
+    }
+    static void hook_callback(hookmgr* mgr, lua_State* hL, lua_Debug* ar) {
+        mgr->hook(hL, ar);
+    }
+#if !defined(USE_THUNK)
+    static void hook_callback_raw(lua_State* hL, lua_Debug* ar) {
+        if (LUA_TLIGHTUSERDATA != lua_rawgetp(hL, LUA_REGISTRYINDEX, &HOOK_MGR)) {
+            lua_pop(hL, 1);
+            lua_sethook(hL, NULL, 0, 0);
+            return;
+        }
+        hook_callback(get_self(hL, -1), hL, ar);
+        lua_pop(hL, 1);
+    }
+#endif
+};
+
+static int start(lua_State* cL) {
+    DEBUG_HOST = checklightudata<int>(cL, 1);
+#if !defined(USE_THUNK)
+    lua_State* hL = get_host(cL);
+    lua_pushlightuserdata(hL, hookmgr::get_self(cL, lua_upvalueindex(1)));
+    lua_rawsetp(hL, LUA_REGISTRYINDEX, &HOOK_MGR);
+#endif
+    return 0;
+}
+
+static int sethook(lua_State* L) {
+    luaL_checktype(L, 1, LUA_TFUNCTION);
+    lua_settop(L, 1);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &HOOK_CALLBACK);
+    return 0;
+}
+
+static int activeline(lua_State* L) {
+    lua_State* hL = get_host(L);
+    int level = luaL_checkinteger(L, 1);
+    lua_Debug ar;
+    if (lua_getstack(hL, level, &ar) == 0) {
+        return 0;
+    }
+    if (lua_getinfo(hL, "L", &ar) == 0) {
+        lua_pop(hL, 1);
+        return 0;
+    }
+    lua_newtable(L);
+    lua_pushnil(hL);
+    while (lua_next(hL, -2)) {
+        lua_pop(hL, 1);
+        lua_pushinteger(L, lua_tointeger(hL, -1));
+        lua_pushboolean(L, 1);
+        lua_rawset(L, -3);
+    }
+    lua_pop(hL, 1);
+    return 1;
+}
+
+static int stacklevel(lua_State* L) {
+    lua_State* hL = get_host(L);
+    lua_pushinteger(L, hookmgr::stacklevel(hL));
+    return 1;
+}
+
+#define hookmgr_s() (*hookmgr::get_self(L, lua_upvalueindex(1)))
+
+static int setcoroutine(lua_State* L) {
+    hookmgr_s().setcoroutine(checklightudata<lua_State>(L, 1));
+    return 0;
+}
+
+static int break_add(lua_State* L) {
+    hookmgr_s().break_add(get_host(L), checklightudata<Proto>(L, 1));
+    return 0;
+}
+
+static int break_del(lua_State* L) {
+    hookmgr_s().break_del(get_host(L), checklightudata<Proto>(L, 1));
+    return 0;
+}
+
+static int break_open(lua_State* L) {
+    hookmgr_s().break_open(get_host(L), L);
+    return 0;
+}
+
+static int break_close(lua_State* L) {
+    hookmgr_s().break_close(get_host(L));
+    return 0;
+}
+
+static int break_closeline(lua_State* L) {
+    hookmgr_s().break_closeline(get_host(L));
+    return 0;
+}
+
+static int step_in(lua_State* L) {
+    hookmgr_s().step_in(get_host(L));
+    return 0;
+}
+
+static int step_out(lua_State* L) {
+    hookmgr_s().step_out(get_host(L));
+    return 0;
+}
+
+static int step_over(lua_State* L) {
+    hookmgr_s().step_over(get_host(L));
+    return 0;
+}
+
+static int step_cancel(lua_State* L) {
+    hookmgr_s().step_cancel(get_host(L));
+    return 0;
+}
+
+#undef hookmgr_s
+
+extern "C" 
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
+int luaopen_debugger_hookmgr(lua_State* L) {
+    lua_newtable(L);
+    if (LUA_TUSERDATA != lua_rawgetp(L, LUA_REGISTRYINDEX, &HOOK_MGR)) {
+        lua_pop(L, 1);
+        hookmgr* thd = (hookmgr*)lua_newuserdata(L, sizeof(hookmgr));
+        new (thd) hookmgr(L);
+        lua_pushvalue(L, -1);
+        lua_rawsetp(L, LUA_REGISTRYINDEX, &HOOK_MGR);
+    }
+
+    static luaL_Reg lib[] = {
+        { "start", start },
+        { "sethook", sethook },
+        { "activeline", activeline },
+        { "stacklevel", stacklevel },
+        { "setcoroutine", setcoroutine },
+        { "break_add", break_add },
+        { "break_del", break_del },
+        { "break_open", break_open },
+        { "break_close", break_close },
+        { "break_closeline", break_closeline },
+        { "step_in", step_in },
+        { "step_out", step_out },
+        { "step_over", step_over },
+        { "step_cancel", step_cancel },
+        { NULL, NULL },
+    };
+    luaL_setfuncs(L, lib, 1);
+    return 1;
+}

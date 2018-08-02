@@ -18,7 +18,7 @@ to_vec3(struct vector4* v) {
 }
 
 static inline const struct vector3*
-to_cvector3(const struct vector4* v) {
+to_cvec3(const struct vector4* v) {
 	return (const struct vector3*)v;
 }
 

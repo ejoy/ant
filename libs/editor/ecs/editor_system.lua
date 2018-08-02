@@ -32,9 +32,8 @@ local function build_hierarchy_tree()
 		end
 	end
 	
-	local function is_transform_obj(e)
-		local obj_transform_names = {"pos_transform", "scale_transform", "rotation_transform"}
-		for _, n in ipairs(obj_transform_names) do
+	local function is_transform_obj(e)		
+		for _, n in ipairs {"pos_transform", "scale_transform",	"rotator_transform"} do
 			if e[n] then
 				return true
 			end

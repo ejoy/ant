@@ -312,7 +312,7 @@ new_page(struct lastack *LS, void *page) {
 
 static inline int
 get_type_size(int type) {
-	const int sizes[LINEAR_TYPE_COUNT] = { 16, 4, 3, 4, 1, 3 };
+	const int sizes[LINEAR_TYPE_COUNT] = { 16, 4, 4, 1, 3 };
 	assert(LINEAR_TYPE_MAT <= type && type < LINEAR_TYPE_COUNT);
 	return sizes[type];
 }
@@ -340,11 +340,6 @@ lastack_pushvector(struct lastack *LS, float *vec4, int type) {
 void
 lastack_pushvec4(struct lastack *LS, float *vec4) {
 	lastack_pushvector(LS, vec4, LINEAR_TYPE_VEC4);
-}
-
-void
-lastack_pushvec3(struct lastack *LS, float *vec3) {
-	lastack_pushvector(LS, vec3, LINEAR_TYPE_VEC3);
 }
 
 void
@@ -570,11 +565,7 @@ print_object(const float *address, int id, int type) {
 	case LINEAR_TYPE_VEC4:
 		printf("(V%d: ",id);
 		print_float(address, 4);
-		break;
-	case LINEAR_TYPE_VEC3:
-		printf("(V%d: ",id);
-		print_float(address, 3);
-		break;
+		break;	
 	case LINEAR_TYPE_QUAT:
 		printf("(Q%d: ",id);
 		print_float(address, 4);
@@ -653,10 +644,7 @@ lastack_idstring(int64_t id, char tmp[64]) {
 		break;
 	case LINEAR_TYPE_VEC4:
 		flags[0] = 'V';
-		break;
-	case LINEAR_TYPE_VEC3:
-		flags[0] = 'v';
-		break;
+		break;	
 	case LINEAR_TYPE_QUAT:
 		flags[0] = 'Q';
 		break;

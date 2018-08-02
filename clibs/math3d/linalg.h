@@ -11,8 +11,7 @@
 enum LinearType {
 	LINEAR_TYPE_NONE = -1,
 	LINEAR_TYPE_MAT = 0,
-	LINEAR_TYPE_VEC4,
-	LINEAR_TYPE_VEC3,
+	LINEAR_TYPE_VEC4,	
 	LINEAR_TYPE_QUAT,
 	LINEAR_TYPE_NUM,
 	LINEAR_TYPE_EULER,
@@ -32,7 +31,6 @@ struct lastack * lastack_new();
 void lastack_delete(struct lastack *LS);
 void lastack_pushvector(struct lastack *LS, float *vec4, int type);
 void lastack_pushvec4(struct lastack *LS, float *v);
-void lastack_pushvec3(struct lastack *LS, float *v);
 void lastack_pushquat(struct lastack *LS, float *v);
 void lastack_pusheuler(struct lastack *LS, float *v);
 void lastack_pushnumber(struct lastack *LS, float number);
@@ -51,7 +49,7 @@ int lastack_gettop(struct lastack *LS); // for debug, get stack length
 void lastack_dump(struct lastack *LS, int from); // for debug, dump top values
 
 static inline int lastack_is_vec_type(int type) {
-	return (type == LINEAR_TYPE_VEC3 || type == LINEAR_TYPE_VEC4) ? 1 : 0;
+	return (type == LINEAR_TYPE_VEC4) ? 1 : 0;
 }
 
 #endif

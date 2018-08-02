@@ -7,7 +7,7 @@ local rhwi = require "render.hardware_interface"
 local nk = require "bgfx.nuklear"
 local task = require "editor.task"
 
-local editor_mainwindow = require "editor.window"
+--local editor_mainwindow = require "editor.window"
 local scene = require "scene.util"
 
 local s_logo = require "logo"
@@ -317,7 +317,7 @@ local function init(canvas, fbw, fbh)
 	bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
 	bgfx.set_debug "T"
 
-    world_building = scene.start_new_world( input_queue,fbw,fbh,"test_world.module")
+    world_building = scene.start_new_world( input_queue,fbw,fbh,{"test_world.module"})
 
 	-- nk init
 	nk.init {

@@ -41,7 +41,7 @@ local function init()
 	rhwi.init(iup.GetAttributeData(canvas,"HWND"), fbw, fbh)
 	local module_description_file = "mem://simple.module"
 	fs_util.write_to_file(module_description_file, [[modules = {"test/system/simple_system.lua"}]])
-	scene.start_new_world(input_queue, fbw, fbh, module_description_file)
+	scene.start_new_world(input_queue, fbw, fbh, {module_description_file})
 end
 
 dlg:showxy(iup.CENTER,iup.CENTER)

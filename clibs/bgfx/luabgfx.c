@@ -64,6 +64,7 @@ struct callback {
 	bgfx_callback_interface_t base;
 	struct screenshot_queue ss;
 	struct log_cache lc;
+	bool getlog;
 };
 
 static void *
@@ -140,8 +141,12 @@ cb_fatal(bgfx_callback_interface_t *self, bgfx_fatal_t code, const char *str) {
 		// truncated
 		n = MAX_LOGBUFFER;
 	}
-
-	append_log(&(((struct callback *)self)->lc), tmp, n);
+	struct callback * cb = (struct callback *)self;
+	if (cb->getlog) {
+		append_log(&(cb->lc), tmp, n);
+	} else {
+		fputs(tmp, stdout);
+	}
 }
 
 static void
@@ -155,8 +160,12 @@ cb_trace_vargs(bgfx_callback_interface_t *self, const char *file, uint16_t line,
 		// truncated
 		n = MAX_LOGBUFFER;
 	}
-
-	append_log(&(((struct callback *)self)->lc), tmp, n);
+	struct callback * cb = (struct callback *)self;
+	if (cb->getlog) {
+		append_log(&(cb->lc), tmp, n);
+	} else {
+		fputs(tmp, stdout);
+	}
 }
 
 // todo: bgfx callback
@@ -278,9 +287,6 @@ reset_flags(lua_State *L, int index) {
 			case 'v' : f |= BGFX_RESET_VSYNC; break;
 			case 'a' : f |= BGFX_RESET_MAXANISOTROPY; break;
 			case 'c' : f |= BGFX_RESET_CAPTURE; break;
-			case 'h' : f |= BGFX_RESET_HMD; break;
-			case 'd' : f |= BGFX_RESET_HMD_DEBUG; break;
-			case 'r' : f |= BGFX_RESET_HMD_RECENTER; break;
 			case 'u' : f |= BGFX_RESET_FLUSH_AFTER_RENDER; break;
 			case 'i' : f |= BGFX_RESET_FLIP_AFTER_RENDER; break;
 			case 's' : f |= BGFX_RESET_SRGB_BACKBUFFER; break;
@@ -383,6 +389,7 @@ linit(lua_State *L) {
 		read_uint32(L, 1, "transientIbSize", &init.limits.transientIbSize);
 		read_boolean(L, 1, "debug", &init.debug);
 		read_boolean(L, 1, "profile", &init.profile);
+		read_boolean(L, 1, "getlog", &cb->getlog);
 	}
 
 	if (!bgfx_init(&init)) {
@@ -429,7 +436,6 @@ push_supported(lua_State *L, uint64_t supported) {
 		CAPSNAME(FRAGMENT_ORDERING)     // Fragment ordering is available in fragment shader.
 		CAPSNAME(GRAPHICS_DEBUGGER)     // Graphics debugger is present.
 		CAPSNAME(HIDPI)                 // HiDPI rendering is supported.
-		CAPSNAME(HMD)                   // Head Mounted Display is available.
 		CAPSNAME(INDEX32)               // 32-bit indices are supported.
 		CAPSNAME(INSTANCING)            // Instancing is supported.
 		CAPSNAME(OCCLUSION_QUERY)       // Occlusion query is supported.
@@ -786,9 +792,6 @@ lgetStats(lua_State *L) {
 	v        : BGFX_RESET_VSYNC - Enable V-Sync.
 	a        : BGFX_RESET_MAXANISOTROPY - Turn on/off max anisotropy.
 	c        : BGFX_RESET_CAPTURE - Begin screen capture.
-	h        : BGFX_RESET_HMD - HMD stereo rendering.
-	d        : BGFX_RESET_HMD_DEBUG - HMD stereo rendering debug mode.
-	r        : BGFX_RESET_HMD_RECENTER - HMD calibration.
 	u        : BGFX_RESET_FLUSH_AFTER_RENDER - Flush rendering after submitting to GPU.
 	i        : BGFX_RESET_FLIP_AFTER_RENDER - This flag specifies where flip occurs. Default behavior is that flip occurs before rendering new frame. This flag only has effect when BGFX_CONFIG_MULTITHREADED=0.
 	s        : BGFX_RESET_SRGB_BACKBUFFER - Enable sRGB backbuffer.
@@ -1424,6 +1427,21 @@ lexportVertexDecl(lua_State *L) {
 
 	return 1;
 }
+static inline int
+lvertexDeclStride(lua_State *L) {
+	int type = lua_type(L, 1);
+	if (type != LUA_TUSERDATA) {
+		luaL_error(L, "lvertexDeclStride : invalid input data");
+	}
+	size_t si = lua_rawlen(L, 1);
+	if (sizeof(bgfx_vertex_decl_t) != si) {
+		luaL_error(L, "bad vertex decl input");
+	}
+
+	bgfx_vertex_decl_t *decl = (bgfx_vertex_decl_t*)lua_touserdata(L, 1);
+	lua_pushnumber(L, decl->stride);
+	return 1;
+}
 
 static inline bgfx_attrib_t find_attrib(const char* what) {
 	for (int ii = 0; ii < ARRAY_COUNT(attrib_name_pairs); ++ii) {
@@ -2038,6 +2056,15 @@ calc_tangent_vb(lua_State *L, const bgfx_memory_t *mem, bgfx_vertex_decl_t *vd, 
 	}
 }
 
+static inline const bgfx_memory_t* 
+copy_mem_from_userdata(lua_State *L, int idx) {
+	size_t rawlen = lua_rawlen(L, 1);
+	const bgfx_memory_t* mem = bgfx_alloc(rawlen);
+	uint8_t *data = (uint8_t*)lua_touserdata(L, 1);
+	memcpy(mem->data, data, rawlen);
+	return mem;
+}
+
 /*
 	table data / lightuserdata memory
 	desc
@@ -2054,7 +2081,10 @@ lcreateVertexBuffer(lua_State *L) {
 	if (vd == NULL)
 		return luaL_error(L, "Invalid vertex decl");
 	
-	const bgfx_memory_t *mem = create_from_table_decl(L, 1, vd);
+	const bgfx_memory_t *mem = (lua_type(L, 1) == LUA_TUSERDATA) ?
+		copy_mem_from_userdata(L, 1) : 	
+		create_from_table_decl(L, 1, vd);
+	
 	uint16_t flags = BGFX_BUFFER_NONE;
 	int calc_targent = 0;
 	if (lua_isstring(L, 3)) {
@@ -2166,11 +2196,20 @@ static int
 lcreateIndexBuffer(lua_State *L) {
 	const bgfx_memory_t *mem;
 	uint16_t flags = index_buffer_flags(L, 2);
-	if (flags & BGFX_BUFFER_INDEX32) {
-		mem = create_from_table_int32(L, 1);
+	const int index32 = flags & BGFX_BUFFER_INDEX32;
+
+	if (lua_type(L, 1) == LUA_TUSERDATA) {
+		mem = copy_mem_from_userdata(L, 1);
 	} else {
-		mem = create_from_table_int16(L, 1);
+		if (index32) {
+			mem = create_from_table_int32(L, 1);
+		}
+		else {
+			mem = create_from_table_int16(L, 1);
+		}
 	}
+
+
 	bgfx_index_buffer_handle_t handle = bgfx_create_index_buffer(mem, flags);
 	if (invalid_handle(handle)) {
 		return luaL_error(L, "create index buffer failed");
@@ -3991,6 +4030,9 @@ lgetScreenshot(lua_State *L) {
 
 static int
 lgetLog(lua_State *L) {
+	if (lua_getfield(L, LUA_REGISTRYINDEX, "bgfx_cb") != LUA_TUSERDATA) {
+		return luaL_error(L, "get_log failed!");
+	}
 	struct callback *cb = lua_touserdata(L, -1);
 	struct log_cache *lc = &cb->lc;
 	spin_lock(lc);
@@ -4098,7 +4140,8 @@ luaopen_bgfx(lua_State *L) {
 		{ "request_screenshot", lrequestScreenshot },
 		{ "get_screenshot", lgetScreenshot },
 		{ "export_vertex_decl", lexportVertexDecl },
-        { "get_log", lgetLog },
+		{ "vertex_decl_stride", lvertexDeclStride },
+		{ "get_log", lgetLog },		
 
 		{ NULL, NULL },
 	};

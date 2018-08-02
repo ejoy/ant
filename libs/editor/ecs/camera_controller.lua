@@ -84,17 +84,17 @@ function camera_controller_system:init()
 					local dx, dy, dz = 0, 0, 0			
 
 					if c == "a" or c == "A" then					
-						dx = move_step
-					elseif c == "d" or c == "D" then					
 						dx = -move_step
+					elseif c == "d" or c == "D" then					
+						dx = move_step
 					elseif c == "w" or c == "W" then					
 						dz = move_step
 					elseif c == "s" or c == "S" then					
 						dz = -move_step
 					elseif c == "q" or c == "Q" then
-						dy = move_step
-					 elseif c == "e" or c == "E" then
 						dy = -move_step
+					 elseif c == "e" or c == "E" then
+						dy = move_step
 					end
 
 					camera_util.move(ms, camera, dx, dy, dz)

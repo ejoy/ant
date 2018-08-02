@@ -7,7 +7,8 @@
 #include <string.h>
 #include "msgqueue.h"
 
-static int THREAD_TYPE = 0;
+static int THREAD_MASTER = 0;
+static int THREAD_WORKER = 0;
 
 struct workerThread {
     msgqueue input;
@@ -112,13 +113,13 @@ static int master_gc(lua_State* L) {
 
 static int master_start(lua_State* L){
     if (mThread.start) {
-        return luaL_error(L, "Master thread has started.");
+        return 0;
     }
-    if (LUA_TNIL != lua_rawgetp(L, LUA_REGISTRYINDEX, &THREAD_TYPE)) {
+    if (LUA_TNIL != lua_rawgetp(L, LUA_REGISTRYINDEX, &THREAD_MASTER)) {
         return luaL_error(L, "Thread has started.");
     }
     lua_pushvalue(L, 1);
-    lua_rawsetp(L, LUA_REGISTRYINDEX, &THREAD_TYPE);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &THREAD_MASTER);
 
     lua_newuserdata(L, 1);
     
@@ -165,11 +166,11 @@ static int worker_gc(lua_State* L) {
 }
 
 static int worker_start(lua_State* L) {
-    if (LUA_TNIL != lua_rawgetp(L, LUA_REGISTRYINDEX, &THREAD_TYPE)) {
+    if (LUA_TNIL != lua_rawgetp(L, LUA_REGISTRYINDEX, &THREAD_WORKER)) {
         return luaL_error(L, "Thread has started.");
     }
     lua_pushvalue(L, 1);
-    lua_rawsetp(L, LUA_REGISTRYINDEX, &THREAD_TYPE);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &THREAD_WORKER);
 
     workerThread* thd = (workerThread*)lua_newuserdata(L, sizeof(workerThread));
     new (thd) workerThread;
@@ -207,7 +208,10 @@ static int sleep(lua_State* L) {
     return 0;
 }
 
-extern "C" __declspec(dllexport)
+extern "C" 
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
 int luaopen_debugger_backend(lua_State* L) {
     static luaL_Reg lib[] = {
         { "start", start },

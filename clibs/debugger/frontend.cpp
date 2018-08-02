@@ -1,11 +1,11 @@
 #include <lua.hpp>
 #include <thread>
-#include <io.h>
-#include <fcntl.h>
 
 #if defined(_WIN32)
 
 #include <Windows.h>
+#include <io.h>
+#include <fcntl.h>
 #include "msgqueue.h"
 
 struct thread_args {
@@ -70,6 +70,20 @@ static int async_stdin(lua_State* L) {
     return 1;
 }
 
+static int filemode(lua_State* L) {
+    luaL_Stream* p =  ((luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE));
+    const char* mode = luaL_checkstring(L, 2);
+    if (p && p->f) {
+        if (mode[0] == 'b') {
+            _setmode(_fileno(p->f), _O_BINARY);
+        }
+        else if (mode[0] == 't') {
+            _setmode(_fileno(p->f), _O_TEXT);
+        }
+    }
+    return 0;
+}
+
 #endif
 
 static int os(lua_State* L) {
@@ -86,27 +100,16 @@ static int sleep(lua_State* L) {
     return 0;
 }
 
-static int filemode(lua_State* L) {
-    luaL_Stream* p =  ((luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE));
-    const char* mode = luaL_checkstring(L, 2);
-    if (p && p->f) {
-        if (mode[0] == 'b') {
-            _setmode(_fileno(p->f), _O_BINARY);
-        }
-        else if (mode[0] == 't') {
-            _setmode(_fileno(p->f), _O_TEXT);
-        }
-    }
-    return 0;
-}
-
-extern "C" __declspec(dllexport)
+extern "C" 
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
 int luaopen_debugger_frontend(lua_State* L) {
     static luaL_Reg lib[] = {
         { "os", os },
         { "sleep", sleep },
-        { "filemode", filemode },
 #if defined(_WIN32)
+        { "filemode", filemode },
         { "async_stdin", async_stdin },
 #endif
         { NULL, NULL },

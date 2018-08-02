@@ -1,36 +1,36 @@
-=== clibs/terrain µØĞÎÄ£¿é ===
+=== clibs/terrain åœ°å½¢æ¨¡å— ===
 
-    terrain.lua            µØĞÎÓÃ»§²ã LUA API 
-    terrain.cpp           c dllÌá¹©¿ìËÙ¼ÆËã,Ö»¸ø terrain.lua Ê¹ÓÃ£¬ÏòÉÏ²ãÓÃ»§ÆÁ±Î 
+    terrain.lua            åœ°å½¢ç”¨æˆ·å±‚ LUA API 
+    terrain.cpp           c dllæä¾›å¿«é€Ÿè®¡ç®—,åªç»™ terrain.lua ä½¿ç”¨ï¼Œå‘ä¸Šå±‚ç”¨æˆ·å±è”½ 
 
     terrain.lua            lua layer API 
     terrain.cpp           c layer API 
 
---- util_* ¸¨Öúº¯Êı----
-    utilclass.lua          ×Öµä±í£¬ÀàÄ£Äâ LUA º¯Êı
-    utilmath.lua         ¹¹Ôì direction µÄÊıÑ§º¯Êı
-    utiltexture.lua      ÎÆÀí¼ÓÔØº¯Êı(Óëant framework ºÏ²¢Ê±»áÉ¾³ı£©
+--- util_* è¾…åŠ©å‡½æ•°----
+    utilclass.lua          å­—å…¸è¡¨ï¼Œç±»æ¨¡æ‹Ÿ LUA å‡½æ•°
+    utilmath.lua         æ„é€  direction çš„æ•°å­¦å‡½æ•°
+    utiltexture.lua      çº¹ç†åŠ è½½å‡½æ•°(ä¸ant framework åˆå¹¶æ—¶ä¼šåˆ é™¤ï¼‰
 
----  ²âÊÔ³ÌĞòÎÄ¼ş ---
+---  æµ‹è¯•ç¨‹åºæ–‡ä»¶ ---
 test_*.lua 
     test_class.lua        lua class usage 
     test_lterrain.lua    lterrain.dll usage
     test_tex.lua          texload usage 
 
 	
-=== ×ÊÔ´ÎÄ¼ş === 
+=== èµ„æºæ–‡ä»¶ === 
 
---- µØĞÎ¹Ø¿¨ÎÄ¼ş ---
+--- åœ°å½¢å…³å¡æ–‡ä»¶ ---
 pvp.lvl 
     terrain level config sample 
 
---- ÎÆÀí¼°ÅäÖÃÎÄ¼şÄ¿Â¼ ---
+--- çº¹ç†åŠé…ç½®æ–‡ä»¶ç›®å½• ---
     terrain resource directory: /Work/ant/assets/build/terrain
 
--- shader ÎÄ¼şÄ¿Â¼ ----
+-- shader æ–‡ä»¶ç›®å½• ----
     terrain shader source directory: /Work/ant/assets/shaders/src/terrain
 
---- ÎÆÀí×ª»»¸ñÊ½ ------
+--- çº¹ç†è½¬æ¢æ ¼å¼ ------
 base and mask images  must convert to dds
      base  with mipmap format = bc3 
      mask  without mipmap
@@ -38,13 +38,13 @@ base and mask images  must convert to dds
 	 
 	 
 	 
-ºÏ²¢±àÒë£º
-    ¿½±´ terrain.cpp µ½ clibs/bgfx
-    ĞŞ¸Ä bgfx ÏÂµÄmakefile Ôö¼Ó terrain.cpp
-    ĞŞ¸Ä terrain.cpp ÎÄ¼şµÄÊä³ö½Ó¿Ú,
-        luaopen_lterrain ¸ÄÎª luaopen_bgfx_terrain
-    ×÷Îªbgfx¹¤³ÌµÄÒ»¸ö×ÓÄ£¿é±àÒë 
-    lua layer terrain api ·ÃÎÊÊ±£¬Ê¹ÓÃ require "bgfx.terrain"
+åˆå¹¶ç¼–è¯‘ï¼š
+    æ‹·è´ terrain.cpp åˆ° clibs/bgfx
+    ä¿®æ”¹ bgfx ä¸‹çš„makefile å¢åŠ  terrain.cpp
+    ä¿®æ”¹ terrain.cpp æ–‡ä»¶çš„è¾“å‡ºæ¥å£,
+        luaopen_lterrain æ”¹ä¸º luaopen_bgfx_terrain
+    ä½œä¸ºbgfxå·¥ç¨‹çš„ä¸€ä¸ªå­æ¨¡å—ç¼–è¯‘ 
+    lua layer terrain api è®¿é—®æ—¶ï¼Œä½¿ç”¨ require "bgfx.terrain"
 
 	
 	

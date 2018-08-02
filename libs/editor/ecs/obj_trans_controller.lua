@@ -38,6 +38,18 @@ local function is_controller_id(controllers, eid)
 	return false
 end
 
+local function get_controller_position(controller)
+	local root_eid = assert(controller.root)
+	return world[root_eid].position.v
+end
+
+local function update_transform(controller, objeid)	
+	controller:update_transform(world[objeid])
+
+	world:change_component(controller.root, "rebuild_hierarchy")
+	world:notify()
+end
+
 local function play_object_transform(ms, ot, dx, dy)
     if  ot.sceneobj_eid == nil or             
         ot.selected_eid == nil or
@@ -49,7 +61,9 @@ local function play_object_transform(ms, ot, dx, dy)
     local controller = ot.controllers[mode]
     if controller == nil then
         return 
-    end
+	end
+	
+	local ctrlpos = get_controller_position(controller)
 
     local sceneobj = assert(world[ot.sceneobj_eid])
     local selected_axis = assert(world[ot.selected_eid])
@@ -60,18 +74,18 @@ local function play_object_transform(ms, ot, dx, dy)
         local camera = world:first_entity("main_camera")
         local view, proj = mu.view_proj_matrix(ms, camera)
 
-		local originInWS = {0, 0, 0, 1}
+		local originInWS = ctrlpos
 		local posInWS = ms(originInWS, dir, "+P")
 
 		local results = {}
 
 		for _, p in ipairs{originInWS, posInWS} do
-			local dirInCS = ms(p, view, proj, "**T")
-			local clipcoord = dirInCS[4]
-			local dirInNDC = {dirInCS[1]/clipcoord, dirInCS[2]/clipcoord}
-			local screenN = {(dirInNDC[1] + 1) * 0.5, (dirInNDC[2] + 1) * 0.5}
+			local posInCS = ms(p, view, proj, "**T")
+			local clipcoord = posInCS[4]
+			local posInNDC = {posInCS[1]/clipcoord, posInCS[2]/clipcoord}
+			local posInSNS = {(posInNDC[1] + 1) * 0.5, (posInNDC[2] + 1) * 0.5}	-- screen normalize space
 			local vr = camera.view_rect
-			local screen = {screenN[1] * vr.w, vr.h * (1 - screenN[2])}
+			local screen = {posInSNS[1] * vr.w, vr.h * (1 - posInSNS[2])}
 			table.insert(results, screen)
 		end
 
@@ -81,20 +95,19 @@ local function play_object_transform(ms, ot, dx, dy)
 		local dirInScreen = {point2[1] - point1[1], point2[2] - point1[2]}
 		local len = math.sqrt(dirInScreen[1] * dirInScreen[1] + dirInScreen[2] * dirInScreen[2])
 		dirInScreen[1], dirInScreen[2] = dirInScreen[1] / len, dirInScreen[2] / len
-		local dot = dirInScreen[1] * dx + dirInScreen[2] * dy
-        return dot
+		return dirInScreen[1] * dx + dirInScreen[2] * dy        
     end
 
-	local xdir, ydir, zdir = ms(sceneobj.rotation.v, "bPPP")	
+	local xdir, ydir, zdir = ms(sceneobj.rotation.v, "bPPP")
 
     if mode == "pos_transform" then            
         if selected_axis then
             local pos = sceneobj.position.v
 
             local function move(dir)
-				local speed = ot.translate_speed
+				local speed = ot.translate_speed			
 				local v = select_step_value(dir) > 0 and speed or -speed
-				ms(pos, pos, dir, {v}, "*+=")
+				ms(pos, pos, dir, {v}, "*+=")			
             end
 
             if axis_name == "x" then
@@ -107,7 +120,7 @@ local function play_object_transform(ms, ot, dx, dy)
                 error("move entity axis not found, axis_name : " .. axis_name)
             end
 
-			controller:update_transform(ot.sceneobj_eid)            
+			update_transform(controller, ot.sceneobj_eid)
         end
     elseif mode == "scale_transform" then
         if selected_axis then                
@@ -173,7 +186,7 @@ local function update_contorller(ot, ms)
     for m, controller in pairs(ot.controllers) do
         local bshow = obj_eid and obj_eid == st_eid and mode == m
 		if bshow then
-			controller:update_transform(obj_eid)            
+			update_transform(controller, obj_eid)
 		end
 
 		controller:show(bshow)
@@ -229,7 +242,7 @@ local function register_message(msg_comp, ot, ms)
             return 
         end
 
-        local deltaX, deltaY = x - lastX, (lastY - y)  -- y value is from up to down, need flip
+        local deltaX, deltaY = x - lastX, y - lastY  -- y value is from up to down, need flip
         lastX, lastY = x, y
 
         play_object_transform(ms, ot, deltaX, deltaY)
@@ -331,19 +344,6 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 		root = rootaxis_eid,
 	}
 
-	function controllers:update_transform(objeid)
-		local obj = world[objeid]
-
-		local root_eid = self.root
-		local root = world[root_eid]
-		
-		ms(root.rotation.v, obj.rotation.v, "=")
-		ms(root.position.v, obj.position.v, "=")
-
-		world:change_component(root_eid, "rebuild_hierarchy")
-		world:notify()
-	end
-
 	function controllers:iter_axis()
 		local root_eid = self.root
 		local root = world[root_eid]
@@ -383,6 +383,12 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 		end
 	end
 
+	function controllers:update_transform(obj)		
+		local root = world[self.root]
+		ms(root.rotation.v, obj.rotation.v, "=")
+		ms(root.position.v, obj.position.v, "=")
+	end
+
 	function controllers:is_controller_id(check_eid)
 		for _, axis_eid in self:iter_axis() do
 			local axisentity = world[axis_eid]
@@ -395,9 +401,6 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 
 		return false
 	end
-
-	world:change_component(rootaxis_eid, "rebuild_hierarchy")
-	world:notify()
 	return controllers
 end
 
@@ -410,105 +413,112 @@ local function add_scale_entities(ms, colors)
 end
 
 local function add_rotator_entities(ms, colors)
+	local rotator_scale = {0.01, 0.01, 0.01}
 	local elems = {
-		x = {
+		{
 			name = "rotate-x",
-			rotation = {-90, 0, 0},
+			srt = { s=rotator_scale, r = {-90, 0, 0},},
 			axis_name = "rotate-axis-x",
-			axis_srt = {s={0.001, 0.001, 0.01}, r={0, 90, 0}, t={2.5, 0, 0}},
+			axis_srt = {s={0.001, 0.001, 0.01}, r={0, 90, 0}, t={0.5, 0, 0}},
 			color_name = "red",
 		},
-		y = {
+		{
 			name = "rotate-y",
-			rotation = {0, 0, 90},
+			srt = { s=rotator_scale, r = {0, 0, 90},},
 			axis_name = "rotate-axis-y",
-			axis_srt = {s={0.001, 0.001, 0.01}, r={-90, 0, 0}, t={0, 2.5, 0}},
+			axis_srt = {s={0.001, 0.001, 0.01}, r={-90, 0, 0}, t={0, 0.5, 0}},
 			color_name = "green",
 		},
-		z = {
+		{
 			name = "rotate-z",
-			rotation = {-90, 90, 0},
+			srt = { s=rotator_scale, r = {-90, 90, 0},},
 			axis_name = "rotate-axis-z",
-			axis_srt = {s={0.001, 0.001, 0.01}, r={0, 0, 0}, t={0, 0, 2.5}},
+			axis_srt = {s={0.001, 0.001, 0.01}, r={0, 0, 0}, t={0, 0, 0.5}},
 			color_name = "blue",
 		},
 	}
 
+	local root_eid = components_util.create_hierarchy_entity(ms, world, "rotator")
+	world:add_component(root_eid, "rotator_transform")
+	local hie_entity = world[root_eid]
+	local root = hie_entity.editable_hierarchy.root
+	local namemapper = hie_entity.hierarchy_name_mapper.v
+	local child_idx = 1
 	local controllers = {}
-	for k, elem in pairs(elems) do
-		local eid = components_util.create_render_entity(ms, world, elem.name, "rotator.mesh",
-													"obj_trans/obj_trans.material")
-		world:add_component(eid, "rotator_transform")
-		local entity = world[eid]
-		ms(entity.scale.v, {0.01, 0.01, 0.01}, "=")
-		ms(entity.rotation.v, elem.rotation, "=")
-		local properties = assert(entity.material.content[1].properties)
-		properties.u_color = {type="color", name="color", value=cu.deep_copy(colors[elem.color_name])}
+	for _, elem in ipairs(elems) do		
+		local function add_elem_entity(name, meshfilename, srt, colorname)
+			local eid = components_util.create_render_entity(ms, world, name, meshfilename,
+			"obj_trans/obj_trans.material")
+			world:add_component(eid, "rotator_transform", "editor", "hierarchy_parent")
+			local entity = world[eid]
 
-		entity.can_render.visible = false
+			local properties = assert(entity.material.content[1].properties)
+			properties.u_color = {type="color", name="color", value=cu.deep_copy(colors[colorname])}
+			entity.can_render.visible = false
+			mu.identify_transform(ms, entity)
 
-		local ids = {}
-		table.insert(ids, eid)
+			entity.hierarchy_parent.eid = root_eid
 
-		local axis_eid = components_util.create_render_entity(ms, world, elem.axis_name, "cylinder.mesh",
-																"obj_trans/obj_trans.material")
-		world:add_component(axis_eid, "rotator_transform")
-		world:remove_component(axis_eid, "can_select")											
+			-- bind to hierarchy tree & namemapper
+			root[child_idx] = {
+				name = name,
+				transform = {
+						s = srt.s,
+						r = ms(srt.r, "qT"),
+						t = srt.t,
+					}
+				}
+			namemapper[name] = eid
+			child_idx = child_idx + 1
+		end
 
-		local axis_entity = world[axis_eid]		
-		local axis_srt = elem.axis_srt
-		ms(	axis_entity.scale.v, axis_srt.s, "=",
-			axis_entity.rotation.v, axis_srt.r, "=",
-			axis_entity.position.v, axis_srt.t, "=")
-		local axis_properties = assert(axis_entity.material.content[1].properties)
-		axis_properties.u_color = {type="color", name="color", value=cu.deep_copy(colors[elem.color_name])}
-
-		axis_entity.can_render.visible = false
-
-		table.insert(ids, axis_eid)
-
-		controllers[k] = ids
+		add_elem_entity(elem.name, "rotator.mesh", elem.srt, elem.color_name)
+		add_elem_entity(elem.axis_name, "cylinder.mesh", elem.axis_srt, elem.color_name)
+		world:remove_component(namemapper[elem.axis_name], "can_select")
 	end
 
-	function controllers:update_transform(objeid)
-		local obj = world[objeid]
-		local objsrt = mu.srt_from_entity(ms, obj)
+	controllers.root = root_eid
 
-		for _, n in ipairs {"x", "y", "z"} do
-			local axis_ids = self[n]			
-			for _, ctrleid in ipairs(axis_ids) do
-				local ctrl = world[ctrleid]
-				local srt = mu.srt_from_entity(ms, ctrl)
-				local s, r, t = ms(srt, objsrt, "*~PPP")
-				ms(ctrl.position.v, t, "=")
-				ms(ctrl.rotation.v, r, "=")
-					
-			end
+	function controllers:iter_rotator_eid()		
+		-- local entity = world[rooteid]
+		-- local mapper = entity.hierarchy_name_mapper.v
+		-- local function rotator_next(t, idx)
+		-- 	idx = idx + 1
+		-- 	if idx < #t then
+		-- 		local name = t[idx]
+		-- 		local eid = mapper[name]
+		-- 		if eid then
+		-- 			return idx, eid
+		-- 		end
+		-- 	end			
+		-- end
+
+		-- return rotator_next, {"rotate-x", "rotate-y", "rotate-z"}, 0
+		
+		local e = world[self.root]
+		return next, e.hierarchy_name_mapper.v, nil
+	end
+
+	function controllers:show(visible)		
+		for name, eid in self:iter_rotator_eid() do
+			local e = world[eid]
+			e.can_render.visible = visible
 		end
 	end
 
-	function controllers:show(visible)
-		for _, n in ipairs {"x", "y", "z"} do
-			local axis_ids = self[n]
-			for _, eid in ipairs(axis_ids) do
-				local e = world[eid]
-				e.can_render.visible = visible
-			end
-		end
+	function controllers:update_transform(obj)		
+		local root = world[self.root]
+		ms(root.position.v, obj.position.v, "=")		
 	end
 
 	function controllers:is_controller_id(check_eid)
-		for _, n in ipairs {"x", "y", "z"} do
-			local axis_ids = self[n]
-			for _, eid in ipairs(axis_ids) do
-				if eid == check_eid then
-					return true
-				end
+		for name, eid in self:iter_rotator_eid() do
+			if eid == check_eid then
+				return true
 			end
 		end
 		return false
 	end
-
 	return controllers
 end
 
@@ -520,7 +530,13 @@ function obj_trans_sys:init()
         pos_transform = add_translate_entities(ms, cc),        
         scale_transform = add_scale_entities(ms, cc),
         rotator_transform = add_rotator_entities(ms, cc),
-    }
+	}
+
+	for _, c in pairs(ot.controllers) do
+		world:change_component(c.root, "rebuild_hierarchy")
+	end
+
+	world:notify()
     
     ot.selected_mode = "pos_transform"
     ot.selected_eid = nil
