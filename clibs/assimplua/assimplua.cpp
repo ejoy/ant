@@ -469,7 +469,6 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene, const char
 			// vertices = {}
 			lua_newtable(L);
 
-<<<<<<< HEAD
 			/*
 			int stride = 12;
 
