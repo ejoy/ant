@@ -7,7 +7,7 @@ local rhwi = require "render.hardware_interface"
 local nk = require "bgfx.nuklear"
 local task = require "editor.task"
 
-local editor_mainwindow = require "editor.window"
+--local editor_mainwindow = require "editor.window"
 local scene = require "scene.util"
 
 local s_logo = require "logo"
