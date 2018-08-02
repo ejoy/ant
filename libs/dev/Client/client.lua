@@ -23,6 +23,7 @@ local _linda = nil
 --TODO this is not the same as file_mgr in clientwindow.lua
 --they are in two different threads
 local filemanager = require "filemanager"
+local file_mgr = filemanager.new()
 ---------------------------------------------------
 local clientcommand = {}
 --cmd while recieving data from server
@@ -95,7 +96,7 @@ function clientcommand.FILE(resp)
             --TODO version management/control
             --the file is complete, inform out side
             _linda:send("new file", {hash, file_path})
-            filemanager:AddFileRecord(hash, file_path)
+            file_mgr:AddFileRecord(hash, file_path)
         end
     else
 
@@ -127,6 +128,9 @@ function clientcommand.EXIST_CHECK(resp)
     print("get exist check result")
     assert(resp[1] == "EXIST_CHECK", "COMMAND: "..resp[1].." invalid, shoule be EXIST_CHECK")
     local result = resp[2]
+
+    _linda:send("file exist", result)
+--[[
     if result == "true" then
         print("File exists on the server")
         _linda:send("file exist", true)
@@ -136,6 +140,7 @@ function clientcommand.EXIST_CHECK(resp)
     else
         print("EXIST CHECK result invalid: "..result)
     end
+    --]]
 end
 
 function clientcommand.DIR(resp)
@@ -181,6 +186,10 @@ function client.new(address, port, init_linda, home_dir)
     --todo:
     app_doc_path = home_dir .. "/Documents/"
     --print("app_doc_path", app_doc_path)
+
+    file_mgr:ReadDirStructure(home_dir.."/Documents/dir.txt")
+    file_mgr:ReadFilePathData(home_dir.."/Documents/file.txt")
+
 	return setmetatable( { host = fd, fd = { fd }, fds = {fd}, sending = {}, resp = {}, reading = ""}, client)
 end
 
@@ -194,7 +203,7 @@ function client:send(...)
 
 --        print("file path", file_path)
         print("check real path: "..file_path)
-        file_path = filemanager:GetRealPath(file_path)
+        file_path = file_mgr:GetRealPath(file_path)
         print("get real path ".. tostring(file_path))
         --client does have it
         if file_path then

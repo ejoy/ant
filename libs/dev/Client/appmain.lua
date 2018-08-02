@@ -49,23 +49,19 @@ local function custom_open(filename, mode, search_local_only)
 
     --file may be in the bundle
     --for now don't cache lua files
-    --todo deal with loadfile condition
-    local file_ext = string.sub(filename, -3)
-    if file_ext and string.lower(file_ext)~="lua" then
-        if not file then
-            print("searching file in bundle: "..filename)
-            --find out if it exist locally
-            local local_path = file_mgr:GetRealPath(filename)
-            if local_path then
-                --check exist, mainly for camparing hash
-                local file_exist = winfile.exist(filename)
-                if file_exist then
-                    print("bundle real path for: "..filename.." is "..local_path)
-                    local_path = bundle_home_dir .. "/Documents/" ..local_path
-                    file = origin_open(local_path, mode)
+    if not file then
+        print("searching file in bundle: "..filename)
+        --find out if it exist locally
+        local local_path = file_mgr:GetRealPath(filename)
+        if local_path then
+            --check exist, mainly for camparing hash
+            local file_exist = winfile.exist(filename)
+            if file_exist then
+                print("bundle real path for: "..filename.." is "..local_path)
+                local_path = bundle_home_dir .. "/Documents/" ..local_path
+                file = origin_open(local_path, mode)
 
-                    return file
-                end
+                return file
             end
         end
     end
@@ -104,8 +100,28 @@ local function custom_open(filename, mode, search_local_only)
         return file
     end
 end
-
 io.open = custom_open
+
+--override the old loadfile function, so it can search remotely
+local origin_loadfile = loadfile
+local function custom_loadfile(file_path)
+    local file = origin_loadfile(file_path)
+    if file then
+        return file
+    end
+
+    file = io.open(file_path, "r")
+    if file then
+        io.input(file)
+        local file_string = file:read("*a")
+        file:close()
+        return load(file_string)
+    else
+        return nil
+    end
+end
+
+loadfile = custom_loadfile
 
 local function remote_searcher (name)
     --local full_path = name..".lua"
@@ -272,12 +288,38 @@ function init(window_handle, width, height, app_dir, bundle_dir)
             while true do
                 local _, value = linda:receive(0.001, "file exist")
                 if value ~= nil then
-                    if value then
+                    if value == "exist" then
                         print(path .. " exist")
                         return true
-                    else
+                    elseif value == "not exist" then
                         print(path .. " not exist!! " .. tostring(value))
                         return false
+                    elseif value == "diff hash" then
+                        --hash is different, request the one on server
+                        --return true if succeed
+                        print("new request " .. path)
+                        local file_request = {"GET", path}
+                        linda:send("request", file_request)
+
+                        --TODO file not exist
+                        --wait here
+                        while true do
+                            local _, value = linda:receive(0.001, "new file")
+                            if value then
+                                print("received msg", path)
+                                --put into the id_table and file_table
+                                file_mgr:AddFileRecord(value[1], value[2])
+                                print("add file recode: "..value[1] .. " and "..value[2])
+                                file_mgr:WriteDirStructure(bundle_home_dir.."/Documents/dir.txt")
+                                file_mgr:WriteFilePathData(bundle_home_dir.."/Documents/file.txt")
+
+                                print("file name", path)
+                                local real_path = file_mgr:GetRealPath(value[2])
+                                real_path = bundle_home_dir .. "/Documents/" .. real_path
+
+                                return true
+                            end
+                        end
                     end
 
                     break
