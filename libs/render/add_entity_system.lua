@@ -147,9 +147,10 @@ function add_entity_sys:init()
 	-- 	--component_util.load_material(pochuan, {"bunny.material"})
 	-- end
 
-
-    -- local PVPScene = require "modelloader.PVPScene"
-    -- PVPScene.init(world, component_util, ms)
+    -- 测试场景时，打开 PVPScene 加载BnH模型
+    local PVPScene = require "modelloader.PVPScene"
+	PVPScene.init(world, component_util, ms)
+	
 	-- do
 	-- 	local stone_eid = world:new_entity("position", "rotation", "scale",
 	-- 	"can_render", "mesh", "material",
