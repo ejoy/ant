@@ -3,7 +3,6 @@
 local rhwi = require "render.hardware_interface"
 local scene = require "scene.util"
 local inputmgr = require "inputmgr"
---local bgfx = require "bgfx"
 
 local iq = inputmgr.queue {
 	button = "_,_,_,_,_",
@@ -43,6 +42,12 @@ end
 function ios_main.mainloop()
     if init_ok then
 	    currentworld.update()
+    end
+end
+
+function ios_main.terminate()
+    if init_ok then
+        --todo
     end
 end
 
