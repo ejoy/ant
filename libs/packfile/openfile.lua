@@ -5,6 +5,8 @@ local winfile =  require "winfile"
 local rawopen = winfile.open
 
 local rules = {}
+--todo support packfile
+--[[
 if winfile.exist(".antpack") then
 	for str in io.lines '.antpack' do
 		local f, l = str:find ' '
@@ -16,7 +18,8 @@ if winfile.exist(".antpack") then
 		end
 	end
 end
-    
+--]]
+
 local function glob_match(pattern, target)
     return target:match(pattern) ~= nil
 end
