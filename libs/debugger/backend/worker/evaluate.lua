@@ -1,6 +1,6 @@
 local rdebug = require 'remotedebug'
-local variables = require 'new-debugger.backend.worker.variables'
-local ev = require 'new-debugger.event'
+local variables = require 'debugger.backend.worker.variables'
+local ev = require 'debugger.event'
 
 local framePool = {}
 

@@ -43,7 +43,7 @@ function mgr.hasThread(w)
 end
 
 function mgr.update()
-    local threads = require 'new-debugger.backend.master.threads'
+    local threads = require 'debugger.backend.master.threads'
     for w in masterThread:foreach() do
         while true do
             local msg = masterThread:recv(w)

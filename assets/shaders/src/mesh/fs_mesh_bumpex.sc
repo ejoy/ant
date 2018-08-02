@@ -1,7 +1,7 @@
 $input v_tex0, v_lightdir, v_viewdir,v_normal,,v_tangent,v_bitangent
 
 #include <common.sh>
-
+#include "common/lighting.sh"
 #include "common/uniforms.sh"
 
 SAMPLER2D(s_basecolor,  0);
@@ -58,7 +58,8 @@ void main()
 	vec3 normal = vec3(ntexdata.xy, 0.0);
 	normal.xy = normal.xy * 2.0 - 1.0;
 	normal.z = sqrt( (1.0- saturate(dot(normal.xy, normal.xy))) );
-
+	float gloss = ntexdata.z;	
+	
 	// projection back 
 	float pX = normal.x/(1.0 + normal.z);
 	float pY = normal.y/(1.0 + normal.z);
@@ -67,7 +68,6 @@ void main()
 	normal.y = pX *denom;
 	normal.z = denom -1.0; 
 	 
-	float gloss = ntexdata.z;	
 
     // not need now,, not in linear space 
 	// vec4 basecolor = toLinear(texture2D(s_basecolor, tc));   

@@ -1,5 +1,6 @@
 local rdebug = require 'remotedebug'
-local source = require 'new-debugger.backend.worker.source'
+local source = require 'debugger.backend.worker.source'
+local hookmgr = require 'debugger.hookmgr'
 
 local info = {}
 
@@ -38,13 +39,13 @@ end
 
 local function getshortsrc(info)
     local src = source.create(info.source)
-    if src.path then
+    if src.sourceReference then
+        local code = source.getCode(src.sourceReference)
+        return shortsrc(code)
+    elseif src.path then
         return shortsrc('@' .. source.clientPath(src.path))
     elseif src.skippath then
         return shortsrc('@' .. source.clientPath(src.skippath))
-    elseif src.ref then
-        local code = source.getCode(src.ref)
-        return shortsrc(code)
     elseif info.source:sub(1,1) == '=' then
         return shortsrc(info.source)
     else
@@ -110,7 +111,7 @@ return function(msg, level)
         msg = replacewhere(msg, level)
     end
     s[#s + 1] = 'stack traceback:'
-    local last = rdebug.stacklevel()
+    local last = hookmgr.stacklevel()
     local n1 = last - level > 21 and 10 or -1
     while rdebug.getinfo(level, info) do
         local f = rdebug.getfunc(level)

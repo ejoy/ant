@@ -1,7 +1,7 @@
 local rdebug = require 'remotedebug'
-local source = require 'new-debugger.backend.worker.source'
-local path = require 'new-debugger.path'
-local ev = require 'new-debugger.event'
+local source = require 'debugger.backend.worker.source'
+local path = require 'debugger.path'
+local ev = require 'debugger.event'
 
 local varPool = {}
 
@@ -96,6 +96,18 @@ local function hasStandard()
     return true
 end
 
+
+local function normalizeNumber(str)
+    if str:find('.', 1, true) then
+        str = str:gsub('0+$', '')
+        if str:sub(-1) == '.' then
+            return str .. '0'
+        end
+    end
+    return str
+end
+
+
 local function varCanExtand(type, subtype, value)
     if type == 'function' then
         return rdebug.getupvaluev(value, 1) ~= nil
@@ -143,7 +155,7 @@ local function varGetName(value)
             end
             return ('%d'):format(rvalue)
         else
-            return ('%.4f'):format(rdebug.value(value))
+            return normalizeNumber(('%.4f'):format(rdebug.value(value)))
         end
     elseif type == 'function' then
         --TODO
@@ -175,7 +187,7 @@ local function varGetShortValue(value)
         if subtype == 'integer' then
             return ('%d'):format(rdebug.value(value))
         else
-            return ('%f'):format(rdebug.value(value))
+            return normalizeNumber(('%f'):format(rdebug.value(value)))
         end
     elseif type == 'function' then
         return 'func'
@@ -294,7 +306,7 @@ local function varGetValue(type, subtype, value)
         if subtype == 'integer' then
             return ('%d'):format(rdebug.value(value))
         else
-            return ('%f'):format(rdebug.value(value))
+            return normalizeNumber(('%f'):format(rdebug.value(value)))
         end
     elseif type == 'function' then
         if subtype == 'c' then
@@ -308,10 +320,10 @@ local function varGetValue(type, subtype, value)
         if not source.valid(src) then
             return tostring(rdebug.value(value))
         end
-        if src.path then
+        if not src.sourceReference then
             return ("%s:%d"):format(source.clientPath(src.path), info.linedefined)
         end
-        local code = source.getCode(src.ref)
+        local code = source.getCode(src.sourceReference)
         return getFunctionCode(code, info.linedefined, info.lastlinedefined)
     elseif type == 'table' then
         return varGetTableValue(value)
@@ -531,7 +543,6 @@ extand[VAR_LOCAL] = function(frameId)
         end
         i = i + 1
     end
-    table.sort(vars, function(a, b) return a.name < b.name end)
     return vars
 end
 
@@ -551,7 +562,6 @@ extand[VAR_VARARG] = function(frameId)
         )
         i = i - 1
     end
-    table.sort(vars, function(a, b) return a.name < b.name end)
     return vars
 end
 
@@ -572,7 +582,6 @@ extand[VAR_UPVALUE] = function(frameId)
         )
         i = i + 1
     end
-    table.sort(vars, function(a, b) return a.name < b.name end)
     return vars
 end
 

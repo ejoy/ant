@@ -1,18 +1,20 @@
 local cdebug = require 'debugger.frontend'
-local proto = require 'new-debugger.protocol'
-local stdin = require 'new-debugger.frontend.stdin'
-local select = require 'new-debugger.frontend.select'
+local proto = require 'debugger.protocol'
+local stdin = require 'debugger.frontend.stdin'
+local socket = require 'debugger.socket'
 local proxy = nil
 local stat = {}
 local m = {}
 
 io.stdin:setvbuf 'no'
 io.stdout:setvbuf 'no'
-cdebug.filemode(io.stdin, 'b')
-cdebug.filemode(io.stdout, 'b')
+if cdebug.os() == 'windows' then
+    cdebug.filemode(io.stdin, 'b')
+    cdebug.filemode(io.stdout, 'b')
+end
 
 local fd = stdin.fd
-select.read(fd, function()
+socket.init(fd, function()
     while true do
         local pkg = proto.recv(fd:recv() or '', stat)
         if pkg then
@@ -24,7 +26,7 @@ select.read(fd, function()
 end)
 
 function m.initialize()
-    proxy = require 'new-debugger.frontend.proxy'
+    proxy = require 'debugger.frontend.proxy'
 end
 
 function m.send(pkg)

@@ -232,7 +232,8 @@ eval_value_(lua_State *L, lua_State *cL, struct value *v) {
 			return LUA_TTABLE;
 		} else {
 			lua_pop(cL, 1);
-			break;
+			lua_pushnil(cL);
+			return LUA_TNIL;
 		}
 	case VAR_USERVALUE: {
 		int t = eval_value_(L, cL, v+1);
@@ -784,9 +785,9 @@ get_uservalue(lua_State *L, lua_State *cL, int getref) {
 		lua_pop(L, 1);
 		return 0;
 	}
-	lua_pop(cL, 1);
 
 	if (t != LUA_TUSERDATA) {
+		lua_pop(cL, 1);
 		lua_pop(L, 1);
 		return 0;
 	}
@@ -798,8 +799,10 @@ get_uservalue(lua_State *L, lua_State *cL, int getref) {
 			lua_replace(L, -2);
 			return 1;
 		}
-		lua_pop(cL,1);
 	}
+
+	// pop full userdata
+	lua_pop(cL, 1);
 
 	// L : value
 	// cL : value uservalue

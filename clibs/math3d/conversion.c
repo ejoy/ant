@@ -124,10 +124,17 @@ euler_to_quaternion(const struct euler *e, struct quaternion *q) {
 	const float cy = cosf(y), sy = sinf(y);
 	const float cp = cosf(p), sp = sinf(p);
 
-	q->x = cy * cp * cr + sy * sp * sr;
-	q->y = cy * sp * cr + sy * cp * sr;
-	q->z = sy * cp * cr - cy * sp * cr;
-	q->w = cy * cp * sr - sy * sp * cr;
+	//q->x = cy * cp * cr + sy * sp * sr;
+	//q->y = cy * sp * cr + sy * cp * sr;
+	//q->z = sy * cp * cr - cy * sp * cr;
+	//q->w = cy * cp * sr - sy * sp * cr;
+
+
+	
+	q->x = sp * cy * cr - cp * sy * sr;
+	q->y = cp * sy * cr + sp * cy * sr;
+	q->z = cp * cy * sr - sp * sy * cr;
+	q->w = cp * cy * cr + sp * sy * sr;
 
     return q;
 }

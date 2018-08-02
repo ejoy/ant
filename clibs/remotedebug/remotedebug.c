@@ -434,12 +434,12 @@ client_index(lua_State *L, int getref) {
 
 static int
 lclient_index(lua_State *L) {
-	return client_index(L, 0);
+	return client_index(L, 1);
 }
 
 static int
 lclient_indexv(lua_State *L) {
-	return client_index(L, 1);
+	return client_index(L, 0);
 }
 
 static int
@@ -465,12 +465,12 @@ client_next(lua_State *L, int getref) {
 
 static int
 lclient_next(lua_State *L) {
-	return client_next(L, 0);
+	return client_next(L, 1);
 }
 
 static int
 lclient_nextv(lua_State *L) {
-	return client_next(L, 1);
+	return client_next(L, 0);
 }
 
 static int
@@ -596,12 +596,12 @@ client_getupvalue(lua_State *L, int getref) {
 
 static int
 lclient_getupvalue(lua_State *L) {
-	return client_getupvalue(L, 0);
+	return client_getupvalue(L, 1);
 }
 
 static int
 lclient_getupvaluev(lua_State *L) {
-	return client_getupvalue(L, 1);
+	return client_getupvalue(L, 0);
 }
 
 static int
@@ -616,12 +616,12 @@ client_getmetatable(lua_State *L, int getref) {
 
 static int
 lclient_getmetatable(lua_State *L) {
-	return client_getmetatable(L, 0);
+	return client_getmetatable(L, 1);
 }
 
 static int
 lclient_getmetatablev(lua_State *L) {
-	return client_getmetatable(L, 1);
+	return client_getmetatable(L, 0);
 }
 
 static int
@@ -636,12 +636,12 @@ client_getuservalue(lua_State *L, int getref) {
 
 static int
 lclient_getuservalue(lua_State *L) {
-	return client_getuservalue(L, 0);
+	return client_getuservalue(L, 1);
 }
 
 static int
 lclient_getuservaluev(lua_State *L) {
-	return client_getuservalue(L, 1);
+	return client_getuservalue(L, 0);
 }
 
 static int
@@ -743,13 +743,30 @@ lclient_activeline(lua_State *L) {
 }
 
 static int
-lclient_stacklevel(lua_State *L) {
+lclient_gethost(lua_State *L) {
+	lua_pushlightuserdata(L, &DEBUG_HOST);
+	return 1;
+}
+
+static int
+lclient_getthread(lua_State *L) {
 	lua_State *hL = get_host(L);
-	lua_Debug ar;
-	int n;
-	for (n = 0; lua_getstack(hL, n + 1, &ar) != 0; ++n)
-	{ }
-	lua_pushinteger(L, n);
+	if (LUA_TUSERDATA == lua_type(L, 1)) {
+		lua_pushvalue(L, 1);
+		int ct = eval_value(L, hL);
+		lua_pop(L, 1);
+		if (ct == LUA_TNONE) {
+			return luaL_error(L, "Invalid thread");
+		}
+		if (ct != LUA_TTHREAD) {
+			lua_pop(hL, 1);
+			return luaL_error(L, "Need coroutine, Is %s", lua_typename(hL, ct));
+		}
+		lua_State *co = lua_tothread(hL, -1);
+		lua_pop(hL, 1);
+		hL = co;
+	} 
+	lua_pushlightuserdata(L, hL);
 	return 1;
 }
 
@@ -783,7 +800,8 @@ luaopen_remotedebug(lua_State *L) {
 			{ "type", lclient_type },
 			{ "getinfo", lclient_getinfo },
 			{ "activeline", lclient_activeline },
-			{ "stacklevel", lclient_stacklevel },
+			{ "gethost", lclient_gethost },
+			{ "getthread", lclient_getthread },
 			{ NULL, NULL },
 		};
 		luaL_newlib(L,l);

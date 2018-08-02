@@ -1,6 +1,7 @@
-local path = require 'new-debugger.path'
-local parser = require 'new-debugger.parser'
-local ev = require 'new-debugger.event'
+local path = require 'debugger.path'
+local parser = require 'debugger.parser'
+local ev = require 'debugger.event'
+local crc32 = require 'debugger.crc32'
 
 local sourcePool = {}
 local codePool = {}
@@ -83,11 +84,16 @@ local function serverPathToClientPath(p)
 end
 
 local function codeReference(s)
-    if not codePool[s] then
-        codePool[#codePool + 1] = s
-        codePool[s] = #codePool
+    local hash = crc32(s)
+    while codePool[hash] do
+        if codePool[hash] == s then
+            return hash
+        end
+        hash = hash + 1
     end
-    return codePool[s]
+    codePool[hash] = s
+    codePool[s] = hash
+    return hash
 end
 
 local function create(source)
@@ -96,15 +102,21 @@ local function create(source)
         local serverPath = source:sub(2)
         local skip, clientPath = serverPathToClientPath(serverPath)
         if skip then
-            return { skippath = clientPath }
+            return {
+                skippath = clientPath,
+            }
         end
-        return { path = clientPath }
+        return {
+            path = clientPath,
+            protos = {},
+        }
     elseif h == '=' then
         -- TODO
         return {}
     else
         local src = {
-            ref = codeReference(source)
+            sourceReference = codeReference(source),
+            protos = {},
         }
         local f = load(source)
         if f then
@@ -124,34 +136,42 @@ function m.create(source)
     end
     local newSource = create(source)
     sourcePool[source] = newSource
-    ev.emit('source-create', newSource)
     return newSource
 end
 
-function m.open(clientpath)
+function m.c2s(clientsrc)
     -- TODO: 不遍历？
-    local nativepath = path.normalize_native(clientpath)
-    for _, source in pairs(sourcePool) do
-        if source.path and path.normalize_native(source.path) == nativepath then
-            return source
+    if clientsrc.sourceReference then
+        local ref = clientsrc.sourceReference
+        for _, source in pairs(sourcePool) do
+            if source.sourceReference == ref then
+                return source
+            end
+        end
+    else
+        local nativepath = path.normalize_native(clientsrc.path)
+        for _, source in pairs(sourcePool) do
+            if source.path and not source.sourceReference and path.normalize_native(source.path) == nativepath then
+                return source
+            end
         end
     end
 end
 
 function m.valid(s)
-    return s.path ~= nil or s.ref ~= nil
+    return s.path ~= nil or s.sourceReference ~= nil
 end
 
 function m.output(s)
-    if s.path ~= nil then
+    if s.sourceReference ~= nil then
+        return {
+            name = '<Memory>',
+            sourceReference = s.sourceReference,
+        }
+    elseif s.path ~= nil then
         return {
             name = path.filename(s.path),
             path = path.normalize(s.path),
-        }
-    elseif s.ref ~= nil then
-        return {
-            name = '<Memory>',
-            sourceReference = s.ref,
         }
     end
 end

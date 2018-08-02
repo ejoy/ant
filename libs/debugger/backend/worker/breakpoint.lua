@@ -1,12 +1,11 @@
 local rdebug = require 'remotedebug'
-local path = require 'new-debugger.path'
-local source = require 'new-debugger.backend.worker.source'
-local hookmgr = require 'new-debugger.backend.worker.hookmgr'
-local evaluate = require 'new-debugger.backend.worker.evaluate'
-local ev = require 'new-debugger.event'
+local path = require 'debugger.path'
+local source = require 'debugger.backend.worker.source'
+local evaluate = require 'debugger.backend.worker.evaluate'
+local ev = require 'debugger.event'
+local hookmgr = require 'debugger.hookmgr'
 
 local breakpoints = {}
-local currentBP = nil
 local waitverify = {}
 local info = {}
 local m = {}
@@ -31,20 +30,57 @@ end
 local function updateHook()
     if enable then
         if next(breakpoints) == nil and next(waitverify) == nil then
-            hookmgr.closeBP()
             enable = false
+            hookmgr.break_close()
         end
     else
         if next(breakpoints) ~= nil or next(waitverify) ~= nil then
-            hookmgr.openBP()
             enable = true
+            hookmgr.break_open()
         end
     end
 end
 
+local function hasActiveBreakpoint(bps, activeline)
+    for line in pairs(bps) do
+        if activeline[line] then
+            return true
+        end
+    end
+    return false
+end
+
+local function updateBreakpoint(key, src, bps)
+    if next(bps) == nil then
+        breakpoints[key] = nil
+        for proto in pairs(src.protos) do
+            hookmgr.break_del(proto)
+        end
+    else
+        breakpoints[key] = bps
+        for proto, activeline in pairs(src.protos) do
+            if hasActiveBreakpoint(bps, activeline) then
+                activeline.bp = true
+                hookmgr.break_add(proto)
+            else
+                activeline.bp = false
+                hookmgr.break_del(proto)
+            end
+        end
+    end
+    updateHook()
+end
+
+local function bpKey(src)
+    if src.sourceReference then
+        return src.sourceReference
+    end
+    return path.normalize_native(src.path)
+end
+
 local function verifyBreakpoint(src, bps)
-    local normalizePath = path.normalize_native(src.path)
-    local oldBP = breakpoints[normalizePath]
+    local key = bpKey(src)
+    local oldBP = breakpoints[key]
     local hits = {}
     if oldBP then
         for _, bp in ipairs(oldBP) do
@@ -102,52 +138,46 @@ local function verifyBreakpoint(src, bps)
             })
         end
     end
-    if next(res) == nil then
-        breakpoints[normalizePath] = nil
-    else
-        breakpoints[normalizePath] = res
-    end
-    updateHook()
-    if currentBP and currentBP == oldBP then
-        m.reset()
-    end
-end
-
-function m.reset()
-    currentBP = nil
-    hookmgr.openLineBP()
+    updateBreakpoint(key, src, res)
 end
 
 function m.find(src, currentline)
+    local currentBP = breakpoints[bpKey(src)]
     if not currentBP then
-        if src.path then
-            currentBP = breakpoints[path.normalize_native(src.path)]
-        else
-            currentBP = breakpoints[src.ref]
-        end
-        if not currentBP then
-            hookmgr.closeLineBP()
-            return
-        end
+        hookmgr.break_closeline()
+        return
     end
     return currentBP[currentline]
 end
 
 function m.update(clientsrc, si, bps)
-    if not clientsrc.path or not si then
-        return
+    if not clientsrc.sourceReference then
+        if not si then
+            return
+        end
+        local src = source.c2s(clientsrc)
+        if src then
+            src.si = si
+            verifyBreakpoint(src, bps)
+            return
+        end
+        for _, bp in ipairs(bps) do
+            bp.source = clientsrc
+        end
+        waitverify[bpKey(clientsrc)] = { bps, si }
+        updateHook()
+    else
+        local src = source.c2s(clientsrc)
+        if src then
+            verifyBreakpoint(src, bps)
+            return
+        end
+        for _, bp in ipairs(bps) do
+            bp.source = clientsrc
+        end
+        waitverify[bpKey(clientsrc)] = { bps, si }
+        updateHook()
     end
-    local src = source.open(clientsrc.path)
-    if src then
-        src.si = si
-        verifyBreakpoint(src, bps)
-        return
-    end
-    for _, bp in ipairs(bps) do
-        bp.source = clientsrc
-    end
-    waitverify[path.normalize_native(clientsrc.path)] = { bps, si }
-    updateHook()
 end
 
 function m.exec(bp)
@@ -191,20 +221,29 @@ function m.exec(bp)
     return true
 end
 
-ev.on('source-create', function(src)
-    if not src.path then
+local function sourceUpdateBreakpoint(src)
+    local key = bpKey(src)
+    local bpssi = waitverify[key]
+    if bpssi then
+        waitverify[key] = nil
+        if not src.sourceReference then
+            src.si = bpssi[2]
+        end
+        verifyBreakpoint(src, bpssi[1])
         return
     end
-    local nativepath = path.normalize_native(src.path)
-    local bpssi = waitverify[nativepath]
-    if not bpssi then
+    local bps = breakpoints[key]
+    if bps then
+        updateBreakpoint(key, src, bps)
         return
     end
-    waitverify[nativepath] = nil
+end
 
-    src.si = bpssi[2]
-    verifyBreakpoint(src, bpssi[1])
-end)
+function m.newproto(proto, src, activeline)
+    src.protos[proto] = activeline
+    sourceUpdateBreakpoint(src)
+    return activeline.bp
+end
 
 ev.on('terminated', function()
     breakpoints = {}
@@ -213,6 +252,7 @@ ev.on('terminated', function()
     info = {}
     m = {}
     enable = false
+    hookmgr.break_close()
 end)
 
 return m

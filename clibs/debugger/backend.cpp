@@ -208,7 +208,10 @@ static int sleep(lua_State* L) {
     return 0;
 }
 
-extern "C" __declspec(dllexport)
+extern "C" 
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
 int luaopen_debugger_backend(lua_State* L) {
     static luaL_Reg lib[] = {
         { "start", start },

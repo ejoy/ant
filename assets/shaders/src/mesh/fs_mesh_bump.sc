@@ -2,7 +2,7 @@ $input v_tex0, v_lightdir, v_viewdir
 
 #include "common.sh"
 #include "common/lighting.sh"
-#include "common/uniform.sh"
+#include "common/uniforms.sh"
 
 SAMPLER2D(s_basecolor,  0);
 SAMPLER2D(s_normal, 1);
