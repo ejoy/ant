@@ -137,3 +137,27 @@ ecs.component "control_state" {
 ecs.component "hierarchy_parent" {
 	eid = -1
 }
+-- mode = color or factor, gradient, skybox etc
+--           
+-- mode = 1  color mode use skycolor as classic ambient
+-- mode = 0  factor mode use ratio factor of mainlight color
+--           ratio factor ，use mainlight's factor directioncolor *factor 
+-- mode = 2  gradient ，interpolate with skycolor，midcolor，groundcolor 
+
+ecs.component "ambient_light" { 
+	data  = {
+		type = "userdata",
+		default = {
+			mode   = "color",
+			factor = 0.3,     			    
+			skycolor = {1,1,1,1},
+			midcolor = {1,1,1,1},
+			groundcolor = {1,1,1,1},
+			-- gradient = {          -- 这种模式，过于复杂多层，简化到上层，平面化
+			-- 	skycolor = {1,1,1,1},
+			-- 	midcolor = {1,1,1,1},
+			-- 	groundcolor = {1,1,1,1},
+			-- },
+		},
+	},
+}
