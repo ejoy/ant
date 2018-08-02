@@ -15,6 +15,7 @@ local function PrintNodeInfo(node, level)
         print(space.."position", v.vertices[1],v.vertices[2],v.vertices[3])
         print(space.."normal", v.vertices[4], v.vertices[5], v.vertices[6])
         print(space.."texcoord0", v.vertices[7], v.vertices[8], v.vertices[9])
+        print(space.."tangent", v.vertices[10], v.vertices[11], v.vertices[12])
         print(space.."index", #v.indices, v.indices[1], v.indices[2], v.indices[3])
     end
 
@@ -109,7 +110,7 @@ function fbx_loader.load(filepath)
         return
     end
 
-    --PrintNodeInfo(model_node, 1)
+    PrintNodeInfo(model_node, 1)
     --PrintMaterialInfo(material_info)
 
     for _, v in ipairs(material_info) do
@@ -126,9 +127,12 @@ function fbx_loader.load(filepath)
             { "POSITION", 3, "FLOAT" },
             { "NORMAL", 3, "FLOAT", true, false},
             { "TEXCOORD0", 3, "FLOAT"},
+            { "TANGENT",3,"FLOAT"}
         }
 
-        local vb_data = {"fffffffff", table.unpack(v.vb_raw)}
+
+        local vb_data = {"ffffffffffff", table.unpack(v.vb_raw)}
+        --local vb_data = {"fffffffff", table.unpack(v.vb_raw)}
         v.vb = bgfx.create_vertex_buffer(vb_data, vdecl)
         v.ib = bgfx.create_index_buffer(v.ib_raw)
     end

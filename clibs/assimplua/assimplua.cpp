@@ -486,18 +486,23 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene) {
 			// vertices = {}
 			lua_newtable(L);
 
+			int stride = 12;
+
 			for (uint32_t j = 0; j < mesh->mNumVertices; ++j){
+
 				uint32_t stackidx = 1;
-				auto push_vector = [L, j, &stackidx](const ai_real *p, uint32_t num){
+				auto push_vector = [L, j, &stackidx](const ai_real *p, uint32_t num,int stride){
 					for (uint32_t iv = 0; iv < num; ++iv) {
 						lua_pushnumber(L, *p++);
-						lua_seti(L, -2, j * 9 + (stackidx++));
+						lua_seti(L, -2, j * stride + (stackidx++));
 					}
 				};
 
-				push_vector(&(mesh->mVertices[j].x), 3);
-				push_vector(&(mesh->mNormals[j].x), 3);
-				push_vector(&(mesh->mTextureCoords[0][j].x), 3);
+				push_vector(&(mesh->mVertices[j].x), 3,stride);
+				push_vector(&(mesh->mNormals[j].x), 3,stride);
+				push_vector(&(mesh->mTextureCoords[0][j].x), 3,stride);
+
+				push_vector(&(mesh->mTangents[j].x),3,stride);     // add tangent 
 
 				aabb.Append(mesh->mVertices[j]);
 			}
