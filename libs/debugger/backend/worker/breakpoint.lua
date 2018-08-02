@@ -1,5 +1,5 @@
 local rdebug = require 'remotedebug'
-local path = require 'debugger.path'
+local fs = require 'debugger.filesystem'
 local source = require 'debugger.backend.worker.source'
 local evaluate = require 'debugger.backend.worker.evaluate'
 local ev = require 'debugger.event'
@@ -75,7 +75,7 @@ local function bpKey(src)
     if src.sourceReference then
         return src.sourceReference
     end
-    return path.normalize_native(src.path)
+    return fs.normalize_native(src.path)
 end
 
 local function verifyBreakpoint(src, bps)
