@@ -21,7 +21,7 @@ local camera_util = require "render.camera.util"
 
 -- 做成 component 
 local terrain = terrainClass.new()       	-- new terrain instance pvp
-local terrain_chibi = terrainClass.new()    -- chibi 
+--local terrain_chibi = terrainClass.new()    -- chibi
 
 local math3d_stack = nil 					--math3d.new()
 
@@ -100,7 +100,7 @@ local function process_input(message)
 	-- for _, msg,x,y,z,w,u in pairs(input_queue) do
 	-- 	nkmsg.push(message, msg, x,y,z,w,u)
 	-- end
-	nk.input(message)
+	--nk.input(message)
 
 
 	--[[
@@ -234,7 +234,7 @@ local function init(fbw, fbh)
 	--]]
 	-- terrain_chibi:load("terrain/chibi16.lvl")
 
-	 terrain_chibi:load("assets/build/terrain/chibi16.lvl")  	  -- 默认顶点格式
+	-- terrain_chibi:load("assets/build/terrain/chibi16.lvl")  	  -- 默认顶点格式
 
 	-- material create mode 
 	if program_create_mode == 1 then 
