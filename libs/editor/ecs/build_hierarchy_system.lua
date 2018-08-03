@@ -8,6 +8,8 @@ local path = require "filesystem.path"
 local build_system = ecs.system "build_hierarchy_system"
 build_system.singleton "math_stack"
 
+local mu = require "math.util"
+
 local assetmgr = require "asset"
 
 local function mark_modified_file(filepath, content, modified_files)
@@ -19,12 +21,13 @@ local function mark_modified_file(filepath, content, modified_files)
 		path.create_dirs(filepath)
 		modified_files[filepath] = content
 	else
-		assert(c == content)
+		--assert(c == content)
 	end
 end
 
 local function create_hierarchy_path(ref_path)	
-	assert(path.ext(ref_path):lower() == "hierarchy")
+	local ext = path.ext(ref_path)
+	assert(ext:lower() == "hierarchy")
 	ref_path = path.remove_ext(ref_path)
 	ref_path = ref_path .. "-hie.hierarchy"	
 	return ref_path
@@ -53,7 +56,7 @@ local function build(ms, eid, modified_files)
 		if hie_np then
 			local namemapper = hie_np.v
 			for _, ceid in pairs(namemapper) do
-				build(ms, ceid)
+				build(ms, ceid, modified_files)
 			end
 		end
 	end
@@ -73,7 +76,7 @@ local function is_eid_in_tree(eid, tree)
 	return is_eid_in_tree(eid, tree.children)
 end
 
-local function build_hierarchy_update_tree(eid, branch, tree)
+local function build_hierarchy_update_tree(eid, branch, tree, modified_files)
 	if is_eid_in_tree(eid, tree) then
 		return 
 	end
@@ -89,26 +92,98 @@ local function build_hierarchy_update_tree(eid, branch, tree)
 				branch.children = {}
 			end
 
-			build_hierarchy_update_tree(ceid, branch.children, tree)
+			build_hierarchy_update_tree(ceid, branch.children, tree, modified_files)
 		end
 	end
 end
 
-local function rebuild_hierarchy(ms, iterop)
-	local tree = {}
+local function rebuild_hierarchy(ms, iterop)	
+	local moditied_files = {}
+
+	--[@	find editable_hierarchy reference path
+	local function add_hierarchy_component(eid, ref_path)
+		local e = world[eid]
+		local hie = e.hierarchy
+		if hie == nil then
+			world:add_component(eid, "hierarchy")
+			hie = e.hierarchy
+			hie.ref_path = create_hierarchy_path(ref_path)
+		end	
+	end	
+
+	local function mark_refpath(erefpath, refpath)		
+		local content = moditied_files[erefpath]
+		if content == nil then
+			moditied_files[erefpath] = refpath
+		end
+	end
+
 	for _, eid in iterop() do
-		build_hierarchy_update_tree(eid, tree, tree)
-	end
+		local function find_hie_entity(eid)
+			local e = world[eid]
+			local hm = e.hierarchy_name_mapper
+			if hm then
+				local erefpath = e.editable_hierarchy.ref_path				
+				add_hierarchy_component(eid, erefpath)
+				mark_refpath(erefpath, e.hierarchy.ref_path)
 
-	-- only first node, child node in build function will be called
-	local modified_files = {}
-	for _, eid in ipairs(tree) do
-		build(ms, eid, modified_files)
-	end
+				local mapper = hm.v
+				for _, eid in pairs(mapper) do
+					find_hie_entity(eid)										
+				end
+			end
+		end
 
-	for filepath, content in pairs(modified_files) do
-		hierarchy_module.save(content, filepath)
+		find_hie_entity(eid)
 	end
+	--@]
+
+	--[@	use hierarchy path to save refercene resource
+	for epath, rpath in pairs(moditied_files) do		
+		-- load the cache if it has been loaded(this cache will be modified by program), otherwise load it from file
+		local hascache = assetmgr.has_res(epath)
+		local root = assetmgr.load(epath, {editable=true})
+		-- we need to rewrite the file from cache
+		local assetdir = assetmgr.assetdir()
+		if hascache then
+			hierarchy_module.save(root, path.join(assetdir, epath))
+		end
+
+		local builddata = hierarchy_module.build(root)
+		hierarchy_module.save(builddata, path.join(assetdir, rpath))
+	end
+	--[@
+
+	
+	--[@	use the new updated resource to update entity srt
+	for _, eid in iterop() do
+		local e = world[eid]
+		local rootsrt = mu.srt_from_entity(ms, e)
+
+		local function update_transform(pe, psrt)
+			local hm = pe.hierarchy_name_mapper
+			if hm then
+				local mapper = hm.v
+				local builddata = assetmgr.load(pe.hierarchy.ref_path)
+				pe.hierarchy.builddata = builddata
+				local srt = psrt
+				for _, node in ipairs(builddata) do
+					local rot = ms({type="q", table.unpack(node.r)}, "eP")
+					local csrt = ms({type="srt", s=node.s, r=rot, t=node.t}, srt, "*P")
+					local s, r, t = ms(csrt, "~PPP")
+					local ceid = mapper[node.name]
+					local ce = world[ceid]
+					ms(ce.position.v, t, "=")
+					ms(ce.rotation.v, r, "=")
+					ms(ce.scale.v, s, "=")
+					update_transform(ce, csrt)
+				end			
+			end
+		end
+
+		update_transform(e, rootsrt)
+	end
+	--@]
 end
 
 function build_system:init()

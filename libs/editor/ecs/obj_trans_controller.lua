@@ -1,11 +1,16 @@
 local ecs = ...
 local world = ecs.world
 
-local asset = require "asset"
+local assetmgr = require "asset"
 local mu = require "math.util"
 local cu = require "common.util"
 local components_util = require "render.components.util"
 
+local hierarchy_module = require "hierarchy"
+
+local axisbase_controller_hierarchyname = "hierarchy/axisbase_contrller.hierarchy"
+local axis_hierarchyname = "hierarchy/axis.hierarchy"
+local rotator_hierarchyname = "hierarchy/rotator.hierarchy"
 
 ecs.component "pos_transform" {}
 ecs.component "scale_transform" {}
@@ -258,21 +263,8 @@ local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axisme
 	world:add_component(hie_eid, tag_comp)
 	local hie_entity = world[hie_eid]
 
-	local hie = hie_entity.editable_hierarchy.root
-	hie[1] = {
-		name = "head",
-		transform = {
-			s={0.002}, 
-			t={0, 0, 1.1},
-		}
-	}
-	hie[2] = {
-		name = "axis",
-		transform = {
-			s={0.001, 0.001, 0.01}, 
-			t={0, 0, 0.5},
-		}
-	}
+	hie_entity.editable_hierarchy.ref_path = axis_hierarchyname
+	hie_entity.editable_hierarchy.root = assetmgr.load(axis_hierarchyname, {editable=true})
 
 	local namemapper = hie_entity.hierarchy_name_mapper.v
 
@@ -303,42 +295,25 @@ local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axisme
 end
 
 local function add_axis_base_transform_entites(ms, basename, headmeshfile, axismeshfile, tag_comp, colors)
-	local xaxis_eid = add_axis_entites(ms, basename, "x", 
+	local rootaxis_eid = components_util.create_hierarchy_entity(ms, world, basename)
+	world:add_component(rootaxis_eid, tag_comp)
+
+	local axis_root = world[rootaxis_eid]
+	local namemapper = axis_root.hierarchy_name_mapper.v
+	namemapper.xaxis = add_axis_entites(ms, basename, "x", 
 										headmeshfile, axismeshfile,
 										"obj_trans/obj_trans.material", tag_comp, colors["red"])
 	
-	local yaxis_eid = add_axis_entites(ms, basename, "y", 
+	namemapper.yaxis = add_axis_entites(ms, basename, "y", 
 										headmeshfile, axismeshfile,
 										"obj_trans/obj_trans.material", tag_comp, colors["green"])
 
-	--ms(yaxis.rotation.v, {-90, 0, 0}, "=")	
-
-	local zaxis_eid = add_axis_entites(ms, basename, "z", 
+	namemapper.zaxis = add_axis_entites(ms, basename, "z", 
 										headmeshfile, axismeshfile,
 										"obj_trans/obj_trans.material", tag_comp, colors["blue"])
 
-	local rootaxis_eid = components_util.create_hierarchy_entity(ms, world, basename)
-	world:add_component(rootaxis_eid, tag_comp)
-	local axis_root = world[rootaxis_eid]
-
-	local eh = axis_root.editable_hierarchy.root
-	eh[1] = {name = "xaxis", 
-		transform = {
-			--r = ms({0, 90, 0}, "qT")
-			r = {0, math.cos(math.pi * 0.25), 0, math.sin(math.pi * 0.25)}
-		}
-	}
-	eh[2] = {name = "yaxis", 
-		transform = {
-			r = {math.cos(-math.pi * 0.25), 0, 0, math.sin(-math.pi * 0.25)}
-		}
-	}
-	eh[3] = {name = "zaxis", }
-	
-	local namemapper = axis_root.hierarchy_name_mapper.v
-	namemapper.xaxis = xaxis_eid
-	namemapper.yaxis = yaxis_eid
-	namemapper.zaxis = zaxis_eid
+	axis_root.editable_hierarchy.ref_path = axisbase_controller_hierarchyname
+	axis_root.editable_hierarchy.root = assetmgr.load(axisbase_controller_hierarchyname, {editable = true})
 	
 	local controllers = {		
 		root = rootaxis_eid,
@@ -412,89 +387,60 @@ local function add_scale_entities(ms, colors)
 	return add_axis_base_transform_entites(ms, "scale", "cube.mesh", "cylinder.mesh", "scale_transform", colors)	
 end
 
-local function add_rotator_entities(ms, colors)
-	local rotator_scale = {0.01, 0.01, 0.01}
+local function add_rotator_entities(ms, colors)	
 	local elems = {
-		{
-			name = "rotate-x",
-			srt = { s=rotator_scale, r = {-90, 0, 0},},
-			axis_name = "rotate-axis-x",
-			axis_srt = {s={0.001, 0.001, 0.01}, r={0, 90, 0}, t={0.5, 0, 0}},
-			color_name = "red",
-		},
-		{
-			name = "rotate-y",
-			srt = { s=rotator_scale, r = {0, 0, 90},},
-			axis_name = "rotate-axis-y",
-			axis_srt = {s={0.001, 0.001, 0.01}, r={-90, 0, 0}, t={0, 0.5, 0}},
-			color_name = "green",
-		},
-		{
-			name = "rotate-z",
-			srt = { s=rotator_scale, r = {-90, 90, 0},},
-			axis_name = "rotate-axis-z",
-			axis_srt = {s={0.001, 0.001, 0.01}, r={0, 0, 0}, t={0, 0, 0.5}},
-			color_name = "blue",
-		},
+		xaxis = {suffixname = "x", clrname="red"},
+		yaxis = {suffixname = "y", clrname="green"},
+		zaxis = {suffixname = "z", clrname="blue"},
 	}
 
 	local root_eid = components_util.create_hierarchy_entity(ms, world, "rotator")
 	world:add_component(root_eid, "rotator_transform")
 	local hie_entity = world[root_eid]
-	local root = hie_entity.editable_hierarchy.root
+	hie_entity.editable_hierarchy.ref_path = axisbase_controller_hierarchyname
+	hie_entity.editable_hierarchy.root = assetmgr.load(axisbase_controller_hierarchyname, {editable=true})
 	local namemapper = hie_entity.hierarchy_name_mapper.v
-	local child_idx = 1
-	local controllers = {}
-	for _, elem in ipairs(elems) do		
-		local function add_elem_entity(name, meshfilename, srt, colorname)
+
+	local function add_elem_entity(elemname, clrname)
+		local elem_eid = components_util.create_hierarchy_entity(ms, world, "rotator-elem-" .. elemname)
+		world:add_component(elem_eid, "rotator_transform")
+		local elem = world[elem_eid]
+
+		elem.editable_hierarchy.root = assetmgr.load(rotator_hierarchyname, {editable=true})
+		elem.editable_hierarchy.ref_path = rotator_hierarchyname
+
+		local mapper = elem.hierarchy_name_mapper.v
+		local function add_entity(name, meshfilename, colorname)
 			local eid = components_util.create_render_entity(ms, world, name, meshfilename,
 			"obj_trans/obj_trans.material")
 			world:add_component(eid, "rotator_transform", "editor", "hierarchy_parent")
 			local entity = world[eid]
-
+	
 			local properties = assert(entity.material.content[1].properties)
 			properties.u_color = {type="color", name="color", value=cu.deep_copy(colors[colorname])}
 			entity.can_render.visible = false
 			mu.identify_transform(ms, entity)
-
-			entity.hierarchy_parent.eid = root_eid
-
-			-- bind to hierarchy tree & namemapper
-			root[child_idx] = {
-				name = name,
-				transform = {
-						s = srt.s,
-						r = ms(srt.r, "qT"),
-						t = srt.t,
-					}
-				}
-			namemapper[name] = eid
-			child_idx = child_idx + 1
+	
+			entity.hierarchy_parent.eid = elem_eid
+			return eid
 		end
-
-		add_elem_entity(elem.name, "rotator.mesh", elem.srt, elem.color_name)
-		add_elem_entity(elem.axis_name, "cylinder.mesh", elem.axis_srt, elem.color_name)
-		world:remove_component(namemapper[elem.axis_name], "can_select")
+	
+		mapper["rotator"] = add_entity("rotator-" .. elemname, "rotator.mesh", clrname)
+		local axiseid = add_entity("rotator-axis-" .. elemname, "cylinder.mesh", clrname)
+		mapper["rotator-axis"] = axiseid
+		world:remove_component(axiseid, "can_select")
+		return elem_eid
 	end
 
-	controllers.root = root_eid
+	for name, elem in pairs(elems) do
+		namemapper[name] = add_elem_entity(elem.suffixname, elem.clrname)
+	end
 
-	function controllers:iter_rotator_eid()		
-		-- local entity = world[rooteid]
-		-- local mapper = entity.hierarchy_name_mapper.v
-		-- local function rotator_next(t, idx)
-		-- 	idx = idx + 1
-		-- 	if idx < #t then
-		-- 		local name = t[idx]
-		-- 		local eid = mapper[name]
-		-- 		if eid then
-		-- 			return idx, eid
-		-- 		end
-		-- 	end			
-		-- end
+	local controllers = {
+		root = root_eid
+	}
 
-		-- return rotator_next, {"rotate-x", "rotate-y", "rotate-z"}, 0
-		
+	function controllers:iter_rotator_eid()				
 		local e = world[self.root]
 		return next, e.hierarchy_name_mapper.v, nil
 	end
@@ -522,9 +468,64 @@ local function add_rotator_entities(ms, colors)
 	return controllers
 end
 
+local function create_axisbase_hierarchy(ms)
+	local path = require "filesystem.path"
+	local ctl_root = hierarchy_module.new()
+	ctl_root[1] = {name = "xaxis", 
+		transform = {
+			r = {0, math.cos(math.pi * 0.25), 0, math.sin(math.pi * 0.25)}
+		}
+	}
+	ctl_root[2] = {name = "yaxis", 
+		transform = {
+			r = {math.cos(-math.pi * 0.25), 0, 0, math.sin(-math.pi * 0.25)}
+		}
+	}
+	ctl_root[3] = {name = "zaxis", }
+
+	hierarchy_module.save(ctl_root, path.join(assetmgr.assetdir(), axisbase_controller_hierarchyname))
+
+	local axis_root = hierarchy_module.new()	
+	axis_root[1] = {
+		name = "head",
+		transform = {
+			s={0.002}, 
+			t={0, 0, 1.1},
+		}
+	}
+	axis_root[2] = {
+		name = "axis",
+		transform = {
+			s={0.001, 0.001, 0.01}, 
+			t={0, 0, 0.5},
+		}
+	}
+	
+	hierarchy_module.save(axis_root, path.join(assetmgr.assetdir(), axis_hierarchyname))
+
+	local rotator_root = hierarchy_module.new()
+	rotator_root[1] = {
+		name = "rotator",
+		transform = {
+			s={0.01, 0.01, 0.01}, r=ms({-90, 0, 0}, "qT")
+		}
+	}
+
+	rotator_root[2] = {
+		name = "rotator-axis",
+		transform = {
+			s={0.001, 0.001, 0.01}, r=ms({0, 90, 0}, "qT"), t={0.5, 0, 0},
+		}
+	}
+	hierarchy_module.save(rotator_root, path.join(assetmgr.assetdir(), rotator_hierarchyname))
+end
+
 function obj_trans_sys:init()
+	local ms = self.math_stack
+	create_axisbase_hierarchy(ms)
+
     local ot = self.object_transform    
-    local ms = self.math_stack
+    
     local cc = assert(self.constant.tcolors)
     ot.controllers = {
         pos_transform = add_translate_entities(ms, cc),        
