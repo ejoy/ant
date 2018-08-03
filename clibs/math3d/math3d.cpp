@@ -1599,31 +1599,33 @@ ltype(lua_State *L) {
 }
 
 extern "C"
-LUAMOD_API int
-luaopen_math3d(lua_State *L) {
-	init_command_desc();
-	luaL_checkversion(L);
-	luaL_Reg ref[] = {
-		{ "__tostring", lreftostring },
-		{ "__call", lassign },
-		{ "__bnot", lpointer },
-		{ "__index", lref_get},
-		{ NULL, NULL },
-	};
-	luaL_newmetatable(L, LINALG_REF);
-	luaL_setfuncs(L, ref, 0);
-	lua_pop(L, 1);
+{
+	LUAMOD_API int
+	luaopen_math3d(lua_State *L) {
+		init_command_desc();
+		luaL_checkversion(L);
+		luaL_Reg ref[] = {
+			{ "__tostring", lreftostring },
+			{ "__call", lassign },
+			{ "__bnot", lpointer },
+			{ "__index", lref_get},
+			{ NULL, NULL },
+		};
+		luaL_newmetatable(L, LINALG_REF);
+		luaL_setfuncs(L, ref, 0);
+		lua_pop(L, 1);
 
-	luaL_Reg l[] = {
-		{ "new", lnew },
-		{ "reset", lreset },
-		{ "constant", lconstant },
-		{ "print", lprint },	// for debug
-		{ "type", ltype },
-		{ "ref", lref },
-		{ "isvalid", lisvalid},
-		{ NULL, NULL },
-	};
-	luaL_newlib(L, l);
-	return 1;
+		luaL_Reg l[] = {
+			{ "new", lnew },
+			{ "reset", lreset },
+			{ "constant", lconstant },
+			{ "print", lprint },	// for debug
+			{ "type", ltype },
+			{ "ref", lref },
+			{ "isvalid", lisvalid},
+			{ NULL, NULL },
+		};
+		luaL_newlib(L, l);
+		return 1;
+	}
 }
