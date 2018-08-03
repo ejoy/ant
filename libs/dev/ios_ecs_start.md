@@ -27,6 +27,8 @@
 	+ 其他的shader暂时需要自己编译
 + 其他资源也需要注意路径,搜索会从上面添加的资源路径搜索(目前就是地形那块我把资源路径前面的assets/build都去除了,相关资源也修改了)
 
++ 下载app。在pm2.ejoy.com上的AntEngine里面,点进去找到fileserver, 再点击就可以用二维码扫描下载, 不过应该是要用阿里郎连接vpn到内网才行
+安装后需要在设置->通用->设备管理里面对"Guangzhou JianYue information technology"信任。
 
 + 使用流程
 	+ 下载并且安装iTunes
