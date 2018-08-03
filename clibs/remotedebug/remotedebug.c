@@ -95,9 +95,9 @@ push_errmsg(lua_State *L, lua_State *cL) {
 static int
 lhost_start(lua_State *L) {
 	clear_client(L);
-	const char * mainscript = luaL_checkstring(L, 1);
 	lua_CFunction preprocessor = NULL;
-	if (lua_type(L, 2) == LUA_TFUNCTION) {
+	int script_index = 1;
+	if (lua_type(L, 1) == LUA_TFUNCTION) {
 		// preprocess c function
 		preprocessor = lua_tocfunction(L, 2);
 		if (preprocessor == NULL) {
@@ -106,7 +106,9 @@ lhost_start(lua_State *L) {
 		if (lua_getupvalue(L, 2, 1)) {
 			return luaL_error(L, "Preprocessor must be a light C function (no upvalue)");
 		}
+		script_index ++;
 	}
+	const char * mainscript = luaL_checkstring(L, script_index);
 	lua_State *cL = luaL_newstate();
 	if (cL == NULL)
 		return luaL_error(L, "Can't new debug client");
