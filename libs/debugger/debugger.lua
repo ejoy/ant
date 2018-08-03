@@ -37,9 +37,9 @@ local function start_hook()
     end
 end
 
-local function start_master()
+local function start_master(io)
     local master = require 'debugger.backend.master'
-    if master.init() then
+    if master.init(io) then
         return master.update
     end
 end
@@ -55,7 +55,7 @@ local function start_worker(wait)
     end
 end
 
-local function start_all(wait)
+local function start_all(wait, io)
     start_hook()
     rdebug.start 'debugger.backend.worker'
     if wait then

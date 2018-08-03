@@ -1,4 +1,5 @@
-local fs = require 'cppfs'
+local ok, fs = pcall(require, 'cppfs')
+if not ok then fs = nil end
 
 local default_sep = package.config:sub(1, 1)
 
@@ -9,6 +10,7 @@ local function split(str)
 end
 
 local function absolute(p)
+    if not fs then return p end
     return fs.absolute(fs.path(p)):string()
 end
 

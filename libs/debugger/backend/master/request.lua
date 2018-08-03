@@ -52,6 +52,7 @@ function request.attach(req)
 end
 
 function request.launch(req)
+    mgr.exitWhenClose()
     return request.attach(req)
 end
 
