@@ -3,18 +3,15 @@
 #include <assert.h>
 #include <stdint.h>
 #include <new>
+#include <memory>
 
 static int HOOK_MGR = 0;
 static int HOOK_CALLBACK = 0;
 static int* DEBUG_HOST = 0;
 
-#define USE_THUNK 1
 #define BPMAP_SIZE (1 << 16)
 
-#if defined(USE_THUNK)
 #include "thunk.h"
-#include "thunk.cpp"
-#endif
 
 #define LOG(...) do { \
     FILE* f = fopen("dbg.log", "a"); \
@@ -246,23 +243,15 @@ struct hookmgr {
     // common
     //
     lua_State* cL = 0;
-#if defined(USE_THUNK)
-    shellcode sc_hook = { 0 };
-#endif
+    std::unique_ptr<thunk> sc_hook;
     hookmgr(lua_State* L)
         : cL(L)
-#if defined(USE_THUNK)
         , sc_hook(thunk_create_hook(
             reinterpret_cast<intptr_t>(this),
             reinterpret_cast<intptr_t>(&hook_callback)
         ))
-#endif
     { }
-#if defined(USE_THUNK)
-    ~hookmgr() {
-        thunk_destory(sc_hook);
-    }
-#endif
+
     void hook(lua_State* hL, lua_Debug* ar) {
         step_hook(hL, ar);
         break_hook(hL, ar);
@@ -292,11 +281,7 @@ struct hookmgr {
     void updatehookmask(lua_State* hL) {
         int mask = break_mask | step_mask;
         if (mask) {
-#if defined(USE_THUNK)
-            lua_sethook(hL, (lua_Hook)sc_hook.data, mask, 0);
-#else
-            lua_sethook(hL, hook_callback_raw, mask, 0);
-#endif
+            lua_sethook(hL, (lua_Hook)sc_hook->data, mask, 0);
         }
         else {
             lua_sethook(hL, NULL, 0, 0);
@@ -311,26 +296,11 @@ struct hookmgr {
     static void hook_callback(hookmgr* mgr, lua_State* hL, lua_Debug* ar) {
         mgr->hook(hL, ar);
     }
-#if !defined(USE_THUNK)
-    static void hook_callback_raw(lua_State* hL, lua_Debug* ar) {
-        if (LUA_TLIGHTUSERDATA != lua_rawgetp(hL, LUA_REGISTRYINDEX, &HOOK_MGR)) {
-            lua_pop(hL, 1);
-            lua_sethook(hL, NULL, 0, 0);
-            return;
-        }
-        hook_callback(get_self(hL, -1), hL, ar);
-        lua_pop(hL, 1);
-    }
-#endif
 };
 
 static int start(lua_State* cL) {
     DEBUG_HOST = checklightudata<int>(cL, 1);
-#if !defined(USE_THUNK)
-    lua_State* hL = get_host(cL);
-    lua_pushlightuserdata(hL, hookmgr::get_self(cL, lua_upvalueindex(1)));
-    lua_rawsetp(hL, LUA_REGISTRYINDEX, &HOOK_MGR);
-#endif
+    thunk_bind((intptr_t)get_host(cL), (intptr_t)hookmgr::get_self(cL, lua_upvalueindex(1)));
     return 0;
 }
 
