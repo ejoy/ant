@@ -1,24 +1,17 @@
 local lsocket = require 'lsocket'
-local proto = require 'debugger.protocol'
 local socket = require 'debugger.socket'
 
 local listen
 local fd
-local stat = {}
-local queue = {}
 
 local m = {}
 function m.start(ip, port)
     fd = assert(lsocket.connect(ip, port))
+end
+
+function m.event_in(frecv)
     socket.init(fd, function()
-        while true do
-            local msg = proto.recv(fd:recv(), stat)
-            if msg then
-                queue[#queue + 1] = msg
-            else
-                break
-            end
-        end
+        frecv(fd:recv())
     end)
 end
 
@@ -27,22 +20,13 @@ function m.update()
     return not not fd
 end
 
-function m.recv()
-    if #queue == 0 then
-        return
-    end
-    return table.remove(queue, 1)
-end
-
 function m.send(data)
-    socket.send(fd, proto.send(data))
+    socket.send(fd, data)
 end
 
 function m.close()
     fd:close()
     fd = nil
-    stat = {}
-    queue = {}
     os.exit(true, true)
 end
 
