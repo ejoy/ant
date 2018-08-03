@@ -194,7 +194,7 @@ local function update_contorller(ot, ms)
 			update_transform(controller, obj_eid)
 		end
 
-		controller:show(bshow)
+		controller:show(bshow)		
     end
 end
 
@@ -290,6 +290,9 @@ local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axisme
 		properties.u_color = {type="color", name="color", value=cu.deep_copy(color)}
 		obj.can_render.visible = false
 		namemapper[k] = eid
+
+		-- print("axis-base object : ", obj.name.n)
+		-- mu.print_srt(obj, 1)
 	end
 	return hie_eid
 end
