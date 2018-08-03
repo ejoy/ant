@@ -8,10 +8,13 @@ local function split(str)
     return r
 end
 
+local function absolute(p)
+    return fs.absolute(fs.path(p)):string()
+end
+
 local function normalize(p)
-    p = fs.absolute(fs.path(p))
     local stack = {}
-    for _, elem in ipairs(split(p:string())) do
+    for _, elem in ipairs(split(absolute(p))) do
         if #elem == 0 then
         elseif elem == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
             stack[#stack] = nil
@@ -23,9 +26,8 @@ local function normalize(p)
 end
 
 local function normalize_native(p)
-    p = fs.absolute(fs.path(p))
     local stack = {}
-    for _, elem in ipairs(split(p:string())) do
+    for _, elem in ipairs(split(absolute(p))) do
         if #elem == 0 then
         elseif elem == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
             stack[#stack] = nil
@@ -67,8 +69,14 @@ function m.relative(path, base, sep)
 end
 
 function m.filename(path)
-    local paths = split(path)
+    local paths = normalize(path)
     return paths[#paths]
+end
+
+function m.remove_filename(path)
+    local paths = normalize(path)
+    paths[#paths] = nil
+    return table.concat(paths, default_sep)
 end
 
 return m

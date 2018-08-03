@@ -469,6 +469,28 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene, const char
 			// vertices = {}
 			lua_newtable(L);
 
+			/*
+			int stride = 12;
+
+			for (uint32_t j = 0; j < mesh->mNumVertices; ++j){
+
+				uint32_t stackidx = 1;
+				auto push_vector = [L, j, &stackidx](const ai_real *p, uint32_t num,int stride){
+					for (uint32_t iv = 0; iv < num; ++iv) {
+						lua_pushnumber(L, *p++);
+						lua_seti(L, -2, j * stride + (stackidx++));
+					}
+				};
+
+				push_vector(&(mesh->mVertices[j].x), 3,stride);
+				push_vector(&(mesh->mNormals[j].x), 3,stride);
+				push_vector(&(mesh->mTextureCoords[0][j].x), 3,stride);
+
+				push_vector(&(mesh->mTangents[j].x),3,stride);     // add tangent 
+
+				aabb.Append(mesh->mVertices[j]);
+			*/
+
 			auto calc_buf_size = [](aiMesh *mesh) {
 				size_t elemsize = 0;
 				if (mesh->HasPositions())
@@ -476,6 +498,8 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene, const char
 				if (mesh->HasNormals())
 					elemsize += sizeof(aiVector3D);
 				if (mesh->HasTextureCoords(0))
+					elemsize += sizeof(aiVector3D);
+				if (mesh->HasTangentsAndBitangents())
 					elemsize += sizeof(aiVector3D);
 				return elemsize * mesh->mNumVertices;
 			};
@@ -495,6 +519,8 @@ void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene, const char
 					*buf++ = mesh->mNormals[j];
 				if (mesh->HasTextureCoords(0))
 					*buf++ = mesh->mTextureCoords[0][j];
+				if( mesh->HasTangentsAndBitangents())
+				    *buf++ = mesh->mTangents[j];
 			}
 			lua_setfield(L, -2, "vertices");	// mesh.vertices = vertices
 

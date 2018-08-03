@@ -1,4 +1,4 @@
-﻿#define LUA_LIB
+#define LUA_LIB
 
 #include <stdio.h>
 #include <string.h>
@@ -407,7 +407,7 @@ hex2dec(char *hex_s) {
 nk_rune *
 get_charset_rune(struct lnk_context *lc,const char *name) {
 	for(int i=0;i<lc->num_charsets;i++)
-		if(!strncmp(lc->charsets[i].name,name,64))
+		if(!strncmp(lc->charsets[i].name,name,sizeof(lc->charsets[i].name)))
 			return lc->charsets[i].rune;
 	// not found ,new charset
 	return NULL;
@@ -415,7 +415,8 @@ get_charset_rune(struct lnk_context *lc,const char *name) {
 
 nk_rune* 
 add_charset_rune(struct lnk_context *lc,const char *name,nk_rune *rune ) {
-	strncpy(lc->charsets[ lc->num_charsets ].name,name,64);
+	strncpy(lc->charsets[ lc->num_charsets ].name,name,sizeof(lc->charsets[0].name)-1);
+	lc->charsets[ lc->num_charsets ].name[sizeof(lc->charsets[0].name)-1] = '\0';
 	lc->charsets[ lc->num_charsets ++].rune  = rune;
 
 	#ifdef MY_DEBUG

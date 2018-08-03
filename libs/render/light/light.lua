@@ -18,7 +18,19 @@ local ecs = ...
 ecs.component "directional_light" {}
 ecs.component "point_light" {}
 ecs.component "spot_light" {}
-ecs.component "ambient_light" {}
+--ecs.component "ambient_light" {    -- add tested 
+    -- data = {
+	-- 	type = "userdatar",   			 
+	-- 	mode = "color", 				-- or factor, gradient, skybox etc
+	-- 	factor = 0.3,     			    -- use direction light's factor directioncolor *factor 
+	-- 	color = {1, 1, 1, 1},
+	-- 	gradient = { 
+	-- 		skycolor = {1,1,1,1},
+	-- 		midcolor = {1,1,1,1},
+	-- 		groundcolor = {1,1,1,1},
+	-- 	},
+	-- },
+--}
 
 ecs.component "light" {
 	v = {
@@ -40,6 +52,8 @@ ecs.component "light" {
 		end
 	},
 }
+
+
 
 -- local light_system = ecs.system "light_system"
 

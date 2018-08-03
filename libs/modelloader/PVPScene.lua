@@ -12,7 +12,7 @@ function PVPScene.init(world, component_util, ms)
         campsite_door.name.n = "CampsiteDoor"
 
         ms(campsite_door.scale.v, {1, 1, 1}, "=")
-        ms(campsite_door.rotation.v, {-90, 90, 0,}, "=")
+        ms(campsite_door.rotation.v, {-90, -90, 0,}, "=")
         ms(campsite_door.position.v, {-12.95, 0.7867187, -14.03104}, "=")
 
         component_util.load_mesh(campsite_door, "PVPScene/campsite-door.mesh")
@@ -474,7 +474,8 @@ function PVPScene.init(world, component_util, ms)
 
         ms(wood_build.scale.v, {1, 1, 1}, "=")
         ms(wood_build.rotation.v, {-90, -90.7483, 0}, "=")
-        ms(wood_build.position.v, {37.152405, -0.429453, 5.41463}, "=")
+        --ms(wood_build.position.v, {37.152405, -0.429453, 5.41463}, "=")
+        ms(wood_build.position.v, { 30.41463 , 1.72, 7.152405 }, "=")
 
         component_util.load_mesh(wood_build, "PVPScene/woodbuilding-05.mesh")
         component_util.load_material(wood_build, {"PVPScene/scene-mat.material"})
@@ -519,7 +520,7 @@ function PVPScene.init(world, component_util, ms)
 
         ms(woodother_45.scale.v, {1, 1, 1}, "=")
         ms(woodother_45.rotation.v, {-90, 50.3198, 0}, "=")
-        ms(woodother_45.position.v, {-28.68, 0, -10.164627}, "=")
+        ms(woodother_45.position.v, {-28.68, 2, -10.164627}, "=")
 
         component_util.load_mesh(woodother_45, "PVPScene/woodother-45.mesh")
         component_util.load_material(woodother_45, {"PVPScene/scene-mat.material"})

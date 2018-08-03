@@ -294,6 +294,17 @@ local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axisme
 	return hie_eid
 end
 
+local function iter_axis(root_eid)	
+	local root = world[root_eid]
+	local namemapper = root.hierarchy_name_mapper.v
+	return next, namemapper, nil
+end
+
+local function iter_axiselem(entity)
+	local namemapper = entity.hierarchy_name_mapper.v
+	return next, namemapper, nil
+end
+
 local function add_axis_base_transform_entites(ms, basename, headmeshfile, axismeshfile, tag_comp, colors)
 	local rootaxis_eid = components_util.create_hierarchy_entity(ms, world, basename)
 	world:add_component(rootaxis_eid, tag_comp)
@@ -319,18 +330,6 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 		root = rootaxis_eid,
 	}
 
-	function controllers:iter_axis()
-		local root_eid = self.root
-		local root = world[root_eid]
-		local namemapper = root.hierarchy_name_mapper.v
-		return next, namemapper, nil
-	end
-
-	local function iter_axiselem(entity)
-		local namemapper = entity.hierarchy_name_mapper.v
-		return next, namemapper, nil
-	end
-
 	function controllers:print()
 		local root_eid = self.root
 		local root = world[root_eid]
@@ -349,7 +348,7 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 	end
 
 	function controllers:show(visible)
-		for _, axis_eid in self:iter_axis() do
+		for _, axis_eid in iter_axis(self.root) do
 			local axisentity = world[axis_eid]
 			for _, eid in iter_axiselem(axisentity) do
 				local e = world[eid]
@@ -365,7 +364,7 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 	end
 
 	function controllers:is_controller_id(check_eid)
-		for _, axis_eid in self:iter_axis() do
+		for _, axis_eid in iter_axis(self.root) do
 			local axisentity = world[axis_eid]
 			for _, eid in iter_axiselem(axisentity) do
 				if eid == check_eid then
@@ -440,16 +439,14 @@ local function add_rotator_entities(ms, colors)
 		root = root_eid
 	}
 
-	function controllers:iter_rotator_eid()				
-		local e = world[self.root]
-		return next, e.hierarchy_name_mapper.v, nil
-	end
-
-	function controllers:show(visible)		
-		for name, eid in self:iter_rotator_eid() do
-			local e = world[eid]
-			e.can_render.visible = visible
-		end
+	function controllers:show(visible)
+		for _, axis_eid in iter_axis(self.root) do
+			local axisentity = world[axis_eid]
+			for _, eid in iter_axiselem(axisentity) do
+				local e = world[eid]
+				e.can_render.visible = visible
+			end
+		end		
 	end
 
 	function controllers:update_transform(obj)		
@@ -458,9 +455,12 @@ local function add_rotator_entities(ms, colors)
 	end
 
 	function controllers:is_controller_id(check_eid)
-		for name, eid in self:iter_rotator_eid() do
-			if eid == check_eid then
-				return true
+		for _, axis_eid in iter_axis(self.root) do
+			local axisentity = world[axis_eid]
+			for _, eid in iter_axiselem(axisentity) do
+				if eid == check_eid then
+					return true
+				end
 			end
 		end
 		return false
@@ -507,14 +507,14 @@ local function create_axisbase_hierarchy(ms)
 	rotator_root[1] = {
 		name = "rotator",
 		transform = {
-			s={0.01, 0.01, 0.01}, r=ms({-90, 0, 0}, "qT")
+			s={0.01, 0.01, 0.01}, r=ms({0, 0, 0}, "qT")
 		}
 	}
 
 	rotator_root[2] = {
 		name = "rotator-axis",
 		transform = {
-			s={0.001, 0.001, 0.01}, r=ms({0, 90, 0}, "qT"), t={0.5, 0, 0},
+			s={0.001, 0.001, 0.01}, r=ms({0, 0, 0}, "qT"), t={0.5, 0, 0},
 		}
 	}
 	hierarchy_module.save(rotator_root, path.join(assetmgr.assetdir(), rotator_hierarchyname))

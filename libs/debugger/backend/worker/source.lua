@@ -1,4 +1,4 @@
-local path = require 'debugger.path'
+local fs = require 'debugger.filesystem'
 local parser = require 'debugger.parser'
 local ev = require 'debugger.event'
 local crc32 = require 'debugger.crc32'
@@ -15,20 +15,20 @@ ev.on('initializing', function(config)
     sourceMaps = {}
     if config.skipFiles then
         for _, pattern in ipairs(config.skipFiles) do
-            skipFiles[#skipFiles + 1] = ('^%s$'):format(path.normalize_native(pattern):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*'))
+            skipFiles[#skipFiles + 1] = ('^%s$'):format(fs.normalize_native(pattern):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*'))
         end
     end
     if config.sourceMaps then
         for _, pattern in ipairs(config.sourceMaps) do
             local sm = {}
-            sm[1] = ('^%s$'):format(path.normalize_native(pattern[1]):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'))
+            sm[1] = ('^%s$'):format(fs.normalize_native(pattern[1]):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'))
             if sm[1]:find '%*' then
                 sm[1]:gsub('%*', '(.*)')
                 local r = {}
-                path.normalize(pattern[2]):gsub('[^%*]+', function (w) r[#r+1] = w end)
+                fs.normalize(pattern[2]):gsub('[^%*]+', function (w) r[#r+1] = w end)
                 sm[2] = r
             else
-                sm[2] = path.normalize(pattern[2])
+                sm[2] = fs.normalize(pattern[2])
             end
             sourceMaps[#sourceMaps + 1] = sm
         end
@@ -66,7 +66,7 @@ end
 local function serverPathToClientPath(p)
     -- TODO: utf8 or ansi
     local skip = false
-    local nativePath = path.normalize_native(p)
+    local nativePath = fs.normalize_native(p)
     for _, pattern in ipairs(skipFiles) do
         if glob_match(pattern, nativePath) then
             skip = true
@@ -80,7 +80,7 @@ local function serverPathToClientPath(p)
         end
     end
     -- TODO: 忽略没有映射的source？
-    return skip, path.normalize(p)
+    return skip, fs.normalize(p)
 end
 
 local function codeReference(s)
@@ -149,9 +149,9 @@ function m.c2s(clientsrc)
             end
         end
     else
-        local nativepath = path.normalize_native(clientsrc.path)
+        local nativepath = fs.normalize_native(clientsrc.path)
         for _, source in pairs(sourcePool) do
-            if source.path and not source.sourceReference and path.normalize_native(source.path) == nativepath then
+            if source.path and not source.sourceReference and fs.normalize_native(source.path) == nativepath then
                 return source
             end
         end
@@ -170,8 +170,8 @@ function m.output(s)
         }
     elseif s.path ~= nil then
         return {
-            name = path.filename(s.path),
-            path = path.normalize(s.path),
+            name = fs.filename(s.path),
+            path = fs.normalize(s.path),
         }
     end
 end
@@ -181,7 +181,7 @@ function m.getCode(ref)
 end
 
 function m.clientPath(p)
-    return path.relative(p, workspaceFolder, '/')
+    return fs.relative(p, workspaceFolder, '/')
 end
 
 return m

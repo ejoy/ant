@@ -7,8 +7,6 @@ local rhwi = require "render.hardware_interface"
 local nk = require "bgfx.nuklear"
 local task = require "editor.task"
 
---local editor_mainwindow = require "editor.window"
-local scene = require "scene.util"
 
 local s_logo = require "logo"
 
@@ -35,10 +33,9 @@ local math3d_stack = math3d.new()
 
 canvas = iup.canvas{}
 
-local input_queue = inputmgr.queue(mapiup)
-eu.regitster_iup(input_queue, canvas)
+local input_queue = inputmgr.queue(mapiup, canvas)  -- 函数已经修改必须配合框架 editor.register_iup 一起使用
+eu.regitster_iup(input_queue, canvas)    -- editor 
 
-local world_building = {}
 dlg = iup.dialog {
   canvas,
   title = "hello terrain world",
@@ -61,10 +58,11 @@ local show_mode = 0
 
 
 -- joystick image
+local joy_width = 320 
 local joy_image = {}
 local joy_base = {}
 -- joystick pos & size
-local joy_rc  = { x= (350-200)/2,y=(350-200)/2,w=200,h=200 }
+local joy_rc  = { x= (joy_width-200)/2,y=(joy_width-200)/2,w=200,h=200 }
 local radius = 0.9  
 local joy_size = 0.7 
 
@@ -82,19 +80,108 @@ local skinStyle = {
 	},
 }
 
--- math3d_stack 或 某个lua 的错误，会引发不可预料的nuklear seq 无关错误，
--- 属于 lua 栈被破坏引发的未知错误
+-- math3d_stack 的错误，会引发不可预料的nuklear seq 错误，应该时lua 栈被破坏
 -- 测试发现，需要注意
 local function joystick_update()
-	local dir = { x=0,y=0 }
+	local move_dir = { x=0,y=0 }
+	local rot_dir = { x =0,y=0 }
+
 	nk.setStyle( skinStyle )   								
-	if nk.windowBegin( "ABC","ABC", 20, ctx.height-350, 350, 350 ) then 
+	if nk.windowBegin( "MoveJoy","ABC", 20, ctx.height-joy_width, joy_width, joy_width ) then 
 		nk.layoutSpaceBegin("static",-1,-1);
-		nk.joystick("joy",joy_rc,joy_size,radius,dir,joy_base,joy_image)						
+		nk.joystick("movejoy",joy_rc,joy_size,radius,move_dir,joy_base,joy_image)						
 	end
 	nk.windowEnd()
+	if nk.windowBegin( "RotJoy","ABC", ctx.width-joy_width-20, ctx.height-joy_width, joy_width, joy_width ) then 
+		nk.layoutSpaceBegin("static",-1,-1);
+		nk.joystick("rotjoy",joy_rc,joy_size,radius,rot_dir,joy_base,joy_image)						
+	end
+	nk.windowEnd()
+
 	nk.unsetStyle()
-	return dir.x ,dir.y  
+	return move_dir.x ,move_dir.y, rot_dir.x, rot_dir.y  
+end 
+
+local function ui_init()
+end 
+local btn_func = {
+	TRANS_MINUS  = 1, TRANS_PLUS =2,
+	RED_MINUS = 3, RED_PLUS = 4,
+	LIGHT_INTEN_MINUS = 5,LIGHT_INTEN_PLUS = 6,
+}
+
+local btn_action = 0
+local function ui_update()
+	btn_action = 0
+	nk.setFont(1)
+	--nk.themeStyle("theme blue")
+	if nk.windowBegin( "UI","Info", 30, 0, ctx.width-30*2,36 ) then 
+		nk.layoutRow('dynamic',30,{1/8,1/8,1/8,1/8,1/8,1/8,1/16,1/16,1/16,1/16} ) 
+
+		if nk.button( "trans -" ) then
+			btn_action = btn_func.TRANS_MINUS 
+		end 
+		if nk.button( "trans +" ) then
+			btn_action = btn_func.TRANS_PLUS 
+		end 
+
+		if nk.button( "red -" ) then
+			btn_action = btn_func.RED_MINUS 
+		end 
+		if nk.button( "red +" ) then
+			btn_action = btn_func.RED_PLUS 
+		end 
+
+		if nk.button( "blue -" ) then
+			btn_action = btn_func.LIGHT_INTEN_MINUS 
+		end 
+		if nk.button( "blue +" ) then
+			btn_action = btn_func.LIGHT_INTEN_PLUS 
+		end 
+
+		if nk.button(nil,"#ff0000") then
+			nk.themeStyle("theme red")
+		end 
+		if nk.button(nil,"#00aabb") then
+			nk.themeStyle("theme blue")
+		end 
+		if nk.button(nil,"#0000ffff") then
+			nk.themeStyle("theme dark")
+		end 
+
+		if nk.button(nil,"#bbbbbb") then
+			nk.themeStyle("theme white")
+		end 
+	
+	end
+	nk.windowEnd()
+
+	if btn_action == btn_func.TRANS_MINUS then
+		lightColor[4] = lightColor[4] -0.03
+		terrain:set_uniform("u_lightColor", lightColor )
+	end
+	if btn_action == btn_func.TRANS_PLUS then
+		lightColor[4] = lightColor[4] +0.03
+		terrain:set_uniform("u_lightColor", lightColor )
+	end
+
+	if  btn_action == btn_func.RED_PLUS then 
+		lightColor[1]  = lightColor[1] + 0.03
+		terrain:set_uniform("u_lightColor", lightColor )
+	end 
+	if  btn_action == btn_func.RED_MINUS then 
+		lightColor[1]  = lightColor[1] - 0.03
+		terrain:set_uniform("u_lightColor", lightColor )
+	end 
+
+	if btn_action == btn_func.LIGHT_INTEN_MINUS  then
+		lightIntensity[1] = lightIntensity[1] -0.03
+		terrain:set_uniform("u_lightIntensity", lightIntensity )
+	elseif btn_action == btn_func.LIGHT_INTEN_PLUS then 
+		lightIntensity[1] = lightIntensity[1] +0.03
+		terrain:set_uniform("u_lightIntensity", lightIntensity )
+	end 	
+
 end 
 
 function loadfonts(font,size,charset)
@@ -102,49 +189,58 @@ function loadfonts(font,size,charset)
 end 
 
 local function process_input()
+	
 	local message = {}
-    for _, msg,x,y,z,w,u in pairs(input_queue) do
-        print(msg, x, y, z, w, u)
+	for _, msg,x,y,z,w,u in pairs(input_queue) do
+		print(msg,x,y,z,w,u)
 		nkmsg.push(message, msg, x,y,z,w,u)
 	end
 
+	ui_update()
+
 	local useJoy = false 
-	local dirx,diry = joystick_update()
+	local use_rJoy = false 
+	local dirx,diry,r_dirx,r_diry = joystick_update()
+
 	if dirx ~= 0 or diry ~= 0 then
 		 useJoy = true 
 	end   
-	
-    -- dir 和 rotate 必须分开处理，否则会相互影响
+	if r_dirx ~= 0 or r_diry ~= 0 then 
+		use_rJoy = true
+	end 
+
+	-- for rotation 
+	if use_rJoy == true then 
+		print("r_dir:",r_diry,r_dirx)
+	  	dir[1]  = dir[1] + r_diry*3.5;
+		dir[2]  = dir[2] + r_dirx*3.5;
+		if(dir[1]>89) then dir[1] = 89 end 
+		if(dir[1]<-89) then dir[1] = -89 end 
+		print("dir:",dir[1],dir[2])
+	end
+	-- for movement 
 	if useJoy == true then 
-		local direction = {}
-		utilmath.direction(direction,dir[2],dir[1]) 
+		-- local var feature
+		local direction = utilmath.dir(dir[2],dir[1]) 
 		local right = utilmath.side(dir[2],dir[1])
 		view[1] = view[1] + right[1]*-dirx + direction[1]* -diry
 		view[2] = view[2] + 0
 		view[3] = view[3] + right[3]*-dirx + direction[3]* -diry
-		print(dirx,diry)
 	end 
-	-- -- for rotation 
-	-- if useJoy == true then 
-	-- 	dir[1]  = dir[1] + diry*2;
-	-- 	dir[2]  = dir[2] + dirx*2;
-	-- end
-
 
 	local x = 0
 	local y = 0 
 	for i=1, #message do 
 		local m = message[i]
-		if m[1] == 'b' and m[3] == true then   				-- b,[l|m|r],press,x,y
+		if m[1] == 'b' and m[3] == true then   									-- b,[l|m|r],press,x,y
 			pressed = m[3]
 			last_x  = m[4]
 			last_y  = m[5]
-		elseif m[1] == 'b' and m[3] == false  then          -- btn release
+		elseif m[1] == 'b' and m[3] == false  then          					-- btn release
 			pressed = m[3]
 			last_x  = m[4]
 			last_y  = m[5]
-		elseif m[1] == 'm' and pressed == true and useJoy ==false  then  		-- m,x,y
-			-- and useJoy == false 						    -- for ratation 
+		elseif m[1] == 'm' and pressed == true and useJoy == false   then  		-- m,x,y  for rotation 
 			x = m[2]
 			y = m[3] 
 			local x_delta = x - last_x 
@@ -229,6 +325,7 @@ local function process_input()
 		end  
 	end
 
+
 	nk.input(message)
 end 
 
@@ -273,7 +370,7 @@ local function mainloop()
 	terrain:render( ctx.width,ctx.height,prim_type)   --"POINT","LINES"  -- for debug 
 
     ---[[
-	bgfx_logo()
+	--bgfx_logo()
 	--]]           
 	-- ui input --
 	local ortho_mtx = math3d_stack( { type = "ortho", l = 0, r = ctx.width, b = ctx.height, t = 0, n = 0, f = 100, h = false }, "m")  
@@ -281,12 +378,8 @@ local function mainloop()
 
 	bgfx.set_view_transform(UI_VIEW,nil,ortho_mtx)	
 
-
-
 	nk.update()
 	
-    world_building.update()
-    
 	bgfx.frame()
 end
 
@@ -313,11 +406,9 @@ end
 
 local function init(canvas, fbw, fbh)
 
-	rhwi.init( iup.GetAttributeData(canvas,"HWND"), fbw, fbh)
+	rhwi.init(iup.GetAttributeData(canvas,"HWND"), fbw, fbh)
 	bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
 	bgfx.set_debug "T"
-
-    world_building = scene.start_new_world( input_queue,fbw,fbh,{"test_world.module"})
 
 	-- nk init
 	nk.init {
@@ -337,7 +428,7 @@ local function init(canvas, fbw, fbh)
 		prog = shaderMgr.programLoad("ui/vs_nuklear_texture.sc","ui/fs_nuklear_texture.sc"),
 
 		fonts = {
-			{ "宋体行楷", loadfonts("build/fonts/stxingka.ttf",50, ch_charset()  ), },
+			{ "宋体行楷", loadfonts("build/fonts/stxingka.ttf",32, ch_charset()  ), },
 		},
 	}	
 
@@ -381,12 +472,11 @@ local function init(canvas, fbw, fbh)
 	terrain_chibi:create_uniform("u_showMode","s_showMode","i1")   -- 0 default,1 = normal
 	terrain_chibi:set_uniform("u_showMode",0)   				   
 
-	terrain:set_transform { t= {140,0,200,1},r= {0,0,0},s={1,1,1,1}}
+	--terrain_chibi:set_transform { t= {-320,-30,-320,1},r= {0,0,0},s={1,1,1,1}}
 	terrain_chibi:set_transform { t= {0,150,0,1},r= {0,0,0},s={1,1,1,1}}
 
 	-- ui init
-    joystick_init()
-    
+	joystick_init()
 
 	task.loop(mainloop)
 end
@@ -396,15 +486,7 @@ function canvas:resize_cb(w,h)
 		init(self, w, h)
 		init = nil
 	else 
-        nk.resize(w,h)
-        for _, eid in world_building:each("viewid") do
-            local e = world_building[eid]
-            e.view_rect.x = 0
-            e.view_rect.y = 0
-            e.view_rect.w = w
-            e.view_rect.h = h             
-            --bgfx.set_view_rect(0, 0, 0, w, h)
-        end        
+		nk.resize(w,h)
 	end
 	bgfx.set_view_rect(0, 0, 0, w, h)
 	bgfx.reset(w,h, "v")
