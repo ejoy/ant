@@ -2,11 +2,12 @@ local json = require 'cjson'
 local proto = require 'debugger.protocol'
 
 local mgr = {}
-local io
+local network
 local seq = 0
 local state = 'birth'
 local stat = {}
 local queue = {}
+local exit = false
 
 local function event_in(data)
     local msg = proto.recv(data, stat)
@@ -33,14 +34,14 @@ function mgr.newSeq()
     return seq
 end
 
-function mgr.init(io_, masterThread_)
-    io = io_
+function mgr.init(io, masterThread_)
+    network = io
     masterThread = masterThread_
-    io.event_in(event_in)
+    network:event_in(event_in)
 end
 
 function mgr.sendToClient(pkg)
-    io.send(proto.send(pkg))
+    network:send(proto.send(pkg))
 end
 
 function mgr.sendToWorker(w, pkg)
@@ -88,6 +89,9 @@ function mgr.runIdle()
         mgr.setState 'birth'
         return false
     end
+    if not network:update() then
+        return true
+    end
     local req = recv()
     if not req then
         return true
@@ -125,12 +129,19 @@ function mgr.setState(s)
     state = s
 end
 
+function mgr.exitWhenClose()
+    exit = true
+end
+
 function mgr.close()
-    io.close()
+    network:close()
     seq = 0
     state = 'birth'
     stat = {}
     queue = {}
+    if exit then
+        os.exit(true, true)
+    end
 end
 
 return mgr
