@@ -1,6 +1,6 @@
 local rdebug = require "remotedebug"
 
-rdebug.start "debugmain"
+rdebug.start [[ require "debugmain" ]]
 
 local function foo(...)
 	print(...)	-- line 6, look debugmain.lua
