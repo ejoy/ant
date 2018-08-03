@@ -1,7 +1,11 @@
 dofile("libs/init.lua")
 
+local project_dir = "/Users/ejoy/Desktop/Engine/ant"
+
 package.cpath = "clibs/?.dll; clibs/lib?.so; clibs/?.so;" .. package.cpath
 package.path = "libs/dev/Common/?.lua;libs/dev/Server/?.lua;libs/dev/?.lua;".. package.path
+package.path = project_dir.."/libs/?.lua;".. package.path
+package.path = project_dir.."/libs/?/?.lua;".. package.path
 
 local iup = require "iuplua"
 local mobiledevice = require "libimobiledevicelua"

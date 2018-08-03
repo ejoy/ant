@@ -162,7 +162,7 @@ local function mainloop()
 		gen_lighting_uniforms( terrain ) 
 		gen_ambient_light_uniforms( terrain )
 	end 
-	print("ambient------------"..init_ambient)
+	--print("ambient------------"..init_ambient)
 
 	-- -- input
 	process_input(message_queue)

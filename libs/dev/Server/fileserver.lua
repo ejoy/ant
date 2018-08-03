@@ -133,7 +133,7 @@ function fileserver.EXIST(req)
         file_path = req.project_dir .. "/" .. file_path
         file = io.open(file_path, "r")
         if not file then
-            print("checking file path file_path")
+            print("checking file path: " .. file_path)
             return {"EXIST_CHECK", "not exist"}
         end
     end
@@ -269,5 +269,14 @@ end
 --get client sent screenshot
 function fileserver.SCREENSHOT(req)
     return req
+end
+
+function fileserver.COMPILE_SHADER(req)
+    return req
+    --print("shader compile request")
+    -- req[1] is COMPILE_SHADER
+    -- req[2] is shader path
+
+
 end
 return fileserver

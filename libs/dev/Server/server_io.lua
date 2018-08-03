@@ -1,6 +1,5 @@
 local require = import and import(...) or require
 local log = log and log(...) or print
-
 local pack = require "pack"
 
 local lsocket = require "lsocket"
@@ -324,6 +323,14 @@ local function save_ppm(filename, data, width, height, pitch)
     f:close()
 end
 
+print(pcall(require, "editor.toolset"))
+print(pcall(require, "filesystem.path"))
+print(pcall(require, "filesystem"))
+---[[
+local toolset = require "editor.toolset"
+local path = require "filesystem.path"
+local fs = require "filesystem"
+--]]
 local screenshot_cache = nil
 local max_screenshot_pack = 64*1024 - 100
 --store handle of lanes, check the result periodically
@@ -369,6 +376,26 @@ local function response(self, req)
                         self.linda:send("response", {"SCREENSHOT", screenshot_cache})
                     end
                     --]]
+                elseif a_cmd[1] == "COMPILE_SHADER" then
+                    local shader_path = req[2]
+
+                    local config = toolset.load_config()
+
+                    if next(config) == nil then
+                        return false, "load_config file failed, 'bin/iup.exe tools/config.lua' need to run first"
+                    end
+
+                    local cwd = fs.currentdir()
+                    config.includes = {config.shaderinc, path.join(cwd, "assets/shaders/src") }
+                    local outfile = string.gsub(shader_path, "src%/", "%/")
+
+                    config.dest = outfile
+                    local success, msg = toolset.compile(shader_path, config, "essl")
+                    if not success then
+                        print(string.format("try compile from file %s, but failed, error message : \n%s", shader_path, msg))
+                        return nil
+                    end
+
                 else
                     local command_package = {a_cmd, req.id}
                     table.insert(command_cache, command_package)
@@ -480,7 +507,6 @@ end
 
 local hash_update_counter = 0
 function server:mainloop(timeout)
-
     self:GetLindaMsg()
     --self:CheckNewDevice()
     --TODO: currently no use of lsocket connection, implement later (for wifi connection)

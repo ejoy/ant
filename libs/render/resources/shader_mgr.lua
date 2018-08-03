@@ -42,6 +42,11 @@ local function get_compile_renderer_name()
         return "d3d11"
     end
 
+    if rendertype == "OPENGLES" then
+        return "essl"
+    end
+
+
     return platform
 end
 
@@ -51,8 +56,9 @@ local alluniforms = {}
 local shader_mgr = {}
 shader_mgr.__index = shader_mgr
 
+--[[
 local function compile_shader(filename, outfile)
-    --[[
+    ---[[
     local config = toolset.load_config()
 
     if next(config) == nil then
@@ -63,9 +69,8 @@ local function compile_shader(filename, outfile)
 	config.includes = {config.shaderinc, path.join(cwd, "assets/shaders/src")}
     config.dest = outfile
     return toolset.compile(filename, config, get_compile_renderer_name())
-    --]]
-    return nil
 end
+    --]]
 
 local function check_compile_shader(name)
     local rt_path = get_shader_rendertype_path()
@@ -83,12 +88,16 @@ local function check_compile_shader(name)
 			if not fs.exist(outfile) or fu.file_is_newer(srcpath, outfile) then
 				path.create_dirs(path.parent(outfile))            
 				local success, msg = compile_shader(srcpath, outfile)
+
 				if not success then
 					print(string.format("try compile from file %s, but failed, error message : \n%s", srcpath, msg))
 					return nil
 				end
-			end 
+			end
 
+            --print("out file is: "..outfile .. " 00 " .. srcdir .."  11  " .. srcpath .." 22 "..assetdir .. " 33 "..shader_subpath)
+            --outfile = assetmgr.find_valid_asset_path(outfile)
+            outfile = assetmgr.find_valid_asset_path(shader_subpath)
             return outfile
         end
     end

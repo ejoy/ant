@@ -6,25 +6,40 @@ local lanes = require "lanes"
 if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
 local linda = lanes.linda()
 
-local pack = require "pack"
 --"cat" means categories for different log
 --for now we have "Script" for lua script log
 --and "Bgfx" for bgfx log
 --"Device" for deivce msg
-
 --project entrance
-local entrance = nil
-
+local entrance
 local origin_print = print
-
-function sendlog(cat, ...)
-    linda:send("log", {cat, ...})
+function sendlog(cat, level, ...)
+    linda:send("log", {cat, level, ...})
     --origin_print(cat, ...)
+end
+
+function app_log(level, ...)
+    sendlog("Script", level, ...)
 end
 
 print = function(...)
     origin_print(...)
-    sendlog("Script", ...)
+    --print will have a priority 1
+    app_log(1, ...)
+end
+
+function compile_shader(srcpath, outfile)
+    print("compile shader path: "..srcpath)
+    linda:send("request", {"COMPILE_SHADER", srcpath})
+
+    while true do
+        local key, value = linda:receive(0.001, "sc compiled")
+        if value then
+            break
+        end
+    end
+
+    return true
 end
 
 local filemanager = require "filemanager"
@@ -39,9 +54,10 @@ local g_WindowHandle
 local g_Width, g_Height = 0
 
 --overwrite the old io.open function, give it the ability to search resources from server
+
 local origin_open = io.open
 
-local function custom_open(filename, mode, search_local_only)
+io.open = function (filename, mode, search_local_only)
     --default we don't search local only
     search_local_only = search_local_only or false
 
@@ -100,11 +116,9 @@ local function custom_open(filename, mode, search_local_only)
         return file
     end
 end
-io.open = custom_open
 
---override the old loadfile function, so it can search remotely
 local origin_loadfile = loadfile
-local function custom_loadfile(file_path)
+loadfile = function(file_path)
     local file = origin_loadfile(file_path)
     if file then
         return file
@@ -120,8 +134,6 @@ local function custom_loadfile(file_path)
         return nil
     end
 end
-
-loadfile = custom_loadfile
 
 local function remote_searcher (name)
     --local full_path = name..".lua"
@@ -246,6 +258,8 @@ local function init_lua_search_path(app_dir)
     function dprint(...) print(...) end
 end
 
+local file_exist_cache = {}
+
 function init(window_handle, width, height, app_dir, bundle_dir)
     bundle_home_dir = bundle_dir
     app_home_dir = app_dir
@@ -276,6 +290,9 @@ function init(window_handle, width, height, app_dir, bundle_dir)
     package.loaded["winfile"].exist = function(path)
         if package.loaded["winfile"].attributes(path) then
             return true
+        elseif file_exist_cache[path] then
+            print("find file exist in cache: "..path)
+            return true
         else
             --search on the server
             local request = {"EXIST", path }
@@ -290,6 +307,7 @@ function init(window_handle, width, height, app_dir, bundle_dir)
                 if value ~= nil then
                     if value == "exist" then
                         print(path .. " exist")
+                        file_exist_cache[path] = true
                         return true
                     elseif value == "not exist" then
                         print(path .. " not exist!! " .. tostring(value))
@@ -317,6 +335,10 @@ function init(window_handle, width, height, app_dir, bundle_dir)
                                 local real_path = file_mgr:GetRealPath(value[2])
                                 real_path = bundle_home_dir .. "/Documents/" .. real_path
 
+                                --add to file exist cache
+                                print("add to exist cache: "..path)
+                                file_exist_cache[path] = true
+
                                 return true
                             end
                         end
@@ -338,6 +360,7 @@ function init(window_handle, width, height, app_dir, bundle_dir)
     local client_io = lanes.gen("*",{package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateIOThread)(linda, bundle_home_dir)
 end
 
+local time_stamp = 0.0
 function mainloop()
     if entrance then
         entrance.mainloop()
@@ -351,6 +374,17 @@ function mainloop()
 
     HandleMsg()
     HandleCacheScreenShot()
+
+    --timer
+    local time_now = os.clock()
+    local delta_time = time_now - time_stamp
+    if delta_time > 0.05 then
+        time_stamp = time_now
+
+        --send time every 0.5 second
+        --_linda:send("log", {"Time", "Time: "..tostring(os.clock())})
+     --   print("Time: "..tostring(os.clock()))
+    end
 
 end
 
