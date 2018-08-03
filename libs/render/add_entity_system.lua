@@ -234,38 +234,38 @@ function add_entity_sys:init()
 	end
 	
 	local hie_refpath = "hierarchy/test_hierarchy.hierarchy"	
-	do
-		local assetpath = path.join(assetmgr.assetdir(), hie_refpath)
-		path.create_dirs(assetpath)
-		local hierarchy = require "hierarchy"
-		local root = hierarchy.new()
+	-- do
+	-- 	local assetpath = path.join(assetmgr.assetdir(), hie_refpath)
+	-- 	path.create_dirs(assetpath)
+	-- 	local hierarchy = require "hierarchy"
+	-- 	local root = hierarchy.new()
 
-		root[1] = {
-			name = "h1",
-			transform = {
-				t = {3, 4, 5},
-				s = {0.01, 0.01, 0.01},
-			}
-		}
+	-- 	root[1] = {
+	-- 		name = "h1",
+	-- 		transform = {
+	-- 			t = {3, 4, 5},
+	-- 			s = {0.01, 0.01, 0.01},
+	-- 		}
+	-- 	}
 
-		root[2] = {
-			name = "h2",
-			transform = {
-				t = {1, 2, 3},
-				s = {0.01, 0.01, 0.01},
-			}
-		}
+	-- 	root[2] = {
+	-- 		name = "h2",
+	-- 		transform = {
+	-- 			t = {1, 2, 3},
+	-- 			s = {0.01, 0.01, 0.01},
+	-- 		}
+	-- 	}
 
-		root[1][1] = {
-			name = "h1_h1",
-			transform = {
-				t = {3, 3, 3},
-				s = {0.01, 0.01, 0.01},
-			}
-		}
+	-- 	root[1][1] = {
+	-- 		name = "h1_h1",
+	-- 		transform = {
+	-- 			t = {3, 3, 3},
+	-- 			s = {0.01, 0.01, 0.01},
+	-- 		}
+	-- 	}
 
-		hierarchy.save(root, assetpath)
-	end
+	-- 	hierarchy.save(root, assetpath)
+	-- end
 
 	local hie_materialpath = "mem://hierarchy.material"
 	do

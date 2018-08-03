@@ -468,61 +468,61 @@ local function add_rotator_entities(ms, colors)
 	return controllers
 end
 
-local function create_axisbase_hierarchy(ms)
-	local path = require "filesystem.path"
-	local ctl_root = hierarchy_module.new()
-	ctl_root[1] = {name = "xaxis", 
-		transform = {
-			r = {0, math.cos(math.pi * 0.25), 0, math.sin(math.pi * 0.25)}
-		}
-	}
-	ctl_root[2] = {name = "yaxis", 
-		transform = {
-			r = {math.cos(-math.pi * 0.25), 0, 0, math.sin(-math.pi * 0.25)}
-		}
-	}
-	ctl_root[3] = {name = "zaxis", }
+-- local function create_axisbase_hierarchy(ms)
+-- 	local path = require "filesystem.path"
+-- 	local ctl_root = hierarchy_module.new()
+-- 	ctl_root[1] = {name = "xaxis", 
+-- 		transform = {
+-- 			r = {0, math.cos(math.pi * 0.25), 0, math.sin(math.pi * 0.25)}
+-- 		}
+-- 	}
+-- 	ctl_root[2] = {name = "yaxis", 
+-- 		transform = {
+-- 			r = {math.cos(-math.pi * 0.25), 0, 0, math.sin(-math.pi * 0.25)}
+-- 		}
+-- 	}
+-- 	ctl_root[3] = {name = "zaxis", }
 
-	hierarchy_module.save(ctl_root, path.join(assetmgr.assetdir(), axisbase_controller_hierarchyname))
+-- 	hierarchy_module.save(ctl_root, path.join(assetmgr.assetdir(), axisbase_controller_hierarchyname))
 
-	local axis_root = hierarchy_module.new()	
-	axis_root[1] = {
-		name = "head",
-		transform = {
-			s={0.002}, 
-			t={0, 0, 1.1},
-		}
-	}
-	axis_root[2] = {
-		name = "axis",
-		transform = {
-			s={0.001, 0.001, 0.01}, 
-			t={0, 0, 0.5},
-		}
-	}
+-- 	local axis_root = hierarchy_module.new()	
+-- 	axis_root[1] = {
+-- 		name = "head",
+-- 		transform = {
+-- 			s={0.002}, 
+-- 			t={0, 0, 1.1},
+-- 		}
+-- 	}
+-- 	axis_root[2] = {
+-- 		name = "axis",
+-- 		transform = {
+-- 			s={0.001, 0.001, 0.01}, 
+-- 			t={0, 0, 0.5},
+-- 		}
+-- 	}
 	
-	hierarchy_module.save(axis_root, path.join(assetmgr.assetdir(), axis_hierarchyname))
+-- 	hierarchy_module.save(axis_root, path.join(assetmgr.assetdir(), axis_hierarchyname))
 
-	local rotator_root = hierarchy_module.new()
-	rotator_root[1] = {
-		name = "rotator",
-		transform = {
-			s={0.01, 0.01, 0.01}, r=ms({0, 0, 0}, "qT")
-		}
-	}
+-- 	local rotator_root = hierarchy_module.new()
+-- 	rotator_root[1] = {
+-- 		name = "rotator",
+-- 		transform = {
+-- 			s={0.01, 0.01, 0.01}, r=ms({0, 0, 0}, "qT")
+-- 		}
+-- 	}
 
-	rotator_root[2] = {
-		name = "rotator-axis",
-		transform = {
-			s={0.001, 0.001, 0.01}, r=ms({0, 0, 0}, "qT"), t={0.5, 0, 0},
-		}
-	}
-	hierarchy_module.save(rotator_root, path.join(assetmgr.assetdir(), rotator_hierarchyname))
-end
+-- 	rotator_root[2] = {
+-- 		name = "rotator-axis",
+-- 		transform = {
+-- 			s={0.001, 0.001, 0.01}, r=ms({0, 0, 0}, "qT"), t={0.5, 0, 0},
+-- 		}
+-- 	}
+-- 	hierarchy_module.save(rotator_root, path.join(assetmgr.assetdir(), rotator_hierarchyname))
+-- end
 
 function obj_trans_sys:init()
 	local ms = self.math_stack
-	create_axisbase_hierarchy(ms)
+	--create_axisbase_hierarchy(ms)
 
     local ot = self.object_transform    
     
