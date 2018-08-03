@@ -5,7 +5,7 @@ local hierarchy_module = require "hierarchy"
 return function(filename, param)
 	if param and param.editable then
 		local editable_hie = hierarchy_module.new()
-		hierarchy_module.load_editable(editable_hie, filename)
+		hierarchy_module.load(editable_hie, filename)
 		return editable_hie
 	end
 

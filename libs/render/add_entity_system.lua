@@ -243,7 +243,7 @@ function add_entity_sys:init()
 			}
 		}
 
-		hierarchy.save_editable(root, assetpath)
+		hierarchy.save(root, assetpath)
 	end
 
 	local hie_materialpath = "mem://hierarchy.material"

@@ -54,12 +54,51 @@ get_tree(lua_State *L, int index){
 	return tree;
 }
 
+
 static int
 lbuilddata_len(lua_State *L){
 	struct hierarchy_build_data* buildata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
 	lua_pushinteger(L, buildata->skeleton->bind_pose().count());
 	return 0;
 }
+
+using serialize_skeop = std::function<void(const char*, struct hierarchy_build_data*)>;
+
+static inline int
+serialize_skeleton(lua_State *L, serialize_skeop op) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	luaL_checktype(L, 2, LUA_TSTRING);
+
+	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
+	if (builddata->skeleton == nullptr) {
+		luaL_error(L, "data not build!");
+	}
+
+	const char* filepath = lua_tostring(L, 2);
+	op(filepath, builddata);
+	return 0;
+}
+
+
+static int
+lbuilddata_save(lua_State *L) {
+	return serialize_skeleton(L, [](auto filepath, auto builddata) {
+		ozz::io::File ff(filepath, "w");
+
+		ozz::io::OArchive oa(&ff);
+		oa << *builddata->skeleton;
+	});
+}
+
+static int
+lbuilddata_load(lua_State *L) {
+	return serialize_skeleton(L, [](auto filepath, auto builddata) {
+		ozz::io::File ff(filepath, "r");
+		ozz::io::IArchive ia(&ff);
+		ia >> *(builddata->skeleton);
+	});
+}
+
 
 static int
 lbuilddata_get(lua_State *L){
@@ -108,8 +147,7 @@ lbuilddata_get(lua_State *L){
 			return 1;			
 		}
 
-		case LUA_TSTRING:{
-			luaL_error(L, "will support if need");
+		case LUA_TSTRING:{			
 			return 0;
 		}
 		default:
@@ -128,6 +166,8 @@ create_builddata_userdata(lua_State *L){
 		lua_setfield(L, -2, "__index");
 		lua_pushcfunction(L, lbuilddata_len);
 		lua_setfield(L, -2, "__len");
+		lua_pushcfunction(L, lbuilddata_save);
+		lua_setfield(L, -2, "__save");
 	}
 	lua_setmetatable(L, -2);
 
@@ -201,44 +241,6 @@ lbuild(lua_State *L){
 	luaL_error(L, "not support type, %d", type);
 	return 0;
 }
-
-using serialize_skeop = std::function<void(const char*, struct hierarchy_build_data*)>;
-
-static inline int 
-serialize_skeleton(lua_State *L, serialize_skeop op) {
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	luaL_checktype(L, 2, LUA_TSTRING);
-
-	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
-	if (builddata->skeleton == nullptr) {
-		luaL_error(L, "data not build!");
-	}
-
-	const char* filepath = lua_tostring(L, 2);
-	op(filepath, builddata);
-	return 0;
-}
-
-
-static int
-lsave_skeleton(lua_State *L) {
-	return serialize_skeleton(L, [](auto filepath, auto builddata) {
-		ozz::io::File ff(filepath, "w");
-
-		ozz::io::OArchive oa(&ff);
-		oa << *builddata->skeleton;
-	});
-}
-
-static int
-lload_skeleton(lua_State *L) {
-	return serialize_skeleton(L, [](auto filepath, auto builddata) {
-		ozz::io::File ff(filepath, "r");
-		ozz::io::IArchive ia(&ff);
-		ia >> *(builddata->skeleton);
-	});
-}
-
 
 static int
 ldelhtree(lua_State *L) {
@@ -489,6 +491,47 @@ linvalidnode(lua_State *L) {
 	return 1;
 }
 
+
+using serialize_op = std::function<void(const char*, struct hierarchy_tree *tree)>;
+
+static inline int
+serialize_rawskeleton(lua_State *L, serialize_op op) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	luaL_checktype(L, 2, LUA_TSTRING);
+
+	struct hierarchy * hnode = (struct hierarchy *)lua_touserdata(L, 1);
+	if (hnode->joint != NULL) {
+		luaL_error(L, "need hierarchy root node");
+	}
+
+	struct hierarchy_tree * tree = get_tree(L, 1);
+
+	const char* filepath = lua_tostring(L, 2);
+	op(filepath, tree);
+	return 0;
+}
+
+static int
+lhnode_save(lua_State *L) {
+	return serialize_rawskeleton(L, [](const char* filepath, struct hierarchy_tree *tree) {
+		ozz::io::File ff(filepath, "w");
+		ozz::io::OArchive oa(&ff);
+		oa << *tree->skl;
+	});
+
+	return 0;
+}
+
+static int
+lhnode_load(lua_State *L) {
+	return serialize_rawskeleton(L, [](const char* filepath, struct hierarchy_tree *tree) {
+		ozz::io::File ff(filepath, "r");
+		ozz::io::IArchive ia(&ff);
+		ia >> *tree->skl;
+	});
+}
+
+
 static int
 lhnodeget(lua_State *L) {
 	assert(lua_type(L, 1) == LUA_TUSERDATA);
@@ -496,7 +539,7 @@ lhnodeget(lua_State *L) {
 	if (keytype == LUA_TSTRING) {
 		struct hierarchy * h = (struct hierarchy *)lua_touserdata(L, 1);
 		RawSkeleton::Joint * joint = h->joint;
-		if (joint == NULL) {
+		if (joint == NULL) {			
 			return luaL_error(L, "Invalid node");
 		}
 		const char * p = luaL_checkstring(L, 2);
@@ -526,45 +569,6 @@ lhnodeget(lua_State *L) {
 	} else {
 		return luaL_error(L, "Invalid key type %s", lua_typename(L, keytype));
 	}
-}
-
-using serialize_op = std::function<void(const char*, struct hierarchy_tree *tree)>;
-
-static inline int
-serialize_rawskeleton(lua_State *L, serialize_op op) {
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	luaL_checktype(L, 2, LUA_TSTRING);
-
-	struct hierarchy * hnode = (struct hierarchy *)lua_touserdata(L, 1);
-	if (hnode->joint != NULL) {
-		luaL_error(L, "save function need hierarchy root node");
-	}
-
-	struct hierarchy_tree * tree = get_tree(L, 1);
-
-	const char* filepath = lua_tostring(L, 2);
-	op(filepath, tree);
-	return 0;
-}
-
-static int
-lsave_rawskeleton(lua_State *L) {
-	return serialize_rawskeleton(L, [](const char* filepath, struct hierarchy_tree *tree) {
-		ozz::io::File ff(filepath, "w");
-		ozz::io::OArchive oa(&ff);
-		oa << *tree->skl;
-	});
-
-	return 0;
-}
-
-static int
-lload_rawskeleton(lua_State *L) {
-	return serialize_rawskeleton(L, [](const char* filepath, struct hierarchy_tree *tree) {
-		ozz::io::File ff(filepath, "r");
-		ozz::io::IArchive ia(&ff);
-		ia >> *tree->skl;
-	});
 }
 
 static int
@@ -605,6 +609,35 @@ lnewhierarchy(lua_State *L) {
 	return 1;
 }
 
+static int
+lsave(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	luaL_checktype(L, 2, LUA_TSTRING);
+
+	if (luaL_getmetafield(L, 1, "__save") == LUA_TNIL)	
+		luaL_error(L, "no __save in userdata metatable");
+
+	lua_pushvalue(L, 1);
+	lua_pushvalue(L, 2);
+	lua_call(L, 2, 0);
+	return 0;// nothing to return
+}
+
+static int
+lload(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	luaL_checktype(L, 2, LUA_TSTRING);
+
+	if (luaL_getmetafield(L, 1, "__load") == LUA_TNIL)
+		luaL_error(L, "no __save in userdata metatable");
+
+	lua_pushvalue(L, 1);
+	lua_pushvalue(L, 2);
+	lua_call(L, 2, 1);
+
+	return 1;	// will return the load result, userdata or table
+}
+
 extern "C" {
 
 LUAMOD_API int
@@ -617,15 +650,17 @@ luaopen_hierarchy(lua_State *L) {
 	lua_setfield(L, -2, "__index");
 	lua_pushcfunction(L, lhnodechildren);
 	lua_setfield(L, -2, "__len");
+	lua_pushcfunction(L, lhnode_save);
+	lua_setfield(L, -2, "__save");
+	lua_pushcfunction(L, lhnode_load);
+	lua_setfield(L, -2, "__load");
 
 	luaL_Reg l[] = {
 		{ "new", lnewhierarchy },
 		{ "invalid", linvalidnode },
 		{ "build", lbuild},
-		{ "save", lsave_skeleton},
-		{ "load", lload_skeleton},
-		{ "save_editable", lsave_rawskeleton },
-		{ "load_editable", lload_rawskeleton },
+		{ "save", lsave},
+		{ "load", lload },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

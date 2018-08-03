@@ -10,19 +10,35 @@ build_system.singleton "math_stack"
 
 local assetmgr = require "asset"
 
-local function build(ms, eid)
+local function mark_modified_file(filepath, content, modified_files)
+	local assetdir = assetmgr.assetdir()
+	filepath = path.join(assetdir, filepath)
+
+	local c = modified_files[filepath]	
+	if c == nil then		
+		path.create_dirs(filepath)
+		modified_files[filepath] = content
+	else
+		assert(c == content)
+	end
+end
+
+local function create_hierarchy_path(ref_path)	
+	assert(path.ext(ref_path):lower() == "hierarchy")
+	ref_path = path.remove_ext(ref_path)
+	ref_path = ref_path .. "-hie.hierarchy"	
+	return ref_path
+end
+
+local function build(ms, eid, modified_files)
 	local e = world[eid]
 	local ehierarchy = e.editable_hierarchy
 	if ehierarchy then
 		local hierarchy = e.hierarchy
 		if hierarchy == nil then
 			world:add_component(eid, "hierarchy")
-			local ref_path = ehierarchy.ref_path
-			assert(path.ext(ref_path):lower() == "hierarchy")
-			ref_path = path.remove_ext(ref_path)
-			ref_path = ref_path .. "-hie.hierarchy"
 			hierarchy = e.hierarchy
-			hierarchy.ref_path = ref_path
+			hierarchy.ref_path = create_hierarchy_path(ehierarchy.ref_path)
 		end
 
 		local root = assert(ehierarchy.root)
@@ -30,17 +46,9 @@ local function build(ms, eid)
 		hierarchy.builddata = builddata
 		hu.update_hierarchy_entiy(ms, world, e)
 
-		-- should move this io operation to asysn thread
-		local assetdir = assetmgr.assetdir()
-		local hie_path = path.join(assetdir, hierarchy.ref_path)
-		local ehie_path = path.join(assetdir, ehierarchy.ref_path)
-
-		path.create_dirs(hie_path)
-		path.create_dirs(ehie_path)
-
-		hierarchy_module.save(builddata, hie_path)
-		hierarchy_module.save_editable(root, ehie_path)
-
+		mark_modified_file(ehierarchy.ref_path, root, modified_files)
+		mark_modified_file(hierarchy.ref_path, builddata, modified_files)
+		
 		local hie_np = e.hierarchy_name_mapper
 		if hie_np then
 			local namemapper = hie_np.v
@@ -93,8 +101,13 @@ local function rebuild_hierarchy(ms, iterop)
 	end
 
 	-- only first node, child node in build function will be called
+	local modified_files = {}
 	for _, eid in ipairs(tree) do
-		build(ms, eid)
+		build(ms, eid, modified_files)
+	end
+
+	for filepath, content in pairs(modified_files) do
+		hierarchy_module.save(content, filepath)
 	end
 end
 

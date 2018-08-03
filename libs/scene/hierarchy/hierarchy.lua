@@ -14,8 +14,7 @@ local h = ecs.component "hierarchy" {
 			local e = world[arg.eid]
 			local comp = e[arg.comp]	
 			local builddata = comp.builddata
-			assert(builddata)
-			hierarchy.save(builddata, v)
+			assert(builddata)			
 			return v
 		end,
 		load = function(v)
