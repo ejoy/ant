@@ -1,28 +1,37 @@
 local ecs = ...
 local world = ecs.world
-local hierarchy_module = require "hierarchy"
-local mu = require "math.util"
+local assetmgr = require "asset"
+local path = require "filesystem.path"
+local fu = require "filesystem.util"
+local hierarchy = require "hierarchy"
 
 local h = ecs.component "hierarchy" {
-    --init from serialize or build from editable_hierarchy component in runtime
-    builddata = {
-        type = "userdata", 
-        save = function(v, arg)
-            assert(type(v) == "userdata")
+	ref_path = {
+		type = "userdata",
+		default = "",
+		save = function(v, arg)
+			assert(type(v) == "string")
+			local e = world[arg.eid]
+			local comp = e[arg.comp]	
+			local builddata = comp.builddata
+			assert(builddata)			
+			return v
+		end,
+		load = function(v)
+			assert(type(v) == "string")			
+			assert(path.ext(v):lower() == "hierarchy")
+			local e = world[arg.eid]
+			local comp = e[arg.comp]
 
-            local t = {}
-            for _, node in ipairs(v) do
-                table.insert(t, node)
-            end
-
-            return t
-        end,
-        load = function(v, arg)
-            assert(type(v) == "table")
-            return hierarchy_module.build(v)
-        end
-    }  
+			comp.builddata = assert(assetmgr.load(v))
+			return v
+		end
+	},
 }
+
+function h:init()
+	self.builddata = nil
+end
 
 ecs.component "hierarchy_name_mapper"{
     v = {

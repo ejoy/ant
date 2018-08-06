@@ -5,7 +5,8 @@ local component_util = require "render.components.util"
 local lu = require "render.light.util"
 local mu = require "math.util"
 local bgfx = require "bgfx"
-
+local assetmgr = require "asset"
+local path = require "filesystem.path"
 
 local update_direction_light_sys = ecs.system "direction_light_system"
 update_direction_light_sys.singleton "math_stack"
@@ -212,91 +213,132 @@ function add_entity_sys:init()
 	-- 	component_util.load_material(stone)
 	-- end
 
-    -- local function create_entity(name, meshfile, materialfile)
-    --     local eid = world:new_entity("rotation", "position", "scale", 
-	-- 	"mesh", "material",
-	-- 	"name", "serialize",
-	-- 	"can_select", "can_render")
+    local function create_entity(name, meshfile, materialfile)
+        local eid = world:new_entity("rotation", "position", "scale", 
+		"mesh", "material",
+		"name", "serialize",
+		"can_select", "can_render")
 
-    --     local entity = world[eid]
-    --     entity.name.n = name
+        local entity = world[eid]
+        entity.name.n = name
 
-    --     ms(entity.scale.v, {1, 1, 1}, "=")
-    --     ms(entity.position.v, {0, 0, 0, 1}, "=") 
-    --     ms(entity.rotation.v, {0, 0, 0}, "=")
+        ms(entity.scale.v, {1, 1, 1}, "=")
+        ms(entity.position.v, {0, 0, 0, 1}, "=") 
+        ms(entity.rotation.v, {0, 0, 0}, "=")
 
-	-- 	entity.mesh.path = meshfile
-	-- 	component_util.load_mesh(entity)
-	-- 	entity.material.content[1] = {path=materialfile, properties={}}
-	-- 	component_util.load_material(entity)
-    --     return eid
-    -- end
+		entity.mesh.path = meshfile
+		component_util.load_mesh(entity)
+		entity.material.content[1] = {path=materialfile, properties={}}
+		component_util.load_material(entity)
+        return eid
+	end
+	
+	local hie_refpath = "hierarchy/test_hierarchy.hierarchy"	
+	-- do
+	-- 	local assetpath = path.join(assetmgr.assetdir(), hie_refpath)
+	-- 	path.create_dirs(assetpath)
+	-- 	local hierarchy = require "hierarchy"
+	-- 	local root = hierarchy.new()
 
-    -- do
-    --     local hierarchy_eid = world:new_entity("editable_hierarchy", "hierarchy_name_mapper",
-    --         "scale", "rotation", "position", 
-    --         "name", "serialize")
-    --     local hierarchy_e = world[hierarchy_eid]
-
-    --     hierarchy_e.name.n = "hierarchy_test"
-
-    --     ms(hierarchy_e.scale.v, {1, 1, 1}, "=")
-    --     ms(hierarchy_e.rotation.v, {0, 60, 0}, "=")
-    --     ms(hierarchy_e.position.v, {10, 0, 0, 1}, "=")
-
-    --     local hierarchy = hierarchy_e.editable_hierarchy.root
-
-    --     hierarchy[1] = {
-    --         name = "h1_cube",
-    --         transform = {
-    --             t = {3, 4, 5},
-    --             s = {0.01, 0.01, 0.01},
-    --         }
-    --     }
-
-    --     hierarchy[2] = {
-    --         name = "h1_sphere",
-    --         transform = {
-    --             t = {1, 2, 3},
-    --             s = {0.01, 0.01, 0.01},
-    --         }
-    --     }
-
-    --     hierarchy[1][1] = {
-    --         name = "h1_h1_cube",
-    --         transform = {
-    --             t = {3, 3, 3},
-    --             s = {0.01, 0.01, 0.01},
-    --         }
+	-- 	root[1] = {
+	-- 		name = "h1",
+	-- 		transform = {
+	-- 			t = {3, 4, 5},
+	-- 			s = {0.01, 0.01, 0.01},
+	-- 		}
 	-- 	}
 
-	-- 	local material_path = "mem://hierarchy.material"
-	-- 	fs_util.write_to_file(material_path, [[
-	-- 		shader = {
-	-- 			vs = "vs_mesh",
-	-- 			fs = "fs_mesh",
+	-- 	root[2] = {
+	-- 		name = "h2",
+	-- 		transform = {
+	-- 			t = {1, 2, 3},
+	-- 			s = {0.01, 0.01, 0.01},
 	-- 		}
-	-- 		state = "default.state"
-	-- 		properties = {
-	-- 			u_time = {name="u_time", type="v4", default={1, 0, 0, 1}}
+	-- 	}
+
+	-- 	root[1][1] = {
+	-- 		name = "h1_h1",
+	-- 		transform = {
+	-- 			t = {3, 3, 3},
+	-- 			s = {0.01, 0.01, 0.01},
 	-- 		}
-	-- 	]])
+	-- 	}
 
-    --     local stone_eid = create_entity("h1_cube", "cube.mesh", material_path)
-    --     local stone_eid_1 = create_entity("h1_h1_cube", "cube.mesh", material_path)
-    --     do
-    --         local e = world[stone_eid_1] 
-    --         ms(e.scale.v, {0.5, 0.5, 0.5}, "=")
-    --     end
+	-- 	hierarchy.save(root, assetpath)
+	-- end
 
-    --     local sphere_eid = create_entity("h1_sphere", "sphere.mesh", material_path)
-    --     local name_mapper = assert(hierarchy_e.hierarchy_name_mapper.v)
+	local hie_materialpath = "mem://hierarchy.material"
+	do
+		
+		fs_util.write_to_file(hie_materialpath, [[
+			shader = {
+				vs = "vs_mesh",
+				fs = "fs_mesh",
+			}
+			state = "default.state"
+			properties = {
+				u_time = {name="u_time", type="v4", default={1, 0, 0, 1}}
+			}
+		]])
+	end
 
-    --     name_mapper.h1_cube     = stone_eid
-    --     name_mapper.h1_h1_cube  = stone_eid_1
-	-- 	name_mapper.h1_sphere   = sphere_eid
+    do
+        local hierarchy_eid = world:new_entity("editable_hierarchy", "hierarchy_name_mapper",
+            "scale", "rotation", "position", 
+            "name", "serialize")
+        local hierarchy_e = world[hierarchy_eid]
 
-	-- 	world:change_component(hierarchy_eid, "rebuild_hierarchy")
-	-- 	world:notify()
-    -- end
+		hierarchy_e.name.n = "hierarchy_test"
+		
+		hierarchy_e.editable_hierarchy.ref_path = hie_refpath
+		hierarchy_e.editable_hierarchy.root = assetmgr.load(hie_refpath, {editable=true})
+
+        ms(hierarchy_e.scale.v, {1, 1, 1}, "=")
+        ms(hierarchy_e.rotation.v, {0, 60, 0}, "=")
+        ms(hierarchy_e.position.v, {10, 0, 0, 1}, "=")
+
+		local entities = {
+			h1 = "cube.mesh",
+			h2 = "sphere.mesh",
+			h1_h1 = "cube.mesh",		
+		}
+
+		local name_mapper = assert(hierarchy_e.hierarchy_name_mapper.v)
+		for k, v in pairs(entities) do
+			local eid = create_entity(k, v, hie_materialpath)	
+			name_mapper[k] = eid
+		end
+		
+		world:change_component(hierarchy_eid, "rebuild_hierarchy")
+		world:notify()
+	end
+	
+	do
+        local hierarchy_eid = world:new_entity("editable_hierarchy", "hierarchy_name_mapper",
+            "scale", "rotation", "position", 
+            "name", "serialize")
+		local hierarchy_e = world[hierarchy_eid]
+		hierarchy_e.editable_hierarchy.ref_path = hie_refpath
+		hierarchy_e.editable_hierarchy.root = assetmgr.load(hie_refpath, {editable=true})
+
+		ms(hierarchy_e.scale.v, {1, 1, 1}, "=")
+        ms(hierarchy_e.rotation.v, {0, -60, 0}, "=")
+		ms(hierarchy_e.position.v, {-10, 0, 0, 1}, "=")
+
+		hierarchy_e.name.n = "hierarchy_test_shared"	
+
+		local entities = {
+			h1 = "cylinder.mesh",
+			h2 = "cone.mesh",
+			h1_h1 = "sphere.mesh",
+		}
+
+		local name_mapper = assert(hierarchy_e.hierarchy_name_mapper.v)
+		for k, v in pairs(entities) do
+			name_mapper[k] = create_entity(k, v, hie_materialpath)
+		end
+		
+		world:change_component(hierarchy_eid, "rebuild_hierarchy")
+		world:notify()
+	end
 end

@@ -10,6 +10,7 @@ asset.insert_searchdir(1, "D:/Engine/ant/assets")
 --mac dir
 asset.insert_searchdir(2, "/Users/ejoy/Desktop/Engine/ant/assets")
 
+
 local util = {}
 util.__index = util
 
@@ -29,16 +30,7 @@ function util.start_new_world(input_queue, fbw, fbh, module_files)
 		args = { mq = input_queue, fb_size={w=fbw, h=fbh} },
     }
     
-	task.loop(world.update,	
-	function (co, status)
-	--	local trace = db.traceback(co)
-	--	elog.print(status)
-	--	elog.print("\n")
-	--	elog.print(trace)
-	--	elog.active_error()
-
-    end)
-    
+	task.loop(world.update)  
     return world
 end
 

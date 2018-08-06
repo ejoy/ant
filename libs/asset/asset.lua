@@ -11,6 +11,7 @@ local support_list = {
 	"material",
 	"module",
 	"texture",
+	"hierarchy",	
 }
 
 local loader = setmetatable({} , {
@@ -90,7 +91,7 @@ function assetmgr.load(filename, param)
 		end
 		
 		res = loader[ext](fn, param)
-		resources[fn] = res
+		resources[filename] = res
 	end
 
 	return res

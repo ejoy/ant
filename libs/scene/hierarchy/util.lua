@@ -3,9 +3,7 @@ local util = {}; util.__index = util
 local mu = require "math.util"
 
 local function update_child_srt(ms, e, srt, node)
-    local rot = ms({type="q", table.unpack(node.r)}, "eT")
-    rot[1], rot[2] = rot[2], rot[1]
-
+    local rot = ms({type="q", table.unpack(node.r)}, "eP")
 	local localsrt = mu.srt(ms, node.s, rot, node.t);
 	local s, r, t = ms(localsrt, srt, "*~PPP");
 	--[[
