@@ -13,7 +13,8 @@ local server_framework = require "server_framework"
 server_framework:init("127.0.0.1", 8888)
 
 --todo store in a file
-local default_proj_dir = "D:/Engine/ant/libs"
+local winfile = require "winfile"
+local default_proj_dir =  winfile.currentdir() ..  "/libs"
 --ui layout
 
 local script_text = iup.text{ multiline = "YES", expand = "YES" }
@@ -30,6 +31,12 @@ local run_file_btn = iup.button{title = "run file"}
 local proj_dir_btn = iup.button{title = "select"}
 local proj_dir_text = iup.text{expand = "HORIZONTAL", value = default_proj_dir}
 server_framework:SetProjectDirectoryPath(default_proj_dir)
+
+--todo for now auto connect all device
+local devices = mobiledevice.GetDevices()
+for k, v in pairs(devices) do
+    server_framework:HandleCommand(v, "CONNECT")
+end
 
 local proj_dir_hbox = iup.hbox{run_file_btn, proj_dir_btn, proj_dir_text}
 local main_vbox = iup.vbox{text_tabs, proj_dir_hbox}
@@ -186,10 +193,10 @@ local function HandleResponse(resp_table)
             local cat = log_table[1]
 
             if cat == "Script" then
-                local new_log_value = log_table[2]
+                local new_log_value = log_table[3]
                 new_log_value = new_log_value .. "\n"
             --todo temperary disable
-                --[[
+                ---[[
                 script_text.value = script_text.value .. new_log_value
                 local pos = iup.TextConvertLinColToPos(script_text,  script_text.linecount, 0)
                 script_text.caretpos = pos

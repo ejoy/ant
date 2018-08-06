@@ -276,7 +276,5 @@ function fileserver.COMPILE_SHADER(req)
     --print("shader compile request")
     -- req[1] is COMPILE_SHADER
     -- req[2] is shader path
-
-
 end
 return fileserver

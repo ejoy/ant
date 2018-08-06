@@ -130,7 +130,8 @@ local function HandlePackage(response_pkg, id, self)
             cmd_type == "EXIST_CHECK" or
             cmd_type == "RUN" or
             cmd_type == "ERROR" or
-            cmd_type == "SCREENSHOT" then
+            cmd_type == "SCREENSHOT" or
+            cmd_type == "COMPILE_SHADER" then
 
         local pack_l = pack.pack(response_pkg)
         --local nbytes = fd:send(pack_l)
@@ -323,9 +324,10 @@ local function save_ppm(filename, data, width, height, pitch)
     f:close()
 end
 
-print(pcall(require, "editor.toolset"))
+--[[print(pcall(require, "editor.toolset"))
 print(pcall(require, "filesystem.path"))
 print(pcall(require, "filesystem"))
+--]]
 ---[[
 local toolset = require "editor.toolset"
 local path = require "filesystem.path"
@@ -377,25 +379,36 @@ local function response(self, req)
                     end
                     --]]
                 elseif a_cmd[1] == "COMPILE_SHADER" then
+                    print(a_cmd[2])
+                    ---[[
                     local shader_path = req[2]
 
                     local config = toolset.load_config()
 
                     if next(config) == nil then
-                        return false, "load_config file failed, 'bin/iup.exe tools/config.lua' need to run first"
+                        print("load_config file failed, 'bin/iup.exe tools/config.lua' need to run first")
+                        assert(false)
                     end
 
                     local cwd = fs.currentdir()
-                    config.includes = {config.shaderinc, path.join(cwd, "assets/shaders/src") }
-                    local outfile = string.gsub(shader_path, "src%/", "%/")
 
+                    config.includes = {config.shaderinc, path.join(cwd, "assets/shaders/src") }
+
+                    local outfile = string.gsub(shader_path, "src/", "essl/")
+                    outfile = string.gsub(outfile, ".sc", ".bin")
                     config.dest = outfile
-                    local success, msg = toolset.compile(shader_path, config, "essl")
+
+                    local success, msg = toolset.compile(shader_path, config, "ios")
+
+                    print("compile msg", success, msg)
+
                     if not success then
                         print(string.format("try compile from file %s, but failed, error message : \n%s", shader_path, msg))
                         return nil
                     end
-
+                    local command_package = {a_cmd, req.id}
+                    table.insert(command_cache, command_package)
+--]]
                 else
                     local command_package = {a_cmd, req.id}
                     table.insert(command_cache, command_package)

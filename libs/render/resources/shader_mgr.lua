@@ -72,6 +72,7 @@ local function compile_shader(filename, outfile)
 end
     --]]
 
+local compiled_shader = {}
 local function check_compile_shader(name)
     local rt_path = get_shader_rendertype_path()
     local shader_subpath = path.join("shaders", rt_path, name)
@@ -84,17 +85,23 @@ local function check_compile_shader(name)
         if srcpath then
             local assetdir = assetmgr.assetdir()
 			local outfile = path.join(assetdir, shader_subpath)
-			
+
+
 			if not fs.exist(outfile) or fu.file_is_newer(srcpath, outfile) then
-				path.create_dirs(path.parent(outfile))            
-				local success, msg = compile_shader(srcpath, outfile)
 
-				if not success then
-					print(string.format("try compile from file %s, but failed, error message : \n%s", srcpath, msg))
-					return nil
-				end
+                if not compiled_shader[srcpath] then
+                    path.create_dirs(path.parent(outfile))
+
+                    local success, msg = compile_shader(srcpath, outfile)
+
+                    if not success then
+                        print(string.format("try compile from file %s, but failed, error message : \n%s", srcpath, msg))
+                        return nil
+                    end
+
+                    compiled_shader[srcpath] = true
+                end
 			end
-
             --print("out file is: "..outfile .. " 00 " .. srcdir .."  11  " .. srcpath .." 22 "..assetdir .. " 33 "..shader_subpath)
             --outfile = assetmgr.find_valid_asset_path(outfile)
             outfile = assetmgr.find_valid_asset_path(shader_subpath)
