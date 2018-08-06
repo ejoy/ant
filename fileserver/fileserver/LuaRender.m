@@ -111,11 +111,116 @@ static int error_handle(lua_State* L) {
     return 0;
 }
 
+NSMutableDictionary* local_file_path;
+
 @implementation LuaRender
+- (void) SelfUpdate{
+    L = luaL_newstate();
+    luaL_openlibs(L);
+    
+    luaL_requiref(L, "preloadc", luaopen_preloadc, 0);
+    luaopen_lanes_embedded(L, default_luaopen_lanes);
+    
+    custom_on_state_create(L);
+    lua_pushcfunction(L, custom_on_state_create);
+    lua_setglobal(L, "custom_on_state_create");
+    
+    NSString* app_dir = [[NSBundle mainBundle]resourcePath];
+    NSString* sandbox_dir = NSHomeDirectory();
+    
+    NSString* script_dir = [app_dir stringByAppendingString:@"/Common/selfupdate.lua"];
+    
+    NSString* script_string = [NSString stringWithContentsOfFile:script_dir encoding:NSUTF8StringEncoding error:nil];
+    
+    luaL_dostring(L, [script_string UTF8String]);
+    
+#ifdef DEBUG
+    lua_pushcfunction(L, error_handle);
+#endif
+    
+    lua_getglobal(L, "SelfUpdate");
+    if(lua_isfunction(L, -1)) {
+        lua_pushstring(L, [sandbox_dir UTF8String]);
+        
+#ifdef DEBUG
+        lua_pcall(L, 1, 1, -3);
+#else
+        lua_pcall(L, 1, 1, 0);
+#endif
+    }
+    
+    local_file_path = [[NSMutableDictionary alloc] initWithCapacity:6];
+    
+    //handle return value
+    if(lua_istable(L, -1)){
+        //get
+        lua_getfield(L, -1, "appmain");
+        NSString* appmain_path = [NSString stringWithUTF8String:lua_tostring(L, -1)];
+        lua_pop(L, 1);
+        
+        lua_getfield(L, -1, "pack");
+        NSString* pack_path = [NSString stringWithUTF8String:lua_tostring(L, -1)];
+        lua_pop(L, 1);
+        
+        lua_getfield(L, -1, "filemanager");
+        NSString* filemanager_path = [NSString stringWithUTF8String:lua_tostring(L, -1)];
+        lua_pop(L, 1);
+        
+        lua_getfield(L, -1, "lanes");
+        NSString* lanes_path = [NSString stringWithUTF8String:lua_tostring(L, -1)];
+        lua_pop(L, 1);
+        
+        lua_getfield(L, -1, "fileprocess");
+        NSString* fileprocess_path = [NSString stringWithUTF8String:lua_tostring(L, -1)];
+        lua_pop(L, 1);
+        
+        lua_getfield(L, -1, "client");
+        NSString* client_path = [NSString stringWithUTF8String:lua_tostring(L, -1)];
+        lua_pop(L, 1);
+        
+        [local_file_path setObject:appmain_path forKey:@"appmain"];
+        [local_file_path setObject:pack_path forKey:@"path"];
+        [local_file_path setObject:filemanager_path forKey:@"filemanager"];
+        [local_file_path setObject:lanes_path forKey:@"lanes"];
+        [local_file_path setObject:fileprocess_path forKey:@"fileprocess"];
+        [local_file_path setObject:client_path forKey:@"client"];
+        lua_pop(L, 1);
+    }
+    else {
+        assert(false);
+    }
+    
+    lua_close(L);
+}
+
 
 - (void) InitScript:(CALayer*)layer size:(CGSize)view_size {
     L = luaL_newstate();
     luaL_openlibs(L);
+    
+    //put file into package.preload()
+    if (lua_getglobal(L, "package") != LUA_TTABLE) {
+        luaL_error(L, "No package");
+    }
+    
+    if(lua_getfield(L, -1, "preload") != LUA_TTABLE){
+        luaL_error(L, "can't find package loaded");
+    }
+   // size_t loaded_length = lua_rawlen(L, -1);
+    
+    NSString* doc_path = [NSHomeDirectory() stringByAppendingString:@"/Documents/"];
+    for(NSString* key in local_file_path) {
+        if(![key isEqualToString:@"appmain"]) {
+            NSString* real_path = [doc_path stringByAppendingString:local_file_path[key]];
+            
+            luaL_loadfile(L, [real_path UTF8String]);
+            lua_setfield(L, -2, [key UTF8String]);
+        }
+    }
+    
+  
+    lua_pop(L, 2);
+//    int top = lua_gettop(L);
     luaL_requiref(L, "preloadc", luaopen_preloadc, 0);
 //    luaL_requiref(L, "cppfs", luaopen_cppfs, 0);
     
@@ -132,9 +237,14 @@ static int error_handle(lua_State* L) {
     NSString *sandbox_dir = NSHomeDirectory();
     NSLog(app_dir, sandbox_dir);
     
-    NSString* file_dir = [app_dir stringByAppendingString:@"/Client/appmain.lua"];
+    //NSString* appmain_local = [app_dir stringByAppendingString:@"/Client/appmain.lua"];
+   
+    //NSString* app_main_string = [NSString stringWithContentsOfFile:app_file_dir encoding:NSUTF8StringEncoding error:nil];
+
+    NSString* appmain_local = [doc_path stringByAppendingString:local_file_path[@"appmain"]];
     
-    luaL_dofile(L, [file_dir UTF8String]);
+    //luaL_dostring(L, [app_main_string UTF8String]);
+    luaL_dofile(L, [appmain_local UTF8String]);
     
 #ifdef DEBUG
     lua_pushcfunction(L, error_handle);
@@ -148,7 +258,12 @@ static int error_handle(lua_State* L) {
         lua_pushstring(L, [app_dir UTF8String]);
         lua_pushstring(L, [sandbox_dir UTF8String]);
         
+#ifdef DEBUG
         lua_pcall(L, 5, 0, -7);
+#else
+        lua_pcall(L, 5, 0, 0);
+#endif
+     
     }
     else {
         assert(false);
@@ -167,7 +282,11 @@ static int error_handle(lua_State* L) {
     
     lua_getglobal(L, "mainloop");
     if(lua_isfunction(L, -1)) {
+#ifdef DEBUG
         lua_pcall(L, 0, 0, -2);
+#else
+        lua_pcall(L, 0, 0, 0);
+#endif
     }
 }
 
@@ -178,7 +297,11 @@ static int error_handle(lua_State* L) {
     
     lua_getglobal(L, "terminate");
     if(lua_isfunction(L, -1)) {
+#ifdef DEBUG
         lua_pcall(L, 0, 0, -2);
+#else
+        lua_pcall(L, 0, 0, 0);
+#endif
     }
     
     lua_close(L);
@@ -206,8 +329,11 @@ static int error_handle(lua_State* L) {
                 
                 lua_seti(L, -2, i+1);
             }
-            
+#ifdef DEBUG
             lua_pcall(L, 1, 0, -3);
+#else
+            lua_pcall(L, 1, 0, 0);
+#endif
         }
         
         [self->MsgArray removeAllObjects];

@@ -183,6 +183,7 @@ function filemanager:AddFileRecord(hash, path)
     local real_path = string.sub(hash, 1, 3) .. "/" .. hash
 
     file_table[hash] = real_path
+    return real_path
 end
 
 return filemanager

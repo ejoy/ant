@@ -21,6 +21,9 @@
 
 - (void) HandleInput;
 - (void) AddInputMessage:(NSString*) msg x_pos:(CGFloat) x y_pos:(CGFloat) y;
+
+- (void) SelfUpdate;
+
 @end
 
 @interface InputMsg : NSObject {

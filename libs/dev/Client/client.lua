@@ -163,6 +163,10 @@ function clientcommand.SCREENSHOT(resp)
 
     _linda:send("screenshot_req", resp)
 end
+
+function clientcommand.COMPILE_SHADER(resp)
+    _linda:send("shader_compiled", resp)
+end
 ---------------------------------------------------
 
 local recieve_cmd = {}
@@ -185,7 +189,7 @@ function client.new(address, port, init_linda, home_dir)
     _linda = init_linda
     --todo:
     app_doc_path = home_dir .. "/Documents/"
-    --print("app_doc_path", app_doc_path)
+--    print("app_doc_path", app_doc_path)
 
     file_mgr:ReadDirStructure(home_dir.."/Documents/dir.txt")
     file_mgr:ReadFilePathData(home_dir.."/Documents/file.txt")
@@ -354,11 +358,12 @@ function client:mainloop(timeout)
             if fd then
                 -- can send
                 pack.send(fd, self.sending)
+                self.sending = {}
             end
         end
     else
         --clear the sending buffer
-        self.sending = {}
+        --self.sending = {}
     end
 
     for i,_ in pairs(logic_request) do
