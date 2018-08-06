@@ -12,9 +12,10 @@ local function HandleResponse(resp_table)
     end
 end
 
+
+local server_framework = require "server_framework"
+server_framework:init("127.0.0.1", 8888)
 function init()
-    local server_framework = require "server_framework"
-    server_framework:init("127.0.0.1", 8888)
 
     local mobiledevices = require "libimobiledevicelua"
     local devices = mobiledevices.GetDevices()
@@ -23,13 +24,21 @@ function init()
     end
 
     server_framework:SetProjectDirectoryPath("/Users/ejoy/Desktop/Engine/ant/libs")
-
-    server_framework:HandleCommand("all", "RUN", "ios_main.lua")
+       server_framework:HandleCommand("all", "RUN", "ios_main.lua")
 end
 
 local count = 1
 
 function mainloop()
+    print("a")
+    --[[
     server_framework:update()
     HandleResponse(server_framework:RecvResponse())
+
+    count = count + 1
+    if count == 4000 then
+        server_framework:HandleCommand("all", "RUN", "ios_main.lua")
+    end
+    print("count", count)
+    --]]
 end

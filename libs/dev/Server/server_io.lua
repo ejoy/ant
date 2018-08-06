@@ -323,14 +323,6 @@ local function save_ppm(filename, data, width, height, pitch)
     f:close()
 end
 
-print(pcall(require, "editor.toolset"))
-print(pcall(require, "filesystem.path"))
-print(pcall(require, "filesystem"))
----[[
-local toolset = require "editor.toolset"
-local path = require "filesystem.path"
-local fs = require "filesystem"
---]]
 local screenshot_cache = nil
 local max_screenshot_pack = 64*1024 - 100
 --store handle of lanes, check the result periodically
@@ -377,6 +369,12 @@ local function response(self, req)
                     end
                     --]]
                 elseif a_cmd[1] == "COMPILE_SHADER" then
+                    ---[[
+                    local toolset = require "editor.toolset"
+                    local path = require "filesystem.path"
+                    local fs = require "filesystem"
+                    --]]
+
                     local shader_path = req[2]
 
                     local config = toolset.load_config()

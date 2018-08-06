@@ -22,6 +22,8 @@
     self = [super initWithFrame:rect];
     
     m_Render = [[LuaRender alloc] init];
+    [m_Render SelfUpdate];
+    
     CGSize view_size = rect.size;
     CALayer* layer = [self layer];
     [m_Render InitScript:layer size:view_size];

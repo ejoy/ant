@@ -6,6 +6,14 @@ local lanes = require "lanes"
 if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
 local linda = lanes.linda()
 
+print("11111", package.loaded)
+if package.loaded then
+    for k, v in pairs(package.preload) do
+        print(k , v)
+    end
+end
+
+
 --"cat" means categories for different log
 --for now we have "Script" for lua script log
 --and "Bgfx" for bgfx log
@@ -33,7 +41,7 @@ function compile_shader(srcpath, outfile)
     linda:send("request", {"COMPILE_SHADER", srcpath})
 
     while true do
-        local key, value = linda:receive(0.001, "sc compiled")
+        local key, value = linda:receive(0.01, "shader_compiled")
         if value then
             break
         end
