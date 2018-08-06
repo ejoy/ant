@@ -4,6 +4,37 @@ local ev = require 'debugger.event'
 
 local CMD = {}
 
+local function asyncLoadFile(filename, callback)
+    -- TODO
+    local f, err = io.open(filename, 'rb')
+    if not f then
+        callback(nil, err)
+        return
+    end
+    local str = f:read 'a'
+    f:close()
+    callback(str)
+end
+
+function CMD.loadfile(w, req)
+    asyncLoadFile(req.filename, function(res, err)
+        local mgr = require 'debugger.backend.master.mgr'
+        if res then
+            mgr.sendToWorker(w, {
+                cmd = 'loadfile',
+                success = true,
+                result = res,
+            })
+            return
+        end
+        mgr.sendToWorker(w, {
+            cmd = 'loadfile',
+            success = false,
+            message = err,
+        })
+    end)
+end
+
 function CMD.ready(w)
     ev.emit('worker-ready', w)
 end

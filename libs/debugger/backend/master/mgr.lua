@@ -69,7 +69,7 @@ end
 
 function mgr.update()
     local threads = require 'debugger.backend.master.threads'
-    for w in masterThread:foreach() do
+    for w in masterThread:foreach(true) do
         while true do
             local msg = masterThread:recv(w)
             if not msg then
