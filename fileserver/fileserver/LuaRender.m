@@ -32,9 +32,10 @@ LUAMOD_API int luaopen_debugger_backend(lua_State *L);
 LUAMOD_API int luaopen_debugger_frontend(lua_State *L);
 LUAMOD_API int luaopen_clonefunc(lua_State *L);
 LUAMOD_API int luaopen_cjson_safe(lua_State *L);
-LUAMOD_API int luaopen_preloadc(lua_State *L);
 
 LUAMOD_API int luaopen_remotedebug(lua_State *L);
+LUAMOD_API int luaopen_preloadc(lua_State *L);
+
 
 //LUAMOD_API int luaopen_cppfs(lua_State *L);
 
@@ -51,30 +52,29 @@ static int default_luaopen_lanes( lua_State* L) {
 }
 
 static int custom_on_state_create(lua_State *L) {
-    luaL_requiref(L, "preloadc", luaopen_preloadc, 0);
+    //luaL_requiref(L, "preloadc", luaopen_preloadc, 0);
+    lua_pushcfunction(L, luaopen_preloadc);
+    if(lua_pcall(L, 0, 0, 0) != 0)
+    {
+    const char *msg = lua_tostring(L, -1);
+    
+    if(msg) {
+        printf("------- error!!! -------- \n %s\n", msg);
+        
+        //send a log
+        lua_getglobal(L, "sendlog");
+        if(lua_isfunction(L, -1)) {
+            lua_pushstring(L, "Device");
+            lua_pushstring(L, msg);
+            lua_pcall(L, 2, 0, 0);
+        }
+        
+        luaL_traceback(L, L, msg, 1);
+    }
+    }
     
     lua_getglobal(L, "package");
-    int top = lua_gettop(L);
     if(lua_istable(L, -1)) {
-        /*
-        lua_getfield(L, -1, "preload");
-        
-        top = lua_gettop(L);
-        if(lua_istable(L, -1)) {
-            lua_pushcfunction(L, luaopen_lsocket);
-            lua_setfield(L, -2, "lsocket");
-            //lua_pop(L, 1);
-            
-            lua_pushcfunction(L, luaopen_crypt);
-            lua_setfield(L, -2, "crypt");
-            
-            lua_pushcfunction(L, luaopen_lfs);
-            lua_setfield(L, -2, "winfile");
-            
-            lua_pop(L, 1);
-        }
-        */
-
         lua_getfield(L, -1, "path");
         if(lua_isstring(L, -1)) {
             const char* pkg_path = lua_tostring(L, -1);
@@ -90,13 +90,15 @@ static int custom_on_state_create(lua_State *L) {
             lua_setfield(L, -2, "path");
         }
     }
-    top = lua_gettop(L);
-    lua_pop(L, -1);
+    
+    
+    lua_pop(L, 1);
     
     return 0;
 }
 
 lua_State *L = nil;
+/*
 static int error_handle(lua_State* L) {
     const char *msg = lua_tostring(L, -1);
     
@@ -114,9 +116,10 @@ static int error_handle(lua_State* L) {
         luaL_traceback(L, L, msg, 1);
     }
     
-    return 0;
+    return 1;
+     
 }
-
+*/
 NSMutableDictionary* local_file_path;
 
 @implementation LuaRender
@@ -124,13 +127,31 @@ NSMutableDictionary* local_file_path;
     L = luaL_newstate();
     luaL_openlibs(L);
     
-    luaL_requiref(L, "preloadc", luaopen_preloadc, 0);
     luaopen_lanes_embedded(L, default_luaopen_lanes);
-    
     custom_on_state_create(L);
     lua_pushcfunction(L, custom_on_state_create);
     lua_setglobal(L, "custom_on_state_create");
     
+    lua_pushcfunction(L, luaopen_preloadc);
+    if(lua_pcall(L, 0, 0, 0))
+    {
+        const char *msg = lua_tostring(L, -1);
+        if(msg) {
+            printf("------- error!!! -------- \n %s\n", msg);
+            
+            //send a log
+            lua_getglobal(L, "sendlog");
+            if(lua_isfunction(L, -1)) {
+                lua_pushstring(L, "Device");
+                lua_pushstring(L, msg);
+                lua_pcall(L, 2, 0, 0);
+            }
+            
+            luaL_traceback(L, L, msg, 1);
+        }
+    }
+    
+    //luaL_requiref(L, "preloadc", luaopen_preloadc, 0);
     NSString* app_dir = [[NSBundle mainBundle]resourcePath];
     NSString* sandbox_dir = NSHomeDirectory();
     
@@ -140,19 +161,29 @@ NSMutableDictionary* local_file_path;
     
     luaL_dostring(L, [script_string UTF8String]);
     
-#ifdef DEBUG
-    lua_pushcfunction(L, error_handle);
-#endif
-    
+  //  lua_pushcfunction(L, error_handle);
     lua_getglobal(L, "SelfUpdate");
     if(lua_isfunction(L, -1)) {
         lua_pushstring(L, [sandbox_dir UTF8String]);
         
-#ifdef DEBUG
-        lua_pcall(L, 1, 1, -3);
-#else
-        lua_pcall(L, 1, 1, 0);
-#endif
+
+        if(lua_pcall(L, 1, 1, 0))
+        {
+            const char *msg = lua_tostring(L, -1);
+            if(msg) {
+                printf("------- error!!! -------- \n %s\n", msg);
+                
+                //send a log
+                lua_getglobal(L, "sendlog");
+                if(lua_isfunction(L, -1)) {
+                    lua_pushstring(L, "Device");
+                    lua_pushstring(L, msg);
+                    lua_pcall(L, 2, 0, 0);
+                }
+                
+                luaL_traceback(L, L, msg, 1);
+            }
+        }
     }
     
     local_file_path = [[NSMutableDictionary alloc] initWithCapacity:6];
@@ -226,15 +257,15 @@ NSMutableDictionary* local_file_path;
     
   
     lua_pop(L, 2);
-//    int top = lua_gettop(L);
-    luaL_requiref(L, "preloadc", luaopen_preloadc, 0);
-//    luaL_requiref(L, "cppfs", luaopen_cppfs, 0);
+    
+//  luaL_requiref(L, "cppfs", luaopen_cppfs, 0);
     
     luaopen_lanes_embedded(L, default_luaopen_lanes);
     
     custom_on_state_create(L);
     lua_pushcfunction(L, custom_on_state_create);
     lua_setglobal(L, "custom_on_state_create");
+    
     
     float width = view_size.width;
     float height = view_size.height;
@@ -243,18 +274,12 @@ NSMutableDictionary* local_file_path;
     NSString *sandbox_dir = NSHomeDirectory();
     NSLog(app_dir, sandbox_dir);
     
-    //NSString* appmain_local = [app_dir stringByAppendingString:@"/Client/appmain.lua"];
-   
-    //NSString* app_main_string = [NSString stringWithContentsOfFile:app_file_dir encoding:NSUTF8StringEncoding error:nil];
-
     NSString* appmain_local = [doc_path stringByAppendingString:local_file_path[@"appmain"]];
     
-    //luaL_dostring(L, [app_main_string UTF8String]);
     luaL_dofile(L, [appmain_local UTF8String]);
     
-#ifdef DEBUG
-    lua_pushcfunction(L, error_handle);
-#endif
+
+    //lua_pushcfunction(L, error_handle);
     
     lua_getglobal(L, "init");
     if(lua_isfunction(L, -1)) {
@@ -264,12 +289,22 @@ NSMutableDictionary* local_file_path;
         lua_pushstring(L, [app_dir UTF8String]);
         lua_pushstring(L, [sandbox_dir UTF8String]);
         
-#ifdef DEBUG
-        lua_pcall(L, 5, 0, -7);
-#else
-        lua_pcall(L, 5, 0, 0);
-#endif
-     
+        if(lua_pcall(L, 5, 0, 0)) {
+            const char *msg = lua_tostring(L, -1);
+            if(msg) {
+                printf("------- error!!! -------- \n %s\n", msg);
+                
+                //send a log
+                lua_getglobal(L, "sendlog");
+                if(lua_isfunction(L, -1)) {
+                    lua_pushstring(L, "Device");
+                    lua_pushstring(L, msg);
+                    lua_pcall(L, 2, 0, 0);
+                }
+                
+                luaL_traceback(L, L, msg, 1);
+            }
+        }
     }
     else {
         assert(false);
@@ -282,41 +317,58 @@ NSMutableDictionary* local_file_path;
 - (void) Update {
     [self HandleInput];
     
-#ifdef DEBUG
-    lua_pushcfunction(L, error_handle);
-#endif
+    //lua_pushcfunction(L, error_handle);
     
     lua_getglobal(L, "mainloop");
     if(lua_isfunction(L, -1)) {
-#ifdef DEBUG
-        lua_pcall(L, 0, 0, -2);
-#else
-        lua_pcall(L, 0, 0, 0);
-#endif
+        if(lua_pcall(L, 0, 0, 0)){
+            const char *msg = lua_tostring(L, -1);
+            if(msg) {
+                printf("------- error!!! -------- \n %s\n", msg);
+                
+                //send a log
+                lua_getglobal(L, "sendlog");
+                if(lua_isfunction(L, -1)) {
+                    lua_pushstring(L, "Device");
+                    lua_pushstring(L, msg);
+                    lua_pcall(L, 2, 0, 0);
+                }
+                
+                luaL_traceback(L, L, msg, 1);
+            }
+        }
     }
 }
 
 - (void) Terminate {
-#ifdef DEBUG
-    lua_pushcfunction(L, error_handle);
-#endif
+  //  lua_pushcfunction(L, error_handle);
     
     lua_getglobal(L, "terminate");
     if(lua_isfunction(L, -1)) {
-#ifdef DEBUG
-        lua_pcall(L, 0, 0, -2);
-#else
-        lua_pcall(L, 0, 0, 0);
-#endif
+        if(lua_pcall(L, 0, 0, 0)) {
+            const char *msg = lua_tostring(L, -1);
+            if(msg) {
+                printf("------- error!!! -------- \n %s\n", msg);
+                
+                //send a log
+                lua_getglobal(L, "sendlog");
+                if(lua_isfunction(L, -1)) {
+                    lua_pushstring(L, "Device");
+                    lua_pushstring(L, msg);
+                    lua_pcall(L, 2, 0, 0);
+                }
+                
+                luaL_traceback(L, L, msg, 1);
+            }
+        }
     }
     
     lua_close(L);
 }
 
 - (void) HandleInput {
-#ifdef DEBUG
-    lua_pushcfunction(L, error_handle);
-#endif
+  //  lua_pushcfunction(L, error_handle);
+
     if([self->MsgArray count] > 0) {
         lua_getglobal(L, "handle_input");
         if(lua_isfunction(L, -1)) {
@@ -335,11 +387,22 @@ NSMutableDictionary* local_file_path;
                 
                 lua_seti(L, -2, i+1);
             }
-#ifdef DEBUG
-            lua_pcall(L, 1, 0, -3);
-#else
-            lua_pcall(L, 1, 0, 0);
-#endif
+            if(lua_pcall(L, 1, 0, 0)) {
+                const char *msg = lua_tostring(L, -1);
+                if(msg) {
+                    printf("------- error!!! -------- \n %s\n", msg);
+                    
+                    //send a log
+                    lua_getglobal(L, "sendlog");
+                    if(lua_isfunction(L, -1)) {
+                        lua_pushstring(L, "Device");
+                        lua_pushstring(L, msg);
+                        lua_pcall(L, 2, 0, 0);
+                    }
+                    
+                    luaL_traceback(L, L, msg, 1);
+                }
+            }
         }
         
         [self->MsgArray removeAllObjects];

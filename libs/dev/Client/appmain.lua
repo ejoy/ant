@@ -153,7 +153,7 @@ local function remote_searcher (name)
     while true do
         local key, value = linda:receive(0.001, "mem_data")
         if value then
-            return load(value)
+            return load(value, "@"..name)
         end
     end
 end
@@ -367,7 +367,7 @@ function init(window_handle, width, height, app_dir, bundle_dir)
 
     --entrance = require "ios_main"
     --entrance.init(window_handle, width, height)
-    local client_io = lanes.gen("*",{package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateIOThread)(linda, bundle_home_dir)
+    local client_io = lanes.gen("*", CreateIOThread)(linda, bundle_home_dir)
 end
 
 local time_stamp = 0.0

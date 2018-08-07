@@ -28,7 +28,7 @@ function SelfUpdate(bundle_dir)
     file_mgr:ReadDirStructure(bundle_dir .. "/Documents/dir.txt")
     file_mgr:ReadFilePathData(bundle_dir .. "/Documents/file.txt")
 
-    local client_io = lanes.gen("*", {package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateIOThread)(linda, bundle_dir)
+    local client_io = lanes.gen("*", CreateIOThread)(linda, bundle_dir)
 
     local check_path = {}
 
