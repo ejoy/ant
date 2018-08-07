@@ -1,7 +1,6 @@
 local require = import and import(...) or require
 
 local winfile =  require "winfile"
-local fs =  require "cppfs"
 
 local rawopen = winfile.open
 

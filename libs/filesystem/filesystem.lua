@@ -1,7 +1,6 @@
 local winfile =  require "winfile"
 local memoryfile = require "memoryfile"
 local packfile_open = require "packfile.openfile"
-local packfile_exist = require "packfile.existfile"
 
 local memopen = memoryfile.open
 
@@ -60,7 +59,5 @@ io.open = wrapper "open"
 os.execute = winfile.execute
 os.getenv = winfile.getenv
 os.popen = winfile.popen
-
-winfile.exist = packfile_exist
 
 return winfile
