@@ -85,7 +85,7 @@ function fileserver.GET(req)
         print("client hash", client_hash)
         --no need to send file
         print("file "..file_path.." is up to date")
-        return --ignore it
+    --    return --ignore it
     end
 
 	local file = io.open(absolute_path, "rb")

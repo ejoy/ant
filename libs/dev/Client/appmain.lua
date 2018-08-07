@@ -182,31 +182,33 @@ local function run(path)
         entrance = nil
     end
 
-    local real_path = file_mgr:GetRealPath(path)
-    if real_path then
-        real_path = bundle_home_dir .."/Documents/" .. real_path
 
-        entrance = dofile(real_path)
-        --must have this function and these variables for init
-        entrance.init(g_WindowHandle, g_Width, g_Height, app_home_dir, bundle_home_dir)
-    else
-        --not in local, need require from distance
-        --get file name
-        local reverse_path = string.reverse(path)
-        local slash_pos = string.find(reverse_path, "/")
-        if slash_pos then
-            reverse_path = string.sub(reverse_path, 1, slash_pos - 1)
-        end
-        reverse_path = string.reverse(reverse_path)
-        --get rid of .lua
-        reverse_path = string.sub(reverse_path, 1, -5)
+    if winfile.exist(path, true) then
+        local real_path = file_mgr:GetRealPath(path)
+        if real_path then
+            real_path = bundle_home_dir .."/Documents/" .. real_path
 
-        entrance = require(reverse_path)
-        if entrance then
+            entrance = dofile(real_path)
+            --must have this function and these variables for init
             entrance.init(g_WindowHandle, g_Width, g_Height, app_home_dir, bundle_home_dir)
+        else
+            --not in local, need require from distance
+            --get file name
+            local reverse_path = string.reverse(path)
+            local slash_pos = string.find(reverse_path, "/")
+            if slash_pos then
+                reverse_path = string.sub(reverse_path, 1, slash_pos - 1)
+            end
+            reverse_path = string.reverse(reverse_path)
+            --get rid of .lua
+            reverse_path = string.sub(reverse_path, 1, -5)
+
+            entrance = require(reverse_path)
+            if entrance then
+                entrance.init(g_WindowHandle, g_Width, g_Height, app_home_dir, bundle_home_dir)
+            end
         end
     end
-
 end
 
 local bgfx = require "bgfx"
@@ -295,10 +297,10 @@ function init(window_handle, width, height, app_dir, bundle_dir)
         return "fileserver"
     end
 
-    package.loaded["winfile"].exist = function(path)
+    package.loaded["winfile"].exist = function(path, ignore_cache)
         if package.loaded["winfile"].attributes(path) then
             return true
-        elseif file_exist_cache[path] then
+        elseif file_exist_cache[path] and not ignore_cache then
             print("find file exist in cache: "..path)
             return true
         else
@@ -373,11 +375,13 @@ function mainloop()
     if entrance then
         entrance.mainloop()
 
+        --[[
         local log = bgfx.get_log()
         if log and #log>0 then
             print("get bgfx log")
             print(log)
         end
+        --]]
     end
 
     HandleMsg()
