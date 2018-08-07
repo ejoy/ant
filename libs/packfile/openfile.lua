@@ -55,26 +55,40 @@ end
 return function (path, mode)
     if mode and mode:match 'w' then
         return rawopen(path, mode)
-    end
-    if winfile.exist(path) then
+	end
+	-- if winfile.exist(path) then
+    --     return rawopen(path, mode)
+    -- end
+    -- local packer_path = find_packer(path)
+    -- if not packer_path then
+    --     return nil, path .. ': No such file or directory'
+    -- end
+    -- local cache_path = 'cache/' .. path
+    -- local lnk_path = path .. '.lnk'
+    -- if not need_update(lnk_path, cache_path) then
+    --     return rawopen(path, mode)
+    -- end
+    -- local packer = require(packer_path)
+    -- local res = packer(lnk_path)
+    -- local ok, err = savefile(cache_path, res)
+    -- if not ok then
+    --     return nil, err
+    -- end
+    -- local time = fs.last_write_time(fs.path(lnk_path))
+    -- fs.last_write_time(fs.path(cache_path), time)
+    -- return rawopen(cache_path, mode)
+
+	local lnk_path = path .. '.lnk'
+
+    if not winfile.exist(lnk_path) then
         return rawopen(path, mode)
-    end
+	end
+	
     local packer_path = find_packer(path)
     if not packer_path then
         return nil, path .. ': No such file or directory'
-    end
-    local cache_path = 'cache/' .. path
-    local lnk_path = path .. '.lnk'
-    if not need_update(lnk_path, cache_path) then
-        return rawopen(path, mode)
-    end
-    local packer = require(packer_path)
-    local res = packer(lnk_path)
-    local ok, err = savefile(cache_path, res)
-    if not ok then
-        return nil, err
-    end
-    local time = fs.last_write_time(fs.path(lnk_path))
-    fs.last_write_time(fs.path(cache_path), time)
-    return rawopen(cache_path, mode)
+	end
+
+	local packer = require(packer_path)
+	return packer(lnk_path, mode)
 end

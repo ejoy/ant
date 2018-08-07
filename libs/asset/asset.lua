@@ -11,7 +11,8 @@ local support_list = {
 	"material",
 	"module",
 	"texture",
-	"hierarchy",	
+	"hierarchy",
+	"lnk",
 }
 
 local loader = setmetatable({} , {

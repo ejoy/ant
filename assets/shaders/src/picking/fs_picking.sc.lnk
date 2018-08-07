@@ -1,0 +1,1 @@
+shader_src = 'shaders/src/picking/fs_picking.sc'

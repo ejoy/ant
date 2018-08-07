@@ -2,16 +2,28 @@ local require = import and import(...) or require
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
-local baselib = require "bgfx.baselib"
-local rhwi = require "render.hardware_interface"
+
 local toolset = require "editor.toolset"
 local path = require "filesystem.path"
 local assetmgr = require "asset"
 local fs = require "filesystem"
 local fu = require "filesystem.util"
 
--- init
-local function get_shader_rendertype_path()
+local baselib = require "bgfx.baselib"
+local rhwi = require "render.hardware_interface"
+
+local alluniforms = {}
+
+local shader_mgr = {}
+shader_mgr.__index = shader_mgr
+
+local rt_subpath = nil
+
+function shader_mgr.get_shader_rendertype_path()
+	if rt_subpath then
+		return rt_subpath
+	end
+
     local caps = rhwi.get_caps()
     local paths = {
         NOOP       = "dx9",
@@ -25,13 +37,14 @@ local function get_shader_rendertype_path()
         VULKAN     = "spirv",
     }
 
-    return assert(paths[caps.rendererType])
+	rt_subpath = assert(paths[caps.rendererType])
+	return rt_subpath	
 end
 
-local function get_compile_renderer_name()
+function shader_mgr.get_compile_renderer_name()
     local caps = rhwi.get_caps()
     local rendertype = caps.rendererType
-    local platform = baselib.platform_name
+    local platform = string.lower(baselib.platform_name)
 
     if  rendertype == "DIRECT3D9" then
         return "d3d9"
@@ -40,70 +53,32 @@ local function get_compile_renderer_name()
     if  rendertype == "DIRECT3D11" or
         rendertype == "DIRECT3D12" then
         return "d3d11"
-    end
-
+	end
+	
     return platform
 end
 
-
-local alluniforms = {}
-
-local shader_mgr = {}
-shader_mgr.__index = shader_mgr
-
-local function compile_shader(filename, outfile)
-    local config = toolset.load_config()
-
-    if next(config) == nil then
-        return false, "load_config file failed, 'bin/iup.exe tools/config.lua' need to run first"
-	end
+local function get_full_filename(relative_name)
+	local ext = path.ext(relative_name)
 	
-	local cwd = fs.currentdir()
-	config.includes = {config.shaderinc, path.join(cwd, "assets/shaders/src")}
-    config.dest = outfile
-    return toolset.compile(filename, config, get_compile_renderer_name())
-end
+	if ext ~= nil then
+		local subshaderfolder = "shaders/src"
+		local filename = path.join(subshaderfolder, relative_name)
+		return assetmgr.find_valid_asset_path(filename)
+	end
 
-local function check_compile_shader(name)
-    local rt_path = get_shader_rendertype_path()
-    local shader_subpath = path.join("shaders", rt_path, name)
-    shader_subpath = path.remove_ext(shader_subpath) .. ".bin"
-
-    local ext = path.ext(name)
-    if ext and ext:lower() == "sc" then
-        local srcdir = path.join("shaders/src", name)
-        local srcpath = assetmgr.find_valid_asset_path(srcdir)
-        if srcpath then
-            local assetdir = assetmgr.assetdir()
-			local outfile = path.join(assetdir, shader_subpath)
-			
-			if not fs.exist(outfile) or fu.file_is_newer(srcpath, outfile) then
-				path.create_dirs(path.parent(outfile))            
-				local success, msg = compile_shader(srcpath, outfile)
-				if not success then
-					print(string.format("try compile from file %s, but failed, error message : \n%s", srcpath, msg))
-					return nil
-				end
-			end 
-
-            return outfile
-        end
-    end
-
-    return assetmgr.find_valid_asset_path(shader_subpath)
+	local rt_path = shader_mgr.get_shader_rendertype_path()
+	return assetmgr.find_valid_asset_path(path.join("shaders", rt_path, relative_name .. ".bin"))
 end
 
 local function load_shader(name)
-    local filename = check_compile_shader(name)
-    if filename then
-        local f = assert(io.open(filename, "rb"))
-        local data = f:read "a"
-        f:close()
-        local h = bgfx.create_shader(data)
-        bgfx.set_name(h, filename)
-        return h
-    end
-    return nil
+	local filename = get_full_filename(name)	
+	local f = assert(io.open(assert(filename), "rb"))
+	local data = f:read "a"
+	f:close()
+	local h = bgfx.create_shader(data)
+	bgfx.set_name(h, name)
+	return h    
 end
 
 local function load_shader_uniforms(name)
