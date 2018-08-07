@@ -228,6 +228,14 @@ function server.new(config, linda)
 end
 
 function server:new_client(id, ip, port)
+
+    for _, v in ipairs(self.ids) do
+        if v == self.ids then
+            self.clients[id] = {ip = ip, port = port, reading = "" }
+            return
+        end
+    end
+
     table.insert(self.ids, id)
     self.clients[id] = {ip = ip, port = port, reading = ""}
 end
@@ -285,7 +293,7 @@ function server:queue_request(id, str)
 end
 
 function server:kick_client(client_id)
-    --[[
+    ---[[
     print("kick id", client_id)
     for k, id in ipairs(self.ids) do
         if id == client_id then

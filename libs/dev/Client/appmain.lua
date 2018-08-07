@@ -390,7 +390,7 @@ function mainloop()
         time_stamp = time_now
 
         --send time every 0.5 second
-        --_linda:send("log", {"Time", "Time: "..tostring(os.clock())})
+        _linda:send("log", {"Time", "Time: "..tostring(os.clock())})
      --   print("Time: "..tostring(os.clock()))
     end
 

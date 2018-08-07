@@ -32,7 +32,10 @@ local proj_dir_btn = iup.button{title = "select"}
 local proj_dir_text = iup.text{expand = "HORIZONTAL", value = default_proj_dir}
 server_framework:SetProjectDirectoryPath(default_proj_dir)
 
---todo for now auto connect all device
+--todo for now auto connect all device at start
+--beacuse self update needs to connect to server, but will close the vm after that
+--for other operation, we need another connection
+local start_up_connect = true
 local devices = mobiledevice.GetDevices()
 for k, v in pairs(devices) do
     server_framework:HandleCommand(v, "CONNECT")
@@ -120,10 +123,17 @@ function run_file_btn:action()
 
     local status = filedlg.status
 
-    if status ~= "-1" then
-        local file_value = string.gsub(filedlg.value, "\\", "/")
+    --send connect command
+    --todo fix it later
+    local devices = mobiledevice.GetDevices()
+    for k, v in pairs(devices) do
 
-        server_framework:HandleCommand("all", "RUN", file_value)
+        if status ~= "-1" then
+            local file_value = string.gsub(filedlg.value, "\\", "/")
+
+            server_framework:HandleCommand(v, "RUN", file_value)
+        end
+
     end
 
     filedlg:destroy()
@@ -138,6 +148,9 @@ function connect_btn:action()
     end
 
     local udid = device_list[select_idx]
+    --disconnect old connection
+    --todo fix it later
+    server_framework:HandleCommand(udid, "DISCONNECT")
     server_framework:HandleCommand(udid, "CONNECT")
 end
 
@@ -225,6 +238,8 @@ local function HandleResponse(resp_table)
 
                 fps_label = "cpu time: "..cpu_timer
                 print("Get fps", gpu_timer, cpu_timer)
+            elseif cat == "Time" then
+                print("time", log_table[2])
             else
                 --for now ignore other category
             end
@@ -234,8 +249,14 @@ local function HandleResponse(resp_table)
             --device connection and disconnection
             if v[2] == 1 then
                 --connected
-                local idx = connect_list.count
-                connect_list[idx+1] = v[3]
+                --start up connect for self update
+                if start_up_connect then
+                    start_up_connect = false
+                else
+                    local idx = connect_list.count
+                    connect_list[idx+1] = v[3]
+                end
+
             else
                 --disconnected
                 local list_count = connect_list.count
