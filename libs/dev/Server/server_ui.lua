@@ -239,7 +239,7 @@ local function HandleResponse(resp_table)
                 fps_label = "cpu time: "..cpu_timer
                 print("Get fps", gpu_timer, cpu_timer)
             elseif cat == "Time" then
-                print("time", log_table[2])
+                --print("time", log_table[2])
             else
                 --for now ignore other category
             end

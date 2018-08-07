@@ -142,7 +142,7 @@ function fileserver.EXIST(req)
     --client does not have the file, return if the server has it
     if not req[3] then
         print("file exist "..file_path)
-        return {"EXIST_CHECK", "exist"}
+        return {"EXIST_CHECK", "diff hash"}
     end
 
     local server_hash = fileprocess.CalculateHash(file_path)
