@@ -4,7 +4,7 @@ local world = ecs.world
 local mu = require "math.util"
 local bgfx = require "bgfx"
 
-ecs.component "main_camera" {}
+ecs.tag "main_camera"
 
 local camera_init_sys = ecs.system "camera_init"
 camera_init_sys.singleton "math_stack"

@@ -6,15 +6,13 @@ local mu = require "math.util"
 local cu = require "common.util"
 local components_util = require "render.components.util"
 
-local hierarchy_module = require "hierarchy"
-
 local axisbase_controller_hierarchyname = "hierarchy/axisbase_contrller.hierarchy"
 local axis_hierarchyname = "hierarchy/axis.hierarchy"
 local rotator_hierarchyname = "hierarchy/rotator.hierarchy"
 
-ecs.component "pos_transform" {}
-ecs.component "scale_transform" {}
-ecs.component "rotator_transform" {}
+ecs.tag "pos_transform"
+ecs.tag "scale_transform"
+ecs.tag "rotator_transform"
 
 ecs.component "object_transform" {
     translate_speed = 0.05,

@@ -93,7 +93,7 @@ ecs.component "material" {
 						end
 					end
 				end
-				table.insert(t, {path=pp, properties=properties})
+				table.insert(t, {path=pp, properties=src_properties})
 			
 			end
 			return t
@@ -126,13 +126,7 @@ ecs.component "name" {
     n = ""
 }
 
-ecs.component "can_select" {
-
-}
-
-ecs.component "last_render"{
-    enable = true
-}
+ecs.tag "can_select"
 
 ecs.component "control_state" {
     state = "camera"

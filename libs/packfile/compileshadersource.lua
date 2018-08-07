@@ -60,10 +60,8 @@ return function (lnk, readmode)
 	if not fs.exist(cache_path) or 
 		fu.file_is_newer(lnk, cache_path) then
 		local outfile = check_compile_shader(src)		
-		assert(outfile == cache_path)
+		assert(outfile == cache_path)		
 	end
 
-	-- local time = fs.last_write_time(fs.path(lnk))
-    -- fs.last_write_time(fs.path(cache_path), time)
 	return io.open(cache_path, readmode)
 end

@@ -111,5 +111,16 @@ return function(world)
 		callback = { "init", "update" },
 	}
 
+	class_register.tag = function (name)
+		local c = class_register.component(name)		
+		c.new = function() return true end
+
+		return function (content)
+			if content and (type(content) ~= "table" or next(content)) then
+				error("tag component should not add any member")
+			end
+		end
+	end
+
 	return class_register, class
 end
