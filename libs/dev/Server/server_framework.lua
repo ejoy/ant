@@ -39,6 +39,7 @@ end
 
 local function CreateServerThread(config, linda)
     local server_io = require "server_io"
+
     local s = server_io.new(config, linda)
     while true do
         s:mainloop(0.05)

@@ -197,6 +197,17 @@ function client.new(address, port, init_linda, home_dir)
 	return setmetatable( { host = fd, fd = { fd }, fds = {fd}, sending = {}, resp = {}, reading = ""}, client)
 end
 
+function client:register_command(cmd_files)
+    --register command from other files
+    for _, cln in ipairs(cmd_files) do
+        local c = require(cln)
+        for cmd, func in pairs(c) do
+            assert(recieve_cmd[cmd] == nil)
+            recieve_cmd[cmd] = func
+        end
+    end
+end
+
 function client:send(...)
 	local client_req = { ...}
 
@@ -263,6 +274,7 @@ end
 
 
 local max_screenshot_pack = 64*1024 - 100
+
 function client:CollectRequest()
     local count = 0
     --this if for client request

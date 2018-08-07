@@ -34,6 +34,8 @@ LUAMOD_API int luaopen_clonefunc(lua_State *L);
 LUAMOD_API int luaopen_cjson_safe(lua_State *L);
 LUAMOD_API int luaopen_preloadc(lua_State *L);
 
+LUAMOD_API int luaopen_remotedebug(lua_State *L);
+
 //LUAMOD_API int luaopen_cppfs(lua_State *L);
 
 void luaopen_lanes_embedded( lua_State* L, lua_CFunction _luaopen_lanes);
@@ -49,9 +51,12 @@ static int default_luaopen_lanes( lua_State* L) {
 }
 
 static int custom_on_state_create(lua_State *L) {
+    luaL_requiref(L, "preloadc", luaopen_preloadc, 0);
+    
     lua_getglobal(L, "package");
     int top = lua_gettop(L);
     if(lua_istable(L, -1)) {
+        /*
         lua_getfield(L, -1, "preload");
         
         top = lua_gettop(L);
@@ -65,10 +70,11 @@ static int custom_on_state_create(lua_State *L) {
             
             lua_pushcfunction(L, luaopen_lfs);
             lua_setfield(L, -2, "winfile");
+            
             lua_pop(L, 1);
         }
-        
-        top = lua_gettop(L);
+        */
+
         lua_getfield(L, -1, "path");
         if(lua_isstring(L, -1)) {
             const char* pkg_path = lua_tostring(L, -1);

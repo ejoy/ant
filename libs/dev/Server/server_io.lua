@@ -622,4 +622,10 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
     end
 end
 
+function server:SendPackage(pkg)
+    for _, id in pairs(self.ids) do
+        SendData(id, pkg)
+    end
+end
+
 return server
