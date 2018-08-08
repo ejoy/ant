@@ -42,7 +42,7 @@ $(BIN)/lua53.dll : lua/lua53.dll
 lua/lua.exe : build_lua
 
 $(BIN)/lua.exe : lua/lua.exe
-	cp $< $$@
+	cp $< $@
 
 define COPY_temp
 $(BIN)/$(1).dll : build_$(1)
