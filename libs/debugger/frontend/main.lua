@@ -6,11 +6,10 @@ end)()
 
 --log = require 'debugger.log'
 --log.file = 'dbg.log'
+print = nil
 
 local socket = require 'debugger.socket'
 local client = require 'debugger.frontend.client'
-
-print = nil
 
 client.initialize()
 

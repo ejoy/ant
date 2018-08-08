@@ -5,9 +5,12 @@ local ev = require 'debugger.event'
 
 local request = {}
 
-local stopOnEntry = true
-local config = nil
 local readyTrg = nil
+local initializing = false
+local config = {
+    initialize = {},
+    breakpoints = {},
+}
 
 function request.initialize(req)
     if not mgr.isState 'birth' then
@@ -21,51 +24,66 @@ function request.initialize(req)
 end
 
 function request.attach(req)
-    initProto = {}
     if not mgr.isState 'initialized' then
         response.error(req, 'not initialized or unexpected state')
         return
     end
     response.success(req)
 
-    config = req.arguments
-    stopOnEntry = true
-    if type(config.stopOnEntry) == 'boolean' then
-        stopOnEntry = config.stopOnEntry
-    end
-
-    mgr.broadcastToWorker {
-        cmd = 'initializing',
-        config = config,
+    initializing = true
+    config = {
+        initialize = req.arguments,
+        breakpoints = {},
     }
-    
+end
+
+function request.launch(req)
+    mgr.exitWhenClose()
+    return request.attach(req)
+end
+
+local function initializeWorker(w)
+    mgr.sendToWorker(w, {
+        cmd = 'initializing',
+        config = config.initialize,
+    })
+    for _, bp in pairs(config.breakpoints) do
+        mgr.sendToWorker(w, {
+            cmd = 'setBreakpoints',
+            source = bp[1],
+            breakpoints = bp[2],
+        })
+    end
+    local stopOnEntry = true
+    if type(config.initialize.stopOnEntry) == 'boolean' then
+        stopOnEntry = config.initialize.stopOnEntry
+    end
+    if stopOnEntry then
+        mgr.sendToWorker(w, {
+            cmd = 'stop',
+            reason = 'stepping',
+        })
+    end
+    mgr.sendToWorker(w, {
+        cmd = 'initialized',
+    })
+end
+
+function request.configurationDone(req)
+    response.success(req)
+    initializing = false
+
     if readyTrg then
         readyTrg:remove()
         readyTrg = nil
     end
     readyTrg = ev.on('worker-ready', function(w)
-        mgr.sendToWorker(w, {
-            cmd = 'initialized',
-            config = config,
-        })
+        initializeWorker(w)
     end)
-end
 
-function request.launch(req)
-    return request.attach(req)
-end
-
-function request.configurationDone(req)
-    response.success(req)
-    if stopOnEntry then
-        mgr.broadcastToWorker {
-            cmd = 'stop',
-            reason = 'stepping',
-        }
+    for _, w in ipairs(mgr.threads()) do
+        initializeWorker(w)
     end
-    mgr.broadcastToWorker {
-        cmd = 'initialized',
-    }
 end
 
 local breakpointID = 0
@@ -86,11 +104,18 @@ function request.setBreakpoints(req)
     if args.source.sourceReference then
         args.source.sourceReference = args.source.sourceReference & 0xffffffff
     end
-    mgr.broadcastToWorker {
-        cmd = 'setBreakpoints',
-        source = args.source,
-        breakpoints = args.breakpoints,
+    --TODO path 无视大小写？
+    config.breakpoints[args.source.sourceReference or args.source.path] = {
+        args.source,
+        args.breakpoints,
     }
+    if not initializing then
+        mgr.broadcastToWorker {
+            cmd = 'setBreakpoints',
+            source = args.source,
+            breakpoints = args.breakpoints,
+        }
+    end
 end
 
 function request.setExceptionBreakpoints(req)

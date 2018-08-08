@@ -59,8 +59,7 @@ function m.init(fd, rcb)
             end
         elseif n == nil then
             write_close(fd)
-            -- TODO
-            error('sockect error:' .. e)
+            --print('sockect error:' .. e)
         end
     end)
     w_buf[fd] = ''

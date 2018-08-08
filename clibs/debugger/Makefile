@@ -4,7 +4,11 @@ CFLAGS = -O2 -Wall
 
 mingw : debugger.dll
 
-debugger.dll : frontend.cpp backend.cpp hookmgr.cpp
+thunk.cpp : thunk.h thunk_windows.inl thunk_windows_i386.inl thunk_windows_amd64.inl thunk_linux_amd64.inl thunk_other.inl
+
+hookmgr.cpp : thunk.h
+
+debugger.dll : frontend.cpp backend.cpp hookmgr.cpp thunk.cpp
 	g++ --shared $(CFLAGS) $(LUAINC) -o $@ $^ $(LUALIB)
 
 clean :

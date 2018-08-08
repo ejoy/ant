@@ -19,11 +19,11 @@ local exceptionTrace = ''
 
 local CMD = {}
 
-local masterThread = cdebug.start 'worker'
+local workerThread = cdebug.start 'worker'
 
 local function workerThreadUpdate()
     while true do
-        local msg = masterThread:recv()
+        local msg = workerThread:recv()
         if not msg then
             break
         end
@@ -35,7 +35,7 @@ local function workerThreadUpdate()
 end
 
 local function sendToMaster(msg)
-    masterThread:send(assert(json.encode(msg)))
+    workerThread:send(assert(json.encode(msg)))
 end
 
 ev.on('breakpoint', function(reason, bp)
@@ -64,7 +64,7 @@ function CMD.initializing(pkg)
     ev.emit('initializing', pkg.config)
 end
 
-function CMD.initialized(pkg)
+function CMD.initialized()
     initialized = true
 end
 
