@@ -122,6 +122,7 @@ function clientcommand.ERROR(resp)
     for k, v in pairs(resp) do
         print(k, v)
     end
+    _linda:send("mem_data", "ERROR")
 end
 
 function clientcommand.EXIST_CHECK(resp)
@@ -197,15 +198,9 @@ function client.new(address, port, init_linda, home_dir)
 	return setmetatable( { host = fd, fd = { fd }, fds = {fd}, sending = {}, resp = {}, reading = ""}, client)
 end
 
-function client:register_command(cmd_files)
+function client:register_command(cmd, func)
     --register command from other files
-    for _, cln in ipairs(cmd_files) do
-        local c = require(cln)
-        for cmd, func in pairs(c) do
-            assert(recieve_cmd[cmd] == nil)
-            recieve_cmd[cmd] = func
-        end
-    end
+    recieve_cmd[cmd] = func
 end
 
 function client:send(...)

@@ -27,7 +27,13 @@ function sendlog(cat, level, ...)
 end
 
 function app_log(level, ...)
-    sendlog("Script", level, ...)
+
+    local output_log_string = {}
+    for _, v in ipairs({...}) do
+        table.insert(output_log_string, tostring(v))
+    end
+
+    sendlog("Script", level, table.unpack(output_log_string))
 end
 
 print = function(...)
@@ -139,6 +145,7 @@ loadfile = function(file_path)
         file:close()
         return load(file_string)
     else
+        print("require file error: "..name)
         return nil
     end
 end
@@ -152,8 +159,10 @@ local function remote_searcher (name)
 
     while true do
         local key, value = linda:receive(0.001, "mem_data")
-        if value then
+        if value ~= "ERROR" then
             return load(value, "@"..name)
+        else
+            return nil
         end
     end
 end
