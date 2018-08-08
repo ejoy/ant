@@ -159,10 +159,8 @@ local function remote_searcher (name)
 
     while true do
         local key, value = linda:receive(0.001, "mem_data")
-        if value ~= "ERROR" then
+        if value then
             return load(value, "@"..name)
-        else
-            return nil
         end
     end
 end
