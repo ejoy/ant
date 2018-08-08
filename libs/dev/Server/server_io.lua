@@ -623,6 +623,7 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
 end
 
 function server:SendPackage(pkg)
+    pkg = pack.pack(pkg)
     for _, id in pairs(self.ids) do
         SendData(id, pkg)
     end

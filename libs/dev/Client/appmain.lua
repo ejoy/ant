@@ -172,8 +172,25 @@ lanes.register("lsocket", lsocket)
 local function CreateIOThread(linda, home_dir)
     local client = require "client"
     local c = client.new("127.0.0.1", 8888, linda, home_dir)
+
+    local DbgIO = {}
+    function DbgIO:event_in(f)
+        c:register_command("dbg", function(data_table)
+            f(data_table[2])
+        end)
+    end
+    function DbgIO:update()
+    end
+    function DbgIO:send(data)
+        c:send("dbg", data)
+    end
+    function DbgIO:close()
+    end
+    local DbgMaster = require 'debugger'.start_master(DbgIO)
+    
     while true do
         c:mainloop(0.001)
+        DbgMaster()
         --print("io mainloop updating")
         local resp = c:pop()
         if resp then
@@ -275,9 +292,11 @@ local function init_lua_search_path(app_dir)
     function dprint(...) print(...) end
 end
 
+local DbgWorker
 local file_exist_cache = {}
 
 function init(window_handle, width, height, app_dir, bundle_dir)
+    DbgWorker = require 'debugger'.start_worker()
     bundle_home_dir = bundle_dir
     app_home_dir = app_dir
 
@@ -391,6 +410,7 @@ function mainloop()
         --]]
     end
 
+    DbgWorker()
     HandleMsg()
     HandleCacheScreenShot()
 
