@@ -21,25 +21,25 @@ end
 --project entrance
 local entrance
 local origin_print = print
-function sendlog(cat, level, ...)
-    linda:send("log", {cat, level, ...})
+function sendlog(cat, ...)
+    linda:send("log", {cat, ...})
     --origin_print(cat, ...)
 end
 
-function app_log(level, ...)
+function app_log( ...)
 
     local output_log_string = {}
     for _, v in ipairs({...}) do
         table.insert(output_log_string, tostring(v))
     end
 
-    sendlog("Script", level, table.unpack(output_log_string))
+    sendlog("Script", table.unpack(output_log_string))
 end
 
 print = function(...)
     origin_print(...)
     --print will have a priority 1
-    app_log(1, ...)
+    app_log(...)
 end
 
 function compile_shader(srcpath, outfile)

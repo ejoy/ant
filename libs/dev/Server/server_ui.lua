@@ -206,14 +206,17 @@ local function HandleResponse(resp_table)
             local cat = log_table[1]
 
             if cat == "Script" then
-                local new_log_value = log_table[3]
-                new_log_value = new_log_value .. "\n"
-            --todo temperary disable
-                ---[[
-                script_text.value = script_text.value .. new_log_value
-                local pos = iup.TextConvertLinColToPos(script_text,  script_text.linecount, 0)
-                script_text.caretpos = pos
-                script_text.scrolltopos = pos
+                local new_log_value = log_table[2]
+                if new_log_value then
+                    new_log_value = new_log_value .. "\n"
+                    --todo temperary disable
+                    ---[[
+                    script_text.value = script_text.value .. new_log_value
+                    local pos = iup.TextConvertLinColToPos(script_text,  script_text.linecount, 0)
+                    script_text.caretpos = pos
+                    script_text.scrolltopos = pos
+
+                end
 --]]
             elseif cat == "Bgfx" then
                 local new_log_value = log_table[2]
