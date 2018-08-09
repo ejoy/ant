@@ -4,6 +4,8 @@
 #include <lauxlib.h>
 #include <stdio.h>
 
+static int RETSTRING = 0;
+
 struct vfs {
 	struct luavm *L;
 	int handle;
@@ -22,6 +24,8 @@ lreturnstring(lua_State *L) {
 	luaL_checktype(L,1, LUA_TLIGHTUSERDATA);
 	const char ** r = (const char **)lua_touserdata(L, 1);
 	*r = luaL_checkstring(L, 2);
+	lua_settop(L, 2);
+	lua_rawsetp(L, LUA_REGISTRYINDEX, &RETSTRING);	// ref ret string
 	return 0;
 }
 
