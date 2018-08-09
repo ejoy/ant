@@ -45,31 +45,6 @@ db_traceback (lua_State *L) {
 	return 1;
 }
 
-/*
-	void * source
-	void * cmodules
- */
-static int
-linit(lua_State *L) {
-	luaL_openlibs(L);
-	lua_newtable(L);
-	lua_rawsetp(L, LUA_REGISTRYINDEX, &MSGTABLE);
-	lua_newtable(L);
-	lua_rawsetp(L, LUA_REGISTRYINDEX, &ERRLOG);
-	const char * source = (const char *)lua_touserdata(L, 1);
-	if (source != NULL) {
-		const char *chunkname = (const char *)lua_touserdata(L, 2);
-		if (luaL_loadbuffer(L, source, strlen(source), chunkname) != LUA_OK) {
-			return lua_error(L);
-		}
-		lua_rawgetp(L, LUA_REGISTRYINDEX, &ERRLOG);
-		lua_pushvalue(L, 3);
-		lua_call(L, 2, 0);
-	}
-
-	return 0;
-}
-
 static int
 lpusherr(lua_State *L) {
 	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &ERRLOG) != LUA_TTABLE) {
@@ -107,24 +82,19 @@ pusherr_result(lua_State *L) {
 }
 
 static int
-call_cfunction(lua_State *L, lua_CFunction f, const char * source, const char *chunkname, void * cf, int ret) {
+call_cfunction(lua_State *L, lua_CFunction f, const char * source, const char *chunkname, void *ud, int ret) {
 	lua_pushcfunction(L, db_traceback);
 	lua_pushcfunction(L, f);
 	lua_pushlightuserdata(L, (void *)source);
 	lua_pushlightuserdata(L, (void *)chunkname);
-	if (cf != NULL) {
-		lua_pushcfunction(L, (lua_CFunction)cf);
+	if (ud) {
+		lua_pushlightuserdata(L, ud);
 	}
-	if (lua_pcall(L, (cf == NULL) ? 2 : 3 , ret, 1) != LUA_OK) {
+	if (lua_pcall(L, (ud == NULL) ? 2 : 3, ret, 1) != LUA_OK) {
 		pusherr_result(L);
 		return -1;
 	}
 	return 0;
-}
-
-int
-luavm_init(struct luavm *L, const char * source, void * cmodules) {
-	return call_cfunction(L, linit, source, "=luavm.init", cmodules, 0);
 }
 
 static int
@@ -227,6 +197,44 @@ pushargs(lua_State *L, const char *format, va_list ap) {
 		}
 	}
 	return i;
+}
+
+/*
+	void * source
+	void * format
+	va_list ap
+ */
+static int
+linit(lua_State *L) {
+	luaL_openlibs(L);
+	lua_newtable(L);
+	lua_rawsetp(L, LUA_REGISTRYINDEX, &MSGTABLE);
+	lua_newtable(L);
+	lua_rawsetp(L, LUA_REGISTRYINDEX, &ERRLOG);
+	const char * source = (const char *)lua_touserdata(L, 1);
+	if (source != NULL) {
+		if (luaL_loadbuffer(L, source, strlen(source), "=init") != LUA_OK) {
+			return lua_error(L);
+		}
+		lua_rawgetp(L, LUA_REGISTRYINDEX, &ERRLOG);
+		const char * format = (const char *)lua_touserdata(L, 2);
+		va_list ap = (va_list)lua_touserdata(L, 3);
+		int nargs = pushargs(L, format, ap);
+		if (nargs < 0)
+			return luaL_error(L, "Invalid init arguments");
+		lua_call(L, 1 + nargs, 0);
+	}
+
+	return 0;
+}
+
+int
+luavm_init(struct luavm *L, const char * source, const char *format, ...) {
+	va_list ap;
+	va_start(ap, format);
+	int ret = call_cfunction(L, linit, source, format, ap, 0);
+	va_end(ap);
+	return ret;
 }
 
 int

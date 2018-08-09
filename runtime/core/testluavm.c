@@ -51,7 +51,7 @@ main() {
 		"local log, preload_searcher = ... " "\n"
 		"_ERR = log" "\n"
 		"package.searchers[3] = preload_searcher" "\n"
-		, preload_searcher)) {
+		, "f", preload_searcher)) {
 		err(V);
 	}
 	int handle = luavm_register(V, 
