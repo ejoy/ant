@@ -4,7 +4,7 @@ BGFXROOT = $(ANT3RD)
 LUAINC = -I../lua
 LUALIB = -L../lua -llua53
 ASSIMPINC = -I$(ASSIMPROOT)/assimp/include -I$(ANT3RD)/build/assimp/include
-ASSIMPLIB = -L$(ASSIMPROOT)/build/assimp/code -llibassimp
+ASSIMPLIB = -L$(ASSIMPROOT)/build/assimp/code -lassimp -L$(ASSIMPROOT)/build/assimp/contrib/irrXML -lIrrXML -lz
 
 BGFXSRC = $(BGFXROOT)/bgfx
 BXSRC = $(BGFXROOT)/bx
@@ -32,6 +32,6 @@ $(ODIR)/luaassimplua.o : assimplua.cpp  | $(ODIR)
 	
 assimplua.dll : $(ODIR)/luaassimplua.o
 	$(CXX) $(CFLAGS) --shared -o $@ $^ -L. $(LUALIB) $(ASSIMPLIB) $(BGFXLIB) $(BGFXUTILLIB) $(BXLIB)
-	
+
 clean :
 	rm -f assimplua.dll
