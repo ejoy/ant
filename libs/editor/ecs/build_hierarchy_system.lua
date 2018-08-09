@@ -146,11 +146,15 @@ local function rebuild_hierarchy(ms, iterop)
 		-- we need to rewrite the file from cache
 		local assetdir = assetmgr.assetdir()
 		if hascache then
-			hierarchy_module.save(root, path.join(assetdir, epath))
+			local assetpath = path.join(assetdir, epath)
+			path.create_dirs(assetpath)
+			hierarchy_module.save(root, assetpath)
 		end
 
 		local builddata = hierarchy_module.build(root)
-		hierarchy_module.save(builddata, path.join(assetdir, rpath))
+		local pp = path.join(assetdir, rpath)
+		path.create_dirs(pp)
+		hierarchy_module.save(builddata, pp)
 	end
 	--[@
 
