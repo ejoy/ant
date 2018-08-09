@@ -218,6 +218,9 @@ pushargs(lua_State *L, const char *format, va_list ap) {
 		case 'f':	// cfunction
 			lua_pushcfunction(L, va_arg(ap, lua_CFunction));
 			break;
+		case 'p':	// lightuserdata
+			lua_pushlightuserdata(L, va_arg(ap, void *));
+			break;
 		default:
 			lua_pop(L, i);
 			return -1;
