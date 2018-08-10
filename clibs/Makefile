@@ -7,7 +7,7 @@ IUPTARS = $(foreach v, $(IUPLIBS), $(BIN)/$(v).dll)
 
 TARS = $(foreach v, $(LIBS), $(BIN)/$(v).dll)
 
-all : $(TARS) $(BIN)/lua53.dll $(BIN)/lua.exe $(IUPTARS) copy_iup_exe
+all : $(TARS) $(BIN)/lua53.dll $(BIN)/lua.exe $(IUPTARS) $(BIN)/iup.exe
 
 build_lua :
 	cd lua && $(MAKE) $(PLAT)
@@ -18,11 +18,11 @@ clean_lua :
 build_iup :
 	cd iup && $(MAKE)
 
-clean_iup : build_lua
+clean_iup :
 	cd iup && $(MAKE) clean
 
-copy_iup_exe :
-	cd iup && cp iup.exe ../iup.exe
+$(BIN)/iup.exe : build_iup
+	cp iup/iup.exe $@
 
 build_lsocket : build_lua
 
@@ -58,4 +58,4 @@ endef
 $(foreach v, $(LIBS), $(eval $(call COPY_temp,$(v))))
 
 clean : $(addprefix clean_,$(LIBS) iup lua)
-	rm -f *.dll
+	rm -f *.dll && rm -f *.exe

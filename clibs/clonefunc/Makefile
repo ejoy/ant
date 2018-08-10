@@ -7,4 +7,4 @@ clonefunc.dll : clonefunc.c
 	gcc -g -o $@ --shared $^ $(LUA_INC) $(LUA_LIB)
 
 clean:
-	rm clonefunc.dll
+	rm -f clonefunc.dll	
