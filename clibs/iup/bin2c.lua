@@ -25,10 +25,11 @@ end
 
 local compile, filename = arg[1]:match"^(+?)(.*)"
 local status = arg[2]
+local code = assert(io.open(filename,"rb")):read"*a"
 
 local content = compile=="+"
-  and string.dump(assert(loadfile(filename)))
-  or assert(io.open(filename,"rb")):read"*a"
+  and string.dump(assert(load(code, '='..filename)))
+  or code
 
 local function boilerplate(fmt)
   return string.format(fmt,
@@ -58,7 +59,7 @@ static const unsigned char B1[]={
 
 };
 
- %siuplua_dobuffer(L,(const char*)B1,sizeof(B1),%q)%s;
+ %siuplua_dobuffer(L,(const char*)B1,sizeof(B1),"="%q)%s;
 }
 ]=])
 
