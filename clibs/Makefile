@@ -1,5 +1,5 @@
 BIN = .
-LIBS = math3d lsocket redirectfd winfile bgfx remotedebug memoryfile lanes crypt assimplua hierarchy cppfs debugger cjson clonefunc
+LIBS = math3d lsocket redirectfd winfile bgfx remotedebug memoryfile lanes crypt assimplua hierarchy cppfs debugger clonefunc
 PLAT = mingw
 
 IUPLIBS = luaiup scintilla iupluaimglib iupluacontrols
@@ -42,7 +42,7 @@ $(BIN)/lua53.dll : lua/lua53.dll
 lua/lua.exe : build_lua
 
 $(BIN)/lua.exe : lua/lua.exe
-	cp $< $$@
+	cp $< $@
 
 define COPY_temp
 $(BIN)/$(1).dll : build_$(1)
