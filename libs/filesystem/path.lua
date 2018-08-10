@@ -124,4 +124,14 @@ function path.create_dirs(fullpath)
     end
 end
 
+function path.isdir(filepath)
+	local m = fs.attributes(filepath, "mode")
+	return m == "directory"
+end
+
+function path.isfile(filepath)
+	local m = fs.attributes(filepath, "mode")
+	return m == "file"
+end
+
 return path
