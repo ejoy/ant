@@ -29,28 +29,27 @@ local function write_cache(cachedir, cache)
 		return string.format("d %s %s\n", filename, s)
 	end
 	local rootpath = path.join(cachedir, "root")
-	fu.write_to_file(rootpath, dir_format(cache.filename, cache.sha1))
+	path.create_dirs(rootpath)
+	fu.write_to_file(rootpath, dir_format(cache.filename, cache.sha1), "wb")
 
 	local function write_sha1_file(cache)
+		local branchpath = gen_subpath_fromsha1(cache.sha1, cachedir)
+
 		local content = ""
-		for k, item in pairs(cache) do
-			local ktype = type(k)
-			if ktype == "string" then
-				write_sha1_file(item.dirs)
-				content = content .. string.format("d %s %s\n", item.filename, item.sha1)
+		for _, item in ipairs(cache) do
+			local itemcontent
+			if item.type == "d" then
+				write_sha1_file(item)
+				itemcontent = dir_format(item.filename, item.sha1)
 			else
-				assert(ktype == "number")
-				assert(item.type == "f")
 				local filepath = gen_subpath_fromsha1(item.sha1, cachedir)
-				local filecontent = string.format("f %s %s %d\n", item.filename, item.sha1, item.timestamp)
-				
-				fu.write_to_file(filepath, content, "wb")
-				content = content .. filecontent
+				itemcontent = string.format("f %s %s %d\n", item.filename, item.sha1, item.timestamp)
+				fu.write_to_file(filepath, itemcontent, "wb")
 			end
+			content = content .. itemcontent
 		end
 
-		local filepath = cache.filename
-		fu.write_to_file(filepath, content, "wb")
+		fu.write_to_file(branchpath, content, "wb")
 	end
 
 	write_sha1_file(cache)
@@ -72,11 +71,11 @@ local function read_file_content(filename)
 end
 
 local function byte2hex(c)
-	return string.format("%02X", c:byte())
+	return string.format("%02x", c:byte())
 end
 
 local function sha12hex_str(s)
-	return s:gsub(".", byte2hex):lower()
+	return s:gsub(".", byte2hex)
 end
 
 local function sha1(str)
@@ -91,28 +90,7 @@ end
 local function create_item(fullpath)
 	local content = read_file_content(fullpath)
 	local s = sha1(content)
-	return {type="f", filename=fullpath, sha1=s, timestamp=fu.last_modify_time(fullpath)}
-end
-
-local function sort_items(dirs)		
-	local ff = {}
-	local dd = {}
-
-	for k, f in pairs(dirs) do
-		if type(k) == "string" then
-			table.insert(dd, {filename=k, sha1=f.sha1})
-		else
-			assert(f.type == "f")
-			table.insert(ff, f)
-		end
-	end
-
-	local comp = function(lhs, rhs) return lhs.filename < rhs.filename end 
-	table.sort(ff, comp)
-	table.sort(dd, comp)
-
-	table.move(dd, 1, #dd, #ff+1, ff)
-	return ff
+	return {type="f", filename=fullpath, sha1=s, timestamp=fu.last_modify_time(fullpath), originpath=fullpath}
 end
 
 local function sha1_from_array(array)
@@ -124,47 +102,38 @@ local function sha1_from_array(array)
 	return sha12hex_str(encoder:final())
 end
 
-local function create_children(dirs, cachedir)
-	local result = sort_items(dirs)
-	local s = sha1_from_array(result)
-	local sha1path = path.join(cachedir, sha1_to_path(s))
-	return {sha1=s, filename=sha1path, dirs=dirs}
-end
-
 local function build_index(filepath, cache, cachedir)
 	local hashtable = {}
 
 	for name in fs.dir(filepath) do
 		local fullpath = filepath .. "/" .. name
-		if name ~= "." and name ~= ".." then
+		if name ~= "." and name ~= ".." and name ~= ".repo" then
 			local item
 			if path.isdir(fullpath) then
-				local dirs = build_index(fullpath, cache, cachedir)				
-		
-				local children = create_children(dirs, cachedir)
-				hashtable[fullpath] = children
-
-				item = {type="d", sha1=children.sha1, filename=children.filename}				
+				item = build_index(fullpath, cache, cachedir)
 			else
 				item = create_item(fullpath, cachedir)
-				table.insert(hashtable, item)
+				cache[item.sha1] = item
 			end
-
-			cache[item.sha1] = item
+			table.insert(hashtable, item)
 		end
 	end
 
+	table.sort(hashtable, function (lhs, rhs) return lhs.originpath < rhs.originpath end)
+	local pathsha1 = sha1_from_array(hashtable)
+	hashtable.sha1 = pathsha1
+	hashtable.filename = path.join(cachedir, sha1_to_path(pathsha1))
+	hashtable.type = "d"
+	hashtable.originpath = filepath
+
+	cache[pathsha1] = hashtable
 	return hashtable
 end
 
 function repo:rebuild_index()
 	assert(path.isdir(self.root))
 	self.extand_cache = {}
-	local cache = build_index(self.root, self.extand_cache, self.cachedir)
-
-	local rootchildren = create_children(cache, self.cachedir)
-	self.cache = rootchildren
-	self.extand_cache[self.cache.sha1] = {type="d", sha1=self.cache.sha1, filename=self.cache.filename}
+	self.cache = build_index(self.root, self.extand_cache, self.cachedir)
 end
 
 function repo:load(hashkey)

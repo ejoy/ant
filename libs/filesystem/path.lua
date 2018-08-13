@@ -59,14 +59,6 @@ function path.normalize(fullname)
 end
 
 function path.remove_filename(fullname)
-	if fullname:sub(1, 1) == '.' then
-		fullname = fullname:sub(2)
-	end
-
-	local idx = fullname:find('.', 1, true)
-	if idx == nil then
-		return fullname
-	end
 	return path.parent(fullname)
 end
 
@@ -116,7 +108,7 @@ function path.create_dirs(fullpath)
 	)
 	
     local cwd = fs.currentdir()
-    for m in fullpath:gmatch("[%w_-]+") do
+    for m in fullpath:gmatch("[^\\/]+") do
         cwd = path.join(cwd, m)
         if not fs.exist(cwd) then
             fs.mkdir(cwd)
