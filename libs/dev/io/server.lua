@@ -1,7 +1,15 @@
+dofile("libs/init.lua")
+
+local server_dir = "libs/dev/io/s/"
+
+local vfsrepo = require "vfsrepo"
+local server_repo = vfsrepo.new()
+server_repo:init("server_dir")
+
 local iosys = require "iosys"
 
 local io_ins = iosys.new()
-local server_dir = "D:/Engine/ant/libs/dev/io/s/"
+
 
 local id = "127.0.0.1:8888"
 if not io_ins:Bind(id) then
@@ -32,6 +40,25 @@ local function SendFile(c_id, file_path)
 
             offset = read_back + 1
         end
+    end
+end
+
+local function HandleRequest(c_id, req)
+    if req[1] == "REQUEST_ROOT" then
+        local root_hash = server_repo:root_hash()
+        io_ins:Send(c_id, {"ROOT_HASH", root_hash})
+
+    elseif req[1] == "LOAD_HASH" then
+        local realpath = server_repo:load(req[2])
+        if realpath then
+            io_ins:Send(c_id, {"REAL_PATH", realpath})
+        else
+            io_ins:Send(c_id, {"HASH_ERROR"})
+        end
+
+    elseif req[1] == "GET" then
+        local file_path = req[2]
+        SendFile(c_id, file_path)
     end
 end
 
@@ -68,9 +95,13 @@ while true do
         local pkg = io_ins:Get(c_id)
         if pkg then
             for _, data in ipairs(pkg) do
+
+                HandleRequest(c_id, data)
+                --[[
                 if data then
                     SendFile(c_id, "doc.md")
                 end
+                --]]
             end
         end
 
