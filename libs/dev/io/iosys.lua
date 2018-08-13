@@ -278,21 +278,23 @@ function io:Update(timeout)
 
     --libimobiledevice
     --send and recv key will be udid, other then these mostly the same
-    for udid,_ in pairs(self.udid) do
-        --recv
-        if not self.recv[udid] then self.recv[udid] = {} end
-        local recv_data = imd.Recv(udid)
-        if recv_data then
-            table.insert(self.recv[udid], recv_data)
-        end
+    if self.udid then
+        for udid,_ in pairs(self.udid) do
+            --recv
+            if not self.recv[udid] then self.recv[udid] = {} end
+            local recv_data = imd.Recv(udid)
+            if recv_data then
+                table.insert(self.recv[udid], recv_data)
+            end
 
-        --send
-        if self.send then
-            local udid_send = self.send[udid]
-            if udid_send and #udid_send > 0 then
-                for _, pkg in ipairs(udid_send) do
-                    if not imd.Send(udid, pkg) then
-                        print("send pkg to udid: ".. udid .. " failed")
+            --send
+            if self.send then
+                local udid_send = self.send[udid]
+                if udid_send and #udid_send > 0 then
+                    for _, pkg in ipairs(udid_send) do
+                        if not imd.Send(udid, pkg) then
+                            print("send pkg to udid: ".. udid .. " failed")
+                        end
                     end
                 end
             end
