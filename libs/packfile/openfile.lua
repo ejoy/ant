@@ -2,10 +2,10 @@ local require = import and import(...) or require
 
 local winfile =  require "winfile"
 
-local rawopen = winfile.open
+local rawopen = winfile.open or io.open
 
 local rules = {}
-if winfile.exist(".antpack") then	
+if winfile.exist(".antpack") then
 	for str in io.lines '.antpack' do
 		local f, l = str:find ' '
 		if f then
@@ -16,7 +16,7 @@ if winfile.exist(".antpack") then
 		end
 	end
 end
-    
+
 local function glob_match(pattern, target)
     return target:match(pattern) ~= nil
 end
@@ -82,7 +82,7 @@ return function (path, mode)
     if not winfile.exist(lnk_path) then
         return rawopen(path, mode)
 	end
-	
+
     local packer_path = find_packer(path)
     if not packer_path then
         return nil, path .. ': No such file or directory'
