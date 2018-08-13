@@ -59,14 +59,6 @@ function path.normalize(fullname)
 end
 
 function path.remove_filename(fullname)
-	if fullname:sub(1, 1) == '.' then
-		fullname = fullname:sub(2)
-	end
-
-	local idx = fullname:find('.', 1, true)
-	if idx == nil then
-		return fullname
-	end
 	return path.parent(fullname)
 end
 
@@ -88,12 +80,14 @@ end
 
 function path.join(...)
     local function join_ex(tb, p0, ...)
-        if p0 then            
-            local lastchar = p0[-1]
-            if lastchar == '/' or lastchar == '\\' then
-                p0 = p0:sub(1, #p0 - 1)
-            end
-            table.insert(tb, p0)
+		if p0 then
+			if p0 ~= "" then
+				local lastchar = p0:sub(#p0)
+				if lastchar == '/' or lastchar == '\\' then
+					p0 = p0:sub(1, #p0 - 1)
+				end
+				table.insert(tb, p0)
+			end
             join_ex(tb, ...)
         end
     end
@@ -116,12 +110,22 @@ function path.create_dirs(fullpath)
 	)
 	
     local cwd = fs.currentdir()
-    for m in fullpath:gmatch("[%w_-]+") do
+    for m in fullpath:gmatch("[^\\/]+") do
         cwd = path.join(cwd, m)
         if not fs.exist(cwd) then
             fs.mkdir(cwd)
         end
     end
+end
+
+function path.isdir(filepath)
+	local m = fs.attributes(filepath, "mode")
+	return m == "directory"
+end
+
+function path.isfile(filepath)
+	local m = fs.attributes(filepath, "mode")
+	return m == "file"
 end
 
 return path

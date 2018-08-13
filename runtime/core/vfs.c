@@ -3,6 +3,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 static int RETSTRING = 0;
 
@@ -29,12 +30,21 @@ lreturnstring(lua_State *L) {
 	return 0;
 }
 
+extern int luaopen_winfile(lua_State *L);
+
+static int
+lfs(lua_State *L) {
+	// todo: use lfs
+	return luaopen_winfile(L);
+}
+
 static int
 cfuncs(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "initvfs", linitvfs },
 		{ "returnstring", lreturnstring },
+		{ "lfs", lfs },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

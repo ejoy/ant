@@ -3,8 +3,8 @@ util.__index = util
 
 local fs = require "filesystem"
 
-function util.write_to_file(fn, content)
-    local f = io.open(fn, "w")
+function util.write_to_file(fn, content, mode)
+    local f = io.open(fn, mode or "w")
     f:write(content)
     f:close()
 end

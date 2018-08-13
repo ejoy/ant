@@ -99,13 +99,13 @@ $(ODIR)/libiup.a : $(OBJIUP) $(OBJWIN) $(OBJIUPLUA) $(OBJCTRL)
 	$(AR) $@ $^
 
 scintilla.dll : luaiup.dll
-	$(MAKE) -f Makefile.scintilla
+	$(MAKE) -f Makefile.scintilla -j8
 
 iupluaimglib.dll : luaiup.dll
-	$(MAKE) -f Makefile.imglib
+	$(MAKE) -f Makefile.imglib -j8
 
 iupluacontrols.dll : luaiup.dll
-	$(MAKE) -f Makefile.controls
+	$(MAKE) -f Makefile.controls -j8
 
 luaiup.dll : $(OBJIUP) $(OBJWIN) $(OBJIUPLUA) $(OBJCTRL) 
 	$(CC) --shared -o $@ $^ -lgdi32 -lcomdlg32 -lcomctl32 -lole32 -luuid $(LUALIB)
