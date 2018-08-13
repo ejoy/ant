@@ -80,9 +80,9 @@ local function sha1(str)
 	return sha12hex_str(sha1)
 end
 
--- function repo:remove_localcache()
--- 	self.localcache = {}
--- end
+function repo:remove_localcache()
+	self.localcache = {}
+end
 
 function repo:read_cache()
 	self.localcache = {}
@@ -155,7 +155,7 @@ function repo:load(hashkey)
 
 	if item.type == "d" then
 		local cachedir = assert(self.cachedir)
-		local filepath = gen_subpath_fromsha1(cache.sha1, cachedir)
+		local filepath = gen_subpath_fromsha1(assert(item.sha1), cachedir)
 		if not fs.exist(filepath) then
 			error("load from value type: internal error")
 		end
