@@ -164,6 +164,11 @@ function repo:load(hashkey)
 	return item.filename
 end
 
+function repo:root_hash()
+	local root = assert(self.cache)
+	return assert(root.sha1)
+end
+
 function repo:load_root()
 	local root = assert(self.cache)
 	local s = assert(root.sha1)
