@@ -24,13 +24,10 @@ local function gen_subpath_fromsha1(s, cache_rootpath)
 	return filepath
 end
 
-local function write_cache(cachedir, cache)
-	local function dir_format(filename, s)
-		return string.format("d %s %s\n", s, filename)
-	end
+local function write_cache(cachedir, cache)	
 	local rootfile = path.join(cachedir, "root")
 	path.create_dirs(rootfile)
-	fu.write_to_file(rootfile, dir_format(cache.filename, cache.sha1), "wb")
+	fu.write_to_file(rootfile, cache.sha1, "wb")
 
 	local function write_sha1_file(cache)
 		local branchpath = gen_subpath_fromsha1(cache.sha1, cachedir)
@@ -40,7 +37,7 @@ local function write_cache(cachedir, cache)
 			local itemcontent
 			if item.type == "d" then
 				write_sha1_file(item)
-				itemcontent = dir_format(path.filename(item.filename), item.sha1)
+				itemcontent = string.format("d %s %s\n", path.filename(item.filename), item.sha1)
 			else
 				local filepath = gen_subpath_fromsha1(item.sha1, cachedir) .. ".ref"
 				fu.write_to_file(filepath, string.format("%s %d\n", item.filename, item.timestamp), "wb")
