@@ -104,10 +104,10 @@ local function build_index(filepath, cache)
 	local hashtable = {}
 
 	local function update_cache(s, item)
-		local exist_item = cache[s]
-		if exist_item then
-			print("same item found, exist item path : ", exist_item.filename, ", will be overwrite by : ", item.filename)
-		end
+		-- local exist_item = cache[s]
+		-- if exist_item then
+		-- 	print("same item found, exist item path : ", exist_item.filename, ", will be overwrite by : ", item.filename)
+		-- end
 		cache[s] = item
 	end
 
@@ -156,6 +156,14 @@ function repo:load(hashkey)
 		error(string.format("not found hash : %s", hashkey))
 	end
 
+	if item.type == "d" then
+		local cachedir = assert(self.cachedir)
+		local filepath = gen_subpath_fromsha1(cache.sha1, cachedir)
+		if not fs.exist(filepath) then
+			error("load from value type: internal error")
+		end
+		return filepath
+	end
 	return item.filename
 end
 
