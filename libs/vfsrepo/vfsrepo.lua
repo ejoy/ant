@@ -26,11 +26,11 @@ end
 
 local function write_cache(cachedir, cache)
 	local function dir_format(filename, s)
-		return string.format("d %s %s\n", filename, s)
+		return string.format("d %s %s\n", s, filename)
 	end
-	local rootpath = path.join(cachedir, "root")
-	path.create_dirs(rootpath)
-	fu.write_to_file(rootpath, dir_format(cache.filename, cache.sha1), "wb")
+	local rootfile = path.join(cachedir, "root")
+	path.create_dirs(rootfile)
+	fu.write_to_file(rootfile, dir_format(cache.filename, cache.sha1), "wb")
 
 	local function write_sha1_file(cache)
 		local branchpath = gen_subpath_fromsha1(cache.sha1, cachedir)
@@ -43,7 +43,7 @@ local function write_cache(cachedir, cache)
 				itemcontent = dir_format(item.filename, item.sha1)
 			else
 				local filepath = gen_subpath_fromsha1(item.sha1, cachedir)
-				itemcontent = string.format("f %s %s %d\n", item.filename, item.sha1, item.timestamp)
+				itemcontent = string.format("f %s %s %d\n", item.sha1, item.filename, item.timestamp)
 				fu.write_to_file(filepath, itemcontent, "wb")
 			end
 			content = content .. itemcontent
@@ -84,13 +84,7 @@ local function sha1(str)
 end
 
 function repo:read_cache()
-	
-end
-
-local function create_item(fullpath)
-	local content = read_file_content(fullpath)
-	local s = sha1(content)
-	return {type="f", filename=fullpath, sha1=s, timestamp=fu.last_modify_time(fullpath), originpath=fullpath}
+	self.localcache = {}
 end
 
 local function sha1_from_array(array)
@@ -102,38 +96,52 @@ local function sha1_from_array(array)
 	return sha12hex_str(encoder:final())
 end
 
-local function build_index(filepath, cache, cachedir)
+local function build_index(subpath, rootpath, cache)
 	local hashtable = {}
 
-	for name in fs.dir(filepath) do
-		local fullpath = filepath .. "/" .. name
+	local function update_cache(s, item)
+		local exist_item = cache[s]
+		if exist_item then
+			print("same item found, exist item path : ", exist_item.filename, ", will be overwrite by : ", item.filename)
+		end
+		cache[s] = item
+	end
+
+	local curfolderpath = path.join(rootpath, subpath)
+	for name in fs.dir(curfolderpath) do
 		if name ~= "." and name ~= ".." and name ~= ".repo" then
+			local curpath = path.join(subpath, name)
+			local fullpath = path.join(curfolderpath, name)
+
 			local item
 			if path.isdir(fullpath) then
-				item = build_index(fullpath, cache, cachedir)
+				item = build_index(curpath, rootpath, cache)
 			else
-				item = create_item(fullpath, cachedir)
-				cache[item.sha1] = item
+				local content = read_file_content(fullpath)
+				local s = sha1(content)
+				item = {type="f", filename=curpath, sha1=s, timestamp=fu.last_modify_time(fullpath)}
+				update_cache(s, item)
 			end
 			table.insert(hashtable, item)
 		end
 	end
 
-	table.sort(hashtable, function (lhs, rhs) return lhs.originpath < rhs.originpath end)
+	table.sort(hashtable, function (lhs, rhs) return lhs.filename < rhs.filename end)
+	
 	local pathsha1 = sha1_from_array(hashtable)
 	hashtable.sha1 = pathsha1
-	hashtable.filename = path.join(cachedir, sha1_to_path(pathsha1))
+	hashtable.filename = subpath
 	hashtable.type = "d"
-	hashtable.originpath = filepath
 
-	cache[pathsha1] = hashtable
+	update_cache(pathsha1, hashtable)	
 	return hashtable
 end
 
 function repo:rebuild_index()
-	assert(path.isdir(self.root))
-	self.extand_cache = {}
-	self.cache = build_index(self.root, self.extand_cache, self.cachedir)
+	local rootpath = self.root
+	assert(path.isdir(rootpath))
+	self.extand_cache = {}	
+	self.cache = build_index(".", rootpath, self.extand_cache)
 end
 
 function repo:load(hashkey)
