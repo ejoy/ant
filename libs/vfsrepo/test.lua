@@ -18,11 +18,11 @@ ff:close()
 
 
 local function byte2hex(c)
-	return string.format("%02X", c:byte())
+	return string.format("%02x", c:byte())
 end
 
 local function sha12hex_str(s)
-	return s:gsub(".", byte2hex):lower()
+	return s:gsub(".", byte2hex)
 end
 
 local function sha1(str)
