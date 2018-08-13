@@ -97,7 +97,7 @@ local function sha1_from_array(array)
 	return sha12hex_str(encoder:final())
 end
 
-local function build_index(filepath, cache)
+local function build_index(filepath, rootpath, cache)
 	local hashtable = {}
 
 	local function update_cache(s, item)
@@ -108,18 +108,19 @@ local function build_index(filepath, cache)
 		cache[s] = item
 	end
 
-	for name in fs.dir(filepath) do
+	local currentpath = path.join(rootpath, filepath)
+	for name in fs.dir(currentpath) do
 		if name ~= "." and name ~= ".." and name ~= ".repo" then
-			local function create_item()				
-				local fullpath = path.join(filepath, name)
-
+			local function create_item()
+				local itempath = path.join(filepath, name)
+				local fullpath = path.join(rootpath, itempath)
 				if path.isdir(fullpath) then
-					return build_index(fullpath, cache)
+					return build_index(itempath, rootpath, cache)
 				end
 
 				local content = read_file_content(fullpath)
 				local s = sha1(content)
-				local item = {type="f", filename=fullpath, sha1=s, timestamp=fu.last_modify_time(fullpath)}
+				local item = {type="f", filename=itempath, sha1=s, timestamp=fu.last_modify_time(fullpath)}
 				update_cache(s, item)
 				return item 
 			end
@@ -143,7 +144,7 @@ function repo:rebuild_index()
 	local rootpath = self.root
 	assert(path.isdir(rootpath))
 	self.extand_cache = {}	
-	self.cache = build_index(rootpath, self.extand_cache)
+	self.cache = build_index("", rootpath, self.extand_cache)
 end
 
 function repo:load(hashkey)

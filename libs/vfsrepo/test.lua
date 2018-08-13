@@ -1,6 +1,7 @@
 dofile("libs/init.lua")
 
 local vfsrepo = require "vfsrepo"
+local path = require "filesystem.path"
 
 local repo = vfsrepo.new()
 
@@ -10,12 +11,12 @@ repo:init(testfolder)
 
 local crypt = require "crypt"
 
-local ff = io.open(testfolder .. "/f0/f0_1.txt")
-
-local content = ff:read "a"
-
-ff:close()
-
+local function filecontent(name)
+	local ff = io.open(path.join(testfolder, name))
+	local content = ff:read "a"
+	ff:close()
+	return content
+end
 
 local function byte2hex(c)
 	return string.format("%02x", c:byte())
@@ -30,8 +31,9 @@ local function sha1(str)
 	return sha12hex_str(sha1)
 end
 
-local s = sha1(content)
+local f1_1_sha1 = sha1(filecontent("f1/f1_1.txt"))
+local f1_sha1 = sha1(f1_1_sha1)
 
-local result = repo:load(s)
-
-print(result)
+local result = repo:load(f1_1_sha1)
+assert(result == "f1/f1_1.txt")
+print(repo:load(f1_sha1))
