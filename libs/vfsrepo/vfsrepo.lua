@@ -37,7 +37,7 @@ local function write_cache(cachedir, cache)
 			local itemcontent
 			if item.type == "d" then
 				write_sha1_file(item)
-				itemcontent = string.format("d %s %s\n", path.filename(item.filename), item.sha1)
+				itemcontent = string.format("d %s %s\n", item.sha1, path.filename(item.filename))
 			else
 				local filepath = gen_subpath_fromsha1(item.sha1, cachedir) .. ".ref"
 				fu.write_to_file(filepath, string.format("%s %d\n", item.filename, item.timestamp), "wb")
