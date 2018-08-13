@@ -80,12 +80,14 @@ end
 
 function path.join(...)
     local function join_ex(tb, p0, ...)
-        if p0 then            
-            local lastchar = p0[-1]
-            if lastchar == '/' or lastchar == '\\' then
-                p0 = p0:sub(1, #p0 - 1)
-            end
-            table.insert(tb, p0)
+		if p0 then
+			if p0 ~= "" then
+				local lastchar = p0:sub(#p0)
+				if lastchar == '/' or lastchar == '\\' then
+					p0 = p0:sub(1, #p0 - 1)
+				end
+				table.insert(tb, p0)
+			end
             join_ex(tb, ...)
         end
     end
