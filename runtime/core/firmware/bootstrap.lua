@@ -1,13 +1,17 @@
 local errlog, firmware, dir, cfuncs, V = ...
 
+cfuncs = cfuncs()
+
+package.preload.lfs = cfuncs.lfs	-- init lfs
+
 local vfs = assert(loadfile(firmware .. "/vfs.lua"))()
-vfs.init(firmware, dir)
-local f = vfs.open(".firmware/vfs.lua")	-- try load vfs.lua in vfs
+local repo = vfs.new(firmware, dir)
+local f = repo:open(".firmware/vfs.lua")	-- try load vfs.lua in vfs
 if f then
 	local vfs_source = f:read "a"
 	f:close()
 	vfs = assert(load(vfs_source, "@.firmware/vfs.lua"))()
-	vfs.init(firmware, dir)
+	repo = vfs.new(firmware, dir)
 end
 
 local function readfile(f)
@@ -18,7 +22,7 @@ local function readfile(f)
 	end
 end
 
-local bootstrap = readfile(vfs.open(".firmware/bootstrap.lua"))
+local bootstrap = readfile(repo:open(".firmware/bootstrap.lua"))
 
 if bootstrap then
 	local newboot = load(bootstrap, "@.firmware/bootstrap.lua")
@@ -31,13 +35,10 @@ if bootstrap then
 	end
 end
 
-cfuncs = cfuncs()
-
 local retstring = cfuncs.returnstring
-local open = vfs.open
 
 function _LOAD(path, ret)
-	local f = open(path)
+	local f = repo:open(path)
 	if f then
 		local content = f:read "a"
 		f:close()
