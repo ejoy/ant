@@ -145,10 +145,24 @@ function repo:build_index(filepath)
 	local hashtable = {}
 
 	local function update_cache(s, item)
-		-- local exist_item = hash_cache[s]
-		-- if exist_item then
-		-- 	print("same item found, exist item path : ", exist_item.filename, ", will be overwrite by : ", item.filename)
-		-- end
+		local exist_item = hash_cache[s]
+		if exist_item then
+			local dcache = self.duplicate_cache
+			
+			if dcache == nil then
+				dcache = {}
+				self.duplicate_cache = dcache				
+			end
+
+			local itemlist = dcache[s]
+			if itemlist == nil then
+				itemlist = {}
+				dcache[s] = itemlist
+			end
+
+			table.insert(itemlist, exist_item)
+			table.insert(itemlist, item)			
+		end
 		hash_cache[s] = item
 	end
 

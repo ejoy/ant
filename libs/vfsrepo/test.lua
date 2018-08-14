@@ -69,4 +69,39 @@ do
 	
 	fs.remove(file1)
 	fs.remove(file2)
+	fs.remove(newtestfolder)
+end
+
+--test duplicate hash------------------------------------------
+do
+	local newtestfolder = path.join(testfolder, "test2")
+	path.create_dirs(newtestfolder)
+	local file1, file2 = path.join(newtestfolder, "test1.txt"), path.join(newtestfolder, "test2.txt")
+
+	fu.write_to_file(file1, "file1", "wb")
+	fu.write_to_file(file2, "file1", "wb")
+
+	local folder1 = path.join(newtestfolder, "dup1")
+	local folder2 = path.join(newtestfolder, "dup2")
+	path.create_dirs(folder1)
+	path.create_dirs(folder2)
+
+	local dfile1 = path.join(folder1, "dfile1.txt")
+	local dfile2 = path.join(folder2, "dfile2.txt")
+
+	fu.write_to_file(dfile1, "dfile", "wb")
+	fu.write_to_file(dfile2, "dfile", "wb")
+
+	local repo3 = vfsrepo.new()
+	repo3:init(newtestfolder)
+
+	local dcache = repo3.duplicate_cache
+	for key, itemlist in pairs(dcache) do
+		print("duplicate key : ", key)
+		for _, item in ipairs(itemlist) do
+			print("type : ", item.type, ", filename : ", item.filename)
+		end
+	end
+
+
 end
