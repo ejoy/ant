@@ -56,6 +56,7 @@ function repo:init(root)
 	self.root = root
 	local cachedir = path.join(root, ".repo")
 	self.cachedir = cachedir
+	self:read_cache()
 	self:rebuild_index(root)
 	write_cache(cachedir, self.cache)
 end
@@ -85,7 +86,58 @@ function repo:remove_localcache()
 end
 
 function repo:read_cache()
-	self.localcache = {}
+	if not fs.exist(self.cachedir) then
+		return
+	end
+
+	local rootfile = path.join(self.cachedir, "root")
+	local rootsha1 = read_file_content(rootfile)	
+	assert(rootsha1:find("[^%da-f]") == nil)
+
+	local function read_tree_branch(pathsha1, dirname)
+		local branch = {}
+
+		local rootsha1path = path.join(self.cachedir, sha1_to_path(pathsha1))
+		for line in io.lines(rootsha1path) do			
+			local function line_reader(l)
+				local co = coroutine.create(function()
+					for m in l:gmatch("[^%s]+") do
+						coroutine.yield(m)
+					end
+				end)
+				
+				return function ()
+					local st, value = coroutine.resume(co)
+					assert(st)
+					return value
+				end
+			end
+	
+			local reader = line_reader(line)
+
+			local type = reader()
+			local child_pathsha1 = reader()
+			local filename = path.join(dirname, reader())
+
+			local item 
+			if type == "d" then				
+				item = read_tree_branch(child_pathsha1, filename)
+			else
+				assert(type=="f")
+				item = {type="f", sha1=child_pathsha1, filename=filename, timestamp=math.tointeger(reader())}				
+			end
+
+			table.insert(branch, item)
+		end
+
+		branch.filename = dirname
+		branch.sha1 = pathsha1
+		branch.type = "d"
+
+		return branch
+	end
+
+	self.localcache = read_tree_branch(rootsha1, "")
 end
 
 local function sha1_from_array(array)
