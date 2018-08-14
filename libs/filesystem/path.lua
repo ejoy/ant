@@ -32,7 +32,7 @@ function path.has_parent(pp)
 end
 
 function path.filename(name)
-    return name:match("[/\\]([%w_.-]+)$")    
+    return name:match("[/\\]?([%w_.-]+)$")    
 end
 
 function path.filename_without_ext(name)
