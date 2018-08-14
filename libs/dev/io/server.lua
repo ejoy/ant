@@ -1,10 +1,10 @@
 dofile("libs/init.lua")
 
-local server_dir = "libs/dev/io/s/"
+local server_dir = "libs/dev/io/s"
 
 local vfsrepo = require "vfsrepo"
 local server_repo = vfsrepo.new()
-server_repo:init("server_dir")
+server_repo:init(server_dir)
 
 local iosys = require "iosys"
 
@@ -19,7 +19,7 @@ end
 local id_table = {}
 
 local function SendFile(c_id, file_path)
-    local full_path = server_dir .. file_path
+    local full_path = file_path
     local file = io.open(full_path, "rb")
     print("file full path", full_path)
     if file then
@@ -36,28 +36,36 @@ local function SendFile(c_id, file_path)
             local package_string = string.sub(data, offset, read_back)
             local hash = "NAN"
 
-            io_ins:Send(c_id, {"FILE", file_path, hash, read_back, d_size, package_string})
+            local local_path = string.gsub(file_path, server_dir.."/.repo","")
+
+            io_ins:Send(c_id, {"FILE", local_path, hash, read_back, d_size, package_string})
 
             offset = read_back + 1
         end
+    else
+        assert(false, "file not found")
     end
 end
 
 local function HandleRequest(c_id, req)
     if req[1] == "REQUEST_ROOT" then
         local root_hash = server_repo:root_hash()
+        print("root hash is: "..root_hash)
         io_ins:Send(c_id, {"ROOT_HASH", root_hash})
 
     elseif req[1] == "LOAD_HASH" then
         local realpath = server_repo:load(req[2])
         if realpath then
+            print("file realpath for: "..req[2].." is: " .. realpath)
             io_ins:Send(c_id, {"REAL_PATH", realpath})
         else
             io_ins:Send(c_id, {"HASH_ERROR"})
         end
 
     elseif req[1] == "GET" then
+
         local file_path = req[2]
+        print("client get file: "..file_path)
         SendFile(c_id, file_path)
     end
 end
@@ -105,13 +113,6 @@ while true do
             end
         end
 
-        --SendFile(c_id, "doc.md")
-        --send pkg
-        --[[
-        io_ins:Send(c_id, {"Yes", "Hello"})
-        io_ins:Send(c_id, {"can you get this?"})
-        io_ins:Send(c_id, {"how about this?"})
-        --]]
     end
 end
 
