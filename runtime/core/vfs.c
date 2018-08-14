@@ -18,16 +18,6 @@ linitvfs(lua_State *L) {
 	return 1;
 }
 
-static int
-lreturnstring(lua_State *L) {
-	luaL_checktype(L,1, LUA_TLIGHTUSERDATA);
-	const char ** r = (const char **)lua_touserdata(L, 1);
-	*r = luaL_checkstring(L, 2);
-	lua_settop(L, 2);
-	lua_rawsetp(L, LUA_REGISTRYINDEX, &RETSTRING);	// ref ret string
-	return 0;
-}
-
 extern int luaopen_winfile(lua_State *L);
 
 static int
@@ -40,8 +30,7 @@ static int
 cfuncs(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "initvfs", linitvfs },
-		{ "returnstring", lreturnstring },
+		{ "initvfs", linitvfs },		
 		{ "lfs", lfs },
 		{ NULL, NULL },
 	};
