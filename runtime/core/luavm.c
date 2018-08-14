@@ -220,6 +220,7 @@ pushargs(lua_State *L, const char *format, va_list ap, lua_State *dL, int *ret) 
 		case 'N':	// return Number
 		case 'I':	// return Integer
 		case 'S':	// return String
+		case 'B':	// return Boolean
 			if (ret == NULL) {
 				lua_pop(L, i);
 				return -1;
@@ -314,6 +315,11 @@ luavm_call(struct luavm *V, int handle, const char *format, ...) {
 				// return number
 				result = lua_touserdata(dL, ++ri + RETOP);
 				*(double *)result = lua_tonumber(L, -nret+ri-1);
+				break;
+			case 'B':
+				// return boolean
+				result = lua_touserdata(dL, ++ri + RETOP);
+				*(int *)result = lua_toboolean(L, -nret+ri-1);
 				break;
 			case 'S':
 				// return string

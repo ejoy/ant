@@ -12,6 +12,7 @@ struct luavm;
 // N double *
 // I int *
 // S const char **
+// B int *	(for boolean return)
 
 struct luavm * luavm_new();
 const char * luavm_init(struct luavm *L, const char * source, const char *format, ...);
