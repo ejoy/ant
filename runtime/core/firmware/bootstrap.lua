@@ -35,14 +35,14 @@ if bootstrap then
 	end
 end
 
-local retstring = cfuncs.returnstring
+local open = vfs.open
 
 function _LOAD(path, ret)
-	local f = repo:open(path)
+	local f = open(path)
 	if f then
 		local content = f:read "a"
 		f:close()
-		retstring(ret, content)
+		return content
 	end
 end
 
