@@ -151,7 +151,7 @@ io_ins:Send(id, {"REQUEST_ROOT"})
                     local data = pkg[6]
 
                     CreateFolder(full_path)
-
+                    print("get package",#pkg[6])
                     client_repo:write(hash, pkg[6])
                     --[[
                     local file
@@ -169,9 +169,6 @@ io_ins:Send(id, {"REQUEST_ROOT"})
                         io.output(file)
                         io.write(data)
                         file:close()
-
-                    else
-                        print("!!!NO FILE!!!")
                     end
 --]]
                     get_file_server = true

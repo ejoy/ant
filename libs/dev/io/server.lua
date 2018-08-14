@@ -36,6 +36,7 @@ local function SendFile(c_id, file_path)
             local package_string = string.sub(data, offset, read_back)
             local hash = "NAN"
 
+            print("send file length ", read_back, PACKAGE_DATA_SIZE)
             local local_path = string.gsub(file_path, server_dir.."/.repo","")
 
             io_ins:Send(c_id, {"FILE", local_path, hash, read_back, d_size, package_string})
@@ -65,6 +66,11 @@ local function HandleRequest(c_id, req)
     elseif req[1] == "GET" then
 
         local file_path = req[2]
+
+        if not string.match(file_path, server_dir) then
+            file_path = server_dir .. "/" .. file_path
+        end
+
         print("client get file: "..file_path)
         SendFile(c_id, file_path)
     end

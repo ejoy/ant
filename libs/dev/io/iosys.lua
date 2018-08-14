@@ -8,7 +8,7 @@ local imd = require "libimobiledevicelua"
 local lsocket = require "lsocket"
 local pack = require "pack"
 
-PACKAGE_DATA_SIZE = 10000
+PACKAGE_DATA_SIZE_ = 10000
 
 local function IsUdid(id)
     --udid only contain char and number
