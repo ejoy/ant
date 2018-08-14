@@ -17,16 +17,14 @@ end
 
 local function gen_subpath_fromsha1(s, cache_rootpath)
 	local filepath = sha1_to_path(s)
-	if cache_rootpath then
-		filepath = path.join(cache_rootpath, filepath)
-	end
-	path.create_dirs(filepath)
+	filepath = path.join(cache_rootpath, filepath)	
+	path.create_dirs(path.parent(filepath))
 	return filepath
 end
 
 local function write_cache(cachedir, cache)	
-	local rootfile = path.join(cachedir, "root")
-	path.create_dirs(rootfile)
+	path.create_dirs(cachedir)
+	local rootfile = path.join(cachedir, "root")	
 	fu.write_to_file(rootfile, cache.sha1, "wb")
 
 	local function write_sha1_file(cache)
@@ -53,12 +51,21 @@ local function write_cache(cachedir, cache)
 end
 
 function repo:init(root)
-	self.root = root
+	self.rootpath = root
 	local cachedir = path.join(root, ".repo")
 	self.cachedir = cachedir
 	self:read_cache()
-	self:rebuild_index(root)
-	write_cache(cachedir, self.cache)
+	if self:rebuild_index(root) then
+		write_cache(cachedir, self.cache)
+	end
+end
+
+function repo:close()
+	self.rootpath = nil
+	self.cachedir = nil
+	self.cache = nil
+	self.hash_cache = nil
+	self.localcache = nil
 end
 
 local function read_file_content(filename)
@@ -94,47 +101,29 @@ function repo:read_cache()
 	local rootsha1 = read_file_content(rootfile)	
 	assert(rootsha1:find("[^%da-f]") == nil)
 
-	local function read_tree_branch(pathsha1, dirname)
-		local branch = {}
-
+	local function read_tree_branch(pathsha1, dirname, cache)
+		local children = {}
 		local rootsha1path = path.join(self.cachedir, sha1_to_path(pathsha1))
-		for line in io.lines(rootsha1path) do			
-			local function line_reader(l)
-				local co = coroutine.create(function()
-					for m in l:gmatch("[^%s]+") do
-						coroutine.yield(m)
-					end
-				end)
-				
-				return function ()
-					local st, value = coroutine.resume(co)
-					assert(st)
-					return value
-				end
+		for line in io.lines(rootsha1path) do
+			local elems = {}	-- [1] ==> type, [2] ==> sha1, [3] ==> dir/file name, [4](opt) ==> file timestamp
+			for m in line:gmatch("[^%s]+") do
+				table.insert(elems, m)
 			end
+			assert(#elems >= 3)
+			local filename = path.join(dirname, elems[3])
 	
-			local reader = line_reader(line)
-
-			local type = reader()
-			local child_pathsha1 = reader()
-			local filename = path.join(dirname, reader())
-
 			local item 
-			if type == "d" then				
-				item = read_tree_branch(child_pathsha1, filename)
+			if elems[1] == "d" then	
+				item = read_tree_branch(elems[2], filename, cache)
 			else
-				assert(type=="f")
-				item = {type="f", sha1=child_pathsha1, filename=filename, timestamp=math.tointeger(reader())}				
+				assert(#elems == 4 and elems[1] == "f")
+				item = {type="f", sha1=elems[2], timestamp=math.tointeger(elems[4])}
 			end
 
-			table.insert(branch, item)
+			children[filename] = item
 		end
 
-		branch.filename = dirname
-		branch.sha1 = pathsha1
-		branch.type = "d"
-
-		return branch
+		return {type="d", children=children, sha1=pathsha1,}
 	end
 
 	self.localcache = read_tree_branch(rootsha1, "")
@@ -149,17 +138,21 @@ local function sha1_from_array(array)
 	return sha12hex_str(encoder:final())
 end
 
-local function build_index(filepath, rootpath, cache)
+function repo:build_index(filepath)
+	local hash_cache = self.hash_cache
+	local localcache = self.localcache
+	local rootpath = self.rootpath
 	local hashtable = {}
 
 	local function update_cache(s, item)
-		-- local exist_item = cache[s]
+		-- local exist_item = hash_cache[s]
 		-- if exist_item then
 		-- 	print("same item found, exist item path : ", exist_item.filename, ", will be overwrite by : ", item.filename)
 		-- end
-		cache[s] = item
+		hash_cache[s] = item
 	end
 
+	local branch_modify = false
 	local currentpath = path.join(rootpath, filepath)
 	for name in fs.dir(currentpath) do
 		if name ~= "." and name ~= ".." and name ~= ".repo" then
@@ -167,40 +160,69 @@ local function build_index(filepath, rootpath, cache)
 				local itempath = path.join(filepath, name)
 				local fullpath = path.join(rootpath, itempath)
 				if path.isdir(fullpath) then
-					return build_index(itempath, rootpath, cache)
+					return self:build_index(itempath)
 				end
 
-				local content = read_file_content(fullpath)
-				local s = sha1(content)
-				local item = {type="f", filename=itempath, sha1=s, timestamp=fu.last_modify_time(fullpath)}
+				local function file_sha1(timestamp)
+					if localcache then
+						local localitem = localcache[itempath]
+						
+						if 	localitem and
+							timestamp == localitem.timestamp then
+
+							return localitem.sha1, false
+						end
+					end
+
+					local content = read_file_content(fullpath)
+					return sha1(content), true
+				end
+
+				local timestamp = fu.last_modify_time(fullpath)
+				local s, modify = file_sha1(timestamp)
+				local item = {type="f", filename=itempath, sha1=s, timestamp=timestamp}
+
 				update_cache(s, item)
-				return item 
+				return item, modify
 			end
 
-			table.insert(hashtable, create_item())
+			local item, modify = create_item()
+			branch_modify = branch_modify or modify
+			table.insert(hashtable, item)
 		end
 	end
 
 	table.sort(hashtable, function (lhs, rhs) return lhs.filename < rhs.filename end)
-	
-	local pathsha1 = sha1_from_array(hashtable)
+
+	local function path_sha1()
+		if localcache then
+			local localitem = localcache[filepath]
+			if localitem and (not branch_modify) then
+				return localitem.sha1
+			end
+		end
+		return sha1_from_array(hashtable)
+	end
+	local pathsha1 = path_sha1()
 	hashtable.sha1 = pathsha1
 	hashtable.filename = filepath
 	hashtable.type = "d"
 
-	update_cache(pathsha1, hashtable)	
-	return hashtable
+	update_cache(pathsha1, hashtable)
+	return hashtable, branch_modify
 end
 
 function repo:rebuild_index()
-	local rootpath = self.root
+	local rootpath = self.rootpath
 	assert(path.isdir(rootpath))
-	self.extand_cache = {}	
-	self.cache = build_index("", rootpath, self.extand_cache)
+	self.hash_cache = {}
+	local modified
+	self.cache, modified = self:build_index("", rootpath, self.localcache, self.hash_cache)
+	return modified
 end
 
 function repo:load(hashkey)
-	local cache = assert(self.extand_cache)
+	local cache = assert(self.hash_cache)
 	local item = cache[hashkey]
 	if item == nil then
 		error(string.format("not found hash : %s", hashkey))
