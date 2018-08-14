@@ -33,7 +33,6 @@ end
 
 cfuncs = cfuncs()
 
-local retstring = cfuncs.returnstring
 local open = vfs.open
 
 function _LOAD(path, ret)
@@ -41,7 +40,7 @@ function _LOAD(path, ret)
 	if f then
 		local content = f:read "a"
 		f:close()
-		retstring(ret, content)
+		return content
 	end
 end
 
