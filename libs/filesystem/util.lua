@@ -26,6 +26,12 @@ function util.file_is_newer(check, base)
 
 	local base_mtime = util.last_modify_time(base)
 	local check_mtime = util.last_modify_time(check)
+
+--todo file is on server
+    if not base_mtime or not check_mtime then
+        return true
+    end
+
 	return check_mtime > base_mtime
 end
 

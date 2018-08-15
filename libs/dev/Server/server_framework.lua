@@ -2,7 +2,7 @@ package.cpath = "../../../clibs/?.dll;../../../clibs/lib?.so;../../../clibs/?.so
 package.path = "../Common/?.lua;" .. "../../?/?.lua;".. package.path
 
 local lanes = require "lanes"
-if lanes.configure then lanes.configure() end
+if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
 local linda = lanes.linda()
 
 function log(name)
@@ -18,20 +18,10 @@ end
 local resp_table = {}
 local function HandleMessage()
     while true do
-        local key, value = linda:receive(0.05, "log")
-        if value then
-            --do something here
+        local key, value = linda:receive(0.001, "log", "response")
+        if key == "log" then
             table.insert(resp_table, {"log", value})
-        else
-            break
-        end
-    end
-
-    while true do
-        local key, value = linda:receive(0.05, "response")
-        if value then
-            -- 0 means disconnect, 1 means connect
-            --value 2 is the udid
+        elseif key == "response" then
             if value[1] == "CONNECT" then
                 print("~~CONNECT", value[1], value[2])
                 table.insert(resp_table, {"connect", 1, value[2]})
@@ -47,10 +37,10 @@ local function HandleMessage()
     end
 end
 
-local function CreateServerThread(config, linda)
+local function CreateServerThread(address, port, linda)
 
-    local server_io = require "server_io"
-    local s = server_io.new(config, linda)
+    local server_io = require "server_new_io"
+    local s = server_io.new(address, port, linda)
     while true do
         s:mainloop(0.05)
     end
@@ -79,11 +69,13 @@ end
 
 function server_ins:init(address, port)
     --self.s = server.new{address = address, port = port}
-
-    local server_io = lanes.gen("*", CreateServerThread)({address = address, port = port}, linda)
+    print("init server")
+    local server_io = lanes.gen("*", {package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateServerThread)(address, port, linda)
 end
 
 function server_ins:update()
+    print("server framework update")
+
     HandleMessage()
 end
 

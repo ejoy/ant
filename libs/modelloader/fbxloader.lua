@@ -12,10 +12,12 @@ local function PrintNodeInfo(node, level)
         print(space.."mesh: "..k, "mesh count: ",#v.vertices/9)
         print(space.."mat idx: ", v.material_idx)
 
+
         print(space.."position", v.vertices[1],v.vertices[2],v.vertices[3])
         print(space.."normal", v.vertices[4], v.vertices[5], v.vertices[6])
         print(space.."texcoord0", v.vertices[7], v.vertices[8], v.vertices[9])
         print(space.."tangent", v.vertices[10], v.vertices[11], v.vertices[12])
+
         print(space.."index", #v.indices, v.indices[1], v.indices[2], v.indices[3])
     end
 
@@ -94,19 +96,37 @@ local function HandleModelNode(material_info, model_node, parent_name, parent_tr
 end
 
 function fbx_loader.load(filepath)
+
     local path = require "filesystem.path"
     local ext = path.ext(filepath)
-    if string.lower(ext) ~= "fbx" then
-        return
-    end
-    
-    --[[
-    local material_info, model_node = assimp.LoadFBX(filepath)
-    if not material_info or not model_node then
+    if ext and string.lower(ext) ~= "fbx" then
         return
     end
 
-    PrintNodeInfo(model_node, 1)
+    local fbx_file = io.open(filepath, "rb")
+    --local material_info, model_node = assimp.LoadFBX(filepath)
+    if not fbx_file then
+        print("fbx file does not exist: "..filepath)
+        return
+    end
+
+    io.input(fbx_file)
+    local file_data = fbx_file:read("*a")
+
+    print("fbx length: "..tostring(#file_data))
+    --read fbx file from memory
+    local material_info, model_node = assimp.LoadFBXFromMem(file_data)
+    io.close(fbx_file)
+
+    
+    ---[[
+  --  local material_info, model_node = assimp.LoadFBX(filepath)
+    if not material_info or not model_node then
+        print("fbx load failed: "..filepath)
+        return
+    end
+
+    --PrintNodeInfo(model_node, 1)
     --PrintMaterialInfo(material_info)
 
     for _, v in ipairs(material_info) do
@@ -123,26 +143,28 @@ function fbx_loader.load(filepath)
             { "POSITION", 3, "FLOAT" },
             { "NORMAL", 3, "FLOAT", true, false},
             { "TEXCOORD0", 3, "FLOAT"},
-            { "TANGENT",3,"FLOAT"}
+  --          { "TANGENT",3,"FLOAT"}
         }
 
+        local vb_data = {"fffffffff", table.unpack(v.vb_raw)}
 
-        local vb_data = {"ffffffffffff", table.unpack(v.vb_raw)}
-        --local vb_data = {"fffffffff", table.unpack(v.vb_raw)}
+   --     local vb_data = {"ffffffffffff", table.unpack(v.vb_raw)}
+
         v.vb = bgfx.create_vertex_buffer(vb_data, vdecl)
         v.ib = bgfx.create_index_buffer(v.ib_raw)
     end
 
     return {group = material_info}
     --]]    
-
+--[[
 	local loadfbx_config = {
 		--[[
 			p3 for position and need 3 element(x, y, z)
 			t20 for texcoord, need 2 element(u, v) and in channel 0
 			t31 for texcoord, need 3 element(u, v, w) and in channel 1
 			c30 for color, need 3 element(r,g,b) and in channel 0
-		]] 
+		--]]
+    --[[
 		layout = "p3|n|T|b|t20|c30",
 		flags = {
 			gen_normal = false,
@@ -198,6 +220,7 @@ function fbx_loader.load(filepath)
 
 		return meshgroup
 	end
+	--]]
 end
 
 -- function fbx_loader.load(filepath)

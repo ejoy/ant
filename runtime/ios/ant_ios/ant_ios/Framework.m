@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "Framework.h"
-#import "preload.c"
+#import "preload.h"
 
 struct luavm* V;
 
@@ -24,13 +24,19 @@ static void err_handle(struct luavm *V) {
 
 -(void) InitFrameWork:(CALayer *)layer size:(CGSize)view_size {
     NSString* app_path = [[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/fw"] ;
+    NSString* sand_box = NSHomeDirectory();
+    
+    const char* app_path_char = [app_path UTF8String];
+    const char* sand_box_path = [sand_box UTF8String];
+    
+    
     NSString* fw_init_path = [app_path stringByAppendingString:@"/fw_init.lua"];
     
     NSString* init_string = [NSString stringWithContentsOfFile:fw_init_path encoding:NSUTF8StringEncoding error:nil];
     V = luavm_new();
     
     //init stuff
-    if(luavm_init(V, [init_string UTF8String], "f", get_cfuncs)){
+    if(luavm_init(V, [init_string UTF8String], "fs", get_cfuncs, app_path_char)){
         err_handle(V);
     }
     
@@ -59,7 +65,7 @@ static void err_handle(struct luavm *V) {
         err_handle(V);
     }
     
-    if(luavm_call(V, init_f, "pnn", layer, view_size.width, view_size.height)){
+    if(luavm_call(V, init_f, "pnnss", layer, view_size.width, view_size.height, app_path_char, sand_box_path)){
         err_handle(V);
     }
 }

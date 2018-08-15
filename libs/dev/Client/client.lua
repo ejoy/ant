@@ -23,6 +23,7 @@ local _linda = nil
 --TODO this is not the same as file_mgr in clientwindow.lua
 --they are in two different threads
 local filemanager = require "filemanager"
+local file_mgr = filemanager.new()
 ---------------------------------------------------
 local clientcommand = {}
 --cmd while recieving data from server
@@ -68,7 +69,6 @@ function clientcommand.FILE(resp)
         local file  = nil
 
         if offset <= fileprocess.MAX_CALC_CHUNK then
-            --TODO mac/ios file instead of winfile
             filesystem.mkdir(folder)
             --file = io.open(temp_path_hash, "wb")
             file = io.open(real_path, "wb")
@@ -88,6 +88,7 @@ function clientcommand.FILE(resp)
         --output to client file directory
         io.output(file)
         io.write(resp[5])   --write the data into the client file
+        print("write data length "..tostring(#resp[5]))
         io.close(file)
 
 
@@ -95,7 +96,7 @@ function clientcommand.FILE(resp)
             --TODO version management/control
             --the file is complete, inform out side
             _linda:send("new file", {hash, file_path})
-            filemanager:AddFileRecord(hash, file_path)
+            file_mgr:AddFileRecord(hash, file_path)
         end
     else
 
@@ -121,12 +122,16 @@ function clientcommand.ERROR(resp)
     for k, v in pairs(resp) do
         print(k, v)
     end
+    _linda:send("mem_data", "ERROR")
 end
 
 function clientcommand.EXIST_CHECK(resp)
     print("get exist check result")
     assert(resp[1] == "EXIST_CHECK", "COMMAND: "..resp[1].." invalid, shoule be EXIST_CHECK")
     local result = resp[2]
+
+    _linda:send("file exist", result)
+--[[
     if result == "true" then
         print("File exists on the server")
         _linda:send("file exist", true)
@@ -136,6 +141,7 @@ function clientcommand.EXIST_CHECK(resp)
     else
         print("EXIST CHECK result invalid: "..result)
     end
+    --]]
 end
 
 function clientcommand.DIR(resp)
@@ -145,7 +151,7 @@ function clientcommand.DIR(resp)
 end
 
 function clientcommand.RUN(resp)
-    --_linda:send("log", {"Bgfx", "get run command", resp[1], resp[2]})
+    _linda:send("log", {"Bgfx", "get run command", resp[1], resp[2]})
     _linda:send("run", resp[2])
 end
 
@@ -157,6 +163,10 @@ function clientcommand.SCREENSHOT(resp)
     --todo maybe more later
 
     _linda:send("screenshot_req", resp)
+end
+
+function clientcommand.COMPILE_SHADER(resp)
+    _linda:send("shader_compiled", resp)
 end
 ---------------------------------------------------
 
@@ -179,9 +189,18 @@ function client.new(address, port, init_linda, home_dir)
     local fd = assert(lsocket.bind("tcp", address, port))
     _linda = init_linda
     --todo:
-    --app_doc_path = home_dir .. "/Documents/"
-    --print("app_doc_path", app_doc_path)
+    app_doc_path = home_dir .. "/Documents/"
+--    print("app_doc_path", app_doc_path)
+
+    file_mgr:ReadDirStructure(home_dir.."/Documents/dir.txt")
+    file_mgr:ReadFilePathData(home_dir.."/Documents/file.txt")
+
 	return setmetatable( { host = fd, fd = { fd }, fds = {fd}, sending = {}, resp = {}, reading = ""}, client)
+end
+
+function client:register_command(cmd, func)
+    --register command from other files
+    recieve_cmd[cmd] = func
 end
 
 function client:send(...)
@@ -193,8 +212,9 @@ function client:send(...)
 		local file_path = client_req[2]
 
 --        print("file path", file_path)
-        file_path = filemanager:GetRealPath(file_path)
---        print("get real path", file_path)
+        print("check real path: "..file_path)
+        file_path = file_mgr:GetRealPath(file_path)
+        print("get real path ".. tostring(file_path))
         --client does have it
         if file_path then
             file_path = app_doc_path..file_path
@@ -249,12 +269,13 @@ end
 
 
 local max_screenshot_pack = 64*1024 - 100
+
 function client:CollectRequest()
     local count = 0
+    --this if for client request
     while true do
-        --this if for client request
-        local key, value = _linda:receive(0.05, "request")
-        if value then
+        local key, value = _linda:receive(0.001, "request", "log", "screenshot")
+        if key == "request" then
             --calculate sha1 value of the request
             --if the request is already exist, ignore the latter ones
             local pack_req = pack.pack(value)
@@ -272,23 +293,10 @@ function client:CollectRequest()
             if count == 10 then
                 break
             end
-        else
-            break
-        end
-    end
-
-    while true do
-        local key, value = _linda:receive(0.05, "log")
-        if value then
+        elseif key == "log" then
             table.insert(self.sending, pack.pack({"LOG", table.unpack(value)}))
-        else
-            break
-        end
-    end
 
-    while true do
-        local key, value = _linda:receive(0.05, "screenshot")
-        if value then
+        elseif key == "screenshot" then
             --after compression, only have name and data string
             --value[2] is data
             local name = value[1]
@@ -305,16 +313,14 @@ function client:CollectRequest()
                 offset = offset + pack_data_size
                 table.insert(self.sending, pack.pack({"SCREENSHOT", name, size, offset, pack_str}))
             end
-
         else
             break
         end
-
     end
+
 end
 
 function client:mainloop(timeout)
-    _linda:send("log", {"Time", "Time: "..tostring(os.clock())})
     self:CollectRequest()
     for key, req in pairs(logic_request) do
         local cmd = req[1]
@@ -359,11 +365,12 @@ function client:mainloop(timeout)
             if fd then
                 -- can send
                 pack.send(fd, self.sending)
+                self.sending = {}
             end
         end
     else
         --clear the sending buffer
-        self.sending = {}
+        --self.sending = {}
     end
 
     for i,_ in pairs(logic_request) do

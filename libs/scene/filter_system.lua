@@ -46,10 +46,12 @@ local function append_lighting_properties(ms, result)
 		
 			-- point from vertex position to light position			
 			table.insert(dlight_info.dir, ms(dlight.rotation.v, "dim"))
+
 			table.insert(dlight_info.color, l.color)
 			table.insert(dlight_info.intensity, {l.intensity, 0.28, 0, 0})
 
 		end
+
 
 		properties["directional_lightdir"] 	= {name="Light Direction", type="v4", value = dlight_info.dir}
 		properties["directional_color"] 	= {name="Light Color", type="color", value = dlight_info.color}
@@ -78,12 +80,13 @@ local function append_lighting_properties(ms, result)
 
 		for _,l_eid in world:each("ambient_light") do 
 			local  am_ent = world[l_eid]
-			local  data = am_ent.ambient_light.data 
+			local  data = am_ent.ambient_light.data
+        --[[
 			print("s data ",data.mode,data.factor)
 			print("s skycolor..",data.skycolor[1],data.skycolor[2],data.skycolor[3],data.skycolor[4])
 			print("s midcolor..",data.midcolor[1],data.midcolor[2],data.midcolor[3],data.midcolor[4])
 			print("s groundcolor..",data.groundcolor[1],data.groundcolor[2],data.groundcolor[3],data.groundcolor[4])
-
+--]]
 			local type = 1   -- default = "color"    	
 			if data.mode == "factor" then 	
 				type = 0
@@ -94,11 +97,12 @@ local function append_lighting_properties(ms, result)
 			table.insert( ambient_data.skycolor,  data.skycolor )
 			table.insert( ambient_data.midcolor, data.midcolor )
 			table.insert( ambient_data.groundcolor, data.groundcolor )
-
+--[[
 			print("t data ",ambient_data.mode[1][1],ambient_data.mode[1][2],ambient_data.mode[3],ambient_data.mode[4])
 			print("t skycolor..",ambient_data.skycolor[1][1],ambient_data.skycolor[1][2],ambient_data.skycolor[1][3],ambient_data.skycolor[1][4])
 			print("t midcolor..",ambient_data.midcolor[1][1],ambient_data.midcolor[1][2],ambient_data.midcolor[1][3],ambient_data.midcolor[1][4])
-			print("t groundcolor..",ambient_data.groundcolor[1][1],ambient_data.groundcolor[1][2],ambient_data.groundcolor[1][3],ambient_data.groundcolor[1][4])	
+			print("t groundcolor..",ambient_data.groundcolor[1][1],ambient_data.groundcolor[1][2],ambient_data.groundcolor[1][3],ambient_data.groundcolor[1][4])
+			--]]
 		end 
 
 		properties["ambient_mode"] = { name ="ambient_mode",type="v4",value = ambient_data.mode }
@@ -106,7 +110,7 @@ local function append_lighting_properties(ms, result)
 		properties["ambient_midcolor"] = { name ="ambient_midcolor",type="color",value=ambient_data.midcolor}
 		properties["ambient_groundcolor"] = { name ="ambient_groundcolor",type="color",value=ambient_data.groundcolor}
 
-		print("gen ambient light propertices")
+		--print("gen ambient light propertices")
 
 		return properties 
 	end 

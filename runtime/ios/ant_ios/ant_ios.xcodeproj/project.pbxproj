@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		11861CF82122B41F00535285 /* preload.m in Sources */ = {isa = PBXBuildFile; fileRef = 11861CF72122B41F00535285 /* preload.m */; };
 		118F3462211BE1BA0092C262 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 118F3461211BE1BA0092C262 /* AppDelegate.m */; };
 		118F3465211BE1BA0092C262 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 118F3464211BE1BA0092C262 /* ViewController.m */; };
 		118F3468211BE1BA0092C262 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 118F3466211BE1BA0092C262 /* Main.storyboard */; };
@@ -43,10 +44,10 @@
 		118F34F8211C21BA0092C262 /* libbxRelease.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34F2211C21BA0092C262 /* libbxRelease.a */; };
 		118F34F9211C21BA0092C262 /* libbgfxRelease.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34F3211C21BA0092C262 /* libbgfxRelease.a */; };
 		118F34FA211C21BA0092C262 /* libbimgRelease.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34F4211C21BA0092C262 /* libbimgRelease.a */; };
-		118F34FD211C23940092C262 /* preload.c in Sources */ = {isa = PBXBuildFile; fileRef = 118F34FB211C23940092C262 /* preload.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		11861CF72122B41F00535285 /* preload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = preload.m; sourceTree = "<group>"; };
 		118F345D211BE1BA0092C262 /* ant_ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ant_ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		118F3460211BE1BA0092C262 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		118F3461211BE1BA0092C262 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -88,7 +89,6 @@
 		118F34F2211C21BA0092C262 /* libbxRelease.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbxRelease.a; path = ../libs/bgfx/libbxRelease.a; sourceTree = "<group>"; };
 		118F34F3211C21BA0092C262 /* libbgfxRelease.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbgfxRelease.a; path = ../libs/bgfx/libbgfxRelease.a; sourceTree = "<group>"; };
 		118F34F4211C21BA0092C262 /* libbimgRelease.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbimgRelease.a; path = ../libs/bgfx/libbimgRelease.a; sourceTree = "<group>"; };
-		118F34FB211C23940092C262 /* preload.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = preload.c; sourceTree = "<group>"; };
 		118F34FC211C23940092C262 /* preload.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = preload.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -163,8 +163,8 @@
 				118F346F211BE1C10092C262 /* main.m */,
 				118F3476211BE8420092C262 /* Framework.m */,
 				118F3478211BE8570092C262 /* Framework.h */,
-				118F34FB211C23940092C262 /* preload.c */,
 				118F34FC211C23940092C262 /* preload.h */,
+				11861CF72122B41F00535285 /* preload.m */,
 			);
 			path = ant_ios;
 			sourceTree = "<group>";
@@ -276,10 +276,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				118F3477211BE8420092C262 /* Framework.m in Sources */,
-				118F34FD211C23940092C262 /* preload.c in Sources */,
 				118F3465211BE1BA0092C262 /* ViewController.m in Sources */,
 				118F3470211BE1C10092C262 /* main.m in Sources */,
 				118F3462211BE1BA0092C262 /* AppDelegate.m in Sources */,
+				11861CF82122B41F00535285 /* preload.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

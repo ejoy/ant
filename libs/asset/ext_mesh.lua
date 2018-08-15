@@ -24,6 +24,7 @@ return function (filename, param)
                 local mesh_loader = require "render.resources.mesh_loader"
                 mesh.handle = mesh_loader.load(p)
 			end
+
         else
             log(string.format("load mesh path %s failed", mesh_path))
         end 

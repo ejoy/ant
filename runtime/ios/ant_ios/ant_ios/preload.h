@@ -8,9 +8,10 @@
 
 #ifndef preload_h
 #define preload_h
+#import <lua.h>
+#import <lauxlib.h>
 
-struct lua_State;
-static int get_cfuncs(struct lua_State* L);
+int get_cfuncs(lua_State* L);
 
 
 #endif /* preload_h */
