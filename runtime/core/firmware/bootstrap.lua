@@ -35,10 +35,8 @@ if bootstrap then
 	end
 end
 
-local open = vfs.open
-
-function _LOAD(path, ret)
-	local f = open(path)
+function _LOAD(path)
+	local f = repo:open(path)
 	if f then
 		local content = f:read "a"
 		f:close()

@@ -32,23 +32,16 @@ local function dir_object(self, hash)
 	if df then
 		local dir = {}
 		for line in df:lines() do
-			local type, hash, name, time = line:match "([fd]) ([%da-f]+) ([^ ]+) ?(%d*)"
+			local type, hash, name = line:match "([fd]) ([%da-f]+) ([^ ]+)"
 			if type == nil then
 				print("Invalid dir object", hash, line)
 				df:close()
 				return
 			end
-			if type == 'd' then
-				dir[name] = {
-					dir = true,
-					hash = hash,
-				}
-			else
-				dir[name] = {
-					hash = hash,
-					time = tonumber(time),
-				}
-			end
+			dir[name] = {
+				dir = type == 'd',
+				hash = hash,
+			}
 		end
 		df:close()
 		return dir
