@@ -74,7 +74,7 @@ end
 
 --test duplicate hash------------------------------------------
 do
-	local newtestfolder = path.join(testfolder, "test2")
+	local newtestfolder = path.join(testfolder, "test3")
 	path.create_dirs(newtestfolder)
 	local file1, file2 = path.join(newtestfolder, "test1.txt"), path.join(newtestfolder, "test2.txt")
 

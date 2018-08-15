@@ -22,6 +22,10 @@ local function gen_subpath_fromsha1(s, cache_rootpath)
 	return filepath
 end
 
+local function refpath_from_sha1(cachedir, s)
+	return path.join(cachedir, sha1_to_path(s)) .. ".ref"	
+end
+
 
 function repo:write_cache()	
 	local cachedir = self.cachedir
@@ -30,8 +34,8 @@ function repo:write_cache()
 	local rootfile = path.join(cachedir, "root")	
 	fu.write_to_file(rootfile, cache.sha1, "wb")
 
-	local function write_sha1_file(cache)
-		local branchpath = gen_subpath_fromsha1(cache.sha1, cachedir)
+	local function write_sha1_file(cache)		
+		
 
 		local content = ""
 		for _, item in ipairs(cache) do
@@ -45,30 +49,38 @@ function repo:write_cache()
 					return string.format("%s %d\n", item.filename, item.timestamp)
 				end
 				local function write_ref_file()
-					local filepath = gen_subpath_fromsha1(s, cachedir) .. ".ref"
-
-					local dcache = self.duplicate_cache					
-					if dcache then
-						local ditems = dcache[s]
-						if ditems then
-							local refcontent = ""
-							for _, item in ipairs(ditems) do
-								refcontent = refcontent .. line_format(item)
+					local refpath = refpath_from_sha1(cachedir, s)
+					if not fs.exist(refpath) then
+						path.create_dirs(path.parent(refpath))
+						local dcache = self.duplicate_cache
+						if dcache then
+							local ditems = dcache[s]
+							if ditems then
+								local refcontent = ""
+								for _, item in ipairs(ditems) do
+									refcontent = refcontent .. line_format(item)
+								end
+								fu.write_to_file(refpath, refcontent, "wb")
+								return
 							end
-							fu.write_to_file(filepath, refcontent, "wb")
-							return
 						end
+						
+						fu.write_to_file(refpath, line_format(item), "wb")
 					end
-					
-					fu.write_to_file(filepath, line_format(item), "wb")
 				end
 
 				write_ref_file()
-				itemcontent = string.format("f %s %s %d\n", s, path.filename(item.filename), item.timestamp)
+				itemcontent = string.format("f %s %s\n", s, path.filename(item.filename))
 			end
 			content = content .. itemcontent
 		end
-		fu.write_to_file(branchpath, content, "wb")
+
+		-- filter out same folder
+		local branchpath = path.join(cachedir, sha1_to_path(cache.sha1))
+		if not fs.exist(branchpath) then
+			path.create_dirs(path.parent(branchpath))
+			fu.write_to_file(branchpath, content, "wb")
+		end		
 	end
 
 	write_sha1_file(cache)
@@ -90,6 +102,7 @@ function repo:close()
 	self.cache = nil
 	self.hash_cache = nil
 	self.localcache = nil
+	self.duplicate_cache = nil
 end
 
 local function read_file_content(filename)
@@ -125,56 +138,85 @@ function repo:get_duplicate_cache()
 	return dcache
 end
 
+local function read_line_elems(l)
+	-- [1] ==> type, [2] ==> sha1, [3] ==> dir/file name(relative to previous folder)
+	local elems = {}	
+	for m in l:gmatch("[^%s]+") do
+		table.insert(elems, m)
+	end
+	return elems
+end
+
+local function read_ref_file_items(s, ref_filepath)
+	local refitems = {}
+	for ref_line in io.lines(ref_filepath) do
+		local refelems = read_line_elems(ref_line)			
+		assert(#refelems == 2)	-- refitems[1] ==> filename(relative to root), refitems[2] ==> timestamp
+		local f = refelems[1]
+		table.insert(refitems, {type="f", sha1=s, filename=f, timestamp=math.tointeger(refelems[2])})
+	end
+
+	return refitems
+end
+
+local function find_timestampe(refitems, filename)	
+	for _,ii in ipairs(refitems) do 
+		if ii.filename == filename then 
+			return ii.timestamp
+		end 
+	end
+	return nil
+end
+
+function repo:update_duplicate_cache(s, refitems)
+	if #refitems > 1 then
+		local dcache = self:get_duplicate_cache()					
+		local ditems = dcache[s]
+		if ditems == nil then
+			dcache[s] = refitems
+		else
+			assert(#ditems == #refitems)
+			for idx, it in ipairs(refitems) do
+				local it0 = ditems[idx]
+				assert(it.sha1 == it0.sha1)
+			end
+		end
+	end
+end
+
 function repo:read_cache()
-	if not fs.exist(self.cachedir) then
+	local cachedir = self.cachedir
+	if not fs.exist(cachedir) then
 		return
 	end
 
-	local rootfile = path.join(self.cachedir, "root")
+	local rootfile = path.join(cachedir, "root")
 	local rootsha1 = read_file_content(rootfile)	
 	assert(rootsha1:find("[^%da-f]") == nil)
 
 	local function read_tree_branch(pathsha1, dirname, cache)
 		local children = {}
-		local rootsha1path = path.join(self.cachedir, sha1_to_path(pathsha1))
+		local rootsha1path = path.join(cachedir, sha1_to_path(pathsha1))
 		for line in io.lines(rootsha1path) do
-
-			local function read_line_elems(l)
-				-- [1] ==> type, [2] ==> sha1, [3] ==> dir/file name(relative to previous folder), [4](opt) ==> file timestamp
-				local elems = {}	
-				for m in l:gmatch("[^%s]+") do
-					table.insert(elems, m)
-				end
-				return elems
-			end
-
 			local elems = read_line_elems(line)
-			assert(#elems >= 3)
+			assert(#elems == 3)
 			local filename = path.join(dirname, elems[3])
 	
 			local item 
 			if elems[1] == "d" then	
 				item = read_tree_branch(elems[2], filename, cache)
 			else
-				assert(#elems == 4 and elems[1] == "f")
+				assert(elems[1] == "f")
 				local s = elems[2]
-				item = {type="f", sha1=s, timestamp=math.tointeger(elems[4])}
-				local ref_filepath = path.join(self.cachedir, sha1_to_path(s)) .. ".ref"
-				-- if file is not exist, it may need to gc
-				if fs.exist(ref_filepath) then
-					local dupitems = {}
-					for ref_line in io.lines(ref_filepath) do
-						local refitems = read_line_elems(ref_line)			
-						assert(#refitems == 2)	-- refitems[1] ==> filename(relative to root), refitems[2] ==> timestamp
-						table.insert(dupitems, {type="f", sha1=s, filename=refitems[1], timestamp=refitems[2]})
-					end
+					
+				local ref_filepath = refpath_from_sha1(cachedir, s)
+				assert(fs.exist(ref_filepath))
 
-					if #dupitems then
-						local dcache = self:get_duplicate_cache()
-						assert(dcache[s] == nil)
-						dcache[s] = dupitems					
-					end
-				end
+				local refitems = read_ref_file_items(s, ref_filepath)
+				local timestamp = find_timestampe(refitems, filename)
+
+				self:update_duplicate_cache(s, refitems)
+				item = {type="f", sha1=s, timestamp=timestamp}			
 			end
 
 			children[filename] = item
@@ -187,7 +229,7 @@ function repo:read_cache()
 end
 
 local function sha1_from_array(array)
-	local encoder = crypt.sha1_encoder():init()	-- init can be omit
+	local encoder = crypt.sha1_encoder():init()
 	for _, item in ipairs(array) do
 		encoder:update(item.sha1)
 	end
@@ -204,12 +246,7 @@ function repo:build_index(filepath)
 	local function update_cache(s, item)
 		local exist_item = hash_cache[s]
 		if exist_item then
-			local dcache = self.duplicate_cache
-			
-			if dcache == nil then
-				dcache = {}
-				self.duplicate_cache = dcache				
-			end
+			local dcache = self:get_duplicate_cache()
 
 			local itemlist = dcache[s]
 			if itemlist == nil then
