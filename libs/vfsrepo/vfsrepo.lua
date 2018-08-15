@@ -31,10 +31,14 @@ local function refpath_from_sha1(cachedir, s)
 	return path.join(cachedir, sha1_to_path(s)) .. ".ref"	
 end
 
+local function read_file_content(filename)
+	local ff = io.open(filename, "rb")
+	local content = ff:read "a"
+	ff:close()
+	return content
+end
 
-function repo:write_cache()	
-	local cachedir = self.cachedir
-	local cache = self.cache
+local function write_cache(cachedir, cache, duplicate_cache)	
 	path.create_dirs(cachedir)
 	local rootfile = path.join(cachedir, "root")	
 	fu.write_to_file(rootfile, cache.sha1, "wb")
@@ -55,20 +59,20 @@ function repo:write_cache()
 					local refpath = refpath_from_sha1(cachedir, s)
 					if not fs.exist(refpath) then
 						path.create_dirs(path.parent(refpath))
-						local dcache = self.duplicate_cache
-						if dcache then
-							local ditems = dcache[s]
-							if ditems then
-								local refcontent = ""
-								for _, item in ipairs(ditems) do
+				
+						local ditems = duplicate_cache[s]
+						local refcontent = ""
+						if ditems then
+							for _, item in ipairs(ditems) do
+								if item.type == "f" then
 									refcontent = refcontent .. line_format(item)
 								end
-								fu.write_to_file(refpath, refcontent, "wb")
-								return
 							end
+						else
+							refcontent = line_format(item)
 						end
-						
-						fu.write_to_file(refpath, line_format(item), "wb")
+
+						fu.write_to_file(refpath, refcontent, "wb")						
 					end
 				end
 
@@ -87,59 +91,6 @@ function repo:write_cache()
 	end
 
 	write_sha1_file(cache)
-end
-
-function repo:init(root)
-	self.rootpath = root
-	local cachedir = path.join(root, ".repo")
-	self.cachedir = cachedir
-	self:read_cache()
-	if self:rebuild_index(root) then
-		self:write_cache()
-		self.localcache = nil		
-	end
-end
-
-function repo:close()
-	self.rootpath = nil
-	self.cachedir = nil
-	self.cache = nil
-	self.hash_cache = nil
-	self.localcache = nil
-	self.duplicate_cache = nil
-end
-
-local function read_file_content(filename)
-	local ff = io.open(filename, "rb")
-	local content = ff:read "a"
-	ff:close()
-	return content
-end
-
-local function byte2hex(c)
-	return string.format("%02x", c:byte())
-end
-
-local function sha12hex_str(s)
-	return s:gsub(".", byte2hex)
-end
-
-local function sha1(str)
-	local sha1 = crypt.sha1(str)
-	return sha12hex_str(sha1)
-end
-
-function repo:remove_localcache()
-	self.localcache = {}
-end
-
-function repo:get_duplicate_cache()
-	local dcache = self.duplicate_cache
-	if dcache == nil then
-		dcache = {}
-		self.duplicate_cache = dcache
-	end
-	return dcache
 end
 
 local function read_line_elems(l)
@@ -226,9 +177,46 @@ local function read_cache_files(cachedir, cache, duplicate_cache)
 	read_tree_branch(rootsha1, "", cache)
 end
 
-function repo:read_cache()
+local function read_cache(cachedir, localcache)	
+	local duplicate_cache = {}
+	read_cache_files(cachedir, localcache, duplicate_cache)
+end
+
+function repo:init(root)
+	self.rootpath = root
+	local cachedir = path.join(root, ".repo")
+	self.cachedir = cachedir
+	local localcache = {}
+	read_cache(cachedir, localcache)
+	if self:rebuild_index(localcache) then				
+		write_cache(cachedir, assert(self.cache), assert(self.duplicate_cache))
+	end
+end
+
+function repo:close()
+	self.rootpath = nil
+	self.cachedir = nil
+	self.cache = nil
+	self.hash_cache = nil
+	self.localcache = nil
+	self.duplicate_cache = nil
+end
+
+local function byte2hex(c)
+	return string.format("%02x", c:byte())
+end
+
+local function sha12hex_str(s)
+	return s:gsub(".", byte2hex)
+end
+
+local function sha1(str)
+	local sha1 = crypt.sha1(str)
+	return sha12hex_str(sha1)
+end
+
+function repo:remove_localcache()
 	self.localcache = {}
-	read_cache_files(self.cachedir, self.localcache, self:get_duplicate_cache())
 end
 
 local function sha1_from_array(array)
@@ -241,27 +229,39 @@ local function sha1_from_array(array)
 	return sha12hex_str(encoder:final())
 end
 
-function repo:build_index(filepath)
-	local hash_cache = self.hash_cache
-	local localcache = self.localcache
+function repo:build_index(filepath, localcache, duplicate_cache)
+	local hash_cache = self.hash_cache	
 	local rootpath = self.rootpath
 	local hashtable = {}
 
 	local function update_cache(s, item)
 		local exist_item = hash_cache[s]
 		if exist_item then
-			local dcache = self:get_duplicate_cache()
-
-			local itemlist = dcache[s]
+			local itemlist = duplicate_cache[s]
 			if itemlist == nil then
 				itemlist = {}
-				dcache[s] = itemlist
+				duplicate_cache[s] = itemlist
 				table.insert(itemlist, exist_item)
 			end
 			
 			table.insert(itemlist, item)
 		end
 		hash_cache[s] = item
+	end
+
+	local function file_sha1(timestamp, itempath, fullpath)
+		if localcache then
+			local localitem = localcache[itempath]
+			
+			if 	localitem and
+				timestamp == localitem.timestamp then
+
+				return localitem.sha1, false
+			end
+		end
+
+		local content = read_file_content(fullpath)
+		return sha1(content), true
 	end
 
 	local branch_modify = false
@@ -272,27 +272,11 @@ function repo:build_index(filepath)
 				local itempath = path.join(filepath, name)
 				local fullpath = path.join(rootpath, itempath)
 				if path.isdir(fullpath) then
-					return self:build_index(itempath)
-				end
-
-				local function file_sha1(timestamp)
-					if localcache then
-						local localitem = localcache[itempath]
-						
-						if 	localitem and
-							timestamp == localitem.timestamp then
-
-							return localitem.sha1, false
-						end
-					end
-
-					print("cacl item : ", itempath)
-					local content = read_file_content(fullpath)
-					return sha1(content), true
+					return self:build_index(itempath, localcache, duplicate_cache)
 				end
 
 				local timestamp = fu.last_modify_time(fullpath)
-				local s, modify = file_sha1(timestamp)
+				local s, modify = file_sha1(timestamp, itempath, fullpath)
 				local item = {type="f", filename=itempath, sha1=s, timestamp=timestamp}
 
 				update_cache(s, item)
@@ -325,12 +309,13 @@ function repo:build_index(filepath)
 	return hashtable, branch_modify
 end
 
-function repo:rebuild_index()
+function repo:rebuild_index(localcache)
 	local rootpath = self.rootpath
 	assert(path.isdir(rootpath))
 	self.hash_cache = {}
+	self.duplicate_cache = {}
 	local modified
-	self.cache, modified = self:build_index("", rootpath, self.localcache, self.hash_cache)
+	self.cache, modified = self:build_index("", localcache, self.duplicate_cache)
 	return modified
 end
 
