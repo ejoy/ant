@@ -22,7 +22,10 @@ local function gen_subpath_fromsha1(s, cache_rootpath)
 	return filepath
 end
 
-local function write_cache(cachedir, cache)	
+
+function repo:write_cache()	
+	local cachedir = self.cachedir
+	local cache = self.cache
 	path.create_dirs(cachedir)
 	local rootfile = path.join(cachedir, "root")	
 	fu.write_to_file(rootfile, cache.sha1, "wb")
@@ -37,10 +40,31 @@ local function write_cache(cachedir, cache)
 				write_sha1_file(item)
 				itemcontent = string.format("d %s %s\n", item.sha1, path.filename(item.filename))
 			else
-				local filepath = gen_subpath_fromsha1(item.sha1, cachedir) .. ".ref"
-				fu.write_to_file(filepath, string.format("%s %d\n", item.filename, item.timestamp), "wb")
+				local s = item.sha1
+				local function line_format(item)
+					return string.format("%s %d\n", item.filename, item.timestamp)
+				end
+				local function write_ref_file()
+					local filepath = gen_subpath_fromsha1(s, cachedir) .. ".ref"
 
-				itemcontent = string.format("f %s %s %d\n", item.sha1, path.filename(item.filename), item.timestamp)
+					local dcache = self.duplicate_cache					
+					if dcache then
+						local ditems = dcache[s]
+						if ditems then
+							local refcontent = ""
+							for _, item in ipairs(ditems) do
+								refcontent = refcontent .. line_format(item)
+							end
+							fu.write_to_file(filepath, refcontent, "wb")
+							return
+						end
+					end
+					
+					fu.write_to_file(filepath, line_format(item), "wb")
+				end
+
+				write_ref_file()
+				itemcontent = string.format("f %s %s %d\n", s, path.filename(item.filename), item.timestamp)
 			end
 			content = content .. itemcontent
 		end
@@ -56,7 +80,7 @@ function repo:init(root)
 	self.cachedir = cachedir
 	self:read_cache()
 	if self:rebuild_index(root) then
-		write_cache(cachedir, self.cache)
+		self:write_cache()
 	end
 end
 
@@ -92,6 +116,15 @@ function repo:remove_localcache()
 	self.localcache = {}
 end
 
+function repo:get_duplicate_cache()
+	local dcache = self.duplicate_cache
+	if dcache == nil then
+		dcache = {}
+		self.duplicate_cache = dcache
+	end
+	return dcache
+end
+
 function repo:read_cache()
 	if not fs.exist(self.cachedir) then
 		return
@@ -105,10 +138,17 @@ function repo:read_cache()
 		local children = {}
 		local rootsha1path = path.join(self.cachedir, sha1_to_path(pathsha1))
 		for line in io.lines(rootsha1path) do
-			local elems = {}	-- [1] ==> type, [2] ==> sha1, [3] ==> dir/file name, [4](opt) ==> file timestamp
-			for m in line:gmatch("[^%s]+") do
-				table.insert(elems, m)
+
+			local function read_line_elems(l)
+				-- [1] ==> type, [2] ==> sha1, [3] ==> dir/file name(relative to previous folder), [4](opt) ==> file timestamp
+				local elems = {}	
+				for m in l:gmatch("[^%s]+") do
+					table.insert(elems, m)
+				end
+				return elems
 			end
+
+			local elems = read_line_elems(line)
 			assert(#elems >= 3)
 			local filename = path.join(dirname, elems[3])
 	
@@ -117,7 +157,24 @@ function repo:read_cache()
 				item = read_tree_branch(elems[2], filename, cache)
 			else
 				assert(#elems == 4 and elems[1] == "f")
-				item = {type="f", sha1=elems[2], timestamp=math.tointeger(elems[4])}
+				local s = elems[2]
+				item = {type="f", sha1=s, timestamp=math.tointeger(elems[4])}
+				local ref_filepath = path.join(self.cachedir, sha1_to_path(s)) .. ".ref"
+				-- if file is not exist, it may need to gc
+				if fs.exist(ref_filepath) then
+					local dupitems = {}
+					for ref_line in io.lines(ref_filepath) do
+						local refitems = read_line_elems(ref_line)			
+						assert(#refitems == 2)	-- refitems[1] ==> filename(relative to root), refitems[2] ==> timestamp
+						table.insert(dupitems, {type="f", sha1=s, filename=refitems[1], timestamp=refitems[2]})
+					end
+
+					if #dupitems then
+						local dcache = self:get_duplicate_cache()
+						assert(dcache[s] == nil)
+						dcache[s] = dupitems					
+					end
+				end
 			end
 
 			children[filename] = item
@@ -158,10 +215,10 @@ function repo:build_index(filepath)
 			if itemlist == nil then
 				itemlist = {}
 				dcache[s] = itemlist
+				table.insert(itemlist, exist_item)
 			end
-
-			table.insert(itemlist, exist_item)
-			table.insert(itemlist, item)			
+			
+			table.insert(itemlist, item)
 		end
 		hash_cache[s] = item
 	end
