@@ -5,8 +5,6 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
-static int RETSTRING = 0;
-
 struct vfs {
 	struct luavm *L;
 	int handle;
@@ -18,16 +16,6 @@ linitvfs(lua_State *L) {
 	struct vfs ** V = (struct vfs **)lua_touserdata(L, 1);
 	*V = lua_newuserdata(L, sizeof(struct vfs));
 	return 1;
-}
-
-static int
-lreturnstring(lua_State *L) {
-	luaL_checktype(L,1, LUA_TLIGHTUSERDATA);
-	const char ** r = (const char **)lua_touserdata(L, 1);
-	*r = luaL_checkstring(L, 2);
-	lua_settop(L, 2);
-	lua_rawsetp(L, LUA_REGISTRYINDEX, &RETSTRING);	// ref ret string
-	return 0;
 }
 
 extern int luaopen_winfile(lua_State *L);
@@ -42,8 +30,7 @@ static int
 cfuncs(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "initvfs", linitvfs },
-		{ "returnstring", lreturnstring },
+		{ "initvfs", linitvfs },		
 		{ "lfs", lfs },
 		{ NULL, NULL },
 	};
@@ -59,8 +46,9 @@ vfs_init(const char *firmware, const char *dir) {
 	if (L == NULL)
 		return NULL;
 	struct vfs *V = NULL;
-	if (luavm_init(L, init_source, "ssfp", firmware, dir, cfuncs, &V)) {
-		fprintf(stderr, "Init error: %s\n", luavm_lasterror(L));
+	const char * err = luavm_init(L, init_source, "ssfp", firmware, dir, cfuncs, &V);
+	if (err) {
+		fprintf(stderr, "Init error: %s\n", err);
 		luavm_close(L);
 		return NULL;
 	}
@@ -70,10 +58,10 @@ vfs_init(const char *firmware, const char *dir) {
 	}
 
 	V->L = L;
-	V->handle = luavm_register(L, "return _LOAD", "=vfs.load");
-	if (V->handle == 0) {
+	err = luavm_register(L, "return _LOAD", "=vfs.load", &V->handle);
+	if (err) {
 		// register failed
-		fprintf(stderr, "Register error: %s\n", luavm_lasterror(L));
+		fprintf(stderr, "Register error: %s\n", err);
 		luavm_close(L);
 		return NULL;
 	}
@@ -90,8 +78,9 @@ vfs_exit(struct vfs *V) {
 const char *
 vfs_load(struct vfs *V, const char *path) {
 	const char * ret = NULL;
-	if (luavm_call(V->L, V->handle, "sp", path, &ret)) {
-		fprintf(stderr, "Load error: %s\n", luavm_lasterror(V->L));
+	const char * err = luavm_call(V->L, V->handle, "sS", path, &ret);
+	if (err) {
+		fprintf(stderr, "Load error: %s\n", err);
 		return NULL;
 	}
 	return ret;

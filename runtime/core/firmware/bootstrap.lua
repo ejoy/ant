@@ -35,14 +35,12 @@ if bootstrap then
 	end
 end
 
-local retstring = cfuncs.returnstring
-
-function _LOAD(path, ret)
+function _LOAD(path)
 	local f = repo:open(path)
 	if f then
 		local content = f:read "a"
 		f:close()
-		retstring(ret, content)
+		return content
 	end
 end
 

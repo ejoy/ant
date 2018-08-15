@@ -18,7 +18,7 @@ local function mark_modified_file(filepath, content, modified_files)
 
 	local c = modified_files[filepath]	
 	if c == nil then		
-		path.create_dirs(filepath)
+		path.create_dirs(path.parent(filepath))
 		modified_files[filepath] = content
 	else
 		--assert(c == content)
@@ -147,13 +147,13 @@ local function rebuild_hierarchy(ms, iterop)
 		local assetdir = assetmgr.assetdir()
 		if hascache then
 			local assetpath = path.join(assetdir, epath)
-			path.create_dirs(assetpath)
+			path.create_dirs(path.parent(assetpath))
 			hierarchy_module.save(root, assetpath)
 		end
 
 		local builddata = hierarchy_module.build(root)
 		local pp = path.join(assetdir, rpath)
-		path.create_dirs(pp)
+		path.create_dirs(path.parent(pp))
 		hierarchy_module.save(builddata, pp)
 	end
 	--[@

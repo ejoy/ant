@@ -103,11 +103,7 @@ function path.trim_slash(fullpath)
 end
 
 function path.create_dirs(fullpath)    
-	fullpath = path.normalize(
-		path.remove_filename(
-			path.trim_slash(fullpath)
-		)
-	)
+	fullpath = path.normalize(path.trim_slash(fullpath))
 	
     local cwd = fs.currentdir()
     for m in fullpath:gmatch("[^\\/]+") do
