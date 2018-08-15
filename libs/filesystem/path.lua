@@ -36,7 +36,7 @@ function path.filename(name)
 end
 
 function path.filename_without_ext(name)
-    local fn = name:match("[/\\]([%w_]+)%.[%w_-]+$")
+    local fn = name:match("[/\\]?([%w_]+)%.[%w_-]+$")
     return fn
 end
 

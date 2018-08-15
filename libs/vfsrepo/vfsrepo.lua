@@ -144,6 +144,10 @@ local function read_cache_files(cachedir, cache, duplicate_cache)
 	end
 
 	local rootfile = path.join(cachedir, "root")
+	if not fs.exist(rootfile) then
+		return 
+	end
+
 	local rootsha1 = read_file_content(rootfile)	
 	assert(rootsha1:find("[^%da-f]") == nil)
 
@@ -348,6 +352,34 @@ function repo:load_root()
 	local rootpath = path.join(self.cachedir, sha1_to_path(s))
 	assert(fs.exist(rootpath))
 	return rootpath	
+end
+
+function repo:gc()
+	if self.rootpath == nil then
+		return 
+	end
+
+	local cachedir = self.cachedir
+	if cachedir and fs.exist(cachedir) then
+		local function remove_filetree(subpath)
+			for name in fs.dir(subpath) do
+				if name ~= "." and name ~= ".." then
+					local fullpath = path.join(subpath, name)
+					if path.isdir(fullpath) then
+						remove_filetree(fullpath)
+					else
+						fs.remove(fullpath)
+					end
+				end
+			end
+		end
+
+		remove_filetree(cachedir)
+
+		local rootpath = self.rootpath
+		self:close()
+		self:init(rootpath)
+	end
 end
 
 return repo

@@ -67,9 +67,36 @@ do
 		end
 	end
 	
-	fs.remove(file1)
-	fs.remove(file2)
-	fs.remove(newtestfolder)
+	repo2:gc()
+
+	local function list_all_sha1(folder)
+		local sha1list = {}
+		local function filter(subfolder)
+			for name in fs.dir(subfolder) do
+				if name ~= "." and name ~= ".." and name ~= "root" and #name >= 64 then
+					local fullpath = path.join(subfolder, name)
+					if path.isdir(fullpath) then
+						filter(fullpath)
+					else
+						local ext = path.ext(name)			
+						if ext == "ref" then
+							local n = path.filename_without_ext(name)
+							sha1list[n] = "f"
+						else
+							sha1list[name] = "d"
+						end					
+					end
+				end
+			end
+		end
+		filter(folder)
+		return sha1list
+	end
+
+	local sha1list = list_all_sha1(path.join(newtestfolder, ".repo"))
+	for k, v in pairs(sha1list) do
+		assert(repo2:load(k))
+	end
 end
 
 --test duplicate hash------------------------------------------
@@ -128,7 +155,4 @@ do
 	local repo4 = vfsrepo.new(newtestfolder)
 	local ditems = repo4.duplicate_cache[sp_sh1]
 	assert(#ditems)	-- folder sp and sp.txt have the same sha1
-	
-	
-
 end
