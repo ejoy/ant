@@ -14,7 +14,7 @@ repo:init(testfolder)
 local crypt = require "crypt"
 
 local function filecontent(name)
-	local ff = io.open(path.join(testfolder, name))
+	local ff = io.open(name)
 	local content = ff:read "a"
 	ff:close()
 	return content
@@ -33,8 +33,8 @@ local function sha1(str)
 	return sha12hex_str(sha1)
 end
 
-local f1_1_sha1 = sha1(filecontent("f1/f1_1.txt"))
-local f1_sha1 = sha1(f1_1_sha1)
+local f1_1_sha1 = sha1(filecontent(path.join(testfolder, "f1/f1_1.txt")))
+local f1_sha1 = sha1(string.format("%s %s %s", "f", f1_1_sha1, "f1_1.txt"))
 
 local result = repo:load(f1_1_sha1)
 assert(result == "f1/f1_1.txt")
@@ -102,6 +102,28 @@ do
 			print("type : ", item.type, ", filename : ", item.filename)
 		end
 	end
+end
 
+--file sha1 value is the same as folder sha1
+do
+	local newtestfolder = path.join(testfolder, "test4")
+	path.create_dirs(newtestfolder)
 
+	local spfolder = path.join(newtestfolder, "sp")
+	local file1, file2 = path.join(spfolder, "1.txt"), path.join(spfolder, "2.txt")
+	fu.write_to_file(file1, "1.txt", "wb")
+	fu.write_to_file(file2, "2.txt", "wb")
+
+	local s1, s2 = sha1(file1), sha1(file2)
+	local t1, t2 = fu.last_modify_time(file1), fu.last_modify_time(file2)
+	local specialfile = paht.join(newtestfolder, "sp.txt")
+	local specialcontent = ""
+	specialcontent = specialcontent .. string.format("f %s %s\n", s1, "1.txt")
+	specialcontent = specialcontent .. string.format("f %s %s\n", s2, "2.txt")
+
+	fu.write_to_file(specialfile, specialcontent, "wb")
+	local sp_sh1 = sh1(specialfile)
+
+	local repo4 = vfsrepo.new(newtestfolder)
+	repo4:load()
 end

@@ -39,9 +39,7 @@ function repo:write_cache()
 	local rootfile = path.join(cachedir, "root")	
 	fu.write_to_file(rootfile, cache.sha1, "wb")
 
-	local function write_sha1_file(cache)		
-		
-
+	local function write_sha1_file(cache)
 		local content = ""
 		for _, item in ipairs(cache) do
 			local itemcontent
@@ -98,6 +96,7 @@ function repo:init(root)
 	self:read_cache()
 	if self:rebuild_index(root) then
 		self:write_cache()
+		self.localcache = nil		
 	end
 end
 
@@ -229,13 +228,14 @@ end
 
 function repo:read_cache()
 	self.localcache = {}
-	read_cache_files(self.cachedir, self.localcahe, self:get_duplicate_cache())
+	read_cache_files(self.cachedir, self.localcache, self:get_duplicate_cache())
 end
 
 local function sha1_from_array(array)
 	local encoder = crypt.sha1_encoder():init()
 	for _, item in ipairs(array) do
-		encoder:update(item.sha1)
+		local content = string.format("%s %s %s", item.type, item.sha1, path.filename(item.filename))
+		encoder:update(content)
 	end
 
 	return sha12hex_str(encoder:final())
