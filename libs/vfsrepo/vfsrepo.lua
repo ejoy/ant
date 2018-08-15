@@ -194,17 +194,15 @@ function repo:read_cache()
 	local rootsha1 = read_file_content(rootfile)	
 	assert(rootsha1:find("[^%da-f]") == nil)
 
-	local function read_tree_branch(pathsha1, dirname, cache)
-		local children = {}
-		local rootsha1path = path.join(cachedir, sha1_to_path(pathsha1))
-		for line in io.lines(rootsha1path) do
+	local function read_tree_branch(pathsha1, dirname, cache)		
+		local dirsha1_filepath = path.join(cachedir, sha1_to_path(pathsha1))
+		for line in io.lines(dirsha1_filepath) do
 			local elems = read_line_elems(line)
 			assert(#elems == 3)
 			local filename = path.join(dirname, elems[3])
 	
-			local item 
 			if elems[1] == "d" then	
-				item = read_tree_branch(elems[2], filename, cache)
+				read_tree_branch(elems[2], filename, cache)
 			else
 				assert(elems[1] == "f")
 				local s = elems[2]
@@ -216,16 +214,15 @@ function repo:read_cache()
 				local timestamp = find_timestampe(refitems, filename)
 
 				self:update_duplicate_cache(s, refitems)
-				item = {type="f", sha1=s, timestamp=timestamp}			
+				cache[filename] = {type="f", sha1=s, timestamp=timestamp}
 			end
-
-			children[filename] = item
 		end
 
-		return {type="d", children=children, sha1=pathsha1,}
+		cache[dirname] = {type="d", sha1=pathsha1,}
 	end
 
-	self.localcache = read_tree_branch(rootsha1, "")
+	self.localcache = {}
+	read_tree_branch(rootsha1, "", self.localcache)
 end
 
 local function sha1_from_array(array)
@@ -282,6 +279,7 @@ function repo:build_index(filepath)
 						end
 					end
 
+					print("cacl item : ", itempath)
 					local content = read_file_content(fullpath)
 					return sha1(content), true
 				end
