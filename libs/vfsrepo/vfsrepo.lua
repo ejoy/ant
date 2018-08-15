@@ -9,10 +9,10 @@ local crypt = require "crypt"
 function repo.new(root)
 	local r = setmetatable({}, repo)
 
-	if root == nil then
-		return r
+	if root then
+		r:init(root)
 	end
-	r:init(root)
+	return r	
 end
 
 local function sha1_to_path(s)
