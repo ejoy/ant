@@ -234,7 +234,7 @@ end
 local function sha1_from_array(array)
 	local encoder = crypt.sha1_encoder():init()
 	for _, item in ipairs(array) do
-		local content = string.format("%s %s %s", item.type, item.sha1, path.filename(item.filename))
+		local content = string.format("%s %s %s\n", item.type, item.sha1, path.filename(item.filename))
 		encoder:update(content)
 	end
 
