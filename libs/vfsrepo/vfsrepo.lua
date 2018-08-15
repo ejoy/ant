@@ -6,8 +6,13 @@ local fu = require "filesystem.util"
 local path = require "filesystem.path"
 local crypt = require "crypt"
 
-function repo.new()
-	return setmetatable({}, repo)
+function repo.new(root)
+	local r = setmetatable({}, repo)
+
+	if root == nil then
+		return r
+	end
+	r:init(root)
 end
 
 local function sha1_to_path(s)
@@ -168,12 +173,11 @@ local function find_timestampe(refitems, filename)
 	return nil
 end
 
-function repo:update_duplicate_cache(s, refitems)
+local function update_duplicate_cache(s, refitems, duplicate_cache)
 	if #refitems > 1 then
-		local dcache = self:get_duplicate_cache()					
-		local ditems = dcache[s]
+		local ditems = duplicate_cache[s]
 		if ditems == nil then
-			dcache[s] = refitems
+			duplicate_cache[s] = refitems
 		else
 			assert(#ditems == #refitems)
 			for idx, it in ipairs(refitems) do
@@ -184,8 +188,7 @@ function repo:update_duplicate_cache(s, refitems)
 	end
 end
 
-function repo:read_cache()
-	local cachedir = self.cachedir
+local function read_cache_files(cachedir, cache, duplicate_cache)
 	if not fs.exist(cachedir) then
 		return
 	end
@@ -213,7 +216,7 @@ function repo:read_cache()
 				local refitems = read_ref_file_items(s, ref_filepath)
 				local timestamp = find_timestampe(refitems, filename)
 
-				self:update_duplicate_cache(s, refitems)
+				update_duplicate_cache(s, refitems, duplicate_cache)
 				cache[filename] = {type="f", sha1=s, timestamp=timestamp}
 			end
 		end
@@ -221,8 +224,12 @@ function repo:read_cache()
 		cache[dirname] = {type="d", sha1=pathsha1,}
 	end
 
+	read_tree_branch(rootsha1, "", cache)
+end
+
+function repo:read_cache()
 	self.localcache = {}
-	read_tree_branch(rootsha1, "", self.localcache)
+	read_cache_files(self.cachedir, self.localcahe, self:get_duplicate_cache())
 end
 
 local function sha1_from_array(array)
