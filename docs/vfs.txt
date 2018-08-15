@@ -19,10 +19,9 @@
 
 a dir hash
 b dir hash
-file2 file timestamp hash
+file2 file hash
 
-对于 a b 子目录，只需要记录 hash 。因为子目录的时间戳改变只是目录下文件变化的充分条件、而非必要条件。不具备太多参考价值。
-对于 file2 记录下时间戳，当读取该文件时，可根据时间戳是否有变化来判断 hash 是否变化。
+对于 a b 子目录，只需要记录 hash 。
 
 我们假定在手机 app 运行过程中，文件基本不会发生变化。如果有变，那么认为需要重启 app ，重建索引信息。时间戳同时可用来加速索引重建过程：时间戳不变时，可以不重算 hash 。
 
@@ -60,9 +59,9 @@ realpath timestamp
 
 采用无 BOM 头的 UTF8 编码，回车使用 Unix 风格，只有 \n ，最后一行需要加 \n
 
-一行一个文件，类型 sha1 文件名 timestamp 用空格分隔。sha1 采用小写的 hex 形式， timestamp 采用十进制数字，类型是 f 或 d 。文件名中不可以有空格。d 类型（目录）不需要时间戳。
+一行一个文件，类型 sha1 文件名用空格分隔。sha1 采用小写的 hex 形式， timestamp 采用十进制数字，类型是 f 或 d 。文件名中不可以有空格。
 
 范例：
 
-f 90a5c279259fd4e105c4eb8378e9a21694e1e3c4 vfs.txt 1533871795
+f 90a5c279259fd4e105c4eb8378e9a21694e1e3c4 vfs.txt
 
