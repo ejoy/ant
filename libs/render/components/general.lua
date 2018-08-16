@@ -92,9 +92,8 @@ ecs.component "material" {
 							properties[k] = p
 						end
 					end
-				end
-				table.insert(t, {path=pp, properties=src_properties})
-			
+					table.insert(t, {path=pp, properties=properties})
+				end			
 			end
 			return t
 		end,
