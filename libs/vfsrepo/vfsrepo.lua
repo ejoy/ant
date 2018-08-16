@@ -361,20 +361,7 @@ function repo:gc()
 
 	local cachedir = self.cachedir
 	if cachedir and fs.exist(cachedir) then
-		local function remove_filetree(subpath)
-			for name in fs.dir(subpath) do
-				if name ~= "." and name ~= ".." then
-					local fullpath = path.join(subpath, name)
-					if path.isdir(fullpath) then
-						remove_filetree(fullpath)
-					else
-						fs.remove(fullpath)
-					end
-				end
-			end
-		end
-
-		remove_filetree(cachedir)
+		path.remove(cachedir)
 
 		local rootpath = self.rootpath
 		self:close()

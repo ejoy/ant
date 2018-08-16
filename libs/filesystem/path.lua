@@ -124,4 +124,20 @@ function path.isfile(filepath)
 	return m == "file"
 end
 
+function path.remove(subpath)
+	for name in fs.dir(subpath) do
+		if name ~= "." and name ~= ".." then
+			local fullpath = path.join(subpath, name)
+			if path.isdir(fullpath) then
+				path.remove_filetree(fullpath)
+			else
+				fs.remove(fullpath)
+			end
+		end
+	end
+
+	path.remove(subpath)
+end
+
+
 return path
