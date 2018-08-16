@@ -94,6 +94,17 @@ local function open_from_repo(self, path)
 	return nil, hash
 end
 
+function vfs:hash(path)
+	if path == '/' then
+		if self.root then
+			return true, self.root
+		else
+			return
+		end
+	end
+	return fetch_file(self, self.root, path)
+end
+
 function vfs:open(path)
 	local f, hash = open_from_repo(self, path)
 	if f then
