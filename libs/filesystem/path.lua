@@ -1,4 +1,5 @@
 local fs = require "filesystem"
+local fu = require "filesystem.util"
 
 local path = {}
 path.__index = path
@@ -36,7 +37,7 @@ function path.filename(name)
 end
 
 function path.filename_without_ext(name)
-    local fn = name:match("[/\\]([%w_]+)%.[%w_-]+$")
+    local fn = name:match("[/\\]?([%w_]+)%.[%w_-]+$")
     return fn
 end
 
@@ -130,5 +131,19 @@ function path.isfile(filepath)
 	local m = fs.attributes(filepath, "mode")
 	return m == "file"
 end
+
+function path.remove(subpath)
+	for name in fu.dir(subpath) do	
+		local fullpath = path.join(subpath, name)
+		if path.isdir(fullpath) then
+			path.remove(fullpath)
+		else
+			fs.remove(fullpath)
+		end	
+	end
+
+	fs.rmdir(subpath)
+end
+
 
 return path
