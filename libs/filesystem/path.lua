@@ -1,4 +1,5 @@
 local fs = require "filesystem"
+local fu = require "filesystem.util"
 
 local path = {}
 path.__index = path
@@ -125,18 +126,16 @@ function path.isfile(filepath)
 end
 
 function path.remove(subpath)
-	for name in fs.dir(subpath) do
-		if name ~= "." and name ~= ".." then
-			local fullpath = path.join(subpath, name)
-			if path.isdir(fullpath) then
-				path.remove_filetree(fullpath)
-			else
-				fs.remove(fullpath)
-			end
-		end
+	for name in fu.dir(subpath) do	
+		local fullpath = path.join(subpath, name)
+		if path.isdir(fullpath) then
+			path.remove(fullpath)
+		else
+			fs.remove(fullpath)
+		end	
 	end
 
-	path.remove(subpath)
+	fs.rmdir(subpath)
 end
 
 

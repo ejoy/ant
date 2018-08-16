@@ -72,21 +72,20 @@ do
 	local function list_all_sha1(folder)
 		local sha1list = {}
 		local function filter(subfolder)
-			for name in fs.dir(subfolder) do
-				if name ~= "." and name ~= ".." and name ~= "root" and #name >= 64 then
-					local fullpath = path.join(subfolder, name)
-					if path.isdir(fullpath) then
-						filter(fullpath)
+			for name in fu.dir(subfolder, {"root"}) do
+				local fullpath = path.join(subfolder, name)
+				if path.isdir(fullpath) then
+					filter(fullpath)
+				else
+					local ext = path.ext(name)			
+					if ext == "ref" then
+						local n = path.filename_without_ext(name)
+						sha1list[n] = "f"
 					else
-						local ext = path.ext(name)			
-						if ext == "ref" then
-							local n = path.filename_without_ext(name)
-							sha1list[n] = "f"
-						else
-							sha1list[name] = "d"
-						end					
-					end
+						sha1list[name] = "d"
+					end					
 				end
+			
 			end
 		end
 		filter(folder)
@@ -97,6 +96,8 @@ do
 	for k, v in pairs(sha1list) do
 		assert(repo2:load(k))
 	end
+
+	path.remove(newtestfolder)
 end
 
 --test duplicate hash------------------------------------------
@@ -129,7 +130,54 @@ do
 			print("type : ", item.type, ", filename : ", item.filename)
 		end
 	end
+
+	path.remove(newtestfolder)
 end
+
+local function sha1_from_array(array)
+	local encoder = crypt.sha1_encoder():init()
+	for _, item in ipairs(array) do
+		local content = string.format("%s %s %s\n", item.type, item.sha1, path.filename(item.filename))
+		encoder:update(content)
+	end
+
+	return sha12hex_str(encoder:final())
+end
+
+local function folder_sha1(subfolder)
+	local function gen_item_list(subfolder)
+		local t = {}
+		for name in fu.dir(subfolder, {".repo"}) do
+			local fullpath = path.join(subfolder, name)
+			local item
+			if path.isdir(fullpath) then
+				item = gen_item_list(fullpath)
+			else
+				item = {type="f", filename=name, sha1=sha1(filecontent(fullpath))}
+			end
+	
+			table.insert(t, item)
+		end
+	
+		table.sort(t, function (lhs, rhs) return lhs.filename < rhs.filename end)
+	
+		t.filename = path.filename(subfolder)
+		t.type = "d"
+		t.sha1 = sha1_from_array(t)
+		return t
+	end
+
+	local items = gen_item_list(subfolder)
+	local encoder = crypt.sha1_encoder():init()
+
+	for _, it in ipairs(items) do
+		local content = string.format("%s %s %s\n", it.type, it.sha1, it.filename)
+		encoder:update(content)
+	end
+
+	return sha12hex_str(encoder:final())
+end
+
 
 --file sha1 value is the same as folder sha1
 do
@@ -155,4 +203,31 @@ do
 	local repo4 = vfsrepo.new(newtestfolder)
 	local ditems = repo4.duplicate_cache[sp_sh1]
 	assert(#ditems)	-- folder sp and sp.txt have the same sha1
+
+	path.remove(newtestfolder)
+end
+
+do
+	local newtestfolder = path.join(testfolder, "test5")
+	path.create_dirs(newtestfolder)
+
+	local f1folder = path.join(newtestfolder, "f1")
+	local f2folder = path.join(newtestfolder, "f2")
+	path.create_dirs(f1folder)
+	path.create_dirs(f2folder)
+
+	local f1, f2 = path.join(f1folder, "1.txt"), path.join(f2folder, "2.txt")
+	fu.write_to_file(f1, f1, "wb")
+	fu.write_to_file(f2, f2, "wb")
+
+	local repo5 = vfsrepo.new(newtestfolder)
+	local hash = folder_sha1(newtestfolder)
+
+	local items = repo5:list_items(hash)
+	for _, i in ipairs(items) do
+		print(i)
+	end
+
+	path.remove(newtestfolder)
+
 end

@@ -219,10 +219,6 @@ local function sha1(str)
 	return sha12hex_str(sha1)
 end
 
-function repo:remove_localcache()
-	self.localcache = {}
-end
-
 local function sha1_from_array(array)
 	local encoder = crypt.sha1_encoder():init()
 	for _, item in ipairs(array) do
@@ -270,27 +266,26 @@ function repo:build_index(filepath, localcache, duplicate_cache)
 
 	local branch_modify = false
 	local currentpath = path.join(rootpath, filepath)
-	for name in fs.dir(currentpath) do
-		if name ~= "." and name ~= ".." and name ~= ".repo" then
-			local function create_item()
-				local itempath = path.join(filepath, name)
-				local fullpath = path.join(rootpath, itempath)
-				if path.isdir(fullpath) then
-					return self:build_index(itempath, localcache, duplicate_cache)
-				end
-
-				local timestamp = fu.last_modify_time(fullpath)
-				local s, modify = file_sha1(timestamp, itempath, fullpath)
-				local item = {type="f", filename=itempath, sha1=s, timestamp=timestamp}
-
-				update_cache(s, item)
-				return item, modify
+	for name in fu.dir(currentpath, {".repo"}) do
+		local function create_item()
+			local itempath = path.join(filepath, name)
+			local fullpath = path.join(rootpath, itempath)
+			if path.isdir(fullpath) then
+				return self:build_index(itempath, localcache, duplicate_cache)
 			end
 
-			local item, modify = create_item()
-			branch_modify = branch_modify or modify
-			table.insert(hashtable, item)
+			local timestamp = fu.last_modify_time(fullpath)
+			local s, modify = file_sha1(timestamp, itempath, fullpath)
+			local item = {type="f", filename=itempath, sha1=s, timestamp=timestamp}
+
+			update_cache(s, item)
+			return item, modify
 		end
+
+		local item, modify = create_item()
+		branch_modify = branch_modify or modify
+		table.insert(hashtable, item)
+	
 	end
 
 	table.sort(hashtable, function (lhs, rhs) return lhs.filename < rhs.filename end)
@@ -327,14 +322,16 @@ function repo:load(hashkey)
 	local cache = assert(self.hash_cache)
 	local item = cache[hashkey]
 	if item == nil then
-		error(string.format("not found hash : %s", hashkey))
+		print("not found hash : ", hashkey)
+		return nil
 	end
 
 	if item.type == "d" then
 		local cachedir = assert(self.cachedir)
 		local filepath = gen_subpath_fromsha1(assert(item.sha1), cachedir)
 		if not fs.exist(filepath) then
-			error("load from value type: internal error")
+			print("hash found, but hash file not exist, filepath : ", filepath)
+			return nil
 		end
 		return filepath
 	end
@@ -367,6 +364,40 @@ function repo:gc()
 		self:close()
 		self:init(rootpath)
 	end
+end
+
+function repo:list_items(hash)
+	local hash_cache = assert(self.hash_cache)
+	local item = hash_cache[hash]
+	if item == nil then
+		print("not found hash : ", hash)
+		return nil
+	end
+
+	if item.type == "f" then
+		return item.filename
+	end
+
+	local cachedir = assert(self.cachedir)
+	local file_items = {}
+	local function read_file_item(pathsha1)
+		local filepath = gen_subpath_fromsha1(assert(pathsha1), cachedir)
+		assert(fs.exist(filepath))
+
+		for line in io.lines(filepath) do
+			local elems = read_line_elems(line)
+			assert(#elems == 3)
+			local type = elems[1]			
+			if type == "d" then
+				read_file_item(elems[2])
+			else
+				table.insert(file_items, elems[3])
+			end
+		end
+	end
+
+	read_file_item(item.sha1)
+	return file_items
 end
 
 return repo
