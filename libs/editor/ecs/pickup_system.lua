@@ -133,19 +133,6 @@ function pickup:which_entity_hitted(pickup_entity)
 		end
 	end
 
-	-- dprint("pick buffer : ")
-	-- for ih=0, h - 1 do
-	-- 	local t = {}
-	-- 	for iw=1, w do
-	-- 		local idx = ih * w + iw
-	-- 		local rgba = comp.blitdata[idx]
-	-- 		local eid = unpackrgba_to_eid(rgba)
-	-- 		table.insert(t, eid)
-	-- 		table.insert(t, " ")
-	-- 	end
-	-- 	dprint(table.concat(t))
-	-- end
-	
     return found_eid
 end
 
@@ -175,28 +162,6 @@ function pickup:pick(p_eid, current_frame_num, select_filter)
         self.reading_frame = nil
     end
     self.is_picking = self.reading_frame ~= nil
-end
-
--- pickup view
-local pickup_view_sys = ecs.system "pickup_view"
-
-pickup_view_sys.singleton "math_stack"
-pickup_view_sys.singleton "message_component"
-
-pickup_view_sys.depend "iup_message"
-pickup_view_sys.dependby "view_system"
-
-function pickup_view_sys:init()
-    --[@    for message callback
-    local msg = {}
-    function msg:button(b, p, x, y)        
-        if b == "LEFT" and p then
-            pickup.clickpt = point2d(x, y)
-        end
-    end
-    local observers = self.message_component.msg_observers
-    observers:add(msg)
-    --@]
 end
 
 local function get_main_camera_viewproj_mat(ms, maincamera)      
@@ -229,67 +194,70 @@ local function update_viewinfo(ms, e, clickpt)
     ms(assert(e.rotation).v, dirWS, "D=")
 end
 
-function pickup_view_sys:update()
-    local clickpt = pickup.clickpt
-    if clickpt ~= nil then
-        local pu_entity = world:first_entity("pickup")        
-        update_viewinfo(self.math_stack, pu_entity, clickpt)
-
-        pickup.is_picking = true
-        pickup.clickpt = nil
-    end
-end
-
 -- system
 local pickup_sys = ecs.system "pickup_system"
 
 pickup_sys.singleton "math_stack"
 pickup_sys.singleton "frame_stat"
 pickup_sys.singleton "select_filter"
+pickup_sys.singleton "message_component"
 
-pickup_sys.depend "pickup_view"
 pickup_sys.dependby "end_frame"
 
+local function add_pick_entity(ms)
+	local eid = world:new_entity("pickup", "viewid", 
+	"view_rect", "clear_component", 
+	"position", "rotation", 
+	"frustum", 
+	"name")        
+	local entity = assert(world[eid])
+	entity.viewid.id = pickup_fb_viewid
+	entity.name.n = "pickup"
+
+	local cc = entity.clear_component
+	cc.color = 0
+
+	local vr = entity.view_rect
+	vr.w = 8
+	vr.h = 8
+
+	local comp = entity.pickup
+	comp.blitdata = bgfx.memory_texture(vr.w*vr.h * 4)
+
+	local frustum = entity.frustum
+	mu.frustum_from_fov(frustum, 0.1, 100, 1, vr.w / vr.h)
+	
+	local pos = entity.position.v
+	local rot = entity.rotation.v
+	ms(pos, {0, 0, 0, 1}, "=")
+	ms(rot, {0, 0, 0, 0}, "=")
+
+	return entity
+end
+
 function pickup_sys:init()
-    local function add_pick_entity(ms)
-        local eid = world:new_entity("pickup", "viewid", 
-        "view_rect", "clear_component", 
-        "position", "rotation", 
-        "frustum", 
-        "name")        
-        local entity = assert(world[eid])
-        entity.viewid.id = pickup_fb_viewid
-        entity.name.n = "pickup"
-
-        local cc = entity.clear_component
-        cc.color = 0
-
-        local vr = entity.view_rect
-        vr.w = 8
-        vr.h = 8
-    
-        local comp = entity.pickup
-        comp.blitdata = bgfx.memory_texture(vr.w*vr.h * 4)
-
-        local frustum = entity.frustum
-        mu.frustum_from_fov(frustum, 0.1, 100, 1, vr.w / vr.h)
-        
-        local pos = entity.position.v
-        local rot = entity.rotation.v
-        ms(pos, {0, 0, 0, 1}, "=")
-        ms(rot, {0, 0, 0, 0}, "=")
-        
-        return entity
-    end
-
     local entity = add_pick_entity(self.math_stack)
 
-    pickup.ms = self.math_stack
-    pickup:init(entity)
+	local ms = self.math_stack
+    pickup.ms = ms
+	pickup:init(entity)
+
+	self.message_component.msg_observers:add({
+		button = function (_, b, p, x, y)
+			if b == "LEFT" and p then
+				local clickpt = point2d(x, y)
+
+				local pu_entity = world:first_entity("pickup")
+				update_viewinfo(ms, pu_entity, clickpt)
+
+				pickup.is_picking = true
+			end
+		end
+	})
 end
 
 function pickup_sys:update()
-    if pickup.is_picking then        
+    if pickup.is_picking then
         local eid = assert(world:first_entity_id("pickup"))    
         pickup:pick(eid, self.frame_stat.frame_num, self.select_filter)
     end
