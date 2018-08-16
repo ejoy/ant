@@ -8,7 +8,16 @@ local filesystem = {
 	file = {
 		loadfile = winfile.loadfile or _G.loadfile,
 		dofile = winfile.dofile or _G.dofile,
-		open = enable_pack and packfile_open or winfile.open,
+		open = function (...)
+			if packfile_open then
+				if enable_pack_framework == nil or enable_pack_framework() then
+					return packfile_open(...)
+				end
+			end
+		
+			return winfile.open(...)
+		end
+		,
 	},
 	mem = {
 		loadfile = function(filename, ...)

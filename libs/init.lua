@@ -12,7 +12,15 @@ local function check_enable_pack()
 	return env_ENABLE_PACK == "ON"
 end
 
-enable_pack = check_enable_pack()
+local enable_pack = check_enable_pack()
+
+function enable_pack_framework(state)
+	if state then
+		enable_pack = state
+	end
+
+	return enable_pack
+end
 
 package.cpath = root .. "/" .. local_binpath .. "/?.dll;" .. 
                 root .. "/bin/?.dll"
