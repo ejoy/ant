@@ -22,7 +22,7 @@ ecs.component "relative_srt" {
 }
 
 ecs.component "frustum" {
-    isortho = false,
+    type = "proj",	--"ortho"
     n = 0.1,
     f = 10000,
     l = -1,
