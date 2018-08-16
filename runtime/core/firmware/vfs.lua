@@ -1,4 +1,4 @@
-local lfs = require "lfs"
+local lfs = require "winfile"
 
 local vfs = {} ; vfs.__index = vfs
 
@@ -87,27 +87,30 @@ local function open_from_repo(self, path)
 	if not ok then
 		return nil, hash
 	end
-	local f = io.open(self.dpath .. hash:sub(1,2) .. "/" .. hash, "rb")
+
+    local f_n = self.dpath .. hash:sub(1,2) .. "/" .. hash
+	local f = io.open(f_n, "rb")
 	if f then
-		return f
+		return f, nil, f_n
 	end
 	return nil, hash
 end
 
 function vfs:open(path)
-	local f, hash = open_from_repo(self, path)
+	local f, hash, f_n = open_from_repo(self, path)
 	if f then
-		return f
+		return f, nil, f_n
 	end
 	local fpath = path:match("^%.firmware/(.+)")
 	if fpath then
-		return io.open(self.fpath .. fpath, "rb"), hash
+		return io.open(self.fpath .. fpath, "rb"), hash, self.fpath .. fpath
 	end
 
 	return nil, hash
 end
 
-function vfs:write(hash, content)
+function vfs:write(hash, content, mode)
+    mode = mode or "wb"
 	local path = self.dpath .. hash:sub(1,2)
 	local m = lfs.attributes(path, "mode")
 	if m then

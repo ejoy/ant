@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1176E61721241A5800D595F3 /* vfsrepo.lua in Resources */ = {isa = PBXBuildFile; fileRef = 1176E61621241A5800D595F3 /* vfsrepo.lua */; };
+		1176E62F2124289C00D595F3 /* firmware in Resources */ = {isa = PBXBuildFile; fileRef = 1176E62E2124289B00D595F3 /* firmware */; };
 		11861CF82122B41F00535285 /* preload.m in Sources */ = {isa = PBXBuildFile; fileRef = 11861CF72122B41F00535285 /* preload.m */; };
 		118F3462211BE1BA0092C262 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 118F3461211BE1BA0092C262 /* AppDelegate.m */; };
 		118F3465211BE1BA0092C262 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 118F3464211BE1BA0092C262 /* ViewController.m */; };
@@ -47,6 +49,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1176E61621241A5800D595F3 /* vfsrepo.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = vfsrepo.lua; path = ../../../libs/vfsrepo/vfsrepo.lua; sourceTree = "<group>"; };
+		1176E62E2124289B00D595F3 /* firmware */ = {isa = PBXFileReference; lastKnownFileType = folder; name = firmware; path = ../../core/firmware; sourceTree = "<group>"; };
 		11861CF72122B41F00535285 /* preload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = preload.m; sourceTree = "<group>"; };
 		118F345D211BE1BA0092C262 /* ant_ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ant_ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		118F3460211BE1BA0092C262 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -134,6 +138,8 @@
 		118F3454211BE1B90092C262 = {
 			isa = PBXGroup;
 			children = (
+				1176E62E2124289B00D595F3 /* firmware */,
+				1176E61621241A5800D595F3 /* vfsrepo.lua */,
 				118F34B0211C16FB0092C262 /* fw */,
 				118F345F211BE1BA0092C262 /* ant_ios */,
 				118F345E211BE1BA0092C262 /* Products */,
@@ -264,7 +270,9 @@
 				118F346D211BE1C00092C262 /* LaunchScreen.storyboard in Resources */,
 				118F346A211BE1C00092C262 /* Assets.xcassets in Resources */,
 				118F3468211BE1BA0092C262 /* Main.storyboard in Resources */,
+				1176E62F2124289C00D595F3 /* firmware in Resources */,
 				118F34B1211C16FB0092C262 /* fw in Resources */,
+				1176E61721241A5800D595F3 /* vfsrepo.lua in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

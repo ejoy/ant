@@ -50,10 +50,11 @@ end
 --pull a file from server to client, maybe invisible to client in the future
 fileserver.MAX_PACKAGE_SIZE = 62*1024    --62k
 
-function fileserver.GET(req)
+function fileserver.GET(req, self)
     --req[1] is the command "GET"
     --req[2] is the file path
-    --req[3] is the hash value, nil if client has no local cache
+    --req[3] is the hash
+
     local project_dir = req.project_dir
 	local file_path = req[2]
 	if not file_path then
@@ -61,67 +62,48 @@ function fileserver.GET(req)
         return {"ERROR", "GET", "path not found"}
 	end
 
-    local client_hash = req[3]
-    --print("client hash:", client_hash)
-
-    local server_hash = fileprocess.GetFileHash(file_path)
-    local absolute_path = file_path
-    if not server_hash then
-        --try under project_dir
-        absolute_path =  CalculateAbsolutePath(project_dir, file_path)
-        print("try this path", absolute_path)
-        server_hash = fileprocess.GetFileHash(absolute_path)
+    local file = io.open(file_path, "rb")
+    if not file then
+        file = io.open(CalculateAbsolutePath(project_dir, file_path), "rb")
     end
-    --still can't find it, return
-    if not server_hash then
-        print("File not exist on server")
-
+    if not file then
         return {"EXIST_CHECK", "not exist"}
     end
 
     --print("server_hash", server_hash)
-    if server_hash == client_hash then
-        print("server hash", server_hash)
-        print("client hash", client_hash)
-        --no need to send file
-        print("file "..file_path.." is up to date")
-    --    return --ignore it
-    end
-
-	local file = io.open(absolute_path, "rb")
-	if not file then
-        return {"EXIST_CHECK", "not exist"}
-	end
-
 	local file_size = fileprocess.GetFileSize(file)
 
 	print("Pulling file", file_path, "filesize", file_size)
-
     --local client_path = string.gsub(file_path, "ServerFiles", "ClientFiles")
     print("client file dir: ", file_path)
 
+    local hash = req[3]
     if file_size < fileserver.MAX_PACKAGE_SIZE  then
         --if file is small enough to fit in one package, just return the file data
         --and the "FILE" command
         io.input(file)
         local file_data = io.read(file_size)
         io.close(file)
-        return {"FILE", file_path, server_hash, file_size.."/"..file_size, file_data}
+        return {"FILE", file_path, hash, file_size.."/"..file_size, file_data}
     else
         --otherwise, return a cmd tell the server to send multiple packages
-        return {"MULTI_PACKAGE", file_path, file_path, file_size, server_hash}
+        return {"MULTI_PACKAGE", file_path, file_path, hash, file_size}
     end
 end
 
-function fileserver.EXIST(req)
+function fileserver.EXIST(req, self)
     --req[1] is the command "EXIST"
-    --req[2] is the file path
-    --req[3] is the hash value of the client
+    --req[2] is the hash value of the file
 
-    --if client does not have the file(no hash) and found the file on server, return exist
-    --if client have the file and is the same as the file on server, return exist
-    --if server does not have the file, return not exist
-    --if server has the file but the hash is not the same, return diff hash
+    local hash = req[2]
+    local real_path = self.vfs_repo:load(hash)
+    if real_path then
+        return {"EXIST_CHECK", real_path}
+    else
+        return {"EXIST_CHECK", "not exist"}
+    end
+
+    --[[
     local file_path = req[2]
     if not file_path then
         return {"ERROR", "EXIST", "No file path found! Must input a file path"}
@@ -153,8 +135,8 @@ function fileserver.EXIST(req)
         print("hash check fail")
         print(server_hash, req[3], file_path)
         return {"EXIST_CHECK", "diff hash"}
-
     end
+    --]]
 end
 
 --this is the log client sends back
@@ -267,14 +249,12 @@ function fileserver.REQUIRE(req)
 end
 
 --get client sent screenshot
-function fileserver.SCREENSHOT(req)
+function fileserver.SCREENSHOT(req, self)
     return req
 end
 
-function fileserver.COMPILE_SHADER(req)
+function fileserver.REQUEST_ROOT(req, self)
+    print("request root")
     return req
-    --print("shader compile request")
-    -- req[1] is COMPILE_SHADER
-    -- req[2] is shader path
 end
 return fileserver

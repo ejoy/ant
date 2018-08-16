@@ -133,7 +133,6 @@ end
 
 function io:Send(id, data)
     print("send package to: " .. tostring(id))
-    print("data ",data[1], data[2])
     local pkg = pack.pack(data)
 
     if IsUdid(id) then
@@ -173,6 +172,7 @@ function io:Get(id)
                 for _, data_pkg in ipairs(self.recv[id]) do
                     local unpack_table = pack.unpack(data_pkg)
                     for _, unpack_pkg in ipairs(unpack_table) do
+                        --print("get pkg", unpack_pkg)
                         table.insert(pkg, pack.unpack(unpack_pkg))
                     end
                 end
@@ -271,11 +271,11 @@ function io:Update(timeout)
                             off = idx
 
                             local unpack_str = pack.unpack(str)
-                            print("unpack str", unpack_str)
+                            print("unpack str", #unpack_str)
                             for kk, vv in pairs(unpack_str)  do
                                 print(kk, vv)
                             end
-                            table.insert(self.recv[fd], pack.unpack(str))
+                            table.insert(self.recv[fd], unpack_str)
                         else
                             break
                         end

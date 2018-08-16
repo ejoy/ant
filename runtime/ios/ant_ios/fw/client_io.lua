@@ -2,12 +2,11 @@ local require = import and import(...) or require
 local log = log and log(...) or print
 
 local crypt = require "crypt"
-local lsocket = require "lsocket"
 
 local pack = require "pack"
 local fileprocess = require "fileprocess"
+
 local client = {}; client.__index = client
-local filesystem = require "winfile"
 
 --the dir hold the files
 local sand_box_path = ""
@@ -20,10 +19,6 @@ local current_reading = ""
 
 local _linda = nil
 
---TODO this is not the same as file_mgr in clientwindow.lua
---they are in two different threads
-local filemanager = require "filemanager"
-local file_mgr = filemanager.new()
 ---------------------------------------------------
 local clientcommand = {}
 --cmd while recieving data from server
@@ -31,7 +26,7 @@ local clientcommand = {}
 --one will store as file
 --one will store in the memory
 --the data stored in the memory will have record in mem_file_status
-function clientcommand.FILE(resp)
+function clientcommand.FILE(resp, self)
     --resp[1] is cmd name "FILE"
     --resp[2] is the file path in client
     --resp[3] is the file hash value
@@ -46,58 +41,35 @@ function clientcommand.FILE(resp)
     local file_path = resp[2]
 
     if not mem_file_status[file_path] then
-
         --store in file
-        local hash = resp[3]
         --file dose not exist on server
+        local hash = resp[3]
+
+        print("write file", file_path, hash)
         if not hash then
             --TODO: handle this situation
+            print("error: server hash not founc")
             return
         end
-        --use temp name
-        --local temp_path_hash = "temp-" .. file_path
 
-        local folder = sand_box_path ..string.sub(hash, 1,3)
-
-        local real_path = folder .. "/" ..hash
-        print("received", resp[1],resp[2],resp[4])
-        print("--", folder)
         --print("package info", resp[1], resp[2],resp[4], resp[5])
         --if is the first package, will delete the origin file
         --if is other package, will add to the existing file
         --TODO: consider if the order is not correct
-        local file  = nil
-
         if offset <= fileprocess.MAX_CALC_CHUNK then
-            filesystem.mkdir(folder)
-            --file = io.open(temp_path_hash, "wb")
-            file = io.open(real_path, "wb")
-            print("create new file", real_path)
+            self.vfs:write(hash, resp[5])
         else
-            --file = io.open(temp_path_hash, "ab")
-            --print("write to file", temp_path_hash)
-            file = io.open(real_path, "ab")
-            print("write to file", real_path)
+            self.vfs:write(hash, resp[5], "ab")
         end
-
-        if file == nil then
-            print("create file error", real_path)
-            return
-        end
-
-        --output to client file directory
-        io.output(file)
-        io.write(resp[5])   --write the data into the client file
-        print("write data length "..tostring(#resp[5]))
-        io.close(file)
-
 
         if offset >= total_pack then
             --TODO version management/control
             --the file is complete, inform out side
-            _linda:send("new file", {hash, file_path})
-            file_mgr:AddFileRecord(hash, file_path)
+            print("get new file: "..file_path)
+            _linda:send("new file", file_path)
         end
+
+        print("write file", file_path, hash)
     else
 
         --store in mem
@@ -118,14 +90,14 @@ end
 
 --handle error
 --for now just print the error message
-function clientcommand.ERROR(resp)
+function clientcommand.ERROR(resp, self)
     for k, v in pairs(resp) do
         print(k, v)
     end
     _linda:send("mem_data", "ERROR")
 end
 
-function clientcommand.EXIST_CHECK(resp)
+function clientcommand.EXIST_CHECK(resp, self)
     assert(resp[1] == "EXIST_CHECK", "COMMAND: "..resp[1].." invalid, shoule be EXIST_CHECK")
     local result = resp[2]
     print("get exist check result: "..tostring(result))
@@ -133,18 +105,18 @@ function clientcommand.EXIST_CHECK(resp)
     _linda:send("file exist", result)
 end
 
-function clientcommand.DIR(resp)
+function clientcommand.DIR(resp, self)
 
     print(resp[1], resp[2], resp[3], resp[4])
 
 end
 
-function clientcommand.RUN(resp)
+function clientcommand.RUN(resp, self)
     _linda:send("log", {"Bgfx", "get run command", resp[1], resp[2]})
     _linda:send("run", resp[2])
 end
 
-function clientcommand.SCREENSHOT(resp)
+function clientcommand.SCREENSHOT(resp, self)
     print("get screenshot command")
 
     --resp[1] is "SCREENSHOT"
@@ -154,9 +126,6 @@ function clientcommand.SCREENSHOT(resp)
     _linda:send("screenshot_req", resp)
 end
 
-function clientcommand.COMPILE_SHADER(resp)
-    _linda:send("shader_compiled", resp)
-end
 ---------------------------------------------------
 
 local receive_cmd = {}
@@ -173,8 +142,7 @@ end
 
 local iosys = require "iosys"
 
-function client.new(address, port, init_linda, sb_dir)
-    --local fd = lsocket.connect(address, port)
+function client.new(address, port, init_linda, pkg_dir, sb_dir)
     --connection started from here
     print("listen to address", address,"port", port)
     local io_ins = iosys.new()
@@ -184,11 +152,12 @@ function client.new(address, port, init_linda, sb_dir)
     _linda = init_linda
     sand_box_path = sb_dir .. "/Documents/"
 
-    file_mgr:ReadDirStructure(sb_dir.."/Documents/dir.txt")
-    file_mgr:ReadFilePathData(sb_dir.."/Documents/file.txt")
-
+    print("init client repo")
+    local vfs = require "firmware.vfs"
+    local client_repo = vfs.new(pkg_dir .. "/fw", sb_dir.."/Documents")
+    --create vfs
     --return setmetatable( { host = fd, fds = {fd}, sending = {}, resp = {}, reading = ""}, client)
-    return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}}, client)
+    return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, vfs = client_repo}, client)
 end
 
 function client:register_command(cmd, func)
@@ -200,22 +169,7 @@ function client:send(...)
     local client_req = { ...}
 
     local cmd = client_req[1]
-    if cmd == "GET" or cmd == "EXIST" then
-        --check if we have local copy
-        local file_path = client_req[2]
-
-        --        print("file path", file_path)
-        print("check real path: "..file_path)
-        file_path = file_mgr:GetRealPath(file_path)
-        print("get real path ".. tostring(file_path))
-        --client does have it
-        if file_path then
-            file_path = sand_box_path ..file_path
-            print("real path", file_path)
-            local hash = fileprocess.CalculateHash(file_path)
-            client_req[3] = hash
-        end
-    elseif cmd == "REQUIRE" then
+    if cmd == "REQUIRE" then
         --TODO add hash check?
         --cmd for server should be the same
         --however, the client may handle differently
@@ -239,7 +193,7 @@ function client:CollectRequest()
     local count = 0
     --this if for client request
     while true do
-        local key, value = _linda:receive(0.001, "request", "log", "screenshot")
+        local key, value = _linda:receive(0.001, "request", "log", "screenshot", "vfs_open")
         if key == "request" then
             --calculate sha1 value of the request
             --if the request is already exist, ignore the latter ones
@@ -284,6 +238,13 @@ function client:CollectRequest()
                     self.io:Send(self.current_connect, {"SCREENSHOT", name, size, offset, pack_str})
                 end
             end
+        elseif key == "vfs_open" then
+            print("try open: ", value)
+            local file, hash, f_n = self.vfs:open(value)
+            print("vfs open res:", file, hash, f_n)
+            if file then file:close() end
+            --FILE can't send through linda
+            self.linda:send("vfs_open_res", {f_n, hash})
         else
             break
         end
@@ -297,6 +258,10 @@ function client:mainloop(timeout)
     if n_connect and #n_connect > 0 then
         for _, v in ipairs(n_connect) do
             self.connect[v] = true
+
+            --auto request root
+            print("request root: " .. v)
+            self.io:Send(v, {"REQUEST_ROOT"})
 
             if not self.current_connect then
                 self.current_connect = v    -- default send to this id
@@ -351,12 +316,16 @@ function client:mainloop(timeout)
         --process request
         for _, recv in ipairs(recv_package) do
             local cmd = recv[1]
-            local func = receive_cmd[cmd]
-            if not func then
-                print("unknown command", cmd)
-            end
+            if cmd == "SERVER_ROOT" then
+                self.vfs:changeroot(recv[2])
+            else
+                local func = receive_cmd[cmd]
+                if not func then
+                    print("unknown command", cmd)
+                end
 
-            func(recv)
+                func(recv, self)
+            end
         end
     end
 

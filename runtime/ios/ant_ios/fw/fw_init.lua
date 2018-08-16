@@ -4,11 +4,11 @@ f_table = cfuncs()
 
 f_table.preloadc()
 
-package.path = package.path .. ";" .. app_dir .. "/?.lua"
+package.path = package.path .. ";" .. app_dir .. "/fw/?.lua;" .. app_dir .. "/?.lua;"
 package.path = "../Common/?.lua;./?.lua;../?/?.lua;../?.lua;" .. package.path  --path for the app
 --TODO: find a way to set this
 --path for the remote script
-package.remote_search_path = "../?.lua;?.lua;../?/?.lua;asset/?.lua;?/?.lua;ecs/?.lua;imputmgr/?.lua"
+package.remote_search_path = "../?.lua;./?.lua;../?/?.lua;asset/?.lua;?/?.lua;ecs/?.lua;imputmgr/?.lua"
 lanes = require "lanes"
 if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
 linda = lanes.linda()
@@ -19,6 +19,7 @@ linda = lanes.linda()
 --"Device" for deivce msg
 --project entrance
 entrance = nil
+client_repo = false   -- vfs repo
 local origin_print = print
 function sendlog(cat, ...)
     linda:send("log", {cat, ...})
@@ -55,9 +56,6 @@ function compile_shader(srcpath, outfile)
     return true
 end
 
-filemanager = require "filemanager"
-file_mgr = filemanager.new()
-
 winfile = require "winfile"
 lodepng = require "lodepnglua"
 
@@ -66,72 +64,75 @@ package_dir = nil
 g_WindowHandle = nil
 g_Width, g_Height = 0
 
---overwrite the old io.open function, give it the ability to search resources from server
-
 local origin_open = io.open
-
 io.open = function (filename, mode, search_local_only)
     --default we don't search local only
     search_local_only = search_local_only or false
 
-    local file = origin_open(filename, mode)
-
+    --vfs not initialized, can only use origin function
+    if not client_repo then
+        return origin_open(filename, mode)
+    end
     --file may be in the bundle
     --for now don't cache lua files
-    if not file then
-        print("searching file in bundle: "..filename)
-        --find out if it exist locally
-        local local_path = file_mgr:GetRealPath(filename)
-        if local_path then
-            --check exist, mainly for camparing hash
-            local file_exist = winfile.exist(filename)
-            if file_exist then
-                print("bundle real path for: "..filename.." is "..local_path)
-                local_path = sand_box_dir .. "/Documents/" ..local_path
-                file = origin_open(local_path, mode)
-
-                return file
+    print("opening file: ", filename)
+    while true do
+        linda:send("vfs_open", filename)
+        --vfs:open()
+        local file_path, hash
+        while true do
+            local key, val = linda:receive(0.001, "vfs_open_res")
+            if val then
+                print("get waiting result")
+                file_path, hash = val[1], val[2]
+                break
             end
         end
-    end
 
-    --file may be in the remote server
-    if not file and not search_local_only then
-        print("searching file in server: "..filename)
-        --search online
-        local request = {"GET", filename}
+        if file_path then
+            print("get file: " .. file_path, filename)
+            return origin_open(file_path, mode)
+        end
+
+        print("hash is: " ..tostring(hash))
+        assert(hash, "vfs system error: no file and no hash: " .. filename)
+
+        print("Try to request hash from server", filename, hash)
+        local request = {"EXIST", hash}
         linda:send("request", request)
 
-        --TODO file not exist
-        --wait here
-        while true do
-            local _, value = linda:receive(0.001, "new file")
-            if value then
-                print("received msg", filename)
-
-                --put into the id_table and file_table
-                file_mgr:AddFileRecord(value[1], value[2])
-                print("add file recode: "..value[1] .. " and "..value[2])
-                file_mgr:WriteDirStructure(sand_box_dir.."/Documents/dir.txt")
-                file_mgr:WriteFilePathData(sand_box_dir.."/Documents/file.txt")
-
-                print("file name", filename)
-                local real_path = file_mgr:GetRealPath(value[2])
-                real_path = sand_box_dir .. "/Documents/" .. real_path
-                file = origin_open(real_path, mode)
-
-                print("server real file path: "..real_path)
-                return file
+        local realpath
+        while not realpath do
+            local _, value = linda:receive(0.001, "file exist")
+            if value == "not exist" then
+                --not such file on server
+                print("error: file "..filename.." can't be found")
+                return nil
+            else
+                realpath = value
             end
         end
-    else
-        print("use origin open: "..filename)
-        return file
+
+        --value is the real path
+        request = {"GET", realpath, hash}
+        linda:send("request", request)
+        -- get file
+        while true do
+            local _, file_value = linda:receive(0.001, "new file")
+            if file_value then
+                --file_value should be local address
+                --client_repo:write should be called in io thread
+                print("get new file: " .. realpath)
+                break
+            end
+        end
+
     end
 end
 
 local origin_loadfile = loadfile
 loadfile = function(file_path)
+    --[[
     local file = origin_loadfile(file_path)
     if file then
         return file
@@ -147,6 +148,7 @@ loadfile = function(file_path)
         print("require file error: "..name)
         return nil
     end
+    --]]
 end
 
 local function remote_searcher (name)
@@ -168,10 +170,10 @@ table.insert(package.searchers, remote_searcher)
 local lsocket = require "lsocket"
 lanes.register("lsocket", lsocket)
 
-function CreateIOThread(linda, sb_dir)
+function CreateIOThread(linda, pkg_dir, sb_dir)
 
     local client_io = require "client_io"
-    local c = client_io.new("127.0.0.1", 8888, linda, sb_dir)
+    local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir)
 
     origin_print("create io")
     while true do
@@ -180,38 +182,27 @@ function CreateIOThread(linda, sb_dir)
 end
 
 function run(path)
-    print("run file"..path)
+    print("run file: "..path)
     if entrance then
         entrance.terminate()
         entrance = nil
     end
 
+    local file = io.open(path, "rb")
+    print("open file: "..path)
+    io.input(file)
+    local entrance_string = file:read("a")
+    print("entrance string: ", entrance_string)
+    file:close()
 
-    if winfile.exist(path, true) then
-        local real_path = file_mgr:GetRealPath(path)
-        if real_path then
-            real_path = sand_box_dir .."/Documents/" .. real_path
+    local res = false
+    res, entrance =  pcall(load(entrance_string))
 
-            entrance = dofile(real_path)
-            --must have this function and these variables for init
-            entrance.init(g_WindowHandle, g_Width, g_Height, package_dir, sand_box_dir)
-        else
-            --not in local, need require from distance
-            --get file name
-            local reverse_path = string.reverse(path)
-            local slash_pos = string.find(reverse_path, "/")
-            if slash_pos then
-                reverse_path = string.sub(reverse_path, 1, slash_pos - 1)
-            end
-            reverse_path = string.reverse(reverse_path)
-            --get rid of .lua
-            reverse_path = string.sub(reverse_path, 1, -5)
-
-            entrance = require(reverse_path)
-            if entrance then
-                entrance.init(g_WindowHandle, g_Width, g_Height, package_dir, sand)
-            end
-        end
+    if res then
+        entrance.init(g_WindowHandle, g_Width, g_Height)
+    else
+        print("entrance script error")
+        entrance = nil
     end
 end
 
@@ -219,16 +210,8 @@ local bgfx = require "bgfx"
 local screenshot_cache_num = 0
 function HandleMsg()
     while true do
-        local key, value = linda:receive(0.001, "new file", "run", "screenshot_req")
-        if key == "new file" then
-            --print("received msg", value)
-            --put into the id_table and file_table
-            file_mgr:AddFileRecord(value[1], value[2])
-
-            file_mgr:WriteDirStructure(sand_box_dir.."/Documents/dir.txt")
-            file_mgr:WriteFilePathData(sand_box_dir.."/Documents/file.txt")
-
-        elseif key == "run" then
+        local key, value = linda:receive(0.001, "run", "screenshot_req")
+        if key == "run" then
             run(value)
         elseif key == "screenshot_req" then
             if entrance then

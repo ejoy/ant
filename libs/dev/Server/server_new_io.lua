@@ -37,8 +37,8 @@ function server:HandlePackage(response_pkg, id, self)
     if cmd_type == "MULTI_PACKAGE" then
         local file_path = response_pkg[2]
         local client_path = response_pkg[3]
-        local file_size = response_pkg[4]
-        local hash = response_pkg[5]
+        local hash = response_pkg[4]
+        local file_size = response_pkg[5]
         local offset = response_pkg[6]
         if not offset then
             offset = 0
@@ -83,7 +83,6 @@ function server:HandlePackage(response_pkg, id, self)
             if offset >= file_size then
                 break
             end
-
         end
 
         response_pkg[6] = offset
@@ -100,7 +99,7 @@ function server:HandlePackage(response_pkg, id, self)
             cmd_type == "RUN" or
             cmd_type == "ERROR" or
             cmd_type == "SCREENSHOT" or
-            cmd_type == "COMPILE_SHADER" then
+            cmd_type == "SERVER_ROOT" then
 
         print("send command", cmd_type, response_pkg[2])
         self.io:Send(id, response_pkg)
@@ -183,21 +182,25 @@ end
 
 --------------------------------------------------------------
 function server.new(address, port, init_linda)
-    local io_ins = iosys.new()
-    print("new server")
-    local id = tostring(address) .. ":" .. tostring(port)
-    print("new server")
-    assert(io_ins:Connect(id), "connect to: " .. id .. " failed")
-    print("new server")
 
-    return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, log = {}}, server)
-    --local fd = assert(lsocket.connect(address, port))
-    --local fd_name = address .. ":" .. port
-    --print("fd", fd_name)
-    --socket_table[fd_name] = fd
-    --local new_client = {ip = config.address, port = config.port, reading = ""}
-    --local var_table = {ids = {fd_name}, clients = {[fd_name] = new_client}, request = {} ,resp = {}, log = {}, linda = linda, address = config.address, port = config.port}
-    --return setmetatable(var_table, server)
+    winfile = require"winfile"
+
+    winfile.exist = function(path)
+        if winfile.attributes(path) then
+            return true
+        else
+            return false
+        end
+    end
+    local io_ins = iosys.new()
+    local id = tostring(address) .. ":" .. tostring(port)
+    assert(io_ins:Connect(id), "connect to: " .. id .. " failed")
+
+    local vfsrepo = require "vfsrepo"
+    local server_repo = vfsrepo.new()
+    server_repo:init("/Users/ejoy/Desktop/Engine/ant/assets/build/meshes")
+
+    return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, log = {}, vfs_repo = server_repo}, server)
 end
 
 function server:kick_client(client_id)
@@ -225,7 +228,7 @@ local function response(self, req, id)
     if not func then
         self:kick_client(id)  --kick
     else
-        local resp = { func(req) }
+        local resp = { func(req, self) }
         --handle the resp
         --collect command
         if resp then
@@ -250,39 +253,11 @@ local function response(self, req, id)
                         self.linda:send("response", {"SCREENSHOT", screenshot_cache})
                     end
                     --]]
-                elseif a_cmd[1] == "COMPILE_SHADER" then
-                    local toolset = require "editor.toolset"
-                    local path = require "filesystem.path"
-                    local fs = require "filesystem"
-
-                    local shader_path = req[2]
-
-                    local config = toolset.load_config()
-
-                    if next(config) == nil then
-                        print("load_config file failed, 'bin/iup.exe tools/config.lua' need to run first")
-                        assert(false)
-                    end
-
-                    local cwd = fs.currentdir()
-
-                    config.includes = {config.shaderinc, path.join(cwd, "assets/shaders/src") }
-
-                    local outfile = string.gsub(shader_path, "src/", "essl/")
-                    outfile = string.gsub(outfile, ".sc", ".bin")
-                    config.dest = outfile
-
-                    local success, msg = toolset.compile(shader_path, config, "ios")
-
-                    print("compile msg", success, msg)
-
-                    if not success then
-                        print(string.format("try compile from file %s, but failed, error message : \n%s", shader_path, msg))
-                        return nil
-                    end
-                    local command_package = {a_cmd, id}
+                elseif a_cmd[1] == "REQUEST_ROOT" then
+                    local server_root = self.vfs_repo:root_hash()
+                    local command_package = {{"SERVER_ROOT", server_root}, id}
+                    print("return root: ", server_root)
                     table.insert(command_cache, command_package)
-                    --]]
                 else
                     local command_package = {a_cmd, id}
                     table.insert(command_cache, command_package)
@@ -312,10 +287,7 @@ function server:CheckNewDevice()
                 self.connect[udid] = true
                 print("connect to ".. udid .." successful")
 
-                print("new connectiont yead")
                 connected_devices[udid] = true --means device "v" is connected now
-
-                print("new connectiont yead")
                 table.insert(self.log, "connect to "..udid)
             end
         else
@@ -360,7 +332,6 @@ function server:mainloop(timeout)
             local request_package = self.io:Get(k)
             --process request
             for _, req in ipairs(request_package) do
-                print(pcall(response, self, req, k))
                 response(self, req, k)
             end
         end

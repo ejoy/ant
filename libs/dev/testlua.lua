@@ -283,11 +283,11 @@ function testlua.mainloop()
     bgfx.frame()
 end
 
-function testlua.init(width, height, ...)
+function testlua.init(window_handle, width, height, ...)
     ctx.width = width
     ctx.height = height
 
-    --[[
+    ---[[
     bgfx.set_platform_data({nwh = window_handle})
     bgfx.init()
 
@@ -302,12 +302,11 @@ function testlua.init(width, height, ...)
     init_flag = true
 
     local bgfx_cb = bgfx.bgfx_cb
-    print("yoyoyo, bgfx_cb", bgfx_cb)
     --]]
 end
 
 function testlua.terminate()
-    --[[
+    ---[[
     if init_flag then
         bgfx.shutdown()
     end

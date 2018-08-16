@@ -15,6 +15,8 @@ function log(name)
 	end
 end
 
+
+
 local resp_table = {}
 local function HandleMessage()
     while true do
@@ -38,7 +40,6 @@ local function HandleMessage()
 end
 
 local function CreateServerThread(address, port, linda)
-
     local server_io = require "server_new_io"
     local s = server_io.new(address, port, linda)
     while true do
@@ -66,11 +67,15 @@ function server_ins.GetNewDeviceInfo()
     return new_devices
 end
 
+--server_repo = nil
 
 function server_ins:init(address, port)
     --self.s = server.new{address = address, port = port}
-    print("init server")
-    local server_io = lanes.gen("*", {package = {path = package.path, cpath = package.cpath, preload = package.preload}}, CreateServerThread)(address, port, linda)
+
+    local server_io, err = lanes.gen("*", {globals = {PLATFORM = PLATFORM}}, CreateServerThread)(address, port, linda)
+    if not server_io then
+        print("server_io error: "..tostring(err))
+    end
 end
 
 function server_ins:update()
