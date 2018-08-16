@@ -24,5 +24,6 @@ assets/assetfiles
 assets/shaders/dx11
 assets/shaders/glsl
 assets/meshes
+assets/hierarchy
 file.txt
 dir.txt
