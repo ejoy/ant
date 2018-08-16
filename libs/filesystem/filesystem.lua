@@ -8,7 +8,7 @@ local filesystem = {
 	file = {
 		loadfile = winfile.loadfile or _G.loadfile,
 		dofile = winfile.dofile or _G.dofile,
-		open = packfile_open,
+		open = enable_pack and packfile_open or winfile.open,
 	},
 	mem = {
 		loadfile = function(filename, ...)
