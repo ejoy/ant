@@ -8,15 +8,10 @@ local mu = require "math.util"
 local asset = require "asset"
 local cu = require "common.util"
 
+local math_baselib = require "math3d.baselib"
+
 local pickup_fb_viewid = 2
 local pickup_blit_viewid = pickup_fb_viewid + 1
-
--- pickup component
-ecs.component "pickup"{}
-
--- pickup helper
-local pickup = {} 
-pickup.__index = pickup
 
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,
@@ -34,7 +29,7 @@ local function unpackrgba_to_eid(rgba)
     return r + g + b + a
 end
 
-function pickup:init_material()
+local function init_pickup_materials()
 	local mname = "pickup.material"
 	local normal_material = asset.load(mname) 
 	normal_material.name = mname
@@ -47,20 +42,13 @@ function pickup:init_material()
 	state.WRITE_MASK = "RGBA"
 	state.DEPTH_TEST = "ALWAYS"
 
-	self.materials = {
+	return {
 		opaticy = normal_material,
 		transparent = transparent_material,
-	}    
+	}
 end
 
-local function bind_frame_buffer(e)
-    local comp = e.pickup    
-    local vid = e.viewid.id
-    bgfx.set_view_frame_buffer(vid, assert(comp.pick_fb))
-end
-
-function pickup:init(pickup_entity)
-    self:init_material()
+local function init_pickup_buffer(pickup_entity)
     local comp = pickup_entity.pickup
     --[@ init hardware resource
     local vr = pickup_entity.view_rect
@@ -72,47 +60,16 @@ function pickup:init(pickup_entity)
     comp.rb_buffer = bgfx.create_texture2d(w, h, false, 1, "RGBA8", "bwbr-p+p*pucvc")
     --@]
 
-    bind_frame_buffer(pickup_entity)
+	bgfx.set_view_frame_buffer(pickup_entity.viewid.id, assert(comp.pick_fb))
 end
 
-function pickup:render_to_pickup_buffer(pickup_entity, select_filter)
-	local ms = self.ms
-	
-	local results = {
-		{result=select_filter.result, mode = '', material = self.materials.opaticy},
-		{result=select_filter.transparent_result, mode = 'D', material = self.materials.transparent},
-	}
-
-	local vid = pickup_entity.viewid.id
-
-	for _, r in ipairs(results) do
-		bgfx.set_view_mode(vid, r.mode)
-		for _, prim in ipairs(r.result) do
-			local pick_prim = {}
-			for k, v in pairs(prim) do
-				pick_prim[k] = v
-			end
-
-			pick_prim.material = r.material
-			pick_prim.properties = {
-				u_id = {type="color", value=packeid_as_rgba(assert(prim.eid))}
-			}
-			
-			local srt = pick_prim.srt
-			local mat = ms({type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
-			ru.draw_primitive(vid, pick_prim, mat)
-		end
-	end
-end
-
-function pickup:readback_render_data(pickup_entity)    
+local function readback_render_data(pickup_entity)
     local comp = pickup_entity.pickup    
-    bgfx.blit(pickup_blit_viewid, assert(comp.rb_buffer), 0, 0, assert(comp.pick_buffer))
-    assert(self.reading_frame == nil)
+    bgfx.blit(pickup_blit_viewid, assert(comp.rb_buffer), 0, 0, assert(comp.pick_buffer))    
     return bgfx.read_texture(comp.rb_buffer, comp.blitdata)
 end
 
-function pickup:which_entity_hitted(pickup_entity)
+local function which_entity_hitted(pickup_entity)
     local comp = pickup_entity.pickup
     local vr = pickup_entity.view_rect
 	local w, h = vr.w, vr.h
@@ -133,165 +90,191 @@ function pickup:which_entity_hitted(pickup_entity)
 		end
 	end
 
-	-- dprint("pick buffer : ")
-	-- for ih=0, h - 1 do
-	-- 	local t = {}
-	-- 	for iw=1, w do
-	-- 		local idx = ih * w + iw
-	-- 		local rgba = comp.blitdata[idx]
-	-- 		local eid = unpackrgba_to_eid(rgba)
-	-- 		table.insert(t, eid)
-	-- 		table.insert(t, " ")
-	-- 	end
-	-- 	dprint(table.concat(t))
-	-- end
-	
     return found_eid
 end
 
-function pickup:pick(p_eid, current_frame_num, select_filter)
-    local pickup_entity = world[p_eid]
-    if self.reading_frame == nil then        
-		bind_frame_buffer(pickup_entity)
-		world:change_component(-1, "create_selection_filter")
-		world:notify()
-        self:render_to_pickup_buffer(pickup_entity, select_filter)
-        self.reading_frame = self:readback_render_data(pickup_entity)        
-    end
-
-    if self.reading_frame == current_frame_num then
-        local comp = pickup_entity.pickup
-        local eid = self:which_entity_hitted(pickup_entity)
-        if eid then
-            local name = assert(world[eid]).name.n
-            print("pick entity id : ", eid, ", name : ", name)
-        else
-            print("not found any eid")
-        end
-
-        comp.last_eid_hit = eid
-        world:change_component(p_eid, "pickup")
-        world.notify()
-        self.reading_frame = nil
-    end
-    self.is_picking = self.reading_frame ~= nil
-end
-
--- pickup view
-local pickup_view_sys = ecs.system "pickup_view"
-
-pickup_view_sys.singleton "math_stack"
-pickup_view_sys.singleton "message_component"
-
-pickup_view_sys.depend "iup_message"
-pickup_view_sys.dependby "view_system"
-
-function pickup_view_sys:init()
-    --[@    for message callback
-    local msg = {}
-    function msg:button(b, p, x, y)        
-        if b == "LEFT" and p then
-            pickup.clickpt = point2d(x, y)
-        end
-    end
-    local observers = self.message_component.msg_observers
-    observers:add(msg)
-    --@]
-end
-
-local function get_main_camera_viewproj_mat(ms, maincamera)      
-    local proj = mu.proj(ms, assert(maincamera.frustum))
-    -- [pos, dir] ==> viewmat --> viewmat * projmat ==> viewprojmat
-    -- --> invert(viewprojmat) ==>invViewProjMat
-    local dir = ms(assert(maincamera.rotation).v, "dP")
-    return ms(assert(maincamera.position).v, dir, "L", proj, "*iP")
-end
-
-local function click_to_eye_and_dir(ms, ndcX, ndcY, invVP)    
-    local eye = ms({ndcX, ndcY, 0, 1}, invVP, "%P")
-    local at = ms({ndcX, ndcY, 1, 1}, invVP, "%P")
-    local dir = ms(at, eye, "-nP")
-    return eye, dir
-end
-
 local function update_viewinfo(ms, e, clickpt)    
-    local maincamera = world:first_entity("main_camera")  
-    local invVP = get_main_camera_viewproj_mat(ms, maincamera)
+	local maincamera = world:first_entity("main_camera")  
+	local mc_vr = maincamera.view_rect
+	local w, h = mc_vr.w, mc_vr.h
+	
+	local pos = ms(maincamera.position.v, "T")
+	local rot = ms(maincamera.rotation.v, "T")
+	local pt3d = math_baselib.screenpt_to_3d(
+		{
+			clickpt.x, clickpt.y, 0,
+			clickpt.x, clickpt.y, 1
+		}, maincamera.frustum, pos, rot, {w=w, h=h})
 
-    local mc_vr = maincamera.view_rect
+	local eye, at = {pt3d[1], pt3d[2], pt3d[3]}, {pt3d[4], pt3d[5], pt3d[6]}
+	local dir = ms(at, eye, "-nT")
 
-    local w, h = mc_vr.w, mc_vr.h
-    local ndcX =  (clickpt.x / w) * 2.0 - 1.0
-    local ndcY = ((h - clickpt.y) / h) * 2.0 - 1.0
+	ms(assert(e.position).v, eye, "=")
+	ms(assert(e.rotation).v, dir, "D=")
 
-    local ptWS, dirWS = click_to_eye_and_dir(ms, ndcX, ndcY, invVP)    
-    ms(assert(e.position).v, assert(ptWS),     "=")
-    ms(assert(e.rotation).v, dirWS, "D=")
 end
 
-function pickup_view_sys:update()
-    local clickpt = pickup.clickpt
-    if clickpt ~= nil then
-        local pu_entity = world:first_entity("pickup")        
-        update_viewinfo(self.math_stack, pu_entity, clickpt)
+-- update material system
+local pickup_material_sys = ecs.system "pickup_material_system"
 
-        pickup.is_picking = true
-        pickup.clickpt = nil
-    end
+pickup_material_sys.depend "transparency_filter_system"
+pickup_material_sys.dependby "entity_rendering"
+
+function pickup_material_sys:update()
+	for _, eid in world:each("pickup") do		
+		local e = world[eid]	
+		local filter = e.primitive_filter
+		if filter then
+			local materials = e.pickup.materials
+
+			for _, elem in ipairs{
+					{result=filter.result, material=materials.opaticy},
+					{result=filter.transparent_result, material=materials.transparent},
+				} do
+				for _, item in ipairs(elem.result) do
+					item.material = elem.material
+					item.properties = {
+						u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
+					}
+				end
+			end
+		end
+	end
 end
 
--- system
+local post_jobs = ecs.component "post_end_frame_jobs" {}
+function post_jobs:init()
+	self.jobs = {}
+end
+
+-- pickup_system
+ecs.component "pickup"{}
+
 local pickup_sys = ecs.system "pickup_system"
 
 pickup_sys.singleton "math_stack"
 pickup_sys.singleton "frame_stat"
-pickup_sys.singleton "select_filter"
+pickup_sys.singleton "message_component"
 
-pickup_sys.depend "pickup_view"
+pickup_sys.singleton "post_end_frame_jobs"
+
+pickup_sys.depend "transparency_filter_system"
+
 pickup_sys.dependby "end_frame"
 
+local function add_pick_entity(ms)
+	local eid = world:new_entity("pickup", 
+	"clear_component", 
+	"viewid", "primitive_filter",
+	"view_rect", 
+	"position", "rotation", 
+	"frustum", 
+	"name")        
+	local entity = assert(world[eid])
+	entity.viewid.id = pickup_fb_viewid
+	entity.name.n = "pickup"
+
+	local cc = entity.clear_component
+	cc.color = 0
+
+	local vr = entity.view_rect
+	vr.w = 8
+	vr.h = 8
+
+	local comp = entity.pickup
+	comp.blitdata = bgfx.memory_texture(vr.w*vr.h * 4)
+	comp.materials = init_pickup_materials()
+
+	init_pickup_buffer(entity)	
+
+	local frustum = entity.frustum
+	mu.frustum_from_fov(frustum, 0.1, 100, 1, vr.w / vr.h)
+
+	local pos = entity.position.v
+	local rot = entity.rotation.v
+	ms(pos, {0, 0, 0, 1}, "=")
+	ms(rot, {0, 0, 0, 0}, "=")
+
+	local filter = entity.primitive_filter
+	filter.no_lighting = true
+	filter.filter_select = true
+	
+	return eid
+end
+
+local post_end_frame = ecs.system "post_end_frame"
+post_end_frame.singleton "post_end_frame_jobs"
+
+post_end_frame.depend "end_frame"
+
+function post_end_frame:update()
+	local jobs = self.post_end_frame_jobs.jobs
+	for _, job in ipairs(jobs) do
+		job()
+	end
+	self.post_end_frame_jobs.jobs = {}
+end
+
 function pickup_sys:init()
-    local function add_pick_entity(ms)
-        local eid = world:new_entity("pickup", "viewid", 
-        "view_rect", "clear_component", 
-        "position", "rotation", 
-        "frustum", 
-        "name")        
-        local entity = assert(world[eid])
-        entity.viewid.id = pickup_fb_viewid
-        entity.name.n = "pickup"
+	local ms = self.math_stack	
+	local stat = self.frame_stat
+	local post_end_comp = self.post_end_frame_jobs
+	
+	self.message_component.msg_observers:add({
+		button = function (_, b, p, x, y)
+			if b == "LEFT" and p then
+				table.insert(post_end_comp.jobs, function ()
+					local pickup_eid = add_pick_entity(self.math_stack)
+					local entity = world[pickup_eid]
+					local pu_comp = entity.pickup
 
-        local cc = entity.clear_component
-        cc.color = 0
+					update_viewinfo(ms, entity, point2d(x, y))			
 
-        local vr = entity.view_rect
-        vr.w = 8
-        vr.h = 8
-    
-        local comp = entity.pickup
-        comp.blitdata = bgfx.memory_texture(vr.w*vr.h * 4)
+					if pu_comp.pickco == nil then
+						local pickco = coroutine.create(function ()
+							local reading_frame = readback_render_data(entity)
+							while stat.frame_num ~= reading_frame do
+								coroutine.yield()
+							end
+							
+							local eid = which_entity_hitted(entity)
+							if eid then
+								local name = assert(world[eid]).name.n
+								print("pick entity id : ", eid, ", name : ", name)
+							else
+								print("not found any eid")
+							end
+					
+							pu_comp.last_eid_hit = eid
+							world:change_component(pickup_eid, "pickup")
+							world.notify()
+						end)
+		
+						entity.pickup.pickco = pickco					
+					end
+				end)
 
-        local frustum = entity.frustum
-        mu.frustum_from_fov(frustum, 0.1, 100, 1, vr.w / vr.h)
-        
-        local pos = entity.position.v
-        local rot = entity.rotation.v
-        ms(pos, {0, 0, 0, 1}, "=")
-        ms(rot, {0, 0, 0, 0}, "=")
-        
-        return entity
-    end
-
-    local entity = add_pick_entity(self.math_stack)
-
-    pickup.ms = self.math_stack
-    pickup:init(entity)
+			end
+		end
+	})
 end
 
 function pickup_sys:update()
-    if pickup.is_picking then        
-        local eid = assert(world:first_entity_id("pickup"))    
-        pickup:pick(eid, self.frame_stat.frame_num, self.select_filter)
-    end
+	local remove_pickup_eids = {}
+	for _, eid in world:each("pickup") do
+		local e = world[eid]
+		local pickco = e.pickup.pickco
+		if pickco then
+			local ret = coroutine.resume(pickco) 
+			if not ret then 
+				e.pickup.pickco = nil
+				table.insert(remove_pickup_eids, eid)
+			end
+		end
+	end
+
+	for _, eid in ipairs(remove_pickup_eids) do
+		world:remove_entity(eid)
+	end
 end
 

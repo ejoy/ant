@@ -22,7 +22,7 @@ ecs.component "relative_srt" {
 }
 
 ecs.component "frustum" {
-    isortho = false,
+    type = "proj",	--"ortho"
     n = 0.1,
     f = 10000,
     l = -1,
@@ -92,9 +92,8 @@ ecs.component "material" {
 							properties[k] = p
 						end
 					end
-				end
-				table.insert(t, {path=pp, properties=src_properties})
-			
+					table.insert(t, {path=pp, properties=properties})
+				end			
 			end
 			return t
 		end,
