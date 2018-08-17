@@ -121,26 +121,30 @@ pickup_material_sys.depend "transparency_filter_system"
 pickup_material_sys.dependby "entity_rendering"
 
 function pickup_material_sys:update()
-	for _, eid in world:each("pickup") do
-		local e = world[eid]
-		local materials = e.pickup.materials
+	for _, eid in world:each("pickup") do		
+		local e = world[eid]	
+		local filter = e.primitive_filter
+		if filter then
+			local materials = e.pickup.materials
 
-		local filter = assert(e.primitive_filter)
-		
-		
-		for _, elem in ipairs{
-									{result=filter.result, material=materials.opaticy},
-									{result=filter.transparent_result, material=materials.transparent},
-								} do
-
-			for _, item in ipairs(elem.result) do
-				item.material = elem.material
-				item.properties = {
-					u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
-				}
+			for _, elem in ipairs{
+					{result=filter.result, material=materials.opaticy},
+					{result=filter.transparent_result, material=materials.transparent},
+				} do
+				for _, item in ipairs(elem.result) do
+					item.material = elem.material
+					item.properties = {
+						u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
+					}
+				end
 			end
 		end
 	end
+end
+
+local post_jobs = ecs.component "post_end_frame_jobs" {}
+function post_jobs:init()
+	self.jobs = {}
 end
 
 -- pickup_system
@@ -152,7 +156,9 @@ pickup_sys.singleton "math_stack"
 pickup_sys.singleton "frame_stat"
 pickup_sys.singleton "message_component"
 
-pickup_sys.depend "entity_rendering"
+pickup_sys.singleton "post_end_frame_jobs"
+
+pickup_sys.depend "transparency_filter_system"
 
 pickup_sys.dependby "end_frame"
 
@@ -177,10 +183,13 @@ local function add_pick_entity(ms)
 
 	local comp = entity.pickup
 	comp.blitdata = bgfx.memory_texture(vr.w*vr.h * 4)
+	comp.materials = init_pickup_materials()
+
+	init_pickup_buffer(entity)	
 
 	local frustum = entity.frustum
 	mu.frustum_from_fov(frustum, 0.1, 100, 1, vr.w / vr.h)
-	
+
 	local pos = entity.position.v
 	local rot = entity.rotation.v
 	ms(pos, {0, 0, 0, 1}, "=")
@@ -189,54 +198,69 @@ local function add_pick_entity(ms)
 	local filter = entity.primitive_filter
 	filter.no_lighting = true
 	filter.filter_select = true
-
+	
 	return eid
 end
 
+local post_end_frame = ecs.system "post_end_frame"
+post_end_frame.singleton "post_end_frame_jobs"
+
+post_end_frame.depend "end_frame"
+
+function post_end_frame:update()
+	local jobs = self.post_end_frame_jobs.jobs
+	for _, job in ipairs(jobs) do
+		job()
+	end
+	self.post_end_frame_jobs.jobs = {}
+end
+
 function pickup_sys:init()
-	local pickup_eid = add_pick_entity(self.math_stack)
-	local entity = world[pickup_eid]
-
 	local ms = self.math_stack	
-
-	local pu_comp = entity.pickup
-	pu_comp.materials = init_pickup_materials()
-
 	local stat = self.frame_stat
-	init_pickup_buffer(entity)
+	local post_end_comp = self.post_end_frame_jobs
+	
 	self.message_component.msg_observers:add({
 		button = function (_, b, p, x, y)
 			if b == "LEFT" and p then
-				update_viewinfo(ms, entity, point2d(x, y))			
+				table.insert(post_end_comp.jobs, function ()
+					local pickup_eid = add_pick_entity(self.math_stack)
+					local entity = world[pickup_eid]
+					local pu_comp = entity.pickup
 
-				if pu_comp.pickco == nil then
-					local pickco = coroutine.create(function ()
-						local reading_frame = readback_render_data(entity)
-						while stat.frame_num ~= reading_frame do
-							coroutine.yield()
-						end
-						
-						local eid = which_entity_hitted(entity)
-						if eid then
-							local name = assert(world[eid]).name.n
-							print("pick entity id : ", eid, ", name : ", name)
-						else
-							print("not found any eid")
-						end
-				
-						pu_comp.last_eid_hit = eid
-						world:change_component(pickup_eid, "pickup")
-						world.notify()
-					end)
-	
-					entity.pickup.pickco = pickco					
-				end
+					update_viewinfo(ms, entity, point2d(x, y))			
+
+					if pu_comp.pickco == nil then
+						local pickco = coroutine.create(function ()
+							local reading_frame = readback_render_data(entity)
+							while stat.frame_num ~= reading_frame do
+								coroutine.yield()
+							end
+							
+							local eid = which_entity_hitted(entity)
+							if eid then
+								local name = assert(world[eid]).name.n
+								print("pick entity id : ", eid, ", name : ", name)
+							else
+								print("not found any eid")
+							end
+					
+							pu_comp.last_eid_hit = eid
+							world:change_component(pickup_eid, "pickup")
+							world.notify()
+						end)
+		
+						entity.pickup.pickco = pickco					
+					end
+				end)
+
 			end
 		end
 	})
 end
 
 function pickup_sys:update()
+	local remove_pickup_eids = {}
 	for _, eid in world:each("pickup") do
 		local e = world[eid]
 		local pickco = e.pickup.pickco
@@ -244,8 +268,13 @@ function pickup_sys:update()
 			local ret = coroutine.resume(pickco) 
 			if not ret then 
 				e.pickup.pickco = nil
+				table.insert(remove_pickup_eids, eid)
 			end
 		end
+	end
+
+	for _, eid in ipairs(remove_pickup_eids) do
+		world:remove_entity(eid)
 	end
 end
 
