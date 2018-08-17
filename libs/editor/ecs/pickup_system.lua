@@ -8,6 +8,8 @@ local mu = require "math.util"
 local asset = require "asset"
 local cu = require "common.util"
 
+local math_baselib = require "math3d.baselib"
+
 local pickup_fb_viewid = 2
 local pickup_blit_viewid = pickup_fb_viewid + 1
 
@@ -164,34 +166,25 @@ function pickup:pick(p_eid, current_frame_num, select_filter)
     self.is_picking = self.reading_frame ~= nil
 end
 
-local function get_main_camera_viewproj_mat(ms, maincamera)      
-    local proj = mu.proj(ms, assert(maincamera.frustum))
-    -- [pos, dir] ==> viewmat --> viewmat * projmat ==> viewprojmat
-    -- --> invert(viewprojmat) ==>invViewProjMat
-    local dir = ms(assert(maincamera.rotation).v, "dP")
-    return ms(assert(maincamera.position).v, dir, "L", proj, "*iP")
-end
-
-local function click_to_eye_and_dir(ms, ndcX, ndcY, invVP)    
-    local eye = ms({ndcX, ndcY, 0, 1}, invVP, "%P")
-    local at = ms({ndcX, ndcY, 1, 1}, invVP, "%P")
-    local dir = ms(at, eye, "-nP")
-    return eye, dir
-end
-
 local function update_viewinfo(ms, e, clickpt)    
-    local maincamera = world:first_entity("main_camera")  
-    local invVP = get_main_camera_viewproj_mat(ms, maincamera)
+	local maincamera = world:first_entity("main_camera")  
+	local mc_vr = maincamera.view_rect
+	local w, h = mc_vr.w, mc_vr.h
+	
+	local pos = ms(maincamera.position.v, "T")
+	local rot = ms(maincamera.rotation.v, "T")
+	local pt3d = math_baselib.screenpt_to_3d(
+		{
+			clickpt.x, clickpt.y, 0,
+			clickpt.x, clickpt.y, 1
+		}, maincamera.frustum, pos, rot, {w=w, h=h})
 
-    local mc_vr = maincamera.view_rect
+	local eye, at = {pt3d[1], pt3d[2], pt3d[3]}, {pt3d[4], pt3d[5], pt3d[6]}
+	local dir = ms(at, eye, "-nT")
+	
+	ms(assert(e.position).v, eye, "=")
+	ms(assert(e.rotation).v, dir, "D=")
 
-    local w, h = mc_vr.w, mc_vr.h
-    local ndcX =  (clickpt.x / w) * 2.0 - 1.0
-    local ndcY = ((h - clickpt.y) / h) * 2.0 - 1.0
-
-    local ptWS, dirWS = click_to_eye_and_dir(ms, ndcX, ndcY, invVP)    
-    ms(assert(e.position).v, assert(ptWS),     "=")
-    ms(assert(e.rotation).v, dirWS, "D=")
 end
 
 -- system

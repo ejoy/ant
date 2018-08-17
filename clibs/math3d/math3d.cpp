@@ -26,10 +26,15 @@ extern "C" {
 #include <string.h>
 #include <stdbool.h>
 
+#include <vector>
+
 #define LINALG "LINALG"
 #define LINALG_REF "LINALG_REF"
 #define MAT_PERSPECTIVE 0
 #define MAT_ORTHO 1
+
+static bool g_default_homogeneous_depth = false;
+
 
 static const char *
 get_typename(uint32_t t) {
@@ -54,8 +59,7 @@ pop(lua_State *L, struct lastack *LS) {
 }
 
 struct boxpointer {
-	struct lastack *LS;
-	int defautlHomogeneousDepth;
+	struct lastack *LS;	
 };
 
 struct refobject {
@@ -497,24 +501,17 @@ push_mat(lua_State *L, struct lastack *LS, int index, int type) {
 		top = luaL_checknumber(L, -1);
 		lua_pop(L, 1);
 	}
-	lua_getfield(L, index, "h");
-	int homogeneousDepth = 0;
-	if (lua_isnil(L, -1)) {
-		struct boxpointer *p = (struct boxpointer *)lua_touserdata(L, lua_upvalueindex(1));
-		homogeneousDepth = p->defautlHomogeneousDepth;
-	} else {
-		homogeneousDepth = lua_toboolean(L, -1);
-	}
+	lua_getfield(L, index, "h");	
 
 	lua_pop(L, 1);
 
 	glm::mat4x4 m;
 	if (type == MAT_PERSPECTIVE) {
-		m = homogeneousDepth ?
+		m = g_default_homogeneous_depth ?
 			glm::frustumLH_NO(left, right, bottom, top, near, far):
 			glm::frustumLH_ZO(left, right, bottom, top, near, far);		
 	} else {
-		m = homogeneousDepth ?
+		m = g_default_homogeneous_depth ?
 			glm::orthoLH_NO(left, right, bottom, top, near, far) :
 			glm::orthoLH_ZO(left, right, bottom, top, near, far);
 	}
@@ -1522,14 +1519,8 @@ commandLS(lua_State *L) {
 }
 
 static int
-lnew(lua_State *L) {
-	int homogeneousDepth = 0;
-	if (!lua_isnoneornil(L, 1)) {
-		homogeneousDepth = lua_toboolean(L, 1);
-		lua_pop(L, 1);
-	}
-	struct boxpointer *bp = (struct boxpointer *)lua_newuserdata(L, sizeof(*bp));
-	bp->defautlHomogeneousDepth = homogeneousDepth;	
+lnew(lua_State *L) {	
+	struct boxpointer *bp = (struct boxpointer *)lua_newuserdata(L, sizeof(*bp));	
 
 	bp->LS = NULL;
 	if (luaL_newmetatable(L, LINALG)) {
@@ -1598,6 +1589,121 @@ ltype(lua_State *L) {
 	return 2;
 }
 
+static int 
+lscreenpt_to_3d(lua_State *L){
+	int numarg = lua_gettop(L);
+	if (numarg < 5){
+		luaL_error(L, "5 arguments needed!", numarg);
+	}
+
+	// get 2d point, point.z is the depth in ndc space
+	luaL_checktype(L, 1, LUA_TTABLE);
+
+	size_t len = lua_rawlen(L, 1);
+	std::vector<glm::vec3>	vv(len / 3);
+	float * v = &vv[0].x;	
+
+	for (int ii = 0; ii < len; ++ii) {
+		lua_geti(L, 1, ii+1);
+		*v++ = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+	}
+
+	// get camera frustum
+	luaL_checktype(L, 2, LUA_TTABLE);
+	lua_getfield(L, 2, "type");
+	const char* type = lua_tostring(L, -1);
+	struct Frustum {
+		float l, r, t, b, n, f;
+	};
+	Frustum f;
+
+	float* fv = &f.l;
+
+	const char* elemnames[] = {
+		"l", "r", "t", "b", "n", "f",
+	};
+
+	for (auto name : elemnames){
+		lua_getfield(L, 2, name);
+		*fv++ = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+	}
+	
+	glm::mat4x4 matProj;
+	if (strcmp(type, "proj") == 0) {
+		auto frustumLH = g_default_homogeneous_depth ? glm::frustumLH_NO<float> : glm::frustumLH_ZO<float>;
+		matProj = frustumLH(f.l, f.r, f.b, f.t, f.n, f.f);
+	} else if (strcmp(type, "ortho") == 0) {
+		auto orthLH = g_default_homogeneous_depth ? glm::orthoLH_NO<float> : glm::orthoLH_ZO<float>;
+		matProj = orthLH(f.l, f.r, f.b, f.t, f.n, f.f);
+	}
+
+	// get camera position & rotation
+	glm::vec3 position, euler;
+	luaL_checktype(L, 3, LUA_TTABLE);
+
+	for (int ii = 0; ii < 3; ++ii) {
+		lua_geti(L, 3, ii + 1);
+		position[ii] = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+
+		lua_geti(L, 4, ii + 1);
+		euler[ii] = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+	}
+
+	glm::vec3 viewDir = to_viewdir(glm::radians(euler));
+	glm::mat4x4 matView = glm::lookAtLH(position, position + viewDir, glm::vec3(0, 1, 0));
+	
+	// get viewport size
+	lua_getfield(L, 5, "w");
+	float width = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, 5, "h");
+	float height = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+
+
+	//////////////////////////////////////////////////////////////////////////
+	glm::mat4x4 matInverseVP = glm::inverse(matProj * matView);
+	
+	
+	for (auto& pt : vv) {		
+		auto remap0_1 = [](float v) {
+			return v * 2.f - 1.f;
+		};
+		pt.x = remap0_1(pt.x / width);
+		pt.y = remap0_1((height - pt.y) / height);
+		
+
+		auto tmp = matInverseVP * glm::vec4(pt, 1);
+		pt = tmp / tmp.w;		
+	}
+	
+	const float * cv = &vv[0].x;
+	lua_createtable(L, 6, 0);
+	for (int ii = 0; ii < 6; ++ii) {
+		lua_pushnumber(L, *cv++);
+		lua_seti(L, -2, ii + 1);
+	}
+
+	return 1;
+}
+
+static int
+lhomogeneous_depth(lua_State *L){
+	int num = lua_gettop(L);
+	if (num > 0){
+		g_default_homogeneous_depth = lua_toboolean(L, 1) != 0;	
+		return 0;
+	}
+
+	lua_pushboolean(L, g_default_homogeneous_depth ? 1 : 0);
+	return 1;
+}
+
 extern "C"
 {
 	LUAMOD_API int
@@ -1623,9 +1729,22 @@ extern "C"
 			{ "type", ltype },
 			{ "ref", lref },
 			{ "isvalid", lisvalid},
+			{ "homogeneous_depth", lhomogeneous_depth},
 			{ NULL, NULL },
 		};
 		luaL_newlib(L, l);
+		return 1;
+	}
+
+	LUAMOD_API int
+	luaopen_math3d_baselib(lua_State *L){
+		luaL_Reg l[] = {
+			{ "screenpt_to_3d", lscreenpt_to_3d },
+			{ NULL, NULL },
+		};
+
+		luaL_newlib(L, l);
+
 		return 1;
 	}
 }
