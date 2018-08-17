@@ -180,6 +180,15 @@ function server:PackageHandleUpdate()
 
 end
 
+local enable_pack = false
+function enable_pack_framework(state)
+    if state then
+        enable_pack = state
+    end
+
+    return enable_pack
+end
+
 --------------------------------------------------------------
 function server.new(address, port, init_linda)
 
@@ -192,14 +201,19 @@ function server.new(address, port, init_linda)
             return false
         end
     end
+    winfile.open = io.open
+
     local io_ins = iosys.new()
     local id = tostring(address) .. ":" .. tostring(port)
     assert(io_ins:Connect(id), "connect to: " .. id .. " failed")
 
     local vfsrepo = require "vfsrepo"
     local server_repo = vfsrepo.new()
-    server_repo:init("/Users/ejoy/Desktop/Engine/ant/assets/build/meshes")
+    print(pcall(server_repo.init, server_repo, "/Users/ejoy/Desktop/Engine/ant"))
 
+
+    --server_repo:init("/Users/ejoy/Desktop/Engine/ant")
+    enable_pack_framework(true)
     return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, log = {}, vfs_repo = server_repo}, server)
 end
 

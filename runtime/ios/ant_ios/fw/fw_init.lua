@@ -8,7 +8,7 @@ package.path = package.path .. ";" .. app_dir .. "/fw/?.lua;" .. app_dir .. "/?.
 package.path = "../Common/?.lua;./?.lua;../?/?.lua;../?.lua;" .. package.path  --path for the app
 --TODO: find a way to set this
 --path for the remote script
-package.remote_search_path = "../?.lua;./?.lua;../?/?.lua;asset/?.lua;?/?.lua;ecs/?.lua;imputmgr/?.lua"
+package.remote_search_path = "/libs/?.lua;/?.lua;./?/?.lua;./libs/asset/?.lua;./libs/ecs/?.lua;./libs/imputmgr/?.lua;"
 lanes = require "lanes"
 if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
 linda = lanes.linda()
@@ -95,7 +95,10 @@ io.open = function (filename, mode, search_local_only)
         end
 
         print("hash is: " ..tostring(hash))
-        assert(hash, "vfs system error: no file and no hash: " .. filename)
+        if not hash then
+            print("file does not exist: "..filename)
+            return nil
+        end
 
         print("Try to request hash from server", filename, hash)
         local request = {"EXIST", hash}
@@ -151,9 +154,33 @@ loadfile = function(file_path)
     --]]
 end
 
-local function remote_searcher (name)
+local function get_require_search_path(r_name)
+--return a table of possible path the file is on
+    local search_string = package.remote_search_path
+    local search_table = {}
+
+    --separate with ";"
+    --"../" not support
+
+    print("require search string", search_string)
+
+    for s_path in string.gmatch(search_string, ".-;") do
+        print("get requrie search path: "..s_path)
+
+        local r_path = string.gsub(r_name, "%.", "/")
+        s_path = string.gsub(s_path, "?", r_path)
+        --get rid of ";" symbol
+        s_path = string.gsub(s_path, ";", "")
+        table.insert(search_table, s_path)
+    end
+
+    return search_table
+end
+
+local function remote_searcher(name)
     --local full_path = name..".lua"
     --need to send the package search path
+    --[[
     print("remote requiring ".. name)
     local request = {"REQUIRE", name, package.remote_search_path}
     linda:send("request", request)
@@ -164,6 +191,26 @@ local function remote_searcher (name)
             return load(value, "@"..name)
         end
     end
+    --]]
+
+    ---search through package.remote_search_path
+    local file_table = get_require_search_path(name)
+    for _, v in ipairs(file_table) do
+        local r_file = io.open(v, "rb")
+        if r_file then
+            io.input(r_file)
+            local r_data = r_file:read("a")
+            r_file:close()
+            return load(r_data, "@"..name)
+        end
+    end
+
+    --required file not exist in the search path
+    print("require failed")
+    for _, v in ipairs(file_table) do
+        print("can't find: "..name.." in " .. v)
+    end
+    return nil
 end
 table.insert(package.searchers, remote_searcher)
 

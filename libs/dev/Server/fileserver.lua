@@ -67,6 +67,7 @@ function fileserver.GET(req, self)
         file = io.open(CalculateAbsolutePath(project_dir, file_path), "rb")
     end
     if not file then
+        print("can't find: ", file_path, CalculateAbsolutePath(project_dir, file_path))
         return {"EXIST_CHECK", "not exist"}
     end
 
@@ -96,10 +97,13 @@ function fileserver.EXIST(req, self)
     --req[2] is the hash value of the file
 
     local hash = req[2]
+    print("check file exist: ", hash)
     local real_path = self.vfs_repo:load(hash)
     if real_path then
+        print("file exist: ", hash)
         return {"EXIST_CHECK", real_path}
     else
+        print("file not exist: ", hash)
         return {"EXIST_CHECK", "not exist"}
     end
 

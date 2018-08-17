@@ -20,7 +20,7 @@ function init()
         server_framework:HandleCommand(udid, "CONNECT")
     end
 
-    server_framework:SetProjectDirectoryPath("/Users/ejoy/Desktop/Engine/ant/libs")
+    server_framework:SetProjectDirectoryPath("/Users/ejoy/Desktop/Engine/ant")
 end
 
 local count = 1
@@ -33,7 +33,7 @@ function mainloop()
 
     count = count + 1
     if count == 1000 then
-        server_framework:HandleCommand("all", "RUN", "testlua.lua")
+        server_framework:HandleCommand("all", "RUN", "/libs/testlua.lua")
     end
     --print("count", count)
     --]]
