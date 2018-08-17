@@ -48,12 +48,6 @@ local function init_pickup_materials()
 	}
 end
 
-local function bind_frame_buffer(e)
-    local comp = e.pickup    
-    local vid = e.viewid.id
-    bgfx.set_view_frame_buffer(vid, assert(comp.pick_fb))
-end
-
 local function init_pickup_buffer(pickup_entity)
     local comp = pickup_entity.pickup
     --[@ init hardware resource
@@ -66,35 +60,7 @@ local function init_pickup_buffer(pickup_entity)
     comp.rb_buffer = bgfx.create_texture2d(w, h, false, 1, "RGBA8", "bwbr-p+p*pucvc")
     --@]
 
-    bind_frame_buffer(pickup_entity)
-end
-
-local function render_to_pickup_buffer(ms, pickup_entity, select_filter, materials)
-	local results = {
-		{result=select_filter.result, mode = '', material = materials.opaticy},
-		{result=select_filter.transparent_result, mode = 'D', material = materials.transparent},
-	}
-
-	local vid = pickup_entity.viewid.id
-
-	for _, r in ipairs(results) do
-		bgfx.set_view_mode(vid, r.mode)
-		for _, prim in ipairs(r.result) do
-			local pick_prim = {}
-			for k, v in pairs(prim) do
-				pick_prim[k] = v
-			end
-
-			pick_prim.material = r.material
-			pick_prim.properties = {
-				u_id = {type="color", value=packeid_as_rgba(assert(prim.eid))}
-			}
-			
-			local srt = pick_prim.srt
-			local mat = ms({type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
-			ru.draw_primitive(vid, pick_prim, mat)
-		end
-	end
+	bgfx.set_view_frame_buffer(pickup_entity.viewid.id, assert(comp.pick_fb))
 end
 
 local function readback_render_data(pickup_entity)
@@ -148,21 +114,53 @@ local function update_viewinfo(ms, e, clickpt)
 
 end
 
--- system
+-- update material system
+local pickup_material_sys = ecs.system "pickup_material_system"
+
+pickup_material_sys.depend "transparency_filter_system"
+pickup_material_sys.dependby "entity_rendering"
+
+function pickup_material_sys:update()
+	for _, eid in world:each("pickup") do
+		local e = world[eid]
+		local materials = e.pickup.materials
+
+		local filter = assert(e.primitive_filter)
+		
+		
+		for _, elem in ipairs{
+									{result=filter.result, material=materials.opaticy},
+									{result=filter.transparent_result, material=materials.transparent},
+								} do
+
+			for _, item in ipairs(elem.result) do
+				item.material = elem.material
+				item.properties = {
+					u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
+				}
+			end
+		end
+	end
+end
+
+-- pickup_system
 ecs.component "pickup"{}
 
 local pickup_sys = ecs.system "pickup_system"
 
 pickup_sys.singleton "math_stack"
 pickup_sys.singleton "frame_stat"
-pickup_sys.singleton "select_filter"
 pickup_sys.singleton "message_component"
+
+pickup_sys.depend "entity_rendering"
 
 pickup_sys.dependby "end_frame"
 
 local function add_pick_entity(ms)
-	local eid = world:new_entity("pickup", "viewid", 
-	"view_rect", "clear_component", 
+	local eid = world:new_entity("pickup", 
+	"clear_component", 
+	"viewid", "primitive_filter",
+	"view_rect", 
 	"position", "rotation", 
 	"frustum", 
 	"name")        
@@ -188,6 +186,10 @@ local function add_pick_entity(ms)
 	ms(pos, {0, 0, 0, 1}, "=")
 	ms(rot, {0, 0, 0, 0}, "=")
 
+	local filter = entity.primitive_filter
+	filter.no_lighting = true
+	filter.filter_select = true
+
 	return eid
 end
 
@@ -195,23 +197,20 @@ function pickup_sys:init()
 	local pickup_eid = add_pick_entity(self.math_stack)
 	local entity = world[pickup_eid]
 
-	local ms = self.math_stack
-	local select_filter = self.select_filter
-	local materials = init_pickup_materials()
+	local ms = self.math_stack	
+
+	local pu_comp = entity.pickup
+	pu_comp.materials = init_pickup_materials()
+
 	local stat = self.frame_stat
 	init_pickup_buffer(entity)
 	self.message_component.msg_observers:add({
 		button = function (_, b, p, x, y)
 			if b == "LEFT" and p then
-				update_viewinfo(ms, entity, point2d(x, y))
-				local pu_comp = entity.pickup
+				update_viewinfo(ms, entity, point2d(x, y))			
 
 				if pu_comp.pickco == nil then
 					local pickco = coroutine.create(function ()
-						bind_frame_buffer(entity)
-						world:change_component(-1, "create_selection_filter")
-						world:notify()
-						render_to_pickup_buffer(ms, entity, select_filter, materials)
 						local reading_frame = readback_render_data(entity)
 						while stat.frame_num ~= reading_frame do
 							coroutine.yield()

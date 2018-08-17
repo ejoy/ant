@@ -43,7 +43,8 @@ end
 function camera_init_sys:init()
     local ms = self.math_stack
     -- create camera entity
-    local camera_eid = world:new_entity("main_camera", "viewid", 
+	local camera_eid = world:new_entity("main_camera", 
+		"viewid", "primitive_filter",
         "rotation", "position", 
         "frustum", 
         "view_rect", 
