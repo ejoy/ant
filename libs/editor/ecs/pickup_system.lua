@@ -142,11 +142,6 @@ function pickup_material_sys:update()
 	end
 end
 
-local post_jobs = ecs.component "post_end_frame_jobs" {}
-function post_jobs:init()
-	self.jobs = {}
-end
-
 -- pickup_system
 ecs.component "pickup"{}
 
@@ -200,19 +195,6 @@ local function add_pick_entity(ms)
 	filter.filter_select = true
 	
 	return eid
-end
-
-local post_end_frame = ecs.system "post_end_frame"
-post_end_frame.singleton "post_end_frame_jobs"
-
-post_end_frame.depend "end_frame"
-
-function post_end_frame:update()
-	local jobs = self.post_end_frame_jobs.jobs
-	for _, job in ipairs(jobs) do
-		job()
-	end
-	self.post_end_frame_jobs.jobs = {}
 end
 
 function pickup_sys:init()
