@@ -353,7 +353,6 @@ function server:mainloop(timeout)
 
     self:PackageHandleUpdate()
     self:SendLog()
-    print("update finished")
 end
 
 function server:SendLog()

@@ -110,7 +110,6 @@ table.insert(check_path, "/fw/lanes.lua")
 table.insert(check_path, "/fw/pack.lua")
 table.insert(check_path, "/fw/fileprocess.lua")
 
-print("sssss")
 while true do
     local key, value = linda:receive(0.01, "new connection")
    -- print("waiting connection")

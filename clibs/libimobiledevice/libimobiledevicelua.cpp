@@ -182,6 +182,14 @@ static int Connect(lua_State* L)
         return 1;
     }
     
+    auto c_iter = g_connection_map.find(udid);
+    if(c_iter != g_connection_map.end())
+    {
+        printf("udid: %s was already connected\n", udid.data());
+        lua_pushboolean(L, false);
+        return 1;
+    }
+    
     idevice_connection_t new_connection;
     idevice_error_t err = idevice_connect(iter->second, port, &new_connection);
     if(err == IDEVICE_E_SUCCESS)
@@ -289,38 +297,55 @@ const int MAX_BUFFER_SIZE = 64*1024;
 char recv_buffer[MAX_BUFFER_SIZE];
 static int Recv(lua_State* L)
 {
+    float timeout;
     std::string udid;
-    if(lua_isstring(L, 1))
+    if(lua_isnumber(L, 2))
     {
-        udid = lua_tostring(L, 1);
-        
-        auto iter = g_connection_map.find(udid);
-        if(iter != g_connection_map.end())
-        {
-            uint32_t recv_bytes = 0;
-            idevice_connection_receive(iter->second, &recv_buffer[0], MAX_BUFFER_SIZE, &recv_bytes);
-        //    printf("%d bytes data received\n", recv_bytes);
-            if(recv_bytes == 0)
-            {
-                return 0;
-            }
-            else
-            {
-                std::string data_s(recv_buffer, recv_bytes);
-                //lua_pushstring(L, data_s.data());
-                lua_pushlstring(L, data_s.data(), recv_bytes);
-                return 1;
-            }
-        }
-        else
-        {
-            printf("no connection available for %s\n", udid.data());
-        }
-        
+        timeout = lua_tonumber(L, 2);
+    }
+    else
+    {
+        printf("second arg should be number\n");
         return 0;
     }
     
+    if(lua_isstring(L, 1))
+    {
+        udid = lua_tostring(L, 1);
+    }
+    else
+    {
+        printf("first arg should be string\n");
+        return 0;
+    }
+    lua_pop(L, 2);
+    
+    auto iter = g_connection_map.find(udid);
+    if(iter != g_connection_map.end())
+    {
+        uint32_t recv_bytes = 0;
+        idevice_connection_receive_timeout(iter->second, &recv_buffer[0], MAX_BUFFER_SIZE, &recv_bytes, timeout);
+        //idevice_connection_receive(iter->second, &recv_buffer[0], MAX_BUFFER_SIZE, &recv_bytes);
+    //    printf("%d bytes data received\n", recv_bytes);
+        if(recv_bytes == 0)
+        {
+            return 0;
+        }
+        else
+        {
+            std::string data_s(recv_buffer, recv_bytes);
+            //lua_pushstring(L, data_s.data());
+            lua_pushlstring(L, data_s.data(), recv_bytes);
+            return 1;
+        }
+    }
+    else
+    {
+        printf("no connection available for %s\n", udid.data());
+    }
+    
     return 0;
+
 }
 
 //clean some mess up
