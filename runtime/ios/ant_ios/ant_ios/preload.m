@@ -122,7 +122,7 @@ static int custom_on_state_create(lua_State *L) {
             luaL_traceback(L, L, msg, 1);
         }
     }
-    
+    /*
     lua_getglobal(L, "package");
     if(lua_istable(L, -1)) {
         lua_getfield(L, -1, "path");
@@ -140,6 +140,8 @@ static int custom_on_state_create(lua_State *L) {
             lua_setfield(L, -2, "path");
         }
     }
+     */
+    
     
     
     lua_pop(L, 1);
