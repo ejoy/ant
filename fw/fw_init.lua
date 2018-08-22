@@ -5,7 +5,7 @@ package.path = package.path .. ";/fw/?.lua;" .. pkg_dir .. "/fw/?.lua;" .. pkg_d
 --package.path = "../Common/?.lua;./?.lua;../?/?.lua;../?.lua;" .. package.path  --path for the app
 --TODO: find a way to set this
 --path for the remote script
-package.remote_search_path = "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;./libs/asset/?.lua;./libs/ecs/?.lua;./libs/imputmgr/?.lua;"
+package.remote_search_path = "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;./libs/asset/?.lua;./libs/ecs/?.lua;./libs/imputmgr/?.lua;" .. package.path
 lanes = require "lanes"
 if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
 linda = lanes.linda()
@@ -196,7 +196,7 @@ require = function(require_path)
             print("content", content)
             file:close()
 
-            local err, result = pcall(load(content, "@"..require_path))
+            local err, result = pcall(load,content, "@"..require_path)
             if not err then
                 print("require " .. require_path .. " error: " .. result)
                 return nil
@@ -206,7 +206,7 @@ require = function(require_path)
         end
     end
 
-    print("use origin require")
+    print("use origin require", require_path)
     return origin_require(require_path)
 end
 
@@ -275,12 +275,19 @@ function run(path)
     file:close()
 
     local res = false
-    res, entrance =  pcall(load(entrance_string))
+    res, entrance =  pcall(load(entrance_string, "@"..path))
 
     if res then
+        print("init entrance", tostring(g_WindowHandle), g_Width, g_Height)
         entrance.init(g_WindowHandle, g_Width, g_Height)
+
+        local init_res, err_string = pcall(entrance.init, g_WindowHandle, g_Width, g_Height)
+        if not init_res then
+            print("entrance init error", err_string)
+            entrance = nil
+        end
     else
-        print("entrance script error")
+        print("load entrance script error")
         entrance = nil
     end
 end
