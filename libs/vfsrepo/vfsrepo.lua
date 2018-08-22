@@ -33,9 +33,6 @@ end
 
 local function read_file_content(filename)
 	local ff = io.open(filename, "rb")
-    if not ff then
-        print("read file error", filename)
-    end
 	local content = ff:read "a"
 	ff:close()
 	return content
@@ -43,7 +40,7 @@ end
 
 local function write_cache(cachedir, cache, duplicate_cache)	
 	path.create_dirs(cachedir)
-	local rootfile = path.join(cachedir, "root")	
+	local rootfile = path.join(cachedir, "root")
 	fu.write_to_file(rootfile, cache.sha1, "wb")
 
 	local function write_sha1_file(cache)
@@ -108,7 +105,7 @@ end
 local function read_ref_file_items(s, ref_filepath)
 	local refitems = {}
 	for ref_line in io.lines(ref_filepath) do
-		local refelems = read_line_elems(ref_line)
+		local refelems = read_line_elems(ref_line)			
 		assert(#refelems == 2)	-- refitems[1] ==> filename(relative to root), refitems[2] ==> timestamp
 		local f = refelems[1]
 		table.insert(refitems, {type="f", sha1=s, filename=f, timestamp=math.tointeger(refelems[2])})

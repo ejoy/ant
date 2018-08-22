@@ -79,7 +79,7 @@ function server_ins:init(address, port)
 end
 
 function server_ins:update()
-    print("server framework update")
+    --print("server framework update")
 
     HandleMessage()
 end

@@ -150,6 +150,7 @@ function server:HandlePackage(response_pkg, id, self)
         --do nothing for now
         --response_pkg[2] is category info
         --response_pkg[3] is log data
+        print("get log", response_pkg)
         table.insert(self.log, {table.unpack(response_pkg, 2)})
         return "DONE"
     else
@@ -209,7 +210,13 @@ function server.new(address, port, init_linda)
 
     local vfsrepo = require "vfsrepo"
     local server_repo = vfsrepo.new()
-    print(pcall(server_repo.init, server_repo, "/Users/ejoy/Desktop/Engine/ant"))
+
+    if PLATFORM == "MAC" then
+        print(pcall(server_repo.init, server_repo, "/Users/ejoy/Desktop/Engine/ant"))
+    else
+        --windows for now
+        print(pcall(server_repo.init, server_repo, "."))
+    end
 
 
     --server_repo:init("/Users/ejoy/Desktop/Engine/ant")

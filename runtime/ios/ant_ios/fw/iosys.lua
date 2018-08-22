@@ -183,10 +183,9 @@ function io:Get(id)
     if IsUdid(id) then
         if imd then
             if self.udid and self.udid[id] then
-                print("get package from: "..id)
                 --todo cache pkg
                 --pkg = imd.Get(id)
-                if self.recv and self.recv[id] then
+                if self.recv and self.recv[id] and #self.recv[id] > 0 then
                     for _, data_pkg in ipairs(self.recv[id]) do
                         local unpack_table = pack.unpack(data_pkg)
                         for _, unpack_pkg in ipairs(unpack_table) do
@@ -206,7 +205,7 @@ function io:Get(id)
         if self.socket then
             local fd = self.socket[id]
             if fd then
-                if self.recv and self.recv[fd] then
+                if self.recv and self.recv[fd] and #self.recv[fd] > 0 then
                     print("getting data from : " .. id)
 
                     for _, data_pkg in ipairs(self.recv[fd]) do
@@ -305,7 +304,7 @@ function io:Update(timeout)
 
                     self.reading = self.reading:sub(off)
 
-                  --  table.insert(self.recv[fd], recv_data)
+                    --  table.insert(self.recv[fd], recv_data)
                 else
                     print("need kick", fd)
                     local d_id
@@ -338,7 +337,7 @@ function io:Update(timeout)
                     --print("send cache", self.send[fd])
                     pack.send(fd, self.send[fd])
                 end
-             --   pack.send(fd, {pack.pack({"LOG", "test"})})
+                --   pack.send(fd, {pack.pack({"LOG", "test"})})
             end
         end
     end

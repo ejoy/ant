@@ -77,7 +77,7 @@ function clientcommand.FILE(resp)
             --file = io.open(temp_path_hash, "ab")
             --print("write to file", temp_path_hash)
             file = io.open(real_path, "ab")
-            print("write to file", real_path)
+            print("write to file __", real_path)
         end
 
         if file == nil then
