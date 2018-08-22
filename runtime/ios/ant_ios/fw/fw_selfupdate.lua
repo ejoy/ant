@@ -13,75 +13,27 @@ lanes = require "lanes"
 if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
 linda = lanes.linda()
 
-local origin_open = io.open
-io.open = function (filename, mode, search_local_only)
-    --default we don't search local only
-    search_local_only = search_local_only or false
-
-    --vfs not initialized, can only use origin function
-    if not client_repo and search_local_only then
-        return origin_open(filename, mode)
-    end
-    --file may be in the bundle
-    --for now don't cache lua files
-    print("opening file: ", filename)
-    while true do
-        linda:send("vfs_open", filename)
-        --vfs:open()
-        local file_path, hash
-        while true do
-            local key, val = linda:receive(0.001, "vfs_open_res")
-            if val then
-                print("get waiting result")
-                file_path, hash = val[1], val[2]
-                break
-            end
-        end
-
-        if file_path then
-            print("get file: " .. file_path, filename)
-            return origin_open(file_path, mode)
-        end
-
-        print("hash is: " ..tostring(hash))
-        if not hash then
-            print("file does not exist: "..filename)
-            return nil
-        end
-
-        print("Try to request hash from server", filename, hash)
-        local request = {"EXIST", hash}
-        linda:send("request", request)
-
-        local realpath
-        while not realpath do
-            local _, value = linda:receive(0.001, "file exist")
-            if value == "not exist" then
-                --not such file on server
-                print("error: file "..filename.." can't be found")
-                return nil
-            else
-                realpath = value
-            end
-        end
-
-        --value is the real path
-        request = {"GET", realpath, hash}
-        linda:send("request", request)
-        -- get file
-        while true do
-            local _, file_value = linda:receive(0.001, "new file")
-            if file_value then
-                --file_value should be local address
-                --client_repo:write should be called in io thread
-                print("get new file: " .. realpath)
-                break
-            end
-        end
-
-    end
+origin_print = print
+function sendlog(cat, ...)
+    linda:send("log", {cat, os.clock(),...})
+    --origin_print(cat, ...)
 end
 
+function app_log( ...)
+
+    local output_log_string = {}
+    for _, v in ipairs({...}) do
+        table.insert(output_log_string, tostring(v))
+    end
+
+    sendlog("Script", table.unpack(output_log_string))
+end
+
+print = function(...)
+    origin_print(...)
+    --print will have a priority 1
+    app_log(...)
+end
 
 function CreateIOThread(linda, pkg_dir, sb_dir)
     local vfs = require "firmware.vfs"
@@ -114,7 +66,6 @@ while true do
     local key, value = linda:receive(0.01, "new connection")
    -- print("waiting connection")
     if value then
-        print("sss")
         for _, filename in ipairs(check_path) do
             print("self updating file: ".. filename)
             while true do
