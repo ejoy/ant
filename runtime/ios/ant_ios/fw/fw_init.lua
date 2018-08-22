@@ -20,7 +20,7 @@ entrance = nil
 
 local origin_print = print
 function sendlog(cat, ...)
-    linda:send("log", {cat, ...})
+    linda:send("log", {cat, os.clock(), ...})
     --origin_print(cat, ...)
 end
 
@@ -31,7 +31,7 @@ function app_log( ...)
         table.insert(output_log_string, tostring(v))
     end
 
-  --  sendlog("Script", table.unpack(output_log_string))
+    sendlog("Script", table.unpack(output_log_string))
 end
 
 print = function(...)

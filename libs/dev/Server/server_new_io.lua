@@ -150,7 +150,8 @@ function server:HandlePackage(response_pkg, id, self)
         --do nothing for now
         --response_pkg[2] is category info
         --response_pkg[3] is log data
-        print("get log", response_pkg)
+        print("get log", response_pkg[2], response_pkg[3], response_pkg[4])
+
         table.insert(self.log, {table.unpack(response_pkg, 2)})
         return "DONE"
     else
@@ -340,7 +341,6 @@ function server:mainloop(timeout)
     --find new disconnection
     if n_disconnect and #n_disconnect > 0 then
         for _, v in ipairs(n_disconnect) do
-            print("111", v)
             print(pcall(self.kick_client, self, v))
             self:kick_client(v)
 
