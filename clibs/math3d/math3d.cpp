@@ -11,6 +11,8 @@ extern "C" {
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+#include <glm/vector_relational.hpp>
+
 #include <glm/gtx/euler_angles.hpp>
 
 
@@ -34,6 +36,10 @@ extern "C" {
 #define MAT_ORTHO 1
 
 static bool g_default_homogeneous_depth = false;
+
+bool default_homogeneous_depth(){
+	return g_default_homogeneous_depth;
+}
 
 
 static const char *
@@ -902,6 +908,18 @@ mul_2values(lua_State *L, struct lastack *LS) {
 	}
 }
 
+template<typename T>
+inline bool
+is_zero(const T &a) {
+	return glm::all(glm::equal(a, glm::zero<T>(), glm::epsilon<T>()));
+}
+
+template<>
+inline bool 
+is_zero<float>(const float &a) {
+	return glm::equal(a, glm::zero<float>(), glm::epsilon<float>());
+}
+
 static void mulH_2values(lua_State *L, struct lastack *LS){
 	int64_t v1 = pop(L, LS);
 	int64_t v0 = pop(L, LS);
@@ -911,14 +929,10 @@ static void mulH_2values(lua_State *L, struct lastack *LS){
 	if (t0 != LINEAR_TYPE_VEC4 && t1 != LINEAR_TYPE_MAT)
 		luaL_error(L, "'%' operator only support vec4 * mat, type0 is : %d, type1 is : %d", t0, t1);
 
-	glm::vec4 r = *mat * *v;
-	if (r != glm::epsilon<glm::vec4>())
-	{
-		float invW = 1.f / fabs(r.w);
-		r.x *= invW;
-		r.y *= invW;
-		r.z *= invW;
-		r.w = 1;
+	glm::vec4 r = *mat * *v;	
+	if (!is_zero(r)){
+		r /= fabs(r.w);
+		r.w = 1.f;
 	}
 
 	lastack_pushvec4(LS, &r.x);
@@ -1009,7 +1023,7 @@ unpack_top(lua_State *L, struct lastack *LS) {
 		break;
 	case LINEAR_TYPE_QUAT: {
 		float sinTheth_2 = std::sqrt(1 - r[3] * r[3]);
-		if (sinTheth_2 == glm::epsilon<float>())
+		if (is_zero(sinTheth_2))
 			sinTheth_2 = 0.00001f;
 
 		glm::vec4 v(glm::normalize(*(glm::vec3*)r / sinTheth_2), 0);
@@ -1106,9 +1120,9 @@ convert_to_quaternion(lua_State *L, struct lastack *LS){
 	lastack_pushquat(LS, &q.x);
 }
 
-static inline glm::vec3
+glm::vec3
 to_viewdir(const glm::vec3 &e){
-	return (e != glm::epsilon<glm::vec3>()) ? 
+	return is_zero(e) ? 
 		glm::rotate(glm::quat(e), glm::vec3(0, 0, 1)) :
 		glm::vec3(0, 0, 1);
 }
@@ -1201,7 +1215,7 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 	glm::vec4 zdir(to_viewdir(glm::radians(*(glm::vec3*)v)), 0);
 	
 	glm::vec4 xdir, ydir;
-	if ((zdir - glm::vec4(0, 0, 1, 0)) == glm::epsilon<glm::vec4>()){
+	if (is_zero(zdir - glm::vec4(0, 0, 1, 0))){
 		ydir = glm::vec4(0, 0, -1, 0);
 		xdir = glm::vec4(1, 0, 0, 0);
 	} else {
@@ -1589,109 +1603,6 @@ ltype(lua_State *L) {
 	return 2;
 }
 
-static int 
-lscreenpt_to_3d(lua_State *L){
-	int numarg = lua_gettop(L);
-	if (numarg < 5){
-		luaL_error(L, "5 arguments needed!", numarg);
-	}
-
-	// get 2d point, point.z is the depth in ndc space
-	luaL_checktype(L, 1, LUA_TTABLE);
-
-	size_t len = lua_rawlen(L, 1);
-	std::vector<glm::vec3>	vv(len / 3);
-	float * v = &vv[0].x;	
-
-	for (int ii = 0; ii < len; ++ii) {
-		lua_geti(L, 1, ii+1);
-		*v++ = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-	}
-
-	// get camera frustum
-	luaL_checktype(L, 2, LUA_TTABLE);
-	lua_getfield(L, 2, "type");
-	const char* type = lua_tostring(L, -1);
-	struct Frustum {
-		float l, r, t, b, n, f;
-	};
-	Frustum f;
-
-	float* fv = &f.l;
-
-	const char* elemnames[] = {
-		"l", "r", "t", "b", "n", "f",
-	};
-
-	for (auto name : elemnames){
-		lua_getfield(L, 2, name);
-		*fv++ = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-	}
-	
-	glm::mat4x4 matProj;
-	if (strcmp(type, "proj") == 0) {
-		auto frustumLH = g_default_homogeneous_depth ? glm::frustumLH_NO<float> : glm::frustumLH_ZO<float>;
-		matProj = frustumLH(f.l, f.r, f.b, f.t, f.n, f.f);
-	} else if (strcmp(type, "ortho") == 0) {
-		auto orthLH = g_default_homogeneous_depth ? glm::orthoLH_NO<float> : glm::orthoLH_ZO<float>;
-		matProj = orthLH(f.l, f.r, f.b, f.t, f.n, f.f);
-	}
-
-	// get camera position & rotation
-	glm::vec3 position, euler;
-	luaL_checktype(L, 3, LUA_TTABLE);
-
-	for (int ii = 0; ii < 3; ++ii) {
-		lua_geti(L, 3, ii + 1);
-		position[ii] = lua_tointeger(L, -1);
-		lua_pop(L, 1);
-
-		lua_geti(L, 4, ii + 1);
-		euler[ii] = lua_tointeger(L, -1);
-		lua_pop(L, 1);
-	}
-
-	glm::vec3 viewDir = to_viewdir(glm::radians(euler));
-	glm::mat4x4 matView = glm::lookAtLH(position, position + viewDir, glm::vec3(0, 1, 0));
-	
-	// get viewport size
-	lua_getfield(L, 5, "w");
-	float width = lua_tointeger(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, 5, "h");
-	float height = lua_tointeger(L, -1);
-	lua_pop(L, 1);
-
-
-	//////////////////////////////////////////////////////////////////////////
-	glm::mat4x4 matInverseVP = glm::inverse(matProj * matView);
-	
-	
-	for (auto& pt : vv) {		
-		auto remap0_1 = [](float v) {
-			return v * 2.f - 1.f;
-		};
-		pt.x = remap0_1(pt.x / width);
-		pt.y = remap0_1((height - pt.y) / height);
-		
-
-		auto tmp = matInverseVP * glm::vec4(pt, 1);
-		pt = tmp / tmp.w;		
-	}
-	
-	const float * cv = &vv[0].x;
-	lua_createtable(L, 6, 0);
-	for (int ii = 0; ii < 6; ++ii) {
-		lua_pushnumber(L, *cv++);
-		lua_seti(L, -2, ii + 1);
-	}
-
-	return 1;
-}
-
 static int
 lhomogeneous_depth(lua_State *L){
 	int num = lua_gettop(L);
@@ -1733,18 +1644,6 @@ extern "C"
 			{ NULL, NULL },
 		};
 		luaL_newlib(L, l);
-		return 1;
-	}
-
-	LUAMOD_API int
-	luaopen_math3d_baselib(lua_State *L){
-		luaL_Reg l[] = {
-			{ "screenpt_to_3d", lscreenpt_to_3d },
-			{ NULL, NULL },
-		};
-
-		luaL_newlib(L, l);
-
 		return 1;
 	}
 }

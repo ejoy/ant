@@ -172,8 +172,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\clibs\math3d\baselib.cpp" />
     <ClCompile Include="..\..\clibs\math3d\linalg.c" />
     <ClCompile Include="..\..\clibs\math3d\math3d.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\clibs\math3d\linalg.h" />
+    <ClInclude Include="..\..\clibs\math3d\refstack.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\clibs\math3d\test.lua" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
