@@ -213,8 +213,12 @@ function client:CollectRequest()
             end
         elseif key == "log" then
             --table.insert(self.sending, pack.pack({"LOG", table.unpack(value)}))
+
             if self.current_connect then
                 self.io:Send(self.current_connect, {"LOG", table.unpack(value)})
+            else
+                if not self.log_cache then self.log_cache = {} end
+                table.insert(self.log_cache, value)
             end
 
         elseif key == "screenshot" then
@@ -264,6 +268,12 @@ function client:mainloop(timeout)
 
             if not self.current_connect then
                 self.current_connect = v    -- default send to this id
+
+                if self.log_cache then
+                    for _, l in ipairs(self.log_cache) do
+                        self.io:Send(self.current_connect, {"LOG", table.unpack(l)})
+                    end
+                end
             end
         end
     end

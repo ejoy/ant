@@ -18,7 +18,7 @@ linda = lanes.linda()
 --project entrance
 entrance = nil
 
-local origin_print = print
+origin_print = print
 function sendlog(cat, ...)
     linda:send("log", {cat, os.clock(),...})
     --origin_print(cat, ...)
@@ -46,7 +46,7 @@ lodepng = require "lodepnglua"
 g_WindowHandle = nil
 g_Width, g_Height = 0
 
-local origin_open = io.open
+origin_open = io.open
 io.open = function (filename, mode, search_local_only)
     --default we don't search local only
     search_local_only = search_local_only or false
@@ -64,27 +64,6 @@ io.open = function (filename, mode, search_local_only)
                 print("get file: "..filename)
                 return file
             end
---[[
-            local wait_time = os.clock()
-            while true do
-                local key, val = linda:receive(0.001, "vfs_open_res")
-                if val then
-                    print("get waiting result")
-                    file_path, hash = val[1], val[2]
-                    break
-                end
-
-                --wait half a second max
-                if os.clock() - wait_time > 0.5 then
-                    break
-                end
-            end
-
-            if file_path then
-                print("get file: " .. file_path, filename)
-                return origin_open(file_path, mode)
-            end
---]]
 
             print("hash is: " ..tostring(hash))
             if not hash then
@@ -212,7 +191,6 @@ require = function(require_path)
 end
 
 function CreateIOThread(linda, pkg_dir, sb_dir)
-
     print("init client repo")
     local vfs = require "firmware.vfs"
     local io_repo = vfs.new(pkg_dir, sb_dir.."/Documents")
