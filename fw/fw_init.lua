@@ -53,16 +53,36 @@ io.open = function (filename, mode, search_local_only)
 
     --vfs not initialized, can only use origin function
 
-    if client_repo then
-        print("opening file: ", filename)
+    print("start open file ", filename)
+
+    if client_repo or io_thread then
+        print("opening file: " .. filename)
         while true do
-            --vfs:open()
-            local file, hash = client_repo:open(filename)
-     --       local file_path, hash
-     --       linda:send("vfs_open", filename)
-            if file then
-                print("get file: "..filename)
-                return file
+            --have io thread
+            local hash
+            if io_thread then
+                local file_path
+                linda:send("vfs_open", filename)
+                while true do
+                    local _, value = linda:receive("vfs_open_res", 0.001)
+                    if value then
+                        file_path, hash = value[1], value[2]
+                        break
+                    end
+                end
+
+                if file_path then
+                    print("get file: "..filename)
+                    return origin_open(file_path, mode)
+                end
+            else
+                local file
+                file, hash = client_repo:open(filename)
+                if file then
+                    --io not init, but have local repo
+                    print("get file: "..filename)
+                    return file
+                end
             end
 
             print("hash is: " ..tostring(hash))
@@ -271,6 +291,8 @@ function HandleMsg()
     while true do
         local key, value = linda:receive(0.001, "run", "screenshot_req")
         if key == "run" then
+            --server may modified files, need changeroot
+
             run(value)
         elseif key == "screenshot_req" then
             if entrance then

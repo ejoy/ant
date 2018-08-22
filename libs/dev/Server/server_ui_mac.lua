@@ -21,6 +21,7 @@ function init()
     end
 
     server_framework:SetProjectDirectoryPath("/Users/ejoy/Desktop/Engine/ant")
+    server_framework:HandleCommand("all", "RUN", "/libs/testlua.lua")
 end
 
 local count = 1
@@ -31,10 +32,6 @@ function mainloop()
     --server_framework:update()
     --HandleResponse(server_framework:RecvResponse())
 
-    count = count + 1
-    if count == 1000 then
-        server_framework:HandleCommand("all", "RUN", "/libs/testlua.lua")
-    end
     --print("count", count)
     --]]
 end

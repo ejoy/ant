@@ -5,10 +5,12 @@ local io = {}
 io.__index = io
 
 --todo: ios device does not need libimobiledevice, only server needs it
---local imd = require "libimobiledevicelua"
 local lsocket = require "lsocket"
 local pack = require "pack"
-
+local err, imd = pcall(require, "libimobiledevicelua")
+if not err then
+    imd = nil   --libimobiledevicelua not avaliable, means its on client
+end
 PACKAGE_DATA_SIZE_ = 62*1024
 
 local function IsUdid(id)
@@ -37,20 +39,25 @@ end
 function io:Connect(id, type)
     --id can be "address:port", or udid of a mobile device
     if IsUdid(id) then
-        local imd = require "libimobiledevicelua"
+        --local imd = require "libimobiledevicelua"
         --todo bug fix
-        local result = imd.Connect(id, 8888)
-        if result then
-            if not self.udid then
-                self.udid = {}
-            end
-            --cache udid info
-            self.udid[id] = true
+        if imd then
+            local result = imd.Connect(id, 8888)
+            if result then
+                if not self.udid then
+                    self.udid = {}
+                end
+                --cache udid info
+                self.udid[id] = true
 
-            print("connect to "..id.." successful")
-            return true
+                print("connect to "..id.." successful")
+                return true
+            else
+                print("connect to "..id.." failed")
+                return false
+            end
         else
-            print("connect to "..id.." failed")
+            print("libimobiledevice not avaliable")
             return false
         end
     else
@@ -112,10 +119,15 @@ function io:Disconnect(id)
     end
 
     if IsUdid(id) then
-        local imd = require "libimobiledevicelua"
-        if self.udid then
-            self.udid[id] = nil
-            return imd.Disconnect(id)
+        --local imd = require "libimobiledevicelua"
+        if imd then
+            if self.udid then
+                self.udid[id] = nil
+                return imd.Disconnect(id)
+            end
+        else
+            print("libimobiledevice not avaliable")
+            return false
         end
     else
         if self.socket then
@@ -136,14 +148,19 @@ function io:Send(id, data)
     local pkg = pack.pack(data)
 
     if IsUdid(id) then
-        if self.udid and self.udid[id] then
-            print("send pkg to: " .. id)
+        if imd then
+            if self.udid and self.udid[id] then
+                print("send pkg to: " .. id)
 
-            if not self.send[id] then self.send[id] = {} end
-            table.insert(self.send[id], pkg)
-            return true
+                if not self.send[id] then self.send[id] = {} end
+                table.insert(self.send[id], pkg)
+                return true
 
-            --return imd.Send(id, pkg)
+                --return imd.Send(id, pkg)
+            end
+        else
+            print("libimobiledevice not avaliable")
+            return false
         end
     else
         if self.socket then
@@ -164,28 +181,31 @@ end
 function io:Get(id)
     local pkg = {}
     if IsUdid(id) then
-        if self.udid and self.udid[id] then
-            print("get package from: "..id)
-            --todo cache pkg
-            --pkg = imd.Get(id)
-            if self.recv and self.recv[id] then
-                for _, data_pkg in ipairs(self.recv[id]) do
-                    local unpack_table = pack.unpack(data_pkg)
-                    for _, unpack_pkg in ipairs(unpack_table) do
-                        --print("get pkg", unpack_pkg)
-                        table.insert(pkg, pack.unpack(unpack_pkg))
+        if imd then
+            if self.udid and self.udid[id] then
+                --todo cache pkg
+                --pkg = imd.Get(id)
+                if self.recv and self.recv[id] and #self.recv[id] > 0 then
+                    for _, data_pkg in ipairs(self.recv[id]) do
+                        local unpack_table = pack.unpack(data_pkg)
+                        for _, unpack_pkg in ipairs(unpack_table) do
+                            --print("get pkg", unpack_pkg)
+                            table.insert(pkg, pack.unpack(unpack_pkg))
+                        end
                     end
-                end
 
-                print("get package form: " .. id .. ", cache size: ".. #self.recv[id])
-                self.recv[id] = nil
+                    print("get package form: " .. id .. ", cache size: ".. #self.recv[id])
+                    self.recv[id] = nil
+                end
             end
+        else
+            print("libimobiledevice not available, can't get msg through udid")
         end
     else
         if self.socket then
             local fd = self.socket[id]
             if fd then
-                if self.recv and self.recv[fd] then
+                if self.recv and self.recv[fd] and #self.recv[fd] > 0 then
                     print("getting data from : " .. id)
 
                     for _, data_pkg in ipairs(self.recv[fd]) do
@@ -234,6 +254,7 @@ function io:Update(timeout)
     local dis_id = {}   --new disconnected id
 
     local rd, wt = self:Select(timeout)
+
     if rd then
         for _, fd in ipairs(rd) do
             if fd == self.host then
@@ -283,7 +304,7 @@ function io:Update(timeout)
 
                     self.reading = self.reading:sub(off)
 
-                  --  table.insert(self.recv[fd], recv_data)
+                    --  table.insert(self.recv[fd], recv_data)
                 else
                     print("need kick", fd)
                     local d_id
@@ -313,21 +334,24 @@ function io:Update(timeout)
             if fd then
                 --send package
                 if self.send[fd] and #self.send[fd] > 0 then
-                    --print("send cache", #self.send[fd])
+                    --print("send cache", self.send[fd])
                     pack.send(fd, self.send[fd])
                 end
+                --   pack.send(fd, {pack.pack({"LOG", "test"})})
             end
         end
     end
 
-    --libimobiledevice
+
     --send and recv key will be udid, other then these mostly the same
-    if self.udid then
-        local imd = require "libimobiledevicelua"
+
+    if self.udid and imd then
         for udid,_ in pairs(self.udid) do
             --recv
             if not self.recv[udid] then self.recv[udid] = {} end
-            local recv_data = imd.Recv(udid)
+
+            local recv_data = imd.Recv(udid, timeout*1000)
+
             if recv_data then
                 table.insert(self.recv[udid], recv_data)
             end

@@ -111,9 +111,14 @@ function clientcommand.DIR(resp, self)
 
 end
 
+local run_cmd_cache = nil
 function clientcommand.RUN(resp, self)
     _linda:send("log", {"Bgfx", "get run command", resp[1], resp[2]})
-    _linda:send("run", resp[2])
+    run_cmd_cache = resp[2]
+
+    print("request root")
+    self.io:Send(self.current_connect, {"REQUEST_ROOT"})
+    --_linda:send("run", resp[2])
 end
 
 function clientcommand.SCREENSHOT(resp, self)
@@ -329,8 +334,14 @@ function client:mainloop(timeout)
                 self.vfs:changeroot(recv[2])
 
                 ---do self update
-                print("get new conneciton ")
-                self.linda:send("new connection", true)
+                if run_cmd_cache then
+                    print("restore run command")
+                    self.linda:send("run", run_cmd_cache)
+                    run_cmd_cache = nil
+                else
+                    print("get new conneciton ")
+                    self.linda:send("new connection", true)
+                end
             else
                 local func = receive_cmd[cmd]
                 if not func then

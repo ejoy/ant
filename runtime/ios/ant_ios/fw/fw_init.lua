@@ -20,7 +20,7 @@ entrance = nil
 
 origin_print = print
 function sendlog(cat, ...)
-    linda:send("log", {cat, os.clock(), ...})
+    linda:send("log", {cat, os.clock(),...})
     --origin_print(cat, ...)
 end
 
@@ -54,12 +54,12 @@ io.open = function (filename, mode, search_local_only)
     --vfs not initialized, can only use origin function
 
     if client_repo then
-        print("opening file: ", filename)
+        print("opening file: " .. filename)
         while true do
             --vfs:open()
             local file, hash = client_repo:open(filename)
-     --       local file_path, hash
-     --       linda:send("vfs_open", filename)
+            --       local file_path, hash
+            --       linda:send("vfs_open", filename)
             if file then
                 print("get file: "..filename)
                 return file
@@ -118,7 +118,7 @@ io.open = function (filename, mode, search_local_only)
 end
 
 local function get_require_search_path(r_name)
---return a table of possible path the file is on
+    --return a table of possible path the file is on
     local search_string = package.remote_search_path
     local search_table = {}
 
@@ -271,6 +271,8 @@ function HandleMsg()
     while true do
         local key, value = linda:receive(0.001, "run", "screenshot_req")
         if key == "run" then
+            --server may modified files, need changeroot
+
             run(value)
         elseif key == "screenshot_req" then
             if entrance then
