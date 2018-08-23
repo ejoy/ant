@@ -1,5 +1,8 @@
 return function()
     if entrance then
-        entrance.terminate()
+        local res = safe_run(entrance.terminate, "entrance.terminate")
+        if not res then
+            entrance = nil
+        end
     end
 end

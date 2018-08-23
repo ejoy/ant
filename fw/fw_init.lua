@@ -2,10 +2,9 @@
 local log, pkg_dir, sand_box_dir = ...
 
 package.path = package.path .. ";/fw/?.lua;" .. pkg_dir .. "/fw/?.lua;" .. pkg_dir .. "/?.lua;"
-package.path = "../Common/?.lua;./?.lua;../?/?.lua;../?.lua;" .. package.path  --path for the app
 --TODO: find a way to set this
 --path for the remote script
-package.remote_search_path = "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;./libs/asset/?.lua;./libs/ecs/?.lua;./libs/imputmgr/?.lua;"
+package.remote_search_path = "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;/libs/?/?.lua;"
 lanes = require "lanes"
 if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
 linda = lanes.linda()
@@ -196,18 +195,44 @@ require = function(require_path)
             print("content", content)
             file:close()
 
-            local err, result = pcall(load(content, "@"..require_path))
+            local err, result = pcall(load, content, "@"..require_path)
             if not err then
                 print("require " .. require_path .. " error: " .. result)
                 return nil
             else
-                return result
+                return result()
             end
         end
     end
 
     print("use origin require")
     return origin_require(require_path)
+end
+
+local origin_loadfile = loadfile
+loadfile = function(file_path)
+    --priority
+    local file = io.open(file_path, "r")
+    if file then
+        local file_string = file:read("a")
+        file:close()
+        local result, load_data = pcall(load, file_string)
+        if result then
+            return load_data
+        else
+            print("load error: " .. load_data)
+        end
+    end
+
+    print("use origin loadfile")
+    local err_string
+    file, err_string = origin_loadfile(file_path)
+    if not file then
+        print("can not load file: " .. tostring(file_path) .. " error: " .. err_string)
+        return nil, err_string
+    else
+        return file
+    end
 end
 
 function CreateIOThread(linda, pkg_dir, sb_dir)
@@ -228,12 +253,12 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
                 print("content", content)
                 file:close()
 
-                local err, result = pcall(load(content, "@"..require_path))
+                local err, result = pcall(load, content, "@"..require_path)
                 if not err then
                     print("require " .. require_path .. " error: " .. result)
                     return nil
                 else
-                    return result
+                    return result()
                 end
             end
         end
@@ -245,7 +270,6 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
 
     print("create io")
     local client_io = require "fw.client_io"
-    print("get required ", client_io)
     local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir, io_repo)
 
     print("create io finished")
@@ -258,6 +282,36 @@ local lanes_err
 io_thread, lanes_err = lanes.gen("*", CreateIOThread)(linda, pkg_dir, sand_box_dir)
 if not io_thread then
     assert(false, "lanes error: ".. lanes_err)
+end
+
+local connect_to_server = false
+
+--todo: offline mode?
+while true do
+    local key, value = linda:receive(0.001, "new connection")
+    if value then
+        connect_to_server = true
+        break
+    end
+end
+
+--remote code can be put blow here
+if connect_to_server then
+    local result, dbg = pcall(require, "debugger")
+    if not result then
+        print("try require debugger: ", dbg)
+    else
+        print("try start workder:" ,pcall(dbg.start_worker))
+    end
+end
+
+function safe_run(func, name,...)
+    local res, run_data = pcall(func, ...)
+    if not res then
+        print("run func " .. name .. " error: " .. run_data)
+    end
+
+    return res, run_data
 end
 
 function run(path)
@@ -274,13 +328,24 @@ function run(path)
     --print("entrance string: ", entrance_string)
     file:close()
 
-    local res = false
-    res, entrance =  pcall(load(entrance_string))
+    local res
+    res, entrance = safe_run(load,"load", entrance_string)
 
+    print("entracne is " ..tostring(entrance))
+    --entrance should be a function
     if res then
-        entrance.init(g_WindowHandle, g_Width, g_Height)
+        --load give a function, needs to run it
+        res, entrance = safe_run(entrance, "entrance()")
+        if res then
+            --entrance.init(g_WindowHandle, g_Width, g_Height)
+            local res = safe_run(entrance.init, "entrance.init",g_WindowHandle, g_Width, g_Height)
+            if not res then
+                entrance = nil
+            end
+        else
+            entrance = nil
+        end
     else
-        print("entrance script error")
         entrance = nil
     end
 end

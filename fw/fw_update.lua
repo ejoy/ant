@@ -1,7 +1,11 @@
 return function()
 
     if entrance then
-        entrance.mainloop()
+        local res = safe_run(entrance.mainloop, "entrance.mainloop")
+        if not res then
+            entrance = nil
+        end
+        --entrance.mainloop()
         --[[
         local log = bgfx.get_log()
         if log and #log>0 then
