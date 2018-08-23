@@ -7,6 +7,7 @@ package.path = "libs/dev/Common/?.lua;libs/dev/Server/?.lua;libs/dev/?.lua;".. p
 package.path = project_dir.."/libs/?.lua;".. package.path
 package.path = project_dir.."/libs/?/?.lua;".. package.path
 
+local path = require "filesystem.path"
 local iup = require "iuplua"
 local mobiledevice = require "libimobiledevicelua"
 local server_framework = require "server_framework"
@@ -14,7 +15,7 @@ server_framework:init("127.0.0.1", 8888)
 
 --todo store in a file
 local winfile = require "winfile"
-local default_proj_dir =  winfile.currentdir() ..  "/libs"
+local default_proj_dir =  winfile.currentdir()
 --ui layout
 
 local script_text = iup.text{ multiline = "YES", expand = "YES" }
@@ -129,9 +130,19 @@ function run_file_btn:action()
     for k, v in pairs(devices) do
 
         if status ~= "-1" then
-            local file_value = string.gsub(filedlg.value, "\\", "/")
+            local p_dir = proj_dir_text.value
 
-            server_framework:HandleCommand(v, "RUN", file_value)
+            local file_path = filedlg.value
+            local s_pos, e_pos = string.find(file_path, p_dir)
+            if e_pos then
+                print("file path is absolute")
+                file_path = string.sub(file_path, e_pos+1)
+            end
+
+            file_path = string.gsub(file_path, "\\", "/")
+            --print(file_path)
+
+            server_framework:HandleCommand(v, "RUN", file_path)
         end
 
     end
@@ -213,7 +224,12 @@ local function HandleResponse(resp_table)
             local cat = log_table[1]
 
             if cat == "Script" then
-                local new_log_value = log_table[2]
+                table.remove(log_table, 1)
+                local new_log_value = ""
+                for _, script_v in ipairs(log_table) do
+                    new_log_value = new_log_value .. tostring(script_v) .. " "
+                end
+
                 if new_log_value then
                     new_log_value = new_log_value .. "\n"
                     --todo temperary disable

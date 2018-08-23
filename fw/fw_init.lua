@@ -205,7 +205,7 @@ require = function(require_path)
         end
     end
 
-    print("use origin require")
+    print("use origin require", require_path)
     return origin_require(require_path)
 end
 
@@ -329,7 +329,7 @@ function run(path)
     file:close()
 
     local res
-    res, entrance = safe_run(load,"load", entrance_string)
+    res, entrance = safe_run(load,"load", entrance_string, "@..path")
 
     print("entracne is " ..tostring(entrance))
     --entrance should be a function

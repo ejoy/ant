@@ -390,6 +390,12 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
     if cmd == "RUN" then
         local entrance_path = cmd_data[1]
 
+        --todo find a way to update
+        if PLATFORM ~= "MAC" then
+            --windows for now
+            print(pcall(self.vfs_repo.init, self.vfs_repo, "."))
+        end
+
         if udid == "all" then
             for k, _ in pairs(self.connect) do
                 local request = {{"RUN", entrance_path}, k}
