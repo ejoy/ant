@@ -3,10 +3,6 @@
 local frustum = {}
 frustum.__index = frustum
 
-frustum.__call = function (t, ...)
-	return t.new(...)
-end
-
 function frustum.new(f, ms)
 	return setmetatable({l=f.l, r=f.r, t=f.t, b=f.b, n=f.n, f=f.f, ms}, frustum)
 end

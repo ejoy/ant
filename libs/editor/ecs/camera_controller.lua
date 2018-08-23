@@ -31,16 +31,11 @@ camera_controller_system.singleton "message_component"
 camera_controller_system.singleton "control_state"
 
 camera_controller_system.depend "iup_message"
+camera_controller_system.depend "camera_init"
 
 function camera_controller_system:init()
 	local ms = self.math_stack
-	local camera_eid = world:first_entity_id("main_camera")
-	if camera_eid then
-		return 
-	end
-
-	local camera = world[camera_eid]
-
+	local camera = world:first_entity("main_camera")
 
 	local move_speed = 1
 	local message = {}
