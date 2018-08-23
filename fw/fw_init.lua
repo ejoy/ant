@@ -39,6 +39,16 @@ print = function(...)
     app_log(...)
 end
 
+
+function safe_run(func, name,...)
+    local res, run_data = pcall(func, ...)
+    if not res then
+        print("run func " .. name .. " error: " .. run_data)
+    end
+
+    return res, run_data
+end
+
 winfile = require "winfile"
 lodepng = require "lodepnglua"
 
@@ -75,6 +85,7 @@ io.open = function (filename, mode, search_local_only)
                     return origin_open(file_path, mode)
                 end
             else
+                --don't have io initiated, use local repo(currently only use to open file for io)
                 local file
                 file, hash = client_repo:open(filename)
                 if file then
@@ -168,7 +179,7 @@ local function remote_searcher(name)
             io.input(r_file)
             local r_data = r_file:read("a")
             r_file:close()
-            return load(r_data, "@"..name)
+            return load(r_data, "@"..v)
         end
     end
 
@@ -185,7 +196,8 @@ table.insert(package.searchers, remote_searcher)
 local origin_require = require
 require = function(require_path)
     print("requiring "..require_path)
-    if client_repo then
+
+    if client_repo or io_thread then
         local file_path = string.gsub(require_path, "%.", "/")
         file_path = file_path .. ".lua"
         local file = client_repo:open(file_path)
@@ -195,9 +207,8 @@ require = function(require_path)
             print("content", content)
             file:close()
 
-            local err, result = pcall(load, content, "@"..require_path)
+            local err, result = safe_run(load, "load", content, "@"..require_path)
             if not err then
-                print("require " .. require_path .. " error: " .. result)
                 return nil
             else
                 return result()
@@ -216,11 +227,9 @@ loadfile = function(file_path)
     if file then
         local file_string = file:read("a")
         file:close()
-        local result, load_data = pcall(load, file_string)
+        local result, load_data = safe_run(load, "load", file_string)
         if result then
             return load_data
-        else
-            print("load error: " .. load_data)
         end
     end
 
@@ -297,21 +306,12 @@ end
 
 --remote code can be put blow here
 if connect_to_server then
-    local result, dbg = pcall(require, "debugger")
+    local result, dbg = safe_run(require, "require","debugger")
     if not result then
         print("try require debugger: ", dbg)
     else
-        print("try start workder:" ,pcall(dbg.start_worker))
+        print("try start workder:" ,safe_run(dbg.start_worker, "dbg.start_worker"))
     end
-end
-
-function safe_run(func, name,...)
-    local res, run_data = pcall(func, ...)
-    if not res then
-        print("run func " .. name .. " error: " .. run_data)
-    end
-
-    return res, run_data
 end
 
 function run(path)
@@ -329,7 +329,7 @@ function run(path)
     file:close()
 
     local res
-    res, entrance = safe_run(load,"load", entrance_string, "@..path")
+    res, entrance = safe_run(load,"load", entrance_string, "@"..path)
 
     print("entracne is " ..tostring(entrance))
     --entrance should be a function
