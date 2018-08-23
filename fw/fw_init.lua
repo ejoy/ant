@@ -170,55 +170,33 @@ local function get_require_search_path(r_name)
     return search_table
 end
 
+
+local require_cache = {}    --record every files that was required, use to clear package.loaded every "run"
 local function remote_searcher(name)
     ---search through package.remote_search_path
     local file_table = get_require_search_path(name)
     for _, v in ipairs(file_table) do
         local r_file = io.open(v, "rb")
         if r_file then
+            print("open required file", name, v)
             io.input(r_file)
             local r_data = r_file:read("a")
             r_file:close()
+
+            --cache the required file name
+            table.insert(require_cache, name)
             return load(r_data, "@"..v)
         end
     end
 
     --required file not exist in the search path
-    print("require failed")
+    --print("require failed")
     for _, v in ipairs(file_table) do
         print("can't find: "..name.." in " .. v)
     end
     return nil
 end
 table.insert(package.searchers, remote_searcher)
-
---require function, will search local files
-local origin_require = require
-require = function(require_path)
-    print("requiring "..require_path)
-
-    if client_repo or io_thread then
-        local file_path = string.gsub(require_path, "%.", "/")
-        file_path = file_path .. ".lua"
-        local file = client_repo:open(file_path)
-        print("search for file path", file_path)
-        if file then
-            local content = file:read("a")
-            print("content", content)
-            file:close()
-
-            local err, result = safe_run(load, "load", content, "@"..require_path)
-            if not err then
-                return nil
-            else
-                return result()
-            end
-        end
-    end
-
-    print("use origin require", require_path)
-    return origin_require(require_path)
-end
 
 local origin_loadfile = loadfile
 loadfile = function(file_path)
@@ -316,6 +294,12 @@ end
 
 function run(path)
     print("run file: "..path)
+    --clear the require "cache"
+    for _, r_n in ipairs(require_cache) do
+        package.loaded[r_n] = nil
+    end
+    require_cache = {}
+
     if entrance then
         entrance.terminate()
         entrance = nil
