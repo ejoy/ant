@@ -15,24 +15,32 @@ function log(name)
 	end
 end
 
-
-
 local resp_table = {}
+
+local IOCommand_name = {"log", "response"}
+local IOCommand_func = {}
+IOCommand_func["log"] = function(value)
+    table.insert(resp_table, {"log", value})
+end
+
+IOCommand_func["response"] = function(value)
+    if value[1] == "CONNECT" then
+        print("~~CONNECT", value[1], value[2])
+        table.insert(resp_table, {"connect", 1, value[2]})
+    elseif value[1] == "DISCONNECT" then
+        print("~~DISCONNECT", value[1], value[2])
+        table.insert(resp_table, {"connect", 0, value[2]})
+    elseif value[1] == "SCREENSHOT" then
+        table.insert(resp_table, {"screenshot", value[2]})
+    end
+end
+
+
 local function HandleMessage()
     while true do
-        local key, value = linda:receive(0.001, "log", "response")
-        if key == "log" then
-            table.insert(resp_table, {"log", value})
-        elseif key == "response" then
-            if value[1] == "CONNECT" then
-                print("~~CONNECT", value[1], value[2])
-                table.insert(resp_table, {"connect", 1, value[2]})
-            elseif value[1] == "DISCONNECT" then
-                print("~~DISCONNECT", value[1], value[2])
-                table.insert(resp_table, {"connect", 0, value[2]})
-            elseif value[1] == "SCREENSHOT" then
-                table.insert(resp_table, {"screenshot", value[2]})
-            end
+        local key, value = linda:receive(0.001, table.unpack(IOCommand_name))
+        if key then
+            IOCommand_func[key](value)
         else
             break
         end
@@ -106,5 +114,18 @@ function server_ins:SetProjectDirectoryPath(path)
     print("project directory set to", path)
     linda:send("proj dir", path)
 end
+
+function server_ins:SendPackage(pkg)
+    linda:send("command", pkg)
+end
+
+function server_ins:RegisterIOCommand(cmd, func)
+    table.insert(IOCommand_name, cmd)
+    IOCommand_func[cmd] = func
+
+    linda:send("RegisterTransmit", cmd)
+end
+
+
 
 return server_ins

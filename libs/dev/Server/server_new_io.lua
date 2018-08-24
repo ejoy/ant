@@ -232,7 +232,7 @@ function server:kick_client(client_id)
     self.io:Disconnect(client_id)
 end
 
-
+server.transmit_cmd = {}
 local screenshot_cache = nil
 local max_screenshot_pack = 64*1024 - 100
 --store handle of lanes, check the result periodically
@@ -248,7 +248,11 @@ local function response(self, req, id)
     local func = dispatch[cmd]
 
     if not func then
-        self:kick_client(id)  --kick
+        if self.transmit_cmd[cmd] then
+            self.linda:send(cmd, req)
+        else
+            self:kick_client(id)  --kick
+        end
     else
         local resp = { func(req, self) }
         --handle the resp
@@ -370,14 +374,17 @@ function server:SendLog()
     self.log = {}
 end
 
+
 function server:GetLindaMsg()
     while true do
-        local key, value = self.linda:receive(0.001, "command", "proj dir")
+        local key, value = self.linda:receive(0.001, "command", "proj dir", "RegisterTransmit")
         if key == "command" then
             self:HandleIupWindowRequest(value.udid, value.cmd, value.cmd_data)
         elseif key == "proj dir" then
             project_directory = value
             print("change project directory to", project_directory)
+        elseif key == "RegisterTransmit" then
+            self.transmit_cmd[value] = true
         else
             break
         end
