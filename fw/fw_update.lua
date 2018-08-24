@@ -1,5 +1,9 @@
 return function()
 
+    if DbgUpdate then
+        DbgUpdate()
+    end
+
     if entrance then
         local res = safe_run(entrance.mainloop, "entrance.mainloop")
         if not res then

@@ -205,8 +205,11 @@ end
 local dbg_tcp = (require "debugger.io.tcp_server")('127.0.0.1', 4278)
 
 dbg_tcp:event_in(function(data)
-    local server_io = require "server_io"
-    server_io:SendPackage { "dbg", data }
+    server_framework:SendPackage({"dbg", data})
+end)
+
+server_framework:RegisterIOCommand("dbg", function(data_table)
+    dbg_tcp:send(data_table[2])
 end)
 
 local lodepng = require "lodepnglua"
@@ -315,9 +318,6 @@ local function HandleResponse(resp_table)
             else
                 --todo handle decode error
             end
-        elseif v[1] == "dbg" then
-            local data = v[2]
-            dbg_tcp:send(data)
         else
             print("resp " .. v[1] .. " not support yet")
         end

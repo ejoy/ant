@@ -41,7 +41,7 @@ end
 
 
 function safe_run(func, name,...)
-    local res, run_data = pcall(func, ...)
+    local res, run_data = xpcall(func, debug.traceback, ...)
     if not res then
         print("run func " .. name .. " error: " .. run_data)
     end
