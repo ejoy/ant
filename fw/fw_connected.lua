@@ -1,6 +1,24 @@
---remote code can be put blow here
-local dbg = require("debugger")
---dbg.start_worker()
+local Dbg = require 'debugger'
+local DbgIO = {}
+function DbgIO:event_in(f)
+    RegisterIOCommand("dbg", function(data_table)
+        f(data_table[2])
+    end)
+end
+function DbgIO:update()
+end
+function DbgIO:send(data)
+    SendIORequest({"dbg", data})
+end
+function DbgIO:close()
+end
+local DbgMaster = Dbg.start_master(DbgIO)
+local DbgWorker = Dbg.start_worker()
+
+function DbgUpdate()
+    DbgMaster()
+    DbgWorker()
+end
 
 function HandleMsg()
     while true do
