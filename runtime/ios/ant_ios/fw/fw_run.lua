@@ -4,7 +4,7 @@ return function(file_path, ...)
        return
    end
 
-   local f, hash = client_repo:open(file_path)
+   local f, hash = io.open(file_path, "r")
    if not f then
        assert(false, "cannot find file: " .. file_path)
    end

@@ -72,7 +72,7 @@ void HandleError(const char* err_msg)
         return;
     }
     
-    err_msg = luavm_call(V, run_func_f, "spnnss", "fw/fw_start.lua", layer, view_size.width, view_size.height, app_path_char, sand_box_path);
+    err_msg = luavm_call(V, run_func_f, "spnnss", "/fw/fw_start.lua", layer, view_size.width, view_size.height, app_path_char, sand_box_path);
     if(err_msg){
         HandleError(err_msg);
         return;
@@ -81,7 +81,7 @@ void HandleError(const char* err_msg)
 
 -(void) Update {
     //call registed update function
-    const char* err_msg = luavm_call(V, run_func_f, "s", "fw/fw_update.lua");
+    const char* err_msg = luavm_call(V, run_func_f, "s", "/fw/fw_update.lua");
     if(err_msg){
         HandleError(err_msg);
         return;
@@ -91,7 +91,7 @@ void HandleError(const char* err_msg)
 
 -(void) Terminate {
     //call registed terminate function
-    const char* err_msg = luavm_call(V, run_func_f, "s", "fw/fw_terminate.lua");
+    const char* err_msg = luavm_call(V, run_func_f, "s", "/fw/fw_terminate.lua");
     if(err_msg){
         HandleError(err_msg);
         return;
