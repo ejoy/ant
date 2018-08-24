@@ -198,30 +198,6 @@ local function remote_searcher(name)
 end
 table.insert(package.searchers, remote_searcher)
 
-local origin_loadfile = loadfile
-loadfile = function(file_path)
-    --priority
-    local file = io.open(file_path, "r")
-    if file then
-        local file_string = file:read("a")
-        file:close()
-        local result, load_data = safe_run(load, "load", file_string)
-        if result then
-            return load_data
-        end
-    end
-
-    print("use origin loadfile")
-    local err_string
-    file, err_string = origin_loadfile(file_path)
-    if not file then
-        print("can not load file: " .. tostring(file_path) .. " error: " .. err_string)
-        return nil, err_string
-    else
-        return file
-    end
-end
-
 function CreateIOThread(linda, pkg_dir, sb_dir)
     print("init client repo")
     local vfs = require "firmware.vfs"
@@ -273,31 +249,16 @@ end
 
 local connect_to_server = false
 
---todo: offline mode?
-while true do
-    local key, value = linda:receive(0.001, "new connection")
-    if value then
-        connect_to_server = true
-        break
-    end
-end
-
---remote code can be put blow here
-if connect_to_server then
-    local result, dbg = safe_run(require, "require","debugger")
-    if not result then
-        print("try require debugger: ", dbg)
-    else
-        print("try start workder:" ,safe_run(dbg.start_worker, "dbg.start_worker"))
-    end
-end
-
 function run(path)
     print("run file: "..path)
     --clear the require "cache"
     for _, r_n in ipairs(require_cache) do
         package.loaded[r_n] = nil
     end
+
+    package.loaded["fw.fw_connected"] = nil
+
+    safe_run(require, "require", "fw.fw_connected")
     require_cache = {}
 
     if entrance then
@@ -334,42 +295,13 @@ function run(path)
     end
 end
 
-local bgfx = require "bgfx"
-local screenshot_cache_num = 0
-function HandleMsg()
-    while true do
-        local key, value = linda:receive(0.001, "run", "screenshot_req")
-        if key == "run" then
-            --server may modified files, need changeroot
-
-            run(value)
-        elseif key == "screenshot_req" then
-            if entrance then
-                bgfx.request_screenshot()
-                screenshot_cache_num = screenshot_cache_num + 1
-                print("request screenshot: ".. value[2].." num: "..screenshot_cache_num)
-            end
-        else
-            break
-        end
+--todo: offline mode?
+while true do
+    local key, value = linda:receive(0.001, "new connection")
+    if value then
+        connect_to_server = true
+        break
     end
 end
 
-function HandleCacheScreenShot()
-    --if screenshot_cache_num
-    --for i = 1, screenshot_cache_num do
-    if screenshot_cache_num > 0 then
-        local name, width, height, pitch, data = bgfx.get_screenshot()
-        if name then
-            local size =#data
-            print("screenshot size is "..size)
-            screenshot_cache_num = screenshot_cache_num - 1
-            --compress to png format
-            --default is bgra format
-            local data_string = lodepng.encode_png(data, width, height);
-            print("screenshot encode size ",#data_string)
-            linda:send("screenshot", {name, data_string})
-        end
-    end
-end
-
+safe_run(require, "require", "fw.fw_connected")
