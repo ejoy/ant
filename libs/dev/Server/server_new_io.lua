@@ -249,6 +249,7 @@ local function response(self, req, id)
 
     if not func then
         if self.transmit_cmd[cmd] then
+            print("send transmit", cmd)
             self.linda:send(cmd, req)
         else
             self:kick_client(id)  --kick
@@ -377,7 +378,7 @@ end
 
 function server:GetLindaMsg()
     while true do
-        local key, value = self.linda:receive(0.001, "command", "proj dir", "RegisterTransmit")
+        local key, value = self.linda:receive(0.001, "command", "proj dir", "RegisterTransmit", "package")
         if key == "command" then
             self:HandleIupWindowRequest(value.udid, value.cmd, value.cmd_data)
         elseif key == "proj dir" then
@@ -385,6 +386,9 @@ function server:GetLindaMsg()
             print("change project directory to", project_directory)
         elseif key == "RegisterTransmit" then
             self.transmit_cmd[value] = true
+        elseif key == "package" then
+            print("get package ", value[1])
+            self:SendPackage(value)
         else
             break
         end
@@ -442,5 +446,20 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
         print("Iup Window Request not support yet")
     end
 end
+
+function server:SendPackage(pkg, id)
+    --pkg = pack.pack(pkg)
+
+    --send to all id
+    if not id then
+        for k, _ in pairs(self.connect) do
+            --print(pcall(self.io.Send, self.io, k, pkg))
+            self.io:Send(k, pkg)
+        end
+    else
+        self.io:Send(id, pkg)
+    end
+end
+
 
 return server

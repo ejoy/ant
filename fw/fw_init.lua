@@ -156,7 +156,6 @@ local function get_require_search_path(r_name)
     --"../" not support
 
     print("require search string", search_string)
-
     for s_path in string.gmatch(search_string, ".-;") do
         print("get requrie search path: "..s_path)
 
@@ -247,8 +246,6 @@ if not io_thread then
     assert(false, "lanes error: ".. lanes_err)
 end
 
-local connect_to_server = false
-
 function run(path)
     print("run file: "..path)
     --clear the require "cache"
@@ -295,6 +292,41 @@ function run(path)
     end
 end
 
+--send package to io
+function SendIORequest(pkg)
+    linda:send("request", pkg)
+end
+
+--register io call back function
+IoCommand_name = {"run", "screenshot_req"}
+
+IoCommand_func = {}
+IoCommand_func["run"] = function(value) run(value) end
+
+local bgfx = require "bgfx"
+local screenshot_cache_num = 0
+IoCommand_func["screenshot_req"] = function(value)
+    if entrance then
+        bgfx.request_screenshot()
+        screenshot_cache_num = screenshot_cache_num + 1
+        print("request screenshot: " .. value[2] .. " num: " .. screenshot_cache_num)
+    end
+end
+
+function RegisterIOCommand(cmd, func)
+    table.insert(IoCommand_name, cmd)
+    IoCommand_func[cmd] = func
+    --register command in io
+    linda:send("RegisterTransmit", cmd)
+end
+
+--test RegisterIOCommand
+local function dbg_test(value)
+    print("XYZXYZ dbg_test_client: " .. tostring(value[1]) .. " and " ..  tostring(value[2]))
+end
+
+RegisterIOCommand("DBG_SERVER_SENT", dbg_test)
+
 --todo: offline mode?
 while true do
     local key, value = linda:receive(0.001, "new connection")
@@ -305,3 +337,5 @@ while true do
 end
 
 safe_run(require, "require", "fw.fw_connected")
+
+SendIORequest({"DBG_CLIENT_SENT", "12345"})

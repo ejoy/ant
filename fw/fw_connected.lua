@@ -3,21 +3,12 @@
 local dbg = require("debugger")
 --dbg.start_worker()
 
-local bgfx = require "bgfx"
-local screenshot_cache_num = 0
 function HandleMsg()
     while true do
-        local key, value = linda:receive(0.001, "run", "screenshot_req")
-        if key == "run" then
-            --server may modified files, need changeroot
-
-            run(value)
-        elseif key == "screenshot_req" then
-            if entrance then
-                bgfx.request_screenshot()
-                screenshot_cache_num = screenshot_cache_num + 1
-                print("request screenshot: ".. value[2].." num: "..screenshot_cache_num)
-            end
+        local key, value = linda:receive(0.001, table.unpack(IoCommand_name))
+        if key then
+            --run io function
+            IoCommand_func[key](value)
         else
             break
         end

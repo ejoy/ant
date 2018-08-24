@@ -116,7 +116,8 @@ function server_ins:SetProjectDirectoryPath(path)
 end
 
 function server_ins:SendPackage(pkg)
-    linda:send("command", pkg)
+    print("send package server framework", pkg[1])
+    linda:send("package", pkg)
 end
 
 function server_ins:RegisterIOCommand(cmd, func)

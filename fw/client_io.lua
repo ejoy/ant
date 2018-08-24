@@ -169,6 +169,9 @@ function client:register_command(cmd, func)
     receive_cmd[cmd] = func
 end
 
+--if get cmd in transmit_cmd, just send the pkg with linda and do nothing
+local transmit_cmd = {}
+
 function client:send(...)
     local client_req = { ...}
 
@@ -197,7 +200,7 @@ function client:CollectRequest()
     local count = 0
     --this if for client request
     while true do
-        local key, value = _linda:receive(0.001, "request", "log", "screenshot", "vfs_open")
+        local key, value = _linda:receive(0.001, "request", "log", "screenshot", "vfs_open", "RegisterTransmit")
         if key == "request" then
             --calculate sha1 value of the request
             --if the request is already exist, ignore the latter ones
@@ -212,8 +215,8 @@ function client:CollectRequest()
                 count = count + 1
             end
 
-            --for now, hard coded a 10 request limit per update
-            if count == 10 then
+            --for now, hard coded a 50 request limit per update
+            if count == 50 then
                 break
             end
         elseif key == "log" then
@@ -253,6 +256,9 @@ function client:CollectRequest()
             if file then file:close() end
             --FILE can't send through linda
             self.linda:send("vfs_open_res", {f_n, hash})
+
+        elseif key == "RegisterTransmit" then
+            transmit_cmd[value] = true
         else
             break
         end
@@ -330,6 +336,7 @@ function client:mainloop(timeout)
         --process request
         for _, recv in ipairs(recv_package) do
             local cmd = recv[1]
+            print("client recv cmd", cmd)
             if cmd == "SERVER_ROOT" then
                 self.vfs:changeroot(recv[2])
 
@@ -345,10 +352,15 @@ function client:mainloop(timeout)
             else
                 local func = receive_cmd[cmd]
                 if not func then
-                    print("unknown command", cmd)
+                    if transmit_cmd[cmd] then
+                        print("get transmit cmd", cmd)
+                        self.linda:send(cmd, recv)
+                    else
+                        print("unknown command", cmd)
+                    end
+                else
+                    func(recv, self)
                 end
-
-                func(recv, self)
             end
         end
     end
