@@ -21,10 +21,18 @@ function cull_sys:update()
 		local results = filter.result
 		for _, prim in ipairs(results) do
 			local srt = ms({type="srt",s=prim.srt.s, r=prim.srt.r, t=prim.srt.t}, "m")
-			local aabb = math3d_baselib.transform_aabb(srt, prim.aabb)
-			local result = math3d_baselib.interset(planes, aabb)
-			if result ~= "outside" then
-				table.insert(newfilter_result, prim)
+			local function need_filter_out()
+				local oriaabb = prim.aabb
+				if oriaabb == nil then
+					return false
+				end
+
+				local aabb = math3d_baselib.transform_aabb(srt, oriaabb)
+				return "outside" == math3d_baselib.interset(planes, aabb)				
+			end
+
+			if not need_filter_out() then
+				table.insert(newfilter_result, prim)			
 			end
 		end
 
