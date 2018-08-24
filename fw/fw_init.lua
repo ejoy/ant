@@ -39,7 +39,7 @@ print = function(...)
     app_log("Script", ...)
 end
 
-error = function(...)
+perror = function(...)
     origin_print("error!", ...)
     app_log("Error", ...)
 end
@@ -260,7 +260,7 @@ function run(path)
 
     package.loaded["fw.fw_connected"] = nil
 
-    safe_run(require, "require", "fw.fw_connected")
+    require "fw.fw_connected"
     require_cache = {}
 
     if entrance then
@@ -353,11 +353,12 @@ if last_error then
     if last_error_cover then last_error_cover:close() end
 
     if #error_content > 0 then
-        error("last err: \n" .. error_content)
+        perror("last err: \n" .. error_content)
     end
 end
 
 
-safe_run(require, "require", "fw.fw_connected")
+--safe_run(require, "require", "fw.fw_connected")
+require "fw.fw_connected"
 
 SendIORequest({"DBG_CLIENT_SENT", "12345"})
