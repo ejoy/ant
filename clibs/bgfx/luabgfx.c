@@ -15,7 +15,9 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 
-#define SUPPORTED_BGFX_API_VERSION 79
+#if BGFX_API_VERSION != 79
+#   error BGFX_API_VERSION mismatch
+#endif
 
 #if _MSC_VER > 0
 #include <malloc.h>
@@ -4104,8 +4106,6 @@ lgetLog(lua_State *L) {
 LUAMOD_API int
 luaopen_bgfx(lua_State *L) {
 	luaL_checkversion(L);
-	if (BGFX_API_VERSION != SUPPORTED_BGFX_API_VERSION)
-		return luaL_error(L, "BGFX_API_VERSION is %d, this binding support %d", BGFX_API_VERSION, SUPPORTED_BGFX_API_VERSION);
 	int tfn = sizeof(c_texture_formats) / sizeof(c_texture_formats[0]);
 	lua_createtable(L, 0, tfn);
 	int i;
