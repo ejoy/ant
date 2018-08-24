@@ -3,6 +3,8 @@ return function()
     if entrance then
         local res = safe_run(entrance.mainloop, "entrance.mainloop")
         if not res then
+            --try properly terminate it
+            safe_run(entrance.terminate, "entrance.terminate")
             entrance = nil
         end
         --entrance.mainloop()
