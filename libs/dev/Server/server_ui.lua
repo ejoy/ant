@@ -364,6 +364,13 @@ local function UpdateSimpad()
     bgfx.frame()
 end
 
+local function server_test_func(value)
+    print("dbg_test_server " .. tostring(value[1]) .. " and " .. tostring(value[2]))
+    server_framework:SendPackage({"DBG_SERVER_SENT", "54321"})
+end
+
+server_framework:RegisterIOCommand("DBG_CLIENT_SENT", server_test_func)
+
 -- to be able to run this script inside another context
 while true do
     local msg = iup.LoopStep()
