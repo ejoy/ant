@@ -23,27 +23,32 @@ function sendlog(cat, ...)
     --origin_print(cat, ...)
 end
 
-function app_log( ...)
+function app_log(cat, ...)
 
     local output_log_string = {}
     for _, v in ipairs({...}) do
         table.insert(output_log_string, tostring(v))
     end
 
-    sendlog("Script", table.unpack(output_log_string))
+    sendlog(cat, table.unpack(output_log_string))
 end
 
 print = function(...)
     origin_print(...)
     --print will have a priority 1
-    app_log(...)
+    app_log("Script", ...)
+end
+
+error = function(...)
+    origin_print("error!", ...)
+    app_log("Error", ...)
 end
 
 
 function safe_run(func, name,...)
     local res, run_data = pcall(func, ...)
     if not res then
-        print("run func " .. name .. " error: " .. run_data)
+        error("run func " .. name .. " error: " .. run_data)
     end
 
     return res, run_data
@@ -326,7 +331,6 @@ local function dbg_test(value)
 end
 
 RegisterIOCommand("DBG_SERVER_SENT", dbg_test)
-
 --todo: offline mode?
 while true do
     local key, value = linda:receive(0.001, "new connection")
@@ -335,6 +339,24 @@ while true do
         break
     end
 end
+
+--send last error to server
+local err_file_path = sand_box_dir .. "/Documents/err.txt"
+print("search for err file: "..err_file_path)
+local last_error = io.open(err_file_path, "rb")
+if last_error then
+    local error_content = last_error:read("a")
+    last_error:close()
+
+    local last_error_cover = io.open(err_file_path, "w")
+    --last_error_cover:write("hehe")
+    if last_error_cover then last_error_cover:close() end
+
+    if #error_content > 0 then
+        error("last err: \n" .. error_content)
+    end
+end
+
 
 safe_run(require, "require", "fw.fw_connected")
 

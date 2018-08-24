@@ -52,15 +52,10 @@ local check_path = {}
 --todo: self update it self, then self update again?
 --put these file to local repo
 table.insert(check_path, "/fw/fw_init.lua")
-table.insert(check_path, "/fw/fw_start.lua")
-table.insert(check_path, "/fw/fw_update.lua")
-table.insert(check_path, "/fw/fw_terminate.lua")
-table.insert(check_path, "/fw/fw_selfupdate.lua")
 table.insert(check_path, "/fw/iosys.lua")
 table.insert(check_path, "/fw/client_io.lua")
 table.insert(check_path, "/fw/lanes.lua")
 table.insert(check_path, "/fw/pack.lua")
-table.insert(check_path, "/fw/fileprocess.lua")
 
 while true do
     local key, value = linda:receive(0.01, "new connection")

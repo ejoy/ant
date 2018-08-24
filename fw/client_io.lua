@@ -4,8 +4,7 @@ local log = log and log(...) or print
 local crypt = require "crypt"
 
 local pack = require "pack"
-local fileprocess = require "fileprocess"
-
+local MAX_CALC_CHUNK = 62*1024
 local client = {}; client.__index = client
 
 --the dir hold the files
@@ -56,7 +55,7 @@ function clientcommand.FILE(resp, self)
         --if is the first package, will delete the origin file
         --if is other package, will add to the existing file
         --TODO: consider if the order is not correct
-        if offset <= fileprocess.MAX_CALC_CHUNK then
+        if offset <= MAX_CALC_CHUNK then
             self.vfs:write(hash, resp[5])
         else
             self.vfs:write(hash, resp[5], "ab")
