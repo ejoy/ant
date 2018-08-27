@@ -1122,9 +1122,9 @@ convert_to_quaternion(lua_State *L, struct lastack *LS){
 
 glm::vec3
 to_viewdir(const glm::vec3 &e){
-	return is_zero(e) ? 
-		glm::rotate(glm::quat(e), glm::vec3(0, 0, 1)) :
-		glm::vec3(0, 0, 1);
+	return is_zero(e) ?
+		glm::vec3(0, 0, 1) :
+		glm::rotate(glm::quat(e), glm::vec3(0, 0, 1));		
 }
 
 static inline void
