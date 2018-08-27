@@ -116,20 +116,37 @@ local function need_commit(material)
 end
 
 
-function util.draw_primitive(vid, prim, mat)
+function util.draw_primitive(vid, primgroup, mat)
     bgfx.set_transform(mat)
 
-    local material = prim.material
+    local material = primgroup.material
     bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
-    update_properties(material.shader, prim.properties)
+    update_properties(material.shader, primgroup.properties)
 
-    local mg = assert(prim.mgroup)
-    local prog = material.shader.prog
-    if mg.ib then
-        bgfx.set_index_buffer(mg.ib)
-    end
-    bgfx.set_vertex_buffer(mg.vb)
-    bgfx.submit(vid, prog, 0, false) --not need_commit(material))
+	local prog = material.shader.prog
+	
+	local mg = assert(primgroup.mgroup)
+	local ib, vb = mg.ib, mg.vb
+
+	local prims = mg.prim
+
+	local numprim = prims and #prims or nil
+	if numprim == nil or numprim == 1 then
+		if ib then
+			bgfx.set_index_buffer(ib)
+		end
+		bgfx.set_vertex_buffer(vb)
+		bgfx.submit(vid, prog, 0, false) --not need_commit(material))
+	else
+		for i=1, numprim do
+			local prim = prims[i]
+			if ib then
+				bgfx.set_index_buffer(ib, prim.startIndex, prim.numIndices)
+			end
+			bgfx.set_vertex_buffer(0, vb, prim.startVertex, prim.numVertices)
+			bgfx.submit(vid, prog, 0, i~=numprim)
+		end
+	end
 end
 
 function util.default_surface_type()
