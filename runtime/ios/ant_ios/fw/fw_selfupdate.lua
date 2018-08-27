@@ -1,52 +1,11 @@
 ---used for initialize structure
-local log, cfuncs, pkg_dir, sb_dir = ...
+log, cfuncs, pkg_dir, sb_dir = ...
 f_table = cfuncs()
 
 f_table.preloadc()
-
 package.path = package.path .. ";" .. pkg_dir .. "/fw/?.lua;".. pkg_dir .. "/?.lua;"
-package.path = "../Common/?.lua;./?.lua;../?/?.lua;../?.lua;" .. package.path  --path for the app
---TODO: find a way to set this
---path for the remote script
-package.remote_search_path = "/libs/?.lua;/?.lua;./?/?.lua;./libs/asset/?.lua;./libs/ecs/?.lua;./libs/imputmgr/?.lua;"
-lanes = require "lanes"
-if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
-linda = lanes.linda()
 
-origin_print = print
-function sendlog(cat, ...)
-    linda:send("log", {cat, os.clock(),...})
-    --origin_print(cat, ...)
-end
-
-function app_log( ...)
-
-    local output_log_string = {}
-    for _, v in ipairs({...}) do
-        table.insert(output_log_string, tostring(v))
-    end
-
-    sendlog("Script", table.unpack(output_log_string))
-end
-
-print = function(...)
-    origin_print(...)
-    --print will have a priority 1
-    app_log(...)
-end
-
-function CreateIOThread(linda, pkg_dir, sb_dir)
-    local vfs = require "firmware.vfs"
-    local io_repo = vfs.new(pkg_dir, sb_dir.."/Documents")
-
-    local client_io = require "client_io"
-    local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir, io_repo)
-    while true do
-        c:mainloop(0.001)
-    end
-end
-
-local client_io = lanes.gen("*", CreateIOThread)(linda, pkg_dir, sb_dir)
+require"fw_io"
 
 local check_path = {}
 --todo: self update it self, then self update again?
@@ -124,3 +83,6 @@ while true do
         break
     end
 end
+
+--self update complete, tell server
+SendIORequest({"SelfUpdate Finished"})

@@ -1,4 +1,4 @@
-local log, pkg_dir, sand_box_dir = ...
+--local log, pkg_dir, sand_box_dir = ...
 
 package.path = package.path .. ";/fw/?.lua;" .. pkg_dir .. "/fw/?.lua;" .. pkg_dir .. "/?.lua;" .. "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;/libs/?/?.lua;"
 --TODO: find a way to set this
@@ -47,7 +47,7 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
     print("init client repo")
     local vfs = require "firmware.vfs"
     local io_repo = vfs.new(pkg_dir, sb_dir.."/Documents")
-
+    ---[[
     local origin_require = require
     require = function(require_path)
         print("requiring "..require_path)
@@ -74,10 +74,10 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
         print("use origin require")
         return origin_require(require_path)
     end
-
+--]]
 
     print("create io")
-    local client_io = require "fw.client_io"
+    local client_io = require "client_io"
     local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir, io_repo)
 
     print("create io finished")
@@ -87,7 +87,7 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
 end
 
 local lanes_err
-io_thread, lanes_err = lanes.gen("*", CreateIOThread)(linda, pkg_dir, sand_box_dir)
+io_thread, lanes_err = lanes.gen("*", CreateIOThread)(linda, pkg_dir, sb_dir)
 if not io_thread then
     assert(false, "lanes error: ".. lanes_err)
 end
@@ -121,3 +121,4 @@ function RegisterIOCommand(cmd, func)
     --register command in io
     linda:send("RegisterTransmit", cmd)
 end
+
