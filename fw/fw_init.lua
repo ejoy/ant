@@ -225,8 +225,9 @@ end
 
 --send last error to server
 local err_file_path = sand_box_dir .. "/Documents/err.txt"
-print("search for err file: "..err_file_path)
+print("search for err file: "..err_file_path, origin_open)
 local last_error = origin_open(err_file_path, "r")
+
 if last_error then
     local error_content = last_error:read("a")
     last_error:close()
@@ -234,7 +235,6 @@ if last_error then
     local last_error_cover = origin_open(err_file_path, "w")
     --last_error_cover:write("hehe")
     if last_error_cover then last_error_cover:close() end
-
     if #error_content > 0 then
         perror("last err: \n" .. error_content)
     end

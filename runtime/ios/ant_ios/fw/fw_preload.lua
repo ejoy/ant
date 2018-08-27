@@ -22,7 +22,6 @@ local function add_module(path, ...)
     module:close()
 
     local res, module_func = xpcall(load, debug.traceback, module_content, "@/fw/fw_init.lua")
-    print("res0", res, module_func)
     return xpcall(module_func, debug.traceback,...)
 end
 

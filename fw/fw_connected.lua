@@ -21,6 +21,7 @@ function DbgUpdate()
     DbgWorker()
 end
 --]]
+
 function HandleMsg()
     while true do
         local key, value = linda:receive(0.001, table.unpack(IoCommand_name))
