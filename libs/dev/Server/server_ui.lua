@@ -20,12 +20,12 @@ local default_proj_dir =  winfile.currentdir()
 
 local script_text = iup.text{ multiline = "YES", expand = "YES" }
 local bgfx_text = iup.text{multiline = "YES", expand = "Yes"}
-local device_text = iup.text{multiline = "YES", expand = "YES"}
+local error_text = iup.text{multiline = "YES", expand = "YES"}
 
 script_text.tabtitle = "Script"
 bgfx_text.tabtitle = "Bgfx"
-device_text.tabtitle = "Device"
-local text_tabs = iup.tabs{script_text, bgfx_text, device_text}
+error_text.tabtitle = "Error"
+local text_tabs = iup.tabs{script_text, bgfx_text, error_text}
 
 --project directory and run file
 local run_file_btn = iup.button{title = "run file"}
@@ -253,14 +253,33 @@ local function HandleResponse(resp_table)
                 bgfx_text.caretpos = pos
                 bgfx_text.scrolltopos = pos
 
-            elseif cat == "Device" then
+            elseif cat == "Error" then
+                table.remove(log_table, 1)
+                local new_log_value = ""
+                for _, script_v in ipairs(log_table) do
+                    new_log_value = new_log_value .. tostring(script_v) .. " "
+                end
+
+                if new_log_value then
+                    new_log_value = new_log_value .. "\n"
+                    --todo temperary disable
+                    ---[[
+                    error_text.value = error_text.value .. new_log_value
+                    local pos = iup.TextConvertLinColToPos(error_text,  error_text.linecount, 0)
+                    error_text.caretpos = pos
+                    error_text.scrolltopos = pos
+
+                end
+
+--[[
                 local new_log_value = log_table[2]
                 new_log_value = new_log_value .. "\n"
 
-                device_text.value = device_text.value .. new_log_value
-                local pos = iup.TextConvertLinColToPos(device_text,  device_text.linecount, 0)
-                device_text.caretpos = pos
-                device_text.scrolltopos = pos
+                error_text.value = error_text.value .. new_log_value
+                local pos = iup.TextConvertLinColToPos(error_text,  error_text.linecount, 0)
+                error_text.caretpos = pos
+                error_text.scrolltopos = pos
+                --]]
             elseif cat == "Fps" then
                 local gpu_timer = log_table[2]
                 local cpu_timer = log_table[3]

@@ -343,22 +343,25 @@ end
 --send last error to server
 local err_file_path = sand_box_dir .. "/Documents/err.txt"
 print("search for err file: "..err_file_path)
-local last_error = io.open(err_file_path, "rb")
+local last_error = origin_open(err_file_path, "r")
 if last_error then
     local error_content = last_error:read("a")
     last_error:close()
 
-    local last_error_cover = io.open(err_file_path, "w")
+    local last_error_cover = origin_open(err_file_path, "w")
     --last_error_cover:write("hehe")
     if last_error_cover then last_error_cover:close() end
 
     if #error_content > 0 then
         perror("last err: \n" .. error_content)
     end
+else
+    --create one
+    local last_error_cover = origin_open(err_file_path, "w")
+    if last_error_cover then last_error_cover:close() print("create file " .. err_file_path) end
 end
-
 
 --safe_run(require, "require", "fw.fw_connected")
 require "fw.fw_connected"
 
-SendIORequest({"DBG_CLIENT_SENT", "12345"})
+--SendIORequest({"DBG_CLIENT_SENT", "12345"})
