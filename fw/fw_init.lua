@@ -1,10 +1,9 @@
 ---used for initialize structure
 local log, pkg_dir, sand_box_dir = ...
 
-package.path = package.path .. ";/fw/?.lua;" .. pkg_dir .. "/fw/?.lua;" .. pkg_dir .. "/?.lua;"
+package.path = package.path .. ";/fw/?.lua;" .. pkg_dir .. "/fw/?.lua;" .. pkg_dir .. "/?.lua;" .. "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;/libs/?/?.lua;"
 --TODO: find a way to set this
 --path for the remote script
-package.remote_search_path = "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;/libs/?/?.lua;"
 lanes = require "lanes"
 if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
 linda = lanes.linda()
@@ -156,7 +155,7 @@ end
 
 local function get_require_search_path(r_name)
 --return a table of possible path the file is on
-    local search_string = package.remote_search_path
+    local search_string = package.path
     local search_table = {}
 
     --separate with ";"
