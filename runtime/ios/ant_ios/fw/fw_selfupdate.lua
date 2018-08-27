@@ -52,9 +52,8 @@ local check_path = {}
 --todo: self update it self, then self update again?
 --put these file to local repo
 table.insert(check_path, "/fw/fw_init.lua")
-table.insert(check_path, "/fw/fw_preload.lua")
+table.insert(check_path, "/fw/fw_io.lua")
 table.insert(check_path, "/fw/fw_run.lua")
-table.insert(check_path, "/fw/fw_selfupdate.lua")
 table.insert(check_path, "/fw/iosys.lua")
 table.insert(check_path, "/fw/client_io.lua")
 table.insert(check_path, "/fw/lanes.lua")

@@ -1,43 +1,12 @@
 ---used for initialize structure
 local log, pkg_dir, sand_box_dir = ...
-
-package.path = package.path .. ";/fw/?.lua;" .. pkg_dir .. "/fw/?.lua;" .. pkg_dir .. "/?.lua;"
-package.path = "../Common/?.lua;./?.lua;../?/?.lua;../?.lua;" .. package.path  --path for the app
---TODO: find a way to set this
---path for the remote script
-package.remote_search_path = "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;./libs/asset/?.lua;./libs/ecs/?.lua;./libs/imputmgr/?.lua;"
-lanes = require "lanes"
-if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
-linda = lanes.linda()
-
-
---"cat" means categories for different log
---for now we have "Script" for lua script log
---and "Bgfx" for bgfx log
---"Device" for deivce msg
---project entrance
-entrance = nil
-
-origin_print = print
-function sendlog(cat, ...)
-    linda:send("log", {cat, os.clock(),...})
-    --origin_print(cat, ...)
-end
-
-function app_log( ...)
-
-    local output_log_string = {}
-    for _, v in ipairs({...}) do
-        table.insert(output_log_string, tostring(v))
+function safe_run(func, name,...)
+    local res, run_data = xpcall(func, debug.traceback, ...)
+    if not res then
+        perror("run func " .. name .. " error: " .. run_data)
     end
 
-    sendlog("Script", table.unpack(output_log_string))
-end
-
-print = function(...)
-    origin_print(...)
-    --print will have a priority 1
-    app_log(...)
+    return res, run_data
 end
 
 winfile = require "winfile"
@@ -53,16 +22,37 @@ io.open = function (filename, mode, search_local_only)
 
     --vfs not initialized, can only use origin function
 
-    if client_repo then
+    print("start open file ", filename)
+
+    if client_repo or io_thread then
         print("opening file: " .. filename)
         while true do
-            --vfs:open()
-            local file, hash = client_repo:open(filename)
-            --       local file_path, hash
-            --       linda:send("vfs_open", filename)
-            if file then
-                print("get file: "..filename)
-                return file
+            --have io thread
+            local hash
+            if io_thread then
+                local file_path
+                linda:send("vfs_open", filename)
+                while true do
+                    local _, value = linda:receive("vfs_open_res", 0.001)
+                    if value then
+                        file_path, hash = value[1], value[2]
+                        break
+                    end
+                end
+
+                if file_path then
+                    print("get file: "..filename)
+                    return origin_open(file_path, mode)
+                end
+            else
+                --don't have io initiated, use local repo(currently only use to open file for io)
+                local file
+                file, hash = client_repo:open(filename)
+                if file then
+                    --io not init, but have local repo
+                    print("get file: "..filename)
+                    return file
+                end
             end
 
             print("hash is: " ..tostring(hash))
@@ -108,25 +98,26 @@ io.open = function (filename, mode, search_local_only)
         end
 
     end
-
-    print("origin find file: " ..filename)
-    local file = origin_open(filename, mode)
-    if not file then
-        print("can't find file loaclly: "..filename)
-    end
-    return file
+    --[[
+        print("origin find file: " ..filename)
+        local file, error = origin_open(filename, mode)
+        if not file then
+            print("cannot open file : "..filename)
+        end
+        return file, error
+        --]]
+    return origin_open(filename, mode)
 end
 
 local function get_require_search_path(r_name)
     --return a table of possible path the file is on
-    local search_string = package.remote_search_path
+    local search_string = package.path
     local search_table = {}
 
     --separate with ";"
     --"../" not support
 
     print("require search string", search_string)
-
     for s_path in string.gmatch(search_string, ".-;") do
         print("get requrie search path: "..s_path)
 
@@ -140,108 +131,48 @@ local function get_require_search_path(r_name)
     return search_table
 end
 
+
+local require_cache = {}    --record every files that was required, use to clear package.loaded every "run"
 local function remote_searcher(name)
     ---search through package.remote_search_path
     local file_table = get_require_search_path(name)
     for _, v in ipairs(file_table) do
         local r_file = io.open(v, "rb")
         if r_file then
+            print("open required file", name, v)
             io.input(r_file)
             local r_data = r_file:read("a")
             r_file:close()
-            return load(r_data, "@"..name)
+
+            --cache the required file name
+            table.insert(require_cache, name)
+            return load(r_data, "@"..v)
         end
     end
 
     --required file not exist in the search path
-    print("require failed")
+    --print("require failed")
+    local err_msg = ""
     for _, v in ipairs(file_table) do
-        print("can't find: "..name.." in " .. v)
+        --print("can't find: "..name.." in " .. v)
+        err_msg = err_msg .. "can't open: " .. name " in " .. v
     end
-    return nil
+    return nil, err_msg
 end
 table.insert(package.searchers, remote_searcher)
 
---require function, will search local files
-local origin_require = require
-require = function(require_path)
-    print("requiring "..require_path)
-    if client_repo then
-        local file_path = string.gsub(require_path, "%.", "/")
-        file_path = file_path .. ".lua"
-        local file = client_repo:open(file_path)
-        print("search for file path", file_path)
-        if file then
-            local content = file:read("a")
-            print("content", content)
-            file:close()
-
-            local err, result = pcall(load(content, "@"..require_path))
-            if not err then
-                print("require " .. require_path .. " error: " .. result)
-                return nil
-            else
-                return result
-            end
-        end
-    end
-
-    print("use origin require")
-    return origin_require(require_path)
-end
-
-function CreateIOThread(linda, pkg_dir, sb_dir)
-    print("init client repo")
-    local vfs = require "firmware.vfs"
-    local io_repo = vfs.new(pkg_dir, sb_dir.."/Documents")
-
-    local origin_require = require
-    require = function(require_path)
-        print("requiring "..require_path)
-        if io_repo then
-            local file_path = string.gsub(require_path, "%.", "/")
-            file_path = file_path .. ".lua"
-            local file = io_repo:open(file_path)
-            print("search for file path", file_path)
-            if file then
-                local content = file:read("a")
-                print("content", content)
-                file:close()
-
-                local err, result = pcall(load(content, "@"..require_path))
-                if not err then
-                    print("require " .. require_path .. " error: " .. result)
-                    return nil
-                else
-                    return result
-                end
-            end
-        end
-
-        print("use origin require")
-        return origin_require(require_path)
-    end
-
-
-    print("create io")
-    local client_io = require "fw.client_io"
-    print("get required ", client_io)
-    local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir, io_repo)
-
-    print("create io finished")
-    while true do
-        c:mainloop(0.001)
-    end
-end
-
-local lanes_err
-io_thread, lanes_err = lanes.gen("*", CreateIOThread)(linda, pkg_dir, sand_box_dir)
-if not io_thread then
-    assert(false, "lanes error: ".. lanes_err)
-end
-
 function run(path)
     print("run file: "..path)
+    --clear the require "cache"
+    for _, r_n in ipairs(require_cache) do
+        package.loaded[r_n] = nil
+    end
+
+    package.loaded["fw.fw_connected"] = nil
+
+    safe_run(require, "require", "fw.fw_connected")
+    require_cache = {}
+
     if entrance then
         entrance.terminate()
         entrance = nil
@@ -254,53 +185,66 @@ function run(path)
     --print("entrance string: ", entrance_string)
     file:close()
 
-    local res = false
-    res, entrance =  pcall(load(entrance_string))
+    local res
+    res, entrance = safe_run(load,"load", entrance_string, "@"..path)
 
+    print("entracne is " ..tostring(entrance))
+    --entrance should be a function
     if res then
-        entrance.init(g_WindowHandle, g_Width, g_Height)
+        --load give a function, needs to run it
+        res, entrance = safe_run(entrance, "entrance()")
+        if res then
+            --entrance.init(g_WindowHandle, g_Width, g_Height)
+            local res = safe_run(entrance.init, "entrance.init",g_WindowHandle, g_Width, g_Height)
+            if not res then
+                entrance = nil
+            end
+        else
+            entrance = nil
+        end
     else
-        print("entrance script error")
         entrance = nil
     end
 end
 
-local bgfx = require "bgfx"
-local screenshot_cache_num = 0
-function HandleMsg()
-    while true do
-        local key, value = linda:receive(0.001, "run", "screenshot_req")
-        if key == "run" then
-            --server may modified files, need changeroot
+--test RegisterIOCommand
+local function dbg_test(value)
+    print("XYZXYZ dbg_test_client: " .. tostring(value[1]) .. " and " ..  tostring(value[2]))
+end
 
-            run(value)
-        elseif key == "screenshot_req" then
-            if entrance then
-                bgfx.request_screenshot()
-                screenshot_cache_num = screenshot_cache_num + 1
-                print("request screenshot: ".. value[2].." num: "..screenshot_cache_num)
-            end
-        else
-            break
-        end
+RegisterIOCommand("DBG_SERVER_SENT", dbg_test)
+
+--todo: offline mode?
+while true do
+    local key, value = linda:receive(0.001, "new connection")
+    if value then
+        connect_to_server = true
+        break
     end
 end
 
-function HandleCacheScreenShot()
-    --if screenshot_cache_num
-    --for i = 1, screenshot_cache_num do
-    if screenshot_cache_num > 0 then
-        local name, width, height, pitch, data = bgfx.get_screenshot()
-        if name then
-            local size =#data
-            print("screenshot size is "..size)
-            screenshot_cache_num = screenshot_cache_num - 1
-            --compress to png format
-            --default is bgra format
-            local data_string = lodepng.encode_png(data, width, height);
-            print("screenshot encode size ",#data_string)
-            linda:send("screenshot", {name, data_string})
-        end
+--send last error to server
+local err_file_path = sand_box_dir .. "/Documents/err.txt"
+print("search for err file: "..err_file_path)
+local last_error = origin_open(err_file_path, "r")
+if last_error then
+    local error_content = last_error:read("a")
+    last_error:close()
+
+    local last_error_cover = origin_open(err_file_path, "w")
+    --last_error_cover:write("hehe")
+    if last_error_cover then last_error_cover:close() end
+
+    if #error_content > 0 then
+        perror("last err: \n" .. error_content)
     end
+else
+    --create one
+    local last_error_cover = origin_open(err_file_path, "w")
+    if last_error_cover then last_error_cover:close() print("create file " .. err_file_path) end
 end
 
+--safe_run(require, "require", "fw.fw_connected")
+require "fw.fw_connected"
+
+--SendIORequest({"DBG_CLIENT_SENT", "12345"})

@@ -11,14 +11,28 @@ package.path = package.path .. ";" .. pkg_dir .. "/?.lua;"
 local vfs = require "firmware.vfs"
 client_repo = vfs.new(pkg_dir, sand_box_dir .. "/Documents")
 
-local init_f, hash = client_repo:open("/fw/fw_init.lua")
+local function add_module(path, ...)
+    local module, hash = client_repo:open(path)
 
-if not init_f then
-    assert(false, "cannot find init file"..tostring(hash))
+    if not module then
+        assert(false, "cannot find module file: ".. path .." with hash " .. tostring(hash))
+    end
+
+    local module_content = module:read("a")
+    module:close()
+
+    local init_func = load(module_content, "@/fw/fw_init.lua")
+    return init_func(...)
 end
 
-local init_content = init_f:read("a")
-init_f:close()
+--io_module
+if not add_module("/fw/fw_io.lua", log, pkg_dir, sand_box_dir) then
+    assert(false, "io thread not valid")
+end
 
-local init_func = load(init_content, "@/fw/fw_init.lua")
-init_func(log, pkg_dir, sand_box_dir)
+--init module
+if not add_module("/fw/fw_init.lua", log, pkg_dir, sand_box_dir) then
+
+end
+
+

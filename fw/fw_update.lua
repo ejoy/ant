@@ -1,5 +1,4 @@
 return function()
-
     if DbgUpdate then
         DbgUpdate()
     end
