@@ -22,6 +22,7 @@ while true do
     local key, value = linda:receive(0.01, "new connection")
    -- print("waiting connection")
     if value then
+
         for _, filename in ipairs(check_path) do
             print("self updating file: ".. filename)
             while true do
@@ -85,4 +86,6 @@ while true do
 end
 
 --self update complete, tell server
-SendIORequest({"SelfUpdate Finished"})
+SendIORequest({"RECONNECT", "id"})
+local time = os.clock()
+while os.clock() - time < 1 do end
