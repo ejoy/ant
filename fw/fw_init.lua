@@ -260,7 +260,7 @@ function run(path)
 
     package.loaded["fw.fw_connected"] = nil
 
-    require "fw.fw_connected"
+    safe_run(require, "require", "fw.fw_connected")
     require_cache = {}
 
     if entrance then
