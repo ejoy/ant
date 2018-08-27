@@ -143,13 +143,15 @@ io.open = function (filename, mode, search_local_only)
         end
 
     end
-
+--[[
     print("origin find file: " ..filename)
-    local file = origin_open(filename, mode)
+    local file, error = origin_open(filename, mode)
     if not file then
-        print("can't find file loaclly: "..filename)
+        print("cannot open file : "..filename)
     end
-    return file
+    return file, error
+    --]]
+    return origin_open(filename, mode)
 end
 
 local function get_require_search_path(r_name)
@@ -195,10 +197,12 @@ local function remote_searcher(name)
 
     --required file not exist in the search path
     --print("require failed")
+    local err_msg = ""
     for _, v in ipairs(file_table) do
-        print("can't find: "..name.." in " .. v)
+        --print("can't find: "..name.." in " .. v)
+        err_msg = err_msg .. "can't open: " .. name " in " .. v
     end
-    return nil
+    return nil, err_msg
 end
 table.insert(package.searchers, remote_searcher)
 
