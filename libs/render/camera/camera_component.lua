@@ -31,15 +31,6 @@ camera_init_sys.singleton "window"
 -- 		-- 	newy_end = math.floor(((vr.y + vr.h) / old_h) * h)
 -- end
 
-local function register_resize_message(update_size_op, observers)
-    local message = {}
-    function message:resize(w, h)
-        update_size_op(w, h)
-    end
-
-    observers:add(message)
-end
-
 function camera_init_sys:init()
     local ms = self.math_stack
     -- create camera entity
@@ -70,6 +61,7 @@ function camera_init_sys:init()
     end
     local fb_size = world.args.fb_size
     update_camera_viewrect(fb_size.w, fb_size.h)
-
-    register_resize_message(update_camera_viewrect, self.message_component.msg_observers)
+	self.message_component.msg_observers:add {
+		resize = function(_, w, h) update_camera_viewrect(w, h) end
+	}
 end
