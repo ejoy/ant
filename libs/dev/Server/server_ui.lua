@@ -383,12 +383,32 @@ local function UpdateSimpad()
     bgfx.frame()
 end
 
-local function server_test_func(value)
-    print("dbg_test_server " .. tostring(value[1]) .. " and " .. tostring(value[2]))
-    server_framework:SendPackage({"DBG_SERVER_SENT", "54321"})
+local function reconnect_func(value)
+    --disconnect then reconnect
+
+    local select_idx = device_list.value
+
+    --none selected
+    if select_idx == 0 then
+        return
+    end
+
+    local udid = device_list[select_idx]
+    --disconnect old connection
+
+    local time = os.clock()
+    while os.clock() - time < 2 do end
+
+    local devices = mobiledevice.GetDevices()
+    for _, v in pairs(devices) do
+        server_framework:HandleCommand(v, "DISCONNECT")
+        server_framework:HandleCommand(v, "CONNECT")
+    end
+
 end
 
-server_framework:RegisterIOCommand("DBG_CLIENT_SENT", server_test_func)
+server_framework:RegisterIOCommand("RECONNECT", reconnect_func)
+
 
 -- to be able to run this script inside another context
 while true do
