@@ -39,13 +39,8 @@ function msg_process:CollectRequest()
         elseif key == "log" then
             --table.insert(self.sending, pack.pack({"LOG", table.unpack(value)}))
 
-            if self.current_connect then
                 --self.io:Send(self.current_connect, {"LOG", table.unpack(value)})
-                self.linda:send("io_send", {"LOG", table.unpack(value)})
-            else
-                if not self.log_cache then self.log_cache = {} end
-                table.insert(self.log_cache, value)
-            end
+            self.linda:send("io_send", {"LOG", table.unpack(value)})
 
         elseif key == "screenshot" then
             --after compression, only have name and data string
