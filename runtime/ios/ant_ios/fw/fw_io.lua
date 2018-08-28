@@ -1,4 +1,4 @@
---local log, pkg_dir, sand_box_dir = ...
+local log, pkg_dir, sand_box_dir = ...
 
 package.path = package.path .. ";/fw/?.lua;" .. pkg_dir .. "/fw/?.lua;" .. pkg_dir .. "/?.lua;" .. "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;/libs/?/?.lua;"
 --TODO: find a way to set this
@@ -80,7 +80,7 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
     local client_io = require "client_io"
     local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir, io_repo)
 
-    print("create io finished")
+    print("update io")
     while true do
         c:mainloop(0.001)
     end
@@ -91,8 +91,6 @@ io_thread, lanes_err = lanes.gen("*", CreateIOThread)(linda, pkg_dir, sb_dir)
 if not io_thread then
     assert(false, "lanes error: ".. lanes_err)
 end
-
-
 
 --send package to io
 function SendIORequest(pkg)

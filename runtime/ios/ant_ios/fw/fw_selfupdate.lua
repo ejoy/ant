@@ -6,12 +6,17 @@ f_table.preloadc()
 package.path = package.path .. ";" .. pkg_dir .. "/fw/?.lua;".. pkg_dir .. "/?.lua;"
 
 require"fw_io"
-
+require"fw_msgprocess"
 local check_path = {}
 --todo: self update it self, then self update again?
 --put these file to local repo
 table.insert(check_path, "/fw/fw_init.lua")
 table.insert(check_path, "/fw/fw_io.lua")
+
+table.insert(check_path, "/fw/fw_msgprocess.lua")
+table.insert(check_path, "/fw/msg_process.lua")
+table.insert(check_path, "/fw/clientcommand.lua")
+
 table.insert(check_path, "/fw/fw_run.lua")
 table.insert(check_path, "/fw/iosys.lua")
 table.insert(check_path, "/fw/client_io.lua")
@@ -46,6 +51,7 @@ while true do
                 print("hash is: " ..tostring(hash))
                 if not hash then
                     print("file does not exist: "..filename)
+                    assert(false, "file does not exist! " .. filename)
                     return nil
                 end
 
@@ -72,9 +78,6 @@ while true do
                 while true do
                     local _, file_value = linda:receive(0.001, "new file")
                     if file_value then
-                        --file_value should be local address
-                        --client_repo:write should be called in io thread
-                        print("get new file: " .. realpath)
                         break
                     end
                 end
@@ -89,3 +92,5 @@ end
 SendIORequest({"RECONNECT", "id"})
 local time = os.clock()
 while os.clock() - time < 1 do end
+
+print("self update finished")

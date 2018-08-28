@@ -9,6 +9,9 @@ function safe_run(func, name,...)
     return res, run_data
 end
 
+--project entrance
+entrance = nil
+
 winfile = require "winfile"
 lodepng = require "lodepnglua"
 
@@ -98,14 +101,7 @@ io.open = function (filename, mode, search_local_only)
         end
 
     end
-    --[[
-        print("origin find file: " ..filename)
-        local file, error = origin_open(filename, mode)
-        if not file then
-            print("cannot open file : "..filename)
-        end
-        return file, error
-        --]]
+
     return origin_open(filename, mode)
 end
 
@@ -210,11 +206,13 @@ function run(path)
 end
 
 --test RegisterIOCommand
+--[[
 local function dbg_test(value)
     print("XYZXYZ dbg_test_client: " .. tostring(value[1]) .. " and " ..  tostring(value[2]))
 end
 
 RegisterIOCommand("DBG_SERVER_SENT", dbg_test)
+--]]
 
 --todo: offline mode?
 while true do
@@ -247,5 +245,15 @@ else
 end
 
 --safe_run(require, "require", "fw.fw_connected")
+local bgfx = require "bgfx"
+local screenshot_cache_num = 0
+IoCommand_func["screenshot_req"] = function(value)
+    if entrance then
+        bgfx.request_screenshot()
+        screenshot_cache_num = screenshot_cache_num + 1
+        print("request screenshot: " .. value[2] .. " num: " .. screenshot_cache_num)
+    end
+end
+
 require "fw.fw_connected"
 --SendIORequest({"DBG_CLIENT_SENT", "12345"})

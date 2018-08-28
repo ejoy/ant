@@ -1,6 +1,6 @@
 local log, pkg_dir, sand_box_dir = ...
 
-package.path = package.path .. ";/fw/?.lua;" .. pkg_dir .. "/fw/?.lua;" .. pkg_dir .. "/?.lua;" .. "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;/libs/?/?.lua;"
+--package.path = package.path .. ";/fw/?.lua;" .. pkg_dir .. "/fw/?.lua;" .. pkg_dir .. "/?.lua;" .. "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;/libs/?/?.lua;"
 --TODO: find a way to set this
 --path for the remote script
 lanes = require "lanes"
@@ -47,7 +47,7 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
     print("init client repo")
     local vfs = require "firmware.vfs"
     local io_repo = vfs.new(pkg_dir, sb_dir.."/Documents")
-
+    ---[[
     local origin_require = require
     require = function(require_path)
         print("requiring "..require_path)
@@ -74,13 +74,12 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
         print("use origin require")
         return origin_require(require_path)
     end
-
+    --]]
 
     print("create io")
     local client_io = require "fw.client_io"
-    local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir, io_repo)
+    local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir)
 
-    print("create io finished")
     while true do
         c:mainloop(0.001)
     end
@@ -121,3 +120,4 @@ function RegisterIOCommand(cmd, func)
     --register command in io
     linda:send("RegisterTransmit", cmd)
 end
+
