@@ -117,9 +117,9 @@ local function get_require_search_path(r_name)
     --separate with ";"
     --"../" not support
 
-    print("require search string", search_string)
+    --print("require search string", search_string)
     for s_path in string.gmatch(search_string, ".-;") do
-        print("get requrie search path: "..s_path)
+        --print("get requrie search path: "..s_path)
 
         local r_path = string.gsub(r_name, "%.", "/")
         s_path = string.gsub(s_path, "?", r_path)
@@ -155,8 +155,10 @@ local function remote_searcher(name)
     local err_msg = ""
     for _, v in ipairs(file_table) do
         --print("can't find: "..name.." in " .. v)
-        err_msg = err_msg .. "can't open: " .. name " in " .. v
+        err_msg = err_msg .. "can't open: " .. name .. " in " .. v
     end
+
+    --print("require error",err_msg)
     return nil, err_msg
 end
 table.insert(package.searchers, remote_searcher)
