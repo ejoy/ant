@@ -26,39 +26,38 @@ local shader_srcsubpath = "shaders/src"
 local function gen_cache_path(srcpath)	
 	local rt_path = shader_mgr.get_shader_rendertype_path()
 	assert(#srcpath > #shader_srcsubpath)
-	local relative_path = path.replace_ext(srcpath:sub(#shader_srcsubpath+1), "bin")	
+	local subloc = srcpath:find(shader_srcsubpath, 1, true)
+	local relative_path = path.replace_ext(srcpath:sub(subloc + #shader_srcsubpath + 1), "bin")	
 	return "cache/shaders/" .. rt_path .. relative_path
 end
 
 local function check_compile_shader(srcpath)
-	assert(srcpath:sub(1, #shader_srcsubpath) == shader_srcsubpath)
-
+	assert(srcpath:find(shader_srcsubpath, 1, true))
     assert(path.ext(srcpath):lower() == "sc")
-	local asset_srcpath = assetmgr.find_valid_asset_path(srcpath)
-	if asset_srcpath then		
-		local outfile = gen_cache_path(srcpath)
-		path.create_dirs(path.parent(outfile))
-		local success, msg = compile_shader(asset_srcpath, outfile)
-		if not success then
-			print(string.format("try compile from file: %s to file: %s , \
-			but failed, error message : \n%s", asset_srcpath, outfile, msg))
-			return nil
-		end
-		return outfile
+	
+	local outfile = gen_cache_path(srcpath)
+	path.create_dirs(path.parent(outfile))
+	local success, msg = compile_shader(srcpath, outfile)
+	if not success then
+		print(string.format("try compile from file: %s to file: %s , \
+		but failed, error message : \n%s", srcpath, outfile, msg))
+		return nil
 	end
-
-	print(asset_srcpath .. ", not found in assets folder")
-	return nil
+	return outfile
 end
 
 return function (lnk, readmode)
 	local c = assetmgr.load(lnk)	
-	local src = assert(c.shader_src)
+	local src = assetmgr.find_valid_asset_path(assert(c.shader_src))
+	if src == nil then
+		print(src .. ", not found in assets folder")
+		return nil
+	end
 
 	local cache_path = gen_cache_path(src)
 	
 	if not fs.exist(cache_path) or 
-		fu.file_is_newer(lnk, cache_path) then
+		fu.file_is_newer(src, cache_path) then
 		local outfile = check_compile_shader(src)		
 		assert(outfile == cache_path)		
 	end

@@ -106,11 +106,7 @@ end
 
 local material_cache = nil
 local function need_commit(material)
-    local need = false
-    if material_cache then
-        need = material ~= material_cache
-    end
-
+    local need = material ~= material_cache
     material_cache = material
     return need
 end

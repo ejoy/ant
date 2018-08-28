@@ -33,7 +33,7 @@ SHADER_DIRS := $(sort $(dir $(SHADER_FILES)))
 TARGET_SHADERFILES := $(patsubst $(SHADER_SRC_PATH)/%.sc,$(OUT_SHADER_PATH)/%.bin,$(SHADER_FILES))
 TARGET_SHADERDIRS := $(sort $(dir $(TARGET_SHADERFILES)))
 
-BIN_RESOURCE_DIRS := meshes assetfiles maps textures hierarchy
+BIN_RESOURCE_DIRS := meshes assetfiles maps textures hierarchy fonts terrain
 ALL_BIN_FILES := $(foreach p,$(BIN_RESOURCE_DIRS),$(call rwildcard,$p/,*.*))
 TARGET_ALL_BIN_FILES := $(addprefix $(OUT_DIR)/,$(ALL_BIN_FILES))
 TARGET_BIN_DIRS := $(sort $(dir $(TARGET_ALL_BIN_FILES)))
@@ -91,5 +91,6 @@ clean_shaders:
 clean_bin:	
 	for v in $(BIN_RESOURCE_DIRS); do rm -Rf $(OUT_DIR)/$$v; done
 
+ALL_RESOURCE_FOLDERS := $(BIN_RESOURCE_DIRS) shaders
 clean :
-	rm -Rf $(OUT_DIR)
+	for v in $(ALL_RESOURCE_FOLDERS); do rm -Rf $(OUT_DIR)/$$v; done

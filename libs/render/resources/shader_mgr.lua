@@ -59,16 +59,16 @@ function shader_mgr.get_compile_renderer_name()
 end
 
 local function get_full_filename(relative_name)
-	local ext = path.ext(relative_name)
-	
-	if ext ~= nil then
-		local subshaderfolder = "shaders/src"
-		local filename = path.join(subshaderfolder, relative_name)
-		return assetmgr.find_valid_asset_path(filename)
+	if path.ext(relative_name) == nil then
+		relative_name = relative_name .. ".sc"
 	end
 
-	local rt_path = shader_mgr.get_shader_rendertype_path()
-	return assetmgr.find_valid_asset_path(path.join("shaders", rt_path, relative_name .. ".bin"))
+	local subshaderfolder = "shaders/src"
+	local filename = path.join(subshaderfolder, relative_name)
+	return assetmgr.find_valid_asset_path(filename)
+
+	-- local rt_path = shader_mgr.get_shader_rendertype_path()
+	-- return assetmgr.find_valid_asset_path(path.join("shaders", rt_path, relative_name .. ".bin"))
 end
 
 local function load_shader(name)
