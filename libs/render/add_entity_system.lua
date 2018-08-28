@@ -97,8 +97,8 @@ function add_entity_sys:init()
 		local sphere_fn = "mem://light_bulb.material"
 		fs_util.write_to_file(sphere_fn, [[
 			shader = {
-				vs = "simple/light_bulb/vs_bulb.sc",
-				fs = "simple/light_bulb/fs_bulb.sc",
+				vs = "simple/light_bulb/vs_bulb",
+				fs = "simple/light_bulb/fs_bulb",
 			}
 			state = "default.state"
 			properties = {
@@ -272,8 +272,8 @@ function add_entity_sys:init()
 		
 		fs_util.write_to_file(hie_materialpath, [[
 			shader = {
-				vs = "vs_mesh",
-				fs = "fs_mesh",
+				vs = "mesh/vs_mesh",
+				fs = "mesh/fs_mesh",
 			}
 			state = "default.state"
 			properties = {

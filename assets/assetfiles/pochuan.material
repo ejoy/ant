@@ -1,6 +1,6 @@
 shader = {
-	vs = "mesh/vs_mesh_bump.sc",
-	fs = "mesh/fs_mesh_bumpex.sc",
+	vs = "mesh/vs_mesh_bump",
+	fs = "mesh/fs_mesh_bumpex",
 }
 
 state = "default.state"
