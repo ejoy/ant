@@ -153,7 +153,7 @@ function LoadFunction(f, psource)
     return f
 end
 
-local function undump(bytes, need_decode)
+local function undump(bytes)
     unpack_pos = 1
     unpack_buf = bytes
     local cl = {}
