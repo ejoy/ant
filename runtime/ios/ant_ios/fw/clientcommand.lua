@@ -74,7 +74,7 @@ function clientcommand.DIR(resp, self)
 end
 
 function clientcommand.RUN(resp, self)
-    self.linda:send("log", {"Bgfx", "get run command", resp[1], resp[2]})
+    print("run cmd", resp[1], resp[2])
     self.run_cmd_cache = resp[2]
 
     print("request root")

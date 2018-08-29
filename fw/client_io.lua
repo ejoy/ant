@@ -50,7 +50,7 @@ function client:mainloop(timeout)
             --auto request root
             print("request root: " .. v)
             self.io:Send(v, {"REQUEST_ROOT"})
-
+            self.linda:send("new connection", true)
             if not self.current_connect then
                 self.current_connect = v    -- default send to this id
 

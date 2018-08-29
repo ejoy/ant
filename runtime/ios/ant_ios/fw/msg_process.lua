@@ -3,7 +3,7 @@ local msg_process = {}
 msg_process.__index = msg_process
 
 local client_cmd = {}
-for _, cmd in ipairs({"clientcommand"}) do
+for _, cmd in ipairs({"fw.clientcommand"}) do
     local s = require(cmd)
     for cmd, func in pairs(s) do
         assert(client_cmd[cmd] == nil)
@@ -11,9 +11,7 @@ for _, cmd in ipairs({"clientcommand"}) do
         client_cmd[cmd] = func
     end
 end
-
 function msg_process.new(init_linda, pkg_dir, sb_dir, io_repo)
-    print("vfs", io_repo)
     return setmetatable({linda = init_linda, vfs = io_repo, run_cmd_cache = nil}, msg_process)
 end
 
@@ -29,17 +27,19 @@ local transmit_cmd = {}
 
 local max_screenshot_pack = 63*1024
 function msg_process:CollectRequest()
-    local count = 0
     --this if for client request
     while true do
         local key, value = self.linda:receive(0.001, "request", "log", "screenshot", "vfs_open", "RegisterTransmit")
         if key == "request" then
             --table.insert(logic_request, value)
+            print("send request hehe", table.unpack(value))
+
             self.linda:send("io_send", value)
         elseif key == "log" then
             --table.insert(self.sending, pack.pack({"LOG", table.unpack(value)}))
 
-                --self.io:Send(self.current_connect, {"LOG", table.unpack(value)})
+            --self.io:Send(self.current_connect, {"LOG", table.unpack(value)})
+            --todo msg cache
             self.linda:send("io_send", {"LOG", table.unpack(value)})
 
         elseif key == "screenshot" then
@@ -93,9 +93,6 @@ function msg_process:HandleRecv()
                     print("restore run command", self.run_cmd_cache)
                     self.linda:send("run", self.run_cmd_cache)
                     self.run_cmd_cache = nil
-                else
-                    print("get new connection")
-                    self.linda:send("new connection", true)
                 end
             else
                 local func = client_cmd[cmd]

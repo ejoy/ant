@@ -20,6 +20,7 @@ function client.new(address, port, init_linda, pkg_dir, sb_dir)
 end
 
 function client:send(client_req)
+
     if self.current_connect then
         self.io:Send(self.current_connect, client_req)
     end
@@ -30,9 +31,8 @@ function client:CollectSendRequest()
     while true do
         local key, value = self.linda:receive(0.001, "io_send")
         if value then
-            --print(pcall(self.send, self, value))
+            print("io send ", table.unpack(value))
             self:send(value)
-            print("io send", table.unpack(value))
         else
             break
         end
@@ -50,7 +50,7 @@ function client:mainloop(timeout)
             --auto request root
             print("request root: " .. v)
             self.io:Send(v, {"REQUEST_ROOT"})
-
+            self.linda:send("new connection", true)
             if not self.current_connect then
                 self.current_connect = v    -- default send to this id
 
@@ -67,6 +67,8 @@ function client:mainloop(timeout)
     if n_disconnect and #n_disconnect > 0 then
         for _, v in ipairs(n_disconnect) do
             self.connect[v] = nil
+
+            print("disconnect from " .. v)
 
             --if current connection failed, set current_connect to other connection(or nil if don't have any)
             if v == self.current_connect then
@@ -85,8 +87,8 @@ function client:mainloop(timeout)
         local recv_package = self.io:Get(k)
         --process request
         for _, recv in ipairs(recv_package) do
-            --print("io recv pakcage", table.unpack(recv))
             --do nothing but put it in linda, let msg process thread handle it
+            print("io recv pkg", table.unpack(recv))
             self.linda:send("io_recv", recv)
         end
     end

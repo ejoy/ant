@@ -45,7 +45,6 @@ end
 while true do
     local key, value = linda:receive(0.001, "new connection")
     if value then
-        connect_to_server = true
         break
     end
 end
