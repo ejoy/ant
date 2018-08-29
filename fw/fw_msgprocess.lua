@@ -56,12 +56,28 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
     end
 
     print("create msg processor 11")
-    local msg_process = require "fw.msg_process"
-    local mp = msg_process.new(linda, pkg_dir, sb_dir, vfs_repo)
+    --local msg_process = require "fw.msg_process"
+    local res, msg_process = xpcall(require, debug.traceback, "fw.msg_process")
+    if not res then
+        perror(msg_process)
+        return
+    end
+
+    --local mp = msg_process.new(linda, pkg_dir, sb_dir, vfs_repo)
+    local res, mp = xpcall(msg_process.new, debug.traceback, linda, pkg_dir, sb_dir, vfs_repo)
+    if not res then
+        perror(mp)
+        return
+    end
 
     print("update msg processor")
     while true do
-        mp:mainloop()
+        --mp:mainloop()
+        local res, err = xpcall(mp.mainloop, debug.traceback, mp)
+        if not res then
+            perror(err)
+            return
+        end
     end
 end
 
