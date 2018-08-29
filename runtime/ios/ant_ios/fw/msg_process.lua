@@ -88,6 +88,8 @@ function msg_process:HandleRecv()
                     self.linda:send("run", self.run_cmd_cache)
                     self.run_cmd_cache = nil
                 end
+
+                self.linda:send("server_root_updated", true)
             else
                 local func = client_cmd[cmd]
                 if not func then
