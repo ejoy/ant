@@ -2,10 +2,28 @@
 local log, pkg_dir, sb_dir = ...
 
 function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
-    print("create msg process thread", tostring(_pkg_dir), tostring(_sb_dir))
     linda = _linda
     pkg_dir = _pkg_dir
     sb_dir = _sb_dir
+
+    origin_print = print
+    print = function(...)
+        origin_print(...)
+        local print_table = {...}
+        for k, v in ipairs(print_table) do
+            print_table[k] = tostring(v)
+        end
+        linda:send("log", {"Script", os.clock(), table.unpack(print_table)})
+    end
+
+    perror = function(...)
+        origin_print("ERROR!!", ...)
+        local error_table = {...}
+        for k, v in ipairs(error_table) do
+            error_table[k] = tostring(v)
+        end
+        linda:send("log", {"Error", table.unpack(error_table)})
+    end
 
     local vfs = require "firmware.vfs"
     local vfs_repo = vfs.new(_pkg_dir, _sb_dir .. "/Documents")
@@ -20,7 +38,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
             print("search for file path", file_path)
             if file then
                 local content = file:read("a")
-                print("content", content)
+                --print("content", content)
                 file:close()
 
                 local err, result = pcall(load, content, "@"..require_path)
