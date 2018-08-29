@@ -22,7 +22,7 @@ for _, svr in ipairs { "pingserver", "fileserver" } do
     for cmd, func in pairs(s) do
         --prevent duplicate cmd
         assert(dispatch[cmd] == nil)
-        print("server cmd:",cmd, "func:",func)
+        print("server cmd:",cmd)
         dispatch[cmd] = func
     end
 end

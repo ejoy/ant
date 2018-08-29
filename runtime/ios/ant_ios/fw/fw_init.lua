@@ -9,6 +9,9 @@ function safe_run(func, name,...)
     return res, run_data
 end
 
+--project entrance
+entrance = nil
+
 winfile = require "winfile"
 lodepng = require "lodepnglua"
 
@@ -98,14 +101,7 @@ io.open = function (filename, mode, search_local_only)
         end
 
     end
-    --[[
-        print("origin find file: " ..filename)
-        local file, error = origin_open(filename, mode)
-        if not file then
-            print("cannot open file : "..filename)
-        end
-        return file, error
-        --]]
+
     return origin_open(filename, mode)
 end
 
@@ -117,9 +113,9 @@ local function get_require_search_path(r_name)
     --separate with ";"
     --"../" not support
 
-    print("require search string", search_string)
+    --print("require search string", search_string)
     for s_path in string.gmatch(search_string, ".-;") do
-        print("get requrie search path: "..s_path)
+        --print("get requrie search path: "..s_path)
 
         local r_path = string.gsub(r_name, "%.", "/")
         s_path = string.gsub(s_path, "?", r_path)
@@ -155,8 +151,10 @@ local function remote_searcher(name)
     local err_msg = ""
     for _, v in ipairs(file_table) do
         --print("can't find: "..name.." in " .. v)
-        err_msg = err_msg .. "can't open: " .. name " in " .. v
+        err_msg = err_msg .. "can't open: " .. name .. " in " .. v
     end
+
+    --print("require error",err_msg)
     return nil, err_msg
 end
 table.insert(package.searchers, remote_searcher)
@@ -197,6 +195,8 @@ function run(path)
             --entrance.init(g_WindowHandle, g_Width, g_Height)
             local res = safe_run(entrance.init, "entrance.init",g_WindowHandle, g_Width, g_Height)
             if not res then
+                --try termainate first
+                entrance.terminate()
                 entrance = nil
             end
         else
@@ -208,28 +208,23 @@ function run(path)
 end
 
 --test RegisterIOCommand
+--[[
 local function dbg_test(value)
     print("XYZXYZ dbg_test_client: " .. tostring(value[1]) .. " and " ..  tostring(value[2]))
 end
 
 RegisterIOCommand("DBG_SERVER_SENT", dbg_test)
-
---todo: offline mode?
-while true do
-    local key, value = linda:receive(0.001, "new connection")
-    if value then
-        connect_to_server = true
-        break
-    end
-end
+--]]
 
 --send last error to server
 local err_file_path = sand_box_dir .. "/Documents/err.txt"
 print("search for err file: "..err_file_path, origin_open)
 local last_error = origin_open(err_file_path, "r")
+
 if last_error then
     local error_content = last_error:read("a")
     last_error:close()
+
     local last_error_cover = origin_open(err_file_path, "w")
     --last_error_cover:write("hehe")
     if last_error_cover then last_error_cover:close() end
@@ -243,5 +238,15 @@ else
 end
 
 --safe_run(require, "require", "fw.fw_connected")
+local bgfx = require "bgfx"
+local screenshot_cache_num = 0
+IoCommand_func["screenshot_req"] = function(value)
+    if entrance then
+        bgfx.request_screenshot()
+        screenshot_cache_num = screenshot_cache_num + 1
+        print("request screenshot: " .. value[2] .. " num: " .. screenshot_cache_num)
+    end
+end
+
 require "fw.fw_connected"
 --SendIORequest({"DBG_CLIENT_SENT", "12345"})
