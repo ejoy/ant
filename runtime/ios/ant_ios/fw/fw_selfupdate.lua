@@ -24,10 +24,8 @@ table.insert(check_path, "/fw/lanes.lua")
 table.insert(check_path, "/fw/pack.lua")
 
 while true do
-    local key, value = linda:receive(0.01, "new connection")
-   -- print("waiting connection")
+    local key, value = linda:receive(0.01, "server_root_updated")
     if value then
-
         for _, filename in ipairs(check_path) do
             print("self updating file: ".. filename)
             while true do
