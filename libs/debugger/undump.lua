@@ -3,7 +3,7 @@ local LUA_TBOOLEAN = 1
 local LUA_TNUMFLT = 3 | (0 << 4)
 local LUA_TNUMINT = 3 | (1 << 4)
 local LUA_TSHRSTR = 4 | (0 << 4)
-local LUA_TLNGSTR = 4 | (0 << 4)
+local LUA_TLNGSTR = 4 | (1 << 4)
 
 local unpack_buf = ''
 local unpack_pos = 1
@@ -13,10 +13,6 @@ local function unpack_setpos(...)
 end
 local function unpack(fmt)
     return unpack_setpos(fmt:unpack(unpack_buf, unpack_pos))
-end
-
-local function LoadInt()
-    return unpack 'i'
 end
 
 local function LoadByte()
@@ -39,36 +35,85 @@ local function LoadCharN(n)
     return unpack('c' .. tostring(n))
 end
 
-local function LoadString()
-    local size = LoadByte()
-    if size == 0xFF then
-        size = LoadSize()
+local function LoadSize53()
+    local x = LoadByte()
+    if x == 0xFF then
+        return LoadByte()
     end
+    return x
+end
+
+local function LoadSize54()
+    local b
+    local x = 0
+    repeat
+        b = LoadByte()
+        x = (x << 7) | (b & 0x7f)
+    until ((b & 0x80) ~= 0)
+    return x
+end
+
+local function LoadRawInt()
+    return unpack 'i'
+end
+
+local Version = 0x53
+local LoadSize = LoadSize53
+local LoadInt = LoadRawInt
+local LoadLineInfo = LoadRawInt
+
+local function InitCompat()
+    local version = LoadByte()
+    if version == 0x53 then
+        Version = 0x53
+        LoadSize = LoadSize53
+        LoadInt = LoadRawInt
+        LoadLineInfo = LoadRawInt
+        LUA_TNUMFLT = 3 | (0 << 4)
+        LUA_TNUMINT = 3 | (1 << 4)
+        LUA_TSHRSTR = 4 | (0 << 4)
+        LUA_TLNGSTR = 4 | (1 << 4)
+    elseif version == 0x54 then
+        Version = 0x54
+        LoadSize = LoadSize54
+        LoadInt = LoadSize54
+        LoadLineInfo = LoadByte
+        LUA_TNUMFLT = 3 | (1 << 4)
+        LUA_TNUMINT = 3 | (2 << 4)
+        LUA_TSHRSTR = 4 | (1 << 4)
+        LUA_TLNGSTR = 4 | (2 << 4)
+    else
+        assert(false)
+    end
+end
+
+local function CheckHeader()
+    assert(LoadCharN(4) == '\x1bLua')
+    InitCompat()
+    assert(LoadByte() == 0)
+    assert(LoadCharN(6) == '\x19\x93\r\n\x1a\n')
+    LoadByte() -- int
+    LoadByte() -- size_t
+    assert(LoadByte() == 4) -- Instruction
+    LoadByte() -- lua_Integer
+    LoadByte() -- lua_Number
+    assert(LoadInteger() == 0x5678)
+    assert(LoadNumber() == 370.5)
+end
+
+local function LoadString()
+    local size = LoadSize()
     if size == 0 then
         return nil
     end
     return LoadCharN(size-1)
 end
 
-local function CheckHeader()
-    assert(LoadCharN(4) == '\x1bLua')
-    assert(LoadByte() == 0x53)
-    assert(LoadByte() == 0)
-    assert(LoadCharN(6) == '\x19\x93\r\n\x1a\n')
-    assert(LoadByte() == 4) -- int
-    assert(LoadByte() == 8) -- size_t
-    assert(LoadByte() == 4) -- Instruction
-    assert(LoadByte() == 8) -- lua_Integer
-    assert(LoadByte() == 8) -- lua_Number
-    assert(LoadInteger() == 0x5678)
-    assert(LoadNumber() == 370.5)
-end
-
 local function LoadCode(f)
     f.sizecode = LoadInt(S)
     f.code = {}
     for i = 1, f.sizecode do
-        f.code[i] = LoadInt()
+        f.code[i] = LoadRawInt()
     end
 end
 
@@ -119,7 +164,16 @@ local function LoadDebug(f)
     f.sizelineinfo = LoadInt()
     f.lineinfo = {}
     for i = 1, f.sizelineinfo do
-        f.lineinfo[i] = LoadInt()
+        f.lineinfo[i] = LoadLineInfo()
+    end
+    if Version >= 0x54 then
+        f.sizeabslineinfo = LoadInt()
+        f.abslineinfo = {}
+        for i = 1, f.sizeabslineinfo do
+            f.abslineinfo[i] = {}
+            f.abslineinfo[i].pc = LoadInt()
+            f.abslineinfo[i].line = LoadInt()
+        end
     end
     f.sizelocvars = LoadInt()
     f.locvars = {}
