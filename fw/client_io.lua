@@ -115,7 +115,7 @@ function client:CollectSendRequest()
             print("vfs open res:", file, hash, f_n)
             if file then file:close() end
             --FILE can't send through linda
-            self.linda:send("vfs_open_res", {f_n, hash})
+            self.linda:send("vfs_open_res"..value, {f_n, hash})
         else
             break
         end
