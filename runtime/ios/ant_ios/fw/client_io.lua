@@ -29,10 +29,12 @@ end
 function client:CollectSendRequest()
     --only listen to one type of message "io send"
     while true do
-        local key, value = self.linda:receive(0.001, "io_send")
-        if value then
+        local key, value = self.linda:receive(0.001, "io_send", "log")
+        if key == "io_send" then
             print("io send ", table.unpack(value))
             self:send(value)
+        elseif key == "log" then
+            self:send({"LOG", table.unpack(value)})
         else
             break
         end

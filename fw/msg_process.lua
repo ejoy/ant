@@ -29,18 +29,12 @@ local max_screenshot_pack = 63*1024
 function msg_process:CollectRequest()
     --this if for client request
     while true do
-        local key, value = self.linda:receive(0.001, "request", "log", "screenshot", "vfs_open", "RegisterTransmit")
+        local key, value = self.linda:receive(0.001, "request", "screenshot", "vfs_open", "RegisterTransmit")
         if key == "request" then
             --table.insert(logic_request, value)
             print("send request hehe", table.unpack(value))
 
             self.linda:send("io_send", value)
-        elseif key == "log" then
-            --table.insert(self.sending, pack.pack({"LOG", table.unpack(value)}))
-
-                --self.io:Send(self.current_connect, {"LOG", table.unpack(value)})
-            --todo msg cache
-            self.linda:send("io_send", {"LOG", table.unpack(value)})
 
         elseif key == "screenshot" then
             --after compression, only have name and data string
