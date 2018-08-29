@@ -195,6 +195,8 @@ function run(path)
             --entrance.init(g_WindowHandle, g_Width, g_Height)
             local res = safe_run(entrance.init, "entrance.init",g_WindowHandle, g_Width, g_Height)
             if not res then
+                --try termainate first
+                entrance.terminate()
                 entrance = nil
             end
         else
@@ -214,14 +216,6 @@ end
 RegisterIOCommand("DBG_SERVER_SENT", dbg_test)
 --]]
 
---todo: offline mode?
-while true do
-    local key, value = linda:receive(0.001, "new connection")
-    if value then
-        connect_to_server = true
-        break
-    end
-end
 
 --send last error to server
 local err_file_path = sand_box_dir .. "/Documents/err.txt"

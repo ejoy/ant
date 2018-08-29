@@ -41,6 +41,15 @@ if not res  then
     error(err)
 end
 
+--todo: offline mode?
+while true do
+    local key, value = linda:receive(0.001, "new connection")
+    if value then
+        connect_to_server = true
+        break
+    end
+end
+
 --msg process thread
 res, err = add_module("/fw/fw_msgprocess.lua", log, pkg_dir, sand_box_dir)
 if not res then

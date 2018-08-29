@@ -71,7 +71,6 @@ while true do
                 while true do
                     local key, val = linda:receive(0.001, "vfs_open_res")
                     if val then
-                        print("get waiting result")
                         file_path, hash = val[1], val[2]
                         break
                     end
