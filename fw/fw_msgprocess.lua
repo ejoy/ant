@@ -43,7 +43,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
             local file_path
             linda:send("vfs_open", filename)
             while true do
-                local _, value = linda:receive("vfs_open_res", 0.001)
+                local _, value = linda:receive("vfs_open_res"..filename, 0.001)
                 if value then
                     file_path, hash = value[1], value[2]
                     break

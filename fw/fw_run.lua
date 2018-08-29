@@ -4,9 +4,9 @@ return function(file_path, ...)
        return
    end
 
-   local f, hash = io.open(file_path, "r")
+   local f, err = io.open(file_path, "r")
    if not f then
-       assert(false, "cannot find file: " .. file_path)
+       assert(false, "cannot find file: " .. file_path, err)
    end
 
    local content = f:read("a")
