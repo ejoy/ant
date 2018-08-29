@@ -78,7 +78,7 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
 
     print("create io")
     local client_io = require "fw.client_io"
-    local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir)
+    local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir, io_repo)
 
     while true do
         c:mainloop(0.001)

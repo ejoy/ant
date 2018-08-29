@@ -1,5 +1,14 @@
 local MAX_CALC_CHUNK = 62*1024
 local clientcommand = {}
+--[[
+function clientcommand.EXIST_CHECK(resp, self)
+    assert(resp[1] == "EXIST_CHECK", "COMMAND: "..resp[1].." invalid, shoule be EXIST_CHECK")
+    local result = resp[2]
+    print("get exist check result: "..tostring(result))
+
+    self.linda:send("file exist", result)
+end
+
 --cmd while recieving data from server
 --there are two types of file data
 --one will store as file
@@ -49,7 +58,7 @@ function clientcommand.FILE(resp, self)
 
     print("write file", file_path, self.vfs)
 end
-
+--]]
 --handle error
 --for now just print the error message
 function clientcommand.ERROR(resp, self)
@@ -57,14 +66,6 @@ function clientcommand.ERROR(resp, self)
         print(k, v)
     end
     self.linda:send("mem_data", "ERROR")
-end
-
-function clientcommand.EXIST_CHECK(resp, self)
-    assert(resp[1] == "EXIST_CHECK", "COMMAND: "..resp[1].." invalid, shoule be EXIST_CHECK")
-    local result = resp[2]
-    print("get exist check result: "..tostring(result))
-
-    self.linda:send("file exist", result)
 end
 
 function clientcommand.DIR(resp, self)

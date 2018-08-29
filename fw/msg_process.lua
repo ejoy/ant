@@ -11,8 +11,9 @@ for _, cmd in ipairs({"fw.clientcommand"}) do
         client_cmd[cmd] = func
     end
 end
-function msg_process.new(init_linda, pkg_dir, sb_dir, io_repo)
-    return setmetatable({linda = init_linda, vfs = io_repo, run_cmd_cache = nil}, msg_process)
+
+function msg_process.new(init_linda, pkg_dir, sb_dir)
+    return setmetatable({linda = init_linda}, msg_process)
 end
 
 function msg_process:mainloop()
@@ -29,14 +30,8 @@ local max_screenshot_pack = 63*1024
 function msg_process:CollectRequest()
     --this if for client request
     while true do
-        local key, value = self.linda:receive(0.001, "request", "screenshot", "vfs_open", "RegisterTransmit")
-        if key == "request" then
-            --table.insert(logic_request, value)
-            print("send request hehe", table.unpack(value))
-
-            self.linda:send("io_send", value)
-
-        elseif key == "screenshot" then
+        local key, value = self.linda:receive(0.001, "screenshot", "RegisterTransmit")
+        if key == "screenshot" then
             --after compression, only have name and data string
             --value[2] is data
             local name = value[1]
@@ -57,6 +52,7 @@ function msg_process:CollectRequest()
                     self.linda:send("io_send", {"SCREENSHOT", name, size, offset, pack_str})
                 end
             end
+            --[[
         elseif key == "vfs_open" then
             print("try open: ", value, self.vfs)
             local file, hash, f_n = self.vfs:open(value)
@@ -64,7 +60,7 @@ function msg_process:CollectRequest()
             if file then file:close() end
             --FILE can't send through linda
             self.linda:send("vfs_open_res", {f_n, hash})
-
+--]]
         elseif key == "RegisterTransmit" then
             transmit_cmd[value] = true
         else
@@ -78,31 +74,19 @@ function msg_process:HandleRecv()
         local key, value = self.linda:receive(0.001, "io_recv")
         if value then
             print("recv io package", table.unpack(value))
-
             local cmd = value[1]
-            if cmd == "SERVER_ROOT" then
-                self.vfs:changeroot(value[2])
 
-                if self.run_cmd_cache then
-                    print("restore run command", self.run_cmd_cache)
-                    self.linda:send("run", self.run_cmd_cache)
-                    self.run_cmd_cache = nil
+            local func = client_cmd[cmd]
+            if not func then
+                if transmit_cmd[cmd] then
+                    print("get transmit cmd", cmd)
+                    self.linda:send(cmd, value)
+                else
+                    print("unknown command", cmd)
                 end
             else
-                local func = client_cmd[cmd]
-                if not func then
-                    if transmit_cmd[cmd] then
-                        print("get transmit cmd", cmd)
-                        self.linda:send(cmd, value)
-                    else
-                        print("unknown command", cmd)
-                    end
-                else
-                    func(value, self)
-                end
+                func(value, self)
             end
-        else
-            break
         end
     end
 end

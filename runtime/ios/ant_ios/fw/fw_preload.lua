@@ -6,8 +6,7 @@ f_table.preloadc()
 RUN_FUNC = nil  --the function currently running"
 RUN_FUNC_NAME = nil --the name of the running function"
 
-package.path = package.path .. ";" .. pkg_dir .. "/?.lua;"
-
+package.path = "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;/libs/?/?.lua;" .. pkg_dir .. "/fw/?.lua;" .. pkg_dir .. "/?.lua;"
 local vfs = require "firmware.vfs"
 client_repo = vfs.new(pkg_dir, sand_box_dir .. "/Documents")
 
@@ -26,7 +25,7 @@ local function add_module(path, ...)
     return xpcall(module_func, debug.traceback,...)
 end
 
-package.path = package.path .. ";/fw/?.lua;" .. pkg_dir .. "/fw/?.lua;" .. pkg_dir .. "/?.lua;" .. "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;/libs/?/?.lua;"
+
 --TODO: find a way to set this
 --path for the remote script
 lanes = require "lanes"

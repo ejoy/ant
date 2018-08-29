@@ -73,6 +73,7 @@ function clientcommand.DIR(resp, self)
 
 end
 
+--[[
 function clientcommand.RUN(resp, self)
     print("run cmd", resp[1], resp[2])
     self.run_cmd_cache = resp[2]
@@ -82,7 +83,7 @@ function clientcommand.RUN(resp, self)
     self.linda:send("io_send", {"REQUEST_ROOT"})
     --_linda:send("run", resp[2])
 end
-
+--]]
 function clientcommand.SCREENSHOT(resp, self)
     print("get screenshot command")
 

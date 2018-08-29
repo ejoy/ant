@@ -1,11 +1,87 @@
 local client = {}; client.__index = client
-
+local MAX_CALC_CHUNK = 62*1024
 --the dir hold the files
 local sand_box_path = ""
 
 local iosys = require "iosys"
+local io_cmd = {}
+io_cmd.EXIST_CHECK = function(resp, self)
+    assert(resp[1] == "EXIST_CHECK", "COMMAND: "..resp[1].." invalid, shoule be EXIST_CHECK")
+    local result = resp[2]
 
-function client.new(address, port, init_linda, pkg_dir, sb_dir)
+    self.linda:send("file exist", result)
+end
+
+io_cmd.FILE = function(resp, self)
+    --resp[1] is cmd name "FILE"
+    --resp[2] is the file path in client
+    --resp[3] is the file hash value
+    --resp[4] is the progress "current/total"
+    --resp[5] is the file data
+    assert(resp[1] == "FILE")
+    local progress = resp[4]
+
+    local slash = string.find(progress, "%/")
+    local offset = tonumber(string.sub(progress, 1, slash - 1))
+    local total_pack = tonumber(string.sub(progress, slash+1, -1))
+    local file_path = resp[2]
+
+    --store in file
+    --file dose not exist on server
+    local hash = resp[3]
+
+    print("write file", file_path, hash)
+    if not hash then
+        --TODO: handle this situation
+        print("error: server hash not founc")
+        return
+    end
+
+    --print("package info", resp[1], resp[2],resp[4], resp[5])
+    --if is the first package, will delete the origin file
+    --if is other package, will add to the existing file
+    --TODO: consider if the order is not correct
+    if offset <= MAX_CALC_CHUNK then
+        self.vfs:write(hash, resp[5])
+    else
+        self.vfs:write(hash, resp[5], "ab")
+    end
+
+    if offset >= total_pack then
+        --TODO version management/control
+        --the file is complete, inform out side
+        print("get new file :  "..file_path)
+        self.linda:send("new file", file_path)
+    end
+
+    print("write file", file_path, self.vfs)
+end
+
+io_cmd.SERVER_ROOT = function(resp, self)
+    local cmd = resp[1]
+    if cmd == "SERVER_ROOT" then
+        self.vfs:changeroot(resp[2])
+
+        print("change root", resp[2])
+        if self.run_cmd_cache then
+            print("restore run command", self.run_cmd_cache)
+            self.linda:send("run", self.run_cmd_cache)
+            self.run_cmd_cache = nil
+        end
+    end
+end
+
+io_cmd.RUN = function(resp, self)
+    print("run cmd", resp[1], resp[2])
+    self.run_cmd_cache = resp[2]
+
+    print("request root")
+    --self.io:Send(self.current_connect, {"REQUEST_ROOT"})
+    self:send({"REQUEST_ROOT"})
+    --_linda:send("run", resp[2])
+end
+
+function client.new(address, port, init_linda, pkg_dir, sb_dir, vfs_repo)
     --connection started from here
     print("listen to address", address,"port", port)
     local io_ins = iosys.new()
@@ -16,7 +92,7 @@ function client.new(address, port, init_linda, pkg_dir, sb_dir)
 
     print("create server repo")
     --return setmetatable( { host = fd, fds = {fd}, sending = {}, resp = {}, reading = ""}, client)
-    return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}}, client)
+    return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, vfs = vfs_repo, run_cmd_cache = nil}, client)
 end
 
 function client:send(client_req)
@@ -27,14 +103,19 @@ function client:send(client_req)
 end
 
 function client:CollectSendRequest()
-    --only listen to one type of message "io send"
     while true do
-        local key, value = self.linda:receive(0.001, "io_send", "log")
-        if key == "io_send" then
-            print("io send ", table.unpack(value))
+        local key, value = self.linda:receive(0.001, "io_send", "log", "vfs_open", "request")
+        if key == "io_send" or key == "request" then
             self:send(value)
         elseif key == "log" then
             self:send({"LOG", table.unpack(value)})
+        elseif key == "vfs_open" then
+            print("try open: ", value)
+            local file, hash, f_n = self.vfs:open(value)
+            print("vfs open res:", file, hash, f_n)
+            if file then file:close() end
+            --FILE can't send through linda
+            self.linda:send("vfs_open_res", {f_n, hash})
         else
             break
         end
@@ -91,7 +172,14 @@ function client:mainloop(timeout)
         for _, recv in ipairs(recv_package) do
             --do nothing but put it in linda, let msg process thread handle it
             print("io recv pkg", table.unpack(recv))
-            self.linda:send("io_recv", recv)
+
+            local cmd = recv[1]
+            local func = io_cmd[cmd]
+            if not func then
+                self.linda:send("io_recv", recv)
+            else
+                func(recv, self)
+            end
         end
     end
 

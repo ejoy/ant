@@ -13,11 +13,11 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
         for k, v in ipairs(print_table) do
             print_table[k] = tostring(v)
         end
-        linda:send("log", {"Script", os.clock(), table.unpack(print_table)})
+        linda:send("log", {"Script", "MSG_PROCESS",os.clock(), table.unpack(print_table)})
     end
 
     perror = function(...)
-        origin_print("ERROR!!", ...)
+        origin_print("ERROR!!", "MSG_PROCESS",...)
         local error_table = {...}
         for k, v in ipairs(error_table) do
             error_table[k] = tostring(v)
@@ -27,40 +27,21 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
 
     local vfs = require "firmware.vfs"
     vfs_repo = vfs.new(_pkg_dir, _sb_dir .. "/Documents")
---[[
-    local origin_require = require
-    require = function(require_path)
-        print("requiring "..require_path)
-        if vfs_repo then
-            local file_path = string.gsub(require_path, "%.", "/")
-            file_path = file_path .. ".lua"
-            local file = vfs_repo:open(file_path)
-            print("search for file path", file_path)
-            if file then
-                local content = file:read("a")
-                --print("content", content)
-                file:close()
+    --local file, hash = vfs_repo:open("/fw/msg_process.lua")
 
-                local err, result = pcall(load, content, "@"..require_path)
-                if not err then
-                    print("require " .. require_path .. " error: " .. result)
-                    return nil
-                else
-                    return result()
-                end
-            end
-        end
-
-        print("use origin require")
-        return origin_require(require_path)
-    end
---]]
     ---[[
     origin_open = io.open
     io.open = function(filename, mode)
         while true do
-            linda:send("vfs_open",filename)
-            local file_path, hash
+           -- print("open file", filename)
+            --[[
+            local file, hash = vfs_repo:open(filename)
+            if file then
+                return file
+            end
+            --]]
+            local file_path
+            linda:send("vfs_open", filename)
             while true do
                 local _, value = linda:receive("vfs_open_res", 0.001)
                 if value then
@@ -139,6 +120,11 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
             table.insert(search_table, s_path)
         end
 
+        print("11111122222")
+        for k, v in ipairs(search_table) do
+            print(k, v)
+        end
+
         return search_table
     end
 
@@ -171,7 +157,10 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
         --print("require error",err_msg)
         return nil, err_msg
     end
-    table.insert(package.searchers, remote_searcher)
+    package.searchers[5] = package.searchers[1]
+    package.searchers[1] = remote_searcher
+    --table.insert(package.searchers, remote_searcher)
+
 
     print("create msg processor 11")
     --local msg_process = require "fw.msg_process"
@@ -182,7 +171,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
     end
 
     --local mp = msg_process.new(linda, pkg_dir, sb_dir, vfs_repo)
-    local res, mp = xpcall(msg_process.new, debug.traceback, linda, pkg_dir, sb_dir, vfs_repo)
+    local res, mp = xpcall(msg_process.new, debug.traceback, linda, pkg_dir, sb_dir)
     if not res then
         perror(mp)
         return
