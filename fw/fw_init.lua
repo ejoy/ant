@@ -183,12 +183,13 @@ function run(path)
     --print("entrance string: ", entrance_string)
     file:close()
 
-    local res
-    res, entrance = safe_run(load,"load", entrance_string, "@"..path)
-
-    print("entracne is " ..tostring(entrance))
+    local err_msg
+    entrance, err_msg = load(entrance_string)
+  --res, entrance = safe_run(load,"load", entrance_string, "@"..path)
+    print("entrance is " ..tostring(entrance))
     --entrance should be a function
-    if res then
+    if entrance then
+        local res
         --load give a function, needs to run it
         res, entrance = safe_run(entrance, "entrance()")
         if res then
@@ -203,7 +204,7 @@ function run(path)
             entrance = nil
         end
     else
-        entrance = nil
+        perror(err_msg)
     end
 end
 

@@ -40,7 +40,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
                 return file
             end
             --]]
-            local file_path
+            local file_path, hash
             linda:send("vfs_open", filename)
             while true do
                 local _, value = linda:receive("vfs_open_res"..filename, 0.001)
@@ -157,13 +157,9 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
         --print("require error",err_msg)
         return nil, err_msg
     end
-    package.searchers[5] = package.searchers[1]
-    package.searchers[1] = remote_searcher
-    --table.insert(package.searchers, 1, remote_searcher)
-    --table.insert(package.searchers, remote_searcher)
+    table.insert(package.searchers, 1, remote_searcher)
 
-
-    print("create msg processor 11")
+    print("create msg processor (remote)")
     --local msg_process = require "fw.msg_process"
     local res, msg_process = xpcall(require, debug.traceback, "fw.msg_process")
     if not res then
