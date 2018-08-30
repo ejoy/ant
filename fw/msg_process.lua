@@ -108,6 +108,8 @@ function msg_process:HandleRecv()
             else
                 func(value, self)
             end
+        else
+            break
         end
     end
 end
