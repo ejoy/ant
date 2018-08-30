@@ -20,6 +20,7 @@ function DbgIO:event_in(f)
     end)
 end
 function DbgIO:update()
+    return true
 end
 function DbgIO:send(data)
     print("[DbgSend]", data)
