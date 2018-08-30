@@ -25,10 +25,8 @@ io.open = function (filename, mode, search_local_only)
 
     --vfs not initialized, can only use origin function
 
-    print("start open file ", filename)
-
     if client_repo or io_thread then
-        print("opening file: " .. filename)
+        --print("opening file: " .. filename)
         while true do
             --have io thread
             local hash
@@ -58,13 +56,13 @@ io.open = function (filename, mode, search_local_only)
                 end
             end
 
-            print("hash is: " ..tostring(hash))
+            --print("hash is: " ..tostring(hash))
             if not hash then
-                print("file does not exist in repo: "..filename)
+                --print("file does not exist in repo: "..filename)
                 break
             end
 
-            print("Try to request hash from server", filename, hash)
+            --print("Try to request hash from server", filename, hash)
             local request = {"EXIST", hash}
             linda:send("request", request)
 
@@ -93,7 +91,7 @@ io.open = function (filename, mode, search_local_only)
                 if file_value then
                     --file_value should be local address
                     --client_repo:write should be called in io thread
-                    print("get new file: " .. realpath)
+                    --print("get new file: " .. realpath)
                     break
                 end
             end
@@ -135,7 +133,7 @@ local function remote_searcher(name)
     for _, v in ipairs(file_table) do
         local r_file = io.open(v, "rb")
         if r_file then
-            print("open required file", name, v)
+            --print("open required file", name, v)
             io.input(r_file)
             local r_data = r_file:read("a")
             r_file:close()
@@ -183,12 +181,13 @@ function run(path)
     --print("entrance string: ", entrance_string)
     file:close()
 
-    local res
-    res, entrance = safe_run(load,"load", entrance_string, "@"..path)
-
-    print("entracne is " ..tostring(entrance))
+    local err_msg
+    entrance, err_msg = load(entrance_string)
+  --res, entrance = safe_run(load,"load", entrance_string, "@"..path)
+    print("entrance is " ..tostring(entrance))
     --entrance should be a function
-    if res then
+    if entrance then
+        local res
         --load give a function, needs to run it
         res, entrance = safe_run(entrance, "entrance()")
         if res then
@@ -203,7 +202,7 @@ function run(path)
             entrance = nil
         end
     else
-        entrance = nil
+        perror(err_msg)
     end
 end
 
