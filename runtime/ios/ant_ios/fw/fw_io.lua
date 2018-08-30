@@ -61,12 +61,18 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
                 print("content", content)
                 file:close()
 
-                local err, result = pcall(load, content, "@"..require_path)
-                if not err then
-                    print("require " .. require_path .. " error: " .. result)
+                local result, err = load(content)
+                if not result then
+                    print("require " .. require_path .. " error: " .. err)
                     return nil
                 else
-                    return result()
+                    local status, return_res = xpcall(result, debug.traceback)
+                    if status then
+                        return return_res
+                    else
+                        error(return_res)
+                        return nil
+                    end
                 end
             end
         end

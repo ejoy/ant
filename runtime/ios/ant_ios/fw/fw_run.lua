@@ -12,7 +12,12 @@ return function(file_path, ...)
     local content = f:read("a")
     f:close()
 
-    local run_func = load(content, "@" .. file_path)
+    local run_func, err_msg = load(content)
+    if not run_func then
+        perror(err_msg)
+        error(err_msg)
+    end
+    
     local err, result = xpcall(run_func, debug.traceback, ...)
     if not err then
         print("run file "..file_path.." error: " .. tostring(result))

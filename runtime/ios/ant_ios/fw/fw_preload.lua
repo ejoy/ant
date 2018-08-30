@@ -20,9 +20,14 @@ local function add_module(path, ...)
     local module_content = module:read("a")
     module:close()
 
-    local res, module_func = xpcall(load, debug.traceback, module_content, "@"..path)
-    print("add module: " .. path)
-    return xpcall(module_func, debug.traceback,...)
+    local res, err = load(module_content)
+    if not res then
+        error("load module " .. path .. " error: " .. err)
+        return
+    end
+
+    print("add module: " .. path .. " finished")
+    return xpcall(res, debug.traceback,...)
 end
 
 

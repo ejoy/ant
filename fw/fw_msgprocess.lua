@@ -120,7 +120,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
             table.insert(search_table, s_path)
         end
 
-        print("11111122222")
+        print("search path is:")
         for k, v in ipairs(search_table) do
             print(k, v)
         end
@@ -142,7 +142,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
 
                 --cache the required file name
                 table.insert(require_cache, name)
-                return load(r_data, "@"..v)
+                return load(r_data)
             end
         end
 
@@ -159,6 +159,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
     end
     package.searchers[5] = package.searchers[1]
     package.searchers[1] = remote_searcher
+    --table.insert(package.searchers, 1, remote_searcher)
     --table.insert(package.searchers, remote_searcher)
 
 

@@ -22,12 +22,18 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
                 print("content", content)
                 file:close()
 
-                local err, result = pcall(load, content, "@"..require_path)
-                if not err then
-                    print("require " .. require_path .. " error: " .. result)
+                local result, err_msg = load(content)
+                if not result then
+                    print("require " .. require_path .. " error: " .. err_msg)
                     return nil
                 else
-                    return result()
+                    local status, return_res = xpcall(result, debug.traceback)
+                    if status then
+                        error(return_res)
+                        return nil
+                    else
+                        return return_res
+                    end
                 end
             end
         end
