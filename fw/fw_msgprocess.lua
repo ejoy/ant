@@ -55,13 +55,13 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
                 return origin_open(file_path, mode)
             end
 
-            print("hash is: " ..tostring(hash))
+            --print("hash is: " ..tostring(hash))
             if not hash then
-                print("file does not exist in repo: "..filename)
+                --print("file does not exist in repo: "..filename)
                 break
             end
 
-            print("Try to request hash from server", filename, hash)
+            --print("Try to request hash from server", filename, hash)
             local request = {"EXIST", hash}
             linda:send("request", request)
 
@@ -90,7 +90,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
                 if file_value then
                     --file_value should be local address
                     --client_repo:write should be called in io thread
-                    print("get new file: " .. realpath)
+                    --print("get new file: " .. realpath)
                     break
                 end
             end
@@ -120,11 +120,6 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
             table.insert(search_table, s_path)
         end
 
-        print("search path is:")
-        for k, v in ipairs(search_table) do
-            print(k, v)
-        end
-
         return search_table
     end
 
@@ -135,7 +130,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
         for _, v in ipairs(file_table) do
             local r_file = io.open(v, "rb")
             if r_file then
-                print("open required file", name, v)
+                --print("open required file", name, v)
                 io.input(r_file)
                 local r_data = r_file:read("a")
                 r_file:close()
