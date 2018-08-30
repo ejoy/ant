@@ -1,6 +1,9 @@
+
+local DbgWorker = require 'debugger'.start_worker()
+
 return function()
-    if DbgUpdate then
-        DbgUpdate()
+    if DbgWorker then
+        DbgWorker()
     end
 
     if entrance then

@@ -12,11 +12,32 @@ for _, cmd in ipairs({"fw.clientcommand"}) do
     end
 end
 
+local DbgIO = {}
+function DbgIO:event_in(f)
+    msg_process:register_command("dbg", function(data_table)
+        print("[DbgRecv]", data_table[2])
+        f(data_table[2])
+    end)
+end
+function DbgIO:update()
+end
+function DbgIO:send(data)
+    print("[DbgSend]", data)
+    msg_process:send_pkg({"dbg", data})
+end
+function DbgIO:close()
+end
+local DbgMaster
+
 function msg_process.new(init_linda, pkg_dir, sb_dir)
+    DbgMaster = require 'debugger'.start_master(DbgIO)
     return setmetatable({linda = init_linda}, msg_process)
 end
 
 function msg_process:mainloop()
+    if DbgMaster then
+        DbgMaster()
+    end
     self:CollectRequest()   --request from game thread
     self:HandleRecv()       --receive from io thread
 end
@@ -96,5 +117,8 @@ function msg_process:register_command(cmd, func)
     client_cmd[cmd] = func
 end
 
+function msg_process:send_pkg(pkg)
+    self.linda:send("io_send", pkg)
+end
 
 return msg_process
