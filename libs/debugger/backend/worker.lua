@@ -60,6 +60,15 @@ ev.on('output', function(category, output, source, line)
     }
 end)
 
+--function print(...)
+--    local n = select('#', ...)
+--    local t = {}
+--    for i = 1, n do
+--        t[i] = tostring(select(i, ...))
+--    end
+--    ev.emit('output', 'stdout', table.concat(t, '\t')..'\n')
+--end
+
 function CMD.initializing(pkg)
     ev.emit('initializing', pkg.config)
 end

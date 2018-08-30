@@ -74,8 +74,10 @@ function m.close(fd)
 end
 
 function m.send(fd, data)
-    w_buf[fd] = w_buf[fd] .. data
-    write_open(fd)
+    if w_buf[fd] then
+        w_buf[fd] = w_buf[fd] .. data
+        write_open(fd)
+    end
 end
 
 function m.update()

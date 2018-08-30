@@ -35,15 +35,15 @@ local function LoadCharN(n)
     return unpack('c' .. tostring(n))
 end
 
-local function LoadSize53()
+local function LoadLength53()
     local x = LoadByte()
     if x == 0xFF then
-        return LoadByte()
+        return LoadSize()
     end
     return x
 end
 
-local function LoadSize54()
+local function LoadLength54()
     local b
     local x = 0
     repeat
@@ -58,7 +58,7 @@ local function LoadRawInt()
 end
 
 local Version = 0x53
-local LoadSize = LoadSize53
+local LoadSize = LoadLength53
 local LoadInt = LoadRawInt
 local LoadLineInfo = LoadRawInt
 
@@ -66,7 +66,7 @@ local function InitCompat()
     local version = LoadByte()
     if version == 0x53 then
         Version = 0x53
-        LoadSize = LoadSize53
+        LoadLength = LoadLength53
         LoadInt = LoadRawInt
         LoadLineInfo = LoadRawInt
         LUA_TNUMFLT = 3 | (0 << 4)
@@ -75,7 +75,7 @@ local function InitCompat()
         LUA_TLNGSTR = 4 | (1 << 4)
     elseif version == 0x54 then
         Version = 0x54
-        LoadSize = LoadSize54
+        LoadLength = LoadLength54
         LoadInt = LoadSize54
         LoadLineInfo = LoadByte
         LUA_TNUMFLT = 3 | (1 << 4)
@@ -102,7 +102,7 @@ local function CheckHeader()
 end
 
 local function LoadString()
-    local size = LoadSize()
+    local size = LoadLength()
     if size == 0 then
         return nil
     end
@@ -110,7 +110,7 @@ local function LoadString()
 end
 
 local function LoadCode(f)
-    f.sizecode = LoadInt(S)
+    f.sizecode = LoadInt()
     f.code = {}
     for i = 1, f.sizecode do
         f.code[i] = LoadRawInt()
