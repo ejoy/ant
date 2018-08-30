@@ -6,7 +6,10 @@ mt.__index = mt
 
 function mt:event_in(frecv)
     socket.init(self.fd, function()
-        frecv(self.fd:recv())
+        local data = self.fd:recv()
+        if data then
+            frecv(data)
+        end
     end)
 end
 

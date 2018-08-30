@@ -19,7 +19,10 @@ function mt:update()
     end
     self.fd = assert(self.listen:accept())
     socket.init(self.fd, function()
-        self.frecv(self.fd:recv())
+        local data = self.fd:recv()
+        if data then
+            self.frecv(data)
+        end
     end)
     return true
 end
