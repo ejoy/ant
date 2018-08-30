@@ -11,7 +11,7 @@ return function(file_path, ...)
 
     local content = f:read("a")
     f:close()
-    
+
     local run_func = load(content, "@" .. file_path)
     local err, result = xpcall(run_func, debug.traceback, ...)
     if not err then

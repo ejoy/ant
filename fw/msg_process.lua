@@ -1,4 +1,5 @@
 local msg_process = {}
+local _linda = nil
 
 msg_process.__index = msg_process
 
@@ -32,6 +33,7 @@ local DbgMaster
 
 function msg_process.new(init_linda, pkg_dir, sb_dir)
     DbgMaster = require 'debugger'.start_master(DbgIO)
+    _linda = init_linda
     return setmetatable({linda = init_linda}, msg_process)
 end
 
@@ -121,7 +123,9 @@ function msg_process:register_command(cmd, func)
 end
 
 function msg_process:send_pkg(pkg)
-    self.linda:send("io_send", pkg)
+    if _linda then
+        _linda:send("io_send", pkg)
+    end
 end
 
 return msg_process
