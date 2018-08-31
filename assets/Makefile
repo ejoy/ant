@@ -13,7 +13,7 @@ $(info "export env var 'ANTGE' as $(ROOT_DIR) ")
 endif
 
 
-.PHONY : all compileshader make_lnkfiles copy_bin
+.PHONY : all compileshader make_lnfiles copy_bin
 
 all : compileshader copy_bin
 	
@@ -66,12 +66,12 @@ endif
 compileshader : $(TARGET_SHADERFILES)
 
 
-LNK_FILES := $(addsuffix .lk,$(SHADER_FILES) $(FBX_FILES))
+LK_FILES := $(addsuffix .lk,$(SHADER_FILES) $(FBX_FILES))
 
-make_lnkfiles: $(LNK_FILES)
+make_lkfiles: $(LK_FILES)
 
-$(LNK_FILES) : %.lk : %
-	$(LUABIN) ./make_lnkfile.lua $^
+$(LK_FILES) : %.lk : %
+	$(LUABIN) ./make_lkfile.lua $^
 
 
 # copy other files
@@ -81,10 +81,10 @@ $(TARGET_ALL_BIN_FILES) : $(OUT_DIR)/% : % | $(TARGET_DIRS)
 copy_bin: $(TARGET_ALL_BIN_FILES)
 	
 
-.PHONY : clean clean_shaders clean_bin clean_lnkfiles
+.PHONY : clean clean_shaders clean_bin clean_lkfiles
 
-clean_lnkfiles:
-	for lnkfile in $(LNK_FILES); do rm -Rf $$lnkfile; done
+clean_lkfiles:
+	for lkfile in $(LK_FILES); do rm -Rf $$lkfile; done
 
 clean_shaders:
 	rm -Rf $(OUT_DIR)/$(SHADER_PATH)
