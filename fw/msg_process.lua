@@ -16,18 +16,24 @@ end
 local DbgIO = {}
 function DbgIO:event_in(f)
     msg_process:register_command("dbg", function(data_table)
-        print("[DbgRecv]", data_table[2])
+        if data_table[2] == false then
+            self.fclose()
+            return
+        end
         f(data_table[2])
     end)
+end
+function DbgIO:event_close(f)
+    self.fclose = f
 end
 function DbgIO:update()
     return true
 end
 function DbgIO:send(data)
-    print("[DbgSend]", data)
     msg_process:send_pkg({"dbg", data})
 end
 function DbgIO:close()
+    self.fclose()
 end
 local DbgMaster
 
@@ -97,7 +103,6 @@ function msg_process:HandleRecv()
     while true do
         local key, value = self.linda:receive(0.001, "io_recv")
         if value then
-            print("recv io package", table.unpack(value))
             local cmd = value[1]
 
             local func = client_cmd[cmd]

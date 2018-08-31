@@ -12,6 +12,14 @@ local config = {
     breakpoints = {},
 }
 
+ev.on('close', function()
+    if readyTrg then
+        readyTrg:remove()
+        readyTrg = nil
+    end
+    event.terminated()
+end)
+
 function request.initialize(req)
     if not mgr.isState 'birth' then
         response.error(req, 'already initialized')
@@ -230,15 +238,6 @@ end
 
 function request.disconnect(req)
     response.success(req)
-    mgr.broadcastToWorker {
-        cmd = 'terminated',
-    }
-    if readyTrg then
-        readyTrg:remove()
-        readyTrg = nil
-    end
-    mgr.setState 'terminated'
-    event.terminated()
     mgr.close()
     return true
 end

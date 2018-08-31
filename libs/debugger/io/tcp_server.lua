@@ -8,6 +8,10 @@ function mt:event_in(f)
     self.frecv = f
 end
 
+function mt:event_close(f)
+    self.fclose = f
+end
+
 function mt:update()
     socket.update()
     if self.fd then
@@ -34,7 +38,9 @@ function mt:send(data)
 end
 
 function mt:close()
-    print('close')
+    if self.fclose then
+        self.fclose()
+    end
     socket.close(self.fd)
     self.fd:close()
     self.fd = nil
