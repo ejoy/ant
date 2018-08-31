@@ -34,7 +34,7 @@ LUAMOD_API int luaopen_clonefunc(lua_State *L);
 LUAMOD_API int luaopen_cjson_safe(lua_State *L);
 
 LUAMOD_API int luaopen_remotedebug(lua_State *L);
-
+LUAMOD_API int luaopen_redirectfd(lua_State *L);
 void luaopen_lanes_embedded(lua_State *L, lua_CFunction _luaopen_lanes);
 
 static const luaL_Reg preload[] = {
@@ -56,7 +56,7 @@ static const luaL_Reg preload[] = {
     {"clonefunc", luaopen_clonefunc},
     {"cjson", luaopen_cjson_safe},
     {"remotedebug", luaopen_remotedebug},
-    
+    {"redirectfd", luaopen_redirectfd},
     { NULL, NULL },
 };
 
@@ -122,27 +122,6 @@ static int custom_on_state_create(lua_State *L) {
             luaL_traceback(L, L, msg, 1);
         }
     }
-    /*
-    lua_getglobal(L, "package");
-    if(lua_istable(L, -1)) {
-        lua_getfield(L, -1, "path");
-        if(lua_isstring(L, -1)) {
-            const char* pkg_path = lua_tostring(L, -1);
-            lua_pop(L, 1);
-            
-            NSString* path_string = [NSString stringWithUTF8String:pkg_path];
-            path_string = [path_string stringByAppendingString:@";"];
-            NSString *app_path = [[NSBundle mainBundle] resourcePath];
-            path_string = [app_path stringByAppendingString:@"/Common/?.lua;"];
-            path_string = [path_string stringByAppendingString:app_path];
-            path_string = [path_string stringByAppendingString:@"/Client/?.lua"];
-            lua_pushstring(L, [path_string UTF8String]);
-            lua_setfield(L, -2, "path");
-        }
-    }
-     */
-    
-    
     
     lua_pop(L, 1);
     
