@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		116FCE9721391AC8000B1E94 /* libredirectfd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 116FCE9621391AC7000B1E94 /* libredirectfd.a */; };
 		11728AEE212579A800C64F0F /* vfsrepo in Resources */ = {isa = PBXBuildFile; fileRef = 11728AED212579A800C64F0F /* vfsrepo */; };
 		1176E62F2124289C00D595F3 /* firmware in Resources */ = {isa = PBXBuildFile; fileRef = 1176E62E2124289B00D595F3 /* firmware */; };
 		11861CF82122B41F00535285 /* preload.m in Sources */ = {isa = PBXBuildFile; fileRef = 11861CF72122B41F00535285 /* preload.m */; };
@@ -49,6 +50,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		116FCE9621391AC7000B1E94 /* libredirectfd.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libredirectfd.a; path = ../libs/libredirectfd.a; sourceTree = "<group>"; };
 		11728AED212579A800C64F0F /* vfsrepo */ = {isa = PBXFileReference; lastKnownFileType = folder; name = vfsrepo; path = ../../../libs/vfsrepo; sourceTree = "<group>"; };
 		1176E62E2124289B00D595F3 /* firmware */ = {isa = PBXFileReference; lastKnownFileType = folder; name = firmware; path = ../../core/firmware; sourceTree = "<group>"; };
 		11861CF72122B41F00535285 /* preload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = preload.m; sourceTree = "<group>"; };
@@ -101,6 +103,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				116FCE9721391AC8000B1E94 /* libredirectfd.a in Frameworks */,
 				118F34F5211C21BA0092C262 /* libexample-commonRelease.a in Frameworks */,
 				118F34F6211C21BA0092C262 /* libbimg_decodeRelease.a in Frameworks */,
 				118F34F7211C21BA0092C262 /* libexample-glueRelease.a in Frameworks */,
@@ -178,6 +181,7 @@
 		118F34C2211C19120092C262 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				116FCE9621391AC7000B1E94 /* libredirectfd.a */,
 				118F34F3211C21BA0092C262 /* libbgfxRelease.a */,
 				118F34F0211C21BA0092C262 /* libbimg_decodeRelease.a */,
 				118F34F4211C21BA0092C262 /* libbimgRelease.a */,

@@ -127,6 +127,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
     local function remote_searcher(name)
         ---search through package.remote_search_path
         local file_table = get_require_search_path(name)
+        local err_msg = ""
         for _, v in ipairs(file_table) do
             local r_file = io.open(v, "rb")
             if r_file then
@@ -137,19 +138,19 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
 
                 --cache the required file name
                 table.insert(require_cache, name)
-                return load(r_data)
+                local load_res, err = load(r_data)
+                print("msg process load", name, load_res, err)
+                if not load_res then
+                    perror(err)
+                    return nil, err
+                else
+                    return load_res
+                end
+            else
+                err_msg = err_msg .. "can't open: " .. name .. " in " .. v
             end
         end
 
-        --required file not exist in the search path
-        --print("require failed")
-        local err_msg = ""
-        for _, v in ipairs(file_table) do
-            --print("can't find: "..name.." in " .. v)
-            err_msg = err_msg .. "can't open: " .. name .. " in " .. v
-        end
-
-        --print("require error",err_msg)
         return nil, err_msg
     end
     table.insert(package.searchers, 1, remote_searcher)
