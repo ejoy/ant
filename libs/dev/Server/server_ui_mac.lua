@@ -28,7 +28,7 @@ function init()
     end
 
     server_framework:SetProjectDirectoryPath("/Users/ejoy/Desktop/Engine/ant")
-    server_framework:HandleCommand("all", "RUN", "/libs/testlua.lua")
+    server_framework:HandleCommand("all", "RUN", "/libs/dev/testlua.lua")
 end
 
 

@@ -138,7 +138,8 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
 
                 --cache the required file name
                 table.insert(require_cache, name)
-                local load_res, err = load(r_data)
+                --local load_res, err = load(r_data)
+                local load_res, err = ant_load(r_data, v)
                 print("msg process load", name, load_res, err)
                 if not load_res then
                     perror(err)
@@ -182,7 +183,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
 end
 
 local lanes_err
-msg_process_thread, lanes_err = lanes.gen("*", CreateMsgProcessThread)(linda, pkg_dir, sb_dir)
+msg_process_thread, lanes_err = lanes.gen("*", {globals = {ant_load = ant_load}}, CreateMsgProcessThread)(linda, pkg_dir, sb_dir)
 if not msg_process_thread then
     assert(false, "lanes error: " .. lanes_err)
 end

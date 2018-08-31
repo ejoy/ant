@@ -42,6 +42,11 @@ perror = function(...)
     app_log("Error", ...)
 end
 
+ant_load = function(content, path)
+--    print("load file ~~ ".. path)
+    return load(content, "@"..path)
+end
+
 
 function CreateIOThread(linda, pkg_dir, sb_dir)
     print("init client repo")
@@ -53,7 +58,7 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
         print("requiring "..require_path)
         if io_repo then
             local file_path = string.gsub(require_path, "%.", "/")
-            file_path = file_path .. ".lua"
+            file_path = "/" .. file_path .. ".lua"
             local file = io_repo:open(file_path)
             print("search for file path", file_path)
             if file then
@@ -61,7 +66,8 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
                 print("content", content)
                 file:close()
 
-                local result, err = load(content)
+                --local result, err = load(content)
+                local result, err = ant_load(content, file_path)
                 if not result then
                     perror("require " .. require_path .. " error: " .. err)
                     return nil
@@ -92,7 +98,7 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
 end
 
 local lanes_err
-io_thread, lanes_err = lanes.gen("*", CreateIOThread)(linda, pkg_dir, sand_box_dir)
+io_thread, lanes_err = lanes.gen("*",{globals = {ant_load = ant_load}}, CreateIOThread)(linda, pkg_dir, sand_box_dir)
 if not io_thread then
     assert(false, "lanes error: ".. lanes_err)
 end

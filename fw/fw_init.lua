@@ -140,7 +140,8 @@ local function remote_searcher(name)
 
             --cache the required file name
             table.insert(require_cache, name)
-            return load(r_data)
+            --return load(r_data)
+            return ant_load(r_data, v)
         end
     end
 
@@ -182,7 +183,8 @@ function run(path)
     file:close()
 
     local err_msg
-    entrance, err_msg = load(entrance_string)
+    --entrance, err_msg = load(entrance_string)
+    entrance, err_msg = ant_load(entrance_string, path)
   --res, entrance = safe_run(load,"load", entrance_string, "@"..path)
     print("entrance is " ..tostring(entrance))
     --entrance should be a function
