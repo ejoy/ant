@@ -131,17 +131,9 @@ local function remote_searcher(name)
     ---search through package.remote_search_path
     local file_table = get_require_search_path(name)
     for _, v in ipairs(file_table) do
-        local r_file = io.open(v, "rb")
-        if r_file then
-            --print("open required file", name, v)
-            io.input(r_file)
-            local r_data = r_file:read("a")
-            r_file:close()
-
-            --cache the required file name
-            table.insert(require_cache, name)
-            --return load(r_data)
-            return ant_load(r_data, v)
+        local status, err = ant_load(v)
+        if status then
+            return status
         end
     end
 
@@ -175,16 +167,9 @@ function run(path)
         entrance = nil
     end
 
-    local file = io.open(path, "rb")
-    print("open file: "..path)
-    io.input(file)
-    local entrance_string = file:read("a")
-    --print("entrance string: ", entrance_string)
-    file:close()
-
     local err_msg
-    --entrance, err_msg = load(entrance_string)
-    entrance, err_msg = ant_load(entrance_string, path)
+    entrance, err_msg = ant_load(path)
+
   --res, entrance = safe_run(load,"load", entrance_string, "@"..path)
     print("entrance is " ..tostring(entrance))
     --entrance should be a function

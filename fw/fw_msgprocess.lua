@@ -129,24 +129,10 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
         local file_table = get_require_search_path(name)
         local err_msg = ""
         for _, v in ipairs(file_table) do
-            local r_file = io.open(v, "rb")
-            if r_file then
-                --print("open required file", name, v)
-                io.input(r_file)
-                local r_data = r_file:read("a")
-                r_file:close()
-
-                --cache the required file name
+            local status, err = ant_load(v)
+            if status then
                 table.insert(require_cache, name)
-                --local load_res, err = load(r_data)
-                local load_res, err = ant_load(r_data, v)
-                print("msg process load", name, load_res, err)
-                if not load_res then
-                    perror(err)
-                    return nil, err
-                else
-                    return load_res
-                end
+                return status
             else
                 err_msg = err_msg .. "can't open: " .. name .. " in " .. v
             end

@@ -4,14 +4,7 @@ return function(file_path, ...)
         return
     end
 
-    local f, err = io.open(file_path, "r")
-    if not f then
-        assert(false, "cannot find file: " .. file_path, err)
-    end
-
-    local content = f:read("a")
-    f:close()
-    local run_func, err = ant_load(content, file_path)
+    local run_func, err = ant_load(file_path)
     if not run_func then
         perror(err)
         return nil

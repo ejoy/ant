@@ -42,16 +42,25 @@ perror = function(...)
     app_log("Error", ...)
 end
 
-ant_load = function(content, path)
+ant_load = function(path)
 --    print("load file ~~ ".. path)
-    return load(content, "@"..path)
-end
 
+    local file, err = io.open(path, "rb")
+    if not file then
+        return nil, err
+    end
+
+    local content = file:read("a")
+    file:close()
+
+    return load(content)
+end
 
 function CreateIOThread(linda, pkg_dir, sb_dir)
     print("init client repo")
     local vfs = require "firmware.vfs"
     local io_repo = vfs.new(pkg_dir, sb_dir.."/Documents")
+
     ---[[
     local origin_require = require
     require = function(require_path)
@@ -67,7 +76,7 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
                 file:close()
 
                 --local result, err = load(content)
-                local result, err = ant_load(content, file_path)
+                local result, err = load(content)
                 if not result then
                     perror("require " .. require_path .. " error: " .. err)
                     return nil
