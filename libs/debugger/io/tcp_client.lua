@@ -7,7 +7,9 @@ mt.__index = mt
 function mt:event_in(frecv)
     socket.init(self.fd, function()
         local data = self.fd:recv()
-        if data then
+        if data == nil then
+            self:close()
+        elseif data ~= false then
             frecv(data)
         end
     end)
@@ -23,6 +25,7 @@ function mt:send(data)
 end
 
 function mt:close()
+    socket.close(self.fd)
     self.fd:close()
     self.fd = nil
 end

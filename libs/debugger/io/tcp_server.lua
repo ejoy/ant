@@ -20,7 +20,9 @@ function mt:update()
     self.fd = assert(self.listen:accept())
     socket.init(self.fd, function()
         local data = self.fd:recv()
-        if data then
+        if data == nil then
+            self:close()
+        elseif data ~= false then
             self.frecv(data)
         end
     end)
@@ -32,6 +34,8 @@ function mt:send(data)
 end
 
 function mt:close()
+    print('close')
+    socket.close(self.fd)
     self.fd:close()
     self.fd = nil
 end
