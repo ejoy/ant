@@ -11,7 +11,7 @@ return function(file_path, ...)
 
    local content = f:read("a")
    f:close()
-   local run_func = load(content, "@" .. file_path)
+   local run_func = load(content)
    local err, result = pcall(run_func, ...)
    if not err then
        print("run file "..file_path.." error: " .. tostring(result))

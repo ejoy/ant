@@ -140,7 +140,7 @@ local function remote_searcher(name)
 
             --cache the required file name
             table.insert(require_cache, name)
-            return load(r_data, "@"..v)
+            return load(r_data)
         end
     end
 
