@@ -5,7 +5,7 @@ local rawtable = require "rawtable"
 local path = require "filesystem.path"
 
 
-return function (filename, param)
+return function (filename)
     local mesh = rawtable(filename)
     
     local mesh_path = mesh.mesh_path

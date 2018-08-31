@@ -9,16 +9,50 @@ local infile = select(1, ...)
 
 dofile(rootdir .. "/libs/init.lua")
 
-local template_filecontent = [[
-shader_src = '%s'
-]]
+local path = require "filesystem.path"
 
-local lnkfile = infile .. ".lnk"
+local templates = {
+	shader = [[
+		shader_src = '%s'
+	]],
+	--[[
+		p3 for position and need 3 element(x, y, z)
+		t20 for texcoord, need 2 element(u, v) and in channel 0
+		t31 for texcoord, need 3 element(u, v, w) and in channel 1
+		c30 for color, need 3 element(r,g,b) and in channel 0
+	]]
+	mesh = [[
+		mesh_src = '%s'
+		config = { 
+			layout = "p3|n|T|b|t20|c30",
+			flags = {
+				gen_normal = false,
+				tangentspace = true,
+			
+				invert_normal = false,
+				flip_uv = true,
+				ib_32 = false,	-- if index num is lower than 65535
+			},
+			animation = {
+				load_skeleton = true,
+				ani_list = "all" -- or {"walk", "stand"}
+			},
+		}
+	]]
+}
 
-template_filecontent = string.format(template_filecontent, infile)
+local ext = path.ext(infile)
+
+local template_filecontent
+if ext == "sc" then
+	template_filecontent = string.format(templates.shader, infile)
+elseif ext == "fbx" then
+	template_filecontent = string.format(templates.mesh, infile)
+end
 
 local winfile =  require "winfile"
 
-local lnk = winfile.open(lnkfile, "wb")
-lnk:write(template_filecontent)
-lnk:close()
+local lnkfile = path.replace_ext(infile, "lk")
+local lk = winfile.open(lnkfile, "wb")
+lk:write(template_filecontent)
+lk:close()

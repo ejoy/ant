@@ -24,6 +24,7 @@ SHADER_SRC_PATH := $(SHADER_PATH)/src
 OUT_SHADER_PATH := $(OUT_DIR)/$(SHADER_PATH)/$(SHADER_TYPE_PATH)
 
 SHADER_FILES := $(call rwildcard,$(SHADER_SRC_PATH)/,*.sc)
+FBX_FILES := $(call rwildcard,$(SHADER_SRC_PATH)/,*.fbx)
 #SHADER_FILES := $(shell find $(SHADER_SRC) -name '*.sc')
 
 #varying.def.sc file used for providing input var for vs and fs
@@ -65,11 +66,11 @@ endif
 compileshader : $(TARGET_SHADERFILES)
 
 
-LNK_FILES := $(addsuffix .lnk,$(SHADER_FILES))
+LNK_FILES := $(addsuffix .lk,$(SHADER_FILES) $(FBX_FILES))
 
 make_lnkfiles: $(LNK_FILES)
 
-$(LNK_FILES) : %.lnk : %
+$(LNK_FILES) : %.lk : %
 	$(LUABIN) ./make_lnkfile.lua $^
 
 

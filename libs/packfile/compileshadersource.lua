@@ -6,6 +6,8 @@ local fu = require "filesystem.util"
 
 local path = require "filesystem.path"
 local shader_mgr = require "render.resources.shader_mgr"
+local winfile = require "winfile"
+local rawopen = winfile.open or io.open
 
 --local fs =  require "cppfs"
 
@@ -18,7 +20,7 @@ local function compile_shader(filename, outfilename)
 		return toolset.compile(filename, config, shader_mgr.get_compile_renderer_name())
 	end
 	
-	return nil, "config is empty, try run libs/lua/lua.exe config.lua"
+	return nil, "config is empty, try run clibs/lua/lua.exe config.lua"
 end
 
 local shader_srcsubpath = "shaders/src"
@@ -46,8 +48,8 @@ local function check_compile_shader(srcpath)
 	return outfile
 end
 
-return function (lnk, readmode)
-	local c = assetmgr.load(lnk)	
+return function (lk, readmode)
+	local c = assetmgr.load(lk)
 	local src = assetmgr.find_valid_asset_path(assert(c.shader_src))
 	if src == nil then
 		print(src .. ", not found in assets folder")
@@ -62,5 +64,5 @@ return function (lnk, readmode)
 		assert(outfile == cache_path)		
 	end
 
-	return io.open(cache_path, readmode)
+	return rawopen(cache_path, readmode)
 end

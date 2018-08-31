@@ -12,7 +12,7 @@ local support_list = {
 	"module",
 	"texture",
 	"hierarchy",
-	"lnk",
+	"lk",
 }
 
 local loader = setmetatable({} , {

@@ -20,6 +20,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\assimplua\assimplua.cpp" />
+    <ClCompile Include="..\..\clibs\assimplua\fbxhelper.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\clibs\assimplua\meshdata.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -101,7 +105,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_ITERATOR_DEBUG_LEVEL=2;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/bx/include/compat/msvc;../../../ant3rd/bx/include;../../../ant3rd/bgfx/examples/common;../../../ant3rd/bgfx/src;../../../ant3rd/bgfx/include;../../../ant3rd/bgfx/3rdparty;../../../ant3rd/assimp/include;../../../ant3rd/build_msvc/assimp/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/bx/include/compat/msvc;../../../ant3rd/bx/include;../../../ant3rd/bgfx/examples/common;../../../ant3rd/bgfx/src;../../../ant3rd/bgfx/include;../../../ant3rd/bgfx/3rdparty;../../../ant3rd/assimp/include;../../../ant3rd/glm;../../../ant3rd/build_msvc/assimp/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -118,7 +122,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_ITERATOR_DEBUG_LEVEL=2;WIN32;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/bx/include/compat/msvc;../../../ant3rd/bx/include;../../../ant3rd/bgfx/examples/common;../../../ant3rd/bgfx/src;../../../ant3rd/bgfx/include;../../../ant3rd/bgfx/3rdparty;../../../ant3rd/assimp/include;../../../ant3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/bx/include/compat/msvc;../../../ant3rd/bx/include;../../../ant3rd/bgfx/examples/common;../../../ant3rd/bgfx/src;../../../ant3rd/bgfx/include;../../../ant3rd/bgfx/3rdparty;../../../ant3rd/assimp/include;../../../ant3rd/glm;../../../ant3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -137,7 +141,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_ITERATOR_DEBUG_LEVEL=2;WIN32;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/bx/include/compat/msvc;../../../ant3rd/bx/include;../../../ant3rd/bgfx/examples/common;../../../ant3rd/bgfx/src;../../../ant3rd/bgfx/include;../../../ant3rd/bgfx/3rdparty;../../../ant3rd/assimp/include;../../../ant3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/bx/include/compat/msvc;../../../ant3rd/bx/include;../../../ant3rd/bgfx/examples/common;../../../ant3rd/bgfx/src;../../../ant3rd/bgfx/include;../../../ant3rd/bgfx/3rdparty;../../../ant3rd/assimp/include;../../../ant3rd/glm;../../../ant3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -158,7 +162,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_ITERATOR_DEBUG_LEVEL=2;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/bx/include/compat/msvc;../../../ant3rd/bx/include;../../../ant3rd/bgfx/examples/common;../../../ant3rd/bgfx/src;../../../ant3rd/bgfx/include;../../../ant3rd/bgfx/3rdparty;../../../ant3rd/assimp/include;../../../ant3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/bx/include/compat/msvc;../../../ant3rd/bx/include;../../../ant3rd/bgfx/examples/common;../../../ant3rd/bgfx/src;../../../ant3rd/bgfx/include;../../../ant3rd/bgfx/3rdparty;../../../ant3rd/assimp/include;../../../ant3rd/glm;../../../ant3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
