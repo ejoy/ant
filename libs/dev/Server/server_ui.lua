@@ -208,6 +208,10 @@ dbg_tcp:event_in(function(data)
     server_framework:SendPackage({"dbg", data})
 end)
 
+dbg_tcp:event_close(function()
+    server_framework:SendPackage({"dbg", false})
+end)
+
 server_framework:RegisterIOCommand("dbg", function(data_table)
     dbg_tcp:send(data_table[2])
 end)

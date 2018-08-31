@@ -15,6 +15,10 @@ function mt:event_in(frecv)
     end)
 end
 
+function mt:event_close(f)
+    self.fclose = f
+end
+
 function mt:update()
     socket.update()
     return not not self.fd
@@ -25,6 +29,9 @@ function mt:send(data)
 end
 
 function mt:close()
+    if self.fclose then
+        self.fclose()
+    end
     socket.close(self.fd)
     self.fd:close()
     self.fd = nil
