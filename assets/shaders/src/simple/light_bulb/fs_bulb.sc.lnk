@@ -1,0 +1,1 @@
+shader_src = 'shaders/src/simple/light_bulb/fs_bulb.sc'
