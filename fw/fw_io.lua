@@ -43,17 +43,16 @@ perror = function(...)
 end
 
 ant_load = function(path)
---    print("load file ~~ ".. path)
-
     local file, err = io.open(path, "rb")
     if not file then
         return nil, err
     end
 
+    --print("load file ~~ ".. path)
     local content = file:read("a")
     file:close()
 
-    return load(content)
+    return load(content, "@" .. path)
 end
 
 function CreateIOThread(linda, pkg_dir, sb_dir)
