@@ -1,6 +1,10 @@
 local assimp = require"assimplua"
 local bgfx = require "bgfx"
 
+local fu = require "filesystem.util"
+local fs = require "filesystem"
+local path = require "filesystem.path"
+
 local function PrintNodeInfo(node, level)
     local space = string.rep(" ", level)
 
@@ -93,6 +97,18 @@ local function HandleModelNode(material_info, model_node, parent_name, parent_tr
     end
 end
 
+local function load_fbx(filepath, config)
+	local antmeshfile = path.join("cache", path.replace_ext(filepath, "antmesh"))
+	path.create_dirs(path.parent(antmeshfile))
+
+	if not fs.exist(antmeshfile) or fu.file_is_newer(filepath, antmeshfile) then
+		assimp.convert_fbx(filepath, antmeshfile, config)
+	end
+
+	local loader = require "modelloader.antmeshloader"
+	return loader(antmeshfile)
+end
+
 function fbx_loader.load(filepath)
     local path = require "filesystem.path"
     local ext = path.ext(filepath)
@@ -158,7 +174,7 @@ function fbx_loader.load(filepath)
 		},
 	}
 
-	local meshgroup = assimp.LoadFBX(filepath, loadfbx_config)
+	local meshgroup = load_fbx(filepath, loadfbx_config)
 
 	if meshgroup then
 		local function create_decl(vb_layout)
@@ -188,11 +204,19 @@ function fbx_loader.load(filepath)
 		end
 
 		local group = meshgroup.group
+
+		local vb_data = {"!", "", 0, nil}
+		local ib_data = {"", 0, nil}
+
 		for _, g in ipairs(group) do
 			local decl, stride = create_decl(g.vbLayout)
-			g.vb = bgfx.create_vertex_buffer(g.vb_raw, decl)
+			vb_data[2], vb_data[4] = g.vbraw, g.numVertices * stride
+			
+			g.vb = bgfx.create_vertex_buffer(vb_data, decl)
 			if g.ib_raw then
-				g.ib = bgfx.create_index_buffer(g.ib_raw, g.ibFormat == 32 and "d" or nil)
+				local elemsize = g.ibFormat == 32 and 4 or 2
+				ib_data[1], ib_data[3] = g.ibraw, elemsize * g.numIndices
+				g.ib = bgfx.create_index_buffer(ib_data, elemsize == 4 and "d" or nil)
 			end
 		end
 

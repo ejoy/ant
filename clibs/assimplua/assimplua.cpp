@@ -598,11 +598,11 @@ static int AssimpImport(lua_State *L)
 	return 0;
 }
 
-int ConvertFBX(lua_State *L);
+int lconvertFBX(lua_State *L);
 
 static const struct luaL_Reg myLib[] = {
 	{"assimp_import", AssimpImport},
-	{"ConvertFBX", ConvertFBX},
+	{"convert_fbx", lconvertFBX},
 	{ NULL, NULL }      
 };
 

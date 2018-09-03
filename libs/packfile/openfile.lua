@@ -1,17 +1,21 @@
 local require = import and import(...) or require
 
 local winfile =  require "winfile"
-
 local rawopen = winfile.open or io.open
 
 local rules = {}
 if winfile.exist(".antpack") then
 	for str in io.lines '.antpack' do
-		local f, l = str:find ' '
-		if f then
-			local pattern = str:sub(1, f - 1)
-			local packer =  str:sub(l + 1)
-			pattern = pattern:gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*')
+		local t = {}
+		for m in str:gmatch("[^%s]+") do
+			table.insert(t, m)
+		end
+
+		local pattern, packer, reg = t[1], t[2], t[3]
+		if pattern then			
+			if reg == nil then
+				pattern = pattern:gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*')
+			end
 			rules[#rules+1] = { pattern, packer }
 		end
 	end

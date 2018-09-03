@@ -62,7 +62,7 @@ local function get_full_filename(relative_name)
 	assert(path.ext(relative_name) == nil)
 
 	local subshaderfolder = "shaders/src"
-	return path.join(subshaderfolder, relative_name)
+	return path.join(assetmgr.assetdir(), subshaderfolder, relative_name)
 	-- local rt_path = shader_mgr.get_shader_rendertype_path()
 	-- return assetmgr.find_valid_asset_path(path.join("shaders", rt_path, relative_name .. ".bin"))
 end
