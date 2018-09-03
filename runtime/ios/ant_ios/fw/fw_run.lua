@@ -7,6 +7,9 @@ return function(file_path, ...)
     local run_func, err = ant_load(file_path)
     if not run_func then
         perror(err)
+
+        --todo wait half a second, then exit
+        assert(false)
         return nil
     end
 

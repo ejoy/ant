@@ -10,18 +10,18 @@ require"fw_msgprocess"
 local check_path = {}
 --todo: self update it self, then self update again?
 --put these file to local repo
-table.insert(check_path, "/fw/fw_init.lua")
-table.insert(check_path, "/fw/fw_io.lua")
+table.insert(check_path, "/libs/fw/fw_init.lua")
+table.insert(check_path, "/libs/fw/fw_io.lua")
 
-table.insert(check_path, "/fw/fw_msgprocess.lua")
-table.insert(check_path, "/fw/msg_process.lua")
-table.insert(check_path, "/fw/clientcommand.lua")
+table.insert(check_path, "/libs/fw/fw_msgprocess.lua")
+table.insert(check_path, "/libs/fw/msg_process.lua")
+table.insert(check_path, "/libs/fw/clientcommand.lua")
 
-table.insert(check_path, "/fw/fw_run.lua")
-table.insert(check_path, "/fw/iosys.lua")
-table.insert(check_path, "/fw/client_io.lua")
-table.insert(check_path, "/fw/lanes.lua")
-table.insert(check_path, "/fw/pack.lua")
+table.insert(check_path, "/libs/fw/fw_run.lua")
+table.insert(check_path, "/libs/fw/iosys.lua")
+table.insert(check_path, "/libs/fw/client_io.lua")
+table.insert(check_path, "/libs/fw/lanes.lua")
+table.insert(check_path, "/libs/fw/pack.lua")
 
 while true do
     local key, value = linda:receive(0.01, "server_root_updated")

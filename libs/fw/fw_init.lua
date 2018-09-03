@@ -130,19 +130,14 @@ local require_cache = {}    --record every files that was required, use to clear
 local function remote_searcher(name)
     ---search through package.remote_search_path
     local file_table = get_require_search_path(name)
+    local err_msg = ""
     for _, v in ipairs(file_table) do
         local status, err = ant_load(v)
         if status then
             return status
+        else
+            err_msg = err_msg .. err .. "\n"
         end
-    end
-
-    --required file not exist in the search path
-    --print("require failed")
-    local err_msg = ""
-    for _, v in ipairs(file_table) do
-        --print("can't find: "..name.." in " .. v)
-        err_msg = err_msg .. "can't open: " .. name .. " in " .. v
     end
 
     --print("require error",err_msg)

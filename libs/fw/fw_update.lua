@@ -1,4 +1,3 @@
-
 local DbgWorker = require 'debugger'.start_worker()
 
 return function()

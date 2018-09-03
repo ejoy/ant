@@ -42,17 +42,26 @@ perror = function(...)
     app_log("Error", ...)
 end
 
-ant_load = function(path)
-    local file, err = io.open(path, "rb")
-    if not file then
-        return nil, err
+local function get_require_search_path(r_name)
+    --return a table of possible path the file is on
+    local search_string = package.path
+    local search_table = {}
+
+    --separate with ";"
+    --"../" not support
+
+    --print("require search string", search_string)
+    for s_path in string.gmatch(search_string, ".-;") do
+        --print("get requrie search path: "..s_path)
+
+        local r_path = string.gsub(r_name, "%.", "/")
+        s_path = string.gsub(s_path, "?", r_path)
+        --get rid of ";" symbol
+        s_path = string.gsub(s_path, ";", "")
+        table.insert(search_table, s_path)
     end
 
-    --print("load file ~~ ".. path)
-    local content = file:read("a")
-    file:close()
-
-    return load(content, "@" .. path)
+    return search_table
 end
 
 function CreateIOThread(linda, pkg_dir, sb_dir)
@@ -64,30 +73,20 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
     local origin_require = require
     require = function(require_path)
         print("requiring "..require_path)
-        if io_repo then
-            local file_path = string.gsub(require_path, "%.", "/")
-            file_path = "/" .. file_path .. ".lua"
-            local file = io_repo:open(file_path)
-            print("search for file path", file_path)
-            if file then
-                local content = file:read("a")
-                print("content", content)
-                file:close()
 
-                --local result, err = load(content)
-                local result, err = load(content)
-                if not result then
-                    perror("require " .. require_path .. " error: " .. err)
-                    return nil
+        local path_table = get_require_search_path(require_path)
+        local err_msg = ""
+        for _, v in ipairs(path_table) do
+            local status, err = ant_load(v, io_repo)
+            if status then
+                local result, ret = xpcall(status, debug.traceback)
+                if result then
+                    return ret
                 else
-                    local status, return_res = xpcall(result, debug.traceback)
-                    if status then
-                        return return_res
-                    else
-                        perror(return_res)
-                        return nil
-                    end
+                    return nil, ret
                 end
+            else
+                err_msg = err_msg .. err .. "\n"
             end
         end
 
@@ -110,8 +109,6 @@ io_thread, lanes_err = lanes.gen("*",{globals = {ant_load = ant_load}}, CreateIO
 if not io_thread then
     assert(false, "lanes error: ".. lanes_err)
 end
-
-
 
 --send package to io
 function SendIORequest(pkg)
