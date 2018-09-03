@@ -98,7 +98,7 @@ local function append_lighting_properties(ms, result)
 			-- print("t data ",ambient_data.mode[1][1],ambient_data.mode[1][2],ambient_data.mode[3],ambient_data.mode[4])
 			-- print("t skycolor..",ambient_data.skycolor[1][1],ambient_data.skycolor[1][2],ambient_data.skycolor[1][3],ambient_data.skycolor[1][4])
 			-- print("t midcolor..",ambient_data.midcolor[1][1],ambient_data.midcolor[1][2],ambient_data.midcolor[1][3],ambient_data.midcolor[1][4])
-			-- print("t groundcolor..",ambient_data.groundcolor[1][1],ambient_data.groundcolor[1][2],ambient_data.groundcolor[1][3],ambient_data.groundcolor[1][4])	
+			-- print("t groundcolor..",ambient_data.groundcolor[1][1],ambient_data.groundcolor[1][2],ambient_data.groundcolor[1][3],ambient_data.groundcolor[1][4])
 		end 
 
 		properties["ambient_mode"] = { name ="ambient_mode",type="v4",value = ambient_data.mode }
@@ -195,7 +195,7 @@ end
 function transparency_filter_sys:update()
 	for _, eid in world:each("primitive_filter") do
 		local e = world[eid]
-		local filter = e.primitive_filter	
+		local filter = e.primitive_filter
 		local transparent_result, opaticy_result= {}, {}
 		split_transparent_filter_result(filter.result, opaticy_result, transparent_result)
 		filter.result = opaticy_result

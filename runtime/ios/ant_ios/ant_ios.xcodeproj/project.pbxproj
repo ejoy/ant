@@ -1,0 +1,516 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		116FCE9721391AC8000B1E94 /* libredirectfd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 116FCE9621391AC7000B1E94 /* libredirectfd.a */; };
+		11728AEE212579A800C64F0F /* vfsrepo in Resources */ = {isa = PBXBuildFile; fileRef = 11728AED212579A800C64F0F /* vfsrepo */; };
+		1176E62F2124289C00D595F3 /* firmware in Resources */ = {isa = PBXBuildFile; fileRef = 1176E62E2124289B00D595F3 /* firmware */; };
+		11861CF82122B41F00535285 /* preload.m in Sources */ = {isa = PBXBuildFile; fileRef = 11861CF72122B41F00535285 /* preload.m */; };
+		118F3462211BE1BA0092C262 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 118F3461211BE1BA0092C262 /* AppDelegate.m */; };
+		118F3465211BE1BA0092C262 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 118F3464211BE1BA0092C262 /* ViewController.m */; };
+		118F3468211BE1BA0092C262 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 118F3466211BE1BA0092C262 /* Main.storyboard */; };
+		118F346A211BE1C00092C262 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 118F3469211BE1C00092C262 /* Assets.xcassets */; };
+		118F346D211BE1C00092C262 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 118F346B211BE1C00092C262 /* LaunchScreen.storyboard */; };
+		118F3470211BE1C10092C262 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 118F346F211BE1C10092C262 /* main.m */; };
+		118F3477211BE8420092C262 /* Framework.m in Sources */ = {isa = PBXBuildFile; fileRef = 118F3476211BE8420092C262 /* Framework.m */; };
+		118F34B1211C16FB0092C262 /* fw in Resources */ = {isa = PBXBuildFile; fileRef = 118F34B0211C16FB0092C262 /* fw */; };
+		118F34C4211C19120092C262 /* libluavm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34C3211C19120092C262 /* libluavm.a */; };
+		118F34C9211C19D60092C262 /* libassimplua.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34C5211C19D50092C262 /* libassimplua.a */; };
+		118F34CA211C19D60092C262 /* libIrrXML.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34C6211C19D50092C262 /* libIrrXML.a */; };
+		118F34CB211C19D60092C262 /* libzlibstatic.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34C7211C19D50092C262 /* libzlibstatic.a */; };
+		118F34CC211C19D60092C262 /* libassimp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34C8211C19D50092C262 /* libassimp.a */; };
+		118F34DE211C19E00092C262 /* liblfs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34CD211C19DF0092C262 /* liblfs.a */; };
+		118F34DF211C19E00092C262 /* libclonefunc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34CE211C19DF0092C262 /* libclonefunc.a */; };
+		118F34E0211C19E00092C262 /* liblanes.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34CF211C19DF0092C262 /* liblanes.a */; };
+		118F34E1211C19E00092C262 /* libpreloadc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34D0211C19DF0092C262 /* libpreloadc.a */; };
+		118F34E2211C19E00092C262 /* liblsocket.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34D1211C19DF0092C262 /* liblsocket.a */; };
+		118F34E3211C19E00092C262 /* libassimplua.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34D2211C19DF0092C262 /* libassimplua.a */; };
+		118F34E4211C19E00092C262 /* libremotedebug.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34D3211C19DF0092C262 /* libremotedebug.a */; };
+		118F34E5211C19E00092C262 /* libmath3d.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34D4211C19DF0092C262 /* libmath3d.a */; };
+		118F34E6211C19E00092C262 /* libmemoryfile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34D5211C19DF0092C262 /* libmemoryfile.a */; };
+		118F34E7211C19E00092C262 /* libcppfs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34D6211C19DF0092C262 /* libcppfs.a */; };
+		118F34E8211C19E00092C262 /* libdebugger.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34D7211C19E00092C262 /* libdebugger.a */; };
+		118F34E9211C19E00092C262 /* libusbmuxd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34D8211C19E00092C262 /* libusbmuxd.a */; };
+		118F34EA211C19E00092C262 /* libcrypt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34D9211C19E00092C262 /* libcrypt.a */; };
+		118F34EB211C19E00092C262 /* libbgfx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34DA211C19E00092C262 /* libbgfx.a */; };
+		118F34EC211C19E00092C262 /* liblodepnglua.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34DB211C19E00092C262 /* liblodepnglua.a */; };
+		118F34ED211C19E00092C262 /* liblua.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34DC211C19E00092C262 /* liblua.a */; };
+		118F34EE211C19E00092C262 /* libcjson.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34DD211C19E00092C262 /* libcjson.a */; };
+		118F34F5211C21BA0092C262 /* libexample-commonRelease.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34EF211C21BA0092C262 /* libexample-commonRelease.a */; };
+		118F34F6211C21BA0092C262 /* libbimg_decodeRelease.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34F0211C21BA0092C262 /* libbimg_decodeRelease.a */; };
+		118F34F7211C21BA0092C262 /* libexample-glueRelease.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34F1211C21BA0092C262 /* libexample-glueRelease.a */; };
+		118F34F8211C21BA0092C262 /* libbxRelease.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34F2211C21BA0092C262 /* libbxRelease.a */; };
+		118F34F9211C21BA0092C262 /* libbgfxRelease.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34F3211C21BA0092C262 /* libbgfxRelease.a */; };
+		118F34FA211C21BA0092C262 /* libbimgRelease.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118F34F4211C21BA0092C262 /* libbimgRelease.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		116FCE9621391AC7000B1E94 /* libredirectfd.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libredirectfd.a; path = ../libs/libredirectfd.a; sourceTree = "<group>"; };
+		11728AED212579A800C64F0F /* vfsrepo */ = {isa = PBXFileReference; lastKnownFileType = folder; name = vfsrepo; path = ../../../libs/vfsrepo; sourceTree = "<group>"; };
+		1176E62E2124289B00D595F3 /* firmware */ = {isa = PBXFileReference; lastKnownFileType = folder; name = firmware; path = ../../core/firmware; sourceTree = "<group>"; };
+		11861CF72122B41F00535285 /* preload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = preload.m; sourceTree = "<group>"; };
+		118F345D211BE1BA0092C262 /* ant_ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ant_ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		118F3460211BE1BA0092C262 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		118F3461211BE1BA0092C262 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		118F3463211BE1BA0092C262 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		118F3464211BE1BA0092C262 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		118F3467211BE1BA0092C262 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		118F3469211BE1C00092C262 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		118F346C211BE1C00092C262 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		118F346E211BE1C00092C262 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		118F346F211BE1C10092C262 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		118F3476211BE8420092C262 /* Framework.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Framework.m; sourceTree = "<group>"; };
+		118F3478211BE8570092C262 /* Framework.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Framework.h; sourceTree = "<group>"; };
+		118F34B0211C16FB0092C262 /* fw */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fw; sourceTree = "<group>"; };
+		118F34C3211C19120092C262 /* libluavm.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libluavm.a; path = ../libs/libluavm.a; sourceTree = "<group>"; };
+		118F34C5211C19D50092C262 /* libassimplua.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libassimplua.a; path = ../libs/assimp/libassimplua.a; sourceTree = "<group>"; };
+		118F34C6211C19D50092C262 /* libIrrXML.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libIrrXML.a; path = ../libs/assimp/libIrrXML.a; sourceTree = "<group>"; };
+		118F34C7211C19D50092C262 /* libzlibstatic.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libzlibstatic.a; path = ../libs/assimp/libzlibstatic.a; sourceTree = "<group>"; };
+		118F34C8211C19D50092C262 /* libassimp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libassimp.a; path = ../libs/assimp/libassimp.a; sourceTree = "<group>"; };
+		118F34CD211C19DF0092C262 /* liblfs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblfs.a; path = ../libs/liblfs.a; sourceTree = "<group>"; };
+		118F34CE211C19DF0092C262 /* libclonefunc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclonefunc.a; path = ../libs/libclonefunc.a; sourceTree = "<group>"; };
+		118F34CF211C19DF0092C262 /* liblanes.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblanes.a; path = ../libs/liblanes.a; sourceTree = "<group>"; };
+		118F34D0211C19DF0092C262 /* libpreloadc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpreloadc.a; path = ../libs/libpreloadc.a; sourceTree = "<group>"; };
+		118F34D1211C19DF0092C262 /* liblsocket.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblsocket.a; path = ../libs/liblsocket.a; sourceTree = "<group>"; };
+		118F34D2211C19DF0092C262 /* libassimplua.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libassimplua.a; path = ../libs/libassimplua.a; sourceTree = "<group>"; };
+		118F34D3211C19DF0092C262 /* libremotedebug.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libremotedebug.a; path = ../libs/libremotedebug.a; sourceTree = "<group>"; };
+		118F34D4211C19DF0092C262 /* libmath3d.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmath3d.a; path = ../libs/libmath3d.a; sourceTree = "<group>"; };
+		118F34D5211C19DF0092C262 /* libmemoryfile.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmemoryfile.a; path = ../libs/libmemoryfile.a; sourceTree = "<group>"; };
+		118F34D6211C19DF0092C262 /* libcppfs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcppfs.a; path = ../libs/libcppfs.a; sourceTree = "<group>"; };
+		118F34D7211C19E00092C262 /* libdebugger.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdebugger.a; path = ../libs/libdebugger.a; sourceTree = "<group>"; };
+		118F34D8211C19E00092C262 /* libusbmuxd.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libusbmuxd.a; path = ../libs/libusbmuxd.a; sourceTree = "<group>"; };
+		118F34D9211C19E00092C262 /* libcrypt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypt.a; path = ../libs/libcrypt.a; sourceTree = "<group>"; };
+		118F34DA211C19E00092C262 /* libbgfx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbgfx.a; path = ../libs/libbgfx.a; sourceTree = "<group>"; };
+		118F34DB211C19E00092C262 /* liblodepnglua.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblodepnglua.a; path = ../libs/liblodepnglua.a; sourceTree = "<group>"; };
+		118F34DC211C19E00092C262 /* liblua.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblua.a; path = ../libs/liblua.a; sourceTree = "<group>"; };
+		118F34DD211C19E00092C262 /* libcjson.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcjson.a; path = ../libs/libcjson.a; sourceTree = "<group>"; };
+		118F34EF211C21BA0092C262 /* libexample-commonRelease.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libexample-commonRelease.a"; path = "../libs/bgfx/libexample-commonRelease.a"; sourceTree = "<group>"; };
+		118F34F0211C21BA0092C262 /* libbimg_decodeRelease.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbimg_decodeRelease.a; path = ../libs/bgfx/libbimg_decodeRelease.a; sourceTree = "<group>"; };
+		118F34F1211C21BA0092C262 /* libexample-glueRelease.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libexample-glueRelease.a"; path = "../libs/bgfx/libexample-glueRelease.a"; sourceTree = "<group>"; };
+		118F34F2211C21BA0092C262 /* libbxRelease.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbxRelease.a; path = ../libs/bgfx/libbxRelease.a; sourceTree = "<group>"; };
+		118F34F3211C21BA0092C262 /* libbgfxRelease.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbgfxRelease.a; path = ../libs/bgfx/libbgfxRelease.a; sourceTree = "<group>"; };
+		118F34F4211C21BA0092C262 /* libbimgRelease.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbimgRelease.a; path = ../libs/bgfx/libbimgRelease.a; sourceTree = "<group>"; };
+		118F34FC211C23940092C262 /* preload.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = preload.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		118F345A211BE1BA0092C262 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				116FCE9721391AC8000B1E94 /* libredirectfd.a in Frameworks */,
+				118F34F5211C21BA0092C262 /* libexample-commonRelease.a in Frameworks */,
+				118F34F6211C21BA0092C262 /* libbimg_decodeRelease.a in Frameworks */,
+				118F34F7211C21BA0092C262 /* libexample-glueRelease.a in Frameworks */,
+				118F34F8211C21BA0092C262 /* libbxRelease.a in Frameworks */,
+				118F34F9211C21BA0092C262 /* libbgfxRelease.a in Frameworks */,
+				118F34FA211C21BA0092C262 /* libbimgRelease.a in Frameworks */,
+				118F34C9211C19D60092C262 /* libassimplua.a in Frameworks */,
+				118F34CA211C19D60092C262 /* libIrrXML.a in Frameworks */,
+				118F34CB211C19D60092C262 /* libzlibstatic.a in Frameworks */,
+				118F34CC211C19D60092C262 /* libassimp.a in Frameworks */,
+				118F34C4211C19120092C262 /* libluavm.a in Frameworks */,
+				118F34DE211C19E00092C262 /* liblfs.a in Frameworks */,
+				118F34DF211C19E00092C262 /* libclonefunc.a in Frameworks */,
+				118F34E0211C19E00092C262 /* liblanes.a in Frameworks */,
+				118F34E1211C19E00092C262 /* libpreloadc.a in Frameworks */,
+				118F34E2211C19E00092C262 /* liblsocket.a in Frameworks */,
+				118F34E3211C19E00092C262 /* libassimplua.a in Frameworks */,
+				118F34E4211C19E00092C262 /* libremotedebug.a in Frameworks */,
+				118F34E5211C19E00092C262 /* libmath3d.a in Frameworks */,
+				118F34E6211C19E00092C262 /* libmemoryfile.a in Frameworks */,
+				118F34E7211C19E00092C262 /* libcppfs.a in Frameworks */,
+				118F34E8211C19E00092C262 /* libdebugger.a in Frameworks */,
+				118F34E9211C19E00092C262 /* libusbmuxd.a in Frameworks */,
+				118F34EA211C19E00092C262 /* libcrypt.a in Frameworks */,
+				118F34EB211C19E00092C262 /* libbgfx.a in Frameworks */,
+				118F34EC211C19E00092C262 /* liblodepnglua.a in Frameworks */,
+				118F34ED211C19E00092C262 /* liblua.a in Frameworks */,
+				118F34EE211C19E00092C262 /* libcjson.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		118F3454211BE1B90092C262 = {
+			isa = PBXGroup;
+			children = (
+				11728AED212579A800C64F0F /* vfsrepo */,
+				1176E62E2124289B00D595F3 /* firmware */,
+				118F34B0211C16FB0092C262 /* fw */,
+				118F345F211BE1BA0092C262 /* ant_ios */,
+				118F345E211BE1BA0092C262 /* Products */,
+				118F34C2211C19120092C262 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		118F345E211BE1BA0092C262 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				118F345D211BE1BA0092C262 /* ant_ios.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		118F345F211BE1BA0092C262 /* ant_ios */ = {
+			isa = PBXGroup;
+			children = (
+				118F3460211BE1BA0092C262 /* AppDelegate.h */,
+				118F3461211BE1BA0092C262 /* AppDelegate.m */,
+				118F3463211BE1BA0092C262 /* ViewController.h */,
+				118F3464211BE1BA0092C262 /* ViewController.m */,
+				118F3466211BE1BA0092C262 /* Main.storyboard */,
+				118F3469211BE1C00092C262 /* Assets.xcassets */,
+				118F346B211BE1C00092C262 /* LaunchScreen.storyboard */,
+				118F346E211BE1C00092C262 /* Info.plist */,
+				118F346F211BE1C10092C262 /* main.m */,
+				118F3476211BE8420092C262 /* Framework.m */,
+				118F3478211BE8570092C262 /* Framework.h */,
+				118F34FC211C23940092C262 /* preload.h */,
+				11861CF72122B41F00535285 /* preload.m */,
+			);
+			path = ant_ios;
+			sourceTree = "<group>";
+		};
+		118F34C2211C19120092C262 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				116FCE9621391AC7000B1E94 /* libredirectfd.a */,
+				118F34F3211C21BA0092C262 /* libbgfxRelease.a */,
+				118F34F0211C21BA0092C262 /* libbimg_decodeRelease.a */,
+				118F34F4211C21BA0092C262 /* libbimgRelease.a */,
+				118F34F2211C21BA0092C262 /* libbxRelease.a */,
+				118F34EF211C21BA0092C262 /* libexample-commonRelease.a */,
+				118F34F1211C21BA0092C262 /* libexample-glueRelease.a */,
+				118F34D2211C19DF0092C262 /* libassimplua.a */,
+				118F34DA211C19E00092C262 /* libbgfx.a */,
+				118F34DD211C19E00092C262 /* libcjson.a */,
+				118F34CE211C19DF0092C262 /* libclonefunc.a */,
+				118F34D6211C19DF0092C262 /* libcppfs.a */,
+				118F34D9211C19E00092C262 /* libcrypt.a */,
+				118F34D7211C19E00092C262 /* libdebugger.a */,
+				118F34CF211C19DF0092C262 /* liblanes.a */,
+				118F34CD211C19DF0092C262 /* liblfs.a */,
+				118F34DB211C19E00092C262 /* liblodepnglua.a */,
+				118F34D1211C19DF0092C262 /* liblsocket.a */,
+				118F34DC211C19E00092C262 /* liblua.a */,
+				118F34D4211C19DF0092C262 /* libmath3d.a */,
+				118F34D5211C19DF0092C262 /* libmemoryfile.a */,
+				118F34D0211C19DF0092C262 /* libpreloadc.a */,
+				118F34D3211C19DF0092C262 /* libremotedebug.a */,
+				118F34D8211C19E00092C262 /* libusbmuxd.a */,
+				118F34C8211C19D50092C262 /* libassimp.a */,
+				118F34C5211C19D50092C262 /* libassimplua.a */,
+				118F34C6211C19D50092C262 /* libIrrXML.a */,
+				118F34C7211C19D50092C262 /* libzlibstatic.a */,
+				118F34C3211C19120092C262 /* libluavm.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		118F345C211BE1BA0092C262 /* ant_ios */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 118F3473211BE1C10092C262 /* Build configuration list for PBXNativeTarget "ant_ios" */;
+			buildPhases = (
+				118F3459211BE1BA0092C262 /* Sources */,
+				118F345A211BE1BA0092C262 /* Frameworks */,
+				118F345B211BE1BA0092C262 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ant_ios;
+			productName = ant_ios;
+			productReference = 118F345D211BE1BA0092C262 /* ant_ios.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		118F3455211BE1B90092C262 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0940;
+				ORGANIZATIONNAME = ejoy;
+				TargetAttributes = {
+					118F345C211BE1BA0092C262 = {
+						CreatedOnToolsVersion = 9.4.1;
+					};
+				};
+			};
+			buildConfigurationList = 118F3458211BE1B90092C262 /* Build configuration list for PBXProject "ant_ios" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 118F3454211BE1B90092C262;
+			productRefGroup = 118F345E211BE1BA0092C262 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				118F345C211BE1BA0092C262 /* ant_ios */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		118F345B211BE1BA0092C262 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				118F346D211BE1C00092C262 /* LaunchScreen.storyboard in Resources */,
+				11728AEE212579A800C64F0F /* vfsrepo in Resources */,
+				118F346A211BE1C00092C262 /* Assets.xcassets in Resources */,
+				118F3468211BE1BA0092C262 /* Main.storyboard in Resources */,
+				1176E62F2124289C00D595F3 /* firmware in Resources */,
+				118F34B1211C16FB0092C262 /* fw in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		118F3459211BE1BA0092C262 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				118F3477211BE8420092C262 /* Framework.m in Sources */,
+				118F3465211BE1BA0092C262 /* ViewController.m in Sources */,
+				118F3470211BE1C10092C262 /* main.m in Sources */,
+				118F3462211BE1BA0092C262 /* AppDelegate.m in Sources */,
+				11861CF82122B41F00535285 /* preload.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		118F3466211BE1BA0092C262 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				118F3467211BE1BA0092C262 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		118F346B211BE1C00092C262 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				118F346C211BE1C00092C262 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		118F3471211BE1C10092C262 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		118F3472211BE1C10092C262 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		118F3474211BE1C10092C262 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GP6WLPM75Q;
+				ENABLE_BITCODE = NO;
+				HEADER_SEARCH_PATHS = (
+					../../core,
+					../../../clibs/lua,
+				);
+				INFOPLIST_FILE = ant_ios/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					../libs,
+					../libs/assimp,
+					../libs/bgfx,
+				);
+				OTHER_LDFLAGS = "-lc++";
+				PRODUCT_BUNDLE_IDENTIFIER = com.ejoy.fileserver;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		118F3475211BE1C10092C262 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GP6WLPM75Q;
+				ENABLE_BITCODE = NO;
+				HEADER_SEARCH_PATHS = (
+					../../core,
+					../../../clibs/lua,
+				);
+				INFOPLIST_FILE = ant_ios/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					../libs,
+					../libs/assimp,
+					../libs/bgfx,
+				);
+				OTHER_LDFLAGS = "-lc++";
+				PRODUCT_BUNDLE_IDENTIFIER = com.ejoy.fileserver;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		118F3458211BE1B90092C262 /* Build configuration list for PBXProject "ant_ios" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				118F3471211BE1C10092C262 /* Debug */,
+				118F3472211BE1C10092C262 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		118F3473211BE1C10092C262 /* Build configuration list for PBXNativeTarget "ant_ios" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				118F3474211BE1C10092C262 /* Debug */,
+				118F3475211BE1C10092C262 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 118F3455211BE1B90092C262 /* Project object */;
+}

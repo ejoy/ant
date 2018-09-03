@@ -105,8 +105,15 @@ end
 
 function path.create_dirs(fullpath)    
 	fullpath = path.normalize(path.trim_slash(fullpath))
-	
-    local cwd = fs.currentdir()
+
+    --todo mac app is in sand box, need fix
+    local cwd
+    if PLATFORM == "MAC" then
+        cwd = "/"
+    else
+        cwd = fs.currentdir()
+    end
+    
     for m in fullpath:gmatch("[^\\/]+") do
         cwd = path.join(cwd, m)
         if not fs.exist(cwd) then

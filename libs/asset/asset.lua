@@ -53,6 +53,7 @@ function assetmgr.find_valid_asset_path(asset_subpath)
 
 	for _, d in ipairs(searchdirs) do
 		local p = path.join(d, asset_subpath)
+        print("check exist: ".. p)
 		if fs.exist(p) then
 			return p
 		end
@@ -80,6 +81,7 @@ function assetmgr.remove_searchdir(idx)
 end
 
 function assetmgr.load(filename, param)
+  --  print("filename", filename)
 	assert(type(filename) == "string")
 	local res = resources[filename]
 	if res == nil then
@@ -87,7 +89,7 @@ function assetmgr.load(filename, param)
 		local fn = assetmgr.find_valid_asset_path(filename)
 		if fn == nil then
 			fn = assetmgr.find_valid_asset_path(path.join("assetfiles", filename))
-		end		
+		end
 		
 		res = loader[ext](fn, param)
 		resources[filename] = res

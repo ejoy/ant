@@ -27,3 +27,6 @@ assets/meshes
 assets/hierarchy
 file.txt
 dir.txt
+
+ServerMac/*
+fileserver/*

@@ -1,31 +1,46 @@
 dofile("libs/init.lua")
 
+local project_dir = "/Users/ejoy/Desktop/Engine/ant"
+
 package.cpath = "clibs/?.dll; clibs/lib?.so; clibs/?.so;" .. package.cpath
 package.path = "libs/dev/Common/?.lua;libs/dev/Server/?.lua;libs/dev/?.lua;".. package.path
+package.path = project_dir.."/libs/?.lua;".. package.path
+package.path = project_dir.."/libs/?/?.lua;".. package.path
 
+local path = require "filesystem.path"
 local iup = require "iuplua"
 local mobiledevice = require "libimobiledevicelua"
 local server_framework = require "server_framework"
 server_framework:init("127.0.0.1", 8888)
 
 --todo store in a file
-local default_proj_dir = "D:/Engine/ant/libs/dev"
+local winfile = require "winfile"
+local default_proj_dir =  winfile.currentdir()
 --ui layout
 
 local script_text = iup.text{ multiline = "YES", expand = "YES" }
 local bgfx_text = iup.text{multiline = "YES", expand = "Yes"}
-local device_text = iup.text{multiline = "YES", expand = "YES"}
+local error_text = iup.text{multiline = "YES", expand = "YES"}
 
 script_text.tabtitle = "Script"
 bgfx_text.tabtitle = "Bgfx"
-device_text.tabtitle = "Device"
-local text_tabs = iup.tabs{script_text, bgfx_text, device_text}
+error_text.tabtitle = "Error"
+local text_tabs = iup.tabs{script_text, bgfx_text, error_text}
 
 --project directory and run file
 local run_file_btn = iup.button{title = "run file"}
 local proj_dir_btn = iup.button{title = "select"}
 local proj_dir_text = iup.text{expand = "HORIZONTAL", value = default_proj_dir}
 server_framework:SetProjectDirectoryPath(default_proj_dir)
+
+--todo for now auto connect all device at start
+--beacuse self update needs to connect to server, but will close the vm after that
+--for other operation, we need another connection
+local start_up_connect = true
+local devices = mobiledevice.GetDevices()
+for k, v in pairs(devices) do
+    server_framework:HandleCommand(v, "CONNECT")
+end
 
 local proj_dir_hbox = iup.hbox{run_file_btn, proj_dir_btn, proj_dir_text}
 local main_vbox = iup.vbox{text_tabs, proj_dir_hbox}
@@ -109,10 +124,27 @@ function run_file_btn:action()
 
     local status = filedlg.status
 
-    if status ~= "-1" then
-        local file_value = string.gsub(filedlg.value, "\\", "/")
+    --send connect command
+    --todo fix it later
+    local devices = mobiledevice.GetDevices()
+    for k, v in pairs(devices) do
 
-        server_framework:HandleCommand("all", "RUN", file_value)
+        if status ~= "-1" then
+            local p_dir = proj_dir_text.value
+
+            local file_path = filedlg.value
+            local s_pos, e_pos = string.find(file_path, p_dir)
+            if e_pos then
+                print("file path is absolute")
+                file_path = string.sub(file_path, e_pos+1)
+            end
+
+            file_path = string.gsub(file_path, "\\", "/")
+            --print(file_path)
+
+            server_framework:HandleCommand(v, "RUN", file_path)
+        end
+
     end
 
     filedlg:destroy()
@@ -127,6 +159,9 @@ function connect_btn:action()
     end
 
     local udid = device_list[select_idx]
+    --disconnect old connection
+    --todo fix it later
+    server_framework:HandleCommand(udid, "DISCONNECT")
     server_framework:HandleCommand(udid, "CONNECT")
 end
 
@@ -167,6 +202,20 @@ function open_close_simpad_btn:action()
     end
 end
 
+local dbg_tcp = (require "debugger.io.tcp_server")('127.0.0.1', 4278)
+
+dbg_tcp:event_in(function(data)
+    server_framework:SendPackage({"dbg", data})
+end)
+
+dbg_tcp:event_close(function()
+    server_framework:SendPackage({"dbg", false})
+end)
+
+server_framework:RegisterIOCommand("dbg", function(data_table)
+    dbg_tcp:send(data_table[2])
+end)
+
 local lodepng = require "lodepnglua"
 local function HandleResponse(resp_table)
 
@@ -182,14 +231,23 @@ local function HandleResponse(resp_table)
             local cat = log_table[1]
 
             if cat == "Script" then
-                local new_log_value = log_table[2]
-                new_log_value = new_log_value .. "\n"
+                table.remove(log_table, 1)
+                local new_log_value = ""
+                for _, script_v in ipairs(log_table) do
+                    new_log_value = new_log_value .. tostring(script_v) .. " "
+                end
 
-                script_text.value = script_text.value .. new_log_value
-                local pos = iup.TextConvertLinColToPos(script_text,  script_text.linecount, 0)
-                script_text.caretpos = pos
-                script_text.scrolltopos = pos
+                if new_log_value then
+                    new_log_value = new_log_value .. "\n"
+                    --todo temperary disable
+                    ---[[
+                    script_text.value = script_text.value .. new_log_value
+                    local pos = iup.TextConvertLinColToPos(script_text,  script_text.linecount, 0)
+                    script_text.caretpos = pos
+                    script_text.scrolltopos = pos
 
+                end
+--]]
             elseif cat == "Bgfx" then
                 local new_log_value = log_table[2]
                 new_log_value = new_log_value .. "\n"
@@ -199,20 +257,41 @@ local function HandleResponse(resp_table)
                 bgfx_text.caretpos = pos
                 bgfx_text.scrolltopos = pos
 
-            elseif cat == "Device" then
+            elseif cat == "Error" then
+                table.remove(log_table, 1)
+                local new_log_value = ""
+                for _, script_v in ipairs(log_table) do
+                    new_log_value = new_log_value .. tostring(script_v) .. " "
+                end
+
+                if new_log_value then
+                    new_log_value = new_log_value .. "\n"
+                    --todo temperary disable
+                    ---[[
+                    error_text.value = error_text.value .. new_log_value
+                    local pos = iup.TextConvertLinColToPos(error_text,  error_text.linecount, 0)
+                    error_text.caretpos = pos
+                    error_text.scrolltopos = pos
+
+                end
+
+--[[
                 local new_log_value = log_table[2]
                 new_log_value = new_log_value .. "\n"
 
-                device_text.value = device_text.value .. new_log_value
-                local pos = iup.TextConvertLinColToPos(device_text,  device_text.linecount, 0)
-                device_text.caretpos = pos
-                device_text.scrolltopos = pos
+                error_text.value = error_text.value .. new_log_value
+                local pos = iup.TextConvertLinColToPos(error_text,  error_text.linecount, 0)
+                error_text.caretpos = pos
+                error_text.scrolltopos = pos
+                --]]
             elseif cat == "Fps" then
                 local gpu_timer = log_table[2]
                 local cpu_timer = log_table[3]
 
                 fps_label = "cpu time: "..cpu_timer
-                --print("Get fps", gpu_timer, cpu_timer)
+                print("Get fps", gpu_timer, cpu_timer)
+            elseif cat == "Time" then
+                --print("time", log_table[2])
             else
                 --for now ignore other category
             end
@@ -222,8 +301,14 @@ local function HandleResponse(resp_table)
             --device connection and disconnection
             if v[2] == 1 then
                 --connected
-                local idx = connect_list.count
-                connect_list[idx+1] = v[3]
+                --start up connect for self update
+                if start_up_connect then
+                    start_up_connect = false
+                else
+                    local idx = connect_list.count
+                    connect_list[idx+1] = v[3]
+                end
+
             else
                 --disconnected
                 local list_count = connect_list.count
@@ -246,13 +331,16 @@ local function HandleResponse(resp_table)
             --decompress it and show the image
             local data, width, height = lodepng.decode_png(encode_data)
 
-            assert(width > 0 and height > 0 and #data > 0)
+            print("decode screenshot data", width, height, #data)
+            if width > 0 and height > 0 and #data > 0 then
+                --assert(width > 0 and height > 0 and #data > 0)
+                print("get screenshot", width, height, #data)
 
-            print("get screenshot", width, height, #data)
-
-            local nkatlas = nk.loadImageFromMemory(data,width,height,#data/width/height)
-            nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h
-
+                local nkatlas = nk.loadImageFromMemory(data,width,height,#data/width/height)
+                nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h
+            else
+                --todo handle decode error
+            end
         else
             print("resp " .. v[1] .. " not support yet")
         end
@@ -275,7 +363,6 @@ dlg.usersize = nil
 
 local time_stamp = 0.0
 local function UpdateSimpad()
-
     local time_now = os.clock()
     local time_step = time_now - time_stamp;
     if time_step > 1.0 then
@@ -300,6 +387,33 @@ local function UpdateSimpad()
     bgfx.frame()
 end
 
+local function reconnect_func(value)
+    --disconnect then reconnect
+
+    local select_idx = device_list.value
+
+    --none selected
+    if select_idx == 0 then
+        return
+    end
+
+    local udid = device_list[select_idx]
+    --disconnect old connection
+
+    local time = os.clock()
+    while os.clock() - time < 2 do end
+
+    local devices = mobiledevice.GetDevices()
+    for _, v in pairs(devices) do
+        server_framework:HandleCommand(v, "DISCONNECT")
+        server_framework:HandleCommand(v, "CONNECT")
+    end
+
+end
+
+server_framework:RegisterIOCommand("RECONNECT", reconnect_func)
+
+
 -- to be able to run this script inside another context
 while true do
     local msg = iup.LoopStep()
@@ -307,6 +421,7 @@ while true do
         break
     end
 
+    dbg_tcp:update()
     server_framework:update()
     local resp_table = server_framework:RecvResponse()
     HandleResponse(resp_table)

@@ -1,5 +1,6 @@
 local json = require 'cjson'
 local proto = require 'debugger.protocol'
+local ev = require 'debugger.event'
 
 local mgr = {}
 local network
@@ -22,6 +23,10 @@ local function event_in(data)
     end
 end
 
+local function event_close()
+    mgr.close()
+end
+
 local function recv()
     if #queue == 0 then
         return
@@ -38,6 +43,7 @@ function mgr.init(io, masterThread_)
     network = io
     masterThread = masterThread_
     network:event_in(event_in)
+    network:event_close(event_close)
 end
 
 function mgr.sendToClient(pkg)
@@ -134,11 +140,19 @@ function mgr.exitWhenClose()
 end
 
 function mgr.close()
-    network:close()
+    if state == 'birth' then
+        return
+    end
+    mgr.broadcastToWorker {
+        cmd = 'terminated',
+    }
+    ev.emit('close')
+    mgr.setState 'terminated'
     seq = 0
     state = 'birth'
     stat = {}
     queue = {}
+    network:close()
     if exit then
         os.exit(true, true)
     end

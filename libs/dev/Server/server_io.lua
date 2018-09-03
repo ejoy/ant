@@ -1,6 +1,5 @@
 local require = import and import(...) or require
 local log = log and log(...) or print
-
 local pack = require "pack"
 
 local lsocket = require "lsocket"
@@ -109,9 +108,9 @@ local function HandlePackage(response_pkg, id, self)
             if not nbytes then
                 break;
             end
-            print("sending", file_path, "remaining", file_size - offset)
+            print("sending", file_path, "remaining", file_size - offset, #file_data)
 
-            offset = offset + nbytes    --should be the data size that actually sent
+            offset = offset + read_size
             if offset >= file_size then
                 break
             end
@@ -131,7 +130,8 @@ local function HandlePackage(response_pkg, id, self)
             cmd_type == "EXIST_CHECK" or
             cmd_type == "RUN" or
             cmd_type == "ERROR" or
-            cmd_type == "SCREENSHOT" then
+            cmd_type == "SCREENSHOT" or
+            cmd_type == "COMPILE_SHADER" then
 
         local pack_l = pack.pack(response_pkg)
         --local nbytes = fd:send(pack_l)
@@ -228,6 +228,14 @@ function server.new(config, linda)
 end
 
 function server:new_client(id, ip, port)
+
+    for _, v in ipairs(self.ids) do
+        if v == self.ids then
+            self.clients[id] = {ip = ip, port = port, reading = "" }
+            return
+        end
+    end
+
     table.insert(self.ids, id)
     self.clients[id] = {ip = ip, port = port, reading = ""}
 end
@@ -254,7 +262,7 @@ function server:client_request(id)
         return
     end
 
-    print("data", str)
+    --print("data", str)
     local obj = self.clients[id]
     local reading = obj.reading .. str
     local off = 1
@@ -285,6 +293,7 @@ function server:queue_request(id, str)
 end
 
 function server:kick_client(client_id)
+    ---[[
     print("kick id", client_id)
     for k, id in ipairs(self.ids) do
         if id == client_id then
@@ -302,6 +311,7 @@ function server:kick_client(client_id)
             return
         end
     end
+    --]]
 end
 
 local function save_ppm(filename, data, width, height, pitch)
@@ -322,11 +332,17 @@ local function save_ppm(filename, data, width, height, pitch)
     f:close()
 end
 
+---[[
+local toolset = require "editor.toolset"
+local path = require "filesystem.path"
+local fs = require "filesystem"
+--]]
+
 local screenshot_cache = nil
 local max_screenshot_pack = 64*1024 - 100
 --store handle of lanes, check the result periodically
 local function response(self, req)
-    print("cmd and second is ", req[1], req[2])
+    --print("cmd and second is ", req[1], req[2])
     local cmd = req[1]
     --if is require command, need project_directory
     if cmd == "REQUIRE" or cmd == "GET" or cmd == "EXIST" then
@@ -367,6 +383,35 @@ local function response(self, req)
                         self.linda:send("response", {"SCREENSHOT", screenshot_cache})
                     end
                     --]]
+                elseif a_cmd[1] == "COMPILE_SHADER" then
+                    local shader_path = req[2]
+
+                    local config = toolset.load_config()
+
+                    if next(config) == nil then
+                        print("load_config file failed, 'bin/iup.exe tools/config.lua' need to run first")
+                        assert(false)
+                    end
+
+                    local cwd = fs.currentdir()
+
+                    config.includes = {config.shaderinc, path.join(cwd, "assets/shaders/src") }
+
+                    local outfile = string.gsub(shader_path, "src/", "essl/")
+                    outfile = string.gsub(outfile, ".sc", ".bin")
+                    config.dest = outfile
+
+                    local success, msg = toolset.compile(shader_path, config, "ios")
+
+                    print("compile msg", success, msg)
+
+                    if not success then
+                        print(string.format("try compile from file %s, but failed, error message : \n%s", shader_path, msg))
+                        return nil
+                    end
+                    local command_package = {a_cmd, req.id}
+                    table.insert(command_cache, command_package)
+--]]
                 else
                     local command_package = {a_cmd, req.id}
                     table.insert(command_cache, command_package)
@@ -478,7 +523,6 @@ end
 
 local hash_update_counter = 0
 function server:mainloop(timeout)
-
     self:GetLindaMsg()
     --self:CheckNewDevice()
     --TODO: currently no use of lsocket connection, implement later (for wifi connection)
@@ -515,17 +559,10 @@ end
 
 function server:GetLindaMsg()
     while true do
-        local key, value = self.linda:receive(0.05, "command")
-        if value then
+        local key, value = self.linda:receive(0.001, "command", "proj dir")
+        if key == "command" then
             self:HandleIupWindowRequest(value.udid, value.cmd, value.cmd_data)
-        else
-            break
-        end
-    end
-
-    while true do
-        local key, value = self.linda:receive(0.05, "proj dir")
-        if value then
+        elseif key == "proj dir" then
             project_directory = value
             print("change project directory to", project_directory)
         else
@@ -537,25 +574,15 @@ end
 function server:HandleIupWindowRequest(udid, cmd, cmd_data)
     --handle request create from iup window
     --if udid is "all", means is for all devices
-    if cmd == "TRANSIT_DIR" then
-        local full_path_table = cmd_data
-        if not full_path_table or type(full_path_table) ~= "table" then
-            print("no path table found")
-            return
-        end
-
-        for _, v in ipairs(full_path_table) do
-            --is equal to client sends "GET" command to server
-            local request = {{"GET", v}, id = udid}
-            table.insert(self.request, request)
-        end
-    elseif cmd == "RUN" then
+    print("receive window cmd", cmd)
+    if cmd == "RUN" then
         local entrance_path = cmd_data[1]
         local request = {{"RUN", entrance_path}, udid}
 
         print("RUN cmd sent", udid, entrance_path)
         table.insert(command_cache, request)
     elseif cmd == "CONNECT" then
+        print("try connencting")
         --connect to device
         local result = libimobiledevicelua.Connect(udid, self.port)
         if  result then
@@ -581,6 +608,13 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
         table.insert(command_cache, request)
     else
         print("Iup Window Request not support yet")
+    end
+end
+
+function server:SendPackage(pkg)
+    pkg = pack.pack(pkg)
+    for _, id in pairs(self.ids) do
+        SendData(id, pkg)
     end
 end
 

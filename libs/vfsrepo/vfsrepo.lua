@@ -40,7 +40,7 @@ end
 
 local function write_cache(cachedir, cache, duplicate_cache)	
 	path.create_dirs(cachedir)
-	local rootfile = path.join(cachedir, "root")	
+	local rootfile = path.join(cachedir, "root")
 	fu.write_to_file(rootfile, cache.sha1, "wb")
 
 	local function write_sha1_file(cache)

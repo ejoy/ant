@@ -40,19 +40,20 @@ function camera_controller_system:init()
 	local move_speed = 1
 	local message = {}
 
-	local button_status = {}
-	function message:button(btn, p, x, y, status)
-		button_status[btn] = p
-	end
+    local last_xy
+    local button_status = {}
+    function message:button(btn, p, x, y, status)
+        button_status[btn] = p
+        last_xy = point2d(x, y)
+    end
 
-	local last_xy
-	function message:motion(x, y, status)		
+	function message:motion(x, y, status)
 		local xy = point2d(x, y)
 		if last_xy then
 			if status.RIGHT then
 				local speed = move_speed * 0.1
 				local delta = (xy - last_xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
-				camera_util.rotate(ms, camera, delta.x, delta.y)				
+				camera_util.rotate(ms, camera, delta.x, delta.y)
 			end
 		end
 

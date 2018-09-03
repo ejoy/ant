@@ -2,7 +2,7 @@ package.cpath = "../../../clibs/?.dll;../../../clibs/lib?.so;../../../clibs/?.so
 package.path = "../Common/?.lua;" .. "../../?/?.lua;".. package.path
 
 local lanes = require "lanes"
-if lanes.configure then lanes.configure() end
+if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
 local linda = lanes.linda()
 
 function log(name)
@@ -16,41 +16,40 @@ function log(name)
 end
 
 local resp_table = {}
+
+local IOCommand_name = {"log", "response"}
+local IOCommand_func = {}
+IOCommand_func["log"] = function(value)
+    table.insert(resp_table, {"log", value})
+end
+
+IOCommand_func["response"] = function(value)
+    if value[1] == "CONNECT" then
+        print("~~CONNECT", value[1], value[2])
+        table.insert(resp_table, {"connect", 1, value[2]})
+    elseif value[1] == "DISCONNECT" then
+        print("~~DISCONNECT", value[1], value[2])
+        table.insert(resp_table, {"connect", 0, value[2]})
+    elseif value[1] == "SCREENSHOT" then
+        table.insert(resp_table, {"screenshot", value[2]})
+    end
+end
+
+
 local function HandleMessage()
     while true do
-        local key, value = linda:receive(0.05, "log")
-        if value then
-            --do something here
-            table.insert(resp_table, {"log", value})
-        else
-            break
-        end
-    end
-
-    while true do
-        local key, value = linda:receive(0.05, "response")
-        if value then
-            -- 0 means disconnect, 1 means connect
-            --value 2 is the udid
-            if value[1] == "CONNECT" then
-                print("~~CONNECT", value[1], value[2])
-                table.insert(resp_table, {"connect", 1, value[2]})
-            elseif value[1] == "DISCONNECT" then
-                print("~~DISCONNECT", value[1], value[2])
-                table.insert(resp_table, {"connect", 0, value[2]})
-            elseif value[1] == "SCREENSHOT" then
-                table.insert(resp_table, {"screenshot", value[2]})
-            end
+        local key, value = linda:receive(0.001, table.unpack(IOCommand_name))
+        if key then
+            IOCommand_func[key](value)
         else
             break
         end
     end
 end
 
-local function CreateServerThread(config, linda)
-
-    local server_io = require "server_io"
-    local s = server_io.new(config, linda)
+local function CreateServerThread(address, port, linda)
+    local server_io = require "server_new_io"
+    local s = server_io.new(address, port, linda)
     while true do
         s:mainloop(0.05)
     end
@@ -76,14 +75,20 @@ function server_ins.GetNewDeviceInfo()
     return new_devices
 end
 
+--server_repo = nil
 
 function server_ins:init(address, port)
     --self.s = server.new{address = address, port = port}
 
-    local server_io = lanes.gen("*", CreateServerThread)({address = address, port = port}, linda)
+    local server_io, err = lanes.gen("*", {globals = {PLATFORM = PLATFORM}}, CreateServerThread)(address, port, linda)
+    if not server_io then
+        print("server_io error: "..tostring(err))
+    end
 end
 
 function server_ins:update()
+    --print("server framework update")
+
     HandleMessage()
 end
 
@@ -109,5 +114,19 @@ function server_ins:SetProjectDirectoryPath(path)
     print("project directory set to", path)
     linda:send("proj dir", path)
 end
+
+function server_ins:SendPackage(pkg)
+    print("send package server framework", pkg[1])
+    linda:send("package", pkg)
+end
+
+function server_ins:RegisterIOCommand(cmd, func)
+    table.insert(IOCommand_name, cmd)
+    IOCommand_func[cmd] = func
+
+    linda:send("RegisterTransmit", cmd)
+end
+
+
 
 return server_ins

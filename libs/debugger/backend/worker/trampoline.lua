@@ -1,8 +1,21 @@
+local searcher_C = ...
+if searcher_C then
+    package.searchers = {
+        searcher_C,
+    }
+else
+    package.searchers = {
+        package.searchers[3],
+        package.searchers[4],
+    }
+end
+
 local cdebug = require 'debugger.backend'
 local json = require 'cjson'
 local pipe = cdebug.start 'vip'
 
 local function loadfile(filename)
+
     pipe:send(assert(json.encode({
         cmd = 'loadfile',
         filename = filename,
@@ -51,18 +64,5 @@ local function searcher_Lua(name)
     return f, filename
 end
 
-local searcher_C = ...
-if searcher_C then
-    package.searchers = {
-        searcher_Lua,
-        searcher_C,
-    }
-else
-    package.searchers = {
-        searcher_Lua,
-        package.searchers[3],
-        package.searchers[4],
-    }
-end
-
+table.insert(package.searchers, 1, searcher_Lua)
 require 'debugger.backend.worker'
