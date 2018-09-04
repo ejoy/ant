@@ -12,7 +12,7 @@ local function insert_primitive(eid, result)
 	assert(#materialcontent >= 1)
 
 	local srt ={s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}
-	local mgroups = mesh.handle.group
+	local mgroups = mesh.handle.groups
 	for i=1, #mgroups do
 		local g = mgroups[i]
 		local mc = materialcontent[i] or materialcontent[1]

@@ -251,110 +251,46 @@ Split(const std::string &ss, char delim) {
 	return vv;
 }
 
+static std::vector<std::string>
+AdjustLayoutElem(const std::string &layout) {
+	auto elems = Split(layout, '|');
+	for (auto &e : elems) {
+		char newelem[] = "_30NIf";
+		for (auto ii = 0; ii < e.size(); ++ii) {
+			newelem[ii] = e[ii];
+		}
+		e = newelem;
+	}
+
+	return elems;
+}
+
 // only valid in array of struct
 static std::string
 CreateVertexLayout(aiMesh *mesh, const std::string &vertexElemNeeded) {
-	auto elems = Split(vertexElemNeeded, '|');
-
-	std::string ss;
-	auto add_elem = [&ss, &elems](const auto &e) {
-		auto it = std::find_if(elems.begin(), elems.end(), [e](auto ename) {
-			const auto &name = std::get<0>(e);
-
-			if (ename.length() == 3 && name.length() == 3) {
-				return ename[0] == name[0] && ename[2] == name[2];
-			}
-
-			return (ename[0] == name[0]);
-		});
-		auto op = std::get<2>(e);
-		if (it != elems.end() && op()) {
-			if (!ss.empty())
-				ss += '|';
-
-			std::string name = *it;
-			if (name.length() < 2) {
-				const uint8_t default_count = std::get<1>(e);
-				name.append(std::to_string(default_count));
-			}
-			ss += name;
+	auto elems = AdjustLayoutElem(vertexElemNeeded);
+	std::string layout;
+	auto append_elem = [&layout](const std::string &e) {
+		if (!layout.empty())
+			layout += '|';
+		layout += e;
+	};
+	for (const auto &e : elems) {		
+		switch (e[0]) {
+		case 'p': if (mesh->HasPositions()) append_elem(e); break;
+		case 'n': if (mesh->HasNormals()) append_elem(e); break;
+		case 'b':
+		case 'T': if (mesh->HasTangentsAndBitangents()) append_elem(e); break;
+		case 'c': if (mesh->HasVertexColors(e[2] - '0')) append_elem(e); break;
+		case 't': if (mesh->HasTextureCoords(e[2] - '0')) append_elem(e); break;
+		case 'w':
+		case 'i': 
+		default:
+			printf("not support type : %d", e[0]);
+			break;
 		}
-	};
-
-	std::vector<std::tuple<std::string, uint8_t, std::function<bool()>>>	check_array = {
-		std::make_tuple("p", 3, [mesh]() {return mesh->HasPositions(); }),
-		std::make_tuple("n", 3, [mesh]() {return mesh->HasNormals(); }),
-		std::make_tuple("T", 3, [mesh]() {return mesh->HasTangentsAndBitangents(); }),
-		std::make_tuple("b", 3, [mesh]() {return mesh->HasTangentsAndBitangents(); }),
-	};
-
-	for (const auto &p : check_array) {
-		add_elem(p);
 	}
-
-	auto add_array_elem = [&](const std::string &basename, uint8_t default_count, auto check_array) {
-		for (auto ii = 0; ii < 4; ++ii) {
-			const std::string n = basename + std::to_string(ii);
-			add_elem(std::make_tuple(n, default_count, [ii, check_array]() { return check_array(ii); }));
-		}
-	};
-
-	add_array_elem("t", 3, [mesh](uint32_t idx) {return mesh->HasTextureCoords(idx); });
-	add_array_elem("c", 4, [mesh](uint32_t idx) {return mesh->HasVertexColors(idx); });
-
-	return ss;
-}
-
-using VertexElemMap = std::unordered_map<std::string, std::function<float *(const aiMesh *mesh, uint32_t idx)> >;
-
-VertexElemMap g_elemMap;
-
-static void
-InitElemMap() {
-	if (!g_elemMap.empty())
-		return;
-
-	g_elemMap["p"] = [](const aiMesh *mesh, uint32_t idx) {return &mesh->mVertices[idx].x; };
-	g_elemMap["n"] = [](const aiMesh *mesh, uint32_t idx) {return &mesh->mNormals[idx].x; };
-	g_elemMap["T"] = [](const aiMesh *mesh, uint32_t idx) {return &mesh->mTangents[idx].x; };
-	g_elemMap["b"] = [](const aiMesh *mesh, uint32_t idx) {return &mesh->mBitangents[idx].x; };
-
-	auto add_array_type = [](auto basename, auto totalnum, auto create_op) {
-		for (int ii = 0; ii < totalnum; ++ii) {
-			std::string name = basename + std::to_string(ii);
-			g_elemMap[name] = create_op(ii);
-		}
-	};
-
-	struct TexCoordValuePtrOp {
-		TexCoordValuePtrOp(uint32_t ii) : texIdx(ii) {}
-		uint32_t texIdx;
-		float * operator()(const aiMesh *mesh, uint32_t idx) {
-			return &(mesh->mTextureCoords[texIdx][idx].x);
-		}
-	};
-
-	add_array_type("t", 4, [](auto ii) { return TexCoordValuePtrOp(ii); });
-
-
-	struct ColorValuePtrOp {
-		ColorValuePtrOp(uint32_t ii) : colorIdx(ii) {}
-		uint32_t colorIdx;
-		float * operator()(const aiMesh *mesh, uint32_t idx) {
-			return &(mesh->mColors[colorIdx][idx].r);
-		}
-	};
-
-	add_array_type("c", 4, [](auto ii) { return ColorValuePtrOp(ii); });
-
-};
-
-static inline void
-extract_layout_elem_info(const std::string &le, std::string &type, uint8_t &count) {
-	type += le[0];
-	type += le[1];
-	
-	count = static_cast<uint8_t>(std::stoi(le.substr(1, 1)));
+	return layout;
 }
 
 static size_t
@@ -405,20 +341,27 @@ CalcBufferSize(const MeshArray &meshes,
 
 static void
 CopyMeshVertices(const aiMesh *mesh, const std::string &layout, const load_config &config, float * &vertices) {
-	auto vv = Split(layout, '|');
-
+	auto elems = AdjustLayoutElem(layout);
 	for (uint32_t ii = 0; ii < mesh->mNumVertices; ++ii) {
-		for (auto v : vv) {
-			assert(v.length() >= 2);
-			std::string type;
-			uint8_t elemCount;
-			extract_layout_elem_info(v, type, elemCount);
-
-			const auto &value_ptr = g_elemMap[type];
-			const float * ptr = value_ptr(mesh, ii);
-
-			memcpy(vertices, ptr, elemCount * sizeof(float));
-			vertices += elemCount;
+		for (auto e : elems) {			
+			const uint32_t count = e[1] - '0';
+			const uint32_t channel = e[2] - '0';
+			float *p = nullptr;
+			switch (e[0]){
+			case 'p': p = &(mesh->mVertices[ii].x); break;
+			case 'n': p = &(mesh->mNormals[ii].x); break;
+			case 'T': p = &(mesh->mTangents[ii].x); break;
+			case 'b': p = &(mesh->mBitangents[ii].x); break;
+			case 'c': p = &(mesh->mColors[channel][ii].r); break;
+			case 't': p = &(mesh->mTextureCoords[channel][ii].x); break;
+			case 'i':
+			case 'w':
+			default:
+				printf("not support type in CopyMeshVertices, %d", e[0]);
+				break;
+			}
+			memcpy(vertices, p, count * sizeof(float));
+			vertices += count;
 		}
 	}
 
@@ -576,7 +519,7 @@ LoadMeshes(const aiScene *scene, const load_config& config, mesh_data &md) {
 			}
 			
 			primitive.name = mesh->mName.C_Str();
-			primitive.material_idx = mesh->mMaterialIndex;
+			primitive.material_idx = mesh->mMaterialIndex + 1;
 
 			// vertices			
 			CopyMeshVertices(mesh, group.vb_layout, config, vertices);
@@ -778,20 +721,6 @@ struct LayoutNamePairs {
 //	{ "t6", bgfx::Attrib::TexCoord6},
 //	{ "t7", bgfx::Attrib::TexCoord7},
 //};
-
-static std::vector<std::string> 
-AdjustLayoutElem(const std::string &layout) {
-	auto elems = Split(layout, '|');	
-	for (auto &e : elems) {
-		char newelem[] = "_30NIf";
-		for (auto ii = 0; ii < e.size(); ++ii){
-			newelem[ii] = e[ii];
-		}
-		e = newelem;
-	}
-
-	return elems;
-}
 
 static bgfx::VertexDecl 
 gen_vertex_decl_from_vblayout(const std::string &vblayout) {
@@ -1135,8 +1064,6 @@ convertFBX(lua_State *L, const std::string &srcpath, const std::string &outputfi
 	}
 
 	luaL_checkstack(L, 10, "");
-
-	InitElemMap();
 
 	mesh_data md;
 	if (!SceneToMeshData(scene, config, md)) {
