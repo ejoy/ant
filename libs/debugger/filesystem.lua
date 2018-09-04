@@ -5,7 +5,7 @@ local default_sep = package.config:sub(1, 1)
 
 local function split(str)
     local r = {}
-    str:gsub('[^/\\]+', function (w) r[#r+1] = w end)
+    str:gsub('[^/\\]*', function (w) r[#r+1] = w end)
     return r
 end
 
@@ -17,7 +17,7 @@ end
 local function normalize(p)
     local stack = {}
     for _, elem in ipairs(split(absolute(p))) do
-        if #elem == 0 then
+        if #elem == 0 and #stack ~= 0 then
         elseif elem == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
             stack[#stack] = nil
         elseif elem ~= '.' then
@@ -30,7 +30,7 @@ end
 local function normalize_native(p)
     local stack = {}
     for _, elem in ipairs(split(absolute(p))) do
-        if #elem == 0 then
+        if #elem == 0 and #stack ~= 0 then
         elseif elem == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
             stack[#stack] = nil
         elseif elem ~= '.' then

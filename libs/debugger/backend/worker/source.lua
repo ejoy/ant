@@ -23,7 +23,7 @@ ev.on('initializing', function(config)
             local sm = {}
             sm[1] = ('^%s$'):format(fs.normalize_native(pattern[1]):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'))
             if sm[1]:find '%*' then
-                sm[1]:gsub('%*', '(.*)')
+                sm[1] = sm[1]:gsub('%*', '(.*)')
                 local r = {}
                 fs.normalize(pattern[2]):gsub('[^%*]+', function (w) r[#r+1] = w end)
                 sm[2] = r
