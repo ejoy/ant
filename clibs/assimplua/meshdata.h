@@ -100,7 +100,29 @@ struct mesh_material_data {
 struct mesh_data {		
 	std::vector<mesh_material_data> materials;
 	struct group {
-		group() : vbraw(nullptr), ibraw(nullptr){}
+		group() 
+			: vbraw(nullptr)
+			, num_vertices(0)
+			, ibraw(nullptr)
+			, num_indices(0)
+			, ib_format(0)
+		{}
+
+		group(group &&tmp) {
+			ibraw = tmp.ibraw;
+			num_indices = tmp.num_indices;
+
+			vbraw = tmp.vbraw;
+			num_vertices = tmp.num_vertices;
+	
+			name = std::move(tmp.name);
+			vb_layout = std::move(tmp.vb_layout);
+
+			primitives = std::move(tmp.primitives);
+			
+			tmp.ibraw = nullptr;
+			tmp.vbraw = nullptr;
+		}
 		~group() {
 			if (vbraw){ 
 				delete[] vbraw;
@@ -113,6 +135,7 @@ struct mesh_data {
 			}
 		}
 		Bounding bounding;
+		std::string name;
 
 		std::string vb_layout;
 		size_t num_vertices;
@@ -123,6 +146,14 @@ struct mesh_data {
 		uint8_t* ibraw;
 		
 		struct primitive_info {
+			primitive_info() 
+				: material_idx(-1)
+				, start_vertex(0)
+				, num_vertices(0)
+				, start_index(0)
+				, num_indices(0)
+			{}
+
 			Bounding bounding;
 
 			glm::mat4x4 transform;

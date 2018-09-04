@@ -166,6 +166,7 @@ return function (filename)
 		groups = function(v)
 			return array_unpack(v, {
 				bounding	= bounding_unpack,
+				name 		= string_unpack,
 				vb_layout	= string_unpack,
 				num_vertices= uint_unpack,
 				vbraw		= string_unpack,

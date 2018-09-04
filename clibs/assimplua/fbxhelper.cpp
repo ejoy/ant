@@ -7,14 +7,18 @@ extern "C" {
 }
 
 //assimp include
-#include <assimp\importer.hpp>
-#include <assimp\postprocess.h>
-#include <assimp\scene.h>
+#include <assimp/importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 
 //bgfx include
-#include <bx\string.h>
-#include <bx\file.h>
-#include <bgfx\bgfx.h>
+#include <bx/string.h>
+#include <bx/file.h>
+#include <bgfx/bgfx.h>
+#include <bgfx_utils.h>
+#include <vertexdecl.h>
+#include <../../3rdparty/ib-compress/indexbufferdecompression.h>
+
 
 //glm
 #include <glm/glm.hpp>
@@ -163,39 +167,39 @@ void LoadMaterials(const aiScene* scene, std::vector<mesh_material_data> &materi
 	}
 }
 
-static void push_aabb(lua_State *L, const AABB &aabb, int32_t tblidx) {
-	lua_createtable(L, 6, 0);
-	const ai_real *p = &aabb.min.x;
-	for (uint32_t ii = 0; ii < 6; ++ii) {
-		lua_pushnumber(L, *p++);
-		lua_seti(L, -2, ii + 1);
-	}
-	lua_setfield(L, tblidx, "aabb");
-}
-
-static void push_sphere(lua_State *L, const BoundingSphere &sphere, int32_t tblidx) {
-	lua_createtable(L, 4, 0);
-	const ai_real *p1 = &sphere.center.x;
-	for (uint32_t ii = 0; ii < 4; ++ii) {
-		lua_pushnumber(L, *p1++);
-		lua_seti(L, -2, ii + 1);
-	}
-
-	lua_setfield(L, tblidx, "sphere");
-}
-
-static void push_sphere(lua_State *L, const AABB &aabb, int32_t tblidx) {
-	BoundingSphere sphere; sphere.Init(aabb);
-	push_sphere(L, sphere, tblidx);
-}
+//static void push_aabb(lua_State *L, const AABB &aabb, int32_t tblidx) {
+//	lua_createtable(L, 6, 0);
+//	const ai_real *p = &aabb.min.x;
+//	for (uint32_t ii = 0; ii < 6; ++ii) {
+//		lua_pushnumber(L, *p++);
+//		lua_seti(L, -2, ii + 1);
+//	}
+//	lua_setfield(L, tblidx, "aabb");
+//}
+//
+//static void push_sphere(lua_State *L, const BoundingSphere &sphere, int32_t tblidx) {
+//	lua_createtable(L, 4, 0);
+//	const ai_real *p1 = &sphere.center.x;
+//	for (uint32_t ii = 0; ii < 4; ++ii) {
+//		lua_pushnumber(L, *p1++);
+//		lua_seti(L, -2, ii + 1);
+//	}
+//
+//	lua_setfield(L, tblidx, "sphere");
+//}
+//
+//static void push_sphere(lua_State *L, const AABB &aabb, int32_t tblidx) {
+//	BoundingSphere sphere; sphere.Init(aabb);
+//	push_sphere(L, sphere, tblidx);
+//}
 
 using MeshArray = std::vector<aiMesh*>;
 using MeshMaterialArray = std::vector<MeshArray>;
 
 
-struct LoadFBXConfig {
-	LoadFBXConfig()
-		: layout("p|n|T|b|t0|t1|t2|t3|t4|c0|c1|c2|c3")
+struct load_config {
+	load_config()
+		: layout("p3|n|T|b|t20|c30")
 		, flags(0) {}
 
 	bool NeedCreateNormal() const {
@@ -347,7 +351,9 @@ InitElemMap() {
 
 static inline void
 extract_layout_elem_info(const std::string &le, std::string &type, uint8_t &count) {
-	type = le.substr(0, 1) + le.substr(2, 1);
+	type += le[0];
+	type += le[1];
+	
 	count = static_cast<uint8_t>(std::stoi(le.substr(1, 1)));
 }
 
@@ -369,7 +375,7 @@ CalcVertexSize(const std::string &layout) {
 static void
 CalcBufferSize(const MeshArray &meshes,
 	const std::string &layout,
-	const LoadFBXConfig &config,
+	const load_config &config,
 	size_t &vertexSizeInBytes, size_t &indexSizeInBytes, size_t &indexElemSizeInBytes) {
 	if (meshes.empty())
 		return;
@@ -391,14 +397,14 @@ CalcBufferSize(const MeshArray &meshes,
 	if (numVertices > uint16_t(-1)) {
 		indexElemSizeInBytes = sizeof(uint32_t);
 	} else {
-		indexElemSizeInBytes = ((config.flags & LoadFBXConfig::IndexBuffer32Bit) ? sizeof(uint32_t) : sizeof(uint16_t));
+		indexElemSizeInBytes = ((config.flags & load_config::IndexBuffer32Bit) ? sizeof(uint32_t) : sizeof(uint16_t));
 	}
 
 	indexSizeInBytes = numIndices * indexElemSizeInBytes;
 }
 
 static void
-CopyMeshVertices(const aiMesh *mesh, const std::string &layout, const LoadFBXConfig &config, float * &vertices) {
+CopyMeshVertices(const aiMesh *mesh, const std::string &layout, const load_config &config, float * &vertices) {
 	auto vv = Split(layout, '|');
 
 	for (uint32_t ii = 0; ii < mesh->mNumVertices; ++ii) {
@@ -419,11 +425,11 @@ CopyMeshVertices(const aiMesh *mesh, const std::string &layout, const LoadFBXCon
 }
 
 static size_t
-CopyMeshIndices(const aiMesh *mesh, const LoadFBXConfig &config, uint8_t* &indices) {
+CopyMeshIndices(const aiMesh *mesh, const load_config &config, uint8_t* &indices) {
 	size_t numIndices = 0;
 	for (uint32_t ii = 0; ii < mesh->mNumFaces; ++ii) {
 		const auto& face = mesh->mFaces[ii];
-		if (config.flags & LoadFBXConfig::IndexBuffer32Bit) {
+		if (config.flags & load_config::IndexBuffer32Bit) {
 			const size_t sizeInBytes = face.mNumIndices * sizeof(uint32_t);
 			memcpy(indices, face.mIndices, sizeInBytes);
 			indices += sizeInBytes;
@@ -465,24 +471,24 @@ FindTransform(const aiScene *scene, const aiNode *node, const aiMesh *mesh, aiMa
 	return false;
 }
 
-static std::pair<std::string, bgfx::AttribType::Enum>
-attrib_type_name_pairs[bgfx::AttribType::Count] = {
-	{ "UINT8", bgfx::AttribType::Uint8 },
-	{ "UINT10", bgfx::AttribType::Uint10 },
-	{ "INT16", bgfx::AttribType::Int16 },
-	{ "HALF", bgfx::AttribType::Half },
-	{ "FLOAT", bgfx::AttribType::Float },
-};
-
-static inline bgfx::AttribType::Enum
-what_elem_type(const std::string &n) {
-	for (auto &pp : attrib_type_name_pairs) {
-		if (pp.first == n)
-			return pp.second;
-	}
-
-	return bgfx::AttribType::Count;
-}
+//static std::pair<std::string, bgfx::AttribType::Enum>
+//attrib_type_name_pairs[bgfx::AttribType::Count] = {
+//	{ "UINT8", bgfx::AttribType::Uint8 },
+//	{ "UINT10", bgfx::AttribType::Uint10 },
+//	{ "INT16", bgfx::AttribType::Int16 },
+//	{ "HALF", bgfx::AttribType::Half },
+//	{ "FLOAT", bgfx::AttribType::Float },
+//};
+//
+//static inline bgfx::AttribType::Enum
+//what_elem_type(const std::string &n) {
+//	for (auto &pp : attrib_type_name_pairs) {
+//		if (pp.first == n)
+//			return pp.second;
+//	}
+//
+//	return bgfx::AttribType::Count;
+//}
 
 #if defined(DISABLE_ASSERTS)
 # define verify(expr) ((void)(expr))
@@ -491,7 +497,7 @@ what_elem_type(const std::string &n) {
 #endif	
 
 static void
-ExtractLoadConfig(lua_State *L, int idx, LoadFBXConfig &config) {
+ExtractLoadConfig(lua_State *L, int idx, load_config &config) {
 	luaL_checktype(L, idx, LUA_TTABLE);
 
 	verify(lua_getfield(L, idx, "layout") == LUA_TSTRING);
@@ -511,17 +517,20 @@ ExtractLoadConfig(lua_State *L, int idx, LoadFBXConfig &config) {
 		lua_pop(L, 1);
 	};
 
-	extract_boolean("gen_normal", LoadFBXConfig::CreateNormal);
-	extract_boolean("tangentspace", LoadFBXConfig::CreateTangent);
-	extract_boolean("tangentspace", LoadFBXConfig::CreateBitangent);
+	auto elems = Split(config.layout, '|');
+	if (std::find_if(std::begin(elems), std::end(elems), [](auto e) {return e[0] == 'n'; }) != std::end(elems))
+		config.flags |= load_config::CreateNormal;
 
-	extract_boolean("invert_normal", LoadFBXConfig::InvertNormal);
-	extract_boolean("flip_uv", LoadFBXConfig::FlipUV);
-	extract_boolean("ib_32", LoadFBXConfig::IndexBuffer32Bit);
+	if (std::find_if(std::begin(elems), std::end(elems), [](auto e) {return e[0] == 'T' || e[0] == 'b';}) != std::end(elems))
+		config.flags |= load_config::CreateTangent|load_config::CreateBitangent;
+
+	extract_boolean("invert_normal", load_config::InvertNormal);
+	extract_boolean("flip_uv", load_config::FlipUV);
+	extract_boolean("ib_32", load_config::IndexBuffer32Bit);
 }
 
 static void
-LoadMeshes(const aiScene *scene, const LoadFBXConfig& config, mesh_data &md) {
+LoadMeshes(const aiScene *scene, const load_config& config, mesh_data &md) {
 	MeshMaterialArray mm;
 	SeparateMeshByMaterialID(scene, mm);
 
@@ -567,7 +576,7 @@ LoadMeshes(const aiScene *scene, const LoadFBXConfig& config, mesh_data &md) {
 			}
 			
 			primitive.name = mesh->mName.C_Str();
-			primitive.material_idx = mesh->mMaterialIndex;			
+			primitive.material_idx = mesh->mMaterialIndex;
 
 			// vertices			
 			CopyMeshVertices(mesh, group.vb_layout, config, vertices);
@@ -593,7 +602,7 @@ LoadMeshes(const aiScene *scene, const LoadFBXConfig& config, mesh_data &md) {
 }
 
 static bool
-SceneToMeshData(const aiScene *scene, const LoadFBXConfig &config, mesh_data &md) {
+SceneToMeshData(const aiScene *scene, const load_config &config, mesh_data &md) {
 	LoadMaterials(scene, md.materials);
 	LoadMeshes(scene, config, md);
 	
@@ -707,7 +716,8 @@ WriteMeshData(const mesh_data &md, const std::string &srcfile, const std::string
 
 	WriteElemValue(off, "groups");
 	for (const auto &g : md.groups) {
-		write_bounding(off, g.bounding);	
+		write_bounding(off, g.bounding);
+		WriteElemValue(off, "name", g.name);
 
 		WriteElemValue(off, "vb_layout", g.vb_layout);
 		WriteElemValue(off, "num_vertices", g.num_vertices);		
@@ -743,70 +753,365 @@ WriteMeshData(const mesh_data &md, const std::string &srcfile, const std::string
 	return true;
 }
 
-template<typename T>
-static void ReadElem(std::istream &iff, const std::string &name, T &value) {
+struct LayoutNamePairs {
+	const char* name;
+	bgfx::Attrib::Enum type;
+};
 
+//static LayoutNamePairs ATTRIB_NAME_PAIRS[bgfx::Attrib::Count] = {
+//	{ "p", bgfx::Attrib::Position },
+//	{ "n", bgfx::Attrib::Normal },
+//	{ "T", bgfx::Attrib::Tangent},
+//	{ "b", bgfx::Attrib::Bitangent},
+//	{ "c0", bgfx::Attrib::Color0 },
+//	{ "c1", bgfx::Attrib::Color1 },
+//	{ "c2", bgfx::Attrib::Color2 },
+//	{ "c3", bgfx::Attrib::Color3 },
+//	{ "i", bgfx::Attrib::Indices},
+//	{ "w", bgfx::Attrib::Weight},
+//	{ "t0", bgfx::Attrib::TexCoord0},
+//	{ "t1", bgfx::Attrib::TexCoord1},
+//	{ "t2", bgfx::Attrib::TexCoord2},
+//	{ "t3", bgfx::Attrib::TexCoord3},
+//	{ "t4", bgfx::Attrib::TexCoord4},
+//	{ "t5", bgfx::Attrib::TexCoord5},
+//	{ "t6", bgfx::Attrib::TexCoord6},
+//	{ "t7", bgfx::Attrib::TexCoord7},
+//};
+
+static std::vector<std::string> 
+AdjustLayoutElem(const std::string &layout) {
+	auto elems = Split(layout, '|');	
+	for (auto &e : elems) {
+		char newelem[] = "_30NIf";
+		for (auto ii = 0; ii < e.size(); ++ii){
+			newelem[ii] = e[ii];
+		}
+		e = newelem;
+	}
+
+	return elems;
 }
 
-//static void ReadNode(std::istream &iff, char* buffer) {
-//	std::string line;
-//	while (std::getline(iff, line)) {
-//		auto elems = Split(line, ':');
-//		assert(elems.size() == 2);
-//
-//		const auto &key = elems[0];
-//
-//		if (key == "bounding") {
-//			const auto &value = elems[1];
-//			assert(value.empty());
-//			read_node(iff, buffer);
-//			buffer += sizeof(Bounding);
-//		}
-//	}
-//}
+static bgfx::VertexDecl 
+gen_vertex_decl_from_vblayout(const std::string &vblayout) {
+	auto elems = AdjustLayoutElem(vblayout);
+	bgfx::VertexDecl decl;
+	decl.begin();
+	for (const auto &e : elems) {
+		auto get_attrib = [](const std::string &e) {
+			switch (e[0])
+			{
+			case 'p':return bgfx::Attrib::Position;
+			case 'n':return bgfx::Attrib::Normal;
+			case 'T':return bgfx::Attrib::Tangent;
+			case 'b':return bgfx::Attrib::Bitangent;
+			case 'i':return bgfx::Attrib::Indices;
+			case 'w':return bgfx::Attrib::Weight;
+			case 't': {
+				auto channel = e[2] - '0';				
+				return bgfx::Attrib::Enum(bgfx::Attrib::TexCoord0 + channel);
+			}
+			case 'c': {
+				auto channel = e[2] - '0';
+				return bgfx::Attrib::Enum(bgfx::Attrib::Color0 + channel);				
+			}
+			default:
+				printf("not support type, %d", e[0]);
+				return bgfx::Attrib::Count;
+			}
+		};
 
-//static bool
-//ReadMeshData(const std::string &filename, mesh_data &md) {
-//	std::ifstream iff(filename, std::ios::binary|std::ios::in);
-//	if (!iff)
-//		return false;
-//
-//	auto read_bounding = [](std::istream &iff, Bounding &bounding) {
-//		std::string line;
-//		while (std::getline(iff, line)) {
-//			const auto &elems = Split(line, ':');
-//			
-//		}
-//	};
-//
-//
-//	auto read_node = [&](std::istream &iff, char* &buffer) {
-//
-//	};
-//
-//
-//	return true;
-//}
+		auto attrib = get_attrib(e);
 
-static bool
-BindMeshDataToLuaObj(lua_State *L, const mesh_data &md) {
+		uint8_t num = e[1] - '0';
+		auto get_type = [](const std::string &e) {
+			switch (e[5]){
+			case 'f': return bgfx::AttribType::Float;
+			case 'h': return bgfx::AttribType::Half;
+			case 'u': return bgfx::AttribType::Uint8;
+			case 'U': return bgfx::AttribType::Uint10;
+			case 'i': return bgfx::AttribType::Int16;
+			default:return bgfx::AttribType::Count;
+			}
+		};
 
-	return true;
+		auto type = get_type(e);
+		bool asInt = e[4] == 'i';
+		bool normalize = e[3] == 'n';
+		decl.add(attrib, num, type, normalize, asInt);
+	}
+	decl.end();
+	return decl;
 }
 
-int
-ConvertFBX(lua_State *L) {
+static std::string
+gen_vblayout_from_decl(const bgfx::VertexDecl &decl) {
+	std::string vblayout;
+	for (uint32_t ii = bgfx::Attrib::Position; ii < bgfx::Attrib::Count; ++ii) {
+		auto attrib = bgfx::Attrib::Enum(ii);
+		if (decl.has(attrib)) {			
+			uint8_t num;
+			bgfx::AttribType::Enum type;
+			bool normalize, asInt;
+			decl.decode(attrib, num, type, normalize, asInt);
+
+			auto get_attrib_name = [](bgfx::Attrib::Enum a, uint8_t num) {
+				auto numstr = std::to_string(num);				
+				const char* names[bgfx::Attrib::Count] = {
+					"p0", "n0", "T0", "b0", 
+					"c0", "c0", "c0", "c0",
+					"i0", "w0", 
+					"t0", "t1","t2","t3",
+					"t4", "t5","t6","t7",
+				};
+
+				assert(bgfx::Attrib::Count > a);
+
+				const char* name = names[a];
+				return name[0] + std::to_string(num) + name[1];
+			};
+
+			if (!vblayout.empty())
+				vblayout += '|';
+			vblayout += get_attrib_name(attrib, num);
+			vblayout += normalize ? 'n' : 'N';
+			vblayout += asInt ? 'i' : 'I';
+
+			auto get_type_char = [](bgfx::AttribType::Enum type) {
+				char cc[bgfx::AttribType::Count] = {
+					'u', 'U', 'i', 'h', 'f'
+				};
+				assert(bgfx::AttribType::Count > type);
+				return cc[type];
+			};
+
+			vblayout += get_type_char(type);
+		}
+	}
+
+	return vblayout;
+};
+
+
+static void 
+LoadBGFXMesh(const std::string& filePath, mesh_data &md){
+#define BGFX_CHUNK_MAGIC_VB  BX_MAKEFOURCC('V', 'B', ' ', 0x1)
+#define BGFX_CHUNK_MAGIC_IB  BX_MAKEFOURCC('I', 'B', ' ', 0x0)
+#define BGFX_CHUNK_MAGIC_IBC BX_MAKEFOURCC('I', 'B', 'C', 0x0)
+#define BGFX_CHUNK_MAGIC_PRI BX_MAKEFOURCC('P', 'R', 'I', 0x0)
+
+	bx::FileReader reader;		
+
+	bx::open(&reader, filePath.c_str());
+
+	uint32_t chunk;
+
+	mesh_data::group group;
+	while (4 == bx::read(&reader, chunk)){		
+		switch (chunk){
+		case BGFX_CHUNK_MAGIC_VB:{
+			auto &bounding = group.bounding;
+			bx::read(&reader, bounding.sphere);
+			bx::read(&reader, bounding.aabb);
+			glm::mat4x4 obb;
+			bx::read(&reader, obb);
+
+			bgfx::VertexDecl decl;
+			bgfx::read(&reader, decl);
+			group.vb_layout = gen_vblayout_from_decl(decl);
+
+			uint16_t stride = decl.getStride();
+			uint16_t numVertices;
+			bx::read(&reader, numVertices);
+			group.num_vertices = numVertices;
+			const uint32_t vertexSizeInBytes = numVertices*stride;
+			group.vbraw = new uint8_t[vertexSizeInBytes];
+			bx::read(&reader, group.vbraw, vertexSizeInBytes);	
+		}
+		break;
+
+		case BGFX_CHUNK_MAGIC_IB: {
+			uint32_t numIndices;
+			bx::read(&reader, numIndices);
+			group.num_indices = numIndices;
+			group.ib_format = 16;
+			const uint32_t sizeInBytes = numIndices * 2;	// bgfx assume only use uint16_t type to save indices
+			group.ibraw = new uint8_t[sizeInBytes];
+			bx::read(&reader, group.ibraw, sizeInBytes);
+		}
+		break;
+		case BGFX_CHUNK_MAGIC_IBC:{
+			uint32_t numIndices;
+			bx::read(&reader, numIndices);
+
+			group.ibraw = new uint8_t[numIndices * 2];			
+
+			uint32_t compressedSize;
+			bx::read(&reader, compressedSize);
+
+			std::vector<uint8_t> compressedIndices(compressedSize);
+			bx::read(&reader, &compressedIndices[0], compressedSize);
+
+			ReadBitstream rbs(compressedIndices.data(), compressedSize);
+			DecompressIndexBuffer((uint16_t*)group.ibraw, numIndices / 3, rbs);
+		}
+		break;
+		case BGFX_CHUNK_MAGIC_PRI: {
+			auto read_name = [&md, &reader]() {
+				uint16_t len;
+				bx::read(&reader, len);
+
+				std::string name;
+				name.resize(len);
+				bx::read(&reader, const_cast<char*>(name.c_str()), len);
+				
+				return name;				
+			};
+
+			group.name = read_name();
+
+			uint16_t num;
+			bx::read(&reader, num);
+
+			group.primitives.resize(num);
+
+			for (uint32_t ii = 0; ii < num; ++ii) {
+				mesh_data::group::primitive_info &prim = group.primitives[ii];
+				prim.name = read_name();
+				
+				uint32_t startIndex, numIndices;
+				uint32_t startVertex, numVertices;
+
+				bx::read(&reader, startIndex);
+				prim.start_index = startIndex;
+				bx::read(&reader, numIndices);
+				prim.num_indices = numIndices;
+				bx::read(&reader, startVertex);
+				prim.start_vertex = startVertex;
+				bx::read(&reader, numVertices);
+				prim.num_vertices = numVertices;
+
+				bx::read(&reader, prim.bounding.sphere);
+				bx::read(&reader, prim.bounding.aabb);
+
+				glm::mat4x4 obb;
+				bx::read(&reader, obb);
+			}
+
+			md.groups.push_back(std::move(group));			
+		}
+		break;
+
+		default:
+			printf("%08x at %d", chunk, int32_t((bx::seek(&reader))));
+			break;
+		}
+	}
+
+	bx::close(&reader);
+}
+
+static void
+convert_32bit_to_16bit(const uint32_t *src, uint16_t* dst, uint32_t num) {
+	for (auto ii = 0UL; ii < num; ++ii) {
+		dst[ii] = uint16_t(src[ii]);
+	}
+}
+
+static void 
+calc_tangents(mesh_data &md) {
+	for (auto &g : md.groups) {
+		auto newlayout = g.vb_layout;
+		newlayout += "|T30nIf";
+		newlayout += "|b30nIf";
+
+		auto dstdecl = gen_vertex_decl_from_vblayout(newlayout);
+		auto srcdecl = gen_vertex_decl_from_vblayout(g.vb_layout);
+
+		auto stride = dstdecl.getStride();
+		auto sizeInBytes = g.num_vertices * stride;
+		uint8_t* buffer = new uint8_t[sizeInBytes + g.num_vertices * sizeof(float) * 6];	// tangent and bitangent have 6 float
+
+		bgfx::vertexConvert(dstdecl, buffer, srcdecl, g.vbraw, uint32_t(g.num_vertices));
+
+		if (g.ib_format == 32) {
+			std::vector<uint16_t> u16buffer(g.num_indices);
+			
+			convert_32bit_to_16bit((const uint32_t*)g.ibraw, &u16buffer[0], uint32_t(g.num_indices));
+			calcTangents(buffer, uint32_t(g.num_vertices), dstdecl, &u16buffer[0], uint32_t(g.num_indices));
+		} else {
+			calcTangents(buffer, uint32_t(g.num_vertices), dstdecl, (const uint16_t*)g.ibraw, uint32_t(g.num_indices));
+		}
+
+		
+
+		delete[]g.vbraw;
+		g.vb_layout = newlayout;
+		g.vbraw = buffer;
+	}
+};
+
+static void flip_uv(mesh_data &md) {
+	for (auto &g : md.groups) {
+		
+		auto decl = gen_vertex_decl_from_vblayout(g.vb_layout);
+		for (auto ii = 0; ii < 8; ++ii) {
+			bgfx::Attrib::Enum a = bgfx::Attrib::Enum(bgfx::Attrib::TexCoord0 + ii);
+			if (decl.has(a)) {
+				for (auto iv = 0; iv < g.num_vertices; ++iv) {
+					float output[4];
+					bgfx::vertexUnpack(output, a, decl, g.vbraw, iv);
+
+					output[1] = -output[1];
+					
+					uint8_t num;
+					bgfx::AttribType::Enum type;
+					bool normalize, asInt;					
+					decl.decode(a, num, type, normalize, asInt);
+					bgfx::vertexPack(output, normalize, a, decl, g.vbraw, iv);
+				}
+
+			}
+		}
+		
+	}
 	
-	luaL_checktype(L, 1, LUA_TSTRING);
-	luaL_checktype(L, 2, LUA_TSTRING);
-	luaL_checktype(L, 3, LUA_TTABLE);		
+}
 
-	const std::string fbx_path = lua_tostring(L, 1);
-	const std::string output_path = lua_tostring(L, 2);
+static int convertBGFX(lua_State *L, const std::string &srcpath, const std::string &outputfile, const load_config &config) {
+	mesh_data md;
+	LoadBGFXMesh(srcpath, md);
+	
+	auto create_boundings = [](mesh_data &md) {
+		auto &b = md.bounding;
+		for (auto &g : md.groups) {
+			auto &gb = g.bounding;
+			for (auto &p : g.primitives) {
+				gb.Merge(p.bounding);
+			}
+			b.Merge(gb);
+		}
+	};
+	create_boundings(md);
 
-	LoadFBXConfig config;
-	ExtractLoadConfig(L, 3, config);
+	if (config.NeedCreateTangentSpaceData()){
+		calc_tangents(md);
+	}
 
+	if (config.NeedFlipUV()) {
+		flip_uv(md);
+	}
+
+	if (!WriteMeshData(md, srcpath, outputfile)) {
+		luaL_error(L, "save to mesh file : %s failed!", outputfile.c_str());
+	}
+
+	return 0;
+}
+
+static bool 
+convertFBX(lua_State *L, const std::string &srcpath, const std::string &outputfile, const load_config &config) {
 	uint32_t import_flags = aiProcessPreset_TargetRealtime_MaxQuality;
 	if (config.NeedCreateTangentSpaceData()) {
 		import_flags |= aiProcess_CalcTangentSpace;
@@ -817,158 +1122,66 @@ ConvertFBX(lua_State *L) {
 	}
 
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(fbx_path, import_flags);
+	const aiScene* scene = importer.ReadFile(srcpath, import_flags);
 	if (!scene) {
-		luaL_error(L, "Error loading: %s", fbx_path.c_str());
-		return 0;
+		luaL_error(L, "Error loading: %s", srcpath.c_str());
+		return false;
 	}
 
 	aiNode* root_node = scene->mRootNode;
-	if (!root_node)	{
-		luaL_error(L, "Root node Invalid!");
-		return 0;
+	if (!root_node) {
+		luaL_error(L, "root not is invalid, source file : %s", srcpath);
+		return false;
 	}
 
-	InitElemMap();
 	luaL_checkstack(L, 10, "");
 
+	InitElemMap();
+
 	mesh_data md;
-	SceneToMeshData(scene, config, md);
-
-	WriteMeshData(md, fbx_path, output_path);
-	
-	//// node = {}
-	//lua_createtable(L, 0, 2);
-
-	//// materials = {}
-	//lua_newtable(L);
-	//LoadMaterials(L, scene);
-
-	//// node.materials = materials
-	//lua_setfield(L, -2, "materials");
+	if (!SceneToMeshData(scene, config, md)) {
+		luaL_error(L, "convert from assimp scene to mesh data failed, source file %s, dst file : %s", 
+			srcpath.c_str(), outputfile.c_str());
+		return false;
+	}
 
 
-	//AABB aabbGroup;
-	//// group = {}
-	//lua_newtable(L);
-	//{
-	//	MeshMaterialArray mm;
-	//	SeparateMeshByMaterialID(scene, mm);
+	if (!WriteMeshData(md, srcpath, outputfile)) {
+		luaL_error(L, "save to file : %s, failed!", outputfile.c_str());
+		return false;
+	}
+	return true;
+}
 
-	//	for (size_t ii = 0; ii < mm.size(); ++ii) {
-	//		AABB aabbMesh;
-	//		// group[ii+1] = {}
-	//		lua_newtable(L);
+static int 
+convertSource(lua_State *L, std::function<bool (lua_State *, const std::string&, const std::string &, const load_config &)> convertop) {
+	luaL_checktype(L, 1, LUA_TSTRING);
+	luaL_checktype(L, 2, LUA_TSTRING);
+	luaL_checktype(L, 3, LUA_TTABLE);
 
-	//		const auto &meshes = mm[ii];
+	const std::string src_path = lua_tostring(L, 1);
+	const std::string output_path = lua_tostring(L, 2);
 
-	//		if (meshes.empty())
-	//			continue;
+	load_config config;
+	ExtractLoadConfig(L, 3, config);
+	convertop(L, src_path, output_path, config);
+	return 0;
+}
 
-	//		const std::string vlayout = CreateVertexLayout(meshes.back(), config.layout);
+int 
+lconvertBGFXBin(lua_State *L) {
+	return convertSource(L, convertBGFX);	
+}
 
-	//		size_t vertexSizeInBytes = 0, indexSizeInBytes = 0, indexElemSizeInBytes = 0;
-	//		CalcBufferSize(meshes, vlayout, config, vertexSizeInBytes, indexSizeInBytes, indexElemSizeInBytes);
+int
+lconvertFBX(lua_State *L) {	
+	return convertSource(L, convertFBX);
+}
 
-	//		float *vertices = (float*)(lua_newuserdata(L, vertexSizeInBytes));
-	//		lua_setfield(L, -2, "vb_raw");
-
-	//		lua_pushnumber(L, (lua_Number)vertexSizeInBytes);
-	//		lua_setfield(L, -2, "numVertices");
-
-	//		lua_pushstring(L, vlayout.c_str());
-	//		lua_setfield(L, -2, "vbLayout");
-
-	//		uint8_t *indices = reinterpret_cast<uint8_t*>(lua_newuserdata(L, indexSizeInBytes));
-	//		lua_setfield(L, -2, "ib_raw");
-
-	//		lua_pushnumber(L, (lua_Number)indexSizeInBytes);
-	//		lua_setfield(L, -2, "numIndices");
-
-	//		lua_pushnumber(L, (lua_Number)(indexElemSizeInBytes == 4 ? 32 : 16));
-	//		lua_setfield(L, -2, "ibFormat");
-
-	//		// prim = {}
-	//		lua_createtable(L, (int)meshes.size(), 0);
-
-	//		size_t startVB = 0, startIB = 0;
-	//		for (size_t jj = 0; jj < meshes.size(); ++jj) {
-	//			// prim[jj+1] = {}
-	//			lua_newtable(L);
-
-	//			aiMesh *mesh = meshes[jj];
-
-	//			aiMatrix4x4 transform;
-	//			FindTransform(scene, scene->mRootNode, mesh, transform);
-	//			{
-	//				const ai_real *p = &transform.a1;
-	//				lua_createtable(L, 16, 0);
-	//				for (uint32_t ii = 0; ii < 16; ++ii) {
-	//					lua_pushnumber(L, *p++);
-	//					lua_seti(L, -2, ii + 1);
-	//				}
-
-	//				lua_setfield(L, -2, "transform");
-	//			}
-
-	//			lua_pushstring(L, mesh->mName.C_Str());
-	//			lua_setfield(L, -2, "name");
-
-	//			lua_pushnumber(L, mesh->mMaterialIndex + 1);
-	//			lua_setfield(L, -2, "materialIdx");
-
-	//			// vertices
-	//			CopyMeshVertices(mesh, vlayout, config, vertices);
-
-	//			lua_pushnumber(L, (lua_Number)startVB);
-	//			lua_setfield(L, -2, "startVertex");
-
-	//			lua_pushnumber(L, (lua_Number)mesh->mNumVertices);
-	//			lua_setfield(L, -2, "numVertices");
-
-	//			startVB += mesh->mNumVertices;
-
-	//			// indices
-	//			size_t meshIndicesCount = CopyMeshIndices(mesh, config, indices);
-	//			lua_pushnumber(L, (lua_Number)startIB);
-	//			lua_setfield(L, -2, "startIndex");
-
-	//			lua_pushnumber(L, (lua_Number)meshIndicesCount);
-	//			lua_setfield(L, -2, "numIndices");
-
-
-	//			//aabb
-	//			AABB aabbPrim;
-	//			aabbPrim.Init(mesh->mVertices, mesh->mNumVertices);
-	//			push_aabb(L, aabbPrim, -2);
-	//			push_sphere(L, aabbPrim, -2);
-
-
-	//			lua_seti(L, -2, jj + 1);
-
-	//			aabbMesh.Merge(aabbPrim);
-	//		}
-
-	//		lua_setfield(L, -2, "prim");
-
-	//		push_aabb(L, aabbMesh, -2);
-	//		push_sphere(L, aabbMesh, -2);
-
-	//		// group[ii+1] = {}
-	//		lua_seti(L, -2, ii + 1);
-
-	//		aabbGroup.Merge(aabbMesh);
-	//	}
-	//}
-
-	//// node.group = group
-	//lua_setfield(L, -2, "group");
-
-	//// node.aabb 
-	//push_aabb(L, aabbGroup, -2);
-	//// node.sphere
-	//push_sphere(L, aabbGroup, -2);
-	return 1;
+extern "C" {
+	int32_t _main_(int32_t _argc, char** _argv) {
+		return 0;
+	}
 }
 
 

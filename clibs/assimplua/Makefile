@@ -8,6 +8,7 @@ ASSIMPLIB = -L$(ASSIMPROOT)/build/assimp/code -lassimp -L$(ASSIMPROOT)/build/ass
 
 BGFXSRC = $(BGFXROOT)/bgfx
 BXSRC = $(BGFXROOT)/bx
+BIMG = $(BGFXROOT)/bimg
 
 
 CFLAGS = -O2 -Wall -lstdc++ -std=c++17
@@ -23,7 +24,7 @@ BGFXUTILLIB = -lexample-common$(BUILD_CFG)
 
 BXLIB = -lbx$(BUILD_CFG)
 #BGFX3RDINC = -I$(BGFXSRC)/3rdparty
-BGFXINC = -I$(BGFXSRC)/include -I$(BXSRC)/include -I$(BXSRC)/include/compat/mingw -I$(BGFXSRC)/src -I$(BGFXSRC)/examples/common
+BGFXINC = -I$(BGFXSRC)/include -I$(BXSRC)/include -I$(BXSRC)/include/compat/mingw -I$(BGFXSRC)/src -I$(BGFXSRC)/examples/common -I$(BIMG)/include
 GLM_INC := -I$(ANT3RD)/glm
 $(ODIR) : 
 	mkdir $@
