@@ -53,6 +53,7 @@ function loader.load(filepath)
 			layout string can be used to create bgfx_vertex_decl_t
 		]] 
 		layout = "p3|n30nIf|T|b|t20|c30",
+		--layout = "p3|n30nIf|t20|c30",
 		flags = {
 			invert_normal = false,
 			flip_uv = true,
@@ -112,8 +113,8 @@ function loader.load(filepath)
 
 		local groups = meshgroup.groups
 
-		local vb_data = {"!", "", 0, nil}
-		local ib_data = {"", 0, nil}
+		local vb_data = {"!", "", 1, nil}
+		local ib_data = {"", 1, nil}
 
 		for _, g in ipairs(groups) do
 			local decl, stride = create_decl(g.vb_layout)
