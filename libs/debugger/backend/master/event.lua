@@ -59,7 +59,6 @@ function event.output(category, output, source, line)
     }
 end
 
-
 function event.terminated()
     mgr.sendToClient {
         type = 'event',
@@ -67,6 +66,18 @@ function event.terminated()
         event = 'terminated',
         body = {
             restart = false,
+        }
+    }
+end
+
+function event.loadedSource(reason, source)
+    mgr.sendToClient {
+        type = 'event',
+        seq = mgr.newSeq(),
+        event = 'loadedSource',
+        body = {
+            reason = reason,
+            source = source,
         }
     }
 end

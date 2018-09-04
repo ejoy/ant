@@ -136,6 +136,7 @@ function m.create(source)
     end
     local newSource = create(source)
     sourcePool[source] = newSource
+    ev.emit('loadedSource', 'new', newSource)
     return newSource
 end
 
@@ -182,6 +183,12 @@ end
 
 function m.clientPath(p)
     return fs.relative(p, workspaceFolder, '/')
+end
+
+function m.all_loaded(p)
+    for _, source in pairs(sourcePool) do
+        ev.emit('loadedSource', 'new', source)
+    end
 end
 
 return m

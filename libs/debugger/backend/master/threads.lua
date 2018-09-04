@@ -135,4 +135,8 @@ function CMD.setVariable(w, req)
     })
 end
 
+function CMD.loadedSource(w, req)
+    event.loadedSource(req.reason, req.source)
+end
+
 return CMD

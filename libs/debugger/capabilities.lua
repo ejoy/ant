@@ -7,6 +7,7 @@ return {
     supportsExceptionInfoRequest = true,
     supportsLogPoints = true,
     supportsEvaluateForHovers = true,
+    supportsLoadedSourcesRequest = true,
     exceptionBreakpointFilters = {
         {
             default = false,

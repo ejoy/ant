@@ -383,4 +383,13 @@ function request.setVariable(req)
     })
 end
 
+function request.loadedSources(req)
+    response.success(req, {
+        sources = {}
+    })
+    mgr.broadcastToWorker {
+        cmd = 'loadedSources'
+    }
+end
+
 return request

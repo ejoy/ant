@@ -60,6 +60,14 @@ ev.on('output', function(category, output, source, line)
     }
 end)
 
+ev.on('loadedSource', function(reason, source)
+    sendToMaster {
+        cmd = 'loadedSource',
+        reason = reason,
+        source = source
+    }
+end)
+
 --function print(...)
 --    local n = select('#', ...)
 --    local t = {}
@@ -264,6 +272,10 @@ function CMD.exceptionInfo(pkg)
             stackTrace = exceptionTrace,
         }
     }
+end
+
+function CMD.loadedSources()
+    source.all_loaded()
 end
 
 function CMD.stop(pkg)
