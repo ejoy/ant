@@ -12,8 +12,7 @@ end
 
 return function(lk, readmode)
 	local c = assetmgr.load(lk)
-	local meshpath = c.mesh_src	
-	
+	local meshpath = c.mesh_src		
 	meshpath = path.join(assetmgr.assetdir(), meshpath)
 	if not fs.exist(meshpath) then
 		print("file not exist : ", meshpath)

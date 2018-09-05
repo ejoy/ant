@@ -1,4 +1,4 @@
 *.test packfile.test
 *.sc packfile.compileshadersource
 .*[/\\]?shaders[/\\]src[/\\].*[vfc]s_.* packfile.compileshadersource reg
-assets[/\\]meshes[/\\].+ packfile.convertmesh reg
+assets[/\\][^/\\]+[/\\]meshes[/\\].+ packfile.convertmesh reg
