@@ -101,11 +101,11 @@ struct mesh_data {
 	std::vector<mesh_material_data> materials;
 	struct group {
 		group() 
-			: vbraw(nullptr)
-			, num_vertices(0)
-			, ibraw(nullptr)
-			, num_indices(0)
+			: num_vertices(0)
+			, vbraw(nullptr)
 			, ib_format(0)
+			, num_indices(0)
+			, ibraw(nullptr)			
 		{}
 
 		group(group &&tmp) {

@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\clibs\assimplua\antmesh_converter.cpp" />
     <ClCompile Include="..\..\clibs\assimplua\assimplua.cpp" />
-    <ClCompile Include="..\..\clibs\assimplua\fbxhelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\assimplua\meshdata.h" />
