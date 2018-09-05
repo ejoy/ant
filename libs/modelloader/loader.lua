@@ -1,4 +1,4 @@
-local meshreader = require"assimplua"
+local meshcreator = require "assimplua"
 local bgfx = require "bgfx"
 
 local fu = require "filesystem.util"
@@ -14,9 +14,9 @@ local function load_from_source(filepath, config)
 	if not fs.exist(antmeshfile) or fu.file_is_newer(filepath, antmeshfile) then		
 		local ext = path.ext(filepath):lower()
 		if ext == "fbx" then
-			meshreader.convert_FBX(filepath, antmeshfile, config)		
+			meshcreator.convert_FBX(filepath, antmeshfile, config)		
 		elseif ext == "bin" then
-			meshreader.convert_BGFXBin(filepath, antmeshfile, config)
+			meshcreator.convert_BGFXBin(filepath, antmeshfile, config)
 		else 
 			error(string.format("unknown ext : %s", ext))
 		end
