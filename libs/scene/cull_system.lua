@@ -15,20 +15,23 @@ function cull_sys:update()
 		local e = world[eid]
 		local filter = e.primitive_filter		
 		local view, proj = mu.view_proj_matrix(ms, e)
+		-- plane is in world space
 		local planes = math3d_baselib.extract_planes(ms(view, proj, "*m"))
 		
 		local newfilter_result = {}
 		local results = filter.result
-		for _, prim in ipairs(results) do
-			local srt = ms({type="srt",s=prim.srt.s, r=prim.srt.r, t=prim.srt.t}, "m")
+		for _, prim in ipairs(results) do			
+			local psrt = prim.srt
+			local srt = ms({type="srt",s=psrt.s, r=psrt.r, t=psrt.t}, "m")
 			local function need_filter_out()
-				local oriaabb = prim.aabb
-				if oriaabb == nil then
+				local group = prim.mgroup
+				local bounding = group.bounding
+				if bounding == nil then
 					return false
 				end
 
-				local aabb = math3d_baselib.transform_aabb(srt, oriaabb)
-				return "outside" == math3d_baselib.interset(planes, aabb)				
+				local aabb = math3d_baselib.transform_aabb(srt, bounding.aabb)
+				return "outside" == math3d_baselib.intersect(planes, aabb)				
 			end
 
 			if not need_filter_out() then
