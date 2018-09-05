@@ -110,25 +110,25 @@ function add_entity_sys:init()
 		lentity.can_render.visible = true
 	end
 
-     --do
-      --   local bunny_eid = world:new_entity("position", "rotation", "scale",
-	 --		"can_render", "mesh", "material",
-	 --		"name", "serialize",
-      --       "can_select")
-      --   local bunny = world[bunny_eid]
-      --   bunny.name.n = "bunny"
-     --
-      --   -- should read from serialize file
-      --   ms(bunny.scale.v, {2, 2, 2, 0}, "=")
-      --   ms(bunny.position.v, {0, 0, 0, 1}, "=")
-	 --	ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
-     --
-	 --	bunny.mesh.path = "bunny.mesh"
-	 --	component_util.load_mesh(bunny)
-     --
-	 --	bunny.material.content[1] = {path = "bunny.material", properties = {}}
-	 --	component_util.load_material(bunny)
-	 --end
+     do
+        local bunny_eid = world:new_entity("position", "rotation", "scale",
+	 		"can_render", "mesh", "material",
+	 		"name", "serialize",
+            "can_select")
+        local bunny = world[bunny_eid]
+        bunny.name.n = "bunny"
+     
+        -- should read from serialize file
+        ms(bunny.scale.v, {2, 2, 2, 0}, "=")
+        ms(bunny.position.v, {0, 0, 0, 1}, "=")
+	 	ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
+     
+	 	bunny.mesh.path = "bunny.mesh"
+	 	component_util.load_mesh(bunny)
+     
+	 	bunny.material.content[1] = {path = "bunny.material", properties = {}}
+	 	component_util.load_material(bunny)
+	 end
 
     
 	-- do	-- pochuan
