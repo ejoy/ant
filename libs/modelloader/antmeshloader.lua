@@ -33,7 +33,7 @@ end
 
 return function (filename)
 	local function openfile(filename)
-		local ff = io.open(filename, "rb")
+		local ff = assert(io.open(filename, "rb"))
 		-- local content = ff:read("a")
 		-- ff:close()
 		-- local readit = 1
@@ -59,10 +59,22 @@ return function (filename)
 		-- 	return elem, value
 
 		-- end
+		local function read(size)
+			if ff == nil then
+				error("file is close and release, but still accessed, filename : ", filename)
+			end
+			return ff:read(size)
+		end
+
+		local function close()
+			ff:close()
+			ff = nil
+		end
+
 		return function ()
-			local prefix = ff:read(4)	-- full content size and elem size
+			local prefix = read(4)	-- full content size and elem size
 			if prefix == nil or #prefix < 4 then
-				ff:close()
+				close()
 				return nil
 			end
 
@@ -72,10 +84,10 @@ return function (filename)
 			end
 
 			assert(fullsize > 4)
-			local elemsize = uint_unpack(ff:read(4))
-			local elem = ff:read(elemsize)
+			local elemsize = uint_unpack(read(4))
+			local elem = read(elemsize)
 			local valuesize = fullsize - elemsize - 8
-			local value = ff:read(valuesize)			
+			local value = read(valuesize)			
 			return elem, value
 		end
 	end

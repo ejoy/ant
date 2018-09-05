@@ -111,13 +111,13 @@ struct mesh_data {
 		group(group &&tmp) {
 			ibraw = tmp.ibraw;
 			num_indices = tmp.num_indices;
+			ib_format = tmp.ib_format;
 
 			vbraw = tmp.vbraw;
 			num_vertices = tmp.num_vertices;
+			vb_layout = std::move(tmp.vb_layout);
 	
 			name = std::move(tmp.name);
-			vb_layout = std::move(tmp.vb_layout);
-
 			primitives = std::move(tmp.primitives);
 			
 			tmp.ibraw = nullptr;
