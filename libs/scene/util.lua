@@ -17,13 +17,11 @@ util.__index = util
 local world = nil
 
 function util.start_new_world(input_queue, fbw, fbh, module_files)
-	local modules = asset.load(module_files)
---[[
+	local modules = {}
 	for _, mfile in ipairs(module_files) do
 		local m = asset.load(mfile)
 		table.move(m, 1, #m, #modules + 1, modules)
-	end
-	--]]
+	end	
 	world = ecs.new_world {
 		modules = modules,
 		update_bydepend = true,

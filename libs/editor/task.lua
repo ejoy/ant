@@ -67,9 +67,7 @@ end
 function task.loop(f, traceback)
 	local n = #tasklist
 	if n == 0 then
-	--	iup.SetIdle(idlefunc)
-        --  todo iOS
---[[        print("task idle")]]
+		iup.SetIdle(idlefunc)        
 	end
 	local co = coroutine.create(
 		function()
