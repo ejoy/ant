@@ -59,20 +59,16 @@ function shader_mgr.get_compile_renderer_name()
 end
 
 local function get_full_filename(relative_name)
-	local ext = path.ext(relative_name)
-	
-	if ext ~= nil then
-		local subshaderfolder = "shaders/src"
-		local filename = path.join(subshaderfolder, relative_name)
-		return assetmgr.find_valid_asset_path(filename)
-	end
+	assert(path.ext(relative_name) == nil)
 
-	local rt_path = shader_mgr.get_shader_rendertype_path()
-	return assetmgr.find_valid_asset_path(path.join("shaders", rt_path, relative_name .. ".bin"))
+	local subshaderfolder = "shaders/src"
+	return path.join(assetmgr.assetdir(), subshaderfolder, relative_name)
+	-- local rt_path = shader_mgr.get_shader_rendertype_path()
+	-- return assetmgr.find_valid_asset_path(path.join("shaders", rt_path, relative_name .. ".bin"))
 end
 
 local function load_shader(name)
-	local filename = get_full_filename(name)	
+	local filename = get_full_filename(name)
 	local f = assert(io.open(assert(filename), "rb"))
 	local data = f:read "a"
 	f:close()

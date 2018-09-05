@@ -72,7 +72,7 @@ do
 	local function list_all_sha1(folder)
 		local sha1list = {}
 		local function filter(subfolder)
-			for name in fu.dir(subfolder, {"root"}) do
+			for name in path.dir(subfolder, {"root"}) do
 				local fullpath = path.join(subfolder, name)
 				if path.isdir(fullpath) then
 					filter(fullpath)
@@ -147,7 +147,7 @@ end
 local function folder_sha1(subfolder)
 	local function gen_item_list(subfolder)
 		local t = {}
-		for name in fu.dir(subfolder, {".repo"}) do
+		for name in path.dir(subfolder, {".repo"}) do
 			local fullpath = path.join(subfolder, name)
 			local item
 			if path.isdir(fullpath) then

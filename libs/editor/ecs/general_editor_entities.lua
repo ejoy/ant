@@ -33,7 +33,7 @@ function general_editor_entites:init()
 		axis.mesh.path = ""	-- runtime mesh info
 		axis.mesh.assetinfo = {
 			handle = {
-				group = {
+				groups = {
 					{
 						vdecl = vdecl,
 						vb = bgfx.create_vertex_buffer({"fffd",
@@ -103,7 +103,7 @@ function general_editor_entites:init()
 		grid.mesh.path = ""
         grid.mesh.assetinfo = {
 			handle = {
-				group = {
+				groups = {
 					{
 						vdecl = vdecl,
 						vb = bgfx.create_vertex_buffer(
@@ -149,7 +149,7 @@ function general_editor_entites:init()
 		frusutm_debug.mesh.path = ""
         frusutm_debug.mesh.assetinfo = {
 			handle = {
-				group = {
+				groups = {
 					{
 						vdecl = vdecl,
 						vb = bgfx.create_vertex_buffer(

@@ -266,7 +266,7 @@ function repo:build_index(filepath, localcache, duplicate_cache)
 
 	local branch_modify = false
 	local currentpath = path.join(rootpath, filepath)
-	for name in fu.dir(currentpath, {".repo"}) do
+	for name in path.dir(currentpath, {".repo"}) do
 		local function create_item()
 			local itempath = path.join(filepath, name)
 			local fullpath = path.join(rootpath, itempath)

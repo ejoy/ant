@@ -133,7 +133,7 @@ function path.isfile(filepath)
 end
 
 function path.remove(subpath)
-	for name in fu.dir(subpath) do	
+	for name in path.dir(subpath) do	
 		local fullpath = path.join(subpath, name)
 		if path.isdir(fullpath) then
 			path.remove(fullpath)
@@ -144,6 +144,55 @@ function path.remove(subpath)
 
 	fs.rmdir(subpath)
 end
+
+function path.dir(subfolder, filters)
+	local oriiter, d, idx = fs.dir(subfolder)
+
+	local function iter(d)
+		local name = oriiter(d)
+		if name == "." or name == ".." then
+			return iter(d)
+		end
+		if filters then
+			for _, f in ipairs(filters) do
+				if f == name then
+					return iter(d)
+				end
+			end
+		end
+		return name
+	end
+	return iter, d, idx
+end
+
+function path.listfiles(subfolder, files, filter_exts)	
+	for p in path.dir(subfolder) do
+		local filepath = path.join(subfolder, p)
+		if path.isdir(filepath) then
+			path.listfiles(filepath, files, filter_exts)
+		else
+			if filter_exts then
+				if type(filter_exts) == "function" then
+					if filter_exts(filepath) then
+						table.insert(files, filepath)
+					end
+				else
+					assert(type(filter_exts) == "table")
+					local ext = path.ext(p)
+					for _, e in ipairs(filter_exts) do
+						if ext == e then
+							table.insert(files, filepath)
+						end
+					end
+				end
+
+			else
+				table.insert(files, filepath)
+			end
+		end
+	end
+end
+
 
 
 return path

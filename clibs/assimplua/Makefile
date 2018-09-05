@@ -8,9 +8,10 @@ ASSIMPLIB = -L$(ASSIMPROOT)/build/assimp/code -lassimp -L$(ASSIMPROOT)/build/ass
 
 BGFXSRC = $(BGFXROOT)/bgfx
 BXSRC = $(BGFXROOT)/bx
+BIMG = $(BGFXROOT)/bimg
 
 
-CFLAGS = -O2 -Wall
+CFLAGS = -O2 -Wall -lstdc++ -std=c++17
 ODIR = o
 CXX = g++
 
@@ -23,15 +24,22 @@ BGFXUTILLIB = -lexample-common$(BUILD_CFG)
 
 BXLIB = -lbx$(BUILD_CFG)
 #BGFX3RDINC = -I$(BGFXSRC)/3rdparty
-BGFXINC = -I$(BGFXSRC)/include -I$(BXSRC)/include -I$(BXSRC)/include/compat/mingw -I$(BGFXSRC)/src -I$(BGFXSRC)/examples/common
+BGFXINC = -I$(BGFXSRC)/include -I$(BXSRC)/include -I$(BXSRC)/include/compat/mingw -I$(BGFXSRC)/src -I$(BGFXSRC)/examples/common -I$(BIMG)/include
+GLM_INC := -I$(ANT3RD)/glm
 $(ODIR) : 
 	mkdir $@
 
-$(ODIR)/luaassimplua.o : assimplua.cpp  | $(ODIR)
-	$(CXX) $(CFLAGS) -c -o $@ $^ -L. $(LUAINC) $(ASSIMPINC) $(BGFXINC)
+#$(CD_LUAOBJS) : $(OCDDIR)/%.o : $(CD_DIR)/src/lua5/%.c | $(OCDDIR)
+#$(ODIR)/luaassimplua.o : assimplua.cpp fbxhelper.cpp  | $(ODIR)
+
+SRC_FILES := assimplua.cpp antmesh_converter.cpp 
+OBJ_FILES := $(patsubst %.cpp,$(ODIR)/%.o,$(SRC_FILES))
+
+$(OBJ_FILES) : $(ODIR)/%.o : %.cpp | $(ODIR)
+	$(CXX) $(CFLAGS) -c -o $@ $^ -L. $(LUAINC) $(ASSIMPINC) $(BGFXINC) $(GLM_INC)
 	
-assimplua.dll : $(ODIR)/luaassimplua.o
-	$(CXX) $(CFLAGS) --shared -o $@ $^ -L. $(LUALIB) $(ASSIMPLIB) $(BGFXLIB) $(BGFXUTILLIB) $(BXLIB)
+assimplua.dll : $(OBJ_FILES)
+	$(CXX) $(CFLAGS) --shared -o $@ $^ -L. $(LUALIB) $(ASSIMPLIB) $(BGFXUTILLIB) $(BGFXLIB) $(BXLIB)
 
 clean :
 	rm -f assimplua.dll

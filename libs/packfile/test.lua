@@ -1,3 +1,3 @@
-return function (lnk)
-	return lnk
+return function (lk)
+	return lk
 end

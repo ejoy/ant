@@ -1,17 +1,21 @@
 local require = import and import(...) or require
 
 local winfile =  require "winfile"
-
 local rawopen = winfile.open or io.open
 
 local rules = {}
 if winfile.exist(".antpack") then
 	for str in io.lines '.antpack' do
-		local f, l = str:find ' '
-		if f then
-			local pattern = str:sub(1, f - 1)
-			local packer =  str:sub(l + 1)
-			pattern = pattern:gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*')
+		local t = {}
+		for m in str:gmatch("[^%s]+") do
+			table.insert(t, m)
+		end
+
+		local pattern, packer, reg = t[1], t[2], t[3]
+		if pattern then			
+			if reg == nil then
+				pattern = pattern:gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*')
+			end
 			rules[#rules+1] = { pattern, packer }
 		end
 	end
@@ -51,9 +55,9 @@ local function need_update(lnk_path, cache_path)
     return not winfile.exist(cache_path)
 end
 
-return function (path, mode)
+return function (filepath, mode)
     if mode and mode:match 'w' then
-        return rawopen(path, mode)
+        return rawopen(filepath, mode)
 	end
 	-- if winfile.exist(path) then
     --     return rawopen(path, mode)
@@ -63,7 +67,7 @@ return function (path, mode)
     --     return nil, path .. ': No such file or directory'
     -- end
     -- local cache_path = 'cache/' .. path
-    -- local lnk_path = path .. '.lnk'
+    -- local lnk_path = path .. '.lk'
     -- if not need_update(lnk_path, cache_path) then
     --     return rawopen(path, mode)
     -- end
@@ -77,17 +81,22 @@ return function (path, mode)
     -- fs.last_write_time(fs.path(cache_path), time)
     -- return rawopen(cache_path, mode)
 
-	local lnk_path = path .. '.lnk'
+	local lk_path = filepath .. '.lk'
 
-    if not winfile.exist(lnk_path) then
-        return rawopen(path, mode)
+    if not winfile.exist(lk_path) then
+        return rawopen(filepath, mode)
 	end
 
-    local packer_path = find_packer(path)
-    if not packer_path then
-        return nil, path .. ': No such file or directory'
+    local packer_path = find_packer(filepath)
+	if not packer_path then
+		local assetmgr = require "asset"
+		local lkcontent = assetmgr.load(lk_path)
+		packer_path = lkcontent.packer
+		if packer_path == nil then
+			return nil, filepath .. ': No such file or directory'
+		end
 	end
 
 	local packer = require(packer_path)
-	return packer(lnk_path, mode)
+	return packer(lk_path, mode)
 end
