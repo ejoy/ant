@@ -267,21 +267,7 @@ function add_entity_sys:init()
 	-- 	hierarchy.save(root, assetpath)
 	-- end
 
-	local hie_materialpath = "mem://hierarchy.material"
-	do
-		
-		fs_util.write_to_file(hie_materialpath, [[
-			shader = {
-				vs = "mesh/vs_mesh",
-				fs = "mesh/fs_mesh",
-			}
-			state = "default.state"
-			properties = {
-				u_time = {name="u_time", type="v4", default={1, 0, 0, 1}}
-			}
-		]])
-	end
-
+	local hie_materialpath = "bunny.material"
     do
         local hierarchy_eid = world:new_entity("editable_hierarchy", "hierarchy_name_mapper",
             "scale", "rotation", "position", 
