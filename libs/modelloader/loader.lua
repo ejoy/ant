@@ -8,62 +8,28 @@ local path = require "filesystem.path"
 local loader = {}
 
 local function load_from_source(filepath, config)
-	local antmeshfile = path.join("cache", path.replace_ext(filepath, "antmesh"))
-	path.create_dirs(path.parent(antmeshfile))
+	-- local antmeshfile = path.join("cache", path.replace_ext(filepath, "antmesh"))
+	-- path.create_dirs(path.parent(antmeshfile))
 
-	if not fs.exist(antmeshfile) or fu.file_is_newer(filepath, antmeshfile) then		
-		local ext = path.ext(filepath):lower()
-		if ext == "fbx" then
-			meshcreator.convert_FBX(filepath, antmeshfile, config)		
-		elseif ext == "bin" then
-			meshcreator.convert_BGFXBin(filepath, antmeshfile, config)
-		else 
-			error(string.format("unknown ext : %s", ext))
-		end
-	end
+	-- if fu.file_is_newer(filepath, antmeshfile) then		
+	-- 	local ext = path.ext(filepath):lower()
+	-- 	if ext == "fbx" then
+	-- 		meshcreator.convert_FBX(filepath, antmeshfile, config)
+	-- 	elseif ext == "bin" then
+	-- 		meshcreator.convert_BGFXBin(filepath, antmeshfile, config)
+	-- 	else 
+	-- 		error(string.format("unknown ext : %s", ext))
+	-- 	end
+	-- end
 
+	path.create_dirs(path.join("cache", filepath))
 	local antmeshloader = require "modelloader.antmeshloader"
-	return antmeshloader(antmeshfile)
+	return antmeshloader(filepath)
 end
 
 function loader.load(filepath)
-	local config = {
-		--[[
-			layout element inlcude 6 char, like : n30nif
-			first char is attribute type, includes:			
-				p	-->	position
-				n	--> normal
-				T	--> tangent
-				b	--> bitangent
-				t	--> texcoord
-				c	--> color
-				i	--> indices
-				w	--> weight
-			second char is element count, can be 1, 2 3 and 4
-			third char is channel index, can be [0, 7], 0 is default number
-			forth char is normalize flag, n for normalize data, N for NOT normalize data
-			fifth char is as integer flag, i for as integer data, I for NOT interger data
-			sixth char is element type, f for float, h for half float, u for uint8, U for uint10, i for int16
-			examples : 
-				n30nif means : 	normal with 3 element(x,y,z) at channel 0 
-								normalize to [0, 1], as integer data, save as float type
-				p3 means: position with 3 element(x,y,z) at channel 0, NOT normalize and NOT as int, using float type
-				T means: tangent with 3 element(x,y,z) at channel 0, NOT normalize and NOT as int, using float type
-			
-			layout string can be used to create bgfx_vertex_decl_t
-		]] 
-		layout = "p3|n30nIf|T|b|t20|c30",
-		--layout = "p3|n30nIf|t20|c30",
-		flags = {
-			invert_normal = false,
-			flip_uv = true,
-			ib_32 = false,	-- if index num is lower than 65535
-		},
-		animation = {
-			load_skeleton = true,
-			ani_list = "all" -- or {"walk", "stand"}
-		},
-	}
+	local modelutil = require "modelloader.util"
+	local config = modelutil.default_config()
 
 	local meshgroup = load_from_source(filepath, config)
 	if meshgroup then
