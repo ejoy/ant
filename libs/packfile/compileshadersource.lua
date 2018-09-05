@@ -30,7 +30,7 @@ local function gen_cache_path(srcpath)
 	assert(#srcpath > #shader_srcsubpath)
 	local subloc = srcpath:find(shader_srcsubpath, 1, true)
 	local relative_path = path.replace_ext(srcpath:sub(subloc + #shader_srcsubpath + 1), "bin")	
-	return "cache/shaders/" .. rt_path .. relative_path
+	return path.join("cache/shaders/" .. rt_path, relative_path)
 end
 
 local function check_compile_shader(srcpath)
