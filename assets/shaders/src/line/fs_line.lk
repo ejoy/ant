@@ -1,2 +1,1 @@
-		shader_src = 'shaders/src/line/fs_line.sc'
-	
+shader_src = 'shaders/src/line/fs_line.sc'

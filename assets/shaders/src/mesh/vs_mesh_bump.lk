@@ -1,2 +1,1 @@
-		shader_src = 'shaders/src/mesh/vs_mesh_bump.sc'
-	
+shader_src = 'shaders/src/mesh/vs_mesh_bump.sc'

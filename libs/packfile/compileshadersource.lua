@@ -58,8 +58,7 @@ return function (lk, readmode)
 
 	local cache_path = gen_cache_path(src)
 	
-	if not fs.exist(cache_path) or 
-		fu.file_is_newer(src, cache_path) then
+	if fu.file_is_newer(src, cache_path) then
 		local outfile = check_compile_shader(src)		
 		assert(outfile == cache_path)		
 	end

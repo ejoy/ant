@@ -24,7 +24,7 @@ local function load_from_source(filepath, config)
 
 	path.create_dirs(path.join("cache", filepath))
 	local antmeshloader = require "modelloader.antmeshloader"
-	return antmeshloader(filepath)
+	return antmeshloader(path.remove_ext(filepath))
 end
 
 function loader.load(filepath)
@@ -33,6 +33,7 @@ function loader.load(filepath)
 
 	local meshgroup = load_from_source(filepath, config)
 	if meshgroup then
+		-- need move to bgfx c module
 		local function create_decl(vb_layout)
 			local decl = {}
 			for v in vb_layout:gmatch("%w+") do 

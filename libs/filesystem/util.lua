@@ -17,6 +17,10 @@ function util.read_from_file(filename)
 end
 
 function util.file_is_newer(check, base)
+	if not fs.exist(base) and fs.exist(check) then
+		return true
+	end
+
 	local base_mode = fs.attributes(base, "mode")
 	local check_mode = fs.attributes(check, "mode")
 
@@ -31,26 +35,6 @@ end
 
 function util.last_modify_time(filename)
 	return fs.attributes(filename, "modification")
-end
-
-function util.dir(subfolder, filters)
-	local oriiter, d, idx = fs.dir(subfolder)
-
-	local function iter(d)
-		local name = oriiter(d)
-		if name == "." or name == ".." then
-			return iter(d)
-		end
-		if filters then
-			for _, f in ipairs(filters) do
-				if f == name then
-					return iter(d)
-				end
-			end
-		end
-		return name
-	end
-	return iter, d, idx
 end
 
 return util

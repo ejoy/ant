@@ -12,10 +12,9 @@ ifeq ($(VERBOSE), ON)
 $(info "export env var 'ANTGE' as $(ROOT_DIR) ")
 endif
 
+.PHONY : all compileshader make_lnfiles copy_bin convertmesh
 
-.PHONY : all compileshader make_lnfiles copy_bin
-
-all : compileshader copy_bin
+all : compileshader copy_bin convertmesh
 	
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 
@@ -24,7 +23,6 @@ SHADER_SRC_PATH := $(SHADER_PATH)/src
 OUT_SHADER_PATH := $(OUT_DIR)/$(SHADER_PATH)/$(SHADER_TYPE_PATH)
 
 SHADER_FILES := $(call rwildcard,$(SHADER_SRC_PATH)/,*.sc)
-FBX_FILES := $(call rwildcard,$(SHADER_SRC_PATH)/,*.fbx)
 #SHADER_FILES := $(shell find $(SHADER_SRC) -name '*.sc')
 
 #varying.def.sc file used for providing input var for vs and fs
@@ -34,7 +32,7 @@ SHADER_DIRS := $(sort $(dir $(SHADER_FILES)))
 TARGET_SHADERFILES := $(patsubst $(SHADER_SRC_PATH)/%.sc,$(OUT_SHADER_PATH)/%.bin,$(SHADER_FILES))
 TARGET_SHADERDIRS := $(sort $(dir $(TARGET_SHADERFILES)))
 
-BIN_RESOURCE_DIRS := meshes assetfiles maps textures hierarchy fonts terrain
+BIN_RESOURCE_DIRS := assetfiles maps textures hierarchy fonts terrain
 ALL_BIN_FILES := $(foreach p,$(BIN_RESOURCE_DIRS),$(call rwildcard,$p/,*.*))
 TARGET_ALL_BIN_FILES := $(addprefix $(OUT_DIR)/,$(ALL_BIN_FILES))
 TARGET_BIN_DIRS := $(sort $(dir $(TARGET_ALL_BIN_FILES)))
@@ -65,13 +63,11 @@ endif
 
 compileshader : $(TARGET_SHADERFILES)
 
+convertmesh :
+	$(LUABIN) ./convertmesh.lua
 
-LK_FILES := $(addsuffix .lk,$(SHADER_FILES) $(FBX_FILES))
-
-make_lkfiles: $(LK_FILES)
-
-$(LK_FILES) : %.lk : %
-	$(LUABIN) ./make_lkfile.lua $^
+make_lk:
+	$(LUABIN) ./make_lkfile.lua
 
 
 # copy other files

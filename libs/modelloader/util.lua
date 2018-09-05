@@ -40,3 +40,5 @@ function util.default_config()
 		},
 	}
 end
+
+return util

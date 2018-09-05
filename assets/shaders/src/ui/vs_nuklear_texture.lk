@@ -1,2 +1,1 @@
-		shader_src = 'shaders/src/ui/vs_nuklear_texture.sc'
-	
+shader_src = 'shaders/src/ui/vs_nuklear_texture.sc'

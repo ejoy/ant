@@ -1,2 +1,1 @@
-		shader_src = 'shaders/src/picking/vs_picking.sc'
-	
+shader_src = 'shaders/src/picking/vs_picking.sc'
