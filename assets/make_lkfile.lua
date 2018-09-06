@@ -40,6 +40,7 @@ if type == nil or type == "mesh" then
 	local exts = {"fbx", "FBX", "bin"}
 	-- we assume all bin/fbx files should only exist in assets/build/meshes folder	
 	path.listfiles("build/meshes", files, exts)
+	path.listfiles("meshes", files, exts)
 end
 
 for _, ff in ipairs(files) do
