@@ -1,35 +1,20 @@
-$input a_position, a_normal, a_tex0,a_tangent
-$output v_tex0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent
+$input a_position, a_normal, a_texcoord0, a_tangent, a_bitangent
+$output v_texcoord0, v_lightdir, v_viewdir,v_normal
 
 
 #include "common/uniforms.sh"
 
 #include <bgfx_shader.sh>
-
+#include "common/transform.sh"
 void main()
 {
-    vec3 pos = a_position;
-	gl_Position = mul(u_modelViewProj, vec4(pos, 1.0));
-	vec4 worldpos = mul(u_model[0], vec4(pos, 1.0));
-
-	v_tex0 = a_tex0;
-
-	vec3 normal = normalize(mul(u_model[0], a_normal.xyz));
-	vec3 tangent = normalize(mul(u_model[0], a_tangent.xyz));
-	vec3 bitangent = (cross(normal,tangent))* a_tangent.w;
-	//bitangent = -bitangent;
-
-	v_normal = normal;
-	v_tangent = tangent;
-	v_bitangent = bitangent;
-
- 	mat3 tbn = transpose	(
-			mat3((tangent),
-			normalize(bitangent),
-			(normal)));
-
+    vec4 pos = vec4(a_position, 1);
+	gl_Position = mul(u_modelViewProj, pos);
+	vec4 worldpos = mul(u_model[0], pos);
+	mat3 tbn = calc_tbn(a_normal, a_tangent, a_bitangent, u_model[0]);
 
 	v_lightdir 	= mul(directional_lightdir[0].xyz , tbn);
-	v_viewdir 	= mul(normalize( u_eyepos - worldpos).xyz, tbn);	
-	v_normal    = normal;
+	v_viewdir 	= mul(normalize(u_eyepos.xyz - worldpos.xyz), tbn);
+	v_normal    = a_normal;
+	v_texcoord0 = a_texcoord0;
 }

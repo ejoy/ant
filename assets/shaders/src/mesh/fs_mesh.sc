@@ -1,4 +1,4 @@
-$input v_normal, v_tex0, v_viewdir
+$input v_normal, v_texcoord0, v_viewdir
 #include "common.sh"
 
 SAMPLER2D(s_basecolor, 0);
@@ -36,7 +36,7 @@ vec3 calc_directional_light(vec3 normal, vec3 lightdir, vec3 viewdir)
 void main()
 {
 	vec3 normal = normalize(v_normal);
-	vec4 color = toLinear(texture2D(s_basecolor, v_tex0));
+	vec4 color = toLinear(texture2D(s_basecolor, v_texcoord0));
 	vec3 viewdir = normalize(v_viewdir);
 
 	gl_FragColor.xyz = calc_directional_light(normal, directional_lightdir[0], viewdir) * color; 
