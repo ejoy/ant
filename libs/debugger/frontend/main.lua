@@ -8,12 +8,11 @@ end)()
 --log.file = 'dbg.log'
 print = nil
 
-local socket = require 'debugger.socket'
-local client = require 'debugger.frontend.client'
+local proxy = require 'debugger.frontend.proxy'
+local io = require 'debugger.io.stdio' ()
 
-client.initialize()
+proxy.initialize(io)
 
 while true do
-    client.update()
-    socket.update()
+    proxy.update()
 end

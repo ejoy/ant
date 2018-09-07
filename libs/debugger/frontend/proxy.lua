@@ -1,11 +1,17 @@
-local client = require 'debugger.frontend.client'
 local server_factory = require 'debugger.frontend.server'
 local parser = require 'debugger.parser'
+local proto = require 'debugger.protocol'
 local fs = require 'debugger.filesystem'
 local server
+local client = {}
 local seq = 0
 local initReq
 local m = {}
+local io
+
+function client.send(pkg)
+    io:send(proto.send(pkg))
+end
 
 local function newSeq()
     seq = seq + 1
@@ -161,6 +167,26 @@ end
 
 function m.recv(pkg)
     client.send(pkg)
+end
+
+function m.update()
+    io:update()
+end
+
+function m.initialize(io_)
+    io = io_
+    local stat = {}
+    io:event_in(function(data)
+        while true do
+            local pkg = proto.recv(data, stat)
+            if pkg then
+                data = ''
+                m.send(pkg)
+            else
+                break
+            end
+        end
+    end)
 end
 
 return m
