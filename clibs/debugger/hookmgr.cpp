@@ -62,7 +62,8 @@ struct hookmgr {
     int    break_mask = 0;
 
     size_t break_hash(Proto* p) {
-        return ((uintptr_t(p) >> 5) ^ uintptr_t(p)) % BPMAP_SIZE;
+        uintptr_t h = uintptr_t(p) ^ uintptr_t(p->code);
+        return ((uintptr_t(h) >> 5) ^ uintptr_t(h)) % BPMAP_SIZE;
     }
     void break_add(lua_State* hL, Proto* p) {
         int key = break_hash(p);
