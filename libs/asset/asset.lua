@@ -12,6 +12,7 @@ local support_list = {
 	"module",
 	"texture",
 	"hierarchy",
+	"ozz",
 	"lk",
 }
 
@@ -21,8 +22,12 @@ local loader = setmetatable({} , {
 	end
 })
 
-for _, mname in ipairs(support_list) do
-	loader[mname] = require("ext_" .. mname)
+local function remap_modulename(mname)
+	return mname == "ozz" and "ext_hierarchy" or ("ext_" .. mname)	
+end
+
+for _, mname in ipairs(support_list) do	
+	loader[mname] = require(remap_modulename(mname))
 end
 
 local assetmgr = {}

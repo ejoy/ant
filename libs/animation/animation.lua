@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local ani = ecs.component "animation" {
-	path = {
+	ref_path = {
 		type = "userdata",
 		default = "",
 		save = function (v, param)
@@ -14,23 +14,23 @@ local ani = ecs.component "animation" {
 	},	
 }
 
--- separate animation and skeleton to 2 component, 
--- skeleton component will corresponding to some system that do not need animation
-local ske = ecs.component "skeleton" {
-	path = {
-		type = "userdata",
-		default = "",
-		save = function (v, param)
-			assert(false, "not implement skeleton save")
-		end,
-		load = function (v, param)
-			assert(false, "not implement skeleton load")
-		end
-	}
-}
+-- -- separate animation and skeleton to 2 component, 
+-- -- skeleton component will corresponding to some system that do not need animation
+-- local ske = ecs.component "skeleton" {
+-- 	path = {
+-- 		type = "userdata",
+-- 		default = "",
+-- 		save = function (v, param)
+-- 			assert(false, "not implement skeleton save")
+-- 		end,
+-- 		load = function (v, param)
+-- 			assert(false, "not implement skeleton load")
+-- 		end
+-- 	}
+-- }
 
 
-local anisystem = ecs.system "animationsystem"
+local anisystem = ecs.system "animation_system"
 anisystem.singleton "timer"
 anisystem.singleton "math_stack"
 
@@ -42,10 +42,10 @@ function anisystem:update()
 
 	for _, eid in world:each("animation") do
 		local e = world[eid]
-		local skeleton = assert(e.skeleton)
+		local skeleton = assert(e.hierarchy)
 		local animation = e.animation
 
-		--ani_module.merge(assert(skeleton.handle), animation.anilist, animation.aniweight, delta)
+		ani_module.motion(skeleton, animation, 0.1)
 	end
 
 end
