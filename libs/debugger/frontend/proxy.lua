@@ -1,6 +1,7 @@
 local server_factory = require 'debugger.frontend.server'
 local parser = require 'debugger.parser'
 local proto = require 'debugger.protocol'
+local socket = require 'debugger.socket'
 local fs = require 'debugger.filesystem'
 local server
 local client = {}
@@ -170,6 +171,7 @@ function m.recv(pkg)
 end
 
 function m.update()
+    socket.update()
     io:update()
 end
 
