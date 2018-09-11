@@ -86,13 +86,28 @@ local function window_settext(wnd, text)
     iup.Map(wnd)
     iup.Refresh(tabs)
 
-    local ln = 1 + math.floor(math.log(tonumber(wnd.LINECOUNT), 10))
+    local ln = 1 + math.floor(math.log(tonumber(wnd.LINECOUNT) or 0, 10))
     wnd.MARGINWIDTH1 = tostring(16 + 8*ln)
 end
 
+local play = iup.button { title = '▶️' }
+local stop  = iup.button { title = '⏹️' }
+
+function play:action()
+    if self.TITLE == '▶️' then
+        ev.emit('gui-keyboard', 'F5')
+    else
+        ev.emit('gui-keyboard', 'F6')
+    end
+end
+
+function stop:action() 
+    ev.emit('gui-keyboard', 'Shift+F5')
+end
+
 local dlg = iup.dialog {
-    tabs, 
-    TITLE = 'Dialog',
+    iup.vbox { iup.hbox { play, stop }, tabs},
+    TITLE = 'Ant Debug',
     SIZE = '600x400'
 }
 
@@ -111,22 +126,22 @@ function dlg:k_any(c)
     elseif c == iup.K_F11 then
         ev.emit('gui-keyboard', 'F11')
         return iup.IGNORE
+    elseif c == iup.XkeyShift(iup.K_F5) then
+        ev.emit('gui-keyboard', 'Shift+F5')
+        return iup.IGNORE
     elseif c == iup.XkeyShift(iup.K_F11) then
         ev.emit('gui-keyboard', 'Shift+F11')
         return iup.IGNORE
     end
 end
 
-local wnds = {}
-
 local m = {}
 
+local wnds = {}
 function m.openwindow(title)
     if not wnds[title] then
         local wnd = window_create(title)
-        wnds[#wnds+1] = wnd
         wnds[title] = wnd
-        wnd._TABS_POS = tostring(#wnds-1)
         return wnd, false
     end
     return wnds[title], true
@@ -142,11 +157,11 @@ function m.setarrow(window, lineno)
     m.cleanarrow()
     pcWindow = window
     pcLineno = lineno - 1
-    tabs.VALUEPOS = pcWindow._TABS_POS
+    tabs.VALUE = pcWindow
     pcWindow['MARKERADD' .. pcLineno] = 2
     pcWindow['MARKERADD' .. pcLineno] = 3
-    pcWindow.CARET = ("%d,0"):format(pcLineno + 20)
-    pcWindow.CARET = ("%d,0"):format(pcLineno)
+    pcWindow.CARET = ('%d,0'):format(pcLineno + 20)
+    pcWindow.CARET = ('%d,0'):format(pcLineno)
 end
 
 function m.cleanarrow()
@@ -157,6 +172,30 @@ function m.cleanarrow()
         pcLineno = nil
     end
 end
+
+function m.btn_run()
+    play.TITLE = '▶️'
+end
+
+function m.btn_stop()
+    play.TITLE = '⏸️'
+end
+
+function tabs:tabclose_cb(pos)
+    local h = iup.GetChild(self, pos)
+    if not h then
+        return iup.CONTINUE
+    end
+    if pcWindow == h then
+        m.cleanarrow()
+    end
+    for k, v in pairs(wnds) do
+        if v == h then
+            wnds[k] = nil
+            return iup.CONTINUE
+        end
+    end
+end 
 
 function m.update()
     local msg = iup.LoopStep()

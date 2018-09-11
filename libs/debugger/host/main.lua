@@ -8,10 +8,12 @@ local ev = require 'debugger.event'
 core.initialize()
 
 ev.on('host-running', function()
+    gui.btn_stop()
     gui.cleanarrow()
 end)
 
 ev.on('host-stopped', function(source, line)
+    gui.btn_run()
     if source.path then
         local title = source.path
         local wnd, exist = gui.openwindow(title)

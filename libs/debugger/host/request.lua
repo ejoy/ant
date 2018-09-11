@@ -128,6 +128,17 @@ function m.pause(threadId)
     }
 end
 
+function m.terminate()
+    return m.send {
+        type = 'request',
+        command = 'terminate',
+        seq = newSeq(),
+        arguments = {
+            restart = false,
+        },
+    }
+end
+
 function m.setBreakpoints(source, breakpoints)
     return m.send {
         type = 'request',

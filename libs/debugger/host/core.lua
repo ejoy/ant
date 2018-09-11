@@ -64,6 +64,10 @@ ev.on('gui-keyboard', function(vk)
             elseif vk == 'F11' then
                 status.status = 'running'
                 request.stepIn(status.threadId)
+            elseif vk == 'Shift+F5' then
+                -- TODO
+                --status.status = 'running'
+                --request.terminate()
             elseif vk == 'Shift+F11' then
                 status.status = 'running'
                 request.stepOut(status.threadId)
