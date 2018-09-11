@@ -173,7 +173,7 @@ function m.run(frameId, expression, context)
         end
         local ok, err = m.complie_then_execute(frameId, expression)
         if not ok then
-            return false, err
+            return false, res[2]
         end
         return true, ''
     end
