@@ -12,4 +12,5 @@ bgfx提供了回调来设置输出调试信息，所以我们也可以通过设�
 使用bgfx_create_shader函数程序崩溃
 ----------------------------------
 
-bgfx_create_shader接受的shader类型依赖于指定的渲染器，如果指定了OpenGL为渲染器就不能使用DX的，bgfx_create_shader接受的参数实际为特定渲染器的特定编译后的
+bgfx_create_shader接受的shader类型依赖于指定的渲染器，如果指定了OpenGL为渲染器就不能使用DX的，bgfx_create_shader接受的参数实际为特定渲染器的特定编译后的二进制格式。
+指定渲染器使用bgfx_init函数进行，设置参数变量的type为指定渲染器即可。

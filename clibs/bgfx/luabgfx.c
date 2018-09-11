@@ -15,7 +15,7 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 
-#if BGFX_API_VERSION != 79
+#if BGFX_API_VERSION != 80
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -653,7 +653,7 @@ push_texture_formats(lua_State *L, const uint16_t *formats) {
 
 static void
 push_limits(lua_State *L, const bgfx_caps_limits_t *lim) {
-	lua_createtable(L, 0, 22);
+	lua_createtable(L, 0, 23);
 #define PUSH_LIMIT(what) lua_pushinteger(L, lim->what); lua_setfield(L, -2, #what);
 
 	PUSH_LIMIT(maxDrawCalls)
@@ -667,6 +667,7 @@ push_limits(lua_State *L, const bgfx_caps_limits_t *lim) {
 	PUSH_LIMIT(maxShaders)
 	PUSH_LIMIT(maxTextures)
 	PUSH_LIMIT(maxTextureSamplers)
+	PUSH_LIMIT(maxComputeBindings)
 	PUSH_LIMIT(maxVertexDecls)
 	PUSH_LIMIT(maxVertexStreams)
 	PUSH_LIMIT(maxIndexBuffers)
