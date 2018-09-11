@@ -108,7 +108,7 @@ ANT Project 开发环境安装及编译配置记录
 		 $ bin/iup.exe tools/config.lua 执行config 配置
 		 AntConfig 窗口中填写各项条目对应的 exe 目录 
 		 lua = D:/Work/ant/clibs/lua/lua.exe 
-		 
+		 shaderc为bgfx官方提供的shader编译器，并不是tools目录下的shaderc.lua
 		 
 		 //---------------------------------------
 		 // (略）以下iup,lua等工具可略，建议使用 ant 目录下bin,clibs 都已经生成的工具版本
