@@ -1,5 +1,5 @@
 #include "meshdata.h"
-
+#include "utils.h"
 extern "C" {
 	#include <lua.h>  
 	#include <lualib.h>
@@ -34,85 +34,6 @@ extern "C" {
 
 //c std
 #include <cassert>
-
-//void WriteMaterialToLua(lua_State *L, const aiScene* scene) {
-//	unsigned mat_count = scene->mNumMaterials;
-//	for (unsigned i = 0; i < mat_count; ++i) {
-//		aiMaterial* mat = scene->mMaterials[i];
-//
-//		lua_newtable(L);
-//
-//		//{@	texture_path = {}
-//		{
-//			struct TexturePathInfo {
-//				const char* name;
-//				aiTextureType type;
-//				uint32_t idx;
-//			};
-//
-//			TexturePathInfo typepaths[] = {
-//				{ "diffuse", aiTextureType_DIFFUSE, 0, },
-//				{ "ambient", aiTextureType_AMBIENT, 0, },
-//				{ "specular", aiTextureType_SPECULAR, 0, },
-//				{ "normals", aiTextureType_NORMALS, 0, },
-//				{ "shininess", aiTextureType_SHININESS, 0, },
-//				{ "lightmap", aiTextureType_LIGHTMAP, 0, },
-//			};
-//
-//			lua_createtable(L, 0, sizeof(typepaths) / sizeof(typepaths[0]));
-//
-//			for (const auto &info : typepaths) {
-//				aiString path;
-//				if (AI_SUCCESS == mat->Get(_AI_MATKEY_TEXTURE_BASE, info.type, info.idx, path)) {
-//					lua_pushstring(L, path.C_Str());
-//					lua_setfield(L, -2, info.name);
-//				}
-//			}
-//
-//			lua_setfield(L, -2, "texture_path");
-//		}
-//		//@}
-//
-//
-//		aiString name;
-//		if (AI_SUCCESS == mat->Get(AI_MATKEY_NAME, name)){
-//			lua_pushstring(L, name.C_Str());
-//			lua_setfield(L, -2, "name");
-//		}
-//
-//		//{@	material color
-//		{
-//			auto push_color = [L](const char* name, const aiColor3D &color) {
-//				lua_createtable(L, 0, 3);
-//				const char* elemnames[] = { "r", "g", "b" };
-//				for (uint32_t ii = 0; ii < 3; ++ii) {
-//					lua_pushnumber(L, color[ii]);
-//					lua_setfield(L, -2, elemnames[ii]);
-//				}
-//
-//				lua_setfield(L, -2, name);
-//			};
-//
-//			struct MatKeys { const char* k; int i, j; const char *name; };
-//			MatKeys keys[] = {
-//				{ AI_MATKEY_COLOR_AMBIENT, "ambient" },
-//			{ AI_MATKEY_COLOR_DIFFUSE, "diffuse" },
-//			{ AI_MATKEY_COLOR_SPECULAR, "specular" },
-//			};
-//
-//			for (const auto &k : keys) {
-//				aiColor3D color;
-//				if (AI_SUCCESS == mat->Get(k.k, k.i, k.j, color)) {
-//					push_color(k.name, color);
-//				}
-//			}
-//		}
-//		//@}
-//
-//
-//		lua_seti(L, -2, i + 1);
-//	}
-//}
 
 void LoadMaterials(const aiScene* scene, std::vector<mesh_material_data> &materials) {	
 	materials.resize(scene->mNumMaterials);
@@ -167,67 +88,8 @@ void LoadMaterials(const aiScene* scene, std::vector<mesh_material_data> &materi
 	}
 }
 
-//static void push_aabb(lua_State *L, const AABB &aabb, int32_t tblidx) {
-//	lua_createtable(L, 6, 0);
-//	const ai_real *p = &aabb.min.x;
-//	for (uint32_t ii = 0; ii < 6; ++ii) {
-//		lua_pushnumber(L, *p++);
-//		lua_seti(L, -2, ii + 1);
-//	}
-//	lua_setfield(L, tblidx, "aabb");
-//}
-//
-//static void push_sphere(lua_State *L, const BoundingSphere &sphere, int32_t tblidx) {
-//	lua_createtable(L, 4, 0);
-//	const ai_real *p1 = &sphere.center.x;
-//	for (uint32_t ii = 0; ii < 4; ++ii) {
-//		lua_pushnumber(L, *p1++);
-//		lua_seti(L, -2, ii + 1);
-//	}
-//
-//	lua_setfield(L, tblidx, "sphere");
-//}
-//
-//static void push_sphere(lua_State *L, const AABB &aabb, int32_t tblidx) {
-//	BoundingSphere sphere; sphere.Init(aabb);
-//	push_sphere(L, sphere, tblidx);
-//}
-
 using MeshArray = std::vector<aiMesh*>;
 using MeshMaterialArray = std::vector<MeshArray>;
-
-
-struct load_config {
-	load_config()
-		: layout("p3|n|T|b|t20|c30")
-		, flags(0) {}
-
-	bool NeedCreateNormal() const {
-		return flags & CreateNormal;
-	}
-
-	bool NeedCreateTangentSpaceData() const {
-		return flags & (CreateTangent | CreateBitangent);
-	}
-
-	bool NeedFlipUV()const {
-		return flags & FlipUV;
-	}
-
-	std::string layout;
-
-	enum {
-		CreateNormal = 0x00000001,
-		CreateTangent = 0x00000002,
-		CreateBitangent = 0x00000004,
-
-		InvertNormal = 0x00000010,
-		FlipUV = 0x00000020,
-		IndexBuffer32Bit = 0x00000040,
-
-	};
-	uint32_t flags;
-};
 
 static void
 SeparateMeshByMaterialID(const aiScene *scene, MeshMaterialArray &mm) {
@@ -237,32 +99,6 @@ SeparateMeshByMaterialID(const aiScene *scene, MeshMaterialArray &mm) {
 		MeshArray &meshes = mm[mesh->mMaterialIndex];
 		meshes.push_back(mesh);
 	}
-}
-
-static inline std::vector<std::string>
-Split(const std::string &ss, char delim) {
-	std::istringstream iss(ss);
-	std::vector<std::string> vv;
-	std::string elem;
-	while (std::getline(iss, elem, delim)) {
-		vv.push_back(elem);
-	}
-
-	return vv;
-}
-
-static std::vector<std::string>
-AdjustLayoutElem(const std::string &layout) {
-	auto elems = Split(layout, '|');
-	for (auto &e : elems) {
-		char newelem[] = "_30NIf";
-		for (auto ii = 0; ii < e.size(); ++ii) {
-			newelem[ii] = e[ii];
-		}
-		e = newelem;
-	}
-
-	return elems;
 }
 
 // only valid in array of struct
@@ -292,21 +128,6 @@ CreateVertexLayout(aiMesh *mesh, const std::string &vertexElemNeeded) {
 	}
 	return layout;
 }
-
-static size_t
-CalcVertexSize(const std::string &layout) {
-	size_t elemSizeInBytes = 0;
-	auto vv = Split(layout, '|');
-
-	for (auto v : vv) {
-		const std::string type = v.substr(0, 1);
-		const uint8_t elemCount = static_cast<uint8_t>(std::stoi(v.substr(1, 1)));
-
-		elemSizeInBytes += elemCount * sizeof(float);
-	}
-
-	return elemSizeInBytes;
-};
 
 static void
 CalcBufferSize(const MeshArray &meshes,
@@ -413,31 +234,6 @@ FindTransform(const aiScene *scene, const aiNode *node, const aiMesh *mesh, aiMa
 
 	return false;
 }
-
-//static std::pair<std::string, bgfx::AttribType::Enum>
-//attrib_type_name_pairs[bgfx::AttribType::Count] = {
-//	{ "UINT8", bgfx::AttribType::Uint8 },
-//	{ "UINT10", bgfx::AttribType::Uint10 },
-//	{ "INT16", bgfx::AttribType::Int16 },
-//	{ "HALF", bgfx::AttribType::Half },
-//	{ "FLOAT", bgfx::AttribType::Float },
-//};
-//
-//static inline bgfx::AttribType::Enum
-//what_elem_type(const std::string &n) {
-//	for (auto &pp : attrib_type_name_pairs) {
-//		if (pp.first == n)
-//			return pp.second;
-//	}
-//
-//	return bgfx::AttribType::Count;
-//}
-
-#if defined(DISABLE_ASSERTS)
-# define verify(expr) ((void)(expr))
-#else
-# define verify(expr) assert(expr)
-#endif	
 
 static void
 ExtractLoadConfig(lua_State *L, int idx, load_config &config) {
@@ -552,28 +348,6 @@ SceneToMeshData(const aiScene *scene, const load_config &config, mesh_data &md) 
 	return true;
 }
 
-//template<typename T>
-//static void WriteElem(std::ostream &os, const T &elem) {
-//	WriteSize(os, sizeof(T));
-//	os.write((const char*)&elem, sizeof(T));
-//}
-//
-//template<typename T>
-//static void WriteElem(std::ostream &os, const T* elem, size_t sizeInBytes) {
-//	WriteSize(os, uint32_t(sizeInBytes));
-//	os.write((const char*)elem, sizeInBytes);
-//}
-//
-//template<>
-//static void WriteElem(std::ostream &os, const std::string &s) {
-//	WriteSize(os, uint32_t(s.size()));
-//	os.write(s.c_str(), s.size());
-//}
-//
-//static void WriteElem(std::ostream &os, const char* v) {
-//	WriteElem(os, v, strlen(v));
-//}
-
 static inline void WriteSize(std::ostream &os, const std::string &elem, size_t valueSize) {
 	uint32_t elemsize = uint32_t(elem.size());
 	uint32_t fullsize = uint32_t(elemsize + valueSize) + 8;	// 8 is fullsize and elemsize
@@ -609,7 +383,7 @@ static void WriteSeparator(std::ostream &os) {
 	os.write((const char*)&s, sizeof(uint32_t));
 }
 
-static bool
+bool
 WriteMeshData(const mesh_data &md, const std::string &srcfile, const std::string &outputfile) {
 	std::ofstream off(outputfile, std::ios::binary);
 	if (!off) {
@@ -722,107 +496,6 @@ struct LayoutNamePairs {
 //	{ "t7", bgfx::Attrib::TexCoord7},
 //};
 
-static bgfx::VertexDecl 
-gen_vertex_decl_from_vblayout(const std::string &vblayout) {
-	auto elems = AdjustLayoutElem(vblayout);
-	bgfx::VertexDecl decl;
-	decl.begin();
-	for (const auto &e : elems) {
-		auto get_attrib = [](const std::string &e) {
-			switch (e[0])
-			{
-			case 'p':return bgfx::Attrib::Position;
-			case 'n':return bgfx::Attrib::Normal;
-			case 'T':return bgfx::Attrib::Tangent;
-			case 'b':return bgfx::Attrib::Bitangent;
-			case 'i':return bgfx::Attrib::Indices;
-			case 'w':return bgfx::Attrib::Weight;
-			case 't': {
-				auto channel = e[2] - '0';				
-				return bgfx::Attrib::Enum(bgfx::Attrib::TexCoord0 + channel);
-			}
-			case 'c': {
-				auto channel = e[2] - '0';
-				return bgfx::Attrib::Enum(bgfx::Attrib::Color0 + channel);				
-			}
-			default:
-				printf("not support type, %d", e[0]);
-				return bgfx::Attrib::Count;
-			}
-		};
-
-		auto attrib = get_attrib(e);
-
-		uint8_t num = e[1] - '0';
-		auto get_type = [](const std::string &e) {
-			switch (e[5]){
-			case 'f': return bgfx::AttribType::Float;
-			case 'h': return bgfx::AttribType::Half;
-			case 'u': return bgfx::AttribType::Uint8;
-			case 'U': return bgfx::AttribType::Uint10;
-			case 'i': return bgfx::AttribType::Int16;
-			default:return bgfx::AttribType::Count;
-			}
-		};
-
-		auto type = get_type(e);
-		bool asInt = e[4] == 'i';
-		bool normalize = e[3] == 'n';
-		decl.add(attrib, num, type, normalize, asInt);
-	}
-	decl.end();
-	return decl;
-}
-
-static std::string
-gen_vblayout_from_decl(const bgfx::VertexDecl &decl) {
-	std::string vblayout;
-	for (uint32_t ii = bgfx::Attrib::Position; ii < bgfx::Attrib::Count; ++ii) {
-		auto attrib = bgfx::Attrib::Enum(ii);
-		if (decl.has(attrib)) {			
-			uint8_t num;
-			bgfx::AttribType::Enum type;
-			bool normalize, asInt;
-			decl.decode(attrib, num, type, normalize, asInt);
-
-			auto get_attrib_name = [](bgfx::Attrib::Enum a, uint8_t num) {
-				auto numstr = std::to_string(num);				
-				const char* names[bgfx::Attrib::Count] = {
-					"p0", "n0", "T0", "b0", 
-					"c0", "c0", "c0", "c0",
-					"i0", "w0", 
-					"t0", "t1","t2","t3",
-					"t4", "t5","t6","t7",
-				};
-
-				assert(bgfx::Attrib::Count > a);
-
-				const char* name = names[a];
-				return name[0] + std::to_string(num) + name[1];
-			};
-
-			if (!vblayout.empty())
-				vblayout += '|';
-			vblayout += get_attrib_name(attrib, num);
-			vblayout += normalize ? 'n' : 'N';
-			vblayout += asInt ? 'i' : 'I';
-
-			auto get_type_char = [](bgfx::AttribType::Enum type) {
-				char cc[bgfx::AttribType::Count] = {
-					'u', 'U', 'i', 'h', 'f'
-				};
-				assert(bgfx::AttribType::Count > type);
-				return cc[type];
-			};
-
-			vblayout += get_type_char(type);
-		}
-	}
-
-	return vblayout;
-};
-
-
 static void 
 LoadBGFXMesh(const std::string& filePath, mesh_data &md){
 #define BGFX_CHUNK_MAGIC_VB  BX_MAKEFOURCC('V', 'B', ' ', 0x1)
@@ -848,7 +521,7 @@ LoadBGFXMesh(const std::string& filePath, mesh_data &md){
 
 			bgfx::VertexDecl decl;
 			bgfx::read(&reader, decl);
-			group.vb_layout = gen_vblayout_from_decl(decl);
+			group.vb_layout = GenVBLayoutFromDecl(decl);
 
 			uint16_t stride = decl.getStride();
 			uint16_t numVertices;
@@ -955,8 +628,8 @@ calc_tangents(mesh_data &md) {
 		newlayout += "|T30nIf";
 		newlayout += "|b30nIf";
 
-		auto dstdecl = gen_vertex_decl_from_vblayout(newlayout);
-		auto srcdecl = gen_vertex_decl_from_vblayout(g.vb_layout);
+		auto dstdecl = GenVertexDeclFromVBLayout(newlayout);
+		auto srcdecl = GenVertexDeclFromVBLayout(g.vb_layout);
 
 		auto stride = dstdecl.getStride();
 		auto sizeInBytes = g.num_vertices * stride;
@@ -984,7 +657,7 @@ calc_tangents(mesh_data &md) {
 static void flip_uv(mesh_data &md) {
 	for (auto &g : md.groups) {
 		
-		auto decl = gen_vertex_decl_from_vblayout(g.vb_layout);
+		auto decl = GenVertexDeclFromVBLayout(g.vb_layout);
 		for (auto ii = 0; ii < 8; ++ii) {
 			bgfx::Attrib::Enum a = bgfx::Attrib::Enum(bgfx::Attrib::TexCoord0 + ii);
 			if (decl.has(a)) {
@@ -1103,6 +776,14 @@ lconvertBGFXBin(lua_State *L) {
 int
 lconvertFBX(lua_State *L) {	
 	return convertSource(L, convertFBX);
+}
+
+extern int
+convertOZZ(lua_State *L, const std::string &srcpath, const std::string &outputfile, const load_config &config);
+
+int
+lconvertOZZMesh(lua_State *L) {
+	return convertSource(L, convertOZZ);
 }
 
 extern "C" {

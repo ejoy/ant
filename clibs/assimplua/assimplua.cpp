@@ -600,11 +600,13 @@ static int AssimpImport(lua_State *L)
 
 int lconvertFBX(lua_State *L);
 int lconvertBGFXBin(lua_State *L);
+int lconvertOZZMesh(lua_State *L);
 
 static const struct luaL_Reg myLib[] = {
 	{"assimp_import", AssimpImport},
 	{"convert_FBX", lconvertFBX},
 	{"convert_BGFXBin", lconvertBGFXBin},
+	{"convert_OZZ", lconvertOZZMesh},
 	{ NULL, NULL }      
 };
 
