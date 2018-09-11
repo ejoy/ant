@@ -1,4 +1,5 @@
 local status = require 'debugger.host.status'
+local request = require 'debugger.host.request'
 local ev = require 'debugger.event'
 
 local m = {}
@@ -12,10 +13,9 @@ end
 function m.stackTrace(pkg)
     if pkg.stackFrames and pkg.stackFrames[1] then
         local frame = pkg.stackFrames[1]
-        if frame.source and frame.source.path then
-            ev.emit('stop-position', frame.source.path, frame.line)
-        else
-            -- TODO
+        local source = frame.source
+        if source then
+            ev.emit('host-stopped', source, frame.line)
         end
     end
 end
@@ -25,7 +25,7 @@ function m.threads(pkg)
 end
 
 function m.continue(pkg)
-    ev.emit('run')
+    ev.emit('host-running')
 end
 
 return m

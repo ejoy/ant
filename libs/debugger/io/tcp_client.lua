@@ -29,12 +29,16 @@ function mt:send(data)
 end
 
 function mt:close()
+    if not self.fd then
+        return
+    end
+    local fd = self.fd
+    self.fd = nil
     if self.fclose then
         self.fclose()
     end
-    socket.close(self.fd)
-    self.fd:close()
-    self.fd = nil
+    socket.close(fd)
+    fd:close()
 end
 
 return function(ip, port)

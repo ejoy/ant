@@ -7,7 +7,7 @@ local function newSeq()
 end
 
 function m.initialize()
-    m.send {
+    return m.send {
         type = 'request',
         command = 'initialize',
         seq = newSeq(),
@@ -27,7 +27,7 @@ function m.initialize()
 end
 
 function m.attach()
-    m.send {
+    return m.send {
         type = 'request',
         command = 'attach',
         seq = newSeq(),
@@ -45,7 +45,7 @@ function m.attach()
 end
 
 function m.configurationDone()
-    m.send {
+    return m.send {
         type = 'request',
         command = 'configurationDone',
         seq = newSeq(),
@@ -53,7 +53,7 @@ function m.configurationDone()
 end
 
 function m.stackTrace(threadId, startFrame, levels)
-    m.send {
+    return m.send {
         type = 'request',
         command = 'stackTrace',
         seq = newSeq(),
@@ -66,7 +66,7 @@ function m.stackTrace(threadId, startFrame, levels)
 end
 
 function m.threads()
-    m.send {
+    return m.send {
         type = 'request',
         command = 'threads',
         seq = newSeq(),
@@ -74,7 +74,7 @@ function m.threads()
 end
 
 function m.next(threadId)
-    m.send {
+    return m.send {
         type = 'request',
         command = 'next',
         seq = newSeq(),
@@ -85,7 +85,7 @@ function m.next(threadId)
 end
 
 function m.stepIn(threadId)
-    m.send {
+    return m.send {
         type = 'request',
         command = 'stepIn',
         seq = newSeq(),
@@ -96,7 +96,7 @@ function m.stepIn(threadId)
 end
 
 function m.stepOut(threadId)
-    m.send {
+    return m.send {
         type = 'request',
         command = 'stepOut',
         seq = newSeq(),
@@ -107,7 +107,7 @@ function m.stepOut(threadId)
 end
 
 function m.continue(threadId)
-    m.send {
+    return m.send {
         type = 'request',
         command = 'continue',
         seq = newSeq(),
@@ -118,12 +118,35 @@ function m.continue(threadId)
 end
 
 function m.pause(threadId)
-    m.send {
+    return m.send {
         type = 'request',
         command = 'pause',
         seq = newSeq(),
         arguments = {
             threadId = threadId,
+        },
+    }
+end
+
+function m.setBreakpoints(source, breakpoints)
+    return m.send {
+        type = 'request',
+        command = 'setBreakpoints',
+        seq = newSeq(),
+        arguments = {
+            source = source,
+            breakpoints = breakpoints,
+        },
+    }
+end
+
+function m.source(sourceReference)
+    return m.send {
+        type = 'request',
+        command = 'source',
+        seq = newSeq(),
+        arguments = {
+            sourceReference = sourceReference,
         },
     }
 end

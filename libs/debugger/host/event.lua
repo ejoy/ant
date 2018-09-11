@@ -6,6 +6,7 @@ local m = {}
 function m.stopped(pkg)
     local threadId = pkg.threadId
     status.threadId = threadId
+    status.status = 'stopped'
     request.threads()
     request.stackTrace(threadId, 0, 20)
 end
