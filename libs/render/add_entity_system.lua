@@ -328,17 +328,17 @@ function add_entity_sys:init()
 		world:notify()
 	end
 
-	do
-		local ani_eid = world:new_entity("position", "scale", "rotation", 
-		"mesh", "animation", "hierarchy", "material",
-		"can_render", "can_select", 
-		"name")
+	-- do
+	-- 	local ani_eid = world:new_entity("position", "scale", "rotation", 
+	-- 	"mesh", "animation", "hierarchy", "material",
+	-- 	"can_render", "can_select", 
+	-- 	"name")
 
-		local ani_e = world[ani_eid]
-		ani_e.hierarchy.ref_path = "meshes/skeleton/skeleton.ozz"
-		ani_e.hierarchy.builddata = asset.load(ani_e.hierarchy.ref_path)
-		ani_e.animation.ref_path = "meshes/animation/animation_base.ozz"
-		ani_e.animation.handle = asset.load(ani_e.animation.ref_path)
+	-- 	local ani_e = world[ani_eid]
+	-- 	ani_e.hierarchy.ref_path = "meshes/skeleton/skeleton.ozz"
+	-- 	ani_e.hierarchy.builddata = asset.load(ani_e.hierarchy.ref_path)
+	-- 	ani_e.animation.ref_path = "meshes/animation/animation_base.ozz"
+	-- 	ani_e.animation.handle = asset.load(ani_e.animation.ref_path)
 
-	end
+	-- end
 end

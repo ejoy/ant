@@ -1,6 +1,8 @@
 local ecs = ...
 
-local timer = ecs.component "timer"
+local timer = ecs.component "timer" {
+	
+}
 
 function timer:init()
 	self.previous = 0
