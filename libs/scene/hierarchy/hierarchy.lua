@@ -2,8 +2,6 @@ local ecs = ...
 local world = ecs.world
 local assetmgr = require "asset"
 local path = require "filesystem.path"
-local fu = require "filesystem.util"
-local hierarchy = require "hierarchy"
 
 local h = ecs.component "hierarchy" {
 	ref_path = {
@@ -14,7 +12,7 @@ local h = ecs.component "hierarchy" {
 			local e = world[arg.eid]
 			local comp = e[arg.comp]	
 			local builddata = comp.builddata
-			assert(builddata)			
+			assert(builddata)
 			return v
 		end,
 		load = function(v)

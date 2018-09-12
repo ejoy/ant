@@ -5,10 +5,10 @@ local asset = require "asset"
 --local elog = require "editor.log"
 --local db = require "debugger"
 
---windows dir
-asset.insert_searchdir(1, "D:/Engine/ant/assets")
---mac dir
-asset.insert_searchdir(2, "/Users/ejoy/Desktop/Engine/ant/assets")
+-- --windows dir
+-- asset.insert_searchdir(1, "D:/Engine/ant/assets")
+-- --mac dir
+-- asset.insert_searchdir(2, "/Users/ejoy/Desktop/Engine/ant/assets")
 
 
 local util = {}
@@ -24,6 +24,7 @@ function util.start_new_world(input_queue, fbw, fbh, module_files)
 	end	
 	world = ecs.new_world {
 		modules = modules,
+		update_order = {"timesystem"},
 		update_bydepend = true,
 		args = { mq = input_queue, fb_size={w=fbw, h=fbh} },
     }
