@@ -22,6 +22,11 @@ function util.start_new_world(input_queue, fbw, fbh, module_files)
 		local m = asset.load(mfile)
 		table.move(m, 1, #m, #modules + 1, modules)
 	end	
+
+	if input_queue == nil then		
+		log("input queue is not privided, no input event will be received!")
+	end
+
 	world = ecs.new_world {
 		modules = modules,
 		update_order = {"timesystem"},

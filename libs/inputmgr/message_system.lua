@@ -30,15 +30,19 @@ local iup_message = ecs.system "iup_message"
 iup_message.singleton "message_component"
 
 function iup_message:update()
-	for _, msg, v1,v2,v3,v4,v5 in pairs(world.args.mq) do
-		local observers = self.message_component.msg_observers
-		for _, ob in ipairs(observers) do
-			local action = ob[msg]
-			if action then
-				action(self,v1,v2,v3,v4,v5)
+	local mq = world.args.mq 
+	if mq then
+		for _, msg, v1,v2,v3,v4,v5 in pairs(mq) do
+			local observers = self.message_component.msg_observers
+			for _, ob in ipairs(observers) do
+				local action = ob[msg]
+				if action then
+					action(self,v1,v2,v3,v4,v5)
+				end
 			end
+	
 		end
-
 	end
+
 end
 --@]
