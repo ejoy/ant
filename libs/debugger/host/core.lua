@@ -52,28 +52,28 @@ function io.host_recv(pkg)
     end
 end
 
-ev.on('gui-keyboard', function(vk)
+ev.on('gui-toolbar', function(vk)
     request.task(function()
         if status.status == 'stopped' then
-            if vk == 'F5' then
+            if vk == 'continue' then
                 status.status = 'running'
                 request.continue(status.threadId)
-            elseif vk == 'F10' then
+            elseif vk == 'stepover' then
                 status.status = 'running'
                 request.next(status.threadId)
-            elseif vk == 'F11' then
+            elseif vk == 'stepin' then
                 status.status = 'running'
                 request.stepIn(status.threadId)
-            elseif vk == 'Shift+F5' then
+            elseif vk == 'stop' then
                 -- TODO
                 --status.status = 'running'
                 --request.terminate()
-            elseif vk == 'Shift+F11' then
+            elseif vk == 'stepout' then
                 status.status = 'running'
                 request.stepOut(status.threadId)
             end
         elseif status.status == 'running' then
-            if vk == 'F6' then
+            if vk == 'pause' then
                 -- TODO
                 if #status.threads > 0 then
                     request.pause(status.threads[1].id)
