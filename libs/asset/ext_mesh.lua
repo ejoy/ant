@@ -15,7 +15,7 @@ return function (filename)
 		local assetmgr = require "asset"
 		local function check_path(fp)
 			if path.ext(fp) == nil then					
-				for _, ext in ipairs {".fbx", ".bin"} do					
+				for _, ext in ipairs {".fbx", ".bin", ".ozz"} do
 					local pp = assetmgr.find_valid_asset_path(fp .. ext)
 					if pp then
 						return pp
@@ -26,7 +26,7 @@ return function (filename)
 			return assetmgr.find_valid_asset_path(fp)
 		end
 
-		mesh_path = check_path(mesh_path)         
+		mesh_path = check_path(mesh_path)
 		if mesh_path then
 			mesh.handle = mesh_loader.load(mesh_path)
         else

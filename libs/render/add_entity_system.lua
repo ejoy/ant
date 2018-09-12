@@ -112,22 +112,22 @@ function add_entity_sys:init()
 
      do
         local bunny_eid = world:new_entity("position", "rotation", "scale",
-	 		"can_render", "mesh", "material",
-	 		"name", "serialize",
-            "can_select")
+			"can_render", "mesh", "material",
+			"name", "serialize",
+			"can_select")
         local bunny = world[bunny_eid]
         bunny.name.n = "bunny"
      
         -- should read from serialize file
         ms(bunny.scale.v, {2, 2, 2, 0}, "=")
         ms(bunny.position.v, {0, 0, 0, 1}, "=")
-	 	ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
+		ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
      
-	 	bunny.mesh.path = "bunny.mesh"
-	 	component_util.load_mesh(bunny)
+		bunny.mesh.path = "bunny.mesh"
+		component_util.load_mesh(bunny)
      
-	 	bunny.material.content[1] = {path = "bunny.material", properties = {}}
-	 	component_util.load_material(bunny)
+		bunny.material.content[1] = {path = "bunny.material", properties = {}}
+		component_util.load_material(bunny)
 	 end
 
     
@@ -326,5 +326,19 @@ function add_entity_sys:init()
 		
 		world:change_component(hierarchy_eid, "rebuild_hierarchy")
 		world:notify()
+	end
+
+	do
+		local ani_eid = world:new_entity("position", "scale", "rotation", 
+		"mesh", "animation", "hierarchy", "material",
+		"can_render", "can_select", 
+		"name")
+
+		local ani_e = world[ani_eid]
+		ani_e.hierarchy.ref_path = "meshes/skeleton/skeleton.ozz"
+		ani_e.hierarchy.builddata = asset.load(ani_e.hierarchy.ref_path)
+		ani_e.animation.ref_path = "meshes/animation/animation_base.ozz"
+		ani_e.animation.handle = asset.load(ani_e.animation.ref_path)
+
 	end
 end

@@ -1,3 +1,5 @@
+#include "hierarchy.h"
+
 extern "C" {
 #define LUA_LIB
 #include "lua.h"
@@ -24,10 +26,6 @@ struct hierarchy_tree {
 
 struct hierarchy {
 	RawSkeleton::Joint *joint;
-};
-
-struct hierarchy_build_data {
-	ozz::animation::Skeleton *skeleton;
 };
 
 static int
@@ -168,6 +166,8 @@ create_builddata_userdata(lua_State *L){
 		lua_setfield(L, -2, "__len");
 		lua_pushcfunction(L, lbuilddata_save);
 		lua_setfield(L, -2, "__save");
+		lua_pushcfunction(L, lbuilddata_load);
+		lua_setfield(L, -2, "__load");
 	}
 	lua_setmetatable(L, -2);
 
@@ -629,7 +629,7 @@ lload(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TSTRING);
 
 	if (luaL_getmetafield(L, 1, "__load") == LUA_TNIL)
-		luaL_error(L, "no __save in userdata metatable");
+		luaL_error(L, "no __load in userdata metatable");
 
 	lua_pushvalue(L, 1);
 	lua_pushvalue(L, 2);

@@ -7,6 +7,38 @@
 #include <vector>
 #include <map>
 
+struct load_config {
+	load_config()
+		: layout("p3|n|T|b|t20|c30")
+		, flags(0) {}
+
+	bool NeedCreateNormal() const {
+		return flags & CreateNormal;
+	}
+
+	bool NeedCreateTangentSpaceData() const {
+		return flags & (CreateTangent | CreateBitangent);
+	}
+
+	bool NeedFlipUV()const {
+		return flags & FlipUV;
+	}
+
+	std::string layout;
+
+	enum {
+		CreateNormal = 0x00000001,
+		CreateTangent = 0x00000002,
+		CreateBitangent = 0x00000004,
+
+		InvertNormal = 0x00000010,
+		FlipUV = 0x00000020,
+		IndexBuffer32Bit = 0x00000040,
+
+	};
+	uint32_t flags;
+};
+
 struct AABB {
 	glm::vec3 min, max;
 
@@ -173,3 +205,6 @@ struct mesh_data {
 	std::vector<group>	groups;
 	Bounding			bounding;
 };
+
+bool
+WriteMeshData(const mesh_data &md, const std::string &srcfile, const std::string &outputfile);
