@@ -90,23 +90,34 @@ local function window_settext(wnd, text)
     wnd.MARGINWIDTH1 = tostring(16 + 8*ln)
 end
 
-local play = iup.button { title = '▶️' }
-local stop  = iup.button { title = '⏹️' }
+local play     = iup.button { TITLE = '▶️', FLAT = 'YES', CANFOCUS = 'NO', SIZE = '16x12' }
+local stepover = iup.button { TITLE = '➡️', FLAT = 'YES', CANFOCUS = 'NO', SIZE = '16x12' }
+local stepin   = iup.button { TITLE = '⤵️', FLAT = 'YES', CANFOCUS = 'NO', SIZE = '16x12' }
+local stepout  = iup.button { TITLE = '⤴️', FLAT = 'YES', CANFOCUS = 'NO', SIZE = '16x12' }
+local stop     = iup.button { TITLE = '⏹️', FLAT = 'YES', CANFOCUS = 'NO', SIZE = '16x12', ACTIVE = 'NO' }
 
 function play:action()
     if self.TITLE == '▶️' then
-        ev.emit('gui-keyboard', 'F5')
+        ev.emit('gui-toolbar', 'continue')
     else
-        ev.emit('gui-keyboard', 'F6')
+        ev.emit('gui-toolbar', 'pause')
     end
 end
-
-function stop:action() 
-    ev.emit('gui-keyboard', 'Shift+F5')
+function stepover:action()
+    ev.emit('gui-toolbar', 'stepover')
+end
+function stepin:action()
+    ev.emit('gui-toolbar', 'stepin')
+end
+function stepout:action()
+    ev.emit('gui-toolbar', 'stepout')
+end
+function stop:action()
+    ev.emit('gui-toolbar', 'stop')
 end
 
 local dlg = iup.dialog {
-    iup.vbox { iup.hbox { play, stop }, tabs},
+    iup.vbox { iup.hbox { play, stepover, stepin, stepout, stop }, tabs},
     TITLE = 'Ant Debug',
     SIZE = '600x400'
 }
@@ -115,22 +126,26 @@ dlg:show()
 
 function dlg:k_any(c)
     if c == iup.K_F5 then
-        ev.emit('gui-keyboard', 'F5')
+        if play.TITLE == '▶️' then
+            play:action()
+        end
         return iup.IGNORE
     elseif c == iup.K_F6 then
-        ev.emit('gui-keyboard', 'F6')
+        if play.TITLE ~= '▶️' then
+            play:action()
+        end
         return iup.IGNORE
     elseif c == iup.K_F10 then
-        ev.emit('gui-keyboard', 'F10')
+        stepover:action()
         return iup.IGNORE
     elseif c == iup.K_F11 then
-        ev.emit('gui-keyboard', 'F11')
+        stepin:action()
         return iup.IGNORE
     elseif c == iup.XkeyShift(iup.K_F5) then
-        ev.emit('gui-keyboard', 'Shift+F5')
+        stop:action()
         return iup.IGNORE
     elseif c == iup.XkeyShift(iup.K_F11) then
-        ev.emit('gui-keyboard', 'Shift+F11')
+        stepout:action()
         return iup.IGNORE
     end
 end
@@ -175,10 +190,16 @@ end
 
 function m.btn_run()
     play.TITLE = '▶️'
+    stepover.ACTIVE = 'YES'
+    stepin.ACTIVE = 'YES'
+    stepout.ACTIVE = 'YES'
 end
 
 function m.btn_stop()
     play.TITLE = '⏸️'
+    stepover.ACTIVE = 'NO'
+    stepin.ACTIVE = 'NO'
+    stepout.ACTIVE = 'NO'
 end
 
 function tabs:tabclose_cb(pos)
