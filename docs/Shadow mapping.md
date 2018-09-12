@@ -19,6 +19,7 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
 (1)如果像素的深度值大于Shadowmap中同一位置像素的深度值，说明这个像素处在阴影中。
 
 下图解释了这一原理：
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/shadowmapping.png)
 
 渲染shadowmap
 ------------------------
@@ -108,6 +109,7 @@ void main(){
 -----------
 
 渲染后的纹理看起来像这样子:
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/DepthTexture.png)
 
 颜色越深表示深度值越小。也就是说对于这个shadowmap右上角更接近相机。与之相反，白色意味着深度值为1(齐次坐标下)，
 距离相机远。
@@ -178,6 +180,7 @@ color =
 -----------------------------
  
 下图是我们当前的代码渲染的结果。显而易见，这个效果是无法接受的。
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/1rstTry.png)
  
 让我们来分析出现的问题。我们提供了两个不同的代码:shadowmaps和shadowmaps_simple，你
 可以自由选择使用哪一个。shadowmaps_simple的渲染的效果像上图一样简陋，但是更容易理解。
@@ -189,8 +192,12 @@ color =
 ------------
  
 最明显的问题是阴影粉刺。
+
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/ShadowAcne.png)
  
 这一现象的解释可以看下图：
+
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/shadow-acne.png)
  
 最常用的修正这一问题的方法是添加额外的容错边缘：我们只对在光源空间下深度值比lightmap值远的像素进行着色，
 我们添加了bias来实现容错边缘
@@ -203,6 +210,8 @@ if ( texture( shadowMap, ShadowCoord.xy ).z  <  ShadowCoord.z-bias){
 
 现在渲染的效果好了很多。
 
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/FixedBias.png)
+
 然而，我们又发现，容错边缘造成地面和墙之间的假象尤为明显。更确切地说，0.005大小的容错边缘对于地面
 来说太大了，但对于曲面来说又有点小了：在圆柱体和球体上可以看到部分假象。
 
@@ -213,9 +222,13 @@ bias = clamp(bias, 0,0.01);
 
 现在连曲面上的阴影粉刺也没有了。
 
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/VariableBias.png)
+
 这里是另一个技巧，工作与否取决于我们使用的几何体，我们只在shadowmap渲染背面。这种方法要求我们必须使用
 一个特殊的集合体(彼得平移(Peter Panning))，以及一个厚厚的墙，但这样做可以使粉刺只出现在阴影之下的表面中，也
 就不会被我们看到。
+
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/shadowmapping-backfaces.png)
 
 渲染shadowmap时，剔除三角形正面：
 
@@ -243,10 +256,14 @@ glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing tri
 
 这个方法的缺点是我们需要渲染更多的三角形(每一帧多渲染一倍！)。
 
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/NoPeterPanning.png)
+
 锯齿
 --------
 
 尽管我们使用了两个小技巧，但在阴影的边缘还是存在锯齿。换句话说就是临近的两个像素颜色变化过大，没有平滑过渡。
+
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/Aliasing.png)
 
 PCF
 ---------
@@ -258,6 +275,8 @@ PCF
 举个例子，0.5意味着2个样本来自阴影，2个样本来自光源。
 
 和对深度值进行的单点采样不同(结果只有true或false),PCF使用4个布尔量来决定最后的结果为true还是false。
+
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/PCF_1tap.png)
 
 就像我们看到的，阴影边缘变得光滑了，但还是有明显的锯齿。
 
@@ -285,8 +304,14 @@ vec2 poissonDisk[4] = vec2[](
 
 使用这种方法后，产生的像素可能会因为采样次数的不同变得更黑或更浅:
 
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/SoftShadows.png)
+
 常量值700.0定义了有多少样本被传播。传播的样本如果很少的话，我们可能最后还是会看到锯齿，太多的话就会出现条带。
 (截图中的程序没有使用PCF，但使用了16个样本进行采样)
+
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/SoftShadows_Close.png)
+
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/SoftShadows_Wide.png)
 
 分层泊松采样(Stratified Poisson Sampling)
 -------------------------------------------
@@ -318,6 +343,8 @@ gl_FragCoord(像素在屏幕中的位置)和Position_worldspace。
         //int index = int(16.0*random(floor(Position_worldspace.xyz*1000.0), i))%16;
 
 现在条带消失了，代价是出现了可见的噪点。不过相对而言，处理较好的噪点要比条带好的多。
+
+![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/PCF_stratified_4tap.png)
 
 更深入的研究
 ---------------
