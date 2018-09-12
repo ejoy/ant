@@ -35,74 +35,74 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
 尝试其它数字也可能取得不错的效果。由于我们需要之后在着色器中对它进行采样，所以我们使用的是深度纹理,
 而不是渲染缓冲区(renderbuffer)。
 
-   / The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
-   GLuint FramebufferName = 0;
-   glGenFramebuffers(1, &FramebufferName);
-   glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+       / The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+        GLuint FramebufferName = 0;
+        glGenFramebuffers(1, &FramebufferName);
+        glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
 
-   // Depth texture. Slower than a depth buffer, but you can sample it later in your shader
-   GLuint depthTexture;
-   glGenTextures(1, &depthTexture);
-   glBindTexture(GL_TEXTURE_2D, depthTexture);
-   glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT16, 1024, 1024, 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+       // Depth texture. Slower than a depth buffer, but you can sample it later in your shader
+        GLuint depthTexture;
+        glGenTextures(1, &depthTexture);
+        glBindTexture(GL_TEXTURE_2D, depthTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT16, 1024, 1024, 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-   glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0);
 
-   glDrawBuffer(GL_NONE); // No color buffer is drawn to.
+        glDrawBuffer(GL_NONE); // No color buffer is drawn to.
 
-   // Always check that our framebuffer is ok
-   if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-   return false;
+        // Always check that our framebuffer is ok
+        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        return false;
  
  用于在光源处进行渲染的模型视图投影矩阵的计算方法如下：
  (1)我们使用正交投影矩阵，它包含了X(-10,10),Y(-10,10),Z(-10,20)空间的场景。
  (2)使用视图矩阵旋转世界空间，使光源方向为-Z方向。
  (3)模型矩阵的设置完全自由。
  
-   glm::vec3 lightInvDir = glm::vec3(0.5f,2,2);
+      glm::vec3 lightInvDir = glm::vec3(0.5f,2,2);
 
-   // Compute the MVP matrix from the light's point of view
-   glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
-   glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0,0,0), glm::vec3(0,1,0));
-   glm::mat4 depthModelMatrix = glm::mat4(1.0);
-   glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
+      // Compute the MVP matrix from the light's point of view
+      glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
+      glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0,0,0), glm::vec3(0,1,0));
+      glm::mat4 depthModelMatrix = glm::mat4(1.0);
+      glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
 
-   // Send our transformation to the currently bound shader,
-   // in the "MVP" uniform
-   glUniformMatrix4fv(depthMatrixID, 1, GL_FALSE, &depthMVP[0][0])
+      // Send our transformation to the currently bound shader,
+      // in the "MVP" uniform
+      glUniformMatrix4fv(depthMatrixID, 1, GL_FALSE, &depthMVP[0][0]);
  
  着色器
  -------------
  
  我们在第一次渲染中使用的顶点着色器非常简单。顶点着色器仅仅计算了顶点变换后的齐次坐标。
  
-  #version 330 core
+    #version 330 core
 
-  // Input vertex data, different for all executions of this shader.
-  layout(location = 0) in vec3 vertexPosition_modelspace;
+    // Input vertex data, different for all executions of this shader.
+    layout(location = 0) in vec3 vertexPosition_modelspace;
 
-  // Values that stay constant for the whole mesh.
-  uniform mat4 depthMVP;
+    // Values that stay constant for the whole mesh.
+    uniform mat4 depthMVP;
 
-  void main(){
-   gl_Position =  depthMVP * vec4(vertexPosition_modelspace,1);
-  }
+     void main(){
+         gl_Position =  depthMVP * vec4(vertexPosition_modelspace,1);
+      }
 
 像素着色器也同样简单。仅仅在位置0处写入了像素的深度值。
 
-  #version 330 core
+      #version 330 core
 
-  // Ouput data
-  layout(location = 0) out float fragmentdepth;
+      // Ouput data
+      layout(location = 0) out float fragmentdepth;
 
-  void main(){
-      // Not really needed, OpenGL does it anyway
-      fragmentdepth = gl_FragCoord.z;
-  }
+      void main(){
+         // Not really needed, OpenGL does it anyway
+         fragmentdepth = gl_FragCoord.z;
+      }
 
 因为我们对写入的深度值精度要求不高，通常渲染shadowmap要比正常的渲染快两倍。通常对于GPU来说，带宽是性能瓶颈所在。
 
@@ -136,24 +136,24 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
 我们显然可以在像素着色器中对它进行处理，但使用下面的矩阵乘以这个齐次坐标更加高效。这个矩阵可以把坐标的大小
 除以2(对角线[-1,1]变为[-0.5,0.5])，然后转换它们(矩阵最后一行,[-0.5,0.5]变为[0,1])。
 
-  glm::mat4 biasMatrix(
-  0.5, 0.0, 0.0, 0.0,
-  0.0, 0.5, 0.0, 0.0,
-  0.0, 0.0, 0.5, 0.0,
-  0.5, 0.5, 0.5, 1.0
-  );
-  glm::mat4 depthBiasMVP = biasMatrix*depthMVP;
+      glm::mat4 biasMatrix(
+        0.5, 0.0, 0.0, 0.0,
+        0.0, 0.5, 0.0, 0.0,
+        0.0, 0.0, 0.5, 0.0,
+        0.5, 0.5, 0.5, 1.0
+       );
+      glm::mat4 depthBiasMVP = biasMatrix*depthMVP;
 
 现在我们可以编写顶点着色器了。这次它输出了两个位置信息。
 
 (1)gl_Position是顶点在当前相机中的位置。
 (2)ShadowCoord是顶点在光源相机中的位置。
 
-  // Output position of the vertex, in clip space : MVP * position
-  gl_Position =  MVP * vec4(vertexPosition_modelspace,1);
+    // Output position of the vertex, in clip space : MVP * position
+     gl_Position =  MVP * vec4(vertexPosition_modelspace,1);
 
-  // Same, but with the light's view matrix
-  ShadowCoord = DepthBiasMVP * vec4(vertexPosition_modelspace,1);
+    // Same, but with the light's view matrix
+     ShadowCoord = DepthBiasMVP * vec4(vertexPosition_modelspace,1);
 
 像素着色器也还是非常简单：
 (1)texture( shadowMap, ShadowCoord.xy ).z是光源到最近的遮挡物的距离。
@@ -161,21 +161,21 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
 
 所以如果当前像素离光源更远，它就在阴影中(准确说，在最近的遮挡物的阴影中)。
 
-  float visibility = 1.0;
-  if ( texture( shadowMap, ShadowCoord.xy ).z  <  ShadowCoord.z){
-     visibility = 0.5;
-  }
+    float visibility = 1.0;
+     if ( texture( shadowMap, ShadowCoord.xy ).z  <  ShadowCoord.z){
+       visibility = 0.5;
+     }
 
 我们使用这一知识来修改我们的着色器。我们没有修改环境光，因为它的目的是为我们提供
 入射光，我们的阴影也能接收到它。(否则，可能得到的结果是一片漆黑。)
 
-   color =
-   // Ambient : simulates indirect lighting
-   MaterialAmbientColor +
-   // Diffuse : "color" of the object
-   visibility * MaterialDiffuseColor * LightColor * LightPower * cosTheta+
-   // Specular : reflective highlight, like a mirror
-   visibility * MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,5);
+      color =
+      // Ambient : simulates indirect lighting
+      MaterialAmbientColor +
+      // Diffuse : "color" of the object
+      visibility * MaterialDiffuseColor * LightColor * LightPower * cosTheta+
+      // Specular : reflective highlight, like a mirror
+      visibility * MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,5);
  
 结果-阴影粉刺(Shadow acne)
 -----------------------------
@@ -203,11 +203,11 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
 最常用的修正这一问题的方法是添加额外的容错边缘：我们只对在光源空间下深度值比lightmap值远的像素进行着色，
 我们添加了bias来实现容错边缘
 
-  float bias = 0.005;
-  float visibility = 1.0;
-  if ( texture( shadowMap, ShadowCoord.xy ).z  <  ShadowCoord.z-bias){
-      visibility = 0.5;
-  }
+      float bias = 0.005;
+      float visibility = 1.0;
+      if ( texture( shadowMap, ShadowCoord.xy ).z  <  ShadowCoord.z-bias){
+          visibility = 0.5;
+      }
 
 现在渲染的效果好了很多。
 
@@ -218,8 +218,8 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
 
 一个常见的方法是根据斜率设置容错边缘:
 
-   float bias = 0.005*tan(acos(cosTheta)); // cosTheta is dot( n,l ), clamped between 0 and 1
-   bias = clamp(bias, 0,0.01);
+       float bias = 0.005*tan(acos(cosTheta)); // cosTheta is dot( n,l ), clamped between 0 and 1
+       bias = clamp(bias, 0,0.01);
 
 现在连曲面上的阴影粉刺也没有了。
 
@@ -233,14 +233,14 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
 
 渲染shadowmap时，剔除三角形正面：
 
-  // We don't use bias in the shader, but instead we draw back faces,
-  // which are already separated from the front faces by a small distance
-  // (if your geometry is made this way)
-  glCullFace(GL_FRONT); // Cull front-facing triangles -> draw only back-facing triangles
+       // We don't use bias in the shader, but instead we draw back faces,
+       // which are already separated from the front faces by a small distance
+       // (if your geometry is made this way)
+       glCullFace(GL_FRONT); // Cull front-facing triangles -> draw only back-facing triangles
 
 渲染场景时我们开启背面剔除。
 
-  glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
+       glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
 
 除了容错边缘，我们的代码中也使用了这一方法。
 
@@ -288,20 +288,20 @@ PCF
 
 下面的代码进行了4次采样:
 
-  for (int i=0;i<4;i++){
-    if ( texture( shadowMap, ShadowCoord.xy + poissonDisk[i]/700.0 ).z  <  ShadowCoord.z-bias ){
-      visibility-=0.2;
-    }
-  }
+      for (int i=0;i<4;i++){
+         if ( texture( shadowMap, ShadowCoord.xy + poissonDisk[i]/700.0 ).z  <  ShadowCoord.z-bias ){
+            visibility-=0.2;
+         }
+      }
 
 poissonDisk是一个常量数组，它的定义如下:
 
-  vec2 poissonDisk[4] = vec2[](
-    vec2( -0.94201624, -0.39906216 ),
-    vec2( 0.94558609, -0.76890725 ),
-    vec2( -0.094184101, -0.92938870 ),
-    vec2( 0.34495938, 0.29387760 )
-  );
+      vec2 poissonDisk[4] = vec2[](
+         vec2( -0.94201624, -0.39906216 ),
+         vec2( 0.94558609, -0.76890725 ),
+         vec2( -0.094184101, -0.92938870 ),
+         vec2( 0.34495938, 0.29387760 )
+      );
 
 使用这种方法后，产生的像素可能会因为采样次数的不同变得更黑或更浅:
 
@@ -363,9 +363,9 @@ gl_FragCoord(像素在屏幕中的位置)和Position_worldspace。
 
 处理聚光灯只需要很少的修改。首先我们需要把正交投影矩阵换成透视投影矩阵:
 
- glm::vec3 lightPos(5, 20, 20);
- glm::mat4 depthProjectionMatrix = glm::perspective<float>(glm::radians(45.0f), 1.0f, 2.0f, 50.0f);
- glm::mat4 depthViewMatrix = glm::lookAt(lightPos, lightPos-lightInvDir, glm::vec3(0,1,0));
+      glm::vec3 lightPos(5, 20, 20);
+      glm::mat4 depthProjectionMatrix = glm::perspective<float>(glm::radians(45.0f), 1.0f, 2.0f, 50.0f);
+      glm::mat4 depthViewMatrix = glm::lookAt(lightPos, lightPos-lightInvDir, glm::vec3(0,1,0));
 
 和之前一样，只是把正交投影的视锥体变成了透视投影的视锥体。我们需要使用texture2Dproj来确保透视除法的正确。
 
@@ -375,8 +375,8 @@ gl_FragCoord(像素在屏幕中的位置)和Position_worldspace。
 
 有两种方法在GLSL中进行这个操作。第2种是使用GLSL内建的textureProj，两种方法的结果是一样的。
 
- if ( texture( shadowMap, (ShadowCoord.xy/ShadowCoord.w) ).z  <  (ShadowCoord.z-bias)/ShadowCoord.w )
- if ( textureProj( shadowMap, ShadowCoord.xyw ).z  <  (ShadowCoord.z-bias)/ShadowCoord.w )
+      if ( texture( shadowMap, (ShadowCoord.xy/ShadowCoord.w) ).z  <  (ShadowCoord.z-bias)/ShadowCoord.w )
+      if ( textureProj( shadowMap, ShadowCoord.xyw ).z  <  (ShadowCoord.z-bias)/ShadowCoord.w )
 
 点光源
 ---------------
