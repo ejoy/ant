@@ -6,7 +6,8 @@ FAQ for bgfx
 
 安装好编译工具链后进入bgfx的源代码目录执行make shaderc。
 如果提示信息缺少yacc和lex，使用pacman -S bison flex来安装yacc和lex。
-
+如果还无法编译成功的话运行bgfx/3rdparty/glsl-optimizer/generateParsers.sh脚本
+然后在bgfx目录下运行make shaderc。
 
 bgfx调式策略
 ------------------------
