@@ -22,12 +22,8 @@ local loader = setmetatable({} , {
 	end
 })
 
-local function remap_modulename(mname)
-	return mname == "ozz" and "ext_hierarchy" or ("ext_" .. mname)	
-end
-
 for _, mname in ipairs(support_list) do	
-	loader[mname] = require(remap_modulename(mname))
+	loader[mname] = require ("ext_" .. mname)
 end
 
 local assetmgr = {}

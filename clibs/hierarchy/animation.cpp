@@ -20,11 +20,14 @@ extern "C" {
 #include <ozz/base/memory/allocator.h>
 #include <ozz/base/io/stream.h>
 #include <ozz/base/io/archive.h>
+#include <ozz/base/containers/vector.h>
 
 
 struct animation_node {
 	ozz::animation::Animation *ani;
 	ozz::animation::SamplingCache *cache;
+
+	ozz::Range<ozz::math::Float4x4>	poses;	
 	float ratio;
 };
 
@@ -74,11 +77,13 @@ lmotion(lua_State *L){
 		luaL_error(L, "run sampling job failed!");
 	}
 
-	auto modelResult = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(ske->num_soa_joints());
+	if (aninode->poses.size() == 0)
+		aninode->poses = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(ske->num_soa_joints());
+
 	ozz::animation::LocalToModelJob ltmjob;
 	ltmjob.input = samplingResults;
 	ltmjob.skeleton = ske;
-	ltmjob.output = modelResult;
+	ltmjob.output = aninode->poses;
 
 	if (!ltmjob.Run()) {
 		luaL_error(L, "transform from local to model failed!");
@@ -97,6 +102,8 @@ ldel_animation(lua_State *L) {
 		ozz::memory::default_allocator()->Delete(node->cache);
 		node->cache = nullptr;
 	}
+
+	ozz::memory::default_allocator()->Deallocate(node->poses);
 	
 	return 0;
 }

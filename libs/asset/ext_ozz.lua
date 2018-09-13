@@ -1,10 +1,13 @@
 return function(filename)
 	local function find_tag(tags)
 		local f = io.open(filename, "rb")
-
+		
+		--print(endless)
 		for _, tag in ipairs(tags) do
 			f:seek("set")
-			if f:read(#tag) == tag then
+			local endless = f:read(1)
+			local c = f:read(#tag)
+			if c == tag then
 				f:close()
 				return tag
 			end
@@ -17,10 +20,10 @@ return function(filename)
 
 	if tag == "ozz-animation" then
 		local animodule = require "hierarchy.animation"
-		return animodule.new_animation(filename)
+		return animodule.new_ani(filename)
 	elseif  tag == "ozz-skeleton" then
 		local hiemodule = require "hierarchy"
-		return hiemodule.load(filename)
+		return hiemodule.build(filename)
 	end
 
 	error("not support type")
