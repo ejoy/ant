@@ -33,7 +33,7 @@ local function ToAddressPort(id)
 end
 
 function io.new()
-    return setmetatable({recv={}, send={}, reading = ""}, io)
+    return setmetatable({recv={}, send={}, reading = "", fds = {}}, io)
 end
 
 function io:Connect(id, type)
@@ -76,7 +76,7 @@ function io:Connect(id, type)
         end
 
         --cache socket info
-        self.fds = {fd}
+        table.insert(self.fds, fd)
         self.socket[id] = fd
 
         print("connect to "..id.." successful")
@@ -95,7 +95,7 @@ function io:Bind(id, type)
         --add to fds
         if fd then
             self.host = fd
-            self.fds = {fd}
+            table.insert(self.fds, fd)
 
             print("bind to "..id.." successful")
             return true
@@ -247,7 +247,7 @@ end
 
 --update return new connect/disconnect id table
 function io:Update(timeout)
-    timeout = timeout or 0.01
+    timeout = timeout or 0.005
     --lsockets
     local con_id = {}   --new connected id
     --todo implement properly
@@ -292,10 +292,6 @@ function io:Update(timeout)
                             off = idx
 
                             local unpack_str = pack.unpack(str)
-                            print("unpack str", #unpack_str)
-                            for kk, vv in pairs(unpack_str)  do
-                                print(kk, vv)
-                            end
                             table.insert(self.recv[fd], unpack_str)
                         else
                             break

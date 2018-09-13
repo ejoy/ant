@@ -8,8 +8,8 @@ local io_cmd = {}
 io_cmd.EXIST_CHECK = function(resp, self)
     assert(resp[1] == "EXIST_CHECK", "COMMAND: "..resp[1].." invalid, shoule be EXIST_CHECK")
     local result = resp[2]
-
-    self.linda:send("file exist", result)
+    local hash = resp[3]
+    self.linda:send("file exist"..hash, result)
 end
 
 io_cmd.FILE = function(resp, self)
@@ -30,7 +30,8 @@ io_cmd.FILE = function(resp, self)
     --file dose not exist on server
     local hash = resp[3]
 
-    print("write file", file_path, hash)
+
+
     if not hash then
         --TODO: handle this situation
         print("error: server hash not founc")
@@ -47,6 +48,8 @@ io_cmd.FILE = function(resp, self)
         self.vfs:write(hash, resp[5], "ab")
     end
 
+    print("write file", file_path, hash)
+
     if offset >= total_pack then
         --TODO version management/control
         --the file is complete, inform out side
@@ -54,21 +57,26 @@ io_cmd.FILE = function(resp, self)
         self.linda:send("new file", file_path)
     end
 
-    print("write file", file_path, self.vfs)
 end
 
 io_cmd.SERVER_ROOT = function(resp, self)
     local cmd = resp[1]
-    if cmd == "SERVER_ROOT" then
-        self.vfs:changeroot(resp[2])
+    assert(cmd == "SERVER_ROOT")
 
-        print("change root", resp[2])
-        if self.run_cmd_cache then
-            print("restore run command", self.run_cmd_cache)
-            self.linda:send("run", self.run_cmd_cache)
-            self.run_cmd_cache = nil
-        end
+    --table.remove(resp, 1)
+    print("root is", resp[2])
+    print(pcall(self.vfs.changeroot, self.vfs, resp[2]))
+    self.vfs:changeroot(resp[2])
+
+    print("change root", resp)
+    if self.run_cmd_cache then
+        print("restore run command", self.run_cmd_cache)
+        self.linda:send("run", self.run_cmd_cache)
+        self.run_cmd_cache = nil
     end
+
+    self.linda:send("server_root_updated", true)
+
 end
 
 io_cmd.RUN = function(resp, self)
@@ -81,22 +89,32 @@ io_cmd.RUN = function(resp, self)
     --_linda:send("run", resp[2])
 end
 
-function client.new(address, port, init_linda, pkg_dir, sb_dir, vfs_repo)
+function client.new(address, port, init_linda, pkg_dir, sb_dir, vfs_cloud)
     --connection started from here
     print("listen to address", address,"port", port)
     local io_ins = iosys.new()
+
+    local connect_id = "127.0.0.1:8889"
+    local connect_res = io_ins:Connect(connect_id)
+    --connect to a port, not available if this is on iOS device
+    if not connect_res then
+        connect_id = nil
+    else
+        --request root here
+        io_ins:Send(connect_id, {"REQUEST_ROOT"})
+    end
+
     local id = tostring(address) .. ":" .. tostring(port)
     assert(io_ins:Bind(id), "bind to: ".. id .. " failed")
+
 
     sand_box_path = sb_dir .. "/Documents/"
 
     print("create server repo")
-    --return setmetatable( { host = fd, fds = {fd}, sending = {}, resp = {}, reading = ""}, client)
-    return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, vfs = vfs_repo, run_cmd_cache = nil}, client)
+    return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, vfs = vfs_cloud,  connect_id = connect_id, current_connect = connect_id}, client)
 end
 
 function client:send(client_req)
-
     if self.current_connect then
         self.io:Send(self.current_connect, client_req)
     end
@@ -110,10 +128,16 @@ function client:CollectSendRequest()
         elseif key == "log" then
             self:send({"LOG", table.unpack(value)})
         elseif key == "vfs_open" then
-            print("try open: ", value)
+            --print("try open: ", value)
             local file, hash, f_n = self.vfs:open(value)
-            print("vfs open res:", file, hash, f_n)
-            if file then file:close() end
+            --print("vfs open res:", file, hash, f_n)
+            if file then
+              --  print("vfs open file", value, f_n)
+              --  local content = file:read("a")
+              --  print(content)
+
+                file:close()
+            end
             --FILE can't send through linda
             self.linda:send("vfs_open_res"..value, {f_n, hash})
         else
@@ -121,6 +145,21 @@ function client:CollectSendRequest()
         end
     end
 
+end
+
+function client:IORecv(recv_pkg)
+    for _, recv in ipairs(recv_pkg) do
+        --do nothing but put it in linda, let msg process thread handle it
+        print("io recv pkg", recv[1])
+
+        local cmd = recv[1]
+        local func = io_cmd[cmd]
+        if not func then
+            self.linda:send("io_recv", recv)
+        else
+            func(recv, self)
+        end
+    end
 end
 
 function client:mainloop(timeout)
@@ -161,6 +200,11 @@ function client:mainloop(timeout)
                     break
                 end
             end
+
+            --server disconnected
+            if v == self.connect_id then
+                self.connect_id = nil
+            end
         end
     end
 
@@ -169,6 +213,8 @@ function client:mainloop(timeout)
     for k, _ in pairs(self.connect) do
         local recv_package = self.io:Get(k)
         --process request
+        self:IORecv(recv_package)
+        --[[
         for _, recv in ipairs(recv_package) do
             --do nothing but put it in linda, let msg process thread handle it
             print("io recv pkg", table.unpack(recv))
@@ -181,8 +227,28 @@ function client:mainloop(timeout)
                 func(recv, self)
             end
         end
+        --]]
     end
 
+    if self.connect_id then
+        --handle server connection
+        local recv_pkg = self.io:Get(self.connect_id)
+        self:IORecv(recv_pkg)
+        --[[
+        for _, recv in ipairs(recv_pkg) do
+            --do nothing but put it in linda, let msg process thread handle it
+            print("io recv pkg", table.unpack(recv))
+
+            local cmd = recv[1]
+            local func = io_cmd[cmd]
+            if not func then
+                self.linda:send("io_recv", recv)
+            else
+                func(recv, self)
+            end
+        end
+        --]]
+    end
 end
 
 return client

@@ -12,7 +12,6 @@ return function()
             safe_run(entrance.terminate, "entrance.terminate")
             entrance = nil
         end
-        --entrance.mainloop()
         --[[
         local log = bgfx.get_log()
         if log and #log>0 then

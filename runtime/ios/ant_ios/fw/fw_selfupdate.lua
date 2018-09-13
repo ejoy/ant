@@ -1,9 +1,9 @@
 ---used for initialize structure
-log, cfuncs, pkg_dir, sb_dir = ...
+log, cfuncs, fw_dir, remote_dir = ...
 f_table = cfuncs()
 
 f_table.preloadc()
-package.path = package.path .. ";" .. pkg_dir .. "/fw/?.lua;".. pkg_dir .. "/?.lua;"
+package.path = package.path .. ";" .. fw_dir .. "/fw/?.lua;".. fw_dir .. "/?.lua;"
 
 require"fw_io"
 require"fw_msgprocess"
@@ -53,7 +53,7 @@ while true do
                 end
 
                 print("Try to request hash from server", filename, hash)
-                local request = {"EXIST", hash}
+                local request = {"EXIST", hash, filename}
                 linda:send("request", request)
 
                 local realpath

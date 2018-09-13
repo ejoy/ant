@@ -33,11 +33,12 @@ local function ToAddressPort(id)
 end
 
 function io.new()
-    return setmetatable({recv={}, send={}, reading = ""}, io)
+    return setmetatable({recv={}, send={}, reading = "", fds = {}}, io)
 end
 
 function io:Connect(id, type)
-    --id can be "address:port", or udid of a mobile device
+    --id can be "address:port"
+    --todo or "udid:port", udid unique for each mobile device
     if IsUdid(id) then
         --local imd = require "libimobiledevicelua"
         --todo bug fix
@@ -76,7 +77,7 @@ function io:Connect(id, type)
         end
 
         --cache socket info
-        self.fds = {fd}
+        table.insert(self.fds, fd)
         self.socket[id] = fd
 
         print("connect to "..id.." successful")
@@ -95,7 +96,7 @@ function io:Bind(id, type)
         --add to fds
         if fd then
             self.host = fd
-            self.fds = {fd}
+            table.insert(self.fds, fd)
 
             print("bind to "..id.." successful")
             return true
@@ -144,7 +145,7 @@ function io:Disconnect(id)
 end
 
 function io:Send(id, data)
-    print("send package to: " .. tostring(id))
+    --print("send package to: " .. tostring(id))
     local pkg = pack.pack(data)
 
     if IsUdid(id) then
@@ -292,10 +293,6 @@ function io:Update(timeout)
                             off = idx
 
                             local unpack_str = pack.unpack(str)
-                            print("unpack str", #unpack_str)
-                            for kk, vv in pairs(unpack_str)  do
-                                print(kk, vv)
-                            end
                             table.insert(self.recv[fd], unpack_str)
                         else
                             break

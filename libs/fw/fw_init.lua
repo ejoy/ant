@@ -16,7 +16,7 @@ winfile = require "winfile"
 lodepng = require "lodepnglua"
 
 g_WindowHandle = nil
-g_Width, g_Height = 0
+g_Width, g_Height = 0, 0
 
 origin_open = io.open
 io.open = function (filename, mode, search_local_only)
@@ -34,7 +34,7 @@ io.open = function (filename, mode, search_local_only)
                 local file_path
                 linda:send("vfs_open", filename)
                 while true do
-                    local _, value = linda:receive("vfs_open_res"..filename, 0.001)
+                    local _, value = linda:receive(0.001, "vfs_open_res"..filename)
                     if value then
                         file_path, hash = value[1], value[2]
                         break
@@ -63,12 +63,12 @@ io.open = function (filename, mode, search_local_only)
             end
 
             --print("Try to request hash from server", filename, hash)
-            local request = {"EXIST", hash}
+            local request = {"EXIST", hash, filename}
             linda:send("request", request)
 
             local realpath
             while not realpath do
-                local _, value = linda:receive(0.001, "file exist")
+                local _, value = linda:receive(0.001, "file exist"..hash)
                 if value == "not exist" then
                     --not such file on server
                     print("error: file "..filename.." can't be found")
@@ -81,6 +81,8 @@ io.open = function (filename, mode, search_local_only)
             if not realpath then
                 break
             end
+
+            print("file exist", realpath, hash)
 
             --value is the real path
             request = {"GET", realpath, hash}
@@ -124,7 +126,6 @@ local function get_require_search_path(r_name)
 
     return search_table
 end
-
 
 local require_cache = {}    --record every files that was required, use to clear package.loaded every "run"
 local function remote_searcher(name)
