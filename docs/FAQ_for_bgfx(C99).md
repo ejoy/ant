@@ -1,6 +1,13 @@
 FAQ for bgfx
 =============
 
+编译bgfx官方的shaderc工具
+-----------------------------
+
+安装好编译工具链后进入bgfx的源代码目录执行make shaderc。
+如果提示信息缺少yacc和lex，使用pacman -S bison flex来安装yacc和lex。
+
+
 bgfx调式策略
 ------------------------
 bgfx向debugger输出了很多调试信息，遇到莫名的问题，查看debugger的效率会高很多。
