@@ -1,17 +1,17 @@
 dofile("libs/init.lua")
 
-local project_dir = "/Users/ejoy/Desktop/Engine/ant"
+--local project_dir = "/Users/ejoy/Desktop/Engine/ant"
 
 package.cpath = "clibs/?.dll; clibs/lib?.so; clibs/?.so;" .. package.cpath
 package.path = "libs/dev/Common/?.lua;libs/dev/Server/?.lua;libs/dev/?.lua;".. package.path
-package.path = project_dir.."/libs/?.lua;".. package.path
-package.path = project_dir.."/libs/?/?.lua;".. package.path
+--package.path = project_dir.."/libs/?.lua;".. package.path
+--package.path = project_dir.."/libs/?/?.lua;".. package.path
 
 local path = require "filesystem.path"
 local iup = require "iuplua"
 local mobiledevice = require "libimobiledevicelua"
 local server_framework = require "server_framework"
-server_framework:init("127.0.0.1", 8888)
+server_framework:init("127.0.0.1", 8889)
 
 --todo store in a file
 local winfile = require "winfile"
@@ -125,27 +125,26 @@ function run_file_btn:action()
     local status = filedlg.status
 
     --send connect command
-    --todo fix it later
-    local devices = mobiledevice.GetDevices()
-    for k, v in pairs(devices) do
+    --todo if select a device, only run on that device
+    if status ~= "-1" then
+        local p_dir = proj_dir_text.value
 
-        if status ~= "-1" then
-            local p_dir = proj_dir_text.value
-
-            local file_path = filedlg.value
-            local s_pos, e_pos = string.find(file_path, p_dir)
-            if e_pos then
-                print("file path is absolute")
-                file_path = string.sub(file_path, e_pos+1)
-            end
-
-            file_path = string.gsub(file_path, "\\", "/")
-            --print(file_path)
-
-            server_framework:HandleCommand(v, "RUN", file_path)
+        local file_path = filedlg.value
+        local s_pos, e_pos = string.find(file_path, p_dir)
+        if e_pos then
+            print("file path is absolute")
+            file_path = string.sub(file_path, e_pos+1)
         end
 
+        file_path = string.gsub(file_path, "\\", "/")
+        --print(file_path)
+
+        print("run file", file_path)
+        server_framework:HandleCommand("all", "RUN", file_path)
     end
+
+
+    --local devices = mobiledevice.GetDevices()
 
     filedlg:destroy()
 end

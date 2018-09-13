@@ -44,6 +44,7 @@ function msg_process.new(init_linda, pkg_dir, sb_dir)
 end
 
 function msg_process:mainloop()
+
     if DbgMaster then
         DbgMaster()
     end
@@ -82,15 +83,6 @@ function msg_process:CollectRequest()
                     self.linda:send("io_send", {"SCREENSHOT", name, size, offset, pack_str})
                 end
             end
-            --[[
-        elseif key == "vfs_open" then
-            print("try open: ", value, self.vfs)
-            local file, hash, f_n = self.vfs:open(value)
-            print("vfs open res:", file, hash, f_n)
-            if file then file:close() end
-            --FILE can't send through linda
-            self.linda:send("vfs_open_res", {f_n, hash})
---]]
         elseif key == "RegisterTransmit" then
             transmit_cmd[value] = true
         else

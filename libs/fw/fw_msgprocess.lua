@@ -17,7 +17,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
     end
 
     perror = function(...)
-        origin_print("ERROR!!", "MSG_PROCESS",...)
+        origin_print("ERROR!!", "MSG_PROCESS", debug.traceback(), ...)
         local error_table = {...}
         for k, v in ipairs(error_table) do
             error_table[k] = tostring(v)
@@ -25,25 +25,15 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
         linda:send("log", {"Error", table.unpack(error_table)})
     end
 
-    local vfs = require "firmware.vfs"
-    vfs_repo = vfs.new(_pkg_dir, _sb_dir .. "/Documents")
-    --local file, hash = vfs_repo:open("/fw/msg_process.lua")
-
     ---[[
     origin_open = io.open
     io.open = function(filename, mode)
         while true do
-           -- print("open file", filename)
-            --[[
-            local file, hash = vfs_repo:open(filename)
-            if file then
-                return file
-            end
-            --]]
             local file_path, hash
             linda:send("vfs_open", filename)
             while true do
-                local _, value = linda:receive("vfs_open_res"..filename, 0.001)
+                local _, value = linda:receive(0.001, "vfs_open_res"..filename)
+                --print("try vfs open: " .. filename)
                 if value then
                     file_path, hash = value[1], value[2]
                     break
@@ -51,7 +41,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
             end
 
             if file_path then
-                print("get file: "..filename)
+                print("MSG_PROCESS get file: "..filename)
                 return origin_open(file_path, mode)
             end
 
@@ -62,12 +52,12 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
             end
 
             --print("Try to request hash from server", filename, hash)
-            local request = {"EXIST", hash}
+            local request = {"EXIST", hash, filename}
             linda:send("request", request)
 
             local realpath
             while not realpath do
-                local _, value = linda:receive(0.001, "file exist")
+                local _, value = linda:receive(0.001, "file exist"..hash)
                 if value == "not exist" then
                     --not such file on server
                     print("error: file "..filename.." can't be found")
@@ -88,9 +78,6 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
             while true do
                 local _, file_value = linda:receive(0.001, "new file")
                 if file_value then
-                    --file_value should be local address
-                    --client_repo:write should be called in io thread
-                    --print("get new file: " .. realpath)
                     break
                 end
             end
@@ -111,12 +98,12 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
 
         --print("require search string", search_string)
         for s_path in string.gmatch(search_string, ".-;") do
-            --print("get requrie search path: "..s_path)
-
             local r_path = string.gsub(r_name, "%.", "/")
             s_path = string.gsub(s_path, "?", r_path)
             --get rid of ";" symbol
             s_path = string.gsub(s_path, ";", "")
+
+            s_path = string.sub(s_path, 2)
             table.insert(search_table, s_path)
         end
 
@@ -134,7 +121,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
                 table.insert(require_cache, name)
                 return status
             else
-                err_msg = err_msg .. "can't open: " .. name .. " in " .. v
+                err_msg = err_msg .. "can't open: " .. name .. " in " .. v .. "\n"
             end
         end
 
@@ -150,7 +137,6 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
         return
     end
 
-    --local mp = msg_process.new(linda, pkg_dir, sb_dir, vfs_repo)
     local res, mp = xpcall(msg_process.new, debug.traceback, linda, pkg_dir, sb_dir)
     if not res then
         perror(mp)

@@ -103,6 +103,7 @@ function server:HandlePackage(response_pkg, id, self)
 
         print("send command", cmd_type, response_pkg[2])
         self.io:Send(id, response_pkg)
+
         return "DONE"
 
     elseif cmd_type == "DIR" then
@@ -207,22 +208,30 @@ function server.new(address, port, init_linda)
 
     local io_ins = iosys.new()
     local id = tostring(address) .. ":" .. tostring(port)
-    assert(io_ins:Connect(id), "connect to: " .. id .. " failed")
+    print("bind to id: " .. id)
 
-    local vfsrepo = require "vfsrepo"
-    local server_repo = vfsrepo.new()
+    assert(io_ins:Bind(id), "bind to: " .. id .. " failed")
 
+    local root_dir = "."
     if PLATFORM == "MAC" then
-        print(pcall(server_repo.init, server_repo, "/Users/ejoy/Desktop/Engine/ant"))
-    else
-        --windows for now
-        print(pcall(server_repo.init, server_repo, "."))
+        root_dir = "/Users/ejoy/Desktop/Engine/ant/"
     end
 
+    --repo table
+    --[[
+    local vfsrepo_cloud = require "vfsrepo.vfsrepo_cloud"
+    local server_repo_cloud = vfsrepo_cloud.new()
+    local dir_table = {root_dir .. "assets", root_dir .. "libs"}
 
-    --server_repo:init("/Users/ejoy/Desktop/Engine/ant")
+    print(pcall(server_repo_cloud.init, server_repo_cloud, dir_table))
+    --]]
+    local vfs_repo = require "vfsrepo"
+    local server_repo = vfs_repo.new()
+    print(pcall(server_repo.init, server_repo, root_dir))
+    print("init server cloud successful")
+
     enable_pack_framework(true)
-    return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, log = {}, vfs_repo = server_repo}, server)
+    return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, log = {}, vfs_repo = server_repo, dir_table = dir_table}, server)
 end
 
 function server:kick_client(client_id)
@@ -280,11 +289,6 @@ local function response(self, req, id)
                         self.linda:send("response", {"SCREENSHOT", screenshot_cache})
                     end
                     --]]
-                elseif a_cmd[1] == "REQUEST_ROOT" then
-                    local server_root = self.vfs_repo:root_hash()
-                    local command_package = {{"SERVER_ROOT", server_root}, id}
-                    print("return root: ", server_root)
-                    table.insert(command_cache, command_package)
                 else
                     local command_package = {a_cmd, id}
                     table.insert(command_cache, command_package)
@@ -352,7 +356,7 @@ function server:mainloop(timeout)
         end
     end
 
-    --recv package
+    --recv package from connection
     if self.connect then
         for k, _ in pairs(self.connect) do
             local request_package = self.io:Get(k)
@@ -405,6 +409,7 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
         if PLATFORM ~= "MAC" then
             --windows for now
             print(pcall(self.vfs_repo.init, self.vfs_repo, "."))
+            --print("init vfs clould", pcall(self.vfs_repo.init, self.vfs_repo, self.dir_table))
         end
 
         if udid == "all" then
@@ -413,6 +418,11 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
                 print("RUN cmd sent", k, entrance_path)
                 table.insert(command_cache, request)
             end
+
+            --also send to bind id
+            local request = {{"RUN", entrance_path}, self.id}
+            print("send run command", self.id)
+            table.insert(command_cache, request)
         else
             local request = {{"RUN", entrance_path}, udid}
             print("RUN cmd sent", udid, entrance_path)

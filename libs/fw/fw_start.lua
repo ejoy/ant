@@ -43,7 +43,7 @@ return function (window_handle, width, height, app_dir, bundle_dir)
                 assert(hash, "vfs system error: no file and no hash", path)
 
                 print("Try to request hash from server", hash)
-                local request = {"EXIST", hash}
+                local request = {"EXIST", hash, filename}
                 linda:send("request", request)
 
                 local realpath

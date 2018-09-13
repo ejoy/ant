@@ -74,11 +74,11 @@ function fileserver.GET(req, self)
     --print("server_hash", server_hash)
 	local file_size = fileprocess.GetFileSize(file)
 
-	print("Pulling file", file_path, "filesize", file_size)
+    local hash = req[3]
+    print("Pulling file", file_path, "filesize", file_size, hash)
     --local client_path = string.gsub(file_path, "ServerFiles", "ClientFiles")
     print("client file dir: ", file_path)
 
-    local hash = req[3]
     if file_size < fileserver.MAX_PACKAGE_SIZE  then
         --if file is small enough to fit in one package, just return the file data
         --and the "FILE" command
@@ -95,13 +95,15 @@ end
 function fileserver.EXIST(req, self)
     --req[1] is the command "EXIST"
     --req[2] is the hash value of the file
+    --req[3] is the path of the file
 
     local hash = req[2]
+    local path = req[3]
     print("check file exist: ", hash)
     local real_path = self.vfs_repo:load(hash)
     if real_path then
         print("file exist: ", hash)
-        return {"EXIST_CHECK", real_path}
+        return {"EXIST_CHECK", real_path, hash}
     else
         print("file not exist: ", hash)
         return {"EXIST_CHECK", "not exist"}
@@ -258,7 +260,7 @@ function fileserver.SCREENSHOT(req, self)
 end
 
 function fileserver.REQUEST_ROOT(req, self)
-    print("request root")
-    return req
+    local server_root = self.vfs_repo:root_hash()
+    return {"SERVER_ROOT", server_root}
 end
 return fileserver
