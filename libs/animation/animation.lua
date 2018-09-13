@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+-- luacheck: ignore param
+
 local ani = ecs.component "animation" {
 	ref_path = {
 		type = "userdata",

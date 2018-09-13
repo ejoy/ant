@@ -1,3 +1,5 @@
+-- luacheck: globals import
+
 local require = import and import(...) or require
 
 local path = require "filesystem.path"

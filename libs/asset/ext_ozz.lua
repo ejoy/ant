@@ -5,6 +5,7 @@ return function(filename)
 		--print(endless)
 		for _, tag in ipairs(tags) do
 			f:seek("set")
+			-- luacheck: ignore endless
 			local endless = f:read(1)
 			local c = f:read(#tag)
 			if c == tag then
