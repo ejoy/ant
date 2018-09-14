@@ -119,9 +119,9 @@ function m.send(pkg)
         server.send(pkg)
     elseif not initReq then
         if pkg.type == 'request' and pkg.command == 'initialize' then
-            response_initialize(pkg)
             pkg.__norepl = true
             initReq = pkg
+            response_initialize(pkg)
         else
             response_error(pkg, 'not initialized')
         end
