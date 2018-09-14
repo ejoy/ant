@@ -41,5 +41,5 @@ bgfx有下面这些预定义的uniform
 但是这样就不能使用bgfx提供的一些便捷API。
 
 如果需要使用bgfx的API，可以在自己的shader中定义它们，bgfx的相应API就会起作用。
-需要注意的是bgfx的API自己维护了设置数据的状态，比如bgfx_set_transform并没有设置着色器程序的uniform，
-而是把它存进一个view的state中，在frame时才真正进行了uniform的设置。
+需要注意的是bgfx的API自己维护了设置数据的状态，比如bgfx_set_view_transform并没有设置着色器程序的uniform，
+而是把它存进view的state中，在frame时才真正进行了uniform的设置。
