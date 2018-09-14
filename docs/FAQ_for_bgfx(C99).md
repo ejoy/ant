@@ -22,6 +22,11 @@ renderer.gl.cpp的7016行左右的
 
 renderer_gl.cpp的ProgramGL::create和ShaderGL::create函数是真正的着色器创建代码。
 
+submit和frame的关系
+-----------------------------
+
+frame由0个或1个或多个submit提交的信息构成。可以这样认为frame是一个submit的集合。
+
 编译bgfx官方的shaderc工具
 -----------------------------
 
