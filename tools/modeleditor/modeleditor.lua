@@ -17,29 +17,34 @@ local ani_text = iup.label {
 	ALIGNMENT = "ACENTER",	
 }
 
-local animation_time_controller = iup.val{
-	min=0, max=1,
-	value="0.3", 	
-	EXPAND = "HORIZONTAL",
+local anitime_slider = iup.val{
+	MIN=0, MAX=1, VALUE="0.3",
+	EXPAND="HORIZONTAL",
+	mousemove_cb=function()
+	end,
+	button_press_cb=function()
+	end,
+	button_release_cb=function()
+	end
 }
 
-
-function animation_time_controller:mousemove_cb()
-
-end
-
-function animation_time_controller:button_press_cb()
-
-end
-
-function animation_time_controller:button_release_cb()
-
-end
+local anitime_inputer = iup.text {
+	VALUE="0",
+	MAXSIZE="24x",
+	ALIGNMENT="ARIGHT",
+}
 
 local animation_time = iup.vbox {
 	iup.fill {},
 	ani_text,
-	animation_time_controller,
+	iup.hbox {
+		anitime_slider,
+		anitime_inputer,
+		iup.label {
+			TITLE="Time(ms)",
+		},	
+		EXPAND="ON",
+	},
 	iup.fill {},
 	ALIGNMENT = "ACENTER",
 }
