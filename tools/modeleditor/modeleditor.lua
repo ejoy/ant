@@ -46,16 +46,95 @@ local animation_time = iup.vbox {
 
 local dlg = iup.dialog {
 	iup.split {
-		ORIENTATION = "HORIZONTAL",
-		canvas,
-		animation_time,
+		TITLE="first element",
+		iup.split {
+			ORIENTATION = "HORIZONTAL",
+			canvas,
+			animation_time,
+		},
+		-- attribute control
+		iup.vbox {
+			iup.tabs {
+				TABTITLE0="Resource Files",
+				iup.hbox {
+					iup.vbox {
+						iup.frame {
+							TITLE="Skeleton",
+							iup.hbox {
+								iup.text {
+									ALIGNMENT="ALEFT",
+									EXPAND ="ON",
+									SIZE="120x0"
+								},
+								iup.button {
+									TITLE="Browse",
+									ALIGNMENT="ARIGHT",
+									EXPAND ="ON",
+								},								
+								EXPAND ="ON",
+							},							
+						},
+						iup.space {
+							SIZE="0x5",
+						},
+						iup.frame {
+							TITLE="Animation",
+							iup.hbox {
+								iup.text {
+									ALIGNMENT="ALEFT",
+									SIZE="120x0"
+								},
+								iup.button {
+									TITLE="Browse",
+									ALIGNMENT="ARIGHT",
+								},
+								iup.fill {}
+							},
+						},
+						iup.fill {},
+					},
+					iup.fill{},
+					EXPAND="ON",
+				},
+				EXPAND="ON",
+			},	
+			iup.frame {
+				TITLE = "Animation List",
+				iup.vbox {
+					iup.list {
+						SIZE="160x0",
+						EXPAND="ON",
+						"None1111111111111111111",								
+					},
+					iup.fill{},
+				},
+				EXPAND="ON",
+			},	
+	
+			ORIENTATION = "HORIZONTAL",			
+		}
 	},
-	canvas,
 	title = "Model Editor",	
 }
 
 dlg:showxy(iup.CENTER, iup.CENTER)
 dlg.usersize = nil
+
+local function print_children(container)	
+	
+	local idx = 1
+	while true do
+		local ctrl = container[idx]
+		if ctrl == nil then
+			break
+		end
+		idx = idx + 1		
+		print("title : ", ctrl.TITLE, ", NATURALSIZE : ", ctrl.NATURALSIZE)
+		print_children(ctrl)
+	end
+end
+
+print_children(dlg)
 
 rhwi.init(iup.GetAttributeData(canvas, "HWND"), fbw, fbh)
 local world = su.start_new_world(nil, fbw, fbh, {
