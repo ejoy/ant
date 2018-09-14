@@ -1,13 +1,17 @@
 dofile("libs/init.lua")
-
+package.path = package.path .. ";libs/dev/common/?.lua;"
 local server_dir = "libs/dev/io/s"
+local PACKAGE_DATA_SIZE = 60*1024
+--local vfsrepo = require "vfsrepo"
+--local server_repo = vfsrepo.new()
+--server_repo:init(server_dir)
 
-local vfsrepo = require "vfsrepo"
-local server_repo = vfsrepo.new()
-server_repo:init(server_dir)
+local dir_table = {"libs/dev/io/s/f0", "libs/dev/io/s/f1"}
+local vfsrepo_cloud = require "vfsrepo.vfsrepo_cloud"
+local repo_cloud = vfsrepo_cloud.new(dir_table)
+
 
 local iosys = require "iosys"
-
 local io_ins = iosys.new()
 
 
@@ -50,12 +54,23 @@ end
 
 local function HandleRequest(c_id, req)
     if req[1] == "REQUEST_ROOT" then
-        local root_hash = server_repo:root_hash()
-        print("root hash is: "..root_hash)
-        io_ins:Send(c_id, {"ROOT_HASH", root_hash})
+        --local root_hash = server_repo:root_hash()
+        local root_hash = repo_cloud:root_hash()
+        print("root hash is: ")
+        if type(root_hash ==  "table") then
+            for k, v in pairs(root_hash) do
+                print(k, v)
+                io_ins:Send(c_id, {"ROOT_HASH", k, v})
+            end
+          --  print(pcall(io_ins.Send, io_ins, c_id, {"ROOT_HASH", root_hash}))
+        end
+        --io_ins:Send(c_id, {"ROOT_HASH", root_hash})
 
     elseif req[1] == "LOAD_HASH" then
-        local realpath = server_repo:load(req[2])
+        --local realpath = server_repo:load(req[2])
+        local hash = req[2]
+        local file_path = req[3]
+        local realpath = repo_cloud:load(hash, file_path)
         if realpath then
             print("file realpath for: "..req[2].." is: " .. realpath)
             io_ins:Send(c_id, {"REAL_PATH", realpath})

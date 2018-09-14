@@ -17,7 +17,7 @@ entrance = nil
 
 origin_print = print
 function sendlog(cat, ...)
-    linda:send("log", {cat, os.clock(),...})
+    linda:send("log", {cat, "MAIN", os.clock(),...})
     --origin_print(cat, ...)
 end
 
@@ -51,15 +51,19 @@ local function get_require_search_path(r_name)
     --separate with ";"
     --"../" not support
 
-    --print("require search string", search_string)
+    print("require search string", search_string)
     for s_path in string.gmatch(search_string, ".-;") do
-        --print("get requrie search path: "..s_path)
 
         local r_path = string.gsub(r_name, "%.", "/")
         s_path = string.gsub(s_path, "?", r_path)
         --get rid of ";" symbol
         s_path = string.gsub(s_path, ";", "")
-        table.insert(search_table, s_path)
+
+        if #s_path>0 then
+            --might be an empty string if there is redundant ";", do not insert empty string
+            table.insert(search_table, s_path)
+            --print("get requrie search path: "..s_path)
+        end
     end
 
     return search_table
@@ -69,26 +73,26 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
     package.path = "./libs/dev/Common/?.lua;"..package.path
     print("init client repo", pkg_dir, sb_dir)
 
-    --[[
     local vfs_cloud = require "firmware.vfs_cloud"
-    local root_dir = sb_dir.."/Documents"
-    local dir_table = {libs = root_dir .. "/libs", assets = root_dir .. "/assets"}
+    local root_dir = sb_dir.."/Documents/"
+    local dir_table = {libs = root_dir .. "libs", assets = root_dir .. "assets"}
     local io_vfs_cloud = vfs_cloud.new(pkg_dir, dir_table)
---]]
+
+    --[[
     local vfs = require "firmware.vfs"
     local root_dir = sb_dir .. "/Documents"
     local io_vfs = vfs.new(pkg_dir, root_dir)
-
+--]]
     ---[[
     local origin_require = require
     require = function(require_path)
-        print("requiring io"..require_path)
+        print("requiring io "..require_path)
 
         local path_table = get_require_search_path(require_path)
         local err_msg = ""
         for _, v in ipairs(path_table) do
             --local status, err = ant_load(v, io_repo)
-            local status, err = ant_load(v, io_vfs_cloud)
+            local status, err = ant_load(v)
             if status then
                 local result, ret = xpcall(status, debug.traceback)
                 if result then
@@ -110,7 +114,7 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
     --print(pcall(require, "fw.client_io"))
     local client_io = require "fw.client_io"
     print("create io data", linda, pkg_dir, sb_dir)
-    local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir, io_vfs)
+    local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir, io_vfs_cloud)
 
     print("create io finished")
     while true do

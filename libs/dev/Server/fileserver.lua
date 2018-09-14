@@ -100,7 +100,7 @@ function fileserver.EXIST(req, self)
     local hash = req[2]
     local path = req[3]
     print("check file exist: ", hash)
-    local real_path = self.vfs_repo:load(hash)
+    local real_path = self.vfs_repo:load(hash, path)
     if real_path then
         print("file exist: ", hash)
         return {"EXIST_CHECK", real_path, hash}
@@ -109,40 +109,6 @@ function fileserver.EXIST(req, self)
         return {"EXIST_CHECK", "not exist"}
     end
 
-    --[[
-    local file_path = req[2]
-    if not file_path then
-        return {"ERROR", "EXIST", "No file path found! Must input a file path"}
-    end
-
-    local file = io.open(file_path, "r")
-    if not file then
-        --try path with project directory path
-        file_path = req.project_dir .. "/" .. file_path
-        file = io.open(file_path, "r")
-        if not file then
-            print("file not exist, path: " .. file_path)
-            return {"EXIST_CHECK", "not exist"}
-        end
-    end
-
-    io.close(file)
-    --client does not have the file, return if the server has it
-    if not req[3] then
-        print("file exist "..file_path)
-        return {"EXIST_CHECK", "diff hash"}
-    end
-
-    local server_hash = fileprocess.CalculateHash(file_path)
-    if server_hash == req[3] then
-        print("file exist "..file_path)
-        return {"EXIST_CHECK", "exist"}
-    else
-        print("hash check fail")
-        print(server_hash, req[3], file_path)
-        return {"EXIST_CHECK", "diff hash"}
-    end
-    --]]
 end
 
 --this is the log client sends back
@@ -237,7 +203,6 @@ function fileserver.REQUIRE(req)
     end
 
     file_path = file_path .. ".lua"
-    --TODO server hash?
     if file_size < fileserver.MAX_PACKAGE_SIZE  then
         --if file is small enough to fit in one package, just return the file data
         --and the "FILE" command
@@ -261,6 +226,11 @@ end
 
 function fileserver.REQUEST_ROOT(req, self)
     local server_root = self.vfs_repo:root_hash()
-    return {"SERVER_ROOT", server_root}
+
+    local root_cmd_table = {}
+    for k, v in pairs(server_root) do
+        table.insert(root_cmd_table, {"SERVER_ROOT", v, k})
+    end
+    return table.unpack(root_cmd_table)
 end
 return fileserver

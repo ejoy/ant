@@ -1,11 +1,18 @@
 dofile("libs/init.lua")
-
+package.path = package.path .. ";runtime/core/?.lua;libs/dev/common/?.lua;"
+local PACKAGE_DATA_SIZE = 60*1024
 package.preload.lfs = function() return require "winfile" end
 local lfs = require "lfs"
 local client_dir = "libs/dev/io/c"
 local filesystem_path = require "filesystem.path"
-local vfs = dofile "runtime/core/firmware/vfs.lua"
-local client_repo = vfs.new( "runtime/core/firmware", client_dir )
+
+--local vfs = require "firmware.vfs"
+--local client_repo = vfs.new( "runtime/core/firmware", client_dir )
+
+local dir_table = {"libs/dev/io/s/f0", "libs/dev/io/s/f1"}
+local vfs_cloud = require "firmware.vfs_cloud"
+local repo_cloud = vfs_cloud.new("runtime/core/firmware", dir_table)
+
 
 local iosys = require "iosys"
 local id = "127.0.0.1:8888"
@@ -14,42 +21,6 @@ local io_ins = iosys.new()
 
 if not io_ins:Connect(id) then
    error("Connect error")
-end
-
-local function HandleResp()
-    local pkg_table = io_ins:Get(id)
-    for _, pkg in ipairs(pkg_table) do
-        if pkg[1] == "FILE" then
-            local full_path = client_dir .. pkg[2]
-            local offset = pkg[4]
-            local size = pkg[5]
-            local data = pkg[6]
-
-            local file
-            if tonumber(offset) <= tonumber(PACKAGE_DATA_SIZE) then
-                file = io.open(full_path, "wb")
-            else
-                file = io.open(full_path, "ab")
-            end
-
-            print("read file: " .. pkg[2] .. " progress: " .. tostring(offset) .. "/" .. tostring(size))
-
-            if file then
-                io.output(file)
-                io.write(data)
-                file:close()
-            end
-
-        elseif pkg[1] == "ROOT_HASH" then
-            client_repo:changeroot(pkg[2])
-
-        elseif pkg[1] == "REAL_PATH" then
-            local real_path = pkg[2]
-
-        else
-            print("command not support", pkg[1])
-        end
-    end
 end
 
 local function CreateFolder(full_path)
@@ -88,29 +59,37 @@ io_ins:Send(id, {"REQUEST_ROOT"})
         end
     end
 
-    local root_changed = false
-    while not root_changed do
+    local root_changed = 0
+    while root_changed < #dir_table do
         local n_c, n_d = io_ins:Update()
         local pkg_table = io_ins:Get(id)
         for _, pkg in ipairs(pkg_table) do
             if pkg[1] == "ROOT_HASH" then
-                local client_root = pkg[2]
-                print("change root", client_root)
-                client_repo:changeroot(client_root)
-                root_changed = true
+                local client_dir = pkg[2]
+                local client_root = pkg[3]
+                print("change root", client_dir, client_root)
+                if repo_cloud:changeroot(client_root, client_dir) then
+                    root_changed = root_changed + 1
+                end
+                --client_repo:changeroot(client_root)
                 break
             end
         end
     end
 
-    local path = "f0/doc.md"
+    local path = "libs/dev/io/s/f1/foo.lua"
     print("Read file", path)
     while true do
         local n_c, n_d = io_ins:Update()
-        local f, hash = client_repo:open(path)
+
+        --local f, hash = client_repo:open(path)
+        local f, hash = repo_cloud:open(path)
         if f then
             print("load file: "..path.." finished")
-            return f
+            local f_content = f:read("a")
+            print(f_content)
+            f:close()
+            return
         elseif hash then
             print("still need file with hash: " .. hash)
         else
@@ -118,7 +97,7 @@ io_ins:Send(id, {"REQUEST_ROOT"})
         end
 
         print("Try to request hash from server repo", hash)
-        io_ins:Send(id, {"LOAD_HASH", hash})
+        io_ins:Send(id, {"LOAD_HASH", hash, path})
         local realpath
         while not realpath do
             local n_c, n_d = io_ins:Update()
@@ -152,25 +131,9 @@ io_ins:Send(id, {"REQUEST_ROOT"})
 
                     CreateFolder(full_path)
                     print("get package",#pkg[6])
-                    client_repo:write(hash, pkg[6])
-                    --[[
-                    local file
-                    if tonumber(offset) <= tonumber(PACKAGE_DATA_SIZE) then
-                        file = io.open(full_path, "wb")
-                    else
-                        file = io.open(full_path, "ab")
-                    end
+                    --client_repo:write(hash, pkg[6])
+                    repo_cloud:write(hash,pkg[6],path)
 
-                    print("read file: " .. pkg[2] .. " progress: " .. tostring(offset) .. "/" .. tostring(size))
-                    print("file path: " .. full_path, filesystem_path.parent(full_path))
-
-
-                    if file then
-                        io.output(file)
-                        io.write(data)
-                        file:close()
-                    end
---]]
                     get_file_server = true
                     break
                 end

@@ -3,7 +3,6 @@ local MAX_CALC_CHUNK = 62*1024
 --the dir hold the files
 local sand_box_path = ""
 
-local iosys = require "iosys"
 local io_cmd = {}
 io_cmd.EXIST_CHECK = function(resp, self)
     assert(resp[1] == "EXIST_CHECK", "COMMAND: "..resp[1].." invalid, shoule be EXIST_CHECK")
@@ -43,9 +42,9 @@ io_cmd.FILE = function(resp, self)
     --if is other package, will add to the existing file
     --TODO: consider if the order is not correct
     if offset <= MAX_CALC_CHUNK then
-        self.vfs:write(hash, resp[5])
+        self.vfs:write(hash, resp[5], file_path)
     else
-        self.vfs:write(hash, resp[5], "ab")
+        self.vfs:write(hash, resp[5], file_path, "ab")
     end
 
     print("write file", file_path, hash)
@@ -65,8 +64,11 @@ io_cmd.SERVER_ROOT = function(resp, self)
 
     --table.remove(resp, 1)
     print("root is", resp[2])
-    print(pcall(self.vfs.changeroot, self.vfs, resp[2]))
-    self.vfs:changeroot(resp[2])
+    local root = resp[2]
+    local subdir = resp[3]
+
+    local res, err = self.vfs:changeroot(root, subdir)
+    assert(res, err)
 
     print("change root", resp)
     if self.run_cmd_cache then
@@ -75,7 +77,9 @@ io_cmd.SERVER_ROOT = function(resp, self)
         self.run_cmd_cache = nil
     end
 
-    self.linda:send("server_root_updated", true)
+    if self.vfs:changeroot_finished() then
+        self.linda:send("server_root_updated", true)
+    end
 
 end
 
@@ -92,10 +96,12 @@ end
 function client.new(address, port, init_linda, pkg_dir, sb_dir, vfs_cloud)
     --connection started from here
     print("listen to address", address,"port", port)
-    local io_ins = iosys.new()
+    local iosys = require "iosys"
 
+    local io_ins = iosys.new()
     local connect_id = "127.0.0.1:8889"
     local connect_res = io_ins:Connect(connect_id)
+
     --connect to a port, not available if this is on iOS device
     if not connect_res then
         connect_id = nil
