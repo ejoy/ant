@@ -1,6 +1,21 @@
 FAQ for bgfx
 =============
 
+阅读bgfx源代码策略
+-------------------
+
+源文件中bgfx_p.h对于使用bgfx的价值极大。
+源文件中的renderer.h中的setPredefined函数设置了bgfx内置的uniform。
+也就是bgfx提供的类似bgfx_set_transform使用的uniform。
+renderer.gl.cpp的7016行左右的
+
+            viewState.setPredefined<1>(this, view, eye, program, _render, draw);
+
+设置了这些预定义的uniform。            
+对于bgfx的渲染细节可以查看renderer_gl.cpp的submit函数。
+基本我们bgfx的API设置的所有渲染信息在这里都被真正提交，从这里可以看出这些信息是如何被使用。
+renderer_gl.cpp的ProgramGL::create和ShaderGL::create函数是真正的着色器创建代码。
+
 编译bgfx官方的shaderc工具
 -----------------------------
 
