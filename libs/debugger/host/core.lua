@@ -94,14 +94,7 @@ end)
 local m = {}
 
 function m.initialize()
-    request.task(function()
-        request.initialize()
-        request.attach()
-        if status.capabilities.supportsConfigurationDoneRequest then
-            request.configurationDone()
-        end
-        request.threads()
-    end)
+    request.initialize()
 end
 
 function m.update()
