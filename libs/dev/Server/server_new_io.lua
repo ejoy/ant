@@ -212,26 +212,27 @@ function server.new(address, port, init_linda)
 
     assert(io_ins:Bind(id), "bind to: " .. id .. " failed")
 
-    local root_dir = "."
+    local root_dir = ""
     if PLATFORM == "MAC" then
         root_dir = "/Users/ejoy/Desktop/Engine/ant/"
     end
 
     --repo table
-    --[[
     local vfsrepo_cloud = require "vfsrepo.vfsrepo_cloud"
     local server_repo_cloud = vfsrepo_cloud.new()
     local dir_table = {root_dir .. "assets", root_dir .. "libs"}
 
     print(pcall(server_repo_cloud.init, server_repo_cloud, dir_table))
-    --]]
+
+    --[[
     local vfs_repo = require "vfsrepo"
     local server_repo = vfs_repo.new()
     print(pcall(server_repo.init, server_repo, root_dir))
+    --]]
     print("init server cloud successful")
 
     enable_pack_framework(true)
-    return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, log = {}, vfs_repo = server_repo, dir_table = dir_table}, server)
+    return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, log = {}, vfs_repo = server_repo_cloud, dir_table = dir_table}, server)
 end
 
 function server:kick_client(client_id)
@@ -408,8 +409,8 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
         --todo find a way to update
         if PLATFORM ~= "MAC" then
             --windows for now
-            print(pcall(self.vfs_repo.init, self.vfs_repo, "."))
-            --print("init vfs clould", pcall(self.vfs_repo.init, self.vfs_repo, self.dir_table))
+            --print(pcall(self.vfs_repo.init, self.vfs_repo, "."))
+            print("init vfs clould", pcall(self.vfs_repo.init, self.vfs_repo, self.dir_table))
         end
 
         if udid == "all" then

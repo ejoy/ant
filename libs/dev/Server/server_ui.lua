@@ -18,14 +18,21 @@ local winfile = require "winfile"
 local default_proj_dir =  winfile.currentdir()
 --ui layout
 
-local script_text = iup.text{ multiline = "YES", expand = "YES" }
 local bgfx_text = iup.text{multiline = "YES", expand = "Yes"}
 local error_text = iup.text{multiline = "YES", expand = "YES"}
 
-script_text.tabtitle = "Script"
+--sub tabs of log
+local main_log_text = iup.text{multiline = "YES", expand = "YES"}
+main_log_text.tabtitle = "Main"
+local msg_prc_log_text = iup.text{multiline = "YES", expand = "YES"}
+msg_prc_log_text.tabtitle = "Msg Process"
+
+local log_tab = iup.tabs{main_log_text, msg_prc_log_text}
+log_tab.tabtitle = "Log"
+
 bgfx_text.tabtitle = "Bgfx"
 error_text.tabtitle = "Error"
-local text_tabs = iup.tabs{script_text, bgfx_text, error_text}
+local text_tabs = iup.tabs{ log_tab, bgfx_text, error_text}
 
 --project directory and run file
 local run_file_btn = iup.button{title = "run file"}
@@ -231,20 +238,28 @@ local function HandleResponse(resp_table)
 
             if cat == "Script" then
                 table.remove(log_table, 1)
+                local log_thread = log_table[1]
+                table.remove(log_table, 1)
+
                 local new_log_value = ""
                 for _, script_v in ipairs(log_table) do
-                    new_log_value = new_log_value .. tostring(script_v) .. " "
+                    new_log_value = new_log_value .. tostring(script_v) .. "\t"
                 end
 
-                if new_log_value then
+                if #new_log_value > 0 then
                     new_log_value = new_log_value .. "\n"
-                    --todo temperary disable
-                    ---[[
-                    script_text.value = script_text.value .. new_log_value
-                    local pos = iup.TextConvertLinColToPos(script_text,  script_text.linecount, 0)
-                    script_text.caretpos = pos
-                    script_text.scrolltopos = pos
 
+                    if log_thread == "MAIN" then
+                        main_log_text.value = main_log_text.value .. new_log_value
+                        local pos = iup.TextConvertLinColToPos(main_log_text,  main_log_text.linecount, 0)
+                        main_log_text.caretpos = pos
+                        main_log_text.scrolltopos = pos
+                    elseif log_thread == "MSG_PROCESS" then
+                        msg_prc_log_text.value = msg_prc_log_text.value .. new_log_value
+                        local pos = iup.TextConvertLinColToPos(msg_prc_log_text,  msg_prc_log_text.linecount, 0)
+                        msg_prc_log_text.caretpos = pos
+                        msg_prc_log_text.scrolltopos = pos
+                    end
                 end
 --]]
             elseif cat == "Bgfx" then

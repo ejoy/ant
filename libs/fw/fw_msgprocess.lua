@@ -41,7 +41,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
             end
 
             if file_path then
-                print("MSG_PROCESS get file: "..filename)
+                print("get file: "..filename)
                 return origin_open(file_path, mode)
             end
 
