@@ -7,6 +7,32 @@ package.path = "libs/dev/Common/?.lua;libs/dev/Server/?.lua;libs/dev/?.lua;".. p
 --package.path = project_dir.."/libs/?.lua;".. package.path
 --package.path = project_dir.."/libs/?/?.lua;".. package.path
 
+local lsocket = require "lsocket"
+local redirectfd = require "redirectfd"
+--redirect std output, then send to log tab
+local function create_pipe()
+    local port = 10000
+    local socket
+
+    repeat
+        socket = assert(lsocket.bind( "127.0.0.1", port))
+        if not socket then
+            port = port + 1
+        end
+    until socket
+
+    local ofd = assert(lsocket.connect("127.0.0.1", port))
+    lsocket.select {socket}
+    local ifd = socket:accept()
+    socket:close()
+    lsocket.select({}, {ofd})
+    return ifd,ofd
+end
+
+local ifd,ofd = create_pipe()
+
+redirectfd.init(ofd:info().fd)
+
 local path = require "filesystem.path"
 local iup = require "iuplua"
 local mobiledevice = require "libimobiledevicelua"
@@ -26,8 +52,10 @@ local main_log_text = iup.text{multiline = "YES", expand = "YES"}
 main_log_text.tabtitle = "Main"
 local msg_prc_log_text = iup.text{multiline = "YES", expand = "YES"}
 msg_prc_log_text.tabtitle = "Msg Process"
+local console_log_text = iup.text{multiline = "YES", expand = "YES"}
+console_log_text.tabtitle = "Console"
 
-local log_tab = iup.tabs{main_log_text, msg_prc_log_text}
+local log_tab = iup.tabs{console_log_text, main_log_text, msg_prc_log_text}
 log_tab.tabtitle = "Log"
 
 bgfx_text.tabtitle = "Bgfx"
@@ -427,13 +455,29 @@ end
 
 server_framework:RegisterIOCommand("RECONNECT", reconnect_func)
 
+local function UpdateConsoleLog()
+    lsocket.select({ifd}, 0.005)
+    local console_log = ifd:recv()
+    if console_log and #console_log > 0 then
+        --io.stderr:write("CONSOLE LOG: ", console_log)
+        --add to console log
+        console_log_text.value = console_log_text.value .. console_log .. "\n"
+        local pos = iup.TextConvertLinColToPos(console_log_text,  console_log_text.linecount, 0)
+        console_log_text.caretpos = pos
+        console_log_text.scrolltopos = pos
+    end
+end
 
 -- to be able to run this script inside another context
+
 while true do
     local msg = iup.LoopStep()
     if msg == iup.CLOSE then
         break
     end
+
+    --update log
+    UpdateConsoleLog()
 
     dbg_tcp:update()
     server_framework:update()
