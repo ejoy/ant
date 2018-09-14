@@ -28,4 +28,16 @@ bgfx有下面这些预定义的uniform
                 ModelViewProj
                 AlphaRef
 
-通过阅读bgfx的OpenGL后端实现，可以发现bgfx对于预定义uniform
+通过阅读bgfx的OpenGL后端实现，可以发现对于一个着色器程序，如果某个预定义的uniform没有被使用(两种情况:
+
+(1)shader中没有定义这个uniform
+
+(2)shader中定义了这个uniform但是在shader中没有代码使用它)
+
+那么它就不会被bgfx认为是存在的(bgfx的OpenGL后端代码中使用glGetActiveUniform来进行预定义uniform的检测)。
+
+简单说就是如果我们完全不用bgfx提供的shader，自己编写shader可以像使用OpenGL可编程管线一样使用bgfx，
+
+但是这样就不能使用bgfx提供的一些便捷API。
+
+如果需要使用bgfx的API，可以在自己的shader中定义它们，bgfx的相应API就会起作用。
