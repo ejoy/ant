@@ -15,18 +15,18 @@ bgfx提供的一些API是通过uniform的方式实现的，比如bgfx_set_transf
 
 bgfx有下面这些预定义的uniform
 
-                ViewRect,
-                ViewTexel
-                View
-                InvView
-                Proj
-                InvProj
-                ViewProj
-                InvViewProj
-                Model
-                ModelView
-                ModelViewProj
-                AlphaRef
+                ViewRect                        "u_viewRect"
+                ViewTexel                       "u_viewTexel"
+                View                            "u_view"
+                InvView                         "u_invView"
+                Proj                            "u_proj"
+                InvProj                         "u_invProj"
+                ViewProj                        "u_viewProj"
+                InvViewProj                     "u_invViewProj"
+                Model                           "u_model"
+                ModelView                       "u_modelView"
+                ModelViewProj                   "u_modelViewProj"
+                AlphaRef                        "u_alphaRef4"
 
 通过阅读bgfx的OpenGL后端实现，可以发现对于一个着色器程序，如果某个预定义的uniform没有被使用(两种情况:
 
