@@ -28,6 +28,11 @@ bgfx_submit函数实际上是
 
 renderer_gl.cpp的ProgramGL::create和ShaderGL::create函数是真正的着色器创建代码。
 
+bgfx的绘制调用排序
+----------------------------------------
+
+bgfx的绘制调用排序是使用SortKey完成的(SortKey的定义和代码在bgfx_ph.h中)。
+
 touch(ViewId id)函数和touch(0)
 -----------------------------------------
 
