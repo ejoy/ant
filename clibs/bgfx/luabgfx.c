@@ -15,7 +15,7 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 
-#if BGFX_API_VERSION != 80
+#if BGFX_API_VERSION != 81
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -3905,6 +3905,13 @@ lsetInstanceDataBuffer(lua_State *L) {
 	return 0;
 }
 
+static int
+lsetInstanceCount(lua_State *L) {
+	uint32_t num = luaL_checkinteger(L, 1);
+	bgfx_set_instance_count(num);
+	return 0;
+}
+
 static uint8_t
 dispatch_flags(lua_State *L, int index) {
 	const char * f = lua_tostring(L, index);
@@ -4180,6 +4187,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "dispatch", ldispatch },
 		{ "dispatch_indirect", ldispatchIndirect },
 		{ "set_instance_data_buffer", lsetInstanceDataBuffer },
+		{ "set_instance_count", lsetInstanceCount },
 		{ "submit_indirect", lsubmitIndirect },
 		{ "update", lupdate },
 		{ "get_shader_uniforms", lgetShaderUniforms },
