@@ -15,7 +15,7 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 
-#if BGFX_API_VERSION != 81
+#if BGFX_API_VERSION != 82
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -379,6 +379,7 @@ linit(lua_State *L) {
 	init.resolution.width = 1280;
 	init.resolution.height = 720;
 	init.resolution.reset = BGFX_RESET_NONE;	// reset flags
+	init.resolution.maxFrameLatency = 0;
 
 	init.limits.maxEncoders     = 8;	// BGFX_CONFIG_DEFAULT_MAX_ENCODERS;
 	init.limits.transientVbSize = (6<<20);	// BGFX_CONFIG_TRANSIENT_VERTEX_BUFFER_SIZE
@@ -405,7 +406,10 @@ linit(lua_State *L) {
 		if (lua_getfield(L, 1, "reset") == LUA_TSTRING) {
 			init.resolution.reset = reset_flags(L, -1);
 		}
+		lua_getfield(L, 1, "maxFrameLatency");
+		init.resolution.maxFrameLatency = luaL_optinteger(L, -1, 0);
 		lua_pop(L, 1);
+
 		if (lua_getfield(L, 1, "maxEncoders") == LUA_TNUMBER) {
 			init.limits.maxEncoders = luaL_checkinteger(L, -1);
 		}
