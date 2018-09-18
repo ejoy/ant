@@ -243,7 +243,7 @@ dbg_tcp:event_in(function(data)
 end)
 
 dbg_tcp:event_close(function()
-    server_framework:SendPackage({"dbg", false})
+    server_framework:SendPackage({"dbg", ""})
 end)
 
 server_framework:RegisterIOCommand("dbg", function(data_table)

@@ -16,7 +16,7 @@ end
 local DbgIO = {}
 function DbgIO:event_in(f)
     msg_process:register_command("dbg", function(data_table)
-        if data_table[2] == false then
+        if data_table[2] == "" then
             self.fclose()
             return
         end
@@ -44,7 +44,6 @@ function msg_process.new(init_linda, pkg_dir, sb_dir)
 end
 
 function msg_process:mainloop()
-
     if DbgMaster then
         DbgMaster()
     end
