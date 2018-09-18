@@ -16,16 +16,61 @@ renderer.gl.cpp的7016行左右的
 
 设置了这些预定义的uniform。
 
-对于bgfx的渲染细节可以查看renderer_gl.cpp的submit函数。
+bgfx_submit函数实际上是
+
+                      void EncoderImpl::submit(ViewId _id, ProgramHandle _program, OcclusionQueryHandle _occlusionQuery, int32_t _depth, bool _preserveState)
+
+这个函数的实现位于bgfx.cpp中，它将当前的一些设置添加到frame中，但不进行实际的渲染。
+
+对于bgfx的渲染细节可以查看renderer_gl.cpp的submit函数(这个submit函数是由bgfx的API函数frame调用的)。
 
 基本我们bgfx的API设置的所有渲染信息在这里都被真正提交，从这里可以看出这些信息是如何被使用。
 
 renderer_gl.cpp的ProgramGL::create和ShaderGL::create函数是真正的着色器创建代码。
 
+bgfx的绘制调用排序
+----------------------------------------
+
+bgfx的绘制调用排序是使用SortKey完成的(SortKey的定义和代码在bgfx_ph.h中)。
+
+touch(ViewId id)函数和touch(0)
+-----------------------------------------
+
+touch函数实际上就是一个空的submit调用。
+touch(0)实际上就是submit(0,BGFX_INVALID_HANDLE)
+
 submit和frame的关系
 -----------------------------
 
 frame由0个或1个或多个submit提交的信息构成。可以这样认为frame是一个submit的集合。
+
+setTransform函数
+----------------------------
+
+setTransform函数设置的矩阵是放在frame中的，当前绘图调用(一次submit)存储了一个指向它的索引。
+
+相关代码如下:
+
+                        uint32_t setTransform(const void* _mtx, uint16_t _num)
+		{
+			m_draw.m_startMatrix = m_frame->m_frameCache.m_matrixCache.add(_mtx, _num);
+			m_draw.m_numMatrices = _num;
+
+			return m_draw.m_startMatrix;
+		}
+                        
+在renderer_gl.cpp中(也就是调用frame函数时)使用了它，相关代码如下:
+
+                        case PredefinedUniform::Model:
+                        {
+		            const Matrix4& model = frameCache.m_matrixCache.m_cache[_draw.m_startMatrix];
+			_renderer->setShaderUniform4x4f(flags
+			, predefined.m_loc
+			, model.un.val
+			, bx::uint32_min(_draw.m_numMatrices*mtxRegs, predefined.m_count)
+			);
+		}
+		            break;
 
 编译bgfx官方的shaderc工具
 -----------------------------
