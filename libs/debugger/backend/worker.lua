@@ -139,7 +139,7 @@ function CMD.stackTrace(pkg)
                     id = depth,
                     name = info.what == 'main' and "[main chunk]" or info.name,
                     line = info.currentline,
-                    column = 0,
+                    column = 1,
                     source = source.output(src),
                 }
             elseif curFrame ~= 0 then
@@ -147,7 +147,7 @@ function CMD.stackTrace(pkg)
                     id = depth,
                     name = info.what == 'main' and "[main chunk]" or info.name,
                     line = info.currentline,
-                    column = 0,
+                    column = 1,
                     presentationHint = 'label',
                 }
             end
