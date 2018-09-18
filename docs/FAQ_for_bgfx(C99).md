@@ -31,9 +31,13 @@ renderer_gl.cpp的ProgramGL::create和ShaderGL::create函数是真正的着色�
 多个View的绘制顺序
 ---------------------
 默认情况下View是从小到大绘制的，但可以使用setViewOrder来重新映射，从而改变绘制顺序。
+
 一个View代表的是一组状态和一组绘制调用，是一个**抽象**的概念。
+
 View的排序是通过编码进行的，View的编码位于高位，所以在排序时可以认为ViewID是第一关键字
-(内部实现是通过把一次绘制调用打包为一个64进制数，ViewID也被打包进去，然后对其进行排序)
+
+(内部实现是通过把一次绘制调用打包为一个64进制数，ViewID也被打包进去，然后对其进行排序，具体参考SortKey.md)
+
 
 bgfx的绘制调用排序
 ----------------------------------------
@@ -95,6 +99,7 @@ bgfx调式策略
 bgfx向debugger输出了很多调试信息，遇到莫名的问题，查看debugger的效率会高很多。
 
 bgfx输出错误信息使用的是bx的debugOutput函数(位于bx\src\debug.cpp中)，在里面使用条件编译根据平台选择合适的输出途径，
+
 在windows下使用的是Windows API函数OutputDebugString。
 
 bgfx提供了回调来设置输出调试信息，所以我们也可以通过设置这个回调来获取bgfx的报错信息。
