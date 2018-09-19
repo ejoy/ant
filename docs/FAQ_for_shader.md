@@ -88,7 +88,17 @@ shaderc的命令行参数说明:
 bgfx提供了这些宏来帮助我们编写shader：
 
 https://github.com/bkaradzic/bgfx/blob/master/src/bgfx_shader.sh
- 
+
+这里提供完整的工程文件：
+
+shader编译的工程文件：
+
+https://github.com/fangcun010/shadercTest
+
+使用上面编译的shader编写的使用BGFX绘制红色三角形的工程文件(VS2017)：
+
+https://github.com/fangcun010/BgfxTriangle
+
 预定义uniform的一些说明
 ------------------------
 
