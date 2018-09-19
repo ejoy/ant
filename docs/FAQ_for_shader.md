@@ -89,6 +89,9 @@ bgfx提供了这些宏来帮助我们编写shader：
 
 https://github.com/bkaradzic/bgfx/blob/master/src/bgfx_shader.sh
 
+使用shader的最简单例子
+---------------------------
+
 这里提供完整的工程文件：
 
 shader编译的工程文件：
