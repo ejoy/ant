@@ -57,6 +57,22 @@ shaderc的命令行参数说明:
   	-O <level>                    优化级别(0, 1, 2, 3).
       		--Werror                  将警告作为错误.
 
+下面介绍如何进行shader的编译。
+
+	./shaderc --platform windows -i ./ -p vs_4_0 -O 3 --type vertex -f test.vs -o vs_test.bin
+	./shaderc --platform windows -i ./ -p ps_4_0 -O 3 --type fragment -f test.fs -o fs_test.bin
+
+这里shaderc和我们的shader文件都在当前目录下。
+
+我们使用--platform编译windows平台的shader，使用vs_4_0这一shader model，使用--type指定我们编译的是顶点shader。
+
+使用-f参数指定要编译的shader源文件,使用-o参数指定编译生成的目标文件。
+
+使用-O参数指定使用优化等级3。
+
+由于我们没有使用--varyingdef，它会使用当前目录下的varying.def.sc文件。
+
+
 (1)对于 **uniform** 不能使用 **bool/int** ，所有 **uniform** 都必须是 **float** 类型。
 
 (2) **attribute** 和 **varying** 只能在 **main()** 中被访问。
@@ -76,7 +92,7 @@ https://github.com/bkaradzic/bgfx/blob/master/src/bgfx_shader.sh
 预定义uniform的一些说明
 ------------------------
 
-bgfx提供的一些API是通过uniform的方式实现的，比如bgfx_set_transform
+bgfx提供的一些API是通过uniform的方式实现的，比如bgfx_set_transform。
 
 bgfx有下面这些预定义的uniform
 
