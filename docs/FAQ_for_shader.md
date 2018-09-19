@@ -24,38 +24,38 @@ bgfx官方shaderc工具的使用说明
 
 shaderc的命令行参数说明:
 
-Usage: shaderc -f <in> -o <out> --type <v/f> --platform <platform>
+	Usage: shaderc -f <in> -o <out> --type <v/f> --platform <platform>
 
-Options:
-  -h, --help                    显示帮助信息.
-  -v, --version                 显示shaderc版本信息.
-  -f <file path>                待编译文件路径.
-  -i <include path>             包含路径 (对于多个包含路径，可以多次使用-i参数来指定它们).
-  -o <file path>                编译后生成的文件路径.
-      --bin2c <file path>       生成的C头文件路径.
-      --depends                 生成Makefile风格的依赖文件信息(Generate makefile style depends file).
-      --platform <platform>     目标平台.
-           android
-           asm.js
-           ios
-           linux
-           nacl
-           osx
-           windows
-      --preprocess              仅进行预处理.
-      --define <defines>        添加define宏定义(分号分割).
-      --raw                     不对shader进行处理，不进行预处理，不进行glsl优化(仅支持GLSL).
-      --type <type>             shader类型(vertex, fragment).
-      --varyingdef <file path>  varying.def.sc文件路径.
-      --verbose                 Verbose.
+	Options:
+  	-h, --help                    显示帮助信息.
+  	-v, --version                 显示shaderc版本信息.
+  	-f <file path>                待编译文件路径.
+  	-i <include path>             包含路径 (对于多个包含路径，可以多次使用-i参数来指定它们).
+  	-o <file path>                编译后生成的文件路径.
+      		--bin2c <file path>       生成的C头文件路径.
+      		--depends                 生成Makefile风格的依赖文件信息(Generate makefile style depends file).
+      		--platform <platform>     目标平台.
+           		android
+           		asm.js
+           		ios
+           		linux
+           		nacl
+           		osx
+           		windows
+      		--preprocess              仅进行预处理.
+      		--define <defines>        添加define宏定义(分号分割).
+      		--raw                     不对shader进行处理，不进行预处理，不进行glsl优化(仅支持GLSL).
+      		--type <type>             shader类型(vertex, fragment).
+      		--varyingdef <file path>  varying.def.sc文件路径.
+      		--verbose                 Verbose.
 
-Options (DX9 and DX11 only):
+	Options (DX9 and DX11 only):
 
-      --debug                   调试信息(Debug information).
-      --disasm                  反汇编shader.
-  -p, --profile <profile>       Shader model (f.e. ps_3_0).
-  -O <level>                    优化级别(0, 1, 2, 3).
-      --Werror                  将警告作为错误.
+      		--debug                   调试信息(Debug information).
+      		--disasm                  反汇编shader.
+  	-p, --profile <profile>       Shader model (f.e. ps_3_0).
+  	-O <level>                    优化级别(0, 1, 2, 3).
+      		--Werror                  将警告作为错误.
 
 (1)对于 **uniform**不能使用 **bool/int**，所有 **uniform**都必须是 **float**类型。
 
