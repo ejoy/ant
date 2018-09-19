@@ -57,17 +57,17 @@ shaderc的命令行参数说明:
   	-O <level>                    优化级别(0, 1, 2, 3).
       		--Werror                  将警告作为错误.
 
-(1)对于 **uniform**不能使用 **bool/int**，所有 **uniform**都必须是 **float**类型。
+(1)对于 **uniform** 不能使用 **bool/int** ，所有 **uniform** 都必须是 **float** 类型。
 
-(2)**attribute**和 **varying**只能在 **main()**中被访问。
+(2) **attribute** 和 **varying** 只能在 **main()** 中被访问。
 
-(3)必须使用 **SAMPLER2D/3D/CUBE**宏来代替 **sampler2D/3D/Cube**。
+(3)必须使用 **SAMPLER2D/3D/CUBE** 宏来代替 **sampler2D/3D/Cube** 。
 
-(4)必须使用 **vec3/3/4_splat(<value>)**来代替 **vec2/3/4(value)**。
+(4)必须使用 **vec3/3/4_splat(<value>)** 来代替 **vec2/3/4(value)**。
 
-(5)必须使用 **varying.def.sc**来定义输入输出和精度，不能使用 **attribute/in**和 **varying/in/out**来做这件事。
+(5)必须使用 **varying.def.sc** 来定义输入输出和精度，不能使用 **attribute/in** 和 **varying/in/out** 来做这件事。
 
-(6)**$input/$output**必须出现在shader的开始处。
+(6) **$input/$output** 必须出现在shader的开始处。
 
 bgfx提供了这些宏来帮助我们编写shader：
 
