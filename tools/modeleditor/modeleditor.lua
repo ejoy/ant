@@ -157,7 +157,7 @@ local function print_children(container)
 	end
 end
 
-print_children(dlg)
+--print_children(dlg)
 
 rhwi.init(iup.GetAttributeData(canvas, "HWND"), fbw, fbh)
 local world = su.start_new_world(nil, fbw, fbh, {

@@ -25,7 +25,7 @@ local function create_sample_entity(skepath, anipath, meshpath)
 	fu.write_to_file(smaplemaerial, [[
 		shader = {
 			vs = "mesh/vs_meshani",
-			fs = "mesh/fs_meshani",
+			fs = "mesh/fs_meshbumpex",
 		}
 
 		state = "default.state"
@@ -80,8 +80,10 @@ function model_ed_sys:update()
 	for _, eid in world:each("animation") do
 		local e = world[eid]
 		local ske = assert(e.skeleton).builddata
-		local ani_handle = assert(e.animation).handle
+		local ani = assert(e.animation).handle
 
-		animodule.motion(ske, ani_handle, time)
+		local duration = ani:duration()
+		local delta = time / duration
+		animodule.motion(ske, ani, delta)
 	end
 end

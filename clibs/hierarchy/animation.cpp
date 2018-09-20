@@ -133,19 +133,23 @@ lnew_animation(lua_State *L) {
 	return 1;
 }
 
+static int
+lduration_animation(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	animation_node *node = (animation_node*)lua_touserdata(L, 1);
+	lua_pushnumber(L, node->ani->duration());
+	return 1;
+}
+
 extern "C" {
 LUAMOD_API int
 luaopen_hierarchy_animation(lua_State *L) {
 	luaL_newmetatable(L, "ANIMATION_NODE");
-	//lua_pushcfunction(L, );
-	//lua_setfield("__")
+	lua_pushcfunction(L, lduration_animation);
+	lua_setfield(L, -2, "duration");
 
 	lua_pushcfunction(L, ldel_animation);
 	lua_setfield(L, -2, "__gc");
-
-	//ozz::animation::Animation ani;
-
-
 
 	luaL_Reg l[] = {
 		{ "blend", lblend },
