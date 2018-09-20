@@ -49,6 +49,24 @@ local animation_time = iup.vbox {
 	ALIGNMENT = "ACENTER",
 }
 
+local ske_path_inputer = iup.text {
+	ALIGNMENT="ALEFT",
+	EXPAND ="ON",
+	SIZE="120x0"
+}
+
+local ani_path_inputer = iup.text {
+		ALIGNMENT="ALEFT",
+		EXPAND ="ON",
+		SIZE="120x0",
+}
+
+local anilist_ctrller = iup.list {
+	SIZE="160x0",
+	EXPAND="ON",
+	"None1111111111111111111",								
+}
+
 local dlg = iup.dialog {
 	iup.split {
 		TITLE="first element",
@@ -66,18 +84,14 @@ local dlg = iup.dialog {
 						iup.frame {
 							TITLE="Skeleton",
 							iup.hbox {
-								iup.text {
-									ALIGNMENT="ALEFT",
-									EXPAND ="ON",
-									SIZE="120x0"
-								},
+								ske_path_inputer,
 								iup.button {
 									TITLE="Browse",
 									ALIGNMENT="ARIGHT",
 									EXPAND ="ON",
-								},								
+								},
 								EXPAND ="ON",
-							},							
+							},
 						},
 						iup.space {
 							SIZE="0x5",
@@ -85,10 +99,7 @@ local dlg = iup.dialog {
 						iup.frame {
 							TITLE="Animation",
 							iup.hbox {
-								iup.text {
-									ALIGNMENT="ALEFT",
-									SIZE="120x0"
-								},
+								ani_path_inputer,
 								iup.button {
 									TITLE="Browse",
 									ALIGNMENT="ARIGHT",
@@ -106,11 +117,7 @@ local dlg = iup.dialog {
 			iup.frame {
 				TITLE = "Animation List",
 				iup.vbox {
-					iup.list {
-						SIZE="160x0",
-						EXPAND="ON",
-						"None1111111111111111111",								
-					},
+					anilist_ctrller,
 					iup.fill{},
 				},
 				EXPAND="ON",
@@ -121,6 +128,17 @@ local dlg = iup.dialog {
 	},
 	title = "Model Editor",	
 }
+
+
+function model_windows()
+	return {
+		anitime_slider=anitime_slider,
+		anitime_inputer=anitime_inputer,
+		ske_path=ske_path_inputer,
+		ani_path=ani_path_inputer,
+		anilist=anilist_ctrller,
+	}
+end
 
 dlg:showxy(iup.CENTER, iup.CENTER)
 dlg.usersize = nil
