@@ -15,7 +15,7 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 
-#if BGFX_API_VERSION != 82
+#if BGFX_API_VERSION != 83
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -138,9 +138,9 @@ append_log(struct log_cache *lc, const char * buffer, int n) {
 }
 
 static void
-cb_fatal(bgfx_callback_interface_t *self, bgfx_fatal_t code, const char *str) {
+cb_fatal(bgfx_callback_interface_t *self, const char* filePath, uint16_t line, bgfx_fatal_t code, const char *str) {
 	char tmp[MAX_LOGBUFFER];
-	int n = snprintf(tmp, sizeof(tmp), "Fatal error: 0x%08x: %s", code, str);
+	int n = snprintf(tmp, sizeof(tmp), "Fatal error at %s(%d): 0x%08x: %s", filePath, line, code, str);
 	if (n > MAX_LOGBUFFER) {
 		// truncated
 		n = MAX_LOGBUFFER;
