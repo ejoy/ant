@@ -54,7 +54,6 @@ function event.output(category, output, source, line)
             output = output,
             source = source,
             line = line,
-            column = line and 1 or nil,
         }
     }
 end

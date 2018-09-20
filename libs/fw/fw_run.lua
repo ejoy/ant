@@ -7,17 +7,27 @@ return function(file_path, ...)
     local run_func, err = ant_load(file_path)
     if not run_func then
         perror(err)
+        error(err)
         return nil
     end
 
     local err, result = pcall(run_func, ...)
+    --print("run func", g_WindowHandle, g_Width, g_Height)
+
     if not err then
-        print("run file "..file_path.." error: " .. tostring(result))
         perror(result)
-        return nil
+        error(result)
+        return
     end
 
     RUN_FUNC_NAME = file_path
     RUN_FUNC = result
-    pcall(RUN_FUNC, ...)
+    print("start run func: "..file_path, result)
+    if type(result) == "table" then
+        for k, v in pairs(result) do
+            print(k, v)
+        end
+    end
+    local res, err = xpcall(RUN_FUNC, debug.traceback, ...)
+    print("run func: "..file_path .. " result ", res, err)
 end

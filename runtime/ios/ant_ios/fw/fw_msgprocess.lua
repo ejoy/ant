@@ -1,17 +1,18 @@
 --process messages
-function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
-    print("create msg process thread")
+function CreateMsgProcessThread(_linda, _fw_dir, _remote_dir)
+    print("create msg process thread", _linda, _fw_dir, _remote_dir)
 
     linda = _linda
-    pkg_dir = _pkg_dir
-    sb_dir = _sb_dir
+    fw_dir = _fw_dir
+    remote_dir = _remote_dir
 
+    --todo change to vfsrepo_cloud
     local vfs = require "firmware.vfs"
-    local vfs_repo = vfs.new(_pkg_dir, _sb_dir .. "/Documents")
+    local vfs_repo = vfs.new(fw_dir, remote_dir .. "/Documents")
 
     local origin_require = require
     require = function(require_path)
-        print("requiring "..require_path)
+        print("requiring msgprocess "..require_path)
         if io_repo then
             local file_path = string.gsub(require_path, "%.", "/")
             file_path = file_path .. ".lua"
@@ -44,7 +45,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
 
     print("create msg processor")
     local msg_process = require "msg_process"
-    local mp = msg_process.new(linda, pkg_dir, sb_dir, vfs_repo)
+    local mp = msg_process.new(linda, fw_dir, remote_dir)
 
     print("update msg processor")
     while true do
@@ -53,7 +54,19 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
 end
 
 local lanes_err
-msg_process_thread, lanes_err = lanes.gen("*", CreateMsgProcessThread)(linda, pkg_dir, sb_dir)
+msg_process_thread, lanes_err = lanes.gen("*", CreateMsgProcessThread)(linda, fw_dir, remote_dir)
 if not msg_process_thread then
     assert(false, "lanes error: " .. lanes_err)
+end
+
+function KillMpThread()
+    if msg_process_thread then
+        while true do
+            local cancel_res = msg_process_thread:cancel(0.5)
+            if cancel_res then
+                break
+            end
+        end
+    end
+    print("kill msg_process thread success")
 end

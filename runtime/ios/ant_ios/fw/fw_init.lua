@@ -36,7 +36,7 @@ io.open = function (filename, mode, search_local_only)
                 local file_path
                 linda:send("vfs_open", filename)
                 while true do
-                    local _, value = linda:receive("vfs_open_res", 0.001)
+                    local _, value = linda:receive(0.001, "vfs_open_res")
                     if value then
                         file_path, hash = value[1], value[2]
                         break
@@ -65,7 +65,7 @@ io.open = function (filename, mode, search_local_only)
             end
 
             print("Try to request hash from server", filename, hash)
-            local request = {"EXIST", hash}
+            local request = {"EXIST", hash, filename}
             linda:send("request", request)
 
             local realpath

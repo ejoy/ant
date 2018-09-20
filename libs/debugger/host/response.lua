@@ -8,6 +8,7 @@ function m.initialize(pkg)
     for k, v in pairs(pkg) do
         status.capabilities[k] = v
     end
+    request.attach()
 end
 
 function m.stackTrace(pkg)

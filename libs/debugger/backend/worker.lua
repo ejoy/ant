@@ -12,7 +12,7 @@ local hookmgr = require 'debugger.hookmgr'
 local initialized = false
 local info = {}
 local state = 'running'
-local stopReason = 'unknown'
+local stopReason = 'step'
 local exceptionFilters = {}
 local exceptionMsg = ''
 local exceptionTrace = ''
@@ -351,6 +351,7 @@ function hook.step()
         return
     elseif state == 'stepOver' or state == 'stepOut' or state == 'stepIn' then
         state = 'stopped'
+        stopReason = 'step'
         hookmgr.step_cancel()
     end
     if state == 'stopped' then

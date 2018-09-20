@@ -69,7 +69,7 @@ local function initializeWorker(w)
     if stopOnEntry then
         mgr.sendToWorker(w, {
             cmd = 'stop',
-            reason = 'stepping',
+            reason = 'entry',
         })
     end
     mgr.sendToWorker(w, {
@@ -256,7 +256,7 @@ function request.pause(req)
 
     mgr.sendToWorker(threadId, {
         cmd = 'stop',
-        reason = 'stepping',
+        reason = 'pause',
     })
     response.success(req)
 end

@@ -1,6 +1,4 @@
-local log, pkg_dir, sand_box_dir = ...
-
-package.path = package.path .. ";/fw/?.lua;" .. pkg_dir .. "/fw/?.lua;" .. pkg_dir .. "/?.lua;" .. "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;/libs/?/?.lua;"
+package.path = package.path .. ";/fw/?.lua;" .. fw_dir .. "/fw/?.lua;" .. fw_dir .. "/?.lua;" .. "/fw/?.lua;/libs/?.lua;/?.lua;./?/?.lua;/libs/?/?.lua;"
 --TODO: find a way to set this
 --path for the remote script
 lanes = require "lanes"
@@ -44,13 +42,13 @@ end
 
 
 function CreateIOThread(linda, pkg_dir, sb_dir)
-    print("init client repo")
+    print("init client repo", pkg_dir, sb_dir)
     local vfs = require "firmware.vfs"
     local io_repo = vfs.new(pkg_dir, sb_dir.."/Documents")
     ---[[
     local origin_require = require
     require = function(require_path)
-        print("requiring "..require_path)
+        print("requiring fw_io"..require_path)
         if io_repo then
             local file_path = string.gsub(require_path, "%.", "/")
             file_path = file_path .. ".lua"
@@ -93,7 +91,7 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
 end
 
 local lanes_err
-io_thread, lanes_err = lanes.gen("*", CreateIOThread)(linda, pkg_dir, sb_dir)
+io_thread, lanes_err = lanes.gen("*", CreateIOThread)(linda, fw_dir, remote_dir)
 if not io_thread then
     assert(false, "lanes error: ".. lanes_err)
 end
@@ -126,3 +124,15 @@ function RegisterIOCommand(cmd, func)
     linda:send("RegisterTransmit", cmd)
 end
 
+function KillIoThread()
+    if io_thread then
+        while true do
+            local cancel_res = io_thread:cancel(0.5)
+            if cancel_res then
+                break
+            end
+        end
+    end
+
+    print("kill io thread success")
+end

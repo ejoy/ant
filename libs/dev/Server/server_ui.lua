@@ -1,31 +1,66 @@
 dofile("libs/init.lua")
 
-local project_dir = "/Users/ejoy/Desktop/Engine/ant"
+--local project_dir = "/Users/ejoy/Desktop/Engine/ant"
 
 package.cpath = "clibs/?.dll; clibs/lib?.so; clibs/?.so;" .. package.cpath
 package.path = "libs/dev/Common/?.lua;libs/dev/Server/?.lua;libs/dev/?.lua;".. package.path
-package.path = project_dir.."/libs/?.lua;".. package.path
-package.path = project_dir.."/libs/?/?.lua;".. package.path
+--package.path = project_dir.."/libs/?.lua;".. package.path
+--package.path = project_dir.."/libs/?/?.lua;".. package.path
+
+local lsocket = require "lsocket"
+local redirectfd = require "redirectfd"
+--redirect std output, then send to log tab
+local function create_pipe()
+    local port = 10000
+    local socket
+
+    repeat
+        socket = assert(lsocket.bind( "127.0.0.1", port))
+        if not socket then
+            port = port + 1
+        end
+    until socket
+
+    local ofd = assert(lsocket.connect("127.0.0.1", port))
+    lsocket.select {socket}
+    local ifd = socket:accept()
+    socket:close()
+    lsocket.select({}, {ofd})
+    return ifd,ofd
+end
+
+local ifd,ofd = create_pipe()
+
+redirectfd.init(ofd:info().fd)
 
 local path = require "filesystem.path"
 local iup = require "iuplua"
 local mobiledevice = require "libimobiledevicelua"
 local server_framework = require "server_framework"
-server_framework:init("127.0.0.1", 8888)
+server_framework:init("127.0.0.1", 8889)
 
 --todo store in a file
 local winfile = require "winfile"
 local default_proj_dir =  winfile.currentdir()
 --ui layout
 
-local script_text = iup.text{ multiline = "YES", expand = "YES" }
 local bgfx_text = iup.text{multiline = "YES", expand = "Yes"}
 local error_text = iup.text{multiline = "YES", expand = "YES"}
 
-script_text.tabtitle = "Script"
+--sub tabs of log
+local main_log_text = iup.text{multiline = "YES", expand = "YES"}
+main_log_text.tabtitle = "Main"
+local msg_prc_log_text = iup.text{multiline = "YES", expand = "YES"}
+msg_prc_log_text.tabtitle = "Msg Process"
+local console_log_text = iup.text{multiline = "YES", expand = "YES"}
+console_log_text.tabtitle = "Console"
+
+local log_tab = iup.tabs{console_log_text, main_log_text, msg_prc_log_text}
+log_tab.tabtitle = "Log"
+
 bgfx_text.tabtitle = "Bgfx"
 error_text.tabtitle = "Error"
-local text_tabs = iup.tabs{script_text, bgfx_text, error_text}
+local text_tabs = iup.tabs{ log_tab, bgfx_text, error_text}
 
 --project directory and run file
 local run_file_btn = iup.button{title = "run file"}
@@ -125,27 +160,26 @@ function run_file_btn:action()
     local status = filedlg.status
 
     --send connect command
-    --todo fix it later
-    local devices = mobiledevice.GetDevices()
-    for k, v in pairs(devices) do
+    --todo if select a device, only run on that device
+    if status ~= "-1" then
+        local p_dir = proj_dir_text.value
 
-        if status ~= "-1" then
-            local p_dir = proj_dir_text.value
-
-            local file_path = filedlg.value
-            local s_pos, e_pos = string.find(file_path, p_dir)
-            if e_pos then
-                print("file path is absolute")
-                file_path = string.sub(file_path, e_pos+1)
-            end
-
-            file_path = string.gsub(file_path, "\\", "/")
-            --print(file_path)
-
-            server_framework:HandleCommand(v, "RUN", file_path)
+        local file_path = filedlg.value
+        local s_pos, e_pos = string.find(file_path, p_dir)
+        if e_pos then
+            print("file path is absolute")
+            file_path = string.sub(file_path, e_pos+1)
         end
 
+        file_path = string.gsub(file_path, "\\", "/")
+        --print(file_path)
+
+        print("run file", file_path)
+        server_framework:HandleCommand("all", "RUN", file_path)
     end
+
+
+    --local devices = mobiledevice.GetDevices()
 
     filedlg:destroy()
 end
@@ -209,7 +243,7 @@ dbg_tcp:event_in(function(data)
 end)
 
 dbg_tcp:event_close(function()
-    server_framework:SendPackage({"dbg", false})
+    server_framework:SendPackage({"dbg", ""})
 end)
 
 server_framework:RegisterIOCommand("dbg", function(data_table)
@@ -232,20 +266,28 @@ local function HandleResponse(resp_table)
 
             if cat == "Script" then
                 table.remove(log_table, 1)
+                local log_thread = log_table[1]
+                table.remove(log_table, 1)
+
                 local new_log_value = ""
                 for _, script_v in ipairs(log_table) do
-                    new_log_value = new_log_value .. tostring(script_v) .. " "
+                    new_log_value = new_log_value .. tostring(script_v) .. "\t"
                 end
 
-                if new_log_value then
+                if #new_log_value > 0 then
                     new_log_value = new_log_value .. "\n"
-                    --todo temperary disable
-                    ---[[
-                    script_text.value = script_text.value .. new_log_value
-                    local pos = iup.TextConvertLinColToPos(script_text,  script_text.linecount, 0)
-                    script_text.caretpos = pos
-                    script_text.scrolltopos = pos
 
+                    if log_thread == "MAIN" then
+                        main_log_text.value = main_log_text.value .. new_log_value
+                        local pos = iup.TextConvertLinColToPos(main_log_text,  main_log_text.linecount, 0)
+                        main_log_text.caretpos = pos
+                        main_log_text.scrolltopos = pos
+                    elseif log_thread == "MSG_PROCESS" then
+                        msg_prc_log_text.value = msg_prc_log_text.value .. new_log_value
+                        local pos = iup.TextConvertLinColToPos(msg_prc_log_text,  msg_prc_log_text.linecount, 0)
+                        msg_prc_log_text.caretpos = pos
+                        msg_prc_log_text.scrolltopos = pos
+                    end
                 end
 --]]
             elseif cat == "Bgfx" then
@@ -413,13 +455,29 @@ end
 
 server_framework:RegisterIOCommand("RECONNECT", reconnect_func)
 
+local function UpdateConsoleLog()
+    lsocket.select({ifd}, 0.005)
+    local console_log = ifd:recv()
+    if console_log and #console_log > 0 then
+        --io.stderr:write("CONSOLE LOG: ", console_log)
+        --add to console log
+        console_log_text.value = console_log_text.value .. console_log .. "\n"
+        local pos = iup.TextConvertLinColToPos(console_log_text,  console_log_text.linecount, 0)
+        console_log_text.caretpos = pos
+        console_log_text.scrolltopos = pos
+    end
+end
 
 -- to be able to run this script inside another context
+
 while true do
     local msg = iup.LoopStep()
     if msg == iup.CLOSE then
         break
     end
+
+    --update log
+    UpdateConsoleLog()
 
     dbg_tcp:update()
     server_framework:update()
