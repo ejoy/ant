@@ -16,6 +16,8 @@ local function create_sample_entity(skepath, anipath, meshpath)
 	"name", "can_render")
 
 	local e = world[eid]
+	e.name = "animation_test"
+
 	e.skeleton.builddata = assetmgr.load(skepath)
 	e.animation.handle = assetmgr.load(anipath)
 
@@ -35,13 +37,12 @@ local function create_sample_entity(skepath, anipath, meshpath)
 		}
 	]])
 
-	comp_util.load_material(e, "")
-
+	comp_util.load_material(e, smaplemaerial)
 	return eid
 end
 
--- luacheck: ignore self
-function model_ed_sys:init()
+
+local function init_control()
 	local sample_eid
 
 	local skepath_ctrl = windows.ske_path
@@ -71,11 +72,22 @@ function model_ed_sys:init()
 	end
 end
 
+-- luacheck: ignore self
+function model_ed_sys:init()
+	init_control()
+end
+
 local animodule = require "hierarchy.animation"
 
-function model_ed_sys:update()
+
+local function get_ani_playtime_in_second()
 	local silder = windows.anitime_silder
-	local time = tonumber(silder.VALUE)
+	local time_in_ms = tonumber(silder.VALUE)
+	return time_in_ms / 1000
+end
+
+function model_ed_sys:update()
+	local time_in_second = get_ani_playtime_in_second()
 
 	for _, eid in world:each("animation") do
 		local e = world[eid]
@@ -83,7 +95,7 @@ function model_ed_sys:update()
 		local ani = assert(e.animation).handle
 
 		local duration = ani:duration()
-		local delta = time / duration
+		local delta = time_in_second / duration
 		animodule.motion(ske, ani, delta)
 	end
 end
