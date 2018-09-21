@@ -166,6 +166,57 @@ local function init_notify(w, notifies)
 	end
 end
 
+local function searchpath(name, path)
+	--TODO
+	local f = io.open(name)
+	if f then
+		f:close()
+		return name
+	end
+	local err = ''
+	name = string.gsub(name, '%.', '/')
+	for c in string.gmatch(path, '[^;]+') do
+		local filename = string.gsub(c, '%?', name)
+		local f = io.open(filename)
+		if f then
+			f:close()
+			return filename
+		end
+		err = err .. ("\n\tno file '%s'"):format(filename)
+	end
+	return nil, err
+end
+
+local function init_modules(w, modules, module_path)
+	local mods = {}
+	local function import(name)
+		local path, err = searchpath(name, module_path)
+		if not path then
+			error(("module '%s' not found:%s"):format(name, err))
+		end
+		if mods[path] then
+			return
+		end
+		mods[#mods+1] = path
+		mods[path] = true
+	end
+	for _, name in ipairs(modules) do
+		import(name)
+	end
+
+	local reg, class = typeclass(w, import)
+	while #mods > 0 do
+		local name = mods[#mods]
+		mods[#mods] = nil
+		local module = loadfile(name)
+		if not module then
+			error("Module " .. name .. " isn't defined.")
+		end
+		module(reg)
+	end
+	return class
+end
+
 -- config.modules
 -- config.update_order
 -- config.args
@@ -186,10 +237,7 @@ function ecs.new_world(config)
 	}, world)
 
 	-- load systems and components from modules
-	local reg, class = typeclass(w)
-	for _, module in ipairs(config.modules) do
-		module(reg)
-	end
+	local class = init_modules(w, config.modules, config.module_path)
 
 	for k,v in pairs(class.component) do
 		w._component_type[k] = component(v)

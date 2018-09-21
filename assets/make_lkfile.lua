@@ -15,7 +15,7 @@ local winfile =  require "winfile"
 local modelutil = require "modelloader.util"
 local su = require "serialize.util"
 
-local config_template = su.serialize(modelutil.default_config())
+local config_template = su.serialize(modelutil.default_config(), true)
 
 local templates = {
 	shader = "shader_src = '%s'",
