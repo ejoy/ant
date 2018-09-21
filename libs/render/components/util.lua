@@ -4,16 +4,31 @@ util.__index = util
 local asset = require "asset"
 local common_util = require "common.util"
 local mu = require "math.util"
-local bgfxutil = require "bgfx.util"
 
-function util.load_mesh(entity, meshpath, param)
-	local mesh_comp = entity.mesh
-	if meshpath then
-		mesh_comp.path = meshpath
+
+local function load_res(comp, respath, param, errmsg)
+	if respath then
+		comp.ref_path = respath
 	end
 
-	local assetinfo = asset.load(mesh_comp.path, param)
-	mesh_comp.assetinfo = assetinfo
+	local ref_path = comp.ref_path
+	if ref_path == nil then
+		error(string.format("[%s]load resource failed, need ref_path, but get nil", errmsg))
+	end
+
+	comp.assetinfo = asset.load(ref_path, param)
+end
+
+function util.load_skeleton(entity, respath, param)
+	load_res(entity.animation, respath, param, "load.skeleton")	
+end
+
+function util.load_animation(entity, respath, param)
+	load_res(entity.animation, respath, param, "load.animation")
+end
+
+function util.load_mesh(entity, respath, param)
+	load_res(entity.mesh, respath, param, "load.mesh")
 end
 
 function util.load_texture(name, stage, texpath)	

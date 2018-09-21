@@ -6,7 +6,8 @@ local fs = require "filesystem"
 function util.write_to_file(fn, content, mode)
     local f = io.open(fn, mode or "w")
     f:write(content)
-    f:close()
+	f:close()
+	return fn
 end
 
 function util.read_from_file(filename)

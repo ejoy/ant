@@ -49,17 +49,31 @@ local animation_time = iup.vbox {
 	ALIGNMENT = "ACENTER",
 }
 
-local ske_path_inputer = iup.text {
-	ALIGNMENT="ALEFT",
-	EXPAND ="ON",
-	SIZE="120x0"
-}
+local function create_pathctrl(title)
+	local btn = iup.button {
+		TITLE="Browse",
+		ALIGNMENT="ARIGHT",
+	}
 
-local ani_path_inputer = iup.text {
+	local path_inputer = iup.text {
 		ALIGNMENT="ALEFT",
 		EXPAND ="ON",
 		SIZE="120x0",
-}
+	}
+
+	return iup.frame {
+		TITLE=title,
+		iup.hbox {
+			path_inputer,
+			btn,
+			iup.fill {}
+		},
+	}
+end
+
+local ske_pathctrl = create_pathctrl("Skeleton")
+local ani_pathctrl = create_pathctrl("Animation")
+local mesh_pathctrl = create_pathctrl("Mesh")
 
 local anilist_ctrller = iup.list {
 	SIZE="160x0",
@@ -81,32 +95,11 @@ local dlg = iup.dialog {
 				TABTITLE0="Resource Files",
 				iup.hbox {
 					iup.vbox {
-						iup.frame {
-							TITLE="Skeleton",
-							iup.hbox {
-								ske_path_inputer,
-								iup.button {
-									TITLE="Browse",
-									ALIGNMENT="ARIGHT",
-									EXPAND ="ON",
-								},
-								EXPAND ="ON",
-							},
-						},
-						iup.space {
-							SIZE="0x5",
-						},
-						iup.frame {
-							TITLE="Animation",
-							iup.hbox {
-								ani_path_inputer,
-								iup.button {
-									TITLE="Browse",
-									ALIGNMENT="ARIGHT",
-								},
-								iup.fill {}
-							},
-						},
+						ske_pathctrl,
+						iup.space {	SIZE="0x5",	},
+						ani_pathctrl,
+						iup.space { SIZE="0x5", },
+						mesh_pathctrl,
 						iup.fill {},
 					},
 					iup.fill{},
@@ -129,13 +122,17 @@ local dlg = iup.dialog {
 	title = "Model Editor",	
 }
 
+local function get_path_inputer(ctrl)
+	return ctrl[1][1]
+end
 
 function model_windows()
 	return {
 		anitime_slider=anitime_slider,
 		anitime_inputer=anitime_inputer,
-		ske_path=ske_path_inputer,
-		ani_path=ani_path_inputer,
+		ske_path=get_path_inputer(ske_pathctrl),
+		ani_path=get_path_inputer(ani_pathctrl),
+		mesh_path=get_path_inputer(mesh_pathctrl),
 		anilist=anilist_ctrller,
 	}
 end
@@ -143,25 +140,25 @@ end
 dlg:showxy(iup.CENTER, iup.CENTER)
 dlg.usersize = nil
 
-local function print_children(container)	
+-- local function print_children(container)	
 	
-	local idx = 1
-	while true do
-		local ctrl = container[idx]
-		if ctrl == nil then
-			break
-		end
-		idx = idx + 1		
-		print("title : ", ctrl.TITLE, ", NATURALSIZE : ", ctrl.NATURALSIZE)
-		print_children(ctrl)
-	end
-end
+-- 	local idx = 1
+-- 	while true do
+-- 		local ctrl = container[idx]
+-- 		if ctrl == nil then
+-- 			break
+-- 		end
+-- 		idx = idx + 1		
+-- 		print("title : ", ctrl.TITLE, ", NATURALSIZE : ", ctrl.NATURALSIZE)
+-- 		print_children(ctrl)
+-- 	end
+-- end
 
 --print_children(dlg)
 
 rhwi.init(iup.GetAttributeData(canvas, "HWND"), fbw, fbh)
 local world = su.start_new_world(nil, fbw, fbh, {
-	"engine.module",
+	"engine.module", "tools/modeleditor/model_editor.module",
 })
 
 if (iup.MainLoopLevel()==0) then

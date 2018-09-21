@@ -14,7 +14,8 @@ local support_list = {
 	"module",
 	"texture",
 	"hierarchy",
-	"ozz",
+	"ske",
+	"ani",	
 	"lk",
 }
 
@@ -103,6 +104,7 @@ function assetmgr.load(filename, param)
 		local fn 
 		for _, ff in ipairs{filename, path.join("assetfiles", filename)} do
 			fn = assetmgr.find_valid_asset_path(ff)
+			if fn then break end
 		end
 
 		if fn == nil then
