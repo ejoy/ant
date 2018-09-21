@@ -18,14 +18,25 @@ local support_list = {
 	"lk",
 }
 
-local loader = setmetatable({} , {
+-- luacheck: ignore param
+local function raw_loader(filename, param)
+	local f = io.open(filename)
+	if f == nil then
+		error(string.format("raw_loader open file failed, filename : ", filename))
+	end
+	local content = f:read("a")
+	f:close()
+	return content
+end
+
+local loaders = setmetatable({} , {
 	__index = function(_, ext)
 		error("Unsupport assetmgr type " .. ext)
 	end
 })
 
 for _, mname in ipairs(support_list) do	
-	loader[mname] = require ("ext_" .. mname)
+	loaders[mname] = require ("ext_" .. mname)
 end
 
 local assetmgr = {}
@@ -34,8 +45,8 @@ assetmgr.__index = assetmgr
 local resources = setmetatable({}, {__mode="kv"})
 
 function assetmgr.add_loader(n, l)
-	--assert(loader[n] == nil)
-	loader[n] = l
+	--assert(loaders[n] == nil)
+	loaders[n] = l
 end
 
 local asset_rootdir = "assets"
@@ -89,12 +100,17 @@ function assetmgr.load(filename, param)
 	local res = resources[filename]
 	if res == nil then
 		local ext = assert(path.ext(filename))
-		local fn = assetmgr.find_valid_asset_path(filename)
-		if fn == nil then
-			fn = assetmgr.find_valid_asset_path(path.join("assetfiles", filename))
+		local fn 
+		for _, ff in ipairs{filename, path.join("assetfiles", filename)} do
+			fn = assetmgr.find_valid_asset_path(ff)
 		end
-		
-		res = loader[ext](fn, param)
+
+		if fn == nil then
+			error(string.format("asset file not found, filename : %s", filename))
+		end
+
+		local loader = loaders[ext] or raw_loader
+		res = loader(fn, param)
 		resources[filename] = res
 	end
 
@@ -117,7 +133,7 @@ return assetmgr
 -- 	__index = function (t, filename)
 -- 		assert(type(filename) == "string")		
 -- 		local ext = assert(filename:match "%.([%w_]+)$")
--- 		local v = loader[ext](filename, t)
+-- 		local v = loaders[ext](filename, t)
 -- 		t[filename] = v		
 -- 		return v
 -- 	end,
