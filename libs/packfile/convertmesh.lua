@@ -28,6 +28,8 @@ return function(lk, readmode)
 		assimp.convert_BGFXBin(meshpath, outputfile, config)
 	elseif ext == "fbx" then
 		assimp.convert_FBX(meshpath, outputfile, config)
+	elseif ext == "ozz" then
+		assimp.convert_OZZ(meshpath, outputfile, config)
 	else
 		error(string.format("not support convert mesh format : %s, filename is : %s", ext, meshpath))
 	end
