@@ -6,7 +6,7 @@ return function(filename)
     local files = assert(t.modules)
     local modules = {}
     for _, v in ipairs(files) do
-        table.insert(modules, assert(loadfile(v)))
+        table.insert(modules, v)
     end
 
     return modules
