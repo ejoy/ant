@@ -233,7 +233,7 @@ function add_entity_sys:init()
         return eid
 	end
 	
-	-- local hie_refpath = "hierarchy/test_hierarchy.hierarchy"	
+	local hie_refpath = "hierarchy/test_hierarchy.hierarchy"
 	-- do
 	-- 	local assetpath = path.join(assetmgr.assetdir(), hie_refpath)
 	-- 	path.create_dirs(path.parent(assetpath))
