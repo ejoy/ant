@@ -3,7 +3,7 @@ local world = ecs.world
 
 local model_ed_sys = ecs.system "model_editor_system"
 
-model_ed_sys.dependby "animation_system"
+model_ed_sys.depend "camera_init"
 
 -- luacheck: globals model_windows
 -- luacheck: globals iup
@@ -125,4 +125,7 @@ end
 -- luacheck: ignore self
 function model_ed_sys:init()
 	init_control()
+
+	local maincamera = world:first_entity("main_camera")
+	assert(maincamera.primitive_filter).no_lighting = true
 end
