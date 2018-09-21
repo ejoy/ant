@@ -145,7 +145,8 @@ extern "C" {
 LUAMOD_API int
 luaopen_hierarchy_animation(lua_State *L) {
 	luaL_newmetatable(L, "ANIMATION_NODE");	
-	//lua_setfield(L, -1, "__index");	// ANIMATION_NODE.__index = ANIMATION_NODE
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");	// ANIMATION_NODE.__index = ANIMATION_NODE
 
 	lua_pushcfunction(L, lduration_animation);
 	lua_setfield(L, -2, "duration");

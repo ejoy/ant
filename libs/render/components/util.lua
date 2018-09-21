@@ -20,7 +20,7 @@ local function load_res(comp, respath, param, errmsg)
 end
 
 function util.load_skeleton(entity, respath, param)
-	load_res(entity.animation, respath, param, "load.skeleton")	
+	load_res(entity.skeleton, respath, param, "load.skeleton")	
 end
 
 function util.load_animation(entity, respath, param)
@@ -84,7 +84,7 @@ function util.create_render_entity(ms, world, name, meshfile, materialfile)
 	
 	obj.name.n = name
 
-	obj.mesh.path = meshfile
+	obj.mesh.ref_path = meshfile
 	util.load_mesh(obj)		
 
 	obj.material.content[1] = {path=materialfile, properties={}}

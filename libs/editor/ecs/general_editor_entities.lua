@@ -30,7 +30,7 @@ function general_editor_entites:init()
 
 		axis.name.n = "axis-tips"
 		
-		axis.mesh.path = ""	-- runtime mesh info
+		axis.mesh.ref_path = ""	-- runtime mesh info
 		axis.mesh.assetinfo = {
 			handle = {
 				groups = {
@@ -100,7 +100,7 @@ function general_editor_entites:init()
             return t
         end
 
-		grid.mesh.path = ""
+		grid.mesh.ref_path = ""
         grid.mesh.assetinfo = {
 			handle = {
 				groups = {
@@ -146,7 +146,7 @@ function general_editor_entites:init()
 			return corners
 		end
 
-		frusutm_debug.mesh.path = ""
+		frusutm_debug.mesh.ref_path = ""
         frusutm_debug.mesh.assetinfo = {
 			handle = {
 				groups = {

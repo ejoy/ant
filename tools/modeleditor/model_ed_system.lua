@@ -15,12 +15,12 @@ local fu = require "filesystem.util"
 
 local function create_sample_entity(skepath, anipath, meshpath)
 	local eid = world:new_entity("position", "scale", "rotation",
-	"hierarchy", "animation", "mesh", "material",
+	"skeleton", "animation", "mesh", "material",
 	"name", "can_render")
 
 	local e = world[eid]
 	e.name = "animation_test"
-	
+
 	comp_util.load_animation(e, anipath)
 	comp_util.load_skeleton(e, skepath)
 	comp_util.load_mesh(e, meshpath)

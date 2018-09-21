@@ -123,7 +123,7 @@ function add_entity_sys:init()
         ms(bunny.position.v, {0, 0, 0, 1}, "=")
 		ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
      
-		bunny.mesh.path = "bunny.mesh"
+		bunny.mesh.ref_path = "bunny.mesh"
 		component_util.load_mesh(bunny)
      
 		bunny.material.content[1] = {path = "bunny.material", properties = {}}
@@ -205,7 +205,7 @@ function add_entity_sys:init()
 	-- 		}
 	-- 	end
 
-	-- 	stone.mesh.path = ""	-- runtime mesh info
+	-- 	stone.mesh.ref_path = ""	-- runtime mesh info
 	-- 	stone.mesh.assetinfo = create_plane_mesh()
 
 
@@ -225,11 +225,9 @@ function add_entity_sys:init()
         ms(entity.scale.v, {1, 1, 1}, "=")
         ms(entity.position.v, {0, 0, 0, 1}, "=") 
         ms(entity.rotation.v, {0, 0, 0}, "=")
-
-		entity.mesh.path = meshfile
-		component_util.load_mesh(entity)
-		entity.material.content[1] = {path=materialfile, properties={}}
-		component_util.load_material(entity)
+		
+		component_util.load_mesh(entity, meshfile)		
+		component_util.load_material(entity, {materialfile})
         return eid
 	end
 	

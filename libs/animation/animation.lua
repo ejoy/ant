@@ -39,7 +39,7 @@ local anisystem = ecs.system "animation_system"
 anisystem.singleton "timer"
 anisystem.singleton "math_stack"
 
-local ani_module = "hierarchy.animation"
+local ani_module = require "hierarchy.animation"
 
 function anisystem:update()
 	for _, eid in world:each("animation") do
