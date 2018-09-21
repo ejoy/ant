@@ -1,8 +1,9 @@
+-- luacheck: globals import
+-- luacheck: globals log
 local require = import and import(...) or require
 local log = log and log(...) or print
 
 local rawtable = require "rawtable"
-local fs = require "filesystem"
 local path = require "filesystem.path"
 local mesh_loader = require "modelloader.loader"
 
