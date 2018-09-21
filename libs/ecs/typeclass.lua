@@ -65,7 +65,7 @@ local function gen_type(c, typename)
 	end
 end
 
-return function(world)
+return function(world, import)
 	local class_register = { world = world }
 	local class = {}
 
@@ -121,6 +121,8 @@ return function(world)
 			end
 		end
 	end
+
+	class_register.import = import
 
 	return class_register, class
 end
