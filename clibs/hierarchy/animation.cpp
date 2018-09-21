@@ -78,7 +78,7 @@ lmotion(lua_State *L){
 	}
 
 	if (aninode->poses.size() == 0)
-		aninode->poses = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(ske->num_soa_joints());
+		aninode->poses = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(ske->num_joints());
 
 	ozz::animation::LocalToModelJob ltmjob;
 	ltmjob.input = samplingResults;
