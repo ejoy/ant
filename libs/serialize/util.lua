@@ -1,3 +1,5 @@
+local cu = require "common.util"
+
 local seri = {}
 
 function seri.load(filename)
@@ -13,7 +15,7 @@ function seri.load(filename)
 	return data
 end
 
-function seri.serialize(v)
+function seri.serialize(v, needsorted)
 	local dup = {}
 	local function seri_value(v)
 		local function seri_table(t)
@@ -23,7 +25,17 @@ function seri.serialize(v)
 				table.insert(st, seri_value(v) .. ",")
 				num_keys[k] = true
 			end
-			for k,v in pairs(t) do
+
+			-- local all_keys = {}
+			-- for k in pairs(t) do
+			-- 	table.insert(all_keys, k)
+			-- end
+			-- table.sort(all_keys, function (lhs, rhs) return lhs < rhs end)
+
+			-- for _, k in ipairs(all_keys) do			
+			-- 	local v = t[k]
+			local mypairs = needsorted and cu.ordered_pairs or pairs
+			for k,v in mypairs(t) do
 				if not num_keys[k] then
 					local value = seri_value(v)
 					local tkey = type(k)
