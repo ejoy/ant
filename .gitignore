@@ -31,3 +31,5 @@ dir.txt
 ServerMac/*
 fileserver/*
 runtime/windows/Documents/
+
+/config/
