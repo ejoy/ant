@@ -34,16 +34,22 @@ local ifd,ofd = create_pipe()
 redirectfd.init(ofd:info().fd)
 
 local path = require "filesystem.path"
-local iup = require "iuplua"
+require "iuplua"
+require "iupluacontrols"
 local mobiledevice = require "libimobiledevicelua"
 local server_framework = require "server_framework"
-server_framework:init("127.0.0.1", 8889)
 
 --todo store in a file
 local winfile = require "winfile"
 local default_proj_dir =  winfile.currentdir()
---ui layout
 
+local fw_path = "."
+if PLATFORM == "MAC" then
+    fw_path = "/Users/ejoy/Desktop/Engine/ant/"
+end
+server_framework:init("127.0.0.1", 8889, fw_path)
+
+--ui layout
 local bgfx_text = iup.text{multiline = "YES", expand = "Yes"}
 local error_text = iup.text{multiline = "YES", expand = "YES"}
 
@@ -86,12 +92,67 @@ local device_frame = iup.frame{device_list, title = "device(s)"}
 local connect_list = iup.list{expand = "YES"}
 local connect_frame = iup.frame{connect_list, title = "connected"}
 
-local connect_btn = iup.button{title = "connect"}
-local disconnect_btn = iup.button{title = "disconnect"}
+--local device_mat = iup.matrix {numcol = 10, numlin = 3, numcol_visible = 4, numlin_visible = 7, width0 = 15, height0 = 8, resizematrix = "YES"}
+local mlist = iup.matrixlist{}
+mlist.count = 10
+--  mlist["COUNT"] = 10
+mlist["VISIBLELINES"] = 5
+mlist["COLUMNORDER"] = "LABEL:COLOR:IMAGE"
+--  mlist["COLUMNORDER"] = "LABEL:COLOR"
+--  mlist["COLUMNORDER"] = "LABEL"
+--  mlist["ACTIVE"] = "NO"
+--  mlist["FOCUSCOLOR"] = "BGCOLOR"
+mlist["SHOWDELETE"] = "Yes"
+
+mlist["EDITABLE"] = "Yes"
+
+-- Bluish style
+if (1) then
+  mlist["TITLE"] = "Test"
+  mlist["BGCOLOR"] = "220 230 240"
+  mlist["FRAMECOLOR"] = "120 140 160"
+  mlist["ITEMBGCOLOR0"] = "120 140 160"
+  mlist["ITEMFGCOLOR0"] = "255 255 255"
+end
+
+mlist["1"] = "AAA"
+mlist["2"] = "BBB"
+mlist["3"] = "CCC"
+mlist["4"] = "DDD"
+mlist["5"] = "EEE"
+mlist["6"] = "FFF"
+mlist["7"] = "GGG"
+mlist["8"] = "HHH"
+mlist["9"] = "III"
+mlist["10"] = "JJJ"
+
+mlist["COLOR1"] = "255 0 0"
+mlist["COLOR2"] = "255 255 0"
+--mlist["COLOR3"] = "0 255 0"
+mlist["COLOR4"] = "0 255 255"
+mlist["COLOR5"] = "0 0 255"
+mlist["COLOR6"] = "255 0 255"
+mlist["COLOR7"] = "255 128 0"
+mlist["COLOR8"] = "255 128 128"
+mlist["COLOR9"] = "0 255 128"
+mlist["COLOR10"] = "128 255 128"
+
+mlist["ITEMACTIVE3"] = "NO"
+mlist["ITEMACTIVE7"] = "NO"
+mlist["ITEMACTIVE8"] = "NO"
+
+mlist["IMAGEACTIVE9"] = "No"
+
+mlist["IMAGEVALUE1"] = "ON"
+mlist["IMAGEVALUE2"] = "ON"
+mlist["IMAGEVALUE3"] = "ON"
+
 local open_close_simpad_btn = iup.button{title = "open/close sim pad"}
 
-local connect_btn_hbox = iup.hbox{connect_btn, disconnect_btn, open_close_simpad_btn}
-local device_vbox = iup.vbox{device_frame, connect_frame, connect_btn_hbox}
+local connect_btn_hbox = iup.hbox{open_close_simpad_btn, device_mat}
+local device_vbox = iup.vbox{mlist, connect_btn_hbox}
+
+
 
 local main_split = iup.split{main_vbox, device_vbox}
 
@@ -182,34 +243,6 @@ function run_file_btn:action()
     --local devices = mobiledevice.GetDevices()
 
     filedlg:destroy()
-end
-
-function connect_btn:action()
-    local select_idx = device_list.value
-
-    --none selected
-    if select_idx == 0 then
-        return
-    end
-
-    local udid = device_list[select_idx]
-    --disconnect old connection
-    --todo fix it later
-    server_framework:HandleCommand(udid, "DISCONNECT")
-    server_framework:HandleCommand(udid, "CONNECT")
-end
-
-
-function disconnect_btn:action()
-    local select_idx = connect_list.value
-
-    --none selected
-    if select_idx == 0 then
-        return
-    end
-
-    local udid = connect_list[select_idx]
-    server_framework:HandleCommand(udid, "DISCONNECT")
 end
 
 function simpad_dlg:close_cb()

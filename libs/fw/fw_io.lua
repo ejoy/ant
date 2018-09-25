@@ -73,16 +73,11 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
     package.path = "./libs/dev/Common/?.lua;"..package.path
     print("init client repo", pkg_dir, sb_dir)
 
-    local vfs_cloud = require "firmware.vfs_cloud"
-    local root_dir = sb_dir.."/Documents/"
-    local dir_table = {libs = root_dir .. "libs", assets = root_dir .. "assets"}
-    local io_vfs_cloud = vfs_cloud.new(pkg_dir, dir_table)
-
-    --[[
+    
     local vfs = require "firmware.vfs"
     local root_dir = sb_dir .. "/Documents"
     local io_vfs = vfs.new(pkg_dir, root_dir)
---]]
+
     ---[[
     local origin_require = require
     require = function(require_path)
@@ -114,7 +109,7 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
     --print(pcall(require, "fw.client_io"))
     local client_io = require "fw.client_io"
     print("create io data", linda, pkg_dir, sb_dir)
-    local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir, io_vfs_cloud)
+    local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir, io_vfs)
 
     print("create io finished")
     while true do

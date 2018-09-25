@@ -37,7 +37,7 @@ fw_dir = "runtime/ios/ant_ios/fw"
 remote_dir = "runtime/Windows"
 
 --at begin, only search for these locations
-function ant_load(file_path, vfs_cloud)
+function ant_load(file_path, vfs_repo)
     --todo vfs load?
     local function path_normalize(fullname)
         local t = {}
@@ -53,8 +53,8 @@ function ant_load(file_path, vfs_cloud)
     end
 
     local file, err = nil, ""
-    if vfs_cloud then
-        file = vfs_cloud:open(file_path)
+    if vfs_repo then
+        file = vfs_repo:open(file_path)
         --print("vfs repo open", path)
     end
 

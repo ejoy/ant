@@ -6,8 +6,8 @@ local lfs = require "lfs"
 local client_dir = "libs/dev/io/c"
 local filesystem_path = require "filesystem.path"
 
---local vfs = require "firmware.vfs"
---local client_repo = vfs.new( "runtime/core/firmware", client_dir )
+local vfs = require "firmware.vfs"
+local client_repo = vfs.new( "runtime/core/firmware", client_dir )
 
 local dir_table = {"libs/dev/io/s/f0", "libs/dev/io/s/f1"}
 local vfs_cloud = require "firmware.vfs_cloud"
@@ -44,7 +44,6 @@ local function CreateFolder(full_path)
 end
 
 io_ins:Send(id, {"REQUEST_ROOT"})
---while true do
     local n_c, n_d = io_ins:Update()
 
     if n_c and #n_c > 0 then
@@ -59,19 +58,13 @@ io_ins:Send(id, {"REQUEST_ROOT"})
         end
     end
 
-    local root_changed = 0
-    while root_changed < #dir_table do
+    while true do
         local n_c, n_d = io_ins:Update()
         local pkg_table = io_ins:Get(id)
         for _, pkg in ipairs(pkg_table) do
             if pkg[1] == "ROOT_HASH" then
-                local client_dir = pkg[2]
-                local client_root = pkg[3]
-                print("change root", client_dir, client_root)
-                if repo_cloud:changeroot(client_root, client_dir) then
-                    root_changed = root_changed + 1
-                end
-                --client_repo:changeroot(client_root)
+                local client_root = pkg[2]
+                client_repo:changeroot(client_root)
                 break
             end
         end

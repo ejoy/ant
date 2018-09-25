@@ -48,10 +48,20 @@ local function HandleMessage()
 end
 
 local function CreateServerThread(address, port, linda)
-    local server_io = require "server_new_io"
+    local server_io = require "server_io"
     local s = server_io.new(address, port, linda)
+    print("create server io")
     while true do
         s:mainloop(0.05)
+    end
+end
+
+local function CreateFileWatchThread(path, linda)
+    local server_filesys = require "server_filesys"
+    local fs = server_filesys.new(linda, path)    
+    
+    while true do
+        fs:mainloop()
     end
 end
 
@@ -77,10 +87,14 @@ end
 
 --server_repo = nil
 
-function server_ins:init(address, port)
+function server_ins:init(address, port, fw_path)
     --self.s = server.new{address = address, port = port}
-
-    local server_io, err = lanes.gen("*", {globals = {PLATFORM = PLATFORM}}, CreateServerThread)(address, port, linda)
+    local file_watch, err = lanes.gen("*", CreateFileWatchThread)(fw_path, linda)
+    if not file_watch then
+        print("unable to create file watch thread: " .. tostring(err))
+    end
+    
+    local server_io, err = lanes.gen("*",  CreateServerThread)(address, port, linda)
     if not server_io then
         print("server_io error: "..tostring(err))
     end
@@ -88,7 +102,6 @@ end
 
 function server_ins:update()
     --print("server framework update")
-
     HandleMessage()
 end
 

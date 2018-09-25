@@ -95,31 +95,36 @@ end
 function fileserver.EXIST(req, self)
     --req[1] is the command "EXIST"
     --req[2] is the hash value of the file
-    --req[3] is the path of the file
 
     local hash = req[2]
-    local path = req[3]
     print("check file exist: ", hash)
-    local real_path = self.vfs_repo:load(hash, path)
-    if real_path then
-        print("file exist: ", hash)
-        return {"EXIST_CHECK", real_path, hash}
-    else
-        print("file not exist: ", hash)
-        return {"EXIST_CHECK", "not exist"}
-    end
 
+    self.linda:send("repo_load", hash)
+    --TODO: non blocking ?
+    while true do
+        local key, value = self.linda:receive(0.002, "repo_load_result"..hash)
+        if key then
+            if value == "nil" then
+                print("file not exist: " .. hash)
+                return {"EXIST_CHECK", "not exist"}
+            else
+                print("file exist: " .. hash)
+                return {"EXIST_CHECK", value, hash}
+            end
+
+            break
+        end
+    end
 end
 
 --this is the log client sends back
-function fileserver.LOG(req)
+function fileserver.LOG(req, self)
     --req[1] is the command "LOG"
-    --req[2] is the id of the client
-    --req[3] is the label of the log TODO:(use for filtering etc. , leave it for now)
-    --req[4] is the log text
-
-    --for now, don't do any thing
-    return req
+    --req[2] is the category info
+    --req[3] is the log data
+    
+    --print("get log", response_pkg[2], response_pkg[3], response_pkg[4])
+    table.insert(self.log, {table.unpack(req, 2)})
 end
 
 --mainly for client requiring a file on server
@@ -225,12 +230,8 @@ function fileserver.SCREENSHOT(req, self)
 end
 
 function fileserver.REQUEST_ROOT(req, self)
-    local server_root = self.vfs_repo:root_hash()
+    print("client request root")
 
-    local root_cmd_table = {}
-    for k, v in pairs(server_root) do
-        table.insert(root_cmd_table, {"SERVER_ROOT", v, k})
-    end
-    return table.unpack(root_cmd_table)
+    self.linda:send("repo_root", true)
 end
 return fileserver
