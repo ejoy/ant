@@ -1,15 +1,24 @@
-FAQ for shader
-=========================
+<!-- TOC -->
 
-编译shader的GUI工具
----------------------
+- [FAQ for shader](#faq-for-shader)
+    - [编译shader的GUI工具](#编译shader的gui工具)
+    - [编译bgfx官方的shaderc工具](#编译bgfx官方的shaderc工具)
+    - [bgfx官方shaderc工具的使用说明](#bgfx官方shaderc工具的使用说明)
+    - [使用shader的最简单例子](#使用shader的最简单例子)
+    - [预定义uniform的一些说明](#预定义uniform的一些说明)
+    - [预定义属性](#预定义属性)
+
+<!-- /TOC -->
+
+# FAQ for shader
+
+## 编译shader的GUI工具
 
 可以通过下面的代码来运行编译shader的GUI工具
 
         bin/iup.exe tools/shaderc.lua
 
-编译bgfx官方的shaderc工具
-------------------------------
+## 编译bgfx官方的shaderc工具
 
 安装好编译工具链后进入bgfx的源代码目录执行make shaderc。
 
@@ -19,8 +28,7 @@ FAQ for shader
 
 然后在bgfx目录下运行make shaderc。
 
-bgfx官方shaderc工具的使用说明
--------------------------------
+## bgfx官方shaderc工具的使用说明
 
 shaderc的命令行参数说明:
 
@@ -89,8 +97,7 @@ bgfx提供了这些宏来帮助我们编写shader：
 
 https://github.com/bkaradzic/bgfx/blob/master/src/bgfx_shader.sh
 
-使用shader的最简单例子
----------------------------
+## 使用shader的最简单例子
 
 这里提供完整的工程文件：
 
@@ -102,8 +109,7 @@ https://github.com/fangcun010/shadercTest
 
 https://github.com/fangcun010/BgfxTriangle
 
-预定义uniform的一些说明
-------------------------
+## 预定义uniform的一些说明
 
 bgfx提供的一些API是通过uniform的方式实现的，比如bgfx_set_transform。
 
@@ -138,8 +144,7 @@ bgfx有下面这些预定义的uniform
 需要注意的是bgfx的API自己维护了设置数据的状态，比如bgfx_set_view_transform并没有设置着色器程序的uniform，
 而是把它存进view的state中，在frame时才真正进行了uniform的设置。
 
-预定义属性
--------------------
+## 预定义属性
 
 bgfx使用了一些预定义的属性，具体如下：
 
