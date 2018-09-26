@@ -93,7 +93,7 @@ function assetmgr.load(filename, param)
 		local ext = assert(path.ext(filename))
 		local fn = assetmgr.find_valid_asset_path(filename)
 		if fn == nil then
-			fn = assetmgr.find_valid_asset_path(path.join("assetfiles", filename))
+			fn = assetmgr.find_valid_asset_path(path.join("depiction", filename))
 		end
 		
 		res = loader[ext](fn, param)
