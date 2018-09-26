@@ -210,8 +210,9 @@ local function init_modules(w, modules, module_path)
 		mods[#mods] = nil
 		local module = loadfile(name)
 		if not module then
-			error("Module " .. name .. " isn't defined.")
+			error(("module '%s' load failed."):format(name))
 		end
+		log(("Init module '%s'."):format(name))
 		module(reg)
 	end
 	return class
