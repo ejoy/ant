@@ -5,11 +5,10 @@ local pack = require "pack"
 local lsocket = require "lsocket"
 local command_cache = {}
 
+local iosys = require "iosys"
+
 --give every socket a id(string), and server will only know the id not the socket itself
 --if server use an id that can't be found in socket table, it should be device's udid
-local socket_table = {}
-local socket_count = 0
-
 local connected_devices = {}
 
 local dispatch = {}
@@ -18,49 +17,28 @@ local libimobiledevicelua = require "libimobiledevicelua"
 local project_directory = ""
 
 -- register command
-for _, svr in ipairs { "pingserver", "fileserver" } do
-	local s = require(svr)
-	for cmd, func in pairs(s) do
+for _, svr in ipairs { "fileserver" } do
+    local s = require(svr)
+    for cmd, func in pairs(s) do
         --prevent duplicate cmd
-		assert(dispatch[cmd] == nil)
-		print("server cmd:",cmd, "func:",func)
-		dispatch[cmd] = func
-	end
+        assert(dispatch[cmd] == nil)
+        print("server cmd:",cmd)
+        dispatch[cmd] = func
+    end
 end
 
 local server = {}; server.__index = server
 
-local function SendData(fd, pack_l)
-    --print("send data",string.format("%q", pack_l))
-    if not socket_table[fd] then
-        if fd == "all" then
-            local byte_sent = 0
-            for k, v in pairs(connected_devices) do
-                if v == true then
-                    byte_sent = byte_sent + libimobiledevicelua.Send(k, pack_l)
-                end
-            end
-
-            return byte_sent
-        else
-            return libimobiledevicelua.Send(fd, pack_l)
-        end
-
-    else
-        return fd:send(pack_l)
-    end
-end
-
 local file_server = require "fileserver"
 -------------------------------------------------------------
-local function HandlePackage(response_pkg, id, self)
+function server:HandlePackage(response_pkg, id, self)
     --fd may be a socket, also can be a string represent the udid, treat them differently
     local cmd_type = response_pkg[1]
     if cmd_type == "MULTI_PACKAGE" then
         local file_path = response_pkg[2]
         local client_path = response_pkg[3]
-        local file_size = response_pkg[4]
-        local hash = response_pkg[5]
+        local hash = response_pkg[4]
+        local file_size = response_pkg[5]
         local offset = response_pkg[6]
         if not offset then
             offset = 0
@@ -73,8 +51,6 @@ local function HandlePackage(response_pkg, id, self)
         --for i = 1, MAX_PACKAGE_NUM do
         while true do
             if not file then
-                --TODO: do something here, maybe the file got deleted on the server
-                --TODO: or the file path is somehow incorrect
                 log("file path invalid: %s", file_path)
                 return
             end
@@ -99,22 +75,14 @@ local function HandlePackage(response_pkg, id, self)
             local client_package = {"FILE", client_path, hash, progress, file_data}
             print("read size", read_size, progress)
             --put it on a lanes, store the handle
-            local pack_l = pack.pack(client_package)
 
-            local nbytes = SendData(id, pack_l)
-
-            --local nbytes = fd:send(pack_l)
-            --if fd write queue is full
-            if not nbytes then
-                break;
-            end
+            self.io:Send(id, client_package)
             print("sending", file_path, "remaining", file_size - offset, #file_data)
 
             offset = offset + read_size
             if offset >= file_size then
                 break
             end
-
         end
 
         response_pkg[6] = offset
@@ -131,16 +99,13 @@ local function HandlePackage(response_pkg, id, self)
             cmd_type == "RUN" or
             cmd_type == "ERROR" or
             cmd_type == "SCREENSHOT" or
-            cmd_type == "COMPILE_SHADER" then
+            cmd_type == "SERVER_ROOT" then
 
-        local pack_l = pack.pack(response_pkg)
-        --local nbytes = fd:send(pack_l)
-        local nbytes = SendData(id, pack_l)
-        if not nbytes then
-            return "RUNNING"
-        else
-            return "DONE"
-        end
+        print("send command", cmd_type, response_pkg[2])
+        self.io:Send(id, response_pkg)
+
+        return "DONE"
+
     elseif cmd_type == "DIR" then
         local list_path = response_pkg[2]
         local file_num = response_pkg[3]
@@ -182,12 +147,6 @@ local function HandlePackage(response_pkg, id, self)
         else
             return "RUNNING"
         end
-    elseif cmd_type == "LOG" then
-        --do nothing for now
-        --response_pkg[2] is category info
-        --response_pkg[3] is log data
-        table.insert(self.log, {table.unpack(response_pkg, 2)})
-        return "DONE"
     else
         print("cmd: " .. cmd_type .." not support yet")
         return "DONE"
@@ -203,7 +162,7 @@ function server:PackageHandleUpdate()
     for k,v in ipairs(command_cache) do
         local a_cmd = v[1]
         local id = v[2]
-        local status = HandlePackage(a_cmd, id, self)
+        local status = self:HandlePackage(a_cmd, id, self)
         if status == "DONE" then
             table.insert(remove_list, k)
         end
@@ -216,132 +175,53 @@ function server:PackageHandleUpdate()
 
 end
 
+local enable_pack = false
+function enable_pack_framework(state)
+    if state then
+        enable_pack = state
+    end
+
+    return enable_pack
+end
+
 --------------------------------------------------------------
-function server.new(config, linda)
-    local fd = assert(lsocket.connect(config.address, config.port))
-    local fd_name = config.address .. ":" .. config.port
-    --print("fd", fd_name)
-    socket_table[fd_name] = fd
-    local new_client = {ip = config.address, port = config.port, reading = ""}
-    local var_table = {ids = {fd_name}, clients = {[fd_name] = new_client}, request = {} ,resp = {}, log = {}, linda = linda, address = config.address, port = config.port}
-    return setmetatable(var_table, server)
-end
+function server.new(address, port, init_linda)
 
-function server:new_client(id, ip, port)
+    winfile = require"winfile"
 
-    for _, v in ipairs(self.ids) do
-        if v == self.ids then
-            self.clients[id] = {ip = ip, port = port, reading = "" }
-            return
-        end
-    end
-
-    table.insert(self.ids, id)
-    self.clients[id] = {ip = ip, port = port, reading = ""}
-end
-
-
-local function GetIdData(id)
-    if socket_table[id] then
-        return socket_table[id]:recv()
-    else
-        return libimobiledevicelua.Recv(id)
-    end
-end
-
-function server:client_request(id)
-    local str = GetIdData(id)
-
-    if not str then
-        local fd = socket_table[id]
-        if not fd then
-            --if nil,means the client is shutdown
-            self:kick_client(id)
-        end
-
-        return
-    end
-
-    --print("data", str)
-    local obj = self.clients[id]
-    local reading = obj.reading .. str
-    local off = 1
-    local len = #reading
-    while off < len do
-        --unpack the string
-        --<s2 meaning:
-        --s[n]: a string preceded by its length coded as an unsigned integer with n bytes (default is a size_t)
-        local ok, pack, idx = pcall(string.unpack,"<s2", reading, off)
-        if ok then
-            self:queue_request(id, pack)
-            off = idx
+    winfile.exist = function(path)
+        if winfile.attributes(path) then
+            return true
         else
-            break
+            return false
         end
     end
-    obj.reading = reading:sub(off)
-end
+    winfile.open = io.open
 
---put request from client in queue
-function server:queue_request(id, str)
-    local req = pack.unpack(str, {id = id})
-    if not req then
-        self:kick_client(id)
-    else
-        table.insert(self.request, req)
-    end
+    local io_ins = iosys.new()
+    local id = tostring(address) .. ":" .. tostring(port)
+    print("bind to id: " .. id)
+
+    assert(io_ins:Bind(id), "bind to: " .. id .. " failed")
+    
+    print("init server cloud successful")
+
+    enable_pack_framework(true)
+    return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, log = {}},  server)
 end
 
 function server:kick_client(client_id)
-    ---[[
-    print("kick id", client_id)
-    for k, id in ipairs(self.ids) do
-        if id == client_id then
-            table.remove(self.ids, k)
-            local fd = socket_table[client_id]
-            if fd then
-                fd:close()
-            else
-                connected_devices[client_id] = nil
-            end
-            self.clients[client_id] = nil
-         --   self.request[client_id] = nil
-            self.resp[client_id] = nil
-
-            return
-        end
+    if self.connect then
+        self.connect[client_id] = nil
     end
-    --]]
+    self.io:Disconnect(client_id)
 end
 
-local function save_ppm(filename, data, width, height, pitch)
-    local f = assert(io.open(filename, "wb"))
-    f:write(string.format("P3\n%d %d\n255\n",width, height))
-    local line = 0
-    for i = 0, height-1 do
-        for j = 0, width-1 do
-            local r,g,b,a = string.unpack("BBBB",data,i*pitch+j*4+1)
-            f:write(r," ",g," ",b," ")
-            line = line + 1
-            if line > 8 then
-                f:write "\n"
-                line = 0
-            end
-        end
-    end
-    f:close()
-end
-
----[[
-local toolset = require "editor.toolset"
-local path = require "filesystem.path"
-local fs = require "filesystem"
---]]
-
+server.transmit_cmd = {}
 local screenshot_cache = nil
 local max_screenshot_pack = 64*1024 - 100
 --store handle of lanes, check the result periodically
-local function response(self, req)
+local function response(self, req, id)
     --print("cmd and second is ", req[1], req[2])
     local cmd = req[1]
     --if is require command, need project_directory
@@ -353,16 +233,21 @@ local function response(self, req)
     local func = dispatch[cmd]
 
     if not func then
-        self:kick_client(req.id)
+        if self.transmit_cmd[cmd] then
+            print("send transmit", cmd)
+            self.linda:send(cmd, req)
+        else
+            self:kick_client(id)  --kick
+        end
     else
-        local resp = { func(req) }
+        local resp = { func(req, self) }
         --handle the resp
         --collect command
         if resp then
             for _, a_cmd in ipairs(resp) do
                 if a_cmd[1] == "SCREENSHOT" then
 
-                     ---[[
+                    ---[[
                     local name = a_cmd[2]
                     local size = a_cmd[3]
                     local offset = a_cmd[4]
@@ -371,11 +256,8 @@ local function response(self, req)
                     if tonumber(offset) <= max_screenshot_pack + 1 then
                         screenshot_cache = nil
                         screenshot_cache = {name, data}
-
                     else
-                    --    print("length before", #screenshot_cache[2], offset, #data)
                         screenshot_cache[2] = screenshot_cache[2]..data
-                    --    print("length after", #screenshot_cache[2], offset)
                     end
 
                     if offset >= size then
@@ -383,104 +265,13 @@ local function response(self, req)
                         self.linda:send("response", {"SCREENSHOT", screenshot_cache})
                     end
                     --]]
-                elseif a_cmd[1] == "COMPILE_SHADER" then
-                    local shader_path = req[2]
-
-                    local config = toolset.load_config()
-
-                    if next(config) == nil then
-                        print("load_config file failed, 'bin/iup.exe tools/config.lua' need to run first")
-                        assert(false)
-                    end
-
-                    local cwd = fs.currentdir()
-
-                    config.includes = {config.shaderinc, path.join(cwd, "assets/shaders/src") }
-
-                    local outfile = string.gsub(shader_path, "src/", "essl/")
-                    outfile = string.gsub(outfile, ".sc", ".bin")
-                    config.dest = outfile
-
-                    local success, msg = toolset.compile(shader_path, config, "ios")
-
-                    print("compile msg", success, msg)
-
-                    if not success then
-                        print(string.format("try compile from file %s, but failed, error message : \n%s", shader_path, msg))
-                        return nil
-                    end
-                    local command_package = {a_cmd, req.id}
-                    table.insert(command_cache, command_package)
---]]
                 else
-                    local command_package = {a_cmd, req.id}
+                    local command_package = {a_cmd, id}
                     table.insert(command_cache, command_package)
                 end
             end
         end
     end
-end
-
-local function UpdateFileHash()
-    --create a file to store the filename, last modification time and hash table
-    --for files, use a counter to check it periodically
-    --for now, hard code the path
-
-    local file_process = require "fileprocess"
-    local file_hash = io.open(file_process.hashfile, "a+")
-
-    local dir_path = file_process.dir_path
-
-    if not file_hash then
-        print("hash file not found")
-        return
-    end
-
-    io.input(file_hash)
-
-    local lines = {}
-    for line in io.lines() do
-        lines[#lines+1] = line
-    end
-
-    local time_stamp_table = file_process.time_stamp_table
-    local file_hash_table = file_process.file_hash_table
-
-    for i = 1, #lines+1, 3 do
-        --store filename
-        local filename = lines[i]
-        if not filename then break end
-
-        local filetime = lines[i+1]
-        local filehash = lines[i+2]
---        print(filename, filetime, filehash)
-
-        time_stamp_table[filename] = filetime
-        file_hash_table[filename] = filehash
-    end
-
-    io.close(file_hash)
-
-    --TODO: some sort of directory projection
-    --TODO: put it on another thread??
-    --use another thread to do for writing
-    local dir_table = file_process.GetDirectoryList(dir_path)
-
-    for _, v in pairs(dir_table) do
-        --for each table, match the filename
-        --if not found, then add the file info later
-        local full_path = dir_path.."/"..v
-        local new_time_stamp = file_process.GetLastModificationTime(full_path)
-
-        local time_stamp = time_stamp_table[full_path]
-        --time_stamp could be nil, in that case the new file will be added
-        if new_time_stamp ~= time_stamp then
-            time_stamp_table[full_path] = new_time_stamp
-            file_hash_table[full_path] = file_process.CalculateHash(full_path)
-        end
-    end
-
-    file_process:UpdateHashFile()
 end
 
 
@@ -497,14 +288,13 @@ function server:CheckNewDevice()
     for k, udid in pairs(current_devices) do
         --new device
         if connected_devices[udid] == nil then
-            local result = libimobiledevicelua.Connect(udid, self.port)
+
+            local result = self.io:Connect(udid)
             if  result then
-                --   print("failed to create connection with", udid)
+                self.connect[udid] = true
                 print("connect to ".. udid .." successful")
-                self:new_client(udid, nil, self.port)
 
                 connected_devices[udid] = true --means device "v" is connected now
-
                 table.insert(self.log, "connect to "..udid)
             end
         else
@@ -524,28 +314,36 @@ end
 local hash_update_counter = 0
 function server:mainloop(timeout)
     self:GetLindaMsg()
-    --self:CheckNewDevice()
-    --TODO: currently no use of lsocket connection, implement later (for wifi connection)
 
-    for _, id in ipairs(self.ids) do
-        self:client_request(id)
+    self:CheckNewDevice()
+    local n_connect, n_disconnect = self.io:Update()
+    if n_connect and #n_connect > 0 then
+        for _, v in ipairs(n_connect) do
+            self.connect[v] = true
+        end
     end
 
-    for k,req in ipairs(self.request) do
-        self.request[k] = nil
-        response(self, req)
+    --find new disconnection
+    if n_disconnect and #n_disconnect > 0 then
+        for _, v in ipairs(n_disconnect) do
+            print(pcall(self.kick_client, self, v))
+            self:kick_client(v)
+
+        end
+    end
+
+    --recv package from connection
+    if self.connect then
+        for k, _ in pairs(self.connect) do
+            local request_package = self.io:Get(k)
+            --process request
+            for _, req in ipairs(request_package) do
+                response(self, req, k)
+            end
+        end
     end
 
     self:PackageHandleUpdate()
-    --check/update file hash every 10 ticks
-    --[[
-    if hash_update_counter % 10 == 0 then
-        UpdateFileHash()
-        hash_update_counter = 0
-    end
-
-    hash_update_counter = hash_update_counter + 1
-    --]]
     self:SendLog()
 end
 
@@ -557,14 +355,43 @@ function server:SendLog()
     self.log = {}
 end
 
+local server_linda_func_body = {}
+server_linda_func_body["command"] = function(server, value)
+    server:HandleIupWindowRequest(value.udid, value.cmd, value.cmd_data)
+end
+
+server_linda_func_body["proj dir"] = function(server, value)
+    project_directory = value
+    print("change project directory to: "..project_directory)
+end
+
+server_linda_func_body["RegisterTransmit"] = function(server, value)
+    server.transmit_cmd[value] = true
+end
+
+server_linda_func_body["package"] = function(server, value)
+    server:SendPackage(value)
+end
+
+server_linda_func_body["repo_root_result"] = function(server, value)
+    --TODO: maybe need repo root for something other than SERVER_ROOT? 
+    --FIXME:
+    server:SendPackage({"SERVER_ROOT", value})
+end
+
+local server_linda_func_name = {}
+for k, _ in pairs(server_linda_func_body) do
+    table.insert(server_linda_func_name, k)
+end
+
 function server:GetLindaMsg()
     while true do
-        local key, value = self.linda:receive(0.001, "command", "proj dir")
-        if key == "command" then
-            self:HandleIupWindowRequest(value.udid, value.cmd, value.cmd_data)
-        elseif key == "proj dir" then
-            project_directory = value
-            print("change project directory to", project_directory)
+        local key, value = self.linda:receive(0.001, table.unpack(server_linda_func_name))
+        if key then
+            local func = server_linda_func_body[key]
+            if func then
+                func(self, value)
+            end
         else
             break
         end
@@ -574,26 +401,37 @@ end
 function server:HandleIupWindowRequest(udid, cmd, cmd_data)
     --handle request create from iup window
     --if udid is "all", means is for all devices
-    print("receive window cmd", cmd)
     if cmd == "RUN" then
         local entrance_path = cmd_data[1]
-        local request = {{"RUN", entrance_path}, udid}
 
-        print("RUN cmd sent", udid, entrance_path)
-        table.insert(command_cache, request)
+        if udid == "all" then
+            for k, _ in pairs(self.connect) do
+                local request = {{"RUN", entrance_path}, k}
+                print("RUN cmd sent", k, entrance_path)
+                table.insert(command_cache, request)
+            end
+
+            --also send to bind id
+            local request = {{"RUN", entrance_path}, self.id}
+            print("send run command", self.id)
+            table.insert(command_cache, request)
+        else
+            local request = {{"RUN", entrance_path}, udid}
+            print("RUN cmd sent", udid, entrance_path)
+            table.insert(command_cache, request)
+        end
+
     elseif cmd == "CONNECT" then
         print("try connencting")
         --connect to device
-        local result = libimobiledevicelua.Connect(udid, self.port)
-        if  result then
-            --   print("failed to create connection with", udid)
-            print("connect to ".. udid .." successful")
-            self:new_client(udid, nil, self.port)
+        if self.io:Connect(udid) then
+            self.connect[udid] = true
+            connected_devices[udid] = true
+
+            print("connect to ".. udid .." successful !!!!!!")
             table.insert(self.log, "connect to "..udid)
             self.linda:send("response", {"CONNECT", udid})
-            connected_devices[udid] = true
         end
-
     elseif cmd == "DISCONNECT" then
         --disconnect device
         local result = libimobiledevicelua.Disconnect(udid)
@@ -611,11 +449,19 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
     end
 end
 
-function server:SendPackage(pkg)
-    pkg = pack.pack(pkg)
-    for _, id in pairs(self.ids) do
-        SendData(id, pkg)
+function server:SendPackage(pkg, id)
+    --pkg = pack.pack(pkg)
+
+    --send to all id
+    if not id then
+        for k, _ in pairs(self.connect) do
+            --print(pcall(self.io.Send, self.io, k, pkg))
+            self.io:Send(k, pkg)
+        end
+    else
+        self.io:Send(id, pkg)
     end
 end
+
 
 return server

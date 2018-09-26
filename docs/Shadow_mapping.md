@@ -1,5 +1,36 @@
-Shadow mapping
-===============================
+<!-- TOC -->
+
+- [Shadow mapping](#shadow-mapping)
+    - [基础Shadowmap算法](#基础shadowmap算法)
+    - [渲染shadowmap](#渲染shadowmap)
+    - [设置渲染目标和模型视图投影矩阵](#设置渲染目标和模型视图投影矩阵)
+    - [着色器](#着色器)
+    - [结果](#结果)
+    - [使用shadowmap](#使用shadowmap)
+    - [基础着色器](#基础着色器)
+    - [结果-阴影粉刺(Shadow acne)](#结果-阴影粉刺shadow-acne)
+    - [问题](#问题)
+    - [阴影粉刺](#阴影粉刺)
+    - [彼得平移(Peter Panning)](#彼得平移peter-panning)
+    - [锯齿](#锯齿)
+    - [PCF](#pcf)
+    - [泊松采样（Poisson Sampling)](#泊松采样poisson-sampling)
+    - [分层泊松采样(Stratified Poisson Sampling)](#分层泊松采样stratified-poisson-sampling)
+    - [更深入的研究](#更深入的研究)
+    - [预测(Early bailing)](#预测early-bailing)
+    - [聚光灯](#聚光灯)
+    - [点光源](#点光源)
+    - [多个光源](#多个光源)
+    - [自动光锥体](#自动光锥体)
+    - [指数shadowmap(Exponential shadow maps)](#指数shadowmapexponential-shadow-maps)
+    - [光照空间透视shadowmap(Light-space perspective Shadow Maps)](#光照空间透视shadowmaplight-space-perspective-shadow-maps)
+    - [层叠shadowmap(Cascaded Shadow Maps)](#层叠shadowmapcascaded-shadow-maps)
+    - [总结](#总结)
+
+<!-- /TOC -->
+
+# Shadow mapping
+
 翻译日期: fangcun 2018-9-12
 原文:http://www.opengl-tutorial.org/cn/intermediate-tutorials/tutorial-16-shadow-mapping/
 
@@ -8,8 +39,7 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
 在本教程，我们首先介绍Shadow map的一个基础算法，然后分析这个基础算法的缺陷，之后我们介绍一些技巧来获得更好的效果。
 由于Shadow map的研究现在还十分火热(2012年)，我们在最后还给出一些可以提升效果的方向。
 
-基础Shadowmap算法
------------------------------
+## 基础Shadowmap算法
 
 基础Shadowmap算法包含两步。
 (1)在光源处，沿光照方向渲染场景，计算出每个像素深度值。
@@ -22,14 +52,12 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
 
 ![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/shadowmapping.png)
 
-渲染shadowmap
-------------------------
+## 渲染shadowmap
 
 在本教程，我们只考虑方向光(光源位于无限远处的平行光)。所以我们只需要使用正交投影矩阵就可以渲染我们的shadowmap。
 正交投影矩阵不会因为视景体中物体的远近而改变物体的大小。
 
-设置渲染目标和模型视图投影矩阵
----------------------------------------------
+## 设置渲染目标和模型视图投影矩阵
 
 我们使用1024x1024的16位的深度纹理来存储shadowmap。通常对于shadowmap来说，16位是足够的。
 尝试其它数字也可能取得不错的效果。由于我们需要之后在着色器中对它进行采样，所以我们使用的是深度纹理,
@@ -75,8 +103,8 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
       // in the "MVP" uniform
       glUniformMatrix4fv(depthMatrixID, 1, GL_FALSE, &depthMVP[0][0]);
  
- 着色器
- -------------
+## 着色器
+
  
  我们在第一次渲染中使用的顶点着色器非常简单。顶点着色器仅仅计算了顶点变换后的齐次坐标。
  
@@ -106,8 +134,7 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
 
 因为我们对写入的深度值精度要求不高，通常渲染shadowmap要比正常的渲染快两倍。通常对于GPU来说，带宽是性能瓶颈所在。
 
-结果
------------
+## 结果
 
 渲染后的纹理看起来像这样子:
 ![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/DepthTexture.png)
@@ -116,11 +143,9 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
 距离相机远。
 
 
-使用shadowmap
------------------
+## 使用shadowmap
 
-基础着色器
------------
+## 基础着色器
 
 现在，我们回过头来看我们的着色器。我们需要对每一个像素进行计算，看它是否在我们的阴影中。
 
@@ -177,8 +202,7 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
       // Specular : reflective highlight, like a mirror
       visibility * MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,5);
  
-结果-阴影粉刺(Shadow acne)
------------------------------
+## 结果-阴影粉刺(Shadow acne)
  
 下图是我们当前的代码渲染的结果。显而易见，这个效果是无法接受的。
 ![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/1rstTry.png)
@@ -186,11 +210,9 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
 让我们来分析出现的问题。我们提供了两个不同的代码:shadowmaps和shadowmaps_simple，你
 可以自由选择使用哪一个。shadowmaps_simple的渲染的效果像上图一样简陋，但是更容易理解。
  
-问题
-------------
+## 问题
  
-阴影粉刺
-------------
+## 阴影粉刺
  
 最明显的问题是阴影粉刺。
 
@@ -244,8 +266,7 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
 
 除了容错边缘，我们的代码中也使用了这一方法。
 
-彼得平移(Peter Panning)
----------------------------
+## 彼得平移(Peter Panning)
 
 现在已经没有阴影粉刺了，但是我们对地面的着色仍然存在问题，看上去我们的墙像飞出去一样(这一现象被叫做 彼得平移).
 实际上这一现象很大程度上是由我们添加的容错边缘造成的。
@@ -259,15 +280,13 @@ Shadow map是现在(2016)流行的一种生成动态阴影的方法。它很容�
 
 ![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/NoPeterPanning.png)
 
-锯齿
---------
+## 锯齿
 
 尽管我们使用了两个小技巧，但在阴影的边缘还是存在锯齿。换句话说就是临近的两个像素颜色变化过大，没有平滑过渡。
 
 ![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/Aliasing.png)
 
-PCF
----------
+## PCF
 
 一个最简单的改善锯齿现象的方法是改变shadowmap的采样类型为sampler2DShadow。
 这样设置后，当我们采样shadowmap时，实际上也采样了邻近的纹理，然后对它们进行比较，根据比较结果返回
@@ -281,8 +300,7 @@ PCF
 
 就像我们看到的，阴影边缘变得光滑了，但还是有明显的锯齿。
 
-泊松采样（Poisson Sampling)
----------------------------------
+## 泊松采样（Poisson Sampling)
 
 一个简单解决方法是对shadowmap进行多次采样。结合PCF后，即使采样次数不多，也可以获得非常好的效果。
 
@@ -314,8 +332,7 @@ poissonDisk是一个常量数组，它的定义如下:
 
 ![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/SoftShadows_Wide.png)
 
-分层泊松采样(Stratified Poisson Sampling)
--------------------------------------------
+## 分层泊松采样(Stratified Poisson Sampling)
 
 我们可以通过为每一个像素选择不同的样本来避免条带。有两个主要的方法:分层泊松和轮换泊松。
 分层会选择不同的样本；旋转则总是选择同一个样本，但是使用了一个随机的轮换，让他们看起来不同。
@@ -347,19 +364,16 @@ gl_FragCoord(像素在屏幕中的位置)和Position_worldspace。
 
 ![img](http://www.opengl-tutorial.org/assets/images/tuto-16-shadow-mapping/PCF_stratified_4tap.png)
 
-更深入的研究
----------------
+## 更深入的研究
 
 除了这些技巧，还有非常多的方法可以提升我们的阴影效果，下面是一些最常见的方法。
 
-预测(Early bailing)
-----------------------------
+## 预测(Early bailing)
 
 相对于为每个像素使用16个样本，我们可以使用4个距离最远的样本。如果它们都在光照下或阴影中，大概率所有16个样本
 会得到同样的结果。如果它们不同，大概率像素处在阴影边缘，这时可以进行16个样本的采样。
 
-聚光灯
--------------------
+## 聚光灯
 
 处理聚光灯只需要很少的修改。首先我们需要把正交投影矩阵换成透视投影矩阵:
 
@@ -378,21 +392,18 @@ gl_FragCoord(像素在屏幕中的位置)和Position_worldspace。
       if ( texture( shadowMap, (ShadowCoord.xy/ShadowCoord.w) ).z  <  (ShadowCoord.z-bias)/ShadowCoord.w )
       if ( textureProj( shadowMap, ShadowCoord.xyw ).z  <  (ShadowCoord.z-bias)/ShadowCoord.w )
 
-点光源
----------------
+## 点光源
 
 同样的做法，但是使用深度立方体贴图。立方体贴图是6个纹理的几何，立方体的每一个面上有一个纹理。它不能通过
 标准的UV纹理坐标来访问，但可以使用一个三维向量表示方向。
 
 空间所有方向的深度值都被存储，使得围绕点光源的阴影计算成为可能。
 
-多个光源
---------------------
+## 多个光源
 
 这个算法可以处理多个光源，但要对每个光源计算shadowmap。这可能需要大量的内存，可能很快就达到带宽瓶颈。
 
-自动光锥体
----------------
+## 自动光锥体
 
 在本教程中，光锥体被我们手动设置包含了整个场景，但这样做仅仅对示例工作，应该避免这样。如果我们的
 地图大小是1Km x 1Km，1024x1024的shadowmap的每一个单元就会表示1平方米，这样的结果是很可笑的。光源的
@@ -412,16 +423,14 @@ gl_FragCoord(像素在屏幕中的位置)和Position_worldspace。
 层叠Shadowmap(Cascaded Shadow Maps)不存在这个问题，但CSM的实现要困难一些，并且我们可以通过平滑过渡来
 克服这个问题。
 
-指数shadowmap(Exponential shadow maps)
-----------------------------------------
+## 指数shadowmap(Exponential shadow maps)
 
 指数shadowmap通过假设一个在阴影中，但接近光表面的像素来减少锯齿。它和容错边缘类似，除了它的测试结果不是布尔量：
 像素会变得越来越暗随着他照亮的表面增加。
 
 这是明显的作弊手段，当两个物体重叠时会产生假象。
 
-光照空间透视shadowmap(Light-space perspective Shadow Maps)
---------------------------------------------------------------
+## 光照空间透视shadowmap(Light-space perspective Shadow Maps)
 
 LiSPSM通过调节投影矩阵来使近处物体拥有更高的精度。
 这在"狭路相逢"这种情况下会得到很好的效果，你望着一个方向，对面同时有一个聚光灯打向你。
@@ -429,8 +438,7 @@ LiSPSM通过调节投影矩阵来使近处物体拥有更高的精度。
 
 然而LiSPSM的实现很具有技巧性，实现起来相对困难。
 
-层叠shadowmap(Cascaded Shadow Maps)
--------------------------------------
+## 层叠shadowmap(Cascaded Shadow Maps)
 
 CSM可以解决比LiSAPSM更多的问题，但是使用的方法是不同的。它简单的通过视景体不同部分的(2-4)个标准shadowmap来进行
 工作。第一个处理很小的空间，所以，我们可以拥有极高的分辨率。下一个处理远一些的物体，最后一个shadowmap处理
@@ -438,8 +446,7 @@ CSM可以解决比LiSAPSM更多的问题，但是使用的方法是不同的。�
 
 CSM到目前为止拥有最佳的复杂度/质量平衡(2012年)，它目前被大量使用。
 
-总结
-------------
+## 总结
 
 如你所料，shadowmap是一个复杂的课题。每一年都有新的改进被发表，到目前位置，还不存在完美的方案。
 

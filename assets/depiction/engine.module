@@ -1,0 +1,26 @@
+modules = {
+	"libs/timer/timer.lua",
+	"libs/inputmgr/message_system.lua",
+	"libs/serialize/serialize_component.lua",
+	"libs/serialize/serialize_system.lua",
+	"libs/serialize/serialize_luatabletext.lua",
+
+	"libs/render/math3d/math_component.lua",
+	"libs/render/constant_system.lua",	
+	"libs/render/light/light.lua",
+	"libs/render/window_component.lua",
+	"libs/render/components/general.lua",
+	"libs/render/camera/camera_component.lua",    
+	"libs/render/view_system.lua",
+	"libs/render/entity_rendering_system.lua",    
+	"libs/render/end_frame_system.lua",	
+
+	"libs/scene/hierarchy/hierarchy.lua",
+	"libs/scene/filter_component.lua",
+	"libs/scene/filter_system.lua",
+	"libs/scene/cull_system.lua",
+	--"libs/scene/terrain/terrain.lua",
+
+	-- animation
+	"libs/animation/animation.lua",
+}

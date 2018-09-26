@@ -102,7 +102,7 @@ function assetmgr.load(filename, param)
 	if res == nil then
 		local ext = assert(path.ext(filename))
 		local fn 
-		for _, ff in ipairs{filename, path.join("assetfiles", filename)} do
+		for _, ff in ipairs{filename, path.join("depiction", filename)} do
 			fn = assetmgr.find_valid_asset_path(ff)
 			if fn then break end
 		end

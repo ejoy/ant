@@ -1,60 +1,88 @@
-ANT Project 开发环境安装及编译配置记录
--提供给开发同学对类Unix环境的帮助熟悉
-    .开发环境安装配置流程
-    .工作目录建议组织
-    .下载工具,源码仓库及对应的地址,版本
-	.编译 , 配置修改
-	.运行测试 
+<!-- TOC -->
+
+- [开发环境安装](#开发环境安装)
+    - [1.MSys2 安装](#1msys2-安装)
+    - [2.工作目录组织](#2工作目录组织)
+    - [下载及构建工作环境](#下载及构建工作环境)
+    - [第三方库单独运行测试及编译：](#第三方库单独运行测试及编译)
+
+<!-- /TOC -->
+
+
+	ANT Project 开发环境安装及编译配置记录
+	-提供给开发同学对类Unix环境的帮助熟悉
+		.开发环境安装配置流程
+		.工作目录建议组织
+		.下载工具,源码仓库及对应的地址,版本
+		.编译 , 配置修改
+		.运行测试 
   
   
   
-#开发环境安装
+# 开发环境安装 #
 
-#1.MSys2 安装
+## 1.MSys2 安装 ##
 
-	传统 Unix 虚拟环境
-	提供 MinGW 环境，bash shell控制，packman 软件包安装等工具
+传统 Unix 虚拟环境
+
+提供 MinGW 环境，bash shell控制，packman 软件包安装等工具
 	
 
-	下载地址：  www.msys2.org 
-	下载安装包：msys2-x86_64-20161025.exe
+下载地址：  www.msys2.org 
+
+下载安装包：msys2-x86_64-20161025.exe
 	
-	S1: $执行 msys2-x86_64-20161025.exe ，选择安装目录
-	    例如：C:/msys64 或 D:/msys64 
+S1: $执行 msys2-x86_64-20161025.exe ，选择安装目录
+
+例如：C:/msys64 或 D:/msys64 
 	
-	    Windows/任务导航/Msys2 msys ，建立快捷桌面，方便使用
-	    $执行桌面应用 msys2 msys ，进入msys shell
+Windows/任务导航/Msys2 msys ，建立快捷桌面，方便使用
+
+$执行桌面应用 msys2 msys ，进入msys shell
 	
-	S2: $执行 pacman -Syu，同步更新 mingw 等软件包
-	    msys2-runtime 与 catgets 有冲突？ ！！
-	    按提示安装，若有冲突出现，关闭重启 msys2 msys 再次执行
-	    pacman -Syu 即可。
+S2: $执行 pacman -Syu，同步更新 mingw 等软件包
+
+msys2-runtime 与 catgets 有冲突？ ！！
+
+按提示安装，若有冲突出现，关闭重启 msys2 msys 再次执行
+
+pacman -Syu 即可。
 	 
 	
-	S3: $执行 pacman -S mingw-w64-x86_64-gcc 安装统一版本号的gcc
+S3: $执行 pacman -S mingw-w64-x86_64-gcc 安装统一版本号的gcc
 	
-	S4: mingw 的访问的配置 
-	    打开 D:/MSys64/home/ejoy/.bash_profile
-		export MINGW=/mingw64
-		export PATH=$MINGW/bin:$PATH
-		！当前环境安装配置发现的问题，需要加 export 修饰。
+S4: mingw 的访问的配置 
+
+打开 D:/MSys64/home/ejoy/.bash_profile
+
+export MINGW=/mingw64
+
+export PATH=$MINGW/bin:$PATH
+
 		
-	S5: pacman -S make  make没有默认安装，需要执行这个命令完成安装
-	    pacman -S git   同上 
-		pacman -S svn   同上
-		pacman -S mingw-w64-x86_64-cmake 同上   // assimp 目前是编译需要  
+S5: pacman -S make  make没有默认安装，需要执行这个命令完成安装
+
+pacman -S git   同上 
+
+pacman -S svn   同上
+
+pacman -S mingw-w64-x86_64-cmake 同上   // assimp 目前是编译需要  
 		
 	
-	辅助配置:
-		pacman 中国镜像,速度较快
-		在 D:/msys64/etc/pacman.d/mirrorlist.msys         // 添加，最前面
-		Server = http://mirrors.aliyun.com/archlinux/     // ALI mirror 
+辅助配置:
+
+pacman 中国镜像,速度较快
+
+在 D:/msys64/etc/pacman.d/mirrorlist.msys         // 添加，最前面
+
+Server = http://mirrors.aliyun.com/archlinux/     // ALI mirror 
+        
 	
-	+..到此Unix 仿真环境，对应 gcc,make,cmake,git,svn 等工具应都安装完成.
++..到此Unix 仿真环境，对应 gcc,make,cmake,git,svn 等工具应都安装完成.
 	
-#2.工作目录组织
+## 2.工作目录组织 ##
   
-   构建后的目录样例	
+	构建后的目录样例	
     |-D:/WORK
 		|- ant         	    //ant  引擎目录
 			|--assets   	//ant  引擎资源目录 
@@ -93,7 +121,7 @@ ANT Project 开发环境安装及编译配置记录
 		|- lua53  
 	  
 	  
-  #下载及构建工作环境
+## 下载及构建工作环境
      以 D：盘为例	  
      在 D：盘建立 D:/WORK 目录，作为 ant  等项目的存放目录 
 		
@@ -171,7 +199,7 @@ ANT Project 开发环境安装及编译配置记录
 		*/
 
 	 
-第三方库单独运行测试及编译：
+## 第三方库单独运行测试及编译：
 	目录假设在D:/gits
     S1：编译 bgfx 
     	下载 bgfx 引擎 
@@ -215,9 +243,9 @@ ANT Project 开发环境安装及编译配置记录
 		conrib/cmakelist.txt 
 		添加 cmake_minimum_required( VERSION 2.6 )
 
-3.VC 环境
+	3.VC 环境
 		https://www.visualstudio.com/zh-hans 下载 Community 社区版本即可
 
 		
 		
-  
+[

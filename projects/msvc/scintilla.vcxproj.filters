@@ -28,442 +28,445 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\XPM.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\XPM.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\AutoComplete.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\AutoComplete.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\CallTip.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\CallTip.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\CaseConvert.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\CaseConvert.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\CaseFolder.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\CaseFolder.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\Catalogue.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\Catalogue.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\CellBuffer.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\CellBuffer.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\CharClassify.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\CharClassify.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\ContractionState.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\ContractionState.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\Decoration.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\Decoration.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\Document.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\Document.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\EditModel.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\DBCS.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\Editor.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\EditModel.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\EditView.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\Editor.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\ExternalLexer.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\EditView.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\Indicator.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\ExternalLexer.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\KeyMap.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\Indicator.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\LineMarker.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\KeyMap.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\MarginView.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\LineMarker.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\PerLine.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\MarginView.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\PositionCache.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\PerLine.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\RESearch.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\PositionCache.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\RunStyles.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\RESearch.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\ScintillaBase.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\RunStyles.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\Selection.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\ScintillaBase.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\Style.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\Selection.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\UniConversion.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\Style.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\src\ViewStyle.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\UniConversion.cxx">
       <Filter>scintilla\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexYAML.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\ViewStyle.cxx">
+      <Filter>scintilla\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexYAML.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexA68k.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexA68k.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexAbaqus.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAbaqus.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexAda.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAda.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexAPDL.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAPDL.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexAsm.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAsm.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexAsn1.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAsn1.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexASY.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexASY.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexAU3.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAU3.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexAVE.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAVE.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexAVS.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAVS.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexBaan.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexBaan.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexBash.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexBash.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexBasic.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexBasic.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexBatch.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexBatch.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexBibTeX.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexBibTeX.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexBullant.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexBullant.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexCaml.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCaml.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexCLW.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCLW.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexCmake.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCmake.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexCOBOL.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCOBOL.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexCoffeeScript.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCoffeeScript.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexConf.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexConf.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexCPP.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCPP.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexCrontab.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCrontab.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexCsound.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCsound.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexCSS.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCSS.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexD.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexD.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexDiff.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexDiff.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexDMAP.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexDMAP.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexDMIS.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexDMIS.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexECL.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexECL.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexEDIFACT.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexEDIFACT.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexEiffel.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexEiffel.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexErlang.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexErlang.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexErrorList.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexErrorList.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexEScript.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexEScript.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexFlagship.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexFlagship.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexForth.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexForth.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexFortran.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexFortran.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexGAP.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexGAP.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexGui4Cli.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexGui4Cli.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexHaskell.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexHaskell.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexHex.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexHex.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexHTML.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexHTML.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexIndent.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexIndent.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexInno.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexInno.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexJSON.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexJSON.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexKix.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexKix.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexKVIrc.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexKVIrc.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexLaTeX.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexLaTeX.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexLisp.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexLisp.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexLout.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexLout.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexLua.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexLua.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexMagik.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMagik.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexMake.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMake.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexMarkdown.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMarkdown.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexMatlab.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMatlab.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexMetapost.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMetapost.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexMMIXAL.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMMIXAL.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexModula.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexModula.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexMPT.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMPT.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexMSSQL.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMSSQL.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexMySQL.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMySQL.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexNimrod.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexNimrod.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexNsis.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexNsis.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexNull.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexNull.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexOpal.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexOpal.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexOScript.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexOScript.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexPascal.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPascal.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexPB.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPB.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexPerl.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPerl.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexPLM.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPLM.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexPO.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPO.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexPOV.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPOV.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexPowerPro.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPowerPro.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexPowerShell.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPowerShell.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexProgress.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexProgress.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexProps.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexProps.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexPS.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPS.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexPython.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPython.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexR.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexR.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexRebol.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexRebol.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexRegistry.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexRegistry.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexRuby.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexRuby.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexRust.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexRust.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexScriptol.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexScriptol.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexSmalltalk.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexSmalltalk.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexSML.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexSML.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexSorcus.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexSorcus.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexSpecman.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexSpecman.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexSpice.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexSpice.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexSQL.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexSQL.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexSTTXT.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexSTTXT.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexTACL.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexTACL.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexTADS3.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexTADS3.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexTAL.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexTAL.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexTCL.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexTCL.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexTCMD.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexTCMD.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexTeX.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexTeX.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexTxt2tags.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexTxt2tags.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexVB.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexVB.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexVerilog.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexVerilog.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexVHDL.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexVHDL.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexers\LexVisualProlog.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexVisualProlog.cxx">
       <Filter>scintilla\lexers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexlib\WordList.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\WordList.cxx">
       <Filter>scintilla\lexlib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexlib\Accessor.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\Accessor.cxx">
       <Filter>scintilla\lexlib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexlib\CharacterCategory.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\CharacterCategory.cxx">
       <Filter>scintilla\lexlib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexlib\CharacterSet.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\CharacterSet.cxx">
       <Filter>scintilla\lexlib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexlib\LexerBase.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\LexerBase.cxx">
       <Filter>scintilla\lexlib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexlib\LexerModule.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\LexerModule.cxx">
       <Filter>scintilla\lexlib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexlib\LexerNoExceptions.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\LexerNoExceptions.cxx">
       <Filter>scintilla\lexlib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexlib\LexerSimple.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\LexerSimple.cxx">
       <Filter>scintilla\lexlib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexlib\PropSetSimple.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\PropSetSimple.cxx">
       <Filter>scintilla\lexlib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\lexlib\StyleContext.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\StyleContext.cxx">
       <Filter>scintilla\lexlib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\win32\ScintillaWin.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\win32\ScintillaWin.cxx">
       <Filter>scintilla\win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\win32\PlatWin.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\win32\PlatWin.cxx">
       <Filter>scintilla\win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla375\win32\HanjaDic.cxx">
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\win32\HanjaDic.cxx">
       <Filter>scintilla\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_wordwrap.c">
@@ -543,6 +546,12 @@
     </ClCompile>
     <ClCompile Include="..\..\clibs\iup\luascintilla.c">
       <Filter>scintilla</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\DefaultLexer.cxx">
+      <Filter>scintilla\lexers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMaxima.cxx">
+      <Filter>scintilla\lexers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

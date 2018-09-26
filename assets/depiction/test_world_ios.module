@@ -1,0 +1,35 @@
+modules = {
+    "inputmgr/message_system.lua",
+    "serialize/serialize_component.lua",
+    "serialize/serialize_system.lua",
+	"serialize/serialize_luatabletext.lua",
+
+	"render/math3d/math_component.lua",
+	"render/constant_system.lua",	
+	"render/light/light.lua",
+    "render/window_component.lua",
+    "render/components/general.lua",
+    "render/camera/camera_component.lua",    
+    "render/view_system.lua",
+	"render/entity_rendering_system.lua",    
+	"render/end_frame_system.lua",	
+
+	--"scene/hierarchy/hierarchy.lua",
+    "scene/filter_component.lua",
+	"scene/filter_system.lua",
+	"scene/terrain/terrain.lua",
+
+	"editor/ecs/camera_controller.lua",
+	-- editor
+	--[[
+	"editor/ecs/obj_trans_controller.lua",
+    "editor/ecs/pickup_system.lua",
+	"editor/ecs/editor_component.lua",
+	"editor/ecs/general_editor_entities.lua",	
+    "editor/ecs/editable_hierarchy.lua",    
+    "editor/ecs/build_hierarchy_system.lua",    
+	"editor/ecs/editor_system.lua",
+	--]]
+	-- for test
+	"render/add_entity_system.lua",
+}

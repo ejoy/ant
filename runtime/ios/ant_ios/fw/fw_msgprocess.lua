@@ -6,7 +6,6 @@ function CreateMsgProcessThread(_linda, _fw_dir, _remote_dir)
     fw_dir = _fw_dir
     remote_dir = _remote_dir
 
-    --todo change to vfsrepo_cloud
     local vfs = require "firmware.vfs"
     local vfs_repo = vfs.new(fw_dir, remote_dir .. "/Documents")
 

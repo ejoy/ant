@@ -42,9 +42,9 @@ io_cmd.FILE = function(resp, self)
     --if is other package, will add to the existing file
     --TODO: consider if the order is not correct
     if offset <= MAX_CALC_CHUNK then
-        self.vfs:write(hash, resp[5], file_path)
+        self.vfs:write(hash, resp[5])
     else
-        self.vfs:write(hash, resp[5], file_path, "ab")
+        self.vfs:write(hash, resp[5], "ab")
     end
 
     print("write file", file_path, hash)
@@ -63,12 +63,10 @@ io_cmd.SERVER_ROOT = function(resp, self)
     assert(cmd == "SERVER_ROOT")
 
     --table.remove(resp, 1)
-    print("root is", resp[2])
+    print("root is", resp[2], self.vfs)
     local root = resp[2]
-    local subdir = resp[3]
 
-    local res, err = self.vfs:changeroot(root, subdir)
-    assert(res, err)
+    self.vfs:changeroot(root)
 
     print("change root", resp)
     if self.run_cmd_cache then
@@ -77,10 +75,7 @@ io_cmd.SERVER_ROOT = function(resp, self)
         self.run_cmd_cache = nil
     end
 
-    if self.vfs:changeroot_finished() then
-        self.linda:send("server_root_updated", true)
-    end
-
+    self.linda:send("server_root_updated", true)
 end
 
 io_cmd.RUN = function(resp, self)
@@ -93,7 +88,7 @@ io_cmd.RUN = function(resp, self)
     --_linda:send("run", resp[2])
 end
 
-function client.new(address, port, init_linda, pkg_dir, sb_dir, vfs_cloud)
+function client.new(address, port, init_linda, pkg_dir, sb_dir, vfs_repo)
     --connection started from here
     print("listen to address", address,"port", port)
     local iosys = require "iosys"
@@ -117,7 +112,7 @@ function client.new(address, port, init_linda, pkg_dir, sb_dir, vfs_cloud)
     sand_box_path = sb_dir .. "/Documents/"
 
     print("create server repo")
-    return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, vfs = vfs_cloud,  connect_id = connect_id, current_connect = connect_id}, client)
+return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, vfs = vfs_repo,  connect_id = connect_id, current_connect = connect_id}, client)
 end
 
 function client:send(client_req)

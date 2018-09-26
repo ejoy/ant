@@ -20,7 +20,6 @@ projects/msvc/Release
 
 assets/map
 assets/textures
-assets/assetfiles
 assets/shaders/dx11
 assets/shaders/glsl
 assets/meshes
