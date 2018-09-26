@@ -1,6 +1,8 @@
 local editor_mainwindow = require 'editor.controls.window'
 local fs = require "filesystem"
 
+local configDir = (os.getenv 'UserProfile') .. '\\.ant\\config\\'
+
 local iupex = {}
 
 function iupex.menu(t, bind)
@@ -59,8 +61,8 @@ local guiOpenMap = iup.GetChild(iup.GetChild(guiMain, 0), 0)
 local openMap
 
 local function recentSave()
-    fs.mkdir './config/'
-    local f = io.open('./config/recent.cfg', 'w')
+    fs.mkdir(configDir)
+    local f = io.open(configDir .. 'recent.cfg', 'w')
     if not f then
         return
     end
@@ -110,7 +112,7 @@ end
 
 local function recentInit()
     config.recent = {}
-    local f = io.open('./config/recent.cfg', 'r')
+    local f = io.open(configDir .. 'recent.cfg', 'r')
     if not f then
         return
     end
