@@ -1,0 +1,23 @@
+root = {
+    {
+        mesh = "bunny.mesh",
+        binding = {
+            {
+                material = "bunny.material",
+                meshids = {1, 2}
+            },
+        },
+        srt = {s={1}, r={}, t={}}   --r for rotate with x, y, z axis, same as [pitch, yaw, roll]
+    },
+    {
+        mesh = "cube.mesh",
+        binding = {
+            {
+                material = "bunny.material",                
+                -- no meshids mean using material to entire mesh
+            }
+        },
+        srt = {t={5, 0, 0}, s={0.01}}
+    }
+
+}
