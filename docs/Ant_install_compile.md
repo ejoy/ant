@@ -59,7 +59,6 @@ export MINGW=/mingw64
 
 export PATH=$MINGW/bin:$PATH
 
-！当前环境安装配置发现的问题，需要加 export 修饰。
 		
 S5: pacman -S make  make没有默认安装，需要执行这个命令完成安装
 
