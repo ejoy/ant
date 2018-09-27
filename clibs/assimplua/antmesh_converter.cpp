@@ -111,6 +111,8 @@ WriteMeshData(const mesh_data &md, const std::string &srcfile, const std::string
 		return false;		
 	}
 
+	WriteElemValue(off, "version", std::to_string(MESH_DATA_VERSION));
+
 	auto write_bounding = [](std::ostream &off, const Bounding &bounding) {
 		WriteElemValue(off, "bounding"); {
 			WriteElemValue(off, "aabb"); {
