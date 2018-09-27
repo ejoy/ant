@@ -133,7 +133,10 @@ end
 
 function world:first_entity(c_type)
 	local eid = self:first_entity_id(c_type)
-	return self[assert(eid)]
+	if eid == nil then
+		return nil
+	end
+	return self[eid]
 end
 
 local function component_filter(world, minor_type)
