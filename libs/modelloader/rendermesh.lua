@@ -1,13 +1,13 @@
 --存放渲染参数
 local bgfx = require "bgfx"
 local shader_mgr = require "render.resources.shader_mgr"
-local mesh_loader = require "render.resources.mesh_loader"
 local ru = require "render.util"
+local asset = require "asset"
 
 local render_mesh = {}
 local ctx = {stats = {}}
 
-local default_shader = { vs = "vs_cubes", fs = "fs_cubes"}
+local default_shader = { vs = "mesh/vs_mesh", fs = "mesh/fs_mesh"}
 
 function render_mesh:InitRenderContext(file_path, shader)
     --暂时不提供太多可供选择的参数
@@ -19,7 +19,7 @@ function render_mesh:InitRenderContext(file_path, shader)
     print("Rendering mesh: " .. file_path)
 
     ctx.prog = shader_mgr.programLoad(shader.vs, shader.fs)
-    ctx.mesh = mesh_loader.load(file_path)
+    ctx.mesh = assert(asset.load(file_path)).handle
     ctx.u_time = bgfx.create_uniform("u_time", "v4")
     ctx.state = bgfx.make_state{
         WRITE_MASK = "RGBAZ",
@@ -29,12 +29,13 @@ function render_mesh:InitRenderContext(file_path, shader)
 end
 
 function render_mesh:SubmitRenderMesh()
+    bgfx.set_state(ctx.state)
     if(ctx.mesh ~= nil and ctx.prog ~= nil) then        
         local mesh = ctx.mesh
-        local num = #mesh.group
+        local num = #mesh.groups
     
         for i=1, num do
-            local g = mesh.group[i]
+            local g = mesh.groups[i]
             bgfx.set_index_buffer(g.ib)
             bgfx.set_vertex_buffer(g.vb)
             bgfx.submit(0, ctx.prog, 0, i ~= num)
