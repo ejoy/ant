@@ -560,7 +560,11 @@ end
 
 local function update_select_state(ot)
     local mode = ot.selected_mode
-    local pu_e = assert(world:first_entity("pickup"))
+	local pu_e = world:first_entity("pickup")
+	if pu_e == nil then
+		return false
+	end
+
     local pickup_eid = assert(pu_e.pickup).last_eid_hit                
     local last_eid = ot.selected_eid
     if pickup_eid then
@@ -584,11 +588,14 @@ local function update_select_state(ot)
     return select_changed
 end
 
-function obj_trans_sys.notify:pickup(set)
+function obj_trans_sys.notify:pickup(set)	
     local ot = self.object_transform
     if update_select_state(ot) then
         update_contorller(ot, self.math_stack)
     end
 
-    self.control_state.state = is_controller_id(ot.controllers, ot.selected_eid) and "object" or "default"
+	local selid = ot.selected_eid
+	if selid then
+		self.control_state.state = is_controller_id(ot.controllers, ot.selected_eid) and "object" or "default"
+	end    
 end
