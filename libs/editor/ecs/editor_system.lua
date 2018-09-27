@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local editor_mainwin = require "editor.controls.window"
-local menu = require "editor.controls.menu"
+local menu = require "editor.controls.popupmenu"
 local eu = require "editor.util"
 local su = require "serialize.util"
 

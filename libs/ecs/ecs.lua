@@ -77,19 +77,18 @@ function world:remove_entity(eid)
 	self[eid] = nil
 	self._entity[eid] = nil
 
-	-- notify all components of this entity
-	local _changecomponent = self._changecomponent
+	-- notify all components of this entity	
 	local typeclass = self._component_type
 	for component_type, c in pairs(e) do
 		local del = typeclass[component_type].delete
 		if del then
 			del(c)
 		end
-		local cc = _changecomponent[component_type]
-		if cc then
-			cc[eid] = true
-		end
+
+		self:change_component(eid, component_type)
 	end
+
+	self:notify()
 end
 
 local function component_next(set, index)
@@ -133,7 +132,10 @@ end
 
 function world:first_entity(c_type)
 	local eid = self:first_entity_id(c_type)
-	return self[assert(eid)]
+	if eid == nil then
+		return nil
+	end
+	return self[eid]
 end
 
 local function component_filter(world, minor_type)
