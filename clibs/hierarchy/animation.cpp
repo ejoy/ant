@@ -10,12 +10,11 @@ extern "C" {
 #include <ozz/animation/runtime/sampling_job.h>
 #include <ozz/animation/runtime/local_to_model_job.h>
 #include <ozz/animation/runtime/blending_job.h>
-
 #include <ozz/animation/runtime/skeleton.h>
 
-#include <ozz/base/maths/soa_transform.h>
+#include <ozz/geometry/runtime/skinning_job.h>
 
-//#include <ozz/animation/offline/raw_animation.h>
+#include <ozz/base/maths/soa_transform.h>
 
 #include <ozz/base/memory/allocator.h>
 #include <ozz/base/io/stream.h>
@@ -139,6 +138,19 @@ lduration_animation(lua_State *L) {
 	animation_node *node = (animation_node*)lua_touserdata(L, 1);
 	lua_pushnumber(L, node->ani->duration());
 	return 1;
+}
+
+static int
+lskinning(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	const hierarchy_build_data *builddata = (const hierarchy_build_data *)lua_touserdata(L, 1);
+
+	luaL_checktype(L, 2, LUA_TUSERDATA);
+	animation_node *node = (animation_node*)lua_touserdata(L, 2);
+
+	ozz::geometry::SkinningJob job;
+	
+	return 0;
 }
 
 extern "C" {

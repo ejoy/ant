@@ -25,3 +25,12 @@ GenVertexDeclFromVBLayout(const std::string &vblayout);
 
 std::string
 GenVBLayoutFromDecl(const bgfx::VertexDecl &decl);
+
+bgfx::Attrib::Enum
+GetAttribFromLayoutElem(const std::string &elem);
+
+size_t 
+GetVertexElemSizeInBytes(const std::string &elem);
+
+std::string
+GetDefaultVertexLayoutElem();

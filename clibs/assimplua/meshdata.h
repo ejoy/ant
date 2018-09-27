@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <map>
+#include <memory>
 
 struct load_config {
 	load_config()
@@ -24,17 +25,33 @@ struct load_config {
 		return flags & FlipUV;
 	}
 
+	bool NeedPackAsSOA() const {
+		return flags & PackAsSOA;
+	}
+
+	bool IsLoadSkeleton() const {
+		return flags & LoadSkeleton;
+	}
+
+	bool IsUsingCPUSkinning() const {
+		return flags & UsingCPUSkinning;
+	}
+
 	std::string layout;
 
 	enum {
-		CreateNormal = 0x00000001,
-		CreateTangent = 0x00000002,
+		CreateNormal	= 0x00000001,
+		CreateTangent	= 0x00000002,
 		CreateBitangent = 0x00000004,
 
-		InvertNormal = 0x00000010,
-		FlipUV = 0x00000020,
-		IndexBuffer32Bit = 0x00000040,
+		InvertNormal	= 0x00000010,
+		FlipUV			= 0x00000020,
+		IndexBuffer32Bit= 0x00000040,
+		PackAsSOA		= 0x00000080,
 
+		AnimationMask	= 0xffff0000,
+		LoadSkeleton	= 0x00010000,
+		UsingCPUSkinning= 0x00020000,
 	};
 	uint32_t flags;
 };
@@ -129,54 +146,79 @@ struct mesh_material_data {
 	std::map<std::string, glm::vec3>	colors;		// need an ordered map
 };
 
+struct vb_info {
+	std::string layout;
+	size_t num_vertices;
+	std::vector<std::unique_ptr<uint8_t[]>>	vbraws;
+	bool soa;
+
+	vb_info()
+		: num_vertices(0)		
+		, soa(false)
+	{}
+
+	vb_info(vb_info &&other) 
+		: layout(std::move(other.layout))		
+		, num_vertices(other.num_vertices)
+		, vbraws(std::move(other.vbraws))
+		, soa(other.soa)
+	{}
+};
+
+struct ib_info {
+	uint8_t	format;
+	size_t num_indices;
+	uint8_t* ibraw;
+
+	ib_info() 
+		: format(0)
+		, num_indices(0)
+		, ibraw(nullptr)
+	{}
+
+	ib_info(ib_info &&other) 
+		: format(other.format)
+		, num_indices(other.num_indices)
+		, ibraw(other.ibraw)
+	{
+		other.ibraw = nullptr;
+		other.num_indices = 0;
+		other.format = 0;
+	}
+
+	~ib_info() {
+		if (ibraw) {
+			delete[] ibraw;
+			ibraw = nullptr;
+		}
+	}
+};
+
+#define MESH_DATA_MINOR_VERSION 0
+#define MESH_DATA_MAJOR_VERSION	1
+#define MESH_DATA_VERSION ((MESH_DATA_MAJOR_VERSION) << 16 | (MESH_DATA_MINOR_VERSION))
 struct mesh_data {		
 	std::vector<mesh_material_data> materials;
 	struct group {
-		group() 
-			: num_vertices(0)
-			, vbraw(nullptr)
-			, ib_format(0)
-			, num_indices(0)
-			, ibraw(nullptr)			
+		group() 			
 		{}
 
-		group(group &&tmp) {
-			ibraw = tmp.ibraw;
-			num_indices = tmp.num_indices;
-			ib_format = tmp.ib_format;
+		group(group &&tmp) 
+			: bounding(tmp.bounding)
+			, name(std::move(tmp.name))
+			, vb(std::move(tmp.vb))
+			, ib(std::move(tmp.ib))			
+			, primitives(std::move(tmp.primitives))
+		{}
 
-			vbraw = tmp.vbraw;
-			num_vertices = tmp.num_vertices;
-			vb_layout = std::move(tmp.vb_layout);
-	
-			name = std::move(tmp.name);
-			primitives = std::move(tmp.primitives);
-			
-			tmp.ibraw = nullptr;
-			tmp.vbraw = nullptr;
-		}
-		~group() {
-			if (vbraw){ 
-				delete[] vbraw;
-				vbraw = nullptr;
-			}
+		~group() = default;
 
-			if (ibraw) {
-				delete[] ibraw;
-				ibraw = nullptr;
-			}
-		}
 		Bounding bounding;
 		std::string name;
 
-		std::string vb_layout;
-		size_t num_vertices;
-		uint8_t* vbraw;
-		
-		uint8_t	ib_format;
-		size_t num_indices;
-		uint8_t* ibraw;
-		
+		vb_info vb;
+		ib_info ib;
+
 		struct primitive_info {
 			primitive_info() 
 				: material_idx(-1)
@@ -204,6 +246,8 @@ struct mesh_data {
 
 	std::vector<group>	groups;
 	Bounding			bounding;
+
+	bool				usingCPUSkinning;
 };
 
 bool

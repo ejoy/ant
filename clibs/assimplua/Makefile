@@ -41,7 +41,7 @@ $(ODIR) :
 #$(CD_LUAOBJS) : $(OCDDIR)/%.o : $(CD_DIR)/src/lua5/%.c | $(OCDDIR)
 #$(ODIR)/luaassimplua.o : assimplua.cpp fbxhelper.cpp  | $(ODIR)
 
-SRC_FILES := assimplua.cpp antmesh_converter.cpp ozz_helper.cpp utils.cpp
+SRC_FILES := assimplua.cpp antmesh_converter.cpp ozz_helper.cpp fbx_helper.cpp bgfxmesh_helper.cpp utils.cpp
 OBJ_FILES := $(patsubst %.cpp,$(ODIR)/%.o,$(SRC_FILES))
 
 $(OBJ_FILES) : $(ODIR)/%.o : %.cpp | $(ODIR)

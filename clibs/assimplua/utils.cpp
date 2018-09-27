@@ -14,6 +14,11 @@ Split(const std::string &ss, char delim) {
 	return vv;
 }
 
+std::string
+GetDefaultVertexLayoutElem() {
+	return "_30NIf";
+}
+
 std::vector<std::string>
 AdjustLayoutElem(const std::string &layout) {
 	auto elems = Split(layout, '|');
@@ -28,36 +33,37 @@ AdjustLayoutElem(const std::string &layout) {
 	return elems;
 }
 
+bgfx::Attrib::Enum 
+GetAttribFromLayoutElem(const std::string &elem) {
+	switch (elem[0])
+	{
+	case 'p':return bgfx::Attrib::Position;
+	case 'n':return bgfx::Attrib::Normal;
+	case 'T':return bgfx::Attrib::Tangent;
+	case 'b':return bgfx::Attrib::Bitangent;
+	case 'i':return bgfx::Attrib::Indices;
+	case 'w':return bgfx::Attrib::Weight;
+	case 't': {
+		auto channel = elem[2] - '0';
+		return bgfx::Attrib::Enum(bgfx::Attrib::TexCoord0 + channel);
+	}
+	case 'c': {
+		auto channel = elem[2] - '0';
+		return bgfx::Attrib::Enum(bgfx::Attrib::Color0 + channel);
+	}
+	default:
+		printf("not support type, %d", elem[0]);
+		return bgfx::Attrib::Count;
+	}
+}
+
 bgfx::VertexDecl
 GenVertexDeclFromVBLayout(const std::string &vblayout) {
 	auto elems = AdjustLayoutElem(vblayout);
 	bgfx::VertexDecl decl;
 	decl.begin();
 	for (const auto &e : elems) {
-		auto get_attrib = [](const std::string &e) {
-			switch (e[0])
-			{
-			case 'p':return bgfx::Attrib::Position;
-			case 'n':return bgfx::Attrib::Normal;
-			case 'T':return bgfx::Attrib::Tangent;
-			case 'b':return bgfx::Attrib::Bitangent;
-			case 'i':return bgfx::Attrib::Indices;
-			case 'w':return bgfx::Attrib::Weight;
-			case 't': {
-				auto channel = e[2] - '0';
-				return bgfx::Attrib::Enum(bgfx::Attrib::TexCoord0 + channel);
-			}
-			case 'c': {
-				auto channel = e[2] - '0';
-				return bgfx::Attrib::Enum(bgfx::Attrib::Color0 + channel);
-			}
-			default:
-				printf("not support type, %d", e[0]);
-				return bgfx::Attrib::Count;
-			}
-		};
-
-		auto attrib = get_attrib(e);
+		auto attrib = GetAttribFromLayoutElem(e);
 
 		uint8_t num = e[1] - '0';
 		auto get_type = [](const std::string &e) {
@@ -127,6 +133,13 @@ GenVBLayoutFromDecl(const bgfx::VertexDecl &decl) {
 
 	return vblayout;
 };
+
+size_t
+GetVertexElemSizeInBytes(const std::string &elem) {
+	auto decl = GenVertexDeclFromVBLayout(elem);
+
+	return decl.getStride();
+}
 
 
 size_t

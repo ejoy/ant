@@ -30,13 +30,15 @@ function util.default_config()
 		layout = "p3|n30nIf|T|b|t20|c30",
 		--layout = "p3|n30nIf|t20|c30",
 		flags = {
-			invert_normal = false,
-			flip_uv = true,
-			ib_32 = false,	-- if index num is lower than 65535
+			invert_normal 	= false,
+			flip_uv 		= true,
+			ib_32 			= false,	-- if index num is lower than 65535			
+			soa 			= false,	-- pack as struct of array, default is array of struct(vertex as position&normal&tangent ...)
 		},
 		animation = {
-			load_skeleton = true,
-			ani_list = "all" -- or {"walk", "stand"}
+			load_skeleton 	= true,
+			ani_list 		= "all", 	-- or {"walk", "stand"}
+			cpu_skinning 	= false,
 		},
 	}
 end
