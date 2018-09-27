@@ -149,6 +149,7 @@ return function (filename)
 	-- raise an lua error(access to nil member).
 	return struct_unpack(nil, 
 	{
+		version = uint_unpack,
 		srcfile = string_unpack,
 		bounding = bounding_unpack,
 
@@ -179,13 +180,36 @@ return function (filename)
 			return array_unpack(v, {
 				bounding	= bounding_unpack,
 				name 		= string_unpack,
-				vb_layout	= string_unpack,
-				num_vertices= uint_unpack,
-				vbraw		= string_unpack,
-
-				ib_format	= uint8_unpack,
-				num_indices	= uint_unpack,
-				ibraw		= string_unpack,
+				vb 			= function(v) 
+					return struct_unpack(v,{
+					layout		= string_unpack,
+					num_vertices= uint_unpack,
+					vbraws		= function (v)
+						local mapper = {}
+						mapper.__index = function (t, key)
+							return string_unpack
+						end
+						local t = array_unpack(v, mapper)
+						assert(#t == 0)
+						local sorted_t = {}
+						for k in pairs(t) do
+							table.insert(sorted_t, k)
+						end
+						local tt = {}
+						for _, k in ipairs(sorted_t) do
+							local v = t[k]
+							table.insert(tt, v)
+						end
+						return tt
+					end})
+				end,
+				ib			= function(v)
+					return struct_unpack(v, {
+						format		=uint8_unpack,
+						num_indices	= uint_unpack,
+						ibraw		= string_unpack,						
+					})
+				end,				
 				primitives = function (v)
 					return array_unpack(v, {
 						bounding= bounding_unpack,
