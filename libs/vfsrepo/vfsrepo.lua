@@ -186,15 +186,20 @@ local function read_cache(cachedir, localcache)
 	read_cache_files(cachedir, localcache, duplicate_cache)
 end
 
-function repo:init(root)
+function repo:init(root, localcache)
 	self.rootpath = root
 	local cachedir = path.join(root, ".repo")
 	self.cachedir = cachedir
-	local localcache = {}
-	read_cache(cachedir, localcache)
-	if self:rebuild_index(localcache) then				
+	if not localcache then
+		localcache = {}
+		read_cache(cachedir, localcache)
+	end
+
+	if self:rebuild_index(localcache) then		
 		write_cache(cachedir, assert(self.cache), assert(self.duplicate_cache))
 	end
+
+	return localcache
 end
 
 function repo:close()
@@ -252,10 +257,10 @@ function repo:build_index(filepath, localcache, duplicate_cache)
 	local function file_sha1(timestamp, itempath, fullpath)
 		if localcache then
 			local localitem = localcache[itempath]
-			
+
 			if 	localitem and
 				timestamp == localitem.timestamp then
-
+					
 				return localitem.sha1, false
 			end
 		end
@@ -274,7 +279,7 @@ function repo:build_index(filepath, localcache, duplicate_cache)
 				return self:build_index(itempath, localcache, duplicate_cache)
 			end
 
-			local timestamp = fu.last_modify_time(fullpath)
+			local timestamp = fu.last_modify_time(fullpath, true)
 			local s, modify = file_sha1(timestamp, itempath, fullpath)
 			local item = {type="f", filename=itempath, sha1=s, timestamp=timestamp}
 

@@ -32,23 +32,26 @@ function server_filesys:Init(root_dir)
     end
 
     winfile.open = io.open
-    
+
     local vfsrepo = require "vfsrepo"
     self.vfs = vfsrepo.new()
 
+    print("create server repo")
+
     local res, err = pcall(self.vfs.init, self.vfs, root_dir)
     assert(res, "create server repo failed: " .. tostring(err))
-
-    self.root_dir = root_dir
+    
     print("create server repo successful")
-
+    self.root_dir = root_dir
+    self.localcache = err
     enable_pack_framework(true)
 
     ---[[
     --init filewatch
     --FIXME: for now only watch libs directory
     --TODO: mulitiple directory watching?
-    local watch = assert(fw.add(root_dir.."/libs", "fdts"))
+    local path = require "filesystem.path"
+    local watch = assert(fw.add(path.join(root_dir, "libs"), "fdts"))
     self.fw_watch = watch
     --]]
 end
@@ -84,18 +87,28 @@ function server_filesys:HandleLindaMsg()
     end
 end
 local last_update_timer = os.clock()
+
 function server_filesys:UpdateFileWatch()    
     while true do
-        local id, type, path = fw.select()
+        local id, type, filepath = fw.select()
         if id then
-            print("fw", id, type, path)
+            local path = require "filesystem.path"
+            filepath = path.normalize(filepath)
+            local full_path = path.join("libs", filepath)
+
+            print("fw", id, type, full_path)
+            local fu = require "filesystem.util"
+            fu.clear_timestamp_cache(full_path)
+            
+            self.localcache[full_path] = nil    --clear a cache
             local time_step = os.clock() - last_update_timer
-            if time_step > 10 then
+            if time_step > 5.0 then
                 --update server_repo
+                local rebuild_start = os.clock()
                 print("file modification detected, rebuild filesystem")
-                local res, err = pcall(self.vfs.init, self.vfs, self.root_dir)
+                local res, err = pcall(self.vfs.init, self.vfs, self.root_dir, self.localcache)
                 assert(res, "update server repo failed: " .. tostring(err))
-                print("build filesystem finished")
+                print("build filesystem finished. cost time:", os.clock() - rebuild_start)
                 last_update_timer = os.clock()
             end
         else
