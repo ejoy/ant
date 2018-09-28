@@ -87,7 +87,8 @@ function server_filesys:HandleLindaMsg()
     end
 end
 local last_update_timer = os.clock()
-
+local min_update_time = 5.0
+local file_dirty = false
 function server_filesys:UpdateFileWatch()    
     while true do
         local id, type, filepath = fw.select()
@@ -101,19 +102,22 @@ function server_filesys:UpdateFileWatch()
             fu.clear_timestamp_cache(full_path)
             
             self.localcache[full_path] = nil    --clear a cache
-            local time_step = os.clock() - last_update_timer
-            if time_step > 5.0 then
-                --update server_repo
-                local rebuild_start = os.clock()
-                print("file modification detected, rebuild filesystem")
-                local res, err = pcall(self.vfs.init, self.vfs, self.root_dir, self.localcache)
-                assert(res, "update server repo failed: " .. tostring(err))
-                print("build filesystem finished. cost time:", os.clock() - rebuild_start)
-                last_update_timer = os.clock()
-            end
+            file_dirty = true
         else
             break
         end
+    end
+
+    local time_step = os.clock() - last_update_timer
+    if time_step > min_update_time and file_dirty then
+        --update server_repo
+        local rebuild_start = os.clock()
+        print("file modification detected, rebuild filesystem")
+        local res, err = pcall(self.vfs.init, self.vfs, self.root_dir, self.localcache)
+        assert(res, "update server repo failed: " .. tostring(err))
+        print("build filesystem finished. cost time:", os.clock() - rebuild_start)
+        last_update_timer = os.clock()
+        file_dirty = false
     end
 end
 
