@@ -1264,6 +1264,7 @@ init_command_desc() {
 	s_command_desc['d'] = "to rotation";
 	s_command_desc['D'] = "to direction";
 	s_command_desc['~'] = "to srt";
+	s_command_desc['b'] = "split srt matrix to s r t";
 	int i;
 	for (i=0;i<256;i++) {
 		if (s_command_desc[i] == NULL) {
