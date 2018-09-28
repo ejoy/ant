@@ -33,7 +33,7 @@ while true do
                 --vfs:open()
                 local file_path, hash
                 while true do
-                    local key, val = linda:receive(0.001, "vfs_open_res")
+                    local key, val = linda:receive(0.001, "vfs_open_res"..filename)
                     if val then
                         file_path, hash = val[1], val[2]
                         break

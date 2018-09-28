@@ -40,8 +40,25 @@ function util.file_is_newer(check, base)
 	return check_mtime > base_mtime
 end
 
-function util.last_modify_time(filename)
-	return fs.attributes(filename, "modification")
+local timestamp_cache = {}
+function util.last_modify_time(filename, use_cache)
+	if not use_cache then
+		return fs.attributes(filename, "modification")
+	end
+	
+	if not timestamp_cache[filename] then
+		local last_t = fs.attributes(filename, "modification")
+		timestamp_cache[filename] = last_t
+	
+		return last_t
+	else
+		return timestamp_cache[filename]
+	end
+	--]]
+end
+
+function util.clear_timestamp_cache(filename)
+	timestamp_cache[filename] = nil
 end
 
 return util

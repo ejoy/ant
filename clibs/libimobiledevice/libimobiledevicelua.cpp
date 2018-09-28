@@ -41,8 +41,8 @@ extern "C" int luaopen_libimobiledevicelua(lua_State* L);
 std::map<std::string, idevice_t> g_device_map;
 std::map<ConnectID, idevice_connection_t> g_connect_id_map;
 
-void TypeError(int var_idx, const char* correct_type, lua_State *L) {
-    printf("ERROR: %d variable should be %s\n", var_idx, correct_type);
+void TypeError(int var_idx, const char* func_name, const char* correct_type, lua_State *L) {
+    printf("ERROR: %d variable in function: %s should be %s\n", var_idx, func_name, correct_type);
 }
 
 bool is_init = false;
@@ -159,7 +159,7 @@ static int Connect(lua_State* L) {
         port = lua_tonumber(L, -1);
         lua_pop(L, 1);
     } else {
-        TypeError(2, "Number", L);
+        TypeError(2, "Connect", "Number", L);
         return 0;
     }
 
@@ -169,7 +169,7 @@ static int Connect(lua_State* L) {
         lua_pop(L, 1);
  //       printf("udid %s\n", udid.data());
     } else {
-        TypeError(1, "String", L);
+        TypeError(1, "Connect", "String", L);
         return 0;
     }   
     
@@ -208,7 +208,7 @@ static int Disconnect(lua_State* L) {
         port = lua_tonumber(L, -1);
         lua_pop(L, 1);
     } else {
-        TypeError(2, "Number", L);
+        TypeError(2, "Disconnect", "Number", L);
         return 0;
     }
 
@@ -217,7 +217,7 @@ static int Disconnect(lua_State* L) {
         udid = lua_tostring(L, 1);
         lua_pop(L, 1);
     } else {
-        TypeError(1, "String", L);
+        TypeError(1, "Disconnect", "String", L);
         return 0;
     }
     
@@ -241,14 +241,14 @@ static int Send(lua_State* L) {
     if(lua_isstring(L, 1)) {
         udid = lua_tostring(L, 1);
     } else {
-        TypeError(1, "String", L);
+        TypeError(1, "Send", "String", L);
         return 0;
     }
     
     if(lua_isnumber(L, 2)) {
         port = lua_tonumber(L,2);
     } else {
-        TypeError(2, "Number", L);
+        TypeError(2, "Send", "Number", L);
         return 0;
     }
 
@@ -257,7 +257,7 @@ static int Send(lua_State* L) {
         sent_data = luaL_tolstring(L, 3, &len);
         //printf("data size %zu\n", len);
     } else {
-        TypeError(3, "String", L);
+        TypeError(3, "Send", "String", L);
         return 0;
     }
 
@@ -303,14 +303,14 @@ static int Recv(lua_State* L)
     if(lua_isnumber(L, 2)) {
         port = lua_tonumber(L, 2);
     } else {
-        TypeError(2, "Number", L);
+        TypeError(2, "Recv", "Number", L);
         return 0;
     }
 
     if(lua_isnumber(L, 3)) {
         timeout = lua_tonumber(L, 3);
     } else {
-        TypeError(3, "Number", L);
+        TypeError(3, "Recv", "Number", L);
         return 0;
     }
     

@@ -289,10 +289,11 @@ function server:CheckNewDevice()
         --new device
         if connected_devices[udid] == nil then
 
-            local result = self.io:Connect(udid)
+            local full_id = udid .. ":8888"
+            local result = self.io:Connect(full_id)
             if  result then
-                self.connect[udid] = true
-                print("connect to ".. udid .." successful")
+                self.connect[full_id] = true
+                print("connect to ".. full_id .." successful")
 
                 connected_devices[udid] = true --means device "v" is connected now
                 table.insert(self.log, "connect to "..udid)
@@ -376,6 +377,7 @@ end
 server_linda_func_body["repo_root_result"] = function(server, value)
     --TODO: maybe need repo root for something other than SERVER_ROOT? 
     --FIXME:
+    print("send server root", value)
     server:SendPackage({"SERVER_ROOT", value})
 end
 
@@ -422,15 +424,18 @@ function server:HandleIupWindowRequest(udid, cmd, cmd_data)
         end
 
     elseif cmd == "CONNECT" then
-        print("try connencting")
+        print("try connecting", udid)
         --connect to device
-        if self.io:Connect(udid) then
+        local res, err = pcall(self.io.Connect, self.io, udid)
+        if res and err then
             self.connect[udid] = true
             connected_devices[udid] = true
 
             print("connect to ".. udid .." successful !!!!!!")
             table.insert(self.log, "connect to "..udid)
             self.linda:send("response", {"CONNECT", udid})
+        else
+            print("connect error", err)
         end
     elseif cmd == "DISCONNECT" then
         --disconnect device

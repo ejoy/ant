@@ -4,15 +4,14 @@ local bgfx = require "bgfx"
 local init_bgfx = ecs.system "init_bgfx"
 local assetmgr = require "asset"
 
-local ctx = { stats = {}}
 
 local render_mesh = require "modelloader.rendermesh"
 
 function init_bgfx:init()
-    bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
+    bgfx.set_view_clear(0, "CD", 0xa0a0a0ff, 1, 0)
     bgfx.set_debug "T"
 
-    local mesh_subpath = "meshes/bunny.bin"
+    local mesh_subpath = "depiction/bunny.mesh"
     local meshpath = assetmgr.find_valid_asset_path(mesh_subpath)
     if meshpath then
         render_mesh:InitRenderContext(meshpath)
@@ -27,7 +26,6 @@ function render_frame:update()
     bgfx.touch(0)
 
     bgfx.dbg_text_clear()
-    bgfx.set_state(ctx.state)
 
     render_mesh.SubmitRenderMesh()
 
@@ -50,8 +48,6 @@ function message:resize(w,h)
     self.window.height = h
     bgfx.set_view_rect(0, 0, 0, w, h)
     bgfx.reset(w,h, "v")
-    ctx.width = w
-    ctx.height = h
 end
 
 function message:button(...)

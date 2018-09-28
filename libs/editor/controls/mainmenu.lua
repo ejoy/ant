@@ -1,5 +1,5 @@
 local editor_mainwindow = require 'editor.controls.window'
-local fs = require "filesystem"
+local fs = require "cppfs"
 
 local configDir = (os.getenv 'UserProfile') .. '\\.ant\\config\\'
 
@@ -61,7 +61,7 @@ local guiOpenMap = iup.GetChild(iup.GetChild(guiMain, 0), 0)
 local openMap
 
 local function recentSave()
-    fs.mkdir(configDir)
+    fs.create_directories(fs.path(configDir))
     local f = io.open(configDir .. 'recent.cfg', 'w')
     if not f then
         return
