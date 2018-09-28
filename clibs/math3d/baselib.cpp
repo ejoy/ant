@@ -87,11 +87,11 @@ lscreenpt_to_3d(lua_State *L){
 
 	for (int ii = 0; ii < 3; ++ii) {
 		lua_geti(L, 3, ii + 1);
-		position[ii] = lua_tointeger(L, -1);
+		position[ii] = lua_tonumber(L, -1);
 		lua_pop(L, 1);
 
 		lua_geti(L, 4, ii + 1);
-		euler[ii] = lua_tointeger(L, -1);
+		euler[ii] = lua_tonumber(L, -1);
 		lua_pop(L, 1);
 	}
 
@@ -100,11 +100,11 @@ lscreenpt_to_3d(lua_State *L){
 	
 	// get viewport size
 	lua_getfield(L, 5, "w");
-	float width = lua_tointeger(L, -1);
+	float width = lua_tonumber(L, -1);
 	lua_pop(L, 1);
 
 	lua_getfield(L, 5, "h");
-	float height = lua_tointeger(L, -1);
+	float height = lua_tonumber(L, -1);
 	lua_pop(L, 1);
 
 

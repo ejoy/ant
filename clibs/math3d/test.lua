@@ -44,6 +44,7 @@ local math3d = require "math3d"
 	n normalize vector3 ( ..., 1 -> ..., {normalize(1) , 1} )
 	l generate lookat matrix ( ..., eye, at -> ..., lookat(eye,at) )
 	e vec4/vec3/matrix to euler angle (v, "e")
+	b extract matrix base orthogonal axis[xyz]
 ]]
 
 local stack = math3d.new()
@@ -170,5 +171,12 @@ do
 
 	local e = stack(q, "eP")
 	print("euler : ", stack(e, "V"))
+end
+
+do
+	-- extract base axis
+	local lookat = stack({0, 0, 0}, {0, 0, 1}, "LP")
+	local x, y, z = stack(lookat, "bPPP")
+	print(stack(x, y, z, "VVV"))
 end
 
