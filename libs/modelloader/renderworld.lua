@@ -12,56 +12,23 @@ local fs_util = require "filesystem.util"
 local lu = require "render.light.util"
 
 function add_entity_sys:init()
-    local ms = self.math_stack
+	local ms = self.math_stack
+	
+	local leid = lu.create_directional_light_entity(world)
+	local lentity = world[leid]
+	local lightcomp = lentity.light.v
+	lightcomp.color = {1,1,1,1}
+	lightcomp.intensity = 2.0
+	ms(lentity.rotation.v, {123.4, -34.22,-28.2}, "=")
+	ms(lentity.position.v, {2, 5, 2}, "=")
 
-	do
-		local leid = lu.create_directional_light_entity(world)
-		world:add_component(leid, "mesh", "material", "can_render", "scale", "name")
-		local lentity = world[leid]
-
-		local lightcomp = lentity.light.v
-		lightcomp.color = {1,1,1,1}
-		lightcomp.intensity = 2.0
-
-		--ms(lentity.rotation.v, {50, -30, 0}, "=")
-		--ms(lentity.rotation.v, {123.4, 234.22,28.2}, "=")
-		ms(lentity.rotation.v, {123.4, -34.22,-28.2}, "=")
-		ms(lentity.position.v, {2, 5, 2}, "=")
-		ms(lentity.scale.v, {1, 1, 1}, "=")
-
-		lentity.name.n = "directional_light"
-
-		-- add tested for ambient 
-		local am_eid = lu.create_ambient_light_entity(world)
-		local am_entity = world[ am_eid]
-		local ambient_comp = am_entity.ambient_light.data
-		ambient_comp.mode = "color" -- "gradient"
-		ambient_comp.skycolor = {1,1,1,1}
-		ambient_comp.midcolor  = {0.9,0.9,1,1}
-		ambient_comp.groundcolor  = {0.60,0.74,0.68,1}
-		--ambient_comp.skycolor = {0.8,0.8,0.8,1} --{0.28,0,1,1}
-		--ambient_comp.midcolor = {0,1,0,1}
-		--ambient_comp.groundcolor = {0,0,1,1}
-		--ambient_comp.factor = 0.25
-		lentity.name.n = "ambient_light"
-		print("-------ambient entity  "..am_entity.name.n..'  '..am_eid)
-
-		component_util.load_mesh(lentity, "sphere.mesh")
-		local sphere_fn = "mem://light_bulb.material"
-		fs_util.write_to_file(sphere_fn, [[
-			shader = {
-				vs = "simple/light_bulb/vs_bulb",
-				fs = "simple/light_bulb/fs_bulb",
-			}
-			state = "default.state"
-			properties = {
-				u_color = {type="color", name = "color", default={1, 1, 1, 1}}
-			}
-		]])
-		component_util.load_material(lentity, {sphere_fn})
-
-		lentity.can_render.visible = true
-    end
+	local am_eid = lu.create_ambient_light_entity(world)
+	local am_entity = world[am_eid]
+	local ambient_comp = am_entity.ambient_light.data
+	ambient_comp.mode = "color" 
+	ambient_comp.skycolor = {1,1,1,1}
+	ambient_comp.midcolor  = {0.9,0.9,1,1}
+	ambient_comp.groundcolor  = {0.60,0.74,0.68,1}
 
     local eid = world:new_entity(
         "position", "rotation", "scale",
