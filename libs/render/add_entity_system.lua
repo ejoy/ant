@@ -71,7 +71,7 @@ function add_entity_sys:init()
 		--ms(lentity.rotation.v, {123.4, 234.22,28.2}, "=")
 		ms(lentity.rotation.v, {123.4, -34.22,-28.2}, "=")
 		ms(lentity.position.v, {2, 5, 2}, "=")
-		ms(lentity.scale.v, {1, 1, 1}, "=")
+		ms(lentity.scale.v, {0.01, 0.01, 0.01}, "=")
 
 		lentity.name.n = "directional_light"
 
