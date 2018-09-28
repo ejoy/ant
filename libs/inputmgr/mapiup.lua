@@ -57,4 +57,5 @@ return {
 	motion = "_,_,STATUS", -- x,y,status
 	keypress = "KEY,PRESSED",	-- keycode, pressed
 	resize = "_,_",	-- width, height
+	wheel = "_,_,_,STATUS",-- delta,x,y,status
 }

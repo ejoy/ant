@@ -1,70 +1,77 @@
 local ecs = ...
 local world = ecs.world
-local bgfx = require "bgfx"
-local init_bgfx = ecs.system "init_bgfx"
-local assetmgr = require "asset"
 
+local component_util = require "render.components.util"
+local add_entity_sys = ecs.system "add_entities_system"
+add_entity_sys.singleton "math_stack"
+add_entity_sys.singleton "constant"
+add_entity_sys.depend "constant_init_sys"
+add_entity_sys.dependby "iup_message"
 
-local render_mesh = require "modelloader.rendermesh"
+local fs_util = require "filesystem.util"
+local lu = require "render.light.util"
 
-function init_bgfx:init()
-    bgfx.set_view_clear(0, "CD", 0xa0a0a0ff, 1, 0)
-    bgfx.set_debug "T"
+function add_entity_sys:init()
+    local ms = self.math_stack
 
-    local mesh_subpath = "depiction/bunny.mesh"
-    local meshpath = assetmgr.find_valid_asset_path(mesh_subpath)
-    if meshpath then
-        render_mesh:InitRenderContext(meshpath)
-    else
-        error(string.format("not found mesh : %s", mesh_subpath))
-    end    
-end
+	do
+		local leid = lu.create_directional_light_entity(world)
+		world:add_component(leid, "mesh", "material", "can_render", "scale", "name")
+		local lentity = world[leid]
 
-local render_frame = ecs.system "render_frame"
+		local lightcomp = lentity.light.v
+		lightcomp.color = {1,1,1,1}
+		lightcomp.intensity = 2.0
 
-function render_frame:update()
-    bgfx.touch(0)
+		--ms(lentity.rotation.v, {50, -30, 0}, "=")
+		--ms(lentity.rotation.v, {123.4, 234.22,28.2}, "=")
+		ms(lentity.rotation.v, {123.4, -34.22,-28.2}, "=")
+		ms(lentity.position.v, {2, 5, 2}, "=")
+		ms(lentity.scale.v, {1, 1, 1}, "=")
 
-    bgfx.dbg_text_clear()
+		lentity.name.n = "directional_light"
 
-    render_mesh.SubmitRenderMesh()
+		-- add tested for ambient 
+		local am_eid = lu.create_ambient_light_entity(world)
+		local am_entity = world[ am_eid]
+		local ambient_comp = am_entity.ambient_light.data
+		ambient_comp.mode = "color" -- "gradient"
+		ambient_comp.skycolor = {1,1,1,1}
+		ambient_comp.midcolor  = {0.9,0.9,1,1}
+		ambient_comp.groundcolor  = {0.60,0.74,0.68,1}
+		--ambient_comp.skycolor = {0.8,0.8,0.8,1} --{0.28,0,1,1}
+		--ambient_comp.midcolor = {0,1,0,1}
+		--ambient_comp.groundcolor = {0,0,1,1}
+		--ambient_comp.factor = 0.25
+		lentity.name.n = "ambient_light"
+		print("-------ambient entity  "..am_entity.name.n..'  '..am_eid)
 
-    bgfx.frame()
-end
+		component_util.load_mesh(lentity, "sphere.mesh")
+		local sphere_fn = "mem://light_bulb.material"
+		fs_util.write_to_file(sphere_fn, [[
+			shader = {
+				vs = "simple/light_bulb/vs_bulb",
+				fs = "simple/light_bulb/fs_bulb",
+			}
+			state = "default.state"
+			properties = {
+				u_color = {type="color", name = "color", default={1, 1, 1, 1}}
+			}
+		]])
+		component_util.load_material(lentity, {sphere_fn})
 
-local window = ecs.component "window" {
-    width = 0,
-    height = 0,
-}
-
-local iup_message = ecs.system "iup_message"
-iup_message.singleton "window"
-
-local message = {}
-
-function message:resize(w,h)
-    print("RESIZE", w,h)
-    self.window.width = w
-    self.window.height = h
-    bgfx.set_view_rect(0, 0, 0, w, h)
-    bgfx.reset(w,h, "v")
-end
-
-function message:button(...)
-    print("BUTTON", ...)
-end
-
-function InitRender(file_path)
-    print("RENDER!!!!")
-    print(file_path)
-end
-
---更新消息
-function iup_message:update()
-    for idx, msg, v1,v2,v3 in pairs(world.args.mq) do
-        local f = message[msg]
-        if f then
-            f(self,v1,v2,v3)
-        end
+		lentity.can_render.visible = true
     end
+
+    local eid = world:new_entity(
+        "position", "rotation", "scale",
+        "can_render", "mesh", "material",
+        "name"
+    )
+    local model = world[eid]
+    ms(model.position.v, {0, 0, 0, 1}, "=")
+    ms(model.rotation.v, {-90, -90, 0,}, "=")
+    ms(model.scale.v, {0.2, 0.2, 0.2, 0}, "=")
+    component_util.load_mesh(model, "PVPScene/campsite-door.mesh")
+    component_util.load_material(model, {"PVPScene/scene-mat.material"})
 end
