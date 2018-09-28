@@ -8,7 +8,8 @@ end
 
 local server_framework = require "server_framework"
 --print(pcall(server_framework.init, server_framework, "127.0.0.1", 8888))
-server_framework:init("127.0.0.1", 8888)
+local fw_path = "/Users/ejoy/Desktop/Engine/ant/"
+server_framework:init("127.0.0.1", 8888, fw_path)
 
 local function server_test_func(value)
     print("dbg_test_server " .. tostring(value[1]) .. " and ".. tostring(value[2]))
@@ -24,7 +25,7 @@ function init()
     local mobiledevices = require "libimobiledevicelua"
     local devices = mobiledevices.GetDevices()
     for _, udid in ipairs(devices) do
-        server_framework:HandleCommand(udid, "CONNECT")
+        server_framework:HandleCommand(udid..":8888", "CONNECT")
     end
 
     server_framework:SetProjectDirectoryPath("/Users/ejoy/Desktop/Engine/ant")

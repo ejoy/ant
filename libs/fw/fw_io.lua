@@ -51,7 +51,6 @@ local function get_require_search_path(r_name)
     --separate with ";"
     --"../" not support
 
-    print("require search string", search_string)
     for s_path in string.gmatch(search_string, ".-;") do
 
         local r_path = string.gsub(r_name, "%.", "/")
@@ -87,7 +86,7 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
         local err_msg = ""
         for _, v in ipairs(path_table) do
             --local status, err = ant_load(v, io_repo)
-            local status, err = ant_load(v)
+            local status, err = ant_load(v, io_vfs)
             if status then
                 local result, ret = xpcall(status, debug.traceback)
                 if result then
@@ -108,7 +107,6 @@ function CreateIOThread(linda, pkg_dir, sb_dir)
     print("create io")
     --print(pcall(require, "fw.client_io"))
     local client_io = require "fw.client_io"
-    print("create io data", linda, pkg_dir, sb_dir)
     local c = client_io.new("127.0.0.1", 8888, linda, pkg_dir, sb_dir, io_vfs)
 
     print("create io finished")
