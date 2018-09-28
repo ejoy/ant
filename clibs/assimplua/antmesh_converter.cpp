@@ -164,44 +164,48 @@ WriteMeshData(const mesh_data &md, const std::string &srcfile, const std::string
 			WriteElemValue(off, "layout", vb.layout);
 			WriteElemValue(off, "num_vertices", vb.num_vertices);
 			WriteElemValue(off, "vbraws"); {
+				// make as struct NOT array, so only call WriteSeparator one time
 				for (uint8_t ii = 0; ii < vb.vbraws.size(); ++ii){
 					const auto &ptr = vb.vbraws[ii];
-					WriteElemValue(off, std::to_string(ii), ptr.get());
-					WriteSeparator(off);
-				}				
+					WriteElemValue(off, std::to_string(ii), ptr.get());					
+				}
 				WriteSeparator(off);
 			}			
 			WriteSeparator(off);	// end vb
 		}
 		
 		const auto &ib = g.ib;
-		WriteElemValue(off, "ib"); {
-			WriteElemValue(off, "format", ib.format);
-			WriteElemValue(off, "num_indices", ib.num_indices);
-			WriteElemValue(off, "ibraw", reinterpret_cast<const char*>(ib.ibraw), (ib.format == 16 ? 2 : 4) * ib.num_indices);
-			WriteSeparator(off);
-		}
-	
-		WriteElemValue(off, "primitives");{
-			for (const auto &p : g.primitives) {
-				write_bounding(off, p.bounding);
-
-				WriteElemValue(off, "transform", p.transform);
-				WriteElemValue(off, "name", p.name);
-
-				WriteElemValue(off, "material_idx", p.material_idx);
-
-				WriteElemValue(off, "start_vertex", p.start_vertex);
-				WriteElemValue(off, "num_vertices", p.num_vertices);
-
-				WriteElemValue(off, "start_index", p.start_index);
-				WriteElemValue(off, "num_indices", p.num_indices);
-
-				WriteSeparator(off);	// end primitive
+		if (ib.num_indices != 0) {
+			WriteElemValue(off, "ib"); {
+				WriteElemValue(off, "format", ib.format);
+				WriteElemValue(off, "num_indices", ib.num_indices);
+				WriteElemValue(off, "ibraw", reinterpret_cast<const char*>(ib.ibraw), (ib.format == 16 ? 2 : 4) * ib.num_indices);
+				WriteSeparator(off);
 			}
-			WriteSeparator(off);	// end primitives
 		}
 
+		if (!g.primitives.empty()) {
+			WriteElemValue(off, "primitives"); {
+				for (const auto &p : g.primitives) {
+					write_bounding(off, p.bounding);
+
+					WriteElemValue(off, "transform", p.transform);
+					WriteElemValue(off, "name", p.name);
+
+					WriteElemValue(off, "material_idx", p.material_idx);
+
+					WriteElemValue(off, "start_vertex", p.start_vertex);
+					WriteElemValue(off, "num_vertices", p.num_vertices);
+
+					WriteElemValue(off, "start_index", p.start_index);
+					WriteElemValue(off, "num_indices", p.num_indices);
+
+					WriteSeparator(off);	// end primitive
+				}
+				WriteSeparator(off);	// end primitives
+			}
+		}
+		
 		WriteSeparator(off);	// end group
 	}
 	WriteSeparator(off);	// end groups

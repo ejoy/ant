@@ -104,14 +104,6 @@ local function update_properties(shader, properties)
     end
 end
 
-local material_cache = nil
-local function need_commit(material)
-    local need = material ~= material_cache
-    material_cache = material
-    return need
-end
-
-
 function util.draw_primitive(vid, primgroup, mat)
     bgfx.set_transform(mat)
 
@@ -129,17 +121,22 @@ function util.draw_primitive(vid, primgroup, mat)
 	local numprim = prims and #prims or nil
 	if numprim == nil or numprim == 1 then
 		if ib then
-			bgfx.set_index_buffer(ib)
+			bgfx.set_index_buffer(ib.handle)
 		end
-		bgfx.set_vertex_buffer(vb)
-		bgfx.submit(vid, prog, 0, false) --not need_commit(material))
+		for idx, v in ipairs(vb.handles) do
+			bgfx.set_vertex_buffer(idx, v)
+		end
+		
+		bgfx.submit(vid, prog, 0, false)
 	else
 		for i=1, numprim do
 			local prim = prims[i]
 			if ib then
-				bgfx.set_index_buffer(ib, prim.startIndex, prim.numIndices)
+				bgfx.set_index_buffer(ib.handle, prim.startIndex, prim.numIndices)
 			end
-			bgfx.set_vertex_buffer(0, vb, prim.startVertex, prim.numVertices)
+			for idx, v in ipairs(vb.handles) do
+				bgfx.set_vertex_buffer(idx, v, prim.startVertex, prim.numVertices)
+			end
 			bgfx.submit(vid, prog, 0, i~=numprim)
 		end
 	end

@@ -294,9 +294,11 @@ LoadFBXMeshes(const aiScene *scene, const load_config& config, mesh_data &md) {
 
 		auto &ib = group.ib;
 
-		ib.ibraw = new uint8_t[indexSizeInBytes];
-		ib.num_indices = indexSizeInBytes / indexElemSizeInBytes;
-		ib.format = indexElemSizeInBytes == 4 ? 32 : 16;
+		if (indexSizeInBytes != 0) {
+			ib.ibraw = new uint8_t[indexSizeInBytes];
+			ib.num_indices = indexSizeInBytes / indexElemSizeInBytes;
+			ib.format = indexElemSizeInBytes == 4 ? 32 : 16;
+		}
 
 		group.primitives.resize(meshes.size());
 

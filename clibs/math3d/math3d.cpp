@@ -170,8 +170,8 @@ push_obj_to_lua_table(lua_State *L, struct lastack *LS, int64_t id){
 
 	// push type to table
 	lua_pushstring(L, "type");
-	lua_pushnumber(L, type);
-	lua_settable(L, -3);	
+	lua_pushinteger(L, type);
+	lua_settable(L, -3);
 }
 
 static inline int
