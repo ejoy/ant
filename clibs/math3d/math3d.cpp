@@ -168,10 +168,9 @@ push_obj_to_lua_table(lua_State *L, struct lastack *LS, int64_t id){
 	}
 #undef TO_LUA_STACK
 
-	// push type to table
-	lua_pushstring(L, "type");
+	// push type to table	
 	lua_pushinteger(L, type);
-	lua_settable(L, -3);
+	lua_setfield(L, -2, "type");
 }
 
 static inline int
@@ -1216,7 +1215,7 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 	
 	glm::vec4 xdir, ydir;
 	if (is_zero(zdir - glm::vec4(0, 0, 1, 0))){
-		ydir = glm::vec4(0, 0, -1, 0);
+		ydir = glm::vec4(0, 1, 0, 0);
 		xdir = glm::vec4(1, 0, 0, 0);
 	} else {
 		xdir = glm::vec4(glm::cross(glm::vec3(0, 1, 0), *((glm::vec3*)&zdir.x)), 0);

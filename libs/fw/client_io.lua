@@ -111,7 +111,7 @@ function client.new(address, port, init_linda, pkg_dir, sb_dir, vfs_repo)
 
     sand_box_path = sb_dir .. "/Documents/"
 
-    print("create server repo")
+    print("create server repo(remote)")
 return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, vfs = vfs_repo,  connect_id = connect_id, current_connect = connect_id}, client)
 end
 

@@ -13,21 +13,24 @@ if not err then
 end
 PACKAGE_DATA_SIZE_ = 62*1024
 
-local function IsUdid(id)
+local function IsUdid(name)
     --udid only contain char and number
-    local pos = string.find(id, ":")
-    if pos then
+    local pos = string.find(name, ":")
+    assert(pos, "io: name format error "..name)
+
+    if pos < 40 then
         return false
     else
         return true
     end
 end
 
-local function ToAddressPort(id)
-    local address = string.sub(id, string.find(id, "%d+.%d+.%d+.%d+"))
+local function ToAddressPort(name)
+    local s, e = string.find(name, ":%d+")
+    assert(s and e, "io: name format error " .. name)
 
-    local s, e = string.find(id, ":%d+")
-    local port = tonumber(string.sub(id, s+1, e))
+    local address = string.sub(name, 1, s-1)
+    local port = tonumber(string.sub(name, s+1, e))
 
     return address, port
 end
@@ -37,12 +40,13 @@ function io.new()
 end
 
 function io:Connect(id, type)
-    --id can be "address:port", or udid of a mobile device
+    --id can be "address:port" and "udid:port"
+    --"address:port" example: "127.0.0.1:8888"
+    --"udid:port" example: "1234567890abcdef1234567890abcdef12345678:8888", udid should be 40 chars
+    local address, port = ToAddressPort(id)
     if IsUdid(id) then
-        --local imd = require "libimobiledevicelua"
-        --todo bug fix
         if imd then
-            local result = imd.Connect(id, 8888)
+            local result = imd.Connect(address, port)
             if result then
                 if not self.udid then
                     self.udid = {}
@@ -63,7 +67,6 @@ function io:Connect(id, type)
     else
         --lsocket connect
         type = type or "tcp"
-        local address, port = ToAddressPort(id)
         local fd = lsocket.connect(type, address, port)
         --connection failed
         if not fd then
@@ -119,11 +122,11 @@ function io:Disconnect(id)
     end
 
     if IsUdid(id) then
-        --local imd = require "libimobiledevicelua"
         if imd then
             if self.udid then
                 self.udid[id] = nil
-                return imd.Disconnect(id)
+                local address, port = ToAddressPort(id)
+                return imd.Disconnect(address, port)
             end
         else
             print("libimobiledevice not avaliable")
@@ -144,7 +147,7 @@ function io:Disconnect(id)
 end
 
 function io:Send(id, data)
-    print("send package to: " .. tostring(id))
+    --print("send package to: " .. tostring(id))
     local pkg = pack.pack(data)
 
     if IsUdid(id) then
@@ -155,8 +158,6 @@ function io:Send(id, data)
                 if not self.send[id] then self.send[id] = {} end
                 table.insert(self.send[id], pkg)
                 return true
-
-                --return imd.Send(id, pkg)
             end
         else
             print("libimobiledevice not avaliable")
@@ -184,7 +185,6 @@ function io:Get(id)
         if imd then
             if self.udid and self.udid[id] then
                 --todo cache pkg
-                --pkg = imd.Get(id)
                 if self.recv and self.recv[id] and #self.recv[id] > 0 then
                     for _, data_pkg in ipairs(self.recv[id]) do
                         local unpack_table = pack.unpack(data_pkg)
@@ -346,7 +346,8 @@ function io:Update(timeout)
             --recv
             if not self.recv[udid] then self.recv[udid] = {} end
 
-            local recv_data = imd.Recv(udid, timeout*1000)
+            local address, port = ToAddressPort(udid)
+            local recv_data = imd.Recv(address, port, timeout*1000)
 
             if recv_data then
                 table.insert(self.recv[udid], recv_data)
@@ -357,7 +358,7 @@ function io:Update(timeout)
                 local udid_send = self.send[udid]
                 if udid_send and #udid_send > 0 then
                     for _, pkg in ipairs(udid_send) do
-                        if imd.Send(udid, pkg) then
+                        if imd.Send(address, port, pkg) then
                             print("send pkg to: "..udid .. " succeed" )
                         else
                             print("send pkg to udid: ".. udid .. " failed")

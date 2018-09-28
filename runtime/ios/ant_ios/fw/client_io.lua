@@ -63,7 +63,7 @@ io_cmd.SERVER_ROOT = function(resp, self)
         print(pcall(self.vfs.changeroot, self.vfs, resp[2]))
         self.vfs:changeroot(resp[2])
 
-        print("change root", resp[2])
+        print("change root ant_ios", resp[2])
         if self.run_cmd_cache then
             print("restore run command", self.run_cmd_cache)
             self.linda:send("run", self.run_cmd_cache)
@@ -128,10 +128,9 @@ function client:CollectSendRequest()
             local file, hash, f_n = self.vfs:open(value)
             print("vfs open res:", file, hash, f_n)
             if file then file:close() end
-            print("close file", value)
             --FILE can't send through linda
             self.linda:send("vfs_open_res"..value, {f_n, hash})
-            print("send file", self.linda)
+            print("send file", value)
         else
             break
         end
