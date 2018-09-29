@@ -16,13 +16,7 @@ util.__index = util
 
 local world = nil
 
-function util.start_new_world(input_queue, fbw, fbh, module_files)
-	local modules = {}
-	for _, mfile in ipairs(module_files) do
-		local m = asset.load(mfile)
-		table.move(m, 1, #m, #modules + 1, modules)
-	end	
-
+function util.start_new_world(input_queue, fbw, fbh, modules)
 	if input_queue == nil then		
 		log("input queue is not privided, no input event will be received!")
 	end

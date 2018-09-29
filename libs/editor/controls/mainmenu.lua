@@ -1,5 +1,6 @@
 local editor_mainwindow = require 'editor.controls.window'
 local fs = require "cppfs"
+local asset = require "asset"
 
 local configDir = (os.getenv 'UserProfile') .. '\\.ant\\config\\'
 
@@ -127,10 +128,17 @@ function openMap(path)
     guiOpenMap.active = "OFF"
     guiRecent.active = "OFF"
     recentAddAndUpdate(path)
-    editor_mainwindow:new_world {
-        path, 
-        "editor.module"
+    local modules = asset.load(path)
+    local editormodules = {
+        "editor.ecs.camera_controller",
+        "editor.ecs.obj_trans_controller",
+        "editor.ecs.pickup_system",
+        "editor.ecs.general_editor_entities",
+        "editor.ecs.build_hierarchy_system",
+        "editor.ecs.editor_system",
     }
+    table.move(editormodules, 1, #editormodules, #modules+1, modules)
+    editor_mainwindow:new_world(modules)
 end
 
 function CMD.OpenMap(e)

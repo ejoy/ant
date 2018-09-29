@@ -77,8 +77,8 @@ function editor_mainwindow:build_window(fbw, fbh)
 end
 
 
-function editor_mainwindow:new_world(module_files)
-	scene.start_new_world(self.iq, self.config.fbw, self.config.fbh, module_files)
+function editor_mainwindow:new_world(modules)
+	scene.start_new_world(self.iq, self.config.fbw, self.config.fbh, modules)
 end
 
 function editor_mainwindow:run(config)
