@@ -1,6 +1,9 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "render.math3d.math_component"
+ecs.import "render.end_frame_system"
+
 local editor_mainwin = require "editor.controls.window"
 local menu = require "editor.controls.popupmenu"
 local eu = require "editor.util"

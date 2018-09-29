@@ -1,6 +1,9 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "render.math3d.math_component"
+ecs.import "render.camera.camera_component"
+
 local cu 	= require "render.components.util"
 local bgfx  = require "bgfx"
 local mu  	= require "math.util"

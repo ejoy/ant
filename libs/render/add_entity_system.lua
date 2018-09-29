@@ -1,5 +1,10 @@
 local ecs = ...
 local world = ecs.world
+
+ecs.import "render.math3d.math_component"
+ecs.import "render.constant_system"
+ecs.import "inputmgr.message_system"
+
 local fs_util = require "filesystem.util"
 local component_util = require "render.components.util"
 local lu = require "render.light.util"
