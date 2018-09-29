@@ -17,7 +17,6 @@ ecs.import "scene.hierarchy.hierarchy"
 ecs.import "scene.cull_system"
 
 ecs.import "editor.ecs.editor_component"
-ecs.import "editor.ecs.general_editor_entities"
 
 local component_util = require "render.components.util"
 local model_review_system = ecs.system "model_review_system"
@@ -26,11 +25,12 @@ model_review_system.singleton "constant"
 model_review_system.depend "constant_init_sys"
 model_review_system.dependby "iup_message"
 
+local bgfx = require "bgfx"
 local lu = require "render.light.util"
+local cu = require "render.components.util"
+local mu = require "math.util"
 
-function model_review_system:init()
-	local ms = self.math_stack
-	
+local function create_light(ms)
 	local leid = lu.create_directional_light_entity(world)
 	local lentity = world[leid]
 	local lightcomp = lentity.light.v
@@ -46,6 +46,84 @@ function model_review_system:init()
 	ambient_comp.skycolor = {1,1,1,1}
 	ambient_comp.midcolor  = {0.9,0.9,1,1}
 	ambient_comp.groundcolor  = {0.60,0.74,0.68,1}
+end
+
+local function create_grid(ms)
+	local gridid = world:new_entity(
+		"rotation", "position", "scale", 
+		"can_render", "mesh", "material", 
+		"name"
+	)
+    local grid = world[gridid]
+    grid.name.n = "grid"
+    mu.identify_transform(ms, grid)
+
+    local function create_grid_line_points(w, h, unit)
+        local t = {"fffd"}
+        local function add_point(x, z, clr)
+            table.insert(t, x)
+            table.insert(t, 0)
+            table.insert(t, z)
+            table.insert(t, clr)
+        end
+
+        local w_len = w * unit
+        local hw_len = w_len * 0.5
+
+        local h_len = h * unit
+        local hh_len = h_len * 0.5
+
+        local color = 0x88c0c0c0
+
+        -- center lines
+        add_point(-hh_len, 0, 0x8800ff)
+        add_point(hh_len, 0, 0x880000ff)
+
+        add_point(0, -hw_len, 0x88ff0000)
+        add_point(0, hw_len, 0x88ff0000)
+
+        -- column lines
+        for i=0, w do
+            local x = -hw_len + i * unit
+            add_point(x, -hh_len, color)
+            add_point(x, hh_len, color)
+        end
+
+        -- row lines
+        for i=0, h do
+            local y = -hh_len + i * unit
+            add_point(-hw_len, y, color)
+            add_point(hw_len, y, color)
+        end
+        return t
+    end
+
+    local vdecl = bgfx.vertex_decl {
+        { "POSITION", 3, "FLOAT" },
+        { "COLOR0", 4, "UINT8", true }
+    }
+
+	grid.mesh.path = ""
+    grid.mesh.assetinfo = {
+		handle = {
+			groups = {
+				{
+					vdecl = vdecl,
+					vb = bgfx.create_vertex_buffer(create_grid_line_points(64, 64, 1), vdecl)
+				}
+			}
+		}
+	}
+
+	grid.material.content[1] = {path="line.material", properties={}}
+	cu.load_material(grid)
+end
+
+function model_review_system:init()
+	local ms = self.math_stack
+
+	create_light(ms)
+	create_grid(ms)
 
 	local eid = world:new_entity(
 		"position", "rotation", "scale",
