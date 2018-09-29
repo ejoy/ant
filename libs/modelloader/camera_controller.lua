@@ -15,54 +15,33 @@ camera_controller_system.singleton "control_state"
 camera_controller_system.depend "iup_message"
 camera_controller_system.depend "camera_init"
 
-local function camera_move_position(ms, p, dir, speed)
-	ms(p, p, dir, {speed}, "*+=")
+local function camera_move(ms, rotation, position, dx, dy, dz)
+	local xdir, ydir, zdir = ms(rotation, "bPPP")
+	ms(position, position, zdir, {dz}, "*+=")
+	ms(position, position, ydir, {dy}, "*+=")
+	ms(position, position, xdir, {dx}, "*+=")
 end
 
-function camera_move(ms, rotation, position, dx, dy, dz)
-	local xdir, ydir, zdir = ms(rotation, "bPPP")
-	local eye = position
-	camera_move_position(ms, eye, xdir, dx)
-	camera_move_position(ms, eye, ydir, dy)
-	camera_move_position(ms, eye, zdir, dz)
+local function camera_reset(ms, camera, target)
+	ms(target, {0, 0, 0, 1}, "=")
+	ms(camera.position.v, {8, 8, -8, 1}, "=")
+	ms(camera.rotation.v, target, camera.position.v, "-D=")
 end
 
 function camera_controller_system:init()
 	local ms = self.math_stack
 	local camera = world:first_entity("main_camera")
 
-	--local mathstack = math3d.new()
-	--local mt = debug.getmetatable(camera.position.v)
-	--function mt:__debugger_extand()
-	--	local t = mathstack(self, "T")
-	--	local ret = {}
-	--	--LINEAR_TYPE_MAT
-	--	--LINEAR_TYPE_VEC4
-	--	if t.type == 1 then
-	--		for i, v in ipairs(t) do
-	--			local name = ('[%d]'):format(i)
-	--			ret[#ret+1] = name
-	--			ret[name] = v
-	--		end
-	--		return ret
-	--	end
-	--	--LINEAR_TYPE_QUAT
-	--	--LINEAR_TYPE_NUM
-	--	--LINEAR_TYPE_EULER
-	--end
-
 	local target = math3d.ref "vector"
-    ms(target, {0, 0, 0, 1}, "=")
-    ms(camera.position.v, {5, 5, -5, 1}, "=")
-	ms(camera.rotation.v, target, camera.position.v, "-D=")
+	camera_reset(ms, camera, target)
 
 	local move_speed = 1
 	local message = {}
 
-    local last_xy
-    function message:button(btn, p, x, y, status)
-        last_xy = point2d(x, y)
-    end
+	local last_xy
+	function message:button(btn, p, x, y, status)
+		last_xy = point2d(x, y)
+	end
 
 	function message:motion(x, y, status)
 		local xy = point2d(x, y)
@@ -87,5 +66,16 @@ function camera_controller_system:init()
 	function message:wheel(delta, x, y, status)
 		camera_move(ms, camera.rotation.v, camera.position.v, 0, 0, delta * move_speed)
 	end
+
+	function message:keypress(c, p, status)
+		if c == nil then return end
+		if not p then return end
+		local c = c:upper()
+		if c == "R" then
+			camera_reset(ms, camera, target)
+			return 
+		end
+	end
+
 	self.message_component.msg_observers:add(message)
 end

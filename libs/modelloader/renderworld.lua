@@ -8,7 +8,6 @@ add_entity_sys.singleton "constant"
 add_entity_sys.depend "constant_init_sys"
 add_entity_sys.dependby "iup_message"
 
-local fs_util = require "filesystem.util"
 local lu = require "render.light.util"
 
 function add_entity_sys:init()
@@ -30,15 +29,15 @@ function add_entity_sys:init()
 	ambient_comp.midcolor  = {0.9,0.9,1,1}
 	ambient_comp.groundcolor  = {0.60,0.74,0.68,1}
 
-    local eid = world:new_entity(
-        "position", "rotation", "scale",
-        "can_render", "mesh", "material",
-        "name"
-    )
-    local model = world[eid]
-    ms(model.position.v, {0, 0, 0, 1}, "=")
-    ms(model.rotation.v, {-90, -90, 0,}, "=")
-    ms(model.scale.v, {0.2, 0.2, 0.2, 0}, "=")
-    component_util.load_mesh(model, "PVPScene/campsite-door.mesh")
-    component_util.load_material(model, {"PVPScene/scene-mat.material"})
+	local eid = world:new_entity(
+		"position", "rotation", "scale",
+		"can_render", "mesh", "material",
+		"name"
+	)
+	local model = world[eid]
+	ms(model.position.v, {0, 0, 0, 1}, "=")
+	ms(model.rotation.v, {-90, -90, 0,}, "=")
+	ms(model.scale.v, {0.2, 0.2, 0.2, 0}, "=")
+	component_util.load_mesh(model, "PVPScene/campsite-door.mesh")
+	--component_util.load_material(model, {"PVPScene/scene-mat.material"})
 end
