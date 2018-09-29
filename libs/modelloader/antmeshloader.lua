@@ -19,6 +19,11 @@ local function string_unpack(v)
 	return v
 end
 
+local function boolean_unpack(v)
+	local r = uint8_unpack(v)
+	return r ~= 0
+end
+
 local function matrix_unpack(v)	
 	local t = table.pack(string.unpack("<ffffffffffffffff", v))
 	assert(#t == 17 and t.n == 17)
@@ -219,7 +224,8 @@ return function (filename)
 						table.insert(tt, v)
 					end
 					return tt
-				end})
+				end,
+				soa 		= boolean_unpack,})
 			end
 			groupmapper.ib = function(v)
 				return struct_unpack(v, {
@@ -244,7 +250,8 @@ return function (filename)
 				result.vb = {
 					layout=assert(result.layout),
 					num_vertices=assert(result.num_vertices),
-					vbraws={assert(result.vbraw)}
+					vbraws={assert(result.vbraw)},
+					soa=false
 				}
 
 				assert(result.ib == nil)

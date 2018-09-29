@@ -146,10 +146,59 @@ struct mesh_material_data {
 	std::map<std::string, glm::vec3>	colors;		// need an ordered map
 };
 
+struct rawbuffer {
+	uint8_t *data;
+	size_t size;
+	rawbuffer()
+		: data(nullptr)
+		, size(0)
+	{}
+
+	rawbuffer(size_t s)
+		: data(new uint8_t[s])
+		, size(s)
+	{}
+
+	explicit rawbuffer(rawbuffer &&tmp)
+		: data(tmp.data)
+		, size(tmp.size)
+	{
+		tmp.data = nullptr;
+		tmp.size = 0;
+	}
+
+	rawbuffer& operator=(rawbuffer &&tmp) {
+		if (data) {
+			delete[] data;
+			data = nullptr;
+		}
+
+		data = tmp.data;
+		size = tmp.size;
+
+		tmp.data = nullptr;
+		tmp.size = 0;
+		return *this;
+
+	}
+
+	~rawbuffer() {
+		if (data) {
+			delete[]data;
+			data = nullptr;
+		}
+	}
+
+private:
+	rawbuffer(const rawbuffer &) = delete;
+	rawbuffer operator=( const rawbuffer &) = delete;
+};
+
 struct vb_info {
 	std::string layout;
 	size_t num_vertices;
-	std::vector<std::unique_ptr<uint8_t[]>>	vbraws;
+
+	std::vector<rawbuffer>	vbraws;
 	bool soa;
 
 	vb_info()

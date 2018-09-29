@@ -164,14 +164,14 @@ CopyMeshVerticesAsSOA(const aiMesh *mesh, size_t startVB, vb_info &vb) {
 
 	for (size_t ii = 0; ii < elems.size(); ++ii) {
 		const auto &e = elems[ii];
-		auto &ptr = vb.vbraws[ii];
+		auto &vbraw = vb.vbraws[ii];
 
 		auto p = GetMeshDataPtr(mesh, e, 0);
 
 		auto elemSizeInBytes = GetVertexElemSizeInBytes(e);
 		auto sizeInBytes = mesh->mNumVertices * elemSizeInBytes;
 
-		uint8_t *dstp = ptr.get() + startVB * elemSizeInBytes;
+		uint8_t *dstp = vbraw.data + startVB * elemSizeInBytes;
 		memcpy(dstp, p, sizeInBytes);
 	}
 }
@@ -179,7 +179,7 @@ CopyMeshVerticesAsSOA(const aiMesh *mesh, size_t startVB, vb_info &vb) {
 static void
 CopyMeshVerticesAsAOS(const aiMesh *mesh, size_t startVB, vb_info &vb) {
 	const size_t vertexSizeInBytes = CalcVertexSize(vb.layout);
-	uint8_t *vertices = vb.vbraws.back().get() + startVB * vertexSizeInBytes;
+	uint8_t *vertices = vb.vbraws.back().data + startVB * vertexSizeInBytes;
 
 	auto elems = AdjustLayoutElem(vb.layout);
 	for (uint32_t ii = 0; ii < mesh->mNumVertices; ++ii) {
@@ -262,10 +262,10 @@ InitVertexBuffer(vb_info &vb) {
 			const bgfx::VertexDecl decl = GenVertexDeclFromVBLayout(elems[ii]);
 			const size_t elemSizeInBytes = decl.getStride();
 
-			vb.vbraws[ii] = std::make_unique<uint8_t[]>(elemSizeInBytes * vb.num_vertices);
+			vb.vbraws[ii] = std::move(rawbuffer(elemSizeInBytes * vb.num_vertices));
 		}
 	} else {
-		vb.vbraws.push_back(std::make_unique<uint8_t[]>(CalcVertexSize(vb.layout) * vb.num_vertices));
+		vb.vbraws.push_back(std::move(rawbuffer(CalcVertexSize(vb.layout) * vb.num_vertices)));
 	}
 }
 

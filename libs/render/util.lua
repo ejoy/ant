@@ -117,9 +117,7 @@ function util.draw_primitive(vid, primgroup, mat)
 	local ib, vb = mg.ib, mg.vb
 
 	local prims = mg.prim
-
-	local numprim = prims and #prims or nil
-	if numprim == nil or numprim == 1 then
+	if prims == nil then
 		if ib then
 			bgfx.set_index_buffer(ib.handle)
 		end
@@ -129,6 +127,7 @@ function util.draw_primitive(vid, primgroup, mat)
 		
 		bgfx.submit(vid, prog, 0, false)
 	else
+		local numprim = #prims
 		for i=1, numprim do
 			local prim = prims[i]
 			if ib then

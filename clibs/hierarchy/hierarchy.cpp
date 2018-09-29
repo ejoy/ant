@@ -519,8 +519,7 @@ serialize_rawskeleton(lua_State *L, serialize_op op) {
 static int
 lhnode_save(lua_State *L) {
 	return serialize_rawskeleton(L, [](const char* filepath, struct hierarchy_tree *tree) {
-		ozz::io::File ff(filepath, "wb");
-		assert(ff.Exist(filepath));
+		ozz::io::File ff(filepath, "wb");		
 		ozz::io::OArchive oa(&ff);
 		oa << *tree->skl;
 	});

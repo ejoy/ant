@@ -256,7 +256,7 @@ init_vertex_buffer(const ozz::sample::Mesh &mesh, vb_info &vb) {
 		auto sizeInBytes = calc_size(mesh, e);
 		const auto idx = vb.vbraws.size();
 		elem_ptr_mapper[e[0]] = idx;
-		vb.vbraws.push_back(std::make_unique<uint8_t[]>(sizeInBytes));		
+		vb.vbraws.push_back(std::move(rawbuffer(sizeInBytes)));
 	}
 	
 	size_t startVB = 0;
@@ -266,7 +266,7 @@ init_vertex_buffer(const ozz::sample::Mesh &mesh, vb_info &vb) {
 		auto copy_data = [&elem_ptr_mapper, &vb](size_t startVB, char elemName, size_t elemSize, auto &srcArray) {
 			const auto idx = elem_ptr_mapper[elemName];
 			auto &ptr = vb.vbraws[idx];			
-			memcpy(ptr.get(), ozz::array_begin(srcArray), startVB * elemSize + srcArray.size() * elemSize);
+			memcpy(ptr.data, ozz::array_begin(srcArray), startVB * elemSize + srcArray.size() * elemSize);
 		};
 
 		copy_data(startVB, 'p', ozz::sample::Mesh::Part::kPositionsCpnts * sizeof(float), part.positions);		

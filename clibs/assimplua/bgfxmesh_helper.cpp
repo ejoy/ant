@@ -51,10 +51,10 @@ LoadBGFXMesh(const std::string& filePath, mesh_data &md) {
 			vb.num_vertices = numVertices;
 			const uint32_t vertexSizeInBytes = numVertices * stride;
 
-			vb.vbraws.push_back(std::make_unique<uint8_t[]>(vertexSizeInBytes));
-			bx::read(&reader, vb.vbraws.back().get(), vertexSizeInBytes);
+			vb.vbraws.push_back(std::move(rawbuffer(vertexSizeInBytes)));
+			bx::read(&reader, vb.vbraws.back().data, vertexSizeInBytes);
 		}
-								  break;
+		break;
 
 		case BGFX_CHUNK_MAGIC_IB: {
 			uint32_t numIndices;
@@ -159,18 +159,18 @@ calc_tangents(mesh_data &md) {
 		auto stride = dstdecl.getStride();
 		auto sizeInBytes = vb.num_vertices * stride;
 
-		auto buffer = std::make_unique<uint8_t[]>(sizeInBytes + vb.num_vertices * sizeof(float) * 6);	// tangent and bitangent have 6 float
+		rawbuffer buffer(sizeInBytes);	// tangent and bitangent have 6 float
 
-		bgfx::vertexConvert(dstdecl, buffer.get(), srcdecl, vb.vbraws.back().get(), uint32_t(vb.num_vertices));
+		bgfx::vertexConvert(dstdecl, buffer.data, srcdecl, vb.vbraws.back().data, uint32_t(vb.num_vertices));
 
 		auto &ib = g.ib;
 		if (ib.format == 32) {
 			std::vector<uint16_t> u16buffer(ib.num_indices);
 
 			convert_32bit_to_16bit((const uint32_t*)ib.ibraw, &u16buffer[0], uint32_t(ib.num_indices));
-			calcTangents(buffer.get(), uint32_t(vb.num_vertices), dstdecl, &u16buffer[0], uint32_t(ib.num_indices));
+			calcTangents(buffer.data, uint32_t(vb.num_vertices), dstdecl, &u16buffer[0], uint32_t(ib.num_indices));
 		} else {
-			calcTangents(buffer.get(), uint32_t(vb.num_vertices), dstdecl, (const uint16_t*)ib.ibraw, uint32_t(ib.num_indices));
+			calcTangents(buffer.data, uint32_t(vb.num_vertices), dstdecl, (const uint16_t*)ib.ibraw, uint32_t(ib.num_indices));
 		}
 
 		vb.layout = newlayout;
@@ -187,7 +187,7 @@ static void flip_uv(mesh_data &md) {
 			if (decl.has(a)) {
 				for (auto iv = 0; iv < vb.num_vertices; ++iv) {
 					float output[4];
-					bgfx::vertexUnpack(output, a, decl, vb.vbraws.back().get(), iv);
+					bgfx::vertexUnpack(output, a, decl, vb.vbraws.back().data, iv);
 
 					output[1] = -output[1];
 
@@ -195,7 +195,7 @@ static void flip_uv(mesh_data &md) {
 					bgfx::AttribType::Enum type;
 					bool normalize, asInt;
 					decl.decode(a, num, type, normalize, asInt);
-					bgfx::vertexPack(output, normalize, a, decl, vb.vbraws.back().get(), iv);
+					bgfx::vertexPack(output, normalize, a, decl, vb.vbraws.back().data, iv);
 				}
 
 			}

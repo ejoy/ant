@@ -1,3 +1,7 @@
+--luacheck: globals log
+
+local log = log and log(...) or print
+
 local bgfx = require "bgfx"
 
 local fs = require "filesystem"
@@ -6,7 +10,7 @@ local path = require "filesystem.path"
 local loader = {}
 
 local function load_from_source(filepath)
-	path.create_dirs(path.join("cache", filepath))
+	path.create_dirs(path.parent(path.join("cache", filepath)))
 	local antmeshloader = require "modelloader.antmeshloader"
 	return antmeshloader(path.remove_ext(filepath))
 end
@@ -51,7 +55,7 @@ local function create_decl(vb_layout)
 
 			return attrib
 		end
-		local attrib = get_attrib(e:sub(1, 1))
+		local attrib = get_attrib(e)
 		local num = tonumber(e:sub(2, 2))
 
 		local function get_type(v)					
@@ -73,52 +77,82 @@ local function create_decl(vb_layout)
 end
 
 local function create_vb(vb, streams)
-	local function gen_layout_vbraw_mapper(vb)
-		local elems = layout_to_elems(vb.layout)		
-		local vbraws = vb.vbraws
-		if #vbraws ~= #elems then 
-			return nil
-		end
-
-		local t = {}
-		for idx, e in ipairs(elems) do
-			t[e] = vbraws[idx]
-		end
-
-		return t
-	end
-
-	local vbmapper = gen_layout_vbraw_mapper(vb)
-
-	if streams == nil then
-		streams = {vb.layout}
-	end
-
 	local handles = {}
+	local decls = {}
 	local vb_data = {"!", "", 1, nil}
-	for _, s in ipairs(streams) do
-		local function get_stream_layout(stream)
-			local layout = vb.layout
-			local stream_layout = {}
-			for e in layout:gmatch("%w+") do
-				assert(#e == 6)
-				local attrib = e:sub(1, 1)
-				if attrib == 'c' or attrib == 't' then
-					local count = e:sub(3, 3)
-					attrib = attrib .. count
-				end
-	
-				if stream:find(attrib, 1, false) then
-					table.insert(stream_layout, e)
-				end
+
+	local function add_vb(layout, vbraw)
+		local decl, stride = create_decl(layout)
+		vb_data[2], vb_data[4] = vbraw, vb.num_vertices * stride
+
+		table.insert(decls, decl)
+		table.insert(handles, bgfx.create_vertex_buffer(vb_data, decl))
+	end
+
+	if streams then
+		local function gen_layout_vbraw_mapper(vb)
+			local elems = layout_to_elems(vb.layout)		
+			local vbraws = vb.vbraws
+			assert(#vbraws == #elems)	
+			local t = {}
+			for idx, e in ipairs(elems) do
+				t[e] = vbraws[idx]
 			end
 	
-			return table.concat(stream_layout, '|')
+			return t
 		end
 
-		local slayout = get_stream_layout(s)
-		local function gen_vbraw(slayout)
-			if vbmapper then				
+		local vbmapper = gen_layout_vbraw_mapper(vb)
+		for _, s in ipairs(streams) do
+			local function get_stream_layout(stream)
+				local layout = vb.layout
+				local stream_layout = {}
+
+				local elems = layout_to_elems(layout)
+
+				local debug_stream = ""
+
+				for m in stream:gmatch("[pnTbtcwi]%d?") do
+					debug_stream = debug_stream .. m
+
+					local function find_elem(m)
+						for e in ipairs(elems) do
+							assert(#e == 6)
+							local attrib = e:sub(1, 1)
+							if attrib == 'c' or attrib == 't' then
+								local count = e:sub(3, 3)
+								attrib = attrib .. count
+							end
+
+							if attrib == m then
+								return e
+							end
+						end		
+						return nil			
+					end
+
+					local e = find_elem(m)
+					if e then
+						table.insert(stream_layout, e)
+					else
+						error(string.format(
+							"stream elem : %s in stream : %s, not match any vertex in layout : %s", 
+							m, stream, layout))
+
+					end					
+				end
+
+				if debug_stream ~= stream then
+					log(string.format(
+						"invalid stream element defined! stream is : %s, valid stream is : %s", 
+						stream, debug_stream))
+				end
+				return table.concat(stream_layout, '|')
+			end
+	
+			local slayout = get_stream_layout(s)
+			-- should create from mesh convertor
+			local function gen_vbraw(slayout)
 				local elems = layout_to_elems(slayout)
 				local vbraw = ""
 				for e in ipairs(elems) do
@@ -126,19 +160,18 @@ local function create_vb(vb, streams)
 				end
 				return vbraw
 			end
-
-			return vb.vbraws[1]
+	
+			local vbraw = gen_vbraw(slayout)
+			add_vb(slayout, vbraw)
 		end
-
-		local vbraw = gen_vbraw(slayout)
-		
-		local decl, stride = create_decl(slayout)
-		vb_data[2], vb_data[4] = vbraw, vb.num_vertices * stride
-
-		table.insert(handles, bgfx.create_vertex_buffer(vb_data, decl))
+	else
+		local vbraws = vb.vbraws
+		assert(#vbraws == 1)
+		add_vb(vb.layout, vbraws[1])
 	end
 
 	vb.handles = handles
+	vb.decls = decls
 end
 
 local function create_ib(ib)
@@ -153,6 +186,7 @@ end
 function loader.load(filepath)
 	local config = read_config(filepath)
 	local meshgroup = load_from_source(filepath)
+	print(filepath)
 	if meshgroup then		
 		for _, g in ipairs(meshgroup.groups) do
 			create_vb(g.vb, config.stream)
