@@ -10,6 +10,7 @@ local config = {
     [[libs\animation\animation.lua]],
     [[libs\timer\timer.lua]],
     [[libs\scene\terrain\terrain.lua]],
+    [[libs\modelloader\renderworld.lua]],
 }
 
 local exepath = package.cpath:sub(1, (package.cpath:find(';') or 0)-6)

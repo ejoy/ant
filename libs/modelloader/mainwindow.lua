@@ -38,11 +38,9 @@ fs_util.write_to_file(module_description_file, [[
 modules = {
 	"modelloader.renderworld",
 	"modelloader.camera_controller",
-	"editor.ecs.editor_component",
-	--"editor.ecs.general_editor_entities",
 }
 ]])
-scene.start_new_world(input_queue, fb_width, fb_height, {module_description_file, "engine.module"})
+scene.start_new_world(input_queue, fb_width, fb_height, {module_description_file})
 
 if iup.MainLoopLevel() == 0 then
 	iup.MainLoop()

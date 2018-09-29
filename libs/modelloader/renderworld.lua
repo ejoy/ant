@@ -1,16 +1,34 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "render.math3d.math_component"
+ecs.import "render.constant_system"
+ecs.import "inputmgr.message_system"
+
+-- light entity
+ecs.import "serialize.serialize_component"
+ecs.import "render.light.light"
+
+-- enable
+ecs.import "serialize.serialize_system"
+ecs.import "render.view_system"
+ecs.import "render.entity_rendering_system"
+ecs.import "scene.hierarchy.hierarchy"
+ecs.import "scene.cull_system"
+
+ecs.import "editor.ecs.editor_component"
+ecs.import "editor.ecs.general_editor_entities"
+
 local component_util = require "render.components.util"
-local add_entity_sys = ecs.system "add_entities_system"
-add_entity_sys.singleton "math_stack"
-add_entity_sys.singleton "constant"
-add_entity_sys.depend "constant_init_sys"
-add_entity_sys.dependby "iup_message"
+local model_review_system = ecs.system "model_review_system"
+model_review_system.singleton "math_stack"
+model_review_system.singleton "constant"
+model_review_system.depend "constant_init_sys"
+model_review_system.dependby "iup_message"
 
 local lu = require "render.light.util"
 
-function add_entity_sys:init()
+function model_review_system:init()
 	local ms = self.math_stack
 	
 	local leid = lu.create_directional_light_entity(world)
@@ -39,5 +57,5 @@ function add_entity_sys:init()
 	ms(model.rotation.v, {-90, -90, 0,}, "=")
 	ms(model.scale.v, {0.2, 0.2, 0.2, 0}, "=")
 	component_util.load_mesh(model, "PVPScene/campsite-door.mesh")
-	--component_util.load_material(model, {"PVPScene/scene-mat.material"})
+	component_util.load_material(model, {"PVPScene/scene-mat.material"})
 end

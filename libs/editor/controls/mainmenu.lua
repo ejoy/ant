@@ -129,7 +129,6 @@ function openMap(path)
     recentAddAndUpdate(path)
     editor_mainwindow:new_world {
         path, 
-        "engine.module", 
         "editor.module"
     }
 end
