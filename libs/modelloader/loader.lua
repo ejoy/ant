@@ -76,6 +76,14 @@ local function create_decl(vb_layout)
 	return bgfx.vertex_decl(decl)
 end
 
+local function get_stream_elems(s)
+	local t = {}
+	for m in s:gmatch("[pnTbtcwi]%d?") do
+		table.insert(t, m)
+	end
+	return t	
+end
+
 local function create_vb(vb, streams)
 	local handles = {}
 	local decls = {}
@@ -109,14 +117,13 @@ local function create_vb(vb, streams)
 				local stream_layout = {}
 
 				local elems = layout_to_elems(layout)
-
 				local debug_stream = ""
-
-				for m in stream:gmatch("[pnTbtcwi]%d?") do
+				local streamelems = get_stream_elems(stream)
+				for _, m in ipairs(streamelems) do
 					debug_stream = debug_stream .. m
 
 					local function find_elem(m)
-						for e in ipairs(elems) do
+						for _, e in ipairs(elems) do
 							assert(#e == 6)
 							local attrib = e:sub(1, 1)
 							if attrib == 'c' or attrib == 't' then
@@ -183,58 +190,48 @@ local function create_ib(ib)
 	end
 end
 
+local function get_streams(config)
+	if config.animation.cpu_skinning then
+		local streams = {}
+		for _, s in ipairs(config.stream) do
+			local selems = get_stream_elems(s)
+			local function find_idx(name)
+				for idx, se in ipairs(selems) do
+					if se == name then
+						return idx
+					end
+				end
+
+				return nil
+			end
+			
+			for _, name in ipairs{'i', 'w'} do
+				local idx = find_idx(name)
+				table.remove(selems, idx)
+			end
+
+
+			table.insert(streams, table.concat(selems))
+		end
+
+		return streams
+	end
+
+	return config.stream
+end
+
 function loader.load(filepath)
 	local config = read_config(filepath)
 	local meshgroup = load_from_source(filepath)
 	print(filepath)
 	if meshgroup then		
 		for _, g in ipairs(meshgroup.groups) do
-			create_vb(g.vb, config.stream)
+			create_vb(g.vb, get_streams(config))
 			create_ib(g.ib)
 		end
 
 		return meshgroup
 	end
 end
-
--- function loader.load(filepath)
---     print(filepath)
---     local path = require "filesystem.path"
---     local ext = path.ext(filepath)
---     if string.lower(ext) ~= "fbx" then
---         return
---     end
-
---     local material_info, model_node = assimp.LoadFBX(filepath)
---     if not material_info or not model_node then
---         return
---     end
-
---     --PrintNodeInfo(model_node, 1)
---     --PrintMaterialInfo(material_info)
-
---     for _, v in ipairs(material_info) do
---         v.vb_raw = {}
---         v.ib_raw = {}
---         v.prim = {}
---     end
-
---     HandleModelNode(material_info, model_node)
-
---     for _, v in ipairs(material_info) do
---         --local data_string = string.pack("s", table.unpack(v.vb_raw))
---         local vdecl, stride = bgfx.vertex_decl {
---             { "POSITION", 3, "FLOAT" },
---             { "NORMAL", 3, "FLOAT", true, false},
---             { "TEXCOORD0", 3, "FLOAT"},
---         }
-
---         local vb_data = {"fffffffff", table.unpack(v.vb_raw)}
---         v.vb = bgfx.create_vertex_buffer(vb_data, vdecl)
---         v.ib = bgfx.create_index_buffer(v.ib_raw)
---     end
-
---     return {group = material_info}
--- end
 
 return loader
