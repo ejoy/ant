@@ -24,7 +24,7 @@ local function boolean_unpack(v)
 	return r ~= 0
 end
 
-local function matrix_unpack(v)	
+local function mat_unpack(v)	
 	local t = table.pack(string.unpack("<ffffffffffffffff", v))
 	assert(#t == 17 and t.n == 17)
 	t[17], t.n = nil, nil
@@ -110,12 +110,12 @@ return function (filename)
 			if k == nil then
 				break
 			end
-			assert(k)
+			
 			local unpacker = mapper[k]
 			if unpacker == nil then
 				error("not found unpacker, member is : " .. k)
 			end			
-			t[k] = mapper[k](vv)
+			t[k] = unpacker(vv)
 		end
 		return t
 	end
@@ -219,7 +219,7 @@ return function (filename)
 				primitives = function (v)
 					return array_unpack(v, {
 						bounding= bounding_unpack,
-						transform =matrix_unpack,
+						transform =mat_unpack,
 						name = string_unpack,
 						material_idx = uint_unpack,
 
