@@ -1530,7 +1530,7 @@ push_command(struct ref_stack *RS, struct lastack *LS, int index, bool *log) {
 	}
 	if (pushlog >= 0) {
 		printf("MATHLOG [push]: ");
-		lastack_dump(LS, 0);
+		lastack_dump(LS, pushlog);
 		printf("\n");
 	}
 	return 0;
