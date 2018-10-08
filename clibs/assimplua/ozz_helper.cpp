@@ -2,9 +2,9 @@
 #include "utils.h"
 
 extern "C" {
-#include <lua.h>  
-#include <lualib.h>
-#include <lauxlib.h>
+#define LUA_LIB
+#include "lua.h"
+#include "lauxlib.h"
 }
 
 // ozz
@@ -12,7 +12,7 @@ extern "C" {
 #include "ozz-animation/samples/framework/utils.h"
 
 
-static Bounding calc_bounding(ozz::sample::Mesh::Part &part) {
+static Bounding calc_bounding(const ozz::sample::Mesh::Part &part) {
 	Bounding bounding;
 
 	if (!part.positions.empty()) {
@@ -273,13 +273,12 @@ init_vertex_buffer(const ozz::sample::Mesh &mesh, const load_config &config, vb_
 		return sizeInBytes;
 	};
 
-	auto elems = AdjustLayoutElem(vb.layout);
-	std::map<char, size_t>	elem_ptr_mapper;
+	auto elems = AdjustLayoutElem(vb.layout);	
 	for (const auto &e : elems) {
 		auto sizeInBytes = calc_size(mesh, e);
-		const auto idx = vb.vbraws.size();
-		elem_ptr_mapper[e[0]] = idx;
-		vb.vbraws.push_back(std::move(rawbuffer(sizeInBytes)));
+		const std::string streamName = GenStreamNameFromElem(e);
+
+		vb.vbraws[streamName] = std::move(rawbuffer(sizeInBytes));
 	}
 	
 	size_t startVB = 0;
@@ -287,23 +286,21 @@ init_vertex_buffer(const ozz::sample::Mesh &mesh, const load_config &config, vb_
 	for (auto &part : mesh.parts) {
 		assert(!part.positions.empty());
 
-		auto copy_data = [&elem_ptr_mapper, &vb](size_t offset, char elemName, size_t elemSize, auto &srcArray) {
-			const auto idx = elem_ptr_mapper[elemName];
-			auto &ptr = vb.vbraws[idx];			
+		auto copy_data = [&vb](size_t offset, const std::string& elemName, size_t elemSize, auto &srcArray) {			
+			auto &ptr = vb.vbraws[elemName];
 			memcpy(ptr.data + offset, ozz::array_begin(srcArray), srcArray.size() * elemSize);
 		};
 
-		copy_data(startVB * ozz::sample::Mesh::Part::kPositionsCpnts * sizeof(float),	'p', sizeof(float), part.positions);		
-		copy_data(startVB * ozz::sample::Mesh::Part::kNormalsCpnts * sizeof(float),		'n', sizeof(float), part.normals);
-		copy_data(startVB * ozz::sample::Mesh::Part::kTangentsCpnts * sizeof(float),	'T', sizeof(float), part.tangents);
-		copy_data(startVB * ozz::sample::Mesh::Part::kColorsCpnts * sizeof(float),		'c', sizeof(float), part.colors);
-		copy_data(startVB * ozz::sample::Mesh::Part::kUVsCpnts * sizeof(float),			't', sizeof(float), part.uvs);
+		copy_data(startVB * ozz::sample::Mesh::Part::kPositionsCpnts * sizeof(float),	"p", sizeof(float), part.positions);		
+		copy_data(startVB * ozz::sample::Mesh::Part::kNormalsCpnts * sizeof(float),		"n", sizeof(float), part.normals);
+		copy_data(startVB * ozz::sample::Mesh::Part::kTangentsCpnts * sizeof(float),	"T", sizeof(float), part.tangents);
+		copy_data(startVB * ozz::sample::Mesh::Part::kColorsCpnts * sizeof(float),		"c0", sizeof(float), part.colors);
+		copy_data(startVB * ozz::sample::Mesh::Part::kUVsCpnts * sizeof(float),			"t0", sizeof(float), part.uvs);
 
 		auto inf = part.influences_count();
 		
-		if (inf > 0) {
-			const auto idx = elem_ptr_mapper['i'];
-			auto &ptr = vb.vbraws[idx];
+		if (inf > 0) {			
+			auto &ptr = vb.vbraws["i"];
 			uint8_t *data = ptr.data + startVB * maxinf;
 			for (size_t iV = 0; iV < part.vertex_count(); ++iV) {
 				for (size_t iInf = 0; iInf < inf; ++iInf) {
@@ -320,9 +317,8 @@ init_vertex_buffer(const ozz::sample::Mesh &mesh, const load_config &config, vb_
 			}
 		}
 			
-		if (inf > 1) {
-			const auto idx = elem_ptr_mapper['w'];
-			auto &ptr = vb.vbraws[idx];
+		if (inf > 1) {			
+			auto &ptr = vb.vbraws["w"];
 
 			const size_t weight_inf = inf - 1;
 			const size_t max_weight_inf = maxinf - 1;
@@ -399,4 +395,161 @@ convertOZZ(lua_State *L, const std::string &srcpath, const std::string &outputfi
 		return false;
 	}
 	return true;
+}
+
+static int
+lnew_sample_mesh(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TSTRING);
+	const char* ozzmeshfilename = lua_tostring(L, 1);
+
+	ozz::sample::Mesh mesh;
+	if (!ozz::sample::LoadMesh(ozzmeshfilename, &mesh)) {
+		luaL_error(L, "load ozz mesh failed, filename : %s", ozzmeshfilename);
+		return 0;
+	}
+
+	lua_newtable(L);		// mesh
+	luaL_getmetatable(L, "SAMPLE_MESH");
+	lua_setmetatable(L, -2);
+
+	lua_pushinteger(L, mesh.vertex_count());
+	lua_setfield(L, -2, "vertex_count");
+
+	// mesh.parts
+	if (!mesh.parts.empty()) {
+		Bounding bounding;
+		lua_createtable(L, 0, 0);
+
+		for (size_t ipart = 0; ipart < mesh.parts.size(); ++ipart) {
+			const auto &part = mesh.parts[ipart];
+			lua_newtable(L);	// part begin
+
+			auto push_attrib = [L](auto elem_count, auto elemtype, auto elemsize, auto name, const auto& srcarray) {
+				lua_createtable(L, 0, 3);
+				lua_pushlstring(L, (const char*)ozz::array_begin(srcarray), srcarray.size() * elemsize);
+				lua_setfield(L, -2, "data");
+
+				lua_pushinteger(L, elem_count);
+				lua_setfield(L, -2, "count");
+
+				lua_pushstring(L, elemtype);
+				lua_setfield(L, -2, "type");
+
+				lua_setfield(L, -2, name);	// set to part table
+			};
+
+			push_attrib(ozz::sample::Mesh::Part::kPositionsCpnts, "f", sizeof(float), "position", part.positions);
+
+			push_attrib(ozz::sample::Mesh::Part::kNormalsCpnts, "f", sizeof(float), "normal", part.normals);
+			push_attrib(ozz::sample::Mesh::Part::kTangentsCpnts, "f", sizeof(float), "tangent", part.tangents);
+
+			push_attrib(ozz::sample::Mesh::Part::kColorsCpnts, "u", sizeof(uint8_t), "color", part.colors);
+			push_attrib(ozz::sample::Mesh::Part::kUVsCpnts, "f", sizeof(float), "texcoord", part.uvs);
+
+			auto inf = part.influences_count();
+			if (inf > 0) {
+				push_attrib(inf, "S", sizeof(uint16_t), "indices", part.joint_indices);
+			}
+
+			if (inf > 1) {
+				push_attrib(inf - 1, "f", sizeof(float), "weights", part.joint_weights);
+			}
+
+			lua_seti(L, -2, ipart + 1);	// set to mesh table
+
+
+			Bounding partBounding = calc_bounding(part);
+			bounding.Merge(partBounding);
+		}
+
+		lua_setfield(L, -2, "parts");
+
+		// add bounding
+		{
+			lua_createtable(L, 0, 2);
+
+			auto add_vec3 = [L](auto v, auto name) {
+				lua_createtable(L, 3, 0);
+				for (auto ii = 0; ii < 3; ++ii) {
+					lua_pushnumber(L, v[ii]);
+					lua_seti(L, -2, ii + 1);
+				}
+				lua_setfield(L, -2, name);
+			};
+
+			lua_createtable(L, 0, 2);	// box	
+			add_vec3(bounding.aabb.min, "min");
+			add_vec3(bounding.aabb.max, "max");			
+			lua_setfield(L, -2, "aabb");
+
+			lua_createtable(L, 0, 2);	//sphere
+			lua_pushnumber(L, bounding.sphere.radius);
+			lua_setfield(L, -2, "radius");
+			add_vec3(bounding.sphere.center, "center");
+			lua_setfield(L, -2, "sphere");
+
+			lua_setfield(L, -2, "bounding");
+		}
+	}
+
+	// mesh.indices
+	if (!mesh.triangle_indices.empty()) {
+		lua_createtable(L, 0, 2);
+		lua_pushlstring(L, (const char*)ozz::array_begin(mesh.triangle_indices), mesh.triangle_indices.size() * sizeof(uint16_t));
+		lua_setfield(L, -2, "data");
+		
+		lua_pushinteger(L, sizeof(uint16_t));
+		lua_setfield(L, -2, "format");
+
+		lua_setfield(L, -2, "indices");	// set mesh.indices = indices
+	}
+
+	// mesh.joint_remaps
+	if (!mesh.joint_remaps.empty()) {
+		lua_createtable(L, 0, 2);
+		lua_pushlstring(L, (const char*)ozz::array_begin(mesh.joint_remaps), mesh.joint_remaps.size() * sizeof(uint16_t));
+		lua_setfield(L, -2, "data");
+
+		lua_pushinteger(L, sizeof(uint16_t));
+		lua_setfield(L, -2, "format");
+
+		lua_setfield(L, -2, "joint_remaps");
+	}
+
+	// mesh.inverse_bind_poses
+	if (!mesh.inverse_bind_poses.empty()) {
+		lua_createtable(L, int(mesh.inverse_bind_poses.size() * 16), 0);
+
+		uint32_t idx = 0;
+		for (const auto &pose : mesh.inverse_bind_poses) {
+			for (uint32_t iCol = 0; iCol < 4; ++iCol) {
+				for (uint32_t iRow = 0; iRow < 4; ++iRow) {
+					lua_pushnumber(L, pose.cols[iCol].m128_f32[iRow]);
+					lua_seti(L, -2, idx + iCol * 4 + iRow + 1);
+				}
+			}
+			idx += 16;
+		}
+
+		lua_setfield(L, -2, "inverse_bind_poses");
+	}
+
+	return 1;
+}
+
+extern "C" {
+LUAMOD_API int
+luaopen_assimplua_ozzmesh(lua_State *L) {
+	luaL_newmetatable(L, "SAMPLE_MESH");
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");	// ANIMATION_NODE.__index = ANIMATION_NODE
+
+	luaL_Reg l[] = {
+		{ "new_ozzmesh", lnew_sample_mesh},	
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, l);
+
+	return 1;
+}
 }

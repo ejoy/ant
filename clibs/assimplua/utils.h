@@ -26,6 +26,12 @@ GenVertexDeclFromVBLayout(const std::string &vblayout);
 std::string
 GenVBLayoutFromDecl(const bgfx::VertexDecl &decl);
 
+std::string
+GenStreamNameFromDecl(const bgfx::VertexDecl &decl);
+
+std::string
+GenStreamNameFromElem(const std::string &elem);
+
 bgfx::Attrib::Enum
 GetAttribFromLayoutElem(const std::string &elem);
 

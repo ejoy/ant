@@ -165,9 +165,11 @@ WriteMeshData(const mesh_data &md, const std::string &srcfile, const std::string
 			WriteElemValue(off, "num_vertices", vb.num_vertices);
 			WriteElemValue(off, "vbraws"); {
 				// make as struct NOT array, so only call WriteSeparator one time
-				for (uint8_t ii = 0; ii < vb.vbraws.size(); ++ii) {
-					const auto &vbraw = vb.vbraws[ii];
-					WriteElemValue(off, std::to_string(ii), vbraw.data, vbraw.size);
+				const auto &vbraws = vb.vbraws;
+				for (auto it = vbraws.begin(); it != vbraws.end(); ++ it){
+					const auto &k = it->first;
+					const auto &v = it->second;
+					WriteElemValue(off, k, v.data, v.size);
 				}
 				WriteSeparator(off);
 			}

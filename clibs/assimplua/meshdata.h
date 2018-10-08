@@ -198,7 +198,7 @@ struct vb_info {
 	std::string layout;
 	size_t num_vertices;
 
-	std::vector<rawbuffer>	vbraws;
+	std::map<std::string, rawbuffer>	vbraws;
 	bool soa;
 
 	vb_info()

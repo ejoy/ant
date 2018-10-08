@@ -211,19 +211,7 @@ return function (filename)
 				num_vertices= uint_unpack,
 				vbraws		= function (v)
 					local mapper = setmetatable({}, {__index=function (t, key)return string_unpack end})					
-					local t = struct_unpack(v, mapper)					
-					local sorted_t = {}
-					for k in pairs(t) do
-						table.insert(sorted_t, k)
-					end
-					assert(#sorted_t ~= 0)
-					table.sort(sorted_t)
-					local tt = {}
-					for _, k in ipairs(sorted_t) do
-						local v = t[k]
-						table.insert(tt, v)
-					end
-					return tt
+					return struct_unpack(v, mapper)
 				end,
 				soa 		= boolean_unpack,})
 			end

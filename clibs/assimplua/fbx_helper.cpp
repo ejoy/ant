@@ -164,7 +164,11 @@ CopyMeshVerticesAsSOA(const aiMesh *mesh, size_t startVB, vb_info &vb) {
 
 	for (size_t ii = 0; ii < elems.size(); ++ii) {
 		const auto &e = elems[ii];
-		auto &vbraw = vb.vbraws[ii];
+
+		const std::string streamName = GenStreamNameFromElem(e);
+		
+		assert(vb.vbraws.find(streamName) != vb.vbraws.end());
+		auto &vbraw = vb.vbraws[streamName];
 
 		auto p = GetMeshDataPtr(mesh, e, 0);
 
@@ -179,7 +183,9 @@ CopyMeshVerticesAsSOA(const aiMesh *mesh, size_t startVB, vb_info &vb) {
 static void
 CopyMeshVerticesAsAOS(const aiMesh *mesh, size_t startVB, vb_info &vb) {
 	const size_t vertexSizeInBytes = CalcVertexSize(vb.layout);
-	uint8_t *vertices = vb.vbraws.back().data + startVB * vertexSizeInBytes;
+	assert(vb.vbraws.size() == 1);
+	auto &buffer = vb.vbraws.begin()->second;
+	uint8_t *vertices = buffer.data + startVB * vertexSizeInBytes;
 
 	auto elems = AdjustLayoutElem(vb.layout);
 	for (uint32_t ii = 0; ii < mesh->mNumVertices; ++ii) {
@@ -254,18 +260,16 @@ InitVertexBuffer(vb_info &vb) {
 	assert(vb.vbraws.empty());
 
 	if (vb.soa) {
-		const auto elems = AdjustLayoutElem(vb.layout);
-		vb.vbraws.resize(elems.size());
-		for (size_t ii = 0; ii < elems.size(); ++ii) {
+		const auto elems = AdjustLayoutElem(vb.layout);		
+		for (const auto &e : elems){
+			const size_t elemSizeInBytes = GetVertexElemSizeInBytes(e);
+			const std::string streamName = GenStreamNameFromElem(e);
 
-			// only add one elem, for using bgfx::VertexDecl::getStride method to calculate one elem size in bytes
-			const bgfx::VertexDecl decl = GenVertexDeclFromVBLayout(elems[ii]);
-			const size_t elemSizeInBytes = decl.getStride();
-
-			vb.vbraws[ii] = std::move(rawbuffer(elemSizeInBytes * vb.num_vertices));
+			vb.vbraws[streamName] = std::move(rawbuffer(elemSizeInBytes * vb.num_vertices));
 		}
 	} else {
-		vb.vbraws.push_back(std::move(rawbuffer(CalcVertexSize(vb.layout) * vb.num_vertices)));
+		const std::string streamName = GenStreamNameFromDecl(GenVertexDeclFromVBLayout(vb.layout));
+		vb.vbraws[streamName] = std::move(rawbuffer(CalcVertexSize(vb.layout) * vb.num_vertices));
 	}
 }
 

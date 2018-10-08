@@ -51,8 +51,11 @@ LoadBGFXMesh(const std::string& filePath, mesh_data &md) {
 			vb.num_vertices = numVertices;
 			const uint32_t vertexSizeInBytes = numVertices * stride;
 
-			vb.vbraws.push_back(std::move(rawbuffer(vertexSizeInBytes)));
-			bx::read(&reader, vb.vbraws.back().data, vertexSizeInBytes);
+			auto streamName = GenStreamNameFromDecl(decl);
+
+			vb.vbraws[streamName] = rawbuffer(vertexSizeInBytes);
+			const auto &buffer = vb.vbraws[streamName];
+			bx::read(&reader, buffer.data, vertexSizeInBytes);
 		}
 		break;
 
@@ -161,7 +164,9 @@ calc_tangents(mesh_data &md) {
 
 		rawbuffer buffer(sizeInBytes);	// tangent and bitangent have 6 float
 
-		bgfx::vertexConvert(dstdecl, buffer.data, srcdecl, vb.vbraws.back().data, uint32_t(vb.num_vertices));
+		assert(vb.vbraws.size() == 1);
+		auto &oldbuffer = vb.vbraws.cbegin()->second;
+		bgfx::vertexConvert(dstdecl, buffer.data, srcdecl, oldbuffer.data, uint32_t(vb.num_vertices));
 
 		auto &ib = g.ib;
 		if (ib.format == 32) {
@@ -174,7 +179,7 @@ calc_tangents(mesh_data &md) {
 		}
 
 		vb.layout = newlayout;
-		vb.vbraws.back() = std::move(buffer);
+		vb.vbraws[vb.vbraws.cbegin()->first] = std::move(buffer);
 	}
 };
 
@@ -182,12 +187,15 @@ static void flip_uv(mesh_data &md) {
 	for (auto &g : md.groups) {
 		auto &vb = g.vb;
 		auto decl = GenVertexDeclFromVBLayout(vb.layout);
+		assert(vb.vbraws.size() == 1);
+
 		for (auto ii = 0; ii < 8; ++ii) {
 			bgfx::Attrib::Enum a = bgfx::Attrib::Enum(bgfx::Attrib::TexCoord0 + ii);
 			if (decl.has(a)) {
 				for (auto iv = 0; iv < vb.num_vertices; ++iv) {
 					float output[4];
-					bgfx::vertexUnpack(output, a, decl, vb.vbraws.back().data, iv);
+					const auto &buf = vb.vbraws.cbegin()->second;
+					bgfx::vertexUnpack(output, a, decl, buf.data, iv);
 
 					output[1] = -output[1];
 
@@ -195,7 +203,7 @@ static void flip_uv(mesh_data &md) {
 					bgfx::AttribType::Enum type;
 					bool normalize, asInt;
 					decl.decode(a, num, type, normalize, asInt);
-					bgfx::vertexPack(output, normalize, a, decl, vb.vbraws.back().data, iv);
+					bgfx::vertexPack(output, normalize, a, decl, buf.data, iv);
 				}
 
 			}

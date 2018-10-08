@@ -134,6 +134,39 @@ GenVBLayoutFromDecl(const bgfx::VertexDecl &decl) {
 	return vblayout;
 };
 
+
+std::string GenStreamNameFromDecl(const bgfx::VertexDecl &decl) {
+	const char* short_names[] = {
+		"p", "n", "T", "b",
+		"c0", "c1", "c2", "c3",
+		"i", "w",
+		"t0", "t1", "t2", "t3",
+		"t4", "t5", "t6", "t7",
+	};
+	std::string streamName;
+	for (uint32_t ii = bgfx::Attrib::Position; ii < bgfx::Attrib::Count; ++ii) {
+		auto attrib = bgfx::Attrib::Enum(ii);
+		if (decl.has(attrib)) {
+			auto name = short_names[ii];
+			streamName += name;
+		}
+	}
+
+	return streamName;
+}
+
+
+std::string GenStreamNameFromElem(const std::string &elem){
+	std::string ss;
+	ss += elem[0];
+
+	if (elem[0] == 't' || elem[2] == 'c') {
+		ss += elem[2];
+	}
+
+	return ss;
+}
+
 size_t
 GetVertexElemSizeInBytes(const std::string &elem) {
 	auto decl = GenVertexDeclFromVBLayout(elem);

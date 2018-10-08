@@ -103,7 +103,7 @@ local function create_vb(vb, streams)
 			local vbraws = vb.vbraws
 			assert(#vbraws == #elems)	
 			local t = {}
-			for idx, e in ipairs(elems) do
+			for idx, e in ipairs(elems) do				
 				t[e] = vbraws[idx]
 			end
 	
@@ -111,6 +111,35 @@ local function create_vb(vb, streams)
 		end
 
 		local vbmapper = gen_layout_vbraw_mapper(vb)
+		local function check_valid(vbmapper)
+			local function elem_size(elem)
+				assert(#elem == 6)				
+				local count = elem:sub(2, 2)
+				local internal_type = elem:sub(6, 6)
+
+				local function get_internal_type_size(type)
+					local typesize = {
+						['f'] = 4,
+						['i'] = 4,
+						['u'] = 1,
+					}
+
+					local size = typesize[type]
+					assert(size, "not support type")
+					return size
+				end
+
+				return get_internal_type_size(internal_type) * count
+			end
+			
+			for k, v in pairs(vbmapper) do
+				local attrib = k:sub(1, 1)
+				if attrib ~= "w" then
+					assert(vb.num_vertices * elem_size(k) == #v)
+				end
+			end
+		end
+		check_valid(vbmapper)
 		for _, s in ipairs(streams) do
 			local function get_stream_layout(stream)
 				local layout = vb.layout
@@ -162,8 +191,9 @@ local function create_vb(vb, streams)
 			local function gen_vbraw(slayout)
 				local elems = layout_to_elems(slayout)
 				local vbraw = ""
-				for e in ipairs(elems) do
-					vbraw = vbraw .. vbmapper[e]
+				for _, e in ipairs(elems) do
+					local v = vbmapper[e]					
+					vbraw = vbraw .. v
 				end
 				return vbraw
 			end
@@ -207,11 +237,14 @@ local function get_streams(config)
 			
 			for _, name in ipairs{'i', 'w'} do
 				local idx = find_idx(name)
-				table.remove(selems, idx)
+				if idx then
+					table.remove(selems, idx)
+				end
 			end
 
-
-			table.insert(streams, table.concat(selems))
+			if next(selems) then
+				table.insert(streams, table.concat(selems))
+			end
 		end
 
 		return streams
