@@ -15,7 +15,8 @@ local fu = require "filesystem.util"
 
 local function create_sample_entity(skepath, anipath, meshpath)
 	local eid = world:new_entity("position", "scale", "rotation",
-	"skeleton", "animation", "mesh", "material",
+	"skeleton", "animation", "skinning_mesh", 
+	"mesh", "material",
 	"name", "can_render")
 
 	local e = world[eid]
