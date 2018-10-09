@@ -415,6 +415,9 @@ lnew_sample_mesh(lua_State *L) {
 	lua_pushinteger(L, mesh.vertex_count());
 	lua_setfield(L, -2, "vertex_count");
 
+	lua_pushinteger(L, mesh.max_influences_count());
+	lua_setfield(L, -2, "max_influences_count");
+
 	// mesh.parts
 	if (!mesh.parts.empty()) {
 		Bounding bounding;
@@ -500,6 +503,9 @@ lnew_sample_mesh(lua_State *L) {
 		
 		lua_pushinteger(L, sizeof(uint16_t));
 		lua_setfield(L, -2, "format");
+
+		lua_pushinteger(L, mesh.triangle_indices.size());
+		lua_setfield(L, -2, "num_indices");
 
 		lua_setfield(L, -2, "indices");	// set mesh.indices = indices
 	}

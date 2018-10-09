@@ -28,7 +28,7 @@ local function mat_pack(v)
 	return string.pack(fmt, table.unpack(v))
 end
 
-return function(filename, mode)
+return function(meshdata, filename, mode)
 	local ff = io.open(filename, mode)
 	if ff == nil then
 		error(string.format("filename open file, filename : %s, mode : %s", filename, mode))
@@ -113,15 +113,15 @@ return function(filename, mode)
 		write_separator()
 	end
 
-	local function write_bounding(v)
-			write_struct(v, {
-			aabb = function (v) 
-				write_struct(v, {
+	local function write_bounding(k, v)
+			write_struct(k, v, {
+			aabb = function (k, v) 
+				write_struct(k, v, {
 					min = write_v3,
 					max = write_v3,
 				})end,			
-			sphere = function (v)
-				return write_struct(v, {
+			sphere = function (k, v)
+				return write_struct(k, v, {
 					center = write_v3,
 					radius = write_float,
 				})
@@ -129,7 +129,7 @@ return function(filename, mode)
 			})
 	end	
 
-	return write_struct(nil, nil, {
+	return write_struct(nil, meshdata, {
 		srcfile = write_string,
 		bounding = write_bounding,
 
