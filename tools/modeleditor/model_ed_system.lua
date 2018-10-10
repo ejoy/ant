@@ -26,6 +26,9 @@ local function create_sample_entity(skepath, anipath, meshpath)
 	comp_util.load_skeleton(e, skepath)
 	comp_util.load_mesh(e, meshpath)
 
+	local skehandle = e.skeleton.assetinfo.handle
+	e.animation.sampling_cache = comp_util.new_sampling_cache(#skehandle)
+
 	local smaplemaerial = "mem://sample.material"
 	fu.write_to_file(smaplemaerial, [[
 		shader = {

@@ -625,6 +625,8 @@ luaopen_hierarchy_animation(lua_State *L) {
 		{ "new_layer", lnew_layer },
 		{ "motion", lmotion},
 		{ "new_ani", lnew_animation},
+		{ "new_ozzmesh", lnew_ozzmesh},
+		{ "new_sampling", lnew_sampling},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

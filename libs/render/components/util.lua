@@ -27,6 +27,11 @@ function util.load_animation(entity, respath, param)
 	load_res(entity.animation, respath, param, "load.animation")
 end
 
+function util.new_sampling_cache(num_joints)
+	local animodule = require "hierarchy.animation"		
+	return animodule.new_sampling(num_joints)
+end
+
 function util.load_mesh(entity, respath, param)
 	load_res(entity.mesh, respath, param, "load.mesh")
 end

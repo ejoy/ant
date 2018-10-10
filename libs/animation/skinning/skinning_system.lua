@@ -34,7 +34,7 @@ function skinning_sys:update()
 
 		-- update mesh dynamic buffer
 		assert(1 == #mesh.groups)
-		local g = mesh.groups[1]				
+		local g = mesh.groups[1]
 		local vb = g.vb
 		assert(#vb.handles == 1)
 		local db = sm:buffer("dynamic")
