@@ -15,7 +15,7 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 
-#if BGFX_API_VERSION != 86
+#if BGFX_API_VERSION != 87
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -749,9 +749,12 @@ lgetStats(lua_State *L) {
 		break;
 	case 'c':	// draw calls
 		PUSHSTAT(numDraw);
+		PUSHSTAT(numBlit);
 		PUSHSTAT(numCompute);
 		PUSHSTAT(maxGpuLatency);
-#define PUSHPRIM(v,name) if (stat->numPrims[v] > 0) { lua_pushinteger(L, stat->numPrims[v]); lua_setfield(L, 2, name); }
+		break;
+	case 'p':	// numPrims
+#define PUSHPRIM(v,name) lua_pushinteger(L, stat->numPrims[v]); lua_setfield(L, 2, name)
 		PUSHPRIM(BGFX_TOPOLOGY_TRI_LIST, "numTriList");
 		PUSHPRIM(BGFX_TOPOLOGY_TRI_STRIP, "numTriStrip");
 		PUSHPRIM(BGFX_TOPOLOGY_LINE_LIST, "numLineList");
