@@ -18,6 +18,8 @@ local skinning_mesh = ecs.component "skinning_mesh" {
 local skinning_sys = ecs.system "skinning_system"
 skinning_sys.singleton "math_stack"
 
+skinning_sys.depend "animation"
+
 function skinning_sys:update()
 	for _, eid in world:each("skinning_mesh") do
 		local e = world[eid]
@@ -28,25 +30,15 @@ function skinning_sys:update()
 		local ani = assert(e.animation).assetinfo.handle
 
 		-- update data include : position, normal, tangent
-		local updatedata = animodule.skinning(sm, ani, ske)
+		animodule.skinning(sm, ske, ani)
 
 		-- update mesh dynamic buffer
-		assert(#updatedata == #mesh.groups)
-		for idx, g in ipairs(mesh.groups) do
-			local ud = updatedata[ud]
-			local vb = g.vb
-			assert(#vb.handles == #ud.vb)
-			for ih, h in ipairs(vb.handles) do
-				local info = ud.vb[ih]
-				bgfx.update(h, info.start, info.data)
-			end
-
-			local ib = g.ib
-			if ib then
-				local info = ud.ib
-				bgfx.update(ib.handle, info.start, info.data)
-			end
-			
-		end
+		assert(1 == #mesh.groups)
+		local g = mesh.groups[1]				
+		local vb = g.vb
+		assert(#vb.handles == 1)
+		local db = sm:buffer("dynamic")
+		local h = vb.handles[1]
+		bgfx.update(h, 0, db)
 	end
 end
