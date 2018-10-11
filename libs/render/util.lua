@@ -1,8 +1,7 @@
+-- luacheck: globals log
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
-local cu = require "render.components.util"
-local mu = require "math.util"
 local shadermgr = require "render.resources.shader_mgr"
 
 local util = {}
