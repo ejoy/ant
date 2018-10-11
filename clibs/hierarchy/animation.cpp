@@ -136,14 +136,14 @@ llayout_ozzmesh(lua_State *L) {
 		if (!part.normals.empty()) {
 			std::string normal(deflayout);
 			normal[0] = 'n';
-			normal[2] = '0' + ozz::sample::Mesh::Part::kNormalsCpnts;
+			normal[1] = '0' + ozz::sample::Mesh::Part::kNormalsCpnts;
 			layout += "|" + normal;
 		}
 
 		if (!part.tangents.empty()) {
 			std::string tangent(deflayout);
 			tangent[0] = 'T';
-			tangent[2] = '0' + ozz::sample::Mesh::Part::kTangentsCpnts;
+			tangent[1] = '0' + ozz::sample::Mesh::Part::kTangentsCpnts;
 			layout += "|" + tangent;
 		}
 
@@ -584,10 +584,10 @@ lbuffer_ozzmesh(lua_State *L) {
 
 	size_t vertex_stride = 0;
 	uint8_t * buffer = nullptr;
-	if (strcmp(type, "dynamic")) {
+	if (strcmp(type, "dynamic") == 0) {
 		buffer = om->dynamic_buffer;
 		vertex_stride = dynamic_vertex_elem_stride(om);
-	} else if (strcmp(type, "static")) {
+	} else if (strcmp(type, "static") == 0) {
 		buffer = om->static_buffer;
 		vertex_stride = static_vertex_elem_stride(om);
 	} else {

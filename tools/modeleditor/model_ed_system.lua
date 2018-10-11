@@ -39,9 +39,17 @@ local function load_mesh_assetinfo(skinning_mesh_comp)
 		end
 	end
 
-	local idx_buffer, ib_size = skinning_mesh:index_buffer()
-	local ib_data = {idx_buffer, ib_size}
-	local ib_handle = bgfx.create_index_buffer(ib_data)
+	local function create_idx_buffer()
+		local idx_buffer, ib_size = skinning_mesh:index_buffer()	
+		if idx_buffer then			
+			return bgfx.create_index_buffer({idx_buffer, ib_size})
+		end
+
+		return nil
+	end
+
+	local ib_handle = create_idx_buffer()
+
 	return {
 		handle = {
 			groups = {

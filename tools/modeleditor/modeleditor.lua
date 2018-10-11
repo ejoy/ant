@@ -6,6 +6,10 @@ dofile "libs/init.lua"
 local rhwi = require "render.hardware_interface"
 local su = require "scene.util"
 
+
+local inputmgr = require "inputmgr"
+local mapiup = require "inputmgr.mapiup"
+
 local fbw, fbh = 800, 600
 
 local canvas = iup.canvas {
@@ -157,7 +161,10 @@ dlg.usersize = nil
 --print_children(dlg)
 
 rhwi.init(iup.GetAttributeData(canvas, "HWND"), fbw, fbh, false)
-local world = su.start_new_world(nil, fbw, fbh, {
+local iq = inputmgr.queue(mapiup)
+local eu = require "editor.util"
+eu.regitster_iup(iq, canvas)
+local world = su.start_new_world(iq, fbw, fbh, {
 	"engine.module", "tools/modeleditor/model_editor.module",
 })
 
