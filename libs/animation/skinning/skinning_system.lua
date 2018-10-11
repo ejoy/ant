@@ -22,23 +22,22 @@ skinning_sys.depend "animation_system"
 
 function skinning_sys:update()
 	for _, eid in world:each("skinning_mesh") do
-		-- local e = world[eid]
-		-- local mesh = assert(e.mesh).assetinfo.handle
+		local e = world[eid]
+		local mesh = assert(e.mesh).assetinfo.handle
 
-		-- local sm = assert(e.skinning_mesh).assetinfo.handle
-		-- local ske = assert(e.skeleton).assetinfo.handle
-		-- local ani = assert(e.animation).assetinfo.handle
+		local sm = assert(e.skinning_mesh).assetinfo.handle
+		local ske = assert(e.skeleton).assetinfo.handle
+		local ani = assert(e.animation).assetinfo.handle
 
-		-- -- update data include : position, normal, tangent
-		-- animodule.skinning(sm, ske, ani)
+		-- update data include : position, normal, tangent
+		animodule.skinning(sm, ske, ani)
 
-		-- -- update mesh dynamic buffer
-		-- assert(1 == #mesh.groups)
-		-- local g = mesh.groups[1]
-		-- local vb = g.vb
-		-- assert(#vb.handles == 1)
-		-- local db = sm:buffer("dynamic")
-		-- local h = vb.handles[1]
-		-- bgfx.update(h, 0, db)
+		-- update mesh dynamic buffer
+		assert(1 == #mesh.groups)
+		local g = mesh.groups[1]
+		local vb = g.vb		
+		local buffer, size = sm:buffer("dynamic")
+		local h = vb.handles[1]
+		bgfx.update(h, 0, {"!", buffer, size})
 	end
 end

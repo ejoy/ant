@@ -57,7 +57,7 @@ get_tree(lua_State *L, int index){
 static int
 lbuilddata_len(lua_State *L){
 	struct hierarchy_build_data* buildata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
-	lua_pushinteger(L, buildata->skeleton->bind_pose().count());
+	lua_pushinteger(L, buildata->skeleton->num_joints());
 	return 1;
 }
 

@@ -671,6 +671,7 @@ luaopen_hierarchy_animation(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "blend", lblend },
 		{ "additive", ladditive},
+		{ "skinning", lskinning},
 		{ "new_layer", lnew_layer },
 		{ "motion", lmotion},
 		{ "new_ani", lnew_animation},

@@ -43,14 +43,14 @@ local ani_module = require "hierarchy.animation"
 
 function anisystem:update()
 	for _, eid in world:each("animation") do
-		-- local e = world[eid]
-		-- local skecomp = assert(e.skeleton)
-		-- local ske = assert(skecomp.assetinfo).handle
+		local e = world[eid]
+		local skecomp = assert(e.skeleton)
+		local ske = assert(skecomp.assetinfo).handle
 
-		-- local anicomp = assert(e.animation)
-		-- local ani = assert(anicomp.assetinfo).handle
+		local anicomp = assert(e.animation)
+		local ani = assert(anicomp.assetinfo).handle
 
-		-- ani_module.motion(ske, ani, anicomp.sampling_cache, anicomp.ratio)
+		ani_module.motion(ske, ani, anicomp.sampling_cache, anicomp.ratio)
 	end
 end
 
