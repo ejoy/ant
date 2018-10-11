@@ -10,8 +10,7 @@ end
 -- center : world space point
 -- radius : logic unit(1 for 1cm)
 function util.draw_sphere(center, radius, color, transform, mode, segments)
-	slices = slices or 10
-	stacks = stacks or 10
+	segments = segments or 2
 end
 
 -- width, height, depth : logic unit
