@@ -17,6 +17,7 @@ local support_list = {
 	"ske",
 	"ani",	
 	"lk",
+	"ozz",
 }
 
 -- luacheck: ignore param

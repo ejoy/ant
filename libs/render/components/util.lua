@@ -27,9 +27,13 @@ function util.load_animation(entity, respath, param)
 	load_res(entity.animation, respath, param, "load.animation")
 end
 
+function util.load_skinning_mesh(entity, respath, param)
+	load_res(entity.skinning_mesh, respath, param)
+end
+
 function util.new_sampling_cache(num_joints)
 	local animodule = require "hierarchy.animation"		
-	return animodule.new_sampling(num_joints)
+	return animodule.new_sampling_cache(num_joints)
 end
 
 function util.load_mesh(entity, respath, param)

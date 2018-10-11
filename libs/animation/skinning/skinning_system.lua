@@ -18,7 +18,7 @@ local skinning_mesh = ecs.component "skinning_mesh" {
 local skinning_sys = ecs.system "skinning_system"
 skinning_sys.singleton "math_stack"
 
-skinning_sys.depend "animation"
+skinning_sys.depend "animation_system"
 
 function skinning_sys:update()
 	for _, eid in world:each("skinning_mesh") do

@@ -43,4 +43,46 @@ function util.default_config()
 	}
 end
 
+-- need move to bgfx c module
+function util.create_decl(vb_layout)
+	local decl = {}
+	for e in vb_layout:gmatch("%w+") do 
+		assert(#e == 6)
+		local function get_attrib(e)
+			local t = {	
+				p = "POSITION",	n = "NORMAL", T = "TANGENT",	b = "BITANGENT",
+				i = "INDICES",	w = "WEIGHT",
+				c = "COLOR", t = "TEXCOORD",
+			}
+			local a = e:sub(1, 1)
+			local attrib = assert(t[a])
+			if attrib == "COLOR" or attrib == "TEXCOORD" then
+				local channel = e:sub(3, 3)
+				return attrib .. channel
+			end
+
+			return attrib
+		end
+		local attrib = get_attrib(e)
+		local num = tonumber(e:sub(2, 2))
+
+		local function get_type(v)					
+			local t = {	
+				u = "UINT8", U = "UINT10", i = "INT16",
+				h = "HALF",	f = "FLOAT",
+			}
+			return assert(t[v])
+		end
+
+		local normalize = e:sub(4, 4) == "n"
+		local asint= e:sub(5, 5) == "i"
+		local type = get_type(e:sub(6, 6))
+
+		table.insert(decl, {attrib, num, type, normalize, asint})
+	end
+
+	local bgfx = require "bgfx"
+	return bgfx.vertex_decl(decl)
+end
+
 return util

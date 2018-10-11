@@ -136,16 +136,18 @@ llayout_ozzmesh(lua_State *L) {
 		if (!part.normals.empty()) {
 			std::string normal(deflayout);
 			normal[0] = 'n';
+			normal[2] = '0' + ozz::sample::Mesh::Part::kNormalsCpnts;
 			layout += "|" + normal;
 		}
 
 		if (!part.tangents.empty()) {
 			std::string tangent(deflayout);
 			tangent[0] = 'T';
+			tangent[2] = '0' + ozz::sample::Mesh::Part::kTangentsCpnts;
 			layout += "|" + tangent;
 		}
 
-	} else if (strcmp(type, "static")) {
+	} else if (strcmp(type, "static") == 0) {
 		if (!part.colors.empty()) {
 			std::string color(deflayout);
 			color[0] = 'c';
@@ -167,6 +169,8 @@ llayout_ozzmesh(lua_State *L) {
 	} else {
 		luaL_error(L, "not support type : %s", type);
 	}
+
+	lua_pushstring(L, layout.c_str());
 	return 1;
 }
 
@@ -388,7 +392,7 @@ ldel_sampling(lua_State *L) {
 }
 
 static int
-lnew_sampling(lua_State *L) {
+lnew_sampling_cache(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TNUMBER);
 	const int numjoints = (int)lua_tointeger(L, 1);
 
@@ -424,14 +428,17 @@ lnew_animation(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TSTRING);
 	const char * path = lua_tostring(L, 1);
 
-	luaL_checktype(L, 2, LUA_TNUMBER);
-	const int numjoints = (int)lua_tointeger(L, 2);
+	const int numjoints = (int)luaL_optinteger(L, 2, 0);
 	
 	animation_node *node = (animation_node*)lua_newuserdata(L, sizeof(animation_node));
 	luaL_getmetatable(L, "ANIMATION_NODE");
 	lua_setmetatable(L, -2);
-
-	node->poses = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(numjoints);
+	if (numjoints > 0){
+		node->poses = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(numjoints);
+	} else {
+		node->poses = ozz::Range<ozz::math::Float4x4>();
+	}
+	
 	node->ani = ozz::memory::default_allocator()->New<ozz::animation::Animation>();
 
 	ozz::io::File file(path, "rb");
@@ -453,6 +460,19 @@ lduration_animation(lua_State *L) {
 	animation_node *node = (animation_node*)lua_touserdata(L, 1);
 	lua_pushnumber(L, node->ani->duration());
 	return 1;
+}
+
+static int
+lresize_animation_poses(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	animation_node *ani = (animation_node*)lua_touserdata(L, 1);
+
+	luaL_checktype(L, 2, LUA_TNUMBER);
+	const int num_joints = (int)lua_tointeger(L, 2);
+
+	ozz::memory::default_allocator()->Deallocate(ani->poses);
+	ani->poses = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(num_joints);
+	return 0;
 }
 
 static int
@@ -494,11 +514,15 @@ lnew_ozzmesh(lua_State *L) {
 
 	if (!om->mesh->inverse_bind_poses.empty()) {
 		om->skinning_matrices = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(om->mesh->inverse_bind_poses.size());
+	} else {
+		om->skinning_matrices = ozz::Range<ozz::math::Float4x4>();
 	}
 
-	const size_t dynamic_size = dynamic_vertex_elem_stride(om);
-	if (dynamic_size != 0) {
-		om->dynamic_buffer = new uint8_t[dynamic_size];
+	const auto num_vertices = om->mesh->vertex_count();
+
+	const size_t dynamic_stride = dynamic_vertex_elem_stride(om);
+	if (dynamic_stride != 0) {
+		om->dynamic_buffer = new uint8_t[dynamic_stride * num_vertices];
 		auto *db = om->dynamic_buffer;
 		const size_t posstep = ozz::sample::Mesh::Part::kPositionsCpnts * sizeof(float);
 		const size_t normalstep = ozz::sample::Mesh::Part::kNormalsCpnts * sizeof(float);
@@ -507,16 +531,16 @@ lnew_ozzmesh(lua_State *L) {
 		for (const auto &part : om->mesh->parts) {
 			assert(0 != part.vertex_count());
 			for (auto iv = 0; iv < part.vertex_count(); ++iv) {				
-				memcpy(db, &(part.positions[iv]), posstep);
+				memcpy(db, &(part.positions[iv * ozz::sample::Mesh::Part::kPositionsCpnts]), posstep);
 				db += posstep;
 				
 				if (!part.normals.empty()) {
-					memcpy(db, &(part.uvs[iv]), normalstep);
+					memcpy(db, &(part.normals[iv * ozz::sample::Mesh::Part::kNormalsCpnts]), normalstep);
 					db += normalstep;
 				}
 
 				if (!part.tangents.empty()) {
-					memcpy(db, &(part.tangents[iv]), tangentstep);
+					memcpy(db, &(part.tangents[iv * ozz::sample::Mesh::Part::kTangentsCpnts]), tangentstep);
 					db += tangentstep;
 				}
 			}
@@ -525,9 +549,9 @@ lnew_ozzmesh(lua_State *L) {
 		om->dynamic_buffer = nullptr;	
 	}
 
-	const size_t static_size = static_vertex_elem_stride(om);
-	if (static_size != 0) {
-		om->static_buffer = new uint8_t[static_size];
+	const size_t static_stride = static_vertex_elem_stride(om);
+	if (static_stride != 0) {
+		om->static_buffer = new uint8_t[static_stride * num_vertices];
 		uint8_t *sb = om->static_buffer;
 		const size_t colorstep = ozz::sample::Mesh::Part::kColorsCpnts * sizeof(uint8_t);
 		const size_t uvstep = ozz::sample::Mesh::Part::kUVsCpnts * sizeof(float);
@@ -558,13 +582,36 @@ lbuffer_ozzmesh(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TSTRING);
 	const char* type = lua_tostring(L, 2);
 
+	size_t vertex_stride = 0;
+	uint8_t * buffer = nullptr;
 	if (strcmp(type, "dynamic")) {
-		lua_pushlightuserdata(L, om->dynamic_buffer);
+		buffer = om->dynamic_buffer;
+		vertex_stride = dynamic_vertex_elem_stride(om);
 	} else if (strcmp(type, "static")) {
-		lua_pushlightuserdata(L, om->static_buffer);
+		buffer = om->static_buffer;
+		vertex_stride = static_vertex_elem_stride(om);
+	} else {
+		luaL_error(L, "not support type : %s", type);
 	}
 	
-	return 1;
+	lua_pushlightuserdata(L, buffer);
+	lua_pushinteger(L, lua_Integer(vertex_stride * om->mesh->vertex_count()));
+	return 2;
+}
+
+static int
+lindexbuffer_ozzmesh(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
+
+	auto mesh = om->mesh;
+
+	lua_pushlightuserdata(L, ozz::array_begin(mesh->triangle_indices));
+	const size_t sizeInBytes = mesh->triangle_index_count() * sizeof(uint16_t);
+	lua_pushinteger(L, lua_Integer(sizeInBytes));
+	lua_pushinteger(L, sizeof(uint16_t));
+
+	return 3;
 }
 
 static void 
@@ -574,6 +621,7 @@ register_animation_mt(lua_State *L) {
 	lua_setfield(L, -2, "__index");	// ANIMATION_NODE.__index = ANIMATION_NODE
 
 	luaL_Reg l[] = {
+		"resize",	lresize_animation_poses,
 		"duration", lduration_animation,
 		"__gc", ldel_animation,
 		nullptr, nullptr,
@@ -602,9 +650,10 @@ register_ozzmesh_mt(lua_State *L) {
 	lua_pushvalue(L, -1);
 	lua_setfield(L, -2, "__index");
 
-	luaL_Reg l[] = {
+	luaL_Reg l[] = {		
 		"buffer", lbuffer_ozzmesh,
-		"layout", llayout_ozzmesh,
+		"index_buffer", lindexbuffer_ozzmesh,
+		"layout", llayout_ozzmesh,		
 		"__gc", ldel_ozzmesh,
 		nullptr, nullptr,
 	};
@@ -626,7 +675,7 @@ luaopen_hierarchy_animation(lua_State *L) {
 		{ "motion", lmotion},
 		{ "new_ani", lnew_animation},
 		{ "new_ozzmesh", lnew_ozzmesh},
-		{ "new_sampling", lnew_sampling},
+		{ "new_sampling_cache", lnew_sampling_cache},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

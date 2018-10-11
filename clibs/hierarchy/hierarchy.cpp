@@ -58,7 +58,7 @@ static int
 lbuilddata_len(lua_State *L){
 	struct hierarchy_build_data* buildata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
 	lua_pushinteger(L, buildata->skeleton->bind_pose().count());
-	return 0;
+	return 1;
 }
 
 using serialize_skeop = std::function<void(const char*, struct hierarchy_build_data*)>;

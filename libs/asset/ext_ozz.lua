@@ -26,14 +26,17 @@ return function(filename)
 			local hiemodule = require "hierarchy"
 			return hiemodule.build(filename)
 		end,
-		["ozz-mesh"] = function()
-			
+		["ozz-sample-Mesh"] = function()
+			local animodule = require "hierarchy.animation"
+			return animodule.new_ozzmesh(filename)
 		end,
 	}
 
 	local readop = find_tagop(readops)
 	if readop then
-		return readop()
+		return {
+			handle = readop()
+		}
 	end
 	error("not support type")
 	return nil
