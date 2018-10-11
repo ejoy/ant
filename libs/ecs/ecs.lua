@@ -210,9 +210,9 @@ local function init_modules(w, modules, module_path)
 	while #mods > 0 do
 		local name = mods[#mods]
 		mods[#mods] = nil
-		local module = loadfile(name)
+		local module, err = loadfile(name)
 		if not module then
-			error(("module '%s' load failed."):format(name))
+			error(("module '%s' load failed:%s"):format(name, err))
 		end
 		log(("Init module '%s'."):format(name))
 		module(reg)

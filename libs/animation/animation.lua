@@ -1,6 +1,9 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "timer"
+ecs.import "render.math3d.math_component"
+
 local ani = ecs.component "animation" {
 	ref_path = {
 		type = "userdata",

@@ -1,6 +1,11 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "scene.filter_system"
+ecs.import "render.end_frame_system"
+ecs.import "render.entity_rendering_system"
+ecs.import "inputmgr.message_system"
+
 local point2d = require "math.point2d"
 local bgfx = require "bgfx"
 local ru = require "render.util"

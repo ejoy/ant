@@ -10,6 +10,7 @@ local config = {
     [[libs\animation\animation.lua]],
     [[libs\timer\timer.lua]],
     [[libs\scene\terrain\terrain.lua]],
+    [[libs\modelloader\renderworld.lua]],
 }
 
 local exepath = package.cpath:sub(1, (package.cpath:find(';') or 0)-6)
@@ -17,6 +18,27 @@ local root = exepath .. [[..\]]
 
 package.path  = root .. [[libs\?.lua]]
 package.cpath = root .. [[clibs\?.dll]]
+
+local function searchpath(name, path)
+	--TODO
+	local f = io.open(name)
+	if f then
+		f:close()
+		return name
+	end
+	local err = ''
+	name = string.gsub(name, '%.', '/')
+	for c in string.gmatch(path, '[^;]+') do
+		local filename = string.gsub(c, '%?', name)
+		local f = io.open(filename)
+		if f then
+			f:close()
+			return filename
+		end
+		err = err .. ("\n\tno file '%s'"):format(filename)
+	end
+	return nil, err
+end
 
 local function sortkpairs(t)
     local sort = {}
@@ -57,7 +79,10 @@ local function sortvpairs(t)
 end
 
 local fs = require 'cppfs'
+local fs_util = require 'debugger.filesystem'
 local typeclass = require 'ecs.typeclass'
+
+root = fs_util.normalize_native(root)
 
 local filetree = {
     branchname = "file",
@@ -70,11 +95,11 @@ local function checkfile(path)
         local global = {
             require = function() end,
         }
-        local reg = typeclass {}
+        local reg = typeclass({}, function() end)
         local f = assert(io.open(path:string()))
         local code = f:read 'a'
         f:close()
-        assert(load(code, path:string():sub(#root+1), 't', global))(reg)
+        assert(load(code, '=(CHECK)', 't', global))(reg)
     end)
 end
 
@@ -121,7 +146,7 @@ local function insert_filetree(t, split, path, ok)
 end
 
 local function add_filetree(path)
-    local subpath = fs.path(path:string():sub(#root+1))
+    local subpath = fs.path(path:string():sub(#root+2))
     local split = {}
     while true do
         local name = subpath:filename():string()
@@ -132,9 +157,11 @@ local function add_filetree(path)
         subpath = subpath:parent_path()
     end
     for _, name in ipairs(split) do
-        local ok = checkfile(path)
+        local ok, err = checkfile(path)
         if ok then
             filetree.userid[#filetree.userid+1] = path
+        else
+            print(err)
         end
         insert_filetree(filetree, split, path, ok)
     end
@@ -151,7 +178,7 @@ local function add_dirtree(dir)
 end
 
 for _, c in ipairs(config) do
-    local path = fs.path(root .. c)
+    local path = fs.path(root .. '/' .. c)
     if fs.is_directory(path) then
         add_dirtree(path)
     else
@@ -233,38 +260,54 @@ local ids = {}
 local function select_filetree(ids)
     cache = {}
 
-    local world = {}
-    local reg, class = typeclass(world, function() end)
-    local global = {
-        require = function() end,
-    }
+    local module_path = 'libs/?.lua;libs/?/?.lua'
 	local mods = {}
-	local function import(path)
+	local function import(name)
+		local path, err = searchpath(name, module_path)
+		if not path then
+			error(("module '%s' not found:%s"):format(name, err))
+        end
+        path = fs_util.normalize_native(path)
 		if mods[path] then
 			return
 		end
 		mods[#mods+1] = path
-        mods[path] = true
-
-        local f = assert(io.open(path:string()))
-        local code = f:read 'a'
-        f:close()
-        assert(load(code, path:string():sub(#root+1), 't', global))(reg)
-    end
+		mods[path] = true
+	end
+    
+    local world = {}
+    local reg, class = typeclass(world, import)
+    local global = {
+        require = function() end,
+    }
 
     for _, id in ipairs(ids) do
         local userid = tree1:GetUserId(id)
         if userid then
             for _, file in ipairs(userid) do
-                import(file)
+                import(file:string())
             end
         end
     end
+
+	while #mods > 0 do
+		local path = mods[#mods]
+		mods[#mods] = nil
+
+        local f = assert(io.open(path))
+        local code = f:read 'a'
+        f:close()
+        assert(load(code, path:sub(#root+2), 't', global))(reg)
+    end
+
     local ecstree = {
         branchname = "ecs"
     }
     for name, obj in sortkpairs(class.system) do
         ecstree[#ecstree+1] = new_system(class, name, obj)
+    end
+    for name, obj in sortkpairs(class.component) do
+        ecstree[#ecstree+1] = new_component(class, name, obj)
     end
     tree2.DELNODE0 = 'CHILDREN'
     iup.TreeAddNodes(tree2, ecstree)
