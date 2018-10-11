@@ -121,7 +121,7 @@ function util.draw_primitive(vid, primgroup, mat)
 			bgfx.set_index_buffer(ib.handle)
 		end
 		for idx, v in ipairs(vb.handles) do
-			bgfx.set_vertex_buffer(idx, v)
+			bgfx.set_vertex_buffer(idx - 1, v)
 		end
 		
 		bgfx.submit(vid, prog, 0, false)
@@ -133,7 +133,7 @@ function util.draw_primitive(vid, primgroup, mat)
 				bgfx.set_index_buffer(ib.handle, prim.startIndex, prim.numIndices)
 			end
 			for idx, v in ipairs(vb.handles) do
-				bgfx.set_vertex_buffer(idx, v, prim.startVertex, prim.numVertices)
+				bgfx.set_vertex_buffer(idx - 1, v, prim.startVertex, prim.numVertices)
 			end
 			bgfx.submit(vid, prog, 0, i~=numprim)
 		end

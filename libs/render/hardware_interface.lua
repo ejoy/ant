@@ -9,13 +9,13 @@ function hw.get_caps()
     return assert(caps)
 end
 
-function hw.init(nwh, fb_w, fb_h)
+function hw.init(nwh, fb_w, fb_h, fetchlog)
 	local args = {
         nwh = nwh,
         width = fb_w,
 
         height = fb_h,
-        getlog = true,
+        getlog = fetchlog or true,
 	}
 	bgfx.set_platform_data(args)
 	-- todo: bgfx.init support other flags : reset , maxFrameLatency, maxEncoders, debug, profile, etc.

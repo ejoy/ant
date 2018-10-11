@@ -165,7 +165,10 @@ calc_tangents(mesh_data &md) {
 		rawbuffer buffer(sizeInBytes);	// tangent and bitangent have 6 float
 
 		assert(vb.vbraws.size() == 1);
-		auto &oldbuffer = vb.vbraws.cbegin()->second;
+		const auto &first = *vb.vbraws.cbegin();
+		const auto &name = first.first;
+		auto &oldbuffer = first.second;
+
 		bgfx::vertexConvert(dstdecl, buffer.data, srcdecl, oldbuffer.data, uint32_t(vb.num_vertices));
 
 		auto &ib = g.ib;
@@ -179,7 +182,11 @@ calc_tangents(mesh_data &md) {
 		}
 
 		vb.layout = newlayout;
-		vb.vbraws[vb.vbraws.cbegin()->first] = std::move(buffer);
+
+		std::string newName(name);
+		newName += "Tb";	//
+		vb.vbraws.erase(vb.vbraws.find(name));
+		vb.vbraws[newName] = std::move(buffer);
 	}
 };
 

@@ -5,7 +5,7 @@ ecs.import "animation.skinning.skinning_system"
 ecs.import "animation.animation"
 
 local model_ed_sys = ecs.system "model_editor_system"
-
+model_ed_sys.singleton "math_stack"
 model_ed_sys.depend "camera_init"
 
 -- luacheck: globals model_windows
@@ -26,7 +26,8 @@ local function load_mesh_assetinfo(skinning_mesh_comp)
 	local vb_handles = {}
 	local vb_data = {"!", "", 1}
 	for _, type in ipairs {"dynamic", "static"} do
-		local decl = modelutil.create_decl(skinning_mesh:layout(type))
+		local layout = skinning_mesh:layout(type)
+		local decl = modelutil.create_decl(layout)
 		table.insert(decls, decl)
 
 		local buffer, size = skinning_mesh:buffer(type)
@@ -44,19 +45,21 @@ local function load_mesh_assetinfo(skinning_mesh_comp)
 	return {
 		handle = {
 			groups = {
-				vb = {
-					decls = decls,
-					handles = vb_handles,
-				},
-				ib = {
-					handle = ib_handle,
+				{
+					vb = {
+						decls = decls,
+						handles = vb_handles,
+					},
+					ib = {
+						handle = ib_handle,
+					}
 				}
 			}
 		},			
 	}
 end
 
-local function create_sample_entity(skepath, anipath, skinning_meshpath)
+local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	local eid = world:new_entity("position", "scale", "rotation",
 	"skeleton", "animation", "skinning_mesh", 
 	"mesh", "material",
@@ -65,11 +68,21 @@ local function create_sample_entity(skepath, anipath, skinning_meshpath)
 	local e = world[eid]
 	e.name.n = "animation_test"
 
-	comp_util.load_animation(e, anipath)
-	comp_util.load_skeleton(e, skepath)
+	local mu = require "math.util"
+	mu.identify_transform(ms, e)
 
-	local skehandle = assert(e.skeleton.assetinfo.handle)
-	e.animation.sampling_cache = comp_util.new_sampling_cache(#skehandle)
+	comp_util.load_skeleton(e, skepath)
+	comp_util.load_animation(e, anipath)
+
+	do
+		local skehandle = assert(e.skeleton.assetinfo.handle)
+		local numjoints = #skehandle
+		e.animation.sampling_cache = comp_util.new_sampling_cache(#skehandle)
+
+		local anihandle = e.animation.assetinfo.handle
+		anihandle:resize(numjoints)
+	end
+	
 
 	comp_util.load_skinning_mesh(e, skinning_meshpath)	
 	e.mesh.assetinfo = load_mesh_assetinfo(e.skinning_mesh)
@@ -77,7 +90,7 @@ local function create_sample_entity(skepath, anipath, skinning_meshpath)
 	local smaplemaerial = "mem://sample.material"
 	fu.write_to_file(smaplemaerial, [[
 		shader = {
-			vs = "mesh/vs_meshani",
+			vs = "mesh/vs_mesh_bump",
 			fs = "mesh/fs_mesh_bumpex",
 		}
 
@@ -106,7 +119,7 @@ local function update_animation_ratio(eid, time_in_second)
 	anicomp.ratio = time_in_second / duration
 end
 
-local function init_control()
+local function init_control(ms)
 	local sample_eid
 
 	local skepath_ctrl = windows.ske_path
@@ -139,7 +152,7 @@ local function init_control()
 				world:remove_entity(sample_eid)
 			end
 
-			sample_eid = create_sample_entity(skepath, anipath, skinning_meshpath)
+			sample_eid = create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 		end
 	end
 
@@ -174,7 +187,8 @@ end
 
 -- luacheck: ignore self
 function model_ed_sys:init()
-	init_control()
+	local ms = self.math_stack
+	init_control(ms)
 
 	local maincamera = world:first_entity("main_camera")
 	assert(maincamera.primitive_filter).no_lighting = true

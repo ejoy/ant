@@ -163,8 +163,9 @@ local function create_vb(vb, streams)
 		end
 	else
 		local vbraws = vb.vbraws
-		assert(#vbraws == 1)
-		add_vb(vb.layout, vbraws[1])
+		for k, v in pairs(vbraws) do
+			add_vb(vb.layout, v)
+		end
 	end
 
 	vb.handles = handles

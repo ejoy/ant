@@ -156,7 +156,7 @@ dlg.usersize = nil
 
 --print_children(dlg)
 
-rhwi.init(iup.GetAttributeData(canvas, "HWND"), fbw, fbh)
+rhwi.init(iup.GetAttributeData(canvas, "HWND"), fbw, fbh, false)
 local world = su.start_new_world(nil, fbw, fbh, {
 	"engine.module", "tools/modeleditor/model_editor.module",
 })
