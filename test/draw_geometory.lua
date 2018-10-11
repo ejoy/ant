@@ -25,25 +25,24 @@ function util.draw_box(center, len, color, transform, mode)
 end
 
 -- len : logic unit, half of then length from head to tail
--- head_radius : logic unit, can be 0
-	-- head and tail, one of them can be 0 to become as cone
-	-- when head_radius = 0, tail_radius > 0, slices = 3, it become tetrahedron
-function util.draw_cylinder(center, len, head_radius, tail_radius, color, transform, slices, mode)
-	if tail_raduis == nil then
-		tail_radius = assert(head_radius)
-	end
-
-	if head_radius == nil then
-		head_radius = assert(tail_radius)
-	end
+-- radius : logic unit
+-- center : center is located in the half length of the cylinder
+-- slices : how many face of this cylinder
+function util.draw_cylinder(center, len, radius, color, transform, mode, slices)
 	
 end
 
+-- height : total height of this cone
+-- center : located in the bottom on the cone
+-- slices : same as cylinder
+function util.draw_cone(center, height, color, transform, mode, slices)
+
+end
+
 -- 
-function util.draw_bone(center, head_len, down_len, color, transform, mode)
-	radius = 111
-	util.draw_cylinder(center, head_len, 0, radius, color, tranform, mode)
-	util.draw_cylinder(center, down_lend, radius, 0, color, tranform, mode)	
+function util.draw_bone(center, head_len, down_len, radius, color, transform, mode)	
+	util.draw_cone(center, head_len, 0, radius, color, tranform, mode)
+	util.draw_cone(center, down_lend, radius, 0, color, tranform, mode)	
 end
 
 
