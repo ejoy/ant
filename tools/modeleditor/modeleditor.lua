@@ -165,7 +165,7 @@ local iq = inputmgr.queue(mapiup)
 local eu = require "editor.util"
 eu.regitster_iup(iq, canvas)
 local world = su.start_new_world(iq, fbw, fbh, {
-	"engine.module", "tools/modeleditor/model_editor.module",
+	"tools/modeleditor/model_ed_system.lua"
 })
 
 if (iup.MainLoopLevel()==0) then

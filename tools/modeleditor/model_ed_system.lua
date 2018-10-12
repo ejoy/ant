@@ -1,8 +1,24 @@
 local ecs = ...
 local world = ecs.world
 
+-- runtime
+ecs.import "render.camera.camera_component"
+ecs.import "render.entity_rendering_system"
+ecs.import "render.view_system"
+
+-- scene
+ecs.import "scene.cull_system"
+
+-- animation
 ecs.import "animation.skinning.skinning_system"
 ecs.import "animation.animation"
+
+-- editor
+ecs.import "editor.ecs.camera_controller"
+ecs.import "editor.ecs.pickup_system"
+
+-- editor elements
+ecs.import "editor.ecs.general_editor_entities"
 
 local model_ed_sys = ecs.system "model_editor_system"
 model_ed_sys.singleton "math_stack"
