@@ -300,6 +300,8 @@ lskinning(lua_State *L) {
 		if (!skinning_job.Run()) {
 			return false;
 		}
+
+		processed_vertex_count += part_vertex_count;
 	}
 
 	return 0;
