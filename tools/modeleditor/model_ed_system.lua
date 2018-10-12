@@ -6,8 +6,15 @@ ecs.import "render.camera.camera_component"
 ecs.import "render.entity_rendering_system"
 ecs.import "render.view_system"
 
+-- lighting
+ecs.import "render.light.light"
+
+-- serialize
+ecs.import "serialize.serialize_system"
+
 -- scene
 ecs.import "scene.cull_system"
+ecs.import "scene.filter_system"
 
 -- animation
 ecs.import "animation.skinning.skinning_system"
@@ -114,8 +121,8 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	local smaplemaerial = "mem://sample.material"
 	fu.write_to_file(smaplemaerial, [[
 		shader = {
-			vs = "mesh/vs_mesh_bump",
-			fs = "mesh/fs_mesh_bumpex",
+			vs = "mesh/vs_test",
+			fs = "mesh/fs_test",
 		}
 
 		state = "default.state"
@@ -212,6 +219,14 @@ function model_ed_sys:init()
 	local ms = self.math_stack
 	init_control(ms)
 
+	local lu = require "render.light.util"
+	local leid = lu.create_directional_light_entity(world)
+	local lentity = world[leid]
+	local lightcomp = lentity.light.v
+	lightcomp.color = {1,1,1,1}
+	lightcomp.intensity = 2.0
+	ms(lentity.rotation.v, {123.4, -34.22,-28.2}, "=")
+
 	local maincamera = world:first_entity("main_camera")
-	assert(maincamera.primitive_filter).no_lighting = true
+	--assert(maincamera.primitive_filter).no_lighting = true
 end

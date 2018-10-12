@@ -84,7 +84,7 @@ local mesh_pathctrl = create_pathctrl("Mesh")
 local anilist_ctrller = iup.list {
 	SIZE="160x0",
 	EXPAND="ON",
-	"None1111111111111111111",								
+	"None",
 }
 
 local dlg = iup.dialog {
