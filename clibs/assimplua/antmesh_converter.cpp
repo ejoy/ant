@@ -249,10 +249,10 @@ lconvertFBX(lua_State *L) {
 extern bool
 convertOZZ(lua_State *L, const std::string &srcpath, const std::string &outputfile, const load_config &config);
 
-int
-lconvertOZZMesh(lua_State *L) {
-	return convertSource(L, convertOZZ);
-}
+// int
+// lconvertOZZMesh(lua_State *L) {
+// 	return convertSource(L, convertOZZ);
+// }
 
 
 // due to example-commonDebug/Release.lib need _main_, we should add ENTRY_CONFIG_IMPLEMENT_MAIN macro when compile bgfx lib, or define

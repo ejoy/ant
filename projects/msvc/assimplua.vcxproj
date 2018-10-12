@@ -23,7 +23,6 @@
     <ClCompile Include="..\..\clibs\assimplua\assimplua.cpp" />
     <ClCompile Include="..\..\clibs\assimplua\bgfxmesh_helper.cpp" />
     <ClCompile Include="..\..\clibs\assimplua\fbx_helper.cpp" />
-    <ClCompile Include="..\..\clibs\assimplua\ozz_helper.cpp" />
     <ClCompile Include="..\..\clibs\assimplua\utils.cpp" />
   </ItemGroup>
   <ItemGroup>

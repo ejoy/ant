@@ -21,9 +21,6 @@
     <ClCompile Include="..\..\clibs\assimplua\antmesh_converter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\assimplua\ozz_helper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\clibs\assimplua\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
