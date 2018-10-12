@@ -60,17 +60,6 @@ ladditive(lua_State *L) {
 	return 0;
 }
 
-static void
-allocate_skinning_buffer(ozzmesh *mesh, size_t dynamic_buffer_size, size_t static_buffer_size) {
-	if (mesh->dynamic_buffer == nullptr) {
-		mesh->dynamic_buffer = new uint8_t[dynamic_buffer_size];
-	}
-
-	if (mesh->static_buffer == nullptr) {
-		mesh->static_buffer = new uint8_t[static_buffer_size];
-	}
-}
-
 static size_t 
 dynamic_vertex_elem_stride(ozzmesh *om) {
 	auto mesh = om->mesh;
@@ -558,11 +547,11 @@ lnew_ozzmesh(lua_State *L) {
 		for (const auto &part : om->mesh->parts) {
 			for (auto iv = 0; iv < part.vertex_count(); ++iv) {
 				if (!part.colors.empty()) {
-					memcpy(sb, &(part.colors[iv]), colorstep);
+					memcpy(sb, &(part.colors[iv * ozz::sample::Mesh::Part::kColorsCpnts]), colorstep);
 					sb += colorstep;
 				}
 				if (!part.uvs.empty()) {
-					memcpy(sb, &(part.uvs[iv]), uvstep);
+					memcpy(sb, &(part.uvs[iv * ozz::sample::Mesh::Part::kUVsCpnts]), uvstep);
 					sb += uvstep;
 				}
 			}
