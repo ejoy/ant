@@ -83,7 +83,7 @@ function add_entity_sys:init()
 
 	do
 		local leid = lu.create_directional_light_entity(world)
-		world:add_component(leid, "mesh", "material", "can_render", "scale", "name")
+		world:add_component(leid, "position", "mesh", "material", "can_render", "scale", "name")
 		local lentity = world[leid]
 
 		local lightcomp = lentity.light.v
