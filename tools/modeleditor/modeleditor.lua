@@ -10,6 +10,8 @@ local su = require "scene.util"
 local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
 
+local elog = require "editor.log"
+
 local fbw, fbh = 800, 600
 
 local canvas = iup.canvas {
@@ -86,12 +88,15 @@ local anilist_ctrller = iup.list {
 }
 
 local dlg = iup.dialog {
-	iup.split {
-		TITLE="first element",
+	iup.split {		
 		iup.split {
 			ORIENTATION = "HORIZONTAL",
 			canvas,
-			animation_time,
+			iup.split {
+				ORIENTATION = "HORIZONTAL",
+				animation_time,
+				elog.window,
+			}			
 		},
 		-- attribute control
 		iup.vbox {
