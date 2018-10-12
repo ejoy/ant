@@ -1,6 +1,11 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "render.math3d.math_component"
+ecs.import "render.constant_system"
+ecs.import "inputmgr.message_system"
+ecs.import "render.components.general"
+
 local assetmgr = require "asset"
 local mu = require "math.util"
 local cu = require "common.util"

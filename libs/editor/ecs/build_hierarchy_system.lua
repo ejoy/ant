@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "render.math3d.math_component"
+
 local hierarchy_module = require "hierarchy"
 local path = require "filesystem.path"
 

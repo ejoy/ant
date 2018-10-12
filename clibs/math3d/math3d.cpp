@@ -1264,7 +1264,8 @@ init_command_desc() {
 	s_command_desc['d'] = "to rotation";
 	s_command_desc['D'] = "to direction";
 	s_command_desc['~'] = "to srt";
-	s_command_desc['b'] = "extract base axis";
+	s_command_desc['b'] = "split srt matrix to s r t";
+	s_command_desc['@'] = "pop everything";
 	int i;
 	for (i=0;i<256;i++) {
 		if (s_command_desc[i] == NULL) {
@@ -1434,7 +1435,6 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		refstack_push(RS);
 		refstack_push(RS);
 		break;
-
 	case 'b':
 		rotation_to_base_axis(L, LS);
 		refstack_pop(RS);
@@ -1442,6 +1442,26 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		refstack_push(RS);
 		refstack_push(RS);
 		break;
+	case '@': {
+		lua_Integer n = 0;
+		lua_newtable(L);
+		for (;;) {
+			int64_t v = lastack_pop(LS);
+			if (v == 0) {
+				break;
+			}
+			int index = refstack_topid(RS);
+			if (index < 0) {
+				pushid(L, v);
+			}
+			else {
+				lua_pushvalue(L, index);
+			}
+			lua_rawseti(L, -2, ++n);
+			refstack_pop(RS);
+		}
+		return 1;
+	}
 	default:
 		luaL_error(L, "Unknown command %c", cmd);
 	}

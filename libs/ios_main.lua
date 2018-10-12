@@ -3,6 +3,7 @@
 local rhwi = require "render.hardware_interface"
 local scene = require "scene.util"
 local inputmgr = require "inputmgr"
+local asset = require "asset"
 
 local iq = inputmgr.queue {
 	button = "_,_,_,_,_",
@@ -14,8 +15,10 @@ local ios_main = {}
 local init_ok = false
 local currentworld
 function ios_main.init(nativewnd, fbw, fbh)
-	rhwi.init(nativewnd, fbw, fbh)
-	currentworld = scene.start_new_world(iq, fbw, fbh, "test_world_ios.module")
+    rhwi.init(nativewnd, fbw, fbh)
+    
+	local modules = asset.load("test_world_ios.module")
+	currentworld = scene.start_new_world(iq, fbw, fbh, modules)
     print("world init finished !!")
     init_ok = true
 end

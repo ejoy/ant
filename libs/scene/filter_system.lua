@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "render.math3d.math_component"
+
 local cu = require "render.components.util"
 
 local function insert_primitive(eid, result)

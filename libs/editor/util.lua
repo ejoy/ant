@@ -27,6 +27,7 @@ local ctrl_cb = {
 	"motion",
 	"keypress",
 	"resize",
+	"wheel"
 }
 
 function util.regitster_iup(msgqueue, ctrl)
