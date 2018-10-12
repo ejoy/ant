@@ -1,9 +1,10 @@
 local ms, dbgName = ...
-local ok, vscdbg = pcall(require, dbgName)
 
-if not ok then
+if not package.loaded[dbgName] then
 	return ms
 end
+
+local vscdbg = require(dbgName)
 
 local function reverse(t)
 	for i = 1, #t // 2 do
