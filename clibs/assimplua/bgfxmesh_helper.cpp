@@ -42,20 +42,17 @@ LoadBGFXMesh(const std::string& filePath, mesh_data &md) {
 			bgfx::read(&reader, decl);
 			auto &vb = group.vb;
 
-			vb.soa = false;	// always false for bgfx file
-			vb.layout = GenVBLayoutFromDecl(decl);
+			const auto layout = GenVBLayoutFromDecl(decl);
 
 			uint16_t stride = decl.getStride();
 			uint16_t numVertices;
 			bx::read(&reader, numVertices);
 			vb.num_vertices = numVertices;
 			const uint32_t vertexSizeInBytes = numVertices * stride;
-
-			auto streamName = GenStreamNameFromDecl(decl);
-
-			vb.vbraws[streamName] = rawbuffer(vertexSizeInBytes);
-			const auto &buffer = vb.vbraws[streamName];
-			bx::read(&reader, buffer.data, vertexSizeInBytes);
+			auto buffer = make_buffer_ptr(vertexSizeInBytes);
+			
+			bx::read(&reader, buffer.get(), vertexSizeInBytes);
+			vb.vbraws[layout] = std::move(buffer);
 		}
 		break;
 
@@ -152,49 +149,50 @@ static void
 calc_tangents(mesh_data &md) {
 	for (auto &g : md.groups) {
 		auto &vb = g.vb;
-		auto newlayout = vb.layout;
+		auto &vbraws = vb.vbraws;
+		assert(vbraws.size() == 1);
+		const auto &oldlayout = vbraws.begin()->first;
+		auto newlayout = oldlayout;
 		newlayout += "|T30nIf";
 		newlayout += "|b30nIf";
 
 		auto dstdecl = GenVertexDeclFromVBLayout(newlayout);
-		auto srcdecl = GenVertexDeclFromVBLayout(vb.layout);
+		auto srcdecl = GenVertexDeclFromVBLayout(oldlayout);
 
 		auto stride = dstdecl.getStride();
 		auto sizeInBytes = vb.num_vertices * stride;
 
-		rawbuffer buffer(sizeInBytes);	// tangent and bitangent have 6 float
+		auto buffer = make_buffer_ptr(sizeInBytes);
 
 		assert(vb.vbraws.size() == 1);
-		const auto &first = *vb.vbraws.cbegin();
-		const auto &name = first.first;
+		const auto &first = *vb.vbraws.cbegin();		
 		auto &oldbuffer = first.second;
 
-		bgfx::vertexConvert(dstdecl, buffer.data, srcdecl, oldbuffer.data, uint32_t(vb.num_vertices));
+		bgfx::vertexConvert(dstdecl, buffer.get(), srcdecl, oldbuffer.get(), uint32_t(vb.num_vertices));
 
 		auto &ib = g.ib;
 		if (ib.format == 32) {
 			std::vector<uint16_t> u16buffer(ib.num_indices);
 
 			convert_32bit_to_16bit((const uint32_t*)ib.ibraw, &u16buffer[0], uint32_t(ib.num_indices));
-			calcTangents(buffer.data, uint32_t(vb.num_vertices), dstdecl, &u16buffer[0], uint32_t(ib.num_indices));
+			calcTangents(buffer.get(), uint32_t(vb.num_vertices), dstdecl, &u16buffer[0], uint32_t(ib.num_indices));
 		} else {
-			calcTangents(buffer.data, uint32_t(vb.num_vertices), dstdecl, (const uint16_t*)ib.ibraw, uint32_t(ib.num_indices));
+			calcTangents(buffer.get(), uint32_t(vb.num_vertices), dstdecl, (const uint16_t*)ib.ibraw, uint32_t(ib.num_indices));
 		}
 
-		vb.layout = newlayout;
-
-		std::string newName(name);
-		newName += "Tb";	//
-		vb.vbraws.erase(vb.vbraws.find(name));
-		vb.vbraws[newName] = std::move(buffer);
+		vb.vbraws.erase(vb.vbraws.find(oldlayout));
+		vb.vbraws[newlayout] = std::move(buffer);
 	}
 };
 
 static void flip_uv(mesh_data &md) {
 	for (auto &g : md.groups) {
 		auto &vb = g.vb;
-		auto decl = GenVertexDeclFromVBLayout(vb.layout);
-		assert(vb.vbraws.size() == 1);
+		auto &vbraws = vb.vbraws;
+		assert(vbraws.size() == 1);
+		const auto &layout = vbraws.begin()->first;
+		auto &buffer = vbraws[layout];
+		auto decl = GenVertexDeclFromVBLayout(layout);
 
 		for (auto ii = 0; ii < 8; ++ii) {
 			bgfx::Attrib::Enum a = bgfx::Attrib::Enum(bgfx::Attrib::TexCoord0 + ii);
@@ -202,7 +200,7 @@ static void flip_uv(mesh_data &md) {
 				for (auto iv = 0; iv < vb.num_vertices; ++iv) {
 					float output[4];
 					const auto &buf = vb.vbraws.cbegin()->second;
-					bgfx::vertexUnpack(output, a, decl, buf.data, iv);
+					bgfx::vertexUnpack(output, a, decl, buffer.get(), iv);
 
 					output[1] = -output[1];
 
@@ -210,7 +208,7 @@ static void flip_uv(mesh_data &md) {
 					bgfx::AttribType::Enum type;
 					bool normalize, asInt;
 					decl.decode(a, num, type, normalize, asInt);
-					bgfx::vertexPack(output, normalize, a, decl, buf.data, iv);
+					bgfx::vertexPack(output, normalize, a, decl, buffer.get(), iv);
 				}
 
 			}

@@ -78,31 +78,38 @@ SeparateMeshByMaterialID(const aiScene *scene, MeshMaterialArray &mm) {
 }
 
 // only valid in array of struct
-static std::string
-CreateVertexLayout(aiMesh *mesh, const std::string &vertexElemNeeded) {
-	auto elems = AdjustLayoutElem(vertexElemNeeded);
-	std::string layout;
-	auto append_elem = [&layout](const std::string &e) {
-		if (!layout.empty())
-			layout += '|';
-		layout += e;
-	};
-	for (const auto &e : elems) {
-		switch (e[0]) {
-		case 'p': if (mesh->HasPositions()) append_elem(e); break;
-		case 'n': if (mesh->HasNormals()) append_elem(e); break;
-		case 'b':
-		case 'T': if (mesh->HasTangentsAndBitangents()) append_elem(e); break;
-		case 'c': if (mesh->HasVertexColors(e[2] - '0')) append_elem(e); break;
-		case 't': if (mesh->HasTextureCoords(e[2] - '0')) append_elem(e); break;
-		case 'w':
-		case 'i':
-		default:
-			printf("not support type : %d", e[0]);
-			break;
+static LayoutArray
+CreateVertexLayout(aiMesh *mesh, const LayoutArray &layouts) {
+	LayoutArray new_layouts = layouts;
+
+	for (auto &layout : new_layouts) {
+		auto elems = AdjustLayoutElem(layout);
+		std::string new_layout;
+		auto append_elem = [&new_layout](const std::string &e) {
+			if (!new_layout.empty())
+				new_layout += '|';
+			new_layout += e;
+		};
+		for (const auto &e : elems) {
+			switch (e[0]) {
+			case 'p': if (mesh->HasPositions()) append_elem(e); break;
+			case 'n': if (mesh->HasNormals()) append_elem(e); break;
+			case 'b':
+			case 'T': if (mesh->HasTangentsAndBitangents()) append_elem(e); break;
+			case 'c': if (mesh->HasVertexColors(e[2] - '0')) append_elem(e); break;
+			case 't': if (mesh->HasTextureCoords(e[2] - '0')) append_elem(e); break;
+			case 'w':
+			case 'i':
+			default:
+				printf("not support type : %d", e[0]);
+				break;
+			}
 		}
+
+		layout = new_layout;
 	}
-	return layout;
+
+	return new_layouts;
 }
 
 static void
@@ -159,35 +166,12 @@ GetMeshDataPtr(const aiMesh *mesh, const std::string &elem, size_t offset) {
 }
 
 static void
-CopyMeshVerticesAsSOA(const aiMesh *mesh, size_t startVB, vb_info &vb) {
-	auto elems = AdjustLayoutElem(vb.layout);
+CopyMeshVertices(const aiMesh *mesh, size_t startVB, const std::string &layout, buffer_ptr &buffer) {
+	const size_t vertexSizeInBytes = CalcVertexSize(layout);	
+	
+	uint8_t *vertices = buffer.get() + startVB * vertexSizeInBytes;
 
-	for (size_t ii = 0; ii < elems.size(); ++ii) {
-		const auto &e = elems[ii];
-
-		const std::string streamName = GenStreamNameFromElem(e);
-		
-		assert(vb.vbraws.find(streamName) != vb.vbraws.end());
-		auto &vbraw = vb.vbraws[streamName];
-
-		auto p = GetMeshDataPtr(mesh, e, 0);
-
-		auto elemSizeInBytes = GetVertexElemSizeInBytes(e);
-		auto sizeInBytes = mesh->mNumVertices * elemSizeInBytes;
-
-		uint8_t *dstp = vbraw.data + startVB * elemSizeInBytes;
-		memcpy(dstp, p, sizeInBytes);
-	}
-}
-
-static void
-CopyMeshVerticesAsAOS(const aiMesh *mesh, size_t startVB, vb_info &vb) {
-	const size_t vertexSizeInBytes = CalcVertexSize(vb.layout);
-	assert(vb.vbraws.size() == 1);
-	auto &buffer = vb.vbraws.begin()->second;
-	uint8_t *vertices = buffer.data + startVB * vertexSizeInBytes;
-
-	auto elems = AdjustLayoutElem(vb.layout);
+	auto elems = AdjustLayoutElem(layout);
 	for (uint32_t ii = 0; ii < mesh->mNumVertices; ++ii) {
 		for (const auto& e : elems) {
 
@@ -253,24 +237,14 @@ FindTransform(const aiScene *scene, const aiNode *node, const aiMesh *mesh, aiMa
 	return false;
 }
 
-static void
-InitVertexBuffer(vb_info &vb) {
-	assert(vb.num_vertices != 0);
-	assert(!vb.layout.empty());
-	assert(vb.vbraws.empty());
+static std::unique_ptr<uint8_t []>
+CreateVertexBuffer(size_t num_vertices, const std::string &layout) {
+	assert(num_vertices != 0);
 
-	if (vb.soa) {
-		const auto elems = AdjustLayoutElem(vb.layout);		
-		for (const auto &e : elems){
-			const size_t elemSizeInBytes = GetVertexElemSizeInBytes(e);
-			const std::string streamName = GenStreamNameFromElem(e);
+	const auto elems = AdjustLayoutElem(layout);
 
-			vb.vbraws[streamName] = std::move(rawbuffer(elemSizeInBytes * vb.num_vertices));
-		}
-	} else {
-		const std::string streamName = GenStreamNameFromDecl(GenVertexDeclFromVBLayout(vb.layout));
-		vb.vbraws[streamName] = std::move(rawbuffer(CalcVertexSize(vb.layout) * vb.num_vertices));
-	}
+	size_t streamBufferSize = CalcVertexSize(layout);
+	return std::move(make_buffer_ptr(streamBufferSize));
 }
 
 static void
@@ -286,69 +260,62 @@ LoadFBXMeshes(const aiScene *scene, const load_config& config, mesh_data &md) {
 			continue;
 		auto &group = md.groups[ii];
 		auto &vb = group.vb;
-		vb.layout = CreateVertexLayout(meshes.back(), config.layout);
+		auto layouts = CreateVertexLayout(meshes.back(), config.layouts);
 
-		size_t vertexSizeInBytes = 0, indexSizeInBytes = 0, indexElemSizeInBytes = 0;
-		CalcBufferSize(meshes, group.vb.layout, config, vertexSizeInBytes, indexSizeInBytes, indexElemSizeInBytes);
+		for (const auto &layout : layouts) {
+			size_t vertexSizeInBytes = 0, indexSizeInBytes = 0, indexElemSizeInBytes = 0;
+			CalcBufferSize(meshes, layout, config, vertexSizeInBytes, indexSizeInBytes, indexElemSizeInBytes);
 
-		vb.soa = config.NeedPackAsSOA();
-		vb.num_vertices = vertexSizeInBytes / CalcVertexSize(vb.layout);
+			vb.num_vertices = vertexSizeInBytes / CalcVertexSize(layout);
+			assert(vb.vbraws.find(layout) == vb.vbraws.end());
+			
+			vb.vbraws[layout] = std::move(make_buffer_ptr(vertexSizeInBytes));
+			auto &buffer = vb.vbraws[layout];
 
-		InitVertexBuffer(vb);
+			auto &ib = group.ib;
 
-		auto &ib = group.ib;
-
-		if (indexSizeInBytes != 0) {
-			ib.ibraw = new uint8_t[indexSizeInBytes];
-			ib.num_indices = indexSizeInBytes / indexElemSizeInBytes;
-			ib.format = indexElemSizeInBytes == 4 ? 32 : 16;
-		}
-
-		group.primitives.resize(meshes.size());
-
-		size_t startVB = 0, startIB = 0;
-		for (size_t jj = 0; jj < meshes.size(); ++jj) {
-			const aiMesh *mesh = meshes[jj];
-
-			auto &primitive = group.primitives[jj];
-
-			aiMatrix4x4 transform;
-			FindTransform(scene, scene->mRootNode, mesh, transform);
-			//primitive.transform = *((glm::mat4x4*)(&transform));
-			// avoid memory align bug
-			for (uint32_t icol = 0; icol < 4; ++icol) {
-				auto &col = primitive.transform[icol];
-				const auto* src = transform[icol];
-				for (uint32_t irow = 0; irow < 4; ++irow)
-					col[irow] = src[irow];
+			if (indexSizeInBytes != 0) {
+				ib.ibraw = new uint8_t[indexSizeInBytes];
+				ib.num_indices = indexSizeInBytes / indexElemSizeInBytes;
+				ib.format = indexElemSizeInBytes == 4 ? 32 : 16;
 			}
 
-			primitive.name = mesh->mName.C_Str();
-			primitive.material_idx = mesh->mMaterialIndex + 1;
+			group.primitives.resize(meshes.size());
 
-			// vertices
-			if (vb.soa) {
-				CopyMeshVerticesAsSOA(mesh, startVB, vb);
-			} else {
-				CopyMeshVerticesAsAOS(mesh, startVB, vb);
+			size_t startVB = 0, startIB = 0;
+			for (size_t jj = 0; jj < meshes.size(); ++jj) {
+				const aiMesh *mesh = meshes[jj];
+
+				auto &primitive = group.primitives[jj];
+
+				aiMatrix4x4 transform;
+				FindTransform(scene, scene->mRootNode, mesh, transform);
+				//primitive.transform = *((glm::mat4x4*)(&transform));
+				// avoid memory align bug
+				for (uint32_t icol = 0; icol < 4; ++icol) {
+					auto &col = primitive.transform[icol];
+					const auto* src = transform[icol];
+					for (uint32_t irow = 0; irow < 4; ++irow)
+						col[irow] = src[irow];
+				}
+
+				primitive.name = mesh->mName.C_Str();
+				primitive.material_idx = mesh->mMaterialIndex + 1;
+
+				// vertices
+				CopyMeshVertices(mesh, startVB, layout, buffer);
+
+				primitive.start_vertex = startVB;
+				primitive.num_vertices = mesh->mNumVertices;
+
+				startVB += mesh->mNumVertices;
+
+				// indices
+				size_t meshIndicesCount = CopyMeshIndices(mesh, config, startIB, ib);
+				primitive.start_index = startIB;
+				primitive.num_indices = meshIndicesCount;
 			}
-
-			primitive.start_vertex = startVB;
-			primitive.num_vertices = mesh->mNumVertices;
-
-			startVB += mesh->mNumVertices;
-
-			// indices
-			size_t meshIndicesCount = CopyMeshIndices(mesh, config, startIB, ib);
-			primitive.start_index = startIB;
-			primitive.num_indices = meshIndicesCount;
-
-			primitive.bounding.Init((glm::vec3*)(mesh->mVertices), mesh->mNumVertices);
-
-			group.bounding.Merge(primitive.bounding);
 		}
-
-		md.bounding.Merge(group.bounding);
 	}
 
 }

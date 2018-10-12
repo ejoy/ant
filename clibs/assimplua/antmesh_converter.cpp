@@ -40,12 +40,17 @@ static void
 ExtractLoadConfig(lua_State *L, int idx, load_config &config) {
 	luaL_checktype(L, idx, LUA_TTABLE);
 
-	verify(lua_getfield(L, idx, "layout") == LUA_TSTRING);
-
-	config.layout = lua_tostring(L, -1);
+	verify(lua_getfield(L, idx, "layout") == LUA_TTABLE);
+	const size_t numStreams = lua_rawlen(L, -1);
+	config.layouts.resize(numStreams);
+	for (size_t ii = 0; ii < numStreams; ++ii) {
+		lua_geti(L, -1, ii + 1);
+		config.layouts[ii] = lua_tostring(L, -1);
+		lua_pop(L, 1);
+	}	
 	lua_pop(L, 1);
 
-	verify(LUA_TTABLE == lua_getfield(L, -1, "flags"));
+	verify(LUA_TTABLE == lua_getfield(L, idx, "flags"));
 
 	auto extract_boolean = [&](auto name, auto bit) {
 		const int type = lua_getfield(L, -1, name);
@@ -57,7 +62,12 @@ ExtractLoadConfig(lua_State *L, int idx, load_config &config) {
 		lua_pop(L, 1);
 	};
 
-	auto elems = Split(config.layout, '|');
+	LayoutArray elems;
+	for (const auto &layout : config.layouts) {
+		auto ee = Split(layout, '|');
+		elems.insert(elems.end(), ee.begin(), ee.end());
+	}
+	
 	if (std::find_if(std::begin(elems), std::end(elems), [](auto e) {return e[0] == 'n'; }) != std::end(elems))
 		config.flags |= load_config::CreateNormal;
 
@@ -160,20 +170,19 @@ WriteMeshData(const mesh_data &md, const std::string &srcfile, const std::string
 		WriteElemValue(off, "name", g.name);
 
 		const auto &vb = g.vb;
-		WriteElemValue(off, "vb"); {
-			WriteElemValue(off, "layout", vb.layout);
+		WriteElemValue(off, "vb"); {			
 			WriteElemValue(off, "num_vertices", vb.num_vertices);
 			WriteElemValue(off, "vbraws"); {
 				// make as struct NOT array, so only call WriteSeparator one time
 				const auto &vbraws = vb.vbraws;
 				for (auto it = vbraws.begin(); it != vbraws.end(); ++ it){
-					const auto &k = it->first;
-					const auto &v = it->second;
-					WriteElemValue(off, k, v.data, v.size);
+					const auto &layout = it->first;
+					const auto &buffer = it->second;
+					const auto sizeInBytes = vb.num_vertices * CalcVertexSize(layout);
+					WriteElemValue(off, layout, buffer.get(), sizeInBytes);
 				}
 				WriteSeparator(off);
-			}
-			WriteElemValue(off, "soa", vb.soa);
+			}			
 			WriteSeparator(off);	// end vb
 		}
 		

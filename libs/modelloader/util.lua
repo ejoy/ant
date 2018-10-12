@@ -27,13 +27,13 @@ function util.default_config()
 			
 			layout string can be used to create bgfx_vertex_decl_t
 		]] 
-		layout = "p3|n30nIf|T|b|t20|c30",
-		--layout = "p3|n30nIf|t20|c30",
+		layout = {
+			"p3|n30nIf|T|b|t20|c40",
+		},
 		flags = {
 			invert_normal 	= false,
 			flip_uv 		= true,
-			ib_32 			= false,	-- if index num is lower than 65535			
-			soa 			= false,	-- pack as struct of array, default is array of struct(vertex as position&normal&tangent ...)
+			ib_32 			= false,	-- if index num is lower than 65535
 		},
 		animation = {
 			load_skeleton 	= true,

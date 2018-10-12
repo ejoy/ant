@@ -8,10 +8,11 @@
 #include <map>
 #include <memory>
 
+using LayoutArray = std::vector<std::string>;
+
 struct load_config {
 	load_config()
-		: layout("p3|n|T|b|t20|c30")
-		, flags(0) {}
+		: flags(0) {}
 
 	bool NeedCreateNormal() const {
 		return flags & CreateNormal;
@@ -37,7 +38,7 @@ struct load_config {
 		return flags & UsingCPUSkinning;
 	}
 
-	std::string layout;
+	LayoutArray layouts;
 
 	enum {
 		CreateNormal	= 0x00000001,
@@ -194,23 +195,23 @@ private:
 	rawbuffer operator=( const rawbuffer &) = delete;
 };
 
-struct vb_info {
-	std::string layout;
-	size_t num_vertices;
+using buffer_ptr = std::unique_ptr<uint8_t[]>;
 
-	std::map<std::string, rawbuffer>	vbraws;
-	bool soa;
+inline buffer_ptr make_buffer_ptr(size_t sizeInBytes) {
+	return std::make_unique<uint8_t[]>(sizeInBytes);
+}
+
+struct vb_info {	
+	size_t num_vertices;
+	std::map<std::string, buffer_ptr>	vbraws;
 
 	vb_info()
-		: num_vertices(0)		
-		, soa(false)
+		: num_vertices(0)
 	{}
 
 	vb_info(vb_info &&other) 
-		: layout(std::move(other.layout))		
-		, num_vertices(other.num_vertices)
-		, vbraws(std::move(other.vbraws))
-		, soa(other.soa)
+		: num_vertices(other.num_vertices)
+		, vbraws(std::move(other.vbraws))		
 	{}
 };
 
