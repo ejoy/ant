@@ -27,6 +27,12 @@
     <ClCompile Include="..\..\clibs\assimplua\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\assimplua\bgfxmesh_helper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\assimplua\fbx_helper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\assimplua\meshdata.h">

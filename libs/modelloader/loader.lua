@@ -1,142 +1,231 @@
-local meshcreator = require "assimplua"
+--luacheck: globals log
+
+local log = log and log(...) or print
+
 local bgfx = require "bgfx"
 
-local fu = require "filesystem.util"
 local fs = require "filesystem"
 local path = require "filesystem.path"
+local modelutil = require "modelloader.util"
 
 local loader = {}
 
-local function load_from_source(filepath, config)
-	-- local antmeshfile = path.join("cache", path.replace_ext(filepath, "antmesh"))
-	-- path.create_dirs(path.parent(antmeshfile))
-
-	-- if fu.file_is_newer(filepath, antmeshfile) then		
-	-- 	local ext = path.ext(filepath):lower()
-	-- 	if ext == "fbx" then
-	-- 		meshcreator.convert_FBX(filepath, antmeshfile, config)
-	-- 	elseif ext == "bin" then
-	-- 		meshcreator.convert_BGFXBin(filepath, antmeshfile, config)
-	-- 	else 
-	-- 		error(string.format("unknown ext : %s", ext))
-	-- 	end
-	-- end
-
-	path.create_dirs(path.join("cache", filepath))
+local function load_from_source(filepath)
+	path.create_dirs(path.parent(path.join("cache", filepath)))
 	local antmeshloader = require "modelloader.antmeshloader"
 	return antmeshloader(path.remove_ext(filepath))
 end
 
-function loader.load(filepath)
-	local modelutil = require "modelloader.util"
-	local config = modelutil.default_config()
+local function read_config(filepath)
+	local lkfile = path.replace_ext(filepath, "lk")
+	if fs.exist(lkfile) then
+		local rawtable = require "asset.rawtable"
+		local t = rawtable(lkfile)
+		return t.config
+	end
 
-	local meshgroup = load_from_source(filepath, config)
-	if meshgroup then
-		-- need move to bgfx c module
-		local function create_decl(vb_layout)
-			local decl = {}
-			for v in vb_layout:gmatch("%w+") do 
-				local function adjust_elem(e)
-					local defelem = {'_', '3', '0', 'N', 'I', 'f'}					
-					for i=1, #e do
-						local c = v:sub(i, i)
-						defelem[i] = c
-					end
-					return table.concat(defelem)
-				end
+	
+	return modelutil.default_config()
+end
 
-				local e = adjust_elem(v)
-				local function get_attrib(a)
-					local t = {	p = "POSITION",	n = "NORMAL",T = "TANGENT",	b = "BITANGENT",
-						i = "INDICES",	w = "WEIGHT",
-						c = "COLOR", t = "TEXCOORD"
-					}
-					return assert(t[a])
-				end
-				local attrib = get_attrib(e:sub(1, 1))
-				local num = tonumber(e:sub(2, 2))
+local function layout_to_elems(layout)
+	local t = {}
+	for m in layout:gmatch("%w+") do
+		table.insert(t, m)
+	end
+	return t
+end
 
-				if attrib == "COLOR" or attrib == "TEXCOORD" then
-					local channel = e:sub(3, 3)
-					attrib = attrib .. channel
-				end
+local function get_stream_elems(s)
+	local t = {}
+	for m in s:gmatch("[pnTbtcwi]%d?") do
+		table.insert(t, m)
+	end
+	return t	
+end
 
-				local function get_type(v)					
-					local t = {	u = "UINT8", U = "UINT10", i = "INT16",
-						h = "HALF",	f = "FLOAT",}
-					return assert(t[v])
-				end
+local function create_vb(vb, streams)
+	local handles = {}
+	local decls = {}
+	local vb_data = {"!", "", 1, nil}
 
-				local normalize = e:sub(4, 4) == "n"
-				local asint= e:sub(5, 5) == "i"
-				local type = get_type(e:sub(6, 6))
+	local function add_vb(layout, vbraw)
+		local decl, stride = modelutil.create_decl(layout)
+		vb_data[2], vb_data[4] = vbraw, vb.num_vertices * stride
 
-				table.insert(decl, {attrib, num, type, normalize, asint})
+		table.insert(decls, decl)
+		table.insert(handles, bgfx.create_vertex_buffer(vb_data, decl))
+	end
+
+	if streams then
+		local function gen_layout_vbraw_mapper(vb)
+			local elems = layout_to_elems(vb.layout)		
+			local vbraws = vb.vbraws
+			assert(#vbraws == #elems)	
+			local t = {}
+			for idx, e in ipairs(elems) do				
+				t[e] = vbraws[idx]
 			end
-		
-			return bgfx.vertex_decl(decl)
+	
+			return t
 		end
 
-		local groups = meshgroup.groups
+		local vbmapper = gen_layout_vbraw_mapper(vb)
+		local function check_valid(vbmapper)
+			local function elem_size(elem)
+				assert(#elem == 6)				
+				local count = elem:sub(2, 2)
+				local internal_type = elem:sub(6, 6)
 
-		local vb_data = {"!", "", 1, nil}
-		local ib_data = {"", 1, nil}
+				local function get_internal_type_size(type)
+					local typesize = {
+						['f'] = 4,
+						['i'] = 4,
+						['u'] = 1,
+					}
 
-		for _, g in ipairs(groups) do
-			local decl, stride = create_decl(g.vb_layout)
-			vb_data[2], vb_data[4] = g.vbraw, g.num_vertices * stride
-			
-			g.vb = bgfx.create_vertex_buffer(vb_data, decl)
-			if g.ibraw then
-				local elemsize = g.ib_format == 32 and 4 or 2
-				ib_data[1], ib_data[3] = g.ibraw, elemsize * g.num_indices
-				g.ib = bgfx.create_index_buffer(ib_data, elemsize == 4 and "d" or nil)
+					local size = typesize[type]
+					assert(size, "not support type")
+					return size
+				end
+
+				return get_internal_type_size(internal_type) * count
 			end
+			
+			for k, v in pairs(vbmapper) do
+				local attrib = k:sub(1, 1)
+				if attrib ~= "w" then
+					assert(vb.num_vertices * elem_size(k) == #v)
+				end
+			end
+		end
+		check_valid(vbmapper)
+		for _, s in ipairs(streams) do
+			local function get_stream_layout(stream)
+				local layout = vb.layout
+				local stream_layout = {}
+
+				local elems = layout_to_elems(layout)
+				local debug_stream = ""
+				local streamelems = get_stream_elems(stream)
+				for _, m in ipairs(streamelems) do
+					debug_stream = debug_stream .. m
+
+					local function find_elem(m)
+						for _, e in ipairs(elems) do
+							assert(#e == 6)
+							local attrib = e:sub(1, 1)
+							if attrib == 'c' or attrib == 't' then
+								local count = e:sub(3, 3)
+								attrib = attrib .. count
+							end
+
+							if attrib == m then
+								return e
+							end
+						end		
+						return nil			
+					end
+
+					local e = find_elem(m)
+					if e then
+						table.insert(stream_layout, e)
+					else
+						error(string.format(
+							"stream elem : %s in stream : %s, not match any vertex in layout : %s", 
+							m, stream, layout))
+
+					end					
+				end
+
+				if debug_stream ~= stream then
+					log(string.format(
+						"invalid stream element defined! stream is : %s, valid stream is : %s", 
+						stream, debug_stream))
+				end
+				return table.concat(stream_layout, '|')
+			end
+	
+			local slayout = get_stream_layout(s)
+			-- should create from mesh convertor
+			local function gen_vbraw(slayout)
+				local elems = layout_to_elems(slayout)
+				local vbraw = ""
+				for _, e in ipairs(elems) do
+					local v = vbmapper[e]					
+					vbraw = vbraw .. v
+				end
+				return vbraw
+			end
+	
+			local vbraw = gen_vbraw(slayout)
+			add_vb(slayout, vbraw)
+		end
+	else
+		local vbraws = vb.vbraws
+		for k, v in pairs(vbraws) do
+			add_vb(vb.layout, v)
+		end
+	end
+
+	vb.handles = handles
+	vb.decls = decls
+end
+
+local function create_ib(ib)
+	if ib then
+		local ib_data = {"", 1, nil}
+		local elemsize = ib.format == 32 and 4 or 2
+		ib_data[1], ib_data[3] = ib.ibraw, elemsize * ib.num_indices
+		ib.handle = bgfx.create_index_buffer(ib_data, elemsize == 4 and "d" or nil)
+	end
+end
+
+local function get_streams(config)
+	if config.animation.cpu_skinning then
+		local streams = {}
+		for _, s in ipairs(config.stream) do
+			local selems = get_stream_elems(s)
+			local function find_idx(name)
+				for idx, se in ipairs(selems) do
+					if se == name then
+						return idx
+					end
+				end
+
+				return nil
+			end
+			
+			for _, name in ipairs{'i', 'w'} do
+				local idx = find_idx(name)
+				if idx then
+					table.remove(selems, idx)
+				end
+			end
+
+			if next(selems) then
+				table.insert(streams, table.concat(selems))
+			end
+		end
+
+		return streams
+	end
+
+	return config.stream
+end
+
+function loader.load(filepath)
+	local config = read_config(filepath)
+	local meshgroup = load_from_source(filepath)
+	print(filepath)
+	if meshgroup then		
+		for _, g in ipairs(meshgroup.groups) do
+			create_vb(g.vb, get_streams(config))
+			create_ib(g.ib)
 		end
 
 		return meshgroup
 	end
 end
-
--- function loader.load(filepath)
---     print(filepath)
---     local path = require "filesystem.path"
---     local ext = path.ext(filepath)
---     if string.lower(ext) ~= "fbx" then
---         return
---     end
-
---     local material_info, model_node = assimp.LoadFBX(filepath)
---     if not material_info or not model_node then
---         return
---     end
-
---     --PrintNodeInfo(model_node, 1)
---     --PrintMaterialInfo(material_info)
-
---     for _, v in ipairs(material_info) do
---         v.vb_raw = {}
---         v.ib_raw = {}
---         v.prim = {}
---     end
-
---     HandleModelNode(material_info, model_node)
-
---     for _, v in ipairs(material_info) do
---         --local data_string = string.pack("s", table.unpack(v.vb_raw))
---         local vdecl, stride = bgfx.vertex_decl {
---             { "POSITION", 3, "FLOAT" },
---             { "NORMAL", 3, "FLOAT", true, false},
---             { "TEXCOORD0", 3, "FLOAT"},
---         }
-
---         local vb_data = {"fffffffff", table.unpack(v.vb_raw)}
---         v.vb = bgfx.create_vertex_buffer(vb_data, vdecl)
---         v.ib = bgfx.create_index_buffer(v.ib_raw)
---     end
-
---     return {group = material_info}
--- end
 
 return loader

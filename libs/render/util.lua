@@ -1,8 +1,7 @@
+-- luacheck: globals log
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
-local cu = require "render.components.util"
-local mu = require "math.util"
 local shadermgr = require "render.resources.shader_mgr"
 
 local util = {}
@@ -104,14 +103,6 @@ local function update_properties(shader, properties)
     end
 end
 
-local material_cache = nil
-local function need_commit(material)
-    local need = material ~= material_cache
-    material_cache = material
-    return need
-end
-
-
 function util.draw_primitive(vid, primgroup, mat)
     bgfx.set_transform(mat)
 
@@ -125,21 +116,25 @@ function util.draw_primitive(vid, primgroup, mat)
 	local ib, vb = mg.ib, mg.vb
 
 	local prims = mg.prim
-
-	local numprim = prims and #prims or nil
-	if numprim == nil or numprim == 1 then
+	if prims == nil then
 		if ib then
-			bgfx.set_index_buffer(ib)
+			bgfx.set_index_buffer(ib.handle)
 		end
-		bgfx.set_vertex_buffer(vb)
-		bgfx.submit(vid, prog, 0, false) --not need_commit(material))
+		for idx, v in ipairs(vb.handles) do
+			bgfx.set_vertex_buffer(idx - 1, v)
+		end
+		
+		bgfx.submit(vid, prog, 0, false)
 	else
+		local numprim = #prims
 		for i=1, numprim do
 			local prim = prims[i]
 			if ib then
-				bgfx.set_index_buffer(ib, prim.startIndex, prim.numIndices)
+				bgfx.set_index_buffer(ib.handle, prim.startIndex, prim.numIndices)
 			end
-			bgfx.set_vertex_buffer(0, vb, prim.startVertex, prim.numVertices)
+			for idx, v in ipairs(vb.handles) do
+				bgfx.set_vertex_buffer(idx - 1, v, prim.startVertex, prim.numVertices)
+			end
 			bgfx.submit(vid, prog, 0, i~=numprim)
 		end
 	end

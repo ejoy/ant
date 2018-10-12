@@ -36,26 +36,31 @@ function general_editor_entites:init()
 
 		axis.name.n = "axis-tips"
 		
-		axis.mesh.path = ""	-- runtime mesh info
+		axis.mesh.ref_path = ""	-- runtime mesh info
 		axis.mesh.assetinfo = {
 			handle = {
 				groups = {
-					{
-						vdecl = vdecl,
-						vb = bgfx.create_vertex_buffer({"fffd",
-						0.0, 0.0, 0.0, 0xff0000ff,  -- x-axis
-						1.0, 0.0, 0.0, 0xff0000ff,
-						0.0, 0.0, 0.0, 0xff00ff00,  -- y-axis
-						0.0, 1.0, 0.0, 0xff00ff00,
-						0.0, 0.0, 0.0, 0xffff0000,  -- z-axis
-						0.0, 0.0, 1.0, 0xffff0000}, vdecl)
+					{						
+						vb = {
+							decls = {
+								vdecl
+							},
+							handles = {
+								bgfx.create_vertex_buffer({"fffd",
+								0.0, 0.0, 0.0, 0xff0000ff,  -- x-axis
+								1.0, 0.0, 0.0, 0xff0000ff,
+								0.0, 0.0, 0.0, 0xff00ff00,  -- y-axis
+								0.0, 1.0, 0.0, 0xff00ff00,
+								0.0, 0.0, 0.0, 0xffff0000,  -- z-axis
+								0.0, 0.0, 1.0, 0xffff0000}, vdecl)
+							},
+						}
 					},
 				}
 			}
 		}
-
-		axis.material.content[1] = {path="line.material", properties={}}
-		cu.load_material(axis)
+		
+		cu.load_material(axis, {"line.material",})
     end
 
     do
@@ -106,22 +111,27 @@ function general_editor_entites:init()
             return t
         end
 
-		grid.mesh.path = ""
+		grid.mesh.ref_path = ""
         grid.mesh.assetinfo = {
 			handle = {
 				groups = {
 					{
-						vdecl = vdecl,
-						vb = bgfx.create_vertex_buffer(
-							create_grid_line_points(64, 64, 1),
-							vdecl)
+						vb = {
+							decls = {
+								vdecl
+							},
+							handles = {
+								bgfx.create_vertex_buffer(
+									create_grid_line_points(64, 64, 1),
+									vdecl)
+							}
+						}
 					}
 				}
 			}
 		}
 
-		grid.material.content[1] = {path="line.material", properties={}}
-		cu.load_material(grid)
+		cu.load_material(grid, {"line.material",})
 	end
 
 	do
@@ -152,40 +162,47 @@ function general_editor_entites:init()
 			return corners
 		end
 
-		frusutm_debug.mesh.path = ""
+		frusutm_debug.mesh.ref_path = ""
         frusutm_debug.mesh.assetinfo = {
 			handle = {
 				groups = {
 					{
 						vdecl = vdecl,
-						vb = bgfx.create_vertex_buffer(
-							create_frustum_points(),
-							vdecl),
-						ib = bgfx.create_index_buffer {
-							-- top
-							1, 2, -- ltn, rtn
-							1, 3, -- ltn, ltf							
-							3, 4, -- ltf, rtf
-							4, 2, -- rtf, rtn
-
-							-- bottom
-							1+4, 2+4, -- ltn, rtn
-							1+4, 3+4, -- ltn, ltf							
-							3+4, 4+4, -- ltf, rtf
-							4+4, 2+4, -- rtf, rtn
-
-							1, 5,
-							2, 6,
-							3, 7,
-							4, 8,
+						vb = {
+							decls = {
+								vdecl
+							},
+							handles = {
+								bgfx.create_vertex_buffer(
+								create_frustum_points(),
+								vdecl),
+							}
 						},
-						
+						ib = {
+							handle = bgfx.create_index_buffer {
+								-- top
+								1, 2, -- ltn, rtn
+								1, 3, -- ltn, ltf							
+								3, 4, -- ltf, rtf
+								4, 2, -- rtf, rtn
+
+								-- bottom
+								1+4, 2+4, -- ltn, rtn
+								1+4, 3+4, -- ltn, ltf							
+								3+4, 4+4, -- ltf, rtf
+								4+4, 2+4, -- rtf, rtn
+
+								1, 5,
+								2, 6,
+								3, 7,
+								4, 8,
+							},	
+						}
 					}
 				}
 			}
 		}
 	
-		frusutm_debug.material.content[1] = {path="line.material", properties={}}
-		cu.load_material(frusutm_debug)
+		cu.load_material(frusutm_debug, {"line.material",})
 	end
 end

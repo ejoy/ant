@@ -1,7 +1,7 @@
 local util = {}; util.__index = util
 
 local function create_light_entity(world, tag_comp, name)
-	local l_eid = world:new_entity("position", "rotation", "name", "serialize", "light", tag_comp)
+	local l_eid = world:new_entity("rotation", "name", "serialize", "light", tag_comp)
 	local l_entity = assert(world[l_eid])
 
 	l_entity.name.n = name
@@ -23,6 +23,7 @@ end
 
 function util.create_point_light_entity(world, name)
 	local l_eid = create_light_entity(world, "point_light", name or "Point Light")
+	world:add_component(l_eid, "position")
 	local l_entity = assert(world[l_eid])	
 
 	local l = l_entity.light.v
@@ -34,6 +35,8 @@ end
 
 function util.create_spot_light_entity(world, name)
 	local l_eid = create_light_entity(world, "spot_light", name or "Spot Light")
+	world:add_component(l_eid, "position")
+	
 	local l_entity = assert(world[l_eid])
 	local l =l_entity.light.v
 

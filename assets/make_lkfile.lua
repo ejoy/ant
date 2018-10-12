@@ -15,7 +15,7 @@ local winfile =  require "winfile"
 local modelutil = require "modelloader.util"
 local su = require "serialize.util"
 
-local config_template = su.serialize(modelutil.default_config(), true)
+
 
 local templates = {
 	shader = "shader_src = '%s'",
@@ -49,7 +49,18 @@ for _, ff in ipairs(files) do
 	local template_filecontent
 	if ext == "sc" then
 		template_filecontent = string.format(templates.shader, ff)
-	elseif ext == "fbx" or ext == "bin" then
+	elseif ext == "fbx" or ext == "bin" or ext == "ozz" then
+		local config = modelutil.default_config()
+		if ext == "ozz" then
+			config.stream = {
+				"pnTbc0t0",	-- stream 0
+				"iw"		-- stream 1
+			}
+			config.flags.soa = true
+		end
+
+		local config_template = su.serialize(config, true)
+
 		template_filecontent = string.format(templates.mesh, ff, config_template)
 	end
 
