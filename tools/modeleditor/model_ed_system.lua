@@ -129,18 +129,16 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	return eid
 end
 
-local function get_ani_playtime_in_second(slider)	
-	local time_in_ms = tonumber(slider.VALUE)
-	return time_in_ms / 1000
+local function get_ani_cursor(slider)
+	assert(tonumber(slider.MIN) == 0)
+	assert(tonumber(slider.MAX) == 1)
+	return tonumber(slider.VALUE)
 end
 
-local function update_animation_ratio(eid, time_in_second)
+local function update_animation_ratio(eid, cursor_pos)
 	local e = world[eid]
-	local anicomp = assert(e.animation)
-	local hani = assert(anicomp.assetinfo).handle
-
-	local duration = hani:duration()
-	anicomp.ratio = time_in_second / duration
+	local anicomp = assert(e.animation)	
+	anicomp.ratio = cursor_pos
 end
 
 local function init_control(ms)
@@ -203,10 +201,10 @@ local function init_control(ms)
 	local slider = windows.anitime_slider
 	
 	function slider:valuechanged_cb()
-		update_animation_ratio(sample_eid, get_ani_playtime_in_second(self))
+		update_animation_ratio(sample_eid, get_ani_cursor(self))
 	end
 
-	update_animation_ratio(sample_eid, get_ani_playtime_in_second(slider))
+	update_animation_ratio(sample_eid, get_ani_cursor(slider))
 end
 
 -- luacheck: ignore self
