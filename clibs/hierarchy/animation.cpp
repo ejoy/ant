@@ -27,6 +27,8 @@ extern "C" {
 
 
 // stl
+#include <string>
+#include <cstring>
 #include <algorithm>
 
 struct animation_node {
@@ -169,9 +171,6 @@ lskinning(lua_State *L) {
 	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
 
 	luaL_checktype(L, 2, LUA_TUSERDATA);
-	hierarchy_build_data *builddata = (hierarchy_build_data *)lua_touserdata(L, 2);
-
-	luaL_checktype(L, 3, LUA_TUSERDATA);
 	animation_node *ani = (animation_node*)lua_touserdata(L, 3);
 	assert(om->mesh);
 
@@ -181,8 +180,6 @@ lskinning(lua_State *L) {
 		om->skinning_matrices[ii] =
 			ani->poses[mesh.joint_remaps[ii]] * mesh.inverse_bind_poses[ii];
 	}
-
-	const size_t vertex_count = mesh.vertex_count();
 
 	// offset
 	const size_t positions_offset = 0;
@@ -324,7 +321,7 @@ lmotion(lua_State *L){
 		return 0;
 	}
 
-	if (aninode->poses.count() != ske->num_joints()) {
+	if (aninode->poses.count() != size_t(ske->num_joints())) {
 		luaL_error(L, 
 			"skeleton joint number : %d, is not the same as animation result poses number : %d", 
 			ske->num_joints(), aninode->poses.count());
@@ -333,7 +330,7 @@ lmotion(lua_State *L){
 
 	luaL_checktype(L, 3, LUA_TUSERDATA);
 	sampling_node * samplingnode = (sampling_node*)lua_touserdata(L, 3);
-	if (samplingnode->results.count() != ske->num_soa_joints()) {
+	if (samplingnode->results.count() != size_t(ske->num_soa_joints())) {
 		luaL_error(L,
 			"sampling node results number : %d, is not the same as ske num_soa_joints number: %d",
 			samplingnode->results.count(), ske->num_soa_joints());

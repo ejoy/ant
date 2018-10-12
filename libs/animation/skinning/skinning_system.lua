@@ -25,12 +25,11 @@ function skinning_sys:update()
 		local e = world[eid]
 		local mesh = assert(e.mesh).assetinfo.handle
 
-		local sm = assert(e.skinning_mesh).assetinfo.handle
-		local ske = assert(e.skeleton).assetinfo.handle
+		local sm = assert(e.skinning_mesh).assetinfo.handle		
 		local ani = assert(e.animation).assetinfo.handle
 
 		-- update data include : position, normal, tangent
-		animodule.skinning(sm, ske, ani)
+		animodule.skinning(sm, ani)
 
 		-- update mesh dynamic buffer
 		assert(1 == #mesh.groups)
