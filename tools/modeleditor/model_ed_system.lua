@@ -121,8 +121,8 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	local smaplemaerial = "mem://sample.material"
 	fu.write_to_file(smaplemaerial, [[
 		shader = {
-			vs = "mesh/vs_test",
-			fs = "mesh/fs_test",
+			vs = "mesh/vs_color_lighting",
+			fs = "mesh/fs_color_lighting",
 		}
 
 		state = "default.state"
