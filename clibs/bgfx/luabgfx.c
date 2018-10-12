@@ -15,7 +15,7 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 
-#if BGFX_API_VERSION != 86
+#if BGFX_API_VERSION != 88
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -749,9 +749,12 @@ lgetStats(lua_State *L) {
 		break;
 	case 'c':	// draw calls
 		PUSHSTAT(numDraw);
+		PUSHSTAT(numBlit);
 		PUSHSTAT(numCompute);
 		PUSHSTAT(maxGpuLatency);
-#define PUSHPRIM(v,name) if (stat->numPrims[v] > 0) { lua_pushinteger(L, stat->numPrims[v]); lua_setfield(L, 2, name); }
+		break;
+	case 'p':	// numPrims
+#define PUSHPRIM(v,name) lua_pushinteger(L, stat->numPrims[v]); lua_setfield(L, 2, name)
 		PUSHPRIM(BGFX_TOPOLOGY_TRI_LIST, "numTriList");
 		PUSHPRIM(BGFX_TOPOLOGY_TRI_STRIP, "numTriStrip");
 		PUSHPRIM(BGFX_TOPOLOGY_LINE_LIST, "numLineList");
@@ -1094,7 +1097,7 @@ static int
 lsubmit(lua_State *L) {
 	bgfx_view_id_t id = luaL_checkinteger(L, 1);
 	int progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
-	int depth = luaL_optinteger(L, 3, 0);
+	uint32_t depth = luaL_optinteger(L, 3, 0);
 	int preserveState = lua_toboolean(L, 4);
 	bgfx_program_handle_t ph = { progid };
 	bgfx_submit(id, ph, depth, preserveState);
@@ -3773,7 +3776,7 @@ lsubmitOcclusionQuery(lua_State *L) {
 	int id = luaL_checkinteger(L, 1);
 	int progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	int oqid = BGFX_LUAHANDLE_ID(OCCLUSION_QUERY, luaL_checkinteger(L, 3));
-	int depth = luaL_optinteger(L, 4, 0);
+	uint32_t depth = luaL_optinteger(L, 4, 0);
 	int preserveState = lua_toboolean(L, 5);
 	bgfx_program_handle_t ph = { progid };
 	bgfx_occlusion_query_handle_t oqh = { oqid };
@@ -3788,7 +3791,7 @@ lsubmitIndirect(lua_State *L) {
 	int iid = BGFX_LUAHANDLE_ID(INDIRECT_BUFFER, luaL_checkinteger(L, 3));
 	uint16_t start = luaL_optinteger(L, 4, 0);
 	uint16_t num = luaL_optinteger(L, 5, 1);
-	int32_t depth = luaL_optinteger(L, 6, 0);
+	uint32_t depth = luaL_optinteger(L, 6, 0);
 	bool preserveState = lua_toboolean(L, 7);
 	bgfx_program_handle_t ph = { progid };
 	bgfx_indirect_buffer_handle_t ih = { iid };
