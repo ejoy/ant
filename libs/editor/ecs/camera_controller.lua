@@ -1,6 +1,11 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "render.math3d.math_component"
+ecs.import "render.camera.camera_component"
+ecs.import "render.components.general"
+ecs.import "inputmgr.message_system"
+
 local mu = require "math.util"
 local cu = require "render.components.util"
 
@@ -31,27 +36,29 @@ camera_controller_system.singleton "message_component"
 camera_controller_system.singleton "control_state"
 
 camera_controller_system.depend "iup_message"
+camera_controller_system.depend "camera_init"
 
 function camera_controller_system:init()
 	local ms = self.math_stack
 	local camera = world:first_entity("main_camera")
 
+	local move_speed = 1
 	local message = {}
 
-	local button_status = {}
-	function message:button(btn, p, x, y, status)
-		button_status[btn] = p
-	end
+    local last_xy
+    local button_status = {}
+    function message:button(btn, p, x, y, status)
+        button_status[btn] = p
+        last_xy = point2d(x, y)
+    end
 
-	local last_xy
-	function message:motion(x, y, status)		
+	function message:motion(x, y, status)
 		local xy = point2d(x, y)
-		if last_xy then			
-			--if (status.LEFT or status.RIGHT) and last_xy then
+		if last_xy then
 			if status.RIGHT then
-				local speed = message.move_speed * 0.1
+				local speed = move_speed * 0.1
 				local delta = (xy - last_xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
-				camera_util.rotate(ms, camera, delta.x, delta.y)				
+				camera_util.rotate(ms, camera, delta.x, delta.y)
 			end
 		end
 
@@ -61,67 +68,45 @@ function camera_controller_system:init()
 	function message:keypress(c, p, status)
 		if c == nil then return end
 		
-		do
-			if p then
-				local ms = message.ms
+		if p then
+			local move_step = move_speed
+			local rot = camera.rotation.v
+			local eye = camera.position.v
 
-				local move_step = message.move_speed
-				local rot = camera.rotation.v
-				local eye = camera.position.v
+			local rightbtn_down = button_status.RIGHT
+			local leftbtn_down = button_status.LEFT
 
-				local rightbtn_down = button_status.RIGHT
-				local leftbtn_down = button_status.LEFT
-
-				local nomouse_down = not (rightbtn_down or leftbtn_down)
-				if nomouse_down and (c == "r" or c == "R") then
-					ms(	eye, {0, 0, -10}, "=")
-					ms( rot, {0, 0, 0}, "=")
-					return 
-				end
-
-				if rightbtn_down then					
-					local dx, dy, dz = 0, 0, 0			
-
-					if c == "a" or c == "A" then					
-						dx = -move_step
-					elseif c == "d" or c == "D" then					
-						dx = move_step
-					elseif c == "w" or c == "W" then					
-						dz = move_step
-					elseif c == "s" or c == "S" then					
-						dz = -move_step
-					elseif c == "q" or c == "Q" then
-						dy = -move_step
-					 elseif c == "e" or c == "E" then
-						dy = move_step
-					end
-
-					camera_util.move(ms, camera, dx, dy, dz)
-				end
+			local nomouse_down = not (rightbtn_down or leftbtn_down)
+			if nomouse_down and (c == "r" or c == "R") then
+				ms(	eye, {0, 0, -10}, "=")
+				ms( rot, {0, 0, 0}, "=")
+				return 
 			end
-		end
+
+			if rightbtn_down then					
+				local dx, dy, dz = 0, 0, 0			
+
+				if c == "a" or c == "A" then					
+					dx = -move_step
+				elseif c == "d" or c == "D" then					
+					dx = move_step
+				elseif c == "w" or c == "W" then					
+					dz = move_step
+				elseif c == "s" or c == "S" then					
+					dz = -move_step
+				elseif c == "q" or c == "Q" then
+					dy = -move_step
+					elseif c == "e" or c == "E" then
+					dy = move_step
+				end
+
+				camera_util.move(ms, camera, dx, dy, dz)
+			end
+		end	
 	end
 
 	self.message_component.msg_observers:add(message)
-	message.cb = {}
-	message.msg_comp = self.message_component
-	message.ms = self.math_stack
-	message.move_speed = 1
 end
-
--- function camera_controller_system:update()
--- 	local camera = world:first_entity("main_camera")
--- 	if camera then
--- 		local cs = self.control_state.state
--- 		if cs == "camera" or cs == "default" then
--- 			for _, cb in pairs(message.cb) do
--- 				cb(camera)
--- 			end
--- 		end
--- 	end
-	
--- 	message.cb = {}
--- end
 
 function camera_controller_system.notify:focus_selected_obj(objects)
 	--only using first obj

@@ -48,16 +48,10 @@ function util.srt_v(ms, s, r, t, ispersistent)
 end
 
 function util.proj(ms, frustum, ispersistent)
-	local t = {type = "proj", n=frustum.n, f=frustum.f, l=frustum.l, r=frustum.r, t=frustum.t, b=frustum.b}
-	if frustum.isortho then
-		t.type = "ortho"
-	end
-
 	if ispersistent then
-		return create_persistent_type("matrix", t)
+		return create_persistent_type("matrix", frustum)
 	end
-
-	return ms(t, "P")
+	return ms(frustum, "P")
 end
 
 function util.proj_v(ms, frustum, ispersistent)

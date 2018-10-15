@@ -72,12 +72,14 @@ client_main(lua_State *L) {
 	lua_pushvalue(L, 2);
 	lua_rawsetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST);	// set host L
 
-	if (lua_getglobal(L, "require") != LUA_TFUNCTION) {
-		return luaL_error(L, "No require api");
-	}
 	const char * mainscript = (const char *)lua_touserdata(L, 1);
-	lua_pushstring(L, mainscript);
-	lua_call(L, 1, 0);	// require mainscript
+
+
+	if (luaL_loadstring(L, mainscript) != LUA_OK) {
+		return lua_error(L);
+	}
+	lua_pushvalue(L, 3);	// preprocessor
+	lua_call(L, 1, 0);
 	return 0;
 }
 
@@ -95,17 +97,37 @@ push_errmsg(lua_State *L, lua_State *cL) {
 static int
 lhost_start(lua_State *L) {
 	clear_client(L);
-	const char * mainscript = luaL_checkstring(L, 1);
+	lua_CFunction preprocessor = NULL;
+	int script_index = 1;
+	if (lua_type(L, 1) == LUA_TFUNCTION) {
+		// preprocess c function
+		preprocessor = lua_tocfunction(L, 1);
+		if (preprocessor == NULL) {
+			return luaL_error(L, "Preprocessor must be a C function");
+		}
+		if (lua_getupvalue(L, 1, 1)) {
+			return luaL_error(L, "Preprocessor must be a light C function (no upvalue)");
+		}
+		script_index ++;
+	}
+	const char * mainscript = luaL_checkstring(L, script_index);
 	lua_State *cL = luaL_newstate();
 	if (cL == NULL)
 		return luaL_error(L, "Can't new debug client");
+
 	lua_pushlightuserdata(L, cL);
 	lua_rawsetp(L, LUA_REGISTRYINDEX, &DEBUG_CLIENT);
 
 	lua_pushcfunction(cL, client_main);
 	lua_pushlightuserdata(cL, (void *)mainscript);
 	lua_pushlightuserdata(cL, (void *)L);
-	if (lua_pcall(cL, 2, 0, 0) != LUA_OK) {
+	if (preprocessor) {
+		lua_pushcfunction(cL, preprocessor);
+	} else {
+		lua_pushnil(cL);
+	}
+
+	if (lua_pcall(cL, 3, 0, 0) != LUA_OK) {
 		push_errmsg(L, cL);
 		clear_client(L);
 		return lua_error(L);

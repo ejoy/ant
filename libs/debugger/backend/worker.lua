@@ -12,18 +12,18 @@ local hookmgr = require 'debugger.hookmgr'
 local initialized = false
 local info = {}
 local state = 'running'
-local stopReason = 'unknown'
+local stopReason = 'step'
 local exceptionFilters = {}
 local exceptionMsg = ''
 local exceptionTrace = ''
 
 local CMD = {}
 
-local masterThread = cdebug.start 'worker'
+local workerThread = cdebug.start 'worker'
 
 local function workerThreadUpdate()
     while true do
-        local msg = masterThread:recv()
+        local msg = workerThread:recv()
         if not msg then
             break
         end
@@ -35,7 +35,7 @@ local function workerThreadUpdate()
 end
 
 local function sendToMaster(msg)
-    masterThread:send(assert(json.encode(msg)))
+    workerThread:send(assert(json.encode(msg)))
 end
 
 ev.on('breakpoint', function(reason, bp)
@@ -60,11 +60,28 @@ ev.on('output', function(category, output, source, line)
     }
 end)
 
+ev.on('loadedSource', function(reason, source)
+    sendToMaster {
+        cmd = 'loadedSource',
+        reason = reason,
+        source = source
+    }
+end)
+
+--function print(...)
+--    local n = select('#', ...)
+--    local t = {}
+--    for i = 1, n do
+--        t[i] = tostring(select(i, ...))
+--    end
+--    ev.emit('output', 'stdout', table.concat(t, '\t')..'\n')
+--end
+
 function CMD.initializing(pkg)
     ev.emit('initializing', pkg.config)
 end
 
-function CMD.initialized(pkg)
+function CMD.initialized()
     initialized = true
 end
 
@@ -257,6 +274,10 @@ function CMD.exceptionInfo(pkg)
     }
 end
 
+function CMD.loadedSources()
+    source.all_loaded()
+end
+
 function CMD.stop(pkg)
     state = 'stopped'
     stopReason = pkg.reason
@@ -330,6 +351,7 @@ function hook.step()
         return
     elseif state == 'stepOver' or state == 'stepOut' or state == 'stepIn' then
         state = 'stopped'
+        stopReason = 'step'
         hookmgr.step_cancel()
     end
     if state == 'stopped' then

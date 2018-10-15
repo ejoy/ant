@@ -98,7 +98,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_USE_MATH_DEFINES;WIN32;_DEBUG;MATH3D_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -116,7 +116,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_USE_MATH_DEFINES;LUA_BUILD_AS_DLL;MATH3D_EXPORTS;_WINDOWS;_USRDLL;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -137,7 +137,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_USE_MATH_DEFINES;WIN32;NDEBUG;MATH3D_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -159,7 +159,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_USE_MATH_DEFINES;LUA_BUILD_AS_DLL;MATH3D_EXPORTS;_WINDOWS;_USRDLL;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -172,25 +172,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\math3d\conversion.c" />
+    <ClCompile Include="..\..\clibs\math3d\baselib.cpp" />
     <ClCompile Include="..\..\clibs\math3d\linalg.c" />
-    <ClCompile Include="..\..\clibs\math3d\math3d.c" />
-    <ClCompile Include="..\..\clibs\math3d\matrix44.c" />
+    <ClCompile Include="..\..\clibs\math3d\math3d.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\clibs\math3d\conversion.h" />
-    <ClInclude Include="..\..\clibs\math3d\datadef.h" />
-    <ClInclude Include="..\..\clibs\math3d\euler.h" />
-    <ClInclude Include="..\..\clibs\math3d\intersection.h" />
     <ClInclude Include="..\..\clibs\math3d\linalg.h" />
-    <ClInclude Include="..\..\clibs\math3d\math3d.h" />
-    <ClInclude Include="..\..\clibs\math3d\matrix44.h" />
-    <ClInclude Include="..\..\clibs\math3d\plane.h" />
-    <ClInclude Include="..\..\clibs\math3d\quaternion.h" />
     <ClInclude Include="..\..\clibs\math3d\refstack.h" />
-    <ClInclude Include="..\..\clibs\math3d\util.h" />
-    <ClInclude Include="..\..\clibs\math3d\vector3.h" />
-    <ClInclude Include="..\..\clibs\math3d\vector4.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\clibs\math3d\test.lua" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

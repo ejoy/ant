@@ -15,6 +15,10 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 
+#if BGFX_API_VERSION != 88
+#   error BGFX_API_VERSION mismatch
+#endif
+
 #if _MSC_VER > 0
 #include <malloc.h>
 
@@ -134,9 +138,9 @@ append_log(struct log_cache *lc, const char * buffer, int n) {
 }
 
 static void
-cb_fatal(bgfx_callback_interface_t *self, bgfx_fatal_t code, const char *str) {
+cb_fatal(bgfx_callback_interface_t *self, const char* filePath, uint16_t line, bgfx_fatal_t code, const char *str) {
 	char tmp[MAX_LOGBUFFER];
-	int n = snprintf(tmp, sizeof(tmp), "Fatal error: 0x%08x: %s", code, str);
+	int n = snprintf(tmp, sizeof(tmp), "Fatal error at %s(%d): 0x%08x: %s", filePath, line, code, str);
 	if (n > MAX_LOGBUFFER) {
 		// truncated
 		n = MAX_LOGBUFFER;
@@ -301,6 +305,10 @@ reset_flags(lua_State *L, int index) {
 					return luaL_error(L, "Invalid MSAA %c", flags[i]);
 				}
 				break;
+			case 'h': f |= BGFX_RESET_HDR10; break;
+			case 'p': f |= BGFX_RESET_HIDPI; break;
+			case 'd': f |= BGFX_RESET_DEPTH_CLAMP; break;
+			case 'z': f |= BGFX_RESET_SUSPEND; break;
 			default:
 				return luaL_error(L, "Invalid reset flag %c", flags[i]);
 			}
@@ -326,6 +334,18 @@ read_boolean(lua_State *L, int index, const char *key, bool *v) {
 		luaL_error(L, ".%s need boolean, it's %s", key, lua_typename(L, t));
 	}
 	lua_pop(L, 1);
+}
+
+static bgfx_texture_format_t
+texture_format_from_string(lua_State *L, int idx) {
+	lua_getfield(L, LUA_REGISTRYINDEX, "BGFX_TF");
+	lua_pushvalue(L, idx);
+	if (lua_rawget(L, -2) != LUA_TNUMBER) {
+		luaL_error(L, "Invalid texture format %s", lua_tostring(L, idx));
+	}
+	int id = lua_tointeger(L, -1);
+	lua_pop(L, 2);
+	return (bgfx_texture_format_t)id;
 }
 
 static int
@@ -355,9 +375,12 @@ linit(lua_State *L) {
 	init.vendorId = BGFX_PCI_ID_NONE;
 	init.deviceId = 0;
 
+	init.resolution.format = BGFX_TEXTURE_FORMAT_RGBA8;
 	init.resolution.width = 1280;
 	init.resolution.height = 720;
 	init.resolution.reset = BGFX_RESET_NONE;	// reset flags
+	init.resolution.numBackBuffers = 2;
+	init.resolution.maxFrameLatency = 0;
 
 	init.limits.maxEncoders     = 8;	// BGFX_CONFIG_DEFAULT_MAX_ENCODERS;
 	init.limits.transientVbSize = (6<<20);	// BGFX_CONFIG_TRANSIENT_VERTEX_BUFFER_SIZE
@@ -375,12 +398,24 @@ linit(lua_State *L) {
 			init.type = renderer_type_id(L, 2);
 		}
 		lua_pop(L, 1);
+		if (lua_getfield(L, 1, "format") == LUA_TSTRING) {
+			init.resolution.format = texture_format_from_string(L, 2);
+		}
+		lua_pop(L, 1);
 		read_uint32(L, 1, "width", &init.resolution.width);
 		read_uint32(L, 1, "height", &init.resolution.height);
 		if (lua_getfield(L, 1, "reset") == LUA_TSTRING) {
 			init.resolution.reset = reset_flags(L, -1);
 		}
+
+		lua_getfield(L, 1, "numBackBuffers");
+		init.resolution.numBackBuffers = luaL_optinteger(L, -1, 2);
 		lua_pop(L, 1);
+
+		lua_getfield(L, 1, "maxFrameLatency");
+		init.resolution.maxFrameLatency = luaL_optinteger(L, -1, 0);
+		lua_pop(L, 1);
+
 		if (lua_getfield(L, 1, "maxEncoders") == LUA_TNUMBER) {
 			init.limits.maxEncoders = luaL_checkinteger(L, -1);
 		}
@@ -435,6 +470,7 @@ push_supported(lua_State *L, uint64_t supported) {
 		CAPSNAME(FRAGMENT_DEPTH)        // Fragment depth is accessible in fragment shader.
 		CAPSNAME(FRAGMENT_ORDERING)     // Fragment ordering is available in fragment shader.
 		CAPSNAME(GRAPHICS_DEBUGGER)     // Graphics debugger is present.
+		CAPSNAME(HDR10)                 // HDR10 rendering is supported.
 		CAPSNAME(HIDPI)                 // HiDPI rendering is supported.
 		CAPSNAME(INDEX32)               // 32-bit indices are supported.
 		CAPSNAME(INSTANCING)            // Instancing is supported.
@@ -627,7 +663,7 @@ push_texture_formats(lua_State *L, const uint16_t *formats) {
 
 static void
 push_limits(lua_State *L, const bgfx_caps_limits_t *lim) {
-	lua_createtable(L, 0, 22);
+	lua_createtable(L, 0, 23);
 #define PUSH_LIMIT(what) lua_pushinteger(L, lim->what); lua_setfield(L, -2, #what);
 
 	PUSH_LIMIT(maxDrawCalls)
@@ -641,6 +677,7 @@ push_limits(lua_State *L, const bgfx_caps_limits_t *lim) {
 	PUSH_LIMIT(maxShaders)
 	PUSH_LIMIT(maxTextures)
 	PUSH_LIMIT(maxTextureSamplers)
+	PUSH_LIMIT(maxComputeBindings)
 	PUSH_LIMIT(maxVertexDecls)
 	PUSH_LIMIT(maxVertexStreams)
 	PUSH_LIMIT(maxIndexBuffers)
@@ -712,9 +749,12 @@ lgetStats(lua_State *L) {
 		break;
 	case 'c':	// draw calls
 		PUSHSTAT(numDraw);
+		PUSHSTAT(numBlit);
 		PUSHSTAT(numCompute);
 		PUSHSTAT(maxGpuLatency);
-#define PUSHPRIM(v,name) if (stat->numPrims[v] > 0) { lua_pushinteger(L, stat->numPrims[v]); lua_setfield(L, 2, name); }
+		break;
+	case 'p':	// numPrims
+#define PUSHPRIM(v,name) lua_pushinteger(L, stat->numPrims[v]); lua_setfield(L, 2, name)
 		PUSHPRIM(BGFX_TOPOLOGY_TRI_LIST, "numTriList");
 		PUSHPRIM(BGFX_TOPOLOGY_TRI_STRIP, "numTriStrip");
 		PUSHPRIM(BGFX_TOPOLOGY_LINE_LIST, "numLineList");
@@ -795,13 +835,21 @@ lgetStats(lua_State *L) {
 	u        : BGFX_RESET_FLUSH_AFTER_RENDER - Flush rendering after submitting to GPU.
 	i        : BGFX_RESET_FLIP_AFTER_RENDER - This flag specifies where flip occurs. Default behavior is that flip occurs before rendering new frame. This flag only has effect when BGFX_CONFIG_MULTITHREADED=0.
 	s        : BGFX_RESET_SRGB_BACKBUFFER - Enable sRGB backbuffer.
+	h        : BGFX_RESET_HDR10 - Enable HDR10 rendering.
+	p        : BGFX_RESET_HIDPI - Enable HiDPI rendering.
+	d        : BGFX_RESET_DEPTH_CLAMP - Enable depth clamp.
+	z        : BGFX_RESET_SUSPEND - Suspend rendering.
 */
 static int
 lreset(lua_State *L) {
 	int width = luaL_checkinteger(L, 1);
 	int height = luaL_checkinteger(L, 2);
 	uint32_t f = reset_flags(L, 3);
-	bgfx_reset(width, height, f); 
+	bgfx_texture_format_t fmt = BGFX_TEXTURE_FORMAT_COUNT;
+	if (lua_isstring(L, 4)) {
+		fmt = texture_format_from_string(L, 4);
+	}
+	bgfx_reset(width, height, f, fmt);
 	return 0;
 }
 
@@ -1049,7 +1097,7 @@ static int
 lsubmit(lua_State *L) {
 	bgfx_view_id_t id = luaL_checkinteger(L, 1);
 	int progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
-	int depth = luaL_optinteger(L, 3, 0);
+	uint32_t depth = luaL_optinteger(L, 3, 0);
 	int preserveState = lua_toboolean(L, 4);
 	bgfx_program_handle_t ph = { progid };
 	bgfx_submit(id, ph, depth, preserveState);
@@ -1709,33 +1757,66 @@ struct BufferDataStream {
 static void 
 extract_buffer_stream(lua_State* L, int idx, int n, struct BufferDataStream *stream) {
 	luaL_checktype(L, idx, LUA_TTABLE);
-	int datatype = lua_geti(L, idx, n);
-	assert(datatype == LUA_TSTRING);
-
-	size_t sz = 0;
-	const char* data = lua_tolstring(L, -1, &sz);
-	lua_pop(L, 1);
-	int start = 1;
-	if (lua_geti(L, idx, n + 1) == LUA_TNUMBER) {
-		start = lua_tointeger(L, -1);
+	const int datatype = lua_geti(L, idx, n);
+	switch ( datatype)
+	{
+	case LUA_TSTRING: {
+		size_t sz = 0;
+		const char* data = lua_tolstring(L, -1, &sz);
 		lua_pop(L, 1);
+		int start = 1;
+		if (lua_geti(L, idx, n + 1) == LUA_TNUMBER) {
+			start = lua_tointeger(L, -1);
+			lua_pop(L, 1);
+		}
+		if (start < 0)
+			start = sz + start + 1;
+
+		stream->data = (const uint8_t *)data + start - 1;
+
+		int end = -1;
+		if (lua_geti(L, idx, n + 2) == LUA_TNUMBER) {
+			end = lua_tointeger(L, -1);
+			lua_pop(L, 1);
+		}
+		if (end < 0)
+			end = sz + end + 1;
+		if (end < start)
+			luaL_error(L, "extract stream data : empty data");
+
+		stream->size = end - start + 1;
+		break;
 	}
-	if (start < 0)
-		start = sz + start + 1;
+	case LUA_TLIGHTUSERDATA:
+	case LUA_TUSERDATA: {
+		const uint8_t * data = lua_touserdata(L, -1);
+		if (lua_geti(L, idx, n + 1) != LUA_TNUMBER) {
+			luaL_error(L, "userdata or light userdata must provided start/end");
+		}
+		const int start = lua_tointeger(L, -1);
+		if (start < 0) {
+			luaL_error(L, "start offset must >= 0, start : %d", start);
+		}
 
-	stream->data = (const uint8_t *)data + start - 1;
+		if (lua_geti(L, idx, n + 2) != LUA_TNUMBER) {
+			luaL_error(L, "userdata or light userdata must provided start/end");
+		}
+		const int end = lua_tointeger(L, -1);
+		if (end < 0) {
+			luaL_error(L, "end offset must > 0, end : %d", end);
+		}
 
-	int end = -1;
-	if (lua_geti(L, idx, n + 2) == LUA_TNUMBER) {
-		end = lua_tointeger(L, -1);
-		lua_pop(L, 1);
+		if (end < start) {
+			luaL_error(L, "end < start, empty data! start : %d, end : %d", start, end);
+		}
+
+		stream->data = data + start - 1;
+		stream->size = end - start + 1;
+		break;
 	}
-	if (end < 0)
-		end = sz + end + 1;
-	if (end < start)
-		luaL_error(L, "extract stream data : empty data");
-
-	stream->size = end - start + 1;
+	default:
+		break;
+	}
 }
 
 static const bgfx_memory_t *
@@ -2056,7 +2137,7 @@ calc_tangent_vb(lua_State *L, const bgfx_memory_t *mem, bgfx_vertex_decl_t *vd, 
 	}
 }
 
-static inline const bgfx_memory_t* 
+static inline const bgfx_memory_t *
 copy_mem_from_userdata(lua_State *L, int idx) {
 	size_t rawlen = lua_rawlen(L, 1);
 	const bgfx_memory_t* mem = bgfx_alloc(rawlen);
@@ -2082,9 +2163,9 @@ lcreateVertexBuffer(lua_State *L) {
 		return luaL_error(L, "Invalid vertex decl");
 	
 	const bgfx_memory_t *mem = (lua_type(L, 1) == LUA_TUSERDATA) ?
-		copy_mem_from_userdata(L, 1) : 	
+		copy_mem_from_userdata(L, 1) :
 		create_from_table_decl(L, 1, vd);
-	
+
 	uint16_t flags = BGFX_BUFFER_NONE;
 	int calc_targent = 0;
 	if (lua_isstring(L, 3)) {
@@ -2886,25 +2967,25 @@ border_color_or_compare(lua_State *L, char c) {
 	} else {
 		// compare
 		switch(c) {
-		case '<': return BGFX_TEXTURE_COMPARE_LESS;
-		case '[': return BGFX_TEXTURE_COMPARE_LEQUAL;
-		case '=': return BGFX_TEXTURE_COMPARE_EQUAL;
-		case ']': return BGFX_TEXTURE_COMPARE_GEQUAL;
-		case '>': return BGFX_TEXTURE_COMPARE_GREATER;
-		case '!': return BGFX_TEXTURE_COMPARE_NOTEQUAL;
-		case '-': return BGFX_TEXTURE_COMPARE_NEVER;
-		case '+': return BGFX_TEXTURE_COMPARE_ALWAYS;
+		case '<': return BGFX_SAMPLER_COMPARE_LESS;
+		case '[': return BGFX_SAMPLER_COMPARE_LEQUAL;
+		case '=': return BGFX_SAMPLER_COMPARE_EQUAL;
+		case ']': return BGFX_SAMPLER_COMPARE_GEQUAL;
+		case '>': return BGFX_SAMPLER_COMPARE_GREATER;
+		case '!': return BGFX_SAMPLER_COMPARE_NOTEQUAL;
+		case '-': return BGFX_SAMPLER_COMPARE_NEVER;
+		case '+': return BGFX_SAMPLER_COMPARE_ALWAYS;
 		default:
 			luaL_error(L, "Invalid border color %c", c);
 		}
 	}
-	return BGFX_TEXTURE_BORDER_COLOR(n);
+	return BGFX_SAMPLER_BORDER_COLOR(n);
 }
 
-static uint32_t
+static uint64_t
 get_texture_flags(lua_State *L, const char *format) {
 	int i;
-	uint32_t flags = 0;
+	uint64_t flags = 0;
 	for (i=0;format[i];i+=2) {
 		int t = 0;
 		switch(format[i]) {
@@ -2937,7 +3018,15 @@ get_texture_flags(lua_State *L, const char *format) {
 			default:
 				luaL_error(L, "Invalid BLIT %c", format[i+1]);
 			}
-			continue;			
+			continue;
+		case 's': // SAMPLE
+			switch(format[i+1]) {
+			case 's': flags |= BGFX_SAMPLER_SAMPLE_STENCIL; break;	//  Sample stencil instead of depth.
+			case 'd': break;	// sample depth (by default)
+			default:
+				luaL_error(L, "Invalid SAMPLE %c", format[i+1]);
+			}
+			continue;
 		default:
 			luaL_error(L, "Invalid texture flags %c",format[i]);
 		}
@@ -2951,20 +3040,20 @@ get_texture_flags(lua_State *L, const char *format) {
 			luaL_error(L, "Invalid texture flags %c", format[i+1]);
 		}
 		switch(t) {
-		case 0x00: flags |= BGFX_TEXTURE_U_MIRROR; break;
-		case 0x01: flags |= BGFX_TEXTURE_U_CLAMP; break;
-		case 0x02: flags |= BGFX_TEXTURE_U_BORDER; break;
-		case 0x10: flags |= BGFX_TEXTURE_V_MIRROR; break;
-		case 0x11: flags |= BGFX_TEXTURE_V_CLAMP; break;
-		case 0x12: flags |= BGFX_TEXTURE_V_BORDER; break;
-		case 0x20: flags |= BGFX_TEXTURE_W_MIRROR; break;
-		case 0x21: flags |= BGFX_TEXTURE_W_CLAMP; break;
-		case 0x22: flags |= BGFX_TEXTURE_W_BORDER; break;
-		case 0x33: flags |= BGFX_TEXTURE_MIN_POINT; break;
-		case 0x34: flags |= BGFX_TEXTURE_MIN_ANISOTROPIC; break;
-		case 0x43: flags |= BGFX_TEXTURE_MAG_POINT; break;      
-		case 0x44: flags |= BGFX_TEXTURE_MAG_ANISOTROPIC; break;
-		case 0x53: flags |= BGFX_TEXTURE_MIP_POINT; break;      
+		case 0x00: flags |= BGFX_SAMPLER_U_MIRROR; break;
+		case 0x01: flags |= BGFX_SAMPLER_U_CLAMP; break;
+		case 0x02: flags |= BGFX_SAMPLER_U_BORDER; break;
+		case 0x10: flags |= BGFX_SAMPLER_V_MIRROR; break;
+		case 0x11: flags |= BGFX_SAMPLER_V_CLAMP; break;
+		case 0x12: flags |= BGFX_SAMPLER_V_BORDER; break;
+		case 0x20: flags |= BGFX_SAMPLER_W_MIRROR; break;
+		case 0x21: flags |= BGFX_SAMPLER_W_CLAMP; break;
+		case 0x22: flags |= BGFX_SAMPLER_W_BORDER; break;
+		case 0x33: flags |= BGFX_SAMPLER_MIN_POINT; break;
+		case 0x34: flags |= BGFX_SAMPLER_MIN_ANISOTROPIC; break;
+		case 0x43: flags |= BGFX_SAMPLER_MAG_POINT; break;
+		case 0x44: flags |= BGFX_SAMPLER_MAG_ANISOTROPIC; break;
+		case 0x53: flags |= BGFX_SAMPLER_MIP_POINT; break;
 		default:
 			luaL_error(L, "Invalid texture flags %c%c", format[i], format[i+1]);
 		}
@@ -3062,7 +3151,7 @@ lcreateTexture(lua_State *L) {
 	size_t sz;
 	const char *imgdata = luaL_checklstring(L, 1, &sz);
 	int idx = 2;
-	uint32_t flags = BGFX_TEXTURE_NONE;
+	uint64_t flags = BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE;
 	if (lua_type(L, idx) == LUA_TSTRING) {
 		const char * f = lua_tostring(L, idx);
 		flags = get_texture_flags(L, f);
@@ -3114,12 +3203,21 @@ lsetName(lua_State *L) {
 	return 0;
 }
 
+static uint32_t
+texture_sampler_flags(lua_State *L, uint64_t flags) {
+	uint32_t sampler = (uint32_t)flags;
+	if (sampler != flags) {
+		luaL_error(L, "Invalid sampler flags");
+	}
+	return sampler;
+}
+
 static int
 lsetTexture(lua_State *L) {
 	int stage = luaL_checkinteger(L, 1);
 	int uniform_id = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 2));
 	int texture_id = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 3));
-	int flags = UINT32_MAX;
+	uint64_t flags = UINT32_MAX;
 	if (!lua_isnoneornil(L, 4)) {
 		const char * f = lua_tostring(L, 4);
 		flags = get_texture_flags(L, f);
@@ -3127,21 +3225,9 @@ lsetTexture(lua_State *L) {
 	bgfx_uniform_handle_t uh = {uniform_id};
 	bgfx_texture_handle_t th = {texture_id};
 
-	bgfx_set_texture(stage, uh, th, flags);
+	bgfx_set_texture(stage, uh, th, texture_sampler_flags(L, flags));
 
 	return 0;
-}
-
-static bgfx_texture_format_t
-texture_format_from_string(lua_State *L, int idx) {
-	lua_getfield(L, LUA_REGISTRYINDEX, "BGFX_TF");
-	lua_pushvalue(L, idx);
-	if (lua_rawget(L, -2) != LUA_TNUMBER) {
-		luaL_error(L, "Invalid texture format %s", lua_tostring(L, idx));
-	}
-	int id = lua_tointeger(L, -1);
-	lua_pop(L, 2);
-	return (bgfx_texture_format_t)id;
 }
 
 static bgfx_frame_buffer_handle_t
@@ -3149,7 +3235,7 @@ create_fb(lua_State *L) {
 	int width = luaL_checkinteger(L, 1);
 	int height = luaL_checkinteger(L, 2);
 	bgfx_texture_format_t fmt = texture_format_from_string(L, 3);
-	uint32_t flags = BGFX_TEXTURE_U_CLAMP|BGFX_TEXTURE_V_CLAMP;
+	uint64_t flags = BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP;
 	if (!lua_isnoneornil(L, 4)) {
 		const char * f = lua_tostring(L, 4);
 		flags = get_texture_flags(L, f);
@@ -3183,7 +3269,7 @@ static bgfx_frame_buffer_handle_t
 create_fb_scaled(lua_State *L) {
 	bgfx_backbuffer_ratio_t ratio = get_ratio(L, 1);
 	bgfx_texture_format_t fmt = texture_format_from_string(L, 2);
-	uint32_t flags = BGFX_TEXTURE_U_CLAMP|BGFX_TEXTURE_V_CLAMP;
+	uint64_t flags = BGFX_SAMPLER_U_CLAMP|BGFX_SAMPLER_V_CLAMP;
 	if (!lua_isnoneornil(L, 3)) {
 		const char * f = lua_tostring(L, 3);
 		flags = get_texture_flags(L, f);
@@ -3215,7 +3301,15 @@ create_fb_nwh(lua_State *L) {
 	void *nwh = lua_touserdata(L, 1);
 	int w = luaL_checkinteger(L, 2);
 	int h = luaL_checkinteger(L, 3);
-	return bgfx_create_frame_buffer_from_nwh(nwh, w, h, BGFX_TEXTURE_FORMAT_UNKNOWN_DEPTH);
+	bgfx_texture_format_t fmt = BGFX_TEXTURE_FORMAT_COUNT;
+	bgfx_texture_format_t depth_fmt = BGFX_TEXTURE_FORMAT_COUNT;
+	if (lua_isstring(L, 4)) {
+		fmt = texture_format_from_string(L, 4);
+	}
+	if (lua_isstring(L, 5)) {
+		depth_fmt = texture_format_from_string(L, 5);
+	}
+	return bgfx_create_frame_buffer_from_nwh(nwh, w, h, fmt, depth_fmt);
 }
 
 /*
@@ -3302,7 +3396,7 @@ lcreateTexture2D(lua_State *L) {
 	int hasMips = lua_toboolean(L, idx++);
 	int layers = luaL_checkinteger(L, idx++);
 	bgfx_texture_format_t fmt = texture_format_from_string(L, idx++);
-	uint32_t flags = BGFX_TEXTURE_NONE;
+	uint64_t flags = BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE;
 	if (!lua_isnoneornil(L, idx)) {
 		const char * f = lua_tostring(L, idx++);
 		flags = get_texture_flags(L, f);
@@ -3384,7 +3478,7 @@ lisTextureValid(lua_State *L) {
 	int layers = luaL_checkinteger(L, 3);
 	bgfx_texture_format_t fmt = texture_format_from_string(L, 4);
 	const char * f = luaL_checkstring(L, 5);
-	uint32_t flags = get_texture_flags(L, f);
+	uint64_t flags = get_texture_flags(L, f);
 
 	bool valid = bgfx_is_texture_valid(depth, cubemap, layers, fmt, flags);
 	lua_pushboolean(L, valid);
@@ -3715,7 +3809,7 @@ lsubmitOcclusionQuery(lua_State *L) {
 	int id = luaL_checkinteger(L, 1);
 	int progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	int oqid = BGFX_LUAHANDLE_ID(OCCLUSION_QUERY, luaL_checkinteger(L, 3));
-	int depth = luaL_optinteger(L, 4, 0);
+	uint32_t depth = luaL_optinteger(L, 4, 0);
 	int preserveState = lua_toboolean(L, 5);
 	bgfx_program_handle_t ph = { progid };
 	bgfx_occlusion_query_handle_t oqh = { oqid };
@@ -3730,7 +3824,7 @@ lsubmitIndirect(lua_State *L) {
 	int iid = BGFX_LUAHANDLE_ID(INDIRECT_BUFFER, luaL_checkinteger(L, 3));
 	uint16_t start = luaL_optinteger(L, 4, 0);
 	uint16_t num = luaL_optinteger(L, 5, 1);
-	int32_t depth = luaL_optinteger(L, 6, 0);
+	uint32_t depth = luaL_optinteger(L, 6, 0);
 	bool preserveState = lua_toboolean(L, 7);
 	bgfx_program_handle_t ph = { progid };
 	bgfx_indirect_buffer_handle_t ih = { iid };
@@ -3854,6 +3948,13 @@ lsetInstanceDataBuffer(lua_State *L) {
 	default:
 		return luaL_error(L, "Invalid set instance data buffer %d", type);
 	}
+	return 0;
+}
+
+static int
+lsetInstanceCount(lua_State *L) {
+	uint32_t num = luaL_checkinteger(L, 1);
+	bgfx_set_instance_count(num);
 	return 0;
 }
 
@@ -4132,6 +4233,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "dispatch", ldispatch },
 		{ "dispatch_indirect", ldispatchIndirect },
 		{ "set_instance_data_buffer", lsetInstanceDataBuffer },
+		{ "set_instance_count", lsetInstanceCount },
 		{ "submit_indirect", lsubmitIndirect },
 		{ "update", lupdate },
 		{ "get_shader_uniforms", lgetShaderUniforms },
@@ -4141,7 +4243,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "get_screenshot", lgetScreenshot },
 		{ "export_vertex_decl", lexportVertexDecl },
 		{ "vertex_decl_stride", lvertexDeclStride },
-		{ "get_log", lgetLog },		
+		{ "get_log", lgetLog },
 
 		{ NULL, NULL },
 	};

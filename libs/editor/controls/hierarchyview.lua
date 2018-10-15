@@ -1,7 +1,9 @@
+-- luacheck: globals log
 local log = log and log(...) or print
 
 local treecontrol = require "editor.controls.tree"
-local eu = require "editor.util"
+
+local cu = require "common.util"
 
 local hierarchyview = {}
 
@@ -18,10 +20,7 @@ hierarchyview.window = tree
 function hierarchyview:build(htree, ud_table)	
 	local treeview = self.window
 	local function constrouct_treeview(tr, parent)
-		local keys = eu.get_sort_keys(tr)
-
-		for _, k in ipairs(keys) do
-			local v = tr[k]
+		for k, v in cu.ordered_pairs(tr) do			
 			local ktype = type(k)
 			if ktype == "string" or ktype == "number" then
 				local vtype = type(v)

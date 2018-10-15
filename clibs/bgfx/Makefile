@@ -14,8 +14,8 @@ CFLAGS = -O2 -Wall -Wno-misleading-indentation -Wno-unused-but-set-variable
 mingw : bgfx.dll
 
 # bgfx
-#BGFXVER = Debug
-BGFXVER = Release
+BGFXVER = Debug
+#BGFXVER = Release
 BGFXLIB = -L$(BGFXSRC)/.build/win64_mingw-gcc/bin -lbgfx$(BGFXVER) -lbimg$(BGFXVER) -lbx$(BGFXVER) -lstdc++ -lgdi32 -lpsapi -luuid
 BGFXINC = -I$(BGFXSRC)/include -I$(BXSRC)/include/compat/mingw -I$(BXSRC)/include
 BGFXUTILLIB = -lexample-common$(BGFXVER)

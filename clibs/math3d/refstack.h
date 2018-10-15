@@ -2,6 +2,7 @@
 #define linear_algebra_refstack_h
 
 #include <lua.h>
+#include <lauxlib.h>
 
 #define MAX_REF_STACK 128
 

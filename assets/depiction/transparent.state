@@ -1,0 +1,5 @@
+WRITE_MASK = "RGBA"    -- no write to Z
+ALPHA_REF = 0
+CULL = "CCW"
+MSAA = true
+DEPTH_TEST = "ALWAYS"    -- no depth test

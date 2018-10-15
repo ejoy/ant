@@ -1,42 +1,29 @@
--- dofile "libs/init.lua"
--- terrain System 
 local ecs = ...
 local world = ecs.world
 
-package.path = package.path..';../clibs/terrain/?.lua;./clibs/terrain/?.lua;./test/?.lua;' 
+package.path = package.path..';../clibs/terrain/?.lua;./clibs/terrain/?.lua;./test/?.lua;'
+package.path = package.path..";"..package.app_dir.."/clibs/terrain/?.lua;"
 package.cpath = package.cpath..';../clibs/terrain/?.dll;./clibs/terrain/?.dll;'
 
 local bgfx = require "bgfx"
-local nk = require "bgfx.nuklear"
+--local nk = require "bgfx.nuklear"
 local nkmsg = require "inputmgr.nuklear"
 
---local rhwi = require "render.hardware_interface"
---local task = require "editor.task"
---local s_logo = require "logo"
---local math3d = require "math3d"
---local utilmath = require "utilmath"
+
 
 local loadfile = require "tested.loadfile"
 local ch_charset = require "tested.charset_chinese_range"
 local shaderMgr = require "render.resources.shader_mgr"
 
-local terrainClass = require "terrain"
+local terrainClass = require "scene.terrain.terrainclass"
+
 local camera_util = require "render.camera.util"
 
 -- 做成 component 
 local terrain = terrainClass.new()       	-- new terrain instance pvp
-local terrain_chibi = terrainClass.new()    -- chibi 
+--local terrain_chibi = terrainClass.new()    -- chibi
 
 local math3d_stack = nil 					--math3d.new()
-
--- canvas = iup.canvas{}
---local input_queue = inputmgr.queue(mapiup, canvas)
--- dlg = iup.dialog {
---   canvas,
---   title = "hello terrain world",
---   size = "HALFxHALF",
--- }
-
 
 local ctx = { stats = {} }
 
@@ -66,8 +53,8 @@ local joy_size = 0.7
 local UI_VIEW = 255
 
 local function joystick_init()
-	joy_image = nk.loadImage("assets/build/textures/yaogan.tga")
-	joy_base  = nk.loadImage("assets/build/textures/yaogandi.tga")
+	joy_image = nk.loadImage(package.app_dir.."/assets/build/textures/yaogan.TGA")
+	joy_base  = nk.loadImage(package.app_dir.."/assets/build/textures/yaogandi.TGA")
 end 
 
 local skinStyle = {
@@ -99,6 +86,10 @@ end
 
 
 function loadfonts(font,size,charset)
+    local file = io.open(font, "r")
+    --if file then
+
+
 	return loadfile(font),size,charset
 end 
 
@@ -109,9 +100,11 @@ local function process_input(message)
 	-- for _, msg,x,y,z,w,u in pairs(input_queue) do
 	-- 	nkmsg.push(message, msg, x,y,z,w,u)
 	-- end
-	nk.input(message)
+	--nk.input(message)
 
-	local dirx,diry,r_dirx,r_diry = joystick_update()
+
+	--[[
+    local dirx,diry,r_dirx,r_diry = joystick_update()
 	local camera = world:first_entity("main_camera")
 	if dirx ~= 0 or diry ~= 0 then
 		camera_util.move(math3d_stack, camera, -dirx, 0, -diry)
@@ -121,7 +114,7 @@ local function process_input(message)
 		local rotate_speed = 1.5
 		camera_util.rotate(math3d_stack, camera, r_dirx * rotate_speed, r_diry * rotate_speed)
 	end
-
+--]]
 
 end 
 
@@ -154,7 +147,7 @@ local function gen_lighting_uniforms( terrain )
 		terrain:set_uniform("u_lightDirection", math3d_stack(dlight.rotation.v, "dim") )
 		terrain:set_uniform("u_lightIntensity", { l.intensity,0,0,0} )  
 		terrain:set_uniform("u_lightColor",l.color  )
-	end 
+	end
 end 
 
 local message_queue = {}
@@ -169,7 +162,7 @@ local function mainloop()
 		gen_lighting_uniforms( terrain ) 
 		gen_ambient_light_uniforms( terrain )
 	end 
-	print("ambient------------"..init_ambient)
+	--print("ambient------------"..init_ambient)
 
 	-- -- input
 	process_input(message_queue)
@@ -181,7 +174,7 @@ local function mainloop()
 	end 
 
     -- terrain chibi 
-	terrain_chibi:render( ctx.width,ctx.height)
+	-- terrain_chibi:render( ctx.width,ctx.height)
     -- terrain pvp 
 	terrain:update( view ,dir)                        -- for further anything 
 	terrain:render( ctx.width,ctx.height,prim_type)   --"POINT","LINES"  -- for debug 
@@ -191,26 +184,23 @@ local function mainloop()
 	--local ortho_mtx = math3d_stack( { 2.0/ctx.width, 0.0, 0.0, 0.0,   0.0,-2.0/ctx.height, 0.0, 0.0,  0.0, 0.0,-1.0, 0.0,  -1.0, 1.0, 0.0, 1.0}, "m") 
 
 	bgfx.set_view_transform(UI_VIEW,nil,ortho_mtx)	
-	nk.update()
+	--nk.update()
 	
 	message_queue = {}
 	--bgfx.frame()
 end
 
-
 local function init(fbw, fbh)
-	-- rhwi.init(iup.GetAttributeData(canvas,"HWND"), fbw, fbh)
-	-- bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
-	-- bgfx.set_debug "T"
-
-	ctx.width = fbw
-	ctx.height = fbh
+    --must be integer
+	ctx.width =  math.tointeger(fbw)
+	ctx.height = math.tointeger(fbh)
 
 	-- nk init
+    --[[
 	nk.init {
 		view = UI_VIEW,
-		width = fbw,
-		height = fbh,
+		width = ctx.width,
+		height = ctx.height,
 		decl = bgfx.vertex_decl {
 			{ "POSITION", 2, "FLOAT" },
 			{ "TEXCOORD0", 2, "FLOAT" },
@@ -221,18 +211,19 @@ local function init(fbw, fbh)
 			WRITE_MASK = "RGBA",
 			BLEND = "ALPHA",
 		},
-		prog = shaderMgr.programLoad("ui/vs_nuklear_texture.sc","ui/fs_nuklear_texture.sc"),
+		prog = shaderMgr.programLoad("ui/vs_nuklear_texture","ui/fs_nuklear_texture"),
 
 		fonts = {
-			{ "宋体行楷", loadfonts("build/fonts/stxingka.ttf",50, ch_charset()  ), },
+			{ "宋体行楷", loadfonts("/assets/build/fonts/stxingka.ttf",50, ch_charset()  ), },
 		},
 	}	
 
+--]]
+	print("nk init ok")
 	local program_create_mode = 0
 
-	-- load terrain level 
-    -- gemotry create mode 
-	terrain:load("assets/build/terrain/pvp1.lvl",      			  -- 自定义顶点格式
+	-- load terrain level
+	terrain:load("terrain/pvp1_ios.lvl",
 					{
 						{ "POSITION", 3, "FLOAT" },
 						{ "TEXCOORD0", 2, "FLOAT" },
@@ -240,16 +231,18 @@ local function init(fbw, fbh)
 						{ "NORMAL", 3, "FLOAT" },
 					}
 				)
+	--]]
+	-- terrain_chibi:load("terrain/chibi16.lvl")
 
-	 terrain_chibi:load("assets/build/terrain/chibi16.lvl")  	  -- 默认顶点格式
+	-- terrain_chibi:load("assets/build/terrain/chibi16.lvl")  	  -- 默认顶点格式
 
 	-- material create mode 
 	if program_create_mode == 1 then 
 		-- load from mtl setting 
-		terrain:load_meterial("assets/build/terrain/terrain.mtl")
+		terrain:load_meterial("terrain/terrain_ios.mtl")
 	else 
 		-- or create manually
-		terrain:load_program("terrain/vs_terrain.sc","terrain/fs_terrain.sc")
+		terrain:load_program("terrain/vs_terrain","terrain/fs_terrain")
 		terrain:create_uniform("u_mask","s_maskTexture","i1",1)
 		terrain:create_uniform("u_base","s_baseTexture","i1",0)
 		terrain:create_uniform("u_lightDirection","s_lightDirection","v4")
@@ -264,18 +257,16 @@ local function init(fbw, fbh)
 		terrain:set_uniform("u_showMode",0)  
 	end 
 
-	terrain_chibi:load_meterial("assets/build/terrain/terrain.mtl")  -- 文件加载材质
-	terrain_chibi:create_uniform("u_showMode","s_showMode","i1")     -- 可以手工增加uniform，方便测试 
-	terrain_chibi:set_uniform("u_showMode",0)   				     -- 0= default, 1 = display normal line
+	--terrain_chibi:load_meterial("terrain/terrain.mtl")
+	-- 手工增加调试，临时增加，可以放在关卡文件里
+	--terrain_chibi:create_uniform("u_showMode","s_showMode","i1")   -- 0 default,1 = normal
+	--terrain_chibi:set_uniform("u_showMode",0)
 
-	terrain:set_transform { t= {147,0,225,1},r= {0,0,0},s={1,1,1,1}}
-	terrain_chibi:set_transform { t= {0,150,0,1},r= {0,0,0},s={1,1,1,1}}
+	terrain:set_transform { t= {140,0,200,1},r= {0,0,0},s={1,1,1,1}}
+	--terrain_chibi:set_transform { t= {0,150,0,1},r= {0,0,0},s={1,1,1,1}}
 
 	-- ui init
-	joystick_init()
-
-	-- 独立app 测试代码
-	--task.loop(mainloop)
+	--joystick_init()
 end
 
 local terrain_sys = ecs.system "terrain_system"
@@ -292,7 +283,6 @@ terrain_sys.dependby "end_frame"
 function terrain_sys:init()
 	math3d_stack = self.math_stack
 	local fb = world.args.fb_size
-
 	init(fb.w, fb.h)
 
 	--
@@ -317,44 +307,3 @@ end
 function terrain_sys:update()
 	mainloop()
 end
-
-
-
-
--- function canvas:resize_cb(w,h)
--- 	if init then
--- 		init(self, w, h)
--- 		init = nil
--- 	else 
--- 		nk.resize(w,h)
--- 	end
--- 	bgfx.set_view_rect(0, 0, 0, w, h)
--- 	bgfx.reset(w,h, "v")
--- 	ctx.width = w
--- 	ctx.height = h
--- end
-
--- function canvas:keypress_cb(key, press)
--- 	if key ==  iup.K_F1 and press == 1 then
--- 		ctx.debug = not ctx.debug
--- 		bgfx.set_debug( ctx.debug and "S" or "")
--- 	end
--- 	if key == iup.K_F12 and press == 1 then
--- 		bgfx.request_screenshot()
--- 	end
--- end
-
-
-
--- function canvas:action(x,y)
--- 	mainloop()
--- end
-
--- dlg:showxy(iup.CENTER,iup.CENTER)
--- dlg.usersize = nil
-
--- -- to be able to run this script inside another context
--- if (iup.MainLoopLevel()==0) then
--- 	iup.MainLoop()
--- 	iup.Close()
--- end

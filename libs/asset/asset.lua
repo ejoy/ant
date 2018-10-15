@@ -1,3 +1,5 @@
+-- luacheck: globals import
+
 local require = import and import(...) or require
 
 local path = require "filesystem.path"
@@ -11,16 +13,32 @@ local support_list = {
 	"material",
 	"module",
 	"texture",
+	"hierarchy",
+	"ske",
+	"ani",	
+	"lk",
+	"ozz",
 }
 
-local loader = setmetatable({} , {
+-- luacheck: ignore param
+local function raw_loader(filename, param)
+	local f = io.open(filename)
+	if f == nil then
+		error(string.format("raw_loader open file failed, filename : ", filename))
+	end
+	local content = f:read("a")
+	f:close()
+	return content
+end
+
+local loaders = setmetatable({} , {
 	__index = function(_, ext)
 		error("Unsupport assetmgr type " .. ext)
 	end
 })
 
-for _, mname in ipairs(support_list) do
-	loader[mname] = require("ext_" .. mname)
+for _, mname in ipairs(support_list) do	
+	loaders[mname] = require ("ext_" .. mname)
 end
 
 local assetmgr = {}
@@ -29,8 +47,8 @@ assetmgr.__index = assetmgr
 local resources = setmetatable({}, {__mode="kv"})
 
 function assetmgr.add_loader(n, l)
-	--assert(loader[n] == nil)
-	loader[n] = l
+	--assert(loaders[n] == nil)
+	loaders[n] = l
 end
 
 local asset_rootdir = "assets"
@@ -51,6 +69,7 @@ function assetmgr.find_valid_asset_path(asset_subpath)
 
 	for _, d in ipairs(searchdirs) do
 		local p = path.join(d, asset_subpath)
+        print("check exist: ".. p)
 		if fs.exist(p) then
 			return p
 		end
@@ -78,17 +97,24 @@ function assetmgr.remove_searchdir(idx)
 end
 
 function assetmgr.load(filename, param)
+  --  print("filename", filename)
 	assert(type(filename) == "string")
 	local res = resources[filename]
 	if res == nil then
 		local ext = assert(path.ext(filename))
-		local fn = assetmgr.find_valid_asset_path(filename)
+		local fn 
+		for _, ff in ipairs{filename, path.join("depiction", filename)} do
+			fn = assetmgr.find_valid_asset_path(ff)
+			if fn then break end
+		end
+
 		if fn == nil then
-			fn = assetmgr.find_valid_asset_path(path.join("assetfiles", filename))
-		end		
-		
-		res = loader[ext](fn, param)
-		resources[fn] = res
+			error(string.format("asset file not found, filename : %s", filename))
+		end
+
+		local loader = loaders[ext] or raw_loader
+		res = loader(fn, param)
+		resources[filename] = res
 	end
 
 	return res
@@ -110,7 +136,7 @@ return assetmgr
 -- 	__index = function (t, filename)
 -- 		assert(type(filename) == "string")		
 -- 		local ext = assert(filename:match "%.([%w_]+)$")
--- 		local v = loader[ext](filename, t)
+-- 		local v = loaders[ext](filename, t)
 -- 		t[filename] = v		
 -- 		return v
 -- 	end,

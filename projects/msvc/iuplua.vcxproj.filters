@@ -624,6 +624,12 @@
     <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_draw_gdi.c">
       <Filter>iupwin</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_multibox.c">
+      <Filter>iup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_multibox.c">
+      <Filter>iupctrl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\ant3rd\iup\srclua5\elem\animatedlabel.lua">
@@ -816,5 +822,8 @@
       <Filter>iup_luaelem</Filter>
     </None>
     <None Include="iup_def_files\iuplua.def" />
+    <None Include="..\..\..\ant3rd\iup\srclua5\elem\multibox.lua">
+      <Filter>iup_luaelem</Filter>
+    </None>
   </ItemGroup>
 </Project>

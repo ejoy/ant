@@ -1,13 +1,15 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "render.math3d.math_component"
+
 local ru = require "render.util"
 local cu = require "render.components.util"
 local mu = require "math.util"
 local bgfx = require "bgfx"
 
 --[@ view rect
-local view_rect_comp = ecs.component "view_rect"{
+ecs.component "view_rect"{
 	x = 0, 
 	y = 0, 
 	w = 1, 
@@ -83,8 +85,8 @@ function view_sys:update()
 	for _, eid in world:each("viewid") do
 		local entity = world[eid]
 		local vid = entity.viewid.id
-		local ms = self.math_stack
-		local view, proj = mu.view_proj_matrix(ms, entity)
+		local ms = self.math_stack		
+		local view, proj = mu.view_proj_matrix(ms, entity)		
 		bgfx.set_view_transform(vid, ms(view, "m"), ms(proj, "m"))
 	end
 end

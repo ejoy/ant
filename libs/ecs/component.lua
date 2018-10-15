@@ -96,16 +96,23 @@ end
 
 local function gen_save(struct)	
 	return function (c, arg)
-		local t = {}
-		for k, v in pairs(c) do
-			local vclass = struct[k]
-			if vclass then
-				arg.struct_type = k
-				local save = vclass.save				
-				t[k] = save(v, arg)
+		local typec = type(c)
+		if typec == "table" then
+			local t = {}
+			for k, v in pairs(c) do
+				local vclass = struct[k]
+				if vclass then
+					arg.struct_type = k
+					local save = vclass.save				
+					t[k] = save(v, arg)
+				end
 			end
-		end
-		return t
+			return t
+		end		
+
+		-- this is tag
+		assert(typec == "boolean")		
+		return c
 	end
 end
 

@@ -1,8 +1,7 @@
+-- luacheck: globals log
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
-local cu = require "render.components.util"
-local mu = require "math.util"
 local shadermgr = require "render.resources.shader_mgr"
 
 local util = {}
@@ -104,32 +103,41 @@ local function update_properties(shader, properties)
     end
 end
 
-local material_cache = nil
-local function need_commit(material)
-    local need = false
-    if material_cache then
-        need = material ~= material_cache
-    end
-
-    material_cache = material
-    return need
-end
-
-
-function util.draw_primitive(vid, prim, mat)
+function util.draw_primitive(vid, primgroup, mat)
     bgfx.set_transform(mat)
 
-    local material = prim.material
+    local material = primgroup.material
     bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
-    update_properties(material.shader, prim.properties)
+    update_properties(material.shader, primgroup.properties)
 
-    local mg = assert(prim.mgroup)
-    local prog = material.shader.prog
-    if mg.ib then
-        bgfx.set_index_buffer(mg.ib)
-    end
-    bgfx.set_vertex_buffer(mg.vb)
-    bgfx.submit(vid, prog, 0, false) --not need_commit(material))
+	local prog = material.shader.prog
+	
+	local mg = assert(primgroup.mgroup)
+	local ib, vb = mg.ib, mg.vb
+
+	local prims = mg.prim
+	if prims == nil then
+		if ib then
+			bgfx.set_index_buffer(ib.handle)
+		end
+		for idx, v in ipairs(vb.handles) do
+			bgfx.set_vertex_buffer(idx - 1, v)
+		end
+		
+		bgfx.submit(vid, prog, 0, false)
+	else
+		local numprim = #prims
+		for i=1, numprim do
+			local prim = prims[i]
+			if ib then
+				bgfx.set_index_buffer(ib.handle, prim.startIndex, prim.numIndices)
+			end
+			for idx, v in ipairs(vb.handles) do
+				bgfx.set_vertex_buffer(idx - 1, v, prim.startVertex, prim.numVertices)
+			end
+			bgfx.submit(vid, prog, 0, i~=numprim)
+		end
+	end
 end
 
 function util.default_surface_type()

@@ -44,6 +44,7 @@ local math3d = require "math3d"
 	n normalize vector3 ( ..., 1 -> ..., {normalize(1) , 1} )
 	l generate lookat matrix ( ..., eye, at -> ..., lookat(eye,at) )
 	e vec4/vec3/matrix to euler angle (v, "e")
+	b extract matrix base orthogonal axis[xyz]
 ]]
 
 local stack = math3d.new()
@@ -105,7 +106,7 @@ print("zdir after rotate : ", stack(zdir, "V"))
 stack(mat, "1=")	-- init mat to an indentity matrix (dup self and assign)
 
 local vH = stack({2, 4, 5, 1}, mat, "%P")
-print("vector homogeneous divide : ", stack(vH, "%"))
+print("vector homogeneous divide : ", stack(vH, "%V"))
 
 local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "lP")	-- calc lookat matrix
 mat(lookat) -- assign lookat matrix to mat
@@ -170,5 +171,12 @@ do
 
 	local e = stack(q, "eP")
 	print("euler : ", stack(e, "V"))
+end
+
+do
+	-- extract base axis
+	local lookat = stack({0, 0, 0}, {0, 0, 1}, "LP")
+	local x, y, z = stack(lookat, "bPPP")
+	print(stack(x, y, z, "VVV"))
 end
 

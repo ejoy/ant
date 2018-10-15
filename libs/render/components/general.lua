@@ -22,7 +22,7 @@ ecs.component "relative_srt" {
 }
 
 ecs.component "frustum" {
-    isortho = false,
+    type = "proj",	--"ortho"
     n = 0.1,
     f = 10000,
     l = -1,
@@ -56,9 +56,7 @@ ecs.component "mesh" {
 
 			if v ~= "" then
 				assert(comp.assetinfo == nil)
-				comp.assetinfo = asset.load(v)
-			else
-				dddddd = 0
+				comp.assetinfo = asset.load(v)			
 			end
 			return v
 		end
@@ -94,9 +92,8 @@ ecs.component "material" {
 							properties[k] = p
 						end
 					end
-				end
-				table.insert(t, {path=pp, properties=properties})
-			
+					table.insert(t, {path=pp, properties=properties})
+				end			
 			end
 			return t
 		end,
@@ -128,13 +125,7 @@ ecs.component "name" {
     n = ""
 }
 
-ecs.component "can_select" {
-
-}
-
-ecs.component "last_render"{
-    enable = true
-}
+ecs.tag "can_select"
 
 ecs.component "control_state" {
     state = "camera"

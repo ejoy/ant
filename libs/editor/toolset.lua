@@ -73,6 +73,12 @@ function toolset.compile(filename, paths, renderer)
 
 	if filename then
 		local dest = paths.dest or filename:gsub("(%w+).sc", "%1") .. ".bin"
+
+		local shaderc = paths.shaderc
+		if shaderc and not fs.exist(shaderc)then
+			error(string.format("bgfx shaderc path is privided, but file is not exist, path is : %s", shaderc))
+		end
+
 		local tbl = {
 			shaderc = paths.shaderc,
 			src = filename,
@@ -91,10 +97,16 @@ function toolset.compile(filename, paths, renderer)
 
 			local incpath = ""
 			for _, p in ipairs(includes) do
+				if not fs.exist(p) then
+					print(string.format("include path : %s, but not exist!", p))
+				end
 				incpath = incpath .. gen_incpath(p) .. " "
 			end
 			if paths.not_include_examples_common == nil then 
 				local incexamplepath = fspath.join(paths.shaderinc, "../examples/common")
+				if not fs.exist(incexamplepath) then
+					print(string.format("example include path %s is not exist!", incexamplepath))
+				end
 				incpath = incpath .. gen_incpath(incexamplepath)
 			end
 

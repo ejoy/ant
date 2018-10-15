@@ -7,6 +7,7 @@ local framePool = {}
 local table_mt = {}
 local func_mt = {}
 local ud_mt = {}
+local thd_mt = {}
 
 local function wrap_v(v)
     local t = rdebug.type(v)
@@ -16,6 +17,8 @@ local function wrap_v(v)
         return setmetatable({ __ref = v }, func_mt)
     elseif t == 'userdata' then
         return setmetatable({ __ref = v }, ud_mt)
+    elseif t == 'thread' then
+        return setmetatable({ __ref = v }, thd_mt)
     end
     return rdebug.value(v)
 end
@@ -170,7 +173,7 @@ function m.run(frameId, expression, context)
         end
         local ok, err = m.complie_then_execute(frameId, expression)
         if not ok then
-            return false, err
+            return false, res[2]
         end
         return true, ''
     end

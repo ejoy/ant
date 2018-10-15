@@ -269,7 +269,7 @@ function testlua.mainloop()
     )
 
     bgfx.dbg_text_print(0, 1, 0xf, "Color can be changed with ANSI \x1b[9;me\x1b[10;ms\x1b[11;mc\x1b[12;ma\x1b[13;mp\x1b[14;me\x1b[0m code too.");
-
+    bgfx.dbg_text_print(0, 2, 0xf, "Time: " .. tostring(os.clock()))
 --[[
     local stats = bgfx.get_stats("whWH",ctx.stats)
 
@@ -283,11 +283,11 @@ function testlua.mainloop()
     bgfx.frame()
 end
 
-function testlua.init(width, height, ...)
+function testlua.init(window_handle, width, height, ...)
     ctx.width = width
     ctx.height = height
 
-    --[[
+    ---[[
     bgfx.set_platform_data({nwh = window_handle})
     bgfx.init()
 
@@ -302,12 +302,11 @@ function testlua.init(width, height, ...)
     init_flag = true
 
     local bgfx_cb = bgfx.bgfx_cb
-    print("yoyoyo, bgfx_cb", bgfx_cb)
     --]]
 end
 
 function testlua.terminate()
-    --[[
+    ---[[
     if init_flag then
         bgfx.shutdown()
     end
