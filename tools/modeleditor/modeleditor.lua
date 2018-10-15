@@ -23,7 +23,7 @@ local ani_text = iup.label {
 	ALIGNMENT = "ACENTER",	
 }
 
-local anitime_slider = iup.val{
+local anitime_slider = iup.val{	
 	MIN=0, MAX=1, VALUE="0.3",
 	EXPAND="HORIZONTAL",
 	mousemove_cb=function()
@@ -35,6 +35,7 @@ local anitime_slider = iup.val{
 }
 
 local anitime_inputer = iup.text {
+	NAME="DURATION",
 	VALUE="0",
 	MAXSIZE="24x",
 	ALIGNMENT="ARIGHT",
@@ -46,7 +47,7 @@ local animation_time = iup.vbox {
 	iup.hbox {
 		anitime_slider,
 		anitime_inputer,
-		iup.label {
+		iup.label {			
 			TITLE="Time(ms)",
 		},	
 		EXPAND="ON",

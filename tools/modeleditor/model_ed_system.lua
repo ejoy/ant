@@ -200,18 +200,48 @@ local function init_control(ms)
 	end
 
 	skepath_ctrl.VALUE=fu.write_to_file("mem://ske.ske", [[path="meshes/skeleton/skeleton"]])
-	anipath_ctrl.VALUE=fu.write_to_file("mem://ani.ani", [[path="meshes/animation/animation_base"]])
-	--meshpath_ctrl.VALUE=fu.write_to_file("mem://mesh.mesh", [[mesh_path = "meshes/mesh"]])
+	anipath_ctrl.VALUE=fu.write_to_file("mem://ani.ani", [[path="meshes/animation/animation_base"]])	
 	meshpath_ctrl.VALUE = "meshes/mesh.ozz"
 	check_create_sample_entity(skepath_ctrl, anipath_ctrl, meshpath_ctrl)
 
 	local slider = windows.anitime_slider
+
+
+	local dlg = iup.GetDialog(slider)
 	
-	function slider:valuechanged_cb()
-		update_animation_ratio(sample_eid, get_ani_cursor(self))
+	local function update_duration_text(cursorpos)
+		local duration_value = iup.GetDialogChild(dlg, "DURATION")
+		if duration_value == nil then
+			return 
+		end
+
+		local sample_e = world[sample_eid]		
+		if sample_e == nil then
+			return nil
+		end
+
+		local anicomp = sample_e.animation
+		if anicomp then
+			local ani_assetinfo = anicomp.assetinfo
+			if ani_assetinfo then
+				local ani_handle = ani_assetinfo.handle
+				local duration_pos = ani_handle:duration() * cursorpos
+				duration_value.VALUE = tostring(duration_pos)
+			end
+		end
 	end
 
-	update_animation_ratio(sample_eid, get_ani_cursor(slider))
+	local function slider_value_chaged(slider)
+		local cursorpos = get_ani_cursor(slider)
+		update_duration_text(cursorpos)
+		update_animation_ratio(sample_eid, cursorpos)
+	end
+
+	function slider:valuechanged_cb()
+		slider_value_chaged(self)
+	end
+
+	slider_value_chaged(slider)
 end
 
 -- luacheck: ignore self
