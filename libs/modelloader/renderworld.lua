@@ -37,7 +37,6 @@ local function create_light(ms)
 	lightcomp.color = {1,1,1,1}
 	lightcomp.intensity = 2.0
 	ms(lentity.rotation.v, {123.4, -34.22,-28.2}, "=")
-	ms(lentity.position.v, {2, 5, 2}, "=")
 
 	local am_eid = lu.create_ambient_light_entity(world)
 	local am_entity = world[am_eid]
@@ -108,8 +107,16 @@ local function create_grid(ms)
 		handle = {
 			groups = {
 				{
-					vdecl = vdecl,
-					vb = bgfx.create_vertex_buffer(create_grid_line_points(64, 64, 1), vdecl)
+					vb = {
+						decls = {
+							vdecl
+						},
+						handles = {
+							bgfx.create_vertex_buffer(
+								create_grid_line_points(64, 64, 1),
+								vdecl)
+						}
+					}
 				}
 			}
 		}
