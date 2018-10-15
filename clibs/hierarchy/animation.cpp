@@ -171,7 +171,7 @@ lskinning(lua_State *L) {
 	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
 
 	luaL_checktype(L, 2, LUA_TUSERDATA);
-	animation_node *ani = (animation_node*)lua_touserdata(L, 3);
+	animation_node *ani = (animation_node*)lua_touserdata(L, 2);
 	assert(om->mesh);
 
 	auto &mesh = *(om->mesh);
