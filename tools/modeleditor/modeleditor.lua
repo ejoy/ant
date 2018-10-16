@@ -47,7 +47,8 @@ local animation_time = iup.vbox {
 	iup.hbox {
 		anitime_slider,
 		anitime_inputer,
-		iup.label {			
+		iup.label {
+			NAME="STATIC_DURATION",
 			TITLE="Time(ms)",
 		},	
 		EXPAND="ON",

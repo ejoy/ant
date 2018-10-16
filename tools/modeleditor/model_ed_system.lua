@@ -205,12 +205,38 @@ local function init_control(ms)
 	check_create_sample_entity(skepath_ctrl, anipath_ctrl, meshpath_ctrl)
 
 	local slider = windows.anitime_slider
-
-
 	local dlg = iup.GetDialog(slider)
+
+	local function update_static_duration_value()
+		if sample_eid then
+			local e = world[sample_eid]
+			local anihandle = assert(e.animation.assetinfo).handle
+			
+			local duration = anihandle:duration()			
+			local static_duration_value = iup.GetDialogChild(dlg, "STATIC_DURATION")
+			static_duration_value.TITLE = string.format("Time(%.2f ms)", duration * 1000)
+		end
+	end
+
+	update_static_duration_value()
+
+	local duration_value = iup.GetDialogChild(dlg, "DURATION")
+	function duration_value:killfocus_cb()
+		local duration = tonumber(self.VALUE)
+
+		if sample_eid then
+			local e = world[sample_eid]
+			local anicomp = e.animation
+			if anicomp then
+				local anihandle = anicomp.assetinfo.handle
+				local aniduration = anihandle:duration()
+				local ratio = math.min(math.max(0, duration / aniduration), 1)
+				anicomp.ratio = ratio
+			end
+		end
+	end
 	
-	local function update_duration_text(cursorpos)
-		local duration_value = iup.GetDialogChild(dlg, "DURATION")
+	local function update_duration_text(cursorpos)		
 		if duration_value == nil then
 			return 
 		end
@@ -226,7 +252,7 @@ local function init_control(ms)
 			if ani_assetinfo then
 				local ani_handle = ani_assetinfo.handle
 				local duration_pos = ani_handle:duration() * cursorpos
-				duration_value.VALUE = tostring(duration_pos)
+				duration_value.VALUE = string.format("%2f", duration_pos)
 			end
 		end
 	end
@@ -242,6 +268,8 @@ local function init_control(ms)
 	end
 
 	slider_value_chaged(slider)
+
+	iup.Map(dlg)
 end
 
 -- luacheck: ignore self

@@ -314,8 +314,15 @@ LoadFBXMeshes(const aiScene *scene, const load_config& config, mesh_data &md) {
 				size_t meshIndicesCount = CopyMeshIndices(mesh, config, startIB, ib);
 				primitive.start_index = startIB;
 				primitive.num_indices = meshIndicesCount;
-			}
+
+				primitive.bounding.aabb.Init((const glm::vec3 *)mesh->mVertices, mesh->mNumVertices);
+				primitive.bounding.sphere.Init(primitive.bounding.aabb);
+
+				group.bounding.Merge(primitive.bounding);
+			}			
 		}
+
+		md.bounding.Merge(group.bounding);
 	}
 
 }
