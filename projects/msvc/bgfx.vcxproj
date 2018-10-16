@@ -111,7 +111,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_CRT_SECURE_NO_WARNINGS;LUA_BUILD_AS_DLL;_DEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_CRT_SECURE_NO_WARNINGS;BGFX_CONFIG_DEBUG;LUA_BUILD_AS_DLL;_DEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/bgfx/include;../../../ant3rd/bx/include;../../../ant3rd/bgfx/3rdparty;../../../ant3rd/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
@@ -130,7 +130,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_CRT_SECURE_NO_WARNINGS;BGFX_CONFIG_DEBUG;WIN32;_DEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/bgfx/include;../../../ant3rd/bx/include;../../../ant3rd/bgfx/3rdparty;../../../ant3rd/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>

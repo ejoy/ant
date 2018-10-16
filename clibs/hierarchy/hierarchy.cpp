@@ -15,6 +15,7 @@ extern "C" {
 #include <ozz/base/io/stream.h>
 
 
+#include <iostream>
 #include <cstring>
 #include <functional>
 
@@ -56,8 +57,8 @@ get_tree(lua_State *L, int index){
 static int
 lbuilddata_len(lua_State *L){
 	struct hierarchy_build_data* buildata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
-	lua_pushinteger(L, buildata->skeleton->bind_pose().count());
-	return 0;
+	lua_pushinteger(L, buildata->skeleton->num_joints());
+	return 1;
 }
 
 using serialize_skeop = std::function<void(const char*, struct hierarchy_build_data*)>;
@@ -81,8 +82,8 @@ serialize_skeleton(lua_State *L, serialize_skeop op) {
 static int
 lbuilddata_save(lua_State *L) {
 	return serialize_skeleton(L, [](auto filepath, auto builddata) {
-		ozz::io::File ff(filepath, "w");
-
+		ozz::io::File ff(filepath, "wb");
+		assert(ff.Exist(filepath));
 		ozz::io::OArchive oa(&ff);
 		oa << *builddata->skeleton;
 	});
@@ -91,7 +92,8 @@ lbuilddata_save(lua_State *L) {
 static int
 lbuilddata_load(lua_State *L) {
 	return serialize_skeleton(L, [](auto filepath, auto builddata) {
-		ozz::io::File ff(filepath, "r");
+		ozz::io::File ff(filepath, "rb");
+		assert(ff.opened());
 		ozz::io::IArchive ia(&ff);
 		ia >> *(builddata->skeleton);
 	});
@@ -231,7 +233,10 @@ lbuild(lua_State *L){
 		const char* filepath = lua_tostring(L, 1);
 		struct hierarchy_build_data *builddata = create_builddata_userdata(L);
 		builddata->skeleton = ozz::memory::default_allocator()->New<ozz::animation::Skeleton>();
-		ozz::io::File ff(filepath, "r");
+		ozz::io::File ff(filepath, "rb");
+		if (!ff.opened()) {
+			luaL_error(L, "could not open file : %s", filepath);
+		}
 		ozz::io::IArchive ia(&ff);
 		ia >> *builddata->skeleton;
 
@@ -514,7 +519,7 @@ serialize_rawskeleton(lua_State *L, serialize_op op) {
 static int
 lhnode_save(lua_State *L) {
 	return serialize_rawskeleton(L, [](const char* filepath, struct hierarchy_tree *tree) {
-		ozz::io::File ff(filepath, "w");
+		ozz::io::File ff(filepath, "wb");		
 		ozz::io::OArchive oa(&ff);
 		oa << *tree->skl;
 	});
@@ -525,7 +530,9 @@ lhnode_save(lua_State *L) {
 static int
 lhnode_load(lua_State *L) {
 	return serialize_rawskeleton(L, [](const char* filepath, struct hierarchy_tree *tree) {
-		ozz::io::File ff(filepath, "r");
+		ozz::io::File ff(filepath, "rb");
+		assert(ff.opened());
+		
 		ozz::io::IArchive ia(&ff);
 		ia >> *tree->skl;
 	});

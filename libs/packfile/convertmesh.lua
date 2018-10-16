@@ -15,7 +15,7 @@ return function(lk, readmode)
 	local meshpath = c.mesh_src		
 	meshpath = path.join(assetmgr.assetdir(), meshpath)
 	if not fs.exist(meshpath) then
-		print("file not exist : ", meshpath)
+		error(string.format("file not exist : %s", meshpath))
 	end
 
 	local config = c.config
@@ -28,6 +28,8 @@ return function(lk, readmode)
 		assimp.convert_BGFXBin(meshpath, outputfile, config)
 	elseif ext == "fbx" then
 		assimp.convert_FBX(meshpath, outputfile, config)
+	elseif ext == "ozz" then
+		assimp.convert_OZZ(meshpath, outputfile, config)
 	else
 		error(string.format("not support convert mesh format : %s, filename is : %s", ext, meshpath))
 	end

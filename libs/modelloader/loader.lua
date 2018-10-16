@@ -1,142 +1,120 @@
-local meshcreator = require "assimplua"
+--luacheck: globals log
+
+local log = log and log(...) or print
+
 local bgfx = require "bgfx"
 
-local fu = require "filesystem.util"
 local fs = require "filesystem"
 local path = require "filesystem.path"
+local modelutil = require "modelloader.util"
 
 local loader = {}
 
-local function load_from_source(filepath, config)
-	-- local antmeshfile = path.join("cache", path.replace_ext(filepath, "antmesh"))
-	-- path.create_dirs(path.parent(antmeshfile))
-
-	-- if fu.file_is_newer(filepath, antmeshfile) then		
-	-- 	local ext = path.ext(filepath):lower()
-	-- 	if ext == "fbx" then
-	-- 		meshcreator.convert_FBX(filepath, antmeshfile, config)
-	-- 	elseif ext == "bin" then
-	-- 		meshcreator.convert_BGFXBin(filepath, antmeshfile, config)
-	-- 	else 
-	-- 		error(string.format("unknown ext : %s", ext))
-	-- 	end
-	-- end
-
-	path.create_dirs(path.join("cache", filepath))
+local function load_from_source(filepath)
+	path.create_dirs(path.parent(path.join("cache", filepath)))
 	local antmeshloader = require "modelloader.antmeshloader"
 	return antmeshloader(path.remove_ext(filepath))
 end
 
-function loader.load(filepath)
-	local modelutil = require "modelloader.util"
-	local config = modelutil.default_config()
+local function read_config(filepath)
+	local lkfile = path.replace_ext(filepath, "lk")
+	if fs.exist(lkfile) then
+		local rawtable = require "asset.rawtable"
+		local t = rawtable(lkfile)
+		return t.config
+	end
 
-	local meshgroup = load_from_source(filepath, config)
-	if meshgroup then
-		-- need move to bgfx c module
-		local function create_decl(vb_layout)
-			local decl = {}
-			for v in vb_layout:gmatch("%w+") do 
-				local function adjust_elem(e)
-					local defelem = {'_', '3', '0', 'N', 'I', 'f'}					
-					for i=1, #e do
-						local c = v:sub(i, i)
-						defelem[i] = c
+	
+	return modelutil.default_config()
+end
+
+local function layout_to_elems(layout)
+	local t = {}
+	for m in layout:gmatch("%w+") do
+		table.insert(t, m)
+	end
+	return t
+end
+
+local function get_stream_elems(s)
+	local t = {}
+	for m in s:gmatch("[pnTbtcwi]%d?") do
+		table.insert(t, m)
+	end
+	return t	
+end
+
+local function create_vb(vb)
+	local handles = {}
+	local decls = {}
+	local vb_data = {"!", "", 1, 0}
+
+	local vbraws = vb.vbraws
+	local num_vertices = vb.num_vertices
+	for layout, vbraw in pairs(vbraws) do
+		local decl, stride = modelutil.create_decl(layout)
+		vb_data[2], vb_data[4] = vbraw, num_vertices * stride
+
+		table.insert(decls, decl)
+		table.insert(handles, bgfx.create_vertex_buffer(vb_data, decl))
+	end
+
+	vb.handles 	= handles
+	vb.decls 	= decls
+end
+
+local function create_ib(ib)
+	if ib then
+		local ib_data = {"", 1, nil}
+		local elemsize = ib.format == 32 and 4 or 2
+		ib_data[1], ib_data[3] = ib.ibraw, elemsize * ib.num_indices
+		ib.handle = bgfx.create_index_buffer(ib_data, elemsize == 4 and "d" or nil)
+	end
+end
+
+local function get_streams(config)
+	if config.animation.cpu_skinning then
+		local streams = {}
+		for _, s in ipairs(config.stream) do
+			local selems = get_stream_elems(s)
+			local function find_idx(name)
+				for idx, se in ipairs(selems) do
+					if se == name then
+						return idx
 					end
-					return table.concat(defelem)
 				end
 
-				local e = adjust_elem(v)
-				local function get_attrib(a)
-					local t = {	p = "POSITION",	n = "NORMAL",T = "TANGENT",	b = "BITANGENT",
-						i = "INDICES",	w = "WEIGHT",
-						c = "COLOR", t = "TEXCOORD"
-					}
-					return assert(t[a])
-				end
-				local attrib = get_attrib(e:sub(1, 1))
-				local num = tonumber(e:sub(2, 2))
-
-				if attrib == "COLOR" or attrib == "TEXCOORD" then
-					local channel = e:sub(3, 3)
-					attrib = attrib .. channel
-				end
-
-				local function get_type(v)					
-					local t = {	u = "UINT8", U = "UINT10", i = "INT16",
-						h = "HALF",	f = "FLOAT",}
-					return assert(t[v])
-				end
-
-				local normalize = e:sub(4, 4) == "n"
-				local asint= e:sub(5, 5) == "i"
-				local type = get_type(e:sub(6, 6))
-
-				table.insert(decl, {attrib, num, type, normalize, asint})
+				return nil
 			end
-		
-			return bgfx.vertex_decl(decl)
+			
+			for _, name in ipairs{'i', 'w'} do
+				local idx = find_idx(name)
+				if idx then
+					table.remove(selems, idx)
+				end
+			end
+
+			if next(selems) then
+				table.insert(streams, table.concat(selems))
+			end
 		end
 
-		local groups = meshgroup.groups
+		return streams
+	end
 
-		local vb_data = {"!", "", 1, nil}
-		local ib_data = {"", 1, nil}
+	return config.stream
+end
 
-		for _, g in ipairs(groups) do
-			local decl, stride = create_decl(g.vb_layout)
-			vb_data[2], vb_data[4] = g.vbraw, g.num_vertices * stride
-			
-			g.vb = bgfx.create_vertex_buffer(vb_data, decl)
-			if g.ibraw then
-				local elemsize = g.ib_format == 32 and 4 or 2
-				ib_data[1], ib_data[3] = g.ibraw, elemsize * g.num_indices
-				g.ib = bgfx.create_index_buffer(ib_data, elemsize == 4 and "d" or nil)
-			end
+function loader.load(filepath)	
+	local meshgroup = load_from_source(filepath)	
+	if meshgroup then		
+		for _, g in ipairs(meshgroup.groups) do
+			create_vb(g.vb)
+			create_ib(g.ib)
 		end
 
 		return meshgroup
 	end
 end
-
--- function loader.load(filepath)
---     print(filepath)
---     local path = require "filesystem.path"
---     local ext = path.ext(filepath)
---     if string.lower(ext) ~= "fbx" then
---         return
---     end
-
---     local material_info, model_node = assimp.LoadFBX(filepath)
---     if not material_info or not model_node then
---         return
---     end
-
---     --PrintNodeInfo(model_node, 1)
---     --PrintMaterialInfo(material_info)
-
---     for _, v in ipairs(material_info) do
---         v.vb_raw = {}
---         v.ib_raw = {}
---         v.prim = {}
---     end
-
---     HandleModelNode(material_info, model_node)
-
---     for _, v in ipairs(material_info) do
---         --local data_string = string.pack("s", table.unpack(v.vb_raw))
---         local vdecl, stride = bgfx.vertex_decl {
---             { "POSITION", 3, "FLOAT" },
---             { "NORMAL", 3, "FLOAT", true, false},
---             { "TEXCOORD0", 3, "FLOAT"},
---         }
-
---         local vb_data = {"fffffffff", table.unpack(v.vb_raw)}
---         v.vb = bgfx.create_vertex_buffer(vb_data, vdecl)
---         v.ib = bgfx.create_index_buffer(v.ib_raw)
---     end
-
---     return {group = material_info}
--- end
 
 return loader

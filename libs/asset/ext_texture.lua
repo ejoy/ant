@@ -1,3 +1,4 @@
+-- luacheck: globals import
 local require = import and import(...) or require
 
 local rawtable = require "rawtable"

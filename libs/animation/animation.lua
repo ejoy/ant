@@ -1,6 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
+-- luacheck: ignore param
 ecs.import "timer"
 ecs.import "render.math3d.math_component"
 
@@ -17,39 +18,42 @@ local ani = ecs.component "animation" {
 	},	
 }
 
--- -- separate animation and skeleton to 2 component, 
--- -- skeleton component will corresponding to some system that do not need animation
--- local ske = ecs.component "skeleton" {
--- 	path = {
--- 		type = "userdata",
--- 		default = "",
--- 		save = function (v, param)
--- 			assert(false, "not implement skeleton save")
--- 		end,
--- 		load = function (v, param)
--- 			assert(false, "not implement skeleton load")
--- 		end
--- 	}
--- }
+function ani:init()
+	self.ratio = 0
+end
+
+-- separate animation and skeleton to 2 component, 
+-- skeleton component will corresponding to some system that do not need animation
+local ske = ecs.component "skeleton" {
+	ref_path = {
+		type = "userdata",
+		default = "",
+		save = function (v, param)
+			assert(false, "not implement skeleton save")
+		end,
+		load = function (v, param)
+			assert(false, "not implement skeleton load")
+		end
+	}
+}
 
 
 local anisystem = ecs.system "animation_system"
 anisystem.singleton "timer"
 anisystem.singleton "math_stack"
 
-local ani_module = "hierarchy.animation"
+local ani_module = require "hierarchy.animation"
 
 function anisystem:update()
-	local timer = self.timer
-	local delta = timer.delta
-
 	for _, eid in world:each("animation") do
 		local e = world[eid]
-		local skeleton = assert(e.hierarchy)
-		local animation = e.animation
+		local skecomp = assert(e.skeleton)
+		local ske = assert(skecomp.assetinfo).handle
 
-		ani_module.motion(skeleton, animation, 0.1)
+		local anicomp = assert(e.animation)
+		local ani = assert(anicomp.assetinfo).handle
+
+		ani_module.motion(ske, ani, anicomp.sampling_cache, anicomp.ratio)
 	end
-
 end
 

@@ -21,10 +21,7 @@ camera_controller_system.depend "iup_message"
 camera_controller_system.depend "camera_init"
 
 local function camera_move(ms, rotation, position, dx, dy, dz)
-	local xdir, ydir, zdir = ms(rotation, "bPPP")
-	ms(position, position, zdir, {dz}, "*+=")
-	ms(position, position, ydir, {dy}, "*+=")
-	ms(position, position, xdir, {dx}, "*+=")
+	ms(position, rotation, "b", position, "S", {dx}, "*+S", {dy}, "*+S", {dz}, "*+=")
 end
 
 local function camera_reset(ms, camera, target)
@@ -59,7 +56,7 @@ function camera_controller_system:init()
 			elseif status.LEFT then
 				local speed = move_speed * 0.1
 				local delta = (xy - last_xy) * speed
-				local distance = math.sqrt(ms(camera.position.v, target, camera.position.v, "-1.T")[1])
+				local distance = math.sqrt(ms(target, camera.position.v, "-1.T")[1])
 				camera_move(ms, camera.rotation.v, camera.position.v, -delta.x, delta.y, 0)
 				ms(camera.rotation.v, target, camera.position.v, "-D=")
 				ms(camera.position.v, target, {-distance}, camera.rotation.v, "dn*+=")

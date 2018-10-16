@@ -83,7 +83,7 @@ function add_entity_sys:init()
 
 	do
 		local leid = lu.create_directional_light_entity(world)
-		world:add_component(leid, "mesh", "material", "can_render", "scale", "name")
+		world:add_component(leid, "position", "mesh", "material", "can_render", "scale", "name")
 		local lentity = world[leid]
 
 		local lightcomp = lentity.light.v
@@ -146,7 +146,7 @@ function add_entity_sys:init()
         ms(bunny.position.v, {0, 0, 0, 1}, "=")
 		ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
      
-		bunny.mesh.path = "bunny.mesh"
+		bunny.mesh.ref_path = "bunny.mesh"
 		component_util.load_mesh(bunny)
      
 		bunny.material.content[1] = {path = "bunny.material", properties = {}}
@@ -228,7 +228,7 @@ function add_entity_sys:init()
 	-- 		}
 	-- 	end
 
-	-- 	stone.mesh.path = ""	-- runtime mesh info
+	-- 	stone.mesh.ref_path = ""	-- runtime mesh info
 	-- 	stone.mesh.assetinfo = create_plane_mesh()
 
 
@@ -248,18 +248,16 @@ function add_entity_sys:init()
         ms(entity.scale.v, {1, 1, 1}, "=")
         ms(entity.position.v, {0, 0, 0, 1}, "=") 
         ms(entity.rotation.v, {0, 0, 0}, "=")
-
-		entity.mesh.path = meshfile
-		component_util.load_mesh(entity)
-		entity.material.content[1] = {path=materialfile, properties={}}
-		component_util.load_material(entity)
+		
+		component_util.load_mesh(entity, meshfile)		
+		component_util.load_material(entity, {materialfile})
         return eid
 	end
 	
-	local hie_refpath = "hierarchy/test_hierarchy.hierarchy"	
+	local hie_refpath = "hierarchy/test_hierarchy.hierarchy"
 	-- do
 	-- 	local assetpath = path.join(assetmgr.assetdir(), hie_refpath)
-	-- 	path.create_dirs(assetpath)
+	-- 	path.create_dirs(path.parent(assetpath))
 	-- 	local hierarchy = require "hierarchy"
 	-- 	local root = hierarchy.new()
 
@@ -351,17 +349,17 @@ function add_entity_sys:init()
 		world:notify()
 	end
 
-	-- do
-	-- 	local ani_eid = world:new_entity("position", "scale", "rotation", 
-	-- 	"mesh", "animation", "hierarchy", "material",
-	-- 	"can_render", "can_select", 
-	-- 	"name")
+	do
+		-- local ani_eid = world:new_entity("position", "scale", "rotation", 
+		-- "mesh", "animation", "hierarchy", "material",
+		-- "can_render", "can_select", 
+		-- "name")
 
-	-- 	local ani_e = world[ani_eid]
-	-- 	ani_e.hierarchy.ref_path = "meshes/skeleton/skeleton.ozz"
-	-- 	ani_e.hierarchy.builddata = asset.load(ani_e.hierarchy.ref_path)
-	-- 	ani_e.animation.ref_path = "meshes/animation/animation_base.ozz"
-	-- 	ani_e.animation.handle = asset.load(ani_e.animation.ref_path)
+		-- local ani_e = world[ani_eid]
+		-- ani_e.hierarchy.ref_path = "meshes/skeleton/skeleton.ozz"
+		-- ani_e.hierarchy.builddata = assetmgr.load(ani_e.hierarchy.ref_path)
+		-- ani_e.animation.ref_path = "meshes/animation/animation_base.ozz"
+		-- ani_e.animation.handle = assetmgr.load(ani_e.animation.ref_path)
 
-	-- end
+	end
 end

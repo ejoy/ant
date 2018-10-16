@@ -92,7 +92,6 @@ local function codeReference(s)
         hash = hash + 1
     end
     codePool[hash] = s
-    codePool[s] = hash
     return hash
 end
 

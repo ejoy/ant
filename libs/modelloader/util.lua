@@ -27,18 +27,62 @@ function util.default_config()
 			
 			layout string can be used to create bgfx_vertex_decl_t
 		]] 
-		layout = "p3|n30nIf|T|b|t20|c30",
-		--layout = "p3|n30nIf|t20|c30",
+		layout = {
+			"p3|n30nIf|T|b|t20|c40",
+		},
 		flags = {
-			invert_normal = false,
-			flip_uv = true,
-			ib_32 = false,	-- if index num is lower than 65535
+			invert_normal 	= false,
+			flip_uv 		= true,
+			ib_32 			= false,	-- if index num is lower than 65535
 		},
 		animation = {
-			load_skeleton = true,
-			ani_list = "all" -- or {"walk", "stand"}
+			load_skeleton 	= true,
+			ani_list 		= "all", 	-- or {"walk", "stand"}
+			cpu_skinning 	= false,
 		},
 	}
+end
+
+-- need move to bgfx c module
+function util.create_decl(vb_layout)
+	local decl = {}
+	for e in vb_layout:gmatch("%w+") do 
+		assert(#e == 6)
+		local function get_attrib(e)
+			local t = {	
+				p = "POSITION",	n = "NORMAL", T = "TANGENT",	b = "BITANGENT",
+				i = "INDICES",	w = "WEIGHT",
+				c = "COLOR", t = "TEXCOORD",
+			}
+			local a = e:sub(1, 1)
+			local attrib = assert(t[a])
+			if attrib == "COLOR" or attrib == "TEXCOORD" then
+				local channel = e:sub(3, 3)
+				return attrib .. channel
+			end
+
+			return attrib
+		end
+		local attrib = get_attrib(e)
+		local num = tonumber(e:sub(2, 2))
+
+		local function get_type(v)					
+			local t = {	
+				u = "UINT8", U = "UINT10", i = "INT16",
+				h = "HALF",	f = "FLOAT",
+			}
+			return assert(t[v])
+		end
+
+		local normalize = e:sub(4, 4) == "n"
+		local asint= e:sub(5, 5) == "i"
+		local type = get_type(e:sub(6, 6))
+
+		table.insert(decl, {attrib, num, type, normalize, asint})
+	end
+
+	local bgfx = require "bgfx"
+	return bgfx.vertex_decl(decl)
 end
 
 return util

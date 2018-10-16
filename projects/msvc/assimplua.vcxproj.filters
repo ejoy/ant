@@ -21,10 +21,13 @@
     <ClCompile Include="..\..\clibs\assimplua\antmesh_converter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\assimplua\ozz_helper.cpp">
+    <ClCompile Include="..\..\clibs\assimplua\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\assimplua\utils.cpp">
+    <ClCompile Include="..\..\clibs\assimplua\bgfxmesh_helper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\assimplua\fbx_helper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

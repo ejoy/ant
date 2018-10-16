@@ -26,7 +26,8 @@
         "request": "launch",        
         "cwd": "${workspaceRoot}",  
         "runtimeExecutable" : "${workspaceRoot}/projects/msvc/vs_bin/x64/Debug/iup.exe",
-        "runtimeArgs": "${workspaceRoot}/libs/main.lua",       
+        "runtimeArgs": "${workspaceRoot}/libs/main.lua", 
+        "internalModule": "vscode-dbg",      
         "stopOnEntry": false,
         "env": {
             "STATIC_LINKING_IUP" : "1",
@@ -40,6 +41,7 @@
         "runtimeExecutable": "${workspaceRoot}/bin/iup.exe",
         "runtimeArgs": "${workspaceRoot}/libs/main.lua",
         "cwd": "${workspaceRoot}",
+        "internalModule": "vscode-dbg",
         "stopOnEntry": false
     },
 
