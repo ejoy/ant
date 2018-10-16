@@ -15,7 +15,7 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 
-#if BGFX_API_VERSION != 88
+#if BGFX_API_VERSION != 89
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -90,7 +90,6 @@ lsetPlatformData(lua_State *L) {
 	bpdt.context = getfield(L, "context");
 	bpdt.backBuffer = getfield(L, "backBuffer");
 	bpdt.backBufferDS = getfield(L, "backBufferDS");
-	bpdt.session = getfield(L, "session");
 	
 	bgfx_set_platform_data(&bpdt);
 
@@ -425,6 +424,12 @@ linit(lua_State *L) {
 		read_boolean(L, 1, "debug", &init.debug);
 		read_boolean(L, 1, "profile", &init.profile);
 		read_boolean(L, 1, "getlog", &cb->getlog);
+
+		init.platformData.ndt = getfield(L, "ndt");
+		init.platformData.nwh = getfield(L, "nwh");
+		init.platformData.context = getfield(L, "context");
+		init.platformData.backBuffer = getfield(L, "backBuffer");
+		init.platformData.backBufferDS = getfield(L, "backBufferDS");
 	}
 
 	if (!bgfx_init(&init)) {
