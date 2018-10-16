@@ -102,19 +102,31 @@ local function compile(ms, args)
 	return table.concat(code, '\n') .. '\n'
 end
 
-local function make_scope(ms, scope, value)
-	for _, v in ipairs(value) do
-		scope[#scope+1] = ms(v, 'T')
+local function value_to_scope(ms, scope, value)
+	for i, v in ipairs(value) do
+		scope[i] = ms(v, 'T')
+	end
+end
+
+local function scope_to_value(ms, scope, value)
+	for i, v in ipairs(scope) do
+		if type(value[i]) == 'userdata' then
+			ms(value[i], v, '=')
+		else
+			value[i] = v
+		end
 	end
 end
 
 local function event_line(ms, status, stack, rets)
 	status.scope[1].value = {}
 	status.scope[2].value = {}
-	make_scope(ms, status.scope[1].value, stack)
-	make_scope(ms, status.scope[2].value, rets)
+	value_to_scope(ms, status.scope[1].value, stack)
+	value_to_scope(ms, status.scope[2].value, rets)
 	status.currentline = status.currentline + 1
 	vscdbg:event('line', status.currentline, status.scope)
+	scope_to_value(ms, status.scope[1].value, stack)
+	scope_to_value(ms, status.scope[2].value, rets)
 end
 
 local _, upvalue1 = debug.getupvalue(ms, 1)
