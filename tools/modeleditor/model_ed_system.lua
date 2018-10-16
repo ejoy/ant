@@ -283,7 +283,7 @@ function model_ed_sys:init()
 	local lightcomp = lentity.light.v
 	lightcomp.color = {1,1,1,1}
 	lightcomp.intensity = 2.0
-	ms(lentity.rotation.v, {123.4, -34.22,-28.2}, "=")
+	ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")
 
 	local maincamera = world:first_entity("main_camera")
 	--assert(maincamera.primitive_filter).no_lighting = true

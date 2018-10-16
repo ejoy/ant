@@ -40,7 +40,7 @@ function util.srt(ms, s, r, t, ispersistent)
 end
 
 function util.srt_from_entity(ms, entity)
-	return util.srt(ms, entity.scale.v, entity.rotation.v, entity.position.v)
+	return util.srt(ms, entity.scale, entity.rotation, entity.position)
 end
 
 function util.srt_v(ms, s, r, t, ispersistent)
@@ -90,9 +90,9 @@ function util.create_persistent_matrix(ms, value)
 end
 
 function util.identify_transform(ms, entity)
-	ms(	entity.scale.v, {1, 1, 1, 0}, "=",
-	entity.rotation.v, {0, 0, 0, 0}, "=",
-	entity.position.v, {0, 0, 0, 1}, "=")
+	ms(	entity.scale, {1, 1, 1, 0}, "=",
+	entity.rotation, {0, 0, 0, 0}, "=",
+	entity.position, {0, 0, 0, 1}, "=")
 end
 
 function util.print_srt(e, numtab)
@@ -103,9 +103,9 @@ function util.print_srt(e, numtab)
 		end		
 	end
 	
-	local s_str = tostring(e.scale.v)
-	local r_str = tostring(e.rotation.v)
-	local t_str = tostring(e.position.v)
+	local s_str = tostring(e.scale)
+	local r_str = tostring(e.rotation)
+	local t_str = tostring(e.position)
 
 	print(tab .. "scale : ", s_str)
 	print(tab .. "rotation : ", r_str)
@@ -121,7 +121,7 @@ local function update_frustum_from_aspect(rt, frustum)
 end
 
 function util.view_proj_matrix(ms, camera_entity)	
-	local view = ms(camera_entity.position.v, camera_entity.rotation.v, "dLP")
+	local view = ms(camera_entity.position, camera_entity.rotation, "dLP")
 	local vr = camera_entity.view_rect
 	local frustum = assert(camera_entity.frustum)
 	update_frustum_from_aspect(vr, frustum)

@@ -32,10 +32,9 @@ function world:remove_component(eid, component_type)
 	local e = assert(self[eid])
 	assert(e[component_type] ~= nil)
 	self._set[component_type] = nil
-	local c = assert(e[component_type])
 	local del = self._component_type[component_type].delete
 	if del then
-		del(c)
+		del(e[component_type])
 	end
 	e[component_type] = nil
 	self:change_component(eid, component_type)
@@ -242,7 +241,7 @@ function ecs.new_world(config)
 	-- load systems and components from modules
 	local class = init_modules(w, config.modules, config.module_path)
 
-	for k,v in pairs(class.component) do
+	for k,v in pairs(class.component_v2) do
 		w._component_type[k] = component(v)
 	end
 

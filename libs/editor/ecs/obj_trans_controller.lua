@@ -48,7 +48,7 @@ end
 
 local function get_controller_position(controller)
 	local root_eid = assert(controller.root)
-	return world[root_eid].position.v
+	return world[root_eid].position
 end
 
 local function update_transform(controller, objeid)	
@@ -106,11 +106,11 @@ local function play_object_transform(ms, ot, dx, dy)
 		return dirInScreen[1] * dx + dirInScreen[2] * dy        
     end
 
-	local xdir, ydir, zdir = ms(sceneobj.rotation.v, "bPPP")
+	local xdir, ydir, zdir = ms(sceneobj.rotation, "bPPP")
 
     if mode == "pos_transform" then            
         if selected_axis then
-            local pos = sceneobj.position.v
+            local pos = sceneobj.position
 
             local function move(dir)
 				local speed = ot.translate_speed			
@@ -132,13 +132,13 @@ local function play_object_transform(ms, ot, dx, dy)
         end
     elseif mode == "scale_transform" then
         if selected_axis then                
-            local scale = ms(sceneobj.scale.v, "T")
+            local scale = ms(sceneobj.scale, "T")
 
             local function scale_by_axis(dir, idx)
                 local speed = ot.scale_speed
                 local v = select_step_value(dir) > 0 and speed or -speed
                 scale[idx] = scale[idx] + v
-                ms(sceneobj.scale.v, scale, "=")
+                ms(sceneobj.scale, scale, "=")
             end
 
             if axis_name == "x" then
@@ -153,13 +153,13 @@ local function play_object_transform(ms, ot, dx, dy)
         end
     elseif mode == "rotator_transform" then
         if selected_axis then
-            local rotation = ms(sceneobj.rotation.v, "T")
+            local rotation = ms(sceneobj.rotation, "T")
 
             local function rotate(dir, idx)
                 local speed = ot.rotation_speed
                 local v = select_step_value(dir) > 0 and speed or -speed
                 rotation[idx] = rotation[idx] + v
-                ms(sceneobj.rotation.v, rotation, "=")
+                ms(sceneobj.rotation, rotation, "=")
             end
 
             if axis_name == "x" then
@@ -365,8 +365,8 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 
 	function controllers:update_transform(obj)		
 		local root = world[self.root]
-		ms(root.rotation.v, obj.rotation.v, "=")
-		ms(root.position.v, obj.position.v, "=")
+		ms(root.rotation, obj.rotation, "=")
+		ms(root.position, obj.position, "=")
 	end
 
 	function controllers:is_controller_id(check_eid)
@@ -457,7 +457,7 @@ local function add_rotator_entities(ms, colors)
 
 	function controllers:update_transform(obj)		
 		local root = world[self.root]
-		ms(root.position.v, obj.position.v, "=")		
+		ms(root.position, obj.position, "=")		
 	end
 
 	function controllers:is_controller_id(check_eid)

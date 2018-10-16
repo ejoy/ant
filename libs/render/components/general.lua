@@ -3,16 +3,16 @@ local ecs = ...
 local component_util = require "render.components.util"
 local asset = require "asset"
 
-ecs.component "position"{
-    v = {type="vector"}
+ecs.component_v2 "position"{
+    type="vector"
 }
 
-ecs.component "rotation"{
-    v = {type="vector"}
+ecs.component_v2 "rotation"{
+    type="vector"
 }
 
-ecs.component "scale" {
-    v = {type="vector"}
+ecs.component_v2 "scale" {
+    type="vector"
 }
 
 ecs.component "relative_srt" {

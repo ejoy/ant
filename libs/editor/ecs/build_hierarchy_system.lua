@@ -101,9 +101,9 @@ local function rebuild_hierarchy(ms, iterop)
 					local s, r, t = ms(csrt, "~PPP")
 					local ceid = mapper[node.name]
 					local ce = world[ceid]
-					ms(ce.position.v, t, "=")
-					ms(ce.rotation.v, r, "=")
-					ms(ce.scale.v, s, "=")
+					ms(ce.position, t, "=")
+					ms(ce.rotation, r, "=")
+					ms(ce.scale, s, "=")
 					update_transform(ce, csrt)
 				end			
 			end

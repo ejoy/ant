@@ -101,7 +101,7 @@ return function(world, import)
 	end
 
 	register {
-		type = "component",
+		type = "component_v2",
 		typename = "struct",
 	}
 	register {
@@ -112,13 +112,22 @@ return function(world, import)
 	}
 
 	class_register.tag = function (name)
-		local c = class_register.component(name)		
+		local c = class_register.component_v2(name)
 		c.new = function() return true end
 
 		return function (content)
 			if content and (type(content) ~= "table" or next(content)) then
 				error("tag component should not add any member")
 			end
+		end
+	end
+
+	class_register.component = function (name)
+		local c = class_register.component_v2(name)
+		return function (content)
+			return c({
+				struct = content,
+			})
 		end
 	end
 
