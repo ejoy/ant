@@ -16,8 +16,8 @@ build_lua :
 clean_lua :
 	cd lua && $(MAKE) clean
 
-build_iup :
-	cd iup && $(MAKE) -j8
+build_iup : build_lua
+	cd iup && $(MAKE)
 
 clean_iup :
 	cd iup && $(MAKE) clean
