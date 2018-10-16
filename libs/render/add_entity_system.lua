@@ -61,11 +61,11 @@ function update_direction_light_sys:update()
 
 		local delta = deltatime_op()
 
-		local rot = ms(e.rotation.v, "T")
+		local rot = ms(e.rotation, "T")
 		rot[1] = rot[1] + delta * angleXpresecond
 		rot[2] = rot[2] + delta * angleYpresecond
 
-		ms(e.rotation.v, rot, "=")
+		ms(e.rotation, rot, "=")
 	end
 end
 
@@ -90,11 +90,11 @@ function add_entity_sys:init()
 		lightcomp.color = {1,1,1,1}
 		lightcomp.intensity = 2.0
 
-		--ms(lentity.rotation.v, {50, -30, 0}, "=")
-		--ms(lentity.rotation.v, {123.4, 234.22,28.2}, "=")
-		ms(lentity.rotation.v, {123.4, -34.22,-28.2}, "=")
-		ms(lentity.position.v, {2, 5, 2}, "=")
-		ms(lentity.scale.v, {0.01, 0.01, 0.01}, "=")
+		--ms(lentity.rotation, {50, -30, 0}, "=")
+		--ms(lentity.rotation, {123.4, 234.22,28.2}, "=")
+		ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")
+		ms(lentity.position, {2, 5, 2}, "=")
+		ms(lentity.scale, {0.01, 0.01, 0.01}, "=")
 
 		lentity.name.n = "directional_light"
 
@@ -142,9 +142,9 @@ function add_entity_sys:init()
         bunny.name.n = "bunny"
      
         -- should read from serialize file
-        ms(bunny.scale.v, {2, 2, 2, 0}, "=")
-        ms(bunny.position.v, {0, 0, 0, 1}, "=")
-		ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
+        ms(bunny.scale, {2, 2, 2, 0}, "=")
+        ms(bunny.position, {0, 0, 0, 1}, "=")
+		ms(bunny.rotation, {0, -60, 0, 0}, "=")
      
 		bunny.mesh.ref_path = "bunny.mesh"
 		component_util.load_mesh(bunny)
@@ -163,8 +163,8 @@ function add_entity_sys:init()
 	-- 	pochuan.name.n = "PoChuan"
 
 	-- 	--mu.identify_transform(ms, pochuan)
-	-- 	ms(pochuan.scale.v, {0.1, 0.1, 0.1}, "=")
-	-- 	ms(pochuan.rotation.v, {-90, 0, 0,}, "=")
+	-- 	ms(pochuan.scale, {0.1, 0.1, 0.1}, "=")
+	-- 	ms(pochuan.rotation, {-90, 0, 0,}, "=")
 
 	-- 	component_util.load_mesh(pochuan, "pochuan.mesh")--, {calctangent=false})
 	-- 	component_util.load_material(pochuan, {"pochuan.material"})
@@ -245,9 +245,9 @@ function add_entity_sys:init()
         local entity = world[eid]
         entity.name.n = name
 
-        ms(entity.scale.v, {1, 1, 1}, "=")
-        ms(entity.position.v, {0, 0, 0, 1}, "=") 
-        ms(entity.rotation.v, {0, 0, 0}, "=")
+        ms(entity.scale, {1, 1, 1}, "=")
+        ms(entity.position, {0, 0, 0, 1}, "=") 
+        ms(entity.rotation, {0, 0, 0}, "=")
 		
 		component_util.load_mesh(entity, meshfile)		
 		component_util.load_material(entity, {materialfile})
@@ -300,9 +300,9 @@ function add_entity_sys:init()
 		hierarchy_e.editable_hierarchy.ref_path = hie_refpath
 		hierarchy_e.editable_hierarchy.root = assetmgr.load(hie_refpath, {editable=true})
 
-        ms(hierarchy_e.scale.v, {1, 1, 1}, "=")
-        ms(hierarchy_e.rotation.v, {0, 60, 0}, "=")
-        ms(hierarchy_e.position.v, {10, 0, 0, 1}, "=")
+        ms(hierarchy_e.scale, {1, 1, 1}, "=")
+        ms(hierarchy_e.rotation, {0, 60, 0}, "=")
+        ms(hierarchy_e.position, {10, 0, 0, 1}, "=")
 
 		local entities = {
 			h1 = "cube.mesh",
@@ -328,9 +328,9 @@ function add_entity_sys:init()
 		hierarchy_e.editable_hierarchy.ref_path = hie_refpath
 		hierarchy_e.editable_hierarchy.root = assetmgr.load(hie_refpath, {editable=true})
 
-		ms(hierarchy_e.scale.v, {1, 1, 1}, "=")
-        ms(hierarchy_e.rotation.v, {0, -60, 0}, "=")
-		ms(hierarchy_e.position.v, {-10, 0, 0, 1}, "=")
+		ms(hierarchy_e.scale, {1, 1, 1}, "=")
+        ms(hierarchy_e.rotation, {0, -60, 0}, "=")
+		ms(hierarchy_e.position, {-10, 0, 0, 1}, "=")
 
 		hierarchy_e.name.n = "hierarchy_test_shared"	
 

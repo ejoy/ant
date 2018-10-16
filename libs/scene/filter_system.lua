@@ -13,7 +13,7 @@ local function insert_primitive(eid, result)
 	local materialcontent = entity.material.content
 	assert(#materialcontent >= 1)
 
-	local srt ={s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}
+	local srt ={s=entity.scale, r=entity.rotation, t=entity.position}
 	local mgroups = mesh.handle.groups
 	for i=1, #mgroups do
 		local g = mgroups[i]
@@ -47,7 +47,7 @@ local function append_lighting_properties(ms, result)
 			local l = dlight.light.v
 		
 			-- point from vertex position to light position			
-			table.insert(dlight_info.dir, ms(dlight.rotation.v, "dim"))
+			table.insert(dlight_info.dir, ms(dlight.rotation, "dim"))
 			table.insert(dlight_info.color, l.color)
 			table.insert(dlight_info.intensity, {l.intensity, 0.28, 0, 0})
 
@@ -120,7 +120,7 @@ local function append_lighting_properties(ms, result)
 
 
 	local camera = world:first_entity("main_camera")
-	local eyepos = ms(camera.position.v, "m")
+	local eyepos = ms(camera.position, "m")
 	lighting_properties["u_eyepos"] = {name = "Eye Position", type="v4", value=eyepos}
 
 	for _, r in ipairs(result) do

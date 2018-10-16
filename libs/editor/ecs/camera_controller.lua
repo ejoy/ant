@@ -70,8 +70,8 @@ function camera_controller_system:init()
 		
 		if p then
 			local move_step = move_speed
-			local rot = camera.rotation.v
-			local eye = camera.position.v
+			local rot = camera.rotation
+			local eye = camera.position
 
 			local rightbtn_down = button_status.RIGHT
 			local leftbtn_down = button_status.LEFT
@@ -137,7 +137,7 @@ function camera_controller_system.notify:focus_selected_obj(objects)
 			sphere.center = centerWS
 
 			local camera = world:first_entity("main_camera")
-			local scale = e.scale.v
+			local scale = e.scale
 			local s = ms(scale, "T")
 			local smax = math.max(s[1], s[2], s[3])			
 			sphere.radius = smax * sphere.radius
@@ -151,8 +151,8 @@ function camera_controller_system.notify:focus_selected_obj(objects)
 			]]
 
 			local newpos = ms(sphere.center, {sphere.radius * 3}, new_camera_rotation, "dni*+P")
-			ms(camera.rotation.v, new_camera_rotation, "=")
-			ms(camera.position.v, newpos, "=")
+			ms(camera.rotation, new_camera_rotation, "=")
+			ms(camera.position, newpos, "=")
 		end
 	end
 end

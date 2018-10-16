@@ -242,7 +242,7 @@ function ecs.new_world(config)
 	-- load systems and components from modules
 	local class = init_modules(w, config.modules, config.module_path)
 
-	for k,v in pairs(class.component) do
+	for k,v in pairs(class.component_v2) do
 		w._component_type[k] = component(v)
 	end
 

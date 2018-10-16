@@ -26,8 +26,8 @@ end
 
 local function camera_reset(ms, camera, target)
 	ms(target, {0, 0, 0, 1}, "=")
-	ms(camera.position.v, {8, 8, -8, 1}, "=")
-	ms(camera.rotation.v, target, camera.position.v, "-D=")
+	ms(camera.position, {8, 8, -8, 1}, "=")
+	ms(camera.rotation, target, camera.position, "-D=")
 end
 
 function camera_controller_system:init()
@@ -51,22 +51,22 @@ function camera_controller_system:init()
 			if status.RIGHT then
 				local speed = move_speed * 0.1
 				local delta = (xy - last_xy) * speed
-				camera_move(ms, camera.rotation.v, target, -delta.x, delta.y, 0)
-				camera_move(ms, camera.rotation.v, camera.position.v, -delta.x, delta.y, 0)
+				camera_move(ms, camera.rotation, target, -delta.x, delta.y, 0)
+				camera_move(ms, camera.rotation, camera.position, -delta.x, delta.y, 0)
 			elseif status.LEFT then
 				local speed = move_speed * 0.1
 				local delta = (xy - last_xy) * speed
-				local distance = math.sqrt(ms(target, camera.position.v, "-1.T")[1])
-				camera_move(ms, camera.rotation.v, camera.position.v, -delta.x, delta.y, 0)
-				ms(camera.rotation.v, target, camera.position.v, "-D=")
-				ms(camera.position.v, target, {-distance}, camera.rotation.v, "dn*+=")
+				local distance = math.sqrt(ms(target, camera.position, "-1.T")[1])
+				camera_move(ms, camera.rotation, camera.position, -delta.x, delta.y, 0)
+				ms(camera.rotation, target, camera.position, "-D=")
+				ms(camera.position, target, {-distance}, camera.rotation, "dn*+=")
 			end
 		end
 		last_xy = xy
 	end
 
 	function message:wheel(delta, x, y, status)
-		camera_move(ms, camera.rotation.v, camera.position.v, 0, 0, delta * move_speed)
+		camera_move(ms, camera.rotation, camera.position, 0, 0, delta * move_speed)
 	end
 
 	function message:keypress(c, p, status)
