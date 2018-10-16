@@ -205,12 +205,26 @@ local function init_control(ms)
 	check_create_sample_entity(skepath_ctrl, anipath_ctrl, meshpath_ctrl)
 
 	local slider = windows.anitime_slider
-
-
 	local dlg = iup.GetDialog(slider)
+
+	local duration_value = iup.GetDialogChild(dlg, "DURATION")
+	function duration_value:killfocus_cb()
+		local duration = tonumber(self.VALUE)
+
+		if sample_eid then
+			local e = world[sample_eid]
+			local anicomp = e.animation
+			if anicomp then
+				local anihandle = anicomp.assetinfo.handle
+				local aniduration = anihandle:duration()
+				local ratio = math.min(math.max(0, duration / aniduration), 1)
+				anicomp.ratio = ratio
+			end
+		end
+	end
 	
 	local function update_duration_text(cursorpos)
-		local duration_value = iup.GetDialogChild(dlg, "DURATION")
+		
 		if duration_value == nil then
 			return 
 		end
