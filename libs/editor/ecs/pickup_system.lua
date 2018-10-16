@@ -103,8 +103,8 @@ local function update_viewinfo(ms, e, clickpt)
 	local mc_vr = maincamera.view_rect
 	local w, h = mc_vr.w, mc_vr.h
 	
-	local pos = ms(maincamera.position.v, "T")
-	local rot = ms(maincamera.rotation.v, "T")
+	local pos = ms(maincamera.position, "T")
+	local rot = ms(maincamera.rotation, "T")
 	local pt3d = math_baselib.screenpt_to_3d(
 		{
 			clickpt.x, clickpt.y, 0,
@@ -114,8 +114,8 @@ local function update_viewinfo(ms, e, clickpt)
 	local eye, at = {pt3d[1], pt3d[2], pt3d[3]}, {pt3d[4], pt3d[5], pt3d[6]}
 	local dir = ms(at, eye, "-nT")
 
-	ms(assert(e.position).v, eye, "=")
-	ms(assert(e.rotation).v, dir, "D=")
+	ms(assert(e.position), eye, "=")
+	ms(assert(e.rotation), dir, "D=")
 
 end
 
@@ -190,8 +190,8 @@ local function add_pick_entity(ms)
 	local frustum = entity.frustum
 	mu.frustum_from_fov(frustum, 0.1, 100, 1, vr.w / vr.h)
 
-	local pos = entity.position.v
-	local rot = entity.rotation.v
+	local pos = entity.position
+	local rot = entity.rotation
 	ms(pos, {0, 0, 0, 1}, "=")
 	ms(rot, {0, 0, 0, 0}, "=")
 

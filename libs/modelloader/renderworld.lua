@@ -36,7 +36,7 @@ local function create_light(ms)
 	local lightcomp = lentity.light.v
 	lightcomp.color = {1,1,1,1}
 	lightcomp.intensity = 2.0
-	ms(lentity.rotation.v, {123.4, -34.22,-28.2}, "=")
+	ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")
 
 	local am_eid = lu.create_ambient_light_entity(world)
 	local am_entity = world[am_eid]
@@ -145,9 +145,9 @@ function model_review_system:init()
 	local mesh = model.mesh.assetinfo.handle.bounding
 	--local bound = ms(mesh.aabb.max, mesh.aabb.min, "-T")
 	--local scale = 10 / math.max(bound[1], math.max(bound[2], bound[3]))
-	--ms(model.scale.v, {scale, scale, scale, 0}, "=")
-	--ms(model.position.v, {0, 0, 0, 1}, {0,mesh.aabb.min[2],0,1}, {scale}, "*-=")
-	ms(model.scale.v, {0.2, 0.2, 0.2, 0}, "=")
-	ms(model.position.v, {0, 0, 0, 1}, "=")
-	ms(model.rotation.v, {-90, -90, 0,}, "=")
+	--ms(model.scale, {scale, scale, scale, 0}, "=")
+	--ms(model.position, {0, 0, 0, 1}, {0,mesh.aabb.min[2],0,1}, {scale}, "*-=")
+	ms(model.scale, {0.2, 0.2, 0.2, 0}, "=")
+	ms(model.position, {0, 0, 0, 1}, "=")
+	ms(model.rotation, {-90, -90, 0,}, "=")
 end

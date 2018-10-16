@@ -7,9 +7,9 @@ local function move_position(ms, p, dir, speed)
 end
 
 function util.move(ms, camera, dx, dy, dz)
-	local xdir, ydir, zdir = ms(camera.rotation.v, "bPPP")
+	local xdir, ydir, zdir = ms(camera.rotation, "bPPP")
 
-	local eye = camera.position.v
+	local eye = camera.position
 	move_position(ms, eye, xdir, dx)
 	move_position(ms, eye, ydir, dy)
 	move_position(ms, eye, zdir, dz)
@@ -30,7 +30,7 @@ function util.move(ms, camera, dx, dy, dz)
 end
 
 function util.rotate(ms, camera, dx, dy)
-	local rot = camera.rotation.v
+	local rot = camera.rotation
 
 	local rot_result = ms(rot, {dy, dx, 0, 0}, "+T")
 
