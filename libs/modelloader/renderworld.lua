@@ -50,7 +50,7 @@ end
 local function create_grid(ms)
 	local gridid = world:new_entity(
 		"rotation", "position", "scale", 
-		"can_render", "mesh", "material", 
+		"can_render", "mesh", "material",
 		"name"
 	)
     local grid = world[gridid]
@@ -134,13 +134,20 @@ function model_review_system:init()
 
 	local eid = world:new_entity(
 		"position", "rotation", "scale",
-		"can_render", "mesh", "material",
-		"name"
+		"can_render", "mesh", "material"
 	)
 	local model = world[eid]
-	ms(model.position.v, {0, 0, 0, 1}, "=")
-	ms(model.rotation.v, {-90, -90, 0,}, "=")
-	ms(model.scale.v, {0.2, 0.2, 0.2, 0}, "=")
 	component_util.load_mesh(model, "PVPScene/campsite-door.mesh")
 	component_util.load_material(model, {"PVPScene/scene-mat.material"})
+	--component_util.load_mesh(model, "cube.mesh")
+	--component_util.load_material(model, {"bunny.material"})
+
+	local mesh = model.mesh.assetinfo.handle.bounding
+	--local bound = ms(mesh.aabb.max, mesh.aabb.min, "-T")
+	--local scale = 10 / math.max(bound[1], math.max(bound[2], bound[3]))
+	--ms(model.scale.v, {scale, scale, scale, 0}, "=")
+	--ms(model.position.v, {0, 0, 0, 1}, {0,mesh.aabb.min[2],0,1}, {scale}, "*-=")
+	ms(model.scale.v, {0.2, 0.2, 0.2, 0}, "=")
+	ms(model.position.v, {0, 0, 0, 1}, "=")
+	ms(model.rotation.v, {-90, -90, 0,}, "=")
 end
