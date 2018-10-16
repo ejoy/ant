@@ -82,7 +82,7 @@ local function gen_value(v)
 	}	
 end
 
-local function TODO(v)
+local function gen_default(v)
 	local ttype = type(v.default)
 	if ttype == "function" then
 		v.default_func = v.default
@@ -127,12 +127,12 @@ return function (c)
 			assert(type(k) == "string", "Property name should be string")
 			v = gen_value(v)
 			t[k] = v
-			TODO(v)
+			gen_default(v)
 		end
 	else
 		t = gen_value(t)
 		c.struct = t
-		TODO(t)
+		gen_default(t)
 	end
 	return t
 end

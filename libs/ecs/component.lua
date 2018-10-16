@@ -76,16 +76,8 @@ local function gen_delete(c)
 			local v = c.struct
 			local tname = v.type
 			if tname == "matrix" or tname == "vector" then
-				local last = primitive
-				if last then
-					function primitive(component)
-						component[k] = nil
-						return last(component)
-					end
-				else
-					function primitive(component)
-						component[k] = nil
-					end
+				function primitive(component)
+					--TODO
 				end
 			end
 		end
