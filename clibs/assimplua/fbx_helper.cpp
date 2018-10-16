@@ -144,8 +144,7 @@ CalcBufferSize(const MeshArray &meshes,
 }
 
 static const void*
-GetMeshDataPtr(const aiMesh *mesh, const std::string &elem, size_t offset) {
-	const uint32_t count = elem[1] - '0';
+GetMeshDataPtr(const aiMesh *mesh, const std::string &elem, size_t offset) {	
 	const uint32_t channel = elem[2] - '0';
 	const float *p = nullptr;
 	switch (elem[0]) {
@@ -235,16 +234,6 @@ FindTransform(const aiScene *scene, const aiNode *node, const aiMesh *mesh, aiMa
 	}
 
 	return false;
-}
-
-static std::unique_ptr<uint8_t []>
-CreateVertexBuffer(size_t num_vertices, const std::string &layout) {
-	assert(num_vertices != 0);
-
-	const auto elems = AdjustLayoutElem(layout);
-
-	size_t streamBufferSize = CalcVertexSize(layout);
-	return std::move(make_buffer_ptr(streamBufferSize));
 }
 
 static void

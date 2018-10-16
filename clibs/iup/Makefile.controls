@@ -1,4 +1,4 @@
-include common.mk
+include ../common.mk
 
 IUPSRC = $(ANT3RD)/iup
 CD_DIR =$(ANT3RD)/cd

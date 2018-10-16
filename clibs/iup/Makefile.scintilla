@@ -1,6 +1,6 @@
-include common.mk
+include ../common.mk
 
-CXXFLAGS = --std=c++17 $(CFLAGS)
+IUPSRC = $(ANT3RD)/iup
 
 #  SCINTILLA
 
@@ -75,7 +75,7 @@ OBJSCI_LEXLIB := $(patsubst %.cxx,$(ODIR)/%.o,$(SRCSCINTILLA_LEXLIB))
 OBJSCI_WIN := $(patsubst %.cxx,$(ODIR)/%.o,$(SRCSCINTILLA_WIN32))
 DEFINES := $(addprefix -D, $(DEFINES))
 
-COMPILE = $(CXX) $(CXXFLAGS) -c -o $@ $< $(INCLUDES) $(DEFINES)
+COMPILE = $(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $< $(INCLUDES) $(DEFINES)
 
 all : scintilla.dll
 

@@ -1,4 +1,6 @@
-include common.mk
+include ../common.mk
+
+IUPSRC = $(ANT3RD)/iup
 
 INCLUDES = include src
 INCLUDES += src/win
