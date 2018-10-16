@@ -313,8 +313,7 @@ pull_frustum_planes(lua_State *L, std::array<glm::vec4, 6> &planes, int index) {
 		const size_t tlen = lua_rawlen(L, 1);
 
 		if (tlen == 0) {
-			for (int iPlane = 0; iPlane < 6; ++iPlane) {
-				glm::vec4 &plane = planes[iPlane];
+			for (int iPlane = 0; iPlane < 6; ++iPlane) {				
 				for (int ii = 0; ii < 4; ++ii) {
 					lua_geti(L, 1, iPlane * 4 + ii + 1);
 					planes[iPlane][ii] = lua_tonumber(L, -1);
@@ -357,8 +356,7 @@ lextract_planes(lua_State *L) {
 }
 
 static inline const char*
-planes_intersect(const std::array<glm::vec4, 6> &planes, AABB &aabb) {
-	const char* result = "inside";
+planes_intersect(const std::array<glm::vec4, 6> &planes, AABB &aabb) {	
 	for (const auto &p : planes) {
 		const int r = plane_intersect(p, aabb);
 		if (r < 0)

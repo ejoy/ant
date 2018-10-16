@@ -1,14 +1,8 @@
-ANT3RD = ../../../ant3rd
+include ../common.mk
+include ../bgfx/bgfx_define.mk
 ASSIMPROOT = $(ANT3RD)
-BGFXROOT = $(ANT3RD)
-LUAINC = -I../lua
-LUALIB = -L../lua -llua53
 ASSIMPINC = -I$(ASSIMPROOT)/assimp/include -I$(ANT3RD)/build/assimp/include
 ASSIMPLIB = -L$(ASSIMPROOT)/build/assimp/code -lassimp -L$(ASSIMPROOT)/build/assimp/contrib/irrXML -lIrrXML -lz
-
-BGFXSRC = $(BGFXROOT)/bgfx
-BXSRC = $(BGFXROOT)/bx
-BIMG = $(BGFXROOT)/bimg
 
 # OZZINC = -I $(ANT3RD) -I$(ANT3RD)/ozz-animation/include
 
@@ -18,11 +12,6 @@ BIMG = $(BGFXROOT)/bimg
 # OZZLIB += -L$(OZZLIBDIR)/src/animation/offline -lozz_animation_offline
 # OZZLIB += -L$(OZZLIBDIR)/src/animation/runtime -lozz_animation 
 # OZZLIB += -L$(OZZLIBDIR)/src/base -lozz_base
-
-
-CFLAGS = -O2 -Wall -lstdc++ -std=c++17
-ODIR = o
-CXX = g++
 
 mingw : assimplua.dll
 
@@ -45,10 +34,10 @@ SRC_FILES := assimplua.cpp antmesh_converter.cpp fbx_helper.cpp bgfxmesh_helper.
 OBJ_FILES := $(patsubst %.cpp,$(ODIR)/%.o,$(SRC_FILES))
 
 $(OBJ_FILES) : $(ODIR)/%.o : %.cpp | $(ODIR)
-	$(CXX) $(CFLAGS) -c -o $@ $^ -L. $(LUAINC) $(ASSIMPINC) $(BGFXINC) $(GLM_INC)
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $^ -L. $(LUAINC) $(ASSIMPINC) $(BGFXINC) $(GLM_INC)
 	
 assimplua.dll : $(OBJ_FILES)
-	$(CXX) $(CFLAGS) --shared -o $@ $^ -L. $(LUALIB) $(ASSIMPLIB) $(BGFXUTILLIB) $(BGFXLIB) $(BXLIB)
+	$(CXX) $(CFLAGS) $(CXXFLAGS) --shared -o $@ $^ -L. $(LUALIB) $(ASSIMPLIB) $(BGFXUTILLIB) $(BGFXLIB) $(BXLIB)
 
 clean :
 	rm -f assimplua.dll

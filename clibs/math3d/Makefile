@@ -1,6 +1,4 @@
-LUAINC = -I ../lua
-LUALIB = -L ../lua -llua53
-CFLAGS = -O2 -Wall
+include ../common.mk
 
 GLM_INC = -I ../../../ant3rd/glm
 
