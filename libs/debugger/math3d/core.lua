@@ -117,7 +117,10 @@ local function event_line(ms, status, stack, rets)
 	vscdbg:event('line', status.currentline, status.scope)
 end
 
+local _, upvalue1 = debug.getupvalue(ms, 1)
+
 return function (...)
+	local _ = upvalue1
 	local args = table.pack(...)
 	local stack = reverse(ms('@'))
 	local m = {}
