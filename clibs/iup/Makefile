@@ -10,7 +10,10 @@ WIN32VER = 0x0501
 
 DEFINES = _WIN32_WINNT=$(WIN32VER) _WIN32_IE=0x600 WINVER=$(WIN32VER) UNICODE IUP_DLL
 
-all : iup.exe | scintilla.dll iupluaimglib.dll iupluacontrols.dll
+all : iup.exe | scintilla.dll iupluaimglib.dll iupluacontrols.dll $(LUABIN)
+
+$(LUABIN):
+	@echo $(LUABIN) is not exist! && exit 1
 
 SRCIUP = iup_array.c iup_callback.c iup_dlglist.c iup_attrib.c iup_focus.c iup_font.c \
       iup_globalattrib.c iup_object.c iup_key.c iup_layout.c iup_ledlex.c iup_names.c \
