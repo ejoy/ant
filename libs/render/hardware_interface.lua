@@ -17,7 +17,7 @@ function hw.init(nwh, fb_w, fb_h, fetchlog)
         height = fb_h,
         getlog = fetchlog or true,
 	}
-	bgfx.set_platform_data(args)
+	
 	-- todo: bgfx.init support other flags : reset , maxFrameLatency, maxEncoders, debug, profile, etc.
 	bgfx.init(args)
 

@@ -272,7 +272,7 @@ function Terrain:render(w,h,prim_type )
 	-- 			  s= {1,1,1,1} }          								 -- for terrain ,eye,target
 	-- 																	 -- yaw = 45,	pitch = 25
 	-- -- local srt = { t= {0,30,-10,1},r={0,45,0,0},s= {1,1,1,1} }          -- for terrain ,eye,target
-	-- local proj_mtx = math3d_stack( { type = "proj",n=0.1, f = 1000, fov = 60, aspect = w/h } , "m")  
+	-- local proj_mtx = math3d_stack( { type = "mat",n=0.1, f = 1000, fov = 60, aspect = w/h } , "m")  
 	-- local view_mtx = math3d_stack( srt.t,srt.r,"dLm" )    			     -- math3d_statck( op data 1,2,..,"op code string")
 
 	-- bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
@@ -351,7 +351,7 @@ function Terrain:render_test( w,h  )
 																		   -- yaw = 45,	pitch = 25
     --local srt = { t= {0,30,-10,1},r={0,45,0,0},s= {1,1,1,1} }              -- for terrain ,eye,target
 	--local srt = { s={1,1,1},r={0,0,0,1},t={0,1,-10,1} }       		   -- fro cube 
-	local proj_mtx = math3d_stack( { type = "proj",n=0.1, f = 1000, fov = 60, aspect = w/h } , "m")  
+	local proj_mtx = math3d_stack( { type = "mat",n=0.1, f = 1000, fov = 60, aspect = w/h } , "m")  
 	local view_mtx = math3d_stack( srt.t,srt.r,"dLm" )   -- math3d_statck( op data 1,2,..,"op code string")
 															   -- view_system.lua 
 															   -- L generate lookat,d convert rot to dir

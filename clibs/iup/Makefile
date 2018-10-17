@@ -10,7 +10,10 @@ WIN32VER = 0x0501
 
 DEFINES = _WIN32_WINNT=$(WIN32VER) _WIN32_IE=0x600 WINVER=$(WIN32VER) UNICODE IUP_DLL
 
-all : iup.exe | scintilla.dll iupluaimglib.dll iupluacontrols.dll
+all : iup.exe | scintilla.dll iupluaimglib.dll iupluacontrols.dll $(LUABIN)
+
+$(LUABIN):
+	@echo $(LUABIN) is not exist! && exit 1
 
 SRCIUP = iup_array.c iup_callback.c iup_dlglist.c iup_attrib.c iup_focus.c iup_font.c \
       iup_globalattrib.c iup_object.c iup_key.c iup_layout.c iup_ledlex.c iup_names.c \
@@ -67,12 +70,12 @@ SRCLUA = iuplua.lua constants.lua iup_config.lua
 GC := $(patsubst %.lua,$(ODIR)/il_%.c,$(CTRLUA))
 
 $(GC) : $(ODIR)/il_%.c : $(IUPSRC)/srclua5/elem/%.lua iupgen.lua
-	$(LUABIN) iupgen.lua $< $@
+	$(LUABIN) iupgen.lua +$< $@
 
 LH := $(patsubst %.lua,$(ODIR)/%.lh,$(SRCLUA))
 
 $(LH) : $(ODIR)/%.lh : $(IUPSRC)/srclua5/%.lua bin2c.lua
-	$(LUABIN) bin2c.lua $< > $@
+	$(LUABIN) bin2c.lua +$< > $@
 
 IUPLUASRC = iuplua.c iuplua_api.c iuplua_draw.c iuplua_tree_aux.c iuplua_scanf.c \
       iuplua_getparam.c iuplua_getcolor.c iuplua_config.c

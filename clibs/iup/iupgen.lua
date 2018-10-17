@@ -1,3 +1,38 @@
+-- Modified from srclua5/generator.lua by Cloud Wu : add bin2c
+
+-- bin2c
+
+local compile, filename = arg[1]:match "^(+?)(.*)"
+
+local numtab={}; for i=0,255 do numtab[string.char(i)]=("%3d,"):format(i) end
+
+local function bin2c(filename)
+
+	local function dump(str)
+		return (str:gsub(".", numtab):gsub(("."):rep(80), "%0\n"))
+	end
+	local f = assert(io.open(filename, 'rb'))
+	local code = f:read 'a'
+	f:close()
+
+	local content = compile=="+"
+	  and string.dump(assert(load(code, '='..filename)))
+	  or code
+
+	return [=[
+	{
+	static const unsigned char B1[]={
+	]=] .. dump(string.dump(load(content, '='  .. filename))) .. [=[
+
+	};
+
+	 iuplua_dobuffer(L,(const char*)B1,sizeof(B1),"=]=] .. filename ..[=[");
+	}
+	]=]
+
+end
+
+
 -- compatibility functions (with iuplua.lua)
 iup = {}
 function iup.SetClass(ctrl, name)
@@ -84,9 +119,9 @@ function write_creation(o, t)
       elseif p == "i" then io.write("iuplua_checkihandle(L, ",aux.n,")")
       elseif p == "I" then io.write("iuplua_checkihandleornil(L, ",aux.n,")")
       elseif p == "-" then io.write("NULL")
-      elseif p == "a" then io.write("iuplua_checkstring_array(L, ",aux.n,",0)")
-      elseif p == "t" then io.write("iuplua_checkint_array(L, ",aux.n,",0)")
-      elseif p == "v" then io.write("iuplua_checkihandle_array(L, ",aux.n,",0)")
+      elseif p == "a" then io.write("iuplua_checkstring_array(L, ",aux.n,",-1)")
+      elseif p == "t" then io.write("iuplua_checkint_array(L, ",aux.n,",-1)")
+      elseif p == "v" then io.write("iuplua_checkihandle_array(L, ",aux.n,",-1)")
       else io.write("FORMAT '", p, "' NOT SUPPORTED\n")
       end
       if aux.n < max then io.write(", ") end
@@ -176,10 +211,9 @@ function write_initialization(o,t)
    for i,v in pairs(c) do
       local type = "NULL"
       -- Handle callbacks that have same names but different parameters
-      if i == "action" or
-         i == "action_cb" or
-         i == "edit_cb" or
-         i == "mousemove_cb" then
+      if i == "action" or -- canvas, buttom, item, list, text, toggle, etc
+         i == "action_cb" or -- matrix and timer
+         i == "mousemove_cb" then -- matrix and val
         type = '"'..string.lower(o)..'"'
       end
       io.write('  iuplua_register_cb(L, "',string.upper(i),'", (lua_CFunction)',o,'_',i,', ',type,');\n')
@@ -191,36 +225,12 @@ function write_initialization(o,t)
       io.write('  iuplua_', o,'funcs_open(L);\n\n')
    end
 
-   io.write(bin2c(arg[1]))
+   io.write(bin2c(filename))
    io.write('  return 0;\n')
    io.write("}\n\n")
 end
 
-local numtab={}; for i=0,255 do numtab[string.char(i)]=("%3d,"):format(i) end
-
-function bin2c(filename)
-
-	local function dump(str)
-		return (str:gsub(".", numtab):gsub(("."):rep(80), "%0\n"))
-	end
-	local f = assert(io.open(filename, 'rb'))
-	local code = f:read 'a'
-	f:close()
-
-	return [=[
-	{
-	static const unsigned char B1[]={
-	]=] .. dump(string.dump(load(code, '='  .. filename))) .. [=[
-
-	};
-
-	 iuplua_dobuffer(L,(const char*)B1,sizeof(B1),"=]=] .. filename ..[=[");
-	}
-	]=]
-
-end
-
-dofile(arg[1])
+dofile(filename)
 element.callback = adjustcallbacktable(element.callback)
 
 io.output(arg[2])
