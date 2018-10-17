@@ -1,4 +1,4 @@
-#define LUA_LIB
+﻿#define LUA_LIB
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -16,9 +16,6 @@ extern "C" {
 
 // #include <bgfx/bgfx.h>
 // #include <bx/allocator.h>
-#include <stdio.h>
-#include <math.h>
-
 
 //Big/Small Endian
 #ifdef __MAC__
@@ -28,10 +25,6 @@ extern "C" {
 
 #include "btBulletDynamicsCommon.h"
 #include "Collision/CollisionSdkC_Api.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define __DEBUG_OUTPU_ 1
 
@@ -166,7 +159,7 @@ lcreate_sphereShape( lua_State *L) {
 		}
 		plCollisionSdkHandle  sdk_handle = (plCollisionSdkHandle) lua_touserdata(L, 1);
 		plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L, 2);
-		btScalar radius = lua_tonumber(L,3);
+		btScalar radius = (btScalar)lua_tonumber(L,3);
 
 		plCollisionShapeHandle shape = plCreateSphereShape( sdk_handle,world_handle,radius);
 		lua_pushlightuserdata(L,shape);
@@ -200,10 +193,10 @@ lcreate_planeShape( lua_State *L) {
 	if( lua_istable(L,3) ) {
 	
 	} else {
-		plane[0] = lua_tonumber(L,3);
-		plane[1] = lua_tonumber(L,4);
-		plane[2] = lua_tonumber(L,5);
-		plane[3] = lua_tonumber(L,6);
+		plane[0] = (btScalar)lua_tonumber(L,3);
+		plane[1] = (btScalar)lua_tonumber(L,4);
+		plane[2] = (btScalar)lua_tonumber(L,5);
+		plane[3] = (btScalar)lua_tonumber(L,6);
 	}
 
 	plCollisionSdkHandle  sdk_handle = (plCollisionSdkHandle) lua_touserdata(L, 1);
@@ -233,10 +226,10 @@ lcreate_capsuleShape( lua_State *L) {
 	plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L, 2);
 
 	int      axis   = 1;
-	btScalar radius = lua_tonumber(L,3);
-	btScalar height = lua_tonumber(L,4);
+	btScalar radius = (btScalar)lua_tonumber(L,3);
+	btScalar height = (btScalar)lua_tonumber(L,4);
 	if( argc == 5 )
-	  axis = lua_tonumber(L,5);
+	  axis = (int)lua_tonumber(L,5);
 	if( axis<0 || axis >2 )
 	  axis = 1;
 
@@ -273,48 +266,29 @@ lcreate_compoundShape( lua_State *L) {
 	return 1;
 }
 
-// table array {0,0,0}
-btVector3 getVector3( lua_State *L,int table)
-{
-	btVector3 pos(0,0,0);
-	int tsize = lua_rawlen(L,table);
-	if(tsize) {
-		lua_rawgeti(L,table,1);
-		pos[0] = lua_tonumber(L,-1);
-		lua_pop(L,1);
-
-		lua_rawgeti(L,table,2);
-		pos[1] = lua_tonumber(L,-1);
-		lua_pop(L,1);
-
-		lua_rawgeti(L,table,3);
-		pos[2] = lua_tonumber(L,-1);
-		lua_pop(L,1);
+template<class buffer>
+static inline void
+getContent(lua_State *L, int table, buffer &v) {
+	const size_t tsize = lua_rawlen(L, table);
+	for (size_t ii = 0; ii < tsize; ++ii) {
+		lua_rawgeti(L, table, ii + 1);
+		v[ii] = (btScalar)lua_tonumber(L, -1);
+		lua_pop(L, 1);
 	}
+}
+
+// table array {0,0,0}
+static btVector3 
+getVector3( lua_State *L,int table) {
+	btVector3 pos(0,0,0);
+	getContent(L, table, pos);
 	return pos;
 }
 // table array {0,0,0,1}
 btQuaternion getQuaternion( lua_State *L,int table) 
 {
 	btQuaternion quat(0,0,0,1);
-	int tsize = lua_rawlen(L,table);
-	if(tsize) {
-		lua_rawgeti(L,table,1);
-		quat[0] = lua_tonumber(L,-1);
-		lua_pop(L,1);
-
-		lua_rawgeti(L,table,2);
-		quat[1] = lua_tonumber(L,-1);
-		lua_pop(L,1);
-
-		lua_rawgeti(L,table,3);
-		quat[2] = lua_tonumber(L,-1);
-		lua_pop(L,1);
-
-		lua_rawgeti(L,table,4);
-		quat[3] = lua_tonumber(L,-1);
-		lua_pop(L,1);
-	}
+	getContent(L, table, quat);
 	return quat;
 }
 
@@ -415,7 +389,7 @@ lcreate_collisionObject( lua_State *L) {
 	btVector3 	 pos = getVector3(L,4);
 	btQuaternion rot = getQuaternion(L,5);
 	void *user_data  = nullptr;
-	int user_id = lua_tointeger(L,6);
+	int user_id = (int)lua_tointeger(L,6);
 
 	if( argc == 7 && !lua_isnil(L,7) ) {
 		// extension mothod,it's an addition not need
@@ -670,43 +644,41 @@ lstep_simulator( lua_State *L) {
 	return 1;
 }
 
-// export physics api framework ...
-LUAMOD_API int
-luaopen_lbullet(lua_State *L) {
-	luaL_checkversion(L);
-	luaL_Reg l[] = {
-		{ "init_physics",linit_physics},
-		{ "exit_physics",lexit_physics},
-		{ "create_world", lcreate_world},
-		{ "destroy_world", ldestroy_world},
-		{ "create_planeShape",lcreate_planeShape},
-		{ "create_cubeShape",lcreate_cubeShape},
-		{ "create_sphereShape",lcreate_sphereShape},
-		{ "create_capsuleShape",lcreate_capsuleShape},
-		{ "create_cylinderShape",lcreate_cylinderShape},
-		{ "create_compoundShape",lcreate_compoundShape},
-		{ "add_shapeToCompound",ladd_shapeToCompound},
-		{ "delete_shape",ldelete_shape},
-		{ "add_shapeToWorld",ladd_shapeToWorld},
-		{ "delete_shapeFromWorld",ldelete_shapeFromWorld},
-		{ "create_collisionObject",lcreate_collisionObject},
-		{ "delete_collisionObject",ldelete_collisionObject},
-		{ "set_collisionObjectTransform",lset_collisionObjectTransform},
-		{ "add_collisionObject",ladd_collisionObject},
-		{ "collide",lcollide},
-		{ "worldCollide",lworldCollide},
-		{ "raycast",lraycast},
-		{ "step_simulator",lstep_simulator},
-		{ NULL, NULL },
-	};
-	luaL_newlib(L, l);
+extern "C" {
+	// export physics api framework ...
+	LUAMOD_API int
+		luaopen_bullet(lua_State *L) {
+		luaL_checkversion(L);
+		luaL_Reg l[] = {
+			{ "init_physics",linit_physics},
+			{ "exit_physics",lexit_physics},
+			{ "create_world", lcreate_world},
+			{ "destroy_world", ldestroy_world},
+			{ "create_planeShape",lcreate_planeShape},
+			{ "create_cubeShape",lcreate_cubeShape},
+			{ "create_sphereShape",lcreate_sphereShape},
+			{ "create_capsuleShape",lcreate_capsuleShape},
+			{ "create_cylinderShape",lcreate_cylinderShape},
+			{ "create_compoundShape",lcreate_compoundShape},
+			{ "add_shapeToCompound",ladd_shapeToCompound},
+			{ "delete_shape",ldelete_shape},
+			{ "add_shapeToWorld",ladd_shapeToWorld},
+			{ "delete_shapeFromWorld",ldelete_shapeFromWorld},
+			{ "create_collisionObject",lcreate_collisionObject},
+			{ "delete_collisionObject",ldelete_collisionObject},
+			{ "set_collisionObjectTransform",lset_collisionObjectTransform},
+			{ "add_collisionObject",ladd_collisionObject},
+			{ "collide",lcollide},
+			{ "worldCollide",lworldCollide},
+			{ "raycast",lraycast},
+			{ "step_simulator",lstep_simulator},
+			{ NULL, NULL },
+		};
+		luaL_newlib(L, l);
 
-	return 1;
+		return 1;
+	}
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 
 

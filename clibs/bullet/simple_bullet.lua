@@ -1,4 +1,4 @@
-local bullet = require "lbullet"
+local bullet = require "bullet"
 
 
 print(" ")
