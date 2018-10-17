@@ -150,7 +150,7 @@ return function (...)
 			}
 		}
 	}
-	vscdbg:event('call', compile(ms, args))
+	vscdbg:event('call', compile(ms, args), '<math3d>')
 
 	local function do_command(c)
 		if c == 'm' then
