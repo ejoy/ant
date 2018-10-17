@@ -138,6 +138,16 @@ lreftostring(lua_State *L) {
 	return 1;
 }
 
+static inline const char*
+get_linear_type_name(LinearType lt) {
+	const char * names[] = {
+		"mat", "v4", "quat", "num", "euler", "",
+	};
+
+	assert(sizeof(names) / sizeof(names[0]) > lt);
+	return names[lt];
+}
+
 static inline void
 push_obj_to_lua_table(lua_State *L, struct lastack *LS, int64_t id){
 	int type;
@@ -169,7 +179,7 @@ push_obj_to_lua_table(lua_State *L, struct lastack *LS, int64_t id){
 #undef TO_LUA_STACK
 
 	// push type to table	
-	lua_pushinteger(L, type);
+	lua_pushstring(L, get_linear_type_name(LinearType(type)));	
 	lua_setfield(L, -2, "type");
 }
 
@@ -471,8 +481,25 @@ push_srt(lua_State *L, struct lastack *LS, int index) {
 	lastack_pushmatrix(LS, &srt[0][0]);
 }
 
+static int
+get_mat_type(lua_State *L, int index) {
+	const int ret_type = lua_getfield(L, index, "ortho");
+	if (ret_type == LUA_TNIL || ret_type == LUA_TNONE) {
+		return MAT_PERSPECTIVE;
+	}
+
+	if (ret_type != LUA_TBOOLEAN) {
+		luaL_error(L, "ortho field must be boolean type, get %d", ret_type);
+	}
+
+	const int mat_type = lua_toboolean(L, -1) != 0 ? MAT_ORTHO : MAT_PERSPECTIVE;
+	lua_pop(L, 1);
+
+	return mat_type;
+}
+
 static void
-push_mat(lua_State *L, struct lastack *LS, int index, int type) {
+push_mat(lua_State *L, struct lastack *LS, int index) {
 	float left,right,top,bottom;
 	lua_getfield(L, index, "n");
 	float near = luaL_optnumber(L, -1, 0.1f);
@@ -480,6 +507,8 @@ push_mat(lua_State *L, struct lastack *LS, int index, int type) {
 	lua_getfield(L, index, "f");
 	float far = luaL_optnumber(L, -1, 100.0f);
 	lua_pop(L, 1);
+
+	const int type = get_mat_type(L, index);
 	if (type == MAT_PERSPECTIVE && lua_getfield(L, index, "fov") == LUA_TNUMBER) {
 		float fov = lua_tonumber(L, -1);
 		lua_pop(L, 1);
@@ -523,15 +552,20 @@ push_mat(lua_State *L, struct lastack *LS, int index, int type) {
 	lastack_pushmatrix(LS, &m[0][0]);
 }
 
-static inline const char * 
-get_type_field(lua_State *L, int index) {
-	const char* type = NULL;
-	if (lua_getfield(L, index, "type") == LUA_TSTRING) {
-		type = lua_tostring(L, -1);
+static inline const char*
+get_field(lua_State *L, int index, const char* name) {
+	const char* field = NULL;
+	if (lua_getfield(L, index, name) == LUA_TSTRING) {
+		field = lua_tostring(L, -1);
 		lua_pop(L, 1);
 	}
 
-	return type;
+	return field;
+}
+
+static inline const char * 
+get_type_field(lua_State *L, int index) {
+	return get_field(L, index, "type");
 }
 
 static inline void
@@ -679,10 +713,8 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 		const char * type = get_type_field(L, index);
 		if (type == NULL || strcmp(type, "srt") == 0) {
 			push_srt(L, LS, index);		
-		} else if (strcmp(type, "proj") == 0) {
-			push_mat(L, LS, index, MAT_PERSPECTIVE);
-		} else if (strcmp(type, "ortho") == 0) {
-			push_mat(L, LS, index, MAT_ORTHO);
+		} else if (strcmp(type, "mat") == 0 || strcmp(type, "m") == 0) {
+			push_mat(L, LS, index);
 		} else if (strcmp(type, "quat") == 0 || strcmp(type, "q") == 0) {
 			push_quat(L, LS, index);
 		} else if (strcmp(type, "euler") == 0 || strcmp(type, "e") == 0) {

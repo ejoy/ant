@@ -353,7 +353,7 @@ local function mainloop()
 	              r= dir or {25,45,0,0},
 	 			  s= {1,1,1,1} }          								 -- for terrain ,eye,target
 	-- local srt = { t= {0,30,-10,1}, r={0,45,0,0}, s= {1,1,1,1} }       -- yaw = 45, pitch = 25
-	local proj_mtx = math3d_stack( { type = "proj",n=0.1, f = 1000, fov = 60, aspect = ctx.width/ctx.height } , "m")  
+	local proj_mtx = math3d_stack( { type = "mat",n=0.1, f = 1000, fov = 60, aspect = ctx.width/ctx.height } , "m")  
 	local view_mtx = math3d_stack( srt.t,srt.r,"dLm" )    			     -- math3d_statck( op data 1,2,..,"op code string")
 
 	bgfx.set_view_clear(0, "CD", 0x103030ff, 1, 0)

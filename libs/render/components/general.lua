@@ -22,13 +22,14 @@ ecs.component "relative_srt" {
 }
 
 ecs.component "frustum" {
-    type = "proj",	--"ortho"
+    type = "mat",
     n = 0.1,
     f = 10000,
     l = -1,
     r = 1,
     t = 1,
-    b = -1,
+	b = -1,
+	ortho = false,
 }
 
 ecs.component "viewid" {
