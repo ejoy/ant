@@ -152,9 +152,10 @@ main (int argc, char **argv) {
 		l_message(&a, argv[0], "cannot create state: not enough memory");
 		return EXIT_FAILURE;
 	}
+	lua_pushcfunction(L, msghandler);
 	lua_pushcfunction(L, &pmain);  /* to call 'pmain' in protected mode */
 	lua_pushlightuserdata(L, &a); /* 2nd argument */
-	status = lua_pcall(L, 1, 1, 0);  /* do the call */
+	status = lua_pcall(L, 1, 1, 1);  /* do the call */
 	result = lua_toboolean(L, -1);  /* get result */
 	report(L, status, argv[0], &a);
 
