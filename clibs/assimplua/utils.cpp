@@ -24,7 +24,7 @@ AdjustLayoutElem(const std::string &layout) {
 	auto elems = Split(layout, '|');
 	for (auto &e : elems) {
 		char newelem[] = "_30NIf";
-		for (auto ii = 0; ii < e.size(); ++ii) {
+		for (size_t ii = 0; ii < e.size(); ++ii) {
 			newelem[ii] = e[ii];
 		}
 		e = newelem;

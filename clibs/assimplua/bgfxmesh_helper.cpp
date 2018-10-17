@@ -197,9 +197,8 @@ static void flip_uv(mesh_data &md) {
 		for (auto ii = 0; ii < 8; ++ii) {
 			bgfx::Attrib::Enum a = bgfx::Attrib::Enum(bgfx::Attrib::TexCoord0 + ii);
 			if (decl.has(a)) {
-				for (auto iv = 0; iv < vb.num_vertices; ++iv) {
-					float output[4];
-					const auto &buf = vb.vbraws.cbegin()->second;
+				for (size_t iv = 0; iv < vb.num_vertices; ++iv) {
+					float output[4];					
 					bgfx::vertexUnpack(output, a, decl, buffer.get(), iv);
 
 					output[1] = -output[1];
