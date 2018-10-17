@@ -54,34 +54,18 @@ local operator = {
 }
 
 local function stringify(t)
-	if t.type == 0 then
-		return ('matrix {{%f,%f,%f,%f},{%f,%f,%f,%f},{%f,%f,%f,%f},{%f,%f,%f,%f}}'):format(t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8], t[9], t[10], t[11], t[12], t[13], t[14], t[15], t[16])
-	elseif t.type == 1 then
-		return ('vector {%f,%f,%f,%f}'):format(t[1], t[2], t[3], t[4])
-	elseif t.type == 2 then
-		return ('quaternion {%f,%f,%f,%f}'):format(t[1], t[2], t[3], t[4])
-	elseif t.type == 3 then
-		return ('number {%f}'):format(t[1])
-	elseif t.type == 4 then
-		return ('euler {%f,%f,%f}'):format(t[1], t[2], t[3])
-	else
-		return ('unknown {type=%d}'):format(t.type)
-	end
-end
-
-local function stringify_simple(t)
-	if t.type == 0 then
+	if t.type == 'mat' then
 		return 'matrix {}'
-	elseif t.type == 1 then
+	elseif t.type == 'v4' then
 		return 'vector {}'
-	elseif t.type == 2 then
+	elseif t.type == 'quat' then
 		return 'quaternion {}'
-	elseif t.type == 3 then
+	elseif t.type == 'num' then
 		return 'number {}'
-	elseif t.type == 4 then
+	elseif t.type == 'euler' then
 		return 'euler {}'
 	else
-		return ('unknown {type=%d}'):format(t.type)
+		return ('unknown(%s) {}'):format(t.type)
 	end
 end
 
@@ -92,11 +76,11 @@ local function compile(ms, args)
 		if type(arg) == 'string' then
 			for j = 1, #arg do
 				local op = arg:sub(j,j)
-				code[#code+1] = ('%s (%s)'):format(op , operator[op] or 'unknown operator')
+				code[#code+1] = ('[%s]  %s'):format(op , operator[op] or 'unknown operator')
 			end
 		else
 			local t = ms(arg, 'T')
-			code[#code+1] = 'push ' .. stringify_simple(t)
+			code[#code+1] = 'push ' .. stringify(t)
 		end
 	end
 	return table.concat(code, '\n') .. '\n'
