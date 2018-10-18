@@ -154,7 +154,8 @@ function pickup:pick(p_eid, current_frame_num, select_filter)
     if self.reading_frame == nil then        
 		bind_frame_buffer(pickup_entity)
 		world:change_component(-1, "create_selection_filter")
-		world:notify()
+        world:notify()
+        --print("select_filter----",#select_filter.result)
         self:render_to_pickup_buffer(pickup_entity, select_filter)
         self.reading_frame = self:readback_render_data(pickup_entity)        
     end
@@ -177,6 +178,7 @@ function pickup:pick(p_eid, current_frame_num, select_filter)
     self.is_picking = self.reading_frame ~= nil
 end
 
+---[[
 -- pickup view
 local pickup_view_sys = ecs.system "pickup_view"
 
@@ -233,12 +235,13 @@ function pickup_view_sys:update()
     local clickpt = pickup.clickpt
     if clickpt ~= nil then
         local pu_entity = world:first_entity("pickup")        
-        update_viewinfo(self.math_stack, pu_entity, clickpt)
+        --update_viewinfo(self.math_stack, pu_entity, clickpt)
 
         pickup.is_picking = true
         pickup.clickpt = nil
     end
 end
+-- ]]
 
 -- system
 local pickup_sys = ecs.system "pickup_system"
@@ -291,7 +294,7 @@ end
 function pickup_sys:update()
     if pickup.is_picking then        
         local eid = assert(world:first_entity_id("pickup"))    
-        pickup:pick(eid, self.frame_stat.frame_num, self.select_filter)
+        -- pickup:pick(eid, self.frame_stat.frame_num, self.select_filter)
     end
 end
 

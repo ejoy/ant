@@ -1,14 +1,21 @@
-vec3 a_position : POSITION;
-vec3 a_normal	: NORMAL;
-vec4 a_tangent	: TANGENT;
-vec2 a_tex0		: TEXCOORD0;
+vec3 a_position  : POSITION;
+vec3 a_normal	 : NORMAL;
+vec4 a_tangent	 : TANGENT;
+vec2 a_tex0		 : TEXCOORD0;
 
+vec2 v_tex0		 : TEXCOORD0;
+vec3 v_lightdir  : TEXCOORD1;
+vec3 v_viewdir	 : TEXCOORD2;
 
-vec3 v_normal	: TEXCOORD3;
-vec3 v_tangent	: TEXCOORD4;
+vec3 v_normal	 : TEXCOORD3;
+vec3 v_tangent	 : TEXCOORD4;
 vec3 v_bitangent : TEXCOORD5;
 
+vec4 v_texcoord4 : TEXCOORD8;
+vec4 v_texcoord5 : TEXCOORD9;
+vec4 v_texcoord6 : TEXCOORD10;
+vec4 v_texcoord7 : TEXCOORD11;
 
-vec2 v_tex0		: TEXCOORD0;
-vec3 v_lightdir : TEXCOORD1;
-vec3 v_viewdir	: TEXCOORD2;
+vec4 v_shadowcoord : TEXCOORD12 = vec4(0.0, 0.0, 0.0, 0.0);
+
+

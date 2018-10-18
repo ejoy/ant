@@ -25,6 +25,10 @@ local camera_util = require "render.camera.util"
 -- end
 
 --[@
+
+
+
+local action = { FORWARD = 0,BACKWARD = 0,LEFT = 0,RIGHT = 0,ROTX = 0,ROTY=0 }
 local camera_controller_system = ecs.system "camera_controller"
 camera_controller_system.singleton "math_stack"
 camera_controller_system.singleton "message_component"
@@ -50,14 +54,15 @@ function camera_controller_system:init()
 			--if (status.LEFT or status.RIGHT) and last_xy then
 			if status.RIGHT then
 				local speed = message.move_speed * 0.1
-				local delta = (xy - last_xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
+				delta = (xy - last_xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
 				camera_util.rotate(ms, camera, delta.x, delta.y)				
-			end
+			end 
 		end
 
 		last_xy = xy
 	end
 
+			
 	function message:keypress(c, p, status)
 		if c == nil then return end
 		
@@ -73,32 +78,40 @@ function camera_controller_system:init()
 				local leftbtn_down = button_status.LEFT
 
 				local nomouse_down = not (rightbtn_down or leftbtn_down)
-				if nomouse_down and (c == "r" or c == "R") then
-					ms(	eye, {0, 0, -10}, "=")
-					ms( rot, {0, 0, 0}, "=")
-					return 
-				end
-
+				-- if nomouse_down and (c == "r" or c == "R") then
+				-- 	ms(	eye, {0, 0, -10}, "=")
+				-- 	ms( rot, {0, 0, 0}, "=")
+				-- 	return 
+				-- end
 				if rightbtn_down then					
-					local dx, dy, dz = 0, 0, 0			
-
-					if c == "a" or c == "A" then					
-						dx = -move_step
-					elseif c == "d" or c == "D" then					
-						dx = move_step
-					elseif c == "w" or c == "W" then					
-						dz = move_step
+					if (c == "a" or c == "A")  then	
+						action.LEFT = 1				
+					elseif c == "d" or c == "D" then
+						action.RIGHT = 1									
+					elseif c == "w" or c == "W" then	
+						action.FORWARD = 1
 					elseif c == "s" or c == "S" then					
-						dz = -move_step
+						action.BACKWARD = 1
 					elseif c == "q" or c == "Q" then
 						dy = -move_step
 					 elseif c == "e" or c == "E" then
 						dy = move_step
 					end
-
-					camera_util.move(ms, camera, dx, dy, dz)
+					--camera_util.move(ms, camera, dx, dy, dz) -- don't do here 
 				end
-			end
+			else
+				if (c == "a" or c == "A")  then					
+					action.LEFT = 0
+				elseif c == "d" or c == "D" then
+					action.RIGHT = 0						
+				elseif c == "w" or c == "W" then	
+					action.FORWARD = 0
+				elseif c == "s" or c == "S" then
+					action.BACKWARD = 0					
+				elseif c == "q" or c == "Q" then
+				elseif c == "e" or c == "E" then
+				end
+			end 
 		end
 	end
 
@@ -108,6 +121,20 @@ function camera_controller_system:init()
 	message.ms = self.math_stack
 	message.move_speed = 1
 end
+-- make movement smooth 
+function camera_controller_system:update()
+	local ms = self.math_stack
+	local deltaTime = 0.5         -- get from timer_system later 
+ 	local camera = world:first_entity("main_camera")
+	if camera then
+		local dx=0  dy = 0  dz = 0
+		if action.FORWARD == 1 then dz = 1  			
+	    elseif action.BACKWARD == 1 then dz = -1 end 	
+		if action.LEFT == 1 then dx = -1				
+		elseif action.RIGHT == 1 then dx = 1 end    	
+		camera_util.move(ms, camera, dx*deltaTime, dy*deltaTime, dz*deltaTime)
+	end 
+end 	
 
 -- function camera_controller_system:update()
 -- 	local camera = world:first_entity("main_camera")
