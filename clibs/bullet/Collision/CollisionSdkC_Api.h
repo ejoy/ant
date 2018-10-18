@@ -60,11 +60,20 @@ extern "C"
 
 	extern plCollisionObjectHandle plCreateCollisionObject(plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, void* userPointer, int userIndex, plCollisionShapeHandle cshape, plVector3 startPosition, plQuaternion startOrientation);
 	extern void plDeleteCollisionObject(plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle body);
-	extern void plSetCollisionObjectTransform(plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle, plVector3 startPosition, plQuaternion startOrientation);
+
+	extern void plSetCollisionObjectTransform( plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle, plVector3 startPosition, plQuaternion startOrientation);
+	// addition protocol
+	extern void plSetCollisionObjectPosition( plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
+												 plVector3 position );
+	extern void plSetCollisionObjectRotation( plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
+												 plQuaternion orientation );
+
 
 	/* Collision Shape definition */
+	// addition staple shape: box 
+	extern plCollisionShapeHandle plCreateCubeShape(plCollisionSdkHandle sdk,plCollisionWorldHandle world,plVector3 size);
 
-	extern plCollisionShapeHandle plCreateSphereShape(plCollisionSdkHandle sdk, plCollisionWorldHandle worldHandle, plReal radius);
+	extern plCollisionShapeHandle plCreateSphereShape( plCollisionSdkHandle sdk, plCollisionWorldHandle worldHandle, plReal radius);
 	extern plCollisionShapeHandle plCreateCapsuleShape(plCollisionSdkHandle sdk, plCollisionWorldHandle worldHandle, plReal radius, plReal height, int capsuleAxis);
 	extern plCollisionShapeHandle plCreatePlaneShape(plCollisionSdkHandle sdk, plCollisionWorldHandle worldHandle,
 													 plReal planeNormalX,

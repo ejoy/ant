@@ -45,6 +45,12 @@ void plDeleteCollisionSdk(plCollisionSdkHandle collisionSdkHandle)
 	delete sdk;
 }
 
+plCollisionShapeHandle plCreateCubeShape(plCollisionSdkHandle sdkHandle,plCollisionWorldHandle world,plVector3 size)
+{
+	CollisionSdkInterface *sdk = (CollisionSdkInterface*) sdkHandle;
+	return sdk->createCubeShape(world,size);
+}
+
 plCollisionShapeHandle plCreateSphereShape(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plReal radius)
 {
 	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
@@ -100,6 +106,17 @@ void plSetCollisionObjectTransform(plCollisionSdkHandle collisionSdkHandle, plCo
 {
 	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
 	sdk->setCollisionObjectTransform(worldHandle, objHandle, position, orientation);
+}
+// addition protocol : use transform simply
+void plSetCollisionObjectPosition( plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle, plVector3 position)
+{
+	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
+	sdk->setCollisionObjectPosition(worldHandle, objHandle, position );
+}
+void plSetCollisionObjectRotation( plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle, plQuaternion orientation)
+{
+	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
+	sdk->setCollisionObjectRotation( worldHandle, objHandle, orientation );
 }
 
 void plAddCollisionObject(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle world, plCollisionObjectHandle object)

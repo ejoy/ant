@@ -114,6 +114,22 @@ void RealTimeBullet3CollisionSdk::deleteCollisionWorld(plCollisionWorldHandle wo
 		delete world;
 	}
 }
+// addition cube shape 
+plCollisionShapeHandle RealTimeBullet3CollisionSdk::createCubeShape(plCollisionWorldHandle worldHandle, plVector3 size)
+{
+	RTB3CollisionWorld *world = (RTB3CollisionWorld*) worldHandle;
+	b3Assert(world->m_nextFreeShapeIndex < world->m_childShape.size());
+	if(world->m_nextFreeShapeIndex < world->m_childShape.size()) {
+		b3GpuChildShape& shape = world->m_childShapes[ world->m_nextFreeShapeIndex ];
+		shape.m_childPosition.setZero();
+		shape.m_childOrientation.setValue(0,0,0,1);
+		shape.m_radius = radius;
+		shape.m_shapeType = RTB3_SHAPE_BOX;  //not defined !
+		world->m_nextFreeShapeIndex ++;
+		return (plCollisionShapeHandle) world->m_nextFreeShapePtr;
+	}
+	return 0;
+}
 
 plCollisionShapeHandle RealTimeBullet3CollisionSdk::createSphereShape(plCollisionWorldHandle worldHandle, plReal radius)
 {
@@ -283,6 +299,20 @@ void RealTimeBullet3CollisionSdk::setCollisionObjectTransform(plCollisionWorldHa
 															  plVector3 position, plQuaternion orientation)
 {
 }
+
+//addition protocol for simplie use transform 
+void RealTimeBullet3CollisionSdk::setCollisionObjectPosition( plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
+												 plVector3 position )
+{
+												 
+}
+
+void RealTimeBullet3CollisionSdk::setCollisionObjectRotation( plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
+												 plQuaternion orientation )
+{
+
+}
+
 
 struct plContactCache
 {

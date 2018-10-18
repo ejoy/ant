@@ -14,6 +14,9 @@ public:
 
 	virtual void deleteCollisionWorld(plCollisionWorldHandle worldHandle) = 0;
 
+	// addition staple box shape 
+	virtual plCollisionShapeHandle createCubeShape(plCollisionWorldHandle world,plVector3 size) = 0;
+
 	virtual plCollisionShapeHandle createSphereShape(plCollisionWorldHandle worldHandle, plReal radius) = 0;
 
 	virtual plCollisionShapeHandle createPlaneShape(plCollisionWorldHandle worldHandle,
@@ -38,8 +41,15 @@ public:
 	virtual plCollisionObjectHandle createCollisionObject(plCollisionWorldHandle worldHandle, void* userPointer, int userIndex, plCollisionShapeHandle cshape,
 														  plVector3 startPosition, plQuaternion startOrientation) = 0;
 	virtual void deleteCollisionObject(plCollisionObjectHandle body) = 0;
+
+
 	virtual void setCollisionObjectTransform(plCollisionWorldHandle world, plCollisionObjectHandle body,
 											 plVector3 position, plQuaternion orientation) = 0;
+	//  addition protocol:
+	virtual void setCollisionObjectPosition( plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
+												 plVector3 position ) = 0;
+	virtual void setCollisionObjectRotation( plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
+												 plQuaternion orientation ) = 0;
 
 	virtual int collide(plCollisionWorldHandle world, plCollisionObjectHandle colA, plCollisionObjectHandle colB,
 						lwContactPoint* pointsOut, int pointCapacity) = 0;
@@ -47,7 +57,7 @@ public:
 	virtual void collideWorld(plCollisionWorldHandle world,
 							  plNearCallback filter, void* userData) = 0;
 
-	// add raycast for accelerate collision detection
+	//  addition protocol: raycast for accelerate collision detection
 	virtual bool raycast( plCollisionWorldHandle world, plVector3 rayFrom,plVector3 rayTo,
 						  ClosestRayResult &result ) = 0;							  
 };

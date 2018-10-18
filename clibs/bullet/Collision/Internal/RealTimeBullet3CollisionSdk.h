@@ -16,6 +16,7 @@ public:
 
 	virtual void deleteCollisionWorld(plCollisionWorldHandle worldHandle);
 
+	virtual plCollisionShapeHandle createCubeShape(plCollisionWorldHandle worldHandle, plVector3 size);
 	virtual plCollisionShapeHandle createSphereShape(plCollisionWorldHandle worldHandle, plReal radius);
 	virtual plCollisionShapeHandle createPlaneShape(plCollisionWorldHandle worldHandle,
 													plReal planeNormalX,
@@ -38,9 +39,15 @@ public:
 	virtual plCollisionObjectHandle createCollisionObject(plCollisionWorldHandle worldHandle, void* userPointer, int userIndex, plCollisionShapeHandle cshape,
 														  plVector3 startPosition, plQuaternion startOrientation);
 	virtual void deleteCollisionObject(plCollisionObjectHandle body);
+
 	virtual void setCollisionObjectTransform(plCollisionWorldHandle world, plCollisionObjectHandle body,
 											 plVector3 position, plQuaternion orientation);
-
+		//addition protocol for simplie use transform 
+	virtual void setCollisionObjectPosition( plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
+												 plVector3 position );
+	virtual void setCollisionObjectRotation( plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
+												 plQuaternion orientation );
+ 
 	virtual int collide(plCollisionWorldHandle world, plCollisionObjectHandle colA, plCollisionObjectHandle colB,
 						lwContactPoint* pointsOut, int pointCapacity);
 
