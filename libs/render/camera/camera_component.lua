@@ -4,6 +4,9 @@ local world = ecs.world
 local mu = require "math.util"
 local bgfx = require "bgfx"
 
+-- 找时间统一到 render 中，作为要给独立的 viewid.lua 存放所有指定的 VIEW 
+local VIEWID_MAINCAMERA = 100 
+
 ecs.component "main_camera" {}
 
 local camera_init_sys = ecs.system "camera_init"
@@ -51,11 +54,11 @@ function camera_init_sys:init()
         "name")
 
     local camera = world[camera_eid]
-    camera.viewid.id = 0
+    camera.viewid.id = VIEWID_MAINCAMERA 
     camera.name.n = "main_camera"
     
     ms(camera.position.v,    {5, 5, -5, 1},  "=")
-    ms(camera.rotation.v,   {45, -45, 0, 0},   "=")
+    ms(camera.rotation.v,   {-25, -45, 0, 0},   "=")
 
     local frustum = camera.frustum
     mu.frustum_from_fov(frustum, 0.1, 10000, 60, 1)

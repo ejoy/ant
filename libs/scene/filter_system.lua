@@ -45,7 +45,7 @@ local function append_lighting_properties(ms, result)
 			local l = dlight.light.v
 		
 			-- point from vertex position to light position			
-			table.insert(dlight_info.dir, ms(dlight.rotation.v, "dim"))
+			table.insert(dlight_info.dir, ms(dlight.rotation.v, "dim")) 
 			table.insert(dlight_info.color, l.color)
 			table.insert(dlight_info.intensity, {l.intensity, 0.28, 0, 0})
 
@@ -68,7 +68,7 @@ local function append_lighting_properties(ms, result)
 			-- midcolor = {1,1,1,1},
 			-- groundcolor = {1,1,1,1},
 
-			-- 流程看来时需要，数据作为表中第一个子表，因此，按这个方法组织
+			-- 流程看来是需要，数据作为表中第一个子表，因此，按这个方法组织
 			mode = {},
 			skycolor = {},
 			midcolor = {},
@@ -79,10 +79,6 @@ local function append_lighting_properties(ms, result)
 		for _,l_eid in world:each("ambient_light") do 
 			local  am_ent = world[l_eid]
 			local  data = am_ent.ambient_light.data 
-			print("s data ",data.mode,data.factor)
-			print("s skycolor..",data.skycolor[1],data.skycolor[2],data.skycolor[3],data.skycolor[4])
-			print("s midcolor..",data.midcolor[1],data.midcolor[2],data.midcolor[3],data.midcolor[4])
-			print("s groundcolor..",data.groundcolor[1],data.groundcolor[2],data.groundcolor[3],data.groundcolor[4])
 
 			local type = 1   -- default = "color"    	
 			if data.mode == "factor" then 	
@@ -95,10 +91,6 @@ local function append_lighting_properties(ms, result)
 			table.insert( ambient_data.midcolor, data.midcolor )
 			table.insert( ambient_data.groundcolor, data.groundcolor )
 
-			print("t data ",ambient_data.mode[1][1],ambient_data.mode[1][2],ambient_data.mode[3],ambient_data.mode[4])
-			print("t skycolor..",ambient_data.skycolor[1][1],ambient_data.skycolor[1][2],ambient_data.skycolor[1][3],ambient_data.skycolor[1][4])
-			print("t midcolor..",ambient_data.midcolor[1][1],ambient_data.midcolor[1][2],ambient_data.midcolor[1][3],ambient_data.midcolor[1][4])
-			print("t groundcolor..",ambient_data.groundcolor[1][1],ambient_data.groundcolor[1][2],ambient_data.groundcolor[1][3],ambient_data.groundcolor[1][4])	
 		end 
 
 		properties["ambient_mode"] = { name ="ambient_mode",type="v4",value = ambient_data.mode }
@@ -106,7 +98,45 @@ local function append_lighting_properties(ms, result)
 		properties["ambient_midcolor"] = { name ="ambient_midcolor",type="color",value=ambient_data.midcolor}
 		properties["ambient_groundcolor"] = { name ="ambient_groundcolor",type="color",value=ambient_data.groundcolor}
 
-		print("gen ambient light propertices")
+
+		-- print("gen ambient light propertices")
+
+		return properties 
+	end 
+
+	-- get shadow uniforms 
+	local function get_shadow_properties()
+		local properties = {} 
+	
+		for _,l_eid in world:each("shadow_maker") do 
+			local  sm_ent   = world[l_eid]
+			local  uniforms = sm_ent.shadow_rt.uniforms 
+			-- uniforms.shadowMap
+			properties["u_params1"] = { name = "u_params1",type="v4",value = { uniforms.shadowMapBias,
+																			   uniforms.shadowMapOffset,0.5,1} } 
+			properties["u_params2"] = { name = "u_params2",type="v4",
+										value = { uniforms.depthValuePow,
+												  uniforms.showSmCoverage,
+												  uniforms.shadowMapTexelSize, 0 } }
+			properties["u_smSamplingParams"] = { name = "u_smSamplingParams",
+									   type  ="v4",
+									   value = { 0, 0, uniforms.ss_offsetx, uniforms.ss_offsety } }
+	
+			-- -- shadow matrices 
+			properties["u_shadowMapMtx0"] = { name  = "u_shadowMapMtx0", type  = "m4", value = uniforms.shadowMapMtx0 }
+			properties["u_shadowMapMtx1"] = { name  = "u_shadowMapMtx1", type  = "m4", value = uniforms.shadowMapMtx1 }
+			properties["u_shadowMapMtx2"] = { name  = "u_shadowMapMtx2", type  = "m4", value = uniforms.shadowMapMtx2 }
+			properties["u_shadowMapMtx3"] = { name  = "u_shadowMapMtx3", type  = "m4", value = uniforms.shadowMapMtx3 }
+			-- -- shadow textures  ?	
+			--if sm_ent.shadow_rt.ready == true then 
+				-- set_texture 函数比较严格，当 texturehandle 非法时引发崩溃
+			 -- properties["s_normal"] = {name="normal", type="texture", stage=1, value = 0}
+			    properties["s_shadowMap0"] = {  name = "s_shadowMap0", type = "texture", stage = 4, value = uniforms.s_shadowMap0 }
+				properties["s_shadowMap1"] = {  name = "s_shadowMap1", type = "texture", stage = 5, value = uniforms.s_shadowMap1 }
+				properties["s_shadowMap2"] = {  name = "s_shadowMap2", type = "texture", stage = 6, value = uniforms.s_shadowMap2 }
+				properties["s_shadowMap3"] = {  name = "s_shadowMap3", type = "texture", stage = 7, value = uniforms.s_shadowMap3 }
+			--end 
+		end 
 
 		return properties 
 	end 
@@ -114,8 +144,9 @@ local function append_lighting_properties(ms, result)
 
 	local lighting_properties = gen_directional_light_properties()
 	-- add tested for ambient 
-	local ambient_properties = gen_ambient_light_propertices()
+	local ambient_properties  = gen_ambient_light_propertices()
 
+	local shadow_properties  =  get_shadow_properties() 
 
 	local camera = world:first_entity("main_camera")
 	local eyepos = ms(camera.position.v, "m")
@@ -126,13 +157,18 @@ local function append_lighting_properties(ms, result)
 		local properties = r.properties   
 		local surface_type = material.surface_type
 		if surface_type.lighting == "on" then
+			-- add lighting 
 			for k, v in pairs(lighting_properties) do
 				properties[k] = v
 			end	
 			-- add ambient propertices
 			for k,v in pairs(ambient_properties) do 	
 				properties[k] = v
-			end 		
+			end 	
+			-- add shadow matrices ?
+			for k,v in pairs(shadow_properties) do 
+				properties[k] = v
+			end 
 		end
 	end
 end

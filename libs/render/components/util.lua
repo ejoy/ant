@@ -6,6 +6,11 @@ local common_util = require "common.util"
 local mu = require "math.util"
 local bgfxutil = require "bgfx.util"
 
+function util.load_terrain(entity, path, param )
+	-- todo 
+	
+end 
+
 function util.load_mesh(entity, meshpath, param)
 	local mesh_comp = entity.mesh
 	if meshpath then
@@ -32,6 +37,9 @@ function util.update_properties(dst_properties, src_properties)
 		end
 	end
 end
+
+
+
 
 function util.load_materialex(content)
 	for _, m in ipairs(content) do		
