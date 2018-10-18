@@ -2,7 +2,7 @@ local lterrain = require 'lterrain'
 local uclass = require 'utilclass'
 local texLoad = require "utiltexture"
 local bgfx = require "bgfx"
---local bgfxu = require "bgfx.util"
+
 
 local shaderMgr = require "render.resources.shader_mgr"
 local math3d = require "math3d"
@@ -18,7 +18,7 @@ local readfile = function( fname )
 end 
 
 ------ 定义 Terrain 类 -----
-local Terrain = Class("antTerrain")
+local TerrainClass = Class("antTerrain")
 
 -- Class Owner
 -- Terrain.render_ctx = {}                  -- render relative
@@ -47,7 +47,7 @@ function create_uniforms(obj)
  -- uniforms tested end
 
 
-function Terrain:set_transform( args )
+function TerrainClass:set_transform( args )
 	local args = args or {
 		t = {0,0,0,1},
 		r = {0,0,0,0},
@@ -58,33 +58,32 @@ function Terrain:set_transform( args )
 end 	
 
 -- name = "renamed_uniform",s_name = "s_uniform",type = "il" or "v4" etc 
-function Terrain:create_uniform(name,s_name,type,texchannel)
+function TerrainClass:create_uniform(name,s_name,type,texchannel)
 	self.render_ctx.uniforms[name] = bgfx.create_uniform(s_name,type)
 	if texchannel ~= nil then 
 		self.render_ctx.tex_chanel[name] = texchannel 
 	end 
-	print("create uniform.. "..name.."..handle.."..self.render_ctx.uniforms[name])
 end 
 
-function Terrain:set_uniform(name,value)
+function TerrainClass:set_uniform(name,value)
 	self.render_ctx.uniform_values[name] = value 
 end 
 
 -- sample shader 
 -- shader src     D:\Work\ant\assets\shaders\src\terrain\*.sc
 -- shader dst bin  D:\Work\ant\assets\shaders\dx11\terrain\*.bin
-function Terrain:load_program( vs,fs )
+function TerrainClass:load_program( vs,fs )
 	self.render_ctx.prog = shaderMgr.programLoad(vs,fs) 
 end 
 
-function Terrain:set_program( prog_handle )
+function TerrainClass:set_program( prog_handle )
 	self.render_ctx.prog = prog_handle 
 end 
 
 -- 材质独立成一个文件，可替换更好
 -- 还是类似 unity 将terrain data，textures 合成在 Level 文件里，material(shader) 对用户不可见 ?
 -- 试图提供尽可能的配置变化，不需要通过程序指定shader 内容
-function Terrain:load_meterial( mtlname )
+function TerrainClass:load_meterial( mtlname )
 	-- todo: 
 	-- load program from mtl 
 	-- load textures from mtl
@@ -121,7 +120,7 @@ end
 -- 顶点定义可以更开放，可以选择属性内容
 -- 默认提供一个基本合适的顶点属性集合，具备POS,NORMAL,TEX0,TEX1
 -- 用户可以定义更少属性，只有Pos; 或更多的属性，比如 Tangent 等信息
-function  Terrain:create_vdecl( args )
+function  TerrainClass:create_vdecl( args )
     local args = args  or  {
 				{"POSITION",3,"FLOAT"},   -- default attrib
 				{"NORMAL",3,"FLOAT"},     -- or UINT8
@@ -135,7 +134,7 @@ end
 -- level 关卡文件配置信息
 -- data  地形数据几何信息，编辑信息
 -- args = terrain level info 
-function Terrain:init(args)      
+function TerrainClass:init(args)      
 	local args = args or { }     
 	local default = {            -- default terrain level,create new terrain
 		raw = "newterrain1",     -- 默认新建地形参数，需要考虑为以后编辑器预留初始数据接口   
@@ -197,7 +196,7 @@ end
 -- asset
 -- load terrain level,[vertex_decl]
 -- return terrain data context
-function Terrain:load( filename,vertex_decl )
+function TerrainClass:load( filename,vertex_decl )
 	local data = readfile(filename)
 	local lvldata = "local level ="..data.." return level" 
 	self.level = load( lvldata )()                		-- 如果地形管卡配置文件的内容出现错误，如何防止挂起？
@@ -205,13 +204,13 @@ function Terrain:load( filename,vertex_decl )
 end 
 
 
-function Terrain:loadHeightmap( raw )
+function TerrainClass:loadHeightmap( raw )
 	self.heightmap = readfile(self.level.raw)
 	return self.heightmap 
 end 
 
 -- create terrain data 
-function Terrain:create( args,vertex_decl )
+function TerrainClass:create( args,vertex_decl )
 
     local args = args or self.level   
 
@@ -253,7 +252,7 @@ function Terrain:create( args,vertex_decl )
 	-- print("---- create bgfx vbh,ibh handle ok ----")
 end 
 
-function Terrain:update( eye,dir)
+function TerrainClass:update( eye,dir)
 	lterrain.update( self.data,self.vb,self.ib,eye,dir)
 	self.eye = eye 
 	self.dir = dir 
@@ -261,35 +260,33 @@ function Terrain:update( eye,dir)
 
 end 
 
-function Terrain:get_height( x,z) 
+function TerrainClass:get_height( x,z) 
 	return  lterrain.get_height( self.data,x,z)
 end 
 
-function Terrain:render(w,h,prim_type )
+
+function TerrainClass:render( viewId, w,h,prim_type )
 
 	-- local srt = { t= self.eye or {0,130,-10,1},
 	--               r= self.dir or {25,45,0,0},
 	-- 			  s= {1,1,1,1} }          								 -- for terrain ,eye,target
 	-- 																	 -- yaw = 45,	pitch = 25
-	-- -- local srt = { t= {0,30,-10,1},r={0,45,0,0},s= {1,1,1,1} }          -- for terrain ,eye,target
 	-- local proj_mtx = math3d_stack( { type = "proj",n=0.1, f = 1000, fov = 60, aspect = w/h } , "m")  
 	-- local view_mtx = math3d_stack( srt.t,srt.r,"dLm" )    			     -- math3d_statck( op data 1,2,..,"op code string")
 
-	-- bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
-	-- bgfx.set_view_rect(0, 0, 0, w, h)
+	-- bgfx.set_view_clear( viewId, "CD", 0x303030ff, 1, 0)
+	-- bgfx.set_view_rect( viewId, 0, 0, w, h)
 	-- bgfx.reset(w,h, "vmx")
-	-- bgfx.touch(0)
-
-	-- bgfx.set_view_transform(0,view_mtx,proj_mtx)
+	-- bgfx.touch(viewId)
+	-- bgfx.set_view_transform(viewId,view_mtx,proj_mtx)
 
 	local prim_type = prim_type or  nil -- "LINES" --
-	local state =  bgfx.make_state({ CULL="CW", PT = prim_type ,
+	local state =  bgfx.make_state( { CULL="CW", PT = prim_type ,
 									 WRITE_MASK = "RGBAZ",
 									 DEPTH_TEST	= "LEQUAL"
-								   } , nil)        									-- for terrain
+								    } , nil)        									-- for terrain
 	bgfx.set_state(state)
-
-	local state_af =  bgfx.make_state({ CULL="CW", PT = prim_type ,
+	local state_af =  bgfx.make_state( { CULL="CW", PT = prim_type ,
 										 WRITE_MASK = "RGBA",
 										 BLEND = "ALPHA",
 										 DEPTH_TEST	= "LEQUAL"
@@ -299,12 +296,7 @@ function Terrain:render(w,h,prim_type )
 	for i=1,self.numlayers do 
 	   bgfx.set_transform(self.transform)
 	   if i > 1 then bgfx.set_state(state_af) end
-	    -- textures
-	    --bgfx.set_texture(0,self.render_ctx.uniforms.u_base,self.textures[i].handle)
-	    --bgfx.set_texture(1,self.render_ctx.uniforms.u_mask,self.masks[i].handle)       -- 不带mimap 的dds,默认最好是 REPEAT,而不是CLAMP
-		--self:set_uniform("u_lightColor",{1,0,0,1} )
-		--self:set_uniform("u_lightIntensity",{1.8,0,0,0})
-		 
+	   -- textures	 
 	   for k,u in pairs(self.render_ctx.uniforms) do 
 		   local tex_chanel = -1
 		   if self.render_ctx.tex_chanel[k] ~=nil and self.render_ctx.tex_chanel[k] >=0   then    -- texture channel
@@ -320,18 +312,18 @@ function Terrain:render(w,h,prim_type )
 	   end 
 
  	   bgfx.set_vertex_buffer( self.render_ctx.vbh )
-	   bgfx.set_index_buffer( self.render_ctx.ibh )     							 -- 使用 index 不正常显示？ wrong update api usage
-	   bgfx.submit(0,self.render_ctx.prog)
+	   bgfx.set_index_buffer( self.render_ctx.ibh )     							 			  -- 使用 index 不正常显示？ wrong update api usage
+	   bgfx.submit( viewId, self.render_ctx.prog)
 	end 
 
 	bgfx.dbg_text_clear()
 	bgfx.dbg_text_print(0, 1, 0xf, "Lua \x1b[9;mt\x1b[10;me\x1b[11;mr\x1b[12;mr\x1b[13;ma\x1b[14;mi\x1b[0mn API test.");
+end
 
-end 
 
 local ctx = {} 
 local CUBE_TEST = 0
-function Terrain:render_test( w,h  )
+function TerrainClass:render_test( w,h  )
 	--print("w := "..w.." h := "..h)
 	--print(w/h)
 	lterrain.render( self.data )
@@ -472,31 +464,31 @@ function Terrain:render_test( w,h  )
 	  --]] 
 end 
 
-function Terrain:getheight(x,y)
+function TerrainClass:getheight(x,y)
     -- todo:
 	local height = 0;
 	return height;
 end 
 
-function Terrain:raycast( x,y,z )
+function TerrainClass:raycast( x,y,z )
 	-- todo:
 	return { hit,pos,obj }
 end 
 
-function Terrain:settexture( layer,tex)
+function TerrainClass:settexture( layer,tex)
 
 end 
 
-function Terrain:setmask( layer,tex)
+function TerrainClass:setmask( layer,tex)
 
 end 
 
-function Terrain:getmask()
+function TerrainClass:getmask()
 	
 end 
 
 
-return Terrain
+return TerrainClass
 
 
 
