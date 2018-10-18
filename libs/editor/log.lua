@@ -75,7 +75,22 @@ do
 	task.loop(fetch_bgfxlog, error_cb)
 end
 
-log.window =  iup.tabs(log_tabs)
+--device debugger logger
+do
+	local dd_msg_log = new_logger "MSG_PROCESS"
+	--local append_dd_msg_log = append_text(dd_msg_log)
+	redirect.callback("MSG_PROCESS", append_text(dd_msg_log))
+
+	local dd_main_log = new_logger "MAIN"
+	--local append_dd_main_log = append_text(dd_main_log)
+	redirect.callback("MAIN", append_text(dd_main_log))
+
+	local dd_log_tab = iup.tabs{dd_msg_log, dd_main_log}
+	dd_log_tab.tabtitle = "device_debug"
+	table.insert(log_tabs, dd_log_tab)
+end
+
+log.window = iup.tabs(log_tabs)
 
 task.loop(redirect.dispatch, error_cb)
 

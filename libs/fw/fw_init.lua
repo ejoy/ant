@@ -261,6 +261,3 @@ function HandleCacheScreenShot()
         end
     end
 end
-
---require "fw.fw_connected"
---SendIORequest({"DBG_CLIENT_SENT", "12345"})

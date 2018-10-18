@@ -5,7 +5,7 @@ package.cpath = root .. "/" .. local_binpath .. "/?.dll;" ..
         root .. "/bin/?.dll"
 
 package.path = root .. "/libs/?.lua;" .. root .. "/libs/?/?.lua;" .. root .. "/libs/fw/?.lua;" .. root .. "/runtime/core/?.lua;"
-
+package.path = root .. "/libs/asset/?.lua;" .. package.path
 ----------------iup ui------------------
 require "iuplua"
 local width, height = 480, 320
@@ -114,11 +114,9 @@ if iup.MainLoopLevel() == 0 then
         end
 
         --fw_update
-        ---[[
         if fw_updating then
             run_func("libs/fw/fw_update.lua")
         end
-        --]]
     end
 
     --fw_terminate

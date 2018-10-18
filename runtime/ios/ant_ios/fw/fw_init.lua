@@ -36,7 +36,7 @@ io.open = function (filename, mode, search_local_only)
                 local file_path
                 linda:send("vfs_open", filename)
                 while true do
-                    local _, value = linda:receive(0.001, "vfs_open_res")
+                    local _, value = linda:receive(0.001, "vfs_open_res..filename")
                     if value then
                         file_path, hash = value[1], value[2]
                         break

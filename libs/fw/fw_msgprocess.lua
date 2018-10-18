@@ -17,6 +17,7 @@ function CreateMsgProcessThread(_linda, _pkg_dir, _sb_dir)
     end
 
     perror = function(...)
+        print(linda)
         origin_print("ERROR!!", "MSG_PROCESS", debug.traceback(), ...)
         local error_table = {...}
         for k, v in ipairs(error_table) do

@@ -79,8 +79,9 @@ server_framework:SetProjectDirectoryPath(default_proj_dir)
 --for other operation, we need another connection
 local start_up_connect = true
 local devices = mobiledevice.GetDevices()
+local device_port = "8888"
 for k, v in pairs(devices) do
-    server_framework:HandleCommand(v, "CONNECT")
+    server_framework:HandleCommand(v .. ":" ..device_port, "CONNECT")
 end
 
 local proj_dir_hbox = iup.hbox{run_file_btn, proj_dir_btn, proj_dir_text}

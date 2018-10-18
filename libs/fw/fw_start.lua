@@ -27,7 +27,7 @@ return function (window_handle, width, height, app_dir, bundle_dir)
                 linda:send("vfs_open", path)
                 local file, hash
                 while true do
-                    local key, val = linda:receive(0.001, "vfs_open_res")
+                    local key, val = linda:receive(0.001, "vfs_open_res"..path)                
                     if val then
                         file, hash = val[1], val[2]
                         break
@@ -40,15 +40,19 @@ return function (window_handle, width, height, app_dir, bundle_dir)
                     return true
                 end
 
-                assert(hash, "vfs system error: no file and no hash", path)
+                if not hash then
+                    print("file can't be found in the system:" .. path)
+                    return false;
+                end
 
-                print("Try to request hash from server", hash)
+                print("Try to request hash from server(start)", path, hash)
                 local request = {"EXIST", hash, filename}
                 linda:send("request", request)
 
                 local realpath
                 while not realpath do
-                    local _, value = linda:receive(0.001, "file exist")
+                    local _, value = linda:receive(0.001, "file exist"..hash)
+
                     if value == "not exist" then
                         --not such file on server
                         print("error: file "..filename.." can't be found")

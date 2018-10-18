@@ -43,6 +43,7 @@ function io:Connect(id, type)
     --id can be "address:port" and "udid:port"
     --"address:port" example: "127.0.0.1:8888"
     --"udid:port" example: "1234567890abcdef1234567890abcdef12345678:8888", udid should be 40 chars
+    print("connect id", id)
     local address, port = ToAddressPort(id)
     if IsUdid(id) then
         if imd then
@@ -206,14 +207,14 @@ function io:Get(id)
             local fd = self.socket[id]
             if fd then
                 if self.recv and self.recv[fd] and #self.recv[fd] > 0 then
-                    print("getting data from : " .. id)
+                    --print("getting data from : " .. id)
 
                     for _, data_pkg in ipairs(self.recv[fd]) do
-                        print("get data package", #data_pkg)
+                        --print("get data package", #data_pkg)
                         table.insert(pkg, data_pkg)
                     end
 
-                    print("get package form: " .. id .. ", cache size: ".. #self.recv[fd])
+                    --print("get package form: " .. id .. ", cache size: ".. #self.recv[fd])
                     self.recv[fd] = nil
                 end
             end
@@ -250,7 +251,6 @@ function io:Update(timeout)
     timeout = timeout or 0.005
     --lsockets
     local con_id = {}   --new connected id
-    --todo implement properly
     local dis_id = {}   --new disconnected id
 
     local rd, wt = self:Select(timeout)
@@ -279,8 +279,7 @@ function io:Update(timeout)
                 --insert recv package to queue
                 local recv_data = fd:recv()
                 if recv_data then
-                    print("get data from fd: ", tostring(fd))
-                    print("data", #recv_data)
+                    --print("get data from fd: ", tostring(fd))
 
                     self.reading = self.reading .. recv_data
                     local off = 1
