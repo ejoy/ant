@@ -4,21 +4,40 @@ util.__index = util
 local asset = require "asset"
 local common_util = require "common.util"
 local mu = require "math.util"
-local bgfxutil = require "bgfx.util"
 
-function util.load_terrain(entity, path, param )
-	-- todo 
-	
-end 
 
-function util.load_mesh(entity, meshpath, param)
-	local mesh_comp = entity.mesh
-	if meshpath then
-		mesh_comp.path = meshpath
+local function load_res(comp, respath, param, errmsg)
+	if respath then
+		comp.ref_path = respath
 	end
 
-	local assetinfo = asset.load(mesh_comp.path, param)
-	mesh_comp.assetinfo = assetinfo
+	local ref_path = comp.ref_path
+	if ref_path == nil then
+		error(string.format("[%s]load resource failed, need ref_path, but get nil", errmsg))
+	end
+
+	comp.assetinfo = asset.load(ref_path, param)
+end
+
+function util.load_skeleton(entity, respath, param)
+	load_res(entity.skeleton, respath, param, "load.skeleton")	
+end
+
+function util.load_animation(entity, respath, param)
+	load_res(entity.animation, respath, param, "load.animation")
+end
+
+function util.load_skinning_mesh(entity, respath, param)
+	load_res(entity.skinning_mesh, respath, param)
+end
+
+function util.new_sampling_cache(num_joints)
+	local animodule = require "hierarchy.animation"		
+	return animodule.new_sampling_cache(num_joints)
+end
+
+function util.load_mesh(entity, respath, param)
+	load_res(entity.mesh, respath, param, "load.mesh")
 end
 
 function util.load_texture(name, stage, texpath)	
@@ -77,7 +96,7 @@ function util.create_render_entity(ms, world, name, meshfile, materialfile)
 	
 	obj.name.n = name
 
-	obj.mesh.path = meshfile
+	obj.mesh.ref_path = meshfile
 	util.load_mesh(obj)		
 
 	obj.material.content[1] = {path=materialfile, properties={}}

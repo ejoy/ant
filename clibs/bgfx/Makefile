@@ -1,26 +1,12 @@
-# Use make BGFXROOT=your_bgfx_path
-BGFXROOT = ../../../ant3rd
-BGFXSRC = $(BGFXROOT)/bgfx
-BXSRC = $(BGFXROOT)/bx
-BIMGSRC = $(BGFXROOT)/bimg
-LUAINC = -I ../lua
-LUALIB = -L ../lua -llua53
-ODIR = o
+include ../common.mk
+include bgfx_define.mk
 
-CC= gcc
-CXX = g++
-CFLAGS = -O2 -Wall -Wno-misleading-indentation -Wno-unused-but-set-variable
+# Use make BGFXROOT=your_bgfx_path
+CFLAGS += -Wno-misleading-indentation -Wno-unused-but-set-variable
 
 mingw : bgfx.dll
 
 # bgfx
-#BGFXVER = Debug
-BGFXVER = Release
-BGFXLIB = -L$(BGFXSRC)/.build/win64_mingw-gcc/bin -lbgfx$(BGFXVER) -lbimg$(BGFXVER) -lbx$(BGFXVER) -lstdc++ -lgdi32 -lpsapi -luuid
-BGFXINC = -I$(BGFXSRC)/include -I$(BXSRC)/include/compat/mingw -I$(BXSRC)/include
-BGFXUTILLIB = -lexample-common$(BGFXVER)
-BGFX3RDINC = -I$(BGFXSRC)/3rdparty
-
 $(ODIR)/ibcompress.o : ibcompress.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -std=c++11 -c -o $@ $^ $(BGFXINC) $(BGFX3RDINC)
 

@@ -1,6 +1,11 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "render.math3d.math_component"
+ecs.import "render.end_frame_system"
+ecs.import "inputmgr.message_system"
+ecs.import "serialize.serialize_component"
+
 local su = require "serialize.util"
 
 local serialize_save_sys = ecs.system "serialize_save_system"

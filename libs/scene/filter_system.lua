@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "render.math3d.math_component"
+
 local cu = require "render.components.util"
 
 local function insert_primitive(eid, result)
@@ -11,8 +13,8 @@ local function insert_primitive(eid, result)
 	local materialcontent = entity.material.content
 	assert(#materialcontent >= 1)
 
-	local srt ={s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}
-	local mgroups = mesh.handle.group
+	local srt ={s=entity.scale, r=entity.rotation, t=entity.position}
+	local mgroups = mesh.handle.groups
 	for i=1, #mgroups do
 		local g = mgroups[i]
 		local mc = materialcontent[i] or materialcontent[1]
@@ -149,7 +151,7 @@ local function append_lighting_properties(ms, result)
 	local shadow_properties  =  get_shadow_properties() 
 
 	local camera = world:first_entity("main_camera")
-	local eyepos = ms(camera.position.v, "m")
+	local eyepos = ms(camera.position, "m")
 	lighting_properties["u_eyepos"] = {name = "Eye Position", type="v4", value=eyepos}
 
 	for _, r in ipairs(result) do
@@ -175,44 +177,47 @@ end
 
 --- scene filter system----------------------------------
 local primitive_filter_sys = ecs.system "primitive_filter_system"
-
-primitive_filter_sys.singleton "primitive_filter"
 primitive_filter_sys.singleton "math_stack"
 
 function primitive_filter_sys:update()
-    local filter = self.primitive_filter
-    filter.result = {}
-	for _, eid in world:each("can_render") do
-		if cu.is_entity_visible(world[eid]) then
-			insert_primitive(eid, filter.result)
+	for _, eid in world:each("primitive_filter") do
+		local e = world[eid]
+		local filter = e.primitive_filter
+		filter.result = {}
+		for _, eid in world:each("can_render") do
+			local ce = world[eid]
+			if cu.is_entity_visible(ce) then
+				if (not filter.filter_select) or ce.can_select then
+					insert_primitive(eid, filter.result)
+				end
+			end
 		end
-    end
+	end
 end
 
 --- scene lighting fitler system ------------------------
 local lighting_primitive_filter_sys = ecs.system "lighting_primitive_filter_system"
-lighting_primitive_filter_sys.singleton "primitive_filter"
 lighting_primitive_filter_sys.singleton "math_stack"
 
 lighting_primitive_filter_sys.depend "primitive_filter_system"
 
 function lighting_primitive_filter_sys:update()
 	local ms = self.math_stack
-	local filter = self.primitive_filter
-	append_lighting_properties(ms, filter.result)
+	for _, eid in world:each("primitive_filter") do
+		local e = world[eid]
+		local filter = e.primitive_filter
+		if not filter.no_lighting then
+			append_lighting_properties(ms, filter.result)
+		end
+	end
 end
 
 ----for transparency filter system-------------------------------
 local transparency_filter_sys = ecs.system "transparency_filter_system"
 transparency_filter_sys.singleton "math_stack"
-transparency_filter_sys.singleton "primitive_filter"
-
 transparency_filter_sys.depend "lighting_primitive_filter_system"
 
-local function split_transparent_filter_result(result)
-	local opacity_result = {}
-	local transparent_result = {}
-
+local function split_transparent_filter_result(result, opaticy_result, transparent_result)
 	for _, r in ipairs(result) do
 		local material = r.material
 		local surface_type = material.surface_type
@@ -220,33 +225,18 @@ local function split_transparent_filter_result(result)
 			table.insert(transparent_result, r)
 		else
 			assert(surface_type.transparency == "opaticy")
-			table.insert(opacity_result, r)
+			table.insert(opaticy_result, r)
 		end
 	end
-
-	return opacity_result, transparent_result
 end
 
 function transparency_filter_sys:update()
-	local filter = self.primitive_filter	
-	filter.result, filter.transparent_result = split_transparent_filter_result(filter.result)
-end
-
-----for select filter system-------------------------------
-local select_filter_sys = ecs.system "select_filter_system"
-
-select_filter_sys.singleton "math_stack"
-select_filter_sys.singleton "select_filter"
-
-function select_filter_sys.notify:create_selection_filter()
-    local filter = self.select_filter
-    filter.result = {}
-	for _, eid in world:each("can_select") do        
+	for _, eid in world:each("primitive_filter") do
 		local e = world[eid]
-		if cu.is_entity_visible(e) then
-			insert_primitive(eid, filter.result)
-		end
+		local filter = e.primitive_filter
+		local transparent_result, opaticy_result= {}, {}
+		split_transparent_filter_result(filter.result, opaticy_result, transparent_result)
+		filter.result = opaticy_result
+		filter.transparent_result = transparent_result
 	end
-	
-	filter.result, filter.transparent_result = split_transparent_filter_result(filter.result)
 end

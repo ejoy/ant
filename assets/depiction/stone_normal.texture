@@ -1,0 +1,7 @@
+path = "textures/brickwall_normal.dds"
+sampler = {
+	U = "CLAMP",
+	V = "CLAMP",
+	MIN = "LINEAR",
+	MAG = "LINEAR",	
+}

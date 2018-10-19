@@ -16,15 +16,20 @@ struct workerThread {
 };
 
 struct masterThread {
-    void addWorker(workerThread* worker) {
+    void addWorker(workerThread* t) {
         std::unique_lock<std::mutex> lock(mutex);
-        handleSeed++;
-        workers.insert(std::make_pair(handleSeed, worker));
+        workerSeed++;
+        workers.insert(std::make_pair(workerSeed, t));
     }
-    void delWorker(workerThread* worker) {
+    void addVip(workerThread* t) {
+        std::unique_lock<std::mutex> lock(mutex);
+        vipSeed++;
+        workers.insert(std::make_pair(vipSeed, t));
+    }
+    void delWorker(workerThread* t) {
         std::unique_lock<std::mutex> lock(mutex);
         for (auto it = workers.begin(); it != workers.end();) {
-            if (it->second == worker) {
+            if (it->second == t) {
                 workers.erase(it);
                 return;
             }
@@ -38,15 +43,18 @@ struct masterThread {
         }
         f(*(it->second));
     }
-    void eachWorker(std::function<void(int, workerThread&)> f) {
+    void eachWorker(bool hasVip, std::function<void(int, workerThread&)> f) {
         std::unique_lock<std::mutex> lock(mutex);
         for (auto p : workers) {
-            f(p.first, *(p.second));
+            if (hasVip || !(p.first >> 16)) {
+                f(p.first, *(p.second));
+            }
         }
     }
 
     std::map<int, workerThread*> workers;
-    int handleSeed = 0;
+    int workerSeed = 0;
+    int vipSeed = 0x10000;
     std::mutex mutex;
     bool start = false;
 };
@@ -78,7 +86,12 @@ static int master_send(lua_State* L) {
 static int master_exists(lua_State* L) {
     masterThread& self = mThread;
     bool res = false;
-    self.getWorker((int)luaL_checkinteger(L, 2), [&](workerThread& worker){
+    int tid = (int)luaL_checkinteger(L, 2);
+    if (tid >> 16) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+    self.getWorker(tid, [&](workerThread& worker){
         res = true;
     });
     lua_pushboolean(L, res);
@@ -94,10 +107,11 @@ static int ipairs(lua_State* L) {
 }
 
 static int master_foreach(lua_State* L) {
+    bool hasVip = lua_toboolean(L, 2);
     masterThread& self = mThread;
     lua_newtable(L);
     int n = 0;
-    self.eachWorker([&](int handle, workerThread& worker){
+    self.eachWorker(hasVip, [&](int handle, workerThread& worker){
         lua_pushinteger(L, handle);
         lua_seti(L, -2, ++n);
     });
@@ -118,10 +132,9 @@ static int master_start(lua_State* L){
     if (LUA_TNIL != lua_rawgetp(L, LUA_REGISTRYINDEX, &THREAD_MASTER)) {
         return luaL_error(L, "Thread has started.");
     }
-    lua_pushvalue(L, 1);
-    lua_rawsetp(L, LUA_REGISTRYINDEX, &THREAD_MASTER);
-
     lua_newuserdata(L, 1);
+    lua_pushvalue(L, -1);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &THREAD_MASTER);
     
     static luaL_Reg lib[] = {
         { "recv", master_recv },
@@ -169,10 +182,10 @@ static int worker_start(lua_State* L) {
     if (LUA_TNIL != lua_rawgetp(L, LUA_REGISTRYINDEX, &THREAD_WORKER)) {
         return luaL_error(L, "Thread has started.");
     }
-    lua_pushvalue(L, 1);
-    lua_rawsetp(L, LUA_REGISTRYINDEX, &THREAD_WORKER);
 
     workerThread* thd = (workerThread*)lua_newuserdata(L, sizeof(workerThread));
+    lua_pushvalue(L, -1);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &THREAD_WORKER);
     new (thd) workerThread;
 
     static luaL_Reg lib[] = {
@@ -192,6 +205,27 @@ static int worker_start(lua_State* L) {
     return 1;
 }
 
+static int vip_start(lua_State* L) {
+    workerThread* thd = (workerThread*)lua_newuserdata(L, sizeof(workerThread));
+    new (thd) workerThread;
+
+    static luaL_Reg lib[] = {
+        { "recv", worker_recv },
+        { "send", worker_send },
+        { "__gc", worker_gc },
+        { NULL, NULL }
+    };    
+    lua_newtable(L);
+    lua_pushvalue(L, -2);
+    luaL_setfuncs(L, lib, 1);
+    lua_pushvalue(L, -1);
+    lua_setfield(L, -2, "__index");
+    lua_setmetatable(L, -2);
+
+    mThread.addVip(thd);
+    return 1;
+}
+
 static int start(lua_State* L) {
     const char* who = luaL_checkstring(L, 1);
     if (strcmp(who, "master") == 0) {
@@ -199,6 +233,9 @@ static int start(lua_State* L) {
     }
     else if (strcmp(who, "worker") == 0) {
         return worker_start(L);
+    }
+    else if (strcmp(who, "vip") == 0) {
+        return vip_start(L);
     }
     return luaL_error(L, "Thread type `%s` error.", who);
 }

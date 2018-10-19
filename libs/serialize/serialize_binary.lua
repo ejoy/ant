@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "serialize.serialize_system"
+
 local save_to_binary = ecs.system "serialize_to_binary"
 save_to_binary.singleton "serialization_tree"
 

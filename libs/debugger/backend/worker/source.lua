@@ -23,7 +23,7 @@ ev.on('initializing', function(config)
             local sm = {}
             sm[1] = ('^%s$'):format(fs.normalize_native(pattern[1]):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'))
             if sm[1]:find '%*' then
-                sm[1]:gsub('%*', '(.*)')
+                sm[1] = sm[1]:gsub('%*', '(.*)')
                 local r = {}
                 fs.normalize(pattern[2]):gsub('[^%*]+', function (w) r[#r+1] = w end)
                 sm[2] = r
@@ -92,7 +92,6 @@ local function codeReference(s)
         hash = hash + 1
     end
     codePool[hash] = s
-    codePool[s] = hash
     return hash
 end
 
@@ -136,6 +135,7 @@ function m.create(source)
     end
     local newSource = create(source)
     sourcePool[source] = newSource
+    ev.emit('loadedSource', 'new', newSource)
     return newSource
 end
 
@@ -182,6 +182,12 @@ end
 
 function m.clientPath(p)
     return fs.relative(p, workspaceFolder, '/')
+end
+
+function m.all_loaded(p)
+    for _, source in pairs(sourcePool) do
+        ev.emit('loadedSource', 'new', source)
+    end
 end
 
 return m

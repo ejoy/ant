@@ -27,8 +27,8 @@ local math3d = require "math3d"
 	{ rx = 1, ry = 0, rz = 0 }
 	{ tx = 0, ty = 0 , tz = 1 }
 
-	{ type = "proj", fov = 60, aspect = 1024/768 , n = 0.1, f = 100 }	-- proj mat
-	{ type = "ortho", l = 0, r = 1, b = 1, t = 0, n = 0, f = 100, h = false } -- ortho mat
+	{ type = "mat", fov = 60, aspect = 1024/768 , n = 0.1, f = 100, }	-- proj mat
+	{ type = "mat", l = 0, r = 1, b = 1, t = 0, n = 0, f = 100, ortho = true, h = false } -- ortho mat
 	{ type = "quat", 0, 0, 0, 1}	-> quaternion, for x, y, z, w
 	{ type = "quat", axis = {0, 0, 0}, angle = 60} -> quaternion from axis and angle
 	* matrix mul ( ..., 1,2 - > ..., 1*2 )
@@ -44,6 +44,7 @@ local math3d = require "math3d"
 	n normalize vector3 ( ..., 1 -> ..., {normalize(1) , 1} )
 	l generate lookat matrix ( ..., eye, at -> ..., lookat(eye,at) )
 	e vec4/vec3/matrix to euler angle (v, "e")
+	b extract matrix base orthogonal axis[xyz]
 ]]
 
 local stack = math3d.new()
@@ -52,8 +53,11 @@ local vec = math3d.ref "vector"
 local mat = math3d.ref "matrix"	-- matrix ref
 
 -- # turn on log
-local v = stack("#", { type = "proj", fov = 60, aspect = 1024/768 } , "VR")	-- make a proj mat
+local v = stack("#", { type = "mat", fov = 60, aspect = 1024/768 } , "VR")	-- make a proj mat
 print(v)
+
+local orthmat = stack({type="m", l=-1, r=1, t=1, b=-1, n=1, f=1000, ortho=true}, "V")	-- make a ortho mat
+print(orthmat)
 
 stack( "#", vec, { 1,2,3,4 } , "1+=")	-- dup {1,2,3,4} add self and then assign to vec
 
@@ -105,7 +109,7 @@ print("zdir after rotate : ", stack(zdir, "V"))
 stack(mat, "1=")	-- init mat to an indentity matrix (dup self and assign)
 
 local vH = stack({2, 4, 5, 1}, mat, "%P")
-print("vector homogeneous divide : ", stack(vH, "%"))
+print("vector homogeneous divide : ", stack(vH, "%V"))
 
 local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "lP")	-- calc lookat matrix
 mat(lookat) -- assign lookat matrix to mat
@@ -170,5 +174,12 @@ do
 
 	local e = stack(q, "eP")
 	print("euler : ", stack(e, "V"))
+end
+
+do
+	-- extract base axis
+	local lookat = stack({0, 0, 0}, {0, 0, 1}, "LP")
+	local x, y, z = stack(lookat, "bPPP")
+	print(stack(x, y, z, "VVV"))
 end
 

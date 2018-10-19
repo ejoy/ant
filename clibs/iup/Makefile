@@ -1,4 +1,6 @@
-include common.mk
+include ../common.mk
+
+IUPSRC = $(ANT3RD)/iup
 
 INCLUDES = include src
 INCLUDES += src/win
@@ -8,7 +10,10 @@ WIN32VER = 0x0501
 
 DEFINES = _WIN32_WINNT=$(WIN32VER) _WIN32_IE=0x600 WINVER=$(WIN32VER) UNICODE IUP_DLL
 
-all : iup.exe | scintilla.dll iupluaimglib.dll iupluacontrols.dll
+all : iup.exe | scintilla.dll iupluaimglib.dll iupluacontrols.dll $(LUABIN)
+
+$(LUABIN):
+	@echo $(LUABIN) is not exist! && exit 1
 
 SRCIUP = iup_array.c iup_callback.c iup_dlglist.c iup_attrib.c iup_focus.c iup_font.c \
       iup_globalattrib.c iup_object.c iup_key.c iup_layout.c iup_ledlex.c iup_names.c \
@@ -25,7 +30,7 @@ SRCIUP = iup_array.c iup_callback.c iup_dlglist.c iup_attrib.c iup_focus.c iup_f
       iup_flatbutton.c iup_animatedlabel.c iup_draw.c iup_flatframe.c iup_flattabs.c \
       iup_flatscrollbar.c iup_flatscrollbox.c iup_dial.c iup_gauge.c iup_colorbar.c \
       iup_colorbrowser.c iup_colorhsi.c iup_flatlabel.c iup_flatseparator.c iup_flattoggle.c \
-      iup_dropbutton.c iup_space.c
+      iup_dropbutton.c iup_space.c iup_multibox.c
 
 SRCWIN += iupwin_common.c iupwin_brush.c iupwin_focus.c iupwin_font.c \
       iupwin_globalattrib.c iupwin_handle.c iupwin_key.c iupwin_str.c \
@@ -58,19 +63,19 @@ CTRLUA = button.lua canvas.lua dialog.lua colordlg.lua clipboard.lua \
        animatedlabel.lua calendar.lua datepick.lua param.lua parambox.lua \
        detachbox.lua flatframe.lua flattabs.lua flatscrollbox.lua \
        dial.lua gauge.lua colorbar.lua colorbrowser.lua flatlabel.lua \
-       flatseparator.lua flattoggle.lua dropbutton.lua space.lua 
+       flatseparator.lua flattoggle.lua dropbutton.lua space.lua multibox.lua
 
 SRCLUA = iuplua.lua constants.lua iup_config.lua
 
 GC := $(patsubst %.lua,$(ODIR)/il_%.c,$(CTRLUA))
 
 $(GC) : $(ODIR)/il_%.c : $(IUPSRC)/srclua5/elem/%.lua iupgen.lua
-	$(LUABIN) iupgen.lua $< $@
+	$(LUABIN) iupgen.lua +$< $@
 
 LH := $(patsubst %.lua,$(ODIR)/%.lh,$(SRCLUA))
 
 $(LH) : $(ODIR)/%.lh : $(IUPSRC)/srclua5/%.lua bin2c.lua
-	$(LUABIN) bin2c.lua $< > $@
+	$(LUABIN) bin2c.lua +$< > $@
 
 IUPLUASRC = iuplua.c iuplua_api.c iuplua_draw.c iuplua_tree_aux.c iuplua_scanf.c \
       iuplua_getparam.c iuplua_getcolor.c iuplua_config.c
@@ -99,13 +104,13 @@ $(ODIR)/libiup.a : $(OBJIUP) $(OBJWIN) $(OBJIUPLUA) $(OBJCTRL)
 	$(AR) $@ $^
 
 scintilla.dll : luaiup.dll
-	$(MAKE) -f Makefile.scintilla
+	$(MAKE) -f Makefile.scintilla -j8
 
 iupluaimglib.dll : luaiup.dll
-	$(MAKE) -f Makefile.imglib
+	$(MAKE) -f Makefile.imglib -j8
 
 iupluacontrols.dll : luaiup.dll
-	$(MAKE) -f Makefile.controls
+	$(MAKE) -f Makefile.controls -j8
 
 luaiup.dll : $(OBJIUP) $(OBJWIN) $(OBJIUPLUA) $(OBJCTRL) 
 	$(CC) --shared -o $@ $^ -lgdi32 -lcomdlg32 -lcomctl32 -lole32 -luuid $(LUALIB)

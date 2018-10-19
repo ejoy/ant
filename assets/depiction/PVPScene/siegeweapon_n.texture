@@ -1,0 +1,11 @@
+path = "textures/PVPScene/BH-Scene-SiegeWeapons-01-N.dds"
+
+sampler = {
+	U = "CLAMP",
+	V = "CLAMP",
+	MIN = "LINEAR",
+	MAG = "LINEAR",	
+}
+
+sRGB 		= true
+normalmap 	= false

@@ -24,7 +24,6 @@ for _, v in ipairs{
     "xpcall",
     "string",
     "rawlen",
-    "ravitype",
     "print",
     "rawequal",
     "setmetatable",
@@ -39,7 +38,6 @@ for _, v in ipairs{
     "collectgarbage",
     "os",
     "table",
-    "ravi",
     "dofile",
     "pcall",
     "load",
@@ -156,12 +154,6 @@ local function varGetName(value)
         else
             return normalizeNumber(('%.4f'):format(rdebug.value(value)))
         end
-    elseif type == 'function' then
-        --TODO
-    elseif type == 'table' then
-        --TODO
-    elseif type == 'userdata' then
-        --TODO
     end
     return tostring(rdebug.value(value))
 end
@@ -197,6 +189,8 @@ local function varGetShortValue(value)
         return '{}'
     elseif type == 'userdata' then
         return 'userdata'
+    elseif type == 'thread' then
+        return 'thread'
     end
     return type
 end
@@ -335,6 +329,8 @@ local function varGetValue(type, subtype, value)
             end
         end
         return 'userdata'
+    elseif type == 'thread' then
+        return 'thread'
     end
     return tostring(rdebug.value(value))
 end

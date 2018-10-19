@@ -65,6 +65,16 @@ function system.component_methods(sys, c)
 	return p
 end
 
+local function get_sort_keys(t)
+	local keys = {}
+	for k in pairs(t) do
+		table.insert(keys, k)
+	end
+
+	table.sort(keys)
+	return keys
+end
+
 local function solve_depend(graph)
 	-- topological sorting
 	local ret = {}	-- sorted result
@@ -74,9 +84,14 @@ local function solve_depend(graph)
 		table.insert(ret, k)
 		S[k] = true
 	end
+
+	local graphkeys = get_sort_keys(graph)
+
 	-- combine depend and dependby
 	local dp_table = {}
-	for k,v in pairs(graph) do
+	--for k,v in pairs(graph) do
+	for _, k in ipairs(graphkeys) do
+		local v = graph[k]
 		local function get_dp(t, k)
 			local dp = t[k]
 			if dp == nil then
@@ -103,7 +118,8 @@ local function solve_depend(graph)
 		end
 	end
 
-	for k,v in pairs(graph) do
+	--for k,v in pairs(graph) do
+	for _, k in ipairs(graphkeys) do		
 		-- local depend = v.depend
 		local depend = dp_table[k]
 		if depend then
@@ -128,7 +144,11 @@ local function solve_depend(graph)
 	end
 	while next(G) do
 		local reduce
-		for name,depends in pairs(G) do
+		local Gkeys = get_sort_keys(G)
+
+		--for name,depends in pairs(G) do
+		for _, name in ipairs(Gkeys) do
+			local depends = G[name]
 			for depend in pairs(depends) do
 				if S[depend] then
 					depends[depend] = nil

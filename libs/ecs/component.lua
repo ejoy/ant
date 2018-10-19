@@ -11,13 +11,24 @@ local function gen_new(c)
 		end
 		local init = c.method.init
 		return function()
-			local ret = {}
-			for k,v in pairs(c.struct) do
+			local ret
+			if c.struct.struct then
+				ret = {}
+				for k,v in pairs(c.struct.struct) do
+					local default = v.default
+					if default ~= nil then
+						ret[k] = default
+					else
+						ret[k] = v.default_func()
+					end
+				end
+			else
+				local v = c.struct
 				local default = v.default
 				if default ~= nil then
-					ret[k] = default
+					ret = default
 				else
-					ret[k] = v.default_func()
+					ret = v.default_func()
 				end
 			end
 			if init then
@@ -40,42 +51,6 @@ local function gen_new(c)
 	end
 end
 
-local function gen_delete(c)
-	local primitive
-	if c.struct then
-		-- matrix and vector
-		for k,v in pairs(c.struct) do
-			local tname = v.type
-			if tname == "matrix" or tname == "vector" then
-				local last = primitive
-				if last then
-					function primitive(component)
-						component[k] = nil
-						return last(component)
-					end
-				else
-					function primitive(component)
-						component[k] = nil
-					end
-				end
-			end
-		end
-	end
-	local delete = c.method.delete
-	if delete then
-		if primitive then
-			return function(component)
-				delete(component)
-				primitive(component)
-			end
-		else
-			return delete
-		end
-	else
-		return primitive
-	end
-end
-
 local reserved_method = { new = true, init = true, delete = true }
 
 local function copy_method(c)
@@ -94,47 +69,70 @@ local function copy_method(c)
 	return m
 end
 
-local function gen_save(struct)	
-	return function (c, arg)
-		local t = {}
-		for k, v in pairs(c) do
-			local vclass = struct[k]
-			if vclass then
-				arg.struct_type = k
-				local save = vclass.save				
-				t[k] = save(v, arg)
+local function gen_save(struct)
+	if struct and struct.struct then
+		return function (c, arg)
+			assert(type(c) == "table")
+			local t = {}
+			for k, v in pairs(c) do
+				local vclass = struct[k]
+				if vclass then
+					arg.struct_type = k
+					local save = vclass.save
+					t[k] = save(v, arg)
+				end
 			end
+			return t
 		end
-		return t
+	elseif struct and struct.type == "tag" then
+		return function (c, arg)
+			-- this is tag
+			assert(type(c) == "boolean")
+			return c
+		end
+	else
+		return function (v, arg)
+			arg.struct_type = "" --TODO
+			local save = struct.save
+			return save(v, arg)
+		end
 	end
 end
 
-local function gen_load(struct)	
-	return function(c, v, arg)
-		local keys = {}
-		for k in pairs(c) do
-			table.insert(keys, k)
-		end
-
-		for _, k in ipairs(keys) do
-			local vclass = struct[k]
-			if vclass then
-				arg.struct_type = k
-				local load = vclass.load
-				c[k] = load(v[k], arg)
+local function gen_load(struct)
+	if struct and struct.struct then
+		return function(c, v, arg)
+			local keys = {}
+			for k in pairs(c) do
+				table.insert(keys, k)
 			end
+
+			for _, k in ipairs(keys) do
+				local vclass = struct[k]
+				if vclass then
+					arg.struct_type = k
+					local load = vclass.load
+					c[k] = load(v[k], arg)
+				end
+			end
+		end
+	else
+		return function(c, v, arg)
+			arg.struct_type = "" -- TODO
+			local load = struct.load
+			c = load(v, arg)
 		end
 	end
 end
 
 return function(c)
-	local struct = c.struct and datatype(c.struct)
+	local struct = c.struct and datatype(c)
 	return {
 		struct = struct,
 		new = gen_new(c),
 		save = gen_save(struct),
 		load = gen_load(struct),
-		delete = gen_delete(c),
+		delete = c.method.delete,
 		method = copy_method(c),
 	}
 end

@@ -14,7 +14,7 @@ function testcube.init(width, height, app_dir, bundle_path)
     ctx.width = width
     ctx.height = height
 
-    local projmat = stack({type = "proj", fov = 60, aspect = ctx.width/ctx.height, n=0.1, f=100}, "m")
+    local projmat = stack({type = "mat", fov = 60, aspect = ctx.width/ctx.height, n=0.1, f=100}, "m")
     local viewmat = stack({0,0,-35},{0,0,0}, "lm")
 
     print("math", type(projmat))

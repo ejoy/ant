@@ -1,9 +1,8 @@
--- dofile "libs/init.lua"
--- terrain System 
 local ecs = ...
 local world = ecs.world
 
-package.path = package.path..';../clibs/terrain/?.lua;./clibs/terrain/?.lua;./test/?.lua;' 
+package.path = package.path..';../clibs/terrain/?.lua;./clibs/terrain/?.lua;./test/?.lua;'
+package.path = package.path..";"..package.app_dir.."/clibs/terrain/?.lua;"
 package.cpath = package.cpath..';../clibs/terrain/?.dll;./clibs/terrain/?.dll;'
 
 -- local nk = require "bgfx.nuklear"
@@ -57,10 +56,10 @@ local function gen_lighting_uniforms( terrain )
 	for _,l_eid in world:each("directional_light") do 
 		local dlight = world[l_eid]
 		local l = dlight.light.v 
-		terrain:set_uniform("u_lightDirection", math3d_stack(dlight.rotation.v, "dim") )
+		terrain:set_uniform("u_lightDirection", math3d_stack(dlight.rotation, "dim") )
 		terrain:set_uniform("u_lightIntensity", { l.intensity,0,0,0} )  
 		terrain:set_uniform("u_lightColor",l.color  )
-	end 
+	end
 end 
 
 local function get_shadow_properties()
@@ -197,6 +196,8 @@ local function init(fbw, fbh, entity )
 						{ "NORMAL", 3, "FLOAT" },
 					}
 				)
+	--]]
+	-- terrain_chibi:load("terrain/chibi16.lvl")
 
 	-- material create mode 
 	if program_create_mode == 1 then 
@@ -329,4 +330,3 @@ function terrain_sys:update()
         --end 
     end 
 end
-

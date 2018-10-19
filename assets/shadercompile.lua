@@ -26,9 +26,9 @@ local function compile(filename, outfilename, rendertype)
 		local success, msg = toolset.compile(filename, config, rendertype)
 		if not success then
 			print(string.format("compile failed!\nsource file : %s, dest file : %s\nerror message : %s", 
-				filename, outfile, msg))
+				filename, outfilename, msg))
 		end
-    end    
+    end
 end
 
 compile(infile, outfile, rendertype)

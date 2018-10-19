@@ -82,46 +82,57 @@ local function gen_value(v)
 	}	
 end
 
-return function (t)
-	for k,v in pairs(t) do
-		assert(type(k) == "string", "Property name should be string")
-		v = gen_value(v)
-		t[k] = v
-
-		local ttype = type(v.default)
-		if ttype == "function" then
-			v.default_func = v.default
-			v.default = nil
-		elseif ttype == "table" then
-			local defobj = v.default
-			local function check_defobj(defobj)
-				for k,v in pairs(defobj) do
-					if type(v) == "table" then
-						check_defobj(v)
-					end
-					assert(type(k) ~= "table")
+local function gen_default(v)
+	local ttype = type(v.default)
+	if ttype == "function" then
+		v.default_func = v.default
+		v.default = nil
+	elseif ttype == "table" then
+		local defobj = v.default
+		local function check_defobj(defobj)
+			for k,v in pairs(defobj) do
+				if type(v) == "table" then
+					check_defobj(v)
 				end
-			end
-			check_defobj(defobj)
-
-			local function deep_copy(obj)
-				local t = {}
-				for k, v in pairs(obj) do
-					if type(v) == "table" then
-						local tt = deep_copy(v)
-						t[k] = tt
-					else
-						t[k] = v
-					end
-				end
-				return t
-			end
-
-			v.default = nil
-			v.default_func = function()
-				return deep_copy(defobj)
+				assert(type(k) ~= "table")
 			end
 		end
+		check_defobj(defobj)
+
+		local function deep_copy(obj)
+			local t = {}
+			for k, v in pairs(obj) do
+				if type(v) == "table" then
+					local tt = deep_copy(v)
+					t[k] = tt
+				else
+					t[k] = v
+				end
+			end
+			return t
+		end
+
+		v.default = nil
+		v.default_func = function()
+			return deep_copy(defobj)
+		end
+	end
+end
+
+return function (c)
+	local t = c.struct
+	if t.struct then
+		t = t.struct
+		for k,v in pairs(t) do
+			assert(type(k) == "string", "Property name should be string")
+			v = gen_value(v)
+			t[k] = v
+			gen_default(v)
+		end
+	else
+		t = gen_value(t)
+		c.struct = t
+		gen_default(t)
 	end
 	return t
 end

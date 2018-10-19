@@ -58,6 +58,7 @@
     <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_list.c" />
     <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_menu.c" />
     <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_messagedlg.c" />
+    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_multibox.c" />
     <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_multiline.c" />
     <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_normalizer.c" />
     <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_param.c" />
@@ -93,6 +94,7 @@
     <ClCompile Include="..\..\..\ant3rd\iup\src\iup_focus.c" />
     <ClCompile Include="..\..\..\ant3rd\iup\src\iup_font.c" />
     <ClCompile Include="..\..\..\ant3rd\iup\src\iup_globalattrib.c" />
+    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_multibox.c" />
     <ClCompile Include="..\..\..\ant3rd\iup\src\iup_object.c" />
     <ClCompile Include="..\..\..\ant3rd\iup\src\iup_key.c" />
     <ClCompile Include="..\..\..\ant3rd\iup\src\iup_layout.c" />
@@ -262,6 +264,7 @@
     <None Include="..\..\..\ant3rd\iup\srclua5\elem\list.lua" />
     <None Include="..\..\..\ant3rd\iup\srclua5\elem\menu.lua" />
     <None Include="..\..\..\ant3rd\iup\srclua5\elem\messagedlg.lua" />
+    <None Include="..\..\..\ant3rd\iup\srclua5\elem\multibox.lua" />
     <None Include="..\..\..\ant3rd\iup\srclua5\elem\multiline.lua" />
     <None Include="..\..\..\ant3rd\iup\srclua5\elem\normalizer.lua" />
     <None Include="..\..\..\ant3rd\iup\srclua5\elem\param.lua" />

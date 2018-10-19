@@ -1,6 +1,11 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "render.math3d.math_component"
+ecs.import "render.camera.camera_component"
+ecs.import "render.components.general"
+ecs.import "inputmgr.message_system"
+
 local mu = require "math.util"
 local cu = require "render.components.util"
 
@@ -35,23 +40,25 @@ camera_controller_system.singleton "message_component"
 camera_controller_system.singleton "control_state"
 
 camera_controller_system.depend "iup_message"
+camera_controller_system.depend "camera_init"
 
 function camera_controller_system:init()
 	local ms = self.math_stack
 	local camera = world:first_entity("main_camera")
 
+	local move_speed = 1
 	local message = {}
 
-	local button_status = {}
-	function message:button(btn, p, x, y, status)
-		button_status[btn] = p
-	end
+    local last_xy
+    local button_status = {}
+    function message:button(btn, p, x, y, status)
+        button_status[btn] = p
+        last_xy = point2d(x, y)
+    end
 
-	local last_xy
-	function message:motion(x, y, status)		
+	function message:motion(x, y, status)
 		local xy = point2d(x, y)
-		if last_xy then			
-			--if (status.LEFT or status.RIGHT) and last_xy then
+		if last_xy then
 			if status.RIGHT then
 				local speed = message.move_speed * 0.1
 				delta = (xy - last_xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
@@ -116,10 +123,6 @@ function camera_controller_system:init()
 	end
 
 	self.message_component.msg_observers:add(message)
-	message.cb = {}
-	message.msg_comp = self.message_component
-	message.ms = self.math_stack
-	message.move_speed = 1
 end
 -- make movement smooth 
 function camera_controller_system:update()
@@ -135,20 +138,6 @@ function camera_controller_system:update()
 		camera_util.move(ms, camera, dx*deltaTime, dy*deltaTime, dz*deltaTime)
 	end 
 end 	
-
--- function camera_controller_system:update()
--- 	local camera = world:first_entity("main_camera")
--- 	if camera then
--- 		local cs = self.control_state.state
--- 		if cs == "camera" or cs == "default" then
--- 			for _, cb in pairs(message.cb) do
--- 				cb(camera)
--- 			end
--- 		end
--- 	end
-	
--- 	message.cb = {}
--- end
 
 function camera_controller_system.notify:focus_selected_obj(objects)
 	--only using first obj
@@ -179,7 +168,7 @@ function camera_controller_system.notify:focus_selected_obj(objects)
 			sphere.center = centerWS
 
 			local camera = world:first_entity("main_camera")
-			local scale = e.scale.v
+			local scale = e.scale
 			local s = ms(scale, "T")
 			local smax = math.max(s[1], s[2], s[3])			
 			sphere.radius = smax * sphere.radius
@@ -193,8 +182,8 @@ function camera_controller_system.notify:focus_selected_obj(objects)
 			]]
 
 			local newpos = ms(sphere.center, {sphere.radius * 3}, new_camera_rotation, "dni*+P")
-			ms(camera.rotation.v, new_camera_rotation, "=")
-			ms(camera.position.v, newpos, "=")
+			ms(camera.rotation, new_camera_rotation, "=")
+			ms(camera.position, newpos, "=")
 		end
 	end
 end

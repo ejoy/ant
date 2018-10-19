@@ -1,6 +1,12 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "render.math3d.math_component"
+ecs.import "render.camera.camera_component"
+
+-- entity
+ecs.import "editor.ecs.editor_component"
+
 local cu 	= require "render.components.util"
 local bgfx  = require "bgfx"
 local mu  	= require "math.util"
@@ -8,6 +14,7 @@ local mu  	= require "math.util"
 local general_editor_entites = ecs.system "general_editor_entites"
 
 general_editor_entites.singleton "math_stack"
+general_editor_entites.depend "camera_init"
 
 function general_editor_entites:init()
     local ms = self.math_stack
@@ -29,26 +36,31 @@ function general_editor_entites:init()
 
 		axis.name.n = "axis-tips"
 		
-		axis.mesh.path = ""	-- runtime mesh info
+		axis.mesh.ref_path = ""	-- runtime mesh info
 		axis.mesh.assetinfo = {
 			handle = {
-				group = {
-					{
-						vdecl = vdecl,
-						vb = bgfx.create_vertex_buffer({"fffd",
-						0.0, 0.0, 0.0, 0xff0000ff,  -- x-axis
-						1.0, 0.0, 0.0, 0xff0000ff,
-						0.0, 0.0, 0.0, 0xff00ff00,  -- y-axis
-						0.0, 1.0, 0.0, 0xff00ff00,
-						0.0, 0.0, 0.0, 0xffff0000,  -- z-axis
-						0.0, 0.0, 1.0, 0xffff0000}, vdecl)
+				groups = {
+					{						
+						vb = {
+							decls = {
+								vdecl
+							},
+							handles = {
+								bgfx.create_vertex_buffer({"fffd",
+								0.0, 0.0, 0.0, 0xff0000ff,  -- x-axis
+								1.0, 0.0, 0.0, 0xff0000ff,
+								0.0, 0.0, 0.0, 0xff00ff00,  -- y-axis
+								0.0, 1.0, 0.0, 0xff00ff00,
+								0.0, 0.0, 0.0, 0xffff0000,  -- z-axis
+								0.0, 0.0, 1.0, 0xffff0000}, vdecl)
+							},
+						}
 					},
 				}
 			}
 		}
-
-		axis.material.content[1] = {path="line.material", properties={}}
-		cu.load_material(axis)
+		
+		cu.load_material(axis, {"line.material",})
     end
 
     do
@@ -100,21 +112,98 @@ function general_editor_entites:init()
             return t
         end
 
-		grid.mesh.path = ""
+		grid.mesh.ref_path = ""
         grid.mesh.assetinfo = {
 			handle = {
-				group = {
+				groups = {
 					{
-						vdecl = vdecl,
-						vb = bgfx.create_vertex_buffer(
-							create_grid_line_points(64, 64, 1),
-							vdecl)
+						vb = {
+							decls = {
+								vdecl
+							},
+							handles = {
+								bgfx.create_vertex_buffer(
+									create_grid_line_points(64, 64, 1),
+									vdecl)
+							}
+						}
 					}
 				}
 			}
 		}
 
-		grid.material.content[1] = {path="line.material", properties={}}
-		cu.load_material(grid)
-    end
+		cu.load_material(grid, {"line.material",})
+	end
+
+	do
+		local frustum_debug_eid = world:new_entity("position", "scale", "rotation",
+		"can_render", "mesh", "material", 
+		"name",
+		"can_select")
+
+		local frusutm_debug = world[frustum_debug_eid]
+		frusutm_debug.name.n = "frustum_debug"
+
+		local function create_frustum_points()
+			local math3d_baselib = require "math3d.baselib"
+			local mu = require "math.util"
+			local camera = world:first_entity("main_camera")
+
+			local view, proj = mu.view_proj_matrix(ms, camera)
+			local matVP = ms(view, proj, "*m")
+			local corners = math3d_baselib.frustum_points(matVP)
+
+			local green_color = 0xff00ff00
+			for i=1, 8 do
+				table.insert(corners, i*3+i, green_color)
+			end
+
+			table.insert(corners, 1, "fffd")
+
+			return corners
+		end
+
+		frusutm_debug.mesh.ref_path = ""
+        frusutm_debug.mesh.assetinfo = {
+			handle = {
+				groups = {
+					{
+						vdecl = vdecl,
+						vb = {
+							decls = {
+								vdecl
+							},
+							handles = {
+								bgfx.create_vertex_buffer(
+								create_frustum_points(),
+								vdecl),
+							}
+						},
+						ib = {
+							handle = bgfx.create_index_buffer {
+								-- top
+								1, 2, -- ltn, rtn
+								1, 3, -- ltn, ltf							
+								3, 4, -- ltf, rtf
+								4, 2, -- rtf, rtn
+
+								-- bottom
+								1+4, 2+4, -- ltn, rtn
+								1+4, 3+4, -- ltn, ltf							
+								3+4, 4+4, -- ltf, rtf
+								4+4, 2+4, -- rtf, rtn
+
+								1, 5,
+								2, 6,
+								3, 7,
+								4, 8,
+							},	
+						}
+					}
+				}
+			}
+		}
+	
+		cu.load_material(frusutm_debug, {"line.material",})
+	end
 end

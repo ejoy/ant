@@ -1,12 +1,12 @@
-include common.mk
+include ../common.mk
 
-CXXFLAGS = --std=c++11 $(CFLAGS)
+IUPSRC = $(ANT3RD)/iup
 
 #  SCINTILLA
 
 DEFINES += STATIC_BUILD SCI_LEXER SCI_NAMESPACE
 
-SCINTILLA := $(IUPSRC)/srcscintilla/scintilla375
+SCINTILLA := $(IUPSRC)/srcscintilla/scintilla410
 
 INCLUDES := $(SCINTILLA)/lexlib $(SCINTILLA)/src $(SCINTILLA)/include
 INCLUDES += $(IUPSRC)/srcscintilla/win32
@@ -15,45 +15,42 @@ LIBS += imm32
 DEFINES += UNICODE
 DEFINES += _WIN32 DISABLE_D2D NO_CXX11_REGEX
 
-SRCSCINTILLA_SRC = AutoComplete.cxx CallTip.cxx Catalogue.cxx CellBuffer.cxx CharClassify.cxx \
-               ContractionState.cxx Decoration.cxx Document.cxx Editor.cxx ExternalLexer.cxx \
-               Indicator.cxx KeyMap.cxx LineMarker.cxx PerLine.cxx PositionCache.cxx \
-               RESearch.cxx RunStyles.cxx ScintillaBase.cxx Selection.cxx Style.cxx \
-               UniConversion.cxx ViewStyle.cxx XPM.cxx CaseConvert.cxx CaseFolder.cxx \
-               EditModel.cxx EditView.cxx MarginView.cxx
+SRCSCINTILLA_SRC = \
+  AutoComplete.cxx  CharClassify.cxx      Editor.cxx         MarginView.cxx     Selection.cxx     \
+  CallTip.cxx       ContractionState.cxx  EditView.cxx       PerLine.cxx        Style.cxx         \
+  CaseConvert.cxx   DBCS.cxx              ExternalLexer.cxx  PositionCache.cxx  UniConversion.cxx \
+  CaseFolder.cxx    Decoration.cxx        Indicator.cxx      RESearch.cxx       ViewStyle.cxx     \
+  Catalogue.cxx     Document.cxx          KeyMap.cxx         RunStyles.cxx      XPM.cxx           \
+  CellBuffer.cxx    EditModel.cxx         LineMarker.cxx     ScintillaBase.cxx
 
-SRCSCINTILLA_LEXERS += LexA68k.cxx LexAbaqus.cxx LexAda.cxx LexAPDL.cxx \
-				LexAsn1.cxx LexASY.cxx LexAU3.cxx LexAVE.cxx LexAVS.cxx \
-				LexBaan.cxx LexBash.cxx LexBasic.cxx LexBullant.cxx LexCaml.cxx \
-				LexCLW.cxx LexCmake.cxx LexCOBOL.cxx LexCoffeeScript.cxx \
-				LexConf.cxx LexCPP.cxx LexCrontab.cxx LexCsound.cxx LexCSS.cxx \
-				LexD.cxx LexECL.cxx LexEiffel.cxx LexErlang.cxx LexEScript.cxx \
-				LexFlagship.cxx LexForth.cxx LexFortran.cxx LexGAP.cxx \
-				LexGui4Cli.cxx LexHaskell.cxx LexHTML.cxx LexInno.cxx \
-				LexKix.cxx LexLisp.cxx LexLout.cxx LexLua.cxx LexMagik.cxx \
-				LexMarkdown.cxx LexMatlab.cxx LexMetapost.cxx LexMMIXAL.cxx \
-				LexModula.cxx LexMPT.cxx LexMSSQL.cxx LexMySQL.cxx \
-				LexNimrod.cxx LexNsis.cxx LexOpal.cxx LexOScript.cxx \
-				LexPascal.cxx LexPB.cxx LexPerl.cxx \
-				LexPLM.cxx LexPO.cxx LexPOV.cxx LexPowerPro.cxx \
-				LexPowerShell.cxx LexProgress.cxx LexPS.cxx LexPython.cxx \
-				LexR.cxx LexRebol.cxx LexRuby.cxx LexScriptol.cxx \
-				LexSmalltalk.cxx LexSML.cxx LexSorcus.cxx LexSpecman.cxx \
-				LexSpice.cxx LexSQL.cxx LexTACL.cxx LexTADS3.cxx LexTAL.cxx \
-				LexTCL.cxx LexTCMD.cxx LexTeX.cxx LexTxt2tags.cxx LexVB.cxx \
-				LexVerilog.cxx LexVHDL.cxx LexVisualProlog.cxx LexYAML.cxx \
-				LexKVIrc.cxx LexLaTeX.cxx LexSTTXT.cxx LexRust.cxx \
-				LexDMAP.cxx LexDMIS.cxx LexBibTeX.cxx LexHex.cxx LexAsm.cxx \
-				LexRegistry.cxx
+SRCSCINTILLA_LEXERS += \
+  LexA68k.cxx          LexCPP.cxx        LexIndent.cxx    LexNull.cxx        LexSML.cxx           \
+  LexAbaqus.cxx        LexCrontab.cxx    LexInno.cxx      LexOpal.cxx        LexSorcus.cxx	  \
+  LexAda.cxx           LexCsound.cxx     LexJSON.cxx      LexOScript.cxx     LexSpecman.cxx	  \
+  LexAPDL.cxx          LexCSS.cxx        LexKix.cxx       LexPascal.cxx      LexSpice.cxx	  \
+  LexAsm.cxx           LexD.cxx          LexKVIrc.cxx     LexPB.cxx          LexSQL.cxx		  \
+  LexAsn1.cxx          LexDiff.cxx       LexLaTeX.cxx     LexPerl.cxx        LexSTTXT.cxx	  \
+  LexASY.cxx           LexDMAP.cxx       LexLisp.cxx      LexPLM.cxx         LexTACL.cxx	  \
+  LexAU3.cxx           LexDMIS.cxx       LexLout.cxx      LexPO.cxx          LexTADS3.cxx	  \
+  LexAVE.cxx           LexECL.cxx        LexLua.cxx       LexPOV.cxx         LexTAL.cxx		  \
+  LexAVS.cxx           LexEDIFACT.cxx    LexMagik.cxx     LexPowerPro.cxx    LexTCL.cxx		  \
+  LexBaan.cxx          LexEiffel.cxx     LexMake.cxx      LexPowerShell.cxx  LexTCMD.cxx	  \
+  LexBash.cxx          LexErlang.cxx     LexMarkdown.cxx  LexProgress.cxx    LexTeX.cxx		  \
+  LexBasic.cxx         LexErrorList.cxx  LexMatlab.cxx    LexProps.cxx       LexTxt2tags.cxx	  \
+  LexBatch.cxx         LexEScript.cxx    LexMaxima.cxx    LexPS.cxx          LexVB.cxx		  \
+  LexBibTeX.cxx        LexFlagship.cxx   LexMetapost.cxx  LexPython.cxx      LexVerilog.cxx	  \
+  LexBullant.cxx       LexForth.cxx      LexMMIXAL.cxx    LexR.cxx           LexVHDL.cxx	  \
+  LexCaml.cxx          LexFortran.cxx    LexModula.cxx    LexRebol.cxx       LexVisualProlog.cxx  \
+  LexCLW.cxx           LexGAP.cxx        LexMPT.cxx       LexRegistry.cxx    LexYAML.cxx	  \
+  LexCmake.cxx         LexGui4Cli.cxx    LexMSSQL.cxx     LexRuby.cxx				  \
+  LexCOBOL.cxx         LexHaskell.cxx    LexMySQL.cxx     LexRust.cxx				  \
+  LexCoffeeScript.cxx  LexHex.cxx        LexNimrod.cxx    LexScriptol.cxx			  \
+  LexConf.cxx          LexHTML.cxx       LexNsis.cxx      LexSmalltalk.cxx
 
-SRCSCINTILLA_LEXERS += LexBatch.cxx LexDiff.cxx LexErrorList.cxx \
-				LexMake.cxx LexNull.cxx LexProps.cxx LexJSON.cxx
-
-SRCSCINTILLA_LEXERS += LexEDIFACT.cxx LexIndent.cxx
-
-SRCSCINTILLA_LEXLIB = Accessor.cxx CharacterSet.cxx LexerBase.cxx LexerModule.cxx \
-                LexerNoExceptions.cxx LexerSimple.cxx PropSetSimple.cxx \
-                StyleContext.cxx WordList.cxx CharacterCategory.cxx
+SRCSCINTILLA_LEXLIB = \
+  Accessor.cxx           DefaultLexer.cxx  LexerNoExceptions.cxx  StyleContext.cxx  \
+  CharacterCategory.cxx  LexerBase.cxx     LexerSimple.cxx        WordList.cxx      \
+  CharacterSet.cxx       LexerModule.cxx   PropSetSimple.cxx
 
 SRCSCINTILLA_WIN32 = PlatWin.cxx ScintillaWin.cxx HanjaDic.cxx
 
@@ -78,7 +75,7 @@ OBJSCI_LEXLIB := $(patsubst %.cxx,$(ODIR)/%.o,$(SRCSCINTILLA_LEXLIB))
 OBJSCI_WIN := $(patsubst %.cxx,$(ODIR)/%.o,$(SRCSCINTILLA_WIN32))
 DEFINES := $(addprefix -D, $(DEFINES))
 
-COMPILE = $(CXX) $(CXXFLAGS) -c -o $@ $< $(INCLUDES) $(DEFINES)
+COMPILE = $(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $< $(INCLUDES) $(DEFINES)
 
 all : scintilla.dll
 

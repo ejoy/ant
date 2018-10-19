@@ -8,7 +8,7 @@ end
 local id_table = {}
 id_table[0] = {}
 local file_table = {}
-
+--todo dir.txt and file.txt, change to lua format
 --root is 0, next dir id start at 1
 local next_dir_id = 1
 
@@ -57,7 +57,7 @@ function filemanager:ReadDirStructure(path)
 end
 
 function filemanager:WriteDirStructure(path)
-    local file = io.open(path, "w")
+    local file = io.open(path, "w", true)
     io.output(file)
     for id, file_table in pairs(id_table) do
         io.write(id.."\n")
@@ -90,7 +90,7 @@ function filemanager:ReadFilePathData(path)
 end
 
 function filemanager:WriteFilePathData(path)
-    local file = io.open(path, "w")
+    local file = io.open(path, "w", true)
     io.output(file)
     for hash, real_path in pairs(file_table) do
         io.write(hash.." "..real_path.."\n")
@@ -183,6 +183,7 @@ function filemanager:AddFileRecord(hash, path)
     local real_path = string.sub(hash, 1, 3) .. "/" .. hash
 
     file_table[hash] = real_path
+    return real_path
 end
 
 return filemanager

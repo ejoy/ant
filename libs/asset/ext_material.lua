@@ -16,8 +16,16 @@ return function(filename)
             local t = type(v)
             if t == "string" then
                 material_info[k] = asset.load(v)
-            elseif t == "table" then
-                local mempath = string.format("mem://%s.%s", path.remove_ext(filename), k)
+			elseif t == "table" then
+				local function create_sub_mem_path(ff, extname)
+					local filepath = ff:match("mem://(.+)")
+					if filepath then
+						ff = filepath
+					end
+					return string.format("mem://%s.%s", path.remove_ext(ff), extname)
+				end
+
+                local mempath = create_sub_mem_path(filename, k)
                 seri.save(mempath, v)
                 material_info[k] = asset.load(mempath)
             end

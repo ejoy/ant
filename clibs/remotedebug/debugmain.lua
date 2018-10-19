@@ -3,8 +3,6 @@ assert(rdebug.status == "debugger")
 local aux = require "debugaux"
 local hook = require "debughook"
 
-print("I'm in debugger")
-
 local function hookpoint(source, line)
 	print("HOOKPOINT ->", aux.frame(1))
 end
