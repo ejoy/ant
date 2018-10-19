@@ -1,6 +1,8 @@
 include ../common.mk
 include bgfx_define.mk
 
+THREADINC=-I ../thread
+
 # Use make BGFXROOT=your_bgfx_path
 CFLAGS += -Wno-misleading-indentation -Wno-unused-but-set-variable
 
@@ -14,7 +16,7 @@ $(ODIR)/baselib.o : baselib.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -std=c++11 -c -DLUA_BUILD_AS_DLL -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC)
 
 $(ODIR)/luabgfx.o : luabgfx.c  | $(ODIR)
-	$(CC) $(CFLAGS) -c -DLUA_BUILD_AS_DLL -o $@ $^ $(LUAINC) $(BGFXINC)
+	$(CC) $(CFLAGS) -c -DLUA_BUILD_AS_DLL -o $@ $^ $(THREADINC) $(LUAINC) $(BGFXINC)
 
 $(ODIR)/luabgfxutil.o : luabgfxutil.c  | $(ODIR)
 	$(CC) $(CFLAGS) -c -DLUA_BUILD_AS_DLL -o $@ $^ $(LUAINC) $(BGFXINC)
