@@ -90,14 +90,10 @@ function add_entity_sys:init()
 		lightcomp.color = {1,1,1,1}
 		lightcomp.intensity = 2.0
 
-		--ms(lentity.rotation.v, {50, -30, 0}, "=")
-		--ms(lentity.rotation.v, {123.4, 234.22,28.2}, "=")
-		--ms(lentity.rotation.v, {123.4, -34.22,-28.2}, "=")
-		--ms(lentity.position.v, {5, 5, 2}, "=")
-		ms(lentity.rotation.v, {45, -135, 45}, "=")
-		ms(lentity.position.v, {100, 100, 100}, "=")
+		ms(lentity.rotation, {45, -135, 45}, "=")
+		ms(lentity.position, {100, 100, 100}, "=")
 
-		ms(lentity.scale.v, {1, 1, 1}, "=")
+		ms(lentity.scale, {1, 1, 1}, "=")
 
 		lentity.name.n = "directional_light"
 
@@ -142,11 +138,11 @@ function add_entity_sys:init()
         bunny.name.n = "bunny"
 
         -- should read from serialize file        
-        ms(bunny.scale.v, {5, 5, 5, 0}, "=")
-        ms(bunny.position.v, {0, 0, 3, 1}, "=")
-		ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
+        ms(bunny.scale, {5, 5, 5, 0}, "=")
+        ms(bunny.position, {0, 0, 3, 1}, "=")
+		ms(bunny.rotation, {0, -60, 0, 0}, "=")
 
-		bunny.mesh.path = "bunny.mesh"
+		bunny.mesh.ref_path = "bunny.mesh"
 		component_util.load_mesh(bunny)
      
 		bunny.material.content[1] = {path = "bunny.material", properties = {}}

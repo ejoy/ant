@@ -473,7 +473,7 @@ local function debug_use_virtual_camera()
     frame = frame + 1.0*dir 
     camera_eye[3] = camera_eye[3] + frame + 40
     local camera_at = {-40,10,0}
-    camera_proj = stack( { type = "proj",n = 0.1,  f = 2000 , fov = 60, aspect = ctx.width/ctx.height } , "P")
+    camera_proj = stack( { type = "mat",n = 0.1,  f = 2000 , fov = 60, aspect = ctx.width/ctx.height } , "P")
     camera_view = stack( camera_eye,camera_at,"lP")   
     print("virtual camera pos ",camera_eye[1],camera_eye[2],camera_eye[3])
     return camera_view,camera_proj 

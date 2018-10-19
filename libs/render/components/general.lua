@@ -37,7 +37,7 @@ ecs.component "viewid" {
 }
 
 ecs.component "mesh" {
-	path = {
+	ref_path = {
 		type = "userdata",
 		default = "",
 		save = function (v, arg)
