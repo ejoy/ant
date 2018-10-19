@@ -98,73 +98,6 @@ local function which_entity_hitted(pickup_entity)
     return found_eid
 end
 
-function pickup:pick(p_eid, current_frame_num, select_filter)
-    local pickup_entity = world[p_eid]
-    if self.reading_frame == nil then        
-		bind_frame_buffer(pickup_entity)
-		world:change_component(-1, "create_selection_filter")
-        world:notify()
-        --print("select_filter----",#select_filter.result)
-        self:render_to_pickup_buffer(pickup_entity, select_filter)
-        self.reading_frame = self:readback_render_data(pickup_entity)        
-    end
-
-    if self.reading_frame == current_frame_num then
-        local comp = pickup_entity.pickup
-        local eid = self:which_entity_hitted(pickup_entity)
-        if eid then
-            local name = assert(world[eid]).name.n
-            print("pick entity id : ", eid, ", name : ", name)
-        else
-            print("not found any eid")
-        end
-
-        comp.last_eid_hit = eid
-        world:change_component(p_eid, "pickup")
-        world.notify()
-        self.reading_frame = nil
-    end
-    self.is_picking = self.reading_frame ~= nil
-end
-
----[[
--- pickup view
-local pickup_view_sys = ecs.system "pickup_view"
-
-pickup_view_sys.singleton "math_stack"
-pickup_view_sys.singleton "message_component"
-
-pickup_view_sys.depend "iup_message"
-pickup_view_sys.dependby "view_system"
-
-function pickup_view_sys:init()
-    --[@    for message callback
-    local msg = {}
-    function msg:button(b, p, x, y)        
-        if b == "LEFT" and p then
-            pickup.clickpt = point2d(x, y)
-        end
-    end
-    local observers = self.message_component.msg_observers
-    observers:add(msg)
-    --@]
-end
-
-local function get_main_camera_viewproj_mat(ms, maincamera)      
-    local proj = mu.proj(ms, assert(maincamera.frustum))
-    -- [pos, dir] ==> viewmat --> viewmat * projmat ==> viewprojmat
-    -- --> invert(viewprojmat) ==>invViewProjMat
-    local dir = ms(assert(maincamera.rotation).v, "dP")
-    return ms(assert(maincamera.position).v, dir, "L", proj, "*iP")
-end
-
-local function click_to_eye_and_dir(ms, ndcX, ndcY, invVP)    
-    local eye = ms({ndcX, ndcY, 0, 1}, invVP, "%P")
-    local at = ms({ndcX, ndcY, 1, 1}, invVP, "%P")
-    local dir = ms(at, eye, "-nP")
-    return eye, dir
-end
-
 local function update_viewinfo(ms, e, clickpt)    
 	local maincamera = world:first_entity("main_camera")  
 	local mc_vr = maincamera.view_rect
@@ -186,15 +119,6 @@ local function update_viewinfo(ms, e, clickpt)
 
 end
 
-function pickup_view_sys:update()
-    local clickpt = pickup.clickpt
-    if clickpt ~= nil then
-        local pu_entity = world:first_entity("pickup")        
-        --update_viewinfo(self.math_stack, pu_entity, clickpt)
-
-        pickup.is_picking = true
-        pickup.clickpt = nil
-    end
 -- update material system
 local pickup_material_sys = ecs.system "pickup_material_system"
 
@@ -222,7 +146,6 @@ function pickup_material_sys:update()
 		end
 	end
 end
--- ]]
 
 -- pickup_system
 ecs.component "pickup"{}
@@ -324,10 +247,6 @@ function pickup_sys:init()
 end
 
 function pickup_sys:update()
-    if pickup.is_picking then        
-        local eid = assert(world:first_entity_id("pickup"))    
-        -- pickup:pick(eid, self.frame_stat.frame_num, self.select_filter)
-    end
 	local remove_pickup_eids = {}
 	for _, eid in world:each("pickup") do
 		local e = world[eid]
@@ -345,4 +264,3 @@ function pickup_sys:update()
 		world:remove_entity(eid)
 	end
 end
-
