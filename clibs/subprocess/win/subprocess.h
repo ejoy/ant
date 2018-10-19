@@ -1,0 +1,78 @@
+#pragma once
+
+#include <Windows.h>
+#include <array>
+#include <map>
+#include <set>
+#include "../dynarray.h"
+
+namespace base { namespace win { namespace subprocess {
+    namespace ignore_case {
+        template <class T> struct less;
+        template <> struct less<wchar_t> {
+            bool operator()(const wchar_t& lft, const wchar_t& rht) const
+            {
+                return (towlower(static_cast<wint_t>(lft)) < towlower(static_cast<wint_t>(rht)));
+            }
+        };
+        template <> struct less<std::wstring> {
+            bool operator()(const std::wstring& lft, const std::wstring& rht) const
+            {
+                return std::lexicographical_compare(lft.begin(), lft.end(), rht.begin(), rht.end(), less<wchar_t>());
+            }
+        };
+    }
+
+    enum class console {
+        eInherit,
+        eDisable,
+        eNew,
+    };
+    enum class stdio {
+        eInput,
+        eOutput,
+        eError,
+    };
+
+    class spawn;
+    class process : public PROCESS_INFORMATION {
+    public:
+        process(spawn& spawn);
+        process(process& pi);
+        ~process();
+        bool     is_running();
+        bool     kill(uint32_t timeout);
+        uint32_t exit_code();
+        uint32_t wait();
+        bool     wait(uint32_t timeout);
+        uint32_t get_id() const;
+    };
+
+    class spawn {
+    public:
+        spawn();
+        ~spawn();
+        bool set_console(console type);
+        bool hide_window();
+        void redirect(stdio type, FILE* f);
+        void env_set(const std::wstring& key, const std::wstring& value);
+        void env_del(const std::wstring& key);
+        bool exec(const wchar_t* application, const std::dynarray<std::wstring>& args, const wchar_t* cwd);
+        PROCESS_INFORMATION& pi();
+
+    private:
+        std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>> set_env_;
+        std::set<std::wstring, ignore_case::less<std::wstring>>               del_env_;
+        STARTUPINFOW            si_;
+        PROCESS_INFORMATION     pi_;
+        bool                    inherit_handle_;
+        DWORD                   flags_;
+    };
+
+    namespace pipe {
+        std::pair<FILE*, FILE*> open();
+        int                     peek(FILE* f);
+    }
+}}
+namespace subprocess = win::subprocess;
+}
