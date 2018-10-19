@@ -1,6 +1,7 @@
 #include "Bullet2CollisionSdk.h"
 #include "btBulletCollisionCommon.h"
 
+#define  _DEBUG_OUTPUT_ 
 struct Bullet2CollisionSdkInternalData
 {
 	btCollisionConfiguration* m_collisionConfig;
@@ -56,6 +57,12 @@ void Bullet2CollisionSdk::deleteCollisionWorld(plCollisionWorldHandle worldHandl
 		delete m_internalData->m_collisionConfig;
 		m_internalData->m_collisionConfig = 0;
 	}
+}
+// addition cube shape 
+plCollisionShapeHandle Bullet2CollisionSdk::createCubeShape(plCollisionWorldHandle world,plVector3 size)
+{
+	btBoxShape *boxShape = new btBoxShape( btVector3(size[0],size[1],size[2]) );
+	return (plCollisionShapeHandle) boxShape;
 }
 
 plCollisionShapeHandle Bullet2CollisionSdk::createSphereShape(plCollisionWorldHandle /*worldHandle*/, plReal radius)
@@ -180,8 +187,37 @@ void Bullet2CollisionSdk::setCollisionObjectTransform(plCollisionWorldHandle /*w
 	btTransform tr;
 	tr.setOrigin(btVector3(position[0], position[1], position[2]));
 	tr.setRotation(btQuaternion(orientation[0], orientation[1], orientation[2], orientation[3]));
+#ifdef _DEBUG_OUTPUT_
+	printf("setCollisionTransform: = \n");
+	printf("pos = {%0.2f,%0.2f,%0.2f}\n",position[0], position[1], position[2]);
+	printf("rot = {%0.2f,%0.2f,%0.2f,%0.2f}\n",orientation[0], orientation[1], orientation[2], orientation[3]);
+#endif 	
 	colObj->setWorldTransform(tr);
 }
+
+// addition protocol for transform 
+void Bullet2CollisionSdk::setCollisionObjectPosition( plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
+												 plVector3 position )
+{
+	btCollisionObject *colObj = (btCollisionObject*) bodyHandle;
+	btTransform &tr = colObj->getWorldTransform();
+	tr.setOrigin( btVector3( position[0],position[1],position[2]) );
+	colObj->setWorldTransform(tr);
+#ifdef _DEBUG_OUTPUT_				 
+	printf("set object pos = (%0.2f,%0.2f,%0.2f)\n",position[0],position[1],position[2]);
+#endif 
+}
+
+void Bullet2CollisionSdk::setCollisionObjectRotation( plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
+												 plQuaternion orientation )
+{
+	btCollisionObject *colObj = (btCollisionObject*) bodyHandle;
+	btTransform &tr = colObj->getWorldTransform();
+	tr.setRotation( btQuaternion(orientation[0],orientation[1],orientation[2],orientation[3]) );
+	colObj->setWorldTransform(tr);
+}
+
+
 
 struct Bullet2ContactResultCallback : public btCollisionWorld::ContactResultCallback
 {
@@ -272,9 +308,11 @@ bool Bullet2CollisionSdk::raycast( plCollisionWorldHandle worldHandle, plVector3
 			// convert result from bullet to interface 
 			return true;
 		} 
+#ifdef _DEBUG_OUTPUT_
 		printf("raycast from(%.02f,%.02f,%.02f) to(%.02f,%.02f,%.02f)---> \n",
 				rayFrom[0],rayFrom[1],rayFrom[2],
 				rayTo[0],rayTo[1],rayTo[2]);
+#endif 				
 	}		
 	return false;
 }
@@ -302,10 +340,11 @@ void Bullet2NearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher&
 	btCollisionObject* colObj1 = (btCollisionObject*)collisionPair.m_pProxy1->m_clientObject;
 	plCollisionObjectHandle obA = (plCollisionObjectHandle)colObj0;
 	plCollisionObjectHandle obB = (plCollisionObjectHandle)colObj1;
-	printf("Bullet2Near Callback In Calculate....\n" );
 	if (gTmpFilter)
 	{
+#ifdef _DEBUG_OUTPUT_		
 		printf("User Callback Calculate....\n" );
+#endif 		
 		gTmpFilter(gCollisionSdk, gCollisionWorldHandle, gUserData, obA, obB);
 		gNearCallbackCount++;
 	}
@@ -317,7 +356,6 @@ void Bullet2CollisionSdk::collideWorld(plCollisionWorldHandle worldHandle,
 	btCollisionWorld* world = (btCollisionWorld*)worldHandle;
 	//chain the near-callback
 	gTmpFilter = filter;
-	printf("do world collision, gTmpFilter =%p.\n",gTmpFilter);	
 	gNearCallbackCount = 0;
 	gUserData = userData;
 	gCollisionSdk = (plCollisionSdkHandle)this;
@@ -325,7 +363,9 @@ void Bullet2CollisionSdk::collideWorld(plCollisionWorldHandle worldHandle,
 	m_internalData->m_dispatcher->setNearCallback(Bullet2NearCallback);
 	world->performDiscreteCollisionDetection();
 	gTmpFilter = 0;
+#ifdef _DEBUG_OUTPUT_	
 	printf("do world collision, performDiscreteCollisionDetection.../-\\-/-\\...\n");
+#endif 	
 }
 // drop function 
 void Bullet2CollisionSdk::collideWorld_L(plCollisionWorldHandle worldHandle,

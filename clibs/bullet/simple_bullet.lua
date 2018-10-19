@@ -12,7 +12,7 @@ local shape_capsule = bullet.create_capsuleShape( sdk,world,2,6,1)
 local shape_compound = bullet.create_compoundShape( sdk,world) 
 
 local entity_plane = { "plane entity " }
-local object_plane = bullet.create_collisionObject(sdk,world,shape_plane,{0,3,0},{0,0,0,1},100, entity_plane )
+local object_plane = bullet.create_collisionObject(sdk,world,shape_plane,{0,0,0},{0,0,0,1},100, entity_plane )
 bullet.add_collisionObject(sdk,world,object_plane)
 
 print("plane",shape_plane)
@@ -52,15 +52,37 @@ end
   
 print("world collide begin ----")
 print("")
-bullet.worldCollide(sdk,world);
+local hit_count,points = bullet.worldCollide(sdk,world);
 print("world collide end ---")
+if hit_count > 0 then 
+    print("collide multiObject in world: find ".. hit_count.."contact points")
+    for i =1 ,hit_count do 
+        print("point idx =",i)
+        print("ptOnAWorld:",points[i].ptOnAWorld.x, points[i].ptOnAWorld.y, points[i].ptOnAWorld.z)
+        print("ptOnBworld:",points[i].ptOnBWorld.x,points[i].ptOnBWorld.y,points[i].ptOnBWorld.z)
+        print("normalOnB:",points[i].normalOnB.x,points[i].normalOnB.y,points[i].normalOnB.z)
+        print("distance:",points[i].distance)        
+     end 
+end 
+
 print("")
 
 print("simple collide objA to objB")
-bullet.collide(sdk,world, objs[1],objs[2] )
+hit_count ,points = bullet.collide(sdk,world, objs[1],objs[2] )
+if hit_count > 0 then 
+      print("collide a to b: find ".. hit_count.." points")
+      for i =1 ,hit_count do 
+          print("point idx =",i)
+          print("ptOnAWorld:",points[i].ptOnAWorld.x, points[i].ptOnAWorld.y, points[i].ptOnAWorld.z)
+          print("ptOnBworld:",points[i].ptOnBWorld.x,points[i].ptOnBWorld.y,points[i].ptOnBWorld.z)
+          print("normalOnB:",points[i].normalOnB.x,points[i].normalOnB.y,points[i].normalOnB.z)
+          print("distance:",points[i].distance)        
+       end 
+end 
 print("");
 
-local rayFrom = { 1.5, 5, 0}
+-- raycast 
+local rayFrom = { 1.5, 20, 0}
 local rayTo = {  1.5, -5, 0 }
 local hit, result = bullet.raycast(sdk,world,rayFrom,rayTo)
 if hit == true  then 
@@ -77,11 +99,101 @@ if hit == true  then
 else 
     print("--- hit nothing, rayInfo = ", result )
 end 
+
 print("")
+-- move up 3 unit
+bullet.set_collisionObjectTransform(sdk,world,object_plane ,{0,3,0},{0,0,0,1} )
+hit, result = bullet.raycast(sdk,world,rayFrom,rayTo)
+if hit == true  then 
+    print("move plane to {0,3,0}")
+    print("+++ hit object, entity id", result.hitObjId )
+    print("hitFraction", result.hitFraction)
+    print("hitNormalWorld",result.hitNormalWorld.x,
+                           result.hitNormalWorld.y,
+                           result.hitNormalWorld.z)
+    print("hitPointWorld", result.hitPointWorld.x,
+                           result.hitPointWorld.y,
+                           result.hitPointWorld.z)
+
+    if result.hitPointWorld.y > -0.000001 and result.hitPointWorld.y< 0.000001 then 
+        print("equal zero")
+    end 
+    print("filterGroup", result.filterGroup)
+    print("filterMask", result.filterGroup)
+else 
+    print("--- hit nothing, rayInfo = ", result )
+end 
+
+print("")
+-- move up 6 unit
+bullet.set_collisionObjectPos(sdk,world,object_plane,{0,6,0})
+hit, result = bullet.raycast(sdk,world,rayFrom,rayTo)
+if hit == true  then 
+    print("move plane to {0,6,0}")
+    print("+++ hit object, entity id", result.hitObjId )
+    print("hitFraction", result.hitFraction)
+    print("hitNormalWorld",result.hitNormalWorld.x,
+                           result.hitNormalWorld.y,
+                           result.hitNormalWorld.z)
+    print("hitPointWorld", result.hitPointWorld.x,
+                           result.hitPointWorld.y,
+                           result.hitPointWorld.z)
+    print("filterGroup", result.filterGroup)
+    print("filterMask", result.filterGroup)
+else 
+    print("--- hit nothing, rayInfo = ", result )
+end 
+print("")
+
+-- rotate 
+local invRayFrom = { 1.5, -20, 0}
+local invRayTo = {  1.5,   20, 0 }
+bullet.set_collisionObjectRot(sdk,world,object_plane,{0.7,0,0.7,0})
+hit, result = bullet.raycast(sdk,world,invRayFrom,invRayTo)
+if hit == true  then 
+    print("rotate plane to {0,-6,0}")
+    print("+++ hit object, entity id", result.hitObjId )
+    print("hitFraction", result.hitFraction)
+    print("hitNormalWorld",result.hitNormalWorld.x,
+                           result.hitNormalWorld.y,
+                           result.hitNormalWorld.z)
+    print("hitPointWorld", result.hitPointWorld.x,
+                           result.hitPointWorld.y,
+                           result.hitPointWorld.z)
+    print("filterGroup", result.filterGroup)
+    print("filterMask", result.filterGroup)
+else 
+    print("--- hit nothing, rayInfo = ", result )
+end 
+print("")
+
+print("")
+-- collide between thin box and capsule 
+local entity = { "any entity" }
+local ent_box = 10
+local ent_capsule = 20
+local tshape_box = bullet.create_cubeShape( sdk,world,{3,0.5,3} )
+local tshape_capsule = bullet.create_capsuleShape( sdk,world,2,6,1)
+local tobj_box = bullet.create_collisionObject(sdk,world,tshape_box,{0,0,0},{0,0,0,1}, ent_box, entity )
+local tobj_capsule = bullet.create_collisionObject(sdk,world,tshape_capsule,{0,5.5,0},{0,0,0,1},ent_box,entity)
+
+hit_count,points = bullet.collide(sdk,world, tobj_box, tobj_capsule )
+if hit_count > 0 then 
+    print("box hit capsule .."..hit_count.." contact points")
+    for i =1 ,hit_count do 
+        print("point idx =",i)
+        print("ptOnAWorld:",points[i].ptOnAWorld.x, points[i].ptOnAWorld.y, points[i].ptOnAWorld.z)
+        print("ptOnBworld:",points[i].ptOnBWorld.x,points[i].ptOnBWorld.y,points[i].ptOnBWorld.z)
+        print("normalOnB:",points[i].normalOnB.x,points[i].normalOnB.y,points[i].normalOnB.z)
+        print("distance:",points[i].distance)        
+     end 
+end 
+print("")
+
+-- quaternion above user-unfriendly
 
 bullet.delete_shape(sdk,world,shape_sphere);
 bullet.delete_collisionObject(sdk,world,object);
-
 
 print("")
 bullet.destroy_world( sdk,world )

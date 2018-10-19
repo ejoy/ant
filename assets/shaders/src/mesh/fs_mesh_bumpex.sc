@@ -7,6 +7,8 @@ $input v_texcoord0, v_lightdir, v_viewdir, v_normal
 SAMPLER2D(s_basecolor,  0);
 SAMPLER2D(s_normal, 1);
 
+SAMPLER2D(s_shadowMap0,4);
+
 uniform vec4 u_specularColor;
 uniform vec4 u_specularLight;
 
@@ -15,7 +17,7 @@ vec4 calc_lighting_BH(vec3 normal, vec3 lightdir, vec3 viewdir,
 						float gloss)
 {
 	float ndotl = max(0, dot(normal, lightdir));
-	
+
 	float hdotn = saturate(dot(normal,normalize(viewdir + lightdir)));
 	float shininess = specularColor.w;   									 // spec shape
 	float specularFactor = pow(hdotn, shininess * 128) * u_specularLight.x;  // spec intensity 

@@ -70,6 +70,7 @@ function general_editor_entites:init()
         local grid = world[gridid]
         grid.name.n = "grid"
         mu.identify_transform(ms, grid)
+        ms( grid.scale.v, { 0.01,0.01,0.01,0},"=" )
 
         local function create_grid_line_points(w, h, unit)
             local t = {"fffd"}

@@ -50,6 +50,7 @@ function vp_clear_sys:update()
 	for _, eid in world:each("clear_component") do
 		local entity = world[eid]
 		local vid = entity.viewid
+
 		if vid then
 			local id = vid.id
 			local cc = entity.clear_component
@@ -88,6 +89,7 @@ function view_sys:update()
 		local ms = self.math_stack		
 		local view, proj = mu.view_proj_matrix(ms, entity)		
 		bgfx.set_view_transform(vid, ms(view, "m"), ms(proj, "m"))
+		local e = ms(entity.position.v,"T")
 	end
 end
 --@]

@@ -90,31 +90,31 @@ function add_entity_sys:init()
 		lightcomp.color = {1,1,1,1}
 		lightcomp.intensity = 2.0
 
-		--ms(lentity.rotation, {50, -30, 0}, "=")
-		--ms(lentity.rotation, {123.4, 234.22,28.2}, "=")
-		ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")
-		ms(lentity.position, {2, 5, 2}, "=")
-		ms(lentity.scale, {0.01, 0.01, 0.01}, "=")
+		--ms(lentity.rotation.v, {50, -30, 0}, "=")
+		--ms(lentity.rotation.v, {123.4, 234.22,28.2}, "=")
+		--ms(lentity.rotation.v, {123.4, -34.22,-28.2}, "=")
+		--ms(lentity.position.v, {5, 5, 2}, "=")
+		ms(lentity.rotation.v, {45, -135, 45}, "=")
+		ms(lentity.position.v, {100, 100, 100}, "=")
+
+		ms(lentity.scale.v, {1, 1, 1}, "=")
 
 		lentity.name.n = "directional_light"
-
 
 		-- add tested for ambient 
 		local am_eid = lu.create_ambient_light_entity(world)
 		local am_entity = world[ am_eid]
 		local ambient_comp = am_entity.ambient_light.data
-		ambient_comp.mode = "color" -- "gradient"
+		ambient_comp.mode = "gradient"
 		ambient_comp.skycolor = {1,1,1,1}
 		ambient_comp.midcolor  = {0.9,0.9,1,1}
-		ambient_comp.groundcolor  = {0.60,0.74,0.68,1}
+		ambient_comp.groundcolor  = {0.50,0.74,0.68,1}
 		--ambient_comp.skycolor = {0.8,0.8,0.8,1} --{0.28,0,1,1}
 		--ambient_comp.midcolor = {0,1,0,1}
 		--ambient_comp.groundcolor = {0,0,1,1}
 		--ambient_comp.factor = 0.25
 		lentity.name.n = "ambient_light"
 		print("-------ambient entity  "..am_entity.name.n..'  '..am_eid)
-
-
 
 		component_util.load_mesh(lentity, "sphere.mesh")
 		local sphere_fn = "mem://light_bulb.material"
@@ -140,13 +140,13 @@ function add_entity_sys:init()
 			"can_select")
         local bunny = world[bunny_eid]
         bunny.name.n = "bunny"
-     
-        -- should read from serialize file
-        ms(bunny.scale, {2, 2, 2, 0}, "=")
-        ms(bunny.position, {0, 0, 0, 1}, "=")
-		ms(bunny.rotation, {0, -60, 0, 0}, "=")
-     
-		bunny.mesh.ref_path = "bunny.mesh"
+
+        -- should read from serialize file        
+        ms(bunny.scale.v, {5, 5, 5, 0}, "=")
+        ms(bunny.position.v, {0, 0, 3, 1}, "=")
+		ms(bunny.rotation.v, {0, -60, 0, 0}, "=")
+
+		bunny.mesh.path = "bunny.mesh"
 		component_util.load_mesh(bunny)
      
 		bunny.material.content[1] = {path = "bunny.material", properties = {}}
