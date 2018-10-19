@@ -9,10 +9,17 @@ local stack = math3d.new()
 local testcube = {}
 local init_flag = false
 
-function testcube.init(width, height, app_dir, bundle_path)
+function testcube.init(window_handle, width, height)
 
     ctx.width = width
     ctx.height = height
+    bgfx.set_platform_data({nwh = window_handle})
+    bgfx.init()
+
+    bgfx.set_debug "T"
+    bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
+    bgfx.set_view_rect(0, 0, 0, width, height)
+    bgfx.reset(width, height, "v")
 
     local projmat = stack({type = "mat", fov = 60, aspect = ctx.width/ctx.height, n=0.1, f=100}, "m")
     local viewmat = stack({0,0,-35},{0,0,0}, "lm")
@@ -49,9 +56,6 @@ function testcube.init(width, height, app_dir, bundle_path)
         0, 1, 2, 3, 7, 1, 5, 0, 4, 2, 6, 7, 4, 5,
     }
 
-    ctx.width = width
-    ctx.height = height
-
     init_flag = true
 end
 
@@ -80,6 +84,7 @@ function testcube.terminate()
         bgfx.destroy(ctx.vb)
         bgfx.destroy(ctx.ib)
         bgfx.destroy(ctx.prog)
+        bgfx.shutdown()
     end
 end
 

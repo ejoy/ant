@@ -287,7 +287,6 @@ function testlua.init(window_handle, width, height, ...)
     ctx.width = width
     ctx.height = height
 
-    ---[[
     bgfx.set_platform_data({nwh = window_handle})
     bgfx.init()
 
@@ -300,9 +299,6 @@ function testlua.init(window_handle, width, height, ...)
     ctx.width = width
     ctx.height = height
     init_flag = true
-
-    local bgfx_cb = bgfx.bgfx_cb
-    --]]
 end
 
 function testlua.terminate()

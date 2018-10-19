@@ -2,6 +2,8 @@ local editor_mainwindow = require 'editor.controls.window'
 local fs = require "cppfs"
 local asset = require "asset"
 
+local server_main = require 'editor.controls.servermain'
+
 local configDir = (os.getenv 'UserProfile') .. '\\.ant\\config\\'
 
 local iupex = {}
@@ -53,12 +55,13 @@ local guiMain = iupex.menu(
         {
             {"Open Map...", "OpenMap"},
             {"Open Recent", guiRecent},
+            {"Run file", "RunFile"},
         } 
     },
 }, bind)
 
 local guiOpenMap = iup.GetChild(iup.GetChild(guiMain, 0), 0)
-
+local guiRunFile = iup.GetChild(iup.GetChild(iup.GetChild(guiMain, 0), 0), 2)
 local openMap
 
 local function recentSave()
@@ -127,6 +130,7 @@ end
 function openMap(path)
     guiOpenMap.active = "OFF"
     guiRecent.active = "OFF"
+    guiRunFile.active = "ON"
     recentAddAndUpdate(path)
     local modules = asset.load(path)
     local editormodules = {
@@ -139,6 +143,21 @@ function openMap(path)
     }
     table.move(editormodules, 1, #editormodules, #modules+1, modules)
     editor_mainwindow:new_world(modules)
+--[[
+    local server_modules = {
+        "debugserver.ui_command_component",
+        "debugserver.filewatch_system",
+        "debugserver.vfs_repo_component",
+        "debugserver.vfs_repo_system",
+        "debugserver.io_system",
+        "debugserver.io_pkg_component",
+        "debugserver.io_pkg_handle_system",
+        "debugserver.remote_log_system",
+        "debugserver.server_debug_system",
+        "debugserver.io_pkg_handle_func_component",
+    }
+    server_main:new_world(server_modules)
+--]]
 end
 
 function CMD.OpenMap(e)
@@ -152,6 +171,26 @@ function CMD.OpenMap(e)
     filedlg:popup(iup.CENTERPARENT, iup.CENTERPARENT)
     if tonumber(filedlg.status) ~= -1 then
         openMap(filedlg.value)
+    end
+
+    filedlg:destroy()
+end
+
+local function runFile(file_path)
+--    server_main:new_ui_command({"RUN", file_path})
+end
+
+function CMD.RunFile(e)
+    local filedlg = iup.filedlg
+    {
+        dialogtype = "OPEN",
+        filter = "*.lua",
+        filterinfo = "Lua File",
+        parentdialog = iup.GetDialog(e),
+    }
+    filedlg:popup(iup.CENTERPARENT, iup.CENTERPARENT)
+    if tonumber(filedlg.status) ~= -1 then
+        runFile(filedlg.value)
     end
 
     filedlg:destroy()

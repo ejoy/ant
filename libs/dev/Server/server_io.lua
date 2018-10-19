@@ -1,5 +1,3 @@
-local require = import and import(...) or require
-local log = log and log(...) or print
 local pack = require "pack"
 
 local lsocket = require "lsocket"
@@ -105,48 +103,6 @@ function server:HandlePackage(response_pkg, id, self)
         self.io:Send(id, response_pkg)
 
         return "DONE"
-
-    elseif cmd_type == "DIR" then
-        local list_path = response_pkg[2]
-        local file_num = response_pkg[3]
-        local dir_table = response_pkg[4]
-        local offset = response_pkg[5]
-        if not offset then
-            --start from the first package
-            offset = 1
-        end
-
-        --for i = 1, MAX_PACKAGE_NUM do
-        while true do
-            local progress = tostring(offset).."/"..tostring(file_num)
-            local file_name = dir_table[offset]
-
-            --for now, send one each loop
-            --TODO:add hash
-            local client_package = {cmd_type, list_path, progress, file_name}
-
-            local pack_l = pack.pack(client_package)
-            --local nbytes = fd:send(pack_l)
-            local nbytes = SendData(id, pack_l)
-            --if fd write is full
-            if not nbytes then
-                break
-            end
-
-            offset = offset + 1
-
-            if offset > file_num then
-                break
-            end
-
-        end
-
-        response_pkg[5] = offset
-        if offset > file_num then
-            return "DONE"
-        else
-            return "RUNNING"
-        end
     else
         print("cmd: " .. cmd_type .." not support yet")
         return "DONE"
@@ -286,7 +242,9 @@ function server:CheckNewDevice()
     local current_devices = libimobiledevicelua.GetDevices()
 
     for k, udid in pairs(current_devices) do
+        connected_devices[udid] = true
         --new device
+        --[[
         if connected_devices[udid] == nil then
 
             local full_id = udid .. ":8888"
@@ -301,7 +259,7 @@ function server:CheckNewDevice()
         else
             connected_devices[udid] = true
         end
-
+--]]
     end
 
     --if device no longer connected, kick the device
@@ -327,9 +285,8 @@ function server:mainloop(timeout)
     --find new disconnection
     if n_disconnect and #n_disconnect > 0 then
         for _, v in ipairs(n_disconnect) do
-            print(pcall(self.kick_client, self, v))
+            --print(pcall(self.kick_client, self, v))
             self:kick_client(v)
-
         end
     end
 

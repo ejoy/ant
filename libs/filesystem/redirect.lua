@@ -42,12 +42,20 @@ local function dispatch()
 	end
 end
 
+redirectfd_table = {}
 function redirect.callback(what, f)
 	local h = handle[what]
 	if not h then
-		local sfd = assert(stdhandle[what])
+		local sfd = stdhandle[what]		
 		local ifd,ofd = create_pipe()
-		redirectfd.init(ofd:info().fd, sfd)
+
+		--if is standard output then
+		if sfd then
+			redirectfd.init(ofd:info().fd, sfd)
+		else
+			redirectfd_table[what] = {ifd = ifd, ofd = ofd}
+		end
+
 		handle[what] = { input = ifd, output = ofd }
 		h = ifd
 		table.insert(handle_set, ifd)

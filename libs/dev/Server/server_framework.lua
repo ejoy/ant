@@ -5,16 +5,6 @@ local lanes = require "lanes"
 if lanes.configure then lanes.configure({with_timers = false, on_state_create = custom_on_state_create}) end
 local linda = lanes.linda()
 
-function log(name)
-	local tag = "[" .. name .. "] "
-	local write = io.write
-	return function(fmt, ...)
-		write(tag)
-		write(string.format(fmt, ...))
-		write("\n")
-	end
-end
-
 local resp_table = {}
 
 local IOCommand_name = {"log", "response"}
