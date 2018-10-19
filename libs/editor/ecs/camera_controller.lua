@@ -33,7 +33,12 @@ local camera_util = require "render.camera.util"
 
 
 
-local action = { FORWARD = 0,BACKWARD = 0,LEFT = 0,RIGHT = 0,ROTX = 0,ROTY=0 }
+local action_type = { 
+	FORWARD = false, BACKWARD = false,
+	LEFT = false, RIGHT = false,
+	UPWARD = false, DOWNWARD = false,
+	ROTX = false, ROTY = false
+}
 local camera_controller_system = ecs.system "camera_controller"
 camera_controller_system.singleton "math_stack"
 camera_controller_system.singleton "message_component"
@@ -50,7 +55,9 @@ function camera_controller_system:init()
 	local message = {}
 
     local last_xy
-    local button_status = {}
+	local button_status = {}
+	-- luacheck: ignore self
+	-- luacheck: ignore status
     function message:button(btn, p, x, y, status)
         button_status[btn] = p
         last_xy = point2d(x, y)
@@ -60,9 +67,9 @@ function camera_controller_system:init()
 		local xy = point2d(x, y)
 		if last_xy then
 			if status.RIGHT then
-				local speed = message.move_speed * 0.1
-				delta = (xy - last_xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
-				camera_util.rotate(ms, camera, delta.x, delta.y)				
+				local speed = move_speed * 0.1
+				local delta = (xy - last_xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
+				camera_util.rotate(ms, camera, delta.x, delta.y)
 			end 
 		end
 
@@ -72,53 +79,18 @@ function camera_controller_system:init()
 			
 	function message:keypress(c, p, status)
 		if c == nil then return end
-		
-		do
-			if p then
-				local ms = message.ms
 
-				local move_step = message.move_speed
-				local rot = camera.rotation.v
-				local eye = camera.position.v
+		local action_name_mappers = {
+			a = "LEFT", d = "RIGHT",
+			w = "FORWARD", s = "BACKWARD",
+			q = "DOWNWARD", e = "UPWARD",
+		}
 
-				local rightbtn_down = button_status.RIGHT
-				local leftbtn_down = button_status.LEFT
+		local lowerC = c:lower()
 
-				local nomouse_down = not (rightbtn_down or leftbtn_down)
-				-- if nomouse_down and (c == "r" or c == "R") then
-				-- 	ms(	eye, {0, 0, -10}, "=")
-				-- 	ms( rot, {0, 0, 0}, "=")
-				-- 	return 
-				-- end
-				if rightbtn_down then					
-					if (c == "a" or c == "A")  then	
-						action.LEFT = 1				
-					elseif c == "d" or c == "D" then
-						action.RIGHT = 1									
-					elseif c == "w" or c == "W" then	
-						action.FORWARD = 1
-					elseif c == "s" or c == "S" then					
-						action.BACKWARD = 1
-					elseif c == "q" or c == "Q" then
-						dy = -move_step
-					 elseif c == "e" or c == "E" then
-						dy = move_step
-					end
-					--camera_util.move(ms, camera, dx, dy, dz) -- don't do here 
-				end
-			else
-				if (c == "a" or c == "A")  then					
-					action.LEFT = 0
-				elseif c == "d" or c == "D" then
-					action.RIGHT = 0						
-				elseif c == "w" or c == "W" then	
-					action.FORWARD = 0
-				elseif c == "s" or c == "S" then
-					action.BACKWARD = 0					
-				elseif c == "q" or c == "Q" then
-				elseif c == "e" or c == "E" then
-				end
-			end 
+		local rightbtn_down = button_status.RIGHT
+		if rightbtn_down then
+			action_type[action_name_mappers[lowerC]] = p
 		end
 	end
 
@@ -128,13 +100,27 @@ end
 function camera_controller_system:update()
 	local ms = self.math_stack
 	local deltaTime = 0.5         -- get from timer_system later 
- 	local camera = world:first_entity("main_camera")
+	local camera = world:first_entity("main_camera")
 	if camera then
-		local dx=0  dy = 0  dz = 0
-		if action.FORWARD == 1 then dz = 1  			
-	    elseif action.BACKWARD == 1 then dz = -1 end 	
-		if action.LEFT == 1 then dx = -1				
-		elseif action.RIGHT == 1 then dx = 1 end    	
+		local dx, dy, dz = 0, 0, 0
+		if action_type.FORWARD then 
+			dz = 1
+		elseif action_type.BACKWARD then
+			dz = -1
+		end
+
+		if action_type.LEFT then 
+			dx = -1				
+		elseif action_type.RIGHT then 
+			dx = 1 
+		end
+
+		if action_type.UPWARD then
+			dy = 1
+		elseif action_type.DOWNWARD then
+			dy = -1
+		end
+
 		camera_util.move(ms, camera, dx*deltaTime, dy*deltaTime, dz*deltaTime)
 	end 
 end 	
