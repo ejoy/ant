@@ -47,7 +47,7 @@ local function append_lighting_properties(ms, result)
 			local l = dlight.light.v
 		
 			-- point from vertex position to light position			
-			table.insert(dlight_info.dir, ms(dlight.rotation.v, "dim")) 
+			table.insert(dlight_info.dir, ms(dlight.rotation, "dim")) 
 			table.insert(dlight_info.color, l.color)
 			table.insert(dlight_info.intensity, {l.intensity, 0.28, 0, 0})
 

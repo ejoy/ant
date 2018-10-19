@@ -57,8 +57,8 @@ function camera_init_sys:init()
     camera.viewid.id = VIEWID_MAINCAMERA 
     camera.name.n = "main_camera"
     
-    ms(camera.position.v,    {5, 5, -5, 1},  "=")
-    ms(camera.rotation.v,   {-25, -45, 0, 0},   "=")
+    ms(camera.position,    {5, 5, -5, 1},  "=")
+    ms(camera.rotation,   {-25, -45, 0, 0},   "=")
 
     local frustum = camera.frustum
     mu.frustum_from_fov(frustum, 0.1, 10000, 60, 1)
