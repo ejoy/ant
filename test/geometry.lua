@@ -194,6 +194,7 @@ function geometry.make_cylinder(radius,height,slices,stacks,color)
 
     if slices==0 or stacks<0 then
         vertex_count=0
+        return
     end
     vertex_count=slices*(stacks+3)+2
     
