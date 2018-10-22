@@ -23,6 +23,7 @@ namespace base { namespace posix { namespace subprocess {
         uint32_t wait() { return -1; }
         bool     wait(uint32_t timeout) { return false; }
         uint32_t get_id() const { return -1; }
+		bool     resume() { return false; }
     };
 
     class spawn {
@@ -44,6 +45,4 @@ namespace base { namespace posix { namespace subprocess {
         std::pair<FILE*, FILE*> open();
         int                     peek(FILE* f);
 	}
-}}
-namespace subprocess = posix::subprocess;
-}
+}}}

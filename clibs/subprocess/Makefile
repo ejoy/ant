@@ -19,17 +19,15 @@ linux :
 
 subprocess.h : subprocess_$(PLAT).h
 
-subprocess.cpp : subprocess_$(PLAT).cpp
-
-binding.o : binding.cpp subprocess.h
+binding_$(PLAT).o : binding.cpp subprocess.h
 	$(CC) $(CFLAGS) $(LUAINC) -o $@ $<
 
-subprocess.o : subprocess.cpp subprocess.h
+subprocess_$(PLAT).o : subprocess_$(PLAT).cpp subprocess.h
 	$(CC) $(CFLAGS) $(LUAINC) -o $@ $<
 
-$(TARGET) : binding.o subprocess.o
+$(TARGET) : binding_$(PLAT).o subprocess_$(PLAT).o
 	$(AR) $(LUALIB) -o $@ $^
 	$(RANLIB) $@
 
 clean :
-	rm -f binding.o subprocess.o subprocess.so subprocess.dll
+	rm -f *.o subprocess.so subprocess.dll

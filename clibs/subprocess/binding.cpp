@@ -79,6 +79,12 @@ namespace process {
         lua_pushboolean(L, self.is_running());
         return 1;
     }
+
+	static int resume(lua_State* L) {
+		base::subprocess::process& self = to(L, 1);
+		lua_pushboolean(L, self.resume());
+		return 1;
+	}
 }
 
 namespace spawn {
@@ -205,6 +211,13 @@ namespace spawn {
             }
         }
         lua_pop(L, 1);
+
+		if (LUA_TBOOLEAN == lua_getfield(L, 1, "suspended")) {
+			if (lua_toboolean(L, -1)) {
+				self.suspended();
+			}
+		}
+		lua_pop(L, 1);
     }
 #else
     static void cast_option(lua_State* , base::subprocess::spawn&)
@@ -266,6 +279,7 @@ int luaopen_subprocess(lua_State* L)
         { "kill", process::kill },
         { "get_id", process::get_id },
         { "is_running", process::is_running },
+		{ "resume", process::resume },
         { "__gc", process::destructor },
         { NULL, NULL }
     };

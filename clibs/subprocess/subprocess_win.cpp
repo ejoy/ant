@@ -191,16 +191,18 @@ namespace base { namespace win { namespace subprocess {
     }
 
     bool spawn::set_console(console type) {
+		flags_ &= ~(CREATE_NO_WINDOW | CREATE_NEW_CONSOLE);
         switch (type) {
         case console::eInherit:
-            flags_ = 0;
             break;
         case console::eDisable:
-            flags_ = CREATE_NO_WINDOW;
+            flags_ |= CREATE_NO_WINDOW;
             break;
         case console::eNew:
-            flags_ = CREATE_NEW_CONSOLE;
+            flags_ |= CREATE_NEW_CONSOLE;
             break;
+		default:
+			return false;
         }
         return true;
     }
@@ -211,6 +213,10 @@ namespace base { namespace win { namespace subprocess {
         return true;
     }
 
+	void spawn::suspended() {
+		flags_ |= CREATE_SUSPENDED;
+	}
+	
     void spawn::redirect(stdio type, FILE* f) {
         si_.dwFlags |= STARTF_USESTDHANDLES;
         inherit_handle_ = true;
@@ -306,6 +312,10 @@ namespace base { namespace win { namespace subprocess {
         }
         return result;
     }
+
+	bool process::resume() {
+		return (DWORD)-1 != ::ResumeThread(hThread);
+	}
 
     uint32_t process::exit_code() {
         DWORD ret = 0;

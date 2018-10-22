@@ -44,6 +44,7 @@ namespace base { namespace win { namespace subprocess {
         uint32_t wait();
         bool     wait(uint32_t timeout);
         uint32_t get_id() const;
+		bool     resume();
     };
 
     class spawn {
@@ -52,6 +53,7 @@ namespace base { namespace win { namespace subprocess {
         ~spawn();
         bool set_console(console type);
         bool hide_window();
+		void suspended();
         void redirect(stdio type, FILE* f);
         void env_set(const std::wstring& key, const std::wstring& value);
         void env_del(const std::wstring& key);
@@ -71,6 +73,4 @@ namespace base { namespace win { namespace subprocess {
         std::pair<FILE*, FILE*> open();
         int                     peek(FILE* f);
     }
-}}
-namespace subprocess = win::subprocess;
-}
+}}}
