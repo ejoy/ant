@@ -60,6 +60,9 @@ local function window_create(title)
         MARKERSYMBOL3 = 'SHORTARROW',
     }
 
+    window.CARETSLOP = 10
+    window.CARETYPOLICY = 'SLOP|EVEN|JUMPS'
+
     window.breakpoints = {}
 
     function window:marginclick_cb(margin, lineno, _)
@@ -179,7 +182,6 @@ function m.setarrow(window, lineno)
     tabs.VALUE = pcWindow
     pcWindow['MARKERADD' .. pcLineno] = 2
     pcWindow['MARKERADD' .. pcLineno] = 3
-    pcWindow.CARET = ('%d,0'):format(pcLineno + 20)
     pcWindow.CARET = ('%d,0'):format(pcLineno)
 end
 

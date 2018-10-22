@@ -86,18 +86,44 @@ local function compile(ms, args)
 	return table.concat(code, '\n') .. '\n'
 end
 
+local function mat_1to2(ms, m)
+	if m.type ~= 'mat' then
+		return m
+	end
+	return {
+		type = m.type,
+		{m[ 1], m[ 2], m[ 3], m[ 4]},
+		{m[ 5], m[ 6], m[ 7], m[ 8]},
+		{m[ 9], m[10], m[11], m[12]},
+		{m[13], m[14], m[15], m[16]},
+	}
+end
+
+local function mat_2to1(ms, m)
+	if m.type ~= 'mat' then
+		return m
+	end
+	return {
+		type = m.type,
+		m[1][1], m[1][2], m[1][3], m[1][4],
+		m[2][1], m[2][2], m[2][3], m[2][4],
+		m[3][1], m[3][2], m[3][3], m[3][4],
+		m[4][1], m[4][2], m[4][3], m[4][4],
+	}
+end
+
 local function value_to_scope(ms, scope, value)
 	for i, v in ipairs(value) do
-		scope[i] = ms(v, 'T')
+		scope[i] = mat_1to2(ms, ms(v, 'T'))
 	end
 end
 
 local function scope_to_value(ms, scope, value)
 	for i, v in ipairs(scope) do
 		if type(value[i]) == 'userdata' then
-			ms(value[i], v, '=')
+			ms(value[i], mat_2to1(ms, v), '=')
 		else
-			value[i] = v
+			value[i] = mat_2to1(ms, v)
 		end
 	end
 end
