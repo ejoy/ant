@@ -647,7 +647,6 @@ local info=geometry.make_line({x=0,y=0,z=0},{x=1,y=1,z=1},0xff)
 for k,v in pairs(info) do
     print(k,v)
 end
-
 print("=========================================")
 --test sphere
 print("test sphere:")
@@ -655,7 +654,6 @@ info=geometry.make_sphere(2,10,10,0xff)
 for k,v in pairs(info) do
     print(k,v)
 end
-
 print("=========================================")
 --test cylinder
 print("test cylinder:")
@@ -663,7 +661,6 @@ info=geometry.make_cylinder(2,5,10,10,0xff)
 for k,v in pairs(info) do
     print(k,v)
 end
-
 print("=========================================")
 --test cone
 print("test cone:")
@@ -671,7 +668,6 @@ info=geometry.make_cone(2,5,10,10,0xff)
 for k,v in pairs(info) do
     print(k,v)
 end
-
 print("=========================================")
 --test cube
 print("test cube:")
@@ -679,7 +675,6 @@ info=geometry.make_cube(0xff)
 for k,v in pairs(info) do
     print(k,v)
 end
-
 print("=========================================")
 --test plane
 info=geometry.make_plane(0xff)
