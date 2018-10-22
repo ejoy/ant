@@ -88,7 +88,7 @@ local function check_uniform_is_match_with_shader(shader, properties)
     
         local p = find_property(name)
         if p == nil then             
-            log(string.format("uniform : %s, not privided, but shader program needed", name))
+            --log(string.format("uniform : %s, not privided, but shader program needed", name))
         else
             local ptype = property_type_description[p.type]
             if ptype.type ~= u.type then
