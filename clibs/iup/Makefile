@@ -10,7 +10,11 @@ WIN32VER = 0x0501
 
 DEFINES = _WIN32_WINNT=$(WIN32VER) _WIN32_IE=0x600 WINVER=$(WIN32VER) UNICODE IUP_DLL
 
+.PHONY: all mingw clean
+
 all : iup.exe | scintilla.dll iupluaimglib.dll iupluacontrols.dll $(LUABIN)
+
+mingw: all
 
 $(LUABIN):
 	@echo $(LUABIN) is not exist! && exit 1

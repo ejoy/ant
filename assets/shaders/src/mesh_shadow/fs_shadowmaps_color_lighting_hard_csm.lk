@@ -1,0 +1,1 @@
+shader_src = 'shaders/src/mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm.sc'

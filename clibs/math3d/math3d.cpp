@@ -1296,7 +1296,7 @@ init_command_desc() {
 	s_command_desc['d'] = "to rotation";
 	s_command_desc['D'] = "to direction";
 	s_command_desc['~'] = "to srt";
-	s_command_desc['b'] = "split srt matrix to s r t";
+	s_command_desc['b'] = "split matrix as x, y, z axis";
 	s_command_desc['@'] = "pop everything";
 	int i;
 	for (i=0;i<256;i++) {
@@ -1615,6 +1615,21 @@ lprint(lua_State *L) {
 }
 
 static int
+lcommand_description(lua_State *L){
+	lua_newtable(L);
+	for (char c = 0; c < sizeof(s_command_desc) / sizeof(s_command_desc[0]); ++c) {
+		auto desc = s_command_desc[c];
+		if (desc) {
+			lua_pushstring(L, desc);
+			char name[16] = { 0 };
+			lua_setfield(L, -1, name);
+		}
+	}
+
+	return 1;
+}
+
+static int
 lconstant(lua_State *L) {
 	const char *what = luaL_checkstring(L, 1);
 	int cons;
@@ -1667,8 +1682,7 @@ lhomogeneous_depth(lua_State *L){
 	return 1;
 }
 
-extern "C"
-{
+extern "C" {
 	LUAMOD_API int
 	luaopen_math3d(lua_State *L) {
 		init_command_desc();
@@ -1692,6 +1706,7 @@ extern "C"
 			{ "type", ltype },
 			{ "ref", lref },
 			{ "isvalid", lisvalid},
+			{ "cmd_description", lcommand_description},
 			{ "homogeneous_depth", lhomogeneous_depth},
 			{ NULL, NULL },
 		};

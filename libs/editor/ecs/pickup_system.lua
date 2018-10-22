@@ -264,4 +264,3 @@ function pickup_sys:update()
 		world:remove_entity(eid)
 	end
 end
-

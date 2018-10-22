@@ -31,6 +31,9 @@ util.__index = util
 local property_type_description = {
     color = {type="v4", },
     v4 = {type="v4",},
+
+    m4 = {type="m4"},
+
     texture = {type="i1",}
 }
 
@@ -44,9 +47,10 @@ local function update_property(name, property)
 	assert(uniform.name == name)
 	assert(property_type_description[property.type].type == uniform.type)
 	
-	if property.type == "texture" then
+    if property.type == "texture" then
 		local stage = assert(property.stage)
-		bgfx.set_texture(stage, assert(uniform.handle), assert(property.value))
+        bgfx.set_texture(stage, assert(uniform.handle), assert(property.value))
+        -- print("texture ",stage,uniform.name,uniform.handle, property.value  )        
 	else
 		local val = assert(property.value)
 
@@ -84,7 +88,7 @@ local function check_uniform_is_match_with_shader(shader, properties)
     
         local p = find_property(name)
         if p == nil then             
-            log(string.format("uniform : %s, not privided, but shader program needed", name))
+            --log(string.format("uniform : %s, not privided, but shader program needed", name))
         else
             local ptype = property_type_description[p.type]
             if ptype.type ~= u.type then
@@ -98,6 +102,7 @@ local function update_properties(shader, properties)
     if properties then
         check_uniform_is_match_with_shader(shader, properties)
         for n, p in pairs(properties) do
+            -- print("uniform update",n,p)
             update_property(n, p)
         end
     end
@@ -139,6 +144,11 @@ function util.draw_primitive(vid, primgroup, mat)
 		end
 	end
 end
+
+-- render to shadowmap
+
+
+
 
 function util.default_surface_type()
 	return {
