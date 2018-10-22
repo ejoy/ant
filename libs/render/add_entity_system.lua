@@ -13,6 +13,8 @@ ecs.import "inputmgr.message_system"
 ecs.import "serialize.serialize_component"
 ecs.import "render.light.light"
 
+--ecs.import "scene.shadow.generate_shadow_system"
+
 -- test entity
 ecs.import "editor.ecs.editable_hierarchy"
 

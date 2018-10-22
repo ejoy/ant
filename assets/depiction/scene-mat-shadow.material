@@ -1,7 +1,7 @@
 shader = {
-	vs = "mesh_shadow/vs_shadowmaps_color_lighting_csm.sc",
+	vs = "mesh_shadow/vs_shadowmaps_color_lighting_csm",
 	--fs = "mesh_shadow/fs_shadowmaps_color_lighting_hard_csm.sc",
-	fs = "mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm.sc",
+	fs = "mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm",
 } 
     
 state = "default.state"

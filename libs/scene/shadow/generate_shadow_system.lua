@@ -535,8 +535,8 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
 
     -- direction light entity  get light position  from light entity
     local d_light = world:first_entity("directional_light")
-    stack(ctx.directionLight.position,d_light.position.v,"=")
-    stack(ctx.directionLight.position_ViewSpace,d_light.position.v,"=")
+    stack(ctx.directionLight.position,d_light.position,"=")
+    stack(ctx.directionLight.position_ViewSpace,d_light.position,"=")
 
     -- main camera entity, get main camera's position,direction
     local camera = world:first_entity("main_camera")
@@ -992,7 +992,7 @@ local function insert_shadow_primitive(eid, result)
 	local materialcontent = entity.material.content
 	assert(#materialcontent >= 1)
 
-	local srt ={s=entity.scale.v, r=entity.rotation.v, t=entity.position.v}
+	local srt ={s=entity.scale, r=entity.rotation, t=entity.position}
 	local mgroups = mesh.handle.group
 	for i=1, #mgroups do
 		local g = mgroups[i]
@@ -1082,8 +1082,8 @@ function gen_shadow_system:init()
         -- get light' position,direction 
         -- light 灯光应该在具备是否 is_cast_shadow 的属性
         -- 这个通过修改 light.component attrib 来扩充
-        local pos = entity.position.v 
-        local rot = entity.rotation.v 
+        local pos = entity.position
+        local rot = entity.rotation 
         -- directional_light 的 entity 添加次序不确定，可能比generate 晚
         -- 需要最后确定下执行顺序，确保正确流程 
         -- local sun = world:first_entity("directional_light")  
