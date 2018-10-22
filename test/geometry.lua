@@ -177,13 +177,11 @@ function geometry.make_cylinder(radius,height,slices,stacks,color)
     local indices={}
     local index_count,vertex_count
 
-    local i=0
-    local j=0
-    local idx=0
+    local idx
 
     local radf=radius
-    local z=0
-    local zStep=0
+    local z
+    local zStep
 
     if stacks>0 then
         zStep=height/stacks
@@ -195,7 +193,7 @@ function geometry.make_cylinder(radius,height,slices,stacks,color)
         return
     end
     vertex_count=slices*(stacks+3)+2
-    
+
     if vertex_count>65535 then
         error("Cylinder:tool many slices or stacks requested,indices will wrap!")
     end
@@ -319,7 +317,7 @@ function geometry.make_cone(base,height,slices,stacks,color)
 
     local idx
 
-    local z=0
+    local z
     local r=base
 
     local zStep
