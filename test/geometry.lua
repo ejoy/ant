@@ -10,7 +10,7 @@ local geometry={}
 
 local function make_circle_table(sint,cost,n,halfCircle)
     local size=math.abs(n)
-    local angle=0
+    local angle
     if halfCircle==true then
         if n==0 then
             angle=math.pi
@@ -70,10 +70,9 @@ function geometry.make_sphere(radius,slices,stacks,color)
     local indices={}
     local vertex_count,index_count
     if slices==0 or stacks<2 then
-        vertex_count=0
         return
     end
-    local vertex_count=slices*(stacks-1)+2
+    vertex_count=slices*(stacks-1)+2
 
     local sint1={}
     local cost1={}
@@ -82,7 +81,7 @@ function geometry.make_sphere(radius,slices,stacks,color)
 
     make_circle_table(sint1,cost1,-slices,false)
     make_circle_table(sint2,cost2,stacks,true)
-    
+
     local base=1
     vertices[base]="ffffffd"
 
@@ -93,7 +92,7 @@ function geometry.make_sphere(radius,slices,stacks,color)
     vertices[base+5]=0.0
     vertices[base+6]=20.0
     vertices[base+7]=color
-    
+
     local idx=8
 
     for i=2,stacks do
@@ -112,7 +111,7 @@ function geometry.make_sphere(radius,slices,stacks,color)
             idx=idx+7
         end
     end
-    
+
     vertices[base+idx]=0
     vertices[base+idx+1]=0
     vertices[base+idx+2]=-radius
@@ -123,7 +122,7 @@ function geometry.make_sphere(radius,slices,stacks,color)
 
     local j=1
     idx=1
-    
+
     while j<=slices do
         indices[idx]=j
         indices[idx+1]=0
@@ -134,7 +133,7 @@ function geometry.make_sphere(radius,slices,stacks,color)
     indices[idx+1]=0
     idx=idx+2
 
-    local offset=0
+    local offset
 
     for i=0,stacks-3 do
         offset=1+i*slices
@@ -193,7 +192,6 @@ function geometry.make_cylinder(radius,height,slices,stacks,color)
     end
 
     if slices==0 or stacks<0 then
-        vertex_count=0
         return
     end
     vertex_count=slices*(stacks+3)+2
@@ -206,7 +204,7 @@ function geometry.make_cylinder(radius,height,slices,stacks,color)
     local cost={}
 
     make_circle_table(sint,cost,-slices,false)
-    
+
     z=0
     vertices[1]="ffffffd"
     vertices[2]=0.0
@@ -275,7 +273,7 @@ function geometry.make_cylinder(radius,height,slices,stacks,color)
     indices[idx+1]=1
     idx=idx+2
 
-    local offset=0
+    local offset
 
     for i=0,stacks-1 do
         offset=1+(i+1)*slices
@@ -297,7 +295,7 @@ function geometry.make_cylinder(radius,height,slices,stacks,color)
     end
     indices[idx]=offset
     indices[idx+1]=vertex_count-1
-    
+
     index_count=idx+1
 
     info.radius=radius
@@ -319,15 +317,13 @@ function geometry.make_cone(base,height,slices,stacks,color)
     local indices={}
     local vertex_count,index_count
 
-    local i=0
-    local j=0
-    local idx=0
+    local idx
 
     local z=0
     local r=base
 
-    local zStep=0
-    local rStep=0
+    local zStep
+    local rStep
 
     if stacks>0 then
         zStep=height/stacks
@@ -341,7 +337,6 @@ function geometry.make_cone(base,height,slices,stacks,color)
     local sinn=(base/math.sqrt(height*height+base*base))
 
     if slices==0 or stacks<1 then
-        vertex_count=0
         return
     end
 
@@ -354,7 +349,7 @@ function geometry.make_cone(base,height,slices,stacks,color)
     local sint={}
     local cost={}
     make_circle_table(sint,cost,-slices,false)
-    
+
     vertices[1]="ffffffd"
     vertices[2]=0.0
     vertices[3]=0.0
@@ -403,7 +398,7 @@ function geometry.make_cone(base,height,slices,stacks,color)
     indices[idx+1]=1
     idx=idx+2
 
-    local offset=0
+    local offset
 
     for i=0,stacks-1 do
         offset=1+(i+1)*slices
@@ -529,17 +524,17 @@ function geometry.make_cube(color)
     vertices[base]=-0.5     vertices[base+1]=0.5    vertices[base+2]=0.5
     vertices[base+3]=0.0    vertices[base+4]=0.0    vertices[base+5]=1.0
     vertices[base+6]=color
-    
+
     base=base+7
     vertices[base]=-0.5     vertices[base+1]=-0.5   vertices[base+2]=0.5
     vertices[base+3]=0.0    vertices[base+4]=0.0    vertices[base+5]=1.0
     vertices[base+6]=color
-    
+
     base=base+7
     vertices[base]=0.5      vertices[base+1]=0.5    vertices[base+2]=0.5
     vertices[base+3]=0.0    vertices[base+4]=0.0    vertices[base+5]=1.0
     vertices[base+6]=color
-    
+
     base=base+7
     vertices[base]=0.5      vertices[base+1]=-0.5   vertices[base+2]=0.5
     vertices[base+3]=0.0    vertices[base+4]=0.0    vertices[base+5]=1.0
@@ -609,7 +604,7 @@ function geometry.make_plane(color)
     vertices[base+4]=0.0
     vertices[base+5]=1.0
     vertices[base+6]=color
-    
+
     base=base+7
     vertices[base]=0.5
     vertices[base+1]=0.5
