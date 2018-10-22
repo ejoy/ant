@@ -13,12 +13,9 @@ local subprocess = require 'subprocess'
 local app = getexe()
 
 local p, stdin, stdout = subprocess.spawn {
-    app = app,
-    args = {
-        app,
-        '-e',
-        [[io.stdout:write('echo ' .. io.stdin:read 'a')]],
-    },
+    app,
+    '-e',
+    [[io.stdout:write('echo ' .. io.stdin:read 'a')]],
     stdin = true,
     stdout = true,
 }

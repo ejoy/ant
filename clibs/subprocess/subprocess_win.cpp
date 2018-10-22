@@ -38,10 +38,6 @@ namespace base { namespace win { namespace subprocess {
             void operator +=(T(&str)[n]) {
                 append(str, n - 1);
             }
-            template <size_t n>
-            void operator +=(const strbuilder& str) {
-                append(str.data, str.size);
-            }
         };
         strbuilder() : size(0) { }
         void clear() {
@@ -119,9 +115,9 @@ namespace base { namespace win { namespace subprocess {
 
     static wchar_t* make_args(const std::dynarray<std::wstring>& args) {
         strbuilder res; 
-        for (size_t i = 0; i < args.size(); ++i) {
+        for (size_t i = 0; i < args.size() - 1; ++i) {
             res += quote_arg(args[i]);
-            if (i + 1 != args.size()) {
+            if (i + 2 != args.size()) {
                 res += L" ";
             }
         }
@@ -180,9 +176,9 @@ namespace base { namespace win { namespace subprocess {
         : inherit_handle_(false)
         , flags_(0)
     {
-        memset(&si_, 0, sizeof STARTUPINFOW);
-        memset(&pi_, 0, sizeof PROCESS_INFORMATION);
-        si_.cb = sizeof STARTUPINFOW;
+        memset(&si_, 0, sizeof(STARTUPINFOW));
+        memset(&pi_, 0, sizeof(PROCESS_INFORMATION));
+        si_.cb = sizeof(STARTUPINFOW);
         si_.dwFlags = 0;
         si_.hStdInput = INVALID_HANDLE_VALUE;
         si_.hStdOutput = INVALID_HANDLE_VALUE;
@@ -233,7 +229,7 @@ namespace base { namespace win { namespace subprocess {
         }
     }
 
-    bool spawn::exec(const wchar_t* application, const std::dynarray<std::wstring>& args, const wchar_t* cwd) {
+    bool spawn::exec(const std::dynarray<std::wstring>& args, const wchar_t* cwd) {
         std::unique_ptr<wchar_t[]> environment;
         if (!set_env_.empty() || !del_env_.empty()) {
             environment.reset(make_env(set_env_, del_env_));
@@ -242,7 +238,7 @@ namespace base { namespace win { namespace subprocess {
 
         std::unique_ptr<wchar_t[]> command_line(make_args(args));
         if (!::CreateProcessW(
-            application,
+            args[0].c_str(),
             command_line.get(),
             NULL, NULL,
             inherit_handle_,
@@ -279,7 +275,7 @@ namespace base { namespace win { namespace subprocess {
     process::process(process& pi)
         : PROCESS_INFORMATION(pi)
     {
-        memset(&pi, 0, sizeof PROCESS_INFORMATION);
+        memset(&pi, 0, sizeof(PROCESS_INFORMATION));
     }
 
     process::~process() {
@@ -333,8 +329,8 @@ namespace base { namespace win { namespace subprocess {
             if (!::CreatePipe(&read_pipe, &write_pipe, &sa, 0)) {
                 return std::make_pair((FILE*)NULL, (FILE*)NULL);
             }
-            FILE* rd = _fdopen(_open_osfhandle((long)read_pipe, _O_RDONLY | _O_BINARY), "rb");
-            FILE* wr = _fdopen(_open_osfhandle((long)write_pipe, _O_WRONLY | _O_BINARY), "wb");
+            FILE* rd = _fdopen(_open_osfhandle((intptr_t)read_pipe, _O_RDONLY | _O_BINARY), "rb");
+            FILE* wr = _fdopen(_open_osfhandle((intptr_t)write_pipe, _O_WRONLY | _O_BINARY), "wb");
             return std::make_pair(rd, wr);
         }
 
