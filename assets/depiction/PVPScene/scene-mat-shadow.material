@@ -1,0 +1,18 @@
+shader = {
+	 vs = "mesh/vs_mesh_bump_shadow",
+	 fs = "mesh/fs_mesh_bumpex_shadow",
+
+	 --vs = "mesh_shadow/vs_shadowmaps_color_lighting_csm.sc",
+	 --fs = "mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm.sc",
+}
+
+state = "default.state"
+
+properties = {
+	s_basecolor = {type="texture", name="base color", stage=0, default="PVPScene/siegeweapon_d.texture"},
+	s_normal = {type="texture", name="normal", stage=1, default="PVPScene/siegeweapon_n.texture"},
+	u_specularColor = {type="v4", name="specular color", default= {200/255, 200/255, 200/255, 0.08}},
+	u_specularLight = {type="v4", name="specular light factor", default={2, 0, 0,0}},
+}
+
+

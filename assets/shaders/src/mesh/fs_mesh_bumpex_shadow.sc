@@ -1,4 +1,4 @@
-$input v_tex0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_texcoord4,v_texcoord5,v_texcoord6,v_texcoord7
+$input v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_texcoord4,v_texcoord5,v_texcoord6,v_texcoord7
  
 #include <common.sh>
 #include "common/lighting.sh"
@@ -58,7 +58,7 @@ vec4 get_ambient_color(float ambientMode,vec3 normal)
  
 void main()
 {
-	vec2 tc = vec2(v_tex0.x, v_tex0.y);
+	vec2 tc = vec2(v_texcoord0.x, v_texcoord0.y);
 
 	vec4 ntexdata = texture2D(s_normal, tc);	
 	vec3 normal = vec3(ntexdata.xy, 0.0);

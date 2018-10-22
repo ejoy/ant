@@ -1,5 +1,5 @@
-$input  a_position, a_normal, a_tex0,a_tangent
-$output v_tex0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent,  v_texcoord4,v_texcoord5,v_texcoord6,v_texcoord7
+$input  a_position, a_normal, a_texcoord0,a_tangent
+$output v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent,  v_texcoord4,v_texcoord5,v_texcoord6,v_texcoord7
 
 // for shadow
 #include "mesh_shadow/vs_ext_shadowmaps_color_lighting_csm.sc"
@@ -14,7 +14,7 @@ void main()
 	gl_Position = mul(u_modelViewProj, vec4(pos, 1.0));
 	vec4 worldpos = mul(u_model[0], vec4(pos, 1.0));
  
-	v_tex0 = a_tex0;
+	v_texcoord0 = a_texcoord0;
 
 	vec3 normal = normalize(mul(u_model[0], a_normal.xyz));
 	vec3 tangent = normalize(mul(u_model[0], a_tangent.xyz));

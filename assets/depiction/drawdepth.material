@@ -1,0 +1,13 @@
+shader = {
+   vs = "shadow/vs_shadowmaps_unpackdepth.sc",
+   fs = "shadow/fs_shadowmaps_unpackdepth.sc"
+   --vs = "line/vs_line.sc",
+   --fs = "line/fs_line.sc"
+}
+
+state = {
+    WRITE_MASK = "RGBAZ",
+    DEPTH_TEST = "LESS",
+    CULL = "CCW",
+    MSAA = true,
+}
