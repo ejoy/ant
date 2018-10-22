@@ -247,5 +247,4 @@ Server = http://mirrors.aliyun.com/archlinux/     // ALI mirror
 		https://www.visualstudio.com/zh-hans 下载 Community 社区版本即可
 
 		
-		
-[
+推荐VSCode安装lua lint进行静态检查
