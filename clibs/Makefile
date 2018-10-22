@@ -1,61 +1,54 @@
 BIN = .
-LIBS = math3d lsocket redirectfd winfile bgfx remotedebug memoryfile lanes crypt assimplua hierarchy cppfs debugger
 PLAT = mingw
+LIBS := math3d lsocket redirectfd winfile bgfx remotedebug memoryfile lanes crypt assimplua hierarchy cppfs debugger
+
+ALL_LIBS := $(LIBS) lua iup
+
+.PHONY: $(ALL_LIBS) $(foreach v,$(ALL_LIBS),build_$(v) clean_$(v) copy_$(v))
 
 IUPLIBS = luaiup scintilla iupluaimglib iupluacontrols
-IUPTARS = $(foreach v, $(IUPLIBS), $(BIN)/$(v).dll)
+TARS = $(foreach v,$(LIBS) $(IUPLIBS),$(BIN)/$(v).dll)
 
-TARS = $(foreach v, $(LIBS), $(BIN)/$(v).dll)
+#all : $(TARS) $(BIN)/iup.exe $(BIN)/lua53.dll $(BIN)/lua.exe 
+all: $(ALL_LIBS)
 
-all : $(TARS) $(BIN)/lua53.dll $(BIN)/lua.exe $(IUPTARS) $(BIN)/iup.exe
-
-build_lua :
+## lua
+copy_lua: build_lua
+	cp lua/lua53.dll lua/lua.exe $(BIN)
+build_lua:
 	cd lua && $(MAKE) $(PLAT)
-
-clean_lua :
+clean_lua:
 	cd lua && $(MAKE) clean
 
-build_iup : build_lua
-	cd iup && $(MAKE)
+IUP_DLL_NAMES := $(foreach v,$(IUPLIBS),iup/$(v).dll)
+copy_iup: build_iup
+	cp $(IUP_DLL_NAMES) iup/iup.exe $(BIN)
 
-clean_iup :
-	cd iup && $(MAKE) clean
-
-$(BIN)/iup.exe : build_iup
-	cp iup/iup.exe $@
-
-build_lsocket : build_lua
-
-define COPY_iup
-$(BIN)/$(1).dll : build_iup
-	cp iup/$(1).dll $$@
-
+define TARG_func
+$(1): build_$(1) copy_$(1)
 endef
 
-$(foreach v, $(IUPLIBS), $(eval $(call COPY_iup,$(v))))
+define COPY_DLL_func
+$(BIN)/$(1).dll : copy_$(1)
 
-lua/lua53.dll : build_lua
+copy_$(1): build_$(1)
+	cp $(1)/$(1).dll $(BIN)/$(1).dll
+endef
 
-$(BIN)/lua53.dll : lua/lua53.dll
-	cp $< $@
-
-lua/lua.exe : build_lua
-
-$(BIN)/lua.exe : lua/lua.exe
-	cp $< $@
-
-define COPY_temp
-$(BIN)/$(1).dll : build_$(1)
-	cp $(1)/$(1).dll $$@
-
-build_$(1) : build_lua
+define MAKE_temp
+build_$(1) : build_lua	
 	cd $(1) && $(MAKE) $(PLAT)
 
 clean_$(1) :
 	cd $(1) && $(MAKE) clean
 endef
 
-$(foreach v, $(LIBS), $(eval $(call COPY_temp,$(v))))
+$(foreach v, $(LIBS) iup, $(eval $(call MAKE_temp,$(v))))
+$(foreach v, $(LIBS), $(eval $(call COPY_DLL_func,$(v))))
 
+$(foreach v, $(LIBS) lua iup, $(eval $(call TARG_func,$(v))))
+
+copy: $(addprefix copy_,$(LIBS) iup lua)
+	
 clean : $(addprefix clean_,$(LIBS) iup lua)
 	rm -f *.dll && rm -f *.exe
