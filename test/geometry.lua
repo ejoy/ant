@@ -57,7 +57,7 @@ function geometry.make_line(line_beg,line_end,color)
     info.line_beg=line_beg
     info.line_end=line_end
     info.color=color
-    info.vertices=info
+    info.vertices=vertices
     info.vertex_count=2
     info.indices=indices
     info.index_count=2
@@ -68,8 +68,9 @@ function geometry.make_sphere(radius,slices,stacks,color)
     local info={}
     local vertices={}
     local indices={}
+    local vertex_count,index_count
     if slices==0 or stacks<2 then
-        vert_count.count=0
+        vertex_count=0
         return
     end
     local vertex_count=slices*(stacks-1)+2
@@ -93,7 +94,7 @@ function geometry.make_sphere(radius,slices,stacks,color)
     vertices[base+6]=20.0
     vertices[base+7]=color
     
-    idx=8
+    local idx=8
 
     for i=2,stacks do
         for j=1,slices do
@@ -594,36 +595,36 @@ function geometry.make_plane(color)
     vertices[base+1]=-0.5
     vertices[base+2]=0.5
     vertices[base+3]=0.0
-    vertices[base+4]=0.7071
-    vertices[base+5]=0.7071
-    vertices[base+6]=0
+    vertices[base+4]=0.0
+    vertices[base+5]=0.0
+    vertices[base+6]=1.0
     vertices[base+7]=color
 
     base=base+8
     vertices[base]=-0.5
     vertices[base+1]=-0.5
     vertices[base+2]=0.0
-    vertices[base+3]=0.7071
-    vertices[base+4]=0.7071
-    vertices[base+5]=0
+    vertices[base+3]=0.0
+    vertices[base+4]=0.0
+    vertices[base+5]=1.0
     vertices[base+6]=color
     
     base=base+7
     vertices[base]=0.5
     vertices[base+1]=0.5
     vertices[base+2]=0.0
-    vertices[base+3]=0.7071
-    vertices[base+4]=0.7071
-    vertices[base+5]=0
+    vertices[base+3]=0.0
+    vertices[base+4]=0.0
+    vertices[base+5]=1.0
     vertices[base+6]=color
 
     base=base+7
     vertices[base]=0.5
     vertices[base+1]=-0.5
     vertices[base+2]=0.0
-    vertices[base+3]=0.7071
-    vertices[base+4]=0.7071
-    vertices[base+5]=0
+    vertices[base+3]=0.0
+    vertices[base+4]=0.0
+    vertices[base+5]=1.0
     vertices[base+6]=color
 
     indices[1]=0
