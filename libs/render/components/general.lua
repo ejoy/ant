@@ -37,7 +37,7 @@ ecs.component "viewid" {
 }
 
 ecs.component "mesh" {
-	path = {
+	ref_path = {
 		type = "userdata",
 		default = "",
 		save = function (v, arg)
@@ -122,6 +122,10 @@ ecs.component "can_render" {
 	visible = true
 }
 
+ecs.component "can_cast" {
+	cast_shadow = true 
+}
+
 ecs.component "name" {
     n = ""
 }
@@ -159,3 +163,4 @@ ecs.component "ambient_light" {
 		},
 	},
 }
+

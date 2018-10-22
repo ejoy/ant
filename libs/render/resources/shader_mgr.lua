@@ -79,6 +79,7 @@ end
 
 local function load_shader_uniforms(name)
     local h = load_shader(name)
+    print("load uniform ",name )
     assert(h)
     local uniforms = bgfx.get_shader_uniforms(h)
     return h, uniforms
@@ -110,6 +111,7 @@ function shader_mgr.programLoad(vs,fs, uniform)
     if uniform then
         local prog = programLoadEx(vs,fs, uniform)
         if prog then
+            print("------- load shader  ",vs,fs,unifrom)
             for k, v in pairs(uniform) do
                 local old_u = alluniforms[k]
                 if old_u and old_u.type ~= v.type and old_u.num ~= v.num then
@@ -124,7 +126,9 @@ function shader_mgr.programLoad(vs,fs, uniform)
         return prog
     else
         local vsid = load_shader(vs)
-        local fsid = fs and load_shader(fs)        
+        local fsid = fs and load_shader(fs)  
+        print(" load vs -------",vs,vsid)      
+        print(" load fs -------",fs,fsid)
         return bgfx.create_program(vsid, fsid, true)
     end
 end

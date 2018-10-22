@@ -76,12 +76,12 @@ int16_t word_btol(uint16_t sw)
 {
 	uint8_t *p = (uint8_t*)&sw;
 	int16_t dw = ((int16_t)p[0]<<8) + (int16_t)p[1];
-	#ifdef MY_DEBUG
+#ifdef MY_DEBUG
 	printf(" sw = %x",sw);
 	printf(" sw[0] =%x,sw[1] = %x\n",p[0],p[1]);
 	printf(" dw = %x",dw);
 	printf(" dw[0] =%x,dw[1] = %x\n",dw&0x00ff,(dw&0xff00)>>8);
-	#endif
+#endif
 	return dw;
 }
 
@@ -194,7 +194,9 @@ lterrain_vb_close(lua_State *L)
 {
 	uint8_t *vertices = (uint8_t *) lua_touserdata(L, 1);
 	// do nothing
+#ifdef MY_DEBUG		
 	printf("gc: vb %p destroy.\n",vertices);
+#endif
 	return 0;
 }
 
@@ -203,7 +205,9 @@ lterrain_ib_close(lua_State *L)
 {
 	uint32_t *indices = (uint32_t *) lua_touserdata(L, 1);
 	// do nothing
+#ifdef MY_DEBUG		
 	printf("gc: ib %p destroy.\n",indices);
+#endif 	
 	return 0;
 }
 
@@ -219,7 +223,9 @@ lterrain_getVB(lua_State *L)
 	bgfx_vertex_decl_t *vd = terData->vdecl;
 	uint32_t num 	= terData->gridWidth * terData->gridLength;
 
+#ifdef MY_DEBUG	
 	printf("c terrain: new alloc vertex = %d, strid =%d\n",num ,vd->stride);
+#endif 	
 
 	terData->vertices = (uint8_t*) lua_newuserdata(L, num * vd->stride );
 
@@ -257,8 +263,9 @@ lterrain_getIB(lua_State *L)
 
 	uint32_t num 	= terData->gridWidth * terData->gridLength;
 	terData->indices = (uint32_t*) lua_newuserdata(L, num * sizeof(uint32_t) * 6 );
-
+#ifdef MY_DEBUG	
 	printf("c terrain: new alloc vertex = %d, index =%d(%d)\n",num ,(uint32_t)(num*6),(uint32_t) (num * sizeof(uint32_t) * 6)  );
+#endif 	
 
 	if (luaL_newmetatable(L, "TERRAIN_IB")) {
 		lua_pushcfunction(L, lterrain_ib_close);        // register gc function
@@ -315,19 +322,19 @@ lterrain_close(lua_State *L)
 {
 	struct TerrainData_t *terData = (struct TerrainData_t*) lua_touserdata(L, 1);
 
-	#ifdef MY_DEBUG
+#ifdef MY_DEBUG
 		printf("\ngc: close terrain start.\n");
 		if(terData->vertices)
 			printf("gc: got vertices.\n");
 		if(terData->indices )
 			printf("gc: got indices.\n");
-	#endif
+#endif
 
     // 都改成 userdata ，由 gc 自动回收
 
-	#ifdef MY_DEBUG
+#ifdef MY_DEBUG
 	printf("gc: close terrain end. \ngc: terrain alloc memory release.\n");
-	#endif
+#endif
 
 	return 0;
 }
@@ -476,8 +483,10 @@ void update_terrain_mesh( struct TerrainData_t* terData )
 	struct vec2 { float u,v; };
 
 	if( is_little_endian() ) {  //tested 
+#ifdef MY_DEBUG	
 		printf("little_endian supported.\n");
 		word_btol( 0x1234 );
+#endif 		
 	}
 
 	if( terData->rawBits == 8)
@@ -489,7 +498,9 @@ void update_terrain_mesh( struct TerrainData_t* terData )
 	uint32_t width = terData->gridWidth;
 	uint32_t height = terData->gridLength;
 	terData->vertexCount = 0;
+#ifdef MY_DEBUG		
 	printf("c terrain:%d,%d,begin create mesh",width,height);
+#endif 	
 	// printf("c terrain: width = %d,height=%d\n",width,height);
     // terrain 本身具备最多的 ATTRIB，用户可以选则全部或部分，实现一定的可定制
 
@@ -549,8 +560,9 @@ void update_terrain_mesh( struct TerrainData_t* terData )
 			terData->vertexCount++;
 		}
 	}
-
+#ifdef MY_DEBUG	
     printf("c terrain:%d,%d,begin create index",width,height);
+#endif 	
 	terData->indexCount = 0;
 	for (uint16_t y = 0; y < (height-1 ); y++)
 	{
@@ -566,8 +578,10 @@ void update_terrain_mesh( struct TerrainData_t* terData )
 			terData->indexCount += 6;
 		}
 	}
+#ifdef MY_DEBUG		
 	printf("c terrain: generate vertex count =%d\n",terData->vertexCount);
 	printf("c terrain: generate index count =%d\n",terData->indexCount);
+#endif 	
 }
 
 bool in_terrain_bounds(struct TerrainData_t* terData,int h,int w)
@@ -651,7 +665,9 @@ void smooth_terrain_quad( struct TerrainData_t *terData) {
 
 void smooth_terrain_mesh( struct TerrainData_t *terData,int mode )
 {
+#ifdef MY_DEBUG		
 	printf("c terrain: smooth terrain gradient.\n");
+#endif 	
 	if( mode == SMOOTH_DEFAULT ) {
 		smooth_terrain_gasslike( terData,mode );
 	}
@@ -780,18 +796,18 @@ lterrain_update_mesh(lua_State *L)
 	   return luaL_error(L,"must alloc vertices first.\n");
 	if( terData->indices == NULL || indices == NULL)
 	   return luaL_error(L,"must alloc indices first.\n");
-	printf("c update mesh.\n");
+
 	update_terrain_mesh(terData);
-	printf("c smooth mesh.\n");
 	smooth_terrain_mesh(terData,SMOOTH_DEFAULT);
-	printf("c update normal.\n");
 	update_terrain_normal_fast( terData );
 	return 0;
 }
 
 void update_terrain_normal_fast( struct TerrainData_t *terData)
 {
+#ifdef MY_DEBUG		
 	printf("c terrain: fast calculate terrain normals.\n");
+#endif 	
 	// normal attrib does not exist
 	if( terData->vdecl->attributes[ BGFX_ATTRIB_NORMAL ] == UINT16_MAX )
 	 	return;
@@ -1166,11 +1182,13 @@ lterrain_render(lua_State *L)
 {
 	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
 	int memory_size = terData->vertexCount * terData->vdecl->stride;
+#ifdef MY_DEBUG		
 	printf("grid width = %d,grid length = %d, vertex strid = %d.\n",terData->gridWidth,
 																	terData->gridLength,
 																	terData->vdecl->stride);
 	printf("width = %d,lenght=%d,height=%d\n",terData->width,terData->length,terData->height);
 	printf("memory size = %d m\n",int(memory_size/1024/1024.0f));
+#endif 	
 	return 0;
 }
 

@@ -1,0 +1,1 @@
+shader_src = 'shaders/src/shadow/vs_shadowmaps_packdepth_linear.sc'

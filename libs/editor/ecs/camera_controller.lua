@@ -30,6 +30,15 @@ local camera_util = require "render.camera.util"
 -- end
 
 --[@
+
+
+
+local action_type = { 
+	FORWARD = false, BACKWARD = false,
+	LEFT = false, RIGHT = false,
+	UPWARD = false, DOWNWARD = false,
+	ROTX = false, ROTY = false
+}
 local camera_controller_system = ecs.system "camera_controller"
 camera_controller_system.singleton "math_stack"
 camera_controller_system.singleton "message_component"
@@ -46,7 +55,9 @@ function camera_controller_system:init()
 	local message = {}
 
     local last_xy
-    local button_status = {}
+	local button_status = {}
+	-- luacheck: ignore self
+	-- luacheck: ignore status
     function message:button(btn, p, x, y, status)
         button_status[btn] = p
         last_xy = point2d(x, y)
@@ -59,54 +70,60 @@ function camera_controller_system:init()
 				local speed = move_speed * 0.1
 				local delta = (xy - last_xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
 				camera_util.rotate(ms, camera, delta.x, delta.y)
-			end
+			end 
 		end
 
 		last_xy = xy
 	end
 
+			
 	function message:keypress(c, p, status)
 		if c == nil then return end
-		
-		if p then
-			local move_step = move_speed
-			local rot = camera.rotation
-			local eye = camera.position
 
-			local rightbtn_down = button_status.RIGHT
-			local leftbtn_down = button_status.LEFT
+		local action_name_mappers = {
+			a = "LEFT", d = "RIGHT",
+			w = "FORWARD", s = "BACKWARD",
+			q = "DOWNWARD", e = "UPWARD",
+		}
 
-			local nomouse_down = not (rightbtn_down or leftbtn_down)
-			if nomouse_down and (c == "r" or c == "R") then
-				ms(	eye, {0, 0, -10}, "=")
-				ms( rot, {0, 0, 0}, "=")
-				return 
-			end
+		local lowerC = c:lower()
 
-			if rightbtn_down then					
-				local dx, dy, dz = 0, 0, 0			
-
-				if c == "a" or c == "A" then					
-					dx = -move_step
-				elseif c == "d" or c == "D" then					
-					dx = move_step
-				elseif c == "w" or c == "W" then					
-					dz = move_step
-				elseif c == "s" or c == "S" then					
-					dz = -move_step
-				elseif c == "q" or c == "Q" then
-					dy = -move_step
-					elseif c == "e" or c == "E" then
-					dy = move_step
-				end
-
-				camera_util.move(ms, camera, dx, dy, dz)
-			end
-		end	
+		local rightbtn_down = button_status.RIGHT
+		if rightbtn_down then
+			action_type[action_name_mappers[lowerC]] = p
+		end
 	end
 
 	self.message_component.msg_observers:add(message)
 end
+-- make movement smooth 
+function camera_controller_system:update()
+	local ms = self.math_stack
+	local deltaTime = 0.5         -- get from timer_system later 
+	local camera = world:first_entity("main_camera")
+	if camera then
+		local dx, dy, dz = 0, 0, 0
+		if action_type.FORWARD then 
+			dz = 1
+		elseif action_type.BACKWARD then
+			dz = -1
+		end
+
+		if action_type.LEFT then 
+			dx = -1				
+		elseif action_type.RIGHT then 
+			dx = 1 
+		end
+
+		if action_type.UPWARD then
+			dy = 1
+		elseif action_type.DOWNWARD then
+			dy = -1
+		end
+
+		camera_util.move(ms, camera, dx*deltaTime, dy*deltaTime, dz*deltaTime)
+	end 
+end 	
 
 function camera_controller_system.notify:focus_selected_obj(objects)
 	--only using first obj

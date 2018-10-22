@@ -57,6 +57,9 @@ function util.update_properties(dst_properties, src_properties)
 	end
 end
 
+
+
+
 function util.load_materialex(content)
 	for _, m in ipairs(content) do		
 		local materialinfo = asset.load(m.path)

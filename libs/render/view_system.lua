@@ -50,6 +50,7 @@ function vp_clear_sys:update()
 	for _, eid in world:each("clear_component") do
 		local entity = world[eid]
 		local vid = entity.viewid
+
 		if vid then
 			local id = vid.id
 			local cc = entity.clear_component
