@@ -97,7 +97,7 @@ cd_clean:
 
 cjson_init: | $(BUILD_PATH)
 cjson_make: | $(BUILD_PATH)
-	cd lua-cjson && make TARGET=cjson.dll LUA_INCLUDE_DIR=../../ant/clibs/lua CJSON_CFLAGS=-DDISABLE_INVALID_NUMBERS CJSON_LDFLAGS="-shared -L../../ant/clibs/lua -llua53" LUA_BIN_SUFFIX=.lua
+	cd lua-cjson && make TARGET=cjson.dll LUA_INCLUDE_DIR=../../clibs/lua CJSON_CFLAGS=-DDISABLE_INVALID_NUMBERS CJSON_LDFLAGS="-shared -L../../clibs/lua -llua53" LUA_BIN_SUFFIX=.lua
 cjson_clean:
 	cd lua-cjson && make clean TARGET=cjson.dll
 
