@@ -113,7 +113,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_CRT_SECURE_NO_WARNINGS;BGFX_CONFIG_DEBUG;LUA_BUILD_AS_DLL;_DEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/thread;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
@@ -132,7 +132,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_CRT_SECURE_NO_WARNINGS;BGFX_CONFIG_DEBUG;WIN32;_DEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/thread;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -152,7 +152,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/thread;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -174,7 +174,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_CRT_SECURE_NO_WARNINGS;LUA_BUILD_AS_DLL;NDEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/thread;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>

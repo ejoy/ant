@@ -3172,7 +3172,7 @@ int nk_joystick(struct nk_context *ctx,const char *text,struct nk_rect *rc,float
 
 	// 如果想不显示joystick，可以使用 0，吃鸡模式
 	if(inner_size<0 || inner_size>=1)
-		inner_size = 0.7;
+		inner_size = 0.7f;
 
 	struct nk_rect inner_rc;
 	int w = rc->w *inner_size;
