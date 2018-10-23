@@ -1,8 +1,8 @@
 path = "textures/PVPScene/BH-Scene-SiegeWeapons-01-N.dds"
 
 sampler = {
-	U = "CLAMP",
-	V = "CLAMP",
+	U = "MIRROR",
+	V = "MIRROR",
 	MIN = "LINEAR",
 	MAG = "LINEAR",	
 }

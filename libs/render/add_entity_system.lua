@@ -13,7 +13,7 @@ ecs.import "inputmgr.message_system"
 ecs.import "serialize.serialize_component"
 ecs.import "render.light.light"
 
---ecs.import "scene.shadow.generate_shadow_system"
+ecs.import "scene.shadow.generate_shadow_system"
 
 -- test entity
 ecs.import "editor.ecs.editable_hierarchy"
@@ -95,7 +95,7 @@ function add_entity_sys:init()
 		ms(lentity.rotation, {45, -135, 45}, "=")
 		ms(lentity.position, {100, 100, 100}, "=")
 
-		ms(lentity.scale, {1, 1, 1}, "=")
+		ms(lentity.scale, {0.1, 0.1, 0.1}, "=")
 
 		lentity.name.n = "directional_light"
 
@@ -112,7 +112,7 @@ function add_entity_sys:init()
 		--ambient_comp.groundcolor = {0,0,1,1}
 		--ambient_comp.factor = 0.25
 		lentity.name.n = "ambient_light"
-		print("-------ambient entity  "..am_entity.name.n..'  '..am_eid)
+		--print("-------ambient entity  "..am_entity.name.n..'  '..am_eid)
 
 		component_util.load_mesh(lentity, "sphere.mesh")
 		local sphere_fn = "mem://light_bulb.material"
@@ -124,6 +124,13 @@ function add_entity_sys:init()
 			state = "default.state"
 			properties = {
 				u_color = {type="color", name = "color", default={1, 1, 1, 1}}
+			}
+			surface_type = {
+				transparency = "opaticy",
+				shadow = {
+					cast = "off",
+					receive = "off",
+				},	
 			}
 		]])
 		component_util.load_material(lentity, {sphere_fn})
