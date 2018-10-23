@@ -1,10 +1,8 @@
 #pragma once
 
 #include <Windows.h>
-#include <array>
 #include <map>
 #include <set>
-#include "../dynarray.h"
 
 namespace base { namespace win { namespace subprocess {
     namespace ignore_case {
@@ -46,6 +44,7 @@ namespace base { namespace win { namespace subprocess {
         uint32_t wait();
         bool     wait(uint32_t timeout);
         uint32_t get_id() const;
+		bool     resume();
     };
 
     class spawn {
@@ -54,10 +53,11 @@ namespace base { namespace win { namespace subprocess {
         ~spawn();
         bool set_console(console type);
         bool hide_window();
+		void suspended();
         void redirect(stdio type, FILE* f);
         void env_set(const std::wstring& key, const std::wstring& value);
         void env_del(const std::wstring& key);
-        bool exec(const wchar_t* application, const std::dynarray<std::wstring>& args, const wchar_t* cwd);
+        bool exec(const std::dynarray<std::wstring>& args, const wchar_t* cwd);
         PROCESS_INFORMATION& pi();
 
     private:
@@ -73,6 +73,4 @@ namespace base { namespace win { namespace subprocess {
         std::pair<FILE*, FILE*> open();
         int                     peek(FILE* f);
     }
-}}
-namespace subprocess = win::subprocess;
-}
+}}}

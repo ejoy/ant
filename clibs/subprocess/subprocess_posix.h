@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <map>
 #include <set>
-#include "../dynarray.h"
 
 namespace base { namespace posix { namespace subprocess {
     enum class stdio {
@@ -24,6 +23,7 @@ namespace base { namespace posix { namespace subprocess {
         uint32_t wait() { return -1; }
         bool     wait(uint32_t timeout) { return false; }
         uint32_t get_id() const { return -1; }
+		bool     resume() { return false; }
     };
 
     class spawn {
@@ -33,7 +33,7 @@ namespace base { namespace posix { namespace subprocess {
         void redirect(stdio type, FILE* f);
         void env_set(const std::string& key, const std::string& value);
         void env_del(const std::string& key);
-        bool exec(const char* app, const std::dynarray<char*>& args, const char* cwd);
+        bool exec(const std::dynarray<char*>& args, const char* cwd);
 
     private:
         std::map<std::string, std::string> set_env_;
@@ -45,6 +45,4 @@ namespace base { namespace posix { namespace subprocess {
         std::pair<FILE*, FILE*> open();
         int                     peek(FILE* f);
 	}
-}}
-namespace subprocess = posix::subprocess;
-}
+}}}

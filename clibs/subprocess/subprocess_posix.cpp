@@ -130,7 +130,7 @@ namespace base { namespace posix { namespace subprocess {
         del_env_.insert(key);
     }
 
-    bool spawn::exec(const char* app, const std::dynarray<char*>& args, const char* cwd) {
+    bool spawn::exec(const std::dynarray<char*>& args, const char* cwd) {
         pid_t pid = fork();
         if (pid == -1) {
             return false;
@@ -149,7 +149,7 @@ namespace base { namespace posix { namespace subprocess {
             if (cwd && chdir(cwd)) {
                 _exit(127);
             }
-            execvp(app, args.data());
+            execvp(args[0], args.data());
             _exit(127);
         }
         for (int i = 0; i < 3; ++i) {
