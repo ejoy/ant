@@ -1,5 +1,5 @@
 ODIR = o
-ANT3RD = ../../../ant3rd
+ANT3RD = ../../3rd
 
 LUAINC = -I ../lua
 LUALIB = -L ../lua -llua53

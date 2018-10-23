@@ -1,10 +1,14 @@
-BGFXROOT = ../../../ant3rd
+BGFXROOT = $(ANT3RD)
 BGFXSRC = $(BGFXROOT)/bgfx
 BXSRC 	= $(BGFXROOT)/bx
 BIMGSRC = $(BGFXROOT)/bimg
 
+ifeq ("$(BGFXROOT)","")
+$(error BGFXROOT NOT define)
+endif
+
 ifeq ("$(BUILD_CONFIG)","")
-$(error BUILD_CONFIG need define)
+$(error BUILD_CONFIG NOT define)
 endif
 
 BGFXINC = -I$(BGFXSRC)/include -I$(BXSRC)/include/compat/mingw -I$(BXSRC)/include -I$(BGFXSRC)/src -I$(BGFXSRC)/examples/common -I$(BIMGSRC)/include

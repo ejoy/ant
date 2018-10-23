@@ -105,12 +105,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd;../../../ant3rd/ozz-animation/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/ozz-animation/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../../ant3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../../ant3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../../ant3rd/build_msvc/ozz-animation/src/geometry/runtime/$(Configuration);../../../ant3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../../ant3rd/build_msvc/ozz-animation/samples/framework/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/geometry/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../3rd/build_msvc/ozz-animation/samples/framework/$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;ozz_base_d.lib;ozz_animation_d.lib;ozz_animation_offline_d.lib;ozz_geometry_d.lib;sample_framework_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -122,12 +122,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd;../../../ant3rd/ozz-animation/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/ozz-animation/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../../ant3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../../ant3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../../ant3rd/build_msvc/ozz-animation/src/base/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;ozz_base_d.lib;ozz_animation_d.lib;ozz_animation_offline_d.lib;ozz_geometry_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -141,14 +141,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd;../../../ant3rd/ozz-animation/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/ozz-animation/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../../ant3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../../ant3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../../ant3rd/build_msvc/ozz-animation/src/base/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;ozz_base.lib;ozz_animation.lib;ozz_animation_offline.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -162,14 +162,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd;../../../ant3rd/ozz-animation/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/ozz-animation/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../../ant3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../../ant3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../../ant3rd/build_msvc/ozz-animation/src/geometry/runtime/$(Configuration);../../../ant3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../../ant3rd/build_msvc/ozz-animation/samples/framework/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/geometry/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../3rd/build_msvc/ozz-animation/samples/framework/$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;ozz_base.lib;ozz_animation.lib;ozz_animation_offline.lib;sample_framework.lib;ozz_geometry.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

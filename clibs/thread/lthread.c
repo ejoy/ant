@@ -18,6 +18,10 @@
 #define MAX_CHANNEL 32
 #define ERRLOG_QUEUE "errlog"
 
+#if _MSC_VER > 0
+#define strdup _strdup
+#endif
+
 struct channel {
 	const char * name;
 	struct simple_queue *queue;
@@ -28,7 +32,7 @@ struct boxchannel {
 };
 
 struct channel g_channel[MAX_CHANNEL];
-extern int luaopen_thread(lua_State *L);
+extern LUAMOD_API int luaopen_thread(lua_State *L);
 
 static struct simple_queue *
 new_channel_(const char * name) {

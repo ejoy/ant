@@ -25,174 +25,174 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\iup_cells.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\iup_cells.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\iup_controls.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\iup_controls.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\iup_matrixlist.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\iup_matrixlist.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_aux.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_aux.c">
       <Filter>src\matrix</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_colres.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_colres.c">
       <Filter>src\matrix</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_draw.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_draw.c">
       <Filter>src\matrix</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_edit.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_edit.c">
       <Filter>src\matrix</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_ex.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_ex.c">
       <Filter>src\matrix</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_getset.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_getset.c">
       <Filter>src\matrix</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_key.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_key.c">
       <Filter>src\matrix</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_mark.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mark.c">
       <Filter>src\matrix</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_mem.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mem.c">
       <Filter>src\matrix</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_mouse.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mouse.c">
       <Filter>src\matrix</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_numlc.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_numlc.c">
       <Filter>src\matrix</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_scroll.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_scroll.c">
       <Filter>src\matrix</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmatrix.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmatrix.c">
       <Filter>src\matrix</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iup_matrixex.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iup_matrixex.c">
       <Filter>src\matrixex</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_busy.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_busy.c">
       <Filter>src\matrixex</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_clipboard.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_clipboard.c">
       <Filter>src\matrixex</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_copy.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_copy.c">
       <Filter>src\matrixex</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_export.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_export.c">
       <Filter>src\matrixex</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_find.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_find.c">
       <Filter>src\matrixex</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_sort.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_sort.c">
       <Filter>src\matrixex</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_undo.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_undo.c">
       <Filter>src\matrixex</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_units.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_units.c">
       <Filter>src\matrixex</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_visible.c">
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_visible.c">
       <Filter>src\matrixex</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\ctrl\il_matrixlist.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\il_matrixlist.c">
       <Filter>ctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\ctrl\il_cells.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\il_cells.c">
       <Filter>ctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\ctrl\il_matrix.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\il_matrix.c">
       <Filter>ctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\ctrl\il_matrixex.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\il_matrixex.c">
       <Filter>ctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\ctrl\iuplua_controls.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\iuplua_controls.c">
       <Filter>ctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\ctrl\iuplua_matrix_aux.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\iuplua_matrix_aux.c">
       <Filter>ctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccd\iup_cd.c">
+    <ClCompile Include="..\..\3rd\iup\srccd\iup_cd.c">
       <Filter>iupcd</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccd\iup_cdutil.c">
+    <ClCompile Include="..\..\3rd\iup\srccd\iup_cdutil.c">
       <Filter>iupcd</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srccd\iup_draw_cd.c">
+    <ClCompile Include="..\..\3rd\iup\srccd\iup_draw_cd.c">
       <Filter>iupcd</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\cd\src\lua5\cdlua5.c">
+    <ClCompile Include="..\..\3rd\cd\src\lua5\cdlua5.c">
       <Filter>cdlua</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\cd\src\lua5\cdlua5_active.c">
+    <ClCompile Include="..\..\3rd\cd\src\lua5\cdlua5_active.c">
       <Filter>cdlua</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\cd\src\lua5\cdlua5_canvas.c">
+    <ClCompile Include="..\..\3rd\cd\src\lua5\cdlua5_canvas.c">
       <Filter>cdlua</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\cd\src\lua5\cdlua5ctx.c">
+    <ClCompile Include="..\..\3rd\cd\src\lua5\cdlua5ctx.c">
       <Filter>cdlua</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\cd\src\lua5\cdvoid5.c">
+    <ClCompile Include="..\..\3rd\cd\src\lua5\cdvoid5.c">
       <Filter>cdlua</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\iup_controls.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\iup_controls.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_aux.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_aux.h">
       <Filter>src\matrix</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_cd.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_cd.h">
       <Filter>src\matrix</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_colres.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_colres.h">
       <Filter>src\matrix</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_def.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_def.h">
       <Filter>src\matrix</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_draw.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_draw.h">
       <Filter>src\matrix</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_edit.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_edit.h">
       <Filter>src\matrix</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_getset.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_getset.h">
       <Filter>src\matrix</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_key.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_key.h">
       <Filter>src\matrix</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_mark.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mark.h">
       <Filter>src\matrix</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_mem.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mem.h">
       <Filter>src\matrix</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_mouse.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mouse.h">
       <Filter>src\matrix</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_numlc.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_numlc.h">
       <Filter>src\matrix</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_scroll.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_scroll.h">
       <Filter>src\matrix</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iup_matrixex.h">
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrixex\iup_matrixex.h">
       <Filter>src\matrixex</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccd\iup_cdutil.h">
+    <ClInclude Include="..\..\3rd\iup\srccd\iup_cdutil.h">
       <Filter>iupcd</Filter>
     </ClInclude>
   </ItemGroup>
