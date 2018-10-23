@@ -3,8 +3,7 @@
 - [开发环境安装](#开发环境安装)
     - [1.MSys2 安装](#1msys2-安装)
     - [2.工作目录组织](#2工作目录组织)
-    - [下载及构建工作环境](#下载及构建工作环境)
-    - [第三方库单独运行测试及编译：](#第三方库单独运行测试及编译)
+    	- [下载及构建工作环境](#下载及构建工作环境)    	
 
 <!-- /TOC -->
 
@@ -109,7 +108,7 @@ S5:
 	clibs下的库都都会依赖clibs/lua，因为放在clibs的库都是lua-binding。而相应的库会依赖ant/3rd下的第三方库
 	通常情况下，3rd下的库编译的情况应该很少。
 	  
-### 下载及构建工作环境
+### 下载及构建工作环境 ###
 	以 D：盘为例	  
 	在 D：盘建立 D:/WORK 目录，作为 ant  等项目的存放目录 
 
@@ -169,15 +168,23 @@ MSVC的工程位于ant/projects/msvc目录下。由于没有使用类似CMake这
 
 	目前使用Mircosoft Visual Studio 2017 社区版（旧的版本不支持）
 
-S1: 打开工程
+S1: 编译MSVC的第三方库工程  
+
+	进入ant/3rd目录，执行：
+	$make init msvc=ON	初始化相应的工程  
+
+	执行：build_msvc_all.bat
+		需要注意的是，该bat文件无法在msys的命令行工具下执行
+
+S2: 打开工程
 
 	通过msvc/ant.sln文件夹即可打开工程	
 
-S2: 添加工程
+S3: 添加工程
 
 	添加新的工程，可以使用ant/projects/msvc/proj_template下的ant_dll_proj的工程模板。该工程模板已经进行了相关的设定，如会include lua库的路径，设定编译的*.obj文件位置，编译后的dll及exe文件路径等。
 
-S3: 配合Visual Studio Code使用
+S4: 配合Visual Studio Code使用
 
 	使用VSCode启动MSVC编译的工程，需要在Debug调试页面，添加调试选项。如：
 > 	{  
