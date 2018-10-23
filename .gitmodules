@@ -17,7 +17,7 @@
 	path = 3rd/ozz-animation
 	url = https://github.com/guillaumeblanc/ozz-animation.git
 [submodule "3rd/freetype2"]
-	path = 3rd/freetype2
+	path = 3rd/freetype
 	url = git://git.sv.nongnu.org/freetype/freetype2.git
 [submodule "3rd/libusbmuxd"]
 	path = 3rd/libusbmuxd
