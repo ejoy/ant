@@ -19,180 +19,180 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\ctrl\il_scintilla.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\ctrl\il_scintilladlg.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\AutoComplete.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\CallTip.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\Catalogue.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\CellBuffer.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\CharClassify.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\ContractionState.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\Decoration.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\Document.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\DBCS.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\Editor.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\ExternalLexer.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\Indicator.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\KeyMap.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\LineMarker.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\PerLine.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\PositionCache.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\RESearch.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\RunStyles.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\ScintillaBase.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\Selection.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\Style.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\UniConversion.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\ViewStyle.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\XPM.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\CaseConvert.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\CaseFolder.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\EditModel.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\EditView.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\src\MarginView.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexA68k.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCPP.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexIndent.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexNull.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexSML.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAbaqus.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCrontab.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexInno.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexOpal.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexSorcus.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAda.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCsound.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexJSON.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexOScript.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexSpecman.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAPDL.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCSS.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexKix.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPascal.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexSpice.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAsm.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexD.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexKVIrc.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPB.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexSQL.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAsn1.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexDiff.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexLaTeX.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPerl.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexSTTXT.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexASY.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexDMAP.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexLisp.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPLM.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexTACL.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAU3.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexDMIS.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexLout.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPO.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexTADS3.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAVE.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexECL.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexLua.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPOV.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexTAL.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexAVS.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexEDIFACT.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMagik.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPowerPro.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexTCL.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexBaan.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexEiffel.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMake.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPowerShell.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexTCMD.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexBash.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexErlang.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMarkdown.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexProgress.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexTeX.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexBasic.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexErrorList.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMatlab.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexProps.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexTxt2tags.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexBatch.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexEScript.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMaxima.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPS.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexVB.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexBibTeX.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexFlagship.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMetapost.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexPython.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexVerilog.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexBullant.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexForth.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMMIXAL.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexR.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexVHDL.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCaml.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexFortran.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexModula.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexRebol.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexVisualProlog.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCLW.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexGAP.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMPT.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexRegistry.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexYAML.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCmake.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexGui4Cli.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMSSQL.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexRuby.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCOBOL.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexHaskell.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexMySQL.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexRust.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexCoffeeScript.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexHex.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexNimrod.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexScriptol.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexConf.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexHTML.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexNsis.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexers\LexSmalltalk.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\Accessor.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\DefaultLexer.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\LexerNoExceptions.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\StyleContext.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\CharacterCategory.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\LexerBase.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\LexerSimple.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\WordList.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\CharacterSet.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\LexerModule.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\lexlib\PropSetSimple.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\win32\PlatWin.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\win32\ScintillaWin.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\scintilla410\win32\HanjaDic.cxx" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_clipboard.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_folding.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_lexer.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_margin.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_overtype.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_scrolling.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_selection.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_style.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_tab.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_text.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_wordwrap.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_markers.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_bracelight.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_cursor.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_whitespace.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_annotation.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_autocompletion.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_searching.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_print.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iupsci_indicator.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iup_scintilla.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iup_scintilladlg.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srcscintilla\iup_scintilla_win.c" />
+    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\il_scintilla.c" />
+    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\il_scintilladlg.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\AutoComplete.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\CallTip.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\Catalogue.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\CellBuffer.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\CharClassify.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\ContractionState.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\Decoration.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\Document.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\DBCS.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\Editor.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\ExternalLexer.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\Indicator.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\KeyMap.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\LineMarker.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\PerLine.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\PositionCache.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\RESearch.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\RunStyles.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\ScintillaBase.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\Selection.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\Style.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\UniConversion.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\ViewStyle.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\XPM.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\CaseConvert.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\CaseFolder.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\EditModel.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\EditView.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\src\MarginView.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexA68k.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexCPP.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexIndent.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexNull.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexSML.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexAbaqus.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexCrontab.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexInno.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexOpal.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexSorcus.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexAda.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexCsound.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexJSON.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexOScript.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexSpecman.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexAPDL.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexCSS.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexKix.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexPascal.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexSpice.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexAsm.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexD.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexKVIrc.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexPB.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexSQL.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexAsn1.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexDiff.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexLaTeX.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexPerl.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexSTTXT.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexASY.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexDMAP.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexLisp.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexPLM.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexTACL.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexAU3.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexDMIS.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexLout.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexPO.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexTADS3.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexAVE.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexECL.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexLua.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexPOV.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexTAL.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexAVS.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexEDIFACT.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexMagik.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexPowerPro.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexTCL.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexBaan.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexEiffel.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexMake.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexPowerShell.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexTCMD.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexBash.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexErlang.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexMarkdown.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexProgress.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexTeX.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexBasic.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexErrorList.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexMatlab.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexProps.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexTxt2tags.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexBatch.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexEScript.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexMaxima.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexPS.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexVB.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexBibTeX.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexFlagship.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexMetapost.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexPython.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexVerilog.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexBullant.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexForth.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexMMIXAL.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexR.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexVHDL.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexCaml.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexFortran.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexModula.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexRebol.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexVisualProlog.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexCLW.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexGAP.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexMPT.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexRegistry.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexYAML.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexCmake.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexGui4Cli.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexMSSQL.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexRuby.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexCOBOL.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexHaskell.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexMySQL.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexRust.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexCoffeeScript.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexHex.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexNimrod.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexScriptol.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexConf.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexHTML.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexNsis.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexers\LexSmalltalk.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexlib\Accessor.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexlib\DefaultLexer.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexlib\LexerNoExceptions.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexlib\StyleContext.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexlib\CharacterCategory.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexlib\LexerBase.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexlib\LexerSimple.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexlib\WordList.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexlib\CharacterSet.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexlib\LexerModule.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\lexlib\PropSetSimple.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\win32\PlatWin.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\win32\ScintillaWin.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\scintilla410\win32\HanjaDic.cxx" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_clipboard.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_folding.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_lexer.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_margin.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_overtype.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_scrolling.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_selection.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_style.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_tab.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_text.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_wordwrap.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_markers.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_bracelight.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_cursor.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_whitespace.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_annotation.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_autocompletion.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_searching.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_print.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iupsci_indicator.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iup_scintilla.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iup_scintilladlg.c" />
+    <ClCompile Include="..\..\3rd\iup\srcscintilla\iup_scintilla_win.c" />
     <ClCompile Include="..\..\clibs\iup\luascintilla.c" />
   </ItemGroup>
   <ItemGroup>
@@ -278,14 +278,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>STATIC_BUILD;IUPLUA_USELH;_CRT_SECURE_NO_WARNINGS;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/iup/include;../../../ant3rd/iup/src;../../../ant3rd/iup/src/win;../../../ant3rd/iup/srclua5;../../../ant3rd/iup/srclua5/lh;../../../ant3rd/iup/srcscintilla/scintilla410/lexlib;../../../ant3rd/iup/srcscintilla/scintilla410/src;../../../ant3rd/iup/srcscintilla/scintilla410/include;../../../ant3rd/iup/srcscintilla/win32</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/iup/include;../../3rd/iup/src;../../3rd/iup/src/win;../../3rd/iup/srclua5;../../3rd/iup/srclua5/lh;../../3rd/iup/srcscintilla/scintilla410/lexlib;../../3rd/iup/srcscintilla/scintilla410/src;../../3rd/iup/srcscintilla/scintilla410/include;../../3rd/iup/srcscintilla/win32</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../../../ant3rd/iup/lib/$(Configuration)_64;$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../3rd/iup/lib/$(Configuration)_64;$(OutDir)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;iuplua.lib;gdi32.lib;msimg32.lib;imm32.lib;ole32.lib;uuid.lib;comdlg32.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>iup_def_files/scintilla.def</ModuleDefinitionFile>
     </Link>
@@ -298,7 +298,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>STATIC_BUILD;IUPLUA_USELH;_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/iup/include;../../../ant3rd/iup/src;../../../ant3rd/iup/src/win;../../../ant3rd/iup/srclua5;../../../ant3rd/iup/srclua5/lh;../../../ant3rd/iup/srcscintilla/scintilla410/lexlib;../../../ant3rd/iup/srcscintilla/scintilla410/src;../../../ant3rd/iup/srcscintilla/scintilla410/include;../../../ant3rd/iup/srcscintilla/win32</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/iup/include;../../3rd/iup/src;../../3rd/iup/src/win;../../3rd/iup/srclua5;../../3rd/iup/srclua5/lh;../../3rd/iup/srcscintilla/scintilla410/lexlib;../../3rd/iup/srcscintilla/scintilla410/src;../../3rd/iup/srcscintilla/scintilla410/include;../../3rd/iup/srcscintilla/win32</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -320,7 +320,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>STATIC_BUILD;IUPLUA_USELH;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/iup/include;../../../ant3rd/iup/src;../../../ant3rd/iup/src/win;../../../ant3rd/iup/srclua5;../../../ant3rd/iup/srclua5/lh;../../../ant3rd/iup/srcscintilla/scintilla410/lexlib;../../../ant3rd/iup/srcscintilla/scintilla410/src;../../../ant3rd/iup/srcscintilla/scintilla410/include;../../../ant3rd/iup/srcscintilla/win32</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/iup/include;../../3rd/iup/src;../../3rd/iup/src/win;../../3rd/iup/srclua5;../../3rd/iup/srclua5/lh;../../3rd/iup/srcscintilla/scintilla410/lexlib;../../3rd/iup/srcscintilla/scintilla410/src;../../3rd/iup/srcscintilla/scintilla410/include;../../3rd/iup/srcscintilla/win32</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -344,7 +344,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>STATIC_BUILD;IUPLUA_USELH;_CRT_SECURE_NO_WARNINGS;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/iup/include;../../../ant3rd/iup/src;../../../ant3rd/iup/src/win;../../../ant3rd/iup/srclua5;../../../ant3rd/iup/srclua5/lh;../../../ant3rd/iup/srcscintilla/scintilla410/lexlib;../../../ant3rd/iup/srcscintilla/scintilla410/src;../../../ant3rd/iup/srcscintilla/scintilla410/include;../../../ant3rd/iup/srcscintilla/win32</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/iup/include;../../3rd/iup/src;../../3rd/iup/src/win;../../3rd/iup/srclua5;../../3rd/iup/srclua5/lh;../../3rd/iup/srcscintilla/scintilla410/lexlib;../../3rd/iup/srcscintilla/scintilla410/src;../../3rd/iup/srcscintilla/scintilla410/include;../../3rd/iup/srcscintilla/win32</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -353,7 +353,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../../../ant3rd/iup/lib/$(Configuration)_64;$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../3rd/iup/lib/$(Configuration)_64;$(OutDir)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;iuplua.lib;gdi32.lib;msimg32.lib;imm32.lib;ole32.lib;uuid.lib;comdlg32.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>iup_def_files/scintilla.def</ModuleDefinitionFile>
     </Link>

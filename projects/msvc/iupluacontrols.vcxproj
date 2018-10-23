@@ -19,64 +19,64 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\ant3rd\cd\src\lua5\cdlua5.c" />
-    <ClCompile Include="..\..\..\ant3rd\cd\src\lua5\cdlua5ctx.c" />
-    <ClCompile Include="..\..\..\ant3rd\cd\src\lua5\cdlua5_active.c" />
-    <ClCompile Include="..\..\..\ant3rd\cd\src\lua5\cdlua5_canvas.c" />
-    <ClCompile Include="..\..\..\ant3rd\cd\src\lua5\cdvoid5.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccd\iup_cd.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccd\iup_cdutil.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccd\iup_draw_cd.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\iup_cells.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\iup_controls.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\iup_matrixlist.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_busy.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_clipboard.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_copy.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_export.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_find.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_sort.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_undo.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_units.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iupmatex_visible.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iup_matrixex.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmatrix.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_aux.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_colres.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_draw.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_edit.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_ex.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_getset.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_key.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_mark.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_mem.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_mouse.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_numlc.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_scroll.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\ctrl\il_cells.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\ctrl\il_matrix.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\ctrl\il_matrixex.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\ctrl\il_matrixlist.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\ctrl\iuplua_controls.c" />
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\ctrl\iuplua_matrix_aux.c" />
+    <ClCompile Include="..\..\3rd\cd\src\lua5\cdlua5.c" />
+    <ClCompile Include="..\..\3rd\cd\src\lua5\cdlua5ctx.c" />
+    <ClCompile Include="..\..\3rd\cd\src\lua5\cdlua5_active.c" />
+    <ClCompile Include="..\..\3rd\cd\src\lua5\cdlua5_canvas.c" />
+    <ClCompile Include="..\..\3rd\cd\src\lua5\cdvoid5.c" />
+    <ClCompile Include="..\..\3rd\iup\srccd\iup_cd.c" />
+    <ClCompile Include="..\..\3rd\iup\srccd\iup_cdutil.c" />
+    <ClCompile Include="..\..\3rd\iup\srccd\iup_draw_cd.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\iup_cells.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\iup_controls.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\iup_matrixlist.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_busy.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_clipboard.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_copy.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_export.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_find.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_sort.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_undo.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_units.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_visible.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iup_matrixex.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmatrix.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_aux.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_colres.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_draw.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_edit.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_ex.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_getset.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_key.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mark.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mem.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mouse.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_numlc.c" />
+    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_scroll.c" />
+    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\il_cells.c" />
+    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\il_matrix.c" />
+    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\il_matrixex.c" />
+    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\il_matrixlist.c" />
+    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\iuplua_controls.c" />
+    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\iuplua_matrix_aux.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\ant3rd\iup\srccd\iup_cdutil.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\iup_controls.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrixex\iup_matrixex.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_aux.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_cd.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_colres.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_def.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_draw.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_edit.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_getset.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_key.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_mark.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_mem.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_mouse.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_numlc.h" />
-    <ClInclude Include="..\..\..\ant3rd\iup\srccontrols\matrix\iupmat_scroll.h" />
+    <ClInclude Include="..\..\3rd\iup\srccd\iup_cdutil.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\iup_controls.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrixex\iup_matrixex.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_aux.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_cd.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_colres.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_def.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_draw.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_edit.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_getset.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_key.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mark.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mem.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mouse.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_numlc.h" />
+    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_scroll.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="iup_def_files\iupluacontrols.def" />
@@ -162,12 +162,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>IUPLUA_USELH;LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/cd/include;../../../ant3rd/iup/include;../../../ant3rd/iup/src;../../../ant3rd/iup/srccontrols;../../../ant3rd/iup/srclua5;../../../ant3rd/iup/srccd;../../../ant3rd/iup/srclua5/lh</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/cd/include;../../3rd/iup/include;../../3rd/iup/src;../../3rd/iup/srccontrols;../../3rd/iup/srclua5;../../3rd/iup/srccd;../../3rd/iup/srclua5/lh</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../../ant3rd/cd/lib/$(Configuration)_64;../../../ant3rd/build_msvc/freetype/$(Configuration);../../../ant3rd/build_msvc/zlib/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/cd/lib/$(Configuration)_64;../../3rd/build_msvc/freetype/$(Configuration);../../3rd/build_msvc/zlib/$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;iuplua.lib;cd.lib;freetyped.lib;zlibstaticd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>iup_def_files/iupluacontrols.def</ModuleDefinitionFile>
     </Link>
@@ -180,12 +180,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>IUPLUA_USELH;LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/cd/include;../../../ant3rd/iup/include;../../../ant3rd/iup/src;../../../ant3rd/iup/srccontrols;../../../ant3rd/iup/srclua5;../../../ant3rd/iup/srccd;../../../ant3rd/iup/srclua5/lh</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/cd/include;../../3rd/iup/include;../../3rd/iup/src;../../3rd/iup/srccontrols;../../3rd/iup/srclua5;../../3rd/iup/srccd;../../3rd/iup/srclua5/lh</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../../ant3rd/cd/lib/$(Configuration)_64</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/cd/lib/$(Configuration)_64</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;cd.lib;freetype.lib;iuplua.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>iup_def_files/iupluacontrols.def</ModuleDefinitionFile>
     </Link>
@@ -200,14 +200,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>IUPLUA_USELH;LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/cd/include;../../../ant3rd/iup/include;../../../ant3rd/iup/src;../../../ant3rd/iup/srccontrols;../../../ant3rd/iup/srclua5;../../../ant3rd/iup/srccd;../../../ant3rd/iup/srclua5/lh</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/cd/include;../../3rd/iup/include;../../3rd/iup/src;../../3rd/iup/srccontrols;../../3rd/iup/srclua5;../../3rd/iup/srccd;../../3rd/iup/srclua5/lh</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../../ant3rd/cd/lib/$(Configuration)_64</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/cd/lib/$(Configuration)_64</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;cd.lib;freetype.lib;iuplua.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>iup_def_files/iupluacontrols.def</ModuleDefinitionFile>
     </Link>
@@ -222,14 +222,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>IUPLUA_USELH;LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../../ant3rd/cd/include;../../../ant3rd/iup/include;../../../ant3rd/iup/src;../../../ant3rd/iup/srccontrols;../../../ant3rd/iup/srclua5;../../../ant3rd/iup/srccd;../../../ant3rd/iup/srclua5/lh</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/cd/include;../../3rd/iup/include;../../3rd/iup/src;../../3rd/iup/srccontrols;../../3rd/iup/srclua5;../../3rd/iup/srccd;../../3rd/iup/srclua5/lh</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../../ant3rd/cd/lib/$(Configuration)_64;../../../ant3rd/build_msvc/freetype/$(Configuration);../../../ant3rd/build_msvc/zlib/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/cd/lib/$(Configuration)_64;../../3rd/build_msvc/freetype/$(Configuration);../../3rd/build_msvc/zlib/$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;iuplua.lib;cd.lib;freetype.lib;zlibstatic.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>iup_def_files/iupluacontrols.def</ModuleDefinitionFile>
     </Link>
