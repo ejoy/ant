@@ -1617,12 +1617,12 @@ lprint(lua_State *L) {
 static int
 lcommand_description(lua_State *L){
 	lua_newtable(L);
-	for (char c = 0; c < sizeof(s_command_desc) / sizeof(s_command_desc[0]); ++c) {
-		auto desc = s_command_desc[c];
-		if (desc) {
+	for (size_t c = 0; c < 256; ++c) {
+		const char* desc = s_command_desc[c];
+		if (desc && strcmp(desc, "undefined") != 0) {
 			lua_pushstring(L, desc);
-			char name[16] = { 0 };
-			lua_setfield(L, -1, name);
+			char name[2] = { (char)(unsigned char)c, 0 };
+			lua_setfield(L, -2, name);
 		}
 	}
 

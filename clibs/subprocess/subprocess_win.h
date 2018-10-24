@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <map>
 #include <set>
+#include <vector>
 
 namespace base { namespace win { namespace subprocess {
     namespace ignore_case {
@@ -39,12 +40,14 @@ namespace base { namespace win { namespace subprocess {
         process(process& pi);
         ~process();
         bool     is_running();
-        bool     kill(uint32_t timeout);
-        uint32_t exit_code();
+        bool     kill(int signum);
         uint32_t wait();
-        bool     wait(uint32_t timeout);
         uint32_t get_id() const;
-		bool     resume();
+        bool     resume();
+
+    private:
+        bool     wait(uint32_t timeout);
+        uint32_t exit_code();
     };
 
     class spawn {
@@ -53,12 +56,12 @@ namespace base { namespace win { namespace subprocess {
         ~spawn();
         bool set_console(console type);
         bool hide_window();
-		void suspended();
+        void suspended();
         void redirect(stdio type, FILE* f);
         void env_set(const std::wstring& key, const std::wstring& value);
         void env_del(const std::wstring& key);
-        bool exec(const std::dynarray<std::wstring>& args, const wchar_t* cwd);
-        PROCESS_INFORMATION& pi();
+        bool exec(const std::vector<std::wstring>& args, const wchar_t* cwd);
+        PROCESS_INFORMATION release();
 
     private:
         std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>> set_env_;
