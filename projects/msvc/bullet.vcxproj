@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\bullet\bullet.cpp" />
+    <ClCompile Include="..\..\clibs\bullet\bullet2.cpp" />
     <ClCompile Include="..\..\clibs\bullet\Collision\CollisionSdkC_Api.cpp" />
     <ClCompile Include="..\..\clibs\bullet\Collision\Internal\Bullet2CollisionSdk.cpp" />
   </ItemGroup>

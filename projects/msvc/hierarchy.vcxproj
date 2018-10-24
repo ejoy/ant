@@ -170,7 +170,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/geometry/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../3rd/build_msvc/ozz-animation/samples/framework/$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;ozz_base.lib;ozz_animation.lib;ozz_animation_offline.lib;sample_framework.lib;ozz_geometry.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;ozz_base_r.lib;ozz_animation_r.lib;ozz_animation_offline_r.lib;sample_framework_r.lib;ozz_geometry_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

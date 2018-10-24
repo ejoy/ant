@@ -77,8 +77,14 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "scintilla", "scintilla.vcxproj", "{3A4D0DB5-0500-4FB2-8BAF-724F6863226B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iuplua", "iuplua.vcxproj", "{AC64B03C-A872-47E2-ABF7-482885728047}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AF8C0252-364F-4D3B-B35E-F3392EEA620B} = {AF8C0252-364F-4D3B-B35E-F3392EEA620B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iupluaimglib", "iupluaimglib.vcxproj", "{0C66FA6C-4B74-43DC-B6E8-165F8DD673BE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AF8C0252-364F-4D3B-B35E-F3392EEA620B} = {AF8C0252-364F-4D3B-B35E-F3392EEA620B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lanes", "lanes.vcxproj", "{EF116D60-7C1D-4C7E-AE87-B3CF2B97012E}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -101,6 +107,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hierarchy", "hierarchy.vcxp
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iupluacontrols", "iupluacontrols.vcxproj", "{699880A4-32F2-4772-A9CF-6459B0CB313F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AF8C0252-364F-4D3B-B35E-F3392EEA620B} = {AF8C0252-364F-4D3B-B35E-F3392EEA620B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cppfs", "cppfs.vcxproj", "{CEDAD799-FD9D-455A-98D9-D23DDE04A6AC}"
 EndProject
@@ -178,8 +187,8 @@ Global
 		{50B83D8C-7938-4814-BC5A-738CBA9BF0E6}.Debug|x64.Build.0 = Debug|x64
 		{50B83D8C-7938-4814-BC5A-738CBA9BF0E6}.Debug|x86.ActiveCfg = Debug|Win32
 		{50B83D8C-7938-4814-BC5A-738CBA9BF0E6}.Debug|x86.Build.0 = Debug|Win32
-		{50B83D8C-7938-4814-BC5A-738CBA9BF0E6}.Release|x64.ActiveCfg = Release|x64
-		{50B83D8C-7938-4814-BC5A-738CBA9BF0E6}.Release|x64.Build.0 = Release|x64
+		{50B83D8C-7938-4814-BC5A-738CBA9BF0E6}.Release|x64.ActiveCfg = Debug|x64
+		{50B83D8C-7938-4814-BC5A-738CBA9BF0E6}.Release|x64.Build.0 = Debug|x64
 		{50B83D8C-7938-4814-BC5A-738CBA9BF0E6}.Release|x86.ActiveCfg = Release|Win32
 		{50B83D8C-7938-4814-BC5A-738CBA9BF0E6}.Release|x86.Build.0 = Release|Win32
 		{5C52D874-9928-49A4-8543-9CAC1AC61AA2}.Debug|x64.ActiveCfg = Debug|x64

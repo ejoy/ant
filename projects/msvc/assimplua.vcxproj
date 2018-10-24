@@ -166,7 +166,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bimg/include;../../3rd/bgfx/examples/common;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/bgfx/3rdparty;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bimg/include;../../3rd/bgfx/examples/common;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/bgfx/3rdparty;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/build_msvc/assimp/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -174,7 +174,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin;../../3rd/build_msvc/assimp/code/$(Configuration);../../3rd/build_msvc/assimp/contrib/irrXML/$(Configuration);../../3rd/build_msvc/assimp/contrib/zlib/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/build_msvc/ozz-animation/samples/framework/$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;gdi32.lib;psapi.lib;uuid.lib;bgfx$(Configuration).lib;bimg$(Configuration).lib;bimg_decode$(Configuration).lib;bx$(Configuration).lib;example-common$(Configuration).lib;assimp-vc140-mt.lib;IrrXML.lib;zlibstatic.lib;ozz_base.lib;ozz_animation.lib;ozz_animation_offline.lib;sample_framework.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;gdi32.lib;psapi.lib;uuid.lib;bgfx$(Configuration).lib;bimg$(Configuration).lib;bimg_decode$(Configuration).lib;bx$(Configuration).lib;example-common$(Configuration).lib;assimp-vc140-mt.lib;IrrXML.lib;zlibstatic.lib;ozz_base_r.lib;ozz_animation_r.lib;ozz_animation_offline_r.lib;sample_framework_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

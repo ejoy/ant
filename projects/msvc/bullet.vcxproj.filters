@@ -36,6 +36,9 @@
     <ClCompile Include="..\..\clibs\bullet\Collision\Internal\Bullet2CollisionSdk.cpp">
       <Filter>Source Files\Collision\Internal</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\bullet\bullet2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\bullet\Collision\Internal\Bullet2CollisionSdk.h">
