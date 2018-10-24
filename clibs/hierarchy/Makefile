@@ -2,6 +2,8 @@ include ../common.mk
 
 ifeq ("$(BUILD_CONFIG)","Release")
 LIB_SUFFIX := _r
+else
+LIB_SUFFIX := _d
 endif
 
 OZZLIBDIR = $(ANT3RD)/build/ozz-animation
