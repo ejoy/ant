@@ -23,7 +23,7 @@ ecs.import "serialize.serialize_system"
 ecs.import "render.view_system"
 ecs.import "render.entity_rendering_system"
 ecs.import "scene.hierarchy.hierarchy"
-ecs.import "scene.cull_system"
+--ecs.import "scene.cull_system"
 
 local fs_util = require "filesystem.util"
 local component_util = require "render.components.util"
@@ -95,7 +95,7 @@ function add_entity_sys:init()
 		ms(lentity.rotation, {45, -135, 45}, "=")
 		ms(lentity.position, {100, 100, 100}, "=")
 
-		ms(lentity.scale, {0.1, 0.1, 0.1}, "=")
+		ms(lentity.scale, {1, 1, 1}, "=")
 
 		lentity.name.n = "directional_light"
 
