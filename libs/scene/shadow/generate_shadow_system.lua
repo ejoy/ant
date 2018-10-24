@@ -290,7 +290,7 @@ function  shadow_maker:init( shadow_maker_entity )
     local drawdepth_material = asset.load( depth_name )
     drawdepth_material.name = depth_name 
 
-    local drawscene_name = "scene-mat-shadow.material"
+    local drawscene_name = "PVPScene/scene-mat-shadow.material"
     local drawscene_material = asset.load( drawscene_name )
     drawscene_material.name = drawscene_name 
     
@@ -572,8 +572,10 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
     -- h = false => 0,1; 
     -- local mtxProj  = stack( { type = "ortho", l=1, r=-1, b=1, t=-1, n= config.near  , f= config.far , h = false    },"P")
     -- h = true  => -1,1 
-    local mtxProj  = stack( { type = "ortho", l=1, r=-1, b=1, t=-1, n= -config.far  , f= config.far ,h = false     },"P") -- true 距离较远，精度较低
-
+    -- 当前使用的
+    -- local mtxProj  = stack( { type = "ortho", l=1, r=-1, b=1, t=-1, n= -config.far  , f= config.far ,h = false     },"P") -- true 距离较远，精度较低
+    -- 转换成新的API
+    local mtxProj = stack({type="mat", l=1, r=-1, t=-1, b=1, n=-config.far, f= config.far, ortho=true }, "P")	-- make a ortho mat
     -- Setup Direction Light Frustum relative matrix
     if config.lightType == "DirectionLight" then 
         -- get position from direction light
@@ -777,7 +779,9 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
     -- draw depth texture 
     config.debug_drawShadow = true   
     if config.debug_drawShadow then 
-        local screenProj = stack( { type = "ortho",l=0, r=1, b=1, t=0, n=0,f=100}, "m")
+        --local screenProj = stack( { type = "ortho",l=0, r=1, b=1, t=0, n=0,f=100}, "m")
+        -- convert to new api 
+        local screenProj = stack({type="mat", l=0, r=1, t=0, b=1, n=0, f= 100, ortho=true }, "m")	-- make a ortho mat
         local screenView = stack( {
             1,  0, 0, 0, 
             0,  1, 0, 0,
@@ -955,21 +959,27 @@ function shadow_maker:render_to_texture( entity, select_filter, viewId, shadow_m
     bgfx.touch( view_id )                   -- test
     for _,mq in ipairs( meshes ) do 
         for _,prim in ipairs(mq.result) do 
-            local cast_prim = {}
-            for k,v in pairs(prim) do 
-                cast_prim[k] = v 
-            end 
-            cast_prim.material = mq.material  
 
-            cast_prim.properties = { }
-         
-            -- state & program assign by input material 
-            local srt = cast_prim.srt 
-            local mat = stack({ type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
-           
-            -- debug output to framebuffer main camera viewid
-            -- render_util.draw_primitive( 0, cast_prim, mat)
-            render_util.draw_primitive( view_id, cast_prim, mat)
+            local surface_type = prim.material.surface_type
+
+             if surface_type.shadow.cast == "on" then
+
+                local cast_prim = {}
+                for k,v in pairs(prim) do 
+                    cast_prim[k] = v 
+                end 
+                cast_prim.material = mq.material  
+
+                cast_prim.properties = { }
+            
+                -- state & program assign by input material 
+                local srt = cast_prim.srt 
+                local mat = stack({ type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
+            
+                -- debug output to framebuffer main camera viewid
+                render_util.draw_primitive( view_id, cast_prim, mat)
+                print("do check")
+            end 
         end 
     end 
 
@@ -993,7 +1003,7 @@ local function insert_shadow_primitive(eid, result)
 	assert(#materialcontent >= 1)
 
 	local srt ={s=entity.scale, r=entity.rotation, t=entity.position}
-	local mgroups = mesh.handle.group
+	local mgroups = mesh.handle.groups
 	for i=1, #mgroups do
 		local g = mgroups[i]
 		local mc = materialcontent[i] or materialcontent[1]

@@ -1,6 +1,6 @@
 include ../common.mk
 
-GLM_INC = -I ../../../ant3rd/glm
+GLM_INC = -I $(ANT3RD)/glm
 
 mingw : math3d.dll
 

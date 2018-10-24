@@ -18,811 +18,811 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_callback.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_callback.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_dlglist.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_dlglist.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_attrib.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_attrib.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_focus.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_focus.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_font.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_font.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_globalattrib.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_globalattrib.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_object.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_object.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_key.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_key.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_layout.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_layout.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_ledlex.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_ledlex.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_names.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_names.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_ledparse.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_ledparse.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_predialogs.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_predialogs.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_register.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_register.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_scanf.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_scanf.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_show.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_show.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_str.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_str.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_func.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_func.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_childtree.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_childtree.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_classattrib.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_classattrib.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_dialog.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_dialog.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_assert.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_assert.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_messagedlg.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_messagedlg.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_timer.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_timer.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_image.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_image.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_label.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_label.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_fill.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_fill.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_zbox.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_zbox.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_colordlg.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_colordlg.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_fontdlg.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_fontdlg.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_filedlg.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_filedlg.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_strmessage.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_strmessage.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_menu.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_menu.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_frame.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_frame.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_user.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_user.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_button.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_button.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_radio.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_radio.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_toggle.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_toggle.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_progressbar.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_progressbar.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_text.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_text.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_val.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_val.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_box.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_box.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_hbox.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_hbox.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_vbox.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_vbox.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_cbox.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_cbox.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_class.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_class.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_classbase.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_classbase.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_maskmatch.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_maskmatch.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_mask.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_mask.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_maskparse.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_maskparse.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_tabs.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_tabs.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_spin.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_spin.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_list.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_list.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_getparam.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_getparam.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_link.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_link.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_sbox.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_sbox.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_scrollbox.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_scrollbox.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_normalizer.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_normalizer.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_tree.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_tree.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_split.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_split.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_layoutdlg.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_layoutdlg.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_recplay.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_recplay.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_progressdlg.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_progressdlg.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_expander.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_expander.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_open.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_open.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_table.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_table.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_canvas.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_canvas.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_gridbox.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_gridbox.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_detachbox.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_detachbox.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_backgroundbox.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_backgroundbox.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_linefile.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_linefile.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_config.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_config.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_flatbutton.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_flatbutton.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_animatedlabel.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_animatedlabel.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_draw.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_draw.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_flatframe.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_flatframe.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_flattabs.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_flattabs.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_flatscrollbar.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_flatscrollbar.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_flatscrollbox.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_flatscrollbox.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_dial.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_dial.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_gauge.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_gauge.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_colorbar.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_colorbar.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_colorbrowser.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_colorbrowser.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_colorhsi.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_colorhsi.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_common.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_common.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_brush.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_brush.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_focus.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_focus.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_font.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_font.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_globalattrib.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_globalattrib.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_handle.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_handle.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_key.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_key.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_str.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_str.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_loop.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_loop.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_open.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_open.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_tips.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_tips.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_info.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_info.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_dialog.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_dialog.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_messagedlg.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_messagedlg.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_timer.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_timer.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_image.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_image.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_label.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_label.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_canvas.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_canvas.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_frame.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_frame.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_fontdlg.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_fontdlg.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_filedlg.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_filedlg.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_dragdrop.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_dragdrop.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_button.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_button.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_draw.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_draw.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_toggle.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_toggle.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_clipboard.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_clipboard.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_progressbar.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_progressbar.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_text.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_text.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_val.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_val.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_touch.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_touch.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_tabs.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_tabs.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_menu.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_menu.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_list.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_list.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_tree.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_tree.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_calendar.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_calendar.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_datepick.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_datepick.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwindows_main.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwindows_main.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwindows_help.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwindows_help.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwindows_info.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwindows_info.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\iuplua.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\iuplua.c">
       <Filter>iuplua</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\iuplua_api.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\iuplua_api.c">
       <Filter>iuplua</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\iuplua_draw.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\iuplua_draw.c">
       <Filter>iuplua</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\iuplua_tree_aux.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\iuplua_tree_aux.c">
       <Filter>iuplua</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\iuplua_scanf.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\iuplua_scanf.c">
       <Filter>iuplua</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\iuplua_getparam.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\iuplua_getparam.c">
       <Filter>iuplua</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\iuplua_getcolor.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\iuplua_getcolor.c">
       <Filter>iuplua</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\iuplua_config.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\iuplua_config.c">
       <Filter>iuplua</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_array.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_array.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_flatlabel.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_flatlabel.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_flattoggle.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_flattoggle.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_dropbutton.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_dropbutton.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_flatscrollbox.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_flatscrollbox.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_flatlabel.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_flatlabel.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_flatframe.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_flatframe.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_flatbutton.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_flatbutton.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_fill.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_fill.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_filedlg.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_filedlg.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_expander.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_expander.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_dropbutton.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_dropbutton.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_dialog.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_dialog.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_dial.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_dial.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_detachbox.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_detachbox.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_datepick.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_datepick.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_colordlg.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_colordlg.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_colorbrowser.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_colorbrowser.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_colorbar.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_colorbar.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_clipboard.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_clipboard.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_cbox.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_cbox.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_canvas.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_canvas.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_calendar.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_calendar.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_button.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_button.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_backgroundbox.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_backgroundbox.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_animatedlabel.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_animatedlabel.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_zbox.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_zbox.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_vbox.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_vbox.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_val.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_val.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_user.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_user.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_tree.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_tree.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_toggle.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_toggle.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_timer.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_timer.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_text.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_text.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_tabs.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_tabs.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_submenu.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_submenu.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_split.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_split.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_spinbox.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_spinbox.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_spin.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_spin.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_space.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_space.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_separator.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_separator.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_scrollbox.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_scrollbox.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_sbox.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_sbox.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_radio.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_radio.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_progressdlg.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_progressdlg.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_progressbar.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_progressbar.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_parambox.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_parambox.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_param.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_param.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_normalizer.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_normalizer.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_multiline.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_multiline.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_messagedlg.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_messagedlg.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_menu.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_menu.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_list.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_list.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_link.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_link.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_label.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_label.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_item.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_item.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_imagergba.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_imagergba.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_imagergb.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_imagergb.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_image.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_image.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_hbox.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_hbox.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_gridbox.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_gridbox.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_gauge.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_gauge.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_frame.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_frame.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_fontdlg.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_fontdlg.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_flattoggle.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_flattoggle.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_flattabs.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_flattabs.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_flatseparator.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_flatseparator.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_flatseparator.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_flatseparator.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_space.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_space.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\win\iupwin_draw_gdi.c">
+    <ClCompile Include="..\..\3rd\iup\src\win\iupwin_draw_gdi.c">
       <Filter>iupwin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\src\iup_multibox.c">
+    <ClCompile Include="..\..\3rd\iup\src\iup_multibox.c">
       <Filter>iup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\ant3rd\iup\srclua5\elem\il_multibox.c">
+    <ClCompile Include="..\..\3rd\iup\srclua5\elem\il_multibox.c">
       <Filter>iupctrl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\animatedlabel.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\animatedlabel.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\zbox.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\zbox.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\vbox.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\vbox.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\val.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\val.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\user.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\user.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\tree.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\tree.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\toggle.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\toggle.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\timer.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\timer.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\text.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\text.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\tabs.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\tabs.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\submenu.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\submenu.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\split.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\split.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\spinbox.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\spinbox.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\spin.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\spin.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\space.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\space.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\separator.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\separator.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\scrollbox.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\scrollbox.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\sbox.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\sbox.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\radio.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\radio.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\progressdlg.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\progressdlg.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\progressbar.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\progressbar.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\parambox.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\parambox.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\param.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\param.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\normalizer.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\normalizer.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\multiline.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\multiline.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\messagedlg.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\messagedlg.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\menu.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\menu.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\list.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\list.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\link.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\link.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\label.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\label.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\item.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\item.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\imagergba.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\imagergba.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\imagergb.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\imagergb.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\image.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\image.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\hbox.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\hbox.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\gridbox.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\gridbox.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\gauge.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\gauge.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\frame.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\frame.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\fontdlg.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\fontdlg.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\flattoggle.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\flattoggle.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\flattabs.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\flattabs.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\flatseparator.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\flatseparator.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\flatscrollbox.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\flatscrollbox.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\flatlabel.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\flatlabel.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\flatframe.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\flatframe.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\flatbutton.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\flatbutton.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\fill.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\fill.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\filedlg.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\filedlg.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\expander.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\expander.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\dropbutton.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\dropbutton.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\dialog.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\dialog.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\dial.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\dial.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\detachbox.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\detachbox.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\datepick.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\datepick.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\colordlg.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\colordlg.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\colorbrowser.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\colorbrowser.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\colorbar.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\colorbar.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\clipboard.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\clipboard.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\cbox.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\cbox.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\canvas.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\canvas.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\calendar.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\calendar.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\button.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\button.lua">
       <Filter>iup_luaelem</Filter>
     </None>
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\backgroundbox.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\backgroundbox.lua">
       <Filter>iup_luaelem</Filter>
     </None>
     <None Include="iup_def_files\iuplua.def" />
-    <None Include="..\..\..\ant3rd\iup\srclua5\elem\multibox.lua">
+    <None Include="..\..\3rd\iup\srclua5\elem\multibox.lua">
       <Filter>iup_luaelem</Filter>
     </None>
   </ItemGroup>

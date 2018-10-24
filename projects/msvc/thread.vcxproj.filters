@@ -15,24 +15,25 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\3rd\iup\srccd\iup_cd.c">
+    <ClCompile Include="..\..\clibs\thread\lseri.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\iup\srccd\iup_cdutil.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\3rd\iup\srccd\iup_draw_cd.c">
+    <ClCompile Include="..\..\clibs\thread\lthread.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\3rd\iup\srccd\iup_cdutil.h">
+    <ClInclude Include="..\..\clibs\thread\lseri.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="iup_def_files\iupcd.def">
-      <Filter>Source Files</Filter>
-    </None>
+    <ClInclude Include="..\..\clibs\thread\simplelock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\thread\simplequeue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\thread\simplethread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

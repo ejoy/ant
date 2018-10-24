@@ -1,15 +1,6 @@
 # Use make BGFXROOT=your_bgfx_path
-BGFXROOT = ../../../ant3rd
-BGFXSRC = $(BGFXROOT)/bgfx
-BXSRC = $(BGFXROOT)/bx
-BIMGSRC = $(BGFXROOT)/bimg
-LUAINC = -I ../lua
-LUALIB = -L ../lua -llua53
-ODIR = obj
-
-CC= gcc
-CXX = g++
-CFLAGS = -O2 -Wall -Wno-misleading-indentation -Wno-unused-but-set-variable
+include ../common.mk
+include ../bgfx/bgfx_define.mk
 
 mingw : lterrain.dll
 

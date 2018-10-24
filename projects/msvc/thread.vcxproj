@@ -19,75 +19,21 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\3rd\cd\src\lua5\cdlua5.c" />
-    <ClCompile Include="..\..\3rd\cd\src\lua5\cdlua5ctx.c" />
-    <ClCompile Include="..\..\3rd\cd\src\lua5\cdlua5_active.c" />
-    <ClCompile Include="..\..\3rd\cd\src\lua5\cdlua5_canvas.c" />
-    <ClCompile Include="..\..\3rd\cd\src\lua5\cdvoid5.c" />
-    <ClCompile Include="..\..\3rd\iup\srccd\iup_cd.c" />
-    <ClCompile Include="..\..\3rd\iup\srccd\iup_cdutil.c" />
-    <ClCompile Include="..\..\3rd\iup\srccd\iup_draw_cd.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\iup_cells.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\iup_controls.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\iup_matrixlist.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_busy.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_clipboard.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_copy.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_export.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_find.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_sort.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_undo.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_units.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iupmatex_visible.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrixex\iup_matrixex.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmatrix.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_aux.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_colres.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_draw.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_edit.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_ex.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_getset.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_key.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mark.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mem.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mouse.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_numlc.c" />
-    <ClCompile Include="..\..\3rd\iup\srccontrols\matrix\iupmat_scroll.c" />
-    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\il_cells.c" />
-    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\il_matrix.c" />
-    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\il_matrixex.c" />
-    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\il_matrixlist.c" />
-    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\iuplua_controls.c" />
-    <ClCompile Include="..\..\3rd\iup\srclua5\ctrl\iuplua_matrix_aux.c" />
+    <ClCompile Include="..\..\clibs\thread\lseri.c" />
+    <ClCompile Include="..\..\clibs\thread\lthread.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\3rd\iup\srccd\iup_cdutil.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\iup_controls.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\matrixex\iup_matrixex.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_aux.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_cd.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_colres.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_def.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_draw.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_edit.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_getset.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_key.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mark.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mem.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_mouse.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_numlc.h" />
-    <ClInclude Include="..\..\3rd\iup\srccontrols\matrix\iupmat_scroll.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="iup_def_files\iupluacontrols.def" />
+    <ClInclude Include="..\..\clibs\thread\lseri.h" />
+    <ClInclude Include="..\..\clibs\thread\simplelock.h" />
+    <ClInclude Include="..\..\clibs\thread\simplequeue.h" />
+    <ClInclude Include="..\..\clibs\thread\simplethread.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{699880a4-32f2-4772-a9cf-6459b0cb313f}</ProjectGuid>
+    <ProjectGuid>{808a256d-3605-4475-854a-0cbe06ab3130}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>iupcontrols</RootNamespace>
+    <RootNamespace>thread</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
-    <ProjectName>iupluacontrols</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -160,16 +106,15 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>IUPLUA_USELH;LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/cd/include;../../3rd/iup/include;../../3rd/iup/src;../../3rd/iup/srccontrols;../../3rd/iup/srclua5;../../3rd/iup/srccd;../../3rd/iup/srclua5/lh</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/cd/lib/$(Configuration)_64;../../3rd/build_msvc/freetype/$(Configuration);../../3rd/build_msvc/zlib/$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;iuplua.lib;cd.lib;freetyped.lib;zlibstaticd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>iup_def_files/iupluacontrols.def</ModuleDefinitionFile>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -178,16 +123,15 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>IUPLUA_USELH;LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/cd/include;../../3rd/iup/include;../../3rd/iup/src;../../3rd/iup/srccontrols;../../3rd/iup/srclua5;../../3rd/iup/srccd;../../3rd/iup/srclua5/lh</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/cd/lib/$(Configuration)_64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;cd.lib;freetype.lib;iuplua.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>iup_def_files/iupluacontrols.def</ModuleDefinitionFile>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -198,18 +142,17 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>IUPLUA_USELH;LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/cd/include;../../3rd/iup/include;../../3rd/iup/src;../../3rd/iup/srccontrols;../../3rd/iup/srclua5;../../3rd/iup/srccd;../../3rd/iup/srclua5/lh</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/cd/lib/$(Configuration)_64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;cd.lib;freetype.lib;iuplua.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>iup_def_files/iupluacontrols.def</ModuleDefinitionFile>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -220,18 +163,17 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>IUPLUA_USELH;LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/cd/include;../../3rd/iup/include;../../3rd/iup/src;../../3rd/iup/srccontrols;../../3rd/iup/srclua5;../../3rd/iup/srccd;../../3rd/iup/srclua5/lh</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/cd/lib/$(Configuration)_64;../../3rd/build_msvc/freetype/$(Configuration);../../3rd/build_msvc/zlib/$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;iuplua.lib;cd.lib;freetype.lib;zlibstatic.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>iup_def_files/iupluacontrols.def</ModuleDefinitionFile>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
