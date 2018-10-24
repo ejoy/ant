@@ -19,9 +19,9 @@ ifeq "$(msvc)" ""
   CMAKE_PROJ_TYPE = MSYS Makefiles
   BUILD_PATH := build
   BGFX_INIT_CMD = make .build/projects/gmake-mingw-gcc
-  BGFX_MAKE_CMD = make mingw-gcc-$(BGFX_CONFIG_TYPE) $(MAKE_PROCESSES)
+  BGFX_MAKE_CMD = make mingw-gcc-$(BGFX_CONFIG_TYPE) $(MP)
   
-  CD_MAKE_CMD	= TEC_UNAME=mingw6_64 MINGW6_64=$(MINGW) make cd $(MAKE_PROCESSES)
+  CD_MAKE_CMD	= TEC_UNAME=mingw6_64 MINGW6_64=$(MINGW) make cd $(MP)
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
@@ -109,7 +109,7 @@ define CMAKE_TEMP
 	cd $$(BUILD_PATH)/$(1) && cmake $(CMAKE_BUILD_TYPE) $$(CMAKE_OPT_$(1)) -G "$(CMAKE_PROJ_TYPE)" ../../$(1)
 
   $(1)_make : | $(BUILD_PATH)/$(1)
-	cd $$(BUILD_PATH)/$(1) && make $(MAKE_PROCESSES)
+	cd $$(BUILD_PATH)/$(1) && make $(MP)
 
   $(1)_clean : | $(BUILD_PATH)/$(1)
 	cd $$(BUILD_PATH)/$(1) && make clean
