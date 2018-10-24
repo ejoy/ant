@@ -5,6 +5,8 @@ if not package.loaded[dbgName] then
 end
 
 local vscdbg = require(dbgName)
+local math3d = require "math3d"
+local operator = math3d.cmd_description()
 
 local function reverse(t)
 	for i = 1, #t // 2 do
@@ -14,44 +16,6 @@ local function reverse(t)
 	end
 	return t
 end
-
-local operator = {
-	['P'] = "pop as id",
-	['m'] = "pop as pointer",
-	['T'] = "pop as table",
-	['V'] = "top as string",
-	['='] = "assign to ref",
-	['1'] = "dup 1",
-	['2'] = "dup 2",
-	['3'] = "dup 3",
-	['4'] = "dup 4",
-	['5'] = "dup 5",
-	['6'] = "dup 6",
-	['7'] = "dup 7",
-	['8'] = "dup 8",
-	['9'] = "dup 9",
-	['S'] = "swap",
-	['R'] = "remove",
-	['.'] = "dot",
-	['x'] = "cross",
-	['*'] = "mul",
-	['%'] = "mulH",
-	['n'] = "normalize",
-	['t'] = "transposed",
-	['i'] = "inverted",
-	['-'] = "sub",
-	['+'] = "add",
-	['l'] = "look at",
-	['L'] = "look from",
-	['>'] = "extract",
-	['e'] = "to euler",
-	['q'] = "to quaternion",
-	['d'] = "to rotation",
-	['D'] = "to direction",
-	['~'] = "to srt",
-	['b'] = "split srt matrix to s r t",
-	['@'] = "pop everything",
-}
 
 local function stringify(t)
 	if t.type == 'mat' then
