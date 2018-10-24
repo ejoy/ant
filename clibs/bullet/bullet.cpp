@@ -57,16 +57,6 @@ objecthandle
 // 1. use euler 
 // 2. axis, angle
 
-struct bullet_node {
-	plCollisionSdkHandle sdk;
-};
-
-struct world_node {
-	plCollisionWorldHandle world;
-	plCollisionSdkHandle sdk;
-};
-
-
 static int 
 linit_physics( lua_State *L) {
 	//todo: bullet sdk create(select between 2 and 3 )
@@ -344,7 +334,7 @@ ladd_shapeToCompound( lua_State *L) {
 
 //sdk,world,shape
 static int 
-ldelete_shape( lua_State *L) {
+ldel_shape( lua_State *L) {
 	if( !check_sdk_world_handle(L,1,2,"delete_shape") )
 		return 0;
 	
@@ -655,89 +645,10 @@ lstep_simulator( lua_State *L) {
 	return 1;
 }
 
-static int
-ldel_bullet(lua_State *L) {
-	luaL_checktype(L, LUA_TUSERDATA, 1);
-	bullet_node *bullet = (bullet_node*) lua_touserdata(L, 1);
-	
-	if (bullet->sdk) {
-		plDeleteCollisionSdk(bullet->sdk);
-	}
-	return 0;
-}
-
-static int
-lnew_bullet(lua_State *L) {
-	luaL_checktype(L, LUA_TNUMBER, 1);
-	const int sdkVersion = (int)lua_tointeger(L, 1);
-	assert(2 <= sdkVersion && sdkVersion <= 3);
-
-	bullet_node *bullet = (bullet_node*)lua_newuserdata(L, sizeof(bullet_node));	
-	luaL_setmetatable(L, "BULLET_NODE");
-
-	return 1;	// return bullet_node userdata
-}
-
-static void
-register_bullet_node(lua_State *L) {
-	luaL_newmetatable(L, "BULLET_NODE");
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -2, "__index");	// BULLET_NODE.__index = BULLET_NODE
-
-	luaL_Reg l[] = {
-		"__gc", ldel_bullet,
-		nullptr, nullptr,
-	};
-
-	luaL_setfuncs(L, l, 0);
-}
-
-static int
-ldel_bullet_world(lua_State *L) {
-	luaL_checktype(L, LUA_TUSERDATA, 1);
-
-	world_node* world = (world_node*) lua_touserdata(L, 1);
-	assert(world->sdk != nullptr);
-	if (world->sdk && world->world) {
-		plDeleteCollisionWorld(world->sdk, world->world);
-	}
-	world->sdk = nullptr;
-	world->world = nullptr;
-	return 0;
-}
-
-static int
-lnew_bullet_world(lua_State *L) {
-	luaL_checktype(L, LUA_TUSERDATA, 1);
-	bullet_node* bullet = (bullet_node*)lua_touserdata(L, 1);
-
-	world_node *world = (world_node*)lua_newuserdata(L, sizeof(world_node));
-	luaL_setmetatable(L, "BULLET_WORLD_NODE");
-
-	return 1;
-}
-
-static void
-register_bullet_world_node(lua_State *L) {
-	luaL_newmetatable(L, "BULLET_WORLD_NODE");
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -2, "__index");	// BULLET_NODE.__index = BULLET_NODE
-
-	luaL_Reg l[] = {
-		"__gc", ldel_bullet_world,
-		nullptr, nullptr,
-	};
-
-	luaL_setfuncs(L, l, 0);
-}
-
 extern "C" {	
 LUAMOD_API int
 	luaopen_bullet(lua_State *L) {
 		luaL_checkversion(L);
-
-		//register_bullet_node(L);
-		//register_bullet_world_node(L);
 
 		luaL_Reg l[] = {
 			{ "init_physics",linit_physics},
@@ -751,7 +662,7 @@ LUAMOD_API int
 			{ "create_cylinderShape",lcreate_cylinderShape},
 			{ "create_compoundShape",lcreate_compoundShape},
 			{ "add_shapeToCompound",ladd_shapeToCompound},
-			{ "delete_shape",ldelete_shape},
+			{ "delete_shape",ldel_shape},
 			{ "add_shapeToWorld",ladd_shapeToWorld},
 			{ "delete_shapeFromWorld",ldelete_shapeFromWorld},
 			{ "create_collisionObject",lcreate_collisionObject},
