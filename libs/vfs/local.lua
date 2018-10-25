@@ -8,11 +8,6 @@ local localvfs = {} ; localvfs.__index = localvfs
 local fs = require "filesystem"
 local access = require "repoaccess"
 
--- todo:
-local function engine_path()
-	return os.getenv "ANTGE" or fs.currentdir()
-end
-
 local function isdir(filepath)
 	return fs.attributes(filepath, "mode") == "directory"
 end
