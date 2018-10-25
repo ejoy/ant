@@ -1,4 +1,4 @@
-local bullet_module = require "bullet.ablb"
+local bullet_module = require "bullet"
 
 local bullet = bullet_module.new()
 local btworld = bullet:new_world()

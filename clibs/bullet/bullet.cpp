@@ -463,7 +463,7 @@ register_bullet_world_node(lua_State *L) {
 
 extern "C" {
 	LUAMOD_API int
-	luaopen_bullet_ablb(lua_State *L) {
+	luaopen_bullet(lua_State *L) {
 		register_bullet_node(L);
 		register_bullet_world_node(L);
 
