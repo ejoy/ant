@@ -32,7 +32,7 @@ struct boxchannel {
 };
 
 struct channel g_channel[MAX_CHANNEL];
-extern LUAMOD_API int luaopen_thread(lua_State *L);
+LUAMOD_API int luaopen_thread(lua_State *L);
 
 static struct simple_queue *
 new_channel_(const char * name) {
