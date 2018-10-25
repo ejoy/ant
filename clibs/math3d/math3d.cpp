@@ -144,7 +144,7 @@ get_linear_type_name(LinearType lt) {
 		"mat", "v4", "quat", "num", "euler", "",
 	};
 
-	assert(sizeof(names) / sizeof(names[0]) > lt);
+	assert((sizeof(names) / sizeof(names[0])) > size_t(lt));
 	return names[lt];
 }
 
