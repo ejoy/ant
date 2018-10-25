@@ -1,3 +1,12 @@
+--[[
+	This test should run in ant directory :
+		lua libs/vfs/test.lua
+	It will create two project in "My documents" ,
+	one is testrepo, another one is antproj.
+
+	Check these two dir in your "My documents" dir.
+]]
+
 dofile("libs/init.lua")
 
 --_G._DEBUG = true
