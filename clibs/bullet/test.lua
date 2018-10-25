@@ -25,12 +25,6 @@ local useridx = gen_user_idx()
 local object_plane = btworld:new_collision_obj(shapes.plane, useridx, {0,0,0}, {0,0,0,1})
 btworld:add_collision_obj(object_plane)
 
--- print("plane",shape_plane)
--- print("sphere",shape_sphere)
--- print("capsule",shape_capsule)
--- print("compound",shape_compound)
--- print("")
-
 btworld:add_to_compund(shapes.compound, shapes.sphere, {0,0,0},{90,0,0,1})
 
 local compound_idx = gen_user_idx()
@@ -60,150 +54,126 @@ for i = 1, num_compounds do
 end 
   
 print("world collide begin ----")
-print("")
-local hit_count,points = bullet.worldCollide(sdk,world);
+
+local collide_points = {}
+
+btworld:collide(function (objA, objB, userdata)
+	assert(type(objA) == type(objB))
+	assert(type(objA) == "luserdata")
+	assert(type(userdata) == "luserdata")
+
+	local pts = btworld:collide_objects(objA, objB, userdata)
+	table.move(pts, 1, #pts, #collide_points, collide_points)
+end)
+
 print("world collide end ---")
-if hit_count > 0 then 
-    print("collide multiObject in world: find ".. hit_count.."contact points")
-    for i =1 ,hit_count do 
-        print("point idx =",i)
-        print("ptOnAWorld:",points[i].ptOnAWorld.x, points[i].ptOnAWorld.y, points[i].ptOnAWorld.z)
-        print("ptOnBworld:",points[i].ptOnBWorld.x,points[i].ptOnBWorld.y,points[i].ptOnBWorld.z)
-        print("normalOnB:",points[i].normalOnB.x,points[i].normalOnB.y,points[i].normalOnB.z)
-        print("distance:",points[i].distance)        
-     end 
+
+local function print_collide_points(points)
+	for _, pt in ipairs(points) do
+        print("point A in world:", 	pt.ptA_in_WS[1], 	pt.ptA_in_WS[2], 	pt.ptA_in_WS[3])
+        print("point B in world:", 	pt.ptB_in_WS[1],	pt.ptB_in_WS[2],	pt.ptB_in_WS[3])
+        print("normal B in world:", pt.normalB_in_WS[1],pt.normalB_in_WS[2],pt.normalB_in_WS[3])
+        print("distance:", 			pt.distance)        		
+	end
+end
+if #collide_points > 0 then 
+	print("world collide result : ", #collide_points)
+	print_collide_points(collide_points)
 end 
 
 print("")
 
-print("simple collide objA to objB")
-hit_count ,points = bullet.collide(sdk,world, objs[1],objs[2] )
-if hit_count > 0 then 
-      print("collide a to b: find ".. hit_count.." points")
-      for i =1 ,hit_count do 
-          print("point idx =",i)
-          print("ptOnAWorld:",points[i].ptOnAWorld.x, points[i].ptOnAWorld.y, points[i].ptOnAWorld.z)
-          print("ptOnBworld:",points[i].ptOnBWorld.x,points[i].ptOnBWorld.y,points[i].ptOnBWorld.z)
-          print("normalOnB:",points[i].normalOnB.x,points[i].normalOnB.y,points[i].normalOnB.z)
-          print("distance:",points[i].distance)        
-       end 
+print("simple collide obj[1] to obj[2]")
+local objAB_collide_points = btworld:collide_objects(objs[1], objs[2] )
+if #objAB_collide_points > 0 then 
+    print("objA objB collide result : ", #objAB_collide_points)
+    print_collide_points(objAB_collide_points)  
 end 
 print("");
 
 -- raycast 
 local rayFrom = { 1.5, 20, 0}
 local rayTo = {  1.5, -5, 0 }
-local hit, result = bullet.raycast(sdk,world,rayFrom,rayTo)
-if hit == true  then 
-    print("+++ hit object, entity id", result.hitObjId )
-    print("hitFraction", result.hitFraction)
-    print("hitNormalWorld",result.hitNormalWorld.x,
-                           result.hitNormalWorld.y,
-                           result.hitNormalWorld.z)
-    print("hitPointWorld", result.hitPointWorld.x,
-                           result.hitPointWorld.y,
-                           result.hitPointWorld.z)
-    print("filterGroup", result.filterGroup)
-    print("filterMask", result.filterGroup)
+local hit, result = btworld:raycast(rayFrom, rayTo)
+
+local function print_raycast_result(result)
+	print("object user index : ", result.useridx)
+	print("hit fraction :", result.hit_fraction)
+
+	print("hit object point : ", result.hit_pt_in_WS[1], result.hit_pt_in_WS[2], result.hit_pt_in_WS[3])
+	print("hit normal : ", result.hit_normal_in_WS[1], result.hit_normal_in_WS[2], result.hit_normal_in_WS[3])
+	print("filter group : ", result.filter_group)
+	print("filter mask : ", result.filter_mask)
+	print("flags : ", result.flags)    
+end
+if hit then 
+	print_raycast_result(result)
 else 
     print("--- hit nothing, rayInfo = ", result )
 end 
 
 print("")
 -- move up 3 unit
-bullet.set_collisionObjectTransform(sdk,world,object_plane ,{0,3,0},{0,0,0,1} )
-hit, result = bullet.raycast(sdk,world,rayFrom,rayTo)
-if hit == true  then 
-    print("move plane to {0,3,0}")
-    print("+++ hit object, entity id", result.hitObjId )
-    print("hitFraction", result.hitFraction)
-    print("hitNormalWorld",result.hitNormalWorld.x,
-                           result.hitNormalWorld.y,
-                           result.hitNormalWorld.z)
-    print("hitPointWorld", result.hitPointWorld.x,
-                           result.hitPointWorld.y,
-                           result.hitPointWorld.z)
+btworld:set_obj_transform(object_plane, {0,3,0}, {0,0,0,1})
 
-    if result.hitPointWorld.y > -0.000001 and result.hitPointWorld.y< 0.000001 then 
-        print("equal zero")
-    end 
-    print("filterGroup", result.filterGroup)
-    print("filterMask", result.filterGroup)
+local hit1, result1 = btworld:raycast(rayFrom,rayTo)
+
+print("move plane to {0,3,0}")
+if hit1 then     
+    print_raycast_result(result1)
 else 
-    print("--- hit nothing, rayInfo = ", result )
+    print("--- hit nothing, rayInfo = ", result1 )
 end 
 
 print("")
 -- move up 6 unit
-bullet.set_collisionObjectPos(sdk,world,object_plane,{0,6,0})
-hit, result = bullet.raycast(sdk,world,rayFrom,rayTo)
-if hit == true  then 
+btworld:set_obj_position(object_plane, {0,6,0})
+local hit2, result2 = btworld:raycast(rayFrom,rayTo)
+if hit2 then 
     print("move plane to {0,6,0}")
-    print("+++ hit object, entity id", result.hitObjId )
-    print("hitFraction", result.hitFraction)
-    print("hitNormalWorld",result.hitNormalWorld.x,
-                           result.hitNormalWorld.y,
-                           result.hitNormalWorld.z)
-    print("hitPointWorld", result.hitPointWorld.x,
-                           result.hitPointWorld.y,
-                           result.hitPointWorld.z)
-    print("filterGroup", result.filterGroup)
-    print("filterMask", result.filterGroup)
+    print_raycast_result(result2)
 else 
-    print("--- hit nothing, rayInfo = ", result )
+    print("--- hit nothing, rayInfo = ", result2 )
 end 
 print("")
 
 -- rotate 
 local invRayFrom = { 1.5, -20, 0}
 local invRayTo = {  1.5,   20, 0 }
-bullet.set_collisionObjectRot(sdk,world,object_plane,{0.7,0,0.7,0})
-hit, result = bullet.raycast(sdk,world,invRayFrom,invRayTo)
-if hit == true  then 
+btworld:set_obj_rotation(object_plane, {0.7,0,0.7,0})
+local hit3, result3 = btworld:raycast(invRayFrom,invRayTo)
+if hit3  then 
     print("rotate plane to {0,-6,0}")
-    print("+++ hit object, entity id", result.hitObjId )
-    print("hitFraction", result.hitFraction)
-    print("hitNormalWorld",result.hitNormalWorld.x,
-                           result.hitNormalWorld.y,
-                           result.hitNormalWorld.z)
-    print("hitPointWorld", result.hitPointWorld.x,
-                           result.hitPointWorld.y,
-                           result.hitPointWorld.z)
-    print("filterGroup", result.filterGroup)
-    print("filterMask", result.filterGroup)
+    print_raycast_result(result3)
 else 
-    print("--- hit nothing, rayInfo = ", result )
+    print("--- hit nothing, rayInfo = ", result3 )
 end 
 print("")
 
 print("")
 -- collide between thin box and capsule 
-local entity = { "any entity" }
-local ent_box = 10
-local ent_capsule = 20
-local tshape_box = bullet.create_cubeShape( sdk,world,{3,0.5,3} )
-local tshape_capsule = bullet.create_capsuleShape( sdk,world,2,6,1)
-local tobj_box = bullet.create_collisionObject(sdk,world,tshape_box,{0,0,0},{0,0,0,1}, ent_box, entity )
-local tobj_capsule = bullet.create_collisionObject(sdk,world,tshape_capsule,{0,5.5,0},{0,0,0,1},ent_box,entity)
 
-hit_count,points = bullet.collide(sdk,world, tobj_box, tobj_capsule )
-if hit_count > 0 then 
-    print("box hit capsule .."..hit_count.." contact points")
-    for i =1 ,hit_count do 
-        print("point idx =",i)
-        print("ptOnAWorld:",points[i].ptOnAWorld.x, points[i].ptOnAWorld.y, points[i].ptOnAWorld.z)
-        print("ptOnBworld:",points[i].ptOnBWorld.x,points[i].ptOnBWorld.y,points[i].ptOnBWorld.z)
-        print("normalOnB:",points[i].normalOnB.x,points[i].normalOnB.y,points[i].normalOnB.z)
-        print("distance:",points[i].distance)        
-     end 
+local ent_box = gen_user_idx()
+local ent_capsule = gen_user_idx()
+local tshape_box = btworld:new_shape("cube", {3,0.5,3} )
+local tshape_capsule = btworld:new_shape("capsule", 2,6,1)
+local tobj_box = btworld:new_collision_obj(tshape_box, ent_box, {0,0,0},{0,0,0,1})
+local tobj_capsule = btworld:create_collisionObject(tshape_capsule, ent_capsule, {0,5.5,0},{0,0,0,1})
+
+local box_capsule_points = btworld:collide(tobj_box, tobj_capsule)
+if #box_capsule_points > 0 then 
+    print("box and capsule collide, hit count is : ", #box_capsule_points)
+    print_collide_points(box_capsule_points)
 end 
 print("")
 
 -- quaternion above user-unfriendly
 
-bullet.delete_shape(sdk,world,shape_sphere);
-bullet.delete_collisionObject(sdk,world,object);
+btworld:del_shape(shapes.sphere);
+btworld:del_obj(tobj_box);
 
 print("")
-bullet.destroy_world( sdk,world )
-bullet.exit_physics( sdk );
+
+btworld = nil		-- gc world
+bullet = nil		-- gc bullet sdk
+
