@@ -866,9 +866,75 @@ lexist(lua_State *L){
 	return 1;
 }
 
+#define LOCK_METATABLE "lock metatable"
+
+typedef struct lfs_Lock {
+  HANDLE fd;
+} lfs_Lock;
+static int lfs_lock_dir(lua_State *L) {
+  size_t pathl; HANDLE fd;
+  lfs_Lock *lock;
+  wchar_t *ln;
+
+  const char *lockfile = "/lockfile.lfs";
+  const char *path = luaL_checklstring(L, 1, &pathl);
+  ln = (wchar_t*)malloc((pathl + strlen(lockfile) + 1) * sizeof(wchar_t));
+  if(!ln) {
+    lua_pushnil(L); lua_pushstring(L, strerror(errno)); return 2;
+  }
+  int winsz = windows_filename(L, path, pathl, ln, pathl);
+  int lsz = strlen(lockfile);
+  winsz += windows_filename(L, lockfile, lsz, ln+winsz, lsz);
+  ln[winsz] = 0;
+
+  if((fd = CreateFileW(ln, GENERIC_WRITE, 0, NULL, CREATE_NEW,
+                FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE, NULL)) == INVALID_HANDLE_VALUE) {
+        int en = GetLastError();
+        free(ln); lua_pushnil(L);
+        if(en == ERROR_FILE_EXISTS || en == ERROR_SHARING_VIOLATION)
+                lua_pushstring(L, "File exists");
+        else
+                lua_pushstring(L, strerror(en));
+        return 2;
+  }
+  free(ln);
+  lock = (lfs_Lock*)lua_newuserdata(L, sizeof(lfs_Lock));
+  lock->fd = fd;
+  luaL_getmetatable (L, LOCK_METATABLE);
+  lua_setmetatable (L, -2);
+  return 1;
+}
+static int lfs_unlock_dir(lua_State *L) {
+  lfs_Lock *lock = (lfs_Lock *)luaL_checkudata(L, 1, LOCK_METATABLE);
+  if(lock->fd != INVALID_HANDLE_VALUE) {    
+    CloseHandle(lock->fd);
+    lock->fd=INVALID_HANDLE_VALUE;
+  }
+  return 0;
+}
+
+/*
+** Creates lock metatable.
+*/
+static int lock_create_meta (lua_State *L) {
+        luaL_newmetatable (L, LOCK_METATABLE);
+
+        /* Method table */
+        lua_newtable(L);
+        lua_pushcfunction(L, lfs_unlock_dir);
+        lua_setfield(L, -2, "free");
+
+        /* Metamethods */
+        lua_setfield(L, -2, "__index");
+        lua_pushcfunction(L, lfs_unlock_dir);
+        lua_setfield(L, -2, "__gc");
+        return 1;
+}
+
 LUAMOD_API int
 luaopen_winfile(lua_State *L) {
 	luaL_checkversion(L);
+	lock_create_meta (L);
 	luaL_Reg l[] = {
 		{ "shortname", lshortname },
 		{ "personaldir" , lpersonaldir },
@@ -889,6 +955,7 @@ luaopen_winfile(lua_State *L) {
 		{ "popen", lpopen },
 		{ "drives", ldrives },
 		{ "exist", lexist },
+		{ "lock_dir", lfs_lock_dir },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
