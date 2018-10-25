@@ -13,7 +13,6 @@ dofile("libs/init.lua")
 
 local vfsrepo = require "vfs.repo"
 local fs = require "filesystem"
-local localrepo = require "vfs.local"
 
 local home = fs.personaldir() .. "/testrepo"
 local cwd = fs.currentdir()
@@ -28,40 +27,24 @@ repo:build()
 
 print("libs path = ", repo:realpath "libs")
 
+local localrepo = require "vfs.local"
+local repo = localrepo.open(home)
+
 local function list_repo(repo)
-	local root = repo:root()
-	local function print_dir(hash, ident)
-		local filelist = repo:dir(hash)
+	local function print_dir(path, ident)
+		local filelist = repo:list(path)
 		if filelist then
-			for name, hash in pairs(filelist.dir) do
-				print(string.format("%s%s/", (" "):rep(ident), name))
-				print_dir(hash, ident+2)
-			end
-			for name, hash in pairs(filelist.file) do
-				print(string.format("%s%s", (" "):rep(ident), name))
+			for name, type in pairs(filelist) do
+				if type == "dir" then
+					print(string.format("%s%s/", (" "):rep(ident), name))
+					print_dir(path .. "/" .. name, ident+2)
+				else
+					print(string.format("%s%s", (" "):rep(ident), name))
+				end
 			end
 		end
 	end
-	print_dir(root, 0)
+	print_dir("", 0)
 end
-
---list_repo(repo)
-
-localrepo.init("antproj")
-assert(localrepo.open "antproj")
-localrepo.build()
-
-local repo = {}
-
-function repo:root()
-	return localrepo.hash ''
-end
-
-function repo:dir(hash)
-	return localrepo.list(hash)
-end
-
 
 list_repo(repo)
-
-

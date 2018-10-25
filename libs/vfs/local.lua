@@ -1,131 +1,87 @@
 local require = import and import(...) or require
---local log = log and log(...) or print
 
 -- Editor or test use vfs.local to manage a VFS dir/repo.
 -- It read/write file from/to a repo
 
-local localvfs = {}
+local localvfs = {} ; localvfs.__index = localvfs
 
-local repo = require "repo"
 local fs = require "filesystem"
-
-local _repo
-local _repo_root
-local cache_fetch = { __mode = "kv" }
-local cache = setmetatable({} , cache_fetch )
-
-function cache_fetch:__index(pathname)
-	if pathname == '' then
-		local rootobj = _repo:hash(_repo_root)
-		self[''] = rootobj
-		return rootobj
-	end
-	local path, name = pathname:match "(.*)/(.-)$"
-	if path == nil then
-		path = ''
-		name = pathname
-	end
-	local dir = self[path]
-	local obj = dir.dir[name]
-	self[pathname] = obj
-	return obj
-end
-
-local function repo_path(name)
-	return fs.personaldir() .. "/" .. name
-end
+local access = require "repoaccess"
 
 -- todo:
 local function engine_path()
 	return os.getenv "ANTGE" or fs.currentdir()
 end
 
--- init a repo in my documents
-function localvfs.init( name , mount)
-	local path = repo_path(name)
-	local ant = engine_path()
-	local config = {
-		path,
-		["engine/libs"] = ant .. "/libs",
-		["engine/assets"] = ant .. "/assets",
-	}
-	if mount then
-		for k, v in pairs(mount) do
-			config[k] = v
+local function isdir(filepath)
+	return fs.attributes(filepath, "mode") == "directory"
+end
+
+local function readmount(filename)
+	local f = io.open(filename, "rb")
+	local ret = {}
+	if not f then
+		return ret
+	end
+	for line in f:lines() do
+		local name, path = line:match "^(.-):(.*)"
+		if name == nil then
+			f:close()
+			error ("Invalid .mount file : " .. line)
+		end
+		ret[name] = path
+	end
+	f:close()
+	return ret
+end
+
+-- open a repo in repopath
+
+local cachemeta = { __mode = "kv" }
+
+function localvfs.open(repopath)
+	if not isdir(repopath) then
+		return
+	end
+
+	local mountpoint = access.readmount(repopath .. "/.mount")
+	local rootpath = mountpoint[''] or repopath
+	local mountname = access.mountname(mountpoint)
+
+	return setmetatable({
+		_mountname = mountname,
+		_mountpoint = mountpoint,
+		_root = rootpath,
+		_cache = setmetatable({} , cachemeta),
+	}, localvfs)
+end
+
+localvfs.realpath = access.realpath
+
+-- list files { name : type (dir/file) }
+function localvfs:list(path)
+	path = path:match "^/?(.-)/?$"
+	local item = self._cache[path]
+	if item then
+		return item
+	end
+	local files = access.list_files(self, path)
+	path = path .. '/'
+	item = {}
+	for filename in pairs(files) do
+		local realpath = access.realpath(self, path .. filename)
+		if isdir(realpath) then
+			item[filename] = 'dir'
+		else
+			item[filename] = 'file'
 		end
 	end
-	repo.init(config)
-	local enginepath = path .. "/engine"
-	fs.mkdir(enginepath)
+	self._cache[path] = item
+	return item
 end
 
--- open a repo
-function localvfs.open( name )
-	assert(_repo == nil, "Already open a repo")
-	_repo = repo.new(repo_path(name))
-	return _repo ~= nil
-end
-
-local function find_name(dir, name)
-	local f = dir.file[name]
-	if f then
-		return f, "file"
-	else
-		local d = dir.dir[name]
-		if d then
-			return d, "dir"
-		end
-	end
-end
-
--- returns a hash (different pathname may share the same hash) in a repo for reading
-function localvfs.hash( pathname )
-	local path, name = pathname:match "(.*)/(.-)$"
-	if path == nil then
-		if pathname == '' then
-			return _repo_root
-		end
-		path = ''
-		name = pathname
-	end
-	return find_name(cache[path], name)
-end
-
--- returns a filename with hash in a repo
-function localvfs.filename( hash )
-	return _repo:hash(hash)
-end
-
--- returns a filename in a repo for writing
-function localvfs.writefile( pathname )
-	return _repo:realpath(pathname)
-end
-
-function localvfs.mkdir( pathname )
-	local path, name = pathname:match "(.*)/(.-)$"
-	local realpath = _repo:realpath(path)
-	return fs.mkdir(realpath .. "/" .. name)
-end
-
--- return { dir = { hashes } , file = { hashes } }
-function localvfs.list( hash )
-	return _repo:dir(hash)
-end
-
-function localvfs.build(rebuild)
-	local oldroot = _repo_root
-	if rebuild then
-		_repo_root = _repo:rebuild()
-	else
-		_repo_root = _repo:build()
-	end
-	if oldroot ~= _repo_root then
-		cache = setmetatable({} , cache_fetch )
-	end
-end
-
-function localvfs.touch(pathname)
-	_repo:touch(pathname)
+function localvfs:uid(filepath)
+	return filepath:match "^/?(.-)/?$"
 end
 
 return localvfs

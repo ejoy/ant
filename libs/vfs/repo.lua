@@ -1,3 +1,5 @@
+local require = import and import(...) or require
+
 -- This module can build/rebuild a directory into a repo.
 --
 
@@ -8,6 +10,7 @@ repo.__index = repo
 
 local fs = require "filesystem"
 local crypt = require "crypt"
+local access = require "repoaccess"
 
 local function addslash(name)
 	return (name:gsub("[/\\]?$","/"))
@@ -33,26 +36,6 @@ local function refname(self, hash)
 	return string.format("%s/%s/%s.ref", self._repo, hash:sub(1,2), hash)
 end
 
-local function readmount(filename)
-	local f = io.open(filename, "rb")
-	local ret = {}
-	if not f then
-		return ret
-	end
-	for line in f:lines() do
-		local name, path = line:match "^%s*(.-)%s*:%s*(.-)%s*$"
-		if name == nil then
-			if not (line:match "^%s*#" or line:match "^%s*$") then
-				f:close()
-				error ("Invalid .mount file : " .. line)
-			end
-		end
-		path = path:gsub("%s*#.*$","")	-- strip comment
-		ret[name] = path
-	end
-	return ret
-end
-
 function repo.new(rootpath)
 	rootpath = addslash(rootpath)
 	local repopath = rootpath .. ".repo"
@@ -61,23 +44,15 @@ function repo.new(rootpath)
 		return
 	end
 
-	local mountpoint = readmount(rootpath .. ".mount")
+	local mountpoint = access.readmount(rootpath .. ".mount")
 	rootpath = mountpoint[''] or rootpath
-	local mountname = {}
-
-	for name, path in pairs(mountpoint) do
-		if name ~= '' then
-			table.insert(mountname, name)
-		end
-		mountpoint[name] = path
-	end
-	table.sort(mountname, function(a,b) return a>b end)
+	local mountname = access.mountname(mountpoint)
 	return setmetatable({
 		_mountname = mountname,
 		_mountpoint = mountpoint,
 		_root = rootpath,
 		_repo = repopath,
-		_namecache = {},	-- todo: read index cache
+		_namecache = {},
 		_lock = filelock(repopath),	-- lock repo
 	}, repo)
 end
@@ -109,49 +84,7 @@ local function sha1_from_file(filename)
 end
 
 -- map path in repo to realpath (replace mountpoint)
-function repo:realpath(pathname)
-	local mountname = self._mountname
-	for _, mpath in ipairs(self._mountname) do
-		if pathname == mpath then
-			return self._mountpoint[mpath]
-		end
-		local n = #mpath + 1
-		if pathname:sub(1,n) == mpath .. '/' then
-			return self._mountpoint[mpath] .. "/" .. pathname:sub(n+1)
-		end
-	end
-	return self._root .. pathname
-end
-
-local function list_files(self, filepath)
-	local rpath = self:realpath(filepath)
-	local files = {}
-	for name in fs.dir(rpath) do
-		if name:sub(1,1) ~= '.' then	-- ignore .xxx file
-			files[name] = true
-		end
-	end
-	if filepath == '' then
-		-- root path
-		for mountname in pairs(self._mountpoint) do
-			if mountname ~= ''  and not mountname:find("/",1,true) then
-				files[mountname] = true
-			end
-		end
-	else
-		filepath = filepath .. '/'
-		local n = #filepath
-		for mountname in pairs(self._mountpoint) do
-			if mountname:sub(1,n) == filepath then
-				local name = mountname:sub(n+1)
-				if not name:find("/",1,true) then
-					files[name] = true
-				end
-			end
-		end
-	end
-	return files
-end
+repo.realpath = access.realpath
 
 -- build cache, cache is a table link list of sha1->{ filelist = ,  filename = , timestamp= , next= }
 -- filepath should be end of / or '' for root
@@ -170,7 +103,7 @@ local function repo_build_dir(self, filepath, cache, namehashcache)
 	end
 	local rpath = self:realpath(filepath)
 	local hashs = {}
-	local files = list_files(self, filepath)
+	local files = access.list_files(self, filepath)
 
 	for name in pairs(files) do
 		local fullname = filepath == '' and name or filepath .. '/' .. name	-- full name in repo
@@ -282,6 +215,15 @@ function repo:rebuild()
 	self:build()
 end
 
+function repo:close()
+	self._lock:free()
+	self._lock = nil
+	self._mountname = nil
+	self._mountpoint = nil
+	self._root = nil
+	self._repo = nil
+	self._namecache = nil
+end
 
 --[[
 	all path should be absolute path
@@ -292,9 +234,7 @@ end
 ]]
 function repo.init(mount)
 	local rootpath = mount[1]
-	if not isdir(rootpath) then
-		assert(fs.mkdir(rootpath))
-	end
+	assert(isdir(rootpath), "Not a dir")
 	rootpath = addslash(rootpath)
 	local mountfile = {}
 	for name, path in pairs(mount) do
@@ -323,13 +263,12 @@ function repo.init(mount)
 	end
 
 	local rootf = repopath .. "/root"
-	local m = fs.attributes(rootf, "mode")
 	if not isfile(rootf) then
 		-- rebuild repo
 		local r = repo.new(rootpath)
 		r:rebuild()
 		-- unlock repo
-		r._lock:free()
+		r:close()
 	end
 end
 
@@ -345,7 +284,7 @@ end
 
 function repo:touch_path(pathname)
 	local namecache = self._namecache
-	if pathname == '' then
+	if pathname == '' or pathname == '/' then
 		-- clear all
 		namecache = {}
 		return
