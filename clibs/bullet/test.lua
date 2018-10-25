@@ -1,10 +1,10 @@
-local bullet_module = require "bullet2"
+local bullet_module = require "bullet.ablb"
 
 local bullet = bullet_module.new()
 local btworld = bullet:new_world()
 
 local shapes = {
-	plane = btworld:new_shape("plane", 0,1,0,-3),
+	plane = btworld:new_shape("plane", 0, 1, 0, -3),
 	sphere = btworld:new_shape("sphere", 5),
 	capsule = btworld:new_shape("capsule", 2, 6, 1),
 	compound = btworld:new_shape("compound"),
@@ -22,13 +22,13 @@ end
 local gen_user_idx = get_user_idx_op()
 
 local useridx = gen_user_idx()
-local object_plane = btworld:new_collision_obj(shapes.plane, useridx, {0,0,0}, {0,0,0,1})
-btworld:add_collision_obj(object_plane)
+local object_plane = btworld:new_obj(shapes.plane, useridx, {0,0,0}, {0,0,0,1})
+btworld:add_obj(object_plane)
 
-btworld:add_to_compund(shapes.compound, shapes.sphere, {0,0,0},{90,0,0,1})
+btworld:add_to_compound(shapes.compound, shapes.sphere, {0,0,0},{90,0,0,1})
 
 local compound_idx = gen_user_idx()
-local compound_obj = btworld:new_collision_obj(shapes.compound, compound_idx, {2,2,2},{45,0,0,1})
+local compound_obj = btworld:new_obj(shapes.compound, compound_idx, {2,2,2},{45,0,0,1})
 
 local radius = 1
 local num_compounds = 5
@@ -37,19 +37,19 @@ local num_spheres = 1
 local objs = {} 
  
 for i = 1, num_compounds do 
-    local compound_shape = btworld:create_shape("compound")
+    local compound_shape = btworld:new_shape("compound")
     for j = 1, num_spheres do 
        local pos = { j*1.5, 0, 0 }
        local rot = { 0, 0, 0, 1 }
-       local child_shape = btworld.create_shape("sphere", radius)
-       btworld:add_to_compund(compound_shape, child_shape, pos, rot)
+       local child_shape = btworld:new_shape("sphere", radius)
+       btworld:add_to_compound(compound_shape, child_shape, pos, rot)
     end 
     -- object
     local pos = { i*1*1.5, -2.4, 0 }
 	local rot = { 0, 0, 0, 1}
 	local idx = gen_user_idx()
-	local object = btworld:new_collision_obj(compound_shape, idx, pos, rot)
-	btworld:add_collision_obj(object)        
+	local object = btworld:new_obj(compound_shape, idx, pos, rot)
+	btworld:add_obj(object)        
     objs[i] = object 
 end 
   
@@ -58,12 +58,14 @@ print("world collide begin ----")
 local collide_points = {}
 
 btworld:collide(function (objA, objB, userdata)
-	assert(type(objA) == type(objB))
-	assert(type(objA) == "luserdata")
-	assert(type(userdata) == "luserdata")
+	assert(type(objA) == type(objB))	
+	assert(type(objA) == "userdata")
+	assert(type(userdata) == "userdata")
 
 	local pts = btworld:collide_objects(objA, objB, userdata)
-	table.move(pts, 1, #pts, #collide_points, collide_points)
+	if pts then
+		table.move(pts, 1, #pts, #collide_points, collide_points)
+	end
 end)
 
 print("world collide end ---")
@@ -85,7 +87,7 @@ print("")
 
 print("simple collide obj[1] to obj[2]")
 local objAB_collide_points = btworld:collide_objects(objs[1], objs[2] )
-if #objAB_collide_points > 0 then 
+if objAB_collide_points then 
     print("objA objB collide result : ", #objAB_collide_points)
     print_collide_points(objAB_collide_points)  
 end 
@@ -155,13 +157,13 @@ print("")
 
 local ent_box = gen_user_idx()
 local ent_capsule = gen_user_idx()
-local tshape_box = btworld:new_shape("cube", {3,0.5,3} )
+local tshape_box = btworld:new_shape("cube", 3, 0.5, 3)
 local tshape_capsule = btworld:new_shape("capsule", 2,6,1)
-local tobj_box = btworld:new_collision_obj(tshape_box, ent_box, {0,0,0},{0,0,0,1})
-local tobj_capsule = btworld:create_collisionObject(tshape_capsule, ent_capsule, {0,5.5,0},{0,0,0,1})
+local tobj_box = btworld:new_obj(tshape_box, ent_box, {0,0,0},{0,0,0,1})
+local tobj_capsule = btworld:new_obj(tshape_capsule, ent_capsule, {0,5.5,0},{0,0,0,1})
 
-local box_capsule_points = btworld:collide(tobj_box, tobj_capsule)
-if #box_capsule_points > 0 then 
+local box_capsule_points = btworld:collide_objects(tobj_box, tobj_capsule)
+if box_capsule_points then 
     print("box and capsule collide, hit count is : ", #box_capsule_points)
     print_collide_points(box_capsule_points)
 end 
