@@ -95,11 +95,7 @@ function add_entity_sys:init()
 		ms(lentity.rotation, {45, -135, 45}, "=")
 		ms(lentity.position, {100, 100, 100}, "=")
 
-<<<<<<< HEAD
-		ms(lentity.scale, {1, 1, 1}, "=")
-=======
 		ms(lentity.scale, {1.1, 1.1, 1.1}, "=")
->>>>>>> 80d9c68923dc7d0c0a804e6d720d73c97d35c72f
 
 		lentity.name.n = "directional_light"
 
