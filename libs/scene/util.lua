@@ -1,6 +1,7 @@
+-- luacheck: globals log bullet
+local log = log and log(...) or print
 local ecs = require "ecs"
 local task = require "editor.task"
-local asset = require "asset"
 
 --local elog = require "editor.log"
 --local db = require "debugger"
@@ -16,6 +17,9 @@ util.__index = util
 
 local world = nil
 
+local bullet_module = require "bullet"
+bullet = bullet_module.new()
+
 function util.start_new_world(input_queue, fbw, fbh, modules)
 	if input_queue == nil then		
 		log("input queue is not privided, no input event will be received!")
@@ -26,7 +30,11 @@ function util.start_new_world(input_queue, fbw, fbh, modules)
 		module_path = 'libs/?.lua;libs/?/?.lua',
 		update_order = {"timesystem"},
 		update_bydepend = true,
-		args = { mq = input_queue, fb_size={w=fbw, h=fbh} },
+		args = { 
+			mq = input_queue, 
+			fb_size={w=fbw, h=fbh},
+			physic_world = bullet:new_world(),
+		},
     }
     
 	task.loop(world.update)  

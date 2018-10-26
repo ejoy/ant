@@ -19,6 +19,7 @@ ecs.import "scene.filter_system"
 -- animation
 ecs.import "animation.skinning.skinning_system"
 ecs.import "animation.animation"
+ecs.import "physic.collision"
 
 -- editor
 ecs.import "editor.ecs.camera_controller"
@@ -93,6 +94,7 @@ end
 local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	local eid = world:new_entity("position", "scale", "rotation",
 	"skeleton", "animation", "skinning_mesh", 
+	"collision",		-- physic relate
 	"mesh", "material",
 	"name", "can_render")
 
@@ -104,6 +106,24 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 
 	comp_util.load_skeleton(e, skepath)
 	comp_util.load_animation(e, anipath)
+
+	local function init_collision()
+		local colcomp = e.collision
+		local shape = assert(colcomp).shape
+		assert("table" == type(shape))
+		local phy_world = world.arg.physic_world
+
+		local bu = require "bullet.util"
+		shape.type = "plane"
+		shape.nx, shape.ny, shape.nz, shape.distance = 0, 1, 0, 10		
+		local shapehandle = bu.create_shape(phy_world, shape.type, shape)
+		shape.handle = shapehandle
+
+		local colobj = assert(colcomp).obj
+		colobj.handle = phy_world:new_obj(shapehandle, {0, 0, 0}, {0, 0, 0, 1})
+	end
+
+	init_collision()
 
 	do
 		local skehandle = assert(e.skeleton.assetinfo.handle)
