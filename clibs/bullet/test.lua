@@ -2,6 +2,7 @@ local bullet_module = require "bullet"
 
 local bullet = bullet_module.new()
 local btworld = bullet:new_world()
+local bu = require "util"
 
 local shapes = {
 	plane = btworld:new_shape("plane", 0, 1, 0, -3),
@@ -37,11 +38,11 @@ local num_spheres = 1
 local objs = {} 
  
 for i = 1, num_compounds do 
-    local compound_shape = btworld:new_shape("compound")
+    local compound_shape = bu.create_compoundShape(btworld)
     for j = 1, num_spheres do 
        local pos = { j*1.5, 0, 0 }
-       local rot = { 0, 0, 0, 1 }
-       local child_shape = btworld:new_shape("sphere", radius)
+	   local rot = { 0, 0, 0, 1 }
+       local child_shape = bu.create_sphereShape(btworld, radius)
        btworld:add_to_compound(compound_shape, child_shape, pos, rot)
     end 
     -- object
