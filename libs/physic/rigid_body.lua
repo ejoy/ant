@@ -7,6 +7,7 @@ ecs.component "rigid_body" {
 		default = {},
 	},
 	obj = {
-
+		type = "userdata",
+		default = {},
 	}
 }

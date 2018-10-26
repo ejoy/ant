@@ -46,6 +46,8 @@ ECS框架的主要文件
 #### packfile
 用于将特定文件在加载时进行转换后读取。如shader下的.sc文件，会在读取的时候，先将sc文件编译为bin文件，然后读取。故，填写shader路径时，不应该带上具体的后缀sc，因为框架会尝试先读取同名的.lk文件，然后在lk文件中找到真正需要编译的sc文件。如，line/vs_line，表示的是，使用assets/shaders/src/line/vs_line.lk文件中的src_path指定的文件进行编译。此外，除了shader文件外，模型文件也会进行转换，转换为antmesh文件。转换/编译后的文件会放在根目录下的cache文件夹下。
 
+#### physic
+与物理相关的库及对应的ecs系统
 
 #### render
 渲染相关。如camera，light等
