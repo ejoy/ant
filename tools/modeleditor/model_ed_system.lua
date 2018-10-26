@@ -28,6 +28,8 @@ ecs.import "editor.ecs.pickup_system"
 -- editor elements
 ecs.import "editor.ecs.general_editor_entities"
 
+local bu = require "bullet.util"
+
 local model_ed_sys = ecs.system "model_editor_system"
 model_ed_sys.singleton "math_stack"
 model_ed_sys.depend "camera_init"
@@ -91,10 +93,24 @@ local function load_mesh_assetinfo(skinning_mesh_comp)
 	}
 end
 
+local smaplemaerial = "mem://sample.material"
+fu.write_to_file(smaplemaerial, [[
+	shader = {
+		vs = "mesh_skin/vs_color_lighting",
+		fs = "mesh_skin/fs_color_lighting",
+	}
+
+	state = "default.state"
+
+	properties = {
+
+	}
+]])
+
 local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	local eid = world:new_entity("position", "scale", "rotation",
 	"skeleton", "animation", "skinning_mesh", 
-	"collision",		-- physic relate
+	"rigid_body",		-- physic relate
 	"mesh", "material",
 	"name", "can_render")
 
@@ -108,19 +124,18 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	comp_util.load_animation(e, anipath)
 
 	local function init_collision()
-		local colcomp = e.collision
-		local shape = assert(colcomp).shape
-		assert("table" == type(shape))
+		local rigid_body = e.rigid_body
+		local aabb = e.mesh.assetinfo.handle.groups.bounding.aabb
+		local len = math.sqrt(ms(aabb.max, aabb.min, "-1.T"))
+
 		local phy_world = world.arg.physic_world
 
-		local bu = require "bullet.util"
-		shape.type = "plane"
-		shape.nx, shape.ny, shape.nz, shape.distance = 0, 1, 0, 10		
-		local shapehandle = bu.create_shape(phy_world, shape.type, shape)
-		shape.handle = shapehandle
-
-		local colobj = assert(colcomp).obj
-		colobj.handle = phy_world:new_obj(shapehandle, {0, 0, 0}, {0, 0, 0, 1})
+		local shape = {type= "capsule", radius=0.1 * len, height=0.8 * len, axis=2}
+		shape.handle = bu.create_shape(phy_world, shape.type, shape)		
+		table.insert(rigid_body.shapes, shape)
+		
+		local colobj = assert(rigid_body).obj
+		colobj.handle = phy_world:new_obj(shape.handle, {0, 0, 0}, {0, 0, 0, 1})
 	end
 
 	init_collision()
@@ -138,20 +153,6 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	comp_util.load_skinning_mesh(e, skinning_meshpath)	
 	e.mesh.assetinfo = load_mesh_assetinfo(e.skinning_mesh)
 
-	local smaplemaerial = "mem://sample.material"
-	fu.write_to_file(smaplemaerial, [[
-		shader = {
-			vs = "mesh_skin/vs_color_lighting",
-			fs = "mesh_skin/fs_color_lighting",
-		}
-
-		state = "default.state"
-
-		properties = {
-
-		}
-	]])
-
 	comp_util.load_material(e, {smaplemaerial})
 	return eid
 end
@@ -166,6 +167,77 @@ local function update_animation_ratio(eid, cursor_pos)
 	local e = world[eid]
 	local anicomp = assert(e.animation)	
 	anicomp.ratio = cursor_pos
+end
+
+local function create_plane_entity()
+	local eid = world:new_entity("position", "rotation", "scale",
+		"mesh", "material",
+		"rigid_body",
+		"name", "can_render")
+
+	local plane = world[eid]
+	local function create_plane_mesh_info()
+		local decl = bgfx.vertex_decl {
+			{ "POSITION", 3, "FLOAT" },
+            { "NORMAL", 3, "FLOAT" },
+            { "COLOR0", 4, "UINT8", true },
+		}
+		local unit = 5
+		local half_unit = unit * 0.5
+		return {
+			handle = {
+				groups = {
+					{
+						bounding = {
+							aabb = {
+								min = {},
+								max = {},
+							},
+							sphere = {
+								center = {},
+								radius = 1,
+							}
+						},
+						vb = {
+							decls = {decl},
+							handles = {
+								bgfx.create_vertex_buffer(
+									{
+										"ffffffd",
+										-half_unit, 0, half_unit,
+										0, 1, 0,
+										0xff080808,
+
+										half_unit, 0, half_unit,
+										0, 0, 0,
+										0xff080808,
+
+										half_unit, 0, -half_unit,
+										0, 0, 0,
+										0xff080808,
+									},
+									decl)
+							}
+						},					
+					}
+				}
+			}
+		}
+	end
+
+	plane.mesh.assetinfo = create_plane_mesh_info()
+
+	comp_util.load_material(plane, {smaplemaerial})
+
+	-- rigid_body
+	local rigid_body = plane.rigid_body
+	local shape = {type="plane", nx=0, ny=1, nz=0, distance=10}
+
+	local physic_world = world.args.physic_world
+	shape.handle = bu.create_shape(physic_world, shape.type, shape)
+	table.insert(rigid_body.shapes, shape)
+
+	rigid.obj.handle = physic_world:new_obj(shape.handle, {0, 0, 0}, {0, 0, 0, 1})
 end
 
 local function init_control(ms)
