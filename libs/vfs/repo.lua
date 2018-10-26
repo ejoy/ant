@@ -312,23 +312,7 @@ local function update_ref(filename, content)
 	end
 end
 
-local function remove_ref(filename, name)
-	local content = {}
-	local f = io.open(filename, "rb")
-	if not f then
-		return
-	end
-	for line in f:lines() do
-		local n = line:match "^[df] (%S*)"
-		if n ~= name then
-			table.insert(content, line)
-		end
-	end
-	f:close()
-	update_ref(filename, content)
-end
-
-local function read_ref(self, hash, conflict)
+local function read_ref(self, hash)
 	local cache = self._namecache
 	local filename = refname(self, hash)
 	local items = {}
@@ -339,10 +323,6 @@ local function read_ref(self, hash, conflict)
 			if _DEBUG then print("INVALID", hash) end
 			needupdate = true
 		elseif cache[name] then
-			if not cache[name].timestamp then
-				-- dir conflict, remove later
-				conflict[name] = cache[name].hash
-			end
 			needupdate = true
 		else
 			local timestamp = tonumber(ts)
@@ -356,8 +336,8 @@ local function read_ref(self, hash, conflict)
 					needupdate = true
 				end
 			else
-				cache[name] = { hash = hash }
-				table.insert(items, line)
+				-- remove dir
+				needupdate = true
 			end
 		end
 	end
@@ -368,21 +348,15 @@ end
 
 function repo:index()
 	local repo = self._repo
-	local conflict = {}
 	local namecache = {}
 	self._namecache = namecache
 	for i = 0, 0xff do
 		local refpath = string.format("%s/%02x", repo, i)
 		for name in fs.dir(refpath) do
 			if name:sub(-4) == ".ref" then
-				read_ref(self, name:sub(1,-5), conflict)
+				read_ref(self, name:sub(1,-5))
 			end
 		end
-	end
-	for name,hash in pairs(conflict) do
-		namecache[name] = nil
-		local filename = refname(self, hash)
-		remove_ref(filename, name)
 	end
 	return self:build()
 end
