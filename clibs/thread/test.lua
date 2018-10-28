@@ -15,7 +15,7 @@ thread.thread ( [[
 	error ("Exit")
 ]] , print )
 
-thread.sleep(1)
+--thread.sleep(1)
 
-print(err:pop())
-print(data:pop())
+print("Error:", err:bpop())
+print("Channel:", data:bpop())
