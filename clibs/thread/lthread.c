@@ -218,7 +218,8 @@ thread_luamain(lua_State *L) {
 	int id = atom_inc(&g_thread_id);
 	lua_pushinteger(L, id);
 	lua_setfield(L, LUA_REGISTRYINDEX, "THREADID");
-	luaL_requiref(L, "thread", luaopen_thread_worker, 0);
+	// todo: preload thread, and prevent dlclose thread.dll
+	//	luaL_requiref(L, "thread", luaopen_thread_worker, 0);
 	void *ud = lua_touserdata(L, 1);
 	struct thread_args *args = (struct thread_args *)ud;
 	if (luaL_loadbuffer(L, args->source, args->sz, "=threadinit") != LUA_OK) {
@@ -309,11 +310,16 @@ luaopen_thread_worker(lua_State *L) {
 
 LUAMOD_API int
 luaopen_thread(lua_State *L) {
-	lua_pushcfunction(L, lnewchannel);
-	lua_pushstring(L, "errlog");
-	lua_call(L, 1, 0);
-	assert(g_thread_id == 0);
-	lua_pushinteger(L, 0);
-	lua_setfield(L, LUA_REGISTRYINDEX, "THREADID");
+	if (lua_getfield(L, LUA_REGISTRYINDEX, "THREADID") == LUA_TNIL) {
+		lua_pop(L, 1);
+		lua_pushcfunction(L, lnewchannel);
+		lua_pushstring(L, "errlog");
+		lua_call(L, 1, 0);
+		assert(g_thread_id == 0);
+		lua_pushinteger(L, 0);
+		lua_setfield(L, LUA_REGISTRYINDEX, "THREADID");
+	} else {
+		lua_pop(L,1);
+	}
 	return luaopen_thread_worker(L);
 }

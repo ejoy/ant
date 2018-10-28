@@ -28,11 +28,11 @@ repo:build()
 print("libs path = ", repo:realpath "libs")
 
 local localrepo = require "vfs.local"
-local repo = localrepo.open(home)
+assert(localrepo.open(home))
 
-local function list_repo(repo)
+local function list_repo()
 	local function print_dir(path, ident)
-		local filelist = repo:list(path)
+		local filelist = localrepo.list(path)
 		if filelist then
 			for name, type in pairs(filelist) do
 				if type == "dir" then
@@ -47,4 +47,4 @@ local function list_repo(repo)
 	print_dir("", 0)
 end
 
-list_repo(repo)
+list_repo()

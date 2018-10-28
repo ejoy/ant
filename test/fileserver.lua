@@ -29,7 +29,6 @@ local connection = {}
 local client = {} ; client.__index = client
 
 local function new_connection(fd, addr, port)
-	table.insert(readfds, fd)
 	local obj = { _fd = fd , _read = {}, _write = {}, _peer = addr .. ":" .. port }
 	LOG("Accept :", obj._peer)
 	connection[fd] = setmetatable(obj, client)

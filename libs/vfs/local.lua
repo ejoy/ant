@@ -33,8 +33,10 @@ end
 -- open a repo in repopath
 
 local cachemeta = { __mode = "kv" }
+local self
 
 function localvfs.open(repopath)
+	assert(self == nil, "Can't open twice")
 	if not isdir(repopath) then
 		return
 	end
@@ -43,18 +45,21 @@ function localvfs.open(repopath)
 	local rootpath = mountpoint[''] or repopath
 	local mountname = access.mountname(mountpoint)
 
-	return setmetatable({
+	self = {
 		_mountname = mountname,
 		_mountpoint = mountpoint,
 		_root = rootpath,
 		_cache = setmetatable({} , cachemeta),
-	}, localvfs)
+	}
+	return true
 end
 
-localvfs.realpath = access.realpath
+function localvfs.realpath(pathname)
+	return access.realpath(self, repo)
+end
 
 -- list files { name : type (dir/file) }
-function localvfs:list(path)
+function localvfs.list(path)
 	path = path:match "^/?(.-)/?$"
 	local item = self._cache[path]
 	if item then
@@ -75,7 +80,7 @@ function localvfs:list(path)
 	return item
 end
 
-function localvfs:uid(filepath)
+function localvfs.uid(filepath)
 	return filepath:match "^/?(.-)/?$"
 end
 
