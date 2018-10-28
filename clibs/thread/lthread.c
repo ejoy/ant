@@ -209,10 +209,12 @@ thread_args_free(struct thread_args *args) {
 	free(args);
 }
 
+static int luaopen_thread_worker(lua_State *L);
+
 static int
 thread_luamain(lua_State *L) {
 	luaL_openlibs(L);
-	luaL_requiref(L, "thread", luaopen_thread, 0);
+	luaL_requiref(L, "thread", luaopen_thread_worker, 0);
 	void *ud = lua_touserdata(L, 1);
 	struct thread_args *args = (struct thread_args *)ud;
 	if (luaL_loadbuffer(L, args->source, args->sz, "=threadinit") != LUA_OK) {
@@ -281,8 +283,8 @@ lthread(lua_State *L) {
 	return 0;
 }
 
-LUAMOD_API int
-luaopen_thread(lua_State *L) {
+static int
+luaopen_thread_worker(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "sleep", lsleep },
@@ -293,4 +295,12 @@ luaopen_thread(lua_State *L) {
 	};
 	luaL_newlib(L,l);
 	return 1;
+}
+
+LUAMOD_API int
+luaopen_thread(lua_State *L) {
+	lua_pushcfunction(L, lnewchannel);
+	lua_pushstring(L, "errlog");
+	lua_call(L, 1, 0);
+	return luaopen_thread_worker(L);
 }

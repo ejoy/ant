@@ -1,6 +1,5 @@
 local thread = require "thread"
 
-thread.newchannel "errlog"
 thread.newchannel "channel"
 
 local err = thread.channel "errlog"
