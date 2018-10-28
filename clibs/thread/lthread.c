@@ -35,6 +35,7 @@ struct boxchannel {
 };
 
 struct channel g_channel[MAX_CHANNEL];
+int g_thread_id = 0;
 LUAMOD_API int luaopen_thread(lua_State *L);
 
 static struct channel *
@@ -214,6 +215,9 @@ static int luaopen_thread_worker(lua_State *L);
 static int
 thread_luamain(lua_State *L) {
 	luaL_openlibs(L);
+	int id = atom_inc(&g_thread_id);
+	lua_pushinteger(L, id);
+	lua_setfield(L, LUA_REGISTRYINDEX, "THREADID");
 	luaL_requiref(L, "thread", luaopen_thread_worker, 0);
 	void *ud = lua_touserdata(L, 1);
 	struct thread_args *args = (struct thread_args *)ud;
@@ -294,6 +298,12 @@ luaopen_thread_worker(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
+	if (lua_getfield(L, LUA_REGISTRYINDEX, "THREADID") != LUA_TNUMBER) {
+		return luaL_error(L, "No THREADID in registry");
+	}
+	lua_setfield(L, -2, "id");
+	lua_pushnil(L);
+	lua_setfield(L, LUA_REGISTRYINDEX, "THREADID");
 	return 1;
 }
 
@@ -302,5 +312,8 @@ luaopen_thread(lua_State *L) {
 	lua_pushcfunction(L, lnewchannel);
 	lua_pushstring(L, "errlog");
 	lua_call(L, 1, 0);
+	assert(g_thread_id == 0);
+	lua_pushinteger(L, 0);
+	lua_setfield(L, LUA_REGISTRYINDEX, "THREADID");
 	return luaopen_thread_worker(L);
 }
