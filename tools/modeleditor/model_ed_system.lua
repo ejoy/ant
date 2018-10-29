@@ -379,6 +379,9 @@ function model_ed_sys:init()
 	local ms = self.math_stack
 	init_control(ms)
 	init_lighting(ms)
-	
+
 	create_plane_entity()
+
+	local comp = {}
+	cu.load_mesh(comp, "bunny.mesh")
 end
