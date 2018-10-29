@@ -236,6 +236,16 @@ get_id(lua_State *L, int index) {
 	return v;
 }
 
+static void
+assign_ref(lua_State *L, struct refobject * ref, int64_t rid) {
+	int64_t markid = lastack_mark(ref->LS, rid);
+	if (markid == 0) {
+		return luaL_error(L, "Mark invalid object id");
+	}
+	lastack_unmark(ref->LS, ref->id);
+	ref->id = markid;
+}
+
 static int
 lassign(lua_State *L) {
 	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
@@ -254,12 +264,7 @@ lassign(lua_State *L) {
 			return luaL_error(L, "assign operation : type mismatch");
 		}
 
-		int64_t markid = lastack_mark(ref->LS, rid);
-		if (markid == 0) {
-			return luaL_error(L, "Invalid object id");
-		}
-		lastack_unmark(ref->LS, ref->id);
-		ref->id = markid;
+		assign_ref(L, ref, rid);
 		break;
 	}
 	case LUA_TUSERDATA: {
@@ -1351,7 +1356,7 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 			luaL_error(L, "need a ref object for assign");
 		}
 		struct refobject * ref = (struct refobject *)lua_touserdata(L, index);
-		ref->id = lastack_mark(LS, id);
+		assign_ref(L, ref, id);
 		refstack_pop(RS);
 		break;
 	}
