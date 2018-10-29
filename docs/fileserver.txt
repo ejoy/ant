@@ -20,13 +20,20 @@ hash sha1 小写 hex 格式
 ROOT 新的 ROOT hash
 hash sha1
 
-FILE 推送文件
+BLOB 推送数据块
 hash sha1
-offset/size 用 / 分割的两个十进制文本数字。用来发送部分文件，对大文件来说，可能会分多条协议发送。offset 是 base 0 的，小文件可以直接 0/size 一次发送。
-content 数据块。
-注：offset/size 字段可以为空，这样 content 也为空。这种情况表示该文件不存在。如果文件内容为空，则应该发送 0/0 。
+content 数据块
 
+MISSING 缺少文件
+hash sha1
 
+FLIE 推送大文件
+hash sha1
+size 十进制数字文件长度
 
+SLICE 推送部分文件
+hash sha1
+offset 十进制数字长度 (base 0)
+content 数据块
 
-
+文件可以由多个 SLICE 组成，依次推送。也可能因为多次请求而重新发送。例如，连续收到两次 GET ，第二次发生后就立刻从 offset 0 开始重新推送文件，并中断第一次 GET 的回应。

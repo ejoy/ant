@@ -21,6 +21,7 @@
 #define getsockopt win_getsockopt
 #define setsockopt win_setsockopt
 #define close closesocket
+#define select win_select
 #ifdef errno
 #undef errno
 #endif
@@ -40,6 +41,7 @@
 int win_getsockopt(SOCKET sockfd, int level, int optname, void *optval, socklen_t *optlen);
 int win_setsockopt(SOCKET sockfd, int level, int optname, const void *optval, socklen_t optlen);
 int wsa_errno();
+int win_select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval * const timeout);
 
 // only support fcntl(fd, F_SETFL, O_NONBLOCK)
 #define F_SETFL 0
