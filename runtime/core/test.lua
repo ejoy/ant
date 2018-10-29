@@ -1,39 +1,48 @@
 dofile "libs/init.lua"
 
-package.preload.lfs = function() return require "winfile" end
+--package.path = "runtime/core/firmware/?.lua;"..package.path
 
-local vfs = dofile "runtime/core/firmware/vfs.lua"
-local client_repo = vfs.new( "runtime/core/firmware", "runtime/core/test" )
+local reponame = assert((...), "Need repo name")
 
+local fs = require "filesystem"
+local thread = require "thread"
 
-local vfsrepo = require "vfsrepo"
-local server_repo = vfsrepo.new()
-server_repo:init "libs/vfsrepo/test"
+thread.thread [[
+	-- thread for log
+	dofile "libs/init.lua"
 
-local root = server_repo:root_hash()
-client_repo:changeroot(root)
+	local thread = require "thread"
+	local err = thread.channel "errlog"
 
-local function readfile(path)
-	print("Read file", path)
 	while true do
-		local f, hash = client_repo:open(path)
-		if f then
-			return f
-		end
-		print("Try to request hash from server repo", hash)
-		local realpath = server_repo:load(hash)
-		if realpath then
-			local f = assert(io.open(realpath, "rb"))
-			local content = f:read "a"
-			f:close()
-			client_repo:write(hash, content)
+		print("ERROR:" .. err:bpop())
+	end
+]]
+
+local repopath = fs.personaldir() .. "/" .. reponame
+local firmware = "runtime/core/firmware"
+
+local boot = assert(loadfile(firmware .. "/bootstrap.lua"))
+
+boot(firmware)
+
+local vfs = require "vfs"	-- from boot
+
+print("Repo:", repopath)
+vfs.open(repopath)
+
+local function list_dir(d, indent)
+	local dir = vfs.list(d)
+	for name,isdir in pairs(dir) do
+		if isdir then
+			print(string.format("%s%s/", (" "):rep(indent), name))
+			list_dir(d .. "/" .. name, indent + 2)
 		else
-			print("Hash not exist", hash)
-			return
+			print(string.format("%s%s", (" "):rep(indent), name))
 		end
 	end
 end
 
-local f = readfile "f0/f0_1.txt"
-f:close()
+list_dir("",0)
+
 
