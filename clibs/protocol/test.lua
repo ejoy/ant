@@ -1,6 +1,6 @@
 dofile "libs/init.lua"
 
-local core = require "protocol.core"
+local core = require "protocol"
 
 local cache = {}
 
