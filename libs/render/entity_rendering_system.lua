@@ -4,7 +4,7 @@ local world = ecs.world
 ecs.import "render.math3d.math_component"
 ecs.import "render.view_system"
 ecs.import "render.end_frame_system"
-ecs.import "scene.filter_system"
+ecs.import "scene.filter.filter_system"
 
 local ru = require "render.util"
 local bgfx = require "bgfx"

@@ -14,7 +14,7 @@ ecs.import "serialize.serialize_system"
 
 -- scene
 ecs.import "scene.cull_system"
-ecs.import "scene.filter_system"
+ecs.import "scene.filter.filter_system"
 
 -- animation
 ecs.import "animation.skinning.skinning_system"

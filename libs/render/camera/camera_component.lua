@@ -6,7 +6,7 @@ ecs.import "render.window_component"
 ecs.import "inputmgr.message_system"
 
 -- camera entity
-ecs.import "scene.filter_component"
+ecs.import "scene.filter.filter_component"
 ecs.import "render.view_system"
 
 local mu = require "math.util"
