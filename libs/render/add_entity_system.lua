@@ -13,6 +13,11 @@ ecs.import "inputmgr.message_system"
 ecs.import "serialize.serialize_component"
 ecs.import "render.light.light"
 
+-- filter
+ecs.import "scene.filter.lighting_filter"
+ecs.import "scene.filter.shadow_filter"
+ecs.import "scene.filter.transparency_filter"
+
 
 -- test entity
 ecs.import "editor.ecs.editable_hierarchy"
