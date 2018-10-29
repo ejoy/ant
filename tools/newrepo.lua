@@ -18,6 +18,7 @@ print ("Project name :",reponame)
 local mount = {
 	["engine/libs"] = enginepath .. "/libs",
 	["engine/assets"] = enginepath .. "/assets",
+	["firmware"] = enginepath .. "/runtime/core/firmware",
 }
 
 for k,v in pairs(mount) do

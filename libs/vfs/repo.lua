@@ -239,7 +239,7 @@ function repo.init(mount)
 	local mountfile = {}
 	for name, path in pairs(mount) do
 		if name ~= 1 then
-			table.insert(mountfile, string.format("%s:%s", name, path))
+			table.insert(mountfile, string.format("%s %s", name, path))
 		end
 	end
 	if #mountfile > 0 then

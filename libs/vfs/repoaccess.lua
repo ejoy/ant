@@ -9,7 +9,7 @@ function access.readmount(filename)
 		return ret
 	end
 	for line in f:lines() do
-		local name, path = line:match "^%s*(.-)%s*:%s*(.-)%s*$"
+		local name, path = line:match "^%s*(.-)%s+(.-)%s*$"
 		if name == nil then
 			if not (line:match "^%s*#" or line:match "^%s*$") then
 				f:close()

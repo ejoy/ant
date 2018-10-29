@@ -33,6 +33,7 @@ local dir_cache = {}
 local hash_cache = {}
 
 local function list_dir(hash, ident)
+	assert(hash)
 	local dir = dir_cache[hash]
 	if not dir or dir.request then
 		if hash_cache[hash] ~= "request" then
@@ -88,7 +89,9 @@ local function solve_dir(dir, hash, data)
 	for line in data:gmatch "([^\n]*)" do
 		print("  ", line)
 		local t, hash, name = line:match "([fd]) (%S+) (%S+)"
-		table.insert(dir, { type = t, hash = hash, name = name })
+		if t then
+			table.insert(dir, { type = t, hash = hash, name = name })
+		end
 	end
 	dir.request = nil
 	local co = sessions[hash]
