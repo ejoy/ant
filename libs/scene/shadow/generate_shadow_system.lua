@@ -535,8 +535,8 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
 
     -- direction light entity  get light position  from light entity
     local d_light = world:first_entity("directional_light")
-    stack(ctx.directionLight.position,d_light.position,"=")
-    stack(ctx.directionLight.position_ViewSpace,d_light.position,"=")
+    --stack(ctx.directionLight.position,d_light.position,"=")
+    --stack(ctx.directionLight.position_ViewSpace,d_light.position,"=")
 
     -- main camera entity, get main camera's position,direction
     local camera = world:first_entity("main_camera")

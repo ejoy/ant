@@ -51,12 +51,18 @@ local function append_lighting_properties(ms, result)
 			table.insert(dlight_info.dir, ms(dlight.rotation, "dim")) 
 			table.insert(dlight_info.color, l.color)
 			table.insert(dlight_info.intensity, {l.intensity, 0.28, 0, 0})
-
 		end
 
-		properties["directional_lightdir"] 	= {name="Light Direction", type="v4", value = dlight_info.dir}
-		properties["directional_color"] 	= {name="Light Color", type="color", value = dlight_info.color}
-		properties["directional_intensity"] = {name="Light Intensity", type="v4", value = dlight_info.intensity}
+		if next(dlight_info.dir) then
+			properties["directional_lightdir"] 	= {name="Light Direction", type="v4", value = dlight_info.dir}
+		end
+		
+		if next(dlight_info.color) then
+			properties["directional_color"] 	= {name="Light Color", type="color", value = dlight_info.color}
+		end
+		if next(dlight_info.intensity) then
+			properties["directional_intensity"] = {name="Light Intensity", type="v4", value = dlight_info.intensity}
+		end
 
 		return properties
 	end
@@ -96,11 +102,20 @@ local function append_lighting_properties(ms, result)
 
 		end 
 
-		properties["ambient_mode"] = { name ="ambient_mode",type="v4",value = ambient_data.mode }
-		properties["ambient_skycolor"] = { name ="ambient_skycolor",type="color",value=ambient_data.skycolor}
-		properties["ambient_midcolor"] = { name ="ambient_midcolor",type="color",value=ambient_data.midcolor}
-		properties["ambient_groundcolor"] = { name ="ambient_groundcolor",type="color",value=ambient_data.groundcolor}
+		if next(ambient_data.mode) then
+			properties["ambient_mode"] = { name ="ambient_mode",type="v4",value = ambient_data.mode }
+		end
 
+		if next(ambient_data.skycolor) then
+			properties["ambient_skycolor"] = { name ="ambient_skycolor",type="color",value=ambient_data.skycolor}
+		end
+
+		if next(ambient_data.midcolor) then
+			properties["ambient_midcolor"] = { name ="ambient_midcolor",type="color",value=ambient_data.midcolor}
+		end
+		if next(ambient_data.groundcolor) then
+			properties["ambient_groundcolor"] = { name ="ambient_groundcolor",type="color",value=ambient_data.groundcolor}
+		end
 
 		-- print("gen ambient light propertices")
 

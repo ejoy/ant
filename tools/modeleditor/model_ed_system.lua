@@ -19,7 +19,7 @@ ecs.import "scene.filter_system"
 -- animation
 ecs.import "animation.skinning.skinning_system"
 ecs.import "animation.animation"
-ecs.import "physic.collision"
+ecs.import "physic.rigid_body"
 
 -- editor
 ecs.import "editor.ecs.camera_controller"
@@ -27,8 +27,9 @@ ecs.import "editor.ecs.pickup_system"
 
 -- editor elements
 ecs.import "editor.ecs.general_editor_entities"
+local bu = require "bullet.lua.util"
 
-local bu = require "bullet.util"
+local bgfx = require "bgfx"
 
 local model_ed_sys = ecs.system "model_editor_system"
 model_ed_sys.singleton "math_stack"
@@ -80,6 +81,7 @@ local function load_mesh_assetinfo(skinning_mesh_comp)
 		handle = {
 			groups = {
 				{
+					bounding = skinning_mesh:bounding(),
 					vb = {
 						decls = decls,
 						handles = vb_handles,
@@ -107,6 +109,9 @@ fu.write_to_file(smaplemaerial, [[
 	}
 ]])
 
+local sample_obj_user_idx = 1
+local plane_obj_user_idx = 2
+
 local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	local eid = world:new_entity("position", "scale", "rotation",
 	"skeleton", "animation", "skinning_mesh", 
@@ -123,23 +128,6 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	comp_util.load_skeleton(e, skepath)
 	comp_util.load_animation(e, anipath)
 
-	local function init_collision()
-		local rigid_body = e.rigid_body
-		local aabb = e.mesh.assetinfo.handle.groups.bounding.aabb
-		local len = math.sqrt(ms(aabb.max, aabb.min, "-1.T"))
-
-		local phy_world = world.arg.physic_world
-
-		local shape = {type= "capsule", radius=0.1 * len, height=0.8 * len, axis=2}
-		shape.handle = bu.create_shape(phy_world, shape.type, shape)		
-		table.insert(rigid_body.shapes, shape)
-		
-		local colobj = assert(rigid_body).obj
-		colobj.handle = phy_world:new_obj(shape.handle, {0, 0, 0}, {0, 0, 0, 1})
-	end
-
-	init_collision()
-
 	do
 		local skehandle = assert(e.skeleton.assetinfo.handle)
 		local numjoints = #skehandle
@@ -152,6 +140,25 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 
 	comp_util.load_skinning_mesh(e, skinning_meshpath)	
 	e.mesh.assetinfo = load_mesh_assetinfo(e.skinning_mesh)
+
+	local function init_physic_obj()
+		local rigid_body = e.rigid_body
+		
+		local aabb = e.mesh.assetinfo.handle.groups[1].bounding.aabb
+		local len = math.sqrt(ms(aabb.max, aabb.min, "-1.T")[1])
+
+		local phy_world = world.args.physic_world
+
+		local shape = {type= "capsule", radius=0.1 * len, height=0.8 * len, axis=2}
+		shape.handle = bu.create_shape(phy_world, shape.type, shape)		
+		table.insert(rigid_body.shapes, shape)
+		
+		local colobj = assert(rigid_body).obj
+		colobj.handle = phy_world:new_obj(shape.handle, sample_obj_user_idx, {0, 0, 0}, {0, 0, 0, 1})
+		colobj.useridx = sample_obj_user_idx
+	end
+
+	init_physic_obj()
 
 	comp_util.load_material(e, {smaplemaerial})
 	return eid
@@ -237,7 +244,8 @@ local function create_plane_entity()
 	shape.handle = bu.create_shape(physic_world, shape.type, shape)
 	table.insert(rigid_body.shapes, shape)
 
-	rigid_body.obj.handle = physic_world:new_obj(shape.handle, {0, 0, 0}, {0, 0, 0, 1})
+	rigid_body.obj.handle = physic_world:new_obj(shape.handle, plane_obj_user_idx, {0, 0, 0}, {0, 0, 0, 1})
+	rigid_body.obj.useridx = plane_obj_user_idx
 end
 
 local function init_control(ms)
@@ -382,6 +390,6 @@ function model_ed_sys:init()
 
 	create_plane_entity()
 
-	local comp = {}
-	cu.load_mesh(comp, "bunny.mesh")
+	local comp = {mesh={}}	
+	comp_util.load_mesh(comp, "bunny.mesh")
 end
