@@ -237,7 +237,7 @@ local function create_plane_entity()
 	shape.handle = bu.create_shape(physic_world, shape.type, shape)
 	table.insert(rigid_body.shapes, shape)
 
-	rigid.obj.handle = physic_world:new_obj(shape.handle, {0, 0, 0}, {0, 0, 0, 1})
+	rigid_body.obj.handle = physic_world:new_obj(shape.handle, {0, 0, 0}, {0, 0, 0, 1})
 end
 
 local function init_control(ms)
@@ -364,11 +364,7 @@ local function init_control(ms)
 	iup.Map(dlg)
 end
 
--- luacheck: ignore self
-function model_ed_sys:init()
-	local ms = self.math_stack
-	init_control(ms)
-
+local function init_lighting(ms)
 	local lu = require "render.light.util"
 	local leid = lu.create_directional_light_entity(world)
 	local lentity = world[leid]
@@ -376,7 +372,13 @@ function model_ed_sys:init()
 	lightcomp.color = {1,1,1,1}
 	lightcomp.intensity = 2.0
 	ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")
+end
 
-	local maincamera = world:first_entity("main_camera")
-	--assert(maincamera.primitive_filter).no_lighting = true
+-- luacheck: ignore self
+function model_ed_sys:init()
+	local ms = self.math_stack
+	init_control(ms)
+	init_lighting(ms)
+	
+	create_plane_entity()
 end
