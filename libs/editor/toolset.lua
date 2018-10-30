@@ -5,19 +5,31 @@ local PATH = "ant"
 
 local toolset = {}
 
+local cwd = fs.currentdir()
+
+if cwd == nil or cwd == "" then
+	error("empty cwd!")
+end
+
 local default_toolset = {
-	lua = "lua.exe",
-	shaderc = "shadercRelease.exe",
+	lua = cwd .. "/clibs/lua/lua.exe",
+	shaderc = cwd .. "/3rd/bgfx/.build/win64_mingw-gcc/bin/shadercRelease.exe",
+	shaderinc = cwd .. "/3rd/bgfx/src",
 }
 
 function toolset.load_config()
 	local home = fs.personaldir()
 	local toolset_path = string.format("%s/%s/toolset.lua", home, PATH)
 	local ret = {}
-	local f,err = loadfile(toolset_path, "t", ret)
-	if f then
+	local f, err = loadfile(toolset_path, "t", ret)
+	if f == nil then
+		print(err)	
+		for k, v in pairs(default_toolset) do
+			ret[k] = v
+		end
+	else
 		f()
-	end
+	end	
 	return ret
 end
 
@@ -76,7 +88,8 @@ function toolset.compile(filename, paths, renderer)
 
 		local shaderc = paths.shaderc
 		if shaderc and not fs.exist(shaderc)then
-			error(string.format("bgfx shaderc path is privided, but file is not exist, path is : %s", shaderc))
+			error(string.format("bgfx shaderc path is privided, but file is not exist, path is : %s. \
+								you can locate to ant folder, and run : bin/iup.lua tools/config.lua, to set the right path", shaderc))
 		end
 
 		local tbl = {
@@ -98,15 +111,21 @@ function toolset.compile(filename, paths, renderer)
 			local incpath = ""
 			for _, p in ipairs(includes) do
 				if not fs.exist(p) then
-					print(string.format("include path : %s, but not exist!", p))
+					error(string.format("include path : %s, but not exist!", p))
 				end
 				incpath = incpath .. gen_incpath(p) .. " "
 			end
-			if paths.not_include_examples_common == nil then 
+			if paths.not_include_examples_common == nil then				
+				if paths.shaderinc and (not fs.exist(paths.shaderinc)) then
+					error(string.format("bgfx shader include path is needed, \
+										but path is not exist! path have been set : %s", paths.shaderinc))
+				end
+
 				local incexamplepath = fspath.join(paths.shaderinc, "../examples/common")
 				if not fs.exist(incexamplepath) then
-					print(string.format("example include path %s is not exist!", incexamplepath))
+					error(string.format("example is needed, but not exist, path is : %s", incexamplepath))
 				end
+				
 				incpath = incpath .. gen_incpath(incexamplepath)
 			end
 
