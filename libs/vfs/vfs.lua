@@ -55,7 +55,7 @@ function localvfs.open(repopath)
 end
 
 function localvfs.realpath(pathname)
-	return access.realpath(self, repo)
+	return access.realpath(self, repo) , pathname:match "^/?(.-)/?$"
 end
 
 -- list files { name : type (dir/file) }
@@ -74,10 +74,6 @@ function localvfs.list(path)
 	end
 	self._cache[path] = item
 	return item
-end
-
-function localvfs.uid(filepath)
-	return filepath:match "^/?(.-)/?$"
 end
 
 return localvfs

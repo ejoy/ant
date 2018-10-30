@@ -1,4 +1,4 @@
-local firmware = assert((...))
+local firmware, address, port = ...
 
 -- todo : remove this
 dofile "libs/init.lua"
@@ -25,7 +25,12 @@ end
 local init = false
 function vfs.open(repopath)
 	assert(not init)
-	io_req:push { repopath = npath(repopath), firmware = npath(firmware) }	-- todo: address/port
+	io_req:push {
+		repopath = npath(repopath),
+		firmware = npath(firmware),
+		address = address,
+		port = port,
+	}
 	init = true
 end
 
@@ -37,6 +42,10 @@ end
 function vfs.realpath(path)
 	io_req:push(threadid, "GET", npath(path))
 	return io_resp:bpop()
+end
+
+function vfs.prefetch(path)
+	io_req:push(threadid, "PREFETCH", npath(path))
 end
 
 -- init vfs

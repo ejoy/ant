@@ -86,7 +86,7 @@ function vfs:list(path)
 end
 
 function vfs:changeroot(hash)
-	local f = assert(io.open(self.dpath .. "root", "wb"))
+	local f = assert(io.open(self.path .. "root", "wb"))
 	f:write(hash)
 	self.root = hash
 	f:close()

@@ -19,12 +19,24 @@ thread.thread [[
 	end
 ]]
 
+do
+	local err = thread.channel "errlog"
+	function _G.print(...)
+		local t = table.pack( "[Main]", ... )
+		for i= 1, t.n do
+			t[i] = tostring(t[i])
+		end
+		local str = table.concat( t , "\t" )
+		err:push(str)
+	end
+end
+
 local repopath = fs.personaldir() .. "/" .. reponame
 local firmware = "runtime/core/firmware"
 
 local boot = assert(loadfile(firmware .. "/bootstrap.lua"))
 
-boot(firmware)
+boot(firmware, "127.0.0.1", 2018)
 
 local vfs = require "vfs"	-- from boot
 
