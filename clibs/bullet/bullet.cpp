@@ -11,51 +11,8 @@ extern "C" {
 
 #include <cassert>
 
-// extern "C" {
-// //#include <bgfx/c99/bgfx.h>
-// //#include <bgfx/c99/platform.h>
-// }
-
-// #include <bgfx/bgfx.h>
-// #include <bx/allocator.h>
-
-//Big/Small Endian
-#ifdef __MAC__
-#elif  __IOS__
-#elif  __WIN64
-#endif
-
 #include "btBulletDynamicsCommon.h"
 #include "Collision/CollisionSdkC_Api.h"
-
-#define __DEBUG_OUTPU_ 1
-
-//	源文件维护方法：
-//	1. 接口并未稳定，升级可能变化
-//	2. 接口提供的功能并不充分，需要扩充
-//	3. 考虑避免更新带来的覆盖，修改扩充对照保留
-//	则将几个sdkinterface 拷贝到lbullet新目录下，
-//	作为独立分支扩充维护,便利些，避免工程受到较大影响。
-//	或者可以考虑只使用 bullet2 sdk 即可，时间和复杂度可以大幅度降低。
-
-//  考察物理引擎的内存对方管理，物理引擎较重度的管理和维护自己的对象空间，
-//  同时参考 bullet 本身的例子实现
-//  认为接口采用 Lua 系统库 File I/O 的 lightuserdata 方式管理比较合适，
-//	这需要Lua Physics API 配对使用，稍微改变 lua 的自动 gc 习惯。
-
-//  使用 SdkC API, 是为了后面 sdk2->sdk3 可以无缝升级.
-
-/*
-// create and return bullet environment
-sdkhandle
-worldhandle
-shapehandle
-objecthandle
-*/
-
-// quaterion 的使用需要设计几种更简单的接口
-// 1. use euler 
-// 2. axis, angle
 
 struct bullet_node {
 	plCollisionSdkHandle sdk;
@@ -66,637 +23,175 @@ struct world_node {
 	plCollisionSdkHandle sdk;
 };
 
+#ifdef _DEBUG
+#define check_world(_WORLD) assert((_WORLD)->sdk != nullptr); assert((_WORLD)->world != nullptr)
+#else
+#define check_world(_WORLD)	 
+#endif // _DEBUG
 
-static int 
-linit_physics( lua_State *L) {
-	//todo: bullet sdk create(select between 2 and 3 )
-	plCollisionSdkHandle sdk_handle = plCreateBullet2CollisionSdk();
-	lua_pushlightuserdata(L,sdk_handle);
-	#ifdef __DEBUG_OUTPU_
-	printf("alloc physic sdk %d\n", sdk_handle->unused );	
-	#endif  
-	return 1;
+static inline world_node*
+to_world(lua_State *L, int idx = 1) {
+	luaL_checktype(L, idx, LUA_TUSERDATA);
+	auto world = (world_node*)lua_touserdata(L, idx);
+	check_world(world);
+
+	return world;
 }
 
-//sdk,world handle 
-static int
-lexit_physics( lua_State *L) {
-	//todo: recyle sdk memory 
-	int argc = lua_gettop(L);
-	if( argc == 1) {
-		if( lua_isuserdata(L,1) ) {
-			plCollisionSdkHandle  sdk_handle = (plCollisionSdkHandle) lua_touserdata(L, 1);
-			plDeleteCollisionSdk( sdk_handle );
-			#ifdef __DEBUG_OUTPU_
-			printf("free physic sdk %d\n", sdk_handle->unused );						
-			#endif 
-		} else {
-			luaL_error(L,"error: exit_physics first argument sdk_handle must be userdata.\n");
-		}
-	}else {
-		luaL_error(L,"error: exit_physics expects argument sdkhandle, exit_physics(sdk_handle).\n");
-	}
-	return 0;
-}
-
-//in: sdk handle
-//out: world handle
-static int 
-lcreate_world( lua_State *L )  {
-	if(!lua_isuserdata(L,1) ) {
-		luaL_error(L,"error: create_world first argument sdk_handle must be userdata.\n");		
-		return 0;
-	}
-
-	plCollisionSdkHandle  sdk_handle = (plCollisionSdkHandle) lua_touserdata(L, 1);
-	// maxNumObjectsCapacity,maxNumShapesCapacity,maxNumPairsCapacity ,sdk2 not need
-	plCollisionWorldHandle world_handle = plCreateCollisionWorld( sdk_handle,0,0,0);
-	lua_pushlightuserdata(L, world_handle );	
-
-	#ifdef __DEBUG_OUTPU_
-	printf("create world %d\n",world_handle->unused);
-	#endif
-
-    return 1;
-}
-static int 
-ldestroy_world( lua_State *L ) {
-	if(!lua_isuserdata(L,1) ) {
-		luaL_error(L,"error: destroy_world first argument sdk_handle must be userdata.\n");		
-		return 0;
-	}
-	if(!lua_isuserdata(L,2) ) {
-		luaL_error(L,"error: destroy_world second argument world_handle must be userdata.\n");		
-		return 0;
-	}
-
-	plCollisionSdkHandle  sdk_handle = (plCollisionSdkHandle) lua_touserdata(L, 1);
-	plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L, 2);
-	plDeleteCollisionWorld(sdk_handle,world_handle);
-
-#ifdef __DEBUG_OUTPU_
-	printf("destroy world %d(%d)\n",world_handle->unused,sdk_handle->unused );
-#endif 
-
-    return 0;
-}
-
-int check_sdk_world_handle(lua_State *L,int sdk_idx,int world_idx,const char *fname) {
-	if(!lua_isuserdata(L, sdk_idx)) {
-		luaL_error(L,"error: %s argument %d must be sdk handle.\n",fname,sdk_idx);
-		return 0;
-	}
-	if(!lua_isuserdata(L, world_idx)) {
-		luaL_error(L,"error: %s argument %d must be world handle.\n",fname,world_idx);
-		return 0;
-	}
-	return 1;
-}
-
-// --- shape ---
-static int 
-lcreate_cubeShape( lua_State *L) {
-
-	return 1;
-}
-
-//sdk,world,radius
-static int 
-lcreate_sphereShape( lua_State *L) {
-	int argc = lua_gettop(L);
-	if( argc == 3) {
-		if( !check_sdk_world_handle(L,1,2,"create_sphereShape") ) {
-			return 0;
-		}
-		plCollisionSdkHandle  sdk_handle = (plCollisionSdkHandle) lua_touserdata(L, 1);
-		plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L, 2);
-		btScalar radius = (btScalar)lua_tonumber(L,3);
-
-		plCollisionShapeHandle shape = plCreateSphereShape( sdk_handle,world_handle,radius);
-		lua_pushlightuserdata(L,shape);
-
-#ifdef __DEBUG_OUTPU_
-		printf("create sphere shape(%d) radius(%.f) \n",shape->unused,radius);
-#endif 
-		return 1;
-	} else {
-		luaL_error(L,"error: invalid number of argument, expects create_sphereShape(sdkhandle,worldhandle,radius)" );
-	}
-	return 0;
-}
-
-//sdk,world, {x,y,z,d} or x,y,z,d
-static int 
-lcreate_planeShape( lua_State *L) {
-	int argc = lua_gettop(L);
-	if( argc < 3 ) {
-		luaL_error(L,"error: create_planeShape must not less than 3 arguments. \n \
-					  create_planeShape(sdk_handle,world_handle,{x,y,z,d}).\n \
-					  or create_planeShape(sdk_handle,world_handle,x,y,z,d).\n " );
-		return 0;
-	}
-
-	if( !check_sdk_world_handle(L,1,2,"create_planeShape") ) {
-			return 0;
-	}
-
-	btVector4 plane(0,0,0,1);
-	if( lua_istable(L,3) ) {
-	
-	} else {
-		plane[0] = (btScalar)lua_tonumber(L,3);
-		plane[1] = (btScalar)lua_tonumber(L,4);
-		plane[2] = (btScalar)lua_tonumber(L,5);
-		plane[3] = (btScalar)lua_tonumber(L,6);
-	}
-
-	plCollisionSdkHandle  sdk_handle = (plCollisionSdkHandle) lua_touserdata(L, 1);
-	plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L, 2);
-	plCollisionShapeHandle shape = plCreatePlaneShape(sdk_handle,world_handle, plane[0],plane[1],plane[2],plane[3] );
-	lua_pushlightuserdata(L,shape);
-
-#ifdef __DEBUG_OUTPU_
-	printf("create plane shape(%d) plane(%f,%f,%f,%f) \n",shape->unused, plane[0],plane[1],plane[2],plane[3] );
-#endif 
-	return 1;
-}
-
-
-// sdk,world,radius,height,capsuleAxis
-static int 
-lcreate_capsuleShape( lua_State *L) {
-	int argc = lua_gettop(L);
-	if( argc < 4 ) {
-		luaL_error(L,"error: invalid number of arguments,expects create_capsuleShape(sdk,world,radius,height,axis=1 ).\n ");
-		return 0;
-	}
-	if( !check_sdk_world_handle(L,1,2,"create_capsuleShape") )
-		return 0;
-
-	plCollisionSdkHandle  sdk_handle = (plCollisionSdkHandle) lua_touserdata(L, 1);
-	plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L, 2);
-
-	int      axis   = 1;
-	btScalar radius = (btScalar)lua_tonumber(L,3);
-	btScalar height = (btScalar)lua_tonumber(L,4);
-	if( argc == 5 )
-	  axis = (int)lua_tonumber(L,5);
-	if( axis<0 || axis >2 )
-	  axis = 1;
-
-	plCollisionShapeHandle shape = plCreateCapsuleShape(sdk_handle,world_handle, radius, height, axis );
-	lua_pushlightuserdata(L,shape);
-#ifdef __DEBUG_OUTPU_
-	printf("create capsule shape(%d),r=%f,h=%f,axis=%d.\n",shape->unused,radius,height,axis);
-#endif 
-	return 1;
-}
-
-static int 
-lcreate_cylinderShape( lua_State *L) {
-	return 1;
-}
-
-static int 
-lcreate_compoundShape( lua_State *L) {
-	int argc = lua_gettop(L);
-	if( argc < 2 ) {
-		luaL_error(L,"error: invalid number of arguments,expects create_compoundShape(sdk,world).\n ");
-		return 0;
-	}
-	if( !check_sdk_world_handle(L,1,2,"create_CompoundShape") )
-		return 0;
-
-	plCollisionSdkHandle  sdk_handle = (plCollisionSdkHandle) lua_touserdata(L, 1);
-	plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L, 2);
-	plCollisionShapeHandle shape = plCreateCompoundShape(sdk_handle,world_handle);
-	lua_pushlightuserdata(L,shape);
-#ifdef __DEBUG_OUTPU_
-	printf("create compound shape(%d).\n",shape->unused);
-#endif 
-	return 1;
-}
-
-template<class buffer>
+template<typename T>
 static inline void
-getContent(lua_State *L, int table, buffer &v) {
-	const size_t tsize = lua_rawlen(L, table);
-	for (size_t ii = 0; ii < tsize; ++ii) {
-		lua_rawgeti(L, table, ii + 1);
-		v[ii] = (btScalar)lua_tonumber(L, -1);
+get_arg_vec(lua_State *L, int index, int num, T &obj) {	
+	for (auto ii = 0; ii < num; ++ii) {
+		const auto idx = ii + index;
+		luaL_checktype(L, idx, LUA_TNUMBER);
+		obj[ii] = (plReal)lua_tonumber(L, idx);
+	}	
+}
+
+//static plCollisionShapeHandle
+//plCreateCylinderShape() {
+//
+//}
+
+static int
+lnew_shape(lua_State *L) {
+	auto world = to_world(L);
+
+	luaL_checktype(L, 2, LUA_TSTRING);
+	const char* type = lua_tostring(L, 2);
+
+	plCollisionShapeHandle shape = nullptr;
+	if (strcmp(type, "sphere") == 0) {
+		luaL_checktype(L, 3, LUA_TNUMBER);
+		btScalar radius = (btScalar)lua_tonumber(L, 2);
+		shape = plCreateSphereShape(world->sdk, world->world, radius);
+	} else if (strcmp(type, "cube") == 0) {		
+		plVector3 size;		
+		get_arg_vec(L, 3, 3, size);
+		shape = plCreateCubeShape(world->sdk, world->world, size);
+	} else if (strcmp(type, "plane") == 0) {
+		plReal plane[4];
+		get_arg_vec(L, 3, 4, plane);
+		shape = plCreatePlaneShape(world->sdk, world->world, plane[0], plane[1], plane[2], plane[3]);
+		
+	} else if (strcmp(type, "cylinder") == 0) {
+		
+	} else if (strcmp(type, "capsule") == 0) {
+		const plReal radius = (plReal)lua_tonumber(L, 3);
+		const plReal height = (plReal)lua_tonumber(L, 4);
+
+		const int axis = (int)luaL_optnumber(L, 5, 1);
+		if (axis < 0 || axis > 2) {
+			luaL_error(L, "invalid axis type : %d", axis);
+		}
+		shape = plCreateCapsuleShape(world->sdk, world->world, radius, height, axis);
+
+	} else if (strcmp(type, "compound") == 0) {
+		shape = plCreateCompoundShape(world->sdk, world->world);
+	}
+
+	assert(shape);
+	lua_pushlightuserdata(L, shape);
+
+	return 1;
+}
+
+template<typename T>
+void extract_vec(lua_State *L, int index, int num, T& obj) {
+	for (auto ii = 0; ii < 3; ++ii) {
+		lua_geti(L, index, ii + 1);
+		obj[ii] = (plReal)lua_tonumber(L, -1);
 		lua_pop(L, 1);
 	}
-}
-
-// table array {0,0,0}
-static btVector3 
-getVector3( lua_State *L,int table) {
-	btVector3 pos(0,0,0);
-	getContent(L, table, pos);
-	return pos;
-}
-// table array {0,0,0,1}
-btQuaternion getQuaternion( lua_State *L,int table) 
-{
-	btQuaternion quat(0,0,0,1);
-	getContent(L, table, quat);
-	return quat;
-}
-
-
-// sdk,world,compound,shape,pos,quat
-static int 
-ladd_shapeToCompound( lua_State *L) {
-	int argc = lua_gettop(L);
-	if( argc != 6 ) {
-		luaL_error( L,"error: invalid arguments, add_shapeToCompound(sdk,world,compound,shape,pos,qrot). \n " ); 
-		return 0;		
-	}
-
-	if( !check_sdk_world_handle(L,1,2,"add_shapeToCompound") )
-		return 0;
-
- 	if( !lua_isuserdata(L,3) ) {
-		 luaL_error(L,"error: argument 3 compound must be handle.\n");
-		 return 0;
-	}
-	if( !lua_isuserdata(L,4) ) {
-		luaL_error(L,"error: argument 4 shape must be handle.\n ");
-		return 0;
-	}
-
-	plCollisionSdkHandle  sdk_handle = (plCollisionSdkHandle) lua_touserdata(L, 1);
-	plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L, 2);
-	plCollisionShapeHandle compound  = (plCollisionShapeHandle) lua_touserdata(L,3);
-	plCollisionShapeHandle shape = (plCollisionShapeHandle) lua_touserdata(L,4);
-
-	btVector3 pos = getVector3(L,5);
-	btQuaternion rot = getQuaternion(L,6);
-
-	plAddChildShape( sdk_handle,world_handle,compound,shape,pos,rot);
-#ifdef __DEBUG_OUTPU_
-	printf("add shapde(%d) to compound(%d).\n",shape->unused,compound->unused);
-	printf("pos = (%f,%f,%f).\n",pos[0],pos[1],pos[2]);
-	printf("quat = (%f,%f,%f,%f).\n",rot[0],rot[1],rot[2],rot[3]);
-#endif 
-	return 0;
-}
-
-//sdk,world,shape
-static int 
-ldelete_shape( lua_State *L) {
-	if( !check_sdk_world_handle(L,1,2,"delete_shape") )
-		return 0;
-	
-	if( !lua_isuserdata(L,3) ) {
-		luaL_error(L,"error: delete_shape argument 3 must be shape handle.\n");
-		return 0;
-	}
-
-	plCollisionSdkHandle sdk_handle = (plCollisionSdkHandle) lua_touserdata(L,1);
-	plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L,2);
-	plCollisionShapeHandle shape = (plCollisionShapeHandle) lua_touserdata(L,3);
-#ifdef __DEBUG_OUTPU_
-	printf("delete shape(%d) from world(%d).\n",shape->unused,world_handle->unused);
-#endif 
-	plDeleteShape( sdk_handle,world_handle, shape);
-
-	return 0;
-}
-
-
-static int 
-ladd_shapeToWorld( lua_State *L) {
-	return 1;
-}
-
-static int 
-ldelete_shapeFromWorld( lua_State *L) {
-	return 1;
-}
-
-
-// --- object ---
-// sdk,world,shape handle,pos,rotation,user index, user pointer
-// link entity id and shape handle
-static int 
-lcreate_collisionObject( lua_State *L) {
-	int argc = lua_gettop(L);
-	if( argc <6 ) {
-		luaL_error(L,"error: expects not less than 6 arguments like create_collisionObject(sdk,world,shape,pos,rotation, id,void *).\n");
-		return 0;
-	}
-	if( !check_sdk_world_handle(L,1,2,"delete_shape") )
-		return 0;
-	if( !lua_isuserdata(L,3) ) {
-		luaL_error(L,"error: delete_shape argument 3 must be shape handle.\n");
-		return 0;
-	}
-
-	plCollisionSdkHandle   sdk_handle = (plCollisionSdkHandle) lua_touserdata(L,1);
-	plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L,2);
-	plCollisionShapeHandle shape = (plCollisionShapeHandle) lua_touserdata(L,3);
-
-	btVector3 	 pos = getVector3(L,4);
-	btQuaternion rot = getQuaternion(L,5);
-	void *user_data  = nullptr;
-	int user_id = (int)lua_tointeger(L,6);
-
-	if( argc == 7 && !lua_isnil(L,7) ) {
-		// extension mothod,it's an addition not need
-		// get lua object ? how ?  
-		// lua_ref 
-	}
-
-	plCollisionObjectHandle object = (plCollisionObjectHandle) 
-	plCreateCollisionObject(sdk_handle,world_handle,user_data,user_id,shape,pos,rot);
-	lua_pushlightuserdata( L, object );
-#ifdef __DEBUG_OUTPU_
-	printf("create collision object(%d) from shape(%d),\n \
-	    pos(%f,%f,%f), rot(%f,%f,%f,%f).\n",
-						object->unused,shape->unused,
-						pos[0], pos[1], pos[2],
-						rot[0], rot[1], rot[2], rot[3]);
-#endif 						
-	return 1;
-}
-
-static int 
-ldelete_collisionObject( lua_State *L) {
-	if( !check_sdk_world_handle(L,1,2,"delete_collisionObject") )
-		return 0;
-	if( !lua_isuserdata(L,3) ) {
-		luaL_error(L,"error: delete_collisionObject argument 3 must be object handle.\n");
-		return 0;
-	}
-
-	plCollisionSdkHandle sdk_handle = (plCollisionSdkHandle) lua_touserdata(L,1);
-	plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L,2);
-	plCollisionObjectHandle object = (plCollisionObjectHandle) lua_touserdata(L,3);
-#ifdef __DEBUG_OUTPU_
-	printf("delete object(%d) from world(%d).\n",object->unused, world_handle->unused);
-#endif 
-	plDeleteCollisionObject( sdk_handle,world_handle, object );
-
-	return 0;
-}
-
-//sdk,world,pos,rot
-static int
-lset_collisionObjectTransform( lua_State *L )
-{
-	return 1;
-}
-
-static int 
-ladd_collisionObject( lua_State *L ) 
-{
-	if( !check_sdk_world_handle(L,1,2,"add_collisionObject") )
-		return 0;
-	if( !lua_isuserdata(L,3) ) {
-		luaL_error(L,"error: add_collisionObject argument 3 must be object handle.\n");
-		return 0;
-	}
-
-	plCollisionSdkHandle sdk_handle = (plCollisionSdkHandle) lua_touserdata(L,1);
-	plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L,2);
-	plCollisionObjectHandle object = (plCollisionObjectHandle) lua_touserdata(L,3);
-#ifdef __DEBUG_OUTPU_
-	printf("add object(%d) to world(%d).\n",object->unused, world_handle->unused);
-#endif 
-	plAddCollisionObject( sdk_handle,world_handle, object );
-
-	return 0;
-}
-
-
-// = 40k contact points 
-#define  POINT_CAPACITY  1000
-const int POINTS = 100;
-
-
-int Collide( plCollisionSdkHandle sdk, plCollisionWorldHandle world, 
-					plCollisionObjectHandle objectA, plCollisionObjectHandle objectB,
-					lwContactPoint *pointsOut,int pointCapacity ) 
-{
-
-
-	return 1;
-}
-
-// --- query and collision action ---
-// sdk,world, objA handle,objB handle ( pointsOut, ) 
-// return numContactPoints,ContactPoints Array 
-static int 
-lcollide( lua_State *L) {
-
-	int 		   numContactPoints = 0;
-	lwContactPoint ctPoints[ POINT_CAPACITY ];
-
-	if( !check_sdk_world_handle(L,1,2,"collide") )
-		return 0;
-	if( !lua_isuserdata(L,3) ) {
-		luaL_error(L,"error: collide argument 3 must be object handle.\n");
-		return 0;
-	}
-	if( !lua_isuserdata(L,4) ) {
-		luaL_error(L,"error: collide argument 3 must be object handle.\n");
-		return 0;
-	}
-
-	plCollisionSdkHandle sdk_handle = (plCollisionSdkHandle) lua_touserdata(L,1);
-	plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L,2);
-	plCollisionObjectHandle objectA = (plCollisionObjectHandle) lua_touserdata(L,3);
-	plCollisionObjectHandle objectB = (plCollisionObjectHandle) lua_touserdata(L,4);
-
-	numContactPoints = plCollide( sdk_handle, world_handle, objectA, objectB, ctPoints ,POINT_CAPACITY );
-
-	if( numContactPoints > 0 ) {
-		// collect contact points ,return as table array
-		// numContactPoints, table = { lwContactPoint1,lwContactPoint2,... }
-#ifdef __DEBUG_OUTPU_		
-		printf("Collide find contact point %d.\n",numContactPoints );
-#endif
-		return 2;
-	} else {
-
-		printf("Collide can not find some hit.\n");
-	}
-
-	return 0;
-}
-
-
-// Need callback function. 
-// this callback use for world objects collide, and return all result. special function
-// bullet sdk warp callback using global function，
-// attempt to avoid global status variables,but bullet system callback limit, 最后一层仍旧是全局函数 :(
-int totalPoints  = 0;
-int numCallbacks = 0;
-lwContactPoint ctPoints[ POINT_CAPACITY ];
-void checkCollide_Callback( plCollisionSdkHandle sdk, plCollisionWorldHandle world, void* userData, plCollisionObjectHandle objectA, plCollisionObjectHandle objectB)
-{
-	numCallbacks ++;
-	int remainingCapacity = POINT_CAPACITY - totalPoints;
-#ifdef __DEBUG_OUTPU_	
-	printf("do collision turn remaining capacity %d\n", remainingCapacity );
-#endif	
-	if(remainingCapacity> 0) {
-		lwContactPoint *pointPtr = &ctPoints[ totalPoints ];
-		int numPoints = plCollide(sdk,world,objectA,objectB,pointPtr,remainingCapacity);
-		btAssert( numPoints <= remainingCapacity );
-		totalPoints += numPoints;
-#ifdef __DEBUG_OUTPU_		
-		printf("do collision turn %d\n",numCallbacks);
-#endif 
-	}
-}
-
-// sdk,world,objA,objB,user id or void *userdata,check counter
-// return totalPoints, contactPoints table 
-static int 
-lworldCollide( lua_State *L) 
-{
-	// check totalPoints value, make result table
-	if( !check_sdk_world_handle(L,1,2,"worldCollide"))	
-		return 0;
-	
-	totalPoints = 0;
-	numCallbacks = 0;
-	void *userPtr = nullptr;
-
-	plCollisionSdkHandle sdk_handle = (plCollisionSdkHandle) lua_touserdata(L,1);
-	plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L,2);
-
-	plWorldCollide( sdk_handle,world_handle, checkCollide_Callback,userPtr);
-
-	if(totalPoints>0) {
-		// do result table construct
-#ifdef __DEBUG_OUTPU_		
-		printf("world collide find %d contack points.\n",totalPoints);
-#endif		
-		return 2;
-	}else {
-#ifdef __DEBUG_OUTPU_		
-		printf("can not find contact points, totalPoints(%d).\n",totalPoints );
-#endif 		
-	}
-
-	return 0;
-}
-
-
-#define SET_FIELD_VALUE(L,key,value) \
-	lua_pushnumber(L,value); \
-	lua_setfield(L,-2,key);
-
-void return_rayhit_info( lua_State *L, ClosestRayResult &result )
-{
-	lua_newtable(L);
-	SET_FIELD_VALUE(L,"hitObjId",result.m_hitObjId);
-	SET_FIELD_VALUE(L,"hitFraction",result.m_hitFraction);
-	SET_FIELD_VALUE(L,"filterGroup",result.m_filterGroup);
-	SET_FIELD_VALUE(L,"filterMask",result.m_filterMask);
-	SET_FIELD_VALUE(L,"flags",result.m_flags);
-
-
-	lua_pushstring(L,"hitPointWorld");   // hitpoint table name
-	lua_newtable(L); {
-		SET_FIELD_VALUE(L,"x",result.m_hitPointWorld[0]);
-		SET_FIELD_VALUE(L,"y",result.m_hitPointWorld[1]);
-		SET_FIELD_VALUE(L,"z",result.m_hitPointWorld[2]);
-	}
-	lua_settable(L,-3);
-
-	lua_pushstring(L,"hitNormalWorld");   // hitpoint table name
-	lua_newtable(L); {
-		SET_FIELD_VALUE(L,"x",result.m_hitNormalWorld[0]);
-		SET_FIELD_VALUE(L,"y",result.m_hitNormalWorld[1]);
-		SET_FIELD_VALUE(L,"z",result.m_hitNormalWorld[2]);
-	}
-	lua_settable(L,-3);
-}
-
-//---------- raycast ------------------------
-static int 
-lraycast( lua_State *L ) {
-	if( !check_sdk_world_handle(L,1,2,"collide") )
-		return 0;
-	plCollisionSdkHandle sdk_handle = (plCollisionSdkHandle) lua_touserdata(L,1);
-	plCollisionWorldHandle world_handle = (plCollisionWorldHandle) lua_touserdata(L,2);
-
-   	btVector3 rayFrom = getVector3(L,3);
-	btVector3 rayTo = getVector3(L,4);
-
-	ClosestRayResult result;
-	memset(&result,0x0,sizeof(result));
-	if( plRaycast(sdk_handle,world_handle,rayFrom,rayTo,result ) ) {
-		// check result and return to lua
-#ifdef __DEBUG_OUTPU_		
-		(void)(result);  
-		printf("raycast hit object.\n");
-#endif 
-		// ishit, hitInfo 
-		lua_pushboolean(L,1);
-		return_rayhit_info(L,result);
-		return 2;
-	}
-#ifdef __DEBUG_OUTPU_	
-	printf("raycast do not hit something.\n");	
-#endif 
-	// ishit, hitInfo 
-	lua_pushboolean(L,0);
-	lua_pushnil(L);
-	return 2;
-}
+};
 
 static int
-lstep_simulator( lua_State *L) {
+lnew_collision_obj(lua_State *L) {
+	auto world = to_world(L);
+
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	plCollisionShapeHandle shape = (plCollisionShapeHandle)lua_touserdata(L, 2);
+
+	luaL_checktype(L, 3, LUA_TNUMBER);
+	const int useridx = (int)lua_tointeger(L, 3);
+
+	luaL_checktype(L, 4, LUA_TTABLE);
+	plVector3 pos;
+	extract_vec(L, 4, 3, pos);
+
+	luaL_checktype(L, 5, LUA_TTABLE);
+	plQuaternion quat;
+	extract_vec(L, 5, 4, quat);
+
+	auto userdata = lua_touserdata(L, 6);
+
+	auto collision_obj = plCreateCollisionObject(world->sdk, world->world, userdata, useridx, shape, pos, quat);
+	lua_pushlightuserdata(L, collision_obj);
 	return 1;
 }
 
 static int
-ldel_bullet(lua_State *L) {
-	luaL_checktype(L, LUA_TUSERDATA, 1);
-	bullet_node *bullet = (bullet_node*) lua_touserdata(L, 1);
-	
-	if (bullet->sdk) {
-		plDeleteCollisionSdk(bullet->sdk);
-	}
+ldel_collision_obj(lua_State *L) {
+	auto world = to_world(L);
+
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	plCollisionObjectHandle obj = (plCollisionObjectHandle)lua_touserdata(L, 2);
+	plDeleteCollisionObject(world->sdk, world->world, obj);
+
 	return 0;
 }
 
 static int
-lnew_bullet(lua_State *L) {
-	luaL_checktype(L, LUA_TNUMBER, 1);
-	const int sdkVersion = (int)lua_tointeger(L, 1);
-	assert(2 <= sdkVersion && sdkVersion <= 3);
+ladd_collision_obj(lua_State *L) {
+	auto world = to_world(L);
 
-	bullet_node *bullet = (bullet_node*)lua_newuserdata(L, sizeof(bullet_node));	
-	luaL_setmetatable(L, "BULLET_NODE");
-
-	return 1;	// return bullet_node userdata
+	plCollisionObjectHandle obj = (plCollisionObjectHandle)lua_touserdata(L, 2);
+	plAddCollisionObject(world->sdk, world->world, obj);
+	return 0;
 }
 
-static void
-register_bullet_node(lua_State *L) {
-	luaL_newmetatable(L, "BULLET_NODE");
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -2, "__index");	// BULLET_NODE.__index = BULLET_NODE
+static int
+ladd_to_compound(lua_State *L) {
+	auto world = to_world(L);
 
-	luaL_Reg l[] = {
-		"__gc", ldel_bullet,
-		nullptr, nullptr,
-	};
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	auto compound = (plCollisionShapeHandle)lua_touserdata(L, 2);
 
-	luaL_setfuncs(L, l, 0);
+	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+	auto child = (plCollisionShapeHandle)lua_touserdata(L, 3);
+
+
+	luaL_checktype(L, 4, LUA_TTABLE);
+	plVector3 pos;
+	extract_vec(L, 4, 3, pos);
+
+	luaL_checktype(L, 5, LUA_TTABLE);
+	plQuaternion quat;
+	extract_vec(L, 5, 4, quat);
+
+	plAddChildShape(world->sdk, world->world, compound, child, pos, quat);
+	return 0;
+}
+
+static int
+ldel_shape(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+
+	world_node *world = (world_node*)lua_touserdata(L, 1);
+	check_world(world);
+	plCollisionShapeHandle shape = (plCollisionShapeHandle)lua_touserdata(L, 2);
+
+	plDeleteShape(world->sdk, world->world, shape);
+
+	return 0;
 }
 
 static int
 ldel_bullet_world(lua_State *L) {
-	luaL_checktype(L, LUA_TUSERDATA, 1);
+	luaL_checktype(L, 1, LUA_TUSERDATA);
 
-	world_node* world = (world_node*) lua_touserdata(L, 1);
+	world_node* world = (world_node*)lua_touserdata(L, 1);
 	assert(world->sdk != nullptr);
 	if (world->sdk && world->world) {
 		plDeleteCollisionWorld(world->sdk, world->world);
@@ -708,14 +203,235 @@ ldel_bullet_world(lua_State *L) {
 
 static int
 lnew_bullet_world(lua_State *L) {
-	luaL_checktype(L, LUA_TUSERDATA, 1);
+	luaL_checktype(L, 1, LUA_TUSERDATA);
 	bullet_node* bullet = (bullet_node*)lua_touserdata(L, 1);
 
-	world_node *world = (world_node*)lua_newuserdata(L, sizeof(world_node));
+	world_node *world = (world_node*)lua_newuserdata(L, sizeof(world_node));	
 	luaL_setmetatable(L, "BULLET_WORLD_NODE");
+
+	world->sdk = bullet->sdk;
+
+	const int maxShape = 10000;
+	const int maxObj = 10000;
+	world->world = plCreateCollisionWorld(bullet->sdk, maxShape, maxObj, maxShape * maxObj);
+
 
 	return 1;
 }
+
+static int
+ldel_bullet(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	bullet_node *bullet = (bullet_node*)lua_touserdata(L, 1);
+
+	if (bullet->sdk) {
+		plDeleteCollisionSdk(bullet->sdk);
+	}
+	return 0;
+}
+
+static int
+lnew_bullet(lua_State *L) {	
+	const int sdkVersion = (int)luaL_optinteger(L, 1, 2);
+	assert(2 <= sdkVersion && sdkVersion <= 3);
+
+	bullet_node *bullet = (bullet_node*)lua_newuserdata(L, sizeof(bullet_node));
+	luaL_setmetatable(L, "BULLET_NODE");
+
+	bullet->sdk = sdkVersion == 2 ? plCreateBullet2CollisionSdk() : plCreateRealTimeBullet3CollisionSdk();
+
+	return 1;	// return bullet_node userdata
+}
+
+static void
+register_bullet_node(lua_State *L) {
+	luaL_newmetatable(L, "BULLET_NODE");
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");	// BULLET_NODE.__index = BULLET_NODE
+
+	luaL_Reg l[] = {
+		"new_world", lnew_bullet_world,
+		"__gc", ldel_bullet,
+		nullptr, nullptr,
+	};
+
+	luaL_setfuncs(L, l, 0);
+}
+#include <functional>
+static int
+lcollide(lua_State *L) {
+	auto world = to_world(L);
+	luaL_checktype(L, 2, LUA_TFUNCTION);
+
+	struct CallBackData {
+		lua_State *L;
+	};
+
+	auto near_callback = [](plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, void* userData,
+			plCollisionObjectHandle objA, plCollisionObjectHandle objB) {
+		CallBackData *cb_data = reinterpret_cast<CallBackData*>(userData);
+		lua_State *L = cb_data->L;
+
+		assert(lua_type(L, -1) == LUA_TFUNCTION);	
+		lua_pushvalue(L, -1);	// keep this lua function
+
+		lua_pushlightuserdata(L, objA);
+		lua_pushlightuserdata(L, objB);
+		lua_pushlightuserdata(L, userData);
+		const int numarg = 3;
+		lua_call(L, numarg, 0);
+
+		assert(lua_type(L, -1) == LUA_TFUNCTION);
+	};
+
+	CallBackData cb_data = { L, };
+	if (lua_type(L, 3) != LUA_TTABLE) {
+		assert("need to implement");
+	}
+	
+	plWorldCollide(world->sdk, world->world, near_callback, &cb_data);
+	return 1;
+}
+
+template<typename T>
+void push_vec(lua_State *L, const char* name, int num, const T &obj) {
+	lua_createtable(L, num, 0);
+	for (auto ii = 0; ii < num; ++ii) {
+		lua_pushnumber(L, obj[ii]);
+		lua_seti(L, -2, ii + 1);
+	}
+	lua_setfield(L, -2, name);
+};
+
+static int
+lcollide_objects(lua_State *L) {
+	auto world = to_world(L);
+
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+	//luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
+
+	auto objA = (plCollisionObjectHandle)lua_touserdata(L, 2);
+	auto objB = (plCollisionObjectHandle)lua_touserdata(L, 3);
+
+	auto userdata = lua_touserdata(L, 4);
+
+	lwContactPoint points[16];
+	auto numContract = plCollide(world->sdk, world->world, objA, objB, points, sizeof(points) / sizeof(points[0]));
+
+	if (numContract == 0) {
+		return 0;
+	}
+
+	lua_createtable(L, numContract, 0);
+	for (auto ii = 0; ii < numContract; ++ii) {
+		lua_createtable(L, 0, 4);
+
+		const auto &point = points[ii];
+
+		push_vec(L, "ptA_in_WS", 3, point.m_ptOnAWorld);
+		push_vec(L, "ptB_in_WS", 3, point.m_ptOnBWorld);
+		push_vec(L, "normalB_in_WS", 3, point.m_normalOnB);
+
+		lua_pushnumber(L, point.m_distance);
+		lua_setfield(L, -2, "distance");
+
+		lua_seti(L, -2, ii + 1);
+	}
+
+	return 1;
+}
+
+static int
+lraycast(lua_State *L) {
+	auto world = to_world(L);
+
+	plVector3 from, to;
+	extract_vec(L, 2, 3, from);
+	extract_vec(L, 3, 3, to);
+
+	ClosestRayResult result;
+	const bool hitted = plRaycast(world->sdk, world->world, from, to, result);
+
+	lua_pushboolean(L, hitted);
+	if (!hitted) {
+		return 1;
+	}
+
+	lua_createtable(L, 0, 7);
+
+	lua_pushinteger(L, result.m_hitObjId);
+	lua_setfield(L, -2, "useridx");
+
+	lua_pushnumber(L, result.m_hitFraction);
+	lua_setfield(L, -2, "hit_fraction");
+
+	push_vec(L, "hit_pt_in_WS", 3, result.m_hitPointWorld);
+	push_vec(L, "hit_normal_in_WS", 3, result.m_hitNormalWorld);
+
+	lua_pushinteger(L, result.m_filterGroup);
+	lua_setfield(L, -2, "filter_group");
+
+	lua_pushinteger(L, result.m_filterMask);
+	lua_setfield(L, -2, "filter_mask");
+
+	lua_pushinteger(L, result.m_flags);
+	lua_setfield(L, -2, "flags");
+	
+	return 2;
+}
+
+static int
+lset_obj_trans(lua_State *L) {
+	auto world = to_world(L);
+
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	auto obj = (plCollisionObjectHandle)lua_touserdata(L, 2);
+
+	luaL_checktype(L, 3, LUA_TTABLE);
+	luaL_checktype(L, 4, LUA_TTABLE);
+
+	plVector3 pos;
+	extract_vec(L, 3, 3, pos);
+	plQuaternion quat;
+	extract_vec(L, 4, 4, quat);
+
+	plSetCollisionObjectTransform(world->sdk, world->world, obj, pos, quat);
+	return 0;
+}
+
+static int
+lset_obj_pos(lua_State *L) {
+	auto world = to_world(L);
+
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	auto obj = (plCollisionObjectHandle)lua_touserdata(L, 2);
+
+	luaL_checktype(L, 3, LUA_TTABLE);
+	plVector3 pos;
+	extract_vec(L, 3, 3, pos);
+
+	plSetCollisionObjectPosition(world->sdk, world->world, obj, pos);
+
+	return 0;
+}
+
+static int
+lset_obj_rot(lua_State *L) {
+	auto world = to_world(L);
+
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	auto obj = (plCollisionObjectHandle)lua_touserdata(L, 2);
+
+	luaL_checktype(L, 3, LUA_TTABLE);
+	plQuaternion quat;
+	extract_vec(L, 3, 3, quat);
+
+	plSetCollisionObjectRotation(world->sdk, world->world, obj, quat);
+
+	return 0;
+}
+
 
 static void
 register_bullet_world_node(lua_State *L) {
@@ -724,6 +440,20 @@ register_bullet_world_node(lua_State *L) {
 	lua_setfield(L, -2, "__index");	// BULLET_NODE.__index = BULLET_NODE
 
 	luaL_Reg l[] = {
+		"new_shape", lnew_shape,
+		"del_shape", ldel_shape,
+		"new_obj", lnew_collision_obj,
+		"del_obj", ldel_collision_obj,
+		"add_obj", ladd_collision_obj,
+		"set_obj_transform", lset_obj_trans,
+		"set_obj_position", lset_obj_pos,
+		"set_obj_rotation", lset_obj_rot,
+		"add_to_compound", ladd_to_compound,
+		//"remove_from_compound", lremove_from_compound,
+		"collide", lcollide,
+		"collide_objects", lcollide_objects,
+		"raycast", lraycast,
+		
 		"__gc", ldel_bullet_world,
 		nullptr, nullptr,
 	};
@@ -731,41 +461,20 @@ register_bullet_world_node(lua_State *L) {
 	luaL_setfuncs(L, l, 0);
 }
 
-extern "C" {	
-LUAMOD_API int
+extern "C" {
+	LUAMOD_API int
 	luaopen_bullet(lua_State *L) {
-		luaL_checkversion(L);
-
-		//register_bullet_node(L);
-		//register_bullet_world_node(L);
+		register_bullet_node(L);
+		register_bullet_world_node(L);
 
 		luaL_Reg l[] = {
-			{ "init_physics",linit_physics},
-			{ "exit_physics",lexit_physics},
-			{ "create_world", lcreate_world},
-			{ "destroy_world", ldestroy_world},
-			{ "create_planeShape",lcreate_planeShape},
-			{ "create_cubeShape",lcreate_cubeShape},
-			{ "create_sphereShape",lcreate_sphereShape},
-			{ "create_capsuleShape",lcreate_capsuleShape},
-			{ "create_cylinderShape",lcreate_cylinderShape},
-			{ "create_compoundShape",lcreate_compoundShape},
-			{ "add_shapeToCompound",ladd_shapeToCompound},
-			{ "delete_shape",ldelete_shape},
-			{ "add_shapeToWorld",ladd_shapeToWorld},
-			{ "delete_shapeFromWorld",ldelete_shapeFromWorld},
-			{ "create_collisionObject",lcreate_collisionObject},
-			{ "delete_collisionObject",ldelete_collisionObject},
-			{ "set_collisionObjectTransform",lset_collisionObjectTransform},
-			{ "add_collisionObject",ladd_collisionObject},
-			{ "collide",lcollide},
-			{ "worldCollide",lworldCollide},
-			{ "raycast",lraycast},
-			{ "step_simulator",lstep_simulator},
-			{ NULL, NULL },
+			{ "new", lnew_bullet},
+			nullptr, nullptr,
 		};
+
 		luaL_newlib(L, l);
 
 		return 1;
+
 	}
 }

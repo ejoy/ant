@@ -1,6 +1,5 @@
 local thread = require "thread"
 
-thread.newchannel "errlog"
 thread.newchannel "channel"
 
 local err = thread.channel "errlog"
@@ -9,13 +8,14 @@ local data = thread.channel "channel"
 thread.thread ( [[
 	local print = print
 	local thread = require "thread"
-	print "Hello World"
+	print ("Hello World in thread" , thread.id)
 	local c = thread.channel "channel"
 	c:push(1,2,3)
 	error ("Exit")
 ]] , print )
 
-thread.sleep(1)
+--thread.sleep(1)
 
-print(err:pop())
-print(data:pop())
+print("Error:", err:bpop())
+print("Channel:", data:bpop())
+print("Main thread id", thread.id)

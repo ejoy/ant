@@ -14,11 +14,13 @@ ecs.import "serialize.serialize_system"
 
 -- scene
 ecs.import "scene.cull_system"
-ecs.import "scene.filter_system"
+ecs.import "scene.filter.filter_system"
+ecs.import "scene.filter.lighting_filter"
 
 -- animation
 ecs.import "animation.skinning.skinning_system"
 ecs.import "animation.animation"
+ecs.import "physic.rigid_body"
 
 -- editor
 ecs.import "editor.ecs.camera_controller"
@@ -26,6 +28,9 @@ ecs.import "editor.ecs.pickup_system"
 
 -- editor elements
 ecs.import "editor.ecs.general_editor_entities"
+local bu = require "bullet.lua.util"
+
+local bgfx = require "bgfx"
 
 local model_ed_sys = ecs.system "model_editor_system"
 model_ed_sys.singleton "math_stack"
@@ -77,6 +82,7 @@ local function load_mesh_assetinfo(skinning_mesh_comp)
 		handle = {
 			groups = {
 				{
+					bounding = skinning_mesh:bounding(),
 					vb = {
 						decls = decls,
 						handles = vb_handles,
@@ -90,9 +96,27 @@ local function load_mesh_assetinfo(skinning_mesh_comp)
 	}
 end
 
+local smaplemaerial = "mem://sample.material"
+fu.write_to_file(smaplemaerial, [[
+	shader = {
+		vs = "mesh_skin/vs_color_lighting",
+		fs = "mesh_skin/fs_color_lighting",
+	}
+
+	state = "default.state"
+
+	properties = {
+
+	}
+]])
+
+local sample_obj_user_idx = 1
+local plane_obj_user_idx = 2
+
 local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	local eid = world:new_entity("position", "scale", "rotation",
 	"skeleton", "animation", "skinning_mesh", 
+	"rigid_body",		-- physic relate
 	"mesh", "material",
 	"name", "can_render")
 
@@ -118,19 +142,24 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	comp_util.load_skinning_mesh(e, skinning_meshpath)	
 	e.mesh.assetinfo = load_mesh_assetinfo(e.skinning_mesh)
 
-	local smaplemaerial = "mem://sample.material"
-	fu.write_to_file(smaplemaerial, [[
-		shader = {
-			vs = "mesh_skin/vs_color_lighting",
-			fs = "mesh_skin/fs_color_lighting",
-		}
+	local function init_physic_obj()
+		local rigid_body = e.rigid_body
+		
+		local aabb = e.mesh.assetinfo.handle.groups[1].bounding.aabb
+		local len = math.sqrt(ms(aabb.max, aabb.min, "-1.T")[1])
 
-		state = "default.state"
+		local phy_world = world.args.physic_world
 
-		properties = {
+		local shape = {type= "capsule", radius=0.1 * len, height=0.8 * len, axis=2}
+		shape.handle = bu.create_shape(phy_world, shape.type, shape)		
+		table.insert(rigid_body.shapes, shape)
+		
+		local colobj = assert(rigid_body).obj
+		colobj.handle = phy_world:new_obj(shape.handle, sample_obj_user_idx, {0, 0, 0}, {0, 0, 0, 1})
+		colobj.useridx = sample_obj_user_idx
+	end
 
-		}
-	]])
+	init_physic_obj()
 
 	comp_util.load_material(e, {smaplemaerial})
 	return eid
@@ -146,6 +175,78 @@ local function update_animation_ratio(eid, cursor_pos)
 	local e = world[eid]
 	local anicomp = assert(e.animation)	
 	anicomp.ratio = cursor_pos
+end
+
+local function create_plane_entity()
+	local eid = world:new_entity("position", "rotation", "scale",
+		"mesh", "material",
+		"rigid_body",
+		"name", "can_render")
+
+	local plane = world[eid]
+	local function create_plane_mesh_info()
+		local decl = bgfx.vertex_decl {
+			{ "POSITION", 3, "FLOAT" },
+            { "NORMAL", 3, "FLOAT" },
+            { "COLOR0", 4, "UINT8", true },
+		}
+		local unit = 5
+		local half_unit = unit * 0.5
+		return {
+			handle = {
+				groups = {
+					{
+						bounding = {
+							aabb = {
+								min = {},
+								max = {},
+							},
+							sphere = {
+								center = {},
+								radius = 1,
+							}
+						},
+						vb = {
+							decls = {decl},
+							handles = {
+								bgfx.create_vertex_buffer(
+									{
+										"ffffffd",
+										-half_unit, 0, half_unit,
+										0, 1, 0,
+										0xff080808,
+
+										half_unit, 0, half_unit,
+										0, 0, 0,
+										0xff080808,
+
+										half_unit, 0, -half_unit,
+										0, 0, 0,
+										0xff080808,
+									},
+									decl)
+							}
+						},					
+					}
+				}
+			}
+		}
+	end
+
+	plane.mesh.assetinfo = create_plane_mesh_info()
+
+	comp_util.load_material(plane, {smaplemaerial})
+
+	-- rigid_body
+	local rigid_body = plane.rigid_body
+	local shape = {type="plane", nx=0, ny=1, nz=0, distance=10}
+
+	local physic_world = world.args.physic_world
+	shape.handle = bu.create_shape(physic_world, shape.type, shape)
+	table.insert(rigid_body.shapes, shape)
+
+	rigid_body.obj.handle = physic_world:new_obj(shape.handle, plane_obj_user_idx, {0, 0, 0}, {0, 0, 0, 1})
+	rigid_body.obj.useridx = plane_obj_user_idx
 end
 
 local function init_control(ms)
@@ -272,11 +373,7 @@ local function init_control(ms)
 	iup.Map(dlg)
 end
 
--- luacheck: ignore self
-function model_ed_sys:init()
-	local ms = self.math_stack
-	init_control(ms)
-
+local function init_lighting(ms)
 	local lu = require "render.light.util"
 	local leid = lu.create_directional_light_entity(world)
 	local lentity = world[leid]
@@ -284,7 +381,16 @@ function model_ed_sys:init()
 	lightcomp.color = {1,1,1,1}
 	lightcomp.intensity = 2.0
 	ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")
+end
 
-	local maincamera = world:first_entity("main_camera")
-	--assert(maincamera.primitive_filter).no_lighting = true
+-- luacheck: ignore self
+function model_ed_sys:init()
+	local ms = self.math_stack
+	init_control(ms)
+	init_lighting(ms)
+
+	create_plane_entity()
+
+	local comp = {mesh={}}	
+	comp_util.load_mesh(comp, "bunny.mesh")
 end

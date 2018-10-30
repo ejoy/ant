@@ -144,7 +144,7 @@ get_linear_type_name(LinearType lt) {
 		"mat", "v4", "quat", "num", "euler", "",
 	};
 
-	assert(sizeof(names) / sizeof(names[0]) > lt);
+	assert((sizeof(names) / sizeof(names[0])) > size_t(lt));
 	return names[lt];
 }
 
@@ -236,6 +236,17 @@ get_id(lua_State *L, int index) {
 	return v;
 }
 
+static void
+assign_ref(lua_State *L, struct refobject * ref, int64_t rid) {
+	int64_t markid = lastack_mark(ref->LS, rid);
+	if (markid == 0) {
+		luaL_error(L, "Mark invalid object id");
+		return;
+	}
+	lastack_unmark(ref->LS, ref->id);
+	ref->id = markid;
+}
+
 static int
 lassign(lua_State *L) {
 	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
@@ -254,12 +265,7 @@ lassign(lua_State *L) {
 			return luaL_error(L, "assign operation : type mismatch");
 		}
 
-		int64_t markid = lastack_mark(ref->LS, rid);
-		if (markid == 0) {
-			return luaL_error(L, "Invalid object id");
-		}
-		lastack_unmark(ref->LS, ref->id);
-		ref->id = markid;
+		assign_ref(L, ref, rid);
 		break;
 	}
 	case LUA_TUSERDATA: {
@@ -1240,10 +1246,23 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 	int64_t id = pop(L, LS);
 	int type;
 	float* v = lastack_value(LS, id, &type);
-	if (!lastack_is_vec_type(type))
-		luaL_error(L, "convert to base axis, only support vec3/vec4");
-	
-	glm::vec4 zdir(to_viewdir(glm::radians(*(glm::vec3*)v)), 0);
+
+	glm::vec4 zdir;
+	switch (type){
+	case LINEAR_TYPE_MAT:
+		zdir = (*(glm::mat4x4 *)v) * glm::vec4(0, 0, 1, 0);
+		break;
+	case LINEAR_TYPE_VEC4:
+	case LINEAR_TYPE_EULER:
+		zdir = glm::vec4(to_viewdir(glm::radians(*(glm::vec3*)v)), 0);
+		break;
+	case LINEAR_TYPE_QUAT: 
+		zdir = (*(glm::quat*)v) * glm::vec4(0, 0, 1, 0);
+		break;
+	default:
+		luaL_error(L, "not support data type, need rotation matrix/quaternion/euler angles, type : %d", type);
+		break;
+	}
 	
 	glm::vec4 xdir, ydir;
 	if (is_zero(zdir - glm::vec4(0, 0, 1, 0))){
@@ -1351,7 +1370,7 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 			luaL_error(L, "need a ref object for assign");
 		}
 		struct refobject * ref = (struct refobject *)lua_touserdata(L, index);
-		ref->id = lastack_mark(LS, id);
+		assign_ref(L, ref, id);
 		refstack_pop(RS);
 		break;
 	}

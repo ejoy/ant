@@ -13,7 +13,11 @@ ecs.import "inputmgr.message_system"
 ecs.import "serialize.serialize_component"
 ecs.import "render.light.light"
 
-ecs.import "scene.shadow.generate_shadow_system"
+-- filter
+ecs.import "scene.filter.lighting_filter"
+ecs.import "scene.filter.shadow_filter"
+ecs.import "scene.filter.transparency_filter"
+
 
 -- test entity
 ecs.import "editor.ecs.editable_hierarchy"
@@ -23,7 +27,8 @@ ecs.import "serialize.serialize_system"
 ecs.import "render.view_system"
 ecs.import "render.entity_rendering_system"
 ecs.import "scene.hierarchy.hierarchy"
-ecs.import "scene.cull_system"
+-- ecs.import "scene.cull_system"
+ecs.import "scene.shadow.generate_shadow_system"
 
 local fs_util = require "filesystem.util"
 local component_util = require "render.components.util"
@@ -95,7 +100,7 @@ function add_entity_sys:init()
 		ms(lentity.rotation, {45, -135, 45}, "=")
 		ms(lentity.position, {100, 100, 100}, "=")
 
-		ms(lentity.scale, {0.1, 0.1, 0.1}, "=")
+		ms(lentity.scale, {1.1, 1.1, 1.1}, "=")
 
 		lentity.name.n = "directional_light"
 
@@ -135,7 +140,7 @@ function add_entity_sys:init()
 		]])
 		component_util.load_material(lentity, {sphere_fn})
 
-		lentity.can_render.visible = true
+		lentity.can_render.visible = true    
 	end
 
      do

@@ -31,4 +31,4 @@ MINGW的第三方库会存放到build目录，MSVC工程会存放到build_msvc�
 
 运行：
 > clibs/iup.exe libs/main.lua  
-> clibs/iup.exe libs/modeleditor/modeleditor.lua
+> clibs/iup.exe tools/modeleditor/modeleditor.lua

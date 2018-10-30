@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "scene.filter_system"
+ecs.import "scene.filter.filter_system"
 ecs.import "render.end_frame_system"
 ecs.import "render.entity_rendering_system"
 ecs.import "inputmgr.message_system"
@@ -122,7 +122,7 @@ end
 -- update material system
 local pickup_material_sys = ecs.system "pickup_material_system"
 
-pickup_material_sys.depend "transparency_filter_system"
+pickup_material_sys.depend "final_filter_system"
 pickup_material_sys.dependby "entity_rendering"
 
 function pickup_material_sys:update()
@@ -158,7 +158,7 @@ pickup_sys.singleton "message_component"
 
 pickup_sys.singleton "post_end_frame_jobs"
 
-pickup_sys.depend "transparency_filter_system"
+pickup_sys.depend "final_filter_system"
 
 pickup_sys.dependby "end_frame"
 

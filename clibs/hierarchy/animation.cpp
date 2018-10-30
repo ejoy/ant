@@ -25,6 +25,10 @@ extern "C" {
 #include <ozz-animation/samples/framework/mesh.h>
 #include <ozz-animation/samples/framework/utils.h>
 
+// glm
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 
 // stl
 #include <string>
@@ -42,12 +46,63 @@ struct sampling_node {
 	ozz::Range<ozz::math::SoaTransform>	results;
 };
 
+struct Bounding {
+	struct AABB {
+		glm::vec3 min, max;
+
+		void merge(const glm::vec3 &p) {
+			for (auto ii = 0; ii < 3; ++ii) {
+				min[ii] = std::min(p[ii], min[ii]);
+				max[ii] = std::max(p[ii], max[ii]);
+			}
+		}
+
+		glm::vec3 center() const {
+			return (max + min) * 0.5f;
+		}
+
+		float length() const {
+			return glm::length(max - min);
+		}
+	};
+
+	struct Sphere {
+		glm::vec3 center;
+		float radius;
+		void from_aabb(const AABB &aabb) {
+			radius = aabb.length() * 0.5f;
+			center = aabb.center();
+		}
+	};
+
+	struct OBB {
+		glm::mat4 m;
+		void from_aabb(const AABB &aabb) {
+
+			auto &trans = m[3];
+			const auto &c = aabb.center();
+			trans[0] = c[0], trans[1] = c[1], trans[2] = c[2], trans[3] = 1;
+
+			float scale = aabb.length() * 0.5f;
+			m[0][0] = m[1][1] = m[2][2] = scale;
+
+			// no rotation here
+		}
+	};
+
+	AABB aabb;
+	Sphere sphere;
+	OBB obb;
+};
+
 struct ozzmesh {
 	ozz::sample::Mesh* mesh;
 	ozz::Range<ozz::math::Float4x4>	skinning_matrices;
 
 	uint8_t * dynamic_buffer;
 	uint8_t * static_buffer;
+
+	Bounding bounding;
 };
 
 
@@ -487,27 +542,11 @@ ldel_ozzmesh(lua_State *L) {
 	return 0;
 }
 
-static int
-lnew_ozzmesh(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TSTRING);
-
-	const char* filename = lua_tostring(L, 1);
-
-	ozzmesh *om = (ozzmesh*)lua_newuserdata(L, sizeof(ozzmesh));
-	luaL_getmetatable(L, "OZZMESH");
-	lua_setmetatable(L, -2);
-
-	om->mesh = ozz::memory::default_allocator()->New<ozz::sample::Mesh>();
-	ozz::sample::LoadMesh(filename, om->mesh);
-
-	if (!om->mesh->inverse_bind_poses.empty()) {
-		om->skinning_matrices = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(om->mesh->inverse_bind_poses.size());
-	} else {
-		om->skinning_matrices = ozz::Range<ozz::math::Float4x4>();
-	}
-
+static void 
+create_buffer(ozzmesh *om) {
 	const auto num_vertices = om->mesh->vertex_count();
 
+	Bounding::AABB aabb; memset(&aabb, 0, sizeof(aabb));
 	const size_t dynamic_stride = dynamic_vertex_elem_stride(om);
 	if (dynamic_stride != 0) {
 		om->dynamic_buffer = new uint8_t[dynamic_stride * num_vertices];
@@ -518,10 +557,12 @@ lnew_ozzmesh(lua_State *L) {
 
 		for (const auto &part : om->mesh->parts) {
 			assert(0 != part.vertex_count());
-			for (auto iv = 0; iv < part.vertex_count(); ++iv) {				
-				memcpy(db, &(part.positions[iv * ozz::sample::Mesh::Part::kPositionsCpnts]), posstep);
+			for (auto iv = 0; iv < part.vertex_count(); ++iv) {
+				auto posptr = &(part.positions[iv * ozz::sample::Mesh::Part::kPositionsCpnts]);
+				aabb.merge(*(glm::vec3*)(posptr));
+				memcpy(db, posptr, posstep);
 				db += posstep;
-				
+
 				if (!part.normals.empty()) {
 					memcpy(db, &(part.normals[iv * ozz::sample::Mesh::Part::kNormalsCpnts]), normalstep);
 					db += normalstep;
@@ -534,8 +575,12 @@ lnew_ozzmesh(lua_State *L) {
 			}
 		}
 	} else {
-		om->dynamic_buffer = nullptr;	
+		om->dynamic_buffer = nullptr;
 	}
+	memset(&om->bounding, 0, sizeof(om->bounding));
+	om->bounding.aabb = aabb;
+	om->bounding.sphere.from_aabb(aabb);
+	om->bounding.obb.from_aabb(aabb);
 
 	const size_t static_stride = static_vertex_elem_stride(om);
 	if (static_stride != 0) {
@@ -558,7 +603,28 @@ lnew_ozzmesh(lua_State *L) {
 	} else {
 		om->static_buffer = nullptr;
 	}
+}
 
+static int
+lnew_ozzmesh(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TSTRING);
+
+	const char* filename = lua_tostring(L, 1);
+
+	ozzmesh *om = (ozzmesh*)lua_newuserdata(L, sizeof(ozzmesh));
+	luaL_getmetatable(L, "OZZMESH");
+	lua_setmetatable(L, -2);
+
+	om->mesh = ozz::memory::default_allocator()->New<ozz::sample::Mesh>();
+	ozz::sample::LoadMesh(filename, om->mesh);
+
+	if (!om->mesh->inverse_bind_poses.empty()) {
+		om->skinning_matrices = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(om->mesh->inverse_bind_poses.size());
+	} else {
+		om->skinning_matrices = ozz::Range<ozz::math::Float4x4>();
+	}
+
+	create_buffer(om);
 	return 1;
 }
 
@@ -585,6 +651,43 @@ lbuffer_ozzmesh(lua_State *L) {
 	lua_pushlightuserdata(L, buffer);
 	lua_pushinteger(L, lua_Integer(vertex_stride * om->mesh->vertex_count()));
 	return 2;
+}
+
+static int
+lbounding_ozzmesh(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	auto om = (ozzmesh*)lua_touserdata(L, 1);
+
+	auto push_vec = [L](auto name, auto num, auto obj) {
+		lua_createtable(L, num, 0);
+		for (auto ii = 0; ii < num; ++ii) {
+			lua_pushnumber(L, obj[ii]);
+			lua_seti(L, -2, ii + 1);
+		}
+		lua_setfield(L, -2, name);
+	};
+	
+	lua_createtable(L, 0, 3);
+
+	// aabb
+	lua_createtable(L, 0, 2);
+	push_vec("min", 3, om->bounding.aabb.min);
+	push_vec("max", 3, om->bounding.aabb.max);
+	lua_setfield(L, -2, "aabb");
+
+	// sphere
+	lua_createtable(L, 0, 2);
+
+	push_vec("center", 3, om->bounding.sphere.center);
+	lua_pushnumber(L, om->bounding.sphere.radius);
+	lua_setfield(L, -2, "radius");
+
+	lua_setfield(L, -2, "sphere");
+
+	//obb
+	push_vec("obb", 16, (const float*)(&om->bounding.obb.m));
+
+	return 1;
 }
 
 static int
@@ -642,6 +745,7 @@ register_ozzmesh_mt(lua_State *L) {
 		"buffer", lbuffer_ozzmesh,
 		"index_buffer", lindexbuffer_ozzmesh,
 		"layout", llayout_ozzmesh,		
+		"bounding", lbounding_ozzmesh,
 		"__gc", ldel_ozzmesh,
 		nullptr, nullptr,
 	};

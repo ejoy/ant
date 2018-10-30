@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "scene.filter_system"
+ecs.import "scene.filter.filter_system"
 
 local math3d_baselib = require "math3d.baselib"
 local mu = require "math.util"

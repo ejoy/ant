@@ -113,7 +113,7 @@ function shadow_config:init()
     self.debug_drawLightView = false 
     self.debug_virtualCamera = false
     self.debug_virtualLight = true 
-    self.debug_drawScene = true   
+    self.debug_drawScene = false        
                                                    -- depth generate method
     self.progShadow   = "packDepth_InvZ_RGBA"      -- inverse z depth method    
     --self.progShadow = "packDepth_Linear_RGBA"   
@@ -205,39 +205,39 @@ local function init_uniforms()
 
     uniforms.activeLight = false                        -- current active light 
 
-    var_def(uniforms,"params0",1,1,0,0)                 -- ambientPass,lightingPass not used now 
-    var_def(uniforms,"params1",0.003,0,0.5,1)           -- bias,offset, shadowMapParam0，shadowMapParam1
-    var_def(uniforms,"params2",1,1,1/SHADOWMAP_SIZE,0)  -- depthPow,SmCoverage,smTexelSize
-    var_def(uniforms,"csmFarDistances",30,90,180,1000)  -- csm split distances
+    -- var_def(uniforms,"params0",1,1,0,0)                 -- ambientPass,lightingPass not used now 
+    -- var_def(uniforms,"params1",0.003,0,0.5,1)           -- bias,offset, shadowMapParam0，shadowMapParam1
+    -- var_def(uniforms,"params2",1,1,1/SHADOWMAP_SIZE,0)  -- depthPow,SmCoverage,smTexelSize
+    -- var_def(uniforms,"csmFarDistances",30,90,180,1000)  -- csm split distances
 
     -- uniform itself 
-    uniform_def "u_params0"
-    uniform_def "u_params1"
-    uniform_def "u_params2"
-    uniform_def "u_color"
-    uniform_def "u_smSamplingParams"
+    -- uniform_def "u_params0"
+    -- uniform_def "u_params1"
+    -- uniform_def "u_params2"
+    -- uniform_def "u_color"
+    -- uniform_def "u_smSamplingParams"
 
     -- csm relative 
-    uniform_def "u_csmFarDistances"
-    uniform_def ("u_lightMtx","m4")
-    uniform_def ("u_shadowMapMtx0","m4")
-    uniform_def ("u_shadowMapMtx1","m4")
-    uniform_def ("u_shadowMapMtx2","m4")
-    uniform_def ("u_shadowMapMtx3","m4")
+    -- uniform_def "u_csmFarDistances"
+    -- uniform_def ("u_lightMtx","m4")
+    -- uniform_def ("u_shadowMapMtx0","m4")
+    -- uniform_def ("u_shadowMapMtx1","m4")
+    -- uniform_def ("u_shadowMapMtx2","m4")
+    -- uniform_def ("u_shadowMapMtx3","m4")
 
-    uniform_def ("u_lightPosition")
-    uniform_def ("u_lightDirection")
+    -- uniform_def ("u_lightPosition")
+    -- uniform_def ("u_lightDirection")
 
     -- debug bounds colors
-	var_def(uniforms,"debugGreen", 0, -0.57735026, 0.81649661)
-	var_def(uniforms,"debugYellow", 0, -0.57735026, -0.81649661)
-	var_def(uniforms,"debugBlue", -0.81649661, 0.57735026, 0)
-	var_def(uniforms,"debugRed", 0.81649661, 0.57735026, 0)
+	-- var_def(uniforms,"debugGreen", 0, -0.57735026, 0.81649661)
+	-- var_def(uniforms,"debugYellow", 0, -0.57735026, -0.81649661)
+	-- var_def(uniforms,"debugBlue", -0.81649661, 0.57735026, 0)
+	-- var_def(uniforms,"debugRed", 0.81649661, 0.57735026, 0)
 
-    uniform_def ("u_debugGreen")
-    uniform_def ("u_debugYellow")
-    uniform_def ("u_debugBlue")
-    uniform_def ("u_debugRed")
+    -- uniform_def ("u_debugGreen")
+    -- uniform_def ("u_debugYellow")
+    -- uniform_def ("u_debugBlue")
+    -- uniform_def ("u_debugRed")
 
 end 
 
@@ -282,7 +282,7 @@ shadow_maker.__index = shadow_maker
 -- shadow_maker init 
 function  shadow_maker:init( shadow_maker_entity )
 
-    local sm_name = "shadow.material"                   --"shadow_linear.material"   --"buny.material"   --"line.material"
+    local sm_name = "shadow.material"                   
     local shadow_material = asset.load( sm_name )
     shadow_material.name = sm_name 
 
@@ -535,8 +535,8 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
 
     -- direction light entity  get light position  from light entity
     local d_light = world:first_entity("directional_light")
-    stack(ctx.directionLight.position,d_light.position,"=")
-    stack(ctx.directionLight.position_ViewSpace,d_light.position,"=")
+    --stack(ctx.directionLight.position,d_light.position,"=")
+    --stack(ctx.directionLight.position_ViewSpace,d_light.position,"=")
 
     -- main camera entity, get main camera's position,direction
     local camera = world:first_entity("main_camera")
@@ -576,7 +576,6 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
     -- local mtxProj  = stack( { type = "ortho", l=1, r=-1, b=1, t=-1, n= -config.far  , f= config.far ,h = false     },"P") -- true 距离较远，精度较低
     -- 转换成新的API
     local mtxProj = stack({type="mat", l=1, r=-1, t=-1, b=1, n=-config.far, f= config.far, ortho=true }, "P")	-- make a ortho mat
-    -- Setup Direction Light Frustum relative matrix
     if config.lightType == "DirectionLight" then 
         -- get position from direction light
         local light_eye = { 100,100,100,1}
@@ -599,7 +598,7 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
 
         -- make userdata parameters for csm far distances                                            
         -- will be set to uniforms next frame 
-        var_set("csmFarDistances",splitSlices[2],splitSlices[4],splitSlices[6],splitSlices[8])
+        -- var_set("csmFarDistances",splitSlices[2],splitSlices[4],splitSlices[6],splitSlices[8])
         
         -- make frustum corners
         local numCorners = 8
@@ -759,9 +758,10 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
             )
 
     for i = 1,numSplits do 
-        local mtxTemp  = math3d.ref "matrix"
-        mtxTemp = stack( lightProj[i],mtxBias,"*P")
+        local mtxTemp = stack( lightProj[i],mtxBias,"*P")
         ctx.shadowMapMtx[i] = stack(lightView[1],mtxTemp,"*m")
+        -- local mtxMat = stack(lightView[1],mtxTemp,"*P")
+        -- stack(ctx.shadowMapMtx[i],mtxMat,"=")
         -- ctx & comp_rt references 
         shadow.shadowMapMtx[i] = ctx.shadowMapMtx[i]
     end  
@@ -779,7 +779,7 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
     -- draw depth texture 
     config.debug_drawShadow = true   
     if config.debug_drawShadow then 
-        --local screenProj = stack( { type = "ortho",l=0, r=1, b=1, t=0, n=0,f=100}, "m")
+        -- local screenProj = stack( { type = "ortho",l=0, r=1, b=1, t=0, n=0,f=100}, "m")
         -- convert to new api 
         local screenProj = stack({type="mat", l=0, r=1, t=0, b=1, n=0, f= 100, ortho=true }, "m")	-- make a ortho mat
         local screenView = stack( {
@@ -818,7 +818,6 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
     bgfx.set_view_transform(VIEWID_DRAWSCENE,ms(camera_view,"m"),ms(camera_proj,"m") )   -- (id->pointer) bgfx need pointer 
     
     -- render scene with shadow 
-    config.debug_drawScene = false                      
     if config.debug_drawScene then           
         self:render_debug_with_shadow( entity, select_filter, self.materials.debug_drawScene )
     end 
@@ -974,11 +973,11 @@ function shadow_maker:render_to_texture( entity, select_filter, viewId, shadow_m
             
                 -- state & program assign by input material 
                 local srt = cast_prim.srt 
-                local mat = stack({ type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
+                local mat = stack( { type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
             
                 -- debug output to framebuffer main camera viewid
                 render_util.draw_primitive( view_id, cast_prim, mat)
-                print("do check")
+                --print("do check generate shadow")
             end 
         end 
     end 

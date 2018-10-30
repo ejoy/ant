@@ -27,7 +27,7 @@ file2 file hash
 
 如果需要打开 /a/file1 文件，则需要先打开 / 根目录文件，然后找到 a 对应的 hash ，再从 hash 打开对应的 /a 文件，再找到 file2 条目。
 
-对于文件，索引信息用 hash 做其文件名，记录
+对于文件，索引信息用 hash.ref 做其文件名，记录
 
 realpath timestamp
 realpath timestamp

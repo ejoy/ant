@@ -10,35 +10,30 @@ ANT 的 runtime 会在设备本地维持一个虚拟文件系统的 cache ，通
 
 请求：
 
-AUTH (待实现)
+ROOT 获取 ROOT hash
 
-LIST 列目录
-path 目录名，/ 表示根目录
-
-GET 获取文件
-pathname 包含目录名的全路径文件名
-hash 本地文件的 hash ，空表示没有本地 cache ，非空时为 md5 值，供 file server 参考。
-
-EXIST 尝试文件或目录，判定 cache 是否需要更新。
-pathname 全路径
-hash 本地文件的 hash 。
+GET 获取指定 hash 对应的文件内容
+hash sha1 小写 hex 格式
 
 回应：
 
-DIR 推送目录
-path 目录名
-id 范围 id ，例如 0/10 表示这个目录有 10 个文件，这次推送从第 0 个开始。当需要推送的数据量太大时，需要多次推送。例如：0/10 5/10 两次每次都推送 5 个文件名。如果这个字段为空，表示目录不存在。
-filename  文件名1 
-hash 该文件的 md5 值，如果 hash 为空，表示这是一个子目录。
-...
+ROOT 新的 ROOT hash
+hash sha1
 
-FILE 推送文件
-pathname 包含目录名的全路径文件名
-hash 文件 hash ，如果 hash 为空，表示文件已经不存在。通常是由于 C 请求了一个空文件。
-offset/size 用来发送部分文件，对大文件来说，可能会分多条协议发送。offset 是 base 0 的，小文件可以直接 0/size 一次发送。
-content 数据块。
-注：offset/size 字段可以为空，这样 content 也为空。一般是当请求时发送的 hash 和 file server 的一致，所以不必发送。也可能客户端是用  EXIST 请求，没有请求内容。只需要发送确认信息。
+BLOB 推送数据块
+hash sha1
+content 数据块
 
+MISSING 缺少文件
+hash sha1
 
+FLIE 推送大文件
+hash sha1
+size 十进制数字文件长度
 
+SLICE 推送部分文件
+hash sha1
+offset 十进制数字长度 (base 0)
+content 数据块
 
+文件可以由多个 SLICE 组成，依次推送。也可能因为多次请求而重新发送。例如，连续收到两次 GET ，第二次发生后就立刻从 offset 0 开始重新推送文件，并中断第一次 GET 的回应。

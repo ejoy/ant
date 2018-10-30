@@ -67,6 +67,18 @@ local function update_property(name, property)
 		if need_unpack(val) then
 			bgfx.set_uniform(assert(uniform.handle), table.unpack(val))
 		else
+			if "u_shadowMapMtx0" == uniform.name then 
+				--print("MapMtx0",val)		
+			elseif "u_shadowMapMtx1" == uniform.name then 		
+				--print("MapMtx1",val)		
+			elseif "u_shadowMapMtx2" == uniform.name then 		
+				--print("MapMtx2",val)		
+			elseif "u_shadowMapMtx3" == uniform.name then
+				--print("MapMtx3",val)		
+				-- filter shadowMaMtx 
+			else  		
+				-- bgfx.set_uniform(assert(uniform.handle), val)
+			end 
 			bgfx.set_uniform(assert(uniform.handle), val)
 		end
 		

@@ -25,16 +25,20 @@
 struct channel {
 	const char * name;
 	struct simple_queue *queue;
+	struct thread_event trigger;
+	int lock;	// empty lock
+	int blocked;
 };
 
 struct boxchannel {
-	struct simple_queue *queue;
+	struct channel *c;
 };
 
 struct channel g_channel[MAX_CHANNEL];
-extern LUAMOD_API int luaopen_thread(lua_State *L);
+int g_thread_id = 0;
+LUAMOD_API int luaopen_thread(lua_State *L);
 
-static struct simple_queue *
+static struct channel *
 new_channel_(const char * name) {
 	int i;
 	for (i=0;i<MAX_CHANNEL;i++) {
@@ -44,9 +48,15 @@ new_channel_(const char * name) {
 	}
 	struct simple_queue * q = (struct simple_queue *)malloc(sizeof(*q));
 	simple_queue_init(q);
-	if (atom_cas_pointer(&g_channel[i].queue, NULL, q)) {
-		g_channel[i].name = strdup(name);
-		return q;
+	struct channel *c = &g_channel[i];
+	if (atom_cas_pointer(&c->queue, NULL, q)) {
+		thread_event_create(&c->trigger);
+		c->blocked = 0;
+		spin_lock_init(c);
+		// name should be set at last
+		atom_sync();
+		c->name = strdup(name);
+		return c;
 	} else {
 		simple_queue_destroy(q);
 		free(q);
@@ -54,19 +64,19 @@ new_channel_(const char * name) {
 	}
 }
 
-static struct simple_queue *
+static struct channel *
 new_channel(const char * name) {
 	for (;;) {
 		if (g_channel[MAX_CHANNEL-1].name != NULL) {
 			return NULL;
 		}
-		struct simple_queue *c = new_channel_(name);
+		struct channel *c = new_channel_(name);
 		if (c)
 			return c;
 	}
 }
 
-static struct simple_queue *
+static struct channel *
 query_channel(const char *name) {
 	int i;
 	for (i=0;i<MAX_CHANNEL;i++) {
@@ -74,7 +84,7 @@ query_channel(const char *name) {
 			return NULL;
 		}
 		if (strcmp(g_channel[i].name, name)==0) {
-			return g_channel[i].queue;
+			return &g_channel[i];
 		}
 	}
 	return NULL;
@@ -83,29 +93,70 @@ query_channel(const char *name) {
 static int
 lnewchannel(lua_State *L) {
 	const char * name = luaL_checkstring(L, 1);
-	struct simple_queue * c = new_channel(name);
+	struct channel * c = new_channel(name);
 	if (c == NULL)
 		return luaL_error(L, "Can't create channel %s", name);
-	struct simple_queue * q = query_channel(name);
+	struct channel * q = query_channel(name);
 	if (q != c)
 		return luaL_error(L, "Duplicate channel %s", name);
 	return 0;
 }
 
+static void
+push_channel(struct channel *c, struct simple_queue_slot *slot) {
+	simple_queue_push(c->queue, slot);
+	spin_lock(c);
+	// trigger iif blocked > 0
+	if (c->blocked > 0) {
+		thread_event_trigger(&c->trigger);
+		--c->blocked;
+	}
+	spin_unlock(c);
+}
+
 static int
 lpush(lua_State *L) {
-	struct boxchannel * c = luaL_checkudata(L, 1, "THREAD_CHANNEL");
+	struct boxchannel * bc = luaL_checkudata(L, 1, "THREAD_CHANNEL");
+	struct channel *c = bc->c;
 	void * buffer = seri_pack(L, 1);
 	struct simple_queue_slot slot = { buffer };
-	simple_queue_push(c->queue, &slot);
+	push_channel(c, &slot);
 	return 0;
+}
+
+static int
+lblockedpop(lua_State *L) {
+	struct boxchannel * bc = luaL_checkudata(L, 1, "THREAD_CHANNEL");
+	struct channel *c = bc->c;
+	struct simple_queue_slot slot;
+	if (simple_queue_pop(c->queue, &slot)) {
+		// queue is empty
+		spin_lock(c);
+		if (simple_queue_pop(c->queue, &slot)) {
+			// double check queue is empty
+			int blocked = ++c->blocked;
+			// queue is empty and blocked should be 1 here.
+			spin_unlock(c);
+			if (blocked > 1) {
+				return luaL_error(L, "Blocked pop from %s in multithread", c->name);
+			}
+			thread_event_wait(&c->trigger);
+			if (simple_queue_pop(c->queue, &slot)) {
+				return luaL_error(L, "Queue %s should not be empty", c->name);
+			}
+		} else {
+			spin_unlock(c);
+		}
+	}
+	int n = seri_unpack(L, slot.data);
+	return n;
 }
 
 static int
 lpop(lua_State *L) {
 	struct boxchannel * c = luaL_checkudata(L, 1, "THREAD_CHANNEL");
 	struct simple_queue_slot slot;
-	if (simple_queue_pop(c->queue, &slot)) {
+	if (simple_queue_pop(c->c->queue, &slot)) {
 		// queue is empty
 		return 0;
 	} else {
@@ -118,16 +169,17 @@ lpop(lua_State *L) {
 static int
 lquerychannel(lua_State *L) {
 	const char * name = luaL_checkstring(L, 1);
-	struct simple_queue * c = query_channel(name);
+	struct channel * c = query_channel(name);
 	if (c == NULL)
 		return luaL_error(L, "Can't create channel %s", name);
 
 	struct boxchannel *bc = lua_newuserdata(L, sizeof(*bc));
-	bc->queue = c;
+	bc->c = c;
 	if (luaL_newmetatable(L, "THREAD_CHANNEL")) {
 		luaL_Reg l[] = {
 			{ "push", lpush },
 			{ "pop", lpop },
+			{ "bpop", lblockedpop },
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
@@ -158,10 +210,16 @@ thread_args_free(struct thread_args *args) {
 	free(args);
 }
 
+static int luaopen_thread_worker(lua_State *L);
+
 static int
 thread_luamain(lua_State *L) {
 	luaL_openlibs(L);
-	luaL_requiref(L, "thread", luaopen_thread, 0);
+	int id = atom_inc(&g_thread_id);
+	lua_pushinteger(L, id);
+	lua_setfield(L, LUA_REGISTRYINDEX, "THREADID");
+	// todo: preload thread, and prevent dlclose thread.dll
+	//	luaL_requiref(L, "thread", luaopen_thread_worker, 0);
 	void *ud = lua_touserdata(L, 1);
 	struct thread_args *args = (struct thread_args *)ud;
 	if (luaL_loadbuffer(L, args->source, args->sz, "=threadinit") != LUA_OK) {
@@ -185,13 +243,13 @@ thread_main(void *ud) {
 	lua_pushlightuserdata(L, ud);
 	if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
 		// NOTICE: may memory leak when error (ud may not be free)
-		struct simple_queue * errlog = query_channel(ERRLOG_QUEUE);
+		struct channel * errlog = query_channel(ERRLOG_QUEUE);
 		if (errlog) {
 			size_t sz;
 			const char * str = lua_tolstring(L, -1, &sz);
 			void * errmsg = seri_packstring(str, (int)sz);
 			struct simple_queue_slot slot = { errmsg };
-			simple_queue_push(errlog, &slot);
+			push_channel(errlog, &slot);
 		} else {
 			printf("thread error : %s", lua_tostring(L, -1));
 		}
@@ -230,8 +288,8 @@ lthread(lua_State *L) {
 	return 0;
 }
 
-LUAMOD_API int
-luaopen_thread(lua_State *L) {
+static int
+luaopen_thread_worker(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "sleep", lsleep },
@@ -241,5 +299,27 @@ luaopen_thread(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
+	if (lua_getfield(L, LUA_REGISTRYINDEX, "THREADID") != LUA_TNUMBER) {
+		return luaL_error(L, "No THREADID in registry");
+	}
+	lua_setfield(L, -2, "id");
+	lua_pushnil(L);
+	lua_setfield(L, LUA_REGISTRYINDEX, "THREADID");
 	return 1;
+}
+
+LUAMOD_API int
+luaopen_thread(lua_State *L) {
+	if (lua_getfield(L, LUA_REGISTRYINDEX, "THREADID") == LUA_TNIL) {
+		lua_pop(L, 1);
+		lua_pushcfunction(L, lnewchannel);
+		lua_pushstring(L, "errlog");
+		lua_call(L, 1, 0);
+		assert(g_thread_id == 0);
+		lua_pushinteger(L, 0);
+		lua_setfield(L, LUA_REGISTRYINDEX, "THREADID");
+	} else {
+		lua_pop(L,1);
+	}
+	return luaopen_thread_worker(L);
 }

@@ -100,8 +100,9 @@ struct blob {
 };
 
 static inline void
-init_blod_slots(struct blob * B, int slot_beg, int slot_end) {	
-	for (int i = slot_beg; i < slot_end; ++i) {
+init_blob_slots(struct blob * B, int slot_beg, int slot_end) {
+	int i;
+	for (i = slot_beg; i < slot_end; ++i) {
 		B->s[i].tag = TAG_FREE;
 		B->s[i].id = i + 2;
 	}
@@ -118,7 +119,7 @@ blob_new(int size, int cap) {
 	B->freelist = 0;	// empty list
 	B->buffer = malloc(size * cap);
 	B->s = malloc(cap * sizeof(*B->s));
-	init_blod_slots(B, 0, cap);
+	init_blob_slots(B, 0, cap);
 	B->old = NULL;
 	return B;
 }
@@ -142,21 +143,15 @@ blob_alloc(struct blob *B, int version) {
 		struct oldpage * p = malloc(sizeof(*p));
 		p->next = B->old;
 		p->page = B->buffer;
+		B->old = p;
 
 		int cap = B->cap;	
 		B->cap *= 2;
 		B->buffer = malloc(B->size * B->cap);
 		memcpy(B->buffer, p->page, B->size * cap);
 		B->s = realloc(B->s, B->cap * sizeof(*B->s));
-		//int i;
-		//for (i=0;i<cap;i++) {
-		//	B->s[cap+i].tag = TAG_FREE;
-		//	B->s[cap+i].id = cap+i+2;
-		//}
-		//B->s[cap*2-1].id = 0;
-		//B->freeslot = cap + 1;
 
-		init_blod_slots(B, cap, B->cap);
+		init_blob_slots(B, cap, B->cap);
 	}
 	int ret = SLOT_INDEX(B->freeslot);
 	struct slot *s = &B->s[ret];
@@ -541,6 +536,8 @@ lastack_reset(struct lastack *LS) {
 	LS->old = NULL;
 	blob_flush(LS->per_vec);
 	blob_flush(LS->per_mat);
+	LS->temp_vector_top = 0;
+	LS->temp_matrix_top = 0;
 }
 
 static void
