@@ -1,0 +1,57 @@
+VFS 是整个引擎负责文件读写的核心模块，它在本地创建了一个目录对实际项目目录做一个索引。其数据组织方式类似 git ，详细结构见 vfs.txt 。
+
+每个项目建立在一个独立目录下，视为一个 vfs 仓库。项目仓库支持挂节点，方便把一些共用路径映射到仓库下。例如，我们可以把引擎目录下的 /assets 映射到项目的 engine/assets 下；把引擎目录下的 /libs 映射到 engine/libs 下。这样，项目工作时，就可以通过 engine/libs 访问到引擎的 lua 库。
+
+cd 引擎目录
+lua tools/newrepo.lua 项目名
+
+这样可以在 My Documents 下建立一个新仓库，注意，项目名暂时只能用 ascii ，不能用中文。
+
+libs/vfs/repo.lua 是仓库的管理模块，用于实现仓库 fileserver 。
+
+项目 client 运行时需要依赖 fileserver 来提供仓库文件，client 本身并不需要除 firmware 目录之外的任何资源/代码文件，全部通过网络向 fileserver 请求。
+
+fileserver 是基于 vfs.repo 来实现的。fileserver 的网络通讯协议见 fileserver.txt 。
+
+vfs.repo 有以下方法：
+
+init 初始化仓库
+new 打开仓库
+
+rebuild 重建仓库索引
+index 从磁盘加载已经创建好的索引
+build 增量创建仓库索引
+touch 提示一个文件被修改，留待 build 重建
+touch_path 提示一个目录下所有文件都可能被修改
+root 获取仓库的根的 hash
+hash 获取仓库中一个 hash 对象实际的文件名
+dir 获取一个 hash 对象代表的目录结构
+close 关闭一个仓库（如果不关闭仓库，别的进程会因为文件锁而无法打开这个仓库）
+
+test/fileserver.lua 是一个实例，实现了一个最简（未优化）的文件服务器，下列指令启动：
+
+lua test/fileserver.lua 仓库名
+
+它将监听 127.0.0.1 2018 。同时可以用 test/fileclient.lua 作简单测试。
+
+编辑环境可以直接利用 libs/vfs.lua （vfs 模块）访问本地仓库，有以下方法。
+
+open 打开一个仓库
+realpath 返回一个虚拟路径对应的真实文件名（全路径），以及一个唯一字符串 id 。
+list 返回一个目录对象 （文件名 -> 是否是子目录）
+
+运行环境需要启动 IO 线程来访问仓库。
+
+参考 runtime/core/test.lua
+
+runtime/core/firmware 目录是一个特殊目录，它必须以本地文件系统的形式提供给程序使用，它里面的脚本提供了访问 vfs 仓库的能力。
+
+firmware 下的 bootstrap.lua 会初始化 IO 线程，并提供一个预设的 vfs 模块。方法是：
+
+boot = loadfile (firmware .. "/bootstrap.lua")
+boot(firmware, 仓库地址，[address], [port])
+vfs = require "vfs"
+
+IO 线程负责和 fileserver 对接，请求文件；vfs 通过消息管道向 IO 线程发出请求。
+
+注意：在 C/S 模式下，即使在本机测试，也必须建立两个仓库。一个供 server 使用，一个供 client 作 cache 。
