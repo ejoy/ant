@@ -240,7 +240,8 @@ static void
 assign_ref(lua_State *L, struct refobject * ref, int64_t rid) {
 	int64_t markid = lastack_mark(ref->LS, rid);
 	if (markid == 0) {
-		return luaL_error(L, "Mark invalid object id");
+		luaL_error(L, "Mark invalid object id");
+		return;
 	}
 	lastack_unmark(ref->LS, ref->id);
 	ref->id = markid;
