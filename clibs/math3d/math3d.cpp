@@ -252,13 +252,6 @@ assign_ref(lua_State *L, struct refobject * ref, int64_t rid) {
 }
 
 static int
-lref_release(lua_State *L) {
-	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
-	release_ref(L, ref);
-	return 0;
-}
-
-static int
 lassign(lua_State *L) {
 	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
 	int type = lua_type(L, 2);
@@ -1649,6 +1642,63 @@ callLS(lua_State *L) {
 }
 
 static int
+new_temp_vector4(lua_State *L) {
+	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct lastack *LS = bp->LS;
+	int top = lua_gettop(L);
+	if (top != 5) {
+		return luaL_error(L, "Need 4 numbers , stack:vector(x,y,z,w)");
+	}
+	float v[4];
+	int i;
+	for (i=0;i<4;i++) {
+		v[i] = luaL_checknumber(L, i+2);
+	}
+
+	lastack_pushvec4(LS, v);
+	pushid(L, lastack_pop(LS));
+	return 1;
+}
+
+static int
+new_temp_matrix(lua_State *L) {
+	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct lastack *LS = bp->LS;
+	int top = lua_gettop(L);
+	float m[16];
+	int i;
+	if (top == 17) {
+		for (i=0;i<16;i++) {
+			m[i] = luaL_checknumber(L, i+2);
+		}
+	} else if (top == 5) {
+		// 4 vector4
+		for (i=0;i<4;i++) {
+			int index = i+2;
+			int type = lua_type(L, index);
+			int64_t id;
+			if (type == LUA_TNUMBER) {
+				id = luaL_checkinteger(L, index);
+			} else if (type == LUA_TUSERDATA) {
+				id = get_ref_id(L, LS, index);
+			} else {
+				return luaL_argerror(L, index, "Need vector");
+			}
+			float * temp = lastack_value(LS, id, &type);
+			if (type != LINEAR_TYPE_VEC4) {
+				return luaL_argerror(L, index, "Not vector4");
+			}
+			memcpy(&m[4*i], temp, 4 * sizeof(float));
+		}
+	} else {
+		return luaL_error(L, "Need 16 numbers, or 4 vector");
+	}
+	lastack_pushmatrix(LS, m);
+	pushid(L, lastack_pop(LS));
+	return 1;
+}
+
+static int
 lnew(lua_State *L) {	
 	struct boxpointer *bp = (struct boxpointer *)lua_newuserdata(L, sizeof(*bp));	
 
@@ -1658,6 +1708,8 @@ lnew(lua_State *L) {
 			{ "__gc", delLS },
 			{ "__call", callLS },
 			{ "command", gencommand },
+			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )
+			{ "matrix", new_temp_matrix },
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);

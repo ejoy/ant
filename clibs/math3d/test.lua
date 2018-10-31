@@ -47,10 +47,26 @@ local math3d = require "math3d"
 	b extract matrix base orthogonal axis[xyz]
 ]]
 
-local stack = math3d.new()
+local stackobj = math3d.new()
 
+local stack = stackobj:command()
+--	stack is the same as stackobj
+--  stack(...) is equivalent to debug.getmetatable(stackobj).__call(stackobj, ...)
+
+-- NOTICE: don't use mathed.ref directly, or we should remember call math3d.unref(refobj) or refobj(nil)
 local vec = math3d.ref "vector"
 local mat = math3d.ref "matrix"	-- matrix ref
+
+do
+	local line1 = stackobj:vector(1,2,3,4)
+	local line2 = stackobj:vector(5,6,7,8)
+	local line3 = stackobj:vector(9,10,11,12)
+	local line4 = stackobj:vector(13,14,15,16)
+	local mat = stackobj:matrix(line1,line2,line3,line4)
+	print(stack(mat, "VR"))
+	local mat = stackobj:matrix(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
+	print(stack(mat, "VR"))
+end
 
 -- # turn on log
 local v = stack("#", { type = "mat", fov = 60, aspect = 1024/768 } , "VR")	-- make a proj mat
@@ -59,7 +75,7 @@ print(v)
 local orthmat = stack({type="m", l=-1, r=1, t=1, b=-1, n=1, f=1000, ortho=true}, "V")	-- make a ortho mat
 print(orthmat)
 
-stack( "#", vec, { 1,2,3,4 } , "1+=")	-- dup {1,2,3,4} add self and then assign to vec
+stack( "#", vec, stackobj:vector( 1,2,3,4 ) , "1+=")	-- dup {1,2,3,4} add self and then assign to vec
 
 local vv = stack({1, 2, 3, 1}, {2}, "*V")
 print("vec4 mul : " .. vv)
