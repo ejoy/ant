@@ -312,11 +312,18 @@ LUAMOD_API int
 luaopen_thread(lua_State *L) {
 	if (lua_getfield(L, LUA_REGISTRYINDEX, "THREADID") == LUA_TNIL) {
 		lua_pop(L, 1);
-		lua_pushcfunction(L, lnewchannel);
-		lua_pushstring(L, "errlog");
-		lua_call(L, 1, 0);
-		assert(g_thread_id == 0);
-		lua_pushinteger(L, 0);
+		if (g_thread_id > 0 || query_channel(ERRLOG_QUEUE)) {
+			// In a sub VM (not in a child thread created by this module)
+			int id = atom_inc(&g_thread_id);
+			lua_pushinteger(L, id);
+		} else {
+			assert(g_thread_id == 0);
+			lua_pushcfunction(L, lnewchannel);
+			lua_pushstring(L, ERRLOG_QUEUE);
+			lua_call(L, 1, 0);
+			assert(g_thread_id == 0);
+			lua_pushinteger(L, 0);
+		}
 		lua_setfield(L, LUA_REGISTRYINDEX, "THREADID");
 	} else {
 		lua_pop(L,1);
