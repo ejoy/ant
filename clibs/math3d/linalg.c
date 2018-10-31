@@ -20,14 +20,28 @@ static float c_ident_mat[16] = {
 	0,0,0,1,
 };
 
+static float c_ident_num[4] = {
+	0, 0, 0, 0
+};
+
+static float c_ident_quat[4] = {
+	0, 0, 0, 1,
+};
+static float c_ident_euler[4] = {
+	0, 0, 0, 0,
+};
+
 struct constant {
 	float * ptr;
 	int size;
 };
 
-static struct constant c_constant_table[LINEAR_CONSTANT_NUM] = {
+static struct constant c_constant_table[LINEAR_CONSTANT_COUNT] = {
 	{ c_ident_vec, VECTOR4 },
 	{ c_ident_mat, MATRIX },
+	{ c_ident_num, VECTOR4 },
+	{ c_ident_quat, VECTOR4 },
+	{ c_ident_euler, VECTOR4 },
 };
 
 struct stackid_ {
@@ -44,18 +58,17 @@ union stackid {
 
 int64_t
 lastack_constant(int cons) {
-	if (cons < 0 || cons >= LINEAR_CONSTANT_NUM)
+	if (cons < 0 || cons >= LINEAR_CONSTANT_COUNT)
 		return 0;
 	union stackid sid;
 	struct constant *c = &c_constant_table[cons];
 	sid.s.version = 0;
 	sid.s.id = cons;
 	sid.s.persistent = 1;
-	if (c->size == VECTOR4) {
-		sid.s.type = LINEAR_TYPE_VEC4;
-	} else {
-		sid.s.type = LINEAR_TYPE_MAT;
-	}
+
+	assert(LINEAR_TYPE_COUNT == LINEAR_CONSTANT_COUNT);
+	sid.s.type = cons;
+	
 	return sid.i;
 }
 
@@ -383,7 +396,7 @@ lastack_value(struct lastack *LS, int64_t ref, int *type) {
 		if (sid.s.version == 0) {
 			// constant
 			int id = sid.s.id;
-			if (id < 0 || id >= LINEAR_CONSTANT_NUM)
+			if (id < 0 || id >= LINEAR_CONSTANT_COUNT)
 				return NULL;
 			struct constant * c = &c_constant_table[id];
 			return c->ptr;
@@ -436,10 +449,20 @@ lastack_unmark(struct lastack *LS, int64_t markid) {
 			blob_dealloc(LS->per_mat, id.s.id, id.s.version);
 		}
 	}
-	if (id.s.type != LINEAR_TYPE_MAT) {
+	switch (id.s.type) {
+	case LINEAR_TYPE_VEC4:
 		return lastack_constant(LINEAR_CONSTANT_IVEC);
-	} else {
+	case LINEAR_TYPE_MAT:
 		return lastack_constant(LINEAR_CONSTANT_IMAT);
+	case LINEAR_CONSTANT_NUM:
+		return lastack_constant(LINEAR_CONSTANT_NUM);
+	case LINEAR_CONSTANT_QUAT:
+		return lastack_constant(LINEAR_CONSTANT_QUAT);
+	case LINEAR_TYPE_EULER:
+		return lastack_constant(LINEAR_CONSTANT_EULER);
+	default:
+		assert(0 && "not support type");
+		return lastack_constant(LINEAR_CONSTANT_IVEC);
 	}
 }
 
