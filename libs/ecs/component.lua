@@ -51,6 +51,52 @@ local function gen_new(c)
 	end
 end
 
+local function gen_delete(c)
+	local primitive
+	if c.struct then
+		-- matrix and vector
+		if c.struct.struct then
+			for k,v in pairs(c.struct) do
+				local tname = v.type
+				if tname == "matrix" or tname == "vector" then
+					local last = primitive
+					if last then
+						function primitive(component)
+							component[k]()  -- release ref
+							return last(component)
+						end
+					else
+						function primitive(component)
+							component[k]()  -- release ref
+						end
+					end
+				end
+			end
+		else
+			local v = c.struct
+			local tname = v.type
+			if tname == "matrix" or tname == "vector" then
+				function primitive(component)
+					component()  -- release ref
+				end
+			end
+		end
+	end
+	local delete = c.method.delete
+	if delete then	
+		if primitive then	
+			return function(component)
+				delete(component)
+				primitive(component)
+			end
+		else
+			return delete
+		end
+	else
+		return primitive
+	end
+end
+
 local reserved_method = { new = true, init = true, delete = true }
 
 local function copy_method(c)
@@ -132,7 +178,7 @@ return function(c)
 		new = gen_new(c),
 		save = gen_save(struct),
 		load = gen_load(struct),
-		delete = c.method.delete,
+		delete = gen_delete(c),
 		method = copy_method(c),
 	}
 end

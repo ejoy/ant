@@ -1262,10 +1262,23 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 	int64_t id = pop(L, LS);
 	int type;
 	float* v = lastack_value(LS, id, &type);
-	if (!lastack_is_vec_type(type))
-		luaL_error(L, "convert to base axis, only support vec3/vec4");
-	
-	glm::vec4 zdir(to_viewdir(glm::radians(*(glm::vec3*)v)), 0);
+
+	glm::vec4 zdir;
+	switch (type){
+	case LINEAR_TYPE_MAT:
+		zdir = (*(glm::mat4x4 *)v) * glm::vec4(0, 0, 1, 0);
+		break;
+	case LINEAR_TYPE_VEC4:
+	case LINEAR_TYPE_EULER:
+		zdir = glm::vec4(to_viewdir(glm::radians(*(glm::vec3*)v)), 0);
+		break;
+	case LINEAR_TYPE_QUAT: 
+		zdir = (*(glm::quat*)v) * glm::vec4(0, 0, 1, 0);
+		break;
+	default:
+		luaL_error(L, "not support data type, need rotation matrix/quaternion/euler angles, type : %d", type);
+		break;
+	}
 	
 	glm::vec4 xdir, ydir;
 	if (is_zero(zdir - glm::vec4(0, 0, 1, 0))){

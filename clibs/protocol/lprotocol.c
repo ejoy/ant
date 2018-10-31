@@ -259,7 +259,7 @@ lpackmessage(lua_State *L) {
 }
 
 LUAMOD_API int
-luaopen_protocol_core(lua_State *L) {
+luaopen_protocol(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "readchunk", lreadchunk },

@@ -1,47 +1,52 @@
-local errlog, firmware, dir, cfuncs, V = ...
+local firmware, address, port = ...
 
-cfuncs = cfuncs()
+-- todo : remove this
+dofile "libs/init.lua"
 
-package.preload.lfs = cfuncs.lfs	-- init lfs
+local thread = require "thread"
 
-local vfs = assert(loadfile(firmware .. "/vfs.lua"))()
-local repo = vfs.new(firmware, dir)
-local f = repo:open(".firmware/vfs.lua")	-- try load vfs.lua in vfs
-if f then
-	local vfs_source = f:read "a"
-	f:close()
-	vfs = assert(load(vfs_source, "@.firmware/vfs.lua"))()
-	repo = vfs.new(firmware, dir)
+local threadid = thread.id
+
+thread.newchannel "IOreq"
+thread.newchannel ("IOresp" .. threadid)
+
+local io_req = thread.channel "IOreq"
+local io_resp = thread.channel ("IOresp" .. threadid)
+
+
+thread.thread (string.format("dofile %q", firmware .. "/io.lua"))
+
+local vfs = {}
+
+local function npath(path)
+	return path:match "^/?(.-)/?$"
 end
 
-local function readfile(f)
-	if f then
-		local content = f:read "a"
-		f:close()
-		return content
-	end
+local init = false
+function vfs.open(repopath)
+	assert(not init)
+	io_req:push {
+		repopath = npath(repopath),
+		firmware = npath(firmware),
+		address = address,
+		port = port,
+	}
+	init = true
 end
 
-local bootstrap = readfile(repo:open(".firmware/bootstrap.lua"))
-
-if bootstrap then
-	local newboot = load(bootstrap, "@.firmware/bootstrap.lua")
-	local selfchunk = string.dump(debug.getinfo(1, "f").func, true)
-
-	if string.dump(newboot, true) ~= selfchunk then
-		-- reload bootstrap
-		newboot(...)
-		return
-	end
+function vfs.list(path)
+	io_req:push(threadid, "LIST", npath(path))
+	return io_resp:bpop()
 end
 
-function _LOAD(path)
-	local f = repo:open(path)
-	if f then
-		local content = f:read "a"
-		f:close()
-		return content
-	end
+function vfs.realpath(path)
+	io_req:push(threadid, "GET", npath(path))
+	return io_resp:bpop()
 end
 
-_VFS = cfuncs.initvfs(V)	-- init V , store in _G
+function vfs.prefetch(path)
+	io_req:push(threadid, "PREFETCH", npath(path))
+end
+
+-- init vfs
+package.loaded.vfs = vfs
