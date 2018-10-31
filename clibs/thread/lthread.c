@@ -317,7 +317,6 @@ luaopen_thread(lua_State *L) {
 			int id = atom_inc(&g_thread_id);
 			lua_pushinteger(L, id);
 		} else {
-			assert(g_thread_id == 0);
 			lua_pushcfunction(L, lnewchannel);
 			lua_pushstring(L, ERRLOG_QUEUE);
 			lua_call(L, 1, 0);
