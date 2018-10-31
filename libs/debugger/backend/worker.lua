@@ -503,6 +503,10 @@ hookmgr.sethook(function(name, ...)
     --return e
 end)
 
+ev.on('terminated', function()
+    hookmgr.step_cancel()
+end)
+
 sendToMaster {
     cmd = 'ready',
 }
