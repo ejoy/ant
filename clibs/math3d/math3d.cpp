@@ -1699,6 +1699,52 @@ new_temp_matrix(lua_State *L) {
 }
 
 static int
+new_temp_quaternion(lua_State *L) {
+	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct lastack *LS = bp->LS;
+
+	int top = lua_gettop(L);
+	glm::quat q;
+	if (top == 6) {
+		luaL_checktype(L, 6, LUA_TBOOLEAN);	// axis angle
+		glm::vec3 axis;		
+		for (int ii = 0; ii < 3; ++ii) {
+			axis[ii] = lua_tonumber(L, ii + 2);
+		}
+
+		const float angle = lua_tonumber(L, 5);
+		q = glm::angleAxis(angle, axis);
+	} else {
+		assert(top == 5);
+		for (int ii = 0; ii < 4; ++ii) {
+			q[ii] = lua_tonumber(L, ii + 2);
+		}
+	}
+
+	lastack_pushquat(LS, &q.x);
+	pushid(L, lastack_pop(LS));
+
+	return 1;
+}
+
+static int
+new_temp_euler(lua_State *L) {
+	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct lastack *LS = bp->LS;
+
+	assert(lua_gettop(L) == 4);
+	glm::vec4 v;
+	for (int ii = 0; ii < 3; ++ii) {
+		v[ii] = lua_tonumber(L, ii + 2);
+	}
+	v[3] = 0;
+
+	lastack_pusheuler(LS, &v.x);
+	pushid(L, lastack_pop(LS));
+	return 1;
+}
+
+static int
 lnew(lua_State *L) {	
 	struct boxpointer *bp = (struct boxpointer *)lua_newuserdata(L, sizeof(*bp));	
 
@@ -1710,6 +1756,8 @@ lnew(lua_State *L) {
 			{ "command", gencommand },
 			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )
 			{ "matrix", new_temp_matrix },
+			{ "quaternion", new_temp_quaternion},
+			{ "euler", new_temp_euler},
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);

@@ -66,6 +66,16 @@ do
 	print(stack(mat, "VR"))
 	local mat = stackobj:matrix(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
 	print(stack(mat, "VR"))
+
+
+	local q0 = stackobj:quaternion(1, 0, 0, 1)
+	local axisangle = true
+	local q1 = stackobj:quaternion(1, 0, 0, 60, axisangle)
+	print(stack(q0, "VR"))
+	print(stack(q1, "VR"))
+
+	local e0 = stackobj:euler(10, 20, 30)
+	print(stack(e0, "VR"))
 end
 
 -- # turn on log
