@@ -58,13 +58,15 @@ local vec = math3d.ref "vector"
 local mat = math3d.ref "matrix"	-- matrix ref
 
 do
-	local line1 = stackobj:vector(1,2,3,4)
-	local line2 = stackobj:vector(5,6,7,8)
-	local line3 = stackobj:vector(9,10,11,12)
-	local line4 = stackobj:vector(13,14,15,16)
+	local line1 = stackobj:vector()	-- (0,0,0,1)
+	local line2 = stackobj:vector(1,2,3)	-- (1,2,3,0)
+	local line3 = stackobj:vector(4,5,6,7)
+	local line4 = stackobj:vector(8,9,10,11)
 	local mat = stackobj:matrix(line1,line2,line3,line4)
 	print(stack(mat, "VR"))
 	local mat = stackobj:matrix(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
+	print(stack(mat, "VR"))
+	local mat = stackobj:matrix() -- (1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1)
 	print(stack(mat, "VR"))
 end
 

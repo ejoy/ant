@@ -1643,18 +1643,26 @@ callLS(lua_State *L) {
 
 static int
 new_temp_vector4(lua_State *L) {
+	int top = lua_gettop(L);
+	if (top == 1) {
+		pushid(L, lastack_constant(LINEAR_CONSTANT_IVEC));
+		return 1;
+	}
 	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
 	struct lastack *LS = bp->LS;
-	int top = lua_gettop(L);
-	if (top != 5) {
-		return luaL_error(L, "Need 4 numbers , stack:vector(x,y,z,w)");
-	}
-	float v[4];
 	int i;
-	for (i=0;i<4;i++) {
-		v[i] = luaL_checknumber(L, i+2);
+	float v[4];
+	switch(top) {
+	case 4:
+		v[3] = 0;
+	case 5:
+		for (i=0;i<top-1;i++) {
+			v[i] = luaL_checknumber(L, i+2);
+		}
+		break;
+	default:
+		return luaL_error(L, "Need 0/3/4 numbers , stack:vector([x,y,z],[w])");
 	}
-
 	lastack_pushvec4(LS, v);
 	pushid(L, lastack_pop(LS));
 	return 1;
@@ -1662,16 +1670,22 @@ new_temp_vector4(lua_State *L) {
 
 static int
 new_temp_matrix(lua_State *L) {
+	int top = lua_gettop(L);
+	if (top == 1) {
+		pushid(L, lastack_constant(LINEAR_CONSTANT_IMAT));
+		return 1;
+	}
 	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
 	struct lastack *LS = bp->LS;
-	int top = lua_gettop(L);
 	float m[16];
 	int i;
-	if (top == 17) {
+	switch(top) {
+	case 17:
 		for (i=0;i<16;i++) {
 			m[i] = luaL_checknumber(L, i+2);
 		}
-	} else if (top == 5) {
+		break;
+	case 5:
 		// 4 vector4
 		for (i=0;i<4;i++) {
 			int index = i+2;
@@ -1690,7 +1704,8 @@ new_temp_matrix(lua_State *L) {
 			}
 			memcpy(&m[4*i], temp, 4 * sizeof(float));
 		}
-	} else {
+		break;
+	default:
 		return luaL_error(L, "Need 16 numbers, or 4 vector");
 	}
 	lastack_pushmatrix(LS, m);
