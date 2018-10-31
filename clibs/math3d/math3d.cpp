@@ -321,6 +321,10 @@ lref(lua_State *L) {
 		cons = LINEAR_CONSTANT_IVEC;
 	} else if (strcmp(t, "matrix") == 0) {
 		cons = LINEAR_CONSTANT_IMAT;
+	} else if (strcmp(t, "quaternion") == 0) {
+		cons = LINEAR_CONSTANT_QUAT;
+	} else if (strcmp(t, "euler") == 0) {
+		cons = LINEAR_CONSTANT_EULER;
 	} else {
 		return luaL_error(L, "Unsupport type %s", t);
 	}
@@ -1714,6 +1718,63 @@ new_temp_matrix(lua_State *L) {
 }
 
 static int
+new_temp_quaternion(lua_State *L) {
+	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct lastack *LS = bp->LS;
+
+	int top = lua_gettop(L);
+
+	if (top == 1) {
+		pushid(L, lastack_constant(LINEAR_CONSTANT_QUAT));
+		return 1;
+	}
+
+	glm::quat q = glm::identity<glm::quat>();
+	if (top == 6) {
+		luaL_checktype(L, 6, LUA_TBOOLEAN);	// axis angle
+		glm::vec3 axis;		
+		for (int ii = 0; ii < 3; ++ii) {
+			axis[ii] = lua_tonumber(L, ii + 2);
+		}
+
+		const float angle = lua_tonumber(L, 5);
+		q = glm::angleAxis(angle, axis);
+	} else {
+		assert(top == 5);
+		for (int ii = 0; ii < 4; ++ii) {
+			q[ii] = lua_tonumber(L, ii + 2);
+		}
+	}
+
+	lastack_pushquat(LS, &q.x);
+	pushid(L, lastack_pop(LS));
+
+	return 1;
+}
+
+static int
+new_temp_euler(lua_State *L) {
+	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct lastack *LS = bp->LS;
+
+	auto top = lua_gettop(L);
+	if (top == 1) {
+		pushid(L, lastack_constant(LINEAR_CONSTANT_EULER));
+		return 1;
+	}
+
+	glm::vec4 v(0, 0, 0, 0);
+	assert(top == 4);
+	for (int ii = 0; ii < 3; ++ii) {
+		v[ii] = lua_tonumber(L, ii + 2);
+	}
+	
+	lastack_pusheuler(LS, &v.x);
+	pushid(L, lastack_pop(LS));
+	return 1;
+}
+
+static int
 lnew(lua_State *L) {	
 	struct boxpointer *bp = (struct boxpointer *)lua_newuserdata(L, sizeof(*bp));	
 
@@ -1725,6 +1786,8 @@ lnew(lua_State *L) {
 			{ "command", gencommand },
 			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )
 			{ "matrix", new_temp_matrix },
+			{ "quaternion", new_temp_quaternion},
+			{ "euler", new_temp_euler},
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
@@ -1766,14 +1829,22 @@ lcommand_description(lua_State *L){
 	return 1;
 }
 
+#include <tuple>
+
 static int
 lconstant(lua_State *L) {
-	const char *what = luaL_checkstring(L, 1);
+	const char *what = luaL_checkstring(L, 1);	
 	int cons;
 	if (strcmp(what, "identvec") == 0) {
 		cons = LINEAR_CONSTANT_IVEC;
 	} else if (strcmp(what, "identmat") == 0) {
 		cons = LINEAR_CONSTANT_IMAT;
+	} else if (strcmp(what, "identnum") == 0) {
+		cons = LINEAR_CONSTANT_NUM;
+	} else if (strcmp(what, "identquat") == 0) {
+		cons = LINEAR_CONSTANT_QUAT;
+	} else if (strcmp(what, "identeuler") == 0) {
+		cons = LINEAR_CONSTANT_EULER;
 	} else {
 		return luaL_error(L, "Invalid constant %s", what);
 	}
