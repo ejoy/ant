@@ -75,13 +75,17 @@ struct refobject {
 
 static struct lastack *
 getLS(lua_State *L, int index) {
-	luaL_checktype(L, index, LUA_TFUNCTION);
-	if (lua_getupvalue(L, index, 1) == NULL) {
-		luaL_error(L, "Can't get linalg object");
+	int type = lua_type(L, index);
+	struct boxpointer * ret;
+	if (type == LUA_TFUNCTION) {
+		if (lua_getupvalue(L, index, 1) == NULL) {
+			luaL_error(L, "Can't get linalg object");
+		}
+		ret = (struct boxpointer *)luaL_checkudata(L, -1, LINALG);
+		lua_pop(L, 1);
+	} else {
+		ret =  (struct boxpointer *)luaL_checkudata(L, index, LINALG);
 	}
-	
-	struct boxpointer * ret =  (struct boxpointer *)luaL_checkudata(L, -1, LINALG);
-	lua_pop(L, 1);
 	return ret->LS;
 }
 
@@ -1604,17 +1608,48 @@ commandLS(lua_State *L) {
 }
 
 static int
+gencommand(lua_State *L) {
+	luaL_checkudata(L, 1, LINALG);
+	lua_settop(L, 1);
+	lua_pushcclosure(L, commandLS, 1);
+	return 1;	
+}
+
+static int
+callLS(lua_State *L) {
+	struct boxpointer *bp = (struct boxpointer *)lua_touserdata(L, 1);
+	struct lastack *LS = bp->LS;
+	bool log = false;
+	int top = lua_gettop(L);
+	int i;
+	int ret = 0;
+	struct ref_stack RS;
+	refstack_init(&RS, L);
+	// The first is userdata
+	for (i=2;i<=top;i++) {
+		ret += push_command(&RS, LS, i, &log);
+	}
+	return ret;
+}
+
+static int
 lnew(lua_State *L) {	
 	struct boxpointer *bp = (struct boxpointer *)lua_newuserdata(L, sizeof(*bp));	
 
 	bp->LS = NULL;
 	if (luaL_newmetatable(L, LINALG)) {
-		lua_pushcfunction(L, delLS);
-		lua_setfield(L, -2, "__gc");
+		luaL_Reg l[] = {
+			{ "__gc", delLS },
+			{ "__call", callLS },
+			{ "command", gencommand },
+			{ NULL, NULL },
+		};
+		luaL_setfuncs(L, l, 0);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
 	}
 
 	lua_setmetatable(L, -2);
-	lua_pushcclosure(L, commandLS, 1);
 	bp->LS = lastack_new();
 	return 1;
 }
