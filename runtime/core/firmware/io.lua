@@ -375,7 +375,13 @@ function online.GET(id, path)
 			response_id(id, nil)
 		end
 	else
-		response_id(id, realpath, hash)
+		local f = io.open(realpath,"rb")
+		if not f then
+			request_file(id, hash, path, "GET")
+		else
+			f:close()
+			response_id(id, realpath, hash)
+		end
 	end
 end
 
