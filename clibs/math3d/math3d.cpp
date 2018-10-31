@@ -248,6 +248,13 @@ assign_ref(lua_State *L, struct refobject * ref, int64_t rid) {
 }
 
 static int
+lref_release(lua_State *L) {
+	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
+	release_ref(L, ref);
+	return 0;
+}
+
+static int
 lassign(lua_State *L) {
 	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
 	int type = lua_type(L, 2);
@@ -326,6 +333,15 @@ lref(lua_State *L) {
 
 	luaL_setmetatable(L, LINALG_REF);
 	return 1;
+}
+
+static int 
+lunref(lua_State *L) {
+	if(!lua_isuserdata(L,1))
+		return luaL_error(L, "unref not userdata. ");
+	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
+	release_ref(L, ref);
+	return 0;
 }
 
 static int
@@ -1711,6 +1727,7 @@ extern "C" {
 			{ "print", lprint },	// for debug
 			{ "type", ltype },
 			{ "ref", lref },
+			{ "unref",lunref },
 			{ "isvalid", lisvalid},
 			{ "cmd_description", lcommand_description},
 			{ "homogeneous_depth", lhomogeneous_depth},
