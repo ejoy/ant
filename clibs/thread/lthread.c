@@ -276,8 +276,8 @@ lthread(lua_State *L) {
 		f = lua_tocfunction(L, 2);
 	}
 	struct thread_args * args = (struct thread_args *)malloc(sizeof(*args));
-	args->source = (char *)malloc(sz);
-	memcpy(args->source, source, sz);
+	args->source = (char *)malloc(sz + 1);
+	memcpy(args->source, source, sz + 1);
 	args->sz = sz;
 	args->param = f;
 	struct thread th = { thread_main, args };
