@@ -276,7 +276,7 @@ namespace spawn {
 }
 
 static int peek(lua_State* L) {
-    luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 2, LUA_FILEHANDLE);
+    luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
     lua_pushinteger(L, base::subprocess::pipe::peek(p->f));
     return 1;
 }

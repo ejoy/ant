@@ -75,13 +75,17 @@ struct refobject {
 
 static struct lastack *
 getLS(lua_State *L, int index) {
-	luaL_checktype(L, index, LUA_TFUNCTION);
-	if (lua_getupvalue(L, index, 1) == NULL) {
-		luaL_error(L, "Can't get linalg object");
+	int type = lua_type(L, index);
+	struct boxpointer * ret;
+	if (type == LUA_TFUNCTION) {
+		if (lua_getupvalue(L, index, 1) == NULL) {
+			luaL_error(L, "Can't get linalg object");
+		}
+		ret = (struct boxpointer *)luaL_checkudata(L, -1, LINALG);
+		lua_pop(L, 1);
+	} else {
+		ret =  (struct boxpointer *)luaL_checkudata(L, index, LINALG);
 	}
-	
-	struct boxpointer * ret =  (struct boxpointer *)luaL_checkudata(L, -1, LINALG);
-	lua_pop(L, 1);
 	return ret->LS;
 }
 
@@ -326,6 +330,15 @@ lref(lua_State *L) {
 
 	luaL_setmetatable(L, LINALG_REF);
 	return 1;
+}
+
+static int 
+lunref(lua_State *L) {
+	if(!lua_isuserdata(L,1))
+		return luaL_error(L, "unref not userdata. ");
+	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
+	release_ref(L, ref);
+	return 0;
 }
 
 static int
@@ -1604,17 +1617,107 @@ commandLS(lua_State *L) {
 }
 
 static int
+gencommand(lua_State *L) {
+	luaL_checkudata(L, 1, LINALG);
+	lua_settop(L, 1);
+	lua_pushcclosure(L, commandLS, 1);
+	return 1;	
+}
+
+static int
+callLS(lua_State *L) {
+	struct boxpointer *bp = (struct boxpointer *)lua_touserdata(L, 1);
+	struct lastack *LS = bp->LS;
+	bool log = false;
+	int top = lua_gettop(L);
+	int i;
+	int ret = 0;
+	struct ref_stack RS;
+	refstack_init(&RS, L);
+	// The first is userdata
+	for (i=2;i<=top;i++) {
+		ret += push_command(&RS, LS, i, &log);
+	}
+	return ret;
+}
+
+static int
+new_temp_vector4(lua_State *L) {
+	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct lastack *LS = bp->LS;
+	int top = lua_gettop(L);
+	if (top != 5) {
+		return luaL_error(L, "Need 4 numbers , stack:vector(x,y,z,w)");
+	}
+	float v[4];
+	int i;
+	for (i=0;i<4;i++) {
+		v[i] = luaL_checknumber(L, i+2);
+	}
+
+	lastack_pushvec4(LS, v);
+	pushid(L, lastack_pop(LS));
+	return 1;
+}
+
+static int
+new_temp_matrix(lua_State *L) {
+	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct lastack *LS = bp->LS;
+	int top = lua_gettop(L);
+	float m[16];
+	int i;
+	if (top == 17) {
+		for (i=0;i<16;i++) {
+			m[i] = luaL_checknumber(L, i+2);
+		}
+	} else if (top == 5) {
+		// 4 vector4
+		for (i=0;i<4;i++) {
+			int index = i+2;
+			int type = lua_type(L, index);
+			int64_t id;
+			if (type == LUA_TNUMBER) {
+				id = luaL_checkinteger(L, index);
+			} else if (type == LUA_TUSERDATA) {
+				id = get_ref_id(L, LS, index);
+			} else {
+				return luaL_argerror(L, index, "Need vector");
+			}
+			float * temp = lastack_value(LS, id, &type);
+			if (type != LINEAR_TYPE_VEC4) {
+				return luaL_argerror(L, index, "Not vector4");
+			}
+			memcpy(&m[4*i], temp, 4 * sizeof(float));
+		}
+	} else {
+		return luaL_error(L, "Need 16 numbers, or 4 vector");
+	}
+	lastack_pushmatrix(LS, m);
+	pushid(L, lastack_pop(LS));
+	return 1;
+}
+
+static int
 lnew(lua_State *L) {	
 	struct boxpointer *bp = (struct boxpointer *)lua_newuserdata(L, sizeof(*bp));	
 
 	bp->LS = NULL;
 	if (luaL_newmetatable(L, LINALG)) {
-		lua_pushcfunction(L, delLS);
-		lua_setfield(L, -2, "__gc");
+		luaL_Reg l[] = {
+			{ "__gc", delLS },
+			{ "__call", callLS },
+			{ "command", gencommand },
+			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )
+			{ "matrix", new_temp_matrix },
+			{ NULL, NULL },
+		};
+		luaL_setfuncs(L, l, 0);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
 	}
 
 	lua_setmetatable(L, -2);
-	lua_pushcclosure(L, commandLS, 1);
 	bp->LS = lastack_new();
 	return 1;
 }
@@ -1724,6 +1827,7 @@ extern "C" {
 			{ "print", lprint },	// for debug
 			{ "type", ltype },
 			{ "ref", lref },
+			{ "unref",lunref },
 			{ "isvalid", lisvalid},
 			{ "cmd_description", lcommand_description},
 			{ "homogeneous_depth", lhomogeneous_depth},
