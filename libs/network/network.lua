@@ -65,9 +65,9 @@ function network.send(obj, data)
 	table.insert(sending, 1, data)
 end
 
-local function dispatch(fd)
+local function dispatch(obj)
 	-- read from fd
-	local obj = connection[fd]
+	local fd = obj._fd
 	local data, err = fd:recv()
 	if not data then
 		if data then
@@ -130,8 +130,12 @@ function network.dispatch(objs, interval)
 				table.insert(objs, obj)
 			end
 		else
-			dispatch(fd)
-			table.insert(objs, connection[fd])
+			local obj = connection[fd]
+			if not connecting[fd] then
+				obj._status = "CONNECTED"
+			end
+			dispatch(obj)
+			table.insert(objs, obj)
 		end
 	end
 	for _, fd in ipairs(wt) do

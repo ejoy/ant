@@ -81,23 +81,6 @@ function message:GET(hash)
 	f:close()
 end
 
-local debugserver = {}
-local function new_debugserver(obj)
-	local server = (require "debugger.io.tcp_server")('127.0.0.1', 4278)
-	server:event_in(function(data)
-		response(obj, "DBG", data)
-	end)
-	server:event_close(function()
-		response(obj, "DBG", "")
-	end)
-	debugserver[obj] = server
-	return server
-end
-
-function message:DBG(data)
-	debugserver[self]:send(data)
-end
-
 local output = {}
 local function dispatch_obj(obj)
 	local reading_queue = obj._read
@@ -120,6 +103,11 @@ local function mainloop()
 		for k,obj in ipairs(objs) do
 			objs[k] = nil
 			dispatch_obj(obj)
+			if obj._status == "CONNECTING" then
+				LOG("New", obj._peer)
+			elseif obj._status == "CLOSED" then
+				LOG("LOGOFF", obj._peer)
+			end
 		end
 	end
 end
