@@ -1,37 +1,5 @@
 local rdebug = require 'remotedebug'
 
-local function loadfile(filename)
-    local f, err = io.open(filename, 'rb')
-    if not f then
-        return nil, err
-    end
-    local str = f:read 'a'
-    f:close()
-    return str
-end
-
-local function searchpath(name, path)
-    local err = ''
-    name = string.gsub(name, '%.', '/')
-    for c in string.gmatch(path, '[^;]+') do
-        local filename = string.gsub(c, '%?', name)
-        local buf, err = loadfile(filename)
-        if buf then
-            return filename, buf
-        end
-        err = err .. ("\n\tno file '%s'"):format(filename)
-    end
-    return nil, err
-end
-
-local function load_worker_entry(name)
-    local filename, buf = searchpath(name, package.path)
-    if not filename then
-        error(("module '%s' not found:%s"):format(name, buf))
-    end
-    return buf
-end
-
 local function event(name, level, ...)
     local r
     rdebug.probe(name)
@@ -78,13 +46,10 @@ end
 
 local function start_worker(wait)
     start_hook()
-    local entry = 'debugger.backend.worker.trampoline'
-    local searcher_C = package.searcher_C or package.searchers[3]
-    if debug.getupvalue(searcher_C, 1) then
-        rdebug.start(load_worker_entry(entry))
-    else
-        rdebug.start(searcher_C, load_worker_entry(entry))
-    end
+    rdebug.start [[
+        dofile 'runtime/core/init_thread.lua'
+        require 'debugger.backend.worker'
+    ]]
     if wait then
         event('wait_client', 1, false)
     end
@@ -95,7 +60,10 @@ end
 
 local function start_all(wait)
     start_hook()
-    rdebug.start('require "debugger.backend.worker"')
+    rdebug.start [[
+        dofile 'runtime/core/init_thread.lua'
+        require 'debugger.backend.worker'
+    ]]
     if wait then
         event('wait_client', 1, true)
     end
