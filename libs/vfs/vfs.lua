@@ -39,7 +39,7 @@ local function mount_repo(mountpoint, repopath)
 	local rootpath = mountpoint[''] or repopath
 	local mountname = access.mountname(mountpoint)
 
-	return = {
+	return {
 		_mountname = mountname,
 		_mountpoint = mountpoint,
 		_root = rootpath,
@@ -47,8 +47,7 @@ local function mount_repo(mountpoint, repopath)
 	}
 end
 
-function localvfs.mount(mountpoint, enginepath)
-	local rootpath = mountpoint[''] or repopath
+function localvfs.mount(mountpoint, enginepath)	
 	self = mount_repo(mountpoint, enginepath or ".")
 end
 
