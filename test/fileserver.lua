@@ -46,6 +46,7 @@ end
 local message = {}
 
 function message:ROOT()
+	repo:rebuild()
 	local roothash = repo:root()
 	response(self, "ROOT", roothash)
 end
@@ -80,6 +81,23 @@ function message:GET(hash)
 	f:close()
 end
 
+local debugserver = {}
+local function new_debugserver(obj)
+	local server = (require "debugger.io.tcp_server")('127.0.0.1', 4278)
+	server:event_in(function(data)
+		response(obj, "DBG", data)
+	end)
+	server:event_close(function()
+		response(obj, "DBG", "")
+	end)
+	debugserver[obj] = server
+	return server
+end
+
+function message:DBG(data)
+	debugserver[self]:send(data)
+end
+
 local output = {}
 local function dispatch_obj(obj)
 	local reading_queue = obj._read
@@ -106,7 +124,6 @@ local function mainloop()
 	end
 end
 
-local obj = network.connect("baidu.com", 80)
 while true do
 	mainloop()
 end

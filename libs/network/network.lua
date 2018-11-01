@@ -18,7 +18,7 @@ function network.listen(address, port)
 end
 
 local function new_connection(fd, addr, port)
-	local obj = { _fd = fd , _read = {}, _write = {}, _peer = addr .. ":" .. port }
+	local obj = { _fd = fd , _read = {}, _write = {}, _peer = addr .. ":" .. port , _status = "CONNECTING" }
 	connection[fd] = obj
 	table.insert(readfds, fd)
 	return obj
@@ -76,6 +76,7 @@ local function dispatch(fd)
 		end
 		log("Closed : %s", obj._peer)
 		close_fd(fd)
+		obj._status = "CLOSED"
 	else
 		table.insert(obj._read, data)
 	end
@@ -126,6 +127,7 @@ function network.dispatch(objs, interval)
 			else
 				local obj = new_connection(client, address, port)
 				log("Accept : %s", obj._peer)
+				table.insert(objs, obj)
 			end
 		else
 			dispatch(fd)
@@ -142,6 +144,8 @@ function network.dispatch(objs, interval)
 				close_fd(fd)
 			else
 				log("%s connected", obj._peer)
+				obj._status = "CONNECTED"
+				table.insert(objs, obj)
 				sendout(fd)
 			end
 		else

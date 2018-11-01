@@ -60,13 +60,12 @@ int64_t
 lastack_constant(int cons) {
 	if (cons < 0 || cons >= LINEAR_CONSTANT_COUNT)
 		return 0;
-	union stackid sid;
-	struct constant *c = &c_constant_table[cons];
+	union stackid sid;	
 	sid.s.version = 0;
 	sid.s.id = cons;
 	sid.s.persistent = 1;
 
-	assert(LINEAR_TYPE_COUNT == LINEAR_CONSTANT_COUNT);
+	assert((int)LINEAR_TYPE_COUNT == (int)LINEAR_CONSTANT_COUNT);
 	sid.s.type = cons;
 	
 	return sid.i;
