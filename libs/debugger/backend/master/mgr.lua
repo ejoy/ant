@@ -1,4 +1,4 @@
-local json = require 'cjson'
+local json = require 'cjson.safe'
 local proto = require 'debugger.protocol'
 local ev = require 'debugger.event'
 
