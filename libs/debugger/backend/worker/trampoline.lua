@@ -11,7 +11,7 @@ else
 end
 
 local cdebug = require 'debugger.backend'
-local json = require 'cjson'
+local json = require 'cjson.safe'
 local pipe = cdebug.start 'vip'
 
 local function loadfile(filename)

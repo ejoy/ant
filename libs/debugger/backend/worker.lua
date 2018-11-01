@@ -1,6 +1,6 @@
 local rdebug = require 'remotedebug'
 local cdebug = require 'debugger.backend'
-local json = require 'cjson'
+local json = require 'cjson.safe'
 local variables = require 'debugger.backend.worker.variables'
 local source = require 'debugger.backend.worker.source'
 local breakpoint = require 'debugger.backend.worker.breakpoint'

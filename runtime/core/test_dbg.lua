@@ -24,6 +24,7 @@ local dbg = require 'debugger'
 local dbgupdate = dbg.start_master()
 
 thread.thread [[
+print(pcall(function()
 	dofile 'runtime/core/init_thread.lua'
 
 	local dbg = require 'debugger'
@@ -41,6 +42,7 @@ thread.thread [[
 		dbgupdate()
 		printLOG(err:pop())
 	end
+end))
 ]]
 
 while true do

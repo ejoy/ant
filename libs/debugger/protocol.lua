@@ -1,4 +1,4 @@
-local json = require 'cjson'
+local json = require 'cjson.safe'
 
 local m = {}
 
