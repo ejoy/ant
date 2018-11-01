@@ -12,7 +12,7 @@ end
 
 local vrepo = require "vfs.repo"
 local fs = require "filesystem"
-local lsocket = require "lsocket"
+local network = require "network"
 local protocol = require "protocol"
 
 local repopath = fs.personaldir() .. "/" .. reponame
@@ -21,12 +21,7 @@ local repo = assert(vrepo.new(repopath))
 local roothash = repo:index()
 
 LOG ("Listen :", config.address, config.port)
-local listenfd = assert(lsocket.bind(config.address, config.port))
-local readfds = { listenfd }
-local writefds = {}
-local connection = {}
-
-local client = {} ; client.__index = client
+network.listen(config.address, config.port)
 
 local function new_connection(fd, addr, port)
 	local obj = { _fd = fd , _read = {}, _write = {}, _peer = addr .. ":" .. port }
@@ -45,12 +40,7 @@ local function remove_fd(tbl, fd)
 end
 
 local function response(obj, ...)
-	local pack = protocol.packmessage({...})
-	local sending = obj._write
-	if #sending == 0 then
-		table.insert(writefds, obj._fd)
-	end
-	table.insert(sending, 1, pack)
+	network.send(obj, protocol.packmessage({...}))
 end
 
 local message = {}
@@ -106,65 +96,17 @@ local function dispatch_obj(obj)
 	end
 end
 
-local function dispatch(fd)
-	-- read from fd
-	local obj = connection[fd]
-	local data, err = fd:recv()
-	if not data then
-		if data then
-			-- socket error
-			LOG("Error :", obj._peer, err)
-		end
-		LOG("Closed :", obj._peer)
-		remove_fd(readfds, fd)
-		remove_fd(writefds, fd)
-	else
-		table.insert(obj._read, data)
-		dispatch_obj(obj)
-	end
-end
-
-local function sendout(fd)
-	local obj = connection[fd]
-	local sending = obj._write
-
-	while true do
-		local data = table.remove(sending)
-		if data == nil then
-			break
-		end
-		local nbytes, err = fd:send(data)
-		if nbytes then
-			if nbytes < #data then
-				table.insert(sending, data:sub(nbytes+1))
-				return
-			end
-		else
-			if err then
-				LOG("Error : ", obj._peer, err)
-			end
-			table.insert(sending, data)	-- push back
-			return
-		end
-	end
-
-	remove_fd(writefds, fd)
-end
-
 local function mainloop()
-	local rd, wt = assert(lsocket.select(readfds, writefds))
-	for _, fd in ipairs(rd) do
-		if fd == listenfd then
-			new_connection(fd:accept())
-		else
-			dispatch(fd)
+	local objs = {}
+	if network.dispatch(objs, nil) then
+		for k,obj in ipairs(objs) do
+			objs[k] = nil
+			dispatch_obj(obj)
 		end
-	end
-	for _, fd in ipairs(wt) do
-		sendout(fd)
 	end
 end
 
+local obj = network.connect("baidu.com", 80)
 while true do
 	mainloop()
 end
