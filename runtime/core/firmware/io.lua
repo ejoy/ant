@@ -40,6 +40,15 @@ local function init_channels()
 		return c
 	end
 
+	local channel_user = {}
+	channel.user = setmetatable({} , channel_user)
+
+	function channel_user:__index(name)
+		local c = assert(thread.channel(name))
+		self[name] = c
+		return c
+	end
+
 	local err = thread.channel "errlog"
 	function _G.print(...)
 		local t = table.pack( "[IO]", ... )
@@ -412,11 +421,11 @@ function online.PREFETCH(id, path)
 	end
 end
 
-function online.SUBSCIBE(id, message)
+function online.SUBSCIBE(channel_name, message)
 	if connection.subscibe[message] then
-		print("Duplicate subscibe", message, id)
+		print("Duplicate subscibe", message, channel_name)
 	end
-	connection.subscibe[message] = id
+	connection.subscibe[message] = channel_name
 end
 
 function online.SEND(id, ...)
@@ -427,9 +436,9 @@ end
 local function dispatch_net(cmd, ...)
 	local f = response[cmd]
 	if not f then
-		local id = connection.subscibe[cmd]
-		if id then
-			channel.resp[id]:push(cmd, ...)
+		local channel_name = connection.subscibe[cmd]
+		if channel_name then
+			channel.user[channel_name]:push(cmd, ...)
 		else
 			print("Unsupport net command", cmd)
 		end
