@@ -20,8 +20,7 @@ LOG ("Open repo : ", repopath)
 local repo = assert(vrepo.new(repopath))
 local roothash = repo:index()
 
-LOG ("Listen :", config.address, config.port)
-network.listen(config.address, config.port)
+LOG ("Listen :", config.address, config.port, network.listen(config.address, config.port))
 
 local function new_connection(fd, addr, port)
 	local obj = { _fd = fd , _read = {}, _write = {}, _peer = addr .. ":" .. port }
@@ -104,7 +103,7 @@ local function mainloop()
 			objs[k] = nil
 			dispatch_obj(obj)
 			if obj._status == "CONNECTING" then
-				LOG("New", obj._peer)
+				LOG("New", obj._peer, obj._ref)
 			elseif obj._status == "CLOSED" then
 				LOG("LOGOFF", obj._peer)
 			end

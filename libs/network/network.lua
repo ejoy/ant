@@ -13,8 +13,10 @@ local connecting = {}
 
 function network.listen(address, port)
 	local fd = assert(lsocket.bind(address, port))
-	listen[fd] = true
+	local obj = { _fd = fd, _status = "LISTEN", _peer = address .. ":" .. port }
+	listen[fd] = obj
 	table.insert(readfds, fd)
+	return obj
 end
 
 local function new_connection(fd, addr, port)
@@ -54,7 +56,10 @@ local function close_fd(fd)
 end
 
 function network.close(obj)
-	close_fd(obj._fd)
+	if obj._status ~= "CLOSED" then
+		close_fd(obj._fd)
+		obj._status = "CLOSED"
+	end
 end
 
 function network.send(obj, data)
@@ -76,14 +81,13 @@ local function dispatch(obj)
 		end
 		log("Closed : %s", obj._peer)
 		close_fd(fd)
-		obj._status = "CLOSED"
 	else
 		table.insert(obj._read, data)
 	end
 end
 
-local function sendout(fd)
-	local obj = connection[fd]
+local function sendout(obj)
+	local fd = obj._fd
 	local sending = obj._write
 
 	while true do
@@ -118,7 +122,8 @@ function network.dispatch(objs, interval)
 		return
 	end
 	for _, fd in ipairs(rd) do
-		if listen[fd] then
+		local listen_obj = listen[fd]
+		if listen_obj then
 			local client, address, port = fd:accept()
 			if not client then
 				if client == nil then
@@ -127,6 +132,7 @@ function network.dispatch(objs, interval)
 			else
 				local obj = new_connection(client, address, port)
 				log("Accept : %s", obj._peer)
+				obj._ref = listen_obj
 				table.insert(objs, obj)
 			end
 		else
@@ -139,21 +145,23 @@ function network.dispatch(objs, interval)
 		end
 	end
 	for _, fd in ipairs(wt) do
-		if connecting[fd] then
-			local obj = connection[fd]
-			local ok, err = fd:status()
-			if not ok then
-				log("Connect %s error : %s", obj._peer, err)
-				connecting[fd] = undef
-				close_fd(fd)
+		local obj = connection[fd]
+		if obj then
+			if connecting[fd] then
+				local ok, err = fd:status()
+				if not ok then
+					log("Connect %s error : %s", obj._peer, err)
+					connecting[fd] = undef
+					close_fd(fd)
+				else
+					log("%s connected", obj._peer)
+					obj._status = "CONNECTED"
+					table.insert(objs, obj)
+					sendout(obj)
+				end
 			else
-				log("%s connected", obj._peer)
-				obj._status = "CONNECTED"
-				table.insert(objs, obj)
-				sendout(fd)
+				sendout(obj)
 			end
-		else
-			sendout(fd)
 		end
 	end
 	return objs
