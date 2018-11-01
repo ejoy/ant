@@ -20,28 +20,14 @@ LOG ("Open repo : ", repopath)
 local repo = assert(vrepo.new(repopath))
 local roothash = repo:index()
 
-LOG ("Listen :", config.address, config.port, network.listen(config.address, config.port))
-
-local function new_connection(fd, addr, port)
-	local obj = { _fd = fd , _read = {}, _write = {}, _peer = addr .. ":" .. port }
-	LOG("Accept :", obj._peer)
-	connection[fd] = setmetatable(obj, client)
-	table.insert(readfds, fd)
-end
-
-local function remove_fd(tbl, fd)
-	for i = 1,#tbl do
-		if fd == tbl[i] then
-			table.remove(tbl, i)
-			return
-		end
-	end
-end
+local filelisten = network.listen(config.address, config.port)
+LOG ("Listen :", config.address, config.port, filelisten)
 
 local function response(obj, ...)
 	network.send(obj, protocol.packmessage({...}))
 end
 
+local debug = {}
 local message = {}
 
 function message:ROOT()
@@ -80,6 +66,15 @@ function message:GET(hash)
 	f:close()
 end
 
+function message:DBG(data)
+	for _, v in pairs(debug) do
+		if v.server == self then
+			network.send(v.client, data)
+			break
+		end
+	end
+end
+
 local output = {}
 local function dispatch_obj(obj)
 	local reading_queue = obj._read
@@ -96,16 +91,58 @@ local function dispatch_obj(obj)
 	end
 end
 
+local function is_fileserver(obj)
+	return filelisten == obj._ref
+end
+
+local function fileserver_update(obj)
+	dispatch_obj(obj)
+	if obj._status == "CONNECTING" then
+		LOG("New", obj._peer, obj._ref)
+		local fd = network.listen('127.0.0.1', 4278)
+		debug[fd] = { server = obj }
+	elseif obj._status == "CLOSED" then
+		LOG("LOGOFF", obj._peer)
+	end
+end
+
+local function is_dbgserver(obj)
+	return debug[obj._ref] ~= nil
+end
+
+local function dbgserver_update(obj)
+	local dbg = debug[obj._ref]
+	local data = table.concat(obj._read)
+	obj._read = {}
+	if data ~= "" then
+		response(dbg.server, "DBG", data)
+	end
+	if obj._status == "CONNECTING" then
+		LOG("New", obj._peer, obj._ref)
+		if dbg.client then
+			network.close(obj)
+		else
+			dbg.client = obj
+		end
+	elseif obj._status == "CLOSED" then
+		LOG("LOGOFF", obj._peer)
+		local dbg = debug[obj._ref]
+		if dbg.client == obj then
+			dbg.client = nil
+		end
+		response(dbg.server, "DBG", "") --close DBG
+	end
+end
+
 local function mainloop()
 	local objs = {}
 	if network.dispatch(objs, nil) then
 		for k,obj in ipairs(objs) do
 			objs[k] = nil
-			dispatch_obj(obj)
-			if obj._status == "CONNECTING" then
-				LOG("New", obj._peer, obj._ref)
-			elseif obj._status == "CLOSED" then
-				LOG("LOGOFF", obj._peer)
+			if is_fileserver(obj) then
+				fileserver_update(obj)
+			elseif is_dbgserver(obj) then
+				dbgserver_update(obj)
 			end
 		end
 	end
