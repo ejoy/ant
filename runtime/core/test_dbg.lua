@@ -24,7 +24,7 @@ dofile 'runtime/core/init_thread.lua'
 thread.newchannel "DdgNet"
 local io_req  = thread.channel "IOreq"
 local dbg_net = thread.channel "DdgNet"
-io_req:push(thread.id, "SUBSCIBE", "DdgNet", "DBG")
+io_req:push("SUBSCIBE", "DdgNet", "DBG")
 local dbg_io = {}
 function dbg_io:event_in(f)
 	self.fsend = f
@@ -40,7 +40,7 @@ function dbg_io:update()
     return true
 end
 function dbg_io:send(data)
-	io_req:push(thread.id, "SEND", "DBG", data)
+	io_req:push("SEND", "DBG", data)
 end
 function dbg_io:close()
     self.fclose()

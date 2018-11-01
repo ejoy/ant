@@ -11,7 +11,7 @@ local io_req = thread.channel "IOreq"
 local io_resp = thread.channel ("IOresp" .. threadid)
 
 local function fs_getpath(path)
-	io_req:push(threadid, "GET", path)
+	io_req:push("GET", threadid, path)
 	return io_resp:bpop()
 end
 
