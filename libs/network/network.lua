@@ -80,7 +80,7 @@ local function dispatch(obj)
 			log("Error : %s %s", obj._peer, err)
 		end
 		log("Closed : %s", obj._peer)
-		close_fd(fd)
+		network.close(obj)
 	else
 		table.insert(obj._read, data)
 	end
@@ -151,8 +151,7 @@ function network.dispatch(objs, interval)
 				local ok, err = fd:status()
 				if not ok then
 					log("Connect %s error : %s", obj._peer, err)
-					connecting[fd] = undef
-					close_fd(fd)
+					network.close(obj)
 				else
 					log("%s connected", obj._peer)
 					obj._status = "CONNECTED"
