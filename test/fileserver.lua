@@ -56,6 +56,7 @@ end
 local message = {}
 
 function message:ROOT()
+	repo:rebuild()
 	local roothash = repo:root()
 	response(self, "ROOT", roothash)
 end
@@ -88,6 +89,23 @@ function message:GET(hash)
 		end
 	end
 	f:close()
+end
+
+local debugserver = {}
+local function new_debugserver(obj)
+	local server = (require "debugger.io.tcp_server")('127.0.0.1', 4278)
+	server:event_in(function(data)
+		response(obj, "DBG", data)
+	end)
+	server:event_close(function()
+		response(obj, "DBG", "")
+	end)
+	debugserver[obj] = server
+	return server
+end
+
+function message:DBG(data)
+	debugserver[self]:send(data)
 end
 
 local output = {}
@@ -152,16 +170,23 @@ local function sendout(fd)
 end
 
 local function mainloop()
-	local rd, wt = assert(lsocket.select(readfds, writefds))
-	for _, fd in ipairs(rd) do
-		if fd == listenfd then
-			new_connection(fd:accept())
-		else
-			dispatch(fd)
+	local rd, wt = lsocket.select(readfds, writefds, 0)
+	if rd then
+		for _, fd in ipairs(rd) do
+			if fd == listenfd then
+				local newfd, addr, port = fd:accept()
+				new_connection(newfd, addr, port)
+				new_debugserver(connection[newfd])
+			else
+				dispatch(fd)
+			end
+		end
+		for _, fd in ipairs(wt) do
+			sendout(fd)
 		end
 	end
-	for _, fd in ipairs(wt) do
-		sendout(fd)
+	for _, server in pairs(debugserver) do
+		server:update()
 	end
 end
 

@@ -421,7 +421,7 @@ function online.PREFETCH(id, path)
 	end
 end
 
-function online.SUBSCIBE(channel_name, message)
+function online.SUBSCIBE(id, channel_name, message)
 	if connection.subscibe[message] then
 		print("Duplicate subscibe", message, channel_name)
 	end
