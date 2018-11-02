@@ -38,12 +38,17 @@ namespace base { namespace win { namespace subprocess {
     public:
         process(spawn& spawn);
         process(process& pi);
+        process(process&& pi);
+        process(PROCESS_INFORMATION& pi);
         ~process();
-        bool     is_running();
-        bool     kill(int signum);
-        uint32_t wait();
-        uint32_t get_id() const;
-        bool     resume();
+        process& operator=(process& pi);
+        process& operator=(process&& pi);
+        bool      is_running();
+        bool      kill(int signum);
+        uint32_t  wait();
+        uint32_t  get_id() const;
+        bool      resume();
+        uintptr_t native_handle();
 
     private:
         bool     wait(uint32_t timeout);
@@ -61,6 +66,7 @@ namespace base { namespace win { namespace subprocess {
         void env_set(const std::wstring& key, const std::wstring& value);
         void env_del(const std::wstring& key);
         bool exec(const std::vector<std::wstring>& args, const wchar_t* cwd);
+        bool exec(const std::wstring& app, const std::wstring& cmd, const wchar_t* cwd);
         PROCESS_INFORMATION release();
 
     private:
