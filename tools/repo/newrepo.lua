@@ -18,7 +18,7 @@ if reponame == nil then
 end
 print ("Project name :",reponame)
 
-local mount = {
+local mount = {	
 	["engine/libs"] = enginepath .. "/libs",
 	["engine/assets"] = enginepath .. "/assets",
 	["firmware"] = enginepath .. "/runtime/core/firmware",

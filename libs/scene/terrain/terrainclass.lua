@@ -8,6 +8,8 @@ local shaderMgr = require "render.resources.shader_mgr"
 local math3d = require "math3d"
 local mathu = require "math.util"
 
+local vfs = require "vfs"
+
 local math3d_stack = math3d.new()
 local asset = require "asset"
 local readfile = function( fname )
@@ -15,7 +17,7 @@ local readfile = function( fname )
     assert(file_path)
 
     print("find path "..file_path)
-	local f = assert(io.open( file_path,'rb'))
+	local f = assert(io.open(vfs.realpath(file_path),'rb'))
 
 	local d = f:read('*a')
 	f:close()

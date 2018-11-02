@@ -1,3 +1,4 @@
+--luacheck: globals enable_packfile
 local winfile =  require "winfile"
 local memoryfile = require "memoryfile"
 local packfile_open = require "packfile.openfile"
@@ -8,13 +9,10 @@ local filesystem = {
 	file = {
 		loadfile = winfile.loadfile or _G.loadfile,
 		dofile = winfile.dofile or _G.dofile,
-		open = function (...)
-			if packfile_open then
-				if enable_pack_framework == nil or enable_pack_framework() then
-					return packfile_open(...)
-				end
+		open = function (...)		
+			if enable_packfile == nil or enable_packfile() then
+				return packfile_open(...)
 			end
-		
 			return winfile.open(...)
 		end
 		,

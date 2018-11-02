@@ -1,21 +1,20 @@
 local toolset = require "editor.toolset"
 
 local assetmgr = require "asset"
-local fs = require "filesystem"
 local fu = require "filesystem.util"
 
 local path = require "filesystem.path"
 local shader_mgr = require "render.resources.shader_mgr"
 local winfile = require "winfile"
 local rawopen = winfile.open or io.open
+local vfs = require "vfs"
 
 --local fs =  require "cppfs"
 
 local function compile_shader(filename, outfilename)
     local config = toolset.load_config()
 	if next(config) then
-		local cwd = fs.currentdir()
-		config.includes = {config.shaderinc, cwd .. "/assets/shaders/src"}
+		config.includes = {config.shaderinc, vfs.realpath("engine/assets") .. "/shaders/src"}
         config.dest = outfilename
 		return toolset.compile(filename, config, shader_mgr.get_compile_renderer_name())
 	end
@@ -39,7 +38,8 @@ local function check_compile_shader(srcpath)
 	
 	local outfile = gen_cache_path(srcpath)
 	path.create_dirs(path.parent(outfile))
-	local success, msg = compile_shader(srcpath, outfile)
+	local real_srcpath = vfs.realpath(srcpath)
+	local success, msg = compile_shader(real_srcpath, outfile)
 	if not success then
 		print(string.format("try compile from file: %s to file: %s , \
 		but failed, error message : \n%s", srcpath, outfile, msg))
@@ -49,7 +49,8 @@ local function check_compile_shader(srcpath)
 end
 
 return function (lk, readmode)
-	local c = assetmgr.load(lk)
+	local rp = fu.convert_to_mount_path(lk, "engine/assets")
+	local c = assetmgr.load(rp)
 	local src = assetmgr.find_valid_asset_path(assert(c.shader_src))
 	if src == nil then
 		print(src .. ", not found in assets folder")

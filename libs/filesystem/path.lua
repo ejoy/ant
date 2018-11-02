@@ -63,10 +63,6 @@ function path.remove_filename(fullname)
 	return path.parent(fullname)
 end
 
-function path.is_mem_file(name)
-    return name:match("^mem://.+") ~= nil
-end
-
 function path.is_absolute_path(p)
 	if p:sub(1, 1) == '/' then
 		return true

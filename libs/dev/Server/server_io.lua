@@ -132,7 +132,7 @@ function server:PackageHandleUpdate()
 end
 
 local enable_pack = false
-function enable_pack_framework(state)
+function enable_packfile(state)
     if state then
         enable_pack = state
     end
@@ -162,7 +162,7 @@ function server.new(address, port, init_linda)
     
     print("init server cloud successful")
 
-    enable_pack_framework(true)
+    enable_packfile(true)
     return setmetatable({id = id, linda = init_linda, io = io_ins, connect = {}, log = {}},  server)
 end
 

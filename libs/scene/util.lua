@@ -27,7 +27,7 @@ function util.start_new_world(input_queue, fbw, fbh, modules)
 
 	world = ecs.new_world {
 		modules = modules,
-		module_path = 'libs/?.lua;libs/?/?.lua',
+		module_path = 'libs/?.lua;libs/?/?.lua;engine/libs/?.lua;engine/libs/?/?.lua',	-- read local libs before engine/libs
 		update_order = {"timesystem"},
 		update_bydepend = true,
 		args = { 

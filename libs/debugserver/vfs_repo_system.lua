@@ -9,7 +9,7 @@ vfs_repo_system.singleton "vfs_load_component"
 local fs = require "filesystem"
 
 local enable_pack = false
-local function enable_pack_framework(state)
+local function enable_packfile(state)
     if state then
         enable_pack = state
     end
@@ -43,7 +43,7 @@ function vfs_repo_system:init()
     rebuild_vfs_repo(self)
 
     self.vfs_root_component.root = self.vfs:root_hash()
-    enable_pack_framework(true)
+    enable_packfile(true)
 end
 
 local last_update_timer = os.clock()

@@ -5,6 +5,7 @@ local require = import and import(...) or require
 local path = require "filesystem.path"
 local fs = require "filesystem"
 local seri = require "serialize.util"
+local vfsutil= require "vfs.util"
 
 local support_list = {
 	"shader",
@@ -19,17 +20,6 @@ local support_list = {
 	"lk",
 	"ozz",
 }
-
--- luacheck: ignore param
-local function raw_loader(filename, param)
-	local f = io.open(filename)
-	if f == nil then
-		error(string.format("raw_loader open file failed, filename : ", filename))
-	end
-	local content = f:read("a")
-	f:close()
-	return content
-end
 
 local loaders = setmetatable({} , {
 	__index = function(_, ext)
@@ -51,7 +41,7 @@ function assetmgr.add_loader(n, l)
 	loaders[n] = l
 end
 
-local asset_rootdir = "assets"
+local asset_rootdir = "engine/assets"
 
 local searchdirs = {
 	asset_rootdir,
@@ -63,14 +53,13 @@ function assetmgr.get_searchdirs()
 end
 
 function assetmgr.find_valid_asset_path(asset_subpath)
-	if path.is_mem_file(asset_subpath) or fs.exist(asset_subpath) then
+	if vfsutil.exist(asset_subpath) then
 		return asset_subpath
 	end
 
 	for _, d in ipairs(searchdirs) do
-		local p = path.join(d, asset_subpath)
-        print("check exist: ".. p)
-		if fs.exist(p) then
+		local p = path.join(d, asset_subpath)        
+		if vfsutil.exist(p) then
 			return p
 		end
 	end
@@ -112,7 +101,7 @@ function assetmgr.load(filename, param)
 			error(string.format("asset file not found, filename : %s", filename))
 		end
 
-		local loader = loaders[ext] or raw_loader
+		local loader = loaders[ext]
 		res = loader(fn, param)
 		resources[filename] = res
 	end

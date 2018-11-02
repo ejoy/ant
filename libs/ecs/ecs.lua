@@ -5,6 +5,8 @@ local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
 
+local vfsutil = require "vfs.util"
+local vfs = require "vfs"
 local ecs = {}
 local world = {} ; world.__index = world
 
@@ -167,9 +169,10 @@ local function init_notify(w, notifies)
 	end
 end
 
+
 local function searchpath(name, path)
 	--TODO
-	local f = io.open(name)
+	local f = vfsutil.open(name, "r")
 	if f then
 		f:close()
 		return name
@@ -178,7 +181,7 @@ local function searchpath(name, path)
 	name = string.gsub(name, '%.', '/')
 	for c in string.gmatch(path, '[^;]+') do
 		local filename = string.gsub(c, '%?', name)
-		local f = io.open(filename)
+		local f = vfsutil.open(filename, "r")
 		if f then
 			f:close()
 			return filename
@@ -209,7 +212,8 @@ local function init_modules(w, modules, module_path)
 	while #mods > 0 do
 		local name = mods[#mods]
 		mods[#mods] = nil
-		local module, err = loadfile(name)
+		local rp = vfs.realpath(name)
+		local module, err = loadfile(rp)
 		if not module then
 			error(("module '%s' load failed:%s"):format(name, err))
 		end

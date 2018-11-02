@@ -2,7 +2,7 @@ local server_filesys = {}
 server_filesys.__index = server_filesys
 
 local enable_pack = false
-function enable_pack_framework(state)
+function enable_packfile(state)
     if state then
         enable_pack = state
     end
@@ -44,7 +44,7 @@ function server_filesys:Init(root_dir)
     print("create server repo successful")
     self.root_dir = root_dir
     self.localcache = err
-    enable_pack_framework(true)
+    enable_packfile(true)
 
     ---[[
     --init filewatch

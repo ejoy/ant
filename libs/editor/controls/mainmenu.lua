@@ -1,6 +1,7 @@
 local editor_mainwindow = require 'editor.controls.window'
 local fs = require "cppfs"
 local asset = require "asset"
+local fu = require "filesystem.util"
 
 local server_main = require 'editor.controls.servermain'
 
@@ -131,7 +132,11 @@ function openMap(path)
     guiOpenMap.active = "OFF"
     guiRecent.active = "OFF"
     guiRunFile.active = "ON"
-    recentAddAndUpdate(path)
+	recentAddAndUpdate(path)
+
+	local mountpath = "engine/assets"
+	path = fu.convert_to_mount_path(path, mountpath):gsub(mountpath.."/", "")	
+	
     local modules = asset.load(path)
     local editormodules = {
         "editor.ecs.camera_controller",

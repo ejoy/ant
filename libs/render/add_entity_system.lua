@@ -119,26 +119,8 @@ function add_entity_sys:init()
 		lentity.name.n = "ambient_light"
 		--print("-------ambient entity  "..am_entity.name.n..'  '..am_eid)
 
-		component_util.load_mesh(lentity, "sphere.mesh")
-		local sphere_fn = "mem://light_bulb.material"
-		fs_util.write_to_file(sphere_fn, [[
-			shader = {
-				vs = "simple/light_bulb/vs_bulb",
-				fs = "simple/light_bulb/fs_bulb",
-			}
-			state = "default.state"
-			properties = {
-				u_color = {type="color", name = "color", default={1, 1, 1, 1}}
-			}
-			surface_type = {
-				transparency = "opaticy",
-				shadow = {
-					cast = "off",
-					receive = "off",
-				},	
-			}
-		]])
-		component_util.load_material(lentity, {sphere_fn})
+		component_util.load_mesh(lentity, "sphere.mesh")		
+		component_util.load_material(lentity, {"light_bulb.material"})
 
 		lentity.can_render.visible = true    
 	end
