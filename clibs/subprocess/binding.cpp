@@ -81,13 +81,17 @@ namespace process {
         return 1;
     }
 
-#if defined(_WIN32)
     static int resume(lua_State* L) {
         base::subprocess::process& self = to(L, 1);
         lua_pushboolean(L, self.resume());
         return 1;
     }
-#endif
+
+    static int native_handle(lua_State* L) {
+        base::subprocess::process& self = to(L, 1);
+        lua_pushinteger(L, self.native_handle());
+        return 1;
+    }
 }
 
 namespace spawn {
@@ -150,7 +154,6 @@ namespace spawn {
     static native_args cast_args(lua_State* L) {
         native_args args;
         cast_args(L, 1, args);
-        args.push_back(native_args::value_type());
         return args;
     }
 
@@ -201,6 +204,15 @@ namespace spawn {
         lua_pop(L, 1);
     }
 
+    static void cast_suspended(lua_State* L, base::subprocess::spawn& self) {
+        if (LUA_TBOOLEAN == lua_getfield(L, 1, "suspended")) {
+            if (lua_toboolean(L, -1)) {
+                self.suspended();
+            }
+        }
+        lua_pop(L, 1);
+    }
+
 #if defined(_WIN32)
     static void cast_option(lua_State* L, base::subprocess::spawn& self)
     {
@@ -224,13 +236,6 @@ namespace spawn {
             }
         }
         lua_pop(L, 1);
-
-        if (LUA_TBOOLEAN == lua_getfield(L, 1, "suspended")) {
-            if (lua_toboolean(L, -1)) {
-                self.suspended();
-            }
-        }
-        lua_pop(L, 1);
     }
 #else
     static void cast_option(lua_State* , base::subprocess::spawn&)
@@ -248,6 +253,7 @@ namespace spawn {
 
         std::optional<nativestring> cwd = cast_cwd(L);
         cast_env(L, spawn);
+        cast_suspended(L, spawn);
         cast_option(L, spawn);
 
         FILE* f_stdin = cast_stdio(L, "stdin");
@@ -281,6 +287,26 @@ static int peek(lua_State* L) {
     return 1;
 }
 
+#if defined(_WIN32)
+#include <fcntl.h>
+
+static int filemode(lua_State* L) {
+    luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
+    const char* mode = luaL_checkstring(L, 2);
+    if (p && p->f) {
+        if (mode[0] == 'b') {
+            _setmode(_fileno(p->f), _O_BINARY);
+        }
+        else {
+            _setmode(_fileno(p->f), _O_TEXT);
+        }
+    }
+    return 0;
+}
+#else
+static int filemode(lua_State* ) { return 0; }
+#endif
+
 extern "C"
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -292,9 +318,8 @@ int luaopen_subprocess(lua_State* L)
         { "kill", process::kill },
         { "get_id", process::get_id },
         { "is_running", process::is_running },
-#if defined(_WIN32)
         { "resume", process::resume },
-#endif
+        { "native_handle", process::native_handle },
         { "__gc", process::destructor },
         { NULL, NULL }
     };
@@ -306,6 +331,7 @@ int luaopen_subprocess(lua_State* L)
     static luaL_Reg lib[] = {
         { "spawn", spawn::spawn },
         { "peek", peek },
+        { "filemode", filemode },
         { NULL, NULL }
     };
     luaL_newlib(L, lib);

@@ -118,12 +118,7 @@ function offline:LIST(path)
 	end
 end
 
-function offline:PREFETCH(path)
-	-- ignore
-end
-
-
-local function offline_dispatch(id, cmd, ...)
+local function offline_dispatch(cmd, id, ...)
 	local f = offline[cmd]
 	if not f then
 		print("Unsupported offline command : ", cmd, id)
@@ -411,7 +406,7 @@ function online.LIST(id, path)
 	end
 end
 
-function online.PREFETCH(id, path)
+function online.PREFETCH(path)
 	local realpath, hash = repo.repo:realpath(path)
 	if realpath then
 		return
@@ -428,7 +423,7 @@ function online.SUBSCIBE(channel_name, message)
 	connection.subscibe[message] = channel_name
 end
 
-function online.SEND(id, ...)
+function online.SEND(...)
 	connection_send(...)
 end
 
@@ -447,16 +442,16 @@ local function dispatch_net(cmd, ...)
 	f(...)
 end
 
-local function online_dispatch(ok, id, cmd, ...)
+local function online_dispatch(ok, cmd, ...)
 	if not ok then
 		-- no req
 		return false
 	end
 	local f = online[cmd]
 	if not f then
-		print("Unsupported online command : ", cmd, id)
+		print("Unsupported online command : ", cmd)
 	else
-		f(id, ...)
+		f(...)
 	end
 	return true
 end

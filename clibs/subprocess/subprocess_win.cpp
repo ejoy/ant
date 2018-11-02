@@ -118,14 +118,22 @@ namespace base { namespace win { namespace subprocess {
 
     static wchar_t* make_args(const std::vector<std::wstring>& args) {
         strbuilder res; 
-        for (size_t i = 0; i < args.size() - 1; ++i) {
+        for (size_t i = 0; i < args.size(); ++i) {
             res += quote_arg(args[i]);
-            if (i + 2 != args.size()) {
+            if (i + 1 != args.size()) {
                 res += L" ";
             }
         }
         return res.string();
     }
+
+	static wchar_t* make_args(const std::wstring& app, const std::wstring& cmd) {
+		strbuilder res;
+		res += quote_arg(app);
+		res += L" ";
+		res += cmd;
+		return res.string();
+	}
 
     static wchar_t* make_env(std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>>& set, std::set<std::wstring, ignore_case::less<std::wstring>>& del)
     {
@@ -265,6 +273,33 @@ namespace base { namespace win { namespace subprocess {
         return true;
     }
 
+	bool spawn::exec(const std::wstring& app, const std::wstring& cmd, const wchar_t* cwd) {
+		std::unique_ptr<wchar_t[]> environment;
+		if (!set_env_.empty() || !del_env_.empty()) {
+			environment.reset(make_env(set_env_, del_env_));
+			flags_ |= CREATE_UNICODE_ENVIRONMENT;
+		}
+
+		std::unique_ptr<wchar_t[]> command_line(make_args(app, cmd));
+		if (!::CreateProcessW(
+			app.c_str(),
+			command_line.get(),
+			NULL, NULL,
+			inherit_handle_,
+			flags_ | NORMAL_PRIORITY_CLASS,
+			environment.get(),
+			cwd,
+			&si_, &pi_
+		))
+		{
+			return false;
+		}
+		::CloseHandle(si_.hStdInput);
+		::CloseHandle(si_.hStdOutput);
+		::CloseHandle(si_.hStdError);
+		return true;
+	}
+
     void spawn::env_set(const std::wstring& key, const std::wstring& value) {
         set_env_[key] = value;
     }
@@ -289,10 +324,38 @@ namespace base { namespace win { namespace subprocess {
         memset(&pi, 0, sizeof(PROCESS_INFORMATION));
     }
 
+	process::process(process&& pi)
+		: PROCESS_INFORMATION(pi)
+	{
+		memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+	}
+
+	process::process(PROCESS_INFORMATION& pi)
+		: PROCESS_INFORMATION(pi)
+	{
+		memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+	}
+
     process::~process() {
         ::CloseHandle(hThread);
         ::CloseHandle(hProcess);
     }
+
+	process& process::operator=(process& pi) {
+		if (this != &pi) {
+			memcpy(this, &pi, sizeof(PROCESS_INFORMATION));
+			memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+		}
+		return *this;
+	}
+
+	process& process::operator=(process&& pi) {
+		if (this != &pi) {
+			memcpy(this, &pi, sizeof(PROCESS_INFORMATION));
+			memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+		}
+		return *this;
+	}
 
     uint32_t process::wait() {
         wait(INFINITE);
@@ -311,19 +374,19 @@ namespace base { namespace win { namespace subprocess {
     }
 
     bool process::kill(int signum) {
-		switch (signum) {
-		case SIGTERM:
-		case SIGKILL:
-		case SIGINT:
-			if (TerminateProcess(hProcess, 1)) {
-				return wait(5000);
-			}
-			return false;
-		case 0:
-			return is_running();
-		default:
-			return false;
-		}
+        switch (signum) {
+        case SIGTERM:
+        case SIGKILL:
+        case SIGINT:
+            if (TerminateProcess(hProcess, 1)) {
+                return wait(5000);
+            }
+            return false;
+        case 0:
+            return is_running();
+        default:
+            return false;
+        }
     }
 
     bool process::resume() {
@@ -340,6 +403,10 @@ namespace base { namespace win { namespace subprocess {
 
     uint32_t process::get_id() const {
         return (uint32_t)dwProcessId;
+    }
+
+    uintptr_t process::native_handle() {
+        return (uintptr_t)hProcess;
     }
 
     namespace pipe {

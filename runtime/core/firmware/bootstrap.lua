@@ -35,17 +35,17 @@ function vfs.open(repopath)
 end
 
 function vfs.list(path)
-	io_req:push(threadid, "LIST", npath(path))
+	io_req:push("LIST", threadid, npath(path))
 	return io_resp:bpop()
 end
 
 function vfs.realpath(path)
-	io_req:push(threadid, "GET", npath(path))
+	io_req:push("GET", threadid, npath(path))
 	return io_resp:bpop()
 end
 
 function vfs.prefetch(path)
-	io_req:push(threadid, "PREFETCH", npath(path))
+	io_req:push("PREFETCH", npath(path))
 end
 
 -- init vfs

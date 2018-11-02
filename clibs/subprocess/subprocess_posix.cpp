@@ -99,10 +99,16 @@ namespace base { namespace posix { namespace subprocess {
         fds_[0] = -1;
         fds_[1] = -1;
         fds_[2] = -1;
+        pid_ = -1;
+        suspended_ = false;
     }
 
     spawn::~spawn()
     { }
+
+    void spawn::suspended() {
+        suspended_ = true;
+    }
 
     void spawn::redirect(stdio type, FILE* f) { 
         switch (type) {
@@ -147,6 +153,10 @@ namespace base { namespace posix { namespace subprocess {
             if (cwd && chdir(cwd)) {
                 _exit(127);
             }
+            if (suspended_) {
+                ::kill(getpid(), SIGSTOP);
+            }
+			args.push_back(nullptr);
             execvp(args[0], args.data());
             _exit(127);
         }
@@ -179,7 +189,15 @@ namespace base { namespace posix { namespace subprocess {
         return WIFEXITED(status)? WEXITSTATUS(status): 0;
     }
 
+    bool process::resume() {
+        return kill(SIGCONT);
+    }
+
     uint32_t process::get_id() const {
+        return pid;
+    }
+
+    uintptr_t process::native_handle() {
         return pid;
     }
 
