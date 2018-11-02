@@ -8,9 +8,7 @@ thunk.cpp : thunk.h thunk_windows.inl thunk_windows_i386.inl thunk_windows_amd64
 
 hookmgr.cpp : thunk.h
 
-frontend.cpp : msgqueue.h queue.h
-
-debugger.dll : frontend.cpp hookmgr.cpp thunk.cpp
+debugger.dll : hookmgr.cpp thunk.cpp
 	g++ --shared $(CFLAGS) $(LUAINC) -o $@ $^ $(LUALIB)
 
 clean :

@@ -287,6 +287,26 @@ static int peek(lua_State* L) {
     return 1;
 }
 
+#if defined(_WIN32)
+#include <fcntl.h>
+
+static int filemode(lua_State* L) {
+    luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
+    const char* mode = luaL_checkstring(L, 2);
+    if (p && p->f) {
+        if (mode[0] == 'b') {
+            _setmode(_fileno(p->f), _O_BINARY);
+        }
+        else {
+            _setmode(_fileno(p->f), _O_TEXT);
+        }
+    }
+    return 0;
+}
+#else
+static int filemode(lua_State* ) { return 0; }
+#endif
+
 extern "C"
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -311,6 +331,7 @@ int luaopen_subprocess(lua_State* L)
     static luaL_Reg lib[] = {
         { "spawn", spawn::spawn },
         { "peek", peek },
+        { "filemode", filemode },
         { NULL, NULL }
     };
     luaL_newlib(L, lib);

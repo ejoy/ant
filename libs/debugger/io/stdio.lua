@@ -1,35 +1,32 @@
-local cdebug = require 'debugger.frontend'
-local stdin = require 'debugger.frontend.stdin'
-local socket = require 'debugger.socket'
+local subprocess = require 'subprocess'
+local STDIN = io.stdin
+local STDOUT = io.stdout
+local peek = subprocess.peek
+subprocess.filemode(STDIN, 'b')
+subprocess.filemode(STDOUT, 'b')
+STDIN:setvbuf 'no'
+STDOUT:setvbuf 'no'
 
 local mt = {}
 mt.__index = mt
 
-io.stdin:setvbuf 'no'
-io.stdout:setvbuf 'no'
-if cdebug.os() == 'windows' then
-    cdebug.filemode(io.stdin, 'b')
-    cdebug.filemode(io.stdout, 'b')
-end
-
 function mt:event_in(f)
-    local fd = stdin.fd
-    socket.init(fd, function()
-        f(fd:recv() or '')
-    end)
+    self.f = f
 end
 
 function mt:event_close()
 end
 
 function mt:update()
-    stdin.update()
-    socket.update()
+    local n = peek(STDIN)
+    if n > 0 then
+        self.f(STDIN:read(n))
+    end
     return true
 end
 
 function mt:send(data)
-    io.stdout:write(data)
+    STDOUT:write(data)
 end
 
 function mt:close()
