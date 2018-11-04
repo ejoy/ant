@@ -107,20 +107,20 @@ $(OBJWIN): $(ODIR)/%.o: $(IUPSRC)/src/win/%.c | $(ODIR)
 $(ODIR)/libiup.a : $(OBJIUP) $(OBJWIN) $(OBJIUPLUA) $(OBJCTRL)
 	$(AR) $@ $^
 
-scintilla.dll : luaiup.dll
+scintilla.dll : iuplua.dll
 	$(MAKE) -f Makefile.scintilla -j8
 
-iupluaimglib.dll : luaiup.dll
+iupluaimglib.dll : iuplua.dll
 	$(MAKE) -f Makefile.imglib -j8
 
-iupluacontrols.dll : luaiup.dll
+iupluacontrols.dll : iuplua.dll
 	$(MAKE) -f Makefile.controls -j8
 
-luaiup.dll : $(OBJIUP) $(OBJWIN) $(OBJIUPLUA) $(OBJCTRL) 
+iuplua.dll : $(OBJIUP) $(OBJWIN) $(OBJIUPLUA) $(OBJCTRL)
 	$(CC) --shared -o $@ $^ -lgdi32 -lcomdlg32 -lcomctl32 -lole32 -luuid $(LUALIB)
 
-iup.exe : iupmain.c | luaiup.dll
-	gcc $(CFLAGS) -o $@ $^ -I$(IUPSRC)/include $(LUAINC) $(LUALIB) -L. -lluaiup -mwindows
+iup.exe : iupmain.c | iuplua.dll
+	gcc $(CFLAGS) -o $@ $^ -I$(IUPSRC)/include $(LUAINC) $(LUALIB) -L. -liuplua -mwindows
 
 clean :
 	rm -rf $(ODIR) && rm -f *.exe && rm -f *.dll

@@ -80,7 +80,7 @@ COMPILE = $(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $< $(INCLUDES) $(DEFINES)
 all : scintilla.dll
 
 scintilla.dll :  $(OBJSCINTILLA) $(OBJSCI_LEXERS) $(OBJSCI_LEXLIB) $(OBJSCI_WIN) $(OBJIUPSCI) $(ILO) $(ODIR)/luascintilla.o
-	$(CXX) --shared -o $@ $^ -lstdc++ -lgdi32 -lmsimg32 -limm32 -lole32 -luuid -lcomdlg32 -loleaut32 -L. -lluaiup $(LUALIB)
+	$(CXX) --shared -o $@ $^ -lstdc++ -lgdi32 -lmsimg32 -limm32 -lole32 -luuid -lcomdlg32 -loleaut32 -L. -liuplua $(LUALIB)
 
 $(ODIR) :
 	mkdir $@
