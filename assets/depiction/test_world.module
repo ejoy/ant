@@ -1,4 +1,4 @@
 modules = {	
 	-- for test
-	"libs/render/add_entity_system.lua",
+	"engine/libs/render/add_entity_system.lua",
 }

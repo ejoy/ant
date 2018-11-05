@@ -23,6 +23,7 @@ local connection = {
 	sendq = {},
 	recvq = {},
 	fd = nil,
+	subscibe = {},
 }
 
 local function init_channels()
@@ -36,6 +37,15 @@ local function init_channels()
 		assert(type(id) == "number")
 		local c = assert(thread.channel("IOresp" .. id))
 		self[id] = c
+		return c
+	end
+
+	local channel_user = {}
+	channel.user = setmetatable({} , channel_user)
+
+	function channel_user:__index(name)
+		local c = assert(thread.channel(name))
+		self[name] = c
 		return c
 	end
 
@@ -108,15 +118,10 @@ function offline:LIST(path)
 	end
 end
 
-function offline:PREFETCH(path)
-	-- ignore
-end
-
-
-local function offline_dispatch(id, cmd, ...)
+local function offline_dispatch(cmd, id, ...)
 	local f = offline[cmd]
 	if not f then
-		print("Unsupported command : ", cmd, id)
+		print("Unsupported offline command : ", cmd, id)
 	else
 		f(channel.resp[id], ...)
 	end
@@ -375,7 +380,13 @@ function online.GET(id, path)
 			response_id(id, nil)
 		end
 	else
-		response_id(id, realpath, hash)
+		local f = io.open(realpath,"rb")
+		if not f then
+			request_file(id, hash, path, "GET")
+		else
+			f:close()
+			response_id(id, realpath, hash)
+		end
 	end
 end
 
@@ -395,7 +406,7 @@ function online.LIST(id, path)
 	end
 end
 
-function online.PREFETCH(id, path)
+function online.PREFETCH(path)
 	local realpath, hash = repo.repo:realpath(path)
 	if realpath then
 		return
@@ -405,26 +416,42 @@ function online.PREFETCH(id, path)
 	end
 end
 
+function online.SUBSCIBE(channel_name, message)
+	if connection.subscibe[message] then
+		print("Duplicate subscibe", message, channel_name)
+	end
+	connection.subscibe[message] = channel_name
+end
+
+function online.SEND(...)
+	connection_send(...)
+end
+
 -- dispatch package from connection
 local function dispatch_net(cmd, ...)
 	local f = response[cmd]
 	if not f then
-		print("Unsupport net command", cmd)
+		local channel_name = connection.subscibe[cmd]
+		if channel_name then
+			channel.user[channel_name]:push(cmd, ...)
+		else
+			print("Unsupport net command", cmd)
+		end
 		return
 	end
 	f(...)
 end
 
-local function online_dispatch(ok, id, cmd, ...)
+local function online_dispatch(ok, cmd, ...)
 	if not ok then
 		-- no req
 		return false
 	end
 	local f = online[cmd]
 	if not f then
-		print("Unsupported command : ", cmd, id)
+		print("Unsupported online command : ", cmd)
 	else
-		f(id, ...)
+		f(...)
 	end
 	return true
 end

@@ -1,5 +1,5 @@
 local cu = require "common.util"
-
+local vfsutil = require "vfs.util"
 local seri = {}
 
 function seri.load(filename)
@@ -73,8 +73,8 @@ function seri.save(filename, data)
 		assert(type(k) == "string" and k:match "[_%a][_%w]*" == k)
 		table.insert(keys, k)
 	end
-	table.sort(keys)
-	local f = assert(io.open(filename, "wb"))
+	table.sort(keys)	
+	local f = assert(vfsutil.open(filename, "wb"))
 	for _, key in ipairs(keys) do
 		local value = seri.serialize(data[key])
 		f:write(string.format("%s = %s\n", key, value))

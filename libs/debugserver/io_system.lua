@@ -22,7 +22,7 @@ function io_system:init()
     self.id = server_id
     self.connect = {}
 
-    enable_pack_framework(true)
+    enable_packfile(true)
 end
 
 local function kick_client(self, v)

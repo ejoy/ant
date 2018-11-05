@@ -35,6 +35,22 @@ end
 local cachemeta = { __mode = "kv" }
 local self
 
+local function mount_repo(mountpoint, repopath)
+	local rootpath = mountpoint[''] or repopath
+	local mountname = access.mountname(mountpoint)
+
+	return {
+		_mountname = mountname,
+		_mountpoint = mountpoint,
+		_root = rootpath,
+		_cache = setmetatable({} , cachemeta),
+	}
+end
+
+function localvfs.mount(mountpoint, enginepath)	
+	self = mount_repo(mountpoint, enginepath or ".")
+end
+
 function localvfs.open(repopath)
 	assert(self == nil, "Can't open twice")
 	if not isdir(repopath) then
@@ -42,20 +58,12 @@ function localvfs.open(repopath)
 	end
 
 	local mountpoint = access.readmount(repopath .. "/.mount")
-	local rootpath = mountpoint[''] or repopath
-	local mountname = access.mountname(mountpoint)
-
-	self = {
-		_mountname = mountname,
-		_mountpoint = mountpoint,
-		_root = rootpath,
-		_cache = setmetatable({} , cachemeta),
-	}
+	self = mount_repo(mountpoint, repopath)
 	return true
 end
 
 function localvfs.realpath(pathname)
-	return access.realpath(self, repo) , pathname:match "^/?(.-)/?$"
+	return access.realpath(self, pathname) , pathname:match "^/?(.-)/?$"
 end
 
 -- list files { name : type (dir/file) }

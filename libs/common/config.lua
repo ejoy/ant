@@ -9,7 +9,7 @@ end
 
 local enable_pack = check_enable_pack()
 
-function enable_pack_framework(state)
+function enable_packfile(state)
 	if state then
 		enable_pack = state
 	end

@@ -1,6 +1,7 @@
-local json = require 'cjson'
+local json = require 'cjson.safe'
 local proto = require 'debugger.protocol'
 local ev = require 'debugger.event'
+local thread = require 'thread'
 
 local mgr = {}
 local network
@@ -9,6 +10,15 @@ local state = 'birth'
 local stat = {}
 local queue = {}
 local exit = false
+
+local workers_mt = {}
+function workers_mt:__index(id)
+    assert(type(id) == "number")
+    local c = assert(thread.channel("DbgWorker" .. id))
+    self[id] = c
+    return c
+end
+local workers = setmetatable({}, workers_mt)
 
 local function event_in(data)
     local msg = proto.recv(data, stat)
@@ -51,40 +61,39 @@ function mgr.sendToClient(pkg)
 end
 
 function mgr.sendToWorker(w, pkg)
-    return masterThread:send(w, assert(json.encode(pkg)))
+    return workers[w]:push(assert(json.encode(pkg)))
 end
 
 function mgr.broadcastToWorker(pkg)
     local msg = assert(json.encode(pkg))
-    for w in masterThread:foreach() do
-        masterThread:send(w, msg)
+    for _, channel in pairs(workers) do
+        channel:push(msg)
     end
 end
 
 function mgr.threads()
     local t = {}
-    for w in masterThread:foreach() do
+    for w in pairs(workers) do
         t[#t + 1] = w
     end
     return t
 end
 
 function mgr.hasThread(w)
-    return masterThread:exists(w)
+    return rawget(workers, w) ~= nil
 end
 
 function mgr.update()
     local threads = require 'debugger.backend.master.threads'
-    for w in masterThread:foreach(true) do
-        while true do
-            local msg = masterThread:recv(w)
-            if not msg then
-                break
-            end
-            local pkg = assert(json.decode(msg))
-            if threads[pkg.cmd] then
-                threads[pkg.cmd](w, pkg)
-            end
+    while true do
+        local ok, w, msg = masterThread:pop()
+        if not ok then
+            break
+        end
+        local _ = workers[w]
+        local pkg = assert(json.decode(msg))
+        if threads[pkg.cmd] then
+            threads[pkg.cmd](w, pkg)
         end
     end
 end

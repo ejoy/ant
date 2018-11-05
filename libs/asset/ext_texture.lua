@@ -5,8 +5,10 @@ local rawtable = require "rawtable"
 local bgfx = require "bgfx"
 local path = require "filesystem.path"
 
+local vfsutil = require "vfs.util"
+
 local function texture_load(filename, info)
-	local f = assert(io.open(filename, "rb"))
+	local f = assert(vfsutil.open(filename, "rb"))
 	if f == nil then
 		error(string.format("load texture file failed, filename : %s", filename))
 	end

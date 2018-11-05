@@ -15,6 +15,7 @@ local vfsrepo = require "vfs.repo"
 local fs = require "filesystem"
 
 local home = fs.personaldir() .. "/testrepo"
+fs.mkdir(home)
 local cwd = fs.currentdir()
 
 vfsrepo.init { home, libs = cwd .. "/libs", bin = cwd .."/bin" , ["libs/c"] = cwd .. "/clibs" }
@@ -27,7 +28,7 @@ repo:build()
 
 print("libs path = ", repo:realpath "libs")
 
-local localrepo = require "vfs.local"
+local localrepo = require "vfs.vfs"
 assert(localrepo.open(home))
 
 local function list_repo()

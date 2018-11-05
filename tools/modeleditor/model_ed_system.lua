@@ -96,19 +96,7 @@ local function load_mesh_assetinfo(skinning_mesh_comp)
 	}
 end
 
-local smaplemaerial = "mem://sample.material"
-fu.write_to_file(smaplemaerial, [[
-	shader = {
-		vs = "mesh_skin/vs_color_lighting",
-		fs = "mesh_skin/fs_color_lighting",
-	}
-
-	state = "default.state"
-
-	properties = {
-
-	}
-]])
+local smaplemaerial = "skin_model_sample.material"
 
 local sample_obj_user_idx = 1
 local plane_obj_user_idx = 2
@@ -300,8 +288,8 @@ local function init_control(ms)
 		check_create_sample_entity(skepath_ctrl, anipath_ctrl, self)
 	end
 
-	skepath_ctrl.VALUE=fu.write_to_file("mem://ske.ske", [[path="meshes/skeleton/skeleton"]])
-	anipath_ctrl.VALUE=fu.write_to_file("mem://ani.ani", [[path="meshes/animation/animation_base"]])	
+	skepath_ctrl.VALUE=fu.write_to_file("cache/ske.ske", [[path="meshes/skeleton/skeleton"]])
+	anipath_ctrl.VALUE=fu.write_to_file("cache/ani.ani", [[path="meshes/animation/animation_base"]])
 	meshpath_ctrl.VALUE = "meshes/mesh.ozz"
 	check_create_sample_entity(skepath_ctrl, anipath_ctrl, meshpath_ctrl)
 

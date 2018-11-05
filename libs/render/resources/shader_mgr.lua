@@ -3,14 +3,12 @@ local log = log and log(...) or print
 
 local bgfx = require "bgfx"
 
-local toolset = require "editor.toolset"
 local path = require "filesystem.path"
 local assetmgr = require "asset"
-local fs = require "filesystem"
-local fu = require "filesystem.util"
-
 local baselib = require "bgfx.baselib"
 local rhwi = require "render.hardware_interface"
+
+local vfsutil = require "vfs.util"
 
 local alluniforms = {}
 
@@ -69,7 +67,7 @@ end
 
 local function load_shader(name)
 	local filename = get_full_filename(name)
-	local f = assert(io.open(assert(filename), "rb"))
+	local f = assert(vfsutil.open(assert(filename), "rb"))
 	local data = f:read "a"
 	f:close()
 	local h = bgfx.create_shader(data)
@@ -110,8 +108,7 @@ end
 function shader_mgr.programLoad(vs,fs, uniform)
     if uniform then
         local prog = programLoadEx(vs,fs, uniform)
-        if prog then
-            print("------- load shader  ",vs,fs,unifrom)
+        if prog then            
             for k, v in pairs(uniform) do
                 local old_u = alluniforms[k]
                 if old_u and old_u.type ~= v.type and old_u.num ~= v.num then
@@ -126,9 +123,7 @@ function shader_mgr.programLoad(vs,fs, uniform)
         return prog
     else
         local vsid = load_shader(vs)
-        local fsid = fs and load_shader(fs)  
-        print(" load vs -------",vs,vsid)      
-        print(" load fs -------",fs,fsid)
+        local fsid = fs and load_shader(fs)          
         return bgfx.create_program(vsid, fsid, true)
     end
 end

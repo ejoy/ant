@@ -1,6 +1,5 @@
 local rdebug = require 'remotedebug'
-local cdebug = require 'debugger.backend'
-local json = require 'cjson'
+local json = require 'cjson.safe'
 local variables = require 'debugger.backend.worker.variables'
 local source = require 'debugger.backend.worker.source'
 local breakpoint = require 'debugger.backend.worker.breakpoint'
@@ -8,6 +7,7 @@ local evaluate = require 'debugger.backend.worker.evaluate'
 local traceback = require 'debugger.backend.worker.traceback'
 local ev = require 'debugger.event'
 local hookmgr = require 'debugger.hookmgr'
+local thread = require 'thread'
 
 local initialized = false
 local info = {}
@@ -19,12 +19,14 @@ local exceptionTrace = ''
 
 local CMD = {}
 
-local workerThread = cdebug.start 'worker'
+thread.newchannel ('DbgWorker' .. thread.id)
+local masterThread = thread.channel 'DbgMaster'
+local workerThread = thread.channel ('DbgWorker' .. thread.id)
 
 local function workerThreadUpdate()
     while true do
-        local msg = workerThread:recv()
-        if not msg then
+        local ok, msg = workerThread:pop()
+        if not ok then
             break
         end
         local pkg = assert(json.decode(msg))
@@ -35,7 +37,7 @@ local function workerThreadUpdate()
 end
 
 local function sendToMaster(msg)
-    workerThread:send(assert(json.encode(msg)))
+	masterThread:push(thread.id, assert(json.encode(msg)))
 end
 
 ev.on('breakpoint', function(reason, bp)
@@ -127,7 +129,7 @@ function CMD.stackTrace(pkg)
         if info.what == 'C' then
             res[#res + 1] = {
                 id = depth,
-                name = info.what == 'main' and "[main chunk]" or info.name,
+                name = info.what == 'main' and '[main chunk]' or info.name,
                 line = 0,
                 column = 0,
                 presentationHint = 'label',
@@ -137,7 +139,7 @@ function CMD.stackTrace(pkg)
             if source.valid(src) then
                 res[#res + 1] = {
                     id = depth,
-                    name = info.what == 'main' and "[main chunk]" or info.name,
+                    name = info.what == 'main' and '[main chunk]' or info.name,
                     line = info.currentline,
                     column = 1,
                     source = source.output(src),
@@ -145,7 +147,7 @@ function CMD.stackTrace(pkg)
             elseif curFrame ~= 0 then
                 res[#res + 1] = {
                     id = depth,
-                    name = info.what == 'main' and "[main chunk]" or info.name,
+                    name = info.what == 'main' and '[main chunk]' or info.name,
                     line = info.currentline,
                     column = 1,
                     presentationHint = 'label',
@@ -311,7 +313,7 @@ local function runLoop(reason)
     }
 
     while true do
-        cdebug.sleep(10)
+        thread.sleep(0.01)
         workerThreadUpdate()
         if state ~= 'stopped' then
             break
@@ -474,7 +476,7 @@ end
 function event.wait_client()
     local _, all = getEventArgs(1)
     while not initialized do
-        cdebug.sleep(10)
+        thread.sleep(0.01)
         if all then
             event.update_all()
         else
@@ -501,6 +503,10 @@ hookmgr.sethook(function(name, ...)
     --end, debug.traceback, ...)
     --if not ok then print(e) end
     --return e
+end)
+
+ev.on('terminated', function()
+    hookmgr.step_cancel()
 end)
 
 sendToMaster {

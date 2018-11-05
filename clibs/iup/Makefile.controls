@@ -75,7 +75,7 @@ $(ADDITIONALCONTROLS_OBJ) : $(OCDDIR)/%.o : $(ADDITIONALCONTROLS_DIR)/%.c | $(OC
 	$(CC) -c -o $@ $< $(CFLAGS) -DIUPLUA_USELH $(IUPCONTROLS_INCLUDES) -I$(SRCLUA_DIR) $(LUAINC)
 
 iupluacontrols.dll: $(IUPCONTROLS_OBJ) $(IUPCONTROLS_MATRIXEX_OBJ) $(IUPCONTROLS_MATRIX_OBJ) $(ADDITIONALCONTROLS_OBJ) $(IUPCD_OBJ) $(CD_ALLOBJS)
-	$(CC) --shared -o $@ $^ -Wl,--export-all-symbols -L. -lluaiup $(CD_LIB) $(FREETYPE_LIB) $(ZLIB_LIB) -lgdi32 -lcomdlg32 -lwinspool $(LUALIB)
+	$(CC) --shared -o $@ $^ -Wl,--export-all-symbols -L. -liuplua $(CD_LIB) $(FREETYPE_LIB) $(ZLIB_LIB) -lgdi32 -lcomdlg32 -lwinspool $(LUALIB)
 
 .PHONY : clean
 clean:

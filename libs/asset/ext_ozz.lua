@@ -1,6 +1,10 @@
+local vfs = require "vfs"
+
 return function(filename)
+	local realfilename = vfs.realpath(filename)
+
 	local function find_tagop(readops)
-		local f = io.open(filename, "rb")
+		local f = io.open(realfilename, "rb")
 		
 		--print(endless)
 		for tag, op in pairs(readops) do
@@ -20,15 +24,15 @@ return function(filename)
 	local readops = {
 		["ozz-animation"] = function ()
 			local animodule = require "hierarchy.animation"
-			return animodule.new_ani(filename)
+			return animodule.new_ani(realfilename)
 		end,
 		["ozz-skeleton"] = function()
 			local hiemodule = require "hierarchy"
-			return hiemodule.build(filename)
+			return hiemodule.build(realfilename)
 		end,
 		["ozz-sample-Mesh"] = function()
 			local animodule = require "hierarchy.animation"
-			return animodule.new_ozzmesh(filename)
+			return animodule.new_ozzmesh(realfilename)
 		end,
 	}
 

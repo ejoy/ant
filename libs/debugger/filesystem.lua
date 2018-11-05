@@ -10,6 +10,7 @@ local function split(str)
 end
 
 local function absolute(p)
+    if p:find(':', 1, true) then return p end
     if not fs then return p end
     return fs.absolute(fs.path(p)):string()
 end

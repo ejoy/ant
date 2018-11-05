@@ -12,7 +12,7 @@ end
 
 local vrepo = require "vfs.repo"
 local fs = require "filesystem"
-local lsocket = require "lsocket"
+local network = require "network"
 local protocol = require "protocol"
 
 local repopath = fs.personaldir() .. "/" .. reponame
@@ -20,42 +20,18 @@ LOG ("Open repo : ", repopath)
 local repo = assert(vrepo.new(repopath))
 local roothash = repo:index()
 
-LOG ("Listen :", config.address, config.port)
-local listenfd = assert(lsocket.bind(config.address, config.port))
-local readfds = { listenfd }
-local writefds = {}
-local connection = {}
-
-local client = {} ; client.__index = client
-
-local function new_connection(fd, addr, port)
-	local obj = { _fd = fd , _read = {}, _write = {}, _peer = addr .. ":" .. port }
-	LOG("Accept :", obj._peer)
-	connection[fd] = setmetatable(obj, client)
-	table.insert(readfds, fd)
-end
-
-local function remove_fd(tbl, fd)
-	for i = 1,#tbl do
-		if fd == tbl[i] then
-			table.remove(tbl, i)
-			return
-		end
-	end
-end
+local filelisten = network.listen(config.address, config.port)
+LOG ("Listen :", config.address, config.port, filelisten)
 
 local function response(obj, ...)
-	local pack = protocol.packmessage({...})
-	local sending = obj._write
-	if #sending == 0 then
-		table.insert(writefds, obj._fd)
-	end
-	table.insert(sending, 1, pack)
+	network.send(obj, protocol.packmessage({...}))
 end
 
+local debug = {}
 local message = {}
 
 function message:ROOT()
+	repo:rebuild()
 	local roothash = repo:root()
 	response(self, "ROOT", roothash)
 end
@@ -90,6 +66,15 @@ function message:GET(hash)
 	f:close()
 end
 
+function message:DBG(data)
+	for _, v in pairs(debug) do
+		if v.server == self then
+			network.send(v.client, data)
+			break
+		end
+	end
+end
+
 local output = {}
 local function dispatch_obj(obj)
 	local reading_queue = obj._read
@@ -106,62 +91,60 @@ local function dispatch_obj(obj)
 	end
 end
 
-local function dispatch(fd)
-	-- read from fd
-	local obj = connection[fd]
-	local data, err = fd:recv()
-	if not data then
-		if data then
-			-- socket error
-			LOG("Error :", obj._peer, err)
-		end
-		LOG("Closed :", obj._peer)
-		remove_fd(readfds, fd)
-		remove_fd(writefds, fd)
-	else
-		table.insert(obj._read, data)
-		dispatch_obj(obj)
+local function is_fileserver(obj)
+	return filelisten == obj._ref
+end
+
+local function fileserver_update(obj)
+	dispatch_obj(obj)
+	if obj._status == "CONNECTING" then
+		LOG("New", obj._peer, obj._ref)
+		local fd = network.listen('127.0.0.1', 4278)
+		debug[fd] = { server = obj }
+	elseif obj._status == "CLOSED" then
+		LOG("LOGOFF", obj._peer)
 	end
 end
 
-local function sendout(fd)
-	local obj = connection[fd]
-	local sending = obj._write
+local function is_dbgserver(obj)
+	return debug[obj._ref] ~= nil
+end
 
-	while true do
-		local data = table.remove(sending)
-		if data == nil then
-			break
-		end
-		local nbytes, err = fd:send(data)
-		if nbytes then
-			if nbytes < #data then
-				table.insert(sending, data:sub(nbytes+1))
-				return
-			end
-		else
-			if err then
-				LOG("Error : ", obj._peer, err)
-			end
-			table.insert(sending, data)	-- push back
-			return
-		end
+local function dbgserver_update(obj)
+	local dbg = debug[obj._ref]
+	local data = table.concat(obj._read)
+	obj._read = {}
+	if data ~= "" then
+		response(dbg.server, "DBG", data)
 	end
-
-	remove_fd(writefds, fd)
+	if obj._status == "CONNECTING" then
+		LOG("New", obj._peer, obj._ref)
+		if dbg.client then
+			network.close(obj)
+		else
+			dbg.client = obj
+		end
+	elseif obj._status == "CLOSED" then
+		LOG("LOGOFF", obj._peer)
+		local dbg = debug[obj._ref]
+		if dbg.client == obj then
+			dbg.client = nil
+		end
+		response(dbg.server, "DBG", "") --close DBG
+	end
 end
 
 local function mainloop()
-	local rd, wt = assert(lsocket.select(readfds, writefds))
-	for _, fd in ipairs(rd) do
-		if fd == listenfd then
-			new_connection(fd:accept())
-		else
-			dispatch(fd)
+	local objs = {}
+	if network.dispatch(objs, nil) then
+		for k,obj in ipairs(objs) do
+			objs[k] = nil
+			if is_fileserver(obj) then
+				fileserver_update(obj)
+			elseif is_dbgserver(obj) then
+				dbgserver_update(obj)
+			end
 		end
-	end
-	for _, fd in ipairs(wt) do
-		sendout(fd)
 	end
 end
 

@@ -1,8 +1,9 @@
 dofile "libs/init.lua"
 
+require "iuplua"
 local redirect = require "filesystem.redirect"
 local elog = require "editor.log"
-local tree = require "editor.tree"
+local tree = require "editor.controls.tree"
 
 local t = tree.new()
 

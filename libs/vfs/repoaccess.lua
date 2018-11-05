@@ -38,8 +38,8 @@ end
 
 function access.realpath(repo, pathname)
 	pathname = pathname:match "^/?(.-)/?$"
-	local mountname = repo._mountname
-	for _, mpath in ipairs(repo._mountname) do
+	local mountnames = repo._mountname
+	for _, mpath in ipairs(mountnames) do
 		if pathname == mpath then
 			return repo._mountpoint[mpath]
 		end
@@ -48,7 +48,7 @@ function access.realpath(repo, pathname)
 			return repo._mountpoint[mpath] .. "/" .. pathname:sub(n+1)
 		end
 	end
-	return repo._root .. pathname
+	return repo._root .. "/" .. pathname
 end
 
 function access.list_files(repo, filepath)

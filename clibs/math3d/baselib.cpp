@@ -332,8 +332,7 @@ pull_frustum_planes(lua_State *L, std::array<glm::vec4, 6> &planes, int index) {
 			pull_table_to_mat(L, 1, matProj);
 		}
 	} else if (type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA) {
-		const float * v = reinterpret_cast<const float*>(lua_touserdata(L, 1));
-		memcpy(&matProj, v, sizeof(matProj));
+		matProj = *(reinterpret_cast<const glm::mat4x4*>(lua_touserdata(L, 1)));
 	}
 
 	extract_planes(planes, matProj, true);

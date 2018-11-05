@@ -14,4 +14,4 @@ SRC :=  $(addprefix $(IMGLIB)/, $(SRC))
 all : iupluaimglib.dll
 
 iupluaimglib.dll :  $(SRC) $(IUPSRC)/srclua5/iuplua_imglib.c
-	$(CC) --shared -o $@ $^ -I$(IMGLIB) -I$(IUPSRC)/include -I$(IUPSRC)/src $(LUAINC) $(LUALIB) -L. -lluaiup
+	$(CC) --shared -o $@ $^ -I$(IMGLIB) -I$(IUPSRC)/include -I$(IUPSRC)/src $(LUAINC) $(LUALIB) -L. -liuplua

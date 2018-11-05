@@ -1,6 +1,5 @@
 
 local lsocket = require 'lsocket'
-local cdebug = require 'debugger.frontend'
 local proto = require 'debugger.protocol'
 local socket = require 'debugger.socket'
 
