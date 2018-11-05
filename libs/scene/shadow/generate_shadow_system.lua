@@ -109,10 +109,10 @@ function shadow_config:init()
     self.depthImpl  = "InvZ"
     self.shadowImpl = "PCF"
 
-    self.debug_drawShadow = true 
+    self.debug_drawShadow = false 
     self.debug_drawLightView = false 
     self.debug_virtualCamera = false
-    self.debug_virtualLight = true 
+    self.debug_virtualLight = false      
     self.debug_drawScene = false        
                                                    -- depth generate method
     self.progShadow   = "packDepth_InvZ_RGBA"      -- inverse z depth method    
@@ -155,17 +155,8 @@ local lightProj = {}
 local frustumCorners = {}
 local mtxCropBias = {}       -- for point lights, do not need this time 
 
-function initMatrices( mtbl,num )
-    for i=1,4 do 
-       table.insert( mtbl, math3d.ref "matrix")
-    end 
-end 
--- for cascade light frustum 
-initMatrices( lightView,4)
-initMatrices( lightProj,4)
-
 -- uniforms --
--- define all vars and  relative uniforms
+-- define all vars  and relative uniforms
 -- 应该从 shadowmap material 材质创建 uniforms,实现可配置化
 local uniforms = {}
 local function uniform_def(name, t )
@@ -179,6 +170,10 @@ end
 local function var_set(name,...)
     stack(uniforms[name],{...},"=")
 end 
+local function var_undef(name)
+    math3d.unref( uniforms[name] )
+end 
+
 
 local function init_uniforms()
 
@@ -203,42 +198,12 @@ local function init_uniforms()
 
     uniforms.csmFarDistances = { 30,90,180,1000 }
 
-    uniforms.activeLight = false                        -- current active light 
+    uniforms.activeLight = false                       -- current active light 
 
-    -- var_def(uniforms,"params0",1,1,0,0)                 -- ambientPass,lightingPass not used now 
-    -- var_def(uniforms,"params1",0.003,0,0.5,1)           -- bias,offset, shadowMapParam0，shadowMapParam1
-    -- var_def(uniforms,"params2",1,1,1/SHADOWMAP_SIZE,0)  -- depthPow,SmCoverage,smTexelSize
-    -- var_def(uniforms,"csmFarDistances",30,90,180,1000)  -- csm split distances
-
-    -- uniform itself 
-    -- uniform_def "u_params0"
-    -- uniform_def "u_params1"
-    -- uniform_def "u_params2"
-    -- uniform_def "u_color"
-    -- uniform_def "u_smSamplingParams"
-
-    -- csm relative 
-    -- uniform_def "u_csmFarDistances"
-    -- uniform_def ("u_lightMtx","m4")
-    -- uniform_def ("u_shadowMapMtx0","m4")
-    -- uniform_def ("u_shadowMapMtx1","m4")
-    -- uniform_def ("u_shadowMapMtx2","m4")
-    -- uniform_def ("u_shadowMapMtx3","m4")
-
-    -- uniform_def ("u_lightPosition")
-    -- uniform_def ("u_lightDirection")
-
-    -- debug bounds colors
-	-- var_def(uniforms,"debugGreen", 0, -0.57735026, 0.81649661)
-	-- var_def(uniforms,"debugYellow", 0, -0.57735026, -0.81649661)
-	-- var_def(uniforms,"debugBlue", -0.81649661, 0.57735026, 0)
-	-- var_def(uniforms,"debugRed", 0.81649661, 0.57735026, 0)
-
-    -- uniform_def ("u_debugGreen")
-    -- uniform_def ("u_debugYellow")
-    -- uniform_def ("u_debugBlue")
-    -- uniform_def ("u_debugRed")
-
+    -- def(uniforms,"params0",1,1,0,0)                 -- ambientPass,lightingPass not used now 
+    -- def(uniforms,"params1",0.003,0,0.5,1)           -- bias,offset, shadowMapParam0，shadowMapParam1
+    -- def(uniforms,"params2",1,1,1/SHADOWMAP_SIZE,0)  -- depthPow,SmCoverage,smTexelSize
+    -- def(uniforms,"csmFarDistances",30,90,180,1000)  -- csm split distances
 end 
 
 local function screenSpaceQuad( textureWidth,textureHeight, originBottomLeft)
@@ -321,7 +286,7 @@ function  shadow_maker:init( shadow_maker_entity )
     -- ctx.shadowMapTexelSize -- texel size 
 
     -- light shadow matrices
-    initMatrices(ctx.shadowMapMtx,4)
+    -- initMatrices(ctx.shadowMapMtx,4)
     uniforms.shadowMapMtx0 = ctx.shadowMapMtx[1]
     uniforms.shadowMapMtx1 = ctx.shadowMapMtx[2]
     uniforms.shadowMapMtx2 = ctx.shadowMapMtx[3]
@@ -417,10 +382,20 @@ local function worldSpaceFrustumCorners( corners, near, far, projW, projH, invVi
     
     local numCorners = 8
 
+    --local temp = {}  -- opt 
     local function make_vertex(idx,w,h,d)
-        local vec = math3d.ref "vector"   -- ?  内存是否可以自动释放，当不再引用时 ?
-        stack(vec,{w,h,d,1},"=")          --    已查阅源代码，是一个可以自动 gc 的 userdata 
-        tmp_c[idx] = vec 
+        -- ref mode 
+        -- local vec  = math3d.ref "vector"        -- ? ref  内存是否可以自动释放，当不再引用时 ? 
+        -- stack(vec,{w,h,d,1},"=")                --  已查阅源代码，是一个可以自动 gc 的 userdata,但内部idx不释放则会一直存在并增加
+                                                   --  ref mark 没释放连续使用是危险的,可使用 unref, vec(nil) 两种方法释放
+        -- temp[1] = w                             --  不建议使用 ref，若用必须知道ref/unref 配对释放 index
+        -- temp[2] = h
+        -- temp[3] = d
+        -- temp[4] = 1
+        -- local vec = stack (temp,"P")
+
+        local vec = stack( {w,h,d,1},"P" )         -- remommend，temporal index 
+        tmp_c[idx] = vec                        
     end 
 
     make_vertex(1,-nw, nh, near)
@@ -436,11 +411,16 @@ local function worldSpaceFrustumCorners( corners, near, far, projW, projH, invVi
     -- convert to world space 
     for i= 1,numCorners do 
         local t_vec = stack(tmp_c[i],invViewMatrix,"*P")           
-        local t = stack(t_vec,"T")                                 
-        local vec = math3d.ref "vector"
-        stack(vec,{t[1],t[2],t[3],t[4]},"=")                       
-        corners[i] = vec 
+        corners[i] = t_vec
+        --// local t = stack(t_vec,"T")                                 
+        --// local vec = math3d.ref "vector"
+        --// stack(vec,{t[1],t[2],t[3],t[4]},"=")     -- debug view                     
+        --// corners[i] = vec 
+        -- tmp_c[i](nil)                            --  unref
+        -- ref mode
+        -- math3d.unref( tmp_c[i] )                    --  or assign(nil) it's work
     end 
+    temp_c = nil 
 end 
 
 local function computeViewSpaceComponents(light,mtx)
@@ -537,6 +517,9 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
     local d_light = world:first_entity("directional_light")
     --stack(ctx.directionLight.position,d_light.position,"=")
     --stack(ctx.directionLight.position_ViewSpace,d_light.position,"=")
+    local d_light_dir_p = stack(d_light.rotation,"diP")
+    local d_light_dir = stack(d_light_dir_p,"T")
+
 
     -- main camera entity, get main camera's position,direction
     local camera = world:first_entity("main_camera")
@@ -544,7 +527,6 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
     local camera_view, camera_proj = math_util.view_proj_matrix( ms, camera )
     
     -- 测试指定一个相机位置
-    config.debug_virtualCamera = false                                          
     if config.debug_virtualCamera  then 
         camera_view, camera_proj = debug_use_virtual_camera()
     end 
@@ -566,25 +548,30 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
         numSplits = config.numSplits
     end     
 
-
     local mtx_CameraViewInv = stack(camera_view,"iP")
 
-    -- h = false => 0,1; 
-    -- local mtxProj  = stack( { type = "ortho", l=1, r=-1, b=1, t=-1, n= config.near  , f= config.far , h = false    },"P")
-    -- h = true  => -1,1 
-    -- 当前使用的
+    -- h = false => 0,1; -- h = true  => -1,1 
+    -- 原来使用的
     -- local mtxProj  = stack( { type = "ortho", l=1, r=-1, b=1, t=-1, n= -config.far  , f= config.far ,h = false     },"P") -- true 距离较远，精度较低
     -- 转换成新的API
-    local mtxProj = stack({type="mat", l=1, r=-1, t=-1, b=1, n=-config.far, f= config.far, ortho=true }, "P")	-- make a ortho mat
+    local mtxProj = stack({type="mat", l=1, r=-1, t=-1, b=1, n=-config.far, f= config.far, ortho = true }, "P")	-- make a ortho mat
     if config.lightType == "DirectionLight" then 
-        -- get position from direction light
         local light_eye = { 100,100,100,1}
         local light_at  = { 0,0,0,1}  
-        config.debug_virtualLight = false     
         if config.debug_virtualLight then 
-            light_eye , light_at = debug_use_virtual_light( true  ,100  )
+            light_eye , light_at = debug_use_virtual_light( true  ,200  )
+            d_light_dir[1] = light_at[1] - light_eye[1]
+            d_light_dir[2] = light_at[2] - light_eye[2]
+            d_light_dir[3] = light_at[3] - light_eye[3]
+            local rot = stack(d_light_dir,"DP")
+            --local t = stack(rot,"T")
+            --print(t[1],t[2],t[3],t[4])
+            stack(d_light.rotation,rot,"=")
         else
             -- get from directinal light entity 
+            light_eye[1] = light_at[1] + d_light_dir[1]*100
+            light_eye[2] = light_at[2] + d_light_dir[2]*100
+            light_eye[3] = light_at[3] + d_light_dir[3]*100
             -- position,direction etc  
         end 
 
@@ -594,12 +581,7 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
         local splitSlices = splitFrustum( numSplits ,
                                           config.near,
                                           config.far,
-                                          config.splitDistribution )  
-
-        -- make userdata parameters for csm far distances                                            
-        -- will be set to uniforms next frame 
-        -- var_set("csmFarDistances",splitSlices[2],splitSlices[4],splitSlices[6],splitSlices[8])
-        
+                                          config.splitDistribution )          
         -- make frustum corners
         local numCorners = 8
         local nn = -1
@@ -643,11 +625,10 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
             -- max_proj[1] = max_proj[1]-qx 
             -- max_proj[2] = max_proj[2]-qy 
 
+            -- local scalez  = 1/(max_proj[3] - max_proj[3]);  -- could be work
+            -- local offsetz = min_proj[3]*scalez; 
             local scalex = 2.0/( max_proj[1] - min_proj[1] )
-            local scaley = 2.0/( max_proj[2] - min_proj[2] )
-            
-            local scalez  = 1/(max_proj[3] - max_proj[3]);  -- could be work
-            local offsetz = min_proj[3]*scalez; 
+            local scaley = 2.0/( max_proj[2] - min_proj[2] )           
 
             if config.stabilize then 
                 local quantizer = config.shadowMapSize   
@@ -673,7 +654,7 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
 
             lightProj[i] = stack(  mtxCrop,mtxProj, "*P")   
 
-            -- 替换合适算法可以使得旋转也稳定 
+            -- 替换合适算法或可以使得旋转也稳定 
             -- 另一种方案 
             -- local lightProjection = stack({ type = "ortho",
             --                                 l = min_proj[1],r= max_proj[1],
@@ -685,7 +666,11 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
 
     ----------------------------------------------------------
     -- reset render shadowmap targets 
-    for  i = 1 , VIEWID_DRAWSCENE do
+    for  i = 1 , VIEWID_SHADOW_END do
+        bgfx.set_view_frame_buffer(i)
+    end 
+
+    for  i = VIEWID_DRAWSCENE , VIEWID_DRAWDEPTH_END do
         bgfx.set_view_frame_buffer(i)
     end 
 
@@ -701,7 +686,7 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
         bgfx.set_view_transform( VIEWID_SHADOW_START+1, lightViewPtr , ms(lightProj[2],"m") )
         bgfx.set_view_transform( VIEWID_SHADOW_START+2, lightViewPtr , ms(lightProj[3],"m") )
         bgfx.set_view_transform( VIEWID_SHADOW_START+3, lightViewPtr , ms(lightProj[4],"m") )
-        -- -- shadow_rt.s_rtShadowMap ,存放在 component 更合适,
+
         bgfx.set_view_frame_buffer( VIEWID_SHADOW_START+0, ctx.s_rtShadowMap[1])
         bgfx.set_view_frame_buffer( VIEWID_SHADOW_START+1, ctx.s_rtShadowMap[2])
         bgfx.set_view_frame_buffer( VIEWID_SHADOW_START+2, ctx.s_rtShadowMap[3])
@@ -760,8 +745,6 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
     for i = 1,numSplits do 
         local mtxTemp = stack( lightProj[i],mtxBias,"*P")
         ctx.shadowMapMtx[i] = stack(lightView[1],mtxTemp,"*m")
-        -- local mtxMat = stack(lightView[1],mtxTemp,"*P")
-        -- stack(ctx.shadowMapMtx[i],mtxMat,"=")
         -- ctx & comp_rt references 
         shadow.shadowMapMtx[i] = ctx.shadowMapMtx[i]
     end  
@@ -777,7 +760,6 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
     uniforms.s_shadowMap3 = bgfx.get_texture( ctx.s_rtShadowMap[4] )
 
     -- draw depth texture 
-    config.debug_drawShadow = true   
     if config.debug_drawShadow then 
         -- local screenProj = stack( { type = "ortho",l=0, r=1, b=1, t=0, n=0,f=100}, "m")
         -- convert to new api 
@@ -937,9 +919,9 @@ function shadow_maker:render_debug(shadow_entity,select_filter)
     view_id = VIEWID_DRAWSCENE 
     bgfx.touch( view_id )
 
-    for _, mq in ipairs( meshes ) do                 -- mesh queue 
+    for _, mq in ipairs( meshes ) do                  -- mesh queue 
         bgfx.set_view_mode(view_id, mq.mode)
-        for _,prim in ipairs( mq.result) do          -- each single mesh
+        for _,prim in ipairs( mq.result) do           -- each single mesh
         local srt = prim.srt
         local mat = stack({ type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
         render_util.draw_primitive( view_id, prim, mat)        

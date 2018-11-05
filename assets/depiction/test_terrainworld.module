@@ -1,0 +1,7 @@
+modules = {	
+	-- for test
+	"libs/render/add_entity_system.lua",
+	-- for terrain 
+	"libs/scene/terrain/terrain.lua",
+
+}

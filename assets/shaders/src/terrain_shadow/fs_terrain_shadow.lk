@@ -1,0 +1,1 @@
+shader_src = 'shaders/src/terrain_shadow/fs_terrain_shadow.sc'
