@@ -22,10 +22,23 @@ function util.attributes(filename, which)
 end
 
 function util.convert_to_mount_path(p, mountpath)	
-	local realpath = vfs.realpath(mountpath)
-	realpath = realpath:gsub('\\', '/')
+	local config = require "common.config"
+	
+	local mount_realpath = vfs.realpath(mountpath):gsub('\\', '/')
 	local p0 = p:gsub('\\', '/')
-	return p0:gsub(realpath, mountpath)
+	
+	local platform = config.platform()
+	if platform == "Windows" then
+		local realpath_lower = mount_realpath:lower()
+		local p0_lower = p0:lower()
+		local pos = p0_lower:find(realpath_lower) 
+		if pos then
+			return mountpath .. p0:sub(#realpath_lower + 1)
+		end
+	else
+		return p0:gsub(mount_realpath, mountpath)
+	end
+	
 end
 
 function util.file_is_newer(check, base)
