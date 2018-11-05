@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <new>
 #include <memory>
+#include "event_free.h"
 
 static int HOOK_MGR = 0;
 static int HOOK_CALLBACK = 0;
@@ -62,8 +63,7 @@ struct hookmgr {
     int    break_mask = 0;
 
     size_t break_hash(Proto* p) {
-        uintptr_t h = uintptr_t(p) ^ uintptr_t(p->code);
-        return ((uintptr_t(h) >> 5) ^ uintptr_t(h)) % BPMAP_SIZE;
+        return uintptr_t(p) % BPMAP_SIZE;
     }
     void break_add(lua_State* hL, Proto* p) {
         int key = break_hash(p);
@@ -80,6 +80,13 @@ struct hookmgr {
         if (break_map[key] != BP::Ignore) {
             break_map[key] = BP::Ignore;
             break_proto[key] = p;
+        }
+    }
+    void break_freeobj(Proto* p) {
+        int key = break_hash(p);
+        if (break_proto[key] == p) {
+            break_map[key] = BP::None;
+            break_proto[key] = 0;
         }
     }
     void break_open(lua_State* hL, lua_State* cL) {
@@ -291,24 +298,32 @@ struct hookmgr {
     void setcoroutine(lua_State* hL) {
         updatehookmask(hL);
     }
-    static hookmgr* get_self(lua_State* L, int idx) {
-        return (hookmgr*)lua_touserdata(L, idx);
+    void start(lua_State* hL) {
+        thunk_bind((intptr_t)hL, (intptr_t)this);
+        event_free::create(hL, lua_freef, this);
+    }
+    static hookmgr* get_self(lua_State* L) {
+        return (hookmgr*)lua_touserdata(L, lua_upvalueindex(1));
     }
     static void hook_callback(hookmgr* mgr, lua_State* hL, lua_Debug* ar) {
         mgr->hook(hL, ar);
     }
+    static void lua_freef(void* mgr, void* ptr) {
+        ((hookmgr*)mgr)->break_freeobj((Proto*)ptr);
+    }
 };
 
-static int start(lua_State* cL) {
-    DEBUG_HOST = checklightudata<int>(cL, 1);
-    thunk_bind((intptr_t)get_host(cL), (intptr_t)hookmgr::get_self(cL, lua_upvalueindex(1)));
+static int sethook(lua_State* L) {
+    DEBUG_HOST = checklightudata<int>(L, 1);
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+    lua_settop(L, 2);
+    hookmgr::get_self(L)->start(get_host(L));
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &HOOK_CALLBACK);
     return 0;
 }
 
-static int sethook(lua_State* L) {
-    luaL_checktype(L, 1, LUA_TFUNCTION);
-    lua_settop(L, 1);
-    lua_rawsetp(L, LUA_REGISTRYINDEX, &HOOK_CALLBACK);
+static int setcoroutine(lua_State* L) {
+    hookmgr::get_self(L)->setcoroutine(checklightudata<lua_State>(L, 1));
     return 0;
 }
 
@@ -341,59 +356,50 @@ static int stacklevel(lua_State* L) {
     return 1;
 }
 
-#define hookmgr_s() (*hookmgr::get_self(L, lua_upvalueindex(1)))
-
-static int setcoroutine(lua_State* L) {
-    hookmgr_s().setcoroutine(checklightudata<lua_State>(L, 1));
-    return 0;
-}
-
 static int break_add(lua_State* L) {
-    hookmgr_s().break_add(get_host(L), checklightudata<Proto>(L, 1));
+    hookmgr::get_self(L)->break_add(get_host(L), checklightudata<Proto>(L, 1));
     return 0;
 }
 
 static int break_del(lua_State* L) {
-    hookmgr_s().break_del(get_host(L), checklightudata<Proto>(L, 1));
+    hookmgr::get_self(L)->break_del(get_host(L), checklightudata<Proto>(L, 1));
     return 0;
 }
 
 static int break_open(lua_State* L) {
-    hookmgr_s().break_open(get_host(L), L);
+    hookmgr::get_self(L)->break_open(get_host(L), L);
     return 0;
 }
 
 static int break_close(lua_State* L) {
-    hookmgr_s().break_close(get_host(L));
+    hookmgr::get_self(L)->break_close(get_host(L));
     return 0;
 }
 
 static int break_closeline(lua_State* L) {
-    hookmgr_s().break_closeline(get_host(L));
+    hookmgr::get_self(L)->break_closeline(get_host(L));
     return 0;
 }
 
 static int step_in(lua_State* L) {
-    hookmgr_s().step_in(get_host(L));
+    hookmgr::get_self(L)->step_in(get_host(L));
     return 0;
 }
 
 static int step_out(lua_State* L) {
-    hookmgr_s().step_out(get_host(L));
+    hookmgr::get_self(L)->step_out(get_host(L));
     return 0;
 }
 
 static int step_over(lua_State* L) {
-    hookmgr_s().step_over(get_host(L));
+    hookmgr::get_self(L)->step_over(get_host(L));
     return 0;
 }
 
 static int step_cancel(lua_State* L) {
-    hookmgr_s().step_cancel(get_host(L));
+    hookmgr::get_self(L)->step_cancel(get_host(L));
     return 0;
 }
-
-#undef hookmgr_s
 
 extern "C" 
 #if defined(_WIN32)
@@ -410,11 +416,10 @@ int luaopen_debugger_hookmgr(lua_State* L) {
     }
 
     static luaL_Reg lib[] = {
-        { "start", start },
         { "sethook", sethook },
+        { "setcoroutine", setcoroutine },
         { "activeline", activeline },
         { "stacklevel", stacklevel },
-        { "setcoroutine", setcoroutine },
         { "break_add", break_add },
         { "break_del", break_del },
         { "break_open", break_open },

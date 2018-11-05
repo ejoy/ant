@@ -494,8 +494,7 @@ rdebug.sethook(function(name, line)
     --if not ok then print(e) end
 end)
 
-hookmgr.start(rdebug.gethost())
-hookmgr.sethook(function(name, ...)
+hookmgr.sethook(rdebug.gethost(), function(name, ...)
     --local ok, e = xpcall(function(...)
         if hook[name] then
             return hook[name](...)
