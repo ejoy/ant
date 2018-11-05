@@ -150,9 +150,12 @@ blob_alloc(struct blob *B, int version) {
 		B->buffer = malloc(B->size * B->cap);
 		memcpy(B->buffer, p->page, B->size * cap);
 		B->s = realloc(B->s, B->cap * sizeof(*B->s));
-
+		static int alloc_count = 0;
+		alloc_count ++;
 		init_blob_slots(B, cap, B->cap);
+		printf("...... alloc new blob %d,s = %d,c = %d, freeslot = %d .......\n",alloc_count,B->size,B->cap,B->freeslot);
 	}
+	//printf("freeslot = %d \n",B->freeslot);
 	int ret = SLOT_INDEX(B->freeslot);
 	struct slot *s = &B->s[ret];
 	B->freeslot = s->id;	// next free slot
@@ -447,8 +450,10 @@ int64_t
 lastack_mark(struct lastack *LS, int64_t tempid) {
 	int t;
 	float *address = lastack_value(LS, tempid, &t);
-	if (address == NULL)
+	if (address == NULL) {
+		//printf("--- mark address = null ---");
 		return 0;
+	}
 	int id;
 	union stackid sid;
 	sid.s.version = LS->version;
@@ -464,6 +469,7 @@ lastack_mark(struct lastack *LS, int64_t tempid) {
 	}
 	sid.s.id = id;
 	if (sid.s.id != id) {
+		//printf(" --- s.id(%d) != id(%d) --- \n ",sid.s.id,id);
 		return 0;
 	}
 	sid.s.persistent = 1;
