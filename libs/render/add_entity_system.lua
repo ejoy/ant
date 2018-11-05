@@ -43,7 +43,7 @@ update_direction_light_sys.singleton "math_stack"
 
 function update_direction_light_sys:update()
     if true then
-        return
+       return
     end
 
 	local ms = self.math_stack
@@ -66,11 +66,11 @@ function update_direction_light_sys:update()
 	for _, eid in world:each("directional_light") do		
 		local e = world[eid]
 
-		local delta = deltatime_op()
+		local delta = deltatime_op() 
 
 		local rot = ms(e.rotation, "T")
-		rot[1] = rot[1] + delta * angleXpresecond
-		rot[2] = rot[2] + delta * angleYpresecond
+		rot[3] = rot[3] + math.sin(delta) * angleXpresecond *0.1
+		rot[2] = rot[2] + math.cos(delta) * angleYpresecond *0.1
 
 		ms(e.rotation, rot, "=")
 	end
@@ -97,8 +97,9 @@ function add_entity_sys:init()
 		lightcomp.color = {1,1,1,1}
 		lightcomp.intensity = 2.0
 
-		ms(lentity.rotation, {45, -135, 45}, "=")
-		ms(lentity.position, {100, 100, 100}, "=")
+		ms(lentity.rotation, {45, 145, -45}, "=")
+		ms(lentity.position, {200, 200, 200}, "=")
+		
 
 		ms(lentity.scale, {1.1, 1.1, 1.1}, "=")
 
