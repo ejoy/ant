@@ -1,3 +1,4 @@
+--luacheck: globals import
 local require = import and import(...) or require
 
 -- This module can build/rebuild a directory into a repo.
@@ -11,6 +12,7 @@ repo.__index = repo
 local fs = require "filesystem"
 local crypt = require "crypt"
 local access = require "repoaccess"
+local packfile_real = require "packfile.realfile"
 
 local function addslash(name)
 	return (name:gsub("[/\\]?$","/"))
@@ -84,7 +86,10 @@ local function sha1_from_file(filename)
 end
 
 -- map path in repo to realpath (replace mountpoint)
-repo.realpath = access.realpath
+repo.realpath = function(filepath)
+	local rp = access.realpath(filepath)
+	return packfile_real(rp)
+end
 
 -- build cache, cache is a table link list of sha1->{ filelist = ,  filename = , timestamp= , next= }
 -- filepath should be end of / or '' for root
@@ -179,7 +184,8 @@ local function repo_write_cache(self, cache)
 				f:close()
 			end
 			table.sort(ref)
-			local f = assert(io.open(filepath, "wb"))
+
+			f = assert(io.open(filepath, "wb"))
 			f:write(table.concat(ref, "\n"))
 			f:close()
 		end
@@ -193,8 +199,7 @@ local function repo_write_root(self, roothash)
 	if _DEBUG then print("ROOT", roothash) end
 end
 
-function repo:rebuild()
-	local cache = {}
+function repo:rebuild()	
 	self._namecache = {}	-- clear cache
 	return self:build()
 end
@@ -282,13 +287,14 @@ function repo:touch(pathname)
 	until path == nil
 end
 
-function repo:touch_path(pathname)
-	local namecache = self._namecache
+function repo:touch_path(pathname)	
 	if pathname == '' or pathname == '/' then
 		-- clear all
-		namecache = {}
+		self._namecache = {}
 		return
 	end
+
+	local namecache = self._namecache
 	self:touch(pathname)
 	pathname = addslash(pathname)
 	local n = #pathname
@@ -381,7 +387,8 @@ function repo:hash(hash)
 		return filename
 	end
 	local rfilename = filename .. ".ref"
-	local f = io.open(rfilename, "rb")
+
+	f = io.open(rfilename, "rb")
 	if not f then
 		return
 	end

@@ -1,12 +1,9 @@
 local toolset = require "editor.toolset"
 
 local assetmgr = require "asset"
-local fu = require "filesystem.util"
-
+local vfsutil = require "vfs.util"
 local path = require "filesystem.path"
 local shader_mgr = require "render.resources.shader_mgr"
-local winfile = require "winfile"
-local rawopen = winfile.open or io.open
 local vfs = require "vfs"
 
 --local fs =  require "cppfs"
@@ -48,8 +45,8 @@ local function check_compile_shader(srcpath)
 	return outfile
 end
 
-return function (lk, readmode)
-	local rp = fu.convert_to_mount_path(lk, "engine/assets")
+return function (lk)
+	local rp = vfsutil.convert_to_mount_path(lk, "engine/assets")
 	local c = assetmgr.load(rp)
 	local src = assetmgr.find_valid_asset_path(assert(c.shader_src))
 	if src == nil then
@@ -59,10 +56,10 @@ return function (lk, readmode)
 
 	local cache_path = gen_cache_path(src)
 	
-	if fu.file_is_newer(src, cache_path) then
+	if vfsutil.file_is_newer(src, cache_path) then
 		local outfile = check_compile_shader(src)		
 		assert(outfile == cache_path)		
 	end
 
-	return rawopen(cache_path, readmode)
+	return cache_path
 end

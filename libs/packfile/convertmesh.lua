@@ -1,20 +1,16 @@
 local assetmgr = require "asset"
-local fs = require "filesystem"
 local path = require "filesystem.path"
 local fu = require "filesystem.util"
 local vfs = require "vfs"
 local vfsutil = require "vfs.util"
-
-local winfile = require "winfile"
-local rawopen = winfile.open or io.open
 
 local function gen_cache_path(srcpath)
 	local outputfile = path.replace_ext(srcpath, "antmesh")
 	return path.join("cache", outputfile)
 end
 
-return function(lk, readmode)
-	local rp_lk = fu.convert_to_mount_path(lk, "engine/assets")
+return function(lk)
+	local rp_lk = vfsutil.convert_to_mount_path(lk, "engine/assets")
 	local c = assetmgr.load(rp_lk)
 	local meshpath = assetmgr.find_valid_asset_path(c.mesh_src)
 	if not vfsutil.exist(meshpath) then
@@ -38,5 +34,5 @@ return function(lk, readmode)
 		error(string.format("not support convert mesh format : %s, filename is : %s", ext, meshpath))
 	end
 
-	return rawopen(outputfile, readmode)
+	return outputfile
 end

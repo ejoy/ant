@@ -1,5 +1,4 @@
 local ecs = ...
-local world = ecs.world
 local filewatch_system = ecs.system "filewatch_system"
 
 filewatch_system.singleton "vfs_update_component"
@@ -27,8 +26,8 @@ function filewatch_system:update()
             local full_path = path.join("libs", filepath)
 
             print("fw catch", id, type, full_path)
-            local fu = require "filesystem.util"
-            fu.clear_timestamp_cache(full_path)
+            local vfsutil = require "vfs.util"
+            vfsutil.clear_timestamp_cache(full_path)
 
             --self.localcache[full_path] = nil
             self.vfs_update_component.do_update = true
