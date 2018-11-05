@@ -86,9 +86,13 @@ local function sha1_from_file(filename)
 end
 
 -- map path in repo to realpath (replace mountpoint)
-repo.realpath = function(filepath)
+function repo:realpath(filepath)
 	local rp = access.realpath(filepath)
-	return packfile_real(rp)
+	local newrp, newcreated = packfile_real(rp)
+	if newcreated then
+		self:touch(newrp)
+	end
+	return newrp
 end
 
 -- build cache, cache is a table link list of sha1->{ filelist = ,  filename = , timestamp= , next= }
@@ -204,13 +208,15 @@ function repo:rebuild()
 	return self:build()
 end
 
-function repo:build()
+function repo:build()	
 	local cache = {}
 	self._namecache[''] = undef
 	local roothash = repo_build_dir(self, "", cache, self._namecache)
 
 	repo_write_cache(self, cache)
 	repo_write_root(self, roothash)
+
+	self.dirty = nil
 
 	return roothash
 end
@@ -279,6 +285,7 @@ end
 
 -- make file dirty, would build later
 function repo:touch(pathname)
+	self.dirty = true
 	repeat
 		local path = pathname:match "(.*)/"
 		if _DEBUG then print("TOUCH", pathname) end
@@ -288,6 +295,7 @@ function repo:touch(pathname)
 end
 
 function repo:touch_path(pathname)	
+	self.dirty = true
 	if pathname == '' or pathname == '/' then
 		-- clear all
 		self._namecache = {}

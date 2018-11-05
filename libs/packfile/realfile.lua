@@ -55,12 +55,12 @@ local path = require "filesystem.path"
 return function (filepath)
 	assert(path.is_absolute_path(filepath))
 	if path.isdir(filepath) then
-		return filepath
+		return filepath, false
 	end
 
 	local lk_path = filepath .. ".lk"
     if not fs.exist(lk_path) then
-        return filepath
+        return filepath, false
 	end
 
     local packer_path = find_packer(filepath)
@@ -72,9 +72,9 @@ return function (filepath)
 		-- 	return nil, filepath .. ': could not found packer to convert lk path'
 		-- end
 		error(string.format("found lk file %s, but could not find packer", lk_path))
-		return
+		return filepath, false
 	end
 
 	local packer = require(packer_path)
-	return packer(lk_path)
+	return packer(lk_path), true
 end
