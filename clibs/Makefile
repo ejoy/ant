@@ -7,7 +7,7 @@ ALL_LIBS := $(LIBS) lua iup
 
 .PHONY: $(ALL_LIBS) $(foreach v,$(ALL_LIBS),build_$(v) clean_$(v) copy_$(v))
 
-IUPLIBS = luaiup scintilla iupluaimglib iupluacontrols
+IUPLIBS = iuplua scintilla iupluaimglib iupluacontrols
 TARS = $(foreach v,$(LIBS) $(IUPLIBS),$(BIN)/$(v).dll)
 
 #all : $(TARS) $(BIN)/iup.exe $(BIN)/lua53.dll $(BIN)/lua.exe 
