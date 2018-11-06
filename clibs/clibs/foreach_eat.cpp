@@ -30,6 +30,9 @@ public:
 		}
 	}
 	const char* rva_to_addr(DWORD rva) const {
+		if (rva == 0) {
+			return nullptr;
+		}
 		std::array_view<IMAGE_SECTION_HEADER> sections(
 			PIMAGE_SECTION_HEADER(
 				data
@@ -59,7 +62,12 @@ void foreach_eat(const wchar_t* dll, std::function<void(const std::string&)> fn)
 	}
 	PIMAGE_EXPORT_DIRECTORY eat = (PIMAGE_EXPORT_DIRECTORY)r.directory(IMAGE_DIRECTORY_ENTRY_EXPORT);
 	DWORD* names_address = (DWORD*)(r.rva_to_addr(eat->AddressOfNames));
-	for (DWORD i = 0; i < eat->NumberOfNames; ++i) {
-		fn(r.rva_to_addr(names_address[i]));
+	if (names_address) {
+		for (DWORD i = 0; i < eat->NumberOfNames; ++i) {
+			const char* name = r.rva_to_addr(names_address[i]);
+			if (name) {
+				fn(name);
+			}
+		}
 	}
 }
