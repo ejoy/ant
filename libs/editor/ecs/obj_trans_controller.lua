@@ -30,7 +30,7 @@ obj_trans_sys.singleton "object_transform"
 obj_trans_sys.singleton "math_stack"
 obj_trans_sys.singleton "constant"
 obj_trans_sys.singleton "control_state"
-obj_trans_sys.singleton "message_component"
+obj_trans_sys.singleton "message"
 
 obj_trans_sys.depend "constant_init_sys"
 
@@ -256,7 +256,7 @@ local function register_message(msg_comp, ot, ms)
         play_object_transform(ms, ot, deltaX, deltaY)
     end
 
-    local observers = msg_comp.msg_observers
+    local observers = msg_comp.observers
     observers:add(message)
 end
 
@@ -558,7 +558,7 @@ function obj_trans_sys:init()
     ot.selected_eid = nil
     ot.sceneobj_eid = nil
 
-    register_message(self.message_component, ot, ms)
+    register_message(self.message, ot, ms)
 end
 
 -- function obj_trans_sys:update()

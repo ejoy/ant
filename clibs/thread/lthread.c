@@ -236,12 +236,28 @@ thread_luamain(lua_State *L) {
 	return 0;
 }
 
+static int
+msghandler(lua_State *L) {
+	const char *msg = lua_tostring(L, 1);
+	if (msg == NULL) {  /* is error object not a string? */
+		if (luaL_callmeta(L, 1, "__tostring") &&  /* does it have a metamethod */
+			lua_type(L, -1) == LUA_TSTRING)  /* that produces a string? */
+			return 1;  /* that is the message */
+		else
+			msg = lua_pushfstring(L, "(error object is a %s value)",
+								   luaL_typename(L, 1));
+	}
+	luaL_traceback(L, L, msg, 1);  /* append a standard traceback */
+	return 1;  /* return the traceback */
+}
+
 static void *
 thread_main(void *ud) {
 	lua_State *L = luaL_newstate();
+	lua_pushcfunction(L, msghandler);
 	lua_pushcfunction(L, thread_luamain);
 	lua_pushlightuserdata(L, ud);
-	if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+	if (lua_pcall(L, 1, 0, 1) != LUA_OK) {
 		// NOTICE: may memory leak when error (ud may not be free)
 		struct channel * errlog = query_channel(ERRLOG_QUEUE);
 		if (errlog) {

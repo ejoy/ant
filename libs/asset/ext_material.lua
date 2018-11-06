@@ -26,9 +26,18 @@ return function(filename)
 		end
 	end
 	
-	if material_info.surface_type == nil then
-		local ru = require "render.util"
-		material_info.surface_type = ru.default_surface_type()
+	-- surface_type
+	local surface = material_info.surface_type
+	local ru = require "render.util"
+	local def_surface = ru.default_surface_type()
+	if surface == nil then
+		material_info.surface_type = def_surface
+	else
+		for k, v in pairs(def_surface) do
+			if surface[k] == nil then
+				surface[k] = v
+			end
+		end
 	end
 
     return material_info

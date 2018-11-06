@@ -22,7 +22,7 @@ local window = ecs.component "window" {
 	height = 0,
 }
 
-local iup_message = ecs.system "iup_message"
+local iup_message = ecs.system "message_system"
 iup_message.singleton "window"
 
 local message = {}

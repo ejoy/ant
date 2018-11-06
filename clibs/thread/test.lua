@@ -11,7 +11,10 @@ thread.thread ( [[
 	print ("Hello World in thread" , thread.id)
 	local c = thread.channel "channel"
 	c:push(1,2,3)
-	error ("Exit")
+	local function err()
+		error ("Exit")
+	end
+	err()
 ]] , print )
 
 --thread.sleep(1)
