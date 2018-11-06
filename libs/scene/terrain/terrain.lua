@@ -2,13 +2,8 @@ local ecs = ...
 local world = ecs.world
 
 package.path = package.path..';../clibs/terrain/?.lua;./clibs/terrain/?.lua;./test/?.lua;'
-package.path = package.path..";"..package.app_dir.."/clibs/terrain/?.lua;"
+--package.path = package.path..";"..package.app_dir.."/clibs/terrain/?.lua;"
 package.cpath = package.cpath..';../clibs/terrain/?.dll;./clibs/terrain/?.dll;'
-
--- local nk = require "bgfx.nuklear"
--- local nkmsg = require "inputmgr.nuklear"
--- local loadfile = require "tested.loadfile"
--- local ch_charset = require "tested.charset_chinese_range"
 
 local bgfx = require "bgfx"
 local math_util = require "math.util"
@@ -16,22 +11,16 @@ local shaderMgr = require "render.resources.shader_mgr"
 local camera_util = require "render.camera.util"
 local render_cu = require "render.components.util"
 
-local terrainClass = require "terrainClass"
+local terrainClass = require "terrainclass"
 
-local UI_VIEW      = 255
+local UI_VIEW      	 = 255
 local VIEWID_TERRAIN = 100 
 
+local stack = nil 					
 
--- 做成 component 
---local terrain = terrainClass.new()       	-- new terrain instance pvp
---local terrain_chibi = terrainClass.new()    -- chibi 
+local init_ambient = nil
 
-local math3d_stack = nil 					-- math3d.new()
-
-local init_ambient = nil 					-- 
-
-
-local ctx = { stats = {} }
+local ctx = { stats = {} }     -- history debug 
 
 --- ambient utils ---
 local function gen_ambient_light_uniforms( terrain )
@@ -56,7 +45,7 @@ local function gen_lighting_uniforms( terrain )
 	for _,l_eid in world:each("directional_light") do 
 		local dlight = world[l_eid]
 		local l = dlight.light.v 
-		terrain:set_uniform("u_lightDirection", math3d_stack(dlight.rotation, "dim") )
+		terrain:set_uniform("u_lightDirection", stack(dlight.rotation, "dim") )
 		terrain:set_uniform("u_lightIntensity", { l.intensity,0,0,0} )  
 		terrain:set_uniform("u_lightColor",l.color  )
 	end
@@ -144,39 +133,40 @@ local function gen_shadow_uniforms( terrain )
 	update_properties(nil,properties)
 end 
 
-local function update( terrain )
+local function shadow_test()
+end 
 
-	local ms = math3d_stack
+local function update_terrain( terrain )
+
+	local ms = stack
 	if init_ambient == nil  then 
 		init_ambient = "true"
-		--gen_lighting_uniforms( terrain ) 
-		--gen_ambient_light_uniforms( terrain )
+		-- already in system ,bgfx uniform only one copy in memory 
+		-- gen_lighting_uniforms( terrain ) 
+		-- gen_ambient_light_uniforms( terrain )
 	end 
-
-	-- 找到获得 view，proj 的直接方法，不需要这里二次转换
+	-- must do this for dynamic light, if light do not move, could be run only once
+	gen_lighting_uniforms( terrain ) 
+	-- 找到获得 view，proj 的直接方法，不需要这里二次转换? 
 	local camera = world:first_entity("main_camera")
     local camera_view, camera_proj = math_util.view_proj_matrix( ms, camera )
 
-	bgfx.set_view_rect( VIEWID_TERRAIN, 0, 0, ctx.width,ctx.height)
+	--bgfx.set_view_rect( VIEWID_TERRAIN, 0, 0, ctx.width,ctx.height)
 	bgfx.set_view_transform( VIEWID_TERRAIN,ms(camera_view,"m"),ms(camera_proj,"m") )	
 	bgfx.touch( VIEWID_TERRAIN )
 	
-	-- terrain chibi 
-	-- terrain_chibi:render( VIEW_TERRAIN, ctx.width,ctx.height)
-
-	-- terrain pvp 	
-	-- for further anything 
-	-- terrain:update( view ,dir)                        				  
-	terrain:render( VIEWID_TERRAIN, ctx.width,ctx.height,prim_type, gen_shadow_uniforms)   -- "POINT","LINES"  -- for debug 
+	-- for further anything like lod etc...
+	-- terrain:update( view ,dir)        
+	
+	terrain:render( VIEWID_TERRAIN, ctx.width,ctx.height,prim_type, gen_shadow_uniforms )   -- "POINT","LINES"  -- for debug 
+	              	
 end
 
 
-local function init(fbw, fbh, entity )
+local function init_terrain(fbw, fbh, entity )
 
 	ctx.width = fbw
 	ctx.height = fbh
-
-	local program_create_mode = 1
 
 	local terrain_comp = entity.terrain 
 	local pos_comp = entity.position 
@@ -184,28 +174,31 @@ local function init(fbw, fbh, entity )
 	local scl_comp = entity.scale 
 
 	local terrain = terrainClass.new()       	-- new terrain instance pvp
-	terrain_comp.terrain_obj = terrain 
+	terrain_comp.terrain_obj = terrain          -- assign to terrain component 
 
+	local program_create_mode = 1
 	-- load terrain level 
     -- gemotry create mode 
 	terrain:load( terrain_comp.level_name ,   --"assets/build/terrain/pvp1.lvl",
-					{  -- 自定义顶点格式
+					{   -- 自定义顶点格式
 						{ "POSITION", 3, "FLOAT" },
 						{ "TEXCOORD0", 2, "FLOAT" },
 						{ "TEXCOORD1", 2, "FLOAT" },
 						{ "NORMAL", 3, "FLOAT" },
 					}
 				)
-	--]]
+    -- gemotry create mode default 				
 	-- terrain_chibi:load("terrain/chibi16.lvl")
 
 	-- material create mode 
 	if program_create_mode == 1 then 
+		-- mothod 1
 		-- load from mtl setting 
 		terrain:load_material( terrain_comp.level_material) --"assets/build/assetfiles/terrain_shadow.mtl")
 	else 
+		-- mothod 2
 		-- or create manually
-		terrain:load_program("terrain_shadow/vs_terrain_shadow.sc","terrain_shadow/fs_terrain_shadow.sc")
+		terrain:load_program("terrain_shadow/vs_terrain_shadow","terrain_shadow/fs_terrain_shadow")
 		terrain:create_uniform("u_mask","s_maskTexture","i1",1)
 		terrain:create_uniform("u_base","s_baseTexture","i1",0)
 		terrain:create_uniform("u_lightDirection","s_lightDirection","v4")
@@ -219,28 +212,22 @@ local function init(fbw, fbh, entity )
 		terrain:set_uniform("u_showMode",1)  
 	end 
 
-	-- combine into pvp scene 
-	local t = math3d_stack( pos_comp.v,"T")
-	local s = math3d_stack( scl_comp.v,"T")
-	local r = math3d_stack( rot_comp.v,"T")
-	--print("t ",t[1],t[2],t[3],t[4])
+	-- set terrain transform 
+	local t = stack( pos_comp,"T")
+	local s = stack( scl_comp,"T")
+	local r = stack( rot_comp,"T")
 	terrain:set_transform { t = t, r = r, s = s }
-	-- terrain:set_transform { t= {147,0.25,225,1},r= {0,0,0},s={1,1,1,1}}
-	-- tested with c impl 
-	-- terrain:set_transform { t= {0,0,0,1},r= {0,0,0},s={1,1,1,1}}
-
-	-- chibi scene 
-	-- terrain_chibi:load("assets/build/terrain/chibi16.lvl")  	  	    -- 默认顶点格式
-	-- terrain_chibi:load_material("assets/build/terrain/terrain.mtl")  -- 文件加载材质
-	-- terrain_chibi:create_uniform("u_showMode","s_showMode","i1")     -- 可以手工增加uniform，方便测试 
-	-- terrain_chibi:set_uniform("u_showMode",0)   				     	-- 0 = default, 1 = display normal line
-	-- terrain_chibi:set_transform { t= {0,150,0,1},r= {0,0,0},s={1,1,1,1}}
 end
 
+
+
 -- terrain component
---  传递地形关卡文件，材质文件，以及 iv,vb,mb
+--  store terrain level name,material name, and terrain object into component
+--  level name,material name need serialize into scene info file.
 ecs.component "terrain" {
 	path = {
+		-- save level name
+		-- save material name 
 		type = "userdata",
 		default = "",
 		save = function (v, arg)
@@ -271,9 +258,7 @@ ecs.component "terrain" {
 	terrain_obj = false, 
 }
 
-
 -- terrain entity
-
 local function create_terrain_entity( world, name  )
 	local eid = world:new_entity(
 		"terrain",  
@@ -287,37 +272,38 @@ local function create_terrain_entity( world, name  )
 end 
 
 
+
 local terrain_sys = ecs.system "terrain_system"
 terrain_sys.singleton "math_stack"
-terrain_sys.singleton "message_component"
+terrain_sys.singleton "message"
 terrain_sys.depend    "lighting_primitive_filter_system"
 terrain_sys.depend 	  "entity_rendering"
 terrain_sys.dependby  "end_frame"
 
--- ecs 需要增加 componet 从文件中创建加载的流程
--- update 访问 component ,mesh,terrain 可同流程不同结构
 function terrain_sys:init()
 
-	math3d_stack = self.math_stack  
+	stack = self.math_stack  
 
 	local fb = world.args.fb_size
 
+	-- we should read terrain entity'name ,compoent data from scene info file 
+	-- or system find a terrain entity already in entity list 
+	-- sample usage 
 	local tr_ent = create_terrain_entity( world,"pvp")
 	tr_ent.terrain.level_name = "assets/build/terrain/pvp1.lvl"
-	tr_ent.terrain.level_material = "assets/build/assetfiles/terrain_shadow.mtl"
-	-- t= {147,0.25,225,1},r= {0,0,0},s={1,1,1,1}
-	math3d_stack(tr_ent.position.v, {147,0.25,225,1}, "=")
-	math3d_stack(tr_ent.rotation.v, {0, 0, 0,}, "=")
-	math3d_stack(tr_ent.scale.v, {1, 1, 1}, "=")
-	init(fb.w, fb.h, tr_ent )
+	tr_ent.terrain.level_material = "assets/depiction/terrain_shadow.mtl"
+	stack(tr_ent.position, {147,0.25,205,1}, "=")
+	stack(tr_ent.rotation, {0, 0, 0,}, "=")
+	stack(tr_ent.scale, {1, 1, 1}, "=")
+	init_terrain(fb.w, fb.h, tr_ent )
 
 	local chibi_ent = create_terrain_entity( world,"chibi")
 	chibi_ent.terrain.level_name = "assets/build/terrain/chibi16.lvl"
-	chibi_ent.terrain.level_material = "assets/build/assetfiles/terrain_shadow.mtl"
-	math3d_stack(chibi_ent.scale.v, {1, 1, 1}, "=")
-	math3d_stack(chibi_ent.rotation.v, {0, 0, 0,}, "=")
-	math3d_stack(chibi_ent.position.v, {60, 10, 60}, "=")
-	init(fb.w, fb.h, chibi_ent )
+	chibi_ent.terrain.level_material = "assets//depiction/terrain_shadow.mtl"
+	stack(chibi_ent.scale, {1, 1, 1}, "=")
+	stack(chibi_ent.rotation, {0, 0, 0,}, "=")
+	stack(chibi_ent.position, {60, 130, 60}, "=")
+	init_terrain(fb.w, fb.h, chibi_ent )
 end
 
 function terrain_sys:update()
@@ -325,7 +311,7 @@ function terrain_sys:update()
         --if render_cu.is_entity_visible(world[eid]) then       -- vis culling 
 		   local ter_ent = world[eid]
 		   if ter_ent.terrain.terrain_obj then 
-		     update( assert( ter_ent.terrain.terrain_obj) )
+		      update_terrain( assert( ter_ent.terrain.terrain_obj) )
 		   end 
         --end 
     end 

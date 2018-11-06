@@ -28,22 +28,17 @@ ecs.import "render.view_system"
 ecs.import "render.entity_rendering_system"
 ecs.import "scene.hierarchy.hierarchy"
 -- ecs.import "scene.cull_system"
-ecs.import "scene.shadow.generate_shadow_system"
 
-local fs_util = require "filesystem.util"
 local component_util = require "render.components.util"
 local lu = require "render.light.util"
-local mu = require "math.util"
-local bgfx = require "bgfx"
 local assetmgr = require "asset"
-local path = require "filesystem.path"
 
 local update_direction_light_sys = ecs.system "direction_light_system"
 update_direction_light_sys.singleton "math_stack"
 
 function update_direction_light_sys:update()
     if true then
-        return
+       return
     end
 
 	local ms = self.math_stack
@@ -66,11 +61,11 @@ function update_direction_light_sys:update()
 	for _, eid in world:each("directional_light") do		
 		local e = world[eid]
 
-		local delta = deltatime_op()
+		local delta = deltatime_op() 
 
 		local rot = ms(e.rotation, "T")
-		rot[1] = rot[1] + delta * angleXpresecond
-		rot[2] = rot[2] + delta * angleYpresecond
+		rot[3] = rot[3] + math.sin(delta) * angleXpresecond *0.1
+		rot[2] = rot[2] + math.cos(delta) * angleYpresecond *0.1
 
 		ms(e.rotation, rot, "=")
 	end
@@ -82,7 +77,7 @@ add_entity_sys.singleton "math_stack"
 add_entity_sys.singleton "constant"
 
 add_entity_sys.depend "constant_init_sys"
-add_entity_sys.dependby "iup_message"
+add_entity_sys.dependby "message_system"
 
 
 function add_entity_sys:init()
@@ -97,8 +92,9 @@ function add_entity_sys:init()
 		lightcomp.color = {1,1,1,1}
 		lightcomp.intensity = 2.0
 
-		ms(lentity.rotation, {45, -135, 45}, "=")
-		ms(lentity.position, {100, 100, 100}, "=")
+		ms(lentity.rotation, {45, 145, -45}, "=")
+		ms(lentity.position, {200, 200, 200}, "=")
+		
 
 		ms(lentity.scale, {1.1, 1.1, 1.1}, "=")
 

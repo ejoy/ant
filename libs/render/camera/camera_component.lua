@@ -13,13 +13,13 @@ local mu = require "math.util"
 local bgfx = require "bgfx"
 
 -- 找时间统一到 render 中，作为要给独立的 viewid.lua 存放所有指定的 VIEW 
-local VIEWID_MAINCAMERA = 100 
+local VIEWID_MAINCAMERA = 100
 
 ecs.component "main_camera" {}
 
 local camera_init_sys = ecs.system "camera_init"
 camera_init_sys.singleton "math_stack"
-camera_init_sys.singleton "message_component"
+camera_init_sys.singleton "message"
 camera_init_sys.singleton "window"
 
 -- local function update_main_camera_viewrect(w, h)	
@@ -72,7 +72,7 @@ function camera_init_sys:init()
     end
     local fb_size = world.args.fb_size
     update_camera_viewrect(fb_size.w, fb_size.h)
-	self.message_component.msg_observers:add {
+	self.message.observers:add {
 		resize = function(_, w, h) update_camera_viewrect(w, h) end
 	}
 end

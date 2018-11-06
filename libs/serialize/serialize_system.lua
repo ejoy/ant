@@ -79,7 +79,7 @@ end
 
 --- test save&load system, only for test purpose
 local serialize_test_sys = ecs.system "serialize_test_system"
-serialize_test_sys.singleton "message_component"
+serialize_test_sys.singleton "message"
 
 function serialize_test_sys:init()
     local message = {}
@@ -98,5 +98,5 @@ function serialize_test_sys:init()
 
     end
 
-    self.message_component.msg_observers:add(message)
+    self.message.observers:add(message)
 end

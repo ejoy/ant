@@ -37,14 +37,15 @@ local action_type = {
 	FORWARD = false, BACKWARD = false,
 	LEFT = false, RIGHT = false,
 	UPWARD = false, DOWNWARD = false,
+	LEFTROT = false, RIGHTROT = false,
 	ROTX = false, ROTY = false
 }
 local camera_controller_system = ecs.system "camera_controller"
 camera_controller_system.singleton "math_stack"
-camera_controller_system.singleton "message_component"
+camera_controller_system.singleton "message"
 camera_controller_system.singleton "control_state"
 
-camera_controller_system.depend "iup_message"
+camera_controller_system.depend "message_system"
 camera_controller_system.depend "camera_init"
 
 function camera_controller_system:init()
@@ -83,18 +84,19 @@ function camera_controller_system:init()
 		local action_name_mappers = {
 			a = "LEFT", d = "RIGHT",
 			w = "FORWARD", s = "BACKWARD",
-			q = "DOWNWARD", e = "UPWARD",
+			c = "DOWNWARD", f = "UPWARD",
+			q = "LEFTROT", e = "RIGHTROT"
 		}
 
 		local lowerC = c:lower()
 
 		local rightbtn_down = button_status.RIGHT
-		if rightbtn_down then
-			action_type[action_name_mappers[lowerC]] = p
+		if rightbtn_down and action_name_mappers[lowerC] ~= nil then
+			action_type[ action_name_mappers[lowerC] ] = p
 		end
 	end
 
-	self.message_component.msg_observers:add(message)
+	self.message.observers:add(message)
 end
 -- make movement smooth 
 function camera_controller_system:update()
@@ -120,6 +122,12 @@ function camera_controller_system:update()
 		elseif action_type.DOWNWARD then
 			dy = -1
 		end
+
+		if action_type.LEFTROT then 
+			camera_util.rotate(ms, camera, -1 , 0)
+		elseif action_type.RIGHTROT then 
+			camera_util.rotate(ms, camera,  1 , 0)
+		end 
 
 		camera_util.move(ms, camera, dx*deltaTime, dy*deltaTime, dz*deltaTime)
 	end 

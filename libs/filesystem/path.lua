@@ -1,9 +1,6 @@
 local fs = require "filesystem"
-local fu = require "filesystem.util"
-
 local path = {}
 path.__index = path
-
 
 function path.remove_ext(name)
     local path, ext = name:match("(.+)%.([%w_-]+)$")
@@ -68,30 +65,24 @@ function path.is_absolute_path(p)
 		return true
 	end
 
-	if p:find(":", 1, true) then
+	if p:sub(2, 2) == ":" then
 		return true
 	end
 
 	return false
 end
 
-function path.join(...)
-    local function join_ex(tb, p0, ...)
-		if p0 then
-			if p0 ~= "" then
-				local lastchar = p0:sub(#p0)
-				if lastchar == '/' or lastchar == '\\' then
-					p0 = p0:sub(1, #p0 - 1)
-				end
-				table.insert(tb, p0)
-			end
-            join_ex(tb, ...)
-        end
-    end
-
-    local tb = {}
-    join_ex(tb, ...)
-    return table.concat(tb, '/')
+function path.join(p0, ...)    
+	if p0 then
+		if p0 ~= "" then
+			p0 = p0:gsub("(.-)[\\/]?$", "%1")
+		end
+		local rest = path.join(...)
+		if rest then
+			return p0 .. '/' .. rest
+		end		
+	end
+	return p0
 end
 
 function path.trim_slash(fullpath)

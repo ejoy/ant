@@ -8,14 +8,13 @@ ecs.import "inputmgr.message_system"
 
 local point2d = require "math.point2d"
 local bgfx = require "bgfx"
-local ru = require "render.util"
 local mu = require "math.util"
 local asset = require "asset"
 local cu = require "common.util"
 
 local math_baselib = require "math3d.baselib"
 
-local pickup_fb_viewid = 2
+local pickup_fb_viewid = 101
 local pickup_blit_viewid = pickup_fb_viewid + 1
 
 local function packeid_as_rgba(eid)
@@ -126,8 +125,8 @@ pickup_material_sys.depend "final_filter_system"
 pickup_material_sys.dependby "entity_rendering"
 
 function pickup_material_sys:update()
-	for _, eid in world:each("pickup") do		
-		local e = world[eid]	
+	for _, eid in world:each("pickup") do
+		local e = world[eid]
 		local filter = e.primitive_filter
 		if filter then
 			local materials = e.pickup.materials
@@ -154,11 +153,11 @@ local pickup_sys = ecs.system "pickup_system"
 
 pickup_sys.singleton "math_stack"
 pickup_sys.singleton "frame_stat"
-pickup_sys.singleton "message_component"
+pickup_sys.singleton "message"
 
 pickup_sys.singleton "post_end_frame_jobs"
 
-pickup_sys.depend "final_filter_system"
+pickup_sys.depend "entity_rendering"
 
 pickup_sys.dependby "end_frame"
 
@@ -204,63 +203,46 @@ end
 
 function pickup_sys:init()
 	local ms = self.math_stack	
-	local stat = self.frame_stat
-	local post_end_comp = self.post_end_frame_jobs
-	
-	self.message_component.msg_observers:add({
+	local pickup_eid = add_pick_entity(self.math_stack)
+	local entity = world[pickup_eid]
+
+	self.message.observers:add({
 		button = function (_, b, p, x, y)
 			if b == "LEFT" and p then
-				table.insert(post_end_comp.jobs, function ()
-					local pickup_eid = add_pick_entity(self.math_stack)
-					local entity = world[pickup_eid]
-					local pu_comp = entity.pickup
-
-					update_viewinfo(ms, entity, point2d(x, y))			
-
-					if pu_comp.pickco == nil then
-						local pickco = coroutine.create(function ()
-							local reading_frame = readback_render_data(entity)
-							while stat.frame_num ~= reading_frame do
-								coroutine.yield()
-							end
-							
-							local eid = which_entity_hitted(entity)
-							if eid then
-								local name = assert(world[eid]).name.n
-								print("pick entity id : ", eid, ", name : ", name)
-							else
-								print("not found any eid")
-							end
-					
-							pu_comp.last_eid_hit = eid
-							world:change_component(pickup_eid, "pickup")
-							world.notify()
-						end)
-		
-						entity.pickup.pickco = pickco					
-					end
-				end)
-
+				update_viewinfo(ms, entity, point2d(x, y))
+				entity.pickup.ispicking = true
 			end
 		end
 	})
 end
 
 function pickup_sys:update()
-	local remove_pickup_eids = {}
-	for _, eid in world:each("pickup") do
-		local e = world[eid]
-		local pickco = e.pickup.pickco
-		if pickco then
-			local ret = coroutine.resume(pickco) 
-			if not ret then 
-				e.pickup.pickco = nil
-				table.insert(remove_pickup_eids, eid)
+	local stat = self.frame_stat
+	for _, pickupeid in world:each("pickup") do
+		local e = world[pickupeid]
+		local pu_comp = e.pickup
+		if pu_comp.ispicking then
+			local reading_frame = pu_comp.reading_frame
+			if reading_frame == nil then
+				pu_comp.reading_frame = readback_render_data(e)
+			else
+				if stat.frame_num == reading_frame then
+					local eid = which_entity_hitted(e)
+					if eid then
+						local name = assert(world[eid]).name.n
+						print("pick entity id : ", eid, ", name : ", name)
+					else
+						print("not found any eid")
+					end
+		
+					pu_comp.last_eid_hit = eid
+					world:change_component(pickupeid, "pickup")
+					world.notify()
+		
+					pu_comp.ispicking = nil
+					pu_comp.reading_frame = nil
+				end	
 			end
 		end
-	end
-
-	for _, eid in ipairs(remove_pickup_eids) do
-		world:remove_entity(eid)
 	end
 end

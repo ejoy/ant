@@ -10,9 +10,13 @@ package.path = root .. "/libs/?.lua;" .. root .. "/libs/?/?.lua;" .. root .. "/c
 
 require "common/import"
 require "common/log"
-require "common/config"
 
 print_r = require "common/print_r"
 require "filesystem"
 
 function dprint(...) print(...) end
+
+local clibs = require 'clibs'
+clibs.init(package.cpath)
+package.searchers[3] = clibs.searcher
+package.searchers[4] = nil

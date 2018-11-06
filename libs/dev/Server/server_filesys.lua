@@ -98,8 +98,8 @@ function server_filesys:UpdateFileWatch()
             local full_path = path.join("libs", filepath)
 
             print("fw", id, type, full_path)
-            local fu = require "filesystem.util"
-            fu.clear_timestamp_cache(full_path)
+            local vfsutil = require "vfs.util"
+            vfsutil.clear_timestamp_cache(full_path)
             
             self.localcache[full_path] = nil    --clear a cache
             file_dirty = true

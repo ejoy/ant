@@ -1,7 +1,10 @@
+--luacheck: globals import
 local require = import and import(...) or require
 
 -- Editor or test use vfs.local to manage a VFS dir/repo.
 -- It read/write file from/to a repo
+
+local packfile_real = require "packfile.realfile"
 
 local localvfs = {} ; localvfs.__index = localvfs
 
@@ -12,6 +15,7 @@ local function isdir(filepath)
 	return fs.attributes(filepath, "mode") == "directory"
 end
 
+--luacheck: ignore readmount
 local function readmount(filename)
 	local f = io.open(filename, "rb")
 	local ret = {}
@@ -63,7 +67,9 @@ function localvfs.open(repopath)
 end
 
 function localvfs.realpath(pathname)
-	return access.realpath(self, pathname) , pathname:match "^/?(.-)/?$"
+	local rp = access.realpath(self, pathname)
+	rp = packfile_real(rp)
+	return  rp, pathname:match "^/?(.-)/?$"
 end
 
 -- list files { name : type (dir/file) }

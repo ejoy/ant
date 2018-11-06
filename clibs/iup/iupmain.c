@@ -14,8 +14,6 @@ struct args {
 	Ihandle *dlg;
 };
 
-int luaopen_iuplua(lua_State* L);
-
 static int 
 quit_cb(void) {
 	return IUP_CLOSE;
@@ -103,14 +101,6 @@ msghandler (lua_State *L) {
 	return 1;  /* return the traceback */
 }
 
-int iuplua_open(lua_State * L);
-
-static int
-dummy_iuplua(lua_State *L) {
-	lua_getglobal(L, "iup");
-	return 1;
-}
-
 static int
 pmain (lua_State *L) {
 	int i;
@@ -120,8 +110,6 @@ pmain (lua_State *L) {
 	const char * filename;
 	int from;
 	luaL_openlibs(L);
-	iuplua_open(L);
-	luaL_requiref(L, "iuplua", dummy_iuplua, 0);
 	lua_settop(L, 0);
 	lua_pushcfunction(L, msghandler);
 	if (argc < 2) {
