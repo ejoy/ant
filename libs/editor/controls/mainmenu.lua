@@ -1,10 +1,7 @@
 local editor_mainwindow = require 'editor.controls.window'
 local fs = require "cppfs"
 local asset = require "asset"
-local fu = require "filesystem.util"
-
-local server_main = require 'editor.controls.servermain'
-
+local vfsutil = require "vfs.util"
 local configDir = (os.getenv 'UserProfile') .. '\\.ant\\config\\'
 
 local iupex = {}
@@ -135,7 +132,7 @@ function openMap(path)
 	recentAddAndUpdate(path)
 
 	local mountpath = "engine/assets"
-	path = fu.convert_to_mount_path(path, mountpath):gsub(mountpath.."/", "")	
+	path = vfsutil.convert_to_mount_path(path, mountpath):gsub(mountpath.."/", "")	
 	
     local modules = asset.load(path)
     local editormodules = {

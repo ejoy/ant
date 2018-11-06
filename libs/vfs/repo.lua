@@ -1,3 +1,4 @@
+--luacheck: globals import
 local require = import and import(...) or require
 
 -- This module can build/rebuild a directory into a repo.
@@ -11,6 +12,7 @@ repo.__index = repo
 local fs = require "filesystem"
 local crypt = require "crypt"
 local access = require "repoaccess"
+local packfile_real = require "packfile.realfile"
 
 local function addslash(name)
 	return (name:gsub("[/\\]?$","/"))
@@ -84,7 +86,14 @@ local function sha1_from_file(filename)
 end
 
 -- map path in repo to realpath (replace mountpoint)
-repo.realpath = access.realpath
+function repo:realpath(filepath)
+	local rp = access.realpath(filepath)
+	local newrp, newcreated = packfile_real(rp)
+	if newcreated then
+		self:touch(newrp)
+	end
+	return newrp
+end
 
 -- build cache, cache is a table link list of sha1->{ filelist = ,  filename = , timestamp= , next= }
 -- filepath should be end of / or '' for root
@@ -179,7 +188,8 @@ local function repo_write_cache(self, cache)
 				f:close()
 			end
 			table.sort(ref)
-			local f = assert(io.open(filepath, "wb"))
+
+			f = assert(io.open(filepath, "wb"))
 			f:write(table.concat(ref, "\n"))
 			f:close()
 		end
@@ -193,19 +203,20 @@ local function repo_write_root(self, roothash)
 	if _DEBUG then print("ROOT", roothash) end
 end
 
-function repo:rebuild()
-	local cache = {}
+function repo:rebuild()	
 	self._namecache = {}	-- clear cache
 	return self:build()
 end
 
-function repo:build()
+function repo:build()	
 	local cache = {}
 	self._namecache[''] = undef
 	local roothash = repo_build_dir(self, "", cache, self._namecache)
 
 	repo_write_cache(self, cache)
 	repo_write_root(self, roothash)
+
+	self.dirty = nil
 
 	return roothash
 end
@@ -274,6 +285,7 @@ end
 
 -- make file dirty, would build later
 function repo:touch(pathname)
+	self.dirty = true
 	repeat
 		local path = pathname:match "(.*)/"
 		if _DEBUG then print("TOUCH", pathname) end
@@ -282,13 +294,15 @@ function repo:touch(pathname)
 	until path == nil
 end
 
-function repo:touch_path(pathname)
-	local namecache = self._namecache
+function repo:touch_path(pathname)	
+	self.dirty = true
 	if pathname == '' or pathname == '/' then
 		-- clear all
-		namecache = {}
+		self._namecache = {}
 		return
 	end
+
+	local namecache = self._namecache
 	self:touch(pathname)
 	pathname = addslash(pathname)
 	local n = #pathname
@@ -381,7 +395,8 @@ function repo:hash(hash)
 		return filename
 	end
 	local rfilename = filename .. ".ref"
-	local f = io.open(rfilename, "rb")
+
+	f = io.open(rfilename, "rb")
 	if not f then
 		return
 	end
