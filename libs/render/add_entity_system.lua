@@ -28,7 +28,6 @@ ecs.import "render.view_system"
 ecs.import "render.entity_rendering_system"
 ecs.import "scene.hierarchy.hierarchy"
 -- ecs.import "scene.cull_system"
-ecs.import "scene.shadow.generate_shadow_system"
 
 local fs_util = require "filesystem.util"
 local component_util = require "render.components.util"
@@ -82,7 +81,7 @@ add_entity_sys.singleton "math_stack"
 add_entity_sys.singleton "constant"
 
 add_entity_sys.depend "constant_init_sys"
-add_entity_sys.dependby "iup_message"
+add_entity_sys.dependby "message_system"
 
 
 function add_entity_sys:init()

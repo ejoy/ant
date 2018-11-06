@@ -14,10 +14,10 @@ local math3d = require "math3d"
 
 local camera_controller_system = ecs.system "camera_controller"
 camera_controller_system.singleton "math_stack"
-camera_controller_system.singleton "message_component"
+camera_controller_system.singleton "message"
 camera_controller_system.singleton "control_state"
 
-camera_controller_system.depend "iup_message"
+camera_controller_system.depend "message_system"
 camera_controller_system.depend "camera_init"
 
 local function camera_move(ms, rotation, position, dx, dy, dz)
@@ -79,5 +79,5 @@ function camera_controller_system:init()
 		end
 	end
 
-	self.message_component.msg_observers:add(message)
+	self.message.observers:add(message)
 end

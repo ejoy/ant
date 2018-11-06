@@ -23,7 +23,7 @@ local model_review_system = ecs.system "model_review_system"
 model_review_system.singleton "math_stack"
 model_review_system.singleton "constant"
 model_review_system.depend "constant_init_sys"
-model_review_system.dependby "iup_message"
+model_review_system.dependby "message_system"
 
 local bgfx = require "bgfx"
 local lu = require "render.light.util"
