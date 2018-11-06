@@ -161,10 +161,22 @@ pickup_sys.depend "entity_rendering"
 
 pickup_sys.dependby "end_frame"
 
+local function add_primitive_filter(eid)
+	world:add_component(eid, "primitive_filter")
+	local e = world[eid]
+	local filter = e.primitive_filter	
+	filter.no_lighting = true
+	filter.filter_select = true
+end
+
+local function remove_primitive_filter(eid)
+	world:remove_component(eid, "primitive_filter")
+end
+
 local function add_pick_entity(ms)
 	local eid = world:new_entity("pickup", 
 	"clear_component", 
-	"viewid", "primitive_filter",
+	"viewid",
 	"view_rect", 
 	"position", "rotation", 
 	"frustum", 
@@ -193,10 +205,6 @@ local function add_pick_entity(ms)
 	local rot = entity.rotation
 	ms(pos, {0, 0, 0, 1}, "=")
 	ms(rot, {0, 0, 0, 0}, "=")
-
-	local filter = entity.primitive_filter
-	filter.no_lighting = true
-	filter.filter_select = true
 	
 	return eid
 end
@@ -204,13 +212,16 @@ end
 function pickup_sys:init()
 	local ms = self.math_stack	
 	local pickup_eid = add_pick_entity(self.math_stack)
-	local entity = world[pickup_eid]
 
 	self.message.observers:add({
 		button = function (_, b, p, x, y)
 			if b == "LEFT" and p then
-				update_viewinfo(ms, entity, point2d(x, y))
-				entity.pickup.ispicking = true
+				local entity = world[pickup_eid]
+				if entity then
+					update_viewinfo(ms, entity, point2d(x, y))
+					add_primitive_filter(pickup_eid)
+					entity.pickup.ispicking = true
+				end
 			end
 		end
 	})
@@ -239,8 +250,9 @@ function pickup_sys:update()
 					world:change_component(pickupeid, "pickup")
 					world.notify()
 		
+					remove_primitive_filter(pickupeid)
 					pu_comp.ispicking = nil
-					pu_comp.reading_frame = nil
+					pu_comp.reading_frame = nil					
 				end	
 			end
 		end
