@@ -29,13 +29,9 @@ ecs.import "render.entity_rendering_system"
 ecs.import "scene.hierarchy.hierarchy"
 -- ecs.import "scene.cull_system"
 
-local fs_util = require "filesystem.util"
 local component_util = require "render.components.util"
 local lu = require "render.light.util"
-local mu = require "math.util"
-local bgfx = require "bgfx"
 local assetmgr = require "asset"
-local path = require "filesystem.path"
 
 local update_direction_light_sys = ecs.system "direction_light_system"
 update_direction_light_sys.singleton "math_stack"

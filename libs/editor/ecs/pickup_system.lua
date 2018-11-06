@@ -14,7 +14,7 @@ local cu = require "common.util"
 
 local math_baselib = require "math3d.baselib"
 
-local pickup_fb_viewid = 2
+local pickup_fb_viewid = 101
 local pickup_blit_viewid = pickup_fb_viewid + 1
 
 local function packeid_as_rgba(eid)
