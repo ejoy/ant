@@ -18,8 +18,7 @@ local vfs = require "vfs"	-- from boot
 print("Repo:", repopath)
 vfs.open(repopath)
 
-dofile 'runtime/core/init_thread.lua'
-
+assert(loadfile('runtime/core/init_thread.lua'))((require 'clibs').searcher)
 
 thread.newchannel "DdgNet"
 local io_req  = thread.channel "IOreq"
@@ -49,27 +48,31 @@ end
 local dbg = require 'debugger'
 local dbgupdate = dbg.start_master(dbg_io)
 
-thread.thread [[
-print(pcall(function()
-	dofile 'runtime/core/init_thread.lua'
+local function createThread(name, code)
+	local clibs = require 'clibs'
+	thread.thread(([[
+	--%s
+	assert(loadfile('runtime/core/init_thread.lua'))(...)
+%s]]):format(name, code)
+		, clibs.searcher
+	)
+end
 
-	local dbg = require 'debugger'
-	local dbgupdate = dbg.start_worker()
-
+createThread('errlog', [[
 	local thread = require "thread"
 	local err = thread.channel "errlog"
-
-	local function printLOG(ok, ...)
-		if ok then
-			print("ERROR:" .. ...)
-		end
+	while true do
+		print("ERROR:" .. err:bpop())
 	end
+]])
+
+createThread('debug', [[
+	local dbg = require 'debugger'
+	local dbgupdate = dbg.start_worker()
 	while true do
 		dbgupdate()
-		printLOG(err:pop())
 	end
-end))
-]]
+]])
 
 while true do
 	dbgupdate()
