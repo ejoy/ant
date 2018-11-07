@@ -4,9 +4,10 @@
 #include <mutex>
 #include <Windows.h>
 #include "foreach_clibs.h"
+#include "preload_module.h"
 
 std::once_flag g_initialized;
-std::map<std::string, lua_CFunction> g_modules;
+std::map<std::string, lua_CFunction> g_modules = preload_module();
 
 static std::wstring u2w(const char* buf, size_t len) {
 	if (!buf || !len) return L"";
@@ -55,6 +56,9 @@ static void init_once(lua_State* L) {
 			}
 			foreach_clibs(dir, [&](const fs::path& dll, const std::string& api) {
 				std::string name = toluaname(api);
+				if (g_modules.find(name) != g_modules.end()) {
+					return;
+				}
 				HMODULE m = LoadLibraryW(dll.c_str());
 				if (!m) {
 					return;

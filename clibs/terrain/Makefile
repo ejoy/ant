@@ -20,6 +20,9 @@ lterrain.dll : $(ODIR)/terrain.o
 	$(CC) $(CFLAGS) --shared -o $@ $^ $(LUALIB) $(BGFXUTILLIB) $(BGFXLIB)
 
 
+libterrain.a : $(ODIR)/terrain.o 
+	ar rsv $@ $^
+
 # all
 
 $(ODIR) :
