@@ -60,7 +60,7 @@ function general_editor_entites:init()
 			}
 		}
 		
-		cu.load_material(axis, {"line.material",})
+		cu.load_material(axis.material,{"line.material",})
     end
 
     do
@@ -131,7 +131,7 @@ function general_editor_entites:init()
 			}
 		}
 
-		cu.load_material(grid, {"line.material",})
+		cu.load_material(grid.material,{"line.material",})
 	end
 
 	do
@@ -203,6 +203,6 @@ function general_editor_entites:init()
 			}
 		}
 	
-		cu.load_material(frusutm_debug, {"line.material",})
+		cu.load_material(frusutm_debug.material,{"line.material",})
 	end
 end

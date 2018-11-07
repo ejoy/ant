@@ -6,6 +6,7 @@ ecs.import "render.camera.camera_component"
 ecs.import "render.entity_rendering_system"
 ecs.import "render.view_system"
 
+
 -- lighting
 ecs.import "render.light.light"
 
@@ -25,6 +26,7 @@ ecs.import "physic.rigid_body"
 -- editor
 ecs.import "editor.ecs.camera_controller"
 ecs.import "editor.ecs.pickup_system"
+ecs.import "editor.ecs.render.widget_system"
 
 -- editor elements
 ecs.import "editor.ecs.general_editor_entities"
@@ -46,8 +48,8 @@ local fu = require "filesystem.util"
 
 local modelutil = require "modelloader.util"
 
-local function load_mesh_assetinfo(skinning_mesh_comp)
-	local bgfx = require "bgfx"
+
+local function gen_mesh_assetinfo(skinning_mesh_comp)	
 	local skinning_mesh = skinning_mesh_comp.assetinfo.handle
 
 	local decls = {}
@@ -101,6 +103,113 @@ local smaplemaerial = "skin_model_sample.material"
 local sample_obj_user_idx = 1
 local plane_obj_user_idx = 2
 
+local function add_aabb_widget(eid)
+--[[
+	ltf---------max
+	/|			/|
+   / |		   / |
+  ltn--------rtn |
+   |lbf-------|-rbf
+   | /		  | /
+   |/		  |/
+  min--------rbn
+]]
+
+	world:add_component(eid, "widget")
+	local e = world[eid]
+	local descs = {}
+	local aabb_material = "line.material"
+	local ib = {
+		0, 1,
+		1, 2,
+		2, 3,
+		3, 0,
+
+		4, 5,
+		5, 6,
+		6, 7,
+		7, 4,
+
+		0, 7,
+		1, 6,
+		2, 5,		
+		3, 4,
+	}
+	for _, g in ipairs(assert(e.mesh).assetinfo.handle.groups) do
+		local bounding = g.bounding
+		local aabb = bounding.aabb
+		local min, max = aabb.min, aabb.max
+
+		local maxx, maxy, maxz = max[1], max[2], max[3]
+		local minx, miny, minz = min[1], min[2], min[3]
+		table.insert(descs, {
+			vb = {
+				min,
+				{minx, maxy, minz},	-- ltn
+				{maxx, maxy, minz},	-- rtn
+				{maxx, miny, minz},	-- rbn
+
+				{maxx, miny, maxz},	-- rbf
+				max,
+				{minx, maxy, maxz},	-- ltf
+				{minx, miny, maxz},	-- lbf			
+			},
+			ib = ib,
+			material = aabb_material,
+		})
+
+	end
+
+	local ibhandle = bgfx.create_index_buffer(ib)
+	local decl = bgfx.vertex_decl {
+		{ "POSITION", 3, "FLOAT" },
+		{ "COLOR0", 4, "UINT8", true },
+	}
+
+	local function create_mesh_groups(descs, color)
+		local groups = {}
+		for _, desc in ipairs(descs) do
+			local vb = {"fffd",}
+			for _, v in ipairs(desc.vb) do
+				for _, vv in ipairs(v) do
+					table.insert(vb, vv)
+				end
+				table.insert(vb, color)
+			end
+
+			table.insert(groups, 
+				{
+					vb = {
+						handles = {	bgfx.create_vertex_buffer(vb, decl)	}
+					},
+					ib = {
+						handle = ibhandle
+					},
+				}
+			)
+		end
+
+		return groups
+	end
+
+	local widget = e.widget
+	widget.mesh = {
+		descs = descs,
+		assetinfo = {
+			handle = {
+				groups = create_mesh_groups(descs, 0xffff0000),
+			}
+		}
+	}
+
+	widget.material = {
+		content = {}
+	}
+	comp_util.load_material(widget.material, {aabb_material})
+
+	widget.srt = {s=e.scale, r=nil, t=e.position}
+end
+
 local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	local eid = world:new_entity("position", "scale", "rotation",
 	"skeleton", "animation", "skinning_mesh", 
@@ -114,8 +223,8 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	local mu = require "math.util"
 	mu.identify_transform(ms, e)
 
-	comp_util.load_skeleton(e, skepath)
-	comp_util.load_animation(e, anipath)
+	comp_util.load_skeleton(e.skeleton, skepath)
+	comp_util.load_animation(e.animation, anipath)
 
 	do
 		local skehandle = assert(e.skeleton.assetinfo.handle)
@@ -127,8 +236,8 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	end
 	
 
-	comp_util.load_skinning_mesh(e, skinning_meshpath)	
-	e.mesh.assetinfo = load_mesh_assetinfo(e.skinning_mesh)
+	comp_util.load_skinning_mesh(e.skinning_mesh, skinning_meshpath)	
+	e.mesh.assetinfo = gen_mesh_assetinfo(e.skinning_mesh)
 
 	local function init_physic_obj()
 		local rigid_body = e.rigid_body
@@ -149,7 +258,9 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 
 	init_physic_obj()
 
-	comp_util.load_material(e, {smaplemaerial})
+	comp_util.load_material(e.material,{smaplemaerial})
+
+	add_aabb_widget(eid)
 	return eid
 end
 
@@ -223,7 +334,7 @@ local function create_plane_entity()
 
 	plane.mesh.assetinfo = create_plane_mesh_info()
 
-	comp_util.load_material(plane, {smaplemaerial})
+	comp_util.load_material(plane.material,{smaplemaerial})
 
 	-- rigid_body
 	local rigid_body = plane.rigid_body
@@ -380,5 +491,5 @@ function model_ed_sys:init()
 	create_plane_entity()
 
 	local comp = {mesh={}}	
-	comp_util.load_mesh(comp, "bunny.mesh")
+	comp_util.load_mesh(comp.mesh,"bunny.mesh")
 end

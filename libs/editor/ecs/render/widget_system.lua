@@ -3,13 +3,13 @@ local world = ecs.world
 
 local ru = require "render.util"
 
-ecs.component_v2 "widget" {}
+ecs.component "widget" {}
 
 local widget_sys = ecs.system "widget_system"
 
 widget_sys.singleton "math_stack"
 
-widget_sys.depend "primitive_filter"
+widget_sys.depend "primitive_filter_system"
 widget_sys.dependby "lighting_primitive_filter_system"
 widget_sys.dependby "transparency_filter_system"
 
