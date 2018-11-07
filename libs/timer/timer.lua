@@ -17,7 +17,7 @@ local baselib = require "bgfx.baselib"
 
 function timesystem:update()
 	local timer = self.timer
-	local current = baselib.HP_time()		
+	local current = baselib.HP_counter()	
 	if timer.previous == 0 then
 		timer.previous = current
 	else
@@ -25,5 +25,5 @@ function timesystem:update()
 	end
 
 	timer.current = current
-	timer.delta = timer.current - timer.previous
+	timer.delta = baselib.HP_time(timer.previous)
 end

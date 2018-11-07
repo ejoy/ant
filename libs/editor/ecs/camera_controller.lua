@@ -5,6 +5,7 @@ ecs.import "render.math3d.math_component"
 ecs.import "render.camera.camera_component"
 ecs.import "render.components.general"
 ecs.import "inputmgr.message_system"
+ecs.import "timer.timer"
 
 local mu = require "math.util"
 local cu = require "render.components.util"
@@ -12,26 +13,6 @@ local cu = require "render.components.util"
 local point2d = require "math.point2d"
 
 local camera_util = require "render.camera.util"
-
--- local function calc_rotate_angle_from_view_direction(ms, vr)
--- 	-- the default view direction is (0, 0, 1, 0)
--- 	local dir = ms(vr, "nT")
--- 	assert(dir.type == 1 or dir.type == 2)	-- 1 for vec4, 2 for vec3
-
--- 	local x, y, z = dir[1], dir[2], dir[3]
--- 	local pitch = -math.asin(y)
--- 	local yaw = z ~= 0 and math.atan2(x, z) or 0
-
--- 	local function to_angle(rad)
--- 		return rad * (180 / 3.1415926)
--- 	end
-
--- 	return to_angle(pitch), to_angle(yaw)
--- end
-
---[@
-
-
 
 local action_type = { 
 	FORWARD = false, BACKWARD = false,
@@ -44,6 +25,7 @@ local camera_controller_system = ecs.system "camera_controller"
 camera_controller_system.singleton "math_stack"
 camera_controller_system.singleton "message"
 camera_controller_system.singleton "control_state"
+camera_controller_system.singleton "timer"
 
 camera_controller_system.depend "message_system"
 camera_controller_system.depend "camera_init"
@@ -77,56 +59,66 @@ function camera_controller_system:init()
 		last_xy = xy
 	end
 
-			
+	local action_name_mappers = {
+		-- right button
+		r_a = "LEFT", r_d = "RIGHT",
+		r_w = "FORWARD", r_s = "BACKWARD",
+		r_c = "DOWNWARD", r_f = "UPWARD",		
+		r_q = "LEFTROT", r_e = "RIGHTROT",
+	}
+
 	function message:keypress(c, p, status)
 		if c == nil then return end
-
-		local action_name_mappers = {
-			a = "LEFT", d = "RIGHT",
-			w = "FORWARD", s = "BACKWARD",
-			c = "DOWNWARD", f = "UPWARD",
-			q = "LEFTROT", e = "RIGHTROT"
-		}
-
-		local lowerC = c:lower()
-
-		local rightbtn_down = button_status.RIGHT
-		if rightbtn_down and action_name_mappers[lowerC] ~= nil then
-			action_type[ action_name_mappers[lowerC] ] = p
+		
+		local name = nil
+		if button_status.RIGHT then
+			name = 'r_'
+		elseif button_status.LEFT then
+			name = 'l_'
 		end
+
+		if name then
+			name = name .. c:lower()
+			local t = action_name_mappers[name]
+			if t then
+				action_type[t] = p
+			end	
+		end		
 	end
 
 	self.message.observers:add(message)
 end
 -- make movement smooth 
 function camera_controller_system:update()
-	local ms = self.math_stack
-	local deltaTime = 0.5         -- get from timer_system later 
+
 	local camera = world:first_entity("main_camera")
 	if camera then
+		local ms = self.math_stack
+		local deltaTime = self.timer.delta
+		local step = 0.05
 		local dx, dy, dz = 0, 0, 0
 		if action_type.FORWARD then 
-			dz = 1
+			dz = step
 		elseif action_type.BACKWARD then
-			dz = -1
+			dz = -step
 		end
 
 		if action_type.LEFT then 
-			dx = -1				
+			dx = -step			
 		elseif action_type.RIGHT then 
-			dx = 1 
+			dx = step
 		end
 
 		if action_type.UPWARD then
-			dy = 1
+			dy = step
 		elseif action_type.DOWNWARD then
-			dy = -1
+			dy = -step
 		end
 
 		if action_type.LEFTROT then 
-			camera_util.rotate(ms, camera, -1 , 0)
+			camera_util.rotate(ms, camera, -step * deltaTime , 0)
 		elseif action_type.RIGHTROT then 
-			camera_util.rotate(ms, camera,  1 , 0)
+			camera_util.rotate(ms, camera,  step * deltaTime, 0)
 		end 
 
 		camera_util.move(ms, camera, dx*deltaTime, dy*deltaTime, dz*deltaTime)

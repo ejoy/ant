@@ -1,5 +1,6 @@
 dofile "libs/init.lua"
 
+require "iuplua"
 require "scintilla"
 
 local bgfx = require "bgfx"

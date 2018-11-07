@@ -11,10 +11,10 @@ std::map<std::string, lua_CFunction> g_modules = preload_module();
 
 static std::wstring u2w(const char* buf, size_t len) {
 	if (!buf || !len) return L"";
-	int wlen = ::MultiByteToWideChar(CP_UTF8, 0, buf, len, NULL, 0);
+	int wlen = ::MultiByteToWideChar(CP_UTF8, 0, buf, (int)len, NULL, 0);
 	if (wlen <= 0) return L"";
 	std::vector<wchar_t> result(wlen);
-	::MultiByteToWideChar(CP_UTF8, 0, buf, len, result.data(), wlen);
+	::MultiByteToWideChar(CP_UTF8, 0, buf, (int)len, result.data(), wlen);
 	return std::wstring(result.data(), result.size());
 }
 
