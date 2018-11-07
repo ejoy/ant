@@ -155,8 +155,6 @@ pickup_sys.singleton "math_stack"
 pickup_sys.singleton "frame_stat"
 pickup_sys.singleton "message"
 
-pickup_sys.singleton "post_end_frame_jobs"
-
 pickup_sys.depend "entity_rendering"
 
 pickup_sys.dependby "end_frame"
