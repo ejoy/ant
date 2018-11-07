@@ -1,6 +1,11 @@
-package.path = "engine/libs/?.lua;engine/libs/?/?.lua"
-package.cpath = "./clibs/?.dll;./bin/?.dll"
+local searcher_preload = package.searchers[1]
+local searcher_C = ...
+package.searchers[1] = searcher_preload
+package.searchers[2] = searcher_C
+package.searchers[3] = nil
+package.loadlib = nil
 
+package.path = "engine/libs/?.lua;engine/libs/?/?.lua"
 local thread = require "thread"
 local threadid = thread.id
 -- main thread id is 0
@@ -77,19 +82,9 @@ local function searcher_Lua(name)
     return f, filename
 end
 
-local searcher_preload = package.searchers[1]
-local searcher_C = package.searchers[3]
-local searcher_Croot = package.searchers[4]
-local searchers = {
-    searcher_preload,
-    searcher_Lua,
-    searcher_C,
-    searcher_Croot,
-}
-for i, v in ipairs(searchers) do
-    package.searchers[i] = v
-end
-package.searchers[#searchers+1] = nil
+package.searchers[1] = searcher_preload
+package.searchers[2] = searcher_Lua
+package.searchers[3] = searcher_C
+package.searchers[4] = nil
 package.searchpath = searchpath
 package.loadfile = fs_loadfile
-package.loadlib = nil

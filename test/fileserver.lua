@@ -69,7 +69,9 @@ end
 function message:DBG(data)
 	for _, v in pairs(debug) do
 		if v.server == self then
-			network.send(v.client, data)
+			if v.client then
+				network.send(v.client, data)
+			end
 			break
 		end
 	end

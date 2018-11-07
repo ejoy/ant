@@ -8,6 +8,7 @@ local traceback = require 'debugger.backend.worker.traceback'
 local ev = require 'debugger.event'
 local hookmgr = require 'debugger.hookmgr'
 local thread = require 'thread'
+local err = thread.channel 'errlog'
 
 local initialized = false
 local info = {}
@@ -486,22 +487,22 @@ function event.wait_client()
 end
 
 rdebug.sethook(function(name, line)
-    --local ok, e = xpcall(function()
+    local ok, e = xpcall(function()
         if event[name] then
             event[name](line)
         end
-    --end, debug.traceback)
-    --if not ok then print(e) end
+    end, debug.traceback)
+    if not ok then err.push(e) end
 end)
 
 hookmgr.sethook(rdebug.gethost(), function(name, ...)
-    --local ok, e = xpcall(function(...)
+    local ok, e = xpcall(function(...)
         if hook[name] then
             return hook[name](...)
         end
-    --end, debug.traceback, ...)
-    --if not ok then print(e) end
-    --return e
+    end, debug.traceback, ...)
+    if not ok then err.push(e) end
+    return e
 end)
 
 ev.on('terminated', function()

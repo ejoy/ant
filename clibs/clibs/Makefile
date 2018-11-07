@@ -8,6 +8,8 @@ RANLIB=strip --strip-unneeded
 
 default : clibs.dll
 
+mingw : default
+
 foreach_clibs.o : foreach_clibs.cpp foreach_clibs.h foreach_eat.h
 	$(CC) $(CFLAGS) $(LUAINC) -o $@ $<
 

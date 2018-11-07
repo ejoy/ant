@@ -46,10 +46,10 @@ end
 
 local function start_worker(wait)
     start_hook()
-    rdebug.start [[
-        dofile 'runtime/core/init_thread.lua'
+    rdebug.start([[
+        assert(loadfile('runtime/core/init_thread.lua'))(...)
         require 'debugger.backend.worker'
-    ]]
+    ]], (require 'clibs').searcher)
     if wait then
         event('wait_client', 1, false)
     end
@@ -60,10 +60,10 @@ end
 
 local function start_all(wait)
     start_hook()
-    rdebug.start [[
-        dofile 'runtime/core/init_thread.lua'
+    rdebug.start([[
+        assert(loadfile('runtime/core/init_thread.lua'))(...)
         require 'debugger.backend.worker'
-    ]]
+    ]], (require 'clibs').searcher)
     if wait then
         event('wait_client', 1, true)
     end
