@@ -5,7 +5,7 @@ default : ant.exe
 
 mingw : default
 
-LIBS= bgfx bullet math3d thread terrain hierarchy crypt debugger lsocket memoryfile protocol remotedebug
+LIBS= bgfx bullet math3d thread terrain hierarchy crypt debugger lsocket memoryfile protocol remotedebug lfs
 
 define MakeLibs
 lib$(1).a :	
@@ -53,6 +53,9 @@ searcher_C.o : searcher_C.cpp  preload_module.h
 main.o : main.c
 	gcc -std=gnu99 -c $(CFLAGS) $(LUAINC) -o $@ $<
 
-ant.exe : $(ALLOBJ) $(ALLLIBS)
-	gcc -o $@ $(ALLOBJ) liblua.a $(LINKLIBS) $(LIBBGFX) $(LIBBULLET) $(LIBOZZ) -lws2_32 -lstdc++
+libcjson.a :
+	cd ../../3rd/lua-cjson/ && $(MAKE) "LUA_INCLUDE_DIR=../../clibs/lua" "CJSON_LDFLAGS=" "TARGET=libcjson.a" "AR=ar rsv" && mv libcjson.a ../../clibs/ant/
+
+ant.exe : $(ALLOBJ) $(ALLLIBS) libcjson.a
+	gcc -o $@ $(ALLOBJ) liblua.a libcjson.a $(LINKLIBS) $(LIBBGFX) $(LIBBULLET) $(LIBOZZ) -lws2_32 -lstdc++
 	strip --strip-unneeded $@ 

@@ -1,6 +1,6 @@
-package.cpath = './clibs/?.dll;./bin/?.dll'
+package.cpath = './clibs/ant/clibs/?.dll;'
 local clibs = require 'clibs'
-clibs.init(package.cpath)
+clibs.init('./clibs/?.dll;./bin/?.dll')
 
 local whitelist = {
     bgfx = true,
@@ -15,6 +15,8 @@ local whitelist = {
     memoryfile = true,
     protocol = true,
     remotedebug = true,
+    lfs = true,
+    cjson = true,
 }
 
 local function modluename(name)

@@ -49,7 +49,7 @@ local function start_worker(wait)
     rdebug.start([[
         assert(loadfile('runtime/core/init_thread.lua'))(...)
         require 'debugger.backend.worker'
-    ]], (require 'clibs').searcher)
+    ]], package.searchers[3])
     if wait then
         event('wait_client', 1, false)
     end
@@ -63,7 +63,7 @@ local function start_all(wait)
     rdebug.start([[
         assert(loadfile('runtime/core/init_thread.lua'))(...)
         require 'debugger.backend.worker'
-    ]], (require 'clibs').searcher)
+    ]], package.searchers[3])
     if wait then
         event('wait_client', 1, true)
     end
