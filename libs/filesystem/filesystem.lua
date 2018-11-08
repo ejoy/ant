@@ -6,9 +6,9 @@ local memopen = memoryfile.open
 
 local filesystem = {
 	file = {
-		loadfile = winfile.loadfile or _G.loadfile,
-		dofile = winfile.dofile or _G.dofile,
-		open = winfile.open or _G.open,
+		loadfile = _G.loadfile,
+		dofile = _G.dofile,
+		open = _G.io.open,
 	},
 	mem = {
 		loadfile = function(filename, ...)
@@ -51,13 +51,8 @@ local function wrapper(apiname)
 	end
 end
 
-os.remove = winfile.remove or os.remove
-os.rename = winfile.rename or os.rename
 loadfile = wrapper "loadfile"
 dofile = wrapper "dofile"
 io.open = wrapper "open"
-os.execute = winfile.execute or os.execute
-os.getenv = winfile.getenv or os.getenv
-os.popen = winfile.popen or os.popen
 
 return winfile
