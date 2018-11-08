@@ -1,8 +1,6 @@
-dofile "libs/init.lua"
-
 local reponame = assert((...), "Need repo name")
 
-local fs = require "filesystem"
+local fs = require "lfs"
 local thread = require "thread"
 
 
@@ -68,7 +66,12 @@ createThread('errlog', [[
 createThread('debug', [[
 	local dbg = require 'debugger'
 	local dbgupdate = dbg.start_worker()
+	local function test()
+		local i = 0
+		i = i + 1
+	end
 	while true do
+		test()
 		dbgupdate()
 	end
 ]])
