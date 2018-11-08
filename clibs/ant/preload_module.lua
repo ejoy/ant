@@ -15,6 +15,7 @@ local whitelist = {
     memoryfile = true,
     protocol = true,
     remotedebug = true,
+    lfs = true,
 }
 
 local function modluename(name)

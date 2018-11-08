@@ -619,7 +619,7 @@ static int lock_create_meta (lua_State *L) {
 }
 
 LUAMOD_API int
-luaopen_winfile(lua_State *L) {
+luaopen_lfs(lua_State *L) {
 	luaL_checkversion(L);
 	lock_create_meta (L);
 	luaL_Reg l[] = {

@@ -10,6 +10,7 @@ int luaopen_crypt(lua_State* L);
 int luaopen_debugger_hookmgr(lua_State* L);
 int luaopen_hierarchy(lua_State* L);
 int luaopen_hierarchy_animation(lua_State* L);
+int luaopen_lfs(lua_State* L);
 int luaopen_lsocket(lua_State* L);
 int luaopen_math3d(lua_State* L);
 int luaopen_math3d_baselib(lua_State* L);
@@ -30,6 +31,7 @@ std::map<std::string, lua_CFunction> preload_module() {
 		{ "debugger.hookmgr", luaopen_debugger_hookmgr },
 		{ "hierarchy", luaopen_hierarchy },
 		{ "hierarchy.animation", luaopen_hierarchy_animation },
+		{ "lfs", luaopen_lfs },
 		{ "lsocket", luaopen_lsocket },
 		{ "math3d", luaopen_math3d },
 		{ "math3d.baselib", luaopen_math3d_baselib },

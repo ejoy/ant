@@ -5,7 +5,7 @@ default : ant.exe
 
 mingw : default
 
-LIBS= bgfx bullet math3d thread terrain hierarchy crypt debugger lsocket memoryfile protocol remotedebug
+LIBS= bgfx bullet math3d thread terrain hierarchy crypt debugger lsocket memoryfile protocol remotedebug lfs
 
 define MakeLibs
 lib$(1).a :	
