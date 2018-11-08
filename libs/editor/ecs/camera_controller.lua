@@ -14,6 +14,8 @@ local point2d = require "math.point2d"
 
 local camera_util = require "render.camera.util"
 
+local step = 0.05
+
 local action_type = { 
 	FORWARD = false, BACKWARD = false,
 	LEFT = false, RIGHT = false,
@@ -44,7 +46,7 @@ function camera_controller_system:init()
     function message:button(btn, p, x, y, status)
         button_status[btn] = p
         last_xy = point2d(x, y)
-    end
+	end
 
 	function message:motion(x, y, status)
 		local xy = point2d(x, y)
@@ -69,7 +71,7 @@ function camera_controller_system:init()
 
 	function message:keypress(c, p, status)
 		if c == nil then return end
-		
+
 		local name = nil
 		if button_status.RIGHT then
 			name = 'r_'
@@ -77,13 +79,20 @@ function camera_controller_system:init()
 			name = 'l_'
 		end
 
+		local clower = c:lower()
 		if name then
-			name = name .. c:lower()
+			name = name .. clower
 			local t = action_name_mappers[name]
 			if t then
 				action_type[t] = p
 			end	
-		end		
+		end
+
+		if clower == "cequal" then
+			step = math.min(1, step + 0.002)
+		elseif clower == "cminus" then
+			step = math.max(0.002, step - 0.002)
+		end			
 	end
 
 	self.message.observers:add(message)
@@ -95,7 +104,7 @@ function camera_controller_system:update()
 	if camera then
 		local ms = self.math_stack
 		local deltaTime = self.timer.delta
-		local step = 0.05
+		
 		local dx, dy, dz = 0, 0, 0
 		if action_type.FORWARD then 
 			dz = step
