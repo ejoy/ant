@@ -34,6 +34,8 @@ local bu = require "bullet.lua.util"
 
 local bgfx = require "bgfx"
 
+local geo = require "editor.ecs.render.geometry"
+
 local model_ed_sys = ecs.system "model_editor_system"
 model_ed_sys.singleton "math_stack"
 model_ed_sys.depend "camera_init"
@@ -103,7 +105,6 @@ local smaplemaerial = "skin_model_sample.material"
 local sample_obj_user_idx = 1
 local plane_obj_user_idx = 2
 
-local function add_aabb_widget(eid)
 --[[
 	ltf---------max
 	/|			/|
@@ -115,45 +116,20 @@ local function add_aabb_widget(eid)
   min--------rbn
 ]]
 
+local function add_aabb_widget(eid)
 	world:add_component(eid, "widget")
 	local e = world[eid]
 	local descs = {}
 	local aabb_material = "line.material"
-	local ib = {
-		0, 1,
-		1, 2,
-		2, 3,
-		3, 0,
 
-		4, 5,
-		5, 6,
-		6, 7,
-		7, 4,
-
-		0, 7,
-		1, 6,
-		2, 5,		
-		3, 4,
-	}
+	local _, ib = geo.box_from_aabb(nil, true, true)
 	for _, g in ipairs(assert(e.mesh).assetinfo.handle.groups) do
 		local bounding = g.bounding
-		local aabb = bounding.aabb
-		local min, max = aabb.min, aabb.max
-
-		local maxx, maxy, maxz = max[1], max[2], max[3]
-		local minx, miny, minz = min[1], min[2], min[3]
+		local aabb = assert(bounding.aabb)
+		
+		local vb = geo.box_from_aabb(aabb)
 		table.insert(descs, {
-			vb = {
-				min,
-				{minx, maxy, minz},	-- ltn
-				{maxx, maxy, minz},	-- rtn
-				{maxx, miny, minz},	-- rbn
-
-				{maxx, miny, maxz},	-- rbf
-				max,
-				{minx, maxy, maxz},	-- ltf
-				{minx, miny, maxz},	-- lbf			
-			},
+			vb = vb,
 			ib = ib,
 			material = aabb_material,
 		})
@@ -177,16 +153,10 @@ local function add_aabb_widget(eid)
 				table.insert(vb, color)
 			end
 
-			table.insert(groups, 
-				{
-					vb = {
-						handles = {	bgfx.create_vertex_buffer(vb, decl)	}
-					},
-					ib = {
-						handle = ibhandle
-					},
-				}
-			)
+			table.insert(groups, {
+					vb = {handles = {	bgfx.create_vertex_buffer(vb, decl)	}},
+					ib = {handle = ibhandle},
+				})
 		end
 
 		return groups
@@ -357,9 +327,9 @@ local function create_plane_entity()
 	rigid_body.obj.useridx = plane_obj_user_idx
 end
 
-local function init_control(ms)
-	local sample_eid
+local sample_eid
 
+local function init_control(ms)
 	local skepath_ctrl = windows.ske_path
 	local anipath_ctrl = windows.ani_path
 	local meshpath_ctrl = windows.mesh_path
@@ -492,6 +462,13 @@ local function init_lighting(ms)
 	ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")
 end
 
+local function focus_sample()
+	if sample_eid then		
+		world:change_component(sample_eid, "focus_selected_obj")
+		world.notify()
+	end
+end
+
 -- luacheck: ignore self
 function model_ed_sys:init()
 	local ms = self.math_stack
@@ -500,6 +477,5 @@ function model_ed_sys:init()
 
 	create_plane_entity()
 
-	local comp = {mesh={}}	
-	comp_util.load_mesh(comp.mesh,"bunny.mesh")
+	focus_sample()
 end
