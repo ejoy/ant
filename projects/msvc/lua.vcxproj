@@ -164,7 +164,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\lua\lua.c" />
+    <ClCompile Include="..\..\clibs\lua\utf8_lua.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\lua\lapi.h" />

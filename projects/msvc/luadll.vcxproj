@@ -186,6 +186,9 @@
     <ClInclude Include="..\..\clibs\lua\lundump.h" />
     <ClInclude Include="..\..\clibs\lua\lvm.h" />
     <ClInclude Include="..\..\clibs\lua\lzio.h" />
+    <ClInclude Include="..\..\clibs\lua\utf8_crt.h" />
+    <ClInclude Include="..\..\clibs\lua\utf8_prefix.h" />
+    <ClInclude Include="..\..\clibs\lua\utf8_unicode.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\lua\lapi.c" />
@@ -222,6 +225,8 @@
     <ClCompile Include="..\..\clibs\lua\lutf8lib.c" />
     <ClCompile Include="..\..\clibs\lua\lvm.c" />
     <ClCompile Include="..\..\clibs\lua\lzio.c" />
+    <ClCompile Include="..\..\clibs\lua\utf8_crt.c" />
+    <ClCompile Include="..\..\clibs\lua\utf8_unicode.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\clibs\lua\lvm.s" />
