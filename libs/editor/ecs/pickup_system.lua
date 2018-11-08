@@ -135,11 +135,15 @@ function pickup_material_sys:update()
 					{result=filter.result, material=materials.opaticy},
 					{result=filter.transparent_result, material=materials.transparent},
 				} do
-				for _, item in ipairs(elem.result) do
-					item.material = elem.material
-					item.properties = {
-						u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
-					}
+				local result = elem.result 
+				local material = elem.material
+				if result then
+					for _, item in ipairs(result) do
+						item.material = material
+						item.properties = {
+							u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
+						}
+					end
 				end
 			end
 		end
