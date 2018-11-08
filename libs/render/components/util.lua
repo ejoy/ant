@@ -19,25 +19,25 @@ local function load_res(comp, respath, param, errmsg)
 	comp.assetinfo = asset.load(ref_path, param)
 end
 
-function util.load_skeleton(entity, respath, param)
-	load_res(entity.skeleton, respath, param, "load.skeleton")	
+function util.load_skeleton(comp, respath, param)
+	load_res(comp, respath, param, "load.skeleton")	
 end
 
-function util.load_animation(entity, respath, param)
-	load_res(entity.animation, respath, param, "load.animation")
+function util.load_animation(comp, respath, param)
+	load_res(comp, respath, param, "load.animation")
 end
 
-function util.load_skinning_mesh(entity, respath, param)
-	load_res(entity.skinning_mesh, respath, param)
+function util.load_skinning_mesh(comp, respath, param)
+	load_res(comp, respath, param, "load.skinning_mesh")
+end
+
+function util.load_mesh(comp, respath, param)
+	load_res(comp, respath, param, "load.mesh")
 end
 
 function util.new_sampling_cache(num_joints)
 	local animodule = require "hierarchy.animation"		
 	return animodule.new_sampling_cache(num_joints)
-end
-
-function util.load_mesh(entity, respath, param)
-	load_res(entity.mesh, respath, param, "load.mesh")
 end
 
 function util.load_texture(name, stage, texpath)	
@@ -57,9 +57,6 @@ function util.update_properties(dst_properties, src_properties)
 	end
 end
 
-
-
-
 function util.load_materialex(content)
 	for _, m in ipairs(content) do		
 		local materialinfo = asset.load(m.path)
@@ -75,14 +72,14 @@ function util.load_materialex(content)
 end
 
 -- todo : remove this function by load_materialex
-function util.load_material(entity, material_filenames)
+function util.load_material(material, material_filenames)
 	if material_filenames then
 		for idx, f in ipairs(material_filenames) do
-			entity.material.content[idx] = {path = f, properties = {}}
+			material.content[idx] = {path = f, properties = {}}
 		end
 	end
 
-	util.load_materialex(entity.material.content)
+	util.load_materialex(material.content)
 end
 
 function util.create_render_entity(ms, world, name, meshfile, materialfile)

@@ -230,7 +230,7 @@ namespace spawn {
         }
         lua_pop(L, 1);
 
-        if (LUA_TBOOLEAN == lua_getfield(L, 1, "windowHide")) {
+        if (LUA_TBOOLEAN == lua_getfield(L, 1, "hideWindow")) {
             if (lua_toboolean(L, -1)) {
                 self.hide_window();
             }
@@ -247,7 +247,7 @@ namespace spawn {
         int retn = 0;
         base::subprocess::spawn spawn;
         native_args args = cast_args(L);
-        if (args.size() <= 1) {
+        if (args.size() == 0) {
             return 0;
         }
 
