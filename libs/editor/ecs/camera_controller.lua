@@ -167,7 +167,7 @@ function camera_controller_system.notify:focus_selected_obj(objects)
 	--[[
 		here is what this code do:
 			1. get world mat in this entity ==> worldmat 
-			2. transform aabb ==> newaabb
+			2. transform aabb ==> aabb
 			3. get aabb center and square aabb radius ==> center, radius
 			4. calculate current camera position to aabb center direction ==> dir
 			5. calculate new camera position ==> newposition = center - radius * dir, here, minus dir is for negative the direction
@@ -177,13 +177,13 @@ function camera_controller_system.notify:focus_selected_obj(objects)
 	local math3dlib = require "math3d.baselib"
 	local worldmat = ms({type="srt", s=e.scale, r=e.rotation, t=e.position}, "m")
 	math3dlib.transform_aabb(worldmat, aabb)
-	local center = ms(newaabb.max, newaabb.min, "-", {0.5}, "*P")
-	local radius = ms(newaabb.max, newaabb.min, "-1.P")
+	local center = ms(aabb.max, aabb.min, "-", {0.5}, "*P")
+	local radius = ms(aabb.max, aabb.min, "-1.P")
 
 	local camera = world:first_entity("main_camera")
 	local dir = ms(center, camera.position, "-nP")
-	local newcamera_pos = ms(center, dir, radius, "*-P")
-	ms(camera.position, newcamera_pos, "=")
+
+	ms(camera.position, center, dir, radius, "*-=")
 	ms(camera.rotation, dir, "D=")
 end
 --@]
