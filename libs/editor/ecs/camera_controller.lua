@@ -139,47 +139,51 @@ function camera_controller_system.notify:focus_selected_obj(objects)
 	local eid = objects[1]
 	local e = world[eid]
 
-	if cu.is_entity_visible(e) then
-		local mesh = e.mesh
-		if mesh then
-			local handle = mesh.assetinfo.handle
-			if nil == handle.sphere then
-				return 
-			end
-
-			local function to_sphere(s)
-				return { 
-					center = {s[1], s[2], s[3]}, 
-					radius = s[4]
-				}
-			end
-
-			--[@	transform sphere
-			local ms = self.math_stack
-			local sphere = to_sphere(handle.sphere)
-			local srtWS = mu.srt_from_entity(ms, e)
-			
-			local centerWS = ms(sphere.center, srtWS, "*T")
-			sphere.center = centerWS
-
-			local camera = world:first_entity("main_camera")
-			local scale = e.scale
-			local s = ms(scale, "T")
-			local smax = math.max(s[1], s[2], s[3])			
-			sphere.radius = smax * sphere.radius
-			--@]
-
-			local new_camera_rotation = {45, -45, 0}
-			--[[
-				local cameradir = todir(new_camera_rotation)
-				cameradir = inverse(normalize(cameradir))
-				local newpos = sphere.center + cameradir * sphere.radius * 3
-			]]
-
-			local newpos = ms(sphere.center, {sphere.radius * 3}, new_camera_rotation, "dni*+P")
-			ms(camera.rotation, new_camera_rotation, "=")
-			ms(camera.position, newpos, "=")
-		end
+	if e == nil then
+		return
 	end
+
+	if not cu.is_entity_visible(e) then
+		return 
+	end
+
+	local mesh = e.mesh
+
+	if mesh == nil then
+		return 
+	end
+
+	local handle = mesh.assetinfo.handle
+
+	local bounding = handle.groups[1].bounding			
+	if nil == bounding then
+		return 
+	end
+
+	local ms = self.math_stack
+	local commonutil = require "common.util"
+	
+	local aabb = commonutil.deep_copy(bounding.aabb)
+	--[[
+		here is what this code do:
+			1. get world mat in this entity ==> worldmat 
+			2. transform aabb ==> newaabb
+			3. get aabb center and square aabb radius ==> center, radius
+			4. calculate current camera position to aabb center direction ==> dir
+			5. calculate new camera position ==> newposition = center - radius * dir, here, minus dir is for negative the direction
+			6. change camera direction as new direction
+
+	]]
+	local math3dlib = require "math3d.baselib"
+	local worldmat = ms({type="srt", s=e.scale, r=e.rotation, t=e.position}, "m")
+	math3dlib.transform_aabb(worldmat, aabb)
+	local center = ms(newaabb.max, newaabb.min, "-", {0.5}, "*P")
+	local radius = ms(newaabb.max, newaabb.min, "-1.P")
+
+	local camera = world:first_entity("main_camera")
+	local dir = ms(center, camera.position, "-nP")
+	local newcamera_pos = ms(center, dir, radius, "*-P")
+	ms(camera.position, newcamera_pos, "=")
+	ms(camera.rotation, dir, "D=")
 end
 --@]
