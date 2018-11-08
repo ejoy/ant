@@ -4,10 +4,9 @@
 #include <mutex>
 #include <Windows.h>
 #include "foreach_clibs.h"
-#include "preload_module.h"
 
 std::once_flag g_initialized;
-std::map<std::string, lua_CFunction> g_modules = preload_module();
+std::map<std::string, lua_CFunction> g_modules;
 
 static std::wstring u2w(const char* buf, size_t len) {
 	if (!buf || !len) return L"";
