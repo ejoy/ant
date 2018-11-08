@@ -1,6 +1,6 @@
 BIN = .
 PLAT = mingw
-LIBS := math3d lsocket redirectfd winfile bgfx remotedebug memoryfile \
+LIBS := math3d lsocket redirectfd lfs bgfx remotedebug memoryfile \
  crypt assimplua hierarchy cppfs debugger thread protocol bullet
 
 ALL_LIBS := $(LIBS) lua iup

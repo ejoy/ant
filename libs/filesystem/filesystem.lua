@@ -1,5 +1,4 @@
 --luacheck: globals enable_packfile
-local winfile =  require "winfile"
 local memoryfile = require "memoryfile"
 
 local memopen = memoryfile.open
@@ -55,4 +54,4 @@ loadfile = wrapper "loadfile"
 dofile = wrapper "dofile"
 io.open = wrapper "open"
 
-return winfile
+return require "lfs"

@@ -1,3 +1,3 @@
 -- just for test
 
-return require "winfile"
+return require "lfs"
