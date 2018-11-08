@@ -46,9 +46,40 @@ struct sampling_node {
 	ozz::Range<ozz::math::SoaTransform>	results;
 };
 
+//#ifdef min
+//#undef min
+//#endif
+//
+//#ifdef max
+//#undef max
+//#endif
+#include <limits>
+
+static const glm::vec3 min_v3(
+	std::numeric_limits<float>::min(),
+	std::numeric_limits<float>::min(),
+	std::numeric_limits<float>::min());
+
+static const glm::vec3 max_v3(
+	std::numeric_limits<float>::max(),
+	std::numeric_limits<float>::max(),
+	std::numeric_limits<float>::max());
+
 struct Bounding {
 	struct AABB {
 		glm::vec3 min, max;
+
+		AABB()
+			: min(min_v3)
+			, max(max_v3){}
+
+		bool isvalid() const {
+			return min != min_v3 && max != max_v3;
+		}
+
+		void init(const glm::vec3 &base) {
+			min = max = base;
+		}
 
 		void merge(const glm::vec3 &p) {
 			for (auto ii = 0; ii < 3; ++ii) {
@@ -546,7 +577,7 @@ static void
 create_buffer(ozzmesh *om) {
 	const auto num_vertices = om->mesh->vertex_count();
 
-	Bounding::AABB aabb; memset(&aabb, 0, sizeof(aabb));
+	auto &aabb = om->bounding.aabb;
 	const size_t dynamic_stride = dynamic_vertex_elem_stride(om);
 	if (dynamic_stride != 0) {
 		om->dynamic_buffer = new uint8_t[dynamic_stride * num_vertices];
@@ -555,10 +586,16 @@ create_buffer(ozzmesh *om) {
 		const size_t normalstep = ozz::sample::Mesh::Part::kNormalsCpnts * sizeof(float);
 		const size_t tangentstep = ozz::sample::Mesh::Part::kTangentsCpnts * sizeof(float);
 
+		if (!om->mesh->parts.empty()) {
+			auto v = (const glm::vec3*)(&om->mesh->parts.front().positions[0]);
+			assert(!aabb.isvalid());
+			aabb.init(*v);
+		}
+
 		for (const auto &part : om->mesh->parts) {
-			assert(0 != part.vertex_count());
+			assert(0 != part.vertex_count());			
 			for (auto iv = 0; iv < part.vertex_count(); ++iv) {
-				auto posptr = &(part.positions[iv * ozz::sample::Mesh::Part::kPositionsCpnts]);
+				auto posptr = &(part.positions[iv * ozz::sample::Mesh::Part::kPositionsCpnts]);				
 				aabb.merge(*(glm::vec3*)(posptr));
 				memcpy(db, posptr, posstep);
 				db += posstep;
@@ -576,9 +613,8 @@ create_buffer(ozzmesh *om) {
 		}
 	} else {
 		om->dynamic_buffer = nullptr;
-	}
-	memset(&om->bounding, 0, sizeof(om->bounding));
-	om->bounding.aabb = aabb;
+	}	
+	
 	om->bounding.sphere.from_aabb(aabb);
 	om->bounding.obb.from_aabb(aabb);
 
@@ -614,6 +650,8 @@ lnew_ozzmesh(lua_State *L) {
 	ozzmesh *om = (ozzmesh*)lua_newuserdata(L, sizeof(ozzmesh));
 	luaL_getmetatable(L, "OZZMESH");
 	lua_setmetatable(L, -2);
+
+	om->bounding = Bounding();
 
 	om->mesh = ozz::memory::default_allocator()->New<ozz::sample::Mesh>();
 	ozz::sample::LoadMesh(filename, om->mesh);

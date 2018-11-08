@@ -23,8 +23,16 @@ function util.load_skeleton(comp, respath, param)
 	load_res(comp, respath, param, "load.skeleton")	
 end
 
-function util.load_animation(comp, respath, param)
+function util.load_animation(comp, skeleton, respath, param)
 	load_res(comp, respath, param, "load.animation")
+	do
+		local skehandle = assert(skeleton.assetinfo.handle)
+		local numjoints = #skehandle
+		comp.sampling_cache = util.new_sampling_cache(#skehandle)
+
+		local anihandle = comp.assetinfo.handle
+		anihandle:resize(numjoints)
+	end
 end
 
 function util.load_skinning_mesh(comp, respath, param)

@@ -207,12 +207,11 @@ local function add_aabb_widget(eid)
 	}
 	comp_util.load_material(widget.material, {aabb_material})
 
-	widget.srt = {s=e.scale, r=nil, t=e.position}
+	widget.srt = {}--{s=e.scale, r=nil, t=e.position}
 end
 
 local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
-	local eid = world:new_entity("position", "scale", "rotation",
-	"skeleton", "animation", "skinning_mesh", 
+	local eid = world:new_entity("position", "scale", "rotation",	
 	"rigid_body",		-- physic relate
 	"mesh", "material",
 	"name", "can_render")
@@ -223,21 +222,29 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	local mu = require "math.util"
 	mu.identify_transform(ms, e)
 
-	comp_util.load_skeleton(e.skeleton, skepath)
-	comp_util.load_animation(e.animation, anipath)
+	if skepath and skepath ~= "" then
+		world:add_component(eid, "skeleton")
+		comp_util.load_skeleton(e.skeleton, skepath)
+	end
 
-	do
-		local skehandle = assert(e.skeleton.assetinfo.handle)
-		local numjoints = #skehandle
-		e.animation.sampling_cache = comp_util.new_sampling_cache(#skehandle)
+	if anipath and anipath ~= "" then
+		world:add_component(eid, "animation")
+		comp_util.load_animation(e.animation, e.skeleton, anipath)
+	end
 
-		local anihandle = e.animation.assetinfo.handle
-		anihandle:resize(numjoints)
+	local skinning_mesh
+	if skinning_meshpath and skinning_meshpath ~= "" then
+		if e.skeleton and e.animation then
+			world:add_component(eid, "skinning_mesh")
+			skinning_mesh = e.skinning_mesh
+		else
+			skinning_mesh = {}
+		end
+
+		comp_util.load_skinning_mesh(skinning_mesh, skinning_meshpath)			
 	end
 	
-
-	comp_util.load_skinning_mesh(e.skinning_mesh, skinning_meshpath)	
-	e.mesh.assetinfo = gen_mesh_assetinfo(e.skinning_mesh)
+	e.mesh.assetinfo = gen_mesh_assetinfo(skinning_mesh)
 
 	local function init_physic_obj()
 		local rigid_body = e.rigid_body
@@ -271,9 +278,11 @@ local function get_ani_cursor(slider)
 end
 
 local function update_animation_ratio(eid, cursor_pos)
-	local e = world[eid]
-	local anicomp = assert(e.animation)	
-	anicomp.ratio = cursor_pos
+	local e = world[eid]	
+	local anicomp = e.animation
+	if anicomp then
+		anicomp.ratio = cursor_pos
+	end
 end
 
 local function create_plane_entity()
@@ -373,10 +382,8 @@ local function init_control(ms)
 			return true
 		end
 
-		if check_path_valid(anipath) and
-			check_path_valid(skepath) and
-			check_path_valid(skinning_meshpath) then
-			
+		-- only skinning meshpath is needed!
+		if check_path_valid(skinning_meshpath) then			
 			if sample_eid then
 				world:remove_entity(sample_eid)
 			end
@@ -399,8 +406,8 @@ local function init_control(ms)
 		check_create_sample_entity(skepath_ctrl, anipath_ctrl, self)
 	end
 
-	skepath_ctrl.VALUE=fu.write_to_file("cache/ske.ske", [[path="meshes/skeleton/skeleton"]])
-	anipath_ctrl.VALUE=fu.write_to_file("cache/ani.ani", [[path="meshes/animation/animation_base"]])
+	-- skepath_ctrl.VALUE=fu.write_to_file("cache/ske.ske", [[path="meshes/skeleton/skeleton"]])
+	-- anipath_ctrl.VALUE=fu.write_to_file("cache/ani.ani", [[path="meshes/animation/animation_base"]])
 	meshpath_ctrl.VALUE = "meshes/mesh.ozz"
 	check_create_sample_entity(skepath_ctrl, anipath_ctrl, meshpath_ctrl)
 
@@ -410,11 +417,14 @@ local function init_control(ms)
 	local function update_static_duration_value()
 		if sample_eid then
 			local e = world[sample_eid]
-			local anihandle = assert(e.animation.assetinfo).handle
-			
-			local duration = anihandle:duration()			
-			local static_duration_value = iup.GetDialogChild(dlg, "STATIC_DURATION")
-			static_duration_value.TITLE = string.format("Time(%.2f ms)", duration * 1000)
+			local ani = e.animation
+			if ani then 
+				local anihandle = ani.assetinfo.handle
+				
+				local duration = anihandle:duration()			
+				local static_duration_value = iup.GetDialogChild(dlg, "STATIC_DURATION")
+				static_duration_value.TITLE = string.format("Time(%.2f ms)", duration * 1000)
+			end
 		end
 	end
 
