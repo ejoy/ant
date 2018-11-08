@@ -1,4 +1,6 @@
 -- IO Thread
+package.searchers[3] = ...
+package.searchers[4] = nil
 
 -- todo: Don't use cpath from libs/init.lua
 dofile "libs/init.lua"

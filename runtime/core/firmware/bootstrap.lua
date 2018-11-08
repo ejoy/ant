@@ -14,7 +14,7 @@ local io_req = thread.channel "IOreq"
 local io_resp = thread.channel ("IOresp" .. threadid)
 
 
-thread.thread (string.format("dofile %q", firmware .. "/io.lua"))
+thread.thread (string.format("assert(loadfile(%q))(...)", firmware .. "/io.lua"), package.searchers[3])
 
 local vfs = {}
 
