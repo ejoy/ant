@@ -9,6 +9,11 @@
 
 #if _MSC_VER > 0
 #include <malloc.h>
+#include <io.h>	// for access
+#ifdef access
+#undef access
+#endif
+#define access _access
 
 #	ifdef USING_ALLOCA_FOR_VLA
 #		define VLA(_TYPE, _VAR, _SIZE)	_TYPE _VAR = (_TYPE*)_alloca(sizeof(_TYPE) * (_SIZE))
@@ -111,10 +116,10 @@ lshortname(lua_State *L) {
 	size_t sz;
 	const char * filename = luaL_checklstring(L, 1, &sz);
 	wchar_t winname[V(sz + 1)];
-	int wsz = windows_filename(L, filename, sz, winname, sz);
+	int wsz = windows_filename(L, filename, (int)sz, winname, (int)sz);
 	winname[wsz] = 0;
 	wchar_t shortname[V(sz + 1)];
-	DWORD ssz = GetShortPathNameW(winname, shortname, sz);
+	DWORD ssz = GetShortPathNameW(winname, shortname, (DWORD)sz);
 	if (ssz == 0) {
 		return error_return(L);
 	}
@@ -129,7 +134,7 @@ static void
 push_filename(lua_State *L, WIN32_FIND_DATAW *data) {
 	size_t wlen = wcsnlen(data->cFileName, MAX_PATH);
 	char firstname[V(wlen*3)];
-	int ulen = utf8_filename(L, data->cFileName, wlen, firstname, wlen*3);
+	int ulen = utf8_filename(L, data->cFileName, (int)wlen, firstname, (int)(wlen*3));
 
 	lua_pushlstring(L, firstname, ulen);
 }
@@ -183,7 +188,7 @@ ldir(lua_State *L) {
 	size_t sz;
 	const char * pathname = luaL_checklstring(L, 1, &sz);
 	wchar_t winname[V(sz+3)];
-	int winsz = windows_filename(L, pathname, sz, winname, sz);
+	int winsz = windows_filename(L, pathname, (int)sz, winname, (int)sz);
 	winname[winsz] = '\\';
 	winname[winsz+1] = '*';
 	winname[winsz+2] = 0;
@@ -231,7 +236,7 @@ lpersonaldir(lua_State *L) {
 	if (pidl && SHGetPathFromIDListW(pidl, document)) {
 		size_t wsz = wcsnlen(document, MAX_PATH);
 		char utf8path[MAX_PATH * 3];
-		int sz = utf8_filename(L, document, wsz, utf8path, MAX_PATH*3);
+		int sz = utf8_filename(L, document, (int)wsz, utf8path, MAX_PATH*3);
 		lua_pushlstring(L, utf8path, sz);
 		return 1;
 	} else {
@@ -248,7 +253,7 @@ lcurrentdir(lua_State *L) {
 		return error_return(L);
 	}
 	size_t wsz = wcsnlen(path, MAX_PATH);
-	int usz = utf8_filename(L, path, wsz, utf8path, MAX_PATH*3);
+	int usz = utf8_filename(L, path, (int)wsz, utf8path, MAX_PATH*3);
 	lua_pushlstring(L, utf8path, usz);
 	return 1;
 }
@@ -258,7 +263,7 @@ lchdir(lua_State *L) {
 	size_t sz;
 	const char * utf8path = luaL_checklstring(L, 1, &sz);
 	wchar_t path[V(sz+1)];
-	int winsz = windows_filename(L, utf8path, sz, path, sz);
+	int winsz = windows_filename(L, utf8path, (int)sz, path, (int)sz);
 	path[winsz] = 0;
 	if (SetCurrentDirectoryW(path) == 0) {
 		return error_return(L);
@@ -272,7 +277,7 @@ ltouch(lua_State *L) {
 	size_t sz;
 	const char * utf8path = luaL_checklstring(L, 1, &sz);
 	wchar_t path[V(sz+1)];
-	int winsz = windows_filename(L, utf8path, sz, path, sz);
+	int winsz = windows_filename(L, utf8path, (int)sz, path, (int)sz);
 	path[winsz] = 0;
 
 	HANDLE file = CreateFileW(path, FILE_WRITE_ATTRIBUTES, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -318,7 +323,7 @@ lmkdir(lua_State *L) {
 	size_t sz;
 	const char * utf8path = luaL_checklstring(L, 1, &sz);
 	wchar_t path[V(sz+1)];
-	int winsz = windows_filename(L, utf8path, sz, path, sz);
+	int winsz = windows_filename(L, utf8path, (int)sz, path, (int)sz);
 	path[winsz] = 0;
 	if (!CreateDirectoryW(path, NULL)) {
 		return error_return(L);
@@ -332,7 +337,7 @@ lrmdir(lua_State *L) {
 	size_t sz;
 	const char * utf8path = luaL_checklstring(L, 1, &sz);
 	wchar_t path[V(sz+1)];
-	int winsz = windows_filename(L, utf8path, sz, path, sz);
+	int winsz = windows_filename(L, utf8path, (int)sz, path, (int)sz);
 	path[winsz] = 0;
 	if (!RemoveDirectoryW(path)) {
 		return error_return(L);
@@ -457,7 +462,7 @@ file_info (lua_State *L) {
 	int i;
 	const char * utf8path = luaL_checklstring(L, 1, &sz);
 	wchar_t file[V(sz+1)];
-	int winsz = windows_filename(L, utf8path, sz, file, sz);
+	int winsz = windows_filename(L, utf8path, (int)sz, file, (int)sz);
 	file[winsz] = 0;
 
 	if (STAT_FUNC(file,	&info))	{
@@ -498,7 +503,7 @@ get_vol_names(lua_State *L, int index) {
 	size_t sz;
 	const char * root = lua_tolstring(L, -1, &sz);
 	wchar_t tmp[V(sz+1)];
-	windows_filename(L, root, sz+1, tmp, sz+1);
+	windows_filename(L, root, (int)(sz+1), tmp, (int)(sz+1));
 	wchar_t volname[MAX_PATH] = {0};
 	if (!GetVolumeInformationW(tmp, volname, MAX_PATH, NULL, NULL, NULL, NULL, 0)) {
 		system_error(L, GetLastError());
@@ -507,7 +512,7 @@ get_vol_names(lua_State *L, int index) {
 	size_t wlen = wcsnlen(volname, MAX_PATH);
 	if (wlen) {
 		char name[V(wlen*3)];
-		int name_sz = utf8_filename(L, volname, wlen, name, wlen*3);
+		int name_sz = utf8_filename(L, volname, (int)wlen, name, (int)(wlen*3));
 		lua_pushlstring(L, name, name_sz);
 		lua_settable(L, -3);
 	} else {
@@ -569,8 +574,8 @@ static int lfs_lock_dir(lua_State *L) {
   if(!ln) {
     lua_pushnil(L); lua_pushstring(L, strerror(errno)); return 2;
   }
-  int winsz = windows_filename(L, path, pathl, ln, pathl);
-  int lsz = strlen(lockfile);
+  int winsz = windows_filename(L, path, (int)pathl, ln, (int)pathl);
+  int lsz = (int)strlen(lockfile);
   winsz += windows_filename(L, lockfile, lsz, ln+winsz, lsz);
   ln[winsz] = 0;
 

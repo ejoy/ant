@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="utf8">
+      <UniqueIdentifier>{b9beadec-8210-439a-b3e5-cf6b57320ded}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\lua\lzio.h">
@@ -92,6 +95,15 @@
     </ClInclude>
     <ClInclude Include="..\..\clibs\lua\lapi.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\lua\utf8_unicode.h">
+      <Filter>utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\lua\utf8_prefix.h">
+      <Filter>utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\lua\utf8_crt.h">
+      <Filter>utf8</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -196,6 +208,12 @@
     </ClCompile>
     <ClCompile Include="..\..\clibs\lua\lauxlib.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\lua\utf8_unicode.c">
+      <Filter>utf8</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\lua\utf8_crt.c">
+      <Filter>utf8</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
