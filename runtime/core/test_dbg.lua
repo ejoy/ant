@@ -18,7 +18,7 @@ local vfs = require "vfs"	-- from boot
 print("Repo:", repopath)
 vfs.open(repopath)
 
-assert(loadfile('runtime/core/init_thread.lua'))((require 'clibs').searcher)
+assert(loadfile('runtime/core/init_thread.lua'))(package.searchers[3])
 
 thread.newchannel "DdgNet"
 local io_req  = thread.channel "IOreq"
@@ -49,12 +49,11 @@ local dbg = require 'debugger'
 local dbgupdate = dbg.start_master(dbg_io)
 
 local function createThread(name, code)
-	local clibs = require 'clibs'
 	thread.thread(([[
 	--%s
 	assert(loadfile('runtime/core/init_thread.lua'))(...)
 %s]]):format(name, code)
-		, clibs.searcher
+		, package.searchers[3]
 	)
 end
 
