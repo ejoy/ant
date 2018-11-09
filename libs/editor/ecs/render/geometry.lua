@@ -297,11 +297,7 @@ local function triangle_index_to_line_index(ib)
 
 		local function haskey(p)
 			local k0, k1 = p[1] .. "," .. p[2], p[2] .. "," .. p[1]
-			if cache[k0] then
-				return true
-			end
-
-			return cache[k1]
+			return cache[k0] or cache[k1]
 		end
 
 		for _, p in ipairs {p0,p1,p2} do

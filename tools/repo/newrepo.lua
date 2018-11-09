@@ -1,3 +1,10 @@
+--[[
+	cd to ant path, run:
+	clibs/lua.exe tools/repo/newrepo.lua *projname* [*editor*]
+
+	editor is optional
+]]
+
 dofile "libs/init.lua"
 
 local arg_num = select('#', ...)

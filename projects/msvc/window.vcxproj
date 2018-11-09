@@ -25,6 +25,9 @@
   <ItemGroup>
     <ClInclude Include="..\..\clibs\window\window.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\clibs\window\test.lua" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{a80cb258-1cc5-4aaf-8d38-f0a6b86d2ae4}</ProjectGuid>
