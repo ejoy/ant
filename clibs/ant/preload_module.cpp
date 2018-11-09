@@ -20,6 +20,8 @@ int luaopen_memoryfile(lua_State* L);
 int luaopen_protocol(lua_State* L);
 int luaopen_remotedebug(lua_State* L);
 int luaopen_thread(lua_State* L);
+int luaopen_window(lua_State* L);
+int luaopen_window_native(lua_State* L);
 }
 
 std::map<std::string, lua_CFunction> preload_module() {
@@ -43,5 +45,7 @@ std::map<std::string, lua_CFunction> preload_module() {
 		{ "protocol", luaopen_protocol },
 		{ "remotedebug", luaopen_remotedebug },
 		{ "thread", luaopen_thread },
+		{ "window", luaopen_window },
+		{ "window.native", luaopen_window_native },
 	};
 }
