@@ -66,7 +66,7 @@ struct hookmgr {
         return uintptr_t(p) % BPMAP_SIZE;
     }
     void break_add(lua_State* hL, Proto* p) {
-        int key = break_hash(p);
+        size_t key = break_hash(p);
         if (break_map[key] == BP::None) {
             break_map[key] = BP::Break;
             break_proto[key] = p;
@@ -76,14 +76,14 @@ struct hookmgr {
         }
     }
     void break_del(lua_State* hL, Proto* p) {
-        int key = break_hash(p);
+		size_t key = break_hash(p);
         if (break_map[key] != BP::Ignore) {
             break_map[key] = BP::Ignore;
             break_proto[key] = p;
         }
     }
     void break_freeobj(Proto* p) {
-        int key = break_hash(p);
+		size_t key = break_hash(p);
         if (break_proto[key] == p) {
             break_map[key] = BP::None;
             break_proto[key] = 0;
@@ -102,7 +102,7 @@ struct hookmgr {
         if (!p) {
             return false;
         }
-        int key = break_hash(p);
+		size_t key = break_hash(p);
         switch (break_map[key]) {
         case BP::None: {
             if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
@@ -329,7 +329,7 @@ static int setcoroutine(lua_State* L) {
 
 static int activeline(lua_State* L) {
     lua_State* hL = get_host(L);
-    int level = luaL_checkinteger(L, 1);
+    int level = (int)luaL_checkinteger(L, 1);
     lua_Debug ar;
     if (lua_getstack(hL, level, &ar) == 0) {
         return 0;
