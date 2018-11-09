@@ -100,12 +100,12 @@ default_message_handle(void *ud, struct ant_window_message *msg) {
  */
 static int
 lcreatewindow(lua_State *L) {
-	int width = luaL_checkinteger(L, 1);
-	int height = luaL_checkinteger(L, 2);
+	int width = (int)luaL_checkinteger(L, 1);
+	int height = (int)luaL_checkinteger(L, 2);
 	size_t sz;
 	const char * title = luaL_checklstring(L, 3, &sz);
 	wchar_t *wtitle = (wchar_t *)lua_newuserdata(L, (sz + 1) * sizeof(wchar_t));
-	int wsz = MultiByteToWideChar(CP_UTF8, 0, title, sz+1, wtitle, sz+1);
+	int wsz = MultiByteToWideChar(CP_UTF8, 0, title, (int)sz+1, wtitle, (int)sz+1);
 	if (wsz == 0)
 		return luaL_error(L, "%s can't convert to utf8", title);
 	struct ant_window_callback *cb = lua_newuserdata(L, sizeof(*cb));
