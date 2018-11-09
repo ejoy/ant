@@ -18,6 +18,7 @@ read_file(const char *filename) {
 		fclose(f);
 		return NULL;
 	}
+	buf[sz] = 0;
 	fclose(f);
 	return buf;
 }
@@ -57,7 +58,7 @@ get_integer(struct call_context *C, const char *what) {
 	return result;
 }
 
-int
+const char *
 antclient_loadconfig(const char *configpath, struct ant_client_config *result) {
 	char * data = read_file(configpath);
 	if (data == NULL)
@@ -67,8 +68,6 @@ antclient_loadconfig(const char *configpath, struct ant_client_config *result) {
 	C.V = luavm_new();
 
 	C.err = luavm_init(C.V, lua_loadconfig, "s", data);
-
-	free(data);
 
 #define CHECK_ERR if (C.err) goto _err;
 
@@ -97,9 +96,10 @@ antclient_loadconfig(const char *configpath, struct ant_client_config *result) {
 	result->bootstrap[sizeof(result->bootstrap)-1] = '\0';
 
 	luavm_close(C.V);
-	return 1;
+	return data;
 _err:
+	free(data);
 	printf("Error: %s\n", C.err);
 	luavm_close(C.V);
-	return 0;
+	return NULL;
 }

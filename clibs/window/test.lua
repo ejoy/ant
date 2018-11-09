@@ -1,36 +1,49 @@
--- copy lua53.dll and bgfx.dll to current dir first
+dofile "libs/init.lua"
 
-local args = ...
-
-local config = {}
-args.config = assert(load(args.config, "=config", "t", config))()
-
+local native = require "window.native"
+local window = require "window"
 local bgfx = require "bgfx"
+
+local width = 1024
+local height = 768
+local wnd = native.create(width,height,"Hello World")
 
 local s_logo
 
 bgfx.init {
-	nwh = args.window,
+	nwh = wnd,
 --	renderer = "DIRECT3D9",
 --	renderer = "OPENGL",
-	width = config.width,
-	height = config.height,
+	width = width,
+	height = height,
 	reset = "v",
 }
 
-bgfx.set_view_rect(0, 0, 0, config.width, config.height)
+bgfx.set_view_rect(0, 0, 0, width, height)
 bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
 bgfx.set_debug "T"
 
-local ant = {}
-local s_stats = {}
+local callback = {}
 
-function ant.update()
+function callback.error(err)
+	print(err)
+end
+
+function callback.move(x,y)
+	print("MOVE", x, y)
+end
+
+function callback.touch(what, x, y)
+	print("TOUCH", what, x, y)
+end
+
+local s_stats = {}
+function callback.update()
 	bgfx.touch(0)
 
 	bgfx.dbg_text_clear()
-	bgfx.dbg_text_image(math.max(config.width //2//8 , 20)-20
-				, math.max(config.height//2//16, 6)-6
+	bgfx.dbg_text_image(math.max(width //2//8 , 20)-20
+				, math.max(height//2//16, 6)-6
 				, 40
 				, 12
 				, s_logo
@@ -46,17 +59,14 @@ function ant.update()
 				, stats.textHeight
 				))
 	bgfx.frame()
-	local log = args.log
-	for k,v in ipairs(log) do
-		-- error log
-		print("ERR:", v)
-		log[k] = nil
-	end
 end
 
-function ant.message(what, x, y)
---	print("Message", what, x, y)
+function callback.exit()
+	print("Exit")
+	bgfx.shutdown()
 end
+
+window.register(callback)
 
 local function init()
 	s_logo = "\z
@@ -315,4 +325,4 @@ end
 
 init()
 
-return ant
+native.mainloop()

@@ -8,6 +8,6 @@ struct ant_client_config {
 	char bootstrap[1024];
 };
 
-int antclient_loadconfig(const char *configpath, struct ant_client_config *result);
+const char * antclient_loadconfig(const char *configpath, struct ant_client_config *result);
 
 #endif

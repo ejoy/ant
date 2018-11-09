@@ -17,9 +17,9 @@ static const char * config_default =
 	"bootstrap = 'main.lua'";
 
 static const char * lua_init =
-	"local log, bootstrap, wnd, width, height = ..." CR
+	"local log, bootstrap, wnd, config = ..." CR
 	"local f = assert(loadfile(bootstrap))" CR
-	"_HANDLE = f { window = wnd, log = log, width = width, height = height }";
+	"_HANDLE = f { window = wnd, log = log, config = config }";
 
 static const char * lua_update =
 	"local update = assert(_HANDLE.update)" CR
@@ -32,6 +32,7 @@ static const char * lua_message =
 struct vm {
 	struct luavm *V;
 	struct ant_client_config *config;
+	const char *config_source;
 	int message;
 	int update;
 };
@@ -74,26 +75,26 @@ create_cache(const char *path) {
 	return 1;
 }
 
-static int
+static const char *
 loadconfig(const char * projpath, struct ant_client_config *c) {
 	char path[MAX_PATH];
 	if (!wfile_personaldir(path, MAX_PATH)) {
 		printf("Get personaldir failed\n");
-		return 1;
+		return NULL;
 	}
 
 	if (!wfile_concat(path, MAX_PATH, projpath)) {
 		printf("Invalid path %s\n", projpath);
-		return 1;
+		return NULL;
 	}
 
 	if (!create_cache(path)) {
 		printf("Can't init cache\n");
-		return 1;
+		return NULL;
 	}
 
 	if (!wfile_concat(path, MAX_PATH, "config.txt"))
-		return 1;
+		return NULL;
 
 	if (wfile_type(path) == WFILE_NONE) {
 		FILE *f = wfile_open(path, "wb");
@@ -101,12 +102,7 @@ loadconfig(const char * projpath, struct ant_client_config *c) {
 		fclose(f);
 	}
 
-	if (!antclient_loadconfig(path, c)) {
-		printf("Load config failed\n");
-		return 1;
-	}
-
-	return 0;
+	return antclient_loadconfig(path, c);
 }
 
 static void
@@ -118,7 +114,9 @@ get_xy(LPARAM lParam, int *x, int *y) {
 static void
 create_vm(struct vm *vm, HWND wnd) {
 	struct luavm *V = luavm_new();
-	const char * err = luavm_init(V, lua_init, "spii", vm->config->bootstrap, wnd, vm->config->width, vm->config->height);
+	const char * err = luavm_init(V, lua_init, "sps", vm->config->bootstrap, wnd, vm->config_source);
+	free((void*)vm->config_source);
+	vm->config_source = NULL;
 	if (err) goto _err;
 	err = luavm_register(V, lua_update, "=update", &vm->update);
 	if (err) goto _err;
@@ -136,6 +134,8 @@ static void
 close_vm(struct vm *vm) {
 	luavm_close(vm->V);
 	vm->V = NULL;
+	free((void *)vm->config_source);
+	vm->config_source = NULL;
 }
 
 static void
@@ -253,7 +253,9 @@ main(int argc, char *argv[]) {
 		projpath = argv[1];
 	}
 	struct ant_client_config c;
-	if(loadconfig(projpath, &c)) {
+	const char *config = loadconfig(projpath, &c);
+	if (config == NULL) {
+		printf("Load config in %s failed\n",  projpath);
 		return 1;
 	}
 
@@ -261,6 +263,7 @@ main(int argc, char *argv[]) {
 	struct vm vm;
 	vm.V = NULL;
 	vm.config = &c;
+	vm.config_source = config;
 	HWND wnd = create_window(c.title, c.width, c.height, &vm);
 
 	ShowWindow(wnd, SW_SHOWDEFAULT);
