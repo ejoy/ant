@@ -2,6 +2,9 @@
 
 local args = ...
 
+local config = {}
+args.config = assert(load(args.config, "=config", "t", config))()
+
 local bgfx = require "bgfx"
 
 local s_logo
@@ -10,12 +13,12 @@ bgfx.init {
 	nwh = args.window,
 --	renderer = "DIRECT3D9",
 --	renderer = "OPENGL",
-	width = args.width,
-	height = args.height,
+	width = config.width,
+	height = config.height,
 	reset = "v",
 }
 
-bgfx.set_view_rect(0, 0, 0, args.width, args.height)
+bgfx.set_view_rect(0, 0, 0, config.width, config.height)
 bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
 bgfx.set_debug "T"
 
@@ -26,8 +29,8 @@ function ant.update()
 	bgfx.touch(0)
 
 	bgfx.dbg_text_clear()
-	bgfx.dbg_text_image(math.max(args.width //2//8 , 20)-20
-				, math.max(args.height//2//16, 6)-6
+	bgfx.dbg_text_image(math.max(config.width //2//8 , 20)-20
+				, math.max(config.height//2//16, 6)-6
 				, 40
 				, 12
 				, s_logo
