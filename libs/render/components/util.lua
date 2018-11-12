@@ -102,10 +102,10 @@ function util.create_render_entity(ms, world, name, meshfile, materialfile)
 	obj.name.n = name
 
 	obj.mesh.ref_path = meshfile
-	util.load_mesh(obj)		
+	util.load_mesh(obj.mesh)		
 
 	obj.material.content[1] = {path=materialfile, properties={}}
-	util.load_material(obj)
+	util.load_material(obj.material)
 	return eid
 end
 

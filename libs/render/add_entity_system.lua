@@ -135,10 +135,10 @@ function add_entity_sys:init()
 		ms(bunny.rotation, {0, -60, 0, 0}, "=")
 
 		bunny.mesh.ref_path = "bunny.mesh"
-		component_util.load_mesh(bunny)
+		component_util.load_mesh(bunny.mesh)
      
 		bunny.material.content[1] = {path = "bunny.material", properties = {}}
-		component_util.load_material(bunny)
+		component_util.load_material(bunny.material)
 	 end
 
     
