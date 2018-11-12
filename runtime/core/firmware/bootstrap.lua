@@ -1,8 +1,5 @@
 local firmware, address, port = ...
 
--- todo : remove this
-dofile "libs/init.lua"
-
 local thread = require "thread"
 
 local threadid = thread.id
@@ -48,5 +45,4 @@ function vfs.prefetch(path)
 	io_req:push("PREFETCH", npath(path))
 end
 
--- init vfs
-package.loaded.vfs = vfs
+return vfs
