@@ -3,7 +3,6 @@
 local require = import and import(...) or require
 
 local path = require "filesystem.path"
-local fs = require "filesystem"
 local seri = require "serialize.util"
 local vfsutil= require "vfs.util"
 
@@ -21,14 +20,36 @@ local support_list = {
 	"ozz",
 }
 
-local loaders = setmetatable({} , {
-	__index = function(_, ext)
-		error("Unsupport assetmgr type " .. ext)
-	end
-})
+-- local loaders = setmetatable({} , {
+-- 	__index = function(_, ext)
+-- 		error("Unsupport assetmgr type " .. ext)
+-- 	end
+-- })
 
-for _, mname in ipairs(support_list) do	
-	loaders[mname] = require ("ext_" .. mname)
+-- for _, mname in ipairs(support_list) do	
+-- 	loaders[mname] = require ("ext_" .. mname)
+-- end
+local loaders = {}
+local function get_loader(name)
+	local loader = loaders[name]
+	if loader == nil then		
+		local function is_support(name)
+			for _, v in ipairs(support_list) do
+				if v == name then
+					return true
+				end
+			end
+			return false
+		end
+
+		if is_support(name) then
+			loader = require ("ext_" .. name)
+			loaders[name] = loader
+		else
+			error("Unsupport assetmgr type " .. name)
+		end
+	end
+	return loader
 end
 
 local assetmgr = {}
@@ -36,14 +57,9 @@ assetmgr.__index = assetmgr
 
 local resources = setmetatable({}, {__mode="kv"})
 
-function assetmgr.add_loader(n, l)
-	--assert(loaders[n] == nil)
-	loaders[n] = l
-end
+local asset_rootdir = "assets"
 
-local asset_rootdir = "engine/assets"
-
-local searchdirs = {
+local searchdirs = {	
 	asset_rootdir,
 	asset_rootdir .. "/build"
 }
@@ -91,18 +107,8 @@ function assetmgr.load(filename, param)
 	local res = resources[filename]
 	if res == nil then
 		local ext = assert(path.ext(filename))
-		local fn 
-		for _, ff in ipairs{filename, path.join("depiction", filename)} do
-			fn = assetmgr.find_valid_asset_path(ff)
-			if fn then break end
-		end
-
-		if fn == nil then
-			error(string.format("asset file not found, filename : %s", filename))
-		end
-
-		local loader = loaders[ext]
-		res = loader(fn, param)
+		local loader = get_loader(ext)
+		res = loader(filename, param)
 		resources[filename] = res
 	end
 
@@ -119,16 +125,3 @@ function assetmgr.has_res(filename)
 end
 
 return assetmgr
-
--- local assetmgr_cache = setmetatable({}, {
--- 	__mode = "kv",
--- 	__index = function (t, filename)
--- 		assert(type(filename) == "string")		
--- 		local ext = assert(filename:match "%.([%w_]+)$")
--- 		local v = loaders[ext](filename, t)
--- 		t[filename] = v		
--- 		return v
--- 	end,
--- })
-
--- return assetmgr_cache

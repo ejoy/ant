@@ -3,8 +3,8 @@ local require = import and import(...) or require
 
 local rawtable = require "rawtable"
 local bgfx = require "bgfx"
-local path = require "filesystem.path"
 
+local assetmgr = require "asset"
 local vfsutil = require "vfs.util"
 
 local function texture_load(filename, info)
@@ -78,18 +78,18 @@ local function fill_default_sampler(sampler)
 end
 
 return function (filename)
-	local assetmgr = require "asset"
-
-	local tex = rawtable(filename)
-
-	local pp = assert(tex.path)
-	if not path.is_absolute_path(pp) then
-		pp = assetmgr.find_valid_asset_path(pp)
-		if pp == nil then
-			error("texture path is not valid, path is : " .. tex.path)
-		end
+		local fn = assetmgr.find_valid_asset_path(filename)
+	if fn == nil then 
+		error(string.format("invalid file in ext_texture, %s", filename))
 	end
-	
+
+	local tex = rawtable(fn)
+
+	local pp = assetmgr.find_valid_asset_path(assert(tex.path))
+	if pp == nil then
+		error("texture path is not valid, path is : " .. tex.path)
+	end
+
 	local sampler = tex.sampler
 
 	local flag = generate_sampler_flag(sampler)

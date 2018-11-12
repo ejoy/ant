@@ -1,7 +1,13 @@
 local vfs = require "vfs"
+local assetmgr = require "asset"
 
 return function(filename)
-	local realfilename = vfs.realpath(filename)
+	local fn = assetmgr.find_valid_asset_path(filename)
+	if fn == nil then
+		error(string.format("invalid filename in ext_ozz", filename))
+	end
+
+	local realfilename = vfs.realpath(fn)
 
 	local function find_tagop(readops)
 		local f = io.open(realfilename, "rb")

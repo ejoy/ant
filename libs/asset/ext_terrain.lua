@@ -6,7 +6,12 @@ local path = require "filesystem.path"
 
 -- terrain loader protocal 
 return function (filename, param)
-    local mesh = rawtable(filename)
+	local fn = assetmgr.find_valid_asset_path(filename)
+	if fn == nil then 
+		error(string.format("invalid file in ext_terrain, %s", filename))
+	end
+	
+    local mesh = rawtable(fn)
     -- todo: terrain struct 
     -- or use extension file format outside
      
