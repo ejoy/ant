@@ -30,16 +30,13 @@ libcjson.a :
 LUAINC= -I./../lua
 CFLAGS= -O2 -Wall -fPIC
 
-tmp/preload_module.o : preload_module.cpp preload_module.h
-	g++ -std=c++17 -c $(CFLAGS) $(LUAINC) -o $@ $<
-
-tmp/searcher_C.o : searcher_C.cpp  preload_module.h
+tmp/ant_searcher.o : ant_searcher.cpp ant.h ant_module_define.h ant_module_declar.h
 	g++ -std=c++17 -c $(CFLAGS) $(LUAINC) -o $@ $<
 
 main.o : main.c
 	gcc -std=gnu99 -c $(CFLAGS) $(LUAINC) -o $@ $<
 
-libant.a : tmp/preload_module.o tmp/searcher_C.o $(UNPACKLIBS)
+libant.a : tmp/ant_searcher.o $(UNPACKLIBS)
 	cd tmp && ar rs $@ *.o
 	mv tmp/$@ $@
 
@@ -48,4 +45,4 @@ ant.exe : main.o libant.a
 	strip --strip-unneeded $@ 
 
 clean :
-	rm -f tmp/*.a && rm -f tmp/*.o & rm -f ant.exe libant.a
+	rm -f tmp/*.a && rm -f tmp/*.o && rm -f ant.exe libant.a

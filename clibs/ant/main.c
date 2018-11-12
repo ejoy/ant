@@ -10,9 +10,9 @@ static void hook_openlibs(lua_State *L);
 
 #include "utf8_unicode.c"
 
-int init_searcher(lua_State *L);
+#include "ant.h"
 
 static void hook_openlibs(lua_State *L) {
     luaL_openlibs(L);
-    init_searcher(L);
+    ant_searcher_init(L);
 }
