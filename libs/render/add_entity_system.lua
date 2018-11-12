@@ -1,33 +1,35 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.math3d.math_component"
-ecs.import "render.constant_system"
-ecs.import "inputmgr.message_system"
+
+
 
 ecs.import "render.math3d.math_component"
 ecs.import "render.constant_system"
+ecs.import "render.camera.camera_component"
+ecs.import "render.entity_rendering_system"
+
+
 ecs.import "inputmgr.message_system"
 
 -- light entity
 ecs.import "serialize.serialize_component"
 ecs.import "render.light.light"
 
--- filter
+-- scene
 ecs.import "scene.filter.lighting_filter"
 ecs.import "scene.filter.shadow_filter"
 ecs.import "scene.filter.transparency_filter"
+ecs.import "scene.hierarchy.hierarchy"
 
+-- scene.cull
+--ecs.import "scene.cull_system"
 
 -- test entity
 ecs.import "editor.ecs.editable_hierarchy"
 
 -- enable
 ecs.import "serialize.serialize_system"
-ecs.import "render.view_system"
-ecs.import "render.entity_rendering_system"
-ecs.import "scene.hierarchy.hierarchy"
--- ecs.import "scene.cull_system"
 
 local component_util = require "render.components.util"
 local lu = require "render.light.util"
