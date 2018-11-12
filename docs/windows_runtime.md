@@ -16,12 +16,18 @@
 .\bin\lua.exe .\tools\repo\clientsetup.lua "客户端repo名"
 ```
 
-4. 启动服务端
+4. 资源管理器打开服务端repo， %UserProfile%\Documents\服务端repo名\
+新建文件main.lua,写入
+```lua
+print 'hello world'
+```
+
+5. 启动服务端
 ```
 .\bin\lua.exe .\test\fileserver.lua "服务端repo名"
 ```
 
-5. 启动客户端
+6. 启动客户端
 ```
 .\runtime\windows\ant.exe "客户端repo名"
 ```
