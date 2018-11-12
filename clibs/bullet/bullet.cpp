@@ -1,4 +1,4 @@
-﻿#define LUA_LIB
+#define LUA_LIB
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -63,19 +63,29 @@ lnew_shape(lua_State *L) {
 	plCollisionShapeHandle shape = nullptr;
 	if (strcmp(type, "sphere") == 0) {
 		luaL_checktype(L, 3, LUA_TNUMBER);
-		btScalar radius = (btScalar)lua_tonumber(L, 2);
+		btScalar radius = (btScalar)lua_tonumber(L, 3);   //error: 2-3 
 		shape = plCreateSphereShape(world->sdk, world->world, radius);
+
 	} else if (strcmp(type, "cube") == 0) {		
 		plVector3 size;		
 		get_arg_vec(L, 3, 3, size);
 		shape = plCreateCubeShape(world->sdk, world->world, size);
+
 	} else if (strcmp(type, "plane") == 0) {
 		plReal plane[4];
 		get_arg_vec(L, 3, 4, plane);
 		shape = plCreatePlaneShape(world->sdk, world->world, plane[0], plane[1], plane[2], plane[3]);
 		
 	} else if (strcmp(type, "cylinder") == 0) {
-		
+		const plReal radius = (plReal)lua_tonumber(L,3);
+		const plReal height = (plReal)lua_tonumber(L,4);
+
+		const int axis = (int) luaL_optinteger(L,5,1);
+		if(axis<0 || axis>2) {
+			luaL_error(L, "invalid axis type : %d", axis);
+		}
+		shape = plCreateCylinderShape(world->sdk,world->world,radius,height,axis);
+
 	} else if (strcmp(type, "capsule") == 0) {
 		const plReal radius = (plReal)lua_tonumber(L, 3);
 		const plReal height = (plReal)lua_tonumber(L, 4);
@@ -98,12 +108,23 @@ lnew_shape(lua_State *L) {
 
 template<typename T>
 void extract_vec(lua_State *L, int index, int num, T& obj) {
-	for (auto ii = 0; ii < 3; ++ii) {
+	for (auto ii = 0; ii < num; ++ii) {    //error: 3-num
 		lua_geti(L, index, ii + 1);
 		obj[ii] = (plReal)lua_tonumber(L, -1);
 		lua_pop(L, 1);
 	}
 };
+
+template<typename T>
+void push_vec(lua_State *L, const char* name, int num, const T &obj) {
+	lua_createtable(L, num, 0);
+	for (auto ii = 0; ii < num; ++ii) {
+		lua_pushnumber(L, obj[ii]);
+		lua_seti(L, -2, ii + 1);
+	}
+	lua_setfield(L, -2, name);
+};
+
 
 static int
 lnew_collision_obj(lua_State *L) {
@@ -147,6 +168,15 @@ ladd_collision_obj(lua_State *L) {
 
 	plCollisionObjectHandle obj = (plCollisionObjectHandle)lua_touserdata(L, 2);
 	plAddCollisionObject(world->sdk, world->world, obj);
+	return 0;
+}
+
+static int
+lremove_collision_obj(lua_State *L) {
+	auto world = to_world(L);
+
+	plCollisionObjectHandle obj = (plCollisionObjectHandle) lua_touserdata(L,2);
+	plRemoveCollisionObject(world->sdk,world->world,obj);
 	return 0;
 }
 
@@ -201,6 +231,7 @@ ldel_bullet_world(lua_State *L) {
 	return 0;
 }
 
+// object parameters need open for lua
 static int
 lnew_bullet_world(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
@@ -257,9 +288,19 @@ register_bullet_node(lua_State *L) {
 
 	luaL_setfuncs(L, l, 0);
 }
+
+
+//the follow functions lworld_collide_usb and lworld_collide,must be use in single thread,
+//cause the bullet interface use global as temporal status
+//-- 这样使用回调的方式
+//-- 1. 复杂度较高，对lua使用者稍不友好，也容易出错
+//-- 2. 速度慢，多次的lua 回调，多次的创建回收points 表，再合并，维护开销大
+//-- 3. 没有终止约束条件
+//-- 4. 如果是回调方式，建议从名称上就体现
+// 保留的一种方式
 #include <functional>
 static int
-lcollide(lua_State *L) {
+lworld_collide_ucb(lua_State *L) {
 	auto world = to_world(L);
 	luaL_checktype(L, 2, LUA_TFUNCTION);
 
@@ -267,8 +308,10 @@ lcollide(lua_State *L) {
 		lua_State *L;
 	};
 
-	auto near_callback = [](plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, void* userData,
-			plCollisionObjectHandle objA, plCollisionObjectHandle objB) {
+    // no end constraint ,no safe 
+	auto near_callback = [] (plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, void* userData,
+			plCollisionObjectHandle objA, plCollisionObjectHandle objB) -> void
+	{
 		CallBackData *cb_data = reinterpret_cast<CallBackData*>(userData);
 		lua_State *L = cb_data->L;
 
@@ -290,18 +333,68 @@ lcollide(lua_State *L) {
 	}
 	
 	plWorldCollide(world->sdk, world->world, near_callback, &cb_data);
-	return 1;
+	return 0;
 }
 
-template<typename T>
-void push_vec(lua_State *L, const char* name, int num, const T &obj) {
-	lua_createtable(L, num, 0);
-	for (auto ii = 0; ii < num; ++ii) {
-		lua_pushnumber(L, obj[ii]);
+#define  POINT_CAPACITY  100
+
+static int
+lworld_collide(lua_State *L) {
+	auto world = to_world(L);
+
+	struct CallBackData {
+		lua_State *L;
+		int totalPoints;
+		int numCallbacks;
+		int maxPoints;
+		lwContactPoint ctPoints[ POINT_CAPACITY ];
+	};
+
+
+	// 1. with end constraint  2. reduced the difficulty for lua user 
+	auto near_callback = [] (plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, void* userData,
+			plCollisionObjectHandle objA, plCollisionObjectHandle objB) -> void
+	{
+		CallBackData *cb_data = reinterpret_cast<CallBackData*>(userData);
+
+		cb_data->numCallbacks ++;
+		int remainingCapacity = cb_data->maxPoints - cb_data->totalPoints;
+		if(remainingCapacity> 0) {		
+		  	lwContactPoint *pointPtr = &cb_data->ctPoints[ cb_data->totalPoints ];
+		  	int numPoints = plCollide(sdkHandle,worldHandle,objA,objB,pointPtr,remainingCapacity);
+		  	cb_data->totalPoints += numPoints;
+		  	//printf("find collide point =  %d ,cb = %d\n",numPoints,cb_data->numCallbacks );
+		}		
+	};
+
+	CallBackData cb_data = { L, 0, 0, POINT_CAPACITY };  // init call status 
+	
+	plWorldCollide(world->sdk, world->world, near_callback, &cb_data); //do collide
+
+	if( cb_data.totalPoints <= 0) {
+		return 0;
+	}
+
+	int numContact = cb_data.totalPoints;
+	lwContactPoint *points = &cb_data.ctPoints[0];
+	lua_createtable(L, numContact, 0);
+	for (auto ii = 0; ii < numContact; ++ii) {
+		lua_createtable(L, 0, 4);
+
+		const auto &point = points[ii];
+
+		push_vec(L, "ptA_in_WS", 3, point.m_ptOnAWorld);
+		push_vec(L, "ptB_in_WS", 3, point.m_ptOnBWorld);
+		push_vec(L, "normalB_in_WS", 3, point.m_normalOnB);
+
+		lua_pushnumber(L, point.m_distance);
+		lua_setfield(L, -2, "distance");
+
 		lua_seti(L, -2, ii + 1);
 	}
-	lua_setfield(L, -2, name);
-};
+
+	return 1;
+}
 
 static int
 lcollide_objects(lua_State *L) {
@@ -314,7 +407,7 @@ lcollide_objects(lua_State *L) {
 	auto objA = (plCollisionObjectHandle)lua_touserdata(L, 2);
 	auto objB = (plCollisionObjectHandle)lua_touserdata(L, 3);
 
-	auto userdata = lua_touserdata(L, 4);
+	//auto userdata = lua_touserdata(L, 4);
 
 	lwContactPoint points[16];
 	auto numContract = plCollide(world->sdk, world->world, objA, objB, points, sizeof(points) / sizeof(points[0]));
@@ -400,6 +493,7 @@ lset_obj_trans(lua_State *L) {
 	return 0;
 }
 
+
 static int
 lset_obj_pos(lua_State *L) {
 	auto world = to_world(L);
@@ -425,10 +519,41 @@ lset_obj_rot(lua_State *L) {
 
 	luaL_checktype(L, 3, LUA_TTABLE);
 	plQuaternion quat;
-	extract_vec(L, 3, 3, quat);
+	extract_vec(L, 3, 4, quat);   // error: args 3->4 
 
 	plSetCollisionObjectRotation(world->sdk, world->world, obj, quat);
 
+	return 0;
+}
+
+// yaw,pitch,roll, not use table, avoid  different meanings
+static int 
+lset_obj_rot_euler(lua_State *L) {
+	auto world = to_world(L);
+
+	luaL_checktype(L,2,LUA_TLIGHTUSERDATA);
+	auto obj = (plCollisionObjectHandle)lua_touserdata(L,2);
+
+	plReal yaw = (plReal)lua_tonumber(L, 3); 
+	plReal pitch = (plReal)lua_tonumber(L, 4); 
+	plReal roll = (plReal)lua_tonumber(L, 5); 
+
+	plSetCollisionObjectRotationEuler( world->sdk,world->world,obj, yaw,pitch,roll);
+	return 0;
+}
+static int 
+lset_obj_rot_axis_angle(lua_State *L) {
+	auto world = to_world(L);
+
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	auto obj = (plCollisionObjectHandle)lua_touserdata(L,2);
+
+	luaL_checktype(L, 3, LUA_TTABLE);
+	plVector3 axis;
+	extract_vec(L,3,3,axis);
+	btScalar angle = (btScalar)lua_tonumber(L, 4); 
+
+	plSetCollisionObjectRotationAxisAngle( world->sdk,world->world,obj,axis,angle);
 	return 0;
 }
 
@@ -437,7 +562,7 @@ static void
 register_bullet_world_node(lua_State *L) {
 	luaL_newmetatable(L, "BULLET_WORLD_NODE");
 	lua_pushvalue(L, -1);
-	lua_setfield(L, -2, "__index");	// BULLET_NODE.__index = BULLET_NODE
+	lua_setfield(L, -2, "__index");	 // BULLET_NODE.__index = BULLET_NODE
 
 	luaL_Reg l[] = {
 		"new_shape", lnew_shape,
@@ -445,12 +570,17 @@ register_bullet_world_node(lua_State *L) {
 		"new_obj", lnew_collision_obj,
 		"del_obj", ldel_collision_obj,
 		"add_obj", ladd_collision_obj,
+		"remove_obj",lremove_collision_obj,
 		"set_obj_transform", lset_obj_trans,
 		"set_obj_position", lset_obj_pos,
 		"set_obj_rotation", lset_obj_rot,
+		"set_obj_pos", lset_obj_pos,
+		"set_obj_rot_euler",lset_obj_rot_euler,
+		"set_obj_rot_axis_angle",lset_obj_rot_axis_angle,
 		"add_to_compound", ladd_to_compound,
-		//"remove_from_compound", lremove_from_compound,
-		"collide", lcollide,
+	
+		"world_collide",lworld_collide,
+		"world_collide_ucb", lworld_collide_ucb,
 		"collide_objects", lcollide_objects,
 		"raycast", lraycast,
 		
