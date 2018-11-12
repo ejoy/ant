@@ -16,7 +16,7 @@ mathbaselib.o : mathbaselib.cpp
 math3d.dll : linalg.o math3d.o mathbaselib.o
 	gcc --shared $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB) $(LUAINC) $(GLM_INC)
 
-libmath3d.a : linalg.o math3d.o baselib.o
+libmath3d.a : linalg.o math3d.o mathbaselib.o
 	ar rsv $@ $^
 
 clean :

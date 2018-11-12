@@ -87,4 +87,6 @@ package.searchers[2] = searcher_Lua
 package.searchers[3] = searcher_C
 package.searchers[4] = nil
 package.searchpath = searchpath
-package.loadfile = fs_loadfile
+
+loadfile = fs_loadfile
+dofile = nil -- TODO

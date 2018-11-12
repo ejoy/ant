@@ -5,15 +5,6 @@ ASSIMPROOT = $(ANT3RD)
 ASSIMPINC = -I$(ASSIMPROOT)/assimp/include -I$(ANT3RD)/build/assimp/include
 ASSIMPLIB = -L$(ASSIMPROOT)/build/assimp/code -lassimp -L$(ASSIMPROOT)/build/assimp/contrib/irrXML -lIrrXML -lz
 
-# OZZINC = -I $(ANT3RD) -I$(ANT3RD)/ozz-animation/include
-
-# OZZLIBDIR = $(ANT3RD)/build/ozz-animation
-
-# OZZLIB = -L$(OZZLIBDIR)/samples/framework  -lsample_framework
-# OZZLIB += -L$(OZZLIBDIR)/src/animation/offline -lozz_animation_offline
-# OZZLIB += -L$(OZZLIBDIR)/src/animation/runtime -lozz_animation 
-# OZZLIB += -L$(OZZLIBDIR)/src/base -lozz_base
-
 mingw : assimplua.dll
 
 GLM_INC := -I$(ANT3RD)/glm
