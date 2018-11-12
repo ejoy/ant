@@ -115,8 +115,8 @@ function add_entity_sys:init()
 		lentity.name.n = "ambient_light"
 		--print("-------ambient entity  "..am_entity.name.n..'  '..am_eid)
 
-		component_util.load_mesh(lentity, "sphere.mesh")		
-		component_util.load_material(lentity, {"light_bulb.material"})
+		component_util.load_mesh(lentity.mesh,"sphere.mesh")		
+		component_util.load_material(lentity.material,{"light_bulb.material"})
 
 		lentity.can_render.visible = true    
 	end
@@ -154,9 +154,9 @@ function add_entity_sys:init()
 	-- 	ms(pochuan.scale, {0.1, 0.1, 0.1}, "=")
 	-- 	ms(pochuan.rotation, {-90, 0, 0,}, "=")
 
-	-- 	component_util.load_mesh(pochuan, "pochuan.mesh")--, {calctangent=false})
-	-- 	component_util.load_material(pochuan, {"pochuan.material"})
-	-- 	--component_util.load_material(pochuan, {"bunny.material"})
+	-- 	component_util.load_mesh(pochuan.mesh,"pochuan.mesh")--, {calctangent=false})
+	-- 	component_util.load_material(pochuan.material,{"pochuan.material"})
+	-- 	--component_util.load_material(pochuan.material,{"bunny.material"})
 	-- end
 
     -- 测试场景时，打开 PVPScene 加载BnH模型
@@ -237,8 +237,8 @@ function add_entity_sys:init()
         ms(entity.position, {0, 0, 0, 1}, "=") 
         ms(entity.rotation, {0, 0, 0}, "=")
 		
-		component_util.load_mesh(entity, meshfile)		
-		component_util.load_material(entity, {materialfile})
+		component_util.load_mesh(entity.mesh, meshfile)		
+		component_util.load_material(entity.material,{materialfile})
         return eid
 	end
 	

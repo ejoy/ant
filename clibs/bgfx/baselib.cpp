@@ -22,11 +22,9 @@ lgetHPTime(lua_State *L) {
 	int64_t c = bx::getHPCounter();
 	int64_t t = bx::getHPFrequency();
 
-	const char* unit = lua_type(L, 1) == LUA_TSTRING ? lua_tostring(L, 1) : "ms";
-	double time = ((double)c / (double)t) * 1000;
-	if (strcmp(unit, "ms") == 0)
-		time *= 1000;
-	
+	int64_t l = lua_tointeger(L, 1);
+
+	double time = ((c - l) / (double)t) * 1000.f;	// 1000 for ms
 	lua_pushnumber(L, time);
 	return 1;
 }

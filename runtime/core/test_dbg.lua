@@ -1,8 +1,6 @@
-dofile "libs/init.lua"
-
 local reponame = assert((...), "Need repo name")
 
-local fs = require "filesystem"
+local fs = require "lfs"
 local thread = require "thread"
 
 
@@ -18,8 +16,7 @@ local vfs = require "vfs"	-- from boot
 print("Repo:", repopath)
 vfs.open(repopath)
 
-dofile 'runtime/core/init_thread.lua'
-
+assert(loadfile('runtime/core/init_thread.lua'))(package.searchers[3])
 
 thread.newchannel "DdgNet"
 local io_req  = thread.channel "IOreq"
@@ -49,27 +46,35 @@ end
 local dbg = require 'debugger'
 local dbgupdate = dbg.start_master(dbg_io)
 
-thread.thread [[
-print(pcall(function()
-	dofile 'runtime/core/init_thread.lua'
+local function createThread(name, code)
+	thread.thread(([[
+	--%s
+	assert(loadfile('runtime/core/init_thread.lua'))(...)
+%s]]):format(name, code)
+		, package.searchers[3]
+	)
+end
 
-	local dbg = require 'debugger'
-	local dbgupdate = dbg.start_worker()
-
+createThread('errlog', [[
 	local thread = require "thread"
 	local err = thread.channel "errlog"
+	while true do
+		print("ERROR:" .. err:bpop())
+	end
+]])
 
-	local function printLOG(ok, ...)
-		if ok then
-			print("ERROR:" .. ...)
-		end
+createThread('debug', [[
+	local dbg = require 'debugger'
+	local dbgupdate = dbg.start_worker()
+	local function test()
+		local i = 0
+		i = i + 1
 	end
 	while true do
+		test()
 		dbgupdate()
-		printLOG(err:pop())
 	end
-end))
-]]
+]])
 
 while true do
 	dbgupdate()

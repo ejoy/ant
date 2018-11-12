@@ -6,6 +6,7 @@ ecs.import "render.camera.camera_component"
 ecs.import "render.entity_rendering_system"
 ecs.import "render.view_system"
 
+
 -- lighting
 ecs.import "render.light.light"
 
@@ -25,12 +26,15 @@ ecs.import "physic.rigid_body"
 -- editor
 ecs.import "editor.ecs.camera_controller"
 ecs.import "editor.ecs.pickup_system"
+ecs.import "editor.ecs.render.widget_system"
 
 -- editor elements
 ecs.import "editor.ecs.general_editor_entities"
 local bu = require "bullet.lua.util"
 
 local bgfx = require "bgfx"
+
+local geo = require "editor.ecs.render.geometry"
 
 local model_ed_sys = ecs.system "model_editor_system"
 model_ed_sys.singleton "math_stack"
@@ -46,8 +50,8 @@ local fu = require "filesystem.util"
 
 local modelutil = require "modelloader.util"
 
-local function load_mesh_assetinfo(skinning_mesh_comp)
-	local bgfx = require "bgfx"
+
+local function gen_mesh_assetinfo(skinning_mesh_comp)	
 	local skinning_mesh = skinning_mesh_comp.assetinfo.handle
 
 	local decls = {}
@@ -101,9 +105,83 @@ local smaplemaerial = "skin_model_sample.material"
 local sample_obj_user_idx = 1
 local plane_obj_user_idx = 2
 
+--[[
+	ltf---------max
+	/|			/|
+   / |		   / |
+  ltn--------rtn |
+   |lbf-------|-rbf
+   | /		  | /
+   |/		  |/
+  min--------rbn
+]]
+
+local function add_aabb_widget(eid)
+	world:add_component(eid, "widget")
+	local e = world[eid]
+	local descs = {}
+	local aabb_material = "line.material"
+
+	local _, ib = geo.box_from_aabb(nil, true, true)
+	for _, g in ipairs(assert(e.mesh).assetinfo.handle.groups) do
+		local bounding = g.bounding
+		local aabb = assert(bounding.aabb)
+		
+		local vb = geo.box_from_aabb(aabb)
+		table.insert(descs, {
+			vb = vb,
+			ib = ib,
+			material = aabb_material,
+		})
+
+	end
+
+	local ibhandle = bgfx.create_index_buffer(ib)
+	local decl = bgfx.vertex_decl {
+		{ "POSITION", 3, "FLOAT" },
+		{ "COLOR0", 4, "UINT8", true },
+	}
+
+	local function create_mesh_groups(descs, color)
+		local groups = {}
+		for _, desc in ipairs(descs) do
+			local vb = {"fffd",}
+			for _, v in ipairs(desc.vb) do
+				for _, vv in ipairs(v) do
+					table.insert(vb, vv)
+				end
+				table.insert(vb, color)
+			end
+
+			table.insert(groups, {
+					vb = {handles = {	bgfx.create_vertex_buffer(vb, decl)	}},
+					ib = {handle = ibhandle},
+				})
+		end
+
+		return groups
+	end
+
+	local widget = e.widget
+	widget.mesh = {
+		descs = descs,
+		assetinfo = {
+			handle = {
+				groups = create_mesh_groups(descs, 0xffff0000),
+			}
+		}
+	}
+
+	widget.material = {
+		content = {}
+	}
+	comp_util.load_material(widget.material, {aabb_material})
+
+	widget.srt = {}--{s=e.scale, r=nil, t=e.position}
+end
+
 local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
-	local eid = world:new_entity("position", "scale", "rotation",
-	"skeleton", "animation", "skinning_mesh", 
+	local eid = world:new_entity("position", "scale", "rotation",	
 	"rigid_body",		-- physic relate
 	"mesh", "material",
 	"name", "can_render")
@@ -114,21 +192,29 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	local mu = require "math.util"
 	mu.identify_transform(ms, e)
 
-	comp_util.load_skeleton(e, skepath)
-	comp_util.load_animation(e, anipath)
+	if skepath and skepath ~= "" then
+		world:add_component(eid, "skeleton")
+		comp_util.load_skeleton(e.skeleton, skepath)
+	end
 
-	do
-		local skehandle = assert(e.skeleton.assetinfo.handle)
-		local numjoints = #skehandle
-		e.animation.sampling_cache = comp_util.new_sampling_cache(#skehandle)
+	if anipath and anipath ~= "" then
+		world:add_component(eid, "animation")
+		comp_util.load_animation(e.animation, e.skeleton, anipath)
+	end
 
-		local anihandle = e.animation.assetinfo.handle
-		anihandle:resize(numjoints)
+	local skinning_mesh
+	if skinning_meshpath and skinning_meshpath ~= "" then
+		if e.skeleton and e.animation then
+			world:add_component(eid, "skinning_mesh")
+			skinning_mesh = e.skinning_mesh
+		else
+			skinning_mesh = {}
+		end
+
+		comp_util.load_skinning_mesh(skinning_mesh, skinning_meshpath)			
 	end
 	
-
-	comp_util.load_skinning_mesh(e, skinning_meshpath)	
-	e.mesh.assetinfo = load_mesh_assetinfo(e.skinning_mesh)
+	e.mesh.assetinfo = gen_mesh_assetinfo(skinning_mesh)
 
 	local function init_physic_obj()
 		local rigid_body = e.rigid_body
@@ -149,7 +235,9 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 
 	init_physic_obj()
 
-	comp_util.load_material(e, {smaplemaerial})
+	comp_util.load_material(e.material,{smaplemaerial})
+
+	add_aabb_widget(eid)
 	return eid
 end
 
@@ -160,9 +248,11 @@ local function get_ani_cursor(slider)
 end
 
 local function update_animation_ratio(eid, cursor_pos)
-	local e = world[eid]
-	local anicomp = assert(e.animation)	
-	anicomp.ratio = cursor_pos
+	local e = world[eid]	
+	local anicomp = e.animation
+	if anicomp then
+		anicomp.ratio = cursor_pos
+	end
 end
 
 local function create_plane_entity()
@@ -223,7 +313,7 @@ local function create_plane_entity()
 
 	plane.mesh.assetinfo = create_plane_mesh_info()
 
-	comp_util.load_material(plane, {smaplemaerial})
+	comp_util.load_material(plane.material,{smaplemaerial})
 
 	-- rigid_body
 	local rigid_body = plane.rigid_body
@@ -237,9 +327,9 @@ local function create_plane_entity()
 	rigid_body.obj.useridx = plane_obj_user_idx
 end
 
-local function init_control(ms)
-	local sample_eid
+local sample_eid
 
+local function init_control(ms)
 	local skepath_ctrl = windows.ske_path
 	local anipath_ctrl = windows.ani_path
 	local meshpath_ctrl = windows.mesh_path
@@ -262,10 +352,8 @@ local function init_control(ms)
 			return true
 		end
 
-		if check_path_valid(anipath) and
-			check_path_valid(skepath) and
-			check_path_valid(skinning_meshpath) then
-			
+		-- only skinning meshpath is needed!
+		if check_path_valid(skinning_meshpath) then			
 			if sample_eid then
 				world:remove_entity(sample_eid)
 			end
@@ -288,8 +376,8 @@ local function init_control(ms)
 		check_create_sample_entity(skepath_ctrl, anipath_ctrl, self)
 	end
 
-	skepath_ctrl.VALUE=fu.write_to_file("cache/ske.ske", [[path="meshes/skeleton/skeleton"]])
-	anipath_ctrl.VALUE=fu.write_to_file("cache/ani.ani", [[path="meshes/animation/animation_base"]])
+	-- skepath_ctrl.VALUE=fu.write_to_file("cache/ske.ske", [[path="meshes/skeleton/skeleton"]])
+	-- anipath_ctrl.VALUE=fu.write_to_file("cache/ani.ani", [[path="meshes/animation/animation_base"]])
 	meshpath_ctrl.VALUE = "meshes/mesh.ozz"
 	check_create_sample_entity(skepath_ctrl, anipath_ctrl, meshpath_ctrl)
 
@@ -299,11 +387,14 @@ local function init_control(ms)
 	local function update_static_duration_value()
 		if sample_eid then
 			local e = world[sample_eid]
-			local anihandle = assert(e.animation.assetinfo).handle
-			
-			local duration = anihandle:duration()			
-			local static_duration_value = iup.GetDialogChild(dlg, "STATIC_DURATION")
-			static_duration_value.TITLE = string.format("Time(%.2f ms)", duration * 1000)
+			local ani = e.animation
+			if ani then 
+				local anihandle = ani.assetinfo.handle
+				
+				local duration = anihandle:duration()			
+				local static_duration_value = iup.GetDialogChild(dlg, "STATIC_DURATION")
+				static_duration_value.TITLE = string.format("Time(%.2f ms)", duration * 1000)
+			end
 		end
 	end
 
@@ -371,6 +462,13 @@ local function init_lighting(ms)
 	ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")
 end
 
+local function focus_sample()
+	if sample_eid then		
+		world:change_component(sample_eid, "focus_selected_obj")
+		world.notify()
+	end
+end
+
 -- luacheck: ignore self
 function model_ed_sys:init()
 	local ms = self.math_stack
@@ -379,6 +477,5 @@ function model_ed_sys:init()
 
 	create_plane_entity()
 
-	local comp = {mesh={}}	
-	comp_util.load_mesh(comp, "bunny.mesh")
+	focus_sample()
 end

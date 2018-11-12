@@ -20,7 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\assimplua\antmesh_converter.cpp" />
-    <ClCompile Include="..\..\clibs\assimplua\assimplua.cpp" />
+    <ClCompile Include="..\..\clibs\assimplua\assimplua.cpp">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
     <ClCompile Include="..\..\clibs\assimplua\bgfxmesh_helper.cpp" />
     <ClCompile Include="..\..\clibs\assimplua\fbx_helper.cpp" />
     <ClCompile Include="..\..\clibs\assimplua\utils.cpp" />

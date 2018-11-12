@@ -110,8 +110,11 @@ call_cfunction(lua_State *L, lua_CFunction f, const char * source, const char *c
 		lua_pushlightuserdata(L, ud);
 	}
 	if (lua_pcall(L, (ud == NULL) ? 2 : 3, ret, 1) != LUA_OK) {
+		lua_replace(L, -2);
 		return pusherr(L);
 	}
+	// remove db_traceback
+	lua_remove(L, - ret - 1);
 	return NULL;
 }
 
@@ -178,14 +181,18 @@ pushargs(lua_State *L, const char *format, va_list ap, lua_State *dL, int *ret) 
 		return 0;
 	int i;
 	for (i=0;format[i];i++) {}
-	if (!lua_checkstack(L, i+1))	// +1 for pushcstr
+	if (!lua_checkstack(L, i+1)) {	// +1 for pushcstr
 		return -1;
+	}
 	if (ret) {
 		*ret = 0;
 		lua_settop(dL, RETOP);
-		if (!lua_checkstack(dL, RETOP + i + 1))
+		if (!lua_checkstack(dL, RETOP + i + 1)) {
 			return -1;
+		}
 	}
+	if (i == 0)
+		return 0;
 	int n = 0;
 	for (i=0;format[i];i++) {
 		switch(format[i]) {
@@ -276,6 +283,8 @@ luavm_init(struct luavm *V, const char * source, const char *format, ...) {
 	return err;
 }
 
+#include <stdlib.h>
+
 const char *
 luavm_call(struct luavm *V, int handle, const char *format, ...) {
 	lua_State *L = V->L;
@@ -295,10 +304,12 @@ luavm_call(struct luavm *V, int handle, const char *format, ...) {
 	int nargs = pushargs(L, format, ap, dL, &nret);
 	if (nargs < 0) {
 		lua_pop(L, 2);
+		printf("format = [%s] nargs = %d %d\n", format, handle, nargs);
 		return "Invalid argument";
 	}
 
 	if (lua_pcall(L, nargs, nret, -2-nargs) != LUA_OK) {
+		lua_replace(L, -2);	// remove db_traceback
 		return pusherr(L);
 	} else if (nret > 0) {
 		int i;
@@ -332,5 +343,6 @@ luavm_call(struct luavm *V, int handle, const char *format, ...) {
 			}
 		}
 	}
+	lua_pop(L, 1);	// remove db_traceback
 	return NULL;
 }

@@ -87,7 +87,7 @@ end
 
 -- map path in repo to realpath (replace mountpoint)
 function repo:realpath(filepath)
-	local rp = access.realpath(filepath)
+	local rp = access.realpath(self, filepath)
 	local newrp, newcreated = packfile_real(rp)
 	if newcreated then
 		self:touch(newrp)

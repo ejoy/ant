@@ -3,6 +3,7 @@ local require = import and import(...) or require
 
 local rawtable = require "rawtable" 
 local hiemodule = require "hierarchy"
+local vfs = require "vfs"
 
 
 -- luacheck: ignore param
@@ -14,6 +15,7 @@ return function (filename, param)
 	if skefile == nil then
 		error(string.format("file not found, filename : ", content.path))
 	end
-	content.handle = hiemodule.build(skefile)
+	local rp_skefile = vfs.realpath(skefile)
+	content.handle = hiemodule.build(rp_skefile)
 	return content
 end

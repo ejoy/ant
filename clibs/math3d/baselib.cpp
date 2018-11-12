@@ -200,10 +200,12 @@ frustum_planes_intersection_points(std::array<glm::vec4, 6> &planes, std::array<
 static inline void
 push_aabb(lua_State *L, const AABB &aabb, int32_t index) {
 	auto push_value = [L, index](auto name, auto value) {
+		lua_getfield(L, index, name);
 		for (int ii = 0; ii < 3; ++ii) {
 			lua_pushnumber(L, *value++);
-			lua_seti(L, index, ii + 1);
+			lua_seti(L, -2, ii + 1);
 		}
+		lua_pop(L, 1);
 	};
 	push_value("min", &aabb.min.x);
 	push_value("max", &aabb.max.x);

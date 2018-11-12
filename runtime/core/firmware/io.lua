@@ -1,7 +1,6 @@
 -- IO Thread
-
--- todo: Don't use cpath from libs/init.lua
-dofile "libs/init.lua"
+package.searchers[3] = ...
+package.searchers[4] = nil
 
 local INTERVAL = 0.01 -- socket select timeout
 

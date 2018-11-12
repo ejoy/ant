@@ -10,8 +10,6 @@ dofile(rootdir .. "/libs/init.lua")
 
 local path = require "filesystem.path"
 
-local winfile =  require "winfile"
-
 local modelutil = require "modelloader.util"
 local su = require "serialize.util"
 
@@ -58,7 +56,7 @@ for _, ff in ipairs(files) do
 
 	local lkfile = path.replace_ext(ff, "lk")
 	print("write lk : ", lkfile)
-	local lk = winfile.open(lkfile, "wb")
+	local lk = io.open(lkfile, "wb")
 	lk:write(template_filecontent)
 	lk:close()
 end

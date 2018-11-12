@@ -1,3 +1,4 @@
+--luacheck: globals iup
 require "iuplua"
 local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"

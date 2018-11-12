@@ -2,6 +2,7 @@
 local require = import and import(...) or require
 
 local rawtable = require "rawtable" 
+local vfs = require "vfs"
 
 -- luacheck: ignore param
 return function(filename, param)
@@ -17,6 +18,7 @@ return function(filename, param)
 	end
 
 	local animodule = require "hierarchy.animation"
-	content.handle = animodule.new_ani(anifile)
+	local rp_anifile = vfs.realpath(anifile)
+	content.handle = animodule.new_ani(rp_anifile)
 	return content
 end

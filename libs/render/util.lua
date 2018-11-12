@@ -67,18 +67,6 @@ local function update_property(name, property)
 		if need_unpack(val) then
 			bgfx.set_uniform(assert(uniform.handle), table.unpack(val))
 		else
-			if "u_shadowMapMtx0" == uniform.name then 
-				--print("MapMtx0",val)		
-			elseif "u_shadowMapMtx1" == uniform.name then 		
-				--print("MapMtx1",val)		
-			elseif "u_shadowMapMtx2" == uniform.name then 		
-				--print("MapMtx2",val)		
-			elseif "u_shadowMapMtx3" == uniform.name then
-				--print("MapMtx3",val)		
-				-- filter shadowMaMtx 
-			else  		
-				-- bgfx.set_uniform(assert(uniform.handle), val)
-			end 
 			bgfx.set_uniform(assert(uniform.handle), val)
 		end
 		
@@ -100,7 +88,7 @@ local function check_uniform_is_match_with_shader(shader, properties)
     
         local p = find_property(name)
         if p == nil then             
-            --log(string.format("uniform : %s, not privided, but shader program needed", name))
+            log(string.format("uniform : %s, not privided, but shader program needed", name))
         else
             local ptype = property_type_description[p.type]
             if ptype.type ~= u.type then
@@ -154,6 +142,24 @@ function util.draw_primitive(vid, primgroup, mat)
 			end
 			bgfx.submit(vid, prog, 0, i~=numprim)
 		end
+	end
+end
+
+function util.insert_primitive(eid, meshhandle, materials, srt, result)
+	local mgroups = meshhandle.groups
+	for i=1, #mgroups do
+		local g = mgroups[i]
+		local mc = materials[i] or materials[1]
+		local material = mc.materialinfo
+		local properties = mc.properties
+
+		table.insert(result, {
+			eid = eid,
+			mgroup = g,
+			material = material,
+			properties = properties,
+			srt = srt,
+		})
 	end
 end
 
