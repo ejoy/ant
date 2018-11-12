@@ -20,7 +20,7 @@
     <ClCompile Include="..\..\clibs\math3d\math3d.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\math3d\baselib.cpp">
+    <ClCompile Include="..\..\clibs\math3d\mathbaselib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
