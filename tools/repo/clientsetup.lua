@@ -1,7 +1,5 @@
 dofile 'libs/init.lua'
 
-local reponame = assert((...), 'Need repo name')
-
 local fs = require 'cppfs'
 local cwd = fs.current_path()
 
@@ -27,7 +25,7 @@ local function cpdir(from, to)
 	end
 end
 
-local repopath = fs.path(os.getenv 'UserProfile') / 'Documents' / reponame
+local repopath = arg[1] or fs.path(os.getenv 'UserProfile') / 'Documents' / 'ant' / 'runtime'
 for i = 0, 255 do
 	mkdir(repopath / '.repo' / ('%02x'):format(i))
 end

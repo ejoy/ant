@@ -22,21 +22,19 @@ static const char* lua_pushutf8string(lua_State* L, const wchar_t* wstr, size_t 
         luaL_error(L, "convert to utf-8 string fail.");
         return 0;
     }
-	const char* r = lua_pushlstring(L, ustr, rusz);
+	const char* r = lua_pushlstring(L, ustr, rusz-1);
     allocf(ud, ustr, usz, 0);
     return r;
 }
 
-static const char* repoinit(lua_State* L, const wchar_t* name) {
+static const char* default_repo(lua_State* L) {
 	wchar_t dir[MAX_PATH] = {0};
 	LPITEMIDLIST pidl = NULL;
 	SHGetSpecialFolderLocation(NULL, CSIDL_PERSONAL, &pidl);
     SHGetPathFromIDListW(pidl, dir);
-	PathAppendW(dir, name);
+	PathAppendW(dir, L"ant");
+	PathAppendW(dir, L"runtime");
     SetCurrentDirectoryW(dir);
-
-	PathAppendW(dir, L"firmware");
-	PathAppendW(dir, L"init.lua");
 	return lua_pushutf8string(L, dir, -1);
 }
 
@@ -68,9 +66,15 @@ static int pmain (lua_State *L) {
     luaL_openlibs(L);
     ant_searcher_init(L);
     if (argc <= 1) {
-        return luaL_error(L, "Need repo name");
+        default_repo(L);
     }
-    dofile(L, repoinit(L, argv[1]));
+    else {
+        SetCurrentDirectoryW(argv[1]);
+        lua_pushutf8string(L, argv[1], -1);
+    }
+    lua_pushstring(L, "\\firmware\\init.lua");
+	lua_concat(L, 2);
+    dofile(L, lua_tostring(L, -1));
     return 0;
 }
 
