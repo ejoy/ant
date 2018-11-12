@@ -178,7 +178,7 @@ local function init_terrain(fbw, fbh, entity )
 
 	local program_create_mode = 1
 	-- load terrain level 
-    -- gemotry create mode 
+    -- gemotry create mode extend
 	terrain:load( terrain_comp.level_name ,   --"assets/build/terrain/pvp1.lvl",
 					{   -- 自定义顶点格式
 						{ "POSITION", 3, "FLOAT" },
