@@ -1,8 +1,10 @@
+-- 定义封装成 bullet 的 lua api layer，用户只需要条用一个 layer api 即可
+
 local util = {}
 util.__index = util
 
 function util.create_planeShape(btworld, nx, ny, nz, distance)
-	return btworld:new_shape("sphere", nx, ny, nz, distance)
+	return btworld:new_shape("plane", nx, ny, nz, distance)
 end
 
 function util.create_sphereShape(btworld, radius)

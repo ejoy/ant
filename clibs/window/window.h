@@ -11,9 +11,11 @@
 #define ANT_WINDOW_CALLBACK "ANT_WINDOW_CALLBACK"
 
 struct ant_window_update {
+	size_t dump;
 };
 
 struct ant_window_exit {
+	size_t dump;
 };
 
 struct ant_window_touch {

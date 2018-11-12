@@ -24,16 +24,27 @@ public:
 													plReal planeNormalY,
 													plReal planeNormalZ,
 													plReal planeConstant) = 0;
-
 	virtual plCollisionShapeHandle createCapsuleShape(plCollisionWorldHandle worldHandle,
 													  plReal radius,
 													  plReal height,
 													  int capsuleAxis) = 0;
 
+	virtual plCollisionShapeHandle createCylinderShape(plCollisionWorldHandle worldHandle,
+													   plReal radius,
+													   plReal height,
+													   int upAxis) = 0;
+
+	virtual plCollisionShapeHandle createTerrainShape(plCollisionWorldHandle worldHandle,
+													int width,int height, const void *heightData, plReal gridSize,
+													plReal heightScale,plReal minHeight,plReal maxHeight,int upAxis,
+													int phyDataType,
+													bool filpQuadEdges) = 0;													
+
 	virtual plCollisionShapeHandle createCompoundShape(plCollisionWorldHandle worldHandle) = 0;
 	virtual void addChildShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle compoundShape, plCollisionShapeHandle childShape, plVector3 childPos, plQuaternion childOrn) = 0;
 
 	virtual void deleteShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle shape) = 0;
+
 
 	virtual void addCollisionObject(plCollisionWorldHandle world, plCollisionObjectHandle object) = 0;
 	virtual void removeCollisionObject(plCollisionWorldHandle world, plCollisionObjectHandle object) = 0;
@@ -51,9 +62,17 @@ public:
 	virtual void setCollisionObjectRotation( plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
 												 plQuaternion orientation ) = 0;
 
+	// friendly user interface
+	virtual void setCollisionObjectRotationEuler( plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
+												   plReal yaw, plReal pitch, plReal roll) = 0;
+																		 
+	virtual void setCollisionObjectRotationAxisAngle( plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
+												 plVector3 axis, plReal angle) = 0;
+												 
+	// collide between two objects
 	virtual int collide(plCollisionWorldHandle world, plCollisionObjectHandle colA, plCollisionObjectHandle colB,
 						lwContactPoint* pointsOut, int pointCapacity) = 0;
-
+    // world collide 
 	virtual void collideWorld(plCollisionWorldHandle world,
 							  plNearCallback filter, void* userData) = 0;
 

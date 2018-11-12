@@ -95,7 +95,7 @@ function shadow_config:init()
 
     -- for params1
     self.shadowMapBias   = 0.0000015*FAR    
-    self.shadowMapOffset = 0.2     
+    self.shadowMapOffset = 0.5  --0.2    
     self.shadowMapParam0 = 0         
     self.shadowMapParam1 = 0                                             
                                      -- hard = none,none 
@@ -112,7 +112,7 @@ function shadow_config:init()
     self.debug_drawShadow = false 
     self.debug_drawLightView = false 
     self.debug_virtualCamera = false
-    self.debug_virtualLight = false      
+    self.debug_virtualLight = false       
     self.debug_drawScene = false        
                                                    -- depth generate method
     self.progShadow   = "packDepth_InvZ_RGBA"      -- inverse z depth method    
@@ -795,12 +795,11 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
             bgfx.submit( viewId, self.materials.debug_drawDepth.shader.prog )  
         end 
     end 
-
-    bgfx.set_view_rect(VIEWID_DRAWSCENE,0,0,ctx.width,ctx.height)
-    bgfx.set_view_transform(VIEWID_DRAWSCENE,ms(camera_view,"m"),ms(camera_proj,"m") )   -- (id->pointer) bgfx need pointer 
-    
+ 
     -- render scene with shadow 
     if config.debug_drawScene then           
+        bgfx.set_view_rect(VIEWID_DRAWSCENE,0,0,ctx.width,ctx.height)
+        bgfx.set_view_transform(VIEWID_DRAWSCENE,ms(camera_view,"m"),ms(camera_proj,"m") )   -- (id->pointer) bgfx need pointer     
         self:render_debug_with_shadow( entity, select_filter, self.materials.debug_drawScene )
     end 
 

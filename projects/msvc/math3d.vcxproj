@@ -176,9 +176,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\math3d\baselib.cpp" />
     <ClCompile Include="..\..\clibs\math3d\linalg.c" />
     <ClCompile Include="..\..\clibs\math3d\math3d.cpp" />
+    <ClCompile Include="..\..\clibs\math3d\mathbaselib.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\math3d\linalg.h" />

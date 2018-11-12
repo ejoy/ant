@@ -105,17 +105,6 @@ local smaplemaerial = "skin_model_sample.material"
 local sample_obj_user_idx = 1
 local plane_obj_user_idx = 2
 
---[[
-	ltf---------max
-	/|			/|
-   / |		   / |
-  ltn--------rtn |
-   |lbf-------|-rbf
-   | /		  | /
-   |/		  |/
-  min--------rbn
-]]
-
 local function add_aabb_widget(eid)
 	world:add_component(eid, "widget")
 	local e = world[eid]
