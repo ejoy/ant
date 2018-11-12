@@ -26,9 +26,19 @@ public:
 													plReal planeConstant);
 
 	virtual plCollisionShapeHandle createCapsuleShape(plCollisionWorldHandle worldHandle,
-													  plReal radius,
-													  plReal height,
-													  int capsuleAxis);
+													plReal radius,
+													plReal height,
+													int capsuleAxis);
+
+	virtual plCollisionShapeHandle createCylinderShape(plCollisionWorldHandle worldHandle,
+													plReal radius,plReal height,int upAxis);
+
+
+	virtual plCollisionShapeHandle createTerrainShape(plCollisionWorldHandle worldHandle,
+													int width,int height, const void *heightData,plReal gridSize,
+													plReal heightScale,plReal minHeight,plReal maxHeight,int upAxis,
+													int phyDataType,
+													bool filpQuadEdges);													
 
 	virtual plCollisionShapeHandle createCompoundShape(plCollisionWorldHandle worldHandle);
 	virtual void addChildShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle compoundShape, plCollisionShapeHandle childShape, plVector3 childPos, plQuaternion childOrn);
@@ -50,20 +60,23 @@ public:
 	virtual void setCollisionObjectRotation( plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
 												 plQuaternion orientation );
 
+	// friendly function for setting quaternion
+	virtual void setCollisionObjectRotationEuler( plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
+												plReal yaw, plReal pitch, plReal roll);
+	virtual void setCollisionObjectRotationAxisAngle( plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
+												plVector3 axis, plReal angle);
+
 
 	virtual int collide(plCollisionWorldHandle world, plCollisionObjectHandle colA, plCollisionObjectHandle colB,
 						lwContactPoint* pointsOut, int pointCapacity);
 
-	
+	//add raycast 
 	virtual bool raycast( plCollisionWorldHandle worldHandle, plVector3 rayFrom, plVector3 rayTo,
 								   ClosestRayResult &result);
 
 	virtual void collideWorld(plCollisionWorldHandle world,
 							  plNearCallback filter, void* userData);
 
-	// add new collideWorld, attempt to avoid global variables for user 10.11
-	virtual void collideWorld_L(plCollisionWorldHandle world,
-							  plNearCallback_L filter,void *userData);
 
 	static plCollisionSdkHandle createBullet2SdkHandle();
 };

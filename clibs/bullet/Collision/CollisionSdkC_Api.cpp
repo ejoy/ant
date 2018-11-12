@@ -57,7 +57,7 @@ plCollisionShapeHandle plCreateSphereShape(plCollisionSdkHandle collisionSdkHand
 	return sdk->createSphereShape(worldHandle, radius);
 }
 
-plCollisionShapeHandle plCreatePlaneShape(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle,
+plCollisionShapeHandle plCreatePlaneShape( plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle,
 										  plReal planeNormalX,
 										  plReal planeNormalY,
 										  plReal planeNormalZ,
@@ -67,10 +67,29 @@ plCollisionShapeHandle plCreatePlaneShape(plCollisionSdkHandle collisionSdkHandl
 	return sdk->createPlaneShape(worldHandle, planeNormalX, planeNormalY, planeNormalZ, planeConstant);
 }
 
-plCollisionShapeHandle plCreateCapsuleShape(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plReal radius, plReal height, int capsuleAxis)
+// phyDataType = 0:float,3:unshort,5:uchar 
+plCollisionShapeHandle plCreateTerrainShape( plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle,
+													int width,int height, const void *heightData, plReal gridSize,
+													plReal heightScale, plReal minHeight, plReal maxHeight, int upAxis,
+													int phyDataType,
+													bool filpQuadEdges)
+{
+	// do data convert! need more setting 
+	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
+	return sdk->createTerrainShape(worldHandle,width,height,heightData, gridSize, heightScale, minHeight,maxHeight,upAxis,
+													phyDataType, filpQuadEdges ); 
+}
+
+plCollisionShapeHandle plCreateCapsuleShape( plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plReal radius, plReal height, int capsuleAxis)
 {
 	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
 	return sdk->createCapsuleShape(worldHandle, radius, height, capsuleAxis);
+}
+
+plCollisionShapeHandle plCreateCylinderShape( plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plReal radius, plReal height, int upAxis )
+{
+	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
+	return sdk->createCylinderShape(worldHandle, radius ,height,upAxis);
 }
 
 plCollisionShapeHandle plCreateCompoundShape(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle)
@@ -89,6 +108,8 @@ void plDeleteShape(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHand
 	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
 	sdk->deleteShape(worldHandle, shapeHandle);
 }
+
+
 
 plCollisionObjectHandle plCreateCollisionObject(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, void* userData, int userIndex, plCollisionShapeHandle cshape, plVector3 childPos, plQuaternion childOrn)
 {
@@ -119,6 +140,21 @@ void plSetCollisionObjectRotation( plCollisionSdkHandle collisionSdkHandle, plCo
 	sdk->setCollisionObjectRotation( worldHandle, objHandle, orientation );
 }
 
+// user friendly interface
+void plSetCollisionObjectRotationEuler( plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
+												   plReal yaw, plReal pitch, plReal roll)
+{
+	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
+	sdk->setCollisionObjectRotationEuler( worldHandle, objHandle, yaw,pitch, roll );
+}
+																								 
+void plSetCollisionObjectRotationAxisAngle( plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
+												   plVector3 axis,plReal angle )
+{
+	CollisionSdkInterface* sdk = (CollisionSdkInterface*) collisionSdkHandle;
+	sdk->setCollisionObjectRotationAxisAngle( worldHandle, objHandle, axis, angle );
+}												   
+
 void plAddCollisionObject(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle world, plCollisionObjectHandle object)
 {
 	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
@@ -129,6 +165,8 @@ void plRemoveCollisionObject(plCollisionSdkHandle collisionSdkHandle, plCollisio
 	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
 	sdk->removeCollisionObject(world, object);
 }
+
+
 
 /* Collision Queries */
 int plCollide(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle colA, plCollisionObjectHandle colB,
