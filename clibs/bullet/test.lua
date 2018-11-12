@@ -2,12 +2,13 @@ local bullet_module = require "bullet"
 
 local bullet = bullet_module.new()
 local btworld = bullet:new_world()
-local bu = require "util"
+local bu = require "lua.util"
 
 local shapes = {
-	plane = btworld:new_shape("plane", 0, 1, 0, -3),
+	plane = btworld:new_shape("plane", 0, -1, 1, 3),
 	sphere = btworld:new_shape("sphere", 5),
 	capsule = btworld:new_shape("capsule", 2, 6, 1),
+	cylinder = btworld:new_shape("cylinder", 6, 2, 1),
 	compound = btworld:new_shape("compound"),
 }
 
@@ -56,21 +57,6 @@ end
   
 print("world collide begin ----")
 
-local collide_points = {}
-
-btworld:collide(function (objA, objB, userdata)
-	assert(type(objA) == type(objB))	
-	assert(type(objA) == "userdata")
-	assert(type(userdata) == "userdata")
-
-	local pts = btworld:collide_objects(objA, objB, userdata)
-	if pts then
-		table.move(pts, 1, #pts, #collide_points, collide_points)
-	end
-end)
-
-print("world collide end ---")
-
 local function print_collide_points(points)
 	for _, pt in ipairs(points) do
         print("point A in world:", 	pt.ptA_in_WS[1], 	pt.ptA_in_WS[2], 	pt.ptA_in_WS[3])
@@ -79,10 +65,41 @@ local function print_collide_points(points)
         print("distance:", 			pt.distance)        		
 	end
 end
-if #collide_points > 0 then 
-	print("world collide result : ", #collide_points)
-	print_collide_points(collide_points)
+
+local collide_points = {}
+
+-- 这样使用回调的方式
+-- 1. 复杂度较高，对lua使用者稍不友好，也容易出错
+-- 2. 速度慢，多次的lua 回调，多次的创建回收points 表，再合并，维护开销大
+-- 3. 没有终止约束条件
+-- 4. 如果是回调方式，建议从名称上就体现
+btworld:world_collide_ucb(function (objA, objB, userdata)
+	assert(type(objA) == type(objB))	
+	assert(type(objA) == "userdata")
+	assert(type(userdata) == "userdata")
+	local pts = btworld:collide_objects(objA, objB, userdata)
+	if pts then
+		for k,v in pairs(pts) do 
+			table.insert(collide_points,v)
+		end 
+		--table.move(pts, 1, #pts, #collide_points, collide_points)
+	end
+end)
+
+print("total points = ",#collide_points)
+print_collide_points(collide_points)
+print("world collide end ---")
+
+print("")
+
+-- 简单直接的另一个方法 
+print("world collide begin 2 ======")
+local points = btworld:world_collide()
+if points then 
+	print("world collide result : ", #points)
+	print_collide_points(points)
 end 
+print("world collide end 2 ======")
 
 print("")
 
@@ -141,9 +158,12 @@ end
 print("")
 
 -- rotate 
-local invRayFrom = { 1.5, -20, 0}
-local invRayTo = {  1.5,   20, 0 }
-btworld:set_obj_rotation(object_plane, {0.7,0,0.7,0})
+local invRayFrom = { 1.5, 20, 0}
+local invRayTo = {  1.5,  -20, 0 }
+btworld:set_obj_position(object_plane, {0,0,0})
+--btworld:set_obj_rotation(object_plane, {0.7,0,0.7,0})
+--btworld:set_obj_rot_euler(object_plane,math.rad(0),math.rad(-180),math.rad(0) )
+btworld:set_obj_rot_axis_angle(object_plane, {1,0,0}, math.rad(180) )
 local hit3, result3 = btworld:raycast(invRayFrom,invRayTo)
 if hit3  then 
     print("rotate plane to {0,-6,0}")
@@ -171,7 +191,6 @@ end
 print("")
 
 -- quaternion above user-unfriendly
-
 btworld:del_shape(shapes.sphere);
 btworld:del_obj(tobj_box);
 

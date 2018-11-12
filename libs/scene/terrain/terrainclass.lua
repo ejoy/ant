@@ -11,8 +11,6 @@ local mathu = require "math.util"
 local vfs = require "vfs"
 
 local math3d_stack = math3d.new()
-<<<<<<< HEAD
-=======
 local asset = require "asset"
 local readfile = function( fname )
     local file_path = asset.find_valid_asset_path(fname)
@@ -20,10 +18,9 @@ local readfile = function( fname )
 
     print("find path "..file_path)
 	local f = assert(io.open(vfs.realpath(file_path),'rb'))
->>>>>>> c2599298625b3e59cf9bc88a7eb1dca470b45f2c
 
-local readfile = function( fname )
-	local f = assert(io.open( fname,'rb'))
+--local readfile = function( fname )
+--	local f = assert(io.open( fname,'rb'))
 	local d = f:read('*a')
 	f:close()
 	return d 
