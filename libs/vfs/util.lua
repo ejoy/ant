@@ -2,6 +2,10 @@ local util = {}; util.__index = {}
 
 local vfs = require "vfs"
 function util.open(filename, mode)
+	return io.open(filename, mode)
+end
+
+function util.local_open(filename, mode)
 	if mode and mode:find("w") then
 		return io.open(filename, mode)
 	else
