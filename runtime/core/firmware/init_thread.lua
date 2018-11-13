@@ -1,3 +1,4 @@
+-- Step 1. init c searcher
 local searcher_preload = package.searchers[1]
 local searcher_C = package.searchers[3]
 
@@ -6,7 +7,7 @@ package.searchers[2] = searcher_C
 package.searchers[3] = nil
 package.loadlib = nil
 
-package.path = "engine/libs/?.lua;engine/libs/?/?.lua"
+-- Step 2. init vfs
 local thread = require "thread"
 local threadid = thread.id
 -- main thread id is 0
@@ -38,12 +39,29 @@ end
 
 package.loaded.vfs = vfs
 
-local function hasfile(path)
-    local realpath = vfs.realpath(path)
-    if not realpath then
-        return false
+-- Step 3. init io
+local nio = io
+local io = {}
+function io.open(filename, mode)
+    if mode ~= nil and mode ~= 'r' and mode ~= 'rb' then
+        return nil, ('%s:Permission denied.'):format(filename)
     end
-    local f = io.open(realpath, 'rb')
+    local real_filename = vfs.realpath(filename)
+    if not real_filename then
+        return nil, ('%s:No such file or directory.'):format(filename)
+    end
+    return nio.open(real_filename, mode)
+end
+
+package.loaded.nativeio = nio
+package.loaded.vfsio = io
+package.loaded.io = io
+_G.io = io
+
+-- Step 4. init dofile and loadfile
+local io_open = io.open
+local function hasfile(path)
+    local f = io_open(path, 'rb')
     if not f then
         return false
     end
@@ -52,11 +70,7 @@ local function hasfile(path)
 end
 
 local function loadfile(path)
-    local realpath = vfs.realpath(path)
-    if not realpath then
-        return nil, ('%s:No such file or directory'):format(path)
-    end
-    local f, err = io.open(realpath, 'rb')
+    local f, err = io_open(path, 'rb')
     if not f then
         return nil, err
     end
@@ -72,6 +86,12 @@ local function dofile(path)
     end
     return f()
 end
+
+_G.loadfile = loadfile
+_G.dofile = dofile
+
+-- Step 5. init lua searcher
+package.path = "engine/libs/?.lua;engine/libs/?/?.lua"
 
 local config = {}
 package.config:gsub('[^\n]+', function (w) config[#config+1] = w end)
@@ -113,7 +133,3 @@ package.searchers[2] = searcher_Lua
 package.searchers[3] = searcher_C
 package.searchers[4] = nil
 package.searchpath = searchpath
-
-_G.loadfile = loadfile
-_G.dofile = dofile
-

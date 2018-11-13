@@ -4,7 +4,6 @@ local thread = require 'thread'
 local m = {}
 
 function m.init(io)
-    thread.newchannel 'DbgMaster'
     local masterThread = thread.channel 'DbgMaster'
     if not io then
         local type = os.getenv('_DBG_IOTYPE') or 'tcp_server'
