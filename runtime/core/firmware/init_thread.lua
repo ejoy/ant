@@ -50,7 +50,16 @@ function io.open(filename, mode)
     if not real_filename then
         return nil, ('%s:No such file or directory.'):format(filename)
     end
-    return nio.open(real_filename, mode)
+    local f, err, ec = nio.open(real_filename, mode)
+    if not f then
+        local first, last = err:find(real_filename, 1, true)
+        if not first then
+            return nil, err, ec
+        end
+        err = err:sub(1, first-1) .. filename .. err:sub(last+1)
+        return nil, err, ec
+    end
+    return f
 end
 
 package.loaded.nativeio = nio
