@@ -476,68 +476,68 @@ end
 
 
 
-local function create_axisbase_hierarchy(ms)
-	local hierarchy_module = require "hierarchy"
-	local path = require "filesystem.path"
+-- local function create_axisbase_hierarchy(ms)
+-- 	local hierarchy_module = require "hierarchy"
+-- 	local path = require "filesystem.path"
 
-	local ctrl_root = hierarchy_module.new()
-	ctrl_root[1] = {name = "xaxis", 
-		transform = {
-			r = {0, math.cos(math.pi * 0.25), 0, math.sin(math.pi * 0.25)}
-		}
-	}
-	ctrl_root[2] = {name = "yaxis", 
-		transform = {
-			r = {math.cos(-math.pi * 0.25), 0, 0, math.sin(-math.pi * 0.25)}
-		}
-	}
-	ctrl_root[3] = {name = "zaxis", }
+-- 	local ctrl_root = hierarchy_module.new()
+-- 	ctrl_root[1] = {name = "xaxis", 
+-- 		transform = {
+-- 			r = {0, math.cos(math.pi * 0.25), 0, math.sin(math.pi * 0.25)}
+-- 		}
+-- 	}
+-- 	ctrl_root[2] = {name = "yaxis", 
+-- 		transform = {
+-- 			r = {math.cos(-math.pi * 0.25), 0, 0, math.sin(-math.pi * 0.25)}
+-- 		}
+-- 	}
+-- 	ctrl_root[3] = {name = "zaxis", }
 
-	local function save_file(node, filename)		
-		path.create_dirs(path.parent(filename))
-		hierarchy_module.save(node, filename)
-	end
+-- 	local function save_file(node, filename)		
+-- 		path.create_dirs(path.parent(filename))
+-- 		hierarchy_module.save(node, filename)
+-- 	end
 
-	save_file(ctrl_root, path.join(assetmgr.assetdir(), axisbase_controller_hierarchyname))
+-- 	save_file(ctrl_root, path.join(assetmgr.assetdir(), axisbase_controller_hierarchyname))
 
-	local axis_root = hierarchy_module.new()	
-	axis_root[1] = {
-		name = "head",
-		transform = {
-			s={0.002}, 
-			t={0, 0, 1.1},
-		}
-	}
-	axis_root[2] = {
-		name = "axis",
-		transform = {
-			s={0.001, 0.001, 0.01}, 
-			t={0, 0, 0.5},
-		}
-	}
+-- 	local axis_root = hierarchy_module.new()	
+-- 	axis_root[1] = {
+-- 		name = "head",
+-- 		transform = {
+-- 			s={0.002}, 
+-- 			t={0, 0, 1.1},
+-- 		}
+-- 	}
+-- 	axis_root[2] = {
+-- 		name = "axis",
+-- 		transform = {
+-- 			s={0.001, 0.001, 0.01}, 
+-- 			t={0, 0, 0.5},
+-- 		}
+-- 	}
 	
-	save_file(axis_root, path.join(assetmgr.assetdir(), axis_hierarchyname))	
+-- 	save_file(axis_root, path.join(assetmgr.assetdir(), axis_hierarchyname))	
 
-	local rotator_root = hierarchy_module.new()
-	rotator_root[1] = {
-		name = "rotator",
-		transform = {
-			s={0.01, 0.01, 0.01}, r=ms({0, 0, 0}, "qT")
-		}
-	}
+-- 	local rotator_root = hierarchy_module.new()
+-- 	rotator_root[1] = {
+-- 		name = "rotator",
+-- 		transform = {
+-- 			s={0.01, 0.01, 0.01}, r=ms({0, 0, 0}, "qT")
+-- 		}
+-- 	}
 
-	rotator_root[2] = {
-		name = "rotator-axis",
-		transform = {
-			s={0.001, 0.001, 0.01}, r=ms({0, 0, 0}, "qT"), t={0.5, 0, 0},
-		}
-	}
-	save_file(rotator_root, path.join(assetmgr.assetdir(), rotator_hierarchyname))
-end
+-- 	rotator_root[2] = {
+-- 		name = "rotator-axis",
+-- 		transform = {
+-- 			s={0.001, 0.001, 0.01}, r=ms({0, 0, 0}, "qT"), t={0.5, 0, 0},
+-- 		}
+-- 	}
+-- 	save_file(rotator_root, path.join(assetmgr.assetdir(), rotator_hierarchyname))
+-- end
 
 function obj_trans_sys:init()
 	local ms = self.math_stack
-	create_axisbase_hierarchy(ms)
+	--create_axisbase_hierarchy(ms)
 
     local ot = self.object_transform    
     

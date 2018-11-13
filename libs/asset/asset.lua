@@ -57,6 +57,16 @@ assetmgr.__index = assetmgr
 
 local resources = setmetatable({}, {__mode="kv"})
 
+local cachedir = "cache"
+function assetmgr.cachedir()
+	return cachedir
+end
+
+local assetdir = "assets"
+function assetmgr.assetdir()
+	return assetdir
+end
+
 function assetmgr.find_valid_asset_path(respath)	
 	if vfsutil.exist(respath) then
 		return respath
@@ -70,7 +80,7 @@ function assetmgr.find_valid_asset_path(respath)
 		return nil
 	end
 
-	for _, v in ipairs {"assets", "assets/build"} do
+	for _, v in ipairs {assetdir, assetdir .. "/build"} do
 		local p = path.join(v, respath)		
 		if vfsutil.exist(p) then
 			return p
