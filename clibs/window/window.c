@@ -5,12 +5,17 @@
 #include <lauxlib.h>
 #include "window.h"
 
-#define CALLBACK_ERROR 1
-#define CALLBACK_UPDATE 2
-#define CALLBACK_EXIT 3
-#define CALLBACK_TOUCH 4
-#define CALLBACK_MOVE 5
-#define CALLBACK_COUNT 5
+
+typedef enum {
+	CALLBACK_ERROR = 1,
+	CALLBACK_UPDATE,
+	CALLBACK_EXIT,
+	CALLBACK_TOUCH,
+	CALLBACK_MOVE,
+	CALLBACK_KEYBOARD,
+	CALLBACK_COUNT,
+} CallBackType;
+
 
 struct callback_context {
 	lua_State *callback;
@@ -47,6 +52,12 @@ static void
 push_move_args(lua_State *L, struct ant_window_move *move) {
 	lua_pushinteger(L, move->x);
 	lua_pushinteger(L, move->y);
+}
+
+static void
+push_keyboard_arg(lua_State *L, struct ant_window_keyboard *keyboard) {
+	lua_pushinteger(L, keyboard->key);
+	lua_pushinteger(L, keyboard->state);
 }
 
 static int
@@ -130,6 +141,13 @@ callback(void *ud, struct ant_window_message *msg) {
 //			raise_error_string(context, "No move handler");
 			return;
 		}
+	case ANT_WINDOW_KEYBOARD:
+		if (push_callback_function(context, CALLBACK_KEYBOARD)) {
+			push_keyboard_arg(L, &msg->u.keyboard);
+			break;
+		} else {
+			return;
+		}
 	default:
 		raise_error_string(context, "Unknown callback");
 		return;
@@ -159,6 +177,7 @@ register_functions(lua_State *L, int index, lua_State *fL) {
 	register_function(L, index, "exit", fL, CALLBACK_EXIT);
 	register_function(L, index, "touch", fL, CALLBACK_TOUCH);
 	register_function(L, index, "move", fL, CALLBACK_MOVE);
+	register_function(L, index, "keypress", fL, CALLBACK_KEYBOARD);
 }
 
 static int

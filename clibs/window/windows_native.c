@@ -4,6 +4,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <windows.h>
+#include <stdint.h>
 #include "window.h"
 
 // project path in my documents
@@ -14,6 +15,25 @@ static void
 get_xy(LPARAM lParam, int *x, int *y) {
 	*x = (short)(lParam & 0xffff); 
 	*y = (short)((lParam>>16) & 0xffff); 
+}
+
+static void
+set_bit(BOOL enable, uint32_t bit, uint32_t *state) {
+	if (enable) {
+		*state |= bit;
+	} else {
+		*state &= ~bit;
+	}
+}
+
+static int
+get_cas_keystate(LPARAM lParam) {
+	uint32_t state = 0;
+	set_bit(GetKeyState(VK_CONTROL), KB_CTRL, &state);
+	set_bit(GetKeyState(VK_MENU), KB_ALT, &state);
+	set_bit(GetKeyState(VK_SHIFT), KB_SHIFT, &state);
+	set_bit(lParam & (0x1 << 24), KB_CAS_LEFTORRIGHT, &state);	
+	return state;
 }
 
 static LRESULT CALLBACK
@@ -41,26 +61,49 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		cb->message(cb->ud, &msg);
 		PostQuitMessage(0);
 		return 0;
+	case WM_RBUTTONUP:
 	case WM_LBUTTONUP:
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		msg.type = ANT_WINDOW_TOUCH;
-		msg.u.touch.what = 0;
+		msg.u.touch.what = message == WM_LBUTTONUP ? 0 : 2;
 		get_xy(lParam, &msg.u.touch.x, &msg.u.touch.y);
 		cb->message(cb->ud, &msg);
 		break;
+	case WM_RBUTTONDOWN:
 	case WM_LBUTTONDOWN:
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		msg.type = ANT_WINDOW_TOUCH;
-		msg.u.touch.what = 1;
+		msg.u.touch.what = message == WM_LBUTTONDOWN ? 1 : 3;
 		get_xy(lParam, &msg.u.touch.x, &msg.u.touch.y);
 		cb->message(cb->ud, &msg);
 		break;
+	
 	case WM_MOUSEMOVE:
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		msg.type = ANT_WINDOW_MOVE;
 		get_xy(lParam, &msg.u.move.x, &msg.u.move.y);
 		cb->message(cb->ud, &msg);
 		break;
+
+	case WM_CHAR:
+		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		msg.type = ANT_WINDOW_KEYBOARD;
+		msg.u.keyboard.state = get_cas_keystate(lParam);
+		set_bit(TRUE, KB_PRESS, &msg.u.keyboard.state);
+		msg.u.keyboard.key = (int)wParam;
+		cb->message(cb->ud, &msg);
+		break;
+
+	case WM_KEYUP:
+		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		msg.type = ANT_WINDOW_KEYBOARD;
+		msg.u.keyboard.state = get_cas_keystate(lParam);
+		set_bit(FALSE, KB_PRESS, &msg.u.keyboard.state);
+		msg.u.keyboard.key = (int)wParam;
+		cb->message(cb->ud, &msg);
+		break;
+	//case WM_KEYDOWN:
+	//	break;
 	}
 	return DefWindowProcW(hWnd, message, wParam, lParam);
 }
