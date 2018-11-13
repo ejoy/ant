@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\ant\ant_searcher.cpp" />
-    <ClCompile Include="..\..\clibs\ant\main.c" />
+    <ClCompile Include="..\..\runtime\windows\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\ant\ant.h" />
@@ -107,13 +107,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\build_msvc\lua-cjson\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;window.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
@@ -126,13 +126,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\build_msvc\lua-cjson\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;window.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
@@ -147,7 +147,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -155,7 +155,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\build_msvc\lua-cjson\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;window.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
@@ -170,7 +170,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -178,7 +178,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\build_msvc\lua-cjson\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;window.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
