@@ -8,6 +8,7 @@ ecs.import "inputmgr.message_system"
 -- camera entity
 ecs.import "scene.filter.filter_component"
 ecs.import "render.view_system"
+ecs.import "render.components.general"
 
 local mu = require "math.util"
 local bgfx = require "bgfx"

@@ -14,8 +14,7 @@ return function (filename)
     
     local mesh_path = mesh.mesh_path
     assert(mesh_path ~= nil)
-    if #mesh_path ~= 0 then
-		
+    if #mesh_path ~= 0 then		
 		local function check_path(fp)
 			if path.ext(fp) == nil then					
 				for _, ext in ipairs {".fbx", ".bin", ".ozz"} do
@@ -33,7 +32,7 @@ return function (filename)
 		if mesh_path then
 			mesh.handle = mesh_loader.load(mesh_path)
         else
-            log(string.format("load mesh path %s failed", mesh_path))
+            log(string.format("load mesh path failed, %s, .mesh file:%s", mesh.mesh_path, filename))
         end 
     end
     

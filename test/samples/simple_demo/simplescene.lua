@@ -16,7 +16,7 @@ local simplescene = ecs.system "simple_scene"
 simplescene.singleton "math_stack"
 
 function simplescene:init()
-	local bunnyeid = ecs.new_entity(
+	local bunnyeid = world:new_entity(
 		"position", "scale", "rotation",
 		"mesh", "material", "can_render",
 		"name"
@@ -29,7 +29,6 @@ function simplescene:init()
 	ms(bunny.position, 	{0, 0, 0, 1}, 	"=")
 	ms(bunny.scale, 	{1, 1, 1}, 		"=")
 	ms(bunny.rotation, 	{0, 0, 0}, 		"=")
-
 
 	computil.load_mesh(bunny.mesh, "/engine/assets/depiction/bunny.mesh")
 	computil.load_material(bunny.material, "depiction/bunny.material")

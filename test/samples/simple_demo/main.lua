@@ -1,4 +1,6 @@
-dofile "libs/init.lua"
+--dofile "libs/init.lua"
+require "common/import"
+require "common/log"
 
 local native = require "window.native"
 local window = require "window"

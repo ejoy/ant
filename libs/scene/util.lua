@@ -1,7 +1,6 @@
 -- luacheck: globals log bullet
 local log = log and log(...) or print
 local ecs = require "ecs"
-local task = require "editor.task"
 
 --local elog = require "editor.log"
 --local db = require "debugger"
@@ -36,8 +35,6 @@ function util.start_new_world(input_queue, fbw, fbh, modules)
 			physic_world = bullet:new_world(),
 		},
     }
-    
-	task.loop(world.update)  
     return world
 end
 
