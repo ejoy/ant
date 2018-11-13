@@ -67,12 +67,30 @@ function assetmgr.assetdir()
 	return assetdir
 end
 
+--[[
+	asset find order:
+	1. try to load respath
+	2. if respath include "engine/assets" sub path, try "engine/assets/build"
+	3. this file should be a relative path, then try:
+		3.1. try local path, include "assets", "assets/build"
+		3.2. if local path not found, try "engine/assets", "engine/assets/build".
+
+	that insure:
+		if we want a file using a path like this:
+			"engine/assets/depicition/bunny.mesh"
+		meaning, we want an engine file, and will not load bunny.mesh file from local directory
+
+		if we want a file without "engine/assets" sub path, then it will try to load
+		from local path, if not found, then try "engine/assets" path
+]]
 function assetmgr.find_valid_asset_path(respath)	
 	if vfsutil.exist(respath) then
 		return respath
 	end
 
-	local enginebuildpath, found = respath:gsub("^/?engine/assets", "engine/assets/build")
+	local engine_assetpath = "engine/" .. assetdir
+	local engine_assetbuildpath = engine_assetpath .. "/build"
+	local enginebuildpath, found = respath:gsub(("^/?%s"):format(engine_assetpath), engine_assetbuildpath)
 	if found ~= 0 then
 		if vfsutil.exist(enginebuildpath) then
 			return enginebuildpath
@@ -80,7 +98,12 @@ function assetmgr.find_valid_asset_path(respath)
 		return nil
 	end
 
-	for _, v in ipairs {assetdir, assetdir .. "/build"} do
+	for _, v in ipairs {
+		assetdir, 
+		assetdir .. "/build",
+		engine_assetpath,
+		engine_assetbuildpath,
+	} do
 		local p = path.join(v, respath)		
 		if vfsutil.exist(p) then
 			return p
