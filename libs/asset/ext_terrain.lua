@@ -3,10 +3,13 @@ local log = log and log(...) or print
 
 local rawtable = require "rawtable"
 local path = require "filesystem.path"
+local assetmgr = require "asset"
 
 -- terrain loader protocal 
 return function (filename, param)
-    local mesh = rawtable(filename)
+	local fn = assetmgr.find_depiction_path(filename)	
+	
+    local mesh = rawtable(fn)
     -- todo: terrain struct 
     -- or use extension file format outside
      

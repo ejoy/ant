@@ -4,16 +4,20 @@ local require = import and import(...) or require
 local rawtable = require "rawtable" 
 local hiemodule = require "hierarchy"
 local vfs = require "vfs"
-
+local assetmgr = require "asset"
+local path = require "filesystem.path"
 
 -- luacheck: ignore param
 return function (filename, param)
-	local content = rawtable(filename)
-	local assetmgr = require "asset"
-	local skefile = assetmgr.find_valid_asset_path(content.path .. ".ozz")
+	local fn = assetmgr.find_depiction_path(filename)	
+	local content = rawtable(fn)
+	
+	local srcpath = content.path
+	assert(path.ext(srcpath) == nil)
+	local skefile = assetmgr.find_valid_asset_path(srcpath .. ".ozz")
 
 	if skefile == nil then
-		error(string.format("file not found, filename : ", content.path))
+		error(string.format("invalid file, define in %s", srcpath))
 	end
 	local rp_skefile = vfs.realpath(skefile)
 	content.handle = hiemodule.build(rp_skefile)

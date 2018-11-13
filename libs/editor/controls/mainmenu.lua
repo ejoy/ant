@@ -96,9 +96,10 @@ local function recentUpdate()
 end
 
 local function recentAdd(path)
-    table.insert(config.recent, 1, path)
+	local filterpath = vfsutil.filter_abs_path(path)
+    table.insert(config.recent, 1, filterpath)
     for i = 2, 10 do
-        if config.recent[i] == path then
+        if config.recent[i] == filterpath then
             table.remove(config.recent, i)
             return
         end
@@ -131,8 +132,7 @@ function openMap(path)
     guiRunFile.active = "ON"
 	recentAddAndUpdate(path)
 
-	local mountpath = "engine/assets"
-	path = vfsutil.convert_to_mount_path(path, mountpath):gsub(mountpath.."/", "")	
+	path = vfsutil.filter_abs_path(path)
 	
     local modules = asset.load(path)
     local editormodules = {

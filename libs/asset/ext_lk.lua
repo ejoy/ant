@@ -1,7 +1,8 @@
 local require = import and import(...) or require
 
 local rawtable = require "rawtable"
+local assetmgr = require "asset"
 
 return function(filename)
-	return rawtable(filename)
+	return rawtable(assetmgr.find_depiction_path(filename))
 end

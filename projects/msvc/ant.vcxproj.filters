@@ -18,15 +18,18 @@
     <ClCompile Include="..\..\clibs\ant\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\ant\preload_module.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\clibs\ant\searcher_C.cpp">
+    <ClCompile Include="..\..\clibs\ant\ant_searcher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\clibs\ant\preload_module.h">
+    <ClInclude Include="..\..\clibs\ant\ant.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ant\ant_module_declar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\ant\ant_module_define.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
