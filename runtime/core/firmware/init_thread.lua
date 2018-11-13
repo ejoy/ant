@@ -43,12 +43,12 @@ package.loaded.vfs = vfs
 local nio = io
 local io = {}
 function io.open(filename, mode)
-    if mode ~= nil and mode ~= 'r' or mode ~= 'rb' then
-        return nil, ('%s:Permission denied.'):format(real_filename)
+    if mode ~= nil and mode ~= 'r' and mode ~= 'rb' then
+        return nil, ('%s:Permission denied.'):format(filename)
     end
     local real_filename = vfs.realpath(filename)
     if not real_filename then
-        return nil, ('%s:No such file or directory.'):format(real_filename)
+        return nil, ('%s:No such file or directory.'):format(filename)
     end
     return nio.open(real_filename, mode)
 end
