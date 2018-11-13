@@ -2,11 +2,14 @@ local util = {}; util.__index = {}
 
 local vfs = require "vfs"
 function util.open(filename, mode)
-	if mode:find("w") then
+	if mode and mode:find("w") then
 		return io.open(filename, mode)
 	else
 		local realpath = vfs.realpath(filename)
-		return io.open(realpath, mode)
+		if realpath then
+			return io.open(realpath, mode)	
+		end
+		return nil, string.format("vfs not found file:%s", filename)
 	end
 end
 
