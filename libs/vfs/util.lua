@@ -14,9 +14,11 @@ function util.open(filename, mode)
 end
 
 local fs = require "filesystem"
-function util.exist(filename)
+function util.exist(filename)	
 	local realpath = vfs.realpath(filename)
-	return fs.exist(realpath)
+	if realpath then
+		return fs.exist(realpath)
+	end
 end
 
 function util.attributes(filename, which)
