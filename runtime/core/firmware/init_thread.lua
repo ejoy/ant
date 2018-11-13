@@ -15,13 +15,30 @@ end
 local io_req = thread.channel "IOreq"
 local io_resp = thread.channel ("IOresp" .. threadid)
 
-local function fs_getpath(path)
-	io_req:push("GET", threadid, path)
+local vfs = {}
+
+local function npath(path)
+	return path:match "^/?(.-)/?$"
+end
+
+function vfs.list(path)
+	io_req:push("LIST", threadid, npath(path))
 	return io_resp:bpop()
 end
 
+function vfs.realpath(path)
+	io_req:push("GET", threadid, npath(path))
+	return io_resp:bpop()
+end
+
+function vfs.prefetch(path)
+	io_req:push("PREFETCH", npath(path))
+end
+
+package.loaded.vfs = vfs
+
 local function fs_has(path)
-    local realpath = fs_getpath(path)
+    local realpath = vfs.realpath(path)
     if not realpath then
         return false
     end
@@ -34,7 +51,7 @@ local function fs_has(path)
 end
 
 local function fs_loadfile(path)
-    local realpath = fs_getpath(path)
+    local realpath = vfs.realpath(path)
     if not realpath then
         return nil, ('%s:No such file or directory'):format(path)
     end
