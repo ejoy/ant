@@ -41,7 +41,19 @@ package.loaded.vfs = vfs
 
 -- Step 3. init io
 local nio = io
-local io = {}
+local io = {
+    read = nio.read,
+    write = nio.write,
+    type = nio.type,
+    flush = nio.flush,
+    close = nio.close,
+    popen = nio.popen,
+    tmpfile = nio.tmpfile,
+    input = nil, -- TODO
+    output = nil,
+    lines = nil,
+}
+
 function io.open(filename, mode)
     if mode ~= nil and mode ~= 'r' and mode ~= 'rb' then
         return nil, ('%s:Permission denied.'):format(filename)
