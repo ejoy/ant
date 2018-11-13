@@ -1,7 +1,8 @@
 local ru = require 'runtime.util'
 
-local thread = require 'thread'
-thread.newchannel 'DbgMaster'
+local dbg = require 'debugger'
+
+dbg.start_init()
 
 ru.createThread('debug', [[
     local thread = require "thread"
@@ -37,5 +38,4 @@ ru.createThread('debug', [[
     end
 ]])
 
-local dbg = require 'debugger'
 return dbg.start_worker()
