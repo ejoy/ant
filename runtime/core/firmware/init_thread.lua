@@ -62,6 +62,8 @@ function io.open(filename, mode)
     return f
 end
 
+io.write = nio.write
+
 package.loaded.nativeio = nio
 package.loaded.vfsio = io
 package.loaded.io = io
