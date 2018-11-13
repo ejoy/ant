@@ -59,23 +59,22 @@ end
 linit()
 
 local t = {}
-t[#t+1] = '#include "preload_module.h"'
-t[#t+1] = ''
 t[#t+1] = 'extern "C" {'
 for name, func in lpairs() do
     t[#t+1] = ('int %s(lua_State* L);'):format(func)
 end
 t[#t+1] = '}'
 t[#t+1] = ''
-t[#t+1] = 'std::map<std::string, lua_CFunction> preload_module() {'
-t[#t+1] = '\treturn {'
-for name, func in lpairs() do
-    t[#t+1] = ('\t\t{ "%s", %s },'):format(name, func)
-end
-t[#t+1] = '\t};'
-t[#t+1] = '}'
-t[#t+1] = ''
+local f = assert(io.open('./clibs/ant/ant_module_declar.h', 'w'))
+f:write(table.concat(t, '\n'))
+f:close()
 
-local f = assert(io.open('./clibs/ant/preload_module.cpp', 'w'))
+
+local t = {}
+for name, func in lpairs() do
+    t[#t+1] = ('{ "%s", %s },'):format(name, func)
+end
+t[#t+1] = ''
+local f = assert(io.open('./clibs/ant/ant_module_define.h', 'w'))
 f:write(table.concat(t, '\n'))
 f:close()

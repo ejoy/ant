@@ -1,9 +1,14 @@
-#include "preload_module.h"
+#include "ant.h"
 #include <lua.hpp>
+#include <map>
+#include <string>
 
-std::map<std::string, lua_CFunction> g_modules = preload_module();
+#include "ant_module_declar.h"
+std::map<std::string, lua_CFunction> g_modules = {
+#include "ant_module_define.h"
+};
 
-static int searcher_C(lua_State *L) {
+int ant_searcher_c(lua_State *L) {
 	size_t len = 0;
 	const char* name = luaL_checklstring(L, 1, &len);
 	auto it = g_modules.find(std::string(name, len));
@@ -17,7 +22,7 @@ static int searcher_C(lua_State *L) {
 }
 
 extern "C"
-int init_searcher(lua_State *L) {
+int ant_searcher_init(lua_State *L) {
     if (LUA_TTABLE != lua_getglobal(L, "package")) {
         return 0;
     }
@@ -25,7 +30,7 @@ int init_searcher(lua_State *L) {
         lua_pop(L, 1);
         return 0;
     }
-    lua_pushcfunction(L, searcher_C);
+    lua_pushcfunction(L, ant_searcher_c);
     lua_seti(L, -2, 3);
     lua_pushnil(L);
     lua_seti(L, -2, 4);
