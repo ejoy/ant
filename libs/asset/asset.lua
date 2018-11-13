@@ -57,48 +57,42 @@ assetmgr.__index = assetmgr
 
 local resources = setmetatable({}, {__mode="kv"})
 
-local asset_rootdir = "assets"
-
-local searchdirs = {	
-	asset_rootdir,
-	asset_rootdir .. "/build"
-}
-
-function assetmgr.get_searchdirs()
-	return searchdirs
-end
-
-function assetmgr.find_valid_asset_path(asset_subpath)
-	if vfsutil.exist(asset_subpath) then
-		return asset_subpath
+function assetmgr.find_valid_asset_path(respath)	
+	if vfsutil.exist(respath) then
+		return respath
 	end
 
-	for _, d in ipairs(searchdirs) do
-		local p = path.join(d, asset_subpath)        
+	local enginebuildpath, found = respath:gsub("^/?engine/assets", "engine/assets/build")
+	if found ~= 0 then
+		if vfsutil.exist(enginebuildpath) then
+			return enginebuildpath
+		end
+		return nil
+	end
+
+	for _, v in ipairs {"assets", "assets/build"} do
+		local p = path.join(v, respath)		
 		if vfsutil.exist(p) then
 			return p
 		end
 	end
-
 	return nil
 end
 
-function assetmgr.assetdir()
-	return asset_rootdir
-end
-
-function assetmgr.insert_searchdir(idx, dir)
-	if idx then
-		assert(idx <= #searchdirs)
-	else
-		idx = idx or (#searchdirs + 1)
+function assetmgr.find_depiction_path(p)
+	local fn = assetmgr.find_valid_asset_path(p)
+	if fn == nil then
+		if not p:match("^/?engine/assets") then
+			local np = path.join("depiction", p)
+			fn = assetmgr.find_valid_asset_path(np)			
+		end
 	end
-	table.insert(searchdirs, idx, dir)
-end
 
-function assetmgr.remove_searchdir(idx)
-	assert(idx <= #searchdirs)
-	table.remove(searchdirs, idx)
+	if fn == nil then
+		error(string.format("invalid path, %s", p))
+	end
+
+	return fn	
 end
 
 function assetmgr.load(filename, param)

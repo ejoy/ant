@@ -32,24 +32,26 @@ local function replace_path(srcpath, checkpath, rplpath)
 		local p0_lower = p0:lower()
 		local pos = p0_lower:find(realpath_lower) 
 		if pos then
-			return rplpath .. p0:sub(#realpath_lower + 1)
+			return rplpath .. p0:sub(#realpath_lower + 1), true
 		end
+		return srcpath, false
 	else
-		return p0:gsub(checkpath, rplpath)
-	end
+		local s, c = p0:gsub(checkpath, rplpath)
+		return s, c ~= 0
+	end	
 end
 
 function util.convert_to_mount_path(p, mountpath)	
 	local mount_realpath = vfs.realpath(mountpath):gsub('\\', '/')
-	return replace_path(p, mount_realpath, mountpath)
-	
+	local rpl = replace_path(p, mount_realpath, mountpath)
+	return rpl	
 end
 
 function util.filter_abs_path(abspath)
 	local assetfolder = (fs.currentdir() .. "/assets"):gsub("\\", "/")
 
-	local newpath = replace_path(abspath, assetfolder, "")
-	if not newpath:match(assetfolder) then
+	local newpath, found = replace_path(abspath, assetfolder, "assets")
+	if not found then
 		return util.convert_to_mount_path(abspath, "engine/assets")
 	end
 

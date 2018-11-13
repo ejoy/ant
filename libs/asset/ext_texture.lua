@@ -78,11 +78,7 @@ local function fill_default_sampler(sampler)
 end
 
 return function (filename)
-		local fn = assetmgr.find_valid_asset_path(filename)
-	if fn == nil then 
-		error(string.format("invalid file in ext_texture, %s", filename))
-	end
-
+	local fn = assetmgr.find_depiction_path(filename)
 	local tex = rawtable(fn)
 
 	local pp = assetmgr.find_valid_asset_path(assert(tex.path))

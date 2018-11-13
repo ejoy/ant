@@ -7,12 +7,8 @@ local vfsutil = require "vfs.util"
 local path = require "filesystem.path"
 
 return function(filename)
-	local fn = assetmgr.find_valid_asset_path(filename)
-	if fn == nil then
-		error(string.format("invalid filename in ext_material, %s", filename))
-	end
-
-    local material = assert(rawtable(fn))
+	local fn = assetmgr.find_depiction_path(filename)
+	local material = assert(rawtable(fn))
     local material_info = {}
     local loaders = {
 		state = function (t) return t end, 

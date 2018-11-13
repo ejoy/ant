@@ -5,10 +5,7 @@ local vfs = require "vfs"
 local assetmgr = require "asset"
 
 return function(filename, param)
-	local fn = assetmgr.find_valid_asset_path(filename)
-	if fn == nil then
-		error(string.format("invalid file in ext_hierarchy, %s", filename))
-	end
+	local fn = assetmgr.find_depiction_path(filename)
 
 	local realfilename = vfs.realpath(fn)
 	if param and param.editable then

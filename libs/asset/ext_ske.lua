@@ -9,10 +9,7 @@ local path = require "filesystem.path"
 
 -- luacheck: ignore param
 return function (filename, param)
-	local fn = assetmgr.find_valid_asset_path(filename)
-	if fn == nil then 
-		error(string.format("invalid file in ext_ske, %s", filename))
-	end
+	local fn = assetmgr.find_depiction_path(filename)	
 	local content = rawtable(fn)
 	
 	local srcpath = content.path

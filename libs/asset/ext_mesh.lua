@@ -9,11 +9,7 @@ local mesh_loader = require "modelloader.loader"
 local assetmgr = require "asset"
 
 return function (filename)
-	local fn = assetmgr.find_valid_asset_path(filename)
-	if fn == nil then
-		error(string.format("invalid filename in ext_mesh", filename))
-	end
-	
+	local fn = assetmgr.find_depiction_path(filename)
     local mesh = rawtable(fn)
     
     local mesh_path = mesh.mesh_path
