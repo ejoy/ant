@@ -21,5 +21,5 @@ end
 
 vfs_open("./", "127.0.0.1", 2018)
 
-assert(loadfile("firmware/init_thread.lua"))(package.searchers[3])
-assert(loadfile("main.lua"))()
+dofile "firmware/init_thread.lua"
+dofile "main.lua"

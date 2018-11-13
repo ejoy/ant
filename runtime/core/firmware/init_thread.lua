@@ -1,5 +1,6 @@
 local searcher_preload = package.searchers[1]
-local searcher_C = ...
+local searcher_C = package.searchers[3]
+
 package.searchers[1] = searcher_preload
 package.searchers[2] = searcher_C
 package.searchers[3] = nil
@@ -37,7 +38,7 @@ end
 
 package.loaded.vfs = vfs
 
-local function fs_has(path)
+local function hasfile(path)
     local realpath = vfs.realpath(path)
     if not realpath then
         return false
@@ -50,7 +51,7 @@ local function fs_has(path)
     return true
 end
 
-local function fs_loadfile(path)
+local function loadfile(path)
     local realpath = vfs.realpath(path)
     if not realpath then
         return nil, ('%s:No such file or directory'):format(path)
@@ -62,6 +63,14 @@ local function fs_loadfile(path)
     local str = f:read 'a'
     f:close()
     return load(str, '@vfs://' .. path)
+end
+
+local function dofile(path)
+    local f, err = loadfile(path)
+    if not f then
+        error(err)
+    end
+    return f()
 end
 
 local config = {}
@@ -78,7 +87,7 @@ local function searchpath(name, path)
     name = string.gsub(name, '%.', '/')
     for c in string.gmatch(path, '[^;]+') do
         local filename = string.gsub(c, '%?', name)
-        if fs_has(filename) then
+        if hasfile(filename) then
             return filename
         end
         err = err .. ("\n\tno file '%s'"):format(filename)
@@ -92,7 +101,7 @@ local function searcher_Lua(name)
     if not filename then
         return err
     end
-    local f, err = fs_loadfile(filename)
+    local f, err = loadfile(filename)
     if not f then
         error(("error loading module '%s' from file '%s':\n\t%s"):format(name, filename, err))
     end
@@ -105,5 +114,6 @@ package.searchers[3] = searcher_C
 package.searchers[4] = nil
 package.searchpath = searchpath
 
-loadfile = fs_loadfile
-dofile = nil -- TODO
+_G.loadfile = loadfile
+_G.dofile = dofile
+

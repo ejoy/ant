@@ -47,7 +47,9 @@ end
 local function start_worker(wait)
     start_hook()
     rdebug.start([[
-        assert(loadfile('firmware/init_thread.lua'))(...)
+        package.searchers[3] = ...
+        package.searchers[4] = nil
+        dofile 'firmware/init_thread.lua'
         require 'debugger.backend.worker'
     ]], package.searchers[3])
     if wait then
@@ -61,7 +63,9 @@ end
 local function start_all(wait)
     start_hook()
     rdebug.start([[
-        assert(loadfile('firmware/init_thread.lua'))(...)
+        package.searchers[3] = ...
+        package.searchers[4] = nil
+        dofile 'firmware/init_thread.lua'
         require 'debugger.backend.worker'
     ]], package.searchers[3])
     if wait then
