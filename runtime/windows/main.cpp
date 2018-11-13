@@ -38,7 +38,7 @@ static const char* default_repo(lua_State* L) {
 	return lua_pushutf8string(L, dir, -1);
 }
 
-static int msghandler (lua_State *L) {
+static int msghandler(lua_State *L) {
     const char *msg = lua_tostring(L, 1);
     if (msg == NULL) {
         lua_pushstring(L, "<null>");
@@ -58,7 +58,7 @@ static void dofile(lua_State* L, const char* name) {
     lua_writestringerror("%s\n", lua_tostring(L, -1));
 }
 
-static int pmain (lua_State *L) {
+static int pmain(lua_State *L) {
     int argc = (int)lua_tointeger(L, 1);
     wchar_t** argv = (wchar_t **)lua_touserdata(L, 2);
     luaL_checkversion(L);
@@ -72,7 +72,7 @@ static int pmain (lua_State *L) {
         SetCurrentDirectoryW(argv[1]);
         lua_pushutf8string(L, argv[1], -1);
     }
-    lua_pushstring(L, "\\firmware\\init.lua");
+    lua_pushstring(L, "\\firmware\\bootstrap.lua");
 	lua_concat(L, 2);
     dofile(L, lua_tostring(L, -1));
     return 0;
@@ -82,19 +82,16 @@ int wmain(int argc, wchar_t** argv) {
     lua_State* L = luaL_newstate();
     if (!L) {
         lua_writestringerror("%s\n", "cannot create state: not enough memory");
-        return EXIT_FAILURE;
+        return 0;
     }
     lua_pushcfunction(L, &pmain);
     lua_pushinteger(L, argc);
     lua_pushlightuserdata(L, argv);
-    if (LUA_OK != lua_pcall(L, 2, 1, 0)) {
-        const char* msg = lua_tostring(L, -1);
-        lua_writestringerror("%s\n", msg);
-        lua_close(L);
-        return EXIT_FAILURE;
+    if (LUA_OK != lua_pcall(L, 2, 0, 0)) {
+        lua_writestringerror("%s\n", lua_tostring(L, -1));
     }
     lua_close(L);
-    return EXIT_SUCCESS;
+    return 0;
 }
 
 #if defined(__MINGW32__)
