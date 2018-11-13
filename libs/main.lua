@@ -1,13 +1,5 @@
 dofile "libs/init.lua"
-
-local fs = require "filesystem"
-local vfs = require "vfs"
-vfs.open = vfs.local_open
-local cwd = fs.currentdir()
-vfs.mount({	
-	['engine/assets']=cwd .. "/assets", 
-	['engine/libs'] = cwd .. "/libs"
-}, cwd)
+require "editor.config"
 
 local editor_mainwindow = require "editor.controls.window"
 

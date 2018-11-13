@@ -30,8 +30,8 @@ local support_list = {
 -- 	loaders[mname] = require ("ext_" .. mname)
 -- end
 local loaders = {}
-local function get_loader(name)
-	local loader = loaders[name]
+local function get_loader(name)	
+	local loader = loaders[assert(name)]
 	if loader == nil then		
 		local function is_support(name)
 			for _, v in ipairs(support_list) do
@@ -67,6 +67,16 @@ function assetmgr.assetdir()
 	return assetdir
 end
 
+local engine_assetpath = "engine/" .. assetdir
+local engine_assetbuildpath = engine_assetpath .. "/build"
+
+local searchdirs = {
+	assetdir, 
+	assetdir .. "/build",
+	engine_assetpath,
+	engine_assetbuildpath,
+}
+
 --[[
 	asset find order:
 	1. try to load respath
@@ -88,8 +98,6 @@ function assetmgr.find_valid_asset_path(respath)
 		return respath
 	end
 
-	local engine_assetpath = "engine/" .. assetdir
-	local engine_assetbuildpath = engine_assetpath .. "/build"
 	local enginebuildpath, found = respath:gsub(("^/?%s"):format(engine_assetpath), engine_assetbuildpath)
 	if found ~= 0 then
 		if vfsutil.exist(enginebuildpath) then
@@ -98,12 +106,7 @@ function assetmgr.find_valid_asset_path(respath)
 		return nil
 	end
 
-	for _, v in ipairs {
-		assetdir, 
-		assetdir .. "/build",
-		engine_assetpath,
-		engine_assetbuildpath,
-	} do
+	for _, v in ipairs(searchdirs) do
 		local p = path.join(v, respath)		
 		if vfsutil.exist(p) then
 			return p
@@ -133,8 +136,11 @@ function assetmgr.load(filename, param)
 	assert(type(filename) == "string")
 	local res = resources[filename]
 	if res == nil then
-		local ext = assert(path.ext(filename))
-		local loader = get_loader(ext)
+		local moudlename = path.ext(filename)
+		if moudlename == nil then
+			error(string.format("not found ext from file:%s", filename))
+		end		
+		local loader = get_loader(moudlename)
 		res = loader(filename, param)
 		resources[filename] = res
 	end

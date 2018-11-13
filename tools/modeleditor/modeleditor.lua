@@ -3,15 +3,7 @@
 
 dofile "libs/init.lua"
 
-local fs = require "filesystem"
-local vfs = require "vfs"
-local vfsutil = require "vfs.util"
-vfsutil.open = vfsutil.local_open
-local cwd = fs.currentdir()
-vfs.mount({	
-	['engine/assets']=cwd .. "/assets", 
-	['engine/libs'] = cwd .. "/libs"
-}, cwd)
+require "editor.config"
 
 require "iuplua"
 
