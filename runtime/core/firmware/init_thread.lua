@@ -17,27 +17,14 @@ end
 local io_req = thread.channel "IOreq"
 local io_resp = thread.channel ("IOresp" .. threadid)
 
-local vfs = {}
-
 local function npath(path)
 	return path:match "^/?(.-)/?$"
 end
 
-function vfs.list(path)
-	io_req:push("LIST", threadid, npath(path))
-	return io_resp:bpop()
-end
-
-function vfs.realpath(path)
+local function vfs_realpath(path)
 	io_req:push("GET", threadid, npath(path))
 	return io_resp:bpop()
 end
-
-function vfs.prefetch(path)
-	io_req:push("PREFETCH", npath(path))
-end
-
-package.loaded.vfs = vfs
 
 -- Step 3. init dofile and loadfile
 local io_open = io.open
@@ -51,7 +38,7 @@ local function errmsg(err, filename, real_filename)
 end
 
 local function openfile(filename)
-    local real_filename = vfs.realpath(filename)
+    local real_filename = vfs_realpath(filename)
     if not real_filename then
         return nil, ('%s:No such file or directory.'):format(filename)
     end
