@@ -38,4 +38,4 @@ ru.createThread('debug', [[
     end
 ]])
 
-return dbg.start_worker()
+return dbg.start_worker(arg[1] == '-stopOnEntry')

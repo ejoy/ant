@@ -58,20 +58,30 @@ static void dofile(lua_State* L, const char* name) {
     lua_writestringerror("%s\n", lua_tostring(L, -1));
 }
 
+static void createargtable(lua_State *L, int argc, wchar_t **argv) {
+  lua_createtable(L, argc - 1, 0);
+  for (int i = 1; i < argc; ++i) {
+    lua_pushutf8string(L, argv[i], -1);
+    lua_rawseti(L, -2, i);
+  }
+  lua_setglobal(L, "arg");
+}
+
 static int pmain(lua_State *L) {
     int argc = (int)lua_tointeger(L, 1);
     wchar_t** argv = (wchar_t **)lua_touserdata(L, 2);
     luaL_checkversion(L);
     lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
     luaL_openlibs(L);
+    createargtable(L, argc, argv);
     ant_searcher_init(L);
-    if (argc <= 1) {
+    //if (argc <= 1) {
         default_repo(L);
-    }
-    else {
-        SetCurrentDirectoryW(argv[1]);
-        lua_pushutf8string(L, argv[1], -1);
-    }
+    //}
+    //else {
+    //    SetCurrentDirectoryW(argv[1]);
+    //    lua_pushutf8string(L, argv[1], -1);
+    //}
     lua_pushstring(L, "\\firmware\\bootstrap.lua");
 	lua_concat(L, 2);
     dofile(L, lua_tostring(L, -1));
