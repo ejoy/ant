@@ -63,36 +63,6 @@ local function openfile(filename)
     return f
 end
 
-local function hasfile(path)
-    local f = openfile(path)
-    if not f then
-        return false
-    end
-    f:close()
-    return true
-end
-
-local function loadfile(path)
-    local f, err = openfile(path)
-    if not f then
-        return nil, err
-    end
-    local str = f:read 'a'
-    f:close()
-    return load(str, '@vfs://' .. path)
-end
-
-local function dofile(path)
-    local f, err = loadfile(path)
-    if not f then
-        error(err)
-    end
-    return f()
-end
-
-_G.loadfile = loadfile
-_G.dofile = dofile
-
 -- Step 4. init lua searcher
 package.path = "?.lua"
 
@@ -110,8 +80,9 @@ local function searchpath(name, path)
     name = string.gsub(name, '%.', '/')
     for c in string.gmatch(path, '[^;]+') do
         local filename = string.gsub(c, '%?', name)
-        if hasfile(filename) then
-            return filename
+        local file = openfile(filename)
+        if file then
+            return filename, file
         end
         err = err .. ("\n\tno file '%s'"):format(filename)
     end
@@ -120,15 +91,17 @@ end
 
 local function searcher_Lua(name)
     assert(type(package.path) == "string", "'package.path' must be a string")
-    local filename, err = searchpath(name, package.path)
+    local filename, file = searchpath(name, package.path)
     if not filename then
-        return err
+        return file -- err
     end
-    local f, err = loadfile(filename)
-    if not f then
+    local str = file:read 'a'
+    file:close()
+    local func, err = load(str, '@vfs://' .. filename)
+    if not func then
         error(("error loading module '%s' from file '%s':\n\t%s"):format(name, filename, err))
     end
-    return f, filename
+    return func, filename
 end
 
 package.searchers[1] = searcher_preload
@@ -136,3 +109,5 @@ package.searchers[2] = searcher_Lua
 package.searchers[3] = searcher_C
 package.searchers[4] = nil
 package.searchpath = searchpath
+
+return openfile

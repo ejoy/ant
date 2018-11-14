@@ -21,5 +21,24 @@ end
 
 vfs_open("./", "127.0.0.1", 2018)
 
-dofile "firmware/init_thread.lua"
+local openfile = dofile "firmware/init_thread.lua"
+
+local function loadfile(path)
+    local f, err = openfile(path)
+    if not f then
+        return nil, err
+    end
+    local str = f:read 'a'
+    f:close()
+    return load(str, '@vfs://' .. path)
+end
+
+local function dofile(path)
+    local f, err = loadfile(path)
+    if not f then
+        error(err)
+    end
+    return f()
+end
+
 dofile "main.lua"
