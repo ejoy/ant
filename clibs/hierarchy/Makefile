@@ -2,7 +2,7 @@ include ../common.mk
 include ozz_define.mk
 
 GLM_DIR = -I$(ANT3RD)/glm
-
+OZZINC = -I $(ANT3RD) -I $(ANT3RD)/ozz-animation/include	
 
 mingw : hierarchy.dll
 
