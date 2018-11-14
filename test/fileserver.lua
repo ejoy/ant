@@ -20,6 +20,7 @@ local repopath = fs.personaldir() .. "/" .. reponame
 LOG ("Open repo : ", repopath)
 local repo = assert(vrepo.new(repopath))
 local roothash = repo:index()
+repo:rebuild()
 
 local wid = {}
 local id = assert(fw.add(repopath, 'fdts'))
