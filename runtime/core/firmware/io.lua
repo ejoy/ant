@@ -291,6 +291,7 @@ function response.MISSING(hash)
 end
 
 function response.SLICE(hash, offset, data)
+	offset = tonumber(offset)
 	local hashpath = repo.repo:hashpath(hash)
 	local tempname = hashpath .. ".download"
 	local f = io.open(tempname, "ab")
@@ -375,7 +376,7 @@ function online.GET(id, path)
 			request_file(id, hash, path, "GET")
 		else
 			-- root changes, missing hash
-			print("Need Change Root")
+			print("Need Change Root", path)
 			response_id(id, nil)
 		end
 	else
