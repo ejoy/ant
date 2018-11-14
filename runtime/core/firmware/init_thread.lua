@@ -21,9 +21,28 @@ local function npath(path)
 	return path:match "^/?(.-)/?$"
 end
 
+local function vfs_list(path)
+	io_req:push("LIST", threadid, npath(path))
+	return io_resp:bpop()
+end
+
 local function vfs_realpath(path)
 	io_req:push("GET", threadid, npath(path))
 	return io_resp:bpop()
+end
+
+local function path_split(path)
+    local t = {}
+    path:gsub('[^/\\]*', function (w) t[#t+1] = w end)
+    local filename = t[#t]
+    t[#t] = nil
+    return table.concat(t, '/'), filename
+end
+
+local function vfs_exists(path)
+    local dir, filename = path_split(path)
+    local list = vfs_list(dir)
+    return list ~= nil and list[filename] ~= nil
 end
 
 -- Step 3. init dofile and loadfile
@@ -50,6 +69,16 @@ local function openfile(filename)
     return f
 end
 
+local function loadfile(path)
+    local f, err = openfile(path)
+    if not f then
+        return nil, err
+    end
+    local str = f:read 'a'
+    f:close()
+    return load(str, '@vfs://' .. path)
+end
+
 -- Step 4. init lua searcher
 package.path = "?.lua"
 
@@ -67,9 +96,8 @@ local function searchpath(name, path)
     name = string.gsub(name, '%.', '/')
     for c in string.gmatch(path, '[^;]+') do
         local filename = string.gsub(c, '%?', name)
-        local file = openfile(filename)
-        if file then
-            return filename, file
+        if vfs_exists(filename) then
+            return filename
         end
         err = err .. ("\n\tno file '%s'"):format(filename)
     end
@@ -82,9 +110,7 @@ local function searcher_Lua(name)
     if not filename then
         return file -- err
     end
-    local str = file:read 'a'
-    file:close()
-    local func, err = load(str, '@vfs://' .. filename)
+    local func, err = loadfile(filename)
     if not func then
         error(("error loading module '%s' from file '%s':\n\t%s"):format(name, filename, err))
     end

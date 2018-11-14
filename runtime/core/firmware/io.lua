@@ -401,7 +401,7 @@ function online.LIST(id, path)
 	elseif hash then
 		request_file(id, hash, path, "LIST")
 	else
-		print("Need Change Root")
+		print("Need Change Root", path)
 		response_id(id, nil)
 	end
 end
