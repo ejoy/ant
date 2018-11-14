@@ -579,7 +579,7 @@ static int lfs_lock_dir(lua_State *L) {
   winsz += windows_filename(L, lockfile, lsz, ln+winsz, lsz);
   ln[winsz] = 0;
 
-  if((fd = CreateFileW(ln, GENERIC_WRITE, 0, NULL, CREATE_NEW,
+  if((fd = CreateFileW(ln, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
                 FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE, NULL)) == INVALID_HANDLE_VALUE) {
         int en = GetLastError();
         free(ln); lua_pushnil(L);
