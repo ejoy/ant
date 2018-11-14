@@ -50,6 +50,7 @@ local bootstrap = ([=[
     dofile 'firmware/init_thread.lua'
     package.path = [[%s]]
     require 'runtime.vfs'
+    require 'runtime.vfsio'
     require 'debugger.backend.worker'
 ]=]):format(package.path)
 

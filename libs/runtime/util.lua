@@ -7,7 +7,8 @@ local function createThread(name, code)
     package.searchers[4] = nil
 	dofile 'firmware/init_thread.lua'
 	package.path = [[%s]]
-	require 'runtime.vfs'
+    require 'runtime.vfs'
+	require 'runtime.vfsio'
 %s]=]):format(name, package.path, code)
 		, package.searchers[3]
 	)
