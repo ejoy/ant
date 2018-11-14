@@ -162,7 +162,8 @@ local function filewacth()
 		if wid[id] == '' and path:sub(1, 5) == '.repo' then
 			goto continue
 		end
-		local path = wid[id] .. '/' .. path
+		local dir = wid[id]
+		local path = (dir == '') and path or (dir .. '/' .. path)
 		print('[FileWatch]', type, path)
 		repo:touch(path)
 		::continue::
