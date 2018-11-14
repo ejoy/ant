@@ -105,6 +105,11 @@ local function fileserver_update(obj)
 		debug[fd] = { server = obj }
 	elseif obj._status == "CLOSED" then
 		LOG("LOGOFF", obj._peer)
+		for fd, v in pairs(debug) do
+			if v.server == obj then
+				network.close(fd)
+			end
+		end
 	end
 end
 
