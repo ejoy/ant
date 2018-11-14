@@ -463,7 +463,7 @@ local function work_online()
 		return
 	end
 	for _, req in ipairs(reqs) do
-		dispatch_net(table.unpack(reqs))
+		dispatch_net(table.unpack(req))
 	end
 	local c = channel.req
 	local result = {}
