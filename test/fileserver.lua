@@ -10,6 +10,7 @@ local function LOG(...)
 	print(...)
 end
 
+local fw = require "filewatch"
 local vrepo = require "vfs.repo"
 local fs = require "filesystem"
 local network = require "network"
@@ -19,6 +20,14 @@ local repopath = fs.personaldir() .. "/" .. reponame
 LOG ("Open repo : ", repopath)
 local repo = assert(vrepo.new(repopath))
 local roothash = repo:index()
+
+local wid = {}
+local id = assert(fw.add(repopath, 'fdts'))
+wid[id] = ''
+for k, v in pairs(repo._mountpoint) do
+	local id = assert(fw.add(v, 'fdts'))
+	wid[id] = k
+end
 
 local filelisten = network.listen(config.address, config.port)
 LOG ("Listen :", config.address, config.port, filelisten)
@@ -31,7 +40,7 @@ local debug = {}
 local message = {}
 
 function message:ROOT()
-	repo:rebuild()
+	repo:build()
 	local roothash = repo:root()
 	response(self, "ROOT", roothash)
 end
@@ -144,9 +153,25 @@ local function dbgserver_update(obj)
 	end
 end
 
+local function filewacth()
+	while true do
+		local id, type, path = fw.select()
+		if not id then
+			break
+		end
+		if wid[id] == '' and path:sub(1, 5) == '.repo' then
+			goto continue
+		end
+		local path = wid[id] .. '/' .. path
+		print('[FileWatch]', type, path)
+		repo:touch(path)
+		::continue::
+	end
+end
+
 local function mainloop()
 	local objs = {}
-	if network.dispatch(objs, nil) then
+	if network.dispatch(objs, 0.1) then
 		for k,obj in ipairs(objs) do
 			objs[k] = nil
 			if is_fileserver(obj) then
@@ -156,6 +181,7 @@ local function mainloop()
 			end
 		end
 	end
+	filewacth()
 end
 
 while true do

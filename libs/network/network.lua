@@ -114,7 +114,7 @@ local function sendout(obj)
 end
 
 function network.dispatch(objs, interval)
-	local rd, wt = assert(lsocket.select(readfds, writefds, interval))
+	local rd, wt = lsocket.select(readfds, writefds, interval)
 	if not rd then
 		if rd == nil then
 			log("Select error : ", wt)
