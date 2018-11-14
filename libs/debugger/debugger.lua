@@ -44,14 +44,18 @@ local function start_master(io)
     end
 end
 
+local bootstrap = ([=[
+    package.searchers[3] = ...
+    package.searchers[4] = nil
+    dofile 'firmware/init_thread.lua'
+    package.path = [[%s]]
+    require 'runtime.vfs'
+    require 'debugger.backend.worker'
+]=]):format(package.path)
+
 local function start_worker(wait)
     start_hook()
-    rdebug.start([[
-        package.searchers[3] = ...
-        package.searchers[4] = nil
-        dofile 'firmware/init_thread.lua'
-        require 'debugger.backend.worker'
-    ]], package.searchers[3])
+    rdebug.start(bootstrap, package.searchers[3])
     if wait then
         event('wait_client', 1, false)
     end
@@ -63,12 +67,7 @@ end
 local function start_all(wait)
     start_init()
     start_hook()
-    rdebug.start([[
-        package.searchers[3] = ...
-        package.searchers[4] = nil
-        dofile 'firmware/init_thread.lua'
-        require 'debugger.backend.worker'
-    ]], package.searchers[3])
+    rdebug.start(bootstrap, package.searchers[3])
     if wait then
         event('wait_client', 1, true)
     end
