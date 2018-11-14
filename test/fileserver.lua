@@ -67,6 +67,11 @@ function message:GET(hash)
 end
 
 function message:DBG(data)
+	if data == "" then
+		local fd = network.listen('127.0.0.1', 4278)
+		debug[fd] = { server = self }
+		return
+	end
 	for _, v in pairs(debug) do
 		if v.server == self then
 			if v.client then
@@ -101,8 +106,6 @@ local function fileserver_update(obj)
 	dispatch_obj(obj)
 	if obj._status == "CONNECTING" then
 		LOG("New", obj._peer, obj._ref)
-		local fd = network.listen('127.0.0.1', 4278)
-		debug[fd] = { server = obj }
 	elseif obj._status == "CLOSED" then
 		LOG("LOGOFF", obj._peer)
 		for fd, v in pairs(debug) do

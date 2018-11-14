@@ -2,14 +2,17 @@ local ru = require 'runtime.util'
 
 local dbg = require 'debugger'
 
-dbg.start_init()
+local thread = require 'thread'
+thread.newchannel 'DbgMaster'
+thread.newchannel "DdgNet"
+local io_req = thread.channel "IOreq"
+io_req:push("SUBSCIBE", "DdgNet", "DBG")
+io_req:push("SEND", "DBG", "")
 
 ru.createThread('debug', [[
     local thread = require "thread"
-    thread.newchannel "DdgNet"
     local io_req  = thread.channel "IOreq"
     local dbg_net = thread.channel "DdgNet"
-    io_req:push("SUBSCIBE", "DdgNet", "DBG")
     local dbg_io = {}
     function dbg_io:event_in(f)
         self.fsend = f
@@ -18,9 +21,9 @@ ru.createThread('debug', [[
         self.fclose = f
     end
     function dbg_io:update()
-        local ok, cmd, msg = dbg_net:pop()
+        local ok, cmd, data = dbg_net:pop()
         if ok then
-            self.fsend(msg)
+            self.fsend(data)
         end
         return true
     end
