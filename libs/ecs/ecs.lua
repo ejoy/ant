@@ -173,7 +173,7 @@ end
 local function searchpath(name, path)
 	--TODO
 	local f = vfsutil.open(name, "r")
-	if f then
+	if f then		
 		f:close()
 		return name
 	end
@@ -200,7 +200,7 @@ local function init_modules(w, modules, module_path)
 		end
 		if mods[path] then
 			return
-		end
+		end		
 		mods[#mods+1] = path
 		mods[path] = true
 	end
@@ -211,9 +211,8 @@ local function init_modules(w, modules, module_path)
 	local reg, class = typeclass(w, import)
 	while #mods > 0 do
 		local name = mods[#mods]
-		mods[#mods] = nil
-		local rp = vfs.realpath(name)
-		local module, err = loadfile(rp)
+		mods[#mods] = nil		
+		local module, err = loadfile(name)
 		if not module then
 			error(("module '%s' load failed:%s"):format(name, err))
 		end

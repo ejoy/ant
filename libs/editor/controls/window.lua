@@ -9,6 +9,7 @@ local eu = require "editor.util"
 local rhwi = require "render.hardware_interface"
 local bgfx = require "bgfx"
 local scene = require "scene.util"
+local task = require "editor.task"
 
 local propertyview = propertycontrol.new {
 	tree = {
@@ -80,7 +81,8 @@ end
 
 
 function editor_mainwindow:new_world(modules)
-	scene.start_new_world(self.iq, self.config.fbw, self.config.fbh, modules)
+	local world = scene.start_new_world(self.iq, self.config.fbw, self.config.fbh, modules)
+	task.loop(world.update)
 end
 
 function editor_mainwindow:run(config)

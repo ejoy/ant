@@ -22,7 +22,7 @@ bullet.o : bullet.cpp
 bullet.dll : $(BULLET_OBJ) | $(ODIR)
 	gcc --shared $(CFLAGS) $(CXXFLAGS) -o $@ $^ -lstdc++ $(LUALIB) $(BULLETLIB) $(BULLETINC) $(LUAINC)
 
-libbullet.a : $(BULLET_OBJ) | $(ODIR)
+libbullet.a : $(BULLET_OBJ)
 	ar rsv $@ $^
 
 $(ODIR) :

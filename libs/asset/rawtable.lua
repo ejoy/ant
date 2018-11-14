@@ -1,5 +1,4 @@
 local require = import and import(...) or require
-local io = require "io"
 local vfsutil = require "vfs.util"
 
 return function (filename)
@@ -7,7 +6,7 @@ return function (filename)
 	local data = f:read "a"
 	f:close()
 	local env = {}
-	local f = assert(load (data, "@" .. filename, "bt", env))
-	f()
+	local r = assert(load (data, "@" .. filename, "bt", env))
+	r()
 	return env
 end

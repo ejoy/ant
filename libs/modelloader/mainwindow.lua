@@ -6,6 +6,7 @@ local bgfx = require "bgfx"
 local rhwi = require "render.hardware_interface"
 local scene = require "scene.util"
 local eu = require "editor.util"
+local task = require "editor.task"
 require "iuplua"
 
 local fb_width, fb_height = 1024, 768
@@ -33,10 +34,12 @@ dlg.usersize = nil
 
 rhwi.init(iup.GetAttributeData(canvas,"HWND"), fb_width, fb_height)
 
-scene.start_new_world(input_queue, fb_width, fb_height, {
+local world = scene.start_new_world(input_queue, fb_width, fb_height, {
 	"modelloader.renderworld",
 	"modelloader.camera_controller",
 })
+
+task.loop(world.update)
 
 if iup.MainLoopLevel() == 0 then
 	iup.MainLoop()

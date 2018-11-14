@@ -1,7 +1,9 @@
 local vfs = require "vfs"
+local assetmgr = require "asset"
 
 return function(filename)
-	local realfilename = vfs.realpath(filename)
+	local fn = assetmgr.find_depiction_path(filename)
+	local realfilename = vfs.realpath(fn)
 
 	local function find_tagop(readops)
 		local f = io.open(realfilename, "rb")

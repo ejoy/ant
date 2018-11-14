@@ -12,6 +12,7 @@ local elog = require "editor.log"
 local rhwi = require "render.hardware_interface"
 local scene = require "scene.util"
 local eu = require "editor.util"
+local task = require "editor.task"
 
 local fs_util = require "filesystem.util"
 
@@ -40,7 +41,8 @@ eu.regitster_iup(input_queue, canvas)
 local function init()
 	local fbw, fbh = 1280, 720
 	rhwi.init(iup.GetAttributeData(canvas,"HWND"), fbw, fbh)
-	scene.start_new_world(input_queue, fbw, fbh, {"test.system.simple_system"})
+	local world = scene.start_new_world(input_queue, fbw, fbh, {"test.system.simple_system"})
+	task.loop(world.update)
 end
 
 dlg:showxy(iup.CENTER,iup.CENTER)

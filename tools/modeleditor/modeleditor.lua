@@ -3,13 +3,7 @@
 
 dofile "libs/init.lua"
 
-local fs = require "filesystem"
-local vfs = require "vfs"
-local cwd = fs.currentdir()
-vfs.mount({	
-	['engine/assets']=cwd .. "/assets", 
-	['engine/libs'] = cwd .. "/libs"
-}, cwd)
+require "editor.config"
 
 require "iuplua"
 
@@ -21,6 +15,7 @@ local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"
 
 local elog = require "editor.log"
+local task = require "editor.task"
 
 local fbw, fbh = 800, 600
 
@@ -184,6 +179,8 @@ eu.regitster_iup(iq, canvas)
 local world = su.start_new_world(iq, fbw, fbh, {
 	"tools/modeleditor/model_ed_system.lua"
 })
+
+task.loop(world.update)
 
 if (iup.MainLoopLevel()==0) then
 	iup.MainLoop()

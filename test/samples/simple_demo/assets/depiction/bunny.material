@@ -1,0 +1,10 @@
+shader = {
+    vs = "mesh/vs_colormesh",
+    fs = "mesh/fs_colormesh",
+}
+
+state = "default.state"
+
+properties = {
+	u_time = {name="u_time", type="v4", default={1, 1, 1, 1}},
+}

@@ -2,18 +2,27 @@ local util = {}; util.__index = {}
 
 local vfs = require "vfs"
 function util.open(filename, mode)
-	if mode:find("w") then
+	return io.open(filename, mode)
+end
+
+function util.local_open(filename, mode)
+	if mode and mode:find("w") then
 		return io.open(filename, mode)
 	else
 		local realpath = vfs.realpath(filename)
-		return io.open(realpath, mode)
+		if realpath then
+			return io.open(realpath, mode)	
+		end
+		return nil, string.format("vfs not found file:%s", filename)
 	end
 end
 
 local fs = require "filesystem"
-function util.exist(filename)
+function util.exist(filename)	
 	local realpath = vfs.realpath(filename)
-	return fs.exist(realpath)
+	if realpath then
+		return fs.exist(realpath)
+	end
 end
 
 function util.attributes(filename, which)
@@ -21,24 +30,41 @@ function util.attributes(filename, which)
 	return fs.attributes(realpath, which)
 end
 
-function util.convert_to_mount_path(p, mountpath)	
+local function replace_path(srcpath, checkpath, rplpath)
 	local config = require "common.config"
-	
-	local mount_realpath = vfs.realpath(mountpath):gsub('\\', '/')
-	local p0 = p:gsub('\\', '/')
+
+	local p0 = srcpath:gsub('\\', '/')
 	
 	local platform = config.platform()
 	if platform == "Windows" then
-		local realpath_lower = mount_realpath:lower()
+		local realpath_lower = checkpath:lower()
 		local p0_lower = p0:lower()
 		local pos = p0_lower:find(realpath_lower) 
 		if pos then
-			return mountpath .. p0:sub(#realpath_lower + 1)
+			return rplpath .. p0:sub(#realpath_lower + 1), true
 		end
+		return srcpath, false
 	else
-		return p0:gsub(mount_realpath, mountpath)
+		local s, c = p0:gsub(checkpath, rplpath)
+		return s, c ~= 0
+	end	
+end
+
+function util.convert_to_mount_path(p, mountpath)	
+	local mount_realpath = vfs.realpath(mountpath):gsub('\\', '/')
+	local rpl = replace_path(p, mount_realpath, mountpath)
+	return rpl	
+end
+
+function util.filter_abs_path(abspath)
+	local assetfolder = (fs.currentdir() .. "/assets"):gsub("\\", "/")
+
+	local newpath, found = replace_path(abspath, assetfolder, "assets")
+	if not found then
+		return util.convert_to_mount_path(abspath, "engine/assets")
 	end
-	
+
+	return newpath
 end
 
 function util.file_is_newer(check, base)

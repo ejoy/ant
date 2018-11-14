@@ -1,5 +1,5 @@
-include ../common.mk
-include ../bgfx/bgfx_define.mk
+ANT3RD = ../../3rd
+include ant_define.mk
 
 default : ant.exe
 
@@ -9,53 +9,40 @@ LIBS= bgfx bullet math3d thread terrain hierarchy crypt debugger lsocket memoryf
 
 define MakeLibs
 lib$(1).a :	
-	cd ./../$(1)/ && $(MAKE) lib$(1).a
+	cd ./../$(1)/ && $(MAKE) lib$(1).a && cp lib$(1).a ../ant/tmp/lib$(1).a
 endef
 $(foreach v, $(LIBS), $(eval $(call MakeLibs,$(v))))
 
-ALLLIBS= $(foreach v, $(LIBS), lib$(v).a)
-LINKLIBS= $(foreach v, $(LIBS), ./../$(v)/lib$(v).a)
-
-LIBBGFX= $(BGFXUTILLIB) $(BIMGLIB) $(BGFXLIB)
-LIBBULLET= -L$(ANT3RD)/build/bullet3/lib -lBulletDynamics -lBulletCollision -lLinearMath -lstdc++ -lHACD
-
-ifeq ("$(BUILD_CONFIG)","Release")
-LIB_SUFFIX := _r
-else
-LIB_SUFFIX := _d
-endif
-OZZLIBDIR = $(ANT3RD)/build/ozz-animation
-OZZLIBSRC_DIR = $(OZZLIBDIR)/src
-OZZBASE = -L $(OZZLIBSRC_DIR)/base -lozz_base$(LIB_SUFFIX)
-OZZRUNTIME = -L $(OZZLIBSRC_DIR)/animation/runtime -lozz_animation$(LIB_SUFFIX)
-OZZOFFLINE = -L $(OZZLIBSRC_DIR)/animation/offline -lozz_animation_offline$(LIB_SUFFIX)
-OZZGEOMERTY = -L $(OZZLIBSRC_DIR)/geometry/runtime -lozz_geometry$(LIB_SUFFIX)
-OZZSAMPLE = -L $(OZZLIBDIR)/samples/framework -lsample_framework$(LIB_SUFFIX)
-LIBOZZ= $(OZZSAMPLE) $(OZZRUNTIME) $(OZZOFFLINE) $(OZZGEOMERTY) $(OZZBASE)
-
-lua.o :
-	cd ../lua && $(MAKE) $@ && mv $@ ../ant/
+ALLLIBS= $(LIBS) lua cjson
+define UnpackLibs
+unpack_lib$(1).a : lib$(1).a
+	cd tmp && ar x lib$(1).a
+endef
+$(foreach v, $(ALLLIBS), $(eval $(call UnpackLibs,$(v))))
+UNPACKLIBS= $(foreach v, $(ALLLIBS), unpack_lib$(v).a)
 
 liblua.a :
-	cd ../lua && $(MAKE) $@ && mv $@ ../ant/
+	cd ../lua && $(MAKE) "MYOBJS=utf8_unicode.o utf8_crt.o" $@ && mv $@ ../ant/tmp
+
+libcjson.a :
+	cd ../../3rd/lua-cjson/ && $(MAKE) "LUA_INCLUDE_DIR=../../clibs/lua" "CJSON_LDFLAGS=" "TARGET=libcjson.a" "AR=ar rsv" && mv libcjson.a ../../clibs/ant/tmp
 
 LUAINC= -I./../lua
 CFLAGS= -O2 -Wall -fPIC
 
-ALLOBJ= preload_module.o searcher_C.o main.o
-
-preload_module.o : preload_module.cpp preload_module.h
-	g++ -std=c++17 -c $(CFLAGS) $(LUAINC) -o $@ $<
-
-searcher_C.o : searcher_C.cpp  preload_module.h
+tmp/ant_searcher.o : ant_searcher.cpp ant.h ant_module_define.h ant_module_declar.h
 	g++ -std=c++17 -c $(CFLAGS) $(LUAINC) -o $@ $<
 
 main.o : main.c
 	gcc -std=gnu99 -c $(CFLAGS) $(LUAINC) -o $@ $<
 
-libcjson.a :
-	cd ../../3rd/lua-cjson/ && $(MAKE) "LUA_INCLUDE_DIR=../../clibs/lua" "CJSON_LDFLAGS=" "TARGET=libcjson.a" "AR=ar rsv" && mv libcjson.a ../../clibs/ant/
+libant.a : tmp/ant_searcher.o $(UNPACKLIBS)
+	cd tmp && ar rs $@ *.o
+	mv tmp/$@ $@
 
-ant.exe : $(ALLOBJ) $(ALLLIBS) libcjson.a
-	gcc -o $@ $(ALLOBJ) liblua.a libcjson.a $(LINKLIBS) $(LIBBGFX) $(LIBBULLET) $(LIBOZZ) -lws2_32 -lstdc++
+ant.exe : main.o libant.a
+	gcc -o $@ $^ $(LINKLIBANT)
 	strip --strip-unneeded $@ 
+
+clean :
+	rm -f tmp/*.a && rm -f tmp/*.o && rm -f ant.exe libant.a
