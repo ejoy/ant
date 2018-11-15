@@ -304,6 +304,25 @@ lthread(lua_State *L) {
 	return 0;
 }
 
+static void
+delete_channel(struct channel *c) {
+	struct channel tmp = *c;
+	memset(c, 0, sizeof(*c));
+	free((char *)tmp.name);
+	simple_queue_destroy(tmp.queue);
+	thread_event_release(&tmp.trigger);
+}
+
+static int
+lreset(lua_State *L) {
+	int i;
+	for (i=0;i<MAX_CHANNEL;i++) {
+		delete_channel(&g_channel[i]);
+	}
+	g_thread_id = 0;
+	return 0;
+}
+
 static int
 luaopen_thread_worker(lua_State *L) {
 	luaL_checkversion(L);
@@ -312,6 +331,7 @@ luaopen_thread_worker(lua_State *L) {
 		{ "thread", lthread },
 		{ "newchannel", lnewchannel },
 		{ "channel", lquerychannel },
+		{ "reset", lreset },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
