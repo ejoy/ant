@@ -171,7 +171,7 @@ lquerychannel(lua_State *L) {
 	const char * name = luaL_checkstring(L, 1);
 	struct channel * c = query_channel(name);
 	if (c == NULL)
-		return luaL_error(L, "Can't create channel %s", name);
+		return luaL_error(L, "Can't query channel %s", name);
 
 	struct boxchannel *bc = lua_newuserdata(L, sizeof(*bc));
 	bc->c = c;
@@ -317,11 +317,22 @@ delete_channel(struct channel *c) {
 
 static int
 lreset(lua_State *L) {
+	lua_getfield(L, LUA_REGISTRYINDEX, "THREADID");
+	int threadid = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+	if (threadid != 0) {
+		return luaL_error(L, "reset must call from main thread");
+	}
+
 	int i;
 	for (i=0;i<MAX_CHANNEL;i++) {
 		delete_channel(&g_channel[i]);
 	}
 	g_thread_id = 0;
+	lua_pushcfunction(L, lnewchannel);
+	lua_pushstring(L, ERRLOG_QUEUE);
+	lua_call(L, 1, 0);
+
 	return 0;
 }
 
