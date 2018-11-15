@@ -23,4 +23,8 @@ function vfs.prefetch(path)
 	io_req:push("PREFETCH", npath(path))
 end
 
+function vfs.fetchall(path)
+	io_req:push("FETCHALL", false, npath(path))
+end
+
 package.loaded.vfs = vfs
