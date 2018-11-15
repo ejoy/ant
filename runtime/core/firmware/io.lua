@@ -422,7 +422,7 @@ local function fetch_all(path)
 				fetch_all(subpath)
 			else
 				print("Fetch", subpath)
-				prefetch_file(hash, subpath)
+				prefetch_file(v.hash, subpath)
 			end
 		end
 	elseif hash then
