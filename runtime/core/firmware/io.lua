@@ -64,12 +64,11 @@ local function init_config()
 	config.repopath = assert(c.repopath)
 	config.address = c.address
 	config.port = c.port
-	config.firmware = assert(c.firmware)
+	config.vfspath = assert(c.vfspath)
 end
 
 local function init_repo()
-	package.path = config.firmware .. "/?.lua"
-	local vfs = require "vfs"	-- from firmware
+	local vfs = dofile(config.vfspath)
 	repo.repo = vfs.new(config.repopath)
 end
 

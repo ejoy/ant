@@ -10,16 +10,16 @@ local io_resp = thread.channel ("IOresp" .. threadid)
 
 thread.thread (string.format("assert(loadfile(%q))(...)", "firmware/io.lua"), package.searchers[3])
 
-local function vfs_open(repopath, address, port)
+local function vfs_init(repopath, address, port)
 	io_req:push {
 		repopath = repopath,
-		firmware = "firmware",
+		vfspath = "firmware/vfs.lua",
 		address = address,
 		port = port,
 	}
 end
 
-vfs_open("./", "127.0.0.1", 2018)
+vfs_init("./", "127.0.0.1", 2018)
 
 local openfile = dofile "firmware/init_thread.lua"
 

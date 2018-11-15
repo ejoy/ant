@@ -21,7 +21,7 @@ local function npath(path)
 	return path:match "^/?(.-)/?$"
 end
 
-local function vfs_realpath(path)
+local function vfs_get(path)
 	io_req:push("GET", threadid, npath(path))
 	return io_resp:bpop()
 end
@@ -43,7 +43,7 @@ local function errmsg(err, filename, real_filename)
 end
 
 local function openfile(filename)
-    local real_filename = vfs_realpath(filename)
+    local real_filename = vfs_get(filename)
     if not real_filename then
         return nil, ('%s:No such file or directory.'):format(filename)
     end
