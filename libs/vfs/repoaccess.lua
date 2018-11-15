@@ -59,6 +59,14 @@ function access.list_files(repo, filepath)
 			files[name] = true
 		end
 	end
+	local ignorepaths = rpath .. "/.ignore"
+	local f = io.open(ignorepaths, "rb")
+	if f then
+		for name in f:lines() do
+			files[name] = nil
+		end
+		f:close()
+	end
 	filepath = (filepath:match "^/?(.-)/?$") .. "/"
 	if filepath == '/' then
 		-- root path

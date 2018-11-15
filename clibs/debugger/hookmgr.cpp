@@ -298,9 +298,22 @@ struct hookmgr {
     void setcoroutine(lua_State* hL) {
         updatehookmask(hL);
     }
+    
+    lua_State* hostL = 0;
     void start(lua_State* hL) {
+        hostL = hL;
         thunk_bind((intptr_t)hL, (intptr_t)this);
         event_free::create(hL, lua_freef, this);
+    }
+    ~hookmgr() {
+        if(hostL) {
+            event_free::destroy(hostL);
+        }
+    }
+    static int clear(lua_State* L) {
+        hookmgr* self = (hookmgr*)lua_touserdata(L, 1);
+        self->~hookmgr();
+        return 0;
     }
     static hookmgr* get_self(lua_State* L) {
         return (hookmgr*)lua_touserdata(L, lua_upvalueindex(1));
@@ -411,6 +424,12 @@ int luaopen_debugger_hookmgr(lua_State* L) {
         lua_pop(L, 1);
         hookmgr* thd = (hookmgr*)lua_newuserdata(L, sizeof(hookmgr));
         new (thd) hookmgr(L);
+
+		lua_createtable(L, 0, 1);
+		lua_pushcfunction(L, hookmgr::clear);
+		lua_setfield(L, -2, "__gc");
+		lua_setmetatable(L, -2);
+
         lua_pushvalue(L, -1);
         lua_rawsetp(L, LUA_REGISTRYINDEX, &HOOK_MGR);
     }

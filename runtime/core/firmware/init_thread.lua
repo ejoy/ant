@@ -21,8 +21,13 @@ local function npath(path)
 	return path:match "^/?(.-)/?$"
 end
 
-local function vfs_realpath(path)
+local function vfs_get(path)
 	io_req:push("GET", threadid, npath(path))
+	return io_resp:bpop()
+end
+
+local function vfs_type(path)
+	io_req:push("TYPE", threadid, npath(path))
 	return io_resp:bpop()
 end
 
@@ -38,7 +43,7 @@ local function errmsg(err, filename, real_filename)
 end
 
 local function openfile(filename)
-    local real_filename = vfs_realpath(filename)
+    local real_filename = vfs_get(filename)
     if not real_filename then
         return nil, ('%s:No such file or directory.'):format(filename)
     end
@@ -48,6 +53,16 @@ local function openfile(filename)
         return nil, err, ec
     end
     return f
+end
+
+local function loadfile(path)
+    local f, err = openfile(path)
+    if not f then
+        return nil, err
+    end
+    local str = f:read 'a'
+    f:close()
+    return load(str, '@vfs://' .. path)
 end
 
 -- Step 4. init lua searcher
@@ -67,9 +82,8 @@ local function searchpath(name, path)
     name = string.gsub(name, '%.', '/')
     for c in string.gmatch(path, '[^;]+') do
         local filename = string.gsub(c, '%?', name)
-        local file = openfile(filename)
-        if file then
-            return filename, file
+        if vfs_type(filename) == 'file' then
+            return filename
         end
         err = err .. ("\n\tno file '%s'"):format(filename)
     end
@@ -82,9 +96,7 @@ local function searcher_Lua(name)
     if not filename then
         return file -- err
     end
-    local str = file:read 'a'
-    file:close()
-    local func, err = load(str, '@vfs://' .. filename)
+    local func, err = loadfile(filename)
     if not func then
         error(("error loading module '%s' from file '%s':\n\t%s"):format(name, filename, err))
     end

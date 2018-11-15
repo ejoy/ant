@@ -23,4 +23,15 @@ function vfs.prefetch(path)
 	io_req:push("PREFETCH", npath(path))
 end
 
+-- prefectch all dir (path should be a dir)
+function vfs.fetchall(path)
+	io_req:push("FETCHALL", false, npath(path))
+end
+
+-- return "dir" "file" or nil
+function vfs.type(path)
+	io_req:push("TYPE", threadid, npath(path))
+	return io_resp:bpop()
+end
+
 package.loaded.vfs = vfs
