@@ -15,4 +15,4 @@ libthread.a : lthread.o lseri.o
 	ar rsv $@ $^
 
 clean :
-	rm -f thread.dll
+	rm -f thread.dll *.o

@@ -277,6 +277,8 @@ thread_main(void *ud) {
 /*
 	string source code
 	cfunction param
+
+	return lightuserdata
  */
 static int
 lthread(lua_State *L) {
@@ -301,6 +303,15 @@ lthread(lua_State *L) {
 		thread_args_free(args);
 		return luaL_error(L, "Create thread failed");
 	}
+	lua_pushlightuserdata(L, th.id);
+	return 1;
+}
+
+static int
+lwait(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+	void * pid = lua_touserdata(L, 1);
+	thread_wait(pid);
 	return 0;
 }
 
@@ -342,6 +353,7 @@ luaopen_thread_worker(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "sleep", lsleep },
 		{ "thread", lthread },
+		{ "wait", lwait },
 		{ "newchannel", lnewchannel },
 		{ "channel", lquerychannel },
 		{ "reset", lreset },

@@ -4,12 +4,13 @@
 struct thread {
 	void* (*func)(void *);
 	void *ud;
+	void* id;
 };
 
 struct thread_event;
 
 static int thread_create(struct thread * thread);
-static void thread_join(struct thread * threads, int n);
+static void thread_wait(void *id);
 static void thread_event_create(struct thread_event *ev);
 static void thread_event_release(struct thread_event *ev);
 static void thread_event_trigger(struct thread_event *ev);
@@ -19,6 +20,7 @@ static void thread_sleep(int msec);
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
 
 #include <windows.h>
+#include <process.h>
 
 #ifdef _MSC_VER
 #define INLINE __inline
@@ -26,19 +28,12 @@ static void thread_sleep(int msec);
 #define INLINE inline
 #endif
 
-static DWORD INLINE WINAPI
-thread_function(LPVOID lpParam) {
+static unsigned INLINE __stdcall
+thread_function(void *lpParam) {
 	struct thread * t = (struct thread *)lpParam;
 	t->func(t->ud);
-	return 0;
-}
-
-static DWORD INLINE WINAPI
-thread_function_one(LPVOID lpParam) {
-	struct thread * t = (struct thread *)lpParam;
-	struct thread temp = *t;
 	HeapFree(GetProcessHeap(), 0, t);
-	temp.func(temp.ud);
+	_endthreadex(0);
 	return 0;
 }
 
@@ -46,8 +41,8 @@ static INLINE int
 thread_create(struct thread * thread) {
 	struct thread *temp = (struct thread *)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(*temp));
 	*temp = *thread;
-	HANDLE h = CreateThread(NULL, 0, thread_function, (LPVOID)temp, 0, NULL);
-	if (h == NULL) {
+	thread->id = (void *)_beginthreadex(NULL, 0, thread_function, (LPVOID)temp, 0, NULL);
+	if (thread->id == NULL) {
 		HeapFree(GetProcessHeap(), 0, temp);
 		return 1;
 	}
@@ -55,21 +50,10 @@ thread_create(struct thread * thread) {
 }
 
 static INLINE void
-thread_join(struct thread * threads, int n) {
-	int i;
-	HANDLE *thread_handle = (HANDLE *)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,n*sizeof(HANDLE));
-	for (i=0;i<n;i++) {
-		thread_handle[i] = CreateThread(NULL, 0, thread_function, (LPVOID)&threads[i], 0, NULL);
-		if (thread_handle[i] == NULL) {
-			HeapFree(GetProcessHeap(), 0, thread_handle);
-			return;
-		}
-	}
-	WaitForMultipleObjects(n, thread_handle, TRUE, INFINITE);
-	for (i=0;i<n;i++) {
-		CloseHandle(thread_handle[i]);
-	}
-	HeapFree(GetProcessHeap(), 0, thread_handle);
+thread_wait(void *id) {
+	HANDLE h = (HANDLE)id;
+	WaitForSingleObject(h, INFINITE);
+	CloseHandle(h);
 }
 
 struct thread_event {
@@ -121,22 +105,15 @@ static inline int
 thread_create(struct thread * thread) {
 	pthread_t pid;
 
-	return pthread_create(&pid, NULL, thread->func, thread->ud);
+	int ret = pthread_create(&pid, NULL, thread->func, thread->ud);
+	thread->id = (void *)pthread_t;
+	return ret;
 }
 
 static inline void
-thread_join(struct thread *threads, int n) {
-	pthread_t pid[n];
-	int i;
-	for (i=0;i<n;i++) {
-		if (pthread_create(&pid[i], NULL, thread_function, &threads[i])) {
-			return;
-		}
-	}
-
-	for (i=0;i<n;i++) {
-		pthread_join(pid[i], NULL); 
-	}
+thread_wait(void *id) {
+	pthread_t pid = (pthread_t)id;
+	pthread_join(pid, NULL);
 }
 
 struct thread_event {
