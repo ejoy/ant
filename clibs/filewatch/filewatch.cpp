@@ -117,9 +117,6 @@ FileWatch::FileWatch()
 { }
 
 FileWatch::~FileWatch() {
-    for (auto& task : m_tasks) {
-        remove(task.first);
-    }
     stop();
     assert(m_tasks.empty());
 }
