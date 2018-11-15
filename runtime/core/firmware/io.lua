@@ -116,6 +116,11 @@ function offline:LIST(path)
 	end
 end
 
+function offline:EXIT()
+	self:push(nil)
+	error "EXIT"
+end
+
 local function offline_dispatch(cmd, id, ...)
 	local f = offline[cmd]
 	if not f then
@@ -481,6 +486,11 @@ end
 
 function online.SEND(...)
 	connection_send(...)
+end
+
+function online.EXIT(id)
+	response_id(id, nil)
+	error "EXIT"
 end
 
 -- dispatch package from connection
