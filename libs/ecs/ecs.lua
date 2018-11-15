@@ -1,3 +1,4 @@
+--luacheck: globals import log
 local require = import and import(...) or require
 local log = log and log(...) or print
 
@@ -5,8 +6,8 @@ local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
 
-local vfsutil = require "vfs.util"
-local vfs = require "vfs"
+local vfs_fs = require "vfs.fs"
+
 local ecs = {}
 local world = {} ; world.__index = world
 
@@ -172,7 +173,7 @@ end
 
 local function searchpath(name, path)
 	--TODO
-	local f = vfsutil.open(name, "r")
+	local f = vfs_fs.open(name, "r")
 	if f then		
 		f:close()
 		return name
@@ -181,7 +182,7 @@ local function searchpath(name, path)
 	name = string.gsub(name, '%.', '/')
 	for c in string.gmatch(path, '[^;]+') do
 		local filename = string.gsub(c, '%?', name)
-		local f = vfsutil.open(filename, "r")
+		local f = vfs_fs.open(filename, "r")
 		if f then
 			f:close()
 			return filename

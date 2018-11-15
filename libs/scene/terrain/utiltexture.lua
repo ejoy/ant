@@ -1,9 +1,9 @@
 local bgfx = require "bgfx"
 local assetmgr = require "asset"
-local vfsutil = require "vfs.util"
+local vfs_fs = require "vfs.fs"
 
 local function texture_load(filename, info)
-	local f = assert(vfsutil.open(filename, "rb"))
+	local f = assert(vfs_fs.open(filename, "rb"))
 	local imgdata = f:read "a"
 	f:close()
 	print("   image name = "..filename)

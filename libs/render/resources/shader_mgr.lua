@@ -8,7 +8,7 @@ local assetmgr = require "asset"
 local baselib = require "bgfx.baselib"
 local rhwi = require "render.hardware_interface"
 
-local vfsutil = require "vfs.util"
+local vfs_fs = require "vfs.fs"
 
 local alluniforms = {}
 
@@ -61,7 +61,7 @@ local function load_shader(name)
 	if filename == nil then
 		error(string.format("not found shader file: %s", name))
 	end
-	local f = assert(vfsutil.open(assert(filename), "rb"))
+	local f = assert(vfs_fs.open(assert(filename), "rb"))
 	local data = f:read "a"
 	f:close()
 	local h = bgfx.create_shader(data)

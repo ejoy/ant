@@ -3,7 +3,7 @@ local require = import and import(...) or require
 local rawtable = require "rawtable"
 local assetutil = require "asset.util"
 local assetmgr = require "asset"
-local vfsutil = require "vfs.util"
+local vfs_fs = require "vfs.fs"
 local path = require "filesystem.path"
 
 return function(filename)
@@ -14,7 +14,7 @@ return function(filename)
 		local parentpath = path.parent(fn)
 		if parentpath then
 			local subres_path = path.join(parentpath, p)
-			if not vfsutil.exist(subres_path) then
+			if not vfs_fs.exist(subres_path) then
 				return p
 			end
 			

@@ -1,8 +1,9 @@
+--luacheck: globals import
 local require = import and import(...) or require
-local vfsutil = require "vfs.util"
+local vfs_fs = require "vfs.fs"
 
 return function (filename)
-	local f = vfsutil.open(filename,"rb")
+	local f = vfs_fs.open(filename,"rb")
 	local data = f:read "a"
 	f:close()
 	local env = {}

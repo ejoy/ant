@@ -1,5 +1,5 @@
 local cu = require "common.util"
-local vfsutil = require "vfs.util"
+local vfs_fs = require "vfs.fs"
 local seri = {}
 
 function seri.load(filename)
@@ -74,7 +74,7 @@ function seri.save(filename, data)
 		table.insert(keys, k)
 	end
 	table.sort(keys)	
-	local f = assert(vfsutil.open(filename, "wb"))
+	local f = assert(vfs_fs.open(filename, "wb"))
 	for _, key in ipairs(keys) do
 		local value = seri.serialize(data[key])
 		f:write(string.format("%s = %s\n", key, value))

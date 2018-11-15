@@ -1,35 +1,5 @@
 local util = {}; util.__index = {}
 
-local vfs = require "vfs"
-function util.open(filename, mode)
-	return io.open(filename, mode)
-end
-
-function util.local_open(filename, mode)
-	if mode and mode:find("w") then
-		return io.open(filename, mode)
-	else
-		local realpath = vfs.realpath(filename)
-		if realpath then
-			return io.open(realpath, mode)	
-		end
-		return nil, string.format("vfs not found file:%s", filename)
-	end
-end
-
-local fs = require "filesystem"
-function util.exist(filename)	
-	local realpath = vfs.realpath(filename)
-	if realpath then
-		return fs.exist(realpath)
-	end
-end
-
-function util.attributes(filename, which)
-	local realpath = vfs.realpath(filename)
-	return fs.attributes(realpath, which)
-end
-
 local function replace_path(srcpath, checkpath, rplpath)
 	local config = require "common.config"
 
@@ -56,23 +26,24 @@ function util.convert_to_mount_path(p, mountpath)
 	return rpl	
 end
 
+local lfs = require "lfs"
 function util.filter_abs_path(abspath)
-	local assetfolder = (fs.currentdir() .. "/assets"):gsub("\\", "/")
+	local assetfolder = (lfs.currentdir() .. "/assets"):gsub("\\", "/")
 
 	local newpath, found = replace_path(abspath, assetfolder, "assets")
 	if not found then
-		return util.convert_to_mount_path(abspath, "engine/assets")
+		return util.convert_to_mount_path(abspath, "engine/assets"), "engine"
 	end
 
-	return newpath
+	return newpath, "local"
 end
 
 function util.file_is_newer(check, base)
 	local rp_check = vfs.realpath(check)
 	local rp_base  = vfs.realpath(base)
 
-	local base_mode = fs.attributes(rp_base, "mode")
-	local check_mode = fs.attributes(rp_check, "mode")
+	local base_mode = lfs.attributes(rp_base, "mode")
+	local check_mode = lfs.attributes(rp_check, "mode")
 
 	if base_mode == nil and check_mode then
 		return true
@@ -91,11 +62,11 @@ local timestamp_cache = {}
 function util.last_modify_time(filename, use_cache)
 	local realfilename = vfs.realpath(filename)
 	if not use_cache then
-		return fs.attributes(realfilename, "modification")
+		return lfs.attributes(realfilename, "modification")
 	end
 	
 	if not timestamp_cache[filename] then
-		local last_t = fs.attributes(realfilename, "modification")
+		local last_t = lfs.attributes(realfilename, "modification")
 		timestamp_cache[filename] = last_t
 	
 		return last_t

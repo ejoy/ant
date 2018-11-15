@@ -4,7 +4,7 @@ local require = import and import(...) or require
 
 local path = require "filesystem.path"
 local seri = require "serialize.util"
-local vfsutil= require "vfs.util"
+local vfs_fs= require "vfs.fs"
 
 local support_list = {
 	"shader",
@@ -94,13 +94,13 @@ local searchdirs = {
 		from local path, if not found, then try "engine/assets" path
 ]]
 function assetmgr.find_valid_asset_path(respath)	
-	if vfsutil.exist(respath) then
+	if vfs_fs.exist(respath) then
 		return respath
 	end
 
 	local enginebuildpath, found = respath:gsub(("^/?%s"):format(engine_assetpath), engine_assetbuildpath)
 	if found ~= 0 then
-		if vfsutil.exist(enginebuildpath) then
+		if vfs_fs.exist(enginebuildpath) then
 			return enginebuildpath
 		end
 		return nil
@@ -108,7 +108,7 @@ function assetmgr.find_valid_asset_path(respath)
 
 	for _, v in ipairs(searchdirs) do
 		local p = path.join(v, respath)		
-		if vfsutil.exist(p) then
+		if vfs_fs.exist(p) then
 			return p
 		end
 	end

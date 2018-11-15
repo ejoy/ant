@@ -6,17 +6,5 @@ vfs.mount({
 	['engine/libs'] = cwd .. "/libs"
 }, cwd)
 
-local vfsutil = require "vfs.util"
-vfsutil.open = vfsutil.local_open
-
-local nlf = loadfile
-loadfile = function (filename)
-	local realpath = vfs.realpath(filename) 
-	return nlf(realpath)
-end
-
-local ndf = dofile
-dofile = function (filename)
-	local realpath = vfs.realpath(filename)
-	return ndf(realpath)
-end
+-- import custom loadfile/dofile/io.open
+require "vfs.fs"
