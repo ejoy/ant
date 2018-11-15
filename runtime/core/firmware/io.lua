@@ -271,13 +271,21 @@ end
 -- Client may not request the file already exist.
 function response.BLOB(hash, data)
 	local hashpath = repo.repo:hashpath(hash)
-	local f = io.open(hashpath, "wb")
+	local temp = hashpath .. ".download"
+	local f = io.open(temp, "wb")
 	if not f then
-		print("Can't write to", hashpath)
+		print("Can't write to", temp)
 		return
 	end
 	f:write(data)
 	f:close()
+	if not os.rename(temp, hashpath) then
+		os.remove(hashpath)
+		if not os.rename(temp, hashpath) then
+			print("Can't rename", hashpath)
+			return
+		end
+	end
 	hash_complete(hash, true)
 end
 
@@ -404,6 +412,29 @@ function online.LIST(id, path)
 		print("Need Change Root", path)
 		response_id(id, nil)
 	end
+end
+
+local function fetch_all(path)
+	local dir, hash = repo.repo:list(path)
+	if dir then
+		for name,v in pairs(dir) do
+			local subpath = path .. "/" .. name
+			if v.dir then
+				fetch_all(subpath)
+			else
+				print("Fetch", subpath)
+				prefetch_file(hash, subpath)
+			end
+		end
+	elseif hash then
+		request_file(false, hash, path, "FETCHALL")
+	else
+		print("Need Change Root", path)
+	end
+end
+
+function online.FETCHALL(_, path)	-- _ for id
+	fetch_all(path)
 end
 
 function online.PREFETCH(path)

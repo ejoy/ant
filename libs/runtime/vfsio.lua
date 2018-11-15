@@ -10,7 +10,7 @@ local function errmsg(err, filename, real_filename)
     return err:sub(1, first-1) .. filename .. err:sub(last+1)
 end
 
-function io_open(filename, mode)
+local function io_open(filename, mode)
     if mode ~= nil and mode ~= 'r' and mode ~= 'rb' then
         return nil, ('%s:Permission denied.'):format(filename)
     end
