@@ -437,6 +437,32 @@ function online.FETCHALL(_, path)	-- _ for id
 	fetch_all(path)
 end
 
+function online.TYPE(id, fullpath)
+	local path, name = fullpath:match "(.*)/(.-)$"
+	if path == nil then
+		if fullpath == "" then
+			response_id(id, "dir")
+			return
+		end
+		path = ""
+		name = fullpath
+	end
+	local dir, hash = repo.repo:list(path)
+	if dir then
+		local v = dir[name]
+		if not v then
+			response_id(id, nil)
+		else
+			response_id(id, v.dir and "dir" or "file")
+		end
+		return
+	elseif hash then
+		request_file(id, hash, fullpath, "EXIST")
+	else
+		response_id(id, nil)
+	end
+end
+
 function online.PREFETCH(path)
 	local realpath, hash = repo.repo:realpath(path)
 	if realpath then
