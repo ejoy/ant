@@ -21,28 +21,14 @@ local function npath(path)
 	return path:match "^/?(.-)/?$"
 end
 
-local function vfs_list(path)
-	io_req:push("LIST", threadid, npath(path))
-	return io_resp:bpop()
-end
-
 local function vfs_realpath(path)
 	io_req:push("GET", threadid, npath(path))
 	return io_resp:bpop()
 end
 
-local function path_split(path)
-    local t = {}
-    path:gsub('[^/\\]*', function (w) t[#t+1] = w end)
-    local filename = t[#t]
-    t[#t] = nil
-    return table.concat(t, '/'), filename
-end
-
-local function vfs_exists(path)
-    local dir, filename = path_split(path)
-    local list = vfs_list(dir)
-    return list ~= nil and list[filename] ~= nil
+local function vfs_type(path)
+	io_req:push("TYPE", threadid, npath(path))
+	return io_resp:bpop()
 end
 
 -- Step 3. init dofile and loadfile
@@ -96,7 +82,7 @@ local function searchpath(name, path)
     name = string.gsub(name, '%.', '/')
     for c in string.gmatch(path, '[^;]+') do
         local filename = string.gsub(c, '%?', name)
-        if vfs_exists(filename) then
+        if vfs_type(filename) == 'file' then
             return filename
         end
         err = err .. ("\n\tno file '%s'"):format(filename)
