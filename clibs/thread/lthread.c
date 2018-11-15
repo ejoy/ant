@@ -308,9 +308,11 @@ static void
 delete_channel(struct channel *c) {
 	struct channel tmp = *c;
 	memset(c, 0, sizeof(*c));
-	free((char *)tmp.name);
-	simple_queue_destroy(tmp.queue);
-	thread_event_release(&tmp.trigger);
+	if (tmp.name) {
+		free((char *)tmp.name);
+		simple_queue_destroy(tmp.queue);
+		thread_event_release(&tmp.trigger);
+	}
 }
 
 static int
