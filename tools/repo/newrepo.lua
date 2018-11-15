@@ -25,9 +25,12 @@ if reponame == nil then
 end
 print ("Project name :",reponame)
 
+local convertors = require "fileconvert"
+convertors()
+
 local mount = {	
 	["engine/libs"] = enginepath .. "/libs",
-	["engine/assets"] = enginepath .. "/assets",
+	["engine/assets"] = enginepath .. "/assets",	
 	["firmware"] = enginepath .. "/runtime/core/firmware",
 }
 

@@ -1,28 +1,9 @@
 local util = {}; util.__index = {}
-
-local function replace_path(srcpath, checkpath, rplpath)
-	local config = require "common.config"
-
-	local p0 = srcpath:gsub('\\', '/')
-	
-	local platform = config.platform()
-	if platform == "Windows" then
-		local realpath_lower = checkpath:lower()
-		local p0_lower = p0:lower()
-		local pos = p0_lower:find(realpath_lower) 
-		if pos then
-			return rplpath .. p0:sub(#realpath_lower + 1), true
-		end
-		return srcpath, false
-	else
-		local s, c = p0:gsub(checkpath, rplpath)
-		return s, c ~= 0
-	end	
-end
+local path = require "filesystem.path"
 
 function util.convert_to_mount_path(p, mountpath)	
 	local mount_realpath = vfs.realpath(mountpath):gsub('\\', '/')
-	local rpl = replace_path(p, mount_realpath, mountpath)
+	local rpl = path.replace_path(p, mount_realpath, mountpath)
 	return rpl	
 end
 
@@ -30,7 +11,7 @@ local lfs = require "lfs"
 function util.filter_abs_path(abspath)
 	local assetfolder = (lfs.currentdir() .. "/assets"):gsub("\\", "/")
 
-	local newpath, found = replace_path(abspath, assetfolder, "assets")
+	local newpath, found = path.replace_path(abspath, assetfolder, "assets")
 	if not found then
 		return util.convert_to_mount_path(abspath, "engine/assets"), "engine"
 	end

@@ -181,5 +181,25 @@ function path.listfiles(subfolder, files, filter_exts)
 end
 
 
+function path.replace_path(srcpath, checkpath, rplpath)
+	local config = require "common.config"
+
+	local p0 = srcpath:gsub('\\', '/')
+	
+	local platform = config.platform()
+	if platform == "Windows" then
+		local realpath_lower = checkpath:lower()
+		local p0_lower = p0:lower()
+		local pos = p0_lower:find(realpath_lower) 
+		if pos then
+			return rplpath .. p0:sub(#realpath_lower + 1), true
+		end
+		return srcpath, false
+	else
+		local s, c = p0:gsub(checkpath, rplpath)
+		return s, c ~= 0
+	end	
+end
+
 
 return path

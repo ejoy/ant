@@ -4,8 +4,6 @@ local require = import and import(...) or require
 -- Editor or test use vfs.local to manage a VFS dir/repo.
 -- It read/write file from/to a repo
 
-local packfile_real = require "packfile.realfile"
-
 local localvfs = {} ; localvfs.__index = localvfs
 
 local fs = require "filesystem"
@@ -68,7 +66,8 @@ end
 
 function localvfs.realpath(pathname)
 	local rp = access.realpath(self, pathname)
-	rp = packfile_real(rp)
+	local fileconvert = require "fileconvert"
+	rp = fileconvert(rp)
 	return  rp, pathname:match "^/?(.-)/?$"
 end
 

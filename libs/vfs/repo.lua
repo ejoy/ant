@@ -12,7 +12,6 @@ repo.__index = repo
 local fs = require "filesystem"
 local crypt = require "crypt"
 local access = require "repoaccess"
-local packfile_real = require "packfile.realfile"
 
 local function addslash(name)
 	return (name:gsub("[/\\]?$","/"))
@@ -87,12 +86,7 @@ end
 
 -- map path in repo to realpath (replace mountpoint)
 function repo:realpath(filepath)
-	local rp = access.realpath(self, filepath)
-	local newrp, newcreated = packfile_real(rp)
-	if newcreated then
-		self:touch(newrp)
-	end
-	return newrp
+	return access.realpath(self, filepath)
 end
 
 -- build cache, cache is a table link list of sha1->{ filelist = ,  filename = , timestamp= , next= }

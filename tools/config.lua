@@ -1,4 +1,5 @@
 dofile "libs/init.lua"
+require "iuplua"
 require "iupluaimglib"
 
 local toolset = require "editor.toolset"
