@@ -165,6 +165,7 @@ local function filewacth()
 		end
 		local dir = wid[id]
 		local path = (dir == '') and path or (dir .. '/' .. path)
+		path = path:gsub('\\', '/')
 		print('[FileWatch]', type, path)
 		repo:touch(path)
 		::continue::
