@@ -18,45 +18,48 @@ shader_mgr.__index = shader_mgr
 local rt_subpath = nil
 
 function shader_mgr.get_shader_rendertype_path()
-	if rt_subpath then
-		return rt_subpath
-	end
+	return "d3d11"
+	-- if rt_subpath then
+	-- 	return rt_subpath
+	-- end
 
-    local caps = rhwi.get_caps()
-    local paths = {
-        NOOP       = "dx9",
-        DIRECT3D9  = "dx9",
-        DIRECT3D11 = "dx11",
-        DIRECT3D12 = "dx11",
-        GNM        = "pssl",
-        METAL      = "metal",
-        OPENGL     = "glsl",
-        OPENGLES   = "essl",
-        VULKAN     = "spirv",
-    }
+    -- local caps = rhwi.get_caps()
+    -- local paths = {
+    --     NOOP       = "dx9",
+    --     DIRECT3D9  = "dx9",
+    --     DIRECT3D11 = "dx11",
+    --     DIRECT3D12 = "dx11",
+    --     GNM        = "pssl",
+    --     METAL      = "metal",
+    --     OPENGL     = "glsl",
+    --     OPENGLES   = "essl",
+    --     VULKAN     = "spirv",
+    -- }
 
-	rt_subpath = assert(paths[caps.rendererType])
-	return rt_subpath	
+	-- rt_subpath = assert(paths[caps.rendererType])
+	-- return rt_subpath	
 end
 
 function shader_mgr.get_compile_renderer_name()
-    local caps = rhwi.get_caps()
-    local rendertype = caps.rendererType
-    local platform = string.lower(baselib.platform_name)
+	return "d3d11"
+    -- local caps = rhwi.get_caps()
+    -- local rendertype = caps.rendererType
+    -- local platform = string.lower(baselib.platform_name)
 
-    if  rendertype == "DIRECT3D9" then
-        return "d3d9"
-    end
+    -- if  rendertype == "DIRECT3D9" then
+    --     return "d3d9"
+    -- end
 
-    if  rendertype == "DIRECT3D11" or
-        rendertype == "DIRECT3D12" then
-        return "d3d11"
-	end
+    -- if  rendertype == "DIRECT3D11" or
+    --     rendertype == "DIRECT3D12" then
+    --     return "d3d11"
+	-- end
 	
-    return platform
+    -- return platform
 end
 
 local function load_shader(name)
+	print("load shader:", name)
 	local filename = assetmgr.find_valid_asset_path(path.join("shaders/src", name))
 	if filename == nil then
 		error(string.format("not found shader file: %s", name))

@@ -30,7 +30,7 @@ local function mat_unpack(v)
 	local t = table.pack(string.unpack("<ffffffffffffffff", v))
 	assert(#t == 17 and t.n == 17)
 	t[17], t.n = nil, nil
-	return t
+	return t    
 end
 
 
@@ -40,7 +40,8 @@ end
 
 return function (filename)
 	local function openfile(filename)
-		local ff = assert(vfs_fs.open(filename, "rb"))
+		dprint("using antmeshloader:", filename)
+		local ff = assert(vfs_fs.open(filename, "rb"))		
 		-- local content = ff:read("a")
 		-- ff:close()
 		-- local readit = 1

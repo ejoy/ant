@@ -10,10 +10,11 @@ local modelutil = require "modelloader.util"
 
 local loader = {}
 
-local function load_from_source(filepath)
-	path.create_dirs(path.parent(path.join("cache", filepath)))
-	local antmeshloader = require "modelloader.antmeshloader"
-	return antmeshloader(path.remove_ext(filepath))
+local function load_from_source(filepath)	
+	assert(path.ext(filepath) == "antmesh")
+	local antmeshloader = require "modelloader.antmeshloader"	
+	dprint("antmesh:", filepath)
+	return antmeshloader(filepath)
 end
 
 local function create_vb(vb)
