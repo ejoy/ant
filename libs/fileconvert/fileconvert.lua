@@ -33,18 +33,15 @@ local path = require "filesystem.path"
 --     end
 -- end
 
-
-local cwd = fs.currentdir() .. "/assets"
-
-local function filter_files(subdir, exts)
-	local absdir = path.join(cwd, subdir)
-	local files = {}
-	path.listfiles(absdir, files, exts)
+local function filter_files(absdir, exts)	
+	
+	local files = {}	
+	path.listfiles(absdir, files, exts)	
 	return files
 end
 
-local function mesh_filter(subdir)
-	local files = filter_files(subdir, {"bin", "fbx"})
+local function mesh_filter(absdir)
+	local files = filter_files(absdir, {"bin", "fbx"})
 	local convertor = require "fileconvert.convertmesh"
 	for _, f in ipairs(files) do
 		convertor(f)
@@ -54,8 +51,8 @@ end
 local shadertype = "d3d11"
 
 local convertors = {
-	["shaders/src"] = function (subdir)
-		local files = filter_files(subdir, function (filepath) 
+	["shaders/src"] = function (absdir)
+		local files = filter_files(absdir, function (filepath) 
 			local ext = path.ext(filepath)
 			if ext == "sc" then
 				return not filepath:match("%.def%.sc")
@@ -70,9 +67,11 @@ local convertors = {
 	["build/meshes"] = mesh_filter,
 }
 
-return function()
+return function(srcdir)
+	srcdir = srcdir or (fs.currentdir() .. "/assets")
+
 	for subdir, convertor in pairs(convertors) do
-		convertor(subdir)
+		convertor(path.join(srcdir, subdir))
 	end
 end
 

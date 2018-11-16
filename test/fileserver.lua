@@ -40,7 +40,17 @@ end
 local debug = {}
 local message = {}
 
-function message:ROOT()
+local fileconvert = require "fileconvert"
+local function convertfiles()
+	fileconvert(repopath .. "/assets")
+	local engineassets = repo._mountpoint["engine/assets"]
+	if engineassets then
+		fileconvert(engineassets)
+	end
+end
+
+function message:ROOT()	
+	convertfiles()
 	repo:build()
 	local roothash = repo:root()
 	response(self, "ROOT", roothash)

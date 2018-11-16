@@ -153,6 +153,9 @@ function path.dir(subfolder, filters)
 end
 
 function path.listfiles(subfolder, files, filter_exts)	
+	if not fs.exist(subfolder) then
+		return
+	end
 	for p in path.dir(subfolder) do
 		local filepath = path.join(subfolder, p)
 		if path.isdir(filepath) then
