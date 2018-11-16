@@ -292,7 +292,7 @@ function response.BLOB(hash, data)
 end
 
 function response.FILE(hash, size)
-	repo.uncomplete[hash] = { size = size, offset = 0 }
+	repo.uncomplete[hash] = { size = tonumber(size), offset = 0 }
 end
 
 function response.MISSING(hash)
