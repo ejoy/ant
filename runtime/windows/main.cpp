@@ -45,7 +45,7 @@ static void repo_setup(wchar_t* dir) {
     dir[sz] = L'\0';
 }
 
-static const char* repo_dir(lua_State* L) {
+static void repo_dir(lua_State* L) {
 	wchar_t dir[MAX_PATH] = {0};
 	LPITEMIDLIST pidl = NULL;
 	SHGetSpecialFolderLocation(NULL, CSIDL_PERSONAL, &pidl);
@@ -55,9 +55,7 @@ static const char* repo_dir(lua_State* L) {
 	PathAppendW(dir, L"runtime");
     CreateDirectoryW(dir, NULL);
     SetCurrentDirectoryW(dir);
-    const char* result = lua_pushutf8string(L, dir, -1);
     repo_setup(dir);
-	return result;
 }
 
 static int msghandler(lua_State *L) {
@@ -69,10 +67,10 @@ static int msghandler(lua_State *L) {
     return 1;
 }
 
-static void dofile(lua_State* L, const char* name) {
+static void dostring(lua_State* L, const char* str) {
     lua_pushcfunction(L, msghandler);
     int err = lua_gettop(L);
-    if (LUA_OK == luaL_loadfile(L, name)) {
+    if (LUA_OK == luaL_loadstring(L, str)) {
         if (LUA_OK == lua_pcall(L, 0, 0, err)) {
             return;
         }
@@ -98,9 +96,7 @@ static int pmain(lua_State *L) {
     createargtable(L, argc, argv);
     ant_searcher_init(L);
     repo_dir(L);
-    lua_pushstring(L, "\\firmware\\bootstrap.lua");
-	lua_concat(L, 2);
-    dofile(L, lua_tostring(L, -1));
+    dostring(L, "local fw = require 'firmware' ; assert(fw.loadfile 'bootstrap.lua')()");
     return 0;
 }
 
