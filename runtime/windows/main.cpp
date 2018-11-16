@@ -27,15 +27,37 @@ static const char* lua_pushutf8string(lua_State* L, const wchar_t* wstr, size_t 
     return r;
 }
 
-static const char* default_repo(lua_State* L) {
+static const wchar_t hex[] = L"0123456789abcdef";
+
+static void repo_setup(wchar_t* dir) {
+	PathAppendW(dir, L".repo");
+    CreateDirectoryW(dir, NULL);
+    size_t sz = wcslen(dir);
+    dir[sz] = L'\\';
+    dir[sz+3] = L'\0';
+    for (int i = 0; i < 16; ++i) {
+        for (int j = 0; j < 16; ++j) {
+            dir[sz+1] = hex[i];
+            dir[sz+2] = hex[j];
+            CreateDirectoryW(dir, NULL);
+        }
+    }
+    dir[sz] = L'\0';
+}
+
+static const char* repo_dir(lua_State* L) {
 	wchar_t dir[MAX_PATH] = {0};
 	LPITEMIDLIST pidl = NULL;
 	SHGetSpecialFolderLocation(NULL, CSIDL_PERSONAL, &pidl);
     SHGetPathFromIDListW(pidl, dir);
 	PathAppendW(dir, L"ant");
+    CreateDirectoryW(dir, NULL);
 	PathAppendW(dir, L"runtime");
+    CreateDirectoryW(dir, NULL);
     SetCurrentDirectoryW(dir);
-	return lua_pushutf8string(L, dir, -1);
+    const char* result = lua_pushutf8string(L, dir, -1);
+    repo_setup(dir);
+	return result;
 }
 
 static int msghandler(lua_State *L) {
@@ -75,13 +97,7 @@ static int pmain(lua_State *L) {
     luaL_openlibs(L);
     createargtable(L, argc, argv);
     ant_searcher_init(L);
-    //if (argc <= 1) {
-        default_repo(L);
-    //}
-    //else {
-    //    SetCurrentDirectoryW(argv[1]);
-    //    lua_pushutf8string(L, argv[1], -1);
-    //}
+    repo_dir(L);
     lua_pushstring(L, "\\firmware\\bootstrap.lua");
 	lua_concat(L, 2);
     dofile(L, lua_tostring(L, -1));
