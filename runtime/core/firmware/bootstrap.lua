@@ -8,7 +8,7 @@ thread.newchannel ("IOresp" .. threadid)
 local io_req = thread.channel "IOreq"
 local io_resp = thread.channel ("IOresp" .. threadid)
 
-thread.thread (string.format("assert(loadfile(%q))(...)", "firmware/io.lua"), package.searchers[3])
+local iothread = thread.thread (string.format("assert(loadfile(%q))(...)", "firmware/io.lua"), package.searchers[3])
 
 local function vfs_init(repopath, address, port)
 	io_req:push {
@@ -54,6 +54,7 @@ vfs_init("./", "127.0.0.1", 2018)
 vfs_fetchall('firmware')
 local bootstrap2 = vfs_get('firmware/bootstrap2.lua')
 vfs_exit()
+thread.wait(iothread)
 thread.reset()
 
 dofile(bootstrap2)
