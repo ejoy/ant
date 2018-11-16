@@ -1,10 +1,11 @@
+local repopath, address, port = ...
+
 local vfs = dofile 'firmware/vfs.lua'
-local repo = vfs.new('./')
+local repo = vfs.new(repopath)
 local vfs = dofile(repo:realpath('firmware/vfs.lua'))
-local repo = vfs.new('./')
+local repo = vfs.new(repopath)
 
 local thread = require "thread"
-
 local threadid = thread.id
 
 thread.newchannel "IOreq"
@@ -15,7 +16,7 @@ local io_resp = thread.channel ("IOresp" .. threadid)
 
 thread.thread (string.format("assert(loadfile(%q))(...)", repo:realpath("firmware/io.lua")), package.searchers[3])
 
-local function vfs_init(repopath, address, port)
+local function vfs_init()
 	io_req:push {
 		repopath = repopath,
 		vfspath = repo:realpath("firmware/vfs.lua"),
@@ -24,7 +25,7 @@ local function vfs_init(repopath, address, port)
 	}
 end
 
-vfs_init("./", "127.0.0.1", 2018)
+vfs_init()
 
 local openfile = dofile(repo:realpath("firmware/init_thread.lua"))
 
