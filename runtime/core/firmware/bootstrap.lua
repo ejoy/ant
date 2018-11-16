@@ -72,6 +72,6 @@ local function loadfile(path, name)
 	end
 	local str = f:read 'a'
 	f:close()
-	return load(str, "vfs://" .. name)
+	return load(str, "@vfs://" .. name)
 end
 assert(loadfile(bootloader, 'firmware/bootloader.lua'))(repopath, address, port)
