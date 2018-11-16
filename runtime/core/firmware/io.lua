@@ -435,7 +435,7 @@ local function fetch_all(path)
 	end
 end
 
-function online.FETCHALL(_, path)	-- _ for id
+function online.FETCHALL(path)
 	fetch_all(path)
 end
 

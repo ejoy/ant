@@ -27,7 +27,7 @@ local function vfs_init()
 end
 
 local function fetchfirmware()
-	io_req:push("FETCHALL", false, 'firmware')
+	io_req:push("FETCHALL", 'firmware')
 
 	-- wait finish
 	io_req:push("LIST", threadid, 'firmware')
