@@ -94,15 +94,13 @@ local searchdirs = {
 		from local path, if not found, then try "engine/assets" path
 ]]
 function assetmgr.find_valid_asset_path(respath)	
-	if vfs_fs.exist(respath) then
-		dprint("[vfs_fs.exist(respath)]:", respath)
+	if vfs_fs.exist(respath) then		
 		return respath
 	end
 
 	local enginebuildpath, found = respath:gsub(("^/?%s"):format(engine_assetpath), engine_assetbuildpath)
 	if found ~= 0 then
-		if vfs_fs.exist(enginebuildpath) then
-			dprint("[vfs_fs.exist(enginebuildpath)]:", enginebuildpath)
+		if vfs_fs.exist(enginebuildpath) then			
 			return enginebuildpath
 		end
 		return nil
@@ -110,8 +108,7 @@ function assetmgr.find_valid_asset_path(respath)
 
 	for _, v in ipairs(searchdirs) do
 		local p = path.join(v, respath)		
-		if vfs_fs.exist(p) then
-			dprint("[vfs_fs.exist(p)]:", p)
+		if vfs_fs.exist(p) then			
 			return p
 		end
 	end

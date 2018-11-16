@@ -6,8 +6,7 @@ function fs.open(filename, mode)
 	return io.open(filename, mode)
 end
 
-function fs.exist(filepath)
-	dprint("[fs.exist(filepath)]:", filepath)
+function fs.exist(filepath)	
 	return vfs.list(filepath) ~= nil
 end
 
