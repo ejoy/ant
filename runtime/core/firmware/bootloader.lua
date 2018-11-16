@@ -8,7 +8,7 @@ local function vfs_dofile(path)
     local f = assert(io.open(realpath))
     local str = f:read 'a'
     f:close()
-    return assert(load(str, "vfs://" .. path))()
+    return assert(load(str, "@vfs://" .. path))()
 end
 local vfs = vfs_dofile 'firmware/vfs.lua'
 repo = vfs.new(repopath)
@@ -34,7 +34,7 @@ thread.thread (([[
         end
         local str = f:read 'a'
         f:close()
-		return load(str, "vfs://" .. name)
+		return load(str, "@vfs://" .. name)
     end
     assert(loadfile(firmware_io, 'firmware/io.lua'))(loadfile)
 ]]):format(repo:realpath("firmware/io.lua")), package.searchers[3])

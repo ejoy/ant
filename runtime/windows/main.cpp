@@ -70,7 +70,7 @@ static int msghandler(lua_State *L) {
 static void dostring(lua_State* L, const char* str) {
     lua_pushcfunction(L, msghandler);
     int err = lua_gettop(L);
-    if (LUA_OK == luaL_loadstring(L, str)) {
+    if (LUA_OK == luaL_loadbuffer(L, str, strlen(str), "=(BOOTSTRAP)")) {
         if (LUA_OK == lua_pcall(L, 0, 0, err)) {
             return;
         }

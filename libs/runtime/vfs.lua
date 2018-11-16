@@ -25,7 +25,7 @@ end
 
 -- prefectch all dir (path should be a dir)
 function vfs.fetchall(path)
-	io_req:push("FETCHALL", false, npath(path))
+	io_req:push("FETCHALL", npath(path))
 end
 
 -- return "dir" "file" or nil

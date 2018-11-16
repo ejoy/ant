@@ -38,7 +38,7 @@ static int load_resource(lua_State* L, const char* type, const char* filename, c
 
 static int lloadfile(lua_State* L) {
 	const char* filename = luaL_checkstring(L, 1);
-	lua_pushstring(L, "firmware://");
+	lua_pushstring(L, "@res://firmware/");
 	lua_pushvalue(L, 1);
 	lua_concat(L, 2);
 	if (LUA_OK != load_resource(L, "firmware", filename, lua_tostring(L, -1))) {

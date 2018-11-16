@@ -27,7 +27,7 @@ local function vfs_init()
 end
 
 local function fetchfirmware()
-	io_req:push("FETCHALL", false, 'firmware')
+	io_req:push("FETCHALL", 'firmware')
 
 	-- wait finish
 	io_req:push("LIST", threadid, 'firmware')
@@ -72,6 +72,6 @@ local function loadfile(path, name)
 	end
 	local str = f:read 'a'
 	f:close()
-	return load(str, "vfs://" .. name)
+	return load(str, "@vfs://" .. name)
 end
 assert(loadfile(bootloader, 'firmware/bootloader.lua'))(repopath, address, port)
