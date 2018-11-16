@@ -9,12 +9,21 @@ thread.newchannel ("IOresp" .. threadid)
 local io_req = thread.channel "IOreq"
 local io_resp = thread.channel ("IOresp" .. threadid)
 
-local iothread = thread.thread (string.format("assert(loadfile(%q))(...)", "firmware/io.lua"), package.searchers[3])
+local iothread = thread.thread([[
+	-- IO Thread
+	package.searchers[1] = ...
+	package.searchers[2] = nil
+	local fw = require "firmware"
+	local function loadfile(path)
+		return load(assert(fw.load("lua", path)), "firmware://" .. path)
+	end
+	assert(loadfile('io.lua'))(loadfile)
+]], package.searchers[3])
 
 local function vfs_init()
 	io_req:push {
 		repopath = repopath,
-		vfspath = "firmware/vfs.lua",
+		vfspath = "vfs.lua",
 		address = address,
 		port = port,
 	}
@@ -59,4 +68,13 @@ vfs_exit()
 thread.wait(iothread)
 thread.reset()
 
-assert(loadfile(bootloader))(repopath, address, port)
+local function loadfile(path, name)
+	local f, err = io.open(path)
+	if not f then
+		return nil, ('%s:No such file or directory.'):format(name)
+	end
+	local str = f:read 'a'
+	f:close()
+	return load(str, "vfs://" .. name)
+end
+assert(loadfile(bootloader, 'firmware/bootloader.lua'))(repopath, address, port)

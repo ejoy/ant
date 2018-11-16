@@ -1,0 +1,3 @@
+BOOTSTRAP.LUA LUA "../core/firmware/bootstrap.lua"
+IO.LUA LUA "../core/firmware/io.lua"
+VFS.LUA LUA "../core/firmware/vfs.lua"

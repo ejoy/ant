@@ -7,6 +7,7 @@
 { "cjson.safe", luaopen_cjson_safe },
 { "crypt", luaopen_crypt },
 { "debugger.hookmgr", luaopen_debugger_hookmgr },
+{ "firmware", luaopen_firmware },
 { "hierarchy", luaopen_hierarchy },
 { "hierarchy.animation", luaopen_hierarchy_animation },
 { "lfs", luaopen_lfs },

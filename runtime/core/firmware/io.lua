@@ -1,6 +1,4 @@
--- IO Thread
-package.searchers[3] = ...
-package.searchers[4] = nil
+local loadfile = ...
 
 local INTERVAL = 0.01 -- socket select timeout
 
@@ -68,7 +66,7 @@ local function init_config()
 end
 
 local function init_repo()
-	local vfs = dofile(config.vfspath)
+	local vfs = assert(loadfile(config.vfspath, 'firmware/vfs.lua'))()
 	repo.repo = vfs.new(config.repopath)
 end
 
