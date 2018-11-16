@@ -56,7 +56,7 @@ local su = require "scene.util"
 local rhwi = require "render.hardware_interface"
 rhwi.init(nwh, width, height)
 
-local world = su.start_new_world(iq, width, height, {"simplescene.lua"})
+local world = su.start_new_world(iq, width, height, {"simplescene.lua"}, "./?.lua")
 
 --local rt = require "runtime"
 function callback.update()
