@@ -49,7 +49,9 @@ function callback.touch(what, x, y)
 end
 
 function callback.keypress(k, p)
-
+	if not p then
+		print(k)
+	end
 end
 
 local su = require "scene.util"
