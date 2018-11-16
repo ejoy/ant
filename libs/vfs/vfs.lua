@@ -87,5 +87,19 @@ function localvfs.list(path)
 	return item
 end
 
+function localvfs.type(filepath)
+	local rp = access.realpath(self, filepath)
+	local mode = fs.attributes(rp, "mode")
+	if mode then
+		if mode == "directory" then
+			return "dir"
+		end
+
+		if mode == "file" then
+			return "file"
+		end
+	end
+end
+
 return localvfs
 

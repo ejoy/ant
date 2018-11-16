@@ -81,7 +81,7 @@ end
 
 
 function editor_mainwindow:new_world(modules)
-	local world = scene.start_new_world(self.iq, self.config.fbw, self.config.fbh, modules)
+	local world = scene.start_new_world(self.iq, self.config.fbw, self.config.fbh, modules, "?.lua")
 	task.loop(world.update)
 end
 
