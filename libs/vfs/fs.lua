@@ -7,17 +7,15 @@ function fs.open(filename, mode)
 end
 
 function fs.exist(filepath)	
-	return vfs.list(filepath) ~= nil
+	return vfs.type(filepath) ~= nil
 end
 
 function fs.isdir(filepath)
-	local item = vfs.list(filepath)
-	return item and item.dir
+	return vfs.type(filename) == 'dir'
 end
 
 function fs.isfile(filename)
-	local item = vfs.list(filename)
-	return item and (not item.dir)
+	return vfs.type(filename) == 'file'
 end
 
 return fs
