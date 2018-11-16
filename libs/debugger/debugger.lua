@@ -44,15 +44,27 @@ local function start_master(io)
     end
 end
 
+require 'runtime.vfs'
+local vfs = require 'vfs'
+local init_thread = vfs.realpath('firmware/init_thread.lua')
 local bootstrap = ([=[
     package.searchers[3] = ...
     package.searchers[4] = nil
-    dofile 'firmware/init_thread.lua'
+	local function init_thread()
+        local f, err = io.open(%q)
+        if not f then
+            error('firmware/init_thread.lua:No such file or directory.')
+        end
+        local str = f:read 'a'
+		f:close()
+		assert(load(str, 'vfs://firmware/init_thread.lua'))()
+	end
+	init_thread()
     package.path = [[%s]]
     require 'runtime.vfs'
     require 'runtime.vfsio'
     require 'debugger.backend.worker'
-]=]):format(package.path)
+]=]):format(init_thread, package.path)
 
 local function start_worker(wait)
     start_hook()

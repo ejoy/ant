@@ -14,10 +14,7 @@ local iothread = thread.thread([[
 	package.searchers[1] = ...
 	package.searchers[2] = nil
 	local fw = require "firmware"
-	local function loadfile(path)
-		return load(assert(fw.load("lua", path)), "firmware://" .. path)
-	end
-	assert(loadfile('io.lua'))(loadfile)
+	assert(fw.loadfile "io.lua")(fw.loadfile)
 ]], package.searchers[3])
 
 local function vfs_init()
