@@ -1,7 +1,7 @@
 --dofile "libs/init.lua"
 package.path = "engine/libs/?.lua;engine/libs/?/?.lua;?.lua"
 
-require "runtime.vfs"
+local rt = require "runtime"
 
 function dprint(...)
 	print(...)
@@ -58,11 +58,10 @@ local su = require "scene.util"
 local rhwi = require "render.hardware_interface"
 rhwi.init(nwh, width, height)
 
-local world = su.start_new_world(iq, width, height, {"simplescene.lua"}, "./?.lua")
+local world = su.start_new_world(iq, width, height, {"simplescene"}, "?.lua")
 
---local rt = require "runtime"
 function callback.update()
-	--rt.update()
+	rt.update()
 	world.update()
 end
 
