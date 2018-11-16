@@ -15,7 +15,7 @@ local function compile_shader(filename, outfilename, shadertype)
 	return nil, "config is empty, try run clibs/lua/lua.exe config.lua"
 end
 
-local function gen_cache_path(srcpath, shadertype)
+local function gen_output_path(srcpath, shadertype)
 	assert(path.ext(srcpath):lower() == "sc")
 	
 	local dstpath, subnum = srcpath:gsub("(.+[/\\]shaders[/\\])src(.+)%.sc", "%1" .. shadertype .. "%2.bin")
@@ -39,11 +39,15 @@ end
 
 
 return function(filepath, shadertype)
-	local dstpath = gen_cache_path(filepath, shadertype)
+	local dstpath = gen_output_path(filepath, shadertype)
 	
 	if fu.file_is_newer(filepath, dstpath) then
 		local outfile = check_compile_shader(filepath, dstpath, shadertype)
-		assert(outfile == dstpath)
+		if outfile == nil then
+			print("compile file:", filepath, "failed!")
+		else
+			assert(outfile == dstpath)			
+		end		
 	end
 
 	return dstpath

@@ -1,4 +1,14 @@
 --dofile "libs/init.lua"
+package.path = "engine/libs/?.lua;engine/libs/?/?.lua;?.lua"
+
+require "runtime.vfs"
+
+function dprint(...)
+	print(...)
+	local nio = package.loaded.nativeio or io	
+	nio.stdout:flush()
+end
+
 require "common/import"
 require "common/log"
 
@@ -26,8 +36,6 @@ function callback.move(x,y)
 end
 
 function callback.touch(what, x, y)
-	--print("TOUCH", what, x, y)
-
 	local function translate()
 		local press = math.max(0, what - 2)
 		if what > 2 then
@@ -47,14 +55,17 @@ end
 local su = require "scene.util"
 local rhwi = require "render.hardware_interface"
 rhwi.init(nwh, width, height)
+
 local world = su.start_new_world(iq, width, height, {"simplescene.lua"})
 
+--local rt = require "runtime"
 function callback.update()
+	--rt.update()
 	world.update()
 end
 
 function callback.exit()	
-	print("exit")
+	dprint("exit")
 end
 
 window.register(callback)

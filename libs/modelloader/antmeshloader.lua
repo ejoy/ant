@@ -40,7 +40,6 @@ end
 
 return function (filename)
 	local function openfile(filename)
-		dprint("using antmeshloader:", filename)
 		local ff = assert(vfs_fs.open(filename, "rb"))		
 		-- local content = ff:read("a")
 		-- ff:close()

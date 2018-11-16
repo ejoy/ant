@@ -9,10 +9,10 @@ ecs.import "scene.filter.filter_system"
 
 ecs.import "inputmgr.message_system"
 
-
 local computil = require "render.components.util"
 
 local simplescene = ecs.system "simple_scene"
+
 simplescene.singleton "math_stack"
 
 function simplescene:init()
@@ -30,6 +30,6 @@ function simplescene:init()
 	ms(bunny.scale, 	{1, 1, 1}, 		"=")
 	ms(bunny.rotation, 	{0, 0, 0}, 		"=")
 
-	computil.load_mesh(bunny.mesh, "/engine/assets/depiction/bunny.mesh")
-	computil.load_material(bunny.material, "depiction/bunny.material")
+	computil.load_mesh(bunny.mesh, "engine/assets/depiction/bunny.mesh")
+	computil.load_material(bunny.material, {"depiction/bunny.material"})	
 end

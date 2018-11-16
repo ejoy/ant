@@ -1,3 +1,4 @@
+--luacheck: globals import
 local require = import and import(...) or require
 
 local rawtable = require "rawtable"
@@ -7,7 +8,7 @@ local vfs_fs = require "vfs.fs"
 local path = require "filesystem.path"
 
 return function(filename)
-	local fn = assetmgr.find_depiction_path(filename)
+	local fn = assetmgr.find_depiction_path(filename)	
 	local material = assert(rawtable(fn))
 
 	local function filter_path(p)
@@ -36,7 +37,9 @@ return function(filename)
             local t = type(v)
 			if t == "string" then
 				-- read file under .material file folder, if not found try from assets path
-                material_info[k] = assetmgr.load(filter_path(v))
+				local subres_path = filter_path(v)
+				dprint("[ext_material]try to load:", k, "value:", v, "subrespath:", subres_path)
+                material_info[k] = assetmgr.load(subres_path)
 			elseif t == "table" then
 				material_info[k] = loader(v)
             end

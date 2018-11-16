@@ -28,6 +28,7 @@ local function glob_match(pattern, target)
     return target:match(pattern) ~= nil
 end
 
+-- TODO: need pass from outside
 local shadertype = "d3d11"
 
 local function find_convertor(path)	
@@ -99,7 +100,7 @@ function fileconvertor.watch_file(file)
 end
 
 function fileconvertor.convert_watchfiles()
-	for _, f in ipairs(watch_files) do
+	for f in pairs(watch_files) do
 		convertor(f)
 	end
 	watch_files = {}

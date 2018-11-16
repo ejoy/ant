@@ -17,6 +17,9 @@ shader_mgr.__index = shader_mgr
 
 local rt_subpath = nil
 
+-- TODO: need pass from outside
+local shadertype = "d3d11"
+
 function shader_mgr.get_shader_rendertype_path()
 	return "d3d11"
 	-- if rt_subpath then
@@ -58,9 +61,28 @@ function shader_mgr.get_compile_renderer_name()
     -- return platform
 end
 
+local function gen_shader_filepath(shadername)	
+	assert(path.ext(shadername) == nil)
+	local shadername_withext = shadername .. ".bin"
+	local filepath = assetmgr.find_valid_asset_path(shadername_withext)
+	if filepath then
+		return filepath 
+	end
+
+	local enginepath, matchnum = shadername_withext:gsub("(engine/assets/shaders)(.+)", "%1/" .. shadertype .. "%2")
+	if matchnum ~= 0 then
+		filepath = assetmgr.find_valid_asset_path(enginepath)
+		if filepath then
+			return filepath
+		end
+	end
+
+	local shadersrc_filepath = path.join("shaders", shadertype, shadername_withext)	
+	return assetmgr.find_valid_asset_path(shadersrc_filepath)
+end
+
 local function load_shader(name)
-	print("load shader:", name)
-	local filename = assetmgr.find_valid_asset_path(path.join("shaders/src", name))
+	local filename = gen_shader_filepath(name)
 	if filename == nil then
 		error(string.format("not found shader file: %s", name))
 	end
