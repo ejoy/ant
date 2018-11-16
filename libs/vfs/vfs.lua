@@ -65,9 +65,7 @@ function localvfs.open(repopath)
 end
 
 function localvfs.realpath(pathname)
-	local rp = access.realpath(self, pathname)
-	local fileconvert = require "fileconvert"
-	rp = fileconvert(rp)
+	local rp = access.realpath(self, pathname)	
 	return  rp, pathname:match "^/?(.-)/?$"
 end
 

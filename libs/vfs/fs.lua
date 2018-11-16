@@ -1,12 +1,12 @@
 local fs = {}; fs.__index = fs
 
 local vfs = require "vfs"
-local vfsio = require "runtime.vfsio"
+require "runtime.vfsio"
 function fs.open(filename, mode)
-	return vfsio.open(filename, mode)
+	return io.open(filename, mode)
 end
 
-function fs.exist(filepath)	
+function fs.exist(filepath)
 	return vfs.list(filepath) ~= nil
 end
 
