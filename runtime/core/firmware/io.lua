@@ -461,7 +461,7 @@ function online.TYPE(id, fullpath)
 		end
 		return
 	elseif hash then
-		request_file(id, hash, fullpath, "EXIST")
+		request_file(id, hash, fullpath, "TYPE")
 	else
 		response_id(id, nil)
 	end
