@@ -23,6 +23,9 @@ assets/textures
 assets/shaders/dx11
 assets/shaders/glsl
 assets/meshes
+assets/shaders/d3d11
+assets/shaders/ogl
+assets/shaders/ogles
 file.txt
 dir.txt
 
