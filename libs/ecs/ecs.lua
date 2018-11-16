@@ -172,14 +172,6 @@ end
 
 
 local function searchpath(name, path)
-	--TODO
-	if vfs_fs.isfile(name) then
-		local f = vfs_fs.open(name, "r")
-		if f then		
-			f:close()
-			return name
-		end
-	end
 	local err = ''
 	name = string.gsub(name, '%.', '/')
 	for c in string.gmatch(path, '[^;]+') do
