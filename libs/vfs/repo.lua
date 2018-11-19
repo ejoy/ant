@@ -173,7 +173,7 @@ local function repo_write_cache(self, cache)
 			if f then
 				-- merge ref file
 				for line in f:lines() do
-					local filename = line:match "^[df] (%S*)"
+					local filename = line:match "^[df] (.-) ?%d*$"
 					if not refset[filename] then
 						table.insert(ref, line)
 						refset[filename] = true
@@ -197,12 +197,12 @@ local function repo_write_root(self, roothash)
 	if _DEBUG then print("ROOT", roothash) end
 end
 
-function repo:rebuild()	
+function repo:rebuild()
 	self._namecache = {}	-- clear cache
 	return self:build()
 end
 
-function repo:build()	
+function repo:build()
 	local cache = {}
 	self._namecache[''] = undef
 	local roothash = repo_build_dir(self, "", cache, self._namecache)
@@ -288,7 +288,7 @@ function repo:touch(pathname)
 	until path == nil
 end
 
-function repo:touch_path(pathname)	
+function repo:touch_path(pathname)
 	self.dirty = true
 	if pathname == '' or pathname == '/' then
 		-- clear all
@@ -326,7 +326,7 @@ local function read_ref(self, hash)
 	local items = {}
 	local needupdate
 	for line in io.lines(filename) do
-		local name, ts = line:match "[df] (%S*) ?(%d*)"
+		local name, ts = line:match "^[df] (.-) ?(%d*)$"
 		if name == nil then
 			if _DEBUG then print("INVALID", hash) end
 			needupdate = true
@@ -395,7 +395,7 @@ function repo:hash(hash)
 		return
 	end
 	for line in f:lines() do
-		local name, timestamp = line:match "f (%S*) (%d*)"
+		local name, timestamp = line:match "f (.-) ?(%d*)$"
 		if timestamp then
 			timestamp = tonumber(timestamp)
 			local realpath = self:realpath(name)
@@ -417,7 +417,7 @@ function repo:dir(hash)
 	local dir = {}
 	local file = {}
 	for line in f:lines() do
-		local t, hash, name = line:match "^([df]) (%S*) (%S*)"
+		local t, hash, name = line:match "^([df]) (%S*) (.*)"
 		if t == 'd' then
 			dir[name] = hash
 		elseif t == 'f' then
