@@ -15,7 +15,7 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 
-#if BGFX_API_VERSION != 89
+#if BGFX_API_VERSION != 90
 #   error BGFX_API_VERSION mismatch
 #endif
 
