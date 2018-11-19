@@ -42,10 +42,16 @@ local available_type = {
 	userdata = { default = function() return {} end,
 				save = empty_func,
 				load = empty_func,},
-	vector = { default = function() return math3d.ref "vector" end,
+	vector = { default = function() 
+					local math3d = require "math3d"
+					return math3d.ref "vector" 
+				end,
 				save = math3d_value_save,
 				load = get_math3d_value_load("vector"), },
-	matrix = { default = function() return math3d.ref "matrix" end,
+	matrix = { default = function() 
+					local math3d = require "math3d"
+					return math3d.ref "matrix" 
+				end,
 				save = math3d_value_save,
 				load = get_math3d_value_load("matrix"), },
 }
