@@ -22,6 +22,24 @@ for _, line in ipairs(rulescfg) do
 		table.insert(rules, { pattern=pattern, convertor=convertor })
 	end
 end
+
+local logfile = nil
+if cfgcontent.logfile then
+	local logfilepath = cfgcontent.logfile
+	path.create_dirs(path.parent(logfilepath))
+	logfile = io.open(logfilepath, "w")
+elseif cfgcontent.debug_print then
+	logfile = io.stdout
+end
+
+local function log(fmt, ...)
+	if logfile then
+		assert(select('#', ...) == 2)
+		local ffff = string.format(fmt, ...)
+		logfile:write(ffff)
+		logfile:write("\n")
+	end
+end
 	
 
 local function glob_match(pattern, target)
@@ -37,7 +55,7 @@ local function find_convertor(path)
 			local convertor = p.convertor
 			if path:match "%.sc$" then
 				return function()
-					convertor(path, shadertype)
+					return convertor(path, shadertype)
 				end
 			end
 			return convertor
@@ -46,9 +64,6 @@ local function find_convertor(path)
 end
 
 local fileconvertor = {}
-
-function fileconvertor.log(fmt)
-end
 
 local function mesh_filter(absdir, files)
 	path.listfiles(absdir, files, {"bin", "fbx"})
@@ -69,9 +84,13 @@ local filefetchers = {
 }
 
 local function convertor(absdir)
-	local convertor = find_convertor(absdir)
-	if convertor then		
-		convertor(absdir)
+	local c = find_convertor(absdir)
+	if c then		
+		local outfile, err = c(absdir)
+		if err then
+			log("%s:convert failed, error:%s", absdir, err)
+			print("warning:", absdir,  "convert failed!")
+		end
 	end
 end
 

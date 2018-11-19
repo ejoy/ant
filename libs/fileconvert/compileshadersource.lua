@@ -42,10 +42,9 @@ return function(filepath, shadertype)
 	if fu.file_is_newer(filepath, dstpath) then
 		local outfile, error = check_compile_shader(filepath, dstpath, shadertype)
 		if error then
-			print("compile file:", filepath, "failed!")
-		else
-			assert(outfile == dstpath)			
-		end		
+			return nil, error
+		end
+		assert(outfile == dstpath)
 	end
 
 	return dstpath
