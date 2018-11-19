@@ -1,7 +1,7 @@
 -- luacheck: globals import
 local require = import and import(...) or require
 
-local rawtable = require "rawtable" 
+local rawtable = require "common.rawtable" 
 local hiemodule = require "hierarchy"
 local vfs = require "vfs"
 local assetmgr = require "asset"

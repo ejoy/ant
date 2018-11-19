@@ -25,9 +25,6 @@ if reponame == nil then
 end
 print ("Project name :",reponame)
 
-local fileconvert = require "fileconvert"
-fileconvert.convert_dir()
-
 local mount = {	
 	["engine/libs"] = enginepath .. "/libs",
 	["engine/assets"] = enginepath .. "/assets",	

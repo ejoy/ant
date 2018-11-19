@@ -30,11 +30,9 @@ local function check_compile_shader(srcpath, outfile, shadertype)
 	path.create_dirs(path.parent(outfile))	
 	local success, msg = compile_shader(srcpath, outfile, shadertype)
 	if not success then
-		print(string.format("try compile from file: %s to file: %s , \
-		but failed, error message : \n%s", srcpath, outfile, msg))
-		return nil
+		return nil, msg
 	end
-	return outfile
+	return outfile, nil
 end
 
 
@@ -42,12 +40,11 @@ return function(filepath, shadertype)
 	local dstpath = gen_output_path(filepath, shadertype)
 	
 	if fu.file_is_newer(filepath, dstpath) then
-		local outfile = check_compile_shader(filepath, dstpath, shadertype)
-		if outfile == nil then
-			print("compile file:", filepath, "failed!")
-		else
-			assert(outfile == dstpath)			
-		end		
+		local outfile, error = check_compile_shader(filepath, dstpath, shadertype)
+		if error then
+			return nil, error
+		end
+		assert(outfile == dstpath)
 	end
 
 	return dstpath

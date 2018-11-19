@@ -12,7 +12,7 @@ return function (srcpath)
 		local fs = require "filesystem"
 		local config
 		if fs.exist(lk_path) then
-			local rawtable = require "asset.rawtable"
+			local rawtable = require "asset.common.rawtable"
 			local c = rawtable(lk_path)
 			config = c.config
 		else
@@ -22,15 +22,15 @@ return function (srcpath)
 		path.create_dirs(path.parent(outputfile))
 
 		local ext = path.ext(srcpath):lower()
-		
-		if ext == "bin" then
-			assimp.convert_BGFXBin(srcpath, outputfile, config)
-		elseif ext == "fbx" then
-			assimp.convert_FBX(srcpath, outputfile, config)
-		elseif ext == "ozz" then
-			assimp.convert_OZZ(srcpath, outputfile, config)
-		else
-			error(string.format("not support convert mesh format : %s, filename is : %s", ext, srcpath))
+
+		local convert_op = {
+			bin = assimp.convert_BGFXBin,
+			fbx = assimp.convert_FBX,
+		}
+
+		local convertor = convert_op[ext]
+		if convertor == nil then
+			return nil, string.format("not support convert mesh format : %s", ext)
 		end
 	end
 
