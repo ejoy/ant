@@ -1,4 +1,11 @@
 local repopath, address, port = "./", "127.0.0.1", 2018
+for _, v in ipairs(arg) do
+	if v:sub(1,4) == '-ip=' then
+		address, port = v:sub(5):match "^(.*):(.*)$"
+		port = tonumber(port)
+		break
+	end
+end
 
 local thread = require "thread"
 local threadid = thread.id
