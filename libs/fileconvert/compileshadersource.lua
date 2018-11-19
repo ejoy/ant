@@ -2,6 +2,9 @@ local toolset = require "editor.toolset"
 local path = require "filesystem.path"
 local fu = require "filesystem.util"
 local fs = require "filesystem"
+local config = require "common.config"
+
+local platform = config.platform()
 
 local function compile_shader(filename, outfilename, shadertype)
     local config = toolset.load_config()
@@ -9,7 +12,7 @@ local function compile_shader(filename, outfilename, shadertype)
 		
 		config.includes = {config.shaderinc, fs.currentdir() .. "/assets/shaders/src"}
         config.dest = outfilename
-		return toolset.compile(filename, config, shadertype)
+		return toolset.compile(filename, config, shadertype, platform)
 	end
 	
 	return nil, "config is empty, try run clibs/lua/lua.exe config.lua"

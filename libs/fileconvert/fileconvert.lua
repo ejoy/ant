@@ -32,7 +32,7 @@ elseif cfgcontent.debug_print then
 	logfile = io.stdout
 end
 
-local shadertypes = cfgcontent.shadertypes or {"d3d11", }
+local shadertypes = assert(cfgcontent.shader).types or {"d3d11", }
 
 local function log(fmt, ...)
 	if logfile then
