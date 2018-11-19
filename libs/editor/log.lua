@@ -1,4 +1,4 @@
-
+require "iuplua"
 require "scintilla"
 
 local redirect = require "filesystem.redirect"

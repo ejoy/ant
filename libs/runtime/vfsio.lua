@@ -98,7 +98,7 @@ local function loadfile(path)
 end
 
 local function dofile(path)
-    local f, err = io_open(path, 'rb')
+    local f, err = loadfile(path)
     if not f then
         error(err)
     end
