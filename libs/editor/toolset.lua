@@ -89,7 +89,7 @@ function toolset.compile(filename, paths, renderer)
 		local shaderc = paths.shaderc
 		if shaderc and not fs.exist(shaderc)then
 			error(string.format("bgfx shaderc path is privided, but file is not exist, path is : %s. \
-								you can locate to ant folder, and run : bin/iup.lua tools/config.lua, to set the right path", shaderc))
+								you can locate to ant folder, and run : bin/iup.exe tools/config.lua, to set the right path", shaderc))
 		end
 
 		local tbl = {
