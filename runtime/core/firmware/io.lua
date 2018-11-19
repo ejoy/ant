@@ -208,9 +208,9 @@ end
 local function request_file(id, hash, path, req)
 	local hash_list = connection.request_hash[hash]
 	if hash_list then
-		table.insert(hash_list, path)
+		hash_list[path] = true
 	else
-		connection.request_hash[hash] = { path }
+		connection.request_hash[hash] = { [path] = true }
 		connection_send("GET", hash)
 	end
 	local path_req = connection.request_path[path]
@@ -241,7 +241,7 @@ local function hash_complete(hash, exist)
 		return
 	end
 	connection.request_hash[hash] = nil
-	for _, path in ipairs(hash_list) do
+	for path in pairs(hash_list) do
 		local path_req = connection.request_path[path]
 		if not path_req then
 			print("No request:", path)
