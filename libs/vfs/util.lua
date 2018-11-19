@@ -1,6 +1,6 @@
 local util = {}; util.__index = {}
 local path = require "filesystem.path"
-
+local vfs = require "vfs"
 function util.convert_to_mount_path(p, mountpath)	
 	local mount_realpath = vfs.realpath(mountpath):gsub('\\', '/')
 	local rpl = path.replace_path(p, mount_realpath, mountpath)
