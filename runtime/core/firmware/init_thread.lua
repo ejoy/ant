@@ -92,9 +92,9 @@ end
 
 local function searcher_Lua(name)
     assert(type(package.path) == "string", "'package.path' must be a string")
-    local filename, file = searchpath(name, package.path)
+    local filename, err = searchpath(name, package.path)
     if not filename then
-        return file -- err
+        return err
     end
     local func, err = loadfile(filename)
     if not func then
