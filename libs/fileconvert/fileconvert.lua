@@ -1,27 +1,27 @@
 local fs = require "filesystem"
 local path = require "filesystem.path"
+local rawtable = require "common.rawtable"
 local rules = {}
 
-do
-	local f = io.open("config/fileconvert.cfg")
-	for line in f:lines() do
-		local t = {}
-		for m in line:gmatch("[^%s]+") do
-			table.insert(t, m)
-		end
-
-		local pattern, convertor_path, reg = t[1], t[2], t[3]
-		if pattern then	
-			if reg == nil then
-				pattern = pattern:gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*')
-			end
-
-			local convertor = require(convertor_path)
-		
-			table.insert(rules, { pattern=pattern, convertor=convertor })
-		end
+local cfgcontent = rawtable("config/fileconvert.cfg")
+local rulescfg = cfgcontent.rules
+for _, line in ipairs(rulescfg) do
+	local t = {}
+	for m in line:gmatch("[^%s]+") do
+		table.insert(t, m)
 	end
-end	
+
+	local pattern, convertor_path, reg = t[1], t[2], t[3]
+	if pattern then	
+		if reg == nil then
+			pattern = pattern:gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*')
+		end
+
+		local convertor = require(convertor_path)
+	
+		table.insert(rules, { pattern=pattern, convertor=convertor })
+	end
+end
 	
 
 local function glob_match(pattern, target)
@@ -46,6 +46,9 @@ local function find_convertor(path)
 end
 
 local fileconvertor = {}
+
+function fileconvertor.log(fmt)
+end
 
 local function mesh_filter(absdir, files)
 	path.listfiles(absdir, files, {"bin", "fbx"})

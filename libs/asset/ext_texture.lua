@@ -1,7 +1,7 @@
 -- luacheck: globals import
 local require = import and import(...) or require
 
-local rawtable = require "rawtable"
+local rawtable = require "common.rawtable"
 local bgfx = require "bgfx"
 
 local assetmgr = require "asset"

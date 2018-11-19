@@ -12,7 +12,7 @@ return function (srcpath)
 		local fs = require "filesystem"
 		local config
 		if fs.exist(lk_path) then
-			local rawtable = require "asset.rawtable"
+			local rawtable = require "asset.common.rawtable"
 			local c = rawtable(lk_path)
 			config = c.config
 		else

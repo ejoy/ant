@@ -1,5 +1,5 @@
 local require = import and import(...) or require
-local rawtable = require "rawtable"
+local rawtable = require "common.rawtable"
 local assetmgr = require "asset"
 
 return function(filename)	
