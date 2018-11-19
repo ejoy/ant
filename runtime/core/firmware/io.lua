@@ -145,14 +145,14 @@ end
 -- fd set for select
 local rdset = {}
 local wtset = {}
-local function connection_dispose()
+local function connection_dispose(timeout)
 	local sending = connection.sendq
 	local fd = connection.fd
 	local rd, wt
 	if #sending > 0  then
-		rd, wt = lsocket.select(rdset, wtset, INTERVAL)
+		rd, wt = lsocket.select(rdset, wtset, timeout)
 	else
-		rd, wt = lsocket.select(rdset, INTERVAL)
+		rd, wt = lsocket.select(rdset, timeout)
 	end
 	if not rd then
 		if rd == false then
@@ -350,7 +350,7 @@ local function waiting_for_root()
 	local reading = connection.recvq
 	connection_send "ROOT"
 	while true do
-		local ok, err = connection_dispose()
+		local ok, err = connection_dispose(INTERVAL)
 		if not ok then
 			if ok == nil then
 				print(err)
@@ -534,8 +534,8 @@ local function work_online()
 	local result = {}
 	local reading = connection.recvq
 	while true do
-		while online_dispatch(c:pop()) do end
-		local ok, err = connection_dispose()
+		while online_dispatch(c:pop(INTERVAL)) do end
+		local ok, err = connection_dispose(0)
 		while protocol.readmessage(reading, result) do
 			dispatch_net(table.unpack(result))
 		end
