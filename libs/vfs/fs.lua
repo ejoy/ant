@@ -11,7 +11,7 @@ function fs.exist(filepath)
 end
 
 function fs.isdir(filepath)
-	return vfs.type(filename) == 'dir'
+	return vfs.type(filepath) == 'dir'
 end
 
 function fs.isfile(filename)

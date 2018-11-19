@@ -2,6 +2,8 @@ local editor_mainwindow = require 'editor.controls.window'
 local fs = require "cppfs"
 local asset = require "asset"
 local vfsutil = require "vfs.util"
+local localfs = require "filesystem.file"
+
 local configDir = (os.getenv 'UserProfile') .. '\\.ant\\config\\'
 
 local iupex = {}
@@ -28,8 +30,8 @@ function iupex.menu(t, bind)
         end 
     end
     return iup.menu(nt)
+	
 end
-
 local CMD = {}
 local config = {}
 config.recent = {}
@@ -64,7 +66,7 @@ local openMap
 
 local function recentSave()
     fs.create_directories(fs.path(configDir))
-    local f = io.open(configDir .. 'recent.cfg', 'w')
+    local f = localfs.open(configDir .. 'recent.cfg', 'w')
     if not f then
         return
     end
@@ -115,8 +117,9 @@ end
 
 local function recentInit()
     config.recent = {}
-    local f = io.open(configDir .. 'recent.cfg', 'r')
+    local f, err = localfs.open(configDir .. 'recent.cfg', 'r')
     if not f then
+		print(err)
         return
     end
     for path in f:lines() do
