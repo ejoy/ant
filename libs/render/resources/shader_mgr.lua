@@ -1,3 +1,4 @@
+--luacheck: globals import log
 local require = import and import(...) or require
 local log = log and log(...) or print
 
@@ -5,7 +6,7 @@ local bgfx = require "bgfx"
 
 local path = require "filesystem.path"
 local assetmgr = require "asset"
-local baselib = require "bgfx.baselib"
+
 local rhwi = require "render.hardware_interface"
 
 local vfs_fs = require "vfs.fs"
@@ -15,51 +16,24 @@ local alluniforms = {}
 local shader_mgr = {}
 shader_mgr.__index = shader_mgr
 
-local rt_subpath = nil
+local function get_shader_type()
+    local caps = rhwi.get_caps()
+    local shadertypes = {
+        NOOP       = "d3d9",
+        DIRECT3D9  = "d3d9",
+        DIRECT3D11 = "d3d11",
+        DIRECT3D12 = "d3d11",
+        GNM        = "pssl",
+        METAL      = "metal",
+        OPENGL     = "glsl",
+        OPENGLES   = "essl",
+        VULKAN     = "spirv",
+    }
 
--- TODO: need pass from outside
-local shadertype = "d3d11"
-
-function shader_mgr.get_shader_rendertype_path()
-	return "d3d11"
-	-- if rt_subpath then
-	-- 	return rt_subpath
-	-- end
-
-    -- local caps = rhwi.get_caps()
-    -- local paths = {
-    --     NOOP       = "dx9",
-    --     DIRECT3D9  = "dx9",
-    --     DIRECT3D11 = "dx11",
-    --     DIRECT3D12 = "dx11",
-    --     GNM        = "pssl",
-    --     METAL      = "metal",
-    --     OPENGL     = "glsl",
-    --     OPENGLES   = "essl",
-    --     VULKAN     = "spirv",
-    -- }
-
-	-- rt_subpath = assert(paths[caps.rendererType])
-	-- return rt_subpath	
+	return assert(shadertypes[caps.rendererType])	
 end
 
-function shader_mgr.get_compile_renderer_name()
-	return "d3d11"
-    -- local caps = rhwi.get_caps()
-    -- local rendertype = caps.rendererType
-    -- local platform = string.lower(baselib.platform_name)
-
-    -- if  rendertype == "DIRECT3D9" then
-    --     return "d3d9"
-    -- end
-
-    -- if  rendertype == "DIRECT3D11" or
-    --     rendertype == "DIRECT3D12" then
-    --     return "d3d11"
-	-- end
-	
-    -- return platform
-end
+local shadertype = get_shader_type()
 
 local function gen_shader_filepath(shadername)	
 	assert(path.ext(shadername) == nil)

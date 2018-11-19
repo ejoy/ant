@@ -53,34 +53,29 @@ function toolset.save_config(path)
 	f:close()
 end
 
-local shader_type = {
+local stage_types = {
 	f = "fragment",
 	v = "vertex",
 	c = "compute",
 }
 
-local shader_opt = {
-	d3d9 = "windows",
+local shader_options = {
 	d3d9_v = "-p vs_3_0 -O 3",
-	d3d9_f = "-p ps_3_0 -O 3",
-	d3d11 = "windows",
+	d3d9_f = "-p ps_3_0 -O 3",	
 	d3d11_v = "-p vs_4_0 -O 3",
 	d3d11_f = "-p ps_4_0 -O 3",
-	d3d11_c = "-p cs_5_0 -O 1",
-	glsl = "linux",
+	d3d11_c = "-p cs_5_0 -O 1",	
 	glsl_v ="-p 120",
 	glsl_f ="-p 120",
-	glsl_c ="-p 430",
-	ios = "ios",
-	ios_v = "",
-	ios_f = "",
-	android = "android",
-	android_v = "",
-	android_f = "",
-	android_c = "",
+	glsl_c ="-p 430",	
+	metal_v = "",
+	metal_f = "",
+	metal_c = "",
+	vulkan_v = "",
+	vulkan_f = "",	
 }
 
-function toolset.compile(filename, paths, renderer)
+function toolset.compile(filename, paths, shadertype, platform, stagetype, shader_opt)
 	paths = paths or toolset.path
 
 	if filename then
@@ -132,11 +127,12 @@ function toolset.compile(filename, paths, renderer)
 			tbl.inc = incpath
 		end
 
-		local vfc = filename:match "[/\\]([fvc])s_[^/\\]+.sc$"
+		stagetype = stagetype or filename:match "[/\\]([fvc])s_[^/\\]+.sc$"
+		shader_opt = shader_opt or assert(shader_options[shadertype .. "_" .. stagetype], shadertype .. "_" .. stagetype)
 
-		tbl.stype = assert(shader_type[vfc], vfc)
-		tbl.splat = assert(shader_opt[renderer], renderer)
-		tbl.sopt = assert(shader_opt[renderer .. "_" .. vfc])
+		tbl.stype = assert(stage_types[stagetype], stagetype)
+		tbl.splat = assert(platform)
+		tbl.sopt = assert(shader_opt)
 
 		local command = string.gsub('$shaderc --platform $splat --type $stype $sopt -f "$src" -o "$dest" $inc',
 			"%$(%w+)", tbl)

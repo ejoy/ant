@@ -1,6 +1,7 @@
 dofile "libs/init.lua"
 require "iupluaimglib"
 require "scintilla"
+
 iup.SetGlobal("UTF8MODE", "YES")
 iup.SetGlobal("UTF8MODE_FILE", "YES")
 
@@ -273,7 +274,8 @@ local function filebuilder()
 	end
 
 	function compile.action()
-		local success, msg = toolset.compile(filename.title, path, renderer.valuestring)
+		local config = require "common.config"
+		local success, msg = toolset.compile(filename.title, path, renderer.valuestring, config.platform())
 		output.append = msg
 	end
 
