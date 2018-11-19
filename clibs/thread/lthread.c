@@ -176,8 +176,10 @@ lpop(lua_State *L) {
 	struct simple_queue_slot slot;
 	if (simple_queue_pop(c->queue, &slot)) {
 		// queue is empty
-		if (lua_isnumber(L, 2)) {
-			int timeout = (int)(lua_tonumber(L, 2) * 1000);
+		lua_settop(L, 2);
+		lua_Number v = lua_tonumber(L, 2);
+		if (v != 0) {
+			int timeout = (int)(v * 1000);
 			if (!timed_pop(L, c, &slot, timeout)) {
 				return 0;
 			}
