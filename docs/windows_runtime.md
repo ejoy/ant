@@ -8,10 +8,10 @@
 
 2. 创建服务端repo
 ```
-.\bin\lua.exe .\tools\repo\newrepo.lua "repo名"
+.\bin\lua.exe .\tools\repo\newrepo.lua "{repo名}"
 ```
 
-3. 资源管理器打开服务端repo， %UserProfile%\Documents\repo名\
+3. 资源管理器打开服务端repo， %UserProfile%\Documents\{repo名}\
 新建文件main.lua,写入
 ```lua
 print 'hello world'
@@ -19,10 +19,43 @@ print 'hello world'
 
 4. 启动服务端
 ```
-.\bin\lua.exe .\test\fileserver.lua "repo名"
+.\bin\lua.exe .\test\fileserver.lua "{repo名}"
 ```
 
 5. 启动客户端
 ```
 .\runtime\windows\ant.exe
+```
+
+6. 调试配置
+
+记得修改{repo名}
+
+```json
+        {
+            "type": "lua",
+            "request": "launch",
+            "name": "WindowsClient",
+            "ip": "localhost",
+            "port": 4278,
+            "noInject" : true,
+            "runtimeExecutable": "${workspaceFolder}/runtime/windows/ant.exe",
+            "sourceMaps": [
+                [
+                    "vfs:/engine/*",
+                    "${workspaceFolder}/*"
+                ],
+                [
+                    "vfs:/*",
+                    "${env:UserProfile}/Documents/{repo名}/*"
+                ],
+                [
+                    "firmware/*",
+                    "${workspaceFolder}/runtime/core/firmware/*"
+                ]
+            ],
+            "skipFiles": [
+                "vfs:/engine/libs/debugger/*",
+            ]
+        }
 ```
