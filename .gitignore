@@ -5,7 +5,11 @@
 *.so
 *.dSYM
 *.user
+*.log
+
 clibs/iup/o
+log
+
 
 .vscode
 .vs
