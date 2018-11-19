@@ -32,6 +32,8 @@ elseif cfgcontent.debug_print then
 	logfile = io.stdout
 end
 
+local shadertypes = cfgcontent.shadertypes or {"d3d11", }
+
 local function log(fmt, ...)
 	if logfile then
 		assert(select('#', ...) == 2)
@@ -46,16 +48,27 @@ local function glob_match(pattern, target)
     return target:match(pattern) ~= nil
 end
 
--- TODO: need pass from outside
-local shadertype = "d3d11"
-
-local function find_convertor(path)	
+local function find_convertor(filepath)	
     for _, p in pairs(rules) do
-		if glob_match(p.pattern, path) then
+		if glob_match(p.pattern, filepath) then
 			local convertor = p.convertor
-			if path:match "%.sc$" then
+			if filepath:match "%.sc$" then
 				return function()
-					return convertor(path, shadertype)
+					local loginfo = nil
+					local newfiles = {}
+					for _, st in ipairs(shadertypes) do
+						local outfile, err = convertor(filepath, st)
+						if err then
+							if loginfo == nil then
+								loginfo = {}
+							end
+							table.insert(loginfo, string.format("shadertype:%s, error:%s", st, err))
+						else
+							table.insert(newfiles, outfile)
+						end
+					end
+
+					return newfiles, loginfo and table.concat(loginfo, "\n") or nil
 				end
 			end
 			return convertor
@@ -88,7 +101,7 @@ local function convertor(absdir)
 	if c then		
 		local outfile, err = c(absdir)
 		if err then
-			log("%s:convert failed, error:%s", absdir, err)
+			log("from source:%s, error:%s", absdir, err)
 			print("warning:", absdir,  "convert failed!")
 		end
 	end
