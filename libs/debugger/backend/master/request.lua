@@ -242,6 +242,12 @@ function request.disconnect(req)
     return true
 end
 
+function request.terminate(req)
+    response.success(req)
+    mgr.close()
+    return true
+end
+
 function request.pause(req)
     local args = req.arguments
     if type(args.threadId) ~= 'number' then
