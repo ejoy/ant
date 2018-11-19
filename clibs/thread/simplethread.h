@@ -14,7 +14,7 @@ static void thread_wait(void *id);
 static void thread_event_create(struct thread_event *ev);
 static void thread_event_release(struct thread_event *ev);
 static void thread_event_trigger(struct thread_event *ev);
-static void thread_event_wait(struct thread_event *ev);
+static int thread_event_wait(struct thread_event *ev, int timeout);
 static void thread_sleep(int msec);
 
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
@@ -78,9 +78,14 @@ thread_event_trigger(struct thread_event *ev) {
 	SetEvent(ev->event);
 }
 
-static INLINE void
-thread_event_wait(struct thread_event *ev) {
-	WaitForSingleObject(ev->event, INFINITE);
+static INLINE int
+thread_event_wait(struct thread_event *ev, int timeout) {
+	DWORD t = timeout < 0 ? INFINITE : (DWORD)timeout;
+	if (WaitForSingleObject(ev->event, t) == WAIT_TIMEOUT) {
+		return 0;
+	}
+	// todo: not WAIT_OBJECT_0
+	return 1;
 }
 
 static INLINE void
@@ -93,6 +98,7 @@ thread_sleep(int msec) {
 #include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
 
 static inline void *
 thread_function(void * args) {
@@ -106,7 +112,7 @@ thread_create(struct thread * thread) {
 	pthread_t pid;
 
 	int ret = pthread_create(&pid, NULL, thread->func, thread->ud);
-	thread->id = (void *)pthread_t;
+	thread->id = (void *)pid;
 	return ret;
 }
 
@@ -144,7 +150,7 @@ thread_event_trigger(struct thread_event *ev) {
 }
 
 static inline void
-thread_event_wait(struct thread_event *ev) {
+thread_event_wait_infinite(struct thread_event *ev) {
 	pthread_mutex_lock(&ev->mutex);
 
 	while (!ev->flag)
@@ -153,6 +159,39 @@ thread_event_wait(struct thread_event *ev) {
 	ev->flag = 0;
 
 	pthread_mutex_unlock(&ev->mutex);
+}
+
+// timeout : 1/1000 sec, -1 infinite
+// return 1 : event trigger, 0: timeout
+static int
+thread_event_wait(struct thread_event *ev, int timeout) {
+	if (timeout < 0) {
+		thread_event_wait_infinite(ev);
+		return 1;
+	}
+	struct timespec ts;
+	clock_gettime(CLOCK_REALTIME, &ts);
+	if (timeout >= 1000) {
+		ts.tv_sec += timeout / 1000;
+		timeout = timeout % 1000;
+	}
+	ts.tv_nsec += timeout * 1000000;
+	if (ts.tv_nsec > 1000000000) {
+		ts.tv_nsec -= 1000000000;
+		ts.tv_sec += 1;
+	}
+	pthread_mutex_lock(&ev->mutex);
+
+	while (!ev->flag) {
+		if (pthread_cond_timedwait(&ev->cond, &ev->mutex, &ts) == ETIMEDOUT) {
+			pthread_mutex_unlock(&ev->mutex);
+			return 0;
+		}
+	}
+	ev->flag = 0;
+	pthread_mutex_unlock(&ev->mutex);
+
+	return 1;
 }
 
 static inline void

@@ -124,29 +124,46 @@ lpush(lua_State *L) {
 	return 0;
 }
 
+// return 1: pop, 0: timeout
+static int
+timed_pop(lua_State *L, struct channel *c, struct simple_queue_slot *slot, int timeout) {
+	// queue would be empty
+	spin_lock(c);
+	if (simple_queue_pop(c->queue, slot)) {
+		// double check queue is empty
+		int blocked = ++c->blocked;
+		// queue is empty and blocked should be 1 here.
+		spin_unlock(c);
+		if (blocked > 1) {
+			return luaL_error(L, "Blocked pop from %s in multithread", c->name);
+		}
+		if (!thread_event_wait(&c->trigger, timeout)) {
+			// timeout
+			spin_lock(c);
+			if (c->blocked > 0) {
+				--c->blocked;
+				spin_unlock(c);
+				return 0;
+			} else {
+				spin_unlock(c);
+			}
+		}
+		if (simple_queue_pop(c->queue, slot)) {
+			return luaL_error(L, "Queue %s should not be empty", c->name);
+		}
+	} else {
+		spin_unlock(c);
+	}
+	return 1;
+}
+
 static int
 lblockedpop(lua_State *L) {
 	struct boxchannel * bc = luaL_checkudata(L, 1, "THREAD_CHANNEL");
 	struct channel *c = bc->c;
 	struct simple_queue_slot slot;
 	if (simple_queue_pop(c->queue, &slot)) {
-		// queue is empty
-		spin_lock(c);
-		if (simple_queue_pop(c->queue, &slot)) {
-			// double check queue is empty
-			int blocked = ++c->blocked;
-			// queue is empty and blocked should be 1 here.
-			spin_unlock(c);
-			if (blocked > 1) {
-				return luaL_error(L, "Blocked pop from %s in multithread", c->name);
-			}
-			thread_event_wait(&c->trigger);
-			if (simple_queue_pop(c->queue, &slot)) {
-				return luaL_error(L, "Queue %s should not be empty", c->name);
-			}
-		} else {
-			spin_unlock(c);
-		}
+		timed_pop(L, c, &slot, -1);
 	}
 	int n = seri_unpack(L, slot.data);
 	return n;
@@ -154,16 +171,23 @@ lblockedpop(lua_State *L) {
 
 static int
 lpop(lua_State *L) {
-	struct boxchannel * c = luaL_checkudata(L, 1, "THREAD_CHANNEL");
+	struct boxchannel * bc = luaL_checkudata(L, 1, "THREAD_CHANNEL");
+	struct channel *c = bc->c;
 	struct simple_queue_slot slot;
-	if (simple_queue_pop(c->c->queue, &slot)) {
+	if (simple_queue_pop(c->queue, &slot)) {
 		// queue is empty
-		return 0;
-	} else {
-		lua_pushboolean(L, 1);
-		int n = seri_unpack(L, slot.data);
-		return n+1;
+		lua_settop(L, 2);
+		lua_Number v = lua_tonumber(L, 2);
+		if (v != 0) {
+			int timeout = (int)(v * 1000);
+			if (!timed_pop(L, c, &slot, timeout)) {
+				return 0;
+			}
+		}
 	}
+	lua_pushboolean(L, 1);
+	int n = seri_unpack(L, slot.data);
+	return n+1;
 }
 
 static int

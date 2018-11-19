@@ -31,3 +31,18 @@ local thread2 = thread.thread [[
 ]]
 
 thread.wait(thread2)
+
+local thread3 = thread.thread [[
+	local thread = require "thread"
+	local c = thread.channel "channel"
+	for i = 1,3 do
+		thread.sleep(0.02)
+		c:push(i)
+	end
+]]
+
+for i = 1,10 do
+	local ok, v = data:pop(0.01)
+	print(i, ok, v)
+end
+
