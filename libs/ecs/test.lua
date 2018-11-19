@@ -1,4 +1,18 @@
 package.cpath = "../../clibs/?.dll;../../bin/?.dll"
+--package.path = "./?.lua;../?.lua;../?/?.lua"
+
+--[@ hack vfs.fs
+local fs = {}
+function fs.isfile(filepath)
+	local f, err = io.open(filepath, "r")
+	if f then
+		return true
+	end
+	print(err)
+	return false
+end
+package.loaded["vfs.fs"] = fs
+--@]
 
 function log(name)
 	local tag = "[" .. name .. "] "
@@ -29,11 +43,15 @@ assert(table.concat(list) == "cbad")
 -- test ecs
 
 local ecs = require "ecs"
-local modules = require "module"
+--local modules = require "module"
 
-local m = modules "test/system;test/component"
-
-local w = ecs.new_world { modules = m , update_order = { "init" } }
+--local m = modules "test/system;test/component"
+local module_searchdirs = "./?.lua"
+local w = ecs.new_world { modules = {
+				"test.system.dummy", 
+				"test.system.init", 
+				"test.component.foobar" }, 
+				module_path = module_searchdirs, update_order = { "init" } }
 
 w.enable_system("dummy", false)
 

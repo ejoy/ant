@@ -1,5 +1,3 @@
-local math3d = require "math3d"
-
 local function math3d_value_save(v, arg)
 	assert(type(v) == "userdata")
 	local ms = arg.math_stack
@@ -18,7 +16,7 @@ local function get_math3d_value_load(typename)
 			error "vector load function need vector type"
 		end
 
-
+		local math3d = require "math3d"
 		local v = math3d.ref(typename)
 		local ms = arg.math_stack
 		ms(v, s, "=")
