@@ -26,8 +26,6 @@ struct channel {
 	const char * name;
 	struct simple_queue *queue;
 	struct thread_event trigger;
-	int lock;	// empty lock
-	int blocked;
 };
 
 struct boxchannel {
@@ -51,8 +49,6 @@ new_channel_(const char * name) {
 	struct channel *c = &g_channel[i];
 	if (atom_cas_pointer(&c->queue, NULL, q)) {
 		thread_event_create(&c->trigger);
-		c->blocked = 0;
-		spin_lock_init(c);
 		// name should be set at last
 		atom_sync();
 		c->name = strdup(name);
@@ -105,13 +101,7 @@ lnewchannel(lua_State *L) {
 static void
 push_channel(struct channel *c, struct simple_queue_slot *slot) {
 	simple_queue_push(c->queue, slot);
-	spin_lock(c);
-	// trigger iif blocked > 0
-	if (c->blocked > 0) {
-		thread_event_trigger(&c->trigger);
-		--c->blocked;
-	}
-	spin_unlock(c);
+	thread_event_trigger(&c->trigger);
 }
 
 static int
@@ -127,33 +117,12 @@ lpush(lua_State *L) {
 // return 1: pop, 0: timeout
 static int
 timed_pop(lua_State *L, struct channel *c, struct simple_queue_slot *slot, int timeout) {
-	// queue would be empty
-	spin_lock(c);
 	if (simple_queue_pop(c->queue, slot)) {
-		// double check queue is empty
-		int blocked = ++c->blocked;
-		// queue is empty and blocked should be 1 here.
-		spin_unlock(c);
-		if (blocked > 1) {
-			return luaL_error(L, "Blocked pop from %s in multithread", c->name);
-		}
-		if (!thread_event_wait(&c->trigger, timeout)) {
-			// timeout
-			spin_lock(c);
-			if (c->blocked > 0) {
-				--c->blocked;
-				spin_unlock(c);
-				return 0;
-			} else {
-				spin_unlock(c);
-			}
-		}
+		thread_event_wait(&c->trigger, timeout);
 		if (simple_queue_pop(c->queue, slot)) {
 			// queue is empty (rare condition, multi consumer)
 			return 0;
 		}
-	} else {
-		spin_unlock(c);
 	}
 	return 1;
 }
@@ -163,9 +132,7 @@ lblockedpop(lua_State *L) {
 	struct boxchannel * bc = luaL_checkudata(L, 1, "THREAD_CONSUME");
 	struct channel *c = bc->c;
 	struct simple_queue_slot slot;
-	if (simple_queue_pop(c->queue, &slot)) {
-		while(!timed_pop(L, c, &slot, -1)) {};
-	}
+	while(!timed_pop(L, c, &slot, -1)) {};
 	int n = seri_unpack(L, slot.data);
 	return n;
 }
