@@ -4,7 +4,7 @@ local log = log and log(...) or print
 
 local bgfx = require "bgfx"
 
-local fs = require "filesystem"
+local fs = require "lfs"
 local path = require "filesystem.path"
 local modelutil = require "modelloader.util"
 

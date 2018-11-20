@@ -277,7 +277,7 @@ local function init_lua_search_path(app_dir)
 
     require "common/import"
     require "common/log"
-    require "filesystem"
+    require "lfs"
 
     print_r = require "common/print_r"
 

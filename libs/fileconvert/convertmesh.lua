@@ -9,7 +9,7 @@ return function (srcpath)
 
 	if fu.file_is_newer(srcpath, outputfile) then
 		local lk_path = path.replace_ext(srcpath, "lk")
-		local fs = require "filesystem"
+		local fs = require "lfs"
 		local config
 		if fs.exist(lk_path) then
 			local rawtable = require "asset.common.rawtable"

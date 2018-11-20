@@ -1,6 +1,6 @@
 dofile "libs/init.lua"
 
-local fs = require "filesystem"
+local fs = require "lfs"
 
 local projpath = fs.personaldir() .."/antproj"
 

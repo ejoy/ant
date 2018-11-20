@@ -4,7 +4,7 @@ dofile "libs/init.lua"
 
 local reponame = assert((...), "Need repo name")
 
-local fs = require "filesystem"
+local fs = require "lfs"
 local thread = require "thread"
 
 thread.thread [[

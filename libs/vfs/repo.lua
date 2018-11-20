@@ -9,7 +9,7 @@ local _DEBUG = _G._DEBUG
 local repo = {}
 repo.__index = repo
 
-local fs = require "filesystem"
+local fs = require "lfs"
 local crypt = require "crypt"
 local access = require "repoaccess"
 

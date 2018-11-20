@@ -6,7 +6,7 @@ io_pkg_handle_system.singleton "vfs_root_component"
 io_pkg_handle_system.singleton "vfs_load_component"
 io_pkg_handle_system.singleton "remote_log_component"
 
-local fs = require "filesystem"
+local fs = require "lfs"
 
 local dispatch = {}
 function io_pkg_handle_system:init()

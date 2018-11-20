@@ -6,7 +6,7 @@ vfs_repo_system.singleton "vfs_update_component"
 vfs_repo_system.singleton "vfs_root_component"
 vfs_repo_system.singleton "vfs_load_component"
 
-local fs = require "filesystem"
+local fs = require "lfs"
 
 local enable_pack = false
 local function enable_packfile(state)

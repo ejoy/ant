@@ -1,4 +1,4 @@
-local fs = require "filesystem"
+local fs = require "lfs"
 local path = {}
 path.__index = path
 

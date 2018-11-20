@@ -1,4 +1,4 @@
-local fs = require "filesystem"
+local fs = require "lfs"
 local path = require "filesystem.path"
 local rawtable = require "common.rawtable"
 local rules = {}

@@ -12,7 +12,7 @@ dofile("libs/init.lua")
 --_G._DEBUG = true
 
 local vfsrepo = require "vfs.repo"
-local fs = require "filesystem"
+local fs = require "lfs"
 
 local home = fs.personaldir() .. "/testrepo"
 fs.mkdir(home)

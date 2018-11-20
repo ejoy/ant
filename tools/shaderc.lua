@@ -5,7 +5,7 @@ require "scintilla"
 iup.SetGlobal("UTF8MODE", "YES")
 iup.SetGlobal("UTF8MODE_FILE", "YES")
 
-local fs = require "filesystem"
+local fs = require "lfs"
 local toolset = require "editor.toolset"
 local path = toolset.load_config()
 path.includes = {path.shaderinc, "assets/shaders/src"}  -- 配置include Path 

@@ -1,7 +1,7 @@
 local util = {}
 util.__index = util
 
-local fs = require "filesystem"
+local fs = require "lfs"
 
 function util.write_to_file(fn, content, mode)
     local f = io.open(fn, mode or "w")

@@ -8,7 +8,7 @@ require "scintilla"
 iup.SetGlobal("UTF8MODE", "YES")
 iup.SetGlobal("UTF8MODE_FILE", "YES")
 
-local fs = require "filesystem"
+local fs = require "lfs"
 local toolset = require "editor.toolset"
 local path = toolset.load_config()
 local seri = require "serialize.util"

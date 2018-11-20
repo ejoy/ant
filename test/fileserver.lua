@@ -12,7 +12,7 @@ end
 
 local fw = require "filewatch"
 local vrepo = require "vfs.repo"
-local fs = require "filesystem"
+local fs = require "lfs"
 local network = require "network"
 local protocol = require "protocol"
 local fileconvert = require "fileconvert"

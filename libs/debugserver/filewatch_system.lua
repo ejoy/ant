@@ -2,7 +2,7 @@ local ecs = ...
 local filewatch_system = ecs.system "filewatch_system"
 
 filewatch_system.singleton "vfs_update_component"
-local fs = require "filesystem"
+local fs = require "lfs"
 
 local fw = require "filewatch"
 function filewatch_system:init()
