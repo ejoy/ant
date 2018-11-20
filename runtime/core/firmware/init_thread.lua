@@ -14,8 +14,8 @@ local threadid = thread.id
 if threadid ~= 0 then
     thread.newchannel ("IOresp" .. threadid)
 end
-local io_req = thread.channel "IOreq"
-local io_resp = thread.channel ("IOresp" .. threadid)
+local io_req = thread.channel_produce "IOreq"
+local io_resp = thread.channel_consume ("IOresp" .. threadid)
 
 local function npath(path)
 	return path:match "^/?(.-)/?$"

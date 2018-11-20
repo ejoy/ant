@@ -8,13 +8,14 @@ ecs.import "inputmgr.message_system"
 -- light entity
 ecs.import "serialize.serialize_component"
 ecs.import "render.light.light"
+ecs.import "scene.filter.lighting_filter"
 
 -- enable
 ecs.import "serialize.serialize_system"
 ecs.import "render.view_system"
 ecs.import "render.entity_rendering_system"
 ecs.import "scene.hierarchy.hierarchy"
-ecs.import "scene.cull_system"
+--ecs.import "scene.cull_system"
 
 ecs.import "editor.ecs.editor_component"
 
@@ -33,14 +34,14 @@ local mu = require "math.util"
 local function create_light(ms)
 	local leid = lu.create_directional_light_entity(world)
 	local lentity = world[leid]
-	local lightcomp = lentity.light.v
+	local lightcomp = lentity.light
 	lightcomp.color = {1,1,1,1}
 	lightcomp.intensity = 2.0
 	ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")
 
 	local am_eid = lu.create_ambient_light_entity(world)
 	local am_entity = world[am_eid]
-	local ambient_comp = am_entity.ambient_light.data
+	local ambient_comp = am_entity.ambient_light
 	ambient_comp.mode = "color" 
 	ambient_comp.skycolor = {1,1,1,1}
 	ambient_comp.midcolor  = {0.9,0.9,1,1}
@@ -54,7 +55,7 @@ local function create_grid(ms)
 		"name"
 	)
     local grid = world[gridid]
-    grid.name.n = "grid"
+    grid.name = "grid"
     mu.identify_transform(ms, grid)
 
     local function create_grid_line_points(w, h, unit)
@@ -123,7 +124,7 @@ local function create_grid(ms)
 	}
 
 	grid.material.content[1] = {path="line.material", properties={}}
-	cu.load_material(grid)
+	cu.load_material(grid.material)
 end
 
 function model_review_system:init()

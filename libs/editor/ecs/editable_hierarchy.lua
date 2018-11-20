@@ -8,7 +8,7 @@ local path = require "filesystem.path"
 local fu = require "filesystem.util"
 local fs = require "lfs"
 
-local eh = ecs.component "editable_hierarchy"{
+local eh = ecs.component_struct "editable_hierarchy"{
 	ref_path = {
 		type = "userdata",
 		default = "",

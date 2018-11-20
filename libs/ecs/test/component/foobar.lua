@@ -1,6 +1,6 @@
 local ecs = ...
 
-local foobar = ecs.component "foobar" {
+local foobar = ecs.component_struct "foobar" {
 	x = 0.0,
 	y = 0.0,
 	-- v = { type = "vector" },

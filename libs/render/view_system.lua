@@ -9,7 +9,7 @@ local mu = require "math.util"
 local bgfx = require "bgfx"
 
 --[@ view rect
-ecs.component "view_rect"{
+ecs.component_struct "view_rect"{
 	x = 0, 
 	y = 0, 
 	w = 1, 
@@ -22,16 +22,16 @@ function view_rect_sys:update()
 	for _, eid in world:each("view_rect") do
 		local entity = world[eid]
 		local vid = entity.viewid
-		if vid then
+		if vid ~= nil then
 			local vr = entity.view_rect
-			bgfx.set_view_rect(vid.id, vr.x, vr.y, vr.w, vr.h)
+			bgfx.set_view_rect(vid, vr.x, vr.y, vr.w, vr.h)
 		end
 	end
 end
 --@]
 
 --[@ clear component
-local clear_comp = ecs.component "clear_component"{
+local clear_comp = ecs.component_struct "clear_component"{
     color = 0x303030ff,
     depth = 1,
     stencil = 0,
@@ -51,8 +51,7 @@ function vp_clear_sys:update()
 		local entity = world[eid]
 		local vid = entity.viewid
 
-		if vid then
-			local id = vid.id
+		if vid then			
 			local cc = entity.clear_component
 			local state = ""
 			if cc.clear_color then
@@ -67,7 +66,7 @@ function vp_clear_sys:update()
 			end
 
 			if state ~= "" then
-				bgfx.set_view_clear(id, state, cc.color, cc.depth, cc.stencil)
+				bgfx.set_view_clear(vid, state, cc.color, cc.depth, cc.stencil)
 			end
 		end
     end
@@ -85,7 +84,7 @@ view_sys.depend "view_rect_system"
 function view_sys:update()	
 	for _, eid in world:each("viewid") do
 		local entity = world[eid]
-		local vid = entity.viewid.id
+		local vid = entity.viewid
 		local ms = self.math_stack		
 		local view, proj = mu.view_proj_matrix(ms, entity)		
 		bgfx.set_view_transform(vid, ms(view, "m"), ms(proj, "m"))

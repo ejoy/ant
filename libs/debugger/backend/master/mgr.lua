@@ -14,7 +14,7 @@ local exit = false
 local workers_mt = {}
 function workers_mt:__index(id)
     assert(type(id) == "number")
-    local c = assert(thread.channel("DbgWorker" .. id))
+    local c = assert(thread.channel_produce("DbgWorker" .. id))
     self[id] = c
     return c
 end
@@ -49,9 +49,9 @@ function mgr.newSeq()
     return seq
 end
 
-function mgr.init(io, masterThread_)
+function mgr.init(io)
     network = io
-    masterThread = masterThread_
+    masterThread = thread.channel_consume 'DbgMaster'
     network:event_in(event_in)
     network:event_close(event_close)
 end

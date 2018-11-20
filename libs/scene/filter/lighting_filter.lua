@@ -14,7 +14,7 @@ local function append_lighting_properties(ms, result)
 
 		for _, l_eid in world:each("directional_light") do
 			local dlight = world[l_eid]
-			local l = dlight.light.v
+			local l = dlight.light
 		
 			-- point from vertex position to light position			
 			table.insert(dlight_info.dir, ms(dlight.rotation, "dim")) 
@@ -56,7 +56,7 @@ local function append_lighting_properties(ms, result)
 
 		for _,l_eid in world:each("ambient_light") do 
 			local  am_ent = world[l_eid]
-			local  data = am_ent.ambient_light.data 
+			local  data = am_ent.ambient_light 
 
 			local type = 1   -- default = "color"    	
 			if data.mode == "factor" then 	

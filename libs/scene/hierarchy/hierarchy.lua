@@ -3,7 +3,7 @@ local world = ecs.world
 local assetmgr = require "asset"
 local path = require "filesystem.path"
 
-local h = ecs.component "hierarchy" {
+local h = ecs.component_struct "hierarchy" {
 	ref_path = {
 		type = "userdata",
 		default = "",
@@ -31,25 +31,23 @@ function h:init()
 	self.builddata = nil
 end
 
-ecs.component "hierarchy_name_mapper"{
-    v = {
-        type = "userdata", 
-        save = function(v, arg)
-            assert(type(v) == "table")
-            local t = {}
-            for k, eid in pairs(v) do
-                assert(type(eid) == "number")
-                local e = world[eid]
-                local seri = e.serialize
-                if seri then
-                    t[k] = seri.uuid
-                end
-            end
-            return t
-        end,
-        load = function(v, arg)
-            assert(type(v) == "table")
-            return v
-        end
-    }
+ecs.component "hierarchy_name_mapper"{    
+	type = "userdata", 
+	save = function(v, arg)
+		assert(type(v) == "table")
+		local t = {}
+		for k, eid in pairs(v) do
+			assert(type(eid) == "number")
+			local e = world[eid]
+			local seri = e.serialize
+			if seri then
+				t[k] = seri.uuid
+			end
+		end
+		return t
+	end,
+	load = function(v, arg)
+		assert(type(v) == "table")
+		return v
+	end
 }

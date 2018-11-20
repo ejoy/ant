@@ -51,7 +51,7 @@ local function build_hierarchy_tree()
 		
 		if not is_transform_obj(e) then
 			local hierarchy_tree = e.editable_hierarchy.root
-			local name_mapper = e.hierarchy_name_mapper.v
+			local name_mapper = e.hierarchy_name_mapper
 			local function build_hierarchy_entity_tree(ehierarchy, name_mapper)
 				local t = {}
 				local num = #ehierarchy
@@ -85,7 +85,7 @@ local function build_hierarchy_tree()
     for _, eid in world:each("can_render") do
 		if not eidin_hierarchy[eid] then			
             local e = world[eid]
-            if not is_transform_obj(e) and e.can_render.visible then
+            if not is_transform_obj(e) and e.can_render then
 				local ename = e.name
 				local name = ename and ename.n or "entity"
 				table.insert(htree, name)
@@ -294,7 +294,7 @@ function editor_sys:init()
 				{name="create entity...", type="item", action=function () 
 				local eid = world:new_entity("name", "render")
 				local e = world[eid]
-				e.name.n = "NewEntity" .. eu.get_new_entity_counter()
+				e.name = "NewEntity" .. eu.get_new_entity_counter()
 
 				build_hv()
 			end}

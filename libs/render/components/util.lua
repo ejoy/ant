@@ -99,7 +99,7 @@ function util.create_render_entity(ms, world, name, meshfile, materialfile)
 	local obj = world[eid]
 	mu.identify_transform(ms, obj)
 	
-	obj.name.n = name
+	obj.name = name
 
 	obj.mesh.ref_path = meshfile
 	util.load_mesh(obj.mesh)		
@@ -115,7 +115,7 @@ function util.create_hierarchy_entity(ms, world, name)
 	"name")
 
 	local obj = world[h_eid]
-	obj.name.n = name
+	obj.name = name
 
 	mu.identify_transform(ms, obj)
 	return h_eid
@@ -124,9 +124,7 @@ end
 function util.is_entity_visible(entity)
 	local can_render = entity.can_render
 	if can_render then
-		if can_render.visible then
-			return entity.mesh ~= nil
-		end		
+		return entity.mesh ~= nil		
 	end
 
 	return false

@@ -1,3 +1,4 @@
+--luacheck: ignore self
 -- system for simple.lua
 local ecs = ...
 local world = ecs.world
@@ -17,7 +18,7 @@ function render_frame:update()
 	bgfx.frame()
 end
 
-local window = ecs.component "window" {
+ecs.component_struct "window" {
 	width = 0,
 	height = 0,
 }

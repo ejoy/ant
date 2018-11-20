@@ -15,42 +15,38 @@ local ecs = ...
 -- 	return true, nil
 -- end
 
-ecs.component "directional_light" {}
-ecs.component "point_light" {}
-ecs.component "spot_light" {}
---ecs.component "ambient_light" {    -- add tested 
-    -- data = {
-	-- 	type = "userdatar",   			 
-	-- 	mode = "color", 				-- or factor, gradient, skybox etc
-	-- 	factor = 0.3,     			    -- use direction light's factor directioncolor *factor 
-	-- 	color = {1, 1, 1, 1},
-	-- 	gradient = { 
-	-- 		skycolor = {1,1,1,1},
-	-- 		midcolor = {1,1,1,1},
-	-- 		groundcolor = {1,1,1,1},
-	-- 	},
-	-- },
+ecs.tag "directional_light"
+ecs.tag "point_light"
+ecs.tag "spot_light"
+--ecs.component_struct "ambient_light" {    -- add tested 
+-- 	type = "userdatar",   			 
+-- 	mode = "color", 				-- or factor, gradient, skybox etc
+-- 	factor = 0.3,     			    -- use direction light's factor directioncolor *factor 
+-- 	color = {1, 1, 1, 1},
+-- 	gradient = { 
+-- 		skycolor = {1,1,1,1},
+-- 		midcolor = {1,1,1,1},
+-- 		groundcolor = {1,1,1,1},
+-- 	},
 --}
 
 ecs.component "light" {
-	v = {
-		type = "userdata",
-		default = {
-			type = "point", 	-- "spot", "directional", "ambient"
-			intensity = 50, 
-			color = {1, 1, 1, 1},
-			angle = 360,
-			range = 100,
-		},
-
-		save = function(v, arg)		
-			return v
-		end,
-	
-		load = function(v, arg)
-			return v
-		end
+	type = "userdata",
+	default = {
+		type = "point", 	-- "spot", "directional", "ambient"
+		intensity = 50, 
+		color = {1, 1, 1, 1},
+		angle = 360,
+		range = 100,
 	},
+
+	save = function(v, arg)		
+		return v
+	end,
+
+	load = function(v, arg)
+		return v
+	end
 }
 
 

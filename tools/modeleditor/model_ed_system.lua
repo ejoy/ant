@@ -176,7 +176,7 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	"name", "can_render")
 
 	local e = world[eid]
-	e.name.n = "animation_test"
+	e.name = "animation_test"
 
 	local mu = require "math.util"
 	mu.identify_transform(ms, e)
@@ -445,7 +445,7 @@ local function init_lighting(ms)
 	local lu = require "render.light.util"
 	local leid = lu.create_directional_light_entity(world)
 	local lentity = world[leid]
-	local lightcomp = lentity.light.v
+	local lightcomp = lentity.light
 	lightcomp.color = {1,1,1,1}
 	lightcomp.intensity = 2.0
 	ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")

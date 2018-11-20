@@ -1,7 +1,7 @@
 local thread = require "thread"
 local threadid = thread.id
-local io_req = thread.channel "IOreq"
-local io_resp = thread.channel ("IOresp" .. threadid)
+local io_req = thread.channel_produce "IOreq"
+local io_resp = thread.channel_consume ("IOresp" .. threadid)
 
 local vfs = {}
 
