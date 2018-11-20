@@ -1,5 +1,5 @@
 dofile "libs/init.lua"
-require "editor.config"
+
 local elog = require "editor.log"
 local inputmgr = require "inputmgr"
 local mapiup = require "inputmgr.mapiup"

@@ -1,13 +1,11 @@
---luacheck: globals import
-local require = import and import(...) or require
-
+-- --luacheck: globals import
 -- Editor or test use vfs.local to manage a VFS dir/repo.
 -- It read/write file from/to a repo
 
 local localvfs = {} ; localvfs.__index = localvfs
 
-local fs = require "filesystem"
-local access = require "repoaccess"
+local fs = require "lfs"
+local access = require "vfs.repoaccess"
 
 local function isdir(filepath)
 	return fs.attributes(filepath, "mode") == "directory"
