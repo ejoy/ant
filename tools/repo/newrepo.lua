@@ -13,7 +13,7 @@ local reponame = select(1, ...)
 local iseditor = arg_num >= 2 and select(2, ...) == "editor" or false
 
 local repo = require "vfs.repo"
-local fs = require "filesystem"
+local fs = require "lfs"
 
 local enginepath = os.getenv "ANTGE" or fs.currentdir()
 local homepath = fs.personaldir()

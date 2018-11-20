@@ -1,6 +1,6 @@
 local require = import and import(...) or require
 
-local fs = require "filesystem"
+local fs = require "lfs"
 
 local cache = setmetatable({}, {
 	__mode = "kv" ,

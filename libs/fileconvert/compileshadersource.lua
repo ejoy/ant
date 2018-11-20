@@ -1,7 +1,7 @@
 local toolset = require "editor.toolset"
 local path = require "filesystem.path"
 local fu = require "filesystem.util"
-local fs = require "filesystem"
+local fs = require "lfs"
 local config = require "common.config"
 
 local platform = config.platform()

@@ -3,8 +3,6 @@
 
 dofile "libs/init.lua"
 
-require "editor.config"
-
 require "iuplua"
 
 local rhwi = require "render.hardware_interface"
@@ -177,8 +175,8 @@ local iq = inputmgr.queue(mapiup)
 local eu = require "editor.util"
 eu.regitster_iup(iq, canvas)
 local world = su.start_new_world(iq, fbw, fbh, {
-	"tools/modeleditor/model_ed_system.lua"
-})
+	"tools.modeleditor.model_ed_system"
+}, "?.lua")
 
 task.loop(world.update)
 

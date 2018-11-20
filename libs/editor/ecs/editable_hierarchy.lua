@@ -6,7 +6,7 @@ local assetmgr = require "asset"
 
 local path = require "filesystem.path"
 local fu = require "filesystem.util"
-local fs = require "filesystem"
+local fs = require "lfs"
 
 local eh = ecs.component "editable_hierarchy"{
 	ref_path = {

@@ -1,6 +1,6 @@
 local access = {}
 
-local fs = require "filesystem"
+local fs = require "lfs"
 
 function access.readmount(filename)
 	local f = io.open(filename, "rb")

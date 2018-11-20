@@ -2,11 +2,10 @@ local vfs = require "vfs"
 local assetmgr = require "asset"
 
 return function(filename)
-	local fn = assetmgr.find_depiction_path(filename)
-	local realfilename = vfs.realpath(fn)
+	local fn = assetmgr.find_valid_asset_path(filename)
 
 	local function find_tagop(readops)
-		local f = io.open(realfilename, "rb")
+		local f = io.open(fn, "rb")
 		
 		--print(endless)
 		for tag, op in pairs(readops) do
@@ -20,8 +19,10 @@ return function(filename)
 			end
 		end
 		
-		f:close()		
+		f:close()
 	end
+
+	local realfilename = vfs.realpath(fn)
 
 	local readops = {
 		["ozz-animation"] = function ()
