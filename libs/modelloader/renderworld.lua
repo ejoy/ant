@@ -15,7 +15,7 @@ ecs.import "serialize.serialize_system"
 ecs.import "render.view_system"
 ecs.import "render.entity_rendering_system"
 ecs.import "scene.hierarchy.hierarchy"
-ecs.import "scene.cull_system"
+--ecs.import "scene.cull_system"
 
 ecs.import "editor.ecs.editor_component"
 
