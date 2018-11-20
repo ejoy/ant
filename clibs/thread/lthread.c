@@ -346,6 +346,7 @@ delete_channel(struct channel *c) {
 	if (tmp.name) {
 		free((char *)tmp.name);
 		simple_queue_destroy(tmp.queue);
+		free(tmp.queue);
 		thread_event_release(&tmp.trigger);
 	}
 }
