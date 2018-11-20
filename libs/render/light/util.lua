@@ -4,7 +4,7 @@ local function create_light_entity(world, tag_comp, name)
 	local l_eid = world:new_entity("rotation", "name", "serialize", "light", tag_comp)
 	local l_entity = assert(world[l_eid])
 
-	l_entity.name.n = name
+	l_entity.name = name
 
 	return l_eid
 end
@@ -12,7 +12,7 @@ end
 function util.create_directional_light_entity(world, name)
 	local l_eid = create_light_entity(world, "directional_light", name or "Directional Light")
 	local l_entity = assert(world[l_eid])
-	local l = l_entity.light.v
+	local l = l_entity.light
 
 	l.type = "directional"
 	l.angle = nil
@@ -26,7 +26,7 @@ function util.create_point_light_entity(world, name)
 	world:add_component(l_eid, "position")
 	local l_entity = assert(world[l_eid])	
 
-	local l = l_entity.light.v
+	local l = l_entity.light
 	assert(l.type == "point")
 	l.angle = nil
 	
@@ -38,7 +38,7 @@ function util.create_spot_light_entity(world, name)
 	world:add_component(l_eid, "position")
 	
 	local l_entity = assert(world[l_eid])
-	local l =l_entity.light.v
+	local l =l_entity.light
 
 	l.type = "spot"	
 	
@@ -52,7 +52,7 @@ end
 function util.create_ambient_light_entity(world,name)
 	local l_eid = create_light_entity(world,"ambient_light",name or "Ambient Light")
 	local l_entity = assert( world[ l_eid] )
-	local l = l_entity.light.v 
+	local l = l_entity.light 
 	l.type = "ambient"
 
 	local ambient = l_entity.ambient_light.data

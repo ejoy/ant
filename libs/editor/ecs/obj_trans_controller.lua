@@ -19,7 +19,7 @@ ecs.tag "pos_transform"
 ecs.tag "scale_transform"
 ecs.tag "rotator_transform"
 
-ecs.component "object_transform" {
+ecs.component_struct "object_transform" {
     translate_speed = 0.05,
     scale_speed = 0.005,
     rotation_speed = 0.5,
@@ -75,7 +75,7 @@ local function play_object_transform(ms, ot, dx, dy)
 
     local sceneobj = assert(world[ot.sceneobj_eid])
     local selected_axis = assert(world[ot.selected_eid])
-    local name = selected_axis.name.n
+    local name = selected_axis.name
     local axis_name = name:match(".+-([xyz])$")
 
     local function select_step_value(dir)
@@ -178,7 +178,7 @@ end
 
 local function print_select_object_transform(ms, eid)
     local obj = assert(world[eid])
-    dprint("select object name : ", obj.name.n)
+    dprint("select object name : ", obj.name)
     mu.print_srt(ms, obj)
 end
 
@@ -269,7 +269,7 @@ local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axisme
 	hie_entity.editable_hierarchy.ref_path = axis_hierarchyname
 	hie_entity.editable_hierarchy.root = assetmgr.load(axis_hierarchyname, {editable=true})
 
-	local namemapper = hie_entity.hierarchy_name_mapper.v
+	local namemapper = hie_entity.hierarchy_name_mapper
 
 	local fullaxis_config = {
 		head = {
@@ -291,10 +291,10 @@ local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axisme
 
 		local properties = assert(obj.material.content[1].properties)
 		properties.u_color = {type="color", name="color", value=cu.deep_copy(color)}
-		obj.can_render.visible = false
+		obj.can_render = false
 		namemapper[k] = eid
 
-		-- print("axis-base object : ", obj.name.n)
+		-- print("axis-base object : ", obj.name)
 		-- mu.print_srt(obj, 1)
 	end
 	return hie_eid
@@ -302,12 +302,12 @@ end
 
 local function iter_axis(root_eid)	
 	local root = world[root_eid]
-	local namemapper = root.hierarchy_name_mapper.v
+	local namemapper = root.hierarchy_name_mapper
 	return next, namemapper, nil
 end
 
 local function iter_axiselem(entity)
-	local namemapper = entity.hierarchy_name_mapper.v
+	local namemapper = entity.hierarchy_name_mapper
 	return next, namemapper, nil
 end
 
@@ -316,7 +316,7 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 	world:add_component(rootaxis_eid, tag_comp)
 
 	local axis_root = world[rootaxis_eid]
-	local namemapper = axis_root.hierarchy_name_mapper.v
+	local namemapper = axis_root.hierarchy_name_mapper
 	namemapper.xaxis = add_axis_entites(ms, basename, "x", 
 										headmeshfile, axismeshfile,
 										"obj_trans/obj_trans.material", tag_comp, colors["red"])
@@ -339,14 +339,14 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 	function controllers:print()
 		local root_eid = self.root
 		local root = world[root_eid]
-		print("root name : ", root.name.n)
+		print("root name : ", root.name)
 
 		mu.print_srt(root, 1)
-		for axis_name, axis_eid in pairs(root.hierarchy_name_mapper.v) do
+		for axis_name, axis_eid in pairs(root.hierarchy_name_mapper) do
 			print("\n\taxis name : ", axis_name, ", axis eid : ", axis_eid)
 			local axis = world[axis_eid]
 			mu.print_srt(axis, 2)
-			for elemname, elemeid in pairs(axis.hierarchy_name_mapper.v) do
+			for elemname, elemeid in pairs(axis.hierarchy_name_mapper) do
 				print("\n\t\taxis elem name : ", elemname, "axis eid : ", elemeid)
 				mu.print_srt(axis, 3)
 			end
@@ -358,7 +358,7 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 			local axisentity = world[axis_eid]
 			for _, eid in iter_axiselem(axisentity) do
 				local e = world[eid]
-				e.can_render.visible = visible
+				e.can_render = visible
 			end
 		end
 	end
@@ -404,7 +404,7 @@ local function add_rotator_entities(ms, colors)
 	local hie_entity = world[root_eid]
 	hie_entity.editable_hierarchy.ref_path = axisbase_controller_hierarchyname
 	hie_entity.editable_hierarchy.root = assetmgr.load(axisbase_controller_hierarchyname, {editable=true})
-	local namemapper = hie_entity.hierarchy_name_mapper.v
+	local namemapper = hie_entity.hierarchy_name_mapper
 
 	local function add_elem_entity(elemname, clrname)
 		local elem_eid = components_util.create_hierarchy_entity(ms, world, "rotator-elem-" .. elemname)
@@ -414,7 +414,7 @@ local function add_rotator_entities(ms, colors)
 		elem.editable_hierarchy.root = assetmgr.load(rotator_hierarchyname, {editable=true})
 		elem.editable_hierarchy.ref_path = rotator_hierarchyname
 
-		local mapper = elem.hierarchy_name_mapper.v
+		local mapper = elem.hierarchy_name_mapper
 		local function add_entity(name, meshfilename, colorname)
 			local eid = components_util.create_render_entity(ms, world, name, meshfilename,
 			"obj_trans/obj_trans.material")
@@ -423,7 +423,7 @@ local function add_rotator_entities(ms, colors)
 	
 			local properties = assert(entity.material.content[1].properties)
 			properties.u_color = {type="color", name="color", value=cu.deep_copy(colors[colorname])}
-			entity.can_render.visible = false
+			entity.can_render = false
 			mu.identify_transform(ms, entity)
 	
 			entity.hierarchy_parent.eid = elem_eid
@@ -450,7 +450,7 @@ local function add_rotator_entities(ms, colors)
 			local axisentity = world[axis_eid]
 			for _, eid in iter_axiselem(axisentity) do
 				local e = world[eid]
-				e.can_render.visible = visible
+				e.can_render = visible
 			end
 		end		
 	end
@@ -610,6 +610,6 @@ function obj_trans_sys.notify:pickup(set)
 
 	local selid = ot.selected_eid
 	if selid then
-		self.control_state.state = is_controller_id(ot.controllers, ot.selected_eid) and "object" or "default"
+		self.control_state = is_controller_id(ot.controllers, ot.selected_eid) and "object" or "default"
 	end    
 end

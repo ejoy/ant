@@ -90,7 +90,7 @@ function add_entity_sys:init()
 		world:add_component(leid, "position", "mesh", "material", "can_render", "scale", "name")
 		local lentity = world[leid]
 
-		local lightcomp = lentity.light.v
+		local lightcomp = lentity.light
 		lightcomp.color = {1,1,1,1}
 		lightcomp.intensity = 2.0
 
@@ -100,7 +100,7 @@ function add_entity_sys:init()
 
 		ms(lentity.scale, {1.1, 1.1, 1.1}, "=")
 
-		lentity.name.n = "directional_light"
+		lentity.name = "directional_light"
 
 		-- add tested for ambient 
 		local am_eid = lu.create_ambient_light_entity(world)
@@ -114,13 +114,13 @@ function add_entity_sys:init()
 		--ambient_comp.midcolor = {0,1,0,1}
 		--ambient_comp.groundcolor = {0,0,1,1}
 		--ambient_comp.factor = 0.25
-		lentity.name.n = "ambient_light"
-		--print("-------ambient entity  "..am_entity.name.n..'  '..am_eid)
+		lentity.name = "ambient_light"
+		--print("-------ambient entity  "..am_entity.name..'  '..am_eid)
 
 		component_util.load_mesh(lentity.mesh,"sphere.mesh")		
 		component_util.load_material(lentity.material,{"light_bulb.material"})
 
-		lentity.can_render.visible = true    
+		lentity.can_render = true    
 	end
 
      do
@@ -129,7 +129,7 @@ function add_entity_sys:init()
 			"name", "serialize",
 			"can_select")
         local bunny = world[bunny_eid]
-        bunny.name.n = "bunny"
+        bunny.name = "bunny"
 
         -- should read from serialize file        
         ms(bunny.scale, {5, 5, 5, 0}, "=")
@@ -150,7 +150,7 @@ function add_entity_sys:init()
 	-- 	"name", "serialize",
 	-- 	"can_select")
 	-- 	local pochuan = world[pochuan_eid]
-	-- 	pochuan.name.n = "PoChuan"
+	-- 	pochuan.name = "PoChuan"
 
 	-- 	--mu.identify_transform(ms, pochuan)
 	-- 	ms(pochuan.scale, {0.1, 0.1, 0.1}, "=")
@@ -171,7 +171,7 @@ function add_entity_sys:init()
 	-- 	"name", "serialize", "can_select")
 
 	-- 	local stone = world[stone_eid]
-	-- 	stone.name.n = "texture_stone"
+	-- 	stone.name = "texture_stone"
 
 	-- 	mu.identify_transform(ms, stone)
 
@@ -233,7 +233,7 @@ function add_entity_sys:init()
 		"can_select", "can_render")
 
         local entity = world[eid]
-        entity.name.n = name
+        entity.name = name
 
         ms(entity.scale, {1, 1, 1}, "=")
         ms(entity.position, {0, 0, 0, 1}, "=") 
@@ -285,7 +285,7 @@ function add_entity_sys:init()
             "name", "serialize")
         local hierarchy_e = world[hierarchy_eid]
 
-		hierarchy_e.name.n = "hierarchy_test"
+		hierarchy_e.name = "hierarchy_test"
 		
 		hierarchy_e.editable_hierarchy.ref_path = hie_refpath
 		hierarchy_e.editable_hierarchy.root = assetmgr.load(hie_refpath, {editable=true})
@@ -300,7 +300,7 @@ function add_entity_sys:init()
 			h1_h1 = "cube.mesh",		
 		}
 
-		local name_mapper = assert(hierarchy_e.hierarchy_name_mapper.v)
+		local name_mapper = assert(hierarchy_e.hierarchy_name_mapper)
 		for k, v in pairs(entities) do
 			local eid = create_entity(k, v, hie_materialpath)	
 			name_mapper[k] = eid
@@ -322,7 +322,7 @@ function add_entity_sys:init()
         ms(hierarchy_e.rotation, {0, -60, 0}, "=")
 		ms(hierarchy_e.position, {-10, 0, 0, 1}, "=")
 
-		hierarchy_e.name.n = "hierarchy_test_shared"	
+		hierarchy_e.name = "hierarchy_test_shared"	
 
 		local entities = {
 			h1 = "cylinder.mesh",
@@ -330,7 +330,7 @@ function add_entity_sys:init()
 			h1_h1 = "sphere.mesh",
 		}
 
-		local name_mapper = assert(hierarchy_e.hierarchy_name_mapper.v)
+		local name_mapper = assert(hierarchy_e.hierarchy_name_mapper)
 		for k, v in pairs(entities) do
 			name_mapper[k] = create_entity(k, v, hie_materialpath)
 		end

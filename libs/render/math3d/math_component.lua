@@ -2,7 +2,7 @@ local ecs = ...
 local bgfx = require "bgfx"
 --{@
 local math3d = require "math3d"
-local math3d_comp = ecs.component_v2 "math_stack"
+local math3d_comp = ecs.component "math_stack"
 
 function math3d_comp.new()
 	local initMath3dDebug = require 'debugger.math3d'

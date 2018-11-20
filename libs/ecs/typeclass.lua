@@ -101,7 +101,7 @@ return function(world, import)
 	end
 
 	register {
-		type = "component_v2",
+		type = "component",
 		typename = "struct",
 	}
 	register {
@@ -112,7 +112,7 @@ return function(world, import)
 	}
 
 	class_register.tag = function (name)
-		local c = class_register.component_v2(name)
+		local c = class_register.component(name)
 		c.new = function() return true end
 
 		return function (content)
@@ -122,12 +122,12 @@ return function(world, import)
 		end
 	end
 
-	class_register.component = function (name)
-		local c = class_register.component_v2(name)
+	class_register.component_struct = function (name)
+		local c = class_register.component(name)
 		return function (content)
-			return c({
-				struct = content,
-			})
+			return c {
+				struct = content
+			}
 		end
 	end
 

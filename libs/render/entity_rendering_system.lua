@@ -25,7 +25,7 @@ function draw_entity_sys:update()
 
 	for _, eid in world:each("primitive_filter") do
 		local e = world[eid]
-		local viewid = assert(e.viewid).id
+		local viewid = assert(e.viewid)
 
 		bgfx.touch(viewid)
 		local filter = e.primitive_filter

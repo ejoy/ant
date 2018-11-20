@@ -34,7 +34,7 @@ local mu = require "math.util"
 local function create_light(ms)
 	local leid = lu.create_directional_light_entity(world)
 	local lentity = world[leid]
-	local lightcomp = lentity.light.v
+	local lightcomp = lentity.light
 	lightcomp.color = {1,1,1,1}
 	lightcomp.intensity = 2.0
 	ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")
@@ -55,7 +55,7 @@ local function create_grid(ms)
 		"name"
 	)
     local grid = world[gridid]
-    grid.name.n = "grid"
+    grid.name = "grid"
     mu.identify_transform(ms, grid)
 
     local function create_grid_line_points(w, h, unit)

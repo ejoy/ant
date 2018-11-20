@@ -1,2 +1,2 @@
 local ecs = ...
-local ui_command_component = ecs.component "ui_command_component" {}
+local ui_command_component = ecs.component_struct "ui_command_component" {}

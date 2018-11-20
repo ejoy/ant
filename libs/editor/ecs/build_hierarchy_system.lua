@@ -45,13 +45,12 @@ local function rebuild_hierarchy(ms, iterop)
 	for _, eid in iterop() do
 		local function find_hie_entity(eid)
 			local e = world[eid]
-			local hm = e.hierarchy_name_mapper
-			if hm then
+			local mapper = e.hierarchy_name_mapper
+			if mapper then
 				local erefpath = e.editable_hierarchy.ref_path				
 				add_hierarchy_component(eid, erefpath)
 				mark_refpath(erefpath, e.hierarchy.ref_path)
 
-				local mapper = hm.v
 				for _, eid in pairs(mapper) do
 					find_hie_entity(eid)										
 				end
@@ -89,9 +88,8 @@ local function rebuild_hierarchy(ms, iterop)
 		local rootsrt = mu.srt_from_entity(ms, e)
 
 		local function update_transform(pe, psrt)
-			local hm = pe.hierarchy_name_mapper
-			if hm then
-				local mapper = hm.v
+			local mapper = pe.hierarchy_name_mapper
+			if mapper then				
 				local builddata = assetmgr.load(pe.hierarchy.ref_path)
 				pe.hierarchy.builddata = builddata
 				local srt = psrt

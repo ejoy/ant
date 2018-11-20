@@ -8,7 +8,7 @@ function PVPScene.init(world, component_util, ms)
                 "can_render", "mesh", "material",
                 "name")
         local campsite_door = world[campsite_door_eid]
-        campsite_door.name.n = "CampsiteDoor"
+        campsite_door.name = "CampsiteDoor"
 
         ms(campsite_door.scale, {1, 1, 1}, "=")
         ms(campsite_door.rotation, {-90, -90, 0,}, "=")
@@ -23,7 +23,7 @@ function PVPScene.init(world, component_util, ms)
                 "can_render", "mesh", "material",
                 "name")
         local campsite_door_1 = world[campsite_door_1_eid]
-        campsite_door_1.name.n = "CampsiteDoor_1"
+        campsite_door_1.name = "CampsiteDoor_1"
 
         ms(campsite_door_1.scale, {1, 1, 1}, "=")
         ms(campsite_door_1.rotation, {-90, 90, 0,}, "=")
@@ -43,7 +43,7 @@ function PVPScene.init(world, component_util, ms)
                 "name", "serialize",
                 "can_select")
         local campsite_wall = world[campsite_wall_eid]
-        campsite_wall.name.n = "CampsiteWall"
+        campsite_wall.name = "CampsiteWall"
 
         ms(campsite_wall.scale, {1, 1, 1}, "=")
         ms(campsite_wall.rotation, {-90, 90, 0,}, "=")
@@ -59,7 +59,7 @@ function PVPScene.init(world, component_util, ms)
                 "name", "serialize",
                 "can_select")
         local campsite_wall_1 = world[campsite_wall_1_eid]
-        campsite_wall_1.name.n = "CampsiteWall_1"
+        campsite_wall_1.name = "CampsiteWall_1"
 
         ms(campsite_wall_1.scale, {1, 1, 1}, "=")
         ms(campsite_wall_1.rotation, {-90, 90, 0,}, "=")
@@ -75,7 +75,7 @@ function PVPScene.init(world, component_util, ms)
                 "name", "serialize",
                 "can_select")
         local campsite_wall_4 = world[campsite_wall_4_eid]
-        campsite_wall_4.name.n = "CampsiteWall_4"
+        campsite_wall_4.name = "CampsiteWall_4"
 
         ms(campsite_wall_4.scale, {1, 1, 1}, "=")
         ms(campsite_wall_4.rotation, {-90, 90, 0,}, "=")
@@ -91,7 +91,7 @@ function PVPScene.init(world, component_util, ms)
                 "name", "serialize",
                 "can_select")
         local campsite_wall_5 = world[campsite_wall_5_eid]
-        campsite_wall_5.name.n = "CampsiteWall_5"
+        campsite_wall_5.name = "CampsiteWall_5"
 
         ms(campsite_wall_5.scale, {1, 1, 1}, "=")
         ms(campsite_wall_5.rotation, {-90, 90, 0,}, "=")
@@ -107,7 +107,7 @@ function PVPScene.init(world, component_util, ms)
                 "name", "serialize",
                 "can_select")
         local campsite_wall_6 = world[campsite_wall_6_eid]
-        campsite_wall_6.name.n = "CampsiteWall_6"
+        campsite_wall_6.name = "CampsiteWall_6"
 
         ms(campsite_wall_6.scale, {1, 1, 1}, "=")
         ms(campsite_wall_6.rotation, {-90, 90, 0,}, "=")
@@ -124,7 +124,7 @@ function PVPScene.init(world, component_util, ms)
                 "name", "serialize",
                 "can_select")
         local campsite_wall_7 = world[campsite_wall_7_eid]
-        campsite_wall_7.name.n = "CampsiteWall_7"
+        campsite_wall_7.name = "CampsiteWall_7"
 
         ms(campsite_wall_7.scale, {1, 1, 1}, "=")
         ms(campsite_wall_7.rotation, {-90, 90, 0,}, "=")
@@ -141,7 +141,7 @@ function PVPScene.init(world, component_util, ms)
                 "name", "serialize",
                 "can_select")
         local campsite_jianta = world[campsite_jianta_eid]
-        campsite_jianta.name.n = "campsite_jianta"
+        campsite_jianta.name = "campsite_jianta"
 
         ms(campsite_jianta.scale, {0.5, 0.5, 0.5}, "=")
         ms(campsite_jianta.rotation, {-90, 0, 0,}, "=")
@@ -157,7 +157,7 @@ function PVPScene.init(world, component_util, ms)
                 "name", "serialize",
                 "can_select")
         local campsite_jianta_1 = world[campsite_jianta_1_eid]
-        campsite_jianta_1.name.n = "campsite_jianta_1"
+        campsite_jianta_1.name = "campsite_jianta_1"
 
         ms(campsite_jianta_1.scale, {0.5, 0.5, 0.5}, "=")
         ms(campsite_jianta_1.rotation, {-90, 0, 0,}, "=")
@@ -173,7 +173,7 @@ function PVPScene.init(world, component_util, ms)
                 "name", "serialize",
                 "can_select")
         local campsite_jianta_2 = world[campsite_jianta_2_eid]
-        campsite_jianta_2.name.n = "campsite_jianta_2"
+        campsite_jianta_2.name = "campsite_jianta_2"
 
         ms(campsite_jianta_2.scale, {0.5, 0.5, 0.5}, "=")
         ms(campsite_jianta_2.rotation, {-90, 0, 0,}, "=")
@@ -189,7 +189,7 @@ function PVPScene.init(world, component_util, ms)
                 "name", "serialize",
                 "can_select")
         local campsite_jianta_3 = world[campsite_jianta_3_eid]
-        campsite_jianta_3.name.n = "campsite_jianta_3"
+        campsite_jianta_3.name = "campsite_jianta_3"
 
         ms(campsite_jianta_3.scale, {0.5, 0.5, 0.5}, "=")
         ms(campsite_jianta_3.rotation, {-90, 0, 0,}, "=")
@@ -209,7 +209,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-90, 90, 0}, fuhuodianA_rotation, "+=")
@@ -225,7 +225,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-90, 90, 0}, fuhuodianA_rotation, "+=")
@@ -241,7 +241,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-89.98, 0, 47.621}, fuhuodianA_rotation, "+=")
@@ -257,7 +257,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-90.0, 0, 0}, fuhuodianA_rotation, "+=")
@@ -273,7 +273,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-90.0, 0, 0}, fuhuodianA_rotation, "+=")
@@ -289,7 +289,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-90.0, -35.40240, 0}, fuhuodianA_rotation, "+=")
@@ -305,7 +305,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-90.0, -91.4971, 0}, fuhuodianA_rotation, "+=")
@@ -321,7 +321,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-90.0, -91.4971, 0}, fuhuodianA_rotation, "+=")
@@ -342,7 +342,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-90.0, 90.0, 0}, "=")
@@ -358,7 +358,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-90.0, 90.0, 0}, "=")
@@ -374,7 +374,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-90.0, -91.4971, 0}, "=")
@@ -390,7 +390,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-90.0, -91.4971, 0}, "=")
@@ -407,7 +407,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-89.98, 0.0, 47.621}, "=")
@@ -423,7 +423,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-90, -35.4024, 0}, "=")
@@ -439,7 +439,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-90, 0.0, 0}, "=")
@@ -455,7 +455,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local tent = world[tent_eid]
-            tent.name.n = "tent"
+            tent.name = "tent"
 
             ms(tent.scale, {1, 1, 1}, "=")
             ms(tent.rotation, {-90, 0.0, 0}, "=")
@@ -473,7 +473,7 @@ function PVPScene.init(world, component_util, ms)
                 "name", "serialize",
                 "can_select")
         local wood_build = world[wood_build_eid]
-        wood_build.name.n = "wood_build"
+        wood_build.name = "wood_build"
 
         ms(wood_build.scale, {1, 1, 1}, "=")
         ms(wood_build.rotation, {-90, -90.7483, 0}, "=")
@@ -489,7 +489,7 @@ function PVPScene.init(world, component_util, ms)
                 "name", "serialize",
                 "can_select")
         local woodother_46 = world[woodother_46_eid]
-        woodother_46.name.n = "woodother_46"
+        woodother_46.name = "woodother_46"
 
         ms(woodother_46.scale, {1, 1, 1}, "=")
         ms(woodother_46.rotation, {-90, -108.1401, 0}, "=")
@@ -504,7 +504,7 @@ function PVPScene.init(world, component_util, ms)
                 "name", "serialize",
                 "can_select")
         local woodother_46_1 = world[woodother_46_1_eid]
-        woodother_46_1.name.n = "woodother_46_1"
+        woodother_46_1.name = "woodother_46_1"
 
         ms(woodother_46_1.scale, {1, 1, 1}, "=")
         ms(woodother_46_1.rotation, {-90, -108.1401, 0}, "=")
@@ -519,7 +519,7 @@ function PVPScene.init(world, component_util, ms)
                 "name", "serialize",
                 "can_select")
         local woodother_45 = world[woodother_45_eid]
-        woodother_45.name.n = "woodother_45"
+        woodother_45.name = "woodother_45"
 
         ms(woodother_45.scale, {1, 1, 1}, "=")
         ms(woodother_45.rotation, {-90, 50.3198, 0}, "=")
@@ -537,7 +537,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local woodother_34 = world[woodother_eid]
-            woodother_34.name.n = "woodother_34"
+            woodother_34.name = "woodother_34"
 
             ms(woodother_34.scale, {1, 1, 1}, "=")
             ms(woodother_34.rotation, {-90, 0, 20}, "=")
@@ -554,7 +554,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local woodother_34 = world[woodother_eid]
-            woodother_34.name.n = "woodother_34"
+            woodother_34.name = "woodother_34"
 
             ms(woodother_34.scale, {1, 1, 1}, "=")
             ms(woodother_34.rotation, {-90, 0, 0}, "=")
@@ -570,7 +570,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local woodother_34 = world[woodother_eid]
-            woodother_34.name.n = "woodother_34"
+            woodother_34.name = "woodother_34"
 
             ms(woodother_34.scale, {1, 1, 1}, "=")
             ms(woodother_34.rotation, {-90, 0, 20}, "=")
@@ -586,7 +586,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local woodother_34 = world[woodother_eid]
-            woodother_34.name.n = "woodother_34"
+            woodother_34.name = "woodother_34"
 
             ms(woodother_34.scale, {1, 1, 1}, "=")
             ms(woodother_34.rotation, {-90, 0, 0}, "=")
@@ -602,7 +602,7 @@ function PVPScene.init(world, component_util, ms)
                     "name", "serialize",
                     "can_select")
             local woodother_34 = world[woodother_eid]
-            woodother_34.name.n = "woodother_34"
+            woodother_34.name = "woodother_34"
 
             ms(woodother_34.scale, {1, 1, 1}, "=")
             ms(woodother_34.rotation, {-90, -60, 0}, "=")

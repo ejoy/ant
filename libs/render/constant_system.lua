@@ -4,7 +4,7 @@ ecs.import "render.math3d.math_component"
 
 local mu = require "math.util"
 
-local constant = ecs.component "constant" {    
+local constant = ecs.component_struct "constant" {    
 }
 
 function constant:init()

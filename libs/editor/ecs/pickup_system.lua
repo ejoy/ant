@@ -64,7 +64,7 @@ local function init_pickup_buffer(pickup_entity)
     comp.rb_buffer = bgfx.create_texture2d(w, h, false, 1, "RGBA8", "bwbr-p+p*pucvc")
     --@]
 
-	bgfx.set_view_frame_buffer(pickup_entity.viewid.id, assert(comp.pick_fb))
+	bgfx.set_view_frame_buffer(pickup_entity.viewid, assert(comp.pick_fb))
 end
 
 local function readback_render_data(pickup_entity)
@@ -151,7 +151,7 @@ function pickup_material_sys:update()
 end
 
 -- pickup_system
-ecs.component "pickup"{}
+ecs.component_struct "pickup"{}
 
 local pickup_sys = ecs.system "pickup_system"
 
@@ -184,8 +184,8 @@ local function add_pick_entity(ms)
 	"frustum", 
 	"name")        
 	local entity = assert(world[eid])
-	entity.viewid.id = pickup_fb_viewid
-	entity.name.n = "pickup"
+	entity.viewid = pickup_fb_viewid
+	entity.name = "pickup"
 
 	local cc = entity.clear_component
 	cc.color = 0
@@ -242,7 +242,7 @@ function pickup_sys:update()
 				if stat.frame_num == reading_frame then
 					local eid = which_entity_hitted(e)
 					if eid then
-						local name = assert(world[eid]).name.n
+						local name = assert(world[eid]).name
 						print("pick entity id : ", eid, ", name : ", name)
 					else
 						print("not found any eid")

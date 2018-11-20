@@ -3,40 +3,40 @@ local ecs = ...
 local component_util = require "render.components.util"
 local asset = require "asset"
 
-ecs.component_v2 "position"{
+ecs.component "position"{
+	type="vector"
+}
+
+ecs.component "rotation"{
     type="vector"
 }
 
-ecs.component_v2 "rotation"{
+ecs.component "scale" {
     type="vector"
 }
 
-ecs.component_v2 "scale" {
-    type="vector"
-}
-
-ecs.component "relative_srt" {
+ecs.component_struct "relative_srt" {
 	s = {type="vector"},
 	r = {type="vector"},
 	t = {type="vector"},
 }
 
-ecs.component "frustum" {
-    type = "mat",
-    n = 0.1,
-    f = 10000,
-    l = -1,
-    r = 1,
-    t = 1,
+ecs.component_struct "frustum" {
+	type = "mat",
+	n = 0.1,
+	f = 10000,
+	l = -1,
+	r = 1,
+	t = 1,
 	b = -1,
 	ortho = false,
 }
 
 ecs.component "viewid" {
-    id = 0
+	default = 0,
 }
 
-ecs.component "mesh" {
+ecs.component_struct "mesh" {
 	ref_path = {
 		type = "userdata",
 		default = "",
@@ -64,7 +64,7 @@ ecs.component "mesh" {
 	}
 }
 
-ecs.component "material" {
+ecs.component_struct "material" {
 	content = {
 		type = "userdata",
 		defatult = {
@@ -118,25 +118,25 @@ ecs.component "material" {
 	}
 }
 
-ecs.component "can_render" {
-	visible = true
+ecs.component "can_render" {	
+	default = true,
 }
 
 ecs.component "can_cast" {
-	cast_shadow = true 
+	default = false,
 }
 
-ecs.component "name" {
-    n = ""
+ecs.component "name" {	
+    type = "string",
 }
 
 ecs.tag "can_select"
 
 ecs.component "control_state" {
-    state = "camera"
+	type = "string",	
 }
 
-ecs.component "hierarchy_parent" {
+ecs.component_struct "hierarchy_parent" {
 	eid = -1
 }
 -- mode = color or factor, gradient, skybox etc
@@ -146,7 +146,7 @@ ecs.component "hierarchy_parent" {
 --           ratio factor ，use mainlight's factor directioncolor *factor 
 -- mode = 2  gradient ，interpolate with skycolor，midcolor，groundcolor 
 
-ecs.component "ambient_light" { 
+ecs.component_struct "ambient_light" { 
 	data  = {
 		type = "userdata",
 		default = {

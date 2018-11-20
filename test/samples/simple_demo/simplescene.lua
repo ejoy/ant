@@ -30,7 +30,7 @@ local function create_grid_entity(ms)
 		--"editor",
 		"name")
 	local grid = world[gridid]
-	grid.name.n = "grid"
+	grid.name = "grid"
 	mu.identify_transform(ms, grid)        
 
 	local function create_grid_line_points(w, h, unit)
@@ -104,7 +104,7 @@ function simplescene:init()
 	)
 
 	local bunny = world[bunnyeid]
-	bunny.name.n = "demo_bunny"
+	bunny.name = "demo_bunny"
 
 	local ms = self.math_stack
 	ms(bunny.position, 	{0, 0, 0, 1}, 	"=")
