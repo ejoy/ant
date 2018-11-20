@@ -94,31 +94,38 @@ local function connect_server()
 	return fd
 end
 
-local offline = {}
-
-function offline:GET(path)
-	local realpath, hash = repo.repo:realpath(path)
-	self:push(realpath, hash)
+-- response io request with id
+local function response_id(id, ...)
+	if id then
+		channel.resp[id]:push(...)
+	end
 end
 
-function offline:LIST(path)
+local offline = {}
+
+function offline.GET(id, path)
+	local realpath, hash = repo.repo:realpath(path)
+	response_id(id, realpath, hash)
+end
+
+function offline.LIST(id, path)
 	local dir = repo.repo:list(path)
 	if dir then
 		local result = {}
 		for k,v in pairs(dir) do
 			result[k] = v.dir
 		end
-		self:push(result)
+		response_id(id, result)
 	else
-		self:push(nil)
+		response_id(id, nil)
 	end
 end
 
-function offline:TYPE(fullpath)
+function offline.TYPE(id, fullpath)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		if fullpath == "" then
-			self:push("dir")
+			response_id(id, "dir")
 			return
 		end
 		path = ""
@@ -128,11 +135,11 @@ function offline:TYPE(fullpath)
 	if dir then
 		local v = dir[name]
 		if v then
-			self:push(v.dir and "dir" or "file")
+			response_id(id, v.dir and "dir" or "file")
 			return
 		end
 	end
-	self:push(nil)
+	response_id(id, nil)
 end
 
 do
@@ -143,8 +150,8 @@ do
 	offline.SEND = noresponse_function
 end
 
-function offline:EXIT()
-	self:push(nil)
+function offline.EXIT(id)
+	response_id(id, nil)
 	error "EXIT"
 end
 
@@ -153,7 +160,7 @@ local function offline_dispatch(cmd, id, ...)
 	if not f then
 		print("Unsupported offline command : ", cmd, id)
 	else
-		f(channel.resp[id], ...)
+		f(id, ...)
 	end
 end
 
@@ -225,13 +232,6 @@ local function connection_dispose(timeout)
 		table.insert(connection.recvq, data)
 	end
 	return true
-end
-
--- response io request with id
-local function response_id(id, ...)
-	if id then
-		channel.resp[id]:push(...)
-	end
 end
 
 local function request_file(id, hash, path, req)
