@@ -75,7 +75,7 @@ local function play_object_transform(ms, ot, dx, dy)
 
     local sceneobj = assert(world[ot.sceneobj_eid])
     local selected_axis = assert(world[ot.selected_eid])
-    local name = selected_axis.name.n
+    local name = selected_axis.name
     local axis_name = name:match(".+-([xyz])$")
 
     local function select_step_value(dir)
@@ -178,7 +178,7 @@ end
 
 local function print_select_object_transform(ms, eid)
     local obj = assert(world[eid])
-    dprint("select object name : ", obj.name.n)
+    dprint("select object name : ", obj.name)
     mu.print_srt(ms, obj)
 end
 
@@ -291,10 +291,10 @@ local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axisme
 
 		local properties = assert(obj.material.content[1].properties)
 		properties.u_color = {type="color", name="color", value=cu.deep_copy(color)}
-		obj.can_render.visible = false
+		obj.can_render = false
 		namemapper[k] = eid
 
-		-- print("axis-base object : ", obj.name.n)
+		-- print("axis-base object : ", obj.name)
 		-- mu.print_srt(obj, 1)
 	end
 	return hie_eid
@@ -339,7 +339,7 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 	function controllers:print()
 		local root_eid = self.root
 		local root = world[root_eid]
-		print("root name : ", root.name.n)
+		print("root name : ", root.name)
 
 		mu.print_srt(root, 1)
 		for axis_name, axis_eid in pairs(root.hierarchy_name_mapper.v) do
@@ -358,7 +358,7 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 			local axisentity = world[axis_eid]
 			for _, eid in iter_axiselem(axisentity) do
 				local e = world[eid]
-				e.can_render.visible = visible
+				e.can_render = visible
 			end
 		end
 	end
@@ -423,7 +423,7 @@ local function add_rotator_entities(ms, colors)
 	
 			local properties = assert(entity.material.content[1].properties)
 			properties.u_color = {type="color", name="color", value=cu.deep_copy(colors[colorname])}
-			entity.can_render.visible = false
+			entity.can_render = false
 			mu.identify_transform(ms, entity)
 	
 			entity.hierarchy_parent.eid = elem_eid
@@ -450,7 +450,7 @@ local function add_rotator_entities(ms, colors)
 			local axisentity = world[axis_eid]
 			for _, eid in iter_axiselem(axisentity) do
 				local e = world[eid]
-				e.can_render.visible = visible
+				e.can_render = visible
 			end
 		end		
 	end
@@ -610,6 +610,6 @@ function obj_trans_sys.notify:pickup(set)
 
 	local selid = ot.selected_eid
 	if selid then
-		self.control_state.state = is_controller_id(ot.controllers, ot.selected_eid) and "object" or "default"
+		self.control_state = is_controller_id(ot.controllers, ot.selected_eid) and "object" or "default"
 	end    
 end

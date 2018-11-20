@@ -267,7 +267,7 @@ local function create_terrain_entity( world, name  )
 		"can_render",
 		"name")
 	local entity = assert( world[eid] )
-	entity.name.n = name 
+	entity.name = name 
 	return entity 
 end 
 

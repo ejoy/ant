@@ -176,7 +176,7 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	"name", "can_render")
 
 	local e = world[eid]
-	e.name.n = "animation_test"
+	e.name = "animation_test"
 
 	local mu = require "math.util"
 	mu.identify_transform(ms, e)

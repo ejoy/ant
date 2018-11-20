@@ -118,22 +118,22 @@ ecs.component "material" {
 	}
 }
 
-ecs.component "can_render" {
-	visible = true
+ecs.component_v2 "can_render" {
+	type = "boolean"
 }
 
-ecs.component "can_cast" {
-	cast_shadow = true 
+ecs.component_v2 "can_cast" {
+	type = "boolean"
 }
 
-ecs.component "name" {
-    n = ""
+ecs.component_v2 "name" {	
+    type = "string",
 }
 
 ecs.tag "can_select"
 
 ecs.component "control_state" {
-    state = "camera"
+    type = "string"
 }
 
 ecs.component "hierarchy_parent" {

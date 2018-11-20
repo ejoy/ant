@@ -34,7 +34,7 @@ function general_editor_entites:init()
 
         mu.identify_transform(ms, axis)
 
-		axis.name.n = "axis-tips"
+		axis.name = "axis-tips"
 		
 		axis.mesh.ref_path = ""	-- runtime mesh info
 		axis.mesh.assetinfo = {
@@ -68,7 +68,7 @@ function general_editor_entites:init()
 		"can_render", "mesh", "material", "editor",
 		"name")
         local grid = world[gridid]
-        grid.name.n = "grid"
+        grid.name = "grid"
         mu.identify_transform(ms, grid)        
 
         local function create_grid_line_points(w, h, unit)
@@ -141,7 +141,7 @@ function general_editor_entites:init()
 		"can_select")
 
 		local frusutm_debug = world[frustum_debug_eid]
-		frusutm_debug.name.n = "frustum_debug"
+		frusutm_debug.name = "frustum_debug"
 
 		local function create_frustum_points()
 			local math3d_baselib = require "math3d.baselib"

@@ -185,7 +185,7 @@ local function add_pick_entity(ms)
 	"name")        
 	local entity = assert(world[eid])
 	entity.viewid.id = pickup_fb_viewid
-	entity.name.n = "pickup"
+	entity.name = "pickup"
 
 	local cc = entity.clear_component
 	cc.color = 0
@@ -242,7 +242,7 @@ function pickup_sys:update()
 				if stat.frame_num == reading_frame then
 					local eid = which_entity_hitted(e)
 					if eid then
-						local name = assert(world[eid]).name.n
+						local name = assert(world[eid]).name
 						print("pick entity id : ", eid, ", name : ", name)
 					else
 						print("not found any eid")

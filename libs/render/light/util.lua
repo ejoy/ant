@@ -4,7 +4,7 @@ local function create_light_entity(world, tag_comp, name)
 	local l_eid = world:new_entity("rotation", "name", "serialize", "light", tag_comp)
 	local l_entity = assert(world[l_eid])
 
-	l_entity.name.n = name
+	l_entity.name = name
 
 	return l_eid
 end

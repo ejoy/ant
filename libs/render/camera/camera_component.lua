@@ -56,7 +56,7 @@ function camera_init_sys:init()
 
     local camera = world[camera_eid]
     camera.viewid.id = VIEWID_MAINCAMERA 
-    camera.name.n = "main_camera"
+    camera.name = "main_camera"
     
     ms(camera.position,    {5, 5, -5, 1},  "=")
     ms(camera.rotation,   {-25, -45, 0, 0},   "=")

@@ -54,7 +54,7 @@ local function create_grid(ms)
 		"name"
 	)
     local grid = world[gridid]
-    grid.name.n = "grid"
+    grid.name = "grid"
     mu.identify_transform(ms, grid)
 
     local function create_grid_line_points(w, h, unit)

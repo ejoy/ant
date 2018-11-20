@@ -1058,7 +1058,7 @@ function gen_shadow_system:init()
             "name")
         local entity = assert( world[eid] )
         entity.viewid.id = VIEWID_SHADOW 
-        entity.name.n = "shadowmap_maker"            
+        entity.name = "shadowmap_maker"            
 
         local shadow_maker_comp = entity.shadow_maker
 
