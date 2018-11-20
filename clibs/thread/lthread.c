@@ -135,8 +135,9 @@ timed_pop(lua_State *L, struct channel *c, struct simple_queue_slot *slot, int t
 		// queue is empty and blocked should be 1 here.
 		spin_unlock(c);
 		if (blocked > 1) {
-			return luaL_error(L, "Blocked pop from %s in multithread", c->name);
+			return luaL_error(L, "Blocked pop from %s in multithread, blocked = %d", c->name, blocked);
 		}
+		// c->blocked should be 1, next push_channel will trigger event and dec c->blocked to 0.
 		if (!thread_event_wait(&c->trigger, timeout)) {
 			// timeout
 			spin_lock(c);
@@ -146,6 +147,11 @@ timed_pop(lua_State *L, struct channel *c, struct simple_queue_slot *slot, int t
 				return 0;
 			} else {
 				spin_unlock(c);
+			}
+		} else {
+			int blocked = c->blocked;
+			if (blocked != 0) {
+				return luaL_error(L, "%s not wakeup by push, blocked = %d", c->name, blocked);
 			}
 		}
 		if (simple_queue_pop(c->queue, slot)) {

@@ -26,7 +26,7 @@ local ctx = { stats = {} }     -- history debug
 local function gen_ambient_light_uniforms( terrain )
 	for _,l_eid in world:each("ambient_light") do
 		local am_ent = world[l_eid]
-		local data = am_ent.ambient_light.data 
+		local data = am_ent.ambient_light 
 
 		local type = 1
 		if data.mode == "factor" then 

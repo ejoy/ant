@@ -81,11 +81,11 @@ thread_event_trigger(struct thread_event *ev) {
 static INLINE int
 thread_event_wait(struct thread_event *ev, int timeout) {
 	DWORD t = timeout < 0 ? INFINITE : (DWORD)timeout;
-	if (WaitForSingleObject(ev->event, t) == WAIT_TIMEOUT) {
-		return 0;
+	if (WaitForSingleObject(ev->event, t) == WAIT_OBJECT_0) {
+		return 1;
 	}
-	// todo: not WAIT_OBJECT_0
-	return 1;
+	// todo: not WAIT_TIMEOUT
+	return 0;
 }
 
 static INLINE void
