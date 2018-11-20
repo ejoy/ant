@@ -19,8 +19,8 @@ local threadid = thread.id
 thread.newchannel "IOreq"
 thread.newchannel ("IOresp" .. threadid)
 
-local io_req = thread.channel "IOreq"
-local io_resp = thread.channel ("IOresp" .. threadid)
+local io_req = thread.channel_produce "IOreq"
+local io_resp = thread.channel_consume ("IOresp" .. threadid)
 
 thread.thread (([[
     -- IO thread

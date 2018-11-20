@@ -116,7 +116,7 @@ push_channel(struct channel *c, struct simple_queue_slot *slot) {
 
 static int
 lpush(lua_State *L) {
-	struct boxchannel * bc = luaL_checkudata(L, 1, "THREAD_CHANNEL");
+	struct boxchannel * bc = luaL_checkudata(L, 1, "THREAD_PRODUCE");
 	struct channel *c = bc->c;
 	void * buffer = seri_pack(L, 1);
 	struct simple_queue_slot slot = { buffer };
@@ -149,7 +149,8 @@ timed_pop(lua_State *L, struct channel *c, struct simple_queue_slot *slot, int t
 			}
 		}
 		if (simple_queue_pop(c->queue, slot)) {
-			return luaL_error(L, "Queue %s should not be empty", c->name);
+			// queue is empty (rare condition, multi consumer)
+			return 0;
 		}
 	} else {
 		spin_unlock(c);
@@ -159,11 +160,11 @@ timed_pop(lua_State *L, struct channel *c, struct simple_queue_slot *slot, int t
 
 static int
 lblockedpop(lua_State *L) {
-	struct boxchannel * bc = luaL_checkudata(L, 1, "THREAD_CHANNEL");
+	struct boxchannel * bc = luaL_checkudata(L, 1, "THREAD_CONSUME");
 	struct channel *c = bc->c;
 	struct simple_queue_slot slot;
 	if (simple_queue_pop(c->queue, &slot)) {
-		timed_pop(L, c, &slot, -1);
+		while(!timed_pop(L, c, &slot, -1)) {};
 	}
 	int n = seri_unpack(L, slot.data);
 	return n;
@@ -171,7 +172,7 @@ lblockedpop(lua_State *L) {
 
 static int
 lpop(lua_State *L) {
-	struct boxchannel * bc = luaL_checkudata(L, 1, "THREAD_CHANNEL");
+	struct boxchannel * bc = luaL_checkudata(L, 1, "THREAD_CONSUME");
 	struct channel *c = bc->c;
 	struct simple_queue_slot slot;
 	if (simple_queue_pop(c->queue, &slot)) {
@@ -183,6 +184,9 @@ lpop(lua_State *L) {
 			if (!timed_pop(L, c, &slot, timeout)) {
 				return 0;
 			}
+		} else {
+			// No 2nd arg or timeout == 0, don't wait
+			return 0;
 		}
 	}
 	lua_pushboolean(L, 1);
@@ -191,7 +195,7 @@ lpop(lua_State *L) {
 }
 
 static int
-lquerychannel(lua_State *L) {
+lpchannel(lua_State *L) {
 	const char * name = luaL_checkstring(L, 1);
 	struct channel * c = query_channel(name);
 	if (c == NULL)
@@ -199,9 +203,32 @@ lquerychannel(lua_State *L) {
 
 	struct boxchannel *bc = lua_newuserdata(L, sizeof(*bc));
 	bc->c = c;
-	if (luaL_newmetatable(L, "THREAD_CHANNEL")) {
+	if (luaL_newmetatable(L, "THREAD_PRODUCE")) {
 		luaL_Reg l[] = {
 			{ "push", lpush },
+			{ NULL, NULL },
+		};
+		luaL_setfuncs(L, l, 0);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
+		lua_pushcfunction(L, lpush);
+		lua_setfield(L, -2, "__call");
+	}
+	lua_setmetatable(L, -2);
+	return 1;
+}
+
+static int
+lcchannel(lua_State *L) {
+	const char * name = luaL_checkstring(L, 1);
+	struct channel * c = query_channel(name);
+	if (c == NULL)
+		return luaL_error(L, "Can't query channel %s", name);
+
+	struct boxchannel *bc = lua_newuserdata(L, sizeof(*bc));
+	bc->c = c;
+	if (luaL_newmetatable(L, "THREAD_CONSUME")) {
+		luaL_Reg l[] = {
 			{ "pop", lpop },
 			{ "bpop", lblockedpop },
 			{ NULL, NULL },
@@ -209,6 +236,8 @@ lquerychannel(lua_State *L) {
 		luaL_setfuncs(L, l, 0);
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
+		lua_pushcfunction(L, lblockedpop);
+		lua_setfield(L, -2, "__call");
 	}
 	lua_setmetatable(L, -2);
 	return 1;
@@ -346,6 +375,7 @@ delete_channel(struct channel *c) {
 	if (tmp.name) {
 		free((char *)tmp.name);
 		simple_queue_destroy(tmp.queue);
+		free(tmp.queue);
 		thread_event_release(&tmp.trigger);
 	}
 }
@@ -379,7 +409,8 @@ luaopen_thread_worker(lua_State *L) {
 		{ "thread", lthread },
 		{ "wait", lwait },
 		{ "newchannel", lnewchannel },
-		{ "channel", lquerychannel },
+		{ "channel_consume", lcchannel },
+		{ "channel_produce", lpchannel },
 		{ "reset", lreset },
 		{ NULL, NULL },
 	};

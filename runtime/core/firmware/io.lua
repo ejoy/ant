@@ -25,14 +25,14 @@ local connection = {
 
 local function init_channels()
 	-- init channels
-	channel.req = thread.channel "IOreq"
+	channel.req = thread.channel_consume "IOreq"
 
 	local channel_index = {}
 	channel.resp = setmetatable({} , channel_index)
 
 	function channel_index:__index(id)
 		assert(type(id) == "number")
-		local c = assert(thread.channel("IOresp" .. id))
+		local c = assert(thread.channel_produce("IOresp" .. id))
 		self[id] = c
 		return c
 	end
@@ -41,12 +41,12 @@ local function init_channels()
 	channel.user = setmetatable({} , channel_user)
 
 	function channel_user:__index(name)
-		local c = assert(thread.channel(name))
+		local c = assert(thread.channel_produce(name))
 		self[name] = c
 		return c
 	end
 
-	local err = thread.channel "errlog"
+	local err = thread.channel_produce "errlog"
 	function _G.print(...)
 		local t = table.pack( "[IO]", ... )
 		for i= 1, t.n do

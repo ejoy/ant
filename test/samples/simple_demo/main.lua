@@ -31,17 +31,21 @@ function callback.error(err)
 	print(err)
 end
 
+local status = {}
 function callback.move(x,y)
-	iq:push("motion", x, y)
+	iq:push("motion", x, y, status)
 end
 
 function callback.touch(what, x, y)
 	local function translate()
-		local press = math.max(0, what - 2)
+		local press = what % 2
 		if what > 2 then
+			status.RIGHT = press == 1
+			status.LEFT = false
 			return "RIGHT", press
 		end
-
+		status.RIGHT = false
+		status.LEFT = press == 1
 		return "LEFT", press
 	end
 	local btn, p = translate()
