@@ -119,7 +119,8 @@ ecs.component "material" {
 }
 
 ecs.component_v2 "can_render" {
-	type = "boolean"
+	type = "boolean",
+	default = true,
 }
 
 ecs.component_v2 "can_cast" {
@@ -133,7 +134,7 @@ ecs.component_v2 "name" {
 ecs.tag "can_select"
 
 ecs.component "control_state" {
-    type = "string"
+	type = "string",	
 }
 
 ecs.component "hierarchy_parent" {
