@@ -183,6 +183,9 @@ lpop(lua_State *L) {
 			if (!timed_pop(L, c, &slot, timeout)) {
 				return 0;
 			}
+		} else {
+			// No 2nd arg or timeout == 0, don't wait
+			return 0;
 		}
 	}
 	lua_pushboolean(L, 1);
