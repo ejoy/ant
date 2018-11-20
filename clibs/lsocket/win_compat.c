@@ -80,6 +80,17 @@ wsa_error_to_errno(int errcode) {
 	}
 }
 
+const char*
+wsa_strerror(int errcode) {
+	switch (errcode) {
+	case ECONNREFUSED:
+		return "Connection refused.";
+	// TODO more errmsg
+	default:
+		return strerror(errcode);
+	}
+}
+
 int 
 win_getsockopt(SOCKET sockfd, int level, int optname, void *optval, socklen_t *optlen) {
 	if (optname == SO_NOSIGPIPE) {

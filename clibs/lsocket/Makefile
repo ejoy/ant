@@ -66,11 +66,11 @@ clean:
 
 mingw: lsocket.dll
 
-lsocket.o : lsocket.c
-	$(CC) -c -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $^ -lws2_32 -I $(LUA_INCDIR) -L $(LUA_DIR) -llua53
+lsocket.o : lsocket.c win_compat.h
+	$(CC) -c -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $< -lws2_32 -I $(LUA_INCDIR) -L $(LUA_DIR) -llua53
 
-win_compat.o : win_compat.c
-	$(CC) -c -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $^ -lws2_32 -I $(LUA_INCDIR) -L $(LUA_DIR) -llua53
+win_compat.o : win_compat.c win_compat.h
+	$(CC) -c -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $< -lws2_32 -I $(LUA_INCDIR) -L $(LUA_DIR) -llua53
 
 lsocket.dll : lsocket.o win_compat.o
 	$(CC) -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $^ $(LDFLAGS) -lws2_32 -I $(LUA_INCDIR) -L $(LUA_DIR) -llua53
