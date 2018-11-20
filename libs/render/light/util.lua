@@ -55,17 +55,17 @@ function util.create_ambient_light_entity(world,name)
 	local l = l_entity.light 
 	l.type = "ambient"
 
-	local ambient = l_entity.ambient_light.data
+	local ambient = l_entity.ambient_light
 	ambient.mode = "color"              -- default ambient type 
 	ambient.factor = 0.3                -- defalut ratio of main lgiht or any special light that in use 
 	ambient.skycolor = {1,0,0,1}        -- default main ambient color 
 
 	-- debug
-	print("### create ambient light---"..l_entity.ambient_light.data.mode..' '..l_entity.ambient_light.data.factor)
-	print("### create ambient light---gradient..."..l_entity.ambient_light.data.midcolor[1],
-													l_entity.ambient_light.data.midcolor[2],
-													l_entity.ambient_light.data.midcolor[3],
-													l_entity.ambient_light.data.midcolor[4] )
+	print("### create ambient light---"..l_entity.ambient_light.mode..' '..l_entity.ambient_light.factor)
+	print("### create ambient light---gradient..."..l_entity.ambient_light.midcolor[1],
+													l_entity.ambient_light.midcolor[2],
+													l_entity.ambient_light.midcolor[3],
+													l_entity.ambient_light.midcolor[4] )
 
 	return l_eid 
 end 

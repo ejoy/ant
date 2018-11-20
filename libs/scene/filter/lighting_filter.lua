@@ -56,7 +56,7 @@ local function append_lighting_properties(ms, result)
 
 		for _,l_eid in world:each("ambient_light") do 
 			local  am_ent = world[l_eid]
-			local  data = am_ent.ambient_light.data 
+			local  data = am_ent.ambient_light 
 
 			local type = 1   -- default = "color"    	
 			if data.mode == "factor" then 	

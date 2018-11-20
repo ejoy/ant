@@ -146,21 +146,19 @@ ecs.component_struct "hierarchy_parent" {
 --           ratio factor ，use mainlight's factor directioncolor *factor 
 -- mode = 2  gradient ，interpolate with skycolor，midcolor，groundcolor 
 
-ecs.component_struct "ambient_light" { 
-	data  = {
-		type = "userdata",
-		default = {
-			mode   = "color",
-			factor = 0.3,     			    
-			skycolor = {1,1,1,1},
-			midcolor = {1,1,1,1},
-			groundcolor = {1,1,1,1},
-			-- gradient = {          -- 这种模式，过于复杂多层，简化到上层，平面化
-			-- 	skycolor = {1,1,1,1},
-			-- 	midcolor = {1,1,1,1},
-			-- 	groundcolor = {1,1,1,1},
-			-- },
-		},
+ecs.component "ambient_light" { 
+	type = "userdata",
+	default = {
+		mode   = "color",
+		factor = 0.3,     			    
+		skycolor = {1,1,1,1},
+		midcolor = {1,1,1,1},
+		groundcolor = {1,1,1,1},
+		-- gradient = {          -- 这种模式，过于复杂多层，简化到上层，平面化
+		-- 	skycolor = {1,1,1,1},
+		-- 	midcolor = {1,1,1,1},
+		-- 	groundcolor = {1,1,1,1},
+		-- },
 	},
 }
 

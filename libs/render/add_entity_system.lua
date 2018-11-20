@@ -105,7 +105,7 @@ function add_entity_sys:init()
 		-- add tested for ambient 
 		local am_eid = lu.create_ambient_light_entity(world)
 		local am_entity = world[ am_eid]
-		local ambient_comp = am_entity.ambient_light.data
+		local ambient_comp = am_entity.ambient_light
 		ambient_comp.mode = "gradient"
 		ambient_comp.skycolor = {1,1,1,1}
 		ambient_comp.midcolor  = {0.9,0.9,1,1}
