@@ -114,6 +114,35 @@ function offline:LIST(path)
 	end
 end
 
+function offline:TYPE(fullpath)
+	local path, name = fullpath:match "(.*)/(.-)$"
+	if path == nil then
+		if fullpath == "" then
+			self:push("dir")
+			return
+		end
+		path = ""
+		name = fullpath
+	end
+	local dir, hash = repo.repo:list(path)
+	if dir then
+		local v = dir[name]
+		if v then
+			self:push(v.dir and "dir" or "file")
+			return
+		end
+	end
+	self:push(nil)
+end
+
+do
+	local function noresponse_function() end
+	offline.FETCHALL = noresponse_function
+	offline.PREFETCH = noresponse_function
+	offline.SUBSCIBE = noresponse_function
+	offline.SEND = noresponse_function
+end
+
 function offline:EXIT()
 	self:push(nil)
 	error "EXIT"
