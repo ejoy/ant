@@ -74,20 +74,20 @@ local function connect_server()
 	print("Connecting", config.address, config.port)
 	local fd, err = lsocket.connect(config.address, config.port)
 	if not fd then
-		print(err)
+		print("connect:", err)
 		return
 	end
 	local fdset = { fd }
 	local rd,wt = lsocket.select(nil, fdset)
 	if not rd then
-		print(wt)	-- select error
+		print("select:", wt)	-- select error
 		fd:close()
 		return
 	end
 	local ok, err = fd:status()
 	if not ok then
 		fd:close()
-		print(err)
+		print("status:", err)
 		return
 	end
 	print("Connected")
