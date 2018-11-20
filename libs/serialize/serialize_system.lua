@@ -40,7 +40,7 @@ local function post_load(loaded_eids)
     for _, eid in world:each("hierarchy_name_mapper") do
         if loaded_eids[eid] then
             local e = world[eid]
-            local name_mapper = e.hierarchy_name_mapper.v
+            local name_mapper = e.hierarchy_name_mapper
             for n, uuid in pairs(name_mapper) do
                 local function find_eid(uuid)
                     for _, eid in world:each("serialize") do

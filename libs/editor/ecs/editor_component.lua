@@ -1,2 +1,2 @@
 local ecs = ...
-ecs.component "editor" {}
+ecs.tag "editor"

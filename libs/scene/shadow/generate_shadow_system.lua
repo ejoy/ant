@@ -67,11 +67,11 @@ ctx.s_flipV = false       -- d3d or ogl
 
 -- 定义 shadowmap entity 相关组件数据( 生成配置, 结果数据, ... )
 -- shadowmap settings
-local shadow_config = ecs.component "shadow_config" { 
+local shadow_config = ecs.component_struct "shadow_config" { 
 
 }
 -- shadowmap runtime status, result id handle,result textures,matrixs,framebuffers
-local shadow_rt = ecs.component "shadow_rt" {
+local shadow_rt = ecs.component_struct "shadow_rt" {
 
 }
 
@@ -136,7 +136,7 @@ end
 
 -- or combine mode 
 -- 合并成一个 compoent 内的两个表? may be clear more,but not use now 
-local shadow = ecs.component "shadow_maker" {}
+local shadow = ecs.component_struct "shadow_maker" {}
 function shadow:init()
     self.config = {}
     self.shadow = {}
@@ -849,7 +849,7 @@ function shadow_maker:render_debug_with_shadow(shadow_entity,select_filter,mater
     local meshes = {
         { result = select_filter.result, mode =''}    --, material = self.materials.generate_shadowmap},
     }
-    local view_id = shadow_entity.viewid.id  
+    local view_id = shadow_entity.viewid  
     view_id  = VIEWID_DRAWSCENE 
     bgfx.touch( view_id )
 
@@ -914,7 +914,7 @@ function shadow_maker:render_debug(shadow_entity,select_filter)
     local meshes = {
         { result = select_filter.result, mode =''}    --, material = self.materials.generate_shadowmap},
     }
-    local view_id = shadow_entity.viewid.id           -- shadow target
+    local view_id = shadow_entity.viewid           -- shadow target
     view_id = VIEWID_DRAWSCENE 
     bgfx.touch( view_id )
 
@@ -1004,7 +1004,7 @@ end
 --    声明一个 shadow_cast_filter 组件类型
 --    定义组件初始化函数，初始化组件内部结构-剪裁结果表
 -- shadow_cast_filter
-local shadow_cast_filter = ecs.component "shadow_cast_filter" {}
+local shadow_cast_filter = ecs.component_struct "shadow_cast_filter" {}
 function shadow_cast_filter:init()
     self.result = {}
 end 
@@ -1057,7 +1057,7 @@ function gen_shadow_system:init()
             "position","rotation",
             "name")
         local entity = assert( world[eid] )
-        entity.viewid.id = VIEWID_SHADOW 
+        entity.viewid = VIEWID_SHADOW 
         entity.name = "shadowmap_maker"            
 
         local shadow_maker_comp = entity.shadow_maker

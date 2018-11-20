@@ -4,7 +4,7 @@ local world = ecs.world
 local bgfx = require "bgfx"
 
 --[@ message
-local msg_comp = ecs.component "message"{}
+local msg_comp = ecs.component_struct "message"{}
 
 function msg_comp:init()
 	local message_observers = {}

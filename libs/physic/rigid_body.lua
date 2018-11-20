@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.component "rigid_body" {
+ecs.component_struct "rigid_body" {
 	shapes = {
 		type = "userdata",
 		default = {},

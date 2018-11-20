@@ -51,7 +51,7 @@ local function build_hierarchy_tree()
 		
 		if not is_transform_obj(e) then
 			local hierarchy_tree = e.editable_hierarchy.root
-			local name_mapper = e.hierarchy_name_mapper.v
+			local name_mapper = e.hierarchy_name_mapper
 			local function build_hierarchy_entity_tree(ehierarchy, name_mapper)
 				local t = {}
 				local num = #ehierarchy

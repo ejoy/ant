@@ -5,7 +5,7 @@ local world = ecs.world
 ecs.import "timer"
 ecs.import "render.math3d.math_component"
 
-local ani = ecs.component "animation" {
+local ani = ecs.component_struct "animation" {
 	ref_path = {
 		type = "userdata",
 		default = "",
@@ -24,7 +24,7 @@ end
 
 -- separate animation and skeleton to 2 component, 
 -- skeleton component will corresponding to some system that do not need animation
-local ske = ecs.component "skeleton" {
+local ske = ecs.component_struct "skeleton" {
 	ref_path = {
 		type = "userdata",
 		default = "",

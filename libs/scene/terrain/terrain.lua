@@ -44,7 +44,7 @@ end
 local function gen_lighting_uniforms( terrain )
 	for _,l_eid in world:each("directional_light") do 
 		local dlight = world[l_eid]
-		local l = dlight.light.v 
+		local l = dlight.light 
 		terrain:set_uniform("u_lightDirection", stack(dlight.rotation, "dim") )
 		terrain:set_uniform("u_lightIntensity", { l.intensity,0,0,0} )  
 		terrain:set_uniform("u_lightColor",l.color  )
@@ -224,7 +224,7 @@ end
 -- terrain component
 --  store terrain level name,material name, and terrain object into component
 --  level name,material name need serialize into scene info file.
-ecs.component "terrain" {
+ecs.component_struct "terrain" {
 	path = {
 		-- save level name
 		-- save material name 

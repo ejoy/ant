@@ -1,5 +1,5 @@
 local ecs = ...
-local primitive_filter = ecs.component "primitive_filter"{
+local primitive_filter = ecs.component_struct "primitive_filter"{
 
 }
 

@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 -- single object
-local init = ecs.component "init" {
+local init = ecs.component_struct "init" {
 	foobar = ""
 } 
 

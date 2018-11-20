@@ -16,7 +16,7 @@ local bgfx = require "bgfx"
 -- 找时间统一到 render 中，作为要给独立的 viewid.lua 存放所有指定的 VIEW 
 local VIEWID_MAINCAMERA = 100
 
-ecs.component "main_camera" {}
+ecs.tag "main_camera"
 
 local camera_init_sys = ecs.system "camera_init"
 camera_init_sys.singleton "math_stack"
@@ -55,7 +55,7 @@ function camera_init_sys:init()
         "name")
 
     local camera = world[camera_eid]
-    camera.viewid.id = VIEWID_MAINCAMERA 
+    camera.viewid = VIEWID_MAINCAMERA 
     camera.name = "main_camera"
     
     ms(camera.position,    {5, 5, -5, 1},  "=")

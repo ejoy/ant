@@ -3,7 +3,7 @@ local world = ecs.world
 
 local ru = require "render.util"
 
-ecs.component "widget" {}
+ecs.component_struct "widget" {}
 
 local widget_sys = ecs.system "widget_system"
 

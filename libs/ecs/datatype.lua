@@ -62,14 +62,26 @@ local function gen_value(v)
 	local default = nil
 	local save = nil
 	local load = nil
+
+	local function get_default_type(default)			
+		if default ~= nil then
+			local tt = type(default)
+			if tt == "number" then
+				return math.type(default)
+			end
+			return tt
+		end
+
+		error("need define type or set default value")
+	end
 	
 	if ttype == "table" then
-		typename = v.type
+		typename = v.type or get_default_type(v.default)
 		default = v.default
 		save = v.save
 		load = v.load
 	else
-		typename = ttype == "number" and math.type(v) or ttype				
+		typename = get_default_type(v)
 		default = v
 		save = default_save
 		load = default_load

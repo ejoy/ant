@@ -2,7 +2,7 @@ local ecs = ...
 
 local crypt = require "crypt"
 
-local seria_comp = ecs.component "serialize" {
+local seria_comp = ecs.component_struct "serialize" {
     uuid = ""
 }
 
@@ -10,7 +10,7 @@ function seria_comp:init()
     self.uuid = crypt.uuid()
 end
 
-local seri_tree = ecs.component "serialization_tree" {    
+local seri_tree = ecs.component_struct "serialization_tree" {    
 }
 
 function seri_tree:init()

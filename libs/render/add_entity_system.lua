@@ -90,7 +90,7 @@ function add_entity_sys:init()
 		world:add_component(leid, "position", "mesh", "material", "can_render", "scale", "name")
 		local lentity = world[leid]
 
-		local lightcomp = lentity.light.v
+		local lightcomp = lentity.light
 		lightcomp.color = {1,1,1,1}
 		lightcomp.intensity = 2.0
 
@@ -300,7 +300,7 @@ function add_entity_sys:init()
 			h1_h1 = "cube.mesh",		
 		}
 
-		local name_mapper = assert(hierarchy_e.hierarchy_name_mapper.v)
+		local name_mapper = assert(hierarchy_e.hierarchy_name_mapper)
 		for k, v in pairs(entities) do
 			local eid = create_entity(k, v, hie_materialpath)	
 			name_mapper[k] = eid
@@ -330,7 +330,7 @@ function add_entity_sys:init()
 			h1_h1 = "sphere.mesh",
 		}
 
-		local name_mapper = assert(hierarchy_e.hierarchy_name_mapper.v)
+		local name_mapper = assert(hierarchy_e.hierarchy_name_mapper)
 		for k, v in pairs(entities) do
 			name_mapper[k] = create_entity(k, v, hie_materialpath)
 		end
