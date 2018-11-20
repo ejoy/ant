@@ -69,7 +69,7 @@ function camera_controller_system:init()
 		r_q = "LEFTROT", r_e = "RIGHTROT",
 	}
 
-	function message:keypress(c, p, status)
+	function message:keypress(c, p, casstate)
 		if c == nil then return end
 
 		local name = nil
@@ -88,11 +88,16 @@ function camera_controller_system:init()
 			end	
 		end
 
-		if clower == "cequal" then
-			step = math.min(1, step + 0.002)
-		elseif clower == "cminus" then
-			step = math.max(0.002, step - 0.002)
-		end			
+		local isctrl = casstate[1] == 'c'
+		if isctrl then
+			if clower == "=" then
+				step = math.min(1, step + 0.002)
+			elseif clower == "-" then
+				step = math.max(0.002, step - 0.002)
+			elseif clower == "c" then
+				
+			end	
+		end		
 	end
 
 	self.message.observers:add(message)

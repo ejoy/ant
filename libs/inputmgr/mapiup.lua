@@ -1,10 +1,10 @@
-local iup_keymap = {}
+-- local iup_keymap = {}
 
-for k,v in pairs(iup) do
-	if type(k) == "string" and type(v) == "number" and k:sub(1,2) == "K_" then
-		iup_keymap[v] = k:sub(3)
-	end
-end
+-- for k,v in pairs(iup) do
+-- 	if type(k) == "string" and type(v) == "number" and k:sub(1,2) == "K_" then
+-- 		iup_keymap[v] = k:sub(3)
+-- 	end
+-- end
 
 local iup_status_mt = { __mode = "kv" }
 local iup_status = setmetatable({}, iup_status_mt)
@@ -52,10 +52,11 @@ return {
 		[0] = false,
 	},
 	STATUS = iup_status,
-	KEY = iup_keymap,
+	--KEY = iup_keymap,
 	button = "BUTTON,PRESSED,_,_,STATUS",	-- button, pressed, x,y, status
 	motion = "_,_,STATUS", -- x,y,status
-	keypress = "KEY,PRESSED",	-- keycode, pressed
+	--keypress = "KEY,PRESSED",	-- keycode, pressed
+	keypress = "_,_,_",	-- keycode, pressed
 	resize = "_,_",	-- width, height
 	wheel = "_,_,_,STATUS",-- delta,x,y,status
 }
