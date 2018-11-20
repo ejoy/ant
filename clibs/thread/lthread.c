@@ -149,7 +149,8 @@ timed_pop(lua_State *L, struct channel *c, struct simple_queue_slot *slot, int t
 			}
 		}
 		if (simple_queue_pop(c->queue, slot)) {
-			return luaL_error(L, "Queue %s should not be empty", c->name);
+			// queue is empty (rare condition, multi consumer)
+			return 0;
 		}
 	} else {
 		spin_unlock(c);
@@ -163,7 +164,7 @@ lblockedpop(lua_State *L) {
 	struct channel *c = bc->c;
 	struct simple_queue_slot slot;
 	if (simple_queue_pop(c->queue, &slot)) {
-		timed_pop(L, c, &slot, -1);
+		while(!timed_pop(L, c, &slot, -1)) {};
 	}
 	int n = seri_unpack(L, slot.data);
 	return n;
