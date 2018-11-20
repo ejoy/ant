@@ -5,14 +5,14 @@ local dbg = require 'debugger'
 local thread = require 'thread'
 thread.newchannel 'DbgMaster'
 thread.newchannel "DdgNet"
-local io_req = thread.channel "IOreq"
+local io_req = thread.channel_produce "IOreq"
 io_req:push("SUBSCIBE", "DdgNet", "DBG")
 io_req:push("SEND", "DBG", "")
 
 ru.createThread('debug', [[
     local thread = require "thread"
-    local io_req  = thread.channel "IOreq"
-    local dbg_net = thread.channel "DdgNet"
+    local io_req  = thread.channel_produce "IOreq"
+    local dbg_net = thread.channel_consume "DdgNet"
     local dbg_io = {}
     function dbg_io:event_in(f)
         self.fsend = f

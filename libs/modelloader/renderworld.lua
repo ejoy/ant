@@ -8,6 +8,7 @@ ecs.import "inputmgr.message_system"
 -- light entity
 ecs.import "serialize.serialize_component"
 ecs.import "render.light.light"
+ecs.import "scene.filter.lighting_filter"
 
 -- enable
 ecs.import "serialize.serialize_system"
@@ -123,7 +124,7 @@ local function create_grid(ms)
 	}
 
 	grid.material.content[1] = {path="line.material", properties={}}
-	cu.load_material(grid)
+	cu.load_material(grid.material)
 end
 
 function model_review_system:init()

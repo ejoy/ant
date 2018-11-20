@@ -8,7 +8,7 @@ local traceback = require 'debugger.backend.worker.traceback'
 local ev = require 'debugger.event'
 local hookmgr = require 'debugger.hookmgr'
 local thread = require 'thread'
-local err = thread.channel 'errlog'
+local err = thread.channel_produce 'errlog'
 
 local initialized = false
 local info = {}
@@ -21,8 +21,8 @@ local exceptionTrace = ''
 local CMD = {}
 
 thread.newchannel ('DbgWorker' .. thread.id)
-local masterThread = thread.channel 'DbgMaster'
-local workerThread = thread.channel ('DbgWorker' .. thread.id)
+local masterThread = thread.channel_produce 'DbgMaster'
+local workerThread = thread.channel_consume ('DbgWorker' .. thread.id)
 
 local function workerThreadUpdate()
     while true do

@@ -12,7 +12,7 @@ thread.thread [[
 	dofile "libs/init.lua"
 
 	local thread = require "thread"
-	local err = thread.channel "errlog"
+	local err = thread.channel_consume "errlog"
 
 	while true do
 		print("ERROR:" .. err:bpop())
@@ -20,7 +20,7 @@ thread.thread [[
 ]]
 
 do
-	local err = thread.channel "errlog"
+	local err = thread.channel_produce "errlog"
 	function _G.print(...)
 		local t = table.pack( "[Main]", ... )
 		for i= 1, t.n do
