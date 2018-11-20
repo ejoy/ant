@@ -53,12 +53,12 @@ local function init_channels()
 			t[i] = tostring(t[i])
 		end
 		local str = table.concat( t , "\t" )
-		err:push(str)
+		err(str)
 	end
 end
 
 local function init_config()
-	local c = channel.req:bpop()
+	local c = channel.req()
 	config.repopath = assert(c.repopath)
 	config.address = c.address
 	config.port = c.port
@@ -97,7 +97,7 @@ end
 -- response io request with id
 local function response_id(id, ...)
 	if id then
-		channel.resp[id]:push(...)
+		channel.resp[id](...)
 	end
 end
 
@@ -167,7 +167,7 @@ end
 local function work_offline()
 	local c = channel.req
 	while true do
-		offline_dispatch(c:bpop())
+		offline_dispatch(c())
 	end
 end
 
@@ -526,7 +526,7 @@ local function dispatch_net(cmd, ...)
 	if not f then
 		local channel_name = connection.subscibe[cmd]
 		if channel_name then
-			channel.user[channel_name]:push(cmd, ...)
+			channel.user[channel_name](cmd, ...)
 		else
 			print("Unsupport net command", cmd)
 		end
