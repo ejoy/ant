@@ -2,7 +2,7 @@ dofile "libs/init.lua"
 
 local reponame = assert(...,  "Need repo name")
 local config = {
-	address = "127.0.0.1",
+	address = "0.0.0.0",
 	port = 2018,
 }
 
