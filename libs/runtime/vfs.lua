@@ -10,28 +10,28 @@ local function npath(path)
 end
 
 function vfs.list(path)
-	io_req:push("LIST", threadid, npath(path))
-	return io_resp:bpop()
+	io_req("LIST", threadid, npath(path))
+	return io_resp()
 end
 
 function vfs.realpath(path)
-	io_req:push("GET", threadid, npath(path))
-	return io_resp:bpop()
+	io_req("GET", threadid, npath(path))
+	return io_resp()
 end
 
 function vfs.prefetch(path)
-	io_req:push("PREFETCH", npath(path))
+	io_req("PREFETCH", npath(path))
 end
 
 -- prefectch all dir (path should be a dir)
 function vfs.fetchall(path)
-	io_req:push("FETCHALL", false, npath(path))
+	io_req("FETCHALL", false, npath(path))
 end
 
 -- return "dir" "file" or nil
 function vfs.type(path)
-	io_req:push("TYPE", threadid, npath(path))
-	return io_resp:bpop()
+	io_req("TYPE", threadid, npath(path))
+	return io_resp()
 end
 
 package.loaded.vfs = vfs

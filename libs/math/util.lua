@@ -129,4 +129,47 @@ function util.view_proj_matrix(ms, camera_entity)
 	return view, util.proj(ms, frustum)
 end
 
+local function math3d_value_save(v, arg)
+	assert(type(v) == "userdata")
+	local ms = arg.math_stack
+	local t = ms(v, "T")
+	assert(type(t) == "table" and t.type ~= nil)
+	return t
+end
+
+local function get_math3d_value_load(typename)
+	return function(s, arg)
+		if s.type == nil then
+			error "vector load function invalid format"
+		end
+
+		if s.type ~= 1 and s.type ~= 2 then
+			error "vector load function need vector type"
+		end
+
+		local math3d = require "math3d"
+		local v = math3d.ref(typename)
+		local ms = arg.math_stack
+		ms(v, s, "=")
+		return v
+	end
+end
+
+local function create_component_elem(tt)
+	return { 
+		type = "userdata",
+		default = function() return math3d.ref(tt) end,
+		save = math3d_value_save,
+		load = get_math3d_value_load(tt), 
+	}
+end
+
+function util.create_component_vector()
+	return create_component_elem("vector")
+end
+
+function util.create_component_matrix()
+	return create_component_elem("matrix")
+end
+
 return util

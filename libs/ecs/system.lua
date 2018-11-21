@@ -1,4 +1,4 @@
-local require = import and import(...) or require
+--luacheck: globals log
 local log = log and log(...) or print
 
 -- load systems

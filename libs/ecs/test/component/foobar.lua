@@ -2,9 +2,7 @@ local ecs = ...
 
 local foobar = ecs.component_struct "foobar" {
 	x = 0.0,
-	y = 0.0,
-	-- v = { type = "vector" },
-	-- m = { type = "matrix" },
+	y = 0.0,	
 }
 
 function foobar:init()

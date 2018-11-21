@@ -34,19 +34,19 @@ local function vfs_init()
 end
 
 local function fetchfirmware()
-	io_req:push("FETCHALL", false, 'firmware')
+	io_req("FETCHALL", false, 'firmware')
 
 	-- wait finish
-	io_req:push("LIST", threadid, 'firmware')
-	local l = io_resp:bpop()
+	io_req("LIST", threadid, 'firmware')
+	local l = io_resp()
 	local result
 	for name, type in pairs(l) do
 		assert(type == false)
-		io_req:push("GET", threadid, 'firmware/' .. name)
+		io_req("GET", threadid, 'firmware/' .. name)
 		if name == 'bootloader.lua' then
-			result = io_resp:bpop()
+			result = io_resp()
 		else
-			io_resp:bpop()
+			io_resp()
 		end
 	end
 	assert(result ~= nil)
@@ -54,8 +54,8 @@ local function fetchfirmware()
 end
 
 local function vfs_exit()
-	io_req:push("EXIT", threadid)
-	return io_resp:bpop()
+	io_req("EXIT", threadid)
+	return io_resp()
 end
 
 vfs_init()

@@ -15,7 +15,7 @@ thread.thread [[
 	local err = thread.channel_consume "errlog"
 
 	while true do
-		print("ERROR:" .. err:bpop())
+		print("ERROR:" .. err())
 	end
 ]]
 

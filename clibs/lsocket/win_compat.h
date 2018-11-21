@@ -26,6 +26,10 @@
 #undef errno
 #endif
 #define errno wsa_errno()
+#ifdef strerror
+#undef strerror
+#endif
+#define strerror(e) wsa_strerror(e)
 
 
 #ifndef EAGAIN
@@ -41,6 +45,7 @@
 int win_getsockopt(SOCKET sockfd, int level, int optname, void *optval, socklen_t *optlen);
 int win_setsockopt(SOCKET sockfd, int level, int optname, const void *optval, socklen_t optlen);
 int wsa_errno();
+const char* wsa_strerror(int errcode);
 int win_select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval * const timeout);
 
 // only support fcntl(fd, F_SETFL, O_NONBLOCK)

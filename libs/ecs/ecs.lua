@@ -14,6 +14,9 @@ local world = {} ; world.__index = world
 local function new_component(w, eid, c, ...)
 	if c then
 		local entity = assert(w[eid])
+		if entity[c] then
+			error(string.format("multiple component defined:%s", c))
+		end
 		entity[c] = w._component_type[c].new()
 		local nc = w._notifycomponent[c]
 		if nc then
@@ -246,7 +249,7 @@ function ecs.new_world(config)
 	local proxy = system.proxy(class.system, w._component_type, singletons)
 
 	local system_methods = system.component_methods(class.system, w._component_type)
-	local init_list = system.init_list(class.system, proxy)
+	local init_list = system.init_list(class.system)
 	local meta = w._entity_meta
 
 	local update_list = system.update_list(class.system, config.update_order, config.update_bydepend)
