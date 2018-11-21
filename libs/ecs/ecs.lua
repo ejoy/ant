@@ -249,7 +249,7 @@ function ecs.new_world(config)
 	local proxy = system.proxy(class.system, w._component_type, singletons)
 
 	local system_methods = system.component_methods(class.system, w._component_type)
-	local init_list = system.init_list(class.system, proxy)
+	local init_list = system.init_list(class.system)
 	local meta = w._entity_meta
 
 	local update_list = system.update_list(class.system, config.update_order, config.update_bydepend)
