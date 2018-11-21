@@ -13,19 +13,19 @@ else
   CMAKE_BUILD_TYPE = -DCMAKE_BUILD_TYPE=Debug
 endif
 
-MSVC_MAKE_INFO := @echo msvc not support make single project, use 'make all msvc=on' instead
+MSVC_MAKE_INFO := @echo msvc not support make single project, use 'make all plat=msvc' instead
 
-ifeq "$(msvc)" ""
-  CMAKE_PROJ_TYPE = MSYS Makefiles
+ifeq "$(plat)" "osx"
+  CMAKE_PROJ_TYPE = Unix Makefiles
   BUILD_PATH := build
-  BGFX_INIT_CMD = make .build/projects/gmake-mingw-gcc
-  BGFX_MAKE_CMD = make mingw-gcc-$(BGFX_CONFIG_TYPE) $(MP)
+  BGFX_INIT_CMD = make .build/projects/gmake-osx
+  BGFX_MAKE_CMD = make osx-$(BGFX_CONFIG_TYPE) $(MP)
   
-  CD_MAKE_CMD	= TEC_UNAME=mingw6_64 MINGW6_64=$(MINGW) make cd $(MP)
+  CD_MAKE_CMD	= TEC_UNAME=clang make cd $(MP)
 
   CMAKE_PROJ_MAKE = make
-  CMAKE_PROJ_CLEAN = make clean
-else
+  CMAKE_PROJ_CLEAN = make clean 
+else ifeq "$(plat)" "msvc"
   CMAKE_PROJ_TYPE = Visual Studio 15 2017 Win64
   BUILD_PATH := build_msvc
 
@@ -37,7 +37,17 @@ else
   CD_MAKE_CMD = $(MSVC_MAKE_INFO)
 
   CMAKE_PROJ_MAKE = $(MSVC_MAKE_INFO)
-  CMAKE_PROJ_CLEAN = $(MSVC_MAKE_INFO)    
+  CMAKE_PROJ_CLEAN = $(MSVC_MAKE_INFO) 
+else
+  CMAKE_PROJ_TYPE = MSYS Makefiles
+  BUILD_PATH := build
+  BGFX_INIT_CMD = make .build/projects/gmake-mingw-gcc
+  BGFX_MAKE_CMD = make mingw-gcc-$(BGFX_CONFIG_TYPE) $(MP)
+  
+  CD_MAKE_CMD	= TEC_UNAME=mingw6_64 MINGW6_64=$(MINGW) make cd $(MP)
+
+  CMAKE_PROJ_MAKE = make
+  CMAKE_PROJ_CLEAN = make clean   
 endif
 
 ASSIMP_FMT_NAMES := AMF 3DS AC ASE ASSBIN ASSXML B3D BVH COLLADA DXF CSM IRR LWO LWS MD2 MD3 MD5 MDC NFF NDO OFF OBJ OGRE OPENGEX PLY MS3D COB BLEND IFC XGL Q3D Q3BSP RAW SIB SMD STL TERRAGEN 3D X X3D GLTF 3MF MMD HMP MDL
