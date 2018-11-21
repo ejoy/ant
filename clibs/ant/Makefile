@@ -1,7 +1,7 @@
 ANT3RD = ../../3rd
 include ant_define.mk
 
-default : ant.exe
+default : libant.a
 
 mingw : default
 

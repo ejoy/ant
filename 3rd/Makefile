@@ -1,5 +1,5 @@
-CMAKE_PROJ = assimp freetype ozz-animation zlib bullet3
-PROJ = $(CMAKE_PROJ) bgfx cd cjson
+CMAKE_PROJ = assimp freetype ozz-animation bullet3
+PROJ = $(CMAKE_PROJ) bgfx cd cjson zlib
 BUILD_CONFIG = release
 
 # should add devenv command's path to system path
@@ -64,6 +64,8 @@ else
   CMAKE_OPT_bullet3=-DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF
 endif
 
+CMAKE_OPT_ozz-animation=-Dozz_build_samples=OFF
+
 .PHONY: info init all clean
 
 info :
@@ -110,6 +112,13 @@ cjson_make: | $(BUILD_PATH)
 	cd lua-cjson && make TARGET=cjson.dll LUA_INCLUDE_DIR=../../clibs/lua CJSON_CFLAGS=-DDISABLE_INVALID_NUMBERS CJSON_LDFLAGS="-shared -L../../clibs/lua -llua53" LUA_BIN_SUFFIX=.lua
 cjson_clean:
 	cd lua-cjson && make clean TARGET=cjson.dll
+
+zlib_init: | $(BUILD_PATH)
+	cd zlib && ./configure
+zlib_make: | $(BUILD_PATH)
+	cd zlib && make
+zlib_clean:
+	cd zlib && make clean
 
 define CMAKE_TEMP
   $(BUILD_PATH)/$(1) : | $(BUILD_PATH)
