@@ -14,6 +14,9 @@ local world = {} ; world.__index = world
 local function new_component(w, eid, c, ...)
 	if c then
 		local entity = assert(w[eid])
+		if entity[c] then
+			error(string.format("multiple component defined:%s", c))
+		end
 		entity[c] = w._component_type[c].new()
 		local nc = w._notifycomponent[c]
 		if nc then
