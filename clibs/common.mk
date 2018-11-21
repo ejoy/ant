@@ -1,9 +1,9 @@
+PLAT = mingw
+
 ODIR = o
 ANT3RD = ../../3rd
 
 LUAINC = -I ../lua
-LUALIB = -L ../lua -llua53
-LUABIN = ../lua/lua.exe
 
 AR= ar rcu
 CC= gcc
@@ -19,3 +19,17 @@ endif
 
 CFLAGS = $(DEBUG_INFO) -Wall
 CXXFLAGS = -lstdc++ -std=c++17
+
+ifeq "$(PLAT)" "mingw"
+
+LUA_FLAGS = -DLUA_BUILD_AS_DLL
+LUALIB = -L ../lua -llua53
+LUABIN = ../lua/lua.exe
+
+else ifeq "$(PLAT)" "osx"
+
+LUA_FLAGS = -DLUA_USE_MACOSX
+LUALIB = -L ../lua -llua
+LUABIN = ../lua/lua
+
+endif
