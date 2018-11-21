@@ -243,6 +243,7 @@ thread_luamain(lua_State *L) {
 	void *ud = lua_touserdata(L, 1);
 	struct thread_args *args = (struct thread_args *)ud;
 	if (luaL_loadbuffer(L, args->source, args->sz, args->source) != LUA_OK) {
+		thread_args_free(args);
 		return lua_error(L);
 	}
 	lua_CFunction f = args->param;
