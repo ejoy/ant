@@ -53,7 +53,7 @@ local w = ecs.new_world { modules = {
 				"test.component.foobar" }, 
 				module_path = module_searchdirs, update_order = { "init" } }
 
-w.enable_system("dummy", false)
+w.enable_system("dummy", true)
 
 print("Step 1")
 w.update()
@@ -62,5 +62,12 @@ w.notify()
 w.enable_system("dummy", true)
 
 print("Step 2")
+w.update()
+w.notify()
+
+print("disable dummy system")
+w.enable_system("dummy", false)
+
+print("Step 3")
 w.update()
 w.notify()

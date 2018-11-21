@@ -18,7 +18,8 @@ dummy.import "foobar"	-- import foobar methods
 function dummy:init()
 	print ("Dummy init")
 	self:init_print()
-	world:new_entity "foobar"
+	local eid = world:new_entity "foobar"
+	--world:add_component(eid, "foobar")
 end
 
 function dummy:update()
