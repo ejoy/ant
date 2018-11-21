@@ -6,8 +6,8 @@ local thread = require 'thread'
 thread.newchannel 'DbgMaster'
 thread.newchannel "DdgNet"
 local io_req = thread.channel_produce "IOreq"
-io_req:push("SUBSCIBE", "DdgNet", "DBG")
-io_req:push("SEND", "DBG", "")
+io_req("SUBSCIBE", "DdgNet", "DBG")
+io_req("SEND", "DBG", "")
 
 ru.createThread('debug', [[
     local thread = require "thread"
@@ -28,7 +28,7 @@ ru.createThread('debug', [[
         return true
     end
     function dbg_io:send(data)
-        io_req:push("SEND", "DBG", data)
+        io_req("SEND", "DBG", data)
     end
     function dbg_io:close()
         self.fclose()

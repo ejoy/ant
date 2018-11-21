@@ -53,12 +53,12 @@ local function init_channels()
 			t[i] = tostring(t[i])
 		end
 		local str = table.concat( t , "\t" )
-		err:push(str)
+		err(str)
 	end
 end
 
 local function init_config()
-	local c = channel.req:bpop()
+	local c = channel.req()
 	config.repopath = assert(c.repopath)
 	config.address = c.address
 	config.port = c.port
@@ -74,48 +74,84 @@ local function connect_server()
 	print("Connecting", config.address, config.port)
 	local fd, err = lsocket.connect(config.address, config.port)
 	if not fd then
-		print(err)
+		print("connect:", err)
 		return
 	end
 	local fdset = { fd }
 	local rd,wt = lsocket.select(nil, fdset)
 	if not rd then
-		print(wt)	-- select error
+		print("select:", wt)	-- select error
 		fd:close()
 		return
 	end
 	local ok, err = fd:status()
 	if not ok then
 		fd:close()
-		print(err)
+		print("status:", err)
 		return
 	end
 	print("Connected")
 	return fd
 end
 
-local offline = {}
-
-function offline:GET(path)
-	local realpath, hash = repo.repo:realpath(path)
-	self:push(realpath, hash)
+-- response io request with id
+local function response_id(id, ...)
+	if id then
+		channel.resp[id](...)
+	end
 end
 
-function offline:LIST(path)
+local offline = {}
+
+function offline.GET(id, path)
+	local realpath, hash = repo.repo:realpath(path)
+	response_id(id, realpath, hash)
+end
+
+function offline.LIST(id, path)
 	local dir = repo.repo:list(path)
 	if dir then
 		local result = {}
 		for k,v in pairs(dir) do
 			result[k] = v.dir
 		end
-		self:push(result)
+		response_id(id, result)
 	else
-		self:push(nil)
+		response_id(id, nil)
 	end
 end
 
-function offline:EXIT()
-	self:push(nil)
+function offline.TYPE(id, fullpath)
+	local path, name = fullpath:match "(.*)/(.-)$"
+	if path == nil then
+		if fullpath == "" then
+			response_id(id, "dir")
+			return
+		end
+		path = ""
+		name = fullpath
+	end
+	local dir, hash = repo.repo:list(path)
+	if dir then
+		local v = dir[name]
+		if v then
+			response_id(id, v.dir and "dir" or "file")
+			return
+		end
+	end
+	response_id(id, nil)
+end
+
+do
+	local function noresponse_function() end
+	offline.FETCHALL = noresponse_function
+	offline.PREFETCH = noresponse_function
+	offline.SUBSCIBE = noresponse_function
+	offline.SEND = noresponse_function
+end
+
+function offline.EXIT(id)
+	response_id(id, nil)
 	error "EXIT"
 end
 
@@ -124,14 +160,14 @@ local function offline_dispatch(cmd, id, ...)
 	if not f then
 		print("Unsupported offline command : ", cmd, id)
 	else
-		f(channel.resp[id], ...)
+		f(id, ...)
 	end
 end
 
 local function work_offline()
 	local c = channel.req
 	while true do
-		offline_dispatch(c:bpop())
+		offline_dispatch(c())
 	end
 end
 
@@ -196,13 +232,6 @@ local function connection_dispose(timeout)
 		table.insert(connection.recvq, data)
 	end
 	return true
-end
-
--- response io request with id
-local function response_id(id, ...)
-	if id then
-		channel.resp[id]:push(...)
-	end
 end
 
 local function request_file(id, hash, path, req)
@@ -497,7 +526,7 @@ local function dispatch_net(cmd, ...)
 	if not f then
 		local channel_name = connection.subscibe[cmd]
 		if channel_name then
-			channel.user[channel_name]:push(cmd, ...)
+			channel.user[channel_name](cmd, ...)
 		else
 			print("Unsupport net command", cmd)
 		end

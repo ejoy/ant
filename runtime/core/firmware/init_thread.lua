@@ -22,13 +22,13 @@ local function npath(path)
 end
 
 local function vfs_get(path)
-	io_req:push("GET", threadid, npath(path))
-	return io_resp:bpop()
+	io_req("GET", threadid, npath(path))
+	return io_resp()
 end
 
 local function vfs_type(path)
-	io_req:push("TYPE", threadid, npath(path))
-	return io_resp:bpop()
+	io_req("TYPE", threadid, npath(path))
+	return io_resp()
 end
 
 -- Step 3. init dofile and loadfile
