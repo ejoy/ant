@@ -56,12 +56,19 @@ end
 
 function callback.keypress(k, state)
 	local ispress = state & 0x10
-	local cas = string.format("%s%s%s", 
-		state & 0x01 and "c" or "_",
-		state & 0x02 and "a" or "_",
-		state & 0x04 and "s" or "_")
 
-	iq:push("keypress", k, ispress, cas)
+	local function what_state(state, bit)
+		if state & bit then
+			return true
+		end		
+	end
+	local status = {}
+	status['C'] = what_state(state, 0x01)
+	status['A'] = what_state(state, 0x02)
+	status['S'] = what_state(state, 0x04)
+	status['Y'] = what_state(state, 0x08)
+
+	iq:push("keypress", k, ispress, status)
 end
 
 function callback.exit()	

@@ -41,9 +41,10 @@ function callback.keypress(key, state)
 	local ctrl = state & 0x01
 	local alt = state & 0x02
 	local shift = state & 0x04
-	local leftOrright = state &0x08
+	local sys = state &0x08
 	local press = state & 0x10
-	print("KEYBOARD", key, "ctrl", ctrl, "alt", alt, "shift", shift, "left|right", leftOrright, "is pressed", press)
+	local leftOrright = state & 0x20
+	print("KEYBOARD", key, "ctrl", ctrl, "alt", alt, "shift", shift, "sys", sys, "left|right", leftOrright, "is pressed", press)
 end
 
 local s_stats = {}

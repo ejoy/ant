@@ -32,7 +32,8 @@ get_cas_keystate(LPARAM lParam) {
 	set_bit(GetKeyState(VK_CONTROL), KB_CTRL, &state);
 	set_bit(GetKeyState(VK_MENU), KB_ALT, &state);
 	set_bit(GetKeyState(VK_SHIFT), KB_SHIFT, &state);
-	set_bit(lParam & (0x1 << 24), KB_CAS_LEFTORRIGHT, &state);	
+	set_bit(GetKeyState(VK_LWIN) || GetKeyState(VK_RWIN), KB_SYS, &state);
+	set_bit(lParam & (0x1 << 24), KB_CAS_LEFTORRIGHT, &state);
 	return state;
 }
 
