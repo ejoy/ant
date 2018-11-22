@@ -15,7 +15,7 @@ endif
 
 MSVC_MAKE_INFO := @echo msvc not support make single project, use 'make all plat=msvc' instead
 
-ifeq "$(plat)" "osx"
+ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles
   BUILD_PATH := build
   BGFX_INIT_CMD = make .build/projects/gmake-osx
@@ -25,7 +25,7 @@ ifeq "$(plat)" "osx"
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean 
-else ifeq "$(plat)" "msvc"
+else ifeq "$(PLAT)" "msvc"
   CMAKE_PROJ_TYPE = Visual Studio 15 2017 Win64
   BUILD_PATH := build_msvc
 
@@ -58,10 +58,10 @@ CMAKE_OPT_freetype :=-DCMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE -DCMAKE_DISABLE_FIN
 # disable build bullet demos and tests
 
 
-ifeq "$(msvc)" "on"
+ifeq "$(PLAT)" "msvc"
   CMAKE_OPT_bullet3 = -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON -DBUILD_BULLET2_DEMOS=ON -DBUILD_UNIT_TESTS=ON
 else
-  CMAKE_OPT_bullet3=-DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF
+  CMAKE_OPT_bullet3=-DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF -DLIBRARY_OUTPUT_PATH=../../lib
 endif
 
 CMAKE_OPT_ozz-animation=-Dozz_build_samples=OFF
