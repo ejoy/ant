@@ -1,14 +1,21 @@
 BIN = .
-PLAT = mingw
 LIBS := math3d lsocket redirectfd lfs bgfx remotedebug memoryfile \
  crypt assimplua hierarchy cppfs debugger thread protocol bullet window filewatch
 
 ALL_LIBS := $(LIBS) lua iup
 
+include common.mk
+
 .PHONY: $(ALL_LIBS) $(foreach v,$(ALL_LIBS),build_$(v) clean_$(v) copy_$(v))
 
 IUPLIBS = iuplua scintilla iupluaimglib iupluacontrols
 TARS = $(foreach v,$(LIBS) $(IUPLIBS),$(BIN)/$(v).dll)
+
+ifeq "$(PLAT)" "osx"
+LUA_PLAT = macosx
+else
+LUA_PLAT = $(PLAT)
+endif
 
 #all : $(TARS) $(BIN)/iup.exe $(BIN)/lua53.dll $(BIN)/lua.exe 
 all: $(ALL_LIBS)
@@ -17,7 +24,7 @@ all: $(ALL_LIBS)
 copy_lua: build_lua
 	cp lua/lua53.dll lua/lua.exe $(BIN)
 build_lua:
-	cd lua && $(MAKE) $(PLAT)
+	cd lua && $(MAKE) $(LUA_PLAT)
 clean_lua:
 	cd lua && $(MAKE) clean
 

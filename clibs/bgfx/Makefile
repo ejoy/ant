@@ -4,7 +4,10 @@ include bgfx_define.mk
 THREADINC=-I ../thread
 
 # Use make BGFXROOT=your_bgfx_path
+ifeq "$(PLAT)" "mingw"
 CFLAGS += -Wno-misleading-indentation -Wno-unused-but-set-variable
+else ifeq "$(PLAT)" "osx"
+endif
 
 mingw : bgfx.dll
 
@@ -13,16 +16,16 @@ $(ODIR)/ibcompress.o : ibcompress.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -std=c++11 -c -o $@ $^ $(BGFXINC) $(BGFX3RDINC)
 
 $(ODIR)/baselib.o : baselib.cpp | $(ODIR)
-	$(CXX) $(CFLAGS) -std=c++11 -c -DLUA_BUILD_AS_DLL -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC)
+	$(CXX) $(CFLAGS) -std=c++11 -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC)
 
 $(ODIR)/luabgfx.o : luabgfx.c  | $(ODIR)
-	$(CC) $(CFLAGS) -c -DLUA_BUILD_AS_DLL -o $@ $^ $(THREADINC) $(LUAINC) $(BGFXINC)
+	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(THREADINC) $(LUAINC) $(BGFXINC)
 
 $(ODIR)/luabgfxutil.o : luabgfxutil.c  | $(ODIR)
-	$(CC) $(CFLAGS) -c -DLUA_BUILD_AS_DLL -o $@ $^ $(LUAINC) $(BGFXINC)
+	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC)
 
 $(ODIR)/nuklearlua.o : nuklearlua.c | $(ODIR)
-	$(CC) $(CFLAGS) -c -DLUA_BUILD_AS_DLL -o $@ $^ $(LUAINC) $(BGFXINC)
+	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC)
 
 bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/ibcompress.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o $(ODIR)/nuklearlua.o
 	$(CC) $(CFLAGS) --shared -o $@ $^ $(LUALIB) $(BGFXUTILLIB) $(BIMGLIB) $(BGFXLIB)

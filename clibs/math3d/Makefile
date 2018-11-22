@@ -5,13 +5,13 @@ GLM_INC = -I $(ANT3RD)/glm
 mingw : math3d.dll
 
 linalg.o : linalg.c
-	gcc -c $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB) $(LUAINC) $(GLM_INC)
+	gcc -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC)
 
 math3d.o : math3d.cpp
-	gcc -c $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB) $(LUAINC) $(GLM_INC)
+	gcc -c -std=c++17 $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC) -Wchar-subscripts
 
 mathbaselib.o : mathbaselib.cpp
-	gcc -c $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB) $(LUAINC) $(GLM_INC)
+	gcc -c -std=c++17 $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC)
 
 math3d.dll : linalg.o math3d.o mathbaselib.o
 	gcc --shared $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB) $(LUAINC) $(GLM_INC)

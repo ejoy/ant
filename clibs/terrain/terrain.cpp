@@ -9,12 +9,13 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+#include <bgfx/bgfx.h>
+
 extern "C" {
 #include <bgfx/c99/bgfx.h>
 #include <bgfx/c99/platform.h>
 }
 
-#include <bgfx/bgfx.h>
 #include <bx/allocator.h>
 #include <stdio.h>
 #include <math.h>

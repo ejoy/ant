@@ -12,7 +12,6 @@ local whitelist = {
     crypt = true,
     debugger = true,
     lsocket = true,
-    memoryfile = true,
     protocol = true,
     remotedebug = true,
     lfs = true,

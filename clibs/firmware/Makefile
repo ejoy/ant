@@ -3,7 +3,7 @@ include ../common.mk
 mingw : firmware.dll
 
 firmware.o : firmware.c
-	gcc -c $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC)
+	gcc -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
 firmware.dll : firmware.o
 	gcc --shared $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC)

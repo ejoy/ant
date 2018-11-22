@@ -1,4 +1,5 @@
 #include "hierarchy.h"
+#include "ozz_mesh/mesh.h"
 
 extern "C" {
 #define LUA_LIB
@@ -21,14 +22,9 @@ extern "C" {
 #include <ozz/base/io/archive.h>
 #include <ozz/base/containers/vector.h>
 
-// for ozz/sample
-#include <ozz-animation/samples/framework/mesh.h>
-#include <ozz-animation/samples/framework/utils.h>
-
 // glm
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
 
 // stl
 #include <string>
@@ -638,6 +634,32 @@ create_buffer(ozzmesh *om) {
 		}
 	} else {
 		om->static_buffer = nullptr;
+	}
+}
+
+namespace ozz {
+	namespace sample {
+		static bool LoadMesh(const char* _filename, ozz::sample::Mesh* _mesh) {
+			assert(_filename && _mesh);
+			//ozz::log::Out() << "Loading mesh archive: " << _filename << "." << std::endl;
+			ozz::io::File file(_filename, "rb");
+			if (!file.opened()) {
+				//ozz::log::Err() << "Failed to open mesh file " << _filename << "."
+				//	<< std::endl;
+				return false;
+			}
+			ozz::io::IArchive archive(&file);
+			if (!archive.TestTag<ozz::sample::Mesh>()) {
+				//ozz::log::Err() << "Failed to load mesh instance from file " << _filename
+				//	<< "." << std::endl;
+				return false;
+			}
+
+			// Once the tag is validated, reading cannot fail.
+			archive >> *_mesh;
+
+			return true;
+		}
 	}
 }
 

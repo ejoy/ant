@@ -1,3 +1,5 @@
+include ../common.mk
+
 # lsocket Makefile, works on Linux and Mac OS X, everywhere else roll your own.
 #
 # Gunnar Zötl <gz@tset.de>, 2013-2015.
@@ -66,14 +68,24 @@ clean:
 
 mingw: lsocket.dll
 
-lsocket.o : lsocket.c win_compat.h
-	$(CC) -c -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $< -lws2_32 -I $(LUA_INCDIR) -L $(LUA_DIR) -llua53
+
+ifeq "$(PLAT)" "mingw"
 
 win_compat.o : win_compat.c win_compat.h
-	$(CC) -c -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $< -lws2_32 -I $(LUA_INCDIR) -L $(LUA_DIR) -llua53
+	$(CC) -c -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $< -I $(LUA_INCDIR)
 
 lsocket.dll : lsocket.o win_compat.o
-	$(CC) -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $^ $(LDFLAGS) -lws2_32 -I $(LUA_INCDIR) -L $(LUA_DIR) -llua53
+	$(CC) -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $^ $(LDFLAGS) -lws2_32 -I $(LUA_INCDIR) $(LUALIB)
 
 liblsocket.a : lsocket.o win_compat.o
 	ar rsv $@ $^
+
+else
+
+lsocket.o : lsocket.c win_compat.h
+	$(CC) -c -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $< -I $(LUA_INCDIR)
+
+liblsocket.a : lsocket.o
+	ar rsv $@ $^
+
+endif
