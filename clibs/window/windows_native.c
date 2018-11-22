@@ -85,7 +85,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		cb->message(cb->ud, &msg);
 		break;
 
-	case WM_CHAR:
+	case WM_KEYDOWN:
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		msg.type = ANT_WINDOW_KEYBOARD;
 		msg.u.keyboard.state = get_cas_keystate(lParam);

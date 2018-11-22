@@ -1,3 +1,4 @@
+--luacheck: globals iup
 local util = {}
 
 local counter = 0
@@ -21,20 +22,30 @@ function util.add_callbacks(ctrl, inst, funcs)
 	end
 end
 
+function util.regitster_iup(msgqueue, ctrl)	
+	local ctrl_cb = {
+		"button",
+		"motion",		
+		"resize",
+		"wheel"
+	}
 
-local ctrl_cb = {
-	"button",
-	"motion",
-	"keypress",
-	"resize",
-	"wheel"
-}
-
-function util.regitster_iup(msgqueue, ctrl)
-	for _, cb in ipairs(ctrl_cb) do
-		ctrl[cb .. "_cb"] = function(_, ...)
-			msgqueue:push(cb, ...)
+	for _, name in ipairs(ctrl_cb) do
+		ctrl[name .. "_cb"] = function(_, ...)
+			msgqueue:push(name, ...)
 		end
+	end
+
+	ctrl.keypress_cb = function(_, key, press)		
+		local fmt = "     %s%s%s%s "	-- 5 spaces + ALT CTRL SYS SHIFT + 1 space
+
+		local syskey_states = string.format(fmt,
+			iup.isAltXkey(key) and "A" or " ",
+			iup.isCtrlXkey(key) and "C" or " ",
+			iup.isSysXkey(key) and "Y" or " ",
+			iup.isShiftXkey(key) and "S" or " ")
+		assert(#syskey_states == 10)
+		msgqueue:push("keypress", key, press, syskey_states)
 	end
 end
 

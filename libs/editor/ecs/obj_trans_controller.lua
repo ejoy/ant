@@ -204,11 +204,11 @@ end
 local function register_message(msg_comp, ot, ms)
     local message = {}
 
-    function message:keypress(c, p)        
+    function message:keypress(c, p, cas)
         if c == nil then return end
 
         if p then 
-            if c == "SP" then
+            if c == ' ' then
                 local map = {
                     [""] = "pos_transform",
                     pos_transform = "scale_transform",
@@ -221,19 +221,21 @@ local function register_message(msg_comp, ot, ms)
 
                 update_contorller(ot, ms)
             else
-                local upC = string.upper(c)                
-                if upC == "CT" then   -- shift + T
-                    ot.selected_mode = "pos_transform"
-                elseif upC == "CR" then   -- shift + R
-                    ot.selected_mode = "rotator_transform"
-                elseif upC == "CS" then   -- shift + S
-                    ot.selected_mode = "scale_transform"
-                elseif upC == "CP" then                
-                    if ot.selected_eid then
-                        print_select_object_transform(ms, ot.selected_eid)
-                    end
-                end
-            
+				local clower = c:lower()
+				local isshift = cas[3] == "s"
+				if isshift then
+					if clower == "t" then   -- shift + T
+						ot.selected_mode = "pos_transform"
+					elseif clower == "r" then   -- shift + R
+						ot.selected_mode = "rotator_transform"
+					elseif clower == "s" then   -- shift + S
+						ot.selected_mode = "scale_transform"
+					elseif clower == "p" then
+						if ot.selected_eid then
+							print_select_object_transform(ms, ot.selected_eid)
+						end
+					end					
+				end            
             end
         end
 

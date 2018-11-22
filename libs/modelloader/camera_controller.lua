@@ -69,7 +69,7 @@ function camera_controller_system:init()
 		camera_move(ms, camera.rotation, camera.position, 0, 0, delta * move_speed)
 	end
 
-	function message:keypress(c, p, status)
+	function message:keypress(c, p)
 		if c == nil then return end
 		if not p then return end
 		local c = c:upper()

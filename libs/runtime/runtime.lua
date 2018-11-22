@@ -24,6 +24,7 @@ local inputmgr = require "inputmgr"
 local iq = inputmgr.queue {
 	button = "_,_,_,_,_",
 	motion = "_,_,_",
+	keypress="_,_,_",
 }
 
 local callback = {}
@@ -53,10 +54,14 @@ function callback.touch(what, x, y)
 	iq:push("button", btn, p, x, y)
 end
 
-function callback.keypress(k, p)
-	if not p then
-		print(k)
-	end
+function callback.keypress(k, state)
+	local ispress = state & 0x10
+	local cas = string.format("%s%s%s", 
+		state & 0x01 and "c" or "_",
+		state & 0x02 and "a" or "_",
+		state & 0x04 and "s" or "_")
+
+	iq:push("keypress", k, ispress, cas)
 end
 
 function callback.exit()	
