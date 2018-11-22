@@ -1,14 +1,14 @@
-LUAINC = -I ../lua
-LUALIB = -L ../lua -llua53
+include ../common.mk
+
 CFLAGS = -O2 -Wall
 
 mingw : crypt.dll
 
 lua-crypt.o : lua-crypt.c
-	gcc -c $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC)
+	gcc -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
 lsha1.o : lsha1.c
-	gcc -c $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC)
+	gcc -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
 crypt.dll : lua-crypt.o lsha1.o
 	gcc --shared $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC)

@@ -1,5 +1,5 @@
-CMAKE_PROJ = assimp freetype ozz-animation zlib bullet3
-PROJ = $(CMAKE_PROJ) bgfx cd cjson
+CMAKE_PROJ = assimp freetype ozz-animation bullet3
+PROJ = $(CMAKE_PROJ) bgfx cd cjson zlib
 BUILD_CONFIG = release
 
 # should add devenv command's path to system path
@@ -13,19 +13,19 @@ else
   CMAKE_BUILD_TYPE = -DCMAKE_BUILD_TYPE=Debug
 endif
 
-MSVC_MAKE_INFO := @echo msvc not support make single project, use 'make all msvc=on' instead
+MSVC_MAKE_INFO := @echo msvc not support make single project, use 'make all plat=msvc' instead
 
-ifeq "$(msvc)" ""
-  CMAKE_PROJ_TYPE = MSYS Makefiles
+ifeq "$(PLAT)" "osx"
+  CMAKE_PROJ_TYPE = Unix Makefiles
   BUILD_PATH := build
-  BGFX_INIT_CMD = make .build/projects/gmake-mingw-gcc
-  BGFX_MAKE_CMD = make mingw-gcc-$(BGFX_CONFIG_TYPE) $(MP)
+  BGFX_INIT_CMD = make .build/projects/gmake-osx
+  BGFX_MAKE_CMD = make osx-$(BGFX_CONFIG_TYPE) $(MP)
   
-  CD_MAKE_CMD	= TEC_UNAME=mingw6_64 MINGW6_64=$(MINGW) make cd $(MP)
+  CD_MAKE_CMD	= TEC_UNAME=clang make cd $(MP)
 
   CMAKE_PROJ_MAKE = make
-  CMAKE_PROJ_CLEAN = make clean
-else
+  CMAKE_PROJ_CLEAN = make clean 
+else ifeq "$(PLAT)" "msvc"
   CMAKE_PROJ_TYPE = Visual Studio 15 2017 Win64
   BUILD_PATH := build_msvc
 
@@ -37,7 +37,17 @@ else
   CD_MAKE_CMD = $(MSVC_MAKE_INFO)
 
   CMAKE_PROJ_MAKE = $(MSVC_MAKE_INFO)
-  CMAKE_PROJ_CLEAN = $(MSVC_MAKE_INFO)    
+  CMAKE_PROJ_CLEAN = $(MSVC_MAKE_INFO) 
+else
+  CMAKE_PROJ_TYPE = MSYS Makefiles
+  BUILD_PATH := build
+  BGFX_INIT_CMD = make .build/projects/gmake-mingw-gcc
+  BGFX_MAKE_CMD = make mingw-gcc-$(BGFX_CONFIG_TYPE) $(MP)
+  
+  CD_MAKE_CMD	= TEC_UNAME=mingw6_64 MINGW6_64=$(MINGW) make cd $(MP)
+
+  CMAKE_PROJ_MAKE = make
+  CMAKE_PROJ_CLEAN = make clean   
 endif
 
 ASSIMP_FMT_NAMES := AMF 3DS AC ASE ASSBIN ASSXML B3D BVH COLLADA DXF CSM IRR LWO LWS MD2 MD3 MD5 MDC NFF NDO OFF OBJ OGRE OPENGEX PLY MS3D COB BLEND IFC XGL Q3D Q3BSP RAW SIB SMD STL TERRAGEN 3D X X3D GLTF 3MF MMD HMP MDL
@@ -48,11 +58,13 @@ CMAKE_OPT_freetype :=-DCMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE -DCMAKE_DISABLE_FIN
 # disable build bullet demos and tests
 
 
-ifeq "$(msvc)" "on"
+ifeq "$(PLAT)" "msvc"
   CMAKE_OPT_bullet3 = -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON -DBUILD_BULLET2_DEMOS=ON -DBUILD_UNIT_TESTS=ON
 else
-  CMAKE_OPT_bullet3=-DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF
+  CMAKE_OPT_bullet3=-DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF -DLIBRARY_OUTPUT_PATH=../../lib
 endif
+
+CMAKE_OPT_ozz-animation=-Dozz_build_samples=OFF
 
 .PHONY: info init all clean
 
@@ -100,6 +112,13 @@ cjson_make: | $(BUILD_PATH)
 	cd lua-cjson && make TARGET=cjson.dll LUA_INCLUDE_DIR=../../clibs/lua CJSON_CFLAGS=-DDISABLE_INVALID_NUMBERS CJSON_LDFLAGS="-shared -L../../clibs/lua -llua53" LUA_BIN_SUFFIX=.lua
 cjson_clean:
 	cd lua-cjson && make clean TARGET=cjson.dll
+
+zlib_init: | $(BUILD_PATH)
+	cd zlib && ./configure
+zlib_make: | $(BUILD_PATH)
+	cd zlib && make
+zlib_clean:
+	cd zlib && make clean
 
 define CMAKE_TEMP
   $(BUILD_PATH)/$(1) : | $(BUILD_PATH)

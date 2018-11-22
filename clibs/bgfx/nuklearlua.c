@@ -12,6 +12,10 @@
 
 #include "luabgfx.h"
 
+#if !defined(_WIN32)
+#define stricmp strcasecmp
+#endif
+
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
 
@@ -103,7 +107,7 @@ lnk_load_image(lua_State *L)
 	int w,h,n;
     unsigned char *data = loadImage(filename, &w, &h, &n, 0);
     if (!data) 
-        printf_s("can not load image %s.\n",filename);
+        printf("can not load image %s.\n",filename);
 
     int size = w * h *n;
     const bgfx_memory_t *m = bgfx_alloc(size);    
@@ -146,7 +150,7 @@ lnk_load_image_data(lua_State *L)
 	int w,h,n;
     unsigned char *data = loadImage(filename, &w, &h, &n, 0);
     if (!data) 
-        printf_s("can not load image %s.\n",filename);
+        printf("can not load image %s.\n",filename);
 
 	lua_newtable(L);
 	lua_pushlstring(L,(const char*)data,w*h*n);
@@ -510,7 +514,7 @@ add_font(lua_State *L,struct lnk_context *lc) {
 	const char *ttf_m = luaL_checklstring(L, -1, &ttf_len);
 	lua_pop(L,1);
 	#ifdef MY_DEBUG
-	printf_s("ttf mem size = %zuk\n", ttf_len/1024);
+	printf("ttf mem size = %zuk\n", ttf_len/1024);
 	#endif 
 
 	lua_geti(L,-1,3);     							// font size
@@ -938,9 +942,9 @@ struct nk_color lnk_checkcolor(lua_State*L,int index)
 	size_t len = 0;
 	const char *color_string = lua_tolstring(L,index,&len);
 	int r,g,b,a = 255;
-	sscanf_s(color_string,"#%02x%02x%02x",&r,&g,&b);
+	sscanf(color_string,"#%02x%02x%02x",&r,&g,&b);
 	if( len==9 )
-		sscanf_s(color_string+7,"%02x",&a);
+		sscanf(color_string+7,"%02x",&a);
 	
 	struct nk_color color = {(nk_byte)r,(nk_byte)g,(nk_byte)b,(nk_byte)a};
 	return color;
