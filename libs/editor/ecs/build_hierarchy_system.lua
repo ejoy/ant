@@ -5,6 +5,7 @@ ecs.import "render.math3d.math_component"
 
 local hierarchy_module = require "hierarchy"
 local path = require "filesystem.path"
+local fu = require "filesystem.util"
 
 local build_system = ecs.system "build_hierarchy_system"
 build_system.singleton "math_stack"
@@ -70,13 +71,13 @@ local function rebuild_hierarchy(ms, iterop)
 		local assetdir = assetmgr.assetdir()
 		if hascache then
 			local assetpath = path.join(assetdir, epath)
-			path.create_dirs(path.parent(assetpath))
+			fu.create_dirs(path.parent(assetpath))
 			hierarchy_module.save(root, assetpath)
 		end
 
 		local builddata = hierarchy_module.build(root)
 		local pp = path.join(assetdir, rpath)
-		path.create_dirs(path.parent(pp))
+		fu.create_dirs(path.parent(pp))
 		hierarchy_module.save(builddata, pp)
 	end
 	--[@

@@ -4,6 +4,7 @@ local world = ecs.world
 ecs.import "serialize.serialize_component"
 
 local seri_util = require "serialize.util"
+local fu = require "filesystem.util"
 local path = require "filesystem.path"
 local assetmgr = require "asset"
 
@@ -12,7 +13,7 @@ to_luatabletext.singleton "serialization_tree"
 
 local function get_map_filename(mapname)
     local subfolder = "map"
-    path.create_dirs(subfolder)
+    fu.create_dirs(subfolder)
 
     return path.join(subfolder, mapname .. ".lua")
 end

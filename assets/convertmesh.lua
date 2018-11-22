@@ -14,9 +14,10 @@ dofile(rootdir .. "/libs/init.lua")
 
 local meshcreator = require "assimplua"
 local path = require "filesystem.path"
+local fu = require "filesystem.util"
 
 local meshfiles = {}
-path.listfiles("./meshes", meshfiles, {"fbx", "FBX", "bin"})
+fu.listfiles("./meshes", meshfiles, {"fbx", "FBX", "bin"})
 local modelutil = require "modelloader.util"
 local config = modelutil.default_config()
 

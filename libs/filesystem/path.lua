@@ -1,4 +1,3 @@
-local fs = require "lfs"
 local path = {}
 path.__index = path
 
@@ -89,95 +88,6 @@ function path.trim_slash(fullpath)
     local m = fullpath:match("^%s*[/\\]*(.+)[/\\]%s*$")
     return m or fullpath
 end
-
-function path.create_dirs(fullpath)    
-	fullpath = path.normalize(path.trim_slash(fullpath))
-	if not path.is_absolute_path(fullpath) then
-		fullpath = path.join(fs.currentdir(), fullpath)
-	end
-	local tmp
-	for m in fullpath:gmatch("[^\\/]+") do        
-		tmp = tmp and path.join(tmp, m) or m
-		if not fs.exist(tmp) then
-            fs.mkdir(tmp)
-        end
-    end
-end
-
-function path.isdir(filepath)
-	local m = fs.attributes(filepath, "mode")
-	return m == "directory"
-end
-
-function path.isfile(filepath)
-	local m = fs.attributes(filepath, "mode")
-	return m == "file"
-end
-
-function path.remove(subpath)
-	for name in path.dir(subpath) do	
-		local fullpath = path.join(subpath, name)
-		if path.isdir(fullpath) then
-			path.remove(fullpath)
-		else
-			fs.remove(fullpath)
-		end	
-	end
-
-	fs.rmdir(subpath)
-end
-
-function path.dir(subfolder, filters)
-	local oriiter, d, idx = fs.dir(subfolder)
-
-	local function iter(d)
-		local name = oriiter(d)
-		if name == "." or name == ".." then
-			return iter(d)
-		end
-		if filters then
-			for _, f in ipairs(filters) do
-				if f == name then
-					return iter(d)
-				end
-			end
-		end
-		return name
-	end
-	return iter, d, idx
-end
-
-function path.listfiles(subfolder, files, filter_exts)	
-	if not fs.exist(subfolder) then
-		return
-	end
-	for p in path.dir(subfolder) do
-		local filepath = path.join(subfolder, p)
-		if path.isdir(filepath) then
-			path.listfiles(filepath, files, filter_exts)
-		else
-			if filter_exts then
-				if type(filter_exts) == "function" then
-					if filter_exts(filepath) then
-						table.insert(files, filepath)
-					end
-				else
-					assert(type(filter_exts) == "table")
-					local ext = path.ext(p)
-					for _, e in ipairs(filter_exts) do
-						if ext == e then
-							table.insert(files, filepath)
-						end
-					end
-				end
-
-			else
-				table.insert(files, filepath)
-			end
-		end
-	end
-end
-
 
 function path.replace_path(srcpath, checkpath, rplpath)
 	local config = require "common.config"

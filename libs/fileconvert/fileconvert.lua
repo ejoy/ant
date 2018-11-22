@@ -1,5 +1,6 @@
 local fs = require "lfs"
 local path = require "filesystem.path"
+local fu = require "filesystem.util"
 local rawtable = require "common.rawtable"
 local rules = {}
 
@@ -26,7 +27,7 @@ end
 local logfile = nil
 if cfgcontent.logfile then
 	local logfilepath = cfgcontent.logfile
-	path.create_dirs(path.parent(logfilepath))
+	fu.create_dirs(path.parent(logfilepath))
 	logfile = io.open(logfilepath, "w")
 elseif cfgcontent.debug_print then
 	logfile = io.stdout
@@ -79,12 +80,12 @@ end
 local fileconvertor = {}
 
 local function mesh_filter(absdir, files)
-	path.listfiles(absdir, files, {"bin", "fbx"})
+	fu.listfiles(absdir, files, {"bin", "fbx"})
 end
 
 local filefetchers = {
 	["shaders/src"] = function (absdir, files)
-		path.listfiles(absdir, files,
+		fu.listfiles(absdir, files,
 		function (filepath) 
 			local ext = path.ext(filepath)
 			if ext == "sc" then
