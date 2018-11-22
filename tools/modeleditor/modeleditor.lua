@@ -10,7 +10,7 @@ local su = require "scene.util"
 
 
 local inputmgr = require "inputmgr"
-local mapiup = require "inputmgr.mapiup"
+local mapiup = require "editor.input.mapiup"
 
 local elog = require "editor.log"
 local task = require "editor.task"
