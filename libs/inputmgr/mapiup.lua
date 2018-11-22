@@ -7,7 +7,7 @@ for k, v in pairs(iup) do
 		type(k) == "string" then 
 		local iup_name = k:match("K_([%w_%d]+)")
 		if iup_name then
-			iupcodemap[v] = iupcodemap
+			iupcodemap[v] = iup_name
 		end
 	end
 end
@@ -38,6 +38,9 @@ function iup_keymap_mt:__index(iupkey)
 	end
 
 	local name = iup.isXkey(basekey) and get_keyname(basekey) or string.char(basekey)
+	if name ~= '' then
+		assert(keymap.code(name))
+	end
 	self[iupkey] = name
 	return name
 end
