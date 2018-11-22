@@ -5,7 +5,7 @@ local log = log and log(...) or print
 
 local rawtable = require "common.rawtable"
 local path = require "filesystem.path"
-local mesh_loader = require "modelloader.loader"
+local mesh_loader = require "modelloader"
 local assetmgr = require "asset"
 
 local function gen_antmesh_filepath(filename)

@@ -11,9 +11,9 @@
 -- assetmgr.
 
 
-local assimp = require "assimplua"
+local meshcreator = require "meshconverter"
 
-assimp.ConvertFBX("../../assets/build/meshes/PVPScene/BH-Scene-campsite-Door.FBX", "./BH-Scene-campsite-Door.antmesh", {
+meshcreator.ConvertFBX("../../assets/build/meshes/PVPScene/BH-Scene-campsite-Door.FBX", "./BH-Scene-campsite-Door.antmesh", {
 	layout = "p3|n|T|b|t20|c30",
 	flags = {
 		gen_normal = false,
