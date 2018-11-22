@@ -68,8 +68,8 @@ clean:
 
 mingw: lsocket.dll
 
-lsocket.o : lsocket.c win_compat.h
-	$(CC) -c -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $< -I $(LUA_INCDIR)
+
+ifeq "$(PLAT)" "mingw"
 
 win_compat.o : win_compat.c win_compat.h
 	$(CC) -c -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $< -I $(LUA_INCDIR)
@@ -79,3 +79,13 @@ lsocket.dll : lsocket.o win_compat.o
 
 liblsocket.a : lsocket.o win_compat.o
 	ar rsv $@ $^
+
+else
+
+lsocket.o : lsocket.c win_compat.h
+	$(CC) -c -o $@ -Wall $(OPT) $(DBG) $(INCDIRS) $< -I $(LUA_INCDIR)
+
+liblsocket.a : lsocket.o
+	ar rsv $@ $^
+
+endif

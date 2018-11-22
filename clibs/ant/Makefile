@@ -1,7 +1,7 @@
 ANT3RD = ../../3rd
 include ant_define.mk
 
-default : libant.a
+default : ant.exe
 
 mingw : default
 
@@ -21,8 +21,13 @@ endef
 $(foreach v, $(ALLLIBS), $(eval $(call UnpackLibs,$(v))))
 UNPACKLIBS= $(foreach v, $(ALLLIBS), unpack_lib$(v).a)
 
+ifeq "$(PLAT)" "mingw"
 liblua.a :
 	cd ../lua && $(MAKE) "MYOBJS=utf8_unicode.o utf8_crt.o" $@ && mv $@ ../ant/tmp
+else
+liblua.a :
+	cd ../lua && $(MAKE) $@ && mv $@ ../ant/tmp
+endif
 
 libcjson.a :
 	cd ../../3rd/lua-cjson/ && $(MAKE) "LUA_INCLUDE_DIR=../../clibs/lua" "CJSON_LDFLAGS=" "TARGET=libcjson.a" "AR=ar rsv" && mv libcjson.a ../../clibs/ant/tmp
