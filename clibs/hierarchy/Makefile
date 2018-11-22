@@ -17,7 +17,7 @@ $(OBJ_FILES): %.o: %.cpp
 hierarchy.dll : $(OBJ_FILES)
 	$(CXX) --shared $(CXXFLAGS) -o $@ $^ $(LUALIB) $(LUAINC) $(GLM_DIR) $(OZZINC) $(OZZRUNTIME) $(OZZOFFLINE) $(OZZGEOMERTY) $(OZZBASE)
 
-libhierarchy.a : hierarchy.o animation.o
+libhierarchy.a : $(OBJ_FILES)
 	ar rsv $@ $^
 
 clean :
