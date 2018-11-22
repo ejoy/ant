@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\clibs\hierarchy\animation.cpp" />
     <ClCompile Include="..\..\clibs\hierarchy\hierarchy.cpp" />
-    <ClCompile Include="..\..\clibs\hierarchy\ozz_mesh\mesh.cc" />
+    <ClCompile Include="..\..\clibs\hierarchy\ozz_mesh\mesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\hierarchy\hierarchy.h" />

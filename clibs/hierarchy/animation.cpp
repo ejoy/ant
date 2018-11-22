@@ -1,4 +1,5 @@
 #include "hierarchy.h"
+#include "ozz_mesh/mesh.h"
 
 extern "C" {
 #define LUA_LIB
@@ -21,14 +22,9 @@ extern "C" {
 #include <ozz/base/io/archive.h>
 #include <ozz/base/containers/vector.h>
 
-// for ozz/sample
-#include <ozz-animation/samples/framework/mesh.h>
-#include <ozz-animation/samples/framework/utils.h>
-
 // glm
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
 
 // stl
 #include <string>

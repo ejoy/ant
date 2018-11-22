@@ -24,7 +24,7 @@
     <ClCompile Include="..\..\clibs\hierarchy\animation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\hierarchy\ozz_mesh\mesh.cc">
+    <ClCompile Include="..\..\clibs\hierarchy\ozz_mesh\mesh.cpp">
       <Filter>ozz_mesh</Filter>
     </ClCompile>
   </ItemGroup>
