@@ -641,6 +641,32 @@ create_buffer(ozzmesh *om) {
 	}
 }
 
+namespace ozz {
+	namespace sample {
+		static bool LoadMesh(const char* _filename, ozz::sample::Mesh* _mesh) {
+			assert(_filename && _mesh);
+			//ozz::log::Out() << "Loading mesh archive: " << _filename << "." << std::endl;
+			ozz::io::File file(_filename, "rb");
+			if (!file.opened()) {
+				//ozz::log::Err() << "Failed to open mesh file " << _filename << "."
+				//	<< std::endl;
+				return false;
+			}
+			ozz::io::IArchive archive(&file);
+			if (!archive.TestTag<ozz::sample::Mesh>()) {
+				//ozz::log::Err() << "Failed to load mesh instance from file " << _filename
+				//	<< "." << std::endl;
+				return false;
+			}
+
+			// Once the tag is validated, reading cannot fail.
+			archive >> *_mesh;
+
+			return true;
+		}
+	}
+}
+
 static int
 lnew_ozzmesh(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TSTRING);

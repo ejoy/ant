@@ -21,9 +21,11 @@
   <ItemGroup>
     <ClCompile Include="..\..\clibs\hierarchy\animation.cpp" />
     <ClCompile Include="..\..\clibs\hierarchy\hierarchy.cpp" />
+    <ClCompile Include="..\..\clibs\hierarchy\ozz_mesh\mesh.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\hierarchy\hierarchy.h" />
+    <ClInclude Include="..\..\clibs\hierarchy\ozz_mesh\mesh.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -110,8 +112,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/geometry/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../3rd/build_msvc/ozz-animation/samples/framework/$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;ozz_base_d.lib;ozz_animation_d.lib;ozz_animation_offline_d.lib;ozz_geometry_d.lib;sample_framework_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/geometry/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;ozz_base_d.lib;ozz_animation_d.lib;ozz_animation_offline_d.lib;ozz_geometry_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -169,7 +171,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/geometry/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../3rd/build_msvc/ozz-animation/samples/framework/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/geometry/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;ozz_base_r.lib;ozz_animation_r.lib;ozz_animation_offline_r.lib;sample_framework_r.lib;ozz_geometry_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="ozz_mesh">
+      <UniqueIdentifier>{52647471-b0fd-4a42-89ee-93fc4388607a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\hierarchy\hierarchy.cpp">
@@ -21,10 +24,16 @@
     <ClCompile Include="..\..\clibs\hierarchy\animation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\hierarchy\ozz_mesh\mesh.cc">
+      <Filter>ozz_mesh</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\hierarchy\hierarchy.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\hierarchy\ozz_mesh\mesh.h">
+      <Filter>ozz_mesh</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
