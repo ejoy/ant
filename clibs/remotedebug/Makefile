@@ -1,23 +1,13 @@
-PLAT= none
+include ../common.mk
 
-LUAINC = -I ../lua
-LUALIB = -L ../lua -llua53
 CFLAGS = -O2 -Wall
-
-all:  $(PLAT)
-
-PLATS= linux mingw
-
-none:
-	@echo "Please do 'make PLATFORM' where PLATFORM is one of these:"
-	@echo "   $(PLATS)"
-
-linux: remotedebug.so
 
 mingw: remotedebug.dll
 
+linux: remotedebug.so
+
 remotedebug.o : remotedebug.c debugvar.h
-	gcc $(CFLAGS) -c -o $@ $< $(LUAINC) $(LUALIB)
+	gcc $(CFLAGS) -c -o $@ $< $(LUAINC)
 
 remotedebug.so: remotedebug.o
 	gcc $(CFLAGS) --shared -o $@ $^ $(LUAINC) -fPIC

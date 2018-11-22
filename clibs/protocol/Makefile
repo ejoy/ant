@@ -3,7 +3,7 @@ include ../common.mk
 mingw : protocol.dll
 
 lprotocol.o : lprotocol.c
-	gcc -c $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC)
+	gcc -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
 protocol.dll : lprotocol.o
 	gcc --shared $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC)
