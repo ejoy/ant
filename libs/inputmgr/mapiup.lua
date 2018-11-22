@@ -1,10 +1,47 @@
--- local iup_keymap = {}
+--luacheck: globals iup
+local keymap = require "inputmgr.keymap"
 
--- for k,v in pairs(iup) do
--- 	if type(k) == "string" and type(v) == "number" and k:sub(1,2) == "K_" then
--- 		iup_keymap[v] = k:sub(3)
--- 	end
--- end
+local iupcodemap = {}
+for k, v in pairs(iup) do
+	if  type(v) == "number" and 
+		type(k) == "string" then 
+		local iup_name = k:match("K_([%w_%d]+)")
+		if iup_name then
+			iupcodemap[v] = iupcodemap
+		end
+	end
+end
+
+local iup_to_keymap = {
+	LCTRL = "LCONTROL",
+	RCTRL = "RCONTROL",
+}
+
+local iup_keymap_mt = {__mode = "kv"}
+function iup_keymap_mt:__index(iupkey)
+	local basekey = iup.XkeyBase(iupkey)
+
+	local function get_keyname(basekey)
+		local iupname = iupcodemap[basekey]
+		if iupname then				
+			local tname = iup_to_keymap[iupname]
+			if tname then
+				return tname
+			end
+
+			if keymap.code(iupname) then
+				return iupname
+			end
+				
+			return ''
+		end		
+	end
+
+	local name = iup.isXkey(basekey) and get_keyname(basekey) or string.char(basekey)
+	self[iupkey] = name
+	return name
+end
+local iup_keymap = setmetatable({}, iup_keymap_mt)
 
 local iup_status_mt = { __mode = "kv" }
 local iup_status = setmetatable({}, iup_status_mt)
@@ -52,11 +89,10 @@ return {
 		[0] = false,
 	},
 	STATUS = iup_status,
-	--KEY = iup_keymap,
+	KEY = iup_keymap,
 	button = "BUTTON,PRESSED,_,_,STATUS",	-- button, pressed, x,y, status
 	motion = "_,_,STATUS", -- x,y,status
-	--keypress = "KEY,PRESSED",	-- keycode, pressed
-	keypress = "_,_,_",	-- keycode, pressed
+	keypress = "KEY,PRESSED,STATUS",	-- keycode, pressed, status
 	resize = "_,_",	-- width, height
 	wheel = "_,_,_,STATUS",-- delta,x,y,status
 }
