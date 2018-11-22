@@ -14,14 +14,11 @@ mingw : default
 main.o : main.cpp mingw_wmain.h
 	g++ -std=c++17 -c $(CFLAGS) $(ANTINC) $(LUAINC) -o $@ $<
 
-firmware :
-	windres firmware.rc firmware.o
-
 libant.a :
 #	cd $(ANT)/clibs/ant/ && $(MAKE)
 
-ant.exe : main.o libant.a firmware
-	gcc -o $@ main.o firmware.o $(ANT)/clibs/ant/libant.a $(LINKLIBANT) -lshlwapi
+ant.exe : main.o libant.a
+	gcc -o $@ main.o $(ANT)/clibs/ant/libant.a $(LINKLIBANT) -lshlwapi
 	strip --strip-unneeded $@ 
 
 clean :

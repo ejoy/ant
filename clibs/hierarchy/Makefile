@@ -9,13 +9,13 @@ mingw : hierarchy.dll
 OBJ_FILES := hierarchy.o animation.o ozz_mesh/mesh.o
 
 hierarchy.o: hierarchy.cpp
-	$(CXX) -c -std=c++17 -o $@ $^ $(LUAINC) $(GLM_DIR) $(OZZINC)
+	$(CXX) -c -std=c++17 -o $@ $< $(LUAINC) $(GLM_DIR) $(OZZINC)
 
 animation.o: animation.cpp
-	$(CXX) -c -std=c++17 -o $@ $^ $(LUAINC) $(GLM_DIR) $(OZZINC)
+	$(CXX) -c -std=c++17 -o $@ $< $(LUAINC) $(GLM_DIR) $(OZZINC)
 
 ozz_mesh/mesh.o: ozz_mesh/mesh.cpp
-	$(CXX) -c -std=c++17 -o $@ $^ $(LUAINC) $(GLM_DIR) $(OZZINC)
+	$(CXX) -c -std=c++17 -o $@ $< $(LUAINC) $(GLM_DIR) $(OZZINC)
 
 hierarchy.dll : $(OBJ_FILES)
 	$(CXX) --shared -lstdc++ -o $@ $^ $(LUALIB) $(LUAINC) $(GLM_DIR) $(OZZINC) $(OZZRUNTIME) $(OZZOFFLINE) $(OZZGEOMERTY) $(OZZBASE)
@@ -24,4 +24,4 @@ libhierarchy.a : $(OBJ_FILES)
 	ar rsv $@ $^
 
 clean :
-	rm -f hierarchy.dll *.o
+	rm -f hierarchy.dll libhierarchy.a *.o
