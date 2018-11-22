@@ -10,12 +10,11 @@ local task = require "editor.task"
 
 local s_logo = require "logo"
 
-local mapiup = require "inputmgr.mapiup"
+local mapiup = require "editor.input.mapiup"
 local inputmgr = require "inputmgr"
 local nkmsg = require "inputmgr.nuklear"
 
 local math3d = require "math3d"
-local mathu = require "math.util"
 
 local loadfile = require "tested.loadfile"
 local ch_charset = require "tested.charset_chinese_range"

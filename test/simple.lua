@@ -6,7 +6,7 @@ require "scintilla"
 local bgfx = require "bgfx"
 
 local inputmgr = require "inputmgr"
-local mapiup = require "inputmgr.mapiup"
+local mapiup = require "editor.input.mapiup"
 local elog = require "editor.log"
 
 local rhwi = require "render.hardware_interface"

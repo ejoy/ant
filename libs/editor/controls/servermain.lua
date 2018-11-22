@@ -1,8 +1,5 @@
 local ecs = require "ecs"
-local asset = require "asset"
 local task = require "editor.task"
-local inputmgr = require "inputmgr"
-local mapiup = require "inputmgr.mapiup"
 
 local server_main = {}
 server_main.__index = server_main

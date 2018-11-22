@@ -9,7 +9,7 @@ local sm = require "render.resources.shader_mgr"
 local task = require "editor.task"
 local nk = require "bgfx.nuklear"
 local inputmgr = require "inputmgr"
-local mapiup = require "inputmgr.mapiup"
+local mapiup = require "editor.input.mapiup"
 local nkmsg = require "inputmgr.nuklear"
 
 local loadfile = require "tested.loadfile"

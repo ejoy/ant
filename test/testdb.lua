@@ -4,7 +4,7 @@ local redirect = require "filesystem.redirect"
 local elog = require "editor.log"
 local debugger = require "debugger"
 local inputmgr = require "inputmgr"
-local mapiup = require "inputmgr.mapiup"
+local mapiup = require "editor.input.mapiup"
 local task = require "editor.task"
 local eu = require "editor.util"
 
