@@ -6,19 +6,22 @@ OZZINC = -I $(ANT3RD) -I $(ANT3RD)/ozz-animation/include
 
 mingw : hierarchy.dll
 
-SRC_FILES := hierarchy.cpp animation.cpp ozz_mesh/mesh.cpp
+OBJ_FILES := hierarchy.o animation.o ozz_mesh/mesh.o
 
-OBJ_FILES := $(patsubst %.c,%.o,$(SRC_FILES))
+hierarchy.o: hierarchy.cpp
+	$(CXX) -c -std=c++17 -o $@ $^ $(LUAINC) $(GLM_DIR) $(OZZINC)
 
+animation.o: animation.cpp
+	$(CXX) -c -std=c++17 -o $@ $^ $(LUAINC) $(GLM_DIR) $(OZZINC)
 
-$(OBJ_FILES): %.o: %.cpp
-	$(CXX) -c $(CXXFLAGS) -o $@ $^ $(LUALIB) $(LUAINC) $(GLM_DIR) $(OZZINC) $(OZZRUNTIME) $(OZZOFFLINE) $(OZZGEOMERTY) $(OZZBASE)
+ozz_mesh/mesh.o: ozz_mesh/mesh.cpp
+	$(CXX) -c -std=c++17 -o $@ $^ $(LUAINC) $(GLM_DIR) $(OZZINC)
 
 hierarchy.dll : $(OBJ_FILES)
-	$(CXX) --shared $(CXXFLAGS) -o $@ $^ $(LUALIB) $(LUAINC) $(GLM_DIR) $(OZZINC) $(OZZRUNTIME) $(OZZOFFLINE) $(OZZGEOMERTY) $(OZZBASE)
+	$(CXX) --shared -lstdc++ -o $@ $^ $(LUALIB) $(LUAINC) $(GLM_DIR) $(OZZINC) $(OZZRUNTIME) $(OZZOFFLINE) $(OZZGEOMERTY) $(OZZBASE)
 
 libhierarchy.a : $(OBJ_FILES)
 	ar rsv $@ $^
 
 clean :
-	rm -f hierarchy.dll
+	rm -f hierarchy.dll *.o

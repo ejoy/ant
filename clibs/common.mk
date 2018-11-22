@@ -33,3 +33,9 @@ LUALIB = -L ../lua -llua
 LUABIN = ../lua/lua
 
 endif
+
+ifeq "$(PLAT)" "osx"
+STRIP = strip -u -r -x
+else
+STRIP = strip --strip-unneeded
+endif

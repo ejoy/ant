@@ -1,3 +1,5 @@
+include ../common.mk
+
 ANT3RD = ../../3rd
 include ant_define.mk
 
@@ -47,7 +49,7 @@ libant.a : tmp/ant_searcher.o $(UNPACKLIBS)
 
 ant.exe : main.o libant.a
 	gcc -o $@ $^ $(LINKLIBANT)
-	strip --strip-unneeded $@ 
+	$(STRIP) $@ 
 
 clean :
 	rm -f tmp/*.a && rm -f tmp/*.o && rm -f ant.exe libant.a
