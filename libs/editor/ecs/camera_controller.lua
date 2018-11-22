@@ -88,7 +88,7 @@ function camera_controller_system:init()
 			end	
 		end
 
-		local isctrl = status.C
+		local isctrl = status.CTRL
 		if isctrl then
 			if clower == "=" then
 				step = math.min(1, step + 0.002)

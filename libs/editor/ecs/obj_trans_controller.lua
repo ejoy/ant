@@ -222,7 +222,7 @@ local function register_message(msg_comp, ot, ms)
                 update_contorller(ot, ms)
             else
 				local clower = c:lower()
-				local isshift = status.S
+				local isshift = status.SHIFT
 				if isshift then
 					if clower == "t" then   -- shift + T
 						ot.selected_mode = "pos_transform"

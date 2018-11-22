@@ -63,10 +63,10 @@ function callback.keypress(k, state)
 		end		
 	end
 	local status = {}
-	status['C'] = what_state(state, 0x01)
-	status['A'] = what_state(state, 0x02)
-	status['S'] = what_state(state, 0x04)
-	status['Y'] = what_state(state, 0x08)
+	status['CTRL'] = what_state(state, 0x01)
+	status['ALT'] = what_state(state, 0x02)
+	status['SHIFT'] = what_state(state, 0x04)
+	status['SYS'] = what_state(state, 0x08)
 
 	iq:push("keypress", k, ispress, status)
 end
