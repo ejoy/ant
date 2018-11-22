@@ -1,5 +1,6 @@
 ANT= ../..
 ANT3RD= $(ANT)/3rd
+include $(ANT)/clibs/common.mk
 include $(ANT)/clibs/ant/ant_define.mk
 
 ANTINC= -I$(ANT)/clibs/ant
