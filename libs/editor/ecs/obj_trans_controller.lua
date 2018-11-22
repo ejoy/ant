@@ -204,7 +204,7 @@ end
 local function register_message(msg_comp, ot, ms)
     local message = {}
 
-    function message:keypress(c, p, cas)
+    function message:keypress(c, p, status)
         if c == nil then return end
 
         if p then 
@@ -222,7 +222,7 @@ local function register_message(msg_comp, ot, ms)
                 update_contorller(ot, ms)
             else
 				local clower = c:lower()
-				local isshift = cas[3] == "s"
+				local isshift = status.S
 				if isshift then
 					if clower == "t" then   -- shift + T
 						ot.selected_mode = "pos_transform"

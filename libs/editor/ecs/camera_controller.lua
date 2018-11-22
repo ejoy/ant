@@ -69,7 +69,7 @@ function camera_controller_system:init()
 		r_q = "LEFTROT", r_e = "RIGHTROT",
 	}
 
-	function message:keypress(c, p, casstate)
+	function message:keypress(c, p, status)
 		if c == nil then return end
 
 		local name = nil
@@ -88,14 +88,12 @@ function camera_controller_system:init()
 			end	
 		end
 
-		local isctrl = casstate[1] == 'c'
+		local isctrl = status.C
 		if isctrl then
 			if clower == "=" then
 				step = math.min(1, step + 0.002)
 			elseif clower == "-" then
-				step = math.max(0.002, step - 0.002)
-			elseif clower == "c" then
-				
+				step = math.max(0.002, step - 0.002)				
 			end	
 		end		
 	end
