@@ -15,7 +15,6 @@ int luaopen_lfs(lua_State* L);
 int luaopen_lsocket(lua_State* L);
 int luaopen_math3d(lua_State* L);
 int luaopen_math3d_baselib(lua_State* L);
-int luaopen_memoryfile(lua_State* L);
 int luaopen_protocol(lua_State* L);
 int luaopen_remotedebug(lua_State* L);
 int luaopen_thread(lua_State* L);

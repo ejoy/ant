@@ -5,7 +5,7 @@ default : libant.a
 
 mingw : default
 
-LIBS= bgfx bullet math3d thread terrain hierarchy crypt debugger lsocket memoryfile protocol remotedebug lfs window firmware
+LIBS= bgfx bullet math3d thread terrain hierarchy crypt debugger lsocket protocol remotedebug lfs window firmware
 
 define MakeLibs
 lib$(1).a :	
