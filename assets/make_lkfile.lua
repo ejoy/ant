@@ -12,7 +12,7 @@ local path = require "filesystem.path"
 
 local modelutil = require "modelloader.util"
 local su = require "serialize.util"
-
+local fu = require "filesystem.util"
 
 
 local templates = {
@@ -25,7 +25,7 @@ config = %s
 
 local files = {}
 if type == nil or type == "shaders" then
-	path.listfiles("shaders", files, function (filepath)
+	fu.listfiles("shaders", files, function (filepath)
 		local ext = path.ext(filepath)
 		if ext == "sc" then
 			return path.filename(filepath):lower() ~= "varying.def.sc"
@@ -37,8 +37,8 @@ end
 if type == nil or type == "mesh" then
 	local exts = {"fbx", "FBX", "bin"}
 	-- we assume all bin/fbx files should only exist in assets/build/meshes folder	
-	path.listfiles("build/meshes", files, exts)
-	path.listfiles("meshes", files, exts)
+	fu.listfiles("build/meshes", files, exts)
+	fu.listfiles("meshes", files, exts)
 end
 
 for _, ff in ipairs(files) do

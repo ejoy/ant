@@ -34,8 +34,9 @@ typedef enum {
 	KB_CTRL = 0x01,
 	KB_ALT = 0x02,
 	KB_SHIFT = 0x04,
-	KB_CAS_LEFTORRIGHT = 0x08,
+	KB_SYS = 0x08,	
 	KB_PRESS = 0x10,
+	KB_CAS_LEFTORRIGHT = 0x20,
 }KEYBOARD_STATE;
 
 struct ant_window_keyboard {

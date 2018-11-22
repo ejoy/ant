@@ -2,7 +2,7 @@ dofile "libs/init.lua"
 
 local elog = require "editor.log"
 local inputmgr = require "inputmgr"
-local mapiup = require "inputmgr.mapiup"
+local mapiup = require "editor.input.mapiup"
 local bgfx = require "bgfx"
 local rhwi = require "render.hardware_interface"
 local scene = require "scene.util"

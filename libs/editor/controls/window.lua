@@ -1,7 +1,7 @@
 --luacheck: globals iup
 require "iuplua"
 local inputmgr = require "inputmgr"
-local mapiup = require "inputmgr.mapiup"
+local mapiup = require "editor.input.mapiup"
 local elog = require "editor.log"
 local hierarchyview = require "editor.controls.hierarchyview"
 local propertycontrol = require "editor.controls.propertyview"

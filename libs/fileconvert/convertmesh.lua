@@ -1,5 +1,4 @@
 local fu = require "filesystem.util"
-local modelutil = require "modelloader.util"
 local assimp = require "assimplua"
 local path = require "filesystem.path"
 
@@ -8,18 +7,7 @@ return function (srcpath)
 	local outputfile = path.replace_ext(srcpath, "antmesh")
 
 	if fu.file_is_newer(srcpath, outputfile) then
-		local lk_path = path.replace_ext(srcpath, "lk")
-		local fs = require "lfs"
-		local config
-		if fs.exist(lk_path) then
-			local rawtable = require "asset.common.rawtable"
-			local c = rawtable(lk_path)
-			config = c.config
-		else
-			config = modelutil.default_config()
-		end
-
-		path.create_dirs(path.parent(outputfile))
+		fu.create_dirs(path.parent(outputfile))
 
 		local ext = path.ext(srcpath):lower()
 

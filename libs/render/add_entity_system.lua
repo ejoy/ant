@@ -33,6 +33,7 @@ ecs.import "serialize.serialize_system"
 
 local component_util = require "render.components.util"
 local lu = require "render.light.util"
+local fu = require "filesystem.util"
 local assetmgr = require "asset"
 
 local update_direction_light_sys = ecs.system "direction_light_system"
@@ -247,7 +248,7 @@ function add_entity_sys:init()
 	local hie_refpath = "hierarchy/test_hierarchy.hierarchy"
 	-- do
 	-- 	local assetpath = path.join(assetmgr.assetdir(), hie_refpath)
-	-- 	path.create_dirs(path.parent(assetpath))
+	-- 	fu.create_dirs(path.parent(assetpath))
 	-- 	local hierarchy = require "hierarchy"
 	-- 	local root = hierarchy.new()
 

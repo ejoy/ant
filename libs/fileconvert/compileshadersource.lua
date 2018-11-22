@@ -1,16 +1,16 @@
 local toolset = require "editor.toolset"
 local path = require "filesystem.path"
 local fu = require "filesystem.util"
-local fs = require "lfs"
+local lfs = require "lfs"
+
 local config = require "common.config"
 
 local platform = config.platform()
 
 local function compile_shader(filename, outfilename, shadertype)
     local config = toolset.load_config()
-	if next(config) then
-		
-		config.includes = {config.shaderinc, fs.currentdir() .. "/assets/shaders/src"}
+	if next(config) then		
+		config.includes = {config.shaderinc, lfs.currentdir() .. "/assets/shaders/src"}
         config.dest = outfilename
 		return toolset.compile(filename, config, shadertype, platform)
 	end
@@ -30,7 +30,7 @@ local function gen_output_path(srcpath, shadertype)
 end
 
 local function check_compile_shader(srcpath, outfile, shadertype)	
-	path.create_dirs(path.parent(outfile))	
+	fu.create_dirs(path.parent(outfile))	
 	local success, msg = compile_shader(srcpath, outfile, shadertype)
 	if not success then
 		return nil, msg
