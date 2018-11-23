@@ -32,15 +32,12 @@ function iup_keymap_mt:__index(iupkey)
 			if keymap.code(iupname) then
 				return iupname
 			end
-				
-			return ''
 		end		
+
+		return ''
 	end
 
-	local name = iup.isXkey(basekey) and get_keyname(basekey) or string.char(basekey)
-	if name ~= '' then
-		assert(keymap.code(name))
-	end
+	local name = iup.isXkey(basekey) and get_keyname(basekey) or string.char(basekey)	
 	self[iupkey] = name
 	return name
 end

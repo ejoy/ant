@@ -19,17 +19,21 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\firmware\firmware.cpp" />
-    <ClCompile Include="tools\data.c" />
+    <ClCompile Include="..\..\clibs\meshconverter\antmesh_converter.cpp" />
+    <ClCompile Include="..\..\clibs\meshconverter\bgfxmesh_helper.cpp" />
+    <ClCompile Include="..\..\clibs\meshconverter\fbx_helper.cpp" />
+    <ClCompile Include="..\..\clibs\meshconverter\utils.cpp" />
+    <ClCompile Include="..\..\clibs\meshconverter\meshconverter.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\clibs\firmware\incbin.h" />
+    <ClInclude Include="..\..\clibs\meshconverter\meshdata.h" />
+    <ClInclude Include="..\..\clibs\meshconverter\utils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{4e00a5a9-ec1a-442e-8e9d-4a44a4bc5898}</ProjectGuid>
+    <ProjectGuid>{6941669e-1992-4f61-8f0e-c0617175597c}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>firmware</RootNamespace>
+    <RootNamespace>meshconverter</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -105,24 +109,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/firmware</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bimg/include;../../3rd/bgfx/examples/common;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/bgfx/3rdparty;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/build_msvc/assimp/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin;../../3rd/build_msvc/assimp/code/$(Configuration);../../3rd/build_msvc/assimp/contrib/irrXML/$(Configuration);../../3rd/build_msvc/assimp/contrib/zlib/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/build_msvc/ozz-animation/samples/framework/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;gdi32.lib;psapi.lib;uuid.lib;bgfx$(Configuration).lib;bimg$(Configuration).lib;bimg_decode$(Configuration).lib;bx$(Configuration).lib;example-common$(Configuration).lib;assimp-vc140-mt.lib;IrrXML.lib;zlibstaticd.lib;ozz_base_d.lib;ozz_animation_d.lib;ozz_animation_offline_d.lib;sample_framework_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>tools\incbin.exe ..\..\clibs\firmware\firmware.cpp &amp;&amp; cp data.c tools/data.c</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Message>generate bin data</Message>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Command>rm data.c</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -132,24 +126,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/firmware</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bimg/include;../../3rd/bgfx/examples/common;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/bgfx/3rdparty;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);;../../3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/code/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;gdi32.lib;psapi.lib;uuid.lib;bgfx$(Configuration).lib;bimg$(Configuration).lib;bimg_decode$(Configuration).lib;bx$(Configuration).lib;example-common$(Configuration).lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>tools\incbin.exe ..\..\clibs\firmware\firmware.cpp &amp;&amp; cp data.c tools/data.c</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Message>generate bin data</Message>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Command>rm data.c</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -161,26 +145,16 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/firmware</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bimg/include;../../3rd/bgfx/examples/common;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/bgfx/3rdparty;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);;../../3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/code/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;gdi32.lib;psapi.lib;uuid.lib;bgfx$(Configuration).lib;bimg$(Configuration).lib;bimg_decode$(Configuration).lib;bx$(Configuration).lib;example-common$(Configuration).lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>tools\incbin.exe ..\..\clibs\firmware\firmware.cpp &amp;&amp; cp data.c tools/data.c</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Message>generate bin data</Message>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Command>rm data.c</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -192,26 +166,16 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/firmware</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bimg/include;../../3rd/bgfx/examples/common;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/bgfx/3rdparty;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/build_msvc/assimp/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin;../../3rd/build_msvc/assimp/code/$(Configuration);../../3rd/build_msvc/assimp/contrib/irrXML/$(Configuration);../../3rd/build_msvc/assimp/contrib/zlib/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/build_msvc/ozz-animation/samples/framework/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;gdi32.lib;psapi.lib;uuid.lib;bgfx$(Configuration).lib;bimg$(Configuration).lib;bimg_decode$(Configuration).lib;bx$(Configuration).lib;example-common$(Configuration).lib;assimp-vc140-mt.lib;IrrXML.lib;zlibstatic.lib;ozz_base_r.lib;ozz_animation_r.lib;ozz_animation_offline_r.lib;sample_framework_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>tools\incbin.exe ..\..\clibs\firmware\firmware.cpp &amp;&amp; cp data.c tools/data.c</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Message>generate bin data</Message>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Command>rm data.c</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

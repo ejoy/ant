@@ -1,19 +1,8 @@
-#define LUA_LIB
-
-#include <stdio.h>  
-extern "C"
-{
-#include <lua.h>  
-#include <lualib.h>
-#include <lauxlib.h>
-}
-#include <vector>
-#include <string>
-#include <array>
 //assimp include
 #include <assimp\importer.hpp>
 #include <assimp\postprocess.h>
 #include <assimp\scene.h>
+
 
 //bgfx include
 #include <bx\string.h>
@@ -25,14 +14,6 @@ extern "C"
 #include <bounds.h>
 
 #include <assert.h>
-
-#include <set>
-#include <algorithm>
-#include <unordered_map>
-#include <functional>
-#include <sstream>
-
-//extern "C" int luaopen_assimplua(lua_State *L);
 
 #define BGFX_CHUNK_MAGIC_VB  BX_MAKEFOURCC('V', 'B', ' ', 0x1)
 #define BGFX_CHUNK_MAGIC_IB  BX_MAKEFOURCC('I', 'B', ' ', 0x0)
@@ -49,7 +30,7 @@ struct Vertex {
 	Vector3 texcoord0;
 };
 
-struct SMaterial 
+struct SMaterial
 {
 	aiString name;
 	aiColor3D diffuse;
@@ -77,7 +58,6 @@ struct SPrimitive {
 	aiVector3D m_rotation;
 };
 
-//æœ€å¤§çš„é¡¶ç‚¹æ•°å’Œç´¢å¼•æ•°
 const int MAX_VERTEX_SIZE = 64 * 1024;
 const int MAX_TRIANGLE_SIZE = 128 * 1024;
 struct SChunk
@@ -90,7 +70,7 @@ struct SChunk
 
 	uint16_t vertex_count = 0;
 	uint16_t triangle_count = 0;
-	
+
 	int start_vertex = 0;
 	int start_triangle = 0;
 };
@@ -117,7 +97,7 @@ std::vector<SMaterial> g_Material;
 void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_transform)
 {
 	int mesh_count = node->mNumMeshes;
-	for(int i = 0; i < mesh_count; ++i)
+	for (int i = 0; i < mesh_count; ++i)
 	{
 		//process mesh info
 		aiMesh* a_mesh = scene->mMeshes[node->mMeshes[i]];
@@ -166,8 +146,7 @@ void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_t
 				vertex.texcoord0.x = a_mesh->mTextureCoords[0][j].x;
 				vertex.texcoord0.y = a_mesh->mTextureCoords[0][j].y;
 				vertex.texcoord0.z = a_mesh->mTextureCoords[0][j].z;
-			}
-			else
+			} else
 			{
 				vertex.texcoord0.x = 0;
 				vertex.texcoord0.y = 0;
@@ -179,7 +158,7 @@ void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_t
 		{
 			const aiFace& face = a_mesh->mFaces[j];
 
-		//	BX_CHECK(face.mNumIndices == 3, "Mesh must be triangulated");
+			//	BX_CHECK(face.mNumIndices == 3, "Mesh must be triangulated");
 			if (face.mNumIndices != 3)
 			{
 				continue;
@@ -192,16 +171,16 @@ void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_t
 		}
 
 		aiMatrix4x4 transformation = parent_transform * node->mTransformation;
-		transformation.Decompose(prim.m_scale, prim.m_rotation, prim.m_translation) ;
+		transformation.Decompose(prim.m_scale, prim.m_rotation, prim.m_translation);
 
 		chunk.start_vertex += vertex_size;
 		chunk.start_triangle += face_size;
-		
+
 		chunk.primitives.push_back(prim);
 	}
 
 	int child_count = node->mNumChildren;
-	for(int i = 0; i < child_count; ++i)
+	for (int i = 0; i < child_count; ++i)
 	{
 		aiNode* child_node = node->mChildren[i];
 		//calculate child node
@@ -215,184 +194,9 @@ void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parent_t
 			//ignore geometric translation
 		//	ProcessNode(child_node, scene, parent_transform);
 		}
-		
+
 	}
 }
-
-//write node information into lua table
-//void WriteNodeToLua(lua_State *L, aiNode* node, const aiScene* scene, const char* parent_name) {
-//	if (!node) {
-//		return;
-//	}
-//
-//	luaL_checkstack(L, 10, "stack not big enough");
-//	// node = {}
-//	lua_newtable(L);
-//
-//	const char* node_name = node->mName.C_Str();
-//	
-//	// node.name = node_name
-//	lua_pushstring(L, node_name);
-//	lua_setfield(L, -2, "name");
-//
-//	// node.parent_name = parent_name
-//	if (parent_name) {
-//		lua_pushstring(L, parent_name);
-//		lua_setfield(L, -2, "parent_name");
-//	}
-//
-//	//set transform
-//	aiMatrix4x4 node_transform = node->mTransformation;
-//
-//	// transform = {}
-//	lua_newtable(L);
-//
-//	const ai_real *p = &node_transform.a1;
-//	for (int ii = 0; ii < 16; ++ii) {		
-//		lua_pushnumber(L, *p++);
-//		lua_seti(L, -2, ii+1);	// ==> transofrm[ii+1] = *p++
-//	}
-//
-//	// ==> node.transform = transform	
-//	lua_setfield(L, -2, "transform");	
-//
-//	// mesh = {}
-//	lua_newtable(L);
-//
-//	std::vector<Bounding>	boundings(node->mNumMeshes);
-//
-//	for (uint32_t i = 0; i < node->mNumMeshes; ++i) {
-//		//start from 1
-//		// group = {}
-//		lua_newtable(L);
-//
-//		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-//
-//		// group.material_idx = mesh->mMaterialIndex+1
-//		lua_pushnumber(L, mesh->mMaterialIndex+1);
-//		lua_setfield(L, -2, "material_idx");	// 
-//
-//		// group.name = mesh->mName
-//		lua_pushstring(L, mesh->mName.C_Str());
-//		lua_setfield(L, -2, "name");
-//
-//		//parse mesh data
-//		if (mesh->HasPositions()) {
-//			AABB aabb;
-//
-//			// vertices = {}
-//			lua_newtable(L);
-//
-//			/*
-//			int stride = 12;
-//
-//			for (uint32_t j = 0; j < mesh->mNumVertices; ++j){
-//
-//				uint32_t stackidx = 1;
-//				auto push_vector = [L, j, &stackidx](const ai_real *p, uint32_t num,int stride){
-//					for (uint32_t iv = 0; iv < num; ++iv) {
-//						lua_pushnumber(L, *p++);
-//						lua_seti(L, -2, j * stride + (stackidx++));
-//					}
-//				};
-//
-//				push_vector(&(mesh->mVertices[j].x), 3,stride);
-//				push_vector(&(mesh->mNormals[j].x), 3,stride);
-//				push_vector(&(mesh->mTextureCoords[0][j].x), 3,stride);
-//
-//				push_vector(&(mesh->mTangents[j].x),3,stride);     // add tangent 
-//
-//				aabb.Append(mesh->mVertices[j]);
-//			*/
-//
-//			auto calc_buf_size = [](aiMesh *mesh) {
-//				size_t elemsize = 0;
-//				if (mesh->HasPositions())
-//					elemsize += sizeof(aiVector3D);
-//				if (mesh->HasNormals())
-//					elemsize += sizeof(aiVector3D);
-//				if (mesh->HasTextureCoords(0))
-//					elemsize += sizeof(aiVector3D);
-//				if (mesh->HasTangentsAndBitangents())
-//					elemsize += sizeof(aiVector3D);
-//				return elemsize * mesh->mNumVertices;
-//			};
-//
-//			const size_t bufsize = calc_buf_size(mesh);
-//
-//			// todo: actually, we can create struct of array, that say, we no need to copy data in new buffer. need support struct of array
-//			// here is array of struct approach 
-//			aiVector3D *buf = reinterpret_cast<aiVector3D*>(lua_newuserdata(L, bufsize));
-//
-//			for (uint32_t j = 0; j < mesh->mNumVertices; ++j) {
-//				if (mesh->HasPositions()) {
-//					*buf++ = mesh->mVertices[j];
-//					aabb.Append(mesh->mVertices[j]);
-//				}					
-//				if (mesh->HasNormals())
-//					*buf++ = mesh->mNormals[j];
-//				if (mesh->HasTextureCoords(0))
-//					*buf++ = mesh->mTextureCoords[0][j];
-//				if( mesh->HasTangentsAndBitangents())
-//				    *buf++ = mesh->mTangents[j];
-//			}
-//			lua_setfield(L, -2, "vertices");	// mesh.vertices = vertices
-//
-//			//{@	aabb & sphere
-//			BoundingSphere sphere;
-//			sphere.Init(aabb);
-//
-//			push_aabb(L, aabb, -2);
-//			push_sphere(L, sphere, -2);
-//
-//			boundings[i].aabb = aabb;
-//			boundings[i].sphere = sphere;
-//			//@}
-//		}
-//
-//		if (mesh->HasFaces()) {
-//			size_t numelem = 0;
-//			for (uint32_t ii = 0; ii < mesh->mNumFaces; ++ii) {
-//				numelem += mesh->mFaces[ii].mNumIndices;
-//			}
-//
-//			uint32_t *buf = reinterpret_cast<uint32_t *>(lua_newuserdata(L, numelem * sizeof(uint32_t)));
-//
-//			for (uint32_t ii = 0; ii < mesh->mNumFaces; ++ii) {
-//				const auto &face = mesh->mFaces[ii];
-//				memcpy(buf, face.mIndices, sizeof(uint32_t) * face.mNumIndices);
-//			}
-//			lua_setfield(L, -2, "indices");
-//		}
-//
-//		lua_seti(L, -2, i + 1);	// mesh[i+1] = group
-//	}
-//
-//	// node.mesh = mesh
-//	lua_setfield(L, -2, "mesh");	
-//	
-//	AABB aabb;
-//	for (const auto &b : boundings) {
-//		aabb.Merge(b.aabb);
-//	}
-//
-//	BoundingSphere sphere;
-//	sphere.Init(aabb);
-//
-//	push_aabb(L, aabb, -2); // ==> aabb = {}; mesh.aabb = aabb
-//	push_sphere(L, sphere, -2);	//==> sphere = {}; mesh.sphere = sphere
-//	
-//	// children = {}
-//	lua_newtable(L);
-//	
-//	for(unsigned i =0; i < node->mNumChildren; ++i){ 
-//		WriteNodeToLua(L, node->mChildren[i], scene, node_name);
-//		lua_seti(L, -2, i + 1);
-//	}
-//
-//	// node.children = children
-//	lua_setfield(L, -2, "children");	// set to result table : children = {}; result.children = children
-//}
 
 //one material for one chunk
 void ProcessMaterial(const aiScene* scene) {
@@ -436,12 +240,12 @@ void ProcessMaterial(const aiScene* scene) {
 
 void WriteChunkToBGFX(const std::string& out_path) {
 
-	//è½¬æ¢æˆbgfxçš„æ ¼å¼
+	//×ª»»³ÉbgfxµÄ¸ñÊ½
 	bgfx::VertexDecl decl;
 	decl.begin();
 
-	decl.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float);						//é¡¶ç‚¹ä½ç½®
-	decl.add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float, true, false);			//é¡¶ç‚¹æ³•çº¿
+	decl.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float);						//¶¥µãÎ»ÖÃ
+	decl.add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float, true, false);			//¶¥µã·¨Ïß
 	decl.add(bgfx::Attrib::TexCoord0, 3, bgfx::AttribType::Float);
 	decl.end();
 
@@ -450,27 +254,27 @@ void WriteChunkToBGFX(const std::string& out_path) {
 	bx::FileWriter file_writer;
 	bx::Error b_error;
 
-	//å†™æ–‡ä»¶
-	bx::open(&file_writer, out_path.data(), false, &b_error);	//æ³¨æ„append(ç¬¬ä¸‰ä¸ªå‚æ•°é€‰false,è¦ä¸ç„¶ä¸ä¼šè¦†ç›–å‰ä¸€ä¸ªæ–‡ä»¶,è€Œä¸æ˜¯å†™åœ¨åé¢)
+	//Ğ´ÎÄ¼ş
+	bx::open(&file_writer, out_path.data(), false, &b_error);	//×¢Òâappend(µÚÈı¸ö²ÎÊıÑ¡false,Òª²»È»²»»á¸²¸ÇÇ°Ò»¸öÎÄ¼ş,¶ø²»ÊÇĞ´ÔÚºóÃæ)
 
-	//ç°åœ¨æŒ‰ç…§bgfxæ ‡å‡†çš„è¯»å–å½¢å¼
+	//ÏÖÔÚ°´ÕÕbgfx±ê×¼µÄ¶ÁÈ¡ĞÎÊ½
 	int stride = decl.getStride();
-	//è¡¨ç¤ºä¼ å…¥æ•°æ®çš„ç±»å‹
-	//è¿™ä¸ªè¡¨ç¤ºçš„æ˜¯vertex bufferæ•°æ®
+	//±íÊ¾´«ÈëÊı¾İµÄÀàĞÍ
+	//Õâ¸ö±íÊ¾µÄÊÇvertex bufferÊı¾İ
 
 	printf("chunk count: %d\n", chunk_count);
 	for (int chunk_idx = 0; chunk_idx < chunk_count; ++chunk_idx)
 	{
 		auto& chunk = g_ChunkArray[chunk_idx];
 		bx::write(&file_writer, BGFX_CHUNK_MAGIC_VB);
-	
+
 		Sphere max_sphere;
 		calcMaxBoundingSphere(max_sphere, &chunk.vertexArray[0], chunk.vertex_count, stride);
 		Sphere min_sphere;
 		calcMinBoundingSphere(min_sphere, &chunk.vertexArray[0], chunk.vertex_count, stride);
 
 		Sphere surround_sphere;
-		//åŒ…å›´çƒ
+		//°üÎ§Çò
 		min_sphere.m_radius < max_sphere.m_radius ? surround_sphere = max_sphere : surround_sphere = min_sphere;
 		bx::write(&file_writer, surround_sphere);
 		//aabb
@@ -484,23 +288,23 @@ void WriteChunkToBGFX(const std::string& out_path) {
 		//vertexdecl
 		bgfx::write(&file_writer, decl);
 
-		bx::write(&file_writer, chunk.vertex_count);		//é¡¶ç‚¹æ•°é‡
+		bx::write(&file_writer, chunk.vertex_count);		//¶¥µãÊıÁ¿
 
-													//ç„¶åæ˜¯æ–‡ä»¶é¡¶ç‚¹array
+													//È»ºóÊÇÎÄ¼ş¶¥µãarray
 		uint32_t vertex_size = sizeof(Vertex) * chunk.vertex_count;
 		bx::write(&file_writer, &chunk.vertexArray[0], vertex_size);
 
-		//è¿™è¾¹å°±æ˜¯indexäº†
+		//Õâ±ß¾ÍÊÇindexÁË
 		bx::write(&file_writer, BGFX_CHUNK_MAGIC_IB);
-		bx::write(&file_writer, chunk.triangle_count * 3);		//ä¸‰è§’å½¢æ•°é‡
-															//ç´¢å¼•array
+		bx::write(&file_writer, chunk.triangle_count * 3);		//Èı½ÇĞÎÊıÁ¿
+															//Ë÷Òıarray
 		bx::write(&file_writer, &chunk.triangleArray[0], sizeof(uint16_t)*chunk.triangle_count * 3);
 
-		bx::write(&file_writer, BGFX_CHUNK_MAGIC_PRI); 
-		uint16_t len = static_cast<uint16_t>(chunk.material.name.length);	//æ–‡ä»¶è·¯å¾„å½“ä½œå…¶åå­—
+		bx::write(&file_writer, BGFX_CHUNK_MAGIC_PRI);
+		uint16_t len = static_cast<uint16_t>(chunk.material.name.length);	//ÎÄ¼şÂ·¾¶µ±×÷ÆäÃû×Ö
 		bx::write(&file_writer, len);
 		bx::write(&file_writer, chunk.material.name.C_Str());
-	
+
 		//must be uint16_t!!
 		uint16_t primitive_count = static_cast<uint16_t>(chunk.primitives.size());
 
@@ -516,8 +320,8 @@ void WriteChunkToBGFX(const std::string& out_path) {
 			bx::write(&file_writer, prim.m_numIndices);
 			bx::write(&file_writer, prim.m_startVertex);
 			bx::write(&file_writer, prim.m_numVertices);
-			
-			bx::write(&file_writer, surround_sphere);	//æš‚æ—¶éšä¾¿å¼„ä¸€ä¸ª
+
+			bx::write(&file_writer, surround_sphere);	//ÔİÊ±Ëæ±ãÅªÒ»¸ö
 			bx::write(&file_writer, aabb);
 			bx::write(&file_writer, obb);
 		}
@@ -537,8 +341,7 @@ static int AssimpImport(lua_State *L)
 	{
 		out_path = lua_tostring(L, -1);
 		lua_pop(L, 1);
-	}
-	else
+	} else
 	{
 		return 0;
 	}
@@ -548,8 +351,7 @@ static int AssimpImport(lua_State *L)
 	{
 		fbx_path = lua_tostring(L, -1);
 		lua_pop(L, 1);
-	}
-	else
+	} else
 	{
 		return 0;
 	}
@@ -562,7 +364,7 @@ static int AssimpImport(lua_State *L)
 		aiProcess_MakeLeftHanded;
 
 	const aiScene* scene = importer.ReadFile(fbx_path, import_flags);
-	
+
 	if (!scene)
 	{
 		printf("Error loading: %s\n %s\n", fbx_path.data(), out_path.data());
@@ -597,42 +399,3 @@ static int AssimpImport(lua_State *L)
 
 	return 0;
 }
-
-int lconvertFBX(lua_State *L);
-int lconvertBGFXBin(lua_State *L);
-//int lconvertOZZMesh(lua_State *L);
-
-static const struct luaL_Reg myLib[] = {
-	{"assimp_import", AssimpImport},
-	{"convert_FBX", lconvertFBX},
-	{"convert_BGFXBin", lconvertBGFXBin},
-	//{"convert_OZZ", lconvertOZZMesh},
-	{ NULL, NULL }      
-};
-
-extern "C" {
-	// not use LUAMOD_API here, when a dynamic lib linking in GCC compiler with static lib which limit symbol export, 
-	// it will cause this dynamic lib not export all symbols by default
-#if defined(_MSC_VER)
-	//  Microsoft 
-#define EXPORT __declspec(dllexport)
-#define IMPORT __declspec(dllimport)
-#elif defined(__GNUC__)
-	//  GCC
-//#define EXPORT	__attribute__(visibility("default"))
-	// need force export, visibility("default") will follow static lib setting
-#define EXPORT	__attribute__((dllexport))
-#define IMPORT
-#else
-	//  do nothing and hope for the best?
-#define EXPORT
-#define IMPORT
-#pragma warning Unknown dynamic link import/export semantics.
-#endif
-	EXPORT int
-	luaopen_assimplua(lua_State *L)	{
-		luaL_newlib(L, myLib);
-		return 1;     
-	}
-}
-

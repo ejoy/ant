@@ -12,7 +12,7 @@ end
 
 dofile(rootdir .. "/libs/init.lua")
 
-local meshcreator = require "assimplua"
+local meshcreator = require "meshconverter"
 local path = require "filesystem.path"
 local fu = require "filesystem.util"
 

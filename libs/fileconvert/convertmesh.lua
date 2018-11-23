@@ -1,5 +1,5 @@
 local fu = require "filesystem.util"
-local assimp = require "assimplua"
+local meshconverter = require "meshconverter"
 local path = require "filesystem.path"
 
 return function (srcpath)
@@ -12,8 +12,8 @@ return function (srcpath)
 		local ext = path.ext(srcpath):lower()
 
 		local convert_op = {
-			bin = assimp.convert_BGFXBin,
-			fbx = assimp.convert_FBX,
+			bin = meshconverter.convert_BGFXBin,
+			fbx = meshconverter.convert_FBX,
 		}
 
 		local convertor = convert_op[ext]

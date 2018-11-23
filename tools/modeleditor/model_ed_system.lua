@@ -49,6 +49,7 @@ local comp_util = require "render.components.util"
 local fu = require "filesystem.util"
 
 local modelutil = require "modelloader.util"
+local me_util = require "tools.modeleditor.util"
 
 
 local function gen_mesh_assetinfo(skinning_mesh_comp)	
@@ -108,24 +109,13 @@ local plane_obj_user_idx = 2
 local function add_aabb_widget(eid)
 	world:add_component(eid, "widget")
 	local e = world[eid]
-	local descs = {}
 	local aabb_material = "line.material"
-
-	local _, ib = geo.box_from_aabb(nil, true, true)
-	for _, g in ipairs(assert(e.mesh).assetinfo.handle.groups) do
-		local bounding = g.bounding
-		local aabb = assert(bounding.aabb)
-		
-		local vb = geo.box_from_aabb(aabb)
-		table.insert(descs, {
-			vb = vb,
-			ib = ib,
-			material = aabb_material,
-		})
-
+	local descs = me_util.create_aabb_descs(e.mesh, aabb_material)
+	if #descs == 0 then
+		return 
 	end
 
-	local ibhandle = bgfx.create_index_buffer(ib)
+	local ibhandle = bgfx.create_index_buffer(descs[1].ib)
 	local decl = bgfx.vertex_decl {
 		{ "POSITION", 3, "FLOAT" },
 		{ "COLOR0", 4, "UINT8", true },

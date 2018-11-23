@@ -15,15 +15,27 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\firmware\firmware.cpp">
+    <ClCompile Include="..\..\clibs\meshconverter\antmesh_converter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="tools\data.c">
+    <ClCompile Include="..\..\clibs\meshconverter\utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\meshconverter\bgfxmesh_helper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\meshconverter\fbx_helper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\meshconverter\meshconverter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\clibs\firmware\incbin.h">
+    <ClInclude Include="..\..\clibs\meshconverter\meshdata.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\meshconverter\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

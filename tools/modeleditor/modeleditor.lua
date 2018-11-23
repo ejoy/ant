@@ -5,15 +5,8 @@ dofile "libs/init.lua"
 
 require "iuplua"
 
-local rhwi = require "render.hardware_interface"
-local su = require "scene.util"
-
-
-local inputmgr = require "inputmgr"
-local mapiup = require "editor.input.mapiup"
-
+local editor = require "editor"
 local elog = require "editor.log"
-local task = require "editor.task"
 
 local fbw, fbh = 800, 600
 
@@ -154,33 +147,6 @@ end
 dlg:showxy(iup.CENTER, iup.CENTER)
 dlg.usersize = nil
 
--- local function print_children(container)	
-	
--- 	local idx = 1
--- 	while true do
--- 		local ctrl = container[idx]
--- 		if ctrl == nil then
--- 			break
--- 		end
--- 		idx = idx + 1		
--- 		print("title : ", ctrl.TITLE, ", NATURALSIZE : ", ctrl.NATURALSIZE)
--- 		print_children(ctrl)
--- 	end
--- end
-
---print_children(dlg)
-
-rhwi.init(iup.GetAttributeData(canvas, "HWND"), fbw, fbh, false)
-local iq = inputmgr.queue(mapiup)
-local eu = require "editor.util"
-eu.regitster_iup(iq, canvas)
-local world = su.start_new_world(iq, fbw, fbh, {
+editor.run(fbw, fbh, canvas, {
 	"tools.modeleditor.model_ed_system"
-}, "?.lua")
-
-task.loop(world.update)
-
-if (iup.MainLoopLevel()==0) then
-	iup.MainLoop()
-	iup.Close()
-end
+})
