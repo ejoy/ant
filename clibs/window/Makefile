@@ -2,18 +2,26 @@ include ../common.mk
 
 mingw : window.dll
 
-window.o : window.c
-	$(CC) $(CFLAGS) -c -o $@ $^ $(LUAINC) $(LUALIB)
+window.o : window.c window.h
+	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC)
 
-windows_native.o : windows_native.c
-	$(CC) $(CFLAGS) -c -o $@ $^ $(LUAINC) $(LUALIB)
+ifeq "$(PLAT)" "osx"
 
-window.dll : window.o windows_native.o
-	$(CC) $(CFLAGS) --shared -o $@ $^ $(LUAINC) $(LUALIB)
+PLAT_O = wnd_osx.o
+PLAT_LIB = -framework Cocoa
+wnd_osx.o : $(PLAT)/wnd_osx.m $(PLAT)/wnd_osx.h
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-libwindow.a : window.o windows_native.o
+endif
+
+wnd_native.o : $(PLAT)/wnd_native.c window.h
+	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC)
+
+window.dll : window.o wnd_native.o $(PLAT_O)
+	$(CC) $(CFLAGS) $(DYNLIB) -o $@ $^ $(PLAT_LIB)
+
+libwindow.a : window.o wnd_native.o $(PLAT_O)
 	ar rsv $@ $^
 
 clean :
-	rm -f window.dll
-
+	rm -f window.dll *.o

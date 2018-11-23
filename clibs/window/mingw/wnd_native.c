@@ -1,11 +1,10 @@
 #define LUA_LIB
 
 #include <lua.h>
-#include <lua.h>
 #include <lauxlib.h>
 #include <windows.h>
 #include <stdint.h>
-#include "window.h"
+#include "../window.h"
 
 // project path in my documents
 #define CLASSNAME L"ANTCLIENT"
