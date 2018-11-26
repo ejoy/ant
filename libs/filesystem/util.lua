@@ -4,6 +4,12 @@ util.__index = util
 local lfs = require "lfs"
 local path = require "filesystem.path"
 
+if not lfs.exist then
+	function lfs.exist(path)
+		return lfs.attributes(path, "mode") ~= nil
+	end
+end
+
 function util.write_to_file(fn, content, mode)
     local f = io.open(fn, mode or "w")
     f:write(content)
@@ -60,7 +66,7 @@ function util.isfile(filepath)
 end
 
 function util.remove(subpath)
-	for name in path.dir(subpath) do	
+	for name in lfs.dir(subpath) do	
 		local fullpath = path.join(subpath, name)
 		if util.isdir(fullpath) then
 			util.remove(fullpath)
@@ -92,13 +98,16 @@ function util.dir(subfolder, filters)
 	return iter, d, idx
 end
 
-function util.listfiles(subfolder, files, filter_exts)	
+function util.listfiles(subfolder, files, filter_exts)
 	if not lfs.exist(subfolder) then
 		return
 	end
-	for p in path.dir(subfolder) do
+	for p in lfs.dir(subfolder) do
+		if p == '.' or p == '..' then
+			goto continue
+		end
 		local filepath = path.join(subfolder, p)
-		if path.isdir(filepath) then
+		if util.isdir(filepath) then
 			util.listfiles(filepath, files, filter_exts)
 		else
 			if filter_exts then
@@ -120,6 +129,7 @@ function util.listfiles(subfolder, files, filter_exts)
 				table.insert(files, filepath)
 			end
 		end
+		::continue::
 	end
 end
 

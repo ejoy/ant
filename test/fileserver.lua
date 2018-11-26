@@ -30,8 +30,11 @@ local function convertfiles(dirs)
 end
 
 local repo = assert(vrepo.new(repopath))
+
+LOG ("Compile repo")
 convertfiles {repopath .. "/assets", repo:realpath("engine/assets")} -- need call before repo build
 
+LOG ("Rebuild repo")
 local roothash = repo:index()
 repo:rebuild()
 

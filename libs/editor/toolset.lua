@@ -1,6 +1,8 @@
 local fs = require "lfs"
 local fspath = require "filesystem.path"
 
+local config = require "common.config"
+
 local PATH = "ant"
 
 local toolset = {}
@@ -11,26 +13,24 @@ if cwd == nil or cwd == "" then
 	error("empty cwd!")
 end
 
-local default_toolset = {
-	lua = cwd .. "/clibs/lua/lua.exe",
-	shaderc = cwd .. "/3rd/bgfx/.build/win64_mingw-gcc/bin/shadercRelease.exe",
-	shaderinc = cwd .. "/3rd/bgfx/src",
-}
+local default_toolset
+
+if config.platform() == "OSX" then
+	default_toolset = {
+		lua = cwd .. "/clibs/lua/lua",
+		shaderc = cwd .. "/3rd/bgfx/.build/osx64_clang/bin/shadercRelease",
+		shaderinc = cwd .. "/3rd/bgfx/src",
+	}
+else
+	default_toolset = {
+		lua = cwd .. "/clibs/lua/lua.exe",
+		shaderc = cwd .. "/3rd/bgfx/.build/win64_mingw-gcc/bin/shadercRelease.exe",
+		shaderinc = cwd .. "/3rd/bgfx/src",
+	}
+end
 
 function toolset.load_config()
-	local home = fs.personaldir and fs.personaldir() or os.getenv 'HOME'
-	local toolset_path = string.format("%s/%s/toolset.lua", home, PATH)
-	local ret = {}
-	local f, err = loadfile(toolset_path, "t", ret)
-	if f == nil then
-		print(err)	
-		for k, v in pairs(default_toolset) do
-			ret[k] = v
-		end
-	else
-		f()
-	end	
-	return ret
+	return toolset.path
 end
 
 local function home_path()
@@ -150,7 +150,23 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 	end
 end
 
-toolset.path = setmetatable(toolset.load_config(), { __index = default_toolset })
+local function load_config()
+	local home = fs.personaldir and fs.personaldir() or os.getenv 'HOME'
+	local toolset_path = string.format("%s/%s/toolset.lua", home, PATH)
+	local ret = {}
+	local f, err = loadfile(toolset_path, "t", ret)
+	if f == nil then
+		print(err)	
+		for k, v in pairs(default_toolset) do
+			ret[k] = v
+		end
+	else
+		f()
+	end	
+	return ret
+end
+
+toolset.path = setmetatable(load_config(), { __index = default_toolset })
 toolset.homedir = home_path()
 
 return toolset

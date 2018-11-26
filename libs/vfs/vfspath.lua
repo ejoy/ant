@@ -71,7 +71,7 @@ local function vfs_searcher_LUA(modname)
 	local c = f:read "a"
 	local func, lerr = load(c, "@vfs://" .. mod_filepath)
 	if lerr then
-		error(string.format("load file '%s' failed", mod_filepath))
+		error(string.format("load file '%s' failed: %s", mod_filepath, lerr))
 	end
 	return func, mod_filepath
 end
