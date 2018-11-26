@@ -1,17 +1,11 @@
 local ecs = ...
 local world = ecs.world
 
---local math3d = require "math3d"
-
--- local math = ecs.component "math"
--- function math.new()
--- 	return math3d.new()
--- end
+ecs.import "test.component.comp_struct"
 
 local dummy = ecs.system "dummy"
 
 dummy.singleton "init"
---dummy.singleton "math"
 dummy.depend "init"
 dummy.import "foobar"	-- import foobar methods
 
@@ -20,6 +14,9 @@ function dummy:init()
 	self:init_print()
 	local eid = world:new_entity "foobar"
 	--world:add_component(eid, "foobar")
+
+	-- import from test/component/comp_struct.lua
+	world:new_entity "c_struct"
 end
 
 function dummy:update()

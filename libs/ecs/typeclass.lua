@@ -124,11 +124,17 @@ return function(world, import)
 
 	class_register.component_struct = function (name)
 		local c = class_register.component(name)
-		return function (content)
-			return c {
+		print("[typeclass]component_struct", name)
+		--support component_struct without init struct, but have "new" function
+		local mt = getmetatable(c)
+		local comp___call = assert(mt.__call)
+		mt.__call = function (content)
+			return comp___call(c, {
 				struct = content
-			}
+			})
 		end
+
+		return c
 	end
 
 	class_register.import = import
