@@ -22,10 +22,10 @@ bool FileWatch::Task::open(const std::wstring& directory) {
     }
     m_directory = ::CreateFileW(directory.c_str(),
         FILE_LIST_DIRECTORY,
-        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE,
         NULL,
         OPEN_EXISTING,
-        FILE_ATTRIBUTE_DIRECTORY | FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
         NULL);
     return (m_directory != INVALID_HANDLE_VALUE);
 }
