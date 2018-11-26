@@ -66,7 +66,7 @@ function util.isfile(filepath)
 end
 
 function util.remove(subpath)
-	for name in lfs.dir(subpath) do	
+	for name in util.dir(subpath) do	
 		local fullpath = path.join(subpath, name)
 		if util.isdir(fullpath) then
 			util.remove(fullpath)
@@ -102,10 +102,7 @@ function util.listfiles(subfolder, files, filter_exts)
 	if not lfs.exist(subfolder) then
 		return
 	end
-	for p in lfs.dir(subfolder) do
-		if p == '.' or p == '..' then
-			goto continue
-		end
+	for p in util.dir(subfolder) do
 		local filepath = path.join(subfolder, p)
 		if util.isdir(filepath) then
 			util.listfiles(filepath, files, filter_exts)
@@ -129,7 +126,6 @@ function util.listfiles(subfolder, files, filter_exts)
 				table.insert(files, filepath)
 			end
 		end
-		::continue::
 	end
 end
 
