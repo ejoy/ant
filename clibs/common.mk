@@ -1,4 +1,6 @@
+ifeq "$(PLAT)" ""
 PLAT = mingw
+endif
 
 ODIR = o
 ANT3RD = ../../3rd

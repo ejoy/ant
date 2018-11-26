@@ -1,5 +1,5 @@
 ANT= ../..
-PLAT=mingw
+PLAT=osx
 ANT3RD= $(ANT)/3rd
 include $(ANT)/clibs/common.mk
 include $(ANT)/clibs/ant/ant_define.mk
@@ -12,14 +12,14 @@ default : ant.exe
 
 mingw : default
 
-main.o : main.cpp mingw_wmain.h
+main.o : main.cpp
 	g++ -std=c++17 -c $(CFLAGS) $(ANTINC) $(LUAINC) -o $@ $<
 
 libant.a :
 #	cd $(ANT)/clibs/ant/ && $(MAKE)
 
 ant.exe : main.o libant.a
-	gcc -o $@ main.o $(ANT)/clibs/ant/libant.a $(LINKLIBANT) -lshlwapi
+	gcc -o $@ main.o $(ANT)/clibs/ant/libant.a $(LINKLIBANT)
 	$(STRIP) $@ 
 
 clean :
