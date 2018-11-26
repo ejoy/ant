@@ -16,7 +16,7 @@ local repo = require "vfs.repo"
 local fs = require "lfs"
 
 local enginepath = os.getenv "ANTGE" or fs.currentdir()
-local homepath = fs.personaldir()
+local homepath = fs.personaldir and fs.personaldir() or os.getenv 'HOME'
 
 print ("Ant engine path :", enginepath)
 print ("Home path :", homepath)

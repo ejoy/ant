@@ -19,5 +19,5 @@ static void hook_openlibs(lua_State *L);
 
 static void hook_openlibs(lua_State *L) {
     luaL_openlibs(L);
-    ant_searcher_init(L);
+    ant_searcher_init(L, 1);
 }

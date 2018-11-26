@@ -48,9 +48,8 @@ extern "C" {
 #pragma warning Unknown dynamic link import/export semantics.
 #endif
 	EXPORT int
-	luaopen_assimplua(lua_State *L)	{
+	luaopen_meshconverter(lua_State *L)	{
 		luaL_newlib(L, myLib);
 		return 1;     
 	}
 }
-

@@ -18,7 +18,7 @@ local default_toolset = {
 }
 
 function toolset.load_config()
-	local home = fs.personaldir()
+	local home = fs.personaldir and fs.personaldir() or os.getenv 'HOME'
 	local toolset_path = string.format("%s/%s/toolset.lua", home, PATH)
 	local ret = {}
 	local f, err = loadfile(toolset_path, "t", ret)
@@ -34,7 +34,7 @@ function toolset.load_config()
 end
 
 local function home_path()
-	local home = fs.personaldir()
+	local home = fs.personaldir and fs.personaldir() or os.getenv 'HOME'
 	local home_path = home .. "/" .. PATH
 	local attrib = fs.attributes(home_path, "mode")
 	if not attrib then

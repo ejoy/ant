@@ -35,9 +35,9 @@ LUABIN = ../lua/lua
 endif
 
 ifeq "$(PLAT)" "osx"
-DYNLIB = -fPIC -dynamiclib -Wl,-undefined,dynamic_lookup
+LD_SHARED = -fPIC -dynamiclib -Wl,-undefined,dynamic_lookup
 STRIP = strip -u -r -x
 else
-DYNLIB = --shared
+LD_SHARED = --shared
 STRIP = strip --strip-unneeded
 endif

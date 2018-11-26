@@ -84,7 +84,7 @@ LoadBGFXMesh(const std::string& filePath, mesh_data &md) {
 		}
 								   break;
 		case BGFX_CHUNK_MAGIC_PRI: {
-			auto read_name = [&md, &reader]() {
+			auto read_name = [&reader]() {
 				uint16_t len;
 				bx::read(&reader, len);
 
