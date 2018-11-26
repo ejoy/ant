@@ -29,7 +29,7 @@ LUABIN = ../lua/lua.exe
 else ifeq "$(PLAT)" "osx"
 
 LUA_FLAGS = -DLUA_USE_MACOSX
-LUALIB = -L../lua -llua
+LUALIB = -L../lua
 LUABIN = ../lua/lua
 
 endif

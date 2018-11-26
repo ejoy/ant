@@ -113,7 +113,7 @@ WindowDelegate* g_wd;
 int32_t g_mx;
 int32_t g_my;
 
-void* window_create(int w, int h, const char* title, size_t sz) {
+void* window_create(struct ant_window_callback* cb, int w, int h, const char* title, size_t sz) {
     (void)sz;
     NSRect rc = NSMakeRect(0, 0, w, h);
 	NSUInteger uiStyle = 0
@@ -133,6 +133,7 @@ void* window_create(int w, int h, const char* title, size_t sz) {
     [win makeMainWindow];
     g_wd = [WindowDelegate new];
 	[g_wd windowCreated:win];
+    [g_wd initAntCallback: cb];
     [nsTitle release];
     return win; 
 }
@@ -232,7 +233,6 @@ void window_mainloop(struct ant_window_callback* cb) {
     if (!g_wd) {
         return;
     }
-    [g_wd initAntCallback: cb];
 	struct ant_window_message update_msg;
 	update_msg.type = ANT_WINDOW_UPDATE;
 	@autoreleasepool {

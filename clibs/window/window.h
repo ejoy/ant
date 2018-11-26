@@ -1,7 +1,6 @@
 #ifndef ant_window_h
 #define ant_window_h
 
-#include <lua.h>
 #include <stdint.h>
 
 #define ANT_WINDOW_UPDATE 0

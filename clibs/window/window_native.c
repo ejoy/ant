@@ -29,7 +29,7 @@ lcreatewindow(lua_State *L) {
 	cb->ud = NULL;
 	cb->message = default_message_handle;
 	lua_setfield(L, LUA_REGISTRYINDEX, ANT_WINDOW_CALLBACK);
-	void* wnd = window_create(width, height, title, sz);
+	void* wnd = window_create(cb, width, height, title, sz);
 	if (wnd == NULL) {
 		return luaL_error(L, "Create window failed");
 	}

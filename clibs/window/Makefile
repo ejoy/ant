@@ -25,7 +25,7 @@ osx_window.o : $(PLAT)/osx_window.m window_native.h
 endif
 
 window.dll : window.o window_native.o $(PLAT_O)
-	$(CC) $(CFLAGS) $(DYNLIB) -o $@ $^ $(PLAT_LIB)
+	$(CC) $(CFLAGS) $(DYNLIB) -o $@ $^ $(PLAT_LIB) $(LUALIB)
 
 libwindow.a : window.o window_native.o $(PLAT_O)
 	ar rsv $@ $^

@@ -105,8 +105,8 @@ register_class()
 	RegisterClassW(&wndclass);
 }
 
-void* window_create(int w, int h, const char* title, size_t sz) {
-	wchar_t* wtitle = (wchar_t *)malloc(L, (sz + 1) * sizeof(wchar_t));
+void* window_create(struct ant_window_callback* cb, int w, int h, const char* title, size_t sz) {
+	wchar_t* wtitle = (wchar_t *)malloc((sz + 1) * sizeof(wchar_t));
 	if (wtitle == 0) {
 		return NULL;
 	}
@@ -131,7 +131,7 @@ void* window_create(int w, int h, const char* title, size_t sz) {
 		cb);
 	free(wtitle);
 	if (wnd == NULL) {
-		return lNULL;
+		return NULL;
 	}
 	ShowWindow(wnd, SW_SHOWDEFAULT);
 	UpdateWindow(wnd);
