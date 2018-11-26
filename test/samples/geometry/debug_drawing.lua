@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local bgfx = require "bgfx"
-local componentutil = require "components.util"
+local componentutil = require "render.components.util"
 
 local function init_wireframe_mesh()
 	local decl, vertexsize = bgfx.vertex_decl {
@@ -26,9 +26,12 @@ local function init_wireframe_mesh()
 	}	
 end
 
-local debug_obj = ecs.component "debug_object" {}
-
 ecs.tag "main_debug"
+
+local debug_obj = ecs.component "debug_object" {
+	type = "userdata",
+	default = {}
+}
 
 function debug_obj:init()
 	self.renderobjs = {
