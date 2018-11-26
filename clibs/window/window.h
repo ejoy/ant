@@ -2,12 +2,14 @@
 #define ant_window_h
 
 #include <lua.h>
+#include <stdint.h>
 
 #define ANT_WINDOW_UPDATE 0
 #define ANT_WINDOW_EXIT 1
 #define ANT_WINDOW_TOUCH 2
 #define ANT_WINDOW_MOVE 3
 #define ANT_WINDOW_KEYBOARD 4
+#define ANT_WINDOW_MOUSE 5
 
 #define ANT_WINDOW_CALLBACK "ANT_WINDOW_CALLBACK"
 
@@ -20,9 +22,9 @@ struct ant_window_exit {
 };
 
 struct ant_window_touch {
-	int what;	// 0: lbutton up ; 1: lbutton down; 2: rbutton up; 3 rbutton down
 	int x;
 	int y;
+	uint8_t what;	// 0: lbutton up ; 1: lbutton down; 2: rbutton up; 3 rbutton down
 };
 
 struct ant_window_move {
@@ -30,18 +32,25 @@ struct ant_window_move {
 	int y;
 };
 
+struct ant_window_mouse {
+	int x;
+	int y;
+	uint8_t type;  // 0: lbutton; 1: rbutton up; 2 mbutton
+	uint8_t press; // 0: up ; 1: down
+};
+
 typedef enum {
-	KB_CTRL = 0x01,
-	KB_ALT = 0x02,
-	KB_SHIFT = 0x04,
-	KB_SYS = 0x08,	
-	KB_PRESS = 0x10,
-	KB_CAS_LEFTORRIGHT = 0x20,
+	KB_CTRL,
+	KB_ALT,
+	KB_SHIFT,
+	KB_SYS,
+	KB_CAPSLOCK,
 }KEYBOARD_STATE;
 
 struct ant_window_keyboard {
 	int key;
-	int state;	// ctrl, alt, shift, in low 3 bits; left or right, in low 4 bit
+	uint8_t state; // ctrl, alt, shift, in low 3 bits; left or right, in low 4 bit
+	uint8_t press; // 0: up ; 1: down
 };
 
 struct ant_window_message {
@@ -52,6 +61,7 @@ struct ant_window_message {
 		struct ant_window_touch touch;
 		struct ant_window_move move;
 		struct ant_window_keyboard keyboard;
+		struct ant_window_mouse mouse;
 	} u;
 };
 

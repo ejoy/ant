@@ -3,24 +3,31 @@ include ../common.mk
 mingw : window.dll
 
 window.o : window.c window.h
-	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC)
+	$(CC) -g $(CFLAGS) -c -o $@ $< $(LUAINC)
 
-ifeq "$(PLAT)" "osx"
+window_native.o : window_native.c window_native.h window.h
+	$(CC) -g $(CFLAGS) -c -o $@ $< $(LUAINC)
 
-PLAT_O = wnd_osx.o
+ifeq "$(PLAT)" "mingw"
+
+PLAT_O = mingw_window.o
+PLAT_LIB =
+mingw_window.o : $(PLAT)/mingw_window.c window_native.h
+	$(CC) -g $(CFLAGS) -c -o $@ $<
+
+else ifeq "$(PLAT)" "osx"
+
+PLAT_O = osx_window.o
 PLAT_LIB = -framework Cocoa
-wnd_osx.o : $(PLAT)/wnd_osx.m $(PLAT)/wnd_osx.h
-	$(CC) $(CFLAGS) -c -o $@ $<
+osx_window.o : $(PLAT)/osx_window.m window_native.h
+	$(CC) -g $(CFLAGS) -c -o $@ $<
 
 endif
 
-wnd_native.o : $(PLAT)/wnd_native.c window.h
-	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC)
-
-window.dll : window.o wnd_native.o $(PLAT_O)
+window.dll : window.o window_native.o $(PLAT_O)
 	$(CC) $(CFLAGS) $(DYNLIB) -o $@ $^ $(PLAT_LIB)
 
-libwindow.a : window.o wnd_native.o $(PLAT_O)
+libwindow.a : window.o window_native.o $(PLAT_O)
 	ar rsv $@ $^
 
 clean :
