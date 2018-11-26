@@ -134,7 +134,7 @@ function util.draw_primitive(vid, primgroup, mat)
 		local numprim = #prims
 		for i=1, numprim do
 			local prim = prims[i]
-			if ib then
+			if ib and prim.startIndex and prim.numIndices then
 				bgfx.set_index_buffer(ib.handle, prim.startIndex, prim.numIndices)
 			end
 			for idx, v in ipairs(vb.handles) do

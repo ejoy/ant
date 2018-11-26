@@ -96,14 +96,8 @@ ecs.component_struct "material" {
 			local content = {}
 			
 			for _, e in ipairs(v) do
-				local pp = e.path
-				local materialinfo = asset.load(pp)
-				local properties = nil
-				if e.properties then
-					properties = {}
-					component_util.update_properties(properties, e.properties)
-				end
-				table.insert(content, {path=pp, materialinfo=materialinfo, properties=properties})
+				local m = component_util.create_material(e.path)
+				table.insert(content, m)
 			end
 
 			return content

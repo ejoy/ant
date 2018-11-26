@@ -65,15 +65,26 @@ function util.update_properties(dst_properties, src_properties)
 	end
 end
 
-function util.load_materialex(content)
-	for _, m in ipairs(content) do		
-		local materialinfo = asset.load(m.path)
-		m.materialinfo = materialinfo
+function util.create_material(filepath)
+	local materialinfo = asset.load(filepath)
+	--
+	local mproperties = materialinfo.properties 
+	local properties = nil
+	if mproperties then
+		properties = {}
+		util.update_properties(properties, mproperties)
+	end
 	
-		--
-		local properties = materialinfo.properties
-		if properties then
-			util.update_properties(assert(m.properties), properties)
+	return {path=filepath, materialinfo=materialinfo, properties=properties}
+end
+
+function util.load_materialex(content)
+	for _, m in ipairs(content) do
+		local info = util.create_material(m.path)
+		if info.properties then
+			for k, p in pairs(info.properties) do
+				m.properties[k] = p
+			end
 		end
 	end
 	return content

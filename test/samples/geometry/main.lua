@@ -20,6 +20,6 @@ local dlg = iup.dialog {
 
 dlg:showxy(iup.CENTER, iup.CENTER)
 
-editor.run(800, 600, canvas, {
-	"test.samples.geometry.geometry_generator"
+editor.run(fbw, fbh, canvas, {
+	"test.samples.geometry.debug_drawing"
 })
