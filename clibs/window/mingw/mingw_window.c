@@ -64,7 +64,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		msg.type = ANT_WINDOW_MOUSE_WHEEL;
 		get_screen_xy(hWnd, lParam, &msg.u.mouse_wheel.x, &msg.u.mouse_wheel.y);
-		msg.u.mouse_wheel.delta = GET_WHEEL_DELTA_WPARAM(wParam)/WHEEL_DELTA;
+		msg.u.mouse_wheel.delta = 100 * GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
 		cb->message(cb->ud, &msg);
 		break;
 	case WM_LBUTTONDOWN:

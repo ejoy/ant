@@ -33,7 +33,7 @@ function camera_controller_system:init()
 	local target = math3d.ref "vector"
 	camera_reset(camera, target)
 
-	local move_speed = 1
+	local move_speed = 0.006
 	local message = {}
 
 	local last_xy

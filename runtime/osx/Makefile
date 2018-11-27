@@ -16,7 +16,7 @@ main.o : main.cpp
 	g++ -std=c++17 -c $(CFLAGS) $(ANTINC) $(LUAINC) -o $@ $<
 
 libant.a :
-#	cd $(ANT)/clibs/ant/ && $(MAKE)
+	cd $(ANT)/clibs/ant/ && $(MAKE)
 
 ant.exe : main.o libant.a
 	gcc -o $@ main.o $(ANT)/clibs/ant/libant.a $(LINKLIBANT)
