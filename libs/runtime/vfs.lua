@@ -34,4 +34,10 @@ function vfs.type(path)
 	return io_resp()
 end
 
+-- return link object with path and platform
+function vfs.link(path)
+	io_req("LINK", threadid, npath(path))
+	return io_resp()
+end
+
 package.loaded.vfs = vfs
