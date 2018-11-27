@@ -118,6 +118,9 @@ end
 
 local function build(plat, source, lk, tmp)
 	-- todo: real build
+	local f = io.open(tmp, "wb")
+	f:write("Dummy\n", plat, "\n", source, "\n", lk)
+	f:close()
 	return true
 end
 
