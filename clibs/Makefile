@@ -1,6 +1,6 @@
 BIN = .
 LIBS := math3d lsocket redirectfd lfs bgfx remotedebug memoryfile \
- crypt assimplua hierarchy cppfs debugger thread protocol bullet window filewatch
+ crypt meshconverter hierarchy cppfs debugger thread protocol bullet window filewatch
 
 ALL_LIBS := $(LIBS) lua iup
 
@@ -58,5 +58,5 @@ $(foreach v, $(LIBS) lua iup, $(eval $(call TARG_func,$(v))))
 
 copy: $(addprefix copy_,$(LIBS) iup lua)
 	
-clean : $(addprefix clean_,$(LIBS) iup lua)
+clean : $(addprefix clean_,$(LIBS))# iup lua)
 	rm -f *.dll && rm -f *.exe
