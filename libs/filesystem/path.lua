@@ -1,6 +1,16 @@
 local path = {}
 path.__index = path
 
+local function rootdir(fullname)
+	if fullname:sub(1, 1) == '/' then
+		return 2
+	end
+	local pos = fullname:find(':', 1, true)
+	if pos then
+		return pos + 1
+	end
+end
+
 function path.remove_ext(name)
     local path, ext = name:match("(.+)%.([%w_-]+)$")
     if ext ~= nil then
@@ -43,8 +53,15 @@ function path.parent(fullname)
 end
 
 function path.normalize(fullname)
+	local pos = rootdir(fullname)
+	local rootpath, otherpath
+	if pos then
+		rootpath, otherpath = fullname:sub(1, pos-1), fullname:sub(pos)
+	else
+		rootpath, otherpath = '', fullname
+	end
 	local t = {}	
-	for m in fullname:gmatch("([^/\\]+)[/\\]?") do
+	for m in otherpath:gmatch("([^/\\]+)[/\\]?") do
 		if m == ".." and next(t) then
 			table.remove(t, #t)
 		elseif m ~= "." then
@@ -52,7 +69,7 @@ function path.normalize(fullname)
 		end		
 	end
 
-	return table.concat(t, "/")
+	return rootpath .. table.concat(t, "/")
 end
 
 function path.remove_filename(fullname)
@@ -60,15 +77,7 @@ function path.remove_filename(fullname)
 end
 
 function path.is_absolute_path(p)
-	if p:sub(1, 1) == '/' then
-		return true
-	end
-
-	if p:sub(2, 2) == ":" then
-		return true
-	end
-
-	return false
+	return rootdir(p) ~= nil
 end
 
 function path.join(p0, ...)    

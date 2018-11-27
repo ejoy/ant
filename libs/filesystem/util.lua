@@ -42,18 +42,20 @@ function util.file_is_newer(check, base)
 	return checktime > basetime
 end
 
+local function create_dirs(fullpath)
+	local parentpath = path.parent(fullpath)
+	if not util.exist(parentpath) then
+		create_dirs(parentpath)
+	end
+	lfs.mkdir(fullpath)
+end
+
 function util.create_dirs(fullpath)
 	fullpath = path.normalize(path.trim_slash(fullpath))
 	if not path.is_absolute_path(fullpath) then
 		fullpath = path.join(lfs.currentdir(), fullpath)
 	end
-	local tmp
-	for m in fullpath:gmatch("[^\\/]+") do        
-		tmp = tmp and path.join(tmp, m) or m
-		if not util.exist(tmp) then
-            lfs.mkdir(tmp)
-        end
-    end
+	create_dirs(fullpath)
 end
 
 function util.isdir(filepath)
