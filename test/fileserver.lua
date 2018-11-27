@@ -10,14 +10,19 @@ local function LOG(...)
 	print(...)
 end
 
-local fw = require "filewatch"
+local ok, fw = pcall(require, "filewatch")
+if not ok then fw = nil end
+
 local vrepo = require "vfs.repo"
 local fs = require "lfs"
 local network = require "network"
 local protocol = require "protocol"
 local fileconvert = require "fileconvert"
+local util = require "filesystem.util"
 
-local repopath = fs.personaldir() .. "/" .. reponame
+local home = util.personaldir()
+local repopath = home .. "/" .. reponame
+
 LOG ("Open repo : ", repopath)
 local function convertfiles(dirs)
 	for _, d in ipairs (dirs) do
@@ -26,17 +31,22 @@ local function convertfiles(dirs)
 end
 
 local repo = assert(vrepo.new(repopath))
+
+LOG ("Compile repo")
 convertfiles {repopath .. "/assets", repo:realpath("engine/assets")} -- need call before repo build
 
+LOG ("Rebuild repo")
 local roothash = repo:index()
 repo:rebuild()
 
-local wid = {}
-local id = assert(fw.add(repopath, 'fdts'))
-wid[id] = ''
-for k, v in pairs(repo._mountpoint) do
-	local id = assert(fw.add(v, 'fdts'))
-	wid[id] = k
+if fw then
+	local wid = {}
+	local id = assert(fw.add(repopath, 'fdts'))
+	wid[id] = ''
+	for k, v in pairs(repo._mountpoint) do
+		local id = assert(fw.add(v, 'fdts'))
+		wid[id] = k
+	end
 end
 
 local filelisten = network.listen(config.address, config.port)
@@ -195,7 +205,9 @@ local function mainloop()
 			end
 		end
 	end
-	filewacth()
+	if fw then
+		filewacth()
+	end
 end
 
 while true do

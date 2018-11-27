@@ -4,6 +4,13 @@ util.__index = util
 local lfs = require "lfs"
 local path = require "filesystem.path"
 
+function util.exist(path)
+	if lfs.exist then
+		return lfs.exist(path)
+	end
+	return lfs.attributes(path, "mode") ~= nil
+end
+
 function util.write_to_file(fn, content, mode)
     local f = io.open(fn, mode or "w")
     f:write(content)
@@ -43,7 +50,7 @@ function util.create_dirs(fullpath)
 	local tmp
 	for m in fullpath:gmatch("[^\\/]+") do        
 		tmp = tmp and path.join(tmp, m) or m
-		if not lfs.exist(tmp) then
+		if not util.exist(tmp) then
             lfs.mkdir(tmp)
         end
     end
@@ -60,7 +67,7 @@ function util.isfile(filepath)
 end
 
 function util.remove(subpath)
-	for name in path.dir(subpath) do	
+	for name in util.dir(subpath) do	
 		local fullpath = path.join(subpath, name)
 		if util.isdir(fullpath) then
 			util.remove(fullpath)
@@ -92,13 +99,13 @@ function util.dir(subfolder, filters)
 	return iter, d, idx
 end
 
-function util.listfiles(subfolder, files, filter_exts)	
-	if not lfs.exist(subfolder) then
+function util.listfiles(subfolder, files, filter_exts)
+	if not util.exist(subfolder) then
 		return
 	end
-	for p in path.dir(subfolder) do
+	for p in util.dir(subfolder) do
 		local filepath = path.join(subfolder, p)
-		if path.isdir(filepath) then
+		if util.isdir(filepath) then
 			util.listfiles(filepath, files, filter_exts)
 		else
 			if filter_exts then
@@ -121,6 +128,13 @@ function util.listfiles(subfolder, files, filter_exts)
 			end
 		end
 	end
+end
+
+function util.personaldir()
+	if lfs.personaldir then
+		return lfs.personaldir()
+	end
+	return path.join(os.getenv 'HOME', 'Documents')
 end
 
 return util

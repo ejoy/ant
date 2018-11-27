@@ -44,6 +44,8 @@ main.o : main.c
 	gcc -std=gnu99 -c $(CFLAGS) $(LUAINC) -o $@ $<
 
 libant.a : tmp/ant_searcher.o $(UNPACKLIBS)
+	rm "tmp/__.SYMDEF"
+	rm "tmp/__.SYMDEF SORTED"
 	cd tmp && ar rs $@ *.o
 	mv tmp/$@ $@
 

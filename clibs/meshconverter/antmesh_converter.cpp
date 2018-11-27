@@ -7,7 +7,7 @@ extern "C" {
 }
 
 //assimp include
-#include <assimp/importer.hpp>
+#include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 

@@ -13,6 +13,7 @@ typedef enum {
 	CALLBACK_TOUCH,
 	CALLBACK_MOVE,
 	CALLBACK_KEYBOARD,
+	CALLBACK_MOUSE,
 	CALLBACK_COUNT,
 } CallBackType;
 
@@ -57,7 +58,16 @@ push_move_args(lua_State *L, struct ant_window_move *move) {
 static void
 push_keyboard_arg(lua_State *L, struct ant_window_keyboard *keyboard) {
 	lua_pushinteger(L, keyboard->key);
+	lua_pushboolean(L, keyboard->press);
 	lua_pushinteger(L, keyboard->state);
+}
+
+static void
+push_mouse_arg(lua_State *L, struct ant_window_mouse *mouse) {
+	lua_pushinteger(L, mouse->type);
+	lua_pushboolean(L, mouse->press);
+	lua_pushinteger(L, mouse->x);
+	lua_pushinteger(L, mouse->y);
 }
 
 static int
@@ -148,6 +158,13 @@ callback(void *ud, struct ant_window_message *msg) {
 		} else {
 			return;
 		}
+	case ANT_WINDOW_MOUSE:
+		if (push_callback_function(context, CALLBACK_MOUSE)) {
+			push_mouse_arg(L, &msg->u.mouse);
+			break;
+		} else {
+			return;
+		}
 	default:
 		raise_error_string(context, "Unknown callback");
 		return;
@@ -178,6 +195,7 @@ register_functions(lua_State *L, int index, lua_State *fL) {
 	register_function(L, index, "touch", fL, CALLBACK_TOUCH);
 	register_function(L, index, "move", fL, CALLBACK_MOVE);
 	register_function(L, index, "keypress", fL, CALLBACK_KEYBOARD);
+	register_function(L, index, "mouse", fL, CALLBACK_MOUSE);
 }
 
 static int

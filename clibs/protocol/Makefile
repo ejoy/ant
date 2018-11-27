@@ -6,10 +6,10 @@ lprotocol.o : lprotocol.c
 	gcc -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
 protocol.dll : lprotocol.o
-	gcc --shared $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC)
+	gcc $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC)
 
 libprotocol.a : lprotocol.o
 	ar rsv $@ $^
 
 clean :
-	rm -f protocol.dll
+	rm -f protocol.dll *.o

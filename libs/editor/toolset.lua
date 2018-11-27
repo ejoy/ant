@@ -1,5 +1,8 @@
 local fs = require "lfs"
 local fspath = require "filesystem.path"
+local util = require "filesystem.util"
+
+local config = require "common.config"
 
 local PATH = "ant"
 
@@ -11,36 +14,36 @@ if cwd == nil or cwd == "" then
 	error("empty cwd!")
 end
 
-local default_toolset = {
-	lua = cwd .. "/clibs/lua/lua.exe",
-	shaderc = cwd .. "/3rd/bgfx/.build/win64_mingw-gcc/bin/shadercRelease.exe",
-	shaderinc = cwd .. "/3rd/bgfx/src",
-}
+local default_toolset
+
+if config.platform() == "OSX" then
+	default_toolset = {
+		lua = cwd .. "/clibs/lua/lua",
+		shaderc = cwd .. "/3rd/bgfx/.build/osx64_clang/bin/shadercRelease",
+		shaderinc = cwd .. "/3rd/bgfx/src",
+	}
+else
+	default_toolset = {
+		lua = cwd .. "/clibs/lua/lua.exe",
+		shaderc = cwd .. "/3rd/bgfx/.build/win64_mingw-gcc/bin/shadercRelease.exe",
+		shaderinc = cwd .. "/3rd/bgfx/src",
+	}
+end
 
 function toolset.load_config()
-	local home = fs.personaldir()
-	local toolset_path = string.format("%s/%s/toolset.lua", home, PATH)
-	local ret = {}
-	local f, err = loadfile(toolset_path, "t", ret)
-	if f == nil then
-		print(err)	
-		for k, v in pairs(default_toolset) do
-			ret[k] = v
-		end
-	else
-		f()
-	end	
-	return ret
+	return toolset.path
 end
 
 local function home_path()
-	local home = fs.personaldir()
+	local home = util.personaldir()
 	local home_path = home .. "/" .. PATH
 	local attrib = fs.attributes(home_path, "mode")
+	print(attrib)
 	if not attrib then
 		assert(fs.mkdir(home_path))
+	else
+		assert(attrib == "directory")
 	end
-	assert(attrib == "directory")
 	return home_path
 end
 
@@ -82,7 +85,7 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 		local dest = paths.dest or filename:gsub("(%w+).sc", "%1") .. ".bin"
 
 		local shaderc = paths.shaderc
-		if shaderc and not fs.exist(shaderc)then
+		if shaderc and not util.exist(shaderc)then
 			error(string.format("bgfx shaderc path is privided, but file is not exist, path is : %s. \
 								you can locate to ant folder, and run : bin/iup.exe tools/config.lua, to set the right path", shaderc))
 		end
@@ -105,19 +108,19 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 
 			local incpath = ""
 			for _, p in ipairs(includes) do
-				if not fs.exist(p) then
+				if not util.exist(p) then
 					error(string.format("include path : %s, but not exist!", p))
 				end
 				incpath = incpath .. gen_incpath(p) .. " "
 			end
 			if paths.not_include_examples_common == nil then				
-				if paths.shaderinc and (not fs.exist(paths.shaderinc)) then
+				if paths.shaderinc and (not util.exist(paths.shaderinc)) then
 					error(string.format("bgfx shader include path is needed, \
 										but path is not exist! path have been set : %s", paths.shaderinc))
 				end
 
 				local incexamplepath = fspath.join(paths.shaderinc, "../examples/common")
-				if not fs.exist(incexamplepath) then
+				if not util.exist(incexamplepath) then
 					error(string.format("example is needed, but not exist, path is : %s", incexamplepath))
 				end
 				
@@ -150,7 +153,23 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 	end
 end
 
-toolset.path = setmetatable(toolset.load_config(), { __index = default_toolset })
+local function load_config()
+	local home = util.personaldir()
+	local toolset_path = string.format("%s/%s/toolset.lua", home, PATH)
+	local ret = {}
+	local f, err = loadfile(toolset_path, "t", ret)
+	if f == nil then
+		print(err)	
+		for k, v in pairs(default_toolset) do
+			ret[k] = v
+		end
+	else
+		f()
+	end	
+	return ret
+end
+
+toolset.path = setmetatable(load_config(), { __index = default_toolset })
 toolset.homedir = home_path()
 
 return toolset

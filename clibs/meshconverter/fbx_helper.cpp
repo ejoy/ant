@@ -7,7 +7,7 @@ extern "C" {
 }
 
 //assimp include
-#include <assimp/importer.hpp>
+#include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
@@ -258,7 +258,7 @@ LoadFBXMeshes(const aiScene *scene, const load_config& config, mesh_data &md) {
 			vb.num_vertices = vertexSizeInBytes / CalcVertexSize(layout);
 			assert(vb.vbraws.find(layout) == vb.vbraws.end());
 			
-			vb.vbraws[layout] = std::move(make_buffer_ptr(vertexSizeInBytes));
+			vb.vbraws[layout] = make_buffer_ptr(vertexSizeInBytes);
 			auto &buffer = vb.vbraws[layout];
 
 			auto &ib = group.ib;
@@ -344,7 +344,7 @@ convertFBX(lua_State *L, const std::string &srcpath, const std::string &outputfi
 
 	aiNode* root_node = scene->mRootNode;
 	if (!root_node) {
-		luaL_error(L, "root not is invalid, source file : %s", srcpath);
+		luaL_error(L, "root not is invalid, source file : %s", srcpath.c_str());
 		return false;
 	}
 

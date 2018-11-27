@@ -6,6 +6,7 @@ local reponame = assert((...), "Need repo name")
 
 local fs = require "lfs"
 local thread = require "thread"
+local util = require "filesystem.util"
 
 thread.thread [[
 	-- thread for log
@@ -31,7 +32,7 @@ do
 	end
 end
 
-local repopath = fs.personaldir() .. "/" .. reponame
+local repopath = util.personaldir() .. "/" .. reponame
 local firmware = "runtime/core/firmware"
 
 local boot = assert(loadfile(firmware .. "/bootstrap.lua"))

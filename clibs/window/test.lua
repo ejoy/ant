@@ -1,6 +1,7 @@
-dofile "libs/init.lua"
+--dofile "libs/init.lua"
 
 local native = require "window.native"
+
 local window = require "window"
 local bgfx = require "bgfx"
 
@@ -13,7 +14,7 @@ local s_logo
 bgfx.init {
 	nwh = wnd,
 --	renderer = "DIRECT3D9",
---	renderer = "OPENGL",
+	renderer = "OPENGL",
 	width = width,
 	height = height,
 	reset = "v",
@@ -21,7 +22,7 @@ bgfx.init {
 
 bgfx.set_view_rect(0, 0, 0, width, height)
 bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
-bgfx.set_debug "T"
+bgfx.set_debug "ST"
 
 local callback = {}
 
@@ -33,17 +34,16 @@ function callback.move(x,y)
 	print("MOVE", x, y)
 end
 
-function callback.touch(what, x, y)
-	print("TOUCH", what, x, y)
+function callback.mouse(what, press, x, y)
+	print("mouse", what, press, x, y)
 end
 
-function callback.keypress(key, state)
+function callback.keypress(key, press, state)
 	local ctrl = state & 0x01
 	local alt = state & 0x02
 	local shift = state & 0x04
-	local sys = state &0x08
-	local press = state & 0x10
-	local leftOrright = state & 0x20
+	local sys = state & 0x08
+	local leftOrright = state & 0x10
 	print("KEYBOARD", key, "ctrl", ctrl, "alt", alt, "shift", shift, "sys", sys, "left|right", leftOrright, "is pressed", press)
 end
 

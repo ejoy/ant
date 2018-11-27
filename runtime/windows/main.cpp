@@ -94,7 +94,7 @@ static int pmain(lua_State *L) {
     lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
     luaL_openlibs(L);
     createargtable(L, argc, argv);
-    ant_searcher_init(L);
+    ant_searcher_init(L, 0);
     repo_dir(L);
     dostring(L, "local fw = require 'firmware' ; assert(fw.loadfile 'bootstrap.lua')()");
     return 0;

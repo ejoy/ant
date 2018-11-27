@@ -1,9 +1,11 @@
+ifeq "$(PLAT)" ""
 PLAT = mingw
+endif
 
 ODIR = o
 ANT3RD = ../../3rd
 
-LUAINC = -I ../lua
+LUAINC = -I../lua
 
 AR= ar rcu
 CC= gcc
@@ -23,19 +25,21 @@ CXXFLAGS = -lstdc++ -std=c++17
 ifeq "$(PLAT)" "mingw"
 
 LUA_FLAGS = -DLUA_BUILD_AS_DLL
-LUALIB = -L ../lua -llua53
+LUALIB = -L../lua -llua53
 LUABIN = ../lua/lua.exe
 
 else ifeq "$(PLAT)" "osx"
 
 LUA_FLAGS = -DLUA_USE_MACOSX
-LUALIB = -L ../lua -llua
+LUALIB = -L../lua
 LUABIN = ../lua/lua
 
 endif
 
 ifeq "$(PLAT)" "osx"
+LD_SHARED = -fPIC -dynamiclib -Wl,-undefined,dynamic_lookup
 STRIP = strip -u -r -x
 else
+LD_SHARED = --shared
 STRIP = strip --strip-unneeded
 endif

@@ -7,6 +7,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <string>
 
 using LayoutArray = std::vector<std::string>;
 

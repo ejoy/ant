@@ -40,8 +40,8 @@ end
 
 
 return function(filepath, shadertype)
-	local dstpath = gen_output_path(filepath, shadertype)
-	
+	local dstpath = gen_output_path(filepath, shadertype)	
+	fu.create_dirs(path.parent(dstpath))
 	if fu.file_is_newer(filepath, dstpath) then
 		local outfile, error = check_compile_shader(filepath, dstpath, shadertype)
 		if error then

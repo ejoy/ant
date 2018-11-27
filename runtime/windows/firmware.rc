@@ -1,3 +1,0 @@
-BOOTSTRAP.LUA FIRMWARE "../core/firmware/bootstrap.lua"
-IO.LUA FIRMWARE "../core/firmware/io.lua"
-VFS.LUA FIRMWARE "../core/firmware/vfs.lua"
