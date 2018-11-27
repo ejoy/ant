@@ -58,5 +58,5 @@ $(foreach v, $(LIBS) lua iup, $(eval $(call TARG_func,$(v))))
 
 copy: $(addprefix copy_,$(LIBS) iup lua)
 	
-clean : $(addprefix clean_,$(LIBS))# iup lua)
+clean : $(addprefix clean_,$(LIBS) iup lua)
 	rm -f *.dll && rm -f *.exe
