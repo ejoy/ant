@@ -2,6 +2,8 @@ require 'runtime.vfs'
 require 'runtime.vfsio'
 require 'runtime.errlog'
 
+local keymap = require 'inputmgr.keymap'
+
 local dbgupdate = require 'runtime.debug'
 
 function dprint(...)
@@ -66,7 +68,8 @@ function callback.keypress(key, press, state)
 	status['SHIFT'] = what_state(state, 0x04)
 	status['SYS'] = what_state(state, 0x08)
 
-	iq:push("keypress", key, press, status)
+	local keyname = keymap.name(key)
+	iq:push("keypress", keyname, press, status)
 end
 
 function callback.exit()	
