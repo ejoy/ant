@@ -83,7 +83,7 @@ serialize_test_sys.singleton "message"
 
 function serialize_test_sys:init()
     local message = {}
-    function message:keypress(c, p)
+    function message:keyboard(c, p)
         if c == nil then return end
 
         if p then

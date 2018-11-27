@@ -204,7 +204,7 @@ end
 local function register_message(msg_comp, ot, ms)
     local message = {}
 
-    function message:keypress(c, p, status)
+    function message:keyboard(c, p, status)
         if c == nil then return end
 
         if p then 
@@ -241,7 +241,7 @@ local function register_message(msg_comp, ot, ms)
 
     end
     local lastX, lastY
-    function message:motion(x, y, status)
+    function message:mouse_move(x, y, status)
         local leftBtnDown = status.LEFT
         if not leftBtnDown then
             return 

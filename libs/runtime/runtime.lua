@@ -24,9 +24,10 @@ local nwh = native.create(width,height,"Hello World")
 
 local inputmgr = require "inputmgr"
 local iq = inputmgr.queue {
-	button = "_,_,_,_,_",
-	motion = "_,_,_",
-	keypress="_,_,_",
+	keyboard="_,_,_",
+	mouse_click = "_,_,_,_,_",
+	mouse_move = "_,_,_",
+	mouse_wheel="_,_,_",
 }
 
 local callback = {}
@@ -37,15 +38,14 @@ end
 
 local status = {}
 function callback.mouse_move(x,y)
-	iq:push("motion", x, y, status)
+	iq:push("mouse_move", x, y, status)
 end
 
 function callback.mouse_wheel(delta, x, y)
-	--print(delta, x, y)
+	iq:push("mouse_wheel", delta, x, y)
 end
 
 function callback.mouse_click(what, press, x, y)
-	--print(what, press, x, y)
 	local function translate()
 		if what == 0 then
 			status.LEFT = press
@@ -58,10 +58,10 @@ function callback.mouse_click(what, press, x, y)
 		end
 	end
 	local btn = translate()
-	iq:push("button", btn, press, x, y)
+	iq:push("mouse_click", btn, press, x, y)
 end
 
-function callback.keypress(key, press, state)
+function callback.keyboard(key, press, state)
 	local function what_state(state, bit)
 		if state & bit then
 			return true
@@ -74,7 +74,7 @@ function callback.keypress(key, press, state)
 	status['SYS'] = what_state(state, 0x08)
 
 	local keyname = keymap.name(key)
-	iq:push("keypress", keyname, press, status)
+	iq:push("keyboard", keyname, press, status)
 end
 
 function callback.exit()	

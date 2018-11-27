@@ -30,15 +30,19 @@ function callback.error(err)
 	print(err)
 end
 
-function callback.move(x,y)
-	print("MOVE", x, y)
+function callback.mouse_move(x,y)
+	print("mouse_move", x, y)
 end
 
-function callback.mouse(what, press, x, y)
-	print("mouse", what, press, x, y)
+function callback.mouse_wheel(delta, x,y)
+	print("mouse_wheel", x, y, delta)
 end
 
-function callback.keypress(key, press, state)
+function callback.mouse_click(what, press, x, y)
+	print("mouse_click", what, press, x, y)
+end
+
+function callback.keyboard(key, press, state)
 	local ctrl = state & 0x01
 	local alt = state & 0x02
 	local shift = state & 0x04
