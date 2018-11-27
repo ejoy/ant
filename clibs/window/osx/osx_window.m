@@ -190,6 +190,7 @@ static int32_t clamp(int32_t v, int32_t min, int32_t max) {
 }
 - (void)windowCreated:(NSWindow*)window {
 	assert(window);
+    m_window = window;
 	[window setDelegate:self];
 	assert(self->m_count < ~0u);
 	self->m_count += 1;
@@ -264,45 +265,57 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
 	case NSEventTypeRightMouseDragged:
 	case NSEventTypeOtherMouseDragged:
 		[g_wd getMouseX:&g_mx getMouseY:&g_my];
-		msg.type = ANT_WINDOW_MOVE;
-        msg.u.mouse.x = g_mx;
-        msg.u.mouse.y = g_my;
+		msg.type = ANT_WINDOW_MOUSE_MOVE;
+        msg.u.mouse_move.x = g_mx;
+        msg.u.mouse_move.y = g_my;
+        switch (eventType) {
+        case NSEventTypeMouseMoved:        msg.u.mouse_move.state = 0; break;
+        case NSEventTypeLeftMouseDragged:  msg.u.mouse_move.state = 1; break;
+        case NSEventTypeRightMouseDragged: msg.u.mouse_move.state = 2; break;
+        case NSEventTypeOtherMouseDragged: msg.u.mouse_move.state = 4; break;
+        default: break;
+        }
+		cb->message(cb->ud, &msg);
+        break;
+	case NSEventTypeScrollWheel:
+		msg.type = ANT_WINDOW_MOUSE_WHEEL;
+        msg.u.mouse_wheel.x = g_mx;
+        msg.u.mouse_wheel.y = g_my;
+		msg.u.mouse_wheel.delta = [event deltaY];
 		cb->message(cb->ud, &msg);
         break;
 	case NSEventTypeLeftMouseDown:
 	case NSEventTypeLeftMouseUp:
-		msg.type = ANT_WINDOW_MOUSE;
-		msg.u.mouse.type = 0;
-		msg.u.mouse.press = (eventType == NSEventTypeLeftMouseDown) ? 1 : 0;
-        msg.u.mouse.x = g_mx;
-        msg.u.mouse.y = g_my;
+		msg.type = ANT_WINDOW_MOUSE_CLICK;
+		msg.u.mouse_click.type = 0;
+		msg.u.mouse_click.press = (eventType == NSEventTypeLeftMouseDown) ? 1 : 0;
+        msg.u.mouse_click.x = g_mx;
+        msg.u.mouse_click.y = g_my;
 		cb->message(cb->ud, &msg);
         break;
 	case NSEventTypeRightMouseDown:
 	case NSEventTypeRightMouseUp:
-		msg.type = ANT_WINDOW_MOUSE;
-		msg.u.mouse.type = 1;
-		msg.u.mouse.press = (eventType == NSEventTypeRightMouseDown) ? 1 : 0;
-        msg.u.mouse.x = g_mx;
-        msg.u.mouse.y = g_my;
+		msg.type = ANT_WINDOW_MOUSE_CLICK;
+		msg.u.mouse_click.type = 1;
+		msg.u.mouse_click.press = (eventType == NSEventTypeRightMouseDown) ? 1 : 0;
+        msg.u.mouse_click.x = g_mx;
+        msg.u.mouse_click.y = g_my;
 		cb->message(cb->ud, &msg);
         break;
 	case NSEventTypeOtherMouseDown:
 	case NSEventTypeOtherMouseUp:
-		msg.type = ANT_WINDOW_MOUSE;
-		msg.u.mouse.type = 2;
-		msg.u.mouse.press = (eventType == NSEventTypeOtherMouseDown) ? 1 : 0;
-        msg.u.mouse.x = g_mx;
-        msg.u.mouse.y = g_my;
+		msg.type = ANT_WINDOW_MOUSE_CLICK;
+		msg.u.mouse_click.type = 2;
+		msg.u.mouse_click.press = (eventType == NSEventTypeOtherMouseDown) ? 1 : 0;
+        msg.u.mouse_click.x = g_mx;
+        msg.u.mouse_click.y = g_my;
 		cb->message(cb->ud, &msg);
-        break;
-	case NSEventTypeScrollWheel:
         break;
 	case NSEventTypeKeyDown:
 	case NSEventTypeKeyUp:
 		msg.type = ANT_WINDOW_KEYBOARD;
 		msg.u.keyboard.state = keyboard_state(event);
-		msg.u.mouse.press = (eventType == NSEventTypeKeyDown) ? 1 : 0;
+		msg.u.keyboard.press = (eventType == NSEventTypeKeyDown) ? 1 : 0;
 		msg.u.keyboard.press = 1;
 		msg.u.keyboard.key = keyboard_key(event);
 		cb->message(cb->ud, &msg);
