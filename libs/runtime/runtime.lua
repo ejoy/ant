@@ -36,11 +36,16 @@ function callback.error(err)
 end
 
 local status = {}
-function callback.move(x,y)
+function callback.mouse_move(x,y)
 	iq:push("motion", x, y, status)
 end
 
-function callback.mouse(what, press, x, y)
+function callback.mouse_wheel(delta, x, y)
+	--print(delta, x, y)
+end
+
+function callback.mouse_click(what, press, x, y)
+	--print(what, press, x, y)
 	local function translate()
 		if what == 0 then
 			status.LEFT = press
