@@ -44,7 +44,7 @@ struct ant_window_keyboard {
 struct ant_window_mouse_wheel {
 	int x;
 	int y;
-	int delta;
+	float delta;
 };
 
 struct ant_window_mouse_move {

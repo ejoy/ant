@@ -68,7 +68,7 @@ static void
 push_mouse_wheel_args(lua_State *L, struct ant_window_mouse_wheel *mouse) {
 	lua_pushinteger(L, mouse->x);
 	lua_pushinteger(L, mouse->y);
-	lua_pushinteger(L, mouse->delta);
+	lua_pushnumber(L, mouse->delta);
 }
 
 static void
