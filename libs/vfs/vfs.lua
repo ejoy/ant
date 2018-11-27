@@ -101,7 +101,8 @@ function localvfs.type(filepath)
 end
 
 function localvfs.link(pathname, plat)
-	return access.build_from_path(self, plat, pathname)
+	local binhash = access.build_from_path(self, plat, pathname)
+	return self._repo .. binhash:sub(1,2) .. "/" .. binhash
 end
 
 return localvfs

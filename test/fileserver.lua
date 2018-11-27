@@ -59,7 +59,7 @@ end
 local debug = {}
 local message = {}
 
-function message:ROOT()	
+function message:ROOT()
 	fileconvert.convert_watchfiles()
 	repo:build()
 	local roothash = repo:root()
@@ -94,6 +94,15 @@ function message:GET(hash)
 		end
 	end
 	f:close()
+end
+
+function message:LINK(hash, plat, source_hash, lk_hash)
+	local binhash = repo:link(hash, plat, source_hash, lk_hash)
+	if binhash then
+		response(self, "LINK", hash, binhash)
+	else
+		response(self, "LINK")
+	end
 end
 
 function message:DBG(data)
@@ -186,7 +195,7 @@ local function filewacth()
 		local dir = wid[id]
 		local path = (dir == '') and path or (dir .. '/' .. path)
 		path = path:gsub('\\', '/')
-		print('[FileWatch]', type, path)
+		LOG('[FileWatch]', type, path)
 		fileconvert.watch_file(repo:realpath(path))
 		repo:touch(path)
 		::continue::

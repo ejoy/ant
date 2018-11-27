@@ -130,7 +130,9 @@ local function genhash(repo, tmp)
 	local binhash_path = repo._repo .. binhash:sub(1,2) .. "/" .. binhash
 	if not os.rename(tmp, binhash_path) then
 		os.remove(binhash_path)
-		assert(os.rename(tmp, binhash_path))
+		if not os.rename(tmp, binhash_path) then
+			return
+		end
 	end
 	return binhash
 end
@@ -156,17 +158,20 @@ function access.build_from_path(repo, plat, pathname)
 	end
 	if not binhash then
 		local tmp = cache .. ".bin"
-		assert(build(plat, source, lk, tmp))
+		if not build(plat, source, lk, tmp) then
+			return
+		end
 		binhash = genhash(repo, tmp)
-		local f = assert(io.open(cache, "wb"))
-		f:write(string.format("%s\n%s\n%s", plat, timestamp, binhash))
-		f:close()
+		if binhash then
+			local f = assert(io.open(cache, "wb"))
+			f:write(string.format("%s\n%s\n%s", plat, timestamp, binhash))
+			f:close()
+		end
 	end
-	return repo._repo .. binhash:sub(1,2) .. "/" .. binhash
+	return binhash
 end
 
-function access.build_from_hash(repo, plat, source_hash, lk_hash)
-	local hash = access.sha1(plat .. source_hash .. lk_hash)
+function access.build_from_hash(repo, hash, plat, source_hash, lk_hash)
 	local link = repo._repo .. hash:sub(1,2) .. "/" .. hash .. ".link"
 	local f = io.open(link, "rb")
 	if f then
@@ -187,7 +192,7 @@ function access.build_from_hash(repo, plat, source_hash, lk_hash)
 	local f = io.open(link, "wb")
 	f:write(binhash)
 	f:close()
-	return repo._repo .. binhash:sub(1,2) .. "/" .. binhash
+	return binhash
 end
 
 return access
