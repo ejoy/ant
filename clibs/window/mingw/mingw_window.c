@@ -52,6 +52,11 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_MOUSEMOVE:
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		msg.type = ANT_WINDOW_MOUSE_MOVE;
+		msg.u.mouse_move.state = 0
+			| ((wParam & MK_LBUTTON) ? 1 : 0)
+			| ((wParam & MK_RBUTTON) ? 2 : 0)
+			| ((wParam & MK_MBUTTON) ? 4 : 0)
+			;
 		get_xy(lParam, &msg.u.mouse_move.x, &msg.u.mouse_move.y);
 		cb->message(cb->ud, &msg);
 		break;

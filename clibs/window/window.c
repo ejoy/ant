@@ -45,9 +45,9 @@ push_exit_args(lua_State *L, struct ant_window_exit *exit) {
 
 static void
 push_touch_args(lua_State *L, struct ant_window_touch *touch) {
-	lua_pushinteger(L, touch->what);
 	lua_pushinteger(L, touch->x);
 	lua_pushinteger(L, touch->y);
+	lua_pushinteger(L, touch->what);
 }
 
 static void
@@ -61,21 +61,22 @@ static void
 push_mouse_move_args(lua_State *L, struct ant_window_mouse_move *mouse) {
 	lua_pushinteger(L, mouse->x);
 	lua_pushinteger(L, mouse->y);
+	lua_pushinteger(L, mouse->state);
 }
 
 static void
 push_mouse_wheel_args(lua_State *L, struct ant_window_mouse_wheel *mouse) {
-	lua_pushinteger(L, mouse->delta);
 	lua_pushinteger(L, mouse->x);
 	lua_pushinteger(L, mouse->y);
+	lua_pushinteger(L, mouse->delta);
 }
 
 static void
 push_mouse_click_arg(lua_State *L, struct ant_window_mouse_click *mouse) {
-	lua_pushinteger(L, mouse->type);
-	lua_pushboolean(L, mouse->press);
 	lua_pushinteger(L, mouse->x);
 	lua_pushinteger(L, mouse->y);
+	lua_pushinteger(L, mouse->type);
+	lua_pushboolean(L, mouse->press);
 }
 
 static int
