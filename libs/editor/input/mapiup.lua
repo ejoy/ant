@@ -90,9 +90,9 @@ return {
 	},
 	STATUS = iup_status,
 	KEY = iup_keymap,
-	button = "BUTTON,PRESSED,_,_,STATUS",	-- button, pressed, x,y, status
-	motion = "_,_,STATUS", -- x,y,status
-	keypress = "KEY,PRESSED,STATUS",	-- keycode, pressed, status
+	mouse_click = "BUTTON,PRESSED,_,_,STATUS",	-- button, pressed, x,y, status
+	mouse_move = "_,_,STATUS", -- x,y,status
+	keyboard = "KEY,PRESSED,STATUS",	-- keycode, pressed, status
 	resize = "_,_",	-- width, height
-	wheel = "_,_,_,STATUS",-- delta,x,y,status
+	mouse_wheel = "_,_,_,STATUS",-- delta,x,y,status
 }

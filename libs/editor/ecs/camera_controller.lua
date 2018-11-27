@@ -41,12 +41,12 @@ function camera_controller_system:init()
 	local button_status = {}
 	-- luacheck: ignore self
 	-- luacheck: ignore status
-    function message:button(btn, p, x, y, status)
+    function message:mouse_click(btn, p, x, y, status)
         button_status[btn] = p
         last_xy = point2d(x, y)
 	end
 
-	function message:motion(x, y, status)
+	function message:mouse_move(x, y, status)
 		local xy = point2d(x, y)
 		if last_xy then
 			if status.RIGHT then
@@ -67,7 +67,7 @@ function camera_controller_system:init()
 		r_q = "LEFTROT", r_e = "RIGHTROT",
 	}
 
-	function message:keypress(c, p, status)
+	function message:keyboard(c, p, status)
 		if c == nil then return end
 
 		local name = nil

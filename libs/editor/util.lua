@@ -45,7 +45,7 @@ function util.regitster_iup(msgqueue, ctrl)
 			iup.isSysXkey(key) and "Y" or " ",
 			iup.isShiftXkey(key) and "S" or " ")
 		assert(#syskey_states == 10)
-		msgqueue:push("keypress", key, press, syskey_states)
+		msgqueue:push("keyboard", key, press, syskey_states)
 	end
 end
 

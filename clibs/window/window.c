@@ -11,9 +11,10 @@ typedef enum {
 	CALLBACK_UPDATE,
 	CALLBACK_EXIT,
 	CALLBACK_TOUCH,
-	CALLBACK_MOVE,
 	CALLBACK_KEYBOARD,
-	CALLBACK_MOUSE,
+	CALLBACK_MOUSE_MOVE,
+	CALLBACK_MOUSE_WHEEL,
+	CALLBACK_MOUSE_CLICK,
 	CALLBACK_COUNT,
 } CallBackType;
 
@@ -50,12 +51,6 @@ push_touch_args(lua_State *L, struct ant_window_touch *touch) {
 }
 
 static void
-push_move_args(lua_State *L, struct ant_window_move *move) {
-	lua_pushinteger(L, move->x);
-	lua_pushinteger(L, move->y);
-}
-
-static void
 push_keyboard_arg(lua_State *L, struct ant_window_keyboard *keyboard) {
 	lua_pushinteger(L, keyboard->key);
 	lua_pushboolean(L, keyboard->press);
@@ -63,7 +58,20 @@ push_keyboard_arg(lua_State *L, struct ant_window_keyboard *keyboard) {
 }
 
 static void
-push_mouse_arg(lua_State *L, struct ant_window_mouse *mouse) {
+push_mouse_move_args(lua_State *L, struct ant_window_mouse_move *mouse) {
+	lua_pushinteger(L, mouse->x);
+	lua_pushinteger(L, mouse->y);
+}
+
+static void
+push_mouse_wheel_args(lua_State *L, struct ant_window_mouse_wheel *mouse) {
+	lua_pushinteger(L, mouse->delta);
+	lua_pushinteger(L, mouse->x);
+	lua_pushinteger(L, mouse->y);
+}
+
+static void
+push_mouse_click_arg(lua_State *L, struct ant_window_mouse_click *mouse) {
 	lua_pushinteger(L, mouse->type);
 	lua_pushboolean(L, mouse->press);
 	lua_pushinteger(L, mouse->x);
@@ -143,14 +151,6 @@ callback(void *ud, struct ant_window_message *msg) {
 //			raise_error_string(context, "No touch handler");
 			return;
 		}
-	case ANT_WINDOW_MOVE:
-		if (push_callback_function(context, CALLBACK_MOVE)) {
-			push_move_args(L, &msg->u.move);
-			break;
-		} else {
-//			raise_error_string(context, "No move handler");
-			return;
-		}
 	case ANT_WINDOW_KEYBOARD:
 		if (push_callback_function(context, CALLBACK_KEYBOARD)) {
 			push_keyboard_arg(L, &msg->u.keyboard);
@@ -158,9 +158,25 @@ callback(void *ud, struct ant_window_message *msg) {
 		} else {
 			return;
 		}
-	case ANT_WINDOW_MOUSE:
-		if (push_callback_function(context, CALLBACK_MOUSE)) {
-			push_mouse_arg(L, &msg->u.mouse);
+	case ANT_WINDOW_MOUSE_MOVE:
+		if (push_callback_function(context, CALLBACK_MOUSE_MOVE)) {
+			push_mouse_move_args(L, &msg->u.mouse_move);
+			break;
+		} else {
+//			raise_error_string(context, "No move handler");
+			return;
+		}
+	case ANT_WINDOW_MOUSE_WHEEL:
+		if (push_callback_function(context, CALLBACK_MOUSE_WHEEL)) {
+			push_mouse_wheel_args(L, &msg->u.mouse_wheel);
+			break;
+		} else {
+//			raise_error_string(context, "No move handler");
+			return;
+		}
+	case ANT_WINDOW_MOUSE_CLICK:
+		if (push_callback_function(context, CALLBACK_MOUSE_CLICK)) {
+			push_mouse_click_arg(L, &msg->u.mouse_click);
 			break;
 		} else {
 			return;
@@ -193,9 +209,10 @@ register_functions(lua_State *L, int index, lua_State *fL) {
 	register_function(L, index, "update", fL, CALLBACK_UPDATE);
 	register_function(L, index, "exit", fL, CALLBACK_EXIT);
 	register_function(L, index, "touch", fL, CALLBACK_TOUCH);
-	register_function(L, index, "move", fL, CALLBACK_MOVE);
-	register_function(L, index, "keypress", fL, CALLBACK_KEYBOARD);
-	register_function(L, index, "mouse", fL, CALLBACK_MOUSE);
+	register_function(L, index, "keyboard", fL, CALLBACK_KEYBOARD);
+	register_function(L, index, "mouse_move", fL, CALLBACK_MOUSE_MOVE);
+	register_function(L, index, "mouse_wheel", fL, CALLBACK_MOUSE_WHEEL);
+	register_function(L, index, "mouse_click", fL, CALLBACK_MOUSE_CLICK);
 }
 
 static int

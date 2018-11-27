@@ -299,16 +299,11 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
 	case NSEventTypeScrollWheel:
         break;
 	case NSEventTypeKeyDown:
-		msg.type = ANT_WINDOW_KEYBOARD;
-		msg.u.keyboard.state = keyboard_state(event);
-		msg.u.keyboard.press = 1;
-		msg.u.keyboard.key = keyboard_key(event);
-		cb->message(cb->ud, &msg);
-		break;
 	case NSEventTypeKeyUp:
 		msg.type = ANT_WINDOW_KEYBOARD;
 		msg.u.keyboard.state = keyboard_state(event);
-		msg.u.keyboard.press = 0;
+		msg.u.mouse.press = (eventType == NSEventTypeKeyDown) ? 1 : 0;
+		msg.u.keyboard.press = 1;
 		msg.u.keyboard.key = keyboard_key(event);
 		cb->message(cb->ud, &msg);
 		break;

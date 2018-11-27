@@ -37,11 +37,11 @@ function camera_controller_system:init()
 	local message = {}
 
 	local last_xy
-	function message:button(btn, p, x, y, status)
+	function message:mouse_click(btn, p, x, y, status)
 		last_xy = point2d(x, y)
 	end
 
-	function message:motion(x, y, status)
+	function message:mouse_move(x, y, status)
 		local xy = point2d(x, y)
 		if last_xy then
 			if status.RIGHT then
@@ -61,15 +61,12 @@ function camera_controller_system:init()
 		last_xy = xy
 	end
 
-	function message:wheel(delta, x, y, status)
+	function message:mouse_wheel(delta, x, y)
 		camera_move(camera.rotation, camera.position, 0, 0, delta * move_speed)
 	end
 
-	function message:keypress(c, p)
-		if c == nil then return end
-		if not p then return end
-		local c = c:upper()
-		if c == "R" then
+	function message:keyboard(code, press)
+		if press and code == "R" then
 			camera_reset(camera, target)
 			return 
 		end

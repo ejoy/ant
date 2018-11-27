@@ -2,7 +2,7 @@ local nkmsg = {}
 
 local map = {}
 
-function map.motion(x, y)
+function map.mouse_move(x, y)
 	return 'm', x, y
 end
 
@@ -23,7 +23,7 @@ function map.button(btn, pressed, x, y, status)
 	return 'b', id, pressed, x, y
 end
 
-function map.keypress(x,pressed)
+function map.keyboard(x,pressed)
     local keycode = x 
 	return 'k',keycode,pressed  
 end 

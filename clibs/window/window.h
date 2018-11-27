@@ -6,9 +6,10 @@
 #define ANT_WINDOW_UPDATE 0
 #define ANT_WINDOW_EXIT 1
 #define ANT_WINDOW_TOUCH 2
-#define ANT_WINDOW_MOVE 3
-#define ANT_WINDOW_KEYBOARD 4
-#define ANT_WINDOW_MOUSE 5
+#define ANT_WINDOW_KEYBOARD 3
+#define ANT_WINDOW_MOUSE_MOVE 4
+#define ANT_WINDOW_MOUSE_WHEEL 5
+#define ANT_WINDOW_MOUSE_CLICK 6
 
 #define ANT_WINDOW_CALLBACK "ANT_WINDOW_CALLBACK"
 
@@ -26,18 +27,6 @@ struct ant_window_touch {
 	uint8_t what;	// 0: lbutton up ; 1: lbutton down; 2: rbutton up; 3 rbutton down
 };
 
-struct ant_window_move {
-	int x;
-	int y;
-};
-
-struct ant_window_mouse {
-	int x;
-	int y;
-	uint8_t type;  // 0: lbutton; 1: rbutton up; 2 mbutton
-	uint8_t press; // 0: up ; 1: down
-};
-
 typedef enum {
 	KB_CTRL,
 	KB_ALT,
@@ -52,15 +41,34 @@ struct ant_window_keyboard {
 	uint8_t press; // 0: up ; 1: down
 };
 
+struct ant_window_mouse_wheel {
+	int x;
+	int y;
+	int delta;
+};
+
+struct ant_window_mouse_move {
+	int x;
+	int y;
+};
+
+struct ant_window_mouse_click {
+	int x;
+	int y;
+	uint8_t type;  // 0: lbutton; 1: rbutton up; 2 mbutton
+	uint8_t press; // 0: up ; 1: down
+};
+
 struct ant_window_message {
 	int type;
 	union {
 		struct ant_window_update update;
 		struct ant_window_exit exit;
 		struct ant_window_touch touch;
-		struct ant_window_move move;
 		struct ant_window_keyboard keyboard;
-		struct ant_window_mouse mouse;
+		struct ant_window_mouse_move mouse_move;
+		struct ant_window_mouse_wheel mouse_wheel;
+		struct ant_window_mouse_click mouse_click;
 	} u;
 };
 
