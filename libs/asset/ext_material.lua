@@ -37,8 +37,7 @@ return function(filename)
             local t = type(v)
 			if t == "string" then
 				-- read file under .material file folder, if not found try from assets path
-				local subres_path = filter_path(v)
-				dprint("[ext_material]try to load:", k, "value:", v, "subrespath:", subres_path)
+				local subres_path = filter_path(v)				
                 material_info[k] = assetmgr.load(subres_path)
 			elseif t == "table" then
 				material_info[k] = loader(v)

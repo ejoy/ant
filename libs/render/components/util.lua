@@ -65,7 +65,7 @@ function util.update_properties(dst_properties, src_properties)
 	end
 end
 
-function util.create_material(filepath)
+function util.create_material(filepath, info)
 	local materialinfo = asset.load(filepath)
 	--
 	local mproperties = materialinfo.properties 
@@ -74,17 +74,16 @@ function util.create_material(filepath)
 		properties = {}
 		util.update_properties(properties, mproperties)
 	end
-	
-	return {path=filepath, materialinfo=materialinfo, properties=properties}
+	info.path = filepath
+	info.materialinfo = materialinfo
+	info.properties = properties
 end
 
 function util.load_materialex(content)
 	for _, m in ipairs(content) do
-		local info = util.create_material(m.path)
-		if info.properties then
-			for k, p in pairs(info.properties) do
-				m.properties[k] = p
-			end
+		util.create_material(m.path, m)
+		if m.properties == nil then
+			m.properties = {}
 		end
 	end
 	return content
@@ -93,6 +92,9 @@ end
 -- todo : remove this function by load_materialex
 function util.load_material(material, material_filenames)
 	if material_filenames then
+		if material.content == nil then
+			material.content = {}
+		end
 		for idx, f in ipairs(material_filenames) do
 			material.content[idx] = {path = f, properties = {}}
 		end

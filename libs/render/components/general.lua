@@ -96,7 +96,8 @@ ecs.component_struct "material" {
 			local content = {}
 			
 			for _, e in ipairs(v) do
-				local m = component_util.create_material(e.path)
+				local m = {}
+				component_util.create_material(e.path, m)
 				table.insert(content, m)
 			end
 

@@ -9,12 +9,12 @@ function hw.get_caps()
     return assert(caps)
 end
 
-function hw.init(nwh, fb_w, fb_h, fetchlog)
+function hw.init(nwh, fb_w, fb_h, fetchlog, renderer)
 	local args = {
         nwh = nwh,
         width = fb_w,
-
         height = fb_h,
+		renderer = renderer or "OPENGL",
         getlog = fetchlog or true,
 	}
 	
