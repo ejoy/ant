@@ -13,8 +13,9 @@ dofile("libs/init.lua")
 
 local vfsrepo = require "vfs.repo"
 local fs = require "lfs"
+local util = require "filesystem.util"
 
-local home = fs.personaldir() .. "/testrepo"
+local home = util.personaldir() .. "/testrepo"
 fs.mkdir(home)
 local cwd = fs.currentdir()
 

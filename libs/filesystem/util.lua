@@ -4,10 +4,11 @@ util.__index = util
 local lfs = require "lfs"
 local path = require "filesystem.path"
 
-if not lfs.exist then
-	function lfs.exist(path)
-		return lfs.attributes(path, "mode") ~= nil
+function util.exist(path)
+	if lfs.exist then
+		return lfs.exist(path)
 	end
+	return lfs.attributes(path, "mode") ~= nil
 end
 
 function util.write_to_file(fn, content, mode)
@@ -49,7 +50,7 @@ function util.create_dirs(fullpath)
 	local tmp
 	for m in fullpath:gmatch("[^\\/]+") do        
 		tmp = tmp and path.join(tmp, m) or m
-		if not lfs.exist(tmp) then
+		if not util.exist(tmp) then
             lfs.mkdir(tmp)
         end
     end
@@ -99,7 +100,7 @@ function util.dir(subfolder, filters)
 end
 
 function util.listfiles(subfolder, files, filter_exts)
-	if not lfs.exist(subfolder) then
+	if not util.exist(subfolder) then
 		return
 	end
 	for p in util.dir(subfolder) do
@@ -127,6 +128,13 @@ function util.listfiles(subfolder, files, filter_exts)
 			end
 		end
 	end
+end
+
+function util.personaldir()
+	if lfs.personaldir then
+		return lfs.personaldir()
+	end
+	return path.join(os.getenv 'HOME', 'Documents')
 end
 
 return util

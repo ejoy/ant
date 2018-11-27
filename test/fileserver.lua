@@ -18,8 +18,9 @@ local fs = require "lfs"
 local network = require "network"
 local protocol = require "protocol"
 local fileconvert = require "fileconvert"
+local util = require "filesystem.util"
 
-local home = fs.personaldir and fs.personaldir() or os.getenv 'HOME'
+local home = util.personaldir()
 local repopath = home .. "/" .. reponame
 
 LOG ("Open repo : ", repopath)

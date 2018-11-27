@@ -13,11 +13,11 @@ static void repo_dir(lua_State* L) {
     const char* home = getenv("HOME");
     chdir(home);
     
-    mkdir("./ant/", MKDIR_OPTION);
-    mkdir("./ant/runtime/", MKDIR_OPTION);
-    mkdir("./ant/runtime/.repo/", MKDIR_OPTION);
-    char dir[] = "./ant/runtime/.repo/00/";
-    size_t sz = sizeof("./ant/runtime/.repo");
+    mkdir("./Documents/ant/", MKDIR_OPTION);
+    mkdir("./Documents/ant/runtime/", MKDIR_OPTION);
+    mkdir("./Documents/ant/runtime/.repo/", MKDIR_OPTION);
+    char dir[] = "./Documents/ant/runtime/.repo/00/";
+    size_t sz = sizeof("./Documents/ant/runtime/.repo");
     for (int i = 0; i < 16; ++i) {
         for (int j = 0; j < 16; ++j) {
             dir[sz+0] = hex[i];
@@ -25,7 +25,7 @@ static void repo_dir(lua_State* L) {
             mkdir(dir, MKDIR_OPTION);
         }
     }
-    chdir("./ant/runtime/");
+    chdir("./Documents/ant/runtime/");
 }
 
 static int msghandler(lua_State *L) {
