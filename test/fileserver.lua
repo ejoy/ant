@@ -39,8 +39,8 @@ LOG ("Rebuild repo")
 local roothash = repo:index()
 repo:rebuild()
 
+local wid = {}
 if fw then
-	local wid = {}
 	local id = assert(fw.add(repopath, 'fdts'))
 	wid[id] = ''
 	for k, v in pairs(repo._mountpoint) do
