@@ -1,5 +1,3 @@
-local commonutil = require "common.util"
-
 local geometry = {}; geometry.__index = geometry
 
 --[[

@@ -34,10 +34,10 @@ local bu = require "bullet.lua.util"
 
 local bgfx = require "bgfx"
 
-local geo = require "editor.ecs.render.geometry"
+local ms = require "math.stack"
 
 local model_ed_sys = ecs.system "model_editor_system"
-model_ed_sys.singleton "math_stack"
+
 model_ed_sys.depend "camera_init"
 
 -- luacheck: globals model_windows
@@ -159,7 +159,7 @@ local function add_aabb_widget(eid)
 	widget.srt = {}--{s=e.scale, r=nil, t=e.position}
 end
 
-local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
+local function create_sample_entity(skepath, anipath, skinning_meshpath)
 	local eid = world:new_entity("position", "scale", "rotation",	
 	"rigid_body",		-- physic relate
 	"mesh", "material",
@@ -169,7 +169,7 @@ local function create_sample_entity(ms, skepath, anipath, skinning_meshpath)
 	e.name = "animation_test"
 
 	local mu = require "math.util"
-	mu.identify_transform(ms, e)
+	mu.identify_transform(e)
 
 	if skepath and skepath ~= "" then
 		world:add_component(eid, "skeleton")
@@ -308,7 +308,7 @@ end
 
 local sample_eid
 
-local function init_control(ms)
+local function init_control()
 	local skepath_ctrl = windows.ske_path
 	local anipath_ctrl = windows.ani_path
 	local meshpath_ctrl = windows.mesh_path
@@ -337,7 +337,7 @@ local function init_control(ms)
 				world:remove_entity(sample_eid)
 			end
 
-			sample_eid = create_sample_entity(ms, skepath, anipath, skinning_meshpath)
+			sample_eid = create_sample_entity(skepath, anipath, skinning_meshpath)
 		end
 	end
 
@@ -431,7 +431,7 @@ local function init_control(ms)
 	iup.Map(dlg)
 end
 
-local function init_lighting(ms)
+local function init_lighting()
 	local lu = require "render.light.util"
 	local leid = lu.create_directional_light_entity(world)
 	local lentity = world[leid]
@@ -449,10 +449,9 @@ local function focus_sample()
 end
 
 -- luacheck: ignore self
-function model_ed_sys:init()
-	local ms = self.math_stack
-	init_control(ms)
-	init_lighting(ms)
+function model_ed_sys:init()	
+	init_control()
+	init_lighting()
 
 	create_plane_entity()
 

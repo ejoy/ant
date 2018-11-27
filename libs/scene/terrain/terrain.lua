@@ -274,16 +274,12 @@ end
 
 
 local terrain_sys = ecs.system "terrain_system"
-terrain_sys.singleton "math_stack"
 terrain_sys.singleton "message"
 terrain_sys.depend    "lighting_primitive_filter_system"
 terrain_sys.depend 	  "entity_rendering"
 terrain_sys.dependby  "end_frame"
 
 function terrain_sys:init()
-
-	stack = self.math_stack  
-
 	local fb = world.args.fb_size
 
 	-- we should read terrain entity'name ,compoent data from scene info file 

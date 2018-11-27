@@ -103,14 +103,14 @@ function util.load_material(material, material_filenames)
 	util.load_materialex(material.content)
 end
 
-function util.create_render_entity(ms, world, name, meshfile, materialfile)
+function util.create_render_entity(world, name, meshfile, materialfile)
 	local eid = world:new_entity("scale", "rotation", "position",
 	"mesh", "material",
 	"name",
 	"can_select", "can_render")
 
 	local obj = world[eid]
-	mu.identify_transform(ms, obj)
+	mu.identify_transform(obj)
 	
 	obj.name = name
 
@@ -122,7 +122,7 @@ function util.create_render_entity(ms, world, name, meshfile, materialfile)
 	return eid
 end
 
-function util.create_hierarchy_entity(ms, world, name)
+function util.create_hierarchy_entity(world, name)
 	local h_eid = world:new_entity("scale", "rotation", "position",
 	"editable_hierarchy", "hierarchy_name_mapper", 
 	"name")
@@ -130,7 +130,7 @@ function util.create_hierarchy_entity(ms, world, name)
 	local obj = world[h_eid]
 	obj.name = name
 
-	mu.identify_transform(ms, obj)
+	mu.identify_transform(obj)
 	return h_eid
 end
 

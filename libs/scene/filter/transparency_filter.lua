@@ -4,7 +4,7 @@ local world = ecs.world
 ecs.import "scene.filter.lighting_filter"
 
 local transparency_filter_sys = ecs.system "transparency_filter_system"
-transparency_filter_sys.singleton "math_stack"
+
 transparency_filter_sys.depend "lighting_primitive_filter_system"
 transparency_filter_sys.dependby "final_filter_system"
 

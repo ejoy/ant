@@ -2,8 +2,11 @@ local ecs = ...
 local world = ecs.world
 
 local bgfx = require "bgfx"
-local componentutil = require "render.components.util"
+
 local mu = require "math.util"
+
+local componentutil = require "render.components.util"
+
 
 local function init_wireframe_mesh()
 	local decl, vertexsize = bgfx.vertex_decl {
@@ -65,7 +68,6 @@ end
 
 local debug_draw = ecs.system "debug_draw"
 debug_draw.singleton "debug_object"
-debug_draw.singleton "math_stack"
 
 local function check_add_material(mc, materialpath)
 	local function has_material()
@@ -93,8 +95,7 @@ function debug_draw:update()
 	local mc = dbentity.material.content
 	local meshgroups = dbentity.mesh.assetinfo.handle.groups
 
-	local ms = self.math_stack
-	mu.identify_transform(ms, dbentity)
+	mu.identify_transform(dbentity)
 	
 	local function commit_desc(desc)		
 		local materialpath = desc.material

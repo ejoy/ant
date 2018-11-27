@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.math3d.math_component"
 ecs.import "render.constant_system"
 ecs.import "inputmgr.message_system"
 
@@ -20,8 +19,9 @@ ecs.import "scene.hierarchy.hierarchy"
 ecs.import "editor.ecs.editor_component"
 
 local component_util = require "render.components.util"
+local ms = require "math.stack"
 local model_review_system = ecs.system "model_review_system"
-model_review_system.singleton "math_stack"
+
 model_review_system.singleton "constant"
 model_review_system.depend "constant_init_sys"
 model_review_system.dependby "message_system"
@@ -31,7 +31,7 @@ local lu = require "render.light.util"
 local cu = require "render.components.util"
 local mu = require "math.util"
 
-local function create_light(ms)
+local function create_light()
 	local leid = lu.create_directional_light_entity(world)
 	local lentity = world[leid]
 	local lightcomp = lentity.light
@@ -48,7 +48,7 @@ local function create_light(ms)
 	ambient_comp.groundcolor  = {0.60,0.74,0.68,1}
 end
 
-local function create_grid(ms)
+local function create_grid()
 	local gridid = world:new_entity(
 		"rotation", "position", "scale", 
 		"can_render", "mesh", "material",
@@ -56,7 +56,7 @@ local function create_grid(ms)
 	)
     local grid = world[gridid]
     grid.name = "grid"
-    mu.identify_transform(ms, grid)
+    mu.identify_transform(grid)
 
     local function create_grid_line_points(w, h, unit)
         local t = {"fffd"}
@@ -128,10 +128,8 @@ local function create_grid(ms)
 end
 
 function model_review_system:init()
-	local ms = self.math_stack
-
-	create_light(ms)
-	create_grid(ms)
+	create_light()
+	create_grid()
 
 	local eid = world:new_entity(
 		"position", "rotation", "scale",

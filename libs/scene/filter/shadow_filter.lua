@@ -4,7 +4,6 @@ local world = ecs.world
 ecs.import "scene.shadow.generate_shadow_system"
 
 local shadow_primitive_filter_sys = ecs.system "shadow_primitive_filter_system"
-shadow_primitive_filter_sys.singleton "math_stack"
 
 shadow_primitive_filter_sys.depend "primitive_filter_system"
 

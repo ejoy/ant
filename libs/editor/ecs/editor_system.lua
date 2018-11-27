@@ -1,16 +1,16 @@
+--luacheck: ignore self
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.math3d.math_component"
 ecs.import "render.end_frame_system"
 
 local editor_mainwin = require "editor.controls.window"
 local menu = require "editor.controls.popupmenu"
 local eu = require "editor.util"
 local su = require "serialize.util"
+local ms = require "math.stack"
 
 local editor_sys = ecs.system "editor_system"
-editor_sys.singleton "math_stack"
 editor_sys.depend "end_frame"
 
 local function build_hierarchy_tree()
@@ -174,7 +174,7 @@ function editor_sys:init()
 	end
 
 	local pv = editor_mainwin.propertyview
-	local ms = self.math_stack
+	
 	local function build_pv(eid, extend_tree)
 		local properties = build_entity_tree(eid, ms)
 		pv:build(properties, extend_tree)
@@ -206,7 +206,7 @@ function editor_sys:init()
 			end
 		end
 
-		function pv.tree:rightclick_cb(id, status)
+		function pv.tree:rightclick_cb(id)
 			local addsubmenu = {name="Add", type="submenu",}
 		
 			local add_action =  function(menuitem)
@@ -269,7 +269,7 @@ function editor_sys:init()
 			local entity = world[eid]
 			local load_comp_op = assert(world._component_type[edited_comp].load)
 
-			local args = {world = world, math_stack = ms, eid = eid}
+			local args = {world = world, eid = eid}
 			world:remove_component(eid, edited_comp)
 			world:add_component(eid, edited_comp)
 			load_comp_op(entity[edited_comp], properties[edited_comp], args)
@@ -288,7 +288,8 @@ function editor_sys:init()
 		end
 	end
 
-	function hv.window:rightclick_cb(id, status)
+	--luacheck: ignore self
+	function hv.window:rightclick_cb()
 		local m = menu.new {
 			recipe = {
 				{name="create entity...", type="item", action=function () 

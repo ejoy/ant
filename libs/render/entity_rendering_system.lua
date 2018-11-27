@@ -1,14 +1,14 @@
+--luacheck: ignore self
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.math3d.math_component"
 ecs.import "render.view_system"
 ecs.import "render.end_frame_system"
 ecs.import "scene.filter.filter_system"
 
 local ru = require "render.util"
 local bgfx = require "bgfx"
-local mu = require "math.util"
+local ms = require "math.stack"
 
 local draw_entity_sys = ecs.system "entity_rendering"
 
@@ -18,11 +18,7 @@ draw_entity_sys.depend "final_filter_system"
 
 draw_entity_sys.dependby "end_frame"
 
-draw_entity_sys.singleton "math_stack"
-
 function draw_entity_sys:update()
-	local ms = self.math_stack
-
 	for _, eid in world:each("primitive_filter") do
 		local e = world[eid]
 		local viewid = assert(e.viewid)

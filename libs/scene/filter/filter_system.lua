@@ -1,14 +1,13 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.math3d.math_component"
 --ecs.import "scene.shadow.generate_shadow_system"
 
 local cu = require "render.components.util"
+
 local ru = require "render.util"
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
-primitive_filter_sys.singleton "math_stack"
 
 --luacheck: ignore self
 function primitive_filter_sys:update()

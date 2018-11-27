@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.math3d.math_component"
 ecs.import "render.camera.camera_component"
 ecs.import "render.entity_rendering_system"
 
@@ -12,13 +11,13 @@ ecs.import "inputmgr.message_system"
 local computil = require "render.components.util"
 local bgfx = require "bgfx"
 local mu = require "math.util"
+local ms = require "math.stack"
 
 local simplescene = ecs.system "simple_scene"
 
-simplescene.singleton "math_stack"
 simplescene.depend "camera_init"
 
-local function create_grid_entity(ms)
+local function create_grid_entity()
 	local vdecl = bgfx.vertex_decl {
 		{ "POSITION", 3, "FLOAT" },
 		{ "COLOR0", 4, "UINT8", true }
@@ -31,7 +30,7 @@ local function create_grid_entity(ms)
 		"name")
 	local grid = world[gridid]
 	grid.name = "grid"
-	mu.identify_transform(ms, grid)        
+	mu.identify_transform(grid)        
 
 	local function create_grid_line_points(w, h, unit)
 		local t = {"fffd"}
@@ -106,7 +105,6 @@ function simplescene:init()
 	local bunny = world[bunnyeid]
 	bunny.name = "demo_bunny"
 
-	local ms = self.math_stack
 	ms(bunny.position, 	{0, 0, 0, 1}, 	"=")
 	ms(bunny.scale, 	{1, 1, 1}, 		"=")
 	ms(bunny.rotation, 	{0, 0, 0}, 		"=")
@@ -117,7 +115,7 @@ function simplescene:init()
 	world:change_component(bunnyeid, "focus_selected_obj")
 	world:notify()
 
-	create_grid_entity(self.math_stack)
+	create_grid_entity()
 
 	local camera = world:first_entity("main_camera")
 	ms(camera.rotation, {25, 45, 0}, "=")

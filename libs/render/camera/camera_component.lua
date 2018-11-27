@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.math3d.math_component"
 ecs.import "render.window_component"
 ecs.import "inputmgr.message_system"
 
@@ -11,6 +10,7 @@ ecs.import "render.view_system"
 ecs.import "render.components.general"
 
 local mu = require "math.util"
+local ms = require "math.stack"
 local bgfx = require "bgfx"
 
 -- 找时间统一到 render 中，作为要给独立的 viewid.lua 存放所有指定的 VIEW 
@@ -19,7 +19,6 @@ local VIEWID_MAINCAMERA = 100
 ecs.tag "main_camera"
 
 local camera_init_sys = ecs.system "camera_init"
-camera_init_sys.singleton "math_stack"
 camera_init_sys.singleton "message"
 camera_init_sys.singleton "window"
 
@@ -43,8 +42,7 @@ camera_init_sys.singleton "window"
 -- 		-- 	newy_end = math.floor(((vr.y + vr.h) / old_h) * h)
 -- end
 
-function camera_init_sys:init()
-    local ms = self.math_stack
+function camera_init_sys:init()    
     -- create camera entity
 	local camera_eid = world:new_entity("main_camera", 
 		"viewid", "primitive_filter",

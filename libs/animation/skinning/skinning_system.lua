@@ -16,7 +16,6 @@ ecs.component_struct "skinning_mesh" {
 
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"
-skinning_sys.singleton "math_stack"
 
 skinning_sys.depend "animation_system"
 

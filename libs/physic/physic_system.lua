@@ -1,15 +1,14 @@
 local ecs = ...
 local world = ecs.world
 
+local ms = require "math.stack"
+
 local physic_sys = ecs.system "physic_system"
-physic_sys.singleton "math_stack"
 physic_sys.dependby "primitive_filter"
 
 function physic_sys:update()
 	local phy_world = world.args.physic_world
 	-- phy_world:step()
-
-	local ms = self.math_stack
 
 	for _, eid in world:each("rigid_body") do
 		local e = world[eid]

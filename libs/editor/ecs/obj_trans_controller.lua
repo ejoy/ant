@@ -1,7 +1,7 @@
+--luacheck: ignore self, globals dprint
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.math3d.math_component"
 ecs.import "render.constant_system"
 ecs.import "inputmgr.message_system"
 ecs.import "render.components.general"
@@ -9,6 +9,8 @@ ecs.import "render.components.general"
 local assetmgr = require "asset"
 local mu = require "math.util"
 local cu = require "common.util"
+local ms = require "math.stack"
+
 local components_util = require "render.components.util"
 
 local axisbase_controller_hierarchyname = "hierarchy/axisbase_contrller.hierarchy"
@@ -27,7 +29,6 @@ ecs.component_struct "object_transform" {
 
 local obj_trans_sys = ecs.system "obj_transform_system"
 obj_trans_sys.singleton "object_transform"
-obj_trans_sys.singleton "math_stack"
 obj_trans_sys.singleton "constant"
 obj_trans_sys.singleton "control_state"
 obj_trans_sys.singleton "message"
@@ -58,7 +59,7 @@ local function update_transform(controller, objeid)
 	world:notify()
 end
 
-local function play_object_transform(ms, ot, dx, dy)
+local function play_object_transform(ot, dx, dy)
     if  ot.sceneobj_eid == nil or             
         ot.selected_eid == nil or
         ot.sceneobj_eid == ot.selected_eid then -- mean no axis selected
@@ -80,7 +81,7 @@ local function play_object_transform(ms, ot, dx, dy)
 
     local function select_step_value(dir)
         local camera = world:first_entity("main_camera")
-        local view, proj = mu.view_proj_matrix(ms, camera)
+        local view, proj = mu.view_proj_matrix(camera)
 
 		local originInWS = ctrlpos
 		local posInWS = ms(originInWS, dir, "+P")
@@ -176,13 +177,13 @@ local function play_object_transform(ms, ot, dx, dy)
 end
 
 
-local function print_select_object_transform(ms, eid)
+local function print_select_object_transform(eid)
     local obj = assert(world[eid])
     dprint("select object name : ", obj.name)
-    mu.print_srt(ms, obj)
+    mu.print_srt(obj)
 end
 
-local function update_contorller(ot, ms)
+local function update_contorller(ot)
     local st_eid = ot.selected_eid
     if is_controller_id(ot.controllers, st_eid) then
         return 
@@ -201,7 +202,7 @@ local function update_contorller(ot, ms)
     end
 end
 
-local function register_message(msg_comp, ot, ms)
+local function register_message(msg_comp, ot)
     local message = {}
 
     function message:keypress(c, p, status)
@@ -232,7 +233,7 @@ local function register_message(msg_comp, ot, ms)
 						ot.selected_mode = "scale_transform"
 					elseif clower == "p" then
 						if ot.selected_eid then
-							print_select_object_transform(ms, ot.selected_eid)
+							print_select_object_transform(ot.selected_eid)
 						end
 					end					
 				end            
@@ -255,15 +256,15 @@ local function register_message(msg_comp, ot, ms)
         local deltaX, deltaY = x - lastX, y - lastY  -- y value is from up to down, need flip
         lastX, lastY = x, y
 
-        play_object_transform(ms, ot, deltaX, deltaY)
+        play_object_transform(ot, deltaX, deltaY)
     end
 
     local observers = msg_comp.observers
     observers:add(message)
 end
 
-local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axismeshfile, materialfile, tag_comp, color)
-	local hie_eid = components_util.create_hierarchy_entity(ms, world, 
+local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfile, materialfile, tag_comp, color)
+	local hie_eid = components_util.create_hierarchy_entity(world, 
 						"hierarchy-" .. prefixname .. "-" .. suffixname)
 	world:add_component(hie_eid, tag_comp)
 	local hie_entity = world[hie_eid]
@@ -285,7 +286,7 @@ local function add_axis_entites(ms, prefixname, suffixname, headmeshfile, axisme
 	}
 
 	for k, v in pairs(fullaxis_config) do
-		local eid = components_util.create_render_entity(ms, world, prefixname .. v.name .. suffixname,		
+		local eid = components_util.create_render_entity(world, prefixname .. v.name .. suffixname,		
 							v.meshfile, materialfile)
 		world:add_component(eid, "hierarchy_parent", tag_comp, "editor")
 		local obj = world[eid]
@@ -313,21 +314,21 @@ local function iter_axiselem(entity)
 	return next, namemapper, nil
 end
 
-local function add_axis_base_transform_entites(ms, basename, headmeshfile, axismeshfile, tag_comp, colors)
-	local rootaxis_eid = components_util.create_hierarchy_entity(ms, world, basename)
+local function add_axis_base_transform_entites(basename, headmeshfile, axismeshfile, tag_comp, colors)
+	local rootaxis_eid = components_util.create_hierarchy_entity(world, basename)
 	world:add_component(rootaxis_eid, tag_comp)
 
 	local axis_root = world[rootaxis_eid]
 	local namemapper = axis_root.hierarchy_name_mapper
-	namemapper.xaxis = add_axis_entites(ms, basename, "x", 
+	namemapper.xaxis = add_axis_entites(basename, "x", 
 										headmeshfile, axismeshfile,
 										"obj_trans/obj_trans.material", tag_comp, colors["red"])
 	
-	namemapper.yaxis = add_axis_entites(ms, basename, "y", 
+	namemapper.yaxis = add_axis_entites(basename, "y", 
 										headmeshfile, axismeshfile,
 										"obj_trans/obj_trans.material", tag_comp, colors["green"])
 
-	namemapper.zaxis = add_axis_entites(ms, basename, "z", 
+	namemapper.zaxis = add_axis_entites(basename, "z", 
 										headmeshfile, axismeshfile,
 										"obj_trans/obj_trans.material", tag_comp, colors["blue"])
 
@@ -386,22 +387,22 @@ local function add_axis_base_transform_entites(ms, basename, headmeshfile, axism
 	return controllers
 end
 
-local function add_translate_entities(ms, colors)
-	return add_axis_base_transform_entites(ms, "translate", "cone.mesh", "cylinder.mesh", "pos_transform", colors)
+local function add_translate_entities(colors)
+	return add_axis_base_transform_entites("translate", "cone.mesh", "cylinder.mesh", "pos_transform", colors)
 end
 
-local function add_scale_entities(ms, colors)
-	return add_axis_base_transform_entites(ms, "scale", "cube.mesh", "cylinder.mesh", "scale_transform", colors)	
+local function add_scale_entities(colors)
+	return add_axis_base_transform_entites("scale", "cube.mesh", "cylinder.mesh", "scale_transform", colors)	
 end
 
-local function add_rotator_entities(ms, colors)	
+local function add_rotator_entities(colors)	
 	local elems = {
 		xaxis = {suffixname = "x", clrname="red"},
 		yaxis = {suffixname = "y", clrname="green"},
 		zaxis = {suffixname = "z", clrname="blue"},
 	}
 
-	local root_eid = components_util.create_hierarchy_entity(ms, world, "rotator")
+	local root_eid = components_util.create_hierarchy_entity(world, "rotator")
 	world:add_component(root_eid, "rotator_transform")
 	local hie_entity = world[root_eid]
 	hie_entity.editable_hierarchy.ref_path = axisbase_controller_hierarchyname
@@ -409,7 +410,7 @@ local function add_rotator_entities(ms, colors)
 	local namemapper = hie_entity.hierarchy_name_mapper
 
 	local function add_elem_entity(elemname, clrname)
-		local elem_eid = components_util.create_hierarchy_entity(ms, world, "rotator-elem-" .. elemname)
+		local elem_eid = components_util.create_hierarchy_entity(world, "rotator-elem-" .. elemname)
 		world:add_component(elem_eid, "rotator_transform")
 		local elem = world[elem_eid]
 
@@ -418,7 +419,7 @@ local function add_rotator_entities(ms, colors)
 
 		local mapper = elem.hierarchy_name_mapper
 		local function add_entity(name, meshfilename, colorname)
-			local eid = components_util.create_render_entity(ms, world, name, meshfilename,
+			local eid = components_util.create_render_entity(world, name, meshfilename,
 			"obj_trans/obj_trans.material")
 			world:add_component(eid, "rotator_transform", "editor", "hierarchy_parent")
 			local entity = world[eid]
@@ -426,7 +427,7 @@ local function add_rotator_entities(ms, colors)
 			local properties = assert(entity.material.content[1].properties)
 			properties.u_color = {type="color", name="color", value=cu.deep_copy(colors[colorname])}
 			entity.can_render = false
-			mu.identify_transform(ms, entity)
+			mu.identify_transform(entity)
 	
 			entity.hierarchy_parent.eid = elem_eid
 			return eid
@@ -478,7 +479,7 @@ end
 
 
 
--- local function create_axisbase_hierarchy(ms)
+-- local function create_axisbase_hierarchy()
 -- 	local hierarchy_module = require "hierarchy"
 -- 	local path = require "filesystem.path"
 
@@ -538,17 +539,16 @@ end
 -- 	save_file(rotator_root, path.join(assetmgr.assetdir(), rotator_hierarchyname))
 -- end
 
-function obj_trans_sys:init()
-	local ms = self.math_stack
-	--create_axisbase_hierarchy(ms)
+function obj_trans_sys:init()	
+	--create_axisbase_hierarchy()
 
     local ot = self.object_transform    
     
     local cc = assert(self.constant.tcolors)
     ot.controllers = {
-        pos_transform = add_translate_entities(ms, cc),        
-        scale_transform = add_scale_entities(ms, cc),
-        rotator_transform = add_rotator_entities(ms, cc),
+        pos_transform = add_translate_entities(cc),        
+        scale_transform = add_scale_entities(cc),
+        rotator_transform = add_rotator_entities(cc),
 	}
 
 	for _, c in pairs(ot.controllers) do
@@ -561,7 +561,7 @@ function obj_trans_sys:init()
     ot.selected_eid = nil
     ot.sceneobj_eid = nil
 
-    register_message(self.message, ot, ms)
+    register_message(self.message, ot)
 end
 
 -- function obj_trans_sys:update()
@@ -572,7 +572,7 @@ end
 
 --     ot.select_changed = false
 
---     update_contorller(ot, self.math_stack)
+--     update_contorller(ot)
 -- end
 
 local function update_select_state(ot)
@@ -605,10 +605,10 @@ local function update_select_state(ot)
     return select_changed
 end
 
-function obj_trans_sys.notify:pickup(set)	
+function obj_trans_sys.notify:pickup()	
     local ot = self.object_transform
     if update_select_state(ot) then
-        update_contorller(ot, self.math_stack)
+        update_contorller(ot)
     end
 
 	local selid = ot.selected_eid

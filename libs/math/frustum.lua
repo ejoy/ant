@@ -11,10 +11,6 @@ function frustum.from_projmat(proj)
 	
 end
 
-function frustum:set_mathstack(ms)
-	self.ms = ms
-end
-
 function frustum:corner_points()
 	local half_nw = (self.r - self.l) * 0.5
 	local half_nh = (self.b - self.t) * 0.5
