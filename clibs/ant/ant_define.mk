@@ -8,7 +8,7 @@ PLAT_LIBS = -lws2_32
 else
 endif
 
-LINKLIBBGFX= $(BGFXUTILLIB) $(BIMGLIB) $(BGFXLIB)
+LINKLIBBGFX= $(BGFXUTILLIB) $(BGFXLIB) $(BIMGLIB) $(BXLIB)
 LINKLIBBULLET= -L$(ANT3RD)/build/bullet3/lib -lBulletDynamics -lBulletCollision -lLinearMath -lstdc++ -lHACD
 LINKLIBOZZ= $(OZZRUNTIME) $(OZZOFFLINE) $(OZZGEOMERTY) $(OZZBASE)
 

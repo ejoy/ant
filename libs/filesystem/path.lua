@@ -1,12 +1,22 @@
 local path = {}
 path.__index = path
 
+local function sep(c)
+	return c == '/' or c == '\\'
+end
+
 local function rootdir(fullname)
 	if fullname:sub(1, 1) == '/' then
 		return 2
 	end
 	local pos = fullname:find(':', 1, true)
 	if pos then
+		if sep(fullname:sub(pos + 1, pos + 1)) then
+			if sep(fullname:sub(pos + 2, pos + 2)) then
+				return pos + 3
+			end
+			return pos + 2
+		end
 		return pos + 1
 	end
 end
