@@ -5,13 +5,14 @@ $output v_texcoord0, v_lightdir, v_viewdir,v_normal
 #include "common/uniforms.sh"
 
 #include <bgfx_shader.sh>
-#include "common/transform.sh"
+#include "common/transform.sh"	// must define after bgfx_shader.sh
+
 void main()
 {
     vec4 pos = vec4(a_position, 1);
 	gl_Position = mul(u_modelViewProj, pos);
 	vec4 worldpos = mul(u_model[0], pos);
-	mat3 tbn = calc_tbn(a_normal, a_tangent, a_bitangent, u_model[0]);
+	mat3 tbn = calc_tbn(a_normal, a_tangent.xyz, a_bitangent, u_model[0]);
 
 	v_lightdir 	= mul(directional_lightdir[0].xyz , tbn);
 	v_viewdir 	= mul(normalize(u_eyepos.xyz - worldpos.xyz), tbn);

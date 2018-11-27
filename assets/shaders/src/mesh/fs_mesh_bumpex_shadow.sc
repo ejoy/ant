@@ -26,7 +26,7 @@ vec4 calc_lighting_BH(vec3 normal, vec3 lightdir, vec3 viewdir,
 	float shininess = specularColor.w;   									 // spec shape
 	float specularFactor = pow(hdotn, shininess * 128) * u_specularLight.x;  // spec intensity 
 
-	vec3 diffuse = diffuseColor * lightColor * ndotl;
+	vec3 diffuse = diffuseColor.xyz * lightColor.xyz * ndotl;
 	vec3 specular = specularColor.rgb * specularFactor * gloss;              // gloss from normalmap texture 
 
 	//return vec4(specularFactor * gloss, specularFactor * gloss, specularFactor * gloss, 1.0);

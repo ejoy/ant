@@ -6,9 +6,9 @@ float fresnel(float _ndotl, float _bias, float _pow)
 
 float specular_blinn(vec3 lightdir, vec3 normal, vec3 viewdir, float shininess)
 {
-	vec3 half = normalize(lightdir + viewdir);
+	vec3 halfdir = normalize(lightdir + viewdir);
 
-	float hdotn = dot(half, normal);	// Phong need check dot result, but Blinn-Phong not	
+	float hdotn = dot(halfdir, normal);	// Phong need check dot result, but Blinn-Phong not	
 	return pow(hdotn, shininess * 128);
 }
 
@@ -20,5 +20,5 @@ vec3 calc_directional_light(vec3 normal, vec3 lightdir, vec3 viewdir, float shin
 	float fres = fresnel(ndotl, 0.2, 5);	
 	float specular = step(0, ndotl) * fres * specular_blinn(lightdir, normal, viewdir, shininess);
 
-	return diffuse + specular;
+	return vec3(diffuse + specular);
 }

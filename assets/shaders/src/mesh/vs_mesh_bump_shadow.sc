@@ -16,8 +16,8 @@ void main()
  
 	v_texcoord0 = a_texcoord0;
 
-	vec3 normal = normalize(mul(u_model[0], a_normal.xyz));
-	vec3 tangent = normalize(mul(u_model[0], a_tangent.xyz));
+	vec3 normal = normalize(mul(u_model[0], vec4(a_normal.xyz, 1.0))).xyz;
+	vec3 tangent = normalize(mul(u_model[0], vec4(a_tangent.xyz, 1.0))).xyz;
 	vec3 bitangent = (cross(normal,tangent))* a_tangent.w;
 	//bitangent = -bitangent;
  
