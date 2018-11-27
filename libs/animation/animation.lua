@@ -3,7 +3,6 @@ local world = ecs.world
 
 -- luacheck: ignore param
 ecs.import "timer"
-ecs.import "render.math3d.math_component"
 
 local ani = ecs.component_struct "animation" {
 	ref_path = {
@@ -40,7 +39,6 @@ local ske = ecs.component_struct "skeleton" {
 
 local anisystem = ecs.system "animation_system"
 anisystem.singleton "timer"
-anisystem.singleton "math_stack"
 
 local ani_module = require "hierarchy.animation"
 

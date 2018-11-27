@@ -1,3 +1,4 @@
+--luacheck: ignore self
 local ecs = ...
 local world = ecs.world
 
@@ -9,6 +10,8 @@ ecs.import "inputmgr.message_system"
 local point2d = require "math.point2d"
 local bgfx = require "bgfx"
 local mu = require "math.util"
+local ms = require "math.stack"
+
 local asset = require "asset"
 local cu = require "common.util"
 
@@ -97,7 +100,7 @@ local function which_entity_hitted(pickup_entity)
     return found_eid
 end
 
-local function update_viewinfo(ms, e, clickpt)    
+local function update_viewinfo(e, clickpt) 
 	local maincamera = world:first_entity("main_camera")  
 	local mc_vr = maincamera.view_rect
 	local w, h = mc_vr.w, mc_vr.h
@@ -155,7 +158,6 @@ ecs.component_struct "pickup"{}
 
 local pickup_sys = ecs.system "pickup_system"
 
-pickup_sys.singleton "math_stack"
 pickup_sys.singleton "frame_stat"
 pickup_sys.singleton "message"
 
@@ -175,7 +177,7 @@ local function remove_primitive_filter(eid)
 	world:remove_component(eid, "primitive_filter")
 end
 
-local function add_pick_entity(ms)
+local function add_pick_entity()
 	local eid = world:new_entity("pickup", 
 	"clear_component", 
 	"viewid",
@@ -211,16 +213,15 @@ local function add_pick_entity(ms)
 	return eid
 end
 
-function pickup_sys:init()
-	local ms = self.math_stack	
-	local pickup_eid = add_pick_entity(self.math_stack)
+function pickup_sys:init()	
+	local pickup_eid = add_pick_entity()
 
 	self.message.observers:add({
 		button = function (_, b, p, x, y)
 			if b == "LEFT" and p then
 				local entity = world[pickup_eid]
 				if entity then
-					update_viewinfo(ms, entity, point2d(x, y))
+					update_viewinfo(entity, point2d(x, y))
 					add_primitive_filter(pickup_eid)
 					entity.pickup.ispicking = true
 				end

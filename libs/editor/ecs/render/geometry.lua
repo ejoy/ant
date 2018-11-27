@@ -1,5 +1,3 @@
-local commonutil = require "common.util"
-
 local geometry = {}; geometry.__index = geometry
 
 --[[
@@ -291,9 +289,9 @@ local function triangle_index_to_line_index(ib)
 	local cache = {}
 	
 	for i=1, #ib, 3 do
-		local p0 = {ib[i+1], ib[i+2]}
-		local p1 = {ib[i+2], ib[i+3]}
-		local p2 = {ib[i+3], ib[i+1]}
+		local p0 = {ib[i+0], ib[i+1]}
+		local p1 = {ib[i+1], ib[i+2]}
+		local p2 = {ib[i+2], ib[i+0]}
 
 		local function haskey(p)
 			local k0, k1 = p[1] .. "," .. p[2], p[2] .. "," .. p[1]

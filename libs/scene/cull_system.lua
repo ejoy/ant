@@ -1,3 +1,4 @@
+--luacheck: ignore self
 local ecs = ...
 local world = ecs.world
 
@@ -5,18 +6,18 @@ ecs.import "scene.filter.filter_system"
 
 local math3d_baselib = require "math3d.baselib"
 local mu = require "math.util"
+local ms = require "math.stack"
 
 local cull_sys = ecs.system "cull_system"
-cull_sys.singleton "math_stack"
+
 cull_sys.depend "primitive_filter_system"
 cull_sys.dependby "lighting_primitive_filter_system"
 
-function cull_sys:update()
-	local ms = self.math_stack
+function cull_sys:update()	
 	for _, eid in world:each("primitive_filter") do
 		local e = world[eid]
 		local filter = e.primitive_filter		
-		local view, proj = mu.view_proj_matrix(ms, e)
+		local view, proj = mu.view_proj_matrix(e)
 		-- plane is in world space
 		local planes = math3d_baselib.extract_planes(ms(view, proj, "*m"))
 		

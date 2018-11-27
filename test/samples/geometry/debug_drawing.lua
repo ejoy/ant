@@ -2,7 +2,11 @@ local ecs = ...
 local world = ecs.world
 
 local bgfx = require "bgfx"
+
+local mu = require "math.util"
+
 local componentutil = require "render.components.util"
+
 
 local function init_wireframe_mesh()
 	local decl, vertexsize = bgfx.vertex_decl {
@@ -20,7 +24,8 @@ local function init_wireframe_mesh()
 				},
 				ib={
 					handle=bgfx.create_dynamic_index_buffer(1024*10, "a")
-				}
+				},
+				primitives={}
 			},
 		}
 	}	
@@ -36,18 +41,12 @@ local debug_obj = ecs.component "debug_object" {
 function debug_obj:init()
 	self.renderobjs = {
 		wireframe = {
-			desc = {},
-			-- desc = {
-			-- 	material = "",
-			-- 	vb={},
-			-- 	ib={},
-			-- 	primitives = {
-			-- 		{
-			-- 			voffset=0, vnum=40,
-			-- 			ioffset=0, inum=40,
-			-- 		},
-			-- 	},
-			-- },
+			desc = {
+				material = "",
+				vb={},
+				ib={},
+				primitives = {},
+			},
 		}
 	}
 
@@ -56,15 +55,19 @@ function debug_obj:init()
 	"main_debug",
 	"can_render", "name")
 
-	local debugobj = world[debugeid]
-	debugobj.mesh = {
+	local dbentity = world[debugeid]
+
+	dbentity.name = "debug_test"	
+
+	dbentity.mesh = {
 		assetinfo={handle=init_wireframe_mesh()}
 	}
+
+	componentutil.load_material(dbentity.material, {"line.material"})
 end
 
 local debug_draw = ecs.system "debug_draw"
 debug_draw.singleton "debug_object"
-debug_draw.singleton "math_stack"
 
 local function check_add_material(mc, materialpath)
 	local function has_material()
@@ -76,7 +79,8 @@ local function check_add_material(mc, materialpath)
 	end
 
 	if not has_material() then
-		table.insert(mc, componentutil.create_material(materialpath))
+		local m = {}
+		table.insert(mc, componentutil.create_material(materialpath, m))
 	end
 end
 
@@ -87,45 +91,35 @@ function debug_draw:update()
 
 	local wireframe = renderobjs.wireframe
 
-	local debugobj = world:first_entity("main_debug")
-	local mc = debugobj.material.content
-	local meshgroups = debugobj.mesh.handle.groups
+	local dbentity = world:first_entity("main_debug")
+	local mc = dbentity.material.content
+	local meshgroups = dbentity.mesh.assetinfo.handle.groups
+
+	mu.identify_transform(dbentity)
 	
-	for _, ro in ipairs(wireframe) do
-		local desc = assert(ro.desc)
+	local function commit_desc(desc)		
 		local materialpath = desc.material
 		if materialpath and materialpath ~= "" then
 			check_add_material(mc, materialpath)
 		end
 
 		local g = meshgroups[1]
-		local prim = g.prim
+
+		local prim = g.primitives
+		table.move(desc.primitives, 1, #desc.primitives, #prim+1, prim)
 
 		local gvb = assert(g.vb)
-		local h = gvb.handles[1]
-		local decl = gvb.decl[1]
-		local ih = assert(g.ib).handle
-
-		local dvb = desc.vb
-		local vnum = #dvb
-		local vbuffer = {}
+		
+		local dvb = desc.vb		
+		local vbuffer = {"fffd"}
 		for _, v in ipairs(dvb) do
 			table.move(v, 1, #v, #vbuffer+1, vbuffer)
 		end
 
-		local dib = desc.ib
-		local inum = #dib
-		local ibuffer = {}
-		for _, i in ipairs(dib) do
-			table.move(i, 1, #i, #ibuffer+1, ibuffer)
-		end
-
-		for _, p in ipairs(desc.primitives) do
-			table.insert(prim, p)
-		end
-
-		bgfx.update(h, 0, {"fffd", vbuffer, vnum * decl.vertexsize})
-		bgfx.update(ih, 0, {ibuffer, inum * 2})
+		bgfx.update(gvb.handles[1], 0, vbuffer)
+		bgfx.update(assert(g.ib).handle, 0, desc.ib)
 	end
+
+	commit_desc(assert(wireframe.desc))
 end
 

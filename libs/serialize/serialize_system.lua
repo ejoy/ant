@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.math3d.math_component"
 ecs.import "render.end_frame_system"
 ecs.import "inputmgr.message_system"
 ecs.import "serialize.serialize_component"
@@ -10,14 +9,13 @@ local su = require "serialize.util"
 
 local serialize_save_sys = ecs.system "serialize_save_system"
 serialize_save_sys.singleton "serialization_tree"
-serialize_save_sys.singleton "math_stack"
 
 serialize_save_sys.depend "end_frame"
 
 function serialize_save_sys.notify:save()
     local children = {}
     for _, eid in world:each("serialize") do        
-        local tr = su.save_entity(world, eid, self.math_stack)
+        local tr = su.save_entity(world, eid)
         table.insert(children, tr)
     end
 
@@ -31,7 +29,6 @@ end
 --- load system
 local serialize_load_sys = ecs.system "serialize_load_system"
 
-serialize_load_sys.singleton "math_stack"
 serialize_load_sys.singleton "serialization_tree"
 
 serialize_load_sys.depend "end_frame"
@@ -70,7 +67,7 @@ function serialize_load_sys.notify:load_from_seri_tree()
     assert(#children ~= 0)
     local loaded_eids = {}
     for _, tr in ipairs(children) do
-        local eid = su.load_entity(tr, self.math_stack)
+        local eid = su.load_entity(tr)
         loaded_eids[eid] = true
     end
 

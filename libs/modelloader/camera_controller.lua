@@ -1,41 +1,37 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.math3d.math_component"
 ecs.import "render.camera.camera_component"
 ecs.import "render.components.general"
 ecs.import "inputmgr.message_system"
 
-local mu = require "math.util"
-local cu = require "render.components.util"
 local point2d = require "math.point2d"
-local camera_util = require "render.camera.util"
 local math3d = require "math3d"
+local ms = require "math.stack"
 
 local camera_controller_system = ecs.system "camera_controller"
-camera_controller_system.singleton "math_stack"
+
 camera_controller_system.singleton "message"
 camera_controller_system.singleton "control_state"
 
 camera_controller_system.depend "message_system"
 camera_controller_system.depend "camera_init"
 
-local function camera_move(ms, rotation, position, dx, dy, dz)
+local function camera_move(rotation, position, dx, dy, dz)
 	ms(position, rotation, "b", position, "S", {dx}, "*+S", {dy}, "*+S", {dz}, "*+=")
 end
 
-local function camera_reset(ms, camera, target)
+local function camera_reset(camera, target)
 	ms(target, {0, 0, 0, 1}, "=")
 	ms(camera.position, {8, 8, -8, 1}, "=")
 	ms(camera.rotation, target, camera.position, "-D=")
 end
 
-function camera_controller_system:init()
-	local ms = self.math_stack
+function camera_controller_system:init()	
 	local camera = world:first_entity("main_camera")
 
 	local target = math3d.ref "vector"
-	camera_reset(ms, camera, target)
+	camera_reset(camera, target)
 
 	local move_speed = 1
 	local message = {}
@@ -51,13 +47,13 @@ function camera_controller_system:init()
 			if status.RIGHT then
 				local speed = move_speed * 0.1
 				local delta = (xy - last_xy) * speed
-				camera_move(ms, camera.rotation, target, -delta.x, delta.y, 0)
-				camera_move(ms, camera.rotation, camera.position, -delta.x, delta.y, 0)
+				camera_move(camera.rotation, target, -delta.x, delta.y, 0)
+				camera_move(camera.rotation, camera.position, -delta.x, delta.y, 0)
 			elseif status.LEFT then
 				local speed = move_speed * 0.1
 				local delta = (xy - last_xy) * speed
 				local distance = math.sqrt(ms(target, camera.position, "-1.T")[1])
-				camera_move(ms, camera.rotation, camera.position, -delta.x, delta.y, 0)
+				camera_move(camera.rotation, camera.position, -delta.x, delta.y, 0)
 				ms(camera.rotation, target, camera.position, "-D=")
 				ms(camera.position, target, {-distance}, camera.rotation, "dn*+=")
 			end
@@ -66,12 +62,12 @@ function camera_controller_system:init()
 	end
 
 	function message:mouse_wheel(delta, x, y)
-		camera_move(ms, camera.rotation, camera.position, 0, 0, delta * move_speed)
+		camera_move(camera.rotation, camera.position, 0, 0, delta * move_speed)
 	end
 
 	function message:keyboard(code, press)
 		if press and code == "R" then
-			camera_reset(ms, camera, target)
+			camera_reset(camera, target)
 			return 
 		end
 	end

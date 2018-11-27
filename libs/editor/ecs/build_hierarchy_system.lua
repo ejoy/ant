@@ -1,18 +1,17 @@
+--luacheck: ignore self
+
 local ecs = ...
 local world = ecs.world
-
-ecs.import "render.math3d.math_component"
 
 local hierarchy_module = require "hierarchy"
 local path = require "filesystem.path"
 local fu = require "filesystem.util"
+local ms = require "math.stack"
+local mu = require "math.util"
+local assetmgr = require "asset"
+
 
 local build_system = ecs.system "build_hierarchy_system"
-build_system.singleton "math_stack"
-
-local mu = require "math.util"
-
-local assetmgr = require "asset"
 
 local function create_hierarchy_path(ref_path)	
 	local ext = path.ext(ref_path)
@@ -22,7 +21,7 @@ local function create_hierarchy_path(ref_path)
 	return ref_path
 end
 
-local function rebuild_hierarchy(ms, iterop)	
+local function rebuild_hierarchy(iterop)
 	local moditied_files = {}
 
 	--[@	find editable_hierarchy reference path
@@ -86,7 +85,7 @@ local function rebuild_hierarchy(ms, iterop)
 	--[@	use the new updated resource to update entity srt
 	for _, eid in iterop() do
 		local e = world[eid]
-		local rootsrt = mu.srt_from_entity(ms, e)
+		local rootsrt = mu.srt_from_entity(e)
 
 		local function update_transform(pe, psrt)
 			local mapper = pe.hierarchy_name_mapper
@@ -114,10 +113,10 @@ local function rebuild_hierarchy(ms, iterop)
 end
 
 function build_system:init()
-	rebuild_hierarchy(self.math_stack, function ()
+	rebuild_hierarchy(function ()
 		return world:each("editable_hierarchy") end)
 end
 
 function build_system.notify:rebuild_hierarchy(set)
-	rebuild_hierarchy(self.math_stack, function () return ipairs(set) end)
+	rebuild_hierarchy(function () return ipairs(set) end)
 end

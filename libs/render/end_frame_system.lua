@@ -17,15 +17,14 @@ end
 local end_frame_sys = ecs.system "end_frame"
 
 end_frame_sys.singleton "frame_stat"
-end_frame_sys.singleton "math_stack"
 
 local math3d = require "math3d"
+local ms = require "math.stack"
 
 function end_frame_sys:update() 
     local stat = self.frame_stat
 	stat.frame_num = bgfx.frame()
 	
-	local ms = self.math_stack	
 	math3d.reset(ms)	
 end
 --@]

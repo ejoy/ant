@@ -1,7 +1,11 @@
+--luacheck: ignore self
+
 local ecs = ...
 local world = ecs.world
 
-local function append_lighting_properties(ms, result)
+local ms = require "math.stack"
+
+local function append_lighting_properties(result)
 
 	local function gen_directional_light_properties()
 		local properties = {}
@@ -119,18 +123,16 @@ end
 
 --- scene lighting fitler system ------------------------
 local lighting_primitive_filter_sys = ecs.system "lighting_primitive_filter_system"
-lighting_primitive_filter_sys.singleton "math_stack"
 
 lighting_primitive_filter_sys.depend "primitive_filter_system"
 lighting_primitive_filter_sys.dependby "final_filter_system"
 
-function lighting_primitive_filter_sys:update()
-	local ms = self.math_stack
+function lighting_primitive_filter_sys:update()	
 	for _, eid in world:each("primitive_filter") do
 		local e = world[eid]
 		local filter = e.primitive_filter
 		if not filter.no_lighting then
-			append_lighting_properties(ms, filter.result)
+			append_lighting_properties(filter.result)
 		end
 	end
 end

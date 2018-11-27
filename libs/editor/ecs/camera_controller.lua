@@ -1,13 +1,12 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.math3d.math_component"
 ecs.import "render.camera.camera_component"
 ecs.import "render.components.general"
 ecs.import "inputmgr.message_system"
 ecs.import "timer.timer"
 
-local mu = require "math.util"
+local ms = require "math.stack"
 local cu = require "render.components.util"
 
 local point2d = require "math.point2d"
@@ -24,7 +23,7 @@ local action_type = {
 	ROTX = false, ROTY = false
 }
 local camera_controller_system = ecs.system "camera_controller"
-camera_controller_system.singleton "math_stack"
+
 camera_controller_system.singleton "message"
 camera_controller_system.singleton "control_state"
 camera_controller_system.singleton "timer"
@@ -32,8 +31,7 @@ camera_controller_system.singleton "timer"
 camera_controller_system.depend "message_system"
 camera_controller_system.depend "camera_init"
 
-function camera_controller_system:init()
-	local ms = self.math_stack
+function camera_controller_system:init()	
 	local camera = world:first_entity("main_camera")
 
 	local move_speed = 1
@@ -54,7 +52,7 @@ function camera_controller_system:init()
 			if status.RIGHT then
 				local speed = move_speed * 0.1
 				local delta = (xy - last_xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
-				camera_util.rotate(ms, camera, delta.x, delta.y)
+				camera_util.rotate(camera, delta.x, delta.y)
 			end 
 		end
 
@@ -104,8 +102,7 @@ end
 function camera_controller_system:update()
 
 	local camera = world:first_entity("main_camera")
-	if camera then
-		local ms = self.math_stack
+	if camera then		
 		local deltaTime = self.timer.delta
 		
 		local dx, dy, dz = 0, 0, 0
@@ -128,15 +125,16 @@ function camera_controller_system:update()
 		end
 
 		if action_type.LEFTROT then 
-			camera_util.rotate(ms, camera, -step * deltaTime , 0)
+			camera_util.rotate(camera, -step * deltaTime , 0)
 		elseif action_type.RIGHTROT then 
-			camera_util.rotate(ms, camera,  step * deltaTime, 0)
+			camera_util.rotate(camera,  step * deltaTime, 0)
 		end 
 
-		camera_util.move(ms, camera, dx*deltaTime, dy*deltaTime, dz*deltaTime)
+		camera_util.move(camera, dx*deltaTime, dy*deltaTime, dz*deltaTime)
 	end 
 end 	
 
+--luacheck: ignore self
 function camera_controller_system.notify:focus_selected_obj(objects)
 	--only using first obj
 	local eid = objects[1]
@@ -163,7 +161,6 @@ function camera_controller_system.notify:focus_selected_obj(objects)
 		return 
 	end
 
-	local ms = self.math_stack
 	local commonutil = require "common.util"
 	
 	local aabb = commonutil.deep_copy(bounding.aabb)
@@ -173,7 +170,8 @@ function camera_controller_system.notify:focus_selected_obj(objects)
 			2. transform aabb ==> aabb
 			3. get aabb center and square aabb radius ==> center, radius
 			4. calculate current camera position to aabb center direction ==> dir
-			5. calculate new camera position ==> newposition = center - radius * dir, here, minus dir is for negative the direction
+			5. calculate new camera position ==> 
+					newposition = center - radius * dir, here, minus dir is for negative the direction
 			6. change camera direction as new direction
 
 	]]

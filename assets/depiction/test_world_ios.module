@@ -4,7 +4,6 @@ modules = {
     "serialize/serialize_system.lua",
 	"serialize/serialize_luatabletext.lua",
 
-	"render/math3d/math_component.lua",
 	"render/constant_system.lua",	
 	"render/light/light.lua",
     "render/window_component.lua",

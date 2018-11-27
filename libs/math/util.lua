@@ -1,4 +1,5 @@
 local math3d = require "math3d"
+local ms = require "math.stack"
 
 local util = {}
 util.__index = util
@@ -26,11 +27,11 @@ local function create_persistent_type(persistent_type, v)
 	return t
 end
 
-local function to_v(ms, math_id)
+local function to_v(math_id)
 	return ms(math_id, "m")
 end
 
-function util.srt(ms, s, r, t, ispersistent)
+function util.srt(s, r, t, ispersistent)
 	local srt = {type="srt", s=s, r=r, t=t}
 	if ispersistent then
 		return create_persistent_type("matrix", srt)
@@ -39,23 +40,23 @@ function util.srt(ms, s, r, t, ispersistent)
 	return ms(srt, "P")
 end
 
-function util.srt_from_entity(ms, entity)
-	return util.srt(ms, entity.scale, entity.rotation, entity.position)
+function util.srt_from_entity(entity)
+	return util.srt(entity.scale, entity.rotation, entity.position)
 end
 
-function util.srt_v(ms, s, r, t, ispersistent)
-	return to_v(ms, util.srt(ms, s, r, t, ispersistent))
+function util.srt_v(s, r, t, ispersistent)
+	return to_v(util.srt(s, r, t, ispersistent))
 end
 
-function util.proj(ms, frustum, ispersistent)
+function util.proj(frustum, ispersistent)
 	if ispersistent then
 		return create_persistent_type("matrix", frustum)
 	end
 	return ms(frustum, "P")
 end
 
-function util.proj_v(ms, frustum, ispersistent)
-	return to_v(ms, util.proj(ms, frustum, ispersistent))
+function util.proj_v(frustum, ispersistent)
+	return to_v(util.proj(frustum, ispersistent))
 end
 
 function util.degree_to_radian(angle)
@@ -77,19 +78,19 @@ function util.frustum_from_fov(frustum, n, f, fov, aspect)
 	frustum.b = -hh
 end
 
-function util.create_persistent_vector(ms, value)
+function util.create_persistent_vector(value)
 	local v = math3d.ref "vector"
 	ms(v, value, "=")
 	return v
 end
 
-function util.create_persistent_matrix(ms, value)
+function util.create_persistent_matrix(value)
 	local m = math3d.ref "matrix"
 	ms(m, value, "=")
 	return m
 end
 
-function util.identify_transform(ms, entity)
+function util.identify_transform(entity)
 	ms(	entity.scale, {1, 1, 1, 0}, "=",
 	entity.rotation, {0, 0, 0, 0}, "=",
 	entity.position, {0, 0, 0, 1}, "=")
@@ -120,18 +121,17 @@ local function update_frustum_from_aspect(rt, frustum)
 	frustum.r = tmp_hw
 end
 
-function util.view_proj_matrix(ms, camera_entity)	
+function util.view_proj_matrix(camera_entity)	
 	local view = ms(camera_entity.position, camera_entity.rotation, "dLP")
 	local vr = camera_entity.view_rect
 	local frustum = assert(camera_entity.frustum)
 	update_frustum_from_aspect(vr, frustum)
 	
-	return view, util.proj(ms, frustum)
+	return view, util.proj(frustum)
 end
 
 local function math3d_value_save(v, arg)
-	assert(type(v) == "userdata")
-	local ms = arg.math_stack
+	assert(type(v) == "userdata")	
 	local t = ms(v, "T")
 	assert(type(t) == "table" and t.type ~= nil)
 	return t
@@ -148,8 +148,7 @@ local function get_math3d_value_load(typename)
 		end
 
 		local math3d = require "math3d"
-		local v = math3d.ref(typename)
-		local ms = arg.math_stack
+		local v = math3d.ref(typename)		
 		ms(v, s, "=")
 		return v
 	end

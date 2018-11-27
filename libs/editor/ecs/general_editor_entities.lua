@@ -1,24 +1,22 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.math3d.math_component"
 ecs.import "render.camera.camera_component"
 
 -- entity
 ecs.import "editor.ecs.editor_component"
 
-local cu 	= require "render.components.util"
 local bgfx  = require "bgfx"
+local cu 	= require "render.components.util"
 local mu  	= require "math.util"
+local ms = require "math.stack"
 
 local general_editor_entites = ecs.system "general_editor_entites"
 
-general_editor_entites.singleton "math_stack"
 general_editor_entites.depend "camera_init"
 
+--luacheck: ignore self
 function general_editor_entites:init()
-    local ms = self.math_stack
-
     local vdecl = bgfx.vertex_decl {
         { "POSITION", 3, "FLOAT" },
         { "COLOR0", 4, "UINT8", true }
@@ -32,7 +30,7 @@ function general_editor_entites:init()
 			"name")
         local axis = world[axisid]
 
-        mu.identify_transform(ms, axis)
+        mu.identify_transform(axis)
 
 		axis.name = "axis-tips"
 		
@@ -69,7 +67,7 @@ function general_editor_entites:init()
 		"name")
         local grid = world[gridid]
         grid.name = "grid"
-        mu.identify_transform(ms, grid)        
+        mu.identify_transform(grid)        
 
         local function create_grid_line_points(w, h, unit)
             local t = {"fffd"}
@@ -148,7 +146,7 @@ function general_editor_entites:init()
 			local mu = require "math.util"
 			local camera = world:first_entity("main_camera")
 
-			local view, proj = mu.view_proj_matrix(ms, camera)
+			local view, proj = mu.view_proj_matrix(camera)
 			local matVP = ms(view, proj, "*m")
 			local corners = math3d_baselib.frustum_points(matVP)
 

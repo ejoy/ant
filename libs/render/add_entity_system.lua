@@ -1,10 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-
-
-
-ecs.import "render.math3d.math_component"
 ecs.import "render.constant_system"
 ecs.import "render.camera.camera_component"
 ecs.import "render.entity_rendering_system"
@@ -33,18 +29,16 @@ ecs.import "serialize.serialize_system"
 
 local component_util = require "render.components.util"
 local lu = require "render.light.util"
-local fu = require "filesystem.util"
+local ms = require "math.stack"
+
 local assetmgr = require "asset"
 
 local update_direction_light_sys = ecs.system "direction_light_system"
-update_direction_light_sys.singleton "math_stack"
 
 function update_direction_light_sys:update()
     if true then
        return
     end
-
-	local ms = self.math_stack
 
 	local function get_delta_time_op()
 		local baselib = require "bgfx.baselib"
@@ -76,16 +70,13 @@ end
 
 local add_entity_sys = ecs.system "add_entities_system"
 
-add_entity_sys.singleton "math_stack"
 add_entity_sys.singleton "constant"
 
 add_entity_sys.depend "constant_init_sys"
 add_entity_sys.dependby "message_system"
 
-
+--luacheck: ignore self
 function add_entity_sys:init()
-	local ms = self.math_stack
-
 	do
 		local leid = lu.create_directional_light_entity(world)
 		world:add_component(leid, "position", "mesh", "material", "can_render", "scale")
@@ -153,7 +144,7 @@ function add_entity_sys:init()
 	-- 	local pochuan = world[pochuan_eid]
 	-- 	pochuan.name = "PoChuan"
 
-	-- 	--mu.identify_transform(ms, pochuan)
+	-- 	--mu.identify_transform(pochuan)
 	-- 	ms(pochuan.scale, {0.1, 0.1, 0.1}, "=")
 	-- 	ms(pochuan.rotation, {-90, 0, 0,}, "=")
 
@@ -164,7 +155,7 @@ function add_entity_sys:init()
 
     -- 测试场景时，打开 PVPScene 加载BnH模型
     local PVPScene = require "modelloader.PVPScene"
-	PVPScene.init(world, component_util, ms)
+	PVPScene.init(world, component_util)
 
 	-- do
 	-- 	local stone_eid = world:new_entity("position", "rotation", "scale",
@@ -174,7 +165,7 @@ function add_entity_sys:init()
 	-- 	local stone = world[stone_eid]
 	-- 	stone.name = "texture_stone"
 
-	-- 	mu.identify_transform(ms, stone)
+	-- 	mu.identify_transform(stone)
 
 	-- 	local function create_plane_mesh()
 	-- 		local vdecl = bgfx.vertex_decl {

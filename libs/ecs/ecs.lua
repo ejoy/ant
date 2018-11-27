@@ -130,9 +130,9 @@ function world:each(component_type)
 end
 
 function world:first_entity_id(c_type)
-	for _, eid in self:each(c_type) do
-		return eid
-	end
+	local n, s, i = self:each(c_type)
+	local _, eid = n(s, i)
+	return eid
 end
 
 function world:first_entity(c_type)

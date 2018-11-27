@@ -3,12 +3,11 @@ local world = ecs.world
 
 local render_cu = require "render.components.util"
 local render_util = require "render.util"
-local light_util = require "render.light.util"
 local math_util = require "math.util"
 local math3d = require "math3d"
 local bgfx = require "bgfx"
 local asset = require "asset"
-local shader_mgr = require "render.resources.shader_mgr"
+local ms = require "math.stack"
 
 -- system rules 
 -- component for global state
@@ -35,9 +34,6 @@ local VIEWID_DRAWSCENE = 200
 
 local VIEWID_DRAWDEPTH_START = 205
 local VIEWID_DRAWDEPTH_END   = 208
-
--- math stack derive from framework 
-local stack = nil   
 
 -- tested helper 
 local ctx = {}
@@ -164,11 +160,11 @@ local function uniform_def(name, t )
 end 
 local function var_def(tbl,name,...)
     local vec = math3d.ref "vector"  
-    stack(vec,{...},"=")             
+    ms(vec,{...},"=")             
     tbl[name] = vec                  
 end 
 local function var_set(name,...)
-    stack(uniforms[name],{...},"=")
+    ms(uniforms[name],{...},"=")
 end 
 local function var_undef(name)
     math3d.unref( uniforms[name] )
@@ -386,15 +382,15 @@ local function worldSpaceFrustumCorners( corners, near, far, projW, projH, invVi
     local function make_vertex(idx,w,h,d)
         -- ref mode 
         -- local vec  = math3d.ref "vector"        -- ? ref  内存是否可以自动释放，当不再引用时 ? 
-        -- stack(vec,{w,h,d,1},"=")                --  已查阅源代码，是一个可以自动 gc 的 userdata,但内部idx不释放则会一直存在并增加
+        -- ms(vec,{w,h,d,1},"=")                --  已查阅源代码，是一个可以自动 gc 的 userdata,但内部idx不释放则会一直存在并增加
                                                    --  ref mark 没释放连续使用是危险的,可使用 unref, vec(nil) 两种方法释放
         -- temp[1] = w                             --  不建议使用 ref，若用必须知道ref/unref 配对释放 index
         -- temp[2] = h
         -- temp[3] = d
         -- temp[4] = 1
-        -- local vec = stack (temp,"P")
+        -- local vec = ms(temp,"P")
 
-        local vec = stack( {w,h,d,1},"P" )         -- remommend，temporal index 
+        local vec = ms( {w,h,d,1},"P" )         -- remommend，temporal index 
         tmp_c[idx] = vec                        
     end 
 
@@ -410,11 +406,11 @@ local function worldSpaceFrustumCorners( corners, near, far, projW, projH, invVi
 
     -- convert to world space 
     for i= 1,numCorners do 
-        local t_vec = stack(tmp_c[i],invViewMatrix,"*P")           
+        local t_vec = ms(tmp_c[i],invViewMatrix,"*P")           
         corners[i] = t_vec
-        --// local t = stack(t_vec,"T")                                 
+        --// local t = ms(t_vec,"T")                                 
         --// local vec = math3d.ref "vector"
-        --// stack(vec,{t[1],t[2],t[3],t[4]},"=")     -- debug view                     
+        --// ms(vec,{t[1],t[2],t[3],t[4]},"=")     -- debug view                     
         --// corners[i] = vec 
         -- tmp_c[i](nil)                            --  unref
         -- ref mode
@@ -424,8 +420,8 @@ local function worldSpaceFrustumCorners( corners, near, far, projW, projH, invVi
 end 
 
 local function computeViewSpaceComponents(light,mtx)
-     local rv = stack( light.position, mtx,"*P")                 
-     stack( light.position_ViewSpace,rv,"=")                     
+     local rv = ms( light.position, mtx,"*P")                 
+     ms( light.position_ViewSpace,rv,"=")                     
 end 
 
 -- tested control variables 
@@ -443,7 +439,7 @@ local function debug_lightView(lightView,lightProj,shadowMapSize)
     else   frame =  0   end 
     --idx = 1
     bgfx.set_view_rect(0,0,0,shadowMapSize,shadowMapSize)
-    bgfx.set_view_transform(0, lightView, stack(lightProj[idx],"m") ) 
+    bgfx.set_view_transform(0, lightView, ms(lightProj[idx],"m") ) 
 end
 
 local function debug_use_virtual_camera()
@@ -453,8 +449,8 @@ local function debug_use_virtual_camera()
     frame = frame + 1.0*dir 
     camera_eye[3] = camera_eye[3] + frame + 40
     local camera_at = {-40,10,0}
-    camera_proj = stack( { type = "mat",n = 0.1,  f = 2000 , fov = 60, aspect = ctx.width/ctx.height } , "P")
-    camera_view = stack( camera_eye,camera_at,"lP")   
+    camera_proj = ms( { type = "mat",n = 0.1,  f = 2000 , fov = 60, aspect = ctx.width/ctx.height } , "P")
+    camera_view = ms( camera_eye,camera_at,"lP")   
     print("virtual camera pos ",camera_eye[1],camera_eye[2],camera_eye[3])
     return camera_view,camera_proj 
 end 
@@ -504,8 +500,7 @@ local function collectSubmitUniforms(ctx,config)
     uniforms.u_csmFarDistances =  uniforms.csmFarDistances
 end 
 
-function shadow_maker:generate_shadow( shadow_entid, select_filter )
-    local ms = self.ms 
+function shadow_maker:generate_shadow( shadow_entid, select_filter )    
     -- shadow_maker entity
     local entity = world[ shadow_entid ]
     local config = entity.shadow_config 
@@ -515,16 +510,16 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
 
     -- direction light entity  get light position  from light entity
     local d_light = world:first_entity("directional_light")
-    --stack(ctx.directionLight.position,d_light.position,"=")
-    --stack(ctx.directionLight.position_ViewSpace,d_light.position,"=")
-    local d_light_dir_p = stack(d_light.rotation,"diP")
-    local d_light_dir = stack(d_light_dir_p,"T")
+    --ms(ctx.directionLight.position,d_light.position,"=")
+    --ms(ctx.directionLight.position_ViewSpace,d_light.position,"=")
+    local d_light_dir_p = ms(d_light.rotation,"diP")
+    local d_light_dir = ms(d_light_dir_p,"T")
 
 
     -- main camera entity, get main camera's position,direction
     local camera = world:first_entity("main_camera")
     local camera_view_rc = camera.view_rect 
-    local camera_view, camera_proj = math_util.view_proj_matrix( ms, camera )
+    local camera_view, camera_proj = math_util.view_proj_matrix(camera)
     
     -- 测试指定一个相机位置
     if config.debug_virtualCamera  then 
@@ -548,13 +543,13 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
         numSplits = config.numSplits
     end     
 
-    local mtx_CameraViewInv = stack(camera_view,"iP")
+    local mtx_CameraViewInv = ms(camera_view,"iP")
 
     -- h = false => 0,1; -- h = true  => -1,1 
     -- 原来使用的
-    -- local mtxProj  = stack( { type = "ortho", l=1, r=-1, b=1, t=-1, n= -config.far  , f= config.far ,h = false     },"P") -- true 距离较远，精度较低
+    -- local mtxProj  = ms( { type = "ortho", l=1, r=-1, b=1, t=-1, n= -config.far  , f= config.far ,h = false     },"P") -- true 距离较远，精度较低
     -- 转换成新的API
-    local mtxProj = stack({type="mat", l=1, r=-1, t=-1, b=1, n=-config.far, f= config.far, ortho = true }, "P")	-- make a ortho mat
+    local mtxProj = ms({type="mat", l=1, r=-1, t=-1, b=1, n=-config.far, f= config.far, ortho = true }, "P")	-- make a ortho mat
     if config.lightType == "DirectionLight" then 
         local light_eye = { 100,100,100,1}
         local light_at  = { 0,0,0,1}  
@@ -563,10 +558,10 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
             d_light_dir[1] = light_at[1] - light_eye[1]
             d_light_dir[2] = light_at[2] - light_eye[2]
             d_light_dir[3] = light_at[3] - light_eye[3]
-            local rot = stack(d_light_dir,"DP")
-            --local t = stack(rot,"T")
+            local rot = ms(d_light_dir,"DP")
+            --local t = ms(rot,"T")
             --print(t[1],t[2],t[3],t[4])
-            stack(d_light.rotation,rot,"=")
+            ms(d_light.rotation,rot,"=")
         else
             -- get from directinal light entity 
             light_eye[1] = light_at[1] + d_light_dir[1]*100
@@ -576,7 +571,7 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
         end 
 
         -- 这个是赋值，还是新内存对象替代原来的 lightView[1],需要查源码对照求证?!!
-        lightView[1] = stack( light_eye,light_at,"lP")    
+        lightView[1] = ms( light_eye,light_at,"lP")    
 
         local splitSlices = splitFrustum( numSplits ,
                                           config.near,
@@ -600,8 +595,8 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
             local max = { -9999,-9999,-9999}
 
             for j = 1, numCorners do 
-                local lightSpaceCorner = stack(fc[j],lightView[1],"*P")
-                local t = stack(lightSpaceCorner,"T")  
+                local lightSpaceCorner = ms(fc[j],lightView[1],"*P")
+                local t = ms(lightSpaceCorner,"T")  
                 local v1,v2,v3 = t[1],t[2],t[3] 
                 min[1] = math.min(min[1],v1)
                 max[1] = math.max(max[1],v1)
@@ -611,10 +606,10 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
                 max[3] = math.max(max[3],v3)
             end 
 
-            local min_proj_id = stack(min, mtxProj,"*P")    
-            local max_proj_id = stack(max, mtxProj,"*P")
-            local min_proj = stack(min_proj_id,"T")         
-            local max_proj = stack(max_proj_id,"T")
+            local min_proj_id = ms(min, mtxProj,"*P")    
+            local max_proj_id = ms(max, mtxProj,"*P")
+            local min_proj = ms(min_proj_id,"T")         
+            local max_proj = ms(max_proj_id,"T")
 
             -- 另一种方案
             -- local quant = 1/config.shadowMapSize 
@@ -646,17 +641,17 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
             -- 只完成移动方向的snap,旋转上仍旧会抖动
             -- 尽管pcf 可以很大消除这种抖动，但理论上不带pcf 的锯齿图也可以稳定
             -- 精度的差异，offset 的差别会影响投影器的稳定性 
-            local mtxCrop = stack( {
+            local mtxCrop = ms( {
                 scalex,  0,      0,   0, 
                 0,       scaley, 0,   0,
                 0,       0,      1,   0,
                 offsetx, offsety,0,   1 }, "P" )
 
-            lightProj[i] = stack(  mtxCrop,mtxProj, "*P")   
+            lightProj[i] = ms(  mtxCrop,mtxProj, "*P")   
 
             -- 替换合适算法或可以使得旋转也稳定 
             -- 另一种方案 
-            -- local lightProjection = stack({ type = "ortho",
+            -- local lightProjection = ms({ type = "ortho",
             --                                 l = min_proj[1],r= max_proj[1],
             --                                 t = min_proj[2],b= max_proj[2],
             --                                 n = min_proj[3],f= max_proj[3], h = fasle },"P")
@@ -674,7 +669,7 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
         bgfx.set_view_frame_buffer(i)
     end 
 
-    local lightViewPtr  = stack(lightView[1],"m")                         -- id to pointer for bgfx 
+    local lightViewPtr  = ms(lightView[1],"m")                         -- id to pointer for bgfx 
 
     if config.lightType == "DirectionLight" then 
         bgfx.set_view_rect( VIEWID_SHADOW_START+0, 0,0,shadowMapSize,shadowMapSize)
@@ -735,7 +730,7 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
     -- bias matrix 
     local ymul = ctx.s_flipV and 0.5 or -0.5
     local zadd = config.depthImpl == "Linear" and 0 or 0.5
-    local mtxBias = stack(  {
+    local mtxBias = ms(  {
                 0.5, 0.0, 0.0, 0.0,
                 0.0, ymul, 0.0, 0.0,
                 0.0, 0.0, 0.5,  0.0,
@@ -743,8 +738,8 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
             )
 
     for i = 1,numSplits do 
-        local mtxTemp = stack( lightProj[i],mtxBias,"*P")
-        ctx.shadowMapMtx[i] = stack(lightView[1],mtxTemp,"*m")
+        local mtxTemp = ms( lightProj[i],mtxBias,"*P")
+        ctx.shadowMapMtx[i] = ms(lightView[1],mtxTemp,"*m")
         -- ctx & comp_rt references 
         shadow.shadowMapMtx[i] = ctx.shadowMapMtx[i]
     end  
@@ -761,10 +756,10 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
 
     -- draw depth texture 
     if config.debug_drawShadow then 
-        -- local screenProj = stack( { type = "ortho",l=0, r=1, b=1, t=0, n=0,f=100}, "m")
+        -- local screenProj = ms( { type = "ortho",l=0, r=1, b=1, t=0, n=0,f=100}, "m")
         -- convert to new api 
-        local screenProj = stack({type="mat", l=0, r=1, t=0, b=1, n=0, f= 100, ortho=true }, "m")	-- make a ortho mat
-        local screenView = stack( {
+        local screenProj = ms({type="mat", l=0, r=1, t=0, b=1, n=0, f= 100, ortho=true }, "m")	-- make a ortho mat
+        local screenView = ms( {
             1,  0, 0, 0, 
             0,  1, 0, 0,
             0,  0, 1, 0,
@@ -901,7 +896,7 @@ function shadow_maker:render_debug_with_shadow(shadow_entity,select_filter,mater
 
             local srt = prim.srt
 
-            local mat = stack({ type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
+            local mat = ms({ type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
             render_util.draw_primitive( view_id, prim, mat)
 
         end 
@@ -922,7 +917,7 @@ function shadow_maker:render_debug(shadow_entity,select_filter)
         bgfx.set_view_mode(view_id, mq.mode)
         for _,prim in ipairs( mq.result) do           -- each single mesh
         local srt = prim.srt
-        local mat = stack({ type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
+        local mat = ms({ type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
         render_util.draw_primitive( view_id, prim, mat)        
         end 
     end 
@@ -954,7 +949,7 @@ function shadow_maker:render_to_texture( entity, select_filter, viewId, shadow_m
             
                 -- state & program assign by input material 
                 local srt = cast_prim.srt 
-                local mat = stack( { type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
+                local mat = ms( { type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
             
                 -- debug output to framebuffer main camera viewid
                 render_util.draw_primitive( view_id, cast_prim, mat)
@@ -1041,14 +1036,14 @@ end
 ------------------------------------------------------
 -- generate shadow main system 
 local gen_shadow_system = ecs.system "generate_shadow_system"
-gen_shadow_system.singleton "math_stack"
+
 gen_shadow_system.singleton "shadow_cast_filter"
 gen_shadow_system.depend   "view_system"       
 gen_shadow_system.dependby "lighting_primitive_filter_system"
 gen_shadow_system.dependby "entity_rendering" 
 
 function gen_shadow_system:init()
-    local function add_shadow_maker_entity(ms)
+    local function add_shadow_maker_entity()
         local eid = world:new_entity(
             "shadow_maker",             -- test combine
             "shadow_config","shadow_rt",
@@ -1082,12 +1077,10 @@ function gen_shadow_system:init()
         return entity;
     end 
 
-    local entity = add_shadow_maker_entity(self.math_stack)
+    local entity = add_shadow_maker_entity()
 
     -- 阴影生成器初始化,具体行为打包在一个类里，简化 shadow system 
-    -- shadow_maker 通过 shadow_maker entity 查询数据，执行动作
-    shadow_maker.ms = self.math_stack 
-    stack = shadow_maker.ms
+    -- shadow_maker 通过 shadow_maker entity 查询数据，执行动作    
 
     shadow_maker:init( entity )   
 end

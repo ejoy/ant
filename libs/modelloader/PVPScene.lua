@@ -1,6 +1,8 @@
+local ms = require "math.stack"
+
 local PVPScene = {}
 
-function PVPScene.init(world, component_util, ms)
+function PVPScene.init(world, component_util)
 
     --campsite door
     do

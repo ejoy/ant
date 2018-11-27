@@ -1,10 +1,8 @@
+--luacheck: ignore self
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.math3d.math_component"
-
-local ru = require "render.util"
-local cu = require "render.components.util"
+local ms = require "math.stack"
 local mu = require "math.util"
 local bgfx = require "bgfx"
 
@@ -76,17 +74,14 @@ end
 
 --[@ view system
 local view_sys = ecs.system "view_system"
-view_sys.singleton "math_stack"
 view_sys.depend "clear_system"
 view_sys.depend "view_rect_system"
-
 
 function view_sys:update()	
 	for _, eid in world:each("viewid") do
 		local entity = world[eid]
-		local vid = entity.viewid
-		local ms = self.math_stack		
-		local view, proj = mu.view_proj_matrix(ms, entity)		
+		local vid = entity.viewid		
+		local view, proj = mu.view_proj_matrix(entity)		
 		bgfx.set_view_transform(vid, ms(view, "m"), ms(proj, "m"))
 	end
 end
