@@ -3,7 +3,7 @@ local draw = {}; draw.__index = {}
 local geo = require "editor.ecs.render.geometry"
 
 local function gen_color_vertex(pt, color, transform, ms)
-	local npt = ms(transform, pt, "*T")
+	local npt = ms(pt, transform, "*T")
 	npt[4] = color
 	return npt
 end
