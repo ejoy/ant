@@ -6,6 +6,16 @@ local INTERVAL = 0.01 -- socket select timeout
 local thread = require "thread"
 local lsocket = require "lsocket"
 local protocol = require "protocol"
+local crypt = require "crypt"
+
+local function byte2hex(c)
+	return ("%02x"):format(c:byte())
+end
+
+local function sha1(str)
+	return crypt.sha1(str):gsub(".", byte2hex)
+end
+
 
 local config = {}
 local channel = {}
@@ -17,6 +27,7 @@ local repo = {
 local connection = {
 	request_path = {},	-- requesting path
 	request_hash = {},	-- requesting hash
+	request_link = {},
 	sendq = {},
 	recvq = {},
 	fd = nil,
@@ -63,6 +74,7 @@ local function init_config()
 	config.address = c.address
 	config.port = c.port
 	config.vfspath = assert(c.vfspath)
+	config.platform = c.platform	-- todo: add assert
 end
 
 local function init_repo()
@@ -140,6 +152,27 @@ function offline.TYPE(id, fullpath)
 		end
 	end
 	response_id(id, nil)
+end
+
+function offline.LINK(id, path)
+	local realpath, source_hash = repo.repo:realpath(path)
+	if not realpath then
+		response_id(id, nil)
+	end
+	local realpath, lk_hash = repo.repo:realpath(path .. ".lk")
+	if not realpath then
+		response_id(id, nil)
+	end
+
+	local hash = sha1(config.platform .. source_hash .. lk_hash)
+	local link = repo.repo:hashpath(hash) .. ".link"
+	local f = io.open(link, "rb")
+	if not f then
+		response_id(id, nil)
+	end
+	local hash = f:read "a"
+	f:close()
+	response_id(id, repo.repo.hashpath(hash))
 end
 
 do
@@ -255,6 +288,16 @@ local function request_file(id, hash, path, req)
 	path_req[id] = req
 end
 
+local function request_link(id, path, hash, source_hash, lk_hash)
+	local hash_req = connection.request_link[hash]
+	if hash_req then
+		hash_req[id] = path
+	else
+		hash_req = { [id] = path }
+		connection_send("LINK", hash, config.platform, source_hash, lk_hash)
+	end
+end
+
 local function prefetch_file(hash, path)
 	local path_req = connection.request_path[path]
 	if path_req then
@@ -297,12 +340,8 @@ function response.ROOT(hash)
 	repo.repo:changeroot(hash)
 end
 
--- REMARK: Main thread may reading the file while writing, if file server update file.
--- It's rare because the file name is sha1 of file content. We don't need update the file.
--- Client may not request the file already exist.
-function response.BLOB(hash, data)
-	local hashpath = repo.repo:hashpath(hash)
-	local temp = hashpath .. ".download"
+local function writefile(filename, data)
+	local temp = filename .. ".download"
 	local f = io.open(temp, "wb")
 	if not f then
 		print("Can't write to", temp)
@@ -310,14 +349,47 @@ function response.BLOB(hash, data)
 	end
 	f:write(data)
 	f:close()
-	if not os.rename(temp, hashpath) then
-		os.remove(hashpath)
-		if not os.rename(temp, hashpath) then
-			print("Can't rename", hashpath)
-			return
+	if not os.rename(temp, filename) then
+		os.remove(filename)
+		if not os.rename(temp, filename) then
+			print("Can't rename", filename)
+			return false
 		end
 	end
+	return true
+end
+
+-- REMARK: Main thread may reading the file while writing, if file server update file.
+-- It's rare because the file name is sha1 of file content. We don't need update the file.
+-- Client may not request the file already exist.
+function response.BLOB(hash, data)
+	local hashpath = repo.repo:hashpath(hash)
+	if not writefile(hashpath, data) then
+		return
+	end
 	hash_complete(hash, true)
+end
+
+function response.LINK(hash, data)
+	local hashlink = repo.repo:hashpath(hash) .. ".link"
+	if not writefile(hashlink, data) then
+		return
+	end
+	local resp = connection.request_link[hash]
+	if resp then
+		local realpath = repo.repo:hashpath(data)
+		local f = io.open(realpath, "rb")
+		if f then
+			f:close()
+			for id, path in pairs(resp) do
+				response_id(id, realpath)
+			end
+			return
+		end
+		for id, path in pairs(resp) do
+			request_file(id, data, path, "LINK")
+		end
+	end
 end
 
 function response.FILE(hash, size)
@@ -492,6 +564,51 @@ function online.TYPE(id, fullpath)
 	else
 		response_id(id, nil)
 	end
+end
+
+function online.LINK(id, path)
+	local realpath, source_hash = repo.repo:realpath(path)
+	if not realpath then
+		if source_hash then
+			-- source_hash is missing, send request
+			request_file(id, source_hash, path, "LINK")
+		else
+			-- root changes, missing hash
+			print("Need Change Root", path)
+			response_id(id, nil)
+		end
+		return
+	end
+	local realpath, lk_hash = repo.repo:realpath(path .. ".lk")
+	if not realpath then
+		if lk_hash then
+			-- source_hash is missing, send request
+			request_file(id, lk_hash, path, "LINK")
+		else
+			-- root changes, missing hash
+			print("Need Change Root", path)
+			response_id(id, nil)
+		end
+		return
+	end
+	local hash = sha1(plat .. source_hash .. lk_hash)
+	local hash_path = repo.repo:hashpath(hash) .. ".link"
+
+	local f = io.open(hash_path,"rb")
+	if not f then
+		request_link(id, path, hash, source_hash, lk_hash)
+		return
+	end
+	local hash = f:read "a"
+	f:close()
+	local realpath = repo.repo:hashpath(hash)
+	local f = io.open(realpath, "rb")
+	if not f then
+		request_file(id, hash, path, "LINK")
+		return
+	end
+	f:close()
+	response_id(id, realpath)
 end
 
 function online.PREFETCH(path)

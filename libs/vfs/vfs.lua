@@ -44,10 +44,11 @@ local function mount_repo(mountpoint, repopath)
 		_mountpoint = mountpoint,
 		_root = rootpath,
 		_cache = setmetatable({} , cachemeta),
+		_repo = rootpath .. "./repo/",
 	}
 end
 
-function localvfs.mount(mountpoint, enginepath)	
+function localvfs.mount(mountpoint, enginepath)
 	self = mount_repo(mountpoint, enginepath or ".")
 end
 
@@ -63,7 +64,7 @@ function localvfs.open(repopath)
 end
 
 function localvfs.realpath(pathname)
-	local rp = access.realpath(self, pathname)	
+	local rp = access.realpath(self, pathname)
 	return  rp, pathname:match "^/?(.-)/?$"
 end
 
@@ -97,6 +98,10 @@ function localvfs.type(filepath)
 			return "file"
 		end
 	end
+end
+
+function localvfs.link(pathname, plat)
+	return access.build_from_path(self, plat, pathname)
 end
 
 return localvfs
