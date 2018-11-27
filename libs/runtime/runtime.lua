@@ -38,25 +38,23 @@ function callback.move(x,y)
 	iq:push("motion", x, y, status)
 end
 
-function callback.touch(what, x, y)
+function callback.mouse(what, press, x, y)
 	local function translate()
-		local press = what % 2
-		if what > 2 then
-			status.RIGHT = press == 1
-			status.LEFT = false
-			return "RIGHT", press
+		if what == 0 then
+			status.LEFT = press
+			return "LEFT"
+		elseif what == 1 then
+			status.RIGHT = press
+			return "RIGHT"
+		else
+			return ""
 		end
-		status.RIGHT = false
-		status.LEFT = press == 1
-		return "LEFT", press
 	end
-	local btn, p = translate()
-	iq:push("button", btn, p, x, y)
+	local btn = translate()
+	iq:push("button", btn, press, x, y)
 end
 
-function callback.keypress(k, state)
-	local ispress = state & 0x10
-
+function callback.keypress(key, press, state)
 	local function what_state(state, bit)
 		if state & bit then
 			return true
@@ -68,7 +66,7 @@ function callback.keypress(k, state)
 	status['SHIFT'] = what_state(state, 0x04)
 	status['SYS'] = what_state(state, 0x08)
 
-	iq:push("keypress", k, ispress, status)
+	iq:push("keypress", key, press, status)
 end
 
 function callback.exit()	
