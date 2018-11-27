@@ -3,7 +3,7 @@
 
 #include <cassert>
 
-#include "bgfx/bgfx.h"
+#include <bgfx/bgfx.h>
 
 #if defined(DISABLE_ASSERTS)
 # define verify(expr) ((void)(expr))

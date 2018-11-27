@@ -12,12 +12,12 @@ extern "C" {
 #include <assimp/scene.h>
 
 //bgfx include
-#include <bx/string.h>
-#include <bx/file.h>
-#include <bgfx/bgfx.h>
-#include <bgfx_utils.h>
-#include <vertexdecl.h>
-#include <../../3rdparty/ib-compress/indexbufferdecompression.h>
+// #include <bx/string.h>
+// #include <bx/file.h>
+// #include <bgfx/bgfx.h>
+// #include <bgfx_utils.h>
+// #include <vertexdecl.h>
+// #include "bgfx/ib-compress/indexbufferdecompression.h"
 
 
 //glm
