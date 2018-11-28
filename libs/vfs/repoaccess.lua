@@ -130,10 +130,6 @@ local function build(plat, source, lk, tmp)
 	return fileconvert.build_file(plat, source, lk, tmp)
 end
 
-local function filetime(filepath)
-	return lfs.attributes(filepath, "modification")
-end
-
 local function genhash(repo, tmp)
 	local binhash = access.sha1_from_file(tmp)
 	local binhash_path = access.repopath(repo, binhash)
@@ -178,12 +174,21 @@ local function checkfilehash(repo, plat, source, lk)
 	return access.build_from_file(repo, hash, plat, source, lk)
 end
 
+local function filetime(filepath)
+	return lfs.attributes(filepath, "modification")
+end
+
 function access.build_from_path(repo, plat, pathname)
 	local hash = access.sha1(pathname .. "." .. plat)
 	local cache = access.repopath(repo, hash, ".path")
 	local lk = access.realpath(repo, pathname .. ".lk")
 	local source = access.realpath(repo, pathname)
-	local timestamp = string.format("%s %d %d", pathname, filetime(source), filetime(lk))
+	local source_time = filetime(source)
+	local lk_time = filetime(source)
+	if not source_time or not lk_time then
+		return
+	end
+	local timestamp = string.format("%s %d %d", pathname, source_time, lk_time)
 
 	local f = localfile.open(cache, "rb")
 	local binhash
