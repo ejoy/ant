@@ -4,7 +4,14 @@ local path = require "filesystem.path"
 local modelutil = require "modelloader.util"
 local config = modelutil.default_config()
 
-return function (srcpath)
+local cvt = {}; cvt.__index = cvt
+
+local convert_op = {
+	bin = meshconverter.convert_BGFXBin,
+	fbx = meshconverter.convert_FBX,
+}
+
+cvt.__call = function (srcpath)
 	assert(path.is_absolute_path(srcpath))	
 	local outputfile = path.replace_ext(srcpath, "antmesh")
 
@@ -12,11 +19,6 @@ return function (srcpath)
 		fu.create_dirs(path.parent(outputfile))
 
 		local ext = path.ext(srcpath):lower()
-
-		local convert_op = {
-			bin = meshconverter.convert_BGFXBin,
-			fbx = meshconverter.convert_FBX,
-		}
 
 		local convertor = convert_op[ext]
 		if convertor == nil then
@@ -27,3 +29,12 @@ return function (srcpath)
 
 	return outputfile
 end
+
+function cvt.build(plat, sourcefile, param, outfile)
+	local t = param.sourcetype
+	local c = convert_op[t]
+	local cfg = param.config or config
+	return c(sourcefile, outfile, cfg)
+end
+
+return cvt

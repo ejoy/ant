@@ -7,51 +7,34 @@ local bgfx = require "bgfx"
 local path = require "filesystem.path"
 local assetmgr = require "asset"
 
-local rhwi = require "render.hardware_interface"
+local vfs = require "vfs"
+local config = require "common.config"
 
-local vfs_fs = require "vfs.fs"
+local localfile = require "filesystem.file"
 
 local alluniforms = {}
 
 local shader_mgr = {}
 shader_mgr.__index = shader_mgr
 
-local function get_shader_type()
-    local caps = rhwi.get_caps()
-    local shadertypes = {
-        NOOP       = "d3d9",
-        DIRECT3D9  = "d3d9",
-        DIRECT3D11 = "d3d11",
-        DIRECT3D12 = "d3d11",
-        GNM        = "pssl",
-        METAL      = "metal",
-        OPENGL     = "glsl",
-        OPENGLES   = "essl",
-        VULKAN     = "spirv",
-    }
-
-	return assert(shadertypes[caps.rendererType])	
-end
-
-local shadertype = get_shader_type()
-
 local function gen_shader_filepath(shadername)	
-	assert(path.ext(shadername) == nil)
-	local shadername_withext = shadername .. ".bin"
+	assert(path.ext(shadername)==nil)
+	local shadername_withext = shadername .. ".sc"
 	local filepath = assetmgr.find_valid_asset_path(shadername_withext)
 	if filepath then
 		return filepath 
 	end
 
-	local enginepath, matchnum = shadername_withext:gsub("(engine/assets/shaders)(.+)", "%1/" .. shadertype .. "%2")
-	if matchnum ~= 0 then
-		filepath = assetmgr.find_valid_asset_path(enginepath)
-		if filepath then
-			return filepath
-		end
-	end
+	--local enginepath, matchnum = shadername_withext:gsub("(engine/assets/shaders)(.+)", "%1/" .. shadertype .. "%2")
+	-- local foundpos = shadername_withext:find("engine/assets/shaders/src")
+	-- if foundpos then
+	-- 	filepath = assetmgr.find_valid_asset_path(enginepath)
+	-- 	if filepath then
+	-- 		return filepath
+	-- 	end
+	-- end
 
-	local shadersrc_filepath = path.join("shaders", shadertype, shadername_withext)	
+	local shadersrc_filepath = path.join("shaders/src", shadername_withext)	
 	return assetmgr.find_valid_asset_path(shadersrc_filepath)
 end
 
@@ -60,7 +43,9 @@ local function load_shader(name)
 	if filename == nil then
 		error(string.format("not found shader file: %s", name))
 	end
-	local f = assert(vfs_fs.open(assert(filename), "rb"))
+
+	local validfile = vfs.link(filename, config.platform())
+	local f = assert(localfile.open(assert(validfile), "rb"))
 	local data = f:read "a"
 	f:close()
 	local h = bgfx.create_shader(data)

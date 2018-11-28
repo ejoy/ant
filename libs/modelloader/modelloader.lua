@@ -1,19 +1,21 @@
---luacheck: globals log
+--luacheck: globals log, ignore log
 
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
-
-local path = require "filesystem.path"
 local modelutil = require "modelloader.util"
+local vfs = require "vfs"
+local config = require "common.config"
+local platform = config.platform()
+
+local antmeshloader = require "modelloader.antmeshloader"
 
 local loader = {}
 
 local function load_from_source(filepath)	
-	assert(path.ext(filepath) == "antmesh")
-	local antmeshloader = require "modelloader.antmeshloader"	
-	dprint("antmesh:", filepath)
-	return antmeshloader(filepath)
+	local validfile = vfs.link(filepath, platform)
+	
+	return antmeshloader(validfile)
 end
 
 local function create_vb(vb)
@@ -46,7 +48,7 @@ end
 
 function loader.load(filepath)	
 	local meshgroup = load_from_source(filepath)	
-	if meshgroup then		
+	if meshgroup then
 		for _, g in ipairs(meshgroup.groups) do
 			create_vb(g.vb)
 			create_ib(g.ib)

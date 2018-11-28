@@ -125,6 +125,27 @@ function fileconvertor.convert_file(absdir)
 	convertor(absdir)
 end
 
+function fileconvertor.build_file(plat, sourcefile, lkfile, dstfile)
+	local rawtable = require "common.rawtable"
+	
+	local lkcontent = rawtable(lkfile, function (filename)
+		local nativeopen = require "filesystem.file" 
+		local f = nativeopen.open(filename, "rb")
+		local data = f:read "a"
+		f:close()
+		return data
+	end)
+	local ctype = lkcontent.type
+	local converter_names = {
+		shader = "fileconvert.compileshadersource",
+		mesh = "fileconvert.convertmesh",
+		texture="",
+	}
+	local converter_name = converter_names[ctype]
+	local c = require(converter_name)
+	return c.build(plat, sourcefile, lkcontent, dstfile)
+end
+
 local watch_files = {}
 function fileconvertor.watch_file(file)
 	local f = file:gsub("(.+)/$", "%1")
