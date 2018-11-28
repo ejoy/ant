@@ -15,6 +15,12 @@ ROOT 获取 ROOT hash
 GET 获取指定 hash 对应的文件内容
 hash sha1 小写 hex 格式
 
+LINK 获取编译目标文件
+hash sha1 是目标文件的最终索引，sha1(平台名..源hash..lkhash)
+plat 平台名
+source_hash sha1
+lk_hash sha1
+
 回应：
 
 ROOT 新的 ROOT hash
@@ -23,6 +29,10 @@ hash sha1
 BLOB 推送数据块
 hash sha1
 content 数据块
+
+LINK 推送编译目标文件
+hash 索引 sha1
+hash 目标 sha1 (后续可以用 GET 去请求这个目标文件，为空表示无法获取)
 
 MISSING 缺少文件
 hash sha1

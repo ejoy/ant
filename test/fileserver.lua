@@ -92,7 +92,7 @@ function message:LINK(hash, plat, source_hash, lk_hash)
 	if binhash then
 		response(self, "LINK", hash, binhash)
 	else
-		response(self, "LINK")
+		response(self, "LINK", hash)
 	end
 end
 

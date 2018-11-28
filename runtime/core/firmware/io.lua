@@ -371,8 +371,10 @@ end
 
 function response.LINK(hash, data)
 	local hashlink = repo.repo:hashpath(hash) .. ".link"
-	if not writefile(hashlink, data) then
-		print("Can't write to ", hashlink)
+	if data then
+		if not writefile(hashlink, data) then
+			print("Can't write to ", hashlink)
+		end
 	end
 	local resp = connection.request_link[hash]
 	print("REQUEST LINK", hash, resp)
@@ -512,7 +514,7 @@ local function fetch_all(path)
 					fetch_all(subpath)
 				else
 					print("Fetch", subpath)
-					online.GET(subpath)
+					online.GET(false, subpath)
 				end
 			end
 		end
