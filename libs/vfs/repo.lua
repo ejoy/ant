@@ -409,7 +409,9 @@ function repo:dir(hash)
 end
 
 function repo:link(hash, plat, source_hash, lk_hash)
-	local binhash = access.build_from_hash(self, hash, plat, source_hash, lk_hash)
+	local source_path = access.repopath(self, source_hash)
+	local lk_path = access.repopath(self, lk_hash)
+	local binhash = access.build_from_file(self, hash, plat, source_path, lk_path)
 	if not binhash then
 		if _DEBUG then print ("LINKFAIL", plat, source_hash) end
 		return

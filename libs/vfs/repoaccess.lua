@@ -152,7 +152,7 @@ local function genhash(repo, tmp)
 	return binhash
 end
 
-function access.build_from_hash(repo, hash, plat, source_hash, lk_hash)
+function access.build_from_file(repo, hash, plat, source_path, lk_path)
 	local link = access.repopath(repo, hash, ".link")
 	local f = io.open(link, "rb")
 	if f then
@@ -166,8 +166,6 @@ function access.build_from_hash(repo, hash, plat, source_hash, lk_hash)
 		end
 	end
 	local tmp = link .. ".bin"
-	local source_path = access.repopath(repo, source_hash)
-	local lk_path = access.repopath(repo, lk_hash)
 	if not build(plat, source_path, lk_path, tmp) then
 		return
 	end
@@ -183,7 +181,7 @@ local function checkfilehash(repo, plat, source, lk)
 	local lk_hash = access.sha1_from_file(lk)
 	-- NOTICE: see io.lua for the same hash algorithm
 	local hash = access.sha1(plat .. source_hash .. lk_hash)
-	return access.build_from_hash(repo, hash, plat, source_hash, lk_hash)
+	return access.build_from_file(repo, hash, plat, source, lk)
 end
 
 function access.build_from_path(repo, plat, pathname)
