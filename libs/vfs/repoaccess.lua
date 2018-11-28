@@ -160,6 +160,7 @@ function access.build_from_file(repo, hash, plat, source_path, lk_path)
 	if not build(plat, source_path, lk_path, tmp) then
 		return
 	end
+	-- todo: if this source is platform independent, we can generate all the platforms' .link file for the same bin file.
 	local binhash = genhash(repo, tmp)
 	local lf = localfile.open(link, "wb")
 	lf:write(binhash)
