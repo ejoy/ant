@@ -115,11 +115,6 @@ end
 
 local offline = {}
 
-function offline.GET(id, path)
-	local realpath, hash = repo.repo:realpath(path)
-	response_id(id, realpath, hash)
-end
-
 function offline.LIST(id, path)
 	local dir = repo.repo:list(path)
 	if dir then
@@ -154,25 +149,37 @@ function offline.TYPE(id, fullpath)
 	response_id(id, nil)
 end
 
-function offline.LINK(id, path)
-	local realpath, source_hash = repo.repo:realpath(path)
-	if not realpath then
-		response_id(id, nil)
+function offline.GET(id, fullpath)
+	local path, name = fullpath:match "(.*)/(.-)$"
+	if path == nil then
+		path = ""
+		name = fullpath
 	end
-	local realpath, lk_hash = repo.repo:realpath(path .. ".lk")
-	if not realpath then
-		response_id(id, nil)
-	end
+	local dir, hash = repo.repo:list(path)
+	if dir then
+		local v = dir[name]
+		if v and not v.dir then
+			local lk = dir[name .. ".lk"]
+			if not lk or lk.dir then
+				-- no .lk , raw file
+				local realpath = repo.repo:hashpath(v.hash)
+				response_id(id, realpath, v.hash)
+				return
+			end
 
-	local hash = sha1(config.platform .. source_hash .. lk_hash)
-	local link = repo.repo:hashpath(hash) .. ".link"
-	local f = io.open(link, "rb")
-	if not f then
-		response_id(id, nil)
+			-- name and name.lk are files
+			local hash = sha1(config.platform .. v.hash .. lk.hash)
+			local hash_path = repo.repo:hashpath(hash) .. ".link"
+			local f = io.open(hash_path,"rb")
+			if f then
+				local hash = f:read "a"
+				f:close()
+				response_id(id, repo.repo:hashpath(hash), hash)
+				return
+			end
+		end
 	end
-	local hash = f:read "a"
-	f:close()
-	response_id(id, repo.repo.hashpath(hash))
+	request_id(id, nil)
 end
 
 do
@@ -298,14 +305,6 @@ local function request_link(id, path, hash, source_hash, lk_hash)
 	end
 end
 
-local function prefetch_file(hash, path)
-	local path_req = connection.request_path[path]
-	if path_req then
-		return
-	end
-	request_file(false, hash, path, "GET")
-end
-
 -- file server update hash file
 local function hash_complete(hash, exist)
 	local hash_list = connection.request_hash[hash]
@@ -373,21 +372,26 @@ end
 function response.LINK(hash, data)
 	local hashlink = repo.repo:hashpath(hash) .. ".link"
 	if not writefile(hashlink, data) then
-		return
+		print("Can't write to ", hashlink)
 	end
 	local resp = connection.request_link[hash]
 	if resp then
+		if not data then
+			-- link failed at server
+			response_id(id, nil)
+			return
+		end
 		local realpath = repo.repo:hashpath(data)
 		local f = io.open(realpath, "rb")
 		if f then
 			f:close()
 			for id, path in pairs(resp) do
-				response_id(id, realpath)
+				response_id(id, realpath, data)
 			end
 			return
 		end
 		for id, path in pairs(resp) do
-			request_file(id, data, path, "LINK")
+			request_file(id, data, path, "GET")
 		end
 	end
 end
@@ -479,28 +483,6 @@ end
 
 ---------- online dispatch
 
-function online.GET(id, path)
-	local realpath, hash = repo.repo:realpath(path)
-	if not realpath then
-		if hash then
-			-- hash is missing, send request
-			request_file(id, hash, path, "GET")
-		else
-			-- root changes, missing hash
-			print("Need Change Root", path)
-			response_id(id, nil)
-		end
-	else
-		local f = io.open(realpath,"rb")
-		if not f then
-			request_file(id, hash, path, "GET")
-		else
-			f:close()
-			response_id(id, realpath, hash)
-		end
-	end
-end
-
 function online.LIST(id, path)
 	local dir, hash = repo.repo:list(path)
 	if dir then
@@ -521,12 +503,14 @@ local function fetch_all(path)
 	local dir, hash = repo.repo:list(path)
 	if dir then
 		for name,v in pairs(dir) do
-			local subpath = path .. "/" .. name
-			if v.dir then
-				fetch_all(subpath)
-			else
-				print("Fetch", subpath)
-				prefetch_file(v.hash, subpath)
+			if not name:match ".lk$" then
+				local subpath = path .. "/" .. name
+				if v.dir then
+					fetch_all(subpath)
+				else
+					print("Fetch", subpath)
+					online.GET(subpath)
+				end
 			end
 		end
 	elseif hash then
@@ -566,59 +550,62 @@ function online.TYPE(id, fullpath)
 	end
 end
 
-function online.LINK(id, path)
-	local realpath, source_hash = repo.repo:realpath(path)
-	if not realpath then
-		if source_hash then
-			-- source_hash is missing, send request
-			request_file(id, source_hash, path, "LINK")
-		else
-			-- root changes, missing hash
-			print("Need Change Root", path)
-			response_id(id, nil)
-		end
-		return
+function online.GET(id, fullpath)
+	local path, name = fullpath:match "(.*)/(.-)$"
+	if path == nil then
+		path = ""
+		name = fullpath
 	end
-	local realpath, lk_hash = repo.repo:realpath(path .. ".lk")
-	if not realpath then
-		if lk_hash then
-			-- source_hash is missing, send request
-			request_file(id, lk_hash, path, "LINK")
-		else
-			-- root changes, missing hash
-			print("Need Change Root", path)
-			response_id(id, nil)
-		end
-		return
-	end
-	local hash = sha1(plat .. source_hash .. lk_hash)
-	local hash_path = repo.repo:hashpath(hash) .. ".link"
+	local dir, hash = repo.repo:list(path)
+	if dir then
+		local v = dir[name]
+		if v and not v.dir then
+			local lk = dir[name .. ".lk"]
+			if not lk or lk.dir then
+				-- no .lk , raw file
+				local realpath = repo.repo:hashpath(v.hash)
+				local f = io.open(realpath,"rb")
+				if not f then
+					request_file(id, v.hash, fullpath, "GET")
+				else
+					f:close()
+					response_id(id, realpath, v.hash)
+				end
 
-	local f = io.open(hash_path,"rb")
-	if not f then
-		request_link(id, path, hash, source_hash, lk_hash)
+				return
+			end
+
+			-- name and name.lk are files
+			local hash = sha1(config.platform .. v.hash .. lk.hash)
+			local hash_path = repo.repo:hashpath(hash) .. ".link"
+			local f = io.open(hash_path,"rb")
+			if not f then
+				request_link(id, fullpath, v.hash, lk.hash)
+				return
+			end
+			local hash = f:read "a"
+			f:close()
+			local realpath = repo.repo:hashpath(hash)
+			local f = io.open(realpath, "rb")
+			if not f then
+				request_file(id, hash, fullpath, "GET")
+				return
+			end
+			f:close()
+			response_id(id, realpath, hash)
+			return
+		end
+	elseif hash then
+		request_file(id, hash, fullpath, "GET")
 		return
 	end
-	local hash = f:read "a"
-	f:close()
-	local realpath = repo.repo:hashpath(hash)
-	local f = io.open(realpath, "rb")
-	if not f then
-		request_file(id, hash, path, "LINK")
-		return
-	end
-	f:close()
-	response_id(id, realpath)
+	-- file not exist
+	print("Not exist", fullpath)
+	request_id(id, nil)
 end
 
 function online.PREFETCH(path)
-	local realpath, hash = repo.repo:realpath(path)
-	if realpath then
-		return
-	end
-	if hash then
-		prefetch_file(hash, path)
-	end
+	return online.GET(false, path)
 end
 
 function online.SUBSCIBE(channel_name, message)

@@ -277,13 +277,14 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
         }
 		cb->message(cb->ud, &msg);
         break;
-	case NSEventTypeScrollWheel:
+	case NSEventTypeScrollWheel:{
 		msg.type = ANT_WINDOW_MOUSE_WHEEL;
         msg.u.mouse_wheel.x = g_mx;
         msg.u.mouse_wheel.y = g_my;
-		msg.u.mouse_wheel.delta = [event deltaY];
+		msg.u.mouse_wheel.delta = 0.5f * [event scrollingDeltaY];
 		cb->message(cb->ud, &msg);
         break;
+    }
 	case NSEventTypeLeftMouseDown:
 	case NSEventTypeLeftMouseUp:
 		msg.type = ANT_WINDOW_MOUSE_CLICK;

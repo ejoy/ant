@@ -86,6 +86,15 @@ function message:GET(hash)
 	f:close()
 end
 
+function message:LINK(hash, plat, source_hash, lk_hash)
+	local binhash = repo:link(hash, plat, source_hash, lk_hash)
+	if binhash then
+		response(self, "LINK", hash, binhash)
+	else
+		response(self, "LINK")
+	end
+end
+
 function message:DBG(data)
 	if data == "" then
 		local fd = network.listen('127.0.0.1', 4278)

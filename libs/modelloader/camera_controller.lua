@@ -34,6 +34,7 @@ function camera_controller_system:init()
 	camera_reset(camera, target)
 
 	local move_speed = 1
+	local wheel_speed = 1
 	local message = {}
 
 	local last_xy
@@ -62,7 +63,7 @@ function camera_controller_system:init()
 	end
 
 	function message:mouse_wheel(delta, x, y)
-		camera_move(camera.rotation, camera.position, 0, 0, delta * move_speed)
+		camera_move(camera.rotation, camera.position, 0, 0, delta * wheel_speed)
 	end
 
 	function message:keyboard(code, press)
