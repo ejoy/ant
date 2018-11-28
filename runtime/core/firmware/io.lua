@@ -579,6 +579,7 @@ function online.GET(id, fullpath)
 			end
 
 			-- name and name.lk are files
+			-- NOTICE: see repoaccess.lua for the same hash algorithm
 			local hash = sha1(config.platform .. v.hash .. lk.hash)
 			local hash_path = repo.repo:hashpath(hash) .. ".link"
 			local f = io.open(hash_path,"rb")

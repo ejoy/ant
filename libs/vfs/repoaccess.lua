@@ -155,6 +155,40 @@ local function genhash(repo, tmp)
 	return binhash
 end
 
+function access.build_from_hash(repo, hash, plat, source_hash, lk_hash)
+	local link = access.repopath(repo, hash, ".link")
+	local f = localfile.open(link, "rb")
+	if f then
+		local binhash = f:read "a"
+		f:close()
+		local binpath = access.repopath(repo, binhash)
+		local bin = localfile.open(binpath, "rb")
+		if bin then
+			bin:close()
+			return binpath
+		end
+	end
+	local tmp = link .. ".bin"
+	local source_path = access.repopath(repo, source_hash)
+	local lk_path = access.repopath(repo, lk_hash)
+	if not build(plat, source_path, lk_path, tmp) then
+		return
+	end
+	local binhash = genhash(repo, tmp)
+	local f = io.open(link, "wb")
+	f:write(binhash)
+	f:close()
+	return binhash
+end
+
+local function checkfilehash(repo, plat, source, lk)
+	local source_hash = access.sha1_from_file(source)
+	local lk_hash = access.sha1_from_file(lk)
+	-- NOTICE: see io.lua for the same hash algorithm
+	local hash = access.sha1(plat .. source_hash .. lk_hash)
+	return access.build_from_hash(repo, hash, plat, source_hash, lk_hash)
+end
+
 function access.build_from_path(repo, plat, pathname)
 	local hash = access.sha1(pathname .. "." .. plat)
 	local cache = access.repopath(repo, hash, ".path")
@@ -175,43 +209,13 @@ function access.build_from_path(repo, plat, pathname)
 		end
 	end
 	if not binhash then
-		local tmp = cache .. ".bin"
-		if not build(plat, source, lk, tmp) then
-			return
-		end
-		binhash = genhash(repo, tmp)
+		binhash = checkfilehash(repo, plat, source, lk)
 		if binhash then
 			local f = assert(localfile.open(cache, "wb"))
 			f:write(string.format("%s\n%s\n%s", plat, timestamp, binhash))
 			f:close()
 		end
 	end
-	return binhash
-end
-
-function access.build_from_hash(repo, hash, plat, source_hash, lk_hash)
-	local link = access.repopath(repo, hash, ".link")
-	local f = localfile.open(link, "rb")
-	if f then
-		local binhash = f:read "a"
-		f:close()
-		local binpath = repo._repo .. binhash:sub(1,2) .. "/" .. binhash
-		local bin = localfile.open(binpath, "rb")
-		if bin then
-			bin:close()
-			return binpath
-		end
-	end
-	local tmp = link .. ".bin"
-	local source_path = access.repopath(repo, source_hash)
-	local lk_path = access.repopath(repo, lk_hash)
-	if not build(plat, source_path, lk_path, tmp) then
-		return
-	end
-	local binhash = genhash(repo, tmp)
-	local lf = localfile.open(link, "wb")
-	lf:write(binhash)
-	lf:close()
 	return binhash
 end
 
