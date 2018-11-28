@@ -18,7 +18,7 @@ dofile(enginepath .. "/libs/init.lua")
 local fs = require "lfs"
 local projpath = fs.currentdir()
 
-local vfs = require "vfs.vfs"
+local vfs = require "vfs"
 vfs.open(projpath)
 
 ----user code begin
