@@ -74,7 +74,7 @@ local function init_config()
 	config.address = c.address
 	config.port = c.port
 	config.vfspath = assert(c.vfspath)
-	config.platform = c.platform	-- todo: add assert
+	config.platform = c.platform or "none" -- todo: add assert
 end
 
 local function init_repo()
@@ -300,7 +300,7 @@ local function request_link(id, path, hash, source_hash, lk_hash)
 	if hash_req then
 		hash_req[id] = path
 	else
-		hash_req = { [id] = path }
+		connection.request_link[hash] = { [id] = path }
 		connection_send("LINK", hash, config.platform, source_hash, lk_hash)
 	end
 end
@@ -375,6 +375,7 @@ function response.LINK(hash, data)
 		print("Can't write to ", hashlink)
 	end
 	local resp = connection.request_link[hash]
+	print("REQUEST LINK", hash, resp)
 	if resp then
 		if not data then
 			-- link failed at server
@@ -390,7 +391,9 @@ function response.LINK(hash, data)
 			end
 			return
 		end
+		print("LINK request")
 		for id, path in pairs(resp) do
+			print("LINK", id, data, path)
 			request_file(id, data, path, "GET")
 		end
 	end
@@ -580,7 +583,7 @@ function online.GET(id, fullpath)
 			local hash_path = repo.repo:hashpath(hash) .. ".link"
 			local f = io.open(hash_path,"rb")
 			if not f then
-				request_link(id, fullpath, v.hash, lk.hash)
+				request_link(id, fullpath, hash, v.hash, lk.hash)
 				return
 			end
 			local hash = f:read "a"

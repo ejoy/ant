@@ -3,6 +3,14 @@ local access = {}
 local fs = require "lfs"
 local crypt = require "crypt"
 
+function access.repopath(repo, hash, ext)
+	if ext then
+		return repo._repo .. "/" ..	hash:sub(1,2) .. "/" .. hash .. ext
+	else
+		return repo._repo .. "/" ..	hash:sub(1,2) .. "/" .. hash
+	end
+end
+
 function access.readmount(filename)
 	local f = io.open(filename, "rb")
 	local ret = {}
@@ -119,6 +127,10 @@ end
 local function build(plat, source, lk, tmp)
 	-- todo: real build
 	local f = io.open(tmp, "wb")
+	if not f then
+		print("Can't write to ", tmp)
+		return false
+	end
 	f:write("Dummy\n", plat, "\n", source, "\n", lk)
 	f:close()
 	return true
@@ -130,7 +142,7 @@ end
 
 local function genhash(repo, tmp)
 	local binhash = access.sha1_from_file(tmp)
-	local binhash_path = repo._repo .. binhash:sub(1,2) .. "/" .. binhash
+	local binhash_path = access.repopath(repo, binhash)
 	if not os.rename(tmp, binhash_path) then
 		os.remove(binhash_path)
 		if not os.rename(tmp, binhash_path) then
@@ -142,7 +154,7 @@ end
 
 function access.build_from_path(repo, plat, pathname)
 	local hash = access.sha1(pathname .. "." .. plat)
-	local cache = repo._repo .. hash:sub(1,2) .. "/" .. hash .. ".path"
+	local cache = access.repopath(repo, hash, ".path")
 	local lk = access.realpath(repo, pathname .. ".lk")
 	local source = access.realpath(repo, pathname)
 	local timestamp = string.format("%s %d %d", pathname, filetime(source), filetime(lk))
@@ -175,7 +187,7 @@ function access.build_from_path(repo, plat, pathname)
 end
 
 function access.build_from_hash(repo, hash, plat, source_hash, lk_hash)
-	local link = repo._repo .. hash:sub(1,2) .. "/" .. hash .. ".link"
+	local link = access.repopath(repo, hash, ".link")
 	local f = io.open(link, "rb")
 	if f then
 		local binhash = f:read "a"
@@ -188,9 +200,11 @@ function access.build_from_hash(repo, hash, plat, source_hash, lk_hash)
 		end
 	end
 	local tmp = link .. ".bin"
-	local source_path = repo._repo .. source_hash:sub(1,2) .. "/" .. source_hash
-	local lk_path = repo._repo .. lk_hash:sub(1,2) .. "/" .. lk_hash
-	assert(build(plat, source_path, lk_path, tmp))
+	local source_path = access.repopath(repo, source_hash)
+	local lk_path = access.repopath(repo, lk_hash)
+	if not build(plat, source_path, lk_path, tmp) then
+		return
+	end
 	local binhash = genhash(repo, tmp)
 	local f = io.open(link, "wb")
 	f:write(binhash)

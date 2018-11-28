@@ -144,7 +144,7 @@ local function repo_write_cache(self, cache)
 			content = content.next
 		until content == nil
 		if #ref > 0 then
-			local filepath = self._repo .. "/" .. hash:sub(1,2) .. "/" .. hash .. ".ref"
+			local filepath = refname(self, hash)
 			local f = io.open(filepath, "rb")
 			if f then
 				-- merge ref file

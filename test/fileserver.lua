@@ -88,6 +88,7 @@ end
 
 function message:LINK(hash, plat, source_hash, lk_hash)
 	local binhash = repo:link(hash, plat, source_hash, lk_hash)
+	LOG("LINK", hash, binhash, plat, source_hash, lk_hash)
 	if binhash then
 		response(self, "LINK", hash, binhash)
 	else
@@ -185,7 +186,7 @@ local function filewacth()
 		local dir = wid[id]
 		local path = (dir == '') and path or (dir .. '/' .. path)
 		path = path:gsub('\\', '/')
-		print('[FileWatch]', type, path)		
+		print('[FileWatch]', type, path)
 		repo:touch(path)
 		::continue::
 	end
