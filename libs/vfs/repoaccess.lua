@@ -1,6 +1,6 @@
 local access = {}
 
-local fs = require "lfs"
+local lfs = require "lfs"
 local crypt = require "crypt"
 
 function access.readmount(filename)
@@ -55,7 +55,7 @@ end
 function access.list_files(repo, filepath)
 	local rpath = access.realpath(repo, filepath)
 	local files = {}
-	for name in fs.dir(rpath) do
+	for name in lfs.dir(rpath) do
 		if name:sub(1,1) ~= '.' then	-- ignore .xxx file
 			files[name] = true
 		end
