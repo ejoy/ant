@@ -1,1 +1,0 @@
-shader_src = 'shaders/src/mesh_shadow/spot_light/fs_shadowmaps_color_lighting_hard.sc'
