@@ -142,17 +142,18 @@ local function genhash(repo, tmp)
 	return binhash
 end
 
+local function ishash(hash)
+	return #hash == 40 and not hash:find "[^%da-f]"
+end
+
 function access.build_from_file(repo, hash, plat, source_path, lk_path)
 	local link = access.repopath(repo, hash, ".link")
 	local f = localfile.open(link, "rb")
 	if f then
 		local binhash = f:read "a"
 		f:close()
-		local binpath = access.repopath(repo, binhash)
-		local bin = localfile.open(binpath, "rb")
-		if bin then
-			bin:close()
-			return binpath
+		if ishash(binhash) then
+			return binhash
 		end
 	end
 	local tmp = link .. ".bin"
@@ -198,7 +199,7 @@ function access.build_from_path(repo, plat, pathname)
 		local otimestamp = readline()
 		local hash = readline()
 		f:close()
-		if oplat == plat and otimestamp == timestamp then
+		if oplat == plat and otimestamp == timestamp and ishash(hash) then
 			binhash = hash
 		end
 	end
