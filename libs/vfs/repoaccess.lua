@@ -128,15 +128,6 @@ end
 local function build(plat, source, lk, tmp)
 	local fileconvert = require "fileconvert"
 	return fileconvert.build_file(plat, source, lk, tmp)
-	-- -- todo: real build
-	-- local f = io.open(tmp, "wb")
-	-- if not f then
-	-- 	print("Can't write to ", tmp)
-	-- 	return false
-	-- end
-	-- f:write("Dummy\n", plat, "\n", source, "\n", lk)
-	-- f:close()
-	-- return true
 end
 
 local function filetime(filepath)
@@ -175,9 +166,9 @@ function access.build_from_hash(repo, hash, plat, source_hash, lk_hash)
 		return
 	end
 	local binhash = genhash(repo, tmp)
-	local f = io.open(link, "wb")
-	f:write(binhash)
-	f:close()
+	local lf = localfile.open(link, "wb")
+	lf:write(binhash)
+	lf:close()
 	return binhash
 end
 
