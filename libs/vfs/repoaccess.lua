@@ -2,6 +2,7 @@ local access = {}
 
 local lfs = require "lfs"
 local crypt = require "crypt"
+local localfile = require "filesystem.file"
 
 function access.repopath(repo, hash, ext)
 	if ext then
@@ -12,7 +13,7 @@ function access.repopath(repo, hash, ext)
 end
 
 function access.readmount(filename)
-	local f = io.open(filename, "rb")
+	local f = localfile.open(filename, "rb")
 	local ret = {}
 	if not f then
 		return ret
@@ -69,7 +70,7 @@ function access.list_files(repo, filepath)
 		end
 	end
 	local ignorepaths = rpath .. "/.ignore"
-	local f = io.open(ignorepaths, "rb")
+	local f = localfile.open(ignorepaths, "rb")
 	if f then
 		for name in f:lines() do
 			files[name] = nil
@@ -111,7 +112,7 @@ local sha1_encoder = crypt.sha1_encoder()
 
 function access.sha1_from_file(filename)
 	sha1_encoder:init()
-	local ff = assert(io.open(filename, "rb"))
+	local ff = assert(localfile.open(filename, "rb"))
 	while true do
 		local content = ff:read(1024)
 		if content then
@@ -125,15 +126,17 @@ function access.sha1_from_file(filename)
 end
 
 local function build(plat, source, lk, tmp)
-	-- todo: real build
-	local f = io.open(tmp, "wb")
-	if not f then
-		print("Can't write to ", tmp)
-		return false
-	end
-	f:write("Dummy\n", plat, "\n", source, "\n", lk)
-	f:close()
-	return true
+	local fileconvert = require "fileconvert"
+	return fileconvert.build_file(plat, source, lk, tmp)
+	-- -- todo: real build
+	-- local f = io.open(tmp, "wb")
+	-- if not f then
+	-- 	print("Can't write to ", tmp)
+	-- 	return false
+	-- end
+	-- f:write("Dummy\n", plat, "\n", source, "\n", lk)
+	-- f:close()
+	-- return true
 end
 
 local function filetime(filepath)
@@ -159,7 +162,7 @@ function access.build_from_path(repo, plat, pathname)
 	local source = access.realpath(repo, pathname)
 	local timestamp = string.format("%s %d %d", pathname, filetime(source), filetime(lk))
 
-	local f = io.open(cache, "rb")
+	local f = localfile.open(cache, "rb")
 	local binhash
 	if f then
 		local readline = f:lines()
@@ -178,7 +181,7 @@ function access.build_from_path(repo, plat, pathname)
 		end
 		binhash = genhash(repo, tmp)
 		if binhash then
-			local f = assert(io.open(cache, "wb"))
+			local f = assert(localfile.open(cache, "wb"))
 			f:write(string.format("%s\n%s\n%s", plat, timestamp, binhash))
 			f:close()
 		end
@@ -188,12 +191,12 @@ end
 
 function access.build_from_hash(repo, hash, plat, source_hash, lk_hash)
 	local link = access.repopath(repo, hash, ".link")
-	local f = io.open(link, "rb")
+	local f = localfile.open(link, "rb")
 	if f then
 		local binhash = f:read "a"
 		f:close()
 		local binpath = repo._repo .. binhash:sub(1,2) .. "/" .. binhash
-		local bin = io.open(binpath, "rb")
+		local bin = localfile.open(binpath, "rb")
 		if bin then
 			bin:close()
 			return binpath
@@ -206,9 +209,9 @@ function access.build_from_hash(repo, hash, plat, source_hash, lk_hash)
 		return
 	end
 	local binhash = genhash(repo, tmp)
-	local f = io.open(link, "wb")
-	f:write(binhash)
-	f:close()
+	local lf = localfile.open(link, "wb")
+	lf:write(binhash)
+	lf:close()
 	return binhash
 end
 
