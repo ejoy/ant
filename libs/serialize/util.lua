@@ -1,5 +1,5 @@
 local cu = require "common.util"
-local vfs_fs = require "vfs.fs"
+local fu = require "filesystem.util"
 local seri = {}
 
 function seri.load(filename)
@@ -73,13 +73,14 @@ function seri.save(filename, data)
 		assert(type(k) == "string" and k:match "[_%a][_%w]*" == k)
 		table.insert(keys, k)
 	end
-	table.sort(keys)	
-	local f = assert(vfs_fs.open(filename, "wb"))
+	table.sort(keys)
+	local content = {}
 	for _, key in ipairs(keys) do
 		local value = seri.serialize(data[key])
-		f:write(string.format("%s = %s\n", key, value))
+		table.insert(content, string.format("%s = %s", key, value))
 	end
-	f:close()
+	local srccontent = table.concat(content, "")
+	fu.write_to_file(filename, srccontent, "wb")
 end
 
 function seri.save_entity(w, eid)
