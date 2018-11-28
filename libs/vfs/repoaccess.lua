@@ -204,7 +204,7 @@ function access.build_from_path(repo, plat, pathname)
 		local otimestamp = readline()
 		local hash = readline()
 		f:close()
-		if oplat == plat and otimestamp == timestamp then
+		if oplat == plat and otimestamp == timestamp and not hash:find "[^%da-f]" then
 			binhash = hash
 		end
 	end
