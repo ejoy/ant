@@ -14,8 +14,24 @@ local threadid = thread.id
 thread.newchannel "IOreq"
 thread.newchannel ("IOresp" .. threadid)
 
+local errlog = thread.channel_produce "errlog"
 local io_req = thread.channel_produce "IOreq"
 local io_resp = thread.channel_consume ("IOresp" .. threadid)
+
+local errthread = thread.thread([[
+	-- Error Thread
+	package.searchers[1] = ...
+	package.searchers[2] = nil
+	local thread = require "thread"
+	local err = thread.channel_consume "errlog"
+	while true do
+		local msg = err()
+		if msg == "EXIT" then
+			break
+		end
+		print("ERROR:" .. msg)
+	end
+]], package.searchers[3])
 
 local iothread = thread.thread([[
 	-- IO Thread
@@ -63,7 +79,9 @@ end
 vfs_init()
 local bootloader = fetchfirmware()
 vfs_exit()
+errlog:push("EXIT")
 thread.wait(iothread)
+thread.wait(errthread)
 thread.reset()
 
 local function loadfile(path, name)
