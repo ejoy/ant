@@ -7,6 +7,7 @@ for _, v in ipairs(arg) do
 	end
 end
 
+local platform = require "platform"
 local thread = require "thread"
 local threadid = thread.id
 
@@ -30,6 +31,7 @@ local function vfs_init()
 		vfspath = "vfs.lua",
 		address = address,
 		port = port,
+		platform = platform.os()
 	}
 end
 
