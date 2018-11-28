@@ -77,9 +77,9 @@ function seri.save(filename, data)
 	local content = {}
 	for _, key in ipairs(keys) do
 		local value = seri.serialize(data[key])
-		table.insert(content, string.format("%s = %s", key, value))
+		table.insert(content, string.format("%s = %s\n", key, value))
 	end
-	local srccontent = table.concat(content, "")
+	local srccontent = table.concat(content)
 	fu.write_to_file(filename, srccontent, "wb")
 end
 

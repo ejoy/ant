@@ -2,6 +2,7 @@ local fu = require "filesystem.util"
 local meshconverter = require "meshconverter"
 local path = require "filesystem.path"
 local modelutil = require "modelloader.util"
+local lfs = require "lfs"
 local config = modelutil.default_config()
 
 local cvt = {}; cvt.__index = cvt
@@ -34,7 +35,8 @@ function cvt.build(plat, sourcefile, param, outfile)
 	local t = param.sourcetype
 	local c = convert_op[t]
 	local cfg = param.config or config
-	return c(sourcefile, outfile, cfg)
+	c(sourcefile, outfile, cfg)
+	return lfs.exist(outfile)
 end
 
 return cvt

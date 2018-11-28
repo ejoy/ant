@@ -1,4 +1,4 @@
-local vfs_fs = require "vfs.fs"
+local localfile = require "filesystem.file"
 
 local function v3_unpack(v)
 	local v1, v2, v3 = string.unpack("<fff", v)
@@ -40,7 +40,7 @@ end
 
 return function (filename)
 	local function openfile(filename)
-		local ff = assert(vfs_fs.open(filename, "rb"))		
+		local ff = assert(localfile.open(filename, "rb"))		
 		-- local content = ff:read("a")
 		-- ff:close()
 		-- local readit = 1
