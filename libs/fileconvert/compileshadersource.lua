@@ -38,23 +38,7 @@ local function check_compile_shader(srcpath, outfile, shadertype)
 	return outfile, nil
 end
 
-local cvt = {}; cvt.__index = cvt
-
-cvt.__call = function(filepath, shadertype)
-	local dstpath = gen_output_path(filepath, shadertype)	
-	fu.create_dirs(path.parent(dstpath))
-	if fu.file_is_newer(filepath, dstpath) then
-		local outfile, error = check_compile_shader(filepath, dstpath, shadertype)
-		if error then
-			return nil, error
-		end
-		assert(outfile == dstpath)
-	end
-
-	return dstpath
-end
-
-function cvt.build(plat, sourcefile, param, outfile)
+return function (plat, sourcefile, param, outfile)
 	local shadertype = param.shadertype
 	if shadertype == nil then
 		local rhwi = require "render.hardware_interface"
@@ -70,4 +54,3 @@ function cvt.build(plat, sourcefile, param, outfile)
 
 	return true
 end
-return cvt

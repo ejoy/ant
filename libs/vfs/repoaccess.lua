@@ -127,7 +127,7 @@ end
 
 local function build(plat, source, lk, tmp)
 	local fileconvert = require "fileconvert"
-	return fileconvert.build_file(plat, source, lk, tmp)
+	return fileconvert(plat, source, lk, tmp)
 end
 
 local function genhash(repo, tmp)
