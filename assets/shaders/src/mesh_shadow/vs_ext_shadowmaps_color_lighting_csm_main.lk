@@ -1,1 +1,0 @@
-shader_src = 'shaders/src/mesh_shadow/vs_ext_shadowmaps_color_lighting_csm_main.sc'

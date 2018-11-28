@@ -38,17 +38,19 @@ local function check_compile_shader(srcpath, outfile, shadertype)
 	return outfile, nil
 end
 
-
-return function(filepath, shadertype)
-	local dstpath = gen_output_path(filepath, shadertype)	
-	fu.create_dirs(path.parent(dstpath))
-	if fu.file_is_newer(filepath, dstpath) then
-		local outfile, error = check_compile_shader(filepath, dstpath, shadertype)
-		if error then
-			return nil, error
-		end
-		assert(outfile == dstpath)
+return function (plat, sourcefile, param, outfile)
+	local shadertype = param.shadertype
+	if shadertype == nil then
+		local rhwi = require "render.hardware_interface"
+		shadertype = rhwi.shader_type()
+		if shadertype == nil then
+			shadertype = rhwi.default_shader_type(plat)
+		end		
+	end
+	local binfile, error = check_compile_shader(sourcefile, outfile, shadertype)
+	if error then
+		return nil, error
 	end
 
-	return dstpath
+	return true
 end

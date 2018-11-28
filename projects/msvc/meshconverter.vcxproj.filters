@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="bgfx">
+      <UniqueIdentifier>{3cb98176-b9a1-493e-8797-19359b469444}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="bgfx\ib-compress">
+      <UniqueIdentifier>{25c4b54c-ea96-4943-b28e-75ae7336fa14}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\meshconverter\antmesh_converter.cpp">
@@ -30,6 +36,15 @@
     <ClCompile Include="..\..\clibs\meshconverter\meshconverter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\meshconverter\bgfx\ib-compress\indexbuffercompression.cpp">
+      <Filter>bgfx\ib-compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\meshconverter\bgfx\ib-compress\indexbufferdecompression.cpp">
+      <Filter>bgfx\ib-compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\meshconverter\bgfx\util.cpp">
+      <Filter>bgfx</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\meshconverter\meshdata.h">
@@ -38,5 +53,28 @@
     <ClInclude Include="..\..\clibs\meshconverter\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\clibs\meshconverter\bgfx\ib-compress\indexbuffercompression.h">
+      <Filter>bgfx\ib-compress</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\meshconverter\bgfx\ib-compress\indexbuffercompressionformat.h">
+      <Filter>bgfx\ib-compress</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\meshconverter\bgfx\ib-compress\indexbufferdecompression.h">
+      <Filter>bgfx\ib-compress</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\meshconverter\bgfx\ib-compress\indexcompressionconstants.h">
+      <Filter>bgfx\ib-compress</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\meshconverter\bgfx\ib-compress\readbitstream.h">
+      <Filter>bgfx\ib-compress</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\meshconverter\bgfx\ib-compress\writebitstream.h">
+      <Filter>bgfx\ib-compress</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\clibs\meshconverter\bgfx\ib-compress\README.md">
+      <Filter>bgfx\ib-compress</Filter>
+    </None>
   </ItemGroup>
 </Project>

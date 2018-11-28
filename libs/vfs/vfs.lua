@@ -44,7 +44,7 @@ local function mount_repo(mountpoint, repopath)
 		_mountpoint = mountpoint,
 		_root = rootpath,
 		_cache = setmetatable({} , cachemeta),
-		_repo = rootpath .. "./repo/",
+		_repo = rootpath .. "/.repo",
 	}
 end
 
@@ -101,7 +101,12 @@ function localvfs.type(filepath)
 end
 
 function localvfs.link(pathname, plat)
-	return access.build_from_path(self, plat, pathname)
+	local binhash = access.build_from_path(self, plat, pathname)
+	return access.repopath(self, binhash)
+end
+
+function localvfs.repopath()
+	return self._repo
 end
 
 return localvfs

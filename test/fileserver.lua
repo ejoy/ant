@@ -17,23 +17,14 @@ local vrepo = require "vfs.repo"
 local fs = require "lfs"
 local network = require "network"
 local protocol = require "protocol"
-local fileconvert = require "fileconvert"
 local util = require "filesystem.util"
 
 local home = util.personaldir()
 local repopath = home .. "/" .. reponame
 
 LOG ("Open repo : ", repopath)
-local function convertfiles(dirs)
-	for _, d in ipairs (dirs) do
-		fileconvert.convert_dir(d)
-	end
-end
 
 local repo = assert(vrepo.new(repopath))
-
-LOG ("Compile repo")
-convertfiles {repopath .. "/assets", repo:realpath("engine/assets")} -- need call before repo build
 
 LOG ("Rebuild repo")
 local roothash = repo:index()
@@ -59,8 +50,7 @@ end
 local debug = {}
 local message = {}
 
-function message:ROOT()	
-	fileconvert.convert_watchfiles()
+function message:ROOT()
 	repo:build()
 	local roothash = repo:root()
 	response(self, "ROOT", roothash)
@@ -94,6 +84,16 @@ function message:GET(hash)
 		end
 	end
 	f:close()
+end
+
+function message:LINK(hash, plat, source_hash, lk_hash)
+	local binhash = repo:link(hash, plat, source_hash, lk_hash)
+	LOG("LINK", hash, binhash, plat, source_hash, lk_hash)
+	if binhash then
+		response(self, "LINK", hash, binhash)
+	else
+		response(self, "LINK", hash)
+	end
 end
 
 function message:DBG(data)
@@ -187,7 +187,6 @@ local function filewacth()
 		local path = (dir == '') and path or (dir .. '/' .. path)
 		path = path:gsub('\\', '/')
 		print('[FileWatch]', type, path)
-		fileconvert.watch_file(repo:realpath(path))
 		repo:touch(path)
 		::continue::
 	end

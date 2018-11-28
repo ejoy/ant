@@ -24,15 +24,15 @@ end
 
 function util.regitster_iup(msgqueue, ctrl)	
 	local ctrl_cb = {
-		"button",
-		"motion",		
-		"resize",
-		"wheel"
+		button = "mouse_click",
+		motion = "mouse_move",
+		resize = "resize",
+		wheel = "mouse_wheel",
 	}
 
-	for _, name in ipairs(ctrl_cb) do
-		ctrl[name .. "_cb"] = function(_, ...)
-			msgqueue:push(name, ...)
+	for iupname, msgname in pairs(ctrl_cb) do
+		ctrl[iupname .. "_cb"] = function(_, ...)
+			msgqueue:push(msgname, ...)
 		end
 	end
 

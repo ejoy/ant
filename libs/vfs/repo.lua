@@ -144,7 +144,7 @@ local function repo_write_cache(self, cache)
 			content = content.next
 		until content == nil
 		if #ref > 0 then
-			local filepath = self._repo .. "/" .. hash:sub(1,2) .. "/" .. hash .. ".ref"
+			local filepath = refname(self, hash)
 			local f = io.open(filepath, "rb")
 			if f then
 				-- merge ref file
@@ -406,6 +406,17 @@ function repo:dir(hash)
 	end
 	f:close()
 	return { dir = dir, file = file }
+end
+
+function repo:link(hash, plat, source_hash, lk_hash)
+	local source_path = access.repopath(self, source_hash)
+	local lk_path = access.repopath(self, lk_hash)
+	local binhash = access.build_from_file(self, hash, plat, source_path, lk_path)
+	if not binhash then
+		if _DEBUG then print ("LINKFAIL", plat, source_hash) end
+		return
+	end
+	return binhash
 end
 
 return repo

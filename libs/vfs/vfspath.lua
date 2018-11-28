@@ -85,3 +85,15 @@ package.path = "?.lua;engine/libs/?.lua;engine/libs/?/?.lua;engine/clibs/?.lua"
 -- standrad require method to load "libs/vfs/vfs.lua"
 local realvfs = require "vfs"
 realvfs.mount(_mounts, root)
+
+-- init local repo
+local repopath = realvfs.repopath()
+if not lfs.exist(repopath) then
+	lfs.mkdir(repopath)
+end
+for i=0,0xff do
+	local abspath = string.format("%s/%02x", repopath , i)
+	if lfs.attributes(abspath, "mode") ~= "directory" then
+		assert(lfs.mkdir(abspath))
+	end
+end

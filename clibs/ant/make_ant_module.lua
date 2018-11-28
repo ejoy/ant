@@ -18,6 +18,7 @@ local whitelist = {
     cjson = true,
     window = true,
     firmware = true,
+    platform = true,
 }
 
 local function modluename(name)

@@ -1,10 +1,19 @@
 local access = {}
 
-local fs = require "lfs"
+local lfs = require "lfs"
 local crypt = require "crypt"
+local localfile = require "filesystem.file"
+
+function access.repopath(repo, hash, ext)
+	if ext then
+		return repo._repo .. "/" ..	hash:sub(1,2) .. "/" .. hash .. ext
+	else
+		return repo._repo .. "/" ..	hash:sub(1,2) .. "/" .. hash
+	end
+end
 
 function access.readmount(filename)
-	local f = io.open(filename, "rb")
+	local f = localfile.open(filename, "rb")
 	local ret = {}
 	if not f then
 		return ret
@@ -55,13 +64,13 @@ end
 function access.list_files(repo, filepath)
 	local rpath = access.realpath(repo, filepath)
 	local files = {}
-	for name in fs.dir(rpath) do
+	for name in lfs.dir(rpath) do
 		if name:sub(1,1) ~= '.' then	-- ignore .xxx file
 			files[name] = true
 		end
 	end
 	local ignorepaths = rpath .. "/.ignore"
-	local f = io.open(ignorepaths, "rb")
+	local f = localfile.open(ignorepaths, "rb")
 	if f then
 		for name in f:lines() do
 			files[name] = nil
@@ -103,7 +112,7 @@ local sha1_encoder = crypt.sha1_encoder()
 
 function access.sha1_from_file(filename)
 	sha1_encoder:init()
-	local ff = assert(io.open(filename, "rb"))
+	local ff = assert(localfile.open(filename, "rb"))
 	while true do
 		local content = ff:read(1024)
 		if content then
@@ -117,32 +126,73 @@ function access.sha1_from_file(filename)
 end
 
 local function build(plat, source, lk, tmp)
-	-- todo: real build
-	return true
+	local fileconvert = require "fileconvert"
+	return fileconvert(plat, source, lk, tmp)
+end
+
+local function genhash(repo, tmp)
+	local binhash = access.sha1_from_file(tmp)
+	local binhash_path = access.repopath(repo, binhash)
+	if not os.rename(tmp, binhash_path) then
+		os.remove(binhash_path)
+		if not os.rename(tmp, binhash_path) then
+			return
+		end
+	end
+	return binhash
+end
+
+local function ishash(hash)
+	return #hash == 40 and not hash:find "[^%da-f]"
+end
+
+function access.build_from_file(repo, hash, plat, source_path, lk_path)
+	local link = access.repopath(repo, hash, ".link")
+	local f = localfile.open(link, "rb")
+	if f then
+		local binhash = f:read "a"
+		f:close()
+		if ishash(binhash) then
+			return binhash
+		end
+	end
+	local tmp = link .. ".bin"
+	if not build(plat, source_path, lk_path, tmp) then
+		return
+	end
+	-- todo: if this source is platform independent, we can generate all the platforms' .link file for the same bin file.
+	local binhash = genhash(repo, tmp)
+	local lf = localfile.open(link, "wb")
+	lf:write(binhash)
+	lf:close()
+	return binhash
+end
+
+local function checkfilehash(repo, plat, source, lk)
+	local source_hash = access.sha1_from_file(source)
+	local lk_hash = access.sha1_from_file(lk)
+	-- NOTICE: see io.lua for the same hash algorithm
+	local hash = access.sha1(plat .. source_hash .. lk_hash)
+	return access.build_from_file(repo, hash, plat, source, lk)
 end
 
 local function filetime(filepath)
 	return lfs.attributes(filepath, "modification")
 end
 
-local function genhash(repo, tmp)
-	local binhash = access.sha1_from_file(tmp)
-	local binhash_path = repo._repo .. binhash:sub(1,2) .. "/" .. binhash
-	if not os.rename(tmp, binhash_path) then
-		os.remove(binhash_path)
-		assert(os.rename(tmp, binhash_path))
-	end
-	return binhash
-end
-
 function access.build_from_path(repo, plat, pathname)
 	local hash = access.sha1(pathname .. "." .. plat)
-	local cache = repo._repo .. hash:sub(1,2) .. "/" .. hash .. ".path"
+	local cache = access.repopath(repo, hash, ".path")
 	local lk = access.realpath(repo, pathname .. ".lk")
 	local source = access.realpath(repo, pathname)
-	local timestamp = string.format("%s %d %d", pathname, filetime(source), filetime(lk))
+	local source_time = filetime(source)
+	local lk_time = filetime(source)
+	if not source_time or not lk_time then
+		return
+	end
+	local timestamp = string.format("%s %d %d", pathname, source_time, lk_time)
 
-	local f = io.open(cache, "rb")
+	local f = localfile.open(cache, "rb")
 	local binhash
 	if f then
 		local readline = f:lines()
@@ -150,44 +200,19 @@ function access.build_from_path(repo, plat, pathname)
 		local otimestamp = readline()
 		local hash = readline()
 		f:close()
-		if oplat == plat and otimestamp == timestamp then
+		if oplat == plat and otimestamp == timestamp and ishash(hash) then
 			binhash = hash
 		end
 	end
 	if not binhash then
-		local tmp = cache .. ".bin"
-		assert(build(plat, source, lk, tmp))
-		binhash = genhash(repo, tmp)
-		local f = assert(io.open(cache, "wb"))
-		f:write(string.format("%s\n%s\n%s", plat, timestamp, binhash))
-		f:close()
-	end
-	return repo._repo .. binhash:sub(1,2) .. "/" .. binhash
-end
-
-function access.build_from_hash(repo, plat, source_hash, lk_hash)
-	local hash = access.sha1(plat .. source_hash .. lk_hash)
-	local link = repo._repo .. hash:sub(1,2) .. "/" .. hash .. ".link"
-	local f = io.open(link, "rb")
-	if f then
-		local binhash = f:read "a"
-		f:close()
-		local binpath = repo._repo .. binhash:sub(1,2) .. "/" .. binhash
-		local bin = io.open(binpath, "rb")
-		if bin then
-			bin:close()
-			return binpath
+		binhash = checkfilehash(repo, plat, source, lk)
+		if binhash then
+			local f = assert(localfile.open(cache, "wb"))
+			f:write(string.format("%s\n%s\n%s", plat, timestamp, binhash))
+			f:close()
 		end
 	end
-	local tmp = link .. ".bin"
-	local source_path = repo._repo .. source_hash:sub(1,2) .. "/" .. source_hash
-	local lk_path = repo._repo .. lk_hash:sub(1,2) .. "/" .. lk_hash
-	assert(build(plat, source_path, lk_path, tmp))
-	local binhash = genhash(repo, tmp)
-	local f = io.open(link, "wb")
-	f:write(binhash)
-	f:close()
-	return repo._repo .. binhash:sub(1,2) .. "/" .. binhash
+	return binhash
 end
 
 return access
