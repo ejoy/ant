@@ -1,4 +1,7 @@
 local rawtable = require "common.rawtable"
+local localfile = require "filesystem.file"
+local fu = require "filesystem.util"
+local lfs = require "lfs"
 
 local converter_names = {
 	shader = "fileconvert.compileshadersource",
@@ -6,23 +9,32 @@ local converter_names = {
 	texture = "",
 }
 
-local function readlocal_file(filename)
-	local nativeopen = require "filesystem.file" 
-	local f, err = nativeopen.open(filename, "rb")
-	if f == nil then
-		error(err)
+local logfile = nil
+
+local function log_err(src, lk, err)
+	if logfile == nil then
+		if not fu.exist("log") then
+			lfs.mkdir("log")
+		end
+
+		logfile = localfile.open("log/fileconvert.log")
 	end
-	local data = f:read "a"
-	f:close()
-	return data
+
+	logfile:write(string.format("[fileconvert]src:%s, lk:%s, error:\n", src, lk, err))
+	logfile:flush()
 end
 
 return function (plat, sourcefile, lkfile, dstfile)
-	local lkcontent = rawtable(lkfile, readlocal_file)
+	local lkcontent = rawtable(lkfile, fu.read_from_file)
 
 	local ctype = assert(lkcontent.type)
 	local converter_name = assert(converter_names[ctype])
 
 	local c = require(converter_name)
-	return c(plat, sourcefile, lkcontent, dstfile)
+	local success, err = c(plat, sourcefile, lkcontent, dstfile)
+	if err then
+		log_err(sourcefile, lkfile, err)
+	end
+
+	return success
 end
