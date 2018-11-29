@@ -1,3 +1,5 @@
+package.cpath = package.cpath:gsub("%.so", ".dll")
+
 local fw = require 'filewatch'
 
 local path = './test'

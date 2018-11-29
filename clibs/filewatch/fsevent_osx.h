@@ -9,27 +9,26 @@
 #include "lockqueue.h"
 #include "semaphore.h"
 
-namespace ant {
-    class fsevent {
+namespace ant::osx::fsevent {
+	typedef int taskid;
+	static const taskid kInvalidTaskId = 0;
+	enum class tasktype {
+		Error,
+		Create,
+		Delete,
+		Modify,
+		Rename,
+	};
+	struct notify {
+		tasktype    type;
+		std::string path;
+	};
+    class watch {
     public:
-		typedef int taskid;
-		static const taskid kInvalidTaskId = 0;
-		enum class tasktype {
-			Error,
-			Create,
-			Delete,
-			Modify,
-			Rename,
-		};
-		struct notify {
-			tasktype    type;
-			std::string path;
-		};
-    public:
-        fsevent();
-        ~fsevent();
-        taskid add_watch(const std::string&  path);
-        bool   remove_watch(taskid id);
+        watch();
+        ~watch();
+        taskid add(const std::string&  path);
+        bool   remove(taskid id);
         void   stop();
 		bool   select(notify& notify);
     private:

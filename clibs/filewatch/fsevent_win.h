@@ -34,8 +34,6 @@ namespace ant::win::fsevent {
 	class watch {
 		friend class task;
 	public:
-
-	public:
 		watch();
 		~watch();
 
