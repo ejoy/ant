@@ -9,14 +9,14 @@ local platform = config.platform()
 
 local function compile_shader(filename, outfilename, shadertype)
     local config = toolset.load_config()
-	if next(config) then		
+	if config.shaderc then		
 		local engineshaderpath = vfs.realpath("engine/assets/shaders/src")
 		config.includes = {config.shaderinc, engineshaderpath}
         config.dest = outfilename
 		return toolset.compile(filename, config, shadertype, platform)
 	end
 	
-	return nil, "config is empty, try run clibs/lua/lua.exe config.lua"
+	return nil, "config is empty, try run `lua tools/config.lua`"
 end
 
 local function check_compile_shader(srcpath, outfile, shadertype)	
@@ -39,6 +39,7 @@ return function (plat, sourcefile, param, outfile)
 	end
 	local binfile, error = check_compile_shader(sourcefile, outfile, shadertype)
 	if error then
+		print(error)
 		return nil, error
 	end
 

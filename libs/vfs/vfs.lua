@@ -13,6 +13,10 @@ local function isdir(filepath)
 	return lfs.attributes(filepath, "mode") == "directory"
 end
 
+local function lfs_exist(filepath)
+	return lfs.attributes(filepath, "mode") ~= nil
+end
+
 --luacheck: ignore readmount
 local function readmount(filename)
 	local f = localfile.open(filename, "rb")
@@ -68,7 +72,7 @@ end
 function localvfs.realpath(pathname)
 	local rp = access.realpath(self, pathname)
 	local lk = rp .. ".lk"
-	if lfs.exist(lk) then
+	if lfs_exist(lk) then
 		local binhash = access.build_from_path(self, platform.os(), pathname)
 		return access.repopath(self, binhash)
 	end
