@@ -185,6 +185,7 @@ local function filewacth()
 			local vpath, rpath = v[1], v[2]
 			local path, ok = fspath.replace_path(path, rpath:gsub('\\', '/'), vpath)
 			if ok then
+				if path:sub(1, 1) == '/' then path = path:sub(2) end
 				local dir = vpath
 				if path:sub(1, 5) ~= '.repo' then
 					print('[FileWatch]', type, path)

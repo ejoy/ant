@@ -159,7 +159,7 @@ local function load_config()
 	
 	local ret = {}
 	local lfs = require "lfs"
-	if lfs.exist(toolset_path) then
+	if util.exist(toolset_path) then
 		local rawtable = require "common.rawtable"
 
 		ret = rawtable(toolset_path, function (filename)
