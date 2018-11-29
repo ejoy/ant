@@ -19,10 +19,10 @@ function generator:init()
 	local dbobj = self.debug_object
 	
 	local desc = dbobj.renderobjs.wireframe.desc
-	geometry_drawer.draw_sphere({center={0, 0, 0}, radius=1}, 0xffffff00, nil, desc)
+	-- geometry_drawer.draw_sphere({center={0, 0, 0}, radius=1, tessellation=2}, 0xffffff00, nil, desc)
 
 	local transform = ms({type="srt", t={5, 0, 0}}, "P")
-	geometry_drawer.draw_cone({height=1, radius=0.5}, 0xffff0000, transform, ms, desc)
+	geometry_drawer.draw_cone({height=1, radius=0.5, slices=5}, 0xffff0000, transform, desc)
 
 	local camera = world:first_entity("main_camera")	
 	ms(camera.rotation, {0, 30, 0}, "=")

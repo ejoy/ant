@@ -56,13 +56,13 @@ end
 function draw.draw_cone(cone, color, transform, desc)
 	draw_primitve(color, transform, desc, 
 	function()
-		return geo.cone(10, cone.height, cone.radius, true, true)
+		return geo.cone(cone.slices, cone.height, cone.radius, true, true)
 	end)
 end
 
 function draw.draw_sphere(sphere, color, transform, desc)
 	draw_primitve(color, transform, desc, function()
-		return geo.sphere(1, sphere.radius, true, true)
+		return geo.sphere(sphere.tessellation, sphere.radius, true, true)
 	end)
 end
 

@@ -1,6 +1,4 @@
 --luacheck:globals iup
-
-dofile "libs/init.lua"
 require "iuplua"
 
 local editor = require "editor"
