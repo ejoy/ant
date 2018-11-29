@@ -5,14 +5,14 @@ ecs.import "render.end_frame_system"
 ecs.import "inputmgr.message_system"
 ecs.import "serialize.serialize_component"
 
-local su = require "serialize.util"
-
 local serialize_save_sys = ecs.system "serialize_save_system"
 serialize_save_sys.singleton "serialization_tree"
 
 serialize_save_sys.depend "end_frame"
 
 function serialize_save_sys.notify:save()
+	local su = require "serialize.util"
+
     local children = {}
     for _, eid in world:each("serialize") do        
         local tr = su.save_entity(world, eid)
@@ -63,6 +63,7 @@ local function post_load(loaded_eids)
 end
 
 function serialize_load_sys.notify:load_from_seri_tree()
+	local su = require "serialize.util"
     local children = assert(self.serialization_tree.root)
     assert(#children ~= 0)
     local loaded_eids = {}

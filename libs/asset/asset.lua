@@ -3,7 +3,7 @@
 local require = import and import(...) or require
 
 local path = require "filesystem.path"
-local seri = require "serialize.util"
+
 local vfs_fs= require "vfs.fs"
 
 local support_list = {
@@ -150,6 +150,7 @@ end
 
 function assetmgr.save(tree, filename)
 	assert(type(filename) == "string")
+	local seri = require "serialize.util"
 	seri.save(filename, tree)
 end
 
