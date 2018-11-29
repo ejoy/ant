@@ -83,7 +83,7 @@ package.path = "?.lua;engine/libs/?.lua;engine/libs/?/?.lua;engine/clibs/?.lua"
 -- standrad require method to load "libs/vfs/vfs.lua"
 local vfs = require "vfs"
 
-if lfs.exist(repopath .. "/.mount") then
+if lfs.attributes(repopath .. "/.mount", "mode") then
 	if not vfs.open(repopath) then
 		error(string.format("open repo failed, repo path : %s", repopath))
 	end
@@ -101,7 +101,7 @@ end
 
 -- init local repo
 local repo_cachepath = vfs.repopath()
-if not lfs.exist(repo_cachepath) then
+if not lfs.attributes(repo_cachepath, "mode") then
 	lfs.mkdir(repo_cachepath)
 end
 for i=0,0xff do

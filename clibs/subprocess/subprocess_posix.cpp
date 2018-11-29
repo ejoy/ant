@@ -7,10 +7,12 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <signal.h>
+#include <errno.h>
 
 extern char **environ;
 
-namespace base { namespace posix { namespace subprocess {
+namespace ant::posix::subprocess {
 
     template <class T>
     struct allocarray {
@@ -134,7 +136,7 @@ namespace base { namespace posix { namespace subprocess {
         del_env_.insert(key);
     }
 
-    bool spawn::exec(const std::vector<char*>& args, const char* cwd) {
+    bool spawn::exec(std::vector<char*>& args, const char* cwd) {
         pid_t pid = fork();
         if (pid == -1) {
             return false;
@@ -156,7 +158,7 @@ namespace base { namespace posix { namespace subprocess {
             if (suspended_) {
                 ::kill(getpid(), SIGSTOP);
             }
-			args.push_back(nullptr);
+            args.push_back(nullptr);
             execvp(args[0], args.data());
             _exit(127);
         }
@@ -231,4 +233,4 @@ namespace base { namespace posix { namespace subprocess {
             return (ioctl(fileno(f), FIONREAD, (char *) &count) < 0 ? -1 : count);
         }
     }
-}}}
+}

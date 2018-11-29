@@ -10,19 +10,19 @@
 #include "semaphore.h"
 
 namespace ant::osx::fsevent {
-	typedef int taskid;
-	static const taskid kInvalidTaskId = 0;
-	enum class tasktype {
-		Error,
-		Create,
-		Delete,
-		Modify,
-		Rename,
-	};
-	struct notify {
-		tasktype    type;
-		std::string path;
-	};
+    typedef int taskid;
+    static const taskid kInvalidTaskId = 0;
+    enum class tasktype {
+        Error,
+        Create,
+        Delete,
+        Modify,
+        Rename,
+    };
+    struct notify {
+        tasktype    type;
+        std::string path;
+    };
     class watch {
     public:
         watch();
@@ -30,7 +30,7 @@ namespace ant::osx::fsevent {
         taskid add(const std::string&  path);
         bool   remove(taskid id);
         void   stop();
-		bool   select(notify& notify);
+        bool   select(notify& notify);
     private:
         bool apc_create_stream(CFArrayRef cf_paths);
         void apc_destroy_stream();
@@ -45,25 +45,25 @@ namespace ant::osx::fsevent {
         void event_cb(const char* paths[], const FSEventStreamEventFlags flags[], size_t n);
         void apc_cb();
     private:
-		struct apc_arg {
-			enum class type {
-				Add,
-				Remove,
-				Terminate,
-			};
-			type                  m_type;
-			taskid                m_id;
-			std::string           m_path;
-		};
+        struct apc_arg {
+            enum class type {
+                Add,
+                Remove,
+                Terminate,
+            };
+            type                  m_type;
+            taskid                m_id;
+            std::string           m_path;
+        };
 
         FSEventStreamRef              m_stream;
         CFRunLoopRef                  m_loop;
         CFRunLoopSourceRef            m_source;
         std::unique_ptr<std::thread>  m_thread;
         lockqueue<apc_arg>            m_apc_queue; 
-		lockqueue<notify>             m_notify;
+        lockqueue<notify>             m_notify;
         std::map<taskid, std::string> m_tasks; 
-		taskid                        m_gentask;
+        taskid                        m_gentask;
         semaphore                     m_sem;
     };
 }

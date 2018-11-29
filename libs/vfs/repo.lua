@@ -417,7 +417,7 @@ function repo:link(hash, plat, source_hash, lk_hash)
 	end
 	local binhash = access.build_from_file(self, hash, plat, source_path, lk_path)
 	if not binhash then
-		if _DEBUG then print ("BUILDFAIL", plat, source_hash) end
+		if _DEBUG then print ("BUILDFAIL", plat, source_hash, source_path) end
 		return
 	end
 	return binhash

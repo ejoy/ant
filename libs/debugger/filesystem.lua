@@ -52,6 +52,7 @@ function m.normalize_native(path)
 end
 
 function m.relative(path, base, sep)
+    sep = sep or default_sep
     local rpath = normalize(path)
     local rbase = normalize(base)
     while #rpath > 0 and #rbase > 0 and rpath[1] == rbase[1] do

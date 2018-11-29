@@ -7,7 +7,7 @@
 #include <set>
 #include <vector>
 
-namespace base { namespace posix { namespace subprocess {
+namespace ant::posix::subprocess {
     enum class stdio {
         eInput,
         eOutput,
@@ -51,4 +51,4 @@ namespace base { namespace posix { namespace subprocess {
         std::pair<FILE*, FILE*> open();
         int                     peek(FILE* f);
     }
-}}}
+}
