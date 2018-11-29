@@ -1,8 +1,9 @@
 local config = {}; config.__index = config
 
-function config.platform()
-	local baselib = require "bgfx.baselib"
-	return baselib.platform_name
+local platform = require "platform"
+local platname = platform.os()
+function config.platform()	
+	return platname
 end
 
 return config

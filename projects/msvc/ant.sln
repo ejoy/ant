@@ -120,6 +120,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "firmware", "firmware.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "meshconverter", "meshconverter.vcxproj", "{6941669E-1992-4F61-8F0E-C0617175597C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "platform", "platform.vcxproj", "{C1F1965C-B68C-4CDF-87A8-89F5AAE79D60}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -352,6 +354,14 @@ Global
 		{6941669E-1992-4F61-8F0E-C0617175597C}.Release|x64.Build.0 = Release|x64
 		{6941669E-1992-4F61-8F0E-C0617175597C}.Release|x86.ActiveCfg = Release|Win32
 		{6941669E-1992-4F61-8F0E-C0617175597C}.Release|x86.Build.0 = Release|Win32
+		{C1F1965C-B68C-4CDF-87A8-89F5AAE79D60}.Debug|x64.ActiveCfg = Debug|x64
+		{C1F1965C-B68C-4CDF-87A8-89F5AAE79D60}.Debug|x64.Build.0 = Debug|x64
+		{C1F1965C-B68C-4CDF-87A8-89F5AAE79D60}.Debug|x86.ActiveCfg = Debug|Win32
+		{C1F1965C-B68C-4CDF-87A8-89F5AAE79D60}.Debug|x86.Build.0 = Debug|Win32
+		{C1F1965C-B68C-4CDF-87A8-89F5AAE79D60}.Release|x64.ActiveCfg = Release|x64
+		{C1F1965C-B68C-4CDF-87A8-89F5AAE79D60}.Release|x64.Build.0 = Release|x64
+		{C1F1965C-B68C-4CDF-87A8-89F5AAE79D60}.Release|x86.ActiveCfg = Release|Win32
+		{C1F1965C-B68C-4CDF-87A8-89F5AAE79D60}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
