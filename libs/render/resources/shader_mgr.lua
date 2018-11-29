@@ -44,7 +44,7 @@ local function load_shader(name)
 		error(string.format("not found shader file: %s", name))
 	end
 
-	local validfile = vfs.link(filename, config.platform())
+	local validfile = vfs.realpath(filename)
 	local f = assert(localfile.open(assert(validfile), "rb"))
 	local data = f:read "a"
 	f:close()

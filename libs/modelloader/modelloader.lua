@@ -5,16 +5,13 @@ local log = log and log(...) or print
 local bgfx = require "bgfx"
 local modelutil = require "modelloader.util"
 local vfs = require "vfs"
-local config = require "common.config"
-local platform = config.platform()
 
 local antmeshloader = require "modelloader.antmeshloader"
 
 local loader = {}
 
-local function load_from_source(filepath)	
-	local validfile = vfs.link(filepath, platform)
-	
+local function load_from_source(filepath)
+	local validfile = vfs.realpath(filepath)
 	return antmeshloader(validfile)
 end
 

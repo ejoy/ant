@@ -4,11 +4,12 @@
 
 local localvfs = {} ; localvfs.__index = localvfs
 
-local fs = require "lfs"
+local lfs = require "lfs"
 local access = require "vfs.repoaccess"
+local platform = require "platform"
 
 local function isdir(filepath)
-	return fs.attributes(filepath, "mode") == "directory"
+	return lfs.attributes(filepath, "mode") == "directory"
 end
 
 --luacheck: ignore readmount
@@ -65,6 +66,11 @@ end
 
 function localvfs.realpath(pathname)
 	local rp = access.realpath(self, pathname)
+	local lk = rp .. ".lk"
+	if lfs.exist(lk) then
+		local binhash = access.build_from_path(self, platform.os(), pathname)
+		return access.repopath(self, binhash)
+	end
 	return  rp, pathname:match "^/?(.-)/?$"
 end
 
@@ -88,7 +94,7 @@ end
 
 function localvfs.type(filepath)
 	local rp = access.realpath(self, filepath)
-	local mode = fs.attributes(rp, "mode")
+	local mode = lfs.attributes(rp, "mode")
 	if mode then
 		if mode == "directory" then
 			return "dir"
@@ -98,11 +104,6 @@ function localvfs.type(filepath)
 			return "file"
 		end
 	end
-end
-
-function localvfs.link(pathname, plat)
-	local binhash = access.build_from_path(self, plat, pathname)
-	return access.repopath(self, binhash)
 end
 
 function localvfs.repopath()

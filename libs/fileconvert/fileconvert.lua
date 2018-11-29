@@ -8,7 +8,10 @@ local converter_names = {
 
 local function readlocal_file(filename)
 	local nativeopen = require "filesystem.file" 
-	local f = nativeopen.open(filename, "rb")
+	local f, err = nativeopen.open(filename, "rb")
+	if f == nil then
+		error(err)
+	end
 	local data = f:read "a"
 	f:close()
 	return data

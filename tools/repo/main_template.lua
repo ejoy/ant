@@ -1,5 +1,3 @@
-
---luacheck: globals iup
 local enginepath = os.getenv("ANTGE")
 
 if enginepath == nil or enginepath == "" then
@@ -18,29 +16,12 @@ dofile(enginepath .. "/libs/init.lua")
 local fs = require "lfs"
 local projpath = fs.currentdir()
 
-local vfs = require "vfs.vfs"
+local vfs = require "vfs"
 vfs.open(projpath)
 
-----user code begin
---[[
-local testf = io.open(vfs.realpath("engine/assets/mehses/mesh.ozz"))
-if testf then
-	iup.Message("Info", "found file")
+local projentry = "project_entry.lua"
+if not lfs.exist(projentry) then
+	error(string.format("project need add project_entry.lua file to load project"))
 end
 
-local canvas = iup.canvas {
-	rastersize = "1024x768",
-}
-
-local dlg = iup.dialog {
-	canvas,
-	title = "vfs project test",
-	shrink="yes",	-- logger box should be allow shrink
-}
-
-dlg:showxy(iup.CENTER,iup.CENTER)
-dlg.usersize = nil
-
-iup.MainLoop()
-iup.Close()
-]]
+require(projentry)

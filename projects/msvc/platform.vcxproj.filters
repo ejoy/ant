@@ -15,25 +15,8 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\filewatch\luafilewatch.cpp">
+    <ClCompile Include="..\..\clibs\platform\lplatform.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\filewatch\filewatch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\clibs\filewatch\queue.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\clibs\filewatch\filewatch.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\clibs\filewatch\lockqueue.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\clibs\filewatch\semaphore.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
