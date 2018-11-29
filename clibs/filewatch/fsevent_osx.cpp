@@ -1,33 +1,33 @@
-#include "fsevent.h"
+#include "fsevent_osx.h"
 #include <thread>
 
-namespace ant {
-    static void fsevent_event_cb(ConstFSEventStreamRef streamRef,
+namespace ant::osx::fsevent {
+    static void watch_event_cb(ConstFSEventStreamRef streamRef,
         void* info,
         size_t numEvents,
         void* eventPaths,
         const FSEventStreamEventFlags eventFlags[],
         const FSEventStreamEventId eventIds[])
     {
-        fsevent* self = (fsevent*)info;
+        watch* self = (watch*)info;
         self->event_cb((const char**)eventPaths, eventFlags, numEvents);
     }
 
-    static void fsevent_apc_cb(void* arg) {
-        fsevent* self = (fsevent*)arg;
+    static void watch_apc_cb(void* arg) {
+        watch* self = (watch*)arg;
         self->apc_cb();
     }
 
-    fsevent::fsevent() 
+    watch::watch() 
 		: m_stream(NULL)
         , m_loop(NULL)
         , m_source(NULL)
         , m_gentask(kInvalidTaskId)
     { }
-    fsevent::~fsevent() {
+    watch::~watch() {
         stop();
     }
-    void fsevent::stop() {
+    void watch::stop() {
         if (!m_thread) {
             return;
         }
@@ -46,23 +46,23 @@ namespace ant {
         m_thread->join();
         m_thread.reset();
     }
-    bool fsevent::thread_init() {
+    bool watch::thread_init() {
         if (m_thread) {
             return true;
         }
         CFRunLoopSourceContext ctx = {0};
         ctx.info = this;
-        ctx.perform = fsevent_apc_cb;
+        ctx.perform = watch_apc_cb;
         m_source = CFRunLoopSourceCreate(NULL, 0, &ctx);
         if (!m_source) {
             return false;
         }
-        m_thread.reset(new std::thread(std::bind(&fsevent::thread_cb, this)));
+        m_thread.reset(new std::thread(std::bind(&watch::thread_cb, this)));
         m_sem.wait();
         return true;
     }
 
-    bool fsevent::thread_signal() {
+    bool watch::thread_signal() {
         if (!m_source || !m_loop) {
             return false;
         }
@@ -71,7 +71,7 @@ namespace ant {
         return true;
     }
 
-    bool fsevent::apc_create_stream(CFArrayRef cf_paths) {
+    bool watch::apc_create_stream(CFArrayRef cf_paths) {
         if (m_stream) {
             return false;
         }
@@ -80,7 +80,7 @@ namespace ant {
 
         FSEventStreamRef ref = 
             FSEventStreamCreate(NULL,
-                &fsevent_event_cb,
+                &watch_event_cb,
                 &ctx,
                 cf_paths,
                 kFSEventStreamEventIdSinceNow,
@@ -98,7 +98,7 @@ namespace ant {
         return true;
     }
 
-    void fsevent::apc_destroy_stream() {
+    void watch::apc_destroy_stream() {
         if (!m_stream) {
             return;
         }
@@ -108,7 +108,7 @@ namespace ant {
         m_stream = NULL;
     }
 
-    fsevent::taskid fsevent::add_watch(const std::string& path) {
+    taskid watch::add(const std::string& path) {
         if (!thread_init()) {
             return kInvalidTaskId;
         }
@@ -122,7 +122,7 @@ namespace ant {
         return id;
     }
 
-    bool fsevent::remove_watch(taskid id) {
+    bool watch::remove(taskid id) {
         if (!m_thread) {
             return false;
         }
@@ -133,7 +133,7 @@ namespace ant {
         thread_signal();
         return true;
     }
-    void fsevent::thread_cb() {
+    void watch::thread_cb() {
         m_loop = CFRunLoopGetCurrent();
         m_sem.signal();
         CFRunLoopAddSource(m_loop, m_source, kCFRunLoopDefaultMode);
@@ -142,7 +142,7 @@ namespace ant {
         m_loop = NULL;
     }
 
-    void fsevent::apc_cb() {
+    void watch::apc_cb() {
         apc_arg arg;
         while (m_apc_queue.pop(arg)) {
             switch (arg.m_type) {
@@ -159,7 +159,7 @@ namespace ant {
         }
     }
 
-    void fsevent::apc_update() {
+    void watch::apc_update() {
         apc_destroy_stream();
         if (m_tasks.empty()) {
             return;
@@ -183,27 +183,27 @@ namespace ant {
         CFRelease(cf_paths);
     }
 
-    void fsevent::apc_add(taskid id, const std::string& path) {
+    void watch::apc_add(taskid id, const std::string& path) {
         m_tasks.insert(std::make_pair(id, path));
         apc_update();
     }
 
-    void fsevent::apc_remove(taskid id) {
+    void watch::apc_remove(taskid id) {
         m_tasks.erase(id);
         apc_update();
     }
 
-    void fsevent::apc_terminate() {
+    void watch::apc_terminate() {
         apc_destroy_stream();
         m_tasks.clear();
         CFRunLoopStop(m_loop);
     }
 
-    bool fsevent::select(notify& notify) {
+    bool watch::select(notify& notify) {
         return m_notify.pop(notify);
     }
 
-    void fsevent::event_cb(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) {
+    void watch::event_cb(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) {
         for (size_t i = 0; i < n; ++i) {
             if (flags[i] & kFSEventStreamEventFlagItemCreated) {
                 m_notify.push({
