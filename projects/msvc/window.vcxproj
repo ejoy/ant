@@ -19,14 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\window\window.c" />
-    <ClCompile Include="..\..\clibs\window\windows_native.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\clibs\window\window.h" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="..\..\clibs\window\test.lua" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\clibs\window\virtual_keys.h" />
+    <ClInclude Include="..\..\clibs\window\window.h" />
+    <ClInclude Include="..\..\clibs\window\window_native.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\clibs\window\mingw\mingw_window.c" />
+    <ClCompile Include="..\..\clibs\window\window.c" />
+    <ClCompile Include="..\..\clibs\window\window_native.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
