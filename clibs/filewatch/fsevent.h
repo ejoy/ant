@@ -40,7 +40,7 @@ namespace ant {
         void apc_terminate();
         void apc_update();
         bool thread_init();
-        void thread_signal();
+        bool thread_signal();
         void thread_cb();
    public:
         void event_cb(const char* paths[], const FSEventStreamEventFlags flags[], size_t n);

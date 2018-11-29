@@ -38,7 +38,11 @@ namespace ant {
         m_apc_queue.push ({
             apc_arg::type::Terminate
         });
-        thread_signal();
+        if (!thread_signal()) {
+            m_thread->detach();
+            m_thread.reset();
+            return;
+        }
         m_thread->join();
         m_thread.reset();
     }
@@ -58,9 +62,13 @@ namespace ant {
         return true;
     }
 
-    void fsevent::thread_signal() {
+    bool fsevent::thread_signal() {
+        if (!m_source || !m_loop) {
+            return false;
+        }
         CFRunLoopSourceSignal(m_source);
         CFRunLoopWakeUp(m_loop);
+        return true;
     }
 
     bool fsevent::apc_create_stream(CFArrayRef cf_paths) {
@@ -131,6 +139,7 @@ namespace ant {
         CFRunLoopAddSource(m_loop, m_source, kCFRunLoopDefaultMode);
         CFRunLoopRun();
         CFRunLoopRemoveSource(m_loop, m_source, kCFRunLoopDefaultMode);
+        m_loop = NULL;
     }
 
     void fsevent::apc_cb() {
@@ -185,6 +194,9 @@ namespace ant {
     }
 
     void fsevent::apc_terminate() {
+        apc_destroy_stream();
+        m_tasks.clear();
+        CFRunLoopStop(m_loop);
     }
 
     bool fsevent::select(notify& notify) {
