@@ -128,5 +128,4 @@ function path.replace_path(srcpath, checkpath, rplpath)
 	end	
 end
 
-
 return path

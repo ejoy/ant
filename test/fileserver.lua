@@ -10,14 +10,13 @@ local function LOG(...)
 	print(...)
 end
 
-local ok, fw = pcall(require, "filewatch")
-if not ok then fw = nil end
-
+local fw = require "filewatch"
 local vrepo = require "vfs.repo"
 local fs = require "lfs"
 local network = require "network"
 local protocol = require "protocol"
 local util = require "filesystem.util"
+local fspath = require "filesystem.path"
 
 local home = util.personaldir()
 local repopath = home .. "/" .. reponame
@@ -30,14 +29,12 @@ LOG ("Rebuild repo")
 local roothash = repo:index()
 repo:rebuild()
 
-local wid = {}
-if fw then
-	local id = assert(fw.add(repopath, 'fdts'))
-	wid[id] = ''
-	for k, v in pairs(repo._mountpoint) do
-		local id = assert(fw.add(v, 'fdts'))
-		wid[id] = k
-	end
+local watch = {}
+assert(fw.add(repopath))
+watch[#watch+1] = {'', repopath}
+for k, v in pairs(repo._mountpoint) do
+	assert(fw.add(v))
+	watch[#watch+1] = {k, v}
 end
 
 local filelisten = network.listen(config.address, config.port)
@@ -176,18 +173,25 @@ end
 
 local function filewacth()
 	while true do
-		local id, type, path = fw.select()
-		if not id then
+		local type, path = fw.select()
+		if not type then
 			break
 		end
-		if wid[id] == '' and path:sub(1, 5) == '.repo' then
+		if type == 'error' then
+			print(path)
 			goto continue
 		end
-		local dir = wid[id]
-		local path = (dir == '') and path or (dir .. '/' .. path)
-		path = path:gsub('\\', '/')
-		print('[FileWatch]', type, path)
-		repo:touch(path)
+		for _, v in ipairs(watch) do
+			local vpath, rpath = v[1], v[2]
+			local path, ok = fspath.replace_path(path, rpath:gsub('\\', '/'), vpath)
+			if ok then
+				local dir = vpath
+				if path:sub(1, 5) ~= '.repo' then
+					print('[FileWatch]', type, path)
+					repo:touch(path)
+				end
+			end
+		end
 		::continue::
 	end
 end
@@ -204,9 +208,7 @@ local function mainloop()
 			end
 		end
 	end
-	if fw then
-		filewacth()
-	end
+	filewacth()
 end
 
 while true do
