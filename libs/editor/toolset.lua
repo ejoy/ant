@@ -3,6 +3,7 @@ local fspath = require "filesystem.path"
 local util = require "filesystem.util"
 local subprocess = require "subprocess"
 local config = require "common.config"
+local rawtable = require "common.rawtable"
 
 local PATH = "ant"
 
@@ -94,7 +95,7 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 			shaderc = paths.shaderc,
 			src = filename,
 			dest = dest,
-			inc = "",
+			inc = {},
 			stype = nil,
 			sopt = nil,
 			splat = nil,
@@ -102,16 +103,16 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 		
 		local includes = paths.includes
 		if includes then
-			local function gen_incpath(pp)
-				return '-i "' .. pp .. '"'
+			local function add_inc(p)
+				table.insert(tbl.inc, "-i")
+				table.insert(tbl.inc, p)
 			end
-
-			local incpath = ""
 			for _, p in ipairs(includes) do
 				if not util.exist(p) then
 					error(string.format("include path : %s, but not exist!", p))
 				end
-				incpath = incpath .. gen_incpath(p) .. " "
+				
+				add_inc(p)
 			end
 			if paths.not_include_examples_common == nil then				
 				if paths.shaderinc and (not util.exist(paths.shaderinc)) then
@@ -124,10 +125,8 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 					error(string.format("example is needed, but not exist, path is : %s", incexamplepath))
 				end
 				
-				incpath = incpath .. gen_incpath(incexamplepath)
+				add_inc(incexamplepath)
 			end
-
-			tbl.inc = incpath
 		end
 
 		stagetype = stagetype or filename:match "[/\\]([fvc])s_[^/\\]+.sc$"
@@ -137,10 +136,7 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 		tbl.splat = assert(platform)
 		tbl.sopt = assert(shader_opt)
 
-		local command = string.gsub('$shaderc --platform $splat --type $stype $sopt -f "$src" -o "$dest" $inc',
-			"%$(%w+)", tbl)
-
-		local prog, stdout = subprocess.spawn {
+		local prog, stdout, stderr = subprocess.spawn {
 			tbl.shaderc,
 			"--platform", tbl.splat,
 			"--type", tbl.stype,
@@ -149,16 +145,35 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 			"-o", tbl.dest,
 			tbl.inc,
 			stdout = true,
+			stderr = true,
 			hideWindow = true,
 		}
 
 		if not prog then
 			return false, "Create shaderc process failed."
-		else			
-			local ret = stdout:read "a"
-			stdout:close()
-			local success = ret and ret:find("error", 1, true) == nil or false
-			return success, command .. "\n" .. ret
+		else
+			local function read_std_info(std)
+				local ret = std:read "a"
+				std:close()
+				local success, err = true, ""
+				if ret and ret ~= "" then
+					success = ret:find("error", 1, true) == nil
+					if not success then
+						err = err .. string.gsub('$shaderc --platform $splat --type $stype $sopt -f "$src" -o "$dest" $inc',
+						"%$(%w+)", tbl) .. "\n" .. ret
+					end
+				end
+	
+				return success, err
+			end
+
+			local success, err = true, ""
+			for _, std in ipairs {stdout, stderr} do
+				local s, e = read_std_info(std)
+				success = success and s
+				err = err .. "\n" .. e
+			end
+			return success, err
 		end
 	end
 end
@@ -167,15 +182,9 @@ local function load_config()
 	local home = util.personaldir()
 	local toolset_path = string.format("%s/%s/toolset.lua", home, PATH)
 	
-	local ret = {}
-	local lfs = require "lfs"
-	if util.exist(toolset_path) then
-		local rawtable = require "common.rawtable"
-
-		ret = rawtable(toolset_path, function (filename)
-			local fu = require "filesystem.util"
-			return fu.read_from_file(filename)
-		end)
+	local ret = {}	
+	if util.exist(toolset_path) then		
+		ret = rawtable(toolset_path, util.read_from_file)
 	end
 	return ret
 end
