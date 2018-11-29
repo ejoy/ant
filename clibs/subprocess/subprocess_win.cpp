@@ -9,7 +9,7 @@
 
 #define SIGKILL 9
 
-namespace base { namespace win { namespace subprocess {
+namespace ant::win::subprocess {
 
     struct strbuilder {
         struct node {
@@ -432,4 +432,4 @@ namespace base { namespace win { namespace subprocess {
             return 0;
         }
     }
-}}}
+}

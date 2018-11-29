@@ -1,33 +1,30 @@
-LUAINC= -I./../lua
-LUALIB= -L./../lua -llua53
+include ../common.mk
+
 CFLAGS= -O2 -Wall -fPIC
-
-PLAT= win
-TARGET= subprocess.dll
-
 CC= g++ -std=c++17 -c
-AR= g++ --shared
-RANLIB=strip --strip-unneeded
 
-default : $(TARGET)
+default : subprocess.dll
 
-mingw :
-	$(MAKE) PLAT=win TARGET=subprocess.dll
+subprocess.h : subprocess_win.h subprocess_posix.h 
 
-linux :
-	$(MAKE) PLAT=posix TARGET=subprocess.so
-
-subprocess.h : subprocess_$(PLAT).h
-
-binding_$(PLAT).o : binding.cpp subprocess.h
+lsubprocess.o : lsubprocess.cpp subprocess.h
 	$(CC) $(CFLAGS) $(LUAINC) -o $@ $<
 
-subprocess_$(PLAT).o : subprocess_$(PLAT).cpp subprocess.h
-	$(CC) $(CFLAGS) $(LUAINC) -o $@ $<
+subprocess_win.o : subprocess_win.cpp subprocess.h
+	$(CC) $(CFLAGS) -o $@ $<
 
-$(TARGET) : binding_$(PLAT).o subprocess_$(PLAT).o
-	$(AR) $(LUALIB) -o $@ $^
-	$(RANLIB) $@
+subprocess_posix.o : subprocess_posix.cpp subprocess.h
+	$(CC) $(CFLAGS) -o $@ $<
+
+ifeq "$(PLAT)" "mingw"
+subprocess.dll : lsubprocess.o subprocess_win.o
+	g++ $(LD_SHARED) $(LUALIB) -o $@ $^
+	$(STRIP) $@
+else ifeq "$(PLAT)" "osx"
+subprocess.dll : lsubprocess.o subprocess_posix.o
+	g++ $(LD_SHARED) $(LUALIB) -o $@ $^
+	$(STRIP) $@
+endif
 
 clean :
-	rm -f *.o subprocess.so subprocess.dll
+	rm -f *.o subprocess.dll

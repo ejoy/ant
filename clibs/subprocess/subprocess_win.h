@@ -5,7 +5,7 @@
 #include <set>
 #include <vector>
 
-namespace base { namespace win { namespace subprocess {
+namespace ant::win::subprocess {
     namespace ignore_case {
         template <class T> struct less;
         template <> struct less<wchar_t> {
@@ -79,7 +79,7 @@ namespace base { namespace win { namespace subprocess {
     };
 
     namespace pipe {
-        std::pair<FILE*, FILE*> open();
-        int                     peek(FILE* f);
+		std::pair<FILE*, FILE*> open();
+		int                     peek(FILE* f);
     }
-}}}
+}

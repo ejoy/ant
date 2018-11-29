@@ -10,7 +10,7 @@
 
 extern char **environ;
 
-namespace base { namespace posix { namespace subprocess {
+namespace ant::posix::subprocess {
 
     template <class T>
     struct allocarray {
@@ -231,4 +231,4 @@ namespace base { namespace posix { namespace subprocess {
             return (ioctl(fileno(f), FIONREAD, (char *) &count) < 0 ? -1 : count);
         }
     }
-}}}
+}
