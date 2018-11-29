@@ -154,9 +154,9 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 
 		if not prog then
 			return false, "Create shaderc process failed."
-		else
-			local ret = prog:read "a"
-			prog:close()
+		else			
+			local ret = stdout:read "a"
+			stdout:close()
 			local success = ret and ret:find("error", 1, true) == nil or false
 			return success, command .. "\n" .. ret
 		end

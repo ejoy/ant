@@ -10,12 +10,12 @@
 typedef std::wstring nativestring;
 
 std::wstring u2w(const char* str, size_t len) {
-    int wlen = ::MultiByteToWideChar(CP_UTF8, 0, str, len, NULL, 0);
+    int wlen = ::MultiByteToWideChar(CP_UTF8, 0, str, (int)len, NULL, 0);
     if (wlen <= 0) {
         return L"";
     }
     std::vector<wchar_t> result(wlen);
-    ::MultiByteToWideChar(CP_UTF8, 0, str, len, result.data(), wlen);
+    ::MultiByteToWideChar(CP_UTF8, 0, str, (int)len, result.data(), wlen);
     return std::wstring(result.data(), result.size());
 }
 
@@ -289,6 +289,7 @@ static int peek(lua_State* L) {
 
 #if defined(_WIN32)
 #include <fcntl.h>
+#include <io.h>
 
 static int filemode(lua_State* L) {
     luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);

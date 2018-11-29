@@ -122,6 +122,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "meshconverter", "meshconver
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "platform", "platform.vcxproj", "{C1F1965C-B68C-4CDF-87A8-89F5AAE79D60}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "subprocess", "subprocess.vcxproj", "{43EBC525-120E-430C-9E79-F351A13F11BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -362,6 +364,14 @@ Global
 		{C1F1965C-B68C-4CDF-87A8-89F5AAE79D60}.Release|x64.Build.0 = Release|x64
 		{C1F1965C-B68C-4CDF-87A8-89F5AAE79D60}.Release|x86.ActiveCfg = Release|Win32
 		{C1F1965C-B68C-4CDF-87A8-89F5AAE79D60}.Release|x86.Build.0 = Release|Win32
+		{43EBC525-120E-430C-9E79-F351A13F11BE}.Debug|x64.ActiveCfg = Debug|x64
+		{43EBC525-120E-430C-9E79-F351A13F11BE}.Debug|x64.Build.0 = Debug|x64
+		{43EBC525-120E-430C-9E79-F351A13F11BE}.Debug|x86.ActiveCfg = Debug|Win32
+		{43EBC525-120E-430C-9E79-F351A13F11BE}.Debug|x86.Build.0 = Debug|Win32
+		{43EBC525-120E-430C-9E79-F351A13F11BE}.Release|x64.ActiveCfg = Release|x64
+		{43EBC525-120E-430C-9E79-F351A13F11BE}.Release|x64.Build.0 = Release|x64
+		{43EBC525-120E-430C-9E79-F351A13F11BE}.Release|x86.ActiveCfg = Release|Win32
+		{43EBC525-120E-430C-9E79-F351A13F11BE}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

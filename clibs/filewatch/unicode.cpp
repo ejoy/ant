@@ -9,13 +9,13 @@ namespace ant {
         {
             return L"";
         }
-        int wlen = ::MultiByteToWideChar(CP_UTF8, 0, str.data(), str.size(), NULL, 0);
+        int wlen = ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), NULL, 0);
         if (wlen <= 0)
         {
             return L"";
         }
         std::vector<wchar_t> result(wlen);
-        ::MultiByteToWideChar(CP_UTF8, 0, str.data(), str.size(), result.data(), wlen);
+        ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), result.data(), (int)wlen);
         return std::wstring(result.data(), result.size());
     }
 
@@ -25,13 +25,13 @@ namespace ant {
         {
             return "";
         }
-        int len = ::WideCharToMultiByte(CP_UTF8, 0, wstr.data(), wstr.size(), NULL, 0, 0, 0);
+        int len = ::WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), NULL, 0, 0, 0);
         if (len <= 0)
         {
             return "";
         }
         std::vector<char> result(len);
-        ::WideCharToMultiByte(CP_UTF8, 0, wstr.data(), wstr.size(), result.data(), len, 0, 0);
+        ::WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), result.data(), (int)len, 0, 0);
         return std::string(result.data(), result.size());
     }
 
@@ -41,13 +41,13 @@ namespace ant {
         {
             return L"";
         }
-        int wlen = ::MultiByteToWideChar(CP_ACP, 0, str.data(), str.size(), NULL, 0);
+        int wlen = ::MultiByteToWideChar(CP_ACP, 0, str.data(), (int)str.size(), NULL, 0);
         if (wlen <= 0)
         {
             return L"";
         }
         std::vector<wchar_t> result(wlen);
-        ::MultiByteToWideChar(CP_ACP, 0, str.data(), str.size(), result.data(), wlen);
+        ::MultiByteToWideChar(CP_ACP, 0, str.data(), (int)str.size(), result.data(), wlen);
         return std::wstring(result.data(), result.size());
     }
 
@@ -57,13 +57,13 @@ namespace ant {
         {
             return "";
         }
-        int len = ::WideCharToMultiByte(CP_ACP, 0, wstr.data(), wstr.size(), NULL, 0, 0, 0);
+        int len = ::WideCharToMultiByte(CP_ACP, 0, wstr.data(), (int)wstr.size(), NULL, 0, 0, 0);
         if (len <= 0)
         {
             return "";
         }
         std::vector<char> result(len);
-        ::WideCharToMultiByte(CP_ACP, 0, wstr.data(), wstr.size(), result.data(), len, 0, 0);
+        ::WideCharToMultiByte(CP_ACP, 0, wstr.data(), (int)wstr.size(), result.data(), len, 0, 0);
         return std::string(result.data(), result.size());
     }
 
