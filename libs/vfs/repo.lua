@@ -409,8 +409,8 @@ function repo:dir(hash)
 end
 
 function repo:link(hash, plat, source_hash, lk_hash)
-	local source_path = repo:hash(source_hash)
-	local lk_path = repo:hash(lk_hash)
+	local source_path = self:hash(source_hash)
+	local lk_path = self:hash(lk_hash)
 	if not source_path or not lk_path then
 		if _DEBUG then print ("LINKFAIL", plat, source_hash) end
 		return
