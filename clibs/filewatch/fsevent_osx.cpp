@@ -19,7 +19,7 @@ namespace ant::osx::fsevent {
     }
 
     watch::watch() 
-		: m_stream(NULL)
+        : m_stream(NULL)
         , m_loop(NULL)
         , m_source(NULL)
         , m_gentask(kInvalidTaskId)

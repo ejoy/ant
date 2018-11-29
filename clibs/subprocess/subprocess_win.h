@@ -79,7 +79,7 @@ namespace ant::win::subprocess {
     };
 
     namespace pipe {
-		std::pair<FILE*, FILE*> open();
-		int                     peek(FILE* f);
+        std::pair<FILE*, FILE*> open();
+        int                     peek(FILE* f);
     }
 }
