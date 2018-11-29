@@ -175,4 +175,5 @@ void window_mainloop(struct ant_window_callback* cb) {
 			Sleep(0);
 		}
 	}
+	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
 }
