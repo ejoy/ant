@@ -62,7 +62,7 @@ bool FileWatch::Task::start() {
     }
     if (m_filter & FilterTime) {
         flags |= FILE_NOTIFY_CHANGE_LAST_WRITE
-              | FILE_NOTIFY_CHANGE_LAST_ACCESS;
+              | FILE_NOTIFY_CHANGE_LAST_ACCESS
               | FILE_NOTIFY_CHANGE_CREATION;
     }
     return !!::ReadDirectoryChangesW(

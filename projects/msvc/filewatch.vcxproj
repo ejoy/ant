@@ -24,7 +24,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\filewatch\filewatch.h" />
+    <ClInclude Include="..\..\clibs\filewatch\lockqueue.h" />
     <ClInclude Include="..\..\clibs\filewatch\queue.h" />
+    <ClInclude Include="..\..\clibs\filewatch\semaphore.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
