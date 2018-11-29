@@ -39,7 +39,6 @@ return function (plat, sourcefile, param, outfile)
 	end
 	local binfile, error = check_compile_shader(sourcefile, outfile, shadertype)
 	if error then
-		print(error)
 		return nil, error
 	end
 

@@ -1,7 +1,7 @@
 local fs = require "lfs"
 local fspath = require "filesystem.path"
 local util = require "filesystem.util"
-
+local subprocess = require "subprocess"
 local config = require "common.config"
 
 local PATH = "ant"
@@ -140,10 +140,20 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 		local command = string.gsub('$shaderc --platform $splat --type $stype $sopt -f "$src" -o "$dest" $inc',
 			"%$(%w+)", tbl)
 
-		local prog, err = io.popen(command .. "  2>&1")
+		local prog, stdout = subprocess.spawn {
+			tbl.shaderc,
+			"--platform", tbl.splat,
+			"--type", tbl.stype,
+			tbl.sopt,
+			"-f", tbl.src,
+			"-o", tbl.dest,
+			tbl.inc,
+			stdout = true,
+			hideWindow = true,
+		}
 
 		if not prog then
-			return false, err
+			return false, "Create shaderc process failed."
 		else
 			local ret = prog:read "a"
 			prog:close()
