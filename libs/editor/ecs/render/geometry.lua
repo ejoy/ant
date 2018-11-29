@@ -107,7 +107,7 @@ end
 local function gen_cricle_indices(ib, slices, baseidx)
 	local last_idx = baseidx
 	for i=1, slices do
-		local next_idx = i == slices and 0 or (last_idx + 1)					
+		local next_idx = i == slices and baseidx or (last_idx + 1)					
 		table.insert(ib, last_idx)
 		table.insert(ib, next_idx)
 
