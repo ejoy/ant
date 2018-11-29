@@ -2,23 +2,21 @@
 -- must call with: 'dofile "libs/vfs/vfspath.lua"'
 
 local lfs = require "lfs"
-local root = ...
-if root == "." then
-	root = lfs.currentdir()
+local enginepath = ...
+local repopath = lfs.currentdir()
+if enginepath == "." then
+	enginepath = repopath
 end
 
 -- this mount paths used in this simple vfs and libs/vfs/vfs.lua
-local _mounts = {
-	["engine/assets"] = root .. "/assets",
-	["engine/libs"] = root .. "/libs",
-	["engine/clibs"] = root .. "/clibs",
-	[""] = root,
+local mod_searchdirs = {	
+	["engine/libs"] = enginepath .. "/libs",
+	["engine/clibs"] = enginepath .. "/clibs",	
 }
--- another simple vfs interface, used before local vfs(in libs/vfs/vfs.lua) can be loaded using standard require
-local vfs = {}
-function vfs.realpath(filename)
+
+local function findpath(filename)
 	filename = filename:match "^/?(.-)/?$"	
-	for mname, mpath in pairs(_mounts) do
+	for mname, mpath in pairs(mod_searchdirs) do
 		if filename == mname then
 			return mpath
 		end
@@ -27,11 +25,11 @@ function vfs.realpath(filename)
 			return mpath .. "/" .. filename:sub(n+1)
 		end
 	end
-	return root .. "/" .. filename
+	return repopath .. "/" .. filename
 end
 
-function vfs.isfile(filename)
-	local rp = vfs.realpath(filename)
+local function isfile(filename)
+	local rp = findpath(filename)
 	return lfs.attributes(rp, "mode") == "file"
 end
 
@@ -42,7 +40,7 @@ local function searchpath(name, spath, sep, rep)
 	local newname = name:gsub("%" .. sep, rep)
 	for p in spath:gmatch("[^;]+") do
 		local newpath = p:gsub("%?", newname)		
-		if vfs.isfile(newpath) then
+		if isfile(newpath) then
 			return newpath
 		end
 		errmsg = errmsg .. ("\n\tfile not found '%s'"):format(newpath)
@@ -52,47 +50,62 @@ end
 
 local nativeio_open = io.open
 
-local function vfs_searcher_LUA(modname)
-	local mod_filepath, serr = searchpath(modname, package.path)
-	if mod_filepath == nil then
+local function searcher_LUA(modname)
+	local modpath, serr = searchpath(modname, package.path)
+	if modpath == nil then
 		return serr
 	end
 
-	local real_modfilepath = vfs.realpath(mod_filepath)
-	if real_modfilepath == nil then
-		error(string.format("not found file '%s' in vfs", real_modfilepath))
+	local rmodpath = findpath(modpath)
+	if rmodpath == nil then
+		error(string.format("not found file '%s' in vfs", rmodpath))
 	end
 
-	local f = nativeio_open(real_modfilepath, "r")
+	local f = nativeio_open(rmodpath, "r")
 	if f == nil then
-		error(string.format("open file failed:'%s'", real_modfilepath))
+		error(string.format("open file failed:'%s'", rmodpath))
 	end
 
 	local c = f:read "a"
-	local func, lerr = load(c, "@vfs://" .. mod_filepath)
+	local func, lerr = load(c, "@vfs://" .. modpath)
 	if lerr then
-		error(string.format("load file '%s' failed: %s", mod_filepath, lerr))
+		error(string.format("load file '%s' failed: %s", modpath, lerr))
 	end
-	return func, mod_filepath
+	return func, modpath
 end
 
-package.searchers[2] = vfs_searcher_LUA
+package.searchers[2] = searcher_LUA
 package.searchpath = searchpath
 
 -- engine/clibs/?.lua for searching wrapper lua in c module
 package.path = "?.lua;engine/libs/?.lua;engine/libs/?/?.lua;engine/clibs/?.lua" 
 
 -- standrad require method to load "libs/vfs/vfs.lua"
-local realvfs = require "vfs"
-realvfs.mount(_mounts, root)
+local vfs = require "vfs"
+
+if lfs.exist(repopath .. "/.mount") then
+	if not vfs.open(repopath) then
+		error(string.format("open repo failed, repo path : %s", repopath))
+	end
+else
+	local mounts = {
+		["engine/assets"] = enginepath .. "/assets",
+		[""] = repopath,
+	}
+	for name, path in pairs(mod_searchdirs) do
+		mounts[name] = path
+	end
+	vfs.mount(mounts, repopath)
+end
+
 
 -- init local repo
-local repopath = realvfs.repopath()
-if not lfs.exist(repopath) then
-	lfs.mkdir(repopath)
+local repo_cachepath = vfs.repopath()
+if not lfs.exist(repo_cachepath) then
+	lfs.mkdir(repo_cachepath)
 end
 for i=0,0xff do
-	local abspath = string.format("%s/%02x", repopath , i)
+	local abspath = string.format("%s/%02x", repo_cachepath , i)
 	if lfs.attributes(abspath, "mode") ~= "directory" then
 		assert(lfs.mkdir(abspath))
 	end

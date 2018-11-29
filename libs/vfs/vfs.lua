@@ -7,6 +7,7 @@ local localvfs = {} ; localvfs.__index = localvfs
 local lfs = require "lfs"
 local access = require "vfs.repoaccess"
 local platform = require "platform"
+local localfile = require "filesystem.file"
 
 local function isdir(filepath)
 	return lfs.attributes(filepath, "mode") == "directory"
@@ -14,7 +15,7 @@ end
 
 --luacheck: ignore readmount
 local function readmount(filename)
-	local f = io.open(filename, "rb")
+	local f = localfile.open(filename, "rb")
 	local ret = {}
 	if not f then
 		return ret

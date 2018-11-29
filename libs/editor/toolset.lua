@@ -156,16 +156,17 @@ end
 local function load_config()
 	local home = util.personaldir()
 	local toolset_path = string.format("%s/%s/toolset.lua", home, PATH)
+	
 	local ret = {}
-	local f, err = loadfile(toolset_path, "t", ret)
-	if f == nil then
-		print(err)	
-		for k, v in pairs(default_toolset) do
-			ret[k] = v
-		end
-	else
-		f()
-	end	
+	local lfs = require "lfs"
+	if lfs.exist(toolset_path) then
+		local rawtable = require "common.rawtable"
+
+		ret = rawtable(toolset_path, function (filename)
+			local fu = require "filesystem.util"
+			return fu.read_from_file(filename)
+		end)
+	end
 	return ret
 end
 

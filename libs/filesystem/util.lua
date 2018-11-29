@@ -3,6 +3,7 @@ util.__index = util
 
 local lfs = require "lfs"
 local path = require "filesystem.path"
+local localfile = require "filesystem.file"
 
 function util.exist(path)
 	if lfs.exist then
@@ -12,14 +13,14 @@ function util.exist(path)
 end
 
 function util.write_to_file(fn, content, mode)
-    local f = io.open(fn, mode or "w")
+    local f = localfile.open(fn, mode or "w")
     f:write(content)
 	f:close()
 	return fn
 end
 
 function util.read_from_file(filename)
-    local f = io.open(filename, "r")
+    local f = localfile.open(filename, "r")
     local content = f:read("a")
     f:close()
     return content

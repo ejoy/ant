@@ -1,7 +1,7 @@
 local toolset = require "editor.toolset"
 local path = require "filesystem.path"
 local fu = require "filesystem.util"
-local lfs = require "lfs"
+local vfs = require "vfs"
 
 local config = require "common.config"
 
@@ -10,23 +10,13 @@ local platform = config.platform()
 local function compile_shader(filename, outfilename, shadertype)
     local config = toolset.load_config()
 	if next(config) then		
-		config.includes = {config.shaderinc, lfs.currentdir() .. "/assets/shaders/src"}
+		local engineshaderpath = vfs.realpath("engine/assets/shaders/src")
+		config.includes = {config.shaderinc, engineshaderpath}
         config.dest = outfilename
 		return toolset.compile(filename, config, shadertype, platform)
 	end
 	
 	return nil, "config is empty, try run clibs/lua/lua.exe config.lua"
-end
-
-local function gen_output_path(srcpath, shadertype)
-	assert(path.ext(srcpath):lower() == "sc")
-	
-	local dstpath, subnum = srcpath:gsub("(.+[/\\]shaders[/\\])src(.+)%.sc", "%1" .. shadertype .. "%2.bin")
-	if subnum == 0 then
-		local filename = path.replace_ext(path.filename(srcpath), "bin")
-		return path.join(path.parent(srcpath), shadertype, filename)
-	end
-	return dstpath	
 end
 
 local function check_compile_shader(srcpath, outfile, shadertype)	
