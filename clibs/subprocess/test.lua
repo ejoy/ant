@@ -1,4 +1,4 @@
-package.cpath = package.cpath .. ';./Debug/?.dll'
+package.cpath = package.cpath:gsub("%.so", ".dll")
 
 local function luaexe()
     local i = -1
