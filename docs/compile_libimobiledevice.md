@@ -18,6 +18,7 @@ pacman -S openssl-devel
 ./autogen.sh
 make
 make intasll
+cp ./src/.libs/msys-plist++-3.dll ../../bin/
 ```
 
 3. 编译libusbmuxd
@@ -33,5 +34,8 @@ make intasll SUBDIRS="common src include"
 make SUBDIRS="common src include docs" INCLUDES="-I../../libplist/include -I../../libusbmuxd/include"
 ```
 
-
-
+5. 从mingw的目录复制两个dll
+```
+libcrypto-1_1-x64.dll
+libssl-1_1-x64.dll
+```

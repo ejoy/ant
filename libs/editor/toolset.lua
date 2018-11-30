@@ -173,7 +173,7 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 								option:%s\n\
 								source:%s\n\
 								output:%s\n\
-								includes:%s\n", tbl.shaderc, tbl.splat, tbl.stype, tbl.soptn, tbl.src, tbl.dest, inc)
+								includes:%s\n", tbl.shaderc, tbl.splat, tbl.stype, tbl.sopt, tbl.src, tbl.dest, inc)
 						end
 						err = err .. cmd_desc(tbl) .. "\n" .. ret
 					end

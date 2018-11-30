@@ -17,10 +17,10 @@ local function log_err(src, lk, err)
 			lfs.mkdir("log")
 		end
 
-		logfile = localfile.open("log/fileconvert.log")
+		logfile = localfile.open("log/fileconvert.log", "wb")
 	end
 
-	logfile:write(string.format("[fileconvert]src:%s, lk:%s, error:\n", src, lk, err))
+	logfile:write(string.format("[fileconvert]src:%s, lk:%s, error:%s\n", src, lk, err))
 	logfile:flush()
 end
 

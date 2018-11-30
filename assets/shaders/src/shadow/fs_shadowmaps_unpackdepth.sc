@@ -14,6 +14,6 @@ uniform vec4 u_params2;
 void main()
 {
 	float depth = unpackRgbaToFloat(texture2D(s_shadowMap0, v_texcoord0) );
-	vec3 rgba = pow(vec3_splat(depth), vec3_splat( 10 )) ; //u_depthValuePow) );
-	gl_FragColor =  vec4(rgba, 1.0);
+	float result = pow(depth, 10) ; //u_depthValuePow) );	
+	gl_FragColor =  vec4(result, result, result, 1.0);
 }

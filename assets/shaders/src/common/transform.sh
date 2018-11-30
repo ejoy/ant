@@ -3,7 +3,7 @@ mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 	mat4 wolrdMat = mat4(0);
 	for (int ii = 0; ii < 4; ++ii)
 	{
-		int id = indices[ii];
+		int id = int(indices[ii]);
 		float weight = weights[ii];
 
 		wolrdMat += u_model[id] * weight;
