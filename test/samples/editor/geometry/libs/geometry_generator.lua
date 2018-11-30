@@ -4,7 +4,7 @@ local world = ecs.world
 ecs.import "render.camera.camera_component"
 ecs.import "render.entity_rendering_system"
 
-ecs.import "libs.debug_drawing"
+ecs.import "editor.ecs.debug.debug_drawing"
 
 ecs.import "editor.ecs.general_editor_entities"
 ecs.import "editor.ecs.camera_controller"
