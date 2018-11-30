@@ -1229,38 +1229,6 @@ static int _table2fd_set(lua_State *L, int idx, fd_set *s)
 	return maxfd;
 }
 
-/* _push_sock_for_fd
- * 
- * helper function for lsocket_select
- * finds a socket object in the table at index idx on the lua stack whose
- * file descriptor is equal to fd, and leaves that on the stack.
- * 
- * Arguments:
- * 	L	Lua State
- * 	idx	index at which the table with the lSocket userdata resides
- * 	fd	file descriptor to search for
- * 
- * Returns:
- * 	1 if a socket was found, which is then left on the stack
- *  0 if no socket was found, nothing on the stack
- */	
-static int _push_sock_for_fd(lua_State *L, int idx, int fd)
-{
-	int i = 1;
-	lua_rawgeti(L, idx, i++);
-	while (lsocket_islSocket(L, -1)) {
-		lSocket *sock = lsocket_checklSocket(L, -1);
-		if (sock->sockfd == fd) return 1;
-		lua_pop(L, 1);
-		lua_rawgeti(L, idx, i++);
-	}
-	
-	if (!lua_isnil(L, -1) && !lsocket_islSocket(L, -1))
-		return luaL_error(L, "bad argument to 'select' (tables can only contain sockets)");
-	
-	return 0;
-}
-
 /* _fd_set2table
  * 
  * helper for lsocket_select
@@ -1279,17 +1247,21 @@ static int _push_sock_for_fd(lua_State *L, int idx, int fd)
  */
 static int _fd_set2table(lua_State *L, int idx, fd_set *s, int maxfd)
 {
-	int i, n = 1;
-	lua_newtable(L);
-	for (i = 0; i <= maxfd; ++i) {
-		if (FD_ISSET(i, s)) {
-			if (_push_sock_for_fd(L, idx, i))
-				lua_rawseti(L, -2, n++);
-			else
-				return luaL_error(L, "unexpected file descriptor returned from select");
-		}
-	}
-	return 1;
+  int i = 1, n = 1;
+  lua_newtable(L);
+  while (lua_rawgeti(L, idx, i++) , lsocket_islSocket(L, -1)) {
+    lSocket *sock = lsocket_checklSocket(L, -1);
+    if (FD_ISSET(sock->sockfd, s)) {
+      lua_rawseti(L, -2, n++);
+    } else {
+      lua_pop(L, 1);
+    }
+  }
+  if (!lua_isnil(L, -1) && !lsocket_islSocket(L, -1))
+    return luaL_error(L, "bad argument to 'select' (tables can only contain sockets)");
+  lua_pop(L, 1);
+  
+  return 1;
 }
 
 /* lsocket_select
