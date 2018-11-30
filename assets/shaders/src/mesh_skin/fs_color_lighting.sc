@@ -1,11 +1,9 @@
 $input v_normal, v_viewdir, v_color0
 #include "common.sh"
+#include "common/uniforms.sh"
 #include "common/lighting.sh"
 
 SAMPLER2D(s_basecolor, 0);
-
-uniform vec4 directional_lightdir[1];
-uniform vec3 u_eyepos;
 
 void main()
 {
