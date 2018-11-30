@@ -7,6 +7,7 @@ local vfs = require "vfs"
 local exts = {
 	sc = true,
 	fbx = true,
+	bin = true,
 }
 
 function util.need_build(srcfilepath)
