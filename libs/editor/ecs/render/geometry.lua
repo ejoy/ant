@@ -319,7 +319,7 @@ local function tessellateion(vb, ib, radius)
 	for f=0, numfaces-1 do
 		local function get_v(idx)				
 			local i = ib[f*3+idx]
-			return vb[i]
+			return vb[i+1]
 		end
 		
 		local v0, v1, v2 = get_v(1), get_v(2), get_v(3)
@@ -332,7 +332,7 @@ local function tessellateion(vb, ib, radius)
 			local l = math.sqrt(t[1] * t[1] + t[2] * t[2] + t[3] * t[3])
 			local factor = radius / l
 			t[1] = t[1] * factor
-			t[2] = t[1] * factor
+			t[2] = t[2] * factor
 			t[3] = t[3] * factor
 			return t
 		end
@@ -344,7 +344,8 @@ local function tessellateion(vb, ib, radius)
 			/\
 		m2 /__\ m0
 		  / \/ \
-		 v2 m1 v1
+		 /___|__\
+		v2  m1  v1
 ]]
 		local vbsize = #newvb
 		table.insert(newvb, v0)
@@ -354,15 +355,18 @@ local function tessellateion(vb, ib, radius)
 		table.insert(newvb, m0)
 		table.insert(newvb, m1)
 		table.insert(newvb, m2)
-		
-		for _, v in ipairs {
+
+		local newindices = {
 			0, 3, 5,
 			1, 4, 3, 
 			3, 4, 5,
 			2, 5, 4,
-		} do
-			table.insert(newib, vbsize + v)
+		}
+
+		for i=1, #newindices do
+			newindices[i] = newindices[i] + vbsize
 		end	
+		table.move(newindices, 1, #newindices, #newib+1, newib)
 	end
 
 	return newvb, newib
