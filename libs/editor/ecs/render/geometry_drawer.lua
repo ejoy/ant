@@ -32,6 +32,45 @@ local function append_array(from, to)
 	table.move(from, 1, #from, #to+1, to)
 end
 
+local function create_bone(bone, color, transform, ratio)
+	local vb, ib = {}, {}
+	local vbup, ibup = geo.cone(4, ratio, ratio, true, true)
+	local vbdown, ibdown = geo.cone(4, -(1 - ratio), ratio, true, true)
+
+	append_array(vbup, vb)
+	append_array(vbdown, vb)
+
+	append_array(ibup, ib)
+	append_array(ibdown, ib)
+
+	local function bone_transform(b)
+		local r = ms(b.r, "eP")
+		return ms({type="srt", r=r, s=b.s, t=b.t}, "P")
+	end
+
+	local bonetrans = bone_transform(bone)
+	local trans = ms({type="srt", r={180, 0, 0}, t={0, 0.3, 0}}, "P")
+	local finaltrans = ms(transform, bonetrans, trans, "**P")
+	for i=1, #vb do
+		local v = vb[i]
+		local nv = ms({v[1], v[2], v[3], 1}, finaltrans, "T")
+		nv[4] = color
+		vb[i] = nv
+	end
+end
+
+function draw.draw_bones(bones, color, transform, desc)
+	local dvb = desc.vb
+	local dib = desc.ib
+	local updown_ratio = 0.3
+	for _, b in ipairs(bones) do
+		local vb, ib = create_bone(b, color, transform, updown_ratio)
+		
+		append_array(vb, dvb)
+		append_array(ib, dib)
+	end
+end
+
 function draw.draw_line(pts, color, transform, desc)
 	local vb = assert(desc.vb)
 

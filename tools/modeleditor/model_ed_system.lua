@@ -30,13 +30,15 @@ ecs.import "editor.ecs.render.widget_system"
 
 -- editor elements
 ecs.import "editor.ecs.general_editor_entities"
+ecs.import "editor.ecs.debug.debug_drawing"
+
+
 local bu = require "bullet.lua.util"
-
 local bgfx = require "bgfx"
-
 local ms = require "math.stack"
 
 local model_ed_sys = ecs.system "model_editor_system"
+model_ed_sys.singleton "debug_object"
 
 model_ed_sys.depend "camera_init"
 
@@ -47,10 +49,14 @@ local windows = model_windows()
 local assetmgr = require "asset"
 local comp_util = require "render.components.util"
 local fu = require "filesystem.util"
+local geodrawer = require "editor.ecs.render.geometry_drawer"
 
 local modelutil = require "modelloader.util"
 local me_util = require "tools.modeleditor.util"
 
+local function draw_bones(desc, ske)
+	geodrawer.draw_bones(ske, 0xffa8a8a8, nil, desc)	
+end
 
 local function gen_mesh_assetinfo(skinning_mesh_comp)	
 	local skinning_mesh = skinning_mesh_comp.assetinfo.handle
@@ -456,4 +462,15 @@ function model_ed_sys:init()
 	create_plane_entity()
 
 	focus_sample()
+end
+
+function model_ed_sys:update()
+	if sample_eid then
+		local e = world[sample_eid]
+		if e then
+			local ske = assert(e.skeleton)
+			local desc = self.debug_object.renderobjs.wireframe.desc
+			draw_bones(desc, ske)
+		end
+	end
 end

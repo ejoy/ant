@@ -5,10 +5,6 @@ local geo = require "editor.ecs.render.geometry"
 
 function util.bones(ske)
 	assert(type(ske) == "userdata")
-
-	local vb, ib = geo.cone(3, 1, 0.5, true, true)
-	
-
 end
 
 function util.create_aabb_descs(mesh, materialfile)

@@ -123,13 +123,11 @@ function geometry.cone(slices, height, radius, needib, line)
 				return 
 			end
 
-			local half_height = height * 0.5			
-
 			local vb = {
-				{0, half_height, 0},	-- top center
-				{0, -half_height, 0}	-- bottom center
+				{0, height, 0},	-- top center
+				{0, 0, 0}	-- bottom center
 			}
-			gen_cricle_vertices(vb, slices, -half_height, radius)
+			gen_cricle_vertices(vb, slices, 0, radius)
 			return vb
 		end
 	end
