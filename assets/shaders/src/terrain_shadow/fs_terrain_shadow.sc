@@ -3,6 +3,7 @@ $input v_position, v_normal, v_texcoord0, v_texcoord1,  v_texcoord4, v_texcoord5
 
 #include "../common/common.sh"
 #include "common/uniforms.sh"
+#include "common/lighting.sh"
 
 #define u_shadowMapOffset u_params1.y
 
@@ -21,29 +22,6 @@ uniform int s_showMode;             // debug output normal,fog
 
 SAMPLER2D(s_baseTexture,0);
 SAMPLER2D(s_maskTexture,1);
-
-// 可以统一加到 common 库，作为通用 ambient 函数
-// normal must transfer to worldspace
-vec4 get_ambient_color(float ambientMode,vec3 normal) 
-{
-	// gradient mode 
-	if(ambientMode == 2.0) {
-		float angle = normal.y;
-		if(angle>0)
-			return (ambient_skycolor*angle) + (ambient_midcolor*(1-angle));
-		else {
-			angle = - angle;
-		    return (ambient_groundcolor*angle) + (ambient_midcolor*(1-angle));
-		}
-	    return ambient_midcolor;
-	}
-	// default classic mode 
-	return ambient_skycolor;
-}
-
-float rand(vec2 co){
- 	return fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453);
-}
 
 
 void main()
@@ -78,7 +56,7 @@ void main()
 	} 
  
 	float ambientMode = ambient_mode.x;
-	vec4  ambientColor = get_ambient_color(ambientMode,v_normal.xyz);
+	vec4  ambientColor = calc_ambient_color(ambientMode,v_normal.xyz);
 		  ambientColor.a = 0.0;      				 		// notice
 		  ambientColor = ambientColor*textureColor;  		// *0.25;   // divide four pass 
 	vec4  diffuseColor = lightColor*textureColor*maskColor;
