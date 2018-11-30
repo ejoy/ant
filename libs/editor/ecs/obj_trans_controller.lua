@@ -288,9 +288,9 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 	for k, v in pairs(fullaxis_config) do
 		local eid = components_util.create_render_entity(world, prefixname .. v.name .. suffixname,		
 							v.meshfile, materialfile)
-		world:add_component(eid, "hierarchy_parent", tag_comp, "editor")
+		world:add_component(eid, "parent", tag_comp, "editor")
 		local obj = world[eid]
-		obj.hierarchy_parent.eid = hie_eid
+		obj.parent.eid = hie_eid
 
 		local properties = assert(obj.material.content[1].properties)
 		properties.u_color = {type="color", name="color", value=cu.deep_copy(color)}
@@ -421,7 +421,7 @@ local function add_rotator_entities(colors)
 		local function add_entity(name, meshfilename, colorname)
 			local eid = components_util.create_render_entity(world, name, meshfilename,
 			"obj_trans/obj_trans.material")
-			world:add_component(eid, "rotator_transform", "editor", "hierarchy_parent")
+			world:add_component(eid, "rotator_transform", "editor", "parent")
 			local entity = world[eid]
 	
 			local properties = assert(entity.material.content[1].properties)
@@ -429,7 +429,7 @@ local function add_rotator_entities(colors)
 			entity.can_render = false
 			mu.identify_transform(entity)
 	
-			entity.hierarchy_parent.eid = elem_eid
+			entity.parent.eid = elem_eid
 			return eid
 		end
 	

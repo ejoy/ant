@@ -124,7 +124,7 @@ ecs.component "control_state" {
 	type = "string",	
 }
 
-ecs.component_struct "hierarchy_parent" {
+ecs.component_struct "parent" {
 	eid = -1
 }
 -- mode = color or factor, gradient, skybox etc

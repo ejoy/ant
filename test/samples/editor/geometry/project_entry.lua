@@ -19,5 +19,5 @@ local dlg = iup.dialog {
 dlg:showxy(iup.CENTER, iup.CENTER)
 
 editor.run(fbw, fbh, canvas, {
-	"test.samples.geometry.geometry_generator"
+	"libs.geometry_generator"
 })
