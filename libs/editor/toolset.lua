@@ -159,8 +159,23 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 				if ret and ret ~= "" then
 					success = ret:find("error", 1, true) == nil
 					if not success then
-						err = err .. string.gsub('$shaderc --platform $splat --type $stype $sopt -f "$src" -o "$dest" $inc',
-						"%$(%w+)", tbl) .. "\n" .. ret
+
+						local function cmd_desc(tbl)
+							local inc = ''
+							for _, i in ipairs(tbl.inc) do
+								inc = inc .. '\t' .. i
+							end
+
+							return string.format(
+								"shaderc:%s\n\
+								platform:%s\n\
+								type:%s\n\
+								option:%s\n\
+								source:%s\n\
+								output:%s\n\
+								includes:%s\n", tbl.shaderc, tbl.splat, tbl.stype, tbl.soptn, tbl.src, tbl.dest, inc)
+						end
+						err = err .. cmd_desc(tbl) .. "\n" .. ret
 					end
 				end
 	
