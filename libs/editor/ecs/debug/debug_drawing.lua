@@ -97,7 +97,10 @@ function debug_draw:update()
 
 	mu.identify_transform(dbentity)
 	
-	local function commit_desc(desc)		
+	local function commit_desc(desc)	
+		if next(desc.vb) == nil then
+			return
+		end
 		local materialpath = desc.material
 		if materialpath and materialpath ~= "" then
 			check_add_material(mc, materialpath)
