@@ -273,21 +273,9 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 	hie_entity.editable_hierarchy.root = assetmgr.load(axis_hierarchyname, {editable=true})
 
 	local namemapper = hie_entity.hierarchy_name_mapper
-
-	local fullaxis_config = {
-		head = {
-			name = "head-",
-			meshfile = headmeshfile,
-		},
-		axis = {
-			name = "axis-",
-			meshfile = axismeshfile,
-		}
-	}
-
-	for k, v in pairs(fullaxis_config) do
-		local eid = components_util.create_render_entity(world, prefixname .. v.name .. suffixname,		
-							v.meshfile, materialfile)
+	local function create_mesh_entity(name, meshfile)
+		local eid = components_util.create_render_entity(world, prefixname .. name .. "-" .. suffixname,
+							meshfile, materialfile)
 		world:add_component(eid, "parent", tag_comp, "editor")
 		local obj = world[eid]
 		obj.parent.eid = hie_eid
@@ -295,11 +283,15 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 		local properties = assert(obj.material.content[1].properties)
 		properties.u_color = {type="color", name="color", value=cu.deep_copy(color)}
 		obj.can_render = false
-		namemapper[k] = eid
+		namemapper[name] = eid
 
-		-- print("axis-base object : ", obj.name)
-		-- mu.print_srt(obj, 1)
+		print("axis-base object : ", obj.name)
+		mu.print_srt(obj, 1)
 	end
+
+	create_mesh_entity("head", headmeshfile)
+	create_mesh_entity("axis", axismeshfile)
+
 	return hie_eid
 end
 
