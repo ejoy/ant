@@ -282,8 +282,8 @@ function editor_sys:init()
 				local eid = node.eid
 				build_pv(eid, get_extendtree(eid))
 
-				world:change_component(eid, "focus_selected_obj")
-				world:notify()
+				local camerautil = require "render.camera.util"
+				camerautil.focus_selected_obj(world, eid)
 			end
 		end
 	end

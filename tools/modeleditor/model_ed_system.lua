@@ -197,9 +197,9 @@ local function init_lighting()
 end
 
 local function focus_sample()
-	if sample_eid then		
-		world:change_component(sample_eid, "focus_selected_obj")
-		world.notify()
+	if sample_eid then
+		local camerautil = require "render.camera.util"
+		camerautil.focus_selected_obj(world, sample_eid)		
 	end
 end
 
