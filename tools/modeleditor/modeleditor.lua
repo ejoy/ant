@@ -20,6 +20,7 @@ local ani_text = iup.label {
 }
 
 local anitime_slider = iup.val{	
+	NAME="ANITIME_SLIDER",
 	MIN=0, MAX=1, VALUE="0.3",
 	EXPAND="HORIZONTAL",
 	mousemove_cb=function()
@@ -53,13 +54,14 @@ local animation_time = iup.vbox {
 	ALIGNMENT = "ACENTER",
 }
 
-local function create_pathctrl(title)
+local function create_pathctrl(title, name)
 	local btn = iup.button {
 		TITLE="Browse",
 		ALIGNMENT="ARIGHT",
 	}
 
 	local path_inputer = iup.text {
+		NAME=name,
 		ALIGNMENT="ALEFT",
 		EXPAND ="ON",
 		SIZE="120x0",
@@ -75,11 +77,12 @@ local function create_pathctrl(title)
 	}
 end
 
-local ske_pathctrl = create_pathctrl("Skeleton")
-local ani_pathctrl = create_pathctrl("Animation")
-local mesh_pathctrl = create_pathctrl("Mesh")
+local ske_pathctrl = create_pathctrl("Skeleton", "SKE_PATH")
+local ani_pathctrl = create_pathctrl("Animation", "ANI_PATH")
+local mesh_pathctrl = create_pathctrl("Mesh", "SM_PATH")
 
 local anilist_ctrller = iup.list {
+	NAME="ANI_LIST",
 	SIZE="160x0",
 	EXPAND="ON",
 	"None",
@@ -129,23 +132,12 @@ local dlg = iup.dialog {
 	title = "Model Editor",	
 }
 
-local function get_path_inputer(ctrl)
-	return ctrl[1][1]
-end
-
-function model_windows()
-	return {
-		anitime_slider=anitime_slider,
-		anitime_inputer=anitime_inputer,
-		ske_path=get_path_inputer(ske_pathctrl),
-		ani_path=get_path_inputer(ani_pathctrl),
-		mesh_path=get_path_inputer(mesh_pathctrl),
-		anilist=anilist_ctrller,
-	}
-end
-
 dlg:showxy(iup.CENTER, iup.CENTER)
 dlg.usersize = nil
+
+function main_dialog()
+	return dlg
+end
 
 editor.run(fbw, fbh, canvas, {
 	"tools.modeleditor.model_ed_system"
