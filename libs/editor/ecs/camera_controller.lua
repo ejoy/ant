@@ -6,9 +6,6 @@ ecs.import "render.components.general"
 ecs.import "inputmgr.message_system"
 ecs.import "timer.timer"
 
-local ms = require "math.stack"
-local cu = require "render.components.util"
-
 local point2d = require "math.point2d"
 
 local camera_util = require "render.camera.util"
@@ -132,59 +129,4 @@ function camera_controller_system:update()
 
 		camera_util.move(camera, dx*deltaTime, dy*deltaTime, dz*deltaTime)
 	end 
-end 	
-
---luacheck: ignore self
-function camera_controller_system.notify:focus_selected_obj(objects)
-	--only using first obj
-	local eid = objects[1]
-	local e = world[eid]
-
-	if e == nil then
-		return
-	end
-
-	if not cu.is_entity_visible(e) then
-		return 
-	end
-
-	local mesh = e.mesh
-
-	if mesh == nil then
-		return 
-	end
-
-	local handle = mesh.assetinfo.handle
-
-	local bounding = handle.groups[1].bounding			
-	if nil == bounding then
-		return 
-	end
-
-	local commonutil = require "common.util"
-	
-	local aabb = commonutil.deep_copy(bounding.aabb)
-	--[[
-		here is what this code do:
-			1. get world mat in this entity ==> worldmat 
-			2. transform aabb ==> aabb
-			3. get aabb center and square aabb radius ==> center, radius
-			4. calculate current camera position to aabb center direction ==> dir
-			5. calculate new camera position ==> 
-					newposition = center - radius * dir, here, minus dir is for negative the direction
-			6. change camera direction as new direction
-
-	]]
-	local math3dlib = require "math3d.baselib"
-	local worldmat = ms({type="srt", s=e.scale, r=e.rotation, t=e.position}, "m")
-	math3dlib.transform_aabb(worldmat, aabb)
-	local center = ms(aabb.max, aabb.min, "-", {0.5}, "*P")
-	local radius = ms(aabb.max, aabb.min, "-1.P")
-
-	local camera = world:first_entity("main_camera")
-	local dir = ms(center, camera.position, "-nP")
-
-	ms(camera.position, center, dir, radius, "*-=")
-	ms(camera.rotation, dir, "D=")
 end
---@]

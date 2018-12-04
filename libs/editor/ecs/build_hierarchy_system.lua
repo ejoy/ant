@@ -91,11 +91,10 @@ local function rebuild_hierarchy(iterop)
 			local mapper = pe.hierarchy_name_mapper
 			if mapper then				
 				local builddata = assetmgr.load(pe.hierarchy.ref_path)
-				pe.hierarchy.builddata = builddata
-				local srt = psrt
+				pe.hierarchy.builddata = builddata				
 				for _, node in ipairs(builddata) do
 					local rot = ms({type="q", table.unpack(node.r)}, "eP")
-					local csrt = ms({type="srt", s=node.s, r=rot, t=node.t}, srt, "*P")
+					local csrt = ms(psrt, {type="srt", s=node.s, r=rot, t=node.t}, "*P")
 					local s, r, t = ms(csrt, "~PPP")
 					local ceid = mapper[node.name]
 					local ce = world[ceid]

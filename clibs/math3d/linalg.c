@@ -322,7 +322,7 @@ new_page(struct lastack *LS, void *page) {
 
 static inline int
 get_type_size(int type) {
-	const int sizes[LINEAR_TYPE_COUNT] = { 16, 4, 4, 1, 3 };
+	const int sizes[LINEAR_TYPE_COUNT] = { 16, 4, 1, 4, 3 };
 	assert(LINEAR_TYPE_MAT <= type && type < LINEAR_TYPE_COUNT);
 	return sizes[type];
 }

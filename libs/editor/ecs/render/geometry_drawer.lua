@@ -5,7 +5,7 @@ local ms = require "math.stack"
 
 local function gen_color_vertex(pt, color, transform)
 	assert(#pt == 3)
-	local npt = ms({pt[1], pt[2], pt[3], 1}, transform, "*T")
+	local npt = ms(transform, {pt[1], pt[2], pt[3], 1}, "*T")
 	npt[4] = color
 	return npt
 end

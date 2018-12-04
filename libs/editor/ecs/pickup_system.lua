@@ -217,7 +217,7 @@ function pickup_sys:init()
 	local pickup_eid = add_pick_entity()
 
 	self.message.observers:add({
-		button = function (_, b, p, x, y)
+		mouse_click = function (_, b, p, x, y)
 			if b == "LEFT" and p then
 				local entity = world[pickup_eid]
 				if entity then

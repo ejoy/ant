@@ -45,10 +45,8 @@ model_ed_sys.singleton "debug_object"
 
 model_ed_sys.depend "camera_init"
 
--- luacheck: globals model_windows
+-- luacheck: globals main_dialog
 -- luacheck: globals iup
-local windows = model_windows()
-
 local function get_ani_cursor(slider)
 	assert(tonumber(slider.MIN) == 0)
 	assert(tonumber(slider.MAX) == 1)
@@ -66,9 +64,10 @@ end
 local sample_eid
 
 local function init_control()
-	local skepath_ctrl = windows.ske_path
-	local anipath_ctrl = windows.ani_path
-	local meshpath_ctrl = windows.mesh_path
+	local dlg = main_dialog()
+	local skepath_ctrl = iup.GetDialogChild(dlg, "SKE_PATH")
+	local anipath_ctrl = iup.GetDialogChild(dlg, "ANI_PATH")
+	local meshpath_ctrl = iup.GetDialogChild(dlg, "SM_PATH")
 
 	local function check_create_sample_entity(sc, ac, mc)
 		local anipath = ac.VALUE
@@ -117,8 +116,7 @@ local function init_control()
 	meshpath_ctrl.VALUE = "meshes/mesh.ozz"
 	check_create_sample_entity(skepath_ctrl, anipath_ctrl, meshpath_ctrl)
 
-	local slider = windows.anitime_slider
-	local dlg = iup.GetDialog(slider)
+	local slider = iup.GetDialogChild(dlg, "ANITIME_SLIDER")
 
 	local function update_static_duration_value()
 		if sample_eid then
@@ -199,9 +197,9 @@ local function init_lighting()
 end
 
 local function focus_sample()
-	if sample_eid then		
-		world:change_component(sample_eid, "focus_selected_obj")
-		world.notify()
+	if sample_eid then
+		local camerautil = require "render.camera.util"
+		camerautil.focus_selected_obj(world, sample_eid)		
 	end
 end
 

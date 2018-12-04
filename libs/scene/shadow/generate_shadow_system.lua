@@ -406,7 +406,7 @@ local function worldSpaceFrustumCorners( corners, near, far, projW, projH, invVi
 
     -- convert to world space 
     for i= 1,numCorners do 
-        local t_vec = ms(tmp_c[i],invViewMatrix,"*P")           
+        local t_vec = ms(invViewMatrix, tmp_c[i], "*P")           
         corners[i] = t_vec
         --// local t = ms(t_vec,"T")                                 
         --// local vec = math3d.ref "vector"
@@ -420,7 +420,7 @@ local function worldSpaceFrustumCorners( corners, near, far, projW, projH, invVi
 end 
 
 local function computeViewSpaceComponents(light,mtx)
-     local rv = ms( light.position, mtx,"*P")                 
+     local rv = ms( mtx, light.position, "*P")                 
      ms( light.position_ViewSpace,rv,"=")                     
 end 
 
@@ -595,7 +595,7 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
             local max = { -9999,-9999,-9999}
 
             for j = 1, numCorners do 
-                local lightSpaceCorner = ms(fc[j],lightView[1],"*P")
+                local lightSpaceCorner = ms(lightView[1], fc[j],"*P")
                 local t = ms(lightSpaceCorner,"T")  
                 local v1,v2,v3 = t[1],t[2],t[3] 
                 min[1] = math.min(min[1],v1)
@@ -606,8 +606,8 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
                 max[3] = math.max(max[3],v3)
             end 
 
-            local min_proj_id = ms(min, mtxProj,"*P")    
-            local max_proj_id = ms(max, mtxProj,"*P")
+            local min_proj_id = ms(mtxProj, min, "*P")    
+            local max_proj_id = ms(mtxProj, max, "*P")
             local min_proj = ms(min_proj_id,"T")         
             local max_proj = ms(max_proj_id,"T")
 
@@ -647,7 +647,7 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
                 0,       0,      1,   0,
                 offsetx, offsety,0,   1 }, "P" )
 
-            lightProj[i] = ms(  mtxCrop,mtxProj, "*P")   
+            lightProj[i] = ms( mtxProj, mtxCrop, "*P")   
 
             -- 替换合适算法或可以使得旋转也稳定 
             -- 另一种方案 
@@ -738,8 +738,8 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
             )
 
     for i = 1,numSplits do 
-        local mtxTemp = ms( lightProj[i],mtxBias,"*P")
-        ctx.shadowMapMtx[i] = ms(lightView[1],mtxTemp,"*m")
+        local mtxTemp = ms( mtxBias, lightProj[i], "*P")
+        ctx.shadowMapMtx[i] = ms(mtxTemp, lightView[1], "*m")
         -- ctx & comp_rt references 
         shadow.shadowMapMtx[i] = ctx.shadowMapMtx[i]
     end  
