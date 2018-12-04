@@ -915,12 +915,17 @@ mul_2values(lua_State *L, struct lastack *LS) {
 	int type = BINTYPE(t0,t1);
 	switch (type) {
 	case BINTYPE(LINEAR_TYPE_MAT,LINEAR_TYPE_MAT): {
-		glm::mat4x4 m = *((const glm::mat4x4*)val1) * *((const glm::mat4x4*)val0);
+		glm::mat4x4 m = *((const glm::mat4x4*)val0) * *((const glm::mat4x4*)val1);
 		lastack_pushmatrix(LS, &m[0][0]);
 		break;
 	}
+	case BINTYPE(LINEAR_TYPE_MAT, LINEAR_TYPE_VEC4): {
+		glm::vec4 r = *((const glm::mat4x4*)val0) * *((const glm::vec4*)val1);
+		lastack_pushvec4(LS, &r.x);
+		break;
+	}
 	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_MAT): {
-		glm::vec4 r = *((const glm::mat4x4*)val1) * *((const glm::vec4*)val0);
+		glm::vec4 r = *((const glm::vec4*)val0) * *((const glm::mat4x4*)val1);
 		lastack_pushvec4(LS, &r.x);
 		break;
 	}

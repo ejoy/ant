@@ -89,7 +89,7 @@ local function play_object_transform(ot, dx, dy)
 		local results = {}
 
 		for _, p in ipairs{originInWS, posInWS} do
-			local posInCS = ms(p, view, proj, "**T")
+			local posInCS = ms(proj, view, p, "**T")
 			local clipcoord = posInCS[4]
 			local posInNDC = {posInCS[1]/clipcoord, posInCS[2]/clipcoord}
 			local posInSNS = {(posInNDC[1] + 1) * 0.5, (posInNDC[2] + 1) * 0.5}	-- screen normalize space

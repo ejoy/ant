@@ -147,7 +147,7 @@ function general_editor_entites:init()
 			local camera = world:first_entity("main_camera")
 
 			local view, proj = mu.view_proj_matrix(camera)
-			local matVP = ms(view, proj, "*m")
+			local matVP = ms(proj, view, "*m")
 			local corners = math3d_baselib.frustum_points(matVP)
 
 			local green_color = 0xff00ff00

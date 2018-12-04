@@ -19,7 +19,7 @@ function cull_sys:update()
 		local filter = e.primitive_filter		
 		local view, proj = mu.view_proj_matrix(e)
 		-- plane is in world space
-		local planes = math3d_baselib.extract_planes(ms(view, proj, "*m"))
+		local planes = math3d_baselib.extract_planes(ms(proj, view, "*m"))
 		
 		local newfilter_result = {}
 		local results = filter.result
