@@ -6,10 +6,10 @@ BUILD_CONFIG = release
 DEVENV_CMD = devenv
 
 ifeq "$(BUILD_CONFIG)" "release"
-  BGFX_CONFIG_TYPE = release64
+  BGFX_CONFIG_TYPE = release
   CMAKE_BUILD_TYPE = -DCMAKE_BUILD_TYPE=Release
 else
-  BGFX_CONFIG_TYPE = debug64
+  BGFX_CONFIG_TYPE = debug
   CMAKE_BUILD_TYPE = -DCMAKE_BUILD_TYPE=Debug
 endif
 
@@ -19,12 +19,22 @@ ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles
   BUILD_PATH := build
   BGFX_INIT_CMD = make .build/projects/gmake-osx
-  BGFX_MAKE_CMD = make osx-$(BGFX_CONFIG_TYPE) $(MP)
+  BGFX_MAKE_CMD = make osx-$(BGFX_CONFIG_TYPE)64 $(MP)
   
   CD_MAKE_CMD	= TEC_UNAME=clang make cd $(MP)
 
   CMAKE_PROJ_MAKE = make
-  CMAKE_PROJ_CLEAN = make clean 
+  CMAKE_PROJ_CLEAN = make clean
+else ifeq "$(PLAT)" "ios"
+  CMAKE_PROJ_TYPE = Unix Makefiles
+  BUILD_PATH := build
+  BGFX_INIT_CMD = make .build/projects/gmake-ios-arm64
+  BGFX_MAKE_CMD = make ios-arm64-$(BGFX_CONFIG_TYPE) $(MP)
+  
+  CD_MAKE_CMD	= TEC_UNAME=clang make cd $(MP)
+
+  CMAKE_PROJ_MAKE = make
+  CMAKE_PROJ_CLEAN = make clean
 else ifeq "$(PLAT)" "msvc"
   CMAKE_PROJ_TYPE = Visual Studio 15 2017 Win64
   BUILD_PATH := build_msvc
@@ -42,7 +52,7 @@ else
   CMAKE_PROJ_TYPE = MSYS Makefiles
   BUILD_PATH := build
   BGFX_INIT_CMD = make .build/projects/gmake-mingw-gcc
-  BGFX_MAKE_CMD = make mingw-gcc-$(BGFX_CONFIG_TYPE) $(MP)
+  BGFX_MAKE_CMD = make mingw-gcc-$(BGFX_CONFIG_TYPE)64 $(MP)
   
   CD_MAKE_CMD	= TEC_UNAME=mingw6_64 MINGW6_64=$(MINGW) make cd $(MP)
 
