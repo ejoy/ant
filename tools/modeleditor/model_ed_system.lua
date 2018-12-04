@@ -63,74 +63,191 @@ end
 
 local sample_eid
 
-local function init_control()
-	local dlg = main_dialog()
-	local skepath_ctrl = iup.GetDialogChild(dlg, "SKE_PATH")
-	local anipath_ctrl = iup.GetDialogChild(dlg, "ANI_PATH")
-	local meshpath_ctrl = iup.GetDialogChild(dlg, "SM_PATH")
+local function smaple_entity()
+	if sample_eid then
+		return world[sample_eid]
+	end
+end
 
-	local function check_create_sample_entity(sc, ac, mc)
-		local anipath = ac.VALUE
-		local skepath = sc.VALUE
-		local skinning_meshpath = mc.VALUE
+local function dlg_item(name)	
+	return iup.GetDialogChild(main_dialog(), name)
+end
 
-		local function check_path_valid(pp)
-			if pp == nil or pp == "" then
-				return false
-			end
-
-			if not assetmgr.find_valid_asset_path(pp) then
-				iup.Message("Error", string.format("invalid path : %s", pp))
-				return false
-			end
-
-			return true
-		end
-
-		-- only skinning meshpath is needed!
-		if check_path_valid(skinning_meshpath) then			
-			if sample_eid then
-				world:remove_entity(sample_eid)
-			end
-
-			sample_eid = util.create_sample_entity(world, skepath, anipath, skinning_meshpath)
+local function enable_sample_visible()
+	if sample_eid then
+		local sample = world[sample_eid]
+		if sample then
+			local sample_shower = dlg_item("SHOWSAMPLE")			
+			sample.can_render = sample_shower.VALUE ~= "OFF"
 		end
 	end
+end
 
-	function skepath_ctrl:killfocus_cb()		
-		check_create_sample_entity(self, anipath_ctrl, meshpath_ctrl)
+local function draw_bone()
+	if sample_eid and world[sample_eid] then
+		local sample = world[sample_eid]	
+		local ske = sample.skeleton
+		local dbg_prim = sample.debug_primitive
+		if dbg_prim then
+			dbg_prim.cache = {}
+			local geodrawer = require "editor.ecs.render.geometry_drawer"
+			local desc = {}
+			geodrawer.draw_bones(ske, 0xfff0f0f0, nil, desc)
+			dbg_prim.cache.desc = desc			
+		end
+	end
+end
+
+local function enable_bones_visible()
+	if sample_eid then
+		local sample =world[sample_eid]
+		if sample then
+			local bone_shower = dlg_item("SHOWBONES")
+			if bone_shower.VALUE ~= "OFF" then
+				assert(sample.debug_primitive == nil)
+				world:add_component(sample_eid, "debug_primitive")				
+				draw_bone()
+			else
+				world:remove_component(sample_eid, "debug_primitive")
+			end
+		end
+	end
+end
+
+local function check_create_sample_entity(sc, ac, mc)
+	local anipath = ac.VALUE
+	local skepath = sc.VALUE
+	local skinning_meshpath = mc.VALUE
+
+	local function check_path_valid(pp)
+		if pp == nil or pp == "" then
+			return false
+		end
+
+		if not assetmgr.find_valid_asset_path(pp) then
+			iup.Message("Error", string.format("invalid path : %s", pp))
+			return false
+		end
+
+		return true
+	end
+
+	-- only skinning meshpath is needed!
+	if check_path_valid(skinning_meshpath) then			
+		if sample_eid then
+			world:remove_entity(sample_eid)
+		end
+
+		sample_eid = util.create_sample_entity(world, skepath, anipath, skinning_meshpath)
+		enable_sample_visible()
+	end
+end
+
+local function update_static_duration_value()
+	if sample_eid then
+		local e = world[sample_eid]
+		local ani = e.animation
+		if ani then 
+			local anihandle = ani.assetinfo.handle
+			
+			local duration = anihandle:duration()
+			local dlg = main_dialog()
+			local static_duration_value = iup.GetDialogChild(dlg, "STATIC_DURATION")
+			static_duration_value.TITLE = string.format("Time(%.2f ms)", duration * 1000)
+		end
+	end
+end
+
+local function update_duration_text(cursorpos)		
+	local dlg = main_dialog()
+	local duration_value = iup.GetDialogChild(dlg, "DURATION")
+	if duration_value == nil then
+		return 
+	end
+
+	local sample_e = world[sample_eid]		
+	if sample_e == nil then
+		return nil
+	end
+
+	local anicomp = sample_e.animation
+	if anicomp then
+		local ani_assetinfo = anicomp.assetinfo
+		if ani_assetinfo then
+			local ani_handle = ani_assetinfo.handle
+			local duration_pos = ani_handle:duration() * cursorpos
+			duration_value.VALUE = string.format("%2f", duration_pos)
+		end
+	end
+end
+
+local function slider_value_chaged(slider)
+	local cursorpos = get_ani_cursor(slider)
+	update_duration_text(cursorpos)
+	update_animation_ratio(sample_eid, cursorpos)
+end
+
+local function init_paths_ctrl()
+	local dlg = main_dialog()
+	local skepath_inputer = iup.GetDialogChild(dlg, "SKE_PATH")
+	local anipath_inputer = iup.GetDialogChild(dlg, "ANI_PATH")
+	local meshpath_inputer = iup.GetDialogChild(dlg, "SM_PATH")
+
+	function skepath_inputer:killfocus_cb()		
+		check_create_sample_entity(self, anipath_inputer, meshpath_inputer)
+		draw_bone()
 		return 0
 	end
 	
-	function anipath_ctrl:killfocus_cb()
-		check_create_sample_entity(skepath_ctrl, self, meshpath_ctrl)
+	function anipath_inputer:killfocus_cb()
+		check_create_sample_entity(skepath_inputer, self, meshpath_inputer)
 		return 0
 	end
 
-	function meshpath_ctrl:killfocus_cb()
-		check_create_sample_entity(skepath_ctrl, anipath_ctrl, self)
+	function meshpath_inputer:killfocus_cb()
+		check_create_sample_entity(skepath_inputer, anipath_inputer, self)
+		return 0
 	end
 
-	-- skepath_ctrl.VALUE=fu.write_to_file("cache/ske.ske", [[path="meshes/skeleton/skeleton"]])
-	-- anipath_ctrl.VALUE=fu.write_to_file("cache/ani.ani", [[path="meshes/animation/animation_base"]])
-	meshpath_ctrl.VALUE = "meshes/mesh.ozz"
-	check_create_sample_entity(skepath_ctrl, anipath_ctrl, meshpath_ctrl)
+	local skepath_finder = iup.GetDialogChild(dlg, "SKE_FINDER")
+	local function get_file()
+		local filename = iup.GetFile("assets/meshes/*.ozz")
+		local vfsutil = require "vfs.util"
+		local vfsfilename = vfsutil.filter_abs_paths(filename)
+		local path = require "filesystem.path"
+		if path.is_abs_path(vfsfilename) then
+			iup.Message("Resource Error", string.format("resource: %s should import to project 'assets' folder"))
+			return 
+		end
+		return filename
+	end
+	function skepath_finder:action()
+		skepath_inputer.VALUE = get_file()
+		check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
+	end
+
+	local anipath_finder = iup.GetDialogChild(dlg, "ANI_FINDER")
+	function anipath_finder:action()
+		anipath_inputer.VALUE = get_file()
+		check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
+	end
+
+	local smpath_finder = iup.GetDialogChild(dlg, "SM_FINDER")
+	function smpath_finder:action()
+		meshpath_inputer.VALUE = get_file()
+		check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
+	end
+
+	-- skepath_inputer.VALUE=fu.write_to_file("cache/ske.ske", [[path="meshes/skeleton/skeleton"]])
+	-- anipath_inputer.VALUE=fu.write_to_file("cache/ani.ani", [[path="meshes/animation/animation_base"]])
+	meshpath_inputer.VALUE = "meshes/mesh.ozz"
+	check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
+end
+
+local function init_playitme_ctrl()
+	local dlg = main_dialog()
 
 	local slider = iup.GetDialogChild(dlg, "ANITIME_SLIDER")
-
-	local function update_static_duration_value()
-		if sample_eid then
-			local e = world[sample_eid]
-			local ani = e.animation
-			if ani then 
-				local anihandle = ani.assetinfo.handle
-				
-				local duration = anihandle:duration()			
-				local static_duration_value = iup.GetDialogChild(dlg, "STATIC_DURATION")
-				static_duration_value.TITLE = string.format("Time(%.2f ms)", duration * 1000)
-			end
-		end
-	end
 
 	update_static_duration_value()
 
@@ -150,40 +267,30 @@ local function init_control()
 		end
 	end
 	
-	local function update_duration_text(cursorpos)		
-		if duration_value == nil then
-			return 
-		end
-
-		local sample_e = world[sample_eid]		
-		if sample_e == nil then
-			return nil
-		end
-
-		local anicomp = sample_e.animation
-		if anicomp then
-			local ani_assetinfo = anicomp.assetinfo
-			if ani_assetinfo then
-				local ani_handle = ani_assetinfo.handle
-				local duration_pos = ani_handle:duration() * cursorpos
-				duration_value.VALUE = string.format("%2f", duration_pos)
-			end
-		end
-	end
-
-	local function slider_value_chaged(slider)
-		local cursorpos = get_ani_cursor(slider)
-		update_duration_text(cursorpos)
-		update_animation_ratio(sample_eid, cursorpos)
-	end
-
 	function slider:valuechanged_cb()
 		slider_value_chaged(self)
 	end
 
 	slider_value_chaged(slider)
+end
 
-	iup.Map(dlg)
+local function init_check_shower()
+	local bone_shower = dlg_item("SHOWBONES")
+	function bone_shower:action()
+		enable_bones_visible()
+	end
+
+	local sample_shower = dlg_item("SHOWSAMPLE")
+	function sample_shower:action()
+		enable_sample_visible()
+	end
+end
+
+local function init_control()
+	init_paths_ctrl()
+	init_playitme_ctrl()
+	init_check_shower()
+	iup.Map(main_dialog())
 end
 
 local function init_lighting()

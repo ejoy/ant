@@ -54,14 +54,15 @@ local animation_time = iup.vbox {
 	ALIGNMENT = "ACENTER",
 }
 
-local function create_pathctrl(title, name)
+local function create_pathctrl(title, inputer_name, btn_name)
 	local btn = iup.button {
+		NAME=btn_name,
 		TITLE="Browse",
 		ALIGNMENT="ARIGHT",
 	}
 
 	local path_inputer = iup.text {
-		NAME=name,
+		NAME=inputer_name,
 		ALIGNMENT="ALEFT",
 		EXPAND ="ON",
 		SIZE="120x0",
@@ -77,9 +78,9 @@ local function create_pathctrl(title, name)
 	}
 end
 
-local ske_pathctrl = create_pathctrl("Skeleton", "SKE_PATH")
-local ani_pathctrl = create_pathctrl("Animation", "ANI_PATH")
-local mesh_pathctrl = create_pathctrl("Mesh", "SM_PATH")
+local ske_pathctrl = create_pathctrl("Skeleton", "SKE_PATH", "SKE_FINDER")
+local ani_pathctrl = create_pathctrl("Animation", "ANI_PATH", "ANI_FINDER")
+local mesh_pathctrl = create_pathctrl("Mesh", "SM_PATH", "SM_FINDER")
 
 local anilist_ctrller = iup.list {
 	NAME="ANI_LIST",
@@ -110,6 +111,18 @@ local dlg = iup.dialog {
 						ani_pathctrl,
 						iup.space { SIZE="0x5", },
 						mesh_pathctrl,
+						iup.space { SIZE="0x5", },
+						iup.toggle {
+							NAME="SHOWBONES",
+							TITLE="Show Bones",
+							VALUE="OFF",
+						},
+						iup.space { SIZE="0x5", },
+						iup.toggle {
+							NAME="SHOWSAMPLE",
+							TITLE="Show Sample Object",
+							VALUE="ON",
+						},
 						iup.fill {},
 					},
 					iup.fill{},

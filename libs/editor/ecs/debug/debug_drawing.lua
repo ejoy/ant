@@ -33,6 +33,14 @@ end
 
 ecs.tag "main_debug"
 
+local dbgprim = ecs.component "debug_primitive" {
+	type = "userdata",
+	default = {}
+}
+function dbgprim:init()
+	self.cache = {}
+end
+
 local debug_obj = ecs.component "debug_object" {
 	type = "userdata",
 	default = {}
@@ -98,7 +106,7 @@ function debug_draw:update()
 	mu.identify_transform(dbentity)
 	
 	local function commit_desc(desc)	
-		if next(desc.vb) == nil then
+		if desc.vb == nil or next(desc.vb) == nil then
 			return
 		end
 		local materialpath = desc.material
@@ -124,5 +132,7 @@ function debug_draw:update()
 	end
 
 	commit_desc(assert(wireframe.desc))
+
+	wireframe.desc = {}	-- need clean
 end
 

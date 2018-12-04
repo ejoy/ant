@@ -137,7 +137,7 @@ function util.create_sample_entity(world, skepath, anipath, skinning_meshpath)
 	local eid = world:new_entity("position", "scale", "rotation",	
 	"rigid_body",		-- physic relate
 	"mesh", "material",
-	"sampleobj",
+	"sampleobj", 
 	"name", "can_render")
 
 	local e = world[eid]
