@@ -46,17 +46,21 @@ local debug_obj = ecs.component "debug_object" {
 	default = {}
 }
 
+local function clean_desc_buffer(desc)
+	desc.material = ""
+	desc.vb={}
+	desc.ib={}
+	desc.primitives = {}
+end
+
 function debug_obj:init()
 	self.renderobjs = {
 		wireframe = {
-			desc = {
-				material = "",
-				vb={},
-				ib={},
-				primitives = {},
-			},
+			desc = {}			
 		}
 	}
+
+	clean_desc_buffer(self.renderobjs.wireframe.desc)
 
 	local debugeid = world:new_entity("position", "scale", "rotation",
 	"mesh", "material",
@@ -121,7 +125,7 @@ function debug_draw:update()
 
 		local gvb = assert(g.vb)
 		
-		local dvb = desc.vb		
+		local dvb = desc.vb
 		local vbuffer = {"fffd"}
 		for _, v in ipairs(dvb) do
 			table.move(v, 1, #v, #vbuffer+1, vbuffer)
@@ -129,10 +133,12 @@ function debug_draw:update()
 
 		bgfx.update(gvb.handles[1], 0, vbuffer)
 		bgfx.update(assert(g.ib).handle, 0, desc.ib)
+
+		clean_desc_buffer(desc)
 	end
 
 	commit_desc(assert(wireframe.desc))
 
-	wireframe.desc = {}	-- need clean
+	
 end
 

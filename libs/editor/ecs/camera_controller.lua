@@ -10,7 +10,7 @@ local point2d = require "math.point2d"
 
 local camera_util = require "render.camera.util"
 
-local step = 0.05
+local step = 0.01
 
 local action_type = { 
 	FORWARD = false, BACKWARD = false,

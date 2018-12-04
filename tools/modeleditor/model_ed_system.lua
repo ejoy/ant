@@ -84,16 +84,18 @@ local function enable_sample_visible()
 end
 
 local function draw_bone()
-	if sample_eid and world[sample_eid] then
-		local sample = world[sample_eid]	
+	local sample = smaple_entity()
+	if sample then		
 		local ske = sample.skeleton
-		local dbg_prim = sample.debug_primitive
-		if dbg_prim then
-			dbg_prim.cache = {}
-			local geodrawer = require "editor.ecs.render.geometry_drawer"
-			local desc = {}
-			geodrawer.draw_bones(ske, 0xfff0f0f0, nil, desc)
-			dbg_prim.cache.desc = desc			
+		if ske then
+			local dbg_prim = sample.debug_primitive
+			if dbg_prim then
+				dbg_prim.cache = {}
+				local geodrawer = require "editor.ecs.render.geometry_drawer"
+				local desc = {vb={}, ib = {}}
+				geodrawer.draw_bones(assert(ske.assetinfo.handle), 0xfff0f0f0, nil, desc)
+				dbg_prim.cache.desc = desc
+			end
 		end
 	end
 end
@@ -108,7 +110,9 @@ local function enable_bones_visible()
 				world:add_component(sample_eid, "debug_primitive")				
 				draw_bone()
 			else
-				world:remove_component(sample_eid, "debug_primitive")
+				if sample.debug_primitive then
+					world:remove_component(sample_eid, "debug_primitive")
+				end
 			end
 		end
 	end
@@ -213,29 +217,38 @@ local function init_paths_ctrl()
 	local function get_file()
 		local filename = iup.GetFile("assets/meshes/*.ozz")
 		local vfsutil = require "vfs.util"
-		local vfsfilename = vfsutil.filter_abs_paths(filename)
+		local vfsfilename = vfsutil.filter_abs_path(filename)
 		local path = require "filesystem.path"
-		if path.is_abs_path(vfsfilename) then
+		if path.is_absolute_path(vfsfilename) then
 			iup.Message("Resource Error", string.format("resource: %s should import to project 'assets' folder"))
 			return 
 		end
-		return filename
+		return vfsfilename
 	end
 	function skepath_finder:action()
-		skepath_inputer.VALUE = get_file()
-		check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
+		local filename = get_file()
+		if filename then
+			skepath_inputer.VALUE = filename
+			check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
+		end
 	end
 
 	local anipath_finder = iup.GetDialogChild(dlg, "ANI_FINDER")
 	function anipath_finder:action()
-		anipath_inputer.VALUE = get_file()
-		check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
+		local filename = get_file()
+		if filename then
+			anipath_inputer.VALUE = filename
+			check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
+		end
 	end
 
 	local smpath_finder = iup.GetDialogChild(dlg, "SM_FINDER")
 	function smpath_finder:action()
-		meshpath_inputer.VALUE = get_file()
-		check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
+		local filename = get_file()
+		if filename then
+			meshpath_inputer.VALUE = filename
+			check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
+		end
 	end
 
 	-- skepath_inputer.VALUE=fu.write_to_file("cache/ske.ske", [[path="meshes/skeleton/skeleton"]])
