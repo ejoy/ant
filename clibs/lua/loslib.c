@@ -21,6 +21,14 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+#if defined(LUA_USE_POSIX) || defined(LUA_USE_WINDOWS)
+#define l_system(c)		(system(c))
+#else
+static int l_system(const char* command) {
+    if (!command) return 0;
+    return -1; 
+}
+#endif
 
 /*
 ** {==================================================================
@@ -140,7 +148,7 @@ static time_t l_checktime (lua_State *L, int arg) {
 
 static int os_execute (lua_State *L) {
   const char *cmd = luaL_optstring(L, 1, NULL);
-  int stat = system(cmd);
+  int stat = l_system(cmd);
   if (cmd != NULL)
     return luaL_execresult(L, stat);
   else {
