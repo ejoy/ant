@@ -48,7 +48,11 @@ namespace ant::posix::subprocess {
     };
 
     namespace pipe {
-        std::pair<FILE*, FILE*> open();
-        int                     peek(FILE* f);
+		struct open_result {
+			FILE* rd;
+			FILE* wr;
+		};
+		open_result open();
+        int         peek(FILE* f);
     }
 }

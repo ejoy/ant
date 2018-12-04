@@ -219,14 +219,14 @@ namespace ant::posix::subprocess {
             cloexec(fds[1], true);
             return true;
         }
-        std::pair<FILE*, FILE*> open() {
+		open_result open() {
             int fds[2];
             if (!create(fds)) {
-                return std::make_pair((FILE*)NULL, (FILE*)NULL);
+				return { NULL, NULL };
             }
             FILE* rd = fdopen(fds[0], "rb");
             FILE* wr = fdopen(fds[1], "wb");
-            return std::make_pair(rd, wr);
+			return { rd, wr };
         }
         int peek(FILE* f) {
             int count;

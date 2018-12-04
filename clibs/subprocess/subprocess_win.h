@@ -37,11 +37,9 @@ namespace ant::win::subprocess {
     class process : public PROCESS_INFORMATION {
     public:
         process(spawn& spawn);
-        process(process& pi);
         process(process&& pi);
-        process(PROCESS_INFORMATION& pi);
+        process(PROCESS_INFORMATION&& pi);
         ~process();
-        process& operator=(process& pi);
         process& operator=(process&& pi);
         bool      is_running();
         bool      kill(int signum);
@@ -79,7 +77,11 @@ namespace ant::win::subprocess {
     };
 
     namespace pipe {
-        std::pair<FILE*, FILE*> open();
-        int                     peek(FILE* f);
+		struct open_result {
+			FILE* rd;
+			FILE* wr;
+		};
+        open_result open();
+        int         peek(FILE* f);
     }
 }

@@ -47,7 +47,7 @@ namespace ant::win::fsevent {
         , m_path()
         , m_directory(INVALID_HANDLE_VALUE)
     {
-        memset(this, 0, sizeof(OVERLAPPED));
+        memset((OVERLAPPED*)this, 0, sizeof(OVERLAPPED));
         hEvent = this;
     }
 

@@ -29,6 +29,9 @@ wsa_error_to_errno(int errcode) {
 	//  10036 - Operation now in progress.
 	case WSAEINPROGRESS:
 		return EAGAIN;
+	//  10038 - Socket operation on non-socket.
+	case WSAENOTSOCK:
+		return ENOTSOCK;
 	//  10040 - Message too long.
 	case WSAEMSGSIZE:
 		return EMSGSIZE;
