@@ -99,6 +99,47 @@ lbuilddata_load(lua_State *L) {
 	});
 }
 
+static bool
+get_properties(lua_State *L, ozz::animation::Skeleton::JointProperties &p) {
+	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
+	auto ske = builddata->skeleton;
+	if (ske) {
+		auto jointidx = (size_t)lua_tointeger(L, 2) - 1;
+		if (jointidx >= ske->num_joints()) {
+			luaL_error(L, "joint index invalid:%d, joint number:%d", jointidx, ske->num_joints());
+		}
+		p = ske->joint_properties()[jointidx];
+		return true;
+	}	
+	return false;
+}
+
+static int lbuilddata_isleaf(lua_State *L) {
+	ozz::animation::Skeleton::JointProperties properties;
+	if (get_properties(L, properties)) {
+		lua_pushboolean(L, properties.is_leaf);
+		return 1;
+	}	
+	return 0;
+}
+
+static int lbuilddata_parent(lua_State *L) {
+	ozz::animation::Skeleton::JointProperties properties;
+	if (get_properties(L, properties)) {
+		lua_pushinteger(L, properties.parent + 1);
+		return 1;
+	}
+	return 0;
+}
+
+static int lbuilddata_isroot(lua_State *L) {
+	ozz::animation::Skeleton::JointProperties properties;
+	if (get_properties(L, properties)) {
+		lua_pushboolean(L, properties.parent == ozz::animation::Skeleton::kNoParentIndex);
+		return 1;
+	}
+	return 0;
+}
 
 static int
 lbuilddata_get(lua_State *L){
@@ -147,57 +188,26 @@ lbuilddata_get(lua_State *L){
 			return 1;			
 		}
 
-		case LUA_TSTRING:{			
-			return 0;
+		case LUA_TSTRING:{
+			auto name = lua_tostring(L, 2);
+
+			std::tuple<const char*, lua_CFunction> tpl[] = {
+				std::make_tuple("isleaf", lbuilddata_isleaf),
+				std::make_tuple("parent", lbuilddata_parent),
+				std::make_tuple("isroot", lbuilddata_isroot),
+			};
+
+			for (auto& t : tpl) {
+				auto &[n, func] = t;
+				if (strcmp(n, name) == 0) {
+					lua_pushcfunction(L, func);
+					return 1;
+				}
+			}
 		}
 		default:
 			return 0;
 	}
-}
-
-static int lbuilddata_isleaf(lua_State *L) {
-	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
-	auto ske = builddata->skeleton;	
-	if (ske) {
-		auto jointidx = (size_t)lua_tonumber(L, 2);
-		if (jointidx >= ske->num_joints()) {
-			luaL_error(L, "joint index invalid:%d, joint number:%d", jointidx, ske->num_joints());
-		}
-		auto properties = ske->joint_properties()[jointidx];		
-		lua_pushboolean(L, properties.is_leaf);
-		return 1;
-	}
-	return 0;
-}
-
-static int lbuilddata_parent(lua_State *L) {
-	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
-	auto ske = builddata->skeleton;
-	if (ske) {
-		auto jointidx = (size_t)lua_tonumber(L, 2);
-		if (jointidx >= ske->num_joints()) {
-			luaL_error(L, "joint index invalid:%d, joint number:%d", jointidx, ske->num_joints());
-		}
-		auto properties = ske->joint_properties()[jointidx];
-		lua_pushnumber(L, properties.parent);
-		return 1;
-	}
-	return 0;
-}
-
-static int lbuilddata_isroot(lua_State *L) {
-	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
-	auto ske = builddata->skeleton;
-	if (ske) {
-		auto jointidx = (size_t)lua_tonumber(L, 2);
-		if (jointidx >= ske->num_joints()) {
-			luaL_error(L, "joint index invalid:%d, joint number:%d", jointidx, ske->num_joints());
-		}
-		auto properties = ske->joint_properties()[jointidx];
-		lua_pushboolean(L, properties.parent == ozz::animation::Skeleton::kNoParentIndex);
-		return 1;
-	}
-	return 0;
 }
 
 static struct hierarchy_build_data*
@@ -211,9 +221,6 @@ create_builddata_userdata(lua_State *L){
 			"__len", lbuilddata_len,
 			"__save", lbuilddata_save,
 			"__load", lbuilddata_load,
-			"isleaf", lbuilddata_isleaf,
-			"parent", lbuilddata_parent,
-			"isroot", lbuilddata_isroot,
 			nullptr, nullptr,
 		};
 
