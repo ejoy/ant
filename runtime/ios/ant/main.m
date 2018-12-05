@@ -4,6 +4,7 @@
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+#include <ant.h>
 
 @interface ViewController : UIViewController
 @end
@@ -32,23 +33,42 @@ static id<MTLDevice> m_device = NULL;
     return [CAEAGLLayer class];
 #pragma clang diagnostic pop
 }
+
+
 - (id)initWithFrame:(CGRect)rect {
     self = [super initWithFrame:rect];
     if (nil == self) {
         return nil;
     }
+    self.backgroundColor = [UIColor yellowColor];
+    
     lua_State* L = luaL_newstate();
     luaL_openlibs(L);
-    if (luaL_dostring(L, "return 'Hello ' .. _VERSION") == LUA_OK) {
-        const char* version = lua_tostring(L, -1);
-        
-        self.backgroundColor = [UIColor yellowColor];
-        UILabel *labelView = [[UILabel alloc] initWithFrame:CGRectMake(200,200,200,50)];
-        labelView.text = @(version);
+    ant_searcher_init(L, false);
+
+    {
+        if (luaL_dostring(L, "return 'Hello ' .. _VERSION") == LUA_OK) {
+        }
+        const char* result = lua_tostring(L, -1);
+        UILabel *labelView = [[UILabel alloc] initWithFrame:CGRectMake(100,200,800,50)];
+        labelView.text = @(result);
         labelView.textColor = [UIColor blackColor];
         [self addSubview:labelView];
     }
-    lua_close(L);
+    
+    {
+        NSString* nsMainLua = [[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"main.lua"];
+        //NSString* nsPersonPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+        //NSString* nsMainLua = [nsPersonPath stringByAppendingPathComponent:@"main.lua"];
+        if (luaL_dofile(L, [nsMainLua cStringUsingEncoding:NSUTF8StringEncoding]) == LUA_OK) {
+        }
+        const char* result = lua_tostring(L, -1);
+        UILabel *labelView = [[UILabel alloc] initWithFrame:CGRectMake(100,300,800,50)];
+        labelView.text = @(result);
+        labelView.textColor = [UIColor blackColor];
+        [self addSubview:labelView];
+        lua_close(L);
+    }
     
     return self;
 }

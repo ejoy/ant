@@ -8,10 +8,10 @@ DEVENV_CMD = devenv
 
 ifeq "$(BUILD_CONFIG)" "release"
   BGFX_CONFIG_TYPE = release
-  CMAKE_BUILD_TYPE = -DCMAKE_BUILD_TYPE=Release
+  CMAKE_BUILD = -DCMAKE_BUILD_TYPE=Release
 else
   BGFX_CONFIG_TYPE = debug
-  CMAKE_BUILD_TYPE = -DCMAKE_BUILD_TYPE=Debug
+  CMAKE_BUILD = -DCMAKE_BUILD_TYPE=Debug
 endif
 
 MSVC_MAKE_INFO := @echo msvc not support make single project, use 'make all plat=msvc' instead
@@ -36,6 +36,8 @@ else ifeq "$(PLAT)" "ios"
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
+
+  CMAKE_BUILD += -DCMAKE_TOOLCHAIN_FILE=../ios-cmake/ios.toolchain.cmake -DIOS_PLATFORM=OS64 -DENABLE_BITCODE=TRUE
 else ifeq "$(PLAT)" "msvc"
   CMAKE_PROJ_TYPE = Visual Studio 15 2017 Win64
   BUILD_PATH := build_msvc
@@ -68,14 +70,19 @@ CMAKE_OPT_assimp :=$(ASSIMP_IMPORT_DISABLE_OPT) -DBUILD_SHARED_LIBS=OFF -DASSIMP
 CMAKE_OPT_freetype :=-DCMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_ZLIB=TRUE
 # disable build bullet demos and tests
 
+CMAKE_OPT_bullet3 = -DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF -DBUILD_EXTRAS=OFF
 
 ifeq "$(PLAT)" "msvc"
-  CMAKE_OPT_bullet3 = -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON -DBUILD_BULLET2_DEMOS=ON -DBUILD_UNIT_TESTS=ON
+  CMAKE_OPT_bullet3 += -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON
 else
-  CMAKE_OPT_bullet3=-DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF -DLIBRARY_OUTPUT_PATH=../../lib
+  CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../lib
 endif
 
-CMAKE_OPT_ozz-animation=-Dozz_build_samples=OFF
+CMAKE_OPT_ozz-animation=-Dozz_build_samples=OFF -Dozz_build_fbx=OFF -Dozz_build_howtos=OFF
+
+ifeq "$(PLAT)" "ios"
+CMAKE_OPT_ozz-animation += -DEMSCRIPTEN=TURE
+endif
 
 .PHONY: info init all clean
 
@@ -138,7 +145,7 @@ define CMAKE_TEMP
 	mkdir $$@
 
   $(1)_init : | $(BUILD_PATH)/$(1)
-	cd $$(BUILD_PATH)/$(1) && cmake $(CMAKE_BUILD_TYPE) $$(CMAKE_OPT_$(1)) -G "$(CMAKE_PROJ_TYPE)" ../../$(1)
+	cd $$(BUILD_PATH)/$(1) && cmake $(CMAKE_BUILD) $$(CMAKE_OPT_$(1)) -G "$(CMAKE_PROJ_TYPE)" ../../$(1)
 
   $(1)_make : | $(BUILD_PATH)/$(1)
 	cd $$(BUILD_PATH)/$(1) && make $(MP)

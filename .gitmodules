@@ -49,3 +49,6 @@
 [submodule "3rd/libimobiledevice"]
 	path = 3rd/libimobiledevice
 	url = https://github.com/libimobiledevice/libimobiledevice.git
+[submodule "3rd/ios-cmake"]
+	path = 3rd/ios-cmake
+	url = https://github.com/leetal/ios-cmake.git

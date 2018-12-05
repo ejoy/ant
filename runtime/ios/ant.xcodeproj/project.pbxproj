@@ -8,12 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		11F4177121B6621C00486046 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 11F4177021B6621C00486046 /* main.m */; };
+		11F4177A21B67CCE00486046 /* main.lua in Resources */ = {isa = PBXBuildFile; fileRef = 11F4177921B67CCE00486046 /* main.lua */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		11F4175E21B6620A00486046 /* ant.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ant.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		11F4176F21B6621C00486046 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		11F4177021B6621C00486046 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		11F4177921B67CCE00486046 /* main.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main.lua; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,6 +48,7 @@
 		11F4176021B6620A00486046 /* ant */ = {
 			isa = PBXGroup;
 			children = (
+				11F4177921B67CCE00486046 /* main.lua */,
 				11F4176F21B6621C00486046 /* Info.plist */,
 				11F4177021B6621C00486046 /* main.m */,
 			);
@@ -109,6 +112,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				11F4177A21B67CCE00486046 /* main.lua in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -246,14 +250,39 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = GP6WLPM75Q;
 				GCC_C_LANGUAGE_STANDARD = c11;
-				HEADER_SEARCH_PATHS = ../../clibs/lua;
+				HEADER_SEARCH_PATHS = (
+					../../clibs/lua,
+					../../clibs/ant,
+				);
 				INFOPLIST_FILE = ant/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = ../../clibs/lua;
-				OTHER_LDFLAGS = "-llua";
+				LIBRARY_SEARCH_PATHS = (
+					../../clibs/ant,
+					"../../3rd/bgfx/.build/ios-arm64/bin",
+					../../3rd/build/bullet3/lib,
+					"../../3rd/build/ozz-animation/src/animation/runtime",
+					"../../3rd/build/ozz-animation/src/animation/offline",
+					"../../3rd/build/ozz-animation/src/geometry/runtime",
+					"../../3rd/build/ozz-animation/src/base",
+				);
+				OTHER_LDFLAGS = (
+					"-lant",
+					"-lbgfxRelease",
+					"-lbxRelease",
+					"-lbimgRelease",
+					"-lbxRelease",
+					"-lBulletDynamics",
+					"-lBulletCollision",
+					"-lLinearMath",
+					"-lozz_animation_r",
+					"-lozz_animation_offline_r",
+					"-lozz_geometry_r",
+					"-lozz_base_r",
+					"-lstdc++",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = ejoy.ant;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -268,14 +297,39 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = GP6WLPM75Q;
 				GCC_C_LANGUAGE_STANDARD = c11;
-				HEADER_SEARCH_PATHS = ../../clibs/lua;
+				HEADER_SEARCH_PATHS = (
+					../../clibs/lua,
+					../../clibs/ant,
+				);
 				INFOPLIST_FILE = ant/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = ../../clibs/lua;
-				OTHER_LDFLAGS = "-llua";
+				LIBRARY_SEARCH_PATHS = (
+					../../clibs/ant,
+					"../../3rd/bgfx/.build/ios-arm64/bin",
+					../../3rd/build/bullet3/lib,
+					"../../3rd/build/ozz-animation/src/animation/runtime",
+					"../../3rd/build/ozz-animation/src/animation/offline",
+					"../../3rd/build/ozz-animation/src/geometry/runtime",
+					"../../3rd/build/ozz-animation/src/base",
+				);
+				OTHER_LDFLAGS = (
+					"-lant",
+					"-lbgfxRelease",
+					"-lbxRelease",
+					"-lbimgRelease",
+					"-lbxRelease",
+					"-lBulletDynamics",
+					"-lBulletCollision",
+					"-lLinearMath",
+					"-lozz_animation_r",
+					"-lozz_animation_offline_r",
+					"-lozz_geometry_r",
+					"-lozz_base_r",
+					"-lstdc++",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = ejoy.ant;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
