@@ -17,5 +17,5 @@
 { "protocol", luaopen_protocol },
 { "remotedebug", luaopen_remotedebug },
 { "thread", luaopen_thread },
-{ "window", luaopen_window },
-{ "window.native", luaopen_window_native },
+//{ "window", luaopen_window },
+//{ "window.native", luaopen_window_native },

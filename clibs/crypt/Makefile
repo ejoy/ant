@@ -1,20 +1,22 @@
 include ../common.mk
 
-CFLAGS = -O2 -Wall
-
-mingw : crypt.dll
+ifeq "$(PLAT)" "mingw"
+default : crypt.dll
+else
+default : libcrypt.a
+endif
 
 lua-crypt.o : lua-crypt.c
-	gcc -c $(CFLAGS) -o $@ $^ $(LUAINC)
+	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
 lsha1.o : lsha1.c
-	gcc -c $(CFLAGS) -o $@ $^ $(LUAINC)
+	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
 crypt.dll : lua-crypt.o lsha1.o
-	gcc $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC)
+	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
 
 libcrypt.a : lua-crypt.o lsha1.o
 	ar rsv $@ $^
 
 clean :
-	rm -f crypt.dll *.o
+	rm -f crypt.dll libcrypt.a *.o

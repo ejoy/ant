@@ -1,15 +1,19 @@
 include ../common.mk
 
-mingw : protocol.dll
+ifeq "$(PLAT)" "mingw"
+default : protocol.dll
+else
+default : libprotocol.a
+endif
 
 lprotocol.o : lprotocol.c
-	gcc -c $(CFLAGS) -o $@ $^ $(LUAINC)
+	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
 protocol.dll : lprotocol.o
-	gcc $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB) $(LUAINC)
+	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
 
 libprotocol.a : lprotocol.o
 	ar rsv $@ $^
 
 clean :
-	rm -f protocol.dll *.o
+	rm -f protocol.dll libprotocol.a *.o

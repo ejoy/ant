@@ -1,18 +1,21 @@
 include ../common.mk
 include ../bgfx/bgfx_define.mk
 
-CFLAGS = -O2 -Wall
 
-mingw : platform.dll
+ifeq "$(PLAT)" "mingw"
+default : platform.dll
+else
+default : libplatform.a
+endif
 
 lplatform.o : lplatform.c
-	gcc -c -std=gnu11 $(CFLAGS) $(LUAINC) -I$(BXSRC)/include -o $@ $<
+	$(CC) -c $(CFLAGS) $(LUAINC) -I$(BXSRC)/include -o $@ $<
 
 platform.dll : lplatform.o
-	g++ $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
+	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
 
 libplatform.a : lplatform.o
 	ar rsv $@ $^
 
 clean :
-	rm -f platform.dll *.o
+	rm -f platform.dll libplatform.a *.o

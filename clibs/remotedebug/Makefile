@@ -1,22 +1,19 @@
 include ../common.mk
 
-CFLAGS = -O2 -Wall
-
-mingw: remotedebug.dll
-
-linux: remotedebug.so
+ifeq "$(PLAT)" "mingw"
+default : remotedebug.dll
+else
+default : libremotedebug.a
+endif
 
 remotedebug.o : remotedebug.c debugvar.h
-	gcc $(CFLAGS) -c -o $@ $< $(LUAINC)
-
-remotedebug.so: remotedebug.o
-	gcc $(CFLAGS) --shared -o $@ $^ $(LUAINC) -fPIC
+	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC)
 
 remotedebug.dll : remotedebug.o
-	gcc $(CFLAGS) --shared -o $@ $^ $(LUAINC) $(LUALIB)
+	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB)
 
 libremotedebug.a : remotedebug.o
 	ar rsv $@ $^
 
 clean :
-	rm -f remotedebug.so remotedebug.dll
+	rm -f remotedebug.dll libremotedebug.a *.o

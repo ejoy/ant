@@ -2,22 +2,26 @@ include ../common.mk
 
 GLM_INC = -I $(ANT3RD)/glm
 
-mingw : math3d.dll
+ifeq "$(PLAT)" "mingw"
+default : math3d.dll
+else
+default : libmath3d.a
+endif
 
 linalg.o : linalg.c
-	gcc -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC)
+	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC)
 
 math3d.o : math3d.cpp
-	gcc -c -std=c++17 $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC) -Wchar-subscripts
+	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC) -Wchar-subscripts
 
 mathbaselib.o : mathbaselib.cpp
-	gcc -c -std=c++17 $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC)
 
 math3d.dll : linalg.o math3d.o mathbaselib.o
-	gcc --shared $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB) $(LUAINC) $(GLM_INC)
+	$(CXX) $(LD_SHARED) $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB)
 
 libmath3d.a : linalg.o math3d.o mathbaselib.o
 	ar rsv $@ $^
 
 clean :
-	rm -f math3d.dll
+	rm -f math3d.dll libmath3d.a *.o
