@@ -1,6 +1,5 @@
 #include "meshdata.h"
 #include "utils.h"
-#include "bgfx/ib-compress/indexbufferdecompression.h"
 
 extern "C" {
 #include <lua.h>  
@@ -8,11 +7,14 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+#include <indexbufferdecompression.h>
+
 //bgfx include
 #include <bx/string.h>
 #include <bx/file.h>
 #include <bgfx/bgfx.h>
 #include <vertexdecl.h>
+
 
 void calcTangents(void* _vertices, uint16_t _numVertices, bgfx::VertexDecl _decl, const uint16_t* _indices, uint32_t _numIndices);
 
