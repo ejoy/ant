@@ -67,7 +67,7 @@ function draw.draw_bones(joints, color, transform, desc)
 	local function print_bone()
 		local begidx, endidx = b[1], b[2]
 		local jbeg, jend = joints[begidx], joints[endix]
-		print("begin joint:", )
+		--print("begin joint:", )
 		
 		local beg_pos, end_pos = jbeg.t, jend.t
 		local beg_name, end_name = jbeg.name, jend.name		
