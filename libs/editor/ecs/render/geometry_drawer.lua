@@ -32,49 +32,58 @@ local function append_array(from, to)
 	table.move(from, 1, #from, #to+1, to)
 end
 
-local function create_bone(bone, color, transform, ratio)
-	local vb, ib = {}, {}
+local function offset_index_buffer(ib, offset)	
+	for i=1, #ib do
+		ib[i] = offset + ib[i]
+	end	
+end
+
+local function create_bone(ratio, vb, ib)	
 	local vbup, ibup = geo.cone(4, ratio, ratio, true, true)
 	local vbdown, ibdown = geo.cone(4, -(1 - ratio), ratio, true, true)
 
 	append_array(vbup, vb)
 	append_array(ibup, ib)
 
-	-- append_array(vbdown, vb)
-	-- append_array(ibdown, ib)
+	offset_index_buffer(ib, #vb)
 
-	-- local function bone_transform(b)
-	-- 	local r = ms(b.r, "eP")
-	-- 	return ms({type="srt", r=r, s=b.s, t=b.t}, "P")
-	-- end
-
-	-- local bonetrans = bone_transform(bone)
-	-- local localtrans = ms({type="srt", r={180, 0, 0}, t={0, 0.3, 0}}, "P")
-	-- local wolrdtrans = ms(bonetrans, localtrans, "*P")
-	-- if transform then
-	-- 	wolrdtrans = ms(transform, wolrdtrans, "*P")
-	-- end
-	
-	-- for i=1, #vb do
-	-- 	local v = vb[i]
-	-- 	local nv = ms({v[1], v[2], v[3], 1}, wolrdtrans, "T")
-	-- 	nv[4] = color
-	-- 	vb[i] = nv
-	-- end
-
-	return vb, ib
+	append_array(vbdown, vb)
+	append_array(ibdown, ib)	
 end
 
-function draw.draw_bones(bones, color, transform, desc)
+function draw.draw_bones(joints, color, transform, desc)
 	local dvb = desc.vb
 	local dib = desc.ib
 	local updown_ratio = 0.3
-	--for _, b in ipairs(bones) do
-		local vb, ib = create_bone(b, color, transform, updown_ratio)
+
+	local bones = {}
+	local numjoints = #joints
+	for i=1, numjoints do		
+		if not joints:isroot(i) then
+			table.insert(bones, {joints:parent(i), i})
+		end
+	end
+	for _, b in ipairs(bones) do
+		local beg_pos, end_pos = b[1].transform.t, b[2].transform.t
 		
-		append_array(vb, dvb)
-		append_array(ib, dib)
-	--end
+		local vstart = #dvb
+		create_bone(updown_ratio, dvb, dib)		
+		local vec = ms(end_pos, beg_pos, "-P")
+		local len = math.sqrt(ms(vec, vec, ".T")[1])
+		local rotation = ms(vec, "neP")
+		
+		local finaltrans = ms({type="srt", r=rotation, s={len, len, len}}, {type="srt", r={-90, 0, 0}, t={0, 0, 0.3}}, "*P")
+		if transform then
+			finaltrans = ms(transform, finaltrans, "*P")
+		end
+
+		for i=vstart, #dvb do
+			local v = dvb[i]
+			local nv = ms(finaltrans, {v[1], v[2], v[3], 1}, "*T")
+			nv[4] = color
+			table.insert(dvb, nv)
+		end	
+	end
 end
 
 function draw.draw_line(pts, color, transform, desc)

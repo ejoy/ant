@@ -169,12 +169,11 @@ local function update_duration_text(cursorpos)
 		return 
 	end
 
-	local sample_e = world[sample_eid]		
-	if sample_e == nil then
-		return nil
+	local sample = smaple_entity()
+	if sample == nil then
+		return 
 	end
-
-	local anicomp = sample_e.animation
+	local anicomp = sample.animation
 	if anicomp then
 		local ani_assetinfo = anicomp.assetinfo
 		if ani_assetinfo then
@@ -251,8 +250,8 @@ local function init_paths_ctrl()
 		end
 	end
 
-	-- skepath_inputer.VALUE=fu.write_to_file("cache/ske.ske", [[path="meshes/skeleton/skeleton"]])
-	-- anipath_inputer.VALUE=fu.write_to_file("cache/ani.ani", [[path="meshes/animation/animation_base"]])
+	skepath_inputer.VALUE = "meshes/skeleton/skeleton.ozz"
+	--anipath_inputer.VALUE = "meshes/animation/animation_base.ozz"
 	meshpath_inputer.VALUE = "meshes/mesh.ozz"
 	check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
 end

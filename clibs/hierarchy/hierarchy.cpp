@@ -155,21 +155,69 @@ lbuilddata_get(lua_State *L){
 	}
 }
 
+static int lbuilddata_isleaf(lua_State *L) {
+	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
+	auto ske = builddata->skeleton;	
+	if (ske) {
+		auto jointidx = (size_t)lua_tonumber(L, 2);
+		if (jointidx >= ske->num_joints()) {
+			luaL_error(L, "joint index invalid:%d, joint number:%d", jointidx, ske->num_joints());
+		}
+		auto properties = ske->joint_properties()[jointidx];		
+		lua_pushboolean(L, properties.is_leaf);
+		return 1;
+	}
+	return 0;
+}
+
+static int lbuilddata_parent(lua_State *L) {
+	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
+	auto ske = builddata->skeleton;
+	if (ske) {
+		auto jointidx = (size_t)lua_tonumber(L, 2);
+		if (jointidx >= ske->num_joints()) {
+			luaL_error(L, "joint index invalid:%d, joint number:%d", jointidx, ske->num_joints());
+		}
+		auto properties = ske->joint_properties()[jointidx];
+		lua_pushnumber(L, properties.parent);
+		return 1;
+	}
+	return 0;
+}
+
+static int lbuilddata_isroot(lua_State *L) {
+	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
+	auto ske = builddata->skeleton;
+	if (ske) {
+		auto jointidx = (size_t)lua_tonumber(L, 2);
+		if (jointidx >= ske->num_joints()) {
+			luaL_error(L, "joint index invalid:%d, joint number:%d", jointidx, ske->num_joints());
+		}
+		auto properties = ske->joint_properties()[jointidx];
+		lua_pushboolean(L, properties.parent == ozz::animation::Skeleton::kNoParentIndex);
+		return 1;
+	}
+	return 0;
+}
+
 static struct hierarchy_build_data*
 create_builddata_userdata(lua_State *L){
 	struct hierarchy_build_data *builddata = (struct hierarchy_build_data*)lua_newuserdata(L, sizeof(*builddata));
 
 	if (luaL_newmetatable(L, "HIERARCHY_BUILD_DATA")){
-		lua_pushcfunction(L, lbuilddata_del);
-		lua_setfield(L, -2, "__gc");
-		lua_pushcfunction(L, lbuilddata_get);
-		lua_setfield(L, -2, "__index");
-		lua_pushcfunction(L, lbuilddata_len);
-		lua_setfield(L, -2, "__len");
-		lua_pushcfunction(L, lbuilddata_save);
-		lua_setfield(L, -2, "__save");
-		lua_pushcfunction(L, lbuilddata_load);
-		lua_setfield(L, -2, "__load");
+		luaL_Reg l[] = {
+			"__gc", lbuilddata_del,
+			"__index", lbuilddata_get,
+			"__len", lbuilddata_len,
+			"__save", lbuilddata_save,
+			"__load", lbuilddata_load,
+			"isleaf", lbuilddata_isleaf,
+			"parent", lbuilddata_parent,
+			"isroot", lbuilddata_isroot,
+			nullptr, nullptr,
+		};
+
+		luaL_setfuncs(L, l, 0);
 	}
 	lua_setmetatable(L, -2);
 
