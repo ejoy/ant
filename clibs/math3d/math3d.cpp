@@ -35,6 +35,10 @@ extern "C" {
 #define MAT_PERSPECTIVE 0
 #define MAT_ORTHO 1
 
+#ifndef M_PI
+#define M_PI (3.14159265358979323846)
+#endif
+
 static bool g_default_homogeneous_depth = false;
 
 bool default_homogeneous_depth(){
