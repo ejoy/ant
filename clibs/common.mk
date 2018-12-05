@@ -7,39 +7,42 @@ ANT3RD = ../../3rd
 
 LUAINC = -I../lua
 
-AR= ar rcu
-CC= gcc
+CC= gcc -std=c11
+CXX = g++ -std=c++17
 
 BUILD_CONFIG = Release
 
-CXX = g++
 ifeq ("$(BUILD_CONFIG)","Release")
 DEBUG_INFO = -O2
 else
 DEBUG_INFO = -g
 endif
 
-CFLAGS = $(DEBUG_INFO) -Wall
-CXXFLAGS = -lstdc++ -std=c++17
-
 ifeq "$(PLAT)" "mingw"
 
 LUA_FLAGS = -DLUA_BUILD_AS_DLL
 LUALIB = -L../lua -llua53
 LUABIN = ../lua/lua.exe
+LD_SHARED = --shared
+STRIP = strip --strip-unneeded
+CFLAGS = $(DEBUG_INFO) -Wall
 
 else ifeq "$(PLAT)" "osx"
 
 LUA_FLAGS = -DLUA_USE_MACOSX
 LUALIB = -L../lua
 LUABIN = ../lua/lua
-
-endif
-
-ifeq "$(PLAT)" "osx"
 LD_SHARED = -fPIC -dynamiclib -Wl,-undefined,dynamic_lookup
 STRIP = strip -u -r -x
-else
-LD_SHARED = --shared
-STRIP = strip --strip-unneeded
+CFLAGS = $(DEBUG_INFO) -Wall
+
+else ifeq "$(PLAT)" "ios"
+
+LUA_FLAGS =
+LUALIB = -L../lua
+LUABIN = ../lua/lua
+LD_SHARED = -fPIC -dynamiclib -Wl,-undefined,dynamic_lookup
+STRIP = strip -u -r -x
+CFLAGS= $(DEBUG_INFO) -Wall -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk -miphoneos-version-min=10.0 -fembed-bitcode
+
 endif

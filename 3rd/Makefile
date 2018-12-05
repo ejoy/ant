@@ -1,5 +1,6 @@
 CMAKE_PROJ = assimp freetype ozz-animation bullet3
-PROJ = $(CMAKE_PROJ) bgfx cd cjson zlib
+RUNTIME_PROJ = freetype ozz-animation bullet3 bgfx zlib
+ALL_PROJ = $(RUNTIME_PROJ) assimp cd cjson
 BUILD_CONFIG = release
 
 # should add devenv command's path to system path
@@ -81,20 +82,22 @@ CMAKE_OPT_ozz-animation=-Dozz_build_samples=OFF
 info :
 	@echo Please do 'make init' or 'make init msvc=on' for the first time , and then 'make all' or 'make all msvc=on' . when msvc=on is passed, it not support the make single project, like 'make bgfx_make msvc=on'
 
-init : $(addsuffix _init,$(PROJ))
+init : $(addsuffix _init,$(ALL_PROJ))
 
 ifeq "$(msvc)" ""
-  MAKE_ALL_DEPEND = $(addsuffix _make,$(PROJ))
+  MAKE_ALL_DEPEND = $(addsuffix _make,$(ALL_PROJ))
 else
   MAKE_ALL_DEPEND = msvc_all
 endif
 
 all : $(MAKE_ALL_DEPEND)
 
+runtime : $(addsuffix _make,$(RUNTIME_PROJ))
+
 msvc_all : 
 	start build_msvc_all.bat
 
-clean : $(addsuffix _clean,$(PROJ))
+clean : $(addsuffix _clean,$(ALL_PROJ))
 
 # $(BUILD_PATH) :
 # 	mkdir $@
@@ -146,7 +149,3 @@ endef
 
 $(foreach v, $(CMAKE_PROJ), $(eval $(call CMAKE_TEMP,$(v))))
 #$(foreach v, $(CMAKE_PROJ), $(warning $(call CMAKE_TEMP,$(v))))
-
-
-
-
