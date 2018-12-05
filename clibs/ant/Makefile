@@ -17,7 +17,7 @@ lib$(1).a :
 endef
 $(foreach v, $(LIBS), $(eval $(call MakeLibs,$(v))))
 
-ALLLIBS= $(LIBS) lua cjson
+ALLLIBS= $(LIBS) lua cjson ib-compress
 define UnpackLibs
 unpack_lib$(1).a : lib$(1).a
 	@cd tmp && ar x lib$(1).a
@@ -37,7 +37,10 @@ liblua.a :
 endif
 
 libcjson.a :
-	@cd ../../3rd/lua-cjson/ && $(MAKE) --no-print-directory "LUA_INCLUDE_DIR=../../clibs/lua" "CJSON_LDFLAGS=" "TARGET=libcjson.a" "AR=ar rsv" "CFLAGS=$(CFLAGS)" && mv libcjson.a ../../clibs/ant/tmp
+	@cd ../../3rd/lua-cjson/ && $(MAKE) --no-print-directory "LUA_INCLUDE_DIR=../../clibs/lua" "CJSON_LDFLAGS=" "TARGET=$@" "AR=ar rsv" "CFLAGS=$(CFLAGS)" && mv $@ ../../clibs/ant/tmp
+
+libib-compress.a :
+	@cd ../../3rd/ib-compress/ && $(MAKE) --no-print-directory $@ "PLAT=$(PLAT)" && mv $@ ../../clibs/ant/tmp
 
 tmp/ant_searcher.o : ant_searcher.cpp ant.h ant_module_define.h ant_module_declar.h
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
