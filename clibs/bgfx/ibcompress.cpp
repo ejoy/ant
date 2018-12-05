@@ -1,5 +1,6 @@
-#include <ib-compress/indexbufferdecompression.h>
-#include <ib-compress/readbitstream.h>
+#include <indexbufferdecompression.h>
+#include <readbitstream.h>
+
 #include <bgfx/bgfx.h>
 #include <stdint.h>
 
