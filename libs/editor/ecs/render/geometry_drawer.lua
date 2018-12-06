@@ -64,74 +64,94 @@ end
 -- 		jend.t[1], jend.t[2], jend.t[3]))
 -- end
 
-function draw.draw_bones(joints, color, transform, desc)
+function draw.draw_skeleton(ske, color, transform, desc)	
+	local function generate_bones()		
+		local bones = {}
+		for i=1, #ske do
+			if not ske:isroot(i) then
+				table.insert(bones, {ske:parent(i), i})
+			end
+		end
+		return bones
+	end
+
+	local bones = generate_bones()
+	local function generate_joints_worldpos()		
+		local function load_world_trans(idx, worldpos)
+			local srt = worldpos[idx]
+			if srt == nil then
+				local function build_hierarchy_indices(idx)
+					local indices = {}
+					local curidx = idx
+					while not ske:isroot(curidx) do
+						table.insert(indices, curidx)
+						curidx = ske:parent(curidx)
+					end
+					assert(ske:isroot(curidx))
+					table.insert(indices, curidx)
+					return indices				
+				end
+	
+				local indices = build_hierarchy_indices(idx)
+	
+				local function get_srt(i)
+					local ii = indices[i]				
+					local fsrt = worldpos[ii]
+					if fsrt then
+						return fsrt, true
+					end
+					local j = ske[ii]
+					local e = ms({type="q", table.unpack(j.r)}, "eP")
+					return ms({type="srt", s=j.s, r=e, t=j.t}, "P"), false
+				end
+		
+				local num_indices = #indices	
+				
+				srt = get_srt(num_indices)		
+				for i=num_indices-1, 1, -1 do
+					local csrt, isworld = get_srt(i)				
+					if isworld then
+						srt = csrt
+					else
+						srt = ms(srt, csrt, "*P")					
+					end
+				end
+			
+				worldpos[idx] = srt
+			end
+			
+			return srt
+		end
+
+		local worldpos = {}
+		for i=1, #ske do
+			load_world_trans(i, worldpos)
+		end	
+
+		return worldpos
+	end
+
+	local joints = generate_joints_worldpos()
+	return draw.draw_bones(bones, joints, color, transform, desc)
+end
+
+function draw.draw_bones(bones, joints, color, transform, desc)
 	local dvb = desc.vb
 	local dib = desc.ib
 	local updown_ratio = 0.3
 
-	local bones = {}
-	local numjoints = #joints
-	for i=1, numjoints do
-		if not joints:isroot(i) then
-			table.insert(bones, {joints:parent(i), i})
-		end
-	end
-
 	local bonevb, boneib = create_bone(updown_ratio)
 	local localtrans = ms({type="srt", r={-90, 0, 0}, t={0, 0, updown_ratio}}, "P")
 
-	local worldtrans_cache = {}
-	local function get_world_pos(idx)
-		local srt = worldtrans_cache[idx]
-		if srt == nil then
-			local function build_hierarchy_indices(idx)
-				local indices = {}
-				local curidx = idx
-				while not joints:isroot(curidx) do
-					table.insert(indices, curidx)
-					curidx = joints:parent(curidx)
-				end
-				assert(joints:isroot(curidx))
-				table.insert(indices, curidx)
-				return indices				
-			end
-
-			local indices = build_hierarchy_indices(idx)
-
-			local function get_srt(i)
-				local ii = indices[i]				
-				local fsrt = worldtrans_cache[ii]
-				if fsrt then
-					return fsrt, true
-				end
-				local j = joints[ii]
-				local e = ms({type="q", table.unpack(j.r)}, "eP")
-				return ms({type="srt", s=j.s, r=e, t=j.t}, "P"), false
-			end
-	
-			local num_indices = #indices	
-			
-			srt = get_srt(num_indices)		
-			for i=num_indices-1, 1, -1 do
-				local csrt, isworld = get_srt(i)				
-				if isworld then
-					srt = csrt
-				else
-					srt = ms(srt, csrt, "*P")					
-				end
-			end
-		
-			worldtrans_cache[idx] = srt
-		end
-		
-		return ms(srt, {0, 0, 0, 1}, "*T")
+	local poitions = {}
+	local origin = {0 ,0, 0, 1}
+	for _, j in ipairs(joints) do
+		local p = ms(j, origin, "*P")	-- extract poistion
+		table.insert(poitions, p)
 	end
 
-	for _, b in ipairs(bones) do		
-		local beg_pos, end_pos = get_world_pos(b[1]), get_world_pos(b[2])
-		
-		--print_bone(b)
-		
+	for _, b in ipairs(bones) do
+		local beg_pos, end_pos = poitions[b[1]], poitions[b[2]]
 		local vec = ms(end_pos, beg_pos, "-P")
 		local len = math.sqrt(ms(vec, vec, ".T")[1])
 		local rotation = ms(vec, "neP")

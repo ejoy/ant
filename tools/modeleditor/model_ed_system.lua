@@ -93,7 +93,7 @@ local function draw_bone()
 				dbg_prim.cache = {}
 				local geodrawer = require "editor.ecs.render.geometry_drawer"
 				local desc = {vb={}, ib = {}}
-				geodrawer.draw_bones(assert(ske.assetinfo.handle), 0xfff0f0f0, nil, desc)
+				geodrawer.draw_skeleton(assert(ske.assetinfo.handle), 0xfff0f0f0, nil, desc)
 				dbg_prim.cache.desc = desc
 			end
 		end
