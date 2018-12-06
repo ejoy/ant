@@ -19,7 +19,7 @@ local native = require "window.native"
 local window = require "window"
 
 native.create(1024, 768, "Hello")
-local nwh = native.handle()
+local nwh, context = native.handle()
 local width, height = native.size()
 
 local inputmgr = require "inputmgr"

@@ -9,7 +9,7 @@ static void
 default_message_handle(void *ud, struct ant_window_message *msg) {
 	// dummy handle
 	(void)ud;
-	printf("Unhandle message %d\n", msg->type);
+	//printf("Unhandle message %d\n", msg->type);
 }
 
 static struct ant_window_callback*
@@ -45,35 +45,13 @@ lmainloop(lua_State *L) {
 	return 0;
 }
 
-static int
-lhandle(lua_State *L) {
-	void* handle;
-	int res = window_gethandle(get_callback(L), &handle);
-	if (res != 0) {
-		return luaL_error(L, "Get handle failed.(%d)", res);
-	}
-	lua_pushlightuserdata(L, handle);
-	return 1;
-}
-
-static int
-lsize(lua_State *L) {
-	struct windowSize s;
-	int res = window_getsize(get_callback(L), &s);
-	if (res != 0) {
-		return luaL_error(L, "Get size failed.(%d)", res);
-	}
-	lua_pushinteger(L, s.w);
-	lua_pushinteger(L, s.h);
-	return 2;
-}
-
 static void
 init(lua_State *L) {
 	struct ant_window_callback* cb = lua_newuserdata(L, sizeof(*cb));
 	cb->ud = NULL;
 	cb->message = default_message_handle;
 	lua_setfield(L, LUA_REGISTRYINDEX, ANT_WINDOW_CALLBACK);
+	window_init(cb);
 }
 
 LUAMOD_API int
@@ -83,8 +61,6 @@ luaopen_window_native(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "create", lcreatewindow },
 		{ "mainloop", lmainloop },
-		{ "handle", lhandle },
-		{ "size", lsize },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

@@ -9,6 +9,7 @@
 typedef enum {
 	CALLBACK_ERROR = 1,
 	CALLBACK_UPDATE,
+	CALLBACK_INIT,
 	CALLBACK_EXIT,
 	CALLBACK_TOUCH,
 	CALLBACK_KEYBOARD,
@@ -37,6 +38,14 @@ push_callback_function(struct callback_context * context, int id) {
 
 static void
 push_update_args(lua_State *L, struct ant_window_update *update) {
+}
+
+static void
+push_init_args(lua_State *L, struct ant_window_init *init) {
+	lua_pushlightuserdata(L, init->window);
+	lua_pushlightuserdata(L, init->context);
+	lua_pushinteger(L, init->w);
+	lua_pushinteger(L, init->h);
 }
 
 static void
@@ -136,6 +145,14 @@ callback(void *ud, struct ant_window_message *msg) {
 //			raise_error_string(context, "No update handler");
 			return;
 		}
+	case ANT_WINDOW_INIT:
+		if (push_callback_function(context, CALLBACK_INIT)) {
+			push_init_args(L, &msg->u.init);
+			break;
+		} else {
+//			raise_error_string(context, "No update handler");
+			return;
+		}
 	case ANT_WINDOW_EXIT:
 		if (push_callback_function(context, CALLBACK_EXIT)) {
 			push_exit_args(L, &msg->u.exit);
@@ -208,6 +225,7 @@ register_functions(lua_State *L, int index, lua_State *fL) {
 	}
 	register_function(L, index, "error", fL, CALLBACK_ERROR);
 	register_function(L, index, "update", fL, CALLBACK_UPDATE);
+	register_function(L, index, "init", fL, CALLBACK_INIT);
 	register_function(L, index, "exit", fL, CALLBACK_EXIT);
 	register_function(L, index, "touch", fL, CALLBACK_TOUCH);
 	register_function(L, index, "keyboard", fL, CALLBACK_KEYBOARD);
