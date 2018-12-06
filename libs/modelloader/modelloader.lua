@@ -7,12 +7,14 @@ local modelutil = require "modelloader.util"
 local vfs = require "vfs"
 
 local antmeshloader = require "modelloader.antmeshloader"
-local cvtutil = require "fileconvert.util"
 
 local loader = {}
 
 local function load_from_source(filepath)
-	assert(cvtutil.need_build(filepath))
+	if vfs.localvfs then
+		local cvtutil = require "fileconvert.util"
+		assert(cvtutil.need_build(filepath))
+	end
 	local validfile = vfs.realpath(filepath)
 	return antmeshloader(validfile)
 end
