@@ -113,15 +113,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_CRT_SECURE_NO_WARNINGS;BGFX_CONFIG_DEBUG;LUA_BUILD_AS_DLL;_DEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/thread;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/thread;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;../../3rd/ib-compress;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;bimg$(Configuration).lib;example-common$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin;../../3rd/ib-compress/vs_bin/$(PlatformTarget)/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;bimg$(Configuration).lib;ib-compress.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -132,14 +132,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_CRT_SECURE_NO_WARNINGS;BGFX_CONFIG_DEBUG;WIN32;_DEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/thread;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/thread;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;../../3rd/ib-compress;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win32_vs2017/bin</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;bimg$(Configuration).lib;example-common$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win32_vs2017/bin;../../3rd/ib-compress/vs_bin/$(Configuration)/$(PlatformName);../../3rd/ib-compress/$(PlatformTarget)/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;bimg$(Configuration).lib;ib-compress.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -152,7 +152,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/thread;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/thread;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;../../3rd/ib-compress;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -160,8 +160,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win32_vs2017/bin</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;bimg$(Configuration).lib;example-common$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win32_vs2017/bin;../../3rd/ib-compress/vs_bin/$(Configuration)/$(PlatformName);../../3rd/ib-compress/$(PlatformTarget)/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;bimg$(Configuration).lib;ib-compress.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -174,7 +174,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;_CRT_SECURE_NO_WARNINGS;LUA_BUILD_AS_DLL;NDEBUG;BGFX_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/thread;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/thread;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/bx/include/compat/msvc;../../3rd/ib-compress;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -182,8 +182,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;bimg$(Configuration).lib;example-common$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin;../../3rd/ib-compress/vs_bin/$(Configuration)/$(PlatformName);../../3rd/ib-compress/$(PlatformTarget)/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;bimg$(Configuration).lib;ib-compress.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

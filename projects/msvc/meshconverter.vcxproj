@@ -21,25 +21,14 @@
   <ItemGroup>
     <ClCompile Include="..\..\clibs\meshconverter\antmesh_converter.cpp" />
     <ClCompile Include="..\..\clibs\meshconverter\bgfxmesh_helper.cpp" />
-    <ClCompile Include="..\..\clibs\meshconverter\bgfx\ib-compress\indexbuffercompression.cpp" />
-    <ClCompile Include="..\..\clibs\meshconverter\bgfx\ib-compress\indexbufferdecompression.cpp" />
     <ClCompile Include="..\..\clibs\meshconverter\bgfx\util.cpp" />
     <ClCompile Include="..\..\clibs\meshconverter\fbx_helper.cpp" />
     <ClCompile Include="..\..\clibs\meshconverter\utils.cpp" />
     <ClCompile Include="..\..\clibs\meshconverter\meshconverter.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\clibs\meshconverter\bgfx\ib-compress\indexbuffercompression.h" />
-    <ClInclude Include="..\..\clibs\meshconverter\bgfx\ib-compress\indexbuffercompressionformat.h" />
-    <ClInclude Include="..\..\clibs\meshconverter\bgfx\ib-compress\indexbufferdecompression.h" />
-    <ClInclude Include="..\..\clibs\meshconverter\bgfx\ib-compress\indexcompressionconstants.h" />
-    <ClInclude Include="..\..\clibs\meshconverter\bgfx\ib-compress\readbitstream.h" />
-    <ClInclude Include="..\..\clibs\meshconverter\bgfx\ib-compress\writebitstream.h" />
     <ClInclude Include="..\..\clibs\meshconverter\meshdata.h" />
     <ClInclude Include="..\..\clibs\meshconverter\utils.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\clibs\meshconverter\bgfx\ib-compress\README.md" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -121,13 +110,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/build_msvc/assimp/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/build_msvc/assimp/include;../../3rd/ib-compress</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin;../../3rd/build_msvc/assimp/code/$(Configuration);../../3rd/build_msvc/assimp/contrib/irrXML/$(Configuration);../../3rd/build_msvc/assimp/contrib/zlib/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/build_msvc/ozz-animation/samples/framework/$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;gdi32.lib;psapi.lib;uuid.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;assimp-vc140-mt.lib;IrrXML.lib;zlibstaticd.lib;ozz_base_d.lib;ozz_animation_d.lib;ozz_animation_offline_d.lib;sample_framework_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin;../../3rd/build_msvc/assimp/code/$(Configuration);../../3rd/build_msvc/assimp/contrib/irrXML/$(Configuration);../../3rd/build_msvc/assimp/contrib/zlib/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/build_msvc/ozz-animation/samples/framework/$(Configuration);../../3rd/ib-compress/vs_bin/$(PlatformTarget)/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;gdi32.lib;psapi.lib;uuid.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;assimp-vc140-mt.lib;IrrXML.lib;zlibstaticd.lib;ozz_base_d.lib;ozz_animation_d.lib;ozz_animation_offline_d.lib;ib-compress.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -143,7 +132,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);;../../3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/code/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/code/$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;gdi32.lib;psapi.lib;uuid.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -178,15 +167,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/build_msvc/assimp/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/build_msvc/assimp/include;../../3rd/ib-compress</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin;../../3rd/build_msvc/assimp/code/$(Configuration);../../3rd/build_msvc/assimp/contrib/irrXML/$(Configuration);../../3rd/build_msvc/assimp/contrib/zlib/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/build_msvc/ozz-animation/samples/framework/$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;gdi32.lib;psapi.lib;uuid.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;assimp-vc140-mt.lib;IrrXML.lib;zlibstatic.lib;ozz_base_r.lib;ozz_animation_r.lib;ozz_animation_offline_r.lib;sample_framework_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin;../../3rd/build_msvc/assimp/code/$(Configuration);../../3rd/build_msvc/assimp/contrib/irrXML/$(Configuration);../../3rd/build_msvc/assimp/contrib/zlib/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/ib-compress/vs_bin/$(Configuration)/$(PlatformTarget)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua53.lib;gdi32.lib;psapi.lib;uuid.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;assimp-vc140-mt.lib;IrrXML.lib;zlibstatic.lib;ozz_base_r.lib;ozz_animation_r.lib;ozz_animation_offline_r.lib;ib-compress.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
