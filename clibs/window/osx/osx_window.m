@@ -215,11 +215,16 @@ static int32_t clamp(int32_t v, int32_t min, int32_t max) {
 @end
 
 WindowDelegate* g_wd;
+NSWindow* g_wnd = 0;
+int     g_w;
+int     g_h;
 int32_t g_mx;
 int32_t g_my;
 
-void* window_create(struct ant_window_callback* cb, int w, int h, const char* title, size_t sz) {
+int window_create(struct ant_window_callback* cb, int w, int h, const char* title, size_t sz) {
     (void)sz;
+    g_w = w;
+    g_h = h;
     NSRect rc = NSMakeRect(0, 0, w, h);
 	NSUInteger uiStyle = 0
 		| NSWindowStyleMaskTitled
@@ -240,7 +245,8 @@ void* window_create(struct ant_window_callback* cb, int w, int h, const char* ti
 	[g_wd windowCreated:win];
     [g_wd initAntCallback: cb];
     [nsTitle release];
-    return win; 
+    g_wnd = win;
+    return 0;
 }
 
 static NSEvent* peek_event() {
@@ -347,4 +353,21 @@ void window_mainloop(struct ant_window_callback* cb) {
             while (dispatch_event(cb, peek_event())) { }
         }
     }
+}
+
+int window_gethandle(struct ant_window_callback* cb, void** handle) {
+	if (!g_wnd) {
+		return 1;
+	}
+	*handle = (void*)g_wnd;
+	return 0;
+}
+
+int window_getsize(struct ant_window_callback* cb, struct windowSize* size) {
+	if (!g_wnd) {
+		return 1;
+	}
+	size->w = g_w;
+	size->h = g_h;
+	return 0;
 }

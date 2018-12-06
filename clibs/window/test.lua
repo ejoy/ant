@@ -5,14 +5,14 @@ local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"
 
-local width = 1024
-local height = 768
-local wnd = native.create(width,height,"Hello World")
+native.create(1024, 768, "Hello")
+local nwh = native.handle()
+local width, height = native.size()
 
 local s_logo
 
 bgfx.init {
-	nwh = wnd,
+	nwh = nwh,
 --	renderer = "DIRECT3D9",
 	renderer = "OPENGL",
 	width = width,

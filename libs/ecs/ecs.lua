@@ -82,7 +82,7 @@ function world:remove_entity(eid)
 	self[eid] = nil
 	self._entity[eid] = nil
 
-	-- notify all components of this entity	
+	-- notify all components of this entity
 	local typeclass = self._component_type
 	for component_type, c in pairs(e) do
 		local del = typeclass[component_type].delete
@@ -92,8 +92,6 @@ function world:remove_entity(eid)
 
 		self:change_component(eid, component_type)
 	end
-
-	self:notify()
 end
 
 local function component_next(set, index)
@@ -196,7 +194,7 @@ local function init_modules(w, modules, module_path)
 		end
 		if mods[path] then
 			return
-		end		
+		end
 		mods[#mods+1] = path
 		mods[path] = true
 	end
@@ -207,7 +205,7 @@ local function init_modules(w, modules, module_path)
 	local reg, class = typeclass(w, import)
 	while #mods > 0 do
 		local name = mods[#mods]
-		mods[#mods] = nil		
+		mods[#mods] = nil
 		local module, err = loadfile(name)
 		if not module then
 			error(("module '%s' load failed:%s"):format(name, err))
