@@ -99,8 +99,12 @@ function editor_mainwindow:run(config)
 	self.iq = inputmgr.queue(mapiup)
 	eu.regitster_iup(self.iq, self.canvas)
 
-    local nwh = iup.GetAttributeData(self.canvas,"HWND")
-    rhwi.init(nwh, fb_width, fb_height)
+	local nwh = iup.GetAttributeData(self.canvas,"HWND")
+    rhwi.init {
+		nwh = nwh,
+		width = fb_width,
+		height = fb_height,
+	}
 
     --self:new_world {"test_world.module", "engine.module", "editor.module"}
     -- to be able to run this script inside another context

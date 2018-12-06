@@ -118,5 +118,7 @@ function localvfs.repopath()
 	return self._repo
 end
 
+localvfs.localvfs = true
+
 return localvfs
 
