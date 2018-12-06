@@ -18,9 +18,9 @@ require "common/log"
 local native = require "window.native"
 local window = require "window"
 
-local width = 1024
-local height = 768
-local nwh = native.create(width,height,"Hello World")
+native.create(1024, 768, "Hello")
+local nwh = native.handle()
+local width, height = native.size()
 
 local inputmgr = require "inputmgr"
 local iq = inputmgr.queue {

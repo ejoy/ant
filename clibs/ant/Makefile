@@ -9,7 +9,7 @@ else
 default : libant.a
 endif
 
-LIBS= bgfx bullet hierarchy math3d thread terrain crypt debugger lsocket protocol remotedebug firmware platform #window
+LIBS= bgfx bullet hierarchy math3d thread terrain crypt debugger lsocket protocol remotedebug firmware platform window
 
 define MakeLibs
 lib$(1).a :	
