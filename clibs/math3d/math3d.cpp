@@ -445,7 +445,7 @@ extract_translate(lua_State *L, struct lastack *LS, int index){
 		translate = *((glm::vec3*)value);
 	} else if (ttype == LUA_TTABLE) {
 		size_t len = lua_rawlen(L, -1);
-		if (len != 3)
+		if (len < 3)
 			luaL_error(L, "t field should : t={1, 2, 3}, only accept 3 value, %d is give", len);
 
 		for (int i = 0; i < 3; ++i)
