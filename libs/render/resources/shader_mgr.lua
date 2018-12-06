@@ -8,7 +8,6 @@ local path = require "filesystem.path"
 local assetmgr = require "asset"
 
 local vfs = require "vfs"
-local cvtutil = require "fileconvert.util"
 
 local localfile = require "filesystem.file"
 
@@ -44,7 +43,10 @@ local function load_shader(name)
 		error(string.format("not found shader file: %s", name))
 	end
 
-	assert(cvtutil.need_build(filename))
+	if vfs.localvfs then
+		local cvtutil = require "fileconvert.util"
+		assert(cvtutil.need_build(filename))
+	end
 	local validfile = vfs.realpath(filename)
 	local f = assert(localfile.open(assert(validfile), "rb"))
 	local data = f:read "a"

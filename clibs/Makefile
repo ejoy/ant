@@ -46,7 +46,7 @@ endef
 
 define MAKE_temp
 build_$(1) : build_lua	
-	cd $(1) && $(MAKE) $(PLAT)
+	cd $(1) && $(MAKE) "PLAT=$(PLAT)"
 
 clean_$(1) :
 	cd $(1) && $(MAKE) clean
