@@ -9,7 +9,6 @@
 }
 @end
 
-static CALayer* g_layer = NULL;
 static id<MTLDevice> g_device = NULL;
 static struct ant_window_callback* g_cb = NULL;
 
@@ -27,26 +26,25 @@ static struct ant_window_callback* g_cb = NULL;
     return [CAEAGLLayer class];
 #pragma clang diagnostic pop
 }
-- (id)initWithFrame:(CGRect)rect {
+- (id)initWithRect:(CGRect)rect WithScale: (float)scale {
     self = [super initWithFrame:rect];
     if (nil == self) {
         return nil;
     }
-    g_layer = self.layer;
-    self.backgroundColor = [UIColor yellowColor];
-    return self;
-}
-- (void)layoutSubviews {
+    [self setContentScaleFactor: scale];
+
     int w = (int)(self.contentScaleFactor * self.frame.size.width);
     int h = (int)(self.contentScaleFactor * self.frame.size.height);
-
     struct ant_window_message msg;
     msg.type = ANT_WINDOW_INIT;
-    msg.u.init.window = (void*)g_layer;
+    msg.u.init.window = (void*)self.layer;
     msg.u.init.context = (void*)g_device;
     msg.u.init.w = w;
     msg.u.init.h = h;
     g_cb->message(g_cb->ud, &msg);
+    return self;
+}
+- (void)layoutSubviews {
 }
 - (void)start {
     if (nil == self.m_displayLink) {
@@ -68,29 +66,70 @@ static struct ant_window_callback* g_cb = NULL;
     g_cb->message(g_cb->ud, &update_msg);
 }
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    UITouch *touch = [[event allTouches] anyObject];
+    CGPoint pt = [touch locationInView:self];
+    pt.x *= self.contentScaleFactor;
+    pt.y *= self.contentScaleFactor;
+    struct ant_window_message msg;
+    msg.type = ANT_WINDOW_MOUSE_CLICK;
+    msg.u.mouse_click.type = 0;
+    msg.u.mouse_click.press = 1;
+    msg.u.mouse_click.x = pt.x;
+    msg.u.mouse_click.y = pt.y;
+    g_cb->message(g_cb->ud, &msg);
 }
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-}
-- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    UITouch *touch = [[event allTouches] anyObject];
+    CGPoint pt = [touch locationInView:self];
+    pt.x *= self.contentScaleFactor;
+    pt.y *= self.contentScaleFactor;
+    struct ant_window_message msg;
+    msg.type = ANT_WINDOW_MOUSE_CLICK;
+    msg.u.mouse_click.type = 0;
+    msg.u.mouse_click.press = 0;
+    msg.u.mouse_click.x = pt.x;
+    msg.u.mouse_click.y = pt.y;
+    g_cb->message(g_cb->ud, &msg);
 }
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+    UITouch *touch = [[event allTouches] anyObject];
+    CGPoint pt = [touch locationInView:self];
+    pt.x *= self.contentScaleFactor;
+    pt.y *= self.contentScaleFactor;
+    struct ant_window_message msg;
+    msg.type = ANT_WINDOW_MOUSE_CLICK;
+    msg.u.mouse_click.type = 0;
+    msg.u.mouse_click.press = 0;
+    msg.u.mouse_click.x = pt.x;
+    msg.u.mouse_click.y = pt.y;
+    g_cb->message(g_cb->ud, &msg);
+}
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    UITouch *touch = [[event allTouches] anyObject];
+    CGPoint pt = [touch locationInView:self];
+    pt.x *= self.contentScaleFactor;
+    pt.y *= self.contentScaleFactor;
+    struct ant_window_message msg;
+    msg.type = ANT_WINDOW_MOUSE_MOVE;
+    msg.u.mouse_move.state = 1;
+    msg.u.mouse_move.x = pt.x;
+    msg.u.mouse_move.y = pt.y;
+    g_cb->message(g_cb->ud, &msg);
 }
 @end
 
 @implementation AppDelegate
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     CGRect rect = [[UIScreen mainScreen] bounds];
+    float scale = [[UIScreen mainScreen] scale];
     self.m_window = [[UIWindow alloc] initWithFrame: rect];
-    self.m_view = [ [View alloc] initWithFrame: rect];
+    self.m_view = [[View alloc] initWithRect: rect WithScale: scale];
     [self.m_window addSubview: self.m_view];
-    
+
     ViewController* mvc = [[ViewController alloc] init];
     mvc.view = self.m_view;
     [self.m_window setRootViewController: mvc];
     [self.m_window makeKeyAndVisible];
-    
-    float scaleFactor = [[UIScreen mainScreen] scale];
-    [self.m_view setContentScaleFactor: scaleFactor ];
     return YES;
 }
 - (void)applicationDidBecomeActive:(UIApplication *)application {
@@ -100,6 +139,9 @@ static struct ant_window_callback* g_cb = NULL;
     [self.m_view stop];
 }
 - (void)applicationWillTerminate:(UIApplication *)application {
+    struct ant_window_message msg;
+    msg.type = ANT_WINDOW_EXIT;
+    g_cb->message(g_cb->ud, &msg);
     [self.m_view stop];
 }
 @end
