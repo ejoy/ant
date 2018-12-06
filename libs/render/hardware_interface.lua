@@ -2,7 +2,6 @@ local hw = {}
 hw.__index = hw
 
 local caps = nil
-local renderertype = nil
 function hw.get_caps()
     return assert(caps)
 end
@@ -51,6 +50,10 @@ function hw.default_shader_type(plat)
 	end
 
 	return "glsl"
+end
+
+function hw.shutdown()
+	bgfx.shutdown()
 end
 
 return hw
