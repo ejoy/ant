@@ -111,7 +111,7 @@ function debug_draw:update()
 	
 	local function commit_desc(desc)	
 		if desc.vb == nil or next(desc.vb) == nil then
-			return
+			return false
 		end
 		local materialpath = desc.material
 		if materialpath and materialpath ~= "" then
@@ -135,10 +135,9 @@ function debug_draw:update()
 		bgfx.update(assert(g.ib).handle, 0, desc.ib)
 
 		clean_desc_buffer(desc)
+		return true
 	end
 
-	commit_desc(assert(wireframe.desc))
-
-	
+	dbentity.can_render = commit_desc(assert(wireframe.desc))
 end
 
