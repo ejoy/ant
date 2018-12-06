@@ -2,19 +2,28 @@
 #define ant_window_h
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define ANT_WINDOW_UPDATE 0
-#define ANT_WINDOW_EXIT 1
-#define ANT_WINDOW_TOUCH 2
-#define ANT_WINDOW_KEYBOARD 3
-#define ANT_WINDOW_MOUSE_MOVE 4
-#define ANT_WINDOW_MOUSE_WHEEL 5
-#define ANT_WINDOW_MOUSE_CLICK 6
+#define ANT_WINDOW_INIT 1
+#define ANT_WINDOW_EXIT 2
+#define ANT_WINDOW_TOUCH 3
+#define ANT_WINDOW_KEYBOARD 4
+#define ANT_WINDOW_MOUSE_MOVE 5
+#define ANT_WINDOW_MOUSE_WHEEL 6
+#define ANT_WINDOW_MOUSE_CLICK 7
 
 #define ANT_WINDOW_CALLBACK "ANT_WINDOW_CALLBACK"
 
 struct ant_window_update {
 	size_t dump;
+};
+
+struct ant_window_init {
+	void* window;
+	void* context;
+	int   w;
+	int   h;
 };
 
 struct ant_window_exit {
@@ -64,6 +73,7 @@ struct ant_window_message {
 	int type;
 	union {
 		struct ant_window_update update;
+		struct ant_window_init init;
 		struct ant_window_exit exit;
 		struct ant_window_touch touch;
 		struct ant_window_keyboard keyboard;

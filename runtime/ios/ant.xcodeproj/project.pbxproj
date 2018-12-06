@@ -253,6 +253,7 @@
 				HEADER_SEARCH_PATHS = (
 					../../clibs/lua,
 					../../clibs/ant,
+					../../clibs/window/ios/,
 				);
 				INFOPLIST_FILE = ant/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -300,6 +301,7 @@
 				HEADER_SEARCH_PATHS = (
 					../../clibs/lua,
 					../../clibs/ant,
+					../../clibs/window/ios/,
 				);
 				INFOPLIST_FILE = ant/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

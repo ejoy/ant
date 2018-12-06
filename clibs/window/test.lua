@@ -1,30 +1,28 @@
 --dofile "libs/init.lua"
-
 local native = require "window.native"
-
 local window = require "window"
 local bgfx = require "bgfx"
-
-native.create(1024, 768, "Hello")
-local nwh = native.handle()
-local width, height = native.size()
-
 local s_logo
-
-bgfx.init {
-	nwh = nwh,
---	renderer = "DIRECT3D9",
-	renderer = "OPENGL",
-	width = width,
-	height = height,
-	reset = "v",
-}
-
-bgfx.set_view_rect(0, 0, 0, width, height)
-bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
-bgfx.set_debug "ST"
+local width, height
 
 local callback = {}
+
+function callback.init(nwh, context, w, h)
+	width, height = w, h
+	bgfx.init {
+		nwh = nwh,
+		context = context,
+	--	renderer = "DIRECT3D9",
+		renderer = "OPENGL",
+		width = width,
+		height = height,
+		reset = "v",
+	}
+	
+	bgfx.set_view_rect(0, 0, 0, width, height)
+	bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
+	bgfx.set_debug "ST"
+end
 
 function callback.error(err)
 	print(err)
@@ -339,4 +337,5 @@ end
 
 init()
 
+native.create(1024, 768, "Hello")
 native.mainloop()

@@ -6,10 +6,6 @@
 #define CLASSNAME L"ANTCLIENT"
 #define WINDOWSTYLE (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX)
 
-static int  g_w = 0;
-static int  g_h = 0;
-static HWND g_wnd = 0;
-
 static void
 get_xy(LPARAM lParam, int *x, int *y) {
 	*x = (short)(lParam & 0xffff); 
@@ -130,6 +126,11 @@ register_class()
 	RegisterClassW(&wndclass);
 }
 
+int window_init(struct ant_window_callback* cb) {
+    // do noting
+    return 0;
+}
+
 int window_create(struct ant_window_callback* cb, int w, int h, const char* title, size_t sz) {
 	wchar_t* wtitle = (wchar_t *)malloc((sz + 1) * sizeof(wchar_t));
 	if (wtitle == 0) {
@@ -160,9 +161,14 @@ int window_create(struct ant_window_callback* cb, int w, int h, const char* titl
 	}
 	ShowWindow(wnd, SW_SHOWDEFAULT);
 	UpdateWindow(wnd);
-	g_w = w;
-	g_h = h;
-	g_wnd = wnd;
+
+	struct ant_window_message msg;
+	msg.type = ANT_WINDOW_INIT;
+	msg.u.init.window = wnd;
+	msg.u.init.context = 0;
+	msg.u.init.w = w;
+	msg.u.init.h = h;
+	cb->message(cb->ud, &msg);
 	return 0;
 }
 
@@ -183,21 +189,4 @@ void window_mainloop(struct ant_window_callback* cb) {
 		}
 	}
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
-}
-
-int window_gethandle(struct ant_window_callback* cb, void** handle) {
-	if (!g_wnd) {
-		return 1;
-	}
-	*handle = (void*)g_wnd;
-	return 0;
-}
-
-int window_getsize(struct ant_window_callback* cb, struct windowSize* size) {
-	if (!g_wnd) {
-		return 1;
-	}
-	size->w = g_w;
-	size->h = g_h;
-	return 0;
 }
