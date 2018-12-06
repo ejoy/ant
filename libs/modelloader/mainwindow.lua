@@ -33,7 +33,11 @@ eu.regitster_iup(input_queue, canvas)
 dlg:showxy(iup.CENTER, iup.CENTER)
 dlg.usersize = nil
 
-rhwi.init(iup.GetAttributeData(canvas,"HWND"), fb_width, fb_height)
+rhwi.init {
+	nwh = iup.GetAttributeData(canvas,"HWND"),
+	width = fb_width,
+	height = fb_height,
+}
 
 local world = scene.start_new_world(input_queue, fb_width, fb_height, {
 	"modelloader.renderworld",

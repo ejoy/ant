@@ -15,7 +15,12 @@ local editor = {}; editor.__index = editor
 
 function editor.run(fbw, fbh, canvas, modules, module_searchpath)
 	module_searchpath = module_searchpath or "?.lua"
-	rhwi.init(iup.GetAttributeData(canvas, "HWND"), fbw, fbh, false)
+	rhwi.init {
+		nwh = iup.GetAttributeData(canvas,"HWND"),
+		width = fbw,
+		height = fbh,
+		getlog = false,
+	}
 	local iq = inputmgr.queue(mapiup)
 	local eu = require "editor.util"
 	eu.regitster_iup(iq, canvas)

@@ -7,24 +7,14 @@ function hw.get_caps()
     return assert(caps)
 end
 
-function hw.init(nwh, fb_w, fb_h, fetchlog, renderer)
-	renderertype = renderer or "OPENGL"
-	local args = {
-        nwh = nwh,
-        width = fb_w,
-        height = fb_h,
-		renderer = renderertype,
-        getlog = fetchlog or true,
-	}
-
+function hw.init(args)
 	local bgfx = require "bgfx"
-	-- todo: bgfx.init support other flags : reset , maxFrameLatency, maxEncoders, debug, profile, etc.
+	args.renderer = args.renderer or "OPENGL"
+	args.getlog = args.getlog or true
 	bgfx.init(args)
-
-    bgfx.reset(fb_w, fb_h, "v")
-
+	bgfx.reset(args.width, args.height, "v")
 	assert(caps == nil)
-    caps = bgfx.get_caps()
+	caps = bgfx.get_caps()
 end
 
 local shadertypes = {

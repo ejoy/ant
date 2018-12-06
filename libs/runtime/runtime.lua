@@ -59,7 +59,12 @@ function callback.init(window, context, w, h)
 	width, height = w, h
     local su = require "scene.util"
     local rhwi = require "render.hardware_interface"
-    rhwi.init(window, width, height)
+    rhwi.init {
+		nwh = window,
+		context = context,
+		width = width,
+		height = height,
+	}
 	local world = su.start_new_world(iq, width, height, modules, modulepath)
 	function update()
 		dbgupdate()
