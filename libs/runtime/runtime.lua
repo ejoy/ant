@@ -18,10 +18,6 @@ require "common/log"
 local native = require "window.native"
 local window = require "window"
 
-native.create(1024, 768, "Hello")
-local nwh, context = native.handle()
-local width, height = native.size()
-
 local inputmgr = require "inputmgr"
 local iq = inputmgr.queue {
 	keyboard="_,_,_",
@@ -53,6 +49,21 @@ end
 
 local callback = {}
 
+local width, height
+local modules, modulepath
+
+function callback.init(window, context, w, h)
+	width, height = w, h
+    local su = require "scene.util"
+    local rhwi = require "render.hardware_interface"
+    rhwi.init(window, width, height)
+    local world = su.start_new_world(iq, width, height, modules, modulepath)
+    function callback.update()
+        dbgupdate()
+        world.update()
+    end
+end
+
 function callback.error(err)
 	print(err)
 end
@@ -83,16 +94,10 @@ function callback.exit()
     dprint("exit")
 end
 
-local function start(modules, modulepath)
-    local su = require "scene.util"
-    local rhwi = require "render.hardware_interface"
-    rhwi.init(nwh, width, height)
-    local world = su.start_new_world(iq, width, height, modules, modulepath)
-    function callback.update()
-        dbgupdate()
-        world.update()
-    end
-    window.register(callback)
+local function start(m1, m2)
+	modules, modulepath = m1, m2
+	window.register(callback)
+	native.create(1024, 768, "Hello")
     native.mainloop()
 end
 
