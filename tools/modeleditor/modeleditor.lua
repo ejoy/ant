@@ -123,6 +123,12 @@ local dlg = iup.dialog {
 							TITLE="Show Sample Object",
 							VALUE="ON",
 						},
+						iup.space { SIZE="0x5", },
+						iup.toggle {
+							NAME="SHOWSAMPLEBOUNDING",
+							TITLE="Show Sample BoundingBox",
+							VALUE="OFF",
+						},
 						iup.fill {},
 					},
 					iup.fill{},

@@ -83,6 +83,14 @@ local function enable_sample_visible()
 	end
 end
 
+local function enable_sample_boundingbox()
+	local sample = smaple_entity()
+	if sample then
+		local bounding = dlg_item("SHOWSAMPLEBOUNDING")
+		sample.widget.can_render = bounding.VALUE ~= "OFF"
+	end
+end
+
 local function draw_bone()
 	local sample = smaple_entity()
 	if sample then		
@@ -287,14 +295,15 @@ local function init_playitme_ctrl()
 end
 
 local function init_check_shower()
-	local bone_shower = dlg_item("SHOWBONES")
-	function bone_shower:action()
-		enable_bones_visible()
-	end
+	local checkers = {
+		SHOWBONES=enable_bones_visible,
+		SHOWSAMPLE=enable_sample_visible,
+		SHOWSAMPLEBOUNDING=enable_sample_boundingbox,
+	}
 
-	local sample_shower = dlg_item("SHOWSAMPLE")
-	function sample_shower:action()
-		enable_sample_visible()
+	for k, v in pairs(checkers) do
+		local checker = dlg_item(k)
+		checker.action = function () v() end
 	end
 end
 

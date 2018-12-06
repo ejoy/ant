@@ -22,9 +22,11 @@ function widget_sys:update()
 		local e = world[eid]
 		local widget = e.widget
 
-		local meshhandle = assert(widget.mesh).assetinfo.handle		
-		local materials = assert(widget.material).content
-		
-		ru.insert_primitive(eid, meshhandle, materials, widget.srt, result)
+		if widget.can_render then
+			local meshhandle = assert(widget.mesh).assetinfo.handle		
+			local materials = assert(widget.material).content
+			
+			ru.insert_primitive(eid, meshhandle, materials, widget.srt, result)
+		end
 	end
 end
