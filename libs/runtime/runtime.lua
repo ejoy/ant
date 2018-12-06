@@ -52,16 +52,19 @@ local callback = {}
 local width, height
 local modules, modulepath
 
+local function update()
+end
+
 function callback.init(window, context, w, h)
 	width, height = w, h
     local su = require "scene.util"
     local rhwi = require "render.hardware_interface"
     rhwi.init(window, width, height)
-    local world = su.start_new_world(iq, width, height, modules, modulepath)
-    function callback.update()
-        dbgupdate()
-        world.update()
-    end
+	local world = su.start_new_world(iq, width, height, modules, modulepath)
+	function update()
+		dbgupdate()
+		world.update()
+	end
 end
 
 function callback.error(err)
@@ -92,6 +95,10 @@ end
 
 function callback.exit()	
     dprint("exit")
+end
+
+function callback.update()
+	update()
 end
 
 local function start(m1, m2)
