@@ -3,20 +3,24 @@ include ../common.mk
 ifeq "$(PLAT)" "mingw"
 default : firmware.dll
 else
-default : libfirmware.a
+default : libfirmware-$(PLAT).a
 endif
 
-firmware.o : firmware.cpp incbin.h \
+$(ODIR)/firmware.o : firmware.cpp incbin.h \
 	$(ANT3RD)/../runtime/core/firmware/bootstrap.lua \
 	$(ANT3RD)/../runtime/core/firmware/io.lua \
-	$(ANT3RD)/../runtime/core/firmware/vfs.lua
+	$(ANT3RD)/../runtime/core/firmware/vfs.lua | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC)
 
-firmware.dll : firmware.o
+firmware.dll : $(ODIR)/firmware.o
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
 
-libfirmware.a : firmware.o
+libfirmware-$(PLAT).a : $(ODIR)/firmware.o
 	ar rsv $@ $^
 
+$(ODIR) :
+	mkdir -p $@
+
 clean :
-	rm -f firmware.dll libfirmware.a *.o
+	rm -rf $(OROOT) *.dll *.a
+

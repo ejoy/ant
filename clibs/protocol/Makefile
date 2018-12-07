@@ -3,17 +3,21 @@ include ../common.mk
 ifeq "$(PLAT)" "mingw"
 default : protocol.dll
 else
-default : libprotocol.a
+default : libprotocol-$(PLAT).a
 endif
 
-lprotocol.o : lprotocol.c
+$(ODIR)/lprotocol.o : lprotocol.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
-protocol.dll : lprotocol.o
+protocol.dll : $(ODIR)/lprotocol.o
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
 
-libprotocol.a : lprotocol.o
+libprotocol-$(PLAT).a : $(ODIR)/lprotocol.o
 	ar rsv $@ $^
 
+$(ODIR) :
+	mkdir -p $@
+
 clean :
-	rm -f protocol.dll libprotocol.a *.o
+	rm -rf $(OROOT) *.dll *.a
+

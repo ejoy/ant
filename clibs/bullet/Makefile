@@ -7,29 +7,29 @@ BULLETLIB = -L$(BULLETROOT)/build/bullet3/lib -lBulletDynamics -lBulletCollision
 ifeq "$(PLAT)" "mingw"
 default : bullet.dll
 else
-default : libbullet.a
+default : libbullet-$(PLAT).a
 endif
 
 BULLET_SRC= Collision/CollisionSdkC_Api.cpp Collision/Internal/Bullet2CollisionSdk.cpp bullet.cpp
-BULLET_OBJ= Collision/CollisionSdkC_Api.o Collision/Internal/Bullet2CollisionSdk.o bullet.o 
+BULLET_OBJ= $(ODIR)/CollisionSdkC_Api.o $(ODIR)/Bullet2CollisionSdk.o $(ODIR)/bullet.o 
 
-Collision/CollisionSdkC_Api.o : Collision/CollisionSdkC_Api.cpp
+$(ODIR)/CollisionSdkC_Api.o : Collision/CollisionSdkC_Api.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(CXXFLAGS) -o $@ $^ $(BULLETINC) $(LUAINC)
 
-Collision/Internal/Bullet2CollisionSdk.o : Collision/Internal/Bullet2CollisionSdk.cpp
+$(ODIR)/Bullet2CollisionSdk.o : Collision/Internal/Bullet2CollisionSdk.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(CXXFLAGS) -o $@ $^ $(BULLETINC) $(LUAINC)
 
-bullet.o : bullet.cpp
+$(ODIR)/bullet.o : bullet.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(CXXFLAGS) -o $@ $^ $(BULLETINC) $(LUAINC)
 
-bullet.dll : $(BULLET_OBJ) | $(ODIR)
+bullet.dll : $(BULLET_OBJ)
 	$(CXX) $(LD_SHARED) $(CFLAGS) $(CXXFLAGS) -o $@ $^ -lstdc++ $(LUALIB) $(BULLETLIB) $(BULLETINC)
 
-libbullet.a : $(BULLET_OBJ)
+libbullet-$(PLAT).a : $(BULLET_OBJ)
 	ar rsv $@ $^
 
 $(ODIR) :
-	mkdir $@
+	mkdir -p $@
 
 clean :
-	rm -f $(BULLET_OBJ) && rm -f *.dll *.a 
+	rm -rf $(OROOT) *.dll *.a

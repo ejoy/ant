@@ -3,26 +3,29 @@ include ../common.mk
 ifeq "$(PLAT)" "mingw"
 default : lsocket.dll
 else
-default : liblsocket.a
+default : liblsocket-$(PLAT).a
 endif
 
 ifeq "$(PLAT)" "mingw"
-OBJS = lsocket.o win_compat.o
+OBJS = $(ODIR)/lsocket.o $(ODIR)/win_compat.o
 else
-OBJS = lsocket.o
+OBJS = $(ODIR)/lsocket.o
 endif
 
-lsocket.o : lsocket.c win_compat.h
+$(ODIR)/lsocket.o : lsocket.c win_compat.h | $(ODIR)
 	$(CC) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
-win_compat.o : win_compat.c win_compat.h
+$(ODIR)/win_compat.o : win_compat.c win_compat.h | $(ODIR)
 	$(CC) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
 lsocket.dll : $(OBJS)
 	$(CXX) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB) -lws2_32
 
-liblsocket.a : $(OBJS)
+liblsocket-$(PLAT).a : $(OBJS)
 	ar rsv $@ $^
 
-clean:
-	rm -f *.o *.so *.dll *.a
+$(ODIR) :
+	mkdir -p $@
+
+clean :
+	rm -rf $(OROOT) *.dll *.a

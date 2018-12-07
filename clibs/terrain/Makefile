@@ -5,7 +5,7 @@ include ../bgfx/bgfx_define.mk
 ifeq "$(PLAT)" "mingw"
 default : lterrain.dll
 else
-default : libterrain.a
+default : libterrain-$(PLAT).a
 endif
 
 $(ODIR)/terrain.o : terrain.cpp | $(ODIR)
@@ -14,13 +14,11 @@ $(ODIR)/terrain.o : terrain.cpp | $(ODIR)
 lterrain.dll : $(ODIR)/terrain.o 
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) $(BGFXUTILLIB) $(BGFXLIB)
 
-libterrain.a : $(ODIR)/terrain.o 
+libterrain-$(PLAT).a : $(ODIR)/terrain.o 
 	ar rsv $@ $^
 
-# all
-
 $(ODIR) :
-	mkdir $@
+	mkdir -p $@
 
 clean :
-	rm -rf $(ODIR) && rm -f *.dll libterrain.a
+	rm -rf $(OROOT) *.dll *.a

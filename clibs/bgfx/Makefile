@@ -10,11 +10,9 @@ endif
 ifeq "$(PLAT)" "mingw"
 default : bgfx.dll
 else
-default : libbgfx.a
+default : libbgfx-$(PLAT).a
 endif
 
-
-# bgfx
 $(ODIR)/ibcompress.o : ibcompress.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $^ $(BGFXINC) $(IB_COMPRESSINC)
 
@@ -33,13 +31,11 @@ $(ODIR)/nuklearlua.o : nuklearlua.c | $(ODIR)
 bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/ibcompress.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o $(ODIR)/nuklearlua.o
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) $(BGFXLIB) $(BIMGLIB) $(BXLIB) $(IB_COMPRESSLIB)
 
-libbgfx.a : $(ODIR)/luabgfx.o $(ODIR)/ibcompress.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o $(ODIR)/nuklearlua.o
+libbgfx-$(PLAT).a : $(ODIR)/luabgfx.o $(ODIR)/ibcompress.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o $(ODIR)/nuklearlua.o
 	ar rsv $@ $^
 
-# all
-
 $(ODIR) :
-	mkdir $@
+	mkdir -p $@
 
 clean :
-	rm -rf $(ODIR) && rm -f *.dll && rm -f libbgfx.a
+	rm -rf $(OROOT) *.dll *.a

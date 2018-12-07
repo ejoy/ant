@@ -3,17 +3,20 @@ include ../common.mk
 ifeq "$(PLAT)" "mingw"
 default : remotedebug.dll
 else
-default : libremotedebug.a
+default : libremotedebug-$(PLAT).a
 endif
 
-remotedebug.o : remotedebug.c debugvar.h
+$(ODIR)/remotedebug.o : remotedebug.c debugvar.h | $(ODIR)
 	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC)
 
-remotedebug.dll : remotedebug.o
+remotedebug.dll : $(ODIR)/remotedebug.o
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB)
 
-libremotedebug.a : remotedebug.o
+libremotedebug-$(PLAT).a : $(ODIR)/remotedebug.o
 	ar rsv $@ $^
 
+$(ODIR) :
+	mkdir -p $@
+
 clean :
-	rm -f remotedebug.dll libremotedebug.a *.o
+	rm -rf $(OROOT) *.dll *.a
