@@ -162,7 +162,7 @@ return function (filename)
 	end
 
 	local version = get_version()
-	print("file version : ", version)
+	--print("file version : ", version)
 
 	-- actually, we can provide a common mapper for some common members, 
 	-- like : bounding, transform, num_vertiecs, num_indices etc.	

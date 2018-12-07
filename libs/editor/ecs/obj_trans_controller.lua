@@ -285,8 +285,8 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 		obj.can_render = false
 		namemapper[name] = eid
 
-		print("axis-base object : ", obj.name)
-		mu.print_srt(obj, 1)
+		-- print("axis-base object : ", obj.name)
+		-- mu.print_srt(obj, 1)
 	end
 
 	create_mesh_entity("head", headmeshfile)

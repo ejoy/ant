@@ -57,9 +57,7 @@ local function load_shader(name)
 end
 
 local function load_shader_uniforms(name)
-    local h = load_shader(name)
-    print("load uniform ",name )
-    assert(h)
+    local h = assert(load_shader(name))    
     local uniforms = bgfx.get_shader_uniforms(h)
     return h, uniforms
 end
