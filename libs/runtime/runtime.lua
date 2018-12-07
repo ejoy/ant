@@ -51,9 +51,7 @@ local callback = {}
 
 local width, height
 local modules, modulepath
-
-local function update()
-end
+local world
 
 function callback.init(window, context, w, h)
 	width, height = w, h
@@ -65,11 +63,7 @@ function callback.init(window, context, w, h)
 		width = width,
 		height = height,
 	}
-	local world = su.start_new_world(iq, width, height, modules, modulepath)
-	function update()
-		dbgupdate()
-		world.update()
-	end
+	world = su.start_new_world(iq, width, height, modules, modulepath)
 end
 
 function callback.error(err)
@@ -103,7 +97,8 @@ function callback.exit()
 end
 
 function callback.update()
-	update()
+	dbgupdate()
+	world.update()
 end
 
 local function start(m1, m2)

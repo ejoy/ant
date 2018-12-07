@@ -463,7 +463,7 @@ local function waiting_for_root()
 		local ok, err = connection_dispose(INTERVAL)
 		if not ok then
 			if ok == nil then
-				print(err)
+				print("dispose", err)
 				return
 			end
 			-- timeout
