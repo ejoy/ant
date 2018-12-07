@@ -2,7 +2,7 @@ local platform = require "platform"
 local config = {
 	repopath = "./",
 	vfspath = "vfs.lua",
-	nettype = (platform.os() ~= "IOS") and "connect" or "listen",
+	nettype = (platform.os() ~= "iOS") and "connect" or "listen",
 	address = "127.0.0.1",
 	port = 2018,
 	platform = platform.os(),
