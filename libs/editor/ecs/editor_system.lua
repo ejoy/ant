@@ -98,48 +98,6 @@ local function build_hierarchy_tree()
 end
 
 local function build_entity_tree(eid, ms)
-	-- local e = assert(world[eid])
-
-	-- local function build_elem_tree(tr, filter)
-	-- 	local t = {}
-	-- 	for k, v in pairs(tr) do
-	-- 		local ignore = filter and filter[k] or nil
-	-- 		if not ignore then
-	-- 			local ktype = type(k)
-	-- 			if ktype == "string" or ktype == "number" then
-	-- 				local vtype = type(v)
-	-- 				if vtype == "table" then
-	-- 					local r = build_elem_tree(v, filter)
-	-- 					t[k] = r
-	-- 				elseif vtype == "function" or vtype == "cfunction" then
-	-- 					t[k] = "...function..."
-	-- 				elseif vtype == "userdata" or vtype == "luserdata" then						
-	-- 					t[k] = tostring(v) or "...userdata..."
-	-- 				elseif vtype == "string" then
-	-- 					t[k] = v
-	-- 				elseif vtype == "number" or  vtype == "boolean" then
-	-- 					t[k] = tostring(v)
-	-- 				else
-	-- 					dprint("not support value type : ", vtype, ", key is : ", k)
-	-- 				end
-	-- 			else
-	-- 				dprint("not support key type : ", ktype)
-	-- 			end
-	-- 		else
-	-- 			t[k] = v
-	-- 		end
-	-- 	end
-
-	-- 	return t
-	-- end
-
-	-- local tr = {}
-	-- for cname, v in pairs(e) do
-	-- 	local etr = build_elem_tree(v)
-	-- 	tr[cname] = etr
-	-- end
-	-- return tr
-
 	return su.save_entity(world, eid, ms)
 end
 

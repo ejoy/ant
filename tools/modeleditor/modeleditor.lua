@@ -82,12 +82,10 @@ local ske_pathctrl = create_pathctrl("Skeleton", "SKE_PATH", "SKE_FINDER")
 local ani_pathctrl = create_pathctrl("Animation", "ANI_PATH", "ANI_FINDER")
 local mesh_pathctrl = create_pathctrl("Mesh", "SM_PATH", "SM_FINDER")
 
-local anilist_ctrller = iup.list {
-	NAME="ANI_LIST",
-	SIZE="160x0",
-	EXPAND="ON",
-	"None",
-}
+local listctrl = require "editor.controls.listctrl"
+local reslist = listctrl.new {NAME="RES_LIST"}
+
+local anilist = listctrl.new {NAME="ANI_LIST"}
 
 local dlg = iup.dialog {
 	iup.split {		
@@ -135,16 +133,15 @@ local dlg = iup.dialog {
 					EXPAND="ON",
 				},
 				EXPAND="ON",
-			},	
-			iup.frame {
-				TITLE = "Animation List",
-				iup.vbox {
-					anilist_ctrller,
-					iup.fill{},
-				},
+			},
+			iup.tabs {
+				reslist.list,
+				anilist.list,
+				TABTITLE0 = "Resources",
+				TABTITLE1 = "Animation List",
 				EXPAND="ON",
-			},	
-	
+			},
+
 			ORIENTATION = "HORIZONTAL",			
 		}
 	},
