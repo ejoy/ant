@@ -1,4 +1,4 @@
-package.cpath = package.cpath .. ";./clibs/mobiledevice/?.dll"
+package.cpath = package.cpath:gsub("%.so", ".dll")
 
 local ios = require 'mobiledevice'
 local thread = require 'thread'
