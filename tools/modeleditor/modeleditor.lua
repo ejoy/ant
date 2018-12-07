@@ -83,9 +83,8 @@ local ani_pathctrl = create_pathctrl("Animation", "ANI_PATH", "ANI_FINDER")
 local mesh_pathctrl = create_pathctrl("Mesh", "SM_PATH", "SM_FINDER")
 
 local listctrl = require "editor.controls.listctrl"
-local reslist = listctrl.new {NAME="RES_LIST"}
-local rescombo = listctrl.new {NAME="RES_TYPE", DROPDOWN="YES"}
-rescombo.list.EXPAND = "HORIZONTAL"
+local assetviewclass = require "editor.controls.assetview"
+local assetview = assetviewclass.new()
 local anilist = listctrl.new {NAME="ANI_LIST"}
 
 local dlg = iup.dialog {
@@ -136,10 +135,7 @@ local dlg = iup.dialog {
 				EXPAND="ON",
 			},
 			iup.tabs {
-				iup.vbox{
-					rescombo.list,
-					reslist.list,
-				},				
+				assetview.view,
 				anilist.list,
 				TABTITLE0 = "Resources",
 				TABTITLE1 = "Animation List",

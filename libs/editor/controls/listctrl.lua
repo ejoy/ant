@@ -8,7 +8,7 @@ end
 
 function lc:append_item(name, ud)
 	local l = self.list
-	l.APPENDITEM = name
+	l.APPENDITEM = name	
 	self:set_ud(self:count(), ud)
 end
 

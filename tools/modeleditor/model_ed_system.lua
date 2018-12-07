@@ -310,56 +310,9 @@ end
 
 local function init_res_ctrl()
 	local dlg = main_dialog()
-	local restype = assert(iup.GetDialogChild(dlg, "RES_TYPE").owner)
-	
-	restype:append_item("engine")
-	restype:append_item("project")
-	local defaulttype = "project"
-	restype.list.VALUESTRING = defaulttype
+	local assetview = assert(iup.GetDialogChild(dlg, "ASSETVIEW").owner)
 
-	local vfs = require "vfs"
-	local lfs = require "lfs"
-
-	local function get_rootdir_from_restype(rt)
-		return rt == "project" and lfs.currentdir() or vfs.realpath("engine/assets")
-	end
-
-	local function update_res_list(l, rootdir)	
-		l:clear()
-		l:append_item("[..]", path.parent(rootdir))
-		local dirs, files = {}, {}
-		for d in fu.dir(rootdir) do
-			local fullpath = path.join(rootdir, d)
-			if fu.isdir(fullpath) then
-				table.insert(dirs, {'[' .. d .. ']', fullpath})
-			else
-				table.insert(files, {d, fullpath})
-			end
-		end
-	
-		for _, d in ipairs(dirs) do
-			l:append_item(d[1], d[2])
-		end
-	
-		for _, f in ipairs(files) do
-			l:append_item(f[1], f[2])
-		end
-		
-		iup.Map(l.list)
-	end
-
-	local reslist = assert(iup.GetDialogChild(dlg, "RES_LIST").owner)
-
-	function restype.list:valuechanged_cb()
-		update_res_list(reslist, get_rootdir_from_restype(self.VALUESTRING))
-	end
-		
-	update_res_list(reslist, get_rootdir_from_restype(restype.list.VALUESTRING))
-
-	function reslist.list:dblclick_cb(item, text)
-		local fullpath = reslist:get_ud(item)
-		update_res_list(reslist, fullpath)
-	end
+	assetview:init("project")
 end
 
 local function init_control()
