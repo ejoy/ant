@@ -1,13 +1,13 @@
-local repopath, address, port = "./", "127.0.0.1", 2018
-for _, v in ipairs(arg) do
-	if v:sub(1,4) == '-ip=' then
-		address, port = v:sub(5):match "^(.*):(.*)$"
-		port = tonumber(port)
-		break
-	end
-end
-
 local platform = require "platform"
+local config = {
+	repopath = "./",
+	vfspath = "vfs.lua",
+	nettype = (platform.os() ~= "IOS") and "connect" or "listen",
+	address = "127.0.0.1",
+	port = 2018,
+	platform = platform.os(),
+}
+
 local thread = require "thread"
 local threadid = thread.id
 
@@ -42,13 +42,7 @@ local iothread = thread.thread([[
 ]], package.searchers[3])
 
 local function vfs_init()
-	io_req:push {
-		repopath = repopath,
-		vfspath = "vfs.lua",
-		address = address,
-		port = port,
-		platform = platform.os()
-	}
+	io_req:push(config)
 end
 
 local function fetchfirmware()
@@ -93,4 +87,4 @@ local function loadfile(path, name)
 	f:close()
 	return load(str, "@vfs://" .. name)
 end
-assert(loadfile(bootloader, 'firmware/bootloader.lua'))(repopath, address, port)
+assert(loadfile(bootloader, 'firmware/bootloader.lua'))(config)

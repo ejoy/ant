@@ -71,10 +71,11 @@ end
 local function init_config()
 	local c = channel.req()
 	config.repopath = assert(c.repopath)
-	config.address = c.address
-	config.port = c.port
+	config.nettype = assert(c.nettype)
+	config.address = assert(c.address)
+	config.port = assert(c.port)
 	config.vfspath = assert(c.vfspath)
-	config.platform = c.platform or "none" -- todo: add assert
+	config.platform = assert(c.platform)
 end
 
 local function init_repo()
@@ -82,9 +83,9 @@ local function init_repo()
 	repo.repo = vfs.new(config.repopath)
 end
 
-local function connect_server()
-	print("Connecting", config.address, config.port)
-	local fd, err = lsocket.connect(config.address, config.port)
+local function connect_server(address, port)
+	print("Connecting", address, port)
+	local fd, err = lsocket.connect(address, port)
 	if not fd then
 		print("connect:", err)
 		return
@@ -104,6 +105,37 @@ local function connect_server()
 	end
 	print("Connected")
 	return fd
+end
+
+local function listen_server(address, port)
+	print("Listening", address, port)
+	local fd, err = lsocket.bind(address, port)
+	if not fd then
+		print("connect:", err)
+		return
+	end
+	local fdset = { fd }
+	local rd,wt = lsocket.select(nil, fdset)
+	if not rd then
+		print("select:", wt)	-- select error
+		fd:close()
+		return
+	end
+	local newfd, err = fd:accept()
+	if not newfd then
+		fd:close()
+		print("accept:", err)
+		return
+	end
+	print("Accepted")
+	return newfd
+end
+
+local function wait_server()
+	if config.nettype == "listen" then
+		return listen_server(config.address, config.port)
+	end
+	return connect_server(config.address, config.port)
 end
 
 -- response io request with id
@@ -699,7 +731,7 @@ local function main()
 	init_config()
 	init_repo()
 	if config.address then
-		connection.fd = connect_server()
+		connection.fd = wait_server()
 		if connection.fd then
 			work_online()
 			-- socket error or closed

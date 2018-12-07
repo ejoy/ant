@@ -1,8 +1,8 @@
-local repopath, address, port = ...
+local config = ...
 
 local fw = require "firmware"
 local vfs = assert(fw.loadfile "vfs.lua")()
-local repo = vfs.new(repopath)
+local repo = vfs.new(config.repopath)
 local function vfs_dofile(path)
     local realpath = repo:realpath(path)
     local f = assert(io.open(realpath))
@@ -11,7 +11,7 @@ local function vfs_dofile(path)
     return assert(load(str, "@vfs://" .. path))()
 end
 local vfs = vfs_dofile 'firmware/vfs.lua'
-repo = vfs.new(repopath)
+repo = vfs.new(config.repopath)
 
 local thread = require "thread"
 local threadid = thread.id
@@ -40,12 +40,8 @@ thread.thread (([[
 ]]):format(repo:realpath("firmware/io.lua")), package.searchers[3])
 
 local function vfs_init()
-	io_req:push {
-		repopath = repopath,
-		vfspath = repo:realpath("firmware/vfs.lua"),
-		address = address,
-		port = port,
-	}
+    config.vfspath = repo:realpath("firmware/vfs.lua")
+	io_req:push(config)
 end
 
 vfs_init()
