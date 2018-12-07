@@ -2,17 +2,36 @@
 
 local lc = {}; lc.__index = lc
 
+function lc:count()
+	return tonumber(self.list.COUNT)
+end
+
 function lc:append_item(name, ud)
 	local l = self.list
 	l.APPENDITEM = name
-	table.insert(self.ud, ud)
-
-	assert(#self.ud == tonumber(l.COUNT))
+	self:set_ud(self:count(), ud)
 end
 
 function lc:get_ud(item)
 	assert(type(item) == "number")
 	return self.ud[item]
+end
+
+function lc:set_ud(item, ud)
+	if ud then
+		self.ud[item] = ud
+	end
+end
+
+function lc:insert_item(pos, name, ud)
+	if pos == nil then
+		pos = self:conut()
+	else
+		self:set_ud(pos, ud)
+		assert(pos <= self:count())
+		local where = "INSERTITEM" .. pos
+		l[where] = name
+	end
 end
 
 function lc:remove(item)
