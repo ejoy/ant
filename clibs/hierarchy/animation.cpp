@@ -33,7 +33,7 @@ extern "C" {
 
 struct animation_node {
 	ozz::animation::Animation		*ani;
-	ozz::Range<ozz::math::Float4x4>	poses;
+	ozz::Range<ozz::math::Float4x4>	joints;
 	float ratio;
 };
 
@@ -260,7 +260,7 @@ lskinning(lua_State *L) {
 
 	for (size_t ii = 0; ii < mesh.joint_remaps.size(); ++ii) {
 		om->skinning_matrices[ii] =
-			ani->poses[mesh.joint_remaps[ii]] * mesh.inverse_bind_poses[ii];
+			ani->joints[mesh.joint_remaps[ii]] * mesh.inverse_bind_poses[ii];
 	}
 
 	// offset
@@ -403,10 +403,10 @@ lmotion(lua_State *L){
 		return 0;
 	}
 
-	if (aninode->poses.count() != size_t(ske->num_joints())) {
+	if (aninode->joints.count() != size_t(ske->num_joints())) {
 		luaL_error(L, 
 			"skeleton joint number : %d, is not the same as animation result poses number : %d", 
-			ske->num_joints(), aninode->poses.count());
+			ske->num_joints(), aninode->joints.count());
 		return 0;
 	}
 
@@ -437,13 +437,39 @@ lmotion(lua_State *L){
 	ozz::animation::LocalToModelJob ltmjob;
 	ltmjob.input	= samplingnode->results;
 	ltmjob.skeleton = builddata->skeleton;
-	ltmjob.output	= aninode->poses;
+	ltmjob.output	= aninode->joints;
 
 	if (!ltmjob.Run()) {
 		luaL_error(L, "transform from local to model failed!");
 	}
 
 	return 0;
+}
+
+static int
+lani_joints(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	const animation_node * aninode = (animation_node*)lua_touserdata(L, 1);
+	if (aninode->ani == nullptr) {
+		luaL_error(L, "invalid ani node!");
+	}
+
+	luaL_checktype(L, 2, LUA_TNUMBER);
+	const int idx = (int)lua_tointeger(L, 2);
+	if (idx >= aninode->joints.count()) {
+		luaL_error(L, "invalid index:%d, joints count:%d", idx, aninode->joints.count());
+	}
+
+	const auto &joint = aninode->joints[idx];
+	lua_createtable(L, 16, 0);
+	for (auto icol= 0; icol < 4; ++icol) {
+		for (auto ii = 0; ii < 4; ++ii) {
+			lua_pushnumber(L, joint.cols[icol].m128_f32[ii]);
+			lua_seti(L, -2, icol * 4 + ii + 1);
+		}		
+	}
+
+	return 1;
 }
 
 static int
@@ -488,7 +514,7 @@ ldel_animation(lua_State *L) {
 
 	animation_node *node = (animation_node*)lua_touserdata(L, 1);
 	ozz::memory::default_allocator()->Delete(node->ani);
-	ozz::memory::default_allocator()->Deallocate(node->poses);
+	ozz::memory::default_allocator()->Deallocate(node->joints);
 	
 	return 0;
 }
@@ -504,9 +530,9 @@ lnew_animation(lua_State *L) {
 	luaL_getmetatable(L, "ANIMATION_NODE");
 	lua_setmetatable(L, -2);
 	if (numjoints > 0){
-		node->poses = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(numjoints);
+		node->joints = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(numjoints);
 	} else {
-		node->poses = ozz::Range<ozz::math::Float4x4>();
+		node->joints = ozz::Range<ozz::math::Float4x4>();
 	}
 	
 	node->ani = ozz::memory::default_allocator()->New<ozz::animation::Animation>();
@@ -540,8 +566,8 @@ lresize_animation_poses(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TNUMBER);
 	const int num_joints = (int)lua_tointeger(L, 2);
 
-	ozz::memory::default_allocator()->Deallocate(ani->poses);
-	ani->poses = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(num_joints);
+	ozz::memory::default_allocator()->Deallocate(ani->joints);
+	ani->joints = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(num_joints);
 	return 0;
 }
 
@@ -774,6 +800,7 @@ register_animation_mt(lua_State *L) {
 	luaL_Reg l[] = {
 		"resize",	lresize_animation_poses,
 		"duration", lduration_animation,
+		"joint", lani_joints,
 		"__gc", ldel_animation,
 		nullptr, nullptr,
 	};
@@ -825,7 +852,7 @@ luaopen_hierarchy_animation(lua_State *L) {
 		{ "additive", ladditive},
 		{ "skinning", lskinning},
 		{ "new_layer", lnew_layer },
-		{ "motion", lmotion},
+		{ "motion", lmotion},		
 		{ "new_ani", lnew_animation},
 		{ "new_ozzmesh", lnew_ozzmesh},
 		{ "new_sampling_cache", lnew_sampling_cache},

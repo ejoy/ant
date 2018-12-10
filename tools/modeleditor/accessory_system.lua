@@ -1,10 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-
 ecs.import "editor.ecs.debug.debug_drawing"
-
-local geodrawer = require "editor.ecs.render.geometry_drawer"
 
 local renderbonesys = ecs.system "renderbone_system"
 renderbonesys.singleton "debug_object"

@@ -171,10 +171,10 @@ lbuilddata_get(lua_State *L){
 #define STACK_ALIGN(_ADDRESS) (float*)(((size_t)((char*)(_ADDRESS) + 15)) & ~0x0f)
 			float *a_buffer = STACK_ALIGN(buffer);
 			
-			auto create_transform_elem = [=](auto name, auto num, auto v){
-				lua_createtable(L, num, 0);			
+			auto create_transform_elem = [=](auto name, auto num, auto v) {
+				lua_createtable(L, num, 0);
 
-				for (int ii = 0; ii < num; ++ii){
+				for (int ii = 0; ii < num; ++ii) {
 					ozz::math::StorePtr(v[ii], a_buffer);
 					lua_pushnumber(L, a_buffer[subidx]);
 					lua_seti(L, -2, ii + 1);

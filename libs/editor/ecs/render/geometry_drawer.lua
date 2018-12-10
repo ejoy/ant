@@ -65,17 +65,8 @@ end
 -- end
 
 function draw.draw_skeleton(ske, color, transform, desc)	
-	local function generate_bones()		
-		local bones = {}
-		for i=1, #ske do
-			if not ske:isroot(i) then
-				table.insert(bones, {ske:parent(i), i})
-			end
-		end
-		return bones
-	end
-
-	local bones = generate_bones()
+	local eru = require "editor.ecs.render.util"
+	local bones = eru.generate_bones(ske)
 	local function generate_joints_worldpos()		
 		local function load_world_trans(idx, worldpos)
 			local srt = worldpos[idx]
@@ -144,7 +135,7 @@ function draw.draw_bones(bones, joints, color, transform, desc)
 	local localtrans = ms({type="srt", r={-90, 0, 0}, t={0, 0, updown_ratio}}, "P")
 
 	local poitions = {}
-	local origin = {0 ,0, 0, 1}
+	local origin = ms({0 ,0, 0, 1}, "P")
 	for _, j in ipairs(joints) do
 		local p = ms(j, origin, "*P")	-- extract poistion
 		table.insert(poitions, p)

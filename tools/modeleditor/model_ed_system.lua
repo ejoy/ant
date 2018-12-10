@@ -104,7 +104,21 @@ local function draw_bone()
 				dbg_prim.cache = {}
 				local geodrawer = require "editor.ecs.render.geometry_drawer"
 				local desc = {vb={}, ib = {}}
-				geodrawer.draw_skeleton(assert(ske.assetinfo.handle), 0xfff0f0f0, nil, desc)
+				local worldtrans = nil
+				if sample.animation then
+					local eru = require "editor.ecs.render.util"
+					local bones = eru.generate_bones(ske.assetinfo.handle)
+					local ani = sample.animation.assetinfo.handle
+					local numjoints = #ske.assetinfo.handle
+					local joints = {}
+					for i=1, numjoints do
+						table.insert(joints, ani:joint(i-1))
+					end
+					geodrawer.draw_bones(bones, joints, 0xfff0f0f0, worldtrans, desc)
+				else
+					geodrawer.draw_skeleton(assert(ske.assetinfo.handle), 0xfff0f0f0, worldtrans, desc)
+				end
+				
 				dbg_prim.cache.desc = desc
 			end
 		end
@@ -208,12 +222,12 @@ local function init_paths_ctrl()
 	local meshpath_inputer = iup.GetDialogChild(dlg, "SM_PATH")
 
 	function skepath_inputer:killfocus_cb()		
-		check_create_sample_entity(self, anipath_inputer, meshpath_inputer)
+		check_create_sample_entity(self, anipath_inputer, meshpath_inputer)		
 		draw_bone()
 		return 0
 	end
 	
-	function anipath_inputer:killfocus_cb()
+	function anipath_inputer:killfocus_cb()		
 		check_create_sample_entity(skepath_inputer, self, meshpath_inputer)
 		return 0
 	end
@@ -260,7 +274,7 @@ local function init_paths_ctrl()
 	end
 
 	skepath_inputer.VALUE = "meshes/skeleton/skeleton.ozz"
-	--anipath_inputer.VALUE = "meshes/animation/animation_base.ozz"
+	anipath_inputer.VALUE = "meshes/animation/animation_base.ozz"
 	meshpath_inputer.VALUE = "meshes/mesh.ozz"
 	check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
 end
