@@ -135,7 +135,7 @@ function assetview:get_select_res()
 end
 
 local function create(config)
-	local reslist = listctrl.new {NAME="RES_LIST"}
+	local reslist = listctrl.new {NAME="RES_LIST", SCROLLBAR="YES", EXPAND="ON"}
 	local restype = listctrl.new {NAME="RES_TYPE", DROPDOWN="YES"}
 	restype.list.EXPAND = "HORIZONTAL"
 
@@ -147,6 +147,7 @@ local function create(config)
 		reslist.list,
 		NAME="ASSETVIEW",
 		EXPANED="ON",
+		MINSIZE="120x0"
 	}
 	return {view=assetview}
 end

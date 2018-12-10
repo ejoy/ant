@@ -5,6 +5,7 @@ local mapiup = require "editor.input.mapiup"
 local elog = require "editor.log"
 local hierarchyview = require "editor.controls.hierarchyview"
 local propertycontrol = require "editor.controls.propertyview"
+local assetviewclass = require "editor.controls.assetview"
 local eu = require "editor.util"
 local rhwi = require "render.hardware_interface"
 local bgfx = require "bgfx"
@@ -31,9 +32,7 @@ function editor_mainwindow:build_window(fbw, fbh)
     self.hierarchyview = hierarchyview
     self.propertyview = propertyview
 
-    self.assetview = iup.list {
-        expand = "YES",
-    }
+	self.assetview = assetviewclass.new()	
 
     self.canvas = iup.canvas {
         rastersize = fbw .. "x" .. fbh
@@ -56,7 +55,7 @@ function editor_mainwindow:build_window(fbw, fbh)
             },
             iup.split {
                 iup.frame {
-                    self.assetview,
+                    self.assetview.view,
                     title = "asset",
                     size = "HALFxHALF",
                 },
@@ -95,6 +94,8 @@ function editor_mainwindow:run(config)
 
     self.dlg:showxy(iup.CENTER,iup.CENTER)
 	self.dlg.usersize = nil
+
+	self.assetview:init("project")
 	
 	self.iq = inputmgr.queue(mapiup)
 	eu.regitster_iup(self.iq, self.canvas)
