@@ -3,6 +3,10 @@ RUNTIME_PROJ = ozz-animation bullet3 bgfx
 ALL_PROJ = $(RUNTIME_PROJ) assimp cd cjson
 BUILD_CONFIG = release
 
+ifeq "$(PLAT)" ""
+PLAT=mingw
+endif
+
 # should add devenv command's path to system path
 DEVENV_CMD = devenv
 
