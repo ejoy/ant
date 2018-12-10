@@ -1,0 +1,20 @@
+include ../common.mk
+
+CJSON = ../../3rd/lua-cjson
+
+default: $(ODIR)/libcjson.a
+
+$(CJSON)/$(ODIR)/strbuf.o : $(CJSON)/strbuf.c | $(CJSON)/$(ODIR)
+	$(CC) -c $(CFLAGS) $(LUAINC) -o $@ $<
+
+$(CJSON)/$(ODIR)/lua_cjson.o : $(CJSON)/lua_cjson.c | $(CJSON)/$(ODIR)
+	$(CC) -c $(CFLAGS) $(LUAINC) -o $@ $<
+
+$(CJSON)/$(ODIR)/fpconv.o : $(CJSON)/fpconv.c | $(CJSON)/$(ODIR)
+	$(CC) -c $(CFLAGS) $(LUAINC) -o $@ $<
+
+$(CJSON)/$(ODIR)/libcjson-$(PLAT).a : $(CJSON)/$(ODIR)/strbuf.o $(CJSON)/$(ODIR)/lua_cjson.o $(CJSON)/$(ODIR)/fpconv.o
+	ar rsv $@ $^
+	
+$(ODIR)/libcjson.a : $(CJSON)/$(ODIR)/libcjson-$(PLAT).a
+	cp $< $@

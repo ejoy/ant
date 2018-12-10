@@ -8,14 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		11F4177121B6621C00486046 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 11F4177021B6621C00486046 /* main.m */; };
-		11F4177A21B67CCE00486046 /* main.lua in Resources */ = {isa = PBXBuildFile; fileRef = 11F4177921B67CCE00486046 /* main.lua */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		11F4175E21B6620A00486046 /* ant.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ant.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		11F4176F21B6621C00486046 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		11F4177021B6621C00486046 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		11F4177921B67CCE00486046 /* main.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main.lua; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,7 +46,6 @@
 		11F4176021B6620A00486046 /* ant */ = {
 			isa = PBXGroup;
 			children = (
-				11F4177921B67CCE00486046 /* main.lua */,
 				11F4176F21B6621C00486046 /* Info.plist */,
 				11F4177021B6621C00486046 /* main.m */,
 			);
@@ -112,7 +109,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				11F4177A21B67CCE00486046 /* main.lua in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

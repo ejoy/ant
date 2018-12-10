@@ -1,8 +1,13 @@
 ifeq "$(PLAT)" ""
-PLAT = mingw
+	ifeq ($(shell uname), Darwin)
+		PLAT = osx
+	else
+		PLAT = mingw
+	endif
 endif
 
-ODIR = o
+OROOT = o
+ODIR := $(OROOT)/$(PLAT)
 ANT3RD = ../../3rd
 
 LUAINC = -I../lua

@@ -6,57 +6,60 @@ include ant_define.mk
 ifeq "$(PLAT)" "mingw"
 default : ant.exe
 else
-default : libant.a
+default : libant-$(PLAT).a
 endif
 
 LIBS= bgfx bullet hierarchy math3d thread terrain crypt debugger lsocket protocol remotedebug firmware platform window
 
 define MakeLibs
-lib$(1).a :	
-	@cd ./../$(1)/ && $(MAKE) --no-print-directory lib$(1).a && cp lib$(1).a ../ant/tmp/lib$(1).a
+$(ODIR)/lib$(1).a :	| $(ODIR)
+	@cd ./../$(1)/ && $(MAKE) --no-print-directory lib$(1)-$(PLAT).a && cp lib$(1)-$(PLAT).a ../ant/$(ODIR)/lib$(1).a
 endef
 $(foreach v, $(LIBS), $(eval $(call MakeLibs,$(v))))
 
-ALLLIBS= $(LIBS) lua cjson ib-compress
+ALLLIBS= $(LIBS) ib-compress cjson lua
 define UnpackLibs
-unpack_lib$(1).a : lib$(1).a
-	@cd tmp && ar x lib$(1).a
+unpack_lib$(1).a : $(ODIR)/lib$(1).a
+	@cd $(ODIR) && ar x lib$(1).a
 endef
 $(foreach v, $(ALLLIBS), $(eval $(call UnpackLibs,$(v))))
 UNPACKLIBS= $(foreach v, $(ALLLIBS), unpack_lib$(v).a)
 
 ifeq "$(PLAT)" "mingw"
-liblua.a :
-	@cd ../lua && $(MAKE) --no-print-directory "MYOBJS=utf8_unicode.o utf8_crt.o" $@ && mv $@ ../ant/tmp
+$(ODIR)/liblua.a :  | $(ODIR)
+	@cd ../lua && $(MAKE) --no-print-directory "MYOBJS=utf8_unicode.o utf8_crt.o" liblua.a && mv liblua.a ../ant/$(ODIR)
 else ifeq "$(PLAT)" "osx"
-liblua.a :
-	@cd ../lua && $(MAKE) --no-print-directory $@ && mv $@ ../ant/tmp
+$(ODIR)/liblua.a : | $(ODIR)
+	@$(MAKE) -f Makefile.lua
 else ifeq "$(PLAT)" "ios"
-liblua.a :
-	@cd ../lua && $(MAKE) --no-print-directory "SYSCFLAGS=$(CFLAGS)" $@ && mv $@ ../ant/tmp
+$(ODIR)/liblua.a : | $(ODIR)
+	@cd ../lua && $(MAKE) --no-print-directory "SYSCFLAGS=$(CFLAGS)" liblua.a && mv liblua.a ../ant/$(ODIR)
 endif
 
-libcjson.a :
-	@cd ../../3rd/lua-cjson/ && $(MAKE) --no-print-directory "LUA_INCLUDE_DIR=../../clibs/lua" "CJSON_LDFLAGS=" "TARGET=$@" "AR=ar rsv" "CFLAGS=$(CFLAGS)" && mv $@ ../../clibs/ant/tmp
+$(ODIR)/libcjson.a : | $(ODIR)
+	@$(MAKE) -f Makefile.cjson
 
-libib-compress.a :
-	@cd ../../3rd/ib-compress/ && $(MAKE) --no-print-directory $@ "PLAT=$(PLAT)" && mv $@ ../../clibs/ant/tmp
+$(ODIR)/libib-compress.a : | $(ODIR)
+	@cd ../../3rd/ib-compress/ && $(MAKE) --no-print-directory libib-compress-$(PLAT).a "ODIR=$(ODIR)" "PLAT=$(PLAT)" && mv libib-compress-$(PLAT).a ../../clibs/ant/$(ODIR)/libib-compress.a
 
-tmp/ant_searcher.o : ant_searcher.cpp ant.h ant_module_define.h ant_module_declar.h
+$(ODIR)/ant_searcher.o : ant_searcher.cpp ant.h ant_module_define.h ant_module_declar.h | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
-main.o : main.c
+$(ODIR)/main.o : main.c | $(ODIR)
 	$(CC) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
-libant.a : tmp/ant_searcher.o $(UNPACKLIBS)
-	rm -f "tmp/__.SYMDEF"
-	rm -f "tmp/__.SYMDEF SORTED"
-	cd tmp && ar rs $@ *.o
-	mv tmp/$@ $@
+libant-$(PLAT).a : $(ODIR)/ant_searcher.o $(UNPACKLIBS)
+	rm -f "$(ODIR)/__.SYMDEF"
+	rm -f "$(ODIR)/__.SYMDEF SORTED"
+	cd $(ODIR) && ar rs $@ *.o
+	mv $(ODIR)/$@ $@
 
-ant.exe : main.o libant.a
+ant.exe : $(ODIR)/main.o libant-$(PLAT).a
 	gcc -o $@ $^ $(LINKLIBANT)
 	$(STRIP) $@ 
 
+$(ODIR) :
+	mkdir -p $@
+
 clean :
-	rm -f tmp/*.a && rm -f tmp/*.o && rm -f ant.exe libant.a
+	rm -rf $(OROOT) *.exe *.a
