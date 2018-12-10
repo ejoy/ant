@@ -1,3 +1,4 @@
+--luachecks: globals iup
 local assetview = {}; assetview.__index = assetview
 local listctrl = require "editor.controls.listctrl"
 
@@ -6,14 +7,22 @@ local fu = require "filesystem.util"
 local lfs = require "lfs"
 local vfs = require "vfs"
 
+local addrctrl = require "editor.controls.addressnavigation_ctrl"
+
 function assetview:restype_ctrl()
 	local ctrl = iup.GetChild(self.view, 0)
 	assert(ctrl.NAME == "RES_TYPE")
 	return ctrl.owner
 end
 
-function assetview:reslist_ctrl()
+function assetview:addrview_ctrl()
 	local ctrl = iup.GetChild(self.view, 1)
+	assert(ctrl.NAME=="ADDR_NAG")
+	return ctrl.owner
+end
+
+function assetview:reslist_ctrl()
+	local ctrl = iup.GetChild(self.view, 2)
 	assert(ctrl.NAME == "RES_LIST")
 	return ctrl.owner	
 end
@@ -21,6 +30,7 @@ end
 function assetview:init(defaultrestype)
 	local restype = assert(self:restype_ctrl())
 	local reslist = assert(self:reslist_ctrl())
+	local addrview = assert(self:addrview_ctrl())
 	
 	restype:append_item("engine")
 	restype:append_item("project")
@@ -36,22 +46,12 @@ function assetview:init(defaultrestype)
 	local function rootdirs()
 		local projectdir = lfs.currentdir():lower()
 		local enginedir = vfs.realpath("engine/assets"):lower()
-		return {projectdir, enginedir}
-	end
-
-	local function is_rootdir(dir)
-		local dirs = rootdirs()
-		for _, d in ipairs(dirs) do
-			if dir == d then
-				return true
-			end
-		end
-		return false
+		return {projectdir:gsub("\\", "/"), enginedir:gsub("\\", "/")}
 	end
 
 	local function is_subdir(dir)
 		local dirs = rootdirs()
-		local dir = dir:lower()
+		dir = dir:lower():gsub("\\", "/")		
 		for _, rd in ipairs(dirs) do
 			if dir:match(rd) and dir ~= rd then
 				return true
@@ -88,20 +88,25 @@ function assetview:init(defaultrestype)
 		for _, f in ipairs(files) do
 			l:append_item(f[1], f[2])
 		end
-		
-		iup.Map(l.list)
 	end
 
 	function restype.list:valuechanged_cb()
 		local rt = self.VALUESTRING
-		update_res_list(reslist, get_rootdir_from_restype(rt), rt)
+		update_res_list(reslist, get_rootdir_from_restype(rt), rt)		
 	end
 
-	update_res_list(reslist, get_rootdir_from_restype(defaultrestype), defaultrestype)
+	local rootdir = get_rootdir_from_restype(defaultrestype)
+	update_res_list(reslist, rootdir, defaultrestype)
+	addrview:update("/" .. defaultrestype)
 
 	function reslist.list:dblclick_cb(item, text)
 		local ud = reslist:get_ud(item)
-		update_res_list(reslist, ud.path, ud.restype)
+		local rt = ud.restype
+		local filepath = ud.path
+		update_res_list(reslist, filepath, rt)
+		local rootdir = get_rootdir_from_restype(rt)		
+		local respath = filepath:gsub(rootdir, "/" .. rt)
+		addrview:update(respath)
 	end
 end
 
@@ -120,8 +125,11 @@ local function create(config)
 	local restype = listctrl.new {NAME="RES_TYPE", DROPDOWN="YES"}
 	restype.list.EXPAND = "HORIZONTAL"
 
+	local addr = addrctrl.new()
+
 	local assetview = iup.vbox {
 		restype.list,
+		addr.view,
 		reslist.list,
 		NAME="ASSETVIEW",
 		EXPANED="ON",
