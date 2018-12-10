@@ -104,10 +104,24 @@ function assetview:init(defaultrestype)
 		local rt = ud.restype
 		local filepath = ud.path
 		update_res_list(reslist, filepath, rt)
-		local rootdir = get_rootdir_from_restype(rt)		
-		local respath = filepath:gsub(rootdir, "/" .. rt)
-		addrview:update(respath)
+		if fu.isdir(filepath) then
+			local rootdir = get_rootdir_from_restype(rt)		
+			local respath = filepath:gsub(rootdir, "/" .. rt)
+			addrview:update(respath)
+		end
 	end
+
+	addrview:add_click_address_cb("update_reslist", function (url)
+		local rt = restype.list.VALUESTRING
+		local rootdir, found = url:gsub("^/project", lfs.currentdir())
+		if found == 0 then
+			rootdir, found = url:gsub("^/engine", vfs.realpath("engine/assets"))
+			if found == 0 then
+				error(string.format("invalid url:%s", url))
+			end
+		end
+		update_res_list(reslist, rootdir, rt)
+	end)
 end
 
 function assetview:which_res_content()

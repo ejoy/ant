@@ -20,6 +20,7 @@ function link.new(config, name, url)
 		local addr = iup.GetParent(self)
 		local owner = assert(addr.owner)
 		owner:update(url)
+		owner:notify(url)
 	end
 
 	return lk
@@ -84,7 +85,9 @@ function addressnavigation:update(url)
 	end
 
 	iup.Refresh(self.view)
+end
 
+function addressnavigation:notify(url)
 	local observers = self.observers
 	if observers then
 		for _, observer in ipairs(observers) do
