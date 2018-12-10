@@ -1,8 +1,4 @@
-include ../common.mk
-
-BULLETROOT = $(ANT3RD)
-BULLETINC = -I$(BULLETROOT)/bullet3/src 
-BULLETLIB = -L$(BULLETROOT)/build/bullet3/lib -lBulletDynamics -lBulletCollision -lLinearMath -lstdc++
+include bullet.mk
 
 ifeq "$(PLAT)" "mingw"
 default : bullet.dll
