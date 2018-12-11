@@ -1,3 +1,4 @@
+include ../common.mk
 include bullet.mk
 
 ifeq "$(PLAT)" "mingw"
