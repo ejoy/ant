@@ -43,6 +43,10 @@ function assetview:init(defaultrestype)
 		return rt == "project" and lfs.currentdir() or vfs.realpath("engine/assets")
 	end
 
+	local function get_vfs_root_path(rt)
+		return rt == "project" and "/project" or "/engine/assets"
+	end
+
 	local function rootdirs()
 		local projectdir = lfs.currentdir():lower()
 		local enginedir = vfs.realpath("engine/assets"):lower()
@@ -92,12 +96,14 @@ function assetview:init(defaultrestype)
 
 	function restype.list:valuechanged_cb()
 		local rt = self.VALUESTRING
-		update_res_list(reslist, get_rootdir_from_restype(rt), rt)		
+		local rootdir = get_rootdir_from_restype(rt)
+		update_res_list(reslist, rootdir, rt)		
+		addrview:update(get_vfs_root_path(rt))
 	end
 
 	local rootdir = get_rootdir_from_restype(defaultrestype)
 	update_res_list(reslist, rootdir, defaultrestype)
-	addrview:update("/" .. defaultrestype)
+	addrview:update(get_vfs_root_path(defaultrestype))
 
 	function reslist.list:dblclick_cb(item, text)
 		local ud = reslist:get_ud(item)
@@ -106,7 +112,7 @@ function assetview:init(defaultrestype)
 		update_res_list(reslist, filepath, rt)
 		if fu.isdir(filepath) then
 			local rootdir = get_rootdir_from_restype(rt)		
-			local respath = filepath:gsub(rootdir, "/" .. rt)
+			local respath = filepath:gsub(rootdir, get_vfs_root_path(rt))
 			addrview:update(respath)
 		end
 	end
@@ -115,7 +121,7 @@ function assetview:init(defaultrestype)
 		local rt = restype.list.VALUESTRING
 		local rootdir, found = url:gsub("^/project", lfs.currentdir())
 		if found == 0 then
-			rootdir, found = url:gsub("^/engine", vfs.realpath("engine/assets"))
+			rootdir, found = url:gsub("^/engine/assets", vfs.realpath("engine/assets"))
 			if found == 0 then
 				error(string.format("invalid url:%s", url))
 			end
