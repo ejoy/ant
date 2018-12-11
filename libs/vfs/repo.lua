@@ -25,7 +25,7 @@ local function isfile(filepath)
 end
 
 local function filelock(filepath)
-	return assert(fs.lock_dir(filepath), "repo is locking")
+	return assert(fs.lock_dir(filepath), "repo is locking. (" .. filepath .. ")")
 end
 
 local function filetime(filepath)

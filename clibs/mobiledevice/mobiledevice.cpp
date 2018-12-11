@@ -61,10 +61,17 @@ namespace idevice {
             return conn_err;
         }
         idevice_error_t recv(char *data, uint32_t len, uint32_t* recv_bytes) {
-            return idevice_connection_receive(conn, data, len, recv_bytes);
+            return idevice_connection_receive_timeout(conn, data, len, recv_bytes, 1);
         }
         idevice_error_t send(const char *data, uint32_t len, uint32_t* sent_bytes) {
             return idevice_connection_send(conn, data, len, sent_bytes);
+        }
+        idevice_error_t close() {
+            if (conn_err == IDEVICE_E_SUCCESS) {
+                conn_err = IDEVICE_E_UNKNOWN_ERROR;
+                return idevice_disconnect(conn);
+            }
+            return conn_err;
         }
         idevice_t            self;
         idevice_connection_t conn;
@@ -176,6 +183,17 @@ static int lsend(lua_State* L) {
     return 1;
 }
 
+static int lclose(lua_State* L) {
+    idevice::device* self = (idevice::device*)luaL_checkudata(L, 1, "idevice::device");
+    if (auto err = self->close(); err != IDEVICE_E_SUCCESS) {
+        lua_pushnil(L);
+        lua_pushstring(L, idevice::errmsg(err));
+        return 2;
+    }
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
 static int lconnect_destory(lua_State* L) {
     idevice::device* self = (idevice::device*)luaL_checkudata(L, 1, "idevice::device");
     self->~device();
@@ -196,6 +214,7 @@ static int lconnect(lua_State* L) {
 		luaL_Reg l[] = {
 			{ "recv", lrecv },
 			{ "send", lsend },
+			{ "close", lclose },
 			{ "__gc", lconnect_destory },
 			{ NULL, NULL },
 		};

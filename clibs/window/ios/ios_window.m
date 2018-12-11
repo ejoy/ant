@@ -12,6 +12,12 @@
 static id<MTLDevice> g_device = NULL;
 static struct ant_window_callback* g_cb = NULL;
 
+static void push_message(struct ant_window_message* msg) {
+    if (g_cb) {
+        g_cb->message(g_cb->ud, msg);
+    }
+}
+
 @implementation View
 + (Class)layerClass  {
     Class metalClass = NSClassFromString(@"CAMetalLayer");
@@ -41,7 +47,7 @@ static struct ant_window_callback* g_cb = NULL;
     msg.u.init.context = (void*)g_device;
     msg.u.init.w = w;
     msg.u.init.h = h;
-    g_cb->message(g_cb->ud, &msg);
+    push_message(&msg);
     return self;
 }
 - (void)layoutSubviews {
@@ -60,10 +66,9 @@ static struct ant_window_callback* g_cb = NULL;
 }
 
 - (void)renderFrame {
-    if (!g_cb) return;
     struct ant_window_message update_msg;
     update_msg.type = ANT_WINDOW_UPDATE;
-    g_cb->message(g_cb->ud, &update_msg);
+    push_message(&msg);
 }
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [[event allTouches] anyObject];
@@ -76,7 +81,7 @@ static struct ant_window_callback* g_cb = NULL;
     msg.u.mouse_click.press = 1;
     msg.u.mouse_click.x = pt.x;
     msg.u.mouse_click.y = pt.y;
-    g_cb->message(g_cb->ud, &msg);
+    push_message(&msg);
 }
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [[event allTouches] anyObject];
@@ -89,7 +94,7 @@ static struct ant_window_callback* g_cb = NULL;
     msg.u.mouse_click.press = 0;
     msg.u.mouse_click.x = pt.x;
     msg.u.mouse_click.y = pt.y;
-    g_cb->message(g_cb->ud, &msg);
+    push_message(&msg);
 }
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [[event allTouches] anyObject];
@@ -102,7 +107,7 @@ static struct ant_window_callback* g_cb = NULL;
     msg.u.mouse_click.press = 0;
     msg.u.mouse_click.x = pt.x;
     msg.u.mouse_click.y = pt.y;
-    g_cb->message(g_cb->ud, &msg);
+    push_message(&msg);
 }
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [[event allTouches] anyObject];
@@ -114,7 +119,7 @@ static struct ant_window_callback* g_cb = NULL;
     msg.u.mouse_move.state = 1;
     msg.u.mouse_move.x = pt.x;
     msg.u.mouse_move.y = pt.y;
-    g_cb->message(g_cb->ud, &msg);
+    push_message(&msg);
 }
 @end
 
@@ -141,7 +146,7 @@ static struct ant_window_callback* g_cb = NULL;
 - (void)applicationWillTerminate:(UIApplication *)application {
     struct ant_window_message msg;
     msg.type = ANT_WINDOW_EXIT;
-    g_cb->message(g_cb->ud, &msg);
+    push_message(&msg);s
     [self.m_view stop];
 }
 @end

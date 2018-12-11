@@ -8,26 +8,18 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-#define MKDIR_OPTION (S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IXOTH)
-
-static const wchar_t hex[] = L"0123456789abcdef";
-
 static void repo_dir(lua_State* L) {
-    const char* home = [[[NSBundle mainBundle] bundlePath] cStringUsingEncoding:NSUTF8StringEncoding];
-    chdir(home);
-    mkdir("./ant/", MKDIR_OPTION);
-    mkdir("./ant/runtime/", MKDIR_OPTION);
-    mkdir("./ant/runtime/.repo/", MKDIR_OPTION);
-    char dir[] = "./ant/runtime/.repo/00/";
-    size_t sz = sizeof("./ant/runtime/.repo");
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString* docDir = [paths objectAtIndex:0];
+    NSFileManager* fileMgr = [NSFileManager defaultManager];
+    [fileMgr changeCurrentDirectoryPath:docDir];
+    [fileMgr createDirectoryAtPath:@".repo/" withIntermediateDirectories:YES attributes:nil error:nil];
     for (int i = 0; i < 16; ++i) {
         for (int j = 0; j < 16; ++j) {
-            dir[sz+0] = hex[i];
-            dir[sz+1] = hex[j];
-            mkdir(dir, MKDIR_OPTION);
+            NSString* dir = [NSString stringWithFormat:@".repo/%x%x", i, j];
+            [fileMgr createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
         }
     }
-    chdir("./ant/runtime/");
 }
 
 static int msghandler(lua_State *L) {
@@ -77,13 +69,14 @@ int main(int argc, char * argv[]) {
         lua_State* L = luaL_newstate();
         if (!L) {
             lua_writestringerror("%s\n", "cannot create state: not enough memory");
-            return 0;
+            return 1;
         }
         lua_pushcfunction(L, &pmain);
         lua_pushinteger(L, argc);
         lua_pushlightuserdata(L, argv);
         if (LUA_OK != lua_pcall(L, 2, 0, 0)) {
             lua_writestringerror("%s\n", lua_tostring(L, -1));
+            return 1;
         }
         int res = UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
         lua_close(L);
