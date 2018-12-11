@@ -25,16 +25,8 @@ endef
 $(foreach v, $(ALLLIBS), $(eval $(call UnpackLibs,$(v))))
 UNPACKLIBS= $(foreach v, $(ALLLIBS), unpack_lib$(v).a)
 
-ifeq "$(PLAT)" "mingw"
-$(ODIR)/liblua.a :  | $(ODIR)
-	@cd ../lua && $(MAKE) --no-print-directory "MYOBJS=utf8_unicode.o utf8_crt.o" liblua.a && mv liblua.a ../ant/$(ODIR)
-else ifeq "$(PLAT)" "osx"
 $(ODIR)/liblua.a : | $(ODIR)
-	@$(MAKE) -f Makefile.lua
-else ifeq "$(PLAT)" "ios"
-$(ODIR)/liblua.a : | $(ODIR)
-	@cd ../lua && $(MAKE) --no-print-directory "SYSCFLAGS=$(CFLAGS)" liblua.a && mv liblua.a ../ant/$(ODIR)
-endif
+	@$(MAKE) --no-print-directory -f Makefile.lua
 
 $(ODIR)/libcjson.a : | $(ODIR)
 	@$(MAKE) -f Makefile.cjson
