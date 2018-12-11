@@ -455,7 +455,7 @@ lani_joints(lua_State *L) {
 	}
 
 	luaL_checktype(L, 2, LUA_TNUMBER);
-	const int idx = (int)lua_tointeger(L, 2);
+	const size_t idx = (size_t)lua_tointeger(L, 2);
 	if (idx >= aninode->joints.count()) {
 		luaL_error(L, "invalid index:%d, joints count:%d", idx, aninode->joints.count());
 	}
@@ -464,7 +464,8 @@ lani_joints(lua_State *L) {
 	lua_createtable(L, 16, 0);
 	for (auto icol= 0; icol < 4; ++icol) {
 		for (auto ii = 0; ii < 4; ++ii) {
-			lua_pushnumber(L, joint.cols[icol].m128_f32[ii]);
+			const float* col = (const float*)(&(joint.cols[icol]));
+			lua_pushnumber(L, col[ii]);
 			lua_seti(L, -2, icol * 4 + ii + 1);
 		}		
 	}

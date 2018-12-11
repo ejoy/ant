@@ -104,7 +104,7 @@ get_properties(lua_State *L, ozz::animation::Skeleton::JointProperties &p) {
 	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
 	auto ske = builddata->skeleton;
 	if (ske) {
-		auto jointidx = (size_t)lua_tointeger(L, 2) - 1;
+		int jointidx = (int)lua_tointeger(L, 2) - 1;
 		if (jointidx >= ske->num_joints()) {
 			luaL_error(L, "joint index invalid:%d, joint number:%d", jointidx, ske->num_joints());
 		}
