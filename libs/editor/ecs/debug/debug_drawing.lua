@@ -32,14 +32,7 @@ local function init_wireframe_mesh()
 end
 
 ecs.tag "main_debug"
-
-local dbgprim = ecs.component "debug_primitive" {
-	type = "userdata",
-	default = {}
-}
-function dbgprim:init()
-	self.cache = {}
-end
+ecs.tag "debug_skeleton"
 
 local debug_obj = ecs.component "debug_object" {
 	type = "userdata",

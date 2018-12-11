@@ -94,49 +94,17 @@ local function enable_sample_boundingbox()
 	end
 end
 
-local function draw_bone()
-	local sample = smaple_entity()
-	if sample then		
-		local ske = sample.skeleton
-		if ske then
-			local dbg_prim = sample.debug_primitive
-			if dbg_prim then
-				dbg_prim.cache = {}
-				local geodrawer = require "editor.ecs.render.geometry_drawer"
-				local desc = {vb={}, ib = {}}
-				local worldtrans = nil
-				if sample.animation then
-					local eru = require "editor.ecs.render.util"
-					local bones = eru.generate_bones(ske.assetinfo.handle)
-					local ani = sample.animation.assetinfo.handle
-					local numjoints = #ske.assetinfo.handle
-					local joints = {}
-					for i=1, numjoints do
-						table.insert(joints, ani:joint(i-1))
-					end
-					geodrawer.draw_bones(bones, joints, 0xfff0f0f0, worldtrans, desc)
-				else
-					geodrawer.draw_skeleton(assert(ske.assetinfo.handle), 0xfff0f0f0, worldtrans, desc)
-				end
-				
-				dbg_prim.cache.desc = desc
-			end
-		end
-	end
-end
-
 local function enable_bones_visible()
 	if sample_eid then
 		local sample =world[sample_eid]
 		if sample then
 			local bone_shower = dlg_item("SHOWBONES")
 			if bone_shower.VALUE ~= "OFF" then
-				assert(sample.debug_primitive == nil)
-				world:add_component(sample_eid, "debug_primitive")				
-				draw_bone()
+				assert(sample.debug_skeleton == nil)
+				world:add_component(sample_eid, "debug_skeleton")
 			else
-				if sample.debug_primitive then
-					world:remove_component(sample_eid, "debug_primitive")
+				if sample.debug_skeleton then
+					world:remove_component(sample_eid, "debug_skeleton")
 				end
 			end
 		end
