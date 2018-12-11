@@ -12,18 +12,22 @@ endif
 LIBS= bgfx bullet hierarchy math3d thread terrain crypt debugger lsocket protocol remotedebug firmware platform window
 
 define MakeLibs
-$(ODIR)/lib$(1).a :	| $(ODIR)
-	@cd ./../$(1)/ && $(MAKE) --no-print-directory lib$(1)-$(PLAT).a && cp lib$(1)-$(PLAT).a ../ant/$(ODIR)/lib$(1).a
+$(ODIR)/lib$(1).a : | $(ODIR)
+	@cd ../$(1)/ && $(MAKE) --no-print-directory lib$(1)-$(PLAT).a && cp lib$(1)-$(PLAT).a ../ant/$(ODIR)/lib$(1).a
+unpack_lib$(1).a : $(ODIR)/lib$(1).a 
+	@cd $(ODIR) && ar x lib$(1).a && rm -f lib$(1).a
 endef
 $(foreach v, $(LIBS), $(eval $(call MakeLibs,$(v))))
 
-ALLLIBS= $(LIBS) ib-compress cjson lua
-define UnpackLibs
+LIBS2= ib-compress cjson lua
+define UnpackLibs2
 unpack_lib$(1).a : $(ODIR)/lib$(1).a
 	@cd $(ODIR) && ar x lib$(1).a
 endef
-$(foreach v, $(ALLLIBS), $(eval $(call UnpackLibs,$(v))))
-UNPACKLIBS= $(foreach v, $(ALLLIBS), unpack_lib$(v).a)
+$(foreach v, $(LIBS2), $(eval $(call UnpackLibs2,$(v))))
+
+UNPACKLIBS= $(foreach v, $(LIBS), unpack_lib$(v).a) $(foreach v, $(LIBS2), unpack_lib$(v).a)
+
 
 $(ODIR)/liblua.a : | $(ODIR)
 	@$(MAKE) --no-print-directory -f Makefile.lua

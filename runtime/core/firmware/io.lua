@@ -90,8 +90,7 @@ local function connect_server(address, port)
 		print("connect:", err)
 		return
 	end
-	local fdset = { fd }
-	local rd,wt = lsocket.select(nil, fdset)
+	local rd,wt = lsocket.select(nil, {fd})
 	if not rd then
 		print("select:", wt)	-- select error
 		fd:close()
@@ -111,11 +110,10 @@ local function listen_server(address, port)
 	print("Listening", address, port)
 	local fd, err = lsocket.bind(address, port)
 	if not fd then
-		print("connect:", err)
+		print("bind:", err)
 		return
 	end
-	local fdset = { fd }
-	local rd,wt = lsocket.select(nil, fdset)
+	local rd,wt = lsocket.select({fd})
 	if not rd then
 		print("select:", wt)	-- select error
 		fd:close()
@@ -295,7 +293,7 @@ local function connection_dispose(timeout)
 	if rd[1] then
 		local data, err = fd:recv()
 		if not data then
-			if data then
+			if err then
 				-- socket error
 				return nil, err
 			end
