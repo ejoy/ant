@@ -45,7 +45,7 @@ ecs.tag "sampleobj"
 
 local model_ed_sys = ecs.system "model_editor_system"
 model_ed_sys.singleton "debug_object"
-
+model_ed_sys.singleton "timer"
 model_ed_sys.depend "camera_init"
 
 -- luacheck: globals main_dialog
@@ -275,6 +275,13 @@ local function init_playitme_ctrl()
 	end
 
 	slider_value_chaged(slider)
+
+	local autoplay = iup.GetDialogChild(dlg, "AUTO_PLAY")
+	function autoplay:action()
+		local active = self.VALUE == "OFF" and "ON" or "OFF"
+		duration_value.ACTIVE = active
+		slider.ACTIVE = active
+	end
 end
 
 local function init_check_shower()
@@ -330,4 +337,55 @@ function model_ed_sys:init()
 	physicobjs.create_plane_entity(world)
 
 	focus_sample()
+end
+
+local function auto_update_ani(deltatimeInSecond)
+	local sample = smaple_entity()
+	if sample == nil then
+		return
+	end
+
+	local ani = sample.animation
+	if ani == nil then
+		return
+	end
+
+	local dlg = main_dialog()
+	local autoplay = iup.GetDialogChild(dlg, "AUTO_PLAY")
+	if autoplay.VALUE ~= "OFF" then
+		local durationctrl = iup.GetDialogChild(dlg, "DURATION")
+		local duration = tonumber(durationctrl.VALUE)
+
+		local anihandle = assert(ani.assetinfo.handle)
+		local aniduration = anihandle:duration()
+		
+
+		local function calc_new_duration(duration, aniduration)
+			local function is_number_equal(lhs, rhs)
+				local delta = lhs - rhs
+				local tolerance = 10e-6
+				return -tolerance <= delta and delta <= tolerance
+			end
+			if is_number_equal(duration, aniduration) then
+				return 0
+			end
+
+			local newduration = duration + deltatimeInSecond
+			if newduration > aniduration then
+				return aniduration
+			end
+			return newduration
+		end
+
+		local newduration = calc_new_duration(duration, aniduration)
+	
+		local ratio = math.min(math.max(0, newduration / aniduration), 1)
+		ani.ratio = ratio
+		durationctrl.VALUE = tostring(newduration)
+	end
+end
+
+function model_ed_sys:update()
+	local timer = self.timer
+	auto_update_ani(timer.delta * 0.001)
 end
