@@ -26,12 +26,12 @@ end
 function lc:insert_item(pos, name, ud)
 	if pos == nil then
 		pos = self:conut()
-	else
-		self:set_ud(pos, ud)
-		assert(pos <= self:count())
-		local where = "INSERTITEM" .. pos
-		l[where] = name
 	end
+
+	self:set_ud(pos, ud)
+	assert(pos <= self:count())
+	local where = "INSERTITEM" .. pos
+	self.view[where] = name
 end
 
 function lc:remove(item)

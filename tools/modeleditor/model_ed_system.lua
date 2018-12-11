@@ -190,8 +190,7 @@ local function init_paths_ctrl()
 	local meshpath_inputer = iup.GetDialogChild(dlg, "SM_PATH")
 
 	function skepath_inputer:killfocus_cb()		
-		check_create_sample_entity(self, anipath_inputer, meshpath_inputer)		
-		draw_bone()
+		check_create_sample_entity(self, anipath_inputer, meshpath_inputer)
 		return 0
 	end
 	

@@ -7,6 +7,7 @@ require "iuplua"
 
 local editor = require "editor"
 local elog = require "editor.log"
+local probeclass = require "editor.controls.assetprobebutton"
 
 local fbw, fbh = 800, 600
 
@@ -61,7 +62,7 @@ local animation_time = iup.vbox {
 local function create_pathctrl(title, inputer_name, btn_name)
 	local btn = iup.button {
 		NAME=btn_name,
-		TITLE="Browse",
+		TITLE="...",
 		ALIGNMENT="ARIGHT",
 	}
 
@@ -72,10 +73,16 @@ local function create_pathctrl(title, inputer_name, btn_name)
 		SIZE="120x0",
 	}
 
+	local probe = probeclass.new()
+	probe:add_probe("asset", function (respath)
+		path_inputer.VALUE = respath or ""
+	end)
+
 	return iup.frame {
 		TITLE=title,
 		iup.hbox {
 			path_inputer,
+			probe.view,
 			btn,
 			iup.fill {}
 		},
