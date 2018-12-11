@@ -259,14 +259,14 @@
 				LIBRARY_SEARCH_PATHS = (
 					../../clibs/ant,
 					"../../3rd/bgfx/.build/ios-arm64/bin",
-					../../3rd/build/bullet3/lib,
-					"../../3rd/build/ozz-animation/src/animation/runtime",
-					"../../3rd/build/ozz-animation/src/animation/offline",
-					"../../3rd/build/ozz-animation/src/geometry/runtime",
-					"../../3rd/build/ozz-animation/src/base",
+					../../3rd/build/bullet3/ios/lib,
+					"../../3rd/build/ozz-animation/ios/src/animation/runtime",
+					"../../3rd/build/ozz-animation/ios/src/animation/offline",
+					"../../3rd/build/ozz-animation/ios/src/geometry/runtime",
+					"../../3rd/build/ozz-animation/ios/src/base",
 				);
 				OTHER_LDFLAGS = (
-					"-lant",
+					"-lant-ios",
 					"-lbgfxRelease",
 					"-lbxRelease",
 					"-lbimgRelease",
@@ -307,14 +307,14 @@
 				LIBRARY_SEARCH_PATHS = (
 					../../clibs/ant,
 					"../../3rd/bgfx/.build/ios-arm64/bin",
-					../../3rd/build/bullet3/lib,
-					"../../3rd/build/ozz-animation/src/animation/runtime",
-					"../../3rd/build/ozz-animation/src/animation/offline",
-					"../../3rd/build/ozz-animation/src/geometry/runtime",
-					"../../3rd/build/ozz-animation/src/base",
+					../../3rd/build/bullet3/ios/lib,
+					"../../3rd/build/ozz-animation/ios/src/animation/runtime",
+					"../../3rd/build/ozz-animation/ios/src/animation/offline",
+					"../../3rd/build/ozz-animation/ios/src/geometry/runtime",
+					"../../3rd/build/ozz-animation/ios/src/base",
 				);
 				OTHER_LDFLAGS = (
-					"-lant",
+					"-lant-ios",
 					"-lbgfxRelease",
 					"-lbxRelease",
 					"-lbimgRelease",

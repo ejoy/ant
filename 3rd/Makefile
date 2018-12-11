@@ -1,7 +1,11 @@
-CMAKE_PROJ = assimp freetype ozz-animation bullet3
-RUNTIME_PROJ = freetype ozz-animation bullet3 bgfx zlib
+CMAKE_PROJ = assimp freetype ozz-animation bullet3 zlib
+RUNTIME_PROJ = ozz-animation bullet3 bgfx
 ALL_PROJ = $(RUNTIME_PROJ) assimp cd cjson
 BUILD_CONFIG = release
+
+ifeq "$(PLAT)" ""
+PLAT=mingw
+endif
 
 # should add devenv command's path to system path
 DEVENV_CMD = devenv
@@ -73,7 +77,9 @@ CMAKE_OPT_freetype :=-DCMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE -DCMAKE_DISABLE_FIN
 CMAKE_OPT_bullet3 = -DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF -DBUILD_EXTRAS=OFF
 
 ifeq "$(PLAT)" "mingw"
-  CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../build/bullet3/lib
+  CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../../build/bullet3/$(PLAT)/lib
+else
+  CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../lib
 endif
 
 ifeq "$(PLAT)" "msvc"
@@ -91,9 +97,13 @@ endif
 info :
 	@echo Please do 'make init' or 'make init msvc=on' for the first time , and then 'make all' or 'make all msvc=on' . when msvc=on is passed, it not support the make single project, like 'make bgfx_make msvc=on'
 
+ifeq "$(PLAT)" "ios"
+init : $(addsuffix _init,$(RUNTIME_PROJ))
+else
 init : $(addsuffix _init,$(ALL_PROJ))
+endif
 
-ifeq "$(msvc)" ""
+ifeq "$(PLAT)" "msvc"
   MAKE_ALL_DEPEND = $(addsuffix _make,$(ALL_PROJ))
 else
   MAKE_ALL_DEPEND = msvc_all
@@ -135,25 +145,18 @@ cjson_make: | $(BUILD_PATH)
 cjson_clean:
 	cd lua-cjson && make clean TARGET=cjson.dll
 
-zlib_init: | $(BUILD_PATH)
-	cd zlib && ./configure
-zlib_make: | $(BUILD_PATH)
-	cd zlib && make
-zlib_clean:
-	cd zlib && make clean
-
 define CMAKE_TEMP
-  $(BUILD_PATH)/$(1) : | $(BUILD_PATH)
-	mkdir $$@
+  $(BUILD_PATH)/$(1)/$(PLAT) : | $(BUILD_PATH)
+	mkdir -p $$@
 
-  $(1)_init : | $(BUILD_PATH)/$(1)
-	cd $$(BUILD_PATH)/$(1) && cmake $(CMAKE_BUILD) $$(CMAKE_OPT_$(1)) -G "$(CMAKE_PROJ_TYPE)" ../../$(1)
+  $(1)_init : | $(BUILD_PATH)/$(1)/$(PLAT)
+	cd $$(BUILD_PATH)/$(1)/$(PLAT) && cmake $(CMAKE_BUILD) $$(CMAKE_OPT_$(1)) -G "$(CMAKE_PROJ_TYPE)" ../../../$(1)
 
-  $(1)_make : | $(BUILD_PATH)/$(1)
-	cd $$(BUILD_PATH)/$(1) && make $(MP)
+  $(1)_make : | $(BUILD_PATH)/$(1)/$(PLAT)
+	cd $$(BUILD_PATH)/$(1)/$(PLAT) && make $(MP)
 
-  $(1)_clean : | $(BUILD_PATH)/$(1)
-	cd $$(BUILD_PATH)/$(1) && make clean
+  $(1)_clean : | $(BUILD_PATH)/$(1)/$(PLAT)
+	cd $$(BUILD_PATH)/$(1)/$(PLAT) && make clean
 endef
 
 $(foreach v, $(CMAKE_PROJ), $(eval $(call CMAKE_TEMP,$(v))))

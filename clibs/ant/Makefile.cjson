@@ -18,3 +18,6 @@ $(CJSON)/$(ODIR)/libcjson-$(PLAT).a : $(CJSON)/$(ODIR)/strbuf.o $(CJSON)/$(ODIR)
 	
 $(ODIR)/libcjson.a : $(CJSON)/$(ODIR)/libcjson-$(PLAT).a
 	cp $< $@
+
+$(CJSON)/$(ODIR) :
+	mkdir -p $@
