@@ -32,7 +32,13 @@
         "env": {
             "STATIC_LINKING_IUP" : "1",
             "BIN_PATH" : "projects/msvc/vs_bin/x64/Debug"
-        }        
+        },
+            "sourceMaps": [
+                [
+                    "vfs://engine/libs/",
+                    "${workspaceRoot}/libs/"
+                ]
+            ]      
     },
     {
         "name": "launch (mingw)",
@@ -42,6 +48,12 @@
         "runtimeArgs": "${workspaceRoot}/libs/main.lua",
         "cwd": "${workspaceRoot}",
         "internalModule": "vscode-dbg",
-        "stopOnEntry": false
+        "stopOnEntry": false,
+            "sourceMaps": [
+                [
+                    "vfs://engine/libs/",
+                    "${workspaceRoot}/libs/"
+                ]
+            ]
     },
 
