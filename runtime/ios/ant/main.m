@@ -1,4 +1,5 @@
 #include "ios_window.h"
+#include "ios_error.h"
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
@@ -32,14 +33,11 @@ static int msghandler(lua_State *L) {
 }
 
 static void dostring(lua_State* L, const char* str) {
-    lua_pushcfunction(L, msghandler);
-    int err = lua_gettop(L);
-    if (LUA_OK == luaL_loadbuffer(L, str, strlen(str), "=(BOOTSTRAP)")) {
-        if (LUA_OK == lua_pcall(L, 0, 0, err)) {
-            return;
-        }
+    if (LUA_OK != luaL_loadbuffer(L, str, strlen(str), "=(BOOTSTRAP)")) {
+        lua_error(L);
+        return;
     }
-    lua_writestringerror("%s\n", lua_tostring(L, -1));
+    lua_call(L, 0, 0);
 }
 
 static void createargtable(lua_State *L, int argc, char **argv) {
@@ -66,16 +64,20 @@ static int pmain(lua_State *L) {
 
 int main(int argc, char * argv[]) {
     @autoreleasepool {
+        ios_error_handler();
         lua_State* L = luaL_newstate();
         if (!L) {
-            lua_writestringerror("%s\n", "cannot create state: not enough memory");
+            ios_error_display("cannot create state: not enough memory");
             return 1;
         }
+        lua_pushcfunction(L, msghandler);
+        int err = lua_gettop(L);
         lua_pushcfunction(L, &pmain);
         lua_pushinteger(L, argc);
         lua_pushlightuserdata(L, argv);
-        if (LUA_OK != lua_pcall(L, 2, 0, 0)) {
-            lua_writestringerror("%s\n", lua_tostring(L, -1));
+        if (LUA_OK != lua_pcall(L, 2, 0, err)) {
+            ios_error_display(lua_tostring(L, -1));
+            lua_close(L);
             return 1;
         }
         int res = UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));

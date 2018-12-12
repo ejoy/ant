@@ -7,10 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		11E9F6B121C0A29C00D271B7 /* ios_error.m in Sources */ = {isa = PBXBuildFile; fileRef = 11E9F6B021C0A29C00D271B7 /* ios_error.m */; };
 		11F4177121B6621C00486046 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 11F4177021B6621C00486046 /* main.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		11E9F6B021C0A29C00D271B7 /* ios_error.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ios_error.m; sourceTree = "<group>"; };
+		11E9F6B221C0A2B400D271B7 /* ios_error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ios_error.h; sourceTree = "<group>"; };
 		11F4175E21B6620A00486046 /* ant.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ant.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		11F4176F21B6621C00486046 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		11F4177021B6621C00486046 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -46,6 +49,8 @@
 		11F4176021B6620A00486046 /* ant */ = {
 			isa = PBXGroup;
 			children = (
+				11E9F6B221C0A2B400D271B7 /* ios_error.h */,
+				11E9F6B021C0A29C00D271B7 /* ios_error.m */,
 				11F4176F21B6621C00486046 /* Info.plist */,
 				11F4177021B6621C00486046 /* main.m */,
 			);
@@ -119,6 +124,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				11E9F6B121C0A29C00D271B7 /* ios_error.m in Sources */,
 				11F4177121B6621C00486046 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

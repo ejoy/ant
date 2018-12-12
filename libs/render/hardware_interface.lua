@@ -8,7 +8,7 @@ end
 
 function hw.init(args)
 	local bgfx = require "bgfx"
-	args.renderer = args.renderer or "OPENGL"
+	assert(args.renderer == nil)
 	args.getlog = args.getlog or true
 	bgfx.init(args)
 	bgfx.reset(args.width, args.height, "v")

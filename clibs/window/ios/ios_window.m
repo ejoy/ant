@@ -25,7 +25,7 @@ static void push_message(struct ant_window_message* msg) {
         g_device = MTLCreateSystemDefaultDevice();
         if (g_device) {
             return metalClass;
-        }
+       }
     }
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -66,8 +66,8 @@ static void push_message(struct ant_window_message* msg) {
 }
 
 - (void)renderFrame {
-    struct ant_window_message update_msg;
-    update_msg.type = ANT_WINDOW_UPDATE;
+    struct ant_window_message msg;
+    msg.type = ANT_WINDOW_UPDATE;
     push_message(&msg);
 }
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -146,7 +146,7 @@ static void push_message(struct ant_window_message* msg) {
 - (void)applicationWillTerminate:(UIApplication *)application {
     struct ant_window_message msg;
     msg.type = ANT_WINDOW_EXIT;
-    push_message(&msg);s
+    push_message(&msg);
     [self.m_view stop];
 }
 @end
