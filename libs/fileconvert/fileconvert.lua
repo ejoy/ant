@@ -32,7 +32,7 @@ end
 
 local function log_info(info)
 	local log = get_logfile()
-	log:write(string.format("[fileconvert-info:%s]", info))
+	log:write(string.format("[fileconvert-info:%s\n]", info))
 	log:flush()
 end
 
