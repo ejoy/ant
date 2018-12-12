@@ -44,7 +44,7 @@
 #define NK_ANT_MAX_FONTS            16
 #define NK_ANT_MAX_CHARSET			16
 
-#define MY_DEBUG 
+// #define MY_DEBUG
 
 #define IMAGE_LIB
 
