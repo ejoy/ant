@@ -17,7 +17,7 @@ pacman -S openssl-devel
 ```
 ./autogen.sh
 make
-make intasll
+make install
 cp ./src/.libs/msys-plist++-3.dll ../../bin/
 ```
 
@@ -25,7 +25,7 @@ cp ./src/.libs/msys-plist++-3.dll ../../bin/
 ```
 ./autogen.sh
 make SUBDIRS="common src include" INCLUDES=-I../../libplist/include
-make intasll SUBDIRS="common src include"
+make install SUBDIRS="common src include"
 ```
 
 4. 编译libimobiledevice/
