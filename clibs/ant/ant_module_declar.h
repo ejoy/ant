@@ -1,4 +1,3 @@
-extern "C" {
 int luaopen_bgfx(lua_State* L);
 int luaopen_bgfx_baselib(lua_State* L);
 int luaopen_bgfx_nuklear(lua_State* L);
@@ -20,4 +19,3 @@ int luaopen_remotedebug(lua_State* L);
 int luaopen_thread(lua_State* L);
 int luaopen_window(lua_State* L);
 int luaopen_window_native(lua_State* L);
-}

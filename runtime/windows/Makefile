@@ -12,14 +12,14 @@ default : ant.exe
 
 mingw : default
 
-main.o : main.cpp mingw_wmain.h
-	g++ -std=c++17 -c $(CFLAGS) $(ANTINC) $(LUAINC) -o $@ $<
+main.o : main.c mingw_wmain.h
+	$(CC) -c $(CFLAGS) $(ANTINC) $(LUAINC) -o $@ $<
 
 libant-$(PLAT).a :
 	cd $(ANT)/clibs/ant/ && $(MAKE) "PLAT=$(PLAT)" $@
 
 ant.exe : main.o libant-$(PLAT).a
-	gcc -o $@ main.o $(ANT)/clibs/ant/libant-$(PLAT).a $(LINKLIBANT) -lshlwapi
+	$(CC) -o $@ main.o $(ANT)/clibs/ant/libant-$(PLAT).a $(LINKLIBANT) -lshlwapi
 	$(STRIP) $@ 
 
 clean :

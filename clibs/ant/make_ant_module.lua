@@ -60,11 +60,9 @@ end
 linit()
 
 local t = {}
-t[#t+1] = 'extern "C" {'
 for name, func in lpairs() do
     t[#t+1] = ('int %s(lua_State* L);'):format(func)
 end
-t[#t+1] = '}'
 t[#t+1] = ''
 local f = assert(io.open('./clibs/ant/ant_module_declar.h', 'w'))
 f:write(table.concat(t, '\n'))

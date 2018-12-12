@@ -104,9 +104,9 @@ init : $(addsuffix _init,$(ALL_PROJ))
 endif
 
 ifeq "$(PLAT)" "msvc"
-  MAKE_ALL_DEPEND = $(addsuffix _make,$(ALL_PROJ))
-else
   MAKE_ALL_DEPEND = msvc_all
+else
+  MAKE_ALL_DEPEND = $(addsuffix _make,$(ALL_PROJ))
 endif
 
 all : $(MAKE_ALL_DEPEND)

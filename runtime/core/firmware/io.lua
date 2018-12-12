@@ -209,7 +209,7 @@ function offline.GET(id, fullpath)
 			end
 		end
 	end
-	request_id(id, nil)
+	response_id(id, nil)
 end
 
 do
@@ -637,7 +637,7 @@ function online.GET(id, fullpath)
 	end
 	-- file not exist
 	print("Not exist", fullpath)
-	request_id(id, nil)
+	response_id(id, nil)
 end
 
 function online.PREFETCH(path)

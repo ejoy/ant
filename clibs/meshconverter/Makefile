@@ -12,11 +12,11 @@ mingw : meshconverter.dll
 
 GLM_INC := -I$(ANT3RD)/glm
 $(ODIR) : 
-	mkdir $@
+	mkdir -p $@
 
 OBGFX_DIR:=$(ODIR)/bgfx 
 $(OBGFX_DIR) : | $(ODIR)
-	mkdir $@
+	mkdir -p $@
 
 SRC_FILES := meshconverter.cpp antmesh_converter.cpp fbx_helper.cpp bgfxmesh_helper.cpp utils.cpp bgfx/util.cpp
 

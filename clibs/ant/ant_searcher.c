@@ -1,28 +1,33 @@
+#include <lua.h>
+#include <lauxlib.h>
+
 #include "ant.h"
-#include <lua.hpp>
-#include <map>
-#include <string>
+#include <string.h>
 
 #include "ant_module_declar.h"
-std::map<std::string, lua_CFunction> g_modules = {
+static const luaL_Reg g_modules[] = {
 #include "ant_module_define.h"
+	{ NULL, NULL },
 };
 
-int ant_searcher_c(lua_State *L) {
-	size_t len = 0;
-	const char* name = luaL_checklstring(L, 1, &len);
-	auto it = g_modules.find(std::string(name, len));
-	if (it == g_modules.end()) {
-		lua_pushfstring(L, "\n\tno C module '%s'", name);
-		return 1;
+int
+ant_searcher_c(lua_State *L) {
+	const char* name = luaL_checkstring(L, 1);
+	int i;
+	for (i=0;g_modules[i].name;i++) {
+		if (strcmp(g_modules[i].name, name) == 0) {
+			lua_pushcfunction(L, g_modules[i].func);
+			lua_pushvalue(L, 1);
+			return 2;
+		}
 	}
-	lua_pushcfunction(L, it->second);
-	lua_pushvalue(L, 1);
-	return 2;
+
+	lua_pushfstring(L, "\n\tno C module '%s'", name);
+	return 1;
 }
 
-extern "C"
-int ant_searcher_init(lua_State *L, int loadlib) {
+int
+ant_searcher_init(lua_State *L, int loadlib) {
     if (LUA_TTABLE != lua_getglobal(L, "package")) {
         return 0;
     }

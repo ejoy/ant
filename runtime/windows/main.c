@@ -1,4 +1,7 @@
-#include <lua.hpp>
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
+#include <wchar.h>
 #include <ant.h>
 #include <shlobj.h>
 #include <shlwapi.h>
