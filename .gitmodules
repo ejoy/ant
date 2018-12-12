@@ -54,4 +54,4 @@
 	url = https://github.com/leetal/ios-cmake.git
 [submodule "3rd/ib-compress"]
 	path = 3rd/ib-compress
-	url = https://gz-tea.ejoy.com/git/chenjunjie/ib-compress.git
+	url = https://gz-tea.ejoy.com/git/Ant/ib-compress.git
