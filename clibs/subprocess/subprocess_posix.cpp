@@ -112,16 +112,16 @@ namespace ant::posix::subprocess {
         suspended_ = true;
     }
 
-    void spawn::redirect(stdio type, FILE* f) { 
+    void spawn::redirect(stdio type, pipe::handle h) { 
         switch (type) {
         case stdio::eInput:
-            fds_[0] = fileno(f);
+            fds_[0] = h;
             break;
         case stdio::eOutput:
-            fds_[1] = fileno(f);
+            fds_[1] = h;
             break;
         case stdio::eError:
-            fds_[2] = fileno(f);
+            fds_[2] = h;
             break;
         default:
             break;
@@ -211,26 +211,32 @@ namespace ant::posix::subprocess {
             while (r == -1 && errno == EINTR);
             return !r;
         }
-        static bool create(int fds[2]) {
+        FILE* open_result::open_file(mode m) {
+            switch (m) {
+            case mode::eRead:
+                return fdopen(rd, "rb");
+            case mode::eWrite:
+                return fdopen(wr, "wb");
+            default:
+                assert(false);
+                return 0;
+            }
+        }
+        handle to_handle(FILE* f) {
+            return fileno(f);
+        }
+        open_result open() {
+            int fds[2];
             if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds)) {
-                return false;
+                return { NULL, NULL };
             }
             cloexec(fds[0], true);
             cloexec(fds[1], true);
-            return true;
-        }
-		open_result open() {
-            int fds[2];
-            if (!create(fds)) {
-				return { NULL, NULL };
-            }
-            FILE* rd = fdopen(fds[0], "rb");
-            FILE* wr = fdopen(fds[1], "wb");
-			return { rd, wr };
+            return { fds[0], fds[1] };
         }
         int peek(FILE* f) {
             int count;
-            return (ioctl(fileno(f), FIONREAD, (char *) &count) < 0 ? -1 : count);
+            return (ioctl(to_handle(f), FIONREAD, (char *) &count) < 0 ? -1 : count);
         }
     }
 }

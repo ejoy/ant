@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <string>
 
 namespace ant::win::subprocess {
     namespace ignore_case {
@@ -33,6 +34,23 @@ namespace ant::win::subprocess {
         eError,
     };
 
+    namespace pipe {
+        typedef HANDLE handle;
+        enum class mode {
+            eRead,
+            eWrite,
+        };
+        struct open_result {
+            handle rd;
+            handle wr;
+            FILE*  open_file(mode m);
+            operator bool() { return rd && wr; }
+        };
+        handle to_handle(FILE* f);
+        open_result open();
+        int         peek(FILE* f);
+    }
+
     class spawn;
     class process : public PROCESS_INFORMATION {
     public:
@@ -60,7 +78,7 @@ namespace ant::win::subprocess {
         bool set_console(console type);
         bool hide_window();
         void suspended();
-        void redirect(stdio type, FILE* f);
+        void redirect(stdio type, pipe::handle h);
         void env_set(const std::wstring& key, const std::wstring& value);
         void env_del(const std::wstring& key);
         bool exec(const std::vector<std::wstring>& args, const wchar_t* cwd);
@@ -75,13 +93,4 @@ namespace ant::win::subprocess {
         bool                    inherit_handle_;
         DWORD                   flags_;
     };
-
-    namespace pipe {
-		struct open_result {
-			FILE* rd;
-			FILE* wr;
-		};
-        open_result open();
-        int         peek(FILE* f);
-    }
 }

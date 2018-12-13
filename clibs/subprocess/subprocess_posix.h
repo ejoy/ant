@@ -14,6 +14,23 @@ namespace ant::posix::subprocess {
         eError,
     };
 
+    namespace pipe {
+        typedef int handle;
+        enum class mode {
+            eRead,
+            eWrite,
+        };
+        struct open_result {
+            FILE* rd;
+            FILE* wr;
+            FILE*  open_file(mode m);
+            operator bool() { return rd && wr; }
+        };
+        handle to_handle(FILE* f);
+        open_result open();
+        int         peek(FILE* f);
+    }
+
     class spawn;
     class process {
     public:
@@ -34,7 +51,7 @@ namespace ant::posix::subprocess {
         spawn();
         ~spawn();
         void suspended();
-        void redirect(stdio type, FILE* f);
+        void redirect(stdio type, pipe::handle f);
         void env_set(const std::string& key, const std::string& value);
         void env_del(const std::string& key);
         bool exec(std::vector<char*>& args, const char* cwd);
@@ -46,13 +63,4 @@ namespace ant::posix::subprocess {
         int                                pid_;
         bool                               suspended_;
     };
-
-    namespace pipe {
-		struct open_result {
-			FILE* rd;
-			FILE* wr;
-		};
-		open_result open();
-        int         peek(FILE* f);
-    }
 }

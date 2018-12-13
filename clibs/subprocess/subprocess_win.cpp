@@ -228,10 +228,9 @@ namespace ant::win::subprocess {
         flags_ |= CREATE_SUSPENDED;
     }
     
-    void spawn::redirect(stdio type, FILE* f) {
+    void spawn::redirect(stdio type, pipe::handle h) {
         si_.dwFlags |= STARTF_USESTDHANDLES;
         inherit_handle_ = true;
-        HANDLE h = (HANDLE)_get_osfhandle(_fileno(f));
         ::SetHandleInformation(h, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         switch (type) {
         case stdio::eInput:
@@ -321,19 +320,19 @@ namespace ant::win::subprocess {
     process::process(process&& pi)
         : PROCESS_INFORMATION(pi)
     {
-		pi.hProcess = 0;
-		pi.hThread = 0;
-		pi.dwProcessId = 0;
-		pi.dwThreadId = 0;
+        pi.hProcess = 0;
+        pi.hThread = 0;
+        pi.dwProcessId = 0;
+        pi.dwThreadId = 0;
     }
 
     process::process(PROCESS_INFORMATION&& pi)
         : PROCESS_INFORMATION(pi)
     {
-		pi.hProcess = 0;
-		pi.hThread = 0;
-		pi.dwProcessId = 0;
-		pi.dwThreadId = 0;
+        pi.hProcess = 0;
+        pi.hThread = 0;
+        pi.dwProcessId = 0;
+        pi.dwThreadId = 0;
     }
 
     process::~process() {
@@ -343,14 +342,14 @@ namespace ant::win::subprocess {
 
     process& process::operator=(process&& pi) {
         if (this != &pi) {
-			hProcess = pi.hProcess;
-			hThread = pi.hThread;
-			dwProcessId = pi.dwProcessId;
-			dwThreadId = pi.dwThreadId;
-			pi.hProcess = 0;
-			pi.hThread = 0;
-			pi.dwProcessId = 0;
-			pi.dwThreadId = 0;
+            hProcess = pi.hProcess;
+            hThread = pi.hThread;
+            dwProcessId = pi.dwProcessId;
+            dwThreadId = pi.dwThreadId;
+            pi.hProcess = 0;
+            pi.hThread = 0;
+            pi.dwProcessId = 0;
+            pi.dwThreadId = 0;
         }
         return *this;
     }
@@ -408,26 +407,40 @@ namespace ant::win::subprocess {
     }
 
     namespace pipe {
-		open_result open() {
+        FILE* open_result::open_file(mode m) {
+            switch (m) {
+            case mode::eRead:
+                return _fdopen(_open_osfhandle((intptr_t)rd, _O_RDONLY | _O_BINARY), "rb");
+            case mode::eWrite:
+                return _fdopen(_open_osfhandle((intptr_t)wr, _O_WRONLY | _O_BINARY), "wb");
+            default:
+                assert(false);
+                return 0;
+            }
+        }
+
+        handle to_handle(FILE* f) {
+            return (HANDLE)_get_osfhandle(_fileno(f));
+        }
+
+        open_result open() {
             SECURITY_ATTRIBUTES sa;
             sa.nLength = sizeof(SECURITY_ATTRIBUTES);
             sa.bInheritHandle = FALSE;
             sa.lpSecurityDescriptor = NULL;
             HANDLE read_pipe = NULL, write_pipe = NULL;
             if (!::CreatePipe(&read_pipe, &write_pipe, &sa, 0)) {
-				return { NULL, NULL };
+                return { NULL, NULL };
             }
-            FILE* rd = _fdopen(_open_osfhandle((intptr_t)read_pipe, _O_RDONLY | _O_BINARY), "rb");
-            FILE* wr = _fdopen(_open_osfhandle((intptr_t)write_pipe, _O_WRONLY | _O_BINARY), "wb");
-			return { rd, wr };
+            return { read_pipe, write_pipe };
         }
 
         int peek(FILE* f) {
             DWORD rlen = 0;
-            if (PeekNamedPipe((HANDLE)_get_osfhandle(_fileno(f)), 0, 0, 0, &rlen, 0)) {
+            if (PeekNamedPipe(to_handle(f), 0, 0, 0, &rlen, 0)) {
                 return rlen;
             }
-            return 0;
+            return -1;
         }
     }
 }
