@@ -2,13 +2,13 @@ include ../common.mk
 include ../bgfx/bgfx_define.mk
 
 ASSIMPROOT = $(ANT3RD)
-ASSIMPINC = -I$(ASSIMPROOT)/assimp/include -I$(ANT3RD)/build/assimp/include
-ASSIMPLIB = -L$(ASSIMPROOT)/build/assimp/code -lassimp -L$(ASSIMPROOT)/build/assimp/contrib/irrXML -lIrrXML -lz
+ASSIMPINC = -I$(ASSIMPROOT)/assimp/include -I$(ANT3RD)/build/assimp/$(PLAT)/include
+ASSIMPLIB = -L$(ASSIMPROOT)/build/assimp/$(PLAT)/code -lassimp -L$(ASSIMPROOT)/build/assimp/$(PLAT)/contrib/irrXML -lIrrXML -lz
 
 IB_COMPRESSINC = -I$(ANT3RD)/ib-compress
-IB_COMPRESSLIB = -L$(ANT3RD)/ib-compress -lib-compress
+IB_COMPRESSLIB = -L$(ANT3RD)/ib-compress -lib-compress-$(PLAT)
 
-mingw : meshconverter.dll
+default : meshconverter.dll
 
 GLM_INC := -I$(ANT3RD)/glm
 $(ODIR) : 

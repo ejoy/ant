@@ -12,7 +12,7 @@ $(ODIR)/linalg.o : linalg.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC)
 
 $(ODIR)/math3d.o : math3d.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC) -Wchar-subscripts
+	$(CXX) -c $(CFLAGS) -Wno-char-subscripts -o $@ $^ $(LUAINC) $(GLM_INC)
 
 $(ODIR)/mathbaselib.o : mathbaselib.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC)

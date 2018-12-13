@@ -1116,20 +1116,6 @@ get_lnametype_pairs(struct lnametype_pairs *p) {
 	SET(p, "euler",		"e",	LINEAR_TYPE_EULER);
 }
 
-static inline int
-linear_name_to_type(const char* name) {
-	struct lnametype_pairs pairs[LINEAR_TYPE_COUNT];
-	get_lnametype_pairs(pairs);
-	for (int i = 0; i < LINEAR_TYPE_COUNT; ++i) {
-		const struct lnametype_pairs *p = pairs + i;
-		if (strcmp(name, p->alias) == 0 || strcmp(name, p->name) == 0) {
-			return p->type;
-		}
-	}
-
-	return LINEAR_TYPE_NONE;
-}
-
 static inline void
 convert_to_euler(lua_State *L, struct lastack*LS) {
 	int64_t id = pop(L, LS);
