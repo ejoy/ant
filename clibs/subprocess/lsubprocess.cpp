@@ -369,7 +369,7 @@ namespace ant::lua_subprocess {
             lua_pushstring(L, "peek: error"); // TODO
             return 2;
         }
-        lua_pushinteger(L, subprocess::pipe::peek(p->f));
+		lua_pushinteger(L, n);
         return 1;
     }
 
@@ -406,6 +406,11 @@ namespace ant::lua_subprocess {
     }
 }
 
+extern "C" 
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
 int luaopen_subprocess(lua_State* L) {
-    return ant::lua_subprocess::luaopen(L);
+	return ant::lua_subprocess::luaopen(L);
 }
+

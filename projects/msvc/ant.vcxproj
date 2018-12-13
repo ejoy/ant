@@ -19,13 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\ant\ant_searcher.cpp" />
-    <ClCompile Include="..\..\runtime\windows\main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\..\clibs\ant\ant.h" />
     <ClInclude Include="..\..\clibs\ant\ant_module_declar.h" />
     <ClInclude Include="..\..\clibs\ant\ant_module_define.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\clibs\ant\ant_searcher.c" />
+    <ClCompile Include="..\..\clibs\ant\main.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

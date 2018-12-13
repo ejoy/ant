@@ -1,6 +1,6 @@
 CMAKE_PROJ = assimp freetype ozz-animation bullet3 zlib
-RUNTIME_PROJ = ozz-animation bullet3 bgfx
-ALL_PROJ = $(RUNTIME_PROJ) assimp cd cjson
+RUNTIME_PROJ = ozz-animation bullet3 bgfx ib-compress
+ALL_PROJ = $(RUNTIME_PROJ) $(CMAKE_PROJ) cd cjson
 BUILD_CONFIG = release
 
 ifeq "$(PLAT)" ""
@@ -20,9 +20,10 @@ endif
 
 MSVC_MAKE_INFO := @echo msvc not support make single project, use 'make all plat=msvc' instead
 
+BUILD_PATH := build
+
 ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles
-  BUILD_PATH := build
   BGFX_INIT_CMD = make .build/projects/gmake-osx
   BGFX_MAKE_CMD = make osx-$(BGFX_CONFIG_TYPE)64 $(MP)
   
@@ -32,7 +33,7 @@ ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_CLEAN = make clean
 else ifeq "$(PLAT)" "ios"
   CMAKE_PROJ_TYPE = Unix Makefiles
-  BUILD_PATH := build
+  
   BGFX_INIT_CMD = make .build/projects/gmake-ios-arm64
   BGFX_MAKE_CMD = make ios-arm64-$(BGFX_CONFIG_TYPE) $(MP)
   
@@ -44,7 +45,6 @@ else ifeq "$(PLAT)" "ios"
   CMAKE_BUILD += -DCMAKE_TOOLCHAIN_FILE=../ios-cmake/ios.toolchain.cmake -DIOS_PLATFORM=OS64 -DENABLE_BITCODE=TRUE
 else ifeq "$(PLAT)" "msvc"
   CMAKE_PROJ_TYPE = Visual Studio 15 2017 Win64
-  BUILD_PATH := build_msvc
 
   # only build debug project in msvc
   BGFX_INIT_CMD = ../bx/tools/bin/windows/genie --with-examples --with-tools  --with-dynamic-runtime --with-shared-lib --with-windows=10.0.16299.0 vs2017
@@ -57,7 +57,6 @@ else ifeq "$(PLAT)" "msvc"
   CMAKE_PROJ_CLEAN = $(MSVC_MAKE_INFO) 
 else
   CMAKE_PROJ_TYPE = MSYS Makefiles
-  BUILD_PATH := build
   BGFX_INIT_CMD = make .build/projects/gmake-mingw-gcc
   BGFX_MAKE_CMD = make mingw-gcc-$(BGFX_CONFIG_TYPE)64 $(MP)
   
@@ -138,6 +137,12 @@ cd_make : | $(BUILD_PATH)
 	cd cd && $(CD_MAKE_CMD)
 cd_clean:
 	cd cd && make clean
+
+ib-compress_init: | $(BUILD_PATH)
+ib-compress_make: | $(BUILD_PATH)
+	cd ib-compress && make PLAT=$(PLAT)
+ib-compress_clean:
+	cd ib-compress && make clean
 
 cjson_init: | $(BUILD_PATH)
 cjson_make: | $(BUILD_PATH)

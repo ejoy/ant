@@ -113,7 +113,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/build_msvc/ozz-animation/src/base/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/geometry/runtime/$(Configuration);../../3rd/build_msvc/ozz-animation/src/animation/offline/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/build/ozz-animation/msvc/src/base/$(Configuration);../../3rd/build/ozz-animation/msvc/src/animation/runtime/$(Configuration);../../3rd/build/ozz-animation/msvc/src/geometry/runtime/$(Configuration);../../3rd/build/ozz-animation/msvc/src/animation/offline/$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;ozz_base_d.lib;ozz_animation_d.lib;ozz_animation_offline_d.lib;ozz_geometry_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

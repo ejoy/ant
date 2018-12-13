@@ -9,8 +9,8 @@ IUPCD_OBJ := $(patsubst %.c,$(OCDDIR)/%.o,$(IUPCD_SRC))
 
 CD_LUASRC := cdlua5.c cdvoid5.c cdlua5_active.c cdlua5_canvas.c cdlua5ctx.c # cdluacontextplus5.c
 CD_LIB := -L$(CD_DIR)/lib/mingw6_64 -lcd
-FREETYPE_LIB := -L$(ANT3RD)/build/freetype -lfreetype
-ZLIB_LIB := -L$(ANT3RD)/build/zlib -lzlibstatic
+FREETYPE_LIB := -L$(ANT3RD)/build/freetype/$(PLAT) -lfreetype
+ZLIB_LIB := -L$(ANT3RD)/build/zlib/$(PLAT) -lzlibstatic
 
 IUPCD_DIR := $(IUPSRC)/srccd
 
