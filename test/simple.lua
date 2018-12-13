@@ -40,7 +40,11 @@ eu.regitster_iup(input_queue, canvas)
 
 local function init()
 	local fbw, fbh = 1280, 720
-	rhwi.init(iup.GetAttributeData(canvas,"HWND"), fbw, fbh)
+	rhwi.init {
+		nwh = iup.GetAttributeData(canvas,"HWND"),
+		width = fbw,
+		height = fbh,
+	}
 	local world = scene.start_new_world(input_queue, fbw, fbh, {"test.system.simple_system"})
 	task.loop(world.update)
 end
