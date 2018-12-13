@@ -20,7 +20,8 @@ vec3 calc_directional_light(vec3 normal, vec3 lightdir, vec3 viewdir, float shin
 	float fres = fresnel(ndotl, 0.2, 5.0);	
 	float specular = step(0, ndotl) * fres * specular_blinn(lightdir, normal, viewdir, shininess);
 
-	return vec3(diffuse + specular);
+	float result = diffuse + specular;
+	return vec3(result, result, result);
 }
 
 vec4 calc_ambient_color(float ambientMode,vec3 normalWS) 

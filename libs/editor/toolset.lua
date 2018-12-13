@@ -26,7 +26,7 @@ if config.platform() == "OSX" then
 else
 	default_toolset = {
 		lua = cwd .. "/clibs/lua/lua.exe",
-		shaderc = cwd .. "/3rd/bgfx/.build/win64_mingw-gcc/bin/shadercRelease.exe",
+		shaderc = cwd .. "/3rd/bgfx/.build/win64_vs2017/bin/shadercDebug.exe",
 		shaderinc = cwd .. "/3rd/bgfx/src",
 	}
 end
@@ -64,22 +64,22 @@ local stage_types = {
 }
 
 local shader_options = {
-	d3d9_v = "-p vs_3_0 -O 3",
-	d3d9_f = "-p ps_3_0 -O 3",	
-	d3d11_v = "-p vs_4_0 -O 3",
-	d3d11_f = "-p ps_4_0 -O 3",
-	d3d11_c = "-p cs_5_0 -O 1",	
-	glsl_v ="-p 120",
-	glsl_f ="-p 120",
-	glsl_c ="-p 430",	
-	metal_v = "",
-	metal_f = "",
-	metal_c = "",
-	vulkan_v = "",
-	vulkan_f = "",	
+	d3d9_v = "vs_3_0",
+	d3d9_f = "ps_3_0",	
+	d3d11_v = "vs_4_0",
+	d3d11_f = "ps_4_0",
+	d3d11_c = "cs_5_0",	
+	glsl_v ="120",
+	glsl_f ="120",
+	glsl_c ="430",
+	metal_v = "metal",
+	metal_f = "metal",
+	metal_c = "metal",
+	vulkan_v = "spirv",
+	vulkan_f = "spirv",	
 }
 
-function toolset.compile(filename, paths, shadertype, platform, stagetype, shader_opt)
+function toolset.compile(filename, paths, shadertype, platform, stagetype, shader_opt, optimizelevel)
 	paths = paths or toolset.path
 
 	if filename then
@@ -136,24 +136,69 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 		tbl.splat = assert(platform)
 		tbl.sopt = assert(shader_opt)
 
-		local prog, stdout, stderr = subprocess.spawn {
+		local cmdline = {
 			tbl.shaderc,
 			"--platform", tbl.splat,
 			"--type", tbl.stype,
-			tbl.sopt,
+			"-p", tbl.sopt,
 			"-f", tbl.src,
-			"-o", tbl.dest,
+			"-o", tbl.dest,			
 			tbl.inc,
 			stdout = true,
 			stderr = true,
 			hideWindow = true,
 		}
 
+		local function default_level(shadertype, stagetype)
+			if shadertype:match("d3d") then
+				return stagetype == "c" and 1 or 3
+			end
+		end
+
+		local function add_optimizelevel(level, defaultlevel)			
+			level = level or defaultlevel
+			if level then
+				table.insert(cmdline, "-O")
+				table.insert(cmdline, tostring(level))
+			end
+		end
+
+		add_optimizelevel(optimizelevel, default_level(shadertype, stagetype))
+
+		local prog = subprocess.spawn(cmdline)
+
+		-- local function to_cmdline()
+		-- 	local s = ""
+		-- 	for _, v in ipairs(cmdline) do
+		-- 		if type(v) == "table" then
+		-- 			for _, vv in ipairs(v) do
+		-- 				s = s .. vv .. " "
+		-- 			end
+		-- 		else
+		-- 			s = s .. v .. " "
+		-- 		end				
+		-- 	end
+
+		-- 	return s
+		-- end
+
+		-- print(to_cmdline())
+
 		if not prog then
 			return false, "Create shaderc process failed."
 		else
 			local function read_std_info(std)
-				local ret = std:read "a"
+				local ret = ""
+				while true do
+					local num = subprocess.peek(std)
+					if num == nil then
+						break
+					end
+
+					if num ~= 0 then
+						ret = ret .. std:read(num)						
+					end					
+				end
 				std:close()
 				local success, err = true, ""
 				if ret and ret ~= "" then
@@ -183,7 +228,7 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 			end
 
 			local success, err = true, ""
-			for _, std in ipairs {stdout, stderr} do
+			for _, std in ipairs {prog.stdout, prog.stderr} do
 				local s, e = read_std_info(std)
 				success = success and s
 				err = err .. "\n" .. e
