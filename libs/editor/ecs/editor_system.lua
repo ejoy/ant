@@ -22,8 +22,7 @@ local function build_hierarchy_tree()
         assert(not eidin_hierarchy[eid])
         eidin_hierarchy[eid] = true
         local e = world[eid]
-		local ename = e.name
-		local name = ename and ename.n or defname
+		local name = e.name or defname
 		ud_table[name] = eid
         table.insert(htree, name)
 	end
@@ -75,8 +74,7 @@ local function build_hierarchy_tree()
 			end
 
 			local t = build_hierarchy_entity_tree(hierarchy_tree, name_mapper)        
-			local ename = e.name
-			local name = ename and ename.n or "hierarchy_entity"
+			local name = e.name or "hierarchy_entity"
 			htree[name] = t
 			ud_table[name] = eid
 		end
@@ -85,9 +83,8 @@ local function build_hierarchy_tree()
     for _, eid in world:each("can_render") do
 		if not eidin_hierarchy[eid] then			
             local e = world[eid]
-            if not is_transform_obj(e) and e.can_render then
-				local ename = e.name
-				local name = ename and ename.n or "entity"
+            if not is_transform_obj(e) and e.can_render then				
+				local name = e.name or "entity"
 				table.insert(htree, name)
 				ud_table[name] = eid
             end
