@@ -80,9 +80,9 @@ unsigned long __stdcall utf8_GetModuleFileNameA(void* module, char* filename, un
 {
 	wchar_t* tmp = calloc(size, sizeof(wchar_t));
 	unsigned long tmplen = GetModuleFileNameW(module, tmp, size);
-	unsigned long ret = WideCharToMultiByte(CP_UTF8, 0, tmp, tmplen, filename, size, NULL, NULL);
+	unsigned long ret = WideCharToMultiByte(CP_UTF8, 0, tmp, tmplen + 1, filename, size, NULL, NULL);
 	free(tmp);
-	return ret;
+	return ret - 1;
 }
 
 unsigned long __stdcall utf8_FormatMessageA(
