@@ -228,7 +228,7 @@ namespace ant::posix::subprocess {
         open_result open() {
             int fds[2];
             if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds)) {
-                return { NULL, NULL };
+                return { 0, 0 };
             }
             cloexec(fds[0], true);
             cloexec(fds[1], true);
