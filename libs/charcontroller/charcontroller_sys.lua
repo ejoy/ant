@@ -2,22 +2,18 @@ local ecs = ...
 local world = ecs.world
 
 -- combine and set into system path 
--- package.path = package.path..';./clibs/terrain/?.lua;./test/?.lua;'
--- package.path = package.path..';./clibs/bullet/?.lua;'
-
-package.path = package.path..';./libs/terrain/?.lua;'
-package.path = package.path..';./libs/bullet/?.lua;'
-
-
-local bullet_world = require "bulletworld"
+-- package.path = package.path..';./libs/terrain/?.lua;'
+-- package.path = package.path..';./libs/bullet/?.lua;'
+-- local bullet_world = require "bulletworld"
 
 ecs.import "inputmgr.message_system"
 ecs.import "timer.timer"
+
 local camera_util = require "render.camera.util"
 local bgfx = require "bgfx"
 local mathu = require "math.util"
 
-local math3d = require "math3d"
+--local math3d = require "math3d"
 local stack = require "math.stack"
 
 
@@ -27,7 +23,9 @@ local char_controller_sys = ecs.system "charcontroller_system"
 char_controller_sys.singleton "message"
 char_controller_sys.singleton "control_state"
 char_controller_sys.singleton "timer"
+
 char_controller_sys.depend "message_system"
+char_controller_sys.depend "camera_init"  -- new use mode 
 
 local VIEW_DEBUG_DRAWER = 255
 
@@ -49,11 +47,11 @@ local action_type = {
 }
 
 local function register_input_message(self)
-
-    local camera = world:first_entity("main_camera")
-
+    --[[
     --local ms = self.math_stack
     local ms = stack 
+
+    local camera = world:first_entity("main_camera")
 
     local point2d = require "math.point2d"
 
@@ -116,7 +114,76 @@ local function register_input_message(self)
 		end			
 	end
 
+    self.message.observers:add(message) 
+    --]]
+    local point2d = require "math.point2d"
+
+    local camera = world:first_entity("main_camera")
+
+	local move_speed = 1
+	local message = {}
+
+    local last_xy
+	local button_status = {}
+	-- luacheck: ignore self
+	-- luacheck: ignore status
+    function message:mouse_click(btn, p, x, y, status)
+        button_status[btn] = p
+        last_xy = point2d(x, y)
+	end
+
+	function message:mouse_move(x, y, status)
+		local xy = point2d(x, y)
+		if last_xy then
+			if status.RIGHT then
+				local speed = move_speed * 0.1
+				local delta = (xy - last_xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
+				camera_util.rotate(camera, delta.x, delta.y)
+			end 
+		end
+
+		last_xy = xy
+	end
+
+	local action_name_mappers = {
+		-- right button
+		r_a = "LEFT", r_d = "RIGHT",
+		r_w = "FORWARD", r_s = "BACKWARD",
+		r_c = "DOWNWARD", r_f = "UPWARD",		
+		r_q = "LEFTROT", r_e = "RIGHTROT",
+	}
+
+	function message:keyboard(c, p, status)
+		if c == nil then return end
+
+		local name = nil
+		if button_status.RIGHT then
+			name = 'r_'
+		elseif button_status.LEFT then
+			name = 'l_'
+		end
+
+		local clower = c:lower()
+		if name then
+			name = name .. clower
+			local t = action_name_mappers[name]
+			if t then
+				action_type[t] = p
+			end	
+		end
+
+		local isctrl = status.CTRL
+		if isctrl then
+			if clower == "=" then
+				step = math.min(1, step + 0.002)
+			elseif clower == "-" then
+				step = math.max(0.002, step - 0.002)				
+			end	
+		end		
+	end
+
 	self.message.observers:add(message)
+
 end 
 
 local function move_step(camera, pos, deltaTime, ms ,Physics )
@@ -261,6 +328,75 @@ function char_controller_sys:init()
     Physics:set_debug_drawer("on",bgfx)
 
     register_input_message(self)
+   --[[ 
+    local point2d = require "math.point2d"
+
+    local camera = world:first_entity("main_camera")
+
+	local move_speed = 1
+	local message = {}
+
+    local last_xy
+	local button_status = {}
+	-- luacheck: ignore self
+	-- luacheck: ignore status
+    function message:mouse_click(btn, p, x, y, status)
+        button_status[btn] = p
+        last_xy = point2d(x, y)
+	end
+
+	function message:mouse_move(x, y, status)
+		local xy = point2d(x, y)
+		if last_xy then
+			if status.RIGHT then
+				local speed = move_speed * 0.1
+				local delta = (xy - last_xy) * speed	--we need to reverse the drag direction so that to rotate angle can reverse
+				camera_util.rotate(camera, delta.x, delta.y)
+			end 
+		end
+
+		last_xy = xy
+	end
+
+	local action_name_mappers = {
+		-- right button
+		r_a = "LEFT", r_d = "RIGHT",
+		r_w = "FORWARD", r_s = "BACKWARD",
+		r_c = "DOWNWARD", r_f = "UPWARD",		
+		r_q = "LEFTROT", r_e = "RIGHTROT",
+	}
+
+	function message:keyboard(c, p, status)
+		if c == nil then return end
+
+		local name = nil
+		if button_status.RIGHT then
+			name = 'r_'
+		elseif button_status.LEFT then
+			name = 'l_'
+		end
+
+		local clower = c:lower()
+		if name then
+			name = name .. clower
+			local t = action_name_mappers[name]
+			if t then
+				action_type[t] = p
+			end	
+		end
+
+		local isctrl = status.CTRL
+		if isctrl then
+			if clower == "=" then
+				step = math.min(1, step + 0.002)
+			elseif clower == "-" then
+				step = math.max(0.002, step - 0.002)				
+			end	
+		end		
+	end
+
+	self.message.observers:add(message)
+    --]]
 
 end     
 
