@@ -29,4 +29,4 @@ $(ODIR) :
 	mkdir -p $@
 
 clean :
-	rm -rf $(OROOT) *.dll *.a
+	rm -rf $(ODIR) && rm -f *.dll && rm -f $(BULLET_OBJ)
