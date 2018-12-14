@@ -1,7 +1,9 @@
 #define LUA_LIB
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 extern "C" {
 #include <lua.h>
@@ -16,9 +18,8 @@ extern "C" {
 #include <bgfx/c99/platform.h>
 }
 
-#include <bx/allocator.h>
-#include <stdio.h>
-#include <math.h>
+// #include <bgfx/bgfx.h>
+// #include <bx/allocator.h>
 
 //@1:只负责地形几何相关的Pos,Normal,Uv,Tangent 的计算,创建，和编辑、更新
 //@2:只接受高度图，画刷，等更改几何形体，顶点索引内容等lua数据,不持有任何图形相关的handle
@@ -30,7 +31,6 @@ extern "C" {
 // 目前,为了工程简单化，独立成lterrain.dll,方便使用，并且不影响已有工程，可自由实验修改测试
 // 测试完成后的工程文件，又可很方便的融入的lua bgfx 工程
 // API 可以进一步根据需求修改，让交互更简单些并符合应用需求
-
 
 //Big/Small Endian
 #ifdef __MAC_
@@ -46,17 +46,17 @@ extern "C" {
 
 #define TERRAIN_CONFIG_IMPLEMENT_DEFAULT_ALLOCATOR  1
 
-#if TERRAIN_CONFIG_IMPLEMENT_DEFAULT_ALLOCATOR
-	bx::AllocatorI* getDefaultAllocator()
-	{
-		BX_PRAGMA_DIAGNOSTIC_PUSH();
-		BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4459);							// warning C4459: declaration of 's_allocator' hides global declaration
-		BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wshadow");
-		static bx::DefaultAllocator s_allocator;
-		return &s_allocator;
-		BX_PRAGMA_DIAGNOSTIC_POP();
-	}
-#endif
+// #if TERRAIN_CONFIG_IMPLEMENT_DEFAULT_ALLOCATOR
+// 	bx::AllocatorI* getDefaultAllocator()
+// 	{
+// 		BX_PRAGMA_DIAGNOSTIC_PUSH();
+// 		BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4459);							// warning C4459: declaration of 's_allocator' hides global declaration
+// 		BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wshadow");
+// 		static bx::DefaultAllocator s_allocator;
+// 		return &s_allocator;
+// 		BX_PRAGMA_DIAGNOSTIC_POP();
+// 	}
+// #endif
 
 int is_little_endian(void)
 {
@@ -66,10 +66,12 @@ int is_little_endian(void)
 	} word;
 	word.ivalue = 1;
 
+#ifdef MY_DEBUG
 	//int  value = 0x00000001;
 	//char *ptr = (char*)&value;
 	//printf("p=%p,%x,%x,%x,%x\n",ptr,ptr[0],ptr[1],ptr[2],ptr[3]);
 	//return ptr[0];
+#endif 	
 	return word.cvalue;
 }
 // big to small
@@ -77,11 +79,12 @@ int16_t word_btol(uint16_t sw)
 {
 	uint8_t *p = (uint8_t*)&sw;
 	int16_t dw = ((int16_t)p[0]<<8) + (int16_t)p[1];
+
 #ifdef MY_DEBUG
-	printf(" sw = %x",sw);
-	printf(" sw[0] =%x,sw[1] = %x\n",p[0],p[1]);
-	printf(" dw = %x",dw);
-	printf(" dw[0] =%x,dw[1] = %x\n",dw&0x00ff,(dw&0xff00)>>8);
+	printf("c terrain: sw = %x",sw);
+	printf("c terrain: sw[0] =%x,sw[1] = %x\n",p[0],p[1]);
+	printf("c terrain: dw = %x",dw);
+	printf("c terrain: dw[0] =%x,dw[1] = %x\n",dw&0x00ff,(dw&0xff00)>>8);
 #endif
 	return dw;
 }
@@ -134,10 +137,17 @@ struct TerrainData_t
 	float	uv0Scale;								// 0 layer texcoord
 	float   uv1Scale;								// 1 layer texcoord
 
+	float   grid_x_scale;
+	float   grid_z_scale;
+	float   height_scale;
+	float   min_height;
+	float   max_height;
+
 	// raw heightmap data
 	uint8_t *					heightmap;              // lua 持有
 	int     					rawBits;
 	int 						rawSize;
+
 	// vertex stream
 	bgfx_vertex_decl_t * 		vdecl;				  	// terrain vertex declare
 	uint8_t *			    	vertices;			  	// maybe from lua
@@ -153,7 +163,7 @@ struct TerrainData_t
 	bgfx_texture_handle_t		t_maskTexture;			// mask texture
 
 	// two mode
-	// ib,vb
+	// ib,vb											// lua maintains
 	//bgfx_dynamic_vertex_buffer_handle_t	vbh;	  	// VertexBuffer
 	//bgfx_dynamic_index_buffer_handle_t  	ibh;
     // dynamic ib,vb
@@ -375,6 +385,16 @@ int terrain_check_level(lua_State *L,int index,struct TerrainData_t* terData)
 	terData->uv0Scale = getfield_tofloat(L,index,"uv0_scale");
 	terData->uv1Scale = getfield_tofloat(L,index,"uv1_scale");
 
+	terData->grid_x_scale  = terData->width *1.0f/ terData->gridWidth;
+	terData->grid_z_scale  = terData->length*1.0f/ terData->gridLength;
+	terData->height_scale  = terData->height*1.0f;
+	if( terData->rawBits == 8)
+		terData->height_scale = terData->height/ 256.0f;   	   
+	else
+		terData->height_scale = terData->height / 65536.0f;    
+
+	terData->min_height = terData->max_height = 0;
+
 	return 0;
 }
 
@@ -451,21 +471,20 @@ lterrain_create(lua_State *L)
 	terData->heightmap = heightmap;
 	terData->rawSize = size;
 
-
 	// param3：vertex decl
     bgfx_vertex_decl_t *vd = (bgfx_vertex_decl_t *) lua_touserdata(L,3);
 	if(vd == NULL)
 	   return luaL_error(L,"Invalid vertex decl");
+
 	// save vertex declare
     terData->vdecl = vd;
 
-
 	// param3： terrainLevel
 	terrain_check_level(L,2,terData);
+
 	// todo:  get terrain data from terrainLevel
 
 	// default init
-	//terrain_default_init(terData);
 
 	return 1;
 }
@@ -474,36 +493,39 @@ lterrain_create(lua_State *L)
 // **顶点数据类型需要优化压缩
 void update_terrain_mesh( struct TerrainData_t* terData )
 {
-	float xspace  = terData->width *1.0f/ terData->gridWidth;
-	float zspace  = terData->length*1.0f/ terData->gridLength;
-	float yscale  = terData->height*1.0f;
+	// float xspace  = terData->width *1.0f/ terData->gridWidth;
+	// float zspace  = terData->length*1.0f/ terData->gridLength;
+	// float yscale  = terData->height*1.0f;
+	float xspace = terData->grid_x_scale;
+	float zspace = terData->grid_z_scale;
+	float yscale = terData->height_scale;
+
 	float uv0scale = terData->uv0Scale;
 	float uv1scale = terData->uv1Scale;
+
+	float min_height = 99999.99f;
+	float max_height = -99999.99f;
 
 	struct vec3 { float x,y,z; };
 	struct vec2 { float u,v; };
 
 	if( is_little_endian() ) {  //tested 
 #ifdef MY_DEBUG	
-		printf("little_endian supported.\n");
+		printf("c terrain: little_endian supported.\n");
 		word_btol( 0x1234 );
 #endif 		
 	}
 
-	if( terData->rawBits == 8)
-		yscale = yscale/ 256.0f;   	   // 256 gray scale
-	else
-		yscale = yscale / 65536.0f;    // 16 bits gray scale
 
 	int nBytes = terData->rawBits / 8;
 	uint32_t width = terData->gridWidth;
 	uint32_t height = terData->gridLength;
 	terData->vertexCount = 0;
 #ifdef MY_DEBUG		
-	printf("c terrain:%d,%d,begin create mesh",width,height);
+	printf("c terrain: %d,%d, begin create mesh\n",width,height);
 #endif 	
 	// printf("c terrain: width = %d,height=%d\n",width,height);
-    // terrain 本身具备最多的 ATTRIB，用户可以选则全部或部分，实现一定的可定制
+    // terrain 本身具备多个的 ATTRIB，用户可以选则全部或部分，实现一定的可定制
 
 	for (uint32_t y = 0; y < height; y++)
 	{
@@ -515,13 +537,15 @@ void update_terrain_mesh( struct TerrainData_t* terData )
 				struct vec3* vert = (struct vec3*) &terData->vertices[ terData->vertexCount*stride + offset ];
 				vert->x = (float) x*xspace;
 				if( nBytes==1 )
-					vert->y = (float) *(uint8_t*)&terData->heightmap[ ( ( ( /*height-1-*/ y) * width) + ( /*(width-1)-*/ x))*nBytes];  //8 or bits
+					vert->y = (float) *(uint8_t*)&terData->heightmap[ ( ( ( /*height-1-*/ y) * width) + ( /*(width-1)-*/ x))*nBytes];  
 				else if( nBytes==2 ) {
-					vert->y = (float) *(uint16_t*)&terData->heightmap[ ( ( ( /*height-1-*/ y) * width) + (/* (width-1)-*/x) )*nBytes];  //8 or bits
+					vert->y = (float) *(uint16_t*)&terData->heightmap[ ( ( ( /*height-1-*/ y) * width) + (/* (width-1)-*/x) )*nBytes];  
 					//vert->y = word_btol(vert->y);
 				}
 				vert->y *= yscale;
 				vert->z  = (float) y*zspace;
+				if( vert->y > max_height ) max_height = vert->y;
+				if( vert->y < min_height ) min_height = vert->y;
 			}
 			//uv0
 			if( terData->vdecl->attributes[ BGFX_ATTRIB_TEXCOORD0 ] != UINT16_MAX ) {
@@ -561,8 +585,11 @@ void update_terrain_mesh( struct TerrainData_t* terData )
 			terData->vertexCount++;
 		}
 	}
+	terData->min_height = min_height;
+	terData->max_height = max_height;
 #ifdef MY_DEBUG	
-    printf("c terrain:%d,%d,begin create index",width,height);
+	printf("c terrain: min_height(%.2f),max_height(%.2f)\n",min_height,max_height);
+    printf("c terrain: %d,%d, begin create index\n",width,height);
 #endif 	
 	terData->indexCount = 0;
 	for (uint16_t y = 0; y < (height-1 ); y++)
@@ -666,6 +693,8 @@ void smooth_terrain_quad( struct TerrainData_t *terData) {
 
 void smooth_terrain_mesh( struct TerrainData_t *terData,int mode )
 {
+	if ( terData->rawBits != 8)
+	  return ;
 #ifdef MY_DEBUG		
 	printf("c terrain: smooth terrain gradient.\n");
 #endif 	
@@ -1047,12 +1076,12 @@ bool check_height_of_triangle(float x,float z,float *height,float v0[3],float v1
 	float start[3],dir[3],ip[3];
 		// ray start point
 	start[0] = x;
-	start[1] = 0.0f;
+	start[1] = 1000.0f;
 	start[2] = z;
 
 	// ray direction
 	dir[0] = 0.0f;
-	dir[1] = -1.0f;
+	dir[1] = -1000.0f;
 	dir[2] = 0.0f;
 
 	if(ray_triangle(start,dir,ip,v0,v1,v2)) {
@@ -1110,10 +1139,65 @@ bool terrain_get_height(struct TerrainData_t* terData,float x,float z,float *hei
 				return true;
 		}
 	}
+	if(*height)
+		*height = 0.0f;
 	return false;
 }
 
+float terrain_get_raw_height(struct TerrainData_t* terData,int x,int z)
+{
+	int stride = terData->vdecl->stride;
+	int offset = terData->vdecl->offset[ BGFX_ATTRIB_POSITION ];
+	uint8_t* verts = terData->vertices;
 
+	int	   width = terData->gridWidth;
+
+	if( !in_terrain_bounds(terData, z,x) )
+	   return -99999.99f;
+
+
+	// 1 ----- 2
+	//  |   / |
+	//  |  /  |
+	//  | /   |
+	// 3 ----- 4
+	struct vec3 { float x, y, z; };
+	int   index = (z * width) + x;
+	struct vec3 *vert = (struct vec3*) &verts[ index*stride + offset ];
+	return vert->y;
+}
+
+
+static int 
+lterrain_get_height_scale( lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");	
+	lua_pushnumber(L,terData->height_scale );
+	return 1;
+}
+static int 
+lterrain_get_width_scale( lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");	
+	lua_pushnumber(L,terData->grid_x_scale );
+	return 1;
+}
+static int 
+lterrain_get_length_scale( lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");	
+	lua_pushnumber(L,terData->grid_z_scale );
+	return 1;
+}
+static int 
+lterrain_get_min_height( lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");	
+	lua_pushnumber(L,terData->min_height );
+	return 1;
+}
+static int 
+lterrain_get_max_height( lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");	
+	lua_pushnumber(L,terData->max_height );
+	return 1;
+}
 
 static int
 lterrain_get_height( lua_State *L) {
@@ -1132,6 +1216,40 @@ lterrain_get_height( lua_State *L) {
 
 	return 2;
 }
+
+static int 
+lterrain_get_raw_height( lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
+	int x = luaL_checkinteger(L,2);
+	int y = luaL_checkinteger(L,3);
+
+	float height = 0.f;
+	height = terrain_get_raw_height(terData,x,y);
+	lua_pushnumber(L,height);
+
+#ifdef MY_DEBUG_OUT
+	float min_height = 99999.f;
+	float max_height = -99999.f;
+	FILE *out = fopen("ter_raw_height.txt","w+");
+	if(out) {
+		for(int y =0 ;y< terData->gridLength; y++) {
+			for(int x =0 ; x< terData->gridWidth; x++) {
+				float hi = terrain_get_raw_height(terData,x,y);
+				fprintf(out,"%06.2f ",hi);
+				if( hi <min_height) min_height = hi;
+				if( hi >max_height) max_height = hi;
+			}
+			fprintf(out,"\r");
+		}
+		fprintf(out,"max = %06.2f ",max_height);
+		fprintf(out,"min = %06.2f ",min_height);
+		fclose(out);
+	}
+#endif 	
+
+	return 1;
+}
+
 
 static int
 lterrain_update_normals( lua_State *L )
@@ -1255,8 +1373,13 @@ luaopen_lterrain(lua_State *L) {
 		{ "update_mesh",lterrain_update_mesh},
 		{ "update_normals",lterrain_update_normals},
 		{ "calculate_normals",lterrain_update_normals},
+		{ "get_raw_height",lterrain_get_raw_height},
 		{ "get_height",lterrain_get_height},
-		{ "getHeight",lterrain_get_height},
+		{ "get_min_height",lterrain_get_min_height},
+		{ "get_max_height",lterrain_get_max_height},
+		{ "get_height_scale",lterrain_get_height_scale},
+		{ "get_width_scale",lterrain_get_width_scale},
+		{ "get_length_scale",lterrain_get_length_scale},
 		{ "update_view",lterrain_update_view},
 		{ "update",lterrain_update_view},
 		{ "render",lterrain_render},
