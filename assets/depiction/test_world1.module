@@ -1,4 +1,5 @@
 modules = {	
 	-- for test
-	"libs/render/add_entity_system.lua",
+	"render.add_entity_system",
+	"editor.ecs.camera_controller",
 }
