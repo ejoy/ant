@@ -21,9 +21,9 @@ namespace ant::posix::subprocess {
             eWrite,
         };
         struct open_result {
-            FILE* rd;
-            FILE* wr;
-            FILE*  open_file(mode m);
+            handle rd;
+            handle wr;
+            FILE* open_file(mode m);
             operator bool() { return rd && wr; }
         };
         handle to_handle(FILE* f);

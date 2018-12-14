@@ -5,23 +5,21 @@ local vfs = require "vfs"
 
 local config = require "common.config"
 
-local platform = config.platform()
-
-local function compile_shader(filename, outfilename, shadertype)
+local function compile_shader(plat, filename, outfilename, shadertype)
     local config = toolset.load_config()
 	if config.shaderc then		
 		local engineshaderpath = vfs.realpath("engine/assets/shaders/src")
 		config.includes = {config.shaderinc, engineshaderpath}
         config.dest = outfilename
-		return toolset.compile(filename, config, shadertype, platform)
+		return toolset.compile(filename, config, shadertype, plat)
 	end
 	
 	return nil, "config is empty, try run `lua tools/config.lua`"
 end
 
-local function check_compile_shader(srcpath, outfile, shadertype)	
+local function check_compile_shader(plat, srcpath, outfile, shadertype)	
 	fu.create_dirs(path.parent(outfile))	
-	local success, msg = compile_shader(srcpath, outfile, shadertype)
+	local success, msg = compile_shader(plat, srcpath, outfile, shadertype)
 	if not success then
 		return nil, msg
 	end
@@ -33,11 +31,11 @@ return function (plat, sourcefile, param, outfile)
 	if shadertype == nil then
 		local rhwi = require "render.hardware_interface"
 		shadertype = rhwi.shader_type()
-		if shadertype == nil then
+		if shadertype == nil then			
 			shadertype = rhwi.default_shader_type(plat)
 		end		
 	end
-	local binfile, error = check_compile_shader(sourcefile, outfile, shadertype)
+	local binfile, error = check_compile_shader(plat, sourcefile, outfile, shadertype)
 	if error then
 		return nil, error
 	end

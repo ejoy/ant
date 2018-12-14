@@ -3,9 +3,11 @@
 #include <optional>
 #include <errno.h>
 #include <string.h>
-#include <filesystem>
 
+#ifndef __clang__
+#include <filesystem>
 namespace fs = std::filesystem;
+#endif //__clang__
 
 namespace ant::lua {
 #if defined(_WIN32)
@@ -37,9 +39,11 @@ namespace ant::lua {
 namespace ant::lua_subprocess {
     typedef lua::string_type nativestring;
 
+#ifndef __clang__
     static fs::path& topath(lua_State* L, int idx) {
         return *(fs::path*)luaL_checkudata(L, idx, "filesystem");
     }
+#endif //__clang__
 
     namespace process {
         static subprocess::process& to(lua_State* L, int idx) {
@@ -158,11 +162,13 @@ namespace ant::lua_subprocess {
                 lua_pop(L, 1);
                 return ret;
             }
+            #ifndef __clang__
             else if (LUA_TUSERDATA == lua_type(L, -1)) {
                 nativestring ret = topath(L, -1).string<nativestring::value_type>();
                 lua_pop(L, 1);
                 return ret;
             }
+            #endif //__clang__
             lua_pop(L, 1);
             return std::optional<nativestring>();
         }
@@ -205,6 +211,7 @@ namespace ant::lua_subprocess {
                 case LUA_TSTRING:
                     args.push_back(LOAD_ARGS(L, -1));
                     break;
+#ifndef __clang__
                 case LUA_TUSERDATA:
 #if defined(_WIN32)
                     args.push_back(topath(L, -1).wstring());
@@ -212,6 +219,7 @@ namespace ant::lua_subprocess {
                     args.push_back(topath(L, -1).c_str());
 #endif
                     break;
+#endif //__clang__
                 case LUA_TTABLE:
                     cast_args(L, lua_absindex(L, -1), args);
                     break;
@@ -257,7 +265,7 @@ namespace ant::lua_subprocess {
                 break;
             }
             lua_pop(L, 1);
-            return nullptr;
+            return 0;
         }
 
         static void cast_env(lua_State* L, subprocess::spawn& self) {

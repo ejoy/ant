@@ -20,7 +20,7 @@ local default_toolset
 if config.platform() == "OSX" then
 	default_toolset = {
 		lua = cwd .. "/clibs/lua/lua",
-		shaderc = cwd .. "/3rd/bgfx/.build/osx64_clang/bin/shadercRelease",
+		shaderc = cwd .. "/3rd/bgfx/.build/osx64_clang/bin/shadercDebug",
 		shaderinc = cwd .. "/3rd/bgfx/src",
 	}
 else
@@ -51,6 +51,7 @@ end
 function toolset.save_config(path)
 	local home_path = home_path()
 	local f = io.open(home_path .. "/toolset.lua", "wb")
+	print("home", home_path)
 	for k,v in pairs(path or toolset.path) do
 		f:write(string.format("%s = %q\n", k,v))
 	end
@@ -167,72 +168,65 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 
 		local prog = subprocess.spawn(cmdline)
 
-		-- local function to_cmdline()
-		-- 	local s = ""
-		-- 	for _, v in ipairs(cmdline) do
-		-- 		if type(v) == "table" then
-		-- 			for _, vv in ipairs(v) do
-		-- 				s = s .. vv .. " "
-		-- 			end
-		-- 		else
-		-- 			s = s .. v .. " "
-		-- 		end				
-		-- 	end
+		local function to_cmdline()
+			local s = ""
+			for _, v in ipairs(cmdline) do
+				if type(v) == "table" then
+					for _, vv in ipairs(v) do
+						s = s .. vv .. " "
+					end
+				else
+					s = s .. v .. " "
+				end				
+			end
 
-		-- 	return s
-		-- end
-
-		-- print(to_cmdline())
+			return s
+		end
+		print(to_cmdline(), "shadertype", shadertype, "platform", platform)
 
 		if not prog then
 			return false, "Create shaderc process failed."
 		else
-			local function read_std_info(std)
-				local ret = ""
-				while true do
-					local num = subprocess.peek(std)
-					if num == nil then
-						break
-					end
-
-					if num ~= 0 then
-						ret = ret .. std:read(num)						
-					end					
-				end
-				std:close()
+			local function check_err(info)				
 				local success, err = true, ""
-				if ret and ret ~= "" then
-					success = ret:find("error", 1, true) == nil
+				if info ~= "" then
+					success = info:find("error", 1, true) == nil
 					if not success then
-
-						local function cmd_desc(tbl)
-							local inc = ''
-							for _, i in ipairs(tbl.inc) do
-								inc = inc .. '\t' .. i
-							end
-
-							return string.format(
-								"shaderc:%s\n\
-								platform:%s\n\
-								type:%s\n\
-								option:%s\n\
-								source:%s\n\
-								output:%s\n\
-								includes:%s\n", tbl.shaderc, tbl.splat, tbl.stype, tbl.sopt, tbl.src, tbl.dest, inc)
-						end
-						err = err .. cmd_desc(tbl) .. "\n" .. ret
+						
+						err = to_cmdline(tbl) .. "\n" .. info .. "\n"
 					end
 				end
 	
 				return success, err
 			end
 
+			local stds = {
+				{fd=prog.stdout, info=""}, 
+				{fd=prog.stderr, info=""}
+			}
+
 			local success, err = true, ""
-			for _, std in ipairs {prog.stdout, prog.stderr} do
-				local s, e = read_std_info(std)
-				success = success and s
-				err = err .. "\n" .. e
+			while #stds > 0 and prog:is_running() do
+				
+				for idx, std in ipairs(stds) do					
+					local fd = std.fd
+					local num = subprocess.peek(fd)
+					if num == nil then
+						local s, e = check_err(info)
+						success = success and s
+						err = err .. e
+						table.remove(stds, idx)
+						break
+					end
+
+					--print("fd", fd, "num:", num)
+	
+					if num ~= 0 then						
+						std.info = std.info .. fd:read(num)
+					end
+				end
 			end
+		
 			return success, err
 		end
 	end
