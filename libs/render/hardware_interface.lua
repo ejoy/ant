@@ -9,6 +9,7 @@ end
 function hw.init(args)
 	local bgfx = require "bgfx"
 	assert(args.renderer == nil)
+	--args.renderer = "OPENGLES"
 	args.getlog = args.getlog or true
 	bgfx.init(args)
 	bgfx.reset(args.width, args.height, "v")
@@ -37,10 +38,11 @@ end
 function hw.default_shader_type(plat)
 	if plat then
 		local PLAT = plat:upper()
-		local platform_shadertypes = {
-			-- all using "glsl"
-			WINDOWS = "glsl",	
-			OSX = "glsl",		
+		local platform_shadertypes = {			
+			WINDOWS = "d3d11",	
+			OSX = "metal",
+			IOS = "metal",
+			ANDROID = "spirv",
 		}
 
 		local shadertype = platform_shadertypes[PLAT]
