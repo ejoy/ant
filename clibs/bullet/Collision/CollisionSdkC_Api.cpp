@@ -4,6 +4,23 @@
 #include "Internal/RealTimeBullet3CollisionSdk.h"
 
 #define DISABLE_REAL_TIME_BULLET3_COLLISION_SDK
+
+/* Debug Drawer*/
+
+void plCreateDebugDrawer(plCollisionSdkHandle sdkHandle,plCollisionWorldHandle worldHandle)
+{
+	CollisionSdkInterface* sdk = (CollisionSdkInterface*)sdkHandle;
+	return sdk->createDebugDrawer( worldHandle );
+}
+void plDeleteDebugDrawer(plCollisionSdkHandle sdkHandle,plCollisionWorldHandle worldHandle)
+{
+	CollisionSdkInterface* sdk = (CollisionSdkInterface*)sdkHandle;
+	if (sdk && worldHandle)
+	{
+		sdk->deleteCollisionWorld(worldHandle);
+	}
+}
+
 /* Collision World */
 
 plCollisionWorldHandle plCreateCollisionWorld(plCollisionSdkHandle collisionSdkHandle, int maxNumObjsCapacity, int maxNumShapesCapacity, int maxNumPairsCapacity)
@@ -20,6 +37,17 @@ void plDeleteCollisionWorld(plCollisionSdkHandle collisionSdkHandle, plCollision
 		sdk->deleteCollisionWorld(worldHandle);
 	}
 }
+
+void plResetCollisionWorld(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle)
+{
+	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
+	if (sdk && worldHandle)
+	{
+		sdk->resetCollisionWorld(worldHandle);
+	}
+}
+
+
 
 plCollisionSdkHandle plCreateBullet2CollisionSdk()
 {
@@ -109,7 +137,11 @@ void plDeleteShape(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHand
 	sdk->deleteShape(worldHandle, shapeHandle);
 }
 
-
+void plSetShapeScale(plCollisionSdkHandle collisionSdkHandle,plCollisionWorldHandle worldHandle,plCollisionObjectHandle objectHandle, plCollisionShapeHandle shapeHandle,plVector3 scale)
+{
+	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
+	sdk->setShapeScale(worldHandle,objectHandle,shapeHandle,scale);
+}
 
 plCollisionObjectHandle plCreateCollisionObject(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, void* userData, int userIndex, plCollisionShapeHandle cshape, plVector3 childPos, plQuaternion childOrn)
 {
@@ -120,7 +152,7 @@ plCollisionObjectHandle plCreateCollisionObject(plCollisionSdkHandle collisionSd
 void plDeleteCollisionObject(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle body)
 {
 	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
-	sdk->deleteCollisionObject(body);
+	sdk->deleteCollisionObject(worldHandle,body);
 }
 
 void plSetCollisionObjectTransform(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle, plVector3 position, plQuaternion orientation)
@@ -142,10 +174,10 @@ void plSetCollisionObjectRotation( plCollisionSdkHandle collisionSdkHandle, plCo
 
 // user friendly interface
 void plSetCollisionObjectRotationEuler( plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
-												   plReal yaw, plReal pitch, plReal roll)
+												   plReal pitch, plReal yaw,  plReal roll)
 {
 	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
-	sdk->setCollisionObjectRotationEuler( worldHandle, objHandle, yaw,pitch, roll );
+	sdk->setCollisionObjectRotationEuler( worldHandle, objHandle, pitch, yaw, roll );
 }
 																								 
 void plSetCollisionObjectRotationAxisAngle( plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
@@ -189,4 +221,12 @@ bool plRaycast( plCollisionSdkHandle SdkHandle, plCollisionWorldHandle world, pl
 	CollisionSdkInterface *sdk = (CollisionSdkInterface*) SdkHandle;
 	return sdk->raycast(world,rayFrom,rayTo,result );
 }
+
+void plDrawline( plCollisionSdkHandle SdkHandle, plCollisionWorldHandle world, plVector3 rayFrom,plVector3 rayTo,unsigned int color)
+{
+	CollisionSdkInterface *sdk = (CollisionSdkInterface*) SdkHandle;
+	sdk->drawline(world,rayFrom,rayTo,color);
+	return;
+}
+
 

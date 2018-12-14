@@ -1,8 +1,10 @@
+
 #include "Bullet2CollisionSdk.h"
 #include "btBulletCollisionCommon.h"
 #include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
+#include "BulletDebugDraw.h"
 
-//#define  _DEBUG_OUTPUT_ 
+#define  _DEBUG_OUTPUT_ 
 struct Bullet2CollisionSdkInternalData
 {
 	btCollisionConfiguration* m_collisionConfig;
@@ -10,11 +12,14 @@ struct Bullet2CollisionSdkInternalData
 	btBroadphaseInterface* m_aabbBroadphase;
 	btCollisionWorld* m_collisionWorld;
 
+	MyDebugDrawer* m_debugDrawer; 
+
 	Bullet2CollisionSdkInternalData()
 		: m_collisionConfig(0),
 		  m_dispatcher(0),
 		  m_aabbBroadphase(0),
-		  m_collisionWorld(0)
+		  m_collisionWorld(0),
+		  m_debugDrawer(0)
 	{
 	}
 };
@@ -42,6 +47,16 @@ plCollisionWorldHandle Bullet2CollisionSdk::createCollisionWorld(int /*maxNumObj
 	return (plCollisionWorldHandle)m_internalData->m_collisionWorld;
 }
 
+// clean world's objects and reuse 
+void Bullet2CollisionSdk::resetCollisionWorld(plCollisionWorldHandle worldHandle)
+{
+	btCollisionWorld* world = (btCollisionWorld*)worldHandle;
+	if (m_internalData->m_collisionWorld == world)
+	{
+		_deleteCollisionWorldObjects(worldHandle);
+	}
+}
+
 void Bullet2CollisionSdk::deleteCollisionWorld(plCollisionWorldHandle worldHandle)
 {
 	btCollisionWorld* world = (btCollisionWorld*)worldHandle;
@@ -49,6 +64,7 @@ void Bullet2CollisionSdk::deleteCollisionWorld(plCollisionWorldHandle worldHandl
 
 	if (m_internalData->m_collisionWorld == world)
 	{
+		_deleteCollisionWorldObjects(worldHandle);
 		delete m_internalData->m_collisionWorld;
 		m_internalData->m_collisionWorld = 0;
 		delete m_internalData->m_aabbBroadphase;
@@ -57,6 +73,60 @@ void Bullet2CollisionSdk::deleteCollisionWorld(plCollisionWorldHandle worldHandl
 		m_internalData->m_dispatcher = 0;
 		delete m_internalData->m_collisionConfig;
 		m_internalData->m_collisionConfig = 0;
+
+		if(m_internalData->m_debugDrawer) {
+			printf("delete debugDrawer = %p\n",m_internalData->m_debugDrawer);
+			delete m_internalData->m_debugDrawer;
+			m_internalData->m_debugDrawer = 0;
+		}
+	} else {
+		printf("m_internalData->m_collisionWorld(%p) != world(%p)",m_internalData->m_collisionWorld,world);
+	}
+}
+
+void Bullet2CollisionSdk::_deleteCollisionWorldObjects(plCollisionWorldHandle worldHandle) 
+{
+		btCollisionWorld* world = (btCollisionWorld*)worldHandle;
+		btCollisionObjectArray& objects = world->getCollisionObjectArray();
+		for(int i =0 ;i<world->getNumCollisionObjects();i++ ) 
+		{
+			btCollisionObject* collisionObject = objects[i];
+			deleteCollisionObject( worldHandle, (plCollisionObjectHandle) collisionObject );
+		}
+		objects.clear();
+}
+
+// create Debug Drawer 
+void Bullet2CollisionSdk::createDebugDrawer(plCollisionWorldHandle worldHandle)
+{
+	btCollisionWorld* world = (btCollisionWorld*)worldHandle;
+	btAssert(m_internalData->m_collisionWorld == world);
+	if(m_internalData->m_collisionWorld == world) {
+		if(m_internalData->m_debugDrawer) {
+			delete m_internalData->m_debugDrawer;
+			m_internalData->m_debugDrawer = 0;
+		}
+		m_internalData->m_debugDrawer = new MyDebugDrawer();    // 或者创建时直接填写绘制回调
+		world->setDebugDrawer( m_internalData->m_debugDrawer );
+		m_internalData->m_debugDrawer->setDebugMode(            // default view status
+			btIDebugDraw::DBG_DrawWireframe 
+			//+ btIDebugDraw::DBG_DrawAabb
+			//+ btIDebugDraw::DBG_DrawContactPoints 
+		);
+	}
+}
+
+// delete Debug Drawer 
+void Bullet2CollisionSdk::deleteDebugDrawer( plCollisionWorldHandle worldHandle)
+{	
+	btCollisionWorld* world = (btCollisionWorld*)worldHandle;
+	btAssert(m_internalData->m_collisionWorld == world);
+	if(m_internalData->m_collisionWorld == world) {
+		if(m_internalData->m_debugDrawer) {
+			delete m_internalData->m_debugDrawer;
+			m_internalData->m_debugDrawer = 0;
+		}
+		world->setDebugDrawer( nullptr );
 	}
 }
 // addition cube shape 
@@ -81,16 +151,71 @@ plCollisionShapeHandle Bullet2CollisionSdk::createPlaneShape(plCollisionWorldHan
 	btStaticPlaneShape* planeShape = new btStaticPlaneShape( btVector3(planeNormalX, planeNormalY, planeNormalZ), planeConstant);
 	return (plCollisionShapeHandle)planeShape;
 }
+
+class HeightfieldTerrainShape:public btHeightfieldTerrainShape
+{
+public:
+	HeightfieldTerrainShape(int heightStickWidth, int heightStickLength,
+							  const void* heightfieldData, btScalar heightScale,
+							  btScalar minHeight, btScalar maxHeight,
+							  int upAxis, PHY_ScalarType heightDataType,
+							  bool flipQuadEdges):
+							  btHeightfieldTerrainShape( heightStickWidth, heightStickLength,
+							  heightfieldData, heightScale,
+							  minHeight, maxHeight,
+							  upAxis, heightDataType,
+							  flipQuadEdges)
+	{ 	}
+
+	void getVertex(int x,int y,btVector3 &vertex) {
+		btHeightfieldTerrainShape::getVertex(x,y,vertex);
+	}
+	btScalar getRawHeight(int x,int y) {
+		return btHeightfieldTerrainShape::getRawHeightFieldValue(x,y);
+	}
+};
+
+void printTerrainShape(int w,int h,HeightfieldTerrainShape *shape) {
+	FILE *out = fopen("terrain.txt","w+");
+	if(out) {
+		float min_height = 99999,max_height = -99999;
+		float vmin_height = 99999,vmax_height = -99999;
+		for(int y=0; y<h; y++) {
+			for( int x=0; x<w; x++) {
+				float height = shape->getRawHeight(x,y);
+				fprintf(out,"%06.2f ",height );
+				if( height <min_height ) min_height = height;
+				if( height >max_height ) max_height = height;
+			}
+			fprintf(out,"\r");
+			for( int x=0; x<h; x++) {
+				btVector3 v ;
+				shape->getVertex(x,y,v);
+				float vh = v.getY();
+				fprintf(out,"%06.2f ",vh );
+				if( vh <vmin_height ) vmin_height = vh;
+				if( vh >vmax_height ) vmax_height = vh;
+			}
+			fprintf(out,"\r");
+		}
+		fclose(out);
+		printf("terrainShape raw min_height =%.2f,max_height =%.2f \n\n",min_height,max_height);
+		printf("terrainShape v min_height =%.2f,max_height =%.2f \n\n",vmin_height,vmax_height);
+	}
+}
 // do grid scale setting 
 plCollisionShapeHandle Bullet2CollisionSdk::createTerrainShape(plCollisionWorldHandle worldHandle,
-													int width,int height, const void *heightData, plReal gridSize,
+													int width,int height, const void *heightData, plReal gridScale,
 													plReal heightScale,plReal minHeight,plReal maxHeight,int upAxis,
-													int phyDataType,
+													int  phyDataType,
 													bool filpQuadEdges)
 {
 	btHeightfieldTerrainShape *terrainShape = new btHeightfieldTerrainShape( width,height,heightData, 
 															                 (btScalar)heightScale,  (btScalar)minHeight,  (btScalar)maxHeight,upAxis,
 																			 (PHY_ScalarType)phyDataType, filpQuadEdges );
+	terrainShape->setLocalScaling(btVector3(gridScale,1.0f,gridScale));
+
+	//printTerrainShape(width,height,terrainShape);
 	return (plCollisionShapeHandle)terrainShape;
 }									
 
@@ -131,12 +256,15 @@ plCollisionShapeHandle Bullet2CollisionSdk::createCylinderShape(plCollisionWorld
 	{
 		case 0: {
 			cylinder = new btCylinderShapeX( btVector3(height,radius,radius) );
+			break;
 		}
 		case 1: {
 			cylinder = new btCylinderShape( btVector3(radius, height, radius) );
+			break;
 		}
 		case 2: {
 			cylinder = new btCylinderShapeZ( btVector3(radius, radius, height) );
+			break;
 		}
 		default: {
 			btAssert(0);
@@ -158,11 +286,36 @@ void Bullet2CollisionSdk::addChildShape(plCollisionWorldHandle worldHandle, plCo
 	localTrans.setRotation(btQuaternion(childOrn[0], childOrn[1], childOrn[2], childOrn[3]));
 	compound->addChildShape(localTrans, childShape);
 }
-
-
-void Bullet2CollisionSdk::deleteShape(plCollisionWorldHandle /*worldHandle*/, plCollisionShapeHandle shapeHandle)
+// object equal shape
+void Bullet2CollisionSdk::setShapeScale(plCollisionWorldHandle worldHandle,plCollisionObjectHandle objectHandle, plCollisionShapeHandle shapeHandle, plVector3 scale)
 {
 	btCollisionShape* shape = (btCollisionShape*)shapeHandle;
+	shape->setLocalScaling(btVector3(scale[0],scale[1],scale[2]));
+	btCollisionWorld* world = (btCollisionWorld*)worldHandle;
+	btCollisionObject* colObj = (btCollisionObject*)objectHandle;
+	world->updateSingleAabb(colObj);
+}
+
+// void Bullet2CollisionSdk:deleteCollisionShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle shapeHandle) 
+// {
+
+// }
+
+void Bullet2CollisionSdk::deleteShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle shapeHandle)
+{
+	btCollisionShape* shape = (btCollisionShape*)shapeHandle;
+	//printf("delete shape %s begin, iscompound(%d)\n ",shape->getName(),shape->isCompound() );
+	if(shape->isCompound() ) {
+		btCompoundShape *compoundShape = (btCompoundShape*)shape;
+		for(int i=0;i<compoundShape->getNumChildShapes();i++) {
+			btCollisionShape* subShape = compoundShape->getChildShape(i);
+			//printf(" subShape name(%s),type(%d)\n",subShape->getName(),subShape->getShapeType());
+			compoundShape->removeChildShapeByIndex(i);
+			deleteShape(worldHandle, (plCollisionShapeHandle)subShape );
+		}
+	}
+	// printf("delete shape %s end, iscompound(%d)\n ",shape->getName(),shape->isCompound() );
+	// printf("\n");
 	delete shape;
 }
 
@@ -203,29 +356,52 @@ plCollisionObjectHandle Bullet2CollisionSdk::createCollisionObject(plCollisionWo
 		tr.setOrigin(btVector3(startPosition[0], startPosition[1], startPosition[2]));
 		tr.setRotation(btQuaternion(startOrientation[0], startOrientation[1], startOrientation[2], startOrientation[3]));
 		colObj->setWorldTransform(tr);
+		if(colShape->getShapeType() == TERRAIN_SHAPE_PROXYTYPE ) {
+			int flags = colObj->getCollisionFlags();
+			flags |= btCollisionObject::CF_DISABLE_VISUALIZE_OBJECT;
+			colObj->setCollisionFlags(flags);
+		}
 		return (plCollisionObjectHandle)colObj;
 	}
 	return 0;
 }
 
-void Bullet2CollisionSdk::deleteCollisionObject(plCollisionObjectHandle bodyHandle)
+void Bullet2CollisionSdk::deleteCollisionObject(plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle)
 {
+	btCollisionWorld *world = (btCollisionWorld *) worldHandle; 
 	btCollisionObject* colObj = (btCollisionObject*)bodyHandle;
+	//printf("[deleteObject start -\n");
+    if( colObj->getWorldArrayIndex() != -1) {
+		// avoid slower search
+		//printf("removeObject (%d) is in world, remove from world first....\n",colObj->getWorldArrayIndex());
+		world->removeCollisionObject(colObj);
+	} else {
+		//printf("removeObject(-1) is not in world, delete now....\n");
+	}
+	btCollisionShape* shape = colObj->getCollisionShape();
+	if(shape) {
+		deleteShape(worldHandle, (plCollisionShapeHandle) shape );
+		colObj->setCollisionShape(0);
+	}
 	delete colObj;
+	//printf("-deleteObject end]\n");
 }
-void Bullet2CollisionSdk::setCollisionObjectTransform(plCollisionWorldHandle /*worldHandle*/, plCollisionObjectHandle bodyHandle,
+
+void Bullet2CollisionSdk::setCollisionObjectTransform(plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
 													  plVector3 position, plQuaternion orientation)
 {
 	btCollisionObject* colObj = (btCollisionObject*)bodyHandle;
 	btTransform tr;
 	tr.setOrigin(btVector3(position[0], position[1], position[2]));
 	tr.setRotation(btQuaternion(orientation[0], orientation[1], orientation[2], orientation[3]));
+	colObj->setWorldTransform(tr);
+	btCollisionWorld *world = (btCollisionWorld *) worldHandle; 
+	world->updateSingleAabb(colObj);
 #ifdef _DEBUG_OUTPUT_
 	printf("setCollisionTransform: = \n");
 	printf("pos = {%0.2f,%0.2f,%0.2f}\n",position[0], position[1], position[2]);
 	printf("rot = {%0.2f,%0.2f,%0.2f,%0.2f}\n",orientation[0], orientation[1], orientation[2], orientation[3]);
 #endif 	
-	colObj->setWorldTransform(tr);
 }
 
 // addition protocol for transform 
@@ -236,6 +412,8 @@ void Bullet2CollisionSdk::setCollisionObjectPosition( plCollisionWorldHandle wor
 	btTransform &tr = colObj->getWorldTransform();
 	tr.setOrigin( btVector3( position[0],position[1],position[2]) );
 	colObj->setWorldTransform(tr);
+	btCollisionWorld *world = (btCollisionWorld *) worldHandle; 
+	world->updateSingleAabb(colObj);
 #ifdef _DEBUG_OUTPUT_				 
 	printf("set object pos = (%0.2f,%0.2f,%0.2f)\n",position[0],position[1],position[2]);
 #endif 
@@ -248,16 +426,34 @@ void Bullet2CollisionSdk::setCollisionObjectRotation( plCollisionWorldHandle wor
 	btTransform &tr = colObj->getWorldTransform();
 	tr.setRotation( btQuaternion(orientation[0],orientation[1],orientation[2],orientation[3]) );
 	colObj->setWorldTransform(tr);
+	btCollisionWorld *world = (btCollisionWorld *) worldHandle; 
+	world->updateSingleAabb(colObj);
 }
 
 void Bullet2CollisionSdk::setCollisionObjectRotationEuler( plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
-												plReal yaw, plReal pitch, plReal roll)
+												plReal pitch, plReal yaw, plReal roll)
 {
 	btCollisionObject *colObj = (btCollisionObject*) objHandle;
 	btTransform &tr = colObj->getWorldTransform();
-	tr.setRotation( btQuaternion(yaw,pitch,roll ));
+	btQuaternion quat;
+	
+	quat.setEulerZYX(roll,yaw,pitch);
+	// we ant engine use extrinsic mode xyz (rpy)
+	// btQuaternion quat1; quat1.setRotation(btVector3(1,0,0),pitch);
+	// btQuaternion quat2; quat2.setRotation(btVector3(0,1,0),yaw);
+	// btQuaternion quat3; quat3.setRotation(btVector3(0,0,1),roll);
+	// zxy mode (惯性系)
+	// btQuaternion quat1; quat1.setRotation(btVector3(0,0,1),roll);
+	// btQuaternion quat2; quat2.setRotation(btVector3(1,0,0),pitch);
+	// btQuaternion quat3; quat3.setRotation(btVector3(0,1,0),yaw);
+	// quat = quat3*quat2*quat1;
+	// yxz mode 
+	// quat.setEuler(yaw,pitch,roll);
+
+	tr.setRotation( quat ); 
 	colObj->setWorldTransform(tr);
-	printf("yaw = %.2f, pitch = %.2f,roll = %.2f\n",yaw,pitch,roll);
+	btCollisionWorld *world = (btCollisionWorld *) worldHandle; 
+	world->updateSingleAabb(colObj);
 }												   
 																		 
 void Bullet2CollisionSdk::setCollisionObjectRotationAxisAngle( plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
@@ -267,10 +463,12 @@ void Bullet2CollisionSdk::setCollisionObjectRotationAxisAngle( plCollisionWorldH
 	btTransform &tr = colObj->getWorldTransform();
 	tr.setRotation( btQuaternion( btVector3(axis[0],axis[1],axis[2]),(btScalar) angle) );
 	colObj->setWorldTransform(tr);
+	btCollisionWorld *world = (btCollisionWorld *) worldHandle; 
+	world->updateSingleAabb(colObj);
+#ifdef _DEBUG_OUTPUT_
 	printf(" axis  = { %.2f,%.2f,%2.f}, angle = %.2f \n", axis[0], axis[1], axis[2], angle);
+#endif 
 }												
-
-
 
 
 struct Bullet2ContactResultCallback : public btCollisionWorld::ContactResultCallback
@@ -321,6 +519,50 @@ int Bullet2CollisionSdk::collide(plCollisionWorldHandle worldHandle, plCollision
 	}
 	return 0;
 }
+
+struct ClosestRayResultCallback: btCollisionWorld::ClosestRayResultCallback {
+	ClosestRayResultCallback(const btVector3& rayFromWorld, const btVector3& rayToWorld)
+			: btCollisionWorld::ClosestRayResultCallback( rayFromWorld,rayToWorld )
+	{
+		m_closestHitFraction = 10.0f;
+	}
+
+	virtual btScalar addSingleResult( btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
+	{
+		//caller already does the filter on the m_closestHitFraction
+		btAssert(rayResult.m_hitFraction >= m_closestHitFraction);
+		if(rayResult.m_hitFraction >= m_closestHitFraction)
+			printf("****** error fraction ******");
+		m_closestHitFraction = rayResult.m_hitFraction;
+		m_collisionObject = rayResult.m_collisionObject;
+		if (normalInWorldSpace)
+		{
+			m_hitNormalWorld = rayResult.m_hitNormalLocal;
+		}
+		else
+		{
+			///need to transform normal into worldspace
+			m_hitNormalWorld = m_collisionObject->getWorldTransform().getBasis() * rayResult.m_hitNormalLocal;
+		}
+		m_hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
+		return rayResult.m_hitFraction;
+	}
+};
+
+void Bullet2CollisionSdk::drawline( plCollisionWorldHandle worldHandle, plVector3 rayFrom,plVector3 rayTo,unsigned int color) 
+{
+	btCollisionWorld* world = (btCollisionWorld*)worldHandle;
+	if (world == m_internalData->m_collisionWorld ) {
+		if(world->getDebugDrawer()) {
+			btVector3 btRayFrom(rayFrom[0],rayFrom[1],rayFrom[2]);
+			btVector3 btRayTo(rayTo[0],rayTo[1],rayTo[2]);
+
+			float scale = 1/255.0f;
+			btVector3 btColor( ((color>>24)&0xFF)*scale, ((color>>16)&0xFF)*scale,((color>>8)&0xFF)*scale);
+			world->getDebugDrawer()->drawLine(btRayFrom,btRayTo, btColor);
+		}
+	}
+}
  
 // add new export function 
 #define  UNUSED(x) (void)(x)
@@ -331,10 +573,17 @@ bool Bullet2CollisionSdk::raycast( plCollisionWorldHandle worldHandle, plVector3
 	if (world == m_internalData->m_collisionWorld ) {
 		btVector3 btRayFrom(rayFrom[0],rayFrom[1],rayFrom[2]);
 		btVector3 btRayTo(rayTo[0],rayTo[1],rayTo[2]);
-		btCollisionWorld::ClosestRayResultCallback cb( btRayFrom, btRayTo);
+
+		// if(world->getDebugDrawer())
+		// 	world->getDebugDrawer()->drawLine(btRayFrom,btRayTo,btVector3(1,0,0));
+		//btCollisionWorld::ClosestRayResultCallback cb( btRayFrom, btRayTo);
+		ClosestRayResultCallback cb( btRayFrom, btRayTo);
 		world->rayTest( btRayFrom,btRayTo, cb );
 
 		if(cb.hasHit()) {
+			// printf("m_hitFraction = %08.4f\n",cb.m_closestHitFraction);
+			// printf("m_userIndex = %d \n", cb.m_collisionObject->getUserIndex());
+
 			UNUSED( cb.m_hitPointWorld );
 			UNUSED( cb.m_hitNormalWorld );
 			UNUSED( cb.m_closestHitFraction );
@@ -358,14 +607,17 @@ bool Bullet2CollisionSdk::raycast( plCollisionWorldHandle worldHandle, plVector3
 			result.m_filterMask  = cb.m_collisionFilterMask;
 			result.m_flags = cb.m_flags;
 
+			if(world->getDebugDrawer()) {
+				btVector3 pt(result.m_hitPointWorld[0],result.m_hitPointWorld[1],result.m_hitPointWorld[2]);
+				btVector3 nt(result.m_hitNormalWorld[0],result.m_hitNormalWorld[1],result.m_hitNormalWorld[2]);
+				nt += pt;
+				world->getDebugDrawer()->drawLine(pt,nt,btVector3(0.85,0.6,0.6));
+				world->getDebugDrawer()->drawLine(pt,nt+btVector3(0,0,-1),btVector3(0.6,0.85,0.6));
+				world->getDebugDrawer()->drawLine(pt,nt+btVector3(1,0,0),btVector3(0.6,0.6,0.85));
+			}
 			// convert result from bullet to interface 
 			return true;
 		} 
-#ifdef _DEBUG_OUTPUT_
-		printf("raycast from(%.02f,%.02f,%.02f) to(%.02f,%.02f,%.02f)---> \n",
-				rayFrom[0],rayFrom[1],rayFrom[2],
-				rayTo[0],rayTo[1],rayTo[2]);
-#endif 				
 	}		
 	return false;
 }
@@ -382,6 +634,7 @@ static void* gUserData = 0;
 // Bullet2NearCallback use callback gTmpFilter which include global status  variables 
 // Bullet2NearCallback 这个是系统层的回调,这个包装避免不了用户回调 使用 gTmpFilter 的变量全局性的需求
 // 而这个状态属于 collision 行为的，是否可以使用 userdata 来规避全局变量，其合理性还需要进一步使用分析?
+// 服务于世界中所有物体的碰撞点检测，实用性极少。
 void Bullet2NearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
 {
 	btCollisionObject* colObj0 = (btCollisionObject*)collisionPair.m_pProxy0->m_clientObject;
