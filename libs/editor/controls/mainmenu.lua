@@ -139,7 +139,7 @@ function openMap(path)
 	
     local modules = asset.load(path)
     local editormodules = {
-        "editor.ecs.camera_controller",
+        -- "editor.ecs.camera_controller",
         "editor.ecs.obj_trans_controller",
         "editor.ecs.pickup_system",
         "editor.ecs.general_editor_entities",
