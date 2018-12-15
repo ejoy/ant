@@ -420,7 +420,8 @@ namespace ant::win::subprocess {
         }
 
         handle to_handle(FILE* f) {
-            return (HANDLE)_get_osfhandle(_fileno(f));
+            int n = _fileno(f);
+            return (n >= 0) ? (HANDLE)_get_osfhandle(n) : INVALID_HANDLE_VALUE;
         }
 
         open_result open() {
