@@ -22,7 +22,7 @@ const char* errmsg = 0;
     self.m_window = [[UIWindow alloc] initWithFrame: rect];
     self.m_view = [ [UIView alloc] initWithFrame: rect];
     self.m_view.backgroundColor = [UIColor blueColor];
-    UILabel *labelView = [[UILabel alloc] initWithFrame:CGRectMake(100,100,0,0)];
+    UILabel *labelView = [[UILabel alloc] initWithFrame:CGRectMake(1,1,0,0)];
     labelView.text = @(errmsg);
     labelView.textColor = [UIColor whiteColor];
     labelView.numberOfLines = 0;
@@ -41,6 +41,7 @@ const char* errmsg = 0;
 @end
 
 void ios_error_display(const char* em) {
+    printf("[Lua Error]:%s\n", em);
     errmsg = em;
     char* argv[] = {""};
     UIApplicationMain(0, argv, nil, NSStringFromClass([ErrorApp class]));
