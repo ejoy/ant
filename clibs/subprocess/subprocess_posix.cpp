@@ -9,10 +9,36 @@
 #include <unistd.h>
 #include <signal.h>
 #include <errno.h>
+#include <assert.h>
 
 extern char **environ;
 
 namespace ant::posix::subprocess {
+
+    static void sigalrm_handler (int) {
+        // Nothing to do
+    }
+    static bool wait_with_timeout(pid_t pid, int *status, int timeout) {
+        assert(pid > 0);
+        assert(timeout >= -1);
+        if (timeout <= 0) {
+            if (timeout == -1) {
+                ::waitpid(pid, status, 0);
+            }
+            return 0 != ::waitpid(pid, status, WNOHANG);
+        }
+        pid_t err;
+        struct sigaction sa, old_sa;
+        sa.sa_handler = sigalrm_handler;
+        ::sigemptyset(&sa.sa_mask);
+        sa.sa_flags = 0;
+        ::sigaction(SIGALRM, &sa, &old_sa);
+        ::alarm(timeout);
+        err = ::waitpid(pid, status, 0);
+        ::alarm(0);
+        ::sigaction(SIGALRM, &old_sa, NULL);
+        return err == pid;
+    }
 
     template <class T>
     struct allocarray {
@@ -180,15 +206,22 @@ namespace ant::posix::subprocess {
     }
 
     bool     process::kill(int signum) {
-        return ::kill(pid, signum);
+        if (0 == ::kill(pid, signum)) {
+            if (signum == 0) {
+                return true;
+            }
+            return wait_with_timeout(pid, &status, 5);
+        }
+        return false;
     }
 
     uint32_t process::wait() {
-        int status = 0;
-        if (-1 == ::waitpid(pid, &status, 0)) {
+        if (!wait_with_timeout(pid, &status, -1)) {
             return 0;
         }
-        return WIFEXITED(status)? WEXITSTATUS(status): 0;
+        int exit_status = WIFEXITED(status)? WEXITSTATUS(status) : 0;
+        int term_signal = WIFSIGNALED(status)? WTERMSIG(status) : 0;
+        return (term_signal << 8) | exit_status;
     }
 
     bool process::resume() {
@@ -235,8 +268,18 @@ namespace ant::posix::subprocess {
             return { fds[0], fds[1] };
         }
         int peek(FILE* f) {
-            int count;
-            return (ioctl(to_handle(f), FIONREAD, (char *) &count) < 0 ? -1 : count);
+            char tmp[256];
+            int rc = recv(to_handle(f), tmp, sizeof(tmp), MSG_PEEK | MSG_DONTWAIT);
+            if (rc == 0) {
+                return -1;
+            }
+            else if (rc < 0) {
+                if (errno == EAGAIN || errno == EINTR) {
+                    return 0;
+                }
+                return -1;
+            }
+            return rc;
         }
     }
 }

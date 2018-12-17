@@ -43,6 +43,7 @@ namespace ant::posix::subprocess {
         uintptr_t native_handle();
 
         int pid;
+        int status = 0;
     };
 
     class spawn {
