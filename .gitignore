@@ -10,6 +10,9 @@
 clibs/iup/o
 log
 
+**/*.xcworkspace
+*.xcscheme
+*.xcbkptlist
 
 .vscode
 .vs
