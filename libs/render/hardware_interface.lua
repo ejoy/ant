@@ -35,23 +35,43 @@ function hw.shader_type()
 	end
 end
 
+local platform_relates = {
+	WINDOWS = {
+		shadertype="d3d11",	
+		renderer="DIRECT3D11",
+	},
+	OSX = {
+		shadertype="metal",
+		renderer="METAL",
+	},
+	IOS = {
+		shadertype="metal",
+		renderer="METAL",
+	},
+	ANDROID = {
+		shadertype="spirv",
+		renderer="VULKAN",
+	},
+}
+
 function hw.default_shader_type(plat)
 	if plat then
 		local PLAT = plat:upper()
-		local platform_shadertypes = {			
-			WINDOWS = "d3d11",	
-			OSX = "metal",
-			IOS = "metal",
-			ANDROID = "spirv",
-		}
-
-		local shadertype = platform_shadertypes[PLAT]
-		if shadertype then
-			return shadertype
+		local pi = platform_relates[PLAT]
+		if pi then
+			return pi.shadertype
 		end
 	end
 
 	return "glsl"
+end
+
+function hw.default_renderer(plat)
+	local PLAT=plat:upper()
+	local pi = platform_relates[PLAT]
+	if pi then
+		return pi.renderer
+	end
 end
 
 function hw.shutdown()
