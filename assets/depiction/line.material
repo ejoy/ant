@@ -12,10 +12,10 @@ state = {
     PT = "LINES"
 }
 
-surface_type = {
-    transparency = "opaticy",
-    shadow = {
-        cast = "off",
-        receive = "off",
-    },	
-}
+-- surface_type = {
+--     transparency = "opaticy",
+--     shadow = {
+--         cast = "off",
+--         receive = "off",
+--     },	
+-- }

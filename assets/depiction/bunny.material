@@ -1,5 +1,5 @@
 shader = {
-    vs = "mesh/vs_colormesh",
+    vs = "mesh/vs_colormeshex",
     fs = "mesh/fs_colormesh",
 }
 
