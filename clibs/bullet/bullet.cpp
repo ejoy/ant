@@ -13,7 +13,7 @@ extern "C" {
 
 #include "btBulletDynamicsCommon.h"
 #include "Collision/CollisionSdkC_Api.h"
-
+#include "Collision/Internal/BulletDebugDraw.h"
 struct bullet_node {
 	plCollisionSdkHandle sdk;
 };
@@ -28,6 +28,9 @@ struct world_node {
 #else
 #define check_world(_WORLD)	 
 #endif // _DEBUG
+
+
+
 
 static inline world_node*
 to_world(lua_State *L, int idx = 1) {
@@ -48,10 +51,49 @@ get_arg_vec(lua_State *L, int index, int num, T &obj) {
 	}	
 }
 
-//static plCollisionShapeHandle
-//plCreateCylinderShape() {
-//
-//}
+plCollisionShapeHandle 
+createTerrainShape(lua_State *L,world_node* world) {
+	// 1: world, 2:shape type
+	int  width  = lua_tointeger(L, 3);
+	int  height = lua_tointeger(L, 4);
+
+	size_t dataLen = 0;
+	luaL_checktype(L, 5, LUA_TSTRING);
+	auto terData = lua_tolstring(L, 5, &dataLen);
+	
+	plReal gridScale = (plReal) lua_tonumber(L, 6);
+	plReal heightScale = (plReal) lua_tonumber(L,7);
+
+	plReal minHeight = (plReal) lua_tonumber(L, 8);
+	plReal maxHeight = (plReal) lua_tonumber(L, 9);
+
+	int upAxis = lua_tointeger(L,10);
+	if ( upAxis < 0 || upAxis > 2) {
+		luaL_error(L, "invalid axis type : %d", upAxis);
+	}
+
+	int phyDataType = (int) PHY_ScalarType::PHY_SHORT;
+	luaL_checktype(L, 11, LUA_TSTRING);
+	const char *phyType = lua_tostring(L,11);
+	if( strcmp(phyType,"uchar") == 0 ) {
+		phyDataType = (int) PHY_ScalarType::PHY_UCHAR;
+	} else if(strcmp(phyType,"short") == 0 ) {
+		phyDataType = (int) PHY_ScalarType::PHY_SHORT;
+	} else if(strcmp(phyType,"float") == 0 ) {
+		phyDataType = (int) PHY_ScalarType::PHY_FLOAT;
+	}
+	bool flipQuadEdges = false;
+	flipQuadEdges = lua_toboolean(L,12);
+
+
+	printf("\nbullet: w = %d,h = %d,terData=%p, gridScale = %.2f, heightScale=%.2f, min=%.2f,max=%.2f, axis=%d, type ='%s',quad = %d\n",
+		width,height,terData,gridScale,heightScale,minHeight,maxHeight,upAxis,phyType,flipQuadEdges);
+	printf("bullet: image data = %p, size = %d\n",terData,(int) dataLen);
+	
+	return plCreateTerrainShape(world->sdk,world->world,width,height,terData,
+						 gridScale, heightScale, minHeight,maxHeight,upAxis,
+						 phyDataType,flipQuadEdges);
+}
 
 static int
 lnew_shape(lua_State *L) {
@@ -98,7 +140,11 @@ lnew_shape(lua_State *L) {
 
 	} else if (strcmp(type, "compound") == 0) {
 		shape = plCreateCompoundShape(world->sdk, world->world);
+
+	} else if (strcmp(type,"terrain") == 0 ) {
+		shape = createTerrainShape(L,world);
 	}
+
 
 	assert(shape);
 	lua_pushlightuserdata(L, shape);
@@ -124,6 +170,20 @@ void push_vec(lua_State *L, const char* name, int num, const T &obj) {
 	}
 	lua_setfield(L, -2, name);
 };
+
+static int 
+lcreate_debugDrawer(lua_State *L) {
+	auto world = to_world(L);
+	plCreateDebugDrawer(world->sdk, world->world);
+	return 0;
+}
+
+static int 
+ldelete_debugDrawer(lua_State *L) {
+	auto world = to_world(L);
+	plDeleteDebugDrawer(world->sdk, world->world);
+	return 0;
+}
 
 
 static int
@@ -180,6 +240,48 @@ lremove_collision_obj(lua_State *L) {
 	return 0;
 }
 
+static int 
+lget_debug_info(lua_State *L) {
+	auto world = to_world(L);
+	btCollisionWorld* btWorld =(btCollisionWorld*) world->world;
+	MyDebugDrawer *debugDrawer = (MyDebugDrawer*) btWorld->getDebugDrawer(); 
+	if(debugDrawer == nullptr ) {
+	   return 0;
+	}
+
+	int idx_size =0, vert_size =0;
+	float *verts = debugDrawer->getVertices(vert_size);
+	unsigned int *indices = debugDrawer->getIndices(idx_size);
+	if( idx_size<=0 || vert_size<=0 ) {
+		return 0;
+	}
+	lua_pushlstring(L,(const char *) verts, vert_size*sizeof(struct MyDebugVec) );
+	lua_pushlstring(L,(const char *) indices, idx_size*sizeof(unsigned int) );
+	lua_pushinteger(L,vert_size);
+	lua_pushinteger(L,idx_size);
+	return 4;
+}
+
+static int 
+ldebug_draw_world(lua_State *L) {
+	auto world = to_world(L);
+	btCollisionWorld* collisionWorld =(btCollisionWorld*) world->world;
+	//MyDebugDrawer* debugDrawer = (MyDebugDrawer*)collisionWorld->getDebugDrawer();
+	collisionWorld->debugDrawWorld();
+	return 0;
+}
+
+// clear debugDrawer data
+static int 
+ldebug_clear_world(lua_State*L) {
+	auto world = to_world(L);
+	btCollisionWorld* btWorld =(btCollisionWorld*) world->world;
+	MyDebugDrawer* debugDrawer = (MyDebugDrawer*)btWorld->getDebugDrawer();
+	if( debugDrawer) 
+		debugDrawer->reset();
+	return 0;
+}
+
 static int
 ladd_to_compound(lua_State *L) {
 	auto world = to_world(L);
@@ -203,6 +305,24 @@ ladd_to_compound(lua_State *L) {
 	return 0;
 }
 
+static int 
+lset_shape_scale(lua_State *L) {
+	auto world = to_world(L);
+
+	luaL_checktype(L,2,LUA_TLIGHTUSERDATA);
+	auto object = (plCollisionObjectHandle)lua_touserdata(L, 2);
+
+	luaL_checktype(L,3,LUA_TLIGHTUSERDATA);
+	auto shape = (plCollisionShapeHandle)lua_touserdata(L, 3);
+
+	luaL_checktype(L, 4, LUA_TTABLE);
+	plVector3 scale;
+	extract_vec(L, 4, 3, scale);
+
+	plSetShapeScale(world->sdk,world->world,object,shape,scale);
+	return 0;
+}
+
 static int
 ldel_shape(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
@@ -222,12 +342,29 @@ ldel_bullet_world(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 
 	world_node* world = (world_node*)lua_touserdata(L, 1);
-	assert(world->sdk != nullptr);
+	//assert(world->sdk != nullptr);
 	if (world->sdk && world->world) {
 		plDeleteCollisionWorld(world->sdk, world->world);
 	}
+
+	//printf("gc delete bullet_world sdk(%p),world(%p)\n",world->sdk,world->world);
+
 	world->sdk = nullptr;
 	world->world = nullptr;
+
+	return 0;
+}
+
+// clear all objects in bullet world 
+static int 
+lreset_bullet_world(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+
+	world_node* world = (world_node*)lua_touserdata(L, 1);
+	//assert(world->sdk != nullptr);
+	if (world->sdk && world->world) {
+		plResetCollisionWorld(world->sdk, world->world);
+	}
 	return 0;
 }
 
@@ -246,6 +383,7 @@ lnew_bullet_world(lua_State *L) {
 	const int maxObj = 10000;
 	world->world = plCreateCollisionWorld(bullet->sdk, maxShape, maxObj, maxShape * maxObj);
 
+	printf("create bullet_world sdk(%p),world(%p)\n",world->sdk,world->world);
 
 	return 1;
 }
@@ -435,6 +573,8 @@ lcollide_objects(lua_State *L) {
 	return 1;
 }
 
+// lua interaction cost, maybe optimize future
+// when lua rays >2500 , c rays could reach 12000
 static int
 lraycast(lua_State *L) {
 	auto world = to_world(L);
@@ -450,7 +590,7 @@ lraycast(lua_State *L) {
 	if (!hitted) {
 		return 1;
 	}
-
+    // if get table from lua,maybe speedup ,avoid gc flick 
 	lua_createtable(L, 0, 7);
 
 	lua_pushinteger(L, result.m_hitObjId);
@@ -472,6 +612,21 @@ lraycast(lua_State *L) {
 	lua_setfield(L, -2, "flags");
 	
 	return 2;
+}
+
+static int
+ldrawline(lua_State *L) {
+	auto world = to_world(L);
+
+	plVector3 from, to;
+	extract_vec(L, 2, 3, from);
+	extract_vec(L, 3, 3, to);
+
+	unsigned int color = luaL_optinteger(L,4,0xffffffff);
+
+	plDrawline(world->sdk, world->world, from, to, color );
+
+	return 0;
 }
 
 static int
@@ -534,11 +689,11 @@ lset_obj_rot_euler(lua_State *L) {
 	luaL_checktype(L,2,LUA_TLIGHTUSERDATA);
 	auto obj = (plCollisionObjectHandle)lua_touserdata(L,2);
 
-	plReal yaw = (plReal)lua_tonumber(L, 3); 
-	plReal pitch = (plReal)lua_tonumber(L, 4); 
+	plReal pitch  = (plReal)lua_tonumber(L, 3); 
+	plReal yaw = (plReal)lua_tonumber(L, 4); 
 	plReal roll = (plReal)lua_tonumber(L, 5); 
 
-	plSetCollisionObjectRotationEuler( world->sdk,world->world,obj, yaw,pitch,roll);
+	plSetCollisionObjectRotationEuler( world->sdk,world->world,obj, pitch,yaw,roll);
 	return 0;
 }
 static int 
@@ -558,6 +713,10 @@ lset_obj_rot_axis_angle(lua_State *L) {
 }
 
 
+//-----------------------------------------------------------------------------------------
+//      debugDrawer
+
+
 static void
 register_bullet_world_node(lua_State *L) {
 	luaL_newmetatable(L, "BULLET_WORLD_NODE");
@@ -567,6 +726,7 @@ register_bullet_world_node(lua_State *L) {
 	luaL_Reg l[] = {
 		"new_shape", lnew_shape,
 		"del_shape", ldel_shape,
+		"set_shape_scale",lset_shape_scale,
 		"new_obj", lnew_collision_obj,
 		"del_obj", ldel_collision_obj,
 		"add_obj", ladd_collision_obj,
@@ -584,7 +744,18 @@ register_bullet_world_node(lua_State *L) {
 		"collide_objects", lcollide_objects,
 		"raycast", lraycast,
 		
-		"__gc", ldel_bullet_world,
+		"drawline",ldrawline,
+		"get_debug_info",lget_debug_info,
+		"create_debug_drawer",lcreate_debugDrawer,
+		"delete_debug_drawer",ldelete_debugDrawer,
+		"debug_begin_draw",ldebug_draw_world,
+		"debug_end_draw",ldebug_clear_world,
+
+		"reset_world",lreset_bullet_world,
+		"del_bullet_world",ldel_bullet_world,    
+		//"__gc", ldel_bullet_world,          // gc is too late 
+											  // when you want to do fast create/delete world,remove this
+
 		nullptr, nullptr,
 	};
 

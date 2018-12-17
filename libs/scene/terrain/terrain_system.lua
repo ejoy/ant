@@ -1,22 +1,20 @@
 local ecs = ...
 local world = ecs.world
 
-package.path = package.path..';../clibs/terrain/?.lua;./clibs/terrain/?.lua;./test/?.lua;'
---package.path = package.path..";"..package.app_dir.."/clibs/terrain/?.lua;"
-package.cpath = package.cpath..';../clibs/terrain/?.dll;./clibs/terrain/?.dll;'
-
 local bgfx = require "bgfx"
 local math_util = require "math.util"
 local shaderMgr = require "render.resources.shader_mgr"
 local camera_util = require "render.camera.util"
 local render_cu = require "render.components.util"
 
-local terrainClass = require "terrainclass"
+local terrainClass = require "terrain.terrainclass"
 
 local UI_VIEW      	 = 255
 local VIEWID_TERRAIN = 100 
 
-local stack = nil 					
+-- local stack = nil
+local math3d = require "math3d"
+local stack = require "math.stack"   -- 
 
 local init_ambient = nil
 
@@ -149,7 +147,7 @@ local function update_terrain( terrain )
 	gen_lighting_uniforms( terrain ) 
 	-- 找到获得 view，proj 的直接方法，不需要这里二次转换? 
 	local camera = world:first_entity("main_camera")
-    local camera_view, camera_proj = math_util.view_proj_matrix( ms, camera )
+    local camera_view, camera_proj = math_util.view_proj_matrix( camera ) -- ms, camera )
 
 	--bgfx.set_view_rect( VIEWID_TERRAIN, 0, 0, ctx.width,ctx.height)
 	bgfx.set_view_transform( VIEWID_TERRAIN,ms(camera_view,"m"),ms(camera_proj,"m") )	
@@ -178,7 +176,7 @@ local function init_terrain(fbw, fbh, entity )
 
 	local program_create_mode = 1
 	-- load terrain level 
-    -- gemotry create mode extend
+    -- gemotry create mode 2, extend, custom vertex decl
 	terrain:load( terrain_comp.level_name ,   --"assets/build/terrain/pvp1.lvl",
 					{   -- 自定义顶点格式
 						{ "POSITION", 3, "FLOAT" },
@@ -187,12 +185,12 @@ local function init_terrain(fbw, fbh, entity )
 						{ "NORMAL", 3, "FLOAT" },
 					}
 				)
-    -- gemotry create mode default 				
-	-- terrain_chibi:load("terrain/chibi16.lvl")
+    -- gemotry auto create mode 1, default 				
+	-- terrain:load("assets/build/terrain/pvp1.lvl")  --chibi16.lvl")
 
 	-- material create mode 
 	if program_create_mode == 1 then 
-		-- mothod 1
+		-- mothod 1, default 
 		-- load from mtl setting 
 		terrain:load_material( terrain_comp.level_material) --"assets/build/assetfiles/terrain_shadow.mtl")
 	else 
@@ -209,11 +207,11 @@ local function init_terrain(fbw, fbh, entity )
 		terrain:set_uniform("u_lightDirection",{1,1,1,1} )
 		terrain:set_uniform("u_lightIntensity",{2.316,0,0,0} )  
 		terrain:set_uniform("u_lightColor",{1,1,1,0.625} )
-		terrain:set_uniform("u_showMode",1)  
+		terrain:set_uniform("u_showMode",0)     -- 0 = texture mode , 1 = normal line
 	end 
 
 	-- set terrain transform 
-	local t = stack( pos_comp,"T")
+	local t = stack( pos_comp,"iT")
 	local s = stack( scl_comp,"T")
 	local r = stack( rot_comp,"T")
 	terrain:set_transform { t = t, r = r, s = s }
@@ -224,39 +222,38 @@ end
 -- terrain component
 --  store terrain level name,material name, and terrain object into component
 --  level name,material name need serialize into scene info file.
-ecs.component_struct "terrain" {
+-- local terrain = ecs.component 
+local terrain = ecs.component_struct "terrain" {
 	path = {
 		-- save level name
 		-- save material name 
 		type = "userdata",
-		default = "",
+		default = { 
+			level_name = " ",            -- put here to serialize 
+			level_material = " "
+		},
 		save = function (v, arg)
 			assert(type(v) == "string")
-			-- local world = arg.world
-			-- local e = assert(world[arg.eid])
-			-- local comp = assert(e[arg.comp])
-			-- assert(comp.assetinfo)
 			return v
 		end,
 
 		load = function (v, arg)
 			assert(type(v) == "string")
-			local world = arg.world
-			local e = assert(world[arg.eid])
-			local comp = assert(e[arg.comp])
-
-			if v ~= "" then
-				assert(comp.assetinfo == nil)
-				comp.assetinfo = asset.load(v)
-			end
-			return v
+			return v 
 		end
 	},
 
-	level_name = " ",
-	level_material = " ",
+    -- runtime data 
 	terrain_obj = false, 
 }
+
+function terrain:delete()
+    --self.terrain_obj.heightmap = nil 
+    --self.terrain_obj.data = nil
+    self.terrain_obj = nil
+	-- collectgarbage()    
+	print("delete terrain")
+end 
 
 -- terrain entity
 local function create_terrain_entity( world, name  )
@@ -268,7 +265,7 @@ local function create_terrain_entity( world, name  )
 		"name")
 	local entity = assert( world[eid] )
 	entity.name = name 
-	return entity 
+	return entity,eid  
 end 
 
 
@@ -280,26 +277,57 @@ terrain_sys.depend 	  "entity_rendering"
 terrain_sys.dependby  "end_frame"
 
 function terrain_sys:init()
+
+	--stack = self.math_stack  
+
+	local Physics = world.args.Physics 
 	local fb = world.args.fb_size
 
-	-- we should read terrain entity'name ,compoent data from scene info file 
-	-- or system find a terrain entity already in entity list 
+	-- we should read terrain entity'name ,compoent data from scene file 
+	-- or system find a terrain entity already in entity list and create terrain delay
 	-- sample usage 
-	local tr_ent = create_terrain_entity( world,"pvp")
+	local tr_ent, pvp_eid = create_terrain_entity( world,"pvp")
 	tr_ent.terrain.level_name = "assets/build/terrain/pvp1.lvl"
 	tr_ent.terrain.level_material = "assets/depiction/terrain_shadow.mtl"
-	stack(tr_ent.position, {147,0.25,205,1}, "=")
+	-- stack(tr_ent.position, {147,0.25,205,1}, "=") -- old inverse 
+	stack(tr_ent.position, {-147,0.25,-225,1}, "=")  
+	--stack(tr_ent.position, {-32,0,-32,1}, "=")  
 	stack(tr_ent.rotation, {0, 0, 0,}, "=")
 	stack(tr_ent.scale, {1, 1, 1}, "=")
 	init_terrain(fb.w, fb.h, tr_ent )
 
-	local chibi_ent = create_terrain_entity( world,"chibi")
+	-- world:add_component(pvp_eid,"terrain_collider")
+	-- if Physics then 
+	-- 	local shape_info = tr_ent.terrain_collider.info
+	-- 	shape_info.obj, shape_info.shape = 
+	-- 	Physics:create_terrainCollider( tr_ent.terrain.terrain_obj,shape_info,pvp_eid,{-147,0.25,-225},{0,0,0,1} )
+	-- end 
+	if Physics then 
+	  Physics:add_component_terCollider(world, pvp_eid, "terrain_collider", stack)
+	end 	  
+
+	local chibi_ent,chibi_eid = create_terrain_entity( world,"chibi")
 	chibi_ent.terrain.level_name = "assets/build/terrain/chibi16.lvl"
 	chibi_ent.terrain.level_material = "assets//depiction/terrain_shadow.mtl"
 	stack(chibi_ent.scale, {1, 1, 1}, "=")
 	stack(chibi_ent.rotation, {0, 0, 0,}, "=")
 	stack(chibi_ent.position, {60, 130, 60}, "=")
 	init_terrain(fb.w, fb.h, chibi_ent )
+
+	-- world:add_component(chibi_eid,"terrain_collider")
+	-- if Physics then 
+	-- 	local chibi_info = chibi_ent.terrain_collider.info 
+	-- 	chibi_info.obj, chibi_info.shape = 
+	-- 	Physics:create_terrainCollider( chibi_ent.terrain.terrain_obj, chibi_info,chibi_eid,{60,130,60},{0,0,0,1})
+	-- end 
+	
+    if Physics then 
+        -- add collider must remove shape from physics world,when entity removed 
+		Physics:add_component_terCollider(world, chibi_eid, "terrain", stack)
+        -- test delete entity,check deleteObject flow and content
+        -- delete sample 1
+		world:remove_entity(chibi_eid)
+	end 	  
 end
 
 function terrain_sys:update()

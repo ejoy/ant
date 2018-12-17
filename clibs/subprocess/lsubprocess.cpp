@@ -241,6 +241,9 @@ namespace ant::lua_subprocess {
             switch (lua_getfield(L, 1, name)) {
             case LUA_TUSERDATA: {
                 luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, -1, LUA_FILEHANDLE);
+                if (!p->closef) {
+                    return 0;
+                }
                 return subprocess::pipe::to_handle(p->f);
             }
             case LUA_TBOOLEAN: {
@@ -371,6 +374,12 @@ namespace ant::lua_subprocess {
 
     static int peek(lua_State* L) {
         luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
+        if (!p->closef) {
+            auto ec = std::make_error_code(std::errc::broken_pipe);
+            lua_pushnil(L);
+            lua_pushfstring(L, "peek: %s (%d)", ec.message().c_str(), ec.value());
+            return 2;
+        }
         int n = subprocess::pipe::peek(p->f);
         if (n < 0) {
             lua_pushnil(L);
@@ -388,7 +397,7 @@ namespace ant::lua_subprocess {
     static int filemode(lua_State* L) {
         luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
         const char* mode = luaL_checkstring(L, 2);
-        if (p && p->f) {
+        if (p && !p->closef && p->f) {
             if (mode[0] == 'b') {
                 _setmode(_fileno(p->f), _O_BINARY);
             }

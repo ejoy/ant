@@ -8,6 +8,9 @@
    当前仍以clibs/terrain 目录为主，两个会同步，或后续固定下来，
    注意这个差别
 
+   terrainclass.lua 等lua 层API ，迁移到libs/terrain, 形成和 clibs/terrain 对应的规范位置.
+   clibs/terrain 只保留 c interface 实现，统一目录环境查找。
+
 ## clibs/terrain/util_* 辅助函数
     utilclass.lua        字典表，类模拟 LUA 函数,方便用来构建类变量
     utilmath.lua         构造 direction 的数学函数
@@ -58,3 +61,8 @@ pvp.lvl 模板
         luaopen_lterrain 改为 luaopen_bgfx_terrain
     作为bgfx工程的一个子模块编译 
     lua layer terrain api 访问时，使用 require "bgfx.terrain"
+
+## 变更
+    统一目录管理，所有c 存放 clibs，所有对应 lua api 整理到 libs.
+    lua layer api 地形工具基础类 terrainclass 迁移到libs/terrain 目录下
+    libs/scene/terrain/terrain.lua 修改并更名为 terrain_system.lua

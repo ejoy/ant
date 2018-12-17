@@ -1,14 +1,16 @@
+
 local bullet_module = require "bullet"
 
 local bullet = bullet_module.new()
 local btworld = bullet:new_world()
 local bu = require "lua.util"
 
+
 local shapes = {
+	cylinder = btworld:new_shape("cylinder", 6, 2, 1),
 	plane = btworld:new_shape("plane", 0, -1, 1, 3),
 	sphere = btworld:new_shape("sphere", 5),
 	capsule = btworld:new_shape("capsule", 2, 6, 1),
-	cylinder = btworld:new_shape("cylinder", 6, 2, 1),
 	compound = btworld:new_shape("compound"),
 }
 
@@ -26,6 +28,7 @@ local gen_user_idx = get_user_idx_op()
 local useridx = gen_user_idx()
 local object_plane = btworld:new_obj(shapes.plane, useridx, {0,0,0}, {0,0,0,1})
 btworld:add_obj(object_plane)
+
 
 btworld:add_to_compound(shapes.compound, shapes.sphere, {0,0,0},{90,0,0,1})
 
@@ -55,6 +58,8 @@ for i = 1, num_compounds do
     objs[i] = object 
 end 
   
+
+------- do collision check ---------
 print("world collide begin ----")
 
 local function print_collide_points(points)
@@ -67,7 +72,7 @@ local function print_collide_points(points)
 end
 
 local collide_points = {}
-
+-- lua callback 
 -- 这样使用回调的方式
 -- 1. 复杂度较高，对lua使用者稍不友好，也容易出错
 -- 2. 速度慢，多次的lua 回调，多次的创建回收points 表，再合并，维护开销大
@@ -85,7 +90,6 @@ btworld:world_collide_ucb(function (objA, objB, userdata)
 		--table.move(pts, 1, #pts, #collide_points, collide_points)
 	end
 end)
-
 print("total points = ",#collide_points)
 print_collide_points(collide_points)
 print("world collide end ---")
@@ -101,8 +105,10 @@ if points then
 end 
 print("world collide end 2 ======")
 
-print("")
 
+
+--- collide between two objects ---
+print("")
 print("simple collide obj[1] to obj[2]")
 local objAB_collide_points = btworld:collide_objects(objs[1], objs[2] )
 if objAB_collide_points then 
@@ -110,6 +116,7 @@ if objAB_collide_points then
     print_collide_points(objAB_collide_points)  
 end 
 print("");
+
 
 -- raycast 
 local rayFrom = { 1.5, 20, 0}
@@ -173,9 +180,9 @@ else
 end 
 print("")
 
+
 print("")
 -- collide between thin box and capsule 
-
 local ent_box = gen_user_idx()
 local ent_capsule = gen_user_idx()
 local tshape_box = btworld:new_shape("cube", 3, 0.5, 3)
@@ -189,6 +196,7 @@ if box_capsule_points then
     print_collide_points(box_capsule_points)
 end 
 print("")
+
 
 -- quaternion above user-unfriendly
 btworld:del_shape(shapes.sphere);

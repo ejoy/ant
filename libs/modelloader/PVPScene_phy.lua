@@ -1,0 +1,715 @@
+local ms = require "math.stack"
+
+local PVPScene = {}
+
+function PVPScene.init(world, component_util)
+
+    local Physics = world.args.Physics 
+    
+    --campsite door
+    -- [[
+    do
+        local campsite_door_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name")
+        local campsite_door = world[campsite_door_eid]
+        campsite_door.name = "CampsiteDoor"
+
+        ms(campsite_door.scale, {2, 2, 2}, "=")
+        --ms(campsite_door.rotation, {-90, -90, 0,}, "=")
+        ms(campsite_door.rotation, {-90, 180, 45}, "=")
+        ms(campsite_door.position, {-12.95, 0.7867187, -14.03104}, "=")
+
+        -- 加入阴影测试 
+        component_util.load_mesh(campsite_door.mesh,"PVPScene/campsite-door.mesh")
+        component_util.load_material(campsite_door.material,{"PVPScene/scene-mat-shadow.material"})
+        -- 加入物理测试 
+        if Physics then 
+            -- local info = { type = "box",center={1,1,1},sx=1,sy=1,sz=1}
+            Physics:add_component_collider(world,campsite_door_eid,"capsule",ms)
+            world:remove_entity( campsite_door_eid ) -- tested 
+
+        end 
+   end
+   -- ]]
+
+   -- [[
+   do     
+        local campsite_door_1_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name")
+        local campsite_door_1 = world[campsite_door_1_eid]
+        campsite_door_1.name = "CampsiteDoor_1"
+
+        ms(campsite_door_1.scale, {1, 1, 1}, "=")
+        --ms(campsite_door_1.rotation, {-90, 90, 0,}, "=")
+        ms(campsite_door_1.rotation, {-90, 90, 0,}, "=")
+        ms(campsite_door_1.position, {124.35, 0.7867187, -14.03104}, "=")
+
+        component_util.load_mesh(campsite_door_1.mesh,"PVPScene/campsite-door.mesh")
+        component_util.load_material(campsite_door_1.material,{"PVPScene/scene-mat-shadow.material"})
+
+        if Physics then 
+                Physics:add_component_collider(world,campsite_door_1_eid,"box",ms)
+        end 
+    end
+
+    
+   
+    --campsite wall
+    do
+        local campsite_wall_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name", "serialize",
+                "can_select")
+        local campsite_wall = world[campsite_wall_eid]
+        campsite_wall.name = "CampsiteWall"
+
+        ms(campsite_wall.scale, {1, 1, 1}, "=")
+       -- ms(campsite_wall.rotation, {-90, 90, 0,}, "=")
+        ms(campsite_wall.position, {-12.45, 10.7867187, -42.53104}, "=")
+
+        component_util.load_mesh(campsite_wall.mesh,"PVPScene/campsite-wall.mesh")
+        component_util.load_material(campsite_wall.material,{"PVPScene/scene-mat-shadow.material"})
+
+        if Physics then 
+                Physics:add_component_collider(world,campsite_wall_eid,"box",ms)
+        end 
+
+        ----
+        local campsite_wall_1_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name", "serialize",
+                "can_select")
+        local campsite_wall_1 = world[campsite_wall_1_eid]
+        campsite_wall_1.name = "CampsiteWall_1"
+
+        ms(campsite_wall_1.scale, {1, 1, 1}, "=")
+       -- ms(campsite_wall_1.rotation, {-90, 90, 0,}, "=")
+        ms(campsite_wall_1.position, {-12.45, 0.7867187, 14.06897}, "=")
+
+        component_util.load_mesh(campsite_wall_1.mesh,"PVPScene/campsite-wall.mesh")
+        component_util.load_material(campsite_wall_1.material,{"PVPScene/scene-mat-shadow.material"})
+
+        if Physics then 
+             Physics:add_component_collider(world,campsite_wall_1_eid,"box",ms)
+        end 
+    end 
+  
+    -- [[
+    do 
+        -- 
+        local campsite_wall_4_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name", "serialize",
+                "can_select")
+        local campsite_wall_4 = world[campsite_wall_4_eid]
+        campsite_wall_4.name = "CampsiteWall_4"
+
+        ms(campsite_wall_4.scale, {1, 1, 1}, "=")
+        ms(campsite_wall_4.rotation, {-90, 90, 0,}, "=")
+        ms(campsite_wall_4.position, {124.85, 5.7867187, -56.8310}, "=")
+
+        component_util.load_mesh(campsite_wall_4.mesh,"PVPScene/campsite-wall.mesh")
+        component_util.load_material(campsite_wall_4.material,{"PVPScene/scene-mat-shadow.material"})
+        if Physics then 
+                Physics:add_component_collider(world, campsite_wall_4_eid, "box",ms)
+        end 
+           
+
+        --- 
+        local campsite_wall_5_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name", "serialize",
+                "can_select")
+        local campsite_wall_5 = world[campsite_wall_5_eid]
+        campsite_wall_5.name = "CampsiteWall_5"
+
+        ms(campsite_wall_5.scale, {1, 1, 1}, "=")
+        ms(campsite_wall_5.rotation, {-90, 90, 0,}, "=")
+        ms(campsite_wall_5.position, {124.85, 5.7867187, 28.36897}, "=")
+
+        component_util.load_mesh(campsite_wall_5.mesh,"PVPScene/campsite-wall.mesh")
+        component_util.load_material(campsite_wall_5.material,{"PVPScene/scene-mat-shadow.material"})
+        if Physics then 
+                Physics:add_component_collider(world, campsite_wall_5_eid, "box",ms)
+        end 
+
+        
+
+        local campsite_wall_6_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name", "serialize",
+                "can_select")
+        local campsite_wall_6 = world[campsite_wall_6_eid]
+        campsite_wall_6.name = "CampsiteWall_6"
+
+        ms(campsite_wall_6.scale, {1, 1, 1}, "=")
+        ms(campsite_wall_6.rotation, {-90, 90, 0,}, "=")
+        ms(campsite_wall_6.position, {124.85, 5.7867187, 14.06897}, "=")
+
+        component_util.load_mesh(campsite_wall_6.mesh,"PVPScene/campsite-wall.mesh")
+        component_util.load_material(campsite_wall_6.material,{"PVPScene/scene-mat-shadow.material"})
+        if Physics then 
+                Physics:add_component_collider(world, campsite_wall_6_eid, "box",ms)
+        end 
+
+
+
+        local campsite_wall_7_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name", "serialize",
+                "can_select")
+        local campsite_wall_7 = world[campsite_wall_7_eid]
+        campsite_wall_7.name = "CampsiteWall_7"
+
+        ms(campsite_wall_7.scale, {1, 1, 1}, "=")
+        ms(campsite_wall_7.rotation, {-90, 90, 0,}, "=")
+        ms(campsite_wall_7.position, {124.85, 5.7867187, -42.5310}, "=")
+
+        component_util.load_mesh(campsite_wall_7.mesh,"PVPScene/campsite-wall.mesh")
+        component_util.load_material(campsite_wall_7.material,{"PVPScene/scene-mat-shadow.material"})
+        if Physics then 
+                Physics:add_component_collider(world, campsite_wall_7_eid, "box",ms)
+        end         
+    end
+    --]]
+
+    --campsite_jianta
+    do
+        local campsite_jianta_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name", "serialize",
+                "can_select")
+        local campsite_jianta = world[campsite_jianta_eid]
+        campsite_jianta.name = "campsite_jianta"
+
+        ms(campsite_jianta.scale, {1.5,1.5, 2}, "=")
+        --ms(campsite_jianta.scale, {0.5, 0.5, 0.5}, "=")
+        ms(campsite_jianta.rotation, {-90, 45, 45}, "=")
+        --ms(campsite_jianta.position, {7.0, 0.96, -14.03104}, "=")
+        ms(campsite_jianta.position, {7, 0.96, 14}, "=")
+
+        component_util.load_mesh(campsite_jianta.mesh,"PVPScene/campsite-door-01.mesh")
+        component_util.load_material(campsite_jianta.material,{"PVPScene/scene-mat-shadow.material"})
+        if Physics then 
+                --local info = { sx = 5,sy = 5,sz=12,center={0,0,12}}
+                local info = { radius =5,height=14,center={0,0,11},axis=2 }
+                Physics:add_component_collider(world, campsite_jianta_eid, "capsule",ms,info)
+        end 
+    end 
+
+    -- [[
+    do 
+        local campsite_jianta_1_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name", "serialize",
+                "can_select")
+        local campsite_jianta_1 = world[campsite_jianta_1_eid]
+        campsite_jianta_1.name = "campsite_jianta_1"
+
+        ms(campsite_jianta_1.scale, {0.5, 0.5, 0.5}, "=")
+        ms(campsite_jianta_1.rotation, {-90, 90, 45,}, "=")
+        ms(campsite_jianta_1.position, {27.0, 0.96, -14.03104}, "=")
+
+        component_util.load_mesh(campsite_jianta_1.mesh,"PVPScene/campsite-door-01.mesh")
+        component_util.load_material(campsite_jianta_1.material,{"PVPScene/scene-mat-shadow.material"})
+        if Physics then 
+                Physics:add_component_collider(world, campsite_jianta_1_eid, "cylinder",ms)
+        end 
+
+
+        local campsite_jianta_2_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name", "serialize",
+                "can_select")
+        local campsite_jianta_2 = world[campsite_jianta_2_eid]
+        campsite_jianta_2.name = "campsite_jianta_2"
+
+        ms(campsite_jianta_2.scale, {0.5, 0.5, 0.5}, "=")
+        ms(campsite_jianta_2.rotation, {-90, 0, 0,}, "=")
+        ms(campsite_jianta_2.position, {104.4, 0.96, -14.03104}, "=")
+
+        component_util.load_mesh(campsite_jianta_2.mesh,"PVPScene/campsite-door-01.mesh")
+        component_util.load_material(campsite_jianta_2.material,{"PVPScene/scene-mat-shadow.material"})
+        if Physics then 
+                Physics:add_component_collider(world, campsite_jianta_2_eid, "box",ms)
+        end 
+
+
+        local campsite_jianta_3_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name", "serialize",
+                "can_select")
+        local campsite_jianta_3 = world[campsite_jianta_3_eid]
+        campsite_jianta_3.name = "campsite_jianta_3"
+
+        ms(campsite_jianta_3.scale, {0.5, 0.5, 0.5}, "=")
+        ms(campsite_jianta_3.rotation, {-90, 0, 0,}, "=")
+        ms(campsite_jianta_3.position, {84.4, 0.96, -14.03104}, "=")
+
+        component_util.load_mesh(campsite_jianta_3.mesh,"PVPScene/campsite-door-01.mesh")
+        component_util.load_material(campsite_jianta_3.material,{"PVPScene/scene-mat-shadow.material"})
+        if Physics then 
+                Physics:add_component_collider(world, campsite_jianta_3_eid, "box",ms)
+        end 
+
+    end
+    
+    --[[
+    -- war chariot and tower 
+    do
+        -- tower 
+        local wood_build_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name", "serialize",
+                "can_select")
+        local wood_build = world[wood_build_eid]
+        wood_build.name.n = "wood_build"
+
+        ms(wood_build.scale, {1, 1, 1}, "=")
+        ms(wood_build.rotation, {-90, -90.7483, 0}, "=")
+        ms(wood_build.position, { 30.41463 , 1.72, 7.152405 }, "=")
+
+        component_util.load_mesh(wood_build.mesh,"PVPScene/woodbuilding-05.mesh")
+        component_util.load_material(wood_build.material,{"PVPScene/scene-mat-shadow.material"})
+        if Physics then 
+                Physics:add_component_collider(world, wood_build_eid, "box",ms)
+        end 
+
+
+        -- middle war chariot 
+        local woodother_46_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name", "serialize",
+                "can_select")
+        local woodother_46 = world[woodother_46_eid]
+        woodother_46.name.n = "woodother_46"
+
+        ms(woodother_46.scale, {1, 1, 1}, "=")
+        ms(woodother_46.rotation, {-90, -108.1401, 0}, "=")
+        ms(woodother_46.position, {33.882416, 1.149453, -32.164627}, "=")
+
+        component_util.load_mesh(woodother_46.mesh,"PVPScene/woodother-46.mesh")
+        component_util.load_material(woodother_46.material,{"PVPScene/scene-mat-shadow.material"})
+        if Physics then 
+                Physics:add_component_collider(world, woodother_46_eid, "box",ms)
+        end 
+                
+
+
+        local woodother_46_1_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name", "serialize",
+                "can_select")
+        local woodother_46_1 = world[woodother_46_1_eid]
+        woodother_46_1.name.n = "woodother_46_1"
+
+        ms(woodother_46_1.scale, {1, 1, 1}, "=")
+        ms(woodother_46_1.rotation, {-90, -108.1401, 0}, "=")
+        ms(woodother_46_1.position, {115.39, 2.149453, -27.164627}, "=")
+
+        component_util.load_mesh(woodother_46_1.mesh,"PVPScene/woodother-46.mesh")
+        component_util.load_material(woodother_46_1.material,{"PVPScene/scene-mat-shadow.material"})
+        if Physics then 
+                Physics:add_component_collider(world, woodother_46_1_eid, "box",ms)
+        end 
+
+
+
+        local woodother_45_eid = world:new_entity("position", "rotation", "scale",
+                "can_render", "mesh", "material",
+                "name", "serialize",
+                "can_select")
+        local woodother_45 = world[woodother_45_eid]
+        woodother_45.name.n = "woodother_45"
+
+        ms(woodother_45.scale, {1, 1, 1}, "=")
+        ms(woodother_45.rotation, {-90, 50.3198, 0}, "=")
+        ms(woodother_45.position, {-28.68, 2, -10.164627}, "=")
+
+        component_util.load_mesh(woodother_45.mesh,"PVPScene/woodother-45.mesh")
+        component_util.load_material(woodother_45.material,{"PVPScene/scene-mat-shadow.material"})
+        if Physics then 
+                Physics:add_component_collider(world, woodother_45_eid, "box",ms)
+        end 
+       
+
+    end 
+
+    --[[
+    -- post and paling  wood other 34
+    do 
+        ---[[
+        local woodother_34_position = {-2.1949, 1.842032, -39.867749}
+        do
+            local woodother_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local woodother_34 = world[woodother_eid]
+            woodother_34.name.n = "woodother_34"
+
+            ms(woodother_34.scale, {1, 1, 1}, "=")
+            --ms(woodother_34.rotation, {-90, 0, 20}, "=")
+            ms(woodother_34.position, {120, 1.241485, 34.06}, woodother_34_position,"+=")
+
+            component_util.load_mesh(woodother_34.mesh,"PVPScene/woodother-34.mesh")
+            component_util.load_material(woodother_34.material,{"PVPScene/scene-mat-shadow.material"})
+            if Physics then 
+                Physics:add_component_collider(world, woodother_eid, "box",ms)
+            end                 
+        end 
+
+
+        do
+            local woodother_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local woodother_34 = world[woodother_eid]
+            woodother_34.name.n = "woodother_34"
+
+            ms(woodother_34.scale, {1, 1, 1}, "=")
+            --ms(woodother_34.rotation, {-90, 0, 0}, "=")
+            ms(woodother_34.position, {116, 1.241485, 36.06}, woodother_34_position,"+=")
+
+            component_util.load_mesh(woodother_34.mesh,"PVPScene/woodother-34.mesh")
+            component_util.load_material(woodother_34.material,{"PVPScene/scene-mat-shadow.material"})
+            if Physics then 
+                Physics:add_component_collider(world, woodother_eid, "box",ms)
+            end                 
+        end
+
+
+        do
+            local woodother_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local woodother_34 = world[woodother_eid]
+            woodother_34.name.n = "woodother_34"
+
+            ms(woodother_34.scale, {1, 1, 1}, "=")
+            --ms(woodother_34.rotation, {-90, 0, 20}, "=")
+            ms(woodother_34.position, {102.1759, 1.241485, 36.53}, woodother_34_position,"+=")
+
+            component_util.load_mesh(woodother_34.mesh,"PVPScene/woodother-34.mesh")
+            component_util.load_material(woodother_34.material,{"PVPScene/scene-mat-shadow.material"})
+            if Physics then 
+                Physics:add_component_collider(world, woodother_eid, "box",ms)
+            end                 
+        end
+
+        do
+            local woodother_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local woodother_34 = world[woodother_eid]
+            woodother_34.name.n = "woodother_34"
+
+            ms(woodother_34.scale, {1, 1, 1}, "=")
+            --ms(woodother_34.rotation, {-90, 0, 0}, "=")
+            ms(woodother_34.position, {98.1759, 1.241485, 36.08}, woodother_34_position,"+=")
+
+            component_util.load_mesh(woodother_34.mesh,"PVPScene/woodother-34.mesh")
+            component_util.load_material(woodother_34.material,{"PVPScene/scene-mat-shadow.material"})
+            if Physics then 
+                Physics:add_component_collider(world, woodother_eid, "box",ms)
+            end                 
+        end
+
+        do
+            local woodother_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local woodother_34 = world[woodother_eid]
+            woodother_34.name.n = "woodother_34"
+
+            ms(woodother_34.scale, {1, 1, 1}, "=")
+            --ms(woodother_34.rotation, {-90, -60, 0}, "=")
+            ms(woodother_34.position, {132.85, 1.241485, 33.62238}, woodother_34_position,"+=")
+
+            component_util.load_mesh(woodother_34.mesh,"PVPScene/woodother-34.mesh")
+            component_util.load_material(woodother_34.material,{"PVPScene/scene-mat-shadow.material"})
+            if Physics then 
+                Physics:add_component_collider(world, woodother_eid, "box",ms)
+            end                 
+        end
+    end
+
+    ------------------------------------------------------------------
+    --fuhuodianA tent
+    local fuhuodianA_position = {-21.07, 5.218985, -8.18463}
+    local fuhuodianA_rotation = {0, 180, 0}
+    do
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-90, 90, 0}, fuhuodianA_rotation, "+=")
+            ms(tent.position, {-0.23547, -6.418437, -19.0813}, fuhuodianA_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-90, 90, 0}, fuhuodianA_rotation, "+=")
+            ms(tent.position, {8.035471, -6.418437, -19.0813}, fuhuodianA_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-89.98, 0, 47.621}, fuhuodianA_rotation, "+=")
+            ms(tent.position, {5.804538, -6.418437, -10.04131}, fuhuodianA_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-90.0, 0, 0}, fuhuodianA_rotation, "+=")
+            ms(tent.position, {4.444535, -6.418437, -1.84131}, fuhuodianA_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-90.0, 0, 0}, fuhuodianA_rotation, "+=")
+            ms(tent.position, {4.444535, -6.418437, 6.4487}, fuhuodianA_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-90.0, -35.40240, 0}, fuhuodianA_rotation, "+=")
+            ms(tent.position, {-1.835464, -6.418437, 6.368698}, fuhuodianA_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-90.0, -91.4971, 0}, fuhuodianA_rotation, "+=")
+            ms(tent.position, {-10.1, -6.418437, 6.2}, fuhuodianA_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-90.0, -91.4971, 0}, fuhuodianA_rotation, "+=")
+            ms(tent.position, {-18.14546, -6.418437, 5.858704}, fuhuodianA_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+    end
+
+    --fuhuodianB tent
+    do
+        local fuhuodianB_position = {134.72, 5.218985, 17.32593}
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-90.0, 90.0, 0}, "=")
+            ms(tent.position, {-10.14546, -6.418437, -19.0813}, fuhuodianB_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-90.0, 90.0, 0}, "=")
+            ms(tent.position, {-2.935471, -6.418437, -19.0813}, fuhuodianB_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent.material"})
+        end
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-90.0, -91.4971, 0}, "=")
+            ms(tent.position, {6.64546, -6.418437, -42.858704}, fuhuodianB_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-90.0, -91.4971, 0}, "=")
+            ms(tent.position, {14.56548, -6.418437, -42.858704}, fuhuodianB_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-89.98, 0.0, 47.621}, "=")
+            ms(tent.position, {-10.104538, -6.418437, -28.54131}, fuhuodianB_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-90, -35.4024, 0}, "=")
+            ms(tent.position, {-1.835464, -6.418437, -44.368698}, fuhuodianB_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-90, 0.0, 0}, "=")
+            ms(tent.position, {-9.944534, -6.418437, -43.341309}, fuhuodianB_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+
+        do
+            local tent_eid = world:new_entity("position", "rotation", "scale",
+                    "can_render", "mesh", "material",
+                    "name", "serialize",
+                    "can_select")
+            local tent = world[tent_eid]
+            tent.name = "tent"
+
+            ms(tent.scale, {1, 1, 1}, "=")
+            ms(tent.rotation, {-90, 0.0, 0}, "=")
+            ms(tent.position, {-9.944534, -6.418437, -36.9487}, fuhuodianB_position, "+=")
+
+            component_util.load_mesh(tent.mesh,"PVPScene/tent-06.mesh")
+            component_util.load_material(tent.material,{"PVPScene/tent-shadow.material"})
+        end
+    end
+
+    --]]
+    
+end
+
+return PVPScene

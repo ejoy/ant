@@ -1,7 +1,8 @@
 modules = {	
 	-- for test
-	"libs/render/add_entity_system.lua",
+	"render.add_entity_system",
 	-- for terrain 
-	"libs/scene/terrain/terrain.lua",
-
+	"bullet.component_collider",
+	"scene.terrain.terrain_system",
+	"editor.ecs.camera_controller",
 }

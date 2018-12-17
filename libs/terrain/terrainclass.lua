@@ -1,6 +1,6 @@
 local lterrain = require 'lterrain'
-local uclass = require 'utilclass'
-local texLoad = require "utiltexture"
+local uclass = require 'terrain.utilclass'
+local texLoad = require "terrain.utiltexture"
 local bgfx = require "bgfx"
 
 
@@ -10,6 +10,7 @@ local mathu = require "math.util"
 
 local math3d_stack = math3d.new()
 
+-- 文件读写需要统一到框架
 local readfile = function( fname )
 	local f = assert(io.open( fname,'rb'))
 	local d = f:read('*a')
@@ -28,7 +29,8 @@ local TerrainClass = Class("antTerrain")
 -- Terrain.render_ctx.uniforms = {} 
 -- Terrain.render_ctx.uniform_values = {} 
 -- Terrain.render_ctx.tex_chanel = {}
--- Terrain.transform = {}   				-- rst terrain's pos/rot/scl
+-- Terrain.rst                              -- rst readable
+-- Terrain.transform = {}   				-- terrain's transform  pos/rot/scl
 -- Terrain.bbox = {}        				-- terrain's bounding box 
 -- Terrain.level = {} 						-- level info 
 
@@ -38,6 +40,7 @@ function TerrainClass:set_transform( args )
 		r = {0,0,0,0},
 		s = {1,1,1,1}
 	}
+	self.rst = args 
 	self.transform = math3d_stack( args.t,args.r,"dLm" )
 end
 
@@ -57,18 +60,17 @@ end
 function TerrainClass:load_program( vs,fs )
 	local uniforms = {}
 	self.render_ctx.prog = shaderMgr.programLoad(vs,fs,uniforms)
-	self.render_ctx.prog_uniforms = uniforms 
 end 
 
 function TerrainClass:set_program( prog, uniforms )
 	self.render_ctx.prog = prog
-	self.render_ctx.prog_uniforms = uniforms 
 end 
 
+
+-- 如果地形管卡配置文件的内容出现错误，如何防止挂起？
 local function ext_load_terrain_material( mtlname )
 	local data    = readfile( mtlname )
 	local mtldata = "local mtl ="..data.." return mtl" 
-	-- 如果地形管卡配置文件的内容出现错误，如何防止挂起？
 	return load( mtldata ) ()								
 end 
 
@@ -82,7 +84,6 @@ function TerrainClass:load_material( mtlname )
 	local uniforms = {}
 	self.render_ctx.prog = shaderMgr.programLoad(assert(self.mtl.vs), assert(self.mtl.fs), uniforms)
 	assert(self.render_ctx.prog ~= nil)
-	self.render_ctx.prog_uniforms = uniforms
 
 	-- check uniforms 
 	for _,u in ipairs(self.mtl.uniforms) do 
@@ -99,7 +100,8 @@ function TerrainClass:load_material( mtlname )
 			end 
 		end
 		self:create_uniform(name,s_name,type,texchannel)
-    end 
+	end 
+	
 	-- check uniform values
 	for k,v in pairs(self.mtl.uniform_values) do 
 	 	self.render_ctx.uniform_values[k] = v 
@@ -146,14 +148,13 @@ function TerrainClass:init(args)
 	self.render_ctx.vbh = 0
 	self.render_ctx.ibh = 0
 	self.render_ctx.prog = 0
-	self.render_ctx.prog_uniforms = nil    -- 统一到框架里的 uniforms 过渡
 	self.render_ctx.uniforms = {} 
 	self.render_ctx.uniform_values = {} 
 	self.render_ctx.tex_chanel = {}
 	-- 
-	self.rst = {}
-	self.transform = {}   					-- rst terrain's pos/rot/scl
-	self.bbox = {}        					-- terrain's bounding box 
+	self.rst = nil
+	self.transform = nil  					-- rst terrain's pos/rot/scl
+	self.bbox = nil        					-- terrain's bounding box 
 		
 	-- setting 
 	self.level = {}
@@ -174,19 +175,12 @@ function TerrainClass:init(args)
 	self.numlayers = 0
 	self.textures = {}
 	self.masks = {}
-	self.heightmap = {}
-
-	-- move to render_ctx 
-	-- self.prog = 0
-	-- self.uniforms = {} 
-	-- self.prog_uniforms = false 
+	self.heightmap = nil
 
     -- default transform 
 	self:set_transform()
 end 
 
-
--- asset
 -- return terrain data context
 local function ext_load_terrain_level( filename, vd )
 	local  data = readfile(filename)
@@ -203,9 +197,90 @@ function TerrainClass:load( filename,vd )
 	self:create( self.level, vd )
 end 
 
-function TerrainClass:loadHeightmap( raw )
+function TerrainClass:load_heightmap( raw )
 	self.heightmap = load_heightmap( raw )
 	return self.heightmap 
+end 
+function TerrainClass:get_data_type()
+	if self.level.bits == 8 then 
+		return 'uchar'
+	elseif self.level.bits == 16 then 
+		return 'short'
+	elseif self.level.bits == 32 then
+		return 'float'
+	end 
+end 
+-- level geometry info
+function TerrainClass:get_heightmap()
+	return self.heightmap
+end 
+
+function TerrainClass:get_grid_width()
+	return self.level.grid_width 
+end 
+function TerrainClass:get_grid_length()
+	return self.level.grid_length 
+end 
+
+function TerrainClass:get_height_scale()
+	return lterrain.get_height_scale( self.data )
+end 
+function TerrainClass:get_width_scale()
+	return lterrain.get_width_scale( self.data )
+end
+function TerrainClass:get_length_scale()
+	return lterrain.get_length_scale( self.data)
+end 
+------------
+function TerrainClass:get_min_height()
+	return lterrain.get_min_height( self.data )
+end 
+function TerrainClass:get_max_height()
+	return lterrain.get_max_height( self.data ) 
+end 
+function TerrainClass:get_raw_height(x,y)
+	return lterrain.get_raw_height( self.data, x, y)
+end 
+------------
+function TerrainClass:get_phys_x_offset()
+	local scale = lterrain.get_width_scale( self.data )
+	local grid  = self:get_grid_width()
+	return scale*(grid-1)*0.5;
+end 
+function TerrainClass:get_phys_z_offset()
+	local scale = lterrain.get_length_scale( self.data )
+	local grid  = self:get_grid_length()
+	return scale*(grid-1)*0.5;
+end 
+function TerrainClass:get_phys_h_offset()
+	local min_height = lterrain.get_min_height( self.data )
+	local max_height = lterrain.get_max_height( self.data )
+	return 0.5*(max_height+min_height)
+end 
+
+function TerrainClass:get_phys_offset()
+	local ofs = {
+		self:get_phys_x_offset(),
+		self:get_phys_h_offset(),
+		self:get_phys_z_offset(),
+	}
+	return ofs
+end 
+
+----------------
+function TerrainClass:get_terrain_info()
+	local info = {}
+	info.grid_width  = self.level.grid_width 
+	info.grid_length = self.level.grid_length 
+	info.grid_scale   = lterrain.get_width_scale( self.data)
+	info.height_scale = lterrain.get_height_scale( self.data )
+	info.min_height = lterrain.get_min_height( self.data )
+	info.max_height = lterrain.get_max_height( self.data )
+	return info 
+end 
+
+function TerrainClass:get_height( x,z) 
+	return  lterrain.get_height( self.data,x,z)
 end 
 
 -- create terrain data 
@@ -214,7 +289,7 @@ function TerrainClass:create( args, vd )
     local args = args or self.level   
 
 	if args.raw then 
-		self.heightmap = self:loadHeightmap( args.raw )
+		self.heightmap = self:load_heightmap( args.raw )
 	end 
 
     if  args.numlayers then 
@@ -244,22 +319,19 @@ end
 function TerrainClass:update( eye,dir)
 	self.eye = eye 
 	self.dir = dir 
-	-- further todo: lod etc 
+	-- future todo: maybe lod etc 
 	-- lterrain.update( self.data,self.vb,self.ib,eye,dir)
 end 
 
-function TerrainClass:get_height( x,z) 
-	return  lterrain.get_height( self.data,x,z)
-end 
 
 -- move to terrain_sys will be good 
 function TerrainClass:render( viewId, w,h,prim_type, ufn, world )
 	-- local srt = { t= self.eye or {0,130,-10,1},
 	--               r= self.dir or {25,45,0,0},
 	-- 			  	 s= {1,1,1,1} }          								     -- for terrain ,eye,target
-	-- 																	     -- yaw = 45,	pitch = 25
+	-- 																	     	 -- yaw = 45,	pitch = 25
 	-- local proj_mtx = math3d_stack( { type = "proj",n=0.1, f = 1000, fov = 60, aspect = w/h } , "m")  
-	-- local view_mtx = math3d_stack( srt.t,srt.r,"dLm" )    			     -- math3d_statck( op data 1,2,..,"op code string")
+	-- local view_mtx = math3d_stack( srt.t,srt.r,"dLm" )    			     	 -- math3d_statck( op data 1,2,..,"op code string")
 
 	-- bgfx.set_view_clear( viewId, "CD", 0x303030ff, 1, 0)
 	-- bgfx.set_view_rect( viewId, 0, 0, w, h)
@@ -332,6 +404,12 @@ function TerrainClass:render( viewId, w,h,prim_type, ufn, world )
 	   bgfx.submit( viewId, self.render_ctx.prog)
 	end 
 
+	local state =  bgfx.make_state( { CULL="CW", PT = prim_type ,
+									 WRITE_MASK = "RGBAZ",
+									 DEPTH_TEST	= "LEQUAL"
+								    } , nil)        									-- for terrain
+	bgfx.set_state( state )
+
 end
 
 
@@ -352,17 +430,17 @@ end
 
 -- 	-- 必须在函数前，写明参数，个数，字符串表示参数意义，用法，否则，需要太多时间查询过多的关联函数和文件
 -- 	-- math_stack(op data1,op data2,..."op code string")
--- 	local srt = { t= {0,130,-10,1},r={25,45,0,0},s= {1,1,1,1} }          -- for terrain ,eye,target
--- 																		   -- yaw = 45,	pitch = 25
+-- 	local srt = { t= {0,130,-10,1},r={25,45,0,0},s= {1,1,1,1} }     -- for terrain ,eye,target
+-- 																	-- yaw = 45,	pitch = 25
 -- 	local proj_mtx = math3d_stack( { type = "proj",n=0.1, f = 1000, fov = 60, aspect = w/h } , "m")  
--- 	local view_mtx = math3d_stack( srt.t,srt.r,"dLm" )   	   -- math3d_statck( op data 1,2,..,"op code string")
--- 															   -- view_system.lua 
--- 															   -- L generate lookat,d convert rot to dir
--- 															   -- m pop matrix pointer 
--- 															   -- for cube 
+-- 	local view_mtx = math3d_stack( srt.t,srt.r,"dLm" )   	   		-- math3d_statck( op data 1,2,..,"op code string")
+-- 															   		-- view_system.lua 
+-- 															   		-- L generate lookat,d convert rot to dir
+-- 															   		-- m pop matrix pointer 
+-- 															   		-- for cube 
 
 -- 	-- test2
---     local mtx = math3d_stack( {0,20,-10,1},{0,45,0,0},"lP")         -- lookat matrix 
+--     local mtx = math3d_stack( {0,20,-10,1},{0,45,0,0},"lP")      -- lookat matrix 
 -- 	local mat = math3d.ref "matrix"	
 -- 	math3d_stack(mat,"1=")
 -- 	mat(mtx)
@@ -449,32 +527,24 @@ end
 -- 	  ---]] 
 -- end 
 
-function TerrainClass:getheight(x,y)
-    -- todo:
-	local  height = 0;
-	return height;
-end 
-
 function TerrainClass:raycast( x,y,z )
 	-- todo:
 	return { hit,pos,obj }
 end 
 
-function TerrainClass:settexture( layer,tex)
+function TerrainClass:set_texture( layer,tex)
 
 end 
 
-function TerrainClass:setmask( layer,tex)
+function TerrainClass:set_mask( layer,tex)
 
 end 
 
-function TerrainClass:getmask()
+function TerrainClass:get_mask( layer )
 	
 end 
 
 return TerrainClass
-
-
 
 ----- 使用方法 -----
 --[[

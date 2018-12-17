@@ -9,12 +9,18 @@ class Bullet2CollisionSdk : public CollisionSdkInterface
 
 public:
 	Bullet2CollisionSdk();
-
 	virtual ~Bullet2CollisionSdk();
-
+	// use create/delete when application start and close.
 	virtual plCollisionWorldHandle createCollisionWorld(int maxNumObjsCapacity, int maxNumShapesCapacity, int maxNumPairsCapacity);
-
 	virtual void deleteCollisionWorld(plCollisionWorldHandle worldHandle);
+		void _deleteCollisionWorldObjects(plCollisionWorldHandle worldHandle);
+
+	// clean world's objects and reuse ,when user change levelmap 
+	// or user remove entity from world,and reuse it 
+	virtual void resetCollisionWorld(plCollisionWorldHandle worldHandle);
+
+	virtual void createDebugDrawer(plCollisionWorldHandle world);
+	virtual void deleteDebugDrawer(plCollisionWorldHandle world);
 
 	virtual plCollisionShapeHandle createCubeShape(plCollisionWorldHandle world,plVector3 size);
 	virtual plCollisionShapeHandle createSphereShape(plCollisionWorldHandle worldHandle, plReal radius);
@@ -42,6 +48,8 @@ public:
 
 	virtual plCollisionShapeHandle createCompoundShape(plCollisionWorldHandle worldHandle);
 	virtual void addChildShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle compoundShape, plCollisionShapeHandle childShape, plVector3 childPos, plQuaternion childOrn);
+	// add for setposition dynamic change
+	virtual void setShapeScale(plCollisionWorldHandle worldHandle, plCollisionObjectHandle objectHandle,plCollisionShapeHandle shapeHandle,plVector3 scale);
 
 	virtual void deleteShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle shape);
 
@@ -50,7 +58,7 @@ public:
 
 	virtual plCollisionObjectHandle createCollisionObject(plCollisionWorldHandle worldHandle, void* userPointer, int userIndex, plCollisionShapeHandle cshape,
 														  plVector3 startPosition, plQuaternion startOrientation);
-	virtual void deleteCollisionObject(plCollisionObjectHandle body);
+	virtual void deleteCollisionObject(plCollisionWorldHandle worldHandle,plCollisionObjectHandle bodyHandle);
 
 	virtual void setCollisionObjectTransform(plCollisionWorldHandle world, plCollisionObjectHandle body,
 											 plVector3 position, plQuaternion orientation);
@@ -62,7 +70,7 @@ public:
 
 	// friendly function for setting quaternion
 	virtual void setCollisionObjectRotationEuler( plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
-												plReal yaw, plReal pitch, plReal roll);
+												plReal pitch, plReal yaw, plReal roll);
 	virtual void setCollisionObjectRotationAxisAngle( plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
 												plVector3 axis, plReal angle);
 
@@ -70,6 +78,8 @@ public:
 	virtual int collide(plCollisionWorldHandle world, plCollisionObjectHandle colA, plCollisionObjectHandle colB,
 						lwContactPoint* pointsOut, int pointCapacity);
 
+	// for debug
+	virtual void drawline( plCollisionWorldHandle worldHandle, plVector3 rayFrom,plVector3 rayTo,unsigned int color);
 	//add raycast 
 	virtual bool raycast( plCollisionWorldHandle worldHandle, plVector3 rayFrom, plVector3 rayTo,
 								   ClosestRayResult &result);

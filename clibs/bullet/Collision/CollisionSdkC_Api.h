@@ -48,10 +48,16 @@ extern "C"
 	//extern int plGetSdkWorldCreationIntParameter();
 	//extern int plSetSdkWorldCreationIntParameter(int newValue);
 
+	/* debug Drawer */
+	extern 	void plCreateDebugDrawer(plCollisionSdkHandle sdk,plCollisionWorldHandle world);
+	extern  void plDeleteDebugDrawer(plCollisionSdkHandle sdk,plCollisionWorldHandle world);
+
+
 	/* Collision World */
 
 	extern plCollisionWorldHandle plCreateCollisionWorld(plCollisionSdkHandle collisionSdkHandle, int maxNumObjsCapacity, int maxNumShapesCapacity, int maxNumPairsCapacity);
-	extern void plDeleteCollisionWorld(plCollisionSdkHandle sdkHandle, plCollisionWorldHandle world);
+	extern void plDeleteCollisionWorld(plCollisionSdkHandle sdkHandle,  plCollisionWorldHandle world);
+	extern void plResetCollisionWorld(plCollisionSdkHandle sdkHandle,  plCollisionWorldHandle world);
 
 	extern void plAddCollisionObject(plCollisionSdkHandle sdkHandle, plCollisionWorldHandle world, plCollisionObjectHandle object);
 	extern void plRemoveCollisionObject(plCollisionSdkHandle sdkHandle, plCollisionWorldHandle world, plCollisionObjectHandle object);
@@ -70,7 +76,7 @@ extern "C"
 
     // user friendly interface
 	extern void plSetCollisionObjectRotationEuler( plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle,plCollisionObjectHandle objHandle,
-												   plReal yaw,plReal pitch, plReal rool);
+												   plReal pitch, plReal yaw, plReal rool);
 																								 
 	extern void plSetCollisionObjectRotationAxisAngle( plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
 												   plVector3 axis,plReal angle);
@@ -90,15 +96,15 @@ extern "C"
 													 plReal planeConstant);
 	// for terrain ,must do convert 
 	extern plCollisionShapeHandle plCreateTerrainShape(plCollisionSdkHandle sdk, plCollisionWorldHandle worldHandle,
-													int width,int height, const void *heightData, plReal gridSize,
+													int width,int height, const void *heightData, plReal gridScale,
 													plReal heightScale,plReal minHeight,plReal maxHeight,int upAxis,
 													int phyDataType,
 													bool filpQuadEdges);
 
 	extern plCollisionShapeHandle plCreateCompoundShape(plCollisionSdkHandle sdk, plCollisionWorldHandle worldHandle);
 	extern void plAddChildShape(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionShapeHandle compoundShape, plCollisionShapeHandle childShape, plVector3 childPos, plQuaternion childOrn);
-
 	extern void plDeleteShape(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionShapeHandle shape);
+	extern void plSetShapeScale(plCollisionSdkHandle collisionSdkHandle,plCollisionWorldHandle worldHandle, plCollisionObjectHandle objectHandle, plCollisionShapeHandle shapeHandle,plVector3 scale);
 
 	/* Contact Results */
 
@@ -145,6 +151,8 @@ extern "C"
 	extern bool plRaycast( plCollisionSdkHandle SdkHandle, plCollisionWorldHandle world, 
 							  plVector3 rayFrom, plVector3 rayTo, ClosestRayResult &result);
 
+	extern void plDrawline( plCollisionSdkHandle SdkHandle, plCollisionWorldHandle world, 
+							  plVector3 rayFrom, plVector3 rayTo,unsigned int color);
 
 #ifdef __cplusplus
 }

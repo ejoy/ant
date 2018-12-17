@@ -10,9 +10,14 @@ public:
 	{
 	}
 
+	virtual void createDebugDrawer(plCollisionWorldHandle world) = 0;
+	virtual void deleteDebugDrawer(plCollisionWorldHandle world) = 0;
+
 	virtual plCollisionWorldHandle createCollisionWorld(int maxNumObjsCapacity, int maxNumShapesCapacity, int maxNumPairsCapacity) = 0;
 
 	virtual void deleteCollisionWorld(plCollisionWorldHandle worldHandle) = 0;
+
+	virtual void resetCollisionWorld(plCollisionWorldHandle worldHandle) = 0;
 
 	// addition staple box shape 
 	virtual plCollisionShapeHandle createCubeShape(plCollisionWorldHandle world,plVector3 size) = 0;
@@ -44,14 +49,14 @@ public:
 	virtual void addChildShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle compoundShape, plCollisionShapeHandle childShape, plVector3 childPos, plQuaternion childOrn) = 0;
 
 	virtual void deleteShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle shape) = 0;
-
+	virtual void setShapeScale(plCollisionWorldHandle worldHandle, plCollisionObjectHandle objectHandle, plCollisionShapeHandle shapeHandle,plVector3 scale) =0;
 
 	virtual void addCollisionObject(plCollisionWorldHandle world, plCollisionObjectHandle object) = 0;
 	virtual void removeCollisionObject(plCollisionWorldHandle world, plCollisionObjectHandle object) = 0;
 
 	virtual plCollisionObjectHandle createCollisionObject(plCollisionWorldHandle worldHandle, void* userPointer, int userIndex, plCollisionShapeHandle cshape,
 														  plVector3 startPosition, plQuaternion startOrientation) = 0;
-	virtual void deleteCollisionObject(plCollisionObjectHandle body) = 0;
+	virtual void deleteCollisionObject( plCollisionWorldHandle worldHandle, plCollisionObjectHandle body) = 0;
 
 
 	virtual void setCollisionObjectTransform(plCollisionWorldHandle world, plCollisionObjectHandle body,
@@ -64,7 +69,7 @@ public:
 
 	// friendly user interface
 	virtual void setCollisionObjectRotationEuler( plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
-												   plReal yaw, plReal pitch, plReal roll) = 0;
+												   plReal pitch, plReal yaw,  plReal roll) = 0;
 																		 
 	virtual void setCollisionObjectRotationAxisAngle( plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
 												 plVector3 axis, plReal angle) = 0;
@@ -79,6 +84,8 @@ public:
 	//  addition protocol: raycast for accelerate collision detection
 	virtual bool raycast( plCollisionWorldHandle world, plVector3 rayFrom,plVector3 rayTo,
 						  ClosestRayResult &result ) = 0;							  
+	virtual void drawline( plCollisionWorldHandle world, plVector3 rayFrom,plVector3 rayTo,unsigned int color ) = 0;							  
+
 };
 
 #endif  //COLLISION_SDK_INTERFACE_H

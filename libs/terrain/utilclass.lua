@@ -28,7 +28,7 @@ function newctor(class)
 		local obj = setmetatable( {},class )   			---  并非深度拷贝，当class 属性删除，class.New 实例同样消失
 														---  class.new 想完全独立，则需要拷贝实现
 		if not obj.init then        				    
-		   obj.init = function() end			       ---  New Class 若该类不存在 init ,使用缺省
+		   obj.init = function() end			        ---  New Class 若该类不存在 init ,使用缺省
 		end 
 		obj:init(...)    				    			---  New Class 可以实现带参数带 init，实现自己的初始化工作
 		return obj
