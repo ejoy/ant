@@ -2,12 +2,6 @@
 package.path = package.path..';./clibs/terrain/?.lua;./test/?.lua;'
 package.path = package.path..';./clibs/bullet/?.lua;'
 
-local bgfx = require "bgfx"
-local math_util = require "math.util"
-local shaderMgr = require "render.resources.shader_mgr"
-local camera_util = require "render.camera.util"
-local render_cu = require "render.components.util"
-
 
 local bullet_module = require "bullet"
 local terrainClass = require "terrainclass"

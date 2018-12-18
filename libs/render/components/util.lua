@@ -143,4 +143,50 @@ function util.is_entity_visible(entity)
 	return false
 end
 
+function util.create_gird_entity(world, name)
+	local geo = require "render.geometry"
+	local girdid = world:new_entity(
+		"rotation", "position", "scale", 
+		"can_render", "mesh", "material",
+		"name"
+	)
+    local gird = world[girdid]
+    gird.name = name or "gird"
+	mu.identify_transform(gird)
+	local vb, ib = geo.gird(64, 64, 1)
+	local gvb = {"fffd"}
+	for _, v in ipairs(vb) do
+		for _, vv in ipairs(v) do
+			table.insert(gvb, vv)
+		end
+	end
+
+    local vdecl = bgfx.vertex_decl {
+        { "POSITION", 3, "FLOAT" },
+        { "COLOR0", 4, "UINT8", true }
+    }
+
+	gird.mesh.ref_path = ""
+    gird.mesh.assetinfo = {
+		handle = {
+			groups = {
+				{
+					vb = {
+						decls = {vdecl},
+						handles = {
+							bgfx.create_vertex_buffer(gvb, vdecl)
+						},
+					},
+					ib = {handle=bgfx.create_index_buffer(ib)}
+				}
+			}
+		}
+	}
+
+	gird.material.content[1] = {path="line.material", properties={}}
+	util.load_material(gird.material)
+
+	return girdid
+end
+
 return util

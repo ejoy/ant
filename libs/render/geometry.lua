@@ -400,4 +400,44 @@ function geometry.sphereLatitude(slices, stacks, radius, needib, line)
 
 end
 
+function geometry.gird(width, height, unit)	
+	local vb, ib = {}, {}		
+	local function add_vertex(x, z, clr)
+		table.insert(vb, {x, 0, z, clr})			
+	end
+
+	local w_len = width * unit
+	local hw_len = w_len * 0.5
+
+	local h_len = height * unit
+	local hh_len = h_len * 0.5
+
+	local color = 0x88c0c0c0
+
+	local function add_line(x0, z0, x1, z1, color)
+		add_vertex(x0, z0, color)
+		add_vertex(x1, z1, color)
+		-- call 2 times
+		table.insert(ib, #ib)
+		table.insert(ib, #ib)
+	end
+
+	-- center lines
+	add_line(-hh_len, 0, hh_len, 0, 0x880000ff)		
+	add_line(0, -hw_len, 0, hw_len, 0x88ff0000)		
+
+	-- column lines
+	for i=0, width do
+		local x = -hw_len + i * unit
+		add_line(x, -hh_len, x, hh_len, color)			              
+	end
+
+	-- row lines
+	for i=0, height do
+		local y = -hh_len + i * unit
+		add_line(-hw_len, y, hw_len, y, color)			
+	end
+	return vb, ib
+end
+
 return geometry

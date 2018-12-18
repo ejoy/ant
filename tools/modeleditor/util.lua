@@ -1,6 +1,6 @@
 local util = {}; util.__index = util
 
-local geo = require "editor.ecs.render.geometry"
+local geo = require "render.geometry"
 local computil = require "render.components.util"
 
 local loaderutil = require "modelloader.util"

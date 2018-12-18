@@ -1,6 +1,6 @@
 local draw = {}; draw.__index = {}
 
-local geo = require "editor.ecs.render.geometry"
+local geo = require "render.geometry"
 local ms = require "math.stack"
 
 local function gen_color_vertex(pt, color, transform)
