@@ -53,7 +53,8 @@ local guiMain = iupex.menu(
     {
         "File",
         {
-            {"Open Map...", "OpenMap"},
+			{"Open Map...", "OpenMap"},
+			{"Open Entry File(*.lua)", "FromEntryFile"},
             {"Open Recent", guiRecent},
             {"Run file", "RunFile"},
         } 
@@ -89,7 +90,7 @@ local function recentUpdate()
         local h = iup.item {
             title = path,
             action = function()
-                openMap(path)
+        		openMap(path)
             end
         }
         iup.Append(guiRecent, h) 
@@ -130,14 +131,24 @@ local function recentInit()
 end
 
 function openMap(path)
-    guiOpenMap.active = "OFF"
+	guiOpenMap.active = "OFF"
     guiRecent.active = "OFF"
     guiRunFile.active = "ON"
 	recentAddAndUpdate(path)
 
 	path = vfsutil.filter_abs_path(path)
-	
-    local modules = asset.load(path)
+
+	local function load_modules(path)
+		local ext = path:match("%.([%w_-]+)$")
+		if ext == "module" then
+			return asset.load(path)
+		end
+
+		assert(ext == "lua")
+		return {path:match("(.+)%.lua$")}
+	end
+
+	local modules = load_modules(path)
     local editormodules = {
         -- "editor.ecs.camera_controller",
         "editor.ecs.obj_trans_controller",
@@ -165,20 +176,28 @@ function openMap(path)
 --]]
 end
 
-function CMD.OpenMap(e)
-    local filedlg = iup.filedlg
+local function popup_select_file_dlg(parentdlg, filepattern, seletfileop)
+	local filedlg = iup.filedlg
     {
         dialogtype = "OPEN",
-        filter = "*.module",
+        filter = filepattern,
         filterinfo = "Map File",
-        parentdialog = iup.GetDialog(e),
-    }
-    filedlg:popup(iup.CENTERPARENT, iup.CENTERPARENT)
-    if tonumber(filedlg.status) ~= -1 then
-        openMap(filedlg.value)
-    end
+        parentdialog = parentdlg,
+	}
+	
+	filedlg:popup(iup.CENTERPARENT, iup.CENTERPARENT)
+	if tonumber(filedlg.status) ~= -1 then
+		seletfileop(filedlg.value)
+	end
+	filedlg:destroy()
+end
 
-    filedlg:destroy()
+function CMD.OpenMap(e)
+	popup_select_file_dlg(iup.GetDialog(e), "*.module", openMap)
+end
+
+function CMD.FromEntryFile(e)
+	popup_select_file_dlg(iup.GetDialog(e), "*.lua", openMap)
 end
 
 local function runFile(file_path)

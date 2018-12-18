@@ -9,9 +9,9 @@ end
 
 local lfs = require "lfs"
 function util.filter_abs_path(abspath)
-	local assetfolder = (lfs.currentdir() .. "/assets"):gsub("\\", "/")
+	local assetfolder = lfs.currentdir():gsub("\\", "/")
 
-	local newpath, found = path.replace_path(abspath, assetfolder, "assets")
+	local newpath, found = path.replace_path(abspath, assetfolder .. "/", "")
 	if not found then
 		return util.convert_to_mount_path(abspath, "engine/assets"), "engine"
 	end

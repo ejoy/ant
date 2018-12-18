@@ -42,7 +42,7 @@ rhwi.init {
 local world = scene.start_new_world(input_queue, fb_width, fb_height, {
 	"renderworld",
 	"camera_controller",
-})
+}, "?.lua;tools/modelviewer/?.lua")
 
 task.loop(world.update)
 
