@@ -40,8 +40,8 @@ rhwi.init {
 }
 
 local world = scene.start_new_world(input_queue, fb_width, fb_height, {
-	"modelloader.renderworld",
-	"modelloader.camera_controller",
+	"renderworld",
+	"camera_controller",
 })
 
 task.loop(world.update)
