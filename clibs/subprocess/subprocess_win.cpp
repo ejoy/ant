@@ -375,7 +375,7 @@ namespace ant::win::subprocess {
         case SIGTERM:
         case SIGKILL:
         case SIGINT:
-            if (TerminateProcess(hProcess, 1)) {
+            if (TerminateProcess(hProcess, (signum << 8))) {
                 return wait(5000);
             }
             return false;
