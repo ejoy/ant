@@ -12,6 +12,7 @@ local computil = require "render.components.util"
 local bgfx = require "bgfx"
 local mu = require "math.util"
 local ms = require "math.stack"
+local camerautil = require "render.camera.util"
 
 local simplescene = ecs.system "simple_scene"
 
@@ -32,13 +33,14 @@ local function create_grid_entity()
 	grid.name = "grid"
 	mu.identify_transform(grid)        
 
-	local function create_grid_line_points(w, h, unit)
-		local t = {"fffd"}
+	local function create_grid(w, h, unit)
+		local vb = {"fffd"}
+		local ib = {}
 		local function add_point(x, z, clr)
-			table.insert(t, x)
-			table.insert(t, 0)
-			table.insert(t, z)
-			table.insert(t, clr)
+			table.insert(vb, x)
+			table.insert(vb, 0)
+			table.insert(vb, z)
+			table.insert(vb, clr)
 		end
 
 		local w_len = w * unit
@@ -49,28 +51,33 @@ local function create_grid_entity()
 
 		local color = 0x88c0c0c0
 
-		-- center lines
-		add_point(-hh_len, 0, 0x8800ff)
-		add_point(hh_len, 0, 0x880000ff)
+		local function add_line(x0, z0, x1, z1, color)
+			add_point(x0, z0, color)
+			add_point(x1, z1, color)
+			-- call 2 times
+			table.insert(ib, #ib)
+			table.insert(ib, #ib)
+		end
 
-		add_point(0, -hw_len, 0x88ff0000)
-		add_point(0, hw_len, 0x88ff0000)
+		-- center lines
+		add_line(-hh_len, 0, hh_len, 0, 0x880000ff)		
+		add_line(0, -hw_len, 0, hw_len, 0x88ff0000)		
 
 		-- column lines
 		for i=0, w do
 			local x = -hw_len + i * unit
-			add_point(x, -hh_len, color)
-			add_point(x, hh_len, color)                
+			add_line(x, -hh_len, x, hh_len, color)			              
 		end
 
 		-- row lines
 		for i=0, h do
 			local y = -hh_len + i * unit
-			add_point(-hw_len, y, color)
-			add_point(hw_len, y, color)
+			add_line(-hw_len, y, hw_len, y, color)			
 		end
-		return t
+		return vb, ib
 	end
+
+	local vb, ib = create_grid(64, 64, 1)
 
 	grid.mesh.ref_path = ""
 	grid.mesh.assetinfo = {
@@ -83,10 +90,14 @@ local function create_grid_entity()
 						},
 						handles = {
 							bgfx.create_vertex_buffer(
-								create_grid_line_points(64, 64, 1),
+								vb,
 								vdecl)
 						}
+					},
+					ib = {
+						handle = bgfx.create_index_buffer(ib)
 					}
+
 				}
 			}
 		}
@@ -96,6 +107,8 @@ local function create_grid_entity()
 end
 
 function simplescene:init()
+	create_grid_entity()
+
 	local bunnyeid = world:new_entity(
 		"position", "scale", "rotation",
 		"mesh", "material", "can_render",
@@ -105,18 +118,10 @@ function simplescene:init()
 	local bunny = world[bunnyeid]
 	bunny.name = "demo_bunny"
 
-	ms(bunny.position, 	{0, 0, 0, 1}, 	"=")
-	ms(bunny.scale, 	{1, 1, 1}, 		"=")
-	ms(bunny.rotation, 	{0, 0, 0}, 		"=")
+	mu.identify_transform(bunny)
 
 	computil.load_mesh(bunny.mesh, "engine/assets/depiction/bunny.mesh")
 	computil.load_material(bunny.material, {"depiction/bunny.material"})
 
-	world:change_component(bunnyeid, "focus_selected_obj")
-	world:notify()
-
-	create_grid_entity()
-
-	local camera = world:first_entity("main_camera")
-	ms(camera.rotation, {25, 45, 0}, "=")
+	camerautil.focus_selected_obj(world, bunnyeid)
 end
