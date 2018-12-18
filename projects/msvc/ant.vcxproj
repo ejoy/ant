@@ -113,7 +113,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\build_msvc\lua-cjson\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;firmware.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;platform.lib;firmware.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
@@ -132,7 +132,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\build_msvc\lua-cjson\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;platform.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
@@ -155,7 +155,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\build_msvc\lua-cjson\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;platform.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
@@ -178,7 +178,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\build_msvc\lua-cjson\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;platform.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>

@@ -143,7 +143,8 @@ function util.is_entity_visible(entity)
 	return false
 end
 
-function util.create_gird_entity(world, name)
+function util.create_gird_entity(world, name, w, h, unit)
+	local bgfx = require "bgfx"
 	local geo = require "render.geometry"
 	local girdid = world:new_entity(
 		"rotation", "position", "scale", 
@@ -153,7 +154,10 @@ function util.create_gird_entity(world, name)
     local gird = world[girdid]
     gird.name = name or "gird"
 	mu.identify_transform(gird)
-	local vb, ib = geo.gird(64, 64, 1)
+	w = w or 64
+	h = h or 64
+	unit = unit or 1
+	local vb, ib = geo.gird(w, h, unit)
 	local gvb = {"fffd"}
 	for _, v in ipairs(vb) do
 		for _, vv in ipairs(v) do

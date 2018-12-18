@@ -21,7 +21,7 @@ BIMGLIB = -lbimg$(BUILD_CONFIG)
 
 IB_COMPRESSROOT:= $(ANT3RD)/ib-compress
 IB_COMPRESSINC:= -I$(IB_COMPRESSROOT)
-IB_COMPRESSLIB:= -L$(IB_COMPRESSROOT) -lib-compress
+IB_COMPRESSLIB:= -L$(IB_COMPRESSROOT) -lib-compress-$(PLAT)
 
 ifeq "$(PLAT)" "mingw"
 BGFXLIB = -L$(BGFXSRC)/.build/win64_mingw-gcc/bin -lbgfx$(BUILD_CONFIG) $(BXLIB) -lstdc++ -lgdi32 -lpsapi -luuid
