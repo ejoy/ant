@@ -3,6 +3,7 @@
 #include <optional>
 #include <errno.h>
 #include <string.h>
+#include <system_error>
 
 #if __has_include(<filesystem>)
 #include <filesystem>

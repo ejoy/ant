@@ -187,47 +187,42 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 		if not prog then
 			return false, "Create shaderc process failed."
 		else
-			local function check_err(info)				
-				local success, err = true, ""
+			local function check_msg(info)				
+				local success, msg = true, ""
 				if info ~= "" then
-					success = info:find("error", 1, true) == nil
-					if not success then
-						
-						err = to_cmdline(tbl) .. "\n" .. info .. "\n"
-					end
+					local INFO = info:upper()
+					success = INFO:find("ERROR:", 1, true) == nil
+					msg = to_cmdline(tbl) .. "\n" .. info .. "\n"					
 				end
 	
-				return success, err
+				return success, msg
 			end
 
 			local stds = {
-				{fd=prog.stdout, info=""}, 
-				{fd=prog.stderr, info=""}
+				{fd=prog.stdout, info="[stdout info]:"}, 
+				{fd=prog.stderr, info="[stderr info]:"}
 			}
 
-			local success, err = true, ""
-			while #stds > 0 and prog:is_running() do
-				
+			local success, msg = true, ""
+			while #stds > 0 do
 				for idx, std in ipairs(stds) do					
 					local fd = std.fd
 					local num = subprocess.peek(fd)
-					if num == nil then
-						local s, e = check_err(info)
-						success = success and s
-						err = err .. e
+					if num == nil or (num == 0 and not prog:is_running()) then
+						local s, m = check_msg(std.info)
+						success = success and s						
+						msg = msg .. "\n\n" .. m						
 						table.remove(stds, idx)
 						break
 					end
 
-					--print("fd", fd, "num:", num)
-	
-					if num ~= 0 then						
+					if num ~= 0 then
 						std.info = std.info .. fd:read(num)
 					end
 				end
 			end
 		
-			return success, err
+			return success, msg
 		end
 	end
 end

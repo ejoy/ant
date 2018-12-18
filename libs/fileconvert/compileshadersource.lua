@@ -19,11 +19,7 @@ end
 
 local function check_compile_shader(plat, srcpath, outfile, shadertype)	
 	fu.create_dirs(path.parent(outfile))	
-	local success, msg = compile_shader(plat, srcpath, outfile, shadertype)
-	if not success then
-		return nil, msg
-	end
-	return outfile, nil
+	return compile_shader(plat, srcpath, outfile, shadertype)
 end
 
 return function (plat, sourcefile, param, outfile)
@@ -35,10 +31,5 @@ return function (plat, sourcefile, param, outfile)
 			shadertype = rhwi.default_shader_type(plat)
 		end		
 	end
-	local binfile, error = check_compile_shader(plat, sourcefile, outfile, shadertype)
-	if error then
-		return nil, error
-	end
-
-	return true
+	return check_compile_shader(plat, sourcefile, outfile, shadertype)
 end

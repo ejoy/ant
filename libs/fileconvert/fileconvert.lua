@@ -45,7 +45,7 @@ return function (plat, sourcefile, lkfile, dstfile)
 	local c = require(converter_name)
 	log_info(string.format("plat:%s, src:%s, lk:%s, dst:%s, cvt type:%s", plat, sourcefile, lkfile, dstfile, ctype))
 	local success, err = c(plat, sourcefile, lkcontent, dstfile)
-	if err then
+	if not success and err then		
 		log_err(sourcefile, lkfile, err)
 	end
 

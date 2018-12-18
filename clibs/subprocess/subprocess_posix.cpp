@@ -30,7 +30,7 @@ namespace ant::posix::subprocess {
         pid_t err;
         struct sigaction sa, old_sa;
         sa.sa_handler = sigalrm_handler;
-        ::sigemptyset(&sa.sa_mask);
+        sigemptyset(&sa.sa_mask);
         sa.sa_flags = 0;
         ::sigaction(SIGALRM, &sa, &old_sa);
         ::alarm(timeout);
