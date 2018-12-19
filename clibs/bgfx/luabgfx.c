@@ -3000,6 +3000,7 @@ get_texture_flags(lua_State *L, const char *format) {
 		case '-': t = 0x30; break;	// MIN
 		case '+': t = 0x40; break;	// MAG
 		case '*': t = 0x50; break;	// MIP
+		case 'a': t = 0x60; break;	// ALL
 		case 'c':
 			flags |= border_color_or_compare(L, format[i+1]);
 			continue;
@@ -3059,6 +3060,10 @@ get_texture_flags(lua_State *L, const char *format) {
 		case 0x43: flags |= BGFX_SAMPLER_MAG_POINT; break;
 		case 0x44: flags |= BGFX_SAMPLER_MAG_ANISOTROPIC; break;
 		case 0x53: flags |= BGFX_SAMPLER_MIP_POINT; break;
+		case 0x60: flags |= BGFX_SAMPLER_UVW_MIRROR; break;
+		case 0x61: flags |= BGFX_SAMPLER_UVW_CLAMP; break;
+		case 0x62: flags |= BGFX_SAMPLER_UVW_BORDER; break;
+		case 0x63: flags |= BGFX_SAMPLER_POINT; break;
 		default:
 			luaL_error(L, "Invalid texture flags %c%c", format[i], format[i+1]);
 		}
