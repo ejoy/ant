@@ -125,9 +125,9 @@ function access.sha1_from_file(filename)
 	return sha1_encoder:final():gsub(".", byte2hex)
 end
 
-local function build(plat, source, lk, tmp)
+local function build(identity, source, lk, tmp)
 	local fileconvert = require "fileconvert"
-	return fileconvert(plat, source, lk, tmp)
+	return fileconvert(identity, source, lk, tmp)
 end
 
 local function genhash(repo, tmp)
@@ -146,7 +146,7 @@ local function ishash(hash)
 	return #hash == 40 and not hash:find "[^%da-f]"
 end
 
-function access.build_from_file(repo, hash, plat, source_path, lk_path)
+function access.build_from_file(repo, hash, identity, source_path, lk_path)
 	local link = access.repopath(repo, hash, ".link")
 	local f = localfile.open(link, "rb")
 	if f then
@@ -157,7 +157,7 @@ function access.build_from_file(repo, hash, plat, source_path, lk_path)
 		end
 	end
 	local tmp = link .. ".bin"
-	if not build(plat, source_path, lk_path, tmp) then
+	if not build(identity, source_path, lk_path, tmp) then
 		return
 	end
 	-- todo: if this source is platform independent, we can generate all the platforms' .link file for the same bin file.
@@ -180,8 +180,8 @@ local function filetime(filepath)
 	return lfs.attributes(filepath, "modification")
 end
 
-function access.build_from_path(repo, plat, pathname)
-	local hash = access.sha1(pathname .. "." .. plat)
+function access.build_from_path(repo, identity, pathname)
+	local hash = access.sha1(pathname .. "." .. identity)
 	local cache = access.repopath(repo, hash, ".path")
 	local lk = access.realpath(repo, pathname .. ".lk")
 	local source = access.realpath(repo, pathname)
@@ -196,19 +196,19 @@ function access.build_from_path(repo, plat, pathname)
 	local binhash
 	if f then
 		local readline = f:lines()
-		local oplat = readline()
+		local oidentity = readline()
 		local otimestamp = readline()
 		local hash = readline()
 		f:close()
-		if oplat == plat and otimestamp == timestamp and ishash(hash) then
+		if oidentity == identity and otimestamp == timestamp and ishash(hash) then
 			binhash = hash
 		end
 	end
 	if not binhash then
-		binhash = checkfilehash(repo, plat, source, lk)
+		binhash = checkfilehash(repo, identity, source, lk)
 		if binhash then
 			local f = assert(localfile.open(cache, "wb"))
-			f:write(string.format("%s\n%s\n%s", plat, timestamp, binhash))
+			f:write(string.format("%s\n%s\n%s", identity, timestamp, binhash))
 			f:close()
 		end
 	end

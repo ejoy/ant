@@ -73,7 +73,7 @@ function localvfs.realpath(pathname)
 	local rp = access.realpath(self, pathname)
 	local lk = rp .. ".lk"
 	if lfs_exist(lk) then
-		local binhash = access.build_from_path(self, platform.os(), pathname)		
+		local binhash = access.build_from_path(self, self.identity, pathname)
 		if binhash == nil then
 			error(string.format("build from path failed, pathname:%s, log file can found in log folder", pathname))
 		end
@@ -116,6 +116,11 @@ end
 
 function localvfs.repopath()
 	return self._repo
+end
+
+function localvfs.identity(identity)
+	assert(self.identity == nil)
+	self.identity = identity
 end
 
 localvfs.localvfs = true

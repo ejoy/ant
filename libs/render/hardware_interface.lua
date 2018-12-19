@@ -1,20 +1,39 @@
 local hw = {}
 hw.__index = hw
 
+local platform = require "platform"
+local platos = platform.os()
+
 local caps = nil
 function hw.get_caps()
     return assert(caps)
 end
 
+local function check_renderer(renderer)
+	if renderer == nil then
+		return hw.default_renderer()
+	end
+
+	if platos == "iOS" and renderer ~= "METAL" then
+		assert(false, 'iOS platform context layer is select before bgfx renderer created \
+			the default layter is metal, if we need to test OpenGLES on iOS platform \
+			we need to change the context layter to OpenGLES')
+	end
+
+	return renderer
+end
+
 function hw.init(args)
 	local bgfx = require "bgfx"
-	assert(args.renderer == nil)
-	--args.renderer = "OPENGLES"
+	args.renderer = check_renderer(args.renderer)
 	args.getlog = args.getlog or true
 	bgfx.init(args)
 	bgfx.reset(args.width, args.height, "v")
 	assert(caps == nil)
 	caps = bgfx.get_caps()
+
+	local vfs = require "vfs"
+	vfs.identity(hw.identity())
 end
 
 local shadertypes = {
@@ -67,15 +86,24 @@ function hw.default_shader_type(plat)
 end
 
 function hw.default_renderer(plat)
+	plat = plat or platos
 	local PLAT=plat:upper()
 	local pi = platform_relates[PLAT]
 	if pi then
+		if PLAT == "IOS" then			
+			assert(pi.renderer == "METAL")
+		end
 		return pi.renderer
 	end
 end
 
 function hw.shutdown()
+	local bgfx = require "bgfx"
 	bgfx.shutdown()
+end
+
+function hw.identity()	
+	return platos .. "-" .. assert(hw.shader_type())
 end
 
 return hw

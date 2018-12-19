@@ -83,9 +83,9 @@ function message:GET(hash)
 	f:close()
 end
 
-function message:LINK(hash, plat, source_hash, lk_hash)
-	local binhash = repo:link(hash, plat, source_hash, lk_hash)
-	LOG("LINK", hash, binhash, plat, source_hash, lk_hash)
+function message:LINK(hash, identity, source_hash, lk_hash)
+	local binhash = repo:link(hash, identity, source_hash, lk_hash)
+	LOG("LINK", hash, binhash, identity, source_hash, lk_hash)
 	if binhash then
 		response(self, "LINK", hash, binhash)
 	else

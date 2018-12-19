@@ -22,6 +22,7 @@ local channel = {}
 local repo = {
 	repo = nil,
 	uncomplete = {},
+	identity = nil,
 }
 
 local connection = {
@@ -75,7 +76,6 @@ local function init_config()
 	config.address = assert(c.address)
 	config.port = assert(c.port)
 	config.vfspath = assert(c.vfspath)
-	config.platform = assert(c.platform)
 end
 
 local function init_repo()
@@ -198,7 +198,7 @@ function offline.GET(id, fullpath)
 			end
 
 			-- name and name.lk are files
-			local hash = sha1(config.platform .. v.hash .. lk.hash)
+			local hash = sha1(repo.identity .. v.hash .. lk.hash)
 			local hash_path = repo.repo:hashpath(hash) .. ".link"
 			local f = io.open(hash_path,"rb")
 			if f then
@@ -331,7 +331,7 @@ local function request_link(id, path, hash, source_hash, lk_hash)
 		hash_req[id] = path
 	else
 		connection.request_link[hash] = { [id] = path }
-		connection_send("LINK", hash, config.platform, source_hash, lk_hash)
+		connection_send("LINK", hash, repo.identity, source_hash, lk_hash)
 	end
 end
 
@@ -585,6 +585,12 @@ function online.TYPE(id, fullpath)
 	end
 end
 
+function online.IDENTITY(identity)
+	assert(repo.identity == nil, "identity should only set one time")
+	assert(type(identity) == "string")
+	repo.identity = identity
+end
+
 function online.GET(id, fullpath)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
@@ -612,7 +618,7 @@ function online.GET(id, fullpath)
 
 			-- name and name.lk are files
 			-- NOTICE: see repoaccess.lua for the same hash algorithm
-			local hash = sha1(config.platform .. v.hash .. lk.hash)
+			local hash = sha1(repo.identity .. v.hash .. lk.hash)
 			local hash_path = repo.repo:hashpath(hash) .. ".link"
 			local f = io.open(hash_path,"rb")
 			if not f then

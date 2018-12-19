@@ -4,8 +4,7 @@ local config = {
 	vfspath = "vfs.lua",
 	nettype = (platform.os() ~= "iOS") and "connect" or "listen",
 	address = "127.0.0.1",
-	port = 2018,
-	platform = platform.os(),
+	port = 2018,	
 }
 
 local thread = require "thread"
