@@ -1,3 +1,5 @@
+--luacheck: globals iup
+
 local probe = {}; probe.__index = probe
 
 function probe:notify(respath)
@@ -19,22 +21,24 @@ function probe:add_probe(name, cb)
 	table.insert(observers, {name=name, cb=cb})
 end
 
+function probe:injust_assetview(assview)
+	self.assetview = assview
+end
+
+function probe:remove_assetview()
+	self.assetview = nil
+end
+
 function probe.new(config)
 	local function create(config)
 		local view = iup.button {
 			TITLE="!"
 		}
 
-		function view:action()
-			local dlg = iup.GetDialog(self)
-			local assetview = iup.GetDialogChild(dlg, "ASSETVIEW")
-			if assetview then
-				local avowner = assetview.owner
-				local respath = avowner:get_select_res()
-				local owner = self.owner
-				if owner then
-					owner:notify(respath)
-				end
+		function view:action()			
+			local av = self.assetview
+			if av then
+				self:notify(av.get_select_res())
 			end
 		end
 		return {view=view}

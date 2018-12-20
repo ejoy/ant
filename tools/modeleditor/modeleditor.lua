@@ -59,7 +59,7 @@ local animation_time = iup.vbox {
 	ALIGNMENT = "ACENTER",
 }
 
-local function create_pathctrl(title, inputer_name, btn_name)
+local function create_pathctrl(title, inputer_name, btn_name, assetview)
 	local btn = iup.button {
 		NAME=btn_name,
 		TITLE="...",
@@ -74,6 +74,7 @@ local function create_pathctrl(title, inputer_name, btn_name)
 	}
 
 	local probe = probeclass.new()
+	probe:injust_assetview(assetview)
 	probe:add_probe("asset", function (respath)
 		path_inputer.VALUE = respath or ""
 	end)
@@ -89,17 +90,18 @@ local function create_pathctrl(title, inputer_name, btn_name)
 	}
 end
 
-local ske_pathctrl = create_pathctrl("Skeleton", "SKE_PATH", "SKE_FINDER")
-local ani_pathctrl = create_pathctrl("Animation", "ANI_PATH", "ANI_FINDER")
-local mesh_pathctrl = create_pathctrl("Mesh", "SM_PATH", "SM_FINDER")
-
-local listctrl = require "editor.controls.listctrl"
 local assetviewclass = require "editor.controls.assetview"
 local assetview = assetviewclass.new()
+
+local ske_pathctrl = create_pathctrl("Skeleton", "SKE_PATH", "SKE_FINDER", assetview)
+local ani_pathctrl = create_pathctrl("Animation", "ANI_PATH", "ANI_FINDER", assetview)
+local mesh_pathctrl = create_pathctrl("Mesh", "SM_PATH", "SM_FINDER", assetview)
+
+local listctrl = require "editor.controls.listctrl"
 local anilist = listctrl.new {NAME="ANI_LIST"}
 
 local dlg = iup.dialog {
-	iup.split {		
+	iup.split {		 
 		iup.split {
 			ORIENTATION = "HORIZONTAL",
 			canvas,
