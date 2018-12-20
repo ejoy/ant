@@ -2,28 +2,23 @@
 local link = {}; link.__index = link
 
 local path = require "filesystem.path"
+local observersclass = require "editor.common.observer"
+local ctrlutil = require "editor.controls.util"
 
 function link.new(config, name, url)
-	local function create(config)
-		local lk = iup.link {
+	return ctrlutil.create_ctrl_wrapper(function ()
+		return iup.link {
 			URL=url,
 			TITLE=name,
+			action = function(self, url)
+				-- should use injust
+				local addr = iup.GetParent(self)
+				local owner = assert(addr.owner)
+				owner:update(url)
+				owner:notify(url)
+			end
 		}
-
-		return {view=lk}
-	end
-
-	local lk = create(config)
-	lk.view.owner = lk	
-
-	function lk.view:action(url)
-		local addr = iup.GetParent(self)
-		local owner = assert(addr.owner)
-		owner:update(url)
-		owner:notify(url)
-	end
-
-	return lk
+	end, link)
 end
 
 local addressnavigation = {}; addressnavigation.__index = addressnavigation
@@ -91,36 +86,28 @@ end
 function addressnavigation:notify(url)
 	local observers = self.observers
 	if observers then
-		for _, observer in ipairs(observers) do
-			observer.cb(url)
-		end
+		observers:notify(url)
 	end
 end
 
 function addressnavigation:add_click_address_cb(name, cb)
-	local observers = self.observers
-	if observers == nil then		
-		observers = {}
-		self.observers = observers
+	if self.observers == nil then
+		self.observers = observersclass.new()
 	end
-
-	table.insert(observers, {name=name, cb=cb})
+	
+	self.observers:add(name, cb)
 end
 
-
-local function create(config)
-	local addr = iup.hbox {
-		NAME="ADDR_NAG",
-		EXPAND="ON",
-	}
-
-	return {view=addr}
-end
 
 function addressnavigation.new(config)
-	local an = create(config)
-	an.view.owner = an
-	return setmetatable(an, addressnavigation)
+	return ctrlutil.create_ctrl_wrapper(function ()
+		local addr = iup.hbox {
+			NAME = config and config.name or "ADDR_NAG",
+			EXPAND = "ON",
+		}
+	
+		return {view=addr}
+	end, addressnavigation)
 end
 
 return addressnavigation

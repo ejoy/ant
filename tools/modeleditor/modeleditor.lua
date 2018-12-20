@@ -140,7 +140,7 @@ local dlg = iup.dialog {
 			},
 			iup.tabs {
 				assetview.view,
-				anilist.list,
+				anilist.view,
 				TABTITLE0 = "Resources",
 				TABTITLE1 = "Animation List",
 				EXPAND="ON",

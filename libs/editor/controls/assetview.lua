@@ -1,6 +1,7 @@
 --luachecks: globals iup
 local assetview = {}; assetview.__index = assetview
 local listctrl = require "editor.controls.listctrl"
+local ctrlutil =require "editor.controls.util"
 
 local path = require "filesystem.path"
 local fu = require "filesystem.util"
@@ -155,28 +156,22 @@ function assetview:get_select_res()
 	return get_vfs_path(ud.restype, ud.path, true)
 end
 
-local function create(config)
-	local reslist = listctrl.new {NAME="RES_LIST", SCROLLBAR="YES", EXPAND="ON"}
-	local restype = listctrl.new {NAME="RES_TYPE", DROPDOWN="YES"}
-	restype.list.EXPAND = "HORIZONTAL"
-
-	local addr = addrctrl.new()
-
-	local assetview = iup.vbox {
-		restype.list,
-		addr.view,
-		reslist.list,
-		NAME="ASSETVIEW",
-		EXPANED="ON",
-		MINSIZE="120x0"
-	}
-	return {view=assetview}
-end
-
 function assetview.new(config)
-	local av = create(config)
-	av.view.owner = av
-	return setmetatable(av, assetview)
+	return ctrlutil.create_ctrl_wrapper(function ()
+		local reslist = listctrl.new {NAME="RES_LIST", SCROLLBAR="YES", EXPAND="ON"}
+		local restype = listctrl.new {NAME="RES_TYPE", DROPDOWN="YES"}
+		restype.list.EXPAND = "HORIZONTAL"
+	
+		local addr = addrctrl.new()	
+		return iup.vbox {
+			restype.view,
+			addr.view,
+			reslist.view,
+			NAME="ASSETVIEW",
+			EXPANED="ON",
+			MINSIZE="120x0"
+		}		
+	end, assetview)	
 end
 
 return assetview
