@@ -42,6 +42,12 @@ function util.rotate(camera, dx, dy)
 	ms(rot, rot_result, "=")
 end
 
+function util.focus_point(world, pt)
+	local maincamera = world:first_entity("main_camera")
+	local newrot = ms(pt, maincamera.position, "-neP")
+	ms(maincamera.rotation, newrot, "=")
+end
+
 function util.focus_selected_obj(world, eid)
 	local entity = assert(world[eid])
 

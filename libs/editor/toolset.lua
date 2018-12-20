@@ -208,7 +208,7 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 				for idx, std in ipairs(stds) do					
 					local fd = std.fd
 					local num = subprocess.peek(fd)
-					if num == nil or (num == 0 and not prog:is_running()) then
+					if num == nil then
 						local s, m = check_msg(std.info)
 						success = success and s						
 						msg = msg .. "\n\n" .. m						

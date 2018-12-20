@@ -1,6 +1,6 @@
-CMAKE_PROJ = assimp freetype ozz-animation bullet3 zlib
-RUNTIME_PROJ = ozz-animation bullet3 bgfx ib-compress
-ALL_PROJ = $(RUNTIME_PROJ) $(CMAKE_PROJ) cd cjson
+CMAKE_PROJ := assimp freetype ozz-animation bullet3 zlib
+RUNTIME_PROJ := ozz-animation bullet3 bgfx ib-compress
+ALL_PROJ := $(RUNTIME_PROJ) $(CMAKE_PROJ)
 BUILD_CONFIG = release
 
 ifeq "$(PLAT)" ""
@@ -55,6 +55,8 @@ else ifeq "$(PLAT)" "msvc"
 
   CMAKE_PROJ_MAKE = $(MSVC_MAKE_INFO)
   CMAKE_PROJ_CLEAN = $(MSVC_MAKE_INFO) 
+
+  ALL_PROJ := $(ALL_PROJ) cd
 else
   CMAKE_PROJ_TYPE = MSYS Makefiles
   BGFX_INIT_CMD = make .build/projects/gmake-mingw-gcc
@@ -64,6 +66,7 @@ else
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean   
+  ALL_PROJ := $(ALL_PROJ) cd
 endif
 
 ASSIMP_FMT_NAMES := AMF 3DS AC ASE ASSBIN ASSXML B3D BVH COLLADA DXF CSM IRR LWO LWS MD2 MD3 MD5 MDC NFF NDO OFF OBJ OGRE OPENGEX PLY MS3D COB BLEND IFC XGL Q3D Q3BSP RAW SIB SMD STL TERRAGEN 3D X X3D GLTF 3MF MMD HMP MDL
@@ -143,12 +146,6 @@ ib-compress_make: | $(BUILD_PATH)
 	cd ib-compress && make PLAT=$(PLAT)
 ib-compress_clean:
 	cd ib-compress && make clean
-
-cjson_init: | $(BUILD_PATH)
-cjson_make: | $(BUILD_PATH)
-	cd lua-cjson && make TARGET=cjson.dll LUA_INCLUDE_DIR=../../clibs/lua CJSON_CFLAGS=-DDISABLE_INVALID_NUMBERS CJSON_LDFLAGS="-shared -L../../clibs/lua -llua53" LUA_BIN_SUFFIX=.lua
-cjson_clean:
-	cd lua-cjson && make clean TARGET=cjson.dll
 
 define CMAKE_TEMP
   $(BUILD_PATH)/$(1)/$(PLAT) : | $(BUILD_PATH)
