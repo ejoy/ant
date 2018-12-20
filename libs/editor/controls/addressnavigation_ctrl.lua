@@ -61,6 +61,7 @@ function addressnavigation:clear()
 
 	for _, c in ipairs(children) do
 		iup.Detach(c)
+		iup.Destroy(c)
 	end
 	iup.Refresh(view)
 end

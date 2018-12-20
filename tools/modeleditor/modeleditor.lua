@@ -7,7 +7,9 @@ require "iuplua"
 
 local editor = require "editor"
 local elog = require "editor.log"
-local probeclass = require "editor.controls.assetprobebutton"
+local probeclass = require "editor.controls.assetprobe"
+local fileinputer = require "tools.modeleditor.fileselectinputer"
+local aniviewclass = require "tools.modeleditor.animationview"
 
 local fbw, fbh = 800, 600
 
@@ -56,35 +58,20 @@ local animation_time = iup.vbox {
 		EXPAND="ON",
 	},
 	iup.fill {},
-	ALIGNMENT = "ACENTER",
+	ALIGNMENT = "ACENTER",  
 }
 
-local function create_pathctrl(title, inputer_name, btn_name, assetview)
-	local btn = iup.button {
-		NAME=btn_name,
-		TITLE="...",
-		ALIGNMENT="ARIGHT",
-	}
-
-	local path_inputer = iup.text {
-		NAME=inputer_name,
-		ALIGNMENT="ALEFT",
-		EXPAND ="ON",
-		SIZE="120x0",
-	}
+local function create_pathctrl(title, name, assetview)
+	local inputer = fileinputer.new({NAME=name})
 
 	local probe = probeclass.new()
-	probe:injust_assetview(assetview)
-	probe:add_probe("asset", function (respath)
-		path_inputer.VALUE = respath or ""
-	end)
+	probe:injust_assetview(assetview)	
 
 	return iup.frame {
 		TITLE=title,
 		iup.hbox {
-			path_inputer,
-			probe.view,
-			btn,
+			inputer.view,
+			probe.view,		
 			iup.fill {}
 		},
 	}
@@ -93,9 +80,13 @@ end
 local assetviewclass = require "editor.controls.assetview"
 local assetview = assetviewclass.new()
 
-local ske_pathctrl = create_pathctrl("Skeleton", "SKE_PATH", "SKE_FINDER", assetview)
-local ani_pathctrl = create_pathctrl("Animation", "ANI_PATH", "ANI_FINDER", assetview)
-local mesh_pathctrl = create_pathctrl("Mesh", "SM_PATH", "SM_FINDER", assetview)
+local ske_pathctrl = create_pathctrl("Skeleton", "SKEINPUTER", assetview)
+local mesh_pathctrl = create_pathctrl("Mesh", "SMINPUTER", assetview)
+
+local animation_expander = iup.expander {
+	TITLE = "Animation",
+	aniviewclass.new({NAME="ANIVIEW"}).view,
+}
 
 local listctrl = require "editor.controls.listctrl"
 local anilist = listctrl.new {NAME="ANI_LIST"}
@@ -117,12 +108,12 @@ local dlg = iup.dialog {
 				TABTITLE0="Resource Files",
 				iup.hbox {
 					iup.vbox {
-						ske_pathctrl,
-						iup.space {	SIZE="0x5",	},
-						ani_pathctrl,
-						iup.space { SIZE="0x5", },
 						mesh_pathctrl,
 						iup.space { SIZE="0x5", },
+						ske_pathctrl,
+						iup.space {	SIZE="0x5",	},
+						animation_expander,
+						iup.space { SIZE="0x5", },					
 						iup.toggle {
 							NAME="SHOWBONES",
 							TITLE="Show Bones",

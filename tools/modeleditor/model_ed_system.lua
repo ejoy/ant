@@ -111,11 +111,7 @@ local function enable_bones_visible()
 	end
 end
 
-local function check_create_sample_entity(sc, ac, mc)
-	local anipath = ac.VALUE
-	local skepath = sc.VALUE
-	local skinning_meshpath = mc.VALUE
-
+local function check_create_sample_entity(skepath, anipath, skinning_meshpath)
 	local function check_path_valid(pp)
 		if pp == nil or pp == "" then
 			return false
@@ -178,72 +174,40 @@ local function update_duration_text(cursorpos)
 end
 
 local function slider_value_chaged(slider)
-	local cursorpos = get_ani_cursor(slider)
-	update_duration_text(cursorpos)
-	update_animation_ratio(sample_eid, cursorpos)
+	if sample_eid then
+		local cursorpos = get_ani_cursor(slider)
+		update_duration_text(cursorpos)
+		update_animation_ratio(sample_eid, cursorpos)
+	end
 end
 
 local function init_paths_ctrl()
 	local dlg = main_dialog()
-	local skepath_inputer = iup.GetDialogChild(dlg, "SKE_PATH")
-	local anipath_inputer = iup.GetDialogChild(dlg, "ANI_PATH")
-	local meshpath_inputer = iup.GetDialogChild(dlg, "SM_PATH")
 
-	function skepath_inputer:killfocus_cb()		
-		check_create_sample_entity(self, anipath_inputer, meshpath_inputer)
-		return 0
-	end
-	
-	function anipath_inputer:killfocus_cb()		
-		check_create_sample_entity(skepath_inputer, self, meshpath_inputer)
-		return 0
-	end
+	--default value
+	local skeinputer = iup.GetDialogChild(dlg, "SKEINPUTER").owner
+	local sminputer = iup.GetDialogChild(dlg, "SMINPUTER").owner
+	local aniview = iup.GetDialogChild(dlg, "ANIVIEW").owner
 
-	function meshpath_inputer:killfocus_cb()
-		check_create_sample_entity(skepath_inputer, anipath_inputer, self)
-		return 0
+	skeinputer:set_filename("meshes/skeleton/skeleton.ozz")
+	sminputer:set_filename("meshes/mesh.ozz")
+
+	if aniview:count() == 0 then
+		aniview:add("meshes/animation/animation_base.ozz")
 	end
 
-	local skepath_finder = iup.GetDialogChild(dlg, "SKE_FINDER")
-	local function get_file()
-		local filename = iup.GetFile("assets/meshes/*.ozz")		
-		local vfsfilename = vfsutil.filter_abs_path(filename)		
-		if path.is_absolute_path(vfsfilename) then
-			iup.Message("Resource Error", string.format("resource: %s should import to project 'assets' folder"))
-			return 
-		end
-		return vfsfilename
-	end
-	function skepath_finder:action()
-		local filename = get_file()
-		if filename then
-			skepath_inputer.VALUE = filename
-			check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
-		end
+	local change_cb = function ()
+		local skepath = skeinputer:get_filename()
+		local smpath = sminputer:get_filename()
+
+		local anipath = aniview:get(0):get_filename()
+		check_create_sample_entity(skepath, anipath, smpath)
 	end
 
-	local anipath_finder = iup.GetDialogChild(dlg, "ANI_FINDER")
-	function anipath_finder:action()
-		local filename = get_file()
-		if filename then
-			anipath_inputer.VALUE = filename
-			check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
-		end
-	end
+	skeinputer:add_changed_cb(change_cb)
+	sminputer:add_changed_cb(change_cb)
 
-	local smpath_finder = iup.GetDialogChild(dlg, "SM_FINDER")
-	function smpath_finder:action()
-		local filename = get_file()
-		if filename then
-			meshpath_inputer.VALUE = filename
-			check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
-		end
-	end
-
-	skepath_inputer.VALUE = "meshes/skeleton/skeleton.ozz"
-	anipath_inputer.VALUE = "meshes/animation/animation_base.ozz"
-	meshpath_inputer.VALUE = "meshes/mesh.ozz"
-	check_create_sample_entity(skepath_inputer, anipath_inputer, meshpath_inputer)
+	change_cb()
 end
 
 local function init_playitme_ctrl()
