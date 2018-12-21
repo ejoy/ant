@@ -196,6 +196,9 @@ local function init_paths_ctrl()
 		aniview:add("meshes/animation/animation_base.ozz")
 	end
 
+	local blender = iup.GetDialogChild(dlg, "BLENDER").owner
+	aniview:set_blender(blender)
+
 	local change_cb = function ()
 		local skepath = skeinputer:get_filename()
 		local smpath = sminputer:get_filename()
@@ -267,11 +270,20 @@ local function init_res_ctrl()
 	assetview:init("project")
 end
 
+local function init_blend_ctrl()
+	local dlg = main_dialog()
+	local blender = dlg_item("BLENDER").owner
+	blender:observer_blend("blend", function (blendlist, type)
+		
+	end)
+end
+
 local function init_control()
 	init_paths_ctrl()
 	init_playitme_ctrl()
 	init_check_shower()
 	init_res_ctrl()
+	init_blend_ctrl()
 	iup.Map(main_dialog())
 end
 

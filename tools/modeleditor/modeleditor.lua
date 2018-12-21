@@ -82,10 +82,17 @@ local assetview = assetviewclass.new()
 local ske_pathctrl = create_pathctrl("Skeleton", "SKEINPUTER", assetview)
 local mesh_pathctrl = create_pathctrl("Mesh", "SMINPUTER", assetview)
 
+local blendviewclass = require "tools.modeleditor.blendview"
+
 local animation_expander = iup.expander {
 	TITLE = "Animation",
-	aniviewclass.new({NAME="ANIVIEW"}).view,
-	EXPAND = "YES",
+	NAME = "ANIMATION",
+	iup.tabs {
+		TABTITLE0 = "Ani list",
+		TABTITLE1 = "Blend",
+		aniviewclass.new({NAME="ANIVIEW"}).view,
+		blendviewclass.new({NAME="BLENDVIEW"}).view,
+	}
 }
 
 local listctrl = require "editor.controls.listctrl"

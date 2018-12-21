@@ -5,7 +5,7 @@ local inputer = require "tools.modeleditor.fileselectinputer"
 local probeclass = require "editor.controls.assetprobe"
 local path = require "filesystem.path"
 
-local function create_ani_ctrl()
+local function create_ani_ctrl(aniview)
 	local ani_ctrl = {}; ani_ctrl.__index = ani_ctrl
 	function ani_ctrl:get_filename()
 		return self:get_inputer():get_filename()
@@ -18,15 +18,21 @@ local function create_ani_ctrl()
 		return inputer.owner
 	end
 
-	return ctrlutil.create_ctrl_wrapper(function ()
+	local add_blend_btn = iup.button {
+		TITLE = "+",
+		NAME = "ADD_BLEND",
+	}
+
+	local ac = ctrlutil.create_ctrl_wrapper(function ()
 		return iup.hbox {
 				iup.label {
 					TITLE = "ani",
 					NAME = "TAG",
-					ALIGNMENT="ALEFT",					
+					ALIGNMENT="ALEFT",
 				},
 				inputer.new({NAME="INPUTER"}).view,
 				probeclass.new({NAME="PROBE"}).view,
+				add_blend_btn,
 				iup.button {
 					TITLE = "X",
 					NAME = "DEL",
@@ -46,6 +52,17 @@ local function create_ani_ctrl()
 				EXPAND = "YES",
 			}
 		end, ani_ctrl)
+
+	function add_blend_btn:action()
+		local blender = aniview:get_blender()
+		if blender then
+			local inputer = ac:get_inputer()
+			local filename = inputer:get_filename()
+			blender:add(filename)
+		end
+	end
+
+	return ac
 end
 
 function animationview:get(idx)
@@ -62,13 +79,21 @@ function animationview:count()
 	return numchild - 1
 end
 
+function animationview:set_blender(blender)
+	self.blender = blender
+end
+
+function animationview:get_blender()
+	return self.blender
+end
+
 local function add_child(aniview)
 	local view = aniview.view
 	local numchild = iup.GetChildCount(view)
 					
 	local afterchild = iup.GetChild(view, numchild - 1)
 
-	local newctrl = create_ani_ctrl(view)
+	local newctrl = create_ani_ctrl(aniview)
 	iup.Insert(view, afterchild, newctrl.view)
 	iup.Map(newctrl.view)
 	iup.Refresh(view)
