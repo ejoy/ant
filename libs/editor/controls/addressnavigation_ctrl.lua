@@ -101,12 +101,10 @@ end
 
 function addressnavigation.new(config)
 	return ctrlutil.create_ctrl_wrapper(function ()
-		local addr = iup.hbox {
+		return iup.hbox {
 			NAME = config and config.name or "ADDR_NAG",
 			EXPAND = "ON",
 		}
-	
-		return {view=addr}
 	end, addressnavigation)
 end
 

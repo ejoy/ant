@@ -87,7 +87,7 @@ function animationview.new(config)
 				EXPAND = "HORIZONTAL",
 				action = function (self)
 					local vbox = iup.GetParent(self)
-					add_child(vbox.view)
+					add_child(vbox.owner)
 				end
 			},				
 		
