@@ -3,6 +3,7 @@ local ctrlutil = require "editor.controls.util"
 
 local inputer = require "tools.modeleditor.fileselectinputer"
 local probeclass = require "editor.controls.assetprobe"
+local path = require "filesystem.path"
 
 local function create_ani_ctrl()
 	local ani_ctrl = {}; ani_ctrl.__index = ani_ctrl
@@ -75,9 +76,33 @@ local function add_child(aniview)
 	return newctrl
 end
 
+local function update_tag_name(aniview, idx)
+	local view = aniview.view
+	local anictrl = iup.GetChild(view, idx).owner
+	local tag = iup.GetChild(anictrl.view, 0)
+	assert(tag.NAME == "TAG")
+	local inputer = anictrl:get_inputer()	
+	local name = path.filename_without_ext(inputer:get_filename())
+
+	name = name or "ani"
+
+	local function chop_name(name)
+		if #name > 10 then
+			local prefix = name:sub(1, 4)
+			local surfix = name:sub(#name-3)
+			return prefix .. ".." .. surfix
+		end
+	end
+
+	tag.TITLE = name ~= "" and chop_name(name) or "ani"
+	iup.Refresh(anictrl.view)
+end
+
 function animationview:add(filename)
 	local child = add_child(self)
 	child:get_inputer():set_filename(filename)
+
+	update_tag_name(self, self:count() - 1)
 end
 
 function animationview.new(config)
