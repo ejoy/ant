@@ -103,7 +103,7 @@ function addressnavigation.new(config)
 	return ctrlutil.create_ctrl_wrapper(function ()
 		return iup.hbox {
 			NAME = config and config.name or "ADDR_NAG",
-			EXPAND = "ON",
+			EXPAND = "YES",
 		}
 	end, addressnavigation)
 end

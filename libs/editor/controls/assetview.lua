@@ -158,7 +158,7 @@ end
 
 function assetview.new(config)
 	return ctrlutil.create_ctrl_wrapper(function ()
-		local reslist = listctrl.new {NAME="RES_LIST", SCROLLBAR="YES", EXPAND="ON"}
+		local reslist = listctrl.new {NAME="RES_LIST", SCROLLBAR="YES", EXPAND="YES"}
 		local restype = listctrl.new {NAME="RES_TYPE", DROPDOWN="YES"}
 		restype.view.EXPAND = "HORIZONTAL"
 	

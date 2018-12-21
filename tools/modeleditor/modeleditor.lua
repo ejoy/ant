@@ -55,7 +55,7 @@ local animation_time = iup.vbox {
 			NAME="AUTO_PLAY",
 			TITLE="Play",
 		},
-		EXPAND="ON",
+		EXPAND="YES",
 	},
 	iup.fill {},
 	ALIGNMENT = "ACENTER",  
@@ -71,8 +71,7 @@ local function create_pathctrl(title, name, assetview)
 		TITLE=title,
 		iup.hbox {
 			inputer.view,
-			probe.view,		
-			iup.fill {}
+			probe.view,					
 		},
 	}
 end
@@ -86,6 +85,7 @@ local mesh_pathctrl = create_pathctrl("Mesh", "SMINPUTER", assetview)
 local animation_expander = iup.expander {
 	TITLE = "Animation",
 	aniviewclass.new({NAME="ANIVIEW"}).view,
+	EXPAND = "YES",
 }
 
 local listctrl = require "editor.controls.listctrl"
@@ -100,54 +100,48 @@ local dlg = iup.dialog {
 				ORIENTATION = "HORIZONTAL",
 				animation_time,
 				elog.window,
-			}			
+			},			
 		},
 		-- attribute control
 		iup.vbox {
 			iup.tabs {
-				TABTITLE0="Resource Files",
-				iup.hbox {
-					iup.vbox {
-						mesh_pathctrl,
-						iup.space { SIZE="0x5", },
-						ske_pathctrl,
-						iup.space {	SIZE="0x5",	},
-						animation_expander,
-						iup.space { SIZE="0x5", },					
-						iup.toggle {
-							NAME="SHOWBONES",
-							TITLE="Show Bones",
-							VALUE="OFF",
-						},
-						iup.space { SIZE="0x5", },
-						iup.toggle {
-							NAME="SHOWSAMPLE",
-							TITLE="Show Sample Object",
-							VALUE="ON",
-						},
-						iup.space { SIZE="0x5", },
-						iup.toggle {
-							NAME="SHOWSAMPLEBOUNDING",
-							TITLE="Show Sample BoundingBox",
-							VALUE="OFF",
-						},
-						iup.fill {},
+				TABTITLE0="Sample Model Resources",				
+				iup.vbox {
+					mesh_pathctrl,
+					iup.space { SIZE="0x5", },
+					ske_pathctrl,
+					iup.space {	SIZE="0x5",	},
+					animation_expander,
+					iup.space { SIZE="0x5", },
+					
+					iup.toggle {
+						NAME="SHOWBONES",
+						TITLE="Show Bones",
+						VALUE="OFF",
 					},
-					iup.fill{},
-					EXPAND="ON",
-				},
-				EXPAND="ON",
+					iup.space { SIZE="0x5", },
+					iup.toggle {
+						NAME="SHOWSAMPLE",
+						TITLE="Show Sample Object",
+						VALUE="ON",
+					},
+					iup.space { SIZE="0x5", },
+					iup.toggle {
+						NAME="SHOWSAMPLEBOUNDING",
+						TITLE="Show Sample BoundingBox",
+						VALUE="OFF",
+					},
+				},				
 			},
 			iup.tabs {
 				assetview.view,
 				anilist.view,
 				TABTITLE0 = "Resources",
-				TABTITLE1 = "Animation List",
-				EXPAND="ON",
+				TABTITLE1 = "Animation List",				
 			},
 
-			ORIENTATION = "HORIZONTAL",			
-		}
+			MINSIZE = "300x0",
+		},		
 	},
 	title = "Model Editor",	
 }

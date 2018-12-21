@@ -22,13 +22,14 @@ local function create_ani_ctrl()
 				iup.label {
 					TITLE = "ani",
 					NAME = "TAG",
-					EXPAND = "ON",
+					ALIGNMENT="ALEFT",					
 				},
 				inputer.new({NAME="INPUTER"}).view,
 				probeclass.new({NAME="PROBE"}).view,
 				iup.button {
 					TITLE = "X",
 					NAME = "DEL",
+					ALIGNMENT="ARIGHT",
 					action = function (self)
 						local parent = iup.GetParent(self)
 						assert(iup.GetClassName(parent) == "hbox")												
@@ -40,7 +41,8 @@ local function create_ani_ctrl()
 							iup.Refresh(grandparent)
 						end
 					end,
-				}
+				},
+				EXPAND = "YES",
 			}
 		end, ani_ctrl)
 end
@@ -82,6 +84,7 @@ function animationview.new(config)
 	return ctrlutil.create_ctrl_wrapper(function ()
 		return iup.vbox {
 			NAME = config and config.NAME or nil,
+			EXPAND = "YES",
 			iup.button {
 				TITLE = "+",
 				EXPAND = "HORIZONTAL",
@@ -90,7 +93,7 @@ function animationview.new(config)
 					add_child(vbox.owner)
 				end
 			},				
-		
+			
 		}
 	end, animationview)
 end

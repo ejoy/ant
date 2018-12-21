@@ -32,8 +32,7 @@ function inputer.new(config)
 			iup.text {
 				NAME="TEXT",
 				ALIGNMENT="ALEFT",
-				EXPAND ="ON",
-				SIZE="120x0",
+				EXPAND ="YES",				
 				kill_focus_cb = function(self)
 					if self.observers then
 						self.observers:notify(self.VALUE)
