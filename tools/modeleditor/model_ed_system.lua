@@ -80,7 +80,7 @@ local function enable_sample_visible()
 	if sample_eid then
 		local sample = world[sample_eid]
 		if sample then
-			local sample_shower = dlg_item("SHOWSAMPLE")			
+			local sample_shower = dlg_item("SHOWSAMPLE")
 			sample.can_render = sample_shower.VALUE ~= "OFF"
 		end
 	end

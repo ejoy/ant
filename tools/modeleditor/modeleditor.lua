@@ -114,22 +114,28 @@ local dlg = iup.dialog {
 					animation_expander,
 					iup.space { SIZE="0x5", },
 					
-					iup.toggle {
-						NAME="SHOWBONES",
-						TITLE="Show Bones",
-						VALUE="OFF",
-					},
-					iup.space { SIZE="0x5", },
-					iup.toggle {
-						NAME="SHOWSAMPLE",
-						TITLE="Show Sample Object",
-						VALUE="ON",
-					},
-					iup.space { SIZE="0x5", },
-					iup.toggle {
-						NAME="SHOWSAMPLEBOUNDING",
-						TITLE="Show Sample BoundingBox",
-						VALUE="OFF",
+					iup.expander {
+						TITLE="Options",
+						NAME = "OPTIONS",
+						iup.vbox {
+							iup.toggle {
+								NAME="SHOWBONES",
+								TITLE="Show Bones",
+								VALUE="OFF",
+							},
+							iup.space { SIZE="0x5", },
+							iup.toggle {
+								NAME="SHOWSAMPLE",
+								TITLE="Show Sample Object",
+								VALUE="ON",
+							},
+							iup.space { SIZE="0x5", },
+							iup.toggle {
+								NAME="SHOWSAMPLEBOUNDING",
+								TITLE="Show Sample BoundingBox",
+								VALUE="OFF",
+							},
+						}
 					},
 				},				
 			},
