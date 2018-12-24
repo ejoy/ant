@@ -28,10 +28,8 @@ function util.load_animation(comp, skeleton, respath, param)
 	do
 		local skehandle = assert(skeleton.assetinfo.handle)
 		local numjoints = #skehandle
-		comp.sampling_cache = util.new_sampling_cache(#skehandle)
-
-		local anihandle = comp.assetinfo.handle
-		anihandle:resize(numjoints)
+		comp.sampling_cache = util.new_sampling_cache(numjoints)
+		comp.aniresult = util.new_ani_result(numjoints)
 	end
 end
 
@@ -46,6 +44,11 @@ end
 function util.new_sampling_cache(num_joints)
 	local animodule = require "hierarchy.animation"		
 	return animodule.new_sampling_cache(num_joints)
+end
+
+function util.new_ani_result(num_joints)
+	local animodule = require "hierarchy.animation"
+	return animodule.new_ani_result(num_joints);
 end
 
 function util.load_texture(name, stage, texpath)	
