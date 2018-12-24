@@ -7,7 +7,9 @@ require "iuplua"
 
 local editor = require "editor"
 local elog = require "editor.log"
-local probeclass = require "editor.controls.assetprobebutton"
+local probeclass = require "editor.controls.assetprobe"
+local fileinputer = require "tools.modeleditor.fileselectinputer"
+local aniviewclass = require "tools.modeleditor.animationview"
 
 local fbw, fbh = 800, 600
 
@@ -53,53 +55,51 @@ local animation_time = iup.vbox {
 			NAME="AUTO_PLAY",
 			TITLE="Play",
 		},
-		EXPAND="ON",
+		EXPAND="YES",
 	},
 	iup.fill {},
-	ALIGNMENT = "ACENTER",
+	ALIGNMENT = "ACENTER",  
 }
 
-local function create_pathctrl(title, inputer_name, btn_name)
-	local btn = iup.button {
-		NAME=btn_name,
-		TITLE="...",
-		ALIGNMENT="ARIGHT",
-	}
-
-	local path_inputer = iup.text {
-		NAME=inputer_name,
-		ALIGNMENT="ALEFT",
-		EXPAND ="ON",
-		SIZE="120x0",
-	}
+local function create_pathctrl(title, name, assetview)
+	local inputer = fileinputer.new({NAME=name})
 
 	local probe = probeclass.new()
-	probe:add_probe("asset", function (respath)
-		path_inputer.VALUE = respath or ""
-	end)
+	probe:injust_assetview(assetview)	
 
 	return iup.frame {
 		TITLE=title,
 		iup.hbox {
-			path_inputer,
-			probe.view,
-			btn,
-			iup.fill {}
+			inputer.view,
+			probe.view,					
 		},
 	}
 end
 
-local ske_pathctrl = create_pathctrl("Skeleton", "SKE_PATH", "SKE_FINDER")
-local ani_pathctrl = create_pathctrl("Animation", "ANI_PATH", "ANI_FINDER")
-local mesh_pathctrl = create_pathctrl("Mesh", "SM_PATH", "SM_FINDER")
-
-local listctrl = require "editor.controls.listctrl"
 local assetviewclass = require "editor.controls.assetview"
 local assetview = assetviewclass.new()
+
+local ske_pathctrl = create_pathctrl("Skeleton", "SKEINPUTER", assetview)
+local mesh_pathctrl = create_pathctrl("Mesh", "SMINPUTER", assetview)
+
+local blendviewclass = require "tools.modeleditor.blendview"
+
+local animation_expander = iup.expander {
+	TITLE = "Animation",
+	NAME = "ANIMATION",
+	iup.tabs {
+		TABTITLE0 = "Ani list",
+		TABTITLE1 = "Blend",
+		aniviewclass.new({NAME="ANIVIEW"}).view,
+		blendviewclass.new({NAME="BLENDVIEW"}).view,
+	}
+}
+
+local listctrl = require "editor.controls.listctrl"
 local anilist = listctrl.new {NAME="ANI_LIST"}
 
 local dlg = iup.dialog {
-	iup.split {		
+	iup.split {		 
 		iup.split {
 			ORIENTATION = "HORIZONTAL",
 			canvas,
@@ -107,54 +107,54 @@ local dlg = iup.dialog {
 				ORIENTATION = "HORIZONTAL",
 				animation_time,
 				elog.window,
-			}			
+			},			
 		},
 		-- attribute control
 		iup.vbox {
 			iup.tabs {
-				TABTITLE0="Resource Files",
-				iup.hbox {
-					iup.vbox {
-						ske_pathctrl,
-						iup.space {	SIZE="0x5",	},
-						ani_pathctrl,
-						iup.space { SIZE="0x5", },
-						mesh_pathctrl,
-						iup.space { SIZE="0x5", },
-						iup.toggle {
-							NAME="SHOWBONES",
-							TITLE="Show Bones",
-							VALUE="OFF",
-						},
-						iup.space { SIZE="0x5", },
-						iup.toggle {
-							NAME="SHOWSAMPLE",
-							TITLE="Show Sample Object",
-							VALUE="ON",
-						},
-						iup.space { SIZE="0x5", },
-						iup.toggle {
-							NAME="SHOWSAMPLEBOUNDING",
-							TITLE="Show Sample BoundingBox",
-							VALUE="OFF",
-						},
-						iup.fill {},
+				TABTITLE0="Sample Model Resources",				
+				iup.vbox {
+					mesh_pathctrl,
+					iup.space { SIZE="0x5", },
+					ske_pathctrl,
+					iup.space {	SIZE="0x5",	},
+					animation_expander,
+					iup.space { SIZE="0x5", },
+					
+					iup.expander {
+						TITLE="Options",
+						NAME = "OPTIONS",
+						iup.vbox {
+							iup.toggle {
+								NAME="SHOWBONES",
+								TITLE="Show Bones",
+								VALUE="OFF",
+							},
+							iup.space { SIZE="0x5", },
+							iup.toggle {
+								NAME="SHOWSAMPLE",
+								TITLE="Show Sample Object",
+								VALUE="ON",
+							},
+							iup.space { SIZE="0x5", },
+							iup.toggle {
+								NAME="SHOWSAMPLEBOUNDING",
+								TITLE="Show Sample BoundingBox",
+								VALUE="OFF",
+							},
+						}
 					},
-					iup.fill{},
-					EXPAND="ON",
-				},
-				EXPAND="ON",
+				},				
 			},
 			iup.tabs {
 				assetview.view,
-				anilist.list,
+				anilist.view,
 				TABTITLE0 = "Resources",
-				TABTITLE1 = "Animation List",
-				EXPAND="ON",
+				TABTITLE1 = "Animation List",				
 			},
 
-			ORIENTATION = "HORIZONTAL",			
-		}
+			MINSIZE = "300x0",
+		},		
 	},
 	title = "Model Editor",	
 }

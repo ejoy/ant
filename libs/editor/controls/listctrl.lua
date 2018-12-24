@@ -2,12 +2,14 @@
 
 local lc = {}; lc.__index = lc
 
+local ctrlutil = require "editor.controls.util"
+
 function lc:count()
-	return tonumber(self.list.COUNT)
+	return tonumber(self.view.COUNT)
 end
 
 function lc:append_item(name, ud)
-	local l = self.list
+	local l = self.view
 	l.APPENDITEM = name	
 	self:set_ud(self:count(), ud)
 end
@@ -35,32 +37,32 @@ function lc:insert_item(pos, name, ud)
 end
 
 function lc:remove(item)
-	self.list.REMOVEITEM = item
+	self.view.REMOVEITEM = item
 	table.remove(self.ud, item)
 end
 
 function lc:clear()
 	self.ud = {}
-	self.list.REMOVEITEM = "ALL"
+	self.view.REMOVEITEM = "ALL"
 end
 
-local function create(config)
-	config = config or {}
-	local defaultcfg = {
-		--RASTERSIZE = "300x300",
-		EXPAND = "YES",
-		SCROLLBAR = "YES",
-	}
-	for k, v in pairs(defaultcfg) do
-		config[k] = v
-	end
-
-	return {list=iup.list(config), ud={}}
-end
 
 function lc.new(config)
-	local l = setmetatable(create(config), lc)
-	l.list.owner = l
-	return l
+	local owner = ctrlutil.create_ctrl_wrapper(function ()
+		config = config or {}
+		local defaultcfg = {
+			--RASTERSIZE = "300x300",
+			EXPAND = "YES",
+			SCROLLBAR = "YES",
+		}
+		for k, v in pairs(defaultcfg) do
+			config[k] = v
+		end
+	
+		return iup.list(config)
+	end, lc)
+
+	owner.ud = {}
+	return owner
 end
 return lc

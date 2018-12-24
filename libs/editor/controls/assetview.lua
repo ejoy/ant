@@ -1,6 +1,7 @@
 --luachecks: globals iup
 local assetview = {}; assetview.__index = assetview
 local listctrl = require "editor.controls.listctrl"
+local ctrlutil =require "editor.controls.util"
 
 local path = require "filesystem.path"
 local fu = require "filesystem.util"
@@ -62,7 +63,7 @@ function assetview:init(defaultrestype)
 
 	defaultrestype = defaultrestype or "project"
 	assert(defaultrestype == "project" or defaultrestype == "engine")
-	restype.list.VALUESTRING = defaultrestype
+	restype.view.VALUESTRING = defaultrestype
 
 	local function rootdirs()
 		local projectdir = lfs.currentdir():lower()
@@ -111,7 +112,7 @@ function assetview:init(defaultrestype)
 		end
 	end
 
-	function restype.list:valuechanged_cb()
+	function restype.view:valuechanged_cb()
 		local rt = self.VALUESTRING
 		local rootdir = get_rootdir_from_restype(rt)
 		update_res_list(reslist, rootdir, rt)		
@@ -122,7 +123,7 @@ function assetview:init(defaultrestype)
 	update_res_list(reslist, rootdir, defaultrestype)
 	addrview:update(get_vfs_root_path(defaultrestype))
 
-	function reslist.list:dblclick_cb(item, text)
+	function reslist.view:dblclick_cb(item, text)
 		local ud = reslist:get_ud(item)
 		local rt = ud.restype
 		local filepath = ud.path
@@ -133,7 +134,7 @@ function assetview:init(defaultrestype)
 	end
 
 	addrview:add_click_address_cb("update_reslist", function (url)
-		local rt = restype.list.VALUESTRING
+		local rt = restype.view.VALUESTRING
 		local rootdir = get_vfs_path(rt, url)
 		update_res_list(reslist, rootdir, rt)
 	end)
@@ -141,12 +142,12 @@ end
 
 function assetview:which_res_content()
 	local restype = self:restype_ctrl()
-	return restype.list.VALUESTRING
+	return restype.view.VALUESTRING
 end
 
 function assetview:get_select_res()
 	local reslist = self:reslist_ctrl()
-	local item = tonumber(reslist.list.VALUE)
+	local item = tonumber(reslist.view.VALUE)
 	if item == 0 then
 		return nil
 	end
@@ -155,28 +156,22 @@ function assetview:get_select_res()
 	return get_vfs_path(ud.restype, ud.path, true)
 end
 
-local function create(config)
-	local reslist = listctrl.new {NAME="RES_LIST", SCROLLBAR="YES", EXPAND="ON"}
-	local restype = listctrl.new {NAME="RES_TYPE", DROPDOWN="YES"}
-	restype.list.EXPAND = "HORIZONTAL"
-
-	local addr = addrctrl.new()
-
-	local assetview = iup.vbox {
-		restype.list,
-		addr.view,
-		reslist.list,
-		NAME="ASSETVIEW",
-		EXPANED="ON",
-		MINSIZE="120x0"
-	}
-	return {view=assetview}
-end
-
 function assetview.new(config)
-	local av = create(config)
-	av.view.owner = av
-	return setmetatable(av, assetview)
+	return ctrlutil.create_ctrl_wrapper(function ()
+		local reslist = listctrl.new {NAME="RES_LIST", SCROLLBAR="YES", EXPAND="YES"}
+		local restype = listctrl.new {NAME="RES_TYPE", DROPDOWN="YES"}
+		restype.view.EXPAND = "HORIZONTAL"
+	
+		local addr = addrctrl.new()	
+		return iup.vbox {
+			restype.view,
+			addr.view,
+			reslist.view,
+			NAME="ASSETVIEW",
+			EXPANED="ON",
+			MINSIZE="120x0"
+		}		
+	end, assetview)	
 end
 
 return assetview
