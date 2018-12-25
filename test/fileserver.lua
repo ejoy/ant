@@ -17,6 +17,7 @@ local network = require "network"
 local protocol = require "protocol"
 local util = require "filesystem.util"
 local fspath = require "filesystem.path"
+local log = dofile 'test/log.lua'
 
 local home = util.personaldir()
 local repopath = home .. "/" .. reponame
@@ -51,6 +52,7 @@ function message:ROOT()
 	repo:build()
 	local roothash = repo:root()
 	response(self, "ROOT", roothash)
+	log.file = ('./log/runtime-%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S'))
 end
 
 function message:GET(hash)
@@ -107,6 +109,10 @@ function message:DBG(data)
 			break
 		end
 	end
+end
+
+function message:LOG(data)
+	log.info(data)
 end
 
 local output = {}
