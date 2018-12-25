@@ -10,6 +10,12 @@ local modes = {
 }
 local levels = {}
 
+local origin = os.time() - os.clock()
+local function os_date(fmt)
+    local ti, tf = math.modf(origin + os.clock())
+    return os.date(fmt, ti):gsub('{ms}', math.floor(tf*1000))
+end
+
 local function round(x, increment)
     increment = increment or 1
     x = x / increment
@@ -30,6 +36,7 @@ end
 
 local m = {}
 m.level = 'trace'
+m.skip = nil
 
 for i, name in ipairs(modes) do
     levels[name] = i
@@ -37,16 +44,23 @@ for i, name in ipairs(modes) do
         if i < levels[m.level] then
             return
         end
-        local info = debug.getinfo(2, 'Sl')
+        local info = debug.getinfo(m.skip or 2, 'Sl')
+        m.skip = nil
         if info.short_src:sub(-12) == 'debugger.lua' then
             info = debug.getinfo(3, 'Sl')
+        end
+        if info.short_src:sub(1, 18) == 'vfs://engine/libs/' then
+            info.short_src = info.short_src:sub(19)
         end
         if info.short_src:sub(1, 6) == 'vfs://' then
             info.short_src = info.short_src:sub(7)
         end
-        IO("SEND", "LOG",  name, info.short_src, tostring(info.currentline), packstring(...))
+	    local data = ('[%s][%-5s](%s:%3d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), name:upper(), info.short_src, info.currentline, packstring(...))
+        IO("SEND", "LOG", data)
     end
 end
 
 print = m.info
 log = m
+
+return m

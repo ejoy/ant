@@ -50,10 +50,10 @@ function rtlog.init()
 	os.rename('./log/runtime.log', ('./log/runtime-%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
 end
 
-function rtlog.write(level, source, line, message)
-	local msg = ('[%s][%s:%3d][%-5s] %s\n'):format(os.date('%Y-%m-%d %H:%M:%S'), source, line, level:upper(), message)
+function rtlog.write(data)
 	local fp = assert(io.open('./log/runtime.log', 'a'))
-	fp:write(msg)
+	fp:write(data)
+	fp:write('\n')
 	fp:close()
 end
 
@@ -124,8 +124,8 @@ function message:DBG(data)
 	end
 end
 
-function message:LOG(level, source, line, message)
-	rtlog.write(level, source, line, message)
+function message:LOG(data)
+	rtlog.write(data)
 end
 
 local output = {}
