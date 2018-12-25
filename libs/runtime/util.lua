@@ -1,16 +1,6 @@
 local thread = require "thread"
 require 'runtime.vfs'
-
-local IO = thread.channel_produce "IOreq"
-local function LOG(...)
-	local message = table.pack(...)
-	for i = 1, message.n do
-		message[i] = tostring(message[i])
-	end
-	message = table.concat(message, '\t')
-	IO("SEND", "LOG", message)
-end
-print = LOG
+require 'runtime.log'
 
 local function createThread(name, code)
 	local vfs = require 'vfs'
@@ -32,17 +22,7 @@ local function createThread(name, code)
 	package.path = [[%s]]
     require 'runtime.vfs'
 	require 'runtime.vfsio'
-
-	local IO = thread.channel_produce "IOreq"
-	local function LOG(...)
-		local message = table.pack(...)
-		for i = 1, message.n do
-			message[i] = tostring(message[i])
-		end
-		message = table.concat(message, '\t')
-		IO("SEND", "LOG", message)
-	end
-	print = LOG
+	require 'runtime.log'
 %s]=]):format(name, init_thread, package.path, code)
 		, package.searchers[3]
 	)

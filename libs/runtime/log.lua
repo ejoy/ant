@@ -1,8 +1,5 @@
-local log = { }
-
-log.file = nil
-log.level = 'trace'
-
+local thread = require "thread"
+local IO = thread.channel_produce "IOreq"
 local modes = {
     'trace',
     'debug',
@@ -11,7 +8,6 @@ local modes = {
     'error',
     'fatal',
 }
-
 local levels = {}
 
 local function round(x, increment)
@@ -32,22 +28,25 @@ local function packstring(...)
     return table.concat(t, ' ')
 end
 
+local m = {}
+m.level = 'trace'
+
 for i, name in ipairs(modes) do
     levels[name] = i
-    log[name] = function(...)
-        if i < levels[log.level] then
-            return
-        end
-        if not log.file then
+    m[name] = function(...)
+        if i < levels[m.level] then
             return
         end
         local info = debug.getinfo(2, 'Sl')
-        local msg = packstring(...)
-        local msg = ('[%s][%s:%3d][%-6s] %s\n'):format(os.date('%Y-%m-%d %H:%M:%S'), info.short_src, info.currentline, name:upper(), msg)
-        local fp = assert(io.open(log.file, 'a'))
-        fp:write(msg)
-        fp:close()
+        if info.short_src:sub(-12) == 'debugger.lua' then
+            info = debug.getinfo(3, 'Sl')
+        end
+        if info.short_src:sub(1, 6) == 'vfs://' then
+            info.short_src = info.short_src:sub(7)
+        end
+        IO("SEND", "LOG",  name, info.short_src, tostring(info.currentline), packstring(...))
     end
 end
 
-return log
+print = m.info
+log = m

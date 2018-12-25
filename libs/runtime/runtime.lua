@@ -88,7 +88,7 @@ function callback.keyboard(key, press, state)
 	iq:push("keyboard", keyname, press, status)
 end
 
-function callback.exit()	
+function callback.exit()
     dprint("exit")
 end
 

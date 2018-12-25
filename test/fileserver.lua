@@ -17,7 +17,6 @@ local network = require "network"
 local protocol = require "protocol"
 local util = require "filesystem.util"
 local fspath = require "filesystem.path"
-local log = dofile 'test/log.lua'
 
 local home = util.personaldir()
 local repopath = home .. "/" .. reponame
@@ -45,6 +44,20 @@ local function response(obj, ...)
 	network.send(obj, protocol.packmessage({...}))
 end
 
+local rtlog = {}
+
+function rtlog.init()
+	os.rename('./log/runtime.log', ('./log/runtime-%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
+end
+
+function rtlog.write(level, source, line, message)
+	local msg = ('[%s][%s:%3d][%-5s] %s\n'):format(os.date('%Y-%m-%d %H:%M:%S'), source, line, level:upper(), message)
+	local fp = assert(io.open('./log/runtime.log', 'a'))
+	fp:write(msg)
+	fp:close()
+end
+
+
 local debug = {}
 local message = {}
 
@@ -52,7 +65,7 @@ function message:ROOT()
 	repo:build()
 	local roothash = repo:root()
 	response(self, "ROOT", roothash)
-	log.file = ('./log/runtime-%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S'))
+	rtlog.init()
 end
 
 function message:GET(hash)
@@ -111,8 +124,8 @@ function message:DBG(data)
 	end
 end
 
-function message:LOG(data)
-	log.info(data)
+function message:LOG(level, source, line, message)
+	rtlog.write(level, source, line, message)
 end
 
 local output = {}
