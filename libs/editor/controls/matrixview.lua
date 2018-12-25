@@ -1,4 +1,5 @@
-local eu = require "editor.util"
+local ctrlutil = require "editor.controls.util"
+local observer = require "editor.common.observer"
 
 local matrixview = {}; matrixview.__index = matrixview
 
@@ -9,7 +10,7 @@ function matrixview:resize(cnum, lnum)
 end
 
 function matrixview:getuserdata(col, lin)
-	local ud = assert(self.userdata)
+	local ud = assert(self.ud)
 	local c = ud[col]
 	if c then
 		return c[lin]
@@ -18,7 +19,7 @@ function matrixview:getuserdata(col, lin)
 end
 
 function matrixview:setuserdata(col, lin, data)
-	local ud = assert(self.userdata)
+	local ud = assert(self.ud)
 	local c = ud[col]
 	if c == nil then
 		c = {}
@@ -47,7 +48,7 @@ function matrixview:fit_col_content_size(col, gap)
 		--local w, h = iup.DrawGetTextSize(c)
 		if c then
 			local w = iup.DrawGetTextSize(view, c)
-			table.insert(sizew, w)		
+			table.insert(sizew, w)
 		end
 	end
 
@@ -97,7 +98,7 @@ function matrixview:setcell(lin, col, v)
 	self.view:setcell(lin, col, v)
 end
 
-local function create_view(config, inst)
+local function create_view(config)
 	local param = {
 		COLNUM = 0, LINNUM = 0
 	}
@@ -107,20 +108,16 @@ local function create_view(config, inst)
 		end
 	end
 
-	local view = iup.matrix(param)
-	
-	eu.add_callbacks(view, inst, {
-		"click_cb", "map_cb", "value_edit_cb", "valuechanged_cb"
-	})
-	return view
+	return iup.matrix(param)	
 end
 
 function matrixview.new(config)
-	local inst = {
-		userdata = {}
-	}
-	inst.view = create_view(config, inst)
-	return setmetatable(inst, matrixview)
+	local c = ctrlutil.create_ctrl_wrapper(function ()
+		return create_view(config)
+	end, matrixview)
+	
+	c.observers = observer.new()
+	return c
 end
 
 return matrixview

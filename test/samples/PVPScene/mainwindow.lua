@@ -1,11 +1,15 @@
---luacheck: globals iup
+--luacheck: globals iup import
+
+local require = import and import(...) or require
 require "iuplua"
+
 local inputmgr = require "inputmgr"
 local mapiup = require "editor.input.mapiup"
 local elog = require "editor.log"
 local hierarchyview = require "editor.controls.hierarchyview"
 local propertycontrol = require "editor.controls.propertyview"
 local assetviewclass = require "editor.controls.assetview"
+
 local eu = require "editor.util"
 local rhwi = require "render.hardware_interface"
 local bgfx = require "bgfx"
@@ -37,14 +41,15 @@ function editor_mainwindow:build_window(fbw, fbh)
     self.canvas = iup.canvas {
         rastersize = fbw .. "x" .. fbh
     }
+	
+	local mainmenu = require "test.samples.PVPScene.mainmenu"
     
-    local mainmenu = require "editor.controls.mainmenu"
     self.dlg = iup.dialog {
         iup.split {
             iup.split {
                 iup.split {
                     iup.frame {
-                        self.hierarchyview.window.view,
+                        self.hierarchyview.view,
                         title = "hierarchy",
                     },
                     self.canvas,
@@ -60,7 +65,7 @@ function editor_mainwindow:build_window(fbw, fbh)
                     size = "HALFxHALF",
                 },
                 iup.frame {
-                    self.propertyview.window,
+                    self.propertyview.view,
                     title = "property",
                     size = "HALFxHALF",
                 },
