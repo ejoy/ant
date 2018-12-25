@@ -87,6 +87,10 @@ function animationview:get_blender()
 	return self.blender
 end
 
+function animationview:get_sel_ani()
+	
+end
+
 local function add_child(aniview)
 	local view = aniview.view
 	local numchild = iup.GetChildCount(view)

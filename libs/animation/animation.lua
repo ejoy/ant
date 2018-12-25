@@ -49,9 +49,13 @@ function anisystem:update()
 		local ske = assert(skecomp.assetinfo).handle
 
 		local anicomp = assert(e.animation)
-		local ani = assert(anicomp.assetinfo).handle
+		local anilist = assert(anicomp.anilist)
 
-		ani_module.motion(ske, ani, anicomp.sampling_cache, anicomp.ratio, anicomp.aniresult)
+		local l = {}
+		for _, a in ipairs(anilist) do
+			table.insert(l, {weight=a.weight, ani=a.handle, sampling=a.sampling_cache})
+		end
+		ani_module.motion(ske, l, anicomp.ratio, anicomp.aniresult)
 	end
 end
 

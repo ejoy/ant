@@ -152,7 +152,9 @@ function util.create_sample_entity(world, skepath, anipath, skinning_meshpath)
 
 	if anipath and anipath ~= "" then
 		world:add_component(eid, "animation")
-		computil.load_animation(e.animation, e.skeleton, anipath)
+		local anicomp = e.animation
+		computil.init_animation(anicomp, e.skeleton)
+		computil.add_animation(anicomp, anipath, 1.0)
 	end
 
 	local skinning_mesh
