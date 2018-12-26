@@ -1,4 +1,8 @@
-local plist = require "mobiledevice.plist"
+local log = log and log(...) or print
+local require = import and import(...) or require
+
+local network = require "network"
+local plist = require "plist"
 
 local USBMUXD_SOCKET_PORT = 27015
 local USBMUXD_SOCKET_FILE = "/var/run/usbmuxd"	-- for unix socket
@@ -46,6 +50,12 @@ local usbmuxd_msgtype = {
 }
 
 local usbmuxd = {}
+local use_tag = 0
+
+local function connect_usbmuxd_socket()
+	-- todo: use unix socket
+	return assert(network.connect("127.0.0.1", USBMUXD_SOCKET_PORT))
+end
 
 local function create_plist_message(message_type)
 	local object = plist.dict {
@@ -58,12 +68,13 @@ local function create_plist_message(message_type)
 	return object
 end
 
-local function plist_package(plist_object, tag)
+local function send_plist_package(fd, plist_object, tag)
 	local payload = plist.toxml(plist_object)
 	local length = 16 + #payload
 	-- usbmuxd_header
 	local header = string.pack("<LLLL", length, proto_version, usbmuxd_msgtype.PLIST, tag)
-	return header, payload
+	network.send(fd, header)
+	network.send(fd, payload)
 end
 
 local function recv_package(fd)
@@ -98,32 +109,59 @@ local function recv_package(fd)
 	end
 end
 
-function usbmuxd.get_address()
-	-- todo: use unix socket
-	return "127.0.0.1", USBMUXD_SOCKET_PORT
+local function print_package(payload)
+	local length, version, message, tag, unread = string.unpack("<LLLL", payload)
+	print("Length=", length, "Version=", version, "Message=", message, "Tag=", tag)
+	if message == usbmuxd_msgtype.PLIST then
+		local msg = plist.fromxml(payload:sub(unread))
+		print_r(msg)
+	end
 end
 
-function usbmuxd.create_listen_package()
+local function listen()
+	local fd = connect_usbmuxd_socket()
+	use_tag = use_tag + 1
+
 	local msg = create_plist_message "Listen"
-	return plist_package(msg, 1)
+	send_plist_package(fd, msg, use_tag)
+
+	return fd
 end
 
-function usbmuxd.create_connect_package(device_id, port)
+--local function list_devices(fd)
+--	use_tag = use_tag + 1
+--	local msg = create_plist_message "ListDevices"
+--	send_plist_package(fd, msg, use_tag)
+--end
+
+local function connect_socket(fd, device_id, port)
 	local msg = create_plist_message "Connect"
 	msg.DeviceID = device_id
-	msg.PortNumber = ('>H'):unpack(('=H'):pack(port))
-	return plist_package(msg, 1)
+	msg.PortNumber = port
+	send_plist_package(fd, msg, 0)
 end
 
-function usbmuxd.recv(fd)
-	local payload = recv_package(fd)
-	if not payload then
-		return
+function usbmuxd.mainloop()
+	local monitor = listen()
+--	list_devices(monitor)
+	local objs = {}
+	while true do
+		if network.dispatch(objs) then
+			for k,obj in ipairs(objs) do
+				objs[k] = nil
+				if obj == monitor then
+					while true do
+						local payload = recv_package(monitor)
+						if payload then
+							print_package(payload)
+						else
+							break
+						end
+					end
+				end
+			end
+		end
 	end
-	local _, version, message, tag, unread = string.unpack("<LLLL", payload)
-	assert(version == proto_version)
-	assert(message == usbmuxd_msgtype.PLIST)
-	return plist.fromxml(payload:sub(unread)), tag
 end
 
 return usbmuxd
