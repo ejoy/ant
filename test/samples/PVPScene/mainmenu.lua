@@ -1,10 +1,15 @@
-local editor_mainwindow = require 'editor.controls.window'
+--luacheck: globals iup import
+local require = import and import(...) or require
+
 local fs = require "cppfs"
 local asset = require "asset"
 local vfsutil = require "vfs.util"
 local localfs = require "filesystem.file"
 
 local configDir = (os.getenv 'UserProfile') .. '\\.ant\\config\\'
+
+--project related
+local editor_mainwindow = require 'test.samples.PVPScene.mainwindow'
 
 local iupex = {}
 
@@ -155,7 +160,7 @@ function openMap(path)
         "editor.ecs.pickup_system",
         "editor.ecs.general_editor_entities",
         "editor.ecs.build_hierarchy_system",
-        "editor.ecs.editor_system",
+        "test.samples.PVPScene.editor_system",
     }
     table.move(editormodules, 1, #editormodules, #modules+1, modules)
     editor_mainwindow:new_world(modules)

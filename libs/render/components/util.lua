@@ -23,16 +23,43 @@ function util.load_skeleton(comp, respath, param)
 	load_res(comp, respath, param, "load.skeleton")	
 end
 
-function util.load_animation(comp, skeleton, respath, param)
-	load_res(comp, respath, param, "load.animation")
-	do
-		local skehandle = assert(skeleton.assetinfo.handle)
-		local numjoints = #skehandle
-		comp.sampling_cache = util.new_sampling_cache(#skehandle)
+function util.add_animation(comp, respath, weight, weighttype)
+	weighttype = weighttype or "full"	-- can be 'full' or 'partial'
 
-		local anihandle = comp.assetinfo.handle
-		anihandle:resize(numjoints)
+	local aniresult = assert(comp.aniresult)
+	local numjoints = aniresult:count()
+	table.insert(assert(comp.anilist), {
+		weight=weight, 
+		handle=asset.load(respath).handle, 
+		ref_path=respath,
+		type=weighttype,
+		sampling_cache = util.new_sampling_cache(numjoints),
+	})
+end
+
+function util.remove_animation(comp, aniidx)
+	local anilist = assert(comp.anilist)
+	if aniidx > #anilist then
+		error(string.format("ani index out of range:%d-%d", aniidx, #anilist))
 	end
+
+	table.remove(anilist, aniidx)
+end
+
+function util.init_animation(comp, skeleton)
+	local skehandle = assert(skeleton.assetinfo.handle)
+	local numjoints = #skehandle	
+	comp.aniresult = util.new_ani_result(numjoints)
+	comp.anilist = {}
+end
+
+function util.set_animation_weight(comp, aniidx, weight)
+	local anilist = assert(comp.anilist)
+	if aniidx > #anilist then
+		error(string.format("ani index out of range:%d-%d", aniidx, #anilist))
+	end
+
+	anilist[aniidx].weight = weight
 end
 
 function util.load_skinning_mesh(comp, respath, param)
@@ -46,6 +73,11 @@ end
 function util.new_sampling_cache(num_joints)
 	local animodule = require "hierarchy.animation"		
 	return animodule.new_sampling_cache(num_joints)
+end
+
+function util.new_ani_result(num_joints)
+	local animodule = require "hierarchy.animation"
+	return animodule.new_ani_result(num_joints);
 end
 
 function util.load_texture(name, stage, texpath)	

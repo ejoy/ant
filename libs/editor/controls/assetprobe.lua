@@ -2,23 +2,12 @@
 
 local probe = {}; probe.__index = probe
 
-function probe:notify(respath)
-	local observers = self.observers
-	if observers then
-		for _, ob in ipairs(observers) do
-			ob.cb(respath)
-		end
-	end	
-end
+
+local ctrlutil = require "editor.controls.util"
+local observer = require "editor.common.observer"
 
 function probe:add_probe(name, cb)
-	local observers = self.observers
-	if observers == nil then
-		observers = {}
-		self.observers = observers
-	end
-
-	table.insert(observers, {name=name, cb=cb})
+	self.observers:add("fetch_asset", name, cb)	
 end
 
 function probe:injust_assetview(assview)
@@ -30,23 +19,24 @@ function probe:remove_assetview()
 end
 
 function probe.new(config)
-	local function create(config)
-		local view = iup.button {
-			TITLE="!"
+	local c = ctrlutil.create_ctrl_wrapper(function ()	
+		local name = config and config.NAME or "PROBE"
+		return iup.button {
+			NAME = name,
+			TITLE="!",
+			action = function (self)
+				local owner = assert(self.owner)
+				local av = owner.assetview
+				if av then
+					self.observers:notify("fetch_asset", av.get_select_res())
+				end
+			end,
 		}
+	
+	end, probe)
 
-		function view:action()			
-			local av = self.assetview
-			if av then
-				self:notify(av.get_select_res())
-			end
-		end
-		return {view=view}
-	end
-
-	local btn = create(config)
-	btn.view.owner = btn
-	return setmetatable(btn, probe)
+	c.observers = observer.new()
+	return c
 end
 
 return probe

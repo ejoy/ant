@@ -15,14 +15,13 @@ local function draw_skeleton(sample)
 	if ske then
 		local desc = {vb={}, ib = {}}
 		local worldtrans = nil
-		if sample.animation then
-			
+		if sample.animation then			
 			local bones = eru.generate_bones(ske.assetinfo.handle)
-			local ani = sample.animation.assetinfo.handle
-			local numjoints = #ske.assetinfo.handle
+			local aniresult = assert(sample.animation.aniresult)
+			local numjoints = aniresult:count()
 			local joints = {}
 			for i=1, numjoints do
-				table.insert(joints, ani:joint(i-1))
+				table.insert(joints, aniresult:joint(i-1))
 			end
 			geodrawer.draw_bones(bones, joints, 0xfff0f0f0, worldtrans, desc)
 		else

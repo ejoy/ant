@@ -1,5 +1,6 @@
 
-local eu = require "editor.util"
+local ctrlutil = require "editor.controls.util"
+
 local tree = {}	; tree.__index = tree
 
 local function new_item(name)
@@ -231,29 +232,23 @@ function tree:parent_node(id)
 	return self:findchild_byid(pid)
 end
 
-local function create_view(config, inst)
+local function create_view(config)
 	local param = {ADDROOT = "NO"}
 	if config then
 		for k, v in pairs(config) do
 			param[k] = v
 		end
 	end
-	local view = iup.tree(param)
-
-	eu.add_callbacks(view, inst, {
-		"selection_cb", "executeleaf_cb", 
-		"rightclick_cb", "button_cb"
-	})
-	return view
+	return iup.tree(param)	
 end
 
 function tree.new(config)
-	local t = {		
-		id = -1,
-	}
-	local view = create_view(config, t)
-	t.view = view
-	return setmetatable(t, tree)
+	local c = ctrlutil.create_ctrl_wrapper(function ()
+		return create_view(config)
+	end, tree)
+
+	c.id = -1	
+	return c
 end
 
 return tree

@@ -4,11 +4,13 @@ local world = ecs.world
 
 ecs.import "render.end_frame_system"
 
-local editor_mainwin = require "editor.controls.window"
+
 local menu = require "editor.controls.popupmenu"
 local eu = require "editor.util"
 local su = require "serialize.util"
 local ms = require "math.stack"
+
+local editor_mainwin = require "test.samples.PVPScene.mainwindow"
 
 local editor_sys = ecs.system "editor_system"
 editor_sys.depend "end_frame"
@@ -134,8 +136,12 @@ function editor_sys:init()
 		local properties = build_entity_tree(eid, ms)
 		pv:build(properties, extend_tree)
 
-		local origin_executeleaf_cb = pv.tree.executeleaf_cb		
-		function pv.tree:executeleaf_cb(id)
+		local dlg = iup.GetDialog(pv.view)
+		local treectrl = iup.GetDialogChild(dlg, "RESVIEW")
+		local detailctrl = iup.GetDialogChild(dlg, "RESDETAIL")
+		
+		local origin_executeleaf_cb = treectrl.executeleaf_cb
+		function treectrl:executeleaf_cb(id)
 			origin_executeleaf_cb(self, id)
 			
 			local extend_tree = extend_tree
@@ -161,7 +167,7 @@ function editor_sys:init()
 			end
 		end
 
-		function pv.tree:rightclick_cb(id)
+		function treectrl:rightclick_cb(id)
 			local addsubmenu = {name="Add", type="submenu",}
 		
 			local add_action =  function(menuitem)
@@ -179,8 +185,8 @@ function editor_sys:init()
 			end
 
 			local added_components = {}
-			for i=0, self.view.COUNT-1 do
-				local name = self.view["TITLE" .. i]
+			for i=0, self.COUNT-1 do
+				local name = self["TITLE" .. i]
 				added_components[name] = true
 			end
 
@@ -195,7 +201,7 @@ function editor_sys:init()
 					{name="Delete", type="item", action=function ()
 						local hvnode = get_hv_selnode()						
 						local eid = hvnode.eid
-						local cname = self.view["TITLE"..id]
+						local cname = self["TITLE"..id]
 						world:remove_component(eid, cname)
 						build_pv(eid, get_extendtree(eid))
 					end},
@@ -206,9 +212,9 @@ function editor_sys:init()
 			m:show(x, y)
 		end
 
-		function pv.detail:valuechanged_cb()
+		function detailctrl:valuechanged_cb()
 			local function which_component()
-				local tree = self.tree
+				local tree = treectrl.owner
 				local selnode = tree:get_selected_node()	
 				local pid = selnode.id
 				local compname
@@ -230,9 +236,10 @@ function editor_sys:init()
 			load_comp_op(entity[edited_comp], properties[edited_comp], args)
 		end
 	end
-	function hv.window:selection_cb(id, status)
+	function hv.view:selection_cb(id, status)
 		if status == 1 then
-			local node = self:findchild_byid(id)
+			local tree = self.owner
+			local node = tree:findchild_byid(id)
 			if node then
 				local eid = node.eid
 				build_pv(eid, get_extendtree(eid))
@@ -244,7 +251,7 @@ function editor_sys:init()
 	end
 
 	--luacheck: ignore self
-	function hv.window:rightclick_cb()
+	function hv.view:rightclick_cb()
 		local m = menu.new {
 			recipe = {
 				{name="create entity...", type="item", action=function () 

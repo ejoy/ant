@@ -84,11 +84,14 @@ else
   CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../lib
 endif
 
+
+WITH_OZZ_SAMPLES := OFF
 ifeq "$(PLAT)" "msvc"
   CMAKE_OPT_bullet3 += -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON
+  WITH_OZZ_SAMPLES := ON
 endif
 
-CMAKE_OPT_ozz-animation=-Dozz_build_samples=OFF -Dozz_build_fbx=OFF -Dozz_build_howtos=OFF
+CMAKE_OPT_ozz-animation=-Dozz_build_samples=$(WITH_OZZ_SAMPLES) -Dozz_build_fbx=OFF -Dozz_build_howtos=OFF
 
 ifeq "$(PLAT)" "ios"
 CMAKE_OPT_ozz-animation += -DEMSCRIPTEN=TURE

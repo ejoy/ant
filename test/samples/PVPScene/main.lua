@@ -1,7 +1,9 @@
+--luacheck: globals iup import
 dofile "libs/init.lua"
 
-local editor_mainwindow = require "editor.controls.window"
+local require = import and import(...) or require
 
-editor_mainwindow:run {
+local mainwin = require "test.samples.PVPScene.mainwindow"
+mainwin:run {
 	fbw=1024, fbh=768,
 }

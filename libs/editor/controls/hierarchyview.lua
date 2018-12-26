@@ -5,9 +5,7 @@ local treecontrol = require "editor.controls.tree"
 
 local cu = require "common.util"
 
-local hierarchyview = {}
-
-local tree = treecontrol.new {
+local hierarchyview = treecontrol.new {
 	HIDEBUTTONS ="YES",
 	HIDELINES   ="YES",	
 	IMAGELEAF	="IMGLEAF",
@@ -15,17 +13,14 @@ local tree = treecontrol.new {
 	IMAGEBRANCHEXPANDED = "IMGLEAF"
 }
 
-hierarchyview.window = tree
-
-function hierarchyview:build(htree, ud_table)	
-	local treeview = self.window
+function hierarchyview:build(htree, ud_table)		
 	local function constrouct_treeview(tr, parent)
 		for k, v in cu.ordered_pairs(tr) do			
 			local ktype = type(k)
 			if ktype == "string" or ktype == "number" then
 				local vtype = type(v)
 				local function add_child(parent, name)
-					local child = treeview:add_child(parent, name)
+					local child = self:add_child(parent, name)
 					local eid = assert(ud_table[name])
 					child.eid = eid					
 					return child
@@ -44,13 +39,13 @@ function hierarchyview:build(htree, ud_table)
 		end
 	end
 
-	treeview:clear()
+	self:clear()
 	constrouct_treeview(htree, nil)	
-	treeview:clear_selections()
+	self:clear_selections()
 end
 
 function hierarchyview:select_nodename()
-	return self.window["TITLE"]
+	return self.view["TITLE"]
 end
 
 return hierarchyview
