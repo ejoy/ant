@@ -15,7 +15,7 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 
-#if BGFX_API_VERSION != 90
+#if BGFX_API_VERSION != 91
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -2406,15 +2406,7 @@ lsetViewTransform(lua_State *L) {
 	if (projL == NULL) {
 		luaL_checktype(L, 3, LUA_TNIL);
 	}
-	if (lua_isboolean(L, 4)) {
-		int stero = lua_toboolean(L, 4);
-		void *projR = lua_touserdata(L, 5);
-		bgfx_set_view_transform_stereo(viewid, view, projL,
-			stero ? BGFX_VIEW_STEREO : BGFX_VIEW_NONE, 
-			projR);
-	} else {
-		bgfx_set_view_transform(viewid, view, projL);
-	}
+	bgfx_set_view_transform(viewid, view, projL);
 	return 0;
 }
 
@@ -3968,32 +3960,10 @@ lsetInstanceCount(lua_State *L) {
 	return 0;
 }
 
-static uint8_t
-dispatch_flags(lua_State *L, int index) {
-	const char * f = lua_tostring(L, index);
-	uint8_t flags = 0;
-	int i;
-	for (i=0;f[i];i++) {
-		switch(f[i]) {
-		case 'l':
-			flags |= BGFX_SUBMIT_EYE_LEFT;
-			break;
-		case 'r':
-			flags |= BGFX_SUBMIT_EYE_RIGHT;
-			break;
-		default:
-			luaL_error(L, "Invalid dispatch flags %s", f);
-			return 0;
-		}
-	}
-	return flags;
-}
-
-static uint8_t
+static void
 dispatch_opt(lua_State *L, int *num, int n, int index) {
 	int top = lua_gettop(L);
 	int i;
-	uint8_t flags = BGFX_SUBMIT_EYE_FIRST;
 	for (i=index;i<=top;i++) {
 		int t = lua_type(L, i);
 		int idx = i - index;
@@ -4001,23 +3971,13 @@ dispatch_opt(lua_State *L, int *num, int n, int index) {
 		case LUA_TNUMBER:
 			if (idx >= n) {
 				luaL_error(L, "Too many parm for dispatch");
-				return 0;
 			}
 			num[i-index] = lua_tointeger(L, i);
 			break;
-		case LUA_TSTRING:
-			if (i != top) {
-				luaL_error(L, "flags should be last");
-				return 0;
-			}
-			flags = dispatch_flags(L, i);
-			break;
 		default:
 			luaL_error(L, "Invalid param type %s at %d", lua_typename(L, i), i);
-			return 0;
 		}
 	}
-	return flags;
 }
 
 static int
@@ -4025,11 +3985,11 @@ ldispatch(lua_State *L) {
 	bgfx_view_id_t viewid = luaL_checkinteger(L, 1);
 	int pid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	int num[3] = {1,1,1};
-	uint8_t flags = dispatch_opt(L, num, 3, 3);
+	dispatch_opt(L, num, 3, 3);
 
 	bgfx_program_handle_t  handle = { pid };
 
-	bgfx_dispatch(viewid, handle, num[0], num[1], num[2], flags); 
+	bgfx_dispatch(viewid, handle, num[0], num[1], num[2]);
 
 	return 0;
 }
@@ -4040,11 +4000,11 @@ ldispatchIndirect(lua_State *L) {
 	int pid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	int iid = BGFX_LUAHANDLE_ID(INDIRECT_BUFFER, luaL_checkinteger(L, 3));
 	int num[2] = { 0, 1 };
-	uint8_t flags = dispatch_opt(L, num, 2, 4);
+	dispatch_opt(L, num, 2, 4);
 	bgfx_program_handle_t  phandle = { pid };
 	bgfx_indirect_buffer_handle_t  ihandle = { iid };
 
-	bgfx_dispatch_indirect(viewid, phandle, ihandle, num[0], num[1], flags); 
+	bgfx_dispatch_indirect(viewid, phandle, ihandle, num[0], num[1]);
 
 	return 0;
 }

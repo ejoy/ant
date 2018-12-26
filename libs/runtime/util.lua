@@ -1,5 +1,6 @@
 local thread = require "thread"
 require 'runtime.vfs'
+require 'runtime.log'
 
 local function createThread(name, code)
 	local vfs = require 'vfs'
@@ -21,6 +22,7 @@ local function createThread(name, code)
 	package.path = [[%s]]
     require 'runtime.vfs'
 	require 'runtime.vfsio'
+	require 'runtime.log'
 %s]=]):format(name, init_thread, package.path, code)
 		, package.searchers[3]
 	)

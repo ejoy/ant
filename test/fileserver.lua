@@ -44,6 +44,20 @@ local function response(obj, ...)
 	network.send(obj, protocol.packmessage({...}))
 end
 
+local rtlog = {}
+
+function rtlog.init()
+	os.rename('./log/runtime.log', ('./log/runtime-%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
+end
+
+function rtlog.write(data)
+	local fp = assert(io.open('./log/runtime.log', 'a'))
+	fp:write(data)
+	fp:write('\n')
+	fp:close()
+end
+
+
 local debug = {}
 local message = {}
 
@@ -51,6 +65,7 @@ function message:ROOT()
 	repo:build()
 	local roothash = repo:root()
 	response(self, "ROOT", roothash)
+	rtlog.init()
 end
 
 function message:GET(hash)
@@ -107,6 +122,10 @@ function message:DBG(data)
 			break
 		end
 	end
+end
+
+function message:LOG(data)
+	rtlog.write(data)
 end
 
 local output = {}

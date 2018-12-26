@@ -6,11 +6,7 @@ local keymap = require 'inputmgr.keymap'
 
 local dbgupdate = require 'runtime.debug'
 
-function dprint(...)
-	print(...)
-	local nio = package.loaded.nativeio or io	
-	nio.stdout:flush()
-end
+dprint = print
 
 require "common/import"
 require "common/log"
@@ -92,7 +88,7 @@ function callback.keyboard(key, press, state)
 	iq:push("keyboard", keyname, press, status)
 end
 
-function callback.exit()	
+function callback.exit()
     dprint("exit")
 end
 
