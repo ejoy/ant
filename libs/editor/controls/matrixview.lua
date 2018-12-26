@@ -1,6 +1,8 @@
 local ctrlutil = require "editor.controls.util"
 local observer = require "editor.common.observer"
 
+require "iupluacontrols"
+
 local matrixview = {}; matrixview.__index = matrixview
 
 function matrixview:resize(cnum, lnum)
@@ -9,7 +11,7 @@ function matrixview:resize(cnum, lnum)
 	view.NUMLIN = lnum
 end
 
-function matrixview:getuserdata(col, lin)
+function matrixview:getuserdata(lin, col)
 	local ud = assert(self.ud)
 	local c = ud[col]
 	if c then
@@ -18,7 +20,7 @@ function matrixview:getuserdata(col, lin)
 	return nil
 end
 
-function matrixview:setuserdata(col, lin, data)
+function matrixview:setuserdata(lin, col, data)
 	local ud = assert(self.ud)
 	local c = ud[col]
 	if c == nil then
@@ -79,23 +81,57 @@ function matrixview:getcell(lin, col)
 	return self.view:getcell(lin, col)
 end
 
-function matrixview:grow_size(lsize, csize)
+function matrixview:size()
 	local view = self.view
-	local ln, cn = tonumber(view["NUMLIN"]), tonumber(view["NUMCOL"])
+	return tonumber(view["NUMLIN"]), tonumber(view["NUMCOL"])
+end
+
+function matrixview:grow_size(lsize, csize)
+	local ln, cn = self:size()
 	if lsize > ln then
 		local s = ln or 0
-		view["ADDLIN"] = s .. "-" .. (lsize - s)
+		self.view["ADDLIN"] = s .. "-" .. (lsize - s)
 	end
 
 	if csize > cn then
 		local s = cn or 0
-		view["ADDCOL"] = s .. "-" .. (csize - s)
+		self.view["ADDCOL"] = s .. "-" .. (csize - s)
 	end
 end
 
 function matrixview:setcell(lin, col, v)
 	self:grow_size(lin, col)
 	self.view:setcell(lin, col, v)
+end
+
+function matrixview:append_line(value, ud)
+	local ln = self:size()
+	if ud then
+		assert(#value == #ud)
+	end
+	local newline = ln + 1
+	for icol=1, #value do
+		local v = value[icol]
+		local uv = ud and ud[icol] or nil
+
+		self:setcell(newline, icol, v)
+		if uv then
+			self:setuserdata(newline, icol, uv)
+		end
+	end
+end
+
+function matrixview:focus()
+	local view = self.view
+
+	local l, c = view.FOCUSCELL:match("(%d+):(%d+)")
+	return tonumber(l), tonumber(c)
+end
+
+function matrixview:remove_line(lineidx)
+	lineidx = lineidx or self:focus()
+	local view = self.view
+	view.DELLIN = lineidx
 end
 
 local function create_view(config)

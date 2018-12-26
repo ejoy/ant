@@ -139,7 +139,7 @@ end
 local function get_sel_ani()
 	local dlg = main_dialog()
 	local aniview = iup.GetDialogChild(dlg, "ANIVIEW").owner
-	return aniview:get_sel_res()
+	return aniview:get()
 end
 
 local function update_static_duration_value()
@@ -219,7 +219,7 @@ local function init_paths_ctrl()
 		local skepath = skeinputer:get_filename()
 		local smpath = sminputer:get_filename()
 
-		local anipath = aniview:get(0):get_filename()
+		local anipath = aniview:get(1)
 		check_create_sample_entity(skepath, anipath, smpath)
 	end
 

@@ -30,7 +30,7 @@ function util.add_animation(comp, respath, weight, weighttype)
 	local numjoints = aniresult:count()
 	table.insert(assert(comp.anilist), {
 		weight=weight, 
-		handle=asset.load(respath), 
+		handle=asset.load(respath).handle, 
 		ref_path=respath,
 		type=weighttype,
 		sampling_cache = util.new_sampling_cache(numjoints),

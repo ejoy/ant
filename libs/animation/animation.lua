@@ -50,12 +50,7 @@ function anisystem:update()
 
 		local anicomp = assert(e.animation)
 		local anilist = assert(anicomp.anilist)
-
-		local l = {}
-		for _, a in ipairs(anilist) do
-			table.insert(l, {weight=a.weight, ani=a.handle, sampling=a.sampling_cache})
-		end
-		ani_module.motion(ske, l, anicomp.ratio, anicomp.aniresult)
+		ani_module.motion(ske, anicomp.ratio, anilist, "blend", anicomp.aniresult)
 	end
 end
 

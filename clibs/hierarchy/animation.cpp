@@ -516,27 +516,29 @@ lmotion(lua_State *L) {
 	const char* blendtype = lua_tostring(L, 4);
 	auto aniresult = get_aniresult(L, ske, 5);
 
-	const float threshold = (float)luaL_optnumber(L, 6, 0.f);
-
-	ozz::Vector<ozz::animation::BlendingJob::Layer>::Std layers; layers.reserve(numani);
+	const float threshold = (float)luaL_optnumber(L, 6, 0.1f);
+	  
+	ozz::Vector<ozz::animation::BlendingJob::Layer>::Std layers; 
+	layers.reserve(numani);
 	struct blendinput {
 		animation_node* aninode;
 		sampling_node* sampling;
 		job_result result;
 	};
-	ozz::Vector<blendinput>::Std inputs; inputs.reserve(numani);	
+	ozz::Vector<blendinput>::Std inputs; 
+	inputs.reserve(numani);	
 
 	for (int ii = 0; ii < numani; ++ii) {
-		lua_geti(L, 2, ii + 1);
+		lua_geti(L, 3, ii + 1);
 
 		blendinput input;
 
-		lua_getfield(L, -1, "ani");
+		lua_getfield(L, -1, "handle");
 		animation_node* aninode = (animation_node*)lua_touserdata(L, -1);
 		input.aninode = aninode;
 		lua_pop(L, 1);
 
-		lua_getfield(L, -1, "sampling");
+		lua_getfield(L, -1, "sampling_cache");
 		input.sampling = (sampling_node*)lua_touserdata(L, -1);
 		lua_pop(L, 1);
 
@@ -544,7 +546,7 @@ lmotion(lua_State *L) {
 		IntermediateJobResult result = from_job_result(input.result);
 
 		if (!do_sample(ske, input.aninode->ani, input.sampling->cache, ratio, result)) {
-			luaL_error(L, "do_sample failed, index:%d, weight=%2f, animation ratio:%2f", ii, ratio);
+			luaL_error(L, "do_sample failed, index:%d, animation ratio:%2f", ii, ratio);
 		}
 
 		inputs.push_back(std::move(input));
