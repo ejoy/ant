@@ -1,6 +1,7 @@
 require 'runtime.vfs'
 require 'runtime.vfsio'
 require 'runtime.errlog'
+local LOGERROR = log.error
 
 local keymap = require 'inputmgr.keymap'
 
@@ -63,7 +64,7 @@ function callback.init(nwh, context, w, h)
 end
 
 function callback.error(err)
-	log.error(err)
+	LOGERROR(err)
 end
 
 function callback.mouse_move(x, y, state)
