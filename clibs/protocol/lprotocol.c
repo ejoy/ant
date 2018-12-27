@@ -56,6 +56,9 @@ remove_input(lua_State *L, int from, int to, int n) {
 	clear_table(L, 1, to, n);
 }
 
+// message slices are in L[1] (a table / size n), the message header is at idx of L[1].
+// msg/sz is the C pointer of message header
+// buffer is a temp buffer for result
 static const char *
 get_chunk(lua_State *L, int idx, int message_size, const char * msg, size_t sz, int n, char * buffer) {
 	// stack top is the string (msg/sz)
@@ -63,6 +66,9 @@ get_chunk(lua_State *L, int idx, int message_size, const char * msg, size_t sz, 
 		if (message_size < sz) {
 			lua_pushlstring(L, msg + message_size, sz - message_size);
 			lua_seti(L, 1, 1);
+			if (idx > 1) {
+				remove_input(L, idx+1, 2, n);
+			}
 		} else {
 			// remove 1st string of input table
 			remove_input(L, idx+1, 1, n);
@@ -190,7 +196,7 @@ static int
 extract_message(lua_State *L, const char *chunk, int size, int output_index) {
 	int sz = read_size(chunk);
 	if (sz + 2 > size) {
-		return luaL_error(L, "Invalid message (%d/%d)", sz, size);
+		return luaL_error(L, "Invalid message at index %d:(%d/%d)", output_index, sz, size);
 	}
 	lua_pushlstring(L, chunk+2, sz);
 	lua_seti(L, 2, output_index);
