@@ -86,7 +86,7 @@ end
 function addressnavigation:notify(url)
 	local observers = self.observers
 	if observers then
-		observers:notify(url)
+		observers:notify("click", url)
 	end
 end
 
@@ -95,7 +95,7 @@ function addressnavigation:add_click_address_cb(name, cb)
 		self.observers = observersclass.new()
 	end
 	
-	self.observers:add(name, cb)
+	self.observers:add("click", name, cb)
 end
 
 

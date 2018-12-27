@@ -49,9 +49,8 @@ function anisystem:update()
 		local ske = assert(skecomp.assetinfo).handle
 
 		local anicomp = assert(e.animation)
-		local ani = assert(anicomp.assetinfo).handle
-
-		ani_module.motion(ske, ani, anicomp.sampling_cache, anicomp.ratio)
+		local anilist = assert(anicomp.anilist)
+		ani_module.motion(ske, anicomp.ratio, anilist, "blend", anicomp.aniresult)
 	end
 end
 

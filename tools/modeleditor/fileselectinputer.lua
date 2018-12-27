@@ -21,7 +21,7 @@ function inputer:add_changed_cb(cb)
 		self.observers = observersclass.new()
 	end
 
-	self.observers:add(cb)
+	self.observers:add("input_changed", cb)
 end
 
 function inputer.new(config)
@@ -35,7 +35,7 @@ function inputer.new(config)
 				EXPAND ="YES",				
 				kill_focus_cb = function(self)
 					if self.observers then
-						self.observers:notify(self.VALUE)
+						self.observers:notify("input_changed", self.VALUE)
 					end
 				end,
 			},
@@ -51,7 +51,7 @@ function inputer.new(config)
 					local filter = owner.filter
 					text.VALUE = iup.GetFile(filter)
 					if self.observers then
-						self.observers:notify(text.VALUE)
+						self.observers:notify("input_changed", text.VALUE)
 					end
 				end,
 			},		

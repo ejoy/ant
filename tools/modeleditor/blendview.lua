@@ -97,7 +97,7 @@ function blender:blend(type)
 	local observers = self.observers
 	if observers then
 		local list = blend_list(self)
-		observers:notify(list, type)
+		observers:notify("blend", list, type)
 	end
 end
 
@@ -105,7 +105,7 @@ function blender:observer_blend(name, cb)
 	if self.observers == nil then
 		self.observers = observerclass.new()
 	end
-	self.observers:add(name, cb)
+	self.observers:add("blend", name, cb)
 end
 
 function blender.new(config)

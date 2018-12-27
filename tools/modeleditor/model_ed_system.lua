@@ -136,17 +136,33 @@ local function check_create_sample_entity(skepath, anipath, skinning_meshpath)
 	end
 end
 
+local function get_sel_ani()
+	local dlg = main_dialog()
+	local aniview = iup.GetDialogChild(dlg, "ANIVIEW").owner
+	return aniview:get()
+end
+
 local function update_static_duration_value()
 	if sample_eid then
 		local e = world[sample_eid]
 		local ani = e.animation
 		if ani then 
-			local anihandle = ani.assetinfo.handle
-			
-			local duration = anihandle:duration()
-			local dlg = main_dialog()
-			local static_duration_value = iup.GetDialogChild(dlg, "STATIC_DURATION")
-			static_duration_value.TITLE = string.format("Time(%.2f ms)", duration * 1000)
+			local anifilename = get_sel_ani()
+			local anihandle = nil
+			for _, ani in ipairs(ani.anilist) do
+				if ani.ref_path == anifilename then
+					anihandle = ani.handle
+				end
+			end
+
+			if anihandle then
+				local duration = anihandle:duration()
+				local dlg = main_dialog()
+				local static_duration_value = iup.GetDialogChild(dlg, "STATIC_DURATION")
+				static_duration_value.TITLE = string.format("Time(%.2f ms)", duration * 1000)
+			else
+				print("not found ani handle, select animation resource:%s", anifilename)
+			end
 		end
 	end
 end
@@ -203,7 +219,7 @@ local function init_paths_ctrl()
 		local skepath = skeinputer:get_filename()
 		local smpath = sminputer:get_filename()
 
-		local anipath = aniview:get(0):get_filename()
+		local anipath = aniview:get(1)
 		check_create_sample_entity(skepath, anipath, smpath)
 	end
 
