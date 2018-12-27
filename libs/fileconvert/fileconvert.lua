@@ -23,16 +23,22 @@ local function get_logfile()
 	return assert(logfile)
 end
 
+local origin = os.time() - os.clock()
+local function os_date()
+    local ti, tf = math.modf(origin + os.clock())
+    return os.date('%Y-%m-%d %H:%M:%S:{ms}', ti):gsub('{ms}', math.floor(tf*1000))
+end
+
 local function log_err(src, lk, err)
 	local log = get_logfile()
 
-	log:write(string.format("[fileconvert]src:%s, lk:%s, error:%s\n", src, lk, err))
+	log:write(string.format("[fileconvert:%s]src:%s, lk:%s, error:%s\n", os_date(), src, lk, err))
 	log:flush()
 end
 
 local function log_info(info)
 	local log = get_logfile()
-	log:write(string.format("[fileconvert-info:%s\n]", info))
+	log:write(string.format("[fileconvert-info:%s]%s\n", os_date(), info))
 	log:flush()
 end
 
@@ -46,6 +52,7 @@ return function (plat, sourcefile, lkfile, dstfile)
 	log_info(string.format("plat:%s, src:%s, lk:%s, dst:%s, cvt type:%s", plat, sourcefile, lkfile, dstfile, ctype))
 	local success, err = c(plat, sourcefile, lkcontent, dstfile)
 	if not success and err then		
+		print("source file:", sourcefile, "lk file:", lkfile, "error:", err)		
 		log_err(sourcefile, lkfile, err)
 	end
 

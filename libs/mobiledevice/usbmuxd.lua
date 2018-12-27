@@ -98,7 +98,7 @@ local function recv_package(fd)
 	end
 end
 
-function usbmuxd.get_address(OS)
+function usbmuxd.get_address()
 	local platform = require "platform"
 	if platform.os() == "Windows" then
 		return "127.0.0.1", USBMUXD_SOCKET_PORT
