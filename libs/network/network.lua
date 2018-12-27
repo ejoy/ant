@@ -20,7 +20,7 @@ function network.listen(address, port)
 end
 
 local function new_connection(fd, addr, port)
-	local obj = { _fd = fd , _read = {}, _write = {}, _peer = addr .. ":" .. port , _status = "CONNECTING" }
+	local obj = { _fd = fd , _read = {}, _write = {}, _peer = port and (addr .. ":" .. port) or addr , _status = "CONNECTING" }
 	connection[fd] = obj
 	table.insert(readfds, fd)
 	return obj
@@ -114,10 +114,13 @@ local function sendout(obj)
 end
 
 function network.dispatch(objs, interval)
+	if #readfds == 0 and #writefds == 0 and interval == nil then
+		return
+	end
 	local rd, wt = lsocket.select(readfds, writefds, interval)
 	if not rd then
 		if rd == nil then
-			log("Select error : ", wt)
+			log("Select error : %s", wt)
 		end
 		return
 	end
@@ -127,7 +130,7 @@ function network.dispatch(objs, interval)
 			local client, address, port = fd:accept()
 			if not client then
 				if client == nil then
-					log("Accept error : ", address)
+					log("Accept error : %s", address)
 				end
 			else
 				local obj = new_connection(client, address, port)
