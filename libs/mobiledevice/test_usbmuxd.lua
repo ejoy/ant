@@ -53,8 +53,12 @@ local usbmuxd = {}
 local use_tag = 0
 
 local function connect_usbmuxd_socket()
-	-- todo: use unix socket
-	return assert(network.connect("127.0.0.1", USBMUXD_SOCKET_PORT))
+	local platform = require "platform"
+	if platform.os() == "Windows" then
+		return assert(network.connect("127.0.0.1", USBMUXD_SOCKET_PORT))
+	else
+		return assert(network.connect(USBMUXD_SOCKET_FILE))
+	end
 end
 
 local function create_plist_message(message_type)
@@ -72,7 +76,7 @@ local function send_plist_package(fd, plist_object, tag)
 	local payload = plist.toxml(plist_object)
 	local length = 16 + #payload
 	-- usbmuxd_header
-	local header = string.pack("<LLLL", length, proto_version, usbmuxd_msgtype.PLIST, tag)
+	local header = string.pack("<I4I4I4I4", length, proto_version, usbmuxd_msgtype.PLIST, tag)
 	network.send(fd, header)
 	network.send(fd, payload)
 end
@@ -82,7 +86,7 @@ local function recv_package(fd)
 	if rd then
 		local n = #rd
 		if n >= 4 then
-			local length = string.unpack("<L", rd)
+			local length = string.unpack("<I4", rd)
 			if length <= n then
 				if length == n then
 					table.remove(fd._read, 1)
@@ -110,7 +114,7 @@ local function recv_package(fd)
 end
 
 local function print_package(payload)
-	local length, version, message, tag, unread = string.unpack("<LLLL", payload)
+	local length, version, message, tag, unread = string.unpack("<I4I4I4I4", payload)
 	print("Length=", length, "Version=", version, "Message=", message, "Tag=", tag)
 	if message == usbmuxd_msgtype.PLIST then
 		local msg = plist.fromxml(payload:sub(unread))
