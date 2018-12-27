@@ -53,9 +53,10 @@ local function update_event()
             local info = {}
             devices[event.DeviceID] = info
             info.id = event.DeviceID
+            info.sn = event.Properties.SerialNumber
             info.status = 'idle'
         elseif event.MessageType == 'Detached' then
-            LOG('device add', event.Properties.SerialNumber)
+            LOG('device add', devices[event.DeviceID].sn)
             devices[event.DeviceID].status = 'closed'
         else
             assert(false, 'Unknown message: ' .. event.MessageType)

@@ -153,7 +153,7 @@ function network.dispatch(objs, interval)
 					log("Connect %s error : %s", obj._peer, err)
 					network.close(obj)
 				else
-					log("%s connected", obj._peer)
+					--log("%s connected", obj._peer)
 					connecting[fd] = undef
 					obj._status = "CONNECTED"
 					table.insert(objs, obj)
