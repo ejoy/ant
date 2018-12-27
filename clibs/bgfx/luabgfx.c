@@ -2867,7 +2867,7 @@ lgetUniformInfo(lua_State *L) {
 		lua_pushstring(L, "m4");
 		break;
 	default:
-		return luaL_error(L, "Invalid uniform type %d", (int)ut.type);
+		return luaL_error(L, "Invalid uniform:%s, type %d", ut.name, (int)ut.type);
 	}
 	lua_pushinteger(L, ut.num);
 	return 3;
