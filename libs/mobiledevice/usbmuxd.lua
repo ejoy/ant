@@ -90,7 +90,7 @@ local function recv_package(fd)
 					if length == n then
 						return rd
 					end
-					fd.read[1] = rd:sub(length+1)
+					fd._read[1] = rd:sub(length+1)
 					return rd:sub(1, length)
 				end
 			end

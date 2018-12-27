@@ -23,15 +23,13 @@ local bullet_world = require "bullet.bulletworld"
 
 
 function util.start_new_world(input_queue, fbw, fbh, modules, module_searchdirs)
-	if input_queue == nil then		
+	if input_queue == nil then
 		log("input queue is not privided, no input event will be received!")
 	end
 
-	local engine_searchdir = "engine/libs/?.lua;engine/libs/?/?.lua"	-- read local libs before engine/libs	
-	local searchdirs = module_searchdirs and (module_searchdirs .. ';' .. engine_searchdir) or engine_searchdir
 	world = ecs.new_world {
 		modules = modules,
-		module_path = searchdirs,
+		module_path = module_searchdirs or package.path,
 		update_order = {"timesystem", "message_system"},
 		update_bydepend = true,
 		args = { 
