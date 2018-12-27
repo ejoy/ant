@@ -19,12 +19,6 @@ local function is_closed(fd)
     return false
 end
 
-local function recv(fd)
-    local data = table.concat(fd._read)
-    fd._read = {}
-    return data
-end
-
 local function connect_server()
     return assert(network.connect('127.0.0.1', 2018))
 end
@@ -112,8 +106,15 @@ local function update_devices()
                 device.status = 'wait'
                 goto continue
             end
-            network.send(device.cfd, recv(device.sfd))
-            network.send(device.sfd, recv(device.cfd))
+            local function proxy(from, to)
+                from = from._read
+                for i = 1, #from do
+                    network.send(to, from[i])
+                    from[i] = nil
+                end
+            end
+            proxy(device.cfd, device.sfd)
+            proxy(device.sfd, device.cfd)
         elseif device.status == 'closed' then
             if device.sfd then
                 LOG('disconnect server')
