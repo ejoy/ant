@@ -26,6 +26,7 @@ ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles
   BGFX_INIT_CMD = make .build/projects/gmake-osx
   BGFX_MAKE_CMD = make osx-$(BGFX_CONFIG_TYPE)64 $(MP)
+  BGFX_CPRC_CMD = cp bgfx/.build/osx64_clang/bin/shaderc$(BGFX_CONFIG_TYPE) ../clibs/
   
   CD_MAKE_CMD	= TEC_UNAME=clang make cd $(MP)
 
@@ -33,7 +34,6 @@ ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_CLEAN = make clean
 else ifeq "$(PLAT)" "ios"
   CMAKE_PROJ_TYPE = Unix Makefiles
-  
   BGFX_INIT_CMD = make .build/projects/gmake-ios-arm64
   BGFX_MAKE_CMD = make ios-arm64-$(BGFX_CONFIG_TYPE) $(MP)
   
@@ -61,6 +61,7 @@ else
   CMAKE_PROJ_TYPE = MSYS Makefiles
   BGFX_INIT_CMD = make .build/projects/gmake-mingw-gcc
   BGFX_MAKE_CMD = make mingw-gcc-$(BGFX_CONFIG_TYPE)64 $(MP)
+  BGFX_CPRC_CMD = cp bgfx/.build/win64_mingw-gcc/bin/shaderc$(BGFX_CONFIG_TYPE).exe ../clibs/
   
   CD_MAKE_CMD	= TEC_UNAME=mingw6_64 MINGW6_64=$(MINGW) make cd $(MP)
 
@@ -135,6 +136,7 @@ bgfx_init : | $(BUILD_PATH)
 	cd bgfx && $(BGFX_INIT_CMD)
 bgfx_make : | $(BUILD_PATH)
 	cd bgfx && $(BGFX_MAKE_CMD)
+	$(BGFX_CPRC_CMD)
 bgfx_clean :
 	cd bgfx && make clean
 

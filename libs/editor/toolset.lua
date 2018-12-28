@@ -3,9 +3,6 @@ local fspath = require "filesystem.path"
 local util = require "filesystem.util"
 local subprocess = require "subprocess"
 local config = require "common.config"
-local rawtable = require "common.rawtable"
-
-local PATH = "ant"
 
 local toolset = {}
 
@@ -15,47 +12,32 @@ if cwd == nil or cwd == "" then
 	error("empty cwd!")
 end
 
-local default_toolset
-
 if config.platform() == "OSX" then
-	default_toolset = {
-		lua = cwd .. "/clibs/lua/lua",
-		shaderc = cwd .. "/3rd/bgfx/.build/osx64_clang/bin/shadercDebug",
+	toolset.config = {
+		lua = cwd .. "/bin/lua",
+		shaderc = {
+			cwd .. "/clibs/shadercDebug",
+			cwd .. "/clibs/shadercRelease",
+			cwd .. "/bin/shadercDebug",
+			cwd .. "/bin/shadercRelease",
+		},
 		shaderinc = cwd .. "/3rd/bgfx/src",
 	}
 else
-	default_toolset = {
-		lua = cwd .. "/clibs/lua/lua.exe",
-		shaderc = cwd .. "/3rd/bgfx/.build/win64_vs2017/bin/shadercDebug.exe",
+	toolset.config = {
+		lua = cwd .. "/bin/lua.exe",
+		shaderc = {
+			cwd .. "/clibs/shadercDebug.exe",
+			cwd .. "/clibs/shadercRelease.exe",
+			cwd .. "/bin/shadercDebug.exe",
+			cwd .. "/bin/shadercRelease.exe",
+		},
 		shaderinc = cwd .. "/3rd/bgfx/src",
 	}
 end
 
 function toolset.load_config()
-	return toolset.path
-end
-
-local function home_path()
-	local home = util.personaldir()
-	local home_path = home .. "/" .. PATH
-	local attrib = fs.attributes(home_path, "mode")
-	print(attrib)
-	if not attrib then
-		assert(fs.mkdir(home_path))
-	else
-		assert(attrib == "directory")
-	end
-	return home_path
-end
-
-function toolset.save_config(path)
-	local home_path = home_path()
-	local f = io.open(home_path .. "/toolset.lua", "wb")
-	print("home", home_path)
-	for k,v in pairs(path or toolset.path) do
-		f:write(string.format("%s = %q\n", k,v))
-	end
-	f:close()
+	return toolset.config
 end
 
 local stage_types = {
@@ -66,10 +48,10 @@ local stage_types = {
 
 local shader_options = {
 	d3d9_v = "vs_3_0",
-	d3d9_f = "ps_3_0",	
+	d3d9_f = "ps_3_0",
 	d3d11_v = "vs_4_0",
 	d3d11_f = "ps_4_0",
-	d3d11_c = "cs_5_0",	
+	d3d11_c = "cs_5_0",
 	glsl_v ="120",
 	glsl_f ="120",
 	glsl_c ="430",
@@ -80,20 +62,36 @@ local shader_options = {
 	vulkan_f = "spirv",	
 }
 
+local function searchExistPath(paths)
+	if type(paths) == 'string' then
+		if util.exist(paths) then
+			return paths
+		end
+		return
+	elseif type(paths) == 'table' then
+		for _, path in pairs(paths) do
+			if util.exist(path) then
+				return path
+			end
+		end
+		return
+	end
+end
+
 function toolset.compile(filename, paths, shadertype, platform, stagetype, shader_opt, optimizelevel)
-	paths = paths or toolset.path
+	paths = paths or toolset.config
 
 	if filename then
 		local dest = paths.dest or filename:gsub("(%w+).sc", "%1") .. ".bin"
 
-		local shaderc = paths.shaderc
-		if shaderc and not util.exist(shaderc)then
+		local shaderc = searchExistPath(paths.shaderc)
+		if not shaderc then
 			error(string.format("bgfx shaderc path is privided, but file is not exist, path is : %s. \
 								you can locate to ant folder, and run : bin/iup.exe tools/config.lua, to set the right path", shaderc))
 		end
 
 		local tbl = {
-			shaderc = paths.shaderc,
+			shaderc = shaderc,
 			src = filename,
 			dest = dest,
 			inc = {},
@@ -101,7 +99,7 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 			sopt = nil,
 			splat = nil,
 		}
-		
+
 		local includes = paths.includes
 		if includes then
 			local function add_inc(p)
@@ -112,10 +110,10 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 				if not util.exist(p) then
 					error(string.format("include path : %s, but not exist!", p))
 				end
-				
+
 				add_inc(p)
 			end
-			if paths.not_include_examples_common == nil then				
+			if paths.not_include_examples_common == nil then
 				if paths.shaderinc and (not util.exist(paths.shaderinc)) then
 					error(string.format("bgfx shader include path is needed, \
 										but path is not exist! path have been set : %s", paths.shaderinc))
@@ -125,7 +123,7 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 				if not util.exist(incexamplepath) then
 					error(string.format("example is needed, but not exist, path is : %s", incexamplepath))
 				end
-				
+
 				add_inc(incexamplepath)
 			end
 		end
@@ -143,7 +141,7 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 			"--type", tbl.stype,
 			"-p", tbl.sopt,
 			"-f", tbl.src,
-			"-o", tbl.dest,			
+			"-o", tbl.dest,
 			tbl.inc,
 			stdout = true,
 			stderr = true,
@@ -156,7 +154,7 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 			end
 		end
 
-		local function add_optimizelevel(level, defaultlevel)			
+		local function add_optimizelevel(level, defaultlevel)
 			level = level or defaultlevel
 			if level then
 				table.insert(cmdline, "-O")
@@ -177,7 +175,7 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 					end
 				else
 					s = s .. v .. " "
-				end				
+				end
 			end
 
 			return s
@@ -187,14 +185,14 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 		if not prog then
 			return false, "Create shaderc process failed."
 		else
-			local function check_msg(info)				
+			local function check_msg(info)
 				local success, msg = true, ""
 				if info ~= "" then
 					local INFO = info:upper()
 					success = INFO:find("ERROR:", 1, true) == nil
-					msg = to_cmdline(tbl) .. "\n" .. info .. "\n"					
+					msg = to_cmdline(tbl) .. "\n" .. info .. "\n"
 				end
-	
+
 				return success, msg
 			end
 
@@ -205,13 +203,13 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 
 			local success, msg = true, ""
 			while #stds > 0 do
-				for idx, std in ipairs(stds) do					
+				for idx, std in ipairs(stds) do
 					local fd = std.fd
 					local num = subprocess.peek(fd)
 					if num == nil then
 						local s, m = check_msg(std.info)
-						success = success and s						
-						msg = msg .. "\n\n" .. m						
+						success = success and s
+						msg = msg .. "\n\n" .. m
 						table.remove(stds, idx)
 						break
 					end
@@ -221,24 +219,10 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 					end
 				end
 			end
-		
+
 			return success, msg
 		end
 	end
 end
-
-local function load_config()
-	local home = util.personaldir()
-	local toolset_path = string.format("%s/%s/toolset.lua", home, PATH)
-	
-	local ret = {}	
-	if util.exist(toolset_path) then		
-		ret = rawtable(toolset_path, util.read_from_file)
-	end
-	return ret
-end
-
-toolset.path = setmetatable(load_config(), { __index = default_toolset })
-toolset.homedir = home_path()
 
 return toolset
