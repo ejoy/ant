@@ -135,6 +135,7 @@ static void push_message(struct ant_window_message* msg) {
     mvc.view = self.m_view;
     [self.m_window setRootViewController: mvc];
     [self.m_window makeKeyAndVisible];
+
     return YES;
 }
 - (void)applicationDidBecomeActive:(UIApplication *)application {
