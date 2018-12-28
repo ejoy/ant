@@ -14,6 +14,7 @@ local fw = require "filewatch"
 local vrepo = require "vfs.repo"
 local network = require "network"
 local protocol = require "protocol"
+local fs = require "lfs"
 local util = require "filesystem.util"
 local fspath = require "filesystem.path"
 
@@ -48,7 +49,8 @@ end
 local rtlog = {}
 
 function rtlog.init()
-	os.rename('./log/runtime.log', ('./log/runtime-%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
+	fs.mkdir('./log/runtime/')
+	os.rename('./log/runtime.log', ('./log/runtime/%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
 end
 
 function rtlog.write(data)
@@ -137,7 +139,7 @@ local function dispatch_obj(obj)
 		if msg == nil then
 			break
 		end
-		LOG("REQ :", obj._peer, msg[1])
+		--LOG("REQ :", obj._peer, msg[1])
 		local f = message[msg[1]]
 		if f then
 			f(obj, table.unpack(msg, 2))
@@ -152,7 +154,7 @@ end
 local function fileserver_update(obj)
 	dispatch_obj(obj)
 	if obj._status == "CONNECTING" then
-		LOG("New", obj._peer, obj._ref)
+		--LOG("New", obj._peer, obj._ref)
 	elseif obj._status == "CLOSED" then
 		LOG("LOGOFF", obj._peer)
 		for fd, v in pairs(debug) do
