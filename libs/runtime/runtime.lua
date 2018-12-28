@@ -1,6 +1,7 @@
 require 'runtime.vfs'
 require 'runtime.vfsio'
 require 'runtime.errlog'
+local LOGERROR = log.error
 
 local keymap = require 'inputmgr.keymap'
 
@@ -40,7 +41,7 @@ local mouse_click_what = {
 local function what_state(state, bit)
 	if state & bit ~= 0 then
 		return true
-	end		
+	end
 end
 
 local callback = {}
@@ -49,12 +50,12 @@ local width, height
 local modules, modulepath
 local world
 
-function callback.init(window, context, w, h)
+function callback.init(nwh, context, w, h)
 	width, height = w, h
     local su = require "scene.util"
     local rhwi = require "render.hardware_interface"
     rhwi.init {
-		nwh = window,
+		nwh = nwh,
 		context = context,
 		width = width,
 		height = height,
@@ -63,7 +64,7 @@ function callback.init(window, context, w, h)
 end
 
 function callback.error(err)
-	print(err)
+	LOGERROR(err)
 end
 
 function callback.mouse_move(x, y, state)
@@ -94,7 +95,7 @@ end
 
 function callback.update()
 	dbgupdate()
-	world.update()
+	if world then world.update() end
 end
 
 local function start(m1, m2)

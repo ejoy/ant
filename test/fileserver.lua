@@ -12,21 +12,23 @@ end
 
 local fw = require "filewatch"
 local vrepo = require "vfs.repo"
-local fs = require "lfs"
 local network = require "network"
 local protocol = require "protocol"
+local fs = require "lfs"
 local util = require "filesystem.util"
 local fspath = require "filesystem.path"
 
 local home = util.personaldir()
 local repopath = home .. "/" .. reponame
 
+assert(loadfile "tools/repo/newrepo.lua")(reponame)
+
 LOG ("Open repo : ", repopath)
 
 local repo = assert(vrepo.new(repopath))
 
 LOG ("Rebuild repo")
-local roothash = repo:index()
+repo:index()
 repo:rebuild()
 
 local watch = {}
@@ -47,7 +49,8 @@ end
 local rtlog = {}
 
 function rtlog.init()
-	os.rename('./log/runtime.log', ('./log/runtime-%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
+	fs.mkdir('./log/runtime/')
+	os.rename('./log/runtime.log', ('./log/runtime/%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
 end
 
 function rtlog.write(data)
@@ -136,7 +139,7 @@ local function dispatch_obj(obj)
 		if msg == nil then
 			break
 		end
-		LOG("REQ :", obj._peer, msg[1])
+		--LOG("REQ :", obj._peer, msg[1])
 		local f = message[msg[1]]
 		if f then
 			f(obj, table.unpack(msg, 2))
@@ -151,7 +154,7 @@ end
 local function fileserver_update(obj)
 	dispatch_obj(obj)
 	if obj._status == "CONNECTING" then
-		LOG("New", obj._peer, obj._ref)
+		--LOG("New", obj._peer, obj._ref)
 	elseif obj._status == "CLOSED" then
 		LOG("LOGOFF", obj._peer)
 		for fd, v in pairs(debug) do
@@ -182,7 +185,6 @@ local function dbgserver_update(obj)
 		end
 	elseif obj._status == "CLOSED" then
 		LOG("LOGOFF", obj._peer)
-		local dbg = debug[obj._ref]
 		if dbg.client == obj then
 			dbg.client = nil
 		end
@@ -202,13 +204,12 @@ local function filewacth()
 		end
 		for _, v in ipairs(watch) do
 			local vpath, rpath = v[1], v[2]
-			local path, ok = fspath.replace_path(path, rpath:gsub('\\', '/'), vpath)
+			local newpath, ok = fspath.replace_path(path, rpath:gsub('\\', '/'), vpath)
 			if ok then
-				if path:sub(1, 1) == '/' then path = path:sub(2) end
-				local dir = vpath
-				if path:sub(1, 5) ~= '.repo' then
-					print('[FileWatch]', type, path)
-					repo:touch(path)
+				if newpath:sub(1, 1) == '/' then newpath = newpath:sub(2) end
+				if newpath:sub(1, 5) ~= '.repo' then
+					print('[FileWatch]', type, newpath)
+					repo:touch(newpath)
 				end
 			end
 		end

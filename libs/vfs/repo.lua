@@ -217,17 +217,25 @@ function repo.init(mount)
 	local rootpath = mount[1]
 	assert(isdir(rootpath), "Not a dir")
 	rootpath = addslash(rootpath)
-	local mountfile = {}
-	for name, path in pairs(mount) do
-		if name ~= 1 then
-			table.insert(mountfile, string.format("%s %s", name, path))
+	local mountpath = rootpath .. ".mount"
+	if isfile(mountpath) then
+		for name, path in pairs(access.readmount(mountpath)) do
+			print("Mount", name, path)
 		end
-	end
-	if #mountfile > 0 then
-		table.sort(mountfile)
-		local f = assert(io.open(rootpath .. ".mount", "wb"))
-		f:write(table.concat(mountfile,"\n"))
-		f:close()
+	else
+		local mountfile = {}
+		for name, path in pairs(mount) do
+			print("Mount", name, path)
+			if name ~= 1 then
+				table.insert(mountfile, string.format("%s %s", name, path))
+			end
+		end
+		if #mountfile > 0 then
+			table.sort(mountfile)
+			local f = assert(io.open(mountpath, "wb"))
+			f:write(table.concat(mountfile,"\n"))
+			f:close()
+		end
 	end
 	local repopath = rootpath .. ".repo"
 	if not isdir(repopath) then

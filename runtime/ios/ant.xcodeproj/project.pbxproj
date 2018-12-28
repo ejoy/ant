@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1142733E21D5C89100018DA5 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 1142733D21D5C89100018DA5 /* Settings.bundle */; };
 		11E9F6B121C0A29C00D271B7 /* ios_error.m in Sources */ = {isa = PBXBuildFile; fileRef = 11E9F6B021C0A29C00D271B7 /* ios_error.m */; };
 		11F4177121B6621C00486046 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 11F4177021B6621C00486046 /* main.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1142733D21D5C89100018DA5 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		11E9F6B021C0A29C00D271B7 /* ios_error.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ios_error.m; sourceTree = "<group>"; };
 		11E9F6B221C0A2B400D271B7 /* ios_error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ios_error.h; sourceTree = "<group>"; };
 		11F4175E21B6620A00486046 /* ant.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ant.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -53,6 +55,7 @@
 				11E9F6B021C0A29C00D271B7 /* ios_error.m */,
 				11F4176F21B6621C00486046 /* Info.plist */,
 				11F4177021B6621C00486046 /* main.m */,
+				1142733D21D5C89100018DA5 /* Settings.bundle */,
 			);
 			path = ant;
 			sourceTree = "<group>";
@@ -114,6 +117,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1142733E21D5C89100018DA5 /* Settings.bundle in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -9,18 +9,12 @@ local converter_names = {
 	texture = "",
 }
 
-local logfile = nil
+if not fu.exist("log") then
+	lfs.mkdir("log")
+end
 
 local function get_logfile()
-	if logfile == nil then
-		if not fu.exist("log") then
-			lfs.mkdir("log")
-		end
-
-		logfile = localfile.open("log/fileconvert.log", "wb")
-	end
-
-	return assert(logfile)
+	return assert(localfile.open("log/fileconvert.log", "a"))
 end
 
 local origin = os.time() - os.clock()
@@ -33,13 +27,13 @@ local function log_err(src, lk, err)
 	local log = get_logfile()
 
 	log:write(string.format("[fileconvert:%s]src:%s, lk:%s, error:%s\n", os_date(), src, lk, err))
-	log:flush()
+	log:close()
 end
 
 local function log_info(info)
 	local log = get_logfile()
 	log:write(string.format("[fileconvert-info:%s]%s\n", os_date(), info))
-	log:flush()
+	log:close()
 end
 
 return function (plat, sourcefile, lkfile, dstfile)

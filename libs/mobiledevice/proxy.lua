@@ -19,12 +19,6 @@ local function is_closed(fd)
     return false
 end
 
-local function recv(fd)
-    local data = table.concat(fd._read)
-    fd._read = {}
-    return data
-end
-
 local function connect_server()
     return assert(network.connect('127.0.0.1', 2018))
 end
@@ -53,9 +47,10 @@ local function update_event()
             local info = {}
             devices[event.DeviceID] = info
             info.id = event.DeviceID
+            info.sn = event.Properties.SerialNumber
             info.status = 'idle'
         elseif event.MessageType == 'Detached' then
-            LOG('device add', event.Properties.SerialNumber)
+            LOG('device add', devices[event.DeviceID].sn)
             devices[event.DeviceID].status = 'closed'
         else
             assert(false, 'Unknown message: ' .. event.MessageType)
@@ -111,8 +106,15 @@ local function update_devices()
                 device.status = 'wait'
                 goto continue
             end
-            network.send(device.cfd, recv(device.sfd))
-            network.send(device.sfd, recv(device.cfd))
+            local function proxy(from, to)
+                from = from._read
+                for i = 1, #from do
+                    network.send(to, from[i])
+                    from[i] = nil
+                end
+            end
+            proxy(device.cfd, device.sfd)
+            proxy(device.sfd, device.cfd)
         elseif device.status == 'closed' then
             if device.sfd then
                 LOG('disconnect server')

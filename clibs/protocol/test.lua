@@ -1,5 +1,3 @@
-dofile "libs/init.lua"
-
 local core = require "protocol"
 
 local cache = {}
@@ -36,6 +34,7 @@ CHUNK( { "", "\5", "", "", "\0", "h", "ell" }, nil, {"\5\0hell"} )
 CHUNK( { "\5\0", "hello\5", "", "\0" }, "hello", {"\5","", "\0"})
 CHUNK( { "\5\0", "hello\0\0" }, "hello", {"\0\0"})
 CHUNK( { "\5", "\0hel", "lo\5", "\0" }, "hello", {"\5","\0"})
+CHUNK( { "\5", "\0hello\0\0" } , "hello", {"\0\0"})
 
 local temp = {}
 for i=0,255 do
