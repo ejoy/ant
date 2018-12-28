@@ -59,7 +59,7 @@ local shader_options = {
 	metal_f = "metal",
 	metal_c = "metal",
 	vulkan_v = "spirv",
-	vulkan_f = "spirv",	
+	vulkan_f = "spirv",
 }
 
 local function searchExistPath(paths)
@@ -75,6 +75,12 @@ local function searchExistPath(paths)
 			end
 		end
 		return
+	end
+end
+
+local function default_level(shadertype, stagetype)
+	if shadertype:match("d3d") then
+		return stagetype == "c" and 1 or 3
 	end
 end
 
@@ -148,12 +154,6 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 			hideWindow = true,
 		}
 
-		local function default_level(shadertype, stagetype)
-			if shadertype:match("d3d") then
-				return stagetype == "c" and 1 or 3
-			end
-		end
-
 		local function add_optimizelevel(level, defaultlevel)
 			level = level or defaultlevel
 			if level then
@@ -190,14 +190,14 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 				if info ~= "" then
 					local INFO = info:upper()
 					success = INFO:find("ERROR:", 1, true) == nil
-					msg = to_cmdline(tbl) .. "\n" .. info .. "\n"
+					msg = to_cmdline() .. "\n" .. info .. "\n"
 				end
 
 				return success, msg
 			end
 
 			local stds = {
-				{fd=prog.stdout, info="[stdout info]:"}, 
+				{fd=prog.stdout, info="[stdout info]:"},
 				{fd=prog.stderr, info="[stderr info]:"}
 			}
 

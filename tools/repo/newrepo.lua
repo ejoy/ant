@@ -32,10 +32,6 @@ local mount = {
 	["firmware"] = enginepath .. "/runtime/core/firmware",
 }
 
-for k,v in pairs(mount) do
-	print("Mount", k, v)
-end
-
 local repopath = homepath .. "/" .. reponame
 
 local function isdir(filepath)

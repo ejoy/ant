@@ -12,7 +12,6 @@ end
 
 local fw = require "filewatch"
 local vrepo = require "vfs.repo"
-local fs = require "lfs"
 local network = require "network"
 local protocol = require "protocol"
 local util = require "filesystem.util"
@@ -21,12 +20,14 @@ local fspath = require "filesystem.path"
 local home = util.personaldir()
 local repopath = home .. "/" .. reponame
 
+assert(loadfile "tools/repo/newrepo.lua")(reponame)
+
 LOG ("Open repo : ", repopath)
 
 local repo = assert(vrepo.new(repopath))
 
 LOG ("Rebuild repo")
-local roothash = repo:index()
+repo:index()
 repo:rebuild()
 
 local watch = {}
@@ -182,7 +183,6 @@ local function dbgserver_update(obj)
 		end
 	elseif obj._status == "CLOSED" then
 		LOG("LOGOFF", obj._peer)
-		local dbg = debug[obj._ref]
 		if dbg.client == obj then
 			dbg.client = nil
 		end
@@ -202,13 +202,12 @@ local function filewacth()
 		end
 		for _, v in ipairs(watch) do
 			local vpath, rpath = v[1], v[2]
-			local path, ok = fspath.replace_path(path, rpath:gsub('\\', '/'), vpath)
+			local newpath, ok = fspath.replace_path(path, rpath:gsub('\\', '/'), vpath)
 			if ok then
-				if path:sub(1, 1) == '/' then path = path:sub(2) end
-				local dir = vpath
-				if path:sub(1, 5) ~= '.repo' then
-					print('[FileWatch]', type, path)
-					repo:touch(path)
+				if newpath:sub(1, 1) == '/' then newpath = newpath:sub(2) end
+				if newpath:sub(1, 5) ~= '.repo' then
+					print('[FileWatch]', type, newpath)
+					repo:touch(newpath)
 				end
 			end
 		end
