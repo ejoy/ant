@@ -49,7 +49,7 @@ function path.has_parent(pp)
 end
 
 function path.filename(name)
-    return name:match("[/\\]?([%w_.-]+)$")    
+    return name:match("[/\\]?([%w_.-]+)$")
 end
 
 function path.filename_without_ext(name)
@@ -70,13 +70,13 @@ function path.normalize(fullname)
 	else
 		rootpath, otherpath = '', fullname
 	end
-	local t = {}	
+	local t = {}
 	for m in otherpath:gmatch("([^/\\]+)[/\\]?") do
 		if m == ".." and next(t) then
 			table.remove(t, #t)
 		elseif m ~= "." then
 			table.insert(t, m)
-		end		
+		end
 	end
 
 	return rootpath .. table.concat(t, "/")

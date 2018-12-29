@@ -70,7 +70,7 @@ function util.isfile(filepath)
 end
 
 function util.remove(subpath)
-	for name in util.dir(subpath) do	
+	for name in util.dir(subpath) do
 		local fullpath = path.join(subpath, name)
 		if util.isdir(fullpath) then
 			util.remove(fullpath)
