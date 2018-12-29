@@ -2,13 +2,11 @@ include ../common.mk
 
 default :  filesystem.dll
 
-OBJS = $(ODIR)/lua_embed.o
-
 ifeq "$(PLAT)" "mingw"
 LIBS = -lstdc++fs
-OBJS += $(ODIR)/lua_filesystem.o $(ODIR)/path_helper.o $(ODIR)/unicode.o $(ODIR)/windows_category.o $(ODIR)/error.o
+OBJS = $(ODIR)/lua_filesystem.o $(ODIR)/path_helper.o $(ODIR)/unicode.o $(ODIR)/windows_category.o $(ODIR)/error.o
 else
-OBJS += $(ODIR)/lua_posixfs.o
+OBJS = $(ODIR)/lua_posixfs.o
 endif
 
 $(ODIR)/windows_category.o : windows_category.cpp | $(ODIR)
@@ -27,9 +25,6 @@ $(ODIR)/lua_filesystem.o : lua_filesystem.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
 $(ODIR)/lua_posixfs.o : lua_posixfs.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
-
-$(ODIR)/lua_embed.o : lua_embed.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
 filesystem.dll : $(OBJS)

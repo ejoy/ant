@@ -1,3 +1,5 @@
+local platform = require 'platform'
+
 local util = {}
 util.__index = util
 
@@ -138,6 +140,18 @@ function util.personaldir()
 		return lfs.personaldir()
 	end
 	return path.join(os.getenv 'HOME', 'Documents')
+end
+
+local fs = require 'filesystem'
+
+if platform.OS == 'Windows' then
+	function util.mydocs_path()
+		return fs.path(os.getenv 'USERPROFILE') / 'Documents'
+	end
+else
+	function util.mydocs_path()
+		return fs.path(os.getenv 'HOME') / 'Documents'
+	end
 end
 
 return util

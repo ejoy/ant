@@ -1,6 +1,19 @@
-local fs = {}; util.__index = fs
+local platform = require 'platform'
 
-local lfs = require "lfs"
-local path = require "filesystem.path"
+if platform.CRT == 'MinGW C Runtime' then
+    return require 'filesystem.mingw'
+end
 
-return fs
+if platform.OS == 'OSX' then
+    return require 'filesystem.macos'
+end
+
+if platform.OS == 'Windows' then
+    return require 'filesystem.cpp'
+end
+
+if platform.OS == 'Linux' then
+    return require 'filesystem.cpp'
+end
+
+error 'Not implemented'

@@ -125,7 +125,7 @@ function path.replace_path(srcpath, checkpath, rplpath)
 	else
 		local s, c = p0:gsub(checkpath, rplpath)
 		return s, c ~= 0
-	end	
+	end
 end
 
 return path
