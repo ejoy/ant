@@ -192,7 +192,7 @@ local function dbgserver_update(obj)
 	end
 end
 
-local function filewacth()
+local function filewatch()
 	while true do
 		local type, path = fw.select()
 		if not type then
@@ -229,7 +229,7 @@ local function mainloop()
 			end
 		end
 	end
-	filewacth()
+	filewatch()
 end
 
 while true do
