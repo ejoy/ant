@@ -154,6 +154,10 @@ function fs.is_directory(path)
     return posixfs.stat(path._value) == 'dir'
 end
 
+function fs.is_regular_file(path)
+    return posixfs.stat(path._value) == 'file'
+end
+
 function fs.rename(from, to)
     assert(os.rename(from._value, to._value))
 end

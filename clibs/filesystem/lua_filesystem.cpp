@@ -283,6 +283,15 @@ namespace ant::lua_filesystem {
         LUA_TRY_END;
     }
 
+    static int is_regular_file(lua_State* L)
+    {
+        LUA_TRY;
+        const fs::path& p = path::to(L, 1);
+        lua_pushboolean(L, fs::is_regular_file(p));
+        return 1;
+        LUA_TRY_END;
+    }
+
     static int create_directory(lua_State* L)
     {
         LUA_TRY;
@@ -415,6 +424,7 @@ namespace ant::lua_filesystem {
             { "path", path::constructor },
             { "exists", exists },
             { "is_directory", is_directory },
+            { "is_regular_file", is_regular_file },
             { "create_directory", create_directory },
             { "create_directories", create_directories },
             { "rename", rename },

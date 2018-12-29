@@ -143,6 +143,10 @@ function fs.is_directory(path)
 	return vfs.type(path._value) == 'dir'
 end
 
+function fs.is_regular_file(path)
+    return vfs.type(path._value) == 'file'
+end
+
 function fs.rename()
     error 'Not implemented'
 end
