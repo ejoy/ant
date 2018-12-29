@@ -58,7 +58,7 @@ function access.realpath(repo, pathname)
 			return repo._mountpoint[mpath] .. "/" .. pathname:sub(n+1)
 		end
 	end
-	return repo._root .. "/" .. pathname
+	return repo._root:string() .. "/" .. pathname
 end
 
 function access.list_files(repo, filepath)

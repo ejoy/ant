@@ -79,11 +79,6 @@ function path_mt:remove_filename()
     return self
 end
 
-function path_mt:remove_extension()
-    self._value = self._value:match("^(.+[^/])%.[%w_-]*$")
-    return self
-end
-
 function path_mt:replace_extension(ext)
     local stem = self:stem()
     self:remove_filename()
@@ -132,7 +127,7 @@ local fs = {}
 fs.path = constructor
 
 function fs.current_path()
-    error 'Not implemented'
+    return constructor('/vfs/')
 end
 
 function fs.exists(path)
@@ -159,8 +154,14 @@ function fs.remove_all()
     error 'Not implemented'
 end
 
-function fs.absolute()
-    error 'Not implemented'
+function fs.absolute(path, base)
+    path = normalize(path._value)
+    if path:sub(1, 1) == '/' then
+        return constructor(path)
+    end
+    base = base or fs.current_path()
+    path = base / path
+    return constructor(normalize(path._value))
 end
 
 function fs.relative(path, base)

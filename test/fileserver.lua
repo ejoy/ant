@@ -11,7 +11,7 @@ local function LOG(...)
 end
 
 local fw = require "filewatch"
-local vrepo = require "vfs.repo"
+local repo = require "vfs.repo"
 local network = require "network"
 local protocol = require "protocol"
 
@@ -26,7 +26,7 @@ assert(loadfile "tools/repo/newrepo.lua")(reponame)
 
 LOG ("Open repo : ", repopath)
 
-local repo = assert(vrepo.new(repopath:string()))
+local repo = assert(repo.new(repopath))
 
 LOG ("Rebuild repo")
 repo:index()
@@ -51,7 +51,9 @@ local rtlog = {}
 
 function rtlog.init()
 	fs.create_directories(WORKDIR / 'log' / 'runtime')
-	fs.rename(WORKDIR / 'log' / 'runtime.log', WORKDIR / 'log' / 'runtime' / ('%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
+	if fs.exists(WORKDIR / 'log' / 'runtime.log') then
+		fs.rename(WORKDIR / 'log' / 'runtime.log', WORKDIR / 'log' / 'runtime' / ('%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
+	end
 end
 
 function rtlog.write(data)
@@ -78,7 +80,7 @@ function message:GET(hash)
 		response(self, "MISSING", hash)
 		return
 	end
-	local f = io.open(filename, "rb")
+	local f = io.open(filename:string(), "rb")
 	if not f then
 		response(self, "MISSING", hash)
 		return

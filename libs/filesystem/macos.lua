@@ -79,11 +79,6 @@ function path_mt:remove_filename()
     return self
 end
 
-function path_mt:remove_extension()
-    self._value = self._value:match("^(.+[^/])%.[%w_-]*$")
-    return self
-end
-
 function path_mt:replace_extension(ext)
     local stem = self:stem()
     self:remove_filename()
@@ -186,12 +181,13 @@ function fs.remove_all(dir)
     return n + (ok and 1 or 0)
 end
 
-function fs.absolute(path)
+function fs.absolute(path, base)
     path = normalize(path._value)
     if path:sub(1, 1) == '/' then
         return constructor(path)
     end
-    path = constructor(posixfs.getcwd()) / path
+    base = base or fs.current_path()
+    path = base / path
     return constructor(normalize(path._value))
 end
 
