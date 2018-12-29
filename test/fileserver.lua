@@ -20,7 +20,7 @@ local fs = require "filesystem"
 local util = require "filesystem.util"
 
 local WORKDIR = fs.current_path()
-local repopath = util.mydocs_path() / reponame
+local repopath = fs.mydocs_path() / reponame
 
 assert(loadfile "tools/repo/newrepo.lua")(reponame)
 
@@ -36,8 +36,8 @@ local watch = {}
 assert(fw.add(repopath:string()))
 watch[#watch+1] = {vfs.path '', repopath}
 for k, v in pairs(repo._mountpoint) do
-	assert(fw.add(v))
-	watch[#watch+1] = {vfs.path(k), fs.path(v)}
+	assert(fw.add(v:string()))
+	watch[#watch+1] = {vfs.path(k), v}
 end
 
 local filelisten = network.listen(config.address, config.port)

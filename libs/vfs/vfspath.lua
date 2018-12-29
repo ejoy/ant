@@ -9,9 +9,9 @@ if enginepath == "." then
 end
 
 -- this mount paths used in this simple vfs and libs/vfs/vfs.lua
-local mod_searchdirs = {	
+local mod_searchdirs = {
 	["engine/libs"] = enginepath .. "/libs",
-	["engine/clibs"] = enginepath .. "/clibs",	
+	["engine/clibs"] = enginepath .. "/clibs",
 }
 
 local function findpath(filename)

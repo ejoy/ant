@@ -64,7 +64,7 @@ function localvfs.open(repopath)
 		return
 	end
 
-	local mountpoint = access.readmount(repopath .. "/.mount")
+	local mountpoint = access.readmount(repopath / ".mount")
 	self = mount_repo(mountpoint, repopath)
 	return true
 end

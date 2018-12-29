@@ -16,10 +16,6 @@ local function addslash(name)
 	return (name:gsub("[/\\]?$","/"))
 end
 
-local function fs_open(filepath, mode)
-	return io.open(filepath:string(), mode)
-end
-
 local function filelock(filepath)
 	--TODO
 	local lfs = require "lfs"
@@ -37,7 +33,7 @@ function repo.new(rootpath)
 		return
 	end
 
-	local mountpoint = access.readmount((rootpath / ".mount"):string())
+	local mountpoint = access.readmount(rootpath / ".mount")
 	rootpath = mountpoint[''] or rootpath
 	local mountname = access.mountname(mountpoint)
 	return setmetatable({
@@ -55,7 +51,7 @@ local sha1 = access.sha1
 
 -- map path in repo to realpath (replace mountpoint)
 function repo:realpath(filepath)
-	return fs.path(access.realpath(self, filepath))
+	return access.realpath(self, filepath)
 end
 
 -- build cache, cache is a table link list of sha1->{ filelist = ,  filename = , timestamp= , next= }
@@ -92,7 +88,7 @@ local function repo_build_dir(self, filepath, cache, namehashcache)
 				hash = cache_hash.hash
 				if _DEBUG then print("CACHE", hash, fullname) end
 			else
-				hash = sha1_from_file(realfullname:string())
+				hash = sha1_from_file(realfullname)
 				namehashcache[fullname] = { hash = hash, timestamp = mtime }
 				if _DEBUG then print("FILE", hash, fullname, mtime) end
 			end
@@ -125,7 +121,7 @@ local function repo_write_cache(self, cache)
 				if not writedir and content.filelist then
 					local filepath = self._repo / hash:sub(1,2) / hash
 					if not fs.is_regular_file(filepath) then
-						local f = assert(fs_open(filepath, "wb"))
+						local f = assert(fs.open(filepath, "wb"))
 						f:write(content.filelist)
 						f:close()
 					end
@@ -138,7 +134,7 @@ local function repo_write_cache(self, cache)
 		until content == nil
 		if #ref > 0 then
 			local filepath = refname(self, hash)
-			local f = fs_open(filepath, "rb")
+			local f = fs.open(filepath, "rb")
 			if f then
 				-- merge ref file
 				for line in f:lines() do
@@ -152,7 +148,7 @@ local function repo_write_cache(self, cache)
 			end
 			table.sort(ref)
 
-			f = assert(fs_open(filepath, "wb"))
+			f = assert(fs.open(filepath, "wb"))
 			f:write(table.concat(ref, "\n"))
 			f:close()
 		end
@@ -160,7 +156,7 @@ local function repo_write_cache(self, cache)
 end
 
 local function repo_write_root(self, roothash)
-	local root = assert(fs_open(self._repo / "root", "wb"))
+	local root = assert(fs.open(self._repo / "root", "wb"))
 	root:write(roothash)
 	root:close()
 	if _DEBUG then print("ROOT", roothash) end
@@ -207,11 +203,11 @@ end
 	}
 ]]
 function repo.init(mount)
-	local rootpath = fs.path(mount[1])
+	local rootpath = mount[1]
 	assert(fs.is_directory(rootpath), "Not a dir")
 	local mountpath = rootpath / ".mount"
 	if fs.is_regular_file(mountpath) then
-		for name, path in pairs(access.readmount(mountpath:string())) do
+		for name, path in pairs(access.readmount(mountpath)) do
 			print("Mount", name, path)
 		end
 	else
@@ -219,12 +215,12 @@ function repo.init(mount)
 		for name, path in pairs(mount) do
 			print("Mount", name, path)
 			if name ~= 1 then
-				table.insert(mountfile, string.format("%s %s", name, path))
+				table.insert(mountfile, string.format("%s %s", name, path:string()))
 			end
 		end
 		if #mountfile > 0 then
 			table.sort(mountfile)
-			local f = assert(fs_open(mountpath, "wb"))
+			local f = assert(fs.open(mountpath, "wb"))
 			f:write(table.concat(mountfile,"\n"))
 			f:close()
 		end
@@ -290,7 +286,7 @@ local function update_ref(filename, content)
 		fs.remove(filename)
 	else
 		if _DEBUG then print("UPDATE", filename) end
-		local f = fs_open(filename, "wb")
+		local f = fs.open(filename, "wb")
 		f:write(table.concat(content, "\n"))
 		f:close()
 	end
@@ -301,7 +297,7 @@ local function read_ref(self, hash)
 	local filename = refname(self, hash)
 	local items = {}
 	local needupdate
-	for line in io.lines(filename:string()) do
+	for line in fs.lines(filename) do
 		local name, ts = line:match "^[df] (.-) ?(%d*)$"
 		if name == nil then
 			if _DEBUG then print("INVALID", hash) end
@@ -346,7 +342,7 @@ function repo:index()
 end
 
 function repo:root()
-	local f = fs_open(self._repo / "root", "rb")
+	local f = fs.open(self._repo / "root", "rb")
 	if not f then
 		return self:index()
 	end
@@ -358,7 +354,7 @@ end
 -- return hash file's real path or nil (invalid hash, need rebuild)
 function repo:hash(hash)
 	local filename = self._repo / hash:sub(1,2) / hash
-	local f = fs_open(filename, "rb")
+	local f = fs.open(filename, "rb")
 	if f then
 		f:close()
 		-- it's a dir object
@@ -366,7 +362,7 @@ function repo:hash(hash)
 	end
 	local rfilename = filename:replace_extension(".ref")
 
-	f = fs_open(rfilename, "rb")
+	f = fs.open(rfilename, "rb")
 	if not f then
 		return
 	end
@@ -386,7 +382,7 @@ end
 
 function repo:dir(hash)
 	local filename = self._repo / hash:sub(1,2) / hash
-	local f = fs_open(filename, "rb")
+	local f = fs.open(filename, "rb")
 	if not f then
 		return
 	end
