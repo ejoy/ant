@@ -150,7 +150,9 @@ function openMap(path)
 		end
 
 		assert(ext == "lua")
-		return {path:match("(.+)%.lua$")}
+		path = path:match("(.+)%.lua$")		
+		path = path:gsub("[/\\]", ".")
+		return {path}
 	end
 
 	local modules = load_modules(path)
