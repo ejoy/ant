@@ -1,3 +1,9 @@
+local vfs = require 'vfs'
+
+if not vfs.localvfs then
+    return require 'filesystem.vfs'
+end
+
 local platform = require 'platform'
 
 if platform.CRT == 'MinGW C Runtime' then

@@ -15,6 +15,7 @@ local vrepo = require "vfs.repo"
 local network = require "network"
 local protocol = require "protocol"
 
+local vfs = require "filesystem.vfs"
 local fs = require "filesystem"
 local util = require "filesystem.util"
 
@@ -33,10 +34,10 @@ repo:rebuild()
 
 local watch = {}
 assert(fw.add(repopath:string()))
-watch[#watch+1] = {fs.path '', repopath}
+watch[#watch+1] = {vfs.path '', repopath}
 for k, v in pairs(repo._mountpoint) do
 	assert(fw.add(v))
-	watch[#watch+1] = {fs.path(k), fs.path(v)}
+	watch[#watch+1] = {vfs.path(k), fs.path(v)}
 end
 
 local filelisten = network.listen(config.address, config.port)

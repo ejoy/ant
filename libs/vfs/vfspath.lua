@@ -67,7 +67,7 @@ local function searcher_LUA(modname)
 	end
 
 	local c = f:read "a"
-	local func, lerr = load(c, "@vfs://" .. modpath)
+	local func, lerr = load(c, "@/vfs/" .. modpath)
 	if lerr then
 		error(string.format("load file '%s' failed: %s", modpath, lerr))
 	end

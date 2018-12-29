@@ -94,7 +94,7 @@ local function loadfile(path)
     end
     local str = f:read 'a'
     f:close()
-    return load(str, '@vfs://' .. path)
+    return load(str, '@/vfs/' .. path)
 end
 
 local function dofile(path)
