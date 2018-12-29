@@ -11,7 +11,6 @@ local reponame = select(1, ...)
 
 local repo = require "vfs.repo"
 local fs = require "filesystem"
-local util = require "filesystem.util"
 
 local ANTGE = os.getenv "ANTGE"
 local enginepath = ANTGE and fs.path(ANTGE) or fs.current_path()

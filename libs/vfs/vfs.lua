@@ -4,37 +4,8 @@
 
 local localvfs = {} ; localvfs.__index = localvfs
 
-local lfs = require "lfs"
+local fs = require "filesystem"
 local access = require "vfs.repoaccess"
-local platform = require "platform"
-local localfile = require "filesystem.file"
-
-local function isdir(filepath)
-	return lfs.attributes(filepath, "mode") == "directory"
-end
-
-local function lfs_exist(filepath)
-	return lfs.attributes(filepath, "mode") ~= nil
-end
-
---luacheck: ignore readmount
-local function readmount(filename)
-	local f = localfile.open(filename, "rb")
-	local ret = {}
-	if not f then
-		return ret
-	end
-	for line in f:lines() do
-		local name, path = line:match "^(.-):(.*)"
-		if name == nil then
-			f:close()
-			error ("Invalid .mount file : " .. line)
-		end
-		ret[name] = path
-	end
-	f:close()
-	return ret
-end
 
 -- open a repo in repopath
 
@@ -50,7 +21,7 @@ local function mount_repo(mountpoint, repopath)
 		_mountpoint = mountpoint,
 		_root = rootpath,
 		_cache = setmetatable({} , cachemeta),
-		_repo = rootpath .. "/.repo",
+		_repo = rootpath / ".repo",
 	}
 end
 
@@ -60,7 +31,7 @@ end
 
 function localvfs.open(repopath)
 	assert(self == nil, "Can't open twice")
-	if not isdir(repopath) then
+	if not fs.is_directory(repopath) then
 		return
 	end
 
@@ -71,15 +42,15 @@ end
 
 function localvfs.realpath(pathname)
 	local rp = access.realpath(self, pathname)
-	local lk = rp .. ".lk"
-	if lfs_exist(lk) then
+	local lk = rp:parent_path() / (rp:filename():string() .. ".lk")
+	if fs.exists(lk) then
 		local binhash = access.build_from_path(self, self.identity, pathname)
 		if binhash == nil then
 			error(string.format("build from path failed, pathname:%s, log file can found in log folder", pathname))
 		end
-		return access.repopath(self, binhash)
+		return access.repopath(self, binhash):string()
 	end
-	return rp, pathname:match "^/?(.-)/?$"
+	return rp:string(), pathname:match "^/?(.-)/?$"
 end
 
 -- list files { name : type (dir/file) }
@@ -94,7 +65,7 @@ function localvfs.list(path)
 	item = {}
 	for filename in pairs(files) do
 		local realpath = access.realpath(self, path .. filename)
-		item[filename] = not not isdir(realpath)
+		item[filename] = not not fs.is_directory(realpath)
 	end
 	self._cache[path] = item
 	return item
@@ -102,15 +73,10 @@ end
 
 function localvfs.type(filepath)
 	local rp = access.realpath(self, filepath)
-	local mode = lfs.attributes(rp, "mode")
-	if mode then
-		if mode == "directory" then
-			return "dir"
-		end
-
-		if mode == "file" then
-			return "file"
-		end
+	if fs.is_directory(rp) then
+		return "dir"
+	elseif fs.is_regular_file(rp) then
+		return "file"
 	end
 end
 
@@ -126,4 +92,3 @@ end
 localvfs.localvfs = true
 
 return localvfs
-
