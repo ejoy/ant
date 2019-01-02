@@ -1,3 +1,13 @@
+mat3 mat3_from_columns(vec3 v0, vec3 v1, vec3 v2)
+{
+	mat3 m = mat3(v0, v1, v2);
+#ifdef BGFX_SHADER_LANGUAGE_HLSL
+	return transpose(m);
+#else
+	return m;
+#endif
+}
+
 mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 {
 	mat4 wolrdMat = mat4(0, 0, 0, 0, 
@@ -23,7 +33,7 @@ mat3 calc_tbn_lh(vec3 n, vec3 t, mat4 worldMat)
 	vec3 bitangent = cross(normal, tangent);
 
  	return transpose(
-			mat3(
+			mat3_from_columns(
 			tangent,
 			bitangent,
 			normal)
@@ -65,7 +75,7 @@ mat3 calc_tbn(vec3 n, vec3 t, vec3 b, mat4 worldMat)
 	vec3 tangent = normalize(mul(worldMat, vec4(t, 0.0)).xyz);
 	vec3 bitangent = normalize(mul(worldMat, vec4(b, 0.0)).xyz);
  	return transpose(
-			mat3(
+			mat3_from_columns(
 			tangent,
 			bitangent,
 			normal)
