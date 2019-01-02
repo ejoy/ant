@@ -1,9 +1,12 @@
 #include <lua.hpp>
 #include <filesystem>
 #include "path_helper.h"
+#include "file_helper.h"
 #include "unicode.h"
 #include "range.h"
+#include "file.h"
 #include "binding.h"
+#include "error.h"
 
 namespace fs = std::filesystem;
 
@@ -142,9 +145,41 @@ namespace ant::lua_filesystem {
                 self.replace_extension(to(L, 2));
                 lua_settop(L, 1);
                 return 1;
+            default:
+                luaL_checktype(L, 2, LUA_TSTRING);
+                return 0;
             }
-            luaL_checktype(L, 2, LUA_TSTRING);
-            return 0;
+            LUA_TRY_END;
+        }
+
+        static int equal_extension(lua_State* L, const fs::path& self, const lua::string_type& ext)
+        {
+            auto const& selfext = self.extension();
+            if (selfext.empty()) {
+                lua_pushboolean(L, ext.empty());
+                return 1;
+            }
+            if (ext[0] != '.') {
+                lua_pushboolean(L, path_helper::equal(selfext, lua::string_type{ '.' } + ext));
+                return 1;
+            }
+            lua_pushboolean(L, path_helper::equal(selfext, ext));
+            return 1;
+        }
+
+        static int equal_extension(lua_State* L)
+        {
+            LUA_TRY;
+            fs::path& self = path::to(L, 1);
+            switch (lua_type(L, 2)) {
+            case LUA_TSTRING:
+                return equal_extension(L, self, lua::to_string(L, 2));
+            case LUA_TUSERDATA:
+                return equal_extension(L, self, to(L, 2));
+            default:
+                luaL_checktype(L, 2, LUA_TSTRING);
+                return 0;
+            }
             LUA_TRY_END;
         }
 
@@ -245,6 +280,7 @@ namespace ant::lua_filesystem {
                     { "is_relative", path::is_relative },
                     { "remove_filename", path::remove_filename },
                     { "replace_extension", path::replace_extension },
+                    { "equal_extension", path::equal_extension },
                     { "list_directory", path::list_directory },
                     { "permissions", path::permissions },
                     { "add_permissions", path::add_permissions },
@@ -418,7 +454,28 @@ namespace ant::lua_filesystem {
         return path::constructor_(L, std::move(path_helper::dll_path().value()));
         LUA_TRY_END;
     }
-    
+
+    static int filelock(lua_State* L)
+    {
+        LUA_TRY;
+        const fs::path& self = path::to(L, 1);
+        file::handle fd = file::lock(self.string<lua::string_type::value_type>());
+        if (!fd) {
+            lua_pushnil(L);
+            lua_pushstring(L, make_syserror().what());
+            return 2;
+        }
+        FILE* f = file::open(fd, file::mode::eWrite);
+        if (!f) {
+            lua_pushnil(L);
+            lua_pushstring(L, make_crterror().what());
+            return 2;
+        }
+        lua::newfile(L, f);
+        return 1;
+        LUA_TRY_END;
+    }
+
     int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
             { "path", path::constructor },
@@ -437,6 +494,7 @@ namespace ant::lua_filesystem {
             { "last_write_time", last_write_time },
             { "exe_path", exe_path },
             { "dll_path", dll_path },
+            { "filelock", filelock },
             { NULL, NULL }
         };
         luaL_newlib(L, lib);

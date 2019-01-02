@@ -21,6 +21,9 @@ $(ODIR)/unicode.o : unicode.cpp | $(ODIR)
 $(ODIR)/path_helper.o : path_helper.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
+$(ODIR)/file_helper.o : file_helper.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
+
 $(ODIR)/lua_filesystem.o : lua_filesystem.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
 

@@ -89,6 +89,16 @@ function path_mt:replace_extension(ext)
     return self
 end
 
+function path_mt:equal_extension(ext)
+    ext = (type(ext) == 'string') and ext or ext._value
+    local selfext = self._value:match("[^/](%.[%w_-]*)$") or ""
+    if selfext == "" then
+        return ext == ""
+    end
+    ext = (ext:sub(1,1) ~= '.') and ('.'..ext) or ext
+    return selfext == ext
+end
+
 function path_mt:is_absolute()
     return self._value:sub(1,1) == '/'
 end
@@ -206,6 +216,10 @@ function fs.exe_path()
 end
 
 function fs.dll_path()
+    error 'Not implemented'
+end
+
+function fs.filelock(path)
     error 'Not implemented'
 end
 
