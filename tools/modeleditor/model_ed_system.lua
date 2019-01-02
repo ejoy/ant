@@ -21,7 +21,6 @@ ecs.import "scene.filter.lighting_filter"
 -- animation
 ecs.import "animation.skinning.skinning_system"
 ecs.import "animation.animation"
-ecs.import "physic.rigid_body"
 
 -- editor
 ecs.import "editor.ecs.camera_controller"
@@ -35,11 +34,7 @@ ecs.import "tools.modeleditor.accessory_system"
 
 local ms = require "math.stack"
 local util = require "tools.modeleditor.util"
-local physicobjs = require "tools.modeleditor.physicobj"
 local assetmgr = require "asset"
-local path = require "filesystem.path"
-local vfsutil = require "vfs.util"
-local fu = require "filesystem.util"
 
 ecs.tag "sampleobj"
 
@@ -324,8 +319,6 @@ end
 function model_ed_sys:init()	
 	init_control()
 	init_lighting()
-
-	physicobjs.create_plane_entity(world)
 
 	focus_sample()
 end

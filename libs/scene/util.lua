@@ -16,11 +16,7 @@ util.__index = util
 
 local world = nil
 
-local bullet_module = require "bullet"
-bullet = bullet_module.new()
-
 local bullet_world = require "bullet.bulletworld"
-
 
 function util.start_new_world(input_queue, fbw, fbh, modules, module_searchdirs)
 	if input_queue == nil then
@@ -34,8 +30,7 @@ function util.start_new_world(input_queue, fbw, fbh, modules, module_searchdirs)
 		update_bydepend = true,
 		args = { 
 			mq = input_queue, 
-			fb_size={w=fbw, h=fbh},
-			physic_world = bullet:new_world(),
+			fb_size={w=fbw, h=fbh},			
 			Physics = bullet_world.new(),
 		},
     }

@@ -8,8 +8,6 @@ local ms = require "math.stack"
 local mu = require "math.util"
 local bgfx = require "bgfx"
 
-local bu = require "bullet.lua.util"
-
 function util.create_aabb_descs(mesh, materialfile)
 	local descs = {}
 	local _, ib = geo.box_from_aabb(nil, true, true)
@@ -134,8 +132,7 @@ end
 local smaplemaerial = "skin_model_sample.material"
 
 function util.create_sample_entity(world, skepath, anipath, skinning_meshpath)
-	local eid = world:new_entity("position", "scale", "rotation",	
-	"rigid_body",		-- physic relate
+	local eid = world:new_entity("position", "scale", "rotation",		
 	"mesh", "material",
 	"sampleobj", 
 	"name", "can_render")
@@ -170,26 +167,6 @@ function util.create_sample_entity(world, skepath, anipath, skinning_meshpath)
 	end
 	
 	e.mesh.assetinfo = gen_mesh_assetinfo(skinning_mesh)
-
-	local function init_physic_obj()
-		local rigid_body = e.rigid_body
-		
-		local aabb = e.mesh.assetinfo.handle.groups[1].bounding.aabb
-		local len = math.sqrt(ms(aabb.max, aabb.min, "-1.T")[1])
-
-		local phy_world = world.args.physic_world
-
-		local shape = {type= "capsule", radius=0.1 * len, height=0.8 * len, axis=2}
-		shape.handle = bu.create_shape(phy_world, shape.type, shape)		
-		table.insert(rigid_body.shapes, shape)
-		
-		local colobj = assert(rigid_body).obj
-		colobj.handle = phy_world:new_obj(shape.handle, sample_obj_user_idx, {0, 0, 0}, {0, 0, 0, 1})
-		colobj.useridx = sample_obj_user_idx
-	end
-
-	init_physic_obj()
-
 	computil.load_material(e.material,{smaplemaerial})
 
 	add_aabb_widget(world, eid)

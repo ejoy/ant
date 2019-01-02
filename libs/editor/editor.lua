@@ -13,8 +13,7 @@ local task = require "editor.task"
 
 local editor = {}; editor.__index = editor
 
-function editor.run(fbw, fbh, canvas, modules, module_searchpath)
-	module_searchpath = module_searchpath or "?.lua"
+function editor.run(fbw, fbh, canvas, modules, module_searchpath)	
 	rhwi.init {
 		nwh = iup.GetAttributeData(canvas,"HWND"),
 		width = fbw,
