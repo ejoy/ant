@@ -16,6 +16,9 @@ int luaopen_platform(lua_State* L) {
         { NULL, NULL },
     };
     luaL_newlib(L, lib);
+    lua_pushstring(L, BX_PLATFORM_NAME);
+    lua_setfield(L, -2, "OS");
+    lua_pushstring(L, BX_CRT_NAME);
+    lua_setfield(L, -2, "CRT");
     return 1;
 }
-

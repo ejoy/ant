@@ -9,42 +9,31 @@ local _DEBUG = _G._DEBUG
 local repo = {}
 repo.__index = repo
 
-local fs = require "lfs"
+local fs = require "filesystem"
 local access = require "repoaccess"
 
 local function addslash(name)
 	return (name:gsub("[/\\]?$","/"))
 end
 
-local function isdir(filepath)
-	return fs.attributes(filepath, "mode") == "directory"
-end
-
-local function isfile(filepath)
-	return fs.attributes(filepath, "mode") == "file"
-end
-
 local function filelock(filepath)
-	return assert(fs.lock_dir(filepath), "repo is locking. (" .. filepath .. ")")
-end
-
-local function filetime(filepath)
-	return fs.attributes(filepath, "modification")
+	--TODO
+	local lfs = require "lfs"
+	return assert(lfs.lock_dir(filepath:string()), "repo is locking. (" .. filepath:string() .. ")")
 end
 
 local function refname(self, hash)
-	return string.format("%s/%s/%s.ref", self._repo, hash:sub(1,2), hash)
+	return self._repo / hash:sub(1,2) / (hash .. ".ref")
 end
 
 function repo.new(rootpath)
-	rootpath = addslash(rootpath)
-	local repopath = rootpath .. ".repo"
+	local repopath = rootpath / ".repo"
 
-	if not isdir(repopath) then
+	if not fs.is_directory(repopath) then
 		return
 	end
 
-	local mountpoint = access.readmount(rootpath .. ".mount")
+	local mountpoint = access.readmount(rootpath / ".mount")
 	rootpath = mountpoint[''] or rootpath
 	local mountname = access.mountname(mountpoint)
 	return setmetatable({
@@ -86,12 +75,12 @@ local function repo_build_dir(self, filepath, cache, namehashcache)
 
 	for name in pairs(files) do
 		local fullname = filepath == '' and name or filepath .. '/' .. name	-- full name in repo
-		local realfullname = rpath .. '/' .. name	-- full name in local file system
-		if self._mountpoint[fullname] or isdir(realfullname) then
+		local realfullname = rpath / name	-- full name in local file system
+		if self._mountpoint[fullname] or fs.is_directory(realfullname) then
 			local hash = repo_build_dir(self, fullname, cache, namehashcache)
 			table.insert(hashs, string.format("d %s %s", hash, name))
 		else
-			local mtime = filetime(realfullname)	-- timestamp
+			local mtime = fs.last_write_time(realfullname)	-- timestamp
 			local cache_hash = namehashcache[fullname]
 			local hash
 			if cache_hash and mtime == cache_hash.timestamp then
@@ -130,9 +119,9 @@ local function repo_write_cache(self, cache)
 			else
 				-- it's dir
 				if not writedir and content.filelist then
-					local filepath = self._repo .. "/" .. hash:sub(1,2) .. "/" .. hash
-					if not isfile(filepath) then
-						local f = assert(io.open(filepath, "wb"))
+					local filepath = self._repo / hash:sub(1,2) / hash
+					if not fs.is_regular_file(filepath) then
+						local f = assert(fs.open(filepath, "wb"))
 						f:write(content.filelist)
 						f:close()
 					end
@@ -145,7 +134,7 @@ local function repo_write_cache(self, cache)
 		until content == nil
 		if #ref > 0 then
 			local filepath = refname(self, hash)
-			local f = io.open(filepath, "rb")
+			local f = fs.open(filepath, "rb")
 			if f then
 				-- merge ref file
 				for line in f:lines() do
@@ -159,7 +148,7 @@ local function repo_write_cache(self, cache)
 			end
 			table.sort(ref)
 
-			f = assert(io.open(filepath, "wb"))
+			f = assert(fs.open(filepath, "wb"))
 			f:write(table.concat(ref, "\n"))
 			f:close()
 		end
@@ -167,7 +156,7 @@ local function repo_write_cache(self, cache)
 end
 
 local function repo_write_root(self, roothash)
-	local root = assert(io.open(self._repo .. "/root", "wb"))
+	local root = assert(fs.open(self._repo / "root", "wb"))
 	root:write(roothash)
 	root:close()
 	if _DEBUG then print("ROOT", roothash) end
@@ -215,10 +204,9 @@ end
 ]]
 function repo.init(mount)
 	local rootpath = mount[1]
-	assert(isdir(rootpath), "Not a dir")
-	rootpath = addslash(rootpath)
-	local mountpath = rootpath .. ".mount"
-	if isfile(mountpath) then
+	assert(fs.is_directory(rootpath), "Not a dir")
+	local mountpath = rootpath / ".mount"
+	if fs.is_regular_file(mountpath) then
 		for name, path in pairs(access.readmount(mountpath)) do
 			print("Mount", name, path)
 		end
@@ -227,32 +215,32 @@ function repo.init(mount)
 		for name, path in pairs(mount) do
 			print("Mount", name, path)
 			if name ~= 1 then
-				table.insert(mountfile, string.format("%s %s", name, path))
+				table.insert(mountfile, string.format("%s %s", name, path:string()))
 			end
 		end
 		if #mountfile > 0 then
 			table.sort(mountfile)
-			local f = assert(io.open(mountpath, "wb"))
+			local f = assert(fs.open(mountpath, "wb"))
 			f:write(table.concat(mountfile,"\n"))
 			f:close()
 		end
 	end
-	local repopath = rootpath .. ".repo"
-	if not isdir(repopath) then
+	local repopath = rootpath / ".repo"
+	if not fs.is_directory(repopath) then
 		-- already has .repo
-		assert(fs.mkdir(repopath))
+		assert(fs.create_directories(repopath))
 	end
 
 	-- mkdir dirs
 	for i=0,0xff do
-		local path = string.format("%s/%02x", repopath , i)
-		if not isdir(path) then
-			assert(fs.mkdir(path))
+		local path = repopath / string.format("%02x", i)
+		if not fs.is_directory(path) then
+			assert(fs.create_directories(path))
 		end
 	end
 
-	local rootf = repopath .. "/root"
-	if not isfile(rootf) then
+	local rootf = repopath / "root"
+	if not fs.is_regular_file(rootf) then
 		-- rebuild repo
 		local r = repo.new(rootpath)
 		r:rebuild()
@@ -295,10 +283,10 @@ end
 local function update_ref(filename, content)
 	if #content == 0 then
 		if _DEBUG then print("REMOVE", filename) end
-		os.remove(filename)
+		fs.remove(filename)
 	else
 		if _DEBUG then print("UPDATE", filename) end
-		local f = io.open(filename, "wb")
+		local f = fs.open(filename, "wb")
 		f:write(table.concat(content, "\n"))
 		f:close()
 	end
@@ -309,7 +297,7 @@ local function read_ref(self, hash)
 	local filename = refname(self, hash)
 	local items = {}
 	local needupdate
-	for line in io.lines(filename) do
+	for line in fs.lines(filename) do
 		local name, ts = line:match "^[df] (.-) ?(%d*)$"
 		if name == nil then
 			if _DEBUG then print("INVALID", hash) end
@@ -321,7 +309,7 @@ local function read_ref(self, hash)
 			if timestamp then
 				-- It's a file
 				local realname = self:realpath(name)
-				if isfile(realname) and filetime(realname) == timestamp then
+				if fs.is_regular_file(realname) and fs.last_write_time(realname) == timestamp then
 					cache[name] = { hash = hash , timestamp = timestamp }
 					table.insert(items, line)
 				else
@@ -339,14 +327,14 @@ local function read_ref(self, hash)
 end
 
 function repo:index()
-	local repo = self._repo
+	local repopath = self._repo
 	local namecache = {}
 	self._namecache = namecache
 	for i = 0, 0xff do
-		local refpath = string.format("%s/%02x", repo, i)
-		for name in fs.dir(refpath) do
-			if name:sub(-4) == ".ref" then
-				read_ref(self, name:sub(1,-5))
+		local refpath = repopath / string.format("%02x", i)
+		for name in refpath:list_directory() do
+			if name:extension():string() == ".ref" then
+				read_ref(self, name:stem():string())
 			end
 		end
 	end
@@ -354,7 +342,7 @@ function repo:index()
 end
 
 function repo:root()
-	local f = io.open(self._repo .. "/root", "rb")
+	local f = fs.open(self._repo / "root", "rb")
 	if not f then
 		return self:index()
 	end
@@ -365,16 +353,16 @@ end
 
 -- return hash file's real path or nil (invalid hash, need rebuild)
 function repo:hash(hash)
-	local filename = string.format("%s/%s/%s", self._repo, hash:sub(1,2), hash)
-	local f = io.open(filename, "rb")
+	local filename = self._repo / hash:sub(1,2) / hash
+	local f = fs.open(filename, "rb")
 	if f then
 		f:close()
 		-- it's a dir object
 		return filename
 	end
-	local rfilename = filename .. ".ref"
+	local rfilename = filename:replace_extension(".ref")
 
-	f = io.open(rfilename, "rb")
+	f = fs.open(rfilename, "rb")
 	if not f then
 		return
 	end
@@ -383,7 +371,7 @@ function repo:hash(hash)
 		if timestamp then
 			timestamp = tonumber(timestamp)
 			local realpath = self:realpath(name)
-			if filetime(realpath) == timestamp then
+			if fs.last_write_time(realpath) == timestamp then
 				f:close()
 				return realpath
 			end
@@ -393,8 +381,8 @@ function repo:hash(hash)
 end
 
 function repo:dir(hash)
-	local filename = string.format("%s/%s/%s", self._repo, hash:sub(1,2), hash)
-	local f = io.open(filename, "rb")
+	local filename = self._repo / hash:sub(1,2) / hash
+	local f = fs.open(filename, "rb")
 	if not f then
 		return
 	end

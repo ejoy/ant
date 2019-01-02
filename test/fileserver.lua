@@ -11,32 +11,33 @@ local function LOG(...)
 end
 
 local fw = require "filewatch"
-local vrepo = require "vfs.repo"
+local repo = require "vfs.repo"
 local network = require "network"
 local protocol = require "protocol"
-local fs = require "lfs"
-local util = require "filesystem.util"
-local fspath = require "filesystem.path"
 
-local home = util.personaldir()
-local repopath = home .. "/" .. reponame
+local vfs = require "filesystem.vfs"
+local fs = require "filesystem"
+local util = require "filesystem.util"
+
+local WORKDIR = fs.current_path()
+local repopath = fs.mydocs_path() / reponame
 
 assert(loadfile "tools/repo/newrepo.lua")(reponame)
 
 LOG ("Open repo : ", repopath)
 
-local repo = assert(vrepo.new(repopath))
+local repo = assert(repo.new(repopath))
 
 LOG ("Rebuild repo")
 repo:index()
 repo:rebuild()
 
 local watch = {}
-assert(fw.add(repopath))
-watch[#watch+1] = {'', repopath}
+assert(fw.add(repopath:string()))
+watch[#watch+1] = {vfs.path '', repopath}
 for k, v in pairs(repo._mountpoint) do
-	assert(fw.add(v))
-	watch[#watch+1] = {k, v}
+	assert(fw.add(v:string()))
+	watch[#watch+1] = {vfs.path(k), v}
 end
 
 local filelisten = network.listen(config.address, config.port)
@@ -49,12 +50,14 @@ end
 local rtlog = {}
 
 function rtlog.init()
-	fs.mkdir('./log/runtime/')
-	os.rename('./log/runtime.log', ('./log/runtime/%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
+	fs.create_directories(WORKDIR / 'log' / 'runtime')
+	if fs.exists(WORKDIR / 'log' / 'runtime.log') then
+		fs.rename(WORKDIR / 'log' / 'runtime.log', WORKDIR / 'log' / 'runtime' / ('%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
+	end
 end
 
 function rtlog.write(data)
-	local fp = assert(io.open('./log/runtime.log', 'a'))
+	local fp = assert(io.open((WORKDIR / 'log' / 'runtime.log'):string(), 'a'))
 	fp:write(data)
 	fp:write('\n')
 	fp:close()
@@ -77,7 +80,7 @@ function message:GET(hash)
 		response(self, "MISSING", hash)
 		return
 	end
-	local f = io.open(filename, "rb")
+	local f = io.open(filename:string(), "rb")
 	if not f then
 		response(self, "MISSING", hash)
 		return
@@ -204,9 +207,9 @@ local function filewatch()
 		end
 		for _, v in ipairs(watch) do
 			local vpath, rpath = v[1], v[2]
-			local newpath, ok = fspath.replace_path(path, rpath:gsub('\\', '/'), vpath)
-			if ok then
-				if newpath:sub(1, 1) == '/' then newpath = newpath:sub(2) end
+			local rel_path = fs.relative(fs.path(path), rpath):string()
+			if rel_path ~= '' and rel_path:sub(1, 1) ~= '.' then
+				local newpath = (vpath / rel_path):string()
 				if newpath:sub(1, 5) ~= '.repo' then
 					print('[FileWatch]', type, newpath)
 					repo:touch(newpath)

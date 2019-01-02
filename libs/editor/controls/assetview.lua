@@ -25,7 +25,7 @@ end
 function assetview:reslist_ctrl()
 	local ctrl = iup.GetChild(self.view, 2)
 	assert(ctrl.NAME == "RES_LIST")
-	return ctrl.owner	
+	return ctrl.owner
 end
 
 local function get_rootdir_from_restype(rt)
@@ -57,7 +57,7 @@ function assetview:init(defaultrestype)
 	local restype = assert(self:restype_ctrl())
 	local reslist = assert(self:reslist_ctrl())
 	local addrview = assert(self:addrview_ctrl())
-	
+
 	restype:append_item("engine")
 	restype:append_item("project")
 
@@ -73,7 +73,7 @@ function assetview:init(defaultrestype)
 
 	local function is_subdir(dir)
 		local dirs = rootdirs()
-		dir = dir:lower():gsub("\\", "/")		
+		dir = dir:lower():gsub("\\", "/")
 		for _, rd in ipairs(dirs) do
 			if dir:match(rd) and dir ~= rd then
 				return true
@@ -84,17 +84,17 @@ function assetview:init(defaultrestype)
 
 	local function update_res_list(l, rootdir, rt)
 		if not fu.isdir(rootdir) then
-			return 
+			return
 		end
 
 		l:clear()
 		if is_subdir(rootdir) then
 			l:append_item("[..]", {path=path.parent(rootdir), restype=rt})
-		end	
-		
+		end
+
 		local dirs, files = {}, {}
 		for d in fu.dir(rootdir) do
-			local fullpath = path.join(rootdir, d)			
+			local fullpath = path.join(rootdir, d)
 			local ud = {path=fullpath, restype = rt}
 			if fu.isdir(fullpath) then
 				table.insert(dirs, {'[' .. d .. ']', ud})
@@ -102,11 +102,11 @@ function assetview:init(defaultrestype)
 				table.insert(files, {d, ud})
 			end
 		end
-	
+
 		for _, d in ipairs(dirs) do
 			l:append_item(d[1], d[2])
 		end
-	
+
 		for _, f in ipairs(files) do
 			l:append_item(f[1], f[2])
 		end
@@ -115,7 +115,7 @@ function assetview:init(defaultrestype)
 	function restype.view:valuechanged_cb()
 		local rt = self.VALUESTRING
 		local rootdir = get_rootdir_from_restype(rt)
-		update_res_list(reslist, rootdir, rt)		
+		update_res_list(reslist, rootdir, rt)
 		addrview:update(get_vfs_root_path(rt))
 	end
 
@@ -161,7 +161,7 @@ function assetview.new(config)
 		local reslist = listctrl.new {NAME="RES_LIST", SCROLLBAR="YES", EXPAND="YES"}
 		local restype = listctrl.new {NAME="RES_TYPE", DROPDOWN="YES"}
 		restype.view.EXPAND = "HORIZONTAL"
-	
+
 		local addr = addrctrl.new()	
 		return iup.vbox {
 			restype.view,
@@ -170,8 +170,8 @@ function assetview.new(config)
 			NAME="ASSETVIEW",
 			EXPANED="ON",
 			MINSIZE="120x0"
-		}		
-	end, assetview)	
+		}
+	end, assetview)
 end
 
 return assetview

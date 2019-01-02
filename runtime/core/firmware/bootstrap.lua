@@ -1,10 +1,12 @@
+__ANT_RUNTIME__ = "0.0.1"
+
 local platform = require "platform"
 local config = {
 	repopath = "./",
 	vfspath = "vfs.lua",
 	nettype = (platform.os() ~= "iOS") and "connect" or "listen",
 	address = "127.0.0.1",
-	port = 2018,	
+	port = 2018,
 }
 
 local thread = require "thread"
@@ -84,6 +86,6 @@ local function loadfile(path, name)
 	end
 	local str = f:read 'a'
 	f:close()
-	return load(str, "@vfs://" .. name)
+	return load(str, "@/vfs/" .. name)
 end
 assert(loadfile(bootloader, 'firmware/bootloader.lua'))(config)
