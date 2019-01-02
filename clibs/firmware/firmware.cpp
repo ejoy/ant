@@ -34,7 +34,7 @@ static int load_resource(lua_State* L, const std::string_view& filename, const c
 static int lloadfile(lua_State* L) {
 	size_t size;
 	const char* name = luaL_checklstring(L, 1, &size);
-	lua_pushstring(L, "@res://firmware/");
+	lua_pushstring(L, "@/firmware/");
 	lua_pushvalue(L, 1);
 	lua_concat(L, 2);
 	if (LUA_OK != load_resource(L, std::string_view(name, size), lua_tostring(L, -1))) {

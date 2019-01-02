@@ -33,12 +33,20 @@
             "STATIC_LINKING_IUP" : "1",
             "BIN_PATH" : "projects/msvc/vs_bin/x64/Debug"
         },
-            "sourceMaps": [
-                [
-                    "vfs://engine/libs/",
-                    "${workspaceRoot}/libs/"
-                ]
-            ]      
+        "sourceMaps": [
+            [
+                "/vfs/engine/",
+                "${workspaceFolder}/"
+            ],
+            [
+                "/vfs/",
+                "${env:UserProfile}/Documents/dbg/"
+            ],
+            [
+                "/firmware/",
+                "${workspaceFolder}/runtime/core/firmware/"
+            ]
+        ]
     },
     {
         "name": "launch (mingw)",
@@ -49,11 +57,19 @@
         "cwd": "${workspaceRoot}",
         "internalModule": "vscode-dbg",
         "stopOnEntry": false,
-            "sourceMaps": [
-                [
-                    "vfs://engine/libs/",
-                    "${workspaceRoot}/libs/"
-                ]
+        "sourceMaps": [
+            [
+                "/vfs/engine/",
+                "${workspaceFolder}/"
+            ],
+            [
+                "/vfs/",
+                "${env:UserProfile}/Documents/dbg/"
+            ],
+            [
+                "/firmware/",
+                "${workspaceFolder}/runtime/core/firmware/"
             ]
+        ]
     },
 
