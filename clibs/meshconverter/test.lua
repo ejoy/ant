@@ -1,9 +1,9 @@
 -- dofile "libs/init.lua"
 
--- local fu = require "filesystem.util"
+-- local fs = require "filesystem"
 
 -- local meshfile = "mem://test.mesh"
--- fu.write_to_file(meshfile, [[
+-- fs.write_to_file(meshfile, [[
 -- 	mesh_path = "meshes/PVPScene/BH-Scene-campsite-Door"
 -- ]])
 

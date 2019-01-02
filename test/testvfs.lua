@@ -1,11 +1,10 @@
 dofile "libs/init.lua"
 
-local fs = require "lfs"
-local util = require "filesystem.util"
+local fs = require "filesystem"
 
-local projpath = util.personaldir() .."/antproj"
+local projpath = fs.mydocs_path() / "antproj"
 
-local vfs = require "vfs.vfs"
+local vfs = require "vfs"
 
 local success = vfs.open(projpath)
 if success then

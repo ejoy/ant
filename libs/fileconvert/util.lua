@@ -1,8 +1,6 @@
 local util = {}; util.__index = util
-
-local path = require "filesystem.path"
-local fu = require "filesystem.util"
 local vfs = require "vfs"
+local fs = require "filesystem"
 
 local exts = {
 	sc = true,
@@ -17,7 +15,7 @@ function util.need_build(srcfilepath)
 		if exts[ext] then
 			local lk = srcfilepath .. ".lk"
 			local r = vfs.realpath(lk)
-			if fu.exist(r) then
+			if fs.exists(r) then
 				return true
 			end
 			error(string.format("src:%s, need lk file, but not provided", srcfilepath))

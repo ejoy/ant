@@ -4,9 +4,7 @@ local world = ecs.world
 local hierarchy = require "hierarchy"
 local assetmgr = require "asset"
 
-local path = require "filesystem.path"
-local fu = require "filesystem.util"
-local fs = require "lfs"
+local fs = require "filesystem"
 
 local eh = ecs.component_struct "editable_hierarchy"{
 	ref_path = {
@@ -18,8 +16,7 @@ local eh = ecs.component_struct "editable_hierarchy"{
 		end,
 		load = function (v, arg)
 			assert(type(v) == "string")
-			assert(path.ext(v):lower() == "hierarchy")
-
+			assert(fs.path(v):extension() == fs.path ".hierarchy")
 			local e = world[arg.eid]
 			e.editable_hierarchy.root = assetmgr.load(v, {editable=true})
 			return v

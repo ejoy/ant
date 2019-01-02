@@ -1,3 +1,4 @@
+require "runtime.vfsio"
 local fs = require "filesystem"
 local enginepath = fs.absolute(fs.path(...))
 local repopath = fs.current_path()

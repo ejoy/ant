@@ -156,7 +156,7 @@ function access.build_from_file(repo, hash, identity, source_path, lk_path)
 			return binhash
 		end
 	end
-	local tmp = link .. ".bin"
+	local tmp = fs.path(link:string() .. ".bin")
 	if not build(identity, source_path, lk_path, tmp) then
 		return
 	end

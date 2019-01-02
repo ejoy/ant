@@ -124,7 +124,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "platform", "platform.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "subprocess", "subprocess.vcxproj", "{43EBC525-120E-430C-9E79-F351A13F11BE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "filesystem", "..\filesystem\filesystem.vcxproj", "{E8872BDC-3E50-4224-963B-FA202217D028}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "filesystem", "filesystem.vcxproj", "{E8872BDC-3E50-4224-963B-FA202217D028}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

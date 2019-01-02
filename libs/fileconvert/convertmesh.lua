@@ -1,8 +1,6 @@
 local meshconverter = require "meshconverter"
-
+local fs = require "filesystem"
 local modelutil = require "modelloader.util"
-local lfs = require "lfs"
-local util = require "filesystem.util"
 local config = modelutil.default_config()
 
 local convert_op = {
@@ -10,10 +8,10 @@ local convert_op = {
 	fbx = meshconverter.convert_FBX,
 }
 
-return function (plat, sourcefile, param, outfile)
+return function (identity, sourcefile, param, outfile)
 	local t = param.sourcetype
 	local c = convert_op[t]
 	local cfg = param.config or config
 	c(sourcefile, outfile, cfg)
-	return util.exist(outfile)
+	return fs.exists(outfile)
 end

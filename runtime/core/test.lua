@@ -4,9 +4,8 @@ dofile "libs/init.lua"
 
 local reponame = assert((...), "Need repo name")
 
-local fs = require "lfs"
 local thread = require "thread"
-local util = require "filesystem.util"
+local fs = require "filesystem"
 
 thread.thread [[
 	-- thread for log
@@ -32,7 +31,7 @@ do
 	end
 end
 
-local repopath = util.personaldir() .. "/" .. reponame
+local repopath = fs.mydocs_path() .. "/" .. reponame
 local firmware = "runtime/core/firmware"
 
 local boot = assert(loadfile(firmware .. "/bootstrap.lua"))

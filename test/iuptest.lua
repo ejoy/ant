@@ -8,24 +8,28 @@ local lc = require "editor.controls.listctrl"
 
 local l = lc.new()
 
-local dlg = iup.dialog {
-	l.list,
+local ex = iup.expander {
+	TITLE="ANIMATION",
+	l.list
 }
 
-local fu = require "filesystem.util"
-local path = require "filesystem.path"
+local dlg = iup.dialog {
+	ex
+}
 
-local rootdir = "d:/Work"
+local fs = require "filesystem"
+
+local rootdir = fs.path "d:/Work"
 local function fill_content(rootdir)
 	l:clear()
-	l:append_item("[..]", rootdir)	
+	l:append_item("[..]", rootdir:string())	
 	local dirs, files = {}, {}
-	for d in fu.dir(rootdir) do
-		local fullpath = path.join(rootdir, d)
+	for d in rootdir:list_directory() do
+		local fullpath = rootdir / d
 		if fu.isdir(fullpath) then
-			table.insert(dirs, {'[' .. d .. ']', fullpath})
+			table.insert(dirs, {'[' .. d:string() .. ']', fullpath})
 		else
-			table.insert(files, {d, fullpath})
+			table.insert(files, {d:string(), fullpath})
 		end
 	end
 
@@ -37,20 +41,20 @@ local function fill_content(rootdir)
 		l:append_item(f[1], f[2])
 	end
 	
-	iup.Map(l.list)
+	iup.Map(l.view)
 end
 
-function l.list:dblclick_cb(item, text)
+function l.view:dblclick_cb(item, text)
 	local ud = l.ud
 	local fullpath = ud[item]
 	assert(fullpath)
 	if text == "[..]" then
-		local parentpath = path.parent(fullpath)
+		local parentpath = fullpath:parent()
 		if parentpath then
 			fill_content(parentpath)
 		end
 	else
-		if fu.isdir(fullpath) then
+		if fs.is_directory(fullpath) then
 			fill_content(fullpath)
 		end
 	end

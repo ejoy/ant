@@ -12,7 +12,7 @@ local function current_path()
         if cwd:sub(-1, -1) ~= '/' then
             cwd = cwd .. '/'
         end
-    else
+    else		
         local cppfs = require 'filesystem.cpp'
         cwd = cppfs.current_path():string()
         if cwd:sub(-1, -1) ~= '/' and cwd:sub(-1, -1) ~= '\\' then

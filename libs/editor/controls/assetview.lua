@@ -3,9 +3,7 @@ local assetview = {}; assetview.__index = assetview
 local listctrl = require "editor.controls.listctrl"
 local ctrlutil =require "editor.controls.util"
 
-local path = require "filesystem.path"
-local fu = require "filesystem.util"
-local lfs = require "lfs"
+local fs = require "filesystem"
 local vfs = require "vfs"
 
 local addrctrl = require "editor.controls.addressnavigation_ctrl"
@@ -29,28 +27,17 @@ function assetview:reslist_ctrl()
 end
 
 local function get_rootdir_from_restype(rt)
-	return rt == "project" and lfs.currentdir() or vfs.realpath("engine/assets")
+	return rt == "project" and fs.current_path() or fs.path(vfs.realpath("engine/assets"))
 end
 
 local function get_vfs_root_path(rt)
-	return rt == "project" and "/project" or "/engine/assets"
+	return fs.path(rt == "project" and "/project" or "/engine/assets")
 end
 
 local function get_vfs_path(rt, abspath, withoutroot)
 	local rootdir = get_rootdir_from_restype(rt)
-	return abspath:gsub(rootdir .. "/", withoutroot and "" or get_vfs_root_path(rt) .. "/")
-end
-
-local function get_abs_path(rt, vfspath)
-	local rootdir, found = url:gsub("^/project", lfs.currentdir())
-	if found == 0 then
-		rootdir, found = url:gsub("^/engine/assets", vfs.realpath("engine/assets"))
-		if found == 0 then
-			return nil
-		end
-	end
-
-	return rootdir
+	local abspathname = abspath:string()
+	return fs.path(abspathname:gsub(rootdir:string() .. "/", withoutroot and "" or get_vfs_root_path(rt):string() .. "/"))
 end
 
 function assetview:init(defaultrestype)
@@ -83,23 +70,23 @@ function assetview:init(defaultrestype)
 	end
 
 	local function update_res_list(l, rootdir, rt)
-		if not fu.isdir(rootdir) then
+		if not fs.is_directory(rootdir) then
 			return
 		end
 
 		l:clear()
 		if is_subdir(rootdir) then
-			l:append_item("[..]", {path=path.parent(rootdir), restype=rt})
+			l:append_item("[..]", {path=rootdir:parent(), restype=rt})
 		end
 
-		local dirs, files = {}, {}
-		for d in fu.dir(rootdir) do
-			local fullpath = path.join(rootdir, d)
+		local dirs, files = {}, {}		
+		for d in rootdir:list_directory() do
+			local fullpath = rootdir / d
 			local ud = {path=fullpath, restype = rt}
-			if fu.isdir(fullpath) then
-				table.insert(dirs, {'[' .. d .. ']', ud})
+			if fs.is_directory(fullpath) then
+				table.insert(dirs, {'[' .. d:string() .. ']', ud})
 			else
-				table.insert(files, {d, ud})
+				table.insert(files, {d:string(), ud})
 			end
 		end
 
@@ -128,13 +115,14 @@ function assetview:init(defaultrestype)
 		local rt = ud.restype
 		local filepath = ud.path
 		update_res_list(reslist, filepath, rt)
-		if fu.isdir(filepath) then
+		if fs.is_directory(filepath) then
 			addrview:update(get_vfs_path(rt, filepath))
 		end
 	end
 
 	addrview:add_click_address_cb("update_reslist", function (url)
 		local rt = restype.view.VALUESTRING
+		assert(type(url) == "userdata")
 		local rootdir = get_vfs_path(rt, url)
 		update_res_list(reslist, rootdir, rt)
 	end)

@@ -1,27 +1,22 @@
-local fs = require "lfs"
-local fspath = require "filesystem.path"
-local util = require "filesystem.util"
 local subprocess = require "subprocess"
-local config = require "common.config"
+local fs = require "filesystem"
+local platform = require "platform"
+local OS = platform.OS
 
 local toolset = {}
 
-local cwd = fs.currentdir()
+local cwd = assert(fs.current_path())
 
-if cwd == nil or cwd == "" then
-	error("empty cwd!")
-end
-
-if config.platform() == "OSX" then
+if OS == "OSX" then
 	toolset.config = {
 		lua = cwd .. "/bin/lua",
 		shaderc = {
-			cwd .. "/clibs/shadercDebug",
-			cwd .. "/clibs/shadercRelease",
-			cwd .. "/bin/shadercDebug",
-			cwd .. "/bin/shadercRelease",
+			cwd / "clibs/shadercDebug",
+			cwd / "clibs/shadercRelease",
+			cwd / "bin/shadercDebug",
+			cwd / "bin/shadercRelease",
 		},
-		shaderinc = cwd .. "/3rd/bgfx/src",
+		shaderinc = cwd / "3rd/bgfx/src",
 	}
 else
 	toolset.config = {
@@ -32,7 +27,7 @@ else
 			cwd .. "/bin/shadercDebug.exe",
 			cwd .. "/bin/shadercRelease.exe",
 		},
-		shaderinc = cwd .. "/3rd/bgfx/src",
+		shaderinc = cwd / "3rd/bgfx/src",
 	}
 end
 
@@ -64,13 +59,13 @@ local shader_options = {
 
 local function searchExistPath(paths)
 	if type(paths) == 'string' then
-		if util.exist(paths) then
+		if fs.exists(paths) then
 			return paths
 		end
 		return
 	elseif type(paths) == 'table' then
 		for _, path in pairs(paths) do
-			if util.exist(path) then
+			if fs.exists(path) then
 				return path
 			end
 		end
@@ -113,20 +108,20 @@ function toolset.compile(filename, paths, shadertype, platform, stagetype, shade
 				table.insert(tbl.inc, p)
 			end
 			for _, p in ipairs(includes) do
-				if not util.exist(p) then
+				if not fs.exists(p) then
 					error(string.format("include path : %s, but not exist!", p))
 				end
 
 				add_inc(p)
 			end
 			if paths.not_include_examples_common == nil then
-				if paths.shaderinc and (not util.exist(paths.shaderinc)) then
+				if paths.shaderinc and (not fs.exists(paths.shaderinc)) then
 					error(string.format("bgfx shader include path is needed, \
 										but path is not exist! path have been set : %s", paths.shaderinc))
 				end
 
-				local incexamplepath = fspath.join(paths.shaderinc, "../examples/common")
-				if not util.exist(incexamplepath) then
+				local incexamplepath = paths.shaderinc / "../examples/common"
+				if not fs.exists(incexamplepath) then
 					error(string.format("example is needed, but not exist, path is : %s", incexamplepath))
 				end
 

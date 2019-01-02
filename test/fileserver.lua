@@ -17,7 +17,6 @@ local protocol = require "protocol"
 
 local vfs = require "filesystem.vfs"
 local fs = require "filesystem"
-local util = require "filesystem.util"
 
 local WORKDIR = fs.current_path()
 local repopath = fs.mydocs_path() / reponame

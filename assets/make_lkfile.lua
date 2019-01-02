@@ -8,11 +8,9 @@ end
 
 dofile(rootdir .. "/libs/init.lua")
 
-local path = require "filesystem.path"
-
 local modelutil = require "modelloader.util"
 local su = require "serialize.util"
-local fu = require "filesystem.util"
+local fs = require "filesystem"
 
 
 local templates = {
@@ -25,10 +23,12 @@ config = %s
 
 local files = {}
 if type == nil or type == "shaders" then
-	fu.listfiles("shaders", files, function (filepath)
-		local ext = path.ext(filepath)
-		if ext == "sc" then
-			return path.filename(filepath):lower() ~= "varying.def.sc"
+	fs.listfiles("shaders", files, function (filepath)
+		local ext = filepath:extension()
+		if ext:string() == "sc" then
+			local filename = filepath:filename()
+			local lowername = filename:string():lower()
+			return lowername ~= "varying.def.sc"
 		end
 		return false
 	end)
@@ -37,12 +37,12 @@ end
 if type == nil or type == "mesh" then
 	local exts = {"fbx", "FBX", "bin"}
 	-- we assume all bin/fbx files should only exist in assets/build/meshes folder	
-	fu.listfiles("build/meshes", files, exts)
-	fu.listfiles("meshes", files, exts)
+	fs.listfiles("build/meshes", files, exts)
+	fs.listfiles("meshes", files, exts)
 end
 
 for _, ff in ipairs(files) do
-	local ext = path.ext(ff):lower()
+	local ext = ff:extension():tostring():lower()
 
 	local template_filecontent
 	if ext == "sc" then
@@ -54,7 +54,7 @@ for _, ff in ipairs(files) do
 		template_filecontent = string.format(templates.mesh, ff, config_template)
 	end
 
-	local lkfile = path.replace_ext(ff, "lk")
+	local lkfile = ff:replace_extension("lk")
 	print("write lk : ", lkfile)
 	local lk = io.open(lkfile, "wb")
 	lk:write(template_filecontent)

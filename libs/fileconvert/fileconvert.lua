@@ -1,7 +1,6 @@
 local rawtable = require "common.rawtable"
-local localfile = require "filesystem.file"
-local fu = require "filesystem.util"
-local lfs = require "lfs"
+local fs = require "filesystem"
+local fsutil = require "filesystem.fsutil"
 
 local converter_names = {
 	shader = "fileconvert.compileshadersource",
@@ -9,12 +8,12 @@ local converter_names = {
 	texture = "",
 }
 
-if not fu.exist("log") then
+if not fs.exists("log") then
 	lfs.mkdir("log")
 end
 
 local function get_logfile()
-	return assert(localfile.open("log/fileconvert.log", "a"))
+	return assert(fsutil.open("log/fileconvert.log", "a"))
 end
 
 local origin = os.time() - os.clock()
@@ -37,7 +36,13 @@ local function log_info(info)
 end
 
 return function (plat, sourcefile, lkfile, dstfile)
-	local lkcontent = rawtable(lkfile, fu.read_from_file)
+	local lkcontent = rawtable(lkfile, 	function (filename, mode)
+		mode = mode or "rb"
+		local f = fs.open(filename, mode)
+		local c = f:read("a")
+		f:close()
+		return c
+	end)
 
 	local ctype = assert(lkcontent.type)
 	local converter_name = assert(converter_names[ctype])

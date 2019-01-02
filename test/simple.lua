@@ -14,7 +14,7 @@ local scene = require "scene.util"
 local eu = require "editor.util"
 local task = require "editor.task"
 
-local fs_util = require "filesystem.util"
+local fs = require "filesystem"
 
 iup.SetGlobal("UTF8MODE", "YES")
 

@@ -1,5 +1,4 @@
 local cu = require "common.util"
-local fu = require "filesystem.util"
 local seri = {}
 
 function seri.load(filename)
@@ -80,7 +79,9 @@ function seri.save(filename, data)
 		table.insert(content, string.format("%s = %s\n", key, value))
 	end
 	local srccontent = table.concat(content)
-	fu.write_to_file(filename, srccontent, "wb")
+	local f = fs.open(filename, "wb")
+	f:write(srccontent)
+	f:close()	
 end
 
 function seri.save_entity(w, eid)

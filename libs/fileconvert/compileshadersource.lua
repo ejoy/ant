@@ -1,6 +1,6 @@
 local toolset = require "editor.toolset"
 local path = require "filesystem.path"
-local fu = require "filesystem.util"
+local fs = require "filesystem"
 local vfs = require "vfs"
 
 local function compile_shader(plat, filename, outfilename, shadertype)
@@ -16,7 +16,7 @@ local function compile_shader(plat, filename, outfilename, shadertype)
 end
 
 local function check_compile_shader(plat, srcpath, outfile, shadertype)	
-	fu.create_dirs(path.parent(outfile))	
+	fs.create_directories(path.parent(outfile))	
 	return compile_shader(plat, srcpath, outfile, shadertype)
 end
 

@@ -5,7 +5,8 @@ local world = ecs.world
 
 local hierarchy_module = require "hierarchy"
 local path = require "filesystem.path"
-local fu = require "filesystem.util"
+local fs = require "filesystem"
+
 local ms = require "math.stack"
 local mu = require "math.util"
 local assetmgr = require "asset"
@@ -70,13 +71,13 @@ local function rebuild_hierarchy(iterop)
 		local assetdir = assetmgr.assetdir()
 		if hascache then
 			local assetpath = path.join(assetdir, epath)
-			fu.create_dirs(path.parent(assetpath))
+			fs.create_directories(path.parent(assetpath))
 			hierarchy_module.save(root, assetpath)
 		end
 
 		local builddata = hierarchy_module.build(root)
 		local pp = path.join(assetdir, rpath)
-		fu.create_dirs(path.parent(pp))
+		fs.create_directories(path.parent(pp))
 		hierarchy_module.save(builddata, pp)
 	end
 	--[@
