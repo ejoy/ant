@@ -19,7 +19,7 @@ local function gen_shader_filepath(shadername)
 	if filepath then
 		return filepath 
 	end
-	return assetmgr.find_valid_asset_path(fs.path("shaders/src") / shadername_withext)
+	return assetmgr.find_valid_asset_path(assetmgr.assetdir() / "shaders/src" / shadername_withext)
 end
 
 local function load_shader(name)
