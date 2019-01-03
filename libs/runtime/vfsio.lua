@@ -88,7 +88,7 @@ package.loaded.io = io
 _G.io = io
 
 local function loadfile(path)
-    local f, err = io_open(path, 'rb')
+    local f, err = io_open(path, 'r')
     if not f then
         return nil, err
     end

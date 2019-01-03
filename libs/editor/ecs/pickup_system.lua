@@ -11,6 +11,7 @@ local point2d = require "math.point2d"
 local bgfx = require "bgfx"
 local mu = require "math.util"
 local ms = require "math.stack"
+local fs = require "filesystem"
 
 local asset = require "asset"
 local cu = require "common.util"
@@ -38,7 +39,7 @@ end
 
 local function init_pickup_materials()
 	local mname = "pickup.material"
-	local normal_material = asset.load(mname) 
+	local normal_material = asset.load(fs.path(mname))
 	normal_material.name = mname
 
 	local transparent_material = cu.deep_copy(normal_material)

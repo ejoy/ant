@@ -3,6 +3,7 @@
 local require = import and import(...) or require
 
 local vfs_fs= require "vfs.fs"
+local fs = require "filesystem"
 
 local support_list = {
 	"shader",
@@ -54,11 +55,15 @@ assetmgr.__index = assetmgr
 local resources = setmetatable({}, {__mode="kv"})
 
 local assetsubdir = fs.path "assets"
-
+local depictiondir = assetsubdir / "depiction"
 local enginedir = fs.path "engine"
 
 function assetmgr.assetdir()
 	return assetsubdir
+end
+
+function assetmgr.depictiondir()
+	return depictiondir
 end
 
 local engine_assetpath = enginedir / assetsubdir
@@ -92,7 +97,7 @@ function assetmgr.find_valid_asset_path(respath)
 		return respath
 	end
 
-	local enginebuildpath, found = respath:gsub(("^/?%s"):format(engine_assetpath), engine_assetbuildpath)
+	local enginebuildpath, found = respath:string():gsub(("^/?%s"):format(engine_assetpath:string()), engine_assetbuildpath:string())
 	if found ~= 0 then
 		if vfs_fs.exist(enginebuildpath) then
 			return enginebuildpath
@@ -113,7 +118,7 @@ function assetmgr.find_depiction_path(p)
 	local fn = assetmgr.find_valid_asset_path(p)
 	if fn == nil then
 		if not p:string():match("^/?engine/assets") then
-			local np = "depiction" / p
+			local np = fs.path("depiction") / p
 			fn = assetmgr.find_valid_asset_path(np)
 		end
 	end
@@ -128,7 +133,7 @@ end
 function assetmgr.load(filepath, param)	
 	local res = resources[filepath:string()]
 	if res == nil then
-		local moudlename = filepath:extension():match("%.(.+)$")
+		local moudlename = filepath:extension():string():match("%.(.+)$")
 		if moudlename == nil then
 			error(string.format("not found ext from file:%s", filepath:string()))
 		end

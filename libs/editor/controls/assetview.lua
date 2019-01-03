@@ -53,16 +53,15 @@ function assetview:init(defaultrestype)
 	restype.view.VALUESTRING = defaultrestype
 
 	local function rootdirs()
-		local projectdir = lfs.currentdir():lower()
+		local projectdir = fs.current_path():string():lower()
 		local enginedir = vfs.realpath("engine/assets"):lower()
 		return {projectdir:gsub("\\", "/"), enginedir:gsub("\\", "/")}
 	end
 
 	local function is_subdir(dir)
-		local dirs = rootdirs()
-		dir = dir:lower():gsub("\\", "/")
+		local dirs = rootdirs()		
 		for _, rd in ipairs(dirs) do
-			if dir:match(rd) and dir ~= rd then
+			if dir:string():match(rd) and dir ~= rd then
 				return true
 			end
 		end
@@ -76,17 +75,17 @@ function assetview:init(defaultrestype)
 
 		l:clear()
 		if is_subdir(rootdir) then
-			l:append_item("[..]", {path=rootdir:parent(), restype=rt})
+			l:append_item("[..]", {path=rootdir:parent_path(), restype=rt})
 		end
 
 		local dirs, files = {}, {}		
-		for d in rootdir:list_directory() do
-			local fullpath = rootdir / d
+		for fullpath in rootdir:list_directory() do
+			local filename = fullpath:filename()
 			local ud = {path=fullpath, restype = rt}
 			if fs.is_directory(fullpath) then
-				table.insert(dirs, {'[' .. d:string() .. ']', ud})
+				table.insert(dirs, {'[' .. filename:string() .. ']', ud})
 			else
-				table.insert(files, {d:string(), ud})
+				table.insert(files, {filename:string(), ud})
 			end
 		end
 

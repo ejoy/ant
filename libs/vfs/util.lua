@@ -6,14 +6,12 @@ local OS = platform.OS
 local vfs = require "vfs"
 
 function util.replace_path(srcpath, checkpath, rplpath)
-	local config = require "common.config"
-
+	local realpath_lower = checkpath:string():lower()
 	if OS == "Windows" then
-		local realpath_lower = checkpath:string():lower()
 		local srcpath_lower = srcpath:string():lower()
 		local pos = srcpath_lower:find(realpath_lower) 
 		if pos then
-			return rplpath / srcpath:sub(#realpath_lower + 1), true
+			return rplpath / srcpath:string():sub(#realpath_lower + 1), true
 		end
 		return srcpath, false
 	else
@@ -23,7 +21,7 @@ function util.replace_path(srcpath, checkpath, rplpath)
 end
 
 function util.convert_to_mount_path(p, mountpath)
-	local mount_realpath = vfs.realpath(mountpath):gsub('\\', '/')
+	local mount_realpath = fs.path(vfs.realpath(mountpath:string()):gsub('\\', '/'))
 	local rpl = util.replace_path(p, mount_realpath, mountpath)
 	return rpl
 end
@@ -31,7 +29,7 @@ end
 function util.filter_abs_path(abspath)
 	local cwd = fs.current_path()
 
-	local newpath, found = util.replace_path(abspath, fs.path(cwd:string() .. "/"), "")
+	local newpath, found = util.replace_path(abspath, fs.path(cwd:string() .. "/"), fs.path "")
 	if not found then
 		return util.convert_to_mount_path(abspath, fs.path("engine/assets")), "engine"
 	end

@@ -4,7 +4,7 @@ local geo = require "render.geometry"
 local computil = require "render.components.util"
 
 local loaderutil = require "modelloader.util"
-local ms = require "math.stack"
+local fs = require "filesystem"
 local mu = require "math.util"
 local bgfx = require "bgfx"
 
@@ -79,7 +79,7 @@ end
 local function add_aabb_widget(world, eid)
 	world:add_component(eid, "widget")
 	local e = world[eid]
-	local aabb_material = "line.material"
+	local aabb_material = fs.path "line.material"
 	local descs = util.create_aabb_descs(e.mesh, aabb_material)
 	if #descs == 0 then
 		return 
@@ -129,7 +129,7 @@ local function add_aabb_widget(world, eid)
 	widget.srt = {}--{s=e.scale, r=nil, t=e.position}
 end
 
-local smaplemaerial = "skin_model_sample.material"
+local samplematerialpath = fs.path "skin_model_sample.material"
 
 function util.create_sample_entity(world, skepath, anipath, skinning_meshpath)
 	local eid = world:new_entity("position", "scale", "rotation",		
@@ -142,12 +142,12 @@ function util.create_sample_entity(world, skepath, anipath, skinning_meshpath)
 
 	mu.identify_transform(e)
 
-	if skepath and skepath ~= "" then
+	if skepath:string() ~= "" then
 		world:add_component(eid, "skeleton")
 		computil.load_skeleton(e.skeleton, skepath)
 	end
 
-	if anipath and anipath ~= "" then
+	if anipath:string() ~= "" then
 		world:add_component(eid, "animation")
 		local anicomp = e.animation
 		computil.init_animation(anicomp, e.skeleton)
@@ -155,7 +155,7 @@ function util.create_sample_entity(world, skepath, anipath, skinning_meshpath)
 	end
 
 	local skinning_mesh
-	if skinning_meshpath and skinning_meshpath ~= "" then
+	if skinning_meshpath:string() ~= "" then
 		if e.skeleton and e.animation then
 			world:add_component(eid, "skinning_mesh")
 			skinning_mesh = e.skinning_mesh
@@ -167,7 +167,7 @@ function util.create_sample_entity(world, skepath, anipath, skinning_meshpath)
 	end
 	
 	e.mesh.assetinfo = gen_mesh_assetinfo(skinning_mesh)
-	computil.load_material(e.material,{smaplemaerial})
+	computil.load_material(e.material,{samplematerialpath})
 
 	add_aabb_widget(world, eid)
 	return eid

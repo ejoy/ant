@@ -15,9 +15,9 @@ local build_system = ecs.system "build_hierarchy_system"
 
 local function create_hierarchy_path(ref_path)	
 	local ext = ref_path:extension()
-	assert(ext:lower() == ".hierarchy")
-	ref_path = ref_path:replace_extension("")
-	return fs.path(ref_path:string() .. "-hie.hierarchy")	
+	assert(ext == fs.path ".hierarchy")	
+	local newfilename = ref_path:string():gsub("%.hierarchy$", "-hie.hierarchy")	
+	return fs.path(newfilename)
 end
 
 local function rebuild_hierarchy(iterop)
@@ -69,13 +69,13 @@ local function rebuild_hierarchy(iterop)
 		local assetdir = assetmgr.assetdir()
 		if hascache then
 			local assetpath = assetdir / epath
-			fs.create_directories(assetpath:parent())
-			hierarchy_module.save(root, assetpath)
+			fs.create_directories(assetpath:parent_path())
+			hierarchy_module.save(root, assetpath:string())
 		end
 
 		local builddata = hierarchy_module.build(root)
 		local pp = assetdir / rpath
-		fs.create_directories(pp:parent())
+		fs.create_directories(pp:parent_path())
 		hierarchy_module.save(builddata, pp:string())
 	end
 	--[@

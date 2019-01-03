@@ -11,26 +11,13 @@ local ru = require "render.util"
 local loaders = {
 	state = function (t) return t end, 
 	shader = function (t)
-		return assetutil.shader_loader(t) --filter_path(t))
+		return assetutil.shader_loader(t)
 	end
 }
 
 return function(filepath)
 	local fn = assetmgr.find_depiction_path(filepath)	
 	local material = assert(rawtable(fn))
-
-	local function filter_path(p)
-		local parentpath = fn:parent()
-		if parentpath then
-			local subres_path = parentpath / p
-			if not vfs_fs.exist(subres_path) then
-				return p
-			end
-			
-			return subres_path
-		end
-		return p
-	end
 
     local material_info = {}
 
@@ -40,7 +27,15 @@ return function(filepath)
             local t = type(v)
 			if t == "string" then
 				-- read file under .material file folder, if not found try from assets path
-				local subres_path = filter_path(fs.path(v))				
+				local function filter_path(parentpath, p)					
+					local subres_path = parentpath / p
+					if not vfs_fs.exist(subres_path) then
+						return p
+					end
+						
+					return subres_path
+				end
+				local subres_path = filter_path(fn:parent_path(), fs.path(v))
                 material_info[k] = assetmgr.load(subres_path)
 			elseif t == "table" then
 				material_info[k] = loader(v)

@@ -1,11 +1,11 @@
 local vfs = require "vfs"
 local assetmgr = require "asset"
 
-return function(filename)
-	local fn = assetmgr.find_valid_asset_path(filename)
+return function(filepath)
+	local fn = assetmgr.find_valid_asset_path(filepath)
 
-	local function find_tagop(readops)
-		local f = io.open(fn, "rb")
+	local function find_tagop(filepath, readops)
+		local f = io.open(filepath:string(), "rb")
 		
 		--print(endless)
 		for tag, op in pairs(readops) do
@@ -22,27 +22,25 @@ return function(filename)
 		f:close()
 	end
 
-	local realfilename = vfs.realpath(fn)
-
 	local readops = {
-		["ozz-animation"] = function ()
+		["ozz-animation"] = function (filename)
 			local animodule = require "hierarchy.animation"
-			return animodule.new_ani(realfilename)
+			return animodule.new_ani(filename)
 		end,
-		["ozz-skeleton"] = function()
+		["ozz-skeleton"] = function(filename)
 			local hiemodule = require "hierarchy"
-			return hiemodule.build(realfilename)
+			return hiemodule.build(filename)
 		end,
-		["ozz-sample-Mesh"] = function()
+		["ozz-sample-Mesh"] = function(filename)
 			local animodule = require "hierarchy.animation"
-			return animodule.new_ozzmesh(realfilename)
+			return animodule.new_ozzmesh(filename)
 		end,
 	}
 
-	local readop = find_tagop(readops)
+	local readop = find_tagop(fn, readops)
 	if readop then
 		return {
-			handle = readop()
+			handle = readop(vfs.realpath(fn:string()))
 		}
 	end
 	error("not support type")

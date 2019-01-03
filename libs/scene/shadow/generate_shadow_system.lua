@@ -243,16 +243,17 @@ shadow_maker.__index = shadow_maker
 -- shadow_maker init 
 function  shadow_maker:init( shadow_maker_entity )
 
-    local sm_name = "shadow.material"                   
-    local shadow_material = asset.load( sm_name )
+	local sm_name = "shadow.material"
+	local depictiondir = asset.depictiondir()
+    local shadow_material = asset.load( depictiondir / sm_name )
     shadow_material.name = sm_name 
 
     local depth_name = "drawdepth.material"
-    local drawdepth_material = asset.load( depth_name )
+    local drawdepth_material = asset.load( depictiondir / depth_name )
     drawdepth_material.name = depth_name 
 
     local drawscene_name = "PVPScene/scene-mat-shadow.material"
-    local drawscene_material = asset.load( drawscene_name )
+    local drawscene_material = asset.load( depictiondir / drawscene_name )
     drawscene_material.name = drawscene_name 
     
 

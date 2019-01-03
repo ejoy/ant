@@ -10,6 +10,8 @@ local bgfx  = require "bgfx"
 local cu 	= require "render.components.util"
 local mu  	= require "math.util"
 local ms = require "math.stack"
+local fs = require "filesystem"
+local computil = require "render.components.util"
 
 local general_editor_entites = ecs.system "general_editor_entites"
 
@@ -58,7 +60,7 @@ function general_editor_entites:init()
 			}
 		}
 		
-		cu.load_material(axis.material,{"line.material",})
+		cu.load_material(axis.material,{fs.path "line.material",})
     end
 
     do
@@ -93,47 +95,26 @@ function general_editor_entites:init()
 			return corners
 		end
 
-		frusutm_debug.mesh.ref_path = ""
-        frusutm_debug.mesh.assetinfo = {
-			handle = {
-				groups = {
-					{
-						vdecl = vdecl,
-						vb = {
-							decls = {
-								vdecl
-							},
-							handles = {
-								bgfx.create_vertex_buffer(
-								create_frustum_points(),
-								vdecl),
-							}
-						},
-						ib = {
-							handle = bgfx.create_index_buffer {
-								-- top
-								1, 2, -- ltn, rtn
-								1, 3, -- ltn, ltf							
-								3, 4, -- ltf, rtf
-								4, 2, -- rtf, rtn
+		local ib = {
+			-- top
+			1, 2, -- ltn, rtn
+			1, 3, -- ltn, ltf							
+			3, 4, -- ltf, rtf
+			4, 2, -- rtf, rtn
 
-								-- bottom
-								1+4, 2+4, -- ltn, rtn
-								1+4, 3+4, -- ltn, ltf							
-								3+4, 4+4, -- ltf, rtf
-								4+4, 2+4, -- rtf, rtn
+			-- bottom
+			1+4, 2+4, -- ltn, rtn
+			1+4, 3+4, -- ltn, ltf							
+			3+4, 4+4, -- ltf, rtf
+			4+4, 2+4, -- rtf, rtn
 
-								1, 5,
-								2, 6,
-								3, 7,
-								4, 8,
-							},	
-						}
-					}
-				}
-			}
+			1, 5,
+			2, 6,
+			3, 7,
+			4, 8,
 		}
-	
-		cu.load_material(frusutm_debug.material,{"line.material",})
+
+        frusutm_debug.mesh.assetinfo = computil.create_mesh_handle(vdecl, create_frustum_points(), ib)	
+		cu.load_material(frusutm_debug.material,{ fs.path "line.material",})
 	end
 end

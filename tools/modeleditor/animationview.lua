@@ -48,14 +48,14 @@ local function get_tag_name(filename)
 	return name ~= "" and chop_name(name) or "ani"	
 end
 
-local function add_ani(aniview, filename)
+local function add_ani(aniview, filepath)
 	local gird = get_gird(aniview)
 	
-	gird:append_line({get_tag_name(filename), filename})
+	gird:append_line({get_tag_name(filepath), filepath:string()})
 end
 
-function animationview:add(filename)
-	add_ani(self, filename)
+function animationview:add(filepath)
+	add_ani(self, filepath)
 end
 
 function animationview.new(config)

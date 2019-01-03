@@ -4,6 +4,8 @@ util.__index = util
 local asset = require "asset"
 local common_util = require "common.util"
 local mu = require "math.util"
+local bgfx = require "bgfx"
+local fs = require "filesystem"
 
 
 local function load_res(comp, respath, param, errmsg)
@@ -81,7 +83,7 @@ function util.new_ani_result(num_joints)
 end
 
 function util.load_texture(name, stage, texpath)	
-	assert(type(texpath) == "string", "texture type's default value should be path to texture file")
+	assert(type(texpath) == "userdata", "texture type's default value should be path to texture file")
 	local assetinfo = asset.load(texpath)
 	return {name=name, type="texture", stage=stage, value=assetinfo.handle}
 end
@@ -90,7 +92,7 @@ end
 function util.update_properties(dst_properties, src_properties)		
 	for k, v in pairs(src_properties) do
 		if v.type == "texture" then
-			dst_properties[k] = util.load_texture(v.name, v.stage, v.default or v.path)
+			dst_properties[k] = util.load_texture(v.name, v.stage, fs.path(v.default or v.path))
 		else
 			dst_properties[k] = {name=v.name, type=v.type, value=common_util.deep_copy(v.default or v.value)}
 		end
@@ -175,8 +177,30 @@ function util.is_entity_visible(entity)
 	return false
 end
 
+function util.create_mesh_handle(decl, vb, ib)
+	local groups = {}
+	
+	if type(decl) == "table" then
+		assert("not implement")
+	else
+		local group = {
+			vb = {
+				decls={decl}, 
+				handles={bgfx.create_vertex_buffer(vb, decl)},
+			},			
+		}
+
+		if ib then
+			group.ib = {handle = bgfx.create_index_buffer(ib)}
+		end
+
+		table.insert(groups, group)
+	end
+
+	return {handle={groups = groups}}
+end
+
 function util.create_gird_entity(world, name, w, h, unit)
-	local bgfx = require "bgfx"
 	local geo = require "render.geometry"
 	local girdid = world:new_entity(
 		"rotation", "position", "scale", 
@@ -203,24 +227,9 @@ function util.create_gird_entity(world, name, w, h, unit)
     }
 
 	gird.mesh.ref_path = ""
-    gird.mesh.assetinfo = {
-		handle = {
-			groups = {
-				{
-					vb = {
-						decls = {vdecl},
-						handles = {
-							bgfx.create_vertex_buffer(gvb, vdecl)
-						},
-					},
-					ib = {handle=bgfx.create_index_buffer(ib)}
-				}
-			}
-		}
-	}
+    gird.mesh.assetinfo = util.create_mesh_handle(vdecl, gvb, ib)
 
-	gird.material.content[1] = {path="line.material", properties={}}
-	util.load_material(gird.material)
+	util.load_material(gird.material, {fs.path "line.material"})
 
 	return girdid
 end

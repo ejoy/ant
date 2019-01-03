@@ -38,7 +38,7 @@ local function searchpath(name, path)
     name = string.gsub(name, '%.', '/')
     for c in string.gmatch(path, '[^;]+') do
         local filename = string.gsub(c, '%?', name)
-        local f = io_open(vfs_path(filename))
+        local f = io_open(vfs_path(filename), 'r')
         if f then
             return filename, f
         end

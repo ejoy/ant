@@ -65,8 +65,8 @@ local function split_url(url)
 	repeat
 		local name = url:filename()
 		table.insert(names, 1, {name, url})
-		url = url:parent()
-	until url == nil
+		url = url:parent_path()
+	until url:string() == "" or url:string() == "/"
 	return names
 end
 

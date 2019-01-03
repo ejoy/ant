@@ -6,7 +6,7 @@ local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
 
-local vfs_fs = require "vfs.fs"
+local vfs = require "vfs"
 
 local ecs = {}
 local world = {} ; world.__index = world
@@ -177,7 +177,7 @@ local function searchpath(name, path)
 	name = string.gsub(name, '%.', '/')
 	for c in string.gmatch(path, '[^;]+') do
 		local filename = string.gsub(c, '%?', name)
-		if vfs_fs.isfile(filename) then
+		if vfs.type(filename) == "file" then
 			return filename
 		end
 		err = err .. ("\n\tno file '%s'"):format(filename)

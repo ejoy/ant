@@ -8,11 +8,11 @@ function inputer:get_text()
 	local view = self.view
 	return iup.GetChild(view, 0)
 end
-function inputer:get_filename()
+function inputer:get_input()
 	return self:get_text().VALUE
 end
 
-function inputer:set_filename(filename)
+function inputer:set_input(filename)
 	self:get_text().VALUE = filename
 end
 

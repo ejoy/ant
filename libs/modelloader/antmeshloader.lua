@@ -1,5 +1,3 @@
-local localfile = require "filesystem.file"
-
 local function v3_unpack(v)
 	local v1, v2, v3 = string.unpack("<fff", v)
 	return {v1, v2, v3}
@@ -38,9 +36,9 @@ end
 -- 	return s:match("([^:]+):(.*)$")
 -- end
 
-return function (filename)
-	local function openfile(filename)
-		local ff = assert(localfile.open(filename, "rb"))		
+return function (filepath)
+	local function openfile(filepath)
+		local ff = assert(io.open(filepath:string(), "rb"))		
 		-- local content = ff:read("a")
 		-- ff:close()
 		-- local readit = 1
@@ -68,7 +66,7 @@ return function (filename)
 		-- end
 		local function read(size)
 			if ff == nil then
-				error("file is close and release, but still accessed, filename : ", filename)
+				error("file is close and release, but still accessed, filepath : ", filepath)
 			end
 			return ff:read(size)
 		end
@@ -102,7 +100,7 @@ return function (filename)
 		end
 	end
 	
-	local kvpairs = openfile(filename)
+	local kvpairs = openfile(filepath)
 
 	local function struct_unpack(v, mapper)
 		assert(v == nil or v == "")

@@ -35,6 +35,7 @@ ecs.import "tools.modeleditor.accessory_system"
 local ms = require "math.stack"
 local util = require "tools.modeleditor.util"
 local assetmgr = require "asset"
+local fs = require "filesystem"
 
 ecs.tag "sampleobj"
 
@@ -106,12 +107,8 @@ local function enable_bones_visible()
 	end
 end
 
-local function check_create_sample_entity(skepath, anipath, skinning_meshpath)
+local function check_create_sample_entity(skepath, anipath, smpath)
 	local function check_path_valid(pp)
-		if pp == nil or pp == "" then
-			return false
-		end
-
 		if not assetmgr.find_valid_asset_path(pp) then
 			iup.Message("Error", string.format("invalid path : %s", pp))
 			return false
@@ -121,12 +118,12 @@ local function check_create_sample_entity(skepath, anipath, skinning_meshpath)
 	end
 
 	-- only skinning meshpath is needed!
-	if check_path_valid(skinning_meshpath) then			
+	if check_path_valid(smpath) then			
 		if sample_eid then
 			world:remove_entity(sample_eid)
 		end
 
-		sample_eid = util.create_sample_entity(world, skepath, anipath, skinning_meshpath)
+		sample_eid = util.create_sample_entity(world, skepath, anipath, smpath)
 		enable_sample_visible()
 	end
 end
@@ -142,10 +139,10 @@ local function update_static_duration_value()
 		local e = world[sample_eid]
 		local ani = e.animation
 		if ani then 
-			local anifilename = get_sel_ani()
+			local anipath = get_sel_ani()
 			local anihandle = nil
 			for _, ani in ipairs(ani.anilist) do
-				if ani.ref_path == anifilename then
+				if ani.ref_path == anipath then
 					anihandle = ani.handle
 				end
 			end
@@ -156,7 +153,7 @@ local function update_static_duration_value()
 				local static_duration_value = iup.GetDialogChild(dlg, "STATIC_DURATION")
 				static_duration_value.TITLE = string.format("Time(%.2f ms)", duration * 1000)
 			else
-				print("not found ani handle, select animation resource:%s", anifilename)
+				print("not found ani handle, select animation resource:%s", anipath)
 			end
 		end
 	end
@@ -200,21 +197,23 @@ local function init_paths_ctrl()
 	local sminputer = iup.GetDialogChild(dlg, "SMINPUTER").owner
 	local aniview = iup.GetDialogChild(dlg, "ANIVIEW").owner
 
-	skeinputer:set_filename("meshes/skeleton/skeleton.ozz")
-	sminputer:set_filename("meshes/mesh.ozz")
+	local skepath = fs.path "meshes/skeleton/skeleton.ozz"
+	local smfilename = fs.path "meshes/mesh.ozz"
+	skeinputer:set_input(skepath:string())
+	sminputer:set_input(smfilename:string())
 
 	if aniview:count() == 0 then
-		aniview:add("meshes/animation/animation_base.ozz")
+		aniview:add(fs.path "meshes/animation/animation_base.ozz")
 	end
 
 	local blender = iup.GetDialogChild(dlg, "BLENDER").owner
 	aniview:set_blender(blender)
 
 	local change_cb = function ()
-		local skepath = skeinputer:get_filename()
-		local smpath = sminputer:get_filename()
+		local skepath = fs.path(skeinputer:get_input())
+		local smpath = fs.path(sminputer:get_input())
 
-		local anipath = aniview:get(1)
+		local anipath = fs.path(aniview:get(1))
 		check_create_sample_entity(skepath, anipath, smpath)
 	end
 

@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local bgfx = require "bgfx"
-
+local fs = require "filesystem"
 local mu = require "math.util"
 
 local componentutil = require "render.components.util"
@@ -68,7 +68,7 @@ function debug_obj:init()
 		assetinfo={handle=init_wireframe_mesh()}
 	}
 
-	componentutil.load_material(dbentity.material, {"line.material"})
+	componentutil.load_material(dbentity.material, {fs.path "line.material"})
 end
 
 local debug_draw = ecs.system "debug_draw"

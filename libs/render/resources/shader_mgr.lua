@@ -13,13 +13,13 @@ local shader_mgr = {}
 shader_mgr.__index = shader_mgr
 
 local function gen_shader_filepath(shadername)
-	assert(fs.path(shadername):extenstion() == nil)
+	assert(fs.path(shadername):extension() == fs.path '')
 	local shadername_withext = fs.path(shadername .. ".sc")
 	local filepath = assetmgr.find_valid_asset_path(shadername_withext)
 	if filepath then
 		return filepath 
 	end
-	return assetmgr.find_valid_asset_path("shaders/src" / shadername_withext)
+	return assetmgr.find_valid_asset_path(fs.path("shaders/src") / shadername_withext)
 end
 
 local function load_shader(name)
@@ -30,9 +30,10 @@ local function load_shader(name)
 
 	if vfs.localvfs then
 		local cvtutil = require "fileconvert.util"
-		assert(cvtutil.need_build(filepath:string()))
+		assert(cvtutil.need_build(filepath))
 	end	
-	local f = assert(fs.open(filepath:string(), "rb"))
+
+	local f = assert(io.open(filepath:string(), "rb"))
 	local data = f:read "a"
 	f:close()
 	local h = bgfx.create_shader(data)

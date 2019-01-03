@@ -11,11 +11,11 @@ local exts = {
 function util.need_build(srcfilepath)
 	local ext = srcfilepath:extension()
 	if ext then
-		ext = ext:lower()
+		ext = ext:string():lower():match("([^.]+)")
 		if exts[ext] then
-			local lk = srcfilepath .. ".lk"
+			local lk = srcfilepath:string() .. ".lk"
 			local r = vfs.realpath(lk)
-			if fs.exists(r) then
+			if fs.exists(fs.path(r)) then
 				return true
 			end
 			error(string.format("src:%s, need lk file, but not provided", srcfilepath))

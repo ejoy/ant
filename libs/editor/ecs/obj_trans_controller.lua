@@ -10,12 +10,16 @@ local assetmgr = require "asset"
 local mu = require "math.util"
 local cu = require "common.util"
 local ms = require "math.stack"
+local fs = require "filesystem"
 
 local components_util = require "render.components.util"
 
-local axisbase_controller_hierarchyname = "hierarchy/axisbase_contrller.hierarchy"
-local axis_hierarchyname = "hierarchy/axis.hierarchy"
-local rotator_hierarchyname = "hierarchy/rotator.hierarchy"
+local assetdir = assetmgr.assetdir()
+local depictiondir = assetdir / "depiction"
+local axisbase_controller_hierarchyname = assetdir / "hierarchy/axisbase_contrller.hierarchy"
+local axis_hierarchyname = assetdir / "hierarchy/axis.hierarchy"
+local rotator_hierarchyname = assetdir / "hierarchy/rotator.hierarchy"
+local objtrans_materialpath = depictiondir / "obj_trans/obj_trans.material"
 
 ecs.tag "pos_transform"
 ecs.tag "scale_transform"
@@ -314,15 +318,15 @@ local function add_axis_base_transform_entites(basename, headmeshfile, axismeshf
 	local namemapper = axis_root.hierarchy_name_mapper
 	namemapper.xaxis = add_axis_entites(basename, "x", 
 										headmeshfile, axismeshfile,
-										"obj_trans/obj_trans.material", tag_comp, colors["red"])
+										objtrans_materialpath, tag_comp, colors["red"])
 	
 	namemapper.yaxis = add_axis_entites(basename, "y", 
 										headmeshfile, axismeshfile,
-										"obj_trans/obj_trans.material", tag_comp, colors["green"])
+										objtrans_materialpath, tag_comp, colors["green"])
 
 	namemapper.zaxis = add_axis_entites(basename, "z", 
 										headmeshfile, axismeshfile,
-										"obj_trans/obj_trans.material", tag_comp, colors["blue"])
+										objtrans_materialpath, tag_comp, colors["blue"])
 
 	axis_root.editable_hierarchy.ref_path = axisbase_controller_hierarchyname
 	axis_root.editable_hierarchy.root = assetmgr.load(axisbase_controller_hierarchyname, {editable = true})
@@ -380,11 +384,11 @@ local function add_axis_base_transform_entites(basename, headmeshfile, axismeshf
 end
 
 local function add_translate_entities(colors)
-	return add_axis_base_transform_entites("translate", "cone.mesh", "cylinder.mesh", "pos_transform", colors)
+	return add_axis_base_transform_entites("translate", depictiondir / "cone.mesh", depictiondir / "cylinder.mesh", "pos_transform", colors)
 end
 
 local function add_scale_entities(colors)
-	return add_axis_base_transform_entites("scale", "cube.mesh", "cylinder.mesh", "scale_transform", colors)	
+	return add_axis_base_transform_entites("scale", depictiondir / "cube.mesh", depictiondir / "cylinder.mesh", "scale_transform", colors)
 end
 
 local function add_rotator_entities(colors)	
@@ -412,7 +416,7 @@ local function add_rotator_entities(colors)
 		local mapper = elem.hierarchy_name_mapper
 		local function add_entity(name, meshfilename, colorname)
 			local eid = components_util.create_render_entity(world, name, meshfilename,
-			"obj_trans/obj_trans.material")
+			objtrans_materialpath)
 			world:add_component(eid, "rotator_transform", "editor", "parent")
 			local entity = world[eid]
 	
@@ -425,8 +429,8 @@ local function add_rotator_entities(colors)
 			return eid
 		end
 	
-		mapper["rotator"] = add_entity("rotator-" .. elemname, "rotator.mesh", clrname)
-		local axiseid = add_entity("rotator-axis-" .. elemname, "cylinder.mesh", clrname)
+		mapper["rotator"] = add_entity("rotator-" .. elemname, fs.path "rotator.mesh", clrname)
+		local axiseid = add_entity("rotator-axis-" .. elemname, fs.path "cylinder.mesh", clrname)
 		mapper["rotator-axis"] = axiseid
 		world:remove_component(axiseid, "can_select")
 		return elem_eid

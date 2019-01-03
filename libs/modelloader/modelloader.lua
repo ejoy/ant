@@ -15,8 +15,7 @@ local function load_from_source(filepath)
 		local cvtutil = require "fileconvert.util"
 		assert(cvtutil.need_build(filepath))
 	end
-	local validfile = vfs.realpath(filepath)
-	return antmeshloader(validfile)
+	return antmeshloader(filepath)
 end
 
 local function create_vb(vb)

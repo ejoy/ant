@@ -1,6 +1,5 @@
 local rawtable = require "common.rawtable"
 local fs = require "filesystem"
-local fsutil = require "filesystem.fsutil"
 
 local converter_names = {
 	shader = "fileconvert.compileshadersource",
@@ -8,12 +7,17 @@ local converter_names = {
 	texture = "",
 }
 
-if not fs.exists("log") then
-	lfs.mkdir("log")
-end
+local logfolder = fs.current_path() / "log"
+fs.create_directories(logfolder)
+
+local logfile = nil
 
 local function get_logfile()
-	return assert(fsutil.open("log/fileconvert.log", "a"))
+	if logfile == nil then
+		logfile = assert(fs.open(logfolder / "fileconvert.log", "a"))
+	end
+
+	return logfile
 end
 
 local origin = os.time() - os.clock()
@@ -24,15 +28,16 @@ end
 
 local function log_err(src, lk, err)
 	local log = get_logfile()
-
-	log:write(string.format("[fileconvert:%s]src:%s, lk:%s, error:%s\n", os_date(), src, lk, err))
-	log:close()
+	local errinfo = string.format("[fileconvert:%s]src:%s, lk:%s, error:%s\n", os_date(), src, lk, err)
+	log:write(errinfo)
+	log:flush()
+	print(errinfo)
 end
 
 local function log_info(info)
 	local log = get_logfile()
 	log:write(string.format("[fileconvert-info:%s]%s\n", os_date(), info))
-	log:close()
+	log:flush()
 end
 
 return function (plat, sourcefile, lkfile, dstfile)
@@ -50,8 +55,7 @@ return function (plat, sourcefile, lkfile, dstfile)
 	local c = require(converter_name)
 	log_info(string.format("plat:%s, src:%s, lk:%s, dst:%s, cvt type:%s", plat, sourcefile, lkfile, dstfile, ctype))
 	local success, err = c(plat, sourcefile, lkcontent, dstfile)
-	if not success and err then		
-		print("source file:", sourcefile, "lk file:", lkfile, "error:", err)		
+	if not success and err then
 		log_err(sourcefile, lkfile, err)
 	end
 

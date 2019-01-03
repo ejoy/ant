@@ -1,12 +1,12 @@
 --luacheck: globals iup import
 local require = import and import(...) or require
 
-local fs = require "cppfs"
 local asset = require "asset"
 local vfsutil = require "vfs.util"
-local localfs = require "filesystem.file"
-
-local configDir = (os.getenv 'UserProfile') .. '\\.ant\\config\\'
+local fs = require "filesystem"
+local configDir = fs.mydocs_path() / '.ant/config'
+fs.create_directories(configDir)
+local recentcfg = configDir / 'recent.cfg'
 
 --project related
 local editor_mainwindow = require 'test.samples.PVPScene.mainwindow'
@@ -70,14 +70,13 @@ local guiOpenMap = iup.GetChild(iup.GetChild(guiMain, 0), 0)
 local guiRunFile = iup.GetChild(iup.GetChild(iup.GetChild(guiMain, 0), 0), 2)
 local openMap
 
-local function recentSave()
-    fs.create_directories(fs.path(configDir))
-    local f = localfs.open(configDir .. 'recent.cfg', 'w')
+local function recentSave()    
+    local f = fs.open(recentcfg, 'w')
     if not f then
         return
     end
     for _, path in ipairs(config.recent) do
-        f:write(path .. '\n')
+        f:write(path:string() .. '\n')
     end
     f:close()
 end
@@ -93,7 +92,7 @@ local function recentUpdate()
     end
     for _, path in ipairs(config.recent) do
         local h = iup.item {
-            title = path,
+            title = path:string(),
             action = function()
         		openMap(path)
             end
@@ -123,13 +122,13 @@ end
 
 local function recentInit()
     config.recent = {}
-    local f, err = localfs.open(configDir .. 'recent.cfg', 'r')
+    local f, err = fs.open(recentcfg, 'r')
     if not f then
 		print(err)
         return
     end
-    for path in f:lines() do
-        table.insert(config.recent, path)
+    for p in f:lines() do
+        table.insert(config.recent, fs.path(p))
     end
     f:close()
     recentUpdate()
@@ -144,15 +143,15 @@ function openMap(path)
 	path = vfsutil.filter_abs_path(path)
 
 	local function load_modules(path)
-		local ext = path:match("%.([%w_-]+)$")
-		if ext == "module" then
+		local ext = path:extension()
+		if ext == ".module" then
 			return asset.load(path)
 		end
 
-		assert(ext == "lua")
-		path = path:match("(.+)%.lua$")		
-		path = path:gsub("[/\\]", ".")
-		return {path}
+		assert(ext == fs.path ".lua")
+		-- from file path, like: abc/efg/hij.lua, to abc.efg.hij
+		local modulename = path:string():match("(.+)%.lua$"):gsub("[/\\]", ".")
+		return {modulename}
 	end
 
 	local modules = load_modules(path)
@@ -194,7 +193,7 @@ local function popup_select_file_dlg(parentdlg, filepattern, seletfileop)
 	
 	filedlg:popup(iup.CENTERPARENT, iup.CENTERPARENT)
 	if tonumber(filedlg.status) ~= -1 then
-		seletfileop(filedlg.value)
+		seletfileop(fs.path(filedlg.value))
 	end
 	filedlg:destroy()
 end

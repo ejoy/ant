@@ -3,15 +3,12 @@ local require = import and import(...) or require
 
 local rawtable = require "common.rawtable"
 local bgfx = require "bgfx"
-
+local fs = require "filesystem"
 local assetmgr = require "asset"
-local vfs_fs = require "vfs.fs"
 
-local function texture_load(filename, info)
-	local f = assert(vfs_fs.open(filename, "rb"))
-	if f == nil then
-		error(string.format("load texture file failed, filename : %s", filename))
-	end
+local function texture_load(filepath, info)
+	local filename = filepath:string()
+	local f = assert(io.open(filename, "rb"))
 	local imgdata = f:read "a"
 	f:close()
 	local h = bgfx.create_texture(imgdata, info)
@@ -81,7 +78,7 @@ return function (filename)
 	local fn = assetmgr.find_depiction_path(filename)
 	local tex = rawtable(fn)
 
-	local pp = assetmgr.find_valid_asset_path(assert(tex.path))
+	local pp = assetmgr.find_valid_asset_path(fs.path(tex.path))
 	if pp == nil then
 		error("texture path is not valid, path is : " .. tex.path)
 	end
