@@ -3,7 +3,6 @@ local ctrlutil = require "editor.controls.util"
 
 local inputer = require "tools.modeleditor.fileselectinputer"
 local probeclass = require "editor.controls.assetprobe"
-local path = require "filesystem.path"
 
 local matviewclass = require "editor.controls.matrixview"
 
@@ -35,7 +34,7 @@ function animationview:get_blender()
 end
 
 local function get_tag_name(filename)
-	local name = path.filename_without_ext(filename)
+	local name = filename:filename():string():match("([^.]+)")
 	name = name or "ani"
 
 	local function chop_name(name)

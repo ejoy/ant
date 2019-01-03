@@ -4,7 +4,6 @@ local ecs = ...
 local world = ecs.world
 
 local hierarchy_module = require "hierarchy"
-local path = require "filesystem.path"
 local fs = require "filesystem"
 
 local ms = require "math.stack"
@@ -15,11 +14,10 @@ local assetmgr = require "asset"
 local build_system = ecs.system "build_hierarchy_system"
 
 local function create_hierarchy_path(ref_path)	
-	local ext = path.ext(ref_path)
-	assert(ext:lower() == "hierarchy")
-	ref_path = path.remove_ext(ref_path)
-	ref_path = ref_path .. "-hie.hierarchy"	
-	return ref_path
+	local ext = ref_path:extension()
+	assert(ext:lower() == ".hierarchy")
+	ref_path = ref_path:replace_extension("")
+	return fs.path(ref_path:string() .. "-hie.hierarchy")	
 end
 
 local function rebuild_hierarchy(iterop)
@@ -37,7 +35,7 @@ local function rebuild_hierarchy(iterop)
 	end	
 
 	local function mark_refpath(erefpath, refpath)		
-		local content = moditied_files[erefpath]
+		local content = moditied_files[erefpath:string()]
 		if content == nil then
 			moditied_files[erefpath] = refpath
 		end
@@ -70,15 +68,15 @@ local function rebuild_hierarchy(iterop)
 		-- we need to rewrite the file from cache
 		local assetdir = assetmgr.assetdir()
 		if hascache then
-			local assetpath = path.join(assetdir, epath)
-			fs.create_directories(path.parent(assetpath))
+			local assetpath = assetdir / epath
+			fs.create_directories(assetpath:parent())
 			hierarchy_module.save(root, assetpath)
 		end
 
 		local builddata = hierarchy_module.build(root)
-		local pp = path.join(assetdir, rpath)
-		fs.create_directories(path.parent(pp))
-		hierarchy_module.save(builddata, pp)
+		local pp = assetdir / rpath
+		fs.create_directories(pp:parent())
+		hierarchy_module.save(builddata, pp:string())
 	end
 	--[@
 

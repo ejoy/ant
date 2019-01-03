@@ -2,7 +2,6 @@ local require = import and import(...) or require
 local log = log and log(...) or print
 
 local rawtable = require "common.rawtable"
-local path = require "filesystem.path"
 local assetmgr = require "asset"
 
 -- terrain loader protocal 

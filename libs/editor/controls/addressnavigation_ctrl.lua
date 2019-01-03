@@ -1,7 +1,6 @@
 --luacheck: globals iup
 local link = {}; link.__index = link
 
-local path = require "filesystem.path"
 local observersclass = require "editor.common.observer"
 local ctrlutil = require "editor.controls.util"
 
@@ -64,9 +63,9 @@ end
 local function split_url(url)
 	local names = {}
 	repeat
-		local name = path.filename(url)
+		local name = url:filename()
 		table.insert(names, 1, {name, url})
-		url = path.parent(url)
+		url = url:parent()
 	until url == nil
 	return names
 end

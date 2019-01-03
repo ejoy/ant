@@ -238,8 +238,8 @@ function add_entity_sys:init()
 	
 	local hie_refpath = "hierarchy/test_hierarchy.hierarchy"
 	-- do
-	-- 	local assetpath = path.join(assetmgr.assetdir(), hie_refpath)
-	-- 	fu.create_dirs(path.parent(assetpath))
+	-- 	local assetpath = assetmgr.assetdir() / hie_refpath
+	-- 	fs.create_directories(assetpath:parent())
 	-- 	local hierarchy = require "hierarchy"
 	-- 	local root = hierarchy.new()
 

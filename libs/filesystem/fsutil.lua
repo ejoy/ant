@@ -62,9 +62,9 @@ return function (fs)
 						end
 					else
 						assert(type(filter_exts) == "table")
-						local ext = path.ext(p)
+						local ext = p:extension()
 						for _, e in ipairs(filter_exts) do
-							if ext == e then
+							if ext:match(e) then
 								table.insert(files, filepath)
 							end
 						end

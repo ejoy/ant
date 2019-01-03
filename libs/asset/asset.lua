@@ -2,8 +2,6 @@
 
 local require = import and import(...) or require
 
-local path = require "filesystem.path"
-
 local vfs_fs= require "vfs.fs"
 
 local support_list = {
@@ -13,9 +11,7 @@ local support_list = {
 	"material",
 	"module",
 	"texture",
-	"hierarchy",
-	"ske",
-	"ani",	
+	"hierarchy",			
 	"lk",
 	"ozz",
 }
@@ -57,22 +53,20 @@ assetmgr.__index = assetmgr
 
 local resources = setmetatable({}, {__mode="kv"})
 
-local cachedir = "cache"
-function assetmgr.cachedir()
-	return cachedir
-end
+local assetsubdir = fs.path "assets"
 
-local assetdir = "assets"
+local enginedir = fs.path "engine"
+
 function assetmgr.assetdir()
-	return assetdir
+	return assetsubdir
 end
 
-local engine_assetpath = "engine/" .. assetdir
-local engine_assetbuildpath = engine_assetpath .. "/build"
+local engine_assetpath = enginedir / assetsubdir
+local engine_assetbuildpath = engine_assetpath / "build"
 
 local searchdirs = {
-	assetdir, 
-	assetdir .. "/build",
+	assetsubdir, 
+	assetsubdir / "build",
 	engine_assetpath,
 	engine_assetbuildpath,
 }
@@ -100,15 +94,15 @@ function assetmgr.find_valid_asset_path(respath)
 
 	local enginebuildpath, found = respath:gsub(("^/?%s"):format(engine_assetpath), engine_assetbuildpath)
 	if found ~= 0 then
-		if vfs_fs.exist(enginebuildpath) then			
+		if vfs_fs.exist(enginebuildpath) then
 			return enginebuildpath
 		end
 		return nil
 	end
 
 	for _, v in ipairs(searchdirs) do
-		local p = path.join(v, respath)		
-		if vfs_fs.exist(p) then			
+		local p = v / respath
+		if vfs_fs.exist(p) then
 			return p
 		end
 	end
@@ -118,9 +112,9 @@ end
 function assetmgr.find_depiction_path(p)
 	local fn = assetmgr.find_valid_asset_path(p)
 	if fn == nil then
-		if not p:match("^/?engine/assets") then
-			local np = path.join("depiction", p)
-			fn = assetmgr.find_valid_asset_path(np)			
+		if not p:string():match("^/?engine/assets") then
+			local np = "depiction" / p
+			fn = assetmgr.find_valid_asset_path(np)
 		end
 	end
 
@@ -131,31 +125,28 @@ function assetmgr.find_depiction_path(p)
 	return fn	
 end
 
-function assetmgr.load(filename, param)
-  --  print("filename", filename)
-	assert(type(filename) == "string")
-	local res = resources[filename]
+function assetmgr.load(filepath, param)	
+	local res = resources[filepath:string()]
 	if res == nil then
-		local moudlename = path.ext(filename)
+		local moudlename = filepath:extension():match("%.(.+)$")
 		if moudlename == nil then
-			error(string.format("not found ext from file:%s", filename))
-		end		
+			error(string.format("not found ext from file:%s", filepath:string()))
+		end
 		local loader = get_loader(moudlename)
-		res = loader(filename, param)
-		resources[filename] = res
+		res = loader(filepath, param)
+		resources[filepath:string()] = res
 	end
 
 	return res
 end
 
-function assetmgr.save(tree, filename)
-	assert(type(filename) == "string")
+function assetmgr.save(tree, filepath)	
 	local seri = require "serialize.util"
-	seri.save(filename, tree)
+	seri.save(filepath, tree)
 end
 
-function assetmgr.has_res(filename)
-	return resources[filename] ~= nil
+function assetmgr.has_res(filepath)
+	return resources[filepath:string()] ~= nil
 end
 
 return assetmgr

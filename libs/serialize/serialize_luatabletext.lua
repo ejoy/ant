@@ -4,17 +4,14 @@ local world = ecs.world
 ecs.import "serialize.serialize_component"
 
 local seri_util = require "serialize.util"
-local fs = require "filesystem"
 local assetmgr = require "asset"
 
 local to_luatabletext = ecs.system "serialize_to_luatabletext"
 to_luatabletext.singleton "serialization_tree"
 
 local function get_map_filename(mapname)
-    local subfolder = "map"
-    fs.create_directories(subfolder)
-
-    return path.join(subfolder, mapname .. ".lua")
+    local subfolder = assetmgr.assetdir() / "map"
+    return subfolder / mapname .. ".lua"
 end
 
 function to_luatabletext.notify:save_tofile()
@@ -24,11 +21,10 @@ function to_luatabletext.notify:save_tofile()
         local filename = get_map_filename(s_tree.name)
 
         local wrapper = {}
-        wrapper.root = s_tree.root
-        local assetmappath = path.join(assetmgr.assetdir(), filename)
-        seri_util.save(assetmappath, wrapper)
+        wrapper.root = s_tree.root        
+        seri_util.save(filename, wrapper)
         s_tree.luatext = false
-        dprint("finish save, file : ", filename)
+        dprint("finish save, file : ", filename:string())
     end    
 end
 

@@ -473,7 +473,6 @@ end
 
 -- local function create_axisbase_hierarchy()
 -- 	local hierarchy_module = require "hierarchy"
--- 	local path = require "filesystem.path"
 
 -- 	local ctrl_root = hierarchy_module.new()
 -- 	ctrl_root[1] = {name = "xaxis", 
@@ -490,11 +489,11 @@ end
 
 -- 	local function save_file(node, filename)
 --		local fs = require "filesystem"		
--- 		fs.create_directories(path.parent(filename))
+-- 		fs.create_directories(filename:parent())
 -- 		hierarchy_module.save(node, filename)
 -- 	end
 
--- 	save_file(ctrl_root, path.join(assetmgr.assetdir(), axisbase_controller_hierarchyname))
+-- 	save_file(ctrl_root, assetmgr.assetdir() / axisbase_controller_hierarchyname)
 
 -- 	local axis_root = hierarchy_module.new()	
 -- 	axis_root[1] = {
@@ -512,7 +511,7 @@ end
 -- 		}
 -- 	}
 	
--- 	save_file(axis_root, path.join(assetmgr.assetdir(), axis_hierarchyname))	
+-- 	save_file(axis_root, assetmgr.assetdir() / axis_hierarchyname)
 
 -- 	local rotator_root = hierarchy_module.new()
 -- 	rotator_root[1] = {
@@ -528,7 +527,7 @@ end
 -- 			s={0.001, 0.001, 0.01}, r=ms({0, 0, 0}, "qT"), t={0.5, 0, 0},
 -- 		}
 -- 	}
--- 	save_file(rotator_root, path.join(assetmgr.assetdir(), rotator_hierarchyname))
+-- 	save_file(rotator_root, assetmgr.assetdir() / rotator_hierarchyname)
 -- end
 
 function obj_trans_sys:init()	

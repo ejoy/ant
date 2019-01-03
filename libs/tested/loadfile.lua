@@ -1,11 +1,9 @@
-local path = require "filesystem.path"
 local assetmgr = require "asset"
 
-return function (name)
-    local sub_path = path.join(name)
-    local filename = assetmgr.find_valid_asset_path(sub_path)
+return function (name)    
+    local filename = assetmgr.find_valid_asset_path(name)
     if filename then
-        local f = assert(io.open(filename, "rb"))
+        local f = assert(io.open(filename:string(), "rb"))
         local data = f:read "a"
         f:close()
         return data

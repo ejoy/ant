@@ -3,52 +3,36 @@ local require = import and import(...) or require
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
-
-local path = require "filesystem.path"
 local assetmgr = require "asset"
-
+local fs = require "filesystem"
 local vfs = require "vfs"
-
-local localfile = require "filesystem.file"
 
 local alluniforms = {}
 
 local shader_mgr = {}
 shader_mgr.__index = shader_mgr
 
-local function gen_shader_filepath(shadername)	
-	assert(path.ext(shadername)==nil)
-	local shadername_withext = shadername .. ".sc"
+local function gen_shader_filepath(shadername)
+	assert(fs.path(shadername):extenstion() == nil)
+	local shadername_withext = fs.path(shadername .. ".sc")
 	local filepath = assetmgr.find_valid_asset_path(shadername_withext)
 	if filepath then
 		return filepath 
 	end
-
-	--local enginepath, matchnum = shadername_withext:gsub("(engine/assets/shaders)(.+)", "%1/" .. shadertype .. "%2")
-	-- local foundpos = shadername_withext:find("engine/assets/shaders/src")
-	-- if foundpos then
-	-- 	filepath = assetmgr.find_valid_asset_path(enginepath)
-	-- 	if filepath then
-	-- 		return filepath
-	-- 	end
-	-- end
-
-	local shadersrc_filepath = path.join("shaders/src", shadername_withext)	
-	return assetmgr.find_valid_asset_path(shadersrc_filepath)
+	return assetmgr.find_valid_asset_path("shaders/src" / shadername_withext)
 end
 
 local function load_shader(name)
-	local filename = gen_shader_filepath(name)
-	if filename == nil then
+	local filepath = gen_shader_filepath(name)
+	if filepath == nil then
 		error(string.format("not found shader file: %s", name))
 	end
 
 	if vfs.localvfs then
 		local cvtutil = require "fileconvert.util"
-		assert(cvtutil.need_build(filename))
-	end
-	local validfile = vfs.realpath(filename)
-	local f = assert(localfile.open(assert(validfile), "rb"))
+		assert(cvtutil.need_build(filepath:string()))
+	end	
+	local f = assert(fs.open(filepath:string(), "rb"))
 	local data = f:read "a"
 	f:close()
 	local h = bgfx.create_shader(data)

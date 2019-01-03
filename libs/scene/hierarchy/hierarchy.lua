@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 local assetmgr = require "asset"
-local path = require "filesystem.path"
 
 local h = ecs.component_struct "hierarchy" {
 	ref_path = {
@@ -17,7 +16,7 @@ local h = ecs.component_struct "hierarchy" {
 		end,
 		load = function(v)
 			assert(type(v) == "string")			
-			assert(path.ext(v):lower() == "hierarchy")
+			assert(fs.path(v):extension() == fs.path ".hierarchy")
 			local e = world[arg.eid]
 			local comp = e[arg.comp]
 

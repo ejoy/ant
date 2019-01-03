@@ -1,5 +1,4 @@
 local bgfx = require "bgfx"
-local path = require "filesystem.path"
 local assetmgr = require "asset"
 
 local function texture_load(filename, info)

@@ -2,20 +2,20 @@ local fs = {}; fs.__index = fs
 
 local vfs = require "vfs"
 require "runtime.vfsio"
-function fs.open(filename, mode)
-	return io.open(filename, mode)
+function fs.open(filepath, mode)
+	return io.open(filepath:string(), mode)
 end
 
 function fs.exist(filepath)	
-	return vfs.type(filepath) ~= nil
+	return vfs.type(filepath:string()) ~= nil
 end
 
 function fs.isdir(filepath)
-	return vfs.type(filepath) == 'dir'
+	return vfs.type(filepath:string()) == 'dir'
 end
 
-function fs.isfile(filename)
-	return vfs.type(filename) == 'file'
+function fs.isfile(filepath)
+	return vfs.type(filepath:string()) == 'file'
 end
 
 return fs

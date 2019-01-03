@@ -9,7 +9,7 @@ local exts = {
 }
 
 function util.need_build(srcfilepath)
-	local ext = path.ext(srcfilepath)
+	local ext = srcfilepath:extension()
 	if ext then
 		ext = ext:lower()
 		if exts[ext] then
