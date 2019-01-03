@@ -5,6 +5,12 @@
 
 namespace ant::lua {
 #if defined(_WIN32)
+    typedef std::wstring string_type;
+#else
+    typedef std::string string_type;
+#endif
+
+#if defined(_WIN32)
     inline std::wstring to_string(lua_State* L, int idx) {
         size_t len = 0;
         const char* buf = luaL_checklstring(L, idx, &len);

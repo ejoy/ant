@@ -5,6 +5,7 @@
 #include <set>
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace ant::win::subprocess {
     namespace ignore_case {

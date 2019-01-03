@@ -17,9 +17,8 @@ local function addslash(name)
 end
 
 local function filelock(filepath)
-	--TODO
-	local lfs = require "lfs"
-	return assert(lfs.lock_dir(filepath:string()), "repo is locking. (" .. filepath:string() .. ")")
+	local f = fs.filelock(filepath)
+	return assert(f, "repo is locking. (" .. filepath:string() .. ")")
 end
 
 local function refname(self, hash)
@@ -186,7 +185,7 @@ function repo:rebuild()
 end
 
 function repo:close()
-	self._lock:free()
+	self._lock:close()
 	self._lock = nil
 	self._mountname = nil
 	self._mountpoint = nil

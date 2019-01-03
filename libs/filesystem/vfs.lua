@@ -1,6 +1,7 @@
 local vfs = require "vfs"
 
 local path_mt = {}
+path_mt.__name = 'vfs-filesystem'
 path_mt.__index = path_mt
 
 local function constructor(str)
@@ -59,23 +60,23 @@ function path_mt:string()
 end
 
 function path_mt:filename()
-    return constructor(self._value:match("[/]?([%w_.-]*)$"))
+    return constructor(self._value:match("[/]?([%w*?_.-]*)$"))
 end
 
 function path_mt:parent_path()
-    return constructor(self._value:match("^(.+)/[%w_.-]*$"))
+    return constructor(self._value:match("^(.+)/[%w*?_.-]*$"))
 end
 
 function path_mt:stem()
-    return constructor(self._value:match("[/]?([%w_.-]+)%.[%w_-]*$") or self._value:match("[/]?([.]?[%w_-]*)$"))
+    return constructor(self._value:match("[/]?([%w*?_.-]+)%.[%w*?_-]*$") or self._value:match("[/]?([.]?[%w*?_-]*)$"))
 end
 
 function path_mt:extension()
-    return constructor(self._value:match("[^/](%.[%w_-]*)$"))
+    return constructor(self._value:match("[^/](%.[%w*?_-]*)$"))
 end
 
 function path_mt:remove_filename()
-    self._value = self._value:match("^(.+/)[%w_.-]*$")
+    self._value = self._value:match("^(.+/)[%w*?_.-]*$") or ""
     return self
 end
 
@@ -87,6 +88,16 @@ function path_mt:replace_extension(ext)
     end
     self._value = self._value .. stem._value .. ext
     return self
+end
+
+function path_mt:equal_extension(ext)
+    ext = (type(ext) == 'string') and ext or ext._value
+    local selfext = self._value:match("[^/](%.[%w*?_-]*)$") or ""
+    if selfext == "" then
+        return ext == ""
+    end
+    ext = (ext:sub(1,1) ~= '.') and ('.'..ext) or ext
+    return selfext == ext
 end
 
 function path_mt:is_absolute()
@@ -185,7 +196,7 @@ function fs.relative(path, base)
     return constructor(table.concat(s, "/"))
 end
 
-function fs.create_directory(path)
+function fs.create_directory()
     error 'Not implemented'
 end
 
@@ -206,6 +217,10 @@ function fs.exe_path()
 end
 
 function fs.dll_path()
+    error 'Not implemented'
+end
+
+function fs.filelock()
     error 'Not implemented'
 end
 
