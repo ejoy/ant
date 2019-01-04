@@ -4,7 +4,7 @@ local require = import and import(...) or require
 local rawtable = require "common.rawtable"
 local assetutil = require "asset.util"
 local assetmgr = require "asset"
-local vfs_fs = require "vfs.fs"
+local vfs = require "filesystem.vfs"
 local fs = require "filesystem"
 local ru = require "render.util"
 
@@ -29,7 +29,7 @@ return function(filepath)
 				-- read file under .material file folder, if not found try from assets path
 				local function filter_path(parentpath, p)					
 					local subres_path = parentpath / p
-					if not vfs_fs.exist(subres_path) then
+					if not vfs.exists(subres_path) then
 						return p
 					end
 						

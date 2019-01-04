@@ -59,8 +59,7 @@ function ev.emit(name, ...)
     if event.lock == 0 and event.clean then
         local i = 1
         while i < #event do
-            local trg = event[i]
-            if event.clean[trg] then
+            if event.clean[event[i]] then
                 tbl_remove(event, i)
             else
                 i = i + 1

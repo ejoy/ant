@@ -1,5 +1,4 @@
 local mgr = require 'debugger.backend.master.mgr'
-local event = require 'debugger.backend.master.event'
 
 local response = {}
 

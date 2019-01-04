@@ -2,7 +2,7 @@
 
 local require = import and import(...) or require
 
-local vfs_fs= require "vfs.fs"
+local vfs = require "filesystem.vfs"
 local fs = require "filesystem"
 
 local support_list = {
@@ -93,13 +93,13 @@ local searchdirs = {
 		from local path, if not found, then try "engine/assets" path
 ]]
 function assetmgr.find_valid_asset_path(respath)	
-	if vfs_fs.exist(respath) then		
+	if vfs.exists(respath) then		
 		return respath
 	end
 
 	local enginebuildpath, found = respath:string():gsub(("^/?%s"):format(engine_assetpath:string()), engine_assetbuildpath:string())
 	if found ~= 0 then
-		if vfs_fs.exist(enginebuildpath) then
+		if vfs.exists(enginebuildpath) then
 			return enginebuildpath
 		end
 		return nil
@@ -107,7 +107,7 @@ function assetmgr.find_valid_asset_path(respath)
 
 	for _, v in ipairs(searchdirs) do
 		local p = v / respath
-		if vfs_fs.exist(p) then
+		if vfs.exists(p) then
 			return p
 		end
 	end

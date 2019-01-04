@@ -22,7 +22,6 @@ local function start_hook()
         end, ...)
     end
 
-    local _pcall = pcall
     function pcall(f, ...)
         return _xpcall(f, function(msg)
             event('exception', 2, 'pcall', msg)
@@ -78,7 +77,6 @@ local function start_worker(wait)
 end
 
 local function start_all(wait)
-    start_init()
     start_hook()
     rdebug.start(bootstrap, package.searchers[3])
     if wait then
