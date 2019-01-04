@@ -9,8 +9,9 @@ ecs.import "inputmgr.message_system"
 
 local point2d = require "math.point2d"
 local bgfx = require "bgfx"
-local mu = require "math.util"
-local ms = require "math.stack"
+local math = import_package "math"
+local mu = math.util
+local ms = math.stack
 local fs = require "filesystem"
 
 local asset = require "asset"

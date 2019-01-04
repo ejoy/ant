@@ -29,7 +29,8 @@ model_review_system.dependby "message_system"
 local bgfx = require "bgfx"
 local lu = require "render.light.util"
 local cu = require "render.components.util"
-local mu = require "math.util"
+local math = import_package "math"
+local mu = math.util
 local geo = require "render.geometry"
 
 local function create_light()

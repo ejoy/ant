@@ -15,7 +15,8 @@ local inputmgr = require "inputmgr"
 local nkmsg = require "inputmgr.nuklear"
 
 local math3d = require "math3d"
-local mathu = require "math.util"
+local math = import_package "math"
+local mathu = math.util
 
 local loadfile = require "tested.loadfile"
 local ch_charset = require "tested.charset_chinese_range"

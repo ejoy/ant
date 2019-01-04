@@ -3,7 +3,9 @@ util.__index = util
 
 local asset = require "asset"
 local common_util = require "common.util"
-local mu = require "math.util"
+
+local math = import_package "math"
+local mu = math.util
 local bgfx = require "bgfx"
 local fs = require "filesystem"
 

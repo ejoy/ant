@@ -2,8 +2,9 @@
 local ecs = ...
 local world = ecs.world
 
-local ms = require "math.stack"
-local mu = require "math.util"
+local math = import_package "math"
+local ms = math.stack
+local mu = math.util
 local bgfx = require "bgfx"
 
 --[@ view rect

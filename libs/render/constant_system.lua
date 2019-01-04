@@ -1,6 +1,7 @@
 local ecs = ...
 
-local mu = require "math.util"
+local math = import_package "math"
+local mu = math.util
 
 local constant = ecs.component_struct "constant" {    
 }

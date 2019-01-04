@@ -15,6 +15,7 @@ assert(loadfile(root .. "/libs/vfs/vfspath.lua"))(root)
 
 require "common.import"
 require "common.log"
+require "antpm"
 
 print_r = require "common.print_r"
 function dprint(...) print(...) end

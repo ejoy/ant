@@ -2,7 +2,8 @@ local ecs = ...
 local world = ecs.world
 
 local bgfx = require "bgfx"
-local math_util = require "math.util"
+local math = import_package "math"
+local math_util = math.util
 local shaderMgr = require "render.resources.shader_mgr"
 local camera_util = require "render.camera.util"
 local render_cu = require "render.components.util"

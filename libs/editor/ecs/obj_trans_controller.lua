@@ -7,7 +7,8 @@ ecs.import "inputmgr.message_system"
 ecs.import "render.components.general"
 
 local assetmgr = require "asset"
-local mu = require "math.util"
+local math = import_package "math"
+local mu = math.util
 local cu = require "common.util"
 local ms = require "math.stack"
 local fs = require "filesystem"

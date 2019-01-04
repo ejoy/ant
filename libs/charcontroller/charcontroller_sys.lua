@@ -11,10 +11,9 @@ ecs.import "timer.timer"
 
 local camera_util = require "render.camera.util"
 local bgfx = require "bgfx"
-local mathu = require "math.util"
-
---local math3d = require "math3d"
-local stack = require "math.stack"
+local math = import_package "math"
+local mathu = math.util
+local stack = math.stack
 
 
 local char_controller_sys = ecs.system "charcontroller_system"

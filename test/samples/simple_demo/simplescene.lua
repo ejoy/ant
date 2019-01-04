@@ -9,8 +9,9 @@ ecs.import "scene.filter.filter_system"
 ecs.import "inputmgr.message_system"
 
 local computil = require "render.components.util"
-local mu = require "math.util"
 local camerautil = require "render.camera.util"
+local math = import_package "math"
+local mu = math.util
 
 local simplescene = ecs.system "simple_scene"
 

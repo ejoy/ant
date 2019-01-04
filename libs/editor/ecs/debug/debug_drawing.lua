@@ -3,7 +3,9 @@ local world = ecs.world
 
 local bgfx = require "bgfx"
 local fs = require "filesystem"
-local mu = require "math.util"
+
+local math = import_package "math"
+local mu = math.util
 
 local componentutil = require "render.components.util"
 
