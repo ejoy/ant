@@ -40,6 +40,13 @@ local function get_vfs_path(rt, abspath, withoutroot)
 	return fs.path(abspathname:gsub(rootdir:string() .. "/", withoutroot and "" or get_vfs_root_path(rt):string() .. "/"))
 end
 
+local function get_local_path(rt, vfspath)
+	local vfsroot = get_vfs_root_path(rt)
+	local vfsname = vfspath:string():lower()
+
+	return fs.path(vfsname:gsub(vfsroot:string(), get_rootdir_from_restype(rt):string()))
+end
+
 function assetview:init(defaultrestype)
 	local restype = assert(self:restype_ctrl())
 	local reslist = assert(self:reslist_ctrl())
@@ -61,7 +68,8 @@ function assetview:init(defaultrestype)
 	local function is_subdir(dir)
 		local dirs = rootdirs()		
 		for _, rd in ipairs(dirs) do
-			if dir:string():match(rd) and dir ~= rd then
+			local lowerstr = dir:string():lower()
+			if lowerstr:match(rd) and lowerstr ~= rd then
 				return true
 			end
 		end
@@ -122,8 +130,8 @@ function assetview:init(defaultrestype)
 	addrview:add_click_address_cb("update_reslist", function (url)
 		local rt = restype.view.VALUESTRING
 		assert(type(url) == "userdata")
-		local rootdir = get_vfs_path(rt, url)
-		update_res_list(reslist, rootdir, rt)
+		local localpath = get_local_path(rt, url)
+		update_res_list(reslist, localpath, rt)
 	end)
 end
 

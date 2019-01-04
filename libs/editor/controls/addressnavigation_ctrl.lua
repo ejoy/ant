@@ -13,8 +13,9 @@ function link.new(config, name, url)
 				-- should use injust
 				local addr = iup.GetParent(self)
 				local owner = assert(addr.owner)
-				owner:update(url)
-				owner:notify(url)
+				local urlpath = fs.path(url)
+				owner:update(urlpath)
+				owner:notify(urlpath)
 			end
 		}
 	end, link)
