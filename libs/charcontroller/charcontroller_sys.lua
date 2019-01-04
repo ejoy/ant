@@ -52,7 +52,8 @@ local function register_input_message(self)
 
     local camera = world:first_entity("main_camera")
 
-    local point2d = require "math.point2d"
+    local math = import_package "math"
+    local point2d = math.point2d
 
 	local move_speed = 1
 	local message = {}
@@ -115,7 +116,8 @@ local function register_input_message(self)
 
     self.message.observers:add(message) 
     --]]
-    local point2d = require "math.point2d"
+    local math = import_package "math"
+    local point2d = math.point2d
 
     local camera = world:first_entity("main_camera")
 
@@ -328,7 +330,8 @@ function char_controller_sys:init()
 
     register_input_message(self)
    --[[ 
-    local point2d = require "math.point2d"
+    local math = import_package "math"
+    local point2d = math.point2d
 
     local camera = world:first_entity("main_camera")
 

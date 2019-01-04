@@ -1,5 +1,5 @@
 local math3d = require "math3d"
-local ms = require "math.stack"
+local ms = require "stack"
 
 local util = {}
 util.__index = util

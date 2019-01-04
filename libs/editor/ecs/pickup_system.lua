@@ -7,9 +7,9 @@ ecs.import "render.end_frame_system"
 ecs.import "render.entity_rendering_system"
 ecs.import "inputmgr.message_system"
 
-local point2d = require "math.point2d"
-local bgfx = require "bgfx"
 local math = import_package "math"
+local point2d = math.point2d
+local bgfx = require "bgfx"
 local mu = math.util
 local ms = math.stack
 local fs = require "filesystem"

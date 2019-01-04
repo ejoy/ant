@@ -5,9 +5,9 @@ ecs.import "render.camera.camera_component"
 ecs.import "render.components.general"
 ecs.import "inputmgr.message_system"
 
-local point2d = require "math.point2d"
-local math3d = require "math3d"
 local math = import_package "math"
+local point2d = math.point2d
+local math3d = require "math3d"
 local ms = math.stack
 
 local camera_controller_system = ecs.system "camera_controller"

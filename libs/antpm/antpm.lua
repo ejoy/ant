@@ -1,11 +1,13 @@
 local fs = require "filesystem"
+local pm_require = require "antpm.require"
 
 local WORKDIR = fs.current_path()
 
 local list = {
-    WORKDIR / "libs" / "math"
+    WORKDIR / "packages" / "math"
 }
 local registered = {}
+local loaded = {}
 
 local function loadfile(path)
     local f, err = fs.open(path, 'r')
@@ -49,7 +51,7 @@ local function searcher_Package(name)
         return ("\n\tno package '%s'"):format(name)
     end
     local info = registered[name]
-    local func, err = loadfile(info[1] / info[2].main)
+    local func, err = pm_require(info[1]:string(), info[2].main, function(path) return fs.open(fs.path(path)) end)
     if not func then
         error(("error loading package '%s':\n\t%s"):format(name, err))
     end
@@ -60,10 +62,16 @@ for _, pkg in ipairs(list) do
     init(pkg)
 end
 
--- TODO 优先级应该提前
-table.insert(package.searchers, 1, searcher_Package)
-
 function import_package(name)
+    if loaded[name] then
+        return loaded[name]
+    end
     local func = assert(searcher_Package(name))
-    return func(func)
+    local res = func(func)
+    if res == nil then
+        loaded[name] = false
+    else
+        loaded[name] = res
+    end
+    return loaded[name]
 end
