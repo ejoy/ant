@@ -4,7 +4,7 @@ local platform = require "platform"
 local config = {
 	repopath = "./",
 	vfspath = "vfs.lua",
-	nettype = (platform.os() ~= "iOS") and "connect" or "listen",
+	nettype = (platform.OS ~= "iOS") and "connect" or "listen",
 	address = "127.0.0.1",
 	port = 2018,
 }
@@ -80,7 +80,7 @@ thread.wait(errthread)
 thread.reset()
 
 local function loadfile(path, name)
-	local f, err = io.open(path)
+	local f = io.open(path)
 	if not f then
 		return nil, ('%s:No such file or directory.'):format(name)
 	end

@@ -2,7 +2,7 @@ local hw = {}
 hw.__index = hw
 
 local platform = require "platform"
-local platos = platform.os()
+local platos = platform.OS
 
 local caps = nil
 function hw.get_caps()
@@ -56,7 +56,7 @@ end
 
 local platform_relates = {
 	WINDOWS = {
-		shadertype="d3d11",	
+		shadertype="d3d11",
 		renderer="DIRECT3D11",
 	},
 	OSX = {
@@ -90,7 +90,7 @@ function hw.default_renderer(plat)
 	local PLAT=plat:upper()
 	local pi = platform_relates[PLAT]
 	if pi then
-		if PLAT == "IOS" then			
+		if PLAT == "IOS" then
 			assert(pi.renderer == "METAL")
 		end
 		return pi.renderer
@@ -102,7 +102,7 @@ function hw.shutdown()
 	bgfx.shutdown()
 end
 
-function hw.identity()	
+function hw.identity()
 	return platos .. "-" .. assert(hw.shader_type())
 end
 

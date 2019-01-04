@@ -100,7 +100,7 @@ end
 
 function usbmuxd.get_address()
 	local platform = require "platform"
-	if platform.os() == "Windows" then
+	if platform.OS == "Windows" then
 		return "127.0.0.1", USBMUXD_SOCKET_PORT
 	else
 		return USBMUXD_SOCKET_FILE

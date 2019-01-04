@@ -46,7 +46,7 @@ redirectfd_table = {}
 function redirect.callback(what, f)
 	local h = handle[what]
 	if not h then
-		local sfd = stdhandle[what]		
+		local sfd = stdhandle[what]
 		local ifd,ofd = create_pipe()
 
 		--if is standard output then
