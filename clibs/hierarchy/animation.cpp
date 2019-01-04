@@ -422,7 +422,7 @@ get_samplingnode(lua_State *L, ozz::animation::Skeleton* ske, int idx = 3) {
 static inline float
 get_ratio(lua_State*L, int idx = 4) {
 	luaL_checktype(L, idx, LUA_TNUMBER);
-	return (float)lua_tonumber(L, 4);
+	return (float)lua_tonumber(L, idx);
 }
 
 static inline animation_result*
@@ -484,25 +484,6 @@ lsample(lua_State *L) {
 static inline IntermediateJobResult
 from_job_result(job_result &result) {
 	return IntermediateJobResult(&*result.begin(), result.size());
-}
-
-static void
-motion(lua_State *L,
-	ozz::animation::Skeleton *ske, 
-	ozz::animation::Animation *ani, 
-	ozz::animation::SamplingCache *sampling, 
-	float ratio, 
-	animation_result &aniresult){
-
-	job_result result(ske->num_soa_joints());
-	auto ijr = from_job_result(result);
-	if (!do_sample(ske, ani, sampling, ratio, ijr)) {
-		luaL_error(L, "do sampling job failed!");
-	}
-
-	if (!do_ltm(ske, ijr, &aniresult)){
-		luaL_error(L, "transform from local to model failed!");
-	}
 }
 
 static int

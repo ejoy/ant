@@ -203,7 +203,7 @@ local function init_paths_ctrl()
 	sminputer:set_input(smfilename:string())
 
 	if aniview:count() == 0 then
-		aniview:add(fs.path "meshes/animation/animation_base.ozz")
+		aniview:add(fs.path "meshes/animation/animation2.ozz")
 	end
 
 	local blender = iup.GetDialogChild(dlg, "BLENDER").owner
@@ -284,7 +284,13 @@ local function init_blend_ctrl()
 	local dlg = main_dialog()
 	local blender = dlg_item("BLENDER").owner
 	blender:observer_blend("blend", function (blendlist, type)
-		
+		local sample = smaple_entity()
+		if sample then
+			local anicomp = sample.animation
+			if anicomp then
+
+			end
+		end
 	end)
 end
 
@@ -336,35 +342,41 @@ local function auto_update_ani(deltatimeInSecond)
 	local dlg = main_dialog()
 	local autoplay = iup.GetDialogChild(dlg, "AUTO_PLAY")
 	if autoplay.VALUE ~= "OFF" then
-		local durationctrl = iup.GetDialogChild(dlg, "DURATION")
-		local duration = tonumber(durationctrl.VALUE)
+		local anilist = ani.anilist
+		if #anilist > 0 then
+			local function update_ani_timer_ctrl(anihandle, ctrlname)
+				local aniduration = anihandle:duration()
 
-		local anihandle = assert(ani.assetinfo.handle)
-		local aniduration = anihandle:duration()
+				local timerctrl = iup.GetDialogChild(dlg, ctrlname)
+				local duration = tonumber(timerctrl.VALUE)
+			
+				local function calc_new_duration(duration, aniduration)
+					local function is_number_equal(lhs, rhs)
+						local delta = lhs - rhs
+						local tolerance = 10e-6
+						return -tolerance <= delta and delta <= tolerance
+					end
+					if is_number_equal(duration, aniduration) then
+						return 0
+					end
 		
+					local newduration = duration + deltatimeInSecond
+					if newduration > aniduration then
+						return aniduration
+					end
+					return newduration
+				end
+		
+				local newduration = calc_new_duration(duration, aniduration)
+			
+				local ratio = math.min(math.max(0, newduration / aniduration), 1)
+				ani.ratio = ratio
+				timerctrl.VALUE = tostring(newduration)
+			end
 
-		local function calc_new_duration(duration, aniduration)
-			local function is_number_equal(lhs, rhs)
-				local delta = lhs - rhs
-				local tolerance = 10e-6
-				return -tolerance <= delta and delta <= tolerance
-			end
-			if is_number_equal(duration, aniduration) then
-				return 0
-			end
-
-			local newduration = duration + deltatimeInSecond
-			if newduration > aniduration then
-				return aniduration
-			end
-			return newduration
+			update_ani_timer_ctrl(assert(anilist[1]).handle, "DURATION")
 		end
 
-		local newduration = calc_new_duration(duration, aniduration)
-	
-		local ratio = math.min(math.max(0, newduration / aniduration), 1)
-		ani.ratio = ratio
-		durationctrl.VALUE = tostring(newduration)
 	end
 end
 
