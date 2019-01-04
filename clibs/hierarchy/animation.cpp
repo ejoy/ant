@@ -14,6 +14,7 @@ extern "C" {
 #include <ozz/animation/runtime/skeleton.h>
 
 #include <ozz/geometry/runtime/skinning_job.h>
+#include <ozz/base/platform.h>
 
 #include <ozz/base/maths/soa_transform.h>
 
@@ -125,6 +126,13 @@ struct ozzmesh {
 
 	Bounding bounding;
 };
+
+template<typename T>
+static ozz::Range<T>
+create_range(size_t count) {
+	auto beg = ozz::memory::default_allocator()->Allocate(sizeof(T) * count, OZZ_ALIGN_OF(T));
+	return ozz::Range<T>(reinterpret_cast<T*>(beg), count);
+}
 
 static size_t 
 dynamic_vertex_elem_stride(ozzmesh *om) {
@@ -544,7 +552,7 @@ lmotion(lua_State *L) {
 	job_result jr;	
 	if (layers.size() > 1) {
 		ozz::animation::BlendingJob blendjob;
-		blendjob.bind_pose = ske->bind_pose();
+		blendjob.bind_pose = ske->joint_bind_poses();
 
 		auto jobrange = ozz::Range<ozz::animation::BlendingJob::Layer>(&*layers.begin(), layers.size());
 		if (strcmp(blendtype, "blend") == 0) {
@@ -641,7 +649,7 @@ static int
 ldel_aniresult(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 	animation_result *result = (animation_result *)lua_touserdata(L, 1);
-	ozz::memory::default_allocator()->Deallocate(result->joints);
+	ozz::memory::default_allocator()->Deallocate(result->joints.begin);
 
 	return 0;
 }
@@ -658,9 +666,8 @@ lnew_aniresult(lua_State *L) {
 
 	animation_result *result = (animation_result*)lua_newuserdata(L, sizeof(animation_result));
 	luaL_getmetatable(L, "ANIRESULT_NODE");
-	lua_setmetatable(L, -2);
-	result->joints = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(numjoints);
-
+	lua_setmetatable(L, -2);	
+	result->joints = create_range<ozz::math::Float4x4>(numjoints);
 	return 1;
 }
 
@@ -714,7 +721,7 @@ ldel_ozzmesh(lua_State *L) {
 
 	if (om->mesh) {
 		ozz::memory::default_allocator()->Delete(om->mesh);
-		ozz::memory::default_allocator()->Deallocate(om->skinning_matrices);
+		ozz::memory::default_allocator()->Deallocate(om->skinning_matrices.begin);
 	}
 
 	if (om->dynamic_buffer) {
@@ -840,7 +847,7 @@ lnew_ozzmesh(lua_State *L) {
 	ozz::sample::LoadMesh(filename, om->mesh);
 
 	if (!om->mesh->inverse_bind_poses.empty()) {
-		om->skinning_matrices = ozz::memory::default_allocator()->AllocateRange<ozz::math::Float4x4>(om->mesh->inverse_bind_poses.size());
+		om->skinning_matrices = create_range<ozz::math::Float4x4>(om->mesh->inverse_bind_poses.size());
 	} else {
 		om->skinning_matrices = ozz::Range<ozz::math::Float4x4>();
 	}
