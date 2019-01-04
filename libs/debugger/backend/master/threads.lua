@@ -85,7 +85,7 @@ function CMD.eventOutput(_, req)
     event.output(req.category, req.output, req.source, req.line)
 end
 
-function CMD.exceptionInfo(w, req)
+function CMD.exceptionInfo(_, req)
     response.success(req, {
         breakMode = req.breakMode,
         exceptionId = req.exceptionId,
@@ -93,7 +93,7 @@ function CMD.exceptionInfo(w, req)
     })
 end
 
-function CMD.setVariable(w, req)
+function CMD.setVariable(_, req)
     if not req.success then
         response.error(req, req.message)
         return
@@ -104,7 +104,7 @@ function CMD.setVariable(w, req)
     })
 end
 
-function CMD.loadedSource(w, req)
+function CMD.loadedSource(_, req)
     event.loadedSource(req.reason, req.source)
 end
 

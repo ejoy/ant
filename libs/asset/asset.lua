@@ -2,7 +2,6 @@
 
 local require = import and import(...) or require
 
-local vfs_fs= require "vfs.fs"
 local fs = require "filesystem"
 
 local support_list = {
@@ -92,14 +91,14 @@ local searchdirs = {
 		if we want a file without "engine/assets" sub path, then it will try to load
 		from local path, if not found, then try "engine/assets" path
 ]]
-function assetmgr.find_valid_asset_path(respath)	
-	if vfs_fs.exist(respath) then		
+function assetmgr.find_valid_asset_path(respath)
+	if fs.exists(respath) then		
 		return respath
 	end
 
 	local enginebuildpath, found = respath:string():gsub(("^/?%s"):format(engine_assetpath:string()), engine_assetbuildpath:string())
 	if found ~= 0 then
-		if vfs_fs.exist(enginebuildpath) then
+		if fs.exists(enginebuildpath) then
 			return enginebuildpath
 		end
 		return nil
@@ -107,7 +106,7 @@ function assetmgr.find_valid_asset_path(respath)
 
 	for _, v in ipairs(searchdirs) do
 		local p = v / respath
-		if vfs_fs.exist(p) then
+		if fs.exists(p) then
 			return p
 		end
 	end
@@ -130,7 +129,7 @@ function assetmgr.find_depiction_path(p)
 	return fn	
 end
 
-function assetmgr.load(filepath, param)	
+function assetmgr.load(filepath, param)
 	local res = resources[filepath:string()]
 	if res == nil then
 		local moudlename = filepath:extension():string():match("%.(.+)$")

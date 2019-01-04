@@ -13,8 +13,8 @@ package.cpath = root .. "/" .. local_binpath .. "/?.dll;" ..
 assert(loadfile(root .. "/libs/vfs/require.lua"))(root)
 assert(loadfile(root .. "/libs/vfs/vfspath.lua"))(root)
 
-require "common/import"
-require "common/log"
+require "common.import"
+require "common.log"
 
-print_r = require "common/print_r"
+print_r = require "common.print_r"
 function dprint(...) print(...) end
