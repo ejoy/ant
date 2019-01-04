@@ -4,7 +4,7 @@ default :  filesystem.dll
 
 ifeq "$(PLAT)" "mingw"
 LIBS = -lstdc++fs
-OBJS = $(ODIR)/lua_filesystem.o $(ODIR)/path_helper.o $(ODIR)/unicode.o $(ODIR)/windows_category.o $(ODIR)/error.o
+OBJS = $(ODIR)/lua_filesystem.o $(ODIR)/path_helper.o $(ODIR)/unicode.o $(ODIR)/windows_category.o $(ODIR)/error.o $(ODIR)/file_helper.o
 else
 OBJS = $(ODIR)/lua_posixfs.o
 endif

@@ -1,5 +1,5 @@
 BIN = .
-LIBS := math3d lsocket redirectfd lfs bgfx remotedebug memoryfile \
+LIBS := math3d lsocket redirectfd bgfx filesystem remotedebug memoryfile \
  crypt meshconverter hierarchy cppfs debugger thread protocol bullet \
  window filewatch platform subprocess
 

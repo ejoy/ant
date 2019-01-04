@@ -23,6 +23,7 @@
     <ClInclude Include="..\..\clibs\filesystem\dynarray.h" />
     <ClInclude Include="..\..\clibs\filesystem\error.h" />
     <ClInclude Include="..\..\clibs\filesystem\expected.h" />
+    <ClInclude Include="..\..\clibs\filesystem\file_helper.h" />
     <ClInclude Include="..\..\clibs\filesystem\path_helper.h" />
     <ClInclude Include="..\..\clibs\filesystem\range.h" />
     <ClInclude Include="..\..\clibs\filesystem\span.h" />
@@ -31,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\filesystem\error.cpp" />
+    <ClCompile Include="..\..\clibs\filesystem\file_helper.cpp" />
     <ClCompile Include="..\..\clibs\filesystem\lua_filesystem.cpp" />
     <ClCompile Include="..\..\clibs\filesystem\path_helper.cpp" />
     <ClCompile Include="..\..\clibs\filesystem\unicode.cpp" />
@@ -114,7 +116,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -172,7 +174,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
