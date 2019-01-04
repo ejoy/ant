@@ -27,61 +27,12 @@ function util.load_skeleton(comp, respath, param)
 	load_res(comp, respath, param, "load.skeleton")	
 end
 
-function util.add_animation(comp, respath, weight, weighttype)
-	weighttype = weighttype or "full"	-- can be 'full' or 'partial'
-
-	local aniresult = assert(comp.aniresult)
-	local numjoints = aniresult:count()
-	table.insert(assert(comp.anilist), {
-		weight=weight, 
-		handle=asset.load(respath).handle, 
-		ref_path=respath,
-		type=weighttype,
-		sampling_cache = util.new_sampling_cache(numjoints),
-	})
-end
-
-function util.remove_animation(comp, aniidx)
-	local anilist = assert(comp.anilist)
-	if aniidx > #anilist then
-		error(string.format("ani index out of range:%d-%d", aniidx, #anilist))
-	end
-
-	table.remove(anilist, aniidx)
-end
-
-function util.init_animation(comp, skeleton)
-	local skehandle = assert(skeleton.assetinfo.handle)
-	local numjoints = #skehandle	
-	comp.aniresult = util.new_ani_result(numjoints)
-	comp.anilist = {}
-end
-
-function util.set_animation_weight(comp, aniidx, weight)
-	local anilist = assert(comp.anilist)
-	if aniidx > #anilist then
-		error(string.format("ani index out of range:%d-%d", aniidx, #anilist))
-	end
-
-	anilist[aniidx].weight = weight
-end
-
 function util.load_skinning_mesh(comp, respath, param)
 	load_res(comp, respath, param, "load.skinning_mesh")
 end
 
 function util.load_mesh(comp, respath, param)
 	load_res(comp, respath, param, "load.mesh")
-end
-
-function util.new_sampling_cache(num_joints)
-	local animodule = require "hierarchy.animation"		
-	return animodule.new_sampling_cache(num_joints)
-end
-
-function util.new_ani_result(num_joints)
-	local animodule = require "hierarchy.animation"
-	return animodule.new_ani_result(num_joints);
 end
 
 function util.load_texture(name, stage, texpath)	
@@ -149,12 +100,8 @@ function util.create_render_entity(world, name, meshfile, materialfile)
 	mu.identify_transform(obj)
 	
 	obj.name = name
-
-	obj.mesh.ref_path = meshfile
-	util.load_mesh(obj.mesh)		
-
-	obj.material.content[1] = {path=materialfile, properties={}}
-	util.load_material(obj.material)
+	util.load_mesh(obj.mesh, meshfile)
+	util.load_material(obj.material, {materialfile})
 	return eid
 end
 
@@ -173,7 +120,8 @@ end
 function util.is_entity_visible(entity)
 	local can_render = entity.can_render
 	if can_render then
-		return entity.mesh ~= nil		
+		local mesh = entity.mesh
+		return mesh and mesh.assetinfo
 	end
 
 	return false

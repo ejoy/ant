@@ -2,7 +2,7 @@ local util = {}; util.__index = util
 
 local geo = require "render.geometry"
 local computil = require "render.components.util"
-
+local aniutil = require "animation.util"
 local loaderutil = require "modelloader.util"
 local fs = require "filesystem"
 
@@ -26,8 +26,6 @@ function util.create_aabb_descs(mesh, materialfile)
 	end
 	return descs
 end
-
-local sample_obj_user_idx = 1
 
 local function gen_mesh_assetinfo(skinning_mesh_comp)	
 	local skinning_mesh = skinning_mesh_comp.assetinfo.handle
@@ -152,10 +150,10 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 	if #anipaths > 0 then
 		world:add_component(eid, "animation")
 		local anicomp = e.animation
-		computil.init_animation(anicomp, e.skeleton)
+		aniutil.init_animation(anicomp, e.skeleton)
 		local avgweight = 1 / #anipaths
 		for _, anipath in ipairs(anipaths) do
-			computil.add_animation(anicomp, anipath, avgweight)
+			aniutil.add_animation(anicomp, anipath, avgweight)
 		end
 	end
 
@@ -169,12 +167,13 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 		end
 
 		computil.load_skinning_mesh(skinning_mesh, skinning_meshpath)			
-	end
-	
-	e.mesh.assetinfo = gen_mesh_assetinfo(skinning_mesh)
-	computil.load_material(e.material,{samplematerialpath})
 
-	add_aabb_widget(world, eid)
+		e.mesh.assetinfo = gen_mesh_assetinfo(skinning_mesh)
+		computil.load_material(e.material,{samplematerialpath})
+	
+		add_aabb_widget(world, eid)
+	end
+
 	return eid
 end
 
