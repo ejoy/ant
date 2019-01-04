@@ -25,8 +25,6 @@ function util.create_aabb_descs(mesh, materialfile)
 	return descs
 end
 
-local sample_obj_user_idx = 1
-
 local function gen_mesh_assetinfo(skinning_mesh_comp)	
 	local skinning_mesh = skinning_mesh_comp.assetinfo.handle
 
@@ -167,12 +165,13 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 		end
 
 		computil.load_skinning_mesh(skinning_mesh, skinning_meshpath)			
-	end
-	
-	e.mesh.assetinfo = gen_mesh_assetinfo(skinning_mesh)
-	computil.load_material(e.material,{samplematerialpath})
 
-	add_aabb_widget(world, eid)
+		e.mesh.assetinfo = gen_mesh_assetinfo(skinning_mesh)
+		computil.load_material(e.material,{samplematerialpath})
+	
+		add_aabb_widget(world, eid)
+	end
+
 	return eid
 end
 

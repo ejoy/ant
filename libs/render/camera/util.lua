@@ -56,7 +56,7 @@ function util.focus_selected_obj(world, eid)
 	end
 
 	local mesh = entity.mesh
-	if mesh == nil then
+	if mesh == nil or mesh.assetinfo == nil then
 		return 
 	end
 

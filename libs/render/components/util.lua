@@ -171,7 +171,8 @@ end
 function util.is_entity_visible(entity)
 	local can_render = entity.can_render
 	if can_render then
-		return entity.mesh ~= nil		
+		local mesh = entity.mesh
+		return mesh and mesh.assetinfo
 	end
 
 	return false
