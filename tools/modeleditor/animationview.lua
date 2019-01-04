@@ -52,6 +52,7 @@ local function add_ani(aniview, filepath)
 	local gird = get_gird(aniview)
 	
 	gird:append_line({get_tag_name(filepath), filepath:string()})
+	gird:fit_col_content_size(2)
 end
 
 function animationview:add(filepath)

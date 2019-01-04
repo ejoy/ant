@@ -1,14 +1,14 @@
 --luacheck: globals iup
 local link = {}; link.__index = link
-
+local fs = require "filesystem"
 local observersclass = require "editor.common.observer"
 local ctrlutil = require "editor.controls.util"
 
 function link.new(config, name, url)
 	return ctrlutil.create_ctrl_wrapper(function ()
 		return iup.link {
-			URL=url,
-			TITLE=name,
+			URL=url:string(),
+			TITLE=name:string(),
 			action = function(self, url)
 				-- should use injust
 				local addr = iup.GetParent(self)
@@ -66,7 +66,8 @@ local function split_url(url)
 		local name = url:filename()
 		table.insert(names, 1, {name, url})
 		url = url:parent_path()
-	until url:string() == "" or url:string() == "/"
+		local urlstr = url:string()
+	until urlstr == "" or urlstr == "/"
 	return names
 end
 
