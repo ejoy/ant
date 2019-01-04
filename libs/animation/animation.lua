@@ -5,20 +5,27 @@ local world = ecs.world
 ecs.import "timer"
 
 local ani = ecs.component_struct "animation" {
-	ref_path = {
+	ani_list = {
 		type = "userdata",
-		default = "",
-		save = function (v, param)
-			assert(false, "not implement animation save")
+		default = {
+			--[[
+			weight = 0.0,
+			handle = load from asset lib,
+			ref_path = respath,				
+			sampling_cache = create from animation c module,
+			weighttype = "full" or "partical", to animaiton system how to blend
+			]]
+		},
+		save = function(v, param)
 		end,
-		load = function (v, param)
-			assert(false, "not implement animation load")
-		end
-	},	
+		load = function(v, param)
+		end,
+	},
 }
 
 function ani:init()
 	self.ratio = 0
+	self.aniresult = nil
 end
 
 -- separate animation and skeleton to 2 component, 
@@ -33,8 +40,12 @@ local ske = ecs.component_struct "skeleton" {
 		load = function (v, param)
 			assert(false, "not implement skeleton load")
 		end
-	}
+	},	
 }
+
+function ske:init()
+	self.handle = nil
+end
 
 
 local anisystem = ecs.system "animation_system"

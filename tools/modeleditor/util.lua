@@ -2,7 +2,7 @@ local util = {}; util.__index = util
 
 local geo = require "render.geometry"
 local computil = require "render.components.util"
-
+local aniutil = require "animation.util"
 local loaderutil = require "modelloader.util"
 local fs = require "filesystem"
 local mu = require "math.util"
@@ -148,10 +148,10 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 	if #anipaths > 0 then
 		world:add_component(eid, "animation")
 		local anicomp = e.animation
-		computil.init_animation(anicomp, e.skeleton)
+		aniutil.init_animation(anicomp, e.skeleton)
 		local avgweight = 1 / #anipaths
 		for _, anipath in ipairs(anipaths) do
-			computil.add_animation(anicomp, anipath, avgweight)
+			aniutil.add_animation(anicomp, anipath, avgweight)
 		end
 	end
 

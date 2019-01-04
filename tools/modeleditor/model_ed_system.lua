@@ -198,13 +198,13 @@ local function init_paths_ctrl()
 	local aniview = iup.GetDialogChild(dlg, "ANIVIEW").owner
 
 	local skepath = fs.path "meshes/skeleton/arm_skeleton.ozz"
-	--local smfilename = fs.path "meshes/mesh.ozz"
+	local smfilename = fs.path "meshes/mesh.ozz"
 	skeinputer:set_input(skepath:string())
-	--sminputer:set_input(smfilename:string())
+	sminputer:set_input(smfilename:string())
 
-	-- assert(aniview:count() == 0)
-	-- aniview:add(fs.path "meshes/animation/animation1.ozz")
-	-- aniview:add(fs.path "meshes/animation/animation2.ozz")
+	assert(aniview:count() == 0)
+	aniview:add(fs.path "meshes/animation/animation1.ozz")
+	aniview:add(fs.path "meshes/animation/animation2.ozz")
 	
 	local blender = iup.GetDialogChild(dlg, "BLENDER").owner
 	aniview:set_blender(blender)
