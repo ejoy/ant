@@ -28,7 +28,7 @@ function probe.new(config)
 				local owner = assert(self.owner)
 				local av = owner.assetview
 				if av then
-					self.observers:notify("fetch_asset", av.get_select_res())
+					owner.observers:notify("fetch_asset", av:get_select_res())
 				end
 			end,
 		}

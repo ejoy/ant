@@ -422,7 +422,7 @@ get_samplingnode(lua_State *L, ozz::animation::Skeleton* ske, int idx = 3) {
 static inline float
 get_ratio(lua_State*L, int idx = 4) {
 	luaL_checktype(L, idx, LUA_TNUMBER);
-	return (float)lua_tonumber(L, 4);
+	return (float)lua_tonumber(L, idx);
 }
 
 static inline animation_result*
@@ -486,25 +486,6 @@ from_job_result(job_result &result) {
 	return IntermediateJobResult(&*result.begin(), result.size());
 }
 
-static void
-motion(lua_State *L,
-	ozz::animation::Skeleton *ske, 
-	ozz::animation::Animation *ani, 
-	ozz::animation::SamplingCache *sampling, 
-	float ratio, 
-	animation_result &aniresult){
-
-	job_result result(ske->num_soa_joints());
-	auto ijr = from_job_result(result);
-	if (!do_sample(ske, ani, sampling, ratio, ijr)) {
-		luaL_error(L, "do sampling job failed!");
-	}
-
-	if (!do_ltm(ske, ijr, &aniresult)){
-		luaL_error(L, "transform from local to model failed!");
-	}
-}
-
 static int
 lmotion(lua_State *L) {
 	auto ske = get_ske(L, 1);
@@ -553,7 +534,7 @@ lmotion(lua_State *L) {
 
 		ozz::animation::BlendingJob::Layer layer;
 		lua_getfield(L, -1, "weight");	
-		layer.weight = (float)lua_tonumber(L, 1);
+		layer.weight = (float)lua_tonumber(L, -1);
 		lua_pop(L, 1);
 
 		layer.transform = from_job_result(inputs.back().result);
@@ -565,10 +546,13 @@ lmotion(lua_State *L) {
 		ozz::animation::BlendingJob blendjob;
 		blendjob.bind_pose = ske->bind_pose();
 
+		auto jobrange = ozz::Range<ozz::animation::BlendingJob::Layer>(&*layers.begin(), layers.size());
 		if (strcmp(blendtype, "blend") == 0) {
-			blendjob.layers = ozz::Range<ozz::animation::BlendingJob::Layer>(&*layers.begin(), &*layers.cend());
+			blendjob.layers = jobrange;
 		} else if (strcmp(blendtype, "additive") == 0) {
-			blendjob.additive_layers = ozz::Range<ozz::animation::BlendingJob::Layer>(&*layers.begin(), &*layers.cend());
+			blendjob.additive_layers = jobrange;
+		} else {
+			luaL_error(L, "need to specify valid blendtype:%s", blendtype);
 		}
 		
 		blendjob.threshold = threshold;		

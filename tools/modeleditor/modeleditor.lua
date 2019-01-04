@@ -84,13 +84,16 @@ local mesh_pathctrl = create_pathctrl("Mesh", "SMINPUTER", assetview)
 
 local blendviewclass = require "tools.modeleditor.blendview"
 
+local aniview = aniviewclass.new({NAME="ANIVIEW"})
+aniview:injust_assetview(assetview)
+
 local animation_expander = iup.expander {
 	TITLE = "Animation",
 	NAME = "ANIMATION",
 	iup.tabs {
 		TABTITLE0 = "Ani list",
 		TABTITLE1 = "Blend",
-		aniviewclass.new({NAME="ANIVIEW"}).view,
+		aniview.view,
 		blendviewclass.new({NAME="BLENDVIEW"}).view,
 	}
 }

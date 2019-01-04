@@ -65,18 +65,15 @@ local function rebuild_hierarchy(iterop)
 		-- load the cache if it has been loaded(this cache will be modified by program), otherwise load it from file
 		local hascache = assetmgr.has_res(epath)
 		local root = assetmgr.load(epath, {editable=true})
-		-- we need to rewrite the file from cache
-		local assetdir = assetmgr.assetdir()
-		if hascache then
-			local assetpath = assetdir / epath
-			fs.create_directories(assetpath:parent_path())
-			hierarchy_module.save(root, assetpath:string())
+		-- we need to rewrite the file from cache		
+		if hascache then			
+			fs.create_directories(epath:parent_path())
+			hierarchy_module.save(root, epath:string())
 		end
 
-		local builddata = hierarchy_module.build(root)
-		local pp = assetdir / rpath
-		fs.create_directories(pp:parent_path())
-		hierarchy_module.save(builddata, pp:string())
+		local builddata = hierarchy_module.build(root)		
+		fs.create_directories(rpath:parent_path())
+		hierarchy_module.save(builddata, rpath:string())
 	end
 	--[@
 

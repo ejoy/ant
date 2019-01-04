@@ -131,7 +131,7 @@ end
 
 local samplematerialpath = fs.path "skin_model_sample.material"
 
-function util.create_sample_entity(world, skepath, anipath, skinning_meshpath)
+function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 	local eid = world:new_entity("position", "scale", "rotation",		
 	"mesh", "material",
 	"sampleobj", 
@@ -147,11 +147,14 @@ function util.create_sample_entity(world, skepath, anipath, skinning_meshpath)
 		computil.load_skeleton(e.skeleton, skepath)
 	end
 
-	if anipath:string() ~= "" then
+	if #anipaths > 0 then
 		world:add_component(eid, "animation")
 		local anicomp = e.animation
 		computil.init_animation(anicomp, e.skeleton)
-		computil.add_animation(anicomp, anipath, 1.0)
+		local avgweight = 1 / #anipaths
+		for _, anipath in ipairs(anipaths) do
+			computil.add_animation(anicomp, anipath, avgweight)
+		end
 	end
 
 	local skinning_mesh

@@ -107,7 +107,7 @@ local function enable_bones_visible()
 	end
 end
 
-local function check_create_sample_entity(skepath, anipath, smpath)
+local function check_create_sample_entity(skepath, anipaths, smpath)
 	local function check_path_valid(pp)
 		if not assetmgr.find_valid_asset_path(pp) then
 			iup.Message("Error", string.format("invalid path : %s", pp))
@@ -123,7 +123,7 @@ local function check_create_sample_entity(skepath, anipath, smpath)
 			world:remove_entity(sample_eid)
 		end
 
-		sample_eid = util.create_sample_entity(world, skepath, anipath, smpath)
+		sample_eid = util.create_sample_entity(world, skepath, anipaths, smpath)
 		enable_sample_visible()
 	end
 end
@@ -202,10 +202,10 @@ local function init_paths_ctrl()
 	skeinputer:set_input(skepath:string())
 	sminputer:set_input(smfilename:string())
 
-	if aniview:count() == 0 then
-		aniview:add(fs.path "meshes/animation/animation_base.ozz")
-	end
-
+	assert(aniview:count() == 0)
+	aniview:add(fs.path "meshes/animation/animation1.ozz")
+	aniview:add(fs.path "meshes/animation/animation2.ozz")
+	
 	local blender = iup.GetDialogChild(dlg, "BLENDER").owner
 	aniview:set_blender(blender)
 
@@ -213,8 +213,11 @@ local function init_paths_ctrl()
 		local skepath = fs.path(skeinputer:get_input())
 		local smpath = fs.path(sminputer:get_input())
 
-		local anipath = fs.path(aniview:get(1))
-		check_create_sample_entity(skepath, anipath, smpath)
+		local anipaths = {}
+		for i=1, aniview:count() do
+			anipaths[#anipaths+1] = fs.path(aniview:get(i))
+		end		
+		check_create_sample_entity(skepath, anipaths, smpath)
 	end
 
 	skeinputer:add_changed_cb(change_cb)
@@ -284,7 +287,13 @@ local function init_blend_ctrl()
 	local dlg = main_dialog()
 	local blender = dlg_item("BLENDER").owner
 	blender:observer_blend("blend", function (blendlist, type)
-		
+		local sample = smaple_entity()
+		if sample then
+			local anicomp = sample.animation
+			if anicomp then
+
+			end
+		end
 	end)
 end
 
@@ -336,35 +345,41 @@ local function auto_update_ani(deltatimeInSecond)
 	local dlg = main_dialog()
 	local autoplay = iup.GetDialogChild(dlg, "AUTO_PLAY")
 	if autoplay.VALUE ~= "OFF" then
-		local durationctrl = iup.GetDialogChild(dlg, "DURATION")
-		local duration = tonumber(durationctrl.VALUE)
+		local anilist = ani.anilist
+		if #anilist > 0 then
+			local function update_ani_timer_ctrl(anihandle, ctrlname)
+				local aniduration = anihandle:duration()
 
-		local anihandle = assert(ani.assetinfo.handle)
-		local aniduration = anihandle:duration()
+				local timerctrl = iup.GetDialogChild(dlg, ctrlname)
+				local duration = tonumber(timerctrl.VALUE)
+			
+				local function calc_new_duration(duration, aniduration)
+					local function is_number_equal(lhs, rhs)
+						local delta = lhs - rhs
+						local tolerance = 10e-6
+						return -tolerance <= delta and delta <= tolerance
+					end
+					if is_number_equal(duration, aniduration) then
+						return 0
+					end
 		
+					local newduration = duration + deltatimeInSecond
+					if newduration > aniduration then
+						return aniduration
+					end
+					return newduration
+				end
+		
+				local newduration = calc_new_duration(duration, aniduration)
+			
+				local ratio = math.min(math.max(0, newduration / aniduration), 1)
+				ani.ratio = ratio
+				timerctrl.VALUE = tostring(newduration)
+			end
 
-		local function calc_new_duration(duration, aniduration)
-			local function is_number_equal(lhs, rhs)
-				local delta = lhs - rhs
-				local tolerance = 10e-6
-				return -tolerance <= delta and delta <= tolerance
-			end
-			if is_number_equal(duration, aniduration) then
-				return 0
-			end
-
-			local newduration = duration + deltatimeInSecond
-			if newduration > aniduration then
-				return aniduration
-			end
-			return newduration
+			update_ani_timer_ctrl(assert(anilist[1]).handle, "DURATION")
 		end
 
-		local newduration = calc_new_duration(duration, aniduration)
-	
-		local ratio = math.min(math.max(0, newduration / aniduration), 1)
-		ani.ratio = ratio
-		durationctrl.VALUE = tostring(newduration)
 	end
 end
 

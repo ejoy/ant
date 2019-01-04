@@ -64,10 +64,10 @@ local function get_blendlist_ctrl(bl)
 	return blist
 end
 
-function blender:add(filename, weight)
+function blender:add(filepath, weight)
 	weight = weight or 0
 	local bc = blendctrl.new()
-	bc:set_filename(filename)
+	bc:set_filename(filepath:string())
 	bc:set_weight(weight)
 	local blist = get_blendlist_ctrl(self)
 
