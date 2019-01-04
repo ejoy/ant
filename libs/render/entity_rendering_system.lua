@@ -8,7 +8,8 @@ ecs.import "scene.filter.filter_system"
 
 local ru = require "render.util"
 local bgfx = require "bgfx"
-local ms = require "math.stack"
+local math = import_package "math"
+local ms = math.stack
 
 local draw_entity_sys = ecs.system "entity_rendering"
 

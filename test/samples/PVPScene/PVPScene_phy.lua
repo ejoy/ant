@@ -1,4 +1,5 @@
-local ms = require "math.stack"
+local math = import_package "math"
+local ms = math.stack
 
 local PVPScene = {}
 

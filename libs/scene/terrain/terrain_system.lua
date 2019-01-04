@@ -15,7 +15,8 @@ local VIEWID_TERRAIN = 100
 
 -- local stack = nil
 local math3d = require "math3d"
-local stack = require "math.stack"   -- 
+local math = import_package "math"
+local stack = math.stack
 
 local init_ambient = nil
 

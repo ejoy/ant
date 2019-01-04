@@ -1,7 +1,8 @@
 local draw = {}; draw.__index = {}
 
 local geo = require "render.geometry"
-local ms = require "math.stack"
+local math = import_package "math"
+local ms = math.stack
 
 local function gen_color_vertex(pt, color, transform)
 	assert(#pt == 3)

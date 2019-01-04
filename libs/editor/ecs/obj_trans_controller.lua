@@ -10,7 +10,7 @@ local assetmgr = require "asset"
 local math = import_package "math"
 local mu = math.util
 local cu = require "common.util"
-local ms = require "math.stack"
+local ms = math.stack
 local fs = require "filesystem"
 
 local components_util = require "render.components.util"

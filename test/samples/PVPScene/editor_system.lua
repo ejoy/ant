@@ -8,7 +8,8 @@ ecs.import "render.end_frame_system"
 local menu = require "editor.controls.popupmenu"
 local eu = require "editor.util"
 local su = require "serialize.util"
-local ms = require "math.stack"
+local math = import_package "math"
+local ms = math.stack
 
 local editor_mainwin = require "test.samples.PVPScene.mainwindow"
 
