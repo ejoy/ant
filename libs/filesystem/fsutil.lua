@@ -15,7 +15,7 @@ return function (fs)
 
 	function fs.open(filepath, ...)
 		local m = native_method("open")
-		return m(filepath:string(), ...)		
+		return m(filepath:string(), ...)
     end
     function fs.lines(filepath, ...)
 		local m = native_method("lines")
@@ -36,21 +36,21 @@ return function (fs)
 		if not fs.exists(base) and fs.exists(check) then
 			return true
 		end
-	
+
 		if fs.is_directory(check) or fs.is_directory(base) then
 			return false
-		end		
-	
+		end
+
 		local checktime = fs.last_write_time(check)
 		local basetime = fs.last_write_time(base)
 		return checktime > basetime
 	end
 
-	function fs.listfiles(subfolder, files, filter_exts)		
+	function fs.listfiles(subfolder, files, filter_exts)
 		if not fs.exists(subfolder) then
 			return
 		end
-		for p in subfolder:list_directory() do		
+		for p in subfolder:list_directory() do
 			local filepath = subfolder / p
 			if fs.is_directory(filepath) then
 				fs.listfiles(filepath, files, filter_exts)
@@ -69,7 +69,7 @@ return function (fs)
 							end
 						end
 					end
-	
+
 				else
 					table.insert(files, filepath)
 				end
