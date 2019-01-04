@@ -534,7 +534,7 @@ lmotion(lua_State *L) {
 
 		ozz::animation::BlendingJob::Layer layer;
 		lua_getfield(L, -1, "weight");	
-		layer.weight = (float)lua_tonumber(L, 1);
+		layer.weight = (float)lua_tonumber(L, -1);
 		lua_pop(L, 1);
 
 		layer.transform = from_job_result(inputs.back().result);
@@ -546,10 +546,13 @@ lmotion(lua_State *L) {
 		ozz::animation::BlendingJob blendjob;
 		blendjob.bind_pose = ske->bind_pose();
 
+		auto jobrange = ozz::Range<ozz::animation::BlendingJob::Layer>(&*layers.begin(), layers.size());
 		if (strcmp(blendtype, "blend") == 0) {
-			blendjob.layers = ozz::Range<ozz::animation::BlendingJob::Layer>(&*layers.begin(), &*layers.cend());
+			blendjob.layers = jobrange;
 		} else if (strcmp(blendtype, "additive") == 0) {
-			blendjob.additive_layers = ozz::Range<ozz::animation::BlendingJob::Layer>(&*layers.begin(), &*layers.cend());
+			blendjob.additive_layers = jobrange;
+		} else {
+			luaL_error(L, "need to specify valid blendtype:%s", blendtype);
 		}
 		
 		blendjob.threshold = threshold;		
