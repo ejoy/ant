@@ -1,7 +1,3 @@
--- luacheck: globals import
-
-local require = import and import(...) or require
-
 local fs = require "filesystem"
 
 local support_list = {
@@ -39,7 +35,7 @@ local function get_loader(name)
 		end
 
 		if is_support(name) then
-			loader = require ("ext_" .. name)
+			loader = require ("asset.ext_" .. name)
 			loaders[name] = loader
 		else
 			error("Unsupport assetmgr type " .. name)

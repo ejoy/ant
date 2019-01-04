@@ -2,16 +2,16 @@ local ecs = ...
 
 local component_util = require "render.components.util"
 local asset = require "asset"
-local mathutil = require "math.util"
+local math = import_package "math"
 
-ecs.component "position" (mathutil.create_component_vector())
-ecs.component "rotation" (mathutil.create_component_vector())
-ecs.component "scale" (mathutil.create_component_vector())
+ecs.component "position" (math.util.create_component_vector())
+ecs.component "rotation" (math.util.create_component_vector())
+ecs.component "scale" (math.util.create_component_vector())
 
 ecs.component_struct "relative_srt" {
-	s = mathutil.create_component_vector(),
-	r = mathutil.create_component_vector(),
-	t = mathutil.create_component_vector(),
+	s = math.util.create_component_vector(),
+	r = math.util.create_component_vector(),
+	t = math.util.create_component_vector(),
 }
 
 ecs.component_struct "frustum" {

@@ -29,7 +29,8 @@ ecs.import "serialize.serialize_system"
 
 local component_util = require "render.components.util"
 local lu = require "render.light.util"
-local ms = require "math.stack"
+local math = import_package "math"
+local ms = math.stack
 
 local assetmgr = require "asset"
 

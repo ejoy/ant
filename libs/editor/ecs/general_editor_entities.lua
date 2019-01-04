@@ -8,8 +8,10 @@ ecs.import "editor.ecs.editor_component"
 
 local bgfx  = require "bgfx"
 local cu 	= require "render.components.util"
-local mu  	= require "math.util"
-local ms = require "math.stack"
+
+local math = import_package "math"
+local mu = math.util
+local ms = math.stack
 local fs = require "filesystem"
 local computil = require "render.components.util"
 
@@ -78,7 +80,6 @@ function general_editor_entites:init()
 
 		local function create_frustum_points()
 			local math3d_baselib = require "math3d.baselib"
-			local mu = require "math.util"
 			local camera = world:first_entity("main_camera")
 
 			local view, proj = mu.view_proj_matrix(camera)

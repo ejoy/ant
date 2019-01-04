@@ -1,7 +1,6 @@
 -- Usage : require this module at your project start,
 -- and put this line into first line of every submodule.
 --
--- local require = import and import(...) or require
 
 local loaded = package.loaded
 local searchpath = package.searchpath

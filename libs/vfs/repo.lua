@@ -1,6 +1,3 @@
---luacheck: globals import
-local require = import and import(...) or require
-
 -- This module can build/rebuild a directory into a repo.
 --
 

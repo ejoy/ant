@@ -11,10 +11,9 @@ ecs.import "timer.timer"
 
 local camera_util = require "render.camera.util"
 local bgfx = require "bgfx"
-local mathu = require "math.util"
-
---local math3d = require "math3d"
-local stack = require "math.stack"
+local math = import_package "math"
+local mathu = math.util
+local stack = math.stack
 
 
 local char_controller_sys = ecs.system "charcontroller_system"
@@ -53,7 +52,8 @@ local function register_input_message(self)
 
     local camera = world:first_entity("main_camera")
 
-    local point2d = require "math.point2d"
+    local math = import_package "math"
+    local point2d = math.point2d
 
 	local move_speed = 1
 	local message = {}
@@ -116,7 +116,8 @@ local function register_input_message(self)
 
     self.message.observers:add(message) 
     --]]
-    local point2d = require "math.point2d"
+    local math = import_package "math"
+    local point2d = math.point2d
 
     local camera = world:first_entity("main_camera")
 
@@ -329,7 +330,8 @@ function char_controller_sys:init()
 
     register_input_message(self)
    --[[ 
-    local point2d = require "math.point2d"
+    local math = import_package "math"
+    local point2d = math.point2d
 
     local camera = world:first_entity("main_camera")
 

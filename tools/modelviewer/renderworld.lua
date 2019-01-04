@@ -19,7 +19,8 @@ ecs.import "scene.hierarchy.hierarchy"
 ecs.import "editor.ecs.editor_component"
 
 local component_util = require "render.components.util"
-local ms = require "math.stack"
+local math = import_package "math"
+local ms = math.stack
 local model_review_system = ecs.system "model_review_system"
 
 model_review_system.singleton "constant"
@@ -29,7 +30,8 @@ model_review_system.dependby "message_system"
 local bgfx = require "bgfx"
 local lu = require "render.light.util"
 local cu = require "render.components.util"
-local mu = require "math.util"
+local math = import_package "math"
+local mu = math.util
 local geo = require "render.geometry"
 
 local function create_light()

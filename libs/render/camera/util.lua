@@ -1,7 +1,8 @@
 local util = {}; util.__index = util
 
-local mu = require "math.util"
-local ms = require "math.stack"
+local math = import_package "math"
+local mu = math.util
+local ms = math.stack
 
 local cu = require "render.components.util"
 local commonutil = require "common.util"

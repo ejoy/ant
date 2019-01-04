@@ -9,8 +9,9 @@ ecs.import "scene.filter.filter_component"
 ecs.import "render.view_system"
 ecs.import "render.components.general"
 
-local mu = require "math.util"
-local ms = require "math.stack"
+local math = import_package "math"
+local mu = math.util
+local ms = math.stack
 local bgfx = require "bgfx"
 
 -- 找时间统一到 render 中，作为要给独立的 viewid.lua 存放所有指定的 VIEW 

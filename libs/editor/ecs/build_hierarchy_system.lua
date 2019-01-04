@@ -6,8 +6,9 @@ local world = ecs.world
 local hierarchy_module = require "hierarchy"
 local fs = require "filesystem"
 
-local ms = require "math.stack"
-local mu = require "math.util"
+local math = import_package "math"
+local ms = math.stack
+local mu = math.util
 local assetmgr = require "asset"
 
 

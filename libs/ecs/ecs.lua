@@ -1,10 +1,9 @@
---luacheck: globals import log
-local require = import and import(...) or require
+--luacheck: globals log
 local log = log and log(...) or print
 
-local typeclass = require "typeclass"
-local system = require "system"
-local component = require "component"
+local typeclass = require "ecs.typeclass"
+local system = require "ecs.system"
+local component = require "ecs.component"
 
 local vfs = require "vfs"
 

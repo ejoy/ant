@@ -3,8 +3,8 @@ local world = ecs.world
 
 local ikmodule = require "hierarchy.ik"
 
-local mathutil = require "math.util"
-local ms = require "math.stack"
+local mathutil = (import_package "math").util
+local ms = (import_package "math").stack
 
 local ik = ecs.component_struct "ik" {
 	target 		= mathutil.create_component_vector(),

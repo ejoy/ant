@@ -5,7 +5,9 @@ local computil = require "render.components.util"
 local aniutil = require "animation.util"
 local loaderutil = require "modelloader.util"
 local fs = require "filesystem"
-local mu = require "math.util"
+
+local math = import_package "math"
+local mu = math.util
 local bgfx = require "bgfx"
 
 function util.create_aabb_descs(mesh, materialfile)

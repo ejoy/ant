@@ -5,8 +5,10 @@ local world = ecs.world
 ecs.import "scene.filter.filter_system"
 
 local math3d_baselib = require "math3d.baselib"
-local mu = require "math.util"
-local ms = require "math.stack"
+
+local math = import_package "math"
+local mu = math.util
+local ms = math.stack
 
 local cull_sys = ecs.system "cull_system"
 

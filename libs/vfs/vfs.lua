@@ -1,4 +1,3 @@
--- --luacheck: globals import
 -- Editor or test use vfs.local to manage a VFS dir/repo.
 -- It read/write file from/to a repo
 

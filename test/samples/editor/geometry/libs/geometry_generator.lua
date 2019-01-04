@@ -8,7 +8,8 @@ ecs.import "editor.ecs.debug.debug_drawing"
 
 ecs.import "editor.ecs.general_editor_entities"
 ecs.import "editor.ecs.camera_controller"
-local ms = require "math.stack"
+local math = import_package "math"
+local ms = math.stack
 
 local geometry_drawer = require "editor.ecs.render.geometry_drawer"
 

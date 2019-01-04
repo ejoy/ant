@@ -3,11 +3,11 @@ local world = ecs.world
 
 local render_cu = require "render.components.util"
 local render_util = require "render.util"
-local math_util = require "math.util"
+local math_util = (import_package "math").util
 local math3d = require "math3d"
 local bgfx = require "bgfx"
 local asset = require "asset"
-local ms = require "math.stack"
+local ms = (import_package "math").stack
 
 -- system rules 
 -- component for global state

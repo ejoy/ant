@@ -32,7 +32,8 @@ ecs.import "editor.ecs.general_editor_entities"
 ecs.import "editor.ecs.debug.debug_drawing"
 ecs.import "tools.modeleditor.accessory_system"
 
-local ms = require "math.stack"
+local math = import_package "math"
+local ms = math.stack
 local util = require "tools.modeleditor.util"
 local assetmgr = require "asset"
 local fs = require "filesystem"

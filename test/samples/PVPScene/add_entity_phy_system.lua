@@ -45,7 +45,8 @@ local lu = require "render.light.util"
 local assetmgr = require "asset"
 
 local math3d = require "math3d"
-local stack = require "math.stack"
+local math = import_package "math"
+local stack = math.stack
 
 
 local update_direction_light_sys = ecs.system "direction_light_system"
