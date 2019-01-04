@@ -1,6 +1,3 @@
---luacheck: globals import
-local require = import and import(...) or require
-
 local rawtable = require "common.rawtable"
 local assetutil = require "asset.util"
 local assetmgr = require "asset"

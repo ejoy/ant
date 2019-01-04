@@ -1,5 +1,3 @@
-local require = import and import(...) or require
-
 local im = {}
 
 --[[ config example

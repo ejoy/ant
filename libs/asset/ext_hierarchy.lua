@@ -1,5 +1,3 @@
-local require = import and import(...) or require
-
 local hierarchy_module = require "hierarchy"
 local vfs = require "vfs"
 local assetmgr = require "asset"

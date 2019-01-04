@@ -1,6 +1,4 @@
 --luacheck: globals iup import
-
-local require = import and import(...) or require
 require "iuplua"
 
 local inputmgr = require "inputmgr"

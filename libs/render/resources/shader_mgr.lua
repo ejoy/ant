@@ -1,5 +1,4 @@
---luacheck: globals import log
-local require = import and import(...) or require
+--luacheck: globals log
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"

@@ -1,6 +1,4 @@
 --luacheck: globals iup import
-local require = import and import(...) or require
-
 local asset = require "asset"
 local vfsutil = require "vfs.util"
 local fs = require "filesystem"
