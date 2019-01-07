@@ -37,6 +37,7 @@ local ms = math.stack
 local util = require "tools.modeleditor.util"
 local assetmgr = require "asset"
 local fs = require "filesystem"
+local camerautil = require "render.camera.util"
 
 ecs.tag "sampleobj"
 
@@ -199,13 +200,14 @@ local function init_paths_ctrl()
 	local aniview = iup.GetDialogChild(dlg, "ANIVIEW").owner
 
 	local skepath = fs.path "meshes/skeleton/arm_skeleton.ozz"
-	local smfilename = fs.path "meshes/mesh.ozz"
 	skeinputer:set_input(skepath:string())
-	sminputer:set_input(smfilename:string())
 
-	assert(aniview:count() == 0)
-	aniview:add(fs.path "meshes/animation/animation1.ozz")
-	aniview:add(fs.path "meshes/animation/animation2.ozz")
+	-- local smfilename = fs.path "meshes/mesh.ozz"	
+	-- sminputer:set_input(smfilename:string())
+
+	-- assert(aniview:count() == 0)
+	-- aniview:add(fs.path "meshes/animation/animation1.ozz")
+	-- aniview:add(fs.path "meshes/animation/animation2.ozz")
 	
 	local blender = iup.GetDialogChild(dlg, "BLENDER").owner
 	aniview:set_blender(blender)
@@ -318,10 +320,13 @@ local function init_lighting()
 end
 
 local function focus_sample()
-	if sample_eid then
-		local camerautil = require "render.camera.util"
-		camerautil.focus_selected_obj(world, sample_eid)		
+	if sample_eid then		
+		if camerautil.focus_selected_obj(world, sample_eid) then
+			return 
+		end	
 	end
+
+	camerautil.focus_point(world, {0, 0, 0})
 end
 
 -- luacheck: ignore self
