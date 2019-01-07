@@ -1,7 +1,6 @@
-local rawtable = require "common.rawtable"
 local assetmgr = require "asset"
+local rawtable = require "asset.rawtable"
 
 return function (filename)
-	local fn = assetmgr.find_depiction_path(filename)
-	return rawtable(fn)
+	return rawtable(assetmgr.find_depiction_path(filename))
 end

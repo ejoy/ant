@@ -2,12 +2,28 @@ local log = log and log(...) or print
 
 require "iupluacontrols"
 local eu = require "editor.util"
-local cu = require "common.util"
 
 local treecontrol = require "editor.controls.tree"
 local mv_control = require "editor.controls.matrixview"
 
 local propertyview = {}; propertyview.__index = propertyview
+
+local function ordered_pairs(t)
+	local sort = {}
+	for k in pairs(t) do
+		sort[#sort+1] = k
+	end
+	table.sort(sort)
+	local n = 1
+	return function ()
+		local k = sort[n]
+		if k == nil then
+			return
+		end
+		n = n + 1
+		return k, t[k]
+	end
+end
 
 local function create_tree_branch(node, parent, treeview)
 	local ntype = type(node)
@@ -15,7 +31,7 @@ local function create_tree_branch(node, parent, treeview)
 		return
 	end
 
-	for k, v in cu.ordered_pairs(node) do		
+	for k, v in ordered_pairs(node) do		
 		local child = treeview:add_child(parent, k)
 		child.userdata = v
 	end
@@ -56,7 +72,7 @@ local function fill_matrixview(detail, node)
 	if type(nodevalue) == "table" then
 		detail:setcell(0, 1, "key")
 		detail:setcell(0, 2, "value")		
-		for k, v in cu.ordered_pairs(nodevalue) do
+		for k, v in ordered_pairs(nodevalue) do
 			detail:setcell(ridx, 1, k)				
 			if type(v) == "table" then
 				detail:setuserdata(ridx, 2, {node=node, name=k})					

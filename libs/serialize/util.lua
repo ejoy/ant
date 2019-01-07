@@ -1,5 +1,21 @@
-local cu = require "common.util"
 local seri = {}
+
+local function ordered_pairs(t)
+	local sort = {}
+	for k in pairs(t) do
+		sort[#sort+1] = k
+	end
+	table.sort(sort)
+	local n = 1
+	return function ()
+		local k = sort[n]
+		if k == nil then
+			return
+		end
+		n = n + 1
+		return k, t[k]
+	end
+end
 
 function seri.load(filename)
 	local data = {}
@@ -33,7 +49,7 @@ function seri.serialize(v, needsorted)
 
 			-- for _, k in ipairs(all_keys) do			
 			-- 	local v = t[k]
-			local mypairs = needsorted and cu.ordered_pairs or pairs
+			local mypairs = needsorted and ordered_pairs or pairs
 			for k,v in mypairs(t) do
 				if not num_keys[k] then
 					local value = seri_value(v)

@@ -9,7 +9,6 @@ ecs.import "render.components.general"
 local assetmgr = require "asset"
 local math = import_package "math"
 local mu = math.util
-local cu = require "common.util"
 local ms = math.stack
 local fs = require "filesystem"
 
@@ -40,6 +39,16 @@ obj_trans_sys.singleton "message"
 
 obj_trans_sys.depend "constant_init_sys"
 
+local function deep_copy(t)
+	if type(t) == "table" then
+		local tmp = {}
+		for k, v in pairs(t) do
+			tmp[k] = deep_copy(v)
+		end
+		return tmp
+	end
+	return t
+end
 
 local function is_controller_id(controllers, eid)
 	if controllers then
@@ -286,7 +295,7 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 		obj.parent.eid = hie_eid
 
 		local properties = assert(obj.material.content[1].properties)
-		properties.u_color = {type="color", name="color", value=cu.deep_copy(color)}
+		properties.u_color = {type="color", name="color", value=deep_copy(color)}
 		obj.can_render = false
 		namemapper[name] = eid
 
@@ -422,7 +431,7 @@ local function add_rotator_entities(colors)
 			local entity = world[eid]
 	
 			local properties = assert(entity.material.content[1].properties)
-			properties.u_color = {type="color", name="color", value=cu.deep_copy(colors[colorname])}
+			properties.u_color = {type="color", name="color", value=deep_copy(colors[colorname])}
 			entity.can_render = false
 			mu.identify_transform(entity)
 	

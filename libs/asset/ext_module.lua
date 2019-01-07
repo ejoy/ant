@@ -1,9 +1,9 @@
-local rawtable = require "common.rawtable"
 local assetmgr = require "asset"
+local fs = require "filesystem"
+local rawtable = require "asset.rawtable"
 
-return function(filename)	
-	local fn = assetmgr.find_depiction_path(filename)
-    local t = rawtable(fn)
+return function(filename)
+    local t = rawtable(assetmgr.find_depiction_path(filename))
     local files = assert(t.modules)
     local modules = {}
     for _, v in ipairs(files) do
