@@ -6,7 +6,7 @@ require "iuplua"
 local rhwi = require "render.hardware_interface"
 local su = require "scene.util"
 
-local inputmgr = require "inputmgr"
+local inputmgr = import_package "inputmgr"
 local mapiup = require "editor.input.mapiup"
 
 local task = require "editor.task"

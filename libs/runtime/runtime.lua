@@ -3,7 +3,7 @@ require 'runtime.vfsio'
 require 'runtime.errlog'
 local LOGERROR = log.error
 
-local keymap = require 'inputmgr.keymap'
+local keymap = (import_package "inputmgr").keymap
 
 local dbgupdate = require 'runtime.debug'
 
@@ -15,7 +15,7 @@ require "common/log"
 local native = require "window.native"
 local window = require "window"
 
-local inputmgr = require "inputmgr"
+local inputmgr = import_package "inputmgr"
 local iq = inputmgr.queue {
 	keyboard="_,_,_",
 	mouse_click = "_,_,_,_,_",

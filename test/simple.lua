@@ -5,7 +5,7 @@ require "scintilla"
 
 local bgfx = require "bgfx"
 
-local inputmgr = require "inputmgr"
+local inputmgr = import_package "inputmgr"
 local mapiup = require "editor.input.mapiup"
 local elog = require "editor.log"
 

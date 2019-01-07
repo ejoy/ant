@@ -1,8 +1,8 @@
-local rawtable = require "common.rawtable"
 local assetutil = require "asset.util"
 local assetmgr = require "asset"
 local fs = require "filesystem"
 local ru = require "render.util"
+local rawtable = require "asset.rawtable"
 
 local loaders = {
 	state = function (t) return t end, 
@@ -12,8 +12,8 @@ local loaders = {
 }
 
 return function(filepath)
-	local fn = assetmgr.find_depiction_path(filepath)	
-	local material = assert(rawtable(fn))
+	local fn = assetmgr.find_depiction_path(filepath)
+	local material = rawtable(fn)
 
     local material_info = {}
 

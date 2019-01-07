@@ -64,7 +64,7 @@ local function gen_type(c, typename)
 	end
 end
 
-return function(world, import)
+return function(world, import, import_package)
 	local class_register = { world = world }
 	local class = {}
 
@@ -105,7 +105,7 @@ return function(world, import)
 	}
 	register {
 		type = "system",
-		setter = { "depend" , "dependby", "singleton", "import" },
+		setter = { "depend" , "dependby", "singleton", "import", "import_package" },
 		submethod = { "notify" },
 		callback = { "init", "update" },
 	}
@@ -136,6 +136,7 @@ return function(world, import)
 	end
 
 	class_register.import = import
+	class_register.import_package = import_package
 
 	return class_register, class
 end

@@ -46,21 +46,20 @@ function bind.on.click(e, name)
     end
 end
 
-local guiRecent = iupex.menu({
-    {"Clean Recently Opened", "CleanRecentlyOpened"},
+local guiFile = iupex.menu({
+    {"Open Map...", "OpenMap"},
+    {"Open Entry File(*.lua)", "FromEntryFile"},
+    {"Run file", "RunFile"},
     {},
+    {},
+    {"Clean Recently Opened", "CleanRecentlyOpened"},
 }, bind)
 
 local guiMain = iupex.menu(
 {
     {
         "File",
-        {
-			{"Open Map...", "OpenMap"},
-			{"Open Entry File(*.lua)", "FromEntryFile"},
-            {"Open Recent", guiRecent},
-            {"Run file", "RunFile"},
-        } 
+        guiFile,
     },
 }, bind)
 
@@ -68,7 +67,7 @@ local guiOpenMap = iup.GetChild(iup.GetChild(guiMain, 0), 0)
 local guiRunFile = iup.GetChild(iup.GetChild(iup.GetChild(guiMain, 0), 0), 2)
 local openMap
 
-local function recentSave()    
+local function recentSave()
     local f = fs.open(recentcfg, 'w')
     if not f then
         return
@@ -80,14 +79,7 @@ local function recentSave()
 end
 
 local function recentUpdate()
-    while true do
-        local h = iup.GetChild(guiRecent, 2)
-        if h then
-            iup.Detach(h)
-        else
-            break
-        end
-    end
+    local ref = iup.GetChild(guiFile, iup.GetChildCount(guiFile) - 2)
     for _, path in ipairs(config.recent) do
         local h = iup.item {
             title = path:string(),
@@ -95,7 +87,7 @@ local function recentUpdate()
         		openMap(path)
             end
         }
-        iup.Append(guiRecent, h) 
+        guiFile:insert(ref, h) 
         iup.Map(h)
     end
 end
@@ -134,7 +126,6 @@ end
 
 function openMap(path)
 	guiOpenMap.active = "OFF"
-    guiRecent.active = "OFF"
     guiRunFile.active = "ON"
 	recentAddAndUpdate(path)
 

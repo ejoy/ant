@@ -22,6 +22,16 @@ return function (fs)
 		return m(filepath:string(), ...)
     end
 
+	function fs.loadfile(filepath, ...)
+		local m = native_method("loadfile")
+		return m(filepath:string(), ...)
+	end
+
+	function fs.dofile(filepath)
+		local m = native_method("dofile")
+		return m(filepath:string())
+	end
+
     if platform.OS == 'Windows' then
         function fs.mydocs_path()
             return fs.path(os.getenv 'USERPROFILE') / 'Documents'

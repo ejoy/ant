@@ -1,4 +1,4 @@
-local im = require "inputmgr"
+local im = import_package "inputmgr"
 
 local q = im.queue {
 	BUTTON = { [1] = "LEFT", [2] = "RIGHT" },

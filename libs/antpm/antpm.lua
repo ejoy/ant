@@ -4,7 +4,8 @@ local pm_require = require "antpm.require"
 local WORKDIR = fs.current_path()
 
 local list = {
-    WORKDIR / "packages" / "math"
+    WORKDIR / "packages" / "math",
+    WORKDIR / "packages" / "inputmgr",
 }
 local registered = {}
 local loaded = {}
@@ -35,7 +36,7 @@ local function init(pkg)
         error(('Cannot find package config `%s`.'):format(cfg:string()))
     end
     local config = dofile(cfg)
-    for _, field in ipairs {'name','main'} do
+    for _, field in ipairs {'name'} do
         if not config[field] then
             error(('Missing `%s` field in `%s`.'):format(field, cfg:string()))
         end 
@@ -47,7 +48,7 @@ local function init(pkg)
 end
 
 local function searcher_Package(name)
-    if not registered[name] then
+    if not registered[name] or not registered[name][2].main then
         return ("\n\tno package '%s'"):format(name)
     end
     local info = registered[name]
@@ -62,7 +63,7 @@ for _, pkg in ipairs(list) do
     init(pkg)
 end
 
-function import_package(name)
+local function import(name)
     if loaded[name] then
         return loaded[name]
     end
@@ -75,3 +76,15 @@ function import_package(name)
     end
     return loaded[name]
 end
+
+local function find(name)
+    if not registered[name] then
+        return
+    end
+    return registered[name][1], registered[name][2]
+end
+
+return {
+    find = find,
+    import = import
+}

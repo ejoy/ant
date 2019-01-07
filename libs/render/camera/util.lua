@@ -5,7 +5,17 @@ local mu = math.util
 local ms = math.stack
 
 local cu = require "render.components.util"
-local commonutil = require "common.util"
+
+local function deep_copy(t)
+	if type(t) == "table" then
+		local tmp = {}
+		for k, v in pairs(t) do
+			tmp[k] = deep_copy(v)
+		end
+		return tmp
+	end
+	return t
+end
 
 local function move_position(p, dir, speed)
 	ms(p, p, dir, {speed}, "*+=")
@@ -67,7 +77,7 @@ function util.focus_selected_obj(world, eid)
 		return 
 	end
 
-	local aabb = commonutil.deep_copy(bounding.aabb)
+	local aabb = deep_copy(bounding.aabb)
 	--[[
 		here is what this code do:
 			1. get world mat in this entity ==> worldmat 

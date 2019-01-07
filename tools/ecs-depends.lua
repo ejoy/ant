@@ -78,7 +78,7 @@ local function sortvpairs(t)
     end
 end
 
-local fs = require 'cppfs'
+local fs = require 'filesystem'
 local fs_util = require 'debugger.filesystem'
 local typeclass = require 'ecs.typeclass'
 

@@ -11,8 +11,8 @@ local task = require "editor.task"
 local s_logo = require "logo"
 
 local mapiup = require "editor.input.mapiup"
-local inputmgr = require "inputmgr"
-local nkmsg = require "inputmgr.nuklear"
+local inputmgr = import_package "inputmgr"
+local nkmsg = (import_package "inputmgr").nuklear
 
 local math3d = require "math3d"
 

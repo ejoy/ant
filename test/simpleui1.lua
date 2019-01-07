@@ -8,9 +8,9 @@ local rhwi = require "render.hardware_interface"
 local sm = require "render.resources.shader_mgr"
 local task = require "editor.task"
 local nk = require "bgfx.nuklear"
-local inputmgr = require "inputmgr"
+local inputmgr = import_package "inputmgr"
 local mapiup = require "editor.input.mapiup"
-local nkmsg = require "inputmgr.nuklear"
+local nkmsg = (import_package "inputmgr").nuklear
 
 local loadfile = require "tested.loadfile"
 local ch_charset = require "tested.charset_chinese_range"

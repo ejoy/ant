@@ -2,13 +2,23 @@ local util = {}
 util.__index = util
 
 local asset = require "asset"
-local common_util = require "common.util"
 
 local math = import_package "math"
 local mu = math.util
 local bgfx = require "bgfx"
 local fs = require "filesystem"
 
+
+local function deep_copy(t)
+	if type(t) == "table" then
+		local tmp = {}
+		for k, v in pairs(t) do
+			tmp[k] = deep_copy(v)
+		end
+		return tmp
+	end
+	return t
+end
 
 local function load_res(comp, respath, param, errmsg)
 	if respath then
@@ -47,7 +57,7 @@ function util.update_properties(dst_properties, src_properties)
 		if v.type == "texture" then
 			dst_properties[k] = util.load_texture(v.name, v.stage, fs.path(v.default or v.path))
 		else
-			dst_properties[k] = {name=v.name, type=v.type, value=common_util.deep_copy(v.default or v.value)}
+			dst_properties[k] = {name=v.name, type=v.type, value=deep_copy(v.default or v.value)}
 		end
 	end
 end

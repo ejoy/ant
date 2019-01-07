@@ -6,7 +6,7 @@ ecs.import "render.entity_rendering_system"
 
 ecs.import "scene.filter.filter_system"
 
-ecs.import "inputmgr.message_system"
+ecs.import_package "inputmgr"
 
 local computil = require "render.components.util"
 local camerautil = require "render.camera.util"

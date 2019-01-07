@@ -3,8 +3,6 @@ local log = log and log(...) or print
 
 local treecontrol = require "editor.controls.tree"
 
-local cu = require "common.util"
-
 local hierarchyview = treecontrol.new {
 	HIDEBUTTONS ="YES",
 	HIDELINES   ="YES",	
@@ -13,9 +11,26 @@ local hierarchyview = treecontrol.new {
 	IMAGEBRANCHEXPANDED = "IMGLEAF"
 }
 
+local function ordered_pairs(t)
+	local sort = {}
+	for k in pairs(t) do
+		sort[#sort+1] = k
+	end
+	table.sort(sort)
+	local n = 1
+	return function ()
+		local k = sort[n]
+		if k == nil then
+			return
+		end
+		n = n + 1
+		return k, t[k]
+	end
+end
+
 function hierarchyview:build(htree, ud_table)		
 	local function constrouct_treeview(tr, parent)
-		for k, v in cu.ordered_pairs(tr) do			
+		for k, v in ordered_pairs(tr) do			
 			local ktype = type(k)
 			if ktype == "string" or ktype == "number" then
 				local vtype = type(v)

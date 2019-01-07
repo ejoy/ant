@@ -5,7 +5,7 @@ local world = ecs.world
 ecs.import "scene.filter.filter_system"
 ecs.import "render.end_frame_system"
 ecs.import "render.entity_rendering_system"
-ecs.import "inputmgr.message_system"
+ecs.import_package "inputmgr"
 
 local math = import_package "math"
 local point2d = math.point2d
@@ -15,12 +15,22 @@ local ms = math.stack
 local fs = require "filesystem"
 
 local asset = require "asset"
-local cu = require "common.util"
 
 local math_baselib = require "math3d.baselib"
 
 local pickup_fb_viewid = 101
 local pickup_blit_viewid = pickup_fb_viewid + 1
+
+local function deep_copy(t)
+	if type(t) == "table" then
+		local tmp = {}
+		for k, v in pairs(t) do
+			tmp[k] = deep_copy(v)
+		end
+		return tmp
+	end
+	return t
+end
 
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,
@@ -43,7 +53,7 @@ local function init_pickup_materials()
 	local normal_material = asset.load(fs.path(mname))
 	normal_material.name = mname
 
-	local transparent_material = cu.deep_copy(normal_material)
+	local transparent_material = deep_copy(normal_material)
 	transparent_material.surface_type.transparency = "transparent"
 	transparent_material.name = ""
 

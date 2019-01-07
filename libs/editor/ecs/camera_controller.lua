@@ -3,7 +3,7 @@ local world = ecs.world
 
 ecs.import "render.camera.camera_component"
 ecs.import "render.components.general"
-ecs.import "inputmgr.message_system"
+ecs.import_package "inputmgr"
 ecs.import "timer.timer"
 
 local math = import_package "math"

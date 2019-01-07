@@ -1,7 +1,7 @@
-local rawtable = require "common.rawtable"
 local bgfx = require "bgfx"
 local fs = require "filesystem"
 local assetmgr = require "asset"
+local rawtable = require "asset.rawtable"
 
 local function texture_load(filepath, info)
 	local filename = filepath:string()
@@ -72,8 +72,7 @@ local function fill_default_sampler(sampler)
 end
 
 return function (filename)
-	local fn = assetmgr.find_depiction_path(filename)
-	local tex = rawtable(fn)
+	local tex = rawtable(assetmgr.find_depiction_path(filename))
 
 	local pp = assetmgr.find_valid_asset_path(fs.path(tex.path))
 	if pp == nil then

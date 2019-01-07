@@ -1,4 +1,3 @@
-local rawtable = require "common.rawtable"
 local fs = require "filesystem"
 
 local converter_names = {
@@ -6,6 +5,14 @@ local converter_names = {
 	mesh = "fileconvert.convertmesh",
 	texture = "",
 }
+
+local function rawtable(filepath)
+	local env = {}
+	local r = assert(fs.loadfile(filepath, "t", env))
+	r()
+	return env
+end
+
 
 local logfolder = fs.current_path() / "log"
 fs.create_directories(logfolder)
@@ -41,14 +48,7 @@ local function log_info(info)
 end
 
 return function (plat, sourcefile, lkfile, dstfile)
-	local lkcontent = rawtable(lkfile, 	function (filename, mode)
-		mode = mode or "rb"
-		local f = fs.open(filename, mode)
-		local c = f:read("a")
-		f:close()
-		return c
-	end)
-
+	local lkcontent = rawtable(lkfile)
 	local ctype = assert(lkcontent.type)
 	local converter_name = assert(converter_names[ctype])
 
