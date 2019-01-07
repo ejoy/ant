@@ -1649,13 +1649,16 @@ new_temp_vector4(lua_State *L) {
 	}
 	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
 	struct lastack *LS = bp->LS;
-	int i;
+
 	float v[4];
 	switch(top) {
-	case 4:
+	case 3:
 		v[3] = 0;
+		// fall off case 4
+	case 4:
+		break;
 	case 5:
-		for (i=0;i<top-1;i++) {
+		for (int i=0;i<top-1;i++) {
 			v[i] = luaL_checknumber(L, i+2);
 		}
 		break;

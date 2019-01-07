@@ -55,8 +55,7 @@ end
 
 function util.focus_point(world, pt)
 	local maincamera = world:first_entity("main_camera")
-	local newrot = ms(pt, maincamera.position, "-neP")
-	ms(maincamera.rotation, newrot, "=")
+	ms(maincamera.rotation, pt, maincamera.position, "-ne=")
 end
 
 function util.focus_selected_obj(world, eid)
@@ -94,6 +93,14 @@ function util.focus_selected_obj(world, eid)
 	local worldmat = ms({type="srt", s=entity.scale, r=entity.rotation, t=entity.position}, "m")
 	math3dlib.transform_aabb(worldmat, aabb)
 	local center = ms(aabb.max, aabb.min, "-", {0.5}, "*P")
+
+	--[[
+		init stack size: 2
+		1. '-': dir = max - min	-> [dir]		1(stack size)
+		2. '1': duplicate dir	-> [dir, dir]	2
+		3. '.': dot(dir, dir)	-> [dot result]	1
+		4. 'P': pop result
+	]]
 	local radius = ms(aabb.max, aabb.min, "-1.P")
 
 	local camera = world:first_entity("main_camera")
@@ -101,6 +108,7 @@ function util.focus_selected_obj(world, eid)
 
 	ms(camera.position, center, dir, radius, "*-=")
 	ms(camera.rotation, dir, "D=")
+	return true
 end
 
 return util

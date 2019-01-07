@@ -21,6 +21,7 @@ ecs.import "scene.filter.lighting_filter"
 -- animation
 ecs.import "animation.skinning.skinning_system"
 ecs.import "animation.animation"
+ecs.import "animation.ik"
 
 -- editor
 ecs.import "editor.ecs.camera_controller"
@@ -37,6 +38,7 @@ local ms = math.stack
 local util = require "tools.modeleditor.util"
 local assetmgr = require "asset"
 local fs = require "filesystem"
+local camerautil = require "render.camera.util"
 
 ecs.tag "sampleobj"
 
@@ -143,7 +145,7 @@ local function update_static_duration_value()
 			local anipath = get_sel_ani()
 			local anihandle = nil
 			for _, ani in ipairs(ani.anilist) do
-				if ani.ref_path == anipath then
+				if ani.ref_path == fs.path(anipath) then
 					anihandle = ani.handle
 				end
 			end
@@ -198,9 +200,10 @@ local function init_paths_ctrl()
 	local sminputer = iup.GetDialogChild(dlg, "SMINPUTER").owner
 	local aniview = iup.GetDialogChild(dlg, "ANIVIEW").owner
 
-	local skepath = fs.path "meshes/skeleton/arm_skeleton.ozz"
-	local smfilename = fs.path "meshes/mesh.ozz"
+	local skepath = fs.path "meshes/skeleton/human_skeleton.ozz"
 	skeinputer:set_input(skepath:string())
+
+	local smfilename = fs.path "meshes/mesh.ozz"	
 	sminputer:set_input(smfilename:string())
 
 	assert(aniview:count() == 0)
@@ -318,9 +321,28 @@ local function init_lighting()
 end
 
 local function focus_sample()
-	if sample_eid then
-		local camerautil = require "render.camera.util"
-		camerautil.focus_selected_obj(world, sample_eid)		
+	if sample_eid then		
+		if camerautil.focus_selected_obj(world, sample_eid) then
+			return 
+		end	
+	end
+
+	camerautil.focus_point(world, {0, 0, 0})
+end
+
+local function init_ik()
+	local sample = smaple_entity()
+	if sample then
+		assert(sample.ik == nil)
+		world:add_component(sample, "ik")
+
+		local ik = sample.ik
+		ik.target = ms:vector {1, 2, 0, 1}
+		ik.pole_vector = ms:vector {0, 1, 0}
+		ik.mid_axis = ms:vector {0, 0, 1}
+		ik.weight = 1.0
+		ik.soften = 0.5
+		ik.twist_angle = 0
 	end
 end
 
@@ -328,6 +350,8 @@ end
 function model_ed_sys:init()	
 	init_control()
 	init_lighting()
+
+	--init_ik()
 
 	focus_sample()
 end

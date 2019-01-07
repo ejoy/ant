@@ -489,11 +489,6 @@ lsample(lua_State *L) {
 	return 0;
 }
 
-static inline IntermediateJobResult
-from_job_result(job_result &result) {
-	return IntermediateJobResult(&*result.begin(), result.size());
-}
-
 static int
 lmotion(lua_State *L) {
 	auto ske = get_ske(L, 1);
@@ -532,10 +527,10 @@ lmotion(lua_State *L) {
 		lua_pop(L, 1);
 
 		input.result.resize(ske->num_soa_joints());
-		IntermediateJobResult result = from_job_result(input.result);
+		auto result = ozz::make_range(input.result);
 
 		if (!do_sample(ske, input.aninode->ani, input.sampling->cache, ratio, result)) {
-			luaL_error(L, "do_sample failed, index:%d, animation ratio:%2f", ii, ratio);
+			luaL_error(L, "do_sample failed, index:%d, animation ratio:%f", ii, ratio);
 		}
 
 		inputs.push_back(std::move(input));
@@ -545,7 +540,7 @@ lmotion(lua_State *L) {
 		layer.weight = (float)lua_tonumber(L, -1);
 		lua_pop(L, 1);
 
-		layer.transform = from_job_result(inputs.back().result);
+		layer.transform = ozz::make_range(inputs.back().result);
 		layers.push_back(std::move(layer));
 	}
 
@@ -554,7 +549,7 @@ lmotion(lua_State *L) {
 		ozz::animation::BlendingJob blendjob;
 		blendjob.bind_pose = ske->joint_bind_poses();
 
-		auto jobrange = ozz::Range<ozz::animation::BlendingJob::Layer>(&*layers.begin(), layers.size());
+		auto jobrange = ozz::make_range(layers);
 		if (strcmp(blendtype, "blend") == 0) {
 			blendjob.layers = jobrange;
 		} else if (strcmp(blendtype, "additive") == 0) {
@@ -566,16 +561,16 @@ lmotion(lua_State *L) {
 		blendjob.threshold = threshold;		
 		jr.resize(ske->num_soa_joints());
 
-		blendjob.output = from_job_result(jr);
+		blendjob.output = ozz::make_range(jr);
 
 		if (!blendjob.Run()) {
 			luaL_error(L, "blend job failed!");
 		}
 	} else {
-		jr = std::move(inputs.back().result);		
+		jr = std::move(inputs.back().result);
 	}
 
-	if (!do_ltm(ske, from_job_result(jr), aniresult)) {
+	if (!do_ltm(ske, ozz::make_range(jr), aniresult)) {
 		luaL_error(L, "doing blend result to ltm job failed!");
 	}
 
