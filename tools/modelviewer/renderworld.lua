@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 ecs.import "render.constant_system"
-ecs.import "inputmgr.message_system"
+ecs.import_package "inputmgr"
 
 -- light entity
 ecs.import "serialize.serialize_component"

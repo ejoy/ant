@@ -5,7 +5,7 @@ local world = ecs.world
 ecs.import "scene.filter.filter_system"
 ecs.import "render.end_frame_system"
 ecs.import "render.entity_rendering_system"
-ecs.import "inputmgr.message_system"
+ecs.import_package "inputmgr"
 
 local math = import_package "math"
 local point2d = math.point2d

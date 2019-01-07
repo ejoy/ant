@@ -197,11 +197,28 @@ local function init_modules(w, modules, module_path)
 		mods[#mods+1] = path
 		mods[path] = true
 	end
+
+	-- TODO: 临时代码
+	local function import_package(name)
+		local pm = require "antpm"
+		local root, config = pm.find(name)
+		if config and config.ecsModules then
+			for _, module in ipairs(config.ecsModules) do
+				local path = (root / module):string()
+				if not mods[path] then
+					mods[#mods+1] = path
+					mods[path] = true
+				end
+			end
+		end
+	end
+
 	for _, name in ipairs(modules) do
 		import(name)
 	end
 
-	local reg, class = typeclass(w, import)
+
+	local reg, class = typeclass(w, import, import_package)
 	while #mods > 0 do
 		local name = mods[#mods]
 		mods[#mods] = nil

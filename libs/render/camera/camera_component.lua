@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 ecs.import "render.window_component"
-ecs.import "inputmgr.message_system"
+ecs.import_package "inputmgr"
 
 -- camera entity
 ecs.import "scene.filter.filter_component"
