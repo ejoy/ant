@@ -1,5 +1,6 @@
 
 local bullet_module = require "bullet"
+local fs = require "filesystem"
 
 local bullet_sdk = bullet_module.new()
 
@@ -439,7 +440,7 @@ function bullet_world:create_debug_drawer(bgfx)
 	if self.prog == nil then 
 		local cu 	= require "render.components.util"
 		local material = { content= {}, }
-		cu.load_material( material,{"line.material",})
+		cu.load_material( material,{fs.path("line.material"),})
 		self.prog = material.content[1].materialinfo.shader.prog 
 		self.material = material    -- how to destroy?
 	end 

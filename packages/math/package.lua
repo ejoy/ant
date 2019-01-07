@@ -1,4 +1,4 @@
 return {
     name = "math",
-    main = "main.lua",
+    entry = "main.lua",
 }

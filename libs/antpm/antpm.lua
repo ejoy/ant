@@ -48,11 +48,11 @@ local function init(pkg)
 end
 
 local function searcher_Package(name)
-    if not registered[name] or not registered[name][2].main then
+    if not registered[name] or not registered[name][2].entry then
         return ("\n\tno package '%s'"):format(name)
     end
     local info = registered[name]
-    local func, err = pm_require(info[1]:string(), info[2].main, function(path) return fs.open(fs.path(path)) end)
+    local func, err = pm_require(info[1]:string(), info[2].entry, function(path) return fs.open(fs.path(path)) end)
     if not func then
         error(("error loading package '%s':\n\t%s"):format(name, err))
     end

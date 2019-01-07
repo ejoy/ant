@@ -1,6 +1,6 @@
 return {
     name = "inputmgr",
-    main = "main.lua",
+    entry = "main.lua",
     ecsModules = {
         "message_system.lua"
     }
