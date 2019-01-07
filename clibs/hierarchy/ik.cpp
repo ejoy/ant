@@ -37,5 +37,6 @@ extern "C" {
 		};
 
 		luaL_newlib(L, l);
+		return 1;
 	}
 }

@@ -1,8 +1,7 @@
 local util = {}; util.__index = util
 
-local computil = require "render.components.util"
 local animodule = require "hierarchy.animation"		
-
+local asset = require "asset"
 -- for animation
 function util.add_animation(comp, respath, weight, weighttype)
 	weighttype = weighttype or "full"	-- can be 'full' or 'partial'
@@ -14,7 +13,7 @@ function util.add_animation(comp, respath, weight, weighttype)
 		handle=asset.load(respath).handle, 
 		ref_path=respath,
 		type=weighttype,
-		sampling_cache = animodule.new_sampling_cache(num_joints),
+		sampling_cache = animodule.new_sampling_cache(numjoints),
 	})
 end
 

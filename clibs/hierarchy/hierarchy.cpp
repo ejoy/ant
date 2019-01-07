@@ -10,6 +10,8 @@ extern "C" {
 #include <ozz/animation/offline/skeleton_builder.h>
 #include <ozz/animation/runtime/skeleton.h>
 #include <ozz/animation/runtime/local_to_model_job.h>
+#include <ozz/animation/runtime/skeleton_utils.h>
+
 #include <ozz/base/maths/soa_transform.h>
 #include <ozz/base/io/archive.h>
 #include <ozz/base/io/stream.h>
@@ -99,46 +101,54 @@ lbuilddata_load(lua_State *L) {
 	});
 }
 
-static bool
-get_properties(lua_State *L, ozz::animation::Skeleton::JointProperties &p) {
-	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
-	auto ske = builddata->skeleton;
-	if (ske) {
-		int jointidx = (int)lua_tointeger(L, 2) - 1;
-		if (jointidx >= ske->num_joints()) {
-			luaL_error(L, "joint index invalid:%d, joint number:%d", jointidx, ske->num_joints());
-		}
-		p = ske->joint_properties()[jointidx];
-		return true;
-	}	
-	return false;
-}
-
 static int lbuilddata_isleaf(lua_State *L) {
-	ozz::animation::Skeleton::JointProperties properties;
-	if (get_properties(L, properties)) {
-		lua_pushboolean(L, properties.is_leaf);
-		return 1;
-	}	
-	return 0;
+	auto ske = ((const hierarchy_build_data*)lua_touserdata(L, 1))->skeleton;
+	if (ske == nullptr) {
+		luaL_error(L, "skeleton data must init!");
+	}
+
+	const int jointidx = (int)lua_tointeger(L, 2) - 1;
+	if (jointidx >= ske->num_joints()) {
+		luaL_error(L, "joint index invalid:%d, joint number:%d", jointidx, ske->num_joints());
+	}
+
+	lua_pushboolean(L, ozz::animation::IsLeaf(*ske, jointidx));
+	return 1;
 }
 
 static int lbuilddata_parent(lua_State *L) {
-	ozz::animation::Skeleton::JointProperties properties;
-	if (get_properties(L, properties)) {
-		lua_pushinteger(L, properties.parent + 1);
-		return 1;
+	auto ske = ((const hierarchy_build_data*)lua_touserdata(L, 1))->skeleton;
+	if (ske == nullptr) {
+		luaL_error(L, "skeleton data must init!");
 	}
-	return 0;
+
+	const int jointidx = (int)lua_tointeger(L, 2) - 1;
+	if (jointidx >= ske->num_joints()) {
+		luaL_error(L, "joint index invalid:%d, joint number:%d", jointidx, ske->num_joints());
+	}
+
+	auto parents = ske->joint_parents();
+	auto parentid = parents[jointidx];
+	lua_pushinteger(L, parentid + 1);
+	return 1;
 }
 
 static int lbuilddata_isroot(lua_State *L) {
-	ozz::animation::Skeleton::JointProperties properties;
-	if (get_properties(L, properties)) {
-		lua_pushboolean(L, properties.parent == ozz::animation::Skeleton::kNoParentIndex);
-		return 1;
+	auto ske = ((const hierarchy_build_data*)lua_touserdata(L, 1))->skeleton;
+	if (ske == nullptr) {
+		luaL_error(L, "skeleton data must init!");
 	}
-	return 0;
+
+	const int jointidx = (int)lua_tointeger(L, 2) - 1;
+	if (jointidx >= ske->num_joints()) {
+		luaL_error(L, "joint index invalid:%d, joint number:%d", jointidx, ske->num_joints());
+	}
+
+	auto parents = ske->joint_parents();
+	auto parentid = parents[jointidx];
+
+	lua_pushboolean(L, parentid == ozz::animation::Skeleton::kNoParent);
+	return 1;
 }
 
 static int
@@ -155,7 +165,7 @@ lbuilddata_get(lua_State *L){
 			if (idx >= joints_num)
 				return 0;
 
-			auto poses = skeleton->bind_pose();
+			auto poses = skeleton->joint_bind_poses();
 			auto names = skeleton->joint_names();
 
 			auto pose = poses[idx / 4];
