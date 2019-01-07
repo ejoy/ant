@@ -87,6 +87,9 @@ package.loaded.vfsio = io
 package.loaded.io = io
 _G.io = io
 
+nio.dofile = dofile
+nio.loadfile = loadfile
+
 local function loadfile(path)
     local f, err = io_open(path, 'r')
     if not f then
@@ -104,6 +107,9 @@ local function dofile(path)
     end
     return f()
 end
+
+io.dofile = dofile
+io.loadfile = loadfile
 
 _G.loadfile = loadfile
 _G.dofile = dofile
