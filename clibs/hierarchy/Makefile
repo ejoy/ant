@@ -10,9 +10,12 @@ else
 default : libhierarchy-$(PLAT).a
 endif
 
-OBJ_FILES := $(ODIR)/hierarchy.o $(ODIR)/animation.o $(ODIR)/mesh.o
+OBJ_FILES := $(ODIR)/hierarchy.o $(ODIR)/animation.o $(ODIR)/mesh.o	$(ODIR)/ik.o
 
 $(ODIR)/hierarchy.o: hierarchy.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(OZZINC)
+
+$(ODIR)/ik.o: ik.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(OZZINC)
 
 $(ODIR)/animation.o: animation.cpp | $(ODIR)
