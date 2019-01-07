@@ -30,7 +30,8 @@ function ik_sys:update()
 	for _, eid in world:each("ik") do
 		local e = world[eid]
 		local ik = e.ik
-		ikmodule.do_ik(assert(e.skeleton), {
+		local mat = ms({type="srt", s=e.scale, r=e.rotation, t=e.position}, "m")
+		ikmodule.do_ik(mat, assert(e.skeleton), {
 			target = ms(ik.target, "m"),
 			pole_vector = ms(ik.pole_vector, "m"),
 			mid_axis = ms(ik.mid_axis, "m"),

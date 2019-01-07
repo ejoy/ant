@@ -530,7 +530,7 @@ lmotion(lua_State *L) {
 		auto result = ozz::make_range(input.result);
 
 		if (!do_sample(ske, input.aninode->ani, input.sampling->cache, ratio, result)) {
-			luaL_error(L, "do_sample failed, index:%d, animation ratio:%2f", ii, ratio);
+			luaL_error(L, "do_sample failed, index:%d, animation ratio:%f", ii, ratio);
 		}
 
 		inputs.push_back(std::move(input));
