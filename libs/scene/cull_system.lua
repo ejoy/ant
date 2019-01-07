@@ -3,6 +3,7 @@ local ecs = ...
 local world = ecs.world
 
 ecs.import "scene.filter.filter_system"
+ecs.import "scene.filter.lighting_filter"
 
 local math3d_baselib = require "math3d.baselib"
 

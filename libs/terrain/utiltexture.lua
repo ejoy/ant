@@ -1,8 +1,9 @@
 local bgfx = require "bgfx"
 local assetmgr = require "asset"
+local fs = require "filesystem"
 
 local function texture_load(filename, info)
-	local f = assert(io.open(filename, "rb"))
+	local f = assert(fs.open(fs.path(filename), "rb"))
 	local imgdata = f:read "a"
 	f:close()
 	print("   image name = "..filename)
@@ -73,7 +74,7 @@ end
 return function (filename)
 	--local assetmgr = require "asset"
 	--local tex = rawtable(filename)
-	local pp = assetmgr.find_valid_asset_path(assert(filename))
+	local pp = assetmgr.find_valid_asset_path(fs.path(assert(filename)))
 	if pp == nil then
 		error("texture path is not valid, path is : ", -1)
 	end

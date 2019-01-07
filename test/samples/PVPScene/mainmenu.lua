@@ -132,12 +132,11 @@ function openMap(path)
 	path = vfsutil.filter_abs_path(path)
 
 	local function load_modules(path)
-		local ext = path:extension()
-		if ext == ".module" then
+		if path:equal_extension(".module") then
 			return asset.load(path)
 		end
 
-		assert(ext == fs.path ".lua")
+		assert(path:equal_extension(".lua"))
 		-- from file path, like: abc/efg/hij.lua, to abc.efg.hij
 		local modulename = path:string():match("(.+)%.lua$"):gsub("[/\\]", ".")
 		return {modulename}
