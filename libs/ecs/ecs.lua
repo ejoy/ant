@@ -63,8 +63,7 @@ function world:component_list(eid)
 end
 
 local function create_entity(w, id)
-	local e = setmetatable({}, w._entity_meta)
-	w[id] = e
+	w[id] = {}
 	w._entity[id] = true
 end
 
@@ -245,7 +244,6 @@ function ecs.new_world(config)
 
 		_entity = {},	-- entity id set
 		_entity_id = 0,
-		_entity_meta = { __index = nil },
 		_notifycomponent = {},	-- component_name : { eid_list }
 		_changecomponent = {},	-- component_name : { eid_set }
 		_notifyset = {},	-- component_name : { n = number, eid_list }
@@ -263,9 +261,7 @@ function ecs.new_world(config)
 	local singletons = system.singleton(class.system, w._component_type)
 	local proxy = system.proxy(class.system, w._component_type, singletons)
 
-	local system_methods = system.component_methods(class.system, w._component_type)
 	local init_list = system.init_list(class.system)
-	local meta = w._entity_meta
 
 	local update_list = system.update_list(class.system, config.update_order, config.update_bydepend)
 	local update_switch = system.list_switch(update_list)
@@ -273,12 +269,11 @@ function ecs.new_world(config)
 		update_switch:update()
 		for _, v in ipairs(update_list) do
 			local name, f = v[1], v[2]
-			meta.__index = system_methods[name]
 			f(proxy[name])
 		end
 	end
 
-	local notify_list = system.notify_list(class.system, proxy, system_methods)
+	local notify_list = system.notify_list(class.system, proxy)
 	init_notify(w, notify_list)
 	local notify_switch = system.list_switch(notify_list)
 
@@ -317,9 +312,7 @@ function ecs.new_world(config)
 
 			if n > 0 then
 				for _, functor in ipairs(notify_list[c]) do
-					local f, inst, methods = functor[2],functor[3],functor[4]
-					-- binding apis
-					meta.__index = methods
+					local f, inst = functor[2],functor[3]
 					f(inst, notifyset)
 				end
 			end
@@ -329,7 +322,6 @@ function ecs.new_world(config)
 	-- call init functions
 	for _, v in ipairs(init_list) do
 		local name, f = v[1], v[2]
-		meta.__index = system_methods[name]
 		log("Init system %s", name)
 		f(proxy[name])
 	end
