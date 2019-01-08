@@ -6,7 +6,7 @@ ecs.import "render.camera.camera_component"
 ecs.import "render.entity_rendering_system"
 
 
-ecs.import_package "inputmgr"
+ecs.import("inputmgr", "message_system")
 
 -- light entity
 ecs.import "serialize.serialize_component"

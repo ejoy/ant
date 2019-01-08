@@ -186,10 +186,23 @@ end
 
 local function init_modules(w, modules, module_path)
 	local mods = {}
-	local function import(name)
-		local path, err = searchpath(name, module_path)
-		if not path then
-			error(("module '%s' not found:%s"):format(name, err))
+
+	-- TODO: 临时代码
+	local function import(package, name)
+		if name == nil then
+			local err
+			name = package
+			path, err = searchpath(name, module_path)
+			if not path then
+				error(("module '%s' not found:%s"):format(name, err))
+			end
+		else
+			local pm = require "antpm"
+			local root = pm.find(package)
+			if not root then
+				error(("package '%s' not found"):format(package))
+			end
+			path = (root / (name .. '.lua')):string()
 		end
 		if mods[path] then
 			return
@@ -198,27 +211,11 @@ local function init_modules(w, modules, module_path)
 		mods[path] = true
 	end
 
-	-- TODO: 临时代码
-	local function import_package(name)
-		local pm = require "antpm"
-		local root, config = pm.find(name)
-		if config and config.ecsModules then
-			for _, module in ipairs(config.ecsModules) do
-				local path = (root / module):string()
-				if not mods[path] then
-					mods[#mods+1] = path
-					mods[path] = true
-				end
-			end
-		end
-	end
-
 	for _, name in ipairs(modules) do
 		import(name)
 	end
 
-
-	local reg, class = typeclass(w, import, import_package)
+	local reg, class = typeclass(w, import)
 	while #mods > 0 do
 		local name = mods[#mods]
 		mods[#mods] = nil

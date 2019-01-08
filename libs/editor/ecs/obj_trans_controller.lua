@@ -3,7 +3,7 @@ local ecs = ...
 local world = ecs.world
 
 ecs.import "render.constant_system"
-ecs.import_package "inputmgr"
+ecs.import("inputmgr", "message_system")
 ecs.import "render.components.general"
 
 local assetmgr = require "asset"

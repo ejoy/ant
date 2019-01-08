@@ -14,11 +14,11 @@ local world = ecs.world
 
 
 ecs.import "render.constant_system"
-ecs.import_package "inputmgr"
+ecs.import("inputmgr", "message_system")
 
 --ecs.import "render.math3d.math_component"
 ecs.import "render.constant_system"
-ecs.import_package "inputmgr"
+ecs.import("inputmgr", "message_system")
 
 -- light entity
 ecs.import "serialize.serialize_component"
