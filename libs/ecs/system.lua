@@ -167,7 +167,7 @@ function system.init_list(sys)
 	return init_list
 end
 
-function system.update_list(sys, order, obydp)
+function system.update_list(sys, order)
 	local update_list = {}
 	local norder = {}
 	for sname in pairs(sys) do
@@ -182,13 +182,11 @@ function system.update_list(sys, order, obydp)
 		end
 	end
 
-	if obydp then
-		local dp_list = solve_depend(sys)
-		for _, n in ipairs(dp_list) do
-			if norder[n] then
-				table.insert(update_list, n)
-				norder[n] = nil
-			end
+	local dp_list = solve_depend(sys)
+	for _, n in ipairs(dp_list) do
+		if norder[n] then
+			table.insert(update_list, n)
+			norder[n] = nil
 		end
 	end
 

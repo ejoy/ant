@@ -4,6 +4,8 @@ local pm_require = require "antpm.require"
 local WORKDIR = fs.current_path()
 
 local list = {
+    WORKDIR / "libs",
+
     WORKDIR / "packages" / "math",
     WORKDIR / "packages" / "inputmgr",
 }

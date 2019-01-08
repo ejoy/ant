@@ -4,6 +4,7 @@ local log = log and log(...) or print
 local typeclass = require "ecs.typeclass"
 local system = require "ecs.system"
 local component = require "ecs.component"
+local fs = require "filesystem"
 
 local vfs = require "vfs"
 
@@ -184,47 +185,124 @@ local function searchpath(name, path)
 	return nil, err
 end
 
-local function init_modules(w, modules, module_path)
-	local mods = {}
+local function import_package(w, name)
+	local pm = require "antpm"
+	local root, config = pm.find(name)
+	if not root then
+		error(("package '%s' not found"):format(name))
+	end
+	local modules = config.ecs_modules
+	if not modules then
+		local ecs_modules = require "antpm.ecs_modules"
+		modules = ecs_modules(root, {'*.lua'})
+	end
 
-	-- TODO: 临时代码
-	local function import(package, name)
-		if name == nil then
-			local err
-			name = package
-			path, err = searchpath(name, module_path)
-			if not path then
-				error(("module '%s' not found:%s"):format(name, err))
-			end
-		else
-			local pm = require "antpm"
-			local root = pm.find(package)
-			if not root then
-				error(("package '%s' not found"):format(package))
-			end
-			path = (root / (name .. '.lua')):string()
+	local function import()
+	end
+	local reg, class = typeclass(w, import)
+	for _, path in ipairs(modules) do
+		local module, err = fs.loadfile(path)
+		if not module then
+			error(("module '%s' load failed:%s"):format(path:string(), err))
 		end
-		if mods[path] then
+		module(reg)
+	end
+	return class
+end
+
+local function init_modules(w, modules, module_path)
+	local class = {}
+
+	local function import(name)
+		local pm = require "antpm"
+		local root, config = pm.find(name)
+		if not root then
+			--TODO
+			--error(("package '%s' not found"):format(name))
 			return
 		end
-		mods[#mods+1] = path
-		mods[path] = true
-	end
-
-	for _, name in ipairs(modules) do
-		import(name)
-	end
-
-	local reg, class = typeclass(w, import)
-	while #mods > 0 do
-		local name = mods[#mods]
-		mods[#mods] = nil
-		local module, err = loadfile(name)
-		if not module then
-			error(("module '%s' load failed:%s"):format(name, err))
+		local modules = config.ecs_modules
+		if modules then
+			local tmp = {}
+			for _, m in ipairs(modules) do
+				tmp[#tmp+1] = root / m
+			end
+			modules = tmp
+		else
+			local ecs_modules = require "antpm.ecs_modules"
+			modules = ecs_modules(root, {"*.lua"})
 		end
-		log(("Init module '%s'."):format(name))
+		local reg, subclass = typeclass(w, import, class)
+		for _, path in ipairs(modules) do
+			local module, err = fs.loadfile(path)
+			if not module then
+				error(("module '%s' load failed:%s"):format(path:string(), err))
+			end
+			module(reg)
+		end
+	end
+	import("")
+
+	local reg, initclass = typeclass(w, function() end)
+	for _, name in ipairs(modules) do
+		local path, err = searchpath(name, module_path)
+		if not path then
+			error(("module '%s' not found:%s"):format(name, err))
+		end
+		local module, err = loadfile(path)
+		if not module then
+			error(("module '%s' load failed:%s"):format(path, err))
+		end
 		module(reg)
+	end
+
+	local reg = typeclass(w, import, class)
+	for _, name in ipairs(modules) do
+		local path, err = searchpath(name, module_path)
+		if not path then
+			error(("module '%s' not found:%s"):format(name, err))
+		end
+		local module, err = loadfile(path)
+		if not module then
+			error(("module '%s' load failed:%s"):format(path, err))
+		end
+		module(reg)
+	end
+
+	local cut = {}
+
+	local function solve_depend(k)
+		if cut[k] then
+			return
+		end
+		cut[k] = true
+		local v = class.system[k]
+		if v then
+			if v.depend then
+				for _, subk in ipairs(v.depend) do
+					solve_depend(subk)
+				end
+			end
+			if v.dependby then
+				for _, subk in ipairs(v.dependby) do
+					solve_depend(subk)
+				end
+			end
+		end
+	end
+
+	for k in pairs(initclass.system) do
+		solve_depend(k)
+	end
+
+	local delete = {}
+	for k in pairs(class.system) do
+		if not cut[k] then
+			delete[k] = true
+		end
+	end
+	for k in pairs(delete) do
+		class.system[k] = nil
 	end
 	return class
 end
@@ -260,7 +338,7 @@ function ecs.new_world(config)
 
 	local init_list = system.init_list(class.system)
 
-	local update_list = system.update_list(class.system, config.update_order, config.update_bydepend)
+	local update_list = system.update_list(class.system, config.update_order)
 	local update_switch = system.list_switch(update_list)
 	function w.update ()
 		update_switch:update()

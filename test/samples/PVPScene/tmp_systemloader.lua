@@ -35,6 +35,12 @@ local PVPScenLoader = require "test.samples.PVPScene.PVPSceneLoader"
 
 local init_loader = ecs.system "init_loader"
 
+
+init_loader.depend "shadow_primitive_filter_system"
+init_loader.depend "transparency_filter_system"
+init_loader.depend "entity_rendering"
+init_loader.depend "camera_controller"
+
 function init_loader:init()
 	do
 		lu.create_directional_light_entity(world, "directional_light")

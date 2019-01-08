@@ -27,7 +27,6 @@ function util.start_new_world(input_queue, fbw, fbh, modules, module_searchdirs)
 		modules = modules,
 		module_path = module_searchdirs or package.path,
 		update_order = {"timesystem", "message_system"},
-		update_bydepend = true,
 		args = { 
 			mq = input_queue, 
 			fb_size={w=fbw, h=fbh},			

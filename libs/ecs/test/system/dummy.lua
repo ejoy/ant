@@ -7,7 +7,6 @@ local dummy = ecs.system "dummy"
 
 dummy.singleton "init"
 dummy.depend "init"
-dummy.import "foobar"	-- import foobar methods
 
 function dummy:init()
 	print ("Dummy init")

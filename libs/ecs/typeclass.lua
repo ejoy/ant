@@ -64,14 +64,14 @@ local function gen_type(c, typename)
 	end
 end
 
-return function(world, import)
+return function(world, import, class)
 	local class_register = { world = world }
-	local class = {}
+	local class = class or {}
 
 	local function register(args)
 		local what = args.type
 		local class_set = {}
-		local class_data = {}
+		local class_data = class[what] or {}
 		class[what] = class_data
 		class_register[what] = function(name)
 			local r = class_set[name]
