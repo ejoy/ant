@@ -36,10 +36,6 @@ struct animation_node {
 	ozz::animation::Animation		*ani;	
 };
 
-struct animation_result {
-	ozz::Range<ozz::math::Float4x4>	joints;
-};
-
 struct sampling_node {
 	ozz::animation::SamplingCache *		cache;	
 };
@@ -462,16 +458,19 @@ do_sample(const ozz::animation::Skeleton *ske,
 	return job.Run();
 }
 
-static inline bool
-do_ltm(ozz::animation::Skeleton *ske, const ozz::Range<ozz::math::SoaTransform> &intermediateResult, animation_result *aniresult) {
+bool
+do_ltm(ozz::animation::Skeleton *ske, 
+	const ozz::Range<const ozz::math::SoaTransform> &intermediateResult, 
+	ozz::Range<ozz::math::Float4x4> &joints,
+	int from = ozz::animation::Skeleton::kNoParent,
+	int to = ozz::animation::Skeleton::kMaxJoints) {
 	ozz::animation::LocalToModelJob ltmjob;
 	ltmjob.input = intermediateResult;
 	ltmjob.skeleton = ske;
-	ltmjob.output = aniresult->joints;
+	ltmjob.output = joints;
 
 	return ltmjob.Run();
 }
-
 
 static int
 lsample(lua_State *L) {
@@ -570,7 +569,7 @@ lmotion(lua_State *L) {
 		jr = std::move(inputs.back().result);
 	}
 
-	if (!do_ltm(ske, ozz::make_range(jr), aniresult)) {
+	if (!do_ltm(ske, ozz::make_range(jr), aniresult->joints)) {
 		luaL_error(L, "doing blend result to ltm job failed!");
 	}
 

@@ -152,6 +152,37 @@ static int lbuilddata_isroot(lua_State *L) {
 }
 
 static int
+lbuilddata_jointindex(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	const auto ske = ((const hierarchy_build_data*)lua_touserdata(L, 1))->skeleton;
+	if (ske == nullptr) {
+		luaL_error(L, "skeleton data must init!");
+	}
+
+	luaL_checktype(L, 2, LUA_TSTRING);
+	const char* name = lua_tostring(L, 2);
+
+	auto find_joint_idx = [ske](auto name) {
+		const auto& joint_names = ske->joint_names();
+		for (int ii = 0; ii < joint_names.count(); ++ii) {
+			if (strcmp(name, joint_names[ii]) == 0) {
+				return ii;
+			}
+		}
+
+		return -1;
+	};
+
+	auto jointidx = find_joint_idx(name);
+	if (jointidx < 0) {
+		luaL_error(L, "not found joint idx, name:%s", name);
+	}
+
+	lua_pushinteger(L, jointidx + 1);
+	return 1;
+}
+
+static int
 lbuilddata_get(lua_State *L){
 	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
 	switch (lua_type(L, 2)){
@@ -205,6 +236,7 @@ lbuilddata_get(lua_State *L){
 				std::make_tuple("isleaf", lbuilddata_isleaf),
 				std::make_tuple("parent", lbuilddata_parent),
 				std::make_tuple("isroot", lbuilddata_isroot),
+				std::make_tuple("joint_index", lbuilddata_jointindex),
 			};
 
 			for (auto& t : tpl) {

@@ -87,14 +87,35 @@ local blendviewclass = require "tools.modeleditor.blendview"
 local aniview = aniviewclass.new({NAME="ANIVIEW"})
 aniview:injust_assetview(assetview)
 
+local vectorviewclass = require "editor.controls.vectorview"
+
+local ikview = iup.vbox {
+	NAME = "IKVIEW",
+	vectorviewclass.new({NAME="TARGET", TITLE="target"}).view,
+	vectorviewclass.new({NAME="POLE", TITLE="pole vector"}).view,
+	vectorviewclass.new({NAME="MIDAXIS", TITLE="mid axis"}).view,
+	iup.gridbox {
+		iup.label {TITLE = "weight:",},			iup.text {NAME="WEIGHT", MINSIZE="32x"},
+		iup.label {TITLE="soften:"},			iup.text {NAME="SOFTEN", MINSIZE="32x"},
+		iup.label {TITLE="twist angle:"},		iup.text {NAME="TWIST_ANGLE", MINSIZE="32x"},
+		iup.label {TITLE="start joint index:"},	iup.text {NAME="START_JOINT", MINSIZE="32x"},
+		iup.label {TITLE="mid joint index:"},	iup.text {NAME="MID_JOINT", MINSIZE="32x"},
+		iup.label {TITLE="end joint index:"},	iup.text {NAME="END_JOINT", MINSIZE="32x"},
+		NUMDIV = 2,
+		NORMALIZESIZE ="BOTH",
+	},
+}
+
 local animation_expander = iup.expander {
 	TITLE = "Animation",
 	NAME = "ANIMATION",
 	iup.tabs {
 		TABTITLE0 = "Ani list",
 		TABTITLE1 = "Blend",
+		TABTITLE2 = "IK",
 		aniview.view,
 		blendviewclass.new({NAME="BLENDVIEW"}).view,
+		ikview,
 	}
 }
 

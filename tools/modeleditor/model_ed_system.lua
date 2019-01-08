@@ -200,15 +200,15 @@ local function init_paths_ctrl()
 	local sminputer = iup.GetDialogChild(dlg, "SMINPUTER").owner
 	local aniview = iup.GetDialogChild(dlg, "ANIVIEW").owner
 
-	local skepath = fs.path "meshes/skeleton/human_skeleton.ozz"
+	local skepath = fs.path "meshes/skeleton/arm_skeleton.ozz"
 	skeinputer:set_input(skepath:string())
 
-	local smfilename = fs.path "meshes/mesh.ozz"	
-	sminputer:set_input(smfilename:string())
+	-- local smfilename = fs.path "meshes/mesh.ozz"	
+	-- sminputer:set_input(smfilename:string())
 
-	assert(aniview:count() == 0)
-	aniview:add(fs.path "meshes/animation/animation1.ozz")
-	aniview:add(fs.path "meshes/animation/animation2.ozz")
+	-- assert(aniview:count() == 0)
+	-- aniview:add(fs.path "meshes/animation/animation1.ozz")
+	-- aniview:add(fs.path "meshes/animation/animation2.ozz")
 	
 	local blender = iup.GetDialogChild(dlg, "BLENDER").owner
 	aniview:set_blender(blender)
@@ -334,15 +334,22 @@ local function init_ik()
 	local sample = smaple_entity()
 	if sample then
 		assert(sample.ik == nil)
-		world:add_component(sample, "ik")
-
+		world:add_component(sample_eid, "ik")
+	
 		local ik = sample.ik
-		ik.target = ms:vector {1, 2, 0, 1}
-		ik.pole_vector = ms:vector {0, 1, 0}
-		ik.mid_axis = ms:vector {0, 0, 1}
+		ik.enable = true
+		ms(ik.target, {1, 2, 0, 1}, "=")
+		ms(ik.pole_vector, {0, 1, 0, 0}, "=")
+		ms(ik.mid_axis, {0, 0, 1, 0}, "=")
 		ik.weight = 1.0
 		ik.soften = 0.5
 		ik.twist_angle = 0
+
+		local ske = assert(sample.skeleton)
+		local skehandle = ske.assetinfo.handle
+		ik.start_joint = skehandle:joint_index("shoulder")
+		ik.mid_joint = skehandle:joint_index("forearm")
+		ik.end_joint = skehandle:joint_index("wrist")
 	end
 end
 
@@ -351,7 +358,7 @@ function model_ed_sys:init()
 	init_control()
 	init_lighting()
 
-	--init_ik()
+	init_ik()
 
 	focus_sample()
 end
