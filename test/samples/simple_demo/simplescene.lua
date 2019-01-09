@@ -1,12 +1,12 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.camera.camera_component"
-ecs.import "render.entity_rendering_system"
 
-ecs.import "scene.filter.filter_system"
 
-ecs.import_package "inputmgr"
+
+
+
+ecs.import "inputmgr"
 
 local computil = require "render.components.util"
 local camerautil = require "render.camera.util"

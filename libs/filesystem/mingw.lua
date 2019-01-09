@@ -32,7 +32,7 @@ function path_mt.string(path)
     return res
 end
 function path_mt.parent_path(path)
-    return fs.path(path:string():match("(.+)[/\\][%w_.-]*$") or "")
+    return fs.path(path:string():match("(.+)[/\\][%w*?_.-]*$") or "")
 end
 
 return fs

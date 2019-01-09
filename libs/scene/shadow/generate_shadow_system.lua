@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+
+
 local render_cu = require "render.components.util"
 local render_util = require "render.util"
 local math_util = (import_package "math").util
@@ -1075,7 +1077,7 @@ function gen_shadow_system:init()
         -- local sun = world:first_entity("directional_light")  
         -- rot = sun.direction;
         -- pos = sun.pos
-        return entity;
+        return entity
     end 
 
     local entity = add_shadow_maker_entity()

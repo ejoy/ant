@@ -6,14 +6,13 @@ local world = ecs.world
 -- package.path = package.path..';./libs/bullet/?.lua;'
 -- local bullet_world = require "bulletworld"
 
-ecs.import_package "inputmgr"
-ecs.import "timer.timer"
+ecs.import "inputmgr"
+
 
 local camera_util = require "render.camera.util"
 local bgfx = require "bgfx"
-local math = import_package "math"
-local mathu = math.util
-local stack = math.stack
+local mathu = (import_package "math").util
+local stack = (import_package "math").stack
 
 
 local char_controller_sys = ecs.system "charcontroller_system"

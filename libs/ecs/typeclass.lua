@@ -64,14 +64,14 @@ local function gen_type(c, typename)
 	end
 end
 
-return function(world, import, import_package)
+return function(world, import, class)
 	local class_register = { world = world }
-	local class = {}
+	local class = class or {}
 
 	local function register(args)
 		local what = args.type
 		local class_set = {}
-		local class_data = {}
+		local class_data = class[what] or {}
 		class[what] = class_data
 		class_register[what] = function(name)
 			local r = class_set[name]
@@ -105,7 +105,7 @@ return function(world, import, import_package)
 	}
 	register {
 		type = "system",
-		setter = { "depend" , "dependby", "singleton", "import", "import_package" },
+		setter = { "depend" , "dependby", "singleton" },
 		submethod = { "notify" },
 		callback = { "init", "update" },
 	}
@@ -136,7 +136,6 @@ return function(world, import, import_package)
 	end
 
 	class_register.import = import
-	class_register.import_package = import_package
 
 	return class_register, class
 end

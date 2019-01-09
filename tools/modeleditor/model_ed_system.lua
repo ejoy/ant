@@ -2,36 +2,36 @@ local ecs = ...
 local world = ecs.world
 
 -- runtime
-ecs.import "render.camera.camera_component"
-ecs.import "render.entity_rendering_system"
-ecs.import "render.view_system"
+
+
+
 
 
 -- lighting
-ecs.import "render.light.light"
+
 
 -- serialize
-ecs.import "serialize.serialize_system"
+
 
 -- scene
-ecs.import "scene.cull_system"
-ecs.import "scene.filter.filter_system"
-ecs.import "scene.filter.lighting_filter"
+
+
+
 
 -- animation
-ecs.import "animation.skinning.skinning_system"
-ecs.import "animation.animation"
-ecs.import "animation.ik"
+
+
+
 
 -- editor
-ecs.import "editor.ecs.camera_controller"
-ecs.import "editor.ecs.pickup_system"
-ecs.import "editor.ecs.render.widget_system"
+
+
+
 
 -- editor elements
-ecs.import "editor.ecs.general_editor_entities"
-ecs.import "editor.ecs.debug.debug_drawing"
-ecs.import "tools.modeleditor.accessory_system"
+
+
+
 
 local math = import_package "math"
 local ms = math.stack

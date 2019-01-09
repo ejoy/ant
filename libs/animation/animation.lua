@@ -5,6 +5,7 @@ local world = ecs.world
 ecs.import "timer"
 ecs.import "animation.ik"
 
+
 local ani = ecs.component_struct "animation" {
 	ani_list = {
 		type = "userdata",

@@ -4,14 +4,15 @@ local log = log and log(...) or print
 local typeclass = require "ecs.typeclass"
 local system = require "ecs.system"
 local component = require "ecs.component"
-
-local vfs = require "vfs"
+local fs = require "filesystem"
+local pm = require "antpm"
 
 local ecs = {}
 local world = {} ; world.__index = world
 
 local function new_component(w, eid, c, ...)
 	if c then
+		assert(w._component_type[c], c)
 		local entity = assert(w[eid])
 		if entity[c] then
 			error(string.format("multiple component defined:%s", c))
@@ -62,8 +63,7 @@ function world:component_list(eid)
 end
 
 local function create_entity(w, id)
-	local e = setmetatable({}, w._entity_meta)
-	w[id] = e
+	w[id] = {}
 	w._entity[id] = true
 end
 
@@ -170,64 +170,73 @@ local function init_notify(w, notifies)
 	end
 end
 
+local function init_modules(w, packages, systems)
+	local class = {}
 
-local function searchpath(name, path)
-	local err = ''
-	name = string.gsub(name, '%.', '/')
-	for c in string.gmatch(path, '[^;]+') do
-		local filename = string.gsub(c, '%?', name)
-		if vfs.type(filename) == "file" then
-			return filename
-		end
-		err = err .. ("\n\tno file '%s'"):format(filename)
-	end
-	return nil, err
-end
-
-local function init_modules(w, modules, module_path)
-	local mods = {}
 	local function import(name)
-		local path, err = searchpath(name, module_path)
-		if not path then
-			error(("module '%s' not found:%s"):format(name, err))
-		end
-		if mods[path] then
+		local root, config = pm.find(name)
+		if not root then
+			error(("package '%s' not found"):format(name))
 			return
 		end
-		mods[#mods+1] = path
-		mods[path] = true
+		local modules = config.ecs_modules
+		if modules then
+			local tmp = {}
+			for _, m in ipairs(modules) do
+				tmp[#tmp+1] = root / m
+			end
+			modules = tmp
+		else
+			modules = pm.ecs_modules(root, {"*.lua"})
+		end
+		local reg = typeclass(w, import, class)
+		for _, path in ipairs(modules) do
+			local module, err = fs.loadfile(path)
+			if not module then
+				error(("module '%s' load failed:%s"):format(path:string(), err))
+			end
+			module(reg)
+		end
 	end
 
-	-- TODO: 临时代码
-	local function import_package(name)
-		local pm = require "antpm"
-		local root, config = pm.find(name)
-		if config and config.ecsModules then
-			for _, module in ipairs(config.ecsModules) do
-				local path = (root / module):string()
-				if not mods[path] then
-					mods[#mods+1] = path
-					mods[path] = true
+	for _, path in ipairs(packages) do
+		import(pm.register(path))
+	end
+
+	local cut = {}
+
+	local function solve_depend(k)
+		if cut[k] then
+			return
+		end
+		cut[k] = true
+		local v = class.system[k]
+		if v then
+			if v.depend then
+				for _, subk in ipairs(v.depend) do
+					solve_depend(subk)
+				end
+			end
+			if v.dependby then
+				for _, subk in ipairs(v.dependby) do
+					solve_depend(subk)
 				end
 			end
 		end
 	end
 
-	for _, name in ipairs(modules) do
-		import(name)
+	for _, k in ipairs(systems) do
+		solve_depend(k)
 	end
 
-
-	local reg, class = typeclass(w, import, import_package)
-	while #mods > 0 do
-		local name = mods[#mods]
-		mods[#mods] = nil
-		local module, err = loadfile(name)
-		if not module then
-			error(("module '%s' load failed:%s"):format(name, err))
+	local delete = {}
+	for k in pairs(class.system) do
+		if not cut[k] then
+			delete[k] = true
 		end
-		log(("Init module '%s'."):format(name))
-		module(reg)
+	end
+	for k in pairs(delete) do
+		class.system[k] = nil
 	end
 	return class
 end
@@ -244,7 +253,6 @@ function ecs.new_world(config)
 
 		_entity = {},	-- entity id set
 		_entity_id = 0,
-		_entity_meta = { __index = nil },
 		_notifycomponent = {},	-- component_name : { eid_list }
 		_changecomponent = {},	-- component_name : { eid_set }
 		_notifyset = {},	-- component_name : { n = number, eid_list }
@@ -252,7 +260,7 @@ function ecs.new_world(config)
 	}, world)
 
 	-- load systems and components from modules
-	local class = init_modules(w, config.modules, config.module_path)
+	local class = init_modules(w, config.packages, config.systems)
 
 	for k,v in pairs(class.component) do
 		w._component_type[k] = component(v)
@@ -262,22 +270,19 @@ function ecs.new_world(config)
 	local singletons = system.singleton(class.system, w._component_type)
 	local proxy = system.proxy(class.system, w._component_type, singletons)
 
-	local system_methods = system.component_methods(class.system, w._component_type)
 	local init_list = system.init_list(class.system)
-	local meta = w._entity_meta
 
-	local update_list = system.update_list(class.system, config.update_order, config.update_bydepend)
+	local update_list = system.update_list(class.system, config.update_order)
 	local update_switch = system.list_switch(update_list)
 	function w.update ()
 		update_switch:update()
 		for _, v in ipairs(update_list) do
 			local name, f = v[1], v[2]
-			meta.__index = system_methods[name]
 			f(proxy[name])
 		end
 	end
 
-	local notify_list = system.notify_list(class.system, proxy, system_methods)
+	local notify_list = system.notify_list(class.system, proxy)
 	init_notify(w, notify_list)
 	local notify_switch = system.list_switch(notify_list)
 
@@ -316,9 +321,7 @@ function ecs.new_world(config)
 
 			if n > 0 then
 				for _, functor in ipairs(notify_list[c]) do
-					local f, inst, methods = functor[2],functor[3],functor[4]
-					-- binding apis
-					meta.__index = methods
+					local f, inst = functor[2],functor[3]
 					f(inst, notifyset)
 				end
 			end
@@ -328,7 +331,6 @@ function ecs.new_world(config)
 	-- call init functions
 	for _, v in ipairs(init_list) do
 		local name, f = v[1], v[2]
-		meta.__index = system_methods[name]
 		log("Init system %s", name)
 		f(proxy[name])
 	end

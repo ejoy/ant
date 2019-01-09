@@ -4,6 +4,8 @@ local pm_require = require "antpm.require"
 local WORKDIR = fs.current_path()
 
 local list = {
+    WORKDIR / "libs",
+
     WORKDIR / "packages" / "math",
     WORKDIR / "packages" / "inputmgr",
 }
@@ -27,7 +29,7 @@ local function dofile(path)
     return f()
 end
 
-local function init(pkg)
+local function register(pkg)
     if not fs.exists(pkg) then
         error(('Cannot find package `%s`.'):format(pkg:string()))
     end
@@ -45,14 +47,15 @@ local function init(pkg)
         error(('Duplicate definition package `%s` in `%s`.'):format(pkg.name, pkg:string()))
     end
     registered[config.name] = { pkg, config }
+    return config.name
 end
 
 local function searcher_Package(name)
-    if not registered[name] or not registered[name][2].main then
+    if not registered[name] or not registered[name][2].entry then
         return ("\n\tno package '%s'"):format(name)
     end
     local info = registered[name]
-    local func, err = pm_require(info[1]:string(), info[2].main, function(path) return fs.open(fs.path(path)) end)
+    local func, err = pm_require(info[1]:string(), info[2].entry, function(path) return fs.open(fs.path(path)) end)
     if not func then
         error(("error loading package '%s':\n\t%s"):format(name, err))
     end
@@ -60,7 +63,7 @@ local function searcher_Package(name)
 end
 
 for _, pkg in ipairs(list) do
-    init(pkg)
+    register(pkg)
 end
 
 local function import(name)
@@ -86,5 +89,7 @@ end
 
 return {
     find = find,
-    import = import
+    register = register,
+    import = import,
+    ecs_modules = require "antpm.ecs_modules"
 }

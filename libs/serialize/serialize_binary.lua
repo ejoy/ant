@@ -1,6 +1,6 @@
 local ecs = ...
 
-ecs.import "serialize.serialize_system"
+
 
 local fs = require "filesystem"
 local assetmgr = require "asset"

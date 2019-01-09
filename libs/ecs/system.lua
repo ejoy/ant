@@ -45,26 +45,6 @@ function system.proxy(sys, c, singletons)
 	return p
 end
 
-local function gen_methods(sto, c)
-	local m = {}
-	if sto.import then
-		for _, cname in ipairs(sto.import) do
-			for method_name, f in pairs(c[cname].method) do
-				m[method_name] = f
-			end
-		end
-	end
-	return m
-end
-
-function system.component_methods(sys, c)
-	local p = {}
-	for system_name, system_typeobject in pairs(sys) do
-		p[system_name] = gen_methods(system_typeobject, c)
-	end
-	return p
-end
-
 local function get_sort_keys(t)
 	local keys = {}
 	for k in pairs(t) do
@@ -187,7 +167,7 @@ function system.init_list(sys)
 	return init_list
 end
 
-function system.update_list(sys, order, obydp)
+function system.update_list(sys, order)
 	local update_list = {}
 	local norder = {}
 	for sname in pairs(sys) do
@@ -202,13 +182,11 @@ function system.update_list(sys, order, obydp)
 		end
 	end
 
-	if obydp then
-		local dp_list = solve_depend(sys)
-		for _, n in ipairs(dp_list) do
-			if norder[n] then
-				table.insert(update_list, n)
-				norder[n] = nil
-			end
+	local dp_list = solve_depend(sys)
+	for _, n in ipairs(dp_list) do
+		if norder[n] then
+			table.insert(update_list, n)
+			norder[n] = nil
 		end
 	end
 
@@ -229,11 +207,11 @@ function system.update_list(sys, order, obydp)
 	return ret
 end
 
-function system.notify_list(sys, proxy, methods)
+function system.notify_list(sys, proxy)
 	local notify = {}
 	for sname, sobject in pairs(sys) do
 		for cname, f in pairs(sobject.notify) do
-			local functor = { sname, f, proxy[sname], methods[sname] }
+			local functor = { sname, f, proxy[sname] }
 			local list = notify[cname]
 			if list == nil then
 				notify[cname] = { functor }

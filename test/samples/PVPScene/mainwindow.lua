@@ -82,8 +82,8 @@ function editor_mainwindow:build_window(fbw, fbh)
 end
 
 
-function editor_mainwindow:new_world(modules)
-	local world = scene.start_new_world(self.iq, self.config.fbw, self.config.fbh, modules)
+function editor_mainwindow:new_world(packages, systems)
+	local world = scene.start_new_world(self.iq, self.config.fbw, self.config.fbh, packages, systems)
 	task.loop(world.update)
 end
 

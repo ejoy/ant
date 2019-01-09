@@ -2,9 +2,9 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.constant_system"
-ecs.import_package "inputmgr"
-ecs.import "render.components.general"
+
+ecs.import "inputmgr"
+
 
 local assetmgr = require "asset"
 local math = import_package "math"

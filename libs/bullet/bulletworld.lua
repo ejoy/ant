@@ -1,5 +1,6 @@
 
 local bullet_module = require "bullet"
+local fs = require "filesystem"
 
 local bullet_sdk = bullet_module.new()
 
@@ -156,7 +157,7 @@ function bullet_world:create_terrainCollider(terrain,info,obj_idx,pos,rot)
 	local ofs = terrain:get_phys_offset()
 	local obj = self:create_object( shape, obj_idx, { pos[1]+ofs[1], pos[2]+ofs[2], pos[3]+ofs[3]}, rot )
 	self:add_object(obj)
-	return obj,shape;
+	return obj,shape
 end 
 
 function bullet_world:raycast( ray_start,ray_end )
@@ -439,7 +440,7 @@ function bullet_world:create_debug_drawer(bgfx)
 	if self.prog == nil then 
 		local cu 	= require "render.components.util"
 		local material = { content= {}, }
-		cu.load_material( material,{"line.material",})
+		cu.load_material( material,{fs.path("line.material"),})
 		self.prog = material.content[1].materialinfo.shader.prog 
 		self.material = material    -- how to destroy?
 	end 

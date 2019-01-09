@@ -2,6 +2,8 @@
 local ecs = ...
 local world = ecs.world
 
+
+
 local ru = require "render.util"
 
 ecs.component_struct "widget" {}

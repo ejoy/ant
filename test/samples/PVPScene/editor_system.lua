@@ -2,7 +2,7 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.end_frame_system"
+
 
 
 local menu = require "editor.controls.popupmenu"

@@ -1,9 +1,9 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.end_frame_system"
-ecs.import_package "inputmgr"
-ecs.import "serialize.serialize_component"
+
+ecs.import "inputmgr"
+
 
 local serialize_save_sys = ecs.system "serialize_save_system"
 serialize_save_sys.singleton "serialization_tree"

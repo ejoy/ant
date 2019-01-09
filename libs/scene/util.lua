@@ -18,16 +18,15 @@ local world = nil
 
 local bullet_world = require "bullet.bulletworld"
 
-function util.start_new_world(input_queue, fbw, fbh, modules, module_searchdirs)
+function util.start_new_world(input_queue, fbw, fbh, packages, systems)
 	if input_queue == nil then
 		log("input queue is not privided, no input event will be received!")
 	end
 
 	world = ecs.new_world {
-		modules = modules,
-		module_path = module_searchdirs or package.path,
+		packages = packages,
+		systems = systems,
 		update_order = {"timesystem", "message_system"},
-		update_bydepend = true,
 		args = { 
 			mq = input_queue, 
 			fb_size={w=fbw, h=fbh},			
