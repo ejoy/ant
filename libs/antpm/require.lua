@@ -1,16 +1,21 @@
-local function sandbox_env(loadlua, openfile)
+local function loadlua(f, name)
+    local str = f:read 'a'
+    f:close()
+    return load(str, '@' .. name)
+end
+
+local function sandbox_env(root, io_open)
     local env = setmetatable({}, {__index=_G})
-    local _LOADED = {}
+    local _LOADED = setmetatable({}, {__index=package.loaded})
 
     local function searchpath(name, path)
         local err = ''
         name = string.gsub(name, '%.', '/')
         for c in string.gmatch(path, '[^;]+') do
             local filename = string.gsub(c, '%?', name)
-            local f = openfile(filename)
+            local f = io_open(filename)
             if f then
-                f:close()
-                return filename
+                return filename, f
             end
             err = err .. ("\n\tno file '%s'"):format(filename)
         end
@@ -19,15 +24,15 @@ local function sandbox_env(loadlua, openfile)
 
     local function searcher_lua(name)
         assert(type(env.package.path) == "string", "'package.path' must be a string")
-        local filename, err = searchpath(name, env.package.path)
+        local filename, f = searchpath(name, env.package.path)
         if not filename then
-            return err
+            return f
         end
-        local f, err = loadlua(filename)
-        if not f then
+        local func, err = loadlua(f, filename)
+        if not func then
             error(("error loading module '%s' from file '%s':\n\t%s"):format(name, filename, err))
         end
-        return f, filename
+        return func, filename
     end
 
     local function require_load(name)
@@ -67,7 +72,7 @@ local function sandbox_env(loadlua, openfile)
         config = table.concat({"/",";","?","!","-"}, "\n"),
         loaded = _LOADED,
         preload = package.preload,
-        path = '?.lua',
+        path = root .. '/?.lua',
         searchpath = searchpath,
         searchers = {}
     }
@@ -78,23 +83,18 @@ local function sandbox_env(loadlua, openfile)
     return env
 end
 
-return function(root, main, io_open)
-    local function openfile(name, mode)
-        return io_open(root .. '/' .. name, mode)
-    end
-    local function loadlua(name)
-        local f, err = openfile(name, 'r')
+return function(root, main, io_open, loaded)
+    local function loadfile(filename)
+        local f, err = io_open(filename)
         if f then
-            local str = f:read 'a'
-            f:close()
-            return load(str, '@' .. root .. '/' .. name)
+            return loadlua(f, filename)
         end
         return nil, err
     end
-    local init, err = loadlua(main)
+    local init, err = loadfile(root .. '/' .. main)
     if not init then
         return nil, err
     end
-    debug.setupvalue(init, 1, sandbox_env(loadlua, openfile))
+    debug.setupvalue(init, 1, sandbox_env(root, io_open))
     return init
 end

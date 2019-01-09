@@ -1,6 +1,6 @@
 local log = log and log(...) or print
 
-local mesh_loader = require "modelloader"
+local mesh_loader = import_package "modelloader"
 local assetmgr = require "asset"
 local fs = require "filesystem"
 local rawtable = require "asset.rawtable"

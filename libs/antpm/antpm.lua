@@ -8,6 +8,7 @@ local list = {
 
     WORKDIR / "packages" / "math",
     WORKDIR / "packages" / "inputmgr",
+    WORKDIR / "packages" / "modelloader",
 }
 local registered = {}
 local loaded = {}

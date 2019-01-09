@@ -1,12 +1,8 @@
---luacheck: globals log, ignore log
-
-local log = log and log(...) or print
-
 local bgfx = require "bgfx"
-local modelutil = require "modelloader.util"
+local modelutil = require "util"
 local vfs = require "vfs"
 
-local antmeshloader = require "modelloader.antmeshloader"
+local antmeshloader = require "antmeshloader"
 
 local loader = {}
 
@@ -57,5 +53,7 @@ function loader.load(filepath)
 		return meshgroup
 	end
 end
+
+loader.util = modelutil
 
 return loader
