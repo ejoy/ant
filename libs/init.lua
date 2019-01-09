@@ -18,7 +18,6 @@ import_package = (require "antpm").import
 
 -- TODO
 require "asset"
-require "serialize.util"
 require "test.samples.PVPScene.PVPSceneLoader"
 require "fileconvert.util"
 

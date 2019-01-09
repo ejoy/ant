@@ -11,6 +11,7 @@ local list = {
     WORKDIR / "packages" / "modelloader",
     WORKDIR / "packages" / "editor",
     WORKDIR / "packages" / "render",
+    WORKDIR / "packages" / "serialize",
 }
 local registered = {}
 local loaded = {}
@@ -53,16 +54,12 @@ local function register(pkg)
     return config.name
 end
 
-local function searcher_Package(name)
+local function require_package(name)
     if not registered[name] or not registered[name][2].entry then
         error(("\n\tno package '%s'"):format(name))
     end
     local info = registered[name]
-    local func, err = sandbox.require(info[1]:string(), info[2].entry)
-    if not func then
-        error(("error loading package '%s':\n\t%s"):format(name, err))
-    end
-    return func, name
+    return sandbox.require(info[1]:string(), info[2].entry)
 end
 
 for _, pkg in ipairs(list) do
@@ -73,8 +70,7 @@ local function import(name)
     if loaded[name] then
         return loaded[name]
     end
-    local func = searcher_Package(name)
-    local res = func(func)
+    local res = require_package(name)
     if res == nil then
         loaded[name] = false
     else

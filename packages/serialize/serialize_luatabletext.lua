@@ -3,7 +3,7 @@ local world = ecs.world
 
 
 
-local seri_util = require "serialize.util"
+local seri_util = require "main"
 local assetmgr = require "asset"
 
 local to_luatabletext = ecs.system "serialize_to_luatabletext"

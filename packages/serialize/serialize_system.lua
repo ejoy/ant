@@ -11,7 +11,7 @@ serialize_save_sys.singleton "serialization_tree"
 serialize_save_sys.depend "end_frame"
 
 function serialize_save_sys.notify:save()
-	local su = require "serialize.util"
+	local su = require "main"
 
     local children = {}
     for _, eid in world:each("serialize") do        
@@ -63,7 +63,7 @@ local function post_load(loaded_eids)
 end
 
 function serialize_load_sys.notify:load_from_seri_tree()
-	local su = require "serialize.util"
+	local su = require "main"
     local children = assert(self.serialization_tree.root)
     assert(#children ~= 0)
     local loaded_eids = {}

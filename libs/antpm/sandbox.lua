@@ -12,7 +12,7 @@ end
 
 local function sandbox_env(root)
     local env = setmetatable({}, {__index=_G})
-    local _LOADED = setmetatable({}, {__index=package.loaded})
+    local _LOADED = {}
 
     local function searchpath(name, path)
         local err = ''
@@ -32,6 +32,9 @@ local function sandbox_env(root)
         assert(type(env.package.path) == "string", "'package.path' must be a string")
         local filename, f = searchpath(name, env.package.path)
         if not filename then
+            if package.loaded[name] then
+                return true
+            end
             return f
         end
         local func, err = loadlua(f, filename)
@@ -51,6 +54,8 @@ local function sandbox_env(root)
                 return f, extra
             elseif type(f) == 'string' then
                 msg = msg .. f
+            elseif type(f) == 'boolean' then
+                return
             end
         end
         error(("module '%s' not found:%s"):format(name, msg))
@@ -63,6 +68,9 @@ local function sandbox_env(root)
             return p
         end
         local init, extra = require_load(name)
+        if not init then
+            return package.loaded[name]
+        end
         debug.setupvalue(init, 1, env)
         local res = init(name, extra)
         if res ~= nil then
@@ -90,19 +98,7 @@ local function sandbox_env(root)
 end
 
 local function sandbox_require(root, main)
-    local function loadfile(filename)
-        local f, err = io_open(filename)
-        if f then
-            return loadlua(f, filename)
-        end
-        return nil, err
-    end
-    local init, err = loadfile(root .. '/' .. main)
-    if not init then
-        return nil, err
-    end
-    debug.setupvalue(init, 1, sandbox_env(root))
-    return init
+    return sandbox_env(root).require(main)
 end
 
 return {

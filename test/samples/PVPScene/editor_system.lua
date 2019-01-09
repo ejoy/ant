@@ -7,7 +7,7 @@ local world = ecs.world
 local editor = import_package "editor"
 local menu = editor.controls.popupmenu
 local eu = editor.util
-local su = require "serialize.util"
+local su = import_package "serialize"
 local math = import_package "math"
 local ms = math.stack
 

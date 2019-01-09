@@ -1,4 +1,4 @@
 return {
-    name = "render",
+    name = "serialize",
     entry = "main",
 }

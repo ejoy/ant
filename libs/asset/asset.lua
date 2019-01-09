@@ -141,7 +141,7 @@ function assetmgr.load(filepath, param)
 end
 
 function assetmgr.save(tree, filepath)	
-	local seri = require "serialize.util"
+	local seri = import_package "serialize"
 	seri.save(filepath, tree)
 end
 
