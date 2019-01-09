@@ -3,7 +3,7 @@
 
 require "iuplua"
 
-local rhwi = require "render.hardware_interface"
+local rhwi = import_package "render".hardware_interface
 local su = require "scene.util"
 
 local inputmgr = import_package "inputmgr"

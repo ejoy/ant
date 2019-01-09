@@ -4,7 +4,7 @@ local world = ecs.world
 
 
 
-local ru = require "render.util"
+local ru = import_package "render".util
 
 ecs.component_struct "widget" {}
 

@@ -71,7 +71,8 @@ end
 function shader_mgr.programLoad(vs,fs, uniform)
     if uniform then
         local prog = programLoadEx(vs,fs, uniform)
-        if prog then            
+        if prog then      
+            
             for k, v in pairs(uniform) do
                 local old_u = alluniforms[k]
                 if old_u and old_u.type ~= v.type and old_u.num ~= v.num then

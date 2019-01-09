@@ -7,7 +7,7 @@ local fs = require "filesystem"
 local math = import_package "math"
 local mu = math.util
 
-local componentutil = require "render.components.util"
+local componentutil = import_package "render".components
 
 
 local function init_wireframe_mesh()

@@ -10,7 +10,7 @@ local propertycontrol = editor.controls.propertyview
 local assetviewclass = editor.controls.assetview
 
 local eu = editor.util
-local rhwi = require "render.hardware_interface"
+local rhwi = import_package "render".hardware_interface
 local bgfx = require "bgfx"
 local scene = require "scene.util"
 local task = editor.task

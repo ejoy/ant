@@ -4,7 +4,7 @@ local math = import_package "math"
 local mu = math.util
 local ms = math.stack
 
-local cu = require "render.components.util"
+local cu = require "components.util"
 
 local function deep_copy(t)
 	if type(t) == "table" then

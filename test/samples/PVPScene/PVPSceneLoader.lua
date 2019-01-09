@@ -1,7 +1,7 @@
 local math = import_package "math"
 local ms = math.stack
 local fs = require "filesystem"
-local computil = require "render.components.util"
+local computil = import_package "render".components
 
 local PVPScene = {}
 

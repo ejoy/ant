@@ -161,7 +161,7 @@ function util.create_mesh_handle(decl, vb, ib)
 end
 
 function util.create_gird_entity(world, name, w, h, unit)
-	local geo = require "render.geometry"
+	local geo = require "geometry"
 	local girdid = world:new_entity(
 		"rotation", "position", "scale", 
 		"can_render", "mesh", "material",

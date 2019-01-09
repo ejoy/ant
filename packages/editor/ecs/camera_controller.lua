@@ -1,15 +1,12 @@
 local ecs = ...
 local world = ecs.world
 
-
-
 ecs.import "inputmgr"
-
 
 local math3d = import_package "math"
 local point2d = math3d.point2d
 
-local camera_util = require "render.camera.util"
+local camera_util = import_package "render".camera
 
 local step = 0.01
 

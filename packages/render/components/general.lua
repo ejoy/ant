@@ -1,6 +1,6 @@
 local ecs = ...
 
-local component_util = require "render.components.util"
+local component_util = require "components.util"
 local asset = require "asset"
 local math = import_package "math"
 

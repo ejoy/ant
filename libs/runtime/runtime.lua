@@ -54,7 +54,7 @@ local world
 function callback.init(nwh, context, w, h)
 	width, height = w, h
     local su = require "scene.util"
-    local rhwi = require "render.hardware_interface"
+    local rhwi = import_package "render".hardware_interface
     rhwi.init {
 		nwh = nwh,
 		context = context,

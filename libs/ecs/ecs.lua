@@ -196,7 +196,7 @@ local function init_modules(w, packages, systems)
 		end
 		local reg = typeclass(w, import, class)
 		for _, path in ipairs(modules) do
-			local module, err = fs.loadfile(path)
+			local module, err = pm.loadfile(name, path)
 			if not module then
 				error(("module '%s' load failed:%s"):format(path:string(), err))
 			end

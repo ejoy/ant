@@ -6,7 +6,7 @@ local world = ecs.world
 
 
 
-local ru = require "render.util"
+local ru = require "util"
 local bgfx = require "bgfx"
 local math = import_package "math"
 local ms = math.stack

@@ -7,13 +7,13 @@ local world = ecs.world
 
 
 local bgfx  = require "bgfx"
-local cu 	= require "render.components.util"
+local cu 	= import_package "render".components
 
 local math = import_package "math"
 local mu = math.util
 local ms = math.stack
 local fs = require "filesystem"
-local computil = require "render.components.util"
+local computil = import_package "render".components
 
 local general_editor_entites = ecs.system "general_editor_entites"
 

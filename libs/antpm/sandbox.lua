@@ -1,10 +1,16 @@
+local fs = require "filesystem"
+
+local function io_open(path)
+    return fs.open(fs.path(path))
+end
+
 local function loadlua(f, name)
     local str = f:read 'a'
     f:close()
     return load(str, '@' .. name)
 end
 
-local function sandbox_env(root, io_open)
+local function sandbox_env(root)
     local env = setmetatable({}, {__index=_G})
     local _LOADED = setmetatable({}, {__index=package.loaded})
 
@@ -83,7 +89,7 @@ local function sandbox_env(root, io_open)
     return env
 end
 
-return function(root, main, io_open, loaded)
+local function sandbox_require(root, main)
     local function loadfile(filename)
         local f, err = io_open(filename)
         if f then
@@ -95,6 +101,11 @@ return function(root, main, io_open, loaded)
     if not init then
         return nil, err
     end
-    debug.setupvalue(init, 1, sandbox_env(root, io_open))
+    debug.setupvalue(init, 1, sandbox_env(root))
     return init
 end
+
+return {
+    require = sandbox_require,
+    env = sandbox_env,
+}

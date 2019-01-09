@@ -1,6 +1,6 @@
 local draw = {}; draw.__index = {}
 
-local geo = require "render.geometry"
+local geo = import_package "render".geometry
 local math3d = import_package "math"
 local ms = math3d.stack
 

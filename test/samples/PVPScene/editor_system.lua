@@ -245,7 +245,7 @@ function editor_sys:init()
 				local eid = node.eid
 				build_pv(eid, get_extendtree(eid))
 
-				local camerautil = require "render.camera.util"
+				local camerautil = import_package "render".camera
 				camerautil.focus_selected_obj(world, eid)
 			end
 		end

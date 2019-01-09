@@ -1,6 +1,6 @@
 local ecs = ...
 local bgfx = require "bgfx"
-local ru = require "render.util"
+local ru = require "util"
 local asset_lib     = require "asset"
 
 -- the viewport can have multi instance in one scene

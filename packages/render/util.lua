@@ -2,7 +2,7 @@
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
-local shadermgr = require "render.resources.shader_mgr"
+local shadermgr = require "resources.shader_mgr"
 
 local util = {}
 util.__index = util
@@ -38,7 +38,8 @@ local property_type_description = {
 }
 
 local function update_property(name, property)
-	local uniform = shadermgr.get_uniform(name)        
+	local uniform = shadermgr.get_uniform(name)       
+	--print("after get_uniform") 
 	if uniform == nil  then
 		-- log(string.format("property name : %s, is needed, but shadermgr not found!", name))
 		return 
@@ -99,7 +100,8 @@ local function check_uniform_is_match_with_shader(shader, properties)
 end
 
 local function update_properties(shader, properties)
-    if properties then
+	if properties then
+		--print("update_properties")
         check_uniform_is_match_with_shader(shader, properties)
         for n, p in pairs(properties) do
             -- print("uniform update",n,p)

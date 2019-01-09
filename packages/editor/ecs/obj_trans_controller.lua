@@ -12,7 +12,7 @@ local mu = math.util
 local ms = math.stack
 local fs = require "filesystem"
 
-local components_util = require "render.components.util"
+local components_util = import_package "render".components
 
 local assetdir = assetmgr.assetdir()
 local depictiondir = assetdir / "depiction"

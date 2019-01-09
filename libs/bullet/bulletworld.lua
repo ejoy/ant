@@ -438,7 +438,7 @@ function bullet_world:create_debug_drawer(bgfx)
 	end 
 
 	if self.prog == nil then 
-		local cu 	= require "render.components.util"
+		local cu 	= import_package "render" .components
 		local material = { content= {}, }
 		cu.load_material( material,{fs.path("line.material"),})
 		self.prog = material.content[1].materialinfo.shader.prog 
