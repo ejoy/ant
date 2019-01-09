@@ -6,8 +6,8 @@ ecs.import "render.components.general"
 ecs.import_package "inputmgr"
 ecs.import "timer.timer"
 
-local math = import_package "math"
-local point2d = math.point2d
+local math3d = import_package "math"
+local point2d = math3d.point2d
 
 local camera_util = require "render.camera.util"
 
