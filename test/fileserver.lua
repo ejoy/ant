@@ -56,7 +56,7 @@ function rtlog.init()
 end
 
 function rtlog.write(data)
-	local fp = assert(io.open((WORKDIR / 'log' / 'runtime.log'):string(), 'a'))
+	local fp = assert(fs.open(WORKDIR / 'log' / 'runtime.log', 'a'))
 	fp:write(data)
 	fp:write('\n')
 	fp:close()

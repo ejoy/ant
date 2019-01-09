@@ -3,13 +3,14 @@ require 'runtime.vfsio'
 require 'runtime.errlog'
 local LOGERROR = log.error
 
+import_package = (require "antpm").import
+
 local keymap = (import_package "inputmgr").keymap
 
 local dbgupdate = require 'runtime.debug'
 
 dprint = print
 
-require "common/import"
 require "common/log"
 
 local native = require "window.native"

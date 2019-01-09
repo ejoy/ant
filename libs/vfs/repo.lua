@@ -7,13 +7,14 @@ local repo = {}
 repo.__index = repo
 
 local fs = require "filesystem"
-local access = require "repoaccess"
+local access = require "vfs.repoaccess"
 
 local function addslash(name)
 	return (name:gsub("[/\\]?$","/"))
 end
 
 local function filelock(filepath)
+	filepath = filepath / "vfs.lock"
 	local f = fs.filelock(filepath)
 	return assert(f, "repo is locking. (" .. filepath:string() .. ")")
 end

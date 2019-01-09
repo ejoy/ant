@@ -1,7 +1,7 @@
 local fs = require "filesystem"
 local pm_require = require "antpm.require"
 
-local WORKDIR = fs.current_path()
+local WORKDIR = fs.vfs and fs.path 'engine' or fs.current_path()
 
 local list = {
     WORKDIR / "libs",
