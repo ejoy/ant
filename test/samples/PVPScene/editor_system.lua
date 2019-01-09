@@ -4,9 +4,9 @@ local world = ecs.world
 
 
 
-
-local menu = require "editor.controls.popupmenu"
-local eu = require "editor.util"
+local editor = import_package "editor"
+local menu = editor.controls.popupmenu
+local eu = editor.util
 local su = require "serialize.util"
 local math = import_package "math"
 local ms = math.stack
@@ -245,7 +245,7 @@ function editor_sys:init()
 				local eid = node.eid
 				build_pv(eid, get_extendtree(eid))
 
-				local camerautil = require "render.camera.util"
+				local camerautil = import_package "render".camera
 				camerautil.focus_selected_obj(world, eid)
 			end
 		end

@@ -8,7 +8,7 @@ end
 
 dofile(rootdir .. "/libs/init.lua")
 
-local modelutil = require "modelloader.util"
+local modelutil = (import_package "modelloader").util
 local su = require "serialize.util"
 local fs = require "filesystem"
 

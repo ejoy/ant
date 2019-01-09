@@ -9,7 +9,7 @@ local world = ecs.world
 ecs.import "inputmgr"
 
 
-local camera_util = require "render.camera.util"
+local camera_util = import_package "render".util
 local bgfx = require "bgfx"
 local mathu = (import_package "math").util
 local stack = (import_package "math").stack

@@ -2,10 +2,10 @@ local ecs = ...
 local world = ecs.world
 
 --
+local render = import_package "render"
+local cu = render.components
 
-local cu = require "render.components.util"
-
-local ru = require "render.util"
+local ru = render.util
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
 

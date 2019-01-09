@@ -18,6 +18,7 @@ local function append_lighting_properties(result)
 		}
 
 		for _, l_eid in world:each("directional_light") do
+			print("111111111111111")
 			local dlight = world[l_eid]
 			local l = dlight.light
 		
@@ -97,7 +98,7 @@ local function append_lighting_properties(result)
 	end 
 
 
-	local lighting_properties = gen_directional_light_properties()
+	local lighting_properties = gen_directional_light_properties()	
 	-- add tested for ambient 
 	local ambient_properties  = gen_ambient_light_propertices()
 

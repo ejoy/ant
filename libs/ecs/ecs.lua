@@ -171,9 +171,14 @@ local function init_notify(w, notifies)
 end
 
 local function init_modules(w, packages, systems)
+	local imported = {}
 	local class = {}
 
 	local function import(name)
+		if imported[name] then
+			return
+		end
+		imported[name] = true
 		local root, config = pm.find(name)
 		if not root then
 			error(("package '%s' not found"):format(name))
@@ -191,7 +196,7 @@ local function init_modules(w, packages, systems)
 		end
 		local reg = typeclass(w, import, class)
 		for _, path in ipairs(modules) do
-			local module, err = fs.loadfile(path)
+			local module, err = pm.loadfile(name, path)
 			if not module then
 				error(("module '%s' load failed:%s"):format(path:string(), err))
 			end

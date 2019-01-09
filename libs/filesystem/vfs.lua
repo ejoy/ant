@@ -110,14 +110,13 @@ end
 
 function path_mt:list_directory()
     local list = vfs.list(self._value)
-    local n = 1
+    local name
     return function()
-        if not list[n] then
+        name = next(list, name)
+        if not name then
             return
         end
-        local r = list[n]
-        n = n + 1
-        return self / r[1]
+        return self / name
     end
 end
 

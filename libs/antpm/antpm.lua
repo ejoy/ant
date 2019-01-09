@@ -1,13 +1,16 @@
 local fs = require "filesystem"
-local pm_require = require "antpm.require"
+local sandbox = require "antpm.sandbox"
 
-local WORKDIR = fs.current_path()
+local WORKDIR = fs.vfs and fs.path 'engine' or fs.current_path()
 
 local list = {
     WORKDIR / "libs",
 
     WORKDIR / "packages" / "math",
     WORKDIR / "packages" / "inputmgr",
+    WORKDIR / "packages" / "modelloader",
+    WORKDIR / "packages" / "editor",
+    WORKDIR / "packages" / "render",
 }
 local registered = {}
 local loaded = {}
@@ -52,10 +55,10 @@ end
 
 local function searcher_Package(name)
     if not registered[name] or not registered[name][2].entry then
-        return ("\n\tno package '%s'"):format(name)
+        error(("\n\tno package '%s'"):format(name))
     end
     local info = registered[name]
-    local func, err = pm_require(info[1]:string(), info[2].entry, function(path) return fs.open(fs.path(path)) end)
+    local func, err = sandbox.require(info[1]:string(), info[2].entry)
     if not func then
         error(("error loading package '%s':\n\t%s"):format(name, err))
     end
@@ -70,7 +73,7 @@ local function import(name)
     if loaded[name] then
         return loaded[name]
     end
-    local func = assert(searcher_Package(name))
+    local func = searcher_Package(name)
     local res = func(func)
     if res == nil then
         loaded[name] = false
@@ -87,9 +90,14 @@ local function find(name)
     return registered[name][1], registered[name][2]
 end
 
+local function m_loadfile(name, filename)
+    return fs.loadfile(filename, 't', sandbox.env(registered[name][1]:string()))
+end
+
 return {
     find = find,
     register = register,
     import = import,
+    loadfile = m_loadfile,
     ecs_modules = require "antpm.ecs_modules"
 }

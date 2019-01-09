@@ -3,8 +3,8 @@ local world = ecs.world
 
 
 
-local render_cu = require "render.components.util"
-local render_util = require "render.util"
+local render_cu = import_package "render".components
+local render_util = import_package "render".util
 local math_util = (import_package "math").util
 local math3d = require "math3d"
 local bgfx = require "bgfx"

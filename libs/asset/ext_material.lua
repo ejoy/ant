@@ -1,7 +1,7 @@
 local assetutil = require "asset.util"
 local assetmgr = require "asset"
 local fs = require "filesystem"
-local ru = require "render.util"
+local ru = import_package "render".util
 local rawtable = require "asset.rawtable"
 
 local loaders = {

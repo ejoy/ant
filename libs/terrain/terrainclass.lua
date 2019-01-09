@@ -4,7 +4,7 @@ local texLoad = require "terrain.utiltexture"
 local bgfx = require "bgfx"
 
 
-local shaderMgr = require "render.resources.shader_mgr"
+local shaderMgr = import_package "render".shader_mgr
 local math3d = require "math3d"
 
 local math3d_stack = math3d.new()

@@ -2,9 +2,11 @@ local ecs = ...
 local world = ecs.world
 
 ecs.import "libs"
+ecs.import "render"
+ecs.import "editor"
 ecs.import "inputmgr"
 
-local lu = require "render.light.util"
+local lu = import_package "render".light
 local PVPScenLoader = require "test.samples.PVPScene.PVPSceneLoader"
 
 local init_loader = ecs.system "init_loader"

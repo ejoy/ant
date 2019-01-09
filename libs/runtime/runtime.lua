@@ -3,13 +3,14 @@ require 'runtime.vfsio'
 require 'runtime.errlog'
 local LOGERROR = log.error
 
+import_package = (require "antpm").import
+
 local keymap = (import_package "inputmgr").keymap
 
 local dbgupdate = require 'runtime.debug'
 
 dprint = print
 
-require "common/import"
 require "common/log"
 
 local native = require "window.native"
@@ -53,7 +54,7 @@ local world
 function callback.init(nwh, context, w, h)
 	width, height = w, h
     local su = require "scene.util"
-    local rhwi = require "render.hardware_interface"
+    local rhwi = import_package "render".hardware_interface
     rhwi.init {
 		nwh = nwh,
 		context = context,

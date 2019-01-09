@@ -16,5 +16,11 @@ assert(loadfile(root .. "/libs/vfs/vfspath.lua"))(root)
 require "common.log"
 import_package = (require "antpm").import
 
+-- TODO
+require "asset"
+require "serialize.util"
+require "test.samples.PVPScene.PVPSceneLoader"
+require "fileconvert.util"
+
 print_r = require "common.print_r"
 function dprint(...) print(...) end

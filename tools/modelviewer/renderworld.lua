@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 ecs.import "inputmgr"
+ecs.import "libs"
 
 
 local component_util = require "render.components.util"
@@ -19,6 +20,7 @@ local cu = require "render.components.util"
 local math = import_package "math"
 local mu = math.util
 local geo = require "render.geometry"
+local fs = require "filesystem"
 
 local function create_light()
 	local leid = lu.create_directional_light_entity(world)
@@ -46,8 +48,8 @@ function model_review_system:init()
 		"can_render", "mesh", "material"
 	)
 	local model = world[eid]
-	component_util.load_mesh(model.mesh,"PVPScene/campsite-door.mesh")
-	component_util.load_material(model.material,{"PVPScene/scene-mat.material"})
+	component_util.load_mesh(model.mesh, fs.path "PVPScene/campsite-door.mesh")
+	component_util.load_material(model.material,{fs.path "PVPScene/scene-mat.material"})
 	--component_util.load_mesh(model.mesh,"cube.mesh")
 	--component_util.load_material(model.material,{"bunny.material"})
 

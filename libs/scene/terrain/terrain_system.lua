@@ -6,9 +6,10 @@ local world = ecs.world
 local bgfx = require "bgfx"
 local math = import_package "math"
 local math_util = math.util
-local shaderMgr = require "render.resources.shader_mgr"
-local camera_util = require "render.camera.util"
-local render_cu = require "render.components.util"
+local render = import_package "render"
+local shaderMgr = render.shader_mgr
+local camera_util = render.camera
+local render_cu = render.components
 
 local terrainClass = require "terrain.terrainclass"
 
