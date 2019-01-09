@@ -1,29 +1,30 @@
-local vectorview = {}; vectorview.__index = {}
+local vectorview = {}; vectorview.__index = vectorview
 
 local ctrlutil = require "editor.controls.util"
 
 local function ctrl_value(owner, idx, name, value)
 	local view = owner.view
-	local containter = iup.GetChild(view, 1)
+	assert(iup.GetChildCount(view) == 1)
+	local containter = iup.GetChild(view, 0)
 	local C = iup.GetChild(containter, idx)
 	assert(C.NAME == name)
 	if value == nil then
-		return tonumber(C.TITLE)
+		return tonumber(C.VALUE)
 	else
-		C.TITLE = tostring(value)
+		C.VALUE = tostring(value)
 	end	
 end
 
 function vectorview:x(v)
-	ctrl_value(self, 1, "X", v)
+	return ctrl_value(self, 1, "X", v)
 end
 
 function vectorview:y(v)
-	ctrl_value(self, 3, "Y", v)
+	return ctrl_value(self, 3, "Y", v)
 end
 
 function vectorview:z(v)
-	ctrl_value(self, 5, "Z", v)
+	return ctrl_value(self, 5, "Z", v)
 end
 
 function vectorview:get_vec()

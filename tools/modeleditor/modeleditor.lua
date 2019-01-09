@@ -92,8 +92,8 @@ local vectorviewclass = require "editor.controls.vectorview"
 local ikview = iup.vbox {
 	NAME = "IKVIEW",
 	vectorviewclass.new({NAME="TARGET", TITLE="target"}).view,
-	vectorviewclass.new({NAME="POLE", TITLE="pole vector"}).view,
-	vectorviewclass.new({NAME="MIDAXIS", TITLE="mid axis"}).view,
+	vectorviewclass.new({NAME="POLE_VECTOR", TITLE="pole vector"}).view,
+	vectorviewclass.new({NAME="MID_AXIS", TITLE="mid axis"}).view,
 	iup.gridbox {
 		iup.label {TITLE = "weight:",},			iup.text {NAME="WEIGHT", MINSIZE="32x"},
 		iup.label {TITLE="soften:"},			iup.text {NAME="SOFTEN", MINSIZE="32x"},
@@ -103,7 +103,12 @@ local ikview = iup.vbox {
 		iup.label {TITLE="end joint index:"},	iup.text {NAME="END_JOINT", MINSIZE="32x"},
 		NUMDIV = 2,
 		NORMALIZESIZE ="BOTH",
+		EXPANDCHILDREN="YES",
 	},
+	iup.button {
+		NAME = "APPLY",
+		TITLE= "Apply",
+	}
 }
 
 local animation_expander = iup.expander {

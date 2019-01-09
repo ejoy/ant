@@ -65,7 +65,7 @@ end
 
 local sample_eid
 
-local function smaple_entity()
+local function sample_entity()
 	if sample_eid then
 		return world[sample_eid]
 	end
@@ -86,7 +86,7 @@ local function enable_sample_visible()
 end
 
 local function enable_sample_boundingbox()
-	local sample = smaple_entity()
+	local sample = sample_entity()
 	if sample then
 		local bounding = dlg_item("SHOWSAMPLEBOUNDING")
 		sample.widget.can_render = bounding.VALUE ~= "OFF"
@@ -169,7 +169,7 @@ local function update_duration_text(cursorpos)
 		return 
 	end
 
-	local sample = smaple_entity()
+	local sample = sample_entity()
 	if sample == nil then
 		return 
 	end
@@ -291,7 +291,7 @@ local function init_blend_ctrl()
 	local dlg = main_dialog()
 	local blender = dlg_item("BLENDER").owner
 	blender:observer_blend("blend", function (blendlist, type)
-		local sample = smaple_entity()
+		local sample = sample_entity()
 		if sample then
 			local anicomp = sample.animation
 			if anicomp then
@@ -301,12 +301,115 @@ local function init_blend_ctrl()
 	end)
 end
 
+local function find_child(container, name)
+	local child_count = iup.GetChildCount(container)
+	if child_count == nil then
+		return 
+	end
+
+	for ii=0, child_count - 1 do
+		local c = iup.GetChild(container, ii)
+		if c.NAME == name then
+			return c
+		end
+
+		local cc = find_child(c, name)
+		if cc then
+			return cc
+		end
+	end				
+end
+
+local function update_ik_ctrl()
+	local sample = sample_entity()
+	if sample then
+		local ik = sample.ik
+		if ik then			
+			local ikview = dlg_item("IKVIEW")
+			local function update_vec_ctrl(ctrlname, ref)
+				local ctrl = find_child(ikview, ctrlname).owner
+				local v = ms(ref, "T")
+				ctrl:x(v[1])
+				ctrl:y(v[2])
+				ctrl:z(v[3])
+			end
+
+			update_vec_ctrl("TARGET", ik.target)
+			update_vec_ctrl("MID_AXIS", ik.mid_axis)
+			update_vec_ctrl("POLE_VECTOR", ik.pole_vector)
+
+			local weight = find_child(ikview, "WEIGHT")
+			weight.VALUE = tostring(ik.weight)
+
+			local soften = find_child(ikview, "SOFTEN")
+			soften.VALUE = tostring(ik.soften)
+
+			local twist_angle = find_child(ikview, "TWIST_ANGLE")
+			twist_angle.VALUE = tostring(ik.twist_angle)
+
+			local startjoint = find_child(ikview, "START_JOINT")
+			startjoint.VALUE = tostring(ik.start_joint)
+
+			local midjoint = find_child(ikview, "MID_JOINT")
+			midjoint.VALUE = tostring(ik.mid_joint)
+
+			local endjoint = find_child(ikview, "END_JOINT")
+			endjoint.VALUE = tostring(ik.end_joint)
+		end
+	end
+end
+
+local function init_ik_ctrl()	
+	local ikview = dlg_item("IKVIEW")
+
+	local applybtn = iup.GetChild(ikview, 4)
+	assert(applybtn.NAME=="APPLY")	
+	function applybtn:action()
+		local sample = sample_entity()
+		if sample then
+			local ik = sample.ik
+			if ik then
+				local function update_vec(name, ispoint, ref)					
+					local ctrl = find_child(ikview, name).owner
+					local tv = ctrl:get_vec()
+					assert(#tv == 3)
+					tv[4] = ispoint and 1 or 0
+					ms(ref, tv, "=")
+				end
+
+				update_vec("TARGET", true, ik.target)
+				update_vec("POLE_VECTOR", false, ik.pole_vector)
+				update_vec("MID_AXIS", true, ik.mid_axis)
+
+				local weight = find_child(ikview, "WEIGHT")
+				ik.weight = tonumber(weight.VALUE)
+
+				local soften = find_child(ikview, "SOFTEN")
+				ik.soften = tonumber(soften.VALUE)
+
+				local twist_angle = find_child(ikview, "TWIST_ANGLE")
+				ik.twist_angle = tonumber(twist_angle.VALUE)
+
+				local startjoint = find_child(ikview, "START_JOINT")
+				ik.start_joint = tonumber(startjoint.VALUE)
+
+				local midjoint = find_child(ikview, "MID_JOINT")
+				ik.mid_joint = tonumber(midjoint.VALUE)
+
+				local endjoint = find_child(ikview, "END_JOINT")
+				ik.end_joint = tonumber(endjoint.VALUE)
+			end
+		end
+	end
+end
+
 local function init_control()
 	init_paths_ctrl()
 	init_playitme_ctrl()
 	init_check_shower()
 	init_res_ctrl()
 	init_blend_ctrl()
+	init_ik_ctrl()
 	iup.Map(main_dialog())
 end
 
@@ -331,7 +434,7 @@ local function focus_sample()
 end
 
 local function init_ik()
-	local sample = smaple_entity()
+	local sample = sample_entity()
 	if sample then
 		assert(sample.ik == nil)
 		world:add_component(sample_eid, "ik")
@@ -360,11 +463,13 @@ function model_ed_sys:init()
 
 	init_ik()
 
+	update_ik_ctrl()
+
 	focus_sample()
 end
 
 local function auto_update_ani(deltatimeInSecond)
-	local sample = smaple_entity()
+	local sample = sample_entity()
 	if sample == nil then
 		return
 	end
