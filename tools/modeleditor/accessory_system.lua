@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "editor.ecs.debug.debug_drawing"
+
 
 local geodrawer = require "editor.ecs.render.geometry_drawer"
 local eru = require "editor.ecs.render.util"

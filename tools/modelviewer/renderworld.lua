@@ -1,22 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.constant_system"
-ecs.import("inputmgr", "message_system")
+ecs.import "inputmgr"
 
--- light entity
-ecs.import "serialize.serialize_component"
-ecs.import "render.light.light"
-ecs.import "scene.filter.lighting_filter"
-
--- enable
-ecs.import "serialize.serialize_system"
-ecs.import "render.view_system"
-ecs.import "render.entity_rendering_system"
-ecs.import "scene.hierarchy.hierarchy"
---ecs.import "scene.cull_system"
-
-ecs.import "editor.ecs.editor_component"
 
 local component_util = require "render.components.util"
 local math = import_package "math"

@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "scene.filter.lighting_filter"
+
 
 local bgfx = require "bgfx"
 local math = import_package "math"

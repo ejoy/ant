@@ -6,8 +6,8 @@ local world = ecs.world
 -- package.path = package.path..';./libs/bullet/?.lua;'
 -- local bullet_world = require "bulletworld"
 
-ecs.import("inputmgr", "message_system")
-ecs.import "timer.timer"
+ecs.import "inputmgr"
+
 
 local camera_util = require "render.camera.util"
 local bgfx = require "bgfx"

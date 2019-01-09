@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "scene.shadow.generate_shadow_system"
+
 
 local shadow_primitive_filter_sys = ecs.system "shadow_primitive_filter_system"
 

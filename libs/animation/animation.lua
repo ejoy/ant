@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 -- luacheck: ignore param
-ecs.import "timer"
+
 
 local ani = ecs.component_struct "animation" {
 	ani_list = {

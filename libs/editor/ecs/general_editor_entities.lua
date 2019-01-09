@@ -1,10 +1,10 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.camera.camera_component"
+
 
 -- entity
-ecs.import "editor.ecs.editor_component"
+
 
 local bgfx  = require "bgfx"
 local cu 	= require "render.components.util"

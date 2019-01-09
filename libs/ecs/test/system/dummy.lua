@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "test.component.comp_struct"
+
 
 local dummy = ecs.system "dummy"
 

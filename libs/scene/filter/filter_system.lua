@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
---ecs.import "scene.shadow.generate_shadow_system"
+--
 
 local cu = require "render.components.util"
 

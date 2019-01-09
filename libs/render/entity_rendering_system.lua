@@ -2,9 +2,9 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.view_system"
-ecs.import "render.end_frame_system"
-ecs.import "scene.filter.filter_system"
+
+
+
 
 local ru = require "render.util"
 local bgfx = require "bgfx"

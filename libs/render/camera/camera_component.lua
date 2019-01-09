@@ -1,13 +1,13 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.window_component"
-ecs.import("inputmgr", "message_system")
+
+ecs.import "inputmgr"
 
 -- camera entity
-ecs.import "scene.filter.filter_component"
-ecs.import "render.view_system"
-ecs.import "render.components.general"
+
+
+
 
 local math = import_package "math"
 local mu = math.util

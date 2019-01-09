@@ -1,10 +1,10 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "render.camera.camera_component"
-ecs.import "render.components.general"
-ecs.import("inputmgr", "message_system")
-ecs.import "timer.timer"
+
+
+ecs.import "inputmgr"
+
 
 local math = import_package "math"
 local point2d = math.point2d

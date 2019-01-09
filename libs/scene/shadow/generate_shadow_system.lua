@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "scene.filter.lighting_filter"
+
 
 local render_cu = require "render.components.util"
 local render_util = require "render.util"

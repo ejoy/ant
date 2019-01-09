@@ -185,31 +185,6 @@ local function searchpath(name, path)
 	return nil, err
 end
 
-local function import_package(w, name)
-	local pm = require "antpm"
-	local root, config = pm.find(name)
-	if not root then
-		error(("package '%s' not found"):format(name))
-	end
-	local modules = config.ecs_modules
-	if not modules then
-		local ecs_modules = require "antpm.ecs_modules"
-		modules = ecs_modules(root, {'*.lua'})
-	end
-
-	local function import()
-	end
-	local reg, class = typeclass(w, import)
-	for _, path in ipairs(modules) do
-		local module, err = fs.loadfile(path)
-		if not module then
-			error(("module '%s' load failed:%s"):format(path:string(), err))
-		end
-		module(reg)
-	end
-	return class
-end
-
 local function init_modules(w, modules, module_path)
 	local class = {}
 
@@ -217,8 +192,7 @@ local function init_modules(w, modules, module_path)
 		local pm = require "antpm"
 		local root, config = pm.find(name)
 		if not root then
-			--TODO
-			--error(("package '%s' not found"):format(name))
+			error(("package '%s' not found"):format(name))
 			return
 		end
 		local modules = config.ecs_modules
@@ -232,7 +206,7 @@ local function init_modules(w, modules, module_path)
 			local ecs_modules = require "antpm.ecs_modules"
 			modules = ecs_modules(root, {"*.lua"})
 		end
-		local reg, subclass = typeclass(w, import, class)
+		local reg = typeclass(w, import, class)
 		for _, path in ipairs(modules) do
 			local module, err = fs.loadfile(path)
 			if not module then
@@ -241,7 +215,6 @@ local function init_modules(w, modules, module_path)
 			module(reg)
 		end
 	end
-	import("")
 
 	local reg, initclass = typeclass(w, function() end)
 	for _, name in ipairs(modules) do

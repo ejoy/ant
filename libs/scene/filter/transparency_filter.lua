@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "scene.filter.lighting_filter"
+
 
 local transparency_filter_sys = ecs.system "transparency_filter_system"
 

@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "serialize.serialize_component"
+
 
 local seri_util = require "serialize.util"
 local assetmgr = require "asset"
