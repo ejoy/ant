@@ -173,15 +173,15 @@ local function init_paths_ctrl()
 	local sminputer = iup.GetDialogChild(dlg, "SMINPUTER").owner
 	local aniview = iup.GetDialogChild(dlg, "ANIVIEW").owner
 
-	local skepath = fs.path "meshes/skeleton/arm_skeleton.ozz"
+	local skepath = fs.path "meshes/skeleton/human_skeleton.ozz"
 	skeinputer:set_input(skepath:string())
 
-	-- local smfilename = fs.path "meshes/mesh.ozz"	
-	-- sminputer:set_input(smfilename:string())
+	local smfilename = fs.path "meshes/mesh.ozz"	
+	sminputer:set_input(smfilename:string())
 
-	-- assert(aniview:count() == 0)
-	-- aniview:add(fs.path "meshes/animation/animation1.ozz")
-	-- aniview:add(fs.path "meshes/animation/animation2.ozz")
+	assert(aniview:count() == 0)
+	aniview:add(fs.path "meshes/animation/animation1.ozz")
+	aniview:add(fs.path "meshes/animation/animation2.ozz")
 	
 	local blender = iup.GetDialogChild(dlg, "BLENDER").owner
 	aniview:set_blender(blender)
@@ -440,9 +440,9 @@ function model_ed_sys:init()
 	init_control()
 	init_lighting()
 
-	init_ik()
+	-- init_ik()
 
-	update_ik_ctrl()
+	-- update_ik_ctrl()
 
 	focus_sample()
 end

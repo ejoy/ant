@@ -205,4 +205,5 @@ editor.run(fbw, fbh, canvas, {
 	"model_editor_system",
 	"camera_controller",
 	"general_editor_entites",
+	"skinning_system",
 })
