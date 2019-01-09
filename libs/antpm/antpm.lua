@@ -9,6 +9,7 @@ local list = {
     WORKDIR / "packages" / "math",
     WORKDIR / "packages" / "inputmgr",
     WORKDIR / "packages" / "modelloader",
+    WORKDIR / "packages" / "editor",
 }
 local registered = {}
 local loaded = {}
@@ -53,7 +54,7 @@ end
 
 local function searcher_Package(name)
     if not registered[name] or not registered[name][2].entry then
-        return ("\n\tno package '%s'"):format(name)
+        error(("\n\tno package '%s'"):format(name))
     end
     local info = registered[name]
     local func, err = pm_require(info[1]:string(), info[2].entry, function(path) return fs.open(fs.path(path)) end)
@@ -71,7 +72,7 @@ local function import(name)
     if loaded[name] then
         return loaded[name]
     end
-    local func = assert(searcher_Package(name))
+    local func = searcher_Package(name)
     local res = func(func)
     if res == nil then
         loaded[name] = false

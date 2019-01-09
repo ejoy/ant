@@ -1,8 +1,8 @@
 require "iuplua"
 require "scintilla"
 
-local redirect = require "filesystem.redirect"
-local task = require "editor.task"
+local redirect = require "redirect"
+local task = require "task"
 
 local log = {}
 

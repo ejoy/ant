@@ -4,9 +4,9 @@ local world = ecs.world
 
 
 
-
-local menu = require "editor.controls.popupmenu"
-local eu = require "editor.util"
+local editor = import_package "editor"
+local menu = editor.controls.popupmenu
+local eu = editor.util
 local su = require "serialize.util"
 local math = import_package "math"
 local ms = math.stack

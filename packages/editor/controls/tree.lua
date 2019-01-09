@@ -1,5 +1,5 @@
 
-local ctrlutil = require "editor.controls.util"
+local ctrlutil = require "controls.util"
 
 local tree = {}	; tree.__index = tree
 

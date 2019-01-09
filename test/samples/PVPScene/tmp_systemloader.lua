@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 ecs.import "libs"
+ecs.import "editor"
 ecs.import "inputmgr"
 
 local lu = require "render.light.util"

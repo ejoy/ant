@@ -1,5 +1,5 @@
-local ctrlutil = require "editor.controls.util"
-local observer = require "editor.common.observer"
+local ctrlutil = require "controls.util"
+local observer = require "common.observer"
 
 require "iupluacontrols"
 

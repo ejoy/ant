@@ -1,10 +1,10 @@
 local log = log and log(...) or print
 
 require "iupluacontrols"
-local eu = require "editor.util"
+local eu = require "util"
 
-local treecontrol = require "editor.controls.tree"
-local mv_control = require "editor.controls.matrixview"
+local treecontrol = require "controls.tree"
+local mv_control = require "controls.matrixview"
 
 local propertyview = {}; propertyview.__index = propertyview
 
@@ -99,7 +99,7 @@ function propertyview.new(config)
 	config.tree.NAME = "RESVIEW"
 	config.detail.NAME = "RESDETAIL"
 
-	local ctrlutil = require "editor.controls.util"
+	local ctrlutil = require "controls.util"
 	return ctrlutil.create_ctrl_wrapper(function ()
 		local tree = treecontrol.new(config.tree)
 		local detail = mv_control.new(config.detail)

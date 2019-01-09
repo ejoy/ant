@@ -3,8 +3,8 @@
 local probe = {}; probe.__index = probe
 
 
-local ctrlutil = require "editor.controls.util"
-local observer = require "editor.common.observer"
+local ctrlutil = require "controls.util"
+local observer = require "common.observer"
 
 function probe:add_probe(name, cb)
 	self.observers:add("fetch_asset", name, cb)	

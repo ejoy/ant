@@ -1,18 +1,19 @@
 --luacheck: globals iup import
 require "iuplua"
 
+local editor = import_package "editor"
 local inputmgr = import_package "inputmgr"
-local mapiup = require "editor.input.mapiup"
-local elog = require "editor.log"
-local hierarchyview = require "editor.controls.hierarchyview"
-local propertycontrol = require "editor.controls.propertyview"
-local assetviewclass = require "editor.controls.assetview"
+local mapiup = editor.mapiup
+local elog = editor.log
+local hierarchyview = editor.controls.hierarchyview
+local propertycontrol = editor.controls.propertyview
+local assetviewclass = editor.controls.assetview
 
-local eu = require "editor.util"
+local eu = editor.util
 local rhwi = require "render.hardware_interface"
 local bgfx = require "bgfx"
 local scene = require "scene.util"
-local task = require "editor.task"
+local task = editor.task
 
 local propertyview = propertycontrol.new {
 	tree = {
@@ -110,8 +111,6 @@ function editor_mainwindow:run(config)
 		height = fb_height,
 	}
 
-    --self:new_world {"test_world.module", "engine.module", "editor.module"}
-    -- to be able to run this script inside another context
     if (iup.MainLoopLevel()==0) then
         iup.MainLoop()
         iup.Close()

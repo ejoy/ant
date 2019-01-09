@@ -66,7 +66,7 @@ end
 -- end
 
 function draw.draw_skeleton(ske, color, transform, desc)	
-	local eru = require "editor.ecs.render.util"
+	local eru = require "ecs.render.util"
 	local bones = eru.generate_bones(ske)
 	local function generate_joints_worldpos()		
 		local function load_world_trans(idx, worldpos)

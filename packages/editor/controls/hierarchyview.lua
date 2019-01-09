@@ -1,7 +1,7 @@
 -- luacheck: globals log
 local log = log and log(...) or print
 
-local treecontrol = require "editor.controls.tree"
+local treecontrol = require "controls.tree"
 
 local hierarchyview = treecontrol.new {
 	HIDEBUTTONS ="YES",

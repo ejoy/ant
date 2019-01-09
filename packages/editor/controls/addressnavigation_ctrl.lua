@@ -1,8 +1,8 @@
 --luacheck: globals iup
 local link = {}; link.__index = link
 local fs = require "filesystem"
-local observersclass = require "editor.common.observer"
-local ctrlutil = require "editor.controls.util"
+local observersclass = require "common.observer"
+local ctrlutil = require "controls.util"
 
 function link.new(config, name, url)
 	return ctrlutil.create_ctrl_wrapper(function ()
