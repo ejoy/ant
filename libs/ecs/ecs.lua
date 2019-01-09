@@ -171,9 +171,14 @@ local function init_notify(w, notifies)
 end
 
 local function init_modules(w, packages, systems)
+	local imported = {}
 	local class = {}
 
 	local function import(name)
+		if imported[name] then
+			return
+		end
+		imported[name] = true
 		local root, config = pm.find(name)
 		if not root then
 			error(("package '%s' not found"):format(name))
