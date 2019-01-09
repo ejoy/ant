@@ -1,31 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-
-
-
-
-
 ecs.import "inputmgr"
-
--- light entity
-
-
-
--- scene
-
-
-
-
-
--- scene.cull
---
-
--- test entity
-
-
--- enable
-
 
 local component_util = require "render.components.util"
 local lu = require "render.light.util"
@@ -37,10 +13,6 @@ local assetmgr = require "asset"
 local update_direction_light_sys = ecs.system "direction_light_system"
 
 function update_direction_light_sys:update()
-    if true then
-       return
-    end
-
 	local function get_delta_time_op()
 		local baselib = require "bgfx.baselib"
 		local lasttime = baselib.HP_time("s")
@@ -156,7 +128,7 @@ function add_entity_sys:init()
 
     -- 测试场景时，打开 PVPScene 加载BnH模型
     local PVPScene = require "test.samples.PVPScene.PVPSceneLoader"
-	PVPScene.init(world, component_util)
+	PVPScene.load(world, component_util)
 
 	-- do
 	-- 	local stone_eid = world:new_entity("position", "rotation", "scale",
