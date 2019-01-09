@@ -5,8 +5,7 @@ local typeclass = require "ecs.typeclass"
 local system = require "ecs.system"
 local component = require "ecs.component"
 local fs = require "filesystem"
-
-local vfs = require "vfs"
+local pm = require "antpm"
 
 local ecs = {}
 local world = {} ; world.__index = world
@@ -171,25 +170,10 @@ local function init_notify(w, notifies)
 	end
 end
 
-
-local function searchpath(name, path)
-	local err = ''
-	name = string.gsub(name, '%.', '/')
-	for c in string.gmatch(path, '[^;]+') do
-		local filename = string.gsub(c, '%?', name)
-		if vfs.type(filename) == "file" then
-			return filename
-		end
-		err = err .. ("\n\tno file '%s'"):format(filename)
-	end
-	return nil, err
-end
-
-local function init_modules(w, modules, module_path)
+local function init_modules(w, packages, systems)
 	local class = {}
 
 	local function import(name)
-		local pm = require "antpm"
 		local root, config = pm.find(name)
 		if not root then
 			error(("package '%s' not found"):format(name))
@@ -203,8 +187,7 @@ local function init_modules(w, modules, module_path)
 			end
 			modules = tmp
 		else
-			local ecs_modules = require "antpm.ecs_modules"
-			modules = ecs_modules(root, {"*.lua"})
+			modules = pm.ecs_modules(root, {"*.lua"})
 		end
 		local reg = typeclass(w, import, class)
 		for _, path in ipairs(modules) do
@@ -216,30 +199,8 @@ local function init_modules(w, modules, module_path)
 		end
 	end
 
-	local reg, initclass = typeclass(w, function() end)
-	for _, name in ipairs(modules) do
-		local path, err = searchpath(name, module_path)
-		if not path then
-			error(("module '%s' not found:%s"):format(name, err))
-		end
-		local module, err = loadfile(path)
-		if not module then
-			error(("module '%s' load failed:%s"):format(path, err))
-		end
-		module(reg)
-	end
-
-	local reg = typeclass(w, import, class)
-	for _, name in ipairs(modules) do
-		local path, err = searchpath(name, module_path)
-		if not path then
-			error(("module '%s' not found:%s"):format(name, err))
-		end
-		local module, err = loadfile(path)
-		if not module then
-			error(("module '%s' load failed:%s"):format(path, err))
-		end
-		module(reg)
+	for _, path in ipairs(packages) do
+		import(pm.register(path))
 	end
 
 	local cut = {}
@@ -264,7 +225,7 @@ local function init_modules(w, modules, module_path)
 		end
 	end
 
-	for k in pairs(initclass.system) do
+	for _, k in ipairs(systems) do
 		solve_depend(k)
 	end
 
@@ -299,7 +260,7 @@ function ecs.new_world(config)
 	}, world)
 
 	-- load systems and components from modules
-	local class = init_modules(w, config.modules, config.module_path)
+	local class = init_modules(w, config.packages, config.systems)
 
 	for k,v in pairs(class.component) do
 		w._component_type[k] = component(v)

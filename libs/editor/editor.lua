@@ -13,7 +13,7 @@ local task = require "editor.task"
 
 local editor = {}; editor.__index = editor
 
-function editor.run(fbw, fbh, canvas, modules, module_searchpath)	
+function editor.run(fbw, fbh, canvas, packages, systems)	
 	rhwi.init {
 		nwh = iup.GetAttributeData(canvas,"HWND"),
 		width = fbw,
@@ -23,7 +23,7 @@ function editor.run(fbw, fbh, canvas, modules, module_searchpath)
 	local iq = inputmgr.queue(mapiup)
 	local eu = require "editor.util"
 	eu.regitster_iup(iq, canvas)
-	local world = su.start_new_world(iq, fbw, fbh, modules, module_searchpath)
+	local world = su.start_new_world(iq, fbw, fbh, packages, systems)
 
 	task.loop(world.update)
 

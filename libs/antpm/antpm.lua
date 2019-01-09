@@ -29,7 +29,7 @@ local function dofile(path)
     return f()
 end
 
-local function init(pkg)
+local function register(pkg)
     if not fs.exists(pkg) then
         error(('Cannot find package `%s`.'):format(pkg:string()))
     end
@@ -47,6 +47,7 @@ local function init(pkg)
         error(('Duplicate definition package `%s` in `%s`.'):format(pkg.name, pkg:string()))
     end
     registered[config.name] = { pkg, config }
+    return config.name
 end
 
 local function searcher_Package(name)
@@ -62,7 +63,7 @@ local function searcher_Package(name)
 end
 
 for _, pkg in ipairs(list) do
-    init(pkg)
+    register(pkg)
 end
 
 local function import(name)
@@ -88,5 +89,7 @@ end
 
 return {
     find = find,
-    import = import
+    register = register,
+    import = import,
+    ecs_modules = require "antpm.ecs_modules"
 }

@@ -48,8 +48,6 @@ end
 
 local guiFile = iupex.menu({
     {"Open Map...", "OpenMap"},
-    {"Open Entry File(*.lua)", "FromEntryFile"},
-    {"Run file", "RunFile"},
     {},
     {},
     {"Clean Recently Opened", "CleanRecentlyOpened"},
@@ -64,7 +62,6 @@ local guiMain = iupex.menu(
 }, bind)
 
 local guiOpenMap = iup.GetChild(iup.GetChild(guiMain, 0), 0)
-local guiRunFile = iup.GetChild(iup.GetChild(iup.GetChild(guiMain, 0), 0), 2)
 local openMap
 
 local function recentSave()
@@ -126,48 +123,25 @@ end
 
 function openMap(path)
 	guiOpenMap.active = "OFF"
-    guiRunFile.active = "ON"
 	recentAddAndUpdate(path)
 
 	path = vfsutil.filter_abs_path(path)
 
-	local function load_modules(path)
-		if path:equal_extension(".module") then
-			return asset.load(path)
-		end
+    local mapcfg = fs.dofile(path)
 
-		assert(path:equal_extension(".lua"))
-		-- from file path, like: abc/efg/hij.lua, to abc.efg.hij
-		local modulename = path:string():match("(.+)%.lua$"):gsub("[/\\]", ".")
-		return {modulename}
-	end
-
-	local modules = load_modules(path)
-    local editormodules = {
-        -- "editor.ecs.camera_controller",
-        "editor.ecs.obj_trans_controller",
-        "editor.ecs.pickup_system",
-        "editor.ecs.general_editor_entities",
-        "editor.ecs.build_hierarchy_system",
-        "test.samples.PVPScene.editor_system",
+    local packages = {
+        path:parent_path()
     }
-    table.move(editormodules, 1, #editormodules, #modules+1, modules)
-    editor_mainwindow:new_world(modules)
---[[
-    local server_modules = {
-        "debugserver.ui_command_component",
-        "debugserver.filewatch_system",
-        "debugserver.vfs_repo_component",
-        "debugserver.vfs_repo_system",
-        "debugserver.io_system",
-        "debugserver.io_pkg_component",
-        "debugserver.io_pkg_handle_system",
-        "debugserver.remote_log_system",
-        "debugserver.server_debug_system",
-        "debugserver.io_pkg_handle_func_component",
+    local systems = {
+        "pickup_material_system",
+        "pickup_system",
+        "obj_transform_system",
+        "general_editor_entites",
+        "build_hierarchy_system",
+        "editor_system"
     }
-    server_main:new_world(server_modules)
---]]
+    table.move(mapcfg.systems, 1, #mapcfg.systems, #systems+1, systems)
+    editor_mainwindow:new_world(packages, systems)
 end
 
 local function popup_select_file_dlg(parentdlg, filepattern, seletfileop)
@@ -187,31 +161,7 @@ local function popup_select_file_dlg(parentdlg, filepattern, seletfileop)
 end
 
 function CMD.OpenMap(e)
-	popup_select_file_dlg(iup.GetDialog(e), "*.module", openMap)
-end
-
-function CMD.FromEntryFile(e)
-	popup_select_file_dlg(iup.GetDialog(e), "*.lua", openMap)
-end
-
-local function runFile(file_path)
---    server_main:new_ui_command({"RUN", file_path})
-end
-
-function CMD.RunFile(e)
-    local filedlg = iup.filedlg
-    {
-        dialogtype = "OPEN",
-        filter = "*.lua",
-        filterinfo = "Lua File",
-        parentdialog = iup.GetDialog(e),
-    }
-    filedlg:popup(iup.CENTERPARENT, iup.CENTERPARENT)
-    if tonumber(filedlg.status) ~= -1 then
-        runFile(filedlg.value)
-    end
-
-    filedlg:destroy()
+	popup_select_file_dlg(iup.GetDialog(e), "*.map", openMap)
 end
 
 function CMD.CleanRecentlyOpened(e)

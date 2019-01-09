@@ -47,7 +47,7 @@ end
 local callback = {}
 
 local width, height
-local modules, modulepath
+local packages, systems
 local world
 
 function callback.init(nwh, context, w, h)
@@ -60,7 +60,7 @@ function callback.init(nwh, context, w, h)
 		width = width,
 		height = height,
 	}
-	world = su.start_new_world(iq, width, height, modules, modulepath)
+	world = su.start_new_world(iq, width, height, packages, systems)
 end
 
 function callback.error(err)
@@ -99,7 +99,7 @@ function callback.update()
 end
 
 local function start(m1, m2)
-	modules, modulepath = m1, m2
+	packages, systems = m1, m2
 	window.register(callback)
 	native.create(1024, 768, "Hello")
     native.mainloop()

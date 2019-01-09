@@ -1077,7 +1077,7 @@ function gen_shadow_system:init()
         -- local sun = world:first_entity("directional_light")  
         -- rot = sun.direction;
         -- pos = sun.pos
-        return entity;
+        return entity
     end 
 
     local entity = add_shadow_maker_entity()

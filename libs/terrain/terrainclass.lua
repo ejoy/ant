@@ -244,12 +244,12 @@ end
 function TerrainClass:get_phys_x_offset()
 	local scale = lterrain.get_width_scale( self.data )
 	local grid  = self:get_grid_width()
-	return scale*(grid-1)*0.5;
+	return scale*(grid-1)*0.5
 end 
 function TerrainClass:get_phys_z_offset()
 	local scale = lterrain.get_length_scale( self.data )
 	local grid  = self:get_grid_length()
-	return scale*(grid-1)*0.5;
+	return scale*(grid-1)*0.5
 end 
 function TerrainClass:get_phys_h_offset()
 	local min_height = lterrain.get_min_height( self.data )
