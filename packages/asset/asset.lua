@@ -35,7 +35,7 @@ local function get_loader(name)
 		end
 
 		if is_support(name) then
-			loader = require ("asset.ext_" .. name)
+			loader = require ("ext_" .. name)
 			loaders[name] = loader
 		else
 			error("Unsupport assetmgr type " .. name)

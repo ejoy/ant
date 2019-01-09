@@ -9,7 +9,7 @@ local fs = require "filesystem"
 local math = import_package "math"
 local ms = math.stack
 local mu = math.util
-local assetmgr = require "asset"
+local assetmgr = import_package "asset"
 
 
 local build_system = ecs.system "build_hierarchy_system"

@@ -8,7 +8,7 @@ local lu = require "render.light.util"
 local math = import_package "math"
 local ms = math.stack
 
-local assetmgr = require "asset"
+local assetmgr = import_package "asset"
 
 local update_direction_light_sys = ecs.system "direction_light_system"
 

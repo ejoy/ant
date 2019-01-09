@@ -17,7 +17,6 @@ require "common.log"
 import_package = (require "antpm").import
 
 -- TODO
-require "asset"
 require "test.samples.PVPScene.PVPSceneLoader"
 require "fileconvert.util"
 

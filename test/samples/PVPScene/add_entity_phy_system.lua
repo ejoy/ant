@@ -41,7 +41,7 @@ ecs.import "inputmgr"
 
 local component_util = import_package "render".components
 local lu = import_package "render".light
-local assetmgr = require "asset"
+local assetmgr = import_package "asset"
 
 local math3d = require "math3d"
 local math = import_package "math"

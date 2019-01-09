@@ -1,7 +1,7 @@
 local util = {}
 util.__index = util
 
-local asset = require "asset"
+local asset = import_package "asset"
 
 local math = import_package "math"
 local mu = math.util

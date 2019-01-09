@@ -1,4 +1,4 @@
-local assetmgr = require "asset"
+local assetmgr = import_package "asset"
 
 return function (name)    
     local filename = assetmgr.find_valid_asset_path(name)

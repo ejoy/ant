@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local hierarchy = require "hierarchy"
-local assetmgr = require "asset"
+local assetmgr = import_package "asset"
 
 local fs = require "filesystem"
 

@@ -1,7 +1,7 @@
 local bgfx = require "bgfx"
 local fs = require "filesystem"
 local assetmgr = require "asset"
-local rawtable = require "asset.rawtable"
+local rawtable = require "rawtable"
 
 local function texture_load(filepath, info)
 	local filename = filepath:string()

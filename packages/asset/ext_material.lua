@@ -1,8 +1,8 @@
-local assetutil = require "asset.util"
+local assetutil = require "util"
 local assetmgr = require "asset"
 local fs = require "filesystem"
 local ru = import_package "render".util
-local rawtable = require "asset.rawtable"
+local rawtable = require "rawtable"
 
 local loaders = {
 	state = function (t) return t end, 

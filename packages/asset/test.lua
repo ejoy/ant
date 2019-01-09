@@ -2,7 +2,7 @@ dofile "libs/init.lua"
 
 local asset = require "asset"
 local fs = require "filesystem"
-local rawtable = require "asset.rawtable"
+local rawtable = require "rawtable"
 
 print_r = require "../common/print_r"
 

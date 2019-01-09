@@ -12,6 +12,7 @@ local list = {
     WORKDIR / "packages" / "editor",
     WORKDIR / "packages" / "render",
     WORKDIR / "packages" / "serialize",
+    WORKDIR / "packages" / "asset",
 }
 local registered = {}
 local loaded = {}

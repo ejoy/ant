@@ -3,7 +3,7 @@ local ecs = ...
 
 
 local fs = require "filesystem"
-local assetmgr = require "asset"
+local assetmgr = import_package "asset"
 
 local save_to_binary = ecs.system "serialize_to_binary"
 save_to_binary.singleton "serialization_tree"

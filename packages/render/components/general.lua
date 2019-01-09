@@ -1,7 +1,7 @@
 local ecs = ...
 
 local component_util = require "components.util"
-local asset = require "asset"
+local asset = import_package "asset"
 local math = import_package "math"
 
 ecs.component "position" (math.util.create_component_vector())

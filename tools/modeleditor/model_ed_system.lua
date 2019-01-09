@@ -7,7 +7,7 @@ local math = import_package "math"
 
 local ms = math.stack
 local util = require "tools.modeleditor.util"
-local assetmgr = require "asset"
+local assetmgr = import_package "asset"
 local fs = require "filesystem"
 local camerautil = require "render.camera.util"
 

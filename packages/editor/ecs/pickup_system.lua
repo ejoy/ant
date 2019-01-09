@@ -14,7 +14,7 @@ local mu = math.util
 local ms = math.stack
 local fs = require "filesystem"
 
-local asset = require "asset"
+local asset = import_package "asset"
 
 local math_baselib = require "math3d.baselib"
 

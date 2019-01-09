@@ -1,6 +1,6 @@
 local assetmgr = require "asset"
 local fs = require "filesystem"
-local rawtable = require "asset.rawtable"
+local rawtable = require "rawtable"
 
 return function(filename)
     local t = rawtable(assetmgr.find_depiction_path(filename))

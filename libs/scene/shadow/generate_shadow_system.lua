@@ -8,7 +8,7 @@ local render_util = import_package "render".util
 local math_util = (import_package "math").util
 local math3d = require "math3d"
 local bgfx = require "bgfx"
-local asset = require "asset"
+local asset = import_package "asset"
 local ms = (import_package "math").stack
 
 -- system rules 

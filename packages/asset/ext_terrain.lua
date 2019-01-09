@@ -1,5 +1,5 @@
 local assetmgr = require "asset"
-local rawtable = require "asset.rawtable"
+local rawtable = require "rawtable"
 
 -- terrain loader protocal 
 return function (filename, param)

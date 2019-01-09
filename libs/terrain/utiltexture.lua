@@ -1,5 +1,5 @@
 local bgfx = require "bgfx"
-local assetmgr = require "asset"
+local assetmgr = import_package "asset"
 local fs = require "filesystem"
 
 local function texture_load(filename, info)
@@ -72,7 +72,7 @@ local function fill_default_sampler(sampler)
 end
 
 return function (filename)
-	--local assetmgr = require "asset"
+	--local assetmgr = import_package "asset"
 	--local tex = rawtable(filename)
 	local pp = assetmgr.find_valid_asset_path(fs.path(assert(filename)))
 	if pp == nil then

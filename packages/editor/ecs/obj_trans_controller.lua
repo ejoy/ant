@@ -6,7 +6,7 @@ local world = ecs.world
 ecs.import "inputmgr"
 
 
-local assetmgr = require "asset"
+local assetmgr = import_package "asset"
 local math = import_package "math"
 local mu = math.util
 local ms = math.stack
