@@ -1,39 +1,10 @@
 local ecs = ...
 local world = ecs.world
 
--- runtime
-
-
-
-
-
--- lighting
-
-
--- serialize
-
-
--- scene
-
-
-
-
--- animation
-
-
-
-
--- editor
-
-
-
-
--- editor elements
-
-
-
+ecs.import "libs"
 
 local math = import_package "math"
+
 local ms = math.stack
 local util = require "tools.modeleditor.util"
 local assetmgr = require "asset"
@@ -46,6 +17,8 @@ local model_ed_sys = ecs.system "model_editor_system"
 model_ed_sys.singleton "debug_object"
 model_ed_sys.singleton "timer"
 model_ed_sys.depend "camera_init"
+model_ed_sys.dependby "transparency_filter_system"
+model_ed_sys.dependby "entity_rendering"
 
 -- luacheck: globals main_dialog
 -- luacheck: globals iup

@@ -5,6 +5,8 @@ dofile "libs/init.lua"
 
 require "iuplua"
 
+local fs = require "filesystem"
+
 local editor = require "editor"
 local elog = require "editor.log"
 local probeclass = require "editor.controls.assetprobe"
@@ -179,7 +181,7 @@ local dlg = iup.dialog {
 				assetview.view,
 				anilist.view,
 				TABTITLE0 = "Resources",
-				TABTITLE1 = "Animation List",				
+				TABTITLE1 = "Animation List",
 			},
 
 			MINSIZE = "300x0",
@@ -195,6 +197,12 @@ function main_dialog()
 	return dlg
 end
 
-editor.run(fbw, fbh, canvas, {
-	"tools.modeleditor.model_ed_system"
+local cwd = fs.current_path()
+editor.run(fbw, fbh, canvas, {	
+	cwd / "tools/modeleditor",
+}, 
+{
+	"model_editor_system",
+	"camera_controller",
+	"general_editor_entites",
 })
