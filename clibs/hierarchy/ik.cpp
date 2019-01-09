@@ -81,8 +81,8 @@ prepare_two_bone_ik_job(lua_State *L, int idx,
 	job.twist_angle = get_number(idx, "twist_angle");
 	
 	auto get_joint = [L, &models](int idx, auto name)->ozz::math::Float4x4* {
-		verfiy(lua_getfield(L, idx, "start_joint"), LUA_TNUMBER);
-		const int jointidx = (int)lua_tointeger(L, -1);		
+		verfiy(lua_getfield(L, idx, name), LUA_TNUMBER);
+		const int jointidx = (int)lua_tointeger(L, -1) - 1;
 		lua_pop(L, 1);
 
 		if (0 < jointidx && jointidx < models.count()) {

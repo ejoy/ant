@@ -437,7 +437,13 @@ local function init_ik()
 	local sample = sample_entity()
 	if sample then
 		assert(sample.ik == nil)
+		local ske = assert(sample.skeleton)
 		world:add_component(sample_eid, "ik")
+		if sample.animation == nil then
+			world:add_component(sample_eid, "animation")
+			local aniutil = require "animation.util"
+			aniutil.init_animation(sample.animation, ske)
+		end
 	
 		local ik = sample.ik
 		ik.enable = true
@@ -448,7 +454,7 @@ local function init_ik()
 		ik.soften = 0.5
 		ik.twist_angle = 0
 
-		local ske = assert(sample.skeleton)
+		
 		local skehandle = ske.assetinfo.handle
 		ik.start_joint = skehandle:joint_index("shoulder")
 		ik.mid_joint = skehandle:joint_index("forearm")
