@@ -57,9 +57,6 @@ local function require_package(name)
     return info.env.require(info.config.entry)
 end
 
--- TODO
-register(WORKDIR / "libs")
-
 for pkg in (WORKDIR / "packages"):list_directory() do
     register(pkg)
 end
