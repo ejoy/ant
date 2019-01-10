@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 
-local geometry = import_package "geometry"
+local geometry = import_package "ant.geometry"
 local geodrawer = geometry.drawer
 local geoutil = geometry.util
 

@@ -1,4 +1,4 @@
 return {
-	name = "hierarchy.offline",
-	entry = "main.lua",
+	name = "ant.hierarchy.offline",
+	entry = "main",
 }

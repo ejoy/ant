@@ -1,4 +1,4 @@
 return {
-	name = "animation",
-	entry = "main.lua",
+	name = "ant.animation",
+	entry = "main",
 }

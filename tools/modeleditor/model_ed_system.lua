@@ -5,14 +5,18 @@ local util 		= require "util"
 local fs 		= require "filesystem"
 
 ecs.import "ant.libs"
-ecs.import "render"
-ecs.import "debug"
-ecs.import "animation"
-ecs.import "geometry"
+ecs.import "ant.render"
+ecs.import "ant.timer"
+ecs.import "ant.scene"
+ecs.import "ant.serialize"
+ecs.import "ant.objcontroller"
+ecs.import "ant.debug"
+ecs.import "ant.animation"
+ecs.import "ant.geometry"
 
 local assetmgr	= import_package "ant.asset"
 local math 		= import_package "ant.math"
-local renderpkg = import_package "render"
+local renderpkg = import_package "ant.render"
 local ms 		= math.stack
 local camerautil= renderpkg.camera
  

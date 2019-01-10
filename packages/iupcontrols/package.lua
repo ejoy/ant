@@ -1,4 +1,4 @@
 return {
 	name = "iupcontrols",
-	entry = "main.lua",
+	entry = "main",
 }

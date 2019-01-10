@@ -1,4 +1,4 @@
 return {
-	name = "objcontroller",
-	entry = "main.lua",
+	name = "ant.objcontroller",
+	entry = "main",
 }

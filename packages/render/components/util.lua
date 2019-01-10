@@ -161,7 +161,7 @@ function util.create_mesh_handle(decl, vb, ib)
 end
 
 function util.create_grid_entity(world, name, w, h, unit)
-	local geopkg= import_package "geometry"
+	local geopkg= import_package "ant.geometry"
 	local geolib= geopkg.geometry
 
 	local gridid = world:new_entity(

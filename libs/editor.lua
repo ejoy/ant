@@ -5,8 +5,9 @@ package.path = table.concat({
 }, ";")
 
 package.cpath = table.concat({
+	"projects/msvc/vs_bin/x64/Debug/?.dll",
     "clibs/?.dll",
-    "bin/?.dll",
+	"bin/?.dll",
 }, ";")
 
 dofile "libs/editor/require.lua"

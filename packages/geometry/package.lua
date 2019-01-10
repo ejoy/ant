@@ -1,4 +1,4 @@
 return {
-	name = "geometry",
-	entry = "main.lua"
+	name = "ant.geometry",
+	entry = "main"
 }

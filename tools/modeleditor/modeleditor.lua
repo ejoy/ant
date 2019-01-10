@@ -1,13 +1,10 @@
 -- luacheck: globals iup
 -- luacheck: ignore self, ignore world
-
-dofile "libs/editor.lua"
-
 require "iuplua"
 
 local fs 			= require "filesystem"
 
-local editor 		= import_package "editor"
+local editor 		= import_package "ant.editor"
 local editormain 	= editor.editor
 
 local iupcontrols 	= import_package "iupcontrols"
@@ -18,13 +15,9 @@ local assetviewclass= iupcontrols.assetview
 local vecviewclass	= iupcontrols.vectorview
 local listctrl 		= iupcontrols.listctrl
 
-local fileinputer 	= require "tools.modeleditor.fileselectinputer"
-local aniviewclass 	= require "tools.modeleditor.animationview"
-local blendviewclass = require "tools.modeleditor.blendview"
-
--- TODO
-require "scene.util"
-
+local fileinputer 	= require "fileselectinputer"
+local aniviewclass 	= require "animationview"
+local blendviewclass= require "blendview"
 
 local fbw, fbh = 800, 600
 
@@ -206,9 +199,8 @@ function main_dialog()
 	return dlg
 end
 
-local cwd = fs.current_path()
 editormain.run(fbw, fbh, canvas, {	
-	cwd / "tools"/ "modeleditor",
+	"ant.ModelEditor"
 }, 
 {
 	"model_editor_system",
