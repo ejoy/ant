@@ -4,7 +4,7 @@
 require "iuplua"
 
 local rhwi = import_package "render".hardware_interface
-local su = require "scene.util"
+local su = import_package "scene"
 
 local inputmgr = import_package "inputmgr"
 local mapiup = require "input.mapiup"

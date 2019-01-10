@@ -17,6 +17,9 @@ require "common.log"
 import_package = (require "antpm").import
 
 -- TODO
+require "ecs"
+require "bullet.bulletworld"
+require "terrain.terrainclass"
 require "test.samples.PVPScene.PVPSceneLoader"
 require "fileconvert.util"
 

@@ -10,7 +10,7 @@ local mapiup = require "editor.input.mapiup"
 local elog = require "editor.log"
 
 local rhwi = require "render.hardware_interface"
-local scene = require "scene.util"
+local scene = import_package "scene"
 local eu = require "editor.util"
 local task = require "editor.task"
 

@@ -8,7 +8,7 @@ local nk = require "bgfx.nuklear"
 local task = require "editor.task"
 
 --local editor_mainwindow = require "editor.window"
-local scene = require "scene.util"
+local scene = import_package "scene"
 
 local s_logo = require "logo"
 

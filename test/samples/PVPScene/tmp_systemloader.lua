@@ -6,6 +6,7 @@ ecs.import "render"
 ecs.import "editor"
 ecs.import "inputmgr"
 ecs.import "serialize"
+ecs.import "scene"
 
 local lu = import_package "render".light
 local PVPScenLoader = require "test.samples.PVPScene.PVPSceneLoader"

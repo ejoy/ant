@@ -12,7 +12,7 @@ local assetviewclass = editor.controls.assetview
 local eu = editor.util
 local rhwi = import_package "render".hardware_interface
 local bgfx = require "bgfx"
-local scene = require "scene.util"
+local scene = import_package "scene"
 local task = editor.task
 
 local propertyview = propertycontrol.new {
