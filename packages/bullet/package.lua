@@ -1,4 +1,4 @@
 return {
-    name = "bullet",
+    name = "ant.bullet",
     entry = "bulletworld",
 }

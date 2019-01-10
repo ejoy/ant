@@ -13,7 +13,7 @@ local world = ecs.world
 
 local bullet_world = require "bulletworld"
 
-local math = import_package "math"
+local math = import_package "ant.math"
 local ms = math.stack
 
 local phys_sys = ecs.system "physics_system"

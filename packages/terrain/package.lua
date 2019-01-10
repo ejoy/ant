@@ -1,4 +1,4 @@
 return {
-    name = "terrain",
+    name = "ant.terrain",
     entry = "terrainclass",
 }

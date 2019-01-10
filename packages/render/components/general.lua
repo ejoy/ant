@@ -1,8 +1,8 @@
 local ecs = ...
 
 local component_util = require "components.util"
-local asset = import_package "asset"
-local math = import_package "math"
+local asset = import_package "ant.asset"
+local math = import_package "ant.math"
 
 ecs.component "position" (math.util.create_component_vector())
 ecs.component "rotation" (math.util.create_component_vector())

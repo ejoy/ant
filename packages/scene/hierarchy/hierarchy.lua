@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local assetmgr = import_package "asset"
+local assetmgr = import_package "ant.asset"
 
 local h = ecs.component_struct "hierarchy" {
 	ref_path = {

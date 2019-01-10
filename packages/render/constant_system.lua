@@ -1,6 +1,6 @@
 local ecs = ...
 
-local math = import_package "math"
+local math = import_package "ant.math"
 local mu = math.util
 
 local constant = ecs.component_struct "constant" {    

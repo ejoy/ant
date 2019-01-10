@@ -2,7 +2,7 @@
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
-local assetmgr = import_package "asset"
+local assetmgr = import_package "ant.asset"
 local fs = require "filesystem"
 local vfs = require "vfs"
 

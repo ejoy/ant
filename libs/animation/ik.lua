@@ -1,5 +1,5 @@
 local ecs = ...
-local mathutil = (import_package "math").util
+local mathutil = (import_package "ant.math").util
 
 local ik = ecs.component_struct "ik" {
 	target 		= mathutil.create_component_vector(),

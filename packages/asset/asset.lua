@@ -141,7 +141,7 @@ function assetmgr.load(filepath, param)
 end
 
 function assetmgr.save(tree, filepath)	
-	local seri = import_package "serialize"
+	local seri = import_package "ant.serialize"
 	seri.save(filepath, tree)
 end
 

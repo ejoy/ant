@@ -1,13 +1,13 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "libs"
+ecs.import "ant.libs"
 
-local math = import_package "math"
+local math = import_package "ant.math"
 
 local ms = math.stack
 local util = require "tools.modeleditor.util"
-local assetmgr = import_package "asset"
+local assetmgr = import_package "ant.asset"
 local fs = require "filesystem"
 local camerautil = require "render.camera.util"
 

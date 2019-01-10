@@ -1,4 +1,4 @@
-local im = import_package "inputmgr"
+local im = import_package "ant.inputmgr"
 
 local q = im.queue {
 	BUTTON = { [1] = "LEFT", [2] = "RIGHT" },

@@ -4,21 +4,21 @@ local world = ecs.world
 
 
 local bgfx = require "bgfx"
-local math = import_package "math"
+local math = import_package "ant.math"
 local math_util = math.util
-local render = import_package "render"
+local render = import_package "ant.render"
 local shaderMgr = render.shader_mgr
 local camera_util = render.camera
 local render_cu = render.components
 
-local terrainClass = import_package "terrain"
+local terrainClass = import_package "ant.terrain"
 
 local UI_VIEW      	 = 255
 local VIEWID_TERRAIN = 100 
 
 -- local stack = nil
 local math3d = require "math3d"
-local math = import_package "math"
+local math = import_package "ant.math"
 local stack = math.stack
 
 local init_ambient = nil

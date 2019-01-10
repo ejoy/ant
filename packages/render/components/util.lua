@@ -1,9 +1,9 @@
 local util = {}
 util.__index = util
 
-local asset = import_package "asset"
+local asset = import_package "ant.asset"
 
-local math = import_package "math"
+local math = import_package "ant.math"
 local mu = math.util
 local bgfx = require "bgfx"
 local fs = require "filesystem"

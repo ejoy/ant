@@ -3,10 +3,10 @@
 
 require "iuplua"
 
-local rhwi = import_package "render".hardware_interface
-local su = import_package "scene"
+local rhwi = import_package "ant.render".hardware_interface
+local su = import_package "ant.scene"
 
-local inputmgr = import_package "inputmgr"
+local inputmgr = import_package "ant.inputmgr"
 local mapiup = require "input.mapiup"
 
 local task = require "task"

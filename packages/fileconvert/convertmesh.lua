@@ -1,6 +1,6 @@
 local meshconverter = require "meshconverter"
 local fs = require "filesystem"
-local modelutil = (import_package "modelloader").util
+local modelutil = (import_package "ant.modelloader").util
 local config = modelutil.default_config()
 
 local convert_op = {

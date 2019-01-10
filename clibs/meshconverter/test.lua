@@ -7,7 +7,7 @@
 -- 	mesh_path = "meshes/PVPScene/BH-Scene-campsite-Door"
 -- ]])
 
--- local assetmgr = import_package "asset"
+-- local assetmgr = import_package "ant.asset"
 -- assetmgr.
 
 

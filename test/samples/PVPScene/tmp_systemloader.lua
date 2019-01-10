@@ -1,14 +1,14 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "libs"
-ecs.import "render"
-ecs.import "editor"
-ecs.import "inputmgr"
-ecs.import "serialize"
-ecs.import "scene"
+ecs.import "ant.libs"
+ecs.import "ant.render"
+ecs.import "ant.editor"
+ecs.import "ant.inputmgr"
+ecs.import "ant.serialize"
+ecs.import "ant.scene"
 
-local lu = import_package "render".light
+local lu = import_package "ant.render".light
 local PVPScenLoader = require "test.samples.PVPScene.PVPSceneLoader"
 
 local init_loader = ecs.system "init_loader"

@@ -1,3 +1,3 @@
 return {
-    name = "libs",
+    name = "ant.libs",
 }

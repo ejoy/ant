@@ -1,4 +1,4 @@
 return {
-    name = "modelloader",
+    name = "ant.modelloader",
     entry = "modelloader",
 }

@@ -12,8 +12,8 @@ local s_logo = require "logo"
 
 local mapiup = require "editor.input.mapiup"
 
-local inputmgr = import_package "inputmgr"
-local nkmsg = (import_package "inputmgr").nuklear
+local inputmgr = import_package "ant.inputmgr"
+local nkmsg = (import_package "ant.inputmgr").nuklear
 
 local math3d = require "math3d"
 

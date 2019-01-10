@@ -1,3 +1,3 @@
 return {
-    name = "pvpscene",
+    name = "ant.pvpscene",
 }

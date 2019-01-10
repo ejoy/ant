@@ -8,8 +8,8 @@ end
 
 dofile(rootdir .. "/libs/init.lua")
 
-local modelutil = (import_package "modelloader").util
-local su = import_package "serialize"
+local modelutil = (import_package "ant.modelloader").util
+local su = import_package "ant.serialize"
 local fs = require "filesystem"
 
 

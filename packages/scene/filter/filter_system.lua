@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 --
-local render = import_package "render"
+local render = import_package "ant.render"
 local cu = render.components
 
 local ru = render.util

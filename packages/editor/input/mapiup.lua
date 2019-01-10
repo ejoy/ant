@@ -1,5 +1,5 @@
 --luacheck: globals iup
-local keymap = (import_package "inputmgr").keymap
+local keymap = (import_package "ant.inputmgr").keymap
 
 local iupcodemap = {}
 for k, v in pairs(iup) do

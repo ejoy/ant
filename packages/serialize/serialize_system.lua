@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 
-ecs.import "inputmgr"
+ecs.import "ant.inputmgr"
 
 
 local serialize_save_sys = ecs.system "serialize_save_system"

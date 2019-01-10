@@ -1,4 +1,4 @@
-local math = import_package "math"
+local math = import_package "ant.math"
 local ms = math.stack
 
 local PVPScene = {}

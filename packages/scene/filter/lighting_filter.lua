@@ -3,7 +3,7 @@
 local ecs = ...
 local world = ecs.world
 
-local math = import_package "math"
+local math = import_package "ant.math"
 local ms = math.stack
 
 local function append_lighting_properties(result)

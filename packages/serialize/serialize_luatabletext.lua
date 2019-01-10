@@ -4,7 +4,7 @@ local world = ecs.world
 
 
 local seri_util = require "main"
-local assetmgr = import_package "asset"
+local assetmgr = import_package "ant.asset"
 
 local to_luatabletext = ecs.system "serialize_to_luatabletext"
 to_luatabletext.singleton "serialization_tree"

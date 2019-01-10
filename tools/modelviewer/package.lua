@@ -1,3 +1,3 @@
 return {
-    name = "modelviewer"
+    name = "ant.modelviewer"
 }

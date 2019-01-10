@@ -1,4 +1,4 @@
 return {
-    name = "math",
+    name = "ant.math",
     entry = "main",
 }

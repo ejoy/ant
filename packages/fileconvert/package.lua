@@ -1,4 +1,4 @@
 return {
-    name = "fileconvert",
+    name = "ant.fileconvert",
     entry = "fileconvert",
 }

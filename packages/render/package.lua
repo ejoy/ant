@@ -1,4 +1,4 @@
 return {
-    name = "render",
+    name = "ant.render",
     entry = "main",
 }

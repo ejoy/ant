@@ -1,4 +1,4 @@
 return {
-    name = "editor",
+    name = "ant.editor",
     entry = "main"
 }

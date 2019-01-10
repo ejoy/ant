@@ -1,4 +1,4 @@
 return {
-    name = "scene",
+    name = "ant.scene",
     entry = "main",
 }

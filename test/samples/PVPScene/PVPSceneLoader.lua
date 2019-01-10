@@ -1,7 +1,7 @@
-local math = import_package "math"
+local math = import_package "ant.math"
 local ms = math.stack
 local fs = require "filesystem"
-local computil = import_package "render".components
+local computil = import_package "ant.render".components
 
 local PVPScene = {}
 

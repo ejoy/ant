@@ -5,7 +5,6 @@ local WORKDIR = fs.vfs and fs.path 'engine' or fs.current_path()
 
 local list = {
     WORKDIR / "libs",
-
     WORKDIR / "packages" / "math",
     WORKDIR / "packages" / "inputmgr",
     WORKDIR / "packages" / "modelloader",
@@ -16,7 +15,9 @@ local list = {
     WORKDIR / "packages" / "scene",
     WORKDIR / "packages" / "terrain",
     WORKDIR / "packages" / "bullet",
+    WORKDIR / "packages" / "fileconvert",
 }
+
 local registered = {}
 local loaded = {}
 

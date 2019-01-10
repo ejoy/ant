@@ -5,7 +5,7 @@ local LOGERROR = log.error
 
 import_package = (require "antpm").import
 
-local keymap = (import_package "inputmgr").keymap
+local keymap = (import_package "ant.inputmgr").keymap
 
 local dbgupdate = require 'runtime.debug'
 
@@ -16,7 +16,7 @@ require "common/log"
 local native = require "window.native"
 local window = require "window"
 
-local inputmgr = import_package "inputmgr"
+local inputmgr = import_package "ant.inputmgr"
 local iq = inputmgr.queue {
 	keyboard="_,_,_",
 	mouse_click = "_,_,_,_,_",
@@ -53,8 +53,8 @@ local world
 
 function callback.init(nwh, context, w, h)
 	width, height = w, h
-    local su = import_package "scene"
-    local rhwi = import_package "render".hardware_interface
+    local su = import_package "ant.scene"
+    local rhwi = import_package "ant.render".hardware_interface
     rhwi.init {
 		nwh = nwh,
 		context = context,

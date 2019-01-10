@@ -1,5 +1,5 @@
 --luacheck: globals iup import
-local asset = import_package "asset"
+local asset = import_package "ant.asset"
 local vfsutil = require "vfs.util"
 local fs = require "filesystem"
 local configDir = fs.mydocs_path() / '.ant/config'

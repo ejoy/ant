@@ -3,13 +3,13 @@ local world = ecs.world
 
 
 
-local render_cu = import_package "render".components
-local render_util = import_package "render".util
-local math_util = (import_package "math").util
+local render_cu = import_package "ant.render".components
+local render_util = import_package "ant.render".util
+local math_util = (import_package "ant.math").util
 local math3d = require "math3d"
 local bgfx = require "bgfx"
-local asset = import_package "asset"
-local ms = (import_package "math").stack
+local asset = import_package "ant.asset"
+local ms = (import_package "ant.math").stack
 
 -- system rules 
 -- component for global state

@@ -14,18 +14,18 @@ local world = ecs.world
 
 
 
-ecs.import "inputmgr"
+ecs.import "ant.inputmgr"
 
 
-ecs.import "inputmgr"
+ecs.import "ant.inputmgr"
 
 
-local component_util = import_package "render".components
-local lu = import_package "render".light
-local assetmgr = import_package "asset"
+local component_util = import_package "ant.render".components
+local lu = import_package "ant.render".light
+local assetmgr = import_package "ant.asset"
 
 local math3d = require "math3d"
-local math = import_package "math"
+local math = import_package "ant.math"
 local stack = math.stack
 
 

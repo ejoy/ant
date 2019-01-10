@@ -1,4 +1,4 @@
 return {
-    name = "asset",
+    name = "ant.asset",
     entry = "asset",
 }

@@ -7,13 +7,13 @@ local world = ecs.world
 
 
 local bgfx  = require "bgfx"
-local cu 	= import_package "render".components
+local cu 	= import_package "ant.render".components
 
-local math = import_package "math"
+local math = import_package "ant.math"
 local mu = math.util
 local ms = math.stack
 local fs = require "filesystem"
-local computil = import_package "render".components
+local computil = import_package "ant.render".components
 
 local general_editor_entites = ecs.system "general_editor_entites"
 

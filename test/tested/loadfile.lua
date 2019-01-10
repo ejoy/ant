@@ -1,4 +1,4 @@
-local assetmgr = import_package "asset"
+local assetmgr = import_package "ant.asset"
 
 return function (name)    
     local filename = assetmgr.find_valid_asset_path(name)

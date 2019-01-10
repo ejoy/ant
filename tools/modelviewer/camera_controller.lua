@@ -3,9 +3,9 @@ local world = ecs.world
 
 
 
-ecs.import "inputmgr"
+ecs.import "ant.inputmgr"
 
-local math = import_package "math"
+local math = import_package "ant.math"
 local point2d = math.point2d
 local math3d = require "math3d"
 local ms = math.stack

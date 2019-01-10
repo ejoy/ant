@@ -6,13 +6,13 @@ local world = ecs.world
 -- package.path = package.path..';./libs/bullet/?.lua;'
 -- local bullet_world = require "bulletworld"
 
-ecs.import "inputmgr"
+ecs.import "ant.inputmgr"
 
 
-local camera_util = import_package "render".util
+local camera_util = import_package "ant.render".util
 local bgfx = require "bgfx"
-local mathu = (import_package "math").util
-local stack = (import_package "math").stack
+local mathu = (import_package "ant.math").util
+local stack = (import_package "ant.math").stack
 
 
 local char_controller_sys = ecs.system "charcontroller_system"
@@ -51,7 +51,7 @@ local function register_input_message(self)
 
     local camera = world:first_entity("main_camera")
 
-    local math = import_package "math"
+    local math = import_package "ant.math"
     local point2d = math.point2d
 
 	local move_speed = 1
@@ -115,7 +115,7 @@ local function register_input_message(self)
 
     self.message.observers:add(message) 
     --]]
-    local math = import_package "math"
+    local math = import_package "ant.math"
     local point2d = math.point2d
 
     local camera = world:first_entity("main_camera")
@@ -329,7 +329,7 @@ function char_controller_sys:init()
 
     register_input_message(self)
    --[[ 
-    local math = import_package "math"
+    local math = import_package "ant.math"
     local point2d = math.point2d
 
     local camera = world:first_entity("main_camera")

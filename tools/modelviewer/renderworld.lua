@@ -1,12 +1,12 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "inputmgr"
-ecs.import "libs"
+ecs.import "ant.inputmgr"
+ecs.import "ant.libs"
 
 
 local component_util = require "render.components.util"
-local math = import_package "math"
+local math = import_package "ant.math"
 local ms = math.stack
 local model_review_system = ecs.system "model_review_system"
 
@@ -17,7 +17,7 @@ model_review_system.dependby "message_system"
 local bgfx = require "bgfx"
 local lu = require "render.light.util"
 local cu = require "render.components.util"
-local math = import_package "math"
+local math = import_package "ant.math"
 local mu = math.util
 local geo = require "render.geometry"
 local fs = require "filesystem"

@@ -1,6 +1,6 @@
 dofile "libs/init.lua"
 
-local seri = import_package "serialize"
+local seri = import_package "ant.serialize"
 
 local f = assert(io.open("mem://test.lua", "w"))
 f:write[[
