@@ -130,7 +130,7 @@ function openMap(path)
     local mapcfg = fs.dofile(path)
 
     local packages = {
-        "ant.test.pvpscene"
+        "ant.test.features"
     }
     local systems = {
         "pickup_material_system",
@@ -140,7 +140,7 @@ function openMap(path)
         "build_hierarchy_system",
         "editor_system"
     }
-    if mapcfg.name ~= "ant.test.pvpscene" then
+    if mapcfg.name ~= "ant.test.features" then
         local pm = require "antpm"
         pm.register(path:parent_path())
     end

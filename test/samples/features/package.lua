@@ -1,5 +1,5 @@
 return {
-    name = "ant.test.pvpscene",
+    name = "ant.test.features",
     entry = "entry",
     systems = {
         "init_loader",
