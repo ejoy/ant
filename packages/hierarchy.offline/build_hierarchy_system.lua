@@ -6,10 +6,10 @@ local world = ecs.world
 local hierarchy_module = require "hierarchy"
 local fs = require "filesystem"
 
-local math = import_package "math"
+local math = import_package "ant.math"
 local ms = math.stack
 local mu = math.util
-local assetmgr = require "asset"
+local assetmgr = import_package "ant.asset"
 
 
 local build_system = ecs.system "build_hierarchy_system"

@@ -3,9 +3,10 @@
 
 require "iuplua"
 
-local rhwi = import_package "render".hardware_interface
+local rhwi = import_package "ant.render".hardware_interface
+local su = import_package "ant.scene"
 
-local inputmgr = import_package "inputmgr"
+local inputmgr = import_package "ant.inputmgr"
 local mapiup = require "input.mapiup"
 
 local task = require "task"
@@ -23,7 +24,6 @@ function editor.run(fbw, fbh, canvas, packages, systems)
 	local eu = require "util"
 	eu.regitster_iup(iq, canvas)
 
-	local su = require "scene.util"
 	local world = su.start_new_world(iq, fbw, fbh, packages, systems)
 
 	task.loop(world.update)

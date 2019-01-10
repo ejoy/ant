@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local math = import_package "math"
+local math = import_package "ant.math"
 local ms = math.stack
 
 local geometry_drawer = require "editor.ecs.render.geometry_drawer"

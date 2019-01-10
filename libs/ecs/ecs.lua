@@ -204,8 +204,8 @@ local function init_modules(w, packages, systems)
 		end
 	end
 
-	for _, path in ipairs(packages) do
-		import(pm.register(path))
+	for _, name in ipairs(packages) do
+		import(name)
 	end
 
 	local cut = {}

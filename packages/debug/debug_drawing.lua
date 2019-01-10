@@ -4,10 +4,10 @@ local world = ecs.world
 local bgfx = require "bgfx"
 local fs = require "filesystem"
 
-local math = import_package "math"
+local math = import_package "ant.math"
 local mu = math.util
 
-local componentutil = import_package "render".components
+local componentutil = import_package "ant.render".components
 
 
 local function init_wireframe_mesh()

@@ -1,4 +1,4 @@
 return {
-    name = "render",
-    entry = "main.lua",
+    name = "ant.render",
+    entry = "main",
 }

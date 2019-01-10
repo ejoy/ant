@@ -1,9 +1,9 @@
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 
 local redirect = require "filesystem.redirect"
 local elog = require "editor.log"
 local debugger = require "debugger"
-local inputmgr = import_package "inputmgr"
+local inputmgr = import_package "ant.inputmgr"
 local mapiup = require "editor.input.mapiup"
 local task = require "editor.task"
 local eu = require "editor.util"

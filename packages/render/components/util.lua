@@ -1,12 +1,13 @@
 local util = {}
 util.__index = util
 
-local asset = require "asset"
-local bgfx 	= require "bgfx"
-local fs 	= require "filesystem"
+local bgfx = require "bgfx"
+local fs = require "filesystem"
 
-local math 	= import_package "math"
-local mu 	= math.util
+local asset = import_package "ant.asset"
+local math = import_package "ant.math"
+local mu = math.util
+
 
 local function deep_copy(t)
 	if type(t) == "table" then

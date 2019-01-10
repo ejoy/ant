@@ -1,4 +1,4 @@
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 
 local reponame = assert(...,  "Need repo name")
 local config = {
@@ -12,7 +12,7 @@ end
 
 local fw = require "filewatch"
 local repo = require "vfs.repo"
-local network = require "network"
+local network = import_package "ant.network"
 local protocol = require "protocol"
 
 local vfs = require "filesystem.vfs"

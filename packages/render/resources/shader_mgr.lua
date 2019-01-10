@@ -2,9 +2,8 @@
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
-local assetmgr = require "asset"
+local assetmgr = import_package "ant.asset"
 local fs = require "filesystem"
-local vfs = require "vfs"
 
 local alluniforms = {}
 
@@ -27,7 +26,7 @@ local function load_shader(name)
 		error(string.format("not found shader file: %s", name))
 	end
 
-	if vfs.localvfs then
+	if not fs.vfs then
 		local cvtutil = require "fileconvert.util"
 		assert(cvtutil.need_build(filepath))
 	end	

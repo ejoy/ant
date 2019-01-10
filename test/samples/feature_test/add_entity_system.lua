@@ -1,14 +1,14 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "inputmgr"
+ecs.import "ant.inputmgr"
 
 local component_util = require "render.components.util"
 local lu = require "render.light.util"
-local math = import_package "math"
+local math = import_package "ant.math"
 local ms = math.stack
 
-local assetmgr = require "asset"
+local assetmgr = import_package "ant.asset"
 
 local update_direction_light_sys = ecs.system "direction_light_system"
 

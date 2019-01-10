@@ -51,7 +51,7 @@ anisystem.singleton "timer"
 local ani_module = require "hierarchy.animation"
 local ik_module = require "hierarchy.ik"
 
-local ms = import_package("math").stack
+local ms = import_package "ant.math".stack
 
 local function deep_copy(t)
 	local typet = type(t)

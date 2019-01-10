@@ -1,13 +1,13 @@
 local bgfx = require "bgfx"
 local modelutil = require "util"
-local vfs = require "vfs"
+local fs = require "filesystem"
 
 local antmeshloader = require "antmeshloader"
 
 local loader = {}
 
 local function load_from_source(filepath)
-	if vfs.localvfs then
+	if not fs.vfs then
 		local cvtutil = require "fileconvert.util"
 		assert(cvtutil.need_build(filepath))
 	end

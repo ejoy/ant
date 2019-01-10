@@ -1,4 +1,4 @@
 return {
-    name = "editor",
-    entry = "main.lua"
+    name = "ant.editor",
+    entry = "main"
 }

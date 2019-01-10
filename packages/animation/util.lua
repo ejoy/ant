@@ -1,7 +1,7 @@
 local util = {}; util.__index = util
 
 local animodule = require "hierarchy.animation"		
-local asset = require "asset"
+local asset = import_package "ant.asset"
 -- for animation
 function util.add_animation(comp, respath, weight, weighttype)
 	weighttype = weighttype or "full"	-- can be 'full' or 'partial'

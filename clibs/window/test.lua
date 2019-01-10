@@ -1,4 +1,4 @@
---dofile "libs/init.lua"
+--dofile "libs/editor.lua"
 local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"

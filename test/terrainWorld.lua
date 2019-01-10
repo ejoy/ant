@@ -1,4 +1,4 @@
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 package.path = package.path..';../clibs/terrain/?.lua;./clibs/terrain/?.lua;./test/?.lua;' 
 package.cpath = package.cpath..';../clibs/terrain/?.dll;./clibs/terrain/?.dll;'
 
@@ -8,13 +8,13 @@ local nk = require "bgfx.nuklear"
 local task = require "editor.task"
 
 --local editor_mainwindow = require "editor.window"
-local scene = require "scene.util"
+local scene = import_package "ant.scene"
 
 local s_logo = require "logo"
 
 local mapiup = require "editor.input.mapiup"
-local inputmgr = import_package "inputmgr"
-local nkmsg = (import_package "inputmgr").nuklear
+local inputmgr = import_package "ant.inputmgr"
+local nkmsg = (import_package "ant.inputmgr").nuklear
 
 local math3d = require "math3d"
 

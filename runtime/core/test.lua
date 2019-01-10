@@ -1,4 +1,4 @@
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 
 --package.path = "runtime/core/firmware/?.lua;"..package.path
 
@@ -9,7 +9,7 @@ local fs = require "filesystem"
 
 thread.thread [[
 	-- thread for log
-	dofile "libs/init.lua"
+	dofile "libs/editor.lua"
 
 	local thread = require "thread"
 	local err = thread.channel_consume "errlog"

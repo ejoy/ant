@@ -8,7 +8,7 @@ local world = ecs.world
 
 local ru = require "util"
 local bgfx = require "bgfx"
-local math = import_package "math"
+local math = import_package "ant.math"
 local ms = math.stack
 
 local draw_entity_sys = ecs.system "entity_rendering"

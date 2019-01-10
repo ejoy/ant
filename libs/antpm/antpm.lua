@@ -2,22 +2,6 @@ local fs = require "filesystem"
 local sandbox = require "antpm.sandbox"
 
 local WORKDIR = fs.vfs and fs.path 'engine' or fs.current_path()
-
-local list = {
-    WORKDIR / "libs",
-
-    WORKDIR / "packages" / "math",
-    WORKDIR / "packages" / "inputmgr",
-    WORKDIR / "packages" / "modelloader",
-    WORKDIR / "packages" / "editor",
-	WORKDIR / "packages" / "render",
-	WORKDIR / "packages" / "animation",
-	WORKDIR / "packages" / "iupcontrols",
-	WORKDIR / "packages" / "objcontroller",
-	WORKDIR / "packages" / "debug",
-	WORKDIR / "packages" / "geometry",
-	WORKDIR / "packages" / "hierarchy.offline",
-}
 local registered = {}
 local loaded = {}
 
@@ -53,25 +37,30 @@ local function register(pkg)
         end 
     end
     if registered[config.name] then
-        error(('Duplicate definition package `%s` in `%s`.'):format(pkg.name, pkg:string()))
+        error(('Duplicate definition package `%s` in `%s`.'):format(config.name, pkg:string()))
     end
-    registered[config.name] = { pkg, config }
+    registered[config.name] = {
+        root = pkg,
+        config = config,
+    }
     return config.name
 end
 
-local function searcher_Package(name)
-    if not registered[name] or not registered[name][2].entry then
+local function require_package(name)
+    if not registered[name] or not registered[name].config.entry then
         error(("\n\tno package '%s'"):format(name))
     end
     local info = registered[name]
-    local func, err = sandbox.require(info[1]:string(), info[2].entry)
-    if not func then
-        error(("error loading package '%s':\n\t%s"):format(name, err))
+    if not info.env then
+        info.env = sandbox.env(info.root:string())
     end
-    return func, name
+    return info.env.require(info.config.entry)
 end
 
-for _, pkg in ipairs(list) do
+-- TODO
+register(WORKDIR / "libs")
+
+for pkg in (WORKDIR / "packages"):list_directory() do
     register(pkg)
 end
 
@@ -79,8 +68,7 @@ local function import(name)
     if loaded[name] then
         return loaded[name]
     end
-    local func = searcher_Package(name)
-    local res = func(func)
+    local res = require_package(name)
     if res == nil then
         loaded[name] = false
     else
@@ -93,11 +81,15 @@ local function find(name)
     if not registered[name] then
         return
     end
-    return registered[name][1], registered[name][2]
+    return registered[name].root, registered[name].config
 end
 
 local function m_loadfile(name, filename)
-    return fs.loadfile(filename, 't', sandbox.env(registered[name][1]:string()))
+    local info = registered[name]
+    if not info.env then
+        info.env = sandbox.env(info.root:string())
+    end
+    return fs.loadfile(filename, 't', info.env)
 end
 
 return {

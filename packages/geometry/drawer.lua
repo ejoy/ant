@@ -1,7 +1,7 @@
 local draw = {}; draw.__index = {}
 
-local geo = import_package "render".geometry
-local math3d = import_package "math"
+local geo = import_package "ant.render".geometry
+local math3d = import_package "ant.math"
 local ms = math3d.stack
 
 local function gen_color_vertex(pt, color, transform)

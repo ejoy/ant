@@ -1,12 +1,12 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "inputmgr"
+ecs.import "ant.inputmgr"
 
-local math3d = import_package "math"
+local math3d = import_package "ant.math"
 local point2d = math3d.point2d
 
-local camera_util = import_package "render".camera
+local camera_util = import_package "ant.render".camera
 
 local step = 0.01
 

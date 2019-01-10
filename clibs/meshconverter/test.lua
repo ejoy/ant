@@ -1,4 +1,4 @@
--- dofile "libs/init.lua"
+-- dofile "libs/editor.lua"
 
 -- local fs = require "filesystem"
 
@@ -7,7 +7,7 @@
 -- 	mesh_path = "meshes/PVPScene/BH-Scene-campsite-Door"
 -- ]])
 
--- local assetmgr = require "asset"
+-- local assetmgr = import_package "ant.asset"
 -- assetmgr.
 
 

@@ -5,7 +5,7 @@
 	editor is optional
 ]]
 
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 
 local reponame = select(1, ...)
 

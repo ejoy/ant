@@ -1,7 +1,7 @@
 local ecs = ...
 local bgfx = require "bgfx"
 local ru = require "util"
-local asset_lib     = require "asset"
+local asset_lib     = import_package "ant.asset"
 
 -- the viewport can have multi instance in one scene
 local win = ecs.component_struct "window" {

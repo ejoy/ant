@@ -3,16 +3,16 @@ local ecs = ...
 local world = ecs.world
 
 
-ecs.import "inputmgr"
+ecs.import "ant.inputmgr"
 
 
-local assetmgr = require "asset"
-local math = import_package "math"
+local assetmgr = import_package "ant.asset"
+local math = import_package "ant.math"
 local mu = math.util
 local ms = math.stack
 local fs = require "filesystem"
 
-local components_util = import_package "render".components
+local components_util = import_package "ant.render".components
 
 local assetdir = assetmgr.assetdir()
 local depictiondir = assetdir / "depiction"

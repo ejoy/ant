@@ -1,16 +1,16 @@
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 
 require "iuplua"
 require "scintilla"
 
 local bgfx = require "bgfx"
 
-local inputmgr = import_package "inputmgr"
+local inputmgr = import_package "ant.inputmgr"
 local mapiup = require "editor.input.mapiup"
 local elog = require "editor.log"
 
 local rhwi = require "render.hardware_interface"
-local scene = require "scene.util"
+local scene = import_package "ant.scene"
 local eu = require "editor.util"
 local task = require "editor.task"
 

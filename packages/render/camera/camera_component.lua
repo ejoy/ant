@@ -2,14 +2,14 @@ local ecs = ...
 local world = ecs.world
 
 
-ecs.import "inputmgr"
+ecs.import "ant.inputmgr"
 
 -- camera entity
 
 
 
 
-local math = import_package "math"
+local math = import_package "ant.math"
 local mu = math.util
 local ms = math.stack
 local bgfx = require "bgfx"

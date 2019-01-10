@@ -1,3 +1,4 @@
 return {
-    name = "pvpscene",
+    name = "ant.test.pvpscene",
+    entry = "entry"
 }

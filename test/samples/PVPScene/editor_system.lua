@@ -4,14 +4,14 @@ local world = ecs.world
 
 
 
-local editor = import_package "editor"
+local editor = import_package "ant.editor"
 local menu = editor.controls.popupmenu
 local eu = editor.util
-local su = require "serialize.util"
-local math = import_package "math"
+local su = import_package "ant.serialize"
+local math = import_package "ant.math"
 local ms = math.stack
 
-local editor_mainwin = require "test.samples.PVPScene.mainwindow"
+local editor_mainwin = require "mainwindow"
 
 local editor_sys = ecs.system "editor_system"
 editor_sys.depend "end_frame"
@@ -245,7 +245,7 @@ function editor_sys:init()
 				local eid = node.eid
 				build_pv(eid, get_extendtree(eid))
 
-				local camerautil = import_package "render".camera
+				local camerautil = import_package "ant.render".camera
 				camerautil.focus_selected_obj(world, eid)
 			end
 		end

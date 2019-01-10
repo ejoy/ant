@@ -4,7 +4,7 @@ local world = ecs.world
 
 
 
-local ru = import_package "render".util
+local ru = import_package "ant.render".util
 
 ecs.component_struct "widget" {}
 

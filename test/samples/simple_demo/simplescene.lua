@@ -6,11 +6,11 @@ local world = ecs.world
 
 
 
-ecs.import "inputmgr"
+ecs.import "ant.inputmgr"
 
 local computil = require "render.components.util"
 local camerautil = require "render.camera.util"
-local math = import_package "math"
+local math = import_package "ant.math"
 local mu = math.util
 
 local simplescene = ecs.system "simple_scene"

@@ -5,16 +5,16 @@ local world = ecs.world
 
 
 
-ecs.import "inputmgr"
+ecs.import "ant.inputmgr"
 
-local math = import_package "math"
+local math = import_package "ant.math"
 local point2d = math.point2d
 local bgfx = require "bgfx"
 local mu = math.util
 local ms = math.stack
 local fs = require "filesystem"
 
-local asset = require "asset"
+local asset = import_package "ant.asset"
 
 local math_baselib = require "math3d.baselib"
 

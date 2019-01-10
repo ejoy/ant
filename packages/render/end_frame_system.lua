@@ -19,7 +19,7 @@ local end_frame_sys = ecs.system "end_frame"
 end_frame_sys.singleton "frame_stat"
 
 local math3d = require "math3d"
-local math = import_package "math"
+local math = import_package "ant.math"
 local ms = math.stack
 
 function end_frame_sys:update() 

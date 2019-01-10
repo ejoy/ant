@@ -1,4 +1,4 @@
 return {
-    name = "modelloader",
-    entry = "modelloader.lua",
+    name = "ant.modelloader",
+    entry = "modelloader",
 }

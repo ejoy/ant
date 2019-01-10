@@ -1,8 +1,8 @@
 --luacheck: globals iup import
 require "iuplua"
 
-local editor = import_package "editor"
-local inputmgr = import_package "inputmgr"
+local editor = import_package "ant.editor"
+local inputmgr = import_package "ant.inputmgr"
 local mapiup = editor.mapiup
 local elog = editor.log
 local hierarchyview = editor.controls.hierarchyview
@@ -10,9 +10,9 @@ local propertycontrol = editor.controls.propertyview
 local assetviewclass = editor.controls.assetview
 
 local eu = editor.util
-local rhwi = import_package "render".hardware_interface
+local rhwi = import_package "ant.render".hardware_interface
 local bgfx = require "bgfx"
-local scene = require "scene.util"
+local scene = import_package "ant.scene"
 local task = editor.task
 
 local propertyview = propertycontrol.new {
@@ -41,7 +41,7 @@ function editor_mainwindow:build_window(fbw, fbh)
         rastersize = fbw .. "x" .. fbh
     }
 	
-	local mainmenu = require "test.samples.PVPScene.mainmenu"
+	local mainmenu = require "mainmenu"
     
     self.dlg = iup.dialog {
         iup.split {
