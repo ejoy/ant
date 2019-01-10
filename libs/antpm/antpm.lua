@@ -52,16 +52,22 @@ local function register(pkg)
     if registered[config.name] then
         error(('Duplicate definition package `%s` in `%s`.'):format(pkg.name, pkg:string()))
     end
-    registered[config.name] = { pkg, config }
+    registered[config.name] = {
+        root = pkg,
+        config = config,
+    }
     return config.name
 end
 
 local function require_package(name)
-    if not registered[name] or not registered[name][2].entry then
+    if not registered[name] or not registered[name].config.entry then
         error(("\n\tno package '%s'"):format(name))
     end
     local info = registered[name]
-    return sandbox.require(info[1]:string(), info[2].entry)
+    if not info.env then
+        info.env = sandbox.env(info.root:string())
+    end
+    return info.env.require(info.config.entry)
 end
 
 for _, pkg in ipairs(list) do
@@ -85,11 +91,15 @@ local function find(name)
     if not registered[name] then
         return
     end
-    return registered[name][1], registered[name][2]
+    return registered[name].root, registered[name].config
 end
 
 local function m_loadfile(name, filename)
-    return fs.loadfile(filename, 't', sandbox.env(registered[name][1]:string()))
+    local info = registered[name]
+    if not info.env then
+        info.env = sandbox.env(info.root:string())
+    end
+    return fs.loadfile(filename, 't', info.env)
 end
 
 return {

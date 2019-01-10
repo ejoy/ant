@@ -97,11 +97,6 @@ local function sandbox_env(root)
     return env
 end
 
-local function sandbox_require(root, main)
-    return sandbox_env(root).require(main)
-end
-
 return {
-    require = sandbox_require,
     env = sandbox_env,
 }
