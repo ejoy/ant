@@ -11,6 +11,8 @@ ecs.import "ant.scene"
 ecs.import "ant.timer"
 ecs.import "ant.bullet"
 
+ecs.import "ant.scene"
+
 local lu = import_package "ant.render".light
 
 local bgfx = require "bgfx"
@@ -18,8 +20,6 @@ local math = import_package "ant.math"
 local math_util = math.util
 local render = import_package "ant.render"
 local shaderMgr = render.shader_mgr
-local camera_util = render.camera
-local render_cu = render.components
 
 local terrainClass = import_package "ant.terrain"
 
@@ -28,7 +28,6 @@ local VIEWID_TERRAIN = 100
 
 -- local stack = nil
 local math3d = require "math3d"
-local math = import_package "ant.math"
 local stack = math.stack
 
 local init_ambient = nil

@@ -21,7 +21,10 @@
   <ItemGroup>
     <ClCompile Include="..\..\clibs\bullet\bullet.cpp" />
     <ClCompile Include="..\..\clibs\bullet\Collision\CollisionSdkC_Api.cpp" />
-    <ClCompile Include="..\..\clibs\bullet\Collision\Internal\Bullet2CollisionSdk.cpp" />
+    <ClCompile Include="..\..\clibs\bullet\Collision\Internal\Bullet2CollisionSdk.cpp">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\bullet\Collision\CollisionSdkC_Api.h" />
@@ -113,7 +116,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);../../3rd/build/bullet3/msvc/lib/$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;BulletDynamics_Debug.lib;BulletCollision_Debug.lib;LinearMath_Debug.lib;HACD_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;BulletDynamics_Debug.lib;BulletCollision_Debug.lib;LinearMath_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -172,7 +175,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);../../3rd/build/bullet3/msvc/lib/$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;BulletDynamics.lib;BulletCollision.lib;LinearMath.lib;HACD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;BulletDynamics.lib;BulletCollision.lib;LinearMath.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
