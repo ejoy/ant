@@ -1,4 +1,4 @@
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 
 local elog = require "editor.log"
 local inputmgr = import_package "ant.inputmgr"

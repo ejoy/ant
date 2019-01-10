@@ -1,17 +1,17 @@
-local root = os.getenv "ANTGE" or "."
-local local_binpath = (os.getenv "BIN_PATH" or "clibs")
-
 package.path = table.concat({
     "engine/libs/?.lua",
     "engine/libs/?/?.lua",
     "engine/?.lua",
 }, ";")
 
-package.cpath = root .. "/" .. local_binpath .. "/?.dll;" ..
-                root .. "/bin/?.dll"
+package.cpath = table.concat({
+    "clibs/?.dll",
+    "bin/?.dll",
+}, ";")
 
-assert(loadfile(root .. "/libs/vfs/require.lua"))(root)
-assert(loadfile(root .. "/libs/vfs/vfspath.lua"))(root)
+dofile "libs/editor/require.lua"
+require "editor.vfs"
+require "editor.vfspath"
 
 require "common.log"
 import_package = (require "antpm").import

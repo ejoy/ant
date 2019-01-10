@@ -1,4 +1,4 @@
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 
 -- See http://lualanes.github.io/lanes/ for document and license
 

@@ -88,6 +88,5 @@ function localvfs.identity(identity)
 	self.identity = identity
 end
 
-localvfs.localvfs = true
+package.loaded.vfs = localvfs
 
-return localvfs

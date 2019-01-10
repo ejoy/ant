@@ -1,4 +1,4 @@
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 package.path = package.path..';../clibs/terrain/?.lua;./clibs/terrain/?.lua;./test/?.lua;' 
 package.cpath = package.cpath..';../clibs/terrain/?.dll;./clibs/terrain/?.dll;'
 

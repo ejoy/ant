@@ -1,4 +1,4 @@
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 
 local asset = require "asset"
 local fs = require "filesystem"

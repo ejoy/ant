@@ -1,4 +1,4 @@
-local root = ...
+local root = "."
 local load = load
 local io_open = io.open
 

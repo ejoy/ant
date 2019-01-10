@@ -1,4 +1,4 @@
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 
 local usbmuxd = require "mobiledevice.usbmuxd"
 local network = require "network"

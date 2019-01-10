@@ -1,4 +1,4 @@
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 
 local redirect = require "filesystem.redirect"
 local elog = require "editor.log"

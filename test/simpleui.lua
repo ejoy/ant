@@ -1,4 +1,4 @@
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 
 local bgfx = require "bgfx"
 local rhwi = require "render.hardware_interface"

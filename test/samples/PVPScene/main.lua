@@ -1,5 +1,5 @@
 --luacheck: globals iup import
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 
 local mainwin = require "test.samples.PVPScene.mainwindow"
 mainwin:run {

@@ -1,7 +1,7 @@
 -- luacheck: globals iup
 -- luacheck: ignore self, ignore world
 
-dofile "libs/init.lua"
+dofile "libs/editor.lua"
 
 require "iuplua"
 

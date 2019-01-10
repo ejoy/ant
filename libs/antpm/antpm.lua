@@ -3,23 +3,6 @@ local sandbox = require "antpm.sandbox"
 
 local WORKDIR = fs.vfs and fs.path 'engine' or fs.current_path()
 
-local list = {
-    WORKDIR / "libs",
-    WORKDIR / "packages" / "math",
-    WORKDIR / "packages" / "inputmgr",
-    WORKDIR / "packages" / "modelloader",
-    WORKDIR / "packages" / "editor",
-    WORKDIR / "packages" / "render",
-    WORKDIR / "packages" / "serialize",
-    WORKDIR / "packages" / "asset",
-    WORKDIR / "packages" / "scene",
-    WORKDIR / "packages" / "terrain",
-    WORKDIR / "packages" / "bullet",
-    WORKDIR / "packages" / "fileconvert",
-    WORKDIR / "packages" / "timer",
-    WORKDIR / "packages" / "network",
-}
-
 local registered = {}
 local loaded = {}
 
@@ -75,7 +58,10 @@ local function require_package(name)
     return info.env.require(info.config.entry)
 end
 
-for _, pkg in ipairs(list) do
+-- TODO
+register(WORKDIR / "libs")
+
+for pkg in (WORKDIR / "packages"):list_directory() do
     register(pkg)
 end
 
