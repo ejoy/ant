@@ -98,7 +98,12 @@ function PVPScene.create_entitices(world)
 					{
 						{}
 					}
-				}
+				},
+				collision_types = {
+					{
+						"capsule",
+					},
+				},
 			}
 		},		
 		woodother_46 = {			
@@ -111,7 +116,13 @@ function PVPScene.create_entitices(world)
 						{},
 						{t={115.39, 0.149453, -27.164627}},
 					},
-				}
+				},
+				collision_types = {
+					{
+						"capsule",
+						"box",					
+					},
+				},
 			}
 		},
 		woodother_45 = {
@@ -123,7 +134,13 @@ function PVPScene.create_entitices(world)
 					{
 						{}
 					}
-				}
+				},
+				collision_types = {
+					{
+						"box"
+					}
+					
+				},
 			}
 		},
 		woodother = {
@@ -140,18 +157,30 @@ function PVPScene.create_entitices(world)
 						{r={-90, 0, 0}, t={98.1759, -1.741485, 36.08}},
 						{r={-90, -60, 0}, t={132.85, -1.741485, 33.62238}},
 					}
-				}
+				},
+				collision_types = {
+					{
+						"capsule",
+						"box",
+						"cylinder",
+						"box",
+						"box",
+					}
+				},
 			}
 		}
 	}
 
+	local Physics = world.args.Physics 
+
 	for name, scenedata in pairs(scene_objects) do
 		local children = assert(scenedata.children)		
 		local srts = assert(children.srts)
-	
+		local collision_types = children.collision_types
 		local nameidx = 1
 		for idx_array=1, #srts do			
-			local srt_array = srts[idx_array]			
+			local srt_array = srts[idx_array]
+			local collision_array = collision_types and collision_types[idx_array] or nil
 			for idx=1, #srt_array do
 				local name = name .. "_" .. nameidx
 				nameidx = nameidx + 1
@@ -181,6 +210,11 @@ function PVPScene.create_entitices(world)
 
 				computil.load_mesh(e.mesh, scenedata.mesh)
 				computil.load_material(e.material, {scenedata.material})
+
+				if collision_array then
+					local ct = collision_array[idx]
+					Physics:add_component_collider(world,eid,ct,ms)
+				end
 			end
 		end
 
