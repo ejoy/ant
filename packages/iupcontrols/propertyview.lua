@@ -1,10 +1,9 @@
 local log = log and log(...) or print
 
 require "iupluacontrols"
-local eu = require "util"
 
-local treecontrol = require "controls.tree"
-local mv_control = require "controls.matrixview"
+local treecontrol = require "tree"
+local mv_control = require "matrixview"
 
 local propertyview = {}; propertyview.__index = propertyview
 

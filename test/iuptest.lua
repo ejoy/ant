@@ -4,8 +4,9 @@ package.cpath = "bin/?.dll"
 package.path = "?.lua;libs/?.lua;libs/?/?.lua"
 
 require( "iuplua" )
-local lc = require "editor.controls.listctrl"
+local iupcontrols = import_package "iupcontrols"
 
+local lc = require iupcontrols.listctrl
 local l = lc.new()
 
 local ex = iup.expander {

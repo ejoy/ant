@@ -1,13 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-
-
-
-
-
-
-
 local math = import_package "math"
 local ms = math.stack
 

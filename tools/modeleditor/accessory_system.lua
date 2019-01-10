@@ -2,9 +2,9 @@ local ecs = ...
 local world = ecs.world
 
 
-
-local geodrawer = require "editor.ecs.render.geometry_drawer"
-local eru = require "editor.ecs.render.util"
+local geometry = import_package "geometry"
+local geodrawer = geometry.drawer
+local geoutil = geometry.util
 
 local renderbonesys = ecs.system "renderbone_system"
 renderbonesys.singleton "debug_object"
@@ -16,7 +16,7 @@ local function draw_skeleton(sample)
 		local desc = {vb={}, ib = {}}
 		local worldtrans = nil
 		if sample.animation then			
-			local bones = eru.generate_bones(ske.assetinfo.handle)
+			local bones = geoutil.generate_bones(ske.assetinfo.handle)
 			local aniresult = assert(sample.animation.aniresult)
 			local numjoints = aniresult:count()
 			local joints = {}

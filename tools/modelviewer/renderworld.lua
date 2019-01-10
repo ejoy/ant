@@ -41,7 +41,7 @@ end
 
 function model_review_system:init()
 	create_light()
-	cu.create_gird_entity(world, "gird")
+	cu.create_grid_entity(world, "grid")
 
 	local eid = world:new_entity(
 		"position", "rotation", "scale",

@@ -3,7 +3,7 @@
 local probe = {}; probe.__index = probe
 
 
-local ctrlutil = require "controls.util"
+local ctrlutil = require "util"
 local observer = require "common.observer"
 
 function probe:add_probe(name, cb)

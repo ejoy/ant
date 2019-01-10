@@ -2,7 +2,7 @@
 
 local lc = {}; lc.__index = lc
 
-local ctrlutil = require "controls.util"
+local ctrlutil = require "util"
 
 function lc:count()
 	return tonumber(self.view.COUNT)

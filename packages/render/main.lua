@@ -5,5 +5,4 @@ return {
     hardware_interface = require "hardware_interface",
     components = require "components.util",
     light = require "light.util",
-    geometry = require "geometry"
 }

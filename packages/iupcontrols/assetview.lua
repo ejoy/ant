@@ -1,12 +1,12 @@
 --luachecks: globals iup
 local assetview = {}; assetview.__index = assetview
-local listctrl = require "controls.listctrl"
-local ctrlutil =require "controls.util"
+local listctrl = require "listctrl"
+local ctrlutil =require "util"
 
 local fs = require "filesystem"
 local vfs = require "vfs"
 
-local addrctrl = require "controls.addressnavigation_ctrl"
+local addrctrl = require "addressnavigation_ctrl"
 
 function assetview:restype_ctrl()
 	local ctrl = iup.GetChild(self.view, 0)

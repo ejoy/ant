@@ -18,7 +18,7 @@ local simplescene = ecs.system "simple_scene"
 simplescene.depend "camera_init"
 
 function simplescene:init()
-	computil.create_gird_entity(world)
+	computil.create_grid_entity(world)
 
 	local bunnyeid = world:new_entity(
 		"position", "scale", "rotation",

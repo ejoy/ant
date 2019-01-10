@@ -1,4 +1,4 @@
-local ctrlutil = require "controls.util"
+local ctrlutil = require "util"
 local observer = require "common.observer"
 
 require "iupluacontrols"

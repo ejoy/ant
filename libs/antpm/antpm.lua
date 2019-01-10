@@ -10,7 +10,13 @@ local list = {
     WORKDIR / "packages" / "inputmgr",
     WORKDIR / "packages" / "modelloader",
     WORKDIR / "packages" / "editor",
-    WORKDIR / "packages" / "render",
+	WORKDIR / "packages" / "render",
+	WORKDIR / "packages" / "animation",
+	WORKDIR / "packages" / "iupcontrols",
+	WORKDIR / "packages" / "objcontroller",
+	WORKDIR / "packages" / "debug",
+	WORKDIR / "packages" / "geometry",
+	WORKDIR / "packages" / "hierarchy.offline",
 }
 local registered = {}
 local loaded = {}

@@ -14,6 +14,8 @@ ecs.component_struct "relative_srt" {
 	t = math.util.create_component_vector(),
 }
 
+ecs.tag "editor"
+
 ecs.component_struct "frustum" {
 	type = "mat",
 	n = 0.1,
