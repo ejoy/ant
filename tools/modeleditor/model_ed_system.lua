@@ -1,16 +1,25 @@
 local ecs = ...
 local world = ecs.world
 
+local util 		= require "util"
+local fs 		= require "filesystem"
+
 ecs.import "ant.libs"
+ecs.import "ant.render"
+ecs.import "ant.timer"
+ecs.import "ant.scene"
+ecs.import "ant.serialize"
+ecs.import "ant.objcontroller"
+ecs.import "ant.debug"
+ecs.import "ant.animation"
+ecs.import "ant.geometry"
 
-local math = import_package "ant.math"
-
-local ms = math.stack
-local util = require "tools.modeleditor.util"
-local assetmgr = import_package "ant.asset"
-local fs = require "filesystem"
-local camerautil = require "render.camera.util"
-
+local assetmgr	= import_package "ant.asset"
+local math 		= import_package "ant.math"
+local renderpkg = import_package "ant.render"
+local ms 		= math.stack
+local camerautil= renderpkg.camera
+ 
 ecs.tag "sampleobj"
 
 local model_ed_sys = ecs.system "model_editor_system"
@@ -387,7 +396,7 @@ local function init_control()
 end
 
 local function init_lighting()
-	local lu = require "render.light.util"
+	local lu = renderpkg.light
 	local leid = lu.create_directional_light_entity(world)
 	local lentity = world[leid]
 	local lightcomp = lentity.light
@@ -435,6 +444,12 @@ local function init_ik()
 	end
 end
 
+
+local function init_scene()
+	local computil = renderpkg.components
+	computil.create_grid_entity(world, "grid", 64, 64, 1)
+end
+
 -- luacheck: ignore self
 function model_ed_sys:init()	
 	init_control()
@@ -444,6 +459,8 @@ function model_ed_sys:init()
 
 	-- update_ik_ctrl()
 
+
+	init_scene()
 	focus_sample()
 end
 

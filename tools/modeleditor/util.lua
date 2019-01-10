@@ -1,9 +1,12 @@
 local util = {}; util.__index = util
 
-local geo = require "render.geometry"
-local computil = require "render.components.util"
-local aniutil = require "animation.util"
+local geometry = import_package "ant.geometry"
+local geo = geometry.geometry
+
+local computil = (import_package "ant.render").components
+local aniutil = (import_package "ant.animation").util
 local loaderutil = (import_package "ant.modelloader").util
+
 local fs = require "filesystem"
 
 local math = import_package "ant.math"

@@ -1,6 +1,6 @@
 local vectorview = {}; vectorview.__index = vectorview
 
-local ctrlutil = require "controls.util"
+local ctrlutil = require "util"
 
 local function ctrl_value(owner, idx, name, value)
 	local view = owner.view

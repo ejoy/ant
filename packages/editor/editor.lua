@@ -23,6 +23,7 @@ function editor.run(fbw, fbh, canvas, packages, systems)
 	local iq = inputmgr.queue(mapiup)
 	local eu = require "util"
 	eu.regitster_iup(iq, canvas)
+
 	local world = su.start_new_world(iq, fbw, fbh, packages, systems)
 
 	task.loop(world.update)

@@ -1,12 +1,12 @@
 local util = {}
 util.__index = util
 
-local asset = import_package "ant.asset"
-
-local math = import_package "ant.math"
-local mu = math.util
 local bgfx = require "bgfx"
 local fs = require "filesystem"
+
+local asset = import_package "ant.asset"
+local math = import_package "ant.math"
+local mu = math.util
 
 
 local function deep_copy(t)
@@ -160,20 +160,22 @@ function util.create_mesh_handle(decl, vb, ib)
 	return {handle={groups = groups}}
 end
 
-function util.create_gird_entity(world, name, w, h, unit)
-	local geo = require "geometry"
-	local girdid = world:new_entity(
+function util.create_grid_entity(world, name, w, h, unit)
+	local geopkg= import_package "ant.geometry"
+	local geolib= geopkg.geometry
+
+	local gridid = world:new_entity(
 		"rotation", "position", "scale", 
 		"can_render", "mesh", "material",
 		"name"
 	)
-    local gird = world[girdid]
-    gird.name = name or "gird"
-	mu.identify_transform(gird)
+    local grid = world[gridid]
+    grid.name = name or "grid"
+	mu.identify_transform(grid)
 	w = w or 64
 	h = h or 64
 	unit = unit or 1
-	local vb, ib = geo.gird(w, h, unit)
+	local vb, ib = geolib.grid(w, h, unit)
 	local gvb = {"fffd"}
 	for _, v in ipairs(vb) do
 		for _, vv in ipairs(v) do
@@ -186,12 +188,12 @@ function util.create_gird_entity(world, name, w, h, unit)
         { "COLOR0", 4, "UINT8", true }
     }
 
-	gird.mesh.ref_path = ""
-    gird.mesh.assetinfo = util.create_mesh_handle(vdecl, gvb, ib)
+	grid.mesh.ref_path = ""
+    grid.mesh.assetinfo = util.create_mesh_handle(vdecl, gvb, ib)
 
-	util.load_material(gird.material, {fs.path "line.material"})
+	util.load_material(grid.material, {fs.path "line.material"})
 
-	return girdid
+	return gridid
 end
 
 return util

@@ -1,17 +1,23 @@
 -- luacheck: globals iup
 -- luacheck: ignore self, ignore world
-
-dofile "libs/editor.lua"
-
 require "iuplua"
 
-local fs = require "filesystem"
+local fs 			= require "filesystem"
 
-local editor = require "editor"
-local elog = require "editor.log"
-local probeclass = require "editor.controls.assetprobe"
-local fileinputer = require "tools.modeleditor.fileselectinputer"
-local aniviewclass = require "tools.modeleditor.animationview"
+local editor 		= import_package "ant.editor"
+local editormain 	= editor.editor
+
+local iupcontrols 	= import_package "ani.iupcontrols"
+
+local elog 			= iupcontrols.logview
+local probeclass 	= iupcontrols.assetprobe
+local assetviewclass= iupcontrols.assetview
+local vecviewclass	= iupcontrols.vectorview
+local listctrl 		= iupcontrols.listctrl
+
+local fileinputer 	= require "fileselectinputer"
+local aniviewclass 	= require "animationview"
+local blendviewclass= require "blendview"
 
 local fbw, fbh = 800, 600
 
@@ -78,24 +84,20 @@ local function create_pathctrl(title, name, assetview)
 	}
 end
 
-local assetviewclass = require "editor.controls.assetview"
+
 local assetview = assetviewclass.new()
 
 local ske_pathctrl = create_pathctrl("Skeleton", "SKEINPUTER", assetview)
 local mesh_pathctrl = create_pathctrl("Mesh", "SMINPUTER", assetview)
 
-local blendviewclass = require "tools.modeleditor.blendview"
-
 local aniview = aniviewclass.new({NAME="ANIVIEW"})
 aniview:injust_assetview(assetview)
 
-local vectorviewclass = require "editor.controls.vectorview"
-
 local ikview = iup.vbox {
 	NAME = "IKVIEW",
-	vectorviewclass.new({NAME="TARGET", TITLE="target"}).view,
-	vectorviewclass.new({NAME="POLE_VECTOR", TITLE="pole vector"}).view,
-	vectorviewclass.new({NAME="MID_AXIS", TITLE="mid axis"}).view,
+	vecviewclass.new({NAME="TARGET", TITLE="target"}).view,
+	vecviewclass.new({NAME="POLE_VECTOR", TITLE="pole vector"}).view,
+	vecviewclass.new({NAME="MID_AXIS", TITLE="mid axis"}).view,
 	iup.gridbox {
 		iup.label {TITLE = "weight:",},			iup.text {NAME="WEIGHT", MINSIZE="32x"},
 		iup.label {TITLE="soften:"},			iup.text {NAME="SOFTEN", MINSIZE="32x"},
@@ -126,7 +128,7 @@ local animation_expander = iup.expander {
 	}
 }
 
-local listctrl = require "editor.controls.listctrl"
+
 local anilist = listctrl.new {NAME="ANI_LIST"}
 
 local dlg = iup.dialog {
@@ -197,13 +199,15 @@ function main_dialog()
 	return dlg
 end
 
-local cwd = fs.current_path()
-editor.run(fbw, fbh, canvas, {	
-	cwd / "tools/modeleditor",
+editormain.run(fbw, fbh, canvas, {	
+	"ant.ModelEditor"
 }, 
 {
 	"model_editor_system",
-	"camera_controller",
-	"general_editor_entites",
+	--objcontroller
+	"camera_controller",	
+	--libs
 	"skinning_system",
+	--debug
+	"debug_draw",
 })

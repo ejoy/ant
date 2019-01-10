@@ -2,7 +2,7 @@
 local link = {}; link.__index = link
 local fs = require "filesystem"
 local observersclass = require "common.observer"
-local ctrlutil = require "controls.util"
+local ctrlutil = require "util"
 
 function link.new(config, name, url)
 	return ctrlutil.create_ctrl_wrapper(function ()

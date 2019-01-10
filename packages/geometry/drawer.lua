@@ -65,9 +65,19 @@ end
 -- 		jend.t[1], jend.t[2], jend.t[3]))
 -- end
 
-function draw.draw_skeleton(ske, color, transform, desc)	
-	local eru = require "ecs.render.util"
-	local bones = eru.generate_bones(ske)
+local function generate_bones(ske)	
+	local bones = {}
+	for i=1, #ske do
+		if not ske:isroot(i) then
+			table.insert(bones, {ske:parent(i), i})
+		end
+	end
+	return bones
+end
+
+function draw.draw_skeleton(ske, ani, color, transform, desc)	
+	local bones = generate_bones(ske)
+
 	local function generate_joints_worldpos()		
 		local function load_world_trans(idx, worldpos)
 			local srt = worldpos[idx]
@@ -123,7 +133,7 @@ function draw.draw_skeleton(ske, color, transform, desc)
 		return worldpos
 	end
 
-	local joints = generate_joints_worldpos()
+	local joints = ani and ani:joints() or generate_joints_worldpos()
 	return draw.draw_bones(bones, joints, color, transform, desc)
 end
 

@@ -1,7 +1,9 @@
 local inputer = {}; inputer.__index = inputer
 
-local ctrlutil = require "editor.controls.util"
-local observersclass = require "editor.common.observer"
+local editor = import_package "ant.editor"
+local iupcontrols = import_package "ani.iupcontrols"
+local ctrlutil = iupcontrols.util
+local observersclass = iupcontrols.common.observer
 
 
 function inputer:get_text()

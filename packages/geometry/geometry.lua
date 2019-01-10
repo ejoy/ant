@@ -400,7 +400,7 @@ function geometry.sphereLatitude(slices, stacks, radius, needib, line)
 
 end
 
-function geometry.gird(width, height, unit)	
+function geometry.grid(width, height, unit)	
 	local vb, ib = {}, {}		
 	local function add_vertex(x, z, clr)
 		table.insert(vb, {x, 0, z, clr})			

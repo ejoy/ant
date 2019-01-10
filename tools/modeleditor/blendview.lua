@@ -1,7 +1,8 @@
 local blender = {}; blender.__index = blender
 
-local ctrlutil = require "editor.controls.util"
-local observerclass = require "editor.common.observer"
+local iupcontrols = import_package "ani.iupcontrols"
+local ctrlutil = iupcontrols.util
+local observerclass = iupcontrols.common.observer
 
 local blendctrl = {}; blendctrl.__index = blendctrl
 

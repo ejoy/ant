@@ -2,7 +2,6 @@ local fs = require "filesystem"
 local sandbox = require "antpm.sandbox"
 
 local WORKDIR = fs.vfs and fs.path 'engine' or fs.current_path()
-
 local registered = {}
 local loaded = {}
 
