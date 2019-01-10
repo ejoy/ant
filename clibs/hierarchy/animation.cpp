@@ -576,9 +576,20 @@ lmotion(lua_State *L) {
 	return 0;
 }
 
+static inline void
+create_joint_table(lua_State *L, const ozz::math::Float4x4 &joint) {
+	lua_createtable(L, 16, 0);
+	for (auto icol = 0; icol < 4; ++icol) {
+		for (auto ii = 0; ii < 4; ++ii) {
+			const float* col = (const float*)(&(joint.cols[icol]));
+			lua_pushnumber(L, col[ii]);
+			lua_seti(L, -2, icol * 4 + ii + 1);
+		}
+	}
+}
 
 static int
-laniresult_joints(lua_State *L) {
+laniresult_joint(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 	const animation_result * result = (animation_result*)lua_touserdata(L, 1);
 
@@ -590,16 +601,22 @@ laniresult_joints(lua_State *L) {
 		luaL_error(L, "invalid index:%d, joints count:%d", idx, joint_count);
 	}
 
-	const auto &joint = result->joints[idx];
-	lua_createtable(L, 16, 0);
-	for (auto icol= 0; icol < 4; ++icol) {
-		for (auto ii = 0; ii < 4; ++ii) {
-			const float* col = (const float*)(&(joint.cols[icol]));
-			lua_pushnumber(L, col[ii]);
-			lua_seti(L, -2, icol * 4 + ii + 1);
-		}
-	}
+	create_joint_table(L, result->joints[idx]);
+	return 1;
+}
 
+static int
+laniresult_joints(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	const animation_result * result = (animation_result*)lua_touserdata(L, 1);
+
+	auto jointcount = result->joints.count();
+	lua_createtable(L, (int)jointcount, 0);
+
+	for (auto ii = 0; ii < jointcount; ++ii) {
+		create_joint_table(L, result->joints[ii]);
+		lua_seti(L, -2, ii + 1);
+	}
 	return 1;
 }
 
@@ -963,7 +980,8 @@ register_anitresult_mt(lua_State *L) {
 	lua_setfield(L, -2, "__index");
 
 	luaL_Reg l[] = {
-		"joint", laniresult_joints,
+		"joint", laniresult_joint,
+		"joints", laniresult_joints,
 		"count", laniresult_count,
 		"__gc", ldel_aniresult,
 		nullptr, nullptr,

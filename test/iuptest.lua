@@ -4,7 +4,7 @@ package.cpath = "bin/?.dll"
 package.path = "?.lua;libs/?.lua;libs/?/?.lua"
 
 require( "iuplua" )
-local iupcontrols = import_package "iupcontrols"
+local iupcontrols = import_package "ani.iupcontrols"
 
 local lc = require iupcontrols.listctrl
 local l = lc.new()

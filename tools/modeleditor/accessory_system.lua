@@ -4,7 +4,6 @@ local world = ecs.world
 
 local geometry = import_package "ant.geometry"
 local geodrawer = geometry.drawer
-local geoutil = geometry.util
 
 local renderbonesys = ecs.system "renderbone_system"
 renderbonesys.singleton "debug_object"
@@ -15,18 +14,8 @@ local function draw_skeleton(sample)
 	if ske then
 		local desc = {vb={}, ib = {}}
 		local worldtrans = nil
-		if sample.animation then			
-			local bones = geoutil.generate_bones(ske.assetinfo.handle)
-			local aniresult = assert(sample.animation.aniresult)
-			local numjoints = aniresult:count()
-			local joints = {}
-			for i=1, numjoints do
-				table.insert(joints, aniresult:joint(i-1))
-			end
-			geodrawer.draw_bones(bones, joints, 0xfff0f0f0, worldtrans, desc)
-		else
-			geodrawer.draw_skeleton(assert(ske.assetinfo.handle), 0xfff0f0f0, worldtrans, desc)
-		end
+		local anicomp = sample.animation
+		geodrawer.draw_skeleton(assert(ske.assetinfo.handle), anicomp and anicomp.aniresult or nil, 0xfff0f0f0, worldtrans, desc)
 		return desc
 	end
 end

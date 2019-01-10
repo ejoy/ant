@@ -4,6 +4,7 @@ require "iupluacontrols"
 
 local treecontrol = require "tree"
 local mv_control = require "matrixview"
+local ctrlutil = require "util"
 
 local propertyview = {}; propertyview.__index = propertyview
 
@@ -94,11 +95,9 @@ local function fill_matrixview(detail, node)
 end
 
 function propertyview.new(config)
-
 	config.tree.NAME = "RESVIEW"
 	config.detail.NAME = "RESDETAIL"
 
-	local ctrlutil = require "controls.util"
 	return ctrlutil.create_ctrl_wrapper(function ()
 		local tree = treecontrol.new(config.tree)
 		local detail = mv_control.new(config.detail)

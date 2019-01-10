@@ -1,19 +1,22 @@
 --luacheck: globals iup import
 require "iuplua"
 
-local editor = import_package "ant.editor"
-local inputmgr = import_package "ant.inputmgr"
-local mapiup = editor.mapiup
-local elog = editor.log
-local hierarchyview = editor.controls.hierarchyview
-local propertycontrol = editor.controls.propertyview
-local assetviewclass = editor.controls.assetview
 
-local eu = editor.util
-local rhwi = import_package "ant.render".hardware_interface
-local bgfx = require "bgfx"
-local scene = import_package "ant.scene"
-local task = editor.task
+local bgfx 			= require "bgfx"
+
+local editor 		= import_package "ant.editor"
+local inputmgr 		= import_package "ant.inputmgr"
+local iupcontrols 	= import_package "ani.iupcontrols"
+local rhwi 			= import_package "ant.render".hardware_interface
+local scene 		= import_package "ant.scene"
+
+local mapiup 		= editor.mapiup
+local elog 			= iupcontrols.logview
+local hierarchyview = iupcontrols.hierarchyview
+local propertycontrol = iupcontrols.propertyview
+local assetviewclass = iupcontrols.assetview
+local eu 			= editor.util
+local task 			= editor.task
 
 local propertyview = propertycontrol.new {
 	tree = {

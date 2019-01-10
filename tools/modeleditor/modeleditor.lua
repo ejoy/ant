@@ -7,7 +7,7 @@ local fs 			= require "filesystem"
 local editor 		= import_package "ant.editor"
 local editormain 	= editor.editor
 
-local iupcontrols 	= import_package "iupcontrols"
+local iupcontrols 	= import_package "ani.iupcontrols"
 
 local elog 			= iupcontrols.logview
 local probeclass 	= iupcontrols.assetprobe

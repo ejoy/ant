@@ -2,13 +2,13 @@
 local ecs = ...
 local world = ecs.world
 
-
-
 local editor = import_package "ant.editor"
-local menu = editor.controls.popupmenu
-local eu = editor.util
+local iupcontrols = import_package "ani.iupcontrols"
 local su = import_package "ant.serialize"
 local math = import_package "ant.math"
+
+local menu = iupcontrols.popupmenu
+local eu = editor.util
 local ms = math.stack
 
 local editor_mainwin = require "mainwindow"

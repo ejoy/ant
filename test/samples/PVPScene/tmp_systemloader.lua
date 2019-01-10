@@ -8,8 +8,12 @@ ecs.import "ant.inputmgr"
 ecs.import "ant.serialize"
 ecs.import "ant.scene"
 ecs.import "ant.timer"
+ecs.import "ant.objcontroller"
+ecs.import "ant.hierarchy.offline"
 
-local lu = import_package "ant.render".light
+local renderpkg = import_package "ant.render"
+local lu = renderpkg.light
+local computil = renderpkg.components
 local PVPScenLoader = require "PVPSceneLoader"
 
 local init_loader = ecs.system "init_loader"
@@ -28,4 +32,6 @@ function init_loader:init()
 	do
 		PVPScenLoader.create_entitices(world)
 	end
+
+	computil.create_grid_entity(world, "grid", 64, 64, 1)
 end

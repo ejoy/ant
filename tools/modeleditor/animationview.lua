@@ -1,6 +1,6 @@
 local animationview = {}; animationview.__index = animationview
 
-local iupcontrols = import_package "iupcontrols"
+local iupcontrols = import_package "ani.iupcontrols"
 local ctrlutil = iupcontrols.util
 local probeclass = iupcontrols.assetprobe
 local matviewclass = iupcontrols.matrixview

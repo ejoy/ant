@@ -1,4 +1,4 @@
 return {
-	name = "iupcontrols",
+	name = "ani.iupcontrols",
 	entry = "main",
 }
