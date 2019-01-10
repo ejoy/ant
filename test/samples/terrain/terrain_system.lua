@@ -2,6 +2,16 @@ local ecs = ...
 local world = ecs.world
 
 
+ecs.import "ant.libs"
+ecs.import "ant.render"
+ecs.import "ant.editor"
+ecs.import "ant.inputmgr"
+ecs.import "ant.serialize"
+ecs.import "ant.scene"
+ecs.import "ant.timer"
+ecs.import "ant.bullet"
+
+local lu = import_package "ant.render".light
 
 local bgfx = require "bgfx"
 local math = import_package "ant.math"
@@ -280,9 +290,13 @@ terrain_sys.singleton "message"
 terrain_sys.depend    "lighting_primitive_filter_system"
 terrain_sys.depend 	  "entity_rendering"
 terrain_sys.dependby  "end_frame"
+terrain_sys.depend    "camera_controller"
 
 function terrain_sys:init()
-	log("")
+	do
+		lu.create_directional_light_entity(world, "directional_light")
+		lu.create_ambient_light_entity(world, "ambient_light", "gradient", {1, 1, 1,1})
+	end
 	--stack = self.math_stack  
 
 	local Physics = world.args.Physics 

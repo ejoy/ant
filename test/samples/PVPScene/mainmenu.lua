@@ -140,6 +140,11 @@ function openMap(path)
         "build_hierarchy_system",
         "editor_system"
     }
+    if mapcfg.name ~= "ant.test.pvpscene" then
+        local pm = require "antpm"
+        pm.register(path:parent_path())
+    end
+    packages[#packages+1] = mapcfg.name
     table.move(mapcfg.systems, 1, #mapcfg.systems, #systems+1, systems)
     editor_mainwindow:new_world(packages, systems)
 end
