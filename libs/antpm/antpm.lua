@@ -16,6 +16,8 @@ local list = {
     WORKDIR / "packages" / "terrain",
     WORKDIR / "packages" / "bullet",
     WORKDIR / "packages" / "fileconvert",
+    WORKDIR / "packages" / "timer",
+    WORKDIR / "packages" / "network",
 }
 
 local registered = {}

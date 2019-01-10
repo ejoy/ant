@@ -7,6 +7,7 @@ ecs.import "ant.editor"
 ecs.import "ant.inputmgr"
 ecs.import "ant.serialize"
 ecs.import "ant.scene"
+ecs.import "ant.timer"
 
 local lu = import_package "ant.render".light
 local PVPScenLoader = require "test.samples.PVPScene.PVPSceneLoader"
