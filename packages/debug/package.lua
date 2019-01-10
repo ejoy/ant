@@ -1,4 +1,3 @@
 return {
-	name = "ant.debug",
-	entry = "main"
+	name = "ant.debug"
 }

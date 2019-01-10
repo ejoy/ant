@@ -1,4 +1,3 @@
 return {
-	name = "ant.objcontroller",
-	entry = "main",
+	name = "ant.objcontroller"
 }
