@@ -161,7 +161,7 @@ local function popup_select_file_dlg(parentdlg, filepattern, seletfileop)
 end
 
 function CMD.OpenMap(e)
-	popup_select_file_dlg(iup.GetDialog(e), "*.map", openMap)
+	popup_select_file_dlg(iup.GetDialog(e), "package.lua", openMap)
 end
 
 function CMD.CleanRecentlyOpened(e)
