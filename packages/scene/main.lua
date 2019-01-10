@@ -1,6 +1,6 @@
 -- luacheck: globals log bullet
 local log = log and log(...) or print
-local ecs = require "ecs"
+local ecs = import_package "ant.ecs"
 
 --local elog = require "editor.log"
 --local db = require "debugger"

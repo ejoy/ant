@@ -1,10 +1,9 @@
 --luacheck: globals log
 local log = log and log(...) or print
 
-local typeclass = require "ecs.typeclass"
-local system = require "ecs.system"
-local component = require "ecs.component"
-local fs = require "filesystem"
+local typeclass = require "typeclass"
+local system = require "system"
+local component = require "component"
 local pm = require "antpm"
 
 local ecs = {}

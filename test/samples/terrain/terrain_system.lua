@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 
 
-ecs.import "ant.libs"
 ecs.import "ant.render"
 ecs.import "ant.editor"
 ecs.import "ant.inputmgr"

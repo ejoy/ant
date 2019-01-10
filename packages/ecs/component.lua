@@ -1,6 +1,6 @@
 local log = log and log(...) or print
 
-local datatype = require "ecs.datatype"
+local datatype = require "datatype"
 
 local function gen_new(c)
 	if c.struct then
