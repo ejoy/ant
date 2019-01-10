@@ -1,7 +1,6 @@
---luacheck: globals iup import
 dofile "libs/editor.lua"
 
-local mainwin = require "test.samples.PVPScene.mainwindow"
-mainwin:run {
-	fbw=1024, fbh=768,
-}
+local fs = require "filesystem"
+local PKGDIR = fs.path(debug.getinfo(1, 'S').source:sub(2)):parent_path()
+local pm = require "antpm"
+pm.import(pm.register(PKGDIR))

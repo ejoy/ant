@@ -1,13 +1,13 @@
 --luacheck: globals iup import
 local asset = import_package "ant.asset"
-local vfsutil = require "vfs.util"
+local vfsutil = require "vfsutil"
 local fs = require "filesystem"
 local configDir = fs.mydocs_path() / '.ant/config'
 fs.create_directories(configDir)
 local recentcfg = configDir / 'recent.cfg'
 
 --project related
-local editor_mainwindow = require 'test.samples.PVPScene.mainwindow'
+local editor_mainwindow = require 'mainwindow'
 
 local iupex = {}
 
@@ -130,7 +130,7 @@ function openMap(path)
     local mapcfg = fs.dofile(path)
 
     local packages = {
-        path:parent_path()
+        "ant.test.pvpscene"
     }
     local systems = {
         "pickup_material_system",

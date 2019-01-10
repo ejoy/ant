@@ -188,7 +188,7 @@ function add_entity_sys:init()
 	 
 	
     -- 测试场景时，打开 PVPScene 加载BnH模型
-    local PVPScene = require "test.samples.PVPScene.PVPScene_phy"
+    local PVPScene = require "PVPScene_phy"
 	PVPScene.init( world, component_util, ms)
 
 	

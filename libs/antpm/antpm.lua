@@ -38,7 +38,7 @@ local function register(pkg)
         end 
     end
     if registered[config.name] then
-        error(('Duplicate definition package `%s` in `%s`.'):format(pkg.name, pkg:string()))
+        error(('Duplicate definition package `%s` in `%s`.'):format(config.name, pkg:string()))
     end
     registered[config.name] = {
         root = pkg,

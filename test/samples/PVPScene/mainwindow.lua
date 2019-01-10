@@ -41,7 +41,7 @@ function editor_mainwindow:build_window(fbw, fbh)
         rastersize = fbw .. "x" .. fbh
     }
 	
-	local mainmenu = require "test.samples.PVPScene.mainmenu"
+	local mainmenu = require "mainmenu"
     
     self.dlg = iup.dialog {
         iup.split {

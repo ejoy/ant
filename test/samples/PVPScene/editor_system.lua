@@ -11,7 +11,7 @@ local su = import_package "ant.serialize"
 local math = import_package "ant.math"
 local ms = math.stack
 
-local editor_mainwin = require "test.samples.PVPScene.mainwindow"
+local editor_mainwin = require "mainwindow"
 
 local editor_sys = ecs.system "editor_system"
 editor_sys.depend "end_frame"
