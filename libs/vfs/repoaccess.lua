@@ -126,7 +126,7 @@ function access.sha1_from_file(filename)
 end
 
 local function build(identity, source, lk, tmp)
-	local fileconvert = require "fileconvert"
+	local fileconvert = import_package "fileconvert"
 	return fileconvert(identity, source, lk, tmp)
 end
 

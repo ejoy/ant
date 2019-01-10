@@ -1,4 +1,4 @@
-local toolset = require "fileconvert.toolset"
+local toolset = require "toolset"
 local fs = require "filesystem"
 local vfs = require "vfs"
 

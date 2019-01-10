@@ -14,6 +14,8 @@ local list = {
     WORKDIR / "packages" / "serialize",
     WORKDIR / "packages" / "asset",
     WORKDIR / "packages" / "scene",
+    WORKDIR / "packages" / "terrain",
+    WORKDIR / "packages" / "bullet",
 }
 local registered = {}
 local loaded = {}

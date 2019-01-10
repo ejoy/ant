@@ -1,6 +1,6 @@
 local lterrain = require 'lterrain'
-local uclass = require 'terrain.utilclass'
-local texLoad = require "terrain.utiltexture"
+local uclass = require 'utilclass'
+local texLoad = require "utiltexture"
 local bgfx = require "bgfx"
 
 

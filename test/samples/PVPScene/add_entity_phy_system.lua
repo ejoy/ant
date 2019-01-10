@@ -19,25 +19,6 @@ ecs.import "inputmgr"
 
 ecs.import "inputmgr"
 
--- light entity
-
-
-
--- filter
-
-
-
-
-
--- test entity
-
-
--- enable
-
-
-
-
--- 
 
 local component_util = import_package "render".components
 local lu = import_package "render".light

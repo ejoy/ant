@@ -11,7 +11,7 @@ local shaderMgr = render.shader_mgr
 local camera_util = render.camera
 local render_cu = render.components
 
-local terrainClass = require "terrain.terrainclass"
+local terrainClass = import_package "terrain"
 
 local UI_VIEW      	 = 255
 local VIEWID_TERRAIN = 100 
@@ -282,7 +282,7 @@ terrain_sys.depend 	  "entity_rendering"
 terrain_sys.dependby  "end_frame"
 
 function terrain_sys:init()
-
+	log("")
 	--stack = self.math_stack  
 
 	local Physics = world.args.Physics 
