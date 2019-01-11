@@ -5,7 +5,6 @@ local geo = geometry.geometry
 
 local computil = (import_package "ant.render").components
 local aniutil = (import_package "ant.animation").util
-local modelloader = import_package "ant.modelloader"
 
 local fs = require "filesystem"
 
@@ -28,55 +27,6 @@ function util.create_aabb_descs(mesh, materialfile)
 		})
 	end
 	return descs
-end
-
-local function gen_mesh_assetinfo(skinning_mesh_comp)	
-	local skinning_mesh = skinning_mesh_comp.assetinfo.handle
-
-	local decls = {}
-	local vb_handles = {}
-	local vb_data = {"!", "", 1}
-	for _, type in ipairs {"dynamic", "static"} do
-		local layout = skinning_mesh:layout(type)
-		local decl = modelloader.create_decl(layout)
-		table.insert(decls, decl)
-
-		local buffer, size = skinning_mesh:buffer(type)
-		vb_data[2], vb_data[3] = buffer, size
-		if type == "dynamic" then
-			table.insert(vb_handles, bgfx.create_dynamic_vertex_buffer(vb_data, decl))
-		elseif type == "static" then
-			table.insert(vb_handles, bgfx.create_vertex_buffer(vb_data, decl))
-		end
-	end
-
-	local function create_idx_buffer()
-		local idx_buffer, ib_size = skinning_mesh:index_buffer()	
-		if idx_buffer then			
-			return bgfx.create_index_buffer({idx_buffer, ib_size})
-		end
-
-		return nil
-	end
-
-	local ib_handle = create_idx_buffer()
-
-	return {
-		handle = {
-			groups = {
-				{
-					bounding = skinning_mesh:bounding(),
-					vb = {
-						decls = decls,
-						handles = vb_handles,
-					},
-					ib = {
-						handle = ib_handle,
-					}
-				}
-			}
-		},			
-	}
 end
 
 local function add_aabb_widget(world, eid)
@@ -160,18 +110,13 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 		end
 	end
 
-	local skinning_mesh
-	if skinning_meshpath:string() ~= "" then
+	
+	if skinning_meshpath:string() ~= "" then		
 		if e.skeleton and e.animation then
 			world:add_component(eid, "skinning_mesh")
-			skinning_mesh = e.skinning_mesh
-		else
-			skinning_mesh = {}
+			computil.load_skinning_mesh(e.skinning_mesh, e.mesh, skinning_meshpath)
 		end
 
-		computil.load_skinning_mesh(skinning_mesh, skinning_meshpath)			
-
-		e.mesh.assetinfo = gen_mesh_assetinfo(skinning_mesh)
 		computil.load_material(e.material,{samplematerialpath})
 	
 		add_aabb_widget(world, eid)

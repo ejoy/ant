@@ -37,8 +37,60 @@ function util.load_skeleton(comp, respath, param)
 	load_res(comp, respath, param, "load.skeleton")	
 end
 
-function util.load_skinning_mesh(comp, respath, param)
-	load_res(comp, respath, param, "load.skinning_mesh")
+local function gen_mesh_assetinfo(skinning_mesh_comp)
+	local modelloader = import_package "ant.modelloader"
+
+	local skinning_mesh = skinning_mesh_comp.assetinfo.handle
+
+	local decls = {}
+	local vb_handles = {}
+	local vb_data = {"!", "", 1}
+	for _, type in ipairs {"dynamic", "static"} do
+		local layout = skinning_mesh:layout(type)
+		local decl = modelloader.create_decl(layout)
+		table.insert(decls, decl)
+
+		local buffer, size = skinning_mesh:buffer(type)
+		vb_data[2], vb_data[3] = buffer, size
+		if type == "dynamic" then
+			table.insert(vb_handles, bgfx.create_dynamic_vertex_buffer(vb_data, decl))
+		elseif type == "static" then
+			table.insert(vb_handles, bgfx.create_vertex_buffer(vb_data, decl))
+		end
+	end
+
+	local function create_idx_buffer()
+		local idx_buffer, ib_size = skinning_mesh:index_buffer()	
+		if idx_buffer then			
+			return bgfx.create_index_buffer({idx_buffer, ib_size})
+		end
+
+		return nil
+	end
+
+	local ib_handle = create_idx_buffer()
+
+	return {
+		handle = {
+			groups = {
+				{
+					bounding = skinning_mesh:bounding(),
+					vb = {
+						decls = decls,
+						handles = vb_handles,
+					},
+					ib = {
+						handle = ib_handle,
+					}
+				}
+			}
+		},			
+	}
+end
+
+function util.load_skinning_mesh(smcomp, meshcomp, respath, param)
+	load_res(smcomp, respath, param, "load.skinning_mesh")
+	meshcomp.assetinfo = gen_mesh_assetinfo(smcomp)
 end
 
 function util.load_mesh(comp, respath, param)
