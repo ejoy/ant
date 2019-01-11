@@ -7,8 +7,6 @@ ecs.import "ant.inputmgr"
 ecs.import "ant.serialize"
 ecs.import "ant.scene"
 ecs.import "ant.timer"
-ecs.import "ant.objcontroller"
-ecs.import "ant.hierarchy.offline"
 ecs.import "ant.bullet"
 
 local renderpkg = import_package "ant.render"

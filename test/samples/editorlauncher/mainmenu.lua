@@ -130,13 +130,14 @@ function openMap(path)
     local mapcfg = fs.dofile(path)
 
     local packages = {
-        "ant.test.features"
+        "ant.EditorLauncher",
+        "ant.objcontroller",
+        "ant.hierarchy.offline",
     }
     local systems = {
         "pickup_material_system",
         "pickup_system",
         "obj_transform_system",
-        "general_editor_entites",
         "build_hierarchy_system",
         "editor_system"
     }
