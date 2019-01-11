@@ -1,5 +1,6 @@
 local bgfx = require "bgfx"
 local fs = require "filesystem"
+local vfs = require "vfs"
 
 local antmeshloader = require "antmeshloader"
 
@@ -49,8 +50,7 @@ end
 
 local function load_from_source(filepath)
 	if not fs.vfs then
-		local cvtutil = require "fileconvert.util"
-		assert(cvtutil.need_build(filepath))
+		assert(vfs.type(filepath:string() .. ".lk") ~= nil)
 	end
 	return antmeshloader(filepath)
 end

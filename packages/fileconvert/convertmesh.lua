@@ -50,6 +50,6 @@ return function (identity, sourcefile, param, outfile)
 	local t = param.sourcetype
 	local c = convert_op[t]
 	local cfg = param.config or config
-	c(sourcefile, outfile, cfg)
+	c(sourcefile:string(), outfile:string(), cfg)
 	return fs.exists(outfile)
 end

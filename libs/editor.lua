@@ -17,8 +17,5 @@ require "editor.vfspath"
 require "common.log"
 import_package = (require "antpm").import
 
--- TODO
-require "fileconvert.util"
-
 print_r = require "common.print_r"
 function dprint(...) print(...) end
