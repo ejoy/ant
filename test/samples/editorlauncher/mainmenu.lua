@@ -140,7 +140,7 @@ function openMap(path)
         "build_hierarchy_system",
         "editor_system"
     }
-    if mapcfg.name ~= "ant.test.features" then
+    if mapcfg.name ~= "ant.EditorLauncher" then
         local pm = require "antpm"
         pm.register(path:parent_path())
     end
