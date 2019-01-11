@@ -5,7 +5,7 @@ local geo = geometry.geometry
 
 local computil = (import_package "ant.render").components
 local aniutil = (import_package "ant.animation").util
-local loaderutil = (import_package "ant.modelloader").util
+local modelloader = import_package "ant.modelloader"
 
 local fs = require "filesystem"
 
@@ -38,7 +38,7 @@ local function gen_mesh_assetinfo(skinning_mesh_comp)
 	local vb_data = {"!", "", 1}
 	for _, type in ipairs {"dynamic", "static"} do
 		local layout = skinning_mesh:layout(type)
-		local decl = loaderutil.create_decl(layout)
+		local decl = modelloader.create_decl(layout)
 		table.insert(decls, decl)
 
 		local buffer, size = skinning_mesh:buffer(type)
