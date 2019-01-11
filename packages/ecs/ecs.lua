@@ -215,16 +215,15 @@ local function init_modules(w, packages, systems)
 		end
 		cut[k] = true
 		local v = class.system[k]
-		if v then
-			if v.depend then
-				for _, subk in ipairs(v.depend) do
-					solve_depend(subk)
-				end
+		assert(v, k)
+		if v.depend then
+			for _, subk in ipairs(v.depend) do
+				solve_depend(subk)
 			end
-			if v.dependby then
-				for _, subk in ipairs(v.dependby) do
-					solve_depend(subk)
-				end
+		end
+		if v.dependby then
+			for _, subk in ipairs(v.dependby) do
+				solve_depend(subk)
 			end
 		end
 	end

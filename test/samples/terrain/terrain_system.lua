@@ -9,7 +9,6 @@ ecs.import "ant.serialize"
 ecs.import "ant.scene"
 ecs.import "ant.timer"
 ecs.import "ant.bullet"
-
 ecs.import "ant.scene"
 
 local lu = import_package "ant.render".light
