@@ -1,9 +1,6 @@
 [submodule "bin"]
 	path = bin
 	url = https://gz-tea.ejoy.com/git/Ant/binary.git
-[submodule "assets/build"]
-	path = assets/build
-	url = https://gz-tea.ejoy.com/git/Ant/assets.git
 [submodule "3rd/bgfx"]
 	path = 3rd/bgfx
 	url = https://github.com/bkaradzic/bgfx.git
