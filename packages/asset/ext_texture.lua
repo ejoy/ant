@@ -72,11 +72,13 @@ local function fill_default_sampler(sampler)
 end
 
 return function (pkgname, respath)
-	local tex = rawtable(assetmgr.find_depiction_path(pkgname, respath))	
-	local pp = assetmgr.find_asset_path(tex.pkgname, fs.path(tex.path))
+	local tex = rawtable(assetmgr.find_depiction_path(pkgname, respath))
+	local texrefpath = tex.path
+	local tpkgname, trespath = texrefpath[1], fs.path(texrefpath[2])
+	local pp = assetmgr.find_asset_path(tpkgname, trespath)
 	if pp == nil then
 		error(string.format("texture path not found, .texture path:[%s:%s], texture file:[%s:%s]", 
-			pkgname, respath, tex.pkgname or "engine", tex.path))
+			pkgname, respath, tpkgname, trespath))
 	end
 
 	local sampler = tex.sampler

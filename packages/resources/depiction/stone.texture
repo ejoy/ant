@@ -1,4 +1,4 @@
-path = "textures/fieldstone-rgba.dds"
+path = {"ant.resources.binary", "textures/fieldstone-rgba.dds"}
 
 sampler = {
 	U = "CLAMP",
