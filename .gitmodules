@@ -52,3 +52,6 @@
 [submodule "3rd/ib-compress"]
 	path = 3rd/ib-compress
 	url = https://gz-tea.ejoy.com/git/Ant/ib-compress.git
+[submodule "packages/resources.binary"]
+	path = packages/resources.binary
+	url = https://gz-tea.ejoy.com/git/Ant/assets.git
