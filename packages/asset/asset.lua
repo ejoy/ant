@@ -42,14 +42,8 @@ assetmgr.__index = assetmgr
 
 local resources = setmetatable({}, {__mode="kv"})
 
-local engineassetdir = fs.path "engine/assets"
-
 function assetmgr.pkgdir(pkgname)
-	if pkgname == nil or pkgname == "engine" then
-		return engineassetdir
-	end
-
-	local root = antpm.find(pkgname)
+	local root = antpm.find(assert(pkgname))
 	if root == nil then
 		error(string.format("package not found:%s", pkgname))
 	end
@@ -73,16 +67,15 @@ function assetmgr.find_depiction_path(pkgname, respath)
 	end
 
 	if fullrespath == nil then
-		error(string.format("not found res, pkgname:%s, respath:%s", pkgname or "engine", respath))
+		error(string.format("not found res, pkgname:%s, respath:%s", pkgname, respath))
 	end
 	return fullrespath
 end
 
 
 local function res_key(pkgname, respath)
-	-- TODO, should use vfs to get the resource file unique key(resource hash), for cache same content file
-	pkgname = pkgname or "engine"
-	return string.format("%s:%s", pkgname, respath:string())
+	-- TODO, should use vfs to get the resource file unique key(resource hash), for cache same content file	
+	return string.format("%s:%s", assert(pkgname), respath:string())
 end
 
 function assetmgr.load(pkgname, respath, param)	
