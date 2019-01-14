@@ -19,7 +19,7 @@ local axis_hierarchyname = fs.path "hierarchy/axis.hierarchy"
 local rotator_hierarchyname = fs.path "hierarchy/rotator.hierarchy"
 local objtrans_materialpath = fs.path "obj_trans/obj_trans.material"
 
-local pkgname = "engine"
+local pkgname = "ant.resources"
 
 ecs.tag "pos_transform"
 ecs.tag "scale_transform"
