@@ -1,6 +1,6 @@
 shader = {
-    vs = "line/vs_line",
-    fs = "line/fs_line"
+    vs ={"ant.resources", "line/vs_line",},
+    fs ={"ant.resources", "line/fs_line"},
 }
 
 state = {

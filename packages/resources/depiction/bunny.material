@@ -1,6 +1,6 @@
 shader = {
-    vs = "mesh/vs_colormeshex",
-    fs = "mesh/fs_colormesh",
+    vs ={"ant.resources", "mesh/vs_colormeshex",},
+    fs ={"ant.resources", "mesh/fs_colormesh",},
 }
 
 state = "default.state"

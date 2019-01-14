@@ -1,1 +1,6 @@
-ani_name = { "","",}mesh_path = {"ant.resources.binary", ""ske_path = ""}
+mesh_path = {"ant.resources.binary", ""}
+ske_path = {"ant.resources.binary", ""}
+ani_names = {
+	"",
+	"",
+}

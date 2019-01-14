@@ -1,6 +1,6 @@
 shader = {
-	vs = "simple/light_bulb/vs_bulb",
-	fs = "simple/light_bulb/fs_bulb",
+	vs ={"ant.resources", "simple/light_bulb/vs_bulb",},
+	fs ={"ant.resources", "simple/light_bulb/fs_bulb",},
 }
 state = "default.state"
 properties = {

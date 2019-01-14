@@ -54,11 +54,11 @@ local function uniform_info(uniforms, handles)
     end
 end
 
-local function programLoadEx(pkgname, vs, fs, uniform)
-    local vsid, u1 = load_shader_uniforms(pkgname, vs)
+local function programLoadEx(vs, fs, uniform)	
+    local vsid, u1 = load_shader_uniforms(vs[1], vs[2])
     local fsid, u2
-    if fs then
-        fsid, u2 = load_shader_uniforms(pkgname, fs)
+	if fs then		
+        fsid, u2 = load_shader_uniforms(fs[1], fs[2])
     end
     uniform_info(uniform, u1)
     if u2 then
@@ -67,9 +67,9 @@ local function programLoadEx(pkgname, vs, fs, uniform)
     return bgfx.create_program(vsid, fsid, true), uniform
 end
 
-function shader_mgr.programLoad(pkgname, vs,fs, uniform)
+function shader_mgr.programLoad(vs, fs, uniform)
     if uniform then
-        local prog = programLoadEx(pkgname, vs,fs, uniform)
+        local prog = programLoadEx(vs,fs, uniform)
         if prog then      
             
             for k, v in pairs(uniform) do
@@ -84,9 +84,13 @@ function shader_mgr.programLoad(pkgname, vs,fs, uniform)
             end
         end
         return prog
-    else
-        local vsid = load_shader(pkgname, vs)
-        local fsid = fs and load_shader(pkgname, fs)          
+	else		
+		local vsid = load_shader(vs[1], vs[2])
+		local fsid = nil
+		if fs then			
+			load_shader(fs[1], fs[2])
+		end
+        
         return bgfx.create_program(vsid, fsid, true)
     end
 end

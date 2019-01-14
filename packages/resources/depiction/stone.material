@@ -1,8 +1,8 @@
 shader = {
-    vs = "mesh/vs_mesh_bump",
-	fs = "mesh/fs_mesh_bump",
-	-- vs = "mesh/vs_mesh",
-    -- fs = "mesh/fs_mesh",
+    vs ={"ant.resources", "mesh/vs_mesh_bump",},
+	fs ={"ant.resources", "mesh/fs_mesh_bump",},
+	-- vs ={"ant.resources", "mesh/vs_mesh",},
+    -- fs ={"ant.resources", "mesh/fs_mesh",},
 }
 
 state = {

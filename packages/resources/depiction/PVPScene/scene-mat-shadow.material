@@ -1,9 +1,9 @@
 shader = {
-	 vs = "mesh/vs_mesh_bump_shadow",
-	 fs = "mesh/fs_mesh_bumpex_shadow",
+	 vs ={"ant.resources", "mesh/vs_mesh_bump_shadow",},
+	 fs ={"ant.resources", "mesh/fs_mesh_bumpex_shadow",},
 
-	 --vs = "mesh_shadow/vs_shadowmaps_color_lighting_csm",
-	 --fs = "mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm",
+	 --vs ={"ant.resources", "mesh_shadow/vs_shadowmaps_color_lighting_csm",},
+	 --fs ={"ant.resources", "mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm",},
 }
 
 state = "default.state"

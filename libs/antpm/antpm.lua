@@ -5,14 +5,14 @@ local WORKDIR = fs.vfs and fs.path 'engine' or fs.current_path()
 local registered = {}
 local loaded = {}
 
-local function loadfile(path)
+local function loadfile(path, mode, env)
     local f, err = fs.open(path, 'r')
     if not f then
         return nil, err
     end
     local str = f:read 'a'
     f:close()
-    return load(str, '@' .. path:string())
+    return load(str, '@' .. path:string(), mode, env)
 end
 local function dofile(path)
     local f, err = loadfile(path)
