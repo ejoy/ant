@@ -11,20 +11,20 @@ local alluniforms = {}
 local shader_mgr = {}
 shader_mgr.__index = shader_mgr
 
-local function gen_shader_filepath(shadername)
+local function gen_shader_filepath(pkgname, shadername)
 	assert(fs.path(shadername):extension() == fs.path '')
 	local shadername_withext = fs.path(shadername .. ".sc")
-	local filepath = assetmgr.find_valid_asset_path(shadername_withext)
+	local filepath = assetmgr.find_asset_path(pkgname, shadername_withext)
 	if filepath then
 		return filepath 
 	end
-	return assetmgr.find_valid_asset_path(assetmgr.assetdir() / "shaders/src" / shadername_withext)
+	return assetmgr.find_asset_path(pkgname, fs.path "shaders/src" / shadername_withext)
 end
 
-local function load_shader(name)
-	local filepath = gen_shader_filepath(name)
+local function load_shader(pkgname, name)
+	local filepath = gen_shader_filepath(pkgname, name)
 	if filepath == nil then
-		error(string.format("not found shader file: %s", name))
+		error(string.format("not found shader file: [%s:%s]", pkgname, name))
 	end
 
 	if not fs.vfs then		
@@ -39,8 +39,8 @@ local function load_shader(name)
 	return h    
 end
 
-local function load_shader_uniforms(name)
-    local h = assert(load_shader(name))    
+local function load_shader_uniforms(pkgname, name)
+    local h = assert(load_shader(pkgname, name))    
     local uniforms = bgfx.get_shader_uniforms(h)
     return h, uniforms
 end
@@ -54,11 +54,11 @@ local function uniform_info(uniforms, handles)
     end
 end
 
-local function programLoadEx(vs,fs, uniform)
-    local vsid, u1 = load_shader_uniforms(vs)
+local function programLoadEx(pkgname, vs, fs, uniform)
+    local vsid, u1 = load_shader_uniforms(pkgname, vs)
     local fsid, u2
     if fs then
-        fsid, u2 = load_shader_uniforms(fs)
+        fsid, u2 = load_shader_uniforms(pkgname, fs)
     end
     uniform_info(uniform, u1)
     if u2 then
@@ -67,9 +67,9 @@ local function programLoadEx(vs,fs, uniform)
     return bgfx.create_program(vsid, fsid, true), uniform
 end
 
-function shader_mgr.programLoad(vs,fs, uniform)
+function shader_mgr.programLoad(pkgname, vs,fs, uniform)
     if uniform then
-        local prog = programLoadEx(vs,fs, uniform)
+        local prog = programLoadEx(pkgname, vs,fs, uniform)
         if prog then      
             
             for k, v in pairs(uniform) do
@@ -85,14 +85,14 @@ function shader_mgr.programLoad(vs,fs, uniform)
         end
         return prog
     else
-        local vsid = load_shader(vs)
-        local fsid = fs and load_shader(fs)          
+        local vsid = load_shader(pkgname, vs)
+        local fsid = fs and load_shader(pkgname, fs)          
         return bgfx.create_program(vsid, fsid, true)
     end
 end
 
-function shader_mgr.computeLoad(cs)
-    local csid = load_shader(cs)
+function shader_mgr.computeLoad(pkgname, cs)
+    local csid = load_shader(pkgname, cs)
     return bgfx.create_program(csid, true)
 end
 

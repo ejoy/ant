@@ -74,7 +74,7 @@ end
 return function (filename)
 	--local assetmgr = import_package "ant.asset"
 	--local tex = rawtable(filename)
-	local pp = assetmgr.find_valid_asset_path(fs.path(assert(filename)))
+	local pp = assetmgr.find_asset_path(nil, fs.path(assert(filename)))
 	if pp == nil then
 		error("texture path is not valid, path is : ", -1)
 	end

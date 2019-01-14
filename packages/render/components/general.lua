@@ -1,5 +1,7 @@
 local ecs = ...
 
+local fs = require "filesystem"
+
 local component_util = require "components.util"
 local asset = import_package "ant.asset"
 local math = import_package "ant.math"
@@ -36,24 +38,31 @@ ecs.component_struct "mesh" {
 		type = "userdata",
 		default = "",
 		save = function (v, arg)
-			assert(type(v) == "string")
+			assert(type(v) == "table")
 			-- local world = arg.world
 			-- local e = assert(world[arg.eid])
 			-- local comp = assert(e[arg.comp])
 			-- assert(comp.assetinfo)
-			return v
+			local pkgname = v[1]
+			local respath = v[2]
+			return {pkgname:string(), respath:string()}
 		end,
 
 		load = function (v, arg)
 			assert(type(v) == "string")
-			local world = arg.world
-			local e = assert(world[arg.eid])
-			local comp = assert(e[arg.comp])
+			local pkgname = fs.path(v[1])
+			local respath = fs.path(v[2])
 
-			if v ~= "" then
+			local empty = fs.path ""
+
+			if pkgname ~= empty and respath ~= empty then
+				local world = arg.world
+				local e = assert(world[arg.eid])
+				local comp = assert(e[arg.comp])
+	
 				assert(comp.assetinfo == nil)
-				comp.assetinfo = asset.load(v)			
-			end
+				comp.assetinfo = asset.load(pkgname, respath)
+			end		
 			return v
 		end
 	}
@@ -71,11 +80,11 @@ ecs.component_struct "material" {
 		save = function (v, arg)
 			local t = {}
 			for _, e in ipairs(v) do				
-				local pp = assert(e.path)
-				assert(pp ~= "")
+				local refpath = assert(e.path)				
 				assert(e.materialinfo)
 
-				local assetcontent = asset.load(pp)
+				local pkgname, respath = refpath[1], refpath[2]
+				local assetcontent = asset.load(pkgname, respath)
 				local src_properties = assetcontent.properties		
 				if src_properties then
 					local properties = {}
@@ -88,7 +97,7 @@ ecs.component_struct "material" {
 							properties[k] = p
 						end
 					end
-					table.insert(t, {path=pp, properties=properties})
+					table.insert(t, {path=refpath, properties=properties})
 				end			
 			end
 			return t
@@ -96,11 +105,12 @@ ecs.component_struct "material" {
 		load = function (v, arg)
 			assert(type(v) == "table")
 			local content = {}
-			
+
 			for _, e in ipairs(v) do
 				local m = {}
-				component_util.create_material(e.path, m)
-				table.insert(content, m)
+				local refpath = e.path
+				local pkgname, respath = refpath[1], fs.path(refpath[2])
+				component_util.add_material(content, pkgname, respath)				
 			end
 
 			return content

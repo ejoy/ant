@@ -93,7 +93,7 @@ end
 
 local function check_create_sample_entity(skepath, anipaths, smpath)
 	local function check_path_valid(pp)
-		if not assetmgr.find_valid_asset_path(pp) then
+		if not assetmgr.find_asset_path("engine", pp) then
 			iup.Message("Error", string.format("invalid path : %s", pp))
 			return false
 		end

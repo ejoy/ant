@@ -1,16 +1,13 @@
 local ecs = ...
 local world = ecs.world
 
-
-
-
-
-
 ecs.import "ant.inputmgr"
 
 local computil = require "render.components.util"
 local camerautil = require "render.camera.util"
 local math = import_package "ant.math"
+local asset = import_package "ant.asset"
+
 local mu = math.util
 
 local simplescene = ecs.system "simple_scene"
@@ -31,8 +28,8 @@ function simplescene:init()
 
 	mu.identify_transform(bunny)
 
-	computil.load_mesh(bunny.mesh, "engine/assets/depiction/bunny.mesh")
-	computil.load_material(bunny.material, {"depiction/bunny.material"})
+	computil.load_mesh(bunny.mesh, "engine", "bunny.mesh")
+	computil.add_material(bunny.material, "engine", "bunny.material")
 
 	camerautil.focus_selected_obj(world, bunnyeid)
 end

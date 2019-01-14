@@ -20,21 +20,17 @@ local function deep_copy(t)
 	return t
 end
 
-local function load_res(comp, respath, param, errmsg)
-	if respath then
-		comp.ref_path = respath
+local function load_res(comp, pkgname, respath, param, errmsg)
+	local res = asset.load(pkgname, respath, param)	
+	if res == nil then
+		error(string.format("[%s]load resource failed, pkgname:%s, respath:%s", errmsg, pkgname, respath))
 	end
 
-	local ref_path = comp.ref_path
-	if ref_path == nil then
-		error(string.format("[%s]load resource failed, need ref_path, but get nil", errmsg))
-	end
-
-	comp.assetinfo = asset.load(ref_path, param)
+	comp.assetinfo = res
 end
 
-function util.load_skeleton(comp, respath, param)
-	load_res(comp, respath, param, "load.skeleton")	
+function util.load_skeleton(comp, pkgname, respath, param)
+	load_res(comp, pkgname, respath, param, "load.skeleton")	
 end
 
 local function gen_mesh_assetinfo(skinning_mesh_comp)
@@ -88,68 +84,54 @@ local function gen_mesh_assetinfo(skinning_mesh_comp)
 	}
 end
 
-function util.load_skinning_mesh(smcomp, meshcomp, respath, param)
-	load_res(smcomp, respath, param, "load.skinning_mesh")
+function util.load_skinning_mesh(smcomp, meshcomp, pkgname, respath, param)
+	load_res(smcomp, pkgname, respath, param, "load.skinning_mesh")
 	meshcomp.assetinfo = gen_mesh_assetinfo(smcomp)
 end
 
-function util.load_mesh(comp, respath, param)
-	load_res(comp, respath, param, "load.mesh")
+function util.load_mesh(comp, pkgname, respath, param)
+	load_res(comp, pkgname, respath, param, "load.mesh")
 end
 
-function util.load_texture(name, stage, texpath)	
+function util.load_texture(name, stage, pkgname, texpath)	
 	assert(type(texpath) == "userdata", "texture type's default value should be path to texture file")
-	local assetinfo = asset.load(texpath)
+	local assetinfo = asset.load(pkgname, texpath)
 	return {name=name, type="texture", stage=stage, value=assetinfo.handle}
 end
 
 
-function util.update_properties(dst_properties, src_properties)		
+local function update_properties(dst_properties, src_properties, pkgname)
 	for k, v in pairs(src_properties) do
 		if v.type == "texture" then
-			dst_properties[k] = util.load_texture(v.name, v.stage, fs.path(v.default or v.path))
+			-- TODO, pkgname should save on the material file
+			dst_properties[k] = util.load_texture(v.name, v.stage, pkgname, fs.path(v.default or v.path))
 		else
 			dst_properties[k] = {name=v.name, type=v.type, value=deep_copy(v.default or v.value)}
 		end
 	end
 end
 
-function util.create_material(filepath, info)
-	local materialinfo = asset.load(filepath)
+function util.add_material(material, pkgname, respath)
+	local content = material.content
+	if content == nil then
+		content = {}
+		material.content = content
+	end
+
+	local materialinfo = asset.load(pkgname, respath)
 	--
 	local mproperties = materialinfo.properties 
-	local properties = nil
-	if mproperties then
-		properties = {}
-		util.update_properties(properties, mproperties)
-	end
-	info.path = filepath
-	info.materialinfo = materialinfo
-	info.properties = properties
-end
-
-function util.load_materialex(content)
-	for _, m in ipairs(content) do
-		util.create_material(m.path, m)
-		if m.properties == nil then
-			m.properties = {}
-		end
-	end
-	return content
-end
-
--- todo : remove this function by load_materialex
-function util.load_material(material, material_filenames)
-	if material_filenames then
-		if material.content == nil then
-			material.content = {}
-		end
-		for idx, f in ipairs(material_filenames) do
-			material.content[idx] = {path = f, properties = {}}
-		end
+	local properties = {}
+	if mproperties then		
+		-- TODO
+		update_properties(properties, mproperties, pkgname)
 	end
 
-	util.load_materialex(material.content)
+	content[#content+1] = {
+		path = {pkgname, respath},
+		materialinfo = materialinfo,
+		properties = properties,
+	}
 end
 
 function util.create_render_entity(world, name, meshfile, materialfile)
@@ -162,8 +144,10 @@ function util.create_render_entity(world, name, meshfile, materialfile)
 	mu.identify_transform(obj)
 	
 	obj.name = name
-	util.load_mesh(obj.mesh, meshfile)
-	util.load_material(obj.material, {materialfile})
+	local pkgname, respath = meshfile[1], meshfile[2]
+	util.load_mesh(obj.mesh, pkgname, respath)
+	local mpkgname, mrespath = materialfile[1], materialfile[2]
+	util.add_material(obj.material, mpkgname, mrespath)
 	return eid
 end
 
@@ -243,7 +227,7 @@ function util.create_grid_entity(world, name, w, h, unit)
 	grid.mesh.ref_path = ""
     grid.mesh.assetinfo = util.create_mesh_handle(vdecl, gvb, ib)
 
-	util.load_material(grid.material, {fs.path "line.material"})
+	util.add_material(grid.material, "engine", fs.path "line.material")
 
 	return gridid
 end

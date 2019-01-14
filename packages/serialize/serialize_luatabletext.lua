@@ -35,9 +35,9 @@ from_luatabletext.singleton "serialization_tree"
 function from_luatabletext.notify:load_from_luatext()
     local s_tree = self.serialization_tree
     local enable = s_tree.luatext
-    if enable then        
+    if enable then
         local mapsubpath = get_map_filename("test_world")
-        local filename = assetmgr.find_valid_asset_path(mapsubpath)
+        local filename = assetmgr.find_asset_path(nil, mapsubpath)
         if filename then
             local wrapper = seri_util.load(filename)
             s_tree.root = wrapper.root

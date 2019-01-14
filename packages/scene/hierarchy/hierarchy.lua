@@ -1,26 +1,29 @@
 local ecs = ...
 local world = ecs.world
 local assetmgr = import_package "ant.asset"
+local fs = require "filesystem"
 
 local h = ecs.component_struct "hierarchy" {
 	ref_path = {
 		type = "userdata",
 		default = "",
 		save = function(v, arg)
-			assert(type(v) == "string")
+			assert(type(v) == "table")
 			local e = world[arg.eid]
 			local comp = e[arg.comp]	
 			local builddata = comp.builddata
 			assert(builddata)
-			return v
+			local pkgname, respath = v[1], v[2]
+			return {pkgname:string(), respath:string()}
 		end,
 		load = function(v)
-			assert(type(v) == "string")			
+			assert(type(v) == "table")			
+			local pkgname, respath = fs.path(v[1]), fs.path(v[2])
 			assert(fs.path(v):extension() == fs.path ".hierarchy")
 			local e = world[arg.eid]
 			local comp = e[arg.comp]
 
-			comp.builddata = assert(assetmgr.load(v))
+			comp.builddata = assert(assetmgr.load(pkgname, respath))
 			return v
 		end
 	},

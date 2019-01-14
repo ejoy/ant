@@ -11,14 +11,19 @@ local eh = ecs.component_struct "editable_hierarchy"{
 		type = "userdata",
 		default = "",
 		save = function (v, arg)
-			assert(type(v) == "string")
-			return v
+			assert(type(v) == "table")
+			local pkgname = v[1]
+			local respath = v[2]
+			-- need save pkgname and respath
+			return {pkgname:string(), respath:string()}
 		end,
 		load = function (v, arg)
-			assert(type(v) == "string")
-			assert(fs.path(v):extension() == fs.path ".hierarchy")
+			assert(type(v) == "table")
+			local pkgname = fs.path(v[1])
+			local respath = fs.path(v[2])
+			assert(respath:extension() == fs.path ".hierarchy")
 			local e = world[arg.eid]
-			e.editable_hierarchy.root = assetmgr.load(v, {editable=true})
+			e.editable_hierarchy.root = assetmgr.load(pkgname, respath, {editable=true})
 			return v
 		end
 	}

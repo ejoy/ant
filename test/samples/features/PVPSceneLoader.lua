@@ -208,8 +208,8 @@ function PVPScene.create_entitices(world)
 
 				e.name = name
 
-				computil.load_mesh(e.mesh, scenedata.mesh)
-				computil.load_material(e.material, {scenedata.material})
+				computil.load_mesh(e.mesh, "engine", scenedata.mesh)
+				computil.add_material(e.material, "engine", scenedata.material)
 
 				if collision_array then
 					local ct = collision_array[idx]

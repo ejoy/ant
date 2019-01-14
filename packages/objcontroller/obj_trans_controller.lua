@@ -14,12 +14,12 @@ local fs = require "filesystem"
 
 local components_util = import_package "ant.render".components
 
-local assetdir = assetmgr.assetdir()
-local depictiondir = assetdir / "depiction"
-local axisbase_controller_hierarchyname = assetdir / "hierarchy/axisbase_contrller.hierarchy"
-local axis_hierarchyname = assetdir / "hierarchy/axis.hierarchy"
-local rotator_hierarchyname = assetdir / "hierarchy/rotator.hierarchy"
-local objtrans_materialpath = depictiondir / "obj_trans/obj_trans.material"
+local axisbase_controller_hierarchyname = fs.path "hierarchy/axisbase_contrller.hierarchy"
+local axis_hierarchyname = fs.path "hierarchy/axis.hierarchy"
+local rotator_hierarchyname = fs.path "hierarchy/rotator.hierarchy"
+local objtrans_materialpath = fs.path "obj_trans/obj_trans.material"
+
+local pkgname = "engine"
 
 ecs.tag "pos_transform"
 ecs.tag "scale_transform"
@@ -283,13 +283,13 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 	world:add_component(hie_eid, tag_comp)
 	local hie_entity = world[hie_eid]
 
-	hie_entity.editable_hierarchy.ref_path = axis_hierarchyname
-	hie_entity.editable_hierarchy.root = assetmgr.load(axis_hierarchyname, {editable=true})
+	hie_entity.editable_hierarchy.ref_path = {pkgname, axis_hierarchyname}
+	hie_entity.editable_hierarchy.root = assetmgr.load(pkgname, axis_hierarchyname, {editable=true})
 
 	local namemapper = hie_entity.hierarchy_name_mapper
 	local function create_mesh_entity(name, meshfile)
 		local eid = components_util.create_render_entity(world, prefixname .. name .. "-" .. suffixname,
-							meshfile, materialfile)
+							{pkgname, fs.path(meshfile)}, {pkgname, fs.path(materialfile)})
 		world:add_component(eid, "parent", tag_comp, "editor")
 		local obj = world[eid]
 		obj.parent.eid = hie_eid
@@ -338,8 +338,8 @@ local function add_axis_base_transform_entites(basename, headmeshfile, axismeshf
 										headmeshfile, axismeshfile,
 										objtrans_materialpath, tag_comp, colors["blue"])
 
-	axis_root.editable_hierarchy.ref_path = axisbase_controller_hierarchyname
-	axis_root.editable_hierarchy.root = assetmgr.load(axisbase_controller_hierarchyname, {editable = true})
+	axis_root.editable_hierarchy.ref_path = {pkgname, axisbase_controller_hierarchyname}
+	axis_root.editable_hierarchy.root = assetmgr.load(pkgname, axisbase_controller_hierarchyname, {editable = true})
 	
 	local controllers = {		
 		root = rootaxis_eid,
@@ -394,11 +394,11 @@ local function add_axis_base_transform_entites(basename, headmeshfile, axismeshf
 end
 
 local function add_translate_entities(colors)
-	return add_axis_base_transform_entites("translate", depictiondir / "cone.mesh", depictiondir / "cylinder.mesh", "pos_transform", colors)
+	return add_axis_base_transform_entites("translate", "cone.mesh", "cylinder.mesh", "pos_transform", colors)
 end
 
 local function add_scale_entities(colors)
-	return add_axis_base_transform_entites("scale", depictiondir / "cube.mesh", depictiondir / "cylinder.mesh", "scale_transform", colors)
+	return add_axis_base_transform_entites("scale", "cube.mesh", "cylinder.mesh", "scale_transform", colors)
 end
 
 local function add_rotator_entities(colors)	
@@ -411,8 +411,8 @@ local function add_rotator_entities(colors)
 	local root_eid = components_util.create_hierarchy_entity(world, "rotator")
 	world:add_component(root_eid, "rotator_transform")
 	local hie_entity = world[root_eid]
-	hie_entity.editable_hierarchy.ref_path = axisbase_controller_hierarchyname
-	hie_entity.editable_hierarchy.root = assetmgr.load(axisbase_controller_hierarchyname, {editable=true})
+	hie_entity.editable_hierarchy.ref_path = {pkgname, axisbase_controller_hierarchyname}
+	hie_entity.editable_hierarchy.root = assetmgr.load(pkgname, axisbase_controller_hierarchyname, {editable=true})
 	local namemapper = hie_entity.hierarchy_name_mapper
 
 	local function add_elem_entity(elemname, clrname)
@@ -420,13 +420,13 @@ local function add_rotator_entities(colors)
 		world:add_component(elem_eid, "rotator_transform")
 		local elem = world[elem_eid]
 
-		elem.editable_hierarchy.root = assetmgr.load(rotator_hierarchyname, {editable=true})
-		elem.editable_hierarchy.ref_path = rotator_hierarchyname
+		elem.editable_hierarchy.root = assetmgr.load(pkgname, rotator_hierarchyname, {editable=true})
+		elem.editable_hierarchy.ref_path = {pkgname, rotator_hierarchyname}
 
 		local mapper = elem.hierarchy_name_mapper
 		local function add_entity(name, meshfilename, colorname)
-			local eid = components_util.create_render_entity(world, name, meshfilename,
-			objtrans_materialpath)
+			local eid = components_util.create_render_entity(world, name, {pkgname, fs.path(meshfilename)},
+			{pkgname, fs.path(objtrans_materialpath)})
 			world:add_component(eid, "rotator_transform", "editor", "parent")
 			local entity = world[eid]
 	

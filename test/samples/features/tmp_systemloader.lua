@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+local fs = require "filesystem"
+
 ecs.import "ant.render"
 ecs.import "ant.editor"
 ecs.import "ant.inputmgr"
@@ -46,19 +48,18 @@ local function create_animation_test()
 	local anitest = world[anitest_eid]
 	anitest.name = "animation_entity"
 
-	mathutil.identify_transform(anitest)
-
-	computil.load_skinning_mesh(anitest.skinning_mesh, anitest.mesh, smpath)
-	computil.load_skeleton(anitest.skeleton, skepath)
+	mathutil.identify_transform(anitest)	
+	computil.load_skinning_mesh(anitest.skinning_mesh, anitest.mesh, nil, smpath)
+	computil.load_skeleton(anitest.skeleton, nil, skepath)
 	
 
 	aniutil.init_animation(anitest.animation, anitest.skeleton)
 	local weight = 1 / #anipaths
 	for _, anipath in ipairs(anipaths) do
-		aniutil.add_animation(anitest.animation, anipath, weight)
+		aniutil.add_animation(anitest.animation, "engine", anipath, weight)
 	end
 
-	computil.load_material(anitest.material, {asset.depictiondir() / "skin_model_sample.material"})
+	computil.add_material(anitest.material, "engine", fs.path "skin_model_sample.material")
 end
 
 

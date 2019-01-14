@@ -1,8 +1,8 @@
 local vfs = require "vfs"
 local assetmgr = require "asset"
 
-return function(filepath)
-	local fn = assetmgr.find_valid_asset_path(filepath)
+return function(pkgname, filepath)
+	local fn = assetmgr.find_asset_path(pkgname, filepath)
 
 	local function find_tagop(filepath, readops)
 		local f = io.open(filepath:string(), "rb")

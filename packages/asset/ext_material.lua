@@ -5,14 +5,14 @@ local ru = import_package "ant.render".util
 local rawtable = require "rawtable"
 
 local loaders = {
-	state = function (t) return t end, 
-	shader = function (t)
-		return assetutil.shader_loader(t)
+	state = function (pkgname, t) return t end, 
+	shader = function (pkgname, t)
+		return assetutil.shader_loader(pkgname, t)
 	end
 }
 
-return function(filepath)
-	local fn = assetmgr.find_depiction_path(filepath)
+return function(pkgname, filepath)
+	local fn = assetmgr.find_depiction_path(pkgname, filepath)
 	local material = rawtable(fn)
 
     local material_info = {}
@@ -32,9 +32,9 @@ return function(filepath)
 					return subres_path
 				end
 				local subres_path = filter_path(fn:parent_path(), fs.path(v))
-                material_info[k] = assetmgr.load(subres_path)
+                material_info[k] = assetmgr.load(pkgname, subres_path)
 			elseif t == "table" then
-				material_info[k] = loader(v)
+				material_info[k] = loader(pkgname, v)
             end
         else
             material_info[k] = v

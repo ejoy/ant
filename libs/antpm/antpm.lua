@@ -52,7 +52,7 @@ local function require_package(name)
     end
     local info = registered[name]
     if not info.env then
-        info.env = sandbox.env(info.root:string())
+		info.env = sandbox.env(info.root:string(), name)
     end
     return info.env.require(info.config.entry)
 end
@@ -84,7 +84,7 @@ end
 local function m_loadfile(name, filename)
     local info = registered[name]
     if not info.env then
-        info.env = sandbox.env(info.root:string())
+        info.env = sandbox.env(info.root:string(), name)
     end
     return fs.loadfile(filename, 't', info.env)
 end
