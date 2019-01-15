@@ -1,7 +1,5 @@
---luacheck: globals iup import
-local asset = import_package "ant.asset"
-local vfsutil = require "vfsutil"
 local fs = require "filesystem"
+local vfs = require "vfs"
 local configDir = fs.mydocs_path() / '.ant/config'
 fs.create_directories(configDir)
 local recentcfg = configDir / 'recent.cfg'
@@ -81,7 +79,7 @@ local function recentUpdate()
         local h = iup.item {
             title = path:string(),
             action = function()
-        		openMap(path)
+				openMap(path)
             end
         }
         guiFile:insert(ref, h) 
@@ -89,11 +87,18 @@ local function recentUpdate()
     end
 end
 
-local function recentAdd(path)
-	local filterpath = vfsutil.filter_abs_path(path)
-    table.insert(config.recent, 1, filterpath)
+local function recentClean()
+	local numChild = iup.GetChildCount(guiFile)
+	assert(numChild <= 12)
+	for i = 1, numChild - 2 do
+		iup.Detach(guiFile, i)
+	end
+end
+
+local function recentAdd(path)	
+    table.insert(config.recent, 1, path)
     for i = 2, 10 do
-        if config.recent[i] == filterpath then
+        if config.recent[i] == path then
             table.remove(config.recent, i)
             return
         end
@@ -121,13 +126,22 @@ local function recentInit()
     recentUpdate()
 end
 
+local function load_package(path)
+	assert(path:is_absolute(path))
+
+	local mapcfg = fs.dofile(path)	
+	return mapcfg.name, mapcfg.systems
+end
+
 function openMap(path)
 	guiOpenMap.active = "OFF"
 	recentAddAndUpdate(path)
 
-	path = vfsutil.filter_abs_path(path)
+	local pkgname, pkgsystems = load_package(path)
 
-    local mapcfg = fs.dofile(path)
+	if pkgname == assert(_PACKAGENAME) then
+		iup.Message("Error", "Could not open entry package, or open a package with the same name as entry package")
+	end
 
     local packages = {
         "ant.EditorLauncher",
@@ -140,13 +154,15 @@ function openMap(path)
         "obj_transform_system",
         "build_hierarchy_system",
         "editor_system"
-    }
-    if mapcfg.name ~= "ant.EditorLauncher" then
-        local pm = require "antpm"
-        pm.register(path:parent_path())
-    end
-    packages[#packages+1] = mapcfg.name
-    table.move(mapcfg.systems, 1, #mapcfg.systems, #systems+1, systems)
+	}
+
+	vfs.remove_mount("currentmap")
+	vfs.add_mount("currentmap", path:parent_path())
+	local pm = require "antpm"
+	pm.register(fs.path "currentmap")
+    
+    packages[#packages+1] = pkgname
+    table.move(pkgsystems, 1, #pkgsystems, #systems+1, systems)
     editor_mainwindow:new_world(packages, systems)
 end
 
@@ -171,6 +187,7 @@ function CMD.OpenMap(e)
 end
 
 function CMD.CleanRecentlyOpened(e)
+	recentClean()
     config.recent = {}
     recentUpdate()
     recentSave()

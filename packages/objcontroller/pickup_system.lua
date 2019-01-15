@@ -50,7 +50,7 @@ end
 
 local function init_pickup_materials()
 	local mname = "pickup.material"
-	local normal_material = asset.load(nil, fs.path(mname))
+	local normal_material = asset.load("ant.resources", fs.path(mname))
 	normal_material.name = mname
 
 	local transparent_material = deep_copy(normal_material)

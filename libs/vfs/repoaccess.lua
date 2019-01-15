@@ -35,11 +35,10 @@ end
 function access.mountname(mountpoint)
 	local mountname = {}
 
-	for name, path in pairs(mountpoint) do
+	for name in pairs(mountpoint) do
 		if name ~= '' then
 			table.insert(mountname, name)
 		end
-		mountpoint[name] = path
 	end
 	table.sort(mountname, function(a,b) return a>b end)
 	return mountname

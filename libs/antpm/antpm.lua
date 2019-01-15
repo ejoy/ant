@@ -1,7 +1,9 @@
 local fs = require "filesystem"
+local vfs = require "vfs"
 local sandbox = require "antpm.sandbox"
 
-local WORKDIR = fs.vfs and fs.path 'engine' or fs.current_path()
+local WORKDIR = fs.path 'engine'
+
 local registered = {}
 local loaded = {}
 
@@ -23,11 +25,12 @@ local function dofile(path)
 end
 
 local function register(pkg)
-    if not fs.exists(pkg) then
+	local realpkg = fs.path(vfs.realpath(pkg:string()))
+    if not fs.exists(realpkg) then
         error(('Cannot find package `%s`.'):format(pkg:string()))
     end
-    local cfg = pkg / "package.lua"
-    if not fs.exists(cfg) then
+    local cfg = realpkg / "package.lua"
+    if not fs.exists(realpkg) then
         error(('Cannot find package config `%s`.'):format(cfg:string()))
     end
     local config = dofile(cfg)
@@ -57,8 +60,10 @@ local function require_package(name)
     return info.env.require(info.config.entry)
 end
 
-for pkg in (WORKDIR / "packages"):list_directory() do
-    register(pkg)
+local REAL_WORKDIR = vfs.realpath(WORKDIR:string())
+local packagedir = fs.path(REAL_WORKDIR) / "packages"
+for pkg in packagedir:list_directory() do
+    register(WORKDIR / "packages" / pkg:filename())
 end
 
 local function import(name)

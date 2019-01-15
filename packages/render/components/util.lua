@@ -227,7 +227,7 @@ function util.create_grid_entity(world, name, w, h, unit)
 	grid.mesh.ref_path = ""
     grid.mesh.assetinfo = util.create_mesh_handle(vdecl, gvb, ib)
 
-	util.add_material(grid.material, "engine", fs.path "line.material")
+	util.add_material(grid.material, "ant.resources", fs.path "line.material")
 
 	return gridid
 end

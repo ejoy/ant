@@ -24,10 +24,42 @@ local function mount_repo(mountpoint, repopath)
 	}
 end
 
+function localvfs.add_mount(name, mountpath)
+	assert(self, "need open repo before add")
+	local mnames = self._mountname
+	for _, n in ipairs(mnames) do
+		if n == name then
+			return 
+		end
+	end
+
+	if not fs.is_directory(mountpath) then
+		return
+	end
+
+	table.insert(mnames, name)
+	table.sort(mnames, function(a, b) return a>b end)
+	self._mountpoint[name] = mountpath
+	return true
+end
+
+function localvfs.remove_mount(name)
+	assert(self)
+	local mnames = self._mountname
+	for idx, n in ipairs(mnames) do
+		if n == name then
+			table.remove(mnames, idx)
+			self._mountpoint[name] = nil
+			return true
+		end
+	end
+end
+
 function localvfs.mount(mountpoint, enginepath)
 	self = mount_repo(mountpoint, enginepath or ".")
 end
 
+-- TODO, remove localvfs.open, will not depend on .mount file, only engine root path is needed
 function localvfs.open(repopath)
 	assert(self == nil, "Can't open twice")
 	if not fs.is_directory(repopath) then

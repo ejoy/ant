@@ -246,7 +246,7 @@ shadow_maker.__index = shadow_maker
 -- shadow_maker init 
 function  shadow_maker:init( shadow_maker_entity )
 	local function load_material(name)		
-		local material = asset.load(nil, fs.path(name))
+		local material = asset.load("ant.resources", fs.path(name))
 		material.name = name 
 		return material
 	end

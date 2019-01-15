@@ -1,4 +1,5 @@
 local fs = require "filesystem"
+local vfs = require "vfs"
 
 local function glob_compile(pattern)
     return ("^%s$"):format(pattern:gsub("[%^%$%(%)%%%.%[%]%+%-%?]", "%%%0"):gsub("%*", ".*"))
@@ -61,8 +62,9 @@ local function get_sources(root, sources)
 end
 
 return function (root, sources)
-    local results = {}
-    for _, path in ipairs(get_sources(root, sources)) do
+	local results = {}
+	local localroot = fs.path(vfs.realpath(root:string()))
+    for _, path in ipairs(get_sources(localroot, sources)) do
         for line in fs.lines(path) do
             if line:match "^[%s]*local[%s]+ecs[%s]*=[%s]*%.%.%.[%s]*$" then
                 results[#results+1] = path
