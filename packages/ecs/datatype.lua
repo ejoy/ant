@@ -98,7 +98,7 @@ local function gen_default(v)
 end
 
 return function (c)
-	local t = c.struct
+	local t = c.typeinfo
 	if t.struct then
 		t = t.struct
 		for k,v in pairs(t) do
@@ -109,7 +109,7 @@ return function (c)
 		end
 	else
 		t = gen_value(t)
-		c.struct = t
+		c.typeinfo = t
 		gen_default(t)
 	end
 	return t

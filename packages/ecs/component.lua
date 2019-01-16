@@ -1,83 +1,65 @@
-local log = log and log(...) or print
-
 local datatype = require "datatype"
 
 local function gen_new(c)
-	if c.struct then
-		if c.method.new then
-			error(string.format("Type %s defined at %s has a struct. It defines new at %s, use init instead",
-				c.name, c.defined, c.source.new))
-		end
-		local init = c.method.init
-		return function()
-			local ret
-			if c.struct.struct then
-				ret = {}
-				for k,v in pairs(c.struct.struct) do
-					local default = v.default
-					if default ~= nil then
-						ret[k] = default
-					else
-						ret[k] = v.default_func()
-					end
-				end
-			else
-				local v = c.struct
+	if c.method.new then
+		error(string.format("Type %s defined at %s has a typeinfo. It defines new at %s, use init instead",
+			c.name, c.defined, c.source.new))
+	end
+	local init = c.method.init
+	return function()
+		local ret
+		if c.typeinfo.struct then
+			ret = {}
+			for k,v in pairs(c.typeinfo.struct) do
 				local default = v.default
 				if default ~= nil then
-					ret = default
+					ret[k] = default
 				else
-					ret = v.default_func()
+					ret[k] = v.default_func()
 				end
 			end
-			if init then
-				init(ret)
+		else
+			local v = c.typeinfo
+			local default = v.default
+			if default ~= nil then
+				ret = default
+			else
+				ret = v.default_func()
 			end
-			return ret
 		end
-	else
-		-- user type
-		local new = c.method.new
-		if new == nil then
-			error(string.format("Type %s defined at %s has no struct without new",
-				c.name, c.defined))
+		if init then
+			init(ret)
 		end
-		if c.method.init then
-			error(string.format("Usertype %s defined at %s defines new at %s, init at %s has no effect",
-				c.name, c.defined, c.source.new, c.source.init))
-		end
-		return new
+		return ret
 	end
 end
 
 local function gen_delete(c)
 	local primitive
-	if c.struct then
-		-- matrix and vector
-		if c.struct.struct then
-			for k,v in pairs(c.struct) do
-				local tname = v.type
-				if tname == "matrix" or tname == "vector" then
-					local last = primitive
-					if last then
-						function primitive(component)
-							component[k]()  -- release ref
-							return last(component)
-						end
-					else
-						function primitive(component)
-							component[k]()  -- release ref
-						end
+	-- matrix and vector
+	if c.typeinfo.struct then
+		for k,v in pairs(c.typeinfo) do
+			local tname = v.type
+			if tname == "matrix" or tname == "vector" then
+				local last = primitive
+				if last then
+					function primitive(component)
+						component[k]()  -- release ref
+						return last(component)
+					end
+				else
+					function primitive(component)
+						component[k]()  -- release ref
 					end
 				end
 			end
-		else
-			local v = c.struct
-			local tname = v.type
-			if tname == "matrix" or tname == "vector" then
-				function primitive(component)
-					component()  -- release ref
-				end
+		end
+	else
+		local v = c.typeinfo
+		local tname = v.type
+		if tname == "matrix" or tname == "vector" then
+			function primitive(component)
+				component()  -- release ref
 			end
 		end
 	end
@@ -114,13 +96,13 @@ local function copy_method(c)
 	return m
 end
 
-local function gen_save(struct)
-	if struct and struct.struct then
+local function gen_save(typeinfo)
+	if typeinfo and typeinfo.struct then
 		return function (c, arg)
 			assert(type(c) == "table")
 			local t = {}
 			for k, v in pairs(c) do
-				local vclass = struct[k]
+				local vclass = typeinfo[k]
 				if vclass then
 					arg.struct_type = k
 					local save = vclass.save
@@ -137,8 +119,8 @@ local function gen_save(struct)
 	end
 end
 
-local function gen_load(struct)
-	if struct and struct.struct then
+local function gen_load(typeinfo)
+	if typeinfo and typeinfo.struct then
 		return function(v, arg)
 			local c = {}
 			local keys = {}
@@ -147,7 +129,7 @@ local function gen_load(struct)
 			end
 
 			for _, k in ipairs(keys) do
-				local vclass = struct[k]
+				local vclass = typeinfo[k]
 				if vclass then
 					arg.struct_type = k
 					local load = vclass.load
@@ -165,12 +147,12 @@ local function gen_load(struct)
 end
 
 return function(c)
-	local struct = c.struct and datatype(c)
+	local typeinfo = datatype(c)
 	return {
-		struct = struct,
+		typeinfo = typeinfo,
 		new = gen_new(c),
-		save = gen_save(struct),
-		load = gen_load(struct),
+		save = gen_save(typeinfo),
+		load = gen_load(typeinfo),
 		delete = gen_delete(c),
 		method = copy_method(c),
 	}
