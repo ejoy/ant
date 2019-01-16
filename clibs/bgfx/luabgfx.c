@@ -2810,10 +2810,7 @@ lcreateUniform(lua_State *L) {
 	const char * type = luaL_checkstring(L, 2);
 	bgfx_uniform_type_t ut;
 	switch(type[0]) {
-	case 'i':
-		if (type[1] != '1') {
-			return luaL_error(L, "Invalid Uniform type %s", type);
-		}
+	case 's':		
 		ut = BGFX_UNIFORM_TYPE_SAMPLER;
 		break;
 	case 'v':

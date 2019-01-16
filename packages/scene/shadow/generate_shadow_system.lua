@@ -262,13 +262,13 @@ function  shadow_maker:init( shadow_maker_entity )
     var_def( ctx.directionLight,"position",0,0,0,1)
     var_def( ctx.directionLight,"position_ViewSpace",0,0,0,1 )
 
-    ctx.s_texColor = bgfx.create_uniform("s_texColor",  "i1")
+    ctx.s_texColor = bgfx.create_uniform("s_texColor",  "s")
     -- shadowtexture uniforms
 	ctx.u_shadowMap = {
-		bgfx.create_uniform("s_shadowMap0", "i1"),      -- only use for draw depth
-		bgfx.create_uniform("s_shadowMap1", "i1"),
-		bgfx.create_uniform("s_shadowMap2", "i1"),
-		bgfx.create_uniform("s_shadowMap3", "i1"),
+		bgfx.create_uniform("s_shadowMap0", "s"),      -- only use for draw depth
+		bgfx.create_uniform("s_shadowMap1", "s"),
+		bgfx.create_uniform("s_shadowMap2", "s"),
+		bgfx.create_uniform("s_shadowMap3", "s"),
     }
     -- ctx.s_shadowMap {}     -- shadowtexture uniforms 
     -- ctx.shadowMapMtx{}     -- shadowMap Matrices 
