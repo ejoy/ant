@@ -3,7 +3,7 @@
 
 local localvfs = {} ; localvfs.__index = localvfs
 
-local fs = require "filesystem"
+local fs = require "filesystem.local"
 local access = require "vfs.repoaccess"
 
 -- open a repo in repopath
@@ -73,7 +73,7 @@ end
 
 function localvfs.realpath(pathname)
 	local rp = access.realpath(self, pathname)
-	local lk = rp:parent_path() / (rp:filename():string() .. ".lk")
+	local lk = fs.path(rp:string() .. ".lk")
 	if fs.exists(lk) then
 		local binhash = access.build_from_path(self, self.identity, pathname)
 		if binhash == nil then

@@ -2,9 +2,9 @@
 local platform = require 'platform'
 
 return function (fs)
-	fs.vfs = __ANT_RUNTIME__ ~= nil
+	local isvfs = fs.vfs
 	local function native_method(name)
-		if fs.vfs then
+		if isvfs then
 			local vfsio = require "vfsio"
 			return vfsio[name]
 		end

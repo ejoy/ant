@@ -5,6 +5,7 @@ local world = ecs.world
 
 local hierarchy_module = require "hierarchy"
 local fs = require "filesystem"
+local localfs = require "filesystem.local"
 local vfs = require "vfs"
 
 local math = import_package "ant.math"
@@ -65,9 +66,10 @@ local function rebuild_hierarchy(iterop)
 
 	local function save_rawdata(data, pkgname, respath)
 		local fullpath = assetmgr.find_asset_path(pkgname, respath)
-		fs.create_directories(fullpath:parent_path())
 
 		local realpath = vfs.realpath(fullpath:string())
+		localfs.create_directories(localfs.path(realpath):parent_path())
+
 		hierarchy_module.save(data, realpath)
 	end
 

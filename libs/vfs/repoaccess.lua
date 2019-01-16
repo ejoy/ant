@@ -1,6 +1,6 @@
 local access = {}
 
-local fs = require "filesystem"
+local fs = require "filesystem.local"
 local crypt = require "crypt"
 
 function access.repopath(repo, hash, ext)

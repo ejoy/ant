@@ -1,14 +1,13 @@
-local fs = require "filesystem"
-local vfs = require "vfs"
+local vfsfs = require "filesystem"
 local sandbox = require "antpm.sandbox"
 
-local WORKDIR = fs.path 'engine'
+local WORKDIR = vfsfs.path 'engine'
 
 local registered = {}
 local loaded = {}
 
 local function loadfile(path, mode, env)
-    local f, err = fs.open(path, 'r')
+    local f, err = vfsfs.open(path, 'r')
     if not f then
         return nil, err
     end
@@ -24,13 +23,12 @@ local function dofile(path)
     return f()
 end
 
-local function register(pkg)
-	local realpkg = fs.path(vfs.realpath(pkg:string()))
-    if not fs.exists(realpkg) then
+local function register(pkg)	
+    if not vfsfs.exists(pkg) then
         error(('Cannot find package `%s`.'):format(pkg:string()))
     end
-    local cfg = realpkg / "package.lua"
-    if not fs.exists(realpkg) then
+    local cfg = pkg / "package.lua"
+    if not vfsfs.exists(pkg) then
         error(('Cannot find package config `%s`.'):format(cfg:string()))
     end
     local config = dofile(cfg)
@@ -60,10 +58,9 @@ local function require_package(name)
     return info.env.require(info.config.entry)
 end
 
-local REAL_WORKDIR = vfs.realpath(WORKDIR:string())
-local packagedir = fs.path(REAL_WORKDIR) / "packages"
+local packagedir = WORKDIR / "packages"
 for pkg in packagedir:list_directory() do
-    register(WORKDIR / "packages" / pkg:filename())
+    register(pkg)
 end
 
 local function import(name)
@@ -91,7 +88,7 @@ local function m_loadfile(name, filename)
     if not info.env then
         info.env = sandbox.env(info.root:string(), name)
     end
-    return fs.loadfile(filename, 't', info.env)
+    return vfsfs.loadfile(filename, 't', info.env)
 end
 
 return {

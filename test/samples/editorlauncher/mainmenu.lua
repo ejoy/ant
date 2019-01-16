@@ -1,7 +1,8 @@
 local fs = require "filesystem"
+local localfs = require "filesystem.local"
 local vfs = require "vfs"
-local configDir = fs.mydocs_path() / '.ant/config'
-fs.create_directories(configDir)
+local configDir = localfs.mydocs_path() / '.ant/config'
+localfs.create_directories(configDir)
 local recentcfg = configDir / 'recent.cfg'
 
 --project related
@@ -63,7 +64,7 @@ local guiOpenMap = iup.GetChild(iup.GetChild(guiMain, 0), 0)
 local openMap
 
 local function recentSave()
-    local f = fs.open(recentcfg, 'w')
+    local f = localfs.open(recentcfg, 'w')
     if not f then
         return
     end
@@ -114,13 +115,13 @@ end
 
 local function recentInit()
     config.recent = {}
-    local f, err = fs.open(recentcfg, 'r')
+    local f, err = localfs.open(recentcfg, 'r')
     if not f then
 		print(err)
         return
     end
     for p in f:lines() do
-        table.insert(config.recent, fs.path(p))
+        table.insert(config.recent, localfs.path(p))
     end
     f:close()
     recentUpdate()
@@ -129,7 +130,7 @@ end
 local function load_package(path)
 	assert(path:is_absolute(path))
 
-	local mapcfg = fs.dofile(path)	
+	local mapcfg = localfs.dofile(path)	
 	return mapcfg.name, mapcfg.systems
 end
 
@@ -177,7 +178,7 @@ local function popup_select_file_dlg(parentdlg, filepattern, seletfileop)
 	
 	filedlg:popup(iup.CENTERPARENT, iup.CENTERPARENT)
 	if tonumber(filedlg.status) ~= -1 then
-		seletfileop(fs.path(filedlg.value))
+		seletfileop(localfs.path(filedlg.value))
 	end
 	filedlg:destroy()
 end

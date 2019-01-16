@@ -31,7 +31,7 @@ return function(pkgname, filepath)
 						
 					return subres_path
 				end
-				local subres_path = filter_path(fn:parent_path(), fs.path(v))
+				local subres_path = filter_path(filepath:parent_path(), fs.path(v))
                 material_info[k] = assetmgr.load(pkgname, subres_path)
 			elseif t == "table" then
 				material_info[k] = loader(v)

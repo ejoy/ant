@@ -14,7 +14,7 @@ local h = ecs.component_struct "hierarchy" {
 			local builddata = comp.builddata
 			assert(builddata)
 			local pkgname, respath = v[1], v[2]
-			return {pkgname:string(), respath:string()}
+			return {pkgname, respath:string()}
 		end,
 		load = function(v)
 			assert(type(v) == "table")			

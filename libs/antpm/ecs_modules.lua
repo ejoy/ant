@@ -1,5 +1,4 @@
-local fs = require "filesystem"
-local vfs = require "vfs"
+local vfsfs = require "filesystem"
 
 local function glob_compile(pattern)
     return ("^%s$"):format(pattern:gsub("[%^%$%(%)%%%.%[%]%+%-%?]", "%%%0"):gsub("%*", ".*"))
@@ -19,7 +18,7 @@ end
 
 local function expand_dir(t, pattern, dir)
     for file in dir:list_directory() do
-        if fs.is_directory(file) then
+        if vfsfs.is_directory(file) then
             expand_dir(t, pattern, file)
         else
             if glob_match(pattern, file:filename():string()) then
@@ -62,10 +61,9 @@ local function get_sources(root, sources)
 end
 
 return function (root, sources)
-	local results = {}
-	local localroot = fs.path(vfs.realpath(root:string()))
-    for _, path in ipairs(get_sources(localroot, sources)) do
-        for line in fs.lines(path) do
+	local results = {}	
+    for _, path in ipairs(get_sources(root, sources)) do
+        for line in vfsfs.lines(path) do
             if line:match "^[%s]*local[%s]+ecs[%s]*=[%s]*%.%.%.[%s]*$" then
                 results[#results+1] = path
                 break

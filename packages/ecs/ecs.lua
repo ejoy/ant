@@ -187,10 +187,9 @@ local function init_modules(w, packages, systems)
 		end
 		local modules = config.ecs_modules
 		if modules then
-			local tmp = {}
-			local localroot = fs.path(vfs.realpath(root:string()))
+			local tmp = {}			
 			for _, m in ipairs(modules) do
-				tmp[#tmp+1] = localroot / m
+				tmp[#tmp+1] = root / m
 			end
 			modules = tmp
 		else

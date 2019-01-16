@@ -14,10 +14,10 @@ local fs = require "filesystem"
 
 local components_util = import_package "ant.render".components
 
-local axisbase_controller_hierarchyname = fs.path "hierarchy/axisbase_contrller.hierarchy"
-local axis_hierarchyname = fs.path "hierarchy/axis.hierarchy"
-local rotator_hierarchyname = fs.path "hierarchy/rotator.hierarchy"
-local objtrans_materialpath = fs.path "obj_trans/obj_trans.material"
+local axisbase_controller_hierarchyname = fs.path "hierarchy" / "axisbase_contrller.hierarchy"
+local axis_hierarchyname = fs.path "hierarchy"/ "axis.hierarchy"
+local rotator_hierarchyname = fs.path "hierarchy" / "rotator.hierarchy"
+local objtrans_materialpath = fs.path "obj_trans"/ "obj_trans.material"
 
 local pkgname = "ant.resources"
 
@@ -289,7 +289,7 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 	local namemapper = hie_entity.hierarchy_name_mapper
 	local function create_mesh_entity(name, meshfile)
 		local eid = components_util.create_render_entity(world, prefixname .. name .. "-" .. suffixname,
-							{pkgname, fs.path(meshfile)}, {pkgname, fs.path(materialfile)})
+							{pkgname, meshfile}, {pkgname, materialfile})
 		world:add_component(eid, "parent", tag_comp, "editor")
 		local obj = world[eid]
 		obj.parent.eid = hie_eid
@@ -394,11 +394,11 @@ local function add_axis_base_transform_entites(basename, headmeshfile, axismeshf
 end
 
 local function add_translate_entities(colors)
-	return add_axis_base_transform_entites("translate", "cone.mesh", "cylinder.mesh", "pos_transform", colors)
+	return add_axis_base_transform_entites("translate", fs.path "cone.mesh", fs.path "cylinder.mesh", "pos_transform", colors)
 end
 
 local function add_scale_entities(colors)
-	return add_axis_base_transform_entites("scale", "cube.mesh", "cylinder.mesh", "scale_transform", colors)
+	return add_axis_base_transform_entites("scale", fs.path "cube.mesh", fs.path "cylinder.mesh", "scale_transform", colors)
 end
 
 local function add_rotator_entities(colors)	
@@ -425,8 +425,8 @@ local function add_rotator_entities(colors)
 
 		local mapper = elem.hierarchy_name_mapper
 		local function add_entity(name, meshfilename, colorname)
-			local eid = components_util.create_render_entity(world, name, {pkgname, fs.path(meshfilename)},
-			{pkgname, fs.path(objtrans_materialpath)})
+			local eid = components_util.create_render_entity(world, name, {pkgname, meshfilename},
+			{pkgname, objtrans_materialpath})
 			world:add_component(eid, "rotator_transform", "editor", "parent")
 			local entity = world[eid]
 	

@@ -94,7 +94,7 @@ function util.load_mesh(comp, pkgname, respath, param)
 end
 
 function util.load_texture(name, stage, pkgname, texpath)	
-	assert(type(texpath) == "userdata", "texture type's default value should be path to texture file")
+	assert(type(texpath) ~= "string", "texture type's default value should be path to texture file")
 	local assetinfo = asset.load(pkgname, texpath)
 	return {name=name, type="texture", stage=stage, value=assetinfo.handle}
 end
