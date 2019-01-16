@@ -1,4 +1,4 @@
 return {
     name = "ant.serialize",
-    entry = "main",
+    entry = "serialize",
 }

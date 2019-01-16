@@ -187,7 +187,7 @@ function PVPScene.create_entitices(world)
 				local srt = srt_array[idx]
 
 				local eid = world:new_entity("scale", "rotation", "position",
-				"can_render", "mesh", "material",
+				"can_render", "mesh", "material", "serialize",
 				"name")
 				local e = world[eid]
 

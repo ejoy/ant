@@ -61,6 +61,7 @@ local function create_animation_test()
 	computil.load_material(anitest.material, {asset.depictiondir() / "skin_model_sample.material"})
 end
 
+local serialize = import_package "ant.serialize"
 
 function init_loader:init()
 	do
@@ -75,4 +76,10 @@ function init_loader:init()
 	computil.create_grid_entity(world, "grid", 64, 64, 1)
 
 	create_animation_test()
+
+	local t = serialize.save(world)
+	for _, eid in world:each "serialize" do
+		world:remove_entity(eid)
+    end
+	serialize.load(world, t)
 end

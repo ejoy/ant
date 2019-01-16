@@ -129,24 +129,18 @@ local function gen_save(struct)
 			end
 			return t
 		end
-	elseif struct and struct.type == "tag" then
-		return function (c, arg)
-			-- this is tag
-			assert(type(c) == "boolean")
-			return c
-		end
 	else
-		return function (v, arg)
-			arg.struct_type = "" --TODO
-			local save = struct.save
-			return save(v, arg)
+		return function (c, arg)
+			--TODO
+			return c
 		end
 	end
 end
 
 local function gen_load(struct)
 	if struct and struct.struct then
-		return function(c, v, arg)
+		return function(v, arg)
+			local c = {}
 			local keys = {}
 			for k in pairs(c) do
 				table.insert(keys, k)
@@ -160,12 +154,12 @@ local function gen_load(struct)
 					c[k] = load(v[k], arg)
 				end
 			end
+			return c
 		end
 	else
-		return function(c, v, arg)
-			arg.struct_type = "" -- TODO
-			local load = struct.load
-			c = load(v, arg)
+		return function(v, arg)
+			-- TODO
+			return v
 		end
 	end
 end
