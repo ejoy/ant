@@ -1,0 +1,10 @@
+shader = {
+    vs ={"ant.resources", "mesh/vs_colormeshex",},
+    fs ={"ant.resources", "mesh/fs_colormesh",},
+}
+
+state = "default.state"
+
+properties = {
+	u_time = {name="u_time", type="v4", default={1, 1, 1, 1}},
+}

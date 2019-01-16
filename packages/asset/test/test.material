@@ -1,6 +1,6 @@
 shader = {
-	vs = "vs_mesh",
-	fs = "fs_mesh",
+	vs ={"ant.resources", "vs_mesh",},
+	fs ={"ant.resources", "fs_mesh",},
 }
 state = "default.state"
 

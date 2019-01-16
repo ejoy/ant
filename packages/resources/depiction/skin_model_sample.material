@@ -1,0 +1,6 @@
+shader = {
+	vs ={"ant.resources", "mesh_skin/vs_color_lighting",},
+	fs ={"ant.resources", "mesh_skin/fs_color_lighting",},
+}
+
+state = "default.state"

@@ -1,5 +1,7 @@
 local ecs = ...
 
+local fs = require "filesystem"
+
 local component_util = require "components.util"
 local asset = import_package "ant.asset"
 local math = import_package "ant.math"

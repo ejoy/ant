@@ -68,7 +68,7 @@ function debug_obj:init()
 		assetinfo={handle=init_wireframe_mesh()}
 	}
 
-	componentutil.load_material(dbentity.material, {fs.path "line.material"})
+	componentutil.add_material(dbentity.material, "engine", fs.path "line.material")
 end
 
 local debug_draw = ecs.system "debug_draw"
@@ -83,9 +83,8 @@ local function check_add_material(mc, materialpath)
 		end
 	end
 
-	if not has_material() then
-		local m = {}
-		table.insert(mc, componentutil.create_material(materialpath, m))
+	if not has_material() then		
+		componentutil.add_material(mc, "engine", materialpath)
 	end
 end
 

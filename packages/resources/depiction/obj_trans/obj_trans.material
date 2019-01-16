@@ -1,0 +1,14 @@
+shader = {
+    vs ={"ant.resources", "objtrans/vs_objtrans",},
+    fs ={"ant.resources", "objtrans/fs_objtrans",},
+}
+
+state = "transparent.state"
+
+properties = {
+	u_color = {type="v4", name="color", default={1, 1, 1, 1}},
+}
+
+surface_type = {
+	transparency = "transparent"
+}

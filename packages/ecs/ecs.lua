@@ -5,6 +5,8 @@ local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
 local pm = require "antpm"
+local vfs = require "vfs"
+local fs = require "filesystem"
 
 local ecs = {}
 local world = {} ; world.__index = world
@@ -185,7 +187,7 @@ local function init_modules(w, packages, systems)
 		end
 		local modules = config.ecs_modules
 		if modules then
-			local tmp = {}
+			local tmp = {}			
 			for _, m in ipairs(modules) do
 				tmp[#tmp+1] = root / m
 			end

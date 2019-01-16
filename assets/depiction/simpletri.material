@@ -1,6 +1,0 @@
-shader = {
-    vs = "simple/triangle/vs_simpletri",
-    fs = "simple/triangle/fs_simpletri",
-}
-
-state = "default.state"

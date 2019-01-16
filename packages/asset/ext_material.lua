@@ -11,8 +11,8 @@ local loaders = {
 	end
 }
 
-return function(filepath)
-	local fn = assetmgr.find_depiction_path(filepath)
+return function(pkgname, filepath)
+	local fn = assetmgr.find_depiction_path(pkgname, filepath)
 	local material = rawtable(fn)
 
     local material_info = {}
@@ -31,8 +31,8 @@ return function(filepath)
 						
 					return subres_path
 				end
-				local subres_path = filter_path(fn:parent_path(), fs.path(v))
-                material_info[k] = assetmgr.load(subres_path)
+				local subres_path = filter_path(filepath:parent_path(), fs.path(v))
+                material_info[k] = assetmgr.load(pkgname, subres_path)
 			elseif t == "table" then
 				material_info[k] = loader(v)
             end

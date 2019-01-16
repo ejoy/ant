@@ -1,6 +1,0 @@
-shader = {
-	vs = "mesh_skin/vs_color_lighting",
-	fs = "mesh_skin/fs_color_lighting",
-}
-
-state = "default.state"

@@ -1,4 +1,5 @@
 local fs = require "filesystem"
+local vfs = require "vfs"
 
 local function io_open(path)
     return fs.open(fs.path(path))
@@ -10,7 +11,7 @@ local function loadlua(f, name)
     return load(str, '@' .. name)
 end
 
-local function sandbox_env(root)
+local function sandbox_env(root, pkgname)
     local env = setmetatable({}, {__index=_G})
     local _LOADED = {}
 
@@ -80,20 +81,23 @@ local function sandbox_env(root)
             _LOADED[name] = true
         end
         return _LOADED[name]
-    end
+	end
+	
+	local realroot = vfs.realpath(root)
 
     env.package = {
         config = table.concat({"/",";","?","!","-"}, "\n"),
         loaded = _LOADED,
         preload = package.preload,
-        path = root .. '/?.lua',
+        path = realroot .. '/?.lua',
         searchpath = searchpath,
         searchers = {}
     }
     for i, searcher in ipairs(package.searchers) do
         env.package.searchers[i] = searcher
     end
-    env.package.searchers[2] = searcher_lua
+	env.package.searchers[2] = searcher_lua
+	env._PACKAGENAME = pkgname
     return env
 end
 

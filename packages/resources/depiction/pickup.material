@@ -1,0 +1,6 @@
+shader = {
+    vs ={"ant.resources", "picking/vs_picking",},
+    fs ={"ant.resources", "picking/fs_picking",},
+}
+
+state = "default.state"

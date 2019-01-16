@@ -209,12 +209,12 @@ local function init_terrain(fbw, fbh, entity )
 		-- mothod 2
 		-- or create manually
 		terrain:load_program("terrain_shadow/vs_terrain_shadow","terrain_shadow/fs_terrain_shadow")
-		terrain:create_uniform("u_mask","s_maskTexture","i1",1)
-		terrain:create_uniform("u_base","s_baseTexture","i1",0)
+		terrain:create_uniform("u_mask","s_maskTexture","s",1)
+		terrain:create_uniform("u_base","s_baseTexture","s",0)
 		terrain:create_uniform("u_lightDirection","s_lightDirection","v4")
 		terrain:create_uniform("u_lightIntensity","s_lightIntensity","v4")
 		terrain:create_uniform("u_lightColor","s_lightColor","v4")
-		terrain:create_uniform("u_showMode","s_showMode","i1")   -- 0 default,1 = normal
+		terrain:create_uniform("u_showMode","s_showMode","s")   -- 0 default,1 = normal
 
 		terrain:set_uniform("u_lightDirection",{1,1,1,1} )
 		terrain:set_uniform("u_lightIntensity",{2.316,0,0,0} )  

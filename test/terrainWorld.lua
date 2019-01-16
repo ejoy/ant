@@ -363,11 +363,11 @@ local function init(canvas, fbw, fbh)
 	else 
 		-- or create manually
 		terrain:load_program("terrain/vs_terrain.sc","terrain/fs_terrain.sc")
-		terrain:create_uniform("u_mask","s_maskTexture","i1",1)
-		terrain:create_uniform("u_base","s_baseTexture","i1",0)
+		terrain:create_uniform("u_mask","s_maskTexture","s",1)
+		terrain:create_uniform("u_base","s_baseTexture","s",0)
 		terrain:create_uniform("u_lightIntensity","s_lightIntensity","v4")
 		terrain:create_uniform("u_lightColor","s_lightColor","v4")
-		terrain:create_uniform("u_showMode","s_showMode","i1")   -- 0 default,1 = normal
+		terrain:create_uniform("u_showMode","s_showMode","s")   -- 0 default,1 = normal
 
 		-- 初始值必须填写,这个限制有益? 或可以修改 terrain.lua 让 uniform 的初始值可以不填写
 		terrain:set_uniform("u_lightIntensity",{1.316,0,0,0} )  
@@ -377,7 +377,7 @@ local function init(canvas, fbw, fbh)
 
 	terrain_chibi:load_meterial("assets/build/terrain/terrain.mtl")
 	-- 手工增加调试，临时增加，可以放在关卡文件里
-	terrain_chibi:create_uniform("u_showMode","s_showMode","i1")   -- 0 default,1 = normal
+	terrain_chibi:create_uniform("u_showMode","s_showMode","s")   -- 0 default,1 = normal
 	terrain_chibi:set_uniform("u_showMode",0)   				   
 
 	terrain:set_transform { t= {140,0,200,1},r= {0,0,0},s={1,1,1,1}}

@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+local fs = require "filesystem"
+
 ecs.import "ant.render"
 ecs.import "ant.editor"
 ecs.import "ant.inputmgr"
@@ -28,14 +30,14 @@ init_loader.depend "skinning_system"
 
 
 local function create_animation_test()
-	local assetdir = asset.assetdir()
-	local skepath = assetdir / "meshes" / "skeleton" / "human_skeleton.ozz"
+	local meshdir = fs.path "meshes"
+	local skepath = meshdir / "skeleton" / "human_skeleton.ozz"
 	local anipaths = {
-		assetdir / "meshes" / "animation" / "animation1.ozz",
-		assetdir / "meshes" / "animation" / "animation2.ozz",
+		meshdir / "animation" / "animation1.ozz",
+		meshdir / "animation" / "animation2.ozz",
 	}
 
-	local smpath = assetdir / "meshes" / "mesh.ozz"
+	local smpath = meshdir / "mesh.ozz"
 
 	local anitest_eid = world:new_entity(
 		"position", "scale", "rotation",
@@ -46,19 +48,18 @@ local function create_animation_test()
 	local anitest = world[anitest_eid]
 	anitest.name = "animation_entity"
 
-	mathutil.identify_transform(anitest)
-
-	computil.load_skinning_mesh(anitest.skinning_mesh, anitest.mesh, smpath)
-	computil.load_skeleton(anitest.skeleton, skepath)
+	mathutil.identify_transform(anitest)	
+	computil.load_skinning_mesh(anitest.skinning_mesh, anitest.mesh, "ant.resources", smpath)
+	computil.load_skeleton(anitest.skeleton, "ant.resources", skepath)
 	
 
 	aniutil.init_animation(anitest.animation, anitest.skeleton)
 	local weight = 1 / #anipaths
 	for _, anipath in ipairs(anipaths) do
-		aniutil.add_animation(anitest.animation, anipath, weight)
+		aniutil.add_animation(anitest.animation, "ant.resources", anipath, weight)
 	end
 
-	computil.load_material(anitest.material, {asset.depictiondir() / "skin_model_sample.material"})
+	computil.add_material(anitest.material, "ant.resources", fs.path "skin_model_sample.material")
 end
 
 local serialize = import_package "ant.serialize"

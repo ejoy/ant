@@ -48,10 +48,10 @@ function model_review_system:init()
 		"can_render", "mesh", "material"
 	)
 	local model = world[eid]
-	component_util.load_mesh(model.mesh, fs.path "PVPScene/campsite-door.mesh")
-	component_util.load_material(model.material,{fs.path "PVPScene/scene-mat.material"})
-	--component_util.load_mesh(model.mesh,"cube.mesh")
-	--component_util.load_material(model.material,{"bunny.material"})
+	component_util.load_mesh(model.mesh, "engine", fs.path "PVPScene/campsite-door.mesh")
+	component_util.add_material(model.material, "engine", fs.path "PVPScene/scene-mat.material")
+	--component_util.load_mesh(model.mesh, "engine", "cube.mesh")
+	--component_util.load_material(model.material,{"engine", "bunny.material"})
 
 	local mesh = model.mesh.assetinfo.handle.bounding
 	--local bound = ms(mesh.aabb.max, mesh.aabb.min, "-T")

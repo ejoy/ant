@@ -2,8 +2,8 @@ local hierarchy_module = require "hierarchy"
 local vfs = require "vfs"
 local assetmgr = require "asset"
 
-return function(filename, param)
-	local fn = assetmgr.find_depiction_path(filename)
+return function(pkgname, filename, param)
+	local fn = assetmgr.find_depiction_path(pkgname, filename)
 
 	local realfilename = vfs.realpath(fn:string())
 	if param and param.editable then

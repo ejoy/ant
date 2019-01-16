@@ -1,8 +1,0 @@
-path = "textures/fieldstone-rgba.dds"
-
-sampler = {
-	U = "CLAMP",
-	V = "CLAMP",
-	MIN = "LINEAR",
-	MAG = "LINEAR",	
-}

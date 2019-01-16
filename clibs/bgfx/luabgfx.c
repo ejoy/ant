@@ -15,7 +15,7 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 
-#if BGFX_API_VERSION != 91
+#if BGFX_API_VERSION != 92
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -2810,11 +2810,8 @@ lcreateUniform(lua_State *L) {
 	const char * type = luaL_checkstring(L, 2);
 	bgfx_uniform_type_t ut;
 	switch(type[0]) {
-	case 'i':
-		if (type[1] != '1') {
-			return luaL_error(L, "Invalid Uniform type %s", type);
-		}
-		ut = BGFX_UNIFORM_TYPE_INT1;
+	case 's':		
+		ut = BGFX_UNIFORM_TYPE_SAMPLER;
 		break;
 	case 'v':
 		if (type[1] != '4') {
@@ -2854,8 +2851,8 @@ lgetUniformInfo(lua_State *L) {
 	bgfx_get_uniform_info(uh, &ut);
 	lua_pushstring(L, ut.name);
 	switch (ut.type) {
-	case BGFX_UNIFORM_TYPE_INT1:
-		lua_pushstring(L, "i1");
+	case BGFX_UNIFORM_TYPE_SAMPLER:
+		lua_pushstring(L, "s");
 		break;
 	case BGFX_UNIFORM_TYPE_VEC4:
 		lua_pushstring(L, "v4");
@@ -2880,7 +2877,7 @@ uniform_size(lua_State *L, bgfx_uniform_handle_t uh) {
 	bgfx_get_uniform_info(uh, &uinfo);
 
 	switch (uinfo.type) {
-//	case BGFX_UNIFORM_TYPE_INT1: sz = 4; break;	// 1 int32 never be INT1
+//	case BGFX_UNIFORM_TYPE_SAMPLER: sz = 4; break;	// 1 int32 never be INT1
 	case BGFX_UNIFORM_TYPE_VEC4: sz = 4; break;	// 4 float
 	case BGFX_UNIFORM_TYPE_MAT3: sz = 3*4; break;	// 3*4 float
 	case BGFX_UNIFORM_TYPE_MAT4: sz = 4*4; break;	// 4*4 float
@@ -2916,7 +2913,7 @@ lsetUniform(lua_State *L) {
 		break;
 	}
 	case LUA_TNUMBER: {
-		// int1
+		// int1 , sampler
 		uint32_t ints[V(number)];
 		int i;
 		for (i=0;i<number;i++) {

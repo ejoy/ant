@@ -10,6 +10,7 @@ local math3d = require "math3d"
 local bgfx = require "bgfx"
 local asset = import_package "ant.asset"
 local ms = (import_package "ant.math").stack
+local fs = require "filesystem"
 
 -- system rules 
 -- component for global state
@@ -244,25 +245,16 @@ shadow_maker.__index = shadow_maker
 
 -- shadow_maker init 
 function  shadow_maker:init( shadow_maker_entity )
-
-	local sm_name = "shadow.material"
-	local depictiondir = asset.depictiondir()
-    local shadow_material = asset.load( depictiondir / sm_name )
-    shadow_material.name = sm_name 
-
-    local depth_name = "drawdepth.material"
-    local drawdepth_material = asset.load( depictiondir / depth_name )
-    drawdepth_material.name = depth_name 
-
-    local drawscene_name = "PVPScene/scene-mat-shadow.material"
-    local drawscene_material = asset.load( depictiondir / drawscene_name )
-    drawscene_material.name = drawscene_name 
-    
+	local function load_material(name)		
+		local material = asset.load("ant.resources", fs.path(name))
+		material.name = name 
+		return material
+	end
 
     self.materials = {
-        generate_shadowmap = shadow_material,
-        debug_drawDepth    = drawdepth_material,
-        debug_drawScene    = drawscene_material
+        generate_shadowmap = load_material("shadow.material"),
+        debug_drawDepth    = load_material("drawdepth.material"),
+        debug_drawScene    = load_material("PVPScene/scene-mat-shadow.material"),
     }
 
     init_uniforms()
@@ -270,13 +262,13 @@ function  shadow_maker:init( shadow_maker_entity )
     var_def( ctx.directionLight,"position",0,0,0,1)
     var_def( ctx.directionLight,"position_ViewSpace",0,0,0,1 )
 
-    ctx.s_texColor = bgfx.create_uniform("s_texColor",  "i1")
+    ctx.s_texColor = bgfx.create_uniform("s_texColor",  "s")
     -- shadowtexture uniforms
 	ctx.u_shadowMap = {
-		bgfx.create_uniform("s_shadowMap0", "i1"),      -- only use for draw depth
-		bgfx.create_uniform("s_shadowMap1", "i1"),
-		bgfx.create_uniform("s_shadowMap2", "i1"),
-		bgfx.create_uniform("s_shadowMap3", "i1"),
+		bgfx.create_uniform("s_shadowMap0", "s"),      -- only use for draw depth
+		bgfx.create_uniform("s_shadowMap1", "s"),
+		bgfx.create_uniform("s_shadowMap2", "s"),
+		bgfx.create_uniform("s_shadowMap3", "s"),
     }
     -- ctx.s_shadowMap {}     -- shadowtexture uniforms 
     -- ctx.shadowMapMtx{}     -- shadowMap Matrices 

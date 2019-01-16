@@ -1,0 +1,11 @@
+path = {"ant.resources.binary", "textures/PVPScene/BH-Scene-SiegeWeapons-01-D.dds"}
+
+sampler = {
+	U = "MIRROR",
+	V = "MIRROR",
+	MIN = "LINEAR",
+	MAG = "LINEAR",	
+}
+
+sRGB 		= true
+normalmap 	= false

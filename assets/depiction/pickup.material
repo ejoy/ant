@@ -1,6 +1,0 @@
-shader = {
-    vs = "picking/vs_picking",
-    fs = "picking/fs_picking",
-}
-
-state = "default.state"
