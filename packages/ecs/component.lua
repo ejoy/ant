@@ -1,5 +1,16 @@
 local datatype = require "datatype"
 
+local function deep_copy(obj)
+	if type(obj) ~= "table" then
+		return obj
+	end
+	local t = {}
+	for k, v in pairs(obj) do
+		t[k] = deep_copy(v)
+	end
+	return t
+end
+
 local function gen_new(c)
 	if c.method.new then
 		error(string.format("Type %s defined at %s has a typeinfo. It defines new at %s, use init instead",
@@ -18,10 +29,10 @@ local function gen_new(c)
 					if type(default) == 'function' then
 						ret[k] = default()
 					else
-						ret[k] = default
+						ret[k] = deep_copy(default)
 					end
 				else
-					ret[k] = v
+					ret[k] = deep_copy(v)
 				end
 			end
 		else
@@ -30,7 +41,7 @@ local function gen_new(c)
 			if type(default) == 'function' then
 				ret = default()
 			else
-				ret = default
+				ret = deep_copy(default)
 			end
 		end
 		if init then
