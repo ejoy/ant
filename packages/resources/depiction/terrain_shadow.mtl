@@ -4,12 +4,12 @@
     
     -- declare uniforms
 	uniforms = {
-		{ name = "u_mask",s_name ="s_maskTexture",type = "i1",texchannel = 1 },
-   		{ name = "u_base",s_name ="s_baseTexture",type = "i1",texchannel = 0 },
-		--{ name = "u_shadow0",s_name ="s_shadowMap0",type = "i1",texchannel = 4 },
-		--{ name = "u_shadow1",s_name ="s_shadowMap1",type = "i1",texchannel = 5 },
-		--{ name = "u_shadow2",s_name ="s_shadowMap2",type = "i1",texchannel = 6 },
-		--{ name = "u_shadow3",s_name ="s_shadowMap3",type = "i1",texchannel = 7 },
+		{ name = "u_mask",s_name ="s_maskTexture",type = "s",texchannel = 1 },
+   		{ name = "u_base",s_name ="s_baseTexture",type = "s",texchannel = 0 },
+		--{ name = "u_shadow0",s_name ="s_shadowMap0",type = "s",texchannel = 4 },
+		--{ name = "u_shadow1",s_name ="s_shadowMap1",type = "s",texchannel = 5 },
+		--{ name = "u_shadow2",s_name ="s_shadowMap2",type = "s",texchannel = 6 },
+		--{ name = "u_shadow3",s_name ="s_shadowMap3",type = "s",texchannel = 7 },
 		
 		{ name = "u_lightDirection", s_name = "s_lightDirection",type ="v4" },
 		{ name = "u_lightIntensity", s_name = "s_lightIntensity",type = "v4"},
