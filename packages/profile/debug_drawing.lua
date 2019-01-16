@@ -37,8 +37,6 @@ ecs.tag "main_debug"
 ecs.tag "debug_skeleton"
 
 local debug_obj = ecs.component "debug_object" {
-	type = "userdata",
-	default = {}
 }
 
 local function clean_desc_buffer(desc)

@@ -31,22 +31,11 @@ ecs.tag "spot_light"
 --}
 
 ecs.component "light" {
-	type = "userdata",
-	default = {
-		type = "point", 	-- "spot", "directional", "ambient"
-		intensity = 50, 
-		color = {1, 1, 1, 1},
-		angle = 360,
-		range = 100,
-	},
-
-	save = function(v, arg)		
-		return v
-	end,
-
-	load = function(v, arg)
-		return v
-	end
+	type = "point", 	-- "spot", "directional", "ambient"
+	intensity = 50, 
+	color = {1, 1, 1, 1},
+	angle = 360,
+	range = 100,
 }
 
 

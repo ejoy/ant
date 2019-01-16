@@ -2,22 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local ani = ecs.component_struct "animation" {
-	ani_list = {
-		type = "userdata",
-		default = {
-			--[[
-			weight = 0.0,
-			handle = load from asset lib,
-			ref_path = respath,				
-			sampling_cache = create from animation c module,
-			weighttype = "full" or "partical", to animaiton system how to blend
-			]]
-		},
-		save = function(v, param)
-		end,
-		load = function(v, param)
-		end,
-	},
+	ani_list = {}
 }
 
 function ani:init()
@@ -28,17 +13,16 @@ end
 -- separate animation and skeleton to 2 component, 
 -- skeleton component will corresponding to some system that do not need animation
 local ske = ecs.component_struct "skeleton" {
-	ref_path = {
-		type = "userdata",
-		default = "",
-		save = function (v, param)
-			assert(false, "not implement skeleton save")
-		end,
-		load = function (v, param)
-			assert(false, "not implement skeleton load")
-		end
-	},	
+	ref_path = ""
 }
+
+-- TODO
+-- save = function (v, param)
+-- 	assert(false, "not implement skeleton save")
+-- end,
+-- load = function (v, param)
+-- 	assert(false, "not implement skeleton load")
+-- end
 
 function ske:init()
 	self.handle = nil

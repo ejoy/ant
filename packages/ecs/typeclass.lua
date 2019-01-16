@@ -52,9 +52,6 @@ end
 
 local function gen_type(c, typename)
 	return function(self, struct)
-		if type(struct) ~= "table" then
-			error("Type struct should be a table")
-		end
 		if c.struct_source ~= nil then
 			error("Type struct has already defined at " .. c.struct_source)
 		end
@@ -111,22 +108,10 @@ return function(world, import, class)
 	}
 
 	class_register.tag = function (name)
-		class_register.component(name) {default = true}
+		class_register.component(name)(true)
 	end
 
-	class_register.component_struct = function (name)
-		local c = class_register.component(name)		
-		--support component_struct without init struct, but have "new" function
-		local mt = getmetatable(c)
-		local comp___call = assert(mt.__call)
-		mt.__call = function (t, content)
-			return comp___call(t, {
-				struct = content
-			})
-		end
-
-		return c
-	end
+	class_register.component_struct = class_register.component
 
 	class_register.import = import
 

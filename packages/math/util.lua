@@ -156,7 +156,7 @@ end
 
 local function create_component_elem(tt)
 	return { 
-		type = "userdata",
+		__type = tt,
 		default = function() return math3d.ref(tt) end,
 		save = math3d_value_save,
 		load = get_math3d_value_load(tt), 

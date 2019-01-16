@@ -8,10 +8,7 @@ local bgfx = require "bgfx"
 -- mesh component is used for render purpose.
 -- skinning_mesh component is used for producing mesh component render data.
 ecs.component_struct "skinning_mesh" {
-	ref_path = {
-		type = "userdata",
-		default = "",
-	}
+	ref_path = ""
 }
 
 -- skinning system

@@ -8,23 +8,29 @@ local function gen_new(c)
 	local init = c.method.init
 	return function()
 		local ret
-		if c.typeinfo.struct then
+		if type(c.typeinfo) ~= 'table' then
+			ret = c.typeinfo
+		elseif not c.typeinfo.__type then
 			ret = {}
-			for k,v in pairs(c.typeinfo.struct) do
-				local default = v.default
-				if default ~= nil then
-					ret[k] = default
+			for k, v in pairs(c.typeinfo) do
+				if type(v) == 'table' and v.__type then
+					local default = v.default
+					if type(default) == 'function' then
+						ret[k] = default()
+					else
+						ret[k] = default
+					end
 				else
-					ret[k] = v.default_func()
+					ret[k] = v
 				end
 			end
 		else
 			local v = c.typeinfo
 			local default = v.default
-			if default ~= nil then
-				ret = default
+			if type(default) == 'function' then
+				ret = default()
 			else
-				ret = v.default_func()
+				ret = default
 			end
 		end
 		if init then
@@ -37,9 +43,10 @@ end
 local function gen_delete(c)
 	local primitive
 	-- matrix and vector
-	if c.typeinfo.struct then
+	if type(c.typeinfo) ~= "table" then
+	elseif not c.typeinfo.__type then
 		for k,v in pairs(c.typeinfo) do
-			local tname = v.type
+			local tname = type(v) == "table" and v.__type
 			if tname == "matrix" or tname == "vector" then
 				local last = primitive
 				if last then
@@ -56,7 +63,7 @@ local function gen_delete(c)
 		end
 	else
 		local v = c.typeinfo
-		local tname = v.type
+		local tname = type(v) == "table" and v.__type
 		if tname == "matrix" or tname == "vector" then
 			function primitive(component)
 				component()  -- release ref
@@ -97,7 +104,12 @@ local function copy_method(c)
 end
 
 local function gen_save(typeinfo)
-	if typeinfo and typeinfo.struct then
+	if type(typeinfo) == "table" and typeinfo.__type then
+		return function (c, arg)
+			--TODO
+			return c
+		end
+	else
 		return function (c, arg)
 			assert(type(c) == "table")
 			local t = {}
@@ -111,43 +123,33 @@ local function gen_save(typeinfo)
 			end
 			return t
 		end
-	else
-		return function (c, arg)
-			--TODO
-			return c
-		end
 	end
 end
 
 local function gen_load(typeinfo)
-	if typeinfo and typeinfo.struct then
-		return function(v, arg)
-			local c = {}
-			local keys = {}
-			for k in pairs(c) do
-				table.insert(keys, k)
-			end
-
-			for _, k in ipairs(keys) do
+	if type(typeinfo) == "table" and typeinfo.__type then
+		return function(c, arg)
+			-- TODO
+			return c
+		end
+	else
+		return function(c, arg)
+			local t = {}
+			for k, v in pairs(c) do
 				local vclass = typeinfo[k]
 				if vclass then
 					arg.struct_type = k
 					local load = vclass.load
-					c[k] = load(v[k], arg)
+					t[k] = load(v, arg)
 				end
 			end
-			return c
-		end
-	else
-		return function(v, arg)
-			-- TODO
-			return v
+			return t
 		end
 	end
 end
 
 return function(c)
-	local typeinfo = datatype(c)
+	local typeinfo = c.typeinfo
 	return {
 		typeinfo = typeinfo,
 		new = gen_new(c),
