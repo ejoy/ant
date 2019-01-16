@@ -13,7 +13,7 @@ local function loadfile(path, mode, env)
     end
     local str = f:read 'a'
     f:close()
-    return load(str, '@' .. path:string(), mode, env)
+    return load(str, '@/vfs/' .. path:string(), mode, env)
 end
 local function dofile(path)
     local f, err = loadfile(path)

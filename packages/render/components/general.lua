@@ -61,10 +61,7 @@ ecs.component_struct "mesh" {
 --end
 
 ecs.component_struct "material" {
-	content = {
-		path = "",
-		properties = {}
-	}
+	content = {}
 }
 
 --TODO

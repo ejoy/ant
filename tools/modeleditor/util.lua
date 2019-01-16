@@ -75,7 +75,7 @@ local function add_aabb_widget(world, eid)
 	}
 
 	local material = {}
-	computil.add_material(material, "engine", aabb_material)
+	computil.add_material(material, "ant.resources", aabb_material)
 	widget.material = material
 
 	widget.srt = {}--{s=e.scale, r=nil, t=e.position}
@@ -98,7 +98,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 
 	if skepath:string() ~= emptypath then
 		world:add_component(eid, "skeleton")
-		computil.load_skeleton(e.skeleton, "engine", skepath)
+		computil.load_skeleton(e.skeleton, "ant.resources", skepath)
 	end
 
 	if #anipaths > 0 then
@@ -108,7 +108,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 		local avgweight = 1 / #anipaths
 		for _, anipath in ipairs(anipaths) do
 			if anipath ~= emptypath then
-				aniutil.add_animation(anicomp, "engine", anipath, avgweight)
+				aniutil.add_animation(anicomp, "ant.resources", anipath, avgweight)
 			end
 		end
 	end
@@ -117,10 +117,10 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 	if skinning_meshpath ~= emptypath then
 		if e.skeleton and e.animation then
 			world:add_component(eid, "skinning_mesh")
-			computil.load_skinning_mesh(e.skinning_mesh, e.mesh, nil, skinning_meshpath)
+			computil.load_skinning_mesh(e.skinning_mesh, e.mesh, "ant.resources", skinning_meshpath)
 		end
 
-		computil.add_material(e.material, "engine", samplematerialpath)
+		computil.add_material(e.material, "ant.resources", samplematerialpath)
 	
 		add_aabb_widget(world, eid)
 	end

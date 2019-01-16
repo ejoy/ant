@@ -68,7 +68,7 @@ function debug_obj:init()
 		assetinfo={handle=init_wireframe_mesh()}
 	}
 
-	componentutil.add_material(dbentity.material, "engine", fs.path "line.material")
+	componentutil.add_material(dbentity.material, "ant.resources", fs.path "line.material")
 end
 
 local debug_draw = ecs.system "debug_draw"
