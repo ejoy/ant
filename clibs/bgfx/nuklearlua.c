@@ -697,7 +697,7 @@ lnk_context_init(lua_State *L) {
 	int prog = BGFX_LUAHANDLE_ID(PROGRAM, getint(L, 1, "prog"));
 	lc->prog.idx = prog;
 	const char * tid_uniform = getstring(L, 1, "texture");
-	lc->tid = bgfx_create_uniform(tid_uniform, BGFX_UNIFORM_TYPE_INT1, 1);
+	lc->tid = bgfx_create_uniform(tid_uniform, BGFX_UNIFORM_TYPE_SAMPLER, 1);
 
 	if (lua_getfield(L, 1, "decl") != LUA_TUSERDATA) {
 		luaL_error(L, "Need decl as userdata");

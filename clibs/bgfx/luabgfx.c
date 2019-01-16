@@ -2855,7 +2855,7 @@ lgetUniformInfo(lua_State *L) {
 	lua_pushstring(L, ut.name);
 	switch (ut.type) {
 	case BGFX_UNIFORM_TYPE_SAMPLER:
-		lua_pushstring(L, "i1");
+		lua_pushstring(L, "s");
 		break;
 	case BGFX_UNIFORM_TYPE_VEC4:
 		lua_pushstring(L, "v4");

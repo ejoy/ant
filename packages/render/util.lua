@@ -34,7 +34,7 @@ local property_type_description = {
 
     m4 = {type="m4"},
 
-    texture = {type="i1",}
+    texture = {type="s",}
 }
 
 local function update_property(name, property)
