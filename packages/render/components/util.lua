@@ -101,11 +101,12 @@ function util.load_texture(name, stage, pkgname, texpath)
 end
 
 
-local function update_properties(dst_properties, src_properties, pkgname)
+local function update_properties(dst_properties, src_properties)
 	for k, v in pairs(src_properties) do
 		if v.type == "texture" then
 			-- TODO, pkgname should save on the material file
-			dst_properties[k] = util.load_texture(v.name, v.stage, pkgname, fs.path(v.default or v.path))
+			local refpath = v.default or v.path
+			dst_properties[k] = util.load_texture(v.name, v.stage, refpath[1], fs.path(refpath[2]))
 		else
 			dst_properties[k] = {name=v.name, type=v.type, value=deep_copy(v.default or v.value)}
 		end

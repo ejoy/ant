@@ -6,8 +6,8 @@ shader = {
 state = "default.state"
 
 properties = {
-	s_basecolor = {type="texture", name="base color", stage=0, default="PVPScene/siegeweapon_d.texture"},
-	s_normal = {type="texture", name="normal", stage=1, default="PVPScene/siegeweapon_n.texture"},
+	s_basecolor = {type="texture", name="base color", stage=0, default={"ant.resources", "PVPScene/siegeweapon_d.texture"}},
+	s_normal = {type="texture", name="normal", stage=1, default={"ant.resources", "PVPScene/siegeweapon_n.texture"}},
 	u_specularColor = {type="v4", name="specular color", default= {6/255, 5/255, 5/255, 0.03}},
 	u_specularLight = {type="v4", name="specular light factor", default={5.5, 0, 0,0}},
 }

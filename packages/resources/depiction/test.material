@@ -6,5 +6,5 @@ state = "default.state"
 
 property = {
 	u_color = {type="v4", name="color", default={1, 0, 0, 1}},
-	roughness = {type="texture", default=""},			
+	roughness = {type="texture", default={"ant.resources", ""}},
 }
