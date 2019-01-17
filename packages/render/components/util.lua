@@ -27,6 +27,7 @@ local function load_res(comp, pkgname, respath, param, errmsg)
 	end
 
 	comp.assetinfo = res
+	comp.ref_path = {pkgname, respath}
 end
 
 function util.load_skeleton(comp, pkgname, respath, param)
