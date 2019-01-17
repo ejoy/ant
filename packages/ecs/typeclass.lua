@@ -111,7 +111,7 @@ return function(world, import, class)
 				class_set[name] = r
 			end
 			if struct then
-				r(r, struct)
+				r(struct)
 			end
 			return r
 		end

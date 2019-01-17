@@ -237,22 +237,8 @@ end
 -- local terrain = ecs.component 
 local terrain = ecs.component "terrain" {
 	path = {
-		-- save level name
-		-- save material name 
-		type = "userdata",
-		default = { 
-			level_name = " ",            -- put here to serialize 
-			level_material = " "
-		},
-		save = function (v, arg)
-			assert(type(v) == "string")
-			return v
-		end,
-
-		load = function (v, arg)
-			assert(type(v) == "string")
-			return v 
-		end
+		level_name = " ",            -- put here to serialize 
+		level_material = " "
 	},
 
     -- runtime data 

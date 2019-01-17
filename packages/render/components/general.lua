@@ -29,80 +29,70 @@ ecs.component "frustum" {
 	ortho = false,
 }
 
-ecs.component "viewid" (
-	0
-)
+ecs.component("viewid", 0)
 
-ecs.component "mesh" {
-	ref_path = ""
+local mesh = ecs.component "mesh" {
 }
 
--- TODO
---save = function (v, arg)
---	assert(type(v) == "string")
---	-- local world = arg.world
---	-- local e = assert(world[arg.eid])
---	-- local comp = assert(e[arg.comp])
---	-- assert(comp.assetinfo)
---	return v
---end,
---
---load = function (v, arg)
---	assert(type(v) == "string")
---	local world = arg.world
---	local e = assert(world[arg.eid])
---	local comp = assert(e[arg.comp])
---
---	if v ~= "" then
---		assert(comp.assetinfo == nil)
---		comp.assetinfo = asset.load(v)			
---	end
---	return v
---end
+function mesh:save(arg)
+	assert(type(self.ref_path[2]) == "table") -- vfs.path
+	local world = arg.world
+	local e = assert(world[arg.eid])
+	local comp = assert(e[arg.comp])
+	assert(comp.assetinfo)
+	self.ref_path[2] = self.ref_path[2]:string()
+	return self
+end
 
-ecs.component "material" {
+function mesh:load()
+	assert(self.assetinfo == nil)
+	assert(type(self.ref_path[2]) == "string")
+	self.ref_path[2] = fs.path(self.ref_path[2])
+	self.assetinfo = asset.load(self.ref_path[1], self.ref_path[2])
+	return self
+end
+
+local material = ecs.component "material" {
 	content = {}
 }
 
---TODO
---save = function (v, arg)
---	local t = {}
---	for _, e in ipairs(v) do				
---		local pp = assert(e.path)
---		assert(pp ~= "")
---		assert(e.materialinfo)
---
---		local assetcontent = asset.load(pp)
---		local src_properties = assetcontent.properties		
---		if src_properties then
---			local properties = {}
---			for k, v in pairs(src_properties) do
---				local p = e.properties[k]
---				local type = p.type
---				if type == "texture" then
---					properties[k] = {name=p.name, type=type, path=v.default, stage=p.stage}
---				else
---					properties[k] = p
---				end
---			end
---			table.insert(t, {path=pp, properties=properties})
---		end			
---	end
---	return t
---end,
---load = function (v, arg)
---	assert(type(v) == "table")
---	local content = {}
---	
---	for _, e in ipairs(v) do
---		local m = {}
---		component_util.create_material(e.path, m)
---		table.insert(content, m)
---	end
---
---	return content
---end
---
+function material:save(arg)
+	local t = {}
+	for _, e in ipairs(self.content) do
+		local pp = assert(e.path)
+		assert(pp ~= "")
+		assert(e.materialinfo)
+
+		local assetcontent = asset.load(pp[1], pp[2])
+		local src_properties = assetcontent.properties		
+		if src_properties then
+			local properties = {}
+			for k, v in pairs(src_properties) do
+				local p = e.properties[k]
+				local type = p.type
+				if type == "texture" then
+					properties[k] = {name=p.name, type=type, path=v.default, stage=p.stage}
+				else
+					properties[k] = p
+				end
+			end
+			e.properties = properties
+		end	
+		e.path[2] = e.path[2]:string()		
+	end
+	return self
+end
+
+function material:load()
+	local content = {}
+	for _, e in ipairs(self.content) do
+		local m = {}
+		component_util.add_material(m, e.path[1], e.path[2])
+		content[#content+1] = m
+	end
+	return content
+end
+
 ecs.component("can_render", true)
 
 ecs.component("can_cast", false)

@@ -47,9 +47,3 @@ function collider:delete()
     -- or use message notify mechanism
     print("delete collider",self.info.type)
 end
-
-
-    
-
-
-

@@ -78,9 +78,9 @@ function init_loader:init()
 
 	create_animation_test()
 
-	--local t = serialize.save(world)
-	--for _, eid in world:each "serialize" do
-	--	world:remove_entity(eid)
-    --end
-	--serialize.load(world, t)
+	local t = serialize.save(world)
+	for _, eid in world:each "serialize" do
+		world:remove_entity(eid)
+    end
+	serialize.load(world, t)
 end

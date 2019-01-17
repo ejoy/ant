@@ -16,14 +16,6 @@ local ske = ecs.component "skeleton" {
 	ref_path = ""
 }
 
--- TODO
--- save = function (v, param)
--- 	assert(false, "not implement skeleton save")
--- end,
--- load = function (v, param)
--- 	assert(false, "not implement skeleton load")
--- end
-
 function ske:init()
 	self.handle = nil
 end

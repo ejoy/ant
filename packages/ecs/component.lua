@@ -1,5 +1,3 @@
-local datatype = require "datatype"
-
 local function deep_copy(obj)
 	if type(obj) ~= "table" then
 		return obj
@@ -11,92 +9,122 @@ local function deep_copy(obj)
 	return t
 end
 
-local function gen_new(c)
-	if c.method.new then
-		error(string.format("Type %s defined at %s has a typeinfo. It defines new at %s, use init instead",
-			c.name, c.defined, c.source.new))
-	end
-	local init = c.method.init
-	return function()
-		local ret
-		if type(c.typeinfo) ~= 'table' then
-			ret = c.typeinfo
-		elseif not c.typeinfo.__type then
-			ret = {}
-			for k, v in pairs(c.typeinfo) do
-				if type(v) == 'table' and v.__type then
-					local default = v.default
-					if type(default) == 'function' then
-						ret[k] = default()
-					else
-						ret[k] = deep_copy(default)
-					end
-				else
-					ret[k] = deep_copy(v)
-				end
-			end
-		else
-			local v = c.typeinfo
-			local default = v.default
-			if type(default) == 'function' then
-				ret = default()
-			else
-				ret = deep_copy(default)
-			end
-		end
-		if init then
-			init(ret)
+local function foreach_init(ti)
+	if type(ti) ~= 'table' then
+		return ti
+	elseif ti.__type then
+		return ti.init()
+	else
+		local ret = {}
+		for k, v in pairs(ti) do
+			ret[k] = foreach_init(v)
 		end
 		return ret
 	end
 end
 
-local function gen_delete(c)
-	local primitive
-	-- matrix and vector
-	if type(c.typeinfo) ~= "table" then
-	elseif not c.typeinfo.__type then
-		for k,v in pairs(c.typeinfo) do
-			local tname = type(v) == "table" and v.__type
-			if tname == "matrix" or tname == "vector" then
-				local last = primitive
-				if last then
-					function primitive(component)
-						component[k]()  -- release ref
-						return last(component)
-					end
-				else
-					function primitive(component)
-						component[k]()  -- release ref
-					end
-				end
-			end
+local function gen_init(c)
+	if not c.method.init then
+		return function()
+			return foreach_init(c.typeinfo)
 		end
+	end
+	local init = c.method.init
+	return function()
+		local ret = foreach_init(c.typeinfo)
+		init(ret)
+		return ret
+	end
+end
+
+local function foreach_delete(ti, component)
+	if type(ti) ~= 'table' then
+	elseif ti.__type then
+		return ti.delete
 	else
-		local v = c.typeinfo
-		local tname = type(v) == "table" and v.__type
-		if tname == "matrix" or tname == "vector" then
-			function primitive(component)
-				component()  -- release ref
+		for k, v in pairs(ti) do
+			local df = foreach_delete(v, component[k])
+			if df then
+				df(component[k])
 			end
 		end
 	end
+end
+
+local function gen_delete(c)
+	local function primitive(component)
+		local df = foreach_delete(c.typeinfo, component)
+		if df then
+			df(component)
+		end
+	end
+
 	local delete = c.method.delete
-	if delete then	
-		if primitive then	
-			return function(component)
-				delete(component)
-				primitive(component)
-			end
-		else
-			return delete
+	if delete then
+		return function(component)
+			delete(component)
+			primitive(component)
 		end
 	else
 		return primitive
 	end
 end
 
-local reserved_method = { new = true, init = true, delete = true }
+local function foreach_save(ti, component, arg)
+	if type(ti) ~= 'table' then
+		return component
+	elseif ti.__type then
+		return ti.save(component, arg)
+	else
+		local ret = {}
+		for k, v in pairs(ti) do
+			ret[k] = foreach_save(v, component[k], arg)
+		end
+		return ret
+	end
+end
+
+local function gen_save(c)
+	local save = c.method.save
+	if save then
+		return function (component, arg)
+			return save(foreach_save(c.typeinfo, component, arg), arg)
+		end
+	else
+		return function (component, arg)
+			return foreach_save(c.typeinfo, component, arg)
+		end
+	end
+end
+
+local function foreach_load(ti, component, arg)
+	if type(ti) ~= 'table' then
+		return component
+	elseif ti.__type then
+		return ti.load(component, arg)
+	else
+		local ret = {}
+		for k, v in pairs(ti) do
+			ret[k] = foreach_load(v, component[k], arg)
+		end
+		return ret
+	end
+end
+
+local function gen_load(c)
+	local load = c.method.load
+	if load then
+		return function (component, arg)
+			return load(foreach_load(c.typeinfo, component, arg), arg)
+		end
+	else
+		return function (component, arg)
+			return foreach_load(c.typeinfo, component, arg)
+		end
+	end
+end
+
+local reserved_method = { init = true, delete = true, save = true, load = true }
 
 local function copy_method(c)
 	local methods = c.method
@@ -114,58 +142,13 @@ local function copy_method(c)
 	return m
 end
 
-local function gen_save(typeinfo)
-	if type(typeinfo) == "table" and typeinfo.__type then
-		return function (c, arg)
-			--TODO
-			return c
-		end
-	else
-		return function (c, arg)
-			assert(type(c) == "table")
-			local t = {}
-			for k, v in pairs(c) do
-				local vclass = typeinfo[k]
-				if vclass then
-					arg.struct_type = k
-					local save = vclass.save
-					t[k] = save(v, arg)
-				end
-			end
-			return t
-		end
-	end
-end
-
-local function gen_load(typeinfo)
-	if type(typeinfo) == "table" and typeinfo.__type then
-		return function(c, arg)
-			-- TODO
-			return c
-		end
-	else
-		return function(c, arg)
-			local t = {}
-			for k, v in pairs(c) do
-				local vclass = typeinfo[k]
-				if vclass then
-					arg.struct_type = k
-					local load = vclass.load
-					t[k] = load(v, arg)
-				end
-			end
-			return t
-		end
-	end
-end
-
 return function(c)
 	local typeinfo = c.typeinfo
 	return {
 		typeinfo = typeinfo,
-		new = gen_new(c),
-		save = gen_save(typeinfo),
-		load = gen_load(typeinfo),
+		init = gen_init(c),
+		save = gen_save(c),
+		load = gen_load(c),
 		delete = gen_delete(c),
 		method = copy_method(c),
 	}

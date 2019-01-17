@@ -18,7 +18,7 @@ local function new_component(w, eid, c, ...)
 		if entity[c] then
 			error(string.format("multiple component defined:%s", c))
 		end
-		entity[c] = w._component_type[c].new()
+		entity[c] = w._component_type[c].init()
 		local nc = w._notifycomponent[c]
 		if nc then
 			table.insert(nc, eid)

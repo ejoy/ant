@@ -137,38 +137,34 @@ local function math3d_value_save(v, arg)
 	return t
 end
 
-local function get_math3d_value_load(typename)
-	return function(s, arg)
-		if s.type == nil then
-			error "vector load function invalid format"
-		end
-
-		if s.type ~= 1 and s.type ~= 2 then
-			error "vector load function need vector type"
-		end
-
-		local math3d = require "math3d"
-		local v = math3d.ref(typename)		
-		ms(v, s, "=")
-		return v
-	end
-end
-
-local function create_component_elem(tt)
+function util.create_component_vector()
 	return { 
-		__type = tt,
-		default = function() return math3d.ref(tt) end,
+		__type = "vector",
+		init = function() return math3d.ref "vector" end,
+		delete = function(m) m() end,
 		save = math3d_value_save,
-		load = get_math3d_value_load(tt), 
+		load = function(s)
+			assert(s.type == "v4", "vector load function need vector type")
+			local v = math3d.ref "vector"
+			ms(v, s, "=")
+			return v
+		end,
 	}
 end
 
-function util.create_component_vector()
-	return create_component_elem("vector")
-end
-
 function util.create_component_matrix()
-	return create_component_elem("matrix")
+	return { 
+		__type = "matrix",
+		init = function() return math3d.ref "matrix" end,
+		delete = function(m) m() end,
+		save = math3d_value_save,
+		load = function(s)
+			assert(s.type == "m4", "matrix load function need matrix type")
+			local v = math3d.ref "matrix"
+			ms(v, s, "=")
+			return v
+		end, 
+	}
 end
 
 return util
