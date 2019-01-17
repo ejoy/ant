@@ -2,7 +2,7 @@ local ecs = ...
 
 local crypt = require "crypt"
 
-local seria_comp = ecs.component_struct "serialize" {
+local seria_comp = ecs.component "serialize" {
     uuid = "",
 }
 

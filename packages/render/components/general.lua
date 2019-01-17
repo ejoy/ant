@@ -10,7 +10,7 @@ ecs.component "position" (math.util.create_component_vector())
 ecs.component "rotation" (math.util.create_component_vector())
 ecs.component "scale" (math.util.create_component_vector())
 
-ecs.component_struct "relative_srt" {
+ecs.component "relative_srt" {
 	s = math.util.create_component_vector(),
 	r = math.util.create_component_vector(),
 	t = math.util.create_component_vector(),
@@ -18,7 +18,7 @@ ecs.component_struct "relative_srt" {
 
 ecs.tag "editor"
 
-ecs.component_struct "frustum" {
+ecs.component "frustum" {
 	type = "mat",
 	n = 0.1,
 	f = 10000,
@@ -33,7 +33,7 @@ ecs.component "viewid" (
 	0
 )
 
-ecs.component_struct "mesh" {
+ecs.component "mesh" {
 	ref_path = ""
 }
 
@@ -60,7 +60,7 @@ ecs.component_struct "mesh" {
 --	return v
 --end
 
-ecs.component_struct "material" {
+ecs.component "material" {
 	content = {}
 }
 
@@ -103,25 +103,17 @@ ecs.component_struct "material" {
 --	return content
 --end
 --
-ecs.component "can_render" (
-	true
-)
+ecs.component("can_render", true)
 
-ecs.component "can_cast" (
-	false
-)
+ecs.component("can_cast", false)
 
-ecs.component "name" (
-    ""
-)
+ecs.component("name", "")
 
 ecs.tag "can_select"
 
-ecs.component "control_state" (
-	""
-)
+ecs.component("control_state", "")
 
-ecs.component_struct "parent" {
+ecs.component "parent" {
 	eid = -1
 }
 -- mode = color or factor, gradient, skybox etc

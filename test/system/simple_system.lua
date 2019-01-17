@@ -18,7 +18,7 @@ function render_frame:update()
 	bgfx.frame()
 end
 
-ecs.component_struct "window" {
+ecs.component "window" {
 	width = 0,
 	height = 0,
 }

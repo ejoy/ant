@@ -8,7 +8,7 @@ local mu = math.util
 local bgfx = require "bgfx"
 
 --[@ view rect
-ecs.component_struct "view_rect"{
+ecs.component "view_rect"{
 	x = 0, 
 	y = 0, 
 	w = 1, 
@@ -30,7 +30,7 @@ end
 --@]
 
 --[@ clear component
-local clear_comp = ecs.component_struct "clear_component"{
+local clear_comp = ecs.component "clear_component"{
     color = 0x303030ff,
     depth = 1,
     stencil = 0,

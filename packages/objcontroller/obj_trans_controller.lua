@@ -25,7 +25,7 @@ ecs.tag "pos_transform"
 ecs.tag "scale_transform"
 ecs.tag "rotator_transform"
 
-ecs.component_struct "object_transform" {
+ecs.component "object_transform" {
     translate_speed = 0.05,
     scale_speed = 0.005,
     rotation_speed = 0.5,

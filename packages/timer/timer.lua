@@ -1,6 +1,6 @@
 local ecs = ...
 
-local timer = ecs.component_struct "timer" {
+local timer = ecs.component "timer" {
 	
 }
 

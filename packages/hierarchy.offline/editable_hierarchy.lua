@@ -6,7 +6,7 @@ local assetmgr = import_package "ant.asset"
 
 local fs = require "filesystem"
 
-local eh = ecs.component_struct "editable_hierarchy"{
+local eh = ecs.component "editable_hierarchy"{
 	ref_path = ""
 }
 

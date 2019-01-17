@@ -166,7 +166,7 @@ function pickup_material_sys:update()
 end
 
 -- pickup_system
-ecs.component_struct "pickup"{}
+ecs.component "pickup"{}
 
 local pickup_sys = ecs.system "pickup_system"
 

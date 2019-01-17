@@ -50,17 +50,6 @@ local function gen_method(c, callback)
 	end
 end
 
-local function gen_type(c, typename)
-	return function(self, struct)
-		if c.struct_source ~= nil then
-			error("Type struct has already defined at " .. c.struct_source)
-		end
-		c.struct_source = sourceinfo()
-		c[typename] = struct
-		return self
-	end
-end
-
 return function(world, import, class)
 	local class_register = { world = world }
 	local class = class or {}
@@ -87,7 +76,6 @@ return function(world, import, class)
 				setmetatable(r, {
 					__index = args.setter and gen_set(c, args.setter),
 					__newindex = gen_method(c, args.callback),
-					__call = args.typename and gen_type(c, args.typename),
 				})
 
 				class_set[name] = r
@@ -96,10 +84,39 @@ return function(world, import, class)
 		end
 	end
 
-	register {
-		type = "component",
-		typename = "typeinfo",
-	}
+	local function register_component()
+		local what = "component"
+		local class_set = {}
+		local class_data = class[what] or {}
+		class[what] = class_data
+		class_register[what] = function(name, struct)
+			local r = class_set[name]
+			if r == nil then
+				log("Register %s %s", what, name)
+				local c = { name = name, method = {}, source = {}, defined = sourceinfo() }
+				class_data[name] = c
+				r = {}
+				local function gen_type(self, struct)
+					if c.struct_source ~= nil then
+						error("Type struct has already defined at " .. c.struct_source)
+					end
+					c.struct_source = sourceinfo()
+					c.typeinfo = struct
+					return self
+				end
+				setmetatable(r, {
+					__newindex = gen_method(c, nil),
+					__call = gen_type,
+				})
+				class_set[name] = r
+			end
+			if struct then
+				r(r, struct)
+			end
+			return r
+		end
+	end
+
 	register {
 		type = "system",
 		setter = { "depend" , "dependby", "singleton" },
@@ -107,11 +124,11 @@ return function(world, import, class)
 		callback = { "init", "update" },
 	}
 
+	register_component()
+
 	class_register.tag = function (name)
 		class_register.component(name)(true)
 	end
-
-	class_register.component_struct = class_register.component
 
 	class_register.import = import
 

@@ -18,7 +18,7 @@ local ecs = ...
 ecs.tag "directional_light"
 ecs.tag "point_light"
 ecs.tag "spot_light"
---ecs.component_struct "ambient_light" {    -- add tested 
+--ecs.component "ambient_light" {    -- add tested 
 -- 	type = "userdatar",   			 
 -- 	mode = "color", 				-- or factor, gradient, skybox etc
 -- 	factor = 0.3,     			    -- use direction light's factor directioncolor *factor 

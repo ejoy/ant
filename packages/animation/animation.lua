@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local ani = ecs.component_struct "animation" {
+local ani = ecs.component "animation" {
 	ani_list = {}
 }
 
@@ -12,7 +12,7 @@ end
 
 -- separate animation and skeleton to 2 component, 
 -- skeleton component will corresponding to some system that do not need animation
-local ske = ecs.component_struct "skeleton" {
+local ske = ecs.component "skeleton" {
 	ref_path = ""
 }
 

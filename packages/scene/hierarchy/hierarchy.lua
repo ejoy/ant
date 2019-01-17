@@ -3,7 +3,7 @@ local world = ecs.world
 local assetmgr = import_package "ant.asset"
 local fs = require "filesystem"
 
-local h = ecs.component_struct "hierarchy" {
+local h = ecs.component "hierarchy" {
 	ref_path = "",
 }
 

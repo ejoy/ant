@@ -2,13 +2,13 @@ local ecs = ...
 local bgfx = require "bgfx"
 
 --[@
-local stat = ecs.component_struct "frame_stat" {}
+local stat = ecs.component "frame_stat" {}
 function stat:init()
 	self.frame_num = 0
 end
 --@]
 
-local post_jobs = ecs.component_struct "post_end_frame_jobs" {}
+local post_jobs = ecs.component "post_end_frame_jobs" {}
 function post_jobs:init()
 	self.jobs = {}
 end

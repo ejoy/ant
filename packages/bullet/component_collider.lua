@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.component_struct "terrain_collider" {
+ecs.component "terrain_collider" {
     info = {
         type = "terrain"
     }
@@ -10,7 +10,7 @@ ecs.component_struct "terrain_collider" {
 ------
 -- combine all collider component into one componet
 -- so user could query it by only one name "collider"
-local collider = ecs.component_struct "collider" {
+local collider = ecs.component "collider" {
     info = {                 -- for user 
         type = "box",           -- for collider component recognize type
         -- collider type string

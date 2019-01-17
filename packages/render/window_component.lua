@@ -4,7 +4,7 @@ local ru = require "util"
 local asset_lib     = import_package "ant.asset"
 
 -- the viewport can have multi instance in one scene
-local win = ecs.component_struct "window" {
+local win = ecs.component "window" {
 	width = 1,  -- use 1 to avoid divide by 0 
     height = 1,
 }

@@ -66,11 +66,11 @@ ctx.s_flipV = false       -- d3d or ogl
 
 -- 定义 shadowmap entity 相关组件数据( 生成配置, 结果数据, ... )
 -- shadowmap settings
-local shadow_config = ecs.component_struct "shadow_config" { 
+local shadow_config = ecs.component "shadow_config" { 
 
 }
 -- shadowmap runtime status, result id handle,result textures,matrixs,framebuffers
-local shadow_rt = ecs.component_struct "shadow_rt" {
+local shadow_rt = ecs.component "shadow_rt" {
 
 }
 
@@ -135,7 +135,7 @@ end
 
 -- or combine mode 
 -- 合并成一个 compoent 内的两个表? may be clear more,but not use now 
-local shadow = ecs.component_struct "shadow_maker" {}
+local shadow = ecs.component "shadow_maker" {}
 function shadow:init()
     self.config = {}
     self.shadow = {}
@@ -994,7 +994,7 @@ end
 --    声明一个 shadow_cast_filter 组件类型
 --    定义组件初始化函数，初始化组件内部结构-剪裁结果表
 -- shadow_cast_filter
-local shadow_cast_filter = ecs.component_struct "shadow_cast_filter" {}
+local shadow_cast_filter = ecs.component "shadow_cast_filter" {}
 function shadow_cast_filter:init()
     self.result = {}
 end 

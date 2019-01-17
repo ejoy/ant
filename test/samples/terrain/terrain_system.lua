@@ -235,7 +235,7 @@ end
 --  store terrain level name,material name, and terrain object into component
 --  level name,material name need serialize into scene info file.
 -- local terrain = ecs.component 
-local terrain = ecs.component_struct "terrain" {
+local terrain = ecs.component "terrain" {
 	path = {
 		-- save level name
 		-- save material name 

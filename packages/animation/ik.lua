@@ -1,7 +1,7 @@
 local ecs = ...
 local mathutil = (import_package "ant.math").util
 
-local ik = ecs.component_struct "ik" {
+local ik = ecs.component "ik" {
 	target 		= mathutil.create_component_vector(),
 	pole_vector = mathutil.create_component_vector(),
 	mid_axis 	= mathutil.create_component_vector(),
