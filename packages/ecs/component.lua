@@ -74,6 +74,13 @@ local function foreach_save(ti, component, arg)
 	if type(ti) ~= 'table' then
 		return component
 	elseif ti.__type then
+		if ti.pairs then
+			local ret = {}
+			for k, v in ti.pairs(component) do
+				ret[k] = foreach_save(v, component[k], arg)
+			end
+			return ret
+		end
 		return ti.save(component, arg)
 	else
 		local ret = {}
@@ -101,6 +108,13 @@ local function foreach_load(ti, component, arg)
 	if type(ti) ~= 'table' then
 		return component
 	elseif ti.__type then
+		if ti.pairs then
+			local ret = {}
+			for k, v in ti.pairs(component) do
+				ret[k] = foreach_load(v, component[k], arg)
+			end
+			return ret
+		end
 		return ti.load(component, arg)
 	else
 		local ret = {}

@@ -26,11 +26,11 @@ local function save_entity(w, eid, args)
     return t
 end
 
-local function save(world)
+local function save(w)
     local args = { world = w }
     local t = {}
-    for _, eid in world:each "serialize" do
-        t[#t+1] = save_entity(world, eid, args)
+    for _, eid in w:each "serialize" do
+        t[#t+1] = save_entity(w, eid, args)
     end
     return t
 end

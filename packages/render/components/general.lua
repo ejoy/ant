@@ -31,40 +31,92 @@ ecs.component "frustum" {
 
 ecs.component("viewid", 0)
 
+local ComponentType = {}
+function ComponentType.path()
+	return {
+		__type = "path",
+		init = function()
+			return {}
+		end,
+		save = function(v)
+			v[2] = v[2]:string()
+			return v
+		end,
+		load = function(v)
+			v[2] = fs.path(v[2])
+			return v
+		end,
+	}
+end
+
+function ComponentType.array(typeinfo)
+	return {
+		__type = "array",
+		init = function()
+			return {}
+		end,
+		pairs = function(c)
+			local i = 0
+			return function ()
+				i = i + 1
+				if c[i] then
+					return i, typeinfo
+				end
+			end
+		end,
+	}
+end
+
+
+function ComponentType.raw()
+	return {
+		__type = "raw",
+		init = function()
+			return {}
+		end,
+		save = function(v)
+			return v
+		end,
+		load = function(v)
+			return v
+		end,
+	}
+end
+
 local mesh = ecs.component "mesh" {
+	ref_path = ComponentType.path()
 }
 
 function mesh:save(arg)
-	assert(type(self.ref_path[2]) == "table") -- vfs.path
+	assert(type(self.ref_path[2]) == "string")
 	local world = arg.world
 	local e = assert(world[arg.eid])
 	local comp = assert(e[arg.comp])
 	assert(comp.assetinfo)
-	self.ref_path[2] = self.ref_path[2]:string()
 	return self
 end
 
 function mesh:load()
 	assert(self.assetinfo == nil)
-	assert(type(self.ref_path[2]) == "string")
-	self.ref_path[2] = fs.path(self.ref_path[2])
+	assert(type(self.ref_path[2]) == "table")
 	self.assetinfo = asset.load(self.ref_path[1], self.ref_path[2])
 	return self
 end
 
 local material = ecs.component "material" {
-	content = {}
+	content = ComponentType.array({
+		path = ComponentType.path(),
+		properties = ComponentType.raw()
+	})
 }
 
-function material:save(arg)
-	local t = {}
+function material:save()
 	for _, e in ipairs(self.content) do
 		local pp = assert(e.path)
 		assert(pp ~= "")
-		assert(e.materialinfo)
 
-		local assetcontent = asset.load(pp[1], pp[2])
-		local src_properties = assetcontent.properties		
+		local assetcontent = asset.load(pp[1], fs.path(pp[2]))
+		local src_properties = assetcontent.properties
 		if src_properties then
 			local properties = {}
 			for k, v in pairs(src_properties) do
@@ -77,20 +129,17 @@ function material:save(arg)
 				end
 			end
 			e.properties = properties
-		end	
-		e.path[2] = e.path[2]:string()		
+		end
 	end
 	return self
 end
 
 function material:load()
-	local content = {}
+	local m = {}
 	for _, e in ipairs(self.content) do
-		local m = {}
 		component_util.add_material(m, e.path[1], e.path[2])
-		content[#content+1] = m
 	end
-	return content
+	return m
 end
 
 ecs.component("can_render", true)
