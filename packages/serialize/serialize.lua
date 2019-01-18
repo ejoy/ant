@@ -23,7 +23,8 @@ local function save_entity(w, eid, args)
     args.eid = eid
     for name, cv in sortpairs(e) do
         args.comp = name
-        t[#t+1] = { name, w._component_type[name].save(cv, args) }
+        t[#t+1] = name
+        t[#t+1] = w._component_type[name].save(cv, args)
     end
     return t
 end
@@ -41,8 +42,8 @@ local function load_entity(w, tree, args)
     local eid = w:new_entity()
     local e = w[eid]
     args.eid = eid
-    for _, nv in ipairs(tree) do
-        local name, cv = nv[1], nv[2]
+    for i = 1, #tree, 2 do
+        local name, cv = tree[i], tree[i+1]
         w:add_component(eid, name)
         args.comp = name
         e[name] = w._component_type[name].load(cv, args)
