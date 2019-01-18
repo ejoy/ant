@@ -7,7 +7,8 @@ p:type "NAME"
 	.b "OBJECT"
 	[ "private" ].c "id" (0)
 --	.d "texture"
-	.array "int[4]" { 1,2,3,4,5 }
+	.array "int[4]" { 1,2,3,4 }
+	.any "var" (nil)
 
 p:typedef("id" , "int", 1)
 p:userdata "OBJECT"

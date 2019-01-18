@@ -88,6 +88,10 @@ function basetype.boolean(v)
 	end
 end
 
+function basetype.var(v)
+	return true, v
+end
+
 local function checktype(self, typename, name)
 	if basetype[typename] or self.map[typename] then
 		return
