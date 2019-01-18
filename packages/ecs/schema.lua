@@ -33,6 +33,13 @@ function defaults_mt:__call(default_value)
 				local ok, v = assert(cf(v))
 				default_value[k] = v
 			end
+		elseif field.map then
+			assert(type(default_value) == "table")
+			for k,v in pairs(default_value) do
+				assert(type(k) == "string")
+				local ok, v = assert(cf(v))
+				default_value[k] = v
+			end
 		else
 			local ok , v = assert(cf(default_value))
 			default_value = v
@@ -100,9 +107,14 @@ local function checktype(self, typename, name)
 end
 
 local function array_type(typename)
-	local name, array = typename:match "(%S+)%[(%d*)%]"	-- pattern : type[1]
+	local name, array = typename:match "(%S+)%[(%d*)%]"	-- array pattern : type[1]
 	if name == nil then
-		return typename
+		local name, map = typename:match "(%S+){}"	-- map pattern : type{}
+		if name == nil then
+			return typename
+		else
+			return name, true	-- It's a map
+		end
 	else
 		if array == "" then
 			array = 0
@@ -115,6 +127,11 @@ end
 
 function fields_mt:__call(typename)
 	local typename, array = array_type(typename)
+	local map
+	if array == true then
+		array = nil
+		map = true
+	end
 	local attrib = self._current_field
 	self._current_field = nil
 	local field_n = #attrib
@@ -123,6 +140,7 @@ function fields_mt:__call(typename)
 		name = attrib[field_n],
 		type = typename,
 		array = array,
+		map = map,
 	}
 	checktype(self._schema, typename, self._name)
 	attrib[field_n] = nil
