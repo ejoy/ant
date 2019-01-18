@@ -5,8 +5,7 @@ local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
 local pm = require "antpm"
-local vfs = require "vfs"
-local fs = require "filesystem"
+local create_schema = require "schema"
 
 local ecs = {}
 local world = {} ; world.__index = world
@@ -255,6 +254,7 @@ function ecs.new_world(config)
 		_component_type = {},	-- component type objects
 		update = nil,	-- update systems
 		notify = nil,
+		schema = create_schema.new(),
 
 		_entity = {},	-- entity id set
 		_entity_id = 0,

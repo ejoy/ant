@@ -1,4 +1,65 @@
 local ecs = ...
+local world = ecs.world
+local schema = world.schema
+
+schema:typedef("tag", "boolean", true)
+
+schema:userdata "ud_vector"
+schema:userdata "ud_path"
+
+schema:typedef("position", "ud_vector")
+schema:typedef("rotation", "ud_vector")
+schema:typedef("scale", "ud_vector")
+
+schema:type "relative_srt"
+	.s "ud_vector"
+	.r "ud_vector"
+	.t "ud_vector"
+
+schema:typedef("editor", "tag")
+
+schema:type "frustum"
+	.type "string" ("mat")
+	.n "real" (0.1)
+	.f "int" (10000)
+	.l "int" (-1)
+	.r "int" (1)
+	.t "int" (1)
+	.b "int" (-1)
+	.ortho "boolean" (false)
+
+schema:typedef("viewid", "int", 0)
+
+schema:type "resource"
+	.package "string"
+	.filename "ud_path"
+
+schema:type "mesh"
+	.ref_path "resource"
+
+schema:type "material_content"
+	.path "ud_path"
+
+schema:type "material"
+	.content "material_content[]"
+
+schema:typedef("can_render", "boolean", true)
+schema:typedef("can_cast", "boolean", false)
+schema:typedef("name", "string", "")
+schema:typedef("can_select", "tag")
+schema:typedef("control_state", "string", "")
+
+schema:type "parent"
+	.eid "int" (-1)
+
+schema:typedef("color", "int[4]", {1,1,1,1})
+
+schema:type "ambient_light"
+	.mode "string" ("color")
+	.factor "real" (0.3)
+	.skycolor "color"
+	.midcolor "color"
+	.groundcolor "color"
 
 local fs = require "filesystem"
 
