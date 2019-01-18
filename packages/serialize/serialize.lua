@@ -1,3 +1,5 @@
+local datalist = require 'datalist'
+
 local function sortpairs(t)
     local sort = {}
     for k in pairs(t) do
@@ -55,7 +57,13 @@ local function load(world, t)
     end
 end
 
+local function parse(s)
+    return datalist.parse(s)
+end
+
 return {
     save = save,
     load = load,
+    stringify = require 'stringify',
+    parse = parse,
 }

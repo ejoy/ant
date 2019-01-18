@@ -130,22 +130,22 @@ function util.view_proj_matrix(camera_entity)
 	return view, util.proj(frustum)
 end
 
-local function math3d_value_save(v, arg)
-	assert(type(v) == "userdata")	
-	local t = ms(v, "T")
-	assert(type(t) == "table" and t.type ~= nil)
-	return t
-end
-
 function util.create_component_vector()
 	return { 
 		__type = "vector",
 		init = function() return math3d.ref "vector" end,
 		delete = function(m) m() end,
-		save = math3d_value_save,
+		save = function (v)
+			assert(type(v) == "userdata")	
+			local t = ms(v, "T")
+			assert(type(t) == "table" and t.type ~= nil)
+			assert(t.type == "v4", "vector load function need vector type")
+			t.type = nil
+			return t
+		end,
 		load = function(s)
-			assert(s.type == "v4", "vector load function need vector type")
 			local v = math3d.ref "vector"
+			s.type = "v4"
 			ms(v, s, "=")
 			return v
 		end,
@@ -157,10 +157,17 @@ function util.create_component_matrix()
 		__type = "matrix",
 		init = function() return math3d.ref "matrix" end,
 		delete = function(m) m() end,
-		save = math3d_value_save,
+		save = function (v)
+			assert(type(v) == "userdata")	
+			local t = ms(v, "T")
+			assert(type(t) == "table" and t.type ~= nil)
+			assert(t.type == "m4", "matrix load function need matrix type")
+			t.type = nil
+			return t
+		end,
 		load = function(s)
-			assert(s.type == "m4", "matrix load function need matrix type")
 			local v = math3d.ref "matrix"
+			s.type = "m4"
 			ms(v, s, "=")
 			return v
 		end, 
