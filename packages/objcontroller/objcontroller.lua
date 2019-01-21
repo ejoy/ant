@@ -1,16 +1,28 @@
 local objcontroller = {}; objcontroller.__index = objcontroller
 
-function objcontroller:bind_message_event(msg)
-	local queue = {}
+-- need work with "objcontroller_system"
+local msgqueue = nil
 
-	local function get_eventlist(name)
-		local eventlist = queue[name]
-		if eventlist == nil then
-			eventlist = {}
-			queue[name] = eventlist
-		end
-		return eventlist
+local tiggers = nil
+local tigger_names = nil
+
+local function get_eventlist(name)
+	assert(msgqueue)
+	local eventlist = msgqueue[name]
+	if eventlist == nil then
+		eventlist = {}
+		msgqueue[name] = eventlist
 	end
+	return eventlist
+end
+
+function objcontroller.init(msg)
+	assert(msgqueue == nil)
+	msgqueue = {}
+	assert(tiggers == nil)
+	tiggers = {}
+	assert(tigger_names == nil)
+	tigger_names = {}
 
 	msg.observers:add  {
 		mouse_click = function (_, what, press, x, y, state)
@@ -34,38 +46,34 @@ function objcontroller:bind_message_event(msg)
 		end,
 	}
 
-	self.msgqueue = queue
+	local defcfg = require "default_control_config"
+	objcontroller.register(defcfg)
 end
 
-local function get_tigger(oc, name)
-	local tigger = oc.tiggers[name]
+local function get_tigger(name)
+	assert(tiggers)
+	local tigger = tiggers[name]
 	if tigger == nil then
 		tigger = {keys={}}
-		oc.tiggers[name] = tigger
-		local names = oc.tigger_names
-	
-		names[#names+1] = name
-		table.sort(names, function(a, b) return a > b end)		
+		tiggers[name] = tigger
+		tigger_names[#tigger_names+1] = name
+		table.sort(tigger_names, function(a, b) return a > b end)		
 	end
 
 	return tigger
 end
 
-function objcontroller.register_tigger(name, tiggerkey)
-	local tigger = get_tigger(self, name)	
-	tigger.keys[#tigger.keys+1] = tiggerkey	
-end
-
-function objcontroller:register(tiggermap)
+function objcontroller.register(tiggermap)
 	for name, tiggerkey in pairs(tiggermap) do
-		local tigger = get_tigger(self, name)
+		local tigger = get_tigger(name)
 		local keys = tigger.keys
 		table.move(tiggerkey, 1, #tiggerkey, #keys+1, keys)
 	end
 end
 
-function objcontroller:bind_tigger(tiggername, cb)
-	local tigger = self.tiggers[tiggername]
+function objcontroller.bind_tigger(tiggername, cb)
+	assert(tiggers)
+	local tigger = tiggers[tiggername]
 	if tigger == nil then
 		error(string.format("not found tigger name:%s", tiggername))
 	end
@@ -125,14 +133,13 @@ local function match_event(tiggerkey, name, event)
 	error "not implement"
 end
 
-
-
-function objcontroller:update()
-	for eventname, eventlist in pairs(self.msgqueue) do
-		local tiggers = self.tiggers
+function objcontroller.update()
+	assert(msgqueue)
+	for eventname, eventlist in pairs(msgqueue) do
+		local tiggers = tiggers
 
 		for _, e in ipairs(eventlist) do
-			for _, name in ipairs(self.tigger_names) do
+			for _, name in ipairs(tigger_names) do
 				local tigger = tiggers[name]
 				local keys = tigger.keys
 				for _, key in ipairs(keys) do
@@ -143,18 +150,8 @@ function objcontroller:update()
 			end
 		end
 
-		self.msgqueue[eventname] = {}
+		msgqueue[eventname] = nil
 	end	
-end
-
-
-function objcontroller.new(bindings)
-	local inst = setmetatable({
-		tiggers = {},
-		tigger_names = {},
-	}, objcontroller)
-	inst:register(bindings)
-	return inst
 end
 
 return objcontroller
