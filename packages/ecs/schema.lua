@@ -144,7 +144,7 @@ function fields_mt:__call(typename)
 	}
 	checktype(self._schema, typename, self._name)
 	attrib[field_n] = nil
-	assert(self._field[name] == nil)
+	assert(self._field[item.name] == nil)
 
 	if field_n > 1 then
 		item.attrib = attrib
