@@ -12,7 +12,6 @@ local scene = import_package "ant.scene"
 
 local s_logo = require "logo"
 
-local mapiup = require "editor.input.mapiup"
 local inputmgr = import_package "ant.inputmgr"
 local nkmsg = (import_package "ant.inputmgr").nuklear
 
@@ -25,7 +24,7 @@ local shaderMgr = require "render.resources.shader_mgr"
 
 local terrainClass = require "terrain"
 local utilmath = require "utilmath"
-local eu = require "editor.util"
+local mapiup = (import_package "ant.editor").mapiup
 
 local terrain = terrainClass.new()       	-- new terrain instance pvp
 local terrain_chibi = terrainClass.new()    -- chibi 
@@ -34,8 +33,8 @@ local math3d_stack = math3d.new()
 
 canvas = iup.canvas{}
 
-local input_queue = inputmgr.queue(mapiup)
-eu.regitster_iup(input_queue, canvas)
+local input_queue = inputmgr.queue()
+mapiup(input_queue, canvas)
 
 local world_building = {}
 dlg = iup.dialog {

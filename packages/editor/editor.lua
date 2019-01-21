@@ -5,10 +5,8 @@ require "iuplua"
 
 local rhwi = import_package "ant.render".hardware_interface
 local su = import_package "ant.scene"
-
 local inputmgr = import_package "ant.inputmgr"
-local mapiup = require "input.mapiup"
-
+local mapiup = require "mapiup"
 local task = require "task"
 
 local editor = {}; editor.__index = editor
@@ -20,9 +18,9 @@ function editor.run(fbw, fbh, canvas, packages, systems)
 		height = fbh,
 		getlog = false,
 	}
-	local iq = inputmgr.queue(mapiup)
-	local eu = require "util"
-	eu.regitster_iup(iq, canvas)
+	
+	local iq = inputmgr.queue()	
+	mapiup(iq, canvas)
 
 	local world = su.start_new_world(iq, fbw, fbh, packages, systems)
 

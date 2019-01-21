@@ -6,15 +6,13 @@ require "scintilla"
 local bgfx = require "bgfx"
 
 local inputmgr = import_package "ant.inputmgr"
-local mapiup = require "editor.input.mapiup"
-local elog = require "editor.log"
+local elog = import_package "ant.iupcontrols".logview
+local rhwi = import_package "ant.render".hardware_interface
 
-local rhwi = require "render.hardware_interface"
 local scene = import_package "ant.scene"
-local eu = require "editor.util"
-local task = require "editor.task"
-
-local fs = require "filesystem"
+local editor = import_package "ant.editor"
+local mapiup = editor.mapiup
+local task = editor.task
 
 iup.SetGlobal("UTF8MODE", "YES")
 
@@ -35,8 +33,8 @@ local dlg = iup.dialog {
 	shrink="yes",	-- logger box should be allow shrink
 }
 
-local input_queue = inputmgr.queue(mapiup)
-eu.regitster_iup(input_queue, canvas)
+local input_queue = inputmgr.queue()
+mapiup(input_queue, canvas)
 
 local function init()
 	local fbw, fbh = 1280, 720

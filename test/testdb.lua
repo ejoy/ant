@@ -4,13 +4,13 @@ local redirect = require "filesystem.redirect"
 local elog = require "editor.log"
 local debugger = require "debugger"
 local inputmgr = import_package "ant.inputmgr"
-local mapiup = require "editor.input.mapiup"
 local task = require "editor.task"
 local eu = require "editor.util"
+local mapiup = (import_package "ant.editor").mapiup
 
 local canvas = iup.canvas { RASTERSIZE = "640x480" }
-local input_queue = inputmgr.queue(mapiup)
-eu.regitster_iup(input_queue, canvas)
+local input_queue = inputmgr.queue()
+mapiup(input_queue, canvas)
 
 local dlg = iup.dialog {
 	iup.split {

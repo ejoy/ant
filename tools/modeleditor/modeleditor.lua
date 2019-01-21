@@ -204,9 +204,11 @@ editormain.run(fbw, fbh, canvas, {
 }, 
 {
 	"model_editor_system",
+	-- timer
+	"timesystem",
 	--objcontroller
-	"camera_controller",	
-	--libs
+	"camera_controller",
+	--animation
 	"skinning_system",
 	--debug
 	"debug_draw",

@@ -10,13 +10,12 @@ local task = require "editor.task"
 
 local s_logo = require "logo"
 
-local mapiup = require "editor.input.mapiup"
 local inputmgr = import_package "ant.inputmgr"
 local nkmsg = (import_package "ant.inputmgr").nuklear
+local mapiup = (import_package "ant.editor").mapiup
 
 local math3d = require "math3d"
 local math = import_package "ant.math"
-local mathu = math.util
 
 local loadfile = require "tested.loadfile"
 local ch_charset = require "tested.charset_chinese_range"
@@ -25,17 +24,16 @@ local shaderMgr = require "render.resources.shader_mgr"
 
 local terrainClass = require "terrain"
 local utilmath = require "utilmath"
-local eu = require "editor.util"
 
 local terrain = terrainClass.new()       	-- new terrain instance pvp
 local terrain_chibi = terrainClass.new()    -- chibi 
 
 local math3d_stack = math3d.new()
 
-canvas = iup.canvas{}
+local canvas = iup.canvas{}
 
-local input_queue = inputmgr.queue(mapiup, canvas)  -- 函数已经修改必须配合框架 editor.register_iup 一起使用
-eu.regitster_iup(input_queue, canvas)    -- editor 
+local input_queue = inputmgr.queue()  -- 函数已经修改必须配合框架 editor.register_iup 一起使用
+mapiup(input_queue, canvas)    -- editor 
 
 dlg = iup.dialog {
   canvas,

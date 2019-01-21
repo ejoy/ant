@@ -6,8 +6,9 @@ local sm = require "render.resources.shader_mgr"
 local task = require "editor.task"
 local nk = require "bgfx.nuklear"
 local inputmgr = import_package "ant.inputmgr"
-local mapiup = require "editor.input.mapiup"
 local nkmsg = (import_package "ant.inputmgr").nuklear
+
+local mapiup = (import_package "ant.editor").mapiup
 
 local loadfile = require "tested.loadfile"
 local ch_charset = require "tested.charset_chinese_range"
@@ -38,8 +39,8 @@ local miandlg = iup.dialog {
 	size = "HALFxHALF",
 }
 
-local input_queue = inputmgr.queue(mapiup)
-eu.regitster_iup(input_queue, canvas)
+local input_queue = inputmgr.queue()
+mapiup(input_queue, canvas)
 
 local UI_VIEW = 0
 

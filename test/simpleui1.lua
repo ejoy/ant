@@ -9,7 +9,6 @@ local sm = require "render.resources.shader_mgr"
 local task = require "editor.task"
 local nk = require "bgfx.nuklear"
 local inputmgr = import_package "ant.inputmgr"
-local mapiup = require "editor.input.mapiup"
 local nkmsg = (import_package "ant.inputmgr").nuklear
 
 local loadfile = require "tested.loadfile"
@@ -27,14 +26,13 @@ local combobox = require "tested.ui.combobox"
 local radio = require "tested.ui.radio"
 local property = require "tested.ui.property"
 local colorStyle = require "tested.ui.styleColors"
-local skinStyle = require "tested.ui.styleSkin"
 local area = require "tested.ui.areaWindow"
 local irr_btn = require "tested.ui.buttonIrregular"
 local joystick = require "tested.ui.joystick"
 
 local terrainClass = require "terrain"
-local texLoad = require "utiltexture"
-local eu = require "editor.util"
+local mapiup = (import_package "ant.editor").mapiup
+
 
 local terrain = terrainClass.new()       -- new terrain instance 
 
@@ -46,8 +44,8 @@ local miandlg = iup.dialog {
 	size = "HALFxHALF",
 }
 
-local input_queue = inputmgr.queue(mapiup)
-eu.regitster_iup(input_queue, canvas)
+local input_queue = inputmgr.queue()
+mapiup(input_queue, canvas)
 
 local UI_VIEW = 0
 

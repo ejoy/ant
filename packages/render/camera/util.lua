@@ -25,9 +25,15 @@ function util.move(camera, dx, dy, dz)
 	local xdir, ydir, zdir = ms(camera.rotation, "bPPP")
 
 	local eye = camera.position
-	move_position(eye, xdir, dx)
-	move_position(eye, ydir, dy)
-	move_position(eye, zdir, dz)
+	if dx then
+		move_position(eye, xdir, dx)
+	end
+	if dy then
+		move_position(eye, ydir, dy)
+	end
+	if dz then
+		move_position(eye, zdir, dz)
+	end
 
 	-- if c == "a" or c == "A" then
 	-- 	move_position(eye, xdir, move_step)
@@ -47,7 +53,7 @@ end
 function util.rotate(camera, dx, dy)
 	local rot = camera.rotation
 
-	local rot_result = ms(rot, {dy, dx, 0, 0}, "+T")
+	local rot_result = ms(rot, {dy or 0, dx or 0, 0, 0}, "+T")
 
 	rot_result[1] = mu.limit(rot_result[1], -89.9, 89.9)
 	ms(rot, rot_result, "=")

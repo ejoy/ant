@@ -9,13 +9,11 @@ local inputmgr 		= import_package "ant.inputmgr"
 local iupcontrols 	= import_package "ani.iupcontrols"
 local rhwi 			= import_package "ant.render".hardware_interface
 local scene 		= import_package "ant.scene"
-
-local mapiup 		= editor.mapiup
 local elog 			= iupcontrols.logview
 local hierarchyview = iupcontrols.hierarchyview
 local propertycontrol = iupcontrols.propertyview
 local assetviewclass = iupcontrols.assetview
-local eu 			= editor.util
+local mapiup 		= editor.mapiup
 local task 			= editor.task
 
 local propertyview = propertycontrol.new {
@@ -104,8 +102,8 @@ function editor_mainwindow:run(config)
 
 	self.assetview:init("project")
 	
-	self.iq = inputmgr.queue(mapiup)
-	eu.regitster_iup(self.iq, self.canvas)
+	self.iq = inputmgr.queue()
+	mapiup(self.iq, self.canvas)
 
 	local nwh = iup.GetAttributeData(self.canvas,"HWND")
     rhwi.init {

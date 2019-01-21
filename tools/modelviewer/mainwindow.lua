@@ -2,12 +2,12 @@ dofile "libs/editor.lua"
 
 local elog = require "editor.log"
 local inputmgr = import_package "ant.inputmgr"
-local mapiup = require "editor.input.mapiup"
 local bgfx = require "bgfx"
-local rhwi = require "render.hardware_interface"
+local rhwi = import_package "render".hardware_interface
 local scene = import_package "ant.scene"
-local eu = require "editor.util"
-local task = require "editor.task"
+local editor = import_package "ant.editor"
+local mapiup = editor.mapiup
+local task = editor.task
 require "iuplua"
 
 local fb_width, fb_height = 1024, 768
@@ -27,8 +27,8 @@ local dlg = iup.dialog {
 	title = "Model",
 }
 
-local input_queue = inputmgr.queue(mapiup)
-eu.regitster_iup(input_queue, canvas)
+local input_queue = inputmgr.queue()
+mapiup(input_queue, canvas)
 
 dlg:showxy(iup.CENTER, iup.CENTER)
 dlg.usersize = nil
