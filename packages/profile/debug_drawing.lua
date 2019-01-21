@@ -38,7 +38,7 @@ ecs.tag "main_debug"
 ecs.tag "debug_skeleton"
 
 schema:userdata "debug_object"
-local debug_obj = ecs.component_v2 "debug_object"
+local debug_obj = ecs.component "debug_object"
 
 local function clean_desc_buffer(desc)
 	desc.material = ""

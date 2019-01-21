@@ -6,7 +6,7 @@ local bgfx = require "bgfx"
 
 --[@ message
 schema:userdata "message"
-local msg_comp = ecs.component_v2 "message"
+local msg_comp = ecs.component "message"
 
 function msg_comp:init()
 	local self = {}

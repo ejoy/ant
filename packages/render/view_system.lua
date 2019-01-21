@@ -35,7 +35,7 @@ schema:type "clear_component"
     .depth "int" (1)
     .stencil "int" (0)
 
-local clear_comp = ecs.component_v2 "clear_component"
+local clear_comp = ecs.component "clear_component"
 
 function clear_comp:init()
     self.clear_color = true

@@ -66,13 +66,13 @@ ctx.s_flipV = false       -- d3d or ogl
 -- 定义 shadowmap entity 相关组件数据( 生成配置, 结果数据, ... )
 -- shadowmap settings
 schema:userdata "shadow_config"
-local shadow_config = ecs.component_v2 "shadow_config"
+local shadow_config = ecs.component "shadow_config"
 
 
 
 -- shadowmap runtime status, result id handle,result textures,matrixs,framebuffers
 schema:userdata "shadow_rt"
-local shadow_rt = ecs.component_v2 "shadow_rt"
+local shadow_rt = ecs.component "shadow_rt"
 
 -- setting & result  
 -- 可修改设置集
@@ -140,7 +140,7 @@ end
 -- or combine mode 
 -- 合并成一个 compoent 内的两个表? may be clear more,but not use now 
 schema:userdata "shadow_maker"
-local shadow = ecs.component_v2 "shadow_maker"
+local shadow = ecs.component "shadow_maker"
 
 function shadow:init()
     local self = {}
@@ -1004,7 +1004,7 @@ end
 -- shadow_cast_filter
 
 schema:userdata "shadow_cast_filter"
-local shadow_cast_filter = ecs.component_v2 "shadow_cast_filter"
+local shadow_cast_filter = ecs.component "shadow_cast_filter"
 function shadow_cast_filter:init()
     return {
         result = {}

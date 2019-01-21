@@ -10,7 +10,7 @@ schema:type "ik"
 	.soften "real" (0.0)
 	.twist_angle "real" (0.0)
 
-local m = ecs.component_v2 "ik"
+local m = ecs.component "ik"
 
 function m:init()
 	self.start_joint = -1

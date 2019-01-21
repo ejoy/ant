@@ -9,7 +9,7 @@ schema:type "animation_content"
 	.weighttype "string" ("full")
 	.ref_path "resource"
 
-local animation_content = ecs.component_v2 "animation_content"
+local animation_content = ecs.component "animation_content"
 
 function animation_content:load()
 	self.handle = asset.load(self.ref_path.package, self.ref_path.filename)
@@ -18,7 +18,7 @@ end
 schema:type "animation"
 	.anilist "animation_content[]"
 
-local ani = ecs.component_v2 "animation"
+local ani = ecs.component "animation"
 	  
 function ani:init()
 	self.ratio = 0
@@ -31,7 +31,7 @@ end
 schema:type "skeleton"
 	.ref_path "resource"
 
-local skeleton = ecs.component_v2 "skeleton"
+local skeleton = ecs.component "skeleton"
 
 function skeleton:load()
 	self.handle = asset.load(self.ref_path.package, self.ref_path.filename)

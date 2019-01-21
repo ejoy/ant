@@ -7,7 +7,7 @@ local schema = world.schema
 local ru = import_package "ant.render".util
 
 schema:userdata "widget"
-local widget = ecs.component_v2 "widget"
+local widget = ecs.component "widget"
 function widget.init()
 	return {}
 end

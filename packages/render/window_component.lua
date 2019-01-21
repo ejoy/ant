@@ -9,7 +9,7 @@ schema:type "window"
     .width "int" (1)  -- use 1 to avoid divide by 0 
     .height "int" (1)
 
-local win = ecs.component_v2 "window"
+local win = ecs.component "window"
 
 function win:init()
     bgfx.set_debug "T"

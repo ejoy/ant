@@ -165,7 +165,7 @@ end
 
 -- pickup_system
 schema:userdata "pickup"
-local pickup = ecs.component_v2 "pickup"
+local pickup = ecs.component "pickup"
 function pickup:init()
 	return {}
 end

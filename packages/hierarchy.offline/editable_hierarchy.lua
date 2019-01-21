@@ -8,7 +8,7 @@ local assetmgr = import_package "ant.asset"
 schema:type "editable_hierarchy"
 	.ref_path "resource"
 
-local eh = ecs.component_v2 "editable_hierarchy"
+local eh = ecs.component "editable_hierarchy"
 
 function eh:init()
 	self.root = hierarchy.new()

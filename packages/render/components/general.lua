@@ -12,7 +12,7 @@ local asset = import_package "ant.asset"
 schema:typedef("entityid", "int", -1)
 
 schema:userdata "path"
-local path = ecs.component_v2 "path"
+local path = ecs.component "path"
 function path:init()
 	return fs.path ""
 end
@@ -53,7 +53,7 @@ schema:type "resource"
 schema:type "mesh"
 	.ref_path "resource"
 
-local mesh = ecs.component_v2 "mesh"
+local mesh = ecs.component "mesh"
 
 function mesh:load()
 	self.assetinfo = asset.load(self.ref_path.package, self.ref_path.filename)
@@ -72,7 +72,7 @@ schema:type "material_content"
 schema:type "material"
 	.content "material_content[]"
 
-local material_content = ecs.component_v2 "material_content"
+local material_content = ecs.component "material_content"
 
 function material_content:save()
 	local pp = assert(self.path)

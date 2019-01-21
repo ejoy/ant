@@ -4,7 +4,6 @@ local log = log and log(...) or print
 local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
-local component_v2 = require "component_v2"
 local pm = require "antpm"
 local create_schema = require "schema"
 
@@ -272,12 +271,8 @@ function ecs.new_world(config)
 
 	w.schema:check()
 
-	for k,v in pairs(class.component) do
-		w._component_type[k] = component(v)
-	end
-
 	for k,v in pairs(w.schema.map) do
-		w._component_type[k] = component_v2(v, w.schema)
+		w._component_type[k] = component(v, w.schema)
 	end
 
 	-- init system

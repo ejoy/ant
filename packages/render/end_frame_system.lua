@@ -5,7 +5,7 @@ local schema = world.schema
 local bgfx = require "bgfx"
 
 schema:userdata "frame_stat"
-local stat = ecs.component_v2 "frame_stat"
+local stat = ecs.component "frame_stat"
 function stat:init()
 	return {
 		frame_num = 0
@@ -13,7 +13,7 @@ function stat:init()
 end
 
 schema:userdata "post_end_frame_jobs"
-local post_jobs = ecs.component_v2 "post_end_frame_jobs"
+local post_jobs = ecs.component "post_end_frame_jobs"
 function post_jobs:init()
 	self.jobs = {}
 end

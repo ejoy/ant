@@ -21,7 +21,7 @@ schema:type "collider_info"
 schema:type "collider"
     .info "collider_info"
 
-local collider = ecs.component_v2 "collider"
+local collider = ecs.component "collider"
 
 -- install delete function here for release
 function collider:delete()

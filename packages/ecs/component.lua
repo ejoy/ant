@@ -1,169 +1,208 @@
-local function deep_copy(obj)
-	if type(obj) ~= "table" then
-		return obj
-	end
-	local t = {}
-	for k, v in pairs(obj) do
-		t[k] = deep_copy(v)
-	end
-	return t
+local foreach_init
+
+local function foreach_single_init(c, schema)
+    if c.method and c.method.init then
+        return c.method.init()
+    end
+    if schema.map[c.type] then
+        return foreach_init(schema.map[c.type], schema)
+    end
+    if c.type == 'int' then
+        return 0
+    elseif c.type == 'real' then
+        return 0.0
+    elseif c.type == 'string' then
+        return ""
+    elseif c.type == 'boolean' then
+        return false
+    elseif c.type == 'userdata' then
+        return nil
+    else
+        error("unknown type:" .. c.type)
+    end
 end
 
-local function foreach_init(ti)
-	if type(ti) ~= 'table' then
-		return ti
-	elseif ti.__type then
-		return ti.init()
-	else
-		local ret = {}
-		for k, v in pairs(ti) do
-			ret[k] = foreach_init(v)
-		end
-		return ret
-	end
+function foreach_init(c, schema)
+    if not c.type then
+        local ret = {}
+        for _, v in ipairs(c) do
+            ret[v.name] = foreach_init(v, schema)
+        end
+        if c.method and c.method.init then
+            return c.method.init(ret)
+        end
+        return ret
+    end
+    if c.default then
+        return c.default
+    end
+    if c.array then
+        if c.array == 0 then
+            return {}
+        end
+        local ret = {}
+        for i = 1, c.array do
+            ret[i] = foreach_single_init(c, schema)
+        end
+        return ret
+    end
+    if c.map then
+        return {}
+    end
+    return foreach_single_init(c, schema)
 end
 
-local function gen_init(c)
-	if not c.method.init then
-		return function()
-			return foreach_init(c.typeinfo)
-		end
-	end
-	local init = c.method.init
-	return function()
-		local ret = foreach_init(c.typeinfo)
-		init(ret)
-		return ret
-	end
+local function gen_init(c, schema)
+    return function()
+        return foreach_init(c, schema)
+    end
 end
 
-local function foreach_delete(ti, component)
-	if type(ti) ~= 'table' then
-	elseif ti.__type then
-		return ti.delete
-	else
-		for k, v in pairs(ti) do
-			local df = foreach_delete(v, component[k])
-			if df then
-				df(component[k])
-			end
-		end
-	end
+local foreach_delete
+local function foreach_single_delete(component, c, schema)
+    if c.method and c.method.delete then
+        c.method.delete(component)
+        return
+    end
+    if schema.map[c.type] then
+        foreach_delete(component, schema.map[c.type], schema)
+        return
+    end
 end
 
-local function gen_delete(c)
-	local function primitive(component)
-		local df = foreach_delete(c.typeinfo, component)
-		if df then
-			df(component)
-		end
-	end
-
-	local delete = c.method.delete
-	if delete then
-		return function(component)
-			delete(component)
-			primitive(component)
-		end
-	else
-		return primitive
-	end
+function foreach_delete(component, c, schema)
+    if not c.type then
+        for _, v in ipairs(c) do
+            foreach_delete(component, v, schema)
+        end
+        return
+    end
+    if c.array then
+        local n = c.array == 0 and #component or c.array
+        for i = 1, n do
+            foreach_single_delete(component[i], c, schema)
+        end
+        return
+    end
+    if c.map then
+        for _, v in pairs(component) do
+            foreach_single_delete(v, c, schema)
+        end
+        return
+    end
+    foreach_single_delete(component, c, schema)
 end
 
-local function foreach_save(ti, component, arg)
-	if type(ti) ~= 'table' then
-		return component
-	elseif ti.__type then
-		if ti.pairs then
-			local ret = {}
-			for k, v in ti.pairs(component) do
-				ret[k] = foreach_save(v, component[k], arg)
-			end
-			return ret
-		end
-		return ti.save(component, arg)
-	else
-		local ret = {}
-		for k, v in pairs(ti) do
-			ret[k] = foreach_save(v, component[k], arg)
-		end
-		return ret
-	end
+local function gen_delete(c, schema)
+    return function(component)
+        return foreach_delete(component, c, schema)
+    end
 end
 
-local function gen_save(c)
-	local save = c.method.save
-	if save then
-		return function (component, arg)
-			return save(foreach_save(c.typeinfo, component, arg), arg)
-		end
-	else
-		return function (component, arg)
-			return foreach_save(c.typeinfo, component, arg)
-		end
-	end
+local foreach_save
+local function foreach_single_save(component, arg, c, schema)
+    if c.method and c.method.save then
+        return c.method.save(component, arg)
+    end
+    if schema.map[c.type] then
+        return foreach_save(component, arg, schema.map[c.type], schema)
+    end
+    if c.type == 'userdata' then
+        assert "serialization isn't allowed."
+    end
+    return component
 end
 
-local function foreach_load(ti, component, arg)
-	if type(ti) ~= 'table' then
-		return component
-	elseif ti.__type then
-		if ti.pairs then
-			local ret = {}
-			for k, v in ti.pairs(component) do
-				ret[k] = foreach_load(v, component[k], arg)
-			end
-			return ret
-		end
-		return ti.load(component, arg)
-	else
-		local ret = {}
-		for k, v in pairs(ti) do
-			ret[k] = foreach_load(v, component[k], arg)
-		end
-		return ret
-	end
+function foreach_save(component, arg, c, schema)
+    if not c.type then
+        local ret = {}
+        for _, v in ipairs(c) do
+            ret[v.name] = foreach_save(component[v.name], arg, v, schema)
+        end
+        if c.method and c.method.save then
+            return c.method.save(ret, arg)
+        end
+        return ret
+    end
+    if c.array then
+        local n = c.array == 0 and #component or c.array
+        local ret = {}
+        for i = 1, n do
+            ret[i] = foreach_single_save(component[i], arg, c, schema)
+        end
+        return ret
+    end
+    if c.map then
+        local ret = {}
+        for k, v in pairs(component) do
+            ret[k] = foreach_single_save(v, arg, c, schema)
+        end
+        return ret
+    end
+    return foreach_single_save(component, arg, c, schema)
 end
 
-local function gen_load(c)
-	local load = c.method.load
-	if load then
-		return function (component, arg)
-			return load(foreach_load(c.typeinfo, component, arg), arg)
-		end
-	else
-		return function (component, arg)
-			return foreach_load(c.typeinfo, component, arg)
-		end
-	end
+local function gen_save(c, schema)
+    return function (component, arg)
+        return foreach_save(component, arg, c, schema)
+    end
 end
 
-local reserved_method = { init = true, delete = true, save = true, load = true }
 
-local function copy_method(c)
-	local methods = c.method
-	local m = {}
-	if methods then
-		local cname = c.name
-		for name, f in pairs(methods) do
-			if not reserved_method[name] then
-				m[cname .. "_" .. name] = function(entity, ...)
-					return f(entity[cname], ...)
-				end
-			end
-		end
-	end
-	return m
+local foreach_load
+local function foreach_single_load(component, arg, c, schema)
+    if c.method and c.method.load then
+        return c.method.load(component, arg)
+    end
+    if schema.map[c.type] then
+        return foreach_load(component, arg, schema.map[c.type], schema)
+    end
+    if c.type == 'userdata' then
+        assert "serialization isn't allowed."
+    end
+    return component
 end
 
-return function(c)
-	local typeinfo = c.typeinfo
-	return {
-		typeinfo = typeinfo,
-		init = gen_init(c),
-		save = gen_save(c),
-		load = gen_load(c),
-		delete = gen_delete(c),
-		method = copy_method(c),
-	}
+function foreach_load(component, arg, c, schema)
+    if not c.type then
+        local ret = {}
+        for _, v in ipairs(c) do
+            ret[v.name] = foreach_load(component[v.name], arg, v, schema)
+        end
+        if c.method and c.method.load then
+            return c.method.load(ret, arg)
+        end
+        return ret
+    end
+    if c.array then
+        local n = c.array == 0 and #component or c.array
+        local ret = {}
+        for i = 1, n do
+            ret[i] = foreach_single_load(component[i], arg, c, schema)
+        end
+        return ret
+    end
+    if c.map then
+        local ret = {}
+        for k, v in pairs(component) do
+            ret[k] = foreach_single_load(v, arg, c, schema)
+        end
+        return ret
+    end
+    return foreach_single_load(component, arg, c, schema)
+end
+
+local function gen_load(c, schema)
+    return function (component, arg)
+        return foreach_load(component, arg, c, schema)
+    end
+end
+
+return function(c, schema)
+    return {
+        init = gen_init(c, schema),
+        delete = gen_delete(c, schema),
+        save = gen_save(c, schema),
+        load = gen_load(c, schema),
+    }
 end

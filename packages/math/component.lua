@@ -7,7 +7,7 @@ local ms = require "stack"
 
 schema:userdata "vector"
 
-local vector = ecs.component_v2 "vector"
+local vector = ecs.component "vector"
 
 function vector.init()
     return math3d.ref "vector"
@@ -35,7 +35,7 @@ end
 
 schema:userdata "matrix"
 
-local matrix = ecs.component_v2 "matrix"
+local matrix = ecs.component "matrix"
 
 function matrix.init()
     return math3d.ref "vector"

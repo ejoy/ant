@@ -6,7 +6,7 @@ local math = import_package "ant.math"
 local mu = math.util
 
 schema:userdata "constant"
-local constant = ecs.component_v2 "constant"
+local constant = ecs.component "constant"
 
 function constant:init()
     return {

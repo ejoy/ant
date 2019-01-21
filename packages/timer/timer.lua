@@ -3,7 +3,7 @@ local world = ecs.world
 local schema = world.schema
 
 schema:userdata "timer"
-local timer = ecs.component_v2 "timer"
+local timer = ecs.component "timer"
 
 function timer:init()
 	return {
