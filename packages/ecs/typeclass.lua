@@ -46,7 +46,7 @@ local function gen_method(c, callback)
 			error("Method " .. key .. " has already defined at " .. c.source[key])
 		end
 		c.source[key] = sourceinfo()
-		c.method[key] = func
+		rawset(c.method, key, func)
 	end
 end
 
@@ -128,6 +128,19 @@ return function(world, import, class)
 
 	class_register.tag = function (name)
 		class_register.component(name)(true)
+	end
+
+	local schema = world.schema
+	class_register.component_v2 = function (name)
+		assert(schema.map[name])
+		local c = schema.map[name]
+		if not c.method then
+			c.source = {}
+			c.method = setmetatable({}, {
+				__newindex = gen_method(c, {"init", "delete", "save", "load"}),
+			})
+		end
+		return c.method
 	end
 
 	class_register.import = import

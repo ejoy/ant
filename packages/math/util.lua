@@ -152,26 +152,4 @@ function util.create_component_vector()
 	}
 end
 
-function util.create_component_matrix()
-	return { 
-		__type = "matrix",
-		init = function() return math3d.ref "matrix" end,
-		delete = function(m) m() end,
-		save = function (v)
-			assert(type(v) == "userdata")	
-			local t = ms(v, "T")
-			assert(type(t) == "table" and t.type ~= nil)
-			assert(t.type == "m4", "matrix load function need matrix type")
-			t.type = nil
-			return t
-		end,
-		load = function(s)
-			local v = math3d.ref "matrix"
-			s.type = "m4"
-			ms(v, s, "=")
-			return v
-		end, 
-	}
-end
-
 return util
