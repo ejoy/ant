@@ -28,6 +28,9 @@ function foreach_init(c, schema)
         for _, v in ipairs(c) do
             ret[v.name] = foreach_init(v, schema)
         end
+        if c.method and c.method.init then
+            return c.method.init(ret)
+        end
         return ret
     end
     if c.default then
@@ -104,6 +107,9 @@ local function foreach_single_save(component, arg, c, schema)
     if schema.map[c.type] then
         return foreach_save(component, arg, schema.map[c.type], schema)
     end
+    if c.type == 'userdata' then
+        assert "serialization isn't allowed."
+    end
     return component
 end
 
@@ -150,6 +156,9 @@ local function foreach_single_load(component, arg, c, schema)
     end
     if schema.map[c.type] then
         return foreach_load(component, arg, schema.map[c.type], schema)
+    end
+    if c.type == 'userdata' then
+        assert "serialization isn't allowed."
     end
     return component
 end

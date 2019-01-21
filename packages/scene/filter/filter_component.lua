@@ -1,8 +1,10 @@
 local ecs = ...
-local primitive_filter = ecs.component "primitive_filter"{
+local world = ecs.world
+local schema = world.schema
 
-}
+schema:userdata "primitive_filter"
+local primitive_filter = ecs.component_v2 "primitive_filter"
 
 function primitive_filter:init()
-	self.result = {}
+	return { result = {} }
 end

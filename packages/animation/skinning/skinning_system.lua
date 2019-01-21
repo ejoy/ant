@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local schema = world.schema
 
 local animodule = require "hierarchy.animation"
 local bgfx = require "bgfx"
@@ -7,9 +8,9 @@ local bgfx = require "bgfx"
 -- skinning_mesh component is different from mesh component.
 -- mesh component is used for render purpose.
 -- skinning_mesh component is used for producing mesh component render data.
-ecs.component "skinning_mesh" {
-	ref_path = ""
-}
+schema:type "skinning_mesh"
+	.ref_path "resource"
+
 
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"

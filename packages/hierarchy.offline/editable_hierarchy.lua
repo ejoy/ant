@@ -1,28 +1,21 @@
 local ecs = ...
 local world = ecs.world
+local schema = world.schema
 
 local hierarchy = require "hierarchy"
 local assetmgr = import_package "ant.asset"
 
-local fs = require "filesystem"
+schema:type "editable_hierarchy"
+	.ref_path "resource"
 
-local eh = ecs.component "editable_hierarchy" {
-	ref_path = ""
-}
+local eh = ecs.component_v2 "editable_hierarchy"
 
 function eh:init()
 	self.root = hierarchy.new()
-end
-
-function eh:save()
-	assert(type(self.ref_path) == "table") -- vfs.path
-	self.ref_path = self.ref_path:string()
 	return self
 end
 
 function eh:load()
-	assert(type(self.ref_path) == "string")
-	assert(fs.path(self.ref_path):extension() == fs.path ".hierarchy")
-	self.root = assetmgr.load(self.ref_path, {editable=true})
-	return v
+	self.root = assetmgr.load(self.ref_path.package, self.ref_path.filename, {editable=true})
+	return self
 end

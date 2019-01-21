@@ -265,6 +265,8 @@ function ecs.new_world(config)
 		_set = setmetatable({}, { __mode = "kv" }),
 	}, world)
 
+	w.schema:typedef("tag", "boolean", true)
+
 	-- load systems and components from modules
 	local class = init_modules(w, config.packages, config.systems)
 

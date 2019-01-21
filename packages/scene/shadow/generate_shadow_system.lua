@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
-
+local schema = world.schema
 
 local render_cu = import_package "ant.render".components
 local render_util = import_package "ant.render".util
@@ -66,17 +65,19 @@ ctx.s_flipV = false       -- d3d or ogl
 
 -- 定义 shadowmap entity 相关组件数据( 生成配置, 结果数据, ... )
 -- shadowmap settings
-local shadow_config = ecs.component "shadow_config" { 
+schema:userdata "shadow_config"
+local shadow_config = ecs.component_v2 "shadow_config"
 
-}
+
+
 -- shadowmap runtime status, result id handle,result textures,matrixs,framebuffers
-local shadow_rt = ecs.component "shadow_rt" {
-
-}
+schema:userdata "shadow_rt"
+local shadow_rt = ecs.component_v2 "shadow_rt"
 
 -- setting & result  
 -- 可修改设置集
 function shadow_config:init()
+    local self = {}
     -- should be read from config, and material asset
     self.shadowMapSize = SHADOWMAP_SIZE
     self.near = NEAR 
@@ -117,10 +118,12 @@ function shadow_config:init()
     self.progShadow   = "packDepth_InvZ_RGBA"      -- inverse z depth method    
     --self.progShadow = "packDepth_Linear_RGBA"   
     --self.progShadow = "drawDepth_RGBA"   
+    return self
 end
 
 -- 使用结果集
 function shadow_rt:init()
+    local self = {}
     -- runtime & result 
     -- ctx overlay data
     self.ready = true                 -- shadowmaps have generated , render system query this flag
@@ -131,14 +134,19 @@ function shadow_rt:init()
 
     -- comp_rt.lightView[4]           -- rumtime 
     -- comp_rt.lightProj[4]           --  
+    return self
 end 
 
 -- or combine mode 
 -- 合并成一个 compoent 内的两个表? may be clear more,but not use now 
-local shadow = ecs.component "shadow_maker" {}
+schema:userdata "shadow_maker"
+local shadow = ecs.component_v2 "shadow_maker"
+
 function shadow:init()
+    local self = {}
     self.config = {}
     self.shadow = {}
+    return self
 end 
 
 -- shadowmap 相关结构数据整理，如何归纳使用，哪些属于 component ，哪些属于系统控制本身
@@ -994,9 +1002,13 @@ end
 --    声明一个 shadow_cast_filter 组件类型
 --    定义组件初始化函数，初始化组件内部结构-剪裁结果表
 -- shadow_cast_filter
-local shadow_cast_filter = ecs.component "shadow_cast_filter" {}
+
+schema:userdata "shadow_cast_filter"
+local shadow_cast_filter = ecs.component_v2 "shadow_cast_filter"
 function shadow_cast_filter:init()
-    self.result = {}
+    return {
+        result = {}
+    }
 end 
 
 -- shadow_cast_system 

@@ -1,17 +1,20 @@
 local ecs = ...
+local world = ecs.world
+local schema = world.schema
+
 local bgfx = require "bgfx"
-local ru = require "util"
-local asset_lib     = import_package "ant.asset"
 
 -- the viewport can have multi instance in one scene
-local win = ecs.component "window" {
-	width = 1,  -- use 1 to avoid divide by 0 
-    height = 1,
-}
+schema:type "window"
+    .width "int" (1)  -- use 1 to avoid divide by 0 
+    .height "int" (1)
+
+local win = ecs.component_v2 "window"
 
 function win:init()
     bgfx.set_debug "T"
     self.isinit_size = false
+    return self
 end
 
 local debug = ecs.system "debug_system"

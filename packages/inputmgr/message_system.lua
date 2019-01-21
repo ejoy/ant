@@ -1,12 +1,15 @@
 local ecs = ...
-
 local world = ecs.world
+local schema = world.schema
+
 local bgfx = require "bgfx"
 
 --[@ message
-local msg_comp = ecs.component "message"{}
+schema:userdata "message"
+local msg_comp = ecs.component_v2 "message"
 
 function msg_comp:init()
+	local self = {}
 	local message_observers = {}
 	message_observers.__index = message_observers
 	function message_observers:add(ob)
@@ -21,7 +24,8 @@ function msg_comp:init()
 		end
 	end
 
-	self.observers = setmetatable({}, message_observers)	
+	self.observers = setmetatable({}, message_observers)
+	return self
 end
 --@]
 

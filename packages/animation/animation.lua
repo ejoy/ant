@@ -1,23 +1,40 @@
 local ecs = ...
 local world = ecs.world
+local schema = world.schema
 
-local ani = ecs.component "animation" {
-	ani_list = {}
-}
+local asset = import_package "ant.asset"
 
+schema:type "animation_content"
+	.weight "real"
+	.weighttype "string" ("full")
+	.ref_path "resource"
+
+local animation_content = ecs.component_v2 "animation_content"
+
+function animation_content:load()
+	self.handle = asset.load(self.ref_path.package, self.ref_path.filename)
+end
+
+schema:type "animation"
+	.anilist "animation_content[]"
+
+local ani = ecs.component_v2 "animation"
+	  
 function ani:init()
 	self.ratio = 0
 	self.aniresult = nil
+	return self
 end
 
 -- separate animation and skeleton to 2 component, 
 -- skeleton component will corresponding to some system that do not need animation
-local ske = ecs.component "skeleton" {
-	ref_path = ""
-}
+schema:type "skeleton"
+	.ref_path "resource"
 
-function ske:init()
-	self.handle = nil
+local skeleton = ecs.component_v2 "skeleton"
+
+function skeleton:load()
+	self.handle = asset.load(self.ref_path.package, self.ref_path.filename)
 end
 
 

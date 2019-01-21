@@ -1,13 +1,17 @@
 local ecs = ...
 local world = ecs.world
+local schema = world.schema
+
 local assetmgr = import_package "ant.asset"
 local fs = require "filesystem"
 
-local hierarchy = ecs.component "hierarchy" {
-}
+schema:userdata "hierarchy"
+local hierarchy = ecs.component_v2 "hierarchy"
 
 function hierarchy:init()
-	self.builddata = nil
+	return {
+		builddata = nil
+	}
 end
 
 function hierarchy:save()
@@ -21,8 +25,12 @@ function hierarchy:load()
 	return self
 end
 
-local hierarchy_name_mapper = ecs.component "hierarchy_name_mapper" {
-}
+schema:userdata "hierarchy_name_mapper"
+local hierarchy_name_mapper = ecs.component_v2 "hierarchy_name_mapper"
+
+function hierarchy_name_mapper:init()
+	return {}
+end
 
 function hierarchy_name_mapper:save()
 	assert(type(self) == "table")

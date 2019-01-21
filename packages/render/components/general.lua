@@ -9,7 +9,6 @@ local fs = require "filesystem"
 local component_util = require "components.util"
 local asset = import_package "ant.asset"
 
-schema:typedef("tag", "boolean", true)
 schema:typedef("entityid", "int", -1)
 
 schema:userdata "path"
@@ -33,7 +32,7 @@ schema:type "relative_srt"
 	.r "vector"
 	.t "vector"
 
-schema:typedef("editor", "tag")
+ecs.tag "editor"
 
 schema:type "frustum"
 	.type "string" ("mat")
@@ -104,7 +103,7 @@ end
 schema:typedef("can_render", "boolean", true)
 schema:typedef("can_cast", "boolean", false)
 schema:typedef("name", "string", "")
-schema:typedef("can_select", "tag")
+ecs.tag "can_select"
 schema:typedef("control_state", "string", "")
 
 schema:type "parent"

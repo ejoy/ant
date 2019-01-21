@@ -126,11 +126,11 @@ return function(world, import, class)
 
 	register_component()
 
+	local schema = world.schema
 	class_register.tag = function (name)
-		class_register.component(name)(true)
+		schema:typedef(name, "tag")
 	end
 
-	local schema = world.schema
 	class_register.component_v2 = function (name)
 		assert(schema.map[name])
 		local c = schema.map[name]
