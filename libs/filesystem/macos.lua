@@ -42,7 +42,7 @@ end
 
 function path_mt:__div(other)
     other = (type(other) == 'string') and other or other._value
-    if other:sub(1, 1) == '/' then
+    if self._value == '' or other:sub(1, 1) == '/' then
         return constructor(other)
     end
     local value = self._value:gsub("(.-)/?$", "%1")

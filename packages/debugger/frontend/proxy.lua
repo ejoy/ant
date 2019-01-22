@@ -70,7 +70,7 @@ local function create_terminal(args, port)
         end
         if type(args.arg0) == 'string' then
             command[#command + 1] = args.arg0
-        elseif type(arg0) == 'table' then
+        elseif type(args.arg0) == 'table' then
             for _, v in ipairs(args.arg0) do
                 command[#command + 1] = v
             end

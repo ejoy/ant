@@ -6,7 +6,7 @@ package.path = "?.lua;libs/?.lua;libs/?/?.lua"
 require( "iuplua" )
 local iupcontrols = import_package "ani.iupcontrols"
 
-local lc = require iupcontrols.listctrl
+local lc = require "iupcontrols.listctrl"
 local l = lc.new()
 
 local ex = iup.expander {
