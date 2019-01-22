@@ -1,16 +1,18 @@
 local ecs = ...
-local mathutil = (import_package "ant.math").util
+local world = ecs.world
+local schema = world.schema
 
-local ik = ecs.component_struct "ik" {
-	target 		= mathutil.create_component_vector(),
-	pole_vector = mathutil.create_component_vector(),
-	mid_axis 	= mathutil.create_component_vector(),
-	weight 		= 0.0,
-	soften 		= 0.0,
-	twist_angle = 0.0,
-}
+schema:type "ik"
+	.target "vector"
+	.pole_vector "vector"
+	.mid_axis "vector"
+	.weight "real" (0.0)
+	.soften "real" (0.0)
+	.twist_angle "real" (0.0)
 
-function ik:init()
+local m = ecs.component "ik"
+
+function m:init()
 	self.start_joint = -1
 	self.mid_joint = -1
 	self.end_joint = -1

@@ -27,7 +27,10 @@ local function load_res(comp, pkgname, respath, param, errmsg)
 	end
 
 	comp.assetinfo = res
-	comp.ref_path = {pkgname, respath}
+	comp.ref_path = {
+		package = pkgname,
+		filename = respath,
+	}
 end
 
 function util.load_skeleton(comp, pkgname, respath, param)
@@ -130,10 +133,25 @@ function util.add_material(material, pkgname, respath)
 	end
 
 	content[#content+1] = {
-		path = {pkgname, respath},
+		path = {
+			package = pkgname,
+			filename = respath,
+		},
 		materialinfo = materialinfo,
 		properties = properties,
 	}
+end
+
+function util.create_material(material)
+	local materialinfo = asset.load(material.path.package, material.path.filename)
+	local mproperties = materialinfo.properties 
+	local properties = {}
+	if mproperties then		
+		-- TODO
+		update_properties(properties, mproperties)
+	end
+	material.materialinfo = materialinfo
+	material.properties = properties
 end
 
 function util.create_render_entity(world, name, meshfile, materialfile)

@@ -1,13 +1,16 @@
 local ecs = ...
+local world = ecs.world
+local schema = world.schema
 
-local timer = ecs.component_struct "timer" {
-	
-}
+schema:userdata "timer"
+local timer = ecs.component "timer"
 
 function timer:init()
-	self.previous = 0
-	self.delta = 0
-	self.current = 0
+	return {
+		previous = 0,
+		delta = 0,
+		current = 0,
+	}
 end
 
 local timesystem = ecs.system "timesystem"

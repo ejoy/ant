@@ -46,18 +46,7 @@ local function gen_method(c, callback)
 			error("Method " .. key .. " has already defined at " .. c.source[key])
 		end
 		c.source[key] = sourceinfo()
-		c.method[key] = func
-	end
-end
-
-local function gen_type(c, typename)
-	return function(self, struct)
-		if c.struct_source ~= nil then
-			error("Type struct has already defined at " .. c.struct_source)
-		end
-		c.struct_source = sourceinfo()
-		c[typename] = struct
-		return self
+		rawset(c.method, key, func)
 	end
 end
 
@@ -87,7 +76,6 @@ return function(world, import, class)
 				setmetatable(r, {
 					__index = args.setter and gen_set(c, args.setter),
 					__newindex = gen_method(c, args.callback),
-					__call = args.typename and gen_type(c, args.typename),
 				})
 
 				class_set[name] = r
@@ -97,21 +85,28 @@ return function(world, import, class)
 	end
 
 	register {
-		type = "component",
-		typename = "typeinfo",
-	}
-	register {
 		type = "system",
 		setter = { "depend" , "dependby", "singleton" },
 		submethod = { "notify" },
 		callback = { "init", "update" },
 	}
 
+	local schema = world.schema
 	class_register.tag = function (name)
-		class_register.component(name)(true)
+		schema:typedef(name, "tag")
 	end
 
-	class_register.component_struct = class_register.component
+	class_register.component = function (name)
+		assert(schema.map[name])
+		local c = schema.map[name]
+		if not c.method then
+			c.source = {}
+			c.method = setmetatable({}, {
+				__newindex = gen_method(c, {"init", "delete", "save", "load"}),
+			})
+		end
+		return c.method
+	end
 
 	class_register.import = import
 

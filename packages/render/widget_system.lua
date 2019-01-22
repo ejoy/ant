@@ -1,12 +1,16 @@
 --luacheck: ignore self
 local ecs = ...
 local world = ecs.world
-
+local schema = world.schema
 
 
 local ru = import_package "ant.render".util
 
-ecs.component_struct "widget" {}
+schema:userdata "widget"
+local widget = ecs.component "widget"
+function widget.init()
+	return {}
+end
 
 local widget_sys = ecs.system "widget_system"
 

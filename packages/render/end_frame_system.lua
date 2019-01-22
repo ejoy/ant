@@ -1,19 +1,23 @@
 local ecs = ...
+local world = ecs.world
+local schema = world.schema
+
 local bgfx = require "bgfx"
 
---[@
-local stat = ecs.component_struct "frame_stat" {}
+schema:userdata "frame_stat"
+local stat = ecs.component "frame_stat"
 function stat:init()
-	self.frame_num = 0
+	return {
+		frame_num = 0
+	}
 end
---@]
 
-local post_jobs = ecs.component_struct "post_end_frame_jobs" {}
+schema:userdata "post_end_frame_jobs"
+local post_jobs = ecs.component "post_end_frame_jobs"
 function post_jobs:init()
 	self.jobs = {}
 end
 
---[@
 local end_frame_sys = ecs.system "end_frame"
 
 end_frame_sys.singleton "frame_stat"
@@ -28,7 +32,6 @@ function end_frame_sys:update()
 	
 	math3d.reset(ms)	
 end
---@]
 
 local post_end_frame = ecs.system "post_end_frame"
 post_end_frame.singleton "post_end_frame_jobs"

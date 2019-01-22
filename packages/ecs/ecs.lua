@@ -5,8 +5,7 @@ local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
 local pm = require "antpm"
-local vfs = require "vfs"
-local fs = require "filesystem"
+local create_schema = require "schema"
 
 local ecs = {}
 local world = {} ; world.__index = world
@@ -18,7 +17,7 @@ local function new_component(w, eid, c, ...)
 		if entity[c] then
 			error(string.format("multiple component defined:%s", c))
 		end
-		entity[c] = w._component_type[c].new()
+		entity[c] = w._component_type[c].init()
 		local nc = w._notifycomponent[c]
 		if nc then
 			table.insert(nc, eid)
@@ -255,6 +254,7 @@ function ecs.new_world(config)
 		_component_type = {},	-- component type objects
 		update = nil,	-- update systems
 		notify = nil,
+		schema = create_schema.new(),
 
 		_entity = {},	-- entity id set
 		_entity_id = 0,
@@ -264,11 +264,15 @@ function ecs.new_world(config)
 		_set = setmetatable({}, { __mode = "kv" }),
 	}, world)
 
+	w.schema:typedef("tag", "boolean", true)
+
 	-- load systems and components from modules
 	local class = init_modules(w, config.packages, config.systems)
 
-	for k,v in pairs(class.component) do
-		w._component_type[k] = component(v)
+	w.schema:check()
+
+	for k,v in pairs(w.schema.map) do
+		w._component_type[k] = component(v, w.schema)
 	end
 
 	-- init system

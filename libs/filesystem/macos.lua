@@ -52,7 +52,7 @@ end
 function path_mt:__eq(other)
     local lft = normalize(self._value)
     local rht = normalize(other._value)
-    return lft == rht
+    return lft:lower() == rht:lower()
 end
 
 function path_mt:string()

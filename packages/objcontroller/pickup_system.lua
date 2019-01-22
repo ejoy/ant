@@ -1,9 +1,7 @@
 --luacheck: ignore self
 local ecs = ...
 local world = ecs.world
-
-
-
+local schema = world.schema
 
 ecs.import "ant.inputmgr"
 
@@ -166,7 +164,11 @@ function pickup_material_sys:update()
 end
 
 -- pickup_system
-ecs.component_struct "pickup"{}
+schema:userdata "pickup"
+local pickup = ecs.component "pickup"
+function pickup:init()
+	return {}
+end
 
 local pickup_sys = ecs.system "pickup_system"
 

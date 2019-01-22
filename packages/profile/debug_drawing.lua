@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local schema = world.schema
 
 local bgfx = require "bgfx"
 local fs = require "filesystem"
@@ -36,8 +37,8 @@ end
 ecs.tag "main_debug"
 ecs.tag "debug_skeleton"
 
-local debug_obj = ecs.component "debug_object" {
-}
+schema:userdata "debug_object"
+local debug_obj = ecs.component "debug_object"
 
 local function clean_desc_buffer(desc)
 	desc.material = ""
@@ -47,6 +48,7 @@ local function clean_desc_buffer(desc)
 end
 
 function debug_obj:init()
+	local self = {}
 	self.renderobjs = {
 		wireframe = {
 			desc = {}			
@@ -69,6 +71,7 @@ function debug_obj:init()
 	}
 
 	componentutil.add_material(dbentity.material, "ant.resources", fs.path "line.material")
+	return self
 end
 
 local debug_draw = ecs.system "debug_draw"

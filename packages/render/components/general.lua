@@ -1,146 +1,123 @@
 local ecs = ...
+local world = ecs.world
+local schema = world.schema
+
+ecs.import "ant.math"
 
 local fs = require "filesystem"
 
 local component_util = require "components.util"
 local asset = import_package "ant.asset"
-local math = import_package "ant.math"
 
-ecs.component "position" (math.util.create_component_vector())
-ecs.component "rotation" (math.util.create_component_vector())
-ecs.component "scale" (math.util.create_component_vector())
+schema:typedef("entityid", "int", -1)
 
-ecs.component_struct "relative_srt" {
-	s = math.util.create_component_vector(),
-	r = math.util.create_component_vector(),
-	t = math.util.create_component_vector(),
-}
+schema:userdata "path"
+local path = ecs.component "path"
+function path:init()
+	return fs.path ""
+end
+function path:save()
+	return self:string()
+end
+function path:load()
+	return fs.path(self)
+end
+
+schema:typedef("position", "vector")
+schema:typedef("rotation", "vector")
+schema:typedef("scale", "vector")
+
+schema:type "relative_srt"
+	.s "vector"
+	.r "vector"
+	.t "vector"
 
 ecs.tag "editor"
 
-ecs.component_struct "frustum" {
-	type = "mat",
-	n = 0.1,
-	f = 10000,
-	l = -1,
-	r = 1,
-	t = 1,
-	b = -1,
-	ortho = false,
-}
+schema:type "frustum"
+	.type "string" ("mat")
+	.n "real" (0.1)
+	.f "int" (10000)
+	.l "int" (-1)
+	.r "int" (1)
+	.t "int" (1)
+	.b "int" (-1)
+	.ortho "boolean" (false)
 
-ecs.component "viewid" (
-	0
-)
+schema:typedef("viewid", "int", 0)
 
-ecs.component_struct "mesh" {
-	ref_path = ""
-}
+schema:type "resource"
+	.package "string"
+	.filename "path"
 
--- TODO
---save = function (v, arg)
---	assert(type(v) == "string")
---	-- local world = arg.world
---	-- local e = assert(world[arg.eid])
---	-- local comp = assert(e[arg.comp])
---	-- assert(comp.assetinfo)
---	return v
---end,
---
---load = function (v, arg)
---	assert(type(v) == "string")
---	local world = arg.world
---	local e = assert(world[arg.eid])
---	local comp = assert(e[arg.comp])
---
---	if v ~= "" then
---		assert(comp.assetinfo == nil)
---		comp.assetinfo = asset.load(v)			
---	end
---	return v
---end
+schema:type "mesh"
+	.ref_path "resource"
 
-ecs.component_struct "material" {
-	content = {}
-}
+local mesh = ecs.component "mesh"
 
---TODO
---save = function (v, arg)
---	local t = {}
---	for _, e in ipairs(v) do				
---		local pp = assert(e.path)
---		assert(pp ~= "")
---		assert(e.materialinfo)
---
---		local assetcontent = asset.load(pp)
---		local src_properties = assetcontent.properties		
---		if src_properties then
---			local properties = {}
---			for k, v in pairs(src_properties) do
---				local p = e.properties[k]
---				local type = p.type
---				if type == "texture" then
---					properties[k] = {name=p.name, type=type, path=v.default, stage=p.stage}
---				else
---					properties[k] = p
---				end
---			end
---			table.insert(t, {path=pp, properties=properties})
---		end			
---	end
---	return t
---end,
---load = function (v, arg)
---	assert(type(v) == "table")
---	local content = {}
---	
---	for _, e in ipairs(v) do
---		local m = {}
---		component_util.create_material(e.path, m)
---		table.insert(content, m)
---	end
---
---	return content
---end
---
-ecs.component "can_render" (
-	true
-)
-
-ecs.component "can_cast" (
-	false
-)
-
-ecs.component "name" (
-    ""
-)
-
-ecs.tag "can_select"
-
-ecs.component "control_state" (
-	""
-)
-
-ecs.component_struct "parent" {
-	eid = -1
-}
--- mode = color or factor, gradient, skybox etc
---           
--- mode = 1  color mode use skycolor as classic ambient
--- mode = 0  factor mode use ratio factor of mainlight color
---           ratio factor ，use mainlight's factor directioncolor *factor 
--- mode = 2  gradient ，interpolate with skycolor，midcolor，groundcolor 
-
-ecs.component "ambient_light" { 
-	mode   = "color",
-	factor = 0.3,     			    
-	skycolor = {1,1,1,1},
-	midcolor = {1,1,1,1},
-	groundcolor = {1,1,1,1},
-}
-
-local char = ecs.component "character" {}
-
-function char:init()
-	self.movespeed = 1
+function mesh:load()
+	self.assetinfo = asset.load(self.ref_path.package, self.ref_path.filename)
+	return self
 end
+
+schema:type "property"
+	.name "string"
+	.type "string"
+	.stage "int"
+
+schema:type "material_content"
+	.path "resource"
+	.properties "property{}"
+
+schema:type "material"
+	.content "material_content[]"
+
+local material_content = ecs.component "material_content"
+
+function material_content:save()
+	local pp = assert(self.path)
+	assert(pp ~= "")
+	local assetcontent = asset.load(pp.package, fs.path(pp.filename))
+	local src_properties = assetcontent.properties
+	if src_properties then
+		local properties = {}
+		for k, v in pairs(src_properties) do
+			local p = self.properties[k]
+			local type = p.type
+			if type == "texture" then
+				properties[k] = {name=p.name, type=type, path=v.default, stage=p.stage}
+			else
+				properties[k] = p
+			end
+		end
+		self.properties = properties
+	end
+	return self
+end
+
+function material_content:load()
+	component_util.create_material(self)
+	return self
+end
+
+schema:typedef("can_render", "boolean", true)
+schema:typedef("can_cast", "boolean", false)
+schema:typedef("name", "string", "")
+ecs.tag "can_select"
+schema:typedef("control_state", "string", "")
+
+schema:type "parent"
+	.eid "entityid"
+
+schema:typedef("color", "int[4]", {1,1,1,1})
+
+
+schema:type "character"
+	.movespeed "real" (1.0)
+
+schema:type "ambient_light"
+	.mode "string" ("color")
+	.factor "real" (0.3)
+	.skycolor "color"
+	.midcolor "color"
+	.groundcolor "color"

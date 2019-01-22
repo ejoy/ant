@@ -1,14 +1,18 @@
 local ecs = ...
+local world = ecs.world
+local schema = world.schema
 
 local math = import_package "ant.math"
 local mu = math.util
 
-local constant = ecs.component_struct "constant" {    
-}
+schema:userdata "constant"
+local constant = ecs.component "constant"
 
 function constant:init()
-    self.colors = {}
-    self.tcolors = {}
+    return {
+        colors = {},
+        tcolors = {},
+    }
 end
 
 local constant_init_sys = ecs.system "constant_init_sys"

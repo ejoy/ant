@@ -1,172 +1,107 @@
-local datatype = require "datatype"
+local foreach_init
 
-local function deep_copy(obj)
-	if type(obj) ~= "table" then
-		return obj
-	end
-	local t = {}
-	for k, v in pairs(obj) do
-		t[k] = deep_copy(v)
-	end
-	return t
+local function foreach_single_init(c, schema)
+    if c.method and c.method.init then
+        return c.method.init()
+    end
+    if schema.map[c.type] then
+        return foreach_init(schema.map[c.type], schema)
+    end
+    if c.type == 'int' then
+        return 0
+    elseif c.type == 'real' then
+        return 0.0
+    elseif c.type == 'string' then
+        return ""
+    elseif c.type == 'boolean' then
+        return false
+    elseif c.type == 'userdata' then
+        return nil
+    else
+        error("unknown type:" .. c.type)
+    end
 end
 
-local function gen_new(c)
-	if c.method.new then
-		error(string.format("Type %s defined at %s has a typeinfo. It defines new at %s, use init instead",
-			c.name, c.defined, c.source.new))
-	end
-	local init = c.method.init
-	return function()
-		local ret
-		if type(c.typeinfo) ~= 'table' then
-			ret = c.typeinfo
-		elseif not c.typeinfo.__type then
-			ret = {}
-			for k, v in pairs(c.typeinfo) do
-				if type(v) == 'table' and v.__type then
-					local default = v.default
-					if type(default) == 'function' then
-						ret[k] = default()
-					else
-						ret[k] = deep_copy(default)
-					end
-				else
-					ret[k] = deep_copy(v)
-				end
-			end
-		else
-			local v = c.typeinfo
-			local default = v.default
-			if type(default) == 'function' then
-				ret = default()
-			else
-				ret = deep_copy(default)
-			end
-		end
-		if init then
-			init(ret)
-		end
-		return ret
-	end
+function foreach_init(c, schema)
+    if not c.type then
+        local ret = {}
+        for _, v in ipairs(c) do
+            ret[v.name] = foreach_init(v, schema)
+        end
+        if c.method and c.method.init then
+            return c.method.init(ret)
+        end
+        return ret
+    end
+    if c.default then
+        return c.default
+    end
+    if c.array then
+        if c.array == 0 then
+            return {}
+        end
+        local ret = {}
+        for i = 1, c.array do
+            ret[i] = foreach_single_init(c, schema)
+        end
+        return ret
+    end
+    if c.map then
+        return {}
+    end
+    return foreach_single_init(c, schema)
 end
 
-local function gen_delete(c)
-	local primitive
-	-- matrix and vector
-	if type(c.typeinfo) ~= "table" then
-	elseif not c.typeinfo.__type then
-		for k,v in pairs(c.typeinfo) do
-			local tname = type(v) == "table" and v.__type
-			if tname == "matrix" or tname == "vector" then
-				local last = primitive
-				if last then
-					function primitive(component)
-						component[k]()  -- release ref
-						return last(component)
-					end
-				else
-					function primitive(component)
-						component[k]()  -- release ref
-					end
-				end
-			end
-		end
-	else
-		local v = c.typeinfo
-		local tname = type(v) == "table" and v.__type
-		if tname == "matrix" or tname == "vector" then
-			function primitive(component)
-				component()  -- release ref
-			end
-		end
-	end
-	local delete = c.method.delete
-	if delete then	
-		if primitive then	
-			return function(component)
-				delete(component)
-				primitive(component)
-			end
-		else
-			return delete
-		end
-	else
-		return primitive
-	end
+local function gen_init(c, schema)
+    return function()
+        return foreach_init(c, schema)
+    end
 end
 
-local reserved_method = { new = true, init = true, delete = true }
-
-local function copy_method(c)
-	local methods = c.method
-	local m = {}
-	if methods then
-		local cname = c.name
-		for name, f in pairs(methods) do
-			if not reserved_method[name] then
-				m[cname .. "_" .. name] = function(entity, ...)
-					return f(entity[cname], ...)
-				end
-			end
-		end
-	end
-	return m
+local foreach_delete
+local function foreach_single_delete(component, c, schema)
+    if c.method and c.method.delete then
+        c.method.delete(component)
+        return
+    end
+    if schema.map[c.type] then
+        foreach_delete(component, schema.map[c.type], schema)
+        return
+    end
 end
 
-local function gen_save(typeinfo)
-	if type(typeinfo) == "table" and typeinfo.__type then
-		return function (c, arg)
-			--TODO
-			return c
-		end
-	else
-		return function (c, arg)
-			assert(type(c) == "table")
-			local t = {}
-			for k, v in pairs(c) do
-				local vclass = typeinfo[k]
-				if vclass then
-					arg.struct_type = k
-					local save = vclass.save
-					t[k] = save(v, arg)
-				end
-			end
-			return t
-		end
-	end
+function foreach_delete(component, c, schema)
+    if not c.type then
+        for _, v in ipairs(c) do
+            foreach_delete(component, v, schema)
+        end
+        return
+    end
+    if c.array then
+        local n = c.array == 0 and #component or c.array
+        for i = 1, n do
+            foreach_single_delete(component[i], c, schema)
+        end
+        return
+    end
+    if c.map then
+        for _, v in pairs(component) do
+            foreach_single_delete(v, c, schema)
+        end
+        return
+    end
+    foreach_single_delete(component, c, schema)
 end
 
-local function gen_load(typeinfo)
-	if type(typeinfo) == "table" and typeinfo.__type then
-		return function(c, arg)
-			-- TODO
-			return c
-		end
-	else
-		return function(c, arg)
-			local t = {}
-			for k, v in pairs(c) do
-				local vclass = typeinfo[k]
-				if vclass then
-					arg.struct_type = k
-					local load = vclass.load
-					t[k] = load(v, arg)
-				end
-			end
-			return t
-		end
-	end
+local function gen_delete(c, schema)
+    return function(component)
+        return foreach_delete(component, c, schema)
+    end
 end
 
-return function(c)
-	local typeinfo = c.typeinfo
-	return {
-		typeinfo = typeinfo,
-		new = gen_new(c),
-		save = gen_save(typeinfo),
-		load = gen_load(typeinfo),
-		delete = gen_delete(c),
-		method = copy_method(c),
-	}
+return function(c, schema)
+    return {
+        init = gen_init(c, schema),
+        delete = gen_delete(c, schema),
+    }
 end
