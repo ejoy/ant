@@ -3,43 +3,114 @@ local objcontroller = {}; objcontroller.__index = objcontroller
 -- need work with "objcontroller_system"
 local msgqueue = nil
 
-local tiggers = nil
-local tigger_names = nil
+local binding = {}; binding.__index = binding
+function binding.new()
+	return setmetatable({v={}}, binding)
+end
+
+function binding:check_add(name, keys)
+	local b = self.v[name]
+	if b == nil then
+		b = {keys={}}
+		self.v[name] = b
+		self[#self+1] = name
+		table.sort(self, function(a, b) return a > b end)
+	end
+	table.move(keys, 1, #keys, #b.keys+1, b.keys)
+end
+
+function binding:bind(name, cb)	
+	local b = self.v[name]
+	if b == nil then
+		error(string.format("not found constant name:%s", name))
+	end
+
+	b.cb = cb
+end
+
+function binding:iter()	
+	local function next(t, idx)
+		idx = idx + 1
+		local name = t[idx]
+		if name then
+			return idx, t.v[name]	
+		end		
+	end
+
+	return next, self, 0
+end
+
+local tiggers = binding.new()
+local constants = binding.new()
 
 local function get_eventlist(name)
+	assert(msgqueue)
+	local eventlist = msgqueue[name]
+	if eventlist == nil then
+		eventlist = {tiggers = {}}
+		msgqueue[name] = eventlist
+	end
+	return eventlist
+end
+
+local function add_event(name, event)
 	assert(msgqueue)
 	local eventlist = msgqueue[name]
 	if eventlist == nil then
 		eventlist = {}
 		msgqueue[name] = eventlist
 	end
-	return eventlist
+
+	local tt = eventlist.tiggers
+	if tt == nil then
+		tt = {}
+		eventlist.tiggers = tt
+	end
+	tt[#tt+1] = event
+
+	if event.press == nil then
+		return
+	end
+
+	if event.press then
+		local c = eventlist.constants
+		if c == nil then
+			c = {}
+			eventlist.constants = c
+		end
+
+		c[#c+1] = event
+	else
+		local c = eventlist.constants
+		if c then
+			local idx = 1
+			while idx <= #c do
+				local ec = c[idx]
+				if ec.name == event.name then
+					table.remove(c, idx)
+				else
+					idx = idx + 1
+				end
+			end
+		end
+	end
 end
 
 function objcontroller.init(msg)
 	assert(msgqueue == nil)
 	msgqueue = {}
-	assert(tiggers == nil)
-	tiggers = {}
-	assert(tigger_names == nil)
-	tigger_names = {}
-
 	msg.observers:add  {
 		mouse_click = function (_, what, press, x, y, state)
-			local eventlist = get_eventlist("mouse_click")
-			eventlist[#eventlist+1] = {what=what, press=press, x=x, y=y, state=state}
+			add_event("mouse_click", {what=what, press=press, x=x, y=y, state=state})			
 		end,
 		mouse_move = function (_, x, y, state)
-			local eventlist = get_eventlist("mouse_move")
-			eventlist[#eventlist+1] = {x=x, y=y, state=state}
+			add_event("mouse_move", {x=x, y=y, state=state})
 		end,
 		mouse_wheel = function (_, x, y, delta)
-			local eventlist = get_eventlist("mouse_wheel")
-			eventlist[#eventlist+1] = {x=x, y=y, delta=delta}
+			add_event("mouse_wheel", {x=x, y=y, delta=delta, press=delta ~= 0})			
 		end,
 		keyboard = function (_, key, press, state)
-			local eventlist = get_eventlist("keyboard")
-			eventlist[#eventlist+1] = {key=key, press=press, state=state}
+			add_event("keyboard", {key=key, press=press, state=state})			
 		end,
 		touch = function (...)
 			error "not implement"
@@ -50,35 +121,25 @@ function objcontroller.init(msg)
 	objcontroller.register(defcfg)
 end
 
-local function get_tigger(name)
-	assert(tiggers)
-	local tigger = tiggers[name]
-	if tigger == nil then
-		tigger = {keys={}}
-		tiggers[name] = tigger
-		tigger_names[#tigger_names+1] = name
-		table.sort(tigger_names, function(a, b) return a > b end)		
+function objcontroller.register(defcfg)
+	local function update_map(srcmap, dstmap)
+		if srcmap then
+			for name, keys in pairs(srcmap) do
+				dstmap:check_add(name, keys)
+			end
+		end
 	end
 
-	return tigger
+	update_map(defcfg.tigger, tiggers)
+	update_map(defcfg.constant, constants)
 end
 
-function objcontroller.register(tiggermap)
-	for name, tiggerkey in pairs(tiggermap) do
-		local tigger = get_tigger(name)
-		local keys = tigger.keys
-		table.move(tiggerkey, 1, #tiggerkey, #keys+1, keys)
-	end
+function objcontroller.bind_tigger(name, cb)
+	tiggers:bind(name, cb)
 end
 
-function objcontroller.bind_tigger(tiggername, cb)
-	assert(tiggers)
-	local tigger = tiggers[tiggername]
-	if tigger == nil then
-		error(string.format("not found tigger name:%s", tiggername))
-	end
-
-	tigger.cb = cb
+function objcontroller.bind_constant(name, cb)
+	constants:bind(name, cb)
 end
 
 local function is_state_match(state1, state2)
@@ -112,7 +173,7 @@ local function is_state_match(state1, state2)
 	return true
 end
 
-local function match_event(tiggerkey, name, event)	
+local function match_tigger_event(tiggerkey, name, event)	
 	if name ~= tiggerkey.name then
 		return false
 	end
@@ -133,24 +194,67 @@ local function match_event(tiggerkey, name, event)
 	error "not implement"
 end
 
-function objcontroller.update()
-	assert(msgqueue)
-	for eventname, eventlist in pairs(msgqueue) do
-		local tiggers = tiggers
+local function match_const_event(const, name, e)
+	if const.name ~= name then
+		return false
+	end
 
-		for _, e in ipairs(eventlist) do
-			for _, name in ipairs(tigger_names) do
-				local tigger = tiggers[name]
-				local keys = tigger.keys
-				for _, key in ipairs(keys) do
-					if match_event(key, eventname, e) then
-						tigger.cb(e)
-					end
+	if name == "mouse_click" then
+		return 	e.what == const.what and 				
+				is_state_match(const.state, e.state)
+	elseif name == "mouse_move" or name == "mouse_wheel" then
+		return is_state_match(const.state, e.state)	
+	elseif name == "keyboard" then		
+		return const.key == e.key and
+			is_state_match(const.state, e.state)
+	end
+
+	error "not implement"
+end
+
+local function update_match_event(eventname, eventlist, match_eventlist, matchop, updateop)
+	for _, e in ipairs(eventlist) do
+		for _, me in match_eventlist:iter() do				
+			local keys = me.keys
+			for _, key in ipairs(keys) do
+				if matchop(key, eventname, e) then
+					updateop(me, e)							
 				end
 			end
 		end
+	end
+end
 
-		msgqueue[eventname] = nil
+function objcontroller.update()
+	assert(msgqueue)
+	for eventname, eventlist in pairs(msgqueue) do		
+		if eventlist.tiggers then
+			update_match_event(eventname, 
+			eventlist.tiggers, tiggers, 
+			match_tigger_event,
+			function (me, e) 
+				local cb = me.cb
+				if cb then
+					cb(e)
+				end
+			end)
+
+			eventlist.tiggers = nil
+		end
+
+		local c = eventlist.constants
+		if c then
+			update_match_event(eventname, 
+			eventlist.constants, constants, 
+			match_const_event,
+			function (me, e)
+				local cb = me.cb
+				if cb then
+					local value = e.value or me.value
+					cb(e, value)
+				end
+			end)
+		end
 	end	
 end
 
