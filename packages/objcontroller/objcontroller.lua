@@ -107,7 +107,7 @@ function objcontroller.init(msg)
 	objcontroller.register(defcfg)
 end
 
-function objcontroller.register(defcfg)
+function objcontroller.register(cfg)
 	local function update_map(srcmap, dstmap)
 		if srcmap then
 			for name, keys in pairs(srcmap) do
@@ -116,8 +116,8 @@ function objcontroller.register(defcfg)
 		end
 	end
 
-	update_map(defcfg.tigger, tiggers)
-	update_map(defcfg.constant, constants)
+	update_map(cfg.tigger, tiggers)
+	update_map(cfg.constant, constants)
 end
 
 function objcontroller.bind_tigger(name, cb)
@@ -186,7 +186,7 @@ local function match_const_event(const, event)
 	end
 
 	if name == "mouse_click" then
-		return 	event.what == const.what and 				
+		return 	event.what == const.what and
 				is_state_match(const.state, event.state)
 	elseif name == "mouse_move" or name == "mouse_wheel" then
 		return is_state_match(const.state, event.state)	
@@ -200,11 +200,11 @@ end
 
 local function update_match_event(eventlist, match_eventlist, matchop, updateop)
 	for _, e in ipairs(eventlist) do
-		for _, me in match_eventlist:iter() do				
+		for _, me in match_eventlist:iter() do
 			local keys = me.keys
 			for _, key in ipairs(keys) do
 				if matchop(key, e) then
-					updateop(me, e)							
+					updateop(me, e, key)
 				end
 			end
 		end
@@ -230,10 +230,10 @@ function objcontroller.update()
 	if msgqueue.constants then
 		update_match_event(msgqueue.constants, constants, 
 		match_const_event,
-		function (me, e)
+		function (me, e, key)
 			local cb = me.cb
 			if cb then
-				local value = e.value or me.value
+				local value = e.value or key.value
 				cb(e, value)
 			end
 		end)

@@ -8,18 +8,13 @@ local world = ecs.world
 
 ecs.import "ant.inputmgr"
 
-
-local camera_util = import_package "ant.render".util
 local bgfx = require "bgfx"
+local camera_util = import_package "ant.render".util
 local mathu = (import_package "ant.math").util
 local stack = (import_package "ant.math").stack
 
-
 local char_controller_sys = ecs.system "charcontroller_system"
--- char_controller_sys.singleton "math_stack"
-
 char_controller_sys.singleton "message"
-char_controller_sys.singleton "control_state"
 char_controller_sys.singleton "timer"
 
 char_controller_sys.depend "message_system"

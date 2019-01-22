@@ -208,6 +208,7 @@ editormain.run(fbw, fbh, canvas, {
 	"timesystem",
 	--objcontroller
 	"camera_controller",
+	
 	--animation
 	"skinning_system",
 	--debug

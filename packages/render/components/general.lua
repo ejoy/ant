@@ -139,3 +139,8 @@ ecs.component "ambient_light" {
 	groundcolor = {1,1,1,1},
 }
 
+local char = ecs.component "character" {}
+
+function char:init()
+	self.movespeed = 1
+end

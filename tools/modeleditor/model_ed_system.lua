@@ -25,6 +25,8 @@ local model_ed_sys = ecs.system "model_editor_system"
 model_ed_sys.singleton "debug_object"
 model_ed_sys.singleton "timer"
 model_ed_sys.depend "camera_init"
+model_ed_sys.depend "character_controller"
+
 model_ed_sys.dependby "transparency_filter_system"
 model_ed_sys.dependby "entity_rendering"
 

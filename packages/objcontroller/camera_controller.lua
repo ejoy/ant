@@ -3,7 +3,7 @@ local world = ecs.world
 
 ecs.import "ant.inputmgr"
 
-local camera_util = import_package "ant.render".camera
+local objutil = require "util"
 local objctrller = require "objcontroller"
 local camera_controller_system = ecs.system "camera_controller"
 
@@ -33,32 +33,32 @@ function camera_controller_system:init()
 
 	objctrller.bind_constant("move_forward", function (event, value)
 		if hit.enable then
-			camera_util.move(camera, 0, 0, calc_step(speed_persecond, timer.delta * 0.001))
+			objutil.move(camera, 0, 0, calc_step(speed_persecond, timer.delta * 0.001))
 		end
 	end)
 	objctrller.bind_constant("move_backward", function (event, value) 
 		if hit.enable then
-			camera_util.move(camera, 0, 0, -calc_step(speed_persecond, timer.delta * 0.001))
+			objutil.move(camera, 0, 0, -calc_step(speed_persecond, timer.delta * 0.001))
 		end
 	end)
 	objctrller.bind_constant("move_left", function (event, value)
 		if hit.enable then
-			camera_util.move(camera, -calc_step(speed_persecond, timer.delta * 0.001), 0, 0)
+			objutil.move(camera, -calc_step(speed_persecond, timer.delta * 0.001), 0, 0)
 		end
 	end)
 	objctrller.bind_constant("move_right", function (event, value) 
 		if hit.enable then
-			camera_util.move(camera, calc_step(speed_persecond, timer.delta * 0.001), 0, 0)
+			objutil.move(camera, calc_step(speed_persecond, timer.delta * 0.001), 0, 0)
 		end
 	end)
 	objctrller.bind_constant("move_up", function (event, value) 
 		if hit.enable then
-			camera_util.move(camera, 0, calc_step(speed_persecond, timer.delta * 0.001), 0)
+			objutil.move(camera, 0, calc_step(speed_persecond, timer.delta * 0.001), 0)
 		end
 	end)
 	objctrller.bind_constant("move_down", function (event, value) 
 		if hit.enable then
-			camera_util.move(camera, 0, -calc_step(speed_persecond, timer.delta * 0.001), 0)
+			objutil.move(camera, 0, -calc_step(speed_persecond, timer.delta * 0.001), 0)
 		end
 	end)
 
@@ -67,7 +67,7 @@ function camera_controller_system:init()
 		local function pixel2angle(pixel)
 			return pixel * 0.1
 		end
-		camera_util.rotate(camera, pixel2angle(dx), pixel2angle(dy))
+		objutil.rotate(camera, pixel2angle(dy), pixel2angle(dx))
 		hit[1], hit[2] = event.x, event.y
 	end)	
 end
