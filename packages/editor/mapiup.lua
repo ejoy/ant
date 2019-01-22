@@ -31,11 +31,11 @@ local pressnames = {
 }
 
 local buttonnames = { 
-	"LEFT",
-	"MIDDLE",
-	"RIGHT",
-	"BUTTON4",
-	"BUTTON5"
+	['1'] = "LEFT",
+	['2'] = "MIDDLE",
+	['3'] = "RIGHT",
+	['4'] = "BUTTON4",
+	['5'] = "BUTTON5"
 }
 
 local iupcodemap = {}
@@ -85,15 +85,15 @@ end
 
 return function (msgqueue, ctrl)	
 	ctrl.button_cb = function(_, btn, press, x, y, status)
-		msgqueue:push("mouse_click", buttonnames[btn], pressnames[press], x, y, translate_status(status))
+		msgqueue:push("mouse_click", buttonnames[string.char(btn)], pressnames[press], x, y, translate_status(status))
 	end
 
 	ctrl.motion_cb = function(_, x, y, status)
 		msgqueue:push("mouse_move", x, y, translate_status(status))
 	end
 
-	ctrl.wheel_cb = function(_, x, y, status)
-		msgqueue:push("mouse_wheel", x, y, translate_status(status))
+	ctrl.wheel_cb = function(_, delta, x, y, status)
+		msgqueue:push("mouse_wheel", delta, x, y, translate_status(status))
 	end
 
 	ctrl.keypress_cb = function(_, key, press)

@@ -5,7 +5,6 @@ ecs.import "ant.inputmgr"
 
 local camera_util = import_package "ant.render".camera
 local objctrller = require "objcontroller"
-
 local camera_controller_system = ecs.system "camera_controller"
 
 camera_controller_system.singleton "control_state"
@@ -23,51 +22,36 @@ function camera_controller_system:init()
 		return speed * delta
 	end
 
-	objctrller.bind_constant("move_forward", function (value)
+	objctrller.bind_constant("move_forward", function (event, value)
 		camera_util.move(camera, 0, 0, calc_step(speed_persecond, timer.delta * 0.001))
 	end)
-	objctrller.bind_constant("move_backward", function (value) 
+	objctrller.bind_constant("move_backward", function (event, value) 
 		camera_util.move(camera, 0, 0, -calc_step(speed_persecond, timer.delta * 0.001))
 	end)
-	objctrller.bind_constant("move_left", function (value) 
+	objctrller.bind_constant("move_left", function (event, value)
 		camera_util.move(camera, -calc_step(speed_persecond, timer.delta * 0.001), 0, 0)
 	end)
-	objctrller.bind_constant("move_right", function (value) 
+	objctrller.bind_constant("move_right", function (event, value) 
 		camera_util.move(camera, calc_step(speed_persecond, timer.delta * 0.001), 0, 0)
 	end)
-	objctrller.bind_constant("move_up", function (value) 
+	objctrller.bind_constant("move_up", function (event, value) 
 		camera_util.move(camera, 0, calc_step(speed_persecond, timer.delta * 0.001), 0)
 	end)
-	objctrller.bind_constant("move_down", function (value) 
+	objctrller.bind_constant("move_down", function (event, value) 
 		camera_util.move(camera, 0, -calc_step(speed_persecond, timer.delta * 0.001), 0)
 	end)
 
-	local rotate_speed_persecond_degree = 30
-	local last_rotate_event = nil
-	objctrller.bind_tigger("rotate", function (event) 
-		if last_rotate_event == nil then
-			last_rotate_event = event
-			return
+	local hitpos = {0, 0}
+	objctrller.bind_tigger("hitpos", function (event)
+		hitpos[1], hitpos[2] = event.x, event.y
+	end)
+
+	objctrller.bind_tigger("rotate", function (event)
+		local dx, dy = event.x - hitpos[1], event.y - hitpos[2]
+		local function pixel2angle(pixel)
+			return pixel * 0.1
 		end
-
-		local function sign(v)
-			if v == 0 then
-				return 0
-			end
-			if v > 0 then
-				return 1
-			end
-
-			return -1			
-		end
-
-		local dx, dy = event.x - last_rotate_event.x, event.y - last_rotate_event.y
-
-		local step = calc_step(rotate_speed_persecond_degree, timer.delta * 0.001)
-		camera_util.rotate(camera, 
-		sign(dx) * step,
-		sign(dy) * step)
-
-		last_rotate_event = event
+		camera_util.rotate(camera, pixel2angle(dx), pixel2angle(dy))
+		hitpos[1], hitpos[2] = event.x, event.y
 	end)	
 end

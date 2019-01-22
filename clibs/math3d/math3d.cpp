@@ -149,7 +149,7 @@ lreftostring(lua_State *L) {
 static inline const char*
 get_linear_type_name(LinearType lt) {
 	const char * names[] = {
-		"mat", "v4", "quat", "num", "euler", "",
+		"mat", "v4", "num", "quat", "euler", "",
 	};
 
 	assert((sizeof(names) / sizeof(names[0])) > size_t(lt));

@@ -125,8 +125,9 @@ lscreenpt_to_3d(lua_State *L){
 	}
 	
 	const float * cv = &vv[0].x;
-	lua_createtable(L, 6, 0);
-	for (int ii = 0; ii < 6; ++ii) {
+	auto count = (int)vv.size() * 3;
+	lua_createtable(L, count, 0);
+	for (int ii = 0; ii < count; ++ii) {
 		lua_pushnumber(L, *cv++);
 		lua_seti(L, -2, ii + 1);
 	}

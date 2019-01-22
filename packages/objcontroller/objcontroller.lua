@@ -43,16 +43,6 @@ end
 local tiggers = binding.new()
 local constants = binding.new()
 
-local function get_eventlist(name)
-	assert(msgqueue)
-	local eventlist = msgqueue[name]
-	if eventlist == nil then
-		eventlist = {tiggers = {}}
-		msgqueue[name] = eventlist
-	end
-	return eventlist
-end
-
 local function add_event(name, event)
 	assert(msgqueue)
 	local eventlist = msgqueue[name]
