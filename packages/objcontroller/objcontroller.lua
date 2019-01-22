@@ -43,91 +43,6 @@ end
 local tiggers = binding.new()
 local constants = binding.new()
 
-local function add_event(event)
-	assert(msgqueue)
-	assert(event.name)
-
-	local tt = msgqueue.tiggers
-	if tt == nil then
-		tt = {}
-		msgqueue.tiggers = tt
-	end
-	tt[#tt+1] = event
-
-	if event.press == nil then
-		return
-	end
-
-	if event.press then
-		local c = msgqueue.constants
-		if c == nil then
-			c = {}
-			msgqueue.constants = c
-		end
-
-		c[#c+1] = event
-	else
-		local c = msgqueue.constants
-		if c then
-			local idx = 1
-			while idx <= #c do
-				local ec = c[idx]
-				if ec.name == event.name then
-					table.remove(c, idx)
-				else
-					idx = idx + 1
-				end
-			end
-		end
-	end
-end
-
-function objcontroller.init(msg)
-	assert(msgqueue == nil)
-	msgqueue = {}
-	msg.observers:add  {
-		mouse_click = function (_, what, press, x, y, state)
-			add_event {name = "mouse_click", what=what, press=press, x=x, y=y, state=state}
-		end,
-		mouse_move = function (_, x, y, state)
-			add_event {name = "mouse_move", x=x, y=y, state=state}
-		end,
-		mouse_wheel = function (_, x, y, delta)
-			add_event {name = "mouse_wheel", x=x, y=y, delta=delta, press=delta ~= 0}
-		end,
-		keyboard = function (_, key, press, state)
-			add_event {name = "keyboard", key=key, press=press, state=state}
-		end,
-		touch = function (...)
-			error "not implement"
-		end,
-	}
-
-	local defcfg = require "default_control_config"
-	objcontroller.register(defcfg)
-end
-
-function objcontroller.register(cfg)
-	local function update_map(srcmap, dstmap)
-		if srcmap then
-			for name, keys in pairs(srcmap) do
-				dstmap:check_add(name, keys)
-			end
-		end
-	end
-
-	update_map(cfg.tigger, tiggers)
-	update_map(cfg.constant, constants)
-end
-
-function objcontroller.bind_tigger(name, cb)
-	tiggers:bind(name, cb)
-end
-
-function objcontroller.bind_constant(name, cb)
-	constants:bind(name, cb)
-end
-
 local function is_state_match(state1, state2)
 	local function key_names(state)
 		local t = {}
@@ -190,12 +105,107 @@ local function match_const_event(const, event)
 				is_state_match(const.state, event.state)
 	elseif name == "mouse_move" or name == "mouse_wheel" then
 		return is_state_match(const.state, event.state)	
-	elseif name == "keyboard" then		
+	elseif name == "keyboard" then
 		return const.key == event.key and
 			is_state_match(const.state, event.state)
 	end
 
 	error "not implement"
+end
+
+local function add_event(event)
+	assert(msgqueue)
+	assert(event.name)
+
+	local tt = msgqueue.tiggers
+	if tt == nil then
+		tt = {}
+		msgqueue.tiggers = tt
+	end
+	tt[#tt+1] = event
+
+	if event.press == nil then
+		return
+	end
+
+	if event.press then
+		local c = msgqueue.constants
+		if c == nil then
+			c = {}
+			msgqueue.constants = c
+		end
+
+		local function find_new_event(event)
+			for idx, e in ipairs(c) do
+				if match_const_event(e, event) then
+					return idx
+				end
+			end
+			return #c+1
+		end
+
+		local idx = find_new_event(event)
+		c[idx] = event
+	else
+		local c = msgqueue.constants
+		if c then
+			local idx = 1
+			while idx <= #c do
+				local ec = c[idx]
+				if ec.name == event.name then
+					table.remove(c, idx)
+				else
+					idx = idx + 1
+				end
+			end
+		end
+	end
+end
+
+function objcontroller.init(msg)
+	assert(msgqueue == nil)
+	msgqueue = {}
+	msg.observers:add  {
+		mouse_click = function (_, what, press, x, y, state)
+			add_event {name = "mouse_click", what=what, press=press, x=x, y=y, state=state}
+		end,
+		mouse_move = function (_, x, y, state)
+			add_event {name = "mouse_move", x=x, y=y, state=state}
+		end,
+		mouse_wheel = function (_, x, y, delta)
+			add_event {name = "mouse_wheel", x=x, y=y, delta=delta, press=delta ~= 0}
+		end,
+		keyboard = function (_, key, press, state)
+			add_event {name = "keyboard", key=key, press=press, state=state}
+		end,
+		touch = function (...)
+			error "not implement"
+		end,
+	}
+
+	local defcfg = require "default_control_config"
+	objcontroller.register(defcfg)
+end
+
+function objcontroller.register(cfg)
+	local function update_map(srcmap, dstmap)
+		if srcmap then
+			for name, keys in pairs(srcmap) do
+				dstmap:check_add(name, keys)
+			end
+		end
+	end
+
+	update_map(cfg.tigger, tiggers)
+	update_map(cfg.constant, constants)
+end
+
+function objcontroller.bind_tigger(name, cb)
+	tiggers:bind(name, cb)
+end
+
+function objcontroller.bind_constant(name, cb)
+	constants:bind(name, cb)
 end
 
 local function update_match_event(eventlist, match_eventlist, matchop, updateop)
@@ -233,8 +243,8 @@ function objcontroller.update()
 		function (me, e, key)
 			local cb = me.cb
 			if cb then
-				local value = e.value or key.value
-				cb(e, value)
+				local value = e.value or 1				
+				cb(e, value * key.value)
 			end
 		end)
 	end

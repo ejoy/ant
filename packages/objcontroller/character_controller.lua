@@ -27,18 +27,18 @@ function cc:init()
 		
 		local movespeed = character.character.movespeed
 		local deltatime = timer.delta * 0.001 * value
-		local dis = movespeed * deltatime		
+		local delta_dis = movespeed * deltatime		
 		if x then
-			x = x * dis
+			x = x * delta_dis			
 		end
 		if y then
-			y = y * dis
+			y = y * delta_dis			
 		end
 
 		if z then
-			z = z * dis
+			z = z * delta_dis			
 		end
-		objutil.move(character, x, y, z)
+		objutil.move(character, x, y, z)		
 	end
 
 	objctrller.bind_constant("move_forward", function (event, value)
