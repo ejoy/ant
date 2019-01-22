@@ -396,7 +396,7 @@ push_token(lua_State *L, struct lex_state *LS, struct token *t) {
 
 static inline int
 layer_depth(struct lex_state *LS) {
-	return (LS->t.to - LS->t.from) - 1;
+	return (int)(LS->t.to - LS->t.from) - 1;
 }
 
 static inline int

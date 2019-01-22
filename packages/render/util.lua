@@ -38,10 +38,9 @@ local property_type_description = {
 }
 
 local function update_property(name, property)
-	local uniform = shadermgr.get_uniform(name)       
-	--print("after get_uniform") 
+	local uniform = shadermgr.get_uniform(name)       	
 	if uniform == nil  then
-		-- log(string.format("property name : %s, is needed, but shadermgr not found!", name))
+		--log(string.format("property name : %s, is needed, but shadermgr not found!", name))
 		return 
 	end
 
@@ -51,7 +50,6 @@ local function update_property(name, property)
     if property.type == "texture" then
 		local stage = assert(property.stage)
         bgfx.set_texture(stage, assert(uniform.handle), assert(property.value))
-        -- print("texture ",stage,uniform.name,uniform.handle, property.value  )        
 	else
 		local val = assert(property.value)
 
@@ -100,11 +98,9 @@ local function check_uniform_is_match_with_shader(shader, properties)
 end
 
 local function update_properties(shader, properties)
-	if properties then
-		--print("update_properties")
+	if properties then		
         check_uniform_is_match_with_shader(shader, properties)
         for n, p in pairs(properties) do
-            -- print("uniform update",n,p)
             update_property(n, p)
         end
     end

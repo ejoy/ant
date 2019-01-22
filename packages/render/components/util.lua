@@ -106,8 +106,7 @@ end
 
 local function update_properties(dst_properties, src_properties)
 	for k, v in pairs(src_properties) do
-		if v.type == "texture" then
-			-- TODO, pkgname should save on the material file
+		if v.type == "texture" then			
 			local refpath = v.default or v.path
 			dst_properties[k] = util.load_texture(v.name, v.stage, refpath[1], fs.path(refpath[2]))
 		else
@@ -123,23 +122,14 @@ function util.add_material(material, pkgname, respath)
 		material.content = content
 	end
 
-	local materialinfo = asset.load(pkgname, respath)
-	--
-	local mproperties = materialinfo.properties 
-	local properties = {}
-	if mproperties then		
-		-- TODO
-		update_properties(properties, mproperties, pkgname)
-	end
-
-	content[#content+1] = {
+	local item = {
 		path = {
 			package = pkgname,
 			filename = respath,
 		},
-		materialinfo = materialinfo,
-		properties = properties,
 	}
+	util.create_material(item)
+	content[#content+1] = item
 end
 
 function util.create_material(material)
