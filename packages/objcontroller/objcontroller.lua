@@ -43,18 +43,14 @@ end
 local tiggers = binding.new()
 local constants = binding.new()
 
-local function add_event(name, event)
+local function add_event(event)
 	assert(msgqueue)
-	local eventlist = msgqueue[name]
-	if eventlist == nil then
-		eventlist = {}
-		msgqueue[name] = eventlist
-	end
+	assert(event.name)
 
-	local tt = eventlist.tiggers
+	local tt = msgqueue.tiggers
 	if tt == nil then
 		tt = {}
-		eventlist.tiggers = tt
+		msgqueue.tiggers = tt
 	end
 	tt[#tt+1] = event
 
@@ -63,15 +59,15 @@ local function add_event(name, event)
 	end
 
 	if event.press then
-		local c = eventlist.constants
+		local c = msgqueue.constants
 		if c == nil then
 			c = {}
-			eventlist.constants = c
+			msgqueue.constants = c
 		end
 
 		c[#c+1] = event
 	else
-		local c = eventlist.constants
+		local c = msgqueue.constants
 		if c then
 			local idx = 1
 			while idx <= #c do
@@ -91,16 +87,16 @@ function objcontroller.init(msg)
 	msgqueue = {}
 	msg.observers:add  {
 		mouse_click = function (_, what, press, x, y, state)
-			add_event("mouse_click", {what=what, press=press, x=x, y=y, state=state})			
+			add_event {name = "mouse_click", what=what, press=press, x=x, y=y, state=state}
 		end,
 		mouse_move = function (_, x, y, state)
-			add_event("mouse_move", {x=x, y=y, state=state})
+			add_event {name = "mouse_move", x=x, y=y, state=state}
 		end,
 		mouse_wheel = function (_, x, y, delta)
-			add_event("mouse_wheel", {x=x, y=y, delta=delta, press=delta ~= 0})			
+			add_event {name = "mouse_wheel", x=x, y=y, delta=delta, press=delta ~= 0}
 		end,
 		keyboard = function (_, key, press, state)
-			add_event("keyboard", {key=key, press=press, state=state})			
+			add_event {name = "keyboard", key=key, press=press, state=state}
 		end,
 		touch = function (...)
 			error "not implement"
@@ -163,51 +159,51 @@ local function is_state_match(state1, state2)
 	return true
 end
 
-local function match_tigger_event(tiggerkey, name, event)	
-	if name ~= tiggerkey.name then
+local function match_tigger_event(tigger, event)	
+	local name = event.name
+	if event.name ~= tigger.name then
 		return false
 	end
 
 	if name == "mouse_click" then
-		return 	event.what == tiggerkey.what and 
-				event.press == tiggerkey.press and
-				is_state_match(event.state, tiggerkey.state)
-	elseif name == "mouse_move" then
-		return is_state_match(event.state, tiggerkey.state)
-	elseif name == "mouse_wheel" then
-		return is_state_match(event.state, tiggerkey.state)
+		return 	event.what == tigger.what and 
+				event.press == tigger.press and
+				is_state_match(event.state, tigger.state)
+	elseif name == "mouse_move" or name == "mouse_wheel" then
+		return is_state_match(event.state, tigger.state)
 	elseif name == "keyboard" then		
-		return event.key == tiggerkey.key and 
-				event.press == tiggerkey.press and
-				is_state_match(event.state, tiggerkey.state)
+		return event.key == tigger.key and 
+				event.press == tigger.press and
+				is_state_match(event.state, tigger.state)
 	end
 	error "not implement"
 end
 
-local function match_const_event(const, name, e)
+local function match_const_event(const, event)
+	local name = event.name
 	if const.name ~= name then
 		return false
 	end
 
 	if name == "mouse_click" then
-		return 	e.what == const.what and 				
-				is_state_match(const.state, e.state)
+		return 	event.what == const.what and 				
+				is_state_match(const.state, event.state)
 	elseif name == "mouse_move" or name == "mouse_wheel" then
-		return is_state_match(const.state, e.state)	
+		return is_state_match(const.state, event.state)	
 	elseif name == "keyboard" then		
-		return const.key == e.key and
-			is_state_match(const.state, e.state)
+		return const.key == event.key and
+			is_state_match(const.state, event.state)
 	end
 
 	error "not implement"
 end
 
-local function update_match_event(eventname, eventlist, match_eventlist, matchop, updateop)
+local function update_match_event(eventlist, match_eventlist, matchop, updateop)
 	for _, e in ipairs(eventlist) do
 		for _, me in match_eventlist:iter() do				
 			local keys = me.keys
 			for _, key in ipairs(keys) do
-				if matchop(key, eventname, e) then
+				if matchop(key, e) then
 					updateop(me, e)							
 				end
 			end
@@ -217,35 +213,31 @@ end
 
 function objcontroller.update()
 	assert(msgqueue)
-	for eventname, eventlist in pairs(msgqueue) do		
-		if eventlist.tiggers then
-			update_match_event(eventname, 
-			eventlist.tiggers, tiggers, 
-			match_tigger_event,
-			function (me, e) 
-				local cb = me.cb
-				if cb then
-					cb(e)
-				end
-			end)
 
-			eventlist.tiggers = nil
-		end
+	if msgqueue.tiggers then
+		update_match_event(msgqueue.tiggers, tiggers, 
+		match_tigger_event,
+		function (me, e) 
+			local cb = me.cb
+			if cb then
+				cb(e)
+			end
+		end)
 
-		local c = eventlist.constants
-		if c then
-			update_match_event(eventname, 
-			eventlist.constants, constants, 
-			match_const_event,
-			function (me, e)
-				local cb = me.cb
-				if cb then
-					local value = e.value or me.value
-					cb(e, value)
-				end
-			end)
-		end
-	end	
+		msgqueue.tiggers = nil
+	end
+
+	if msgqueue.constants then
+		update_match_event(msgqueue.constants, constants, 
+		match_const_event,
+		function (me, e)
+			local cb = me.cb
+			if cb then
+				local value = e.value or me.value
+				cb(e, value)
+			end
+		end)
+	end
 end
 
 return objcontroller

@@ -22,36 +22,52 @@ function camera_controller_system:init()
 		return speed * delta
 	end
 
-	objctrller.bind_constant("move_forward", function (event, value)
-		camera_util.move(camera, 0, 0, calc_step(speed_persecond, timer.delta * 0.001))
+	local hit = {}
+	objctrller.bind_tigger("hitstart", function (event)
+		hit[1], hit[2] = event.x, event.y		
+		hit.enable = true
 	end)
-	objctrller.bind_constant("move_backward", function (event, value) 
-		camera_util.move(camera, 0, 0, -calc_step(speed_persecond, timer.delta * 0.001))
-	end)
-	objctrller.bind_constant("move_left", function (event, value)
-		camera_util.move(camera, -calc_step(speed_persecond, timer.delta * 0.001), 0, 0)
-	end)
-	objctrller.bind_constant("move_right", function (event, value) 
-		camera_util.move(camera, calc_step(speed_persecond, timer.delta * 0.001), 0, 0)
-	end)
-	objctrller.bind_constant("move_up", function (event, value) 
-		camera_util.move(camera, 0, calc_step(speed_persecond, timer.delta * 0.001), 0)
-	end)
-	objctrller.bind_constant("move_down", function (event, value) 
-		camera_util.move(camera, 0, -calc_step(speed_persecond, timer.delta * 0.001), 0)
+	objctrller.bind_tigger("hitend", function()
+		hit.enable = false
 	end)
 
-	local hitpos = {0, 0}
-	objctrller.bind_tigger("hitpos", function (event)
-		hitpos[1], hitpos[2] = event.x, event.y
+	objctrller.bind_constant("move_forward", function (event, value)
+		if hit.enable then
+			camera_util.move(camera, 0, 0, calc_step(speed_persecond, timer.delta * 0.001))
+		end
+	end)
+	objctrller.bind_constant("move_backward", function (event, value) 
+		if hit.enable then
+			camera_util.move(camera, 0, 0, -calc_step(speed_persecond, timer.delta * 0.001))
+		end
+	end)
+	objctrller.bind_constant("move_left", function (event, value)
+		if hit.enable then
+			camera_util.move(camera, -calc_step(speed_persecond, timer.delta * 0.001), 0, 0)
+		end
+	end)
+	objctrller.bind_constant("move_right", function (event, value) 
+		if hit.enable then
+			camera_util.move(camera, calc_step(speed_persecond, timer.delta * 0.001), 0, 0)
+		end
+	end)
+	objctrller.bind_constant("move_up", function (event, value) 
+		if hit.enable then
+			camera_util.move(camera, 0, calc_step(speed_persecond, timer.delta * 0.001), 0)
+		end
+	end)
+	objctrller.bind_constant("move_down", function (event, value) 
+		if hit.enable then
+			camera_util.move(camera, 0, -calc_step(speed_persecond, timer.delta * 0.001), 0)
+		end
 	end)
 
 	objctrller.bind_tigger("rotate", function (event)
-		local dx, dy = event.x - hitpos[1], event.y - hitpos[2]
+		local dx, dy = event.x - hit[1], event.y - hit[2]
 		local function pixel2angle(pixel)
 			return pixel * 0.1
 		end
 		camera_util.rotate(camera, pixel2angle(dx), pixel2angle(dy))
-		hitpos[1], hitpos[2] = event.x, event.y
+		hit[1], hit[2] = event.x, event.y
 	end)	
 end

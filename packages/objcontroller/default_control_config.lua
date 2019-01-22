@@ -1,11 +1,17 @@
 return {
 	tigger = {
 		rotate = {
-			{name = 'mouse_move', state = {LEFT=true},}
+			{name = 'mouse_move', state = {LEFT=true},},
+			{name = 'mouse_move', state = {RIGHT=true},}
 		},
-		hitpos = {
-			{name = 'mouse_click', what='LEFT', press=true, state={LEFT=true}}
+		hitstart = {
+			{name = 'mouse_click', what='LEFT', press=true, state={LEFT=true}},
+			{name = 'mouse_click', what='RIGHT', press=true, state={RIGHT=true}}
 		},
+		hitend = {
+			{name = 'mouse_click', what='LEFT', press=false, state={LEFT=true}},
+			{name = 'mouse_click', what='RIGHT', press=false, state={RIGHT=true}}
+		}
 	},
 	constant = {
 		move_forward = {

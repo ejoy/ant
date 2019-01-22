@@ -93,7 +93,8 @@ return function (msgqueue, ctrl)
 	end
 
 	ctrl.wheel_cb = function(_, delta, x, y, status)
-		msgqueue:push("mouse_wheel", delta, x, y, translate_status(status))
+		-- not use status right now
+		msgqueue:push("mouse_wheel", x, y, delta)
 	end
 
 	ctrl.keypress_cb = function(_, key, press)
