@@ -3,14 +3,13 @@
 local ecs = ...
 local world = ecs.world
 
+local filterutil = require "filter.util"
 local math = import_package "ant.math"
 local ms = math.stack
 
 local function append_lighting_properties(result)
 
-	local function gen_directional_light_properties()
-		local properties = {}
-
+	local function add_directional_light_properties(uniform_properties)
 		local dlight_info = {
 			dir = {},
 			color = {},
@@ -28,30 +27,25 @@ local function append_lighting_properties(result)
 		end
 
 		if next(dlight_info.dir) then
-			properties["directional_lightdir"] 	= {name="Light Direction", type="v4", value = dlight_info.dir}
+			uniform_properties["directional_lightdir"] 	= {name="Light Direction", type="v4", value = dlight_info.dir}
 		end
 		
 		if next(dlight_info.color) then
-			properties["directional_color"] 	= {name="Light Color", type="color", value = dlight_info.color}
+			uniform_properties["directional_color"] 	= {name="Light Color", type="color", value = dlight_info.color}
 		end
 		if next(dlight_info.intensity) then
-			properties["directional_intensity"] = {name="Light Intensity", type="v4", value = dlight_info.intensity}
+			uniform_properties["directional_intensity"] = {name="Light Intensity", type="v4", value = dlight_info.intensity}
 		end
-
-		return properties
 	end
 
 	--add ambient properties
-	local function gen_ambient_light_propertices()
-		local properties = {} 
+	local function add_ambient_light_propertices(uniform_properties)		
 		local ambient_data = {		
 			-- mode = { 0, 0.3, 0, 0},   -- transfer and combine
 			-- 							 -- mode :=   0 = "factor" , 1= "color" ,2 = "gradient"
 			-- skycolor = {1,1,1,1},
 			-- midcolor = {1,1,1,1},
 			-- groundcolor = {1,1,1,1},
-
-			-- 流程看来是需要，数据作为表中第一个子表，因此，按这个方法组织
 			mode = {},
 			skycolor = {},
 			midcolor = {},
@@ -77,29 +71,24 @@ local function append_lighting_properties(result)
 		end 
 
 		if next(ambient_data.mode) then
-			properties["ambient_mode"] = { name ="ambient_mode",type="v4",value = ambient_data.mode }
+			uniform_properties["ambient_mode"] = { name ="ambient_mode",type="v4",value = ambient_data.mode }
 		end
 
 		if next(ambient_data.skycolor) then
-			properties["ambient_skycolor"] = { name ="ambient_skycolor",type="color",value=ambient_data.skycolor}
+			uniform_properties["ambient_skycolor"] = { name ="ambient_skycolor",type="color",value=ambient_data.skycolor}
 		end
 
 		if next(ambient_data.midcolor) then
-			properties["ambient_midcolor"] = { name ="ambient_midcolor",type="color",value=ambient_data.midcolor}
+			uniform_properties["ambient_midcolor"] = { name ="ambient_midcolor",type="color",value=ambient_data.midcolor}
 		end
 		if next(ambient_data.groundcolor) then
-			properties["ambient_groundcolor"] = { name ="ambient_groundcolor",type="color",value=ambient_data.groundcolor}
+			uniform_properties["ambient_groundcolor"] = { name ="ambient_groundcolor",type="color",value=ambient_data.groundcolor}
 		end
-
-		-- print("gen ambient light propertices")
-
-		return properties 
 	end 
 
-
-	local lighting_properties = gen_directional_light_properties()	
-	-- add tested for ambient 
-	local ambient_properties  = gen_ambient_light_propertices()
+	local lighting_properties = {}
+	add_directional_light_properties(lighting_properties)
+	add_ambient_light_propertices(lighting_properties)
 
 	local camera = world:first_entity("main_camera")
 	local eyepos = ms(camera.position, "m")
@@ -111,13 +100,7 @@ local function append_lighting_properties(result)
 		local surface_type = material.surface_type
 		if surface_type.lighting == "on" then
 			-- add lighting 
-			for k, v in pairs(lighting_properties) do
-				properties[k] = v
-			end	
-			-- add ambient propertices
-			for k,v in pairs(ambient_properties) do 	
-				properties[k] = v
-			end
+			filterutil.append_uniform_properties(properties, lighting_properties)
 		end
 	end
 end
@@ -133,6 +116,13 @@ function lighting_primitive_filter_sys:update()
 		local e = world[eid]
 		local filter = e.primitive_filter
 		if not filter.no_lighting then
+			--[[
+				TODO:
+				1. create when light properties has been changed, not every frame;
+				2. primitive should order by lighting properties, so that not every draw need to take all the lighing properties
+				3. 
+			]] 
+			-- 
 			append_lighting_properties(filter.result)
 		end
 	end

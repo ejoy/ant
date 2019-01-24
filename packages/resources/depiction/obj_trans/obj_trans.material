@@ -6,7 +6,9 @@ shader = {
 state = "transparent.state"
 
 properties = {
-	u_color = {type="v4", name="color", default={1, 1, 1, 1}},
+	uniforms = {
+		u_color = {type="v4", name="color", default={1, 1, 1, 1}},
+	}	
 }
 
 surface_type = {

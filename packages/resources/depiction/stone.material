@@ -26,6 +26,8 @@ surface_type = {
 }
 
 properties = {
-	s_basecolor = {name="base color", type="texture", stage=0, default={"ant.resources", "stone.texture"}},
-	s_normal = {name="normal", type="texture", stage=1, default={"ant.resources", "stone_normal.texture"}},
+	textures = {
+		s_basecolor = {name="base color", type="texture", stage=0, ref_path={"ant.resources", "stone.texture"}},
+		s_normal = {name="normal", type="texture", stage=1, ref_path={"ant.resources", "stone_normal.texture"}},
+	}	
 }

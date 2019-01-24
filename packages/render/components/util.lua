@@ -100,18 +100,30 @@ end
 function util.load_texture(name, stage, pkgname, texpath)	
 	assert(type(texpath) ~= "string", "texture type's default value should be path to texture file")
 	local assetinfo = asset.load(pkgname, texpath)
-	return {name=name, type="texture", stage=stage, value=assetinfo.handle}
+	return {name=name, type="texture", stage=stage, ref_path={package=pkgname, filename=texpath}, handle=assetinfo.handle}
 end
 
-
 local function update_properties(dst_properties, src_properties)
-	for k, v in pairs(src_properties) do
-		if v.type == "texture" then			
-			local refpath = v.default or v.path
-			dst_properties[k] = util.load_texture(v.name, v.stage, refpath[1], fs.path(refpath[2]))
-		else
-			dst_properties[k] = {name=v.name, type=v.type, value=deep_copy(v.default or v.value)}
+	local srctextures = src_properties.textures
+	if srctextures then
+		local dsttextures = {}
+		for k, v in pairs(srctextures) do
+			local refpath = v.ref_path
+			dsttextures[k] = util.load_texture(v.name, v.stage, refpath[1], fs.path(refpath[2]))
 		end
+		dst_properties.textures = dsttextures
+	end
+
+	local srcuniforms = src_properties.uniforms
+	if srcuniforms then
+		local dstuniforms = {}
+		
+		for k, v in pairs(srcuniforms) do			
+			assert(type(v.default) == "table")			
+			local value = deep_copy(v.default)
+			dstuniforms[k] = {name=v.name, type=v.type, value=value}
+		end
+		dst_properties.uniforms = dstuniforms
 	end
 end
 
@@ -136,8 +148,7 @@ function util.create_material(material)
 	local materialinfo = asset.load(material.path.package, material.path.filename)
 	local mproperties = materialinfo.properties 
 	local properties = {}
-	if mproperties then		
-		-- TODO
+	if mproperties then
 		update_properties(properties, mproperties)
 	end
 	material.materialinfo = materialinfo

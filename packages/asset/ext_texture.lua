@@ -62,9 +62,9 @@ local function fill_default_sampler(sampler)
 		return d
 	end
 
-	for k, v in pairs(sampler) do
-		if v == nil then
-			sampler[k] = d[k]
+	for k, v in pairs(d) do
+		if sampler[k] == nil then
+			sampler[k] = v
 		end
 	end
 
@@ -85,5 +85,5 @@ return function (pkgname, respath)
 	local flag = generate_sampler_flag(sampler)
 	
 	local handle = texture_load(pp, flag)
-	return {handle=handle, sampler=fill_default_sampler(sampler), path=tex.path}
+	return {handle=handle, sampler=fill_default_sampler(sampler), path=texrefpath}
 end

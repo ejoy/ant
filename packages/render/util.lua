@@ -28,81 +28,126 @@ util.__index = util
 --     end
 -- end
 
-local property_type_description = {
-    color = {type="v4", },
-    v4 = {type="v4",},
-
-    m4 = {type="m4"},
-
-    texture = {type="s",}
+local property_types = {
+    color = "v4",
+    v4 = "v4",
+    m4 = "m4",
+    texture = "s",
 }
 
-local function update_property(name, property)
-	local uniform = shadermgr.get_uniform(name)       	
-	if uniform == nil  then
-		--log(string.format("property name : %s, is needed, but shadermgr not found!", name))
-		return 
+local function update_textures(textures)
+	if textures == nil then
+		return
 	end
 
-	assert(uniform.name == name)
-	assert(property_type_description[property.type].type == uniform.type)
-	
-    if property.type == "texture" then
-		local stage = assert(property.stage)
-        bgfx.set_texture(stage, assert(uniform.handle), assert(property.value))
-	else
-		local val = assert(property.value)
-
-		local function need_unpack(val)
-			if type(val) == "table" then
-				local elemtype = type(val[1])
-				if elemtype == "table" or elemtype == "userdata" or elemtype == "luserdata" then
-					return true
-				end
-			end
-			return false
+	for name, tex in pairs(textures) do
+		local uniform = shadermgr.get_uniform(name)
+		if uniform then
+			assert(tex.type == "texture")
+			assert(property_types[tex.type] == uniform.type)
+			local stage = assert(tex.stage)
+			bgfx.set_texture(stage, assert(uniform.handle), assert(tex.handle))
 		end
-		
-		if need_unpack(val) then
-			bgfx.set_uniform(assert(uniform.handle), table.unpack(val))
-		else
-			bgfx.set_uniform(assert(uniform.handle), val)
-		end
-		
 	end
 end
 
-local function check_uniform_is_match_with_shader(shader, properties)
-    local su = shader.uniforms
-    for name, u in pairs(su) do
-        local function find_property(name)
-            for k, p in pairs(properties) do
-                if k == name then
-                    return p
-                end
-            end
+local function update_uniforms(uniforms)
+	if uniforms == nil then
+		return
+	end
 
-            return nil
-        end
-    
-        local p = find_property(name)
-        if p == nil then             
-            log(string.format("uniform : %s, not privided, but shader program needed", name))
-        else
-            local ptype = property_type_description[p.type]
-            if ptype.type ~= u.type then
-                log(string.format("uniform type : %s, property type : %s/%s, not match", u.type, p.type, ptype.type))
-            end
-        end
+	for name, uniformproperty in pairs(uniforms) do
+		local uniform = shadermgr.get_uniform(name)
+		if uniform then
+			assert(uniformproperty.type)
+			assert(property_types[uniformproperty.type] == uniform.type)
+
+			local value = uniformproperty.value
+
+			local function need_unpack(val)
+				if type(val) == "table" then
+					local elemtype = type(val[1])
+					if elemtype == "table" or elemtype == "userdata" or elemtype == "luserdata" then
+						return true
+					end
+				end
+				return false
+			end
+			
+			if need_unpack(value) then
+				bgfx.set_uniform(assert(uniform.handle), table.unpack(value))
+			else
+				bgfx.set_uniform(assert(uniform.handle), value)
+			end
+		end
+	end
+end
+
+local function fetch_properties(properties)
+	local function add_properties(pp, subproperties)
+		if pp == nil then
+			return
+		end
+
+		if pp.uniforms then
+			subproperties[#subproperties+1] = pp.uniforms
+		end
+
+		if pp.textures then
+			subproperties[#subproperties+1] = pp.textures
+		end
+	end
+
+	local subproperties = {}
+	add_properties(properties, subproperties)
+	add_properties(properties.internal, subproperties)
+	return subproperties
+end
+
+local function check_uniform_is_match_with_shader(shader, properties)
+	local su = shader.uniforms
+	local allproperties = fetch_properties(properties)
+    for name, u in pairs(su) do
+		local function find_property(name, allproperties)
+			for _, sub in ipairs(allproperties) do
+				for k, p in pairs(sub) do
+					if k == name then
+						return p
+					end
+				end
+			end
+			return nil
+		end
+
+		local function check_property(name, allproperties)			
+			local p = find_property(name, allproperties)
+			if p == nil then             
+				log(string.format("uniform : %s, not privided, but shader program needed", name))
+			else
+				local ptype = property_types[p.type]
+				if ptype ~= u.type then
+					log(string.format("uniform type : %s, property type : %s/%s, not match", u.type, p.type, ptype))
+				end
+			end
+		end
+		
+		check_property(name, allproperties)		
     end
 end
 
 local function update_properties(shader, properties)
 	if properties then		
-        check_uniform_is_match_with_shader(shader, properties)
-        for n, p in pairs(properties) do
-            update_property(n, p)
-        end
+		check_uniform_is_match_with_shader(shader, properties)
+		
+		local function update(properties)
+			if properties then
+				update_uniforms(properties.uniforms)
+				update_textures(properties.textures)
+			end
+		end
+
+		update(properties)
+		update(properties.internal)
     end
 end
 

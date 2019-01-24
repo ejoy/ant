@@ -5,7 +5,8 @@ local function foreach_single_save(component, arg, c, schema)
         return c.method.save(component, arg)
     end
     if schema.map[c.type] then
-        return foreach_save(component, arg, schema.map[c.type], schema)
+		local ret = foreach_save(component, arg, schema.map[c.type], schema)
+		return ret
     end
     if c.type == 'userdata' then
         assert "serialization isn't allowed."
@@ -33,10 +34,10 @@ function foreach_save(component, arg, c, schema)
         return ret
     end
     if c.map then
-        local ret = {}
+		local ret = {}
         for k, v in pairs(component) do
-            ret[k] = foreach_single_save(v, arg, c, schema)
-        end
+			ret[k] = foreach_single_save(v, arg, c, schema)
+		end
         return ret
     end
     return foreach_single_save(component, arg, c, schema)

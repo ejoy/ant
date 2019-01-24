@@ -2912,16 +2912,6 @@ lsetUniform(lua_State *L) {
 		bgfx_set_uniform(uh, buffer, number);
 		break;
 	}
-	case LUA_TNUMBER: {
-		// int1 , sampler
-		uint32_t ints[V(number)];
-		int i;
-		for (i=0;i<number;i++) {
-			ints[i] = luaL_checkinteger(L, i+2);
-		}
-		bgfx_set_uniform(uh, ints, number);
-		break;
-	}
 	case LUA_TUSERDATA:
 	case LUA_TLIGHTUSERDATA:
 		// vectir or matrix

@@ -6,5 +6,7 @@ shader = {
 state = "default.state"
 
 properties = {
-	u_time = {name="u_time", type="v4", default={1, 1, 1, 1}},
+	uniforms = {
+		u_time = {name="u_time", type="v4", default={1, 1, 1, 1}},
+	}	
 }

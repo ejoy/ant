@@ -21,7 +21,6 @@ function primitive_filter_sys:update()
 				if (not filter.filter_select) or ce.can_select then					
 					local meshhandle = assert(ce.mesh.assetinfo).handle
 					local materials = assert(ce.material.content)
-					
 					ru.insert_primitive(eid, 
 						meshhandle, 
 						materials, 

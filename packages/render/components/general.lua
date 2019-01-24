@@ -8,6 +8,8 @@ local fs = require "filesystem"
 
 local component_util = require "components.util"
 local asset = import_package "ant.asset"
+local math3d = import_package "ant.math"
+local ms = math3d.stack
 
 schema:typedef("entityid", "int", -1)
 
@@ -60,40 +62,51 @@ function mesh:load()
 	return self
 end
 
-schema:type "property"
+schema:type "texture"
 	.name "string"
 	.type "string"
 	.stage "int"
+	.ref_path "resource"	
+
+schema:userdata "uniformdata"
+
+local uniformdata = ecs.component "uniformdata"
+function uniformdata.save(v)
+	local tt = type(v)
+	if tt == "userdata" then
+		local d = ms(v, "T")
+		assert(d.type)
+		d.type = nil
+		return d
+	elseif tt == "table" then
+		return v
+	else
+		error(string.format("not support type in uniformdata:%s", tt))
+	end
+end
+
+function uniformdata.load(s)
+	assert(type(s) == "table")
+	return s
+end
+
+schema:type "uniform"
+	.name "string"
+	.type "string"
+	.value "uniformdata"
+
+schema:type "properties"
+	.textures "texture{}"
+	.uniforms "uniform{}"
 
 schema:type "material_content"
 	.path "resource"
-	.properties "property{}"
+	.properties "properties"	
 
 schema:type "material"
 	.content "material_content[]"
 
 local material_content = ecs.component "material_content"
-
-function material_content:save()
-	local pp = assert(self.path)
-	assert(pp ~= "")
-	local assetcontent = asset.load(pp.package, fs.path(pp.filename))
-	local src_properties = assetcontent.properties
-	if src_properties then
-		local properties = {}
-		for k, v in pairs(src_properties) do
-			local p = self.properties[k]
-			local type = p.type
-			if type == "texture" then
-				properties[k] = {name=p.name, type=type, path=v.default, stage=p.stage}
-			else
-				properties[k] = p
-			end
-		end
-		self.properties = properties
-	end
-	return self
-end
 
 function material_content:load()
 	component_util.create_material(self)
