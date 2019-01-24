@@ -24,23 +24,20 @@ function system.singleton(sys, c)
 	return s
 end
 
-local function gen_proxy(sto, c, singletons)
+local function gen_proxy(sto, singletons)
 	local inst = {}
 	if sto.singleton then
 		for _, singleton_name in ipairs(sto.singleton) do
 			inst[singleton_name] = singletons[singleton_name]
-			--for method_name, f in pairs(c[singleton_name].method) do
-			--	inst[method_name] = f
-			--end
 		end
 	end
 	return inst
 end
 
-function system.proxy(sys, c, singletons)
+function system.proxy(sys, singletons)
 	local p = {}
 	for system_name, system_typeobject in pairs(sys) do
-		p[system_name] = gen_proxy(system_typeobject, c, singletons)
+		p[system_name] = gen_proxy(system_typeobject, singletons)
 	end
 	return p
 end

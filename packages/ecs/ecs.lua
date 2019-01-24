@@ -277,7 +277,7 @@ function ecs.new_world(config)
 
 	-- init system
 	local singletons = system.singleton(class.system, class.singleton_component)
-	local proxy = system.proxy(class.system, w._component_type, singletons)
+	local proxy = system.proxy(class.system, singletons)
 
 	local init_list = system.init_list(class.system)
 
