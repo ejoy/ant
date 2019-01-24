@@ -453,14 +453,14 @@ local function extandUserdata(frameId, varRef)
     if uv ~= nil then
         varCreateInsert(vars, frameId, varRef, '[uservalue]', uv
             , ('debug.getuservalue(%s)'):format(evaluateName)
-            , function() return rdebug.getuservalue(t) end
+            , function() return rdebug.getuservalue(u) end
         )
     end
     local meta = rdebug.getmetatablev(u)
     if meta ~= nil then
         varCreateInsert(vars, frameId, varRef, '[metatable]', meta
             , ('debug.getmetatable(%s)'):format(evaluateName)
-            , function() return rdebug.getmetatable(t) end
+            , function() return rdebug.getmetatable(u) end
         )
     end
     return vars

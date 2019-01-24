@@ -58,9 +58,9 @@ local function LoadRawInt()
 end
 
 local Version = 0x53
-local LoadSize = LoadLength53
 local LoadInt = LoadRawInt
 local LoadLineInfo = LoadRawInt
+LoadSize = LoadLength53
 
 local function InitCompat()
     local version = LoadByte()
@@ -76,7 +76,7 @@ local function InitCompat()
     elseif version == 0x54 then
         Version = 0x54
         LoadLength = LoadLength54
-        LoadInt = LoadSize54
+        LoadInt = LoadSize
         LoadLineInfo = LoadByte
         LUA_TNUMFLT = 3 | (1 << 4)
         LUA_TNUMINT = 3 | (2 << 4)
