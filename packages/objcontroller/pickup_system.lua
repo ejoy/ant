@@ -164,11 +164,7 @@ function pickup_material_sys:update()
 end
 
 -- pickup_system
-schema:primtype "pickup"
-local pickup = ecs.component "pickup"
-function pickup:init()
-	return {}
-end
+schema:type "pickup"
 
 local pickup_sys = ecs.system "pickup_system"
 

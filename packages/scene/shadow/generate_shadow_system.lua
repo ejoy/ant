@@ -65,19 +65,18 @@ ctx.s_flipV = false       -- d3d or ogl
 
 -- 定义 shadowmap entity 相关组件数据( 生成配置, 结果数据, ... )
 -- shadowmap settings
-schema:primtype "shadow_config"
+schema:type "shadow_config"
 local shadow_config = ecs.component "shadow_config"
 
 
 
 -- shadowmap runtime status, result id handle,result textures,matrixs,framebuffers
-schema:primtype "shadow_rt"
+schema:type "shadow_rt"
 local shadow_rt = ecs.component "shadow_rt"
 
 -- setting & result  
 -- 可修改设置集
 function shadow_config:init()
-    local self = {}
     -- should be read from config, and material asset
     self.shadowMapSize = SHADOWMAP_SIZE
     self.near = NEAR 
@@ -139,11 +138,10 @@ end
 
 -- or combine mode 
 -- 合并成一个 compoent 内的两个表? may be clear more,but not use now 
-schema:primtype "shadow_maker"
+schema:type "shadow_maker"
 local shadow = ecs.component "shadow_maker"
 
 function shadow:init()
-    local self = {}
     self.config = {}
     self.shadow = {}
     return self
