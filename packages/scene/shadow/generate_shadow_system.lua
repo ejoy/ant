@@ -1003,8 +1003,7 @@ end
 --    定义组件初始化函数，初始化组件内部结构-剪裁结果表
 -- shadow_cast_filter
 
-schema:primtype "shadow_cast_filter"
-local shadow_cast_filter = ecs.component "shadow_cast_filter"
+local shadow_cast_filter = ecs.singleton_component "shadow_cast_filter"
 function shadow_cast_filter:init()
     return {
         result = {}

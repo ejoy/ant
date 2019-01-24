@@ -1,12 +1,9 @@
 local ecs = ...
-local world = ecs.world
-local schema = world.schema
 
 local math = import_package "ant.math"
 local mu = math.util
 
-schema:primtype "constant"
-local constant = ecs.component "constant"
+local constant = ecs.singleton_component "constant"
 
 function constant:init()
     return {

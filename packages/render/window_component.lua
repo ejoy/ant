@@ -1,20 +1,17 @@
 local ecs = ...
-local world = ecs.world
-local schema = world.schema
 
 local bgfx = require "bgfx"
 
--- the viewport can have multi instance in one scene
-schema:type "window"
-    .width "int" (1)  -- use 1 to avoid divide by 0 
-    .height "int" (1)
 
-local win = ecs.component "window"
+local win = ecs.singleton_component "window"
 
 function win:init()
     bgfx.set_debug "T"
-    self.isinit_size = false
-    return self
+    return {
+        width = 1,
+        height = 1,
+        isinit_size = false
+    }
 end
 
 local debug = ecs.system "debug_system"

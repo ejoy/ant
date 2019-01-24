@@ -117,7 +117,11 @@ schema:typedef("can_render", "boolean", true)
 schema:typedef("can_cast", "boolean", false)
 schema:typedef("name", "string", "")
 ecs.tag "can_select"
-schema:typedef("control_state", "string", "")
+
+local control_state = ecs.singleton_component "control_state"
+function control_state:init()
+	return ""
+end
 
 schema:type "parent"
 	.eid "entityid"

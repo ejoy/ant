@@ -85,6 +85,11 @@ return function(world, import, class)
 	end
 
 	register {
+		type = "singleton_component",
+		callback = { "init" },
+	}
+
+	register {
 		type = "system",
 		setter = { "depend" , "dependby", "singleton" },
 		submethod = { "notify" },

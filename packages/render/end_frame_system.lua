@@ -1,21 +1,19 @@
 local ecs = ...
-local world = ecs.world
-local schema = world.schema
 
 local bgfx = require "bgfx"
 
-schema:primtype "frame_stat"
-local stat = ecs.component "frame_stat"
-function stat:init()
+local frame_stat = ecs.singleton_component "frame_stat"
+function frame_stat:init()
 	return {
 		frame_num = 0
 	}
 end
 
-schema:primtype "post_end_frame_jobs"
-local post_jobs = ecs.component "post_end_frame_jobs"
-function post_jobs:init()
-	self.jobs = {}
+local post_end_frame_jobs = ecs.singleton_component "post_end_frame_jobs"
+function post_end_frame_jobs:init()
+	return {
+		jobs = {}
+	}
 end
 
 local end_frame_sys = ecs.system "end_frame"

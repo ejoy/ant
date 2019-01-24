@@ -1,9 +1,6 @@
 local ecs = ...
-local world = ecs.world
-local schema = world.schema
 
-schema:primtype "timer"
-local timer = ecs.component "timer"
+local timer = ecs.singleton_component "timer"
 
 function timer:init()
 	return {

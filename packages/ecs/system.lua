@@ -16,7 +16,7 @@ function system.singleton(sys, c)
 				end
 				if s[singleton_name] == nil then
 					log("New singleton %s", singleton_name)
-					s[singleton_name] = singleton_typeobject.init()
+					s[singleton_name] = singleton_typeobject.method.init()
 				end
 			end
 		end

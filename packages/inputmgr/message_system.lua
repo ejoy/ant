@@ -5,8 +5,7 @@ local schema = world.schema
 local bgfx = require "bgfx"
 
 --[@ message
-schema:primtype "message"
-local msg_comp = ecs.component "message"
+local msg_comp = ecs.singleton_component "message"
 
 function msg_comp:init()
 	local self = {}
