@@ -12,6 +12,6 @@ p:type "NAME"
 	.map "int{}" { x = 1, y = 2 }
 
 p:typedef("id" , "int", 1)
-p:userdata "OBJECT"
+p:primtype "OBJECT"
 p:check()
 

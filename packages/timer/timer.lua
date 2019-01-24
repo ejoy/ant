@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local schema = world.schema
 
-schema:userdata "timer"
+schema:primtype "timer"
 local timer = ecs.component "timer"
 
 function timer:init()

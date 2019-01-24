@@ -5,7 +5,7 @@ local schema = world.schema
 local math3d = require "math3d"
 local ms = require "stack"
 
-schema:userdata "vector"
+schema:primtype "vector"
 
 local vector = ecs.component "vector"
 
@@ -33,7 +33,7 @@ function vector.load(s)
     return v
 end
 
-schema:userdata "matrix"
+schema:primtype "matrix"
 
 local matrix = ecs.component "matrix"
 

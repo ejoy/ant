@@ -15,7 +15,7 @@ local function foreach_single_init(c, schema)
         return ""
     elseif c.type == 'boolean' then
         return false
-    elseif c.type == 'userdata' then
+    elseif c.type == 'primtype' then
         return nil
     else
         error("unknown type:" .. c.type)

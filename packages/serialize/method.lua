@@ -8,7 +8,7 @@ local function foreach_single_save(component, arg, c, schema)
 		local ret = foreach_save(component, arg, schema.map[c.type], schema)
 		return ret
     end
-    if c.type == 'userdata' then
+    if c.type == 'primtype' then
         assert "serialization isn't allowed."
     end
     return component
@@ -58,7 +58,7 @@ local function foreach_single_load(component, arg, c, schema)
     if schema.map[c.type] then
         return foreach_load(component, arg, schema.map[c.type], schema)
     end
-    if c.type == 'userdata' then
+    if c.type == 'primtype' then
         assert "serialization isn't allowed."
     end
     return component

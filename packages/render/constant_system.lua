@@ -5,7 +5,7 @@ local schema = world.schema
 local math = import_package "ant.math"
 local mu = math.util
 
-schema:userdata "constant"
+schema:primtype "constant"
 local constant = ecs.component "constant"
 
 function constant:init()

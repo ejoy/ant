@@ -5,7 +5,7 @@ local schema = world.schema
 local bgfx = require "bgfx"
 
 --[@ message
-schema:userdata "message"
+schema:primtype "message"
 local msg_comp = ecs.component "message"
 
 function msg_comp:init()

@@ -5,7 +5,7 @@ local schema = world.schema
 local assetmgr = import_package "ant.asset"
 local fs = require "filesystem"
 
-schema:userdata "hierarchy"
+schema:primtype "hierarchy"
 local hierarchy = ecs.component "hierarchy"
 
 function hierarchy:init()
@@ -25,7 +25,7 @@ function hierarchy:load()
 	return self
 end
 
-schema:userdata "hierarchy_name_mapper"
+schema:primtype "hierarchy_name_mapper"
 local hierarchy_name_mapper = ecs.component "hierarchy_name_mapper"
 
 function hierarchy_name_mapper:init()

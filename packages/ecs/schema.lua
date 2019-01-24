@@ -187,10 +187,10 @@ function schema:typedef(typename, aliastype, default_value)
 	}
 end
 
-function schema:userdata(typename)
+function schema:primtype(typename)
 	self:_newtype {
 		name = typename,
-		type = "userdata",
+		type = "primtype",
 	}
 end
 
