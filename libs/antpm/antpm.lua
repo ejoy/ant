@@ -96,5 +96,4 @@ return {
     register = register,
     import = import,
     loadfile = m_loadfile,
-    ecs_modules = require "antpm.ecs_modules"
 }

@@ -35,7 +35,7 @@ local thread = require "thread"
 local threadid = thread.id
 
 thread.newchannel "IOreq"
-thread.newchannel ("IOresp" .. threadid)
+thread.newchannel ("IOresp" .. threadid) -- TODO: No need?
 
 local io_req = thread.channel_produce "IOreq"
 
