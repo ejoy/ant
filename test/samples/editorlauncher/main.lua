@@ -1,6 +1,6 @@
 dofile "libs/editor.lua"
 
-local vfsfs = require "filesystem"
+local fs = require "filesystem"
 local localfs = require "filesystem.local"
 local vfs = require "vfs"
 
@@ -12,4 +12,4 @@ vfs.add_mount(pkgname:string(), absPKGDIR)
 vfs.add_mount("entry", absPKGDIR)
 
 local pm = require "antpm"
-pm.import(pm.register(vfsfs.path "entry"))
+pm.import(pm.register(fs.path "entry"))

@@ -6,7 +6,7 @@ local system = require "system"
 local component = require "component"
 local pm = require "antpm"
 local create_schema = require "schema"
-local modules = require "modules"
+local get_modules = require "modules"
 
 local ecs = {}
 local world = {} ; world.__index = world
@@ -193,7 +193,7 @@ local function init_modules(w, packages, systems)
 			end
 			modules = tmp
 		else
-			modules = modules(root, {"*.lua"})
+			modules = get_modules(root, {"*.lua"})
 		end
 		local reg = typeclass(w, import, class)
 		for _, path in ipairs(modules) do

@@ -1,13 +1,13 @@
-local vfsfs = require "filesystem"
+local fs = require "filesystem"
 local sandbox = require "antpm.sandbox"
 
-local WORKDIR = vfsfs.path 'engine'
+local WORKDIR = fs.path 'engine'
 
 local registered = {}
 local loaded = {}
 
 local function loadfile(path, mode, env)
-    local f, err = vfsfs.open(path, 'r')
+    local f, err = fs.open(path, 'r')
     if not f then
         return nil, err
     end
@@ -24,11 +24,11 @@ local function dofile(path)
 end
 
 local function register(pkg)	
-    if not vfsfs.exists(pkg) then
+    if not fs.exists(pkg) then
         error(('Cannot find package `%s`.'):format(pkg:string()))
     end
     local cfg = pkg / "package.lua"
-    if not vfsfs.exists(pkg) then
+    if not fs.exists(pkg) then
         error(('Cannot find package config `%s`.'):format(cfg:string()))
     end
     local config = dofile(cfg)
@@ -88,7 +88,7 @@ local function m_loadfile(name, filename)
     if not info.env then
         info.env = sandbox.env(info.root:string(), name)
     end
-    return vfsfs.loadfile(filename, 't', info.env)
+    return fs.loadfile(filename, 't', info.env)
 end
 
 return {
