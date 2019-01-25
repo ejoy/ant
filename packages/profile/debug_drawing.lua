@@ -1,6 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local schema = world.schema
 
 local bgfx = require "bgfx"
 local fs = require "filesystem"

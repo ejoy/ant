@@ -51,8 +51,6 @@ local function request_runinterminal(args)
 end
 
 local function create_terminal(args, port)
-    local utf8 = "utf8" == args.sourceCoding -- TODO
-
     local command = {}
     if args.runtimeExecutable then
         command[#command + 1] = args.runtimeExecutable

@@ -503,7 +503,7 @@ local function setValue(frameId, varRef, name, value)
     if not rdebug.assign(rvalue, newvalue) then
         return nil, 'Failed set variable'
     end
-    local text, type, ref = varCreateReference(frameId, rvalue, maps[name][2])
+    local text, type = varCreateReference(frameId, rvalue, maps[name][2])
     return {
         value = text,
         type = type,
@@ -660,14 +660,14 @@ function m.scopes(frameId)
             expensive = false,
         }
     end
-    if hasGlobal(frameId) then
+    if hasGlobal() then
         scopes[#scopes + 1] = {
             name = "Globals",
             variablesReference = (frameId << 16) | VAR_GLOBAL,
             expensive = true,
         }
     end
-    if hasStandard(frameId) then
+    if hasStandard() then
         scopes[#scopes + 1] = {
             name = "Standard",
             variablesReference = (frameId << 16) | VAR_STANDARD,

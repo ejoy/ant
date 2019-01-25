@@ -50,7 +50,7 @@ local function compile(ms, args)
 	return table.concat(code, '\n') .. '\n'
 end
 
-local function mat_1to2(ms, m)
+local function mat_1to2(_, m)
 	if m.type ~= 'mat' then
 		return m
 	end
@@ -63,7 +63,7 @@ local function mat_1to2(ms, m)
 	}
 end
 
-local function mat_2to1(ms, m)
+local function mat_2to1(_, m)
 	if m.type ~= 'mat' then
 		return m
 	end

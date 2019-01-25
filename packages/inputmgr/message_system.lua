@@ -1,8 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local schema = world.schema
-
-local bgfx = require "bgfx"
 
 --[@ message
 local msg_comp = ecs.singleton_component "message"

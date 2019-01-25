@@ -171,7 +171,7 @@ function m.run(frameId, expression, context)
         if context ~= 'repl' then
             return false, res[2]
         end
-        local ok, err = m.complie_then_execute(frameId, expression)
+        local ok = m.complie_then_execute(frameId, expression)
         if not ok then
             return false, res[2]
         end

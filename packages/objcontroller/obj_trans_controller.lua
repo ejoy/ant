@@ -1,7 +1,6 @@
 --luacheck: ignore self, globals dprint
 local ecs = ...
 local world = ecs.world
-local schema = world.schema
 
 
 ecs.import "ant.inputmgr"

@@ -56,7 +56,7 @@ local function glob_replace(pattern, target)
         return pattern[2]
     end
     local s = {}
-    for i, p in ipairs(pattern[2]) do
+    for _, p in ipairs(pattern[2]) do
         s[#s + 1] = p
         s[#s + 1] = res[1]
     end
@@ -184,7 +184,7 @@ function m.clientPath(p)
     return fs.relative(p, workspaceFolder, '/')
 end
 
-function m.all_loaded(p)
+function m.all_loaded()
     for _, source in pairs(sourcePool) do
         ev.emit('loadedSource', 'new', source)
     end
