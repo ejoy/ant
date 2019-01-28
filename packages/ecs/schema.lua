@@ -106,14 +106,14 @@ local function checktype(self, typename, name)
 	self._undefined[typename] = name
 end
 
-local function array_type(typename)
+local function parse_type(t)
+	local typename = t.type
 	local name, array = typename:match "(%S+)%[(%d*)%]"	-- array pattern : type[1]
 	if name == nil then
 		local name, map = typename:match "(%S+){}"	-- map pattern : type{}
-		if name == nil then
-			return typename
-		else
-			return name, true	-- It's a map
+		if name then
+			t.type = name
+			t.map = true
 		end
 	else
 		if array == "" then
@@ -121,28 +121,22 @@ local function array_type(typename)
 		else
 			array = tonumber(array)
 		end
-		return name, array
+		t.type = name
+		t.array = array
 	end
+	return t
 end
 
 function fields_mt:__call(typename)
-	local typename, array = array_type(typename)
-	local map
-	if array == true then
-		array = nil
-		map = true
-	end
 	local attrib = self._current_field
 	self._current_field = nil
 	local field_n = #attrib
 	assert(field_n > 0, "Need field name")
-	local item = {
+	local item = parse_type {
 		name = attrib[field_n],
 		type = typename,
-		array = array,
-		map = map,
 	}
-	checktype(self._schema, typename, self._name)
+	checktype(self._schema, item.type, self._name)
 	attrib[field_n] = nil
 	assert(self._field[item.name] == nil)
 
@@ -180,11 +174,11 @@ function schema:type(typename)
 end
 
 function schema:typedef(typename, aliastype, default_value)
-	self:_newtype {
+	self:_newtype( parse_type {
 		name = typename,
 		type = aliastype,
-		default = default_value
-	}
+		default = default_value,
+	} )
 end
 
 function schema:primtype(typename)

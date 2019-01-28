@@ -10,8 +10,10 @@ p:type "NAME"
 	.array "int[4]" { 1,2,3,4 }
 	.any "var" (nil)
 	.map "int{}" { x = 1, y = 2 }
+	.color "color"
 
 p:typedef("id" , "int", 1)
+p:typedef("color", "int[4]", { 0,0,0,1 })
 p:primtype "OBJECT"
 p:check()
 
