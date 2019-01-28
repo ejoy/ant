@@ -25,8 +25,7 @@ local function save_entity(w, msave, eid, args)
     args.eid = eid
     for name, cv in sortpairs(e) do
         args.comp = name
-        t[#t+1] = name
-        t[#t+1] = msave[name](cv, args)
+        t[name] = msave[name](cv, args)
     end
     return t
 end
@@ -47,8 +46,7 @@ local function load_entity(w, mload, tree, args)
     local eid = w:new_entity()
     local e = w[eid]
     args.eid = eid
-    for i = 1, #tree, 2 do
-        local name, cv = tree[i], tree[i+1]
+    for name, cv in pairs(tree) do
         w:add_component(eid, name)
         args.comp = name
         e[name] = mload[name](cv, args)

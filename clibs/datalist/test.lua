@@ -41,126 +41,103 @@ local function F(str)
 	assert(not ok)
 end
 
+C [[
+---
+x : 1
+y : 2
+---
+---
+b : 2
+---
+hello
+world
+--- { 1,2,3 }
+---
+	---
+	x : 1
+	---
+	y : 2
+]] {
+	{ x = 1 , y = 2 },
+	{},
+	{ b = 2 },
+	{ "hello", "world" },
+	{ 1,2,3 },
+	{ { x = 1 } , { y = 2 } },
+}
+
+C [[
+a :
+	- 1
+	- 2
+	- 3
+b :
+	-1
+	2
+	3
+c :
+	---
+	x = 1
+	---
+	y = 2
+]] {
+	a = { 1,2,3 },
+	b = { -1,2,3 },
+	c = { { x = 1 }, { y = 2 } },
+}
+
+C [[
+hello "world"
+"newline\n"
+]] {
+	"hello",
+	"world",
+	"newline\n",
+}
+
+
+C [[
+list :
+	1,2
+	3,4
+x = 1 y = 2.0
+layer :
+	a = hello
+	b = world
+z = 0x3
+w = {1,2,3}
+map = { x = 1, y =
+	{ a , b, c }
+}
+]] {
+	list = { 1,2,3,4 },
+	x = 1,
+	y = 2,
+	z = 3,
+	layer = {
+		a = "hello",
+		b = "world",
+	},
+	w = { 1,2,3 },
+	map = { x = 1, y = { "a", "b", "c" } }
+}
+
 local mt = { __newindex = function (t,k,v)
 	rawset(t,k,v)
 	print("SET", k, v)
 end }
 
---datalist.parse("x=1,y=2", setmetatable({}, mt))
+datalist.parse("x=1,y=2", setmetatable({}, mt))
 
-C [[
-[]
-{{}},
-hello
-]] {{}, {{}}, "hello"}
-
-C [[
-a=1	-- comment
-b=2.0
-c=0x3
-d=0x1p+0
-e={}
-]] {
-	a = 1,
-	b = 2.0,
-	c = 3,
-	d = 0x1p+0,
-	e = {},
-}
-
-C [[
-a:0xff
-b:1.2345
-]] {
-	a = 0xff,
-	b = 1.2345,
-}
-
-C [[
-a="hello world"
-汉字=汉字
-]] {
-	a = "hello world",
-	["汉字"] = "汉字",
-}
-
-C [[
-1
-2
-3
-nil
-true
-false
-on,
-off,
-yes,
-no,
-]] { 1,2,3,nil,true,false,true,false,true,false }
-
-C [[
-"hello\nworld",
-"\0\1\2\3\4\xff",
-]] {
-	"hello\nworld",
-	"\0\1\2\3\4\xff",
-}
-
-C [[
-{ 1,2,3 }
-]] {
-	{ 1, 2, 3 }
-}
-
-C [[
-a = { 1,2,3 }
-]] {
-	a = { 1,2,3 }
-}
-
-C [[
-[ a = 1, b = "hello" ]
-{ c = 2 }
-3
-]] {
-	{ "a" , 1 , "b", "hello" },
-	{ c = 2 },
-	3,
-}
-
-
-
-C [[
-##XXX
-hello
-##YYY
-x = 1
-y = 2
-###YYY : 3	-- single value section
-z = 4
-**ZZZ
-a = 1
-b = 2
-***EMPTY
-***WWW
-array
-{ 1,2,3,4 }
-]] {
-	XXX = { "hello" },
-	YYY = {
-		x = 1,
-		y = 2,
-		YYY = 3,
-		z = 4,
-	},
-	ZZZ = { "a", 1, "b", 2, "EMPTY", {}, "WWW", {"array", {1,2,3,4}} },
-}
-
-
-F [[
-"a" : hello
+local token = datalist.token [[
+first
+	hello world  # comment
+---
+	1
+	2
+"hello world"
 ]]
 
-F [[
-a
-b:1
-]]
+for _,v in ipairs(token) do
+	print(string.format("[%s]",v))
+end
