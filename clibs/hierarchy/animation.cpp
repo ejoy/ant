@@ -440,20 +440,33 @@ get_aniresult(lua_State *L, ozz::animation::Skeleton* ske, int idx) {
 	return result;
 }
 
-using IntermediateJobResult = ozz::Range<ozz::math::SoaTransform>;
-using job_result = ozz::Vector<ozz::math::SoaTransform>::Std;
+static inline bind_pose*
+get_bindpose(lua_State *L, ozz::animation::Skeleton *ske, int idx) {
+	luaL_checktype(L, idx, LUA_TUSERDATA);
+	bind_pose* pose = (bind_pose*)lua_touserdata(L, idx);
+	if (pose->pose.count() != (size_t)ske->num_soa_joints()) {
+		luaL_error(L, "bindposecount:%d, is not equal to skeleton soa joint number: %d", pose->pose.count(), ske->num_soa_joints());
+	}
+
+	return pose;
+}
+
+struct sample_info {
+	animation_node *aninode;
+	sampling_node *sampling;
+	float weight;
+};
+
 
 static inline bool
 do_sample(const ozz::animation::Skeleton *ske, 
-			const ozz::animation::Animation *ani, 
-			ozz::animation::SamplingCache *samplingcache, 
-			float ratio,
-			IntermediateJobResult &result) {
+			const sample_info &si,	float ratio,
+			bind_pose &result) {
 	ozz::animation::SamplingJob job;
-	job.animation = ani;
-	job.cache = samplingcache;
+	job.animation = si.aninode->ani;
+	job.cache = si.sampling->cache;
 	job.ratio = ratio;
-	job.output = result;
+	job.output = result.pose;
 
 	return job.Run();
 }
@@ -472,18 +485,203 @@ do_ltm(ozz::animation::Skeleton *ske,
 	return ltmjob.Run();
 }
 
-static int
-lsample(lua_State *L) {
-	const auto ske = get_ske(L);
-	auto aninode = get_aninode(L);
-	auto samplingnode = get_samplingnode(L, ske);
-	auto ratio = get_ratio(L);
+struct blendlayers {
+	ozz::Vector<ozz::animation::BlendingJob::Layer>::Std layers;
+	ozz::Vector<bind_pose>::Std results;
 
-	IntermediateJobResult result;
-
-	if (!do_sample(ske, aninode->ani, samplingnode->cache, ratio, result)){
-		luaL_error(L, "run sampling job failed!");
+	~blendlayers() {
+		for (auto &r : results) {
+			ozz::memory::default_allocator()->Deallocate(r.pose.begin);
+		}
 	}
+};
+
+static inline void
+check_init_bind_pose_result(int numsoa, bind_pose *bindpose) {
+	if (bindpose->pose.count() == 0) {
+		bindpose->pose = create_range<ozz::math::SoaTransform>(numsoa);
+	} else if (bindpose->pose.count() != numsoa) {
+		bindpose->pose = ozz::Range<ozz::math::SoaTransform>(
+			reinterpret_cast<ozz::math::SoaTransform*>(
+				ozz::memory::default_allocator()->Reallocate(
+					bindpose->pose.begin,
+					numsoa,
+					sizeof(ozz::math::SoaTransform))),
+			numsoa);
+	}
+}
+
+static inline void
+load_sample_info(lua_State *L, int index, sample_info &si) {	
+	luaL_checktype(L, index, LUA_TTABLE);
+
+	lua_getfield(L, index, "handle");
+	si.aninode = (animation_node*)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "sampling_cache");
+	si.sampling = (sampling_node*)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, -1, "weight");
+	si.weight = (float)lua_tonumber(L, -1);
+	lua_pop(L, 1);
+}
+
+static inline bool
+sample_animation(const ozz::animation::Skeleton *ske, const sample_info &si, float ratio, bind_pose *bindpose) {
+	check_init_bind_pose_result(ske->num_soa_joints(), bindpose);
+	return do_sample(ske, si, ratio, *bindpose);
+}
+
+static int
+lsample_animation(lua_State *L) {
+	auto ske = get_ske(L, 1);
+	const float ratio = (float)lua_tonumber(L, 2);
+	sample_info si;
+	load_sample_info(L, 3, si);
+	bind_pose *bindpose = (bind_pose*)lua_touserdata(L, 4);
+
+	if (!sample_animation(ske, si, ratio, bindpose)) {
+		luaL_error(L, "sampling animation failed");
+	}
+	return 0;
+}
+
+static void
+create_blend_layers(lua_State *L, int index, 
+	float ratio, const ozz::animation::Skeleton *ske, 
+	blendlayers &bl) {
+	const int numani = (int)lua_rawlen(L, 3);
+
+	bl.layers.resize(numani);
+	bl.results.resize(numani);
+
+	auto& layers = bl.layers;
+	auto& results = bl.results;
+
+	for (int ii = 0; ii < numani; ++ii) {
+		lua_geti(L, index, ii + 1);
+
+		sample_info si;
+		load_sample_info(L, -1, si);
+
+		auto &result = results[ii];
+		if (sample_animation(ske, si, ratio, &result)) {
+			luaL_error(L, "sampling animation failed!");
+		}
+
+		layers[ii].weight = si.weight;
+		layers[ii].transform = result.pose;
+
+		lua_pop(L, 1);
+	}
+}
+
+static inline bool
+do_blend(const ozz::animation::Skeleton *ske, 
+	const ozz::Vector<ozz::animation::BlendingJob::Layer>::Std &layers, 
+	const char* blendtype, 
+	float threshold, 
+	bind_pose *finalpose) {
+	ozz::animation::BlendingJob blendjob;
+	blendjob.bind_pose = ske->joint_bind_poses();
+
+	auto jobrange = ozz::make_range(layers);
+	if (strcmp(blendtype, "blend") == 0) {
+		blendjob.layers = jobrange;
+	} else if (strcmp(blendtype, "additive") == 0) {
+		blendjob.additive_layers = jobrange;
+	} else {
+		return false;
+	}
+
+	blendjob.threshold = threshold;
+	blendjob.output = finalpose->pose;
+
+	return blendjob.Run();
+}
+
+static int
+lblend_bind_poses(lua_State *L) {
+	const auto ske = get_ske(L, 1);
+	const float ratio = (float)lua_tonumber(L, 2);
+
+	luaL_checktype(L, 3, LUA_TTABLE);
+
+	int numposes = (int)lua_rawlen(L, 3);
+	struct pose_info {
+		bind_pose *pose;
+		float weight;
+	};
+
+	blendlayers bl;
+	bl.layers.resize(numposes);
+	bl.results.resize(numposes);
+
+	for (int ii = 0; ii < numposes; ++ii) {
+		lua_geti(L, 3, ii+1);
+		{
+			lua_getfield(L, -1, "pose");
+			auto pose = (bind_pose*)lua_touserdata(L, -1);
+			lua_pop(L, -1);
+
+			lua_getfield(L, -1, "weight");
+			const float weight = (float)lua_tonumber(L, -1);
+			lua_pop(L, -1);
+
+			bl.layers[ii].weight = weight;
+			bl.layers[ii].transform = pose->pose;
+		}
+		lua_pop(L, -1);
+	}
+
+	const char* blendtype = lua_tostring(L, 4);
+	bind_pose *finalpose = (bind_pose*)lua_touserdata(L, 5);
+	const float threshold = (float)luaL_optnumber(L, 6, 0.1f);
+
+	do_blend(ske, bl.layers, blendtype, threshold, finalpose);
+
+	return 0;
+}
+
+static bool
+blend_animations(lua_State *L, 
+	int ani_index,
+	float ratio, const char* blendtype, const ozz::animation::Skeleton *ske, float threshold, 
+	bind_pose *bindpose) {
+
+	blendlayers bl;
+	create_blend_layers(L, ani_index, ratio, ske, bl);
+
+	if (bl.layers.empty()) {
+		return true;
+	}
+
+	check_init_bind_pose_result(ske->num_soa_joints(), bindpose);
+
+	if (bl.layers.size() > 1) {
+		do_blend(ske, bl.layers, blendtype, threshold, bindpose);
+	} else {
+		auto &result = bl.results.back();
+		assert(result.pose.count() == bindpose->pose.count());
+		bindpose->pose = result.pose;
+		result.pose.Clear();
+	}
+	
+	return true;
+}
+
+static int
+lblend(lua_State *L) {
+	auto ske = get_ske(L, 1);
+	auto ratio = get_ratio(L, 2);	
+	const char* blendtype = lua_tostring(L, 4);
+	auto bindpose = get_bindpose(L, ske, 5);
+
+	const float threshold = (float)luaL_optnumber(L, 6, 0.1f);
+
+	blend_animations(L, 3, ratio, blendtype, ske, threshold, bindpose);
 
 	return 0;
 }
@@ -493,83 +691,16 @@ lmotion(lua_State *L) {
 	auto ske = get_ske(L, 1);
 	auto ratio = get_ratio(L, 2);
 
-	int numani = (int)lua_rawlen(L, 3);
-
 	luaL_checktype(L, 4, LUA_TSTRING);
 	const char* blendtype = lua_tostring(L, 4);
 	auto aniresult = get_aniresult(L, ske, 5);
 
 	const float threshold = (float)luaL_optnumber(L, 6, 0.1f);
-	  
-	ozz::Vector<ozz::animation::BlendingJob::Layer>::Std layers; 
-	layers.reserve(numani);
-	struct blendinput {
-		animation_node* aninode;
-		sampling_node* sampling;
-		job_result result;
-	};
-	ozz::Vector<blendinput>::Std inputs; 
-	inputs.reserve(numani);	
+	 
+	bind_pose bindpose;
+	blend_animations(L, 3, ratio, blendtype, ske, threshold, &bindpose);
 
-	for (int ii = 0; ii < numani; ++ii) {
-		lua_geti(L, 3, ii + 1);
-
-		blendinput input;
-
-		lua_getfield(L, -1, "handle");
-		animation_node* aninode = (animation_node*)lua_touserdata(L, -1);
-		input.aninode = aninode;
-		lua_pop(L, 1);
-
-		lua_getfield(L, -1, "sampling_cache");
-		input.sampling = (sampling_node*)lua_touserdata(L, -1);
-		lua_pop(L, 1);
-
-		input.result.resize(ske->num_soa_joints());
-		auto result = ozz::make_range(input.result);
-
-		if (!do_sample(ske, input.aninode->ani, input.sampling->cache, ratio, result)) {
-			luaL_error(L, "do_sample failed, index:%d, animation ratio:%f", ii, ratio);
-		}
-
-		inputs.push_back(std::move(input));
-
-		ozz::animation::BlendingJob::Layer layer;
-		lua_getfield(L, -1, "weight");	
-		layer.weight = (float)lua_tonumber(L, -1);
-		lua_pop(L, 1);
-
-		layer.transform = ozz::make_range(inputs.back().result);
-		layers.push_back(std::move(layer));
-	}
-
-	job_result jr;	
-	if (layers.size() > 1) {
-		ozz::animation::BlendingJob blendjob;
-		blendjob.bind_pose = ske->joint_bind_poses();
-
-		auto jobrange = ozz::make_range(layers);
-		if (strcmp(blendtype, "blend") == 0) {
-			blendjob.layers = jobrange;
-		} else if (strcmp(blendtype, "additive") == 0) {
-			blendjob.additive_layers = jobrange;
-		} else {
-			luaL_error(L, "need to specify valid blendtype:%s", blendtype);
-		}
-		
-		blendjob.threshold = threshold;		
-		jr.resize(ske->num_soa_joints());
-
-		blendjob.output = ozz::make_range(jr);
-
-		if (!blendjob.Run()) {
-			luaL_error(L, "blend job failed!");
-		}
-	} else {
-		jr = std::move(inputs.back().result);
-	}
-
-	if (!do_ltm(ske, ozz::make_range(jr), aniresult->joints)) {
+	if (!do_ltm(ske, bindpose.pose, aniresult->joints)) {
 		luaL_error(L, "doing blend result to ltm job failed!");
 	}
 
@@ -1008,6 +1139,38 @@ register_ozzmesh_mt(lua_State *L) {
 	luaL_setfuncs(L, l, 0);
 }
 
+static int
+ldel_bind_pose(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	bind_pose *om = (bind_pose*)lua_touserdata(L, 1);
+
+	if (om->pose.count() != 0) {
+		ozz::memory::default_allocator()->Deallocate(om->pose.begin);
+	}
+	return 0;
+}
+
+static int
+lnew_bind_pose(lua_State *L) {
+	auto bp = (bind_pose*)lua_newuserdata(L, sizeof(bind_pose));
+	bp->pose = ozz::Range<ozz::math::SoaTransform>();
+	return 1;
+}
+
+static void
+register_bind_pose_mt(lua_State *L) {
+	luaL_newmetatable(L, "OZZBINGPOSE");
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");
+
+	luaL_Reg l[] = {
+		"__gc", ldel_bind_pose,
+		nullptr, nullptr,
+	};
+
+	luaL_setfuncs(L, l, 0);
+}
+
 extern "C" {
 LUAMOD_API int
 luaopen_hierarchy_animation(lua_State *L) {
@@ -1015,14 +1178,19 @@ luaopen_hierarchy_animation(lua_State *L) {
 	register_sampling_mt(L);
 	register_ozzmesh_mt(L);
 	register_anitresult_mt(L);
+	register_bind_pose_mt(L);
 
 	luaL_Reg l[] = {		
 		{ "skinning", lskinning},
-		{ "motion", lmotion},		
+		{ "motion", lmotion},
+		{ "blend", lblend},
+		{ "blend_bind_poses", lblend_bind_poses},
+		{ "sample_animation", lsample_animation},		
 		{ "new_ani", lnew_animation},
 		{ "new_ozzmesh", lnew_ozzmesh},
 		{ "new_sampling_cache", lnew_sampling_cache},
 		{ "new_ani_result", lnew_aniresult,},
+		{ "new_bind_pose", lnew_bind_pose},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
