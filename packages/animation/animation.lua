@@ -49,6 +49,9 @@ local ani = ecs.component "animation"
 	  
 function ani:init()	
 	self.aniresult = nil
+	self.pose = {
+		define = {}
+	}
 	return self
 end
 
@@ -86,6 +89,7 @@ end
 
 function anisystem:update()
 	local timer = self.timer
+	local currenttime = timer.current
 
 	for _, eid in world:each("animation") do
 		local e = world[eid]
@@ -105,14 +109,50 @@ function anisystem:update()
 
 			ik_module.do_ik(mat, ske, t, anicomp.aniresult)
 		else
-			local anilist = assert(anicomp.anilist)
-			if #anilist > 0 then
-				for _, a in ipairs(anilist) do
-					assert(a.starttime and a.starttime ~= 0)
-					a.ratio = calc_ratio(timer.current, a)
+			-- local anilist = assert(anicomp.anilist)
+			-- if #anilist > 0 then
+			-- 	for _, a in ipairs(anilist) do
+			-- 		assert(a.starttime and a.starttime ~= 0)
+			-- 		a.ratio = calc_ratio(timer.current, a)
+			-- 	end
+			-- 	ani_module.motion(ske, anilist, anicomp.blendtype, anicomp.aniresult)
+			-- end
+
+			local anipose = anicomp.pose
+			local define = anipose.define
+			local transmit = anipose.transmit
+
+			local anilist_ref = anicomp.anilist
+			local function fetch_anilist(pose)
+				local anilist = {}
+				for _, aniref in ipairs(pose.anilist) do
+					local ani = assert(anilist_ref[aniref.idx])
+					ani.ratio = calc_ratio(currenttime, ani)
+					ani.weight = aniref.weight
+					anilist[#anilist] = ani
 				end
-				ani_module.motion(ske, anilist, anicomp.blendtype, anicomp.aniresult)
+				return anilist
 			end
+
+			local srcanilist = fetch_anilist(define)
+			if transmit then
+				local targetanilist = fetch_anilist(transmit.targetpose)
+				local srcbindpose = ani_module.new_bind_pose()
+				local targetbindpose = ani_module.new_bind_pose()
+
+				ani_module.blend_animations(ske, srcanilist, anicomp.blendtype, srcbindpose)
+				ani_module.blend_animations(ske, targetanilist, anicomp.blendtype, targetbindpose)
+
+				local finalbindpose = ani_module.new_bind_pose()
+				ani_module.blend_bind_poses(ske, {
+					{pose=srcbindpose, weight=assert(transmit.source_weight)}, 
+					{pose=targetbindpose, weight=assert(transmit.target_weight)}
+				}, anicomp.blendtype, finalbindpose)
+				ani_module.transform(ske, finalbindpose, anicomp.aniresult)
+			else
+				ani_module.motion(ske, srcanilist, anicomp.blendtype, anicomp.aniresult)
+			end
+			
 		end		
 	end
 end

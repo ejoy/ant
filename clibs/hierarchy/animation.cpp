@@ -455,7 +455,7 @@ struct sample_info {
 	animation_node *aninode;
 	sampling_node *sampling;
 	float ratio;
-	float weight;	
+	float weight;
 };
 
 
@@ -523,7 +523,7 @@ load_sample_info(lua_State *L, int index, sample_info &si) {
 	si.sampling = (sampling_node*)lua_touserdata(L, -1);
 	lua_pop(L, 1);
 
-	lua_getfield(L, index, "phase");
+	lua_getfield(L, index, "ratio");
 	si.ratio = (float)lua_tonumber(L, -1);
 	lua_pop(L, 1);
 
@@ -548,6 +548,19 @@ lsample_animation(lua_State *L) {
 	if (!sample_animation(ske, si, bindpose)) {
 		luaL_error(L, "sampling animation failed");
 	}
+	return 0;
+}
+
+static int
+ltransform_bindpose(lua_State *L) {
+	auto ske = get_ske(L, 1);
+	auto bindpose = get_bindpose(L, ske, 2);
+	auto result = get_aniresult(L, ske, 3);
+
+	if (!do_ltm(ske, bindpose->pose, result->joints)) {
+		luaL_error(L, "transform from bind pose to ani result failed!");
+	}
+
 	return 0;
 }
 
@@ -611,11 +624,6 @@ lblend_bind_poses(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TTABLE);
 
 	int numposes = (int)lua_rawlen(L, 2);
-	struct pose_info {
-		bind_pose *pose;
-		float weight;
-	};
-
 	blendlayers bl;
 	bl.layers.resize(numposes);
 	bl.results.resize(numposes);
@@ -674,12 +682,12 @@ blend_animations(lua_State *L,
 }
 
 static int
-lblend(lua_State *L) {
+lblend_animations(lua_State *L) {
 	auto ske = get_ske(L, 1);	
 	const char* blendtype = lua_tostring(L, 3);
-	auto bindpose = get_bindpose(L, ske, 5);
+	auto bindpose = get_bindpose(L, ske, 4);
 
-	const float threshold = (float)luaL_optnumber(L, 6, 0.1f);
+	const float threshold = (float)luaL_optnumber(L, 5, 0.1f);
 
 	blend_animations(L, 2, blendtype, ske, threshold, bindpose);
 
@@ -1181,9 +1189,10 @@ luaopen_hierarchy_animation(lua_State *L) {
 	luaL_Reg l[] = {		
 		{ "skinning", lskinning},
 		{ "motion", lmotion},
-		{ "blend", lblend},
+		{ "blend_animations", lblend_animations},
 		{ "blend_bind_poses", lblend_bind_poses},
-		{ "sample_animation", lsample_animation},		
+		{ "sample_animation", lsample_animation},
+		{ "transform", ltransform_bindpose},
 		{ "new_ani", lnew_animation},
 		{ "new_ozzmesh", lnew_ozzmesh},
 		{ "new_sampling_cache", lnew_sampling_cache},

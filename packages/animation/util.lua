@@ -41,10 +41,18 @@ function util.set_animation_weight(comp, aniidx, weight)
 	anilist[aniidx].weight = weight
 end
 
-function util.play_animation(comp, timer)
+function util.play_animation(comp, timer, anilistref)
+	local current = timer.current
 	local anilist = comp.anilist
-	for _, ani in ipairs(anilist) do
-		ani.starttime = timer.current
+	if anilistref then
+		for _, aniref in ipairs(anilistref) do
+			local ani = assert(anilist[aniref.idx])
+			ani.starttime = current
+		end
+	else
+		for _, ani in ipairs(anilist) do
+			ani.starttime = current
+		end
 	end
 end
 

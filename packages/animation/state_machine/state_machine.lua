@@ -2,53 +2,35 @@ local ecs = ...
 local world = ecs.world
 local schema = world.schema
 
-local animodule = require "hierarchy.animation"
-
-schema.type "ani"
-	.ani_idx "int"
+schema.type "aniref"
+	.idx "int"	-- TODO: need use name to referent which animation
 	.weight "real"
 
 schema.type "pose"
-	.anilist "ani[]"
-	.ratio 	"real"
-
-local pose = ecs.component "pose"
-function pose:init()
-	self.bindpose = animodule.new_bind_pose()
-end
+	.anilist "aniref[]"
+	.name "string"
 
 schema.type "state"
 	.name "string"
 	.pose "pose"
 
-schema.type "transmit_type"
-	.name "string"
-	.weight "real"
+schema.type "transmit_target"
+	.targetname "string"
 
 schema.type "transmit"
-	.time "real"
-	.src_transtype "transmit_type"
-	.dst_translist "transmit_type{}"
+	.duration "real"	
+	.targets "transmit_target[]"
 
 schema.type "state_chain"
 	.chain "state[]"
 	.transmits "transmit{}"
 	.script "resource"	--code for state transmit
 
-
-local function get_pose(chain, name)
-	for _, s in ipairs(chain) do
-		if s.name == name then
-			return s.pose
-		end
-	end
-end
-
 local state_chain = ecs.component "state_chain"
 function state_chain.init()
 	return {
 		current = "idle",
-		dest	= "",		
+		target	= "",		
 		transmit = nil,
 	}
 end
@@ -61,7 +43,24 @@ function sm:init()
 
 end
 
-local function get_transimit(script)
+local function get_pose(chain, name)
+	for _, s in ipairs(chain) do
+		if s.name == name then
+			return s.pose
+		end
+	end
+end
+
+local function find_target_state(transmit, targetstate)
+	for _, t in ipairs(transmit.targets) do
+		if t.name == targetstate then
+			return t
+		end
+	end
+end
+
+
+local function get_transmit(script)
 	if script then
 		local antpm = require "antpm"
 		local root = antpm.find(assert(script[1]))
@@ -69,76 +68,61 @@ local function get_transimit(script)
 	end
 
 	local timepassed = 0
-	return function (srcinput, dstinput, ske, ani, transtime, dt)
-		local anilist = ani.anilist
+	return function (ani, duration, deltatime)
+		local weight = math.min(1, timepassed / duration)
+		timepassed = timepassed + deltatime
 
-		timepassed = timepassed + dt
-		local ratio = math.max(1, timepassed / transtime)
-	
-		local function blend_poses(srcinput, dstinput, ratio)
-			local w1, p1 = srcinput.trantype.weight, srcinput.pose
-			local w2, p2 = dstinput.trantype.weight, dstinput.pose
-
-			local function gen_bind_pose(weight, pose)
-				local anis = {}
-				for _, aniidx in ipairs(pose.ani) do
-					local ani = assert(anilist[aniidx])
-					anis[#anis+1] = ani					
-				end
-
-				animodule.blend(ske, pose.ratio, anis, "blend", pose.bindpose)
-				return pose.bindpose
-			end
-
-			local bp1, bp2 = gen_bind_pose(w1, p1), gen_bind_pose(w2, p2)
-			
-
-		end
+		local transmit = assert(ani.pose.transmit)
+		transmit.source_weight = 1 - weight
+		transmit.target_weight = weight
 	end
 end
 
 function sm:update()
+	local timer = self.timer
+
 	for _, eid in world:each "state_chain" do
 		local e = world[eid]
 		local state_chain = e.state_chain
-		local ani = assert(e.animation)
+		local anicomp = assert(e.animation)
+		local anipose = anicomp.pose
 
 		local srcstate = state_chain.current
 		local chain = state_chain.chain
 
 		if state_chain.transmit then
-			if state_chain.transmit() then
+			if state_chain.transmit(timer.deltatime) then
 				state_chain.transmit = nil
+				anipose.define = anipose.transmit.targetpose
+				anipose.transmit = nil
 			end
-		elseif state_chain.dest then
-			local dststate = state_chain.dest
-			assert(get_pose(chain, srcstate), string.format("invalid state:%s", srcstate))
-			assert(get_pose(chain, dststate), string.format("invalid state:%s", dststate))			
+		elseif state_chain.target then
+			local targetstate = state_chain.target
+			local srcpose = get_pose(chain, srcstate)
+			local targetpose = get_pose(chain, targetstate)
+			assert(srcpose, string.format("invalid state:%s", srcstate))
+			assert(targetpose, string.format("invalid state:%s", targetstate))
 
 			local transmits = state_chain.transmits
 			local transmit = transmits[srcstate]
 
-			local dst_trantype = transmit.dst_translist[dststate]
-			if dst_trantype == nil then
-				error(string.format("dest state:%s, not reachable!", dststate))
+			local target = find_target_state(transmit, targetstate)
+			if target == nil then
+				error(string.format("dest state:%s, not reachable!", targetstate))
 			end
 
-			local srcinput = {
-				transtype = transmit.src_transtype,
-				pose = get_pose(chain, srcstate)
-			}
-			local dstinput = {
-				transtype = dst_trantype,
-				pose = get_pose(chain, dststate)
+			anipose.transmit = {
+				source_weight = 0,
+				target_weight = 0,
+				targetpose = targetpose
 			}
 
-			local op = get_transimit(state_chain.script)
-
+			local op = get_transmit(state_chain.script)
 			state_chain.transmit = function (deltatime)
-				return op(srcinput, dstinput, ani, transmit.time, deltatime)
+				return op(anicomp, transmit.duration, deltatime)
 			end
 
-			state_chain.dest = nil
+			state_chain.target = nil
 		end
 	end
 end

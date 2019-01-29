@@ -29,7 +29,7 @@ init_loader.depend "camera_controller"
 init_loader.depend "skinning_system"
 
 
-local function create_animation_test()
+local function create_animation_test(timer)
 	local meshdir = fs.path "meshes"
 	local skepath = meshdir / "skeleton" / "human_skeleton.ozz"
 	local anipaths = {
@@ -52,12 +52,17 @@ local function create_animation_test()
 	computil.load_skinning_mesh(anitest.skinning_mesh, anitest.mesh, "ant.resources", smpath)
 	computil.load_skeleton(anitest.skeleton, "ant.resources", skepath)
 	
-
-	aniutil.init_animation(anitest.animation, anitest.skeleton)
+	local anicomp = anitest.animation
+	aniutil.init_animation(anicomp, anitest.skeleton)
+	local anidefine = anicomp.pose.define
+	local anidefinelist = anidefine.anilist
 	local weight = 1 / #anipaths
-	for _, anipath in ipairs(anipaths) do
-		aniutil.add_animation(anitest.animation, "ant.resources", anipath, weight)
+	for idx, anipath in ipairs(anipaths) do
+		aniutil.add_animation(anicomp, "ant.resources", anipath, weight)
+		anidefinelist[#anidefinelist+1] = {idx = idx, weight = weight}
 	end
+
+	aniutil.play_animation(anicomp, timer, anidefinelist)
 
 	computil.add_material(anitest.material, "ant.resources", fs.path "skin_model_sample.material")
 end
@@ -76,7 +81,7 @@ function init_loader:init()
 
 	computil.create_grid_entity(world, "grid", 64, 64, 1)
 
-	create_animation_test()
+	create_animation_test(self.timer)
 
 	local t1 = serialize.save(world)
 	local s = serialize.stringify(t1)
