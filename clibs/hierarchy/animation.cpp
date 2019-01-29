@@ -454,18 +454,18 @@ get_bindpose(lua_State *L, ozz::animation::Skeleton *ske, int idx) {
 struct sample_info {
 	animation_node *aninode;
 	sampling_node *sampling;
-	float weight;
+	float ratio;
+	float weight;	
 };
 
 
 static inline bool
 do_sample(const ozz::animation::Skeleton *ske, 
-			const sample_info &si,	float ratio,
-			bind_pose &result) {
+			const sample_info &si, bind_pose &result) {
 	ozz::animation::SamplingJob job;
 	job.animation = si.aninode->ani;
 	job.cache = si.sampling->cache;
-	job.ratio = ratio;
+	job.ratio = si.ratio;
 	job.output = result.pose;
 
 	return job.Run();
@@ -523,26 +523,29 @@ load_sample_info(lua_State *L, int index, sample_info &si) {
 	si.sampling = (sampling_node*)lua_touserdata(L, -1);
 	lua_pop(L, 1);
 
+	lua_getfield(L, index, "phase");
+	si.ratio = (float)lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
 	lua_getfield(L, -1, "weight");
 	si.weight = (float)lua_tonumber(L, -1);
 	lua_pop(L, 1);
 }
 
 static inline bool
-sample_animation(const ozz::animation::Skeleton *ske, const sample_info &si, float ratio, bind_pose *bindpose) {
+sample_animation(const ozz::animation::Skeleton *ske, const sample_info &si, bind_pose *bindpose) {
 	check_init_bind_pose_result(ske->num_soa_joints(), bindpose);
-	return do_sample(ske, si, ratio, *bindpose);
+	return do_sample(ske, si, *bindpose);
 }
 
 static int
 lsample_animation(lua_State *L) {
-	auto ske = get_ske(L, 1);
-	const float ratio = (float)lua_tonumber(L, 2);
+	auto ske = get_ske(L, 1);	
 	sample_info si;
-	load_sample_info(L, 3, si);
-	bind_pose *bindpose = (bind_pose*)lua_touserdata(L, 4);
+	load_sample_info(L, 2, si);
+	bind_pose *bindpose = (bind_pose*)lua_touserdata(L, 3);
 
-	if (!sample_animation(ske, si, ratio, bindpose)) {
+	if (!sample_animation(ske, si, bindpose)) {
 		luaL_error(L, "sampling animation failed");
 	}
 	return 0;
@@ -550,7 +553,7 @@ lsample_animation(lua_State *L) {
 
 static void
 create_blend_layers(lua_State *L, int index, 
-	float ratio, const ozz::animation::Skeleton *ske, 
+	const ozz::animation::Skeleton *ske, 
 	blendlayers &bl) {
 	const int numani = (int)lua_rawlen(L, 3);
 
@@ -567,7 +570,7 @@ create_blend_layers(lua_State *L, int index,
 		load_sample_info(L, -1, si);
 
 		auto &result = results[ii];
-		if (sample_animation(ske, si, ratio, &result)) {
+		if (sample_animation(ske, si, &result)) {
 			luaL_error(L, "sampling animation failed!");
 		}
 
@@ -605,11 +608,9 @@ do_blend(const ozz::animation::Skeleton *ske,
 static int
 lblend_bind_poses(lua_State *L) {
 	const auto ske = get_ske(L, 1);
-	const float ratio = (float)lua_tonumber(L, 2);
+	luaL_checktype(L, 2, LUA_TTABLE);
 
-	luaL_checktype(L, 3, LUA_TTABLE);
-
-	int numposes = (int)lua_rawlen(L, 3);
+	int numposes = (int)lua_rawlen(L, 2);
 	struct pose_info {
 		bind_pose *pose;
 		float weight;
@@ -648,11 +649,11 @@ lblend_bind_poses(lua_State *L) {
 static bool
 blend_animations(lua_State *L, 
 	int ani_index,
-	float ratio, const char* blendtype, const ozz::animation::Skeleton *ske, float threshold, 
+	const char* blendtype, const ozz::animation::Skeleton *ske, float threshold, 
 	bind_pose *bindpose) {
 
 	blendlayers bl;
-	create_blend_layers(L, ani_index, ratio, ske, bl);
+	create_blend_layers(L, ani_index, ske, bl);
 
 	if (bl.layers.empty()) {
 		return true;
@@ -674,14 +675,13 @@ blend_animations(lua_State *L,
 
 static int
 lblend(lua_State *L) {
-	auto ske = get_ske(L, 1);
-	auto ratio = get_ratio(L, 2);	
-	const char* blendtype = lua_tostring(L, 4);
+	auto ske = get_ske(L, 1);	
+	const char* blendtype = lua_tostring(L, 3);
 	auto bindpose = get_bindpose(L, ske, 5);
 
 	const float threshold = (float)luaL_optnumber(L, 6, 0.1f);
 
-	blend_animations(L, 3, ratio, blendtype, ske, threshold, bindpose);
+	blend_animations(L, 2, blendtype, ske, threshold, bindpose);
 
 	return 0;
 }
@@ -689,16 +689,14 @@ lblend(lua_State *L) {
 static int
 lmotion(lua_State *L) {
 	auto ske = get_ske(L, 1);
-	auto ratio = get_ratio(L, 2);
+	luaL_checktype(L, 3, LUA_TSTRING);
+	const char* blendtype = lua_tostring(L, 3);
+	auto aniresult = get_aniresult(L, ske, 4);
 
-	luaL_checktype(L, 4, LUA_TSTRING);
-	const char* blendtype = lua_tostring(L, 4);
-	auto aniresult = get_aniresult(L, ske, 5);
-
-	const float threshold = (float)luaL_optnumber(L, 6, 0.1f);
+	const float threshold = (float)luaL_optnumber(L, 5, 0.1f);
 	 
 	bind_pose bindpose;
-	blend_animations(L, 3, ratio, blendtype, ske, threshold, &bindpose);
+	blend_animations(L, 2, blendtype, ske, threshold, &bindpose);
 
 	if (!do_ltm(ske, bindpose.pose, aniresult->joints)) {
 		luaL_error(L, "doing blend result to ltm job failed!");

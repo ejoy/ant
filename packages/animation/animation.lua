@@ -8,8 +8,34 @@ schema:type "animation_content"
 	.weight "real"
 	.weighttype "string" ("full")
 	.ref_path "resource"
+	.name "string"
+	.scale "real" (1)	
+	.looptime "int" (1)
 
 local animation_content = ecs.component "animation_content"
+
+local function calc_ratio(current, ani)
+	local handle = assert(ani.handle)
+	local duration = handle:duration()
+	local localtime = (current - ani.starttime) * ani.scale
+	local frametime = localtime - duration * ani.looptime
+	frametime = math.min(duration, frametime)
+	return frametime / duration
+end
+
+function animation_content:init()
+	self.starttime = 0
+	self.ratio = 0	
+	return self
+end
+
+function animation_content:save()
+	local name = self.name
+	if name == nil or name == "" then
+		local filename = self.ref_path.filename
+		self.name = filename:filename()
+	end
+end
 
 function animation_content:load()
 	self.handle = asset.load(self.ref_path.package, self.ref_path.filename)
@@ -17,11 +43,11 @@ end
 
 schema:type "animation"
 	.anilist "animation_content[]"
+	.blendtype "blend"
 
 local ani = ecs.component "animation"
 	  
-function ani:init()
-	self.ratio = 0
+function ani:init()	
 	self.aniresult = nil
 	return self
 end
@@ -59,6 +85,8 @@ local function deep_copy(t)
 end
 
 function anisystem:update()
+	local timer = self.timer
+
 	for _, eid in world:each("animation") do
 		local e = world[eid]
 		local skecomp = assert(e.skeleton)
@@ -79,7 +107,11 @@ function anisystem:update()
 		else
 			local anilist = assert(anicomp.anilist)
 			if #anilist > 0 then
-				ani_module.motion(ske, anicomp.ratio, anilist, "blend", anicomp.aniresult)
+				for _, a in ipairs(anilist) do
+					assert(a.starttime and a.starttime ~= 0)
+					a.ratio = calc_ratio(timer.current, a)
+				end
+				ani_module.motion(ske, anilist, anicomp.blendtype, anicomp.aniresult)
 			end
 		end		
 	end
