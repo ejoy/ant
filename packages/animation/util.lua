@@ -45,18 +45,13 @@ function util.set_animation_weight(comp, aniidx, weight)
 	anilist[aniidx].weight = weight
 end
 
-function util.play_animation(comp, anilistref)
+function util.play_animation(comp, pose)
 	local current = timer.get_sys_counter()
 	local anilist = comp.anilist
-	if anilistref then
-		for _, aniref in ipairs(anilistref) do
-			local ani = assert(anilist[aniref.idx])
-			ani.start_counter = current
-		end
-	else
-		for _, ani in ipairs(anilist) do
-			ani.start_counter = current
-		end
+
+	for _, aniref in ipairs(assert(pose.anilist)) do
+		local ani = assert(anilist[aniref.idx])
+		ani.start_counter = current
 	end
 end
 

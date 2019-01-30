@@ -2,8 +2,6 @@
 -- luacheck: ignore self, ignore world
 require "iuplua"
 
-local fs 			= require "filesystem"
-
 local editor 		= import_package "ant.editor"
 local editormain 	= editor.editor
 
@@ -15,9 +13,9 @@ local assetviewclass= iupcontrols.assetview
 local vecviewclass	= iupcontrols.vectorview
 local listctrl 		= iupcontrols.listctrl
 
-local fileinputer 	= require "fileselectinputer"
-local aniviewclass 	= require "animationview"
-local blendviewclass= require "blendview"
+local fileinputer 	= require "controls.fileselectinputer"
+local aniviewclass 	= require "controls.animationview"
+local blendviewclass= require "controls.blendview"
 
 local fbw, fbh = 800, 600
 

@@ -452,78 +452,64 @@ local function init_scene()
 	computil.create_grid_entity(world, "grid", 64, 64, 1)
 end
 
+local function init_state_machine()
+	local sample = sample_entity()
+	if sample then
+		local states = sample.state_chain
+		states.chain = {
+			{
+				name = "idle",
+				pose = {
+					name = "idle",
+					anilist = {
+						{idx=1, weight=0.5},
+						{idx=2, weight=0.5},
+					},
+				}
+			},
+			{
+				name = "walk",
+				pose = {
+					name = "walk",
+					anilist = {
+						{idx=3, weight=1},
+					}
+				}
+			}
+		}
+
+		states.transmits = {
+			idle = {
+				{duration = 0.5, targetname="walk"},
+			},
+			walk = {
+				{duration = 0.3, targetname="idle"},
+				{duration = 0.2, targetname="run"},
+			},
+			run = {
+				{duration = 0.5, targetname="idle"},
+				{duration = 0.2, targetname="walk"},
+			}
+		}
+
+	end
+end
+
 -- luacheck: ignore self
 function model_ed_sys:init()	
 	init_control()
 	init_lighting()
 
 	-- init_ik()
-
 	-- update_ik_ctrl()
 
-
+	init_state_machine()
 	init_scene()
 	focus_sample()
 
 	local sample = sample_entity()
 	if sample then
 		local anicomp = sample.animation
-		aniutil.play_animation(anicomp, anicomp.pose.define.anilist)
+		aniutil.play_animation(anicomp, anicomp.pose.define)
 	end
-end
-
-local function auto_update_ani(deltatimeInSecond)
-	local sample = sample_entity()
-	if sample == nil then
-		return
-	end
-
-	local ani = sample.animation
-	if ani == nil then
-		return
-	end
-
-	local dlg = main_dialog()
-	local autoplay = iup.GetDialogChild(dlg, "AUTO_PLAY")
-	if autoplay.VALUE ~= "OFF" then
-		local anilist = ani.anilist
-		if #anilist > 0 then
-			local function update_ani_timer_ctrl(anihandle, ctrlname)
-				local aniduration = anihandle:duration()
-
-				local timerctrl = iup.GetDialogChild(dlg, ctrlname)
-				local duration = tonumber(timerctrl.VALUE)
-			
-				local function calc_new_duration(duration, aniduration)
-					local function is_number_equal(lhs, rhs)
-						local delta = lhs - rhs
-						local tolerance = 10e-6
-						return -tolerance <= delta and delta <= tolerance
-					end
-					if is_number_equal(duration, aniduration) then
-						return 0
-					end
-		
-					local newduration = duration + deltatimeInSecond
-					if newduration > aniduration then
-						return aniduration
-					end
-					return newduration
-				end
-		
-				local newduration = calc_new_duration(duration, aniduration)
-			
-				local ratio = math.min(math.max(0, newduration / aniduration), 1)
-				ani.ratio = ratio
-				timerctrl.VALUE = tostring(newduration)
-			end
-
-			update_ani_timer_ctrl(assert(anilist[1]).handle, "DURATION")
-		end
-
-	end
-end
-
-function model_ed_sys:update()	
-	auto_update_ani(timer.deltatime * 0.001)
 end

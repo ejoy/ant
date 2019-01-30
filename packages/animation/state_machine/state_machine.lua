@@ -28,6 +28,7 @@ schema:type "state_chain"
 
 
 local timer = import_package "ant.timer"
+local aniutil = require "util"
 
 local state_chain = ecs.component "state_chain"
 function state_chain.init()
@@ -118,6 +119,7 @@ function sm:update()
 				targetpose = targetpose
 			}
 
+			aniutil.play_animation(anicomp, targetpose)
 			local op = get_transmit(state_chain.script)
 			state_chain.transmit = function (deltatime)
 				return op(anicomp, target, deltatime)
