@@ -9,17 +9,21 @@
 
 #define MAX_DEPTH 256
 #define SHORT_STRING 1024
+#define REF_CACHE 2
+#define REF_UNSOLVED 3
 
 enum token_type {
-	TOKEN_OPEN,	// {
-	TOKEN_CLOSE,	// }
-	TOKEN_MAP,	// = :
-	TOKEN_LIST,	// ---
-	TOKEN_STRING,
-	TOKEN_ESCAPESTRING,
-	TOKEN_ATOM,
-	TOKEN_NEWLINE,	// space \t
-	TOKEN_EOF,	// end of file
+	TOKEN_OPEN,	// 0 {
+	TOKEN_CLOSE,	// 1 }
+	TOKEN_MAP,	// 2 = :
+	TOKEN_LIST,	// 3 ---
+	TOKEN_STRING,	// 4
+	TOKEN_ESCAPESTRING,	// 5
+	TOKEN_ATOM,	// 6
+	TOKEN_NEWLINE,	// 7 space \t
+	TOKEN_TAG,	// 8	&badf00d  (64bit hex number)
+	TOKEN_REF,	// 9	*badf00d
+	TOKEN_EOF,	// 10 end of file
 };
 
 struct token {
@@ -81,24 +85,54 @@ parse_ident(struct lex_state *LS) {
 	return ptr;
 }
 
+static int
+is_hexnumber(struct lex_state *LS) {
+	const char * ptr = LS->source + LS->n.from + 1;
+	const char * endptr = LS->source + LS->n.to;
+	if (ptr == endptr)
+		return 0;
+	do {
+		char c = *ptr;
+		if (!((c >= '0' && c <= '9')
+			|| (c >= 'a' && c <= 'f')
+			|| (c >= 'A' && c <= 'F')))
+			return 0;
+	} while (++ptr < endptr);
+	return 1;
+}
 
 static void
 parse_atom(struct lex_state *LS) {
 	static const char * separator = " \t\r\n,{}:=\"'";
 	const char * ptr = LS->source + LS->position;
 	const char * endptr = LS->source + LS->sz;
-	LS->n.type = TOKEN_ATOM;
+	char head = *ptr;
 	LS->n.from = LS->position;
 	while (ptr < endptr) {
 		if (strchr(separator, *ptr)) {
-			LS->n.to = ptr - LS->source;
-			LS->position = LS->n.to;
-			return;
+			break;
 		}
 		++ptr;
 	}
-	LS->n.to = LS->sz;
+	LS->n.to = ptr - LS->source;
 	LS->position = LS->n.to;
+	switch (head) {
+	case '&':
+		if (is_hexnumber(LS)) {
+			LS->n.type = TOKEN_TAG;
+			return;
+		}
+		break;
+	case '*':
+		if (is_hexnumber(LS)) {
+			LS->n.type = TOKEN_REF;
+			return;
+		}
+		break;
+	default:
+		break;
+	}
+	LS->n.type = TOKEN_ATOM;
 }
 
 static int
@@ -223,7 +257,7 @@ read_token(lua_State *L, struct lex_state *LS) {
 	LS->c = LS->n;
 	if (!next_token(LS))
 		invalid(L, LS, "Invalid token");
-//	printf("token %.*s\n", (int)(LS->c.to-LS->c.from), LS->source + LS->c.from);
+//	printf("token %d %.*s\n", LS->c.type, (int)(LS->c.to-LS->c.from), LS->source + LS->c.from);
 	return LS->c.type;
 }
 
@@ -447,14 +481,77 @@ push_key(lua_State *L, struct lex_state *LS) {
 }
 
 static void
-new_table(lua_State *L, int layer) {
+new_table(lua_State *L, int layer, void *ref) {
 	if (layer >= MAX_DEPTH)
 		luaL_error(L, "too many layers");
 	luaL_checkstack(L, 4, NULL);
-	lua_newtable(L);
+	if (ref == NULL) {
+		lua_newtable(L);
+	} else {
+		lua_rawgetp(L, REF_CACHE, ref);
+	}
 }
 
-static void parse_bracket(lua_State *L, struct lex_state *LS, int layer);
+static uintptr_t
+read_tag(struct lex_state *LS) {
+	const char * ptr = LS->source + LS->c.from + 1;
+	const char * endptr = LS->source + LS->c.to;
+	uintptr_t x = 0;
+	while (ptr < endptr) {
+		char c = *ptr;
+		int n;
+		if (c >= '0' && c <= '9')
+			n = c - '0';
+		else if (c >= 'a' && c <= 'f')
+			n = c - 'a' + 10;
+		else
+			n = c - 'A' + 10;
+		x = x * 16 + n;
+		++ptr;
+	}
+	if (x == 0) {
+		x = (uintptr_t)~0;
+	}
+	return x;
+}
+
+static void *
+parse_tag(lua_State *L, struct lex_state *LS) {
+	void *tag = (void *)read_tag(LS);
+	if (lua_rawgetp(L, REF_CACHE, tag) != LUA_TNIL) {
+		lua_pop(L, 1);
+		if (lua_rawgetp(L, REF_UNSOLVED, tag) == LUA_TNIL) {
+			invalid(L, LS, "Duplicate tag");
+		}
+		lua_pop(L, 1);
+		// clear unsolved
+		lua_pushnil(L);
+		lua_rawsetp(L, REF_UNSOLVED, tag);
+	} else {
+		lua_pop(L, 1);
+		lua_newtable(L);
+		lua_rawsetp(L, REF_CACHE, tag);
+	}
+	return tag;
+}
+
+static void
+parse_ref(lua_State *L, struct lex_state *LS) {
+	void *tag = (void *)read_tag(LS);
+	read_token(L, LS);	//	consume ref tag
+	if (lua_rawgetp(L, REF_CACHE, tag) != LUA_TNIL) {
+		return;
+	}
+	lua_pop(L, 1);
+	lua_newtable(L);	// Create a table for future
+	lua_pushvalue(L, -1);
+	lua_rawsetp(L, REF_CACHE, tag);
+	// set unsolved flag
+	lua_pushboolean(L, 1);
+	lua_rawsetp(L, REF_UNSOLVED, tag);
+}
+
+static void parse_bracket(lua_State *L, struct lex_state *LS, int layer, void *tag);
 
 static int
 closed_bracket(lua_State *L, struct lex_state *LS) {
@@ -484,10 +581,24 @@ parse_bracket_map(lua_State *L, struct lex_state *LS, int layer) {
 		if (read_token(L, LS) != TOKEN_MAP) {
 			invalid(L, LS, "Need a : or =");
 		}
-		while (read_token(L, LS) == TOKEN_NEWLINE) ;
+		void * tag = NULL;
+		int t = read_token(L, LS);
+		if (t == TOKEN_TAG) {
+			tag = parse_tag(L, LS);
+			t = read_token(L, LS);
+		}
+		while (t == TOKEN_NEWLINE) {
+			t = read_token(L, LS);
+		}
 		switch (LS->c.type) {
+		case TOKEN_REF:
+			if (tag != NULL) {
+				invalid(L, LS, "Invalid ref in bracket map");
+			}
+			parse_ref(L, LS);
+			break;
 		case TOKEN_OPEN:
-			parse_bracket(L, LS, layer+1);
+			parse_bracket(L, LS, layer+1, tag);
 			break;
 		default:
 			push_token(L, LS, &LS->c);
@@ -515,8 +626,12 @@ parse_bracket_sequence(lua_State *L, struct lex_state *LS, int layer) {
 		case TOKEN_CLOSE:
 			read_token(L, LS);	// consume }
 			return;
+		case TOKEN_REF:
+			parse_ref(L, LS);
+			return;
 		case TOKEN_OPEN:
-			parse_bracket(L, LS, layer);
+			// No tag in sequence
+			parse_bracket(L, LS, layer, NULL);
 		default:
 			push_token(L, LS, &LS->c);
 			read_token(L, LS);
@@ -527,8 +642,8 @@ parse_bracket_sequence(lua_State *L, struct lex_state *LS, int layer) {
 }
 
 static void
-parse_bracket(lua_State *L, struct lex_state *LS, int layer) {
-	new_table(L, layer);
+parse_bracket(lua_State *L, struct lex_state *LS, int layer, void *ref) {
+	new_table(L, layer, ref);
 	switch (read_token(L, LS)) {
 	case TOKEN_CLOSE:
 		return;
@@ -579,16 +694,29 @@ parse_section_map(lua_State *L, struct lex_state *LS, int ident, int layer) {
 		if (read_token(L, LS) != TOKEN_MAP) {
 			invalid(L, LS, "Need a : or =");
 		}
-		switch (read_token(L, LS)) {
+		void * tag = NULL;
+		int t = read_token(L, LS);
+		if (t == TOKEN_TAG) {
+			tag = parse_tag(L, LS);
+			t = read_token(L, LS);
+		}
+
+		switch (t) {
+		case TOKEN_REF:
+			if (tag != NULL) {
+				invalid(L, LS, "Invalid ref after tag");
+			}
+			parse_ref(L, LS);
+			break;
 		case TOKEN_OPEN:
-			parse_bracket(L, LS, layer+1);
+			parse_bracket(L, LS, layer+1, tag);
 			break;
 		case TOKEN_NEWLINE: {
 			int next_ident = token_length(&LS->c);
 			if (next_ident <= ident) {
 				invalid(L, LS, "Invalid new section ident");
 			}
-			new_table(L, layer+1);
+			new_table(L, layer+1, tag);
 			parse_section(L, LS, layer+1);
 			break;
 		}
@@ -612,8 +740,11 @@ parse_section_sequence(lua_State *L, struct lex_state *LS, int ident, int layer)
 	int n = 1;
 	do {
 		switch (LS->c.type) {
+		case TOKEN_REF:
+			parse_ref(L, LS);
+			break;
 		case TOKEN_OPEN:
-			parse_bracket(L, LS, layer+1);
+			parse_bracket(L, LS, layer+1, NULL);
 			break;
 		case TOKEN_LIST:
 			// end of this section
@@ -647,36 +778,58 @@ next_list(lua_State *L, struct lex_state *LS, int ident) {
 			// end of sequence
 			return 0;
 		}
-	}
+	} else if (t == TOKEN_EOF)
+		return 0;
+	invalid(L, LS, "Invalid list");
 	return 0;
+}
+
+static void
+empty_list(lua_State *L, int n, void * tag) {
+	new_table(L, 0, NULL);
+	lua_pushvalue(L, -1);
+	lua_rawsetp(L, REF_CACHE, tag);
+	lua_seti(L, -2, n);
 }
 
 static void
 parse_section_list(lua_State *L, struct lex_state *LS, int ident, int layer) {
 	int n = 1;
 	do {
-		switch (read_token(L, LS)) {
+		int t = read_token(L, LS);
+		void * tag = NULL;
+		if (t == TOKEN_TAG) {
+			tag = parse_tag(L, LS);
+			t = read_token(L, LS);
+		}
+		switch (t) {
+		case TOKEN_REF:
+			if (tag != NULL) {
+				invalid(L, LS, "Invalid ref after tag");
+			}
+			parse_ref(L, LS);
+			break;
 		case TOKEN_OPEN:
-			parse_bracket(L, LS, layer+1);
+			parse_bracket(L, LS, layer+1, tag);
 			break;
 		case TOKEN_NEWLINE: {
 			int next_ident = token_length(&LS->c);
 			if (next_ident >= ident) {
-				new_table(L, layer + 1);
+				new_table(L, layer + 1, tag);
 				if (LS->n.type != TOKEN_LIST || next_ident > ident) {
 					// not an empty list
 					parse_section(L, LS, layer + 1);
 				}
 			} else {
 				// end of list
+				empty_list(L, n, tag);
 				return;
 			}
 			break;
 		}
 		case TOKEN_EOF:
 			// empty list
-			new_table(L, layer + 1);
-			lua_seti(L, -2, n);
+			empty_list(L, n, tag);
 			return;
 		default:
 			push_token(L, LS, &LS->c);
@@ -702,6 +855,7 @@ parse_section(lua_State *L, struct lex_state *LS, int layer) {
 	case TOKEN_STRING:
 	case TOKEN_ESCAPESTRING:
 	case TOKEN_OPEN:
+	case TOKEN_REF:
 		break;
 	case TOKEN_LIST:
 		parse_section_list(L, LS, ident, layer);
@@ -729,8 +883,11 @@ parse_all(lua_State *L, struct lex_state *LS) {
 	if (t == LUA_TTABLE || t == LUA_TUSERDATA) {
 		lua_settop(L, 2);
 	} else {
-		new_table(L, 0);
+		new_table(L, 0, NULL);
 	}
+	lua_newtable(L);	// ref cache (index 2/REF_CACHE)
+	lua_newtable(L);	// unsolved ref (index 3/REF_UNSOLVED)
+	lua_rotate(L, -3, 2);
 	int tt = read_token(L, LS);
 	if (tt == TOKEN_EOF)
 		return;
@@ -738,6 +895,12 @@ parse_all(lua_State *L, struct lex_state *LS) {
 	parse_section(L, LS, 0);
 	if (LS->c.type != TOKEN_EOF) {
 		invalid(L, LS, "not end");
+	}
+	// check unsolved
+	lua_pushnil(L);
+	if (lua_next(L, REF_UNSOLVED) != 0) {
+		void * tag = lua_touserdata(L, -2);
+		luaL_error(L, "Unsolved tag %p", tag);
 	}
 }
 

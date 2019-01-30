@@ -13,7 +13,7 @@ local ms = math3d.stack
 
 schema:typedef("entityid", "int", -1)
 
-schema:primtype "path"
+schema:typedef("path", "string")
 local path = ecs.component "path"
 function path:init()
 	return fs.path ""
@@ -68,7 +68,7 @@ schema:type "texture"
 	.stage "int"
 	.ref_path "resource"	
 
-schema:primtype "uniformdata"
+schema:typedef("uniformdata", "real[]")
 
 local uniformdata = ecs.component "uniformdata"
 function uniformdata.save(v)

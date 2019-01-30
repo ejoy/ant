@@ -19,30 +19,21 @@ end
 
 local fields_mt = {}
 local defaults_mt = {}
-local basetype = {}
 
 function defaults_mt:__call(default_value)
 	-- todo: check type
 	local field = self._object[#self._object]
-	local cf = basetype[field.type]
-	if cf then
-		if field.array then
-			assert(type(default_value) == "table")
-			assert(field.array == 0 or #default_value == field.array , "Invalid array defaults")
-			for k,v in ipairs(default_value) do
-				local ok, v = assert(cf(v))
-				default_value[k] = v
-			end
-		elseif field.map then
-			assert(type(default_value) == "table")
-			for k,v in pairs(default_value) do
-				assert(type(k) == "string")
-				local ok, v = assert(cf(v))
-				default_value[k] = v
-			end
-		else
-			local ok , v = assert(cf(default_value))
-			default_value = v
+	if field.array then
+		assert(type(default_value) == "table")
+		assert(field.array == 0 or #default_value == field.array , "Invalid array defaults")
+		for k,v in ipairs(default_value) do
+			default_value[k] = v
+		end
+	elseif field.map then
+		assert(type(default_value) == "table")
+		for k,v in pairs(default_value) do
+			assert(type(k) == "string")
+			default_value[k] = v
 		end
 	end
 	field.default = default_value
@@ -63,44 +54,8 @@ function fields_mt:__index(name)
 	return self
 end
 
-function basetype.int(v)
-	local c = math.tointeger(v)
-	if c then
-		return true, c
-	end
-	return false, tostring(v) .. " is not an integer"
-end
-
-function basetype.real(v)
-	local c = tonumber(v)
-	if c then
-		return true, c
-	end
-	return false, tostring(v) .. " is not a number"
-end
-
-function basetype.string(v)
-	if type(v) ~= "string" then
-		return false, tostring(v) .. " is not a string"
-	else
-		return true, v
-	end
-end
-
-function basetype.boolean(v)
-	if type(v) ~= "boolean" then
-		return false, tostring(v) .. " is not a boolean"
-	else
-		return true, v
-	end
-end
-
-function basetype.var(v)
-	return true, v
-end
-
 local function checktype(self, typename, name)
-	if basetype[typename] or self.map[typename] then
+	if self.map[typename] then
 		return
 	end
 	self._undefined[typename] = name
@@ -181,10 +136,11 @@ function schema:typedef(typename, aliastype, default_value)
 	} )
 end
 
-function schema:primtype(typename)
+function schema:primtype(typename, default_value)
 	self:_newtype {
 		name = typename,
 		type = "primtype",
+		default = default_value,
 	}
 end
 

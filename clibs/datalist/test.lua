@@ -12,6 +12,7 @@ local function compare_table(a,b)
 	if type(a) ~= "table" then
 		assert(a == b)
 	else
+		assert(type(b) == "table", "Not a table")
 		local k = keys(a)
 		assert(#k == #keys(b))
 		for k,v in pairs(a) do
@@ -40,6 +41,28 @@ local function F(str)
 	local ok = pcall(datalist.parse, str)
 	assert(not ok)
 end
+
+C [[
+--- &1
+x : 1
+--- *1
+--- *2
+--- &2
+y : &3 { 1, 2, 3}
+z : *1
+---
+*1 *2 *3
+]] {
+	{ x = 1 },
+	{ x = 1 },
+	{ y = {1,2,3}, z = { x = 1} },
+	{ y = {1,2,3}, z = { x = 1} },
+	{
+		{ x = 1 } ,
+		{ y = {1,2,3}, z = { x = 1 } },
+		{ 1,2,3 },
+	},
+}
 
 C [[
 ---

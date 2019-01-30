@@ -11,14 +11,18 @@ local get_modules = require "modules"
 local ecs = {}
 local world = {} ; world.__index = world
 
+function world:create_component(c)
+	assert(self._component_type[c], c)
+	return self._component_type[c].init()
+end
+
 local function new_component(w, eid, c, ...)
 	if c then
-		assert(w._component_type[c], c)
 		local entity = assert(w[eid])
 		if entity[c] then
 			error(string.format("multiple component defined:%s", c))
 		end
-		entity[c] = w._component_type[c].init()
+		entity[c] = w:create_component(c)
 		local nc = w._notifycomponent[c]
 		if nc then
 			table.insert(nc, eid)
@@ -273,15 +277,12 @@ function ecs.new_world(config)
 	w.schema:check()
 
 	for k,v in pairs(w.schema.map) do
-		w._component_type[k] = component(v, w.schema)
+		w._component_type[k] = component(v, w)
 	end
 
 	-- init system
-	local singletons = system.singleton(class.system, class.singleton_component)
-	local proxy = system.proxy(class.system, singletons)
-
+	local proxy = system.proxy(class.system, class.singleton_component)
 	local init_list = system.init_list(class.system)
-
 	local update_list = system.update_list(class.system, config.update_order)
 	local update_switch = system.list_switch(update_list)
 	function w.update ()

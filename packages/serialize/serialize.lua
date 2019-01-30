@@ -19,13 +19,11 @@ local function sortpairs(t)
     end
 end
 
-local function save_entity(w, msave, eid, args)
+local function save_entity(w, msave, eid)
     local e = assert(w[eid])
     local t = {}
-    args.eid = eid
     for name, cv in sortpairs(e) do
-        args.comp = name
-        t[name] = msave[name](cv, args)
+        t[name] = msave[name](cv)
     end
     return t
 end
@@ -34,11 +32,12 @@ local function save(w)
     if not method then
         method = create_method(w)
     end
-    local args = { world = w }
+    method.reset()
     local t = {}
     for _, eid in w:each "serialize" do
-        t[#t+1] = save_entity(w, method.save, eid, args)
+        t[#t+1] = save_entity(w, method.save, eid)
     end
+    method.reset()
     return t
 end
 

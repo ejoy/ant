@@ -5,7 +5,7 @@ local log = log and log(...) or print
 
 local system = {}	-- module system
 
-function system.singleton(sys, c)
+local function get_singleton(sys, c)
 	local s = {}
 	for _,v in pairs(sys) do
 		if v.singleton then
@@ -34,7 +34,8 @@ local function gen_proxy(sto, singletons)
 	return inst
 end
 
-function system.proxy(sys, singletons)
+function system.proxy(sys, c)
+	local singletons = get_singleton(sys, c)
 	local p = {}
 	for system_name, system_typeobject in pairs(sys) do
 		p[system_name] = gen_proxy(system_typeobject, singletons)
