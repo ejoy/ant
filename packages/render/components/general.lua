@@ -126,7 +126,7 @@ end
 schema:type "parent"
 	.eid "entityid"
 
-schema:typedef("color", "int[4]", {1,1,1,1})
+schema:typedef("color", "real[4]", {1,1,1,1})
 
 
 schema:type "character"

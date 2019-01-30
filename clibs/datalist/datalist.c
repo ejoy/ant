@@ -936,6 +936,54 @@ ltoken(lua_State *L) {
 	return 1;
 }
 
+static int
+lquote(lua_State *L) {
+	luaL_Buffer b;
+	luaL_buffinit(L, &b);
+	luaL_addchar(&b, '"');
+	size_t sz,i;
+	const char * str = luaL_checklstring(L, 1, &sz);
+	for (i=0;i<sz;i++) {
+		if (str[i] < 32) {
+			switch (str[i]) {
+			case 0:
+				luaL_addchar(&b, '\\');
+				luaL_addchar(&b, '0');
+				break;
+			case '\t':
+				luaL_addchar(&b, '\\');
+				luaL_addchar(&b, 't');
+				break;
+			case '\n':
+				luaL_addchar(&b, '\\');
+				luaL_addchar(&b, 'n');
+				break;
+			case '\r':
+				luaL_addchar(&b, '\\');
+				luaL_addchar(&b, 'r');
+				break;
+			default:
+				luaL_addchar(&b, '\\');
+				luaL_addchar(&b, 'x');
+				luaL_addchar(&b, str[i] / 16 + '0');
+				luaL_addchar(&b, str[i] % 16 + '0');
+				break;
+			}
+		} else if (str[i] == '"') {
+			luaL_addchar(&b, '\\');
+			luaL_addchar(&b, '"');
+		} else if (str[i] == '\\') {
+			luaL_addchar(&b, '\\');
+			luaL_addchar(&b, '\\');
+		} else {
+			luaL_addchar(&b, str[i]);
+		}
+	}
+	luaL_addchar(&b, '"');
+	luaL_pushresult(&b);
+	return 1;
+}
+
 LUAMOD_API int
 luaopen_datalist(lua_State *L) {
 	luaL_checkversion(L);
@@ -943,6 +991,7 @@ luaopen_datalist(lua_State *L) {
 		{ "parse", lparse },
 		{ "parse_list", lparse_list },
 		{ "token", ltoken },
+		{ "quote", lquote },
 		{ NULL, NULL },
 	};
 

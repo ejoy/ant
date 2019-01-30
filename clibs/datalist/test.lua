@@ -43,6 +43,16 @@ local function F(str)
 end
 
 C [[
+---
+  --- *e001
+--- &e001
+light:true
+]] {
+	{ { light = true } },
+	{ light = true },
+}
+
+C [[
 --- &1
 x : 1
 --- *1
@@ -164,3 +174,5 @@ first
 for _,v in ipairs(token) do
 	print(string.format("[%s]",v))
 end
+
+print(datalist.quotestring "hello\\\tworld\n\1\0")
