@@ -16,9 +16,9 @@ schema:type "state"
 
 schema:type "transmit_target"
 	.targetname "string"
+	.duration "real"
 
-schema:type "transmit"
-	.duration "real"	
+schema:type "transmit"	
 	.targets "transmit_target[]"
 
 schema:type "state_chain"
@@ -70,8 +70,9 @@ local function get_transmit(script)
 	end
 
 	local timepassed = 0
-	return function (ani, duration, deltatime)
-		local weight = math.min(1, timepassed / duration)
+	return function (ani, targettransmit, deltatime)
+		local tt_duration = targettransmit.duration
+		local weight = math.max(0, math.min(1, timepassed / tt_duration))
 		timepassed = timepassed + deltatime
 
 		local transmit = assert(ani.pose.transmit)
@@ -119,18 +120,10 @@ function sm:update()
 
 			local op = get_transmit(state_chain.script)
 			state_chain.transmit = function (deltatime)
-				return op(anicomp, transmit.duration, deltatime)
+				return op(anicomp, target, deltatime)
 			end
 
 			state_chain.target = nil
 		end
 	end
-end
-
-
-local smtest = ecs.system "state_machine_test"
-smtest.dependby "state_machine_test"
-
-function smtest:init()
-
 end

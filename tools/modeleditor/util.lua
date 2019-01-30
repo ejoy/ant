@@ -87,7 +87,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 	local eid = world:new_entity("position", "scale", "rotation",		
 	"mesh", "material", "can_render",
 	"sampleobj", 
-	"character",
+	"character", "state_chain",
 	"name")
 
 	local e = world[eid]

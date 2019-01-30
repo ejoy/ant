@@ -1,3 +1,4 @@
 return {
-	name = "ant.objcontroller"
+	name = "ant.objcontroller",
+	entry = "objcontroller"
 }
