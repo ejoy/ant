@@ -3,6 +3,7 @@ local world = ecs.world
 local schema = world.schema
 
 local asset = import_package "ant.asset"
+local timer = import_package "ant.timer"
 
 schema:type "animation_content"
 	.weight "real"
@@ -10,22 +11,28 @@ schema:type "animation_content"
 	.ref_path "resource"
 	.name "string"
 	.scale "real" (1)	
-	.looptime "int" (1)
+	.looptimes "int" (1)
 
 local animation_content = ecs.component "animation_content"
 
-local function calc_ratio(current, ani)
+local function calc_ratio(current_counter, ani)
 	local handle = assert(ani.handle)
-	local duration = handle:duration()
-	local localtime = (current - ani.starttime) * ani.scale
-	local frametime = localtime - duration * ani.looptime
-	frametime = math.min(duration, frametime)
+	local duration = handle:duration() * 1000
+	local localtime = timer.from_counter(current_counter - ani.start_counter) * ani.scale
+	local frametime
+	if ani.looptimes then
+		frametime = localtime - duration * ani.looptimes
+	else
+		frametime = localtime % duration
+	end
+	
+	frametime = math.max(0, math.min(duration, frametime))
 	return frametime / duration
 end
 
 function animation_content:init()
-	self.starttime = 0
-	self.ratio = 0	
+	self.start_counter = 0
+	self.ratio = 0
 	return self
 end
 
@@ -43,7 +50,7 @@ end
 
 schema:type "animation"
 	.anilist "animation_content[]"
-	.blendtype "blend"
+	.blendtype "string" ("blend")
 
 local ani = ecs.component "animation"
 	  
@@ -68,7 +75,6 @@ end
 
 
 local anisystem = ecs.system "animation_system"
-anisystem.singleton "timer"
 
 local ani_module = require "hierarchy.animation"
 local ik_module = require "hierarchy.ik"
@@ -87,9 +93,8 @@ local function deep_copy(t)
 	return t
 end
 
-function anisystem:update()
-	local timer = self.timer
-	local currenttime = timer.current
+function anisystem:update()	
+	local current_counter = timer.current_counter
 
 	for _, eid in world:each("animation") do
 		local e = world[eid]
@@ -127,9 +132,9 @@ function anisystem:update()
 				local anilist = {}
 				for _, aniref in ipairs(pose.anilist) do
 					local ani = assert(anilist_ref[aniref.idx])
-					ani.ratio = calc_ratio(currenttime, ani)
+					ani.ratio = calc_ratio(current_counter, ani)
 					ani.weight = aniref.weight
-					anilist[#anilist] = ani
+					anilist[#anilist+1] = ani
 				end
 				return anilist
 			end

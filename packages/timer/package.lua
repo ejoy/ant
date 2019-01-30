@@ -1,3 +1,4 @@
 return {
-    name = "ant.timer",
+	name = "ant.timer",
+	entry = "timer",
 }

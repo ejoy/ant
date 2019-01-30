@@ -1,32 +1,23 @@
-local ecs = ...
-local world = ecs.world
-local schema = world.schema
-
-schema:userdata "timer"
-local timer = ecs.component "timer"
-
-function timer:init()
-	return {
-		previous = 0,
-		delta = 0,
-		current = 0,
-	}
-end
-
-local timesystem = ecs.system "timesystem"
-timesystem.singleton "timer"
-
 local baselib = require "bgfx.baselib"
 
-function timesystem:update()
-	local timer = self.timer
-	local current = baselib.HP_counter()	
-	if timer.previous == 0 then
-		timer.previous = current
-	else
-		timer.previous = timer.current
-	end
+local timer = {
+	previous_counter=0,
+	current_counter=0,
+	-- in ms
+	deltatime=0,
+}; 
 
-	timer.current = current
-	timer.delta = baselib.HP_time(timer.previous)
+timer.__index = timer
+
+local freq = baselib.HP_frequency
+
+function timer.from_counter(counter, unit)
+	unit = unit or 1000
+	return (counter / freq) * unit
 end
+
+function timer.get_sys_counter()
+	return baselib.HP_counter()
+end
+
+return timer

@@ -16,14 +16,15 @@ ecs.import "ant.geometry"
 local assetmgr	= import_package "ant.asset"
 local math 		= import_package "ant.math"
 local renderpkg = import_package "ant.render"
+local timer 	= import_package "ant.timer"
 local ms 		= math.stack
 local camerautil= renderpkg.camera
+local aniutil 	= import_package "ant.animation".util
  
 ecs.tag "sampleobj"
 
 local model_ed_sys = ecs.system "model_editor_system"
 model_ed_sys.singleton "debug_object"
-model_ed_sys.singleton "timer"
 model_ed_sys.depend "camera_init"
 model_ed_sys.depend "character_controller"
 
@@ -109,7 +110,7 @@ local function check_create_sample_entity(skepath, anipaths, smpath)
 			world:remove_entity(sample_eid)
 		end
 
-		sample_eid = util.create_sample_entity(world, skepath, anipaths, smpath)
+		sample_eid = util.create_sample_entity(world, skepath, anipaths, smpath)		
 		enable_sample_visible()
 	end
 end
@@ -463,6 +464,12 @@ function model_ed_sys:init()
 
 	init_scene()
 	focus_sample()
+
+	local sample = sample_entity()
+	if sample then
+		local anicomp = sample.animation
+		aniutil.play_animation(anicomp, anicomp.pose.define.anilist)
+	end
 end
 
 local function auto_update_ani(deltatimeInSecond)
@@ -517,7 +524,6 @@ local function auto_update_ani(deltatimeInSecond)
 	end
 end
 
-function model_ed_sys:update()
-	local timer = self.timer
-	auto_update_ani(timer.delta * 0.001)
+function model_ed_sys:update()	
+	auto_update_ani(timer.deltatime * 0.001)
 end

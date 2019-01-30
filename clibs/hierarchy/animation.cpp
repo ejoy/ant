@@ -568,7 +568,7 @@ static void
 create_blend_layers(lua_State *L, int index, 
 	const ozz::animation::Skeleton *ske, 
 	blendlayers &bl) {
-	const int numani = (int)lua_rawlen(L, 3);
+	const int numani = (int)lua_rawlen(L, index);
 
 	bl.layers.resize(numani);
 	bl.results.resize(numani);
@@ -582,8 +582,8 @@ create_blend_layers(lua_State *L, int index,
 		sample_info si;
 		load_sample_info(L, -1, si);
 
-		auto &result = results[ii];
-		if (sample_animation(ske, si, &result)) {
+		auto &result = results[ii];		
+		if (!sample_animation(ske, si, &result)) {
 			luaL_error(L, "sampling animation failed!");
 		}
 
@@ -696,7 +696,7 @@ lblend_animations(lua_State *L) {
 
 static int
 lmotion(lua_State *L) {
-	auto ske = get_ske(L, 1);
+	auto ske = get_ske(L, 1);	
 	luaL_checktype(L, 3, LUA_TSTRING);
 	const char* blendtype = lua_tostring(L, 3);
 	auto aniresult = get_aniresult(L, ske, 4);

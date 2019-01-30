@@ -2,29 +2,32 @@ local ecs = ...
 local world = ecs.world
 local schema = world.schema
 
-schema.type "aniref"
+schema:type "aniref"
 	.idx "int"	-- TODO: need use name to referent which animation
 	.weight "real"
 
-schema.type "pose"
+schema:type "pose"
 	.anilist "aniref[]"
 	.name "string"
 
-schema.type "state"
+schema:type "state"
 	.name "string"
 	.pose "pose"
 
-schema.type "transmit_target"
+schema:type "transmit_target"
 	.targetname "string"
 
-schema.type "transmit"
+schema:type "transmit"
 	.duration "real"	
 	.targets "transmit_target[]"
 
-schema.type "state_chain"
+schema:type "state_chain"
 	.chain "state[]"
 	.transmits "transmit{}"
 	.script "resource"	--code for state transmit
+
+
+local timer = import_package "ant.timer"
 
 local state_chain = ecs.component "state_chain"
 function state_chain.init()
@@ -37,7 +40,6 @@ end
 
 local sm = ecs.system "state_machine"
 sm.dependby "animation_system"
-sm.singleton "timer"
 
 function sm:init()
 
@@ -79,8 +81,6 @@ local function get_transmit(script)
 end
 
 function sm:update()
-	local timer = self.timer
-
 	for _, eid in world:each "state_chain" do
 		local e = world[eid]
 		local state_chain = e.state_chain

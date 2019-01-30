@@ -2,17 +2,21 @@ local util = {}; util.__index = util
 
 local animodule = require "hierarchy.animation"		
 local asset = import_package "ant.asset"
+local timer = import_package "ant.timer"
 -- for animation
 function util.add_animation(comp, pkgname, respath, weight, weighttype)
 	weighttype = weighttype or "full"	-- can be 'full' or 'partial'
 	local aniresult = assert(comp.aniresult)
-	local numjoints = aniresult:count()
+	local numjoints = aniresult:count()	
 	table.insert(assert(comp.anilist), {
 		weight=weight, 
 		handle=asset.load(pkgname, respath).handle, 
 		ref_path=respath,
 		type=weighttype,
 		sampling_cache = animodule.new_sampling_cache(numjoints),
+		scale = 1,		
+		start_counter=0,
+		ratio = 0,
 	})
 end
 
@@ -41,17 +45,17 @@ function util.set_animation_weight(comp, aniidx, weight)
 	anilist[aniidx].weight = weight
 end
 
-function util.play_animation(comp, timer, anilistref)
-	local current = timer.current
+function util.play_animation(comp, anilistref)
+	local current = timer.get_sys_counter()
 	local anilist = comp.anilist
 	if anilistref then
 		for _, aniref in ipairs(anilistref) do
 			local ani = assert(anilist[aniref.idx])
-			ani.starttime = current
+			ani.start_counter = current
 		end
 	else
 		for _, ani in ipairs(anilist) do
-			ani.starttime = current
+			ani.start_counter = current
 		end
 	end
 end

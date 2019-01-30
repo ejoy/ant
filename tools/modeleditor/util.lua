@@ -107,11 +107,17 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 		local anicomp = e.animation
 		aniutil.init_animation(anicomp, e.skeleton)
 		local avgweight = 1 / #anipaths
-		for _, anipath in ipairs(anipaths) do
+		local anipose = anicomp.pose
+		local define = anipose.define
+		local activelist = {}
+		for idx, anipath in ipairs(anipaths) do
 			if anipath ~= emptypath then
 				aniutil.add_animation(anicomp, "ant.resources", anipath, avgweight)
+				activelist[#activelist+1] = {idx=idx, weight=avgweight}
 			end
 		end
+		define.anilist = activelist
+		define.name = "test"
 	end
 
 	

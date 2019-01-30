@@ -7,7 +7,7 @@ local world = ecs.world
 -- local bullet_world = require "bulletworld"
 
 ecs.import "ant.inputmgr"
-
+local timer = import_package "ant.timer"
 local bgfx = require "bgfx"
 local camera_util = import_package "ant.render".util
 local mathu = (import_package "ant.math").util
@@ -15,7 +15,6 @@ local stack = (import_package "ant.math").stack
 
 local char_controller_sys = ecs.system "charcontroller_system"
 char_controller_sys.singleton "message"
-char_controller_sys.singleton "timer"
 
 char_controller_sys.depend "message_system"
 char_controller_sys.depend "camera_init"  -- new use mode 
@@ -435,7 +434,7 @@ function char_controller_sys:update()
     local camera = world:first_entity("main_camera")
     local pos = ms(camera.position,"T")
 
-    local deltaTime =  self.timer.delta
+    local deltaTime =  timer.deltatime
     -- print("deltaTime",deltaTime)
     move_step( camera, pos, deltaTime, ms, Physics )
 

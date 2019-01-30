@@ -1,23 +1,19 @@
 local ecs = ...
-
 local world = ecs.world
 
-local math3d = import_package "ant.math"
-local ms = math3d.stack
+local timer = import_package "ant.timer"
 
 local objutil = require "util"
 
 local cc = ecs.system "character_controller"
 cc.depend "objcontroller_system"
-cc.singleton "timer"
+
 
 local objctrller = require "objcontroller"
 
 function cc:init()
 	-- TODO: we need to control the character state machine after "state_machine" on animation is finished, 
 	-- then let the state machine to control the charather
-	local timer = self.timer
-
 	objctrller.register {
 		tigger = {jump = {{name="keyboard", key = " ", press=true, state={}}}}
 	}
@@ -26,7 +22,7 @@ function cc:init()
 		local character = assert(world:first_entity("character"))
 		
 		local movespeed = character.character.movespeed
-		local deltatime = timer.delta * 0.001 * value
+		local deltatime = timer.deltatime * 0.001 * value
 		local delta_dis = movespeed * deltatime		
 		if x then
 			x = x * delta_dis			
