@@ -85,11 +85,6 @@ function uniformdata.save(v)
 	end
 end
 
-function uniformdata.load(s)
-	assert(type(s) == "table")
-	return s
-end
-
 schema:type "uniform"
 	.name "string"
 	.type "string"

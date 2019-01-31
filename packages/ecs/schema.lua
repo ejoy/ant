@@ -96,7 +96,11 @@ function fields_mt:__call(typename)
 	assert(self._field[item.name] == nil)
 
 	if field_n > 1 then
-		item.attrib = attrib
+		local t = {}
+		for _, v in ipairs(attrib) do
+			t[v] = true
+		end
+		item.attrib = t
 	end
 
 	table.insert(self._object, item)
