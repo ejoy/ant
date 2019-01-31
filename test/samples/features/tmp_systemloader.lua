@@ -82,9 +82,8 @@ function init_loader:init()
 	local s = serialize.stringify(world, t1)
 	local nativeio = require 'nativeio'
 	assert(assert(nativeio.open('D:\\work\\ant\\serialize.txt', 'w')):write(s)):close()
-	--for _, eid in world:each "serialize" do
-	--	world:remove_entity(eid)
-	--end
-	local t2 = serialize.parse(s)
-	--serialize.load(world, t2)
+	for _, eid in world:each "serialize" do
+		world:remove_entity(eid)
+	end
+	serialize.load(world, s)
 end

@@ -3,6 +3,23 @@ local method = require "method"
 local pool
 local typeinfo
 
+local function sortpairs(t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    table.sort(sort)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
 local foreach_save_1
 local function foreach_save_3(component, c)
     if c.method and c.method.save then
@@ -25,7 +42,7 @@ local function foreach_save_2(component, c)
     end
     if c.map then
 		local ret = {}
-        for k, v in pairs(component) do
+        for k, v in sortpairs(component) do
 			ret[#ret+1] = {k , foreach_save_3(v, c)}
 		end
         return ret
@@ -54,6 +71,10 @@ function foreach_save_1(component, name)
         if c.method and c.method.save then
             c.method.save(ret)
         end
+        if c.method and c.method.load then
+            load[c.name] = load[c.name] or {}
+            table.insert(load[c.name], ret)
+        end
     else
         ret = foreach_save_2(component, c)
     end
@@ -63,28 +84,14 @@ function foreach_save_1(component, name)
     return ret
 end
 
-local function sortpairs(t)
-    local sort = {}
-    for k in pairs(t) do
-        sort[#sort+1] = k
-    end
-    table.sort(sort)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
-end
-
 local function save_entity(w, eid)
     local e = assert(w[eid])
     local t = {}
     for name, cv in sortpairs(e) do
         t[#t+1] = { name, foreach_save_1(cv, name) }
+        if name == 'serialize' then
+            t.serialize = cv
+        end
     end
     return t
 end
@@ -94,11 +101,18 @@ local function save(w)
     pool = {}
     load = {}
     typeinfo = w.schema.map
-    local t = {}
+    local entity = {}
     for _, eid in w:each "serialize" do
-        t[#t+1] = save_entity(w, eid)
+        entity[#entity+1] = save_entity(w, eid)
     end
-    return t
+    local component = {}
+    for name, v in pairs(load) do
+        component[#component+1] = { name, v }
+    end
+
+    table.sort(entity, function (a,b) return a.serialize < b.serialize end)
+    table.sort(component, function (a,b) return a[1] < b[1] end)
+    return { entity, component }
 end
 
 return save

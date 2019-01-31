@@ -29,7 +29,8 @@ end
 function vector.load(s)
     s.type = "v4"
     local v = math3d.ref "vector"
-    v(s)
+    --v(s)
+    ms(v, s, "=")
     return v
 end
 

@@ -44,44 +44,48 @@ local function gen_init(c, w)
     end
 end
 
-local foreach_delete
-local function foreach_single_delete(component, c, schema)
+local foreach_delete_1
+local function foreach_delete_2(component, c, schema)
     if c.method and c.method.delete then
         c.method.delete(component)
         return
     end
     if schema.map[c.type] then
-        foreach_delete(component, schema.map[c.type], schema)
+        foreach_delete_1(component, schema.map[c.type], schema)
         return
     end
 end
 
-function foreach_delete(component, c, schema)
+function foreach_delete_1(component, c, schema)
+    if c.method and c.method.delete then
+        c.method.delete(component)
+        return
+    end
     if not c.type then
         for _, v in ipairs(c) do
-            foreach_delete(component, v, schema)
+            foreach_delete_1(component, v, schema)
         end
         return
     end
     if c.array then
         local n = c.array == 0 and #component or c.array
         for i = 1, n do
-            foreach_single_delete(component[i], c, schema)
+            foreach_delete_2(component[i], c, schema)
         end
         return
     end
     if c.map then
         for _, v in pairs(component) do
-            foreach_single_delete(v, c, schema)
+            foreach_delete_2(v, c, schema)
         end
         return
     end
-    foreach_single_delete(component, c, schema)
+    foreach_delete_2(component, c, schema)
 end
 
 local function gen_delete(c, schema)
     return function(component)
-        return foreach_delete(component, c, schema)
+        return foreach_delete_1(component, c, schema)
     end
 end
 

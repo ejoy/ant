@@ -9,12 +9,13 @@
 
 #define MAX_DEPTH 256
 #define SHORT_STRING 1024
-#define REF_CACHE 2
-#define REF_UNSOLVED 3
+#define CONVERTER 2
+#define REF_CACHE 3
+#define REF_UNSOLVED 4
 
 enum token_type {
-	TOKEN_OPEN,	// 0 {
-	TOKEN_CLOSE,	// 1 }
+	TOKEN_OPEN,	// 0 { [
+	TOKEN_CLOSE,	// 1 } ]
 	TOKEN_MAP,	// 2 = :
 	TOKEN_LIST,	// 3 ---
 	TOKEN_STRING,	// 4
@@ -103,7 +104,7 @@ is_hexnumber(struct lex_state *LS) {
 
 static void
 parse_atom(struct lex_state *LS) {
-	static const char * separator = " \t\r\n,{}:=\"'";
+	static const char * separator = " \t\r\n,{}[]:=\"'";
 	const char * ptr = LS->source + LS->position;
 	const char * endptr = LS->source + LS->sz;
 	char head = *ptr;
@@ -195,11 +196,13 @@ next_token(struct lex_state *LS) {
 		case ',':
 			break;
 		case '{':
+		case '[':
 			LS->n.type = TOKEN_OPEN;
 			LS->n.from = LS->position;
 			LS->n.to = ++LS->position;
 			return 1;
 		case '}':
+		case ']':
 			LS->n.type = TOKEN_CLOSE;
 			LS->n.from = LS->position;
 			LS->n.to = ++LS->position;
@@ -484,7 +487,7 @@ static void
 new_table(lua_State *L, int layer, void *ref) {
 	if (layer >= MAX_DEPTH)
 		luaL_error(L, "too many layers");
-	luaL_checkstack(L, 4, NULL);
+	luaL_checkstack(L, 8, NULL);
 	if (ref == NULL) {
 		lua_newtable(L);
 	} else {
@@ -554,10 +557,13 @@ parse_ref(lua_State *L, struct lex_state *LS) {
 static void parse_bracket(lua_State *L, struct lex_state *LS, int layer, void *tag);
 
 static int
-closed_bracket(lua_State *L, struct lex_state *LS) {
+closed_bracket(lua_State *L, struct lex_state *LS, int bracket) {
 	for (;;) {
 		switch (LS->c.type) {
 		case TOKEN_CLOSE:
+			if (token_symbol(LS) != bracket) {
+				invalid(L, LS, "Invalid close bracket");
+			}
 			read_token(L, LS);
 			return 1;
 		case TOKEN_NEWLINE:
@@ -570,7 +576,7 @@ closed_bracket(lua_State *L, struct lex_state *LS) {
 }
 
 static void
-parse_bracket_map(lua_State *L, struct lex_state *LS, int layer) {
+parse_bracket_map(lua_State *L, struct lex_state *LS, int layer, int bracket) {
 	int i = 1;
 	int aslist = LS->aslist;
 	do {
@@ -612,11 +618,11 @@ parse_bracket_map(lua_State *L, struct lex_state *LS, int layer) {
 		} else {
 			lua_settable(L, -3);
 		}
-	} while (!closed_bracket(L, LS));
+	} while (!closed_bracket(L, LS, bracket));
 }
 
 static void
-parse_bracket_sequence(lua_State *L, struct lex_state *LS, int layer) {
+parse_bracket_sequence(lua_State *L, struct lex_state *LS, int layer, int bracket) {
 	int n = 1;
 	for (;;) {
 		switch (LS->c.type) {
@@ -624,6 +630,9 @@ parse_bracket_sequence(lua_State *L, struct lex_state *LS, int layer) {
 			read_token(L, LS);
 			continue;	// skip ident
 		case TOKEN_CLOSE:
+			if (token_symbol(LS) != bracket) {
+				invalid(L, LS, "Invalid close bracket");
+			}
 			read_token(L, LS);	// consume }
 			return;
 		case TOKEN_REF:
@@ -632,6 +641,7 @@ parse_bracket_sequence(lua_State *L, struct lex_state *LS, int layer) {
 		case TOKEN_OPEN:
 			// No tag in sequence
 			parse_bracket(L, LS, layer, NULL);
+			break;
 		default:
 			push_token(L, LS, &LS->c);
 			read_token(L, LS);
@@ -641,22 +651,42 @@ parse_bracket_sequence(lua_State *L, struct lex_state *LS, int layer) {
 	}
 }
 
-static void
-parse_bracket(lua_State *L, struct lex_state *LS, int layer, void *ref) {
+static inline void
+parse_bracket_(lua_State *L, struct lex_state *LS, int layer, void *ref, int bracket) {
 	new_table(L, layer, ref);
 	switch (read_token(L, LS)) {
 	case TOKEN_CLOSE:
+		if (token_symbol(LS) != bracket) {
+			invalid(L, LS, "Invalid close bracket");
+		}
+		read_token(L, LS);	// consume }
 		return;
 	case TOKEN_ATOM:
 		if (LS->n.type == TOKEN_MAP) {
-			parse_bracket_map(L, LS, layer);
+			parse_bracket_map(L, LS, layer, bracket);
 			return;
 		}
 		break;
 	default:
 		break;
 	}
-	parse_bracket_sequence(L, LS, layer);
+	parse_bracket_sequence(L, LS, layer, bracket);
+}
+
+static void 
+parse_bracket(lua_State *L, struct lex_state *LS, int layer, void *ref) {
+	char bracket = token_symbol(LS);
+	if (bracket == '[') {
+		if (ref) {
+			invalid(L, LS, "[] can't has a tag");
+		}
+		parse_bracket_(L, LS, layer, ref, ']');
+		lua_pushvalue(L, CONVERTER);
+		lua_insert(L, -2);
+		lua_call(L, 1, 1);
+	} else {
+		parse_bracket_(L, LS, layer, ref, '}');
+	}
 }
 
 static int
@@ -877,16 +907,27 @@ init_lex(lua_State *L, int index, struct lex_state *LS) {
 		invalid(L, LS, "Invalid token");
 }
 
+static int
+dummy_converter(lua_State *L) {
+	return 1;
+}
+
 static void
 parse_all(lua_State *L, struct lex_state *LS) {
 	int t = lua_type(L, 2);
+	if (t != LUA_TFUNCTION) {
+		lua_pushcfunction(L, dummy_converter);
+		lua_insert(L, 2);
+	} else {
+		t = lua_type(L, 3);
+	}
 	if (t == LUA_TTABLE || t == LUA_TUSERDATA) {
-		lua_settop(L, 2);
+		lua_settop(L, 3);
 	} else {
 		new_table(L, 0, NULL);
 	}
-	lua_newtable(L);	// ref cache (index 2/REF_CACHE)
-	lua_newtable(L);	// unsolved ref (index 3/REF_UNSOLVED)
+	lua_newtable(L);	// ref cache (index 3/REF_CACHE)
+	lua_newtable(L);	// unsolved ref (index 4/REF_UNSOLVED)
 	lua_rotate(L, -3, 2);
 	int tt = read_token(L, LS);
 	if (tt == TOKEN_EOF)

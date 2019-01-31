@@ -46,41 +46,62 @@ local function stringify_basetype(name, v)
     assert('unknown base type:'..name)
 end
 
-local function stringify_array_value(c, array, v)
+local function stringify_array_value(c, array, v, load)
+    if not load and c.method and c.method.load then
+        load = c.name
+    end
     if c.type ~= 'primtype' then
-        return stringify_array_value(typeinfo[c.type], array, v)
+        return stringify_array_value(typeinfo[c.type], array, v, load)
     end
     local n = array == 0 and #v or array
     local s = {}
     for i = 1, n do
         s[i] = stringify_basetype(c.name, v[i])
     end
+    if load then
+        if load == 'vector' or load == 'matrix' then
+            return '['..table.concat(s, ',')..']'
+        end
+        return '['..load..',{'..table.concat(s, ',')..'}]'
+    end
     return '{'..table.concat(s, ',')..'}'
 end
 
-local function stringify_map_value(c, map, v)
+local function stringify_map_value(c, v, load)
+    if not load and c.method and c.method.load then
+        load = c.name
+    end
     if c.type ~= 'primtype' then
-        return stringify_map_value(typeinfo[c.type], map, v)
+        return stringify_map_value(typeinfo[c.type], v, load)
     end
     local s = {}
     for i = 1, #v do
         s[#s+1] = v[i][1]..':'..stringify_basetype(c.name, v[i][2])
     end
+    if load then
+        return '['..load..',{'..table.concat(s, ',')..'}]'
+    end
     return '{'..table.concat(s, ',')..'}'
 end
 
-local function stringify_value(c, v)
+local function stringify_value(c, v, load)
     assert(c.type)
     if c.array then
-        return stringify_array_value(c, c.array, v)
+        return stringify_array_value(c, c.array, v, load)
     end
     if c.map then
-        return stringify_map_value(c, c.map, v)
+        return stringify_map_value(c, v, load)
     end
     if c.type == 'primtype' then
+        if load then
+            return '['..load..','..stringify_basetype(c.name, v)..']'
+        end
         return stringify_basetype(c.name, v)
     end
-    return stringify_value(typeinfo[c.type], v)
+    if not load and c.method and c.method.load then
+        load = c.name
+    end
+    return stringify_value(typeinfo[c.type], v, load)
 end
 
 local function stringify_component_value(name, v)
@@ -106,15 +127,13 @@ local function stringify_component_children(c, v)
     if c.array then
         local n = c.array == 0 and #v or c.array
         for i = 1, n do
-            out[#out+1] = '  ---'
-            stringify_component_ref(typeinfo[c.type], v[i], 1)
+            out[#out+1] = ('  --- %s'):format(stringify_component_value(typeinfo[c.type].name, v[i]))
         end
         return
     end
     if c.map then
         for i = 1, #v do
-            out[#out+1] = ('  %s:'):format(v[i][1])
-            stringify_component_ref(typeinfo[c.type], v[i][2], 2)
+            out[#out+1] = ('  %s:%s'):format(v[i][1], stringify_component_value(typeinfo[c.type].name, v[i][2]))
         end
         return
     end
@@ -152,20 +171,41 @@ end
 
 local function stringify(w, t)
     pool = {}
-    out = {}
     stack = {}
     typeinfo = w.schema.map
     cid = 0
-    prefix(#t)
+    
+    local entity, component = t[1], t[2]
+    prefix(#entity)
+
+    local out1, out2, out3 = {}, {}, {}
+
+    out = out1
     out[#out+1] = '---'
-    for i in ipairs(t) do
+    for i in ipairs(entity) do
         out[#out+1] = ('  --- *%x'):format(e_prefix + i)
     end
-    for i, e in ipairs(t) do
+
+    out = out3
+    for i, e in ipairs(entity) do
         out[#out+1] = ('--- &%x'):format(e_prefix + i)
         stringify_entity(e)
     end
-    return table.concat(out, '\n')
+
+    out = out2
+    out[#out+1] = '---'
+    for _, cs in ipairs(component) do
+        out[#out+1] = '  ---'
+        out[#out+1] = ('    --- %s'):format(cs[1])
+        for _, v in ipairs(cs[2]) do
+            out[#out+1] = ('    --- *%x'):format(pool[v])
+        end
+    end
+
+    table.move(out2, 1, #out2, #out1+1, out1)
+    table.move(out3, 1, #out3, #out1+1, out1)
+    out1[#out1+1] = ''
+    return table.concat(out1, '\n')
 end
 
 return stringify

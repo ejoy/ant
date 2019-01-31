@@ -16,6 +16,17 @@ function world:create_component(c)
 	return self._component_type[c].init()
 end
 
+function world:register_component(eid, c)
+	local nc = self._notifycomponent[c]
+	if nc then
+		table.insert(nc, eid)
+	end
+	local set = self._set[c]
+	if set then
+		set[#set+1] = eid
+	end
+end
+
 local function new_component(w, eid, c, ...)
 	if c then
 		local entity = assert(w[eid])
@@ -23,14 +34,7 @@ local function new_component(w, eid, c, ...)
 			error(string.format("multiple component defined:%s", c))
 		end
 		entity[c] = w:create_component(c)
-		local nc = w._notifycomponent[c]
-		if nc then
-			table.insert(nc, eid)
-		end
-		local set = w._set[c]
-		if set then
-			set[#set+1] = eid
-		end
+		w:register_component(eid, c)
 		new_component(w, eid, ...)
 	end
 end

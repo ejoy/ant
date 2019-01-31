@@ -44,10 +44,13 @@ end
 
 C [[
 ---
+{}
+---
   --- *e001
 --- &e001
 light:true
 ]] {
+	{ {} },
 	{ { light = true } },
 	{ light = true },
 }
@@ -175,4 +178,14 @@ for _,v in ipairs(token) do
 	print(string.format("[%s]",v))
 end
 
-print(datalist.quotestring "hello\\\tworld\n\1\0")
+print(datalist.quote "hello\\\tworld\n\1\0")
+
+local v = datalist.parse([[ [1,2,3,4] ]], function(v)
+	local s = 0
+	for _, v in ipairs(v) do
+		s = s + v
+	end
+	return s
+end)
+
+print(v[1])
