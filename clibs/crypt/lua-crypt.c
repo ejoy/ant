@@ -1002,7 +1002,7 @@ init_uuid_header() {
 	uuid_header[3] = pid & 0xff;
 	uuid_header[4] = (pid >> 8) & 0xff;
 	
-	uint32_t c = h ^ time(NULL) ^ (uintptr_t)&h;
+	uint32_t c = (uint32_t)(h ^ time(NULL) ^ (uintptr_t)&h);
 	if (c == 0) {
 		c = 1;
 	}
@@ -1063,7 +1063,7 @@ init_uuid64_header() {
 	uuid64_header[0] = h & 0xff;
 	uuid64_header[1] = (h>>8) & 0xff;
 	
-	uint32_t c = h ^ time(NULL) ^ (uintptr_t)&h;
+	uint32_t c = (uint32_t)(h ^ time(NULL) ^ (uintptr_t)&h);
 	if (c == 0) {
 		c = 1;
 	}
@@ -1111,7 +1111,7 @@ luaopen_skynet_crypt(lua_State *L) {
 		init = 1 ;
 		init_uuid_header();
 		init_uuid64_header();
-		srand(time(NULL));
+		srand((uint32_t)time(NULL));
 	}
 	luaL_Reg l[] = {
 		{ "hashkey", lhashkey },

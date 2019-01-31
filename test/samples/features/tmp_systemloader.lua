@@ -27,6 +27,7 @@ init_loader.depend "transparency_filter_system"
 init_loader.depend "entity_rendering"
 init_loader.depend "camera_controller"
 init_loader.depend "skinning_system"
+init_loader.depend "timesystem"
 
 
 local function create_animation_test(timer)
@@ -54,15 +55,17 @@ local function create_animation_test(timer)
 	
 	local anicomp = anitest.animation
 	aniutil.init_animation(anicomp, anitest.skeleton)
-	local anidefine = anicomp.pose.define
-	local anidefinelist = anidefine.anilist
+	local anidefine = anicomp.pose.define	
+	if anidefine.anilist == nil then
+		anidefine.anilist = {}		
+	end
 	local weight = 1 / #anipaths
 	for idx, anipath in ipairs(anipaths) do
 		aniutil.add_animation(anicomp, "ant.resources", anipath, weight)
-		anidefinelist[#anidefinelist+1] = {idx = idx, weight = weight}
+		anidefine.anilist[#anidefine.anilist+1] = {idx = idx, weight = weight}
 	end
 
-	aniutil.play_animation(anicomp, timer, anidefinelist)
+	aniutil.play_animation(anicomp, anidefine)
 
 	computil.add_material(anitest.material, "ant.resources", fs.path "skin_model_sample.material")
 end
