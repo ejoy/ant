@@ -11,7 +11,7 @@ schema:type "animation_content"
 	.ref_path "resource"
 	.name "string"
 	.scale "real" (1)	
-	.looptimes "int" (1)
+	.looptimes "int" (0)
 
 local animation_content = ecs.component "animation_content"
 
@@ -20,7 +20,7 @@ local function calc_ratio(current_counter, ani)
 	local duration = handle:duration() * 1000
 	local localtime = timer.from_counter(current_counter - ani.start_counter) * ani.scale
 	local frametime
-	if ani.looptimes then
+	if ani.looptimes > 0 then
 		frametime = localtime - duration * ani.looptimes
 	else
 		frametime = localtime % duration
@@ -36,13 +36,13 @@ function animation_content:init()
 	return self
 end
 
-function animation_content:save()
-	local name = self.name
-	if name == nil or name == "" then
-		local filename = self.ref_path.filename
-		self.name = filename:filename()
-	end
-end
+-- function animation_content:save()
+-- 	local name = self.name
+-- 	if name == nil or name == "" then
+-- 		local filename = self.ref_path.filename
+-- 		self.name = filename:filename()
+-- 	end
+-- end
 
 function animation_content:load()
 	self.handle = asset.load(self.ref_path.package, self.ref_path.filename)

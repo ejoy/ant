@@ -11,12 +11,14 @@ function util.add_animation(comp, pkgname, respath, weight, weighttype)
 	table.insert(assert(comp.anilist), {
 		weight=weight, 
 		handle=asset.load(pkgname, respath).handle, 
-		ref_path={pkgname, respath},
-		type=weighttype,
+		ref_path={package=pkgname, filename=respath},
+		weighttype=weighttype,
 		sampling_cache = animodule.new_sampling_cache(numjoints),
 		scale = 1,		
 		start_counter=0,
+		name = "",
 		ratio = 0,
+		looptimes=0,
 	})
 end
 

@@ -91,12 +91,12 @@ schema:type "uniform"
 	.value "uniformdata"
 
 schema:type "properties"
-	.textures "texture{}"
-	.uniforms "uniform{}"
+	["opt"].textures "texture{}"
+	["opt"].uniforms "uniform{}"
 
 schema:type "material_content"
 	.path "resource"
-	.properties "properties"	
+	["opt"].properties "properties"	
 
 schema:type "material"
 	.content "material_content[]"

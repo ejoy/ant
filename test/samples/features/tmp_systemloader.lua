@@ -44,7 +44,7 @@ local function create_animation_test(timer)
 		"position", "scale", "rotation",
 		"can_render", "mesh", "material",
 		"animation", "skeleton", "skinning_mesh",
-		"name")
+		"name", "serialize")
 
 	local anitest = world[anitest_eid]
 	anitest.name = "animation_entity"
