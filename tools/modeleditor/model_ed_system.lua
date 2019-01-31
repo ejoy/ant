@@ -129,7 +129,7 @@ local function update_static_duration_value()
 			local anipath = get_sel_ani()
 			local anihandle = nil
 			for _, ani in ipairs(ani.anilist) do
-				if ani.ref_path == fs.path(anipath) then
+				if ani.ref_path[2] == fs.path(anipath) then
 					anihandle = ani.handle
 				end
 			end
