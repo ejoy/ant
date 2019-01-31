@@ -978,7 +978,7 @@ lxor_str(lua_State *L) {
 }
 
 static uint8_t uuid_header[5];
-static uint32_t uuid_counter;
+static uint32_t uuid_counter = 0;
 
 static void
 init_uuid_header() {
@@ -1037,6 +1037,66 @@ luuid(lua_State *L) {
 	return 1;
 }
 
+
+static uint8_t uuid64_header[2];
+static uint32_t uuid64_counter = 0;
+
+static void
+init_uuid64_header() {
+	if (uuid64_counter) {
+		// already init
+		return;
+	}
+	pid_t pid = getpid();
+	uint32_t h = 0;
+	char hostname[256];
+	if (getcomputername(hostname, sizeof(hostname))) {
+		int i;
+		for (i=0;i<sizeof(hostname) && hostname[i];i++) {
+			h = h ^ ((h<<5)+(h>>2)+hostname[i]);
+ 		}
+		h ^= i;
+	}
+	h ^= pid;
+	h = (h & 0xFFFF) ^ ((h >> 16) & 0xFFFF);
+
+	uuid64_header[0] = h & 0xff;
+	uuid64_header[1] = (h>>8) & 0xff;
+	
+	uint32_t c = h ^ time(NULL) ^ (uintptr_t)&h;
+	if (c == 0) {
+		c = 1;
+	}
+	uuid64_counter = c;
+}
+
+static int
+luuid64(lua_State *L) {
+	uint8_t uuid[8];
+	time_t ti = time(NULL);
+	uint32_t id = ++uuid64_counter;	// NOTICE: not thread safe
+
+	uuid[0] = (ti>>16) & 0xff;;
+	uuid[1] = (ti>>8) & 0xff;
+	uuid[2] = ti & 0xff;
+	memcpy(uuid+3 , uuid64_header, 2);
+	uuid[5] = (id>>16) & 0xff; 
+	uuid[6] = (id>>8) & 0xff; 
+	uuid[7] = id & 0xff;
+
+	static char hex[] = "0123456789abcdef";
+	char tmp[sizeof(uuid)*2];
+	char *buffer = tmp;
+	int i;
+	for (i=0;i<sizeof(uuid);i++) {
+		buffer[i*2] = hex[uuid[i] >> 4];
+		buffer[i*2+1] = hex[uuid[i] & 0xf];
+	}
+	lua_pushlstring(L, buffer, sizeof(uuid) * 2);
+
+	return 1;
+}
+
 // defined in lsha1.c
 int lsha1(lua_State *L);
 int lhmac_sha1(lua_State *L);
@@ -1050,6 +1110,7 @@ luaopen_skynet_crypt(lua_State *L) {
 		// Don't need call srandom more than once.
 		init = 1 ;
 		init_uuid_header();
+		init_uuid64_header();
 		srand(time(NULL));
 	}
 	luaL_Reg l[] = {
@@ -1071,6 +1132,7 @@ luaopen_skynet_crypt(lua_State *L) {
 		{ "hmac_hash", lhmac_hash },
 		{ "xor_str", lxor_str },
 		{ "uuid", luuid },
+		{ "uuid64", luuid64 },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);

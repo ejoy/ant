@@ -1,7 +1,9 @@
 local method = require "method"
+local crypt = require "crypt"
 
 local pool
 local typeinfo
+local ids
 
 local function sortpairs(t)
     local sort = {}
@@ -61,7 +63,9 @@ function foreach_save_1(component, name)
     end
     local ret 
     if not c.type then
-        ret = {}
+        ret = {
+            __id = ids[component] and ids[component] or crypt.uuid64()
+        }
         for _, v in ipairs(c) do
             --TODO: 现在所有字段都是可选字段
             if component[v.name] ~= nil then
@@ -86,14 +90,23 @@ end
 
 local function save_entity(w, eid)
     local e = assert(w[eid])
-    local t = {}
+    local t = {
+        __id = ids[e] and ids[e] or crypt.uuid64()
+    }
     for name, cv in sortpairs(e) do
         t[#t+1] = { name, foreach_save_1(cv, name) }
-        if name == 'serialize' then
-            t.serialize = cv
-        end
     end
     return t
+end
+
+local function update_deserialize(w)
+    ids = {}
+    if not w.__deserialize then
+        return
+    end
+    for id, t in pairs(w.__deserialize) do
+        ids[t] = tostring(id):sub(11)
+    end
 end
 
 local function save(w)
@@ -101,16 +114,18 @@ local function save(w)
     pool = {}
     load = {}
     typeinfo = w.schema.map
+    update_deserialize(w)
     local entity = {}
     for _, eid in w:each "serialize" do
-        entity[#entity+1] = save_entity(w, eid)
+        entity[#entity+1] = save_entity(w, eid, ids)
     end
+
     local component = {}
     for name, v in pairs(load) do
         component[#component+1] = { name, v }
     end
 
-    table.sort(entity, function (a,b) return a.serialize < b.serialize end)
+    table.sort(entity, function(a, b) return a.__id < b.__id end)
     table.sort(component, function (a,b) return a[1] < b[1] end)
     return { entity, component }
 end

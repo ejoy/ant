@@ -16,11 +16,10 @@ local function getPost(w)
 end
 
 local function load_entity(w, tree)
-    local eid = w:new_entity()
-    local e = w[eid]
-    for name, value in pairs(tree) do
+    local eid = w:register_entity()
+    w[eid] = tree
+    for name in pairs(tree) do
         w:register_component(eid, name)
-        e[name] = value
     end
     return eid
 end
@@ -32,7 +31,7 @@ local function load(w, s)
         return post[type](value)
     end
 
-    local res = datalist.parse(s, function(t)
+    local res, ids = datalist.parse(s, function(t)
         if type(t[1]) == 'number' then
             if #t == 4 or #t == 3 then
                 return doPost('vector', t)
@@ -44,6 +43,7 @@ local function load(w, s)
         end
         return doPost(t[1], t[2])
     end)
+    w.__deserialize = ids
 
     local entity, component = res[1], res[2]
     for _, tree in ipairs(entity) do

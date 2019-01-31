@@ -27,6 +27,13 @@ function world:register_component(eid, c)
 	end
 end
 
+function world:register_entity()
+	local entity_id = self._entity_id + 1
+	self._entity_id = entity_id
+	self._entity[entity_id] = true
+	return entity_id
+end
+
 local function new_component(w, eid, c, ...)
 	if c then
 		local entity = assert(w[eid])

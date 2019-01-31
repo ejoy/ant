@@ -4,16 +4,6 @@ local pool
 local out
 local stack
 local typeinfo
-local e_prefix
-local c_prefix
-local cid 
-
-local function prefix(len)
-    local n = #('%x'):format(len) + 1
-    assert(n <= 7)
-    e_prefix = 0xe*(1<<(4*n))
-    c_prefix = 0xc*(1<<(4*(n+1)))
-end
 
 local function convertreal(v)
     local g = ('%g'):format(v)
@@ -111,11 +101,10 @@ local function stringify_component_value(name, v)
         return stringify_value(c, v)
     end
     if not pool[v] then
-        cid = cid + 1
-        pool[v] = c_prefix + cid
+        pool[v] = v.__id
         stack[#stack+1] = {c, v}
     end
-    return ('*%x'):format(pool[v])
+    return ('*%s'):format(pool[v])
 end
 
 local stringify_component_ref
@@ -155,6 +144,7 @@ function stringify_component_ref(c, v, lv)
 end
 
 local function stringify_entity(e)
+    out[#out+1] = ('--- &%s'):format(e.__id)
     for _, c in ipairs(e) do
         local k, v = c[1], c[2]
         out[#out+1] = ('%s:%s'):format(k, stringify_component_value(k, v))
@@ -164,7 +154,7 @@ local function stringify_entity(e)
         local c, v = stack[1][1], stack[1][2]
         table.remove(stack, 1)
 
-        out[#out+1] = ('--- &%x'):format(pool[v])
+        out[#out+1] = ('--- &%s'):format(pool[v])
         stringify_component_ref(c, v, 0)
     end
 end
@@ -176,19 +166,16 @@ local function stringify(w, t)
     cid = 0
     
     local entity, component = t[1], t[2]
-    prefix(#entity)
-
     local out1, out2, out3 = {}, {}, {}
 
     out = out1
     out[#out+1] = '---'
-    for i in ipairs(entity) do
-        out[#out+1] = ('  --- *%x'):format(e_prefix + i)
+    for _, e in ipairs(entity) do
+        out[#out+1] = ('  --- *%s'):format(e.__id)
     end
 
     out = out3
-    for i, e in ipairs(entity) do
-        out[#out+1] = ('--- &%x'):format(e_prefix + i)
+    for _, e in ipairs(entity) do
         stringify_entity(e)
     end
 
@@ -197,8 +184,13 @@ local function stringify(w, t)
     for _, cs in ipairs(component) do
         out[#out+1] = '  ---'
         out[#out+1] = ('    --- %s'):format(cs[1])
+        local l = {}
         for _, v in ipairs(cs[2]) do
-            out[#out+1] = ('    --- *%x'):format(pool[v])
+            l[#l+1] = pool[v]
+        end
+        table.sort(l)
+        for _, v in ipairs(l) do
+            out[#out+1] = ('    --- *%s'):format(v)
         end
     end
 

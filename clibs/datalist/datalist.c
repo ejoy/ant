@@ -950,7 +950,8 @@ lparse(lua_State *L) {
 	struct lex_state LS;
 	init_lex(L, 1, &LS);
 	parse_all(L, &LS);
-	return 1;
+	lua_pushvalue(L, REF_CACHE);
+	return 2;
 }
 
 static int
@@ -959,7 +960,8 @@ lparse_list(lua_State *L) {
 	init_lex(L, 1, &LS);
 	LS.aslist = 1;
 	parse_all(L, &LS);
-	return 1;
+	lua_pushvalue(L, REF_CACHE);
+	return 2;
 }
 
 static int
