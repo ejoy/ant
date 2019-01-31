@@ -67,10 +67,11 @@ function foreach_save_1(component, name)
             __id = ids[component] and ids[component] or crypt.uuid64()
         }
         for _, v in ipairs(c) do
-            --TODO: 现在所有字段都是可选字段
-            if component[v.name] ~= nil then
-                ret[v.name] = foreach_save_2(component[v.name], v)
+            if component[v.name] == nil and v.attrib and v.attrib.opt then
+                goto continue
             end
+            ret[v.name] = foreach_save_2(component[v.name], v)
+            ::continue::
         end
         if c.method and c.method.save then
             c.method.save(ret)
@@ -117,7 +118,7 @@ local function save(w)
     update_deserialize(w)
     local entity = {}
     for _, eid in w:each "serialize" do
-        entity[#entity+1] = save_entity(w, eid, ids)
+        entity[#entity+1] = save_entity(w, eid)
     end
 
     local component = {}

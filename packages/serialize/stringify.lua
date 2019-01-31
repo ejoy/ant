@@ -132,14 +132,16 @@ end
 function stringify_component_ref(c, v, lv)
     assert(not c.type)
     for _, cv in ipairs(c) do
-        if v[cv.name] ~= nil then
-            if cv.ref and (cv.array or cv.map) then
-                out[#out+1] = ('  '):rep(lv) .. ('%s:'):format(cv.name)
-                stringify_component_children(cv, v[cv.name])
-            else
-                out[#out+1] = ('  '):rep(lv) .. ('%s:%s'):format(cv.name, stringify_component_children(cv, v[cv.name]))
-            end
+        if v[cv.name] == nil and cv.attrib and cv.attrib.opt then
+            goto continue
         end
+        if cv.ref and (cv.array or cv.map) then
+            out[#out+1] = ('  '):rep(lv) .. ('%s:'):format(cv.name)
+            stringify_component_children(cv, v[cv.name])
+        else
+            out[#out+1] = ('  '):rep(lv) .. ('%s:%s'):format(cv.name, stringify_component_children(cv, v[cv.name]))
+        end
+        ::continue::
     end
 end
 
