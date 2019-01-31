@@ -51,7 +51,7 @@ function m.init(fd, rcb)
     read_init(fd, rcb)
     read_open(fd)
     write_init(fd, function()
-        local n, e = fd:send(w_buf[fd])
+        local n = fd:send(w_buf[fd])
         if n then
             w_buf[fd] = w_buf[fd]:sub(n + 1)
             if w_buf[fd] == '' then

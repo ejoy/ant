@@ -13,7 +13,7 @@ local ms = math3d.stack
 
 schema:typedef("entityid", "int", -1)
 
-schema:userdata "path"
+schema:typedef("path", "string")
 local path = ecs.component "path"
 function path:init()
 	return fs.path ""
@@ -68,7 +68,7 @@ schema:type "texture"
 	.stage "int"
 	.ref_path "resource"	
 
-schema:userdata "uniformdata"
+schema:typedef("uniformdata", "real[]")
 
 local uniformdata = ecs.component "uniformdata"
 function uniformdata.save(v)
@@ -117,12 +117,16 @@ schema:typedef("can_render", "boolean", true)
 schema:typedef("can_cast", "boolean", false)
 schema:typedef("name", "string", "")
 ecs.tag "can_select"
-schema:typedef("control_state", "string", "")
+
+local control_state = ecs.singleton_component "control_state"
+function control_state:init()
+	return ""
+end
 
 schema:type "parent"
 	.eid "entityid"
 
-schema:typedef("color", "int[4]", {1,1,1,1})
+schema:typedef("color", "real[4]", {1,1,1,1})
 
 
 schema:type "character"

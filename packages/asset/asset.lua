@@ -1,4 +1,4 @@
-local vfsfs = require "filesystem"
+local fs = require "filesystem"
 local antpm = require "antpm"
 
 local support_list = {
@@ -54,7 +54,7 @@ function assetmgr.find_asset_path(pkgname, respath)
 	local pkgpath = assetmgr.pkgdir(pkgname)
 
 	local fullrespath = pkgpath / respath
-	if vfsfs.exists(fullrespath) then
+	if fs.exists(fullrespath) then
 		return fullrespath
 	end
 	return nil
@@ -63,7 +63,7 @@ end
 function assetmgr.find_depiction_path(pkgname, respath)
 	local fullrespath = assetmgr.find_asset_path(pkgname, respath)
 	if fullrespath == nil then
-		fullrespath = assetmgr.find_asset_path(pkgname, vfsfs.path "depiction" / respath)
+		fullrespath = assetmgr.find_asset_path(pkgname, fs.path "depiction" / respath)
 	end
 
 	if fullrespath == nil then

@@ -1,86 +1,203 @@
-local stringify_value
+local datalist = require 'datalist'
 
-local function stringify_simple_array(out, n, value)
-    local str = {}
-    for _, v in ipairs(value) do
-        assert(type(v) ~= 'table')
-        stringify_value(str, 0, v)
+local pool
+local out
+local stack
+local typeinfo
+
+local function convertreal(v)
+    local g = ('%g'):format(v)
+    if tonumber(g) == v then
+        return g
     end
-    out[#out+1] = ('  '):rep(n) .. ('[%s]'):format(table.concat(str, ','))
-end
-
-local function stringify_array(out, n, value)
-    out[#out+1] = ('  '):rep(n) .. '['
-    for _, v in ipairs(value) do
-        local str = {}
-        stringify_value(str, n, v)
-        if #str > 1 then
-            table.move(str, 1, #str, #out+1, out)
-        else
-            out[#out] = out[#out] .. (',' .. str[1])
+    for i = 6, 20 do
+        local ng = ('%%.%dg'):format(i):format(v)
+        if tonumber(ng) == v then
+            return ng
         end
     end
-    out[#out+1] = ('  '):rep(n) .. ']'
+    return ('%a'):format(v)
 end
 
-local function stringify_table(out, n, value)
-    out[#out+1] = ('  '):rep(n) .. '{'
-    for k, v in pairs(value) do
-        assert(type(k) == 'string')
-        local str = {}
-        stringify_value(str, n, v)
-        out[#out+1] = ('  '):rep(n + 1) .. k .. ':' .. str[1]:gsub('^[ ]*', '')
-        table.move(str, 2, #str, #out+1, out)
-    end
-    out[#out+1] =('  '):rep(n) .. '}'
-end
-
-function stringify_value(out, n, value)
-    local vt = type(value)
-    assert(vt ~= 'function' and vt ~= 'userdata')
-    if vt ~= 'table' then
-        if vt == 'string' and value:match ' ' then
-            out[#out+1] = ('  '):rep(n) .. ('%q'):format(value)
+local function stringify_basetype(name, v)
+    if name == 'int' then
+        return ('%d'):format(v)
+    elseif name == 'real' then
+        return convertreal(v)
+    elseif name == 'string' then
+        return datalist.quote(v)
+    elseif name == 'boolean' then
+        if v then
+            return 'true'
         else
-            out[#out+1] = ('  '):rep(n) .. tostring(value)
+            return 'false'
+        end
+    end
+    assert('unknown base type:'..name)
+end
+
+local function stringify_array_value(c, array, v, load)
+    if not load and c.method and c.method.load then
+        load = c.name
+    end
+    if c.type ~= 'primtype' then
+        return stringify_array_value(typeinfo[c.type], array, v, load)
+    end
+    local n = array == 0 and #v or array
+    local s = {}
+    for i = 1, n do
+        s[i] = stringify_basetype(c.name, v[i])
+    end
+    if load then
+        if load == 'vector' or load == 'matrix' then
+            return '['..table.concat(s, ',')..']'
+        end
+        return '['..load..',{'..table.concat(s, ',')..'}]'
+    end
+    return '{'..table.concat(s, ',')..'}'
+end
+
+local function stringify_map_value(c, v, load)
+    if not load and c.method and c.method.load then
+        load = c.name
+    end
+    if c.type ~= 'primtype' then
+        return stringify_map_value(typeinfo[c.type], v, load)
+    end
+    local s = {}
+    for i = 1, #v do
+        s[#s+1] = v[i][1]..':'..stringify_basetype(c.name, v[i][2])
+    end
+    if load then
+        return '['..load..',{'..table.concat(s, ',')..'}]'
+    end
+    return '{'..table.concat(s, ',')..'}'
+end
+
+local function stringify_value(c, v, load)
+    assert(c.type)
+    if c.array then
+        return stringify_array_value(c, c.array, v, load)
+    end
+    if c.map then
+        return stringify_map_value(c, v, load)
+    end
+    if c.type == 'primtype' then
+        if load then
+            return '['..load..','..stringify_basetype(c.name, v)..']'
+        end
+        return stringify_basetype(c.name, v)
+    end
+    if not load and c.method and c.method.load then
+        load = c.name
+    end
+    return stringify_value(typeinfo[c.type], v, load)
+end
+
+local function stringify_component_value(name, v)
+    assert(typeinfo[name], "unknown type:" .. name)
+    local c = typeinfo[name]
+    if not c.ref then
+        return stringify_value(c, v)
+    end
+    if not pool[v] then
+        pool[v] = v.__id
+        stack[#stack+1] = {c, v}
+    end
+    return ('*%s'):format(pool[v])
+end
+
+local stringify_component_ref
+
+local function stringify_component_children(c, v)
+    if not c.ref then
+        return stringify_value(c, v)
+    end
+    if c.array then
+        local n = c.array == 0 and #v or c.array
+        for i = 1, n do
+            out[#out+1] = ('  --- %s'):format(stringify_component_value(typeinfo[c.type].name, v[i]))
         end
         return
     end
-    local fk = next(value)
-    if not fk then
-        -- empty table
-        out[#out+1] = ('  '):rep(n) .. '{}'
+    if c.map then
+        for i = 1, #v do
+            out[#out+1] = ('  %s:%s'):format(v[i][1], stringify_component_value(typeinfo[c.type].name, v[i][2]))
+        end
         return
     end
-    if type(fk) == 'number' then
-        if type(value[1]) ~= 'table' and type(value[2]) ~= 'table' then
-            stringify_simple_array(out, n + 1, value)
-        else
-            stringify_array(out, n + 1, value)
+    return stringify_component_value(c.type, v)
+end
+
+function stringify_component_ref(c, v, lv)
+    assert(not c.type)
+    for _, cv in ipairs(c) do
+        if v[cv.name] ~= nil then
+            if cv.ref and (cv.array or cv.map) then
+                out[#out+1] = ('  '):rep(lv) .. ('%s:'):format(cv.name)
+                stringify_component_children(cv, v[cv.name])
+            else
+                out[#out+1] = ('  '):rep(lv) .. ('%s:%s'):format(cv.name, stringify_component_children(cv, v[cv.name]))
+            end
         end
-        return 
-    end
-    stringify_table(out, n + 1, value)
-end
-
-local function stringify_entity(out, n, e)
-    for i = 1, #e, 2 do
-        local str = {}
-        stringify_value(str, n-1, e[i+1])
-        out[#out+1] = ('  '):rep(n) .. e[i] .. ':' .. str[1]:gsub('^[ ]*', '')
-        table.move(str, 2, #str, #out+1, out)
     end
 end
 
-local function stringify(t)
-    local n = 0
-    local out = {}
-    for _, e in ipairs(t) do
-        out[#out+1] = ('  '):rep(n) .. '['
-        stringify_entity(out, n+1, e)
-        out[#out+1] = ('  '):rep(n) .. ']'
+local function stringify_entity(e)
+    out[#out+1] = ('--- &%s'):format(e.__id)
+    for _, c in ipairs(e) do
+        local k, v = c[1], c[2]
+        out[#out+1] = ('%s:%s'):format(k, stringify_component_value(k, v))
     end
-    return table.concat(out, '\n')
+
+    while #stack ~= 0 do
+        local c, v = stack[1][1], stack[1][2]
+        table.remove(stack, 1)
+
+        out[#out+1] = ('--- &%s'):format(pool[v])
+        stringify_component_ref(c, v, 0)
+    end
+end
+
+local function stringify(w, t)
+    pool = {}
+    stack = {}
+    typeinfo = w.schema.map
+    cid = 0
+    
+    local entity, component = t[1], t[2]
+    local out1, out2, out3 = {}, {}, {}
+
+    out = out1
+    out[#out+1] = '---'
+    for _, e in ipairs(entity) do
+        out[#out+1] = ('  --- *%s'):format(e.__id)
+    end
+
+    out = out3
+    for _, e in ipairs(entity) do
+        stringify_entity(e)
+    end
+
+    out = out2
+    out[#out+1] = '---'
+    for _, cs in ipairs(component) do
+        out[#out+1] = '  ---'
+        out[#out+1] = ('    --- %s'):format(cs[1])
+        local l = {}
+        for _, v in ipairs(cs[2]) do
+            l[#l+1] = pool[v]
+        end
+        table.sort(l)
+        for _, v in ipairs(l) do
+            out[#out+1] = ('    --- *%s'):format(v)
+        end
+    end
+
+    table.move(out2, 1, #out2, #out1+1, out1)
+    table.move(out3, 1, #out3, #out1+1, out1)
+    out1[#out1+1] = ''
+    return table.concat(out1, '\n')
 end
 
 return stringify

@@ -1,7 +1,6 @@
 --luacheck: ignore self, globals dprint
 local ecs = ...
 local world = ecs.world
-local schema = world.schema
 
 
 ecs.import "ant.inputmgr"
@@ -26,10 +25,14 @@ ecs.tag "pos_transform"
 ecs.tag "scale_transform"
 ecs.tag "rotator_transform"
 
-schema:type "object_transform"
-	.translate_speed "real" (0.05)
-	.scale_speed "real" (0.005)
-	.rotation_speed "real" (0.5)
+local object_transform = ecs.singleton_component "object_transform"
+function object_transform:init()
+	return {
+		translate_speed = 0.05,
+		scale_speed = 0.005,
+		rotation_speed = 0.5,
+	}
+end
 
 local obj_trans_sys = ecs.system "obj_transform_system"
 obj_trans_sys.singleton "object_transform"

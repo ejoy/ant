@@ -5,6 +5,27 @@ local computil = import_package "ant.render".components
 
 local PVPScene = {}
 
+local poolMesh = {}
+local function createMesh(e, path)
+	if poolMesh[tostring(path)] then
+		e.mesh = poolMesh[tostring(path)]
+		return
+	end
+	computil.load_mesh(e.mesh, "ant.resources", path)
+	poolMesh[tostring(path)] = e.mesh
+end
+
+local poolMaterial = {}
+local function createMaterial(e, path)
+	if poolMaterial[tostring(path)] then
+		e.material = poolMaterial[tostring(path)]
+		return
+	end
+	computil.add_material(e.material, "ant.resources", path)
+	poolMaterial[tostring(path)] = e.material
+end
+
+
 function PVPScene.create_entitices(world)
 	local scene_objects = {
 		CampsiteDoor = {			
@@ -208,8 +229,8 @@ function PVPScene.create_entitices(world)
 
 				e.name = name
 
-				computil.load_mesh(e.mesh, "ant.resources", scenedata.mesh)
-				computil.add_material(e.material, "ant.resources", scenedata.material)
+				createMesh(e, scenedata.mesh)
+				createMaterial(e, scenedata.material)
 
 				if collision_array then
 					local ct = collision_array[idx]

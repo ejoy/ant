@@ -25,7 +25,7 @@ function m.threads(pkg)
     status.threads = pkg.threads
 end
 
-function m.continue(pkg)
+function m.continue()
     ev.emit('host-running')
 end
 

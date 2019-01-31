@@ -375,7 +375,7 @@ local function getEventLevel()
     local level = 0
     local name, value = rdebug.getlocal(1, 2)
     if name ~= nil then
-        local type, subtype = rdebug.type(value)
+        local _, subtype = rdebug.type(value)
         if subtype == 'integer' then
             level = rdebug.value(value)
         end

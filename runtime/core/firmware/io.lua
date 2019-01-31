@@ -401,19 +401,12 @@ end
 
 function response.LINK(hash, data)
 	local hashlink = repo.repo:hashpath(hash) .. ".link"
-	if data then
-		if not writefile(hashlink, data) then
-			print("Can't write to ", hashlink)
-		end
+	if not writefile(hashlink, data) then
+		print("Can't write to ", hashlink)
 	end
 	local resp = connection.request_link[hash]
 	print("REQUEST LINK", hash, resp)
 	if resp then
-		if not data then
-			-- link failed at server
-			response_id(id, nil)
-			return
-		end
 		local realpath = repo.repo:hashpath(data)
 		local f = io.open(realpath, "rb")
 		if f then

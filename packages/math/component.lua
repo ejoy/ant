@@ -5,7 +5,7 @@ local schema = world.schema
 local math3d = require "math3d"
 local ms = require "stack"
 
-schema:userdata "vector"
+schema:typedef("vector", "real[4]")
 
 local vector = ecs.component "vector"
 
@@ -27,13 +27,14 @@ function vector.save(v)
 end
 
 function vector.load(s)
-    local v = math3d.ref "vector"
     s.type = "v4"
+    local v = math3d.ref "vector"
+    --v(s)
     ms(v, s, "=")
     return v
 end
 
-schema:userdata "matrix"
+schema:typedef("matrix", "real[16]")
 
 local matrix = ecs.component "matrix"
 

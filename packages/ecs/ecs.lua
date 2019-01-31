@@ -6,27 +6,43 @@ local system = require "system"
 local component = require "component"
 local pm = require "antpm"
 local create_schema = require "schema"
+local get_modules = require "modules"
 
 local ecs = {}
 local world = {} ; world.__index = world
 
+function world:create_component(c)
+	assert(self._component_type[c], c)
+	return self._component_type[c].init()
+end
+
+function world:register_component(eid, c)
+	local nc = self._notifycomponent[c]
+	if nc then
+		table.insert(nc, eid)
+	end
+	local set = self._set[c]
+	if set then
+		set[#set+1] = eid
+	end
+end
+
+function world:register_entity()
+	local entity_id = self._entity_id + 1
+	self._entity_id = entity_id
+	self._entity[entity_id] = true
+	return entity_id
+end
+
 local function new_component(w, eid, c, ...)
 	if c then
-		assert(w._component_type[c], c)
 		local entity = assert(w[eid])
 		print("component:%s", c)
 		if entity[c] then
 			error(string.format("multiple component defined:%s", c))
 		end
-		entity[c] = w._component_type[c].init()
-		local nc = w._notifycomponent[c]
-		if nc then
-			table.insert(nc, eid)
-		end
-		local set = w._set[c]
-		if set then
-			set[#set+1] = eid
-		end
+		entity[c] = w:create_component(c)
+		w:register_component(eid, c)
 		new_component(w, eid, ...)
 	end
 end
@@ -193,7 +209,7 @@ local function init_modules(w, packages, systems)
 			end
 			modules = tmp
 		else
-			modules = pm.ecs_modules(root, {"*.lua"})
+			modules = get_modules(root, {"*.lua"})
 		end
 		local reg = typeclass(w, import, class)
 		for _, path in ipairs(modules) do
@@ -273,15 +289,12 @@ function ecs.new_world(config)
 	w.schema:check()
 
 	for k,v in pairs(w.schema.map) do
-		w._component_type[k] = component(v, w.schema)
+		w._component_type[k] = component(v, w)
 	end
 
 	-- init system
-	local singletons = system.singleton(class.system, w._component_type)
-	local proxy = system.proxy(class.system, w._component_type, singletons)
-
+	local proxy = system.proxy(class.system, class.singleton_component)
 	local init_list = system.init_list(class.system)
-
 	local update_list = system.update_list(class.system, config.update_order)
 	local update_switch = system.list_switch(update_list)
 	function w.update ()

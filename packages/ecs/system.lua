@@ -5,7 +5,7 @@ local log = log and log(...) or print
 
 local system = {}	-- module system
 
-function system.singleton(sys, c)
+local function get_singleton(sys, c)
 	local s = {}
 	for _,v in pairs(sys) do
 		if v.singleton then
@@ -16,7 +16,7 @@ function system.singleton(sys, c)
 				end
 				if s[singleton_name] == nil then
 					log("New singleton %s", singleton_name)
-					s[singleton_name] = singleton_typeobject.init()
+					s[singleton_name] = singleton_typeobject.method.init()
 				end
 			end
 		end
@@ -24,23 +24,21 @@ function system.singleton(sys, c)
 	return s
 end
 
-local function gen_proxy(sto, c, singletons)
+local function gen_proxy(sto, singletons)
 	local inst = {}
 	if sto.singleton then
 		for _, singleton_name in ipairs(sto.singleton) do
 			inst[singleton_name] = singletons[singleton_name]
-			--for method_name, f in pairs(c[singleton_name].method) do
-			--	inst[method_name] = f
-			--end
 		end
 	end
 	return inst
 end
 
-function system.proxy(sys, c, singletons)
+function system.proxy(sys, c)
+	local singletons = get_singleton(sys, c)
 	local p = {}
 	for system_name, system_typeobject in pairs(sys) do
-		p[system_name] = gen_proxy(system_typeobject, c, singletons)
+		p[system_name] = gen_proxy(system_typeobject, singletons)
 	end
 	return p
 end

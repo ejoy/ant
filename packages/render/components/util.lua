@@ -103,30 +103,6 @@ function util.load_texture(name, stage, pkgname, texpath)
 	return {name=name, type="texture", stage=stage, ref_path={package=pkgname, filename=texpath}, handle=assetinfo.handle}
 end
 
-local function update_properties(dst_properties, src_properties)
-	local srctextures = src_properties.textures
-	if srctextures then
-		local dsttextures = {}
-		for k, v in pairs(srctextures) do
-			local refpath = v.ref_path
-			dsttextures[k] = util.load_texture(v.name, v.stage, refpath[1], fs.path(refpath[2]))
-		end
-		dst_properties.textures = dsttextures
-	end
-
-	local srcuniforms = src_properties.uniforms
-	if srcuniforms then
-		local dstuniforms = {}
-		
-		for k, v in pairs(srcuniforms) do			
-			assert(type(v.default) == "table")			
-			local value = deep_copy(v.default)
-			dstuniforms[k] = {name=v.name, type=v.type, value=value}
-		end
-		dst_properties.uniforms = dstuniforms
-	end
-end
-
 function util.add_material(material, pkgname, respath)
 	local content = material.content
 	if content == nil then
@@ -144,15 +120,47 @@ function util.add_material(material, pkgname, respath)
 	content[#content+1] = item
 end
 
+local function update_properties(dst_properties, src_properties)
+	local srctextures = src_properties.textures
+	if srctextures then
+		local dsttextures = dst_properties.textures or {}
+		for k, v in pairs(srctextures) do
+			local refpath = v.ref_path
+			local tex = util.load_texture(v.name, v.stage, refpath[1], fs.path(refpath[2]))
+			if dsttextures[k] == nil then
+				dsttextures[k] = tex
+			else
+				dsttextures[k].handle = tex.handle
+			end
+		end
+		dst_properties.textures = dsttextures
+	end
+
+	local srcuniforms = src_properties.uniforms
+	if srcuniforms then
+		local dstuniforms = dst_properties.uniforms or {}
+		for k, v in pairs(srcuniforms) do			
+			if dstuniforms[k] == nil then
+				assert(type(v.default) == "table")			
+				local value = deep_copy(v.default)
+				dstuniforms[k] = {name=v.name, type=v.type, value=value}
+			end
+		end
+		dst_properties.uniforms = dstuniforms
+	end
+end
+
 function util.create_material(material)
 	local materialinfo = asset.load(material.path.package, material.path.filename)
+	if not material.properties then
+		material.properties = {}
+	end
 	local mproperties = materialinfo.properties 
-	local properties = {}
+	local properties = material.properties
 	if mproperties then
 		update_properties(properties, mproperties)
 	end
-	material.materialinfo = materialinfo
-	material.properties = properties
+	material.materialinfo = materialinfo	
 end
 
 function util.create_render_entity(world, name, meshfile, materialfile)

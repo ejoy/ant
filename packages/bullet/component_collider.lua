@@ -13,10 +13,10 @@ schema:type "terrain_collider"
 -- so user could query it by only one name "collider"
 schema:type "collider_info"
     .type "string" ("box")
-    .center "int[3]" {0,0,0}
-    .sx "int" (1)
-    .sy "int" (1)
-    .sz "int" (1)
+    .center "real[3]" {0,0,0}
+    .sx "real" (1)
+    .sy "real" (1)
+    .sz "real" (1)
 
 schema:type "collider"
     .info "collider_info"
