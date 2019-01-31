@@ -94,7 +94,7 @@ ifeq "$(PLAT)" "msvc"
   WITH_OZZ_SAMPLES := ON
 endif
 
-CMAKE_OPT_ozz-animation=-Dozz_build_samples=$(WITH_OZZ_SAMPLES) -Dozz_build_fbx=OFF -Dozz_build_howtos=OFF
+CMAKE_OPT_ozz-animation=-Dozz_build_samples=$(WITH_OZZ_SAMPLES) -Dozz_build_fbx=$(WITH_OZZ_SAMPLES) -Dozz_build_howtos=$(WITH_OZZ_SAMPLES)
 
 ifeq "$(PLAT)" "ios"
 CMAKE_OPT_ozz-animation += -DEMSCRIPTEN=TURE
