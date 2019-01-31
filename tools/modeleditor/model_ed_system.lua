@@ -455,7 +455,7 @@ end
 local function init_state_machine()
 	local sample = sample_entity()
 	if sample then
-		sample.state_chian = assetmgr.load("ani.resources", fs.path "simple_animation.sm")
+		sample.state_chain = assetmgr.load("ant.resources", fs.path "simple_animation.sm")
 	end
 end
 
