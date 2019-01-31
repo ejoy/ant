@@ -11,6 +11,7 @@ local support_list = {
 	"hierarchy",
 	"lk",
 	"ozz",
+	"sm",
 }
 
 local loaders = {}

@@ -455,43 +455,7 @@ end
 local function init_state_machine()
 	local sample = sample_entity()
 	if sample then
-		local states = sample.state_chain
-		states.chain = {
-			{
-				name = "idle",
-				pose = {
-					name = "idle",
-					anilist = {
-						{idx=1, weight=0.5},
-						{idx=2, weight=0.5},
-					},
-				}
-			},
-			{
-				name = "walk",
-				pose = {
-					name = "walk",
-					anilist = {
-						{idx=3, weight=1},
-					}
-				}
-			}
-		}
-
-		states.transmits = {
-			idle = {
-				{duration = 0.5, targetname="walk"},
-			},
-			walk = {
-				{duration = 0.3, targetname="idle"},
-				{duration = 0.2, targetname="run"},
-			},
-			run = {
-				{duration = 0.5, targetname="idle"},
-				{duration = 0.2, targetname="walk"},
-			}
-		}
-
+		sample.state_chian = assetmgr.load("ani.resources", fs.path "simple_animation.sm")
 	end
 end
 
