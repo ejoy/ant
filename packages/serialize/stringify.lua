@@ -131,7 +131,9 @@ local function stringify_component_children(c, v)
 end
 
 function stringify_component_ref(c, v, lv)
-    assert(not c.type)
+    if c.type then
+        return stringify_component_ref(typeinfo[c.type], v, lv)
+    end
     for _, cv in ipairs(c) do
         if v[cv.name] == nil and cv.attrib and cv.attrib.opt then
             goto continue
