@@ -1,16 +1,8 @@
-local hierarchy_module = require "hierarchy"
-local vfs = require "vfs"
+-- local hierarchy_module = require "hierarchy"
+-- local vfs = require "vfs"
 local assetmgr = require "asset"
 
 return function(pkgname, filename, param)
-	local fn = assetmgr.find_depiction_path(pkgname, filename)
-
-	local realfilename = vfs.realpath(fn:string())
-	if param and param.editable then
-		local editable_hie = hierarchy_module.new()
-		hierarchy_module.load(editable_hie, realfilename)
-		return editable_hie
-	end
-
-	return hierarchy_module.build(realfilename)
+	local loader = assetmgr.get_loader("ozz")
+	return loader(pkgname, filename, param)
 end

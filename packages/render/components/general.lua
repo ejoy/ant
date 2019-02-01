@@ -48,25 +48,26 @@ schema:type "frustum"
 
 schema:typedef("viewid", "int", 0)
 
-schema:type "resource"
+schema:type "respath"
 	.package "string"
 	.filename "path"
 
-schema:type "mesh"
-	.ref_path "resource"
+schema:type "resource"
+	.ref_path "respath"
 
-local mesh = ecs.component "mesh"
-
-function mesh:load()
+local resource = ecs.component "resource"
+function resource:load()
 	self.assetinfo = asset.load(self.ref_path.package, self.ref_path.filename)
 	return self
 end
+
+schema:typedef("mesh", "resource")
 
 schema:type "texture"
 	.name "string"
 	.type "string"
 	.stage "int"
-	.ref_path "resource"	
+	.ref_path "respath"	
 
 schema:typedef("uniformdata", "real[]")
 
@@ -95,7 +96,7 @@ schema:type "properties"
 	["opt"].uniforms "uniform{}"
 
 schema:type "material_content"
-	.path "resource"
+	.ref_path "respath"
 	["opt"].properties "properties"	
 
 schema:type "material"

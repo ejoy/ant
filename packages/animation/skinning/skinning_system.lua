@@ -8,9 +8,7 @@ local bgfx = require "bgfx"
 -- skinning_mesh component is different from mesh component.
 -- mesh component is used for render purpose.
 -- skinning_mesh component is used for producing mesh component render data.
-schema:type "skinning_mesh"
-	.ref_path "resource"
-
+schema:typedef("skinning_mesh", "resource")
 
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"

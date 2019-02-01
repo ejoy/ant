@@ -284,10 +284,9 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 	local hie_eid = components_util.create_hierarchy_entity(world, 
 						"hierarchy-" .. prefixname .. "-" .. suffixname)
 	world:add_component(hie_eid, tag_comp)
-	local hie_entity = world[hie_eid]
-
-	hie_entity.editable_hierarchy.ref_path = {pkgname, axis_hierarchyname}
-	hie_entity.editable_hierarchy.root = assetmgr.load(pkgname, axis_hierarchyname, {editable=true})
+	local hie_entity = world[hie_eid]	
+	hie_entity.editable_hierarchy.ref_path = {package=pkgname, filename=axis_hierarchyname}
+	hie_entity.editable_hierarchy.assetinfo = assetmgr.load(pkgname, axis_hierarchyname)
 
 	local namemapper = hie_entity.hierarchy_name_mapper
 	local function create_mesh_entity(name, meshfile)
@@ -341,8 +340,8 @@ local function add_axis_base_transform_entites(basename, headmeshfile, axismeshf
 										headmeshfile, axismeshfile,
 										objtrans_materialpath, tag_comp, colors["blue"])
 
-	axis_root.editable_hierarchy.ref_path = {pkgname, axisbase_controller_hierarchyname}
-	axis_root.editable_hierarchy.root = assetmgr.load(pkgname, axisbase_controller_hierarchyname, {editable = true})
+	axis_root.editable_hierarchy.ref_path = {package=pkgname, filename=axisbase_controller_hierarchyname}
+	axis_root.editable_hierarchy.assetinfo = assetmgr.load(pkgname, axisbase_controller_hierarchyname, {editable = true})
 	
 	local controllers = {		
 		root = rootaxis_eid,
@@ -414,8 +413,8 @@ local function add_rotator_entities(colors)
 	local root_eid = components_util.create_hierarchy_entity(world, "rotator")
 	world:add_component(root_eid, "rotator_transform")
 	local hie_entity = world[root_eid]
-	hie_entity.editable_hierarchy.ref_path = {pkgname, axisbase_controller_hierarchyname}
-	hie_entity.editable_hierarchy.root = assetmgr.load(pkgname, axisbase_controller_hierarchyname, {editable=true})
+	hie_entity.editable_hierarchy.ref_path = {package=pkgname, filename=axisbase_controller_hierarchyname}
+	hie_entity.editable_hierarchy.assetinfo = assetmgr.load(pkgname, axisbase_controller_hierarchyname)
 	local namemapper = hie_entity.hierarchy_name_mapper
 
 	local function add_elem_entity(elemname, clrname)
@@ -423,8 +422,8 @@ local function add_rotator_entities(colors)
 		world:add_component(elem_eid, "rotator_transform")
 		local elem = world[elem_eid]
 
-		elem.editable_hierarchy.root = assetmgr.load(pkgname, rotator_hierarchyname, {editable=true})
-		elem.editable_hierarchy.ref_path = {pkgname, rotator_hierarchyname}
+		elem.editable_hierarchy.ref_path = {package=pkgname, filename=rotator_hierarchyname}
+		elem.editable_hierarchy.assetinfo = assetmgr.load(pkgname, rotator_hierarchyname)
 
 		local mapper = elem.hierarchy_name_mapper
 		local function add_entity(name, meshfilename, colorname)

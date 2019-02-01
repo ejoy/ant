@@ -111,7 +111,7 @@ function util.add_material(material, pkgname, respath)
 	end
 
 	local item = {
-		path = {
+		ref_path = {
 			package = pkgname,
 			filename = respath,
 		},
@@ -151,7 +151,7 @@ local function update_properties(dst_properties, src_properties)
 end
 
 function util.create_material(material)
-	local materialinfo = asset.load(material.path.package, material.path.filename)
+	local materialinfo = asset.load(material.ref_path.package, material.ref_path.filename)
 	if not material.properties then
 		material.properties = {}
 	end

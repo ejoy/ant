@@ -29,11 +29,9 @@ local function rebuild_hierarchy(iterop)
 	--[@	find editable_hierarchy reference path
 	local function add_hierarchy_component(eid, ref_path)
 		local e = world[eid]
-		local hie = e.hierarchy
-		if hie == nil then
-			world:add_component(eid, "hierarchy")
-			hie = e.hierarchy
-			hie.ref_path = {ref_path[1], create_hierarchy_path(ref_path[2])}
+		if e.hierarchy == nil then
+			world:add_component(eid, "hierarchy")			
+			e.hierarchy.ref_path = {package=ref_path.package, filename=create_hierarchy_path(ref_path.filename)}
 		end	
 	end	
 
@@ -75,19 +73,16 @@ local function rebuild_hierarchy(iterop)
 
 	--[@	use hierarchy path to save refercene resource
 	for epath, rpath in pairs(moditied_files) do		
-		-- load the cache if it has been loaded(this cache will be modified by program), otherwise load it from file
-		local pkgname, hpath = rpath[1], rpath[2]
-
-		local epkgname, ehpath = epath[1], epath[2]
-		local root = assetmgr.load(epkgname, ehpath, {editable=true})
+		-- load the cache if it has been loaded(this cache will be modified by program), otherwise load it from file		
+		local root = assetmgr.load(epath.package, epath.filename)
 
 		-- we need to rewrite the file from cache		
-		if assetmgr.has_res(epkgname, ehpath) then
-			save_rawdata(root, epkgname, ehpath)
+		if assetmgr.has_res(epath.package, epath.filename) then
+			save_rawdata(root, epath.package. epath.filename)
 		end
 
-		local builddata = hierarchy_module.build(root)		
-		save_rawdata(builddata, pkgname, hpath)
+		local builddata = hierarchy_module.build(root)
+		save_rawdata(builddata, rpath.package, rpath.filename)
 	end
 	--[@
 
@@ -102,7 +97,7 @@ local function rebuild_hierarchy(iterop)
 			if mapper then				
 				local hie = pe.hierarchy
 				local refpath = hie.ref_path
-				local builddata = assetmgr.load(refpath[1], refpath[2])
+				local builddata = assetmgr.load(refpath.package, refpath.filename)
 				hie.builddata = builddata
 				for _, node in ipairs(builddata) do
 					local rot = ms({type="q", table.unpack(node.r)}, "eP")

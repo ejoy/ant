@@ -24,7 +24,7 @@ schema:type "transmit"
 schema:type "state_chain"
 	.chain "state[]"
 	.transmits "transmit{}"
-	.script "resource"	--code for state transmit
+	.script "respath"	--code for state transmit
 
 
 local timer = import_package "ant.timer"

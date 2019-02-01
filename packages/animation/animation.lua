@@ -8,7 +8,7 @@ local timer = import_package "ant.timer"
 schema:type "animation_content"
 	.weight "real"
 	.weighttype "string" ("full")
-	.ref_path "resource"
+	.ref_path "respath"
 	.name "string"
 	.scale "real" (1)	
 	.looptimes "int" (0)
@@ -62,17 +62,7 @@ function ani:init()
 	return self
 end
 
--- separate animation and skeleton to 2 component, 
--- skeleton component will corresponding to some system that do not need animation
-schema:type "skeleton"
-	.ref_path "resource"
-
-local skeleton = ecs.component "skeleton"
-
-function skeleton:load()
-	self.handle = asset.load(self.ref_path.package, self.ref_path.filename)
-end
-
+schema:typedef("skeleton", "resource")
 
 local anisystem = ecs.system "animation_system"
 

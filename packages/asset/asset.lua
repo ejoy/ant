@@ -15,7 +15,10 @@ local support_list = {
 }
 
 local loaders = {}
-local function get_loader(name)	
+local assetmgr = {}
+assetmgr.__index = assetmgr
+
+function assetmgr.get_loader(name)	
 	local loader = loaders[assert(name)]
 	if loader == nil then
 		local function is_support(name)
@@ -36,9 +39,6 @@ local function get_loader(name)
 	end
 	return loader
 end
-
-local assetmgr = {}
-assetmgr.__index = assetmgr
 
 local resources = setmetatable({}, {__mode="kv"})
 
@@ -89,7 +89,7 @@ function assetmgr.load(pkgname, respath, param)
 		if moudlename == nil then
 			error(string.format("not found ext from file:%s", respath))
 		end
-		local loader = get_loader(moudlename)
+		local loader = assetmgr.get_loader(moudlename)
 		res = loader(pkgname, respath, param)
 		resources[res_key] = res
 	end

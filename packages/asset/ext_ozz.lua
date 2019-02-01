@@ -27,6 +27,12 @@ return function(pkgname, filepath)
 			local animodule = require "hierarchy.animation"
 			return animodule.new_ani(filename)
 		end,
+		["ozz-raw_skeleton"] = function (filename)
+			local hiemodule = require "hierarchy"
+			local editable_hie = hiemodule.new()
+			hiemodule.load(editable_hie, filename)
+			return editable_hie
+		end,
 		["ozz-skeleton"] = function(filename)
 			local hiemodule = require "hierarchy"
 			return hiemodule.build(filename)
