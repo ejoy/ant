@@ -20,9 +20,9 @@ function skinning_sys:update()
 		local e = world[eid]
 		local mesh = assert(e.mesh).assetinfo.handle
 
-		local sm = assert(e.skinning_mesh).assetinfo.handle		
+		local sm = assert(e.skinning_mesh).assetinfo.handle				
 		local aniresult = assert(e.animation).aniresult
-
+		
 		-- update data include : position, normal, tangent
 		animodule.skinning(sm, aniresult)
 

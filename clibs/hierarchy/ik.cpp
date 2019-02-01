@@ -33,8 +33,8 @@ to_matrix(lua_State *L, int idx, ozz::math::Float4x4 &sf) {
 
 bool
 do_ltm(ozz::animation::Skeleton *ske, 
-	const ozz::Range<const ozz::math::SoaTransform> &intermediateResult, 
-	ozz::Range<ozz::math::Float4x4> &joints, 
+	const ozz::Vector<ozz::math::SoaTransform>::Std &intermediateResult, 
+	ozz::Vector<ozz::math::Float4x4>::Std &joints, 
 	int from = ozz::animation::Skeleton::kNoParent,
 	int to = ozz::animation::Skeleton::kMaxJoints);
 
@@ -82,7 +82,7 @@ prepare_two_bone_ik_job(lua_State *L, int idx,
 	
 	auto get_joint = [L, &models](int idx, auto name)->ozz::math::Float4x4* {
 		verfiy(lua_getfield(L, idx, name), LUA_TNUMBER);
-		const int jointidx = (int)lua_tointeger(L, -1) - 1;
+		const size_t jointidx = (size_t)lua_tointeger(L, -1) - 1;
 		lua_pop(L, 1);
 
 		if (0 < jointidx && jointidx < models.count()) {
@@ -130,15 +130,16 @@ ldo_ik(lua_State *L) {
 
 	const auto &poses = ske->joint_bind_poses();
 	ozz::Vector<ozz::math::SoaTransform>::Std local_trans(poses.count());	
-	for (int ii = 0; ii < poses.count(); ++ii)
+	for (size_t ii = 0; ii < poses.count(); ++ii)
 		local_trans[ii] = poses[ii];
 
-	if (!do_ltm(ske, ozz::make_range(local_trans), result->joints)) {
+	if (!do_ltm(ske, local_trans, result->joints)) {
 		luaL_error(L, "transform from local to model job failed!");
 	}
 
 	ozz::animation::IKTwoBoneJob ikjob;
-	prepare_two_bone_ik_job(L, 3, result->joints, ikjob);
+	auto jointrange = ozz::make_range(result->joints);
+	prepare_two_bone_ik_job(L, 3, jointrange, ikjob);
 
 	// to model space
 	ikjob.target = ozz::math::TransformPoint(invRoot, ikjob.target);
@@ -152,12 +153,12 @@ ldo_ik(lua_State *L) {
 		luaL_error(L, "run two bones ik failed");
 	}
 
-	const size_t start_jointidx = ikjob.start_joint - result->joints.begin;
+	const size_t start_jointidx = ikjob.start_joint - jointrange.begin;
 	mul_quaternion(start_jointidx, start_correction, local_trans);
-	const size_t mid_jointidx = ikjob.mid_joint - result->joints.begin;
+	const size_t mid_jointidx = ikjob.mid_joint - jointrange.begin;
 	mul_quaternion(mid_jointidx, mid_correction, local_trans);
 
-	if (!do_ltm(ske, ozz::make_range(local_trans), result->joints, (int)start_jointidx)) {
+	if (!do_ltm(ske, local_trans, result->joints, (int)start_jointidx)) {
 		luaL_error(L, "rerun local to model job after ik failed");
 	}
 	return 0;

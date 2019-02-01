@@ -30,7 +30,7 @@ init_loader.depend "skinning_system"
 init_loader.depend "timesystem"
 
 
-local function create_animation_test(timer)
+local function create_animation_test()
 	local meshdir = fs.path "meshes"
 	local skepath = meshdir / "skeleton" / "human_skeleton.ozz"
 	local anipaths = {
@@ -84,7 +84,7 @@ function init_loader:init()
 
 	computil.create_grid_entity(world, "grid", 64, 64, 1)
 
-	create_animation_test(self.timer)
+	create_animation_test()
 
 	local s = serialize.save_world(world)
 	local nativeio = require 'nativeio'

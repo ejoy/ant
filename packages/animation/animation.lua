@@ -118,7 +118,7 @@ function anisystem:update()
 			local transmit = anipose.transmit
 
 			local anilist_ref = anicomp.anilist
-			local function fetch_anilist(pose)
+			local function fetch_anilist(pose)				
 				local anilist = {}
 				for _, aniref in ipairs(pose.anilist) do
 					local ani = assert(anilist_ref[aniref.idx])
@@ -145,7 +145,9 @@ function anisystem:update()
 				}, anicomp.blendtype, finalbindpose)
 				ani_module.transform(ske, finalbindpose, anicomp.aniresult)
 			else
-				ani_module.motion(ske, srcanilist, anicomp.blendtype, anicomp.aniresult)
+				if srcanilist then
+					ani_module.motion(ske, srcanilist, anicomp.blendtype, anicomp.aniresult)
+				end
 			end
 			
 		end		
