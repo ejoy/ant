@@ -105,7 +105,7 @@ local function stringify_component_value(name, v)
         pool[v] = v.__id
         stack[#stack+1] = {c, v}
     end
-    return ('*%s'):format(pool[v])
+    return ('*%x'):format(pool[v])
 end
 
 local stringify_component_ref
@@ -149,7 +149,7 @@ function stringify_component_ref(c, v, lv)
 end
 
 local function _stringify_entity(e)
-    out[#out+1] = ('--- &%s'):format(e.__id)
+    out[#out+1] = ('--- &%x'):format(e.__id)
     for _, c in ipairs(e) do
         local k, v = c[1], c[2]
         out[#out+1] = ('%s:%s'):format(k, stringify_component_value(k, v))
@@ -159,7 +159,7 @@ local function _stringify_entity(e)
         local c, v = stack[1][1], stack[1][2]
         table.remove(stack, 1)
 
-        out[#out+1] = ('--- &%s'):format(pool[v])
+        out[#out+1] = ('--- &%x'):format(pool[v])
         stringify_component_ref(c, v, 0)
     end
 end
@@ -183,7 +183,7 @@ local function stringify_end(t)
         end
         table.sort(l)
         for _, v in ipairs(l) do
-            out[#out+1] = ('    --- *%s'):format(v)
+            out[#out+1] = ('    --- *%x'):format(v)
         end
     end
 
@@ -201,7 +201,7 @@ local function stringify_world(w, t)
     out = out1
     out[#out+1] = '---'
     for _, e in ipairs(entity) do
-        out[#out+1] = ('  --- *%s'):format(e.__id)
+        out[#out+1] = ('  --- *%x'):format(e.__id)
     end
 
     out = out3
@@ -229,7 +229,7 @@ local function stringify_entity(w, t)
         local c, v = stack[1][1], stack[1][2]
         table.remove(stack, 1)
 
-        out[#out+1] = ('--- &%s'):format(pool[v])
+        out[#out+1] = ('--- &%x'):format(pool[v])
         stringify_component_ref(c, v, 0)
     end
 
