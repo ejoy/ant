@@ -23,12 +23,6 @@ local function sortpairs(t)
 end
 
 local foreach_save_1
-local function foreach_save_3(component, c)
-    if c.method and c.method.save then
-        return c.method.save(component)
-    end
-    return foreach_save_1(component, c.type)
-end
 
 local function foreach_save_2(component, c)
     if c.method and c.method.save then
@@ -38,14 +32,14 @@ local function foreach_save_2(component, c)
         local n = c.array == 0 and #component or c.array
         local ret = {}
         for i = 1, n do
-            ret[i] = foreach_save_3(component[i], c)
+            ret[i] = foreach_save_1(component[i], c.type)
         end
         return ret
     end
     if c.map then
 		local ret = {}
         for k, v in sortpairs(component) do
-			ret[#ret+1] = {k , foreach_save_3(v, c)}
+			ret[#ret+1] = {k , foreach_save_1(v, c.type)}
 		end
         return ret
     end
@@ -73,15 +67,15 @@ function foreach_save_1(component, name)
             ret[v.name] = foreach_save_2(component[v.name], v)
             ::continue::
         end
-        if c.method and c.method.save then
-            c.method.save(ret)
-        end
         if c.method and c.method.load then
             load[c.name] = load[c.name] or {}
             table.insert(load[c.name], ret)
         end
     else
         ret = foreach_save_2(component, c)
+    end
+    if c.method and c.method.postsave then
+        c.method.postsave(ret)
     end
     if c.ref then
         pool[component] = ret
