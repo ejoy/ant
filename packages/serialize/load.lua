@@ -24,7 +24,7 @@ local function load_entity(w, tree)
     return eid
 end
 
-local function load(w, s)
+local function load_world(w, s)
     local post = getPost(w)
     local function doPost(type, value)
         assert(post[type])
@@ -57,4 +57,7 @@ local function load(w, s)
     end
 end
 
-return load
+return {
+    world = load_world,
+    entity = load_entity,
+}

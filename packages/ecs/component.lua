@@ -44,14 +44,11 @@ end
 
 local foreach_delete_1
 local function foreach_delete_2(component, c, schema)
-    if c.method and c.method.delete then
-        c.method.delete(component)
+    if c.type == 'primtype' then
         return
     end
-    if schema.map[c.type] then
-        foreach_delete_1(component, schema.map[c.type], schema)
-        return
-    end
+    assert(schema.map[c.type], "unknown type:" .. c.type)
+    foreach_delete_1(component, schema.map[c.type], schema)
 end
 
 function foreach_delete_1(component, c, schema)
@@ -87,23 +84,9 @@ local function gen_delete(c, schema)
     end
 end
 
-local nonref = {int=true,real=true,string=true,boolean=true,primtype=true}
-
-local function is_ref(c, schema)
-    if not c.type then
-        return true
-    end
-    if schema.map[c.type] then
-        return is_ref(schema.map[c.type], schema)
-    end
-    assert(nonref[c.type], "unknown type:" .. c.type)
-    return false
-end
-
 return function(c, w)
     return {
         init = gen_init(c, w),
-        delete = gen_delete(c, w.schema),
-        ref = is_ref(c, w.schema)
+        delete = gen_delete(c, w.schema)
     }
 end

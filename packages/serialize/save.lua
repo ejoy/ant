@@ -89,7 +89,7 @@ function foreach_save_1(component, name)
     return ret
 end
 
-local function save_entity(w, eid)
+local function _save_entity(w, eid)
     local e = assert(w[eid])
     local t = {
         __id = ids[e] and ids[e] or crypt.uuid64()
@@ -110,25 +110,40 @@ local function update_deserialize(w)
     end
 end
 
-local function save(w)
+local function save_start(w)
     method.init(w)
     pool = {}
     load = {}
     typeinfo = w.schema.map
     update_deserialize(w)
-    local entity = {}
-    for _, eid in w:each "serialize" do
-        entity[#entity+1] = save_entity(w, eid)
-    end
+end
 
+local function save_end()
     local component = {}
     for name, v in pairs(load) do
         component[#component+1] = { name, v }
     end
-
-    table.sort(entity, function(a, b) return a.__id < b.__id end)
     table.sort(component, function (a,b) return a[1] < b[1] end)
-    return { entity, component }
+    return component
 end
 
-return save
+local function save_world(w)
+    save_start(w)
+    local entity = {}
+    for _, eid in w:each "serialize" do
+        entity[#entity+1] = _save_entity(w, eid)
+    end
+    table.sort(entity, function(a, b) return a.__id < b.__id end)
+    return { entity, save_end() }
+end
+
+local function save_entity(w, eid)
+    save_start(w)
+    local entity = _save_entity(w, eid)
+    return { entity, save_end() }
+end
+
+return {
+    world = save_world,
+    entity = save_entity,
+}

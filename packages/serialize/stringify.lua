@@ -4,6 +4,7 @@ local pool
 local out
 local stack
 local typeinfo
+local out1, out2, out3
 
 local function convertreal(v)
     local g = ('%g'):format(v)
@@ -145,7 +146,7 @@ function stringify_component_ref(c, v, lv)
     end
 end
 
-local function stringify_entity(e)
+local function _stringify_entity(e)
     out[#out+1] = ('--- &%s'):format(e.__id)
     for _, c in ipairs(e) do
         local k, v = c[1], c[2]
@@ -161,29 +162,17 @@ local function stringify_entity(e)
     end
 end
 
-local function stringify(w, t)
+local function stringify_start(w)
     pool = {}
     stack = {}
     typeinfo = w.schema.map
-    cid = 0
-    
-    local entity, component = t[1], t[2]
-    local out1, out2, out3 = {}, {}, {}
+    out1, out2, out3 = {}, {}, {}
+end
 
-    out = out1
-    out[#out+1] = '---'
-    for _, e in ipairs(entity) do
-        out[#out+1] = ('  --- *%s'):format(e.__id)
-    end
-
-    out = out3
-    for _, e in ipairs(entity) do
-        stringify_entity(e)
-    end
-
+local function stringify_end(t)
     out = out2
     out[#out+1] = '---'
-    for _, cs in ipairs(component) do
+    for _, cs in ipairs(t[2]) do
         out[#out+1] = '  ---'
         out[#out+1] = ('    --- %s'):format(cs[1])
         local l = {}
@@ -202,4 +191,50 @@ local function stringify(w, t)
     return table.concat(out1, '\n')
 end
 
-return stringify
+local function stringify_world(w, t)
+    stringify_start(w)
+
+    local entity = t[1]
+
+    out = out1
+    out[#out+1] = '---'
+    for _, e in ipairs(entity) do
+        out[#out+1] = ('  --- *%s'):format(e.__id)
+    end
+
+    out = out3
+    for _, e in ipairs(entity) do
+        _stringify_entity(e)
+    end
+
+    return stringify_end(t)
+end
+
+local function stringify_entity(w, t)
+    stringify_start(w)
+
+    local e = t[1]
+
+    out = out1
+    out[#out+1] = '---'
+    for _, c in ipairs(e) do
+        local k, v = c[1], c[2]
+        out[#out+1] = ('%s:%s'):format(k, stringify_component_value(k, v))
+    end
+
+    out = out3
+    while #stack ~= 0 do
+        local c, v = stack[1][1], stack[1][2]
+        table.remove(stack, 1)
+
+        out[#out+1] = ('--- &%s'):format(pool[v])
+        stringify_component_ref(c, v, 0)
+    end
+
+    return stringify_end(t)
+end
+
+return {
+    world = stringify_world,
+    entity = stringify_entity,
+}
