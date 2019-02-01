@@ -86,17 +86,15 @@ function init_loader:init()
 
 	create_animation_test(self.timer)
 
-	local t1 = serialize.save(world)
-	local s = serialize.stringify(world, t1)
+	local s = serialize.save_world(world)
 	local nativeio = require 'nativeio'
 	assert(assert(nativeio.open('D:\\work\\ant\\serialize.txt', 'w')):write(s)):close()
 	for _, eid in world:each "serialize" do
 		world:remove_entity(eid)
 	end
-	serialize.load(world, s)
+	serialize.load_world(world, s)
 
-	local t1 = serialize.save(world)
-	local s = serialize.stringify(world, t1)
+	local s = serialize.save_world(world)
 	local nativeio = require 'nativeio'
 	assert(assert(nativeio.open('D:\\work\\ant\\serialize2.txt', 'w')):write(s)):close()
 end

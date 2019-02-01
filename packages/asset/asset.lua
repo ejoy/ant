@@ -87,7 +87,7 @@ function assetmgr.load(pkgname, respath, param)
 	if res == nil then
 		local moudlename = respath:extension():string():match("%.(.+)$")
 		if moudlename == nil then
-			error(string.format("not found ext from file:%s", respath))
+			error(string.format("not found ext from file:%s", respath:string()))
 		end
 		local loader = assetmgr.get_loader(moudlename)
 		res = loader(pkgname, respath, param)

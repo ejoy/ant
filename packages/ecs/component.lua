@@ -1,8 +1,4 @@
 local function foreach_init_2(c, w)
-    if c.method and c.method.init then
-        assert(not c.default)
-        return c.method.init()
-    end
     if c.default ~= nil or c.type == 'primtype' then
         return c.default
     end
@@ -24,18 +20,20 @@ local function foreach_init_2(c, w)
 end
 
 local function foreach_init_1(c, w)
-    if not c.type then
-        local ret = {}
+    local ret
+    if c.type then
+        ret = foreach_init_2(c, w)
+    else
+        ret = {}
         for _, v in ipairs(c) do
             assert(v.type)
             ret[v.name] = foreach_init_2(v, w)
         end
-        if c.method and c.method.init then
-            return c.method.init(ret)
-        end
-        return ret
     end
-    return foreach_init_2(c, w)
+    if c.method and c.method.init then
+        ret = c.method.init(ret)
+    end
+    return ret
 end
 
 local function gen_init(c, w)
