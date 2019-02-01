@@ -106,7 +106,7 @@ local function update_deserialize(w)
         return
     end
     for id, t in pairs(w.__deserialize) do
-        ids[t] = tostring(id):sub(11)
+        ids[t] = id
     end
 end
 

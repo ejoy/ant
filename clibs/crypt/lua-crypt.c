@@ -1076,24 +1076,15 @@ luuid64(lua_State *L) {
 	time_t ti = time(NULL);
 	uint32_t id = ++uuid64_counter;	// NOTICE: not thread safe
 
-	uuid[0] = (ti>>16) & 0xff;;
-	uuid[1] = (ti>>8) & 0xff;
-	uuid[2] = ti & 0xff;
-	memcpy(uuid+3 , uuid64_header, 2);
-	uuid[5] = (id>>16) & 0xff; 
-	uuid[6] = (id>>8) & 0xff; 
-	uuid[7] = id & 0xff;
-
-	static char hex[] = "0123456789abcdef";
-	char tmp[sizeof(uuid)*2];
-	char *buffer = tmp;
-	int i;
-	for (i=0;i<sizeof(uuid);i++) {
-		buffer[i*2] = hex[uuid[i] >> 4];
-		buffer[i*2+1] = hex[uuid[i] & 0xf];
-	}
-	lua_pushlstring(L, buffer, sizeof(uuid) * 2);
-
+	uuid[7] = (ti>>16) & 0xff;;
+	uuid[6] = (ti>>8) & 0xff;
+	uuid[5] = ti & 0xff;
+	uuid[4] = uuid64_header[0];
+	uuid[3] = uuid64_header[1];
+	uuid[2] = (id>>16) & 0xff; 
+	uuid[1] = (id>>8) & 0xff; 
+	uuid[0] = id & 0xff;
+	lua_pushinteger(L, *(uint64_t*)&uuid);
 	return 1;
 }
 
