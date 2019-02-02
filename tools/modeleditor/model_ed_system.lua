@@ -27,6 +27,7 @@ local model_ed_sys = ecs.system "model_editor_system"
 model_ed_sys.singleton "debug_object"
 model_ed_sys.depend "camera_init"
 model_ed_sys.depend "character_controller"
+model_ed_sys.depend "renderbone_system"
 
 model_ed_sys.dependby "transparency_filter_system"
 model_ed_sys.dependby "entity_rendering"
@@ -184,15 +185,21 @@ local function init_paths_ctrl()
 	local sminputer = iup.GetDialogChild(dlg, "SMINPUTER").owner
 	local aniview = iup.GetDialogChild(dlg, "ANIVIEW").owner
 
-	local skepath = fs.path "meshes/skeleton/human_skeleton.ozz"
+	-- local skepath = fs.path "meshes/skeleton/human_skeleton.ozz"
+	-- skeinputer:set_input(skepath:string())
+
+	-- local smfilename = fs.path "meshes/mesh.ozz"	
+	-- sminputer:set_input(smfilename:string())
+
+	-- assert(aniview:count() == 0)
+	-- aniview:add(fs.path "meshes/animation/animation1.ozz")
+	-- aniview:add(fs.path "meshes/animation/animation2.ozz")
+
+	local skepath = fs.path "meshes/female/skeleton.ozz"
 	skeinputer:set_input(skepath:string())
-
-	local smfilename = fs.path "meshes/mesh.ozz"	
-	sminputer:set_input(smfilename:string())
-
+	
 	assert(aniview:count() == 0)
-	aniview:add(fs.path "meshes/animation/animation1.ozz")
-	aniview:add(fs.path "meshes/animation/animation2.ozz")
+	aniview:add(fs.path "meshes/female/walking.ozz")	
 	
 	local blender = iup.GetDialogChild(dlg, "BLENDER").owner
 	aniview:set_blender(blender)

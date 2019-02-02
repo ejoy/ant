@@ -32,9 +32,10 @@ to_matrix(lua_State *L, int idx, ozz::math::Float4x4 &sf) {
 }
 
 bool
-do_ltm(ozz::animation::Skeleton *ske, 
-	const ozz::Vector<ozz::math::SoaTransform>::Std &intermediateResult, 
-	ozz::Vector<ozz::math::Float4x4>::Std &joints, 
+do_ltm(ozz::animation::Skeleton *ske,
+	const ozz::Vector<ozz::math::SoaTransform>::Std &intermediateResult,
+	ozz::Vector<ozz::math::Float4x4>::Std &joints,
+	const ozz::math::Float4x4 *root = nullptr,
 	int from = ozz::animation::Skeleton::kNoParent,
 	int to = ozz::animation::Skeleton::kMaxJoints);
 
@@ -158,7 +159,7 @@ ldo_ik(lua_State *L) {
 	const size_t mid_jointidx = ikjob.mid_joint - jointrange.begin;
 	mul_quaternion(mid_jointidx, mid_correction, local_trans);
 
-	if (!do_ltm(ske, local_trans, result->joints, (int)start_jointidx)) {
+	if (!do_ltm(ske, local_trans, result->joints, nullptr, (int)start_jointidx)) {
 		luaL_error(L, "rerun local to model job after ik failed");
 	}
 	return 0;

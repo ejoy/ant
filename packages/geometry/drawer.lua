@@ -1,8 +1,10 @@
 local draw = {}; draw.__index = {}
 
-local geo = import_package "ant.render".geometry
 local math3d = import_package "ant.math"
 local ms = math3d.stack
+
+local geo = require "geometry"
+
 
 local function gen_color_vertex(pt, color, transform)
 	assert(#pt == 3)

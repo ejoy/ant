@@ -68,6 +68,7 @@ function debug_obj:init()
 		assetinfo={handle=init_wireframe_mesh()}
 	}
 
+	mu.identify_transform(dbentity)
 	componentutil.add_material(dbentity.material, "ant.resources", fs.path "line.material")
 	return self
 end
@@ -100,8 +101,6 @@ function debug_draw:update()
 	local mc = dbentity.material.content
 	local meshgroups = dbentity.mesh.assetinfo.handle.groups
 
-	mu.identify_transform(dbentity)
-	
 	local function commit_desc(desc)	
 		if desc.vb == nil or next(desc.vb) == nil then
 			return false

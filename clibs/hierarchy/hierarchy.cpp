@@ -13,6 +13,7 @@ extern "C" {
 #include <ozz/animation/runtime/skeleton_utils.h>
 
 #include <ozz/base/maths/soa_transform.h>
+#include <ozz/base/maths/soa_float4x4.h>
 #include <ozz/base/io/archive.h>
 #include <ozz/base/io/stream.h>
 
