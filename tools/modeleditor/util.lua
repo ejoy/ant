@@ -97,34 +97,32 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 
 	local emptypath = fs.path ""
 
-	if skepath:string() ~= emptypath then
+	if skepath.filename ~= emptypath then
 		world:add_component(eid, "skeleton")
-		computil.load_skeleton(e.skeleton, "ant.resources", skepath)
+		computil.load_skeleton(e.skeleton, skepath.package, skepath.filename)
 	end
 
 	if #anipaths > 0 then
 		world:add_component(eid, "animation")
 		local anicomp = e.animation
-		aniutil.init_animation(anicomp, e.skeleton)
-		local avgweight = 1 / #anipaths
+		aniutil.init_animation(anicomp, e.skeleton)		
 		local anipose = anicomp.pose
 		local define = anipose.define
-		local activelist = {}
-		for idx, anipath in ipairs(anipaths) do
-			if anipath ~= emptypath then
-				aniutil.add_animation(anicomp, "ant.resources", anipath, avgweight)
-				activelist[#activelist+1] = {idx=idx, weight=avgweight}
-			end
-		end
-		define.anilist = activelist
+		
+		for _, anipath in ipairs(anipaths) do
+			aniutil.add_animation(anicomp, anipath)
+		end		
+		define.anilist = {
+			{idx=1, weight=1}
+		}
 		define.name = "test"
 	end
 
 	
-	if skinning_meshpath ~= emptypath then
+	if skinning_meshpath.filename ~= emptypath then
 		if e.skeleton and e.animation then
 			world:add_component(eid, "skinning_mesh")
-			computil.load_skinning_mesh(e.skinning_mesh, e.mesh, "ant.resources", skinning_meshpath)
+			computil.load_skinning_mesh(e.skinning_mesh, e.mesh, skinning_meshpath.package, skinning_meshpath.filename)
 		end
 
 		computil.add_material(e.material, "ant.resources", samplematerialpath)

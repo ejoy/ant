@@ -4,8 +4,7 @@ chain = {
 		pose = {
 			name = "idle",
 			anilist = {
-				{idx=1, weight=0.5},
-				{idx=2, weight=0.5},
+				{idx=1, weight=1},
 			},
 		}
 	},
@@ -14,7 +13,16 @@ chain = {
 		pose = {
 			name = "walk",
 			anilist = {
-				{idx=3, weight=1},
+				{idx=2, weight=1},
+			}
+		}
+	},
+	{
+		name = "run",
+		pose = {
+			name = "run",
+			anilist = {
+				{idx=3, weight=1}
 			}
 		}
 	}

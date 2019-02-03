@@ -5,9 +5,7 @@ local schema = world.schema
 local asset = import_package "ant.asset"
 local timer = import_package "ant.timer"
 
-schema:type "animation_content"
-	.weight "real"
-	.weighttype "string" ("full")
+schema:type "animation_content"		
 	.ref_path "respath"
 	.name "string"
 	.scale "real" (1)	

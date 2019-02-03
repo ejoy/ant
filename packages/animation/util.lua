@@ -4,15 +4,12 @@ local animodule = require "hierarchy.animation"
 local asset = import_package "ant.asset"
 local timer = import_package "ant.timer"
 -- for animation
-function util.add_animation(comp, pkgname, respath, weight, weighttype)
-	weighttype = weighttype or "full"	-- can be 'full' or 'partial'
+function util.add_animation(comp, respath)	
 	local aniresult = assert(comp.aniresult)
 	local numjoints = aniresult:count()	
-	table.insert(assert(comp.anilist), {
-		weight=weight, 
-		handle=asset.load(pkgname, respath).handle, 
-		ref_path={package=pkgname, filename=respath},
-		weighttype=weighttype,
+	table.insert(assert(comp.anilist), {		
+		handle=asset.load(respath.package, respath.filename).handle, 
+		ref_path=respath,
 		sampling_cache = animodule.new_sampling_cache(numjoints),
 		scale = 1,		
 		start_counter=0,

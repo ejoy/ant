@@ -195,22 +195,32 @@ local function init_paths_ctrl()
 	-- aniview:add(fs.path "meshes/animation/animation1.ozz")
 	-- aniview:add(fs.path "meshes/animation/animation2.ozz")
 
-	local skepath = fs.path "meshes/female/skeleton.ozz"
-	skeinputer:set_input(skepath:string())
+	sminputer:set_input("ant.resources.binary:meshes/female/female.ozz")
+	skeinputer:set_input("ant.resources.binary:meshes/female/skeleton.ozz")
 	
 	assert(aniview:count() == 0)
-	aniview:add(fs.path "meshes/female/walking.ozz")	
+	aniview:add("ant.resource.binary:meshes/female/animations/idle.ozz")
+	aniview:add("ant.resource.binary:meshes/female/animations/walking.ozz")
+	aniview:add("ant.resource.binary:meshes/female/animations/running.ozz")
 	
 	local blender = iup.GetDialogChild(dlg, "BLENDER").owner
 	aniview:set_blender(blender)
 
 	local change_cb = function ()
-		local skepath = fs.path(skeinputer:get_input())
-		local smpath = fs.path(sminputer:get_input())
+		local function string_to_path(ss)
+			local pkgname, resname = ss:match("[^([^:]+):(.+)$]")
+			if pkgname == nil then
+				pkgname = "ant.resources"
+				resname = ss
+			end
+			return {package=pkgname, filename=fs.path(resname)}
+		end
+		local skepath = string_to_path(skeinputer:get_input())
+		local smpath = string_to_path(sminputer:get_input())
 
 		local anipaths = {}
 		for i=1, aniview:count() do
-			anipaths[#anipaths+1] = fs.path(aniview:get(i))
+			anipaths[#anipaths+1] = string_to_path(aniview:get(i))
 		end
 		check_create_sample_entity(skepath, anipaths, smpath)
 	end

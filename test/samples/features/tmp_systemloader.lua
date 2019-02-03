@@ -61,7 +61,7 @@ local function create_animation_test()
 	end
 	local weight = 1 / #anipaths
 	for idx, anipath in ipairs(anipaths) do
-		aniutil.add_animation(anicomp, "ant.resources", anipath, weight)
+		aniutil.add_animation(anicomp, {package="ant.resources", filename=anipath})
 		anidefine.anilist[#anidefine.anilist+1] = {idx = idx, weight = weight}
 	end
 
