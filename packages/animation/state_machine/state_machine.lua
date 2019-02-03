@@ -24,18 +24,15 @@ schema:type "transmit"
 schema:type "state_chain"
 	.chain "state[]"
 	.transmits "transmit{}"
-	.script "respath"	--code for state transmit
-
+	.target "string"
 
 local timer = import_package "ant.timer"
 local aniutil = require "util"
 
 local state_chain = ecs.component "state_chain"
 function state_chain.init()
-	return {
-		current = "idle",
-		target	= "",		
-		transmit = nil,
+	return {		
+		transmit_merge = nil,
 	}
 end
 
@@ -54,29 +51,16 @@ local function get_pose(chain, name)
 	end
 end
 
-local function find_target_state(transmit, targetstate)
-	for _, t in ipairs(transmit.targets) do
-		if t.name == targetstate then
-			return t
-		end
-	end
-end
 
-
-local function get_transmit(script)
-	if script then
-		local antpm = require "antpm"
-		local root = antpm.find(assert(script[1]))
-		return require(root / script[2])
-	end
-
+local function get_transmit_merge(entity, targettransmit)
 	local timepassed = 0
-	return function (ani, targettransmit, deltatime)
+	return function (deltatime)
 		local tt_duration = targettransmit.duration
 		local weight = math.max(0, math.min(1, timepassed / tt_duration))
 		timepassed = timepassed + deltatime
 
-		local transmit = assert(ani.pose.transmit)
+		local anicomp = entity.animation
+		local transmit = assert(anicomp.pose.transmit)
 		transmit.source_weight = 1 - weight
 		transmit.target_weight = weight
 	end
@@ -89,43 +73,39 @@ function sm:update()
 		local anicomp = assert(e.animation)
 		local anipose = anicomp.pose
 
-		local srcstate = state_chain.current
 		local chain = state_chain.chain
 
-		if state_chain.transmit then
-			if state_chain.transmit(timer.deltatime) then
-				state_chain.transmit = nil
+		local transmit_merge = state_chain.transmit_merge
+		if transmit_merge then
+			if transmit_merge(timer.deltatime) then
+				state_chain.transmit_merge = nil
 				anipose.define = anipose.transmit.targetpose
 				anipose.transmit = nil
 			end
-		elseif state_chain.target then
-			local targetstate = state_chain.target
-			local srcpose = get_pose(chain, srcstate)
-			local targetpose = get_pose(chain, targetstate)
-			assert(srcpose, string.format("invalid state:%s", srcstate))
-			assert(targetpose, string.format("invalid state:%s", targetstate))
-
-			local transmits = state_chain.transmits
-			local transmit = transmits[srcstate]
-
-			local target = find_target_state(transmit, targetstate)
-			if target == nil then
-				error(string.format("dest state:%s, not reachable!", targetstate))
+		else
+			local traget_transmits = state_chain.transmits[state_chain.target]
+			if traget_transmits then
+				for _, transmit in ipairs(traget_transmits) do
+					if transmit.can_transmit(e, _G) then
+						local newtarget = transmit.name
+						state_chain.target = newtarget
+						local targetpose = get_pose(chain, newtarget)
+						anipose.transmit = {
+							source_weight = 0,
+							target_weight = 0,
+							targetpose = targetpose
+						}
+			
+						aniutil.play_animation(anicomp, targetpose)
+						state_chain.transmit = get_transmit_merge(e, transmit)
+						break
+					end
+				end
+			else
+				if _G.DEBUG then
+					print("[state machine]: there are not transmit targets for current target> ", state_chain.target)
+				end
 			end
-
-			anipose.transmit = {
-				source_weight = 0,
-				target_weight = 0,
-				targetpose = targetpose
-			}
-
-			aniutil.play_animation(anicomp, targetpose)
-			local op = get_transmit(state_chain.script)
-			state_chain.transmit = function (deltatime)
-				return op(anicomp, target, deltatime)
-			end
-
-			state_chain.target = nil
 		end
 	end
 end

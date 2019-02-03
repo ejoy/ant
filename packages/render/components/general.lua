@@ -128,6 +128,9 @@ schema:typedef("color", "real[4]", {1,1,1,1})
 schema:type "character"
 	.movespeed "real" (1.0)
 
+schema:type "physic_state"
+	.velocity "vector"
+
 schema:type "ambient_light"
 	.mode "string" ("color")
 	.factor "real" (0.3)

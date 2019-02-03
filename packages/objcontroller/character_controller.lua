@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local timer = import_package "ant.timer"
-
+local ms = import_package "ant.math".stack
 local objutil = require "util"
 
 local cc = ecs.system "character_controller"
@@ -23,9 +23,14 @@ function cc:init()
 		
 		local movespeed = character.character.movespeed
 		local deltatime = timer.deltatime * 0.001 * value
-		local delta_dis = movespeed * deltatime		
+
+		local physic_state = character.physic_state
+		physic_state.velocity = ms({movespeed}, character.rotation, "dT")
+
+		local delta_dis = movespeed * deltatime
 		if x then
-			x = x * delta_dis			
+			ms()
+			x = x * delta_dis
 		end
 		if y then
 			y = y * delta_dis			
@@ -56,4 +61,8 @@ function cc:init()
 	objctrller.bind_tigger("jump", function (event, value)
 		
 	end)
+end
+
+function cc:update()
+	
 end
