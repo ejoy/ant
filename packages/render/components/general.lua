@@ -129,7 +129,7 @@ schema:type "character"
 	.movespeed "real" (1.0)
 
 schema:type "physic_state"
-	.velocity "vector"
+	.velocity "real[3]"
 
 schema:type "ambient_light"
 	.mode "string" ("color")

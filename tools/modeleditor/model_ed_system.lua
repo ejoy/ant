@@ -28,6 +28,7 @@ model_ed_sys.singleton "debug_object"
 model_ed_sys.depend "camera_init"
 model_ed_sys.depend "character_controller"
 model_ed_sys.depend "renderbone_system"
+model_ed_sys.depend "state_machine"
 
 model_ed_sys.dependby "transparency_filter_system"
 model_ed_sys.dependby "entity_rendering"
@@ -97,7 +98,7 @@ end
 
 local function check_create_sample_entity(skepath, anipaths, smpath)
 	local function check_path_valid(pp)
-		if not assetmgr.find_asset_path("ant.resources", pp) then
+		if not assetmgr.find_asset_path(pp.package, pp.filename) then
 			iup.Message("Error", string.format("invalid path : %s", pp))
 			return false
 		end
@@ -199,16 +200,16 @@ local function init_paths_ctrl()
 	skeinputer:set_input("ant.resources.binary:meshes/female/skeleton.ozz")
 	
 	assert(aniview:count() == 0)
-	aniview:add("ant.resource.binary:meshes/female/animations/idle.ozz")
-	aniview:add("ant.resource.binary:meshes/female/animations/walking.ozz")
-	aniview:add("ant.resource.binary:meshes/female/animations/running.ozz")
+	aniview:add("ant.resources.binary:meshes/female/animations/idle.ozz")
+	aniview:add("ant.resources.binary:meshes/female/animations/walking.ozz")
+	aniview:add("ant.resources.binary:meshes/female/animations/running.ozz")
 	
 	local blender = iup.GetDialogChild(dlg, "BLENDER").owner
 	aniview:set_blender(blender)
 
 	local change_cb = function ()
 		local function string_to_path(ss)
-			local pkgname, resname = ss:match("[^([^:]+):(.+)$]")
+			local pkgname, resname = ss:match("^([^:]+):(.+)$")
 			if pkgname == nil then
 				pkgname = "ant.resources"
 				resname = ss
@@ -472,7 +473,9 @@ end
 local function init_state_machine()
 	local sample = sample_entity()
 	if sample then
-		sample.state_chain = assetmgr.load("ant.resources", fs.path "simple_animation.sm")
+		local sm = assetmgr.load("ant.resources", fs.path "simple_animation.sm")
+		sample.state_chain = sm
+		sample.state_chain.target = sm.main_entry
 	end
 end
 

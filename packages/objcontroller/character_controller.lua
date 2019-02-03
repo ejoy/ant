@@ -25,7 +25,9 @@ function cc:init()
 		local deltatime = timer.deltatime * 0.001 * value
 
 		local physic_state = character.physic_state
-		physic_state.velocity = ms({movespeed}, character.rotation, "dT")
+		local result = ms({movespeed}, character.rotation, "dT")
+		local velocity = physic_state.velocity
+		velocity[1], velocity[2], velocity[3] = result[1], result[2], result[3]		
 
 		local delta_dis = movespeed * deltatime
 		if x then

@@ -41,7 +41,7 @@ transmits = {
 				end
 
 				local velocity = physic_state.velocity
-				return velocity and (velocity.x ~= 0 or velocity.y ~= 0 or velocity.z ~= 0) or false
+				return velocity and (velocity[1] ~= 0 or velocity[2] ~= 0 or velocity[3] ~= 0) or false
 			end,
 		},
 	},
@@ -56,9 +56,9 @@ transmits = {
 						local function is_almost_zero(v)
 							return -1e-6 < v and v < 1e-6
 						end
-						return is_almost_zero(velocity.x) 
-						and is_almost_zero(velocity.y) 
-						and is_almost_zero(velocity.z)
+						return is_almost_zero(velocity[1]) 
+						and is_almost_zero(velocity[2]) 
+						and is_almost_zero(velocity[3])
 					end
 				end
 
@@ -75,9 +75,9 @@ transmits = {
 						local function is_large_enough_to_run(v)
 							return v > 5
 						end
-						return is_large_enough_to_run(velocity.x) 
-						and is_large_enough_to_run(velocity.y) 
-						and is_large_enough_to_run(velocity.z)
+						return is_large_enough_to_run(velocity[1]) 
+						and is_large_enough_to_run(velocity[2]) 
+						and is_large_enough_to_run(velocity[3])
 					end
 				end
 			end
@@ -94,9 +94,9 @@ transmits = {
 						local function is_almost_zero(v)
 							return -1e-6 < v and v < 1e-6
 						end
-						return is_almost_zero(velocity.x) 
-						and is_almost_zero(velocity.y) 
-						and is_almost_zero(velocity.z)
+						return is_almost_zero(velocity[1]) 
+						and is_almost_zero(velocity[2]) 
+						and is_almost_zero(velocity[3])
 					end
 				end
 			end
@@ -111,9 +111,9 @@ transmits = {
 						local function is_slow_to_walk(v)
 							return 1 < v and v <= 5
 						end
-						return is_slow_to_walk(velocity.x) 
-						and is_slow_to_walk(velocity.y) 
-						and is_slow_to_walk(velocity.z)
+						return is_slow_to_walk(velocity[1]) 
+						and is_slow_to_walk(velocity[2]) 
+						and is_slow_to_walk(velocity[3])
 					end
 				end
 			end

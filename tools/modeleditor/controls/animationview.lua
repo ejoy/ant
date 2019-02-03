@@ -36,7 +36,7 @@ function animationview:get_blender()
 end
 
 local function get_tag_name(filename)
-	local name = filename:filename():string():match("([^.]+)")
+	local name = filename:match(".+/([^.]+)")
 	name = name or "ani"
 
 	local function chop_name(name)
@@ -45,13 +45,14 @@ local function get_tag_name(filename)
 			local surfix = name:sub(#name-3)
 			return prefix .. ".." .. surfix
 		end
+		return name
 	end
 
 	return name ~= "" and chop_name(name) or "ani"	
 end
 
 local function add_ani_to_grid(grid, filepath)
-	grid:append_line({get_tag_name(filepath), filepath:string()})
+	grid:append_line({get_tag_name(filepath), filepath})
 	grid:fit_col_content_size(2)
 end
 

@@ -423,14 +423,9 @@ get_aniresult(lua_State *L, ozz::animation::Skeleton* ske, int idx) {
 }
 
 static inline bind_pose*
-get_bindpose(lua_State *L, ozz::animation::Skeleton *ske, int idx) {
+get_bindpose(lua_State *L, int idx) {
 	luaL_checktype(L, idx, LUA_TUSERDATA);
-	bind_pose* pose = (bind_pose*)lua_touserdata(L, idx);
-	if (pose->pose.size() != (size_t)ske->num_soa_joints()) {
-		luaL_error(L, "bindposecount:%d, is not equal to skeleton soa joint number: %d", pose->pose.size(), ske->num_soa_joints());
-	}
-
-	return pose;
+	return (bind_pose*)lua_touserdata(L, idx);
 }
 
 struct sample_info {
@@ -518,13 +513,12 @@ lsample_animation(lua_State *L) {
 static int
 ltransform_bindpose(lua_State *L) {
 	auto ske = get_ske(L, 1);
-	auto bindpose = get_bindpose(L, ske, 2);
+	auto bindpose = get_bindpose(L, 2);
 	auto result = get_aniresult(L, ske, 3);
 
 	if (!do_ltm(ske, bindpose->pose, result->joints)) {
 		luaL_error(L, "transform from bind pose to ani result failed!");
 	}
-
 	return 0;
 }
 
@@ -593,26 +587,28 @@ lblend_bind_poses(lua_State *L) {
 	bl.results.resize(numposes);
 
 	for (int ii = 0; ii < numposes; ++ii) {
-		lua_geti(L, 3, ii+1);
+		lua_geti(L, 2, ii+1);
 		{
+			luaL_checktype(L, -1, LUA_TTABLE);
 			lua_getfield(L, -1, "pose");
 			auto pose = (bind_pose*)lua_touserdata(L, -1);
-			lua_pop(L, -1);
+			lua_pop(L, 1);
 
 			lua_getfield(L, -1, "weight");
 			const float weight = (float)lua_tonumber(L, -1);
-			lua_pop(L, -1);
+			lua_pop(L, 1);
 
 			bl.layers[ii].weight = weight;
 			bl.layers[ii].transform = ozz::make_range(pose->pose);
 		}
-		lua_pop(L, -1);
+		lua_pop(L, 1);
 	}
 
-	const char* blendtype = lua_tostring(L, 4);
-	bind_pose *finalpose = (bind_pose*)lua_touserdata(L, 5);
-	const float threshold = (float)luaL_optnumber(L, 6, 0.1f);
+	const char* blendtype = lua_tostring(L, 3);
+	bind_pose *finalpose = (bind_pose*)lua_touserdata(L, 4);
+	const float threshold = (float)luaL_optnumber(L, 5, 0.1f);
 
+	finalpose->pose.resize(ske->num_soa_joints());
 	do_blend(ske, bl.layers, blendtype, threshold, finalpose);
 
 	return 0;
@@ -646,11 +642,13 @@ static int
 lblend_animations(lua_State *L) {
 	auto ske = get_ske(L, 1);	
 	const char* blendtype = lua_tostring(L, 3);
-	auto bindpose = get_bindpose(L, ske, 4);
+	auto bindpose = get_bindpose(L, 4);
 
 	const float threshold = (float)luaL_optnumber(L, 5, 0.1f);
 
 	blend_animations(L, 2, blendtype, ske, threshold, bindpose);
+
+	assert(bindpose->pose.size() == ske->joint_bind_poses().count());
 
 	return 0;
 }

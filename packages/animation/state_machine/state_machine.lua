@@ -87,11 +87,11 @@ function sm:update()
 			if traget_transmits then
 				for _, transmit in ipairs(traget_transmits) do
 					if transmit.can_transmit(e, _G) then
-						local newtarget = transmit.name
+						local newtarget = transmit.targetname
 						state_chain.target = newtarget
 						local targetpose = get_pose(chain, newtarget)
 						anipose.transmit = {
-							source_weight = 0,
+							source_weight = 1,
 							target_weight = 0,
 							targetpose = targetpose
 						}
