@@ -510,14 +510,75 @@ lsample_animation(lua_State *L) {
 	return 0;
 }
 
+static inline int
+find_root_index(const ozz::animation::Skeleton *ske) {
+	const auto jointcount = ske->num_joints();
+	const auto &parents = ske->joint_parents();
+	for (auto ii = 0; ii < jointcount; ++ii) {
+		auto &parent = parents[ii];
+		if (parent == ozz::animation::Skeleton::kNoParent)
+			return ii;
+	}
+
+	return -1;
+}
+
+static inline void
+fetch_float4x4(const ozz::math::SoaTransform &trans, int subidx, ozz::math::Float4x4 &f4x4) {
+	const ozz::math::SoaFloat4x4 local_soa_matrices = ozz::math::SoaFloat4x4::FromAffine(
+		trans.translation, trans.rotation, trans.scale);
+
+	// Converts to aos matrices.
+	ozz::math::Float4x4 local_aos_matrices[4];
+	ozz::math::Transpose16x16(&local_soa_matrices.cols[0].x,
+		local_aos_matrices->cols);
+
+	f4x4 = local_aos_matrices[subidx];
+}
+
+static inline void
+extract_fix_matrix(const ozz::animation::Skeleton *ske, const bind_pose &pose, ozz::math::Float4x4 &root) {
+	const auto rootidx = find_root_index(ske);
+	assert(rootidx >= 0);
+	
+	const auto soa_rootidx = rootidx / 4;
+	const auto aos_subidx = rootidx % 4;
+
+	const auto &trans = pose.pose[soa_rootidx];
+	fetch_float4x4(trans, aos_subidx, root);
+
+	const auto &bindpose_root = ske->joint_bind_poses()[soa_rootidx];
+	ozz::math::Float4x4 bp4x4;
+	fetch_float4x4(bindpose_root, aos_subidx, bp4x4);
+
+	root = ozz::math::Invert(root) * bp4x4;
+	
+}
+
+static inline bool
+transform_bindpose(ozz::animation::Skeleton *ske, 
+	bind_pose *bindpose, 
+	bool fixroot,
+	animation_result *result) {
+
+	ozz::math::Float4x4 rootmat = ozz::math::Float4x4::identity();
+	if (fixroot) {
+		extract_fix_matrix(ske, *bindpose, rootmat);
+	}
+
+	return do_ltm(ske, bindpose->pose, result->joints, &rootmat);
+}
+
+
 static int
 ltransform_bindpose(lua_State *L) {
 	auto ske = get_ske(L, 1);
 	auto bindpose = get_bindpose(L, 2);
 	auto result = get_aniresult(L, ske, 3);
+	const bool need_fix_root = luaL_opt(L, lua_toboolean, 4, true);
 
-	if (!do_ltm(ske, bindpose->pose, result->joints)) {
-		luaL_error(L, "transform from bind pose to ani result failed!");
+	if (!transform_bindpose(ske, bindpose, need_fix_root, result)) {
+		luaL_error(L, "transform bind pose is failed!");
 	}
 	return 0;
 }
@@ -653,50 +714,6 @@ lblend_animations(lua_State *L) {
 	return 0;
 }
 
-static inline int
-find_root_index(const ozz::animation::Skeleton *ske) {
-	const auto jointcount = ske->num_joints();
-	const auto &parents = ske->joint_parents();
-	for (auto ii = 0; ii < jointcount; ++ii) {
-		auto &parent = parents[ii];
-		if (parent == ozz::animation::Skeleton::kNoParent)
-			return ii;
-	}
-
-	return -1;
-}
-
-static inline void
-fetch_float4x4(const ozz::math::SoaTransform &trans, int subidx, ozz::math::Float4x4 &f4x4) {
-	const ozz::math::SoaFloat4x4 local_soa_matrices = ozz::math::SoaFloat4x4::FromAffine(
-		trans.translation, trans.rotation, trans.scale);
-
-	// Converts to aos matrices.
-	ozz::math::Float4x4 local_aos_matrices[4];
-	ozz::math::Transpose16x16(&local_soa_matrices.cols[0].x,
-		local_aos_matrices->cols);
-
-	f4x4 = local_aos_matrices[subidx];
-}
-
-static inline void
-extract_fix_matrix(const ozz::animation::Skeleton *ske, const bind_pose &pose, ozz::math::Float4x4 &root) {
-	const auto rootidx = find_root_index(ske);
-	if (rootidx >= 0) {
-		const auto soa_rootidx = rootidx / 4;
-		const auto aos_subidx = rootidx % 4;
-
-		const auto &trans = pose.pose[soa_rootidx];
-		fetch_float4x4(trans, aos_subidx, root);
-
-		const auto &bindpose_root = ske->joint_bind_poses()[soa_rootidx];
-		ozz::math::Float4x4 bp4x4;
-		fetch_float4x4(bindpose_root, aos_subidx, bp4x4);
-
-		root = ozz::math::Invert(root) * bp4x4;
-	}
-}
-
 static int
 lmotion(lua_State *L) {
 	auto ske = get_ske(L, 1);	
@@ -710,12 +727,7 @@ lmotion(lua_State *L) {
 	bind_pose bindpose;
 	blend_animations(L, 2, blendtype, ske, threshold, &bindpose);
 
-	ozz::math::Float4x4 rootmat = ozz::math::Float4x4::identity();
-	if (need_fix_root) {
-		extract_fix_matrix(ske, bindpose, rootmat);		
-	}
-
-	if (!do_ltm(ske, bindpose.pose, aniresult->joints, &rootmat)) {
+	if (!transform_bindpose(ske, &bindpose, need_fix_root, aniresult)){
 		luaL_error(L, "doing blend result to ltm job failed!");
 	}
 

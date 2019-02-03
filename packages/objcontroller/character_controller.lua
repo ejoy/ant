@@ -25,7 +25,7 @@ function cc:init()
 		local deltatime = timer.deltatime * 0.001 * value
 
 		local physic_state = character.physic_state
-		local result = ms({movespeed}, character.rotation, "dT")
+		local result = ms({movespeed * value}, character.rotation, "d*T")
 		local velocity = physic_state.velocity
 		velocity[1], velocity[2], velocity[3] = result[1], result[2], result[3]		
 
@@ -44,23 +44,15 @@ function cc:init()
 		objutil.move(character, x, y, z)		
 	end
 
-	objctrller.bind_constant("move_forward", function (event, value)
+	objctrller.bind_constant("move_forward", function (value)
 		move(value, nil, nil, 1)
 	end)
 
-	objctrller.bind_constant("move_backward", function (event, value)
-		move(value, nil, nil, 1)
-	end)
-
-	objctrller.bind_constant("move_left", function (event, value)
+	objctrller.bind_constant("move_left", function (value)
 		move(value, 1)
 	end)
 
-	objctrller.bind_constant("move_right", function (event, value)
-		move(value, 1)
-	end)
-
-	objctrller.bind_tigger("jump", function (event, value)
+	objctrller.bind_tigger("jump", function (event)
 		
 	end)
 end

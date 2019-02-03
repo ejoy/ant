@@ -116,55 +116,61 @@ end
 local function add_event(event)
 	assert(msgqueue)
 	assert(event.name)
+	-- tiger
+	msgqueue.tiggers[#msgqueue.tiggers+1] = event
 
-	local tt = msgqueue.tiggers
-	if tt == nil then
-		tt = {}
-		msgqueue.tiggers = tt
-	end
-	tt[#tt+1] = event
-
-	if event.press == nil then
-		return
-	end
-
-	if event.press then
-		local c = msgqueue.constants
-		if c == nil then
-			c = {}
-			msgqueue.constants = c
-		end
-
-		local function find_new_event(event)
-			for idx, e in ipairs(c) do
-				if match_const_event(e, event) then
-					return idx
-				end
+	-- constant
+	local function find_new_slot(constants, event)
+		for idx, e in ipairs(constants) do
+			if match_const_event(e, event) then
+				return idx
 			end
-			return #c+1
+		end
+		return #constants+1
+	end
+
+	local function simulate_const_input(event)
+		local name = event.name
+		if name == "keyboard" or name == "mouse" then
+			if event.press then
+				event.value = 1
+				return event
+			else
+				return nil
+			end
 		end
 
-		local idx = find_new_event(event)
-		c[idx] = event
+		return event
+	end
+
+	local function remove_const_event_by_name(eventlist, name)
+		local idx = 1
+		while idx <= #eventlist do
+			local c = eventlist[idx]
+			if c.name == event.name then
+				table.remove(eventlist, idx)
+			else
+				idx = idx + 1
+			end
+		end		
+	end
+
+	local slot = find_new_slot(msgqueue.constants, event)
+	local newevent = simulate_const_input(event)
+	if newevent then
+		msgqueue.constants[slot] = newevent
 	else
-		local c = msgqueue.constants
-		if c then
-			local idx = 1
-			while idx <= #c do
-				local ec = c[idx]
-				if ec.name == event.name then
-					table.remove(c, idx)
-				else
-					idx = idx + 1
-				end
-			end
-		end
+		remove_const_event_by_name(msgqueue.constants, newevent)
 	end
+	
 end
 
 function objcontroller.init(msg)
 	assert(msgqueue == nil)
-	msgqueue = {}
+	msgqueue = {
+		tiggers = {},
+		constants = {},
+	}
 	msg.observers:add  {
 		mouse_click = function (_, what, press, x, y, state)
 			add_event {name = "mouse_click", what=what, press=press, x=x, y=y, state=state}
@@ -208,15 +214,46 @@ function objcontroller.bind_constant(name, cb)
 	constants:bind(name, cb)
 end
 
-local function update_match_event(eventlist, match_eventlist, matchop, updateop)
-	for _, e in ipairs(eventlist) do
-		for _, me in match_eventlist:iter() do
-			local keys = me.keys
-			for _, key in ipairs(keys) do
-				if matchop(key, e) then
-					updateop(me, e, key)
+local function update_tigger_event(eventlist, tiggers)
+	for _, event in ipairs(eventlist) do
+		for _, tigger in tiggers:iter() do
+			local keys = tigger.keys
+			local function find_key(keys, event) 
+				for _, key in ipairs(keys) do
+					if match_tigger_event(key, event) then
+						return key
+					end
 				end
 			end
+			local key = find_key(keys, event)
+			if key then
+				local cb = tigger.cb
+				if cb then
+					cb(event, key)
+				end
+				break
+			end
+		end
+	end
+end
+
+local function update_constant_event(eventlist, constants)
+	for _, c in constants:iter() do
+		local function find_event(eventlist, const)
+			for _, key in ipairs(const.keys) do			
+				for _, event in ipairs(eventlist) do
+					if match_const_event(key, event) then
+						return event, key
+					end
+				end
+			end
+		end
+
+		local event, key = find_event(eventlist, c)	
+		local cb = c.cb
+		if cb then
+			local value = event and event.value * key.scale or 0
+			cb(value)
 		end
 	end
 end
@@ -225,29 +262,11 @@ function objcontroller.update()
 	assert(msgqueue)
 
 	if msgqueue.tiggers then
-		update_match_event(msgqueue.tiggers, tiggers, 
-		match_tigger_event,
-		function (me, e) 
-			local cb = me.cb
-			if cb then
-				cb(e)
-			end
-		end)
-
-		msgqueue.tiggers = nil
+		update_tigger_event(msgqueue.tiggers, tiggers)
+		msgqueue.tiggers = {}
 	end
 
-	if msgqueue.constants then
-		update_match_event(msgqueue.constants, constants, 
-		match_const_event,
-		function (me, e, key)
-			local cb = me.cb
-			if cb then
-				local value = e.value or 1				
-				cb(e, value * key.value)
-			end
-		end)
-	end
+	update_constant_event(msgqueue.constants, constants)	
 end
 
 return objcontroller

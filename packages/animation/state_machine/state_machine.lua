@@ -56,13 +56,19 @@ local function get_transmit_merge(entity, targettransmit)
 	local timepassed = 0
 	return function (deltatime)
 		local tt_duration = targettransmit.duration
-		local weight = math.max(0, math.min(1, timepassed / tt_duration))
 		timepassed = timepassed + deltatime
 
+		if timepassed > tt_duration then
+			return true
+		end
+
+		local weight = math.max(0, math.min(1, timepassed / tt_duration))
 		local anicomp = entity.animation
 		local transmit = assert(anicomp.pose.transmit)
 		transmit.source_weight = 1 - weight
 		transmit.target_weight = weight
+
+		return false
 	end
 end
 
@@ -97,7 +103,7 @@ function sm:update()
 						}
 			
 						aniutil.play_animation(anicomp, targetpose)
-						state_chain.transmit = get_transmit_merge(e, transmit)
+						state_chain.transmit_merge = get_transmit_merge(e, transmit)
 						break
 					end
 				end

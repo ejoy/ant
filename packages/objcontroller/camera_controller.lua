@@ -14,7 +14,7 @@ camera_controller_system.singleton "control_state"
 camera_controller_system.depend "camera_init"
 camera_controller_system.depend "objcontroller_system"
 
-function camera_controller_system:init()	
+function camera_controller_system:init()
 	local camera = world:first_entity("main_camera")
 	local speed_persecond = 30
 	local function calc_step(speed, delta)
@@ -30,36 +30,26 @@ function camera_controller_system:init()
 		hit.enable = false
 	end)
 
-	objctrller.bind_constant("move_forward", function (event, value)
+	objctrller.bind_constant("move_forward", function (scale)
 		if hit.enable then
-			objutil.move(camera, 0, 0, calc_step(speed_persecond, timer.deltatime * 0.001))
+			objutil.move(camera, 0, 0, calc_step(speed_persecond, timer.deltatime * 0.001) * scale)
+			return "handled"
 		end
 	end)
-	objctrller.bind_constant("move_backward", function (event, value) 
+	
+	objctrller.bind_constant("move_left", function (scale)
 		if hit.enable then
-			objutil.move(camera, 0, 0, -calc_step(speed_persecond, timer.deltatime * 0.001))
+			objutil.move(camera, calc_step(speed_persecond, timer.deltatime * 0.001) * scale, 0, 0)
+			return "handled"
 		end
 	end)
-	objctrller.bind_constant("move_left", function (event, value)
+	
+	objctrller.bind_constant("move_up", function (scale) 
 		if hit.enable then
-			objutil.move(camera, -calc_step(speed_persecond, timer.deltatime * 0.001), 0, 0)
+			objutil.move(camera, 0, calc_step(speed_persecond, timer.deltatime * 0.001) * scale, 0)
+			return "handled"
 		end
-	end)
-	objctrller.bind_constant("move_right", function (event, value) 
-		if hit.enable then
-			objutil.move(camera, calc_step(speed_persecond, timer.deltatime * 0.001), 0, 0)
-		end
-	end)
-	objctrller.bind_constant("move_up", function (event, value) 
-		if hit.enable then
-			objutil.move(camera, 0, calc_step(speed_persecond, timer.deltatime * 0.001), 0)
-		end
-	end)
-	objctrller.bind_constant("move_down", function (event, value) 
-		if hit.enable then
-			objutil.move(camera, 0, -calc_step(speed_persecond, timer.deltatime * 0.001), 0)
-		end
-	end)
+	end)	
 
 	objctrller.bind_tigger("rotate", function (event)
 		local dx, dy = event.x - hit[1], event.y - hit[2]

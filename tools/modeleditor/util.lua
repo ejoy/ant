@@ -114,7 +114,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 		define.anilist = {
 			{idx=1, weight=1}
 		}
-		define.name = "test"
+		define.name = "idle"
 	end
 
 	

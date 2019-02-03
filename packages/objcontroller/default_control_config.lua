@@ -15,29 +15,24 @@ return {
 	},
 	constant = {
 		move_forward = {
-			{name = 'keyboard', key = 'W', value=1, state = {}},
-			{name = 'keyboard', key = 'w', value=1, state = {}},
+			{name = 'keyboard', key = 'W', scale=1, state = {}},
+			{name = 'keyboard', key = 'w', scale=1, state = {}},
+			{name = 'keyboard', key = 'S', scale=-1, state = {}},
+			{name = 'keyboard', key = 's', scale=-1, state = {}},
 		},
-		move_backward = {			
-			{name = 'keyboard', key = 'S', value=-1, state = {}},
-			{name = 'keyboard', key = 's', value=-1, state = {}},
-		},
+
 		move_left = {			
-			{name = 'keyboard', key = 'A', value=-1, state = {}},
-			{name = 'keyboard', key = 'a', value=-1, state = {}}
+			{name = 'keyboard', key = 'A', scale=-1, state = {}},
+			{name = 'keyboard', key = 'a', scale=-1, state = {}},
+			{name = 'keyboard', key = 'D', scale=1, state = {}},
+			{name = 'keyboard', key = 'd', scale=1, state = {}}
 		},
-		move_right = {		
-			{name = 'keyboard', key = 'D', value=1, state = {}},
-			{name = 'keyboard', key = 'd', value=1, state = {}}
 		
-		},
 		move_up = {			
-			{name = 'keyboard', key = 'Q', value=1, state = {}},
-			{name = 'keyboard', key = 'q', value=1, state = {}}
-		},
-		move_down = {			
-			{name = 'keyboard', key = 'E', value=-1, state = {}},
-			{name = 'keyboard', key = 'e', value=-1, state = {}}
+			{name = 'keyboard', key = 'Q', scale=1, state = {}},
+			{name = 'keyboard', key = 'q', scale=1, state = {}},
+			{name = 'keyboard', key = 'E', scale=-1, state = {}},
+			{name = 'keyboard', key = 'e', scale=-1, state = {}}
 		},
 	}
 
