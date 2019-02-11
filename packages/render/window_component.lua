@@ -18,7 +18,7 @@ local debug = ecs.system "debug_system"
 
 debug.singleton "message"
 
-function debug:update()
+function debug:init()
     local message = {}
     local enable = false
     function message:keyboard(c, p)
