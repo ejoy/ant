@@ -2,6 +2,7 @@ local method = require "method"
 local crypt = require "crypt"
 
 local pool
+local load
 local typeinfo
 local ids
 
