@@ -29,6 +29,9 @@ local function calc_ratio(current_counter, ani)
 end
 
 function animation_content:init()
+	if self.ref_path.package ~= '' then
+		self.handle = asset.load(self.ref_path.package, self.ref_path.filename)
+	end
 	self.start_counter = 0
 	self.ratio = 0
 	return self
@@ -41,10 +44,6 @@ end
 -- 		self.name = filename:filename()
 -- 	end
 -- end
-
-function animation_content:load()
-	self.handle = asset.load(self.ref_path.package, self.ref_path.filename)
-end
 
 schema:type "animation"
 	.anilist "animation_content[]"

@@ -38,7 +38,7 @@ local function stringify_basetype(name, v)
 end
 
 local function stringify_array_value(c, array, v, load)
-    if not load and c.method and c.method.load then
+    if not load and c.method and c.method.init then
         load = c.name
     end
     if c.type ~= 'primtype' then
@@ -59,7 +59,7 @@ local function stringify_array_value(c, array, v, load)
 end
 
 local function stringify_map_value(c, v, load)
-    if not load and c.method and c.method.load then
+    if not load and c.method and c.method.init then
         load = c.name
     end
     if c.type ~= 'primtype' then
@@ -89,7 +89,7 @@ local function stringify_value(c, v, load)
         end
         return stringify_basetype(c.name, v)
     end
-    if not load and c.method and c.method.load then
+    if not load and c.method and c.method.init then
         load = c.name
     end
     return stringify_value(typeinfo[c.type], v, load)

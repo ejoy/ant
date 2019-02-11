@@ -6,8 +6,8 @@ local function getPost(w)
     if not postPool[w] then
         local t = {}
         for k, v in pairs(w.schema.map) do
-            if v.method and v.method.load then
-                t[k] = v.method.load
+            if v.method and v.method.init then
+                t[k] = v.method.init
             end
         end
         postPool[w] = t
