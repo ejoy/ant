@@ -2,13 +2,47 @@ local ecs = ...
 local world = ecs.world
 local schema = world.schema
 
-ecs.tag "directional_light"
-ecs.tag "point_light"
-ecs.tag "spot_light"
+ecs.tag "light"
 
-schema:type "light"
-		.type "string" "point" 	-- "spot", "directional", "ambient"
-		.intensity "int" (50)
-		.color "color"
-["opt"]	.angle "int" (360)
-["opt"]	.range "int" (100)
+schema:type "directional_light"
+	.intensity "int"	(50)
+	.color "color"
+
+schema:type "point_light"
+	.intensity "int" (50)
+	.color "color"
+	.range "real"	(100)
+
+schema:type "spot_light"
+	.intensity "int" (50)
+	.color "color"
+	.range "real"	(100)
+	.angle "real"	(60)
+
+schema:type "ambient_light"
+	.mode "string" ("color")
+	.factor "real" (0.3)
+	.skycolor "color"
+	.midcolor "color"
+	.groundcolor "color"
+
+for _, ltype in ipairs {
+	"directional_light", 
+	"point_light", 
+	"spot_light",
+	"ambient_light"} do
+	local l = ecs.component(ltype)
+	local function init(self)
+		self.dirty = true
+	end
+
+	function l:init()
+		init(self)
+		return self
+	end
+
+	function l:load()
+		init(self)
+		return self
+	end
+end

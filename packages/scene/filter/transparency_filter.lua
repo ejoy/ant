@@ -1,15 +1,12 @@
 local ecs = ...
 local world = ecs.world
 
-
-
 local transparency_filter_sys = ecs.system "transparency_filter_system"
 
 transparency_filter_sys.depend "lighting_primitive_filter_system"
 transparency_filter_sys.dependby "final_filter_system"
-
 --luacheck: ignore self
-function transparency_filter_sys:update()
+function transparency_filter_sys:update()	
 	for _, eid in world:each("primitive_filter") do
 		local e = world[eid]
 		local filter = e.primitive_filter

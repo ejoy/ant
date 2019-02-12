@@ -37,7 +37,7 @@ end
 local function new_component(w, eid, c, ...)
 	if c then
 		local entity = assert(w[eid])
-		print("component:%s", c)
+		print("component:", c)
 		if entity[c] then
 			error(string.format("multiple component defined:%s", c))
 		end

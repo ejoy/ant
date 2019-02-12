@@ -18,8 +18,6 @@ function widget_sys:update()
 	local camera = world:first_entity("main_camera")
 
 	local filter = assert(camera.primitive_filter)
-	local result = assert(filter.result)
-
 	for _, eid in world:each("widget") do
 		local e = world[eid]
 		local widget = e.widget
@@ -28,7 +26,7 @@ function widget_sys:update()
 			local meshhandle = assert(widget.mesh).assetinfo.handle		
 			local materials = assert(widget.material).content
 			
-			ru.insert_primitive(eid, meshhandle, materials, widget.srt, result)
+			ru.insert_primitive(eid, meshhandle, materials, widget.srt, filter)
 		end
 	end
 end

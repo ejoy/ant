@@ -130,10 +130,3 @@ schema:type "character"
 
 schema:type "physic_state"
 	.velocity "real[3]"
-
-schema:type "ambient_light"
-	.mode "string" ("color")
-	.factor "real" (0.3)
-	.skycolor "color"
-	.midcolor "color"
-	.groundcolor "color"

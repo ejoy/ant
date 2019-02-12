@@ -56,21 +56,11 @@ local function get_shadow_properties(uniform_properties, texture_properties)
 	end 
 end 
 
---luacheck: ignore self
-function shadow_primitive_filter_sys:update()	
+function shadow_primitive_filter_sys:update()		
 	for _, eid in world:each("primitive_filter") do
 		local e = world[eid]
 		local filter = e.primitive_filter
-		
-		-- TODO: same as lighting properties
-		local unifrom_properties = {}
-		local texture_properties = {}
-		get_shadow_properties(unifrom_properties, texture_properties) 		
-		for _, r in ipairs(filter.result) do
-			local properties = r.properties
-			filterutil.append_uniform_properties(properties, unifrom_properties)
-			filterutil.append_texture_properties(properties, texture_properties)
-		end
-	
+		local shadowproperties = filter.render_properties.shadow		
+		get_shadow_properties(shadowproperties.uniforms, shadowproperties.textures)
 	end
 end

@@ -1773,6 +1773,45 @@ new_temp_euler(lua_State *L) {
 }
 
 static int
+to_srt(lua_State *L) {
+	int numarg = lua_gettop(L);
+	if (numarg != 3) {
+		luaL_error(L, "need 3 arg, %d provided", numarg);
+	}
+
+	struct refobject *scale = (struct refobject*)lua_touserdata(L, 1);
+	struct lastack *LS = scale->LS;
+	struct refobject *rotation = (struct refobject*)lua_touserdata(L, 2);
+	assert(LS == rotation->LS);
+	struct refobject *translation = (struct refobject*)lua_touserdata(L, 3);
+	assert(LS == translation->LS);
+
+	int scaletype, rotationtype, translationtype;
+	glm::vec3 * scalevalue = (glm::vec3 *)lastack_value(LS, scale->id, &scaletype);
+	assert(scaletype == LINEAR_TYPE_VEC4);
+
+	glm::vec3 * rotationvalue = (glm::vec3 *)lastack_value(LS, rotation->id, &rotationtype);
+	assert(rotationtype == LINEAR_TYPE_VEC4 || rotationtype == LINEAR_TYPE_EULER);
+
+	glm::vec4 * translationvalue = (glm::vec4 *)lastack_value(LS, translation->id, &translationtype);
+	assert(translationtype == LINEAR_TYPE_VEC4);
+
+	glm::mat4x4 srt(1);
+	srt[0][0] = (*scalevalue)[0];
+	srt[1][1] = (*scalevalue)[1];
+	srt[2][2] = (*scalevalue)[2];
+
+	srt = glm::mat4x4(glm::quat(glm::radians(*rotationvalue))) * srt;
+
+	srt[3] = *translationvalue;
+	srt[3][3] = 1;
+
+	lastack_pushmatrix(LS, &(srt[0][0]));
+	lua_pushlightuserdata(L, pop_value(L, LS, NULL));
+	return 1;
+}
+
+static int
 lnew(lua_State *L) {	
 	struct boxpointer *bp = (struct boxpointer *)lua_newuserdata(L, sizeof(*bp));	
 
@@ -1786,6 +1825,7 @@ lnew(lua_State *L) {
 			{ "matrix", new_temp_matrix },
 			{ "quaternion", new_temp_quaternion},
 			{ "euler", new_temp_euler},
+			{ "to_srt", to_srt},
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
@@ -1897,7 +1937,7 @@ extern "C" {
 			{ "__tostring", lreftostring },
 			{ "__call", lassign },
 			{ "__bnot", lpointer },
-			{ "__index", lref_get},
+			{ "__index", lref_get},			
 			{ NULL, NULL },
 		};
 		luaL_newmetatable(L, LINALG_REF);

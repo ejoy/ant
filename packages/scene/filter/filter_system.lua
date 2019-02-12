@@ -1,11 +1,11 @@
 local ecs = ...
 local world = ecs.world
 
---
 local render = import_package "ant.render"
 local cu = render.components
-
 local ru = render.util
+
+local ms = import_package "ant.math" .stack
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
 
@@ -14,21 +14,19 @@ function primitive_filter_sys:update()
 	for _, eid in world:each("primitive_filter") do
 		local e = world[eid]
 		local filter = e.primitive_filter
-		filter.result = {}		
+		filter.idx = 1
 		for _, eid in world:each("can_render") do
 			local ce = world[eid]
 			if cu.is_entity_visible(ce) then
-				if (not filter.filter_select) or ce.can_select then					
-					local meshhandle = assert(ce.mesh.assetinfo).handle
-					local materials = assert(ce.material.content)
+				if (not filter.filter_select) or ce.can_select then
 					ru.insert_primitive(eid, 
-						meshhandle, 
-						materials, 
-						{s=ce.scale, r=ce.rotation, t=ce.position},
-						filter.result)
+						assert(ce.mesh.assetinfo).handle,
+						assert(ce.material.content),
+						ms({type="srt", s=ce.scale, r=ce.rotation, t=ce.position}, "m"),
+						filter)
 				end
 			end
-		end
+		end	
 	end
 end
 
