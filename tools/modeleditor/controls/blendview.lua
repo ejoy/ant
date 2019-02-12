@@ -1,6 +1,6 @@
 local blender = {}; blender.__index = blender
 
-local iupcontrols = import_package "ani.iupcontrols"
+local iupcontrols = import_package "ant.iupcontrols"
 local ctrlutil = iupcontrols.util
 local observerclass = iupcontrols.common.observer
 

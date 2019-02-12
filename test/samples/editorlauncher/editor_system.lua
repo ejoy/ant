@@ -3,7 +3,7 @@ local ecs = ...
 local world = ecs.world
 
 local editor = import_package "ant.editor"
-local iupcontrols = import_package "ani.iupcontrols"
+local iupcontrols = import_package "ant.iupcontrols"
 local su = import_package "ant.serialize"
 local math = import_package "ant.math"
 

@@ -1,7 +1,7 @@
 local inputer = {}; inputer.__index = inputer
 
 local editor = import_package "ant.editor"
-local iupcontrols = import_package "ani.iupcontrols"
+local iupcontrols = import_package "ant.iupcontrols"
 local ctrlutil = iupcontrols.util
 local observersclass = iupcontrols.common.observer
 
