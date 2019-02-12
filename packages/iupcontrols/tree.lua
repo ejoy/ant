@@ -1,6 +1,8 @@
 
 local ctrlutil = require "util"
 
+require "iuplua"
+
 local tree = {}	; tree.__index = tree
 
 local function new_item(name)

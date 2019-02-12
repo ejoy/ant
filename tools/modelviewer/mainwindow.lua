@@ -1,9 +1,8 @@
-dofile "libs/editor.lua"
 
-local elog = require "editor.log"
+local elog = import_package "ant.iupcontrols" .logview
 local inputmgr = import_package "ant.inputmgr"
 local bgfx = require "bgfx"
-local rhwi = import_package "render".hardware_interface
+local rhwi = import_package "ant.render".hardware_interface
 local scene = import_package "ant.scene"
 local editor = import_package "ant.editor"
 local mapiup = editor.mapiup
@@ -39,10 +38,10 @@ rhwi.init {
 	height = fb_height,
 }
 
-local world = scene.start_new_world(input_queue, fb_width, fb_height, {
-	"renderworld",
+local world = scene.start_new_world(input_queue, fb_width, fb_height, {"ant.modelviewer"}, {
+	"model_review_system",
 	"camera_controller",
-}, "?.lua;tools/modelviewer/?.lua")
+})
 
 task.loop(world.update)
 

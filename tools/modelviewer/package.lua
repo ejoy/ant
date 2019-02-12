@@ -1,3 +1,4 @@
 return {
-    name = "ant.modelviewer"
+    name = "ant.modelviewer",
+    entry = "mainwindow"
 }
