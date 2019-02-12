@@ -90,14 +90,14 @@ _G.io = io
 nio.dofile = dofile
 nio.loadfile = loadfile
 
-local function loadfile(path, mode, env)
+local function loadfile(path, ...)
     local f, err = io_open(path, 'r')
     if not f then
         return nil, err
     end
     local str = f:read 'a'
     f:close()
-    return load(str, '@/vfs/' .. path, mode, env)
+    return load(str, '@/vfs/' .. path, ...)
 end
 
 local function dofile(path)

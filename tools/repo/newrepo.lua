@@ -4,13 +4,12 @@
 
 	editor is optional
 ]]
-
 dofile "libs/editor.lua"
 
 local reponame = select(1, ...)
 
 local repo = require "vfs.repo"
-local fs = require "filesystem"
+local fs = require "filesystem.local"
 
 local ANTGE = os.getenv "ANTGE"
 local enginepath = ANTGE and fs.path(ANTGE) or fs.current_path()

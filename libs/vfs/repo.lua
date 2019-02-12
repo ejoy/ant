@@ -6,7 +6,7 @@ local _DEBUG = _G._DEBUG
 local repo = {}
 repo.__index = repo
 
-local fs = require "filesystem"
+local fs = require "filesystem.local"
 local access = require "vfs.repoaccess"
 
 local function addslash(name)
