@@ -124,11 +124,6 @@ S1: ant 工作目录
 	$git clone http://github.com/ejoy/ant
 	ant clone 生成 D:/WORK/ant
 	
-	// lua环境的配置
-	$ bin/iup.exe tools/config.lua 执行config 配置
-	AntConfig 窗口中填写各项条目对应的 exe 目录 
-	lua = D:/Work/ant/clibs/lua/lua.exe 
-	shaderc为bgfx官方提供的shader编译器，并不是tools目录下的shaderc.lua
 	
 	//---------------------------------------
 	// (略）以下iup,lua等工具可略，建议使用 ant 目录下bin,clibs 都已经生成的工具版本
@@ -144,7 +139,8 @@ S2: 第三方库配置
 	运行命令:
 
 	$git submodule update --init	//更新子仓库
-	$make init						//构建各个子项目工程
+	$cd 3rd
+	$make init PLAT=OSX/iOS/MingW/msvc		//构建各个子项目工程,PLAT不指定的话默认是OSX(mac)或者MingW(PC)
 	$make all 						//构建所有子项目
 
 	如果成功即完成第三方库配置, 下方是各个库的单独配置方法, 可以跳过
