@@ -5,10 +5,9 @@ local world = ecs.world
 
 ecs.import "ant.inputmgr"
 
-local math = import_package "ant.math"
 local point2d = math.point2d
 local math3d = require "math3d"
-local ms = math.stack
+local ms = import_package "ant.math".stack
 
 local camera_controller_system = ecs.system "camera_controller"
 

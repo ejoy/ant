@@ -32,17 +32,8 @@ for _, ltype in ipairs {
 	"spot_light",
 	"ambient_light"} do
 	local l = ecs.component(ltype)
-	local function init(self)
-		self.dirty = true
-	end
-
 	function l:init()
-		init(self)
-		return self
-	end
-
-	function l:load()
-		init(self)
+		self.dirty = true
 		return self
 	end
 end
