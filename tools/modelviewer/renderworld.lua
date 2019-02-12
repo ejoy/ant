@@ -15,6 +15,9 @@ local model_review_system = ecs.system "model_review_system"
 model_review_system.singleton "constant"
 model_review_system.depend "constant_init_sys"
 model_review_system.dependby "message_system"
+model_review_system.depend "shadow_primitive_filter_system"
+model_review_system.depend "transparency_filter_system"
+model_review_system.depend "entity_rendering"
 
 local lu = import_package "ant.render" .light
 local cu = import_package "ant.render" .components
