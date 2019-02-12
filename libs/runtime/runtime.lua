@@ -7,7 +7,7 @@ import_package = (require "antpm").import
 
 local keymap = (import_package "ant.inputmgr").keymap
 
-local dbgupdate = require 'runtime.debug'
+--local dbgupdate = require 'runtime.debug'
 
 dprint = print
 
@@ -95,7 +95,7 @@ function callback.exit()
 end
 
 function callback.update()
-	dbgupdate()
+	--dbgupdate()
 	if world then world.update() end
 end
 

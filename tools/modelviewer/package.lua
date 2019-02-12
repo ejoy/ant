@@ -1,4 +1,5 @@
 return {
     name = "ant.modelviewer",
-    entry = "mainwindow"
+    entry = "mainwindow",
+    --entry = "runtimemain",
 }

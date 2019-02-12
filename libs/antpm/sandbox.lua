@@ -1,5 +1,4 @@
 local fs = require "filesystem"
-local vfs = require "vfs"
 
 local function io_open(path)
     return fs.open(fs.path(path))
@@ -83,13 +82,11 @@ local function sandbox_env(root, pkgname)
         return _LOADED[name]
 	end
 
-	local realroot = vfs.realpath(root)
-
     env.package = {
         config = table.concat({"/",";","?","!","-"}, "\n"),
         loaded = _LOADED,
         preload = package.preload,
-        path = realroot .. '/?.lua',
+        path = root .. '/?.lua',
         searchpath = searchpath,
         searchers = {}
     }
