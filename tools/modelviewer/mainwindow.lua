@@ -1,3 +1,16 @@
+local packages = {
+	"ant.modelviewer"
+}
+local systems = {
+	"model_review_system",
+	"camera_controller",
+}
+
+if __ANT_RUNTIME__ then
+	local rt = require "runtime"
+	rt.start(packages, systems)
+	return
+end
 
 local elog = import_package "ant.iupcontrols" .logview
 local inputmgr = import_package "ant.inputmgr"
@@ -38,10 +51,7 @@ rhwi.init {
 	height = fb_height,
 }
 
-local world = scene.start_new_world(input_queue, fb_width, fb_height, {"ant.modelviewer"}, {
-	"model_review_system",
-	"camera_controller",
-})
+local world = scene.start_new_world(input_queue, fb_width, fb_height, packages, systems)
 
 task.loop(world.update)
 
