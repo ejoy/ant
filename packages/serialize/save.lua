@@ -2,6 +2,7 @@ local method = require "method"
 local crypt = require "crypt"
 
 local pool
+local load
 local typeinfo
 local ids
 
@@ -67,7 +68,7 @@ function foreach_save_1(component, name)
             ret[v.name] = foreach_save_2(component[v.name], v)
             ::continue::
         end
-        if c.method and c.method.load then
+        if c.method and c.method.init then
             load[c.name] = load[c.name] or {}
             table.insert(load[c.name], ret)
         end

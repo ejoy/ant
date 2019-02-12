@@ -9,8 +9,10 @@ schema:typedef("vector", "real[4]")
 
 local vector = ecs.component "vector"
 
-function vector.init()
-    return math3d.ref "vector"
+function vector.init(s)
+    local v = math3d.ref "vector"
+    ms(v, s, "=")
+    return v
 end
 
 function vector.delete(m)
@@ -26,20 +28,14 @@ function vector.save(v)
     return t
 end
 
-function vector.load(s)
-    s.type = "v4"
-    local v = math3d.ref "vector"
-    --v(s)
-    ms(v, s, "=")
-    return v
-end
-
 schema:typedef("matrix", "real[16]")
 
 local matrix = ecs.component "matrix"
 
-function matrix.init()
-    return math3d.ref "vector"
+function matrix.init(s)
+    local v = math3d.ref "matrix"
+    ms(v, s, "=")
+    return v
 end
 
 function matrix.delete(m)
@@ -53,11 +49,4 @@ function matrix.save(v)
     assert(t.type == "m4", "matrix load function need matrix type")
     t.type = nil
     return t
-end
-
-function matrix.load(s)
-    local v = math3d.ref "matrix"
-    s.type = "m4"
-    ms(v, s, "=")
-    return v
 end

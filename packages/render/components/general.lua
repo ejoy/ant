@@ -16,13 +16,10 @@ schema:typedef("entityid", "int", -1)
 schema:typedef("path", "string")
 local path = ecs.component "path"
 function path:init()
-	return fs.path ""
+	return fs.path(self)
 end
 function path:save()
 	return self:string()
-end
-function path:load()
-	return fs.path(self)
 end
 
 schema:typedef("position", "vector")
@@ -56,8 +53,10 @@ schema:type "resource"
 	.ref_path "respath"
 
 local resource = ecs.component "resource"
-function resource:load()
-	self.assetinfo = asset.load(self.ref_path.package, self.ref_path.filename)
+function resource:init()
+	if self.ref_path.package ~= '' then
+		self.assetinfo = asset.load(self.ref_path.package, self.ref_path.filename)
+	end
 	return self
 end
 
@@ -104,7 +103,7 @@ schema:type "material"
 
 local material_content = ecs.component "material_content"
 
-function material_content:load()
+function material_content:init()
 	component_util.create_material(self)
 	return self
 end

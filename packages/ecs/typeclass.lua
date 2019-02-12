@@ -107,7 +107,7 @@ return function(world, import, class)
 		if not c.method then
 			c.source = {}
 			c.method = setmetatable({}, {
-				__newindex = gen_method(c, {"init", "delete", "load", "save", "postsave"}),
+				__newindex = gen_method(c, {"init", "delete", "save", "postsave"}),
 			})
 		end
 		return c.method
