@@ -1,10 +1,14 @@
 local toolset = require "toolset"
-local fs = require "filesystem"
+local fs = require "filesystem.local"
 local vfs = require "vfs"
+
+local assetmgr = import_package "ant.asset"
+local assetdir = assetmgr.pkgdir("ant.resources")
+local engine_shader_srcpath = fs.path(vfs.realpath((assetdir / "shaders"/"src"):string()))
 
 local function compile_shader(plat, srcfilepath, outfilepath, shadertype)
 	local config = {
-		includes = {fs.path(vfs.realpath("engine/assets/shaders/src"))},
+		includes = {engine_shader_srcpath},
 		platform = plat,
 	}
 	return toolset.compile(srcfilepath, outfilepath, shadertype, config)

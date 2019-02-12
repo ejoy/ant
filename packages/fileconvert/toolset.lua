@@ -1,6 +1,6 @@
 local subprocess = require "subprocess"
 local vfs = require "vfs"
-local fs = require "filesystem"
+local fs = require "filesystem.local"
 local platform = require "platform"
 local OS = platform.OS
 
@@ -18,6 +18,7 @@ local function init_config()
 			"clibs/shadercRelease",
 			"bin/shadercDebug",
 			"bin/shadercRelease",
+			"bin/shaderc",
 		} do
 			local exepath = to_execute_path(name)
 			if fs.exists(exepath) then

@@ -1,5 +1,5 @@
 local meshconverter = require "meshconverter"
-local fs = require "filesystem"
+local fs = require "filesystem.local"
 
 local config = {
 	--[[
