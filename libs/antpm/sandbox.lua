@@ -82,7 +82,7 @@ local function sandbox_env(root, pkgname)
         end
         return _LOADED[name]
 	end
-	
+
 	local realroot = vfs.realpath(root)
 
     env.package = {

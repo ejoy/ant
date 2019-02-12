@@ -26,7 +26,7 @@ local collider = ecs.component "collider"
 -- install delete function here for release
 function collider:delete()
     local Physics = world.args.Physics     -- if use message notify, decoupling will be better?
-    if Physics then
+    if Physics and self.info.obj then
         Physics:delete_object( self.info.obj,self.info.shape)
     end 
     -- or use message notify mechanism

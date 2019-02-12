@@ -132,11 +132,11 @@ end
 local function genhash(repo, tmp)
 	local binhash = access.sha1_from_file(tmp)
 	local binhash_path = access.repopath(repo, binhash)
+	if not pcall(fs.remove, binhash_path) then
+		return
+	end
 	if not pcall(fs.rename, tmp, binhash_path) then
-		fs.remove(binhash_path)
-		if not pcall(fs.rename, tmp, binhash_path) then
-			return
-		end
+		return
 	end
 	return binhash
 end

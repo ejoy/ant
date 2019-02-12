@@ -6,7 +6,7 @@ local asset = import_package "ant.asset"
 local timer = import_package "ant.timer"
 
 schema:type "animation_content"		
-	.ref_path "respath"
+	.ref_path "respath" ()
 	.name "string"
 	.scale "real" (1)	
 	.looptimes "int" (0)
@@ -29,7 +29,7 @@ local function calc_ratio(current_counter, ani)
 end
 
 function animation_content:init()
-	if self.ref_path.package ~= '' then
+	if self.ref_path then
 		self.handle = asset.load(self.ref_path.package, self.ref_path.filename)
 	end
 	self.start_counter = 0

@@ -50,11 +50,11 @@ schema:type "respath"
 	.filename "path"
 
 schema:type "resource"
-	.ref_path "respath"
+	.ref_path "respath" ()
 
 local resource = ecs.component "resource"
 function resource:init()
-	if self.ref_path.package ~= '' then
+	if self.ref_path then
 		self.assetinfo = asset.load(self.ref_path.package, self.ref_path.filename)
 	end
 	return self
