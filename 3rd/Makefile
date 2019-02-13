@@ -79,26 +79,21 @@ CMAKE_OPT_freetype :=-DCMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE -DCMAKE_DISABLE_FIN
 
 CMAKE_OPT_bullet3 = -DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF -DBUILD_EXTRAS=OFF
 
+WITH_OZZ_SAMPLES := OFF
+OZZ_ENABLE_EMSCRIPTEN := FALSE
+
 ifeq "$(PLAT)" "mingw"
   CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../../build/bullet3/$(PLAT)/lib
 else ifeq "$(PLAT)" "msvc"
-  CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../../build/bullet3/$(PLAT)/lib
+  CMAKE_OPT_bullet3 += -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON -DLIBRARY_OUTPUT_PATH=../../../build/bullet3/$(PLAT)/lib -DBUILD_BULLET2_DEMOS=ON
+  WITH_OZZ_SAMPLES := ON
+else ifeq "$(PLAT)" "ios"
+  OZZ_ENABLE_EMSCRIPTEN := TRUE
 else
   CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../lib
 endif
 
-
-WITH_OZZ_SAMPLES := OFF
-ifeq "$(PLAT)" "msvc"
-  CMAKE_OPT_bullet3 += -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON
-  WITH_OZZ_SAMPLES := ON
-endif
-
-CMAKE_OPT_ozz-animation=-Dozz_build_samples=$(WITH_OZZ_SAMPLES) -Dozz_build_fbx=$(WITH_OZZ_SAMPLES) -Dozz_build_howtos=$(WITH_OZZ_SAMPLES)
-
-ifeq "$(PLAT)" "ios"
-CMAKE_OPT_ozz-animation += -DEMSCRIPTEN=TURE
-endif
+CMAKE_OPT_ozz-animation=-Dozz_build_samples=$(WITH_OZZ_SAMPLES) -Dozz_build_fbx=$(WITH_OZZ_SAMPLES) -Dozz_build_howtos=$(WITH_OZZ_SAMPLES) -DEMSCRIPTEN=$(OZZ_ENABLE_EMSCRIPTEN)
 
 .PHONY: info init all clean
 
