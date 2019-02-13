@@ -16,7 +16,8 @@ local function get_singleton(sys, c)
 				end
 				if s[singleton_name] == nil then
 					log("New singleton %s", singleton_name)
-					s[singleton_name] = singleton_typeobject.method.init()
+					local init = singleton_typeobject.method.init
+					s[singleton_name] = init and init() or {}
 				end
 			end
 		end
@@ -97,7 +98,7 @@ local function solve_depend(graph)
 	end
 
 	--for k,v in pairs(graph) do
-	for _, k in ipairs(graphkeys) do		
+	for _, k in ipairs(graphkeys) do
 		-- local depend = v.depend
 		local depend = dp_table[k]
 		if depend then

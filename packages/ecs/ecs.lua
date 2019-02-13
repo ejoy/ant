@@ -4,9 +4,7 @@ local log = log and log(...) or print
 local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
-local pm = require "antpm"
 local create_schema = require "schema"
-local get_modules = require "modules"
 
 local ecs = {}
 local world = {} ; world.__index = world
@@ -37,7 +35,6 @@ end
 local function new_component(w, eid, c, ...)
 	if c then
 		local entity = assert(w[eid])
-		print("component:", c)
 		if entity[c] then
 			error(string.format("multiple component defined:%s", c))
 		end
@@ -187,39 +184,25 @@ local function init_notify(w, notifies)
 	end
 end
 
-local function init_modules(w, packages, systems)
-	local imported = {}
+local function init_modules(w, packages, systems, loader)
 	local class = {}
-
+	local imported = {}
+	local reg
 	local function import(name)
 		if imported[name] then
 			return
 		end
 		imported[name] = true
-		local root, config = pm.find(name)
-		if not root then
-			error(("package '%s' not found"):format(name))
-			return
-		end
-		local modules = config.ecs_modules
-		if modules then
-			local tmp = {}			
+		local modules = assert(loader(name) , "load module " .. name .. " failed")
+		if type(modules) == "table" then
 			for _, m in ipairs(modules) do
-				tmp[#tmp+1] = root / m
+				m(reg)
 			end
-			modules = tmp
 		else
-			modules = get_modules(root, {"*.lua"})
-		end
-		local reg = typeclass(w, import, class)
-		for _, path in ipairs(modules) do
-			local module, err = pm.loadfile(name, path)
-			if not module then
-				error(("module '%s' load failed:%s"):format(path:string(), err))
-			end
-			module(reg)
+			modules(reg)
 		end
 	end
+	reg = typeclass(w, import, class)
 
 	for _, name in ipairs(packages) do
 		import(name)
@@ -262,8 +245,10 @@ local function init_modules(w, packages, systems)
 	return class
 end
 
--- config.modules
+-- config.packages
+-- config.systems
 -- config.update_order
+-- config.loader (optional)
 -- config.args
 function ecs.new_world(config)
 	local w = setmetatable({
@@ -284,7 +269,7 @@ function ecs.new_world(config)
 	w.schema:typedef("tag", "boolean", true)
 
 	-- load systems and components from modules
-	local class = init_modules(w, config.packages, config.systems)
+	local class = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
 
 	w.schema:check()
 
