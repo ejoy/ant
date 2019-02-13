@@ -7,7 +7,7 @@ end
 local function loadlua(f, name)
     local str = f:read 'a'
     f:close()
-    return load(str, '@' .. name)
+    return load(str, '@/vfs/' .. name)
 end
 
 local function sandbox_env(root, pkgname)
