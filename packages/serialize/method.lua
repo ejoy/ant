@@ -7,7 +7,7 @@ local function gen_ref(c)
     end
     if not c.type then
         for _,v in ipairs(c) do
-            gen_ref(v)
+            v.ref = gen_ref(v)
         end
         c.ref = true
         return c.ref
@@ -17,7 +17,8 @@ local function gen_ref(c)
         return c.ref
     end
     assert(typeinfo[c.type], "unknown type:" .. c.type)
-    c.ref = gen_ref(typeinfo[c.type])
+	c.ref = gen_ref(typeinfo[c.type])
+	return c.ref
 end
 
 local function init (w)

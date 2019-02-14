@@ -92,16 +92,14 @@ local function stringify_value(c, v, load)
     if not load and c.method and c.method.init then
         load = c.name
     end
-	local sss = stringify_value(typeinfo[c.type], v, load)
-	return sss
+	return stringify_value(typeinfo[c.type], v, load)
 end
 
 local function stringify_component_value(name, v)
     assert(typeinfo[name], "unknown type:" .. name)
     local c = typeinfo[name]
     if not c.ref then
-		local sss = stringify_value(c, v)
-		return sss
+		return stringify_value(c, v)		
     end
     if not pool[v] then
         pool[v] = v.__id
@@ -114,8 +112,7 @@ local stringify_component_ref
 
 local function stringify_component_children(c, v)
     if not c.ref then
-		local sss = stringify_value(c, v)
-		return sss
+		return stringify_value(c, v)
     end
     if c.array then
         local n = c.array == 0 and #v or c.array
