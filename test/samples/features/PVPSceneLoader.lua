@@ -2,6 +2,7 @@ local math = import_package "ant.math"
 local ms = math.stack
 local fs = require "filesystem"
 local computil = import_package "ant.render".components
+local bulletutil = import_package "ant.bullet".util
 
 local PVPScene = {}
 
@@ -194,7 +195,6 @@ function PVPScene.create_entitices(world)
 
 	local Physics = world.args.Physics 
 
-	for i=1, 50 do
 	for name, scenedata in pairs(scene_objects) do
 		local children = assert(scenedata.children)		
 		local srts = assert(children.srts)
@@ -235,14 +235,17 @@ function PVPScene.create_entitices(world)
 
 				if collision_array then
 					local collisitontype = collision_array[idx]
-					Physics:add_component_collider(world, eid, collisitontype)
+					world:add_component(eid, collisitontype)
+					
+					local collidercomp = e[collisitontype]
+					bulletutil.fill_collider_info(collidercomp, e.mesh.assetinfo.handle.bounding)
+					Physics:init_collider_component(collidercomp, eid, {e.scale, e.rotation, e.position})
 					local e = world[eid]
 					local collider = e[collisitontype].collider
 					assert(collider.handle)
 				end
 			end
 		end
-	end
 	end
 end
 

@@ -156,84 +156,10 @@ end
 
 function bullet_world:collide_objects(objA,objB)
 	return self.world:collide_objects(objA,objB)
-end 
-
-local function get_max_length(x,y,z)
-	local len = x 
-	if y > len then len = y end 
-	if z > len then len = z end 
-	return len 
-end 
-local function get_max_axis(x,y,z)
-	local axis = 0
-	if y> x and y> z then axis = 1 end 
-	if z> x and z> y then axis = 2 end 
-	return axis 
-end 
+end  
 
 local default_quat = math3d.ref("quaternion", ms)
 default_quat(ms:quaternion(0,0,0,1))
-
-local function fill_collider_info(entity)
--- local rot, pos, scale 
--- if ms then 
--- 	pos = ms(entity.position,"T")
--- 	rot = ms(entity.rotation,"T")
--- 	scale = ms(entity.scale,"T")
--- else 
--- 	pos = {0,0,0}  rot = {0,0,0}  scale = {1,1,1}
--- end 
-
--- local r_scale = scale[1]
--- if scale[2] > r_scale then r_scale = scale[2] end 
--- if scale[3] > r_scale then r_scale = scale[3] end 
-
-
--- local bounding_info = entity.mesh.assetinfo.handle.bounding
--- local shape_info = entity[c_type].info    
-
--- if s_info == nil then  
--- 	if type == "box" or type == "cube" then 
--- 		shape_info.sx = (bounding_info.aabb.max[1] - bounding_info.aabb.min[1])*0.5
--- 		shape_info.sy = (bounding_info.aabb.max[2] - bounding_info.aabb.min[2])*0.5
--- 		shape_info.sz = (bounding_info.aabb.max[3] - bounding_info.aabb.min[3])*0.5
--- 	elseif type == "sphere" then 
--- 		shape_info.sx = (bounding_info.aabb.max[1] - bounding_info.aabb.min[1])*0.5
--- 		shape_info.sy = (bounding_info.aabb.max[2] - bounding_info.aabb.min[2])*0.5
--- 		shape_info.sz = (bounding_info.aabb.max[3] - bounding_info.aabb.min[3])*0.5
--- 		shape_info.radius = get_max_length(shape_info.sx,shape_info.sy,shape_info.sz )
--- 		scale[1] = r_scale  scale[2] = r_scale  scale[3] = r_scale     -- set max scale 
--- 		-- some boundind_info radius > 2*real radius,so we need calculate 
--- 		-- shape_info.radius = bounding_info.sphere.radius 
--- 	elseif type == "capsule" or type == "cylinder" then 
--- 		local xl = (bounding_info.aabb.max[1] - bounding_info.aabb.min[1])*0.5
--- 		local yl = (bounding_info.aabb.max[2] - bounding_info.aabb.min[2])*0.5
--- 		local zl = (bounding_info.aabb.max[3] - bounding_info.aabb.min[3])*0.5
--- 		-- set max axis as default axis ,we do not known the correct axis from modeler 
--- 		local axis = get_max_axis(xl,yl,zl)  -- or manually set main axis
--- 		local radius,height = 0,0
--- 		--axis = 2
--- 		if axis == 0 then 
--- 			height = xl  radius = yl 
--- 			if zl  > radius then radius = zl end  
--- 		elseif axis == 1 then 
--- 			height = yl  radius = xl 
--- 			if zl > radius then radius = zl end  
--- 		elseif axis == 2 then 
--- 			height = zl  radius = xl 
--- 			if yl > radius then radius = yl end  
--- 		end 	
--- 		shape_info.axis   = axis 
--- 		shape_info.radius = radius 
--- 		shape_info.height = height 
--- 		-- scale[1] = r_scale  scale[2] = r_scale  scale[3] = r_scale     -- set max scale 
--- 	end
--- 	local cx = (bounding_info.aabb.max[1] + bounding_info.aabb.min[1])*0.5
--- 	local cy = (bounding_info.aabb.max[2] + bounding_info.aabb.min[2])*0.5
--- 	local cz = (bounding_info.aabb.max[3] + bounding_info.aabb.min[3])*0.5
--- 	shape_info.center = { cx,cy,cz }
--- end 
-end
 
 function bullet_world:init_collider_component(collidercomp, obj_idx, srt, offset)		
 	local collider = collidercomp.collider

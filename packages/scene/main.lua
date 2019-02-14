@@ -16,7 +16,7 @@ util.__index = util
 
 local world = nil
 
-local bullet_world = import_package "ant.bullet"
+local bullet_world = import_package "ant.bullet".bulletworld
 
 function util.start_new_world(input_queue, fbw, fbh, packages, systems)
 	if input_queue == nil then
