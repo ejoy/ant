@@ -245,6 +245,34 @@ local function init_modules(w, packages, systems, loader)
 	return class
 end
 
+function world:groups()
+	local keys = {}
+	for k in pairs(self._systems) do
+		keys[#keys+1] = k
+	end
+	return keys
+end
+
+function world:update_func(what, order)
+	local list = self._systems[what]
+	if not list then
+		return function() end
+	end
+	if order then
+		list = system.order_list(list, order)
+	end
+	local switch = system.list_switch(list)
+	self._switchs[what] = switch
+	local proxy = self._singleton_proxy
+	return function()
+		switch:update()
+		for _, v in ipairs(list) do
+			local name, f = v[1], v[2]
+			f(proxy[name])
+		end
+	end
+end
+
 -- config.packages
 -- config.systems
 -- config.update_order
@@ -264,6 +292,7 @@ function ecs.new_world(config)
 		_changecomponent = {},	-- component_name : { eid_set }
 		_notifyset = {},	-- component_name : { n = number, eid_list }
 		_set = setmetatable({}, { __mode = "kv" }),
+		_switchs = {},	-- for enable/disable
 	}, world)
 
 	w.schema:typedef("tag", "boolean", true)
@@ -278,25 +307,21 @@ function ecs.new_world(config)
 	end
 
 	-- init system
-	local proxy = system.proxy(class.system, class.singleton_component)
-	local init_list = system.init_list(class.system)
-	local update_list = system.update_list(class.system, config.update_order)
-	local update_switch = system.list_switch(update_list)
-	function w.update ()
-		update_switch:update()
-		for _, v in ipairs(update_list) do
-			local name, f = v[1], v[2]
-			f(proxy[name])
-		end
-	end
+	w._systems = system.lists(class.system)
+	w._singleton_proxy = system.proxy(class.system, class.singleton_component)
 
-	local notify_list = system.notify_list(class.system, proxy)
+	-- todo: remove update
+	w.update = w:update_func("update", config.update_order)
+
+	local notify_list = system.notify_list(class.system, w._singleton_proxy)
 	init_notify(w, notify_list)
 	local notify_switch = system.list_switch(notify_list)
 
 	function w.enable_system(name, enable)
-		update_switch:enable(name, enable)
 		notify_switch:enable(name, enable)
+		for _, switch in pairs(w._switchs) do
+			switch:enable(name, enable)
+		end
 	end
 
 	function w.notify()
@@ -336,12 +361,10 @@ function ecs.new_world(config)
 		end
 	end
 
-	-- call init functions
-	for _, v in ipairs(init_list) do
-		local name, f = v[1], v[2]
-		log("Init system %s", name)
-		f(proxy[name])
-	end
+	-- todo: remove init_func
+	local init_func = w:update_func "init"
+
+	init_func()
 
 	return w
 end
