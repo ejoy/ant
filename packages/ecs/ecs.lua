@@ -4,9 +4,7 @@ local log = log and log(...) or print
 local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
-local pm = require "antpm"
 local create_schema = require "schema"
-local get_modules = require "modules"
 
 local ecs = {}
 local world = {} ; world.__index = world
@@ -37,7 +35,6 @@ end
 local function new_component(w, eid, c, ...)
 	if c then
 		local entity = assert(w[eid])
-		print("component:", c)
 		if entity[c] then
 			error(string.format("multiple component defined:%s", c))
 		end
@@ -187,39 +184,25 @@ local function init_notify(w, notifies)
 	end
 end
 
-local function init_modules(w, packages, systems)
-	local imported = {}
+local function init_modules(w, packages, systems, loader)
 	local class = {}
-
+	local imported = {}
+	local reg
 	local function import(name)
 		if imported[name] then
 			return
 		end
 		imported[name] = true
-		local root, config = pm.find(name)
-		if not root then
-			error(("package '%s' not found"):format(name))
-			return
-		end
-		local modules = config.ecs_modules
-		if modules then
-			local tmp = {}			
+		local modules = assert(loader(name) , "load module " .. name .. " failed")
+		if type(modules) == "table" then
 			for _, m in ipairs(modules) do
-				tmp[#tmp+1] = root / m
+				m(reg)
 			end
-			modules = tmp
 		else
-			modules = get_modules(root, {"*.lua"})
-		end
-		local reg = typeclass(w, import, class)
-		for _, path in ipairs(modules) do
-			local module, err = pm.loadfile(name, path)
-			if not module then
-				error(("module '%s' load failed:%s"):format(path:string(), err))
-			end
-			module(reg)
+			modules(reg)
 		end
 	end
+	reg = typeclass(w, import, class)
 
 	for _, name in ipairs(packages) do
 		import(name)
@@ -262,8 +245,38 @@ local function init_modules(w, packages, systems)
 	return class
 end
 
--- config.modules
+function world:groups()
+	local keys = {}
+	for k in pairs(self._systems) do
+		keys[#keys+1] = k
+	end
+	return keys
+end
+
+function world:update_func(what, order)
+	local list = self._systems[what]
+	if not list then
+		return function() end
+	end
+	if order then
+		list = system.order_list(list, order)
+	end
+	local switch = system.list_switch(list)
+	self._switchs[what] = switch
+	local proxy = self._singleton_proxy
+	return function()
+		switch:update()
+		for _, v in ipairs(list) do
+			local name, f = v[1], v[2]
+			f(proxy[name])
+		end
+	end
+end
+
+-- config.packages
+-- config.systems
 -- config.update_order
+-- config.loader (optional)
 -- config.args
 function ecs.new_world(config)
 	local w = setmetatable({
@@ -279,12 +292,13 @@ function ecs.new_world(config)
 		_changecomponent = {},	-- component_name : { eid_set }
 		_notifyset = {},	-- component_name : { n = number, eid_list }
 		_set = setmetatable({}, { __mode = "kv" }),
+		_switchs = {},	-- for enable/disable
 	}, world)
 
 	w.schema:typedef("tag", "boolean", true)
 
 	-- load systems and components from modules
-	local class = init_modules(w, config.packages, config.systems)
+	local class = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
 
 	w.schema:check()
 
@@ -293,25 +307,21 @@ function ecs.new_world(config)
 	end
 
 	-- init system
-	local proxy = system.proxy(class.system, class.singleton_component)
-	local init_list = system.init_list(class.system)
-	local update_list = system.update_list(class.system, config.update_order)
-	local update_switch = system.list_switch(update_list)
-	function w.update ()
-		update_switch:update()
-		for _, v in ipairs(update_list) do
-			local name, f = v[1], v[2]
-			f(proxy[name])
-		end
-	end
+	w._systems = system.lists(class.system)
+	w._singleton_proxy = system.proxy(class.system, class.singleton_component)
 
-	local notify_list = system.notify_list(class.system, proxy)
+	-- todo: remove update
+	w.update = w:update_func("update", config.update_order)
+
+	local notify_list = system.notify_list(class.system, w._singleton_proxy)
 	init_notify(w, notify_list)
 	local notify_switch = system.list_switch(notify_list)
 
 	function w.enable_system(name, enable)
-		update_switch:enable(name, enable)
 		notify_switch:enable(name, enable)
+		for _, switch in pairs(w._switchs) do
+			switch:enable(name, enable)
+		end
 	end
 
 	function w.notify()
@@ -351,12 +361,10 @@ function ecs.new_world(config)
 		end
 	end
 
-	-- call init functions
-	for _, v in ipairs(init_list) do
-		local name, f = v[1], v[2]
-		log("Init system %s", name)
-		f(proxy[name])
-	end
+	-- todo: remove init_func
+	local init_func = w:update_func "init"
+
+	init_func()
 
 	return w
 end

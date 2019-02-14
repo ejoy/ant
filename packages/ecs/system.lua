@@ -16,7 +16,8 @@ local function get_singleton(sys, c)
 				end
 				if s[singleton_name] == nil then
 					log("New singleton %s", singleton_name)
-					s[singleton_name] = singleton_typeobject.method.init()
+					local init = singleton_typeobject.method.init
+					s[singleton_name] = init and init() or {}
 				end
 			end
 		end
@@ -97,7 +98,7 @@ local function solve_depend(graph)
 	end
 
 	--for k,v in pairs(graph) do
-	for _, k in ipairs(graphkeys) do		
+	for _, k in ipairs(graphkeys) do
 		-- local depend = v.depend
 		local depend = dp_table[k]
 		if depend then
@@ -153,35 +154,36 @@ local function solve_depend(graph)
 	return ret
 end
 
-function system.init_list(sys)
+function system.lists(sys)
+	local r = setmetatable( {} , { __index = function(t,k)
+			local obj = {}
+			t[k] = obj
+			return obj
+		end } )
 	local depend_list = solve_depend(sys)
-	local init_list = {}
 	for _, sname in ipairs(depend_list) do
-		local init = sys[sname].method.init
-		if init then
-			table.insert(init_list, { sname, init } )
+		for what, func in pairs(sys[sname].method) do
+			table.insert(r[what], { sname, func })
 		end
 	end
-	return init_list
+	setmetatable(r, nil)
+	return r
 end
 
-function system.update_list(sys, order)
+function system.order_list(list, order)
 	local update_list = {}
 	local norder = {}
-	for sname in pairs(sys) do
+	for _, sname in ipairs(list) do
 		norder[sname] = true
 	end
-	if order then
-		for _, sname in ipairs(order) do
-			if sys[sname] then
-				table.insert(update_list, sname)
-				norder[sname] = nil
-			end
+	for _, sname in ipairs(order) do
+		if norder[sname] then
+			table.insert(update_list, sname)
+			norder[sname] = nil
 		end
 	end
 
-	local dp_list = solve_depend(sys)
-	for _, n in ipairs(dp_list) do
+	for _, n in ipairs(list) do
 		if norder[n] then
 			table.insert(update_list, n)
 			norder[n] = nil
@@ -195,14 +197,7 @@ function system.update_list(sys, order)
 	table.sort(norder_list)
 	table.move(norder_list, 1, #norder_list, #update_list+1,update_list)
 
-	local ret = {}
-	for _, sname in ipairs(update_list) do
-		local update = sys[sname].method.update
-		if update then
-			table.insert(ret, { sname, update } )
-		end
-	end
-	return ret
+	return update_list
 end
 
 function system.notify_list(sys, proxy)

@@ -16,7 +16,7 @@ local network = import_package "ant.network"
 local protocol = require "protocol"
 
 local vfs = require "filesystem"
-local fs = require "filesystem"
+local fs = require "filesystem.local"
 
 local WORKDIR = fs.current_path()
 local repopath = fs.mydocs_path() / reponame

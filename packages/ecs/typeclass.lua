@@ -51,7 +51,7 @@ local function gen_method(c, callback)
 end
 
 return function(world, import, class)
-	local class_register = { world = world }
+	local class_register = { world = world, schema = world.schema }
 	local class = class or {}
 
 	local function register(args)
@@ -102,7 +102,7 @@ return function(world, import, class)
 	end
 
 	class_register.component = function (name)
-		assert(schema.map[name])
+		assert(schema.map[name] , "type " .. name .. " not exist")
 		local c = schema.map[name]
 		if not c.method then
 			c.source = {}

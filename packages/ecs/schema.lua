@@ -36,6 +36,7 @@ function defaults_mt:__call(default_value)
 			default_value[k] = v
 		end
 	end
+	field.has_default = true
 	field.default = default_value
 	self._current_field = {}
 	return setmetatable(self, fields_mt)
@@ -132,19 +133,21 @@ function schema:type(typename)
 	return setmetatable(typegen, fields_mt)
 end
 
-function schema:typedef(typename, aliastype, default_value)
+function schema:typedef(typename, aliastype, ...)
 	self:_newtype( parse_type {
 		name = typename,
 		type = aliastype,
-		default = default_value,
+		has_default = select('#', ...) > 0,
+		default = select('1', ...),
 	} )
 end
 
-function schema:primtype(typename, default_value)
+function schema:primtype(typename, ...)
 	self:_newtype {
 		name = typename,
 		type = "primtype",
-		default = default_value,
+		has_default = select('#', ...) > 0,
+		default = select('1', ...),
 	}
 end
 

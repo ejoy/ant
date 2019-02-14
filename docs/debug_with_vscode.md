@@ -28,7 +28,7 @@
         "runtimeExecutable" : "${workspaceRoot}/projects/msvc/vs_bin/x64/Debug/iup.exe",
         "runtimeArgs": "${workspaceRoot}/libs/main.lua", 
         "internalModule": "vscode-dbg",      
-        "stopOnEntry": false,
+        "stopOnEntry": true,
         "env": {
             "STATIC_LINKING_IUP" : "1",
             "BIN_PATH" : "projects/msvc/vs_bin/x64/Debug"
@@ -39,8 +39,8 @@
                 "${workspaceFolder}/"
             ],
             [
-                "/vfs/",
-                "${env:UserProfile}/Documents/dbg/"
+                "/vfs/entry",
+                "${package目录}"
             ],
             [
                 "/firmware/",
@@ -56,15 +56,15 @@
         "runtimeArgs": "${workspaceRoot}/libs/main.lua",
         "cwd": "${workspaceRoot}",
         "internalModule": "vscode-dbg",
-        "stopOnEntry": false,
+        "stopOnEntry": true,
         "sourceMaps": [
             [
                 "/vfs/engine/",
                 "${workspaceFolder}/"
             ],
             [
-                "/vfs/",
-                "${env:UserProfile}/Documents/dbg/"
+                "/vfs/entry",
+                "${package目录}"
             ],
             [
                 "/firmware/",

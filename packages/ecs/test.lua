@@ -1,18 +1,6 @@
-package.cpath = "../../clibs/?.dll;../../bin/?.dll"
---package.path = "./?.lua;../?.lua;../?/?.lua"
+-- test solve_depend
 
---[@ hack vfs.fs
-local fs = {}
-function fs.isfile(filepath)
-	local f, err = io.open(filepath, "r")
-	if f then
-		return true
-	end
-	print(err)
-	return false
-end
-package.loaded["vfs.fs"] = fs
---@]
+TEST = true
 
 function log(name)
 	local tag = "[" .. name .. "] "
@@ -24,9 +12,6 @@ function log(name)
 	end
 end
 
--- test solve_depend
-
-TEST = true
 
 local system = require "system"
 
@@ -43,15 +28,115 @@ assert(table.concat(list) == "cbad")
 -- test ecs
 
 local ecs = require "ecs"
---local modules = require "module"
 
---local m = modules "test/system;test/component"
-local module_searchdirs = "./?.lua"
-local w = ecs.new_world { modules = {
-				"test.system.dummy", 
-				"test.system.init", 
-				"test.component.foobar" }, 
-				module_path = module_searchdirs, update_order = { "init" } }
+local mods = {}
+
+function mods.basetype(...)
+	local ecs = ...
+	local schema = ecs.schema
+
+	schema:primtype("int", 0)
+	schema:primtype("real", 0.0)
+	schema:primtype("string", "")
+	schema:primtype("boolean", false)
+end
+
+function mods.dummy(...)
+	local ecs = ...
+	local world = ecs.world
+
+	local dummy = ecs.system "dummy"
+
+	dummy.singleton "init"
+	dummy.depend "init"
+
+	function dummy:init()
+		print ("Dummy init")
+		local eid = world:new_entity "foobar"
+	end
+
+	function dummy:update()
+		print ("Dummy update")
+		for _, eid in world:each "foobar" do
+			print("1. Dummy foobar", eid)
+		end
+		world:new_entity "foobar"
+		for _, eid in world:each "foobar" do
+			print("2. Dummy foobar", eid)
+		end
+	end
+
+	function dummy.notify:foobar(set)
+		for _, eid in ipairs(set) do
+			print ("Notify", eid)
+			local e = world[eid]
+			if e then
+				print("Notify Foobar", eid, e)
+				print("Foobar", e.foobar.x, e.foobar.y)
+				world:remove_entity(eid)
+			else
+				print ("Notify removed", eid)
+			end
+		end
+	end
+
+	local dby = ecs.system "dependby"
+	dby.dependby "dummy"
+
+	function dby:init()
+		print("in dby:init()")
+	end
+end
+
+function mods.init(...)
+	local ecs = ...
+	local world = ecs.world
+	local schema = ecs.schema
+
+	local init = ecs.singleton_component "init"
+	local init_system = ecs.system "init"
+
+	init_system.singleton "init"	-- depend singleton components
+
+	function init_system:init()
+		print ("Init system")
+		self.init.foobar = "Hello"
+	end
+
+	function init_system:update()
+		print "Init update"
+	end
+end
+
+function mods.foobar(...)
+	local ecs = ...
+	local world = ecs.world
+	local schema = ecs.schema
+
+	schema:type "foobar"
+		.x "real"
+		.y "real"
+
+	local foobar = ecs.component "foobar"
+
+	function foobar:init()
+		print("New component foobar")
+		self.temp = 0
+		return self
+	end
+
+	function foobar:delete()
+		print("Delete", self.x, self.y)
+	end
+
+end
+
+local w = ecs.new_world {
+	packages = { "basetype", "dummy", "init", "foobar" },
+	systems = { "init", "dummy" },
+	loader = function(name) return mods[name] end,
+	update_order = { "init" },
+}
 
 w.enable_system("dummy", true)
 
