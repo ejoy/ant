@@ -332,8 +332,16 @@ lref(lua_State *L) {
 	} else {
 		return luaL_error(L, "Unsupport type %s", t);
 	}
+
+	const bool has_LS = !lua_isnoneornil(L, 2);
+
 	struct refobject * ref = (struct refobject *)lua_newuserdata(L, sizeof(*ref));
-	ref->LS = NULL;
+	if (has_LS) {
+		struct boxpointer *bp = (struct boxpointer *)lua_touserdata(L, 2);
+		ref->LS = bp->LS;
+	} else {
+		ref->LS = nullptr;
+	}
 	ref->id = lastack_constant(cons);
 
 	luaL_setmetatable(L, LINALG_REF);
@@ -1737,11 +1745,12 @@ new_temp_quaternion(lua_State *L) {
 
 		const float angle = lua_tonumber(L, 5);
 		q = glm::angleAxis(angle, axis);
-	} else {
-		assert(top == 5);
+	} else if (top == 5){		
 		for (int ii = 0; ii < 4; ++ii) {
 			q[ii] = lua_tonumber(L, ii + 2);
 		}
+	} else {
+		luaL_error(L, "need 5/6 argument, %d provided", top);
 	}
 
 	lastack_pushquat(LS, &q.x);

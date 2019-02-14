@@ -52,47 +52,82 @@ get_arg_vec(lua_State *L, int index, int num, T &obj) {
 }
 
 plCollisionShapeHandle 
-createTerrainShape(lua_State *L,world_node* world) {
-	// 1: world, 2:shape type
-	int  width  = lua_tointeger(L, 3);
-	int  height = lua_tointeger(L, 4);
+createTerrainShape(lua_State *L, world_node* world, int index) {
+	lua_getfield(L, index, "width");
+	const int  width = (int)lua_tointeger(L, -1);
+	lua_pop(L, 1);
 
+	lua_getfield(L, index, "height");	
+	const int  height = (int)lua_tointeger(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "data");	
 	size_t dataLen = 0;
-	luaL_checktype(L, 5, LUA_TSTRING);
-	auto terData = lua_tolstring(L, 5, &dataLen);
-	
-	plReal gridScale = (plReal) lua_tonumber(L, 6);
-	plReal heightScale = (plReal) lua_tonumber(L,7);
+	luaL_checktype(L, -1, LUA_TSTRING);
+	auto terData = lua_tolstring(L, -1, &dataLen);
+	lua_pop(L, 1);
 
-	plReal minHeight = (plReal) lua_tonumber(L, 8);
-	plReal maxHeight = (plReal) lua_tonumber(L, 9);
+	lua_getfield(L, index, "grid_scale");
+	const plReal gridScale = (plReal) lua_tonumber(L, -1);
+	lua_pop(L, 1);
 
-	int upAxis = lua_tointeger(L,10);
-	if ( upAxis < 0 || upAxis > 2) {
+	lua_getfield(L, index, "height_scale");
+	const plReal heightScale = (plReal) lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "min_height");
+	const plReal minHeight = (plReal)lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "max_height");
+	const plReal maxHeight = (plReal)lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "axis");
+	const int upAxis = (int)lua_tointeger(L, 10);
+	if (upAxis < 0 || upAxis > 2) {
 		luaL_error(L, "invalid axis type : %d", upAxis);
 	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "datatype");
+	const char* datatype = lua_tostring(L, -1);
+	lua_pop(L, 1);
 
 	int phyDataType = (int) PHY_ScalarType::PHY_SHORT;
-	luaL_checktype(L, 11, LUA_TSTRING);
-	const char *phyType = lua_tostring(L,11);
-	if( strcmp(phyType,"uchar") == 0 ) {
+	if( strcmp(datatype,"uchar") == 0 ) {
 		phyDataType = (int) PHY_ScalarType::PHY_UCHAR;
-	} else if(strcmp(phyType,"short") == 0 ) {
+	} else if(strcmp(datatype,"short") == 0 ) {
 		phyDataType = (int) PHY_ScalarType::PHY_SHORT;
-	} else if(strcmp(phyType,"float") == 0 ) {
+	} else if(strcmp(datatype,"float") == 0 ) {
 		phyDataType = (int) PHY_ScalarType::PHY_FLOAT;
 	}
-	bool flipQuadEdges = false;
-	flipQuadEdges = lua_toboolean(L,12);
 
 
-	printf("\nbullet: w = %d,h = %d,terData=%p, gridScale = %.2f, heightScale=%.2f, min=%.2f,max=%.2f, axis=%d, type ='%s',quad = %d\n",
-		width,height,terData,gridScale,heightScale,minHeight,maxHeight,upAxis,phyType,flipQuadEdges);
-	printf("bullet: image data = %p, size = %d\n",terData,(int) dataLen);
+	lua_getfield(L, index, "flip_quad_edges");
+	const bool flip_quad_edges = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+
+	//printf("\nbullet: w = %d,h = %d,terData=%p, gridScale = %.2f, heightScale=%.2f, min=%.2f,max=%.2f, axis=%d, type ='%s',quad = %d\n",
+	//	width,height,terData,gridScale,heightScale,minHeight,maxHeight,upAxis,phyType,flip_quad_edges);
+	//printf("bullet: image data = %p, size = %d\n",terData,(int) dataLen);
 	
-	return plCreateTerrainShape(world->sdk,world->world,width,height,terData,
-						 gridScale, heightScale, minHeight,maxHeight,upAxis,
-						 phyDataType,flipQuadEdges);
+	return plCreateTerrainShape(world->sdk,world->world,
+						width, height, 
+						terData, phyDataType,
+						gridScale, 
+						heightScale, minHeight, maxHeight, 
+						upAxis,						
+						flip_quad_edges);
+}
+
+static inline void
+get_vec(lua_State *L, int index, int count, plReal *v) {
+	for (int ii = 0; ii < count; ++ii) {
+		lua_geti(L, index, ii + 1);
+		v[ii] = (plReal)lua_tonumber(L, -1);
+		lua_pop(L, 1);
+	}
 }
 
 static int
@@ -102,49 +137,55 @@ lnew_shape(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TSTRING);
 	const char* type = lua_tostring(L, 2);
 
+	luaL_checktype(L, 3, LUA_TTABLE);
+
 	plCollisionShapeHandle shape = nullptr;
 	if (strcmp(type, "sphere") == 0) {
-		luaL_checktype(L, 3, LUA_TNUMBER);
-		btScalar radius = (btScalar)lua_tonumber(L, 3);   //error: 2-3 
+		lua_getfield(L, 3, "radius");
+		const plReal radius = (plReal)lua_tonumber(L, -1);
+		lua_pop(L, 1);
 		shape = plCreateSphereShape(world->sdk, world->world, radius);
 
-	} else if (strcmp(type, "cube") == 0) {		
-		plVector3 size;		
-		get_arg_vec(L, 3, 3, size);
-		shape = plCreateCubeShape(world->sdk, world->world, size);
-
+	} else if (strcmp(type, "box") == 0) {		
+		plVector3 size;
+		lua_getfield(L, 3, "size");
+		get_vec(L, -1, 3, size);
+		lua_pop(L, 1);
+		shape = plCreateBoxShape(world->sdk, world->world, size);
 	} else if (strcmp(type, "plane") == 0) {
 		plReal plane[4];
-		get_arg_vec(L, 3, 4, plane);
+		lua_getfield(L, 3, "normal");
+		get_vec(L, -1, 4, plane);
+		lua_pop(L, 1);
+		lua_getfield(L, 3, "distance");
+		plane[3] = (plReal)lua_tonumber(L, -1);
+		lua_pop(L, 1);
 		shape = plCreatePlaneShape(world->sdk, world->world, plane[0], plane[1], plane[2], plane[3]);
-		
-	} else if (strcmp(type, "cylinder") == 0) {
-		const plReal radius = (plReal)lua_tonumber(L,3);
-		const plReal height = (plReal)lua_tonumber(L,4);
+	} else if (strcmp(type, "cylinder") == 0 || strcmp(type, "capsule") == 0) {
+		lua_getfield(L, 3, "radius");		
+		const plReal radius = (plReal)lua_tonumber(L, -1);
+		lua_pop(L, 1);
 
-		const int axis = (int) luaL_optinteger(L,5,1);
+		lua_getfield(L, 3, "height");
+		const plReal height = (plReal)lua_tonumber(L, -1);
+		lua_pop(L, 1);
+
+		lua_getfield(L, 3, "axis");
+		const int axis = (int)luaL_optinteger(L, -1, 1);
+		lua_pop(L, 1);
+
 		if(axis<0 || axis>2) {
 			luaL_error(L, "invalid axis type : %d", axis);
 		}
-		shape = plCreateCylinderShape(world->sdk,world->world,radius,height,axis);
 
-	} else if (strcmp(type, "capsule") == 0) {
-		const plReal radius = (plReal)lua_tonumber(L, 3);
-		const plReal height = (plReal)lua_tonumber(L, 4);
-
-		const int axis = (int)luaL_optnumber(L, 5, 1);
-		if (axis < 0 || axis > 2) {
-			luaL_error(L, "invalid axis type : %d", axis);
-		}
-		shape = plCreateCapsuleShape(world->sdk, world->world, radius, height, axis);
+		auto op = strcmp(type, "capsule") == 0 ? plCreateCapsuleShape : plCreateCylinderShape;
+		shape = op(world->sdk,world->world,radius,height,axis);
 
 	} else if (strcmp(type, "compound") == 0) {
 		shape = plCreateCompoundShape(world->sdk, world->world);
-
 	} else if (strcmp(type,"terrain") == 0 ) {
-		shape = createTerrainShape(L,world);
+		shape = createTerrainShape(L, world, 3);
 	}
-
 
 	assert(shape);
 	lua_pushlightuserdata(L, shape);
@@ -196,15 +237,13 @@ lnew_collision_obj(lua_State *L) {
 	luaL_checktype(L, 3, LUA_TNUMBER);
 	const int useridx = (int)lua_tointeger(L, 3);
 
-	luaL_checktype(L, 4, LUA_TTABLE);
-	plVector3 pos;
-	extract_vec(L, 4, 3, pos);
+	luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
+	plReal* pos = (plReal*)lua_touserdata(L, 4);
+	
+	luaL_checktype(L, 5, LUA_TLIGHTUSERDATA);
+	plReal *quat = (plReal*)lua_touserdata(L, 5);
 
-	luaL_checktype(L, 5, LUA_TTABLE);
-	plQuaternion quat;
-	extract_vec(L, 5, 4, quat);
-
-	auto userdata = lua_touserdata(L, 6);
+	void *userdata = lua_isnoneornil(L, 6) ? nullptr : lua_touserdata(L, 6);
 
 	auto collision_obj = plCreateCollisionObject(world->sdk, world->world, userdata, useridx, shape, pos, quat);
 	lua_pushlightuserdata(L, collision_obj);
@@ -312,14 +351,14 @@ lset_shape_scale(lua_State *L) {
 	luaL_checktype(L,2,LUA_TLIGHTUSERDATA);
 	auto object = (plCollisionObjectHandle)lua_touserdata(L, 2);
 
-	luaL_checktype(L,3,LUA_TLIGHTUSERDATA);
-	auto shape = (plCollisionShapeHandle)lua_touserdata(L, 3);
+	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+	plReal *scale = (plReal *)lua_touserdata(L, 3);
 
-	luaL_checktype(L, 4, LUA_TTABLE);
-	plVector3 scale;
-	extract_vec(L, 4, 3, scale);
-
-	plSetShapeScale(world->sdk,world->world,object,shape,scale);
+	auto shape = plGetCollisionObjectShape(world->sdk, world->world, object);
+	if (shape == nullptr) {
+		luaL_error(L, "collision object do not have shape");
+	}
+	plSetShapeScale(world->sdk,world->world, object, shape, scale);
 	return 0;
 }
 
@@ -430,12 +469,6 @@ register_bullet_node(lua_State *L) {
 
 //the follow functions lworld_collide_usb and lworld_collide,must be use in single thread,
 //cause the bullet interface use global as temporal status
-//-- 这样使用回调的方式
-//-- 1. 复杂度较高，对lua使用者稍不友好，也容易出错
-//-- 2. 速度慢，多次的lua 回调，多次的创建回收points 表，再合并，维护开销大
-//-- 3. 没有终止约束条件
-//-- 4. 如果是回调方式，建议从名称上就体现
-// 保留的一种方式
 #include <functional>
 static int
 lworld_collide_ucb(lua_State *L) {
@@ -622,7 +655,7 @@ ldrawline(lua_State *L) {
 	extract_vec(L, 2, 3, from);
 	extract_vec(L, 3, 3, to);
 
-	unsigned int color = luaL_optinteger(L,4,0xffffffff);
+	uint32_t color = (int)luaL_optinteger(L,4,0xffffffff);
 
 	plDrawline(world->sdk, world->world, from, to, color );
 
@@ -674,12 +707,17 @@ lset_obj_rot(lua_State *L) {
 
 	luaL_checktype(L, 3, LUA_TTABLE);
 	plQuaternion quat;
-	extract_vec(L, 3, 4, quat);   // error: args 3->4 
+	extract_vec(L, 3, 4, quat);
 
 	plSetCollisionObjectRotation(world->sdk, world->world, obj, quat);
 
 	return 0;
 }
+
+#ifndef M_PI
+#define M_PI (3.14159265358979323846)
+#endif
+#define TO_RADIAN(_ANGLE) ((_ANGLE)/180)*(float)M_PI
 
 // yaw,pitch,roll, not use table, avoid  different meanings
 static int 
@@ -689,11 +727,12 @@ lset_obj_rot_euler(lua_State *L) {
 	luaL_checktype(L,2,LUA_TLIGHTUSERDATA);
 	auto obj = (plCollisionObjectHandle)lua_touserdata(L,2);
 
-	plReal pitch  = (plReal)lua_tonumber(L, 3); 
-	plReal yaw = (plReal)lua_tonumber(L, 4); 
-	plReal roll = (plReal)lua_tonumber(L, 5); 
-
-	plSetCollisionObjectRotationEuler( world->sdk,world->world,obj, pitch,yaw,roll);
+	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+	plReal* euler = (plReal*)lua_touserdata(L, 3);	// pitch, yaw, roll
+	plReal pitch = TO_RADIAN(euler[0]), 
+			yaw = TO_RADIAN(euler[1]), 
+			roll = TO_RADIAN(euler[2]);
+	plSetCollisionObjectRotationEuler( world->sdk,world->world,obj, pitch, yaw, roll);
 	return 0;
 }
 static int 

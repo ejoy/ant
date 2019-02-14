@@ -2,6 +2,10 @@
 local bullet_module = require "bullet"
 local fs = require "filesystem"
 
+local mathpkg = import_package "ant.math"
+local math3d = require "math3d"
+local ms = mathpkg.stack
+
 local bullet_sdk = bullet_module.new()
 
 local bullet_world = {}
@@ -23,142 +27,127 @@ function bullet_world:delete()
    self:delete_debug_drawer(true)
 end 
 
-function bullet_world:create_planeShape( nx, ny, nz, distance)
-	return self.world:new_shape("plane", nx, ny, nz, distance)
-end
+-- function bullet_world:create_planeShape( nx, ny, nz, distance)
+-- 	return self.world:new_shape("plane", nx, ny, nz, distance)
+-- end
 
-function bullet_world:create_sphereShape( radius)
-	return self.world:new_shape("sphere", radius)
-end
+-- function bullet_world:create_sphereShape( radius)
+-- 	return self.world:new_shape("sphere", radius)
+-- end
 
-function bullet_world:create_capsuleShape( radius, height, axis)
-	return self.world:new_shape("capsule", radius, height, axis)
-end
+-- function bullet_world:create_capsuleShape( radius, height, axis)
+-- 	return self.world:new_shape("capsule", radius, height, axis)
+-- end
 
-function bullet_world:create_cubeShape(sx, sy, sz)
-	return self.world:new_shape("cube", sx, sy, sz)
-end
+-- function bullet_world:create_boxShape(sx, sy, sz)
+-- 	return self.world:new_shape("cube", sx, sy, sz)
+-- end
 
-function bullet_world:create_cylinderShape( radius,up,axis)
-    return self.world:new_shape("cylinder",radius,up,axis)
-end 
+-- function bullet_world:create_cylinderShape( radius,up,axis)
+--     return self.world:new_shape("cylinder",radius,up,axis)
+-- end 
 
-function bullet_world:create_terrainShape(grid_width,grid_height,imgData,grid_scale,height_scale,min_height,max_height,
-                                          axis,data_type,bflipQuadEdges)
-    return self.world:new_shape("terrain",grid_width, grid_height ,imgData, 
-                                          grid_scale, height_scale, min_height,max_height,
-                                          axis, data_type, false )
-end 
+-- function bullet_world:create_terrainShape(grid_width,grid_height,imgData,grid_scale,height_scale,min_height,max_height,
+--                                           axis,data_type,bflipQuadEdges)
+--     return self.world:new_shape("terrain",grid_width, grid_height ,imgData, 
+--                                           grid_scale, height_scale, min_height,max_height,
+--                                           axis, data_type, bflipQuadEdges )
+-- end 
 
-function bullet_world:create_compoundShape(btworld)
-	return self.world:new_shape("compound")
-end
+-- function bullet_world:create_compoundShape()
+-- 	return self.world:new_shape("compound")
+-- end
 
--- 多重 type string 判断，影响性能,不过为非密集型，问题不大
 function bullet_world:create_shape(type, arg)
-	if type == "plane" then
-		return self.world:new_shape(type, arg.nx, arg.ny, arg.nz, arg.dist)
-	elseif type == "sphere" then
-		return self.world:new_shape(type, arg.radius)
-	elseif type == "capsule" then
-		return self.world:new_shape(type, arg.radius, arg.height, arg.axis)
-	elseif type == "cube" or type == "box" then
-		return self.world:new_shape("cube", arg.sx, arg.sy, arg.sz)
-	elseif type == "cylinder" then 
-		return self.world:new_shape(type, arg.radius, arg.height, arg.axis)
-	elseif type == "compound" then
-		return self.world:new_shape(type)
+	return self.world:new_shape(type, arg)
+
+	-- if type == "plane" then
+	-- 	return self.world:new_shape(type, arg.nx, arg.ny, arg.nz, arg.dist)
+	-- elseif type == "sphere" then
+	-- 	return self.world:new_shape(type, arg.radius)
+	-- elseif type == "capsule" then
+	-- 	return self.world:new_shape(type, arg.radius, arg.height, arg.axis)
+	-- elseif type == "box" then
+	-- 	return self.world:new_shape(type, arg.sx, arg.sy, arg.sz)
+	-- elseif type == "cylinder" then 
+	-- 	return self.world:new_shape(type, arg.radius, arg.height, arg.axis)
+	-- elseif type == "compound" then
+	-- 	return self.world:new_shape(type)
+	-- end
+end
+
+
+function bullet_world:create_object(shape, obj_idx, pos, rot)
+    return self.world:new_obj(shape, obj_idx, pos, rot)
+end
+
+function bullet_world:delete_shape(shape)
+	if shape then
+		self.world:del_shape(shape)
 	end
 end
 
-
-function bullet_world:create_object(shape, obj_idx,pos,rot)
-    return self.world:new_obj(shape,obj_idx,pos,rot)
-end 
-function bullet_world:delete_object(object)
-   -- todo: object must search all it's shape and delete
-   -- 1. remove object from world first if it's in world
-   -- 2. delete child shape first
-   -- 3. delete object 
-    return self.world:del_obj( object )
+function bullet_world:delete_object(object)	
+	if object then
+		self.world:del_obj(object)
+	end
 end 
 
-function bullet_world:add_object( object )
-    return self.world:add_obj( object )
+function bullet_world:add_object(object)
+    return self.world:add_obj(object)
 end 
-function bullet_world:remove_object( object )
-	-- check if invalid(worldArrayIndex <=-1), return 
+function bullet_world:remove_object(object)
 	return self.world:remove_obj(object)
 end 
 
--- rotation by quaternion
 function bullet_world:set_object_rotation(object, quat)
 	return self.world:set_obj_rotation(object, quat  )
 end 
 
--- rotation by euler angles
-function bullet_world:set_object_angles(object, ax,ay,az )
-	local rad = math.rad
-	local rx ,ry,rz = rad(ax),rad(ay),rad(az)
-	return self.world:set_obj_rot_euler(object, rx, ry,  rz )
-end 
--- set object position 
-function bullet_world:set_object_position(object, pos)
-	return self.world:set_obj_position(object, pos  )
-end 
--- set object scale
-function bullet_world:set_object_scale(object,shape,scale)
-	return self.world:set_shape_scale(object,shape,scale)
+function bullet_world:set_object_angles(object, rot)	
+	return self.world:set_obj_rot_euler(object, rot)
 end 
 
--- info from component
-local _pos = {}
-function bullet_world:create_collider(type,info,obj_idx,pos,rot)
-	local base_shape = self:create_shape("compound")
-	local shape = self:create_shape(type,info)
-	self.world:add_to_compound(base_shape,shape,{info.center[1],info.center[2],info.center[3]},rot)
-	_pos[1] = pos[1] 
-	_pos[2] = pos[2] 
-	_pos[3] = pos[3] 
-	-- local shape = self:create_shape(type,info)
-	-- _pos[1] = info.center[1] + pos[1]
-	-- _pos[2] = info.center[2] + pos[2]
-	-- _pos[3] = info.center[3] + pos[3]
-	local object = self:create_object(base_shape,obj_idx,_pos,rot)
-	self:add_object( object )
-	return object, base_shape 
+function bullet_world:set_object_position(object, pos)
+	return self.world:set_obj_position(object, pos)
+end 
+
+function bullet_world:set_object_scale(object, scale)
+	return self.world:set_shape_scale(object, scale)
 end
 
--- delete and collider's object and it's sub shape 
-function bullet_world:delete_collider(object,shape)
-	self:delete_object(object)
-end 
+function bullet_world:create_collider(shapetype, shapeinfo, obj_idx, pos, rot)	
+	local shape = self:create_shape(shapetype, shapeinfo)
+	local object = self:create_object(shape, obj_idx, pos, rot)
+	self:add_object(object)
+	return object, shape
+end
 
 
--- terrain is special, so give it an separate interface
-function bullet_world:create_terrainCollider(terrain,info,obj_idx,pos,rot)
-	local imgData = terrain:get_heightmap()
+-- -- terrain is special, so give it an separate interface
+-- function bullet_world:create_terrainCollider(terrain,info,obj_idx,pos,rot)
+-- 	local imgData = terrain:get_heightmap()
 
-	--local terInfo = terrain:get_terrain_info()
-	local grid_width = terrain:get_grid_width()
-	local grid_length = terrain:get_grid_length()
-	local grid_scale = terrain:get_width_scale()
-	local height_scale = terrain:get_height_scale()
-	local min_height = terrain:get_min_height()
-	local max_height = terrain:get_max_height()
+-- 	--local terInfo = terrain:get_terrain_info()
+-- 	local grid_width = terrain:get_grid_width()
+-- 	local grid_length = terrain:get_grid_length()
+-- 	local grid_scale = terrain:get_width_scale()
+-- 	local height_scale = terrain:get_height_scale()
+-- 	local min_height = terrain:get_min_height()
+-- 	local max_height = terrain:get_max_height()
 
-	local data_type = terrain:get_data_type()
-	local upAxis = 1   -- default in our engine
+-- 	local data_type = terrain:get_data_type()
+-- 	local upAxis = 1   -- default in our engine
 
-	local shape = self:create_terrainShape( grid_width, grid_length ,imgData, 
-									   grid_scale, height_scale, min_height,max_height,
-									   upAxis, data_type, false )
+-- 	local shape = self:create_terrainShape( grid_width, grid_length ,imgData, 
+-- 									   grid_scale, height_scale, min_height,max_height,
+-- 									   upAxis, data_type, false )
 									   
-	local ofs = terrain:get_phys_offset()
-	local obj = self:create_object( shape, obj_idx, { pos[1]+ofs[1], pos[2]+ofs[2], pos[3]+ofs[3]}, rot )
-	self:add_object(obj)
-	return obj,shape
-end 
+-- 	local ofs = terrain:get_phys_offset()
+-- 	local obj = self:create_object(shape, obj_idx, { pos[1]+ofs[1], pos[2]+ofs[2], pos[3]+ofs[3]}, rot )
+-- 	self:add_object(obj)
+-- 	return obj, shape
+-- end 
 
 function bullet_world:raycast( ray_start,ray_end )
 	if self.debug then  end 
@@ -182,203 +171,125 @@ local function get_max_axis(x,y,z)
 	return axis 
 end 
 
-local default_quat = {0,0,0,1}
+local default_quat = math3d.ref("quaternion", ms)
+default_quat(ms:quaternion(0,0,0,1))
 
--- special handy function, for lazy auto create component collider 
-function bullet_world:add_component_collider(world,eid,type,ms, s_info)
-	local Physics = self or world.args.Physics 
-	-- component and collider info edit by editor 
-	local c_type = type 
-	local s,tag = string.find(type,"_collider")
-	if(tag == nil ) then 
-		if type == "box" or type == "cube" then type = "box" end 
-        c_type = "collider"
-	else
-		type = string.sub(type,0,s-1) 
-	end  
+local function fill_collider_info(entity)
+-- local rot, pos, scale 
+-- if ms then 
+-- 	pos = ms(entity.position,"T")
+-- 	rot = ms(entity.rotation,"T")
+-- 	scale = ms(entity.scale,"T")
+-- else 
+-- 	pos = {0,0,0}  rot = {0,0,0}  scale = {1,1,1}
+-- end 
 
-	local entity = world[eid]
-	if entity[c_type] == nil then 
-		world:add_component(eid, c_type)
-	end 
-
-	if s_info then 
-		-- overwrite ,old entity.info will be gc later , or do copy 
-		if s_info.type == nil then s_info.type = type end   -- verify check
-		entity[c_type].info = s_info 
-	else 
-		entity[c_type].info.type = type 
-	end    
-
-	local rot, pos, scale 
-	if ms then 
-		pos = ms(entity.position,"T")
-		rot = ms(entity.rotation,"T")
-		scale = ms(entity.scale,"T")
-	else 
-		pos = {0,0,0}  rot = {0,0,0}  scale = {1,1,1}
-	end 
-
-	local r_scale = scale[1]
-	if scale[2] > r_scale then r_scale = scale[2] end 
-	if scale[3] > r_scale then r_scale = scale[3] end 
+-- local r_scale = scale[1]
+-- if scale[2] > r_scale then r_scale = scale[2] end 
+-- if scale[3] > r_scale then r_scale = scale[3] end 
 
 
-	local bounding_info = entity.mesh.assetinfo.handle.bounding
-	local shape_info = entity[c_type].info    
+-- local bounding_info = entity.mesh.assetinfo.handle.bounding
+-- local shape_info = entity[c_type].info    
 
-	-- make sure shape info suply by ouside or serialization doc, if not exist auto calc
-	-- for sizer 
-	-- if s_info == nil then  
-	-- 	if type == "box" or type == "cube" then 
-	-- 		shape_info.sx = (bounding_info.aabb.max[1] - bounding_info.aabb.min[1])*0.5*scale[1]
-	-- 		shape_info.sy = (bounding_info.aabb.max[2] - bounding_info.aabb.min[2])*0.5*scale[2]
-	-- 		shape_info.sz = (bounding_info.aabb.max[3] - bounding_info.aabb.min[3])*0.5*scale[3]
-	-- 	elseif type == "sphere" then 
-	-- 		shape_info.radius = bounding_info.sphere.radius *r_scale
-	-- 	elseif type == "capsule" or type == "cylinder" then 
-	-- 		local xl = (bounding_info.aabb.max[1] - bounding_info.aabb.min[1])*0.5*r_scale
-	-- 		local yl = (bounding_info.aabb.max[3] - bounding_info.aabb.min[3])*0.5*r_scale
-	-- 		local radius = xl 
-	-- 		if xl < yl then radius = yl end 
-	-- 		shape_info.height = (bounding_info.aabb.max[2] - bounding_info.aabb.min[2])*0.5*r_scale
-	-- 		shape_info.radius = radius 
-	-- 		shape_info.axis = 1 
-	-- 	end 
-	-- 	shape_info.center = {0,0,0}		
-	-- 	local cx = (bounding_info.aabb.max[1] + bounding_info.aabb.min[1])*0.5*scale[1]
-	-- 	local cy = (bounding_info.aabb.max[2] + bounding_info.aabb.min[2])*0.5*scale[2]
-	-- 	local cz = (bounding_info.aabb.max[3] + bounding_info.aabb.min[3])*0.5*scale[3]      
-	-- 	shape_info.center = { cx,cy,cz }
-	-- else
-	-- 	if type == "box" or type == "cube" then 
-	-- 		shape_info.sx = shape_info.sx*scale[1]
-	-- 		shape_info.sy = shape_info.sy*scale[2]
-	-- 		shape_info.sz = shape_info.sz*scale[3]
-	-- 	elseif type == "sphere" then 
-	-- 		shape_info.radius = shape_info.radius *r_scale
-	-- 	elseif type == "capsule" or type == "cylinder" then 
-	-- 		r_scale = 0
-	-- 		if shape_info.axis == 0 then 
-	-- 			r_scale = scale[2] if scale[3] >r_scale then r_scale = scale[3] end 
-	-- 		elseif shape_info.axis == 1 then 
-	-- 			r_scale = scale[3] if scale[1] >r_scale then r_scale = scale[1] end 
-	-- 		elseif shape_info.axis == 2 then 
-	-- 			r_scale = scale[1] if scale[2] >r_scale then r_scale = scale[2] end 
-	-- 		end 
-	-- 		shape_info.radius =  shape_info.radius* r_scale 
-	-- 		shape_info.height = shape_info.height* scale[shape_info.axis+1]
-	-- 	end 
-	-- end 
+-- if s_info == nil then  
+-- 	if type == "box" or type == "cube" then 
+-- 		shape_info.sx = (bounding_info.aabb.max[1] - bounding_info.aabb.min[1])*0.5
+-- 		shape_info.sy = (bounding_info.aabb.max[2] - bounding_info.aabb.min[2])*0.5
+-- 		shape_info.sz = (bounding_info.aabb.max[3] - bounding_info.aabb.min[3])*0.5
+-- 	elseif type == "sphere" then 
+-- 		shape_info.sx = (bounding_info.aabb.max[1] - bounding_info.aabb.min[1])*0.5
+-- 		shape_info.sy = (bounding_info.aabb.max[2] - bounding_info.aabb.min[2])*0.5
+-- 		shape_info.sz = (bounding_info.aabb.max[3] - bounding_info.aabb.min[3])*0.5
+-- 		shape_info.radius = get_max_length(shape_info.sx,shape_info.sy,shape_info.sz )
+-- 		scale[1] = r_scale  scale[2] = r_scale  scale[3] = r_scale     -- set max scale 
+-- 		-- some boundind_info radius > 2*real radius,so we need calculate 
+-- 		-- shape_info.radius = bounding_info.sphere.radius 
+-- 	elseif type == "capsule" or type == "cylinder" then 
+-- 		local xl = (bounding_info.aabb.max[1] - bounding_info.aabb.min[1])*0.5
+-- 		local yl = (bounding_info.aabb.max[2] - bounding_info.aabb.min[2])*0.5
+-- 		local zl = (bounding_info.aabb.max[3] - bounding_info.aabb.min[3])*0.5
+-- 		-- set max axis as default axis ,we do not known the correct axis from modeler 
+-- 		local axis = get_max_axis(xl,yl,zl)  -- or manually set main axis
+-- 		local radius,height = 0,0
+-- 		--axis = 2
+-- 		if axis == 0 then 
+-- 			height = xl  radius = yl 
+-- 			if zl  > radius then radius = zl end  
+-- 		elseif axis == 1 then 
+-- 			height = yl  radius = xl 
+-- 			if zl > radius then radius = zl end  
+-- 		elseif axis == 2 then 
+-- 			height = zl  radius = xl 
+-- 			if yl > radius then radius = yl end  
+-- 		end 	
+-- 		shape_info.axis   = axis 
+-- 		shape_info.radius = radius 
+-- 		shape_info.height = height 
+-- 		-- scale[1] = r_scale  scale[2] = r_scale  scale[3] = r_scale     -- set max scale 
+-- 	end
+-- 	local cx = (bounding_info.aabb.max[1] + bounding_info.aabb.min[1])*0.5
+-- 	local cy = (bounding_info.aabb.max[2] + bounding_info.aabb.min[2])*0.5
+-- 	local cz = (bounding_info.aabb.max[3] + bounding_info.aabb.min[3])*0.5
+-- 	shape_info.center = { cx,cy,cz }
+-- end 
+end
 
-	-- if ms then 
-	-- 	local mat = ms( {type="srt", s= {1,1,1} , r= entity.rotation, t={0,0,0} }, "P")
-	-- 	local nc  = ms( shape_info.center,mat,"*P")
-	-- 	--local nc = ms( bounding_info.sphere.center,mat,"*P")
-	-- 	--shape_info.center = ms(nc,"T")
-	-- else 
-	-- 	-- special tested ,not correct at all type 
-	-- 	shape_info.center[1] = bounding_info.sphere.center[1]
-	-- 	shape_info.center[2] = bounding_info.sphere.center[3]
-	-- 	shape_info.center[3] = bounding_info.sphere.center[2]
-	-- end 
-	------------------------------------------------------------------
-	-- for auto mode 
-	if s_info == nil then  
-		if type == "box" or type == "cube" then 
-			shape_info.sx = (bounding_info.aabb.max[1] - bounding_info.aabb.min[1])*0.5
-			shape_info.sy = (bounding_info.aabb.max[2] - bounding_info.aabb.min[2])*0.5
-			shape_info.sz = (bounding_info.aabb.max[3] - bounding_info.aabb.min[3])*0.5
-		elseif type == "sphere" then 
-			shape_info.sx = (bounding_info.aabb.max[1] - bounding_info.aabb.min[1])*0.5
-			shape_info.sy = (bounding_info.aabb.max[2] - bounding_info.aabb.min[2])*0.5
-			shape_info.sz = (bounding_info.aabb.max[3] - bounding_info.aabb.min[3])*0.5
-			shape_info.radius = get_max_length(shape_info.sx,shape_info.sy,shape_info.sz )
-			scale[1] = r_scale  scale[2] = r_scale  scale[3] = r_scale     -- set max scale 
-			-- some boundind_info radius > 2*real radius,so we need calculate 
-			-- shape_info.radius = bounding_info.sphere.radius 
-		elseif type == "capsule" or type == "cylinder" then 
-			local xl = (bounding_info.aabb.max[1] - bounding_info.aabb.min[1])*0.5
-			local yl = (bounding_info.aabb.max[2] - bounding_info.aabb.min[2])*0.5
-			local zl = (bounding_info.aabb.max[3] - bounding_info.aabb.min[3])*0.5
-		    -- set max axis as default axis ,we do not known the correct axis from modeler 
-			local axis = get_max_axis(xl,yl,zl)  -- or manually set main axis
-			local radius,height = 0,0
-			--axis = 2
-			if axis == 0 then 
-				height = xl  radius = yl 
-				if zl  > radius then radius = zl end  
-			elseif axis == 1 then 
-				height = yl  radius = xl 
-				if zl > radius then radius = zl end  
-			elseif axis == 2 then 
-				height = zl  radius = xl 
-				if yl > radius then radius = yl end  
-			end 	
-			shape_info.axis   = axis 
-			shape_info.radius = radius 
-			shape_info.height = height 
-			-- scale[1] = r_scale  scale[2] = r_scale  scale[3] = r_scale     -- set max scale 
-		end 
-		shape_info.center = {0,0,0}		
-		local cx = (bounding_info.aabb.max[1] + bounding_info.aabb.min[1])*0.5
-		local cy = (bounding_info.aabb.max[2] + bounding_info.aabb.min[2])*0.5
-		local cz = (bounding_info.aabb.max[3] + bounding_info.aabb.min[3])*0.5
-		shape_info.center = { cx,cy,cz }
-	end 
+function bullet_world:init_collider_component(collidercomp, obj_idx, srt, offset)		
+	local collider = collidercomp.collider
+	collider.obj_idx = obj_idx
 
-	shape_info.isTrigger = true
-	shape_info.obj_idx = eid   -- or any combine mode 
+	local s, r, t = srt[1], srt[2], srt[3]
+	local pos = offset and ms(t, offset, "+m") or ms(t, "m")
 
-	shape_info.obj, shape_info.shape = Physics:create_collider( type ,shape_info, eid, pos , default_quat ) 
-	-- Physics:set_object_position( shape_info.obj, {pos[1],pos[2] + 10,pos[3] } )	
-	Physics:set_object_angles( shape_info.obj, rot[1], rot[2], rot[3] )  --defer ajust, not add seperator function for create_*
-	Physics:set_object_scale( shape_info.obj,shape_info.shape, scale )
+	local shapeinfo = collidercomp.shape
+	local obj, shape = self:create_collider(shapeinfo.type, shapeinfo, obj_idx, pos, ~default_quat)
 
-	-- tested method and data 
-	-- Physics:remove_object( shape_info.obj )
-	-- Physics:set_object_rotation(shape_info.obj, {rx,ry,rz,rw})
+	collider.handle = obj
+	shapeinfo.handle = shape
 
-    -- Physics:set_object_angles( shape_info.obj, rot[1], rot[2], rot[3] ) 
-	-- Physics:add_object( shape_info.obj )
-	-- pos[1] = pos[1] + shape_info.center[1] 
-	-- pos[2] = pos[2] + shape_info.center[2] 
-	-- pos[3] = pos[3] + shape_info.center[3] 
-	-- Physics:set_object_position( shape_info.obj, pos  )
+	self:set_object_angles(obj, ms(r, "m"))
+	self:set_object_scale(obj, ms(s, "m"))
+end
+
+function bullet_world:add_component_collider(world, eid, collidername, offset)
+	world:add_component(eid, collidername)
+	local e = world[eid]
+	self:init_collider_component(e[collidername], eid, {e.scale, e.rotation, e.position}, offset)
 end 
 
 -- special handy function, for lazy auto create component terrain collider 
-function bullet_world:add_component_terCollider(world,eid,type,ms)
-	local Physics = self or world.args.Physics 
-	-- component and collider info edit by editor 
-	local c_type = type 
-	local s,tag = string.find(type,"_collider")
-	if(tag == nil ) then 
-        c_type = "collider"
-	else
-		type = string.sub(type,0,s-1) 
-	end  
+-- function bullet_world:add_component_terCollider(world,eid,type,ms)
+-- 	local Physics = self or world.args.Physics 
+-- 	-- component and collider info edit by editor 
+-- 	local c_type = type 
+-- 	local s,tag = string.find(type,"_collider")
+-- 	if(tag == nil ) then 
+--         c_type = "collider"
+-- 	else
+-- 		type = string.sub(type,0,s-1) 
+-- 	end  
 
-	local entity = world[eid]
-	if entity[c_type] == nil then 
-		world:add_component(eid, c_type)
-	end 
+-- 	local entity = world[eid]
+-- 	if entity[c_type] == nil then 
+-- 		world:add_component(eid, c_type)
+-- 	end 
 
-	local terrain_obj = entity.terrain.terrain_obj 
-	local shape_info = entity[c_type].info
-	shape_info.type = "terrain"
+-- 	local terrain_obj = entity.terrain.terrain_obj 
+-- 	local shape_info = entity[c_type].info
+-- 	shape_info.type = "terrain"
 
-	local rot, pos
-	if ms then 
-		pos = ms(entity.position,"T")
-		rot = ms(entity.rotation,"T")
-	else 
-		pos = {0,0,0} rot = {1,1,1}
-	end 	
-	shape_info.obj, shape_info.shape = 
-	Physics:create_terrainCollider(terrain_obj ,shape_info, eid, pos, {0,0,0,1} )
-	-- Physics:set_object_angles( shape_info.obj, rot[1], rot[2], rot[3] )  --not need
-end 
+-- 	local rot, pos
+-- 	if ms then 
+-- 		pos = ms(entity.position,"T")
+-- 		rot = ms(entity.rotation,"T")
+-- 	else 
+-- 		pos = {0,0,0} rot = {1,1,1}
+-- 	end 	
+-- 	shape_info.obj, shape_info.shape = 
+-- 	Physics:create_terrainCollider(terrain_obj ,shape_info, eid, pos, {0,0,0,1} )
+-- 	-- Physics:set_object_angles( shape_info.obj, rot[1], rot[2], rot[3] )  --not need
+-- end 
 
 
 -----------------------------------

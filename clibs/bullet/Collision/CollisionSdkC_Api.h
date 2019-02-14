@@ -62,6 +62,8 @@ extern "C"
 	extern void plAddCollisionObject(plCollisionSdkHandle sdkHandle, plCollisionWorldHandle world, plCollisionObjectHandle object);
 	extern void plRemoveCollisionObject(plCollisionSdkHandle sdkHandle, plCollisionWorldHandle world, plCollisionObjectHandle object);
 
+	extern plCollisionShapeHandle plGetCollisionObjectShape(plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle);
+
 	/* Collision Object  */
 
 	extern plCollisionObjectHandle plCreateCollisionObject(plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, void* userPointer, int userIndex, plCollisionShapeHandle cshape, plVector3 startPosition, plQuaternion startOrientation);
@@ -83,7 +85,7 @@ extern "C"
 
 	/* Collision Shape definition */
 	// addition staple shape: box 
-	extern plCollisionShapeHandle plCreateCubeShape(plCollisionSdkHandle sdk,plCollisionWorldHandle world,plVector3 size);
+	extern plCollisionShapeHandle plCreateBoxShape(plCollisionSdkHandle sdk,plCollisionWorldHandle world,plVector3 size);
 
 	extern plCollisionShapeHandle plCreateSphereShape( plCollisionSdkHandle sdk, plCollisionWorldHandle worldHandle, plReal radius);
 	extern plCollisionShapeHandle plCreateCapsuleShape( plCollisionSdkHandle sdk, plCollisionWorldHandle worldHandle, plReal radius, plReal height, int capsuleAxis );
@@ -96,9 +98,11 @@ extern "C"
 													 plReal planeConstant);
 	// for terrain ,must do convert 
 	extern plCollisionShapeHandle plCreateTerrainShape(plCollisionSdkHandle sdk, plCollisionWorldHandle worldHandle,
-													int width,int height, const void *heightData, plReal gridScale,
-													plReal heightScale,plReal minHeight,plReal maxHeight,int upAxis,
-													int phyDataType,
+													int width,int height, 
+													const void *heightData, int phyDataType,
+													plReal gridScale,
+													plReal heightScale,plReal minHeight,plReal maxHeight, 
+													int upAxis,													
 													bool filpQuadEdges);
 
 	extern plCollisionShapeHandle plCreateCompoundShape(plCollisionSdkHandle sdk, plCollisionWorldHandle worldHandle);

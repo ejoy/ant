@@ -122,7 +122,7 @@ function PVPScene.create_entitices(world)
 				},
 				collision_types = {
 					{
-						"capsule",
+						"capsule_collider",
 					},
 				},
 			}
@@ -140,8 +140,8 @@ function PVPScene.create_entitices(world)
 				},
 				collision_types = {
 					{
-						"capsule",
-						"box",					
+						"capsule_collider",
+						"box_collider",					
 					},
 				},
 			}
@@ -158,7 +158,7 @@ function PVPScene.create_entitices(world)
 				},
 				collision_types = {
 					{
-						"box"
+						"box_collider"
 					}
 					
 				},
@@ -181,11 +181,11 @@ function PVPScene.create_entitices(world)
 				},
 				collision_types = {
 					{
-						"capsule",
-						"box",
-						"cylinder",
-						"box",
-						"box",
+						"capsule_collider",
+						"box_collider",
+						"cylinder_collider",
+						"box_collider",
+						"box_collider",
 					}
 				},
 			}
@@ -194,6 +194,7 @@ function PVPScene.create_entitices(world)
 
 	local Physics = world.args.Physics 
 
+	for i=1, 50 do
 	for name, scenedata in pairs(scene_objects) do
 		local children = assert(scenedata.children)		
 		local srts = assert(children.srts)
@@ -233,12 +234,15 @@ function PVPScene.create_entitices(world)
 				createMaterial(e, scenedata.material)
 
 				if collision_array then
-					local ct = collision_array[idx]
-					Physics:add_component_collider(world,eid,ct,ms)
+					local collisitontype = collision_array[idx]
+					Physics:add_component_collider(world, eid, collisitontype)
+					local e = world[eid]
+					local collider = e[collisitontype].collider
+					assert(collider.handle)
 				end
 			end
 		end
-
+	end
 	end
 end
 

@@ -10,9 +10,6 @@ public:
 	{
 	}
 
-	virtual void createDebugDrawer(plCollisionWorldHandle world) = 0;
-	virtual void deleteDebugDrawer(plCollisionWorldHandle world) = 0;
-
 	virtual plCollisionWorldHandle createCollisionWorld(int maxNumObjsCapacity, int maxNumShapesCapacity, int maxNumPairsCapacity) = 0;
 
 	virtual void deleteCollisionWorld(plCollisionWorldHandle worldHandle) = 0;
@@ -20,7 +17,7 @@ public:
 	virtual void resetCollisionWorld(plCollisionWorldHandle worldHandle) = 0;
 
 	// addition staple box shape 
-	virtual plCollisionShapeHandle createCubeShape(plCollisionWorldHandle world,plVector3 size) = 0;
+	virtual plCollisionShapeHandle createBoxShape(plCollisionWorldHandle world,plVector3 size) = 0;
 
 	virtual plCollisionShapeHandle createSphereShape(plCollisionWorldHandle worldHandle, plReal radius) = 0;
 
@@ -40,12 +37,16 @@ public:
 													   int upAxis) = 0;
 
 	virtual plCollisionShapeHandle createTerrainShape(plCollisionWorldHandle worldHandle,
-													int width,int height, const void *heightData, plReal gridSize,
-													plReal heightScale,plReal minHeight,plReal maxHeight,int upAxis,
-													int phyDataType,
+													int width,int height, 
+													const void *heightData, int phyDataType,
+													plReal gridSize,
+													plReal heightScale, plReal minHeight, plReal maxHeight,
+													int upAxis,
 													bool filpQuadEdges) = 0;													
 
 	virtual plCollisionShapeHandle createCompoundShape(plCollisionWorldHandle worldHandle) = 0;
+	virtual plCollisionShapeHandle getCompoundChildShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle compoundShape, int childidx) = 0;
+
 	virtual void addChildShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle compoundShape, plCollisionShapeHandle childShape, plVector3 childPos, plQuaternion childOrn) = 0;
 
 	virtual void deleteShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle shape) = 0;
@@ -57,7 +58,7 @@ public:
 	virtual plCollisionObjectHandle createCollisionObject(plCollisionWorldHandle worldHandle, void* userPointer, int userIndex, plCollisionShapeHandle cshape,
 														  plVector3 startPosition, plQuaternion startOrientation) = 0;
 	virtual void deleteCollisionObject( plCollisionWorldHandle worldHandle, plCollisionObjectHandle body) = 0;
-
+	virtual plCollisionShapeHandle getCollisionObjectShape(plCollisionWorldHandle worldHandle, plCollisionObjectHandle object) = 0;
 
 	virtual void setCollisionObjectTransform(plCollisionWorldHandle world, plCollisionObjectHandle body,
 											 plVector3 position, plQuaternion orientation) = 0;
@@ -83,8 +84,14 @@ public:
 
 	//  addition protocol: raycast for accelerate collision detection
 	virtual bool raycast( plCollisionWorldHandle world, plVector3 rayFrom,plVector3 rayTo,
-						  ClosestRayResult &result ) = 0;							  
+						  ClosestRayResult &result ) = 0;
+
+	//{@	debug	
+	virtual void createDebugDrawer(plCollisionWorldHandle world) = 0;
+	virtual void deleteDebugDrawer(plCollisionWorldHandle world) = 0;
+
 	virtual void drawline( plCollisionWorldHandle world, plVector3 rayFrom,plVector3 rayTo,unsigned int color ) = 0;							  
+	//@}
 
 };
 

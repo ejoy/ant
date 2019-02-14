@@ -1,15 +1,10 @@
-local lterrain = require 'lterrain'
-local uclass = require 'utilclass'
-local texLoad = require "utiltexture"
+local lterrain 	= require 'lterrain'
+
+local texLoad 	= require "utiltexture"
 local bgfx = require "bgfx"
 
-
 local shaderMgr = import_package "ant.render".shader_mgr
-local math3d = require "math3d"
 
-local math3d_stack = math3d.new()
-
--- 文件读写需要统一到框架
 local readfile = function( fname )
 	local f = assert(io.open( fname,'rb'))
 	local d = f:read('*a')
@@ -17,7 +12,6 @@ local readfile = function( fname )
 	return d 
 end 
 
------- 定义 Terrain 类 -----
 local TerrainClass = Class("antTerrain")
 
 -- Class Owner Attributes ,Forward description for reader 

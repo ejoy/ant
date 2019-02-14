@@ -130,7 +130,7 @@ void Bullet2CollisionSdk::deleteDebugDrawer( plCollisionWorldHandle worldHandle)
 	}
 }
 // addition cube shape 
-plCollisionShapeHandle Bullet2CollisionSdk::createCubeShape(plCollisionWorldHandle world,plVector3 size)
+plCollisionShapeHandle Bullet2CollisionSdk::createBoxShape(plCollisionWorldHandle world,plVector3 size)
 {
 	btBoxShape *boxShape = new btBoxShape( btVector3(size[0],size[1],size[2]) );
 	return (plCollisionShapeHandle) boxShape;
@@ -205,14 +205,18 @@ void printTerrainShape(int w,int h,HeightfieldTerrainShape *shape) {
 }
 // do grid scale setting 
 plCollisionShapeHandle Bullet2CollisionSdk::createTerrainShape(plCollisionWorldHandle worldHandle,
-													int width,int height, const void *heightData, plReal gridScale,
-													plReal heightScale,plReal minHeight,plReal maxHeight,int upAxis,
-													int  phyDataType,
-													bool filpQuadEdges)
+	int width, int height,
+	const void *heightData, int phyDataType,
+	plReal gridScale,
+	plReal heightScale, plReal minHeight, plReal maxHeight,
+	int upAxis,
+	bool filpQuadEdges)
 {
-	btHeightfieldTerrainShape *terrainShape = new btHeightfieldTerrainShape( width,height,heightData, 
-															                 (btScalar)heightScale,  (btScalar)minHeight,  (btScalar)maxHeight,upAxis,
-																			 (PHY_ScalarType)phyDataType, filpQuadEdges );
+	btHeightfieldTerrainShape *terrainShape = 
+		new btHeightfieldTerrainShape( width, height,
+			heightData, 
+			(btScalar)heightScale,  (btScalar)minHeight,  (btScalar)maxHeight,upAxis,
+			(PHY_ScalarType)phyDataType, filpQuadEdges );
 	terrainShape->setLocalScaling(btVector3(gridScale,1.0f,gridScale));
 
 	//printTerrainShape(width,height,terrainShape);
@@ -277,6 +281,15 @@ plCollisionShapeHandle Bullet2CollisionSdk::createCompoundShape(plCollisionWorld
 {
 	return (plCollisionShapeHandle) new btCompoundShape();
 }
+
+plCollisionShapeHandle Bullet2CollisionSdk::getCompoundChildShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle compoundShapeHandle, int childidx) {
+	btCompoundShape *compoundShape = (btCompoundShape*)compoundShapeHandle;
+	btAssert(compoundShape->isCompound());
+
+	btAssert(0 <= childidx && childidx < compoundShape->getNumChildShapes());
+	return (plCollisionShapeHandle)compoundShape->getChildShape(childidx);
+}
+
 void Bullet2CollisionSdk::addChildShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle compoundShapeHandle, plCollisionShapeHandle childShapeHandle, plVector3 childPos, plQuaternion childOrn)
 {
 	btCompoundShape* compound = (btCompoundShape*)compoundShapeHandle;
@@ -296,26 +309,9 @@ void Bullet2CollisionSdk::setShapeScale(plCollisionWorldHandle worldHandle,plCol
 	world->updateSingleAabb(colObj);
 }
 
-// void Bullet2CollisionSdk:deleteCollisionShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle shapeHandle) 
-// {
-
-// }
-
 void Bullet2CollisionSdk::deleteShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle shapeHandle)
 {
 	btCollisionShape* shape = (btCollisionShape*)shapeHandle;
-	//printf("delete shape %s begin, iscompound(%d)\n ",shape->getName(),shape->isCompound() );
-	if(shape->isCompound() ) {
-		btCompoundShape *compoundShape = (btCompoundShape*)shape;
-		for(int i=0;i<compoundShape->getNumChildShapes();i++) {
-			btCollisionShape* subShape = compoundShape->getChildShape(i);
-			//printf(" subShape name(%s),type(%d)\n",subShape->getName(),subShape->getShapeType());
-			compoundShape->removeChildShapeByIndex(i);
-			deleteShape(worldHandle, (plCollisionShapeHandle)subShape );
-		}
-	}
-	// printf("delete shape %s end, iscompound(%d)\n ",shape->getName(),shape->isCompound() );
-	// printf("\n");
 	delete shape;
 }
 
@@ -369,22 +365,22 @@ plCollisionObjectHandle Bullet2CollisionSdk::createCollisionObject(plCollisionWo
 void Bullet2CollisionSdk::deleteCollisionObject(plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle)
 {
 	btCollisionWorld *world = (btCollisionWorld *) worldHandle; 
-	btCollisionObject* colObj = (btCollisionObject*)bodyHandle;
-	//printf("[deleteObject start -\n");
-    if( colObj->getWorldArrayIndex() != -1) {
-		// avoid slower search
-		//printf("removeObject (%d) is in world, remove from world first....\n",colObj->getWorldArrayIndex());
+	btCollisionObject* colObj = (btCollisionObject*)bodyHandle;	
+    if( colObj->getWorldArrayIndex() != -1) {		
 		world->removeCollisionObject(colObj);
-	} else {
-		//printf("removeObject(-1) is not in world, delete now....\n");
 	}
 	btCollisionShape* shape = colObj->getCollisionShape();
 	if(shape) {
 		deleteShape(worldHandle, (plCollisionShapeHandle) shape );
 		colObj->setCollisionShape(0);
 	}
-	delete colObj;
-	//printf("-deleteObject end]\n");
+	delete colObj;	
+}
+
+
+plCollisionShapeHandle Bullet2CollisionSdk::getCollisionObjectShape(plCollisionWorldHandle worldHandle, plCollisionObjectHandle objectHandle) {
+	btCollisionObject *obj = (btCollisionObject*)objectHandle;
+	return (plCollisionShapeHandle)obj->getCollisionShape();
 }
 
 void Bullet2CollisionSdk::setCollisionObjectTransform(plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
@@ -611,9 +607,9 @@ bool Bullet2CollisionSdk::raycast( plCollisionWorldHandle worldHandle, plVector3
 				btVector3 pt(result.m_hitPointWorld[0],result.m_hitPointWorld[1],result.m_hitPointWorld[2]);
 				btVector3 nt(result.m_hitNormalWorld[0],result.m_hitNormalWorld[1],result.m_hitNormalWorld[2]);
 				nt += pt;
-				world->getDebugDrawer()->drawLine(pt,nt,btVector3(0.85,0.6,0.6));
-				world->getDebugDrawer()->drawLine(pt,nt+btVector3(0,0,-1),btVector3(0.6,0.85,0.6));
-				world->getDebugDrawer()->drawLine(pt,nt+btVector3(1,0,0),btVector3(0.6,0.6,0.85));
+				world->getDebugDrawer()->drawLine(pt,nt,btVector3(0.85f,0.6f,0.6f));
+				world->getDebugDrawer()->drawLine(pt,nt+btVector3(0,0,-1),btVector3(0.6f,0.85f,0.6f));
+				world->getDebugDrawer()->drawLine(pt,nt+btVector3(1,0,0),btVector3(0.6f,0.6f,0.85f));
 			}
 			// convert result from bullet to interface 
 			return true;
