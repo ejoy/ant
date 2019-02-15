@@ -5,11 +5,11 @@ local function gen_ref(c)
     if c.ref ~= nil then
         return c.ref
     end
-    if not c.type then
+	if not c.type then
+		c.ref = true
         for _,v in ipairs(c) do
             v.ref = gen_ref(v)
-        end
-        c.ref = true
+        end        
         return c.ref
     end
     if c.type == 'primtype' then
