@@ -15,10 +15,6 @@ function world:create_component(c)
 end
 
 function world:register_component(eid, c)
-	local nc = self._notifycomponent[c]
-	if nc then
-		table.insert(nc, eid)
-	end
 	local set = self._set[c]
 	if set then
 		set[#set+1] = eid
@@ -57,14 +53,6 @@ function world:remove_component(eid, component_type)
 		del(e[component_type])
 	end
 	e[component_type] = nil
-	self:change_component(eid, component_type)
-end
-
-function world:change_component(eid, component_type)
-	local cc = self._changecomponent[component_type]
-	if cc then
-		cc[eid] = true
-	end
 end
 
 function world:component_list(eid)
@@ -95,15 +83,13 @@ function world:remove_entity(eid)
 	self[eid] = nil
 	self._entity[eid] = nil
 
-	-- notify all components of this entity
+	-- todo: defer delete
 	local typeclass = self._component_type
 	for component_type, c in pairs(e) do
 		local del = typeclass[component_type].delete
 		if del then
 			del(c)
 		end
-
-		self:change_component(eid, component_type)
 	end
 end
 
@@ -174,14 +160,6 @@ end
 function world:each2(ct1, ct2)
 	local _,s = self:each(ct1)
 	return component_filter(self, ct2), s, 0
-end
-
-local function init_notify(w, notifies)
-	for cname in pairs(notifies) do
-		w._notifycomponent[cname] = {}
-		w._changecomponent[cname] = {}
-		w._notifyset[cname] = { n = 0 }
-	end
 end
 
 local function init_modules(w, packages, systems, loader)
@@ -273,6 +251,12 @@ function world:update_func(what, order)
 	end
 end
 
+function world:enable_system(name, enable)
+	for _, switch in pairs(self._switchs) do
+		switch:enable(name, enable)
+	end
+end
+
 -- config.packages
 -- config.systems
 -- config.update_order
@@ -283,14 +267,10 @@ function ecs.new_world(config)
 		args = config.args,
 		_component_type = {},	-- component type objects
 		update = nil,	-- update systems
-		notify = nil,
 		schema = create_schema.new(),
 
 		_entity = {},	-- entity id set
 		_entity_id = 0,
-		_notifycomponent = {},	-- component_name : { eid_list }
-		_changecomponent = {},	-- component_name : { eid_set }
-		_notifyset = {},	-- component_name : { n = number, eid_list }
 		_set = setmetatable({}, { __mode = "kv" }),
 		_switchs = {},	-- for enable/disable
 	}, world)
@@ -310,53 +290,6 @@ function ecs.new_world(config)
 	w._systems = system.lists(class.system)
 	w._singleton_proxy = system.proxy(class.system, class.singleton_component)
 
-	local notify_list = system.notify_list(class.system, w._singleton_proxy)
-	init_notify(w, notify_list)
-	local notify_switch = system.list_switch(notify_list)
-
-	function w.enable_system(name, enable)
-		notify_switch:enable(name, enable)
-		for _, switch in pairs(w._switchs) do
-			switch:enable(name, enable)
-		end
-	end
-
-	function w.notify()
-		notify_switch:update()
-		local _changecomponent = w._changecomponent
-		local _notifyset = w._notifyset
-
-		for c, newset in pairs(w._notifycomponent) do
-			local n = #newset
-			local changeset = _changecomponent[c]
-			local notifyset = _notifyset[c]
-			for i = 1, n do
-				local new_id = newset[i]
-				if changeset[new_id] then
-					changeset[new_id] = nil
-				end
-				notifyset[i] = new_id
-				newset[i] = nil
-			end
-
-			for change_id in pairs(changeset) do
-				changeset[change_id] = nil
-				n = n + 1
-				notifyset[n] = change_id
-			end
-			for i = n+1, notifyset.n do
-				notifyset[i] = nil
-			end
-			notifyset.n = n
-
-			if n > 0 then
-				for _, functor in ipairs(notify_list[c]) do
-					local f, inst = functor[2],functor[3]
-					f(inst, notifyset)
-				end
-			end
-		end
-	end
 	return w
 end
 

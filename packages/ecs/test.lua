@@ -66,20 +66,6 @@ function mods.dummy(...)
 		end
 	end
 
-	function dummy.notify:foobar(set)
-		for _, eid in ipairs(set) do
-			print ("Notify", eid)
-			local e = world[eid]
-			if e then
-				print("Notify Foobar", eid, e)
-				print("Foobar", e.foobar.x, e.foobar.y)
-				world:remove_entity(eid)
-			else
-				print ("Notify removed", eid)
-			end
-		end
-	end
-
 	local dby = ecs.system "dependby"
 	dby.dependby "dummy"
 
@@ -138,21 +124,22 @@ local w = ecs.new_world {
 	update_order = { "init" },
 }
 
-w.enable_system("dummy", true)
+w:enable_system("dummy", true)
+
+local init = w:update_func "init"
+init()
+local update = w:update_func "update"
 
 print("Step 1")
-w.update()
-w.notify()
+update()
 
-w.enable_system("dummy", true)
+w:enable_system("dummy", true)
 
 print("Step 2")
-w.update()
-w.notify()
+update()
 
 print("disable dummy system")
-w.enable_system("dummy", false)
+w:enable_system("dummy", false)
 
 print("Step 3")
-w.update()
-w.notify()
+update()
