@@ -74,11 +74,20 @@ function mods.dummy(...)
 		print("in dby:init()")
 	end
 
-	local newdummy = ecs.system "newdummy"
+	local newdummy = ecs.system "new"
 
 	function newdummy:update()
-		for eid in world:eachnew "foobar" do
+		for eid in world:each_new "foobar" do
 			print("New foobar", eid)
+			world:remove_entity(eid)
+		end
+	end
+
+	local delete = ecs.system "delete"
+
+	function delete:delete()
+		for eid in world:each_removed "foobar" do
+			print("Delete foobar", eid)
 		end
 	end
 end
@@ -128,7 +137,7 @@ end
 
 local w = ecs.new_world {
 	packages = { "basetype", "dummy", "init", "foobar" },
-	systems = { "init", "dummy", "newdummy" },
+	systems = { "init", "dummy", "new", "delete" },
 	loader = function(name) return mods[name] end,
 	update_order = { "init" },
 }
@@ -138,17 +147,24 @@ w:enable_system("dummy", true)
 local init = w:update_func "init"
 init()
 local update = w:update_func "update"
+local delete = w:update_func "delete"
+
+local function update_all()
+	update()
+	delete()
+	w:clear_removed()
+end
 
 print("Step 1")
-update()
+update_all()
 
 w:enable_system("dummy", true)
 
 print("Step 2")
-update()
+update_all()
 
 print("disable dummy system")
 w:enable_system("dummy", false)
 
 print("Step 3")
-update()
+update_all()

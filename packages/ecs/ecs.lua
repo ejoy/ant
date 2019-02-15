@@ -52,10 +52,9 @@ function world:remove_component(eid, component_type)
 	local e = assert(self[eid])
 	assert(e[component_type] ~= nil)
 	self._set[component_type] = nil
-	local del = self._component_type[component_type].delete
-	if del then
-		del(e[component_type])
-	end
+	-- defer delete , see world:remove_reset
+	local removed = self._removed
+	removed[#removed+1] = { eid, component_type, e[component_type] }
 	e[component_type] = nil
 end
 
@@ -87,14 +86,9 @@ function world:remove_entity(eid)
 	self[eid] = nil
 	self._entity[eid] = nil
 
-	-- todo: defer delete
-	local typeclass = self._component_type
-	for component_type, c in pairs(e) do
-		local del = typeclass[component_type].delete
-		if del then
-			del(c)
-		end
-	end
+	local removed = self._removed
+	removed[#removed+1] = { eid, e }
+	-- defer delete , see world:remove_reset
 end
 
 local function component_next(set, index)
@@ -106,6 +100,7 @@ local function component_next(set, index)
 			return
 		end
 		local exist = set.entity[eid]
+		-- NOTICE: component may removed from entity
 		if exist then
 			return index, eid
 		end
@@ -178,7 +173,7 @@ local function new_component_next(set)
 	end
 end
 
-function world:eachnew(component_type)
+function world:each_new(component_type)
 	local s = self._newset[component_type]
 	if s == nil then
 		s = { entity = self._entity }
@@ -188,6 +183,66 @@ function world:eachnew(component_type)
 		self._newset[component_type] = s
 	end
 	return new_component_next, s
+end
+
+function world:clear_removed()
+	local set = self._removed
+	local typeclass = self._component_type
+
+	for i = #set,1,-1 do
+		local item = set[i]
+		set[i] = nil
+		local c = item[3]
+		if c ~= nil then
+			-- delete component
+			local component_type = item[2]
+			local del = typeclass[component_type].delete
+			if del then
+				del(c)
+			end
+		else
+			local e = item[2]
+			-- delete entity
+			for component_type, c in pairs(e) do
+				local del = typeclass[component_type].delete
+				if del then
+					del(c)
+				end
+			end
+		end
+	end
+end
+
+local function dummy_iter() end
+
+function world:each_removed(component_type)
+	local removed_set
+
+	local set = self._removed
+	for i = 1, #set do
+		local item = set[i]
+		local eid = item[1]
+		local c = item[3]	-- { eid, component_type, c }
+		if c ~= nil then
+			local ctype = item[2]
+			if ctype == component_type then
+				removed_set = removed_set or {}
+				removed_set[eid] = true
+			end
+		else
+			local e = item[2]
+			if e[component_type] ~= nil then
+				removed_set = removed_set or {}
+				removed_set[eid] = true
+			end
+		end
+	end
+
+	if removed_set then
+		return pairs(removed_set)
+	else
+		return dummy_iter
+	end
 end
 
 local function init_modules(w, packages, systems, loader)
@@ -300,6 +355,7 @@ function ecs.new_world(config)
 		_entity_id = 0,
 		_set = setmetatable({}, { __mode = "kv" }),
 		_newset = {},
+		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 	}, world)
 
