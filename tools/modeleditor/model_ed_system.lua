@@ -419,7 +419,7 @@ local function init_lighting()
 	local lu = renderpkg.light
 	local leid = lu.create_directional_light_entity(world)
 	local lentity = world[leid]
-	local lightcomp = lentity.light
+	local lightcomp = lentity.directional_light
 	lightcomp.color = {1,1,1,1}
 	lightcomp.intensity = 2.0
 	ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")

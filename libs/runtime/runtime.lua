@@ -50,6 +50,7 @@ local callback = {}
 local width, height
 local packages, systems
 local world
+local world_update
 
 function callback.init(nwh, context, w, h)
 	width, height = w, h
@@ -62,6 +63,7 @@ function callback.init(nwh, context, w, h)
 		height = height,
 	}
 	world = su.start_new_world(iq, width, height, packages, systems)
+	world_update = world:update_func("update", {"timesystem", "message_system"})
 end
 
 function callback.error(err)
@@ -96,7 +98,9 @@ end
 
 function callback.update()
 	--dbgupdate()
-	if world then world.update() end
+	if world_update then 
+		world_update()
+	end
 end
 
 local function start(m1, m2)

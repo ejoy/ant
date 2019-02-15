@@ -36,7 +36,9 @@ canvas = iup.canvas{}
 local input_queue = inputmgr.queue()
 mapiup(input_queue, canvas)
 
-local world_building = {}
+local world = {}
+local worldupdate = nil
+
 dlg = iup.dialog {
   canvas,
   title = "hello terrain world",
@@ -283,7 +285,7 @@ local function mainloop()
 
 	nk.update()
 	
-    world_building.update()
+    world.update()
     
 	bgfx.frame()
 end
@@ -315,8 +317,8 @@ local function init(canvas, fbw, fbh)
 	bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
 	bgfx.set_debug "T"
 
-    world_building = scene.start_new_world( input_queue,fbw,fbh,{"render.add_entity_system"})
-
+    world = scene.start_new_world( input_queue,fbw,fbh,{"render.add_entity_system"})
+	worldupdate = world:update_func("update", {"timesystem", "message_system"})
 	-- nk init
 	nk.init {
 		view = UI_VIEW,
@@ -395,8 +397,8 @@ function canvas:resize_cb(w,h)
 		init = nil
 	else 
         nk.resize(w,h)
-        for _, eid in world_building:each("viewid") do
-            local e = world_building[eid]
+        for _, eid in world:each("viewid") do
+            local e = world[eid]
             e.view_rect.x = 0
             e.view_rect.y = 0
             e.view_rect.w = w

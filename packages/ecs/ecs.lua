@@ -310,9 +310,6 @@ function ecs.new_world(config)
 	w._systems = system.lists(class.system)
 	w._singleton_proxy = system.proxy(class.system, class.singleton_component)
 
-	-- todo: remove update
-	w.update = w:update_func("update", config.update_order)
-
 	local notify_list = system.notify_list(class.system, w._singleton_proxy)
 	init_notify(w, notify_list)
 	local notify_switch = system.list_switch(notify_list)

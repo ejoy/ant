@@ -85,8 +85,9 @@ end
 
 
 function editor_mainwindow:new_world(packages, systems)
-	local world = scene.start_new_world(self.iq, self.config.fbw, self.config.fbh, packages, systems)
-	task.loop(world.update)
+	local world = scene.start_new_world(self.iq, self.config.fbw, self.config.fbh, packages, systems)	
+	local update = world:update_func("update", {"timesystem", "message_system"})
+	task.loop(update)
 end
 
 function editor_mainwindow:run(config)

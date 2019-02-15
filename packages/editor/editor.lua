@@ -24,7 +24,8 @@ function editor.run(fbw, fbh, canvas, packages, systems)
 
 	local world = su.start_new_world(iq, fbw, fbh, packages, systems)
 
-	task.loop(world.update)
+	local update = world:update_func("update", {"timesystem", "message_system"})
+	task.loop(update)
 
 	if (iup.MainLoopLevel()==0) then
 		iup.MainLoop()

@@ -25,8 +25,7 @@ function util.start_new_world(input_queue, fbw, fbh, packages, systems)
 
 	world = ecs.new_world {
 		packages = packages,
-		systems = systems,
-		update_order = {"timesystem", "message_system"},
+		systems = systems,		
 		args = { 
 			mq = input_queue, 
 			fb_size={w=fbw, h=fbh},			

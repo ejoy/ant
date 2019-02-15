@@ -52,8 +52,8 @@ rhwi.init {
 }
 
 local world = scene.start_new_world(input_queue, fb_width, fb_height, packages, systems)
-
-task.loop(world.update)
+local update = world:update_func("update", {"timesystem", "message_system"})
+task.loop(update)
 
 if iup.MainLoopLevel() == 0 then
 	iup.MainLoop()
