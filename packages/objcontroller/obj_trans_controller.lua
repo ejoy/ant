@@ -609,14 +609,14 @@ local function update_select_state(ot)
     return select_changed
 end
 
-function obj_trans_sys.notify:pickup()	
-    local ot = self.object_transform
-    if update_select_state(ot) then
-        update_contorller(ot)
-    end
+function obj_trans_sys:pickup()
+	local ot = self.object_transform
+	if update_select_state(ot) then
+		update_contorller(ot)
+	end
 
 	local selid = ot.selected_eid
 	if selid then
 		self.control_state = is_controller_id(ot.controllers, ot.selected_eid) and "object" or "default"
-	end    
+	end
 end

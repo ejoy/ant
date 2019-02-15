@@ -260,8 +260,8 @@ function pickup_sys:update()
 					end
 		
 					pu_comp.last_eid_hit = eid
-					world:change_component(pickupeid, "pickup")
-					world.notify()
+
+					world:update_func("pickup")()
 		
 					remove_primitive_filter(pickupeid)
 					pu_comp.ispicking = nil

@@ -75,7 +75,7 @@ return function(world, import, class)
 				end
 				setmetatable(r, {
 					__index = args.setter and gen_set(c, args.setter),
-					__newindex = gen_method(c, args.callback),
+					__newindex = gen_method(c),
 				})
 
 				class_set[name] = r
@@ -92,8 +92,7 @@ return function(world, import, class)
 	register {
 		type = "system",
 		setter = { "depend" , "dependby", "singleton" },
-		submethod = { "notify" },
-		callback = { "init", "update" },
+		submethod = { "notify" },		
 	}
 
 	local schema = world.schema
