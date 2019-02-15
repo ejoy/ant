@@ -15,13 +15,13 @@ function world:create_component(c)
 end
 
 function world:register_component(eid, c)
-	local nc = self._notifycomponent[c]
-	if nc then
-		table.insert(nc, eid)
-	end
 	local set = self._set[c]
 	if set then
 		set[#set+1] = eid
+	end
+	local newset = self._newset[c]
+	if newset then
+		newset[#newset+1] = eid
 	end
 end
 
@@ -52,19 +52,10 @@ function world:remove_component(eid, component_type)
 	local e = assert(self[eid])
 	assert(e[component_type] ~= nil)
 	self._set[component_type] = nil
-	local del = self._component_type[component_type].delete
-	if del then
-		del(e[component_type])
-	end
+	-- defer delete , see world:remove_reset
+	local removed = self._removed
+	removed[#removed+1] = { eid, component_type, e[component_type] }
 	e[component_type] = nil
-	self:change_component(eid, component_type)
-end
-
-function world:change_component(eid, component_type)
-	local cc = self._changecomponent[component_type]
-	if cc then
-		cc[eid] = true
-	end
 end
 
 function world:component_list(eid)
@@ -95,16 +86,9 @@ function world:remove_entity(eid)
 	self[eid] = nil
 	self._entity[eid] = nil
 
-	-- notify all components of this entity
-	local typeclass = self._component_type
-	for component_type, c in pairs(e) do
-		local del = typeclass[component_type].delete
-		if del then
-			del(c)
-		end
-
-		self:change_component(eid, component_type)
-	end
+	local removed = self._removed
+	removed[#removed+1] = { eid, e }
+	-- defer delete , see world:remove_reset
 end
 
 local function component_next(set, index)
@@ -116,6 +100,7 @@ local function component_next(set, index)
 			return
 		end
 		local exist = set.entity[eid]
+		-- NOTICE: component may removed from entity
 		if exist then
 			return index, eid
 		end
@@ -176,11 +161,87 @@ function world:each2(ct1, ct2)
 	return component_filter(self, ct2), s, 0
 end
 
-local function init_notify(w, notifies)
-	for cname in pairs(notifies) do
-		w._notifycomponent[cname] = {}
-		w._changecomponent[cname] = {}
-		w._notifyset[cname] = { n = 0 }
+local function new_component_next(set)
+	local n = #set
+	while n >= 0 do
+		local eid = set[n]
+		if set.entity[eid] then
+			set[n] = nil
+			return eid
+		end
+		n = n - 1
+	end
+end
+
+function world:each_new(component_type)
+	local s = self._newset[component_type]
+	if s == nil then
+		s = { entity = self._entity }
+		for index, eid in self:each(component_type) do
+			s[index] = eid
+		end
+		self._newset[component_type] = s
+	end
+	return new_component_next, s
+end
+
+function world:clear_removed()
+	local set = self._removed
+	local typeclass = self._component_type
+
+	for i = #set,1,-1 do
+		local item = set[i]
+		set[i] = nil
+		local c = item[3]
+		if c ~= nil then
+			-- delete component
+			local component_type = item[2]
+			local del = typeclass[component_type].delete
+			if del then
+				del(c)
+			end
+		else
+			local e = item[2]
+			-- delete entity
+			for component_type, c in pairs(e) do
+				local del = typeclass[component_type].delete
+				if del then
+					del(c)
+				end
+			end
+		end
+	end
+end
+
+local function dummy_iter() end
+
+function world:each_removed(component_type)
+	local removed_set
+
+	local set = self._removed
+	for i = 1, #set do
+		local item = set[i]
+		local eid = item[1]
+		local c = item[3]	-- { eid, component_type, c }
+		if c ~= nil then
+			local ctype = item[2]
+			if ctype == component_type then
+				removed_set = removed_set or {}
+				removed_set[eid] = true
+			end
+		else
+			local e = item[2]
+			if e[component_type] ~= nil then
+				removed_set = removed_set or {}
+				removed_set[eid] = true
+			end
+		end
+	end
+
+	if removed_set then
+		return pairs(removed_set)
+	else
+		return dummy_iter
 	end
 end
 
@@ -273,6 +334,12 @@ function world:update_func(what, order)
 	end
 end
 
+function world:enable_system(name, enable)
+	for _, switch in pairs(self._switchs) do
+		switch:enable(name, enable)
+	end
+end
+
 -- config.packages
 -- config.systems
 -- config.update_order
@@ -282,16 +349,13 @@ function ecs.new_world(config)
 	local w = setmetatable({
 		args = config.args,
 		_component_type = {},	-- component type objects
-		update = nil,	-- update systems
-		notify = nil,
 		schema = create_schema.new(),
 
 		_entity = {},	-- entity id set
 		_entity_id = 0,
-		_notifycomponent = {},	-- component_name : { eid_list }
-		_changecomponent = {},	-- component_name : { eid_set }
-		_notifyset = {},	-- component_name : { n = number, eid_list }
 		_set = setmetatable({}, { __mode = "kv" }),
+		_newset = {},
+		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 	}, world)
 
@@ -310,53 +374,6 @@ function ecs.new_world(config)
 	w._systems = system.lists(class.system)
 	w._singleton_proxy = system.proxy(class.system, class.singleton_component)
 
-	local notify_list = system.notify_list(class.system, w._singleton_proxy)
-	init_notify(w, notify_list)
-	local notify_switch = system.list_switch(notify_list)
-
-	function w.enable_system(name, enable)
-		notify_switch:enable(name, enable)
-		for _, switch in pairs(w._switchs) do
-			switch:enable(name, enable)
-		end
-	end
-
-	function w.notify()
-		notify_switch:update()
-		local _changecomponent = w._changecomponent
-		local _notifyset = w._notifyset
-
-		for c, newset in pairs(w._notifycomponent) do
-			local n = #newset
-			local changeset = _changecomponent[c]
-			local notifyset = _notifyset[c]
-			for i = 1, n do
-				local new_id = newset[i]
-				if changeset[new_id] then
-					changeset[new_id] = nil
-				end
-				notifyset[i] = new_id
-				newset[i] = nil
-			end
-
-			for change_id in pairs(changeset) do
-				changeset[change_id] = nil
-				n = n + 1
-				notifyset[n] = change_id
-			end
-			for i = n+1, notifyset.n do
-				notifyset[i] = nil
-			end
-			notifyset.n = n
-
-			if n > 0 then
-				for _, functor in ipairs(notify_list[c]) do
-					local f, inst = functor[2],functor[3]
-					f(inst, notifyset)
-				end
-			end
-		end
-	end
 	return w
 end
 

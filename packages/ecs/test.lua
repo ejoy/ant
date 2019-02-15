@@ -60,23 +60,10 @@ function mods.dummy(...)
 		for _, eid in world:each "foobar" do
 			print("1. Dummy foobar", eid)
 		end
-		world:new_entity "foobar"
+		local newid = world:new_entity "foobar"
+		print("Create foobar", newid)
 		for _, eid in world:each "foobar" do
 			print("2. Dummy foobar", eid)
-		end
-	end
-
-	function dummy.notify:foobar(set)
-		for _, eid in ipairs(set) do
-			print ("Notify", eid)
-			local e = world[eid]
-			if e then
-				print("Notify Foobar", eid, e)
-				print("Foobar", e.foobar.x, e.foobar.y)
-				world:remove_entity(eid)
-			else
-				print ("Notify removed", eid)
-			end
 		end
 	end
 
@@ -85,6 +72,23 @@ function mods.dummy(...)
 
 	function dby:init()
 		print("in dby:init()")
+	end
+
+	local newdummy = ecs.system "new"
+
+	function newdummy:update()
+		for eid in world:each_new "foobar" do
+			print("New foobar", eid)
+			world:remove_entity(eid)
+		end
+	end
+
+	local delete = ecs.system "delete"
+
+	function delete:delete()
+		for eid in world:each_removed "foobar" do
+			print("Delete foobar", eid)
+		end
 	end
 end
 
@@ -133,26 +137,34 @@ end
 
 local w = ecs.new_world {
 	packages = { "basetype", "dummy", "init", "foobar" },
-	systems = { "init", "dummy" },
+	systems = { "init", "dummy", "new", "delete" },
 	loader = function(name) return mods[name] end,
 	update_order = { "init" },
 }
 
-w.enable_system("dummy", true)
+w:enable_system("dummy", true)
+
+local init = w:update_func "init"
+init()
+local update = w:update_func "update"
+local delete = w:update_func "delete"
+
+local function update_all()
+	update()
+	delete()
+	w:clear_removed()
+end
 
 print("Step 1")
-w.update()
-w.notify()
+update_all()
 
-w.enable_system("dummy", true)
+w:enable_system("dummy", true)
 
 print("Step 2")
-w.update()
-w.notify()
+update_all()
 
 print("disable dummy system")
-w.enable_system("dummy", false)
+w:enable_system("dummy", false)
 
 print("Step 3")
-w.update()
-w.notify()
+update_all()

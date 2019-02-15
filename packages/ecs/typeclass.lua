@@ -66,13 +66,6 @@ return function(world, import, class)
 				local c = { name = name, method = {}, source = {}, defined = sourceinfo() }
 				class_data[name] = c
 				r = {}
-				if args.submethod then
-					for _, subm in ipairs(args.submethod) do
-						local sub = { source = {}, method = {} }
-						c[subm] = sub.method
-						r[subm] = setmetatable({}, { __newindex = gen_method(sub) })
-					end
-				end
 				setmetatable(r, {
 					__index = args.setter and gen_set(c, args.setter),
 					__newindex = gen_method(c),
@@ -92,7 +85,6 @@ return function(world, import, class)
 	register {
 		type = "system",
 		setter = { "depend" , "dependby", "singleton" },
-		submethod = { "notify" },		
 	}
 
 	local schema = world.schema
