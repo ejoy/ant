@@ -214,7 +214,7 @@ function PVPScene.create_entitices(world)
 
 				if collision_array then
 					local collisitontype = collision_array[idx]
-					world:add_component(eid, collisitontype)
+					world:add_component(eid, collisitontype, "collider_tag")
 					
 					local collidercomp = e[collisitontype]
 					bulletutil.fill_collider_info(collidercomp, e.mesh.assetinfo.handle.bounding)

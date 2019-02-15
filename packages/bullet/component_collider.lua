@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local schema = world.schema
     	
---ecs.tag "collider"
+ecs.tag "collider_tag"
 
 schema:type "collider"
 	.center "real[3]" {0, 0, 0}
