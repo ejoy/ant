@@ -501,6 +501,45 @@ local function collectSubmitUniforms(ctx,config)
     uniforms.u_csmFarDistances =  uniforms.csmFarDistances
 end 
 
+-----------------------------------------
+-- 测试 culling 是否同步，有没有滞后的
+-- 网格加入到剪裁结果列表 filter.result ，而后使用 shadow_material 进行渲染
+local function insert_shadow_primitive(eid, result)
+	local entity = world[eid]
+
+	local mesh = assert(entity.mesh.assetinfo)
+	
+	local materialcontent = entity.material.content
+	assert(#materialcontent >= 1)
+
+	local srt ={s=entity.scale, r=entity.rotation, t=entity.position}
+	local mgroups = mesh.handle.groups
+	for i=1, #mgroups do
+		local g = mgroups[i]
+		local mc = materialcontent[i] or materialcontent[1]
+		local material = mc.materialinfo
+		local properties = mc.properties
+
+		table.insert(result, {
+			eid = eid,
+			mgroup = g,
+			material = material,
+			properties = properties,
+			srt = srt,
+		})
+	end
+end
+
+local function culling_shadow_cast_filter(shadowcast_filter)
+	local result = {}    
+    for _,eid in world:each("can_render") do              -- can_cast, mesh 需要新增 can_cast 属性
+        if render_cu.is_entity_visible(world[eid]) then   -- vis culling 
+            insert_shadow_primitive(eid, result)
+        end 
+	end 
+	shadowcast_filter.result = result
+end 
+
 function shadow_maker:generate_shadow( shadow_entid, select_filter )    
     -- shadow_maker entity
     local entity = world[ shadow_entid ]
@@ -712,8 +751,7 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
         -- do culling & render mesh
         --   notify shadow_cast_system to do culling  -- 如何每次传递不同的 frustum 
         --   exact shadow frustum culling system that we need 
-        world:change_component(-1,"culling_shadow_cast_filter")   
-        world:notify()
+        culling_shadow_cast_filter(select_filter)
 
         -- update immediately,check delay 
         -- local filter = select_filter
@@ -966,35 +1004,6 @@ function shadow_maker:debug_drawshadow()
 
 end 
 
-
------------------------------------------
--- 测试 culling 是否同步，有没有滞后的
--- 网格加入到剪裁结果列表 filter.result ，而后使用 shadow_material 进行渲染
-local function insert_shadow_primitive(eid, result)
-	local entity = world[eid]
-
-	local mesh = assert(entity.mesh.assetinfo)
-	
-	local materialcontent = entity.material.content
-	assert(#materialcontent >= 1)
-
-	local srt ={s=entity.scale, r=entity.rotation, t=entity.position}
-	local mgroups = mesh.handle.groups
-	for i=1, #mgroups do
-		local g = mgroups[i]
-		local mc = materialcontent[i] or materialcontent[1]
-		local material = mc.materialinfo
-		local properties = mc.properties
-
-		table.insert(result, {
-			eid = eid,
-			mgroup = g,
-			material = material,
-			properties = properties,
-			srt = srt,
-		})
-	end
-end
 --------------------------------------------------------
 -- filter component & system 
 --    声明一个 shadow_cast_filter 组件类型
@@ -1009,31 +1018,20 @@ function shadow_cast_filter:init()
 end 
 
 -- shadow_cast_system 
-local shadow_filter_system = ecs.system "shadow_cast_system"
-shadow_filter_system.singleton "shadow_cast_filter"               -- single component global
--- 阴影网格剪裁系统也是 shadow_system 的一个子系统
--- 可以如下作为一个成对的子系统同步运行
--- function shadow_filter_system:update()
---     local filter = self.shadow_cast_filter
---     filter.result = {}
---     for _,eid in world:each("can_render") do                   -- can_cast  
---         if render_cu.is_entity_visible(world[eid]) then   -- vis culling 
---             insert_shadow_primitive( eid, filter.result )
---         end 
---     end 
--- end 
+-- local shadow_filter_system = ecs.system "shadow_cast_system"
+-- shadow_filter_system.singleton "shadow_cast_filter"               -- single component global
+-- -- 阴影网格剪裁系统也是 shadow_system 的一个子系统
+-- -- 可以如下作为一个成对的子系统同步运行
+-- -- function shadow_filter_system:update()
+-- --     local filter = self.shadow_cast_filter
+-- --     filter.result = {}
+-- --     for _,eid in world:each("can_render") do                   -- can_cast  
+-- --         if render_cu.is_entity_visible(world[eid]) then   -- vis culling 
+-- --             insert_shadow_primitive( eid, filter.result )
+-- --         end 
+-- --     end 
+-- -- end 
 
--- 由 shadow_system generate 函数驱动，收集light frustum 中的可投掷阴影mesh
--- 不知道执行序和效率是否有影响 ?
-function shadow_filter_system.notify:culling_shadow_cast_filter()
-    local filter = self.shadow_cast_filter
-    filter.result = {}
-    for _,eid in world:each("can_render") do              -- can_cast, mesh 需要新增 can_cast 属性
-        if render_cu.is_entity_visible(world[eid]) then   -- vis culling 
-            insert_shadow_primitive(eid,filter.result)
-        end 
-    end 
-end 
 
 
 
