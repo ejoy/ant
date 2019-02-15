@@ -31,7 +31,9 @@ function util.start_new_world(input_queue, fbw, fbh, packages, systems)
 			fb_size={w=fbw, h=fbh},			
 			Physics = bullet_world.new(),
 		},
-    }
+	}
+	
+	world:update_func("init")()
     return world
 end
 

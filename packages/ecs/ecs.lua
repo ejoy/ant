@@ -357,12 +357,6 @@ function ecs.new_world(config)
 			end
 		end
 	end
-
-	-- todo: remove init_func
-	local init_func = w:update_func "init"
-
-	init_func()
-
 	return w
 end
 
