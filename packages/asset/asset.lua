@@ -91,7 +91,7 @@ function assetmgr.load(pkgname, respath, param)
 		end
 		local loader = assetmgr.get_loader(moudlename)
 		res = loader(pkgname, respath, param)
-		resources[res_key] = res
+		resources[reskey] = res
 	end
 
 	return res

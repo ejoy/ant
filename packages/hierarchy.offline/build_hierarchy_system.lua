@@ -62,13 +62,13 @@ local function rebuild_hierarchy(iterop)
 	end
 	--@]
 
-	local function save_rawdata(data, pkgname, respath)
-		local fullpath = assetmgr.find_asset_path(pkgname, respath)
+	local function save_rawdata(handle, respath)
+		local fullpath = assetmgr.find_asset_path(respath.package, respath.filename)
 
 		local realpath = vfs.realpath(fullpath:string())
 		localfs.create_directories(localfs.path(realpath):parent_path())
 
-		hierarchy_module.save(data, realpath)
+		hierarchy_module.save(handle, realpath)
 	end
 
 	--[@	use hierarchy path to save refercene resource
@@ -78,11 +78,11 @@ local function rebuild_hierarchy(iterop)
 
 		-- we need to rewrite the file from cache		
 		if assetmgr.has_res(epath.package, epath.filename) then
-			save_rawdata(root, epath.package. epath.filename)
+			save_rawdata(root.handle, epath)
 		end
 
 		local builddata = hierarchy_module.build(root)
-		save_rawdata(builddata, rpath.package, rpath.filename)
+		save_rawdata(builddata, rpath)
 	end
 	--[@
 

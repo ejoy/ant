@@ -6,28 +6,7 @@ local bulletutil = import_package "ant.bullet".util
 
 local PVPScene = {}
 
-local poolMesh = {}
-local function createMesh(e, path)
-	if poolMesh[tostring(path)] then
-		e.mesh = poolMesh[tostring(path)]
-		return
-	end
-	computil.load_mesh(e.mesh, "ant.resources", path)
-	poolMesh[tostring(path)] = e.mesh
-end
-
-local poolMaterial = {}
-local function createMaterial(e, path)
-	if poolMaterial[tostring(path)] then
-		e.material = poolMaterial[tostring(path)]
-		return
-	end
-	computil.add_material(e.material, "ant.resources", path)
-	poolMaterial[tostring(path)] = e.material
-end
-
-
-function PVPScene.create_entitices(world)
+function PVPScene.create_entitices(world)	
 	local scene_objects = {
 		CampsiteDoor = {			
 			srt = {{1, 1, 1}, {-90, -90, 0,}, {-12.95, 0.7867187, -14.03104}},
@@ -230,8 +209,8 @@ function PVPScene.create_entitices(world)
 
 				e.name = name
 
-				createMesh(e, scenedata.mesh)
-				createMaterial(e, scenedata.material)
+				computil.load_mesh(e.mesh, "ant.resources", scenedata.mesh)
+				computil.add_material(e.material, "ant.resources", scenedata.material)
 
 				if collision_array then
 					local collisitontype = collision_array[idx]
@@ -240,13 +219,12 @@ function PVPScene.create_entitices(world)
 					local collidercomp = e[collisitontype]
 					bulletutil.fill_collider_info(collidercomp, e.mesh.assetinfo.handle.bounding)
 					Physics:init_collider_component(collidercomp, eid, {e.scale, e.rotation, e.position})
-					local e = world[eid]
-					local collider = e[collisitontype].collider
-					assert(collider.handle)
+					
+					assert(collidercomp.collider.handle)
 				end
 			end
 		end
-	end
+	end	
 end
 
 return PVPScene
