@@ -19,6 +19,10 @@ function world:register_component(eid, c)
 	if set then
 		set[#set+1] = eid
 	end
+	local newset = self._newset[c]
+	if newset then
+		newset[#newset+1] = eid
+	end
 end
 
 function world:register_entity()
@@ -162,6 +166,30 @@ function world:each2(ct1, ct2)
 	return component_filter(self, ct2), s, 0
 end
 
+local function new_component_next(set)
+	local n = #set
+	while n >= 0 do
+		local eid = set[n]
+		if set.entity[eid] then
+			set[n] = nil
+			return eid
+		end
+		n = n - 1
+	end
+end
+
+function world:eachnew(component_type)
+	local s = self._newset[component_type]
+	if s == nil then
+		s = { entity = self._entity }
+		for index, eid in self:each(component_type) do
+			s[index] = eid
+		end
+		self._newset[component_type] = s
+	end
+	return new_component_next, s
+end
+
 local function init_modules(w, packages, systems, loader)
 	local class = {}
 	local imported = {}
@@ -266,12 +294,12 @@ function ecs.new_world(config)
 	local w = setmetatable({
 		args = config.args,
 		_component_type = {},	-- component type objects
-		update = nil,	-- update systems
 		schema = create_schema.new(),
 
 		_entity = {},	-- entity id set
 		_entity_id = 0,
 		_set = setmetatable({}, { __mode = "kv" }),
+		_newset = {},
 		_switchs = {},	-- for enable/disable
 	}, world)
 

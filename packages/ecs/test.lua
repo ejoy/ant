@@ -60,7 +60,8 @@ function mods.dummy(...)
 		for _, eid in world:each "foobar" do
 			print("1. Dummy foobar", eid)
 		end
-		world:new_entity "foobar"
+		local newid = world:new_entity "foobar"
+		print("Create foobar", newid)
 		for _, eid in world:each "foobar" do
 			print("2. Dummy foobar", eid)
 		end
@@ -71,6 +72,14 @@ function mods.dummy(...)
 
 	function dby:init()
 		print("in dby:init()")
+	end
+
+	local newdummy = ecs.system "newdummy"
+
+	function newdummy:update()
+		for eid in world:eachnew "foobar" do
+			print("New foobar", eid)
+		end
 	end
 end
 
@@ -119,7 +128,7 @@ end
 
 local w = ecs.new_world {
 	packages = { "basetype", "dummy", "init", "foobar" },
-	systems = { "init", "dummy" },
+	systems = { "init", "dummy", "newdummy" },
 	loader = function(name) return mods[name] end,
 	update_order = { "init" },
 }
