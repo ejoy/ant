@@ -78,7 +78,7 @@ local function build_hierarchy_tree()
 
 			local t = build_hierarchy_entity_tree(hierarchy_tree, name_mapper)        
 			local name = e.name or "hierarchy_entity"
-			htree[name] = t
+			htree[name] = t			
 			ud_table[name] = eid
 		end
     end
@@ -104,12 +104,12 @@ end
 function editor_sys:init()
 	local hv = editor_mainwin.hierarchyview
 	
-	local function build_hv()
-		local htree, ud_table = build_hierarchy_tree()
-		hv:build(htree, ud_table)
-	end
+	-- local function build_hv()
+	-- 	local htree, ud_table = build_hierarchy_tree()
+	-- 	hv:build(htree, ud_table)
+	-- end
 
-	build_hv()
+	--build_hv()
 
 	hv.extend_trees = {}
 

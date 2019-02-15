@@ -28,7 +28,7 @@ function util.start_new_world(input_queue, fbw, fbh, packages, systems)
 		systems = systems,		
 		args = { 
 			mq = input_queue, 
-			fb_size={w=fbw, h=fbh},			
+			fb_size={w=fbw, h=fbh},
 			Physics = bullet_world.new(),
 		},
 	}

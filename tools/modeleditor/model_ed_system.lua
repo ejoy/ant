@@ -29,6 +29,7 @@ model_ed_sys.depend "camera_init"
 model_ed_sys.depend "character_controller"
 model_ed_sys.depend "renderbone_system"
 model_ed_sys.depend "state_machine"
+model_ed_sys.depend "test_scene"
 
 model_ed_sys.dependby "transparency_filter_system"
 model_ed_sys.dependby "entity_rendering"
