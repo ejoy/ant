@@ -1,3 +1,4 @@
 return {
-	name = "ant.hierarchy.offline"
+	name = "ant.hierarchy.offline",
+	entry = "main",
 }

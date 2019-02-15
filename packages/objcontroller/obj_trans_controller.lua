@@ -13,6 +13,7 @@ local ms = math.stack
 local fs = require "filesystem"
 
 local components_util = import_package "ant.render".components
+local hie_offline_util = import_package "ant.hierarchy.offline".util
 
 local axisbase_controller_hierarchyname = fs.path "hierarchy" / "axisbase_contrller.hierarchy"
 local axis_hierarchyname = fs.path "hierarchy"/ "axis.hierarchy"
@@ -72,8 +73,7 @@ end
 local function update_transform(controller, objeid)	
 	controller:update_transform(world[objeid])
 
-	world:change_component(controller.root, "rebuild_hierarchy")
-	world:notify()
+	hie_offline_util.rebuild_hierarchy(world, controller.root)	
 end
 
 local function play_object_transform(ot, dx, dy)
@@ -559,11 +559,8 @@ function obj_trans_sys:init()
 	}
 
 	for _, c in pairs(ot.controllers) do
-		world:change_component(c.root, "rebuild_hierarchy")
+		hie_offline_util.rebuild_hierarchy(world, c.root)		
 	end
-
-	world:notify()
-    
     ot.selected_mode = "pos_transform"
     ot.selected_eid = nil
     ot.sceneobj_eid = nil
