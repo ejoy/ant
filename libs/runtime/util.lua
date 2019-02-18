@@ -21,7 +21,6 @@ local function createThread(name, code)
 	init_thread()
 	package.path = [[%s]]
     require 'runtime.vfs'
-	require 'runtime.vfsio'
 	require 'runtime.log'
 %s]=]):format(name, init_thread, package.path, code)
 		, package.searchers[3]

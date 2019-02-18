@@ -1,6 +1,6 @@
-require "runtime.vfsio"
 local localfs = require "filesystem.local"
 local vfs = require "vfs"
+require "vfs.io"
 
 --we assume cwd is ant root folder
 local repopath = localfs.current_path()

@@ -1,7 +1,6 @@
 package.path = "engine/libs/?.lua;engine/libs/?/?.lua;?.lua"
 
 require 'runtime.vfs'
-require 'runtime.vfsio'
 require 'runtime.errlog'
 
 function dprint(...)
