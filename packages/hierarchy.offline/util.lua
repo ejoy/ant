@@ -4,7 +4,6 @@ util.__index = util
 local hierarchy_module = require 'hierarchy'
 local fs = require 'filesystem'
 local localfs = require 'filesystem.local'
-local vfs = require 'vfs'
 
 local math = import_package 'ant.math'
 local ms = math.stack
@@ -52,10 +51,10 @@ end
 local function save_rawdata(handle, respath)
 	local fullpath = assetmgr.find_asset_path(respath.package, respath.filename)
 
-	local realpath = vfs.realpath(fullpath:string())
-	localfs.create_directories(localfs.path(realpath):parent_path())
+	local realpath = fullpath:localpath()
+	localfs.create_directories(realpath:parent_path())
 
-	hierarchy_module.save(handle, realpath)
+	hierarchy_module.save(handle, realpath:string())
 end
 
 local function update_transform(world, pe, psrt)

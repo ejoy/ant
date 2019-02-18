@@ -1,5 +1,4 @@
 require 'runtime.vfs'
-require 'runtime.vfsio'
 require 'runtime.errlog'
 local LOGERROR = log.error
 

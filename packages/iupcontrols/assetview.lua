@@ -4,7 +4,6 @@ local listctrl = require "listctrl"
 local ctrlutil =require "util"
 
 local fs = require "filesystem"
-local vfs = require "vfs"
 
 local addrctrl = require "addressnavigation_ctrl"
 
@@ -27,7 +26,7 @@ function assetview:reslist_ctrl()
 end
 
 local function get_rootdir_from_restype(rt)
-	return rt == "project" and fs.current_path() or fs.path(vfs.realpath("engine/assets"))
+	return rt == "project" and fs.current_path() or fs.path("engine/assets"):localpath()
 end
 
 local function get_vfs_root_path(rt)
@@ -61,7 +60,7 @@ function assetview:init(defaultrestype)
 
 	local function rootdirs()
 		local projectdir = fs.current_path():string():lower()
-		local enginedir = vfs.realpath("engine/assets"):lower()
+		local enginedir = fs.path("engine/assets"):localpath():string():lower()
 		return {projectdir:gsub("\\", "/"), enginedir:gsub("\\", "/")}
 	end
 

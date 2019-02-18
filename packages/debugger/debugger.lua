@@ -61,7 +61,6 @@ local bootstrap = ([=[
 	init_thread()
     package.path = [[%s]]
     require 'runtime.vfs'
-    require 'runtime.vfsio'
     require 'debugger.backend.worker'
 ]=]):format(init_thread, package.path)
 
