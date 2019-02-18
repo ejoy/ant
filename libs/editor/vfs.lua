@@ -120,5 +120,18 @@ function localvfs.identity(identity)
 	self.identity = identity
 end
 
+local repopath = fs.current_path()
+localvfs.mount({["engine"] = repopath}, repopath)
+
+local repo_cachepath = localvfs.repopath()
+if not fs.exists(repo_cachepath) then
+	fs.create_directories(repo_cachepath)
+	for i=0,0xff do
+		local abspath = repo_cachepath / string.format("%02x", i)
+		fs.create_directories(abspath)
+	end
+end
+
 package.loaded.vfs = localvfs
 
+require "vfs.io"

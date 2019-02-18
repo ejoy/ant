@@ -12,7 +12,6 @@ package.cpath = table.concat({
 
 dofile "libs/editor/require.lua"
 require "editor.vfs"
-require "editor.vfspath"
 
 require "common.log"
 import_package = (require "antpm").import
