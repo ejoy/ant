@@ -1,5 +1,3 @@
--- local hierarchy_module = require "hierarchy"
--- local vfs = require "vfs"
 local assetmgr = require "asset"
 
 return function(pkgname, filename, param)

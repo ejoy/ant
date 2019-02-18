@@ -1,11 +1,11 @@
-local vfs = require "vfs"
+local fs = require "filesystem"
 local assetmgr = require "asset"
 
 return function(pkgname, filepath)
 	local fn = assetmgr.find_asset_path(pkgname, filepath)
 
 	local function find_tagop(filepath, readops)
-		local f = io.open(filepath:string(), "rb")
+		local f = fs.open(filepath, "rb")
 		
 		--print(endless)
 		for tag, op in pairs(readops) do
@@ -46,7 +46,7 @@ return function(pkgname, filepath)
 	local readop = find_tagop(fn, readops)
 	if readop then
 		return {
-			handle = readop(vfs.realpath(fn:string()))
+			handle = readop(fn:localpath():string())
 		}
 	end
 	error("not support type")

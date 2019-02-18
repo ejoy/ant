@@ -139,13 +139,12 @@ local function create_hierarchy_test()
 		local localfs = require "filesystem.local"
 
 		local function save_rawdata(handle, respath)
-			local vfs = require "vfs"
 			local fullpath = assetmgr.find_asset_path(respath.package, respath.filename)
 
-			local realpath = vfs.realpath(fullpath:string())
-			localfs.create_directories(localfs.path(realpath):parent_path())
+			local realpath = fullpath:localpath()
+			localfs.create_directories(realpath:parent_path())
 
-			hierarchy.save(handle, realpath)
+			hierarchy.save(handle, realpath:string())
 		end
 		
 		save_rawdata(root, hie_refpath)

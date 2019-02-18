@@ -42,6 +42,19 @@ return function (fs)
         end
 	end
 
+	local path_mt = debug.getmetatable(fs.path())
+	if isvfs then
+		local vfs = require 'vfs'
+		local localfs = require 'filesystem.local'
+		function path_mt:localpath()
+			return localfs.path(vfs.realpath(self:string()))
+		end
+	else
+		function path_mt:localpath()
+			return self
+		end
+	end
+
 	function fs.file_is_newer(check, base)
 		if not fs.exists(base) and fs.exists(check) then
 			return true
