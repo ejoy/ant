@@ -14,6 +14,11 @@ function world:create_component(c)
 	return self._component_type[c].init()
 end
 
+function world:create_component_with_args(c, args)
+	assert(self._component_type[c], c)
+	return self._component_type[c].initp(args)
+end
+
 function world:register_component(eid, c)
 	local set = self._set[c]
 	if set then
@@ -79,6 +84,18 @@ function world:new_entity(...)
 	new_component(self, entity_id, ...)
 
 	return entity_id
+end
+
+function world:create_entity(t)
+	local eid = self._entity_id + 1
+	self._entity_id = eid
+	create_entity(self, eid)
+	local entity = self[eid]
+	for c, args in pairs(t) do
+		self:register_component(eid, c)
+		entity[c] = self:create_component_with_args(c, args)
+	end
+	return eid
 end
 
 function world:remove_entity(eid)

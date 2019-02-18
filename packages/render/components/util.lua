@@ -164,10 +164,16 @@ function util.create_material(material)
 end
 
 function util.create_render_entity(world, name, meshfile, materialfile)
-	local eid = world:new_entity("scale", "rotation", "position",
-	"mesh", "material",
-	"name",
-	"can_select", "can_render")
+	local eid = world:create_entity {
+		scale = {0,0,0,0},
+		rotation = {0,0,0,0},
+		position = {0,0,0,0},
+		mesh = {},
+		material = {},
+		name = "",
+		can_select = true,
+		can_render = true,
+	}
 
 	local obj = world[eid]
 	mu.identify_transform(obj)

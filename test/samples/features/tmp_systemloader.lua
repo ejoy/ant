@@ -255,5 +255,5 @@ function init_loader:init()
     world:remove_entity(eid)
 	serialize.load_entity(world, s)
 
-	check_hierarchy_name_mapper()
+	--check_hierarchy_name_mapper()
 end

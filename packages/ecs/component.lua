@@ -42,6 +42,50 @@ local function gen_init(c, w)
     end
 end
 
+local function foreach_initp_2(c, w, args)
+    if c.has_default or c.type == 'primtype' then
+        return args
+    end
+    assert(w.schema.map[c.type], "unknown type:" .. c.type)
+    if c.array then
+        if c.array == 0 then
+            return {}
+        end
+        local ret = {}
+        for i = 1, c.array do
+            ret[i] = w:create_component(c.type)
+        end
+        return ret
+    end
+    if c.map then
+        return {}
+    end
+    return w:create_component(c.type)
+end
+
+local function foreach_initp_1(c, w, args)
+    local ret
+    if c.type then
+        ret = foreach_initp_2(c, w, args)
+    else
+        ret = {}
+        for _, v in ipairs(c) do
+            assert(v.type)
+            ret[v.name] = foreach_initp_2(v, w, args[v.name])
+        end
+    end
+    if c.method and c.method.init then
+        ret = c.method.init(ret)
+    end
+    return ret
+end
+
+local function gen_initp(c, w)
+    return function(args)
+        return foreach_initp_1(c, w, args)
+    end
+end
+
 local foreach_delete_1
 local function foreach_delete_2(component, c, schema)
     if c.type == 'primtype' then
@@ -87,6 +131,7 @@ end
 return function(c, w)
     return {
         init = gen_init(c, w),
+        initp = gen_initp(c, w),
         delete = gen_delete(c, w.schema)
     }
 end
