@@ -1,3 +1,20 @@
+local function sortpairs(t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    table.sort(sort)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
 local function foreach_init_2(c, w)
     if c.has_default or c.type == 'primtype' then
         return c.default
@@ -48,19 +65,23 @@ local function foreach_initp_2(c, w, args)
     end
     assert(w.schema.map[c.type], "unknown type:" .. c.type)
     if c.array then
-        if c.array == 0 then
-            return {}
-        end
+        local n = c.array == 0 and (args and #args or 0) or c.array
         local ret = {}
-        for i = 1, c.array do
-            ret[i] = w:create_component(c.type)
+        for i = 1, n do
+            ret[i] = w:create_component_with_args(c.type, args)
         end
         return ret
     end
     if c.map then
-        return {}
+        local ret = {}
+        if args then
+            for k, v in sortpairs(args) do
+                ret[k] = w:create_component_with_args(c.type, v)
+            end
+        end
+        return ret
     end
-    return w:create_component(c.type)
+    return w:create_component_with_args(c.type, args)
 end
 
 local function foreach_initp_1(c, w, args)
