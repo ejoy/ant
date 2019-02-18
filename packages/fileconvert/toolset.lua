@@ -1,15 +1,14 @@
 local subprocess = require "subprocess"
-local fs = require "filesystem"
-local localfs = require "filesystem.local"
+local fs = require "filesystem.local"
 local platform = require "platform"
 local OS = platform.OS
+local CWD = fs.current_path()
 
 local function init_config()
-	local enginedir = fs.path("engine"):localpath()
 	local suffix = OS == "OSX" and "" or ".exe"
 
 	local function to_execute_path(pathname)
-		return enginedir / (pathname .. suffix)
+		return CWD / (pathname .. suffix)
 	end
 
 	local function valid_shaderc_path()
@@ -21,7 +20,7 @@ local function init_config()
 			"bin/shaderc",
 		} do
 			local exepath = to_execute_path(name)
-			if localfs.exists(exepath) then
+			if fs.exists(exepath) then
 				return exepath
 			end
 		end
@@ -32,7 +31,7 @@ local function init_config()
 	return {
 		lua = to_execute_path "bin/lua",
 		shaderc = valid_shaderc_path(),
-		shaderinc = enginedir / "3rd/bgfx/src",
+		shaderinc = CWD / "3rd" / "bgfx" / "src",
 	}
 end
 
@@ -69,7 +68,7 @@ local function default_level(shadertype, stagetype)
 end
 
 function toolset.compile(filepath, outfilepath, shadertype, config)
-	assert(localfs.exists(filepath), filepath:string())
+	assert(fs.exists(filepath), filepath:string())
 	
 	local shaderc = toolset.config.shaderc
 	local srcfilename = filepath:string()
@@ -77,7 +76,7 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 
 	local shaderinc_path = toolset.config.shaderinc
 
-	if not localfs.exists(shaderinc_path) then
+	if not fs.exists(shaderinc_path) then
 		error(string.format("bgfx shader include path is needed, \
 							but path is not exist! path have been set : %s", config.shaderinc))
 	end
@@ -93,7 +92,7 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 
 	if config.not_include_examples_common == nil then
 		local incexamplepath = shaderinc_path:parent_path() / "examples/common"
-		if not localfs.exists(incexamplepath) then
+		if not fs.exists(incexamplepath) then
 			error(string.format("example is needed, but not exist, path is : %s", incexamplepath))
 		end
 
@@ -102,7 +101,7 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 
 	if config.includes then
 		for _, p in ipairs(config.includes) do
-			if not localfs.exists(p) then
+			if not fs.exists(p) then
 				error(string.format("include path : %s, but not exist!", p))
 			end
 

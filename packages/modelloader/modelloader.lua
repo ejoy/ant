@@ -1,6 +1,5 @@
 local bgfx = require "bgfx"
 local fs = require "filesystem"
-local vfs = require "vfs"
 
 local antmeshloader = require "antmeshloader"
 
@@ -50,7 +49,7 @@ end
 
 local function load_from_source(filepath)
 	if not fs.vfs then
-		assert(vfs.type(filepath:string() .. ".lk") ~= nil)
+		assert(fs.exists(filepath .. ".lk"))
 	end
 	return antmeshloader(filepath)
 end

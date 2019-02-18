@@ -18,4 +18,8 @@ if platform.OS == 'Linux' then
     return fsutil(require 'filesystem.cpp')
 end
 
+if platform.OS == 'iOS' then
+    return fsutil(require 'filesystem.ios')
+end
+
 error 'Not implemented'

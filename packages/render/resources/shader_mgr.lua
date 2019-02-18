@@ -4,7 +4,6 @@ local log = log and log(...) or print
 local bgfx = require "bgfx"
 local assetmgr = import_package "ant.asset"
 local fs = require "filesystem"
-local vfs = require "vfs"
 
 local alluniforms = {}
 
@@ -27,11 +26,11 @@ local function load_shader(pkgname, name)
 		error(string.format("not found shader file: [%s:%s]", pkgname, name))
 	end
 
-	if not fs.vfs then		
-		assert(vfs.type(filepath:string() .. ".lk") ~= nil)		
+	if not fs.vfs then
+        assert(fs.exists(filepath .. ".lk"))
 	end	
 
-	local f = assert(io.open(filepath:string(), "rb"))
+	local f = assert(fs.open(filepath, "rb"))
 	local data = f:read "a"
 	f:close()
 	local h = bgfx.create_shader(data)
