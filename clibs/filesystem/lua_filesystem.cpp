@@ -238,6 +238,21 @@ namespace ant::lua_filesystem {
             LUA_TRY_END;
         }
 
+        static int mt_concat(lua_State* L)
+        {
+            LUA_TRY;
+            const fs::path& self = path::to(L, 1);
+            switch (lua_type(L, 2)) {
+            case LUA_TSTRING:
+                return constructor_(L, self.native() + lua::to_string(L, 2));
+            case LUA_TUSERDATA:
+                return constructor_(L, self.native() + to(L, 2).native());
+            }
+            luaL_checktype(L, 2, LUA_TSTRING);
+            return 0;
+            LUA_TRY_END;
+        }
+
         static int mt_eq(lua_State* L)
         {
             LUA_TRY;
@@ -286,6 +301,7 @@ namespace ant::lua_filesystem {
                     { "add_permissions", path::add_permissions },
                     { "remove_permissions", path::remove_permissions },
                     { "__div", path::mt_div },
+                    { "__concat", path::mt_concat },
                     { "__eq", path::mt_eq },
                     { "__gc", path::destructor },
                     { "__tostring", path::mt_tostring },

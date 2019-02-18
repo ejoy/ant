@@ -49,6 +49,11 @@ function path_mt:__div(other)
     return constructor(value .. '/' .. other)
 end
 
+function path_mt:__concat(other)
+    other = (type(other) == 'string') and other or other._value
+    return constructor(self._value .. other)
+end
+
 function path_mt:__eq(other)
     local lft = normalize(self._value)
     local rht = normalize(other._value)
