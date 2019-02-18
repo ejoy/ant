@@ -25,6 +25,8 @@ local ms = mathpkg.stack
 local assetmgr = import_package 'ant.asset'
 local PVPScenLoader = require 'PVPSceneLoader'
 
+local serialize = import_package 'ant.serialize'
+
 local init_loader = ecs.system 'init_loader'
 
 init_loader.depend 'shadow_primitive_filter_system'
@@ -167,8 +169,8 @@ local function create_hierarchy_test()
 
         hierarchy_e.name = name
 
-        hierarchy_e.editable_hierarchy.ref_path = hie_refpath
-        hierarchy_e.editable_hierarchy.assetinfo = assetmgr.load(hie_refpath.package, hie_refpath.filename)
+		hierarchy_e.editable_hierarchy.ref_path = hie_refpath
+		hierarchy_e.editable_hierarchy.assetinfo = assetmgr.load(hie_refpath.package, hie_refpath.filename)
 
         ms(hierarchy_e.scale, srt[1], '=')
         ms(hierarchy_e.rotation, srt[2], '=')
@@ -188,7 +190,8 @@ local function create_hierarchy_test()
 
 		local hierarchypkg = import_package 'ant.hierarchy.offline'
 		local hieutil = hierarchypkg.util
-        hieutil.rebuild_hierarchy(world, hierarchy_eid)
+		hieutil.rebuild_hierarchy(world, hierarchy_eid)
+		return hierarchy_eid
     end
 
 	create_hierarchy({
@@ -203,8 +206,6 @@ local function create_hierarchy_test()
 		{-10, 0, 0, 1}
 	}, "hierarchy_test2")
 end
-
-local serialize = import_package 'ant.serialize'
 
 function init_loader:init()
     do

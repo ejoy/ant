@@ -62,10 +62,9 @@ local function update_transform(world, pe, psrt)
 	local mapper = pe.hierarchy_name_mapper
 	if mapper then
 		local hie = pe.hierarchy
-		local refpath = hie.ref_path
-		local builddata = assetmgr.load(refpath.package, refpath.filename)
-		hie.builddata = builddata
-		for _, node in ipairs(builddata) do
+		local refpath = hie.ref_path		
+		hie.assetinfo = assetmgr.load(refpath.package, refpath.filename)
+		for _, node in ipairs(hie.assetinfo.handle) do
 			local rot = ms({type = 'q', table.unpack(node.r)}, 'eP')
 			local csrt = ms(psrt, {type = 'srt', s = node.s, r = rot, t = node.t}, '*P')
 			local s, r, t = ms(csrt, '~PPP')
@@ -82,6 +81,7 @@ end
 function util.rebuild_hierarchy(world, eid_rebuild)
     local moditied_files = {}
     find_hie_entity(world, eid_rebuild, moditied_files)
+	local rootentity = world[eid_rebuild]
 
     for epath, rpath in pairs(moditied_files) do
         local root = assetmgr.load(epath.package, epath.filename)
@@ -91,12 +91,12 @@ function util.rebuild_hierarchy(world, eid_rebuild)
             save_rawdata(root.handle, epath)
         end
 
-        local builddata = hierarchy_module.build(root)
-        save_rawdata(builddata, rpath)
+        local builddata = hierarchy_module.build(root.handle)
+		save_rawdata(builddata, rpath)
     end
 
-    local rootentity = world[eid_rebuild]
-    local rootsrt = mu.srt_from_entity(rootentity)
+    
+	local rootsrt = mu.srt_from_entity(rootentity)
     update_transform(world, rootentity, rootsrt)
 end
 
