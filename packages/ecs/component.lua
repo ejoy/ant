@@ -68,7 +68,7 @@ local function foreach_initp_2(c, w, args)
         local n = c.array == 0 and (args and #args or 0) or c.array
         local ret = {}
         for i = 1, n do
-            ret[i] = w:create_component_with_args(c.type, args)
+            ret[i] = w:create_component_with_args(c.type, args[i])
         end
         return ret
     end
@@ -91,8 +91,12 @@ local function foreach_initp_1(c, w, args)
     else
         ret = {}
         for _, v in ipairs(c) do
+            if args[v.name] == nil and v.attrib and v.attrib.opt then
+                goto continue
+            end
             assert(v.type)
             ret[v.name] = foreach_initp_2(v, w, args[v.name])
+            ::continue::
         end
     end
     if c.method and c.method.init then
