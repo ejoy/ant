@@ -5,12 +5,19 @@ require "iuplua"
 
 local tree = {}	; tree.__index = tree
 
-local function new_item(name)
-	return {
-		parent = nil,
-		name = name,
-		id = nil,
-	}
+local function new_item(name,tree_view)
+	return setmetatable(
+		{
+			parent = nil,
+			name = name,
+		},{
+			__index = function(tb,key)
+				if key == "id" then
+					return tree_view:GetId(tb)
+				end
+			end
+		}
+	)
 end
 
 local function mapped(tree, node)
@@ -37,15 +44,17 @@ local function add_child(self, parent, child, n)
 			-- change leaf to branch
 			view["INSERTBRANCH" .. lastid] = parent.name
 			view["DELNODE" .. lastid] = "SELECTED"
+			view:SetUserId(lastid ,parent)
 		end
 		view["ADDLEAF" .. lastid] = child.name
-		child.id = lastid + 1
+		view:SetUserId(lastid + 1,child)
 	else
-		local lastid = assert(parent[n].id)		
+		local last_node = parent[n]
+		local lastid = assert(last_node.id)		
 		view["INSERTLEAF" .. lastid] = child.name
-		child.id = view["NEXT" .. lastid]		
-	end
+		view:SetUserId(view["NEXT" .. (lastid or 0 )],child)
 
+	end
 	child.parent = parent
 	parent[n+1] = child
 	for idx, c in ipairs(child) do
@@ -63,26 +72,12 @@ function tree:print()
 end
 
 function tree:findchild_byid(ctrlid)
-	local function find_ex(node, id)
-		for _, child in ipairs(node) do
-			if child.id == id then
-				return child
-			end
-
-			local r = find_ex(child, id)
-			if r then
-				return r
-			end
-		end
-
-		return nil
-	end
-
 	if ctrlid == self.id then
 		return self
+	else
+		local child = self.view:GetUserId(ctrlid)
+		return child
 	end
-
-	return find_ex(self, ctrlid)
 end
 
 function tree:isbranch(node)
@@ -101,19 +96,6 @@ function tree:findchild_byname(parent, name)
 	return nil
 end
 
-local function remap(view, root, id)
-	for _,node in ipairs(root) do
-		view["USERDATA" .. id] = node
-		node.id = id		
-		id = remap(view, node, id + 1)		
-	end
-	return id
-end
-
-local function remap_tree(self)
-	remap(self.view, self, 0)
-end
-
 function tree:add_child(parent, name)	
 	if parent == nil then
 		parent = self
@@ -123,14 +105,14 @@ function tree:add_child(parent, name)
 		parent = self
 	end
 
-	local child = new_item(name)
+	local child = new_item(name,self.view)
 	-- already map to tree
 	if not mapped(self, parent) then
 		table.insert(parent, child)
 		child.parent = parent
 	else
 		add_child(self, parent, child, #parent)
-		remap_tree(self)
+
 	end
 	return child
 end
@@ -145,7 +127,7 @@ local function sibling_index(item)
 end
 
 function tree:insert_sibling(sibling, name)
-	local item = new_item(name)
+	local item = new_item(name,self.view)
 	item.parent = sibling.parent
 	local index = sibling_index(sibling)
 	table.insert(sibling.parent, index , item)
@@ -153,14 +135,17 @@ function tree:insert_sibling(sibling, name)
 		if index == 1 then
 			-- first child
 			self.view["ADDLEAF"..sibling.parent.id] = item.name
+			self.view:SetUserId(sibling.id-1,item)
 		else
 			local insert_id = "INSERTLEAF" .. self.view["PREVIOUS" .. sibling.id]
 			self.view[insert_id] = item.name
+			self.view:SetUserId(sibling.id-1,item)
+
 		end
+		---why a new item has children?
 		for _, c in ipairs(item) do
 			add_child(self,item,c)
 		end
-		remap_tree(self)
 	end
 	return item
 end
@@ -176,12 +161,28 @@ local function remove_item(item)
 	end
 end
 
+function tree:del_id(id)
+	local node = self:findchild_byid(id)
+	if node then
+		return self:del(node)
+	end
+end
+
 function tree:del(item)
 	local mapped = mapped(self, item)
 	remove_item(item)
 	if mapped then
 		self.view["DELNODE" .. item.id] = "SELECTED"
-		remap_tree(self)
+	end
+end
+
+function tree:remove_child(item)
+	local temp = {}
+	for _,n in ipairs(item) do
+		table.insert(temp,n)
+	end
+	for _,child in ipairs(temp) do
+		self:del(child)
 	end
 end
 
