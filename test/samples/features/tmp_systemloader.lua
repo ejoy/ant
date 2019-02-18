@@ -207,6 +207,21 @@ local function create_hierarchy_test()
 	}, "hierarchy_test2")
 end
 
+local function check_hierarchy_name_mapper()
+	for _, eid in world:each("hierarchy") do
+		local e = world[eid]
+		if e.serialize then
+			local hiemapper = e.hierarchy_name_mapper
+			if hiemapper then
+				assert(next(hiemapper))
+				for k, ceid in pairs(hiemapper) do
+					print("slot name:", k, "child name:", world[ceid].name)
+				end
+			end
+		end
+	end
+end
+
 function init_loader:init()
     do
         lu.create_directional_light_entity(world, 'directional_light')
@@ -239,5 +254,7 @@ function init_loader:init()
     local s = serialize.save_entity(world, eid)
     save_file('serialize_entity.txt', s)
     world:remove_entity(eid)
-    serialize.load_entity(world, s)
+	serialize.load_entity(world, s)
+
+	check_hierarchy_name_mapper()
 end
