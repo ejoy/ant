@@ -11,8 +11,6 @@ local asset = import_package "ant.asset"
 local math3d = import_package "ant.math"
 local ms = math3d.stack
 
-schema:typedef("entityid", "int", -1)
-
 schema:typedef("path", "string")
 local path = ecs.component "path"
 function path:init()

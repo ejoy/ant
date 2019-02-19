@@ -377,6 +377,7 @@ function ecs.new_world(config)
 	}, world)
 
 	w.schema:typedef("tag", "boolean", true)
+	w.schema:primtype("entityid", -1)
 
 	-- load systems and components from modules
 	local class = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
