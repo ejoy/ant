@@ -1,0 +1,11 @@
+include ../common.mk
+
+IUPSRC = $(ANT3RD)/iup
+
+SRC = extension/iupextension.c extension/winshell.c
+
+all : iupextension.dll
+
+iupextension.dll :  $(SRC)
+	$(CC) --shared -o $@ $^ -D UNICODE -I$(IUPSRC)/include -I$(IUPSRC)/srclua5 -I$(IUPSRC)/src/win $(LUAINC) $(LUALIB) -L. -liuplua -lgdi32
+

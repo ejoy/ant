@@ -9,7 +9,7 @@ include common.mk
 
 .PHONY: $(ALL_LIBS) $(foreach v,$(ALL_LIBS),build_$(v) clean_$(v) copy_$(v))
 
-IUPLIBS = iuplua scintilla iupluaimglib iupluacontrols
+IUPLIBS = iuplua scintilla iupluaimglib iupluacontrols iupextension
 TARS = $(foreach v,$(LIBS) $(IUPLIBS),$(BIN)/$(v).dll)
 
 ifeq "$(PLAT)" "osx"

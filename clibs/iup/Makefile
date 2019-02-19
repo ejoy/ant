@@ -12,7 +12,7 @@ DEFINES = _WIN32_WINNT=$(WIN32VER) _WIN32_IE=0x600 WINVER=$(WIN32VER) UNICODE IU
 
 .PHONY: all mingw clean
 
-all : iup.exe | scintilla.dll iupluaimglib.dll iupluacontrols.dll $(LUABIN)
+all : iup.exe | scintilla.dll iupluaimglib.dll iupluacontrols.dll iupextension.dll $(LUABIN)
 
 mingw: all
 
@@ -115,6 +115,9 @@ iupluaimglib.dll : iuplua.dll
 
 iupluacontrols.dll : iuplua.dll
 	$(MAKE) -f Makefile.controls -j8
+
+iupextension.dll : iuplua.dll
+	$(MAKE) -f Makefile.extension
 
 iuplua.dll : $(OBJIUP) $(OBJWIN) $(OBJIUPLUA) $(OBJCTRL)
 	$(CC) --shared -o $@ $^ -lgdi32 -lcomdlg32 -lcomctl32 -lole32 -luuid $(LUALIB)
