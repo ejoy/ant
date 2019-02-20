@@ -32,21 +32,7 @@
         "env": {
             "STATIC_LINKING_IUP" : "1",
             "BIN_PATH" : "projects/msvc/vs_bin/x64/Debug"
-        },
-        "sourceMaps": [
-            [
-                "/vfs/engine/",
-                "${workspaceFolder}/"
-            ],
-            [
-                "/vfs/entry",
-                "${package目录}"
-            ],
-            [
-                "/firmware/",
-                "${workspaceFolder}/runtime/core/firmware/"
-            ]
-        ]
+        }
     },
     {
         "name": "launch (mingw)",
@@ -56,20 +42,6 @@
         "program": "${workspaceRoot}\\test\\samples\\editorlauncher\\main.lua",
         "cwd": "${workspaceRoot}",
         "internalModule": "vscode-dbg",
-        "stopOnEntry": true,
-        "sourceMaps": [
-            [
-                "/vfs/engine/",
-                "${workspaceFolder}/"
-            ],
-            [
-                "/vfs/entry",
-                "${package目录}"
-            ],
-            [
-                "/firmware/",
-                "${workspaceFolder}/runtime/core/firmware/"
-            ]
-        ]
+        "stopOnEntry": true
     },
 
