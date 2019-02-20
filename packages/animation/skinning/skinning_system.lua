@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local schema = world.schema
+local schema = ecs.schema
 
 local animodule = require "hierarchy.animation"
 local bgfx = require "bgfx"

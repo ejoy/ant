@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local schema = world.schema
+local schema = ecs.schema
 
 local math3d = require "math3d"
 local ms = require "stack"

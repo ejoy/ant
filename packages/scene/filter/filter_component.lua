@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local schema = world.schema
+local schema = ecs.schema
 
 schema:type "primitive_filter"
 local primitive_filter = ecs.component "primitive_filter"

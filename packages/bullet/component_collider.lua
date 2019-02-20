@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local schema = world.schema
+local schema = ecs.schema
     	
 ecs.tag "collider_tag"
 

@@ -1,7 +1,6 @@
 local ecs = ...
 
-local world = ecs.world
-local schema = world.schema
+local schema = ecs.schema
 
 -- schema:type "scenenode"
 -- 	.parent "scenenode" ()

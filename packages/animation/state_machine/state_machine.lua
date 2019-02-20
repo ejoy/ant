@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local schema = world.schema
+local schema = ecs.schema
 
 schema:type "aniref"
 	.idx "int"	-- TODO: need use name to referent which animation
