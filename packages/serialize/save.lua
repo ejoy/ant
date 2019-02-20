@@ -27,6 +27,15 @@ end
 local foreach_save_1
 
 local function foreach_save_2(component, c)
+    if c.attrib and c.attrib.tmp then
+        if c.has_default or c.type == 'primtype' then
+            if type(c.default) == 'function' then
+                return c.default()
+            end
+            return c.default
+        end
+        return
+    end
     if c.method and c.method.save then
         return c.method.save(component)
     end
