@@ -6,23 +6,6 @@ local WORKDIR = fs.path 'engine'
 local registered = {}
 local loaded = {}
 
-local function loadfile(path, mode, env)
-    local f, err = fs.open(path, 'r')
-    if not f then
-        return nil, err
-    end
-    local str = f:read 'a'
-    f:close()
-    return load(str, '@/vfs/' .. path:string(), mode, env)
-end
-local function dofile(path)
-    local f, err = loadfile(path)
-    if not f then
-        error(err)
-    end
-    return f()
-end
-
 local function register(pkg)	
     if not fs.exists(pkg) then
         error(('Cannot find package `%s`.'):format(pkg:string()))
@@ -31,7 +14,7 @@ local function register(pkg)
     if not fs.exists(pkg) then
         error(('Cannot find package config `%s`.'):format(cfg:string()))
     end
-    local config = dofile(cfg)
+    local config = fs.dofile(cfg)
     for _, field in ipairs {'name'} do
         if not config[field] then
             error(('Missing `%s` field in `%s`.'):format(field, cfg:string()))

@@ -8,7 +8,6 @@ return function (fs)
 			local vfsio = require "vfsio"
 			return vfsio[name]
 		end
-
 		local nativeio = require "nativeio"
         return nativeio[name]
 	end
@@ -22,14 +21,30 @@ return function (fs)
 		return m(filepath:string(), ...)
     end
 
-	function fs.loadfile(filepath, ...)
-		local m = native_method("loadfile")
-		return m(filepath:string(), ...)
-	end
-
-	function fs.dofile(filepath)
-		local m = native_method("dofile")
-		return m(filepath:string())
+	if __ANT_RUNTIME__ then
+		function fs.loadfile(filepath, ...)
+			local m = native_method("loadfile")
+			return m(filepath:string(), ...)
+		end
+		function fs.dofile(filepath)
+			local m = native_method("dofile")
+			return m(filepath:string())
+		end
+	else
+		function fs.loadfile(filepath, ...)
+			if isvfs then
+				filepath = filepath:localpath()
+			end
+			local m = native_method("loadfile")
+			return m(filepath:string(), ...)
+		end
+		function fs.dofile(filepath)
+			if isvfs then
+				filepath = filepath:localpath()
+			end
+			local m = native_method("dofile")
+			return m(filepath:string())
+		end
 	end
 
     if platform.OS == 'Windows' then
