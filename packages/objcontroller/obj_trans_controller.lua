@@ -281,28 +281,44 @@ local function register_message(msg_comp, ot)
 end
 
 local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfile, materialfile, tag_comp, color)
-	local hie_eid = components_util.create_hierarchy_entity(world, 
-						"hierarchy-" .. prefixname .. "-" .. suffixname)
-	world:add_component(hie_eid, tag_comp)
-	local hie_entity = world[hie_eid]	
-	hie_entity.editable_hierarchy.ref_path = {package=pkgname, filename=axis_hierarchyname}
-	hie_entity.editable_hierarchy.assetinfo = assetmgr.load(pkgname, axis_hierarchyname)
+	local hie_eid = world:create_entity {
+		scale = {1, 1, 1, 0},
+		rotation = {0, 0, 0, 0},
+		position = {0, 0, 0, 1},
+		name = "hierarchy-" .. prefixname .. "-" .. suffixname,
+		editable_hierarchy = {ref_path = {package=pkgname, filename=axis_hierarchyname}},
+		hierarchy_name_mapper = {},
+		[tag_comp] = true,
+	}
 
-	local namemapper = hie_entity.hierarchy_name_mapper
+	local namemapper = world[hie_eid].hierarchy_name_mapper
 	local function create_mesh_entity(name, meshfile)
-		local eid = components_util.create_render_entity(world, prefixname .. name .. "-" .. suffixname,
-							{pkgname, meshfile}, {pkgname, materialfile})
-		world:add_component(eid, "parent", tag_comp, "editor")
-		local obj = world[eid]
-		obj.parent.eid = hie_eid
-
-		local properties = assert(obj.material.content[1].properties)
-		properties.u_color = {type="color", name="color", value=deep_copy(color)}
-		obj.can_render = false
+		local eid = world:create_entity {
+			scale = {1, 1, 1, 0},
+			rotation = {0, 0, 0, 0},
+			position = {0, 0, 0, 1},
+			name = prefixname .. name .. "-" .. suffixname,
+			mesh = {
+				ref_path = {package=pkgname, filename=meshfile}, 
+			},
+			material = {
+				{
+					ref_path = {package=pkgname, filename=materialfile},
+					properties = {
+						color = {type="color", name="color", value=deep_copy(color)},
+					}
+				}
+			},
+			can_select = true,
+			can_render = false,
+			[tag_comp] = true,
+			editor = true,
+			parent = {
+				eid = hie_eid
+			},
+		}
 		namemapper[name] = eid
-
-		-- print("axis-base object : ", obj.name)
-		-- mu.print_srt(obj, 1)
+		return eid
 	end
 
 	create_mesh_entity("head", headmeshfile)
@@ -323,11 +339,18 @@ local function iter_axiselem(entity)
 end
 
 local function add_axis_base_transform_entites(basename, headmeshfile, axismeshfile, tag_comp, colors)
-	local rootaxis_eid = components_util.create_hierarchy_entity(world, basename)
-	world:add_component(rootaxis_eid, tag_comp)
 
-	local axis_root = world[rootaxis_eid]
-	local namemapper = axis_root.hierarchy_name_mapper
+	local rootaxis_eid = world:create_entity {
+		scale = {1, 1, 1, 0},
+		rotation = {0, 0, 0, 0},
+		position = {0, 0, 0, 1},
+		editable_hierarchy = {ref_path = {package=pkgname, filename=axisbase_controller_hierarchyname}},
+		hierarchy_name_mapper = {},
+		name = basename,
+		[tag_comp] = true,
+	}
+
+	local namemapper = world[rootaxis_eid].hierarchy_name_mapper
 	namemapper.xaxis = add_axis_entites(basename, "x", 
 										headmeshfile, axismeshfile,
 										objtrans_materialpath, tag_comp, colors["red"])
@@ -339,10 +362,6 @@ local function add_axis_base_transform_entites(basename, headmeshfile, axismeshf
 	namemapper.zaxis = add_axis_entites(basename, "z", 
 										headmeshfile, axismeshfile,
 										objtrans_materialpath, tag_comp, colors["blue"])
-
-	axis_root.editable_hierarchy.ref_path = {package=pkgname, filename=axisbase_controller_hierarchyname}
-	axis_root.editable_hierarchy.assetinfo = assetmgr.load(pkgname, axisbase_controller_hierarchyname, {editable = true})
-	
 	local controllers = {		
 		root = rootaxis_eid,
 	}
@@ -410,35 +429,58 @@ local function add_rotator_entities(colors)
 		zaxis = {suffixname = "z", clrname="blue"},
 	}
 
-	local root_eid = components_util.create_hierarchy_entity(world, "rotator")
-	world:add_component(root_eid, "rotator_transform")
-	local hie_entity = world[root_eid]
-	hie_entity.editable_hierarchy.ref_path = {package=pkgname, filename=axisbase_controller_hierarchyname}
-	hie_entity.editable_hierarchy.assetinfo = assetmgr.load(pkgname, axisbase_controller_hierarchyname)
-	local namemapper = hie_entity.hierarchy_name_mapper
-
+	local root_eid = world:create_entity {		
+		scale = {1, 1, 1, 0},
+		rotation = {0, 0, 0, 0},
+		position = {0, 0, 0, 1},
+		name = "rotator",
+		rotator_transform = true,
+		editable_hierarchy = {
+			ref_path = {package=pkgname, filename=axisbase_controller_hierarchyname},			
+		},
+		hierarchy_name_mapper = {},
+	}
+	
+	local namemapper = world[root_eid].hierarchy_name_mapper
 	local function add_elem_entity(elemname, clrname)
-		local elem_eid = components_util.create_hierarchy_entity(world, "rotator-elem-" .. elemname)
-		world:add_component(elem_eid, "rotator_transform")
+		local elem_eid = world:create_entity {
+			scale = {1, 1, 1,0},
+			rotation = {0, 0, 0, 0},
+			position = {0, 0, 0, 1},
+			editable_hierarchy = {
+				ref_path = {package=pkgname, filename=rotator_hierarchyname},
+			},
+			hierarchy_name_mapper = {},
+			name = "rotator-elem-" .. elemname,
+			rotator_transform = true,
+		}
+
 		local elem = world[elem_eid]
-
-		elem.editable_hierarchy.ref_path = {package=pkgname, filename=rotator_hierarchyname}
-		elem.editable_hierarchy.assetinfo = assetmgr.load(pkgname, rotator_hierarchyname)
-
 		local mapper = elem.hierarchy_name_mapper
+		
 		local function add_entity(name, meshfilename, colorname)
-			local eid = components_util.create_render_entity(world, name, {pkgname, meshfilename},
-			{pkgname, objtrans_materialpath})
-			world:add_component(eid, "rotator_transform", "editor", "parent")
-			local entity = world[eid]
-	
-			local properties = assert(entity.material.content[1].properties)
-			properties.u_color = {type="color", name="color", value=deep_copy(colors[colorname])}
-			entity.can_render = false
-			mu.identify_transform(entity)
-	
-			entity.parent.eid = elem_eid
-			return eid
+			return world:create_entity {
+				position = {0, 0, 0, 1},
+				scale = {1, 1, 1, 0},
+				rotation = {0, 0, 0, 0},
+				name = name,
+				rotator_transform = true,
+				editor = true,
+				parent = {eid = elem_eid},
+				mesh = {
+					ref_path = {package=pkgname, filename=meshfilename},
+				},
+				material = {
+					content = {
+						{
+							ref_path = {package = pkgname, filename=objtrans_materialpath},
+							properties = {type="color", name="color", value=deep_copy(colors[colorname])},
+						}
+					}
+				},
+				can_render = false,
+				can_select = true,
+			}			
 		end
 	
 		mapper["rotator"] = add_entity("rotator-" .. elemname, fs.path "rotator.mesh", clrname)

@@ -37,4 +37,14 @@ function util.start_new_world(input_queue, fbw, fbh, packages, systems)
     return world
 end
 
+function util.loop(arg)	
+	return function ()
+		for _, updatetype in ipairs {
+			"post_init", "update",
+		} do
+			world:update_func(updatetype, arg[updatetype])()
+		end
+	end
+end
+
 return util

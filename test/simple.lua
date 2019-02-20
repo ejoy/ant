@@ -44,8 +44,9 @@ local function init()
 		height = fbh,
 	}
 	local world = scene.start_new_world(input_queue, fbw, fbh, {"test.system.simple_system"})
-	local update = world:update_func("update", {"timesystem", "message_system"})
-	task.loop(update)
+	task.loop(scene.loop {
+		update = {"timesystem", "message_system"}
+	})
 end
 
 dlg:showxy(iup.CENTER,iup.CENTER)

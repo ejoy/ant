@@ -2,14 +2,6 @@ local ecs = ...
 local world = ecs.world
 local schema = world.schema
 
-schema:type "aniref"
-	.idx "int"	-- TODO: need use name to referent which animation
-	.weight "real"
-
-schema:type "pose"
-	.anilist "aniref[]"
-	.name "string"
-
 schema:type "state"
 	.name "string"
 	.pose "pose"
@@ -21,20 +13,17 @@ schema:type "transmit_target"
 schema:type "transmit"	
 	.targets "transmit_target[]"
 
-schema:type "state_chain"
-	.chain "state[]"
-	.transmits "transmit{}"
-	.target "string"
+schema:typedef("state_chain", "resource")
+
+local state_chain = ecs.component "state_chain"
+function state_chain:init()
+	local statecfg = self.assetinfo
+	self.target = statecfg.main_entry
+	return self
+end
 
 local timer = import_package "ant.timer"
 local aniutil = require "util"
-
-local state_chain = ecs.component "state_chain"
-function state_chain.init()
-	return {		
-		transmit_merge = nil,
-	}
-end
 
 local sm = ecs.system "state_machine"
 sm.dependby "animation_system"
@@ -75,11 +64,11 @@ end
 function sm:update()
 	for _, eid in world:each "state_chain" do
 		local e = world[eid]
-		local state_chain = e.state_chain
+		local statecfg = e.state_chain.assetinfo
 		local anicomp = assert(e.animation)
 		local anipose = anicomp.pose
 
-		local chain = state_chain.chain
+		local chain = statecfg.chain
 
 		local transmit_merge = state_chain.transmit_merge
 		if transmit_merge then
@@ -89,7 +78,7 @@ function sm:update()
 				anipose.transmit = nil
 			end
 		else
-			local traget_transmits = state_chain.transmits[state_chain.target]
+			local traget_transmits = statecfg.transmits[state_chain.target]
 			if traget_transmits then
 				for _, transmit in ipairs(traget_transmits) do
 					if transmit.can_transmit(e, _G) then

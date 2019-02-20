@@ -1,0 +1,9 @@
+shader = {
+    vs ={"ant.resources", "picking/vs_picking",},
+    fs ={"ant.resources", "picking/fs_picking",},
+}
+
+state = {
+	WRITE_MASK = "RGBA",
+	DEPTH_TEST = "ALWAYS",
+}

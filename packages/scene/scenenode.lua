@@ -3,20 +3,31 @@ local ecs = ...
 local world = ecs.world
 local schema = world.schema
 
--- schema:type "scenenode"
--- 	.parent "scenenode" ()
--- 	.id "int" (-1)
--- 	.hierarchy_ref "hierarchy" ()
--- 	.eid "int" (-1)
--- 	.children "scenenode[]"
+schema:type "scenenode"
+	["opt"].parent "scenenode" ()
+	.id "int" (-1)
+	["opt"].hierarchy_ref "hierarchy" ()
+	.eid "int" (-1)
+	.children "scenenode[]"
 
--- schema:type "scenelayer"
--- 	.nodes "scenenode[]"
-
-
--- local testscene = ecs.system "test_scene"
--- function testscene:init()
--- 	local layereid = world:new_entity("scenelayer", "name", "serialize")
+schema:type "scenelayer"
+	.nodes "scenenode[]"
 
 
--- end
+local testscene = ecs.system "test_scene"
+function testscene:init()
+	local layereid = world:new_entity("scenelayer", "name", "serialize")
+
+	local layer = world[layereid]
+	local sceneroot = world:create_component("scenenode")
+	table.insert(layer.scenelayer.nodes, sceneroot)
+
+
+	local cubeeid = world:new_entity(
+		"position", "scale", "rotation"
+	)
+
+	--sn.parent
+
+
+end

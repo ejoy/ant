@@ -1,60 +1,62 @@
 local util = {}; util.__index = util
 
-local function create_light_entity(world, lightcomp, name)
-	local l_eid = world:new_entity("rotation", "name", "serialize", "light", lightcomp)
-	local l_entity = assert(world[l_eid])
-
-	l_entity.name = name
-
-	return l_eid
-end
-
 function util.create_directional_light_entity(world, name, color, intensity)
-	local l_eid = create_light_entity(world, "directional_light", name or "Directional Light")
-	local l_entity = assert(world[l_eid])
-	local l = l_entity.directional_light
-
-	l.color = color or {1, 1, 1, 1}
-	l.intensity = intensity or 2
-
-	return l_eid
+	return world:create_entity {
+		rotation = {0, 0, 0, 0}, 
+		name = name, 
+		serialize = '', 
+		light = true,
+		directional_light = {
+			color = color or {1, 1, 1, 1},
+			intensity = intensity or 2,
+		}
+	}
 end
 
 function util.create_point_light_entity(world, name)
-	local l_eid = create_light_entity(world, "point_light", name or "Point Light")
-	world:add_component(l_eid, "position")
-	return l_eid
+	return world:create_entity {
+		position = {0, 0, 0, 1},
+		rotation = {0, 0, 0, 0}, 
+		name = name, 
+		serialize = '', 
+		light = true,
+		point_light = {
+			color = {0.8, 0.8, 0.8, 1},
+			intensity = 2,
+			range = 1000,
+		}
+	}
 end
 
 function util.create_spot_light_entity(world, name)
-	local l_eid = create_light_entity(world, "spot_light", name or "Spot Light")
-	world:add_component(l_eid, "position")
-	return l_eid
+	return world:create_entity {
+		position = {0, 0, 0, 1},
+		rotation = {0, 0, 0, 0}, 
+		name = name, 
+		serialize = '', 
+		light = true,
+		spot_light = {
+			color = {0.8, 0.8, 0.8, 1},
+			intensity = 2,
+			range = 1000,
+			angle = 60,
+		}
+	}
 end
 
 function util.create_ambient_light_entity(world, name, mode, skycolor, midcolor, groundcolor)	
-	local l_eid = world:new_entity("position", "rotation", "name", "serialize", "ambient_light")
-	local l_entity = assert( world[l_eid] )
-	l_entity.name = name
-
-	local ambient = l_entity.ambient_light
-	ambient.mode = mode or "color"              -- default ambient type 
-	ambient.factor = 0.3                -- defalut ratio of main lgiht or any special light that in use 
-	ambient.skycolor = skycolor or {1,0,0,1}        -- default main ambient color 
-
-	ambient.midcolor = midcolor or {0.9,0.9,1,1}
-	ambient.groundcolor  = groundcolor or {0.50,0.74,0.68,1}
-	
-	-- debug
-	if _DEBUG then
-		print("### create ambient light---"..l_entity.ambient_light.mode..' '..l_entity.ambient_light.factor)
-		print("### create ambient light---gradient..."..l_entity.ambient_light.midcolor[1],
-														l_entity.ambient_light.midcolor[2],
-														l_entity.ambient_light.midcolor[3],
-														l_entity.ambient_light.midcolor[4] )
-	end
-
-	return l_eid 
+	return world:create_entity {
+		name = name, 
+		serialize = '', 
+		light = true,
+		ambient_light = {
+			mode = mode or 'color',
+			factor = 0.3,
+			skycolor = skycolor or {1,0,0,1},
+			midcolor = midcolor or {0.9,0.9,1,1},
+			groundcolor = groundcolor or {0.50,0.74,0.68,1},
+		}
+	}
 end 
 
 return util

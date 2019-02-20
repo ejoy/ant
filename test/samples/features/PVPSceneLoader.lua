@@ -186,41 +186,44 @@ function PVPScene.create_entitices(world)
 				local name = name .. "_" .. nameidx
 				nameidx = nameidx + 1
 				local srt = srt_array[idx]
-
-				local eid = world:new_entity("scale", "rotation", "position",
-				"can_render", "mesh", "material", "serialize",
-				"name")
-				local e = world[eid]
-
 				local s = srt.s or scenedata.srt[1]
 				local r = srt.r or scenedata.srt[2]
 				local t = srt.t or scenedata.srt[3]
 
 				local rsrt = scenedata.relate_srts and scenedata.relate_srts[idx_array] or nil
 				if rsrt then
-					s = ms(s, rsrt[1], "+P")
-					r = ms(r, rsrt[2], "+P")
-					t = ms(t, rsrt[3], "+P")
+					s = ms(s, rsrt[1], "+T")
+					r = ms(r, rsrt[2], "+T")
+					t = ms(t, rsrt[3], "+T")
 				end
 
-				ms(e.scale, s, "=")
-				ms(e.rotation, r, "=")
-				ms(e.position, t, "=")
 
-				e.name = name
-
-				computil.load_mesh(e.mesh, "ant.resources", scenedata.mesh)
-				computil.add_material(e.material, "ant.resources", scenedata.material)
+				local eid = world:create_entity  {
+					scale = s, 
+					rotation = r, 
+					position = t,
+					can_render = true, 
+					mesh = {
+						ref_path = {package = "ant.resources", filename = scenedata.mesh},						
+					},
+					material = {
+						content = {
+							{
+								ref_path = {package="ant.resources", filename=scenedata.material}
+							}
+						}
+					}, 
+					serialize = '',
+					name = name,
+				}
+				local e = world[eid]
 
 				if collision_array then
 					local collisitontype = collision_array[idx]
-					world:add_component(eid, collisitontype, "collider_tag")
-					
-					local collidercomp = e[collisitontype]
-					bulletutil.fill_collider_info(collidercomp, e.mesh.assetinfo.handle.bounding)
-					Physics:init_collider_component(collidercomp, eid, {e.scale, e.rotation, e.position})
-					
-					assert(collidercomp.collider.handle)
+					world:add_single_component(eid, "collider_tag", true)
+
+					local collidercomp = world:create_component(collisitontype)
+					world:add_single_component(eid, collisitontype, collidercomp)
 				end
 			end
 		end

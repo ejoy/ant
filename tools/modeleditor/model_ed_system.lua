@@ -471,15 +471,6 @@ local function init_scene()
 	computil.create_grid_entity(world, "grid", 64, 64, 1)
 end
 
-local function init_state_machine()
-	local sample = sample_entity()
-	if sample then
-		local sm = assetmgr.load("ant.resources", fs.path "simple_animation.sm")
-		sample.state_chain = sm
-		sample.state_chain.target = sm.main_entry
-	end
-end
-
 -- luacheck: ignore self
 function model_ed_sys:init()	
 	init_control()
@@ -488,13 +479,12 @@ function model_ed_sys:init()
 	-- init_ik()
 	-- update_ik_ctrl()
 
-	init_state_machine()
 	init_scene()
 	focus_sample()
 
 	local sample = sample_entity()
 	if sample then
 		local anicomp = sample.animation
-		aniutil.play_animation(anicomp, anicomp.pose.define)
+		aniutil.play_animation(anicomp, anicomp.pose_state.pose)
 	end
 end

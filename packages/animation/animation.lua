@@ -4,6 +4,7 @@ local schema = world.schema
 
 local asset = import_package "ant.asset"
 local timer = import_package "ant.timer"
+local animodule = require "hierarchy.animation"
 
 schema:type "animation_content"		
 	.ref_path "respath" ()
@@ -30,34 +31,28 @@ end
 
 function animation_content:init()
 	if self.ref_path then
-		self.handle = asset.load(self.ref_path.package, self.ref_path.filename)
-	end
+		self.handle = asset.load(self.ref_path.package, self.ref_path.filename).handle
+	end	
 	self.start_counter = 0
 	self.ratio = 0
 	return self
 end
 
--- function animation_content:save()
--- 	local name = self.name
--- 	if name == nil or name == "" then
--- 		local filename = self.ref_path.filename
--- 		self.name = filename:filename()
--- 	end
--- end
+schema:type "aniref"
+	.idx "int"	-- TODO: need use name to referent which animation
+	.weight "real"
+
+schema:type "pose"
+	.anirefs "aniref[]"
+	.name "string"
+
+schema:type "pose_state"
+	.pose "pose"
 
 schema:type "animation"
+	.pose_state "pose_state"
 	.anilist "animation_content[]"
 	.blendtype "string" ("blend")
-
-local ani = ecs.component "animation"
-	  
-function ani:init()	
-	self.aniresult = nil
-	self.pose = {
-		define = {}
-	}
-	return self
-end
 
 schema:typedef("skeleton", "resource")
 
@@ -110,23 +105,23 @@ function anisystem:update()
 			-- 	ani_module.motion(ske, anilist, anicomp.blendtype, anicomp.aniresult)
 			-- end
 
-			local anipose = anicomp.pose
-			local define = anipose.define
-			local transmit = anipose.transmit
+			local pose_state = anicomp.pose_state
+			local pose = pose_state.pose
+			local transmit = pose_state.transmit
 
-			local anilist_ref = anicomp.anilist
+			local anilist = anicomp.anilist
 			local function fetch_anilist(pose)				
-				local anilist = {}
-				for _, aniref in ipairs(pose.anilist) do
-					local ani = assert(anilist_ref[aniref.idx])
+				local anis = {}
+				for _, aniref in ipairs(pose.anirefs) do
+					local ani = assert(anilist[aniref.idx])
 					ani.ratio = calc_ratio(current_counter, ani)
 					ani.weight = aniref.weight
-					anilist[#anilist+1] = ani
+					anis[#anis+1] = ani
 				end
-				return anilist
+				return anis
 			end
 
-			local srcanilist = fetch_anilist(define)
+			local srcanilist = fetch_anilist(pose)
 			if transmit then
 				local targetanilist = fetch_anilist(transmit.targetpose)
 				local srcbindpose = ani_module.new_bind_pose()
@@ -151,3 +146,16 @@ function anisystem:update()
 	end
 end
 
+function anisystem:post_init()
+	for eid in world:each_new("animation") do
+		local e = world[eid]
+		local ske = assert(e.skeleton)
+		local anicomp = e.animation
+		local numjoints = #ske.assetinfo.handle
+		anicomp.aniresult = animodule.new_ani_result(numjoints)
+		
+		for _, ani in ipairs(anicomp.anilist) do			
+			ani.sampling_cache = animodule.new_sampling_cache(numjoints)
+		end
+	end
+end

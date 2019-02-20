@@ -163,41 +163,6 @@ function util.create_material(material)
 	material.materialinfo = materialinfo	
 end
 
-function util.create_render_entity(world, name, meshfile, materialfile)
-	local eid = world:create_entity {
-		scale = {0,0,0,0},
-		rotation = {0,0,0,0},
-		position = {0,0,0,0},
-		mesh = {},
-		material = {},
-		name = "",
-		can_select = true,
-		can_render = true,
-	}
-
-	local obj = world[eid]
-	mu.identify_transform(obj)
-	
-	obj.name = name
-	local pkgname, respath = meshfile[1], meshfile[2]
-	util.load_mesh(obj.mesh, pkgname, respath)
-	local mpkgname, mrespath = materialfile[1], materialfile[2]
-	util.add_material(obj.material, mpkgname, mrespath)
-	return eid
-end
-
-function util.create_hierarchy_entity(world, name)
-	local h_eid = world:new_entity("scale", "rotation", "position",
-	"editable_hierarchy", "hierarchy_name_mapper", 
-	"name")
-
-	local obj = world[h_eid]
-	obj.name = name
-
-	mu.identify_transform(obj)
-	return h_eid
-end
-
 function util.is_entity_visible(entity)
 	local can_render = entity.can_render
 	if can_render then
@@ -235,14 +200,25 @@ function util.create_grid_entity(world, name, w, h, unit)
 	local geopkg= import_package "ant.geometry"
 	local geolib= geopkg.geometry
 
-	local gridid = world:new_entity(
-		"rotation", "position", "scale", 
-		"can_render", "mesh", "material",
-		"name"
-	)
+	local gridid = world:create_entity {
+		rotation = {0, 0, 0, 0}, 
+		position = {0, 0, 0, 1},
+		scale = {1, 1, 1, 0},
+		can_render = true, 
+		mesh = {},
+		material = {
+			content = {
+				{
+					ref_path = {package = "ant.resources", filename = fs.path "line.material"}
+				}
+			}
+		},
+		name = name,
+	}
+
+	
     local grid = world[gridid]
-    grid.name = name or "grid"
-	mu.identify_transform(grid)
+    
 	w = w or 64
 	h = h or 64
 	unit = unit or 1
@@ -259,11 +235,7 @@ function util.create_grid_entity(world, name, w, h, unit)
         { "COLOR0", 4, "UINT8", true }
     }
 
-	grid.mesh.ref_path = ""
     grid.mesh.assetinfo = util.create_mesh_handle(vdecl, gvb, ib)
-
-	util.add_material(grid.material, "ant.resources", fs.path "line.material")
-
 	return gridid
 end
 

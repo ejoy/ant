@@ -43,26 +43,27 @@ camera_init_sys.singleton "window"
 -- 		-- 	newy_end = math.floor(((vr.y + vr.h) / old_h) * h)
 -- end
 
-function camera_init_sys:init()    
-    -- create camera entity
-	local camera_eid = world:new_entity("main_camera", 
-		"viewid", "primitive_filter",
-        "rotation", "position", 
-        "frustum", 
-        "view_rect", 
-        "clear_component", 
-        "name")
+function camera_init_sys:init()
+	local fb_size = world.args.fb_size
+	local frustum = {type="mat"}
+	mu.frustum_from_fov(frustum, 0.1, 10000, 60, 1)
+	local camera_eid = world:create_entity {
+		main_camera = true,
+		viewid = VIEWID_MAINCAMERA, 
+		primitive_filter = {},
+		rotation = {-25, -45, 0, 0}, 
+		position = {5, 5, -5, 1},
+		frustum = frustum,
+        view_rect = {x = 0, y = 0, w=fb_size.w, h=fb_size.h},
+        clear_component = {
+			color = 0x303030ff,
+			depth = 1,
+			stencil = 0,
+		},
+		name = "main_camera"
+	}
 
     local camera = world[camera_eid]
-    camera.viewid = VIEWID_MAINCAMERA 
-    camera.name = "main_camera"
-    
-    ms(camera.position,    {5, 5, -5, 1},  "=")
-    ms(camera.rotation,   {-25, -45, 0, 0},   "=")
-
-    local frustum = camera.frustum
-    mu.frustum_from_fov(frustum, 0.1, 10000, 60, 1)
-
     local function update_camera_viewrect(w, h)
         local vr = camera.view_rect
         vr.w, vr.h = w, h
@@ -70,7 +71,7 @@ function camera_init_sys:init()
 
         bgfx.reset(w, h, "v")
     end
-    local fb_size = world.args.fb_size
+    
     update_camera_viewrect(fb_size.w, fb_size.h)
 	self.message.observers:add {
 		resize = function(_, w, h) update_camera_viewrect(w, h) end

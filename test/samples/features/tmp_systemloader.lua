@@ -44,69 +44,86 @@ local function create_animation_test()
         meshdir / 'animation' / 'animation2.ozz'
     }
 
-    local smpath = meshdir / 'mesh.ozz'
+	local smpath = meshdir / 'mesh.ozz'
+	
+	local anilist = {}		
+	for _, anipath in ipairs(anipaths) do
+		anilist[#anilist+1] ={ref_path = anipath}
+	end
 
-    local anitest_eid =
-        world:new_entity(
-        'position',
-        'scale',
-        'rotation',
-        'can_render',
-        'mesh',
-        'material',
-        'animation',
-        'skeleton',
-        'skinning_mesh',
-        'name'
-    )
+	local eid = world:create_entity {
+		position = {0, 0, 0, 1},
+		scale = {1, 1, 1, 0},
+		rotation = {0, 0, 0, 0},
+		can_render = true,
+		mesh = {},
+		material = {
+			content = {
+				{
+					ref_path = {package = 'ant.resources', filename = fs.path 'skin_model_sample.material'}
+				}
+			}
+		},
+		animation = {
+			pose_state = {
+				pose = {
+					anirefs = {
+						{idx = 1, weight = 0.5},
+						{idx = 2, weight = 0.5},
+					}
+				}
+			},
+			anilist = {
+				{
+					ref_path = {package = "ant.resources", filename = meshdir / 'animation' / 'animation1.ozz'},
+					scale = 1,
+					looptimes = 0,
+					name = "ani1",
+				},
+				{
+					ref_path = {package= "ant.resources", filename = meshdir / 'animation' / 'animation2.ozz'},
+					scale = 1,
+					looptimes = 0,
+					name = "ani2",
+				}
+			},
+			blendtype = "blend",
+		},
+		skeleton = {
+			ref_path = {package = "ant.resources", filename = skepath},
+		},
+		skinning_mesh = {
+			ref_path = {package = "ant.resources", filename = smpath},
+		},
+		name = "animation_sample",
+	}
 
-    local anitest = world[anitest_eid]
-    anitest.name = 'animation_entity'
-
-    mathutil.identify_transform(anitest)
-    computil.load_skinning_mesh(anitest.skinning_mesh, anitest.mesh, 'ant.resources', smpath)
-    computil.load_skeleton(anitest.skeleton, 'ant.resources', skepath)
-
-    local anicomp = anitest.animation
-    aniutil.init_animation(anicomp, anitest.skeleton)
-    local anidefine = anicomp.pose.define
-    if anidefine.anilist == nil then
-        anidefine.anilist = {}
-    end
-    local weight = 1 / #anipaths
-    for idx, anipath in ipairs(anipaths) do
-        aniutil.add_animation(anicomp, {package = 'ant.resources', filename = anipath})
-        anidefine.anilist[#anidefine.anilist + 1] = {idx = idx, weight = weight}
-    end
-
-    aniutil.play_animation(anicomp, anidefine)
-
-    computil.add_material(anitest.material, 'ant.resources', fs.path 'skin_model_sample.material')
+	local e = world[eid]
+	local anicomp = e.animation
+    aniutil.play_animation(e.animation, anicomp.pose_state.pose)
 end
 
 local function create_hierarchy_test()
     local function create_entity(name, meshfile, materialfile)
-        local eid =
-            world:new_entity(
-            'rotation',
-            'position',
-            'scale',
-            'mesh',
-            'material',
-            'name',
-            'serialize',
-            'can_select',
-            'can_render'
-        )
-
-        local entity = world[eid]
-        entity.name = name
-
-        mathutil.identify_transform(entity)
-
-        computil.load_mesh(entity.mesh, meshfile.package, meshfile.filename)
-        computil.add_material(entity.material, materialfile.package, materialfile.filename)
-        return eid
+        return world:create_entity {
+				scale = {1, 1, 1, 0},
+				rotation = {0, 0, 0, 0},
+				position = {0, 0, 0, 1},
+				mesh = {
+					ref_path = meshfile,
+				},
+				material = {
+					content = {
+						{
+							ref_path = materialfile,
+						}
+					}
+				},
+				name = name,
+				serialize = '',
+				can_select = true,
+				can_render = true,
+			}
     end
 
     local hie_refpath = {package = 'ant.resources', filename = fs.path 'hierarchy' / 'test_hierarchy.hierarchy'}
@@ -153,39 +170,28 @@ local function create_hierarchy_test()
     end
 
     local hie_materialpath = {package = 'ant.resources', filename = fs.path 'bunny.material'}
-    local function create_hierarchy(srt, name)
-        local hierarchy_eid =
-            world:new_entity(
-            'editable_hierarchy',
-            'hierarchy_name_mapper',
-            'scale',
-            'rotation',
-            'position',
-            'name',
-            'serialize'
-        )
-        local hierarchy_e = world[hierarchy_eid]
+	local function create_hierarchy(srt, name)
 
-        hierarchy_e.name = name
 
-		hierarchy_e.editable_hierarchy.ref_path = hie_refpath
-		hierarchy_e.editable_hierarchy.assetinfo = assetmgr.load(hie_refpath.package, hie_refpath.filename)
+        local hierarchy_eid = world:create_entity {
+			editable_hierarchy = {
+				ref_path = hie_refpath,
+			},
+			hierarchy_name_mapper = {},
+			scale = srt[1], rotation = srt[2], position = srt[3],
+			name = name,
+			serialize = '',
+		}
 
-        ms(hierarchy_e.scale, srt[1], '=')
-        ms(hierarchy_e.rotation, srt[2], '=')
-		ms(hierarchy_e.position, srt[3], '=')
-		
-        local entities = {
-            h1 = {package = 'ant.resources', filename = fs.path 'cube.mesh'},
-            h2 = {package = 'ant.resources', filename = fs.path 'sphere.mesh'},
-            h1_h1 = {package = 'ant.resources', filename = fs.path 'cube.mesh'},
-        }
-
-        local name_mapper = assert(hierarchy_e.hierarchy_name_mapper)
-        for k, v in pairs(entities) do
-            local eid = create_entity(k, v, hie_materialpath)
-            name_mapper[k] = eid
-        end
+		local hentity = world[hierarchy_eid]
+		local name_mapper = hentity.hierarchy_name_mapper
+		for k, v in pairs {
+			h1 = 'cube.mesh',
+			h2 = 'sphere.mesh',
+			h1_h1 ='cube.mesh',
+		} do
+			name_mapper[k] = create_entity(k, {package = 'ant.resources', filename = fs.path(v)}, hie_materialpath)
+		end
 
 		local hierarchypkg = import_package 'ant.hierarchy.offline'
 		local hieutil = hierarchypkg.util

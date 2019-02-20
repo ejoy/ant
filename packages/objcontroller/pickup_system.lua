@@ -13,6 +13,7 @@ local ms = math.stack
 local fs = require "filesystem"
 
 local asset = import_package "ant.asset"
+local computil = import_package "ant.render".components
 
 local math_baselib = require "math3d.baselib"
 
@@ -46,30 +47,12 @@ local function unpackrgba_to_eid(rgba)
     return r + g + b + a
 end
 
-local function init_pickup_materials()
-	local mname = "pickup.material"
-	local normal_material = asset.load("ant.resources", fs.path(mname))
-	normal_material.name = mname
-
-	local transparent_material = deep_copy(normal_material)
-	transparent_material.surface_type.transparency = "transparent"
-	transparent_material.name = ""
-
-	local state = transparent_material.state
-	state.WRITE_MASK = "RGBA"
-	state.DEPTH_TEST = "ALWAYS"
-
-	return {
-		opaticy = normal_material,
-		transparent = transparent_material,
-	}
-end
-
 local function init_pickup_buffer(pickup_entity)
     local comp = pickup_entity.pickup
     --[@ init hardware resource
     local vr = pickup_entity.view_rect
-    local w, h = vr.w, vr.h
+	local w, h = vr.w, vr.h
+	comp.blitdata = bgfx.memory_texture(w*h * 4)
     comp.pick_buffer = bgfx.create_texture2d(w, h, false, 1, "RGBA8", "rt-p+p*pucvc")
     comp.pick_dbuffer = bgfx.create_texture2d(w, h, false, 1, "D24S8", "rt-p+p*pucvc")
 
@@ -164,7 +147,28 @@ function pickup_material_sys:update()
 end
 
 -- pickup_system
+schema:type "pickup_material"
+	.opacity "material_content"
+	.transparent "material_content"
+
 schema:type "pickup"
+	.materials "pickup_material"
+
+local pickupcomp = ecs.component "pickup"
+function pickupcomp:init()
+	local materials = self.materials
+	local opacity = materials.opacity
+	if opacity then
+		computil.create_material(opacity)		
+	end
+
+	local transparent = materials.transparent
+	if transparent then
+		computil.create_material(transparent)
+	end
+
+	return self
+end
 
 local pickup_sys = ecs.system "pickup_system"
 
@@ -188,38 +192,38 @@ local function remove_primitive_filter(eid)
 end
 
 local function add_pick_entity()
-	local eid = world:new_entity("pickup", 
-	"clear_component", 
-	"viewid",
-	"view_rect", 
-	"position", "rotation", 
-	"frustum", 
-	"name")        
-	local entity = assert(world[eid])
-	entity.viewid = pickup_fb_viewid
-	entity.name = "pickup"
+	local vr_w, vr_h = 8, 8
+	local frustum = {type="mat"}
+	mu.frustum_from_fov(frustum, 0.1, 100, 1, vr_w / vr_h)
 
-	local cc = entity.clear_component
-	cc.color = 0
+	local eid = world:create_entity {
+		pickup = {
+			materials = {
+				opacity = {
+					ref_path = {package = "ant.resources", filename = fs.path "pickup_opacity.material"}
+				},
+				transparent = {
+					ref_path = {package = "ant.resources", filename = fs.path "pickup_transparent.material"}
+				}
+			},			
+		},
+		clear_component = {
+			color = 0,
+			depth = 1,
+			stencil = 0,
+		},
+		viewid = pickup_fb_viewid,
+		view_rect = {
+			x = 0, y = 0,
+			w = vr_w, h = vr_h,
+		},
+		position = {0, 0, 0, 1},
+		rotation = {0, 0, 0, 0},
+		frustum = frustum,
+		name = "pickup",
+	}
 
-	local vr = entity.view_rect
-	vr.w = 8
-	vr.h = 8
-
-	local comp = entity.pickup
-	comp.blitdata = bgfx.memory_texture(vr.w*vr.h * 4)
-	comp.materials = init_pickup_materials()
-
-	init_pickup_buffer(entity)	
-
-	local frustum = entity.frustum
-	mu.frustum_from_fov(frustum, 0.1, 100, 1, vr.w / vr.h)
-
-	local pos = entity.position
-	local rot = entity.rotation
-	ms(pos, {0, 0, 0, 1}, "=")
-	ms(rot, {0, 0, 0, 0}, "=")
-	
+	init_pickup_buffer(world[eid])	
 	return eid
 end
 

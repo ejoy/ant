@@ -235,15 +235,17 @@ end
 --  store terrain level name,material name, and terrain object into component
 --  level name,material name need serialize into scene info file.
 -- local terrain = ecs.component 
-local terrain = ecs.component "terrain" {
-	path = {
-		level_name = " ",            -- put here to serialize 
-		level_material = " "
-	},
-
-    -- runtime data 
-	terrain_obj = false, 
-}
+local schema = world.schema
+schema:type "terrain_resource"
+	.name "string" ""	--level_name
+	.material "respath"	--level_material
+schema:type "terrain"
+	.path "terrain_resource"
+local terraincomp = ecs.component "terrain" 
+function terraincomp:init()
+	self.terrain_obj = false
+	return self
+end
 
 function terrain:delete()
     --self.terrain_obj.heightmap = nil 
@@ -255,15 +257,23 @@ end
 
 -- terrain entity
 local function create_terrain_entity( world, name  )
-	local eid = world:new_entity(
-		"terrain",  
-		"material", 
-		"position","rotation","scale",
-		"can_render",
-		"name")
-	local entity = assert( world[eid] )
-	entity.name = name 
-	return entity,eid  
+	local eid = world:create_entity {
+		terrain = {
+			path = {
+				name = "levelname",
+			}
+		},
+		material = {
+
+		},
+		position = {0, 0, 0, 1},
+		rotation = {0, 0, 0, 0},
+		scale = {1, 1, 1, 0},
+		
+		can_render = true,
+		name = name
+	}
+	return world[eid], eid
 end 
 
 

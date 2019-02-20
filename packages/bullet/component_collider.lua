@@ -1,7 +1,8 @@
 local ecs = ...
 local world = ecs.world
 local schema = world.schema
-    	
+		
+local ms = import_package "ant.math".stack
 ecs.tag "collider_tag"
 
 schema:type "collider"
@@ -64,19 +65,60 @@ for _, pp in ipairs {
 		.shape(shapename)
 
 	local s = ecs.component(shapename)
-	function s:delete()
-		local Physics = assert(world.args.Physics)     -- if use message notify, decoupling will be better?		
-		Physics:delete_shape(self.handle)
-		-- or use message notify mechanism
-		print("delete shape", shapename)
+	function s:init()
+		local Physics = assert(world.args.Physics)
+		self.handle = Physics:create_shape(self.type, self)
+		return self
 	end
 
-	local c = ecs.component(collidername)	
+	function s:delete()
+		if self.handle then
+			local Physics = assert(world.args.Physics)			
+			Physics:delete_shape(self.handle)		
+		end
+	end
+
+	local c = ecs.component(collidername)
+
 	function c:delete()
 		local collider = self.collider
-		local Physics = assert(world.args.Physics)
-		Physics:delete_object(collider.handle)
+		if collider.handle then
+			local Physics = assert(world.args.Physics)
+			Physics:delete_object(collider.handle)
+		end
+	end
+end
 
-		print("delete object", collidername)
+local collider_post_init = ecs.system "collider_post_init"
+
+function collider_post_init:post_init()
+	local Physics = assert(world.args.Physics)
+	for eid in world:each_new("collider_tag") do
+		local e = world[eid]
+		local function get_collider(e)
+			for _, name in ipairs {
+				"plane_collider", "sphere_collider", "box_collider",
+				"capsule_collider", "cylinder_collider", "terrain_collider",
+				"character_collider",
+			} do
+				local c = e[name]
+				if c then
+					return c
+				end
+			end
+		end
+
+		local collidercomp = get_collider(e)
+		if collidercomp == nil then
+			error("using collider_tag but do not define any collider")
+		end
+
+		local collider = collidercomp.collider
+		collider.obj_idx = eid
+		local shapeinfo = collidercomp.shape
+		local pos = ms(e.position, collider.center, "+m")
+		assert(shapeinfo.handle == nil)
+		assert(collider.handle == nil)
+		shapeinfo.handle, collider.handle = Physics:create_collider(shapeinfo.type, shapeinfo, eid, pos, ms(e.rotation, "qm"))
 	end
 end

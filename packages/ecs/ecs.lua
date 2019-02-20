@@ -53,6 +53,12 @@ function world:add_component(eid, ...)
 	new_component(self, eid, ...)
 end
 
+function world:add_single_component(eid, component_type, args)
+	self:register_component(eid, component_type)
+	local e = self[eid]
+	e[component_type] = self:create_component_with_args(component_type, args)
+end
+
 function world:remove_component(eid, component_type)
 	local e = assert(self[eid])
 	assert(e[component_type] ~= nil)

@@ -16,6 +16,9 @@ schema:typedef("entityid", "int", -1)
 schema:typedef("path", "string")
 local path = ecs.component "path"
 function path:init()
+	if self.string then
+		return self
+	end
 	return fs.path(self)
 end
 function path:save()

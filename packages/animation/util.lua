@@ -48,7 +48,7 @@ function util.play_animation(comp, pose)
 	local current = timer.get_sys_counter()
 	local anilist = comp.anilist
 
-	for _, aniref in ipairs(assert(pose.anilist)) do
+	for _, aniref in ipairs(assert(pose.anirefs)) do
 		local ani = assert(anilist[aniref.idx])
 		ani.start_counter = current
 	end

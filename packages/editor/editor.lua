@@ -23,9 +23,9 @@ function editor.run(fbw, fbh, canvas, packages, systems)
 	mapiup(iq, canvas)
 
 	local world = su.start_new_world(iq, fbw, fbh, packages, systems)
-
-	local update = world:update_func("update", {"timesystem", "message_system"})
-	task.loop(update)
+	task.loop(su.loop{
+		update = {"timesystem", "message_system"},
+	})
 
 	if (iup.MainLoopLevel()==0) then
 		iup.MainLoop()

@@ -1045,38 +1045,31 @@ gen_shadow_system.dependby "lighting_primitive_filter_system"
 gen_shadow_system.dependby "entity_rendering" 
 
 function gen_shadow_system:init()
-    local function add_shadow_maker_entity()
-        local eid = world:new_entity(
-            "shadow_maker",             -- test combine
-            "shadow_config","shadow_rt",
-            "viewid", "view_rect", "frustum",
-            "clear_component",
-            "position","rotation",
-            "name")
-        local entity = assert( world[eid] )
-        entity.viewid = VIEWID_SHADOW 
-        entity.name = "shadowmap_maker"            
+	local function add_shadow_maker_entity()
+		local light_frustum = {type="mat"}
+		math_util.frustum_from_fov(light_frustum,0.1,1000,1,1)
 
-        local shadow_maker_comp = entity.shadow_maker
-
-        -- view and frustum, not need 
-        local view_rc = entity.view_rect;
-        view_rc.w = SHADOWMAP_SIZE;
-        view_rc.h = SHADOWMAP_SIZE;
-        local light_frustum = entity.frustum 
-        math_util.frustum_from_fov(light_frustum,0.1,1000,1,view_rc.w/view_rc.h)
-
-        -- get light' position,direction 
-        -- light 灯光应该在具备是否 is_cast_shadow 的属性
-        -- 这个通过修改 light.component attrib 来扩充
-        local pos = entity.position
-        local rot = entity.rotation 
-        -- directional_light 的 entity 添加次序不确定，可能比generate 晚
-        -- 需要最后确定下执行顺序，确保正确流程 
-        -- local sun = world:first_entity("directional_light")  
-        -- rot = sun.direction;
-        -- pos = sun.pos
-        return entity
+        local eid = world:create_entity {
+            shadow_maker = {},
+			shadow_config = {},
+			shadow_rt = {},
+			viewid = VIEWID_SHADOW, 
+			view_rect = {
+				x = 0, y = 0,
+				w = SHADOWMAP_SIZE,
+				h = SHADOWMAP_SIZE,
+			}, 
+			frustum = light_frustum,
+            clear_component = {
+				color = 0,
+				depth = 1,
+				stencil = 0,
+			},
+			position = {0, 0, 0, 1},
+			rotation = {0, 0, 0, 0},
+			name = "shadowmap_maker",
+		}
+        return assert( world[eid] )
     end 
 
     local entity = add_shadow_maker_entity()

@@ -84,49 +84,71 @@ end
 local samplematerialpath = fs.path "skin_model_sample.material"
 
 function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
-	local eid = world:new_entity("position", "scale", "rotation",		
-	"mesh", "material", "can_render",
-	"sampleobj", "character", "physic_state", "state_chain",
-	"name")
+	local eid = world:create_entity {
+		position = {0, 0, 0, 1}, 
+		scale = {1, 1, 1, 0}, 
+		rotation = {0, 0, 0, 0},
+		mesh = {}, 
+		material = {},
+		can_render = true,
+		sampleobj = true,
+		character = {
+			movespeed = 1
+		}, 
+		physic_state = {
+			velocity = {1, 0, 0},
+		}, 
+		state_chain = {
+			ref_path = {package="ant.resources", filename = fs.path "simple_animation.sm"},
+		},
+		name = "animation_sample"
+	}
 
 	local e = world[eid]
-	e.name = "animation_test"
-
-	mu.identify_transform(e)
-
 	local emptypath = fs.path ""
 
 	if skepath.filename ~= emptypath then
-		world:add_component(eid, "skeleton")
-		computil.load_skeleton(e.skeleton, skepath.package, skepath.filename)
+		world:add_single_component(eid, "skeleton", {ref_path = skepath})
 	end
 
 	if #anipaths > 0 then
-		world:add_component(eid, "animation")
-		local anicomp = e.animation
-		aniutil.init_animation(anicomp, e.skeleton)		
-		local anipose = anicomp.pose
-		local define = anipose.define
-		
+		local anilist = {}		
 		for _, anipath in ipairs(anipaths) do
-			aniutil.add_animation(anicomp, anipath)
-		end		
-		define.anilist = {
-			{idx=1, weight=1}
-		}
-		define.name = "idle"
+			anilist[#anilist+1] = {
+				ref_path = anipath,
+				scale = 1,
+				looptimes = 0,
+				name = "",
+			}
+		end
+
+		world:add_single_component(eid, "animation", {
+			pose_state = {
+				pose = {
+					anirefs = {
+						{idx = 1, weight=1},
+					},
+					name = "idle",
+				}
+			},
+			anilist = anilist,
+			blendtype = "blend",
+		})
 	end
 
 	
 	if skinning_meshpath.filename ~= emptypath then
 		if e.skeleton and e.animation then
-			world:add_component(eid, "skinning_mesh")
-			computil.load_skinning_mesh(e.skinning_mesh, e.mesh, skinning_meshpath.package, skinning_meshpath.filename)
+			world:add_single_component(eid, "skinning_mesh", {ref_path = skinning_meshpath})
 		end
 
-		computil.add_material(e.material, "ant.resources", samplematerialpath)
+		world:add_single_component(eid, "material", {
+			content = {
+				{ref_path = {package = "ant.resources", filename = samplematerialpath}}
+			}
+		})
 	
-		add_aabb_widget(world, eid)
+		--add_aabb_widget(world, eid)
 	end
 
 	return eid

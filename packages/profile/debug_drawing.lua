@@ -55,21 +55,27 @@ function debug_obj:init()
 
 	clean_desc_buffer(self.renderobjs.wireframe.desc)
 
-	local debugeid = world:new_entity("position", "scale", "rotation",
-	"mesh", "material",
-	"main_debug",
-	"can_render", "name")
+	local debugeid = world:create_entity {
+		position = {0, 0, 0, 1}, 
+		scale = {1, 1, 1, 0}, 
+		rotation = {0, 0, 0, 0},
+		mesh = {},
+		material = {
+			content = {
+				{
+					ref_path = {package="ant.resources", filename=fs.path "line.material"}
+				}				
+			}
+		},
+		main_debug = true,
+		can_render = true, 
+		name = "debug_test",
+	}
 
 	local dbentity = world[debugeid]
-
-	dbentity.name = "debug_test"	
-
 	dbentity.mesh = {
 		assetinfo={handle=init_wireframe_mesh()}
 	}
-
-	mu.identify_transform(dbentity)
-	componentutil.add_material(dbentity.material, "ant.resources", fs.path "line.material")
 	return self
 end
 

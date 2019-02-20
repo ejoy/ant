@@ -3,7 +3,7 @@ chain = {
 		name = "idle",
 		pose = {
 			name = "idle",
-			anilist = {
+			anirefs = {
 				{idx=1, weight=1},
 			},
 		}
@@ -12,7 +12,7 @@ chain = {
 		name = "walk",
 		pose = {
 			name = "walk",
-			anilist = {
+			anirefs = {
 				{idx=2, weight=1},
 			}
 		}
@@ -21,7 +21,7 @@ chain = {
 		name = "run",
 		pose = {
 			name = "run",
-			anilist = {
+			anirefs = {
 				{idx=3, weight=1}
 			}
 		}

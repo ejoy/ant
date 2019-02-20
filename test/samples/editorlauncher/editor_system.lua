@@ -256,11 +256,11 @@ function editor_sys:init()
 		local m = menu.new {
 			recipe = {
 				{name="create entity...", type="item", action=function () 
-				local eid = world:new_entity("name", "render")
-				local e = world[eid]
-				e.name = "NewEntity" .. eu.get_new_entity_counter()
+				-- local eid = world:new_entity("name", "render")
+				-- local e = world[eid]
+				-- e.name = "NewEntity" .. eu.get_new_entity_counter()
 
-				build_hv()
+				-- build_hv()
 			end}
 			},
 			open_cb = nil,
