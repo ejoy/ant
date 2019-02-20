@@ -35,15 +35,13 @@ return function (fs)
 			if isvfs then
 				filepath = filepath:localpath()
 			end
-			local m = native_method("loadfile")
-			return m(filepath:string(), ...)
+			return require "nativeio".loadfile(filepath:string(), ...)
 		end
 		function fs.dofile(filepath)
 			if isvfs then
 				filepath = filepath:localpath()
 			end
-			local m = native_method("dofile")
-			return m(filepath:string())
+			return require "nativeio".dofile(filepath:string())
 		end
 	end
 

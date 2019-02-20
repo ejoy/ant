@@ -249,11 +249,11 @@ function init_loader:init()
     serialize.load_world(world, s)
 
     -- test serialize entity
-    local eid = world:first_entity_id 'serialize'
-    local s = serialize.save_entity(world, eid)
-    save_file('serialize_entity.txt', s)
-    world:remove_entity(eid)
-	serialize.load_entity(world, s)
+    --local eid = world:first_entity_id 'serialize'
+    --local s = serialize.save_entity(world, eid)
+    --save_file('serialize_entity.txt', s)
+    --world:remove_entity(eid)
+	--serialize.load_entity(world, s)
 
 	check_hierarchy_name_mapper()
 end
