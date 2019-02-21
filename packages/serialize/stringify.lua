@@ -7,17 +7,11 @@ local typeinfo
 local out1, out2, out3
 
 local function convertreal(v)
-    local g = ('%g'):format(v)
+    local g = ('%.16g'):format(v)
     if tonumber(g) == v then
         return g
     end
-    for i = 6, 20 do
-        local ng = ('%%.%dg'):format(i):format(v)
-        if tonumber(ng) == v then
-            return ng
-        end
-    end
-    return ('%a'):format(v)
+    return ('%.17g'):format(v)
 end
 
 local function stringify_basetype(name, v)

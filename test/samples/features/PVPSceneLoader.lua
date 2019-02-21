@@ -9,6 +9,7 @@ local function get_default_collider_comp_value(name)
 	local default_collider_field = {
 		center = {0, 0, 0, 1},
 		is_tigger = true,
+		obj_idx = -1,
 	}
 	local default_value = {
 		capsule_collider = {
@@ -22,7 +23,10 @@ local function get_default_collider_comp_value(name)
 		},
 		box_collider = {
 			collider = default_collider_field,
-			
+			shape = {
+				type = "box",
+				size = {1, 1, 1},
+			},
 		},
 		cylinder_collider = {
 			collider = default_collider_field,
