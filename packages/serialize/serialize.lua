@@ -19,9 +19,16 @@ local function load_entity(w, t)
     return load.entity(w, t)
 end
 
+local crypt = require "crypt"
+
+local function create()
+    return crypt.uuid()
+end
+
 return {
     save_world = save_world,
     save_entity = save_entity,
     load_world = load_world,
     load_entity = load_entity,
+    create = create,
 }

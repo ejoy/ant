@@ -4,7 +4,7 @@ function util.create_directional_light_entity(world, name, color, intensity)
 	return world:create_entity {
 		rotation = {0, 0, 0, 0}, 
 		name = name, 
-		serialize = '', 
+		serialize = import_package 'ant.serialize'.create(), 
 		light = true,
 		dirty = true,
 		directional_light = {
@@ -19,7 +19,7 @@ function util.create_point_light_entity(world, name)
 		position = {0, 0, 0, 1},
 		rotation = {0, 0, 0, 0}, 
 		name = name, 
-		serialize = '', 
+		serialize = import_package 'ant.serialize'.create(), 
 		light = true,
 		dirty = true,
 		point_light = {
@@ -35,7 +35,7 @@ function util.create_spot_light_entity(world, name)
 		position = {0, 0, 0, 1},
 		rotation = {0, 0, 0, 0}, 
 		name = name, 
-		serialize = '', 
+		serialize = import_package 'ant.serialize'.create(), 
 		light = true,
 		dirty = true,
 		spot_light = {
@@ -50,7 +50,7 @@ end
 function util.create_ambient_light_entity(world, name, mode, skycolor, midcolor, groundcolor)	
 	return world:create_entity {
 		name = name, 
-		serialize = '', 
+		serialize = import_package 'ant.serialize'.create(), 
 		light = true,
 		dirty = true,
 		ambient_light = {

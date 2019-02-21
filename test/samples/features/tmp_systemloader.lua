@@ -120,7 +120,7 @@ local function create_hierarchy_test()
 					}
 				},
 				name = name,
-				serialize = '',
+				serialize = import_package 'ant.serialize'.create(), 
 				can_select = true,
 				can_render = true,
 			}
@@ -180,7 +180,7 @@ local function create_hierarchy_test()
 			hierarchy_name_mapper = {},
 			scale = srt[1], rotation = srt[2], position = srt[3],
 			name = name,
-			serialize = '',
+			serialize = import_package 'ant.serialize'.create(), 
 		}
 
 		local hentity = world[hierarchy_eid]
