@@ -255,12 +255,7 @@ function editor_sys:init()
 	function hv.view:rightclick_cb()
 		local m = menu.new {
 			recipe = {
-				{name="create entity...", type="item", action=function () 
-				-- local eid = world:new_entity("name", "render")
-				-- local e = world[eid]
-				-- e.name = "NewEntity" .. eu.get_new_entity_counter()
-
-				-- build_hv()
+				{name="create entity...", type="item", action=function () 				
 			end}
 			},
 			open_cb = nil,

@@ -52,7 +52,11 @@ function mods.dummy(...)
 
 	function dummy:init()
 		print ("Dummy init")
-		local eid = world:new_entity "foobar"
+		local eid = world:create_entity {
+			foobar = {
+				x = 0, y = 0,
+			}
+		}
 	end
 
 	function dummy:update()
@@ -60,7 +64,11 @@ function mods.dummy(...)
 		for _, eid in world:each "foobar" do
 			print("1. Dummy foobar", eid)
 		end
-		local newid = world:new_entity "foobar"
+		local newid = world:create_entity {
+			foobar = {
+				x = 1, y = 1,
+			}
+		}
 		print("Create foobar", newid)
 		for _, eid in world:each "foobar" do
 			print("2. Dummy foobar", eid)

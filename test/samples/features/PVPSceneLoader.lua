@@ -5,6 +5,56 @@ local computil = import_package "ant.render".components
 local bulletutil = import_package "ant.bullet".util
 
 local PVPScene = {}
+local function get_default_collider_comp_value(name)
+	local default_collider_field = {
+		center = {0, 0, 0, 1},
+		is_tigger = true,
+	}
+	local default_value = {
+		capsule_collider = {
+			collider = default_collider_field,
+			shape = {
+				type = "capsule",
+				radius = 1, 
+				height = 1,
+				axis = 0,
+			},
+		},
+		box_collider = {
+			collider = default_collider_field,
+			
+		},
+		cylinder_collider = {
+			collider = default_collider_field,
+			shape = {
+				type = "capsule",
+				radius = 1, 
+				height = 1,
+				axis = 0,
+			},
+		},
+		plane_collider = {
+			collider = default_collider_field,
+			shape = {
+				type = "plane",
+				normal = {0, 1, 0},
+				distance = 1,
+			},
+		},
+		sphere = {
+			collider = default_collider_field,
+			shape = {
+				type = "sphere",
+				shape = {
+					type = "sphere",
+					radius = 1,
+				}
+			}
+		}
+
+	}
+	return default_value[name]
+end
 
 function PVPScene.create_entitices(world)	
 	local scene_objects = {
@@ -161,7 +211,7 @@ function PVPScene.create_entitices(world)
 				},
 				collision_types = {
 					{
-						"capsule_collider",
+						"capsule_collider",						
 						"box_collider",
 						"cylinder_collider",
 						"box_collider",
@@ -171,8 +221,6 @@ function PVPScene.create_entitices(world)
 			}
 		}
 	}
-
-	local Physics = world.args.Physics 
 
 	for name, scenedata in pairs(scene_objects) do
 		local children = assert(scenedata.children)		
@@ -216,13 +264,11 @@ function PVPScene.create_entitices(world)
 					serialize = '',
 					name = name,
 				}
-				local e = world[eid]
 
 				if collision_array then
 					local collisitontype = collision_array[idx]
 					world:add_single_component(eid, "collider_tag", true)
-
-					local collidercomp = world:create_component(collisitontype)
+					local collidercomp = get_default_collider_comp_value(collisitontype)
 					world:add_single_component(eid, collisitontype, collidercomp)
 				end
 			end
