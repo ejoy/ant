@@ -7,6 +7,7 @@ local function createThread(name, code)
 	local init_thread = vfs.realpath('firmware/init_thread.lua')
 	thread.thread(([=[
 	--%s
+	__ANT_RUNTIME__ = %q
     package.searchers[3] = ...
 	package.searchers[4] = nil
 	local function init_thread()
@@ -22,7 +23,7 @@ local function createThread(name, code)
 	package.path = [[%s]]
     require 'runtime.vfs'
 	require 'runtime.log'
-%s]=]):format(name, init_thread, package.path, code)
+%s]=]):format(name, __ANT_RUNTIME__, init_thread, package.path, code)
 		, package.searchers[3]
 	)
 end
