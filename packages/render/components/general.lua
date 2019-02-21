@@ -26,7 +26,7 @@ schema:typedef("position", "vector")
 schema:typedef("rotation", "vector")
 schema:typedef("scale", "vector")
 
-schema:type "relative_srt"
+schema:type "srt"
 	.s "vector"
 	.r "vector"
 	.t "vector"
