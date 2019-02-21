@@ -1,6 +1,17 @@
 local datalist = require 'datalist'
 
 local postPool = {}
+local doPost
+local component
+local entitys
+
+local function init_entitys(w)
+    local res = {}
+    for _, eid in w:each "serialize" do
+        res[w[eid].serialize] = eid
+    end
+    return res
+end
 
 local function getPost(w)
     if not postPool[w] then
@@ -16,7 +27,13 @@ local function getPost(w)
 end
 
 local function _load_entity(w, tree)
-    local eid = w:register_entity()
+    local eid = entitys[tree.serialize]
+    if not eid then
+        eid = w:register_entity()
+        if entitys then
+            entitys[tree.serialize] = eid
+        end
+    end
     w[eid] = tree
     for name in pairs(tree) do
         w:register_component(eid, name)
@@ -24,12 +41,21 @@ local function _load_entity(w, tree)
     return eid
 end
 
-local doPost
-local component
-
 local function load_start(w, s)
     local post = getPost(w)
     function doPost(type, value)
+        if type == 'entity' then
+            if not entitys then
+                entitys = init_entitys(w)
+            end
+            local eid = entitys[value]
+            if not eid then
+                eid = w:register_entity()
+                w[eid] = {}
+                entitys[value] = eid
+            end
+            return eid
+        end
         assert(post[type])
         return post[type](value)
     end

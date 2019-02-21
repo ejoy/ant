@@ -94,7 +94,6 @@ end
 
 function mods.init(...)
 	local ecs = ...
-	local world = ecs.world
 	local schema = ecs.schema
 
 	local init = ecs.singleton_component "init"
@@ -114,7 +113,6 @@ end
 
 function mods.foobar(...)
 	local ecs = ...
-	local world = ecs.world
 	local schema = ecs.schema
 
 	schema:type "foobar"

@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local schema = world.schema
+local schema = ecs.schema
 
 local asset = import_package "ant.asset"
 local timer = import_package "ant.timer"

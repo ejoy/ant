@@ -1,7 +1,6 @@
 package.path = table.concat({
-    "engine/libs/?.lua",
-    "engine/libs/?/?.lua",
-    "engine/?.lua",
+    "libs/?.lua",
+    "libs/?/?.lua",
 }, ";")
 
 package.cpath = table.concat({
@@ -10,7 +9,6 @@ package.cpath = table.concat({
 	"bin/?.dll",
 }, ";")
 
-dofile "libs/editor/require.lua"
 require "editor.vfs"
 
 require "common.log"

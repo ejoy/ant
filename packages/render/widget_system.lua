@@ -1,7 +1,7 @@
 --luacheck: ignore self
 local ecs = ...
 local world = ecs.world
-local schema = world.schema
+local schema = ecs.schema
 
 
 local ru = import_package "ant.render".util

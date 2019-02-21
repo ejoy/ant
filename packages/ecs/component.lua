@@ -17,6 +17,9 @@ end
 
 local function foreach_init_2(c, w)
     if c.has_default or c.type == 'primtype' then
+        if type(c.default) == 'function' then
+            return c.default()
+        end
         return c.default
     end
     assert(w.schema.map[c.type], "unknown type:" .. c.type)

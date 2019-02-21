@@ -1,6 +1,7 @@
 local method = require "method"
 local crypt = require "crypt"
 
+local world
 local pool
 local load
 local typeinfo
@@ -26,6 +27,15 @@ end
 local foreach_save_1
 
 local function foreach_save_2(component, c)
+    if c.attrib and c.attrib.tmp then
+        if c.has_default or c.type == 'primtype' then
+            if type(c.default) == 'function' then
+                return c.default()
+            end
+            return c.default
+        end
+        return
+    end
     if c.method and c.method.save then
         return c.method.save(component)
     end
@@ -50,6 +60,12 @@ end
 function foreach_save_1(component, name)
     if name == 'primtype' then
         return component
+    end
+    if name == 'entityid' then
+        local entity = world[component]
+        assert(entity, "unknown entityid: "..component)
+        assert(entity.serialize, "entity("..component..") doesn't allow serialization.")
+        return entity.serialize
     end
     assert(typeinfo[name], "unknown type:" .. name)
     local c = typeinfo[name]
@@ -106,6 +122,7 @@ local function update_deserialize(w)
 end
 
 local function save_start(w)
+    world = w
     method.init(w)
     pool = {}
     load = {}

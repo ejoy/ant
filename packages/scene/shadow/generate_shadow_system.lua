@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local schema = world.schema
+local schema = ecs.schema
 
 local render_cu = import_package "ant.render".components
 local render_util = import_package "ant.render".util

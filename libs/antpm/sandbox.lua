@@ -1,15 +1,5 @@
 local fs = require "filesystem"
 
-local function io_open(path)
-    return fs.open(fs.path(path))
-end
-
-local function loadlua(f, name)
-    local str = f:read 'a'
-    f:close()
-    return load(str, '@/vfs/' .. name)
-end
-
 local function sandbox_env(root, pkgname)
     local env = setmetatable({}, {__index=_G})
     local _LOADED = {}
@@ -19,9 +9,10 @@ local function sandbox_env(root, pkgname)
         name = string.gsub(name, '%.', '/')
         for c in string.gmatch(path, '[^;]+') do
             local filename = string.gsub(c, '%?', name)
-            local f = io_open(filename)
+            local f = fs.open(fs.path(filename))
             if f then
-                return filename, f
+                f:close()
+                return filename
             end
             err = err .. ("\n\tno file '%s'"):format(filename)
         end
@@ -30,18 +21,18 @@ local function sandbox_env(root, pkgname)
 
     local function searcher_lua(name)
         assert(type(env.package.path) == "string", "'package.path' must be a string")
-        local filename, f = searchpath(name, env.package.path)
-        if not filename then
+        local path, err1 = searchpath(name, env.package.path)
+        if not path then
             if package.loaded[name] then
                 return true
             end
-            return f
+            return err1
         end
-        local func, err = loadlua(f, filename)
+        local func, err2 = fs.loadfile(fs.path(path))
         if not func then
-            error(("error loading module '%s' from file '%s':\n\t%s"):format(name, filename, err))
+            error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err2))
         end
-        return func, filename
+        return func, path
     end
 
     local function require_load(name)
