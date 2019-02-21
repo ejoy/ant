@@ -6,7 +6,7 @@ import_package = (require "antpm").import
 
 local keymap = (import_package "ant.inputmgr").keymap
 
---local dbgupdate = require 'runtime.debug'
+local dbgupdate = require 'runtime.debug'
 
 dprint = print
 
@@ -62,7 +62,9 @@ function callback.init(nwh, context, w, h)
 		height = height,
 	}
 	world = su.start_new_world(iq, width, height, packages, systems)
-	world_update = world:update_func("update", {"timesystem", "message_system"})
+	world_update = su.loop {
+		update = {"timesystem", "message_system"}
+	}
 end
 
 function callback.error(err)
@@ -96,8 +98,8 @@ function callback.exit()
 end
 
 function callback.update()
-	--dbgupdate()
-	if world_update then 
+	dbgupdate()
+	if world_update then
 		world_update()
 	end
 end

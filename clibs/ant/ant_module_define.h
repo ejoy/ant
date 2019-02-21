@@ -6,6 +6,7 @@
 { "cjson", luaopen_cjson },
 { "cjson.safe", luaopen_cjson_safe },
 { "crypt", luaopen_crypt },
+{ "datalist", luaopen_datalist },
 { "debugger.hookmgr", luaopen_debugger_hookmgr },
 { "firmware", luaopen_firmware },
 { "hierarchy", luaopen_hierarchy },
