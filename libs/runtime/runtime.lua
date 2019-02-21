@@ -62,7 +62,9 @@ function callback.init(nwh, context, w, h)
 		height = height,
 	}
 	world = su.start_new_world(iq, width, height, packages, systems)
-	world_update = world:update_func("update", {"timesystem", "message_system"})
+	world_update = su.loop {
+		update = {"timesystem", "message_system"}
+	}
 end
 
 function callback.error(err)
@@ -97,7 +99,7 @@ end
 
 function callback.update()
 	--dbgupdate()
-	if world_update then 
+	if world_update then
 		world_update()
 	end
 end
