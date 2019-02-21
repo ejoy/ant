@@ -15,7 +15,7 @@ local model_review_system = ecs.system "model_review_system"
 model_review_system.singleton "constant"
 model_review_system.depend "constant_init_sys"
 model_review_system.dependby "message_system"
-model_review_system.depend "shadow_primitive_filter_system"
+--model_review_system.depend "shadow_primitive_filter_system"
 model_review_system.depend "transparency_filter_system"
 model_review_system.depend "entity_rendering"
 
@@ -28,7 +28,7 @@ local function create_light()
 	local lentity = world[leid]	
 	ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")
 
-	lu.create_ambient_light_entity(world, "color", {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
+	lu.create_ambient_light_entity(world, "ambient light", {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end
 
 function model_review_system:init()
