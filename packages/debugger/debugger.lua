@@ -62,7 +62,7 @@ local bootstrap = ([=[
     package.path = [[%s]]
     require 'runtime.vfs'
     require 'debugger.backend.worker'
-]=]):format(init_thread, package.path)
+]=]):format(init_thread, "engine/libs/?.lua;engine/packages/?.lua")
 
 local function start_worker(wait)
     start_hook()

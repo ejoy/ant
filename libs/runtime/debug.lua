@@ -1,6 +1,6 @@
 local ru = require 'runtime.util'
 
-local dbg = require 'debugger'
+local dbg = import_package 'ant.debugger'
 
 local thread = require 'thread'
 thread.newchannel 'DbgMaster'
