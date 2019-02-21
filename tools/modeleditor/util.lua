@@ -3,16 +3,10 @@ local util = {}; util.__index = util
 local geometry = import_package "ant.geometry"
 local geo = geometry.geometry
 
-local computil = (import_package "ant.render").components
-local aniutil = (import_package "ant.animation").util
-
 local fs = require "filesystem"
-
-local math = import_package "ant.math"
-local mu = math.util
 local bgfx = require "bgfx"
 
-function util.create_aabb_descs(mesh, materialfile)
+function util.create_aabb_mesh_info(mesh)
 	local descs = {}
 	local _, ib = geo.box_from_aabb(nil, true, true)
 	for _, g in ipairs(mesh.assetinfo.handle.groups) do
@@ -22,41 +16,35 @@ function util.create_aabb_descs(mesh, materialfile)
 		local vb = geo.box_from_aabb(aabb)
 		table.insert(descs, {
 			vb = vb,
-			ib = ib,
-			material = materialfile,
+			ib = ib,			
 		})
 	end
 	return descs
 end
 
-local function add_aabb_widget(world, eid)
-	world:add_component(eid, "widget")
-	local e = world[eid]
-	local aabb_material = fs.path "line.material"
-	local descs = util.create_aabb_descs(e.mesh, aabb_material)
+function util.create_aabb_widget(e)	
+	local descs = util.create_aabb_mesh_info(e.mesh)
 	if #descs == 0 then
 		return 
 	end
 
 	local ibhandle = bgfx.create_index_buffer(descs[1].ib)
 	local decl = bgfx.vertex_decl {
-		{ "POSITION", 3, "FLOAT" },
-		{ "COLOR0", 4, "UINT8", true },
+		{ "POSITION", 3, "FLOAT" },		
 	}
 
-	local function create_mesh_groups(descs, color)
+	local function create_mesh_groups(descs)
 		local groups = {}
 		for _, desc in ipairs(descs) do
-			local vb = {"fffd",}
+			local vb = {"fff",}
 			for _, v in ipairs(desc.vb) do
 				for _, vv in ipairs(v) do
 					table.insert(vb, vv)
 				end
-				table.insert(vb, color)
 			end
 
 			table.insert(groups, {
-					vb = {handles = {	bgfx.create_vertex_buffer(vb, decl)	}},
+					vb = {handles = {bgfx.create_vertex_buffer(vb, decl)}},
 					ib = {handle = ibhandle},
 				})
 		end
@@ -66,19 +54,12 @@ local function add_aabb_widget(world, eid)
 
 	local widget = e.widget
 	widget.mesh = {
-		descs = descs,
 		assetinfo = {
 			handle = {
 				groups = create_mesh_groups(descs, 0xffff0000),
 			}
 		}
 	}
-
-	local material = {}
-	computil.add_material(material, "ant.resources", aabb_material)
-	widget.material = material
-
-	widget.srt = {}--{s=e.scale, r=nil, t=e.position}
 end
 
 local samplematerialpath = fs.path "skin_model_sample.material"
@@ -148,7 +129,21 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 			}
 		})
 	
-		--add_aabb_widget(world, eid)
+		world:add_single_component(eid, "widget", {
+			material = {
+				content = {
+					{
+						ref_path = {package="ant.resources", filename=fs.path "line.material"}
+					}
+				}
+			},
+			mesh = {},
+			srt = {
+				s = {1, 1, 1, 0},
+				r = {0, 0, 0, 0},
+				t = {0, 0, 0, 1},
+			}
+		})
 	end
 
 	return eid

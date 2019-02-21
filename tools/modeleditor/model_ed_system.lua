@@ -30,9 +30,11 @@ model_ed_sys.depend "character_controller"
 model_ed_sys.depend "renderbone_system"
 model_ed_sys.depend "state_machine"
 model_ed_sys.depend "test_scene"
+model_ed_sys.depend "skinning_system"
 
 model_ed_sys.dependby "transparency_filter_system"
 model_ed_sys.dependby "entity_rendering"
+model_ed_sys.dependby "widget_system"
 
 -- luacheck: globals main_dialog
 -- luacheck: globals iup
@@ -487,4 +489,13 @@ function model_ed_sys:init()
 		local anicomp = sample.animation
 		aniutil.play_animation(anicomp, anicomp.pose_state.pose)
 	end
+end
+
+
+function model_ed_sys:post_init()
+	for eid in world:each_new("widget") do
+		assert(eid == sample_eid)
+		local e = world[eid]
+		util.create_aabb_widget(e)
+	end	
 end
