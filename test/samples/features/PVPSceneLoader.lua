@@ -213,7 +213,7 @@ function PVPScene.create_entitices(world)
 							}
 						}
 					}, 
-					serialize = '',
+					serialize = import_package 'ant.serialize'.create(), 
 					name = name,
 				}
 				local e = world[eid]

@@ -34,7 +34,7 @@ local function stringify_basetype(name, v)
             return 'false'
         end
     elseif name == 'entityid' then
-        return '[entity,'..v..']'
+        return '[entity,'..(v == '' and '""' or v)..']'
     end
     assert('unknown base type:'..name)
 end
