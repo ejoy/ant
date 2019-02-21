@@ -6,6 +6,7 @@ function util.create_directional_light_entity(world, name, color, intensity)
 		name = name, 
 		serialize = '', 
 		light = true,
+		dirty = true,
 		directional_light = {
 			color = color or {1, 1, 1, 1},
 			intensity = intensity or 2,
@@ -20,6 +21,7 @@ function util.create_point_light_entity(world, name)
 		name = name, 
 		serialize = '', 
 		light = true,
+		dirty = true,
 		point_light = {
 			color = {0.8, 0.8, 0.8, 1},
 			intensity = 2,
@@ -35,6 +37,7 @@ function util.create_spot_light_entity(world, name)
 		name = name, 
 		serialize = '', 
 		light = true,
+		dirty = true,
 		spot_light = {
 			color = {0.8, 0.8, 0.8, 1},
 			intensity = 2,
@@ -49,6 +52,7 @@ function util.create_ambient_light_entity(world, name, mode, skycolor, midcolor,
 		name = name, 
 		serialize = '', 
 		light = true,
+		dirty = true,
 		ambient_light = {
 			mode = mode or 'color',
 			factor = 0.3,
