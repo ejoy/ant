@@ -24,7 +24,7 @@ local cu = import_package "ant.render" .components
 local fs = require "filesystem"
 
 local function create_light()
-	local leid = lu.create_directional_light_entity(world, {1,1,1,1}, 2)
+	local leid = lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2)
 	local lentity = world[leid]	
 	ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")
 
