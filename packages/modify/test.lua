@@ -3,7 +3,7 @@
 local ecs = import_package "ant.ecs"
 
 local w = ecs.new_world {
-	packages = { "ant.render", "ant.modify" },
+	packages = { "ant.basic_components", "ant.modify" },
 	systems = { "test_modify" },
 	update_order = {},
 }
