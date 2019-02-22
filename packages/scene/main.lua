@@ -38,11 +38,16 @@ function util.start_new_world(input_queue, fbw, fbh, packages, systems)
 end
 
 function util.loop(arg)	
+	local queue = {}
+	for _, updatetype in ipairs {
+		"post_init", "update",
+	} do
+		queue[#queue+1] = world:update_func(updatetype, arg[updatetype])		
+	end
+
 	return function ()
-		for _, updatetype in ipairs {
-			"post_init", "update",
-		} do
-			world:update_func(updatetype, arg[updatetype])()
+		for _, q in ipairs(queue) do
+			q()
 		end
 	end
 end
