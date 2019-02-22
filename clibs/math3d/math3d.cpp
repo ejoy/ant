@@ -1660,6 +1660,12 @@ new_temp_vector4(lua_State *L) {
 
 	float v[4];
 	switch(top) {
+	case 2:
+		luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+		
+		memcpy(v, lua_touserdata(L, 2), sizeof(v));
+		break;
+
 	case 3:
 		v[3] = 0;
 		// fall off case 4
@@ -1690,6 +1696,10 @@ new_temp_matrix(lua_State *L) {
 	float m[16];
 	int i;
 	switch(top) {
+	case 2:
+		luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);		
+		memcpy(m, lua_touserdata(L, 2), sizeof(m));
+		break;
 	case 17:
 		for (i=0;i<16;i++) {
 			m[i] = luaL_checknumber(L, i+2);

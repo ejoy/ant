@@ -759,7 +759,9 @@ laniresult_joint(lua_State *L) {
 		luaL_error(L, "invalid index:%d, joints count:%d", idx, joint_count);
 	}
 
-	create_joint_table(L, result->joints[idx]);
+	auto &joint = result->joints[idx];
+	auto p = &(joint.cols[0]);
+	lua_pushlightuserdata(L, (void*)p);
 	return 1;
 }
 

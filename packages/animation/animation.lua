@@ -75,6 +75,14 @@ local function deep_copy(t)
 	return t
 end
 
+local function update_transform_from_animation(aniresult, ske, e)
+	local rootidx = 1
+	assert(ske:isroot(rootidx))
+	local trans = aniresult:joint(rootidx)
+	local s, r, t = ms(ms:matrix(trans), "~PPP")
+	e.position(t)
+end
+
 function anisystem:update()	
 	local current_counter = timer.current_counter
 
@@ -85,6 +93,7 @@ function anisystem:update()
 		local ske = assert(skecomp.assetinfo).handle
 		local anicomp = assert(e.animation)
 
+		local fix_root = false
 		local ikcomp = e.ik
 		if ikcomp and ikcomp.enable then
 			local mat = ms({type="srt", s=e.scale, r=e.rotation, t=e.position}, "m")
@@ -94,17 +103,8 @@ function anisystem:update()
 			t.pole_vector = ms(assert(t.pole_vector), "m")
 			t.mid_axis = ms(assert(t.mid_axis), "m")
 
-			ik_module.do_ik(mat, ske, t, anicomp.aniresult)
+			ik_module.do_ik(mat, ske, t, anicomp.aniresult, fix_root)
 		else
-			-- local anilist = assert(anicomp.anilist)
-			-- if #anilist > 0 then
-			-- 	for _, a in ipairs(anilist) do
-			-- 		assert(a.starttime and a.starttime ~= 0)
-			-- 		a.ratio = calc_ratio(timer.current, a)
-			-- 	end
-			-- 	ani_module.motion(ske, anilist, anicomp.blendtype, anicomp.aniresult)
-			-- end
-
 			local pose_state = anicomp.pose_state
 			local pose = pose_state.pose
 			local transmit = pose_state.transmit
@@ -135,14 +135,17 @@ function anisystem:update()
 					{pose=srcbindpose, weight=assert(transmit.source_weight)}, 
 					{pose=targetbindpose, weight=assert(transmit.target_weight)}
 				}, anicomp.blendtype, finalbindpose)
-				ani_module.transform(ske, finalbindpose, anicomp.aniresult)
+				ani_module.transform(ske, finalbindpose, anicomp.aniresult, fix_root)
 			else
 				if srcanilist then
-					ani_module.motion(ske, srcanilist, anicomp.blendtype, anicomp.aniresult)
+					ani_module.motion(ske, srcanilist, anicomp.blendtype, anicomp.aniresult, nil, fix_root)
 				end
 			end
-			
-		end		
+		end
+
+		if not fix_root then
+			update_transform_from_animation(anicomp.aniresult, ske, e)
+		end
 	end
 end
 
@@ -159,3 +162,12 @@ function anisystem:post_init()
 		end
 	end
 end
+
+
+
+-- local post_ani_sys = ecs.system "post_animation_system"
+-- post_ani_sys.depend "animation"
+-- post_ani_sys.dependby
+-- function post_ani_sys:update()
+-- 	for _, eid in 
+-- end

@@ -150,7 +150,7 @@ function draw.draw_bones(bones, joints, color, transform, desc)
 	local poitions = {}
 	local origin = ms({0 ,0, 0, 1}, "P")
 	for _, j in ipairs(joints) do
-		local p = ms(j, origin, "*P")	-- extract poistion
+		local p = ms(ms:matrix(j), origin, "*P")	-- extract poistion
 		table.insert(poitions, p)
 	end
 

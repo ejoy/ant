@@ -470,7 +470,7 @@ end
 
 local function init_scene()
 	local computil = renderpkg.components
-	computil.create_grid_entity(world, "grid", 64, 64, 1)
+	computil.create_grid_entity(world, "grid", 16, 16, 1)
 end
 
 -- luacheck: ignore self
