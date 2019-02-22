@@ -60,9 +60,6 @@ local function import(name)
 end
 
 local function test(name, entry)
-    if not loaded[name] then
-        import(name)
-    end
     if not registered[name] then
         error(("\n\tno package '%s'"):format(name))
     end
