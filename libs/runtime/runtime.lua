@@ -2,9 +2,9 @@ require 'runtime.vfs'
 require 'runtime.errlog'
 local LOGERROR = log.error
 
-import_package = (require "antpm").import
+import_package = require "antpm".import
 
-local keymap = (import_package "ant.inputmgr").keymap
+local keymap = import_package "ant.inputmgr".keymap
 
 local dbgupdate = require 'runtime.debug'
 

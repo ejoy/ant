@@ -1,4 +1,4 @@
-local json = require 'cjson.safe'
+local json = require 'cjson.safe' json.encode_empty_table_as_array 'on'
 
 local m = {}
 
