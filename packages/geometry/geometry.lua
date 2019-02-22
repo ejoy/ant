@@ -406,11 +406,24 @@ function geometry.grid(width, height, unit)
 		table.insert(vb, {x, 0, z, clr})			
 	end
 
-	local w_len = width * unit
-	local hw_len = w_len * 0.5
+	if width < 2 or height < 2 then
+		return
+	end
 
-	local h_len = height * unit
-	local hh_len = h_len * 0.5
+	local function is_even_number(num)
+		local half = num * 0.5
+		return math.floor(half) == half
+	end	
+
+	if not is_even_number(width) or not is_even_number(height) then
+		error(string.format("width = %d, height = %d, all need to even number", width, height))
+	end
+
+	local hw = width * 0.5
+	local hw_len = hw * unit
+
+	local hh = height * 0.5
+	local hh_len = hh * unit
 
 	local color = 0x88c0c0c0
 
@@ -428,14 +441,18 @@ function geometry.grid(width, height, unit)
 
 	-- column lines
 	for i=0, width do
-		local x = -hw_len + i * unit
-		add_line(x, -hh_len, x, hh_len, color)			              
+		if i ~= hw then
+			local x = -hw_len + i * unit
+			add_line(x, -hh_len, x, hh_len, color)
+		end
 	end
 
 	-- row lines
 	for i=0, height do
-		local y = -hh_len + i * unit
-		add_line(-hw_len, y, hw_len, y, color)			
+		if i ~= hh then
+			local y = -hh_len + i * unit
+			add_line(-hw_len, y, hw_len, y, color)
+		end
 	end
 	return vb, ib
 end
