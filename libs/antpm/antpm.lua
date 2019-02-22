@@ -59,6 +59,20 @@ local function import(name)
     return loaded[name]
 end
 
+local function test(name, entry)
+    if not loaded[name] then
+        import(name)
+    end
+    if not registered[name] then
+        error(("\n\tno package '%s'"):format(name))
+    end
+    local info = registered[name]
+    if not info.env then
+		info.env = sandbox.env(info.root:string(), name)
+    end
+    return info.env.require(entry or 'test')
+end
+
 local function find(name)
     if not registered[name] then
         return
@@ -89,6 +103,7 @@ return {
     find = find,
     register = register,
     import = import,
+    test = test,
     loadfile = m_loadfile,
     get_registered_list = get_registered_list,
 }
