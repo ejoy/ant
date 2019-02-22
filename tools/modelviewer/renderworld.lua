@@ -1,6 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import 'ant.basic_components'
 ecs.import "ant.inputmgr"
 ecs.import "ant.render"
 ecs.import "ant.scene"

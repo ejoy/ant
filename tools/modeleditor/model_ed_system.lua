@@ -4,6 +4,7 @@ local world = ecs.world
 local util 		= require "util"
 local fs 		= require "filesystem"
 
+ecs.import 'ant.basic_components'
 ecs.import "ant.render"
 ecs.import "ant.timer"
 ecs.import "ant.scene"

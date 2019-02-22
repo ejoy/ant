@@ -3,6 +3,7 @@ local world = ecs.world
 
 local fs = require 'filesystem'
 
+ecs.import 'ant.basic_components'
 ecs.import 'ant.render'
 ecs.import 'ant.editor'
 ecs.import 'ant.inputmgr'
