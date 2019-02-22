@@ -7,5 +7,4 @@ local math3d = require "math3d"
 local caps = bgfx.get_caps();
 local ms = math3d.new(caps.homogeneousDepth)
 --return initMath3dDebug(ms)
-print(ms)
 return ms
