@@ -19,9 +19,12 @@
 
 ### 附上launch.json具体的设置
 使用iup调试
->        
+``` json
+{
+    "version": "0.2.0",
+    "configurations": [
     {
-        "name": "launch (msvc)",
+        "name": "Editor (msvc)",
         "type": "lua",
         "request": "launch",        
         "cwd": "${workspaceRoot}",  
@@ -35,7 +38,7 @@
         }
     },
     {
-        "name": "launch (mingw)",
+        "name": "Editor (mingw)",
         "type": "lua",
         "request": "launch",
         "luaexe": "${workspaceRoot}\\bin\\lua.exe",
@@ -44,4 +47,25 @@
         "internalModule": "vscode-dbg",
         "stopOnEntry": true
     },
+    {
+        "type": "lua",
+        "request": "launch",
+        "name": "Runtime",
+        "ip": "localhost",
+        "port": 4278,
+        "noInject": true,
+        "runtimeExecutable": "${workspaceFolder}/runtime/windows/ant.exe",
+        "skipFiles": [
+            "/vfs/engine/packages/debugger/*"
+        ],
+        "sourceMaps": [
+            [
+                "/vfs/engine/*",
+                "${workspaceRoot}/*"
+            ]
+        ]
+    }
+    ]
+ }
+```
 
