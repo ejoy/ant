@@ -2,6 +2,7 @@ local mgr = require 'debugger.backend.master.mgr'
 local response = require 'debugger.backend.master.response'
 local event = require 'debugger.backend.master.event'
 local ev = require 'debugger.event'
+local parser = require 'debugger.parser'
 
 local request = {}
 
@@ -102,6 +103,14 @@ end
 
 function request.setBreakpoints(req)
     local args = req.arguments
+    local source = req.arguments.source
+    if source.path then
+        local f = loadfile(source.path)
+        if f then
+            source.si = {}
+            parser(source.si, f)
+        end
+    end
     for _, bp in ipairs(args.breakpoints) do
         bp.id = genBreakpointID()
         bp.verified = false
