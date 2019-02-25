@@ -11,14 +11,15 @@ local primitive_filter_sys = ecs.system "primitive_filter_system"
 
 --luacheck: ignore self
 function primitive_filter_sys:update()
-	for _, eid in world:each("primitive_filter") do
-		local e = world[eid]
+	for _, prim_eid in world:each("primitive_filter") do
+		local e = world[prim_eid]
 		local filter = e.primitive_filter
-		filter.idx = 1
+		filter.idx = 1		
 		for _, eid in world:each("can_render") do
 			local ce = world[eid]
 			if cu.is_entity_visible(ce) then
 				if (not filter.filter_select) or ce.can_select then
+					print("insert", eid)
 					ru.insert_primitive(eid, 
 						assert(ce.mesh.assetinfo).handle,
 						assert(ce.material.content),
