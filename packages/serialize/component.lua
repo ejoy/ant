@@ -1,6 +1,5 @@
 local ecs = ...
-local schema = ecs.schema
 
 local crypt = require "crypt"
 
-schema:typedef("serialize", "string", crypt.uuid)
+ecs.component_alias("serialize", "string", crypt.uuid)

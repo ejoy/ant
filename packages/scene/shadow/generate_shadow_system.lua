@@ -1,6 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local schema = ecs.schema
 
 local render_cu = import_package "ant.render".components
 local render_util = import_package "ant.render".util
@@ -65,13 +64,11 @@ ctx.s_flipV = false       -- d3d or ogl
 
 -- 定义 shadowmap entity 相关组件数据( 生成配置, 结果数据, ... )
 -- shadowmap settings
-schema:type "shadow_config"
 local shadow_config = ecs.component "shadow_config"
 
 
 
 -- shadowmap runtime status, result id handle,result textures,matrixs,framebuffers
-schema:type "shadow_rt"
 local shadow_rt = ecs.component "shadow_rt"
 
 -- setting & result  
@@ -138,7 +135,6 @@ end
 
 -- or combine mode 
 -- 合并成一个 compoent 内的两个表? may be clear more,but not use now 
-schema:type "shadow_maker"
 local shadow = ecs.component "shadow_maker"
 
 function shadow:init()

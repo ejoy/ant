@@ -1,6 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local schema = ecs.schema
 
 
 ecs.import "ant.render"
@@ -236,12 +235,12 @@ end
 --  store terrain level name,material name, and terrain object into component
 --  level name,material name need serialize into scene info file.
 -- local terrain = ecs.component 
-schema:type "terrain_resource"
+ecs.component "terrain_resource"
 	.name "string" ""	--level_name
 	.material "respath"	--level_material
-schema:type "terrain"
+local terraincomp = ecs.component "terrain"
 	.path "terrain_resource"
-local terraincomp = ecs.component "terrain" 
+
 function terraincomp:init()
 	self.terrain_obj = false
 	return self

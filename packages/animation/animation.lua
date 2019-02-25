@@ -1,18 +1,15 @@
 local ecs = ...
 local world = ecs.world
-local schema = ecs.schema
 
 local asset = import_package "ant.asset"
 local timer = import_package "ant.timer"
 local animodule = require "hierarchy.animation"
 
-schema:type "animation_content"		
+local animation_content = ecs.component "animation_content"		
 	.ref_path "respath" ()
 	.name "string"
 	.scale "real" (1)	
 	.looptimes "int" (0)
-
-local animation_content = ecs.component "animation_content"
 
 local function calc_ratio(current_counter, ani)
 	local handle = assert(ani.handle)
@@ -38,23 +35,23 @@ function animation_content:init()
 	return self
 end
 
-schema:type "aniref"
+ecs.component "aniref"
 	.idx "int"	-- TODO: need use name to referent which animation
 	.weight "real"
 
-schema:type "pose"
+ecs.component "pose"
 	.anirefs "aniref[]"
 	.name "string"
 
-schema:type "pose_state"
+ecs.component "pose_state"
 	.pose "pose"
 
-schema:type "animation"
+ecs.component "animation"
 	.pose_state "pose_state"
 	.anilist "animation_content[]"
 	.blendtype "string" ("blend")
 
-schema:typedef("skeleton", "resource")
+ecs.component_alias("skeleton", "resource")
 
 local anisystem = ecs.system "animation_system"
 

@@ -1,7 +1,4 @@
 local ecs = ...
-local world = ecs.world
-local schema = ecs.schema
 
-schema:typedef("hierarchy", "resource")
-
-schema:typedef("hierarchy_name_mapper", "entityid{}")
+ecs.component_alias("hierarchy", "resource")
+ecs.component_alias("hierarchy_name_mapper", "entityid{}")

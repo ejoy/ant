@@ -1,18 +1,15 @@
 local ecs = ...
-local schema = ecs.schema
 
-schema:typedef("view_tag", "string")
-schema:typedef("filter_tag", "string")
+ecs.component_alias("view_tag", "string")
+ecs.component_alias("filter_tag", "string")
 
-schema:type "primitive_filter"
+local primitive_filter = ecs.component "primitive_filter"
 	.view_tag "view_tag" ("main_viewtag")
 	.filter_tag "filter_tag" ("can_render")
 	.no_lighting "boolean" (false)
 
+ecs.component_alias("main_viewtag", "boolean")
 
-schema:typedef("main_viewtag", "boolean")
-
-local primitive_filter = ecs.component "primitive_filter"
 
 function primitive_filter:init()
 	self.result = {}

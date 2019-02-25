@@ -1,4 +1,3 @@
 local ecs = ...
-local schema = ecs.schema
 
-schema:typedef("editable_hierarchy", "resource")
+ecs.component_alias("editable_hierarchy", "resource")

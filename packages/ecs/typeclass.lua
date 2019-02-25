@@ -1,5 +1,7 @@
 local log = log and log(...) or print
 
+local createschema = require "schema"
+
 local function sourceinfo()
 	local info = debug.getinfo(3, "Sl")
 	return string.format("%s(%d)", info.source, info.currentline)
@@ -51,7 +53,8 @@ local function gen_method(c, callback)
 end
 
 return function(world, import, class)
-	local class_register = { world = world, schema = world.schema }
+	local schema = createschema(world._schema)
+	local class_register = { world = world, import = import }
 	local class = class or {}
 
 	local function register(args)
@@ -87,24 +90,24 @@ return function(world, import, class)
 		setter = { "depend" , "dependby", "singleton" },
 	}
 
-	local schema = world.schema
+	class_register.component = function (name, ...)
+		return schema:type(name)
+	end
+
+	class_register.component_alias = function (name, ...)
+		return schema:typedef(name, ...)
+	end
+	
+	class_register.component_base = function (name, ...)
+		schema:primtype(name, ...)
+	end
+
 	class_register.tag = function (name)
-		schema:typedef(name, "tag")
+		class_register.component_alias(name, "tag")
 	end
 
-	class_register.component = function (name)
-		assert(schema.map[name] , "type " .. name .. " not exist")
-		local c = schema.map[name]
-		if not c.method then
-			c.source = {}
-			c.method = setmetatable({}, {
-				__newindex = gen_method(c, {"init", "delete", "save", "postsave"}),
-			})
-		end
-		return c.method
-	end
-
-	class_register.import = import
+	class_register.component_alias("tag", "boolean", true)
+	class_register.component_base("entityid", -1)
 
 	return class_register, class
 end

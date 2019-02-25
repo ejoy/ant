@@ -1,7 +1,6 @@
 local ecs = ...
-local schema = ecs.schema
 
-schema:type "terrain"
+ecs.component "terrain"
 	.heightmap "resource"
 	
 local terrain_system = ecs.system "terrain_system"

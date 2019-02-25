@@ -1,7 +1,5 @@
 local ecs = ...
-
 local world = ecs.world
-local schema = ecs.schema
 
 local modify = {} ; modify.__index = modify
 

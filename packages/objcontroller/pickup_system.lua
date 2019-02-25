@@ -1,7 +1,6 @@
 --luacheck: ignore self
 local ecs = ...
 local world = ecs.world
-local schema = ecs.schema
 
 ecs.import "ant.inputmgr"
 
@@ -147,16 +146,15 @@ function pickup_material_sys:update()
 end
 
 -- pickup_system
-schema:type "pickup_material"
+ecs.component "pickup_material"
 	.opacity "material_content"
 	.transparent "material_content"
 
-schema:type "pickup"
-	.materials "pickup_material"
-
-schema:typedef("pickup_viewtag", "boolean")
+ecs.component_alias("pickup_viewtag", "boolean")
 
 local pickupcomp = ecs.component "pickup"
+	.materials "pickup_material"
+
 function pickupcomp:init()
 	local materials = self.materials
 	local opacity = materials.opacity

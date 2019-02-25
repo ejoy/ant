@@ -1,5 +1,4 @@
 local ecs = ...
-local schema = ecs.schema
 
 ecs.import "ant.math"
 
@@ -10,8 +9,8 @@ local asset = import_package "ant.asset"
 local math3d = import_package "ant.math"
 local ms = math3d.stack
 
-schema:typedef("path", "string")
-local path = ecs.component "path"
+local path = ecs.component_alias("path", "string")
+
 function path:init()
 	if self.string then
 		return self
@@ -22,20 +21,20 @@ function path:save()
 	return self:string()
 end
 
-schema:typedef("position", "vector")
-schema:typedef("rotation", "vector")
-schema:typedef("scale", "vector")
+ecs.component_alias("position", "vector")
+ecs.component_alias("rotation", "vector")
+ecs.component_alias("scale", "vector")
 
-schema:type "transform"
+ecs.component "transform"
 	.s "vector"
 	.r "vector"
 	.t "vector"
 
-schema:typedef("srt", "transform")
+ecs.component_alias("srt", "transform")
 
 ecs.tag "editor"
 
-schema:type "frustum"
+ecs.component "frustum"
 	.type "string" ("mat")
 	.n "real" (0.1)
 	.f "int" (10000)
@@ -45,16 +44,15 @@ schema:type "frustum"
 	.b "int" (-1)
 	.ortho "boolean" (false)
 
-schema:typedef("viewid", "int", 0)
+ecs.component_alias("viewid", "int", 0)
 
-schema:type "respath"
+ecs.component "respath"
 	.package "string"
 	.filename "path"
 
-schema:type "resource"
+local resource = ecs.component "resource"
 	.ref_path "respath" ()
 
-local resource = ecs.component "resource"
 function resource:init()
 	if self.ref_path then
 		self.assetinfo = asset.load(self.ref_path.package, self.ref_path.filename)
@@ -62,17 +60,16 @@ function resource:init()
 	return self
 end
 
-schema:typedef("mesh", "resource")
+ecs.component_alias("mesh", "resource")
 
-schema:type "texture"
+ecs.component "texture"
 	.name "string"
 	.type "string"
 	.stage "int"
 	.ref_path "respath"	
 
-schema:typedef("uniformdata", "real[]")
+local uniformdata = ecs.component_alias("uniformdata", "real[]")
 
-local uniformdata = ecs.component "uniformdata"
 function uniformdata.save(v)
 	local tt = type(v)
 	if tt == "userdata" then
@@ -87,32 +84,31 @@ function uniformdata.save(v)
 	end
 end
 
-schema:type "uniform"
+ecs.component "uniform"
 	.name "string"
 	.type "string"
 	.value "uniformdata"
 
-schema:type "properties"
+ecs.component "properties"
 	["opt"].textures "texture{}"
 	["opt"].uniforms "uniform{}"
 
-schema:type "material_content"
+local material_content = ecs.component "material_content"
 	.ref_path "respath"
 	["opt"].properties "properties"	
-
-schema:type "material"
-	.content "material_content[]"
-
-local material_content = ecs.component "material_content"
 
 function material_content:init()
 	component_util.create_material(self)
 	return self
 end
 
-schema:typedef("can_render", "boolean", true)
-schema:typedef("can_cast", "boolean", false)
-schema:typedef("name", "string", "")
+ecs.component "material"
+	.content "material_content[]"
+
+
+ecs.component_alias("can_render", "boolean", true)
+ecs.component_alias("can_cast", "boolean", false)
+ecs.component_alias("name", "string", "")
 ecs.tag "can_select"
 
 local control_state = ecs.singleton "control_state"
@@ -120,14 +116,14 @@ function control_state:init()
 	return ""
 end
 
-schema:type "parent"
+ecs.component "parent"
 	.eid "entityid"
 
-schema:typedef("color", "real[4]", {1,1,1,1})
+ecs.component_alias("color", "real[4]", {1,1,1,1})
 
 
-schema:type "character"
+ecs.component "character"
 	.movespeed "real" (1.0)
 
-schema:type "physic_state"
+ecs.component "physic_state"
 	.velocity "real[3]"

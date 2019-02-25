@@ -1,7 +1,6 @@
 --luacheck: ignore self
 local ecs = ...
 local world = ecs.world
-local schema = ecs.schema
 
 local math = import_package "ant.math"
 local ms = math.stack
@@ -9,7 +8,7 @@ local mu = math.util
 local bgfx = require "bgfx"
 
 --[@ view rect
-schema:type "view_rect"
+ecs.component "view_rect"
 	.x "real" (0)
 	.y "real" (0)
 	.w "real" (1)
@@ -30,12 +29,10 @@ end
 --@]
 
 --[@ clear component
-schema:type "clear_component"
+local clear_comp = ecs.component "clear_component"
     .color "int" (0x303030ff)
     .depth "int" (1)
     .stencil "int" (0)
-
-local clear_comp = ecs.component "clear_component"
 
 function clear_comp:init()
     self.clear_color = true

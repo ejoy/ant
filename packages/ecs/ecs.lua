@@ -4,7 +4,7 @@ local log = log and log(...) or print
 local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
-local create_schema = require "schema"
+local createschema = require "schema"
 
 local ecs = {}
 local world = {} ; world.__index = world
@@ -334,6 +334,22 @@ function world:enable_system(name, enable)
 	end
 end
 
+local function check_comonpent(w)
+	local typeinfo = w._schema
+	for k,v in ipairs(typeinfo.list) do
+		if v.uncomplete then
+			error( v.name .. " is uncomplete")
+		end
+	end
+	for k in pairs(typeinfo._undefined) do
+		if typeinfo.map[k] then
+		typeinfo._undefined[k] = nil
+		else
+			error( k .. " is undefined in " .. typeinfo._undefined[k])
+		end
+	end
+end
+
 -- config.packages
 -- config.systems
 -- config.update_order
@@ -343,8 +359,7 @@ function ecs.new_world(config)
 	local w = setmetatable({
 		args = config.args,
 		_component_type = {},	-- component type objects
-		schema = create_schema.new(),
-
+		_schema = {},
 		_entity = {},	-- entity id set
 		_entity_id = 0,
 		_set = setmetatable({}, { __mode = "kv" }),
@@ -353,22 +368,14 @@ function ecs.new_world(config)
 		_switchs = {},	-- for enable/disable
 	}, world)
 
-	w.schema:typedef("tag", "boolean", true)
-	w.schema:primtype("entityid", -1)
-
 	-- load systems and components from modules
 	local class = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
 
-	w.schema:check()
+	check_comonpent(w)
 
-	for k,v in pairs(w.schema.map) do
+	for k,v in pairs(w._schema.map) do
 		w._component_type[k] = component(v, w)
 	end
-	w._schema =  {
-		map = w.schema.map
-	}
-	w.schema.map = nil
-	w.schema.list = nil
 
 	-- init system
 	w._systems = system.lists(class.system)

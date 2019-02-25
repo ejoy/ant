@@ -1,8 +1,6 @@
 local ecs = ...
-local world = ecs.world
-local schema = ecs.schema
 
-schema:primtype("int", 0)
-schema:primtype("real", 0.0)
-schema:primtype("string", "")
-schema:primtype("boolean", false)
+ecs.component_base("int", 0)
+ecs.component_base("real", 0.0)
+ecs.component_base("string", "")
+ecs.component_base("boolean", false)
