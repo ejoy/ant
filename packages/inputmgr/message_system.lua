@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 --[@ message
-local msg_comp = ecs.singleton_component "message"
+local msg_comp = ecs.singleton "message"
 
 function msg_comp:init()
 	local self = {}

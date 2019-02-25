@@ -29,14 +29,14 @@ local function foreach_init_2(c, w)
         end
         local ret = {}
         for i = 1, c.array do
-            ret[i] = w:create_component(c.type)
+            ret[i] = w:create_component_v1(c.type)
         end
         return ret
     end
     if c.map then
         return {}
     end
-    return w:create_component(c.type)
+    return w:create_component_v1(c.type)
 end
 
 local function foreach_init_1(c, w)
@@ -71,7 +71,7 @@ local function foreach_initp_2(c, w, args)
         local n = c.array == 0 and (args and #args or 0) or c.array
         local ret = {}
         for i = 1, n do
-            ret[i] = w:create_component_with_args(c.type, args[i])
+            ret[i] = w:create_component(c.type, args[i])
         end
         return ret
     end
@@ -79,12 +79,12 @@ local function foreach_initp_2(c, w, args)
         local ret = {}
         if args then
             for k, v in sortpairs(args) do
-                ret[k] = w:create_component_with_args(c.type, v)
+                ret[k] = w:create_component(c.type, v)
             end
         end
         return ret
     end
-    return w:create_component_with_args(c.type, args)
+    return w:create_component(c.type, args)
 end
 
 local function foreach_initp_1(c, w, args)

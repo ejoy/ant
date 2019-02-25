@@ -9,12 +9,12 @@ local create_schema = require "schema"
 local ecs = {}
 local world = {} ; world.__index = world
 
-function world:create_component(c)
+function world:create_component_v1(c)
 	assert(self._component_type[c], c)
 	return self._component_type[c].init()
 end
 
-function world:create_component_with_args(c, args)
+function world:create_component(c, args)
 	assert(self._component_type[c], c)
 	return self._component_type[c].initp(args)
 end
@@ -37,26 +37,10 @@ function world:register_entity()
 	return entity_id
 end
 
-local function new_component(w, eid, c, ...)
-	if c then
-		local entity = assert(w[eid])
-		if entity[c] then
-			error(string.format("multiple component defined:%s", c))
-		end
-		entity[c] = w:create_component(c)
-		w:register_component(eid, c)
-		new_component(w, eid, ...)
-	end
-end
-
-function world:add_component(eid, ...)
-	new_component(self, eid, ...)
-end
-
-function world:add_single_component(eid, component_type, args)
-	self:register_component(eid, component_type)
+function world:add_component(eid, component_type, args)
 	local e = self[eid]
-	e[component_type] = self:create_component_with_args(component_type, args)
+	self:register_component(eid, component_type)
+	e[component_type] = self:create_component(component_type, args)
 end
 
 function world:remove_component(eid, component_type)
@@ -78,28 +62,15 @@ function world:component_list(eid)
 	return r
 end
 
-local function create_entity(w, id)
-	w[id] = {}
-	w._entity[id] = true
-end
-
-function world:new_entity(...)
-	local entity_id = self._entity_id + 1
-	self._entity_id = entity_id
-	create_entity(self, entity_id)
-	new_component(self, entity_id, ...)
-
-	return entity_id
-end
-
 function world:create_entity(t)
 	local eid = self._entity_id + 1
 	self._entity_id = eid
-	create_entity(self, eid)
+	self[eid] = {}
+	self._entity[eid] = true
 	local entity = self[eid]
 	for c, args in pairs(t) do
 		self:register_component(eid, c)
-		entity[c] = self:create_component_with_args(c, args)
+		entity[c] = self:create_component(c, args)
 	end
 	return eid
 end
@@ -396,7 +367,7 @@ function ecs.new_world(config)
 
 	-- init system
 	w._systems = system.lists(class.system)
-	w._singleton_proxy = system.proxy(class.system, class.singleton_component)
+	w._singleton_proxy = system.proxy(class.system, class.singleton)
 
 	return w
 end

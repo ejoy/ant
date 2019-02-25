@@ -20,7 +20,7 @@ function modify:each(component_type)
 	return self._iterators[component_type]
 end
 
-local modify_singleton = ecs.singleton_component "modify"
+local modify_singleton = ecs.singleton "modify"
 
 function modify_singleton.init()
 	local self = {}
