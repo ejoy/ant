@@ -179,7 +179,7 @@ function bullet_world:init_collider_component(collidercomp, obj_idx, srt, offset
 end
 
 function bullet_world:add_component_collider(world, eid, collidername, offset)
-	world:add_component(eid, collidername)
+	--world:add_component(eid, collidername)
 	local e = world[eid]
 	self:init_collider_component(e[collidername], eid, {e.scale, e.rotation, e.position}, offset)
 end 

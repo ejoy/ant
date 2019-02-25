@@ -25,7 +25,11 @@ function testscene:init()
 	}
 
 	local layer = world[layereid]
-	local sceneroot = world:create_component("scenenode")
+	local sceneroot = world:create_component("scenenode", {
+		id = -1,
+		eid = -1,
+		children = {},
+	})
 	table.insert(layer.scenelayer.nodes, sceneroot)
 
 	local cubeeid = world:create_entity  {

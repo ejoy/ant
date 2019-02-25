@@ -21,7 +21,7 @@ end
 local function add_hierarchy_component(world, eid, ref_path)
     local e = world[eid]
     if e.hierarchy == nil then
-        world:add_single_component(eid, 'hierarchy', {
+        world:add_component(eid, 'hierarchy', {
 			ref_path = {package = ref_path.package, filename = create_hierarchy_path(ref_path.filename)}
 		})
     end

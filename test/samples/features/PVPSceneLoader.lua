@@ -271,9 +271,9 @@ function PVPScene.create_entitices(world)
 
 				if collision_array then
 					local collisitontype = collision_array[idx]
-					world:add_single_component(eid, "collider_tag", true)
+					world:add_component(eid, "collider_tag", true)
 					local collidercomp = get_default_collider_comp_value(collisitontype)
-					world:add_single_component(eid, collisitontype, collidercomp)
+					world:add_component(eid, collisitontype, collidercomp)
 				end
 			end
 		end

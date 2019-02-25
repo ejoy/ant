@@ -1,5 +1,4 @@
 local ecs = ...
-local world = ecs.world
 local schema = ecs.schema
 
 schema:type "primitive_filter"

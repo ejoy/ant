@@ -89,7 +89,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 	local emptypath = fs.path ""
 
 	if skepath.filename ~= emptypath then
-		world:add_single_component(eid, "skeleton", {ref_path = skepath})
+		world:add_component(eid, "skeleton", {ref_path = skepath})
 	end
 
 	if #anipaths > 0 then
@@ -103,7 +103,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 			}
 		end
 
-		world:add_single_component(eid, "animation", {
+		world:add_component(eid, "animation", {
 			pose_state = {
 				pose = {
 					anirefs = {
@@ -120,16 +120,16 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 	
 	if skinning_meshpath.filename ~= emptypath then
 		if e.skeleton and e.animation then
-			world:add_single_component(eid, "skinning_mesh", {ref_path = skinning_meshpath})
+			world:add_component(eid, "skinning_mesh", {ref_path = skinning_meshpath})
 		end
 
-		world:add_single_component(eid, "material", {
+		world:add_component(eid, "material", {
 			content = {
 				{ref_path = {package = "ant.resources", filename = samplematerialpath}}
 			}
 		})
 	
-		world:add_single_component(eid, "widget", {
+		world:add_component(eid, "widget", {
 			material = {
 				content = {
 					{
