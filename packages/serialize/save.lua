@@ -126,7 +126,7 @@ local function save_start(w)
     method.init(w)
     pool = {}
     load = {}
-    typeinfo = w.schema.map
+    typeinfo = w._schema.map
     update_deserialize(w)
 end
 

@@ -134,6 +134,7 @@ function network.dispatch(objs, interval)
 				end
 			else
 				local obj = new_connection(client, address, port)
+				table.insert(writefds, client)
 				log("Accept : %s", obj._peer)
 				obj._ref = listen_obj
 				table.insert(objs, obj)

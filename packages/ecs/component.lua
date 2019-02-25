@@ -22,7 +22,7 @@ local function foreach_init_2(c, w)
         end
         return c.default
     end
-    assert(w.schema.map[c.type], "unknown type:" .. c.type)
+    assert(w._schema.map[c.type], "unknown type:" .. c.type)
     if c.array then
         if c.array == 0 then
             return {}
@@ -66,7 +66,7 @@ local function foreach_initp_2(c, w, args)
     if c.has_default or c.type == 'primtype' then
         return args
     end
-    assert(w.schema.map[c.type], "unknown type:" .. c.type)
+    assert(w._schema.map[c.type], "unknown type:" .. c.type)
     if c.array then
         local n = c.array == 0 and (args and #args or 0) or c.array
         local ret = {}
@@ -160,6 +160,6 @@ return function(c, w)
     return {
         init = gen_init(c, w),
         initp = gen_initp(c, w),
-        delete = gen_delete(c, w.schema)
+        delete = gen_delete(c, w._schema)
     }
 end
