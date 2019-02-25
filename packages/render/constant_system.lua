@@ -3,7 +3,7 @@ local ecs = ...
 local math = import_package "ant.math"
 local mu = math.util
 
-local constant = ecs.singleton_component "constant"
+local constant = ecs.singleton "constant"
 
 function constant:init()
     return {

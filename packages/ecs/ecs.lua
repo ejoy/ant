@@ -396,7 +396,7 @@ function ecs.new_world(config)
 
 	-- init system
 	w._systems = system.lists(class.system)
-	w._singleton_proxy = system.proxy(class.system, class.singleton_component)
+	w._singleton_proxy = system.proxy(class.system, class.singleton)
 
 	return w
 end

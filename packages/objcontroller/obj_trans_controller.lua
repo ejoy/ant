@@ -26,7 +26,7 @@ ecs.tag "pos_transform"
 ecs.tag "scale_transform"
 ecs.tag "rotator_transform"
 
-local object_transform = ecs.singleton_component "object_transform"
+local object_transform = ecs.singleton "object_transform"
 function object_transform:init()
 	return {
 		translate_speed = 0.05,

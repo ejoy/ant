@@ -2,14 +2,14 @@ local ecs = ...
 
 local bgfx = require "bgfx"
 
-local frame_stat = ecs.singleton_component "frame_stat"
+local frame_stat = ecs.singleton "frame_stat"
 function frame_stat:init()
 	return {
 		frame_num = 0
 	}
 end
 
-local post_end_frame_jobs = ecs.singleton_component "post_end_frame_jobs"
+local post_end_frame_jobs = ecs.singleton "post_end_frame_jobs"
 function post_end_frame_jobs:init()
 	return {
 		jobs = {}

@@ -104,7 +104,7 @@ function mods.init(...)
 	local ecs = ...
 	local schema = ecs.schema
 
-	local init = ecs.singleton_component "init"
+	local init = ecs.singleton "init"
 	local init_system = ecs.system "init"
 
 	init_system.singleton "init"	-- depend singleton components

@@ -113,7 +113,7 @@ schema:typedef("can_cast", "boolean", false)
 schema:typedef("name", "string", "")
 ecs.tag "can_select"
 
-local control_state = ecs.singleton_component "control_state"
+local control_state = ecs.singleton "control_state"
 function control_state:init()
 	return ""
 end

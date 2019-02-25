@@ -78,7 +78,7 @@ return function(world, import, class)
 	end
 
 	register {
-		type = "singleton_component",
+		type = "singleton",
 		callback = { "init" },
 	}
 

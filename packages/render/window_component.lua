@@ -3,7 +3,7 @@ local ecs = ...
 local bgfx = require "bgfx"
 
 
-local win = ecs.singleton_component "window"
+local win = ecs.singleton "window"
 
 function win:init()
     bgfx.set_debug "T"
