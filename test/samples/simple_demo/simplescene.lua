@@ -34,6 +34,7 @@ function simplescene:init()
 		},
 		can_render = true,
 		name = "demo_bunny",		
+		main_viewtag = true,
 	}
 
 	camerautil.focus_selected_obj(world, bunnyeid)

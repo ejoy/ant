@@ -97,6 +97,7 @@ local function create_animation_test()
 			ref_path = {package = "ant.resources", filename = smpath},
 		},
 		name = "animation_sample",
+		main_viewtag = true,
 	}
 
 	local e = world[eid]
@@ -124,6 +125,7 @@ local function create_hierarchy_test()
 				serialize = import_package 'ant.serialize'.create(), 
 				can_select = true,
 				can_render = true,
+				main_viewtag = true,
 			}
     end
 

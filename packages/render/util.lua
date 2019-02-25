@@ -111,16 +111,16 @@ end
 
 function util.insert_primitive(eid, meshhandle, materials, srt, filter)	
 	local mgroups = meshhandle.groups
-	local idx = filter.idx
+	local cacheidx = filter._cache_idx
 	local result = filter.result
 	for i=1, #mgroups do
 		local g = mgroups[i]
 		local mc = materials[i] or materials[1]
 
-		local r = result[idx]
+		local r = result[cacheidx]
 		if r == nil then
 			r = {}
-			result[idx] = r
+			result[cacheidx] = r
 		end
 
 		r.eid = eid
@@ -129,10 +129,10 @@ function util.insert_primitive(eid, meshhandle, materials, srt, filter)
 		r.properties = mc.properties
 		r.srt = srt
 
-		idx = idx + 1
+		cacheidx = cacheidx + 1
 	end
 
-	filter.idx = idx
+	filter._cache_idx = cacheidx
 end
 
 -- render to shadowmap

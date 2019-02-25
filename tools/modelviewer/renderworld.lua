@@ -50,7 +50,8 @@ function model_review_system:init()
 					ref_path = {package = "ant.resources", filename = fs.path "PVPScene/scene-mat.material"},
 				}
 			}
-		}
+		},
+		main_viewtag = true,
 	}
 
 	-- local model = world[eid]

@@ -3,54 +3,59 @@ local world = ecs.world
 local schema = world.schema
 local fs = require "filesystem"
 
-schema:type "scenenode"
-	["opt"].parent "scenenode" ()
-	.id "int" (-1)
-	["opt"].hierarchy_ref "hierarchy" ()
-	.eid "int" (-1)
-	.children "scenenode[]"
-
-schema:type "scenelayer"
-	.nodes "scenenode[]"
-
+schema:typedef("world_transform", "transform")
+	
 
 local testscene = ecs.system "test_scene"
 function testscene:init()
-	local layereid = world:create_entity{
-		scenelayer = {
-
-		}, 
-		name = "scene layer", 
-		serialize = '',
-	}
-
-	local layer = world[layereid]
-	local sceneroot = world:create_component("scenenode", {
-		id = -1,
-		eid = -1,
-		children = {},
-	})
-	table.insert(layer.scenelayer.nodes, sceneroot)
-
-	local cubeeid = world:create_entity  {
-		position = {0, 0, 0, 1},
-		scale = {1, 1, 1, 0},
-		rotation = {0, 0, 0, 0},
+	local root_eid = world:create_entity {
+		world_transform = {
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
+		},
+		transform = {
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
+		},
 		can_render = true,
-		mesh = {
-			ref_path = {package="ant.resources", filename = fs.path "cube.mesh"},
-		},
-		material = {
-			content = {
-				{
-					ref_path = {package = "ant.resources", filename = fs.path "bunny.material"}
-				}
-			}
-		},
-		name = "cube",
+		name = "root",
 	}
 
-	--sn.parent
+	local childeid = world:create_entity {
+		world_transform = {
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},			
+		},
+		transform = {
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
+		},
+		parent = {
+			eid = root_eid,
+		},
+		can_render = true,
+		name = "child1",
+	}
+
+	local chideid2 = world:create_entity {
+		world_transform = {
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
+		},
+		transform = {
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
+		},
+		parent = {
+			eid = root_eid,
+		},
+	}
 
 
 end

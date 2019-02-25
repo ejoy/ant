@@ -14,18 +14,19 @@ function primitive_filter_sys:update()
 	for _, prim_eid in world:each("primitive_filter") do
 		local e = world[prim_eid]
 		local filter = e.primitive_filter
-		filter.idx = 1		
-		for _, eid in world:each("can_render") do
+		filter._cache_idx = 1
+		local viewtag = filter.view_tag
+		local filtertag = filter.filter_tag
+		for _, eid in world:each(filtertag) do
 			local ce = world[eid]
-			if cu.is_entity_visible(ce) then
-				if (not filter.filter_select) or ce.can_select then
-					print("insert", eid)
-					ru.insert_primitive(eid, 
-						assert(ce.mesh.assetinfo).handle,
-						assert(ce.material.content),
-						ms({type="srt", s=ce.scale, r=ce.rotation, t=ce.position}, "m"),
-						filter)
-				end
+			local vt = ce[viewtag]
+			local ft = ce[filtertag]
+			if vt and ft then
+				ru.insert_primitive(eid, 
+					assert(ce.mesh.assetinfo).handle,
+					assert(ce.material.content),
+					ms({type="srt", s=ce.scale, r=ce.rotation, t=ce.position}, "m"),
+					filter)
 			end
 		end	
 	end

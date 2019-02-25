@@ -50,7 +50,11 @@ function camera_init_sys:init()
 	local camera_eid = world:create_entity {
 		main_camera = true,
 		viewid = VIEWID_MAINCAMERA, 
-		primitive_filter = {},
+		primitive_filter = {
+			view_tag = "main_viewtag",
+			filter_tag = "can_render",
+			no_lighting  = false,
+		},
 		rotation = {-25, -45, 0, 0}, 
 		position = {5, 5, -5, 1},
 		frustum = frustum,
@@ -60,7 +64,7 @@ function camera_init_sys:init()
 			depth = 1,
 			stencil = 0,
 		},
-		name = "main_camera"
+		name = "main_camera",		
 	}
 
     local camera = world[camera_eid]

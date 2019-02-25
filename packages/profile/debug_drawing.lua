@@ -70,6 +70,7 @@ function debug_obj:init()
 		main_debug = true,
 		can_render = true, 
 		name = "debug_test",
+		main_viewtag = true,
 	}
 
 	local dbentity = world[debugeid]

@@ -154,6 +154,8 @@ schema:type "pickup_material"
 schema:type "pickup"
 	.materials "pickup_material"
 
+schema:typedef("pickup_viewtag", "boolean")
+
 local pickupcomp = ecs.component "pickup"
 function pickupcomp:init()
 	local materials = self.materials
@@ -179,12 +181,13 @@ pickup_sys.depend "entity_rendering"
 
 pickup_sys.dependby "end_frame"
 
+local primitive_filter_default = {
+	view_tag  = "pickup_viewtag",
+	filter_tag = "can_select",
+	no_lighting = true,
+}
 local function add_primitive_filter(eid)
-	world:add_component(eid, "primitive_filter")
-	local e = world[eid]
-	local filter = e.primitive_filter	
-	filter.no_lighting = true
-	filter.filter_select = true
+	world:add_single_componet(eid, "primitive_filter", primitive_filter_default)
 end
 
 local function remove_primitive_filter(eid)
@@ -221,6 +224,7 @@ local function add_pick_entity()
 		rotation = {0, 0, 0, 0},
 		frustum = frustum,
 		name = "pickup",
+		pickup_viewtag = true,
 	}
 
 	init_pickup_buffer(world[eid])	

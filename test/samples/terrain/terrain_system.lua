@@ -271,7 +271,8 @@ local function create_terrain_entity( world, name  )
 		scale = {1, 1, 1, 0},
 		
 		can_render = true,
-		name = name
+		name = name,
+		main_viewtag = true,
 	}
 	return world[eid], eid
 end 

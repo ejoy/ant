@@ -119,7 +119,7 @@ function lighting_primitive_filter_sys:update()
 	for _, eid in world:each("primitive_filter") do
 		local e = world[eid]
 		local filter = e.primitive_filter
-		if not filter.no_lighting then			
+		if not filter.no_lighting then
 			append_lighting_properties(filter)
 		end
 	end

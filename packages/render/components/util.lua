@@ -214,6 +214,7 @@ function util.create_grid_entity(world, name, w, h, unit)
 			}
 		},
 		name = name,
+		main_viewtag = true,
 	}
 
 	

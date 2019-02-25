@@ -26,10 +26,12 @@ schema:typedef("position", "vector")
 schema:typedef("rotation", "vector")
 schema:typedef("scale", "vector")
 
-schema:type "srt"
+schema:type "transform"
 	.s "vector"
 	.r "vector"
 	.t "vector"
+
+schema:typedef("srt", "transform")
 
 ecs.tag "editor"
 

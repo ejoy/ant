@@ -82,7 +82,8 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 		state_chain = {
 			ref_path = {package="ant.resources", filename = fs.path "simple_animation.sm"},
 		},
-		name = "animation_sample"
+		name = "animation_sample",
+		main_viewtag = true,
 	}
 
 	local e = world[eid]
