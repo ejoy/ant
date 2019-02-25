@@ -179,7 +179,6 @@ local function dbgserver_update(obj)
 		response(dbg.server, "DBG", data)
 	end
 	if obj._status == "CONNECTING" then
-		obj._status = "CONNECTED"
 		LOG("New DBG", obj._peer, obj._ref)
 		if dbg.client then
 			network.close(obj)
