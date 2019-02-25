@@ -164,7 +164,7 @@ end
 local function stringify_start(w)
     pool = {}
     stack = {}
-    typeinfo = w.schema.map
+    typeinfo = w._schema.map
     out1, out2, out3 = {}, {}, {}
 end
 

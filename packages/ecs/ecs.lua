@@ -364,6 +364,11 @@ function ecs.new_world(config)
 	for k,v in pairs(w.schema.map) do
 		w._component_type[k] = component(v, w)
 	end
+	w._schema =  {
+		map = w.schema.map
+	}
+	w.schema.map = nil
+	w.schema.list = nil
 
 	-- init system
 	w._systems = system.lists(class.system)
