@@ -1,6 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local schema = ecs.schema
 
 ecs.import "ant.inputmgr"
 
@@ -13,12 +12,12 @@ local VIEWID_MAINCAMERA = 100
 
 ecs.tag "main_camera"
 
-schema:typedef("view_tag", "string")
-schema:typedef("filter_tag", "string")
+ecs.component_alias("view_tag", "string")
+ecs.component_alias("filter_tag", "string")
 
-schema:typedef("viewid", "int", 0)
+ecs.component_alias("viewid", "int", 0)
 
-schema:type "camera"
+ecs.component "camera"
 	.type "string"
 	.eyepos	"vector"
 	.viewdir"vector"

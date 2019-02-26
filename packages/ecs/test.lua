@@ -33,12 +33,11 @@ local mods = {}
 
 function mods.basetype(...)
 	local ecs = ...
-	local schema = ecs.schema
 
-	schema:primtype("int", 0)
-	schema:primtype("real", 0.0)
-	schema:primtype("string", "")
-	schema:primtype("boolean", false)
+	ecs.component_base("int", 0)
+	ecs.component_base("real", 0.0)
+	ecs.component_base("string", "")
+	ecs.component_base("boolean", false)
 end
 
 function mods.dummy(...)
@@ -102,7 +101,6 @@ end
 
 function mods.init(...)
 	local ecs = ...
-	local schema = ecs.schema
 
 	local init = ecs.singleton "init"
 	local init_system = ecs.system "init"
@@ -121,13 +119,10 @@ end
 
 function mods.foobar(...)
 	local ecs = ...
-	local schema = ecs.schema
-
-	schema:type "foobar"
-		.x "real"
-		.y "real"
 
 	local foobar = ecs.component "foobar"
+		.x "real"
+		.y "real"
 
 	function foobar:init()
 		print("New component foobar")

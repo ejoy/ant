@@ -1,10 +1,7 @@
 local ecs = ...
 local world = ecs.world
-local schema = world.schema
-local fs = require "filesystem"
 
-schema:typedef("world_transform", "transform")
-	
+ecs.component_alias("world_transform", "transform")
 
 local testscene = ecs.system "test_scene"
 function testscene:init()

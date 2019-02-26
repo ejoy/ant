@@ -1,36 +1,35 @@
 local ecs = ...
 local world = ecs.world
-local schema = world.schema
 		
 local ms = import_package "ant.math".stack
 ecs.tag "collider_tag"
 
-schema:type "collider"
+ecs.component "collider"
 	.center "real[3]" {0, 0, 0}
 	.is_tigger "boolean" (true)
 	.obj_idx "int" (-1)
 
-schema:type "plane_shape"
+ecs.component "plane_shape"
 	.type "string" "plane"
 	.normal "real[3]" {0, 1, 0}
 	.distance "real" (1)
 
-schema:type "sphere_shape"	
+ecs.component "sphere_shape"	
 	.radius "real" (1)
 
-schema:type "box_shape"	
+ecs.component "box_shape"	
 	.type "string" "box"
 	.size "real[3]" {1, 1, 1}	
 
-schema:type "capsule_shape"	
+ecs.component "capsule_shape"	
 	.type "string" "capsule"
 	.radius "real" (1)
 	.height "real" (1)
 	.axis "int" (0)	
 
-schema:typedef("cylinder_shape", "capsule_shape")
+ecs.component_alias("cylinder_shape", "capsule_shape")
 
-schema:type "terrain_shape"
+ecs.component "terrain_shape"
 	.width "int" (1)
 	.height "int" (1)
 	.grid_scale "real" (1)
@@ -41,10 +40,10 @@ schema:type "terrain_shape"
 	.datatype "string" ("uchar")
 	.flip_quad_edges "boolean" (false)
 
-schema:type "custom_shape"
+ecs.component "custom_shape"
 	.type "string" "compound"	
 
-schema:type "character_shape"
+ecs.component "character_shape"
 	.type "string" "compound"
 	.spheres "sphere_shape[]"
 	.boxes 	"box_shape[]"
@@ -60,7 +59,7 @@ for _, pp in ipairs {
 	{"character_collider", "character_shape" },
 } do
 	local collidername, shapename = pp[1], pp[2]
-	schema:type(collidername)
+	ecs.component(collidername)
 		.collider "collider"
 		.shape(shapename)
 

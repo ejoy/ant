@@ -1,22 +1,3 @@
---[[
-schema.type "NAME"
-	["temp"].a "int" (1)
-	.b "OBJECT"
-	.c [ "private" ] "mat" {}
-	.d "texture"
-	.array "int[4]" { 1,2,3,4 }
-]]
-local schema = {} ; schema.__index = schema
-
-function schema.new()
-	local s = {
-		list = {},
-		map = {},
-		_undefined = {},
-	}
-	return setmetatable(s, schema)
-end
-
 local fields_mt = {}
 local defaults_mt = {}
 
@@ -38,12 +19,12 @@ function defaults_mt:__call(default_value)
 	end
 	field.has_default = true
 	field.default = default_value
-	self._current_field = {}
+	rawset(self, "_current_field", {})
 	return setmetatable(self, fields_mt)
 end
 
 function defaults_mt:__index(name)
-	self._current_field = {}
+	rawset(self, "_current_field", {})
 	fields_mt.__index(self, name)
 	return setmetatable(self, fields_mt)
 end
@@ -54,6 +35,23 @@ function fields_mt:__index(name)
 	self._object.uncomplete = true
 	return self
 end
+
+local callback = {init=true, delete=true, save=true, postinit=true, postsave=true}
+
+function fields_mt:__newindex(key, func)
+	assert(type(key) == "string")
+	if type(func) ~= "function" then
+		error("Method should be a function")
+	end
+	if callback[key] == nil then
+		error("Invalid callback function " .. key)
+	end
+	local obj = self._schema.map[self._name]
+	obj.method = obj.method or {}
+	obj.method[key] = func
+end
+
+defaults_mt.__newindex = fields_mt.__newindex
 
 local function checktype(self, typename, name)
 	if self.map[typename] then
@@ -84,6 +82,15 @@ local function parse_type(t)
 end
 
 function fields_mt:__call(typename)
+	if type(typename) == 'table' then
+		local obj = self._schema.map[self._name]
+		if type(typename.depend) ~= 'table' then
+			obj.depend = { typename.depend }
+		else
+			obj.depend = typename.depend
+		end
+		return setmetatable(self, defaults_mt)
+	end
 	local attrib = self._current_field
 	self._current_field = nil
 	local field_n = #attrib
@@ -111,59 +118,63 @@ function fields_mt:__call(typename)
 	return setmetatable(self, defaults_mt)
 end
 
-function schema:_newtype(typeobject)
+local function _newtype(self, typeobject)
 	local typename = typeobject.name
+	if self.map[typename] then
+		return self.map[typename]
+	end
 	assert(self.map[typename] == nil)
 	self.map[typename] = typeobject
 	table.insert(self.list, typeobject)
 	return typeobject
 end
 
-function schema:type(typename)
-	local typeobject = self:_newtype {
-		name = typename
-	}
-	local typegen = {
-		_schema = self,
-		_name = typename,
-		_object = typeobject,
-		_current_field = {},
-		_field = {},
-	}
-	return setmetatable(typegen, fields_mt)
-end
+return function (class)
+	class.list = class.list or {}
+	class.map = class.map or {}
+	class._undefined = class._undefined or {}
 
-function schema:typedef(typename, aliastype, ...)
-	self:_newtype( parse_type {
-		name = typename,
-		type = aliastype,
-		has_default = select('#', ...) > 0,
-		default = select('1', ...),
-	} )
-end
+	local schema = {}
 
-function schema:primtype(typename, ...)
-	self:_newtype {
-		name = typename,
-		type = "primtype",
-		has_default = select('#', ...) > 0,
-		default = select('1', ...),
-	}
-end
-
-function schema:check()
-	for k,v in ipairs(self.list) do
-		if v.uncomplete then
-			error( v.name .. " is uncomplete")
-		end
+	function schema:type(typename)
+		local typeobject = _newtype(class, {
+			name = typename
+		})
+		local typegen = {
+			_schema = class,
+			_name = typename,
+			_object = typeobject,
+			_current_field = {},
+			_field = {},
+		}
+		return setmetatable(typegen, fields_mt)
 	end
-	for k,v in pairs(self._undefined) do
-		if self.map[k] then
-			self._undefined[k] = nil
-		else
-			error( k .. " is undefined in " .. self._undefined[k])
-		end
-	end
-end
 
-return schema
+	function schema:typedef(typename, aliastype, ...)
+		local typeobject = _newtype(class, parse_type {
+			name = typename,
+			type = aliastype,
+			has_default = select('#', ...) > 0,
+			default = select('1', ...),
+		} )
+		local typegen = {
+			_schema = class,
+			_name = typename,
+			_object = typeobject,
+			_current_field = {},
+			_field = {},
+		}
+		return setmetatable(typegen, fields_mt)
+	end
+
+	function schema:primtype(typename, ...)
+		_newtype(class, {
+			name = typename,
+			type = "primtype",
+			has_default = select('#', ...) > 0,
+			default = select('1', ...),
+		})
+	end
+
+	return schema
+end

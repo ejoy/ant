@@ -4,22 +4,23 @@ local log = log and log(...) or print
 local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
-local create_schema = require "schema"
+local component_init = component.init
+local component_delete = component.delete
 
 local ecs = {}
 local world = {} ; world.__index = world
 
-function world:create_component_v1(c)
-	assert(self._component_type[c], c)
-	return self._component_type[c].init()
-end
-
 function world:create_component(c, args)
-	assert(self._component_type[c], c)
-	return self._component_type[c].initp(args)
+	local ti = assert(self._components[c], c)
+	return component_init(self, ti, args)
 end
 
 function world:register_component(eid, c)
+	local ti = assert(self._components[c], c)
+	if ti.method and ti.method.postinit then
+		local e = self[eid]
+		ti.method.postinit(e[c], e)
+	end
 	local set = self._set[c]
 	if set then
 		set[#set+1] = eid
@@ -28,6 +29,12 @@ function world:register_component(eid, c)
 	if newset then
 		newset[#newset+1] = eid
 	end
+end
+
+function world:register_all_component(eid)
+    for name in pairs(self[eid]) do
+        self:register_component(eid, name)
+    end
 end
 
 function world:register_entity()
@@ -62,15 +69,33 @@ function world:component_list(eid)
 	return r
 end
 
+local function sortcomponent(w, t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    local ti = w._components
+    table.sort(sort, function (a, b) return ti[a].sortid < ti[b].sortid end)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
 function world:create_entity(t)
 	local eid = self._entity_id + 1
 	self._entity_id = eid
 	self[eid] = {}
 	self._entity[eid] = true
 	local entity = self[eid]
-	for c, args in pairs(t) do
-		self:register_component(eid, c)
+	for c, args in sortcomponent(self, t) do
 		entity[c] = self:create_component(c, args)
+		self:register_component(eid, c)
 	end
 	return eid
 end
@@ -181,7 +206,6 @@ end
 
 function world:clear_removed()
 	local set = self._removed
-	local typeclass = self._component_type
 
 	for i = #set,1,-1 do
 		local item = set[i]
@@ -190,18 +214,14 @@ function world:clear_removed()
 		if c ~= nil then
 			-- delete component
 			local component_type = item[2]
-			local del = typeclass[component_type].delete
-			if del then
-				del(c)
-			end
+			local ti = assert(self._components[component_type], component_type)
+			component_delete(self, ti, c)
 		else
 			local e = item[2]
 			-- delete entity
 			for component_type, c in pairs(e) do
-				local del = typeclass[component_type].delete
-				if del then
-					del(c)
-				end
+				local ti = assert(self._components[component_type], component_type)
+				component_delete(self, ti, c)
 			end
 		end
 	end
@@ -334,6 +354,22 @@ function world:enable_system(name, enable)
 	end
 end
 
+local function check_comonpent(w)
+	local typeinfo = w._schema
+	for k,v in ipairs(typeinfo.list) do
+		if v.uncomplete then
+			error( v.name .. " is uncomplete")
+		end
+	end
+	for k in pairs(typeinfo._undefined) do
+		if typeinfo.map[k] then
+		typeinfo._undefined[k] = nil
+		else
+			error( k .. " is undefined in " .. typeinfo._undefined[k])
+		end
+	end
+end
+
 -- config.packages
 -- config.systems
 -- config.update_order
@@ -342,9 +378,8 @@ end
 function ecs.new_world(config)
 	local w = setmetatable({
 		args = config.args,
-		_component_type = {},	-- component type objects
-		schema = create_schema.new(),
-
+		_schema = {},
+		_components = {},
 		_entity = {},	-- entity id set
 		_entity_id = 0,
 		_set = setmetatable({}, { __mode = "kv" }),
@@ -353,22 +388,11 @@ function ecs.new_world(config)
 		_switchs = {},	-- for enable/disable
 	}, world)
 
-	w.schema:typedef("tag", "boolean", true)
-	w.schema:primtype("entityid", -1)
-
 	-- load systems and components from modules
 	local class = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
 
-	w.schema:check()
-
-	for k,v in pairs(w.schema.map) do
-		w._component_type[k] = component(v, w)
-	end
-	w._schema =  {
-		map = w.schema.map
-	}
-	w.schema.map = nil
-	w.schema.list = nil
+	check_comonpent(w)
+	component.solve(w)
 
 	-- init system
 	w._systems = system.lists(class.system)

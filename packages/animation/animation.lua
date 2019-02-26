@@ -1,18 +1,15 @@
 local ecs = ...
 local world = ecs.world
-local schema = ecs.schema
 
 local asset = import_package "ant.asset"
 local timer = import_package "ant.timer"
 local animodule = require "hierarchy.animation"
 
-schema:type "animation_content"		
+local animation_content = ecs.component "animation_content"		
 	.ref_path "respath" ()
 	.name "string"
 	.scale "real" (1)	
-	.looptimes "int" (0)
-
-local animation_content = ecs.component "animation_content"
+	.looptimes "int" (0)	
 
 local function calc_ratio(current_counter, ani)
 	local handle = assert(ani.handle)
@@ -38,23 +35,32 @@ function animation_content:init()
 	return self
 end
 
-schema:type "aniref"
+ecs.component "aniref"
 	.idx "int"	-- TODO: need use name to referent which animation
 	.weight "real"
 
-schema:type "pose"
+ecs.component "pose"
 	.anirefs "aniref[]"
 	.name "string"
 
-schema:type "pose_state"
+ecs.component "pose_state"
 	.pose "pose"
 
-schema:type "animation"
+local animation = ecs.component "animation"  { depend = "skeleton" }
 	.pose_state "pose_state"
 	.anilist "animation_content[]"
 	.blendtype "string" ("blend")
 
-schema:typedef("skeleton", "resource")
+function animation:postinit(e)
+	local ske = e.skeleton
+	local numjoints = #ske.assetinfo.handle
+	self.aniresult = animodule.new_ani_result(numjoints)
+	for _, ani in ipairs(self.anilist) do			
+		ani.sampling_cache = animodule.new_sampling_cache(numjoints)
+	end
+end
+
+ecs.component_alias("skeleton", "resource")
 
 local anisystem = ecs.system "animation_system"
 
@@ -145,20 +151,6 @@ function anisystem:update()
 
 		if not fix_root then
 			update_transform_from_animation(anicomp.aniresult, ske, e)
-		end
-	end
-end
-
-function anisystem:post_init()
-	for eid in world:each_new("animation") do
-		local e = world[eid]
-		local ske = assert(e.skeleton)
-		local anicomp = e.animation
-		local numjoints = #ske.assetinfo.handle
-		anicomp.aniresult = animodule.new_ani_result(numjoints)
-		
-		for _, ani in ipairs(anicomp.anilist) do			
-			ani.sampling_cache = animodule.new_sampling_cache(numjoints)
 		end
 	end
 end

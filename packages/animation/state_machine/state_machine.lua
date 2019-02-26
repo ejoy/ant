@@ -1,21 +1,19 @@
 local ecs = ...
 local world = ecs.world
-local schema = ecs.schema
 
-schema:type "state"
+ecs.component "state"
 	.name "string"
 	.pose "pose"
 
-schema:type "transmit_target"
+ecs.component "transmit_target"
 	.targetname "string"
 	.duration "real"
 
-schema:type "transmit"	
+ecs.component "transmit"	
 	.targets "transmit_target[]"
 
-schema:typedef("state_chain", "resource")
+local state_chain = ecs.component_alias("state_chain", "resource")
 
-local state_chain = ecs.component "state_chain"
 function state_chain:init()
 	local statecfg = self.assetinfo
 	self.target = statecfg.main_entry

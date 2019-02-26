@@ -1,13 +1,12 @@
 --luacheck: ignore self
 local ecs = ...
 local world = ecs.world
-local schema = ecs.schema
 
 
 local ru = import_package "ant.render".util
 local ms = import_package "ant.math".stack
 
-schema:type "widget"
+ecs.component "widget"
 	.mesh "mesh"
 	.material "material"
 	.srt "srt"

@@ -1,8 +1,7 @@
 local ecs = ...
 local world = ecs.world
-local schema = ecs.schema
 
-schema:type "foobar"
+ecs.component "foobar"
 	.x "real"
 	.y "real"
 
