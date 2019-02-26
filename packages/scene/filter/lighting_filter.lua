@@ -104,9 +104,8 @@ local function append_lighting_properties(filter)
 	add_directional_light_properties(lighting_properties)
 	add_ambient_light_propertices(lighting_properties)
 
-	local camera = world:first_entity("main_camera")
-	local eyepos = ms(camera.position, "m")
-	lighting_properties["u_eyepos"] = {name = "Eye Position", type="v4", value=eyepos}
+	local camera_entity = world:first_entity("main_camera")	
+	lighting_properties["u_eyepos"] = {name = "Eye Position", type="v4", value=camera_entity.camera.eyepos}
 end
 
 --- scene lighting fitler system ------------------------
@@ -117,7 +116,7 @@ lighting_primitive_filter_sys.dependby "final_filter_system"
 
 function lighting_primitive_filter_sys:update()		
 	for _, eid in world:each("primitive_filter") do
-		local e = world[eid]
+		local e = world[eid]		
 		local filter = e.primitive_filter
 		if not filter.no_lighting then
 			append_lighting_properties(filter)

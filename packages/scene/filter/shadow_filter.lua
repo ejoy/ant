@@ -58,7 +58,7 @@ end
 
 function shadow_primitive_filter_sys:update()		
 	for _, eid in world:each("primitive_filter") do
-		local e = world[eid]
+		local e = world[eid]		
 		local filter = e.primitive_filter
 		local shadowproperties = filter.render_properties.shadow		
 		get_shadow_properties(shadowproperties.uniforms, shadowproperties.textures)

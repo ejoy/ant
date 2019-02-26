@@ -12,24 +12,12 @@ local mu = math.util
 local ms = math.stack
 local fs = require "filesystem"
 
-local asset = import_package "ant.asset"
 local computil = import_package "ant.render".components
 
 local math_baselib = require "math3d.baselib"
 
 local pickup_fb_viewid = 101
 local pickup_blit_viewid = pickup_fb_viewid + 1
-
-local function deep_copy(t)
-	if type(t) == "table" then
-		local tmp = {}
-		for k, v in pairs(t) do
-			tmp[k] = deep_copy(v)
-		end
-		return tmp
-	end
-	return t
-end
 
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,
@@ -58,9 +46,10 @@ local function init_pickup_buffer(pickup_entity)
 
     comp.pick_fb = bgfx.create_frame_buffer({comp.pick_buffer, comp.pick_dbuffer}, true)
     comp.rb_buffer = bgfx.create_texture2d(w, h, false, 1, "RGBA8", "bwbr-p+p*pucvc")
-    --@]
-
-	bgfx.set_view_frame_buffer(pickup_entity.viewid, assert(comp.pick_fb))
+	--@]
+	
+	local camera = pickup_entity.camera
+	bgfx.set_view_frame_buffer(camera.viewid, assert(comp.pick_fb))
 end
 
 local function readback_render_data(pickup_entity)
@@ -95,23 +84,21 @@ end
 
 local function update_viewinfo(e, clickpt) 
 	local maincamera = world:first_entity("main_camera")  
+	local cameracomp = maincamera.camera
 	local mc_vr = maincamera.view_rect
 	local w, h = mc_vr.w, mc_vr.h
-	
-	local pos = ms(maincamera.position, "T")
-	local rot = ms(maincamera.rotation, "T")
-	local pt3d = math_baselib.screenpt_to_3d(
+
+	local result = math_baselib.screenpt_to_3d(
 		{
 			clickpt.x, clickpt.y, 0,
 			clickpt.x, clickpt.y, 1
-		}, maincamera.frustum, pos, rot, {w=w, h=h})
+		}, cameracomp.frustum, ~cameracomp.eyepos, ~cameracomp.viewdir, {w=w, h=h})
 
-	local eye, at = {pt3d[1], pt3d[2], pt3d[3]}, {pt3d[4], pt3d[5], pt3d[6]}
-	local dir = ms(at, eye, "-nT")
+	local pickupcamera = e.camera
+	local eye, at = ms:vector(result[1]), ms:vector(result[2])
 
-	ms(assert(e.position), eye, "=")
-	ms(assert(e.rotation), dir, "D=")
-
+	pickupcamera.eyepos(eye)
+	pickupcamera.viewdir(ms(at, eye, "-nP"))
 end
 
 -- update material system
@@ -127,12 +114,7 @@ function pickup_material_sys:update()
 		if filter then
 			local materials = e.pickup.materials
 
-			for _, elem in ipairs{
-					{result=filter.result, material=materials.opaticy},
-					{result=filter.transparent_result, material=materials.transparent},
-				} do
-				local result = elem.result 
-				local material = elem.material
+			local function replace_material(result, material)
 				if result then
 					for _, item in ipairs(result) do
 						item.material = material
@@ -142,6 +124,9 @@ function pickup_material_sys:update()
 					end
 				end
 			end
+
+			replace_material(filter.result, materials.opaticy)
+			replace_material(filter.transparent_result, materials.transparent)
 		end
 	end
 end
@@ -181,24 +166,34 @@ pickup_sys.depend "entity_rendering"
 
 pickup_sys.dependby "end_frame"
 
-local primitive_filter_default = {
+local vr_w, vr_h = 8, 8
+local default_frustum = {type="mat"}
+mu.frustum_from_fov(default_frustum, 0.1, 100, 1, vr_w / vr_h)
+
+local default_camera = {
+	viewid = pickup_fb_viewid,
+	eyepos = {0, 0, 0, 1},
+	viewdir = {0, 0, 0, 0},
+	frustum = default_frustum,
+}
+
+local default_primitive_filter = {
 	view_tag  = "pickup_viewtag",
 	filter_tag = "can_select",
 	no_lighting = true,
 }
-local function add_primitive_filter(eid)
-	world:add_single_componet(eid, "primitive_filter", primitive_filter_default)
-end
 
-local function remove_primitive_filter(eid)
-	world:remove_component(eid, "primitive_filter")
+local function enable_pickup(eid, enable)
+	if enable then
+		world:add_single_componet(eid, "camera", default_camera)
+		world:add_single_componet(eid, "primitive_filter", default_primitive_filter)
+	else
+		world:remove_component(eid, "camera")
+		world:remove_component(eid, "primitive_filter")
+	end
 end
 
 local function add_pick_entity()
-	local vr_w, vr_h = 8, 8
-	local frustum = {type="mat"}
-	mu.frustum_from_fov(frustum, 0.1, 100, 1, vr_w / vr_h)
-
 	local eid = world:create_entity {
 		pickup = {
 			materials = {
@@ -208,23 +203,19 @@ local function add_pick_entity()
 				transparent = {
 					ref_path = {package = "ant.resources", filename = fs.path "pickup_transparent.material"}
 				}
-			},			
-		},
+			},
+		},		
 		clear_component = {
 			color = 0,
 			depth = 1,
 			stencil = 0,
-		},
-		viewid = pickup_fb_viewid,
+		},		
 		view_rect = {
 			x = 0, y = 0,
 			w = vr_w, h = vr_h,
 		},
-		position = {0, 0, 0, 1},
-		rotation = {0, 0, 0, 0},
-		frustum = frustum,
 		name = "pickup",
-		pickup_viewtag = true,
+		pickup_viewtag = true,		
 	}
 
 	init_pickup_buffer(world[eid])	
@@ -240,7 +231,7 @@ function pickup_sys:init()
 				local entity = world[pickup_eid]
 				if entity then
 					update_viewinfo(entity, point2d(x, y))
-					add_primitive_filter(pickup_eid)
+					enable_pickup(pickup_eid, true)
 					entity.pickup.ispicking = true
 				end
 			end
@@ -271,7 +262,7 @@ function pickup_sys:update()
 
 					world:update_func("pickup")()
 		
-					remove_primitive_filter(pickupeid)
+					enable_pickup(pickupeid, false)
 					pu_comp.ispicking = nil
 					pu_comp.reading_frame = nil					
 				end	

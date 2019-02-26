@@ -82,21 +82,10 @@ lscreenpt_to_3d(lua_State *L){
 	glm::mat4x4 matProj = projection_mat(f);
 
 	// get camera position & rotation
-	glm::vec3 position, euler;
-	luaL_checktype(L, 3, LUA_TTABLE);
+	glm::vec3 *position = (glm::vec3*)lua_touserdata(L, 3);
+	glm::vec3 *viewDir = (glm::vec3*)lua_touserdata(L, 4);
 
-	for (int ii = 0; ii < 3; ++ii) {
-		lua_geti(L, 3, ii + 1);
-		position[ii] = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-
-		lua_geti(L, 4, ii + 1);
-		euler[ii] = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-	}
-
-	glm::vec3 viewDir = to_viewdir(glm::radians(euler));
-	glm::mat4x4 matView = glm::lookAtLH(position, position + viewDir, glm::vec3(0, 1, 0));
+	glm::mat4x4 matView = glm::lookAtLH(*position, *position + *viewDir, glm::vec3(0, 1, 0));
 	
 	// get viewport size
 	lua_getfield(L, 5, "w");
@@ -128,7 +117,8 @@ lscreenpt_to_3d(lua_State *L){
 	auto count = (int)vv.size() * 3;
 	lua_createtable(L, count, 0);
 	for (int ii = 0; ii < count; ++ii) {
-		lua_pushnumber(L, *cv++);
+		auto p = lua_newuserdata(L, sizeof(glm::vec3));
+		memcpy(p, &vv[ii], sizeof(glm::vec3));		
 		lua_seti(L, -2, ii + 1);
 	}
 

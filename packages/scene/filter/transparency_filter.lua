@@ -8,7 +8,7 @@ transparency_filter_sys.dependby "final_filter_system"
 --luacheck: ignore self
 function transparency_filter_sys:update()	
 	for _, eid in world:each("primitive_filter") do
-		local e = world[eid]
+		local e = world[eid]		
 		local filter = e.primitive_filter
 		local transparent_result, opaticy_result= {}, {}
 		for _, r in ipairs(filter.result) do

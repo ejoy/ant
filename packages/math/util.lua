@@ -121,10 +121,11 @@ local function update_frustum_from_aspect(rt, frustum)
 	frustum.r = tmp_hw
 end
 
-function util.view_proj_matrix(camera_entity)	
-	local view = ms(camera_entity.position, camera_entity.rotation, "dLP")
-	local vr = camera_entity.view_rect
-	local frustum = assert(camera_entity.frustum)
+function util.view_proj_matrix(e)
+	local camera = assert(e.camera)
+	local view = ms(camera.eyepos, camera.viewdir, "LP")
+	local vr = e.view_rect
+	local frustum = assert(camera.frustum)
 	update_frustum_from_aspect(vr, frustum)
 	
 	return view, util.proj(frustum)

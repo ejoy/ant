@@ -17,9 +17,9 @@ cull_sys.depend "primitive_filter_system"
 cull_sys.dependby "lighting_primitive_filter_system"
 
 function cull_sys:update()	
-	for _, eid in world:each("primitive_filter") do
-		local e = world[eid]
-		local filter = e.primitive_filter		
+	for _, eid in world:each("camera") do
+		local e = world[eid]		
+		local filter = e.primitive_filter
 		local view, proj = mu.view_proj_matrix(e)
 		-- plane is in world space
 		local planes = math3d_baselib.extract_planes(ms(proj, view, "*m"))

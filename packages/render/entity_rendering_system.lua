@@ -22,9 +22,10 @@ local function draw_primitives(vid, result, mode, render_properties)
 end
 
 function draw_entity_sys:update()
-	for _, eid in world:each("primitive_filter") do
+	for _, eid in world:each("camera") do
 		local e = world[eid]
-		local viewid = assert(e.viewid)
+		local camera = e.camera
+		local viewid = assert(camera.viewid)
 
 		bgfx.touch(viewid)
 		local filter = e.primitive_filter

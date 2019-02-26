@@ -22,6 +22,8 @@ function path:save()
 	return self:string()
 end
 
+schema:typedef("point", "vector")
+
 schema:typedef("position", "vector")
 schema:typedef("rotation", "vector")
 schema:typedef("scale", "vector")
@@ -44,8 +46,6 @@ schema:type "frustum"
 	.t "int" (1)
 	.b "int" (-1)
 	.ortho "boolean" (false)
-
-schema:typedef("viewid", "int", 0)
 
 schema:type "respath"
 	.package "string"

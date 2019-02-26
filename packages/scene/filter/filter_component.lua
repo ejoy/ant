@@ -1,9 +1,6 @@
 local ecs = ...
 local schema = ecs.schema
 
-schema:typedef("view_tag", "string")
-schema:typedef("filter_tag", "string")
-
 schema:type "primitive_filter"
 	.view_tag "view_tag" ("main_viewtag")
 	.filter_tag "filter_tag" ("can_render")
