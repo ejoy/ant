@@ -5,7 +5,7 @@ local doPost
 local component
 local entitys
 
-local function sortpairs(w, t)
+local function sortcomponent(w, t)
     local sort = {}
     for k in pairs(t) do
         sort[#sort+1] = k
@@ -53,7 +53,7 @@ local function _load_entity(w, tree)
         end
     end
     w[eid] = tree
-    for name in sortpairs(w, tree) do
+    for name in sortcomponent(w, tree) do
         w:register_component(eid, name)
     end
     return eid
