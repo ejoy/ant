@@ -18,7 +18,7 @@ schema:type "view_rect"
 local view_rect_sys = ecs.system "view_rect_system"
 
 function view_rect_sys:update()
-	for _, eid in world:each("view_rect") do
+	for _, eid in world:each("camera") do
 		local entity = world[eid]
 		local vid = entity.camera.viewid
 		if vid ~= nil then

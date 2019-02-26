@@ -47,9 +47,6 @@ local function init_pickup_buffer(pickup_entity)
     comp.pick_fb = bgfx.create_frame_buffer({comp.pick_buffer, comp.pick_dbuffer}, true)
     comp.rb_buffer = bgfx.create_texture2d(w, h, false, 1, "RGBA8", "bwbr-p+p*pucvc")
 	--@]
-	
-	local camera = pickup_entity.camera
-	bgfx.set_view_frame_buffer(camera.viewid, assert(comp.pick_fb))
 end
 
 local function readback_render_data(pickup_entity)
@@ -187,6 +184,10 @@ local function enable_pickup(eid, enable)
 	if enable then
 		world:add_single_componet(eid, "camera", default_camera)
 		world:add_single_componet(eid, "primitive_filter", default_primitive_filter)
+		local e = world[eid]
+		local camera = e.camera
+		local comp = e.pickup
+		bgfx.set_view_frame_buffer(camera.viewid, assert(comp.pick_fb))
 	else
 		world:remove_component(eid, "camera")
 		world:remove_component(eid, "primitive_filter")
