@@ -19,7 +19,7 @@ function testscene:init()
 			r = {0, 0, 0, 0},
 			t = {0, 0, 0, 1},
 		},
-		can_render = true,
+		--can_render = true,
 		name = "root",
 		main_viewtag = true,
 	}
@@ -38,7 +38,7 @@ function testscene:init()
 		parent = {
 			eid = root_eid,
 		},
-		can_render = true,
+		--can_render = true,
 		name = "child1",
 		main_viewtag = true,
 	}

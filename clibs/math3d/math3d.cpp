@@ -244,6 +244,35 @@ get_id(lua_State *L, int index) {
 	return v;
 }
 
+static inline int64_t
+get_ref_id(lua_State *L, struct lastack *LS, int index) {
+	struct refobject * ref = (struct refobject *)lua_touserdata(L, index);
+	if (lua_rawlen(L, index) != sizeof(*ref)) {
+		luaL_error(L, "The userdata is not a ref object");
+	}
+	if (ref->LS == NULL) {
+		ref->LS = LS;
+	} else if (ref->LS != LS) {
+		luaL_error(L, "ref object not belongs this stack");
+	}
+
+	return ref->id;
+}
+
+
+static inline int64_t
+get_stack_id(lua_State *L, struct lastack *LS, int index) {
+	const int type = lua_type(L, index);
+	switch (type) {
+	case LUA_TNUMBER:
+		return get_id(L, index);
+	case LUA_TUSERDATA:
+		return get_ref_id(L, LS, index);
+	default:
+		return -1;
+	}
+}
+
 static void
 assign_ref(lua_State *L, struct refobject * ref, int64_t rid) {
 	int64_t markid = lastack_mark(ref->LS, rid);
@@ -263,12 +292,12 @@ lassign(lua_State *L) {
 	case LUA_TNIL:
 	case LUA_TNONE:
 		release_ref(L, ref);
-		break;	
+		break;
 	case LUA_TNUMBER: {
 		if (ref->LS == NULL) {
 			return luaL_error(L, "Init ref object first : use stack(ref, id, '=')");
 		}
-		int64_t rid = get_id(L, 2);		
+		int64_t rid = get_id(L, 2);
 		if (!lastack_sametype(rid, ref->id)) {
 			return luaL_error(L, "assign operation : type mismatch");
 		}
@@ -379,22 +408,6 @@ get_table_value(lua_State *L, int idx) {
 	float s = lua_tonumber(L, -1);
 	lua_pop(L, 1);
 	return s;
-}
-
-static inline int64_t
-get_ref_id(lua_State *L, struct lastack *LS, int index) {
-	struct refobject * ref = (struct refobject *)lua_touserdata(L, index);
-	if (lua_rawlen(L, index) != sizeof(*ref)) {
-		luaL_error(L, "The userdata is not a ref object");
-	}
-	if (ref->LS == NULL) {
-		ref->LS = LS;
-	}
-	else if (ref->LS != LS) {
-		luaL_error(L, "ref object not belongs this stack");
-	}
-
-	return ref->id;
 }
 
 static inline int64_t
@@ -1260,6 +1273,17 @@ split_mat_to_srt(lua_State *L, struct lastack *LS){
 	lastack_pushvec4(LS, &scale.x);	
 }
 
+static inline void
+base_axes_from_forward_vector(const glm::vec4& forward, glm::vec4& right, glm::vec4 &up) {
+	if (is_zero(forward - glm::vec4(0, 0, 1, 0))) {
+		up = glm::vec4(0, 1, 0, 0);
+		right = glm::vec4(1, 0, 0, 0);
+	} else {
+		right = glm::vec4(glm::cross(glm::vec3(0, 1, 0), *((glm::vec3*)&forward.x)), 0);
+		up = glm::vec4(glm::cross(*(glm::vec3*)(&forward.x), *((glm::vec3*)&right.x)), 0);
+	}
+}
+
 
 static inline void
 rotation_to_base_axis(lua_State *L, struct lastack *LS){
@@ -1285,13 +1309,7 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 	}
 	
 	glm::vec4 xdir, ydir;
-	if (is_zero(zdir - glm::vec4(0, 0, 1, 0))){
-		ydir = glm::vec4(0, 1, 0, 0);
-		xdir = glm::vec4(1, 0, 0, 0);
-	} else {
-		xdir = glm::vec4(glm::cross(glm::vec3(0, 1, 0), *((glm::vec3*)&zdir.x)), 0);
-		ydir = glm::vec4(glm::cross(*(glm::vec3*)(&zdir.x), *((glm::vec3*)&xdir.x)), 0);
-	}
+	base_axes_from_forward_vector(zdir, xdir, ydir);
 
 	lastack_pushvec4(LS, &zdir.x);
 	lastack_pushvec4(LS, &ydir.x);
@@ -1794,15 +1812,17 @@ new_temp_euler(lua_State *L) {
 static int
 to_srt(lua_State *L) {
 	int numarg = lua_gettop(L);
-	if (numarg != 3) {
+	if (numarg != 4) {
 		luaL_error(L, "need 3 arg, %d provided", numarg);
 	}
 
-	struct refobject *scale = (struct refobject*)lua_touserdata(L, 1);
+	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+
+	struct refobject *scale = (struct refobject*)lua_touserdata(L, 2);
 	struct lastack *LS = scale->LS;
-	struct refobject *rotation = (struct refobject*)lua_touserdata(L, 2);
+	struct refobject *rotation = (struct refobject*)lua_touserdata(L, 3);
 	assert(LS == rotation->LS);
-	struct refobject *translation = (struct refobject*)lua_touserdata(L, 3);
+	struct refobject *translation = (struct refobject*)lua_touserdata(L, 4);
 	assert(LS == translation->LS);
 
 	int scaletype, rotationtype, translationtype;
@@ -1830,6 +1850,42 @@ to_srt(lua_State *L) {
 	return 1;
 }
 
+//static int
+//new_ref(lua_State *L) {
+//	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+//	struct lastack *LS = bp->LS;
+//
+//	const char* type = lua_tostring(L, 2);
+//
+//	if (strcmp(type, "vector") == 0) {
+//
+//	}
+//
+//	struct refobject* ref = (struct refobject *)lua_newuserdata(L, sizeof(refobject));
+//	int num = lua_gettop(L);
+//
+//}
+
+static int
+lbase_axes_from_forward_vector(lua_State *L) {
+	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct lastack* LS = bp->LS;
+
+	auto forwardid = get_stack_id(L, LS, 2);
+	int type;
+	glm::vec4 *forward = (glm::vec4 *)lastack_value(LS, forwardid, &type);
+	glm::vec4 right, up;
+	base_axes_from_forward_vector(*forward, right, up);
+
+	lastack_pushvec4(LS, &up.x);
+	pushid(L, pop(L, LS));
+
+	lastack_pushvec4(LS, &right.x);
+	pushid(L, pop(L, LS));
+
+	return 2;
+}
+
 static int
 lnew(lua_State *L) {	
 	struct boxpointer *bp = (struct boxpointer *)lua_newuserdata(L, sizeof(*bp));	
@@ -1844,6 +1900,7 @@ lnew(lua_State *L) {
 			{ "matrix", new_temp_matrix },
 			{ "quaternion", new_temp_quaternion},
 			{ "euler", new_temp_euler},
+			{ "base_axes", lbase_axes_from_forward_vector},
 			{ "to_srt", to_srt},
 			{ NULL, NULL },
 		};

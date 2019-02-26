@@ -21,7 +21,7 @@ function primitive_filter_sys:update()
 			local ce = world[eid]
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
-			if vt and ft and cu.is_entity_visible(ce) then
+			if vt and ft then
 				ru.insert_primitive(eid, 
 					assert(ce.mesh.assetinfo).handle,
 					assert(ce.material.content),

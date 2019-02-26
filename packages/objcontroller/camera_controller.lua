@@ -4,6 +4,9 @@ local world = ecs.world
 ecs.import "ant.inputmgr"
 
 local timer = import_package "ant.timer"
+local mathpkg = import_package "ant.math"
+local ms = mathpkg.stack
+local mu = mathpkg.util
 
 local objutil = require "util"
 local objctrller = require "objcontroller"
@@ -15,7 +18,8 @@ camera_controller_system.depend "camera_init"
 camera_controller_system.depend "objcontroller_system"
 
 function camera_controller_system:init()
-	local camera = world:first_entity("main_camera")
+	local camera_entity = world:first_entity("main_camera")
+	local cameracomp = camera_entity.camera
 	local speed_persecond = 30
 	local function calc_step(speed, delta)
 		return speed * delta
@@ -30,23 +34,29 @@ function camera_controller_system:init()
 		hit.enable = false
 	end)
 
+	local function step(axis, scale)
+		ms(cameracomp.eyepos, cameracomp.eyepos, axis, {calc_step(speed_persecond, timer.deltatime * 0.001) * scale}, "*+=")			
+	end
+
 	objctrller.bind_constant("move_forward", function (scale)
 		if hit.enable then
-			objutil.move(camera, 0, 0, calc_step(speed_persecond, timer.deltatime * 0.001) * scale)
+			step(cameracomp.viewdir, scale)			
 			return "handled"
 		end
 	end)
 	
 	objctrller.bind_constant("move_left", function (scale)
 		if hit.enable then
-			objutil.move(camera, calc_step(speed_persecond, timer.deltatime * 0.001) * scale, 0, 0)
+			local xaxis = ms:base_axes(cameracomp.viewdir)
+			step(xaxis, scale)
 			return "handled"
 		end
 	end)
 	
 	objctrller.bind_constant("move_up", function (scale) 
 		if hit.enable then
-			objutil.move(camera, 0, calc_step(speed_persecond, timer.deltatime * 0.001) * scale, 0)
+			local _, yaxis = ms:base_axes(cameracomp.viewdir)
+			step(yaxis, scale)
 			return "handled"
 		end
 	end)	
@@ -56,7 +66,10 @@ function camera_controller_system:init()
 		local function pixel2angle(pixel)
 			return pixel * 0.1
 		end
-		objutil.rotate(camera, pixel2angle(dy), pixel2angle(dx))
+		
+		local rotation = ms({pixel2angle(dy), pixel2angle(dx), 0, 0}, cameracomp.viewdir, "D+T")
+		rotation[1] = mu.limit(rotation[1], -89.9, 89.9)	-- only yaw angle should limit in [-90, 90]
+		ms(cameracomp.viewdir, rotation, "d=")
 		hit[1], hit[2] = event.x, event.y
 	end)	
 end
