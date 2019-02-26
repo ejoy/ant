@@ -9,7 +9,7 @@ else
 default : libant-$(PLAT).a
 endif
 
-LIBS= bgfx bullet hierarchy math3d thread terrain crypt debugger lsocket protocol remotedebug firmware platform window datalist
+LIBS= bgfx bullet hierarchy math3d thread terrain crypt lsocket protocol remotedebug firmware platform window datalist
 
 define MakeLibs
 $(ODIR)/lib$(1).a : | $(ODIR)

@@ -1,6 +1,6 @@
 local rdebug = require 'remotedebug'
 local source = require 'debugger.backend.worker.source'
-local hookmgr = require 'debugger.hookmgr'
+local hookmgr = require 'remotedebug.hookmgr'
 
 local info = {}
 
