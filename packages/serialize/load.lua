@@ -5,6 +5,24 @@ local doPost
 local component
 local entitys
 
+local function sortpairs(w, t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    local ti = w._components
+    table.sort(sort, function (a, b) return ti[a].sortid < ti[b].sortid end)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
 local function init_entitys(w)
     local res = {}
     for _, eid in w:each "serialize" do
@@ -16,7 +34,7 @@ end
 local function getPost(w)
     if not postPool[w] then
         local t = {}
-        for k, v in pairs(w._schema.map) do
+        for k, v in pairs(w._components) do
             if v.method and v.method.init then
                 t[k] = v.method.init
             end
@@ -35,7 +53,7 @@ local function _load_entity(w, tree)
         end
     end
     w[eid] = tree
-    for name in pairs(tree) do
+    for name in sortpairs(w, tree) do
         w:register_component(eid, name)
     end
     return eid

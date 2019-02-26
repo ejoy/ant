@@ -4,22 +4,23 @@ local log = log and log(...) or print
 local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
-local createschema = require "schema"
+local component_init = component.init
+local component_delete = component.delete
 
 local ecs = {}
 local world = {} ; world.__index = world
 
-function world:create_component_v1(c)
-	assert(self._component_type[c], c)
-	return self._component_type[c].init()
-end
-
 function world:create_component(c, args)
-	assert(self._component_type[c], c)
-	return self._component_type[c].initp(args)
+	local ti = assert(self._components[c], c)
+	return component_init(self, ti, args)
 end
 
 function world:register_component(eid, c)
+	local ti = assert(self._components[c], c)
+	if ti.method and ti.method.postinit then
+		local e = self[eid]
+		ti.method.postinit(e[c], e)
+	end
 	local set = self._set[c]
 	if set then
 		set[#set+1] = eid
@@ -28,6 +29,12 @@ function world:register_component(eid, c)
 	if newset then
 		newset[#newset+1] = eid
 	end
+end
+
+function world:register_all_component(eid)
+    for name in pairs(self[eid]) do
+        self:register_component(eid, name)
+    end
 end
 
 function world:register_entity()
@@ -69,8 +76,8 @@ function world:create_entity(t)
 	self._entity[eid] = true
 	local entity = self[eid]
 	for c, args in pairs(t) do
-		self:register_component(eid, c)
 		entity[c] = self:create_component(c, args)
+		self:register_component(eid, c)
 	end
 	return eid
 end
@@ -181,7 +188,6 @@ end
 
 function world:clear_removed()
 	local set = self._removed
-	local typeclass = self._component_type
 
 	for i = #set,1,-1 do
 		local item = set[i]
@@ -190,18 +196,14 @@ function world:clear_removed()
 		if c ~= nil then
 			-- delete component
 			local component_type = item[2]
-			local del = typeclass[component_type].delete
-			if del then
-				del(c)
-			end
+			local ti = assert(self._components[component_type], component_type)
+			component_delete(self, ti, c)
 		else
 			local e = item[2]
 			-- delete entity
 			for component_type, c in pairs(e) do
-				local del = typeclass[component_type].delete
-				if del then
-					del(c)
-				end
+				local ti = assert(self._components[component_type], component_type)
+				component_delete(self, ti, c)
 			end
 		end
 	end
@@ -358,8 +360,8 @@ end
 function ecs.new_world(config)
 	local w = setmetatable({
 		args = config.args,
-		_component_type = {},	-- component type objects
 		_schema = {},
+		_components = {},
 		_entity = {},	-- entity id set
 		_entity_id = 0,
 		_set = setmetatable({}, { __mode = "kv" }),
@@ -372,10 +374,7 @@ function ecs.new_world(config)
 	local class = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
 
 	check_comonpent(w)
-
-	for k,v in pairs(w._schema.map) do
-		w._component_type[k] = component(v, w)
-	end
+	component.solve(w)
 
 	-- init system
 	w._systems = system.lists(class.system)

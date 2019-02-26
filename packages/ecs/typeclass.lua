@@ -56,6 +56,7 @@ return function(world, import, class)
 	local schema = createschema(world._schema)
 	local class_register = { world = world, import = import }
 	local class = class or {}
+	world._components = world._schema.map
 
 	local function register(args)
 		local what = args.type

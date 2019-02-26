@@ -26,7 +26,7 @@ local function init (w)
         return
     end
     inited = true
-    typeinfo = w._schema.map
+    typeinfo = w._components
     for _,v in pairs(typeinfo) do
         gen_ref(v)
     end

@@ -36,7 +36,7 @@ function fields_mt:__index(name)
 	return self
 end
 
-local callback =  {init=true, delete=true, save=true, postsave=true}
+local callback = {init=true, delete=true, save=true, postinit=true, postsave=true}
 
 function fields_mt:__newindex(key, func)
 	assert(type(key) == "string")
@@ -82,6 +82,15 @@ local function parse_type(t)
 end
 
 function fields_mt:__call(typename)
+	if type(typename) == 'table' then
+		local obj = self._schema.map[self._name]
+		if type(typename.depend) ~= 'table' then
+			obj.depend = { typename.depend }
+		else
+			obj.depend = typename.depend
+		end
+		return setmetatable(self, defaults_mt)
+	end
 	local attrib = self._current_field
 	self._current_field = nil
 	local field_n = #attrib
