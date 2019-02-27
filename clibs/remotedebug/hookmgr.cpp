@@ -251,6 +251,19 @@ struct hookmgr {
         ))
     { }
 
+    void probe(lua_State* hL, const char* name) {
+        if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+            lua_pop(cL, 1);
+            return;
+        }
+        set_host(cL, hL);
+        lua_pushstring(cL, name);
+        if (lua_pcall(cL, 1, 0, 0) != LUA_OK) {
+            lua_pop(cL, 1);
+            return;
+        }
+    }
+
     void hook(lua_State* hL, lua_Debug* ar) {
         step_hook(hL, ar);
         break_hook(hL, ar);
@@ -442,4 +455,12 @@ int luaopen_remotedebug_hookmgr(lua_State* L) {
     };
     luaL_setfuncs(L, lib, 1);
     return 1;
+}
+
+extern "C"
+void probe(lua_State* cL, lua_State* hL, const char* name) {
+    if (LUA_TUSERDATA != lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_MGR)) {
+        return;
+    }
+    ((hookmgr*)lua_touserdata(cL,-1))->probe(hL, name);
 }

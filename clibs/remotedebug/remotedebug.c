@@ -12,6 +12,7 @@ static int DEBUG_CLIENT = 0;	// client L in host VM for hook
 static int DEBUG_HOOK = 0;	// hook function in client VM (void * in host VM)
 
 int eval_value(lua_State *L, lua_State *cL);
+void probe(lua_State* cL, lua_State* hL, const char* name);
 
 static void
 clear_client(lua_State *L) {
@@ -153,35 +154,8 @@ lhost_probe(lua_State *L) {
 		// debugger not start
 		return 0;
 	}
-	lua_Debug ar;
-	if (lua_getstack(L, 1, &ar) == 0 || lua_getinfo(L, "l", &ar) == 0) {
-		return 0;
-	}
 	lua_State *cL = lua_touserdata(L, -1);
-	lua_State *debugL = L;
-	int index = 1;
-	int t = lua_type(L, index);
-	if (t == LUA_TTHREAD) {
-		debugL = lua_tothread(L, index);
-		index ++;
-		t = lua_type(L, index);
-	}
-	if (t == LUA_TSTRING) {
-		const char * p = lua_tostring(L, index);
-		lua_pushlightuserdata(cL, (void *)p);
-	} else {
-		lua_pushnil(cL);
-	}
-	lua_pushinteger(cL, ar.currentline);
-	lua_pushlightuserdata(cL, debugL);
-	if (lua_resume(cL, NULL, 3) == LUA_YIELD) {
-		return 0;
-	}
-	// todo : remove this printf
-	printf("err: %s\n", lua_tostring(cL, -1));
-
-	// shutdown the debugger
-	clear_client(L);
+	probe(cL, L, luaL_checkstring(L, 1));
 	return 0;
 }
 
