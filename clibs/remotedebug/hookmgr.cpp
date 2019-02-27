@@ -8,7 +8,12 @@
 
 static int HOOK_MGR = 0;
 static int HOOK_CALLBACK = 0;
-static int* DEBUG_HOST = 0;
+
+extern "C" {
+lua_State* get_host(lua_State *L);
+void set_host(lua_State* L, lua_State* hL);
+lua_State* getthread(lua_State *L);
+}
 
 #define BPMAP_SIZE (1 << 16)
 
@@ -32,20 +37,6 @@ static Proto* ci2proto(CallInfo* ci) {
         return 0;
     }
     return clLvalue(func)->p;
-}
-
-static lua_State* get_host(lua_State* cL) {
-    if (lua_rawgetp(cL, LUA_REGISTRYINDEX, DEBUG_HOST) != LUA_TLIGHTUSERDATA) {
-        luaL_error(cL, "Must call in debug client");
-    }
-    lua_State* hL = (lua_State*)lua_touserdata(cL, -1);
-    lua_pop(cL, 1);
-    return hL;
-}
-
-static void set_host(lua_State* cL, lua_State* hL) {
-    lua_pushlightuserdata(cL, hL);
-    lua_rawsetp(cL, LUA_REGISTRYINDEX, DEBUG_HOST);
 }
 
 struct hookmgr {
@@ -260,6 +251,19 @@ struct hookmgr {
         ))
     { }
 
+    void probe(lua_State* hL, const char* name) {
+        if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+            lua_pop(cL, 1);
+            return;
+        }
+        set_host(cL, hL);
+        lua_pushstring(cL, name);
+        if (lua_pcall(cL, 1, 0, 0) != LUA_OK) {
+            lua_pop(cL, 1);
+            return;
+        }
+    }
+
     void hook(lua_State* hL, lua_Debug* ar) {
         step_hook(hL, ar);
         break_hook(hL, ar);
@@ -327,16 +331,15 @@ struct hookmgr {
 };
 
 static int sethook(lua_State* L) {
-    DEBUG_HOST = checklightudata<int>(L, 1);
-    luaL_checktype(L, 2, LUA_TFUNCTION);
-    lua_settop(L, 2);
+    luaL_checktype(L, 1, LUA_TFUNCTION);
+    lua_settop(L, 1);
     hookmgr::get_self(L)->start(get_host(L));
     lua_rawsetp(L, LUA_REGISTRYINDEX, &HOOK_CALLBACK);
     return 0;
 }
 
 static int setcoroutine(lua_State* L) {
-    hookmgr::get_self(L)->setcoroutine(checklightudata<lua_State>(L, 1));
+    hookmgr::get_self(L)->setcoroutine(getthread(L));
     return 0;
 }
 
@@ -419,6 +422,8 @@ extern "C"
 __declspec(dllexport)
 #endif
 int luaopen_remotedebug_hookmgr(lua_State* L) {
+	get_host(L);
+
     lua_newtable(L);
     if (LUA_TUSERDATA != lua_rawgetp(L, LUA_REGISTRYINDEX, &HOOK_MGR)) {
         lua_pop(L, 1);
@@ -452,4 +457,12 @@ int luaopen_remotedebug_hookmgr(lua_State* L) {
     };
     luaL_setfuncs(L, lib, 1);
     return 1;
+}
+
+extern "C"
+void probe(lua_State* cL, lua_State* hL, const char* name) {
+    if (LUA_TUSERDATA != lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_MGR)) {
+        return;
+    }
+    ((hookmgr*)lua_touserdata(cL,-1))->probe(hL, name);
 }

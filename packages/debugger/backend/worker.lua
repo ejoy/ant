@@ -416,7 +416,7 @@ local function pairsEventArgs()
     end, nil, 1
 end
 
-local event = {}
+local event = hook
 
 function event.update()
     workerThreadUpdate()
@@ -454,7 +454,7 @@ end
 
 function event.coroutine()
     local _, co = getEventArgsRaw(1)
-    hookmgr.setcoroutine(rdebug.getthread(co))
+    hookmgr.setcoroutine(co)
 end
 
 local createMaster = true
@@ -486,22 +486,13 @@ function event.wait_client()
     end
 end
 
-rdebug.sethook(function(name)
-    local ok, e = xpcall(function()
-        if event[name] then
-            event[name]()
-        end
-    end, debug.traceback)
-    if not ok then err.push(e) end
-end)
-
-hookmgr.sethook(rdebug.gethost(), function(name, ...)
+hookmgr.sethook(function(name, ...)
     local ok, e = xpcall(function(...)
-        if hook[name] then
-            return hook[name](...)
+        if event[name] then
+            return event[name](...)
         end
     end, debug.traceback, ...)
-    if not ok then err.push(e) end
+    if not ok then err:push(e) end
     return e
 end)
 
