@@ -198,7 +198,7 @@ function main_dialog()
 end
 
 editormain.run(fbw, fbh, canvas, {	
-	"ant.ModelEditor", "ant.modify"
+	"ant.ModelEditor", "ant.event"
 }, 
 {
 	"model_editor_system",

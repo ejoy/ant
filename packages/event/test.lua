@@ -1,10 +1,10 @@
--- Use lua test/package.lua ant.modify to test.
+-- Use lua test/package.lua ant.event to test.
 
 local ecs = import_package "ant.ecs"
 
 local w = ecs.new_world {
-	packages = { "ant.basic_components", "ant.modify" },
-	systems = { "test_modify" },
+	packages = { "ant.basic_components", "ant.event" },
+	systems = { "test_event" },
 	update_order = {},
 }
 
