@@ -9,7 +9,6 @@ static int DEBUG_HOST = 0;	// host L in client VM
 static int DEBUG_CLIENT = 0;	// client L in host VM for hook
 static int DEBUG_HOOK = 0;	// hook function in client VM (void * in host VM)
 
-int eval_value(lua_State *L, lua_State *cL);
 void probe(lua_State* cL, lua_State* hL, const char* name);
 int init_visitor(lua_State *L);
 
@@ -166,27 +165,6 @@ void
 set_host(lua_State* L, lua_State* hL) {
     lua_pushlightuserdata(L, hL);
     lua_rawsetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST);
-}
-
-lua_State *
-getthread(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	lua_State *hL = get_host(L);
-	lua_pushvalue(L, 1);
-	int ct = eval_value(L, hL);
-	lua_pop(L, 1);
-	if (ct == LUA_TNONE) {
-		luaL_error(L, "Invalid thread");
-		return NULL;
-	}
-	if (ct != LUA_TTHREAD) {
-		lua_pop(hL, 1);
-		luaL_error(L, "Need coroutine, Is %s", lua_typename(hL, ct));
-		return NULL;
-	}
-	lua_State *co = lua_tothread(hL, -1);
-	lua_pop(hL, 1);
-	return co;
 }
 
 LUAMOD_API int
