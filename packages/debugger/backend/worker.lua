@@ -6,7 +6,7 @@ local breakpoint = require 'debugger.backend.worker.breakpoint'
 local evaluate = require 'debugger.backend.worker.evaluate'
 local traceback = require 'debugger.backend.worker.traceback'
 local ev = require 'debugger.event'
-local hookmgr = require 'debugger.hookmgr'
+local hookmgr = require 'remotedebug.hookmgr'
 local thread = require 'thread'
 local err = thread.channel_produce 'errlog'
 
@@ -486,10 +486,10 @@ function event.wait_client()
     end
 end
 
-rdebug.sethook(function(name, line)
+rdebug.sethook(function(name)
     local ok, e = xpcall(function()
         if event[name] then
-            event[name](line)
+            event[name]()
         end
     end, debug.traceback)
     if not ok then err.push(e) end

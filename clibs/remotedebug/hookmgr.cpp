@@ -418,7 +418,7 @@ extern "C"
 #if defined(_WIN32)
 __declspec(dllexport)
 #endif
-int luaopen_debugger_hookmgr(lua_State* L) {
+int luaopen_remotedebug_hookmgr(lua_State* L) {
     lua_newtable(L);
     if (LUA_TUSERDATA != lua_rawgetp(L, LUA_REGISTRYINDEX, &HOOK_MGR)) {
         lua_pop(L, 1);

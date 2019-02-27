@@ -3,7 +3,7 @@ local fs = require 'debugger.filesystem'
 local source = require 'debugger.backend.worker.source'
 local evaluate = require 'debugger.backend.worker.evaluate'
 local ev = require 'debugger.event'
-local hookmgr = require 'debugger.hookmgr'
+local hookmgr = require 'remotedebug.hookmgr'
 
 local breakpoints = {}
 local waitverify = {}

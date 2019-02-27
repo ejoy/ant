@@ -1,6 +1,6 @@
 BIN = .
 LIBS := math3d lsocket redirectfd bgfx filesystem remotedebug memoryfile \
- crypt meshconverter hierarchy debugger thread protocol bullet \
+ crypt meshconverter hierarchy thread protocol bullet \
  window filewatch platform subprocess datalist
 
 ALL_LIBS := $(LIBS) lua iup
