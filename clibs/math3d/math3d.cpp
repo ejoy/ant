@@ -1877,12 +1877,11 @@ lbase_axes_from_forward_vector(lua_State *L) {
 	glm::vec4 right, up;
 	base_axes_from_forward_vector(*forward, right, up);
 
-	lastack_pushvec4(LS, &up.x);
-	pushid(L, pop(L, LS));
-
 	lastack_pushvec4(LS, &right.x);
 	pushid(L, pop(L, LS));
 
+	lastack_pushvec4(LS, &up.x);
+	pushid(L, pop(L, LS));
 	return 2;
 }
 

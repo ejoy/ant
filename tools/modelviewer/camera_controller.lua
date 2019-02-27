@@ -17,20 +17,27 @@ camera_controller_system.singleton "control_state"
 camera_controller_system.depend "message_system"
 camera_controller_system.depend "camera_init"
 
-local function camera_move(rotation, position, dx, dy, dz)
-	ms(position, rotation, "b", position, "S", {dx}, "*+S", {dy}, "*+S", {dz}, "*+=")
+local function camera_move(forward_axis, position, dx, dy, dz)
+	--ms(position, rotation, "b", position, "S", {dx}, "*+S", {dy}, "*+S", {dz}, "*+=")	
+	local right_axis, up_axis = ms:base_axes(forward_axis)
+	ms(position, 
+		position, 
+			right_axis, {dx}, "*+", 
+			up_axis, {dy}, "*+", 
+			forward_axis, {dz}, "*+=")
 end
 
 local function camera_reset(camera, target)
 	ms(target, {0, 0, 0, 1}, "=")
-	ms(camera.position, {8, 8, -8, 1}, "=")
-	ms(camera.rotation, target, camera.position, "-D=")
+	ms(camera.eyepos, {8, 8, -8, 1}, "=")
+	ms(camera.viewdir, target, camera.eyepos, "-n=")
 end
 
 function camera_controller_system:init()	
-	local camera = world:first_entity("main_camera")
+	local camera_entity = world:first_entity("main_camera")
 
 	local target = math3d.ref "vector"
+	local camera = camera_entity.camera
 	camera_reset(camera, target)
 
 	local move_speed = 1
@@ -48,22 +55,22 @@ function camera_controller_system:init()
 			if status.RIGHT then
 				local speed = move_speed * 0.1
 				local delta = (xy - last_xy) * speed
-				camera_move(camera.rotation, target, -delta.x, delta.y, 0)
-				camera_move(camera.rotation, camera.position, -delta.x, delta.y, 0)
+				camera_move(camera.viewdir, target, -delta.x, delta.y, 0)
+				camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
 			elseif status.LEFT then
 				local speed = move_speed * 0.1
 				local delta = (xy - last_xy) * speed
-				local distance = math.sqrt(ms(target, camera.position, "-1.T")[1])
-				camera_move(camera.rotation, camera.position, -delta.x, delta.y, 0)
-				ms(camera.rotation, target, camera.position, "-D=")
-				ms(camera.position, target, {-distance}, camera.rotation, "dn*+=")
+				local distance = math.sqrt(ms(target, camera.eyepos, "-1.T")[1])
+				camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
+				ms(camera.viewdir, target, camera.eyepos, "-n=")
+				ms(camera.eyepos, target, {-distance}, camera.viewdir, "*+=")
 			end
 		end
 		last_xy = xy
 	end
 
-	function message:mouse_wheel(delta, x, y)
-		camera_move(camera.rotation, camera.position, 0, 0, delta * wheel_speed)
+	function message:mouse_wheel(delta, x, y)		
+		camera_move(camera.viewdir, camera.eyepos, 0, 0, delta * wheel_speed)
 	end
 
 	function message:keyboard(code, press)
