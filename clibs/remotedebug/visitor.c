@@ -338,43 +338,6 @@ lclient_getinfo(lua_State *L) {
 	return 1;
 }
 
-static int
-lclient_activeline(lua_State *L) {
-	int line = luaL_checkinteger(L, 1);
-	lua_State *hL = get_host(L);
-	if (lua_checkstack(hL, 2) == 0) {
-		return luaL_error(L, "stack overflow");
-	}
-	lua_Debug ar;
-	if (lua_getstack(hL, 1, &ar) == 0)
-		return 0;
-	if (lua_getinfo(hL, "SL", &ar) == 0) {
-		lua_pop(hL, 1);
-		return 0;
-	}
-
-	if (line < ar.linedefined)
-		line = ar.linedefined;
-	else if (line > ar.lastlinedefined) {
-		lua_pop(hL, 1);
-		return 0;
-	}
-
-	int i;
-	for (i=line;i<=ar.lastlinedefined;i++) {
-		lua_rawgeti(hL, -1, i);
-		int b = lua_toboolean(hL, -1);
-		if (b) {
-			lua_pop(hL,2);
-			lua_pushinteger(L, i);
-			return 1;
-		}
-		lua_pop(hL,1);
-	}
-	lua_pop(hL, 1);
-	return 0;
-}
-
 int
 init_visitor(lua_State *L) {
 	// It's client
@@ -398,7 +361,6 @@ init_visitor(lua_State *L) {
 		{ "assign", lclient_assign },
 		{ "type", lclient_type },
 		{ "getinfo", lclient_getinfo },
-		{ "activeline", lclient_activeline },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);
