@@ -422,6 +422,8 @@ extern "C"
 __declspec(dllexport)
 #endif
 int luaopen_remotedebug_hookmgr(lua_State* L) {
+	get_host(L);
+
     lua_newtable(L);
     if (LUA_TUSERDATA != lua_rawgetp(L, LUA_REGISTRYINDEX, &HOOK_MGR)) {
         lua_pop(L, 1);

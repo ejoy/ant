@@ -375,10 +375,8 @@ lclient_activeline(lua_State *L) {
 	return 0;
 }
 
-LUAMOD_API int
-luaopen_remotedebug_visitor(lua_State *L) {
-	luaL_checkversion(L);
-	get_host(L);
+int
+init_visitor(lua_State *L) {
 	// It's client
 	luaL_Reg l[] = {
 		{ "getlocal", lclient_getlocal },
@@ -411,4 +409,11 @@ luaopen_remotedebug_visitor(lua_State *L) {
 	get_registry(L, VAR_MAINTHREAD);
 	lua_setfield(L, -2, "_MAINTHREAD");
 	return 1;
+}
+
+LUAMOD_API int
+luaopen_remotedebug_visitor(lua_State *L) {
+	luaL_checkversion(L);
+	get_host(L);
+	return init_visitor(L);
 }

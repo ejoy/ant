@@ -11,6 +11,7 @@ static int DEBUG_HOOK = 0;	// hook function in client VM (void * in host VM)
 
 int eval_value(lua_State *L, lua_State *cL);
 void probe(lua_State* cL, lua_State* hL, const char* name);
+int init_visitor(lua_State *L);
 
 static void
 clear_client(lua_State *L) {
@@ -193,9 +194,7 @@ luaopen_remotedebug(lua_State *L) {
 	luaL_checkversion(L);
 	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST) != LUA_TNIL) {
 		// It's client
-		lua_newtable(L);
-		lua_pushstring(L, "debugger");
-		lua_setfield(L, -2, "status");
+		return init_visitor(L);
 	} else {
 		// It's host
 		luaL_Reg l[] = {
@@ -205,8 +204,6 @@ luaopen_remotedebug(lua_State *L) {
 			{ NULL, NULL },
 		};
 		luaL_newlib(L,l);
-		lua_pushstring(L, "host");
-		lua_setfield(L, -2, "status");
 
 		// autoclose debugger VM, __gc in module table
 		lua_createtable(L,0,1);

@@ -1,4 +1,4 @@
-local rdebug = require 'remotedebug.visitor'
+local rdebug = require 'remotedebug'
 local json = require 'cjson.safe' json.encode_empty_table_as_array 'on'
 local variables = require 'debugger.backend.worker.variables'
 local source = require 'debugger.backend.worker.source'
