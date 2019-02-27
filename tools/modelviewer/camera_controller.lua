@@ -69,7 +69,7 @@ function camera_controller_system:init()
 		last_xy = xy
 	end
 
-	function message:mouse_wheel(delta, x, y)		
+	function message:mouse_wheel(x, y, delta)		
 		camera_move(camera.viewdir, camera.eyepos, 0, 0, delta * wheel_speed)
 	end
 
