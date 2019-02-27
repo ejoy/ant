@@ -17,6 +17,12 @@ end
 
 function world:register_component(eid, c)
 	local ti = assert(self._components[c], c)
+	if ti.depend then
+		local e = self[eid]
+		for _, name in ipairs(ti.depend) do
+			assert(e[name], ("`%s` depend `%s`"):format(c, name))
+		end
+	end
 	if ti.method and ti.method.postinit then
 		local e = self[eid]
 		ti.method.postinit(e[c], e)
