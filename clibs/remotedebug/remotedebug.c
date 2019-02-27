@@ -402,26 +402,25 @@ lclient_hookmask(lua_State *L) {
 	return 0;
 }
 
-static int
-lclient_getthread(lua_State *L) {
+lua_State *
+getthread(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
 	lua_State *hL = get_host(L);
-	if (LUA_TUSERDATA == lua_type(L, 1)) {
-		lua_pushvalue(L, 1);
-		int ct = eval_value(L, hL);
-		lua_pop(L, 1);
-		if (ct == LUA_TNONE) {
-			return luaL_error(L, "Invalid thread");
-		}
-		if (ct != LUA_TTHREAD) {
-			lua_pop(hL, 1);
-			return luaL_error(L, "Need coroutine, Is %s", lua_typename(hL, ct));
-		}
-		lua_State *co = lua_tothread(hL, -1);
+	lua_pushvalue(L, 1);
+	int ct = eval_value(L, hL);
+	lua_pop(L, 1);
+	if (ct == LUA_TNONE) {
+		luaL_error(L, "Invalid thread");
+		return NULL;
+	}
+	if (ct != LUA_TTHREAD) {
 		lua_pop(hL, 1);
-		hL = co;
-	} 
-	lua_pushlightuserdata(L, hL);
-	return 1;
+		luaL_error(L, "Need coroutine, Is %s", lua_typename(hL, ct));
+		return NULL;
+	}
+	lua_State *co = lua_tothread(hL, -1);
+	lua_pop(hL, 1);
+	return co;
 }
 
 LUAMOD_API int
@@ -434,7 +433,6 @@ luaopen_remotedebug(lua_State *L) {
 			{ "context", lclient_context },
 			{ "sethook", lclient_sethook },
 			{ "hookmask", lclient_hookmask },
-			{ "getthread", lclient_getthread },
 			{ NULL, NULL },
 		};
 		luaL_newlib(L,l);

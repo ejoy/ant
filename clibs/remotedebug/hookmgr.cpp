@@ -12,6 +12,7 @@ static int HOOK_CALLBACK = 0;
 extern "C" {
 lua_State* get_host(lua_State *L);
 void set_host(lua_State* L, lua_State* hL);
+lua_State* getthread(lua_State *L);
 }
 
 #define BPMAP_SIZE (1 << 16)
@@ -325,7 +326,7 @@ static int sethook(lua_State* L) {
 }
 
 static int setcoroutine(lua_State* L) {
-    hookmgr::get_self(L)->setcoroutine(checklightudata<lua_State>(L, 1));
+    hookmgr::get_self(L)->setcoroutine(getthread(L));
     return 0;
 }
 

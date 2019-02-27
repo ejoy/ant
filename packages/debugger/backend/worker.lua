@@ -455,7 +455,7 @@ end
 
 function event.coroutine()
     local _, co = getEventArgsRaw(1)
-    hookmgr.setcoroutine(rdebugM.getthread(co))
+    hookmgr.setcoroutine(co)
 end
 
 local createMaster = true
