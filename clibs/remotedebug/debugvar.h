@@ -252,7 +252,7 @@ eval_value_(lua_State *L, lua_State *cL, struct value *v) {
 }
 
 // extract L top into cL, return the lua type or LUA_TNONE(failed)
-static int
+int
 eval_value(lua_State *L, lua_State *cL) {
 	if (lua_checkstack(cL, 1) == 0)
 		return luaL_error(L, "stack overflow");

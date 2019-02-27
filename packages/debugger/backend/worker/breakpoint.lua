@@ -1,4 +1,4 @@
-local rdebug = require 'remotedebug'
+local rdebug = require 'remotedebug.visitor'
 local fs = require 'debugger.filesystem'
 local source = require 'debugger.backend.worker.source'
 local evaluate = require 'debugger.backend.worker.evaluate'

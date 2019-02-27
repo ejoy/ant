@@ -1,4 +1,4 @@
-local rdebug = require 'remotedebug'
+local rdebug = require 'remotedebug.visitor'
 local variables = require 'debugger.backend.worker.variables'
 local ev = require 'debugger.event'
 

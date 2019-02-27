@@ -1,4 +1,5 @@
-local rdebug = require 'remotedebug'
+local rdebugM = require 'remotedebug'
+local rdebug = require 'remotedebug.visitor'
 local json = require 'cjson.safe' json.encode_empty_table_as_array 'on'
 local variables = require 'debugger.backend.worker.variables'
 local source = require 'debugger.backend.worker.source'
@@ -454,7 +455,7 @@ end
 
 function event.coroutine()
     local _, co = getEventArgsRaw(1)
-    hookmgr.setcoroutine(rdebug.getthread(co))
+    hookmgr.setcoroutine(rdebugM.getthread(co))
 end
 
 local createMaster = true
@@ -486,7 +487,7 @@ function event.wait_client()
     end
 end
 
-rdebug.sethook(function(name)
+rdebugM.sethook(function(name)
     local ok, e = xpcall(function()
         if event[name] then
             event[name]()
@@ -495,7 +496,7 @@ rdebug.sethook(function(name)
     if not ok then err.push(e) end
 end)
 
-hookmgr.sethook(rdebug.gethost(), function(name, ...)
+hookmgr.sethook(rdebugM.gethost(), function(name, ...)
     local ok, e = xpcall(function(...)
         if hook[name] then
             return hook[name](...)
