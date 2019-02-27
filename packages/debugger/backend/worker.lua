@@ -1,4 +1,3 @@
-local rdebugM = require 'remotedebug'
 local rdebug = require 'remotedebug.visitor'
 local json = require 'cjson.safe' json.encode_empty_table_as_array 'on'
 local variables = require 'debugger.backend.worker.variables'
@@ -486,8 +485,6 @@ function event.wait_client()
         end
     end
 end
-
-rdebugM.sethook(function()end)
 
 hookmgr.sethook(function(name, ...)
     local ok, e = xpcall(function(...)
