@@ -37,12 +37,6 @@ function world:register_component(eid, c)
 	end
 end
 
-function world:register_all_component(eid)
-    for name in pairs(self[eid]) do
-        self:register_component(eid, name)
-    end
-end
-
 function world:register_entity()
 	local entity_id = self._entity_id + 1
 	self._entity_id = entity_id
