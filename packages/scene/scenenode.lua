@@ -3,6 +3,9 @@ local world = ecs.world
 
 local fs = require "filesystem"
 
+local mathpkg = import_package "ant.math"
+local ms = mathpkg.stack
+
 ecs.tag "hierarchy_tag"
 
 ecs.component_alias("world_transform", "transform")
@@ -17,7 +20,7 @@ function hierarchy_transform_result:init()
 end
 
 local testscene = ecs.system "test_scene"
-testscene.singleton "modify"
+testscene.singleton "event"
 testscene.singleton "hierarchy_transform_result"
 
 
@@ -253,22 +256,23 @@ render_level1_1			hie_level1_1	hie_level1_2		render_level1_2
 		can_render = true,
 		main_viewtag = true,
 	}
-
-	self.modify:new(hie_root, "hierarchy_transform")
-	self.modify:new(hie_level1_1, "hierarchy_transform")
-	self.modify:new(hie_level1_2, "hierarchy_transform")
-	self.modify:new(hie_level2_1, "hierarchy_transform")
-
-
-	self.modify:new(render_root, "base_transform")
-	self.modify:new(render_level1_1, "base_transform")
-	self.modify:new(render_level1_2, "base_transform")
-	self.modify:new(render_level2_1, "base_transform")
 end
 
+function testscene:post_init()
+	for eid in world:each_new("hierarchy_transform") do
+		self.event:new(eid, "hierarchy_transform")
+	end
 
-function testscene:event_changed()
-	for eid, modify in self.modify:each("base_transform") do
+	for eid in world:each_new("base_transform") do
+		self.event:new(eid, "base_transform")
+	end
+end
+
+local scene_space_update = ecs.component "scene_space_update"
+scene_space_update.singleton "event"
+
+function scene_space_update:event_changed()
+	for eid, modify in self.event:each("base_transform") do
 		local e = world[eid]
 		local attacheid = e.attach
 		local attache = world[attacheid]
@@ -279,21 +283,42 @@ function testscene:event_changed()
 
 	local hierarchy_result = self.hierarchy_transform_result
 
-
-	local eids = {}
-	local map = {}
-	for eid, modify in self.modify:each("hierarchy_transform") do
-		eids[eid] = {parent=world[eid].parent, modify=modify}		
+	local eids = {}	
+	for eid, modify in self.event:each("hierarchy_transform") do
+		local e = world[eid]
+		e.hierarchy_transform = modify
+		eids[#eids+1] = eid
 	end
 
-	local leafs = {}
-	for eid, item in pairs(eids) do
-		leafs[item.parent] = false
-		leafs[eid] = true
+	if #eids > 0 then
+		local function find_parent_eid(eid)
+			for idx, peid in ipairs(eids) do
+				if peid == eid then
+					return idx
+				end
+			end
+		end
+
+		for _, eid in world:each "hierarchy_transform" do
+			local e = world[eid]
+			local idx = find_parent_eid(e.parent) 
+			if idx then
+				table.insert(eids, idx+1, eid)
+			end
+		end
+
+		for _, eid in ipairs(eids) do
+			local e = world[eid]
+			local peid = e.parent 
+			if peid then
+				local parent = world[peid]
+				local wt = parent.world_transform
+				ms(e.world_transform, wt, e.world_transform, "*=")
+				hierarchy_result[eid] = e.world_transform
+			end
+		end
+
 	end
 
-	for _, l in ipairs(leafs) do
-		local e = world[l]
-		print("leaf : ", l, e.name)
-	end
+	
 end
