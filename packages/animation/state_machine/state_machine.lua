@@ -68,20 +68,20 @@ function sm:update()
 
 		local chain = statecfg.chain
 
-		local transmit_merge = state_chain.transmit_merge
+		local transmit_merge = statecfg.transmit_merge
 		if transmit_merge then
 			if transmit_merge(timer.deltatime) then
-				state_chain.transmit_merge = nil
+				statecfg.transmit_merge = nil
 				anipose.define = anipose.transmit.targetpose
 				anipose.transmit = nil
 			end
 		else
-			local traget_transmits = statecfg.transmits[state_chain.target]
+			local traget_transmits = statecfg.transmits[statecfg.target]
 			if traget_transmits then
 				for _, transmit in ipairs(traget_transmits) do
 					if transmit.can_transmit(e, _G) then
 						local newtarget = transmit.targetname
-						state_chain.target = newtarget
+						statecfg.target = newtarget
 						local targetpose = get_pose(chain, newtarget)
 						anipose.transmit = {
 							source_weight = 1,
@@ -90,13 +90,13 @@ function sm:update()
 						}
 			
 						aniutil.play_animation(anicomp, targetpose)
-						state_chain.transmit_merge = get_transmit_merge(e, transmit)
+						statecfg.transmit_merge = get_transmit_merge(e, transmit)
 						break
 					end
 				end
 			else
 				if _G.DEBUG then
-					print("[state machine]: there are not transmit targets for current target> ", state_chain.target)
+					print("[state machine]: there are not transmit targets for current target> ", statecfg.target)
 				end
 			end
 		end
