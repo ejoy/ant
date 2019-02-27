@@ -12,6 +12,7 @@ ecs.import 'ant.scene'
 ecs.import 'ant.timer'
 ecs.import 'ant.bullet'
 ecs.import 'ant.animation'
+ecs.import 'ant.modify'
 
 local renderpkg = import_package 'ant.render'
 local computil = renderpkg.components

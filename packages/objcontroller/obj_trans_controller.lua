@@ -314,9 +314,7 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 			can_render = false,
 			[tag_comp] = true,
 			editor = true,
-			parent = {
-				eid = hie_eid
-			},
+			parent = hie_eid,
 			main_viewtag = true,
 		}
 		namemapper[name] = eid
@@ -471,7 +469,7 @@ local function add_rotator_entities(colors)
 				name = name,
 				rotator_transform = true,
 				editor = true,
-				parent = {eid = elem_eid},
+				parent = elem_eid,
 				mesh = {
 					ref_path = {package=pkgname, filename=meshfilename},
 				},

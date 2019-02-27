@@ -116,9 +116,7 @@ function control_state:init()
 	return ""
 end
 
-ecs.component "parent"
-	.eid "entityid"
-
+ecs.component_alias("parent", "entityid")
 ecs.component_alias("color", "real[4]", {1,1,1,1})
 
 

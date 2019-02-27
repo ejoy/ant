@@ -40,7 +40,7 @@ end
 function util.loop(arg)	
 	local queue = {}
 	for _, updatetype in ipairs {
-		"post_init", "update", "delete"
+		"post_init", "event_changed", "update", "delete",
 	} do
 		queue[#queue+1] = world:update_func(updatetype, arg[updatetype])
 	end

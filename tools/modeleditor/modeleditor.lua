@@ -198,7 +198,7 @@ function main_dialog()
 end
 
 editormain.run(fbw, fbh, canvas, {	
-	"ant.ModelEditor"
+	"ant.ModelEditor", "ant.modify"
 }, 
 {
 	"model_editor_system",
@@ -211,4 +211,5 @@ editormain.run(fbw, fbh, canvas, {
 	"skinning_system",
 	--debug
 	"debug_draw",
+	"test_scene",
 })
