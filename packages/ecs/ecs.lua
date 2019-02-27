@@ -46,8 +46,8 @@ end
 
 function world:add_component(eid, component_type, args)
 	local e = self[eid]
-	self:register_component(eid, component_type)
 	e[component_type] = self:create_component(component_type, args)
+	self:register_component(eid, component_type)
 end
 
 function world:remove_component(eid, component_type)
