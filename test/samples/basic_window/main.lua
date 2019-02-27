@@ -142,7 +142,7 @@ function callback.mouse_move(x,y)
 	print("mouse_move", x, y)
 end
 
-function callback.mouse_wheel(delta, x,y)
+function callback.mouse_wheel(x,y, delta)
 	print("mouse_wheel", x, y, delta)
 end
 
