@@ -239,6 +239,12 @@ get_host(lua_State *L) {
 	return hL;
 }
 
+void
+set_host(lua_State* L, lua_State* hL) {
+    lua_pushlightuserdata(L, hL);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST);
+}
+
 static int hook_loop_k(lua_State *L, int status, lua_KContext ctx);
 
 static int
@@ -397,12 +403,6 @@ lclient_hookmask(lua_State *L) {
 }
 
 static int
-lclient_gethost(lua_State *L) {
-	lua_pushlightuserdata(L, &DEBUG_HOST);
-	return 1;
-}
-
-static int
 lclient_getthread(lua_State *L) {
 	lua_State *hL = get_host(L);
 	if (LUA_TUSERDATA == lua_type(L, 1)) {
@@ -434,7 +434,6 @@ luaopen_remotedebug(lua_State *L) {
 			{ "context", lclient_context },
 			{ "sethook", lclient_sethook },
 			{ "hookmask", lclient_hookmask },
-			{ "gethost", lclient_gethost },
 			{ "getthread", lclient_getthread },
 			{ NULL, NULL },
 		};

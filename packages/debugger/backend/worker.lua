@@ -496,7 +496,7 @@ rdebugM.sethook(function(name)
     if not ok then err.push(e) end
 end)
 
-hookmgr.sethook(rdebugM.gethost(), function(name, ...)
+hookmgr.sethook(function(name, ...)
     local ok, e = xpcall(function(...)
         if hook[name] then
             return hook[name](...)
