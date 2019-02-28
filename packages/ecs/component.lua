@@ -78,9 +78,14 @@ function foreach_delete_1(w, c, component)
         return
     end
     if not c.type then
-        for _, v in ipairs(c) do
-            foreach_delete_1(w, v, component)
-        end
+		for _, v in ipairs(c) do
+			if component[v.name] == nil and v.attrib and v.attrib.opt then
+				goto continue
+			end
+			assert(v.type)
+            foreach_delete_1(w, v, component[v.name])
+			::continue::
+		end
         return
     end
     if c.array then
