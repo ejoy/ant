@@ -251,9 +251,13 @@ function PVPScene.create_entitices(world)
 
 
 				local eid = world:create_entity  {
-					scale = s, 
-					rotation = r, 
-					position = t,
+					transform = {
+						base = {
+							s = s,
+							r = r,
+							t = t,
+						}
+					},
 					can_render = true, 
 					mesh = {
 						ref_path = {package = "ant.resources", filename = scenedata.mesh},						

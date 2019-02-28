@@ -27,12 +27,19 @@ ecs.component_alias("position", "vector")
 ecs.component_alias("rotation", "vector")
 ecs.component_alias("scale", "vector")
 
-ecs.component "transform"
+ecs.component "srt"
 	.s "vector"
 	.r "vector"
 	.t "vector"
 
-ecs.component_alias("srt", "transform")
+ecs.component "transform"
+	.base "srt"
+	['opt'].parent "parent"
+	['opt'].attach "attach"
+	['opt'].relative_srt "srt"	
+	['opt'].slotname "string"
+	['opt'].hierarchy "hierarchy"
+	
 
 ecs.tag "editor"
 

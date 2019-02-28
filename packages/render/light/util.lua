@@ -1,8 +1,8 @@
 local util = {}; util.__index = util
 
-function util.create_directional_light_entity(world, name, color, intensity)
+function util.create_directional_light_entity(world, name, color, intensity, rotation)
 	return world:create_entity {
-		rotation = {0, 0, 0, 0}, 
+		rotation = rotation or {0, 0, 0, 0}, 
 		name = name, 
 		serialize = import_package 'ant.serialize'.create(), 
 		light = true,		

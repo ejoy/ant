@@ -45,7 +45,7 @@ local function mesh_bounding_sphere(entity)
 				
 					]]
 					local math3dlib = require "math3d.baselib"
-					local worldmat = ms({type="srt", s=entity.scale, r=entity.rotation, t=entity.position}, "m")
+					local worldmat = ms:create_srt_matrix(entity.transform.base)
 					math3dlib.transform_aabb(worldmat, aabb)
 					local center = ms(aabb.max, aabb.min, "-", {0.5}, "*P")
 				
@@ -65,7 +65,7 @@ local function mesh_bounding_sphere(entity)
 		end
 	end
 
-	return {center = entity.position, radius = 100}
+	return {center = entity.transform.base.t, radius = 100}
 end
 
 function util.focus_selected_obj(world, eid)

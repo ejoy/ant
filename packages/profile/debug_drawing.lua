@@ -56,9 +56,13 @@ function debug_obj:init()
 	clean_desc_buffer(self.renderobjs.wireframe.desc)
 
 	local debugeid = world:create_entity {
-		position = {0, 0, 0, 1}, 
-		scale = {1, 1, 1, 0}, 
-		rotation = {0, 0, 0, 0},
+		transform = {
+			base = {
+				s = {1, 1, 1, 0},
+				r = {0, 0, 0, 0},
+				t = {0, 0, 0, 1},
+			}
+		},
 		mesh = {},
 		material = {
 			content = {

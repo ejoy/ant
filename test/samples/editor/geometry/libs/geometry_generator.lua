@@ -18,6 +18,7 @@ function generator:init()
 	-- local transform = ms({type="srt", t={5, 0, 0}}, "P")
 	-- geometry_drawer.draw_cone({height=1, radius=0.5, slices=5}, 0xffff0000, transform, desc)
 
-	local camera = world:first_entity("main_camera")	
-	ms(camera.rotation, {0, 30, 0}, "=")
+	local camera_entity = world:first_entity("main_camera")	
+	
+	ms(camera_entity.transform.base.r, {0, 30, 0}, "=")
 end

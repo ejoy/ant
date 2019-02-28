@@ -211,5 +211,5 @@ editormain.run(fbw, fbh, canvas, {
 	"skinning_system",
 	--debug
 	"debug_draw",
-	"test_scene",
+	--"scene_space",
 })

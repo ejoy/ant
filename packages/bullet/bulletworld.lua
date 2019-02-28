@@ -165,7 +165,7 @@ function bullet_world:init_collider_component(collidercomp, obj_idx, srt, offset
 	local collider = collidercomp.collider
 	collider.obj_idx = obj_idx
 
-	local s, r, t = srt[1], srt[2], srt[3]
+	local s, r, t = srt.s, srt.r, srt.t
 	local pos = offset and ms(t, offset, "+m") or ms(t, "m")
 
 	local shapeinfo = collidercomp.shape
@@ -181,7 +181,7 @@ end
 function bullet_world:add_component_collider(world, eid, collidername, offset)
 	--world:add_component(eid, collidername)
 	local e = world[eid]
-	self:init_collider_component(e[collidername], eid, {e.scale, e.rotation, e.position}, offset)
+	self:init_collider_component(e[collidername], eid, e.transform.base, offset)
 end 
 
 -- special handy function, for lazy auto create component terrain collider 

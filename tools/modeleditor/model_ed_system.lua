@@ -421,12 +421,7 @@ end
 
 local function init_lighting()
 	local lu = renderpkg.light
-	local leid = lu.create_directional_light_entity(world)
-	local lentity = world[leid]
-	local lightcomp = lentity.directional_light
-	lightcomp.color = {1,1,1,1}
-	lightcomp.intensity = 2.0
-	ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")
+	lu.create_directional_light_entity(world, nil, {1,1,1,1}, 2, {123.4, -34.22,-28.2})
 end
 
 local function focus_sample()

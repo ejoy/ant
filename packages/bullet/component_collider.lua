@@ -115,9 +115,10 @@ function collider_post_init:post_init()
 		local collider = collidercomp.collider
 		collider.obj_idx = eid
 		local shapeinfo = collidercomp.shape
-		local pos = ms(e.position, collider.center, "+m")
+		local base_srt = e.transform.base
+		local pos = ms(base_srt.t, collider.center, "+m")
 		assert(shapeinfo.handle == nil)
 		assert(collider.handle == nil)
-		shapeinfo.handle, collider.handle = Physics:create_collider(shapeinfo.type, shapeinfo, eid, pos, ms(e.rotation, "qm"))
+		shapeinfo.handle, collider.handle = Physics:create_collider(shapeinfo.type, shapeinfo, eid, pos, ms(base_srt.r, "qm"))
 	end
 end

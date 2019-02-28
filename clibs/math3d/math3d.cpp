@@ -259,18 +259,15 @@ get_ref_id(lua_State *L, struct lastack *LS, int index) {
 	return ref->id;
 }
 
+static inline int64_t
+get_id_by_type(lua_State *L, struct lastack *LS, int lType, int index) {
+	return lType == LUA_TNUMBER ? get_id(L, index) : get_ref_id(L, LS, index);
+}
 
 static inline int64_t
 get_stack_id(lua_State *L, struct lastack *LS, int index) {
 	const int type = lua_type(L, index);
-	switch (type) {
-	case LUA_TNUMBER:
-		return get_id(L, index);
-	case LUA_TUSERDATA:
-		return get_ref_id(L, LS, index);
-	default:
-		return -1;
-	}
+	return get_id_by_type(L, LS, type, index);
 }
 
 static void
@@ -408,11 +405,6 @@ get_table_value(lua_State *L, int idx) {
 	float s = lua_tonumber(L, -1);
 	lua_pop(L, 1);
 	return s;
-}
-
-static inline int64_t
-get_id_by_type(lua_State *L, struct lastack *LS, int lType, int index){
-	return lType == LUA_TNUMBER ? get_id(L, index) : get_ref_id(L, LS, index);
 }
 
 static inline glm::vec3
@@ -1679,11 +1671,14 @@ new_temp_vector4(lua_State *L) {
 	float v[4];
 	switch(top) {
 	case 2:
-		luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
-		
+	{
+		const int type = lua_type(L, 2);
+		if (type != LUA_TLIGHTUSERDATA && type != LUA_TUSERDATA) {
+			luaL_error(L, "invalid data type, need userdata/lightuserdata: %d", type);
+		}
 		memcpy(v, lua_touserdata(L, 2), sizeof(v));
 		break;
-
+	}
 	case 3:
 		v[3] = 0;
 		// fall off case 4
@@ -1773,10 +1768,37 @@ new_temp_quaternion(lua_State *L) {
 
 		const float angle = lua_tonumber(L, 5);
 		q = glm::angleAxis(angle, axis);
-	} else if (top == 5){		
+	} else if (top == 5) {
 		for (int ii = 0; ii < 4; ++ii) {
 			q[ii] = lua_tonumber(L, ii + 2);
 		}
+	} else if (top == 2){
+		const int type = lua_type(L, 2);
+		if (type == LUA_TTABLE) {
+			const size_t arraynum = lua_rawlen(L, 2);
+			if (arraynum == 4) {
+				for (int ii = 0; ii < 4; ++ii) {
+					lua_geti(L, -1, ii + 1);
+					q[ii] = lua_tonumber(L, -1);
+					lua_pop(L, 1);
+				}
+			} else if (arraynum == 3) {
+				glm::vec3 euler;
+				for (int ii = 0; ii < 3; ++ii) {
+					lua_geti(L, -1, ii + 1);
+					euler[ii] = lua_tonumber(L, -1);
+					lua_pop(L, 1);
+				}
+				q = glm::quat(glm::radians(euler));
+			} else {
+				luaL_error(L, "need 3/4 element in array as euler angle or quaternion:%d", arraynum);
+			}
+		} else if (type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA) {
+			memcpy(&q, (float*)lua_touserdata(L, 2), sizeof(q));
+		} else {
+			luaL_error(L, "invalid type, only support 'table(array 3/4)' or 'userdata(quaternion data)' : %d", type);
+		}
+
 	} else {
 		luaL_error(L, "need 5/6 argument, %d provided", top);
 	}
@@ -1810,43 +1832,67 @@ new_temp_euler(lua_State *L) {
 }
 
 static int
-to_srt(lua_State *L) {
-	int numarg = lua_gettop(L);
-	if (numarg != 4) {
-		luaL_error(L, "need 3 arg, %d provided", numarg);
+create_srt_matrix(lua_State *L) {	
+	const int numarg = lua_gettop(L);
+	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct lastack *LS = bp->LS;
+
+	glm::mat4x4 srtmat(1);
+	glm::vec4 *scale = nullptr, *rotation = nullptr, *translation = nullptr;
+	switch (numarg) {
+	case 2:
+	{
+		luaL_checktype(L, 2, LUA_TTABLE);
+		const char* srtnames[] = { "s", "r", "t" };
+		glm::vec4** srtvalues[] = { &scale, &rotation, &translation };
+		for (int ii = 0; ii < 3; ++ii){
+			auto name = srtnames[ii];
+			lua_getfield(L, 2, name);
+			int type;
+			*(srtvalues[ii]) = (glm::vec4*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
+		}
+	}
+		break;
+	case 4:
+	{
+		int scaletype, rotationtype, translationtype;
+		scale = (glm::vec4 *)lastack_value(LS, get_stack_id(L, LS, 2), &scaletype);
+		assert(scaletype == LINEAR_TYPE_VEC4);
+
+		rotation = (glm::vec4 *)lastack_value(LS, get_stack_id(L, LS, 3), &rotationtype);
+		assert(rotationtype == LINEAR_TYPE_VEC4 || rotationtype == LINEAR_TYPE_EULER);
+
+		translation = (glm::vec4 *)lastack_value(LS, get_stack_id(L, LS, 4), &translationtype);
+		assert(translationtype == LINEAR_TYPE_VEC4);
+	}
+		break;
+	default:
+		luaL_error(L, "invalid argument number:%d", numarg);
+		break;
 	}
 
-	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	assert(scale &&rotation && translation);
+	srtmat[0][0] = (*scale)[0];
+	srtmat[1][1] = (*scale)[1];
+	srtmat[2][2] = (*scale)[2];
 
-	struct refobject *scale = (struct refobject*)lua_touserdata(L, 2);
-	struct lastack *LS = scale->LS;
-	struct refobject *rotation = (struct refobject*)lua_touserdata(L, 3);
-	assert(LS == rotation->LS);
-	struct refobject *translation = (struct refobject*)lua_touserdata(L, 4);
-	assert(LS == translation->LS);
+	srtmat = glm::mat4x4(glm::quat(glm::radians(*rotation))) * srtmat;
 
-	int scaletype, rotationtype, translationtype;
-	glm::vec3 * scalevalue = (glm::vec3 *)lastack_value(LS, scale->id, &scaletype);
-	assert(scaletype == LINEAR_TYPE_VEC4);
+	srtmat[3] = *translation;
+	srtmat[3][3] = 1;
 
-	glm::vec3 * rotationvalue = (glm::vec3 *)lastack_value(LS, rotation->id, &rotationtype);
-	assert(rotationtype == LINEAR_TYPE_VEC4 || rotationtype == LINEAR_TYPE_EULER);
-
-	glm::vec4 * translationvalue = (glm::vec4 *)lastack_value(LS, translation->id, &translationtype);
-	assert(translationtype == LINEAR_TYPE_VEC4);
-
-	glm::mat4x4 srt(1);
-	srt[0][0] = (*scalevalue)[0];
-	srt[1][1] = (*scalevalue)[1];
-	srt[2][2] = (*scalevalue)[2];
-
-	srt = glm::mat4x4(glm::quat(glm::radians(*rotationvalue))) * srt;
-
-	srt[3] = *translationvalue;
-	srt[3][3] = 1;
-
-	lastack_pushmatrix(LS, &(srt[0][0]));
+	lastack_pushmatrix(LS, &(srtmat[0][0]));
 	lua_pushlightuserdata(L, pop_value(L, LS, NULL));
+	return 1;
+}
+
+static int
+lpush_srt(lua_State *L) {
+	struct boxpointer *bp = (struct boxpointer*)lua_touserdata(L, 1);
+	lastack *LS = bp->LS;
+
+	push_srt(L, LS, 2);
+	pushid(L, pop(L, LS));
 	return 1;
 }
 
@@ -1900,7 +1946,8 @@ lnew(lua_State *L) {
 			{ "quaternion", new_temp_quaternion},
 			{ "euler", new_temp_euler},
 			{ "base_axes", lbase_axes_from_forward_vector},
-			{ "to_srt", to_srt},
+			{ "create_srt_matrix", create_srt_matrix},
+			{ "push_srt_matrix", lpush_srt},
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);

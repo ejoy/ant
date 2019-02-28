@@ -8,9 +8,8 @@ local ms = mathpkg.stack
 
 ecs.tag "hierarchy_tag"
 
-ecs.component_alias("world_transform", "transform")
+ecs.component_alias("world_srt", "srt")
 ecs.component_alias("hierarchy_transform", "transform")
-ecs.component_alias("base_transform", "transform")
 
 ecs.component_alias("attach", "entityid")
 
@@ -23,6 +22,23 @@ local testscene = ecs.system "test_scene"
 testscene.singleton "event"
 testscene.singleton "hierarchy_transform_result"
 
+local function identify_srt(s, r, t)
+	return {
+		s = s or {1, 1, 1, 0},
+		r = r or {0, 0, 0, 0},
+		t = t or {0, 0, 0, 1},
+	}
+end
+
+local function create_default_transform(parent, base, srt, attach)
+	return {
+		parent = parent,
+		attach = attach,
+		base = base or identify_srt(),
+		relative_srt = srt,
+	}
+end
+
 
 function testscene:init()
 	local material = {
@@ -34,47 +50,28 @@ function testscene:init()
 	}
 
 	local hie_root = world:create_entity {				
-		hierarchy_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},		
+		hierarchy_transform = create_default_transform(),
 		name = "root",
 		hierarchy_tag = true,
 		main_viewtag = true,
 	}
 
 	local hie_level1_1 = world:create_entity {		
-		hierarchy_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		parent = hie_root,
+		hierarchy_transform = create_default_transform(hie_root),
 		name = "level1_1",
 		hierarchy_tag = true,
 		main_viewtag = true,
 	}
 
 	local hie_level1_2 = world:create_entity {		
-		hierarchy_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		parent = hie_root,
+		hierarchy_transform = create_default_transform(hie_root),
 		name = "level1_2",
 		hierarchy_tag = true,
 		main_viewtag = true,
 	}
 
 	local hie_level2_1 = world:create_entity {
-		hierarchy_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		parent = hie_level1_2,
+		hierarchy_transform = create_default_transform(hie_level1_2),
 		name = "level2_1",
 		hierarchy_tag = true,
 		main_viewtag = true,
@@ -82,22 +79,7 @@ function testscene:init()
 
 
 	local render_root = world:create_entity {
-		world_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		base_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},		
-		attach = hie_root,
+		transform = create_default_transform(nil, nil, identify_srt(), hie_root),
 		name = "render_root",
 		mesh = {
 			ref_path = {package="ant.resources", filename=fs.path "cube.mesh"},
@@ -108,23 +90,7 @@ function testscene:init()
 	}
 
 	local render_level1_1 = world:create_entity {
-		world_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		base_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		parent = hie_root,
-		attach = hie_level1_1,
+		transform = create_default_transform(nil, nil, identify_srt(), hie_level1_1),
 		name = "render_level1",
 		mesh = {
 			ref_path = {package="ant.resources", filename=fs.path "sphere.mesh"},
@@ -135,23 +101,7 @@ function testscene:init()
 	}
 
 	local render_level1_2 = world:create_entity {
-		world_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		base_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		parent = hie_root,
-		attach = hie_level1_2,
+		transform = create_default_transform(nil, nil, identify_srt(), hie_level1_2),
 		name = "render_level1_2",
 		mesh = {
 			ref_path = {package="ant.resources", filename=fs.path "sphere.mesh"},
@@ -163,23 +113,7 @@ function testscene:init()
 
 
 	local render_level2_1 = world:create_entity {
-		world_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		base_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		parent = hie_level1_2,
-		attach = hie_level2_1,
+		transform = create_default_transform(nil, nil, identify_srt(), hie_level2_1),		
 		name = "render_level2_eid1",
 		mesh = {
 			ref_path = {package="ant.resources", filename=fs.path "sphere.mesh"},
@@ -206,22 +140,7 @@ render_level1_1			hie_level1_1	hie_level1_2		render_level1_2
 	]]
 
 	local render_child1 = world:create_entity{
-		world_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		base_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		parent = hie_level1_1,
+		transform = create_default_transform(hie_level1_1),
 		name = "render_child1",
 		mesh = {
 			ref_path = {package="ant.resources", filename=fs.path "sphere.mesh"},
@@ -232,22 +151,7 @@ render_level1_1			hie_level1_1	hie_level1_2		render_level1_2
 	}
 
 	local render_child2_1 = world:create_entity{
-		world_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		base_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		parent = hie_level2_1,
+		transform = create_default_transform(hie_level2_1),		
 		name = "render_child2_1",
 		mesh = {
 			ref_path = {package="ant.resources", filename=fs.path "sphere.mesh"},
@@ -263,21 +167,21 @@ function testscene:post_init()
 		self.event:new(eid, "hierarchy_transform")
 	end
 
-	for eid in world:each_new("base_transform") do
-		self.event:new(eid, "base_transform")
+	for eid in world:each_new("transform") do
+		self.event:new(eid, "transform")
 	end
 end
 
-local scene_space_update = ecs.component "scene_space_update"
-scene_space_update.singleton "event"
+local scene_space = ecs.system "scene_space"
+scene_space.singleton "event"
 
-function scene_space_update:event_changed()
+function scene_space:event_changed()
 	for eid, modify in self.event:each("base_transform") do
 		local e = world[eid]
 		local attacheid = e.attach
 		local attache = world[attacheid]
 		e.base_transform = modify
-		attache.hierarchy_transform = modify		
+		attache.hierarchy_transform = modify
 	end
 
 

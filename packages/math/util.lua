@@ -40,10 +40,6 @@ function util.srt(s, r, t, ispersistent)
 	return ms(srt, "P")
 end
 
-function util.srt_from_entity(entity)
-	return util.srt(entity.scale, entity.rotation, entity.position)
-end
-
 function util.srt_v(s, r, t, ispersistent)
 	return to_v(util.srt(s, r, t, ispersistent))
 end
@@ -90,12 +86,6 @@ function util.create_persistent_matrix(value)
 	return m
 end
 
-function util.identify_transform(entity)
-	ms(	entity.scale, {1, 1, 1, 0}, "=",
-	entity.rotation, {0, 0, 0, 0}, "=",
-	entity.position, {0, 0, 0, 1}, "=")
-end
-
 function util.print_srt(e, numtab)
 	local tab = ""
 	if numtab then
@@ -104,9 +94,10 @@ function util.print_srt(e, numtab)
 		end		
 	end
 	
-	local s_str = tostring(e.scale)
-	local r_str = tostring(e.rotation)
-	local t_str = tostring(e.position)
+	local base_srt = e.transform.base
+	local s_str = tostring(base_srt.s)
+	local r_str = tostring(base_srt.r)
+	local t_str = tostring(base_srt.t)
 
 	print(tab .. "scale : ", s_str)
 	print(tab .. "rotation : ", r_str)

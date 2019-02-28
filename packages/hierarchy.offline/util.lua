@@ -65,14 +65,15 @@ local function update_transform(world, pe, psrt)
 		local refpath = hie.ref_path		
 		hie.assetinfo = assetmgr.load(refpath.package, refpath.filename)
 		for _, node in ipairs(hie.assetinfo.handle) do
-			local rot = ms({type = 'q', table.unpack(node.r)}, 'eP')
-			local csrt = ms(psrt, {type = 'srt', s = node.s, r = rot, t = node.t}, '*P')
+			local rot = ms(ms:quaternion(node.r), 'eP')			
+			local csrt = ms(psrt, ms:push_srt_matrix(node.s, rot, node.t), '*P')
 			local s, r, t = ms(csrt, '~PPP')
 			local ceid = mapper[node.name]
 			local ce = world[ceid]
-			ms(ce.position, t, '=')
-			ms(ce.rotation, r, '=')
-			ms(ce.scale, s, '=')
+			local base_srt = ce.transform.base
+			ms(base_srt.t, t, '=', 
+				base_srt.r, r, '=',
+				base_srt.s, s, '=')
 			update_transform(world, ce, csrt)
 		end
 	end
@@ -95,8 +96,7 @@ function util.rebuild_hierarchy(world, eid_rebuild)
 		save_rawdata(builddata, rpath)
     end
 
-    
-	local rootsrt = mu.srt_from_entity(rootentity)
+	local rootsrt = ms:push_srt_matrix(rootentity.transform.base)
     update_transform(world, rootentity, rootsrt)
 end
 

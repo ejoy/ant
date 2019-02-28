@@ -179,10 +179,7 @@ local function init_terrain(fbw, fbh, entity )
 	ctx.height = fbh
 
 	local terrain_comp = entity.terrain 
-	local pos_comp = entity.position 
-	local rot_comp = entity.rotation 
-	local scl_comp = entity.scale 
-
+	
 	local terrain = terrainClass.new()       	-- new terrain instance pvp
 	terrain_comp.terrain_obj = terrain          -- assign to terrain component 
 
@@ -223,9 +220,10 @@ local function init_terrain(fbw, fbh, entity )
 	end 
 
 	-- set terrain transform 
-	local t = stack( pos_comp,"iT")
-	local s = stack( scl_comp,"T")
-	local r = stack( rot_comp,"T")
+	local base_srt = entity.transform.base
+	local t = stack( base_srt.t,"iT")
+	local s = stack( base_srt.s,"T")
+	local r = stack( base_srt.r,"T")
 	terrain:set_transform { t = t, r = r, s = s }
 end
 
@@ -265,9 +263,13 @@ local function create_terrain_entity( world, name  )
 		material = {
 
 		},
-		position = {0, 0, 0, 1},
-		rotation = {0, 0, 0, 0},
-		scale = {1, 1, 1, 0},
+		transform = {
+			base = {
+				s = {1, 1, 1, 0},
+				r = {0, 0, 0, 0},
+				t = {0, 0, 0, 1},
+			}
+		},
 		
 		can_render = true,
 		name = name,
@@ -301,11 +303,11 @@ function terrain_sys:init()
 	local tr_ent, pvp_eid = create_terrain_entity( world,"pvp")
 	tr_ent.terrain.level_name = "assets/build/terrain/pvp1.lvl"
 	tr_ent.terrain.level_material = "assets/depiction/terrain_shadow.mtl"
-	-- stack(tr_ent.position, {147,0.25,205,1}, "=") -- old inverse 
-	stack(tr_ent.position, {-147,0.25,-225,1}, "=")  
-	--stack(tr_ent.position, {-32,0,-32,1}, "=")  
-	stack(tr_ent.rotation, {0, 0, 0,}, "=")
-	stack(tr_ent.scale, {1, 1, 1}, "=")
+	
+	local tr_srt = tr_ent.transform.base
+	stack(tr_srt.t, {-147,0.25,-225,1}, "=")  	
+	stack(tr_srt.r, {0, 0, 0,}, "=")
+	stack(tr_srt.s, {1, 1, 1}, "=")
 	init_terrain(fb.w, fb.h, tr_ent )
 
 	-- world:add_component(pvp_eid,"terrain_collider")
@@ -318,12 +320,13 @@ function terrain_sys:init()
 	  Physics:add_component_terCollider(world, pvp_eid, "terrain_collider", stack)
 	end 	  
 
-	local chibi_ent,chibi_eid = create_terrain_entity( world,"chibi")
+	local chibi_ent,chibi_eid = create_terrain_entity(world,"chibi")
 	chibi_ent.terrain.level_name = "assets/build/terrain/chibi16.lvl"
 	chibi_ent.terrain.level_material = "assets//depiction/terrain_shadow.mtl"
-	stack(chibi_ent.scale, {1, 1, 1}, "=")
-	stack(chibi_ent.rotation, {0, 0, 0,}, "=")
-	stack(chibi_ent.position, {60, 130, 60}, "=")
+	local chibi_srt = chibi_ent.transform.base
+	stack(chibi_srt.s, {1, 1, 1}, "=")
+	stack(chibi_srt.r, {0, 0, 0,}, "=")
+	stack(chibi_srt.t, {60, 130, 60}, "=")
 	init_terrain(fb.w, fb.h, chibi_ent )
 
 	-- world:add_component(chibi_eid,"terrain_collider")

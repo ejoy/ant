@@ -66,9 +66,13 @@ local samplematerialpath = fs.path "skin_model_sample.material"
 
 function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 	local eid = world:create_entity {
-		position = {0, 0, 0, 1}, 
-		scale = {1, 1, 1, 0}, 
-		rotation = {0, 0, 0, 0},
+		transform = {
+			base = {
+				s = {1, 1, 1, 0},
+				r = {0, 0, 0, 0},
+				t = {0, 0, 0, 1},
+			}
+		},
 		mesh = {}, 
 		material = {},
 		can_render = true,

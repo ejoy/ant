@@ -8,9 +8,11 @@ function event:new(eid, component_type)
 	assert(c.watcher == nil , "Can't new watcher more than once")
 	-- A modifier is a table with meta, __newindex is init with a trigger.
 
-	local data = {}
-	local meta = { __index = data, __newindex = self._triggers[component_type] }
+	local data = c
+	local tigger = self._triggers[component_type]
+	local meta = { __index = data, __newindex = tigger }
 	c.watcher = setmetatable( { _rawdata = data , _meta = meta, _eid = eid }, meta )
+	tigger(c.watcher, "_inited", true)
 end
 
 function event:each(component_type)
@@ -45,7 +47,8 @@ function event_singleton.init()
 					if c then
 						-- reset __newindex trigger
 						local w = c.watcher
-						local rawdata = w._rawdata
+						w._inited = nil
+						local rawdata = w._rawdata						
 						local newrawdata = {}
 						w._rawdata = newrawdata
 						local meta = w._meta

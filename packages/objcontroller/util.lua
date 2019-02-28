@@ -9,9 +9,10 @@ local function move_position(p, dir, speed)
 end
 
 function util.move(obj, dx, dy, dz)
-	local xdir, ydir, zdir = ms(obj.rotation, "bPPP")
+	local base_srt = obj.transform.base
+	local xdir, ydir, zdir = ms(base_srt.r, "bPPP")
 
-	local eye = obj.position
+	local eye = obj.transform.base.t
 	if dx then
 		move_position(eye, xdir, dx)
 	end
@@ -24,7 +25,7 @@ function util.move(obj, dx, dy, dz)
 end
 
 function util.rotate(obj, angle_xaxis, angle_yaxis)
-	local rot = obj.rotation
+	local rot = obj.transform.base.r
 
 	angle_xaxis = angle_xaxis or 0
 	angle_yaxis = angle_yaxis or 0

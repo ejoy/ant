@@ -508,7 +508,7 @@ local function insert_shadow_primitive(eid, result)
 	local materialcontent = entity.material.content
 	assert(#materialcontent >= 1)
 
-	local srt ={s=entity.scale, r=entity.rotation, t=entity.position}
+	local srt = ms:create_srt_matrix(entity.transform.base)
 	local mgroups = mesh.handle.groups
 	for i=1, #mgroups do
 		local g = mgroups[i]
@@ -981,13 +981,8 @@ function shadow_maker:render_to_texture( entity, select_filter, viewId, shadow_m
                 cast_prim.material = mq.material  
 
                 cast_prim.properties = { }
-            
-                -- state & program assign by input material 
-                local srt = cast_prim.srt 
-                local mat = ms( { type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
-            
                 -- debug output to framebuffer main camera viewid
-                render_util.draw_primitive( view_id, cast_prim, mat)
+                render_util.draw_primitive( view_id, cast_prim, cast_prim.srt)
                 --print("do check generate shadow")
             end 
         end 

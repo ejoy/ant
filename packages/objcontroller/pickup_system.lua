@@ -180,8 +180,8 @@ local default_primitive_filter = {
 
 local function enable_pickup(eid, enable)
 	if enable then
-		world:add_single_componet(eid, "camera", default_camera)
-		world:add_single_componet(eid, "primitive_filter", default_primitive_filter)
+		world:add_component(eid, "camera", default_camera)
+		world:add_component(eid, "primitive_filter", default_primitive_filter)
 		local e = world[eid]
 		local camera = e.camera
 		local comp = e.pickup
@@ -229,8 +229,8 @@ function pickup_sys:init()
 			if b == "LEFT" and p then
 				local entity = world[pickup_eid]
 				if entity then
-					update_viewinfo(entity, point2d(x, y))
 					enable_pickup(pickup_eid, true)
+					update_viewinfo(entity, point2d(x, y))					
 					entity.pickup.ispicking = true
 				end
 			end
