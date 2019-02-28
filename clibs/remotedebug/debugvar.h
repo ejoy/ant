@@ -465,7 +465,7 @@ get_frame_func(lua_State *L, lua_State *cL, int frame) {
 static void
 copy_table(lua_State *L, int index) {
 	if (lua_getuservalue(L, index) == LUA_TTABLE) {
-		int n = lua_rawlen(L, -1);
+		int n = (int)lua_rawlen(L, -1);
 		lua_createtable(L, n, 0);
 		// v, ut, []
 		int i;
@@ -498,7 +498,7 @@ new_index(lua_State *L, int type) {
 			lua_createtable(L, 1, 0);
 		}
 		// t k v []
-		int n = lua_rawlen(L, -1);
+		int n = (int)lua_rawlen(L, -1);
 		lua_pushvalue(L, -3);
 		// t k v [] k
 		lua_rawseti(L, -2, n+1);
@@ -522,7 +522,7 @@ append_table(lua_State *L, int index) {
 		return 0;
 	}
 	// ..., v, [from_uv], [to_uv]
-	int offset = lua_rawlen(L, -1);
+	int offset = (int)lua_rawlen(L, -1);
 	int i;
 	for (i=1;;i++) {
 		if (lua_rawgeti(L, -2, i) == LUA_TNIL) {

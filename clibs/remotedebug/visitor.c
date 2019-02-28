@@ -13,8 +13,8 @@ lua_State* get_host(lua_State *L);
 // return value, name
 static int
 client_getlocal(lua_State *L, int getref) {
-	int frame = luaL_checkinteger(L, 1);
-	int index = luaL_checkinteger(L, 2);
+	int frame = (int)luaL_checkinteger(L, 1);
+	int index = (int)luaL_checkinteger(L, 2);
 
 	lua_State *hL = get_host(L);
 
@@ -42,7 +42,7 @@ lclient_getlocalv(lua_State *L) {
 // return func
 static int
 lclient_getfunc(lua_State *L) {
-	int frame = luaL_checkinteger(L, 1);
+	int frame = (int)luaL_checkinteger(L, 1);
 
 	lua_State *hL = get_host(L);
 
@@ -213,7 +213,7 @@ lclient_type(lua_State *L) {
 
 static int
 client_getupvalue(lua_State *L, int getref) {
-	int index = luaL_checkinteger(L, 2);
+	int index = (int)luaL_checkinteger(L, 2);
 	lua_settop(L, 1);
 	lua_State *hL = get_host(L);
 
@@ -289,7 +289,7 @@ lclient_getinfo(lua_State *L) {
 
 	switch (lua_type(L, 1)) {
 	case LUA_TNUMBER:
-		if (lua_getstack(hL, luaL_checkinteger(L, 1), &ar) == 0)
+		if (lua_getstack(hL, (int)luaL_checkinteger(L, 1), &ar) == 0)
 			return 0;
 		if (lua_getinfo(hL, "Slnt", &ar) == 0)
 			return 0;

@@ -19,10 +19,23 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\clibs\remotedebug\event_free.cpp" />
+    <ClCompile Include="..\..\clibs\remotedebug\hookmgr.cpp" />
     <ClCompile Include="..\..\clibs\remotedebug\remotedebug.c" />
+    <ClCompile Include="..\..\clibs\remotedebug\thunk.cpp" />
+    <ClCompile Include="..\..\clibs\remotedebug\visitor.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\remotedebug\debugvar.h" />
+    <ClInclude Include="..\..\clibs\remotedebug\event_free.h" />
+    <ClInclude Include="..\..\clibs\remotedebug\thunk.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\clibs\remotedebug\thunk_linux_amd64.inl" />
+    <None Include="..\..\clibs\remotedebug\thunk_other.inl" />
+    <None Include="..\..\clibs\remotedebug\thunk_windows.inl" />
+    <None Include="..\..\clibs\remotedebug\thunk_windows_amd64.inl" />
+    <None Include="..\..\clibs\remotedebug\thunk_windows_i386.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
