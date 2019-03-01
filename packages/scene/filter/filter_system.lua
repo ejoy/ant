@@ -8,9 +8,23 @@ local ru = render.util
 local ms = import_package "ant.math" .stack
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
+primitive_filter_sys.singleton "hierarchy_transform_result"
+
+local function update_transform(transform, hierarchy_cache)
+	local peid = transform.parent
+	local localmat = ms:push_srt_matrix(transform)
+	if peid then
+		local parentmat = hierarchy_cache[peid]
+		localmat = ms(parentmat, localmat, "*P")
+	end
+
+	transform.world = localmat
+	return localmat
+end
 
 --luacheck: ignore self
 function primitive_filter_sys:update()
+	local transform_cache = self.hierarchy_transform_result
 	for _, prim_eid in world:each("primitive_filter") do
 		local e = world[prim_eid]		
 		local filter = e.primitive_filter
@@ -22,11 +36,11 @@ function primitive_filter_sys:update()
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
 			if vt and ft then
-				local trans = ce.transform
+				local trans = update_transform(ce.transform, transform_cache)				
 				ru.insert_primitive(eid, 
 					assert(ce.mesh.assetinfo).handle,
 					assert(ce.material.content),
-					ms:create_srt_matrix(trans),
+					ms(trans, "m"),
 					filter)
 			end
 		end	
