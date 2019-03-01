@@ -14,8 +14,6 @@ local ecs = import_package "ant.ecs"
 local util = {}
 util.__index = util
 
-local world = nil
-
 local bullet_world = import_package "ant.bullet".bulletworld
 
 function util.start_new_world(input_queue, fbw, fbh, packages, systems)
@@ -23,7 +21,7 @@ function util.start_new_world(input_queue, fbw, fbh, packages, systems)
 		log("input queue is not privided, no input event will be received!")
 	end
 
-	world = ecs.new_world {
+	local world = ecs.new_world {
 		packages = packages,
 		systems = systems,		
 		args = { 
@@ -37,7 +35,7 @@ function util.start_new_world(input_queue, fbw, fbh, packages, systems)
     return world
 end
 
-function util.loop(arg)	
+function util.loop(world, arg)	
 	local queue = {}
 	for _, updatetype in ipairs {
 		"post_init", "event_changed", "update", "delete",

@@ -36,6 +36,8 @@ local dlg = iup.dialog {
 local input_queue = inputmgr.queue()
 mapiup(input_queue, canvas)
 
+local world
+
 local function init()
 	local fbw, fbh = 1280, 720
 	rhwi.init {
@@ -43,10 +45,10 @@ local function init()
 		width = fbw,
 		height = fbh,
 	}
-	local world = scene.start_new_world(input_queue, fbw, fbh, {"test.system.simple_system"})
-	task.loop(scene.loop {
+	world = scene.start_new_world(input_queue, fbw, fbh, {"test.system.simple_system"})
+	task.loop(scene.loop(world, {
 		update = {"timesystem", "message_system"}
-	})
+	}))
 end
 
 dlg:showxy(iup.CENTER,iup.CENTER)

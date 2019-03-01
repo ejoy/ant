@@ -318,9 +318,9 @@ local function init(canvas, fbw, fbh)
 	bgfx.set_debug "T"
 
     world = scene.start_new_world( input_queue,fbw,fbh,{"render.add_entity_system"})
-	task.loop(scene.loop {
+	task.loop(scene.loop(world, {
 		update = {"timesystem", "message_system"}
-	})
+	}))
 	-- nk init
 	nk.init {
 		view = UI_VIEW,

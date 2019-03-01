@@ -62,9 +62,9 @@ function callback.init(nwh, context, w, h)
 		height = height,
 	}
 	world = su.start_new_world(iq, width, height, packages, systems)
-	world_update = su.loop {
+	world_update = su.loop(world, {
 		update = {"timesystem", "message_system"}
-	}
+	})
 end
 
 function callback.error(err)
