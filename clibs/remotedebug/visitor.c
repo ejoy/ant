@@ -7,6 +7,9 @@
 
 #include "debugvar.h"
 
+static int DEBUG_WATCH = 0;
+static int DEBUG_WATCH_FUNC = 0;
+
 lua_State* get_host(lua_State *L);
 
 // frame, index
@@ -338,6 +341,155 @@ lclient_getinfo(lua_State *L) {
 	return 1;
 }
 
+static int
+lclient_reffunc(lua_State *L) {
+	size_t len = 0;
+	const char* func = luaL_checklstring(L, 1, &len);
+	lua_State* hL = get_host(L);
+	if (lua_rawgetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH_FUNC) == LUA_TNIL) {
+		lua_pop(hL, 1);
+		lua_newtable(hL);
+		lua_pushvalue(hL, -1);
+		lua_rawsetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH_FUNC);
+	}
+	if (luaL_loadbuffer(hL, func, len, "=")) {
+		lua_pushnil(L);
+		lua_pushstring(L, lua_tostring(hL, -1));
+		lua_pop(hL, 2);
+		return 2;
+	}
+	lua_pushinteger(L, luaL_ref(hL, -2));
+	lua_pop(hL, 1);
+	return 1;
+}
+
+static int
+getreffunc(lua_State *hL, lua_Integer func) {
+	if (lua_rawgetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH_FUNC) != LUA_TTABLE) {
+		lua_pop(hL, 1);
+		return 0;
+	}
+	if (lua_rawgeti(hL, -1, func) != LUA_TFUNCTION) {
+		lua_pop(hL, 2);
+		return 0;
+	}
+	lua_remove(hL, -2);
+	return 1;
+}
+
+static int
+lclient_eval(lua_State *L) {
+	lua_Integer func = luaL_checkinteger(L, 1);
+	const char* source = luaL_checkstring(L, 2);
+	lua_Integer level = luaL_checkinteger(L, 3);
+	lua_State* hL = get_host(L);
+	if (!getreffunc(hL, func)) {
+		lua_pushboolean(L, 0);
+		lua_pushstring(L, "invalid func");
+		return 2;
+	}
+	lua_pushstring(hL, source);
+	lua_pushinteger(hL, level);
+	if (lua_pcall(hL, 2, 1, 0)) {
+		lua_pushboolean(L, 0);
+		lua_pushstring(L, lua_tostring(hL, -1));
+		lua_pop(hL, 1);
+		return 2;
+	}
+	lua_pushboolean(L, 1);
+	if (LUA_TNONE == copy_value(hL, L)) {
+		lua_pushboolean(L, 0);
+		lua_pushfstring(L, "invalid value type `%s`", lua_typename(hL, lua_type(hL, -1)));
+		lua_pop(hL, 1);
+		return 2;
+	}
+	lua_pop(hL, 1);
+	return 2;
+}
+
+static int
+addwatch(lua_State *hL, int idx) {
+	lua_pushvalue(hL, idx);
+	if (lua_rawgetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH) == LUA_TNIL) {
+		lua_pop(hL, 1);
+		lua_newtable(hL);
+		lua_pushvalue(hL, -1);
+		lua_rawsetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH);
+	}
+	lua_insert(hL, -2);
+	int ref = luaL_ref(hL, -2);
+	lua_pop(hL, 1);
+	return ref;
+}
+
+static int
+storewatch(lua_State *L, lua_State *hL, int idx) {
+	int ref = addwatch(hL, idx);
+	lua_remove(hL, idx);
+	get_registry(L, VAR_REGISTRY);
+	lua_pushlightuserdata(L, &DEBUG_WATCH);
+	if (!get_index(L, hL, 1)) {
+		return 0;
+	}
+	lua_pushinteger(L, ref);
+	if (!get_index(L, hL, 1)) {
+		return 0;
+	}
+	return 1;
+}
+
+static int
+lclient_evalwatch(lua_State *L) {
+	lua_Integer func = luaL_checkinteger(L, 1);
+	const char* source = luaL_checkstring(L, 2);
+	lua_Integer level = luaL_checkinteger(L, 3);
+	lua_State* hL = get_host(L);
+	if (!getreffunc(hL, func)) {
+		lua_pushboolean(L, 0);
+		lua_pushstring(L, "invalid func");
+		return 2;
+	}
+	lua_pushstring(hL, source);
+	lua_pushinteger(hL, level);
+	int n = lua_gettop(hL) - 3;
+	if (lua_pcall(hL, 2, LUA_MULTRET, 0)) {
+		lua_pushboolean(L, 0);
+		lua_pushstring(L, lua_tostring(hL, -1));
+		lua_pop(hL, 1);
+		return 2;
+	}
+	int rets = lua_gettop(hL) - n;
+	for (int i = 0; i < rets; ++i) {
+		if (!storewatch(L, hL, i-rets)) {
+			lua_pushboolean(L, 0);
+			lua_pushstring(L, "error");
+			return 2;
+		}
+	}
+	lua_pushboolean(L, 1);
+	lua_insert(L, -1-rets);
+	return 1 + rets;
+}
+
+static int
+lclient_unwatch(lua_State *L) {
+	lua_Integer ref = luaL_checkinteger(L, 1);
+	lua_State* hL = get_host(L);
+	if (lua_rawgetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH) == LUA_TNIL) {
+		return 0;
+	}
+	luaL_unref(hL, -1, ref);
+	return 0;
+}
+
+static int
+lclient_cleanwatch(lua_State *L) {
+	lua_State* hL = get_host(L);
+	lua_pushnil(hL);
+	lua_rawsetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH);
+	return 0;
+}
+
 int
 init_visitor(lua_State *L) {
 	// It's client
@@ -361,6 +513,11 @@ init_visitor(lua_State *L) {
 		{ "assign", lclient_assign },
 		{ "type", lclient_type },
 		{ "getinfo", lclient_getinfo },
+		{ "reffunc", lclient_reffunc },
+		{ "eval", lclient_eval },
+		{ "evalwatch", lclient_evalwatch },
+		{ "unwatch", lclient_unwatch },
+		{ "cleanwatch", lclient_cleanwatch },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);

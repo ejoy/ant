@@ -98,34 +98,13 @@ local function verifyBreakpoint(src, bps)
             res[bp.line] = bp
 
             bp.statHit = hits[bp.realLine] or 0
-            if bp.condition then
-                local f, err = evaluate.complie('return ' .. bp.condition)
-                if not f then
-                    bp.message = err
-                else
-                    bp.statCondition = f
-                end
-            end
-            if bp.hitCondition then
-                local f, err = evaluate.complie('return (...)' .. bp.hitCondition)
-                if not f then
-                    bp.message = err
-                else
-                    bp.statHitCondition = f
-                end
-            end
             if bp.logMessage then
                 local n = 0
                 bp.statLog = {}
                 bp.statLog[1] = bp.logMessage:gsub('%b{}', function(str)
                     n = n + 1
                     local key = ('{%d}'):format(n)
-                    local f = evaluate.complie('return ' .. str:sub(2,-2))
-                    if not f then
-                        bp.statLog[key] = { str }
-                    else
-                        bp.statLog[key] = { str, f }
-                    end
+                    bp.statLog[key] = str:sub(2,-2)
                     return key
                 end)
                 bp.statLog[1] = bp.statLog[1] .. '\n'
@@ -181,15 +160,15 @@ function m.update(clientsrc, si, bps)
 end
 
 function m.exec(bp)
-    if bp.statCondition then
-        local ok, res = evaluate.execute(1, bp.statCondition)
+    if bp.condition then
+        local ok, res = evaluate.eval(bp.condition)
         if ok and type(res) == 'boolean' and res == false then
             return false
         end
     end
     bp.statHit = bp.statHit + 1
-    if bp.statHitCondition then
-        local ok, res = evaluate.execute(1, bp.statHitCondition, bp.statHit)
+    if bp.hitCondition then
+        local ok, res = evaluate.eval(bp.statHit .. ' ' .. bp.hitCondition)
         if ok and type(res) == 'boolean' and res == false then
             return false
         end
@@ -200,12 +179,9 @@ function m.exec(bp)
             if not info then
                 return key
             end
-            if not info[2] then
-                return info[1]
-            end
-            local ok, r = evaluate.execute(1, info[2])
+            local ok, r = evaluate.eval(info)
             if not ok then
-                return info[1]
+                return info
             end
             return tostring(r)
         end)
