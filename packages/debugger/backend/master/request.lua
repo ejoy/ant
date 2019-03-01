@@ -103,10 +103,10 @@ end
 
 function request.setBreakpoints(req)
     local args = req.arguments
-    local source = req.arguments.source
-    if source.path then
-        local f = loadfile(source.path)
+    if args.sourceContent then
+        local f = load(args.sourceContent)
         if f then
+            local source = args.source
             source.si = {}
             parser(source.si, f)
         end
@@ -406,5 +406,14 @@ function request.loadedSources(req)
         cmd = 'loadedSources'
     }
 end
+
+--function print(...)
+--    local n = select('#', ...)
+--    local t = {}
+--    for i = 1, n do
+--        t[i] = tostring(select(i, ...))
+--    end
+--    event.output('stdout', table.concat(t, '\t')..'\n')
+--end
 
 return request
