@@ -54,12 +54,10 @@ local function create_animation_test()
 	end
 
 	local eid = world:create_entity {
-		transform = {
-			base = {
+		transform = {			
 				s = {1, 1, 1, 0},
 				r = {0, 0, 0, 0},
 				t = {0, 0, 0, 1},
-			}
 		},
 		can_render = true,
 		mesh = {},
@@ -114,11 +112,9 @@ local function create_hierarchy_test()
     local function create_entity(name, meshfile, materialfile)
         return world:create_entity {
 				transform = {
-					base = {
-						s = {1, 1, 1, 0},
-						r = {0, 0, 0, 0},
-						t = {0, 0, 0, 1},
-					}
+					s = {1, 1, 1, 0},
+					r = {0, 0, 0, 0},
+					t = {0, 0, 0, 1},
 				},
 				mesh = {
 					ref_path = meshfile,
@@ -190,12 +186,10 @@ local function create_hierarchy_test()
 				ref_path = hie_refpath,
 			},
 			hierarchy_name_mapper = {},
-			transform = {
-				base = {
-					s = srt[1],
-					r = srt[2],
-					t = srt[3],
-				}
+			transform = {				
+				s = srt[1],
+				r = srt[2],
+				t = srt[3],				
 			},
 			name = name,
 			serialize = import_package 'ant.serialize'.create(), 

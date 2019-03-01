@@ -1888,10 +1888,32 @@ create_srt_matrix(lua_State *L) {
 
 static int
 lpush_srt(lua_State *L) {
+	const int numarg = lua_gettop(L);
+	if (numarg < 1) {
+		luaL_error(L, "invalid argument, at least 1:%d", numarg);
+	}
+
 	struct boxpointer *bp = (struct boxpointer*)lua_touserdata(L, 1);
 	lastack *LS = bp->LS;
 
-	push_srt(L, LS, 2);
+	switch (numarg) {
+	case 1:
+	{
+		glm::mat4x4 srt(1);
+		lastack_pushmatrix(LS, &(srt[0][0]));
+	}
+	break;
+	case 2:
+	{
+		push_srt(L, LS, 2);
+	}
+	break;
+
+	default:
+		luaL_error(L, "only support 1/2 argument:%d", numarg);
+		break;
+	}	
+	
 	pushid(L, pop(L, LS));
 	return 1;
 }

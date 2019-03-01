@@ -251,12 +251,10 @@ function PVPScene.create_entitices(world)
 
 
 				local eid = world:create_entity  {
-					transform = {
-						base = {
-							s = s,
-							r = r,
-							t = t,
-						}
+					transform = {						
+						s = s,
+						r = r,
+						t = t,
 					},
 					can_render = true, 
 					mesh = {

@@ -19,12 +19,10 @@ function simplescene:init()
 	computil.create_grid_entity(world)
 
 	local bunnyeid = world:create_entity {
-		transform = {
-			base = {
-				s = {1, 1, 1, 0},
-				r = {0, 0, 0, 0},
-				t = {0, 0, 0, 1},
-			}
+		transform = {			
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
 		},
 		mesh = {
 			ref_path = {package="ant.resources", filename=fs.path "bunny.mesh"},

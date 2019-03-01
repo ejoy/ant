@@ -25,8 +25,8 @@ function cc:init()
 		local deltatime = timer.deltatime * 0.001 * value
 
 		local physic_state = character.physic_state
-		local base_srt = character.transform.base
-		local result = ms({movespeed * value}, base_srt.r, "d*T")
+		local srt = character.transform
+		local result = ms({movespeed * value}, srt.r, "d*T")
 		local velocity = physic_state.velocity
 		velocity[1], velocity[2], velocity[3] = result[1], result[2], result[3]		
 

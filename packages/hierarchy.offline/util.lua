@@ -70,10 +70,10 @@ local function update_transform(world, pe, psrt)
 			local s, r, t = ms(csrt, '~PPP')
 			local ceid = mapper[node.name]
 			local ce = world[ceid]
-			local base_srt = ce.transform.base
-			ms(base_srt.t, t, '=', 
-				base_srt.r, r, '=',
-				base_srt.s, s, '=')
+			local srt = ce.transform
+			ms(srt.t, t, '=', 
+				srt.r, r, '=',
+				srt.s, s, '=')
 			update_transform(world, ce, csrt)
 		end
 	end
@@ -96,7 +96,7 @@ function util.rebuild_hierarchy(world, eid_rebuild)
 		save_rawdata(builddata, rpath)
     end
 
-	local rootsrt = ms:push_srt_matrix(rootentity.transform.base)
+	local rootsrt = ms:push_srt_matrix(rootentity.transform)
     update_transform(world, rootentity, rootsrt)
 end
 

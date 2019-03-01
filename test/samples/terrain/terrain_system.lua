@@ -220,10 +220,10 @@ local function init_terrain(fbw, fbh, entity )
 	end 
 
 	-- set terrain transform 
-	local base_srt = entity.transform.base
-	local t = stack( base_srt.t,"iT")
-	local s = stack( base_srt.s,"T")
-	local r = stack( base_srt.r,"T")
+	local transform = entity.transform
+	local t = stack( transform.t,"iT")
+	local s = stack( transform.s,"T")
+	local r = stack( transform.r,"T")
 	terrain:set_transform { t = t, r = r, s = s }
 end
 
@@ -263,12 +263,10 @@ local function create_terrain_entity( world, name  )
 		material = {
 
 		},
-		transform = {
-			base = {
-				s = {1, 1, 1, 0},
-				r = {0, 0, 0, 0},
-				t = {0, 0, 0, 1},
-			}
+		transform = {			
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
 		},
 		
 		can_render = true,
@@ -304,10 +302,10 @@ function terrain_sys:init()
 	tr_ent.terrain.level_name = "assets/build/terrain/pvp1.lvl"
 	tr_ent.terrain.level_material = "assets/depiction/terrain_shadow.mtl"
 	
-	local tr_srt = tr_ent.transform.base
-	stack(tr_srt.t, {-147,0.25,-225,1}, "=")  	
-	stack(tr_srt.r, {0, 0, 0,}, "=")
-	stack(tr_srt.s, {1, 1, 1}, "=")
+	local tr_transform = tr_ent.transform
+	stack(tr_transform.t, {-147,0.25,-225,1}, "=")  	
+	stack(tr_transform.r, {0, 0, 0,}, "=")
+	stack(tr_transform.s, {1, 1, 1}, "=")
 	init_terrain(fb.w, fb.h, tr_ent )
 
 	-- world:add_component(pvp_eid,"terrain_collider")
@@ -323,10 +321,10 @@ function terrain_sys:init()
 	local chibi_ent,chibi_eid = create_terrain_entity(world,"chibi")
 	chibi_ent.terrain.level_name = "assets/build/terrain/chibi16.lvl"
 	chibi_ent.terrain.level_material = "assets//depiction/terrain_shadow.mtl"
-	local chibi_srt = chibi_ent.transform.base
-	stack(chibi_srt.s, {1, 1, 1}, "=")
-	stack(chibi_srt.r, {0, 0, 0,}, "=")
-	stack(chibi_srt.t, {60, 130, 60}, "=")
+	local chibi_transform = chibi_ent.transform
+	stack(chibi_transform.s, {1, 1, 1}, "=")
+	stack(chibi_transform.r, {0, 0, 0,}, "=")
+	stack(chibi_transform.t, {60, 130, 60}, "=")
 	init_terrain(fb.w, fb.h, chibi_ent )
 
 	-- world:add_component(chibi_eid,"terrain_collider")

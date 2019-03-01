@@ -86,7 +86,7 @@ local function update_transform_from_animation(aniresult, ske, e)
 	assert(ske:isroot(rootidx))
 	local trans = aniresult:joint(rootidx)
 	local s, r, t = ms(ms:matrix(trans), "~PPP")
-	e.transform.base.t(t)
+	e.transform.t(t)
 end
 
 function anisystem:update()	
@@ -102,8 +102,7 @@ function anisystem:update()
 		local fix_root = false
 		local ikcomp = e.ik
 		if ikcomp and ikcomp.enable then
-			local mat = ms({type="srt", e.transform.base}, "m")
-
+			local mat = ms:create_srt_matrix(e.transform)
 			local t = deep_copy(ikcomp)
 			t.target = ms(assert(t.target), "m")
 			t.pole_vector = ms(assert(t.pole_vector), "m")

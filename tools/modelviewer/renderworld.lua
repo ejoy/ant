@@ -37,12 +37,10 @@ function model_review_system:init()
 	cu.create_grid_entity(world, "grid")
 
 	world:create_entity {
-		transform = {
-			base = {
-				s = {0.2, 0.2, 0.2, 0},
-				r = {-90, -90, 0, 0},
-				t = {0, 0, 0, 1},
-			}
+		transform = {			
+			s = {0.2, 0.2, 0.2, 0},
+			r = {-90, -90, 0, 0},
+			t = {0, 0, 0, 1},
 		},
 		can_render = true,
 		mesh = {
@@ -62,7 +60,7 @@ function model_review_system:init()
 	-- local mesh = model.mesh.assetinfo.handle.bounding
 	--local bound = ms(mesh.aabb.max, mesh.aabb.min, "-T")
 	--local scale = 10 / math.max(bound[1], math.max(bound[2], bound[3]))
-	-- local base_srt = model.transform.base 
-	--ms(base_srt.s, {scale, scale, scale, 0}, "=")
-	--ms(base_srt.t, {0, 0, 0, 1}, {0,mesh.aabb.min[2],0,1}, {scale}, "*-=")
+	-- local trans = model.transform
+	--ms(trans.s, {scale, scale, scale, 0}, "=")
+	--ms(trans.t, {0, 0, 0, 1}, {0,mesh.aabb.min[2],0,1}, {scale}, "*-=")
 end

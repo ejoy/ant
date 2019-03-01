@@ -508,7 +508,7 @@ local function insert_shadow_primitive(eid, result)
 	local materialcontent = entity.material.content
 	assert(#materialcontent >= 1)
 
-	local srt = ms:create_srt_matrix(entity.transform.base)
+	local srt = ms:create_srt_matrix(entity.transform)
 	local mgroups = mesh.handle.groups
 	for i=1, #mgroups do
 		local g = mgroups[i]

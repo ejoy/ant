@@ -181,7 +181,7 @@ end
 function bullet_world:add_component_collider(world, eid, collidername, offset)
 	--world:add_component(eid, collidername)
 	local e = world[eid]
-	self:init_collider_component(e[collidername], eid, e.transform.base, offset)
+	self:init_collider_component(e[collidername], eid, e.transform, offset)
 end 
 
 -- special handy function, for lazy auto create component terrain collider 

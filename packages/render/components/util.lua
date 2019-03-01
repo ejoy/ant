@@ -201,12 +201,10 @@ function util.create_grid_entity(world, name, w, h, unit)
 	local geolib= geopkg.geometry
 
 	local gridid = world:create_entity {
-		transform = {
-			base = {
-				s = {1, 1, 1, 0},
-				r = {0, 0, 0, 0},
-				t = {0, 0, 0, 1},
-			}
+		transform = {			
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
 		},
 		can_render = true, 
 		mesh = {},

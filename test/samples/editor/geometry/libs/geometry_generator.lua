@@ -20,5 +20,5 @@ function generator:init()
 
 	local camera_entity = world:first_entity("main_camera")	
 	
-	ms(camera_entity.transform.base.r, {0, 30, 0}, "=")
+	ms(camera_entity.transform.r, {0, 30, 0}, "=")
 end

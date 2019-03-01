@@ -94,10 +94,10 @@ function util.print_srt(e, numtab)
 		end		
 	end
 	
-	local base_srt = e.transform.base
-	local s_str = tostring(base_srt.s)
-	local r_str = tostring(base_srt.r)
-	local t_str = tostring(base_srt.t)
+	local srt = e.transform
+	local s_str = tostring(srt.s)
+	local r_str = tostring(srt.r)
+	local t_str = tostring(srt.t)
 
 	print(tab .. "scale : ", s_str)
 	print(tab .. "rotation : ", r_str)

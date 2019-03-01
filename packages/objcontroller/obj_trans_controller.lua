@@ -67,7 +67,7 @@ end
 
 local function get_controller_position(controller)
 	local root_eid = assert(controller.root)
-	return world[root_eid].transform.base.t
+	return world[root_eid].transform.t
 end
 
 local function update_transform(controller, objeid)	
@@ -124,12 +124,12 @@ local function play_object_transform(ot, dx, dy)
 		return dirInScreen[1] * dx + dirInScreen[2] * dy        
     end
 
-	local sceneobj_base_srt = sceneobj.transform.base
-	local xdir, ydir, zdir = ms(sceneobj_base_srt.r, "bPPP")
+	local sceneobj_srt = sceneobj.transform
+	local xdir, ydir, zdir = ms(sceneobj_srt.r, "bPPP")
 
     if mode == "pos_transform" then            
         if selected_axis then
-            local pos = sceneobj_base_srt.t
+            local pos = sceneobj_srt.t
 
             local function move(dir)
 				local speed = ot.translate_speed			
@@ -151,13 +151,13 @@ local function play_object_transform(ot, dx, dy)
         end
     elseif mode == "scale_transform" then
         if selected_axis then                
-            local scale = ms(sceneobj_base_srt.s, "T")
+            local scale = ms(sceneobj_srt.s, "T")
 
             local function scale_by_axis(dir, idx)
                 local speed = ot.scale_speed
                 local v = select_step_value(dir) > 0 and speed or -speed
                 scale[idx] = scale[idx] + v
-                ms(sceneobj_base_srt.s, scale, "=")
+                ms(sceneobj_srt.s, scale, "=")
             end
 
             if axis_name == "x" then
@@ -172,13 +172,13 @@ local function play_object_transform(ot, dx, dy)
         end
     elseif mode == "rotator_transform" then
         if selected_axis then
-            local rotation = ms(sceneobj_base_srt.r, "T")
+            local rotation = ms(sceneobj_srt.r, "T")
 
             local function rotate(dir, idx)
                 local speed = ot.rotation_speed
                 local v = select_step_value(dir) > 0 and speed or -speed
                 rotation[idx] = rotation[idx] + v
-                ms(sceneobj_base_srt.r, rotation, "=")
+                ms(sceneobj_srt.r, rotation, "=")
             end
 
             if axis_name == "x" then
@@ -284,11 +284,9 @@ end
 local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfile, materialfile, tag_comp, color)
 	local hie_eid = world:create_entity {
 		transform = {
-			base = {
-				s = {1, 1, 1, 0},
-				r = {0, 0, 0, 0},
-				t = {0, 0, 0, 1},
-			}
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
 		},
 		name = "hierarchy-" .. prefixname .. "-" .. suffixname,
 		editable_hierarchy = {ref_path = {package=pkgname, filename=axis_hierarchyname}},
@@ -301,11 +299,9 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 	local function create_mesh_entity(name, meshfile)
 		local eid = world:create_entity {
 			transform = {
-				base = {
-					s = {1, 1, 1, 0},
-					r = {0, 0, 0, 0},
-					t = {0, 0, 0, 1},
-				}
+				s = {1, 1, 1, 0},
+				r = {0, 0, 0, 0},
+				t = {0, 0, 0, 1},
 			},
 			name = prefixname .. name .. "-" .. suffixname,
 			mesh = {
@@ -351,11 +347,10 @@ local function add_axis_base_transform_entites(basename, headmeshfile, axismeshf
 
 	local rootaxis_eid = world:create_entity {
 		transform = {
-			base = {
 				s = {1, 1, 1, 0},
 				r = {0, 0, 0, 0},
 				t = {0, 0, 0, 1},
-			}
+
 		},
 		editable_hierarchy = {ref_path = {package=pkgname, filename=axisbase_controller_hierarchyname}},
 		hierarchy_name_mapper = {},
@@ -409,10 +404,10 @@ local function add_axis_base_transform_entites(basename, headmeshfile, axismeshf
 
 	function controllers:update_transform(obj)		
 		local root = world[self.root]
-		local root_base_srt = root.transform.base
-		local obj_base_srt = obj.transform.base
-		ms(root_base_srt.r, obj_base_srt.r, "=")
-		ms(root_base_srt.t, obj_base_srt.t, "=")
+		local root_srt = root.transform
+		local obj_srt = obj.transform
+		ms(root_srt.r, obj_srt.r, "=")
+		ms(root_srt.t, obj_srt.t, "=")
 	end
 
 	function controllers:is_controller_id(check_eid)
@@ -447,11 +442,9 @@ local function add_rotator_entities(colors)
 
 	local root_eid = world:create_entity {		
 		transform = {
-			base = {
-				s = {1, 1, 1, 0},
-				r = {0, 0, 0, 0},
-				t = {0, 0, 0, 1},
-			}
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
 		},
 		name = "rotator",
 		rotator_transform = true,
@@ -466,11 +459,10 @@ local function add_rotator_entities(colors)
 	local function add_elem_entity(elemname, clrname)
 		local elem_eid = world:create_entity {
 			transform = {
-				base = {
-					s = {1, 1, 1, 0},
-					r = {0, 0, 0, 0},
-					t = {0, 0, 0, 1},
-				}
+				s = {1, 1, 1, 0},
+				r = {0, 0, 0, 0},
+				t = {0, 0, 0, 1},
+				
 			},
 			editable_hierarchy = {
 				ref_path = {package=pkgname, filename=rotator_hierarchyname},
@@ -487,11 +479,9 @@ local function add_rotator_entities(colors)
 		local function add_entity(name, meshfilename, colorname)
 			return world:create_entity {
 				transform = {
-					base = {
-						s = {1, 1, 1, 0},
-						r = {0, 0, 0, 0},
-						t = {0, 0, 0, 1},
-					}
+					s = {1, 1, 1, 0},
+					r = {0, 0, 0, 0},
+					t = {0, 0, 0, 1},
 				},
 				name = name,
 				rotator_transform = true,
@@ -541,7 +531,7 @@ local function add_rotator_entities(colors)
 
 	function controllers:update_transform(obj)		
 		local root = world[self.root]		
-		ms(root.transform.base.t, obj.transform.base.t, "=")
+		ms(root.transform.t, obj.transform.t, "=")
 	end
 
 	function controllers:is_controller_id(check_eid)

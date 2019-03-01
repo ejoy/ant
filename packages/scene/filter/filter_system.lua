@@ -22,11 +22,11 @@ function primitive_filter_sys:update()
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
 			if vt and ft then
-				local base_srt = ce.transform.base
+				local trans = ce.transform
 				ru.insert_primitive(eid, 
 					assert(ce.mesh.assetinfo).handle,
 					assert(ce.material.content),
-					ms:create_srt_matrix(base_srt),
+					ms:create_srt_matrix(trans),
 					filter)
 			end
 		end	

@@ -22,22 +22,23 @@ local testscene = ecs.system "test_scene"
 testscene.singleton "event"
 testscene.singleton "hierarchy_transform_result"
 
-local function identify_srt(s, r, t)
+local function create_default_transform(parent, base, s, r, t, attach)
 	return {
+		parent = parent,
+		attach = attach,
+		base = base,
 		s = s or {1, 1, 1, 0},
 		r = r or {0, 0, 0, 0},
 		t = t or {0, 0, 0, 1},
 	}
 end
 
-local function create_default_transform(parent, base, srt, attach)
-	return {
-		parent = parent,
-		attach = attach,
-		base = base or identify_srt(),
-		relative_srt = srt,
-	}
-end
+local identity_matrix = {
+	1, 0, 0, 0,
+	0, 1, 0, 0,
+	0, 0, 1, 0,
+	0, 0, 0, 1,
+}
 
 
 function testscene:init()
@@ -79,7 +80,7 @@ function testscene:init()
 
 
 	local render_root = world:create_entity {
-		transform = create_default_transform(nil, nil, identify_srt(), hie_root),
+		transform = create_default_transform(nil, identity_matrix, nil, nil, nil, hie_root),
 		name = "render_root",
 		mesh = {
 			ref_path = {package="ant.resources", filename=fs.path "cube.mesh"},
@@ -90,7 +91,7 @@ function testscene:init()
 	}
 
 	local render_level1_1 = world:create_entity {
-		transform = create_default_transform(nil, nil, identify_srt(), hie_level1_1),
+		transform = create_default_transform(nil, identity_matrix, nil, nil, nil, hie_level1_1),
 		name = "render_level1",
 		mesh = {
 			ref_path = {package="ant.resources", filename=fs.path "sphere.mesh"},
@@ -101,7 +102,7 @@ function testscene:init()
 	}
 
 	local render_level1_2 = world:create_entity {
-		transform = create_default_transform(nil, nil, identify_srt(), hie_level1_2),
+		transform = create_default_transform(nil, identity_matrix, nil, nil, nil, hie_level1_2),
 		name = "render_level1_2",
 		mesh = {
 			ref_path = {package="ant.resources", filename=fs.path "sphere.mesh"},
@@ -113,7 +114,7 @@ function testscene:init()
 
 
 	local render_level2_1 = world:create_entity {
-		transform = create_default_transform(nil, nil, identify_srt(), hie_level2_1),		
+		transform = create_default_transform(nil, identity_matrix, nil, nil, nil, hie_level2_1),
 		name = "render_level2_eid1",
 		mesh = {
 			ref_path = {package="ant.resources", filename=fs.path "sphere.mesh"},
@@ -175,51 +176,142 @@ end
 local scene_space = ecs.system "scene_space"
 scene_space.singleton "event"
 
-function scene_space:event_changed()
-	for eid, modify in self.event:each("base_transform") do
-		local e = world[eid]
-		local attacheid = e.attach
-		local attache = world[attacheid]
-		e.base_transform = modify
-		attache.hierarchy_transform = modify
+local function mark_children(marked, eid)
+	local pid = world[eid].transform.parent
+	if pid and marked[pid] then
+		marked[eid] = pid
+		return true
 	end
+	marked[eid] = false
+	return false
+end
 
+local mark_mt = { __index = mark_children }
+
+local function find_children(tree, eid)
+	local _ = tree[eid]
+end
+
+local function tree_sort(tree)
+	local r = {}
+
+	local from = 1
+	local to = 1
+	-- find leaves
+	local leaf = {}
+	for eid, pid in pairs(tree) do
+		if pid then
+			if leaf[pid] then	-- fake leaf
+				-- todo remove result
+				for i = 1, to-1 do
+					if r[i] == pid then
+						to = to - 1
+						r[i] = r[to]
+						break
+					end
+				end
+			end
+			leaf[pid] = false
+			if leaf[eid] == nil then
+				leaf[eid] = true	-- mark leaf
+				r[to] = eid
+				to = to + 1
+			end
+		end
+	end
+	while to > from do
+		local lb = from
+		from = to
+		for i = lb, to-1 do
+			local pid = tree[r[i]]
+			if pid and tree[pid] and not leaf[pid] then
+				r[to] = pid
+				to = to + 1
+				leaf[pid] = true
+			end
+		end
+	end
+	return r
+end
+
+local function update_world(trans)
+	local srt = ms:push_srt_matrix(trans)
+	ms(trans.world, srt, trans.base, "*=")
+end
+
+local function handle_transform_events(events, comp)
+	local handlers = {
+		attach = function (comp, value)
+		end,
+		parent = function (comp, value)
+		end,
+		s = function (comp, value)
+			ms(comp.s, value, "=")			
+		end,
+		r = function (comp, value)
+			ms(comp.r, value, "=")			
+		end,
+		t = function (comp, value)
+			ms(comp.s, value, "=")			
+		end,
+		base = function (comp, value)
+			ms(comp.base, value, "=")			
+		end,
+	}
+
+	for event, value in pairs(events) do
+		local handler = handlers[event]
+		if handler then
+			handler(comp, value)
+		else
+			print("handler is not default in transform:", event)
+		end
+	end
+end
+
+function scene_space:event_changed()
+	for eid, events in self.event:each("transform") do
+		local e = world[eid]
+		local trans = e.transform
+		handle_transform_events(events, trans)
+
+		local attacheid = trans.attach
+		if attacheid then
+			local attache = world[attacheid]
+			local base = events['base']
+			if base then
+				attache.hierarchy_transform.watcher.base = base
+			end
+		end
+	end
 
 	local hierarchy_result = self.hierarchy_transform_result
 
-	local eids = {}	
+	local tree = setmetatable({}, mark_mt)
+
 	for eid, modify in self.event:each("hierarchy_transform") do
 		local e = world[eid]
 		e.hierarchy_transform = modify
-		eids[#eids+1] = eid
+		find_children(tree, eid)
 	end
 
-	if #eids > 0 then
-		local function find_parent_eid(eid)
-			for idx, peid in ipairs(eids) do
-				if peid == eid then
-					return idx
-				end
-			end
-		end
-
-		for _, eid in world:each "hierarchy_transform" do
+	if #tree > 0 then
+		local result = tree_sort(tree)
+		
+		for i=#result, 1, -1 do
+			local eid = result[i]
 			local e = world[eid]
-			local idx = find_parent_eid(e.parent) 
-			if idx then
-				table.insert(eids, idx+1, eid)
-			end
-		end
-
-		for _, eid in ipairs(eids) do
-			local e = world[eid]
+			local t = e.transform
+			update_world(e.transform)
 			local peid = e.parent 
+	
 			if peid then
 				local parent = world[peid]
-				local wt = parent.world_transform
-				ms(e.world_transform, wt, e.world_transform, "*=")
-				hierarchy_result[eid] = e.world_transform
+				local pt = parent.transform
+				ms(t.world, pt.world, t.world, "*=")				
 			end
+
+			hierarchy_result[eid] = t.world
 		end
 
 	end
