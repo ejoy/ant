@@ -236,7 +236,12 @@ end
 
 local function update_world(trans)
 	local srt = ms:push_srt_matrix(trans)
-	ms(trans.world, srt, trans.base, "*=")
+	local base = trans.base 
+	if base then
+		ms(trans.world, srt, trans.base, "*=")
+	else
+		ms(trans.world, srt, "=")
+	end
 end
 
 local function handle_transform_events(events, comp)
@@ -314,7 +319,5 @@ function scene_space:event_changed()
 			hierarchy_result[eid] = t.world
 		end
 
-	end
-
-	
+	end	
 end
