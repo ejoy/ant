@@ -6,10 +6,7 @@ ecs.import "ant.inputmgr"
 ecs.import "ant.render"
 ecs.import "ant.scene"
 ecs.import "ant.serialize"
-ecs.import "ant.event"
 
-
-local component_util = import_package "ant.render".components
 local math = import_package "ant.math"
 local ms = math.stack
 local model_review_system = ecs.system "model_review_system"
@@ -20,7 +17,6 @@ model_review_system.dependby "message_system"
 --model_review_system.depend "shadow_primitive_filter_system"
 model_review_system.depend "transparency_filter_system"
 model_review_system.depend "entity_rendering"
-model_review_system.depend "scene_space"
 
 local lu = import_package "ant.render" .light
 local cu = import_package "ant.render" .components
@@ -38,7 +34,7 @@ function model_review_system:init()
 	create_light()
 	cu.create_grid_entity(world, "grid")
 
-	local eid = world:create_entity {
+	world:create_entity {
 		transform = {			
 			s = {0.2, 0.2, 0.2, 0},
 			r = {-90, -90, 0, 0},
@@ -55,7 +51,7 @@ function model_review_system:init()
 				}
 			}
 		},
-		main_viewtag = true,
+		main_viewtag = true,		
 	}
 
 	-- local mesh = model.mesh.assetinfo.handle.bounding
@@ -64,11 +60,4 @@ function model_review_system:init()
 	-- local trans = model.transform
 	--ms(trans.s, {scale, scale, scale, 0}, "=")
 	--ms(trans.t, {0, 0, 0, 1}, {0,mesh.aabb.min[2],0,1}, {scale}, "*-=")
-end
-
-function model_review_system:post_init()
-	for eid in world:each_new("transform") do
-		local e = world[eid]
-		e.transform.watcher.s = {0.5, 0.2, 0.2, 0}
-	end
 end
