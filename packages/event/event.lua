@@ -8,7 +8,7 @@ function event:new(eid, component_type)
 	assert(c.watcher == nil , "Can't new watcher more than once")
 	-- A modifier is a table with meta, __newindex is init with a trigger.
 
-	local data = c
+	local data = {}
 	local tigger = self._triggers[component_type]
 	local meta = { __index = data, __newindex = tigger }
 	c.watcher = setmetatable( { _rawdata = data , _meta = meta, _eid = eid }, meta )
