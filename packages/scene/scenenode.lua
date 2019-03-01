@@ -13,14 +13,12 @@ ecs.component_alias("hierarchy_transform", "transform")
 
 ecs.component_alias("attach", "entityid")
 
-local hierarchy_transform_result = ecs.singleton "hierarchy_transform_result"
-function hierarchy_transform_result:init()
+ecs.singleton "hierarchy_transform_result"
 
-end
-
-local testscene = ecs.system "test_scene"
-testscene.singleton "event"
-testscene.singleton "hierarchy_transform_result"
+local scene_space = ecs.system "scene_space"
+scene_space.dependby "primitive_filter_system"
+scene_space.singleton "event"
+scene_space.singleton "hierarchy_transform_result"
 
 local function create_default_transform(parent, base, s, r, t, attach)
 	return {
@@ -41,7 +39,7 @@ local identity_matrix = {
 }
 
 
-function testscene:init()
+function scene_space:init()
 	local material = {
 		content = {
 			{
@@ -163,7 +161,7 @@ render_level1_1			hie_level1_1	hie_level1_2		render_level1_2
 	}
 end
 
-function testscene:post_init()
+function scene_space:post_init()
 	for eid in world:each_new("hierarchy_transform") do
 		self.event:new(eid, "hierarchy_transform")
 	end
@@ -173,11 +171,8 @@ function testscene:post_init()
 	end
 end
 
-local scene_space = ecs.system "scene_space"
-scene_space.singleton "event"
-
 local function mark_children(marked, eid)
-	local pid = world[eid].transform.parent
+	local pid = world[eid].hierarchy_transform.parent
 	if pid and marked[pid] then
 		marked[eid] = pid
 		return true
@@ -238,7 +233,7 @@ local function update_world(trans)
 	local srt = ms:push_srt_matrix(trans)
 	local base = trans.base 
 	if base then
-		ms(trans.world, srt, trans.base, "*=")
+		ms(trans.world, trans.base, srt, "*=")
 	else
 		ms(trans.world, srt, "=")
 	end
@@ -257,7 +252,7 @@ local function handle_transform_events(events, comp)
 			ms(comp.r, value, "=")			
 		end,
 		t = function (comp, value)
-			ms(comp.s, value, "=")			
+			ms(comp.t, value, "=")			
 		end,
 		base = function (comp, value)
 			ms(comp.base, value, "=")			
