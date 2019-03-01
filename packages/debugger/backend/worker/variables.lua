@@ -712,6 +712,11 @@ function m.clean()
     varPool = {}
 end
 
+function m.createText(value)
+    local type, subtype = rdebug.type(value)
+    return varGetValue(type, subtype, value)
+end
+
 function m.createRef(frameId, value, evaluateName)
     if not varPool[frameId] then
         varPool[frameId] = {}

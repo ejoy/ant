@@ -321,7 +321,7 @@ local function runLoop(reason)
         end
     end
     variables.clean()
-    evaluate.clean()
+    rdebug.cleanwatch()
 end
 
 local hook = {}
