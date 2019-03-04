@@ -1927,7 +1927,7 @@ lpush_srt(lua_State *L) {
 	break;
 
 	default:
-		luaL_error(L, "only support 1/2 argument:%d", numarg);
+		luaL_error(L, "only support 1(const)/2({s=...,r=...,t=...})/4(s,r,t) argument:%d", numarg);
 		break;
 	}	
 	

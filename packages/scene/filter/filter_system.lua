@@ -66,7 +66,7 @@ function primitive_filter_sys:event_changed()
 		local trans = e.transform
 
 		if init then
-			assert(next(events))
+			assert(not next(events))
 			update_transform(e.transform, hierarchy_cache)
 		else
 			for k, v in pairs(events) do			
