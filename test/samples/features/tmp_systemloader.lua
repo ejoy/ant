@@ -258,7 +258,11 @@ local function create_scene_node_test()
 
     local hie_root =
         world:create_entity {
-        hierarchy_transform = create_default_transform(),
+        hierarchy_transform = {
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
+		},
         name = 'root',
         hierarchy_tag = true,
         main_viewtag = true
@@ -266,23 +270,38 @@ local function create_scene_node_test()
 
     local hie_level1_1 =
         world:create_entity {
-        hierarchy_transform = create_default_transform(hie_root),
+        hierarchy_transform = {
+			parent = hie_root,
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {2, 0, 0, 1},
+		},
         name = 'level1_1',
         hierarchy_tag = true,
         main_viewtag = true
-    }
+	}
 
     local hie_level1_2 =
         world:create_entity {
-        hierarchy_transform = create_default_transform(hie_root),
+        hierarchy_transform = {
+			parent = hie_root,
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {2, 0, 4, 1},
+		},
         name = 'level1_2',
         hierarchy_tag = true,
         main_viewtag = true
-    }
-
+	}
+	
     local hie_level2_1 =
         world:create_entity {
-        hierarchy_transform = create_default_transform(hie_level1_2),
+        hierarchy_transform = {
+			parent = hie_level1_2,
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {-2, 0, 0, 1},
+		},
         name = 'level2_1',
         hierarchy_tag = true,
         main_viewtag = true
@@ -302,10 +321,15 @@ local function create_scene_node_test()
 											   /
 										render_child2_1
 	]]
-    local render_child1 =
+    local render_child1_1 =
         world:create_entity {
-        transform = create_default_transform(hie_level1_1, {0.01, 0.01, 0.01, 0}),
-        name = 'render_child1',
+        transform = {
+			parent = hie_level1_1, 
+			s = {0.01, 0.01, 0.01, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
+		},
+        name = 'render_child1_1',
         mesh = {
             ref_path = {package = 'ant.resources', filename = fs.path 'sphere.mesh'}
         },
@@ -317,7 +341,12 @@ local function create_scene_node_test()
 	
     local render_child1_2 =
         world:create_entity {
-        transform = create_default_transform(hie_level1_2, nil, {0.01, 0.01, 0.01, 0}),
+        transform = {
+			parent = hie_level1_2, 
+			s = {0.01, 0.01, 0.01, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
+		},
         name = 'render_child2_1',
         mesh = {
             ref_path = {package = 'ant.resources', filename = fs.path 'cylinder.mesh'}
@@ -329,7 +358,12 @@ local function create_scene_node_test()
 
     local render_child2_1 =
         world:create_entity {
-        transform = create_default_transform(hie_level2_1, nil, {0.01, 0.01, 0.01, 0}),
+        transform = {
+			parent = hie_level2_1, 
+			s = {0.01, 0.01, 0.01, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
+		},
         name = 'render_child2_1',
         mesh = {
             ref_path = {package = 'ant.resources', filename = fs.path 'cube.mesh'}

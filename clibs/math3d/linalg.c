@@ -37,8 +37,8 @@ struct constant {
 };
 
 static struct constant c_constant_table[LINEAR_CONSTANT_COUNT] = {
-	{ c_ident_vec, VECTOR4 },
 	{ c_ident_mat, MATRIX },
+	{ c_ident_vec, VECTOR4 },	
 	{ c_ident_num, VECTOR4 },
 	{ c_ident_quat, VECTOR4 },
 	{ c_ident_euler, VECTOR4 },
