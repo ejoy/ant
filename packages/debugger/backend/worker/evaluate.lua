@@ -57,6 +57,20 @@ local function run_watch(frameId, expression)
     return true, table.concat(res, ',', 2), ref
 end
 
+local function run_copyvalue(frameId, expression)
+    local res = table.pack(rdebug.evalwatch(eval_watch, expression, frameId))
+    if not res[1] then
+        return false, res[2]
+    end
+    if #res == 0 then
+        return true, 'nil'
+    end
+    for i = 2, res.n do
+        res[i] = variables.createText(res[i])
+    end
+    return true, table.concat(res, ',', 2)
+end
+
 local m = {}
 
 function m.run(frameId, expression, context)
@@ -68,6 +82,9 @@ function m.run(frameId, expression, context)
     end
     if context == "repl" then
         return run_repl(frameId, expression)
+    end
+    if context == nil then
+        return run_copyvalue(frameId, expression)
     end
     return nil, ("unknown context `%s`"):format(context)
 end
