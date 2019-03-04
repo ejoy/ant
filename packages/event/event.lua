@@ -12,7 +12,7 @@ function event:new(eid, component_type)
 	local tigger = self._triggers[component_type]
 	local meta = { __index = data, __newindex = tigger }
 	c.watcher = setmetatable( { _rawdata = data , _meta = meta, _eid = eid }, meta )
-	tigger(c.watcher, "_marked", true)
+	tigger(c.watcher, "_marked_init", true)
 end
 
 function event:each(component_type)
@@ -47,7 +47,8 @@ function event_singleton.init()
 					if c then
 						-- reset __newindex trigger
 						local w = c.watcher
-						w._marked = nil
+						local _marked_init = w._marked_init ~= nil
+						w._marked_init = nil
 						local rawdata = w._rawdata						
 						local newrawdata = {}
 						w._rawdata = newrawdata
@@ -55,7 +56,7 @@ function event_singleton.init()
 						meta.__index = newrawdata
 						meta.__newindex = trigger
 						dirty_set[n] = nil
-						return w._eid, rawdata
+						return w._eid, rawdata, _marked_init
 					end
 				end
 				dirty_set[n] = nil

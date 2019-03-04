@@ -6,16 +6,20 @@ local cu = render.components
 local ru = render.util
 
 local ms = import_package "ant.math" .stack
+local math3d = require "math3d"
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
 primitive_filter_sys.singleton "hierarchy_transform_result"
+primitive_filter_sys.singleton "event"
 
 local function update_transform(transform, hierarchy_cache)
 	local peid = transform.parent
 	local localmat = ms:push_srt_matrix(transform)
 	if peid then
 		local parentmat = hierarchy_cache[peid]
-		localmat = ms(parentmat, localmat, "*P")
+		if parentmat then
+			localmat = ms(parentmat, localmat, "*P")
+		end
 	end
 
 	local w = transform.world
@@ -24,8 +28,7 @@ local function update_transform(transform, hierarchy_cache)
 end
 
 --luacheck: ignore self
-function primitive_filter_sys:update()
-	local transform_cache = self.hierarchy_transform_result
+function primitive_filter_sys:update()	
 	for _, prim_eid in world:each("primitive_filter") do
 		local e = world[prim_eid]		
 		local filter = e.primitive_filter
@@ -37,14 +40,48 @@ function primitive_filter_sys:update()
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
 			if vt and ft then
-				local trans = update_transform(ce.transform, transform_cache)				
 				ru.insert_primitive(eid, 
 					assert(ce.mesh.assetinfo).handle,
 					assert(ce.material.content),
-					ms(trans, "m"),
+					ms(ce.transform.world, "m"),
 					filter)
 			end
 		end	
+	end
+end
+
+function primitive_filter_sys:post_init()	
+	for eid in world:each_new("transform") do
+		local e = world[eid]
+		e.transform.world = math3d.ref "matrix"
+
+		self.event:new(eid, "transform")
+	end
+end
+
+function primitive_filter_sys:event_changed()
+	local hierarchy_cache = self.hierarchy_transform_result
+	for eid, events, init in self.event:each("transform") do
+		local e = world[eid]
+		local trans = e.transform
+
+		if init then
+			assert(next(events))
+			update_transform(e.transform, hierarchy_cache)
+		else
+			for k, v in pairs(events) do			
+				if k == 's' or k == 'r' or k == 't' then
+					ms(trans[k], v, "=")
+					update_transform(e.transform, hierarchy_cache)
+				elseif k == 'parent' then
+					trans.parent = v
+					update_transform(e.transform, hierarchy_cache)
+				elseif k == 'base' then
+					ms(trans.base, v, "=")
+					update_transform(e.transform, hierarchy_cache)
+				end
+			end
+		end
 	end
 end
 

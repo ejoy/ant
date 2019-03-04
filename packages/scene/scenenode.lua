@@ -21,18 +21,6 @@ scene_space.dependby "primitive_filter_system"
 scene_space.singleton "event"
 scene_space.singleton "hierarchy_transform_result"
 
-function scene_space:post_init()
-	for eid in world:each_new("hierarchy_transform") do
-		self.event:new(eid, "hierarchy_transform")
-		world[eid].hierarchy_transform.world = math3d.ref "matrix"
-	end
-
-	for eid in world:each_new("transform") do
-		self.event:new(eid, "transform")
-		world[eid].transform.world = math3d.ref "matrix"
-	end
-end
-
 local function find_children(marked, eid)
 	local pid = world[eid].hierarchy_transform.parent
 	if pid and marked[pid] then
@@ -112,8 +100,34 @@ local function update_world(trans)
 	return worldmat
 end
 
-function scene_space:event_changed()
-	local hierarchy_result = self.hierarchy_transform_result
+local function update_scene_tree(tree, cache_result)
+	if next(tree) then
+		setmetatable(tree, mark_mt)
+		mark_tree(tree)
+		local sort_result = tree_sort(tree)
+
+		for i = #sort_result, 1, -1 do
+			local eid = sort_result[i]
+			local e = world[eid]
+			local t = e.hierarchy_transform
+			local cachemat = update_world(t)
+			assert(type(cachemat) == 'userdata')
+			cache_result[eid] = cachemat
+		end
+	end
+end
+
+
+function scene_space:post_init()	
+	for eid in world:each_new("hierarchy_transform") do
+		local e = world[eid]
+		local trans = e.hierarchy_transform		
+		trans.world = math3d.ref "matrix"
+		self.event:new(eid, "hierarchy_transform")
+	end
+end
+
+function scene_space:event_changed()	
 	local tree = {}
 	for eid, events in self.event:each("hierarchy_transform") do
 		local e = world[eid]
@@ -123,19 +137,5 @@ function scene_space:event_changed()
 		tree[eid] = trans.parent
 	end
 
-	if next(tree) then
-		setmetatable(tree, mark_mt)
-		mark_tree(tree)
-		local result = tree_sort(tree)
-		
-		for i=#result, 1, -1 do
-			local eid = result[i]
-			local e = world[eid]
-			local t = e.hierarchy_transform
-			local cachemat = update_world(t)
-			assert(type(cachemat) == "userdata")
-			hierarchy_result[eid] = cachemat
-		end
-
-	end	
+	update_scene_tree(tree, self.hierarchy_transform_result)
 end
