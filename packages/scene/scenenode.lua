@@ -5,6 +5,7 @@ local su = require "util"
 
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
+local math3d = require "math3d"
 
 ecs.tag "hierarchy_tag"
 
@@ -23,14 +24,16 @@ scene_space.singleton "hierarchy_transform_result"
 function scene_space:post_init()
 	for eid in world:each_new("hierarchy_transform") do
 		self.event:new(eid, "hierarchy_transform")
+		world[eid].hierarchy_transform.world = math3d.ref "matrix"
 	end
 
 	for eid in world:each_new("transform") do
 		self.event:new(eid, "transform")
+		world[eid].transform.world = math3d.ref "matrix"
 	end
 end
 
-local function mark_children(marked, eid)
+local function find_children(marked, eid)
 	local pid = world[eid].hierarchy_transform.parent
 	if pid and marked[pid] then
 		marked[eid] = pid
@@ -40,10 +43,12 @@ local function mark_children(marked, eid)
 	return false
 end
 
-local mark_mt = { __index = mark_children }
+local mark_mt = { __index = find_children }
 
-local function find_children(tree, eid)
-	local _ = tree[eid]
+local function mark_tree(tree)
+	for _, eid in world:each("hierarchy_transform") do
+		local _ = tree[eid]
+	end
 end
 
 local function tree_sort(tree)
@@ -90,43 +95,46 @@ end
 
 local function update_world(trans)
 	local srt = ms:push_srt_matrix(trans)
-	local base = trans.base 
+	local base = trans.base
+	local worldmat = trans.world
 	if base then
-		ms(trans.world, trans.base, srt, "*=")
-	else
-		ms(trans.world, srt, "=")
+		srt = ms(trans.base, srt, "*P")	
 	end
+
+	local peid = trans.parent
+	if peid then
+		local parent = world[peid]
+		local pt = parent.hierarchy_transform
+		ms(worldmat, pt.world, srt, "*=")
+	else
+		ms(worldmat, srt, "=")
+	end
+	return worldmat
 end
 
 function scene_space:event_changed()
 	local hierarchy_result = self.hierarchy_transform_result
-
-	local tree = setmetatable({}, mark_mt)
-
+	local tree = {}
 	for eid, events in self.event:each("hierarchy_transform") do
 		local e = world[eid]
 		local trans = e.hierarchy_transform
 		su.handle_transform(events, trans)
-		find_children(tree, eid)
+
+		tree[eid] = trans.parent
 	end
 
-	if #tree > 0 then
+	if next(tree) then
+		setmetatable(tree, mark_mt)
+		mark_tree(tree)
 		local result = tree_sort(tree)
 		
 		for i=#result, 1, -1 do
 			local eid = result[i]
 			local e = world[eid]
-			local t = e.transform
-			update_world(e.transform)
-			local peid = e.parent 
-	
-			if peid then
-				local parent = world[peid]
-				local pt = parent.transform
-				ms(t.world, pt.world, t.world, "*=")				
-			end
-
-			hierarchy_result[eid] = t.world
+			local t = e.hierarchy_transform
+			local cachemat = update_world(t)
+			assert(type(cachemat) == "userdata")
+			hierarchy_result[eid] = cachemat
 		end
 
 	end	

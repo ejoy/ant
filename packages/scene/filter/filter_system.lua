@@ -18,8 +18,9 @@ local function update_transform(transform, hierarchy_cache)
 		localmat = ms(parentmat, localmat, "*P")
 	end
 
-	transform.world = localmat
-	return localmat
+	local w = transform.world
+	ms(w, localmat, "=")
+	return w
 end
 
 --luacheck: ignore self

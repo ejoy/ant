@@ -37,6 +37,7 @@ init_loader.depend 'entity_rendering'
 init_loader.depend 'camera_controller'
 init_loader.depend 'skinning_system'
 init_loader.depend 'timesystem'
+init_loader.depend 'scene_space'
 
 local function create_animation_test()
     local meshdir = fs.path 'meshes'
@@ -368,7 +369,7 @@ function init_loader:init()
 
     create_animation_test()
 	create_hierarchy_test()
-	--create_scene_node_test()
+	create_scene_node_test()
 
     -- local function save_file(file, data)
     --     local nativeio = require 'nativeio'
