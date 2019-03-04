@@ -434,7 +434,7 @@ local function extandFunction(frameId, varRef)
         end
         local fi = i
         varCreate(vars, frameId, varRef, name, value
-            , ('debug.getupvalue(%s,%d)'):format(evaluateName, i)
+            , ('select(2, debug.getupvalue(%s,%d))'):format(evaluateName, i)
             , function() local _, r = rdebug.getupvalue(f, fi) return r end
         )
         i = i + 1
@@ -532,7 +532,7 @@ extand[VAR_LOCAL] = function(frameId)
         if name ~= '(*temporary)' then
             local fi = i
             varCreate(vars, frameId, children[VAR_LOCAL], name, value
-                , ('debug.getlocal(%d,%d,%q)'):format(frameId, i, name)
+                , name
                 , function() local _, r = rdebug.getlocal(frameId, fi) return r end
             )
         end
@@ -552,7 +552,7 @@ extand[VAR_VARARG] = function(frameId)
         end
         local fi = i
         varCreate(vars, frameId, children[VAR_VARARG], ('[%d]'):format(-i), value
-            , ('debug.getlocal(%d,%d)'):format(frameId, -i)
+            , ('select(%d,...)'):format(i)
             , function() local _, r = rdebug.getlocal(frameId, fi) return r end
         )
         i = i - 1
@@ -572,7 +572,7 @@ extand[VAR_UPVALUE] = function(frameId)
         end
         local fi = i
         varCreate(vars, frameId, children[VAR_UPVALUE], name, value
-            , ('debug.getupvalue(%d,%d,%q)'):format(frameId, i, name)
+            , name
             , function() local _, r = rdebug.getupvalue(f, fi) return r end
         )
         i = i + 1
