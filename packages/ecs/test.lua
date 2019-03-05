@@ -93,8 +93,8 @@ function mods.dummy(...)
 	local delete = ecs.system "delete"
 
 	function delete:delete()
-		for eid in world:each_removed "foobar" do
-			print("Delete foobar", eid)
+		for eid, c in world:each_removed "foobar" do
+			print("Delete foobar", eid, "foobar", c.x, c.y)
 		end
 	end
 end

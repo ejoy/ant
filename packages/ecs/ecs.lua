@@ -241,13 +241,14 @@ function world:each_removed(component_type)
 			local ctype = item[2]
 			if ctype == component_type then
 				removed_set = removed_set or {}
-				removed_set[eid] = true
+				removed_set[eid] = c -- true
 			end
 		else
 			local e = item[2]
-			if e[component_type] ~= nil then
+			c = e[component_type]
+			if c ~= nil then
 				removed_set = removed_set or {}
-				removed_set[eid] = true
+				removed_set[eid] = c --true
 			end
 		end
 	end
