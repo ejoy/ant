@@ -127,14 +127,36 @@ function scene_space:post_init()
 	end
 end
 
+function scene_space:delete()
+	local hierarchy_cache = self.hierarchy_transform_result
+	local tree = {}
+	for eid in world:each_removed "hierarchy_transform" do
+		hierarchy_cache[eid] = nil
+	end
+
+	for eid in pairs(hierarchy_cache) do
+		local e = world[eid]
+		tree[eid] = e.hierarchy_transform.parent		
+	end
+
+	update_scene_tree(tree, hierarchy_cache)
+end
+
 function scene_space:event_changed()	
 	local tree = {}
 	for eid, events in self.event:each("hierarchy_transform") do
 		local e = world[eid]
 		local trans = e.hierarchy_transform
+		local oldparent = trans.parent
 		su.handle_transform(events, trans)
 
-		tree[eid] = trans.parent
+		local newparent = trans.parent
+		if newparent ~= oldparent then
+			local newparent_entity = world[newparent]
+			tree[newparent] = newparent_entity.hierarchy_transform.parent
+		end
+		
+		tree[eid] = newparent
 	end
 
 	update_scene_tree(tree, self.hierarchy_transform_result)
