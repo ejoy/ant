@@ -39,17 +39,6 @@ namespace ant::path_helper {
     auto dll_path()->nonstd::expected<fs::path, std::exception> {
         return dll_path(reinterpret_cast<void*>(&__ImageBase));
     }
-
-    bool equal(fs::path const& lhs, fs::path const& rhs) {
-        fs::path lpath = lhs.lexically_normal();
-        fs::path rpath = rhs.lexically_normal();
-        const fs::path::value_type* l(lpath.c_str());
-        const fs::path::value_type* r(rpath.c_str());
-        while ((towlower(*l) == towlower(*r) || (*l == L'\\' && *r == L'/') || (*l == L'/' && *r == L'\\')) && *l) { 
-            ++l; ++r; 
-        }
-        return *l == *r;
-    }
 }
 
 #else
@@ -75,10 +64,36 @@ namespace ant::path_helper {
     auto dll_path()->nonstd::expected<fs::path, std::exception> {
         return dll_path((void*)&exe_path);
     }
-
-    bool equal(fs::path const& lhs, fs::path const& rhs) {
-        return lhs.lexically_normal() == rhs.lexically_normal();
-    }
 }
 
 #endif
+
+namespace ant::path_helper {
+#if defined(_WIN32)
+    bool equal(fs::path const& lhs, fs::path const& rhs) {
+        fs::path lpath = lhs.lexically_normal();
+        fs::path rpath = rhs.lexically_normal();
+        const fs::path::value_type* l(lpath.c_str());
+        const fs::path::value_type* r(rpath.c_str());
+        while ((towlower(*l) == towlower(*r) || (*l == L'\\' && *r == L'/') || (*l == L'/' && *r == L'\\')) && *l) {
+            ++l; ++r;
+        }
+        return *l == *r;
+    }
+#elif defined(__APPLE__)
+    bool equal(fs::path const& lhs, fs::path const& rhs) {
+        fs::path lpath = lhs.lexically_normal();
+        fs::path rpath = rhs.lexically_normal();
+        const fs::path::value_type* l(lpath.c_str());
+        const fs::path::value_type* r(rpath.c_str());
+        while (towlower(*l) == towlower(*r) && *l) {
+            ++l; ++r;
+        }
+        return *l == *r;
+}
+#else
+    bool equal(fs::path const& lhs, fs::path const& rhs) {
+        return lhs.lexically_normal() == rhs.lexically_normal();
+    }
+#endif
+}
