@@ -21,8 +21,9 @@ scene_space.dependby "primitive_filter_system"
 scene_space.singleton "event"
 scene_space.singleton "hierarchy_transform_result"
 
-local function find_children(marked, eid)
-	local pid = world[eid].hierarchy_transform.parent
+local function find_children(marked, eid, componenttype)
+	local e = world[eid]
+	local pid = e[componenttype].parent
 	if pid and marked[pid] then
 		marked[eid] = pid
 		return true
@@ -31,10 +32,12 @@ local function find_children(marked, eid)
 	return false
 end
 
-local mark_mt = { __index = find_children }
+local mark_mt = { __index = function(marked, eid) return find_children(marked, eid, "hierarchy_transform") end }
 
-local function mark_tree(tree)
-	for _, eid in world:each("hierarchy_transform") do
+local render_mark_mt = {__index = function(marked, eid) return find_children(marked, eid, "transform") end}
+
+local function mark_tree(tree, componenttype)
+	for _, eid in world:each(componenttype) do
 		local _ = tree[eid]
 	end
 end
@@ -100,11 +103,15 @@ local function update_world(trans)
 	return worldmat
 end
 
+local function fetch_sort_tree_result(tree, mark_mt, componenttype)
+	setmetatable(tree, mark_mt)
+	mark_tree(tree, componenttype)
+	return tree_sort(tree)
+end
+
 local function update_scene_tree(tree, cache_result)
 	if next(tree) then
-		setmetatable(tree, mark_mt)
-		mark_tree(tree)
-		local sort_result = tree_sort(tree)
+		local sort_result = fetch_sort_tree_result(tree, mark_mt, "hierarchy_transform")
 
 		for i = #sort_result, 1, -1 do
 			local eid = sort_result[i]
@@ -117,6 +124,21 @@ local function update_scene_tree(tree, cache_result)
 	end
 end
 
+local function notify_render_child_changed(tree)
+	if next(tree) then
+		local sort_result = fetch_sort_tree_result(tree, render_mark_mt, "transform")
+		for i = 1, #sort_result do
+			local eid = sort_result[i]
+			local e = world[eid]
+			if e.hierarchy_transform then
+				-- mean all the render child have been updated
+				break
+			end
+
+			e.transform.watcher._marked_init = true
+		end
+	end
+end
 
 function scene_space:post_init()	
 	for eid in world:each_new("hierarchy_transform") do
@@ -143,7 +165,8 @@ function scene_space:delete()
 end
 
 function scene_space:event_changed()	
-	local tree = {}
+	local tree = {}	
+	local changed_parent = false
 	for eid, events in self.event:each("hierarchy_transform") do
 		local e = world[eid]
 		local trans = e.hierarchy_transform
@@ -152,12 +175,16 @@ function scene_space:event_changed()
 
 		local newparent = trans.parent
 		if newparent ~= oldparent then
-			local newparent_entity = world[newparent]
-			tree[newparent] = newparent_entity.hierarchy_transform.parent
+			local parentparent = world[newparent].hierarchy_transform.parent
+			tree[newparent] = parentparent
+			changed_parent = true
 		end
 		
 		tree[eid] = newparent
 	end
 
 	update_scene_tree(tree, self.hierarchy_transform_result)
+	if changed_parent then
+		notify_render_child_changed(tree)
+	end
 end

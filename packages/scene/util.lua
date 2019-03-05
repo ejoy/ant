@@ -2,22 +2,21 @@ local util = {}; util.__index = util
 
 local ms = import_package "ant.math" .stack
 
-local handlers = {
-	attach = function (comp, value)
-	end,
+local handlers = {	
 	parent = function (comp, value)
+		comp.parent = value
 	end,
 	s = function (comp, value)
-		ms(comp.s, value, "=")			
+		ms(comp.s, value, "=")
 	end,
 	r = function (comp, value)
-		ms(comp.r, value, "=")			
+		ms(comp.r, value, "=")
 	end,
 	t = function (comp, value)
-		ms(comp.t, value, "=")			
+		ms(comp.t, value, "=")
 	end,
 	base = function (comp, value)
-		ms(comp.base, value, "=")			
+		ms(comp.base, value, "=")
 	end,
 }
 

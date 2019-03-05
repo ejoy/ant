@@ -30,6 +30,7 @@ local PVPScenLoader = require 'PVPSceneLoader'
 local serialize = import_package 'ant.serialize'
 
 local init_loader = ecs.system 'init_loader'
+init_loader.singleton 'event'
 
 init_loader.depend 'shadow_primitive_filter_system'
 init_loader.depend 'transparency_filter_system'
@@ -232,22 +233,6 @@ local function create_hierarchy_test()
 end
 
 local function create_scene_node_test()
-    local function create_default_transform(parent, s, r, t)
-        return {
-            parent = parent,
-            s = s or {1, 1, 1, 0},
-            r = r or {0, 0, 0, 0},
-            t = t or {0, 0, 0, 1}
-        }
-    end
-
-    -- local identity_matrix = {
-	-- 	1, 0, 0, 0,
-	-- 	0, 1, 0, 0, 
-	-- 	0, 0, 1, 0,
-	-- 	0, 0, 0, 1,
-    -- }
-
     local material = {
         content = {
             {
@@ -371,7 +356,7 @@ local function create_scene_node_test()
         material = material,
         can_render = true,
         main_viewtag = true
-    }
+	}
 end
 
 local function check_hierarchy_name_mapper()
@@ -387,6 +372,40 @@ local function check_hierarchy_name_mapper()
             end
         end
     end
+end
+
+local onetime = nil
+local function change_scene_node_test()
+	if onetime == nil then
+		local function find_entity_by_name(name)
+			for _, eid in world:each("hierarchy_transform") do
+				local e = world[eid]
+				if e.name == name then
+					return eid
+				end
+			end
+		end
+
+		local level1_2_eid = find_entity_by_name('level1_2')
+		if level1_2_eid then
+			local level1_2 = world[level1_2_eid]
+			local level1_2_trans = level1_2.hierarchy_transform
+		
+			local level1_1_eid = find_entity_by_name('level1_1')
+
+			local level1_1 = world[level1_1_eid]
+			local level1_1_trans = level1_1.hierarchy_transform
+			assert(level1_1_trans.parent == level1_2_trans.parent)
+
+			level1_2_trans.watcher.parent = level1_1_eid
+		end
+
+		onetime = true
+	end
+end
+
+function init_loader:event_changed()
+	--change_scene_node_test()
 end
 
 function init_loader:init()
