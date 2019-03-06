@@ -1,7 +1,8 @@
-local posixfs = require 'filesystem.posix'
+local pm = require "antpm"
+local vfs = require "filesystem"
 
 local path_mt = {}
-path_mt.__name = 'filesystem'
+path_mt.__name = 'pkg-filesystem'
 path_mt.__index = path_mt
 
 local function constructor(str)
@@ -9,7 +10,7 @@ local function constructor(str)
 end
 
 local function normalize(fullname)
-    local first = (fullname:sub(1, 1) == "/") and "/" or ""
+    local first = (fullname:sub(1, 2) == "//") and "//" or ""
     local last = (fullname:sub(-1, -1) == "/") and "/" or ""
 	local t = {}
 	for m in fullname:gmatch("([^/\\]+)[/\\]?") do
@@ -23,7 +24,7 @@ local function normalize(fullname)
 end
 
 local function normalize_split(fullname)
-    local root = (fullname:sub(1, 1) == "/") and "/" or ""
+    local root = (fullname:sub(1, 2) == "//") and "//" or ""
     local stack = {}
 	for elem in fullname:gmatch("([^/\\]+)[/\\]?") do
         if #elem == 0 and #stack ~= 0 then
@@ -36,13 +37,26 @@ local function normalize_split(fullname)
     return root, stack
 end
 
+local function vfspath(self)
+    assert(self:is_absolute())
+    local value = self._value
+    local pos = value:find('/', 3, true)
+    assert(pos)
+	local root = pm.find(value:sub(3, pos-1))
+	if not root then
+		error(("No file '%s'"):format(value))
+		return
+	end
+    return root / value:sub(pos+1)
+end
+
 function path_mt:__tostring()
     return self._value
 end
 
 function path_mt:__div(other)
     other = (type(other) == 'string') and other or other._value
-    if self._value == '' or other:sub(1, 1) == '/' then
+    if other:sub(1, 1) == '//' then
         return constructor(other)
     end
     local value = self._value:gsub("(.-)/?$", "%1")
@@ -57,7 +71,7 @@ end
 function path_mt:__eq(other)
     local lft = normalize(self._value)
     local rht = normalize(other._value)
-    return lft:lower() == rht:lower()
+    return lft == rht
 end
 
 function path_mt:string()
@@ -106,47 +120,39 @@ function path_mt:equal_extension(ext)
 end
 
 function path_mt:is_absolute()
-    return self._value:sub(1,1) == '/'
+    return self._value:sub(1,2) == '//'
 end
 
 function path_mt:is_relative()
-    return self._value:sub(1,1) ~= '/'
+    return self._value:sub(1,2) ~= '//'
 end
 
 function path_mt:list_directory()
-    local next = posixfs.dir(self._value)
+    local next = vfspath(self):list_directory()
+    local name
     return function()
-        local v
-        repeat
-            v = next()
-        until v ~= '.' and v ~= '..'
-        if v == nil then
+        name = next(name)
+        if not name then
             return
         end
-        return self / v
+        return self / name:filename():string()
     end
 end
 
 function path_mt:permissions()
-    return posixfs.permissions(self._value)
+    error 'Not implemented'
 end
 
-function path_mt:add_permissions(prms)
-    local old = posixfs.permissions(self._value)
-    local new = prms | old
-    if not posixfs.permissions(self._value, new) then
-        return old
-    end
-    return new
+function path_mt:add_permissions()
+    error 'Not implemented'
 end
 
-function path_mt:remove_permissions(prms)
-    local old = posixfs.permissions(self._value)
-    local new = (~prms) & old
-    if not posixfs.permissions(self._value, new) then
-        return old
-    end
-    return new
+function path_mt:remove_permissions()
+    error 'Not implemented'
+end
+
+function path_mt:localpath()
+    return vfspath(self):localpath()
 end
 
 local fs = {}
@@ -154,52 +160,36 @@ local fs = {}
 fs.path = constructor
 
 function fs.current_path()
-    return constructor(posixfs.getcwd())
+    error 'Not implemented'
 end
 
 function fs.exists(path)
-    return posixfs.stat(path._value) ~= nil
+    return vfs.exists(vfspath(path))
 end
 
 function fs.is_directory(path)
-    return posixfs.stat(path._value) == 'dir'
+    return vfs.is_directory(vfspath(path))
 end
 
 function fs.is_regular_file(path)
-    return posixfs.stat(path._value) == 'file'
+    return vfs.is_regular_file(vfspath(path))
 end
 
-function fs.rename(from, to)
-    assert(os.rename(from._value, to._value))
+function fs.rename()
+    error 'Not implemented'
 end
 
-function fs.remove(path)
-    if posixfs.stat(path._value) == nil then
-        return false
-    end
-    assert(os.remove(path._value))
-    return true
+function fs.remove()
+    error 'Not implemented'
 end
 
-function fs.remove_all(dir)
-    local stat = posixfs.stat(dir._value)
-    if stat == nil then
-        return 0
-    elseif stat ~= 'dir' then
-        local ok = os.remove(dir._value)
-        return ok and 1 or 0
-    end
-    local n = 0
-    for path in dir:list_directory() do
-        n = n + fs.remove_all(path)
-    end
-    local ok = os.remove(dir._value)
-    return n + (ok and 1 or 0)
+function fs.remove_all()
+    error 'Not implemented'
 end
 
 function fs.absolute(path, base)
     path = normalize(path._value)
-    if path:sub(1, 1) == '/' then
+    if path:sub(1, 2) == '//' then
         return constructor(path)
     end
     base = base or fs.current_path()
@@ -228,50 +218,35 @@ function fs.relative(path, base)
     return constructor(table.concat(s, "/"))
 end
 
-function fs.create_directory(path)
-    assert(posixfs.mkdir(path._value) == true)
-    return true
+function fs.create_directory()
+    error 'Not implemented'
 end
 
-local function create_directories(path)
-    local parent = path:parent_path()
-	if not fs.exists(parent) then
-        if not fs.create_directories(parent) then
-            return false
-        end
-	end
-    return posixfs.mkdir(path._value)
+function fs.create_directories()
+    error 'Not implemented'
 end
 
-function fs.create_directories(path)
-    return create_directories(fs.absolute(path))
+function fs.copy_file()
+    error 'Not implemented'
 end
 
-function fs.copy_file(from, to, overwritten)
-    if not overwritten then
-        assert(not fs.exists(to), to)
-    end
-    local fromf = assert(io.open(from._value, "rb"))
-    local tof = assert(io.open(to._value, "wb"))
-    tof:write(fromf:read "a")
-    fromf:close()
-    tof:close()
-end
-
-function fs.last_write_time(path, newtime)
-    return posixfs.last_write_time(path._value, newtime)
+function fs.last_write_time()
+    error 'Not implemented'
 end
 
 function fs.exe_path()
-    return constructor(posixfs.exe_path())
+    error 'Not implemented'
 end
 
 function fs.dll_path()
-    return constructor(posixfs.dll_path())
+    error 'Not implemented'
 end
 
-function fs.filelock(path)
-    return posixfs.filelock(path._value)
+function fs.filelock()
+    error 'Not implemented'
 end
 
-return fs
+fs.vfs = false
+
+local fsutil = require 'filesystem.fsutil'
+return fsutil(fs)

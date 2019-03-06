@@ -127,6 +127,10 @@ function path_mt:remove_permissions()
     error 'Not implemented'
 end
 
+function path_mt:localpath()
+    return self
+end
+
 local fs = {}
 
 fs.path = constructor

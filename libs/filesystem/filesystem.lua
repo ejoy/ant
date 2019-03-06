@@ -1,4 +1,5 @@
 local vfs = require "vfs"
+local localfs = require 'filesystem.cpp'
 
 local path_mt = {}
 path_mt.__name = 'vfs-filesystem'
@@ -135,6 +136,10 @@ end
 
 function path_mt:remove_permissions()
     error 'Not implemented'
+end
+
+function path_mt:localpath()
+    return localfs.path(vfs.realpath(self:string()))
 end
 
 local fs = {}

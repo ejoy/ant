@@ -56,13 +56,7 @@ return function (fs)
 	end
 
 	local path_mt = debug.getmetatable(fs.path())
-	if isvfs then
-		local vfs = require 'vfs'
-		local localfs = require 'filesystem.local'
-		function path_mt:localpath()
-			return localfs.path(vfs.realpath(self:string()))
-		end
-	else
+	if not path_mt.localpath then
 		function path_mt:localpath()
 			return self
 		end
