@@ -1,8 +1,8 @@
-local vfs = require "vfs"
-local localfs = require 'filesystem.cpp'
+local pm = require "antpm"
+local vfs = require "filesystem"
 
 local path_mt = {}
-path_mt.__name = 'vfs-filesystem'
+path_mt.__name = 'pkg-filesystem'
 path_mt.__index = path_mt
 
 local function constructor(str)
@@ -10,7 +10,7 @@ local function constructor(str)
 end
 
 local function normalize(fullname)
-    local first = (fullname:sub(1, 1) == "/") and "/" or ""
+    local first = (fullname:sub(1, 2) == "//") and "//" or ""
     local last = (fullname:sub(-1, -1) == "/") and "/" or ""
 	local t = {}
 	for m in fullname:gmatch("([^/\\]+)[/\\]?") do
@@ -24,7 +24,7 @@ local function normalize(fullname)
 end
 
 local function normalize_split(fullname)
-    local root = (fullname:sub(1, 1) == "/") and "/" or ""
+    local root = (fullname:sub(1, 2) == "//") and "//" or ""
     local stack = {}
 	for elem in fullname:gmatch("([^/\\]+)[/\\]?") do
         if #elem == 0 and #stack ~= 0 then
@@ -37,13 +37,26 @@ local function normalize_split(fullname)
     return root, stack
 end
 
+local function vfspath(self)
+    assert(self:is_absolute())
+    local value = self._value
+    local pos = value:find('/', 3, true)
+    assert(pos)
+	local root = pm.find(value:sub(3, pos-1))
+	if not root then
+		error(("No file '%s'"):format(value))
+		return
+	end
+    return root / value:sub(pos+1)
+end
+
 function path_mt:__tostring()
     return self._value
 end
 
 function path_mt:__div(other)
     other = (type(other) == 'string') and other or other._value
-    if other:sub(1, 1) == '/' then
+    if other:sub(1, 1) == '//' then
         return constructor(other)
     end
     local value = self._value:gsub("(.-)/?$", "%1")
@@ -107,22 +120,22 @@ function path_mt:equal_extension(ext)
 end
 
 function path_mt:is_absolute()
-    return self._value:sub(1,1) == '/'
+    return self._value:sub(1,2) == '//'
 end
 
 function path_mt:is_relative()
-    return self._value:sub(1,1) ~= '/'
+    return self._value:sub(1,2) ~= '//'
 end
 
 function path_mt:list_directory()
-    local list = vfs.list(self._value)
+    local next = vfspath(self):list_directory()
     local name
     return function()
-        name = next(list, name)
+        name = next(name)
         if not name then
             return
         end
-        return self / name
+        return self / name:filename():string()
     end
 end
 
@@ -139,7 +152,7 @@ function path_mt:remove_permissions()
 end
 
 function path_mt:localpath()
-    return localfs.path(vfs.realpath(self:string()))
+    return vfspath(self):localpath()
 end
 
 local fs = {}
@@ -147,19 +160,19 @@ local fs = {}
 fs.path = constructor
 
 function fs.current_path()
-    return constructor('/vfs/')
+    error 'Not implemented'
 end
 
 function fs.exists(path)
-	return vfs.type(path._value) ~= nil
+    return vfs.exists(vfspath(path))
 end
 
 function fs.is_directory(path)
-	return vfs.type(path._value) == 'dir'
+    return vfs.is_directory(vfspath(path))
 end
 
 function fs.is_regular_file(path)
-    return vfs.type(path._value) == 'file'
+    return vfs.is_regular_file(vfspath(path))
 end
 
 function fs.rename()
@@ -176,7 +189,7 @@ end
 
 function fs.absolute(path, base)
     path = normalize(path._value)
-    if path:sub(1, 1) == '/' then
+    if path:sub(1, 2) == '//' then
         return constructor(path)
     end
     base = base or fs.current_path()
@@ -233,7 +246,7 @@ function fs.filelock()
     error 'Not implemented'
 end
 
-fs.vfs = true
+fs.vfs = false
 
 local fsutil = require 'filesystem.fsutil'
 return fsutil(fs)
