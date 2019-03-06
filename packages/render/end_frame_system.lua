@@ -5,7 +5,8 @@ local bgfx = require "bgfx"
 local frame_stat = ecs.singleton "frame_stat"
 function frame_stat:init()
 	return {
-		frame_num = 0
+		frame_num = 0,
+		bgfx_frames = -1,
 	}
 end
 
@@ -26,7 +27,8 @@ local ms = math.stack
 
 function end_frame_sys:update() 
     local stat = self.frame_stat
-	stat.frame_num = bgfx.frame()
+	stat.frame_num = stat.frame_num + 1
+	stat.bgfx_frames = bgfx.frame()
 	
 	math3d.reset(ms)	
 end

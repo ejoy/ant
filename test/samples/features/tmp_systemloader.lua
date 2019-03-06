@@ -30,7 +30,6 @@ local PVPScenLoader = require 'PVPSceneLoader'
 local serialize = import_package 'ant.serialize'
 
 local init_loader = ecs.system 'init_loader'
-init_loader.singleton 'event'
 
 init_loader.depend 'shadow_primitive_filter_system'
 init_loader.depend 'transparency_filter_system'
@@ -38,7 +37,6 @@ init_loader.depend 'entity_rendering'
 init_loader.depend 'camera_controller'
 init_loader.depend 'skinning_system'
 init_loader.depend 'timesystem'
-init_loader.depend 'scene_space'
 
 local function create_animation_test()
     local meshdir = fs.path 'meshes'
@@ -232,133 +230,6 @@ local function create_hierarchy_test()
     )
 end
 
-local function create_scene_node_test()
-    local material = {
-        content = {
-            {
-                ref_path = {package = 'ant.resources', filename = fs.path 'bunny.material'}
-            }
-        }
-    }
-
-    local hie_root =
-        world:create_entity {
-        hierarchy_transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-        name = 'root',
-        hierarchy_tag = true,
-        main_viewtag = true
-    }
-
-    local hie_level1_1 =
-        world:create_entity {
-        hierarchy_transform = {
-			parent = hie_root,
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {2, 0, 0, 1},
-		},
-        name = 'level1_1',
-        hierarchy_tag = true,
-        main_viewtag = true
-	}
-
-    local hie_level1_2 =
-        world:create_entity {
-        hierarchy_transform = {
-			parent = hie_root,
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {2, 0, 4, 1},
-		},
-        name = 'level1_2',
-        hierarchy_tag = true,
-        main_viewtag = true
-	}
-	
-    local hie_level2_1 =
-        world:create_entity {
-        hierarchy_transform = {
-			parent = hie_level1_2,
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {-2, 0, 0, 1},
-		},
-        name = 'level2_1',
-        hierarchy_tag = true,
-        main_viewtag = true
-    }
-    --[[
-								hie_root
-								/		\
-							   /		 \
-							  /		 	  \
-							 /		 	   \
-						hie_level1_1	hie_level1_2
-							/			 	 \
-						   /				  \
-						  /					   \
-						render_child1 		hie_level2_1
-												/
-											   /
-										render_child2_1
-	]]
-    local render_child1_1 =
-        world:create_entity {
-        transform = {
-			parent = hie_level1_1, 
-			s = {0.01, 0.01, 0.01, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-        name = 'render_child1_1',
-        mesh = {
-            ref_path = {package = 'ant.resources', filename = fs.path 'sphere.mesh'}
-        },
-        material = material,
-        can_render = true,
-        main_viewtag = true
-	}
-	
-	
-    local render_child1_2 =
-        world:create_entity {
-        transform = {
-			parent = hie_level1_2, 
-			s = {0.01, 0.01, 0.01, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-        name = 'render_child2_1',
-        mesh = {
-            ref_path = {package = 'ant.resources', filename = fs.path 'cylinder.mesh'}
-        },
-        material = material,
-        can_render = true,
-        main_viewtag = true
-    }
-
-    local render_child2_1 =
-        world:create_entity {
-        transform = {
-			parent = hie_level2_1, 
-			s = {0.01, 0.01, 0.01, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-        name = 'render_child2_1',
-        mesh = {
-            ref_path = {package = 'ant.resources', filename = fs.path 'cube.mesh'}
-        },
-        material = material,
-        can_render = true,
-        main_viewtag = true
-	}
-end
-
 local function check_hierarchy_name_mapper()
     for _, eid in world:each('hierarchy') do
         local e = world[eid]
@@ -374,40 +245,6 @@ local function check_hierarchy_name_mapper()
     end
 end
 
-local onetime = nil
-local function change_scene_node_test()
-	if onetime == nil then
-		local function find_entity_by_name(name)
-			for _, eid in world:each("hierarchy_transform") do
-				local e = world[eid]
-				if e.name == name then
-					return eid
-				end
-			end
-		end
-
-		local level1_2_eid = find_entity_by_name('level1_2')
-		if level1_2_eid then
-			local level1_2 = world[level1_2_eid]
-			local level1_2_trans = level1_2.hierarchy_transform
-		
-			local level1_1_eid = find_entity_by_name('level1_1')
-
-			local level1_1 = world[level1_1_eid]
-			local level1_1_trans = level1_1.hierarchy_transform
-			assert(level1_1_trans.parent == level1_2_trans.parent)
-
-			level1_2_trans.watcher.parent = level1_1_eid
-		end
-
-		onetime = true
-	end
-end
-
-function init_loader:event_changed()
-	--change_scene_node_test()
-end
-
 function init_loader:init()
     do
         lu.create_directional_light_entity(world, 'directional_light')
@@ -421,8 +258,7 @@ function init_loader:init()
     computil.create_grid_entity(world, 'grid', 64, 64, 1)
 
     create_animation_test()
-	create_hierarchy_test()
-	create_scene_node_test()
+	create_hierarchy_test()	
 
     -- local function save_file(file, data)
     --     local nativeio = require 'nativeio'
