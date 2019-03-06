@@ -139,24 +139,24 @@ function scenespace_test:init()
 	create_scene_node_test()
 end
 
+local function find_entity_by_name(name, componenttype)
+	for _, eid in world:each(componenttype) do
+		local e = world[eid]
+		if e.name == name then
+			return eid
+		end
+	end
+end
+
 local onetime = nil
 local function change_scene_node_test()
 	if onetime == nil then
-		local function find_entity_by_name(name)
-			for _, eid in world:each("hierarchy_transform") do
-				local e = world[eid]
-				if e.name == name then
-					return eid
-				end
-			end
-		end
-
-		local level1_2_eid = find_entity_by_name('level1_2')
+		local level1_2_eid = find_entity_by_name('level1_2', 'hierarchy_transform')
 		if level1_2_eid then
 			local level1_2 = world[level1_2_eid]
 			local level1_2_trans = level1_2.hierarchy_transform
 		
-			local level1_1_eid = find_entity_by_name('level1_1')
+			local level1_1_eid = find_entity_by_name('level1_1', 'hierarchy_transform')
 
 			local level1_1 = world[level1_1_eid]
 			local level1_1_trans = level1_1.hierarchy_transform
@@ -243,10 +243,13 @@ function scenespace_test:event_changed()
 
 	if whichframe == nil then
 		print_scene_nodes()
-		whichframe = self.frame_stat.frame_num + 1
-	end
-
-	if whichframe == self.frame_stat.frame_num then
+		whichframe = self.frame_stat.frame_num
+	elseif self.frame_stat.frame_num == whichframe + 1 then
+		print_scene_nodes()
+	elseif self.frame_stat.frame_num == whichframe + 2 then 
+		local level1_1_eid = find_entity_by_name('level1_1', 'hierarchy_transform')
+		world:remove_entity(level1_1_eid)
+	elseif self.frame_stat.frame_num == whichframe + 3 then
 		print_scene_nodes()
 	end
 end
