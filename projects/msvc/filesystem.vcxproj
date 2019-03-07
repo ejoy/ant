@@ -19,24 +19,27 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\clibs\filesystem\binding.h" />
-    <ClInclude Include="..\..\clibs\filesystem\dynarray.h" />
-    <ClInclude Include="..\..\clibs\filesystem\error.h" />
-    <ClInclude Include="..\..\clibs\filesystem\expected.h" />
-    <ClInclude Include="..\..\clibs\filesystem\file_helper.h" />
-    <ClInclude Include="..\..\clibs\filesystem\path_helper.h" />
-    <ClInclude Include="..\..\clibs\filesystem\range.h" />
-    <ClInclude Include="..\..\clibs\filesystem\span.h" />
-    <ClInclude Include="..\..\clibs\filesystem\unicode.h" />
-    <ClInclude Include="..\..\clibs\filesystem\windows_category.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\..\clibs\filesystem\error.cpp" />
     <ClCompile Include="..\..\clibs\filesystem\file_helper.cpp" />
     <ClCompile Include="..\..\clibs\filesystem\lua_filesystem.cpp" />
     <ClCompile Include="..\..\clibs\filesystem\path_helper.cpp" />
     <ClCompile Include="..\..\clibs\filesystem\unicode.cpp" />
     <ClCompile Include="..\..\clibs\filesystem\windows_category.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\clibs\filesystem\binding.h" />
+    <ClInclude Include="..\..\clibs\filesystem\dynarray.h" />
+    <ClInclude Include="..\..\clibs\filesystem\error.h" />
+    <ClInclude Include="..\..\clibs\filesystem\expected.h" />
+    <ClInclude Include="..\..\clibs\filesystem\file.h" />
+    <ClInclude Include="..\..\clibs\filesystem\filesystem.h" />
+    <ClInclude Include="..\..\clibs\filesystem\file_helper.h" />
+    <ClInclude Include="..\..\clibs\filesystem\ghc_filesystem.h" />
+    <ClInclude Include="..\..\clibs\filesystem\path_helper.h" />
+    <ClInclude Include="..\..\clibs\filesystem\range.h" />
+    <ClInclude Include="..\..\clibs\filesystem\span.h" />
+    <ClInclude Include="..\..\clibs\filesystem\unicode.h" />
+    <ClInclude Include="..\..\clibs\filesystem\windows_category.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
