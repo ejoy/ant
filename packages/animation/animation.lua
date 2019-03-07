@@ -28,7 +28,7 @@ end
 
 function animation_content:init()
 	if self.ref_path then
-		self.handle = asset.load(self.ref_path.package, self.ref_path.filename).handle
+		self.handle = asset.load(self.ref_path).handle
 	end	
 	self.start_counter = 0
 	self.ratio = 0

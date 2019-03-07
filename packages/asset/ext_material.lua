@@ -11,8 +11,8 @@ local loaders = {
 	end
 }
 
-return function(pkgname, filepath)
-	local fn = assetmgr.find_depiction_path(pkgname, filepath)
+return function(filename)
+	local fn = assetmgr.find_depiction_path(filename)
 	local material = rawtable(fn)
 
     local material_info = {}
@@ -20,20 +20,16 @@ return function(pkgname, filepath)
 	for k, v in pairs(material) do
 		local loader = loaders[k]
         if loader then
-            local t = type(v)
-			if t == "string" then
+			if type(v) == "string" then
 				-- read file under .material file folder, if not found try from assets path
-				local function filter_path(parentpath, p)					
-					local subres_path = parentpath / p
-					if not fs.exists(subres_path) then
-						return p
-					end
-						
-					return subres_path
+				local pkgname = filename:root_name()
+				local dir = filename:parent_path()
+				local fullpath = dir / v
+				if not fs.exists(fullpath) then
+					fullpath = pkgname /v
 				end
-				local subres_path = filter_path(filepath:parent_path(), fs.path(v))
-                material_info[k] = assetmgr.load(pkgname, subres_path)
-			elseif t == "table" then
+                material_info[k] = assetmgr.load(fullpath)
+			elseif type(v) == "table" then
 				material_info[k] = loader(v)
             end
         else

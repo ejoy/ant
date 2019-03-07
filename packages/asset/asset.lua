@@ -49,55 +49,49 @@ function assetmgr.find_asset_path(fullrespath)
 	return nil
 end
 
-function assetmgr.find_asset_path_old(resource)
-	local pkgname, respath = resource.package, resource.filename
-	return assetmgr.find_asset_path(pfs.path('//'..pkgname) / respath)
+
+function assetmgr.find_depiction_path(fullrespath)
+	local res = assetmgr.find_asset_path(fullrespath)
+	if res == nil then
+		local pkgname = fullrespath:root_name()
+		res = assetmgr.find_asset_path(pkgname / "depiction" / fullrespath:string():sub(1+#pkgname:string()))
+	end
+	if res == nil then
+		error(string.format("not found res, pkgname:%s, respath:%s", fullrespath:string()))
+	end
+	return res
 end
 
-function assetmgr.find_depiction_path(pkgname, respath)
-	local fullrespath = assetmgr.find_asset_path(pfs.path('//'..pkgname) / respath)
-	if fullrespath == nil then
-		fullrespath = assetmgr.find_asset_path(pfs.path('//'..pkgname) / "depiction" / respath)
-	end
-
-	if fullrespath == nil then
-		error(string.format("not found res, pkgname:%s, respath:%s", pkgname, respath))
-	end
-	return fullrespath
-end
-
-
-local function res_key(pkgname, respath)
+local function res_key(filename)
 	-- TODO, should use vfs to get the resource file unique key(resource hash), for cache same content file	
-	return string.format("%s:%s", assert(pkgname), respath:string())
+	return filename:string()
 end
 
-function assetmgr.load(pkgname, respath, param)	
-	assert(pkgname == nil or type(pkgname) == "string")
-	assert(type(respath) ~= "string")
+function assetmgr.load(filename, param)	
+	assert(type(filename) ~= "string")
 
-	local reskey = res_key(pkgname, respath)
+	local reskey = res_key(filename)
 	local res = resources[reskey]
 	if res == nil then
-		local moudlename = respath:extension():string():match("%.(.+)$")
+		local moudlename = filename:extension():string():match("%.(.+)$")
 		if moudlename == nil then
-			error(string.format("not found ext from file:%s", respath:string()))
+			error(string.format("not found ext from file:%s", filename:string()))
 		end
 		local loader = assetmgr.get_loader(moudlename)
-		res = loader(pkgname, respath, param)
+		res = loader(filename, param)
 		resources[reskey] = res
 	end
 
 	return res
 end
 
-function assetmgr.save(tree, pkgname, respath)	
+function assetmgr.save(tree, filename)	
 	local seri = import_package "ant.serialize"
-	seri.save(pkgname, respath, tree)
+	seri.save(filename, tree)
 end
 
-function assetmgr.has_res(pkgname, respath)
-	local key = res_key(pkgname, respath)
+function assetmgr.has_res(filename)
+	local key = res_key(filename)
 	return resources[key] ~= nil
 end
 

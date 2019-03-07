@@ -11,6 +11,7 @@ local alluniforms = {}
 local shader_mgr = {}
 shader_mgr.__index = shader_mgr
 
+-- TODO: package path
 local function gen_shader_filepath(pkgname, shadername)
 	assert(pfs.path(shadername):extension() == pfs.path '')
 	local shadername_withext = shadername .. ".sc"

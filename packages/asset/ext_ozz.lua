@@ -1,9 +1,8 @@
 local fs = require "filesystem"
-local pfs = require "filesystem.pkg"
 local assetmgr = require "asset"
 
-return function(pkgname, filepath)
-	local fn = assetmgr.find_asset_path(pfs.path('//'..pkgname) / filepath)
+return function(filename)
+	local fn = assetmgr.find_asset_path(filename)
 
 	local function find_tagop(filepath, readops)
 		local f = fs.open(filepath, "rb")

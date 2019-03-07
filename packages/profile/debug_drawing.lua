@@ -95,7 +95,7 @@ local function check_add_material(mc, materialpath)
 	end
 
 	if not has_material() then		
-		componentutil.add_material(mc, "engine", materialpath)
+		componentutil.add_material(mc, materialpath)
 	end
 end
 

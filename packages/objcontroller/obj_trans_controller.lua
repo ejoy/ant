@@ -6,21 +6,17 @@ local world = ecs.world
 ecs.import "ant.inputmgr"
 
 
-local assetmgr = import_package "ant.asset"
 local math = import_package "ant.math"
 local mu = math.util
 local ms = math.stack
-local fs = require "filesystem"
+local pfs = require "filesystem.pkg"
 
-local components_util = import_package "ant.render".components
 local hie_offline_util = import_package "ant.hierarchy.offline".util
 
-local axisbase_controller_hierarchyname = fs.path "hierarchy" / "axisbase_contrller.hierarchy"
-local axis_hierarchyname = fs.path "hierarchy"/ "axis.hierarchy"
-local rotator_hierarchyname = fs.path "hierarchy" / "rotator.hierarchy"
-local objtrans_materialpath = fs.path "obj_trans"/ "obj_trans.material"
-
-local pkgname = "ant.resources"
+local axisbase_controller_hierarchyname = pfs.path "//ant.resources" / "hierarchy" / "axisbase_contrller.hierarchy"
+local axis_hierarchyname = pfs.path "//ant.resources"  / "hierarchy" / "axis.hierarchy"
+local rotator_hierarchyname = pfs.path "//ant.resources" / "hierarchy"  / "rotator.hierarchy"
+local objtrans_materialpath = pfs.path "//ant.resources"  / "obj_trans" / "obj_trans.material"
 
 ecs.tag "pos_transform"
 ecs.tag "scale_transform"
@@ -289,7 +285,7 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 			t = {0, 0, 0, 1},
 		},
 		name = "hierarchy-" .. prefixname .. "-" .. suffixname,
-		editable_hierarchy = {ref_path = {package=pkgname, filename=axis_hierarchyname}},
+		editable_hierarchy = {ref_path = axis_hierarchyname},
 		hierarchy_name_mapper = {},
 		[tag_comp] = true,
 		main_viewtag = true,
@@ -305,11 +301,11 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 			},
 			name = prefixname .. name .. "-" .. suffixname,
 			mesh = {
-				ref_path = {package=pkgname, filename=meshfile}, 
+				ref_path = meshfile, 
 			},
 			material = {
 				{
-					ref_path = {package=pkgname, filename=materialfile},
+					ref_path = materialfile,
 					properties = {
 						color = {type="color", name="color", value=deep_copy(color)},
 					}
@@ -352,7 +348,7 @@ local function add_axis_base_transform_entites(basename, headmeshfile, axismeshf
 				t = {0, 0, 0, 1},
 
 		},
-		editable_hierarchy = {ref_path = {package=pkgname, filename=axisbase_controller_hierarchyname}},
+		editable_hierarchy = {ref_path = axisbase_controller_hierarchyname},
 		hierarchy_name_mapper = {},
 		name = basename,
 		[tag_comp] = true,
@@ -426,11 +422,11 @@ local function add_axis_base_transform_entites(basename, headmeshfile, axismeshf
 end
 
 local function add_translate_entities(colors)
-	return add_axis_base_transform_entites("translate", fs.path "cone.mesh", fs.path "cylinder.mesh", "pos_transform", colors)
+	return add_axis_base_transform_entites("translate", pfs.path "//ant.resources/cone.mesh", pfs.path "//ant.resources/cylinder.mesh", "pos_transform", colors)
 end
 
 local function add_scale_entities(colors)
-	return add_axis_base_transform_entites("scale", fs.path "cube.mesh", fs.path "cylinder.mesh", "scale_transform", colors)
+	return add_axis_base_transform_entites("scale", pfs.path "//ant.resources/cube.mesh", pfs.path "//ant.resources/cylinder.mesh", "scale_transform", colors)
 end
 
 local function add_rotator_entities(colors)	
@@ -449,7 +445,7 @@ local function add_rotator_entities(colors)
 		name = "rotator",
 		rotator_transform = true,
 		editable_hierarchy = {
-			ref_path = {package=pkgname, filename=axisbase_controller_hierarchyname},			
+			ref_path = axisbase_controller_hierarchyname,
 		},
 		hierarchy_name_mapper = {},
 		main_viewtag = true,
@@ -465,7 +461,7 @@ local function add_rotator_entities(colors)
 				
 			},
 			editable_hierarchy = {
-				ref_path = {package=pkgname, filename=rotator_hierarchyname},
+				ref_path = rotator_hierarchyname,
 			},
 			hierarchy_name_mapper = {},
 			name = "rotator-elem-" .. elemname,
@@ -488,12 +484,12 @@ local function add_rotator_entities(colors)
 				editor = true,
 				parent = elem_eid,
 				mesh = {
-					ref_path = {package=pkgname, filename=meshfilename},
+					ref_path = meshfilename,
 				},
 				material = {
 					content = {
 						{
-							ref_path = {package = pkgname, filename=objtrans_materialpath},
+							ref_path = objtrans_materialpath,
 							properties = {type="color", name="color", value=deep_copy(colors[colorname])},
 						}
 					}
@@ -504,8 +500,8 @@ local function add_rotator_entities(colors)
 			}			
 		end
 	
-		mapper["rotator"] = add_entity("rotator-" .. elemname, fs.path "rotator.mesh", clrname)
-		local axiseid = add_entity("rotator-axis-" .. elemname, fs.path "cylinder.mesh", clrname)
+		mapper["rotator"] = add_entity("rotator-" .. elemname, pfs.path "//ant.resources/rotator.mesh", clrname)
+		local axiseid = add_entity("rotator-axis-" .. elemname, pfs.path "//ant.resources/cylinder.mesh", clrname)
 		mapper["rotator-axis"] = axiseid
 		world:remove_component(axiseid, "can_select")
 		return elem_eid

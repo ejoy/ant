@@ -21,7 +21,7 @@ model_review_system.depend "entity_rendering"
 
 local lu = import_package "ant.render" .light
 local cu = import_package "ant.render" .components
-local fs = require "filesystem"
+local pfs = require "filesystem.pkg"
 
 local function create_light()
 	local leid = lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2)
@@ -43,12 +43,12 @@ function model_review_system:init()
 		},
 		can_render = true,
 		mesh = {
-			ref_path = {package = "ant.resources", filename = fs.path "PVPScene/campsite-door.mesh"}
+			ref_path = pfs.path "//ant.resources/PVPScene/campsite-door.mesh"
 		},
 		material = {
 			content = {
 				{
-					ref_path = {package = "ant.resources", filename = fs.path "PVPScene/scene-mat.material"},
+					ref_path = pfs.path "//ant.resources/PVPScene/scene-mat.material",
 				}
 			}
 		},

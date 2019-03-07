@@ -3,6 +3,7 @@ util.__index = util
 
 local bgfx = require "bgfx"
 local fs = require "filesystem"
+local pfs = require "filesystem.pkg"
 
 local asset = import_package "ant.asset"
 local math = import_package "ant.math"
@@ -20,21 +21,18 @@ local function deep_copy(t)
 	return t
 end
 
-local function load_res(comp, pkgname, respath, param, errmsg)
-	local res = asset.load(pkgname, respath, param)	
+local function load_res(comp, filename, param, errmsg)
+	local res = asset.load(filename, param)	
 	if res == nil then
-		error(string.format("[%s]load resource failed, pkgname:%s, respath:%s", errmsg, pkgname, respath))
+		error(string.format("[%s]load resource failed, respath:%s", errmsg, filename))
 	end
 
 	comp.assetinfo = res
-	comp.ref_path = {
-		package = pkgname,
-		filename = respath,
-	}
+	comp.ref_path = filename
 end
 
-function util.load_skeleton(comp, pkgname, respath, param)
-	load_res(comp, pkgname, respath, param, "load.skeleton")	
+function util.load_skeleton(comp, filename, param)
+	load_res(comp, filename, param, "load.skeleton")	
 end
 
 local function gen_mesh_assetinfo(skinning_mesh_comp)
@@ -88,22 +86,22 @@ local function gen_mesh_assetinfo(skinning_mesh_comp)
 	}
 end
 
-function util.load_skinning_mesh(smcomp, meshcomp, pkgname, respath, param)
-	load_res(smcomp, pkgname, respath, param, "load.skinning_mesh")
+function util.load_skinning_mesh(smcomp, meshcomp, filename, param)
+	load_res(smcomp, filename, param, "load.skinning_mesh")
 	meshcomp.assetinfo = gen_mesh_assetinfo(smcomp)
 end
 
-function util.load_mesh(comp, pkgname, respath, param)
-	load_res(comp, pkgname, respath, param, "load.mesh")
+function util.load_mesh(comp, filename, param)
+	load_res(comp, filename, param, "load.mesh")
 end
 
-function util.load_texture(name, stage, pkgname, texpath)	
-	assert(type(texpath) ~= "string", "texture type's default value should be path to texture file")
-	local assetinfo = asset.load(pkgname, texpath)
-	return {name=name, type="texture", stage=stage, ref_path={package=pkgname, filename=texpath}, handle=assetinfo.handle}
+function util.load_texture(name, stage, filename)	
+	assert(type(filename) == "table", "texture type's default value should be path to texture file")
+	local assetinfo = asset.load(filename)
+	return {name=name, type="texture", stage=stage, ref_path=filename, handle=assetinfo.handle}
 end
 
-function util.add_material(material, pkgname, respath)
+function util.add_material(material, filename)
 	local content = material.content
 	if content == nil then
 		content = {}
@@ -111,10 +109,7 @@ function util.add_material(material, pkgname, respath)
 	end
 
 	local item = {
-		ref_path = {
-			package = pkgname,
-			filename = respath,
-		},
+		ref_path = filename,
 	}
 	util.create_material(item)
 	content[#content+1] = item
@@ -126,7 +121,7 @@ local function update_properties(dst_properties, src_properties)
 		local dsttextures = dst_properties.textures or {}
 		for k, v in pairs(srctextures) do
 			local refpath = v.ref_path
-			local tex = util.load_texture(v.name, v.stage, refpath[1], fs.path(refpath[2]))
+			local tex = util.load_texture(v.name, v.stage, pfs.path('//'..refpath[1]) / refpath[2]) -- TODO: package path
 			if dsttextures[k] == nil then
 				dsttextures[k] = tex
 			else
@@ -151,7 +146,7 @@ local function update_properties(dst_properties, src_properties)
 end
 
 function util.create_material(material)
-	local materialinfo = asset.load(material.ref_path.package, material.ref_path.filename)
+	local materialinfo = asset.load(material.ref_path)
 	if not material.properties then
 		material.properties = {}
 	end
@@ -211,7 +206,7 @@ function util.create_grid_entity(world, name, w, h, unit)
 		material = {
 			content = {
 				{
-					ref_path = {package = "ant.resources", filename = fs.path "line.material"}
+					ref_path = pfs.path "//ant.resources/line.material"
 				}
 			}
 		},

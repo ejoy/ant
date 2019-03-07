@@ -11,5 +11,5 @@ asset.add_loader("material", function (filename)
 	return assert(rawtable(filename))	
 end)
 
-local material = asset.load(nil, "test.material")
+local material = asset.load("test.material")
 print_r(material)
