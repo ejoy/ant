@@ -1,4 +1,3 @@
-
 local platform = require 'platform'
 
 return function (fs)
@@ -12,14 +11,25 @@ return function (fs)
         return nativeio[name]
 	end
 
-	function fs.open(filepath, ...)
-		local m = native_method("open")
-		return m(filepath:string(), ...)
-    end
-    function fs.lines(filepath, ...)
-		local m = native_method("lines")
-		return m(filepath:string(), ...)
-    end
+	if fs.pkg then
+		function fs.open(filepath, ...)
+			local m = native_method("open")
+			return m(filepath:localpath():string(), ...)
+		end
+		function fs.lines(filepath, ...)
+			local m = native_method("lines")
+			return m(filepath:localpath():string(), ...)
+		end
+	else
+		function fs.open(filepath, ...)
+			local m = native_method("open")
+			return m(filepath:string(), ...)
+		end
+		function fs.lines(filepath, ...)
+			local m = native_method("lines")
+			return m(filepath:string(), ...)
+		end
+	end
 
 	if __ANT_RUNTIME__ then
 		function fs.loadfile(filepath, ...)

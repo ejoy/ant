@@ -41,10 +41,17 @@ local function vfspath(self)
     assert(self:is_absolute())
     local value = self._value
     local pos = value:find('/', 3, true)
-    assert(pos)
+    if not pos then
+        local root = pm.find(value:sub(3))
+        if not root then
+		    error(("No file '%s'"):format(value))
+            return
+        end
+        return root
+    end
 	local root = pm.find(value:sub(3, pos-1))
 	if not root then
-		error(("No file '%s'"):format(value))
+        error(("No file '%s'"):format(value))
 		return
 	end
     return root / value:sub(pos+1)
@@ -155,6 +162,23 @@ function path_mt:localpath()
     return vfspath(self):localpath()
 end
 
+-- TODO: delete
+function path_mt:vfspath()
+    return vfspath(self)
+end
+
+function path_mt:root_name()
+    if not self:is_absolute() then
+        return constructor('')
+    end
+    local value = self._value
+    local pos = value:find('/', 3, true)
+    if not pos then
+        return constructor(value)
+    end
+    return constructor(value:sub(1, pos-1))
+end
+
 local fs = {}
 
 fs.path = constructor
@@ -247,6 +271,7 @@ function fs.filelock()
 end
 
 fs.vfs = false
+fs.pkg = true
 
 local fsutil = require 'filesystem.fsutil'
 return fsutil(fs)

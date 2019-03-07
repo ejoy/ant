@@ -1,5 +1,5 @@
 local fs = require "filesystem"
-local antpm = require "antpm"
+local pfs = require "filesystem.pkg"
 
 local support_list = {
 	"shader",
@@ -42,20 +42,10 @@ end
 
 local resources = setmetatable({}, {__mode="kv"})
 
-function assetmgr.pkgdir(pkgname)
-	local root = antpm.find(assert(pkgname))
-	if root == nil then
-		error(string.format("package not found:%s", pkgname))
-	end
-	return root
-end
-
 function assetmgr.find_asset_path(pkgname, respath)
-	local pkgpath = assetmgr.pkgdir(pkgname)
-
-	local fullrespath = pkgpath / respath
-	if fs.exists(fullrespath) then
-		return fullrespath
+	local fullrespath = pfs.path('//'..pkgname) / respath
+	if pfs.exists(fullrespath) then
+		return fullrespath:vfspath()
 	end
 	return nil
 end
