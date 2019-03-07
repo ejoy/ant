@@ -159,8 +159,6 @@ function scene_space:delete()
 
 	if next(removed_eids) then
 		local tree = {}
-		local renderchildren = {}
-		local cache
 		for eid in pairs(hierarchy_cache) do
 			local e = world[eid]
 			local trans = e.hierarchy_transform
@@ -175,17 +173,15 @@ function scene_space:delete()
 			end
 		end
 		update_scene_tree(tree, hierarchy_cache)
-		local function update_render_child()
-			if cache == nil then
-				cache = {}
-				for _, eid in world:each "transform" do
-					local parent = world[eid].transform.parent
-					if parent then 
-						if cache[parent] == nil then
-							cache[parent] = {}
-						end 
-						table.insert(cache[parent], eid)
-					end
+		local function update_render_child()		
+			local cache = {}
+			for _, eid in world:each "transform" do
+				local parent = world[eid].transform.parent
+				if parent then 
+					if cache[parent] == nil then
+						cache[parent] = {}
+					end 
+					table.insert(cache[parent], eid)
 				end
 			end
 
@@ -194,11 +190,10 @@ function scene_space:delete()
 				if children then
 					for _, ceid in ipairs(children) do 
 						local e = world[ceid]
-						e.transform.parent = nil
+						e.transform.parent = nil	-- could not use watcher.parent, because nil will not add notification to watcher
 						e.transform.watcher._marked_init = true
 					end
 				end
-
 			end
 		end
 
