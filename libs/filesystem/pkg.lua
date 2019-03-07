@@ -270,7 +270,6 @@ function fs.filelock()
     error 'Not implemented'
 end
 
-fs.vfs = false
 fs.pkg = true
 
 local fsutil = require 'filesystem.fsutil'

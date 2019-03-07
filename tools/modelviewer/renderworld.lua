@@ -6,6 +6,7 @@ ecs.import "ant.inputmgr"
 ecs.import "ant.render"
 ecs.import "ant.scene"
 ecs.import "ant.serialize"
+ecs.import "ant.event"
 
 local math = import_package "ant.math"
 local ms = math.stack

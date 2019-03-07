@@ -2,33 +2,28 @@ local platform = require 'platform'
 
 return function (fs)
 	local isvfs = fs.vfs
+	local ispkg = fs.pkg
+	local isloc = not isvfs and not ispkg
 	local function native_method(name)
 		if isvfs then
 			local vfsio = require "vfsio"
 			return vfsio[name]
 		end
+		if ispkg then
+			local pkgio = require "pkgio"
+			return pkgio[name]
+		end
 		local nativeio = require "nativeio"
         return nativeio[name]
 	end
 
-	if fs.pkg then
-		function fs.open(filepath, ...)
-			local m = native_method("open")
-			return m(filepath:localpath():string(), ...)
-		end
-		function fs.lines(filepath, ...)
-			local m = native_method("lines")
-			return m(filepath:localpath():string(), ...)
-		end
-	else
-		function fs.open(filepath, ...)
-			local m = native_method("open")
-			return m(filepath:string(), ...)
-		end
-		function fs.lines(filepath, ...)
-			local m = native_method("lines")
-			return m(filepath:string(), ...)
-		end
+	function fs.open(filepath, ...)
+		local m = native_method("open")
+		return m(filepath:string(), ...)
+	end
+	function fs.lines(filepath, ...)
+		local m = native_method("lines")
+		return m(filepath:string(), ...)
 	end
 
 	if __ANT_RUNTIME__ then
@@ -42,17 +37,21 @@ return function (fs)
 		end
 	else
 		function fs.loadfile(filepath, ...)
-			if isvfs then
+			if not isloc then
 				filepath = filepath:localpath()
 			end
 			return require "nativeio".loadfile(filepath:string(), ...)
 		end
 		function fs.dofile(filepath)
-			if isvfs then
+			if not isloc then
 				filepath = filepath:localpath()
 			end
 			return require "nativeio".dofile(filepath:string())
 		end
+	end
+
+	if not isloc then
+		return fs
 	end
 
     if platform.OS == 'Windows' then
@@ -63,13 +62,6 @@ return function (fs)
         function fs.mydocs_path()
             return fs.path(os.getenv 'HOME') / 'Documents'
         end
-	end
-
-	local path_mt = debug.getmetatable(fs.path())
-	if not path_mt.localpath then
-		function path_mt:localpath()
-			return self
-		end
 	end
 
 	function fs.file_is_newer(check, base)
@@ -116,5 +108,13 @@ return function (fs)
 			end
 		end
 	end
+
+	local path_mt = debug.getmetatable(fs.path())
+	if not path_mt.localpath then
+		function path_mt:localpath()
+			return self
+		end
+	end
+
     return fs
 end

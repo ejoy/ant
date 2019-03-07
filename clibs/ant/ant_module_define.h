@@ -7,6 +7,7 @@
 { "cjson.safe", luaopen_cjson_safe },
 { "crypt", luaopen_crypt },
 { "datalist", luaopen_datalist },
+{ "filesystem.cpp", luaopen_filesystem_cpp },
 { "firmware", luaopen_firmware },
 { "hierarchy", luaopen_hierarchy },
 { "hierarchy.animation", luaopen_hierarchy_animation },

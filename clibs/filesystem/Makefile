@@ -30,6 +30,9 @@ $(ODIR)/lua_filesystem.o : lua_filesystem.cpp | $(ODIR)
 filesystem.dll : $(OBJS)
 	$(CXX) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB) $(LIBS)
 
+libfilesystem-$(PLAT).a : $(OBJS)
+	ar rsv $@ $^
+
 $(ODIR) :
 	mkdir -p $@
 

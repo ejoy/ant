@@ -83,7 +83,8 @@ local function m_loadfile(filename)
     if not info.env then
         info.env = sandbox.env(info.root:string(), name)
     end
-    return fs.loadfile(filename, 't', info.env)
+    local pfs = require "filesystem.pkg"
+    return pfs.loadfile(filename, 't', info.env)
 end
 
 return {
