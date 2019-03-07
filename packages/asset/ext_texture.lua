@@ -1,5 +1,5 @@
 local bgfx = require "bgfx"
-local fs = require "filesystem"
+local pfs = require "filesystem.pkg"
 local assetmgr = require "asset"
 local rawtable = require "rawtable"
 
@@ -74,11 +74,10 @@ end
 return function (pkgname, respath)
 	local tex = rawtable(assetmgr.find_depiction_path(pkgname, respath))
 	local texrefpath = tex.path
-	local tpkgname, trespath = texrefpath[1], fs.path(texrefpath[2])
-	local pp = assetmgr.find_asset_path(tpkgname, trespath)
+	local pp = assetmgr.find_asset_path(pfs.path(texrefpath))
 	if pp == nil then
-		error(string.format("texture path not found, .texture path:[%s:%s], texture file:[%s:%s]", 
-			pkgname, respath, tpkgname, trespath))
+		error(string.format("texture path not found, .texture path:[%s:%s], texture file:[%s]", 
+			pkgname, respath, texrefpath))
 	end
 
 	local sampler = tex.sampler

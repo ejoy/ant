@@ -4,6 +4,7 @@ local log = log and log(...) or print
 local bgfx = require "bgfx"
 local assetmgr = import_package "ant.asset"
 local fs = require "filesystem"
+local pfs = require "filesystem.pkg"
 
 local alluniforms = {}
 
@@ -11,13 +12,13 @@ local shader_mgr = {}
 shader_mgr.__index = shader_mgr
 
 local function gen_shader_filepath(pkgname, shadername)
-	assert(fs.path(shadername):extension() == fs.path '')
-	local shadername_withext = fs.path(shadername .. ".sc")
-	local filepath = assetmgr.find_asset_path(pkgname, shadername_withext)
+	assert(pfs.path(shadername):extension() == pfs.path '')
+	local shadername_withext = shadername .. ".sc"
+	local filepath = assetmgr.find_asset_path(pfs.path('//'..pkgname) / shadername_withext)
 	if filepath then
 		return filepath 
 	end
-	return assetmgr.find_asset_path(pkgname, fs.path "shaders/src" / shadername_withext)
+	return assetmgr.find_asset_path(pfs.path('//'..pkgname) / "shaders" / "src" / shadername_withext)
 end
 
 local function load_shader(pkgname, name)

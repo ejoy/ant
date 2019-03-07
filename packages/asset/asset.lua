@@ -42,18 +42,22 @@ end
 
 local resources = setmetatable({}, {__mode="kv"})
 
-function assetmgr.find_asset_path(pkgname, respath)
-	local fullrespath = pfs.path('//'..pkgname) / respath
+function assetmgr.find_asset_path(fullrespath)
 	if pfs.exists(fullrespath) then
 		return fullrespath:vfspath()
 	end
 	return nil
 end
 
+function assetmgr.find_asset_path_old(resource)
+	local pkgname, respath = resource.package, resource.filename
+	return assetmgr.find_asset_path(pfs.path('//'..pkgname) / respath)
+end
+
 function assetmgr.find_depiction_path(pkgname, respath)
-	local fullrespath = assetmgr.find_asset_path(pkgname, respath)
+	local fullrespath = assetmgr.find_asset_path(pfs.path('//'..pkgname) / respath)
 	if fullrespath == nil then
-		fullrespath = assetmgr.find_asset_path(pkgname, fs.path "depiction" / respath)
+		fullrespath = assetmgr.find_asset_path(pfs.path('//'..pkgname) / "depiction" / respath)
 	end
 
 	if fullrespath == nil then
