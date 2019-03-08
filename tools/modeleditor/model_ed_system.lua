@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local util 		= require "util"
-local pfs 		= require "filesystem.pkg"
+local fs 		= require "filesystem"
 
 ecs.import 'ant.basic_components'
 ecs.import "ant.render"
@@ -98,7 +98,7 @@ local function enable_bones_visible()
 end
 
 local function check_create_sample_entity(skepath, anipaths, smpath)
-	if not pfs.exists(smpath) then
+	if not fs.exists(smpath) then
 		iup.Message("Error", string.format("invalid path : %s", smpath))
 		return
 	end
@@ -123,7 +123,7 @@ local function update_static_duration_value()
 			local anipath = get_sel_ani()
 			local anihandle = nil
 			for _, ani in ipairs(ani.anilist) do
-				if ani.ref_path == pfs.path(anipath) then
+				if ani.ref_path == fs.path(anipath) then
 					anihandle = ani.handle
 				end
 			end

@@ -5,7 +5,7 @@ local renderpkg = import_package "ant.render"
 local computil = renderpkg.components
 local camerautil = renderpkg.camera
 
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 
 local simplescene = ecs.system "simple_scene"
 
@@ -25,12 +25,12 @@ function simplescene:init()
 			t = {0, 0, 0, 1},
 		},
 		mesh = {
-			ref_path = pfs.path "//ant.resources/bunny.mesh",
+			ref_path = fs.path "//ant.resources/bunny.mesh",
 		},
 		material = {
 			content = {
 				{
-					ref_path = pfs.path "//ant.resources/bunny.material",
+					ref_path = fs.path "//ant.resources/bunny.material",
 				}
 			}
 		},

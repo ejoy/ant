@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local pfs = require 'filesystem.pkg'
+local fs = require 'filesystem'
 
 
 ecs.import 'ant.basic_components'
@@ -33,7 +33,7 @@ init_loader.depend 'skinning_system'
 init_loader.depend 'timesystem'
 
 local function create_animation_test()
-    local meshdir = pfs.path 'meshes'
+    local meshdir = fs.path 'meshes'
     local skepath = meshdir / 'skeleton' / 'human_skeleton.ozz'
     local anipaths = {
         meshdir / 'animation' / 'animation1.ozz',
@@ -59,7 +59,7 @@ local function create_animation_test()
         material = {
             content = {
                 {
-                    ref_path = pfs.path "//ant.resources/skin_model_sample.material"
+                    ref_path = fs.path "//ant.resources/skin_model_sample.material"
                 }
             }
         },
@@ -74,13 +74,13 @@ local function create_animation_test()
             },
             anilist = {
                 {
-                    ref_path = pfs.path '//ant.resources' / meshdir / 'animation' / 'animation1.ozz',
+                    ref_path = fs.path '//ant.resources' / meshdir / 'animation' / 'animation1.ozz',
                     scale = 1,
                     looptimes = 0,
                     name = 'ani1'
                 },
                 {
-                    ref_path = pfs.path '//ant.resources' / meshdir / 'animation' / 'animation2.ozz',
+                    ref_path = fs.path '//ant.resources' / meshdir / 'animation' / 'animation2.ozz',
                     scale = 1,
                     looptimes = 0,
                     name = 'ani2'
@@ -89,10 +89,10 @@ local function create_animation_test()
             blendtype = 'blend'
         },
         skeleton = {
-            ref_path = pfs.path '//ant.resources' / skepath
+            ref_path = fs.path '//ant.resources' / skepath
         },
         skinning_mesh = {
-            ref_path = pfs.path '//ant.resources' / smpath
+            ref_path = fs.path '//ant.resources' / smpath
         },
         name = 'animation_sample',
         main_viewtag = true
@@ -129,7 +129,7 @@ local function create_hierarchy_test()
         }
     end
 
-    local hie_refpath = pfs.path '//ant.resources' / 'hierarchy' / 'test_hierarchy.hierarchy'
+    local hie_refpath = fs.path '//ant.resources' / 'hierarchy' / 'test_hierarchy.hierarchy'
     do
         local hierarchy = require 'hierarchy'
         local root = hierarchy.new()
@@ -170,7 +170,7 @@ local function create_hierarchy_test()
         save_rawdata(root, hie_refpath)
     end
 
-    local hie_materialpath = pfs.path '//ant.resources' / 'bunny.material'
+    local hie_materialpath = fs.path '//ant.resources' / 'bunny.material'
     local function create_hierarchy(srt, name)
         local hierarchy_eid =
             world:create_entity {
@@ -194,7 +194,7 @@ local function create_hierarchy_test()
             h2 = 'sphere.mesh',
             h1_h1 = 'cube.mesh'
         } do
-            name_mapper[k] = create_entity(k, pfs.path '//ant.resources' / v, hie_materialpath)
+            name_mapper[k] = create_entity(k, fs.path '//ant.resources' / v, hie_materialpath)
         end
 
         local hierarchypkg = import_package 'ant.hierarchy.offline'

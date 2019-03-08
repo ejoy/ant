@@ -1,6 +1,6 @@
 local assetutil = require "util"
 local assetmgr = require "asset"
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 local ru = import_package "ant.render".util
 
 local loaders = {
@@ -23,7 +23,7 @@ return function(filename)
 				local pkgname = filename:root_name()
 				local dir = filename:parent_path()
 				local fullpath = dir / v
-				if not pfs.exists(fullpath) then
+				if not fs.exists(fullpath) then
 					fullpath = pkgname /v
 				end
                 material_info[k] = assetmgr.load(fullpath)

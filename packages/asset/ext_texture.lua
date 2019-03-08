@@ -1,9 +1,9 @@
 local bgfx = require "bgfx"
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 local assetmgr = require "asset"
 
 local function texture_load(filepath, info)
-	local f = assert(pfs.open(filepath, "rb"))
+	local f = assert(fs.open(filepath, "rb"))
 	local imgdata = f:read "a"
 	f:close()
 	local h = bgfx.create_texture(imgdata, info)
@@ -71,8 +71,8 @@ end
 
 return function (filename)
 	local tex = assetmgr.get_depiction(filename)
-	local texrefpath = pfs.path(tex.path)
-	if not pfs.exists(texrefpath) then
+	local texrefpath = fs.path(tex.path)
+	if not fs.exists(texrefpath) then
 		error(string.format("texture path not found, .texture path:[%s], texture file:[%s]", filename, texrefpath))
 	end
 

@@ -1,6 +1,6 @@
 --luacheck: globals iup
 local link = {}; link.__index = link
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 local observersclass = require "common.observer"
 local ctrlutil = require "util"
 
@@ -13,7 +13,7 @@ function link.new(config, name, url)
 				-- should use injust
 				local addr = iup.GetParent(self)
 				local owner = assert(addr.owner)
-				local urlpath = pfs.path(url)
+				local urlpath = fs.path(url)
 				owner:update(urlpath)
 				owner:notify(urlpath)
 			end

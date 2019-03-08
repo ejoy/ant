@@ -1,8 +1,8 @@
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 
 return function(filename)
 	local function find_tagop(filepath, readops)
-		local f = pfs.open(filepath, "rb")
+		local f = fs.open(filepath, "rb")
 		
 		--print(endless)
 		for tag, op in pairs(readops) do

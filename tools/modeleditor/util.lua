@@ -3,7 +3,7 @@ local util = {}; util.__index = util
 local geometry = import_package "ant.geometry"
 local geo = geometry.geometry
 
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 local bgfx = require "bgfx"
 
 function util.create_aabb_mesh_info(mesh)
@@ -80,7 +80,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 			velocity = {1, 0, 0},
 		}, 
 		state_chain = {
-			ref_path = pfs.path "//ant.resources/simple_animation.sm",
+			ref_path = fs.path "//ant.resources/simple_animation.sm",
 		},
 		name = "animation_sample",
 		main_viewtag = true,
@@ -125,7 +125,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 
 		world:add_component(eid, "material", {
 			content = {
-				{ref_path = pfs.path "//ant.resources/skin_model_sample.material"}
+				{ref_path = fs.path "//ant.resources/skin_model_sample.material"}
 			}
 		})
 	
@@ -133,7 +133,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 			material = {
 				content = {
 					{
-						ref_path = pfs.path "//ant.resources/line.material"
+						ref_path = fs.path "//ant.resources/line.material"
 					}
 				}
 			},

@@ -1,6 +1,6 @@
 
 local bullet_module = require "bullet"
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 
 local mathpkg = import_package "ant.math"
 local math3d = require "math3d"
@@ -277,7 +277,7 @@ function bullet_world:create_debug_drawer(bgfx)
 	if self.prog == nil then 
 		local cu 	= import_package "ant.render" .components
 		local material = { content= {}, }
-		cu.add_material(material, pfs.path "line.material")
+		cu.add_material(material, fs.path "line.material")
 		self.prog = material.content[1].materialinfo.shader.prog 
 		self.material = material    -- how to destroy?
 	end 

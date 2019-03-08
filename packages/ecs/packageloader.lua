@@ -1,5 +1,5 @@
 local pm = require "antpm"
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 local get_modules = require "modules"
 
 return function(name)
@@ -8,7 +8,7 @@ return function(name)
 		error(("package '%s' not found"):format(name))
 		return
 	end
-	local root = pfs.path('//'..name)
+	local root = fs.path('//'..name)
 	local modules = config.ecs_modules
 	if modules then
 		local tmp = {}

@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 local scenespace_test = ecs.system "scenespace_test"
 scenespace_test.singleton 'event'
 scenespace_test.singleton 'frame_stat'
@@ -12,7 +12,7 @@ local function create_scene_node_test()
     local material = {
         content = {
             {
-                ref_path = pfs.path '//ant.resources/bunny.material'
+                ref_path = fs.path '//ant.resources/bunny.material'
             }
         }
     }
@@ -92,7 +92,7 @@ local function create_scene_node_test()
 		},
         name = 'render_child1_1',
         mesh = {
-            ref_path = pfs.path '//ant.resources/sphere.mesh'
+            ref_path = fs.path '//ant.resources/sphere.mesh'
         },
         material = material,
         can_render = true,
@@ -110,7 +110,7 @@ local function create_scene_node_test()
 		},
         name = 'render_child1_2',
         mesh = {
-            ref_path = pfs.path '//ant.resources/cylinder.mesh'
+            ref_path = fs.path '//ant.resources/cylinder.mesh'
         },
         material = material,
         can_render = true,
@@ -127,7 +127,7 @@ local function create_scene_node_test()
 		},
         name = 'render_child2_1',
         mesh = {
-            ref_path = pfs.path '//ant.resources/cube.mesh'
+            ref_path = fs.path '//ant.resources/cube.mesh'
         },
         material = material,
         can_render = true,

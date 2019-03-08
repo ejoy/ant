@@ -1,5 +1,5 @@
 local bgfx = require "bgfx"
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 
 local antmeshloader = require "antmeshloader"
 
@@ -49,7 +49,7 @@ end
 
 local function load_from_source(filepath)
 	if not __ANT_RUNTIME__ then
-		assert(pfs.exists(filepath .. ".lk"))
+		assert(fs.exists(filepath .. ".lk"))
 	end
 	return antmeshloader(filepath)
 end

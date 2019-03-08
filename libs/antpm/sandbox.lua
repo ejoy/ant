@@ -1,4 +1,4 @@
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 
 local function sandbox_env(root, pkgname)
     local env = setmetatable({}, {__index=_G})
@@ -9,7 +9,7 @@ local function sandbox_env(root, pkgname)
         name = string.gsub(name, '%.', '/')
         for c in string.gmatch(path, '[^;]+') do
             local filename = string.gsub(c, '%?', name)
-            local f = pfs.open(pfs.path(filename))
+            local f = fs.open(fs.path(filename))
             if f then
                 f:close()
                 return filename
@@ -28,7 +28,7 @@ local function sandbox_env(root, pkgname)
             end
             return err1
         end
-        local func, err2 = pfs.loadfile(pfs.path(path))
+        local func, err2 = fs.loadfile(fs.path(path))
         if not func then
             error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err2))
         end
