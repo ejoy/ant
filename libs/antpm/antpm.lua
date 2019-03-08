@@ -1,27 +1,26 @@
-local fs = require "filesystem"
 local sandbox = require "antpm.sandbox"
-
-local WORKDIR = fs.path 'engine'
+local vfsio = require "vfsio"
+local vfs = require "vfs.simplefs"
 
 local registered = {}
 local loaded = {}
 
-local function register(pkg)	
-    if not fs.exists(pkg) then
-        error(('Cannot find package `%s`.'):format(pkg:string()))
+local function register(pkg)
+    if not vfs.type(pkg) then
+        error(('Cannot find package `%s`.'):format(pkg))
     end
-    local cfg = pkg / "package.lua"
-    if not fs.exists(pkg) then
-        error(('Cannot find package config `%s`.'):format(cfg:string()))
+    local cfg = vfs.join(pkg, "package.lua")
+    if not vfs.type(cfg) then
+        error(('Cannot find package config `%s`.'):format(cfg))
     end
-    local config = fs.dofile(cfg)
+    local config = vfsio.dofile(cfg)
     for _, field in ipairs {'name'} do
         if not config[field] then
-            error(('Missing `%s` field in `%s`.'):format(field, cfg:string()))
+            error(('Missing `%s` field in `%s`.'):format(field, cfg))
         end 
     end
     if registered[config.name] then
-        error(('Duplicate definition package `%s` in `%s`.'):format(config.name, pkg:string()))
+        error(('Duplicate definition package `%s` in `%s`.'):format(config.name, pkg))
     end
     registered[config.name] = {
         root = pkg,
@@ -36,14 +35,14 @@ local function require_package(name)
     end
     local info = registered[name]
     if not info.env then
-		info.env = sandbox.env(info.root:string(), name)
+		info.env = sandbox.env("//"..name, name)
     end
     return info.env.require(info.config.entry)
 end
 
-local packagedir = WORKDIR / "packages"
-for pkg in packagedir:list_directory() do
-    register(pkg)
+local packagedir = 'engine/packages'
+for pkg in vfs.each(packagedir) do
+    register(vfs.join(packagedir, pkg))
 end
 
 local function import(name)
@@ -65,7 +64,7 @@ local function test(name, entry)
     end
     local info = registered[name]
     if not info.env then
-		info.env = sandbox.env(info.root:string(), name)
+		info.env = sandbox.env("//"..name, name)
     end
     return info.env.require(entry or 'test')
 end
@@ -81,7 +80,7 @@ local function m_loadfile(filename)
     local name = filename:root_name():string():sub(3)
     local info = registered[name]
     if not info.env then
-        info.env = sandbox.env(info.root:string(), name)
+        info.env = sandbox.env("//"..name, name)
     end
     local pfs = require "filesystem.pkg"
     return pfs.loadfile(filename, 't', info.env)

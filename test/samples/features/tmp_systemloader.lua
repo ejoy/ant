@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-local fs = require 'filesystem'
 local pfs = require 'filesystem.pkg'
 
 
@@ -22,8 +21,6 @@ local aniutil = import_package 'ant.animation'.util
 
 local lu = renderpkg.light
 
-
-local assetmgr = import_package 'ant.asset'
 local PVPScenLoader = require 'PVPSceneLoader'
 
 local init_loader = ecs.system 'init_loader'
@@ -36,7 +33,7 @@ init_loader.depend 'skinning_system'
 init_loader.depend 'timesystem'
 
 local function create_animation_test()
-    local meshdir = fs.path 'meshes'
+    local meshdir = pfs.path 'meshes'
     local skepath = meshdir / 'skeleton' / 'human_skeleton.ozz'
     local anipaths = {
         meshdir / 'animation' / 'animation1.ozz',

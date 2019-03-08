@@ -1,4 +1,5 @@
 local pm = require "antpm"
+local vfs = require "vfs.simplefs"
 
 local nio = package.loaded.nativeio
 
@@ -18,11 +19,11 @@ local function vfspath(value)
         error(("No file '%s'"):format(value))
 		return
 	end
-    return root / value:sub(pos+1)
+    return vfs.join(root, value:sub(pos+1))
 end
 
 local function localpath(path)
-    return vfspath(path):localpath():string()
+    return vfs.realpath(vfspath(path))
 end
 
 local function errmsg(err, filename, real_filename)

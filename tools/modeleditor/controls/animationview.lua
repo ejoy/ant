@@ -5,7 +5,7 @@ local ctrlutil = iupcontrols.util
 local probeclass = iupcontrols.assetprobe
 local matviewclass = iupcontrols.matrixview
 
-local fs = require "filesystem"
+local pfs = require "filesystem.pkg"
 
 
 local function get_grid(aniview)
@@ -100,7 +100,7 @@ function animationview.new(config)
 		if blender then
 			local grid = get_grid(aniview)
 			local ln = grid:focus()			
-			blender:add(fs.path(grid:getcell(ln, 2)))
+			blender:add(pfs.path(grid:getcell(ln, 2)))
 		end
 	end
 

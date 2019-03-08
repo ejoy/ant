@@ -1,5 +1,5 @@
-local pm = require "antpm"
-local vfs = require "filesystem"
+local lfs = require "filesystem.local"
+local vfs = require "vfs.simplefs"
 
 local path_mt = {}
 path_mt.__name = 'pkg-filesystem'
@@ -38,6 +38,7 @@ local function normalize_split(fullname)
 end
 
 local function vfspath(self)
+    local pm = require "antpm"
     assert(self:is_absolute())
     local value = self._value
     local pos = value:find('/', 3, true)
@@ -54,7 +55,7 @@ local function vfspath(self)
         error(("No file '%s'"):format(value))
 		return
 	end
-    return root / value:sub(pos+1)
+    return vfs.join(root, value:sub(pos+1))
 end
 
 function path_mt:__tostring()
@@ -135,14 +136,14 @@ function path_mt:is_relative()
 end
 
 function path_mt:list_directory()
-    local next = vfspath(self):list_directory()
+    local next = vfs.each(vfspath(self))
     local name
     return function()
-        name = next(name)
+        name = next()
         if not name then
             return
         end
-        return self / name:filename():string()
+        return self / name
     end
 end
 
@@ -159,12 +160,7 @@ function path_mt:remove_permissions()
 end
 
 function path_mt:localpath()
-    return vfspath(self):localpath()
-end
-
--- TODO: delete
-function path_mt:vfspath()
-    return vfspath(self)
+    return lfs.path(vfs.realpath(vfspath(self)))
 end
 
 function path_mt:root_name()
@@ -188,15 +184,15 @@ function fs.current_path()
 end
 
 function fs.exists(path)
-    return vfs.exists(vfspath(path))
+    return lfs.exists(path:localpath())
 end
 
 function fs.is_directory(path)
-    return vfs.is_directory(vfspath(path))
+    return lfs.is_directory(path:localpath())
 end
 
 function fs.is_regular_file(path)
-    return vfs.is_regular_file(vfspath(path))
+    return lfs.is_regular_file(path:localpath())
 end
 
 function fs.rename()

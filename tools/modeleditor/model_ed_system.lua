@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 
 local util 		= require "util"
-local fs 		= require "filesystem"
 local pfs 		= require "filesystem.pkg"
 
 ecs.import 'ant.basic_components'
@@ -124,7 +123,7 @@ local function update_static_duration_value()
 			local anipath = get_sel_ani()
 			local anihandle = nil
 			for _, ani in ipairs(ani.anilist) do
-				if ani.ref_path[2] == fs.path(anipath) then
+				if ani.ref_path == pfs.path(anipath) then
 					anihandle = ani.handle
 				end
 			end
@@ -201,20 +200,12 @@ local function init_paths_ctrl()
 	aniview:set_blender(blender)
 
 	local change_cb = function ()
-		local function string_to_path(ss)
-			local pkgname, resname = ss:match("^([^:]+):(.+)$")
-			if pkgname == nil then
-				pkgname = "ant.resources"
-				resname = ss
-			end
-			return {package=pkgname, filename=fs.path(resname)}
-		end
 		local skepath = skeinputer:get_input()
 		local smpath = sminputer:get_input()
 
 		local anipaths = {}
 		for i=1, aniview:count() do
-			anipaths[#anipaths+1] = string_to_path(aniview:get(i))
+			anipaths[#anipaths+1] = aniview:get(i)
 		end
 		check_create_sample_entity(skepath, anipaths, smpath)
 	end

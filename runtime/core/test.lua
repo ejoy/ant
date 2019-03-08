@@ -5,7 +5,7 @@ dofile "libs/editor.lua"
 local reponame = assert((...), "Need repo name")
 
 local thread = require "thread"
-local fs = require "filesystem"
+local fs = require "filesystem.local"
 
 thread.thread [[
 	-- thread for log

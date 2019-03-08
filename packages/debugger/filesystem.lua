@@ -1,4 +1,4 @@
-local ok, fs = pcall(require, 'filesystem')
+local ok, fs = pcall(require, 'filesystem.pkg')
 if not ok then fs = nil end
 
 local default_sep = package.config:sub(1, 1)

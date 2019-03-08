@@ -1,6 +1,5 @@
 local math = import_package "ant.math"
 local ms = math.stack
-local fs = require "filesystem"
 local pfs = require "filesystem.pkg"
 
 local PVPScene = {}
