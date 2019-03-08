@@ -40,4 +40,4 @@ end
 
 package.loaded.vfs = vfs
 
-require 'vfs.io'
+require 'antpm.io'
