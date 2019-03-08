@@ -1,4 +1,4 @@
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 
 local function v3_unpack(v)
 	local v1, v2, v3 = string.unpack("<fff", v)
@@ -40,7 +40,7 @@ end
 
 return function (filepath)
 	local function openfile(filepath)
-		local ff = assert(pfs.open(filepath, "rb"))		
+		local ff = assert(fs.open(filepath, "rb"))		
 		-- local content = ff:read("a")
 		-- ff:close()
 		-- local readit = 1

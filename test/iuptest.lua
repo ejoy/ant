@@ -18,7 +18,7 @@ local dlg = iup.dialog {
 	ex
 }
 
-local fs = require "filesystem"
+local fs = require "filesystem.local"
 
 local rootdir = fs.path "d:/Work"
 local function fill_content(rootdir)

@@ -2,7 +2,7 @@ local util = {}
 util.__index = util
 
 local bgfx = require "bgfx"
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 
 local asset = import_package "ant.asset"
 
@@ -118,7 +118,7 @@ local function update_properties(dst_properties, src_properties)
 		local dsttextures = dst_properties.textures or {}
 		for k, v in pairs(srctextures) do
 			local refpath = v.ref_path
-			local tex = util.load_texture(v.name, v.stage, pfs.path(refpath))
+			local tex = util.load_texture(v.name, v.stage, fs.path(refpath))
 			if dsttextures[k] == nil then
 				dsttextures[k] = tex
 			else
@@ -203,7 +203,7 @@ function util.create_grid_entity(world, name, w, h, unit)
 		material = {
 			content = {
 				{
-					ref_path = pfs.path "//ant.resources/line.material"
+					ref_path = fs.path "//ant.resources/line.material"
 				}
 			}
 		},

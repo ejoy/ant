@@ -25,12 +25,12 @@ function simplescene:init()
 			t = {0, 0, 0, 1},
 		},
 		mesh = {
-			ref_path = {package="ant.resources", filename=fs.path "bunny.mesh"},
+			ref_path = fs.path "//ant.resources/bunny.mesh",
 		},
 		material = {
 			content = {
 				{
-					ref_path = {package="ant.resources", filename=fs.path "bunny.material"},
+					ref_path = fs.path "//ant.resources/bunny.material",
 				}
 			}
 		},

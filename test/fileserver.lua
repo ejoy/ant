@@ -15,7 +15,7 @@ local repo = require "vfs.repo"
 local network = import_package "ant.network"
 local protocol = require "protocol"
 
-local vfs = require "filesystem"
+local vfs = require "vfs.simplefs"
 local fs = require "filesystem.local"
 
 local WORKDIR = fs.current_path()
@@ -33,10 +33,10 @@ repo:rebuild()
 
 local watch = {}
 assert(fw.add(repopath:string()))
-watch[#watch+1] = {vfs.path '', repopath}
+watch[#watch+1] = {'', repopath}
 for k, v in pairs(repo._mountpoint) do
 	assert(fw.add(v:string()))
-	watch[#watch+1] = {vfs.path(k), v}
+	watch[#watch+1] = {k, v}
 end
 
 local filelisten = network.listen(config.address, config.port)
@@ -209,7 +209,7 @@ local function filewatch()
 			local vpath, rpath = v[1], v[2]
 			local rel_path = fs.relative(fs.path(path), rpath):string()
 			if rel_path ~= '' and rel_path:sub(1, 1) ~= '.' then
-				local newpath = (vpath / rel_path):string()
+				local newpath = vfs.join(vpath, rel_path)
 				if newpath:sub(1, 5) ~= '.repo' then
 					print('[FileWatch]', type, newpath)
 					repo:touch(newpath)

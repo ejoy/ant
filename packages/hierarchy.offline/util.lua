@@ -2,7 +2,7 @@ local util = {}
 util.__index = util
 
 local hierarchy_module = require 'hierarchy'
-local pfs = require 'filesystem.pkg'
+local pfs = require 'filesystem'
 local localfs = require 'filesystem.local'
 
 local math = import_package 'ant.math'

@@ -1,8 +1,8 @@
 local bgfx = require "bgfx"
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 
 local function texture_load(filename, info)
-	local f = assert(pfs.open(pfs.path(filename), "rb"))
+	local f = assert(fs.open(fs.path(filename), "rb"))
 	local imgdata = f:read "a"
 	f:close()
 	print("   image name = "..filename)

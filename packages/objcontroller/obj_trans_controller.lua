@@ -9,14 +9,14 @@ ecs.import "ant.inputmgr"
 local math = import_package "ant.math"
 local mu = math.util
 local ms = math.stack
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 
 local hie_offline_util = import_package "ant.hierarchy.offline".util
 
-local axisbase_controller_hierarchyname = pfs.path "//ant.resources" / "hierarchy" / "axisbase_contrller.hierarchy"
-local axis_hierarchyname = pfs.path "//ant.resources"  / "hierarchy" / "axis.hierarchy"
-local rotator_hierarchyname = pfs.path "//ant.resources" / "hierarchy"  / "rotator.hierarchy"
-local objtrans_materialpath = pfs.path "//ant.resources"  / "obj_trans" / "obj_trans.material"
+local axisbase_controller_hierarchyname = fs.path "//ant.resources" / "hierarchy" / "axisbase_contrller.hierarchy"
+local axis_hierarchyname = fs.path "//ant.resources"  / "hierarchy" / "axis.hierarchy"
+local rotator_hierarchyname = fs.path "//ant.resources" / "hierarchy"  / "rotator.hierarchy"
+local objtrans_materialpath = fs.path "//ant.resources"  / "obj_trans" / "obj_trans.material"
 
 ecs.tag "pos_transform"
 ecs.tag "scale_transform"
@@ -422,11 +422,11 @@ local function add_axis_base_transform_entites(basename, headmeshfile, axismeshf
 end
 
 local function add_translate_entities(colors)
-	return add_axis_base_transform_entites("translate", pfs.path "//ant.resources/cone.mesh", pfs.path "//ant.resources/cylinder.mesh", "pos_transform", colors)
+	return add_axis_base_transform_entites("translate", fs.path "//ant.resources/cone.mesh", fs.path "//ant.resources/cylinder.mesh", "pos_transform", colors)
 end
 
 local function add_scale_entities(colors)
-	return add_axis_base_transform_entites("scale", pfs.path "//ant.resources/cube.mesh", pfs.path "//ant.resources/cylinder.mesh", "scale_transform", colors)
+	return add_axis_base_transform_entites("scale", fs.path "//ant.resources/cube.mesh", fs.path "//ant.resources/cylinder.mesh", "scale_transform", colors)
 end
 
 local function add_rotator_entities(colors)	
@@ -500,8 +500,8 @@ local function add_rotator_entities(colors)
 			}			
 		end
 	
-		mapper["rotator"] = add_entity("rotator-" .. elemname, pfs.path "//ant.resources/rotator.mesh", clrname)
-		local axiseid = add_entity("rotator-axis-" .. elemname, pfs.path "//ant.resources/cylinder.mesh", clrname)
+		mapper["rotator"] = add_entity("rotator-" .. elemname, fs.path "//ant.resources/rotator.mesh", clrname)
+		local axiseid = add_entity("rotator-axis-" .. elemname, fs.path "//ant.resources/cylinder.mesh", clrname)
 		mapper["rotator-axis"] = axiseid
 		world:remove_component(axiseid, "can_select")
 		return elem_eid
@@ -563,7 +563,7 @@ end
 -- 	ctrl_root[3] = {name = "zaxis", }
 
 -- 	local function save_file(node, filename)
---		local pfs = require "filesystem.pkg"		
+--		local fs = require "filesystem"		
 -- 		fs.create_directories(filename:parent())
 -- 		hierarchy_module.save(node, filename)
 -- 	end

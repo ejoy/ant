@@ -3,7 +3,6 @@ local world = ecs.world
 
 local util 		= require "util"
 local fs 		= require "filesystem"
-local pfs 		= require "filesystem.pkg"
 
 ecs.import 'ant.basic_components'
 ecs.import "ant.render"
@@ -99,7 +98,7 @@ local function enable_bones_visible()
 end
 
 local function check_create_sample_entity(skepath, anipaths, smpath)
-	if not pfs.exists(smpath) then
+	if not fs.exists(smpath) then
 		iup.Message("Error", string.format("invalid path : %s", smpath))
 		return
 	end
@@ -124,7 +123,7 @@ local function update_static_duration_value()
 			local anipath = get_sel_ani()
 			local anihandle = nil
 			for _, ani in ipairs(ani.anilist) do
-				if ani.ref_path[2] == fs.path(anipath) then
+				if ani.ref_path == fs.path(anipath) then
 					anihandle = ani.handle
 				end
 			end
@@ -201,12 +200,12 @@ local function init_paths_ctrl()
 	aniview:set_blender(blender)
 
 	local change_cb = function ()		
-		local skepath = pfs.path(skeinputer:get_input())
-		local smpath = pfs.path(sminputer:get_input())
+		local skepath = fs.path(skeinputer:get_input())
+		local smpath = fs.path(sminputer:get_input())
 
 		local anipaths = {}
 		for i=1, aniview:count() do
-			anipaths[#anipaths+1] = pfs.path(aniview:get(i))
+			anipaths[#anipaths+1] = fs.path(aniview:get(i))
 		end
 		check_create_sample_entity(skepath, anipaths, smpath)
 	end

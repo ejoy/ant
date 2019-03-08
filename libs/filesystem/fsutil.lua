@@ -1,15 +1,9 @@
 local platform = require 'platform'
 
 return function (fs)
-	local isvfs = fs.vfs
-	local ispkg = fs.pkg
-	local isloc = not isvfs and not ispkg
+	local isloc = not fs.pkg
 	local function native_method(name)
-		if isvfs then
-			local vfsio = require "vfsio"
-			return vfsio[name]
-		end
-		if ispkg then
+		if not isloc then
 			local pkgio = require "pkgio"
 			return pkgio[name]
 		end

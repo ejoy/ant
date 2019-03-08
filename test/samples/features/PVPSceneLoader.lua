@@ -1,7 +1,6 @@
 local math = import_package "ant.math"
 local ms = math.stack
 local fs = require "filesystem"
-local pfs = require "filesystem.pkg"
 
 local PVPScene = {}
 local function get_default_collider_comp_value(name)
@@ -63,8 +62,8 @@ function PVPScene.create_entitices(world)
 	local scene_objects = {
 		CampsiteDoor = {			
 			srt = {{1, 1, 1}, {-90, -90, 0,}, {-12.95, 0.7867187, -14.03104}},
-			mesh = pfs.path "PVPScene/campsite-door.mesh",
-			material = pfs.path "PVPScene/scene-mat-shadow.material",
+			mesh = fs.path "PVPScene/campsite-door.mesh",
+			material = fs.path "PVPScene/scene-mat-shadow.material",
 			children = {				
 				srts = {
 					{
@@ -76,8 +75,8 @@ function PVPScene.create_entitices(world)
 		},		
 		CampsiteWall={
 			srt = {{1, 1, 1}, {-90, 90, 0,}, {-12.45, 0.7867187, -42.53104}},	
-			mesh = pfs.path "PVPScene/campsite-wall.mesh",
-			material = pfs.path "PVPScene/scene-mat-shadow.material",
+			mesh = fs.path "PVPScene/campsite-wall.mesh",
+			material = fs.path "PVPScene/scene-mat-shadow.material",
 			children = {				
 				srts = {
 					{
@@ -94,8 +93,8 @@ function PVPScene.create_entitices(world)
 
 		campsite_jianta = {
 			srt = {{0.5, 0.5, 0.5}, {-90, 0, 0,}, {7.0, 0.96, -14.03104}},	
-			mesh = pfs.path "PVPScene/campsite-door-01.mesh",
-			material = pfs.path "PVPScene/scene-mat-shadow.material",
+			mesh = fs.path "PVPScene/campsite-door-01.mesh",
+			material = fs.path "PVPScene/scene-mat-shadow.material",
 			children = {				
 				srts = {
 					{
@@ -114,8 +113,8 @@ function PVPScene.create_entitices(world)
 				{{0, 0,0}, {0, 180, 0}, {-21.07, 5.218985, -8.18463}},
 				{{0, 0,0}, {0, 0,0 },  {134.72, 5.218985, 17.32593}}
 			},
-			mesh = pfs.path "PVPScene/tent-06.mesh",
-			material = pfs.path "PVPScene/tent-shadow.material",
+			mesh = fs.path "PVPScene/tent-06.mesh",
+			material = fs.path "PVPScene/tent-shadow.material",
 			children = {				
 				srts = {
 					-- relate 1
@@ -145,8 +144,8 @@ function PVPScene.create_entitices(world)
 		},
 		wood_build_eid = {
 			srt = {	{1, 1, 1},	{-90, -90.7483, 0},  { 30.41463, 1.72, 7.152405 },},
-			mesh = pfs.path "PVPScene/woodbuilding-05.mesh",
-			material = pfs.path "PVPScene/scene-mat-shadow.material",
+			mesh = fs.path "PVPScene/woodbuilding-05.mesh",
+			material = fs.path "PVPScene/scene-mat-shadow.material",
 			children = {				
 				srts = {
 					{
@@ -162,8 +161,8 @@ function PVPScene.create_entitices(world)
 		},		
 		woodother_46 = {			
 			srt = {	{1, 1, 1},	{-90, -108.1401, 0},  { 33.882416, 0.149453, -32.164627 },},
-			mesh = pfs.path "PVPScene/woodother-46.mesh",
-			material = pfs.path "PVPScene/scene-mat-shadow.material",
+			mesh = fs.path "PVPScene/woodother-46.mesh",
+			material = fs.path "PVPScene/scene-mat-shadow.material",
 			children = {				
 				srts = {
 					{
@@ -181,8 +180,8 @@ function PVPScene.create_entitices(world)
 		},
 		woodother_45 = {
 			srt = {{1, 1, 1}, {-90, 50.3198, 0},{-28.68, 2, -10.164627},},
-			mesh = pfs.path "PVPScene/woodother-45.mesh",
-			material = pfs.path "PVPScene/scene-mat-shadow.material",
+			mesh = fs.path "PVPScene/woodother-45.mesh",
+			material = fs.path "PVPScene/scene-mat-shadow.material",
 			children = {				
 				srts = {
 					{
@@ -200,8 +199,8 @@ function PVPScene.create_entitices(world)
 		woodother = {
 			srt = {{1, 1, 1}, {-90, 0, 20}, {120, -1.741485, 34.06}},
 			relate_srt = {{0, 0,0 }, {0, 0, 0}, {-2.1949, 1.842032, -39.867749}},
-			mesh = pfs.path "PVPScene/woodother-34.mesh",
-			material = pfs.path "PVPScene/scene-mat-shadow.material",
+			mesh = fs.path "PVPScene/woodother-34.mesh",
+			material = fs.path "PVPScene/scene-mat-shadow.material",
 			children = {				
 				srts = {
 					{
@@ -257,12 +256,12 @@ function PVPScene.create_entitices(world)
 					},
 					can_render = true, 
 					mesh = {
-						ref_path = pfs.path "//ant.resources" / scenedata.mesh,						
+						ref_path = fs.path "//ant.resources" / scenedata.mesh,						
 					},
 					material = {
 						content = {
 							{
-								ref_path = pfs.path "//ant.resources" / scenedata.material
+								ref_path = fs.path "//ant.resources" / scenedata.material
 							}
 						}
 					}, 

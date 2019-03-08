@@ -1,4 +1,4 @@
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 
 local support_list = {
 	"shader",
@@ -43,17 +43,17 @@ local resources = setmetatable({}, {__mode="kv"})
 
 local function rawtable(filepath)
 	local env = {}
-	local r = assert(pfs.loadfile(filepath, "t", env))
+	local r = assert(fs.loadfile(filepath, "t", env))
 	r()
 	return env
 end
 
 function assetmgr.get_depiction(fullpath)
 	local orig = fullpath
-	if not pfs.exists(fullpath) then
+	if not fs.exists(fullpath) then
 		local pkgname = fullpath:root_name()
-		fullpath = pkgname / "depiction" / pfs.relative(fullpath, pkgname)
-		if not pfs.exists(fullpath) then
+		fullpath = pkgname / "depiction" / fs.relative(fullpath, pkgname)
+		if not fs.exists(fullpath) then
 			error(string.format("not found res, filename:%s", orig:string()))
 		end
 	end

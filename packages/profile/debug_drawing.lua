@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local bgfx = require "bgfx"
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 
 local componentutil = import_package "ant.render".components
 
@@ -62,7 +62,7 @@ function debug_obj:init()
 		material = {
 			content = {
 				{
-					ref_path = pfs.path "//ant.resources/line.material"
+					ref_path = fs.path "//ant.resources/line.material"
 				}				
 			}
 		},

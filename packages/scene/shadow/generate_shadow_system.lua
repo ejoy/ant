@@ -8,7 +8,7 @@ local math3d = require "math3d"
 local bgfx = require "bgfx"
 local asset = import_package "ant.asset"
 local ms = (import_package "ant.math").stack
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 
 -- system rules 
 -- component for global state
@@ -248,7 +248,7 @@ shadow_maker.__index = shadow_maker
 -- shadow_maker init 
 function  shadow_maker:init( shadow_maker_entity )
 	local function load_material(name)		
-		local material = asset.load(pfs.path "//ant.resources" / name)
+		local material = asset.load(fs.path "//ant.resources" / name)
 		material.name = name 
 		return material
 	end

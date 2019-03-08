@@ -1,4 +1,3 @@
-local fs = require "filesystem"
 local localfs = require "filesystem.local"
 local vfs = require "vfs"
 local configDir = localfs.mydocs_path() / '.ant/config'
@@ -160,7 +159,7 @@ function openMap(path)
 	vfs.remove_mount("currentmap")
 	vfs.add_mount("currentmap", path:parent_path())
 	local pm = require "antpm"
-	pm.register(fs.path "currentmap")
+	pm.register("currentmap")
     
     packages[#packages+1] = pkgname
     table.move(pkgsystems, 1, #pkgsystems, #systems+1, systems)

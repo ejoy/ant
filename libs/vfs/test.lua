@@ -13,7 +13,7 @@ dofile("libs/init.lua")
 
 local vfsrepo = require "vfs.repo"
 
-local fs = require "filesystem"
+local fs = require "filesystem.local"
 
 local home = fs.mydocs_path() / "testrepo"
 fs.create_directories(home)

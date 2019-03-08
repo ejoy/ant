@@ -1,8 +1,9 @@
-local pm = require "antpm"
+local vfs = require "vfs.simplefs"
 
-local nio = package.loaded.nativeio
+local nio = io
 
 local function vfspath(value)
+    local pm = require "antpm"
     assert(value:sub(1, 2) == '//')
     local pos = value:find('/', 3, true)
     if not pos then
@@ -18,11 +19,11 @@ local function vfspath(value)
         error(("No file '%s'"):format(value))
 		return
 	end
-    return root / value:sub(pos+1)
+    return vfs.join(root, value:sub(pos+1))
 end
 
 local function localpath(path)
-    return vfspath(path):localpath():string()
+    return vfs.realpath(vfspath(path))
 end
 
 local function errmsg(err, filename, real_filename)
@@ -75,7 +76,13 @@ function io.lines(filename, ...)
     error(errmsg(res, filename, real_filename))
 end
 
+package.loaded.nativeio = nio
 package.loaded.pkgio = io
+package.loaded.io = io
+_G.io = io
+
+nio.dofile = dofile
+nio.loadfile = loadfile
 
 local function loadfile(path, ...)
     local f, err = io_open(path, 'r')
@@ -97,3 +104,6 @@ end
 
 io.dofile = dofile
 io.loadfile = loadfile
+
+_G.loadfile = loadfile
+_G.dofile = dofile

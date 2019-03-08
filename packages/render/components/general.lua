@@ -2,7 +2,7 @@ local ecs = ...
 
 ecs.import "ant.math"
 
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 
 local component_util = require "components.util"
 local asset = import_package "ant.asset"
@@ -47,7 +47,7 @@ function respath:init()
 	if self.string then
 		return self
 	end
-	return pfs.path(self)
+	return fs.path(self)
 end
 function respath:save()
 	return self:string()

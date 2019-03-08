@@ -2,7 +2,7 @@
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
-local pfs = require "filesystem.pkg"
+local fs = require "filesystem"
 
 local alluniforms = {}
 
@@ -10,14 +10,14 @@ local shader_mgr = {}
 shader_mgr.__index = shader_mgr
 
 local function gen_shader_filepath(filename)
-    filename = pfs.path(filename)
+    filename = fs.path(filename)
 	assert(filename:equal_extension(''))
 	local shadername_withext = filename .. ".sc"
-	if pfs.exists(shadername_withext) then
+	if fs.exists(shadername_withext) then
 		return shadername_withext 
     end
-	shadername_withext = shadername_withext:root_name() / "shaders" / "src" / pfs.relative(shadername_withext, shadername_withext:root_name())
-	if pfs.exists(shadername_withext) then
+	shadername_withext = shadername_withext:root_name() / "shaders" / "src" / fs.relative(shadername_withext, shadername_withext:root_name())
+	if fs.exists(shadername_withext) then
 		return shadername_withext 
     end
 end
@@ -29,10 +29,10 @@ local function load_shader(filename)
 	end
 
 	if not __ANT_RUNTIME__ then
-        assert(pfs.exists(filepath .. ".lk"))
+        assert(fs.exists(filepath .. ".lk"))
 	end	
 
-	local f = assert(pfs.open(filepath, "rb"))
+	local f = assert(fs.open(filepath, "rb"))
 	local data = f:read "a"
 	f:close()
 	local h = bgfx.create_shader(data)
