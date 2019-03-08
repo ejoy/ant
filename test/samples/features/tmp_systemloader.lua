@@ -164,9 +164,7 @@ local function create_hierarchy_test()
         local localfs = require 'filesystem.local'
 
         local function save_rawdata(handle, respath)
-            local fullpath = assetmgr.find_asset_path(respath)
-
-            local realpath = fullpath:localpath()
+            local realpath = respath:localpath()
             localfs.create_directories(realpath:parent_path())
 
             hierarchy.save(handle, realpath:string())

@@ -1,8 +1,7 @@
 local assetutil = require "util"
 local assetmgr = require "asset"
-local fs = require "filesystem"
+local pfs = require "filesystem.pkg"
 local ru = import_package "ant.render".util
-local rawtable = require "rawtable"
 
 local loaders = {
 	state = function (t) return t end, 
@@ -12,8 +11,7 @@ local loaders = {
 }
 
 return function(filename)
-	local fn = assetmgr.find_depiction_path(filename)
-	local material = rawtable(fn)
+	local material = assetmgr.get_depiction(filename)
 
     local material_info = {}
 
@@ -25,7 +23,7 @@ return function(filename)
 				local pkgname = filename:root_name()
 				local dir = filename:parent_path()
 				local fullpath = dir / v
-				if not fs.exists(fullpath) then
+				if not pfs.exists(fullpath) then
 					fullpath = pkgname /v
 				end
                 material_info[k] = assetmgr.load(fullpath)

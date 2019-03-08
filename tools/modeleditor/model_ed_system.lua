@@ -3,6 +3,7 @@ local world = ecs.world
 
 local util 		= require "util"
 local fs 		= require "filesystem"
+local pfs 		= require "filesystem.pkg"
 
 ecs.import 'ant.basic_components'
 ecs.import "ant.render"
@@ -14,10 +15,8 @@ ecs.import "ant.profile"
 ecs.import "ant.animation"
 ecs.import "ant.geometry"
 
-local assetmgr	= import_package "ant.asset"
 local math 		= import_package "ant.math"
 local renderpkg = import_package "ant.render"
-local timer 	= import_package "ant.timer"
 local ms 		= math.stack
 local camerautil= renderpkg.camera
 local aniutil 	= import_package "ant.animation".util
@@ -101,7 +100,7 @@ local function enable_bones_visible()
 end
 
 local function check_create_sample_entity(skepath, anipaths, smpath)
-	if not assetmgr.find_asset_path(smpath) then
+	if not pfs.exists(smpath) then
 		iup.Message("Error", string.format("invalid path : %s", smpath))
 		return
 	end

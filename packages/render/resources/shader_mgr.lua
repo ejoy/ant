@@ -2,8 +2,6 @@
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
-local assetmgr = import_package "ant.asset"
-local fs = require "filesystem"
 local pfs = require "filesystem.pkg"
 
 local alluniforms = {}
@@ -15,11 +13,13 @@ local function gen_shader_filepath(filename)
     filename = pfs.path(filename)
 	assert(filename:equal_extension(''))
 	local shadername_withext = filename .. ".sc"
-	local filepath = assetmgr.find_asset_path(shadername_withext)
-	if filepath then
-		return filepath 
+	if pfs.exists(shadername_withext) then
+		return shadername_withext 
     end
-	return assetmgr.find_asset_path(shadername_withext:root_name() / "shaders" / "src" / pfs.relative(shadername_withext, shadername_withext:root_name()))
+	shadername_withext = shadername_withext:root_name() / "shaders" / "src" / pfs.relative(shadername_withext, shadername_withext:root_name())
+	if pfs.exists(shadername_withext) then
+		return shadername_withext 
+    end
 end
 
 local function load_shader(filename)
@@ -28,11 +28,11 @@ local function load_shader(filename)
 		error(string.format("not found shader file: [%s]", filename))
 	end
 
-	if not fs.vfs then
-        assert(fs.exists(filepath .. ".lk"))
+	if not __ANT_RUNTIME__ then
+        assert(pfs.exists(filepath .. ".lk"))
 	end	
 
-	local f = assert(fs.open(filepath, "rb"))
+	local f = assert(pfs.open(filepath, "rb"))
 	local data = f:read "a"
 	f:close()
 	local h = bgfx.create_shader(data)

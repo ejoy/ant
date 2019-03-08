@@ -49,9 +49,7 @@ local function find_hie_entity(world, eid, moditied_files)
 end
 
 local function save_rawdata(handle, respath)
-	local fullpath = assetmgr.find_asset_path(respath)
-
-	local realpath = fullpath:localpath()
+	local realpath = respath:localpath()
 	localfs.create_directories(realpath:parent_path())
 
 	hierarchy_module.save(handle, realpath:string())

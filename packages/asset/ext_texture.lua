@@ -1,15 +1,13 @@
 local bgfx = require "bgfx"
 local pfs = require "filesystem.pkg"
 local assetmgr = require "asset"
-local rawtable = require "rawtable"
 
 local function texture_load(filepath, info)
-	local filename = filepath:string()
-	local f = assert(io.open(filename, "rb"))
+	local f = assert(pfs.open(filepath, "rb"))
 	local imgdata = f:read "a"
 	f:close()
 	local h = bgfx.create_texture(imgdata, info)
-	bgfx.set_name(h, filename)
+	bgfx.set_name(h, filepath:string())
 	return h
 end
 
@@ -72,17 +70,15 @@ local function fill_default_sampler(sampler)
 end
 
 return function (filename)
-	local tex = rawtable(assetmgr.find_depiction_path(filename))
-	local texrefpath = tex.path
-	local pp = assetmgr.find_asset_path(pfs.path(texrefpath))
-	if pp == nil then
-		error(string.format("texture path not found, .texture path:[%s], texture file:[%s]", 
-		filename, texrefpath))
+	local tex = assetmgr.get_depiction(filename)
+	local texrefpath = pfs.path(tex.path)
+	if not pfs.exists(texrefpath) then
+		error(string.format("texture path not found, .texture path:[%s], texture file:[%s]", filename, texrefpath))
 	end
 
 	local sampler = tex.sampler
 	local flag = generate_sampler_flag(sampler)
 	
-	local handle = texture_load(pp, flag)
+	local handle = texture_load(texrefpath, flag)
 	return {handle=handle, sampler=fill_default_sampler(sampler), path=texrefpath}
 end

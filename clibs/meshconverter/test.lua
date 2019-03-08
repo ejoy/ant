@@ -1,16 +1,3 @@
--- dofile "libs/editor.lua"
-
--- local fs = require "filesystem"
-
--- local meshfile = "mem://test.mesh"
--- fs.write_to_file(meshfile, [[
--- 	mesh_path = "meshes/PVPScene/BH-Scene-campsite-Door"
--- ]])
-
--- local assetmgr = import_package "ant.asset"
--- assetmgr.
-
-
 local meshcreator = require "meshconverter"
 
 meshcreator.ConvertFBX("../../assets/build/meshes/PVPScene/BH-Scene-campsite-Door.FBX", "./BH-Scene-campsite-Door.antmesh", {

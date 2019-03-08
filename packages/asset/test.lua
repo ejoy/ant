@@ -1,7 +1,6 @@
 dofile "libs/editor.lua"
 
 local asset = require "asset"
-local rawtable = require "rawtable"
 
 print_r = require "../common/print_r"
 

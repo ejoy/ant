@@ -41,24 +41,23 @@ end
 
 local resources = setmetatable({}, {__mode="kv"})
 
-function assetmgr.find_asset_path(fullrespath)
-	if pfs.exists(fullrespath) then
-		return fullrespath:vfspath()
-	end
-	return nil
+local function rawtable(filepath)
+	local env = {}
+	local r = assert(pfs.loadfile(filepath, "t", env))
+	r()
+	return env
 end
 
-
-function assetmgr.find_depiction_path(fullrespath)
-	local res = assetmgr.find_asset_path(fullrespath)
-	if res == nil then
-		local pkgname = fullrespath:root_name()
-		res = assetmgr.find_asset_path(pkgname / "depiction" / pfs.relative(fullrespath, pkgname))
+function assetmgr.get_depiction(fullpath)
+	local orig = fullpath
+	if not pfs.exists(fullpath) then
+		local pkgname = fullpath:root_name()
+		fullpath = pkgname / "depiction" / pfs.relative(fullpath, pkgname)
+		if not pfs.exists(fullpath) then
+			error(string.format("not found res, filename:%s", orig:string()))
+		end
 	end
-	if res == nil then
-		error(string.format("not found res, pkgname:%s, respath:%s", fullrespath:string()))
-	end
-	return res
+	return rawtable(fullpath)
 end
 
 local function res_key(filename)
