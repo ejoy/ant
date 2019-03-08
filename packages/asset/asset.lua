@@ -1,4 +1,3 @@
-local fs = require "filesystem"
 local pfs = require "filesystem.pkg"
 
 local support_list = {
@@ -54,7 +53,7 @@ function assetmgr.find_depiction_path(fullrespath)
 	local res = assetmgr.find_asset_path(fullrespath)
 	if res == nil then
 		local pkgname = fullrespath:root_name()
-		res = assetmgr.find_asset_path(pkgname / "depiction" / fullrespath:string():sub(1+#pkgname:string()))
+		res = assetmgr.find_asset_path(pkgname / "depiction" / pfs.relative(fullrespath, pkgname))
 	end
 	if res == nil then
 		error(string.format("not found res, pkgname:%s, respath:%s", fullrespath:string()))

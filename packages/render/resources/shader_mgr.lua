@@ -11,21 +11,21 @@ local alluniforms = {}
 local shader_mgr = {}
 shader_mgr.__index = shader_mgr
 
--- TODO: package path
-local function gen_shader_filepath(pkgname, shadername)
-	assert(pfs.path(shadername):extension() == pfs.path '')
-	local shadername_withext = shadername .. ".sc"
-	local filepath = assetmgr.find_asset_path(pfs.path('//'..pkgname) / shadername_withext)
+local function gen_shader_filepath(filename)
+    filename = pfs.path(filename)
+	assert(filename:equal_extension(''))
+	local shadername_withext = filename .. ".sc"
+	local filepath = assetmgr.find_asset_path(shadername_withext)
 	if filepath then
 		return filepath 
-	end
-	return assetmgr.find_asset_path(pfs.path('//'..pkgname) / "shaders" / "src" / shadername_withext)
+    end
+	return assetmgr.find_asset_path(shadername_withext:root_name() / "shaders" / "src" / pfs.relative(shadername_withext, shadername_withext:root_name()))
 end
 
-local function load_shader(pkgname, name)
-	local filepath = gen_shader_filepath(pkgname, name)
+local function load_shader(filename)
+	local filepath = gen_shader_filepath(filename)
 	if filepath == nil then
-		error(string.format("not found shader file: [%s:%s]", pkgname, name))
+		error(string.format("not found shader file: [%s]", filename))
 	end
 
 	if not fs.vfs then
@@ -36,12 +36,12 @@ local function load_shader(pkgname, name)
 	local data = f:read "a"
 	f:close()
 	local h = bgfx.create_shader(data)
-	bgfx.set_name(h, name)
+	bgfx.set_name(h, filename)
 	return h    
 end
 
-local function load_shader_uniforms(pkgname, name)
-    local h = assert(load_shader(pkgname, name))    
+local function load_shader_uniforms(filename)
+    local h = assert(load_shader(filename))    
     local uniforms = bgfx.get_shader_uniforms(h)
     return h, uniforms
 end
@@ -56,10 +56,10 @@ local function uniform_info(uniforms, handles)
 end
 
 local function programLoadEx(vs, fs, uniform)	
-    local vsid, u1 = load_shader_uniforms(vs[1], vs[2])
+    local vsid, u1 = load_shader_uniforms(vs)
     local fsid, u2
 	if fs then		
-        fsid, u2 = load_shader_uniforms(fs[1], fs[2])
+        fsid, u2 = load_shader_uniforms(fs)
     end
     uniform_info(uniform, u1)
     if u2 then

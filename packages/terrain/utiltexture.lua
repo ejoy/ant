@@ -1,5 +1,4 @@
 local bgfx = require "bgfx"
-local assetmgr = import_package "ant.asset"
 local fs = require "filesystem"
 
 local function texture_load(filename, info)

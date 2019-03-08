@@ -1,6 +1,6 @@
 shader = {
-    vs ={"ant.resources", "picking/vs_picking",},
-    fs ={"ant.resources", "picking/fs_picking",},
+    vs = "//ant.resources/picking/vs_picking",
+    fs = "//ant.resources/picking/fs_picking",
 }
 
 state = {

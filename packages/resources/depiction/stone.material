@@ -1,8 +1,8 @@
 shader = {
-    vs ={"ant.resources", "mesh/vs_mesh_bump",},
-	fs ={"ant.resources", "mesh/fs_mesh_bump",},
-	-- vs ={"ant.resources", "mesh/vs_mesh",},
-    -- fs ={"ant.resources", "mesh/fs_mesh",},
+    vs = "//ant.resources/mesh/vs_mesh_bump",
+	fs = "//ant.resources/mesh/fs_mesh_bump",
+	-- vs = "//ant.resources/mesh/vs_mesh",
+    -- fs = "//ant.resources/mesh/fs_mesh",
 }
 
 state = {
@@ -27,7 +27,7 @@ surface_type = {
 
 properties = {
 	textures = {
-		s_basecolor = {name="base color", type="texture", stage=0, ref_path={"ant.resources", "stone.texture"}},
-		s_normal = {name="normal", type="texture", stage=1, ref_path={"ant.resources", "stone_normal.texture"}},
+		s_basecolor = {name="base color", type="texture", stage=0, ref_path="//ant.resources/stone.texture"},
+		s_normal = {name="normal", type="texture", stage=1, ref_path="//ant.resources/stone_normal.texture"},
 	}	
 }

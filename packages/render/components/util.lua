@@ -2,12 +2,9 @@ local util = {}
 util.__index = util
 
 local bgfx = require "bgfx"
-local fs = require "filesystem"
 local pfs = require "filesystem.pkg"
 
 local asset = import_package "ant.asset"
-local math = import_package "ant.math"
-local mu = math.util
 
 
 local function deep_copy(t)
@@ -121,7 +118,7 @@ local function update_properties(dst_properties, src_properties)
 		local dsttextures = dst_properties.textures or {}
 		for k, v in pairs(srctextures) do
 			local refpath = v.ref_path
-			local tex = util.load_texture(v.name, v.stage, pfs.path('//'..refpath[1]) / refpath[2]) -- TODO: package path
+			local tex = util.load_texture(v.name, v.stage, pfs.path(refpath))
 			if dsttextures[k] == nil then
 				dsttextures[k] = tex
 			else
