@@ -46,11 +46,11 @@ ecs.tag "editor"
 ecs.component "frustum"
 	.type "string" ("mat")
 	.n "real" (0.1)
-	.f "int" (10000)
-	.l "int" (-1)
-	.r "int" (1)
-	.t "int" (1)
-	.b "int" (-1)
+	.f "real" (10000)
+	.l "real" (-1)
+	.r "real" (1)
+	.t "real" (1)
+	.b "real" (-1)
 	.ortho "boolean" (false)
 
 ecs.component "respath"

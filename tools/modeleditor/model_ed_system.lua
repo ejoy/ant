@@ -30,7 +30,6 @@ model_ed_sys.depend "camera_init"
 model_ed_sys.depend "character_controller"
 model_ed_sys.depend "renderbone_system"
 model_ed_sys.depend "state_machine"
-model_ed_sys.depend "test_scene"
 model_ed_sys.depend "skinning_system"
 
 model_ed_sys.dependby "transparency_filter_system"
@@ -286,13 +285,6 @@ local function init_check_shower()
 	end
 end
 
-local function init_res_ctrl()
-	local dlg = main_dialog()
-	local assetview = assert(iup.GetDialogChild(dlg, "ASSETVIEW").owner)
-
-	assetview:init("project")
-end
-
 local function init_blend_ctrl()
 	local dlg = main_dialog()
 	local blender = dlg_item("BLENDER").owner
@@ -412,8 +404,7 @@ end
 local function init_control()
 	init_paths_ctrl()
 	init_playitme_ctrl()
-	init_check_shower()
-	init_res_ctrl()
+	init_check_shower()	
 	init_blend_ctrl()
 	init_ik_ctrl()
 	iup.Map(main_dialog())

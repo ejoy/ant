@@ -9,7 +9,6 @@ local iupcontrols 	= import_package "ant.iupcontrols"
 
 local elog 			= iupcontrols.logview
 local probeclass 	= iupcontrols.assetprobe
-local assetviewclass= iupcontrols.assetview
 local vecviewclass	= iupcontrols.vectorview
 local listctrl 		= iupcontrols.listctrl
 
@@ -67,12 +66,10 @@ local animation_time = iup.vbox {
 	ALIGNMENT = "ACENTER",  
 }
 
-local function create_pathctrl(title, name, assetview)
+local function create_pathctrl(title, name)
 	local inputer = fileinputer.new({NAME=name})
 
-	local probe = probeclass.new()
-	probe:injust_assetview(assetview)	
-
+	local probe = probeclass.new()	
 	return iup.frame {
 		TITLE=title,
 		iup.hbox {
@@ -83,13 +80,10 @@ local function create_pathctrl(title, name, assetview)
 end
 
 
-local assetview = assetviewclass.new()
-
-local ske_pathctrl = create_pathctrl("Skeleton", "SKEINPUTER", assetview)
-local mesh_pathctrl = create_pathctrl("Mesh", "SMINPUTER", assetview)
+local ske_pathctrl = create_pathctrl("Skeleton", "SKEINPUTER")
+local mesh_pathctrl = create_pathctrl("Mesh", "SMINPUTER")
 
 local aniview = aniviewclass.new({NAME="ANIVIEW"})
-aniview:injust_assetview(assetview)
 
 local ikview = iup.vbox {
 	NAME = "IKVIEW",
@@ -177,8 +171,7 @@ local dlg = iup.dialog {
 					},
 				},				
 			},
-			iup.tabs {
-				assetview.view,
+			iup.tabs {				
 				anilist.view,
 				TABTITLE0 = "Resources",
 				TABTITLE1 = "Animation List",

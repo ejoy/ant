@@ -56,22 +56,8 @@ local function add_ani_to_grid(grid, filepath)
 	grid:fit_col_content_size(2)
 end
 
-local function get_probe(aniview)
-	local view = aniview.view
-	local container = iup.GetChild(view, 0)
-	return assert(iup.GetChild(container, 0).owner)	
-	
-end
-
 function animationview:add(filepath)
 	add_ani_to_grid(get_grid(self), filepath)
-end
-
-function animationview:injust_assetview(av)
-	self.assetview = av
-
-	local probe = get_probe(self)
-	probe:injust_assetview(av)
 end
 
 function animationview.new(config)

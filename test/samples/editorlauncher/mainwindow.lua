@@ -12,7 +12,6 @@ local scene 		= import_package "ant.scene"
 local elog 			= iupcontrols.logview
 local hierarchyview = iupcontrols.hierarchyview
 local propertycontrol = iupcontrols.propertyview
-local assetviewclass = iupcontrols.assetview
 local mapiup 		= editor.mapiup
 local task 			= editor.task
 
@@ -36,8 +35,6 @@ function editor_mainwindow:build_window(fbw, fbh)
     self.hierarchyview = hierarchyview
     self.propertyview = propertyview
 
-	self.assetview = assetviewclass.new()	
-
     self.canvas = iup.canvas {
         rastersize = fbw .. "x" .. fbh
     }
@@ -58,12 +55,7 @@ function editor_mainwindow:build_window(fbw, fbh)
                 elog.window,
                 showgrip = "NO",
             },
-            iup.split {
-                iup.frame {
-                    self.assetview.view,
-                    title = "asset",
-                    size = "HALFxHALF",
-                },
+            iup.split {                
                 iup.frame {
                     self.propertyview.view,
                     title = "property",
@@ -102,8 +94,6 @@ function editor_mainwindow:run(config)
     self.dlg:showxy(iup.CENTER,iup.CENTER)
 	self.dlg.usersize = nil
 
-	self.assetview:init("project")
-	
 	self.iq = inputmgr.queue()
 	mapiup(self.iq, self.canvas)
 
