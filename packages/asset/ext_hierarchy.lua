@@ -1,6 +1,6 @@
 local assetmgr = require "asset"
 
-return function(pkgname, filename, param)
+return function(filename, param)
 	local loader = assetmgr.get_loader("ozz")
-	return loader(pkgname, filename, param)
+	return loader(filename, param)
 end

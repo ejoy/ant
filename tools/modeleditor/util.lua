@@ -3,7 +3,7 @@ local util = {}; util.__index = util
 local geometry = import_package "ant.geometry"
 local geo = geometry.geometry
 
-local fs = require "filesystem"
+local pfs = require "filesystem.pkg"
 local bgfx = require "bgfx"
 
 function util.create_aabb_mesh_info(mesh)
@@ -62,8 +62,6 @@ function util.create_aabb_widget(e)
 	}
 end
 
-local samplematerialpath = fs.path "skin_model_sample.material"
-
 function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 	local eid = world:create_entity {
 		transform = {			
@@ -82,16 +80,15 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 			velocity = {1, 0, 0},
 		}, 
 		state_chain = {
-			ref_path = {package="ant.resources", filename = fs.path "simple_animation.sm"},
+			ref_path = pfs.path "//ant.resources/simple_animation.sm",
 		},
 		name = "animation_sample",
 		main_viewtag = true,
 	}
 
 	local e = world[eid]
-	local emptypath = fs.path ""
 
-	if skepath.filename ~= emptypath then
+	if skepath then
 		world:add_component(eid, "skeleton", {ref_path = skepath})
 	end
 
@@ -121,14 +118,14 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 	end
 
 	
-	if skinning_meshpath.filename ~= emptypath then
+	if skinning_meshpath then
 		if e.skeleton and e.animation then
 			world:add_component(eid, "skinning_mesh", {ref_path = skinning_meshpath})
 		end
 
 		world:add_component(eid, "material", {
 			content = {
-				{ref_path = {package = "ant.resources", filename = samplematerialpath}}
+				{ref_path = pfs.path "//ant.resources/skin_model_sample.material"}
 			}
 		})
 	
@@ -136,7 +133,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 			material = {
 				content = {
 					{
-						ref_path = {package="ant.resources", filename=fs.path "line.material"}
+						ref_path = pfs.path "//ant.resources/line.material"
 					}
 				}
 			},

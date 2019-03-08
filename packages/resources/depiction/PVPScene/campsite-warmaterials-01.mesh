@@ -1,1 +1,1 @@
-mesh_path = {"ant.resources.binary", "meshes/PVPScene/BH-Scene-campsite-WarMaterials-01.FBX"}
+mesh_path = "//ant.resources.binary/meshes/PVPScene/BH-Scene-campsite-WarMaterials-01.FBX"

@@ -1,11 +1,8 @@
-local fs = require "filesystem"
-local assetmgr = require "asset"
+local pfs = require "filesystem.pkg"
 
-return function(pkgname, filepath)
-	local fn = assetmgr.find_asset_path(pkgname, filepath)
-
+return function(filename)
 	local function find_tagop(filepath, readops)
-		local f = fs.open(filepath, "rb")
+		local f = pfs.open(filepath, "rb")
 		
 		--print(endless)
 		for tag, op in pairs(readops) do
@@ -43,10 +40,10 @@ return function(pkgname, filepath)
 		end,
 	}
 
-	local readop = find_tagop(fn, readops)
+	local readop = find_tagop(filename, readops)
 	if readop then
 		return {
-			handle = readop(fn:localpath():string())
+			handle = readop(filename:localpath():string())
 		}
 	end
 	error("not support type")

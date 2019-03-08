@@ -1,8 +1,7 @@
 local assetutil = require "util"
 local assetmgr = require "asset"
-local fs = require "filesystem"
+local pfs = require "filesystem.pkg"
 local ru = import_package "ant.render".util
-local rawtable = require "rawtable"
 
 local loaders = {
 	state = function (t) return t end, 
@@ -11,29 +10,24 @@ local loaders = {
 	end
 }
 
-return function(pkgname, filepath)
-	local fn = assetmgr.find_depiction_path(pkgname, filepath)
-	local material = rawtable(fn)
+return function(filename)
+	local material = assetmgr.get_depiction(filename)
 
     local material_info = {}
 
 	for k, v in pairs(material) do
 		local loader = loaders[k]
         if loader then
-            local t = type(v)
-			if t == "string" then
+			if type(v) == "string" then
 				-- read file under .material file folder, if not found try from assets path
-				local function filter_path(parentpath, p)					
-					local subres_path = parentpath / p
-					if not fs.exists(subres_path) then
-						return p
-					end
-						
-					return subres_path
+				local pkgname = filename:root_name()
+				local dir = filename:parent_path()
+				local fullpath = dir / v
+				if not pfs.exists(fullpath) then
+					fullpath = pkgname /v
 				end
-				local subres_path = filter_path(filepath:parent_path(), fs.path(v))
-                material_info[k] = assetmgr.load(pkgname, subres_path)
-			elseif t == "table" then
+                material_info[k] = assetmgr.load(fullpath)
+			elseif type(v) == "table" then
 				material_info[k] = loader(v)
             end
         else

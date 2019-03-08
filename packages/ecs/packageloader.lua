@@ -1,12 +1,14 @@
 local pm = require "antpm"
+local pfs = require "filesystem.pkg"
 local get_modules = require "modules"
 
 return function(name)
-	local root, config = pm.find(name)
-	if not root then
+	local _, config = pm.find(name)
+	if not _ then
 		error(("package '%s' not found"):format(name))
 		return
 	end
+	local root = pfs.path('//'..name)
 	local modules = config.ecs_modules
 	if modules then
 		local tmp = {}
@@ -19,7 +21,7 @@ return function(name)
 	end
 	local results = {}
 	for _, path in ipairs(modules) do
-		local module, err = pm.loadfile(name, path)
+		local module, err = pm.loadfile(path)
 		if not module then
 			error(("module '%s' load failed:%s"):format(path:string(), err))
 		end

@@ -2,24 +2,12 @@ local ecs = ...
 
 ecs.import "ant.math"
 
-local fs = require "filesystem"
+local pfs = require "filesystem.pkg"
 
 local component_util = require "components.util"
 local asset = import_package "ant.asset"
 local math3d = import_package "ant.math"
 local ms = math3d.stack
-
-local path = ecs.component_alias("path", "string")
-
-function path:init()
-	if self.string then
-		return self
-	end
-	return fs.path(self)
-end
-function path:save()
-	return self:string()
-end
 
 
 ecs.component_alias("point", "vector")
@@ -53,16 +41,24 @@ ecs.component "frustum"
 	.b "real" (-1)
 	.ortho "boolean" (false)
 
-ecs.component "respath"
-	.package "string"
-	.filename "path"
+local respath = ecs.component_alias("respath", "string")
+
+function respath:init()
+	if self.string then
+		return self
+	end
+	return pfs.path(self)
+end
+function respath:save()
+	return self:string()
+end
 
 local resource = ecs.component "resource"
 	.ref_path "respath" ()
 
 function resource:init()
 	if self.ref_path then
-		self.assetinfo = asset.load(self.ref_path.package, self.ref_path.filename)
+		self.assetinfo = asset.load(self.ref_path)
 	end
 	return self
 end

@@ -3,6 +3,7 @@ local world = ecs.world
 
 local util 		= require "util"
 local fs 		= require "filesystem"
+local pfs 		= require "filesystem.pkg"
 
 ecs.import 'ant.basic_components'
 ecs.import "ant.render"
@@ -14,10 +15,8 @@ ecs.import "ant.profile"
 ecs.import "ant.animation"
 ecs.import "ant.geometry"
 
-local assetmgr	= import_package "ant.asset"
 local math 		= import_package "ant.math"
 local renderpkg = import_package "ant.render"
-local timer 	= import_package "ant.timer"
 local ms 		= math.stack
 local camerautil= renderpkg.camera
 local aniutil 	= import_package "ant.animation".util
@@ -100,24 +99,15 @@ local function enable_bones_visible()
 end
 
 local function check_create_sample_entity(skepath, anipaths, smpath)
-	local function check_path_valid(pp)
-		if not assetmgr.find_asset_path(pp.package, pp.filename) then
-			iup.Message("Error", string.format("invalid path : %s", pp))
-			return false
-		end
-
-		return true
+	if not pfs.exists(smpath) then
+		iup.Message("Error", string.format("invalid path : %s", smpath))
+		return
 	end
-
-	-- only skinning meshpath is needed!
-	if check_path_valid(smpath) then			
-		if sample_eid then
-			world:remove_entity(sample_eid)
-		end
-
-		sample_eid = util.create_sample_entity(world, skepath, anipaths, smpath)		
-		enable_sample_visible()
+	if sample_eid then
+		world:remove_entity(sample_eid)
 	end
+	sample_eid = util.create_sample_entity(world, skepath, anipaths, smpath)		
+	enable_sample_visible()
 end
 
 local function get_sel_ani()
@@ -219,8 +209,8 @@ local function init_paths_ctrl()
 			end
 			return {package=pkgname, filename=fs.path(resname)}
 		end
-		local skepath = string_to_path(skeinputer:get_input())
-		local smpath = string_to_path(sminputer:get_input())
+		local skepath = skeinputer:get_input()
+		local smpath = sminputer:get_input()
 
 		local anipaths = {}
 		for i=1, aniview:count() do

@@ -1,5 +1,5 @@
 local bgfx = require "bgfx"
-local fs = require "filesystem"
+local pfs = require "filesystem.pkg"
 
 local antmeshloader = require "antmeshloader"
 
@@ -48,8 +48,8 @@ local function create_decl(vb_layout)
 end
 
 local function load_from_source(filepath)
-	if not fs.vfs then
-		assert(fs.exists(filepath .. ".lk"))
+	if not __ANT_RUNTIME__ then
+		assert(pfs.exists(filepath .. ".lk"))
 	end
 	return antmeshloader(filepath)
 end

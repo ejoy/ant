@@ -2,10 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local bgfx = require "bgfx"
-local fs = require "filesystem"
-
-local math = import_package "ant.math"
-local mu = math.util
+local pfs = require "filesystem.pkg"
 
 local componentutil = import_package "ant.render".components
 
@@ -65,7 +62,7 @@ function debug_obj:init()
 		material = {
 			content = {
 				{
-					ref_path = {package="ant.resources", filename=fs.path "line.material"}
+					ref_path = pfs.path "//ant.resources/line.material"
 				}				
 			}
 		},
@@ -95,7 +92,7 @@ local function check_add_material(mc, materialpath)
 	end
 
 	if not has_material() then		
-		componentutil.add_material(mc, "engine", materialpath)
+		componentutil.add_material(mc, materialpath)
 	end
 end
 

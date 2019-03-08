@@ -8,7 +8,7 @@ function util.add_animation(comp, respath)
 	local aniresult = assert(comp.aniresult)
 	local numjoints = aniresult:count()	
 	table.insert(assert(comp.anilist), {		
-		handle=asset.load(respath.package, respath.filename).handle, 
+		handle=asset.load(respath).handle, 
 		ref_path=respath,
 		sampling_cache = animodule.new_sampling_cache(numjoints),
 		scale = 1,		

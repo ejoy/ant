@@ -9,7 +9,7 @@ local point2d = math.point2d
 local bgfx = require "bgfx"
 local mu = math.util
 local ms = math.stack
-local fs = require "filesystem"
+local pfs = require "filesystem.pkg"
 
 local computil = import_package "ant.render".components
 
@@ -197,10 +197,10 @@ local function add_pick_entity()
 		pickup = {
 			materials = {
 				opacity = {
-					ref_path = {package = "ant.resources", filename = fs.path "pickup_opacity.material"}
+					ref_path = pfs.path '//ant.resources/pickup_opacity.material'
 				},
 				transparent = {
-					ref_path = {package = "ant.resources", filename = fs.path "pickup_transparent.material"}
+					ref_path = pfs.path '//ant.resources/pickup_transparent.material'
 				}
 			},
 		},		

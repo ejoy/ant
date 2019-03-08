@@ -1,5 +1,4 @@
-local fs = require "filesystem"
-local antpm = require "antpm"
+local pfs = require "filesystem.pkg"
 
 local support_list = {
 	"shader",
@@ -42,68 +41,55 @@ end
 
 local resources = setmetatable({}, {__mode="kv"})
 
-function assetmgr.pkgdir(pkgname)
-	local root = antpm.find(assert(pkgname))
-	if root == nil then
-		error(string.format("package not found:%s", pkgname))
-	end
-	return root
+local function rawtable(filepath)
+	local env = {}
+	local r = assert(pfs.loadfile(filepath, "t", env))
+	r()
+	return env
 end
 
-function assetmgr.find_asset_path(pkgname, respath)
-	local pkgpath = assetmgr.pkgdir(pkgname)
-
-	local fullrespath = pkgpath / respath
-	if fs.exists(fullrespath) then
-		return fullrespath
+function assetmgr.get_depiction(fullpath)
+	local orig = fullpath
+	if not pfs.exists(fullpath) then
+		local pkgname = fullpath:root_name()
+		fullpath = pkgname / "depiction" / pfs.relative(fullpath, pkgname)
+		if not pfs.exists(fullpath) then
+			error(string.format("not found res, filename:%s", orig:string()))
+		end
 	end
-	return nil
+	return rawtable(fullpath)
 end
 
-function assetmgr.find_depiction_path(pkgname, respath)
-	local fullrespath = assetmgr.find_asset_path(pkgname, respath)
-	if fullrespath == nil then
-		fullrespath = assetmgr.find_asset_path(pkgname, fs.path "depiction" / respath)
-	end
-
-	if fullrespath == nil then
-		error(string.format("not found res, pkgname:%s, respath:%s", pkgname, respath))
-	end
-	return fullrespath
-end
-
-
-local function res_key(pkgname, respath)
+local function res_key(filename)
 	-- TODO, should use vfs to get the resource file unique key(resource hash), for cache same content file	
-	return string.format("%s:%s", assert(pkgname), respath:string())
+	return filename:string()
 end
 
-function assetmgr.load(pkgname, respath, param)	
-	assert(pkgname == nil or type(pkgname) == "string")
-	assert(type(respath) ~= "string")
+function assetmgr.load(filename, param)	
+	assert(type(filename) ~= "string")
 
-	local reskey = res_key(pkgname, respath)
+	local reskey = res_key(filename)
 	local res = resources[reskey]
 	if res == nil then
-		local moudlename = respath:extension():string():match("%.(.+)$")
+		local moudlename = filename:extension():string():match("%.(.+)$")
 		if moudlename == nil then
-			error(string.format("not found ext from file:%s", respath:string()))
+			error(string.format("not found ext from file:%s", filename:string()))
 		end
 		local loader = assetmgr.get_loader(moudlename)
-		res = loader(pkgname, respath, param)
+		res = loader(filename, param)
 		resources[reskey] = res
 	end
 
 	return res
 end
 
-function assetmgr.save(tree, pkgname, respath)	
+function assetmgr.save(tree, filename)	
 	local seri = import_package "ant.serialize"
-	seri.save(pkgname, respath, tree)
+	seri.save(filename, tree)
 end
 
-function assetmgr.has_res(pkgname, respath)
-	local key = res_key(pkgname, respath)
+function assetmgr.has_res(filename)
+	local key = res_key(filename)
 	return resources[key] ~= nil
 end
 

@@ -4,6 +4,9 @@ local LOGERROR = log.error
 
 import_package = require "antpm".import
 
+require "filesystem.pkg"
+require "antpm.io"
+
 local keymap = import_package "ant.inputmgr".keymap
 
 local dbgupdate = require 'runtime.debug'

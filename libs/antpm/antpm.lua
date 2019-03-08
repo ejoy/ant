@@ -77,23 +77,14 @@ local function find(name)
     return registered[name].root, registered[name].config
 end
 
-local function m_loadfile(name, filename)
+local function m_loadfile(filename)
+    local name = filename:root_name():string():sub(3)
     local info = registered[name]
     if not info.env then
         info.env = sandbox.env(info.root:string(), name)
     end
-    return fs.loadfile(filename, 't', info.env)
-end
-
-local function get_registered_list(sort)
-    local t = {}
-    for name,_ in pairs(registered) do
-        table.insert(t,name)
-    end
-    if sort then
-        table.sort(t)
-    end
-    return t
+    local pfs = require "filesystem.pkg"
+    return pfs.loadfile(filename, 't', info.env)
 end
 
 return {
@@ -102,5 +93,4 @@ return {
     import = import,
     test = test,
     loadfile = m_loadfile,
-    get_registered_list = get_registered_list,
 }
