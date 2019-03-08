@@ -119,7 +119,7 @@ local function update_scene_tree(tree, cache_result)
 			local t = e.hierarchy_transform
 			local cachemat = update_world(t)
 			assert(type(cachemat) == 'userdata')
-			cache_result[eid] = cachemat
+			cache_result[eid] = {world=cachemat, hierarchy=e.hierarchy}
 		end
 	end
 end

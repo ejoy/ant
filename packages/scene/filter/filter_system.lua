@@ -16,10 +16,19 @@ local function update_transform(transform, hierarchy_cache)
 	local peid = transform.parent
 	local localmat = ms:push_srt_matrix(transform)
 	if peid then
-		local parentmat = hierarchy_cache[peid]
+		local parentresult = hierarchy_cache[peid]
+		local parentmat = parentresult.world
 		if parentmat then
 			localmat = ms(parentmat, localmat, "*P")
 		end
+
+		local hierarchy = parentresult.hierarchy
+		local slotname = transform.slotname
+		if hierarchy and slotname then
+			-- local hiemat = 
+			-- localmat = ms()
+		end
+		
 	end
 
 	local w = transform.world
