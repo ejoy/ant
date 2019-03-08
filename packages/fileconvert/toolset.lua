@@ -1,8 +1,8 @@
 local subprocess = require "subprocess"
-local fs = require "filesystem.local"
+local lfs = require "filesystem.local"
 local platform = require "platform"
 local OS = platform.OS
-local CWD = fs.current_path()
+local CWD = lfs.current_path()
 
 local function init_config()
 	local suffix = OS == "OSX" and "" or ".exe"
@@ -20,7 +20,7 @@ local function init_config()
 			"bin/shaderc",
 		} do
 			local exepath = to_execute_path(name)
-			if fs.exists(exepath) then
+			if lfs.exists(exepath) then
 				return exepath
 			end
 		end
@@ -68,7 +68,7 @@ local function default_level(shadertype, stagetype)
 end
 
 function toolset.compile(filepath, outfilepath, shadertype, config)
-	assert(fs.exists(filepath), filepath:string())
+	assert(lfs.exists(filepath), filepath:string())
 	
 	local shaderc = toolset.config.shaderc
 	local srcfilename = filepath:string()
@@ -76,7 +76,7 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 
 	local shaderinc_path = toolset.config.shaderinc
 
-	if not fs.exists(shaderinc_path) then
+	if not lfs.exists(shaderinc_path) then
 		error(string.format("bgfx shader include path is needed, \
 							but path is not exist! path have been set : %s", config.shaderinc))
 	end
@@ -92,7 +92,7 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 
 	if config.not_include_examples_common == nil then
 		local incexamplepath = shaderinc_path:parent_path() / "examples/common"
-		if not fs.exists(incexamplepath) then
+		if not lfs.exists(incexamplepath) then
 			error(string.format("example is needed, but not exist, path is : %s", incexamplepath))
 		end
 
@@ -101,7 +101,7 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 
 	if config.includes then
 		for _, p in ipairs(config.includes) do
-			if not fs.exists(p) then
+			if not lfs.exists(p) then
 				error(string.format("include path : %s, but not exist!", p))
 			end
 

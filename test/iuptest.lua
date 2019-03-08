@@ -18,9 +18,9 @@ local dlg = iup.dialog {
 	ex
 }
 
-local fs = require "filesystem.local"
+local lfs = require "filesystem.local"
 
-local rootdir = fs.path "d:/Work"
+local rootdir = lfs.path "d:/Work"
 local function fill_content(rootdir)
 	l:clear()
 	l:append_item("[..]", rootdir:string())	
@@ -55,7 +55,7 @@ function l.view:dblclick_cb(item, text)
 			fill_content(parentpath)
 		end
 	else
-		if fs.is_directory(fullpath) then
+		if lfs.is_directory(fullpath) then
 			fill_content(fullpath)
 		end
 	end

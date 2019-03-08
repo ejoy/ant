@@ -9,11 +9,11 @@ dofile "libs/editor.lua"
 local reponame = select(1, ...)
 
 local repo = require "vfs.repo"
-local fs = require "filesystem.local"
+local lfs = require "filesystem.local"
 
 local ANTGE = os.getenv "ANTGE"
-local enginepath = ANTGE and fs.path(ANTGE) or fs.current_path()
-local homepath = fs.mydocs_path()
+local enginepath = ANTGE and lfs.path(ANTGE) or lfs.current_path()
+local homepath = lfs.mydocs_path()
 
 print ("Ant engine path :", enginepath)
 print ("Home path :", homepath)
@@ -30,16 +30,16 @@ local mount = {
 
 local repopath = homepath / reponame
 
-if not fs.is_directory(repopath) then
-	if not fs.create_directories(repopath) then
+if not lfs.is_directory(repopath) then
+	if not lfs.create_directories(repopath) then
 		error("Can't mkdir ", repopath)
 	end
 end
 
 local engine_mountpoint = repopath / "engine"
-if not fs.is_directory(engine_mountpoint) then
+if not lfs.is_directory(engine_mountpoint) then
 	print("Mkdir ", engine_mountpoint)
-	assert(fs.create_directories(engine_mountpoint))
+	assert(lfs.create_directories(engine_mountpoint))
 end
 
 mount[1] = repopath

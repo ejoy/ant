@@ -1,6 +1,6 @@
 local access = {}
 
-local fs = require "filesystem.local"
+local lfs = require "filesystem.local"
 local crypt = require "crypt"
 
 function access.repopath(repo, hash, ext)
@@ -12,7 +12,7 @@ function access.repopath(repo, hash, ext)
 end
 
 function access.readmount(filename)
-	local f = fs.open(filename, "rb")
+	local f = lfs.open(filename, "rb")
 	local ret = {}
 	if not f then
 		return ret
@@ -26,7 +26,7 @@ function access.readmount(filename)
 			end
 		end
 		path = path:gsub("%s*#.*$","")	-- strip comment
-		ret[name] = fs.path(path)
+		ret[name] = lfs.path(path)
 	end
 	f:close()
 	return ret
@@ -69,7 +69,7 @@ function access.list_files(repo, filepath)
 		end
 	end
 	local ignorepaths = rpath / ".ignore"
-	local f = fs.open(ignorepaths, "rb")
+	local f = lfs.open(ignorepaths, "rb")
 	if f then
 		for name in f:lines() do
 			files[name] = nil
@@ -111,7 +111,7 @@ local sha1_encoder = crypt.sha1_encoder()
 
 function access.sha1_from_file(filename)
 	sha1_encoder:init()
-	local ff = assert(fs.open(filename, "rb"))
+	local ff = assert(lfs.open(filename, "rb"))
 	while true do
 		local content = ff:read(1024)
 		if content then
@@ -132,10 +132,10 @@ end
 local function genhash(repo, tmp)
 	local binhash = access.sha1_from_file(tmp)
 	local binhash_path = access.repopath(repo, binhash)
-	if not pcall(fs.remove, binhash_path) then
+	if not pcall(lfs.remove, binhash_path) then
 		return
 	end
-	if not pcall(fs.rename, tmp, binhash_path) then
+	if not pcall(lfs.rename, tmp, binhash_path) then
 		return
 	end
 	return binhash
@@ -147,7 +147,7 @@ end
 
 function access.build_from_file(repo, hash, identity, source_path, lk_path)
 	local link = access.repopath(repo, hash, ".link")
-	local f = fs.open(link, "rb")
+	local f = lfs.open(link, "rb")
 	if f then
 		local binhash = f:read "a"
 		f:close()
@@ -155,13 +155,13 @@ function access.build_from_file(repo, hash, identity, source_path, lk_path)
 			return binhash
 		end
 	end
-	local tmp = fs.path(link:string() .. ".bin")
+	local tmp = lfs.path(link:string() .. ".bin")
 	if not build(identity, source_path, lk_path, tmp) then
 		return
 	end
 	-- todo: if this source is platform independent, we can generate all the platforms' .link file for the same bin file.
 	local binhash = genhash(repo, tmp)
-	local lf = fs.open(link, "wb")
+	local lf = lfs.open(link, "wb")
 	lf:write(binhash)
 	lf:close()
 	return binhash
@@ -180,14 +180,14 @@ function access.build_from_path(repo, identity, pathname)
 	local cache = access.repopath(repo, hash, ".path")
 	local lk = access.realpath(repo, pathname .. ".lk")
 	local source = access.realpath(repo, pathname)
-	local source_time = fs.last_write_time(source)
-	local lk_time = fs.last_write_time(source)
+	local source_time = lfs.last_write_time(source)
+	local lk_time = lfs.last_write_time(source)
 	if not source_time or not lk_time then
 		return
 	end
 	local timestamp = string.format("%s %d %d", pathname, source_time, lk_time)
 
-	local f = fs.open(cache, "rb")
+	local f = lfs.open(cache, "rb")
 	local binhash
 	if f then
 		local readline = f:lines()
@@ -202,7 +202,7 @@ function access.build_from_path(repo, identity, pathname)
 	if not binhash then
 		binhash = checkfilehash(repo, identity, source, lk)
 		if binhash then
-			local f = assert(fs.open(cache, "wb"))
+			local f = assert(lfs.open(cache, "wb"))
 			f:write(string.format("%s\n%s\n%s", identity, timestamp, binhash))
 			f:close()
 		end
