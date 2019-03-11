@@ -1,7 +1,5 @@
 local vfs = require "vfs"
 
-local nio_open = io.open
-
 local function join(dir, file)
     if file:sub(1, 1) == '/' then
         return file

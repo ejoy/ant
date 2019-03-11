@@ -28,7 +28,7 @@ function hw.init(args)
 	args.renderer = check_renderer(args.renderer)
 	args.getlog = args.getlog or true
 	bgfx.init(args)
-	bgfx.reset(args.width, args.height, "v")
+	bgfx.reset(args.width, args.height, "vmx")
 	assert(caps == nil)
 	caps = bgfx.get_caps()
 

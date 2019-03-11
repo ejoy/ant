@@ -68,7 +68,7 @@ function camera_init_sys:init()
         vr.w, vr.h = w, h
         self.window.width, self.window.height = w, h
 
-        bgfx.reset(w, h, "v")
+        bgfx.reset(w, h, "vmx")
     end
     
     update_camera_viewrect(fb_size.w, fb_size.h)
