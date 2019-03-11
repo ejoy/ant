@@ -33,6 +33,20 @@ local function camera_reset(camera, target)
 	ms(camera.viewdir, target, camera.eyepos, "-n=")
 end
 
+-- local t_quat = {type="q", }
+-- local function rotate_round_point(point)
+	
+-- 	local right, up = ms:base_axes(camera.viewdir)
+				
+-- 	t_quat.axis, t_quat.angle = up, -delta.x
+-- 	local inv_v = ms(t_quat, camera.viewdir, "*P")
+
+-- 	t_quat.axis, t_quat.angle = right, delta.y
+-- 	inv_v = ms(t_quat, inv_v, "*P")
+
+-- 	ms()
+-- end
+
 function camera_controller_system:init()	
 	local camera_entity = world:first_entity("main_camera")
 
