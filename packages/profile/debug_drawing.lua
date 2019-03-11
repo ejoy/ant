@@ -117,9 +117,10 @@ function debug_draw:update()
 		end
 
 		local g = meshgroups[1]
-
-		local prim = g.primitives
-		table.move(desc.primitives, 1, #desc.primitives, #prim+1, prim)
+		
+		-- local prim = g.primitives		
+		-- table.move(desc.primitives, 1, #desc.primitives, #prim+1, prim)
+		g.prim = desc.primitives
 
 		local gvb = assert(g.vb)
 		

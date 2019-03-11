@@ -25,7 +25,8 @@ ecs.tag "sampleobj"
 local model_ed_sys = ecs.system "model_editor_system"
 model_ed_sys.singleton "debug_object"
 model_ed_sys.depend "camera_init"
-model_ed_sys.depend "character_controller"
+--model_ed_sys.depend "character_controller"
+model_ed_sys.depend "camera_controller"
 model_ed_sys.depend "renderbone_system"
 model_ed_sys.depend "state_machine"
 model_ed_sys.depend "skinning_system"
@@ -168,6 +169,10 @@ local function slider_value_chaged(slider)
 		update_duration_text(cursorpos)
 		update_animation_ratio(sample_eid, cursorpos)
 	end
+end
+
+local function init_debug()
+	
 end
 
 local function init_paths_ctrl()

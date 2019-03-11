@@ -2435,13 +2435,13 @@ lsetVertexBuffer(lua_State *L) {
 	int idx = id & 0xffff;
 	if (idtype == BGFX_HANDLE_VERTEX_BUFFER) {
 		bgfx_vertex_buffer_handle_t handle = { idx };
-		bgfx_set_vertex_buffer(stream, handle, 0, UINT32_MAX);
+		bgfx_set_vertex_buffer(stream, handle, start, end);
 	} else {
 		if (idtype != BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER) {
 			return luaL_error(L, "Invalid vertex buffer type %d", idtype);
 		}
 		bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
-		bgfx_set_dynamic_vertex_buffer(stream, handle, 0, UINT32_MAX);
+		bgfx_set_dynamic_vertex_buffer(stream, handle, start, end);
 	}
 	return 0;
 }
