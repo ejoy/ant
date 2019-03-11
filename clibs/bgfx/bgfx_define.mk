@@ -24,12 +24,12 @@ IB_COMPRESSINC:= -I$(IB_COMPRESSROOT)
 IB_COMPRESSLIB:= -L$(IB_COMPRESSROOT) -lib-compress-$(PLAT)
 
 ifeq "$(PLAT)" "mingw"
-BGFXLIB = -L$(BGFXSRC)/.build/win64_mingw-gcc/bin -lbgfx$(BUILD_CONFIG) $(BXLIB) -lstdc++ -lgdi32 -lpsapi -luuid
+BGFXLIB = -L$(BGFXSRC)/.build/win64_mingw-gcc/bin -lbgfx$(BUILD_CONFIG) $(BIMGLIB) $(BXLIB) -lstdc++ -lgdi32 -lpsapi -luuid
 else ifeq "$(PLAT)" "osx"
-BGFXLIB = -L$(BGFXSRC)/.build/osx64_clang/bin -lbgfx$(BUILD_CONFIG) $(BXLIB) -lstdc++
+BGFXLIB = -L$(BGFXSRC)/.build/osx64_clang/bin -lbgfx$(BUILD_CONFIG) $(BIMGLIB) $(BXLIB) -lstdc++
 BGFXLIB += -framework Foundation -framework Metal -framework QuartzCore -framework Cocoa
 else ifeq "$(PLAT)" "ios"
-BGFXLIB = -L$(BGFXSRC)/.build/ios-arm64/bin -lbgfx$(BUILD_CONFIG) $(BXLIB) -lstdc++
+BGFXLIB = -L$(BGFXSRC)/.build/ios-arm64/bin -lbgfx$(BUILD_CONFIG) $(BIMGLIB) $(BXLIB) -lstdc++
 BGFXLIB += -framework CoreFoundation -framework Foundation -framework OpenGLES -framework UIKit -framework QuartzCore -weak_framework Metal
 endif
 
