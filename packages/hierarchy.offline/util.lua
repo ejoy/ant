@@ -2,8 +2,8 @@ local util = {}
 util.__index = util
 
 local hierarchy_module = require 'hierarchy'
-local pfs = require 'filesystem'
-local localfs = require 'filesystem.local'
+local fs = require 'filesystem'
+local lfs = require 'filesystem.local'
 
 local math = import_package 'ant.math'
 local ms = math.stack
@@ -11,9 +11,9 @@ local assetmgr = import_package 'ant.asset'
 
 local function create_hierarchy_path(ref_path)
     local ext = ref_path:extension()
-    assert(ext == pfs.path '.hierarchy')
+    assert(ext == fs.path '.hierarchy')
     local newfilename = ref_path:string():gsub('%.hierarchy$', '-hie.hierarchy')
-    return pfs.path(newfilename)
+    return fs.path(newfilename)
 end
 
 --[@	find editable_hierarchy reference path
@@ -50,7 +50,7 @@ end
 
 local function save_rawdata(handle, respath)
 	local realpath = respath:localpath()
-	localfs.create_directories(realpath:parent_path())
+	lfs.create_directories(realpath:parent_path())
 
 	hierarchy_module.save(handle, realpath:string())
 end

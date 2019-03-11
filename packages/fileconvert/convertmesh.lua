@@ -1,5 +1,5 @@
 local meshconverter = require "meshconverter"
-local fs = require "filesystem.local"
+local lfs = require "filesystem.local"
 
 local config = {
 	--[[
@@ -51,5 +51,5 @@ return function (identity, sourcefile, param, outfile)
 	local c = convert_op[t]
 	local cfg = param.config or config
 	c(sourcefile:string(), outfile:string(), cfg)
-	return fs.exists(outfile)
+	return lfs.exists(outfile)
 end

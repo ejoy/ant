@@ -1,8 +1,8 @@
 dofile "libs/editor.lua"
 
-local fs = require "filesystem.local"
+local lfs = require "filesystem.local"
 
-local projpath = fs.mydocs_path() / "antproj"
+local projpath = lfs.mydocs_path() / "antproj"
 
 local vfs = require "vfs"
 

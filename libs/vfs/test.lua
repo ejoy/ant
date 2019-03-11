@@ -13,11 +13,11 @@ dofile("libs/init.lua")
 
 local vfsrepo = require "vfs.repo"
 
-local fs = require "filesystem.local"
+local lfs = require "filesystem.local"
 
-local home = fs.mydocs_path() / "testrepo"
-fs.create_directories(home)
-local cwd = fs.current_path()
+local home = lfs.mydocs_path() / "testrepo"
+lfs.create_directories(home)
+local cwd = lfs.current_path()
 
 vfsrepo.init { home, libs = cwd / "libs", bin = cwd / "bin" , ["libs/c"] = cwd / "clibs" }
 print("init repo in ", home)

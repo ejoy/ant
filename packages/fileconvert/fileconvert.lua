@@ -1,4 +1,4 @@
-local fs = require "filesystem.local"
+local lfs = require "filesystem.local"
 
 local converter_names = {
 	shader = "compileshadersource",
@@ -8,20 +8,20 @@ local converter_names = {
 
 local function rawtable(filepath)
 	local env = {}
-	local r = assert(fs.loadfile(filepath, "t", env))
+	local r = assert(lfs.loadfile(filepath, "t", env))
 	r()
 	return env
 end
 
 
-local logfolder = fs.current_path() / "log"
-fs.create_directories(logfolder)
+local logfolder = lfs.current_path() / "log"
+lfs.create_directories(logfolder)
 
 local logfile = nil
 
 local function get_logfile()
 	if logfile == nil then
-		logfile = assert(fs.open(logfolder / "fileconvert.log", "a"))
+		logfile = assert(lfs.open(logfolder / "fileconvert.log", "a"))
 	end
 
 	return logfile

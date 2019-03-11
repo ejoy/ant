@@ -5,7 +5,7 @@ dofile "libs/editor.lua"
 local reponame = assert((...), "Need repo name")
 
 local thread = require "thread"
-local fs = require "filesystem.local"
+local lfs = require "filesystem.local"
 
 thread.thread [[
 	-- thread for log
@@ -31,7 +31,7 @@ do
 	end
 end
 
-local repopath = fs.mydocs_path() .. "/" .. reponame
+local repopath = lfs.mydocs_path() .. "/" .. reponame
 local firmware = "runtime/core/firmware"
 
 local boot = assert(loadfile(firmware .. "/bootstrap.lua"))

@@ -16,10 +16,10 @@ local network = import_package "ant.network"
 local protocol = require "protocol"
 
 local vfs = require "vfs.simplefs"
-local fs = require "filesystem.local"
+local lfs = require "filesystem.local"
 
-local WORKDIR = fs.current_path()
-local repopath = fs.mydocs_path() / reponame
+local WORKDIR = lfs.current_path()
+local repopath = lfs.mydocs_path() / reponame
 
 assert(loadfile "tools/repo/newrepo.lua")(reponame)
 
@@ -49,14 +49,14 @@ end
 local rtlog = {}
 
 function rtlog.init()
-	fs.create_directories(WORKDIR / 'log' / 'runtime')
-	if fs.exists(WORKDIR / 'log' / 'runtime.log') then
-		fs.rename(WORKDIR / 'log' / 'runtime.log', WORKDIR / 'log' / 'runtime' / ('%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
+	lfs.create_directories(WORKDIR / 'log' / 'runtime')
+	if lfs.exists(WORKDIR / 'log' / 'runtime.log') then
+		lfs.rename(WORKDIR / 'log' / 'runtime.log', WORKDIR / 'log' / 'runtime' / ('%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
 	end
 end
 
 function rtlog.write(data)
-	local fp = assert(fs.open(WORKDIR / 'log' / 'runtime.log', 'a'))
+	local fp = assert(lfs.open(WORKDIR / 'log' / 'runtime.log', 'a'))
 	fp:write(data)
 	fp:write('\n')
 	fp:close()
@@ -207,7 +207,7 @@ local function filewatch()
 		end
 		for _, v in ipairs(watch) do
 			local vpath, rpath = v[1], v[2]
-			local rel_path = fs.relative(fs.path(path), rpath):string()
+			local rel_path = lfs.relative(lfs.path(path), rpath):string()
 			if rel_path ~= '' and rel_path:sub(1, 1) ~= '.' then
 				local newpath = vfs.join(vpath, rel_path)
 				if newpath:sub(1, 5) ~= '.repo' then

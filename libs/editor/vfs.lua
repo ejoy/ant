@@ -3,7 +3,7 @@
 
 local localvfs = {} ; localvfs.__index = localvfs
 
-local fs = require "filesystem.local"
+local lfs = require "filesystem.local"
 local access = require "vfs.repoaccess"
 
 -- open a repo in repopath
@@ -33,7 +33,7 @@ function localvfs.add_mount(name, mountpath)
 		end
 	end
 
-	if not fs.is_directory(mountpath) then
+	if not lfs.is_directory(mountpath) then
 		return
 	end
 
@@ -62,7 +62,7 @@ end
 -- TODO, remove localvfs.open, will not depend on .mount file, only engine root path is needed
 function localvfs.open(repopath)
 	assert(self == nil, "Can't open twice")
-	if not fs.is_directory(repopath) then
+	if not lfs.is_directory(repopath) then
 		return
 	end
 
@@ -73,8 +73,8 @@ end
 
 function localvfs.realpath(pathname)
 	local rp = access.realpath(self, pathname)
-	local lk = fs.path(rp:string() .. ".lk")
-	if fs.exists(lk) then
+	local lk = lfs.path(rp:string() .. ".lk")
+	if lfs.exists(lk) then
 		local binhash = access.build_from_path(self, self.identity, pathname)
 		if binhash == nil then
 			error(string.format("build from path failed, pathname:%s, log file can found in log folder", pathname))
@@ -96,7 +96,7 @@ function localvfs.list(path)
 	item = {}
 	for filename in pairs(files) do
 		local realpath = access.realpath(self, path .. filename)
-		item[filename] = not not fs.is_directory(realpath)
+		item[filename] = not not lfs.is_directory(realpath)
 	end
 	self._cache[path] = item
 	return item
@@ -104,9 +104,9 @@ end
 
 function localvfs.type(filepath)
 	local rp = access.realpath(self, filepath)
-	if fs.is_directory(rp) then
+	if lfs.is_directory(rp) then
 		return "dir"
-	elseif fs.is_regular_file(rp) then
+	elseif lfs.is_regular_file(rp) then
 		return "file"
 	end
 end
@@ -120,15 +120,15 @@ function localvfs.identity(identity)
 	self.identity = identity
 end
 
-local repopath = fs.current_path()
+local repopath = lfs.current_path()
 localvfs.mount({["engine"] = repopath}, repopath)
 
 local repo_cachepath = localvfs.repopath()
-if not fs.exists(repo_cachepath) then
-	fs.create_directories(repo_cachepath)
+if not lfs.exists(repo_cachepath) then
+	lfs.create_directories(repo_cachepath)
 	for i=0,0xff do
 		local abspath = repo_cachepath / string.format("%02x", i)
-		fs.create_directories(abspath)
+		lfs.create_directories(abspath)
 	end
 end
 

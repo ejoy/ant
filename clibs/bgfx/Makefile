@@ -29,7 +29,7 @@ $(ODIR)/nuklearlua.o : nuklearlua.c | $(ODIR)
 	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC)
 
 bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/ibcompress.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o $(ODIR)/nuklearlua.o
-	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) $(BGFXLIB) $(BIMGLIB) $(BXLIB) $(IB_COMPRESSLIB)
+	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) $(IB_COMPRESSLIB) $(BGFXLIB) 
 
 libbgfx-$(PLAT).a : $(ODIR)/luabgfx.o $(ODIR)/ibcompress.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o $(ODIR)/nuklearlua.o
 	ar rsv $@ $^

@@ -9,13 +9,12 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <bgfx/c99/bgfx.h>
-#include <bgfx/c99/platform.h>
 #include <assert.h>
 
 #include "luabgfx.h"
 #include "simplelock.h"
 
-#if BGFX_API_VERSION != 93
+#if BGFX_API_VERSION != 96
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -530,6 +529,7 @@ find_texture_format(const uint16_t *formats, int index) {
 }
 
 #define TFNAME(v) #v,
+
 static const char * c_texture_formats[] = {
 	TFNAME(BC1)
 	TFNAME(BC2)
@@ -552,12 +552,12 @@ static const char * c_texture_formats[] = {
 	TFNAME(ATC)
 	TFNAME(ATCE)
 	TFNAME(ATCI)
-	TFNAME(ASTC4x4)
-	TFNAME(ASTC5x5)
-	TFNAME(ASTC6x6)
-	TFNAME(ASTC8x5)
-	TFNAME(ASTC8x6)
-	TFNAME(ASTC10x5)
+	TFNAME(ASTC4X4)
+	TFNAME(ASTC5X5)
+	TFNAME(ASTC6X6)
+	TFNAME(ASTC8X5)
+	TFNAME(ASTC8X6)
+	TFNAME(ASTC10X5)
 
 	TFNAME(UNKNOWN)
 	TFNAME(R1)
@@ -609,7 +609,7 @@ static const char * c_texture_formats[] = {
 	TFNAME(RGB5A1)
 	TFNAME(RGB10A2)
 	TFNAME(RG11B10F)
-	TFNAME(UNKNOWN_DEPTH)
+	TFNAME(UNKNOWNDEPTH)
 	TFNAME(D16)
 	TFNAME(D24)
 	TFNAME(D24S8)
@@ -2617,7 +2617,7 @@ lpackTVB(lua_State *L) {
 		return luaL_error(L, "Transient vb index out of range %d/%d", idx, v->cap_v);
 	}
 	int stride = v->tvb.stride;
-	uint8_t * data = v->tvb.data + stride * idx;
+	uint8_t * data = (uint8_t *)v->tvb.data + stride * idx;
 	int i;
 	int offset = 0;
 	for (i=0;v->format[i];i++) {
@@ -3525,12 +3525,12 @@ lsetViewRect(lua_State *L) {
 	switch(t) {
 	case LUA_TSTRING: {
 		bgfx_backbuffer_ratio_t ratio = get_ratio(L, 4);
-		bgfx_set_view_rect_auto(viewid, x, y, ratio);
+		bgfx_set_view_rect_ratio(viewid, x, y, ratio);
 		break;
 	}
 	case LUA_TNONE:
 	case LUA_TNIL:
-		bgfx_set_view_rect_auto(viewid, x, y, BGFX_BACKBUFFER_RATIO_EQUAL);
+		bgfx_set_view_rect_ratio(viewid, x, y, BGFX_BACKBUFFER_RATIO_EQUAL);
 		break;
 	case LUA_TNUMBER: {
 		int w = luaL_checkinteger(L, 4);
