@@ -23,15 +23,32 @@ local function check_renderer(renderer)
 	return renderer
 end
 
-local reset_flags = ""
+local flags = {}
+local w, h
+
+local function get_flags()
+	local t = {}	
+	for f, v in pairs(flags) do
+		if v == true then
+			t[#t+1] = f
+		else
+			t[#t+1] = f..v
+		end
+	end	
+	return table.concat(t)
+end
 
 function hw.init(args)
+	w, h = args.width, args.height
 	local bgfx = require "bgfx"
 	args.renderer = check_renderer(args.renderer)
 	args.getlog = args.getlog or true
 	if args.reset == nil then
-		reset_flags = "vm4"
-		args.reset = reset_flags
+		flags = {
+			v = true,
+			m = 4,
+		}
+		args.reset = get_flags()
 	end
 	
 	bgfx.init(args)
@@ -42,37 +59,31 @@ function hw.init(args)
 	vfs.identity(hw.identity())
 end
 
-function hw.reset(flags)
-	reset_flags = flags
-	bgfx.reset(reset_flags)
+function hw.reset(t)
+	flags = t
+	local bgfx = require "bgfx"
+	bgfx.reset(w, h, get_flags())
 end
 
-local function reset_flag_table(s)
-	local m = {}	
-	for i = 1, #s do
-		local f = s:sub(i, i+1)
-		m[f] = true
-	end	
-
-	return m
-end
-
-function hw.add_reset_flag(newflags)
-	local m = reset_flag_table(newflags .. reset_flags)
-
-	reset_flags = table.concat(m, '')
-	bgfx.reset(reset_flags)
-end
-
-function hw.remove_reset_flag(delflags)
-	local m = reset_flag_table(reset_flags)
-	for i=1, #delflags do
-		local s = delflags:sub(i, i+1)
-		m[s] = nil
+function hw.add_reset_flag(flag)
+	local f = flag:sub(1,1)
+	local v = flag:sub(2) or true
+	if flags[f] == v then
+		return
 	end
+	flags[f] = v
+	local bgfx = require "bgfx"
+	bgfx.reset(w, h, get_flags())
+end
 
-	reset_flags = table.concat(m, '')
-	bgfx.reset(reset_flags)
+function hw.remove_reset_flag(flag)
+	local f = flag:sub(1,1)
+	if flags[f] ~= nil then
+		return
+	end
+	flags[f] = nil
+	local bgfx = require "bgfx"
+	bgfx.reset(w, h, get_flags())
 end
 
 local shadertypes = {
