@@ -23,12 +23,15 @@ local function check_renderer(renderer)
 	return renderer
 end
 
+local reset_flags = ""
+
 function hw.init(args)
 	local bgfx = require "bgfx"
 	args.renderer = check_renderer(args.renderer)
 	args.getlog = args.getlog or true
 	if args.reset == nil then
-		args.reset = "vm4"
+		reset_flags = "vm4"
+		args.reset = reset_flags
 	end
 	
 	bgfx.init(args)
@@ -37,6 +40,39 @@ function hw.init(args)
 
 	local vfs = require "vfs"
 	vfs.identity(hw.identity())
+end
+
+function hw.reset(flags)
+	reset_flags = flags
+	bgfx.reset(reset_flags)
+end
+
+local function reset_flag_table(s)
+	local m = {}	
+	for i = 1, #s do
+		local f = s:sub(i, i+1)
+		m[f] = true
+	end	
+
+	return m
+end
+
+function hw.add_reset_flag(newflags)
+	local m = reset_flag_table(newflags .. reset_flags)
+
+	reset_flags = table.concat(m, '')
+	bgfx.reset(reset_flags)
+end
+
+function hw.remove_reset_flag(delflags)
+	local m = reset_flag_table(reset_flags)
+	for i=1, #delflags do
+		local s = delflags:sub(i, i+1)
+		m[s] = nil
+	end
+
+	reset_flags = table.concat(m, '')
+	bgfx.reset(reset_flags)
 end
 
 local shadertypes = {
