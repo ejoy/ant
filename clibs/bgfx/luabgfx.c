@@ -1250,9 +1250,14 @@ combine_state(lua_State *L, uint64_t *state) {
 		*state |= BGFX_STATE_POINT_SIZE(size);
 	} else if CASE(MSAA) {
 		if (lua_toboolean(L, -1))
-			*state |= BGFX_STATE_MSAA; 
-		else 
+			*state |= BGFX_STATE_MSAA;
+		else
 			*state &= ~BGFX_STATE_MSAA;
+	} else if CASE(LINEAA) {
+		if (lua_toboolean(L, -1))
+			*state |= BGFX_STATE_LINEAA;
+		else
+			*state &= ~BGFX_STATE_LINEAA;
 	} else if CASE(WRITE_MASK) {
 		*state &= ~BGFX_STATE_WRITE_MASK;
 		const char * mask = luaL_checkstring(L, -1);
