@@ -88,7 +88,7 @@ function camera_controller_system:init()
 	end
 
 	function message:keyboard(code, press)
-		if press and code == "R" then
+		if press and code == "r" then
 			camera_reset(camera, target)
 			return 
 		end

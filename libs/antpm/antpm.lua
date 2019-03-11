@@ -1,5 +1,6 @@
 local sandbox = require "antpm.sandbox"
 local vfs = require "vfs.simplefs"
+local dofile = dofile
 
 local registered = {}
 local loaded = {}
@@ -12,7 +13,8 @@ local function register(pkg)
     if not vfs.type(cfg) then
         error(('Cannot find package config `%s`.'):format(cfg))
     end
-    local config = vfs.dofile(cfg)
+    local cfgpath = assert(vfs.realpath(cfg))
+    local config = dofile(cfgpath)
     for _, field in ipairs {'name'} do
         if not config[field] then
             error(('Missing `%s` field in `%s`.'):format(field, cfg))

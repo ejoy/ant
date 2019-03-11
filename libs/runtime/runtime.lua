@@ -5,7 +5,6 @@ local LOGERROR = log.error
 import_package = require "antpm".import
 
 require "filesystem"
-require "antpm.io"
 
 local keymap = import_package "ant.inputmgr".keymap
 

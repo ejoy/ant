@@ -253,8 +253,7 @@ function init_loader:init()
 	create_hierarchy_test()	
 
     -- local function save_file(file, data)
-    --     local nativeio = require 'nativeio'
-    --     assert(assert(nativeio.open(file, 'w')):write(data)):close()
+    --     assert(assert(io.open(file, 'w')):write(data)):close()
     -- end
     -- -- test serialize world
     -- local s = serialize.save_world(world)
