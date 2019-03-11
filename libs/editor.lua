@@ -11,7 +11,6 @@ package.cpath = table.concat({
 
 require "editor.vfs"
 require "filesystem"
-require "antpm.io"
 
 require "common.log"
 import_package = (require "antpm").import

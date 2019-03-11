@@ -5,7 +5,7 @@ require 'runtime.errlog'
 
 function dprint(...)
 	print(...)
-	local nio = package.loaded.nativeio or io	
+	local nio = io	
 	nio.stdout:flush()
 end
 

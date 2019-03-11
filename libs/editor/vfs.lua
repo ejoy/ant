@@ -134,4 +134,3 @@ end
 
 package.loaded.vfs = localvfs
 
-require "antpm.io"

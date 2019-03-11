@@ -1,5 +1,6 @@
 local lfs = require "filesystem.local"
 local vfs = require "vfs.simplefs"
+local pkgio = require "antpm.io"
 
 local path_mt = {}
 path_mt.__name = 'pkg-filesystem'
@@ -266,7 +267,27 @@ function fs.filelock()
     error 'Not implemented'
 end
 
-fs.pkg = true
+function fs.open(filepath, ...)
+    return pkgio.open(filepath:string(), ...)
+end
+function fs.lines(filepath, ...)
+    return pkgio.lines(filepath:string(), ...)
+end
 
-local fsutil = require 'filesystem.fsutil'
-return fsutil(fs)
+if __ANT_RUNTIME__ then
+    function fs.loadfile(filepath, ...)
+        return pkgio.loadfile(filepath:string(), ...)
+    end
+    function fs.dofile(filepath)
+        return pkgio.dofile(filepath:string())
+    end
+else
+    function fs.loadfile(filepath, ...)
+        return loadfile(filepath:localpath():string(), ...)
+    end
+    function fs.dofile(filepath)
+        return dofile(filepath:localpath():string())
+    end
+end
+
+return fs

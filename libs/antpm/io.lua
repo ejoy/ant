@@ -50,18 +50,8 @@ local function io_open(filename, mode)
     return f
 end
 
-local io = {
-    open = io_open,
-    read = nio.read,
-    write = nio.write,
-    type = nio.type,
-    flush = nio.flush,
-    close = nio.close,
-    popen = nio.popen,
-    tmpfile = nio.tmpfile,
-}
 
-function io.lines(filename, ...)
+local function io_lines(filename, ...)
     if type(filename) ~= 'string' then
         return nio.lines(filename, ...)
     end
@@ -75,14 +65,6 @@ function io.lines(filename, ...)
     end
     error(errmsg(res, filename, real_filename))
 end
-
-package.loaded.nativeio = nio
-package.loaded.pkgio = io
-package.loaded.io = io
-_G.io = io
-
-nio.dofile = dofile
-nio.loadfile = loadfile
 
 local function loadfile(path, ...)
     local f, err = io_open(path, 'r')
@@ -102,8 +84,9 @@ local function dofile(path)
     return f()
 end
 
-io.dofile = dofile
-io.loadfile = loadfile
-
-_G.loadfile = loadfile
-_G.dofile = dofile
+return {
+    open = io_open,
+    lines = io_lines,
+    dofile = dofile,
+    loadfile = loadfile,
+}
