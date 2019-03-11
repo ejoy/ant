@@ -27,8 +27,11 @@ function hw.init(args)
 	local bgfx = require "bgfx"
 	args.renderer = check_renderer(args.renderer)
 	args.getlog = args.getlog or true
+	if args.reset == nil then
+		args.reset = "vm4"
+	end
+	
 	bgfx.init(args)
-	bgfx.reset(args.width, args.height, "v")
 	assert(caps == nil)
 	caps = bgfx.get_caps()
 
