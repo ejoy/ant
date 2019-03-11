@@ -18,6 +18,7 @@ model_review_system.dependby "message_system"
 --model_review_system.depend "shadow_primitive_filter_system"
 model_review_system.depend "transparency_filter_system"
 model_review_system.depend "entity_rendering"
+model_review_system.depend "debug_system"
 
 local lu = import_package "ant.render" .light
 local cu = import_package "ant.render" .components

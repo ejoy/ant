@@ -23,7 +23,7 @@ function debug:init()
     local enable = false
     function message:keyboard(c, p)
 		if c == nil then return end
-        if c == "I" then
+        if c == "i" then
             enable = p
             bgfx.set_debug(enable and "ST" or "T")
 		end
