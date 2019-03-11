@@ -10,8 +10,10 @@ extern "C" {
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/ext/scalar_relational.hpp>
+#include <glm/ext/vector_relational.hpp>
 
-#include <glm/vector_relational.hpp>
+//#include <glm/vector_relational.hpp>
 
 #include <glm/gtx/euler_angles.hpp>
 
@@ -992,8 +994,8 @@ mul_2values(lua_State *L, struct lastack *LS) {
 
 template<typename T>
 inline bool
-is_zero(const T &a) {
-	return glm::all(glm::equal(a, glm::zero<T>(), glm::epsilon<T>()));
+is_zero(const T &a) {	
+	return glm::all(glm::equal(a, glm::zero<T>(), T(glm::epsilon<float>())));
 }
 
 template<>
@@ -1778,7 +1780,12 @@ new_temp_quaternion(lua_State *L) {
 		for (int ii = 0; ii < 4; ++ii) {
 			q[ii] = lua_tonumber(L, ii + 2);
 		}
-	} else if (top == 2){
+	} else if (top == 3) {
+		const int type = lua_type(L, 2);
+		if (type != LUA_TNUMBER) {
+
+		}
+	} else if (top == 2) {
 		const int type = lua_type(L, 2);
 		if (type == LUA_TTABLE) {
 			const size_t arraynum = lua_rawlen(L, 2);
@@ -1803,8 +1810,7 @@ new_temp_quaternion(lua_State *L) {
 			memcpy(&q, (float*)lua_touserdata(L, 2), sizeof(q));
 		} else {
 			luaL_error(L, "invalid type, only support 'table(array 3/4)' or 'userdata(quaternion data)' : %d", type);
-		}
-
+		}		
 	} else {
 		luaL_error(L, "need 5/6 argument, %d provided", top);
 	}
