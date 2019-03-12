@@ -63,12 +63,13 @@ function camera_controller_system:init()
 
 	objctrller.bind_tigger("rotate", function (event)
 		local dx, dy = event.x - hit[1], event.y - hit[2]
-		local function pixel2angle(pixel)
-			return pixel * 0.1
+		local function pixel2radian(pixel)
+			return pixel * 0.001
 		end
 		
-		local rotation = ms({pixel2angle(dy), pixel2angle(dx), 0, 0}, cameracomp.viewdir, "D+T")
-		rotation[1] = mu.limit(rotation[1], -89.9, 89.9)	-- only yaw angle should limit in [-90, 90]
+		local rotation = ms({pixel2radian(dy), pixel2radian(dx), 0, 0}, cameracomp.viewdir, "D+T")
+		local threshold = math.pi - 0.01
+		rotation[1] = mu.limit(rotation[1], -threshold, threshold)	-- only yaw angle should limit in [-90, 90]
 		ms(cameracomp.viewdir, rotation, "d=")
 		hit[1], hit[2] = event.x, event.y
 	end)	

@@ -26,8 +26,11 @@ local fs = require "filesystem"
 
 local function create_light()
 	local leid = lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2)
-	local lentity = world[leid]	
-	ms(lentity.rotation, {123.4, -34.22,-28.2}, "=")
+	local lentity = world[leid]
+	local function to_radian(angle)
+		return (math.pi / 180) * angle
+	end
+	ms(lentity.rotation, {to_radian(123.4), to_radian(-34.22), to_radian(-28.2)}, "=")
 
 	lu.create_ambient_light_entity(world, "ambient light", {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end

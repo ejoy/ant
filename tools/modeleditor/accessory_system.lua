@@ -11,8 +11,6 @@ renderbonesys.dependby "debug_draw"
 
 local ms = import_package "ant.math".stack
 
-local test_ske = require "skeleten"
-
 local function draw_skeleton(sample)
 	local ske = sample.skeleton
 	if ske then
@@ -77,17 +75,5 @@ function renderbonesys:update()
 				append_desc(descbuffer, desc)
 			end
 		end	
-	end
-
-	if cache == nil then
-		cache = {}
-		for _, trans in ipairs(test_ske) do
-			local spheres = draw_sphere(trans)
-			cache[#cache+1] = spheres			
-		end
-	end
-
-	for _, sphere in ipairs(cache) do
-		append_desc(descbuffer, sphere)
 	end
 end

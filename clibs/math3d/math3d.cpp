@@ -480,7 +480,7 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index, glm::mat4x4 &m
 		if (type != LINEAR_TYPE_VEC4 && type != LINEAR_TYPE_EULER)
 			luaL_error(L, "ref object need should be vec4/euler!, type is : %d", type);
 
-		m = glm::mat4x4(glm::quat(glm::radians(*(const glm::vec3*)value)));
+		m = glm::mat4x4(glm::quat(*(const glm::vec3*)value));
 	} else if (rtype == LUA_TTABLE) {
 		size_t len = lua_rawlen(L, index);
 		if (len != 3)
@@ -493,7 +493,7 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index, glm::mat4x4 &m
 
 		// be careful here, glm::quat(euler_angles) result is different from eulerAngleXYZ()
 		// keep the same order with glm::quat
-		m = glm::mat4x4(glm::quat(glm::radians(e)));	
+		m = glm::mat4x4(glm::quat(e));	
 	} else {
 		m = glm::mat4x4(1.f);
 	}
@@ -617,7 +617,7 @@ get_type_field(lua_State *L, int index) {
 }
 
 static inline void
-push_quat_with_axis_angle(lua_State* L, struct lastack *LS, int index) {
+push_quat_with_axis_radian(lua_State* L, struct lastack *LS, int index) {
 	// get axis
 	lua_getfield(L, index, "axis");
 
@@ -653,24 +653,24 @@ push_quat_with_axis_angle(lua_State* L, struct lastack *LS, int index) {
 		break;
 	}
 	default:
-		luaL_error(L, "quaternion axis angle init, only support table and number, type is : %d", axis_type);
+		luaL_error(L, "quaternion axis radian init, only support table and number, type is : %d", axis_type);
 	}
 
 	lua_pop(L, 1);
 
-	// get angle
-	lua_getfield(L, index, "angle");
-	int angle_type = lua_type(L, -1);
-	if (angle_type != LUA_TTABLE) {
-		luaL_error(L, "angle should define as angle = {xx}");
+	// get radian
+	lua_getfield(L, index, "radian");
+	int radian_type = lua_type(L, -1);
+	if (radian_type != LUA_TTABLE) {
+		luaL_error(L, "radian should define as radian = {xx}");
 	}
 	lua_geti(L, -1, 1);
-	float angle = lua_tonumber(L, -1);
+	float radian = lua_tonumber(L, -1);
 	lua_pop(L, 1);
 
 	lua_pop(L, 1);
 
-	glm::quat q = glm::angleAxis(glm::radians(angle), axis);
+	glm::quat q = glm::angleAxis(radian, axis);
 	lastack_pushquat(LS, &q.x);
 }
 
@@ -708,7 +708,7 @@ push_quat_with_euler(lua_State* L, struct lastack *LS, int index) {
 
 	lua_pop(L, 1);
 
-	glm::quat q(glm::radians(e));
+	glm::quat q(e);
 	lastack_pushquat(LS, &(q.x));
 }
 
@@ -721,7 +721,7 @@ push_quat(lua_State* L, struct lastack *LS, int index) {
 	if (curType == LUA_TTABLE || curType == LUA_TNUMBER) {
 		push_quat_with_euler(L, LS, index);
 	} else {
-		push_quat_with_axis_angle(L, LS, index);
+		push_quat_with_axis_radian(L, LS, index);
 	}
 }
 
@@ -1180,7 +1180,7 @@ convert_to_quaternion(lua_State *L, struct lastack *LS){
 			break;		
 		case LINEAR_TYPE_VEC4:
 		case LINEAR_TYPE_EULER:	
-			q = glm::quat(glm::radians(*(const glm::vec3*)value));
+			q = glm::quat(*(const glm::vec3*)value);
 			break;
 		default:
 			luaL_error(L, "not support for converting to quaternion, type is : %d", type);
@@ -1205,7 +1205,7 @@ convert_rotation_to_viewdir(lua_State *L, struct lastack *LS){
 	switch (type){
 		case LINEAR_TYPE_EULER:
 		case LINEAR_TYPE_VEC4:{
-			glm::vec4 v4(to_viewdir(glm::radians(*(const glm::vec3*)v)), 0);
+			glm::vec4 v4(to_viewdir(*(const glm::vec3*)v), 0);
 			lastack_pushvec4(LS, &v4.x);
 			break;
 		}
@@ -1223,7 +1223,7 @@ convert_viewdir_to_rotation(lua_State *L, struct lastack *LS){
 	switch (type){		
 		case LINEAR_TYPE_VEC4: {						
 			glm::quat q(glm::vec3(0, 0, 1), *(const glm::vec3*)v);
-			glm::vec4 e(glm::degrees(glm::eulerAngles(q)), 0);
+			glm::vec4 e(glm::eulerAngles(q), 0);
 			lastack_pushvec4(LS, &e.x);
 			break;
 		}
@@ -1298,7 +1298,7 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 		break;
 	case LINEAR_TYPE_VEC4:
 	case LINEAR_TYPE_EULER:
-		zdir = glm::vec4(to_viewdir(glm::radians(*(glm::vec3*)v)), 0);
+		zdir = glm::vec4(to_viewdir(*(glm::vec3*)v), 0);
 		break;
 	case LINEAR_TYPE_QUAT: 
 		zdir = (*(glm::quat*)v) * glm::vec4(0, 0, 1, 0);
@@ -1440,7 +1440,7 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 		float * vec2 = pop_value(L, LS, &t1);
 		if (t0 != LINEAR_TYPE_VEC4 || t0 != t1)
 			luaL_error(L, "dot operation with type mismatch");
-		
+
 		lastack_pushnumber(LS, glm::dot(*((const glm::vec3*)vec1), *((const glm::vec3*)vec2)));
 		refstack_2_1(RS);
 		break;
@@ -1769,14 +1769,14 @@ new_temp_quaternion(lua_State *L) {
 
 	glm::quat q = glm::identity<glm::quat>();
 	if (top == 6) {
-		luaL_checktype(L, 6, LUA_TBOOLEAN);	// axis angle
+		luaL_checktype(L, 6, LUA_TBOOLEAN);	// axis radian
 		glm::vec3 axis;		
 		for (int ii = 0; ii < 3; ++ii) {
 			axis[ii] = lua_tonumber(L, ii + 2);
 		}
 
-		const float angle = lua_tonumber(L, 5);
-		q = glm::angleAxis(angle, axis);
+		const float radian = lua_tonumber(L, 5);
+		q = glm::angleAxis(radian, axis);
 	} else if (top == 5) {
 		for (int ii = 0; ii < 4; ++ii) {
 			q[ii] = lua_tonumber(L, ii + 2);
@@ -1787,8 +1787,8 @@ new_temp_quaternion(lua_State *L) {
 		if (type == LUA_TUSERDATA || LUA_TLIGHTUSERDATA) {
 			axis = (const glm::vec3*)lua_touserdata(L, 2);
 		}
-		const float angle = lua_tonumber(L, 3);
-		q = glm::angleAxis(angle, *axis);
+		const float radian = lua_tonumber(L, 3);
+		q = glm::angleAxis(radian, *axis);
 	} else if (top == 2) {
 		const int type = lua_type(L, 2);
 		if (type == LUA_TTABLE) {
@@ -1806,9 +1806,9 @@ new_temp_quaternion(lua_State *L) {
 					euler[ii] = lua_tonumber(L, -1);
 					lua_pop(L, 1);
 				}
-				q = glm::quat(glm::radians(euler));
+				q = glm::quat(euler);
 			} else {
-				luaL_error(L, "need 3/4 element in array as euler angle or quaternion:%d", arraynum);
+				luaL_error(L, "need 3/4 element in array as euler radian or quaternion:%d", arraynum);
 			}
 		} else if (type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA) {
 			memcpy(&q, (float*)lua_touserdata(L, 2), sizeof(q));
@@ -1892,7 +1892,7 @@ create_srt_matrix(lua_State *L) {
 	srtmat[1][1] = (*scale)[1];
 	srtmat[2][2] = (*scale)[2];
 
-	srtmat = glm::mat4x4(glm::quat(glm::radians(*rotation))) * srtmat;
+	srtmat = glm::mat4x4(glm::quat(*rotation)) * srtmat;
 
 	srtmat[3] = *translation;
 	srtmat[3][3] = 1;
@@ -1931,7 +1931,7 @@ lpush_srt(lua_State *L) {
 		glm::mat4x4 rotmat;
 		extract_rotation_mat(L, LS, 3, rotmat);
 
-		const auto translate = extract_scale(L, LS, 4);
+		const auto translate = extract_translate(L, LS, 4);
 		make_srt(LS, scale, rotmat, translate);
 	}
 	break;

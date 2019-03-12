@@ -1,5 +1,5 @@
-local math = import_package "ant.math"
-local ms = math.stack
+local math3d = import_package "ant.math"
+local ms = math3d.stack
 local fs = require "filesystem"
 
 local PVPScene = {}
@@ -224,6 +224,18 @@ function PVPScene.create_entitices(world)
 		}
 	}
 
+	local function to_radian(angles)
+		local function radian(angle)
+			return (math.pi / 180) * angle
+		end
+
+		local radians = {}
+		for i=1, #angles do
+			radians[i] = radian(angles[i])
+		end
+		return radians
+	end
+
 	for name, scenedata in pairs(scene_objects) do
 		local children = assert(scenedata.children)		
 		local srts = assert(children.srts)
@@ -237,13 +249,13 @@ function PVPScene.create_entitices(world)
 				nameidx = nameidx + 1
 				local srt = srt_array[idx]
 				local s = srt.s or scenedata.srt[1]
-				local r = srt.r or scenedata.srt[2]
+				local r = to_radian(srt.r or scenedata.srt[2])
 				local t = srt.t or scenedata.srt[3]
 
 				local rsrt = scenedata.relate_srts and scenedata.relate_srts[idx_array] or nil
 				if rsrt then
 					s = ms(s, rsrt[1], "+T")
-					r = ms(r, rsrt[2], "+T")
+					r = ms(r, to_radian(rsrt[2]), "+T")
 					t = ms(t, rsrt[3], "+T")
 				end
 
