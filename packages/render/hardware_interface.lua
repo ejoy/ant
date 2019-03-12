@@ -60,7 +60,7 @@ function hw.init(args)
 end
 
 function hw.reset(t)
-	flags = t
+	if t then flags = t end
 	local bgfx = require "bgfx"
 	bgfx.reset(w, h, get_flags())
 end

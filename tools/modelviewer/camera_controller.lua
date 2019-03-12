@@ -8,6 +8,7 @@ ecs.import "ant.inputmgr"
 local point2d = import_package "ant.math".point2d
 local math3d = require "math3d"
 local ms = import_package "ant.math".stack
+local rhwi = import_package "ant.render".hardware_interface
 
 local camera_controller_system = ecs.system "camera_controller"
 
@@ -92,6 +93,10 @@ function camera_controller_system:init()
 			camera_reset(camera, target)
 			return 
 		end
+	end
+
+	function message:resize()
+		rhwi.reset()
 	end
 
 	self.message.observers:add(message)

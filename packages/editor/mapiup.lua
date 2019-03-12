@@ -116,4 +116,7 @@ return function (msgqueue, ctrl)
 		end
 		msgqueue:push("keyboard", translate_key(key), pressnames[press], t)
 	end
+	ctrl.resize_cb = function(_, a, b)
+		msgqueue:push("resize", a, b)
+	end
 end
