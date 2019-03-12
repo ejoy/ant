@@ -95,9 +95,5 @@ function camera_controller_system:init()
 		end
 	end
 
-	function message:resize()
-		rhwi.reset()
-	end
-
 	self.message.observers:add(message)
 end
