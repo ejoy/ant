@@ -73,7 +73,7 @@ do
 
 	local q0 = stackobj:quaternion(0, 0, 0, 1)
 	local axisangle = true
-	local q1 = stackobj:quaternion(1, 0, 0, 60, axisangle)	
+	local q1 = stackobj:quaternion(1, 0, 0, 60, axisangle)
 	local q2 = stackobj:quaternion()
 	print(stack(q0, "VR"))
 	print(stack(q1, "VR"))
@@ -118,7 +118,7 @@ do
 end
 
 --quaternion
-local quat_aa = stack({type = "quat", axis = {0, 1, 0}, angle = {60}}, "V")	--
+local quat_aa = stack({type = "quat", axis = {0, 1, 0}, radian = {math.rad(60)}}, "V")	--
 print("quaternion with axis and angle : " .. quat_aa)
 
 local quat_mul = stack({type = "quat", 0, 1, 0, 1}, {type = "quat", 1, 0, 0, 0.5}, "*V")	-- define an indentity quaternion
@@ -129,7 +129,7 @@ print("q * v : " .. quat_vec_mul)
 
 local axisid = stack({1, 0, 0}, "P")
 print("axisid : ", axisid)
-local qq = stack({type = "quat", axis = axisid, angle = {60}}, "V")
+local qq = stack({type = "quat", axis = axisid, radian = {math.rad(60)}}, "V")
 print("quaternion axis angle : ", qq)
 
 --euler
@@ -203,7 +203,7 @@ do
 	local q = stack({0, 90, 0}, "qP")
 	print("quaternion", stack(q, "V"))
 
-	local q1 = stack({type="q", axis={0, 1, 0}, angle={90}}, "P")
+	local q1 = stack({type="q", axis={0, 1, 0}, radian={math.rad(90)}}, "P")
 	print("quaternion 1 : ", stack(q1, "V"))
 
 	local e = stack(q, "eP")
