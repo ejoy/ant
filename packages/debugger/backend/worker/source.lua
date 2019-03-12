@@ -1,4 +1,4 @@
-local fs = require 'debugger.filesystem'
+local fs = require 'debugger.fs'
 local parser = require 'debugger.parser'
 local ev = require 'debugger.event'
 local crc32 = require 'debugger.crc32'

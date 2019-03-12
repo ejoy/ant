@@ -1,8 +1,13 @@
-local ms, dbgName = ...
+local self, dbgName = ...
 
 if not package.loaded[dbgName] then
-	return ms
+	return self
 end
+
+local mt = debug.getmetatable(self)
+local mscall = mt.__call
+local ms = function(...) return mscall(self, ...) end
+local _, upvalue1 = debug.getupvalue(mt.__call, 1)
 
 local vscdbg = require(dbgName)
 local math3d = require "math3d"
@@ -103,9 +108,7 @@ local function event_line(ms, status, stack, rets)
 	scope_to_value(ms, status.scope[2].value, rets)
 end
 
-local _, upvalue1 = debug.getupvalue(ms, 1)
-
-return function (...)
+function mt:__call(...)
 	local _ = upvalue1
 	local args = table.pack(...)
 	local stack = reverse(ms('@'))
@@ -162,3 +165,5 @@ return function (...)
 	end
 	return table.unpack(rets)
 end
+
+return self

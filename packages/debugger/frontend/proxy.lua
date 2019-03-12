@@ -1,7 +1,7 @@
 local server_factory = require 'debugger.frontend.server'
 local proto = require 'debugger.protocol'
 local socket = require 'debugger.socket'
-local fs = require 'debugger.filesystem'
+local fs = require 'debugger.fs'
 local server
 local client = {}
 local seq = 0
