@@ -1385,6 +1385,7 @@ do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
 	//	return 1;	
 	case 'm':		
 		lua_pushlightuserdata(L, pop_value(L, LS, NULL));
+		refstack_pop(RS);
 		return 1;
 
 	case 'T': {
@@ -1782,9 +1783,12 @@ new_temp_quaternion(lua_State *L) {
 		}
 	} else if (top == 3) {
 		const int type = lua_type(L, 2);
-		if (type != LUA_TNUMBER) {
-
+		const glm::vec3 *axis;
+		if (type == LUA_TUSERDATA || LUA_TLIGHTUSERDATA) {
+			axis = (const glm::vec3*)lua_touserdata(L, 2);
 		}
+		const float angle = lua_tonumber(L, 3);
+		q = glm::angleAxis(angle, *axis);
 	} else if (top == 2) {
 		const int type = lua_type(L, 2);
 		if (type == LUA_TTABLE) {
