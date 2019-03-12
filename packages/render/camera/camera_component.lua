@@ -6,7 +6,9 @@ ecs.import "ant.inputmgr"
 local math = import_package "ant.math"
 local mu = math.util
 local ms = math.stack
-local bgfx = require "bgfx"
+
+local renderpkg = import_package "ant.render"
+local rhwi = renderpkg.hardware_interface
 
 local VIEWID_MAINCAMERA = 100
 
@@ -66,7 +68,8 @@ function camera_init_sys:init()
     local function update_camera_viewrect(w, h)
         local vr = entity.view_rect
         vr.w, vr.h = w, h
-        self.window.width, self.window.height = w, h
+		self.window.width, self.window.height = w, h
+		rhwi.reset(nil, w, h)
     end
     
     update_camera_viewrect(fb_size.w, fb_size.h)
