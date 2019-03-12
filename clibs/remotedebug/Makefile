@@ -6,8 +6,13 @@ else
 default : libremotedebug-$(PLAT).a
 endif
 
+ifeq "$(PLAT)" "mingw"
+$(ODIR)/remotedebug.o : remotedebug.c debugvar.h | $(ODIR)
+	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC) -DLUA_BUILD_AS_DLL
+else
 $(ODIR)/remotedebug.o : remotedebug.c debugvar.h | $(ODIR)
 	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC)
+endif
 
 $(ODIR)/visitor.o : visitor.c debugvar.h | $(ODIR)
 	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC)
