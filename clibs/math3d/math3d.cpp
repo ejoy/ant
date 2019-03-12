@@ -1911,11 +1911,9 @@ new_temp_vector4(lua_State *L) {
 		memcpy(v, lua_touserdata(L, 2), sizeof(v));
 		break;
 	}
-	case 3:
-		v[3] = 0;
-		// fall off case 4
 	case 4:
-		break;
+		v[3] = 0;
+		//fall-through
 	case 5:
 		for (int i=0;i<top-1;i++) {
 			v[i] = luaL_checknumber(L, i+2);

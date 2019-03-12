@@ -115,7 +115,7 @@ lscreenpt_to_3d(lua_State *L){
 	
 	const auto count = vv.size();
 	lua_createtable(L, (int)count, 0);
-	for (int ii = 0; ii < count; ++ii) {
+	for (int ii = 0; ii < (int)count; ++ii) {
 		auto p = lua_newuserdata(L, sizeof(glm::vec3));
 		memcpy(p, &vv[ii].x, sizeof(glm::vec3));		
 		lua_seti(L, -2, ii + 1);
