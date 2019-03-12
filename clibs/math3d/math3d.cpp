@@ -4,6 +4,7 @@
 extern "C" {
 	#include "linalg.h"	
 	#include "refstack.h"
+	#include "fastmath.h"
 }
 
 #include <glm/glm.hpp>
@@ -46,8 +47,24 @@ static bool g_default_homogeneous_depth = false;
 bool default_homogeneous_depth(){
 	return g_default_homogeneous_depth;
 }
-
-
+/*
+static inline float
+get_angle(lua_State *L, int index) {
+	int type = lua_type(L, index);
+	switch (type) {
+	case LUA_TNUMBER:
+		return lua_tonumber(L, index);
+	case LUA_TSTRING: {
+		float degree = lua_tonumber(L, index);	// all degree should be string like "30"
+		return glm::radians(degree);
+	}
+	case LUA_TNIL:
+		return 0;
+	default:
+		return luaL_error(L, "Invalid angle type %s", lua_typename(L, lua_type(L, index)));
+	}
+}
+*/
 static const char *
 get_typename(uint32_t t) {
 	static const char * type_names[] = {
@@ -1316,246 +1333,438 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 	lastack_pushvec4(LS, &xdir.x);
 }
 
-static const char * s_command_desc[256];
+// fast math functions
 
-static void 
-init_command_desc() {
-	s_command_desc['P'] = "pop as id";
-	s_command_desc['m'] = "pop as pointer";
-	s_command_desc['T'] = "pop as table";
-	s_command_desc['V'] = "top as string";
-	s_command_desc['='] = "assign to ref";
-	s_command_desc['1'] = "dup 1";
-	s_command_desc['2'] = "dup 2";
-	s_command_desc['3'] = "dup 3";
-	s_command_desc['4'] = "dup 4";
-	s_command_desc['5'] = "dup 5";
-	s_command_desc['6'] = "dup 6";
-	s_command_desc['7'] = "dup 7";
-	s_command_desc['8'] = "dup 8";
-	s_command_desc['9'] = "dup 9";
-	s_command_desc['S'] = "swap";
-	s_command_desc['R'] = "remove";
-	s_command_desc['.'] = "dot";
-	s_command_desc['x'] = "cross";
-	s_command_desc['*'] = "mul";
-	s_command_desc['%'] = "mulH";
-	s_command_desc['n'] = "normalize";
-	s_command_desc['t'] = "transposed";
-	s_command_desc['i'] = "inverted";
-	s_command_desc['-'] = "sub";
-	s_command_desc['+'] = "add";
-	s_command_desc['l'] = "look at";
-	s_command_desc['L'] = "look from";
-	s_command_desc['>'] = "extract";
-	s_command_desc['e'] = "to euler";
-	s_command_desc['q'] = "to quaternion";
-	s_command_desc['d'] = "to rotation";
-	s_command_desc['D'] = "to direction";
-	s_command_desc['~'] = "to srt";
-	s_command_desc['b'] = "split matrix as x, y, z axis";
-	s_command_desc['@'] = "pop everything";
-	int i;
-	for (i=0;i<256;i++) {
-		if (s_command_desc[i] == NULL) {
-			s_command_desc[i] = "undefined";
-		}
-	}
+static FASTMATH(pop)
+	pushid(L, pop(L, LS));
+	refstack_pop(RS);
+	return 1;
 }
 
-/*
-	P : pop and return id
-	v : pop and return vector4 pointer
-	m : pop and return matrix pointer
-	V : top to string for debug
-	R : remove stack top
-	M : mark stack top and pop
- */
-static int
-do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
-	lua_State *L = RS->L;
-	switch (cmd) {
-	case 'P':
-		pushid(L, pop(L, LS));
-		refstack_pop(RS);
-		return 1;
-	//case 'f':
-	//	lua_pushnumber(L, pop_value(L,LS,LINEAR_TYPE_NUM)[0]);
-	//	refstack_pop(RS);
-	//	return 1;	
-	case 'm':		
-		lua_pushlightuserdata(L, pop_value(L, LS, NULL));
-		refstack_pop(RS);
-		return 1;
+static FASTMATH(mul)
+	mul_2values(L, LS);
+	refstack_2_1(RS);
+	return 0;
+}
 
-	case 'T': {
-		struct lua_State *L = RS->L;
+static FASTMATH(pointer)
+	lua_pushlightuserdata(L, pop_value(L, LS, NULL));
+	refstack_pop(RS);
+	return 1;
+}
 
-		int64_t id = pop(L, LS);
-		push_obj_to_lua_table(L, LS, id);
-		refstack_pop(RS);
-		return 1;
+static FASTMATH(table)
+	int64_t id = pop(L, LS);
+	push_obj_to_lua_table(L, LS, id);
+	refstack_pop(RS);
+	return 1;
+}
+
+static FASTMATH(string)
+	top_tostring(L, LS);
+	return 1;
+}
+
+static FASTMATH(assign)
+	int64_t id = pop(L, LS);
+	refstack_pop(RS);
+	pop(L, LS);
+	int index = refstack_topid(RS);
+	if (index < 0) {
+		luaL_error(L, "need a ref object for assign");
+	}
+	struct refobject * ref = (struct refobject *)lua_touserdata(L, index);
+	assign_ref(L, ref, id);
+	refstack_pop(RS);
+	return 0;
+}
+
+static FASTMATH(dup1)
+	int index = 1;
+	int64_t v = lastack_dup(LS, index);
+	if (v == 0)
+		luaL_error(L, "dup invalid stack index (%d)", index);
+	refstack_dup(RS, index);
+	return 0;
+}
+
+static FASTMATH(dup2)
+	int index = 2;
+	int64_t v = lastack_dup(LS, index);
+	if (v == 0)
+		luaL_error(L, "dup invalid stack index (%d)", index);
+	refstack_dup(RS, index);
+	return 0;
+}
+
+static FASTMATH(dup3)
+	int index = 3;
+	int64_t v = lastack_dup(LS, index);
+	if (v == 0)
+		luaL_error(L, "dup invalid stack index (%d)", index);
+	refstack_dup(RS, index);
+	return 0;
+}
+
+static FASTMATH(dup4)
+	int index = 4;
+	int64_t v = lastack_dup(LS, index);
+	if (v == 0)
+		luaL_error(L, "dup invalid stack index (%d)", index);
+	refstack_dup(RS, index);
+	return 0;
+}
+
+static FASTMATH(dup5)
+	int index = 5;
+	int64_t v = lastack_dup(LS, index);
+	if (v == 0)
+		luaL_error(L, "dup invalid stack index (%d)", index);
+	refstack_dup(RS, index);
+	return 0;
+}
+
+static FASTMATH(dup6)
+	int index = 6;
+	int64_t v = lastack_dup(LS, index);
+	if (v == 0)
+		luaL_error(L, "dup invalid stack index (%d)", index);
+	refstack_dup(RS, index);
+	return 0;
+}
+
+static FASTMATH(dup7)
+	int index = 7;
+	int64_t v = lastack_dup(LS, index);
+	if (v == 0)
+		luaL_error(L, "dup invalid stack index (%d)", index);
+	refstack_dup(RS, index);
+	return 0;
+}
+
+static FASTMATH(dup8)
+	int index = 8;
+	int64_t v = lastack_dup(LS, index);
+	if (v == 0)
+		luaL_error(L, "dup invalid stack index (%d)", index);
+	refstack_dup(RS, index);
+	return 0;
+}
+
+static FASTMATH(dup9)
+	int index = 9;
+	int64_t v = lastack_dup(LS, index);
+	if (v == 0)
+		luaL_error(L, "dup invalid stack index (%d)", index);
+	refstack_dup(RS, index);
+	return 0;
+}
+
+static FASTMATH(swap)
+	int64_t v = lastack_swap(LS);
+	if (v == 0)
+		luaL_error(L, "dup empty stack");
+	refstack_swap(RS);
+	return 0;
+}
+
+static FASTMATH(remove)
+	pop(L, LS);
+	refstack_pop(RS);
+	return 0;
+}
+
+static FASTMATH(dot)
+	int t0, t1;
+	float * vec1 = pop_value(L, LS, &t0);
+	float * vec2 = pop_value(L, LS, &t1);
+	if (t0 != LINEAR_TYPE_VEC4 || t0 != t1)
+		luaL_error(L, "dot operation with type mismatch");
+
+	lastack_pushnumber(LS, glm::dot(*((const glm::vec3*)vec1), *((const glm::vec3*)vec2)));
+	refstack_2_1(RS);
+	return 0;
+}
+
+static FASTMATH(cross)
+	int t1,t2;
+	float * vec2 = pop_value(L, LS, &t1);
+	float * vec1 = pop_value(L, LS, &t2);
+	if (t1 != LINEAR_TYPE_VEC4 || t1 != t2) {
+		luaL_error(L, "need vec4 type and cross type mismatch");
 	}
 
-	case 'V':
-		top_tostring(L, LS);
-		return 1;
-	case '=': {
-		int64_t id = pop(L, LS);
-		refstack_pop(RS);
-		pop(L, LS);
+	glm::vec4 r(glm::cross(*((const glm::vec3*)vec1), *((const glm::vec3*)vec2)), 0);	
+	lastack_pushvec4(LS, &r.x);
+	refstack_2_1(RS);
+	return 0;
+}
+
+static FASTMATH(mulH)
+	mulH_2values(L, LS);
+	refstack_2_1(RS);
+	return 0;
+}
+
+static FASTMATH(normalize)
+	normalize_vector(L, LS);
+	refstack_1_1(RS);
+	return 0;
+}
+
+static FASTMATH(transposed)
+	transposed_matrix(L, LS);
+	refstack_1_1(RS);
+	return 0;
+}
+
+static FASTMATH(inverted)
+	inverted_value(L, LS);
+	refstack_1_1(RS);
+	return 0;
+}
+
+static FASTMATH(sub)
+	sub_2values(L, LS);
+	refstack_2_1(RS);
+	return 0;
+}
+
+static FASTMATH(add)
+	add_2values(L, LS);
+	refstack_2_1(RS);
+	return 0;
+}
+
+static FASTMATH(lookat)
+	lookat_matrix(L, LS, 0);
+	refstack_2_1(RS);
+	return 0;
+}
+
+static FASTMATH(lookfrom)
+	lookat_matrix(L, LS, 1);
+	refstack_2_1(RS);
+	return 0;
+}
+
+static FASTMATH(extract)
+	unpack_top(L, LS);
+	refstack_pop(RS);
+	refstack_push(RS);
+	refstack_push(RS);
+	refstack_push(RS);
+	refstack_push(RS);
+	return 0;
+}
+
+static FASTMATH(toeuler)
+	convert_to_euler(L, LS);
+	refstack_1_1(RS);
+	return 0;
+}
+
+static FASTMATH(toquaternion)
+	convert_to_quaternion(L, LS);
+	refstack_1_1(RS);
+	return 0;
+}
+
+static FASTMATH(torotation)
+	convert_rotation_to_viewdir(L, LS);
+	refstack_1_1(RS);
+	return 0;
+}
+
+static FASTMATH(todirection)
+	convert_viewdir_to_rotation(L, LS);
+	refstack_1_1(RS);
+	return 0;
+}
+
+static FASTMATH(tosrt)
+	split_mat_to_srt(L, LS);
+	refstack_pop(RS);
+	refstack_push(RS);
+	refstack_push(RS);
+	refstack_push(RS);
+	return 0;
+}
+
+static FASTMATH(tobase)
+	rotation_to_base_axis(L, LS);
+	refstack_pop(RS);
+	refstack_push(RS);
+	refstack_push(RS);
+	refstack_push(RS);
+	return 0;
+}
+
+static FASTMATH(all)
+	lua_Integer n = 0;
+	lua_newtable(L);
+	for (;;) {
+		int64_t v = lastack_pop(LS);
+		if (v == 0) {
+			break;
+		}
 		int index = refstack_topid(RS);
 		if (index < 0) {
-			luaL_error(L, "need a ref object for assign");
+			pushid(L, v);
 		}
-		struct refobject * ref = (struct refobject *)lua_touserdata(L, index);
-		assign_ref(L, ref, id);
-		refstack_pop(RS);
-		break;
-	}
-	case '1':	case '2':	case '3':	case '4':	case '5':
-	case '6':	case '7':	case '8':	case '9':
-	{
-		int index = cmd-'1'+1;
-		int64_t v = lastack_dup(LS, index);
-		if (v == 0)
-			luaL_error(L, "dup invalid stack index (%d)", index);
-		refstack_dup(RS, index);
-		break;
-	}
-	case 'S': {
-		int64_t v = lastack_swap(LS);
-		if (v == 0)
-			luaL_error(L, "dup empty stack");
-		refstack_swap(RS);
-		break;
-	}
-	case 'R':
-		pop(L, LS);
-		refstack_pop(RS);
-		break;
-	case '.': {
-		int t0, t1;
-		float * vec1 = pop_value(L, LS, &t0);
-		float * vec2 = pop_value(L, LS, &t1);
-		if (t0 != LINEAR_TYPE_VEC4 || t0 != t1)
-			luaL_error(L, "dot operation with type mismatch");
-
-		lastack_pushnumber(LS, glm::dot(*((const glm::vec3*)vec1), *((const glm::vec3*)vec2)));
-		refstack_2_1(RS);
-		break;
-	}
-	case 'x': {		
-		int t1,t2;
-		float * vec2 = pop_value(L, LS, &t1);
-		float * vec1 = pop_value(L, LS, &t2);
-		if (t1 != LINEAR_TYPE_VEC4 || t1 != t2) {
-			luaL_error(L, "need vec4 type and cross type mismatch");
+		else {
+			lua_pushvalue(L, index);
 		}
+		lua_rawseti(L, -2, ++n);
+		refstack_pop(RS);
+	}
+	return 1;
+}
 
-		glm::vec4 r(glm::cross(*((const glm::vec3*)vec1), *((const glm::vec3*)vec2)), 0);		
-		lastack_pushvec4(LS, &r.x);
-		refstack_2_1(RS);
-		break;
-	}
-	case '*':
-		mul_2values(L, LS);
-		refstack_2_1(RS);
-		break;
+struct fastmath_function {
+	MFunction func;
+	const char *desc;
+};
 
-	case '%':
-		mulH_2values(L, LS);
-		refstack_2_1(RS);
-		break;
-	case 'n':
-		normalize_vector(L, LS);
-		refstack_1_1(RS);
-		break;
-	case 't':
-		transposed_matrix(L, LS);
-		refstack_1_1(RS);
-		break;
-	case 'i':
-		inverted_value(L, LS);
-		refstack_1_1(RS);
-		break;
-	case '-':
-		sub_2values(L, LS);
-		refstack_2_1(RS);
-		break;
-	case '+':
-		add_2values(L, LS);
-		refstack_2_1(RS);
-		break;
-	case 'l':
-	case 'L': {
-		int direction = cmd == 'L' ? 1 : 0;
-		lookat_matrix(L, LS, direction);
-		refstack_2_1(RS);
-		break;
+static struct fastmath_function s_fastmath[256] = {
+	{ NULL, NULL }, //0
+	{ NULL, NULL }, //1
+	{ NULL, NULL }, //2
+	{ NULL, NULL }, //3
+	{ NULL, NULL }, //4
+	{ NULL, NULL }, //5
+	{ NULL, NULL }, //6
+	{ NULL, NULL }, //7
+	{ NULL, NULL }, //8
+	{ NULL, NULL }, //9
+	{ NULL, NULL }, //10
+	{ NULL, NULL }, //11
+	{ NULL, NULL }, //12
+	{ NULL, NULL }, //13
+	{ NULL, NULL }, //14
+	{ NULL, NULL }, //15
+	{ NULL, NULL }, //16
+	{ NULL, NULL }, //17
+	{ NULL, NULL }, //18
+	{ NULL, NULL }, //19
+	{ NULL, NULL }, //20
+	{ NULL, NULL }, //21
+	{ NULL, NULL }, //22
+	{ NULL, NULL }, //23
+	{ NULL, NULL }, //24
+	{ NULL, NULL }, //25
+	{ NULL, NULL }, //26
+	{ NULL, NULL }, //27
+	{ NULL, NULL }, //28
+	{ NULL, NULL }, //29
+	{ NULL, NULL }, //30
+	{ NULL, NULL }, //31
+	{ NULL, NULL }, //" "
+	{ NULL, NULL }, //!
+	{ NULL, NULL }, //"
+	{ NULL, NULL }, //#
+	{ NULL, NULL }, //$
+	{ m_mulH, "mulH" }, //%
+	{ NULL, NULL }, //&
+	{ NULL, NULL }, //'
+	{ NULL, NULL }, //(
+	{ NULL, NULL }, //)
+	{ m_mul, "mul" }, //*
+	{ m_add, "add" }, //+
+	{ NULL, NULL }, //,
+	{ m_sub, "sub" }, //-
+	{ m_dot, "dot" }, //.
+	{ NULL, NULL }, // /
+	{ NULL, NULL }, //0
+	{ m_dup1, "dup 1" }, //1
+	{ m_dup2, "dup 2" }, //2
+	{ m_dup3, "dup 3" }, //3
+	{ m_dup4, "dup 4" }, //4
+	{ m_dup5, "dup 5" }, //5
+	{ m_dup6, "dup 6" }, //6
+	{ m_dup7, "dup 7" }, //7
+	{ m_dup8, "dup 8" }, //8
+	{ m_dup9, "dup 9" }, //9
+	{ NULL, NULL }, //:
+	{ NULL, NULL }, //;
+	{ NULL, NULL }, //<
+	{ m_assign, "assign to ref" }, //=
+	{ m_extract, "extract" }, //>
+	{ NULL, NULL }, //?
+	{ m_all, "pop everything" }, //@
+	{ NULL, NULL }, //A
+	{ NULL, NULL }, //B
+	{ NULL, NULL }, //C
+	{ m_todirection, "to direction" }, //D
+	{ NULL, NULL }, //E
+	{ NULL, NULL }, //F
+	{ NULL, NULL }, //G
+	{ NULL, NULL }, //H
+	{ NULL, NULL }, //I
+	{ NULL, NULL }, //J
+	{ NULL, NULL }, //K
+	{ m_lookfrom, "look from" }, //L
+	{ NULL, NULL }, //M
+	{ NULL, NULL }, //N
+	{ NULL, NULL }, //O
+	{ m_pop, "pop as id" }, //P
+	{ NULL, NULL }, //Q
+	{ m_remove, "remove" }, //R
+	{ m_swap, "swap" }, //S
+	{ m_table, "pop as table" }, //T
+	{ NULL, NULL }, //U
+	{ m_string, "top as string" }, //V
+	{ NULL, NULL }, //W
+	{ NULL, NULL }, //X
+	{ NULL, NULL }, //Y
+	{ NULL, NULL }, //Z
+	{ NULL, NULL }, //[
+	{ NULL, NULL }, //'\\'
+	{ NULL, NULL }, //]
+	{ NULL, NULL }, //^
+	{ NULL, NULL }, //_
+	{ NULL, NULL }, //`
+	{ NULL, NULL }, //a
+	{ m_tobase, "split matrix as x, y, z axis" }, //b
+	{ NULL, NULL }, //c
+	{ m_torotation, "to rotation" }, //d
+	{ m_toeuler, "to euler" }, //e
+	{ NULL, NULL }, //f
+	{ NULL, NULL }, //g
+	{ NULL, NULL }, //h
+	{ m_inverted, "inverted" }, //i
+	{ NULL, NULL }, //j
+	{ NULL, NULL }, //k
+	{ m_lookat, "look at" }, //l
+	{ m_pointer, "pop as pointer" }, //m
+	{ m_normalize, "normalize" }, //n
+	{ NULL, NULL }, //o
+	{ NULL, NULL }, //p
+	{ m_toquaternion, "to quaternion" }, //q
+	{ NULL, NULL }, //r
+	{ NULL, NULL }, //s
+	{ m_transposed, "transposed" }, //t
+	{ NULL, NULL }, //u
+	{ NULL, NULL }, //v
+	{ NULL, NULL }, //w
+	{ m_cross, "cross" }, //x
+	{ NULL, NULL }, //y
+	{ NULL, NULL }, //z
+	{ NULL, NULL }, //{
+	{ NULL, NULL }, //|
+	{ NULL, NULL }, //}
+	{ m_tosrt, "to srt" }, //~
+	{ NULL, NULL }, //127
+};
+
+static int
+do_command(struct ref_stack *RS, struct lastack *LS, char cmd) {
+	MFunction f = s_fastmath[(uint8_t)cmd].func;
+	if (f) {
+		return f(NULL, LS, RS);
+	} else {
+		return luaL_error(RS->L, "Unknown command %c", cmd);
 	}
-	case '>':
-		unpack_top(L, LS);
-		refstack_pop(RS);
-		refstack_push(RS);
-		refstack_push(RS);
-		refstack_push(RS);
-		refstack_push(RS);
-		break;	
-	case 'e':
-		convert_to_euler(L, LS);
-		refstack_1_1(RS);
-		break;
-	case 'q':
-		convert_to_quaternion(L, LS);
-		refstack_1_1(RS);
-		break;		
-	case 'd':
-		convert_rotation_to_viewdir(L, LS);
-		refstack_1_1(RS);
-		break;
-	case 'D':
-		convert_viewdir_to_rotation(L, LS);
-		refstack_1_1(RS);
-		break;
-	case '~':
-		split_mat_to_srt(L, LS);
-		refstack_pop(RS);
-		refstack_push(RS);
-		refstack_push(RS);
-		refstack_push(RS);
-		break;
-	case 'b':
-		rotation_to_base_axis(L, LS);
-		refstack_pop(RS);
-		refstack_push(RS);
-		refstack_push(RS);
-		refstack_push(RS);
-		break;
-	case '@': {
-		lua_Integer n = 0;
-		lua_newtable(L);
-		for (;;) {
-			int64_t v = lastack_pop(LS);
-			if (v == 0) {
-				break;
-			}
-			int index = refstack_topid(RS);
-			if (index < 0) {
-				pushid(L, v);
-			}
-			else {
-				lua_pushvalue(L, index);
-			}
-			lua_rawseti(L, -2, ++n);
-			refstack_pop(RS);
-		}
-		return 1;
-	}
-	default:
-		luaL_error(L, "Unknown command %c", cmd);
-	}
-	return 0;
 }
 
 static int
@@ -1601,7 +1810,13 @@ push_command(struct ref_stack *RS, struct lastack *LS, int index, bool *log) {
 				break;
 			default:
 				if (*log) {
-					printf("MATHLOG [%c %s]: ", c, s_command_desc[c]);
+					const char * desc = NULL;
+					if (c>=0 && c<=127) {
+						desc = s_fastmath[c].desc;
+					}
+					if (desc == NULL)
+						desc = "undefined";
+					printf("MATHLOG [%c %s]: ", c, desc);
 					lastack_dump(LS, 0);
 					ret += do_command(RS, LS, c);
 					printf(" -> ");
@@ -1614,6 +1829,14 @@ push_command(struct ref_stack *RS, struct lastack *LS, int index, bool *log) {
 			}
 		}
 		return ret;
+	}
+	case LUA_TFUNCTION: {
+		// fast call
+		MFunction mf = (MFunction)lua_tocfunction(L, index);
+		if (mf == NULL) {
+			return luaL_error(L, "Not a fast math function");
+		}
+		return mf(NULL, LS, RS);
 	}
 	default:
 		return luaL_error(L, "Invalid command type %s at %d", lua_typename(L, type), index);
@@ -1945,22 +2168,6 @@ lpush_srt(lua_State *L) {
 	return 1;
 }
 
-//static int
-//new_ref(lua_State *L) {
-//	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
-//	struct lastack *LS = bp->LS;
-//
-//	const char* type = lua_tostring(L, 2);
-//
-//	if (strcmp(type, "vector") == 0) {
-//
-//	}
-//
-//	struct refobject* ref = (struct refobject *)lua_newuserdata(L, sizeof(refobject));
-//	int num = lua_gettop(L);
-//
-//}
-
 static int
 lbase_axes_from_forward_vector(lua_State *L) {
 	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
@@ -1989,6 +2196,8 @@ lnew(lua_State *L) {
 		luaL_Reg l[] = {
 			{ "__gc", delLS },
 			{ "__call", callLS },
+			{ MFUNCTION(mul) },
+			{ MFUNCTION(pop) },
 			{ "command", gencommand },
 			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )
 			{ "matrix", new_temp_matrix },
@@ -2026,9 +2235,9 @@ lprint(lua_State *L) {
 static int
 lcommand_description(lua_State *L){
 	lua_newtable(L);
-	for (size_t c = 0; c < 256; ++c) {
-		const char* desc = s_command_desc[c];
-		if (desc && strcmp(desc, "undefined") != 0) {
+	for (size_t c = 0; c < 128; ++c) {
+		const char* desc = s_fastmath[c].desc;
+		if (desc) {
 			lua_pushstring(L, desc);
 			char name[2] = { (char)(unsigned char)c, 0 };
 			lua_setfield(L, -2, name);
@@ -2102,7 +2311,6 @@ lhomogeneous_depth(lua_State *L){
 extern "C" {
 	LUAMOD_API int
 	luaopen_math3d(lua_State *L) {
-		init_command_desc();
 		luaL_checkversion(L);
 		luaL_Reg ref[] = {
 			{ "__tostring", lreftostring },
