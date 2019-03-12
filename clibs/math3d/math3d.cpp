@@ -454,6 +454,8 @@ extract_scale(lua_State *L, struct lastack *LS, int index){
 		} else {
 			luaL_error(L, "using table for s element, format must be s = {1}/{1, 2, 3}, give number : %d", len);
 		}		
+	} else if (stype != LUA_TNIL) {
+		luaL_error(L, "Invalid scale type %s", lua_typename(L, stype));
 	}
 	return scale;
 }
@@ -481,6 +483,8 @@ extract_translate(lua_State *L, struct lastack *LS, int index){
 		for (int i = 0; i < 3; ++i)
 			translate[i] = get_table_value(L, i + 1);
 
+	} else if (ttype != LUA_TNIL) {
+		luaL_error(L, "Invalid translate type %s", lua_typename(L, ttype));
 	}
 	return translate;
 }
@@ -513,6 +517,8 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index, glm::mat4x4 &m
 		m = glm::mat4x4(glm::quat(e));	
 	} else {
 		m = glm::mat4x4(1.f);
+		if (rtype != LUA_TNIL)
+			luaL_error(L, "Invalid rotation type %s", lua_typename(L, rtype));
 	}
 
 	return m;
