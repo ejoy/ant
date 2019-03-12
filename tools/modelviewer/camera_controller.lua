@@ -33,19 +33,18 @@ local function camera_reset(camera, target)
 	ms(camera.viewdir, target, camera.eyepos, "-n=")
 end
 
--- local t_quat = {type="q", }
--- local function rotate_round_point(point)
-	
--- 	local right, up = ms:base_axes(camera.viewdir)
-				
--- 	t_quat.axis, t_quat.angle = up, -delta.x
--- 	local inv_v = ms(t_quat, camera.viewdir, "*P")
+local function rotate_round_point(camera, point, dx, dy)
+	local right, up = ms:base_axes(camera.viewdir)
+	local forward = ms(
+				{type="q", axis=up, radian={dx}}, 
+				{type="q", axis=right, radian={dy}}, "*",	-- rotation quternion in stack
+				camera.viewdir, "i*nP")	-- get view dir from point to camera position, than multipy with rotation quternion
 
--- 	t_quat.axis, t_quat.angle = right, delta.y
--- 	inv_v = ms(t_quat, inv_v, "*P")
+	local distance = math.sqrt(ms(point, camera.eyepos, "-1.T")[1])	-- calculate 
 
--- 	ms()
--- end
+	ms(camera.eyepos, point, forward, {distance}, '*+=',	--calculate new camera position: point + forward * distance
+		camera.viewdir, forward, 'i=')	--reverse forward vector, make camera position to point
+end
 
 function camera_controller_system:init()	
 	local camera_entity = world:first_entity("main_camera")
@@ -72,12 +71,13 @@ function camera_controller_system:init()
 				camera_move(camera.viewdir, target, -delta.x, delta.y, 0)
 				camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
 			elseif status.LEFT then
-				local speed = move_speed * 0.1
+				local speed = move_speed * 0.001
 				local delta = (xy - last_xy) * speed
-				local distance = math.sqrt(ms(target, camera.eyepos, "-1.T")[1])
-				camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
-				ms(camera.viewdir, target, camera.eyepos, "-n=")
-				ms(camera.eyepos, target, {-distance}, camera.viewdir, "*+=")
+				rotate_round_point(camera, target, delta.x, delta.y)
+				-- local distance = math.sqrt(ms(target, camera.eyepos, "-1.T")[1])
+				-- camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
+				-- ms(camera.viewdir, target, camera.eyepos, "-n=")
+				-- ms(camera.eyepos, target, {-distance}, camera.viewdir, "*+=")
 			end
 		end
 		last_xy = xy
