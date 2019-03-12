@@ -62,9 +62,9 @@ end
 function hw.reset(t, w_, h_)
 	if t then flags = t end
 	local bgfx = require "bgfx"
-	w_ = w_ or w
-	h_ = h_ or h
-	bgfx.reset(w_, h_, get_flags())
+	w = w_ or w
+	h = h_ or h
+	bgfx.reset(w, h, get_flags())
 end
 
 function hw.add_reset_flag(flag)
