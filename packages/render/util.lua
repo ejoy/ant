@@ -98,11 +98,11 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 		local numprim = #prims
 		for i=1, numprim do
 			local prim = prims[i]
-			if ib and prim.startIndex and prim.numIndices then
-				bgfx.set_index_buffer(ib.handle, prim.startIndex, prim.numIndices)
+			if ib and prim.start_index and prim.num_indices then
+				bgfx.set_index_buffer(ib.handle, prim.start_index, prim.num_indices)
 			end
 			for idx, v in ipairs(vb.handles) do
-				bgfx.set_vertex_buffer(idx - 1, v, prim.startVertex, prim.numVertices)
+				bgfx.set_vertex_buffer(idx - 1, v, prim.start_vertex, prim.num_vertices)
 			end
 			bgfx.submit(vid, prog, 0, i~=numprim)
 		end

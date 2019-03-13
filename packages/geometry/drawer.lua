@@ -28,7 +28,7 @@ local function gen_color_vertices(pts, color, transform, vb)
 end
 
 local function add_primitive(primitives, voffset, vnum, ioffset, inum)
-	table.insert(primitives, {startVertex=voffset, numVertices=vnum, startIndex=ioffset, numIndices=inum})
+	table.insert(primitives, {start_vertex=voffset, num_vertices=vnum, start_index=ioffset, num_indices=inum})
 end
 
 local function append_array(from, to)

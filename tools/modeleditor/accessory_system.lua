@@ -51,10 +51,10 @@ local function append_desc(buffer, desc)
 		local primitives = {}
 		for _, prim in ipairs(desc.primitives) do
 			primitives[#primitives+1] = {
-				startVertex=voffset+prim.startVertex, 
-				numVertices=prim.numVertices, 
-				startIndex=ioffset+prim.startIndex, 
-				numIndices=prim.numIndices
+				start_vertex=voffset+prim.start_vertex, 
+				num_vertices=prim.num_vertices, 
+				start_index=ioffset+prim.start_index, 
+				num_indices=prim.num_indices
 			}
 		end		
 		append_array(primitives, buffer.primitives)
