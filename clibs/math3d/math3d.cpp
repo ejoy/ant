@@ -300,125 +300,6 @@ assign_ref(lua_State *L, struct refobject * ref, int64_t rid) {
 	ref->id = markid;
 }
 
-static int
-lassign(lua_State *L) {
-	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
-	int type = lua_type(L, 2);
-	switch(type) {
-	case LUA_TNIL:
-	case LUA_TNONE:
-		release_ref(L, ref);
-		break;
-	case LUA_TNUMBER: {
-		if (ref->LS == NULL) {
-			return luaL_error(L, "Init ref object first : use stack(ref, id, '=')");
-		}
-		int64_t rid = get_id(L, 2);
-		if (!lastack_sametype(rid, ref->id)) {
-			return luaL_error(L, "assign operation : type mismatch");
-		}
-
-		assign_ref(L, ref, rid);
-		break;
-	}
-	case LUA_TUSERDATA: {
-		struct refobject *rv = (struct refobject *)lua_touserdata(L, 2);
-		if (lua_rawlen(L,2) != sizeof(*rv)) {
-			return luaL_error(L, "Assign Invalid ref object");
-		}
-		if (!lastack_sametype(ref->id, rv->id)) {
-			return luaL_error(L, "type mismatch");
-		}
-		if (ref->LS == NULL) {
-			ref->LS = rv->LS;
-			if (ref->LS) {
-				ref->id = lastack_mark(ref->LS, rv->id);
-			}
-		} else {
-			if (rv->LS == NULL) {
-				lastack_unmark(ref->LS, ref->id);
-				ref->id = rv->id;
-			} else {
-				if (ref->LS != rv->LS) {
-					return luaL_error(L, "Not the same stack");
-				}
-				lastack_unmark(ref->LS, ref->id);
-				ref->id = lastack_mark(ref->LS, rv->id);
-			}
-		}
-		break;
-	}
-	default:
-		return luaL_error(L, "Invalid lua type %s", lua_typename(L, type));
-	}
-	lua_settop(L, 1);
-	return 1;
-}
-
-static int
-lpointer(lua_State *L) {
-	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
-	float * v = lastack_value(ref->LS, ref->id, NULL);
-	lua_pushlightuserdata(L, (void *)v);
-	return 1;
-}
-
-static int
-lref(lua_State *L) {
-	const char * t = luaL_checkstring(L, 1);
-	int cons;
-	if (strcmp(t, "vector") == 0) {
-		cons = LINEAR_CONSTANT_IVEC;
-	} else if (strcmp(t, "matrix") == 0) {
-		cons = LINEAR_CONSTANT_IMAT;
-	} else if (strcmp(t, "quaternion") == 0) {
-		cons = LINEAR_CONSTANT_QUAT;
-	} else if (strcmp(t, "euler") == 0) {
-		cons = LINEAR_CONSTANT_EULER;
-	} else {
-		return luaL_error(L, "Unsupport type %s", t);
-	}
-
-	const bool has_LS = !lua_isnoneornil(L, 2);
-
-	struct refobject * ref = (struct refobject *)lua_newuserdata(L, sizeof(*ref));
-	if (has_LS) {
-		struct boxpointer *bp = (struct boxpointer *)lua_touserdata(L, 2);
-		ref->LS = bp->LS;
-	} else {
-		ref->LS = nullptr;
-	}
-	ref->id = lastack_constant(cons);
-
-	luaL_setmetatable(L, LINALG_REF);
-	return 1;
-}
-
-static int 
-lunref(lua_State *L) {
-	if(!lua_isuserdata(L,1))
-		return luaL_error(L, "unref not userdata. ");
-	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
-	release_ref(L, ref);
-	return 0;
-}
-
-static int
-lisvalid(lua_State *L){
-	int type = lua_type(L, 1);
-	if (type == LUA_TNUMBER){
-		int number = lua_tonumber(L, -1);
-		struct boxpointer *p = (struct boxpointer *)lua_touserdata(L, lua_upvalueindex(1));
-		void *value = lastack_value(p->LS, number, NULL);
-		lua_pushboolean(L, value != NULL);
-	} else if (type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA){
-		lua_pushboolean(L, is_ref_obj(L));
-	} else {
-		lua_pushboolean(L, 0);
-	}
-	return 1;
-}
-
 static inline float
 get_table_value(lua_State *L, int idx) {
 	lua_geti(L, -1, idx);
@@ -1340,6 +1221,132 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 	lastack_pushvec4(LS, &xdir.x);
 }
 
+static int
+lassign(lua_State *L) {
+	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
+	int type = lua_type(L, 2);
+	switch(type) {
+	case LUA_TNIL:
+	case LUA_TNONE:
+		release_ref(L, ref);
+		break;
+	case LUA_TTABLE:
+	case LUA_TNUMBER: {
+		struct lastack *LS = ref->LS;
+		if (LS == NULL) {
+			return luaL_error(L, "Init ref object first : use stack(ref, id, '=')");
+		}
+		int64_t rid;
+		if (type == LUA_TTABLE) {
+			push_value(L, LS, 2);
+			rid = pop(L, LS);
+		} else {
+			rid = get_id(L, 2);
+		}
+		if (!lastack_sametype(rid, ref->id)) {
+			return luaL_error(L, "assign operation : type mismatch");
+		}
+		assign_ref(L, ref, rid);
+		break;
+	}
+	case LUA_TUSERDATA: {
+		struct refobject *rv = (struct refobject *)lua_touserdata(L, 2);
+		if (lua_rawlen(L,2) != sizeof(*rv)) {
+			return luaL_error(L, "Assign Invalid ref object");
+		}
+		if (!lastack_sametype(ref->id, rv->id)) {
+			return luaL_error(L, "type mismatch");
+		}
+		if (ref->LS == NULL) {
+			ref->LS = rv->LS;
+			if (ref->LS) {
+				ref->id = lastack_mark(ref->LS, rv->id);
+			}
+		} else {
+			if (rv->LS == NULL) {
+				lastack_unmark(ref->LS, ref->id);
+				ref->id = rv->id;
+			} else {
+				if (ref->LS != rv->LS) {
+					return luaL_error(L, "Not the same stack");
+				}
+				lastack_unmark(ref->LS, ref->id);
+				ref->id = lastack_mark(ref->LS, rv->id);
+			}
+		}
+		break;
+	}
+	default:
+		return luaL_error(L, "Invalid lua type %s", lua_typename(L, type));
+	}
+	lua_settop(L, 1);
+	return 1;
+}
+
+static int
+lpointer(lua_State *L) {
+	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
+	float * v = lastack_value(ref->LS, ref->id, NULL);
+	lua_pushlightuserdata(L, (void *)v);
+	return 1;
+}
+
+static int
+lref(lua_State *L) {
+	const char * t = luaL_checkstring(L, 1);
+	int cons;
+	if (strcmp(t, "vector") == 0) {
+		cons = LINEAR_CONSTANT_IVEC;
+	} else if (strcmp(t, "matrix") == 0) {
+		cons = LINEAR_CONSTANT_IMAT;
+	} else if (strcmp(t, "quaternion") == 0) {
+		cons = LINEAR_CONSTANT_QUAT;
+	} else if (strcmp(t, "euler") == 0) {
+		cons = LINEAR_CONSTANT_EULER;
+	} else {
+		return luaL_error(L, "Unsupport type %s", t);
+	}
+
+	const bool has_LS = !lua_isnoneornil(L, 2);
+
+	struct refobject * ref = (struct refobject *)lua_newuserdata(L, sizeof(*ref));
+	if (has_LS) {
+		struct boxpointer *bp = (struct boxpointer *)lua_touserdata(L, 2);
+		ref->LS = bp->LS;
+	} else {
+		ref->LS = nullptr;
+	}
+	ref->id = lastack_constant(cons);
+
+	luaL_setmetatable(L, LINALG_REF);
+	return 1;
+}
+
+static int 
+lunref(lua_State *L) {
+	if(!lua_isuserdata(L,1))
+		return luaL_error(L, "unref not userdata. ");
+	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
+	release_ref(L, ref);
+	return 0;
+}
+
+static int
+lisvalid(lua_State *L){
+	int type = lua_type(L, 1);
+	if (type == LUA_TNUMBER){
+		int number = lua_tonumber(L, -1);
+		struct boxpointer *p = (struct boxpointer *)lua_touserdata(L, lua_upvalueindex(1));
+		void *value = lastack_value(p->LS, number, NULL);
+		lua_pushboolean(L, value != NULL);
+	} else if (type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA){
+		lua_pushboolean(L, is_ref_obj(L));
+	} else {
+		lua_pushboolean(L, 0);
+	}
+	return 1;
+}
+
 // fast math functions
 
 static FASTMATH(pop)
@@ -2214,6 +2221,13 @@ lbase_axes_from_forward_vector(lua_State *L) {
 }
 
 static int
+lstackrefobject(lua_State *L) {
+	lua_settop(L, 2);
+	lua_insert(L, 1);	// type stack
+	return lref(L);
+}
+
+static int
 lnew(lua_State *L) {	
 	struct boxpointer *bp = (struct boxpointer *)lua_newuserdata(L, sizeof(*bp));	
 
@@ -2224,6 +2238,7 @@ lnew(lua_State *L) {
 			{ "__call", callLS },
 			{ MFUNCTION(mul) },
 			{ MFUNCTION(pop) },
+			{ "ref", lstackrefobject },
 			{ "command", gencommand },
 			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )
 			{ "matrix", new_temp_matrix },
