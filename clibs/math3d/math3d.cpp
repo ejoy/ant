@@ -1947,8 +1947,29 @@ new_temp_matrix(lua_State *L) {
 	int i;
 	switch(top) {
 	case 2:
-		luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);		
-		memcpy(m, lua_touserdata(L, 2), sizeof(m));
+	{
+		int type = lua_type(L, 2);
+		switch (type) {
+		case LUA_TNUMBER:
+		{
+			auto id = lua_tointeger(L, 2);
+			int valuetype;
+			auto value = lastack_value(LS, id, &valuetype);
+			if (valuetype != LINEAR_CONSTANT_IMAT) {
+				luaL_error(L, "arg: %d is not matrix, type : %d", top, valuetype);
+			}
+			memcpy(m, value, sizeof(m));
+		}
+			break;
+		case LUA_TUSERDATA:
+		case LUA_TLIGHTUSERDATA:
+			memcpy(m, lua_touserdata(L, 2), sizeof(m));
+			break;
+		default:
+			luaL_error(L, "not support type in arg: %d, type is : %d", top, type);
+			break;
+		}
+	}
 		break;
 	case 17:
 		for (i=0;i<16;i++) {

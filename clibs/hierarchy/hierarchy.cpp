@@ -183,6 +183,67 @@ lbuilddata_jointindex(lua_State *L) {
 	return 1;
 }
 
+static ozz::math::Float4x4
+joint_matrix(const ozz::animation::Skeleton *ske, int jointidx) {
+	auto poses = ske->joint_bind_poses();
+	assert(0 <= jointidx && jointidx < poses.size());
+	
+	auto pose = poses[jointidx / 4];
+	auto subidx = jointidx % 4;
+
+	auto create_transform_elem = [=](auto name, auto num, auto v) {
+		lua_createtable(L, num, 0);
+
+		for (int ii = 0; ii < num; ++ii) {
+			ozz::math::StorePtr(v[ii], a_buffer);
+			lua_pushnumber(L, a_buffer[subidx]);
+			lua_seti(L, -2, ii + 1);
+		}
+		lua_setfield(L, -2, name);
+	};
+
+	//create_transform_elem("s", 3, &(pose.scale.x));
+	//create_transform_elem("r", 4, &(pose.rotation.x));
+	//create_transform_elem("t", 3, &(pose.translation.x));
+
+	const ozz::math::SoaFloat4x4 local_soa_matrices = ozz::math::SoaFloat4x4::FromAffine(
+		pose.translation, pose.rotation, pose.scale);
+
+	// Converts to aos matrices.
+	ozz::math::Float4x4 local_aos_matrices[4];
+	ozz::math::Transpose16x16(&local_soa_matrices.cols[0].x,
+		local_aos_matrices->cols);
+
+	return local_aos_matrices[subidx];
+}
+
+static int
+lbuilddata_jointmatrix(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
+
+	luaL_checktype(L, 2, LUA_TNUMBER);
+	int jointidx = (int)lua_tointeger(L, 2) - 1;
+
+	const auto ske = builddata->skeleton;
+	if (jointidx < 0 || jointidx >= ske->joint_bind_poses().size()) {
+		luaL_error(L, "invalid joint index : %d", jointidx);
+	}
+
+	const auto trans = joint_matrix(builddata->skeleton, jointidx);
+	auto* p = lua_newuserdata(L, sizeof(trans));
+	memcpy(p, &trans, sizeof(trans));
+	return 1;
+}
+
+std::unordered_map<std::string, lua_CFunction> s_builddata_methods = {
+	{"isleaf", lbuilddata_isleaf },
+	{"parent", lbuilddata_parent},
+	{"isroot", lbuilddata_isroot},
+	{"joint_index", lbuilddata_jointindex},
+	{"joint_matrix", lbuilddata_jointmatrix},
+};
+
 static int
 lbuilddata_get(lua_State *L){
 	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
@@ -231,21 +292,14 @@ lbuilddata_get(lua_State *L){
 		}
 
 		case LUA_TSTRING:{
-			auto name = lua_tostring(L, 2);
-
-			std::tuple<const char*, lua_CFunction> tpl[] = {
-				std::make_tuple("isleaf", lbuilddata_isleaf),
-				std::make_tuple("parent", lbuilddata_parent),
-				std::make_tuple("isroot", lbuilddata_isroot),
-				std::make_tuple("joint_index", lbuilddata_jointindex),
-			};
-
-			for (auto& t : tpl) {
-				auto &[n, func] = t;
-				if (strcmp(n, name) == 0) {
-					lua_pushcfunction(L, func);
-					return 1;
-				}
+			std::string name = lua_tostring(L, 2);
+			auto itFound = s_builddata_methods.find(name);
+			if (itFound != s_builddata_methods.end()) {
+				auto func = itFound->second;
+				lua_pushcfunction(L, func);
+				return 1;
+			} else {
+				luaL_error(L, "not support method : %s", name);
 			}
 		}
 		default:

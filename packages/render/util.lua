@@ -84,8 +84,8 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 	local mg = assert(primgroup.mgroup)
 	local ib, vb = mg.ib, mg.vb
 
-	local prims = mg.prim
-	if prims == nil then
+	local prims = mg.primitives
+	if prims == nil or next(prims) == nil then
 		if ib then
 			bgfx.set_index_buffer(ib.handle)
 		end

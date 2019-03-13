@@ -88,7 +88,7 @@ local function enable_bones_visible()
 			local bone_shower = dlg_item("SHOWBONES")
 			if bone_shower.VALUE ~= "OFF" then
 				assert(sample.debug_skeleton == nil)
-				world:add_component(sample_eid, "debug_skeleton")
+				world:add_component(sample_eid, "debug_skeleton", true)
 			else
 				if sample.debug_skeleton then
 					world:remove_component(sample_eid, "debug_skeleton")
