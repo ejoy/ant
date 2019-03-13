@@ -87,7 +87,7 @@ function camera_controller_system:init()
 				camera_move(camera.viewdir, target, -delta.x, delta.y, 0)
 				camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
 			elseif status.LEFT then
-				local speed = move_speed * 0.001
+				local speed = move_speed * 0.01
 				local delta = (xy - last_xy) * speed
 				rotate_round_point(camera, target, delta.x, delta.y)
 				-- local distance = math.sqrt(ms(target, camera.eyepos, "-1.T")[1])
@@ -108,6 +108,10 @@ function camera_controller_system:init()
 			camera_reset(camera, target)
 			return 
 		end
+	end
+
+	function message:resize(w, h)
+		rhwi.reset(nil, w, h)
 	end
 
 	self.message.observers:add(message)

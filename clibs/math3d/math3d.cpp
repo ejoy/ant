@@ -351,7 +351,8 @@ lassign(lua_State *L) {
 	default:
 		return luaL_error(L, "Invalid lua type %s", lua_typename(L, type));
 	}
-	return 0;
+	lua_settop(L, 1);
+	return 1;
 }
 
 static int
