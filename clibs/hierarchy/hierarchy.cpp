@@ -192,17 +192,6 @@ joint_matrix(const ozz::animation::Skeleton *ske, int jointidx) {
 	auto pose = poses[jointidx / 4];
 	auto subidx = jointidx % 4;
 
-	auto create_transform_elem = [=](auto name, auto num, auto v) {
-		lua_createtable(L, num, 0);
-
-		for (int ii = 0; ii < num; ++ii) {
-			ozz::math::StorePtr(v[ii], a_buffer);
-			lua_pushnumber(L, a_buffer[subidx]);
-			lua_seti(L, -2, ii + 1);
-		}
-		lua_setfield(L, -2, name);
-	};
-
 	const ozz::math::SoaFloat4x4 local_soa_matrices = ozz::math::SoaFloat4x4::FromAffine(
 		pose.translation, pose.rotation, pose.scale);
 
