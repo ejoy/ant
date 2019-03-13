@@ -153,6 +153,18 @@ static int lbuilddata_isroot(lua_State *L) {
 }
 
 static int
+find_joint_index(const ozz::animation::Skeleton *ske, const char*name) {
+	const auto& joint_names = ske->joint_names();
+	for (int ii = 0; ii < joint_names.count(); ++ii) {
+		if (strcmp(name, joint_names[ii]) == 0) {
+			return ii;
+		}
+	}
+
+	return -1;
+}
+
+static int
 lbuilddata_jointindex(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 	const auto ske = ((const hierarchy_build_data*)lua_touserdata(L, 1))->skeleton;
@@ -163,18 +175,7 @@ lbuilddata_jointindex(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TSTRING);
 	const char* name = lua_tostring(L, 2);
 
-	auto find_joint_idx = [ske](auto name) {
-		const auto& joint_names = ske->joint_names();
-		for (int ii = 0; ii < joint_names.count(); ++ii) {
-			if (strcmp(name, joint_names[ii]) == 0) {
-				return ii;
-			}
-		}
-
-		return -1;
-	};
-
-	auto jointidx = find_joint_idx(name);
+	auto jointidx = find_joint_index(ske, name);
 	if (jointidx < 0) {
 		luaL_error(L, "not found joint idx, name:%s", name);
 	}
@@ -202,10 +203,6 @@ joint_matrix(const ozz::animation::Skeleton *ske, int jointidx) {
 		lua_setfield(L, -2, name);
 	};
 
-	//create_transform_elem("s", 3, &(pose.scale.x));
-	//create_transform_elem("r", 4, &(pose.rotation.x));
-	//create_transform_elem("t", 3, &(pose.translation.x));
-
 	const ozz::math::SoaFloat4x4 local_soa_matrices = ozz::math::SoaFloat4x4::FromAffine(
 		pose.translation, pose.rotation, pose.scale);
 
@@ -217,15 +214,29 @@ joint_matrix(const ozz::animation::Skeleton *ske, int jointidx) {
 	return local_aos_matrices[subidx];
 }
 
+static inline int
+get_joint_index(lua_State *L, const ozz::animation::Skeleton *ske, int index) {
+	int type = lua_type(L, 2);
+	if (type == LUA_TNUMBER) {
+		return (int)lua_tointeger(L, 2) - 1;
+	} 
+	
+	if (type == LUA_TSTRING) {
+		const char* slotname = lua_tostring(L, 2);
+		return find_joint_index(ske, slotname);
+	}
+
+	return -1;
+}
+
 static int
 lbuilddata_jointmatrix(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
 
-	luaL_checktype(L, 2, LUA_TNUMBER);
-	int jointidx = (int)lua_tointeger(L, 2) - 1;
-
 	const auto ske = builddata->skeleton;
+	const int jointidx = get_joint_index(L, ske, 2);
+
 	if (jointidx < 0 || jointidx >= ske->joint_bind_poses().size()) {
 		luaL_error(L, "invalid joint index : %d", jointidx);
 	}
