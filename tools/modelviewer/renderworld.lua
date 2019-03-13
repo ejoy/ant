@@ -60,6 +60,26 @@ function model_review_system:init()
 		main_viewtag = true,		
 	}
 
+	world:create_entity {
+		transform = {
+			s = {0.01, 0.01, 0.01},
+			r = {0, 0, 0, 0},
+			t = {2, 2, 2},
+		},
+		can_render = true,
+		mesh = {
+			ref_path = fs.path "//ant.resources/cube.mesh",
+		},
+		material = {
+			content = {
+				{
+					ref_path = fs.path "//ant.resources/bunny.material"
+				}
+			}
+		},
+		main_viewtag = true,
+	}
+
 	-- local mesh = model.mesh.assetinfo.handle.bounding
 	--local bound = ms(mesh.aabb.max, mesh.aabb.min, "-T")
 	--local scale = 10 / math.max(bound[1], math.max(bound[2], bound[3]))

@@ -30,21 +30,36 @@ end
 
 local function camera_reset(camera, target)
 	ms(target, {0, 0, 0, 1}, "=")
-	ms(camera.eyepos, {8, 8, -8, 1}, "=")
+	ms(camera.eyepos, {0, 0, -8, 1}, "=")
 	ms(camera.viewdir, target, camera.eyepos, "-n=")
 end
 
 local function rotate_round_point(camera, point, dx, dy)
 	local right, up = ms:base_axes(camera.viewdir)
-	local forward = ms(
-				{type="q", axis=up, radian={dx}}, 
-				{type="q", axis=right, radian={dy}}, "*",	-- rotation quternion in stack
-				camera.viewdir, "i*nP")	-- get view dir from point to camera position, than multipy with rotation quternion
 
+	local forward = ms(camera.viewdir, "iP")
+	local euler = ms(forward, "DT")
+	euler[1] = euler[1] + dy
+	--euler[2] = euler[2] + dx
+
+	print("dx : ", dx)
+	print("euler : ", euler[1], euler[2], euler[3])
+
+	local rotatedforward = ms(euler, "dnP")
 	local distance = math.sqrt(ms(point, camera.eyepos, "-1.T")[1])	-- calculate 
+	ms(camera.eyepos, point, rotatedforward, {distance}, "*+=")
+	ms(camera.viewdir, rotatedforward, "i=")
+	
 
-	ms(camera.eyepos, point, forward, {distance}, '*+=',	--calculate new camera position: point + forward * distance
-		camera.viewdir, forward, 'i=')	--reverse forward vector, make camera position to point
+	-- local forward = ms(
+	-- 			{type="q", axis=up, radian={dx}}, 
+	-- 			{type="q", axis=right, radian={dy}}, "*",	-- rotation quternion in stack
+	-- 			camera.viewdir, "i*nP")	-- get view dir from point to camera position, than multipy with rotation quternion
+
+	-- local distance = math.sqrt(ms(point, camera.eyepos, "-1.T")[1])	-- calculate 
+
+	-- ms(camera.eyepos, point, forward, {distance}, '*+=',	--calculate new camera position: point + forward * distance
+	-- 	camera.viewdir, forward, 'i=')	--reverse forward vector, make camera position to point
 end
 
 function camera_controller_system:init()	
