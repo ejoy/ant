@@ -65,13 +65,29 @@ local function to_scope(_, m)
 			{m[13], m[14], m[15], m[16]},
 		}
 	end
+	if m.type == 'euler' then
+		return {
+			type = m.type,
+			x = math.deg(m[1]),
+			y = math.deg(m[2]),
+			z = math.deg(m[3]),
+			value = {m[1],m[2],m[3]},
+		}
+	end
 	if m.type == 'quat' then
 		local r = math.acos(m[4])
-		local sinr = math.sin(r)
+		local tmp = 1.0 - m[4] * m[4]
+		local axis
+		if tmp > 0 then
+			tmp = 1.0 / math.sqrt(tmp)
+			axis = {m[1]*tmp, m[2]*tmp, m[3]*tmp}
+		else
+			axis = {0,0,1}
+		end
 		return {
 			type = m.type,
 			value = {m[1], m[2], m[3], m[4]},
-			axis = {m[1]/sinr, m[2]/sinr, m[3]/sinr},
+			axis = axis,
 			radian = r*2,
 			angle = math.deg(r*2)
 		}
@@ -87,6 +103,12 @@ local function to_value(_, m)
 			m[2][1], m[2][2], m[2][3], m[2][4],
 			m[3][1], m[3][2], m[3][3], m[3][4],
 			m[4][1], m[4][2], m[4][3], m[4][4],
+		}
+	end
+	if m.type == 'euler' then
+		return {
+			type = m.type,
+			m.value[1], m.value[2], m.value[3]
 		}
 	end
 	if m.type == 'quat' then
