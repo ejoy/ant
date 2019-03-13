@@ -127,19 +127,19 @@ ldo_ik(lua_State *L) {
 	auto invRoot = ozz::math::Invert(rootMat);
 
 	luaL_checktype(L, 4, LUA_TUSERDATA);
-	animation_result* result = (animation_result*)lua_touserdata(L, 4);
+	bindpose_result* result = (bindpose_result*)lua_touserdata(L, 4);
 
 	const auto &poses = ske->joint_bind_poses();
 	ozz::Vector<ozz::math::SoaTransform>::Std local_trans(poses.count());	
 	for (size_t ii = 0; ii < poses.count(); ++ii)
 		local_trans[ii] = poses[ii];
 
-	if (!do_ltm(ske, local_trans, result->joints)) {
+	if (!do_ltm(ske, local_trans, result->pose)) {
 		luaL_error(L, "transform from local to model job failed!");
 	}
 
 	ozz::animation::IKTwoBoneJob ikjob;
-	auto jointrange = ozz::make_range(result->joints);
+	auto jointrange = ozz::make_range(result->pose);
 	prepare_two_bone_ik_job(L, 3, jointrange, ikjob);
 
 	// to model space
@@ -159,7 +159,7 @@ ldo_ik(lua_State *L) {
 	const size_t mid_jointidx = ikjob.mid_joint - jointrange.begin;
 	mul_quaternion(mid_jointidx, mid_correction, local_trans);
 
-	if (!do_ltm(ske, local_trans, result->joints, nullptr, (int)start_jointidx)) {
+	if (!do_ltm(ske, local_trans, result->pose, nullptr, (int)start_jointidx)) {
 		luaL_error(L, "rerun local to model job after ik failed");
 	}
 	return 0;

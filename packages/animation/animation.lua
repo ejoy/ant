@@ -54,7 +54,7 @@ local animation = ecs.component "animation"  { depend = "skeleton" }
 function animation:postinit(e)
 	local ske = e.skeleton
 	local numjoints = #ske.assetinfo.handle
-	self.aniresult = animodule.new_ani_result(numjoints)
+	self.aniresult = animodule.new_bind_pose_result(numjoints)
 	for _, ani in ipairs(self.anilist) do			
 		ani.sampling_cache = animodule.new_sampling_cache(numjoints)
 	end

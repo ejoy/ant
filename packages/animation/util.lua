@@ -31,7 +31,7 @@ end
 function util.init_animation(comp, skeleton)
 	local skehandle = assert(skeleton.assetinfo.handle)
 	local numjoints = #skehandle
-	comp.aniresult = animodule.new_ani_result(numjoints)
+	comp.aniresult = animodule.new_bind_pose_result(numjoints)
 	comp.anilist = {}
 end
 

@@ -19,11 +19,10 @@ local function update_transform(transform, hierarchy_cache)
 		local parentresult = hierarchy_cache[peid]
 		local parentmat = parentresult.world
 		if parentmat then
-			local hierarchy = parentresult.hierarchy
+			local hie_result = parentresult.hierarchy
 			local slotname = transform.slotname
-			if hierarchy and slotname then			
-				local hiehandle = hierarchy.assetinfo.handle
-				local hiemat = hiehandle:joint_matrix(slotname)
+			if hie_result and slotname then
+				local hiemat = ms:matrix(hie_result[(slotname)])
 				localmat = ms(parentmat, hiemat, localmat, "**P")
 			else
 				localmat = ms(parentmat, localmat, "*P")

@@ -7,6 +7,10 @@ local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 local math3d = require "math3d"
 
+local animodule = require "hierarchy.animation"
+
+local hie_util = import_package "ant.scene".hierarchy
+
 ecs.tag "hierarchy_tag"
 
 ecs.component_alias("world_srt", "srt")
@@ -109,6 +113,12 @@ local function fetch_sort_tree_result(tree, mark_mt, componenttype)
 	return tree_sort(tree)
 end
 
+local function build_world_hierarchy(trans)
+	local hierarchy = trans.hierarhcy
+	local hiehandle = hierarchy.assetinfo.handle
+	return hie_util.generate_joints_worldpos(hiehandle)
+end
+
 local function update_scene_tree(tree, cache_result)
 	if next(tree) then
 		local sort_result = fetch_sort_tree_result(tree, mark_mt, "hierarchy_transform")
@@ -119,7 +129,22 @@ local function update_scene_tree(tree, cache_result)
 			local t = e.hierarchy_transform
 			local cachemat = update_world(t)
 			assert(type(cachemat) == 'userdata')
-			cache_result[eid] = {world=cachemat, hierarchy=e.hierarchy}
+
+			local hie = t.hierarchy
+			if hie then
+				local hiehandle = hie.assetinfo.handle
+				if t.hierarchy_result == nil then
+					local bpresult = animodule.new_bind_pose_result(#hiehandle)
+					hiehandle:bindpose_result(bpresult)
+					t.hierarchy_result = setmetatable({}, {__index=function(t, key)
+						local jointidx = hiehandle:joint_index(key)
+						local j = bpresult:joint(jointidx)
+						t[key] = j
+						return j
+					end})
+				end
+			end
+			cache_result[eid] = {world=cachemat, hierarchy=t.hierarchy_result}
 		end
 	end
 end

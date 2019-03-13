@@ -9,7 +9,7 @@ local inputmgr = import_package "ant.inputmgr"
 local elog = import_package "ant.iupcontrols".logview
 local rhwi = import_package "ant.render".hardware_interface
 
-local scene = import_package "ant.scene"
+local scene = import_package "ant.scene".util
 local editor = import_package "ant.editor"
 local mapiup = editor.mapiup
 local task = editor.task

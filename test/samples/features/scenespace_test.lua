@@ -1,5 +1,7 @@
 local ecs = ...
 local world = ecs.world
+
+local ms = import_package "ant.math".stack
 local fs = require "filesystem"
 local scenespace_test = ecs.system "scenespace_test"
 scenespace_test.singleton 'event'
@@ -7,6 +9,47 @@ scenespace_test.singleton 'frame_stat'
 
 scenespace_test.depend 'scene_space'
 scenespace_test.depend 'init_loader'
+
+local hie_refpath = fs.path '//ant.resources' / 'hierarchy' / 'test_hierarchy.hierarchy'
+local function add_hierarchy_file(hiepath)
+	local hierarchy_module = require 'hierarchy'
+	local root = hierarchy_module.new()
+
+	root[1] = {
+		name = 'h1',
+		transform = {
+			t = {3, 4, 5},
+			s = {0.01, 0.01, 0.01}
+		}
+	}
+
+	root[2] = {
+		name = 'h2',
+		transform = {
+			t = {1, 2, 3},
+			s = {0.01, 0.01, 0.01}
+		}
+	}
+
+	root[1][1] = {
+		name = 'h1_h1',
+		transform = {
+			t = {0, 2, 0},
+		}
+	}
+
+	local function save_rawdata(handle, respath)
+		local realpath = respath:localpath()
+
+		local localfs = require 'filesystem.local'
+		localfs.create_directories(realpath:parent_path())
+
+		hierarchy_module.save(handle, realpath:string())
+	end
+
+	local builddata = hierarchy_module.build(root)
+	save_rawdata(builddata, hiepath)	
+end
 
 local function create_scene_node_test()
     local material = {
@@ -62,6 +105,9 @@ local function create_scene_node_test()
 			s = {1, 1, 1, 0},
 			r = {0, 0, 0, 0},
 			t = {-2, 0, 0, 1},
+			hierarchy = {
+				ref_path = hie_refpath,
+			}
 		},
         name = 'level2_1',
         hierarchy_tag = true,
@@ -121,9 +167,10 @@ local function create_scene_node_test()
         world:create_entity {
         transform = {
 			parent = hie_level2_1, 
-			s = {0.01, 0.01, 0.01, 0},
+			s = {1, 1, 1, 0},
 			r = {0, 0, 0, 0},
 			t = {0, 0, 0, 1},
+			slotname = "h1_h1",
 		},
         name = 'render_child2_1',
         mesh = {
@@ -136,6 +183,7 @@ local function create_scene_node_test()
 end
 
 function scenespace_test:init()
+	add_hierarchy_file(hie_refpath)
 	create_scene_node_test()
 end
 

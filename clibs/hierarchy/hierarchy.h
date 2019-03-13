@@ -13,10 +13,12 @@ struct hierarchy_build_data {
 	ozz::animation::Skeleton *skeleton;
 };
 
-struct animation_result {
-	ozz::Vector<ozz::math::Float4x4>::Std	joints;
+using result_poses = ozz::Vector<ozz::math::Float4x4>::Std;
+struct bindpose_result {
+	result_poses	pose;
 };
 
+using soa_poses = ozz::Vector<ozz::math::SoaTransform>::Std;
 struct bind_pose {
-	ozz::Vector<ozz::math::SoaTransform>::Std	pose;
+	soa_poses pose;
 };

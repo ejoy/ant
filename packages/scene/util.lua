@@ -1,6 +1,8 @@
 local util = {}; util.__index = util
 
 local ms = import_package "ant.math" .stack
+local log = log and log(...) or print
+local ecs = import_package "ant.ecs"
 
 local handlers = {	
 	parent = function (comp, value)
@@ -28,6 +30,49 @@ function util.handle_transform(events, comp)
 		else
 			print('handler is not default in transform:', event)
 		end
+	end
+end
+
+local bullet_world = import_package "ant.bullet".bulletworld
+
+function util.start_new_world(input_queue, fbw, fbh, packages, systems)
+	if input_queue == nil then
+		log("input queue is not privided, no input event will be received!")
+	end
+
+	local world = ecs.new_world {
+		packages = packages,
+		systems = systems,		
+		args = { 
+			mq = input_queue, 
+			fb_size={w=fbw, h=fbh},
+			Physics = bullet_world.new(),
+		},
+	}
+	
+	world:update_func("init")()
+    return world
+end
+
+function util.loop(world, arg)	
+	local queue = {}
+	for _, updatetype in ipairs {
+		"post_init", 
+		"event_changed", 
+		"before_update", 
+		"update", 
+		"after_update", 
+		"delete",
+	} do
+		queue[#queue+1] = world:update_func(updatetype, arg[updatetype])
+	end
+
+	return function ()
+		for _, q in ipairs(queue) do
+			q()
+		end
+
+		world:clear_removed()
 	end
 end
 

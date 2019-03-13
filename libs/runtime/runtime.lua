@@ -55,7 +55,7 @@ local world_update
 
 function callback.init(nwh, context, w, h)
 	width, height = w, h
-    local su = import_package "ant.scene"
+    local su = import_package "ant.scene".util
     local rhwi = import_package "ant.render".hardware_interface
     rhwi.init {
 		nwh = nwh,

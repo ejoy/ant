@@ -155,7 +155,7 @@ static int lbuilddata_isroot(lua_State *L) {
 static int
 find_joint_index(const ozz::animation::Skeleton *ske, const char*name) {
 	const auto& joint_names = ske->joint_names();
-	for (int ii = 0; ii < joint_names.count(); ++ii) {
+	for (int ii = 0; ii < (int)joint_names.count(); ++ii) {
 		if (strcmp(name, joint_names[ii]) == 0) {
 			return ii;
 		}
@@ -187,21 +187,10 @@ lbuilddata_jointindex(lua_State *L) {
 static ozz::math::Float4x4
 joint_matrix(const ozz::animation::Skeleton *ske, int jointidx) {
 	auto poses = ske->joint_bind_poses();
-	assert(0 <= jointidx && jointidx < poses.size());
+	assert(0 <= jointidx && jointidx < (int)poses.size());
 	
 	auto pose = poses[jointidx / 4];
 	auto subidx = jointidx % 4;
-
-	auto create_transform_elem = [=](auto name, auto num, auto v) {
-		lua_createtable(L, num, 0);
-
-		for (int ii = 0; ii < num; ++ii) {
-			ozz::math::StorePtr(v[ii], a_buffer);
-			lua_pushnumber(L, a_buffer[subidx]);
-			lua_seti(L, -2, ii + 1);
-		}
-		lua_setfield(L, -2, name);
-	};
 
 	const ozz::math::SoaFloat4x4 local_soa_matrices = ozz::math::SoaFloat4x4::FromAffine(
 		pose.translation, pose.rotation, pose.scale);
@@ -226,6 +215,7 @@ get_joint_index(lua_State *L, const ozz::animation::Skeleton *ske, int index) {
 		return find_joint_index(ske, slotname);
 	}
 
+	luaL_error(L, "only support integer[joint index] or string[joint name], type : %d", type);
 	return -1;
 }
 
@@ -237,7 +227,7 @@ lbuilddata_jointmatrix(lua_State *L) {
 	const auto ske = builddata->skeleton;
 	const int jointidx = get_joint_index(L, ske, 2);
 
-	if (jointidx < 0 || jointidx >= ske->joint_bind_poses().size()) {
+	if (jointidx < 0 || jointidx >= (int)ske->joint_bind_poses().size()) {
 		luaL_error(L, "invalid joint index : %d", jointidx);
 	}
 
@@ -247,12 +237,32 @@ lbuilddata_jointmatrix(lua_State *L) {
 	return 1;
 }
 
+static int
+lbuilddata_bindpose_result(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
+
+	luaL_checktype(L, 2, LUA_TUSERDATA);
+	struct bindpose_result* bpresult = (struct bindpose_result*)lua_touserdata(L, 2);
+
+	ozz::animation::LocalToModelJob job;
+	job.skeleton = builddata->skeleton;
+	job.input = builddata->skeleton->joint_bind_poses();
+	job.output = ozz::make_range(bpresult->pose);
+
+	if (!job.Run()) {
+		luaL_error(L, "build local to model failed");
+	}
+	return 0;
+}
+
 std::unordered_map<std::string, lua_CFunction> s_builddata_methods = {
 	{"isleaf", lbuilddata_isleaf },
 	{"parent", lbuilddata_parent},
 	{"isroot", lbuilddata_isroot},
 	{"joint_index", lbuilddata_jointindex},
 	{"joint_matrix", lbuilddata_jointmatrix},
+	{"bindpose_result", lbuilddata_bindpose_result},
 };
 
 static int

@@ -240,14 +240,14 @@ lskinning(lua_State *L) {
 	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
 
 	luaL_checktype(L, 2, LUA_TUSERDATA);
-	animation_result *ani = (animation_result*)lua_touserdata(L, 2);
+	bindpose_result *ani = (bindpose_result*)lua_touserdata(L, 2);
 	assert(om->mesh);
 
 	auto &mesh = *(om->mesh);
 
 	for (size_t ii = 0; ii < mesh.joint_remaps.size(); ++ii) {		
 		om->skinning_matrices[ii] =
-			ani->joints[mesh.joint_remaps[ii]] * mesh.inverse_bind_poses[ii];
+			ani->pose[mesh.joint_remaps[ii]] * mesh.inverse_bind_poses[ii];
 	}
 
 	// offset
@@ -411,12 +411,12 @@ get_ratio(lua_State*L, int idx = 4) {
 	return (float)lua_tonumber(L, idx);
 }
 
-static inline animation_result*
+static inline bindpose_result*
 get_aniresult(lua_State *L, ozz::animation::Skeleton* ske, int idx) {
 	luaL_checktype(L, idx, LUA_TUSERDATA);
-	animation_result* result = (animation_result*) lua_touserdata(L, idx);
-	if (result->joints.size() != (size_t)ske->num_joints()) {
-		luaL_error(L, "animation result joint count:%d, is not equal to skeleton joint number: %d", result->joints.size(), ske->num_joints());
+	bindpose_result* result = (bindpose_result*) lua_touserdata(L, idx);
+	if (result->pose.size() != (size_t)ske->num_joints()) {
+		luaL_error(L, "animation result joint count:%d, is not equal to skeleton joint number: %d", result->pose.size(), ske->num_joints());
 	}
 
 	return result;
@@ -537,14 +537,14 @@ fetch_float4x4(const ozz::math::SoaTransform &trans, int subidx, ozz::math::Floa
 }
 
 static inline void
-extract_fix_matrix(const ozz::animation::Skeleton *ske, const bind_pose &pose, ozz::math::Float4x4 &root) {
+extract_fix_matrix(const ozz::animation::Skeleton *ske, const soa_poses &poses, ozz::math::Float4x4 &root) {
 	const auto rootidx = find_root_index(ske);
 	assert(rootidx >= 0);
 	
 	const auto soa_rootidx = rootidx / 4;
 	const auto aos_subidx = rootidx % 4;
 
-	const auto &trans = pose.pose[soa_rootidx];
+	const auto &trans = poses[soa_rootidx];
 	fetch_float4x4(trans, aos_subidx, root);
 
 	const auto &bindpose_root = ske->joint_bind_poses()[soa_rootidx];
@@ -556,28 +556,28 @@ extract_fix_matrix(const ozz::animation::Skeleton *ske, const bind_pose &pose, o
 }
 
 static inline bool
-transform_bindpose(ozz::animation::Skeleton *ske, 
-	bind_pose *bindpose, 
+transform_bindpose_result(ozz::animation::Skeleton *ske, 
+	const soa_poses &soapose,
 	bool fixroot,
-	animation_result *result) {
+	bindpose_result *result) {
 
 	ozz::math::Float4x4 rootmat = ozz::math::Float4x4::identity();
 	if (fixroot) {
-		extract_fix_matrix(ske, *bindpose, rootmat);
+		extract_fix_matrix(ske, soapose, rootmat);
 	}
 
-	return do_ltm(ske, bindpose->pose, result->joints, &rootmat);
+	return do_ltm(ske, soapose, result->pose, &rootmat);
 }
 
 
 static int
-ltransform_bindpose(lua_State *L) {
+ltransform_to_bindpose_result(lua_State *L) {
 	auto ske = get_ske(L, 1);
 	auto bindpose = get_bindpose(L, 2);
 	auto result = get_aniresult(L, ske, 3);
 	const bool need_fix_root = luaL_opt(L, lua_toboolean, 4, true);
 
-	if (!transform_bindpose(ske, bindpose, need_fix_root, result)) {
+	if (!transform_bindpose_result(ske, bindpose->pose, need_fix_root, result)) {
 		luaL_error(L, "transform bind pose is failed!");
 	}
 	return 0;
@@ -727,7 +727,7 @@ lmotion(lua_State *L) {
 	bind_pose bindpose;
 	blend_animations(L, 2, blendtype, ske, threshold, &bindpose);
 
-	if (!transform_bindpose(ske, &bindpose, need_fix_root, aniresult)){
+	if (!transform_bindpose_result(ske, bindpose.pose, need_fix_root, aniresult)){
 		luaL_error(L, "doing blend result to ltm job failed!");
 	}
 
@@ -747,45 +747,45 @@ create_joint_table(lua_State *L, const ozz::math::Float4x4 &joint) {
 }
 
 static int
-laniresult_joint(lua_State *L) {
+lbp_result_joint(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
-	const animation_result * result = (animation_result*)lua_touserdata(L, 1);
+	const bindpose_result * result = (bindpose_result*)lua_touserdata(L, 1);
 
 	luaL_checktype(L, 2, LUA_TNUMBER);
 	const size_t idx = (size_t)lua_tointeger(L, 2);
-	const auto joint_count = result->joints.size();
+	const auto joint_count = result->pose.size();
 
 	if (idx >= joint_count) {
 		luaL_error(L, "invalid index:%d, joints count:%d", idx, joint_count);
 	}
 
-	auto &joint = result->joints[idx];
+	auto &joint = result->pose[idx];
 	auto p = &(joint.cols[0]);
 	lua_pushlightuserdata(L, (void*)p);
 	return 1;
 }
 
 static int
-laniresult_joints(lua_State *L) {
+lbp_result_joints(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
-	const animation_result * result = (animation_result*)lua_touserdata(L, 1);
+	const bindpose_result * result = (bindpose_result*)lua_touserdata(L, 1);
 
-	auto jointcount = result->joints.size();
+	auto jointcount = result->pose.size();
 	lua_createtable(L, (int)jointcount, 0);
 
 	for (size_t ii = 0; ii < jointcount; ++ii) {
-		create_joint_table(L, result->joints[ii]);
+		create_joint_table(L, result->pose[ii]);
 		lua_seti(L, -2, ii + 1);
 	}
 	return 1;
 }
 
 static int
-laniresult_count(lua_State *L) {
+lbp_result_count(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
-	const animation_result * result = (animation_result*)lua_touserdata(L, 1);
+	const bindpose_result * result = (bindpose_result*)lua_touserdata(L, 1);
 
-	lua_pushinteger(L, result->joints.size());
+	lua_pushinteger(L, result->pose.size());
 	return 1;
 }
 
@@ -817,15 +817,15 @@ lnew_sampling_cache(lua_State *L) {
 }
 
 static int
-ldel_aniresult(lua_State *L) {
+ldel_bpresult(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
-	animation_result *result = (animation_result *)lua_touserdata(L, 1);	
-	result->joints.~vector();
+	bindpose_result *result = (bindpose_result *)lua_touserdata(L, 1);	
+	result->pose.~vector();
 	return 0;
 }
 
 static int
-lnew_aniresult(lua_State *L) {
+lnew_bpresult(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TNUMBER);
 	const size_t numjoints = (size_t)lua_tointeger(L, 1);
 
@@ -834,10 +834,10 @@ lnew_aniresult(lua_State *L) {
 		return 0;
 	}
 
-	animation_result *result = (animation_result*)lua_newuserdata(L, sizeof(animation_result));
-	luaL_getmetatable(L, "ANIRESULT_NODE");
+	bindpose_result *result = (bindpose_result*)lua_newuserdata(L, sizeof(bindpose_result));
+	luaL_getmetatable(L, "BPRESULT_NODE");
 	lua_setmetatable(L, -2);	
-	new(&result->joints)ozz::Vector<ozz::math::Float4x4>::Std(numjoints);
+	new(&result->pose)ozz::Vector<ozz::math::Float4x4>::Std(numjoints);
 
 	return 1;
 }
@@ -1134,16 +1134,16 @@ register_sampling_mt(lua_State *L) {
 }
 
 static void
-register_anitresult_mt(lua_State *L) {
-	luaL_newmetatable(L, "ANIRESULT_NODE");
+register_bpresult_mt(lua_State *L) {
+	luaL_newmetatable(L, "BPRESULT_NODE");
 	lua_pushvalue(L, -1);
 	lua_setfield(L, -2, "__index");
 
 	luaL_Reg l[] = {
-		"joint", laniresult_joint,
-		"joints", laniresult_joints,
-		"count", laniresult_count,
-		"__gc", ldel_aniresult,
+		"joint", lbp_result_joint,
+		"joints", lbp_result_joints,
+		"count", lbp_result_count,
+		"__gc", ldel_bpresult,
 		nullptr, nullptr,
 	};
 
@@ -1206,7 +1206,7 @@ luaopen_hierarchy_animation(lua_State *L) {
 	register_animation_mt(L);
 	register_sampling_mt(L);
 	register_ozzmesh_mt(L);
-	register_anitresult_mt(L);
+	register_bpresult_mt(L);
 	register_bind_pose_mt(L);
 
 	luaL_Reg l[] = {		
@@ -1215,11 +1215,11 @@ luaopen_hierarchy_animation(lua_State *L) {
 		{ "blend_animations", lblend_animations},
 		{ "blend_bind_poses", lblend_bind_poses},
 		{ "sample_animation", lsample_animation},
-		{ "transform", ltransform_bindpose},
+		{ "transform", ltransform_to_bindpose_result},
 		{ "new_ani", lnew_animation},
 		{ "new_ozzmesh", lnew_ozzmesh},
 		{ "new_sampling_cache", lnew_sampling_cache},
-		{ "new_ani_result", lnew_aniresult,},
+		{ "new_bind_pose_result", lnew_bpresult,},
 		{ "new_bind_pose", lnew_bind_pose},
 		{ NULL, NULL },
 	};
