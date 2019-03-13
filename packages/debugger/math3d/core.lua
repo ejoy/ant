@@ -45,8 +45,10 @@ local function compile(ms, args)
 		if type(arg) == 'string' then
 			for j = 1, #arg do
 				local op = arg:sub(j,j)
-				code[#code+1] = ('[%s]  %s'):format(op , operator[op] or 'unknown operator')
+				code[#code+1] = ('[%s]  %s'):format(op, operator[op] or 'unknown operator')
 			end
+		elseif type(arg) == 'function' then
+			code[#code+1] = 'unknown operator'
 		else
 			local t = ms(arg, 'T')
 			code[#code+1] = 'push ' .. stringify(t)
