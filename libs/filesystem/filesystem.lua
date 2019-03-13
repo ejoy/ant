@@ -185,15 +185,15 @@ function fs.current_path()
 end
 
 function fs.exists(path)
-    return lfs.exists(path:localpath())
+    return vfs.type(vfspath(path)) ~= nil
 end
 
 function fs.is_directory(path)
-    return lfs.is_directory(path:localpath())
+    return vfs.type(vfspath(path)) == 'dir'
 end
 
 function fs.is_regular_file(path)
-    return lfs.is_regular_file(path:localpath())
+    return vfs.type(vfspath(path)) == 'file'
 end
 
 function fs.rename()
