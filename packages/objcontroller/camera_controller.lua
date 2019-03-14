@@ -8,7 +8,6 @@ local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 local mu = mathpkg.util
 
-local objutil = require "util"
 local objctrller = require "objcontroller"
 local camera_controller_system = ecs.system "camera_controller"
 

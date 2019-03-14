@@ -292,7 +292,7 @@ local function init_modules(w, packages, systems, loader)
 		end
 		cut[k] = true
 		local v = class.system[k]
-		assert(v, k)
+		assert(v, 'invalid system '..k)
 		if v.depend then
 			for _, subk in ipairs(v.depend) do
 				solve_depend(subk)
