@@ -9,6 +9,10 @@ end
 
 local function each(dir)
     local list = vfs.list(dir)
+    if not list then
+        return function ()
+        end
+    end
     local name
     return function()
         name = next(list, name)
