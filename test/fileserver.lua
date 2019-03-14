@@ -19,9 +19,9 @@ local vfs = require "vfs.simplefs"
 local lfs = require "filesystem.local"
 
 local WORKDIR = lfs.current_path()
-local repopath = lfs.mydocs_path() / reponame
+local repopath = lfs.path(reponame)
 
-assert(loadfile "tools/repo/newrepo.lua")(reponame)
+assert(loadfile "tools/repo/newrepo.lua")(repopath)
 
 LOG ("Open repo : ", repopath)
 

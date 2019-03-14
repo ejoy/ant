@@ -6,29 +6,25 @@
 ]]
 dofile "libs/editor.lua"
 
-local reponame = select(1, ...)
+local repopath = select(1, ...)
 
 local repo = require "vfs.repo"
 local lfs = require "filesystem.local"
 
 local ANTGE = os.getenv "ANTGE"
 local enginepath = ANTGE and lfs.path(ANTGE) or lfs.current_path()
-local homepath = lfs.mydocs_path()
 
 print ("Ant engine path :", enginepath)
-print ("Home path :", homepath)
-if reponame == nil then
+if repopath == nil then
 	error ("Need a project name")
 end
-print ("Project name :",reponame)
+print ("Project name :",repopath)
 
 local mount = {
 	["engine/libs"] = enginepath / "libs",
 	["engine/assets"] = enginepath / "assets",
 	["firmware"] = enginepath / "runtime" / "core" / "firmware",
 }
-
-local repopath = homepath / reponame
 
 if not lfs.is_directory(repopath) then
 	if not lfs.create_directories(repopath) then
