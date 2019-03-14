@@ -91,8 +91,7 @@ function callback.keyboard(key, press, state)
 	status['ALT'] = what_state(state, 0x02)
 	status['SHIFT'] = what_state(state, 0x04)
 	status['SYS'] = what_state(state, 0x08)
-	local keyname = keymap.name(key)
-	iq:push("keyboard", keyname, press, status)
+	iq:push("keyboard", keymap[key], press, status)
 end
 
 function callback.exit()
