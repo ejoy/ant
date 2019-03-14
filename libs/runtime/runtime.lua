@@ -18,12 +18,7 @@ local native = require "window.native"
 local window = require "window"
 
 local inputmgr = import_package "ant.inputmgr"
-local iq = inputmgr.queue {
-	keyboard="_,_,_",
-	mouse_click = "_,_,_,_,_",
-	mouse_move = "_,_,_",
-	mouse_wheel="_,_,_",
-}
+local iq = inputmgr.queue()
 
 local mouse_status = {
 	{},
