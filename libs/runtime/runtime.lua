@@ -25,7 +25,7 @@ local iq = inputmgr.queue {
 	mouse_wheel="_,_,_",
 }
 
-local mouse_move_status = {
+local mouse_status = {
 	{},
 	{ LEFT = true },
 	{ RIGHT = true },
@@ -74,7 +74,7 @@ function callback.error(err)
 end
 
 function callback.mouse_move(x, y, state)
-	iq:push("mouse_move", x, y, mouse_move_status[(state & 7) + 1])
+	iq:push("mouse_move", x, y, mouse_status[(state & 7) + 1])
 end
 
 function callback.mouse_wheel(x, y, delta)
