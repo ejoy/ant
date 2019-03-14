@@ -916,7 +916,7 @@ static void mulH_2values(lua_State *L, struct lastack *LS){
 	const glm::mat4x4 * mat = (const glm::mat4x4 *)lastack_value(LS, v1, &t1);
 	const glm::vec4 * v = (const glm::vec4 *)lastack_value(LS, v0, &t0);
 	if (t0 != LINEAR_TYPE_VEC4 && t1 != LINEAR_TYPE_MAT)
-		luaL_error(L, "'%' operator only support vec4 * mat, type0 is : %d, type1 is : %d", t0, t1);
+		luaL_error(L, "'%%' operator only support vec4 * mat, type0 is : %d, type1 is : %d", t0, t1);
 
 	glm::vec4 r = *mat * *v;	
 	if (!is_zero(r)){
