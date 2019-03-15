@@ -1,7 +1,3 @@
-#if defined(_WIN32)
-#define _WIN32_WINNT _WIN32_WINNT_WINBLUE
-#endif
-
 #include <lua.hpp>
 #include <bx/platform.h>
 
