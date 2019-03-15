@@ -2773,6 +2773,13 @@ lpackIDB(lua_State *L) {
 }
 
 static int
+lformatIDB(lua_State *L) {
+	struct lidb *v = (struct lidb *)lua_touserdata(L, 1);
+	lua_pushlightuserdata(L, (void *)v->format);
+	return 1;
+}
+
+static int
 lnewInstanceBuffer(lua_State *L) {
 	size_t sz;
 	const char * format = luaL_checklstring(L, 1, &sz);
@@ -2794,19 +2801,14 @@ lnewInstanceBuffer(lua_State *L) {
 	}
 	v->stride = stride;
 	memcpy(v->format, format, sz+1);
-	if (luaL_newmetatable(L, "BGFX_IDB")) {
-		luaL_Reg l[] = {
-			{ "alloc", lallocIDB },
-			{ "set", lsetIDB },
-			{ "pack", lpackIDB },
-			{ NULL, NULL },
-		};
-		luaL_newlib(L, l);
-		lua_setfield(L, -2, "__index");
-		lua_pushcfunction(L, lpackIDB);
-		lua_setfield(L, -2, "__call");
-	}
+	luaL_getmetatable(L, "BGFX_IDB");
 	lua_setmetatable(L, -2);
+	return 1;
+}
+
+static int
+lgetInstanceBufferMetatable(lua_State *L) {
+	luaL_getmetatable(L, "BGFX_IDB");
 	return 1;
 }
 
@@ -4173,6 +4175,21 @@ luaopen_bgfx(lua_State *L) {
 		lua_settable(L, -3);
 	}
 	lua_setfield(L, LUA_REGISTRYINDEX, "BGFX_TF");
+
+	luaL_newmetatable(L, "BGFX_IDB");
+	luaL_Reg idb[] = {
+		{ "alloc", lallocIDB },
+		{ "set", lsetIDB },
+		{ "pack", lpackIDB },
+		{ "format", lformatIDB }, // for math adapter
+		{ "__call", lpackIDB },
+		{ NULL, NULL },
+	};
+	luaL_setfuncs(L, idb , 0);
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");
+	lua_pop(L, 1);
+
 	luaL_Reg l[] = {
 		{ "set_platform_data", lsetPlatformData },
 		{ "init", linit },
@@ -4215,6 +4232,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "set_uniform_matrix", lsetUniformMatrix },	// for adapter
 		{ "set_uniform_vector", lsetUniformVector },	// for adapter
 		{ "instance_buffer", lnewInstanceBuffer },
+		{ "instance_buffer_metatable", lgetInstanceBufferMetatable },
 		{ "memory_texture", lmemoryTexture },
 		{ "create_texture", lcreateTexture },	// create texture from data string (DDS, KTX or PVR texture data)
 		{ "create_texture2d", lcreateTexture2D },

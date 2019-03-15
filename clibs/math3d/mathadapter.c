@@ -242,12 +242,75 @@ lbind_variant(lua_State *L) {
 	return 1;
 }
 
+static int
+lformat(lua_State *L) {
+	struct boxstack *bp = lua_touserdata(L, lua_upvalueindex(1));
+	struct lastack *LS = bp->LS;
+	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(2));
+	lua_CFunction getformat = lua_tocfunction(L, lua_upvalueindex(3));
+	int from = lua_tointeger(L, lua_upvalueindex(4));
+	if (getformat(L) != 1 || lua_type(L, -1) != LUA_TLIGHTUSERDATA)
+		luaL_error(L, "Invalid format C function");
+	const char *format = (const char *)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	int i;
+	int top = lua_gettop(L);
+	int type;
+	void *v;
+	for (i=0;format[i];i++) {
+		int index = from + i;
+		if (index > top)
+			luaL_error(L, "Invalid format string %s", format);
+		v = get_pointer_type(L, LS, index, &type);
+		switch(format[i]) {
+		case 'm':
+			if (type != LINEAR_TYPE_MAT) {
+				typemismatch(L, LINEAR_TYPE_MAT, type);
+			}
+			break;
+		case 'v':
+			if (type == LINEAR_TYPE_MAT) {
+				typemismatch(L, LINEAR_TYPE_VEC4, type);
+			}
+			break;
+		default:
+			luaL_error(L, "Invalid format string %s", format);
+			break;
+		}
+		lua_pushlightuserdata(L, v);
+		lua_replace(L, index);
+	}
+	return f(L);
+}
+
+static int
+lbind_format(lua_State *L) {
+	luaL_checkudata(L, 1, LINALG);
+	if (!lua_iscfunction(L, 2))
+		return luaL_error(L, "need a c function");
+	if (lua_getupvalue(L, 2, 1) != NULL)
+		luaL_error(L, "Only support light cfunction");
+	if (!lua_iscfunction(L, 3))
+		return luaL_error(L, "need a c function");
+	if (lua_getupvalue(L, 3, 1) != NULL)
+		luaL_error(L, "Only support light cfunction");
+	luaL_checkinteger(L, 4);
+	lua_settop(L, 4);
+	lua_pushcclosure(L, lformat, 4);
+	return 1;
+}
+
+// userdata mathstack
+// cfunction original function for varient
+// cfunction function for format
+// integer from
 LUAMOD_API int
 luaopen_math3d_adapter(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "matrix", lbind_matrix },
 		{ "variant", lbind_variant },
+		{ "format", lbind_format },
 		{ NULL, NULL },
 	};
 
