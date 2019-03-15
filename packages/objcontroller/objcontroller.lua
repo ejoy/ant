@@ -82,10 +82,11 @@ local function match_tigger_event(tigger, event)
 
 	if name == "mouse_click" then
 		return 	event.what == tigger.what and 
-				event.press == tigger.press and
-				is_state_match(event.state, tigger.state)
-	elseif name == "mouse_move" or name == "mouse_wheel" then
+				event.press == tigger.press
+	elseif name == "mouse_move" then
 		return is_state_match(event.state, tigger.state)
+	elseif name == "mouse_wheel" then
+		return true
 	elseif name == "keyboard" then		
 		return event.key == tigger.key and 
 				event.press == tigger.press and
@@ -101,10 +102,11 @@ local function match_const_event(const, event)
 	end
 
 	if name == "mouse_click" then
-		return 	event.what == const.what and
-				is_state_match(const.state, event.state)
-	elseif name == "mouse_move" or name == "mouse_wheel" then
+		return event.what == const.what and event.press == const.press
+	elseif name == "mouse_move" then
 		return is_state_match(const.state, event.state)	
+	elseif name == "mouse_wheel" then
+		return true
 	elseif name == "keyboard" then
 		return const.key == event.key and
 			is_state_match(const.state, event.state)
@@ -172,8 +174,8 @@ function objcontroller.init(msg)
 		constants = {},
 	}
 	msg.observers:add  {
-		mouse_click = function (_, what, press, x, y, state)
-			add_event {name = "mouse_click", what=what, press=press, x=x, y=y, state=state}
+		mouse_click = function (_, what, press, x, y)
+			add_event {name = "mouse_click", what=what, press=press, x=x, y=y}
 		end,
 		mouse_move = function (_, x, y, state)
 			add_event {name = "mouse_move", x=x, y=y, state=state}

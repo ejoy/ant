@@ -11,6 +11,7 @@ int luaopen_filesystem_cpp(lua_State* L);
 int luaopen_firmware(lua_State* L);
 int luaopen_hierarchy(lua_State* L);
 int luaopen_hierarchy_animation(lua_State* L);
+int luaopen_hierarchy_ik(lua_State* L);
 int luaopen_lsocket(lua_State* L);
 int luaopen_math3d(lua_State* L);
 int luaopen_math3d_baselib(lua_State* L);

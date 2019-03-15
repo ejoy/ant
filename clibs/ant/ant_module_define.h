@@ -11,6 +11,7 @@
 { "firmware", luaopen_firmware },
 { "hierarchy", luaopen_hierarchy },
 { "hierarchy.animation", luaopen_hierarchy_animation },
+{ "hierarchy.ik", luaopen_hierarchy_ik },
 { "lsocket", luaopen_lsocket },
 { "math3d", luaopen_math3d },
 { "math3d.baselib", luaopen_math3d_baselib },

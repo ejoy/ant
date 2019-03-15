@@ -5,12 +5,12 @@ return {
 			{name = 'mouse_move', state = {RIGHT=true},}
 		},
 		hitstart = {
-			{name = 'mouse_click', what='LEFT', press=true, state={LEFT=true}},
-			{name = 'mouse_click', what='RIGHT', press=true, state={RIGHT=true}}
+			{name = 'mouse_click', what='LEFT', press=true},
+			{name = 'mouse_click', what='RIGHT', press=true}
 		},
 		hitend = {
-			{name = 'mouse_click', what='LEFT', press=false, state={LEFT=true}},
-			{name = 'mouse_click', what='RIGHT', press=false, state={RIGHT=true}}
+			{name = 'mouse_click', what='LEFT', press=false},
+			{name = 'mouse_click', what='RIGHT', press=false}
 		}
 	},
 	constant = {

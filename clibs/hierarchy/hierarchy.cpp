@@ -21,6 +21,7 @@ extern "C" {
 #include <iostream>
 #include <cstring>
 #include <functional>
+#include <unordered_map>
 
 using namespace ozz::animation::offline;
 
@@ -320,7 +321,7 @@ lbuilddata_get(lua_State *L){
 				lua_pushcfunction(L, func);
 				return 1;
 			} else {
-				luaL_error(L, "not support method : %s", name);
+				luaL_error(L, "not support method : %s", name.c_str());
 			}
 		}
 		default:

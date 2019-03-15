@@ -14,7 +14,7 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 
-#if BGFX_API_VERSION != 96
+#if BGFX_API_VERSION != 97
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -107,6 +107,7 @@ renderer_type_id(lua_State *L, int index) {
 	RENDERER_TYPE_ID(DIRECT3D12);
 	RENDERER_TYPE_ID(GNM);
 	RENDERER_TYPE_ID(METAL);
+	RENDERER_TYPE_ID(NVN);
 	RENDERER_TYPE_ID(OPENGLES);
 	RENDERER_TYPE_ID(OPENGL);
 	RENDERER_TYPE_ID(VULKAN);
@@ -246,7 +247,7 @@ cb_screen_shot(bgfx_callback_interface_t *self, const char* file, uint32_t width
 	s->height = height;
 	s->pitch = pitch;
 	s->size = size;
-	uint8_t * dst = (uint8_t *)s->data;
+	uint8_t * dst = s->data;
 	const uint8_t * src = (const uint8_t *)data;
 	int line_pitch = pitch;
 	if (yflip) {
@@ -2617,7 +2618,7 @@ lpackTVB(lua_State *L) {
 		return luaL_error(L, "Transient vb index out of range %d/%d", idx, v->cap_v);
 	}
 	int stride = v->tvb.stride;
-	uint8_t * data = (uint8_t *)v->tvb.data + stride * idx;
+	uint8_t * data = v->tvb.data + stride * idx;
 	int i;
 	int offset = 0;
 	for (i=0;v->format[i];i++) {
@@ -2893,15 +2894,12 @@ uniform_size(lua_State *L, bgfx_uniform_handle_t uh) {
 }
 
 static int
-lsetUniform(lua_State *L) {
-	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
-	bgfx_uniform_handle_t uh = { uniformid };
+setUniform(lua_State *L, bgfx_uniform_handle_t uh, int sz) {
 	int number = lua_gettop(L) - 1;
 	int t = lua_type(L, 2);	// the first value type
 	switch(t) {
 	case LUA_TTABLE: {
 		// vector or matrix
-		int sz = uniform_size(L, uh);
 		float buffer[V(sz * number)];
 		int i,j;
 		for (i=0;i<number;i++) {
@@ -2927,7 +2925,6 @@ lsetUniform(lua_State *L) {
 				return luaL_error(L, "Uniform can't be NULL");
 			bgfx_set_uniform(uh, data, 1);
 		} else {
-			int sz = uniform_size(L, uh);
 			float buffer[V(sz * number)];
 			int i;
 			for (i=0;i<number;i++) {
@@ -2944,6 +2941,36 @@ lsetUniform(lua_State *L) {
 		return luaL_error(L, "Invalid value type : %s", lua_typename(L, t));
 	}
 	return 0;
+}
+
+static int
+lsetUniform(lua_State *L) {
+	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
+	bgfx_uniform_handle_t uh = { uniformid };
+	int sz = uniform_size(L, uh);
+	return setUniform(L, uh, sz);
+}
+
+static int
+lsetUniformMatrix(lua_State *L) {
+	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
+	bgfx_uniform_handle_t uh = { uniformid };
+	int sz = uniform_size(L, uh);
+	if (sz <= 4) {
+		return luaL_error(L, "Need a matrix");
+	}
+	return setUniform(L, uh, sz);
+}
+
+static int
+lsetUniformVector(lua_State *L) {
+	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
+	bgfx_uniform_handle_t uh = { uniformid };
+	int sz = uniform_size(L, uh);
+	if (sz != 4) {
+		return luaL_error(L, "Need a vector");
+	}
+	return setUniform(L, uh, sz);
 }
 
 static uint32_t
@@ -4185,6 +4212,8 @@ luaopen_bgfx(lua_State *L) {
 		{ "create_uniform", lcreateUniform },
 		{ "get_uniform_info", lgetUniformInfo },
 		{ "set_uniform", lsetUniform },
+		{ "set_uniform_matrix", lsetUniformMatrix },	// for adapter
+		{ "set_uniform_vector", lsetUniformVector },	// for adapter
 		{ "instance_buffer", lnewInstanceBuffer },
 		{ "memory_texture", lmemoryTexture },
 		{ "create_texture", lcreateTexture },	// create texture from data string (DDS, KTX or PVR texture data)

@@ -6,10 +6,6 @@
 *.dSYM
 *.user
 *.log
-
-clibs/iup/o
-./log
-
 **/*.xcworkspace
 *.xcscheme
 *.xcbkptlist
@@ -18,25 +14,20 @@ clibs/iup/o
 .vs
 .repo
 
-cache
+/clibs/iup/o
+/clibs/shadercrelease
+/log
 
-projects/msvc/vs_bin
-projects/msvc/x64
-projects/msvc/Debug
-projects/msvc/Release
+/projects/msvc/vs_bin
+/projects/msvc/x64
+/projects/msvc/Debug
+/projects/msvc/Release
 
-assets/map
-assets/textures
-assets/shaders/dx11
-assets/shaders/glsl
-assets/meshes
-assets/shaders/d3d11
-assets/shaders/ogl
-assets/shaders/ogles
-file.txt
-dir.txt
-
-ServerMac/*
-fileserver/*
-runtime/windows/Documents/
-clibs/shadercrelease
+/assets/map
+/assets/textures
+/assets/shaders/dx11
+/assets/shaders/glsl
+/assets/meshes
+/assets/shaders/d3d11
+/assets/shaders/ogl
+/assets/shaders/ogles

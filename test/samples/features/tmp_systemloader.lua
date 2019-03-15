@@ -14,6 +14,7 @@ ecs.import 'ant.timer'
 ecs.import 'ant.bullet'
 ecs.import 'ant.animation'
 ecs.import 'ant.event'
+ecs.import 'ant.objcontroller'
 
 local renderpkg = import_package 'ant.render'
 local computil = renderpkg.components

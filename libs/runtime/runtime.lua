@@ -18,14 +18,9 @@ local native = require "window.native"
 local window = require "window"
 
 local inputmgr = import_package "ant.inputmgr"
-local iq = inputmgr.queue {
-	keyboard="_,_,_",
-	mouse_click = "_,_,_,_,_",
-	mouse_move = "_,_,_",
-	mouse_wheel="_,_,_",
-}
+local iq = inputmgr.queue()
 
-local mouse_move_status = {
+local mouse_status = {
 	{},
 	{ LEFT = true },
 	{ RIGHT = true },
@@ -74,7 +69,7 @@ function callback.error(err)
 end
 
 function callback.mouse_move(x, y, state)
-	iq:push("mouse_move", x, y, mouse_move_status[(state & 7) + 1])
+	iq:push("mouse_move", x, y, mouse_status[(state & 7) + 1])
 end
 
 function callback.mouse_wheel(x, y, delta)
@@ -91,8 +86,7 @@ function callback.keyboard(key, press, state)
 	status['ALT'] = what_state(state, 0x02)
 	status['SHIFT'] = what_state(state, 0x04)
 	status['SYS'] = what_state(state, 0x08)
-	local keyname = keymap.name(key)
-	iq:push("keyboard", keyname, press, status)
+	iq:push("keyboard", keymap[key], press, status)
 end
 
 function callback.exit()

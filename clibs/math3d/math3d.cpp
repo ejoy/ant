@@ -5,6 +5,7 @@ extern "C" {
 	#include "linalg.h"	
 	#include "refstack.h"
 	#include "fastmath.h"
+	#include "math3d.h"
 }
 
 #include <glm/glm.hpp>
@@ -33,8 +34,6 @@ extern "C" {
 
 #include <vector>
 
-#define LINALG "LINALG"
-#define LINALG_REF "LINALG_REF"
 #define MAT_PERSPECTIVE 0
 #define MAT_ORTHO 1
 
@@ -87,34 +86,25 @@ pop(lua_State *L, struct lastack *LS) {
 	return v;
 }
 
-struct boxpointer {
-	struct lastack *LS;	
-};
-
-struct refobject {
-	struct lastack *LS;
-	int64_t id;
-};
-
 static struct lastack *
 getLS(lua_State *L, int index) {
 	int type = lua_type(L, index);
-	struct boxpointer * ret;
+	struct boxstack * ret;
 	if (type == LUA_TFUNCTION) {
 		if (lua_getupvalue(L, index, 1) == NULL) {
 			luaL_error(L, "Can't get linalg object");
 		}
-		ret = (struct boxpointer *)luaL_checkudata(L, -1, LINALG);
+		ret = (struct boxstack *)luaL_checkudata(L, -1, LINALG);
 		lua_pop(L, 1);
 	} else {
-		ret =  (struct boxpointer *)luaL_checkudata(L, index, LINALG);
+		ret =  (struct boxstack *)luaL_checkudata(L, index, LINALG);
 	}
 	return ret->LS;
 }
 
 static int
 delLS(lua_State *L) {
-	struct boxpointer *bp = (struct boxpointer *)lua_touserdata(L, 1);
+	struct boxstack *bp = (struct boxstack *)lua_touserdata(L, 1);
 	if (bp->LS) {
 		lastack_delete(bp->LS);
 		bp->LS = NULL;
@@ -917,7 +907,7 @@ static void mulH_2values(lua_State *L, struct lastack *LS){
 	const glm::mat4x4 * mat = (const glm::mat4x4 *)lastack_value(LS, v1, &t1);
 	const glm::vec4 * v = (const glm::vec4 *)lastack_value(LS, v0, &t0);
 	if (t0 != LINEAR_TYPE_VEC4 && t1 != LINEAR_TYPE_MAT)
-		luaL_error(L, "'%' operator only support vec4 * mat, type0 is : %d, type1 is : %d", t0, t1);
+		luaL_error(L, "'%%' operator only support vec4 * mat, type0 is : %d, type1 is : %d", t0, t1);
 
 	glm::vec4 r = *mat * *v;	
 	if (!is_zero(r)){
@@ -1312,7 +1302,7 @@ lref(lua_State *L) {
 
 	struct refobject * ref = (struct refobject *)lua_newuserdata(L, sizeof(*ref));
 	if (has_LS) {
-		struct boxpointer *bp = (struct boxpointer *)lua_touserdata(L, 2);
+		struct boxstack *bp = (struct boxstack *)lua_touserdata(L, 2);
 		ref->LS = bp->LS;
 	} else {
 		ref->LS = nullptr;
@@ -1337,7 +1327,7 @@ lisvalid(lua_State *L){
 	int type = lua_type(L, 1);
 	if (type == LUA_TNUMBER){
 		int number = lua_tonumber(L, -1);
-		struct boxpointer *p = (struct boxpointer *)lua_touserdata(L, lua_upvalueindex(1));
+		struct boxstack *p = (struct boxstack *)lua_touserdata(L, lua_upvalueindex(1));
 		void *value = lastack_value(p->LS, number, NULL);
 		lua_pushboolean(L, value != NULL);
 	} else if (type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA){
@@ -1866,7 +1856,7 @@ push_command(struct ref_stack *RS, struct lastack *LS, int index, bool *log) {
 
 static int
 commandLS(lua_State *L) {
-	struct boxpointer *bp = (struct boxpointer *)lua_touserdata(L, lua_upvalueindex(1));
+	struct boxstack *bp = (struct boxstack *)lua_touserdata(L, lua_upvalueindex(1));
 	struct lastack *LS = bp->LS;
 	bool log = false;
 	int top = lua_gettop(L);
@@ -1890,7 +1880,7 @@ gencommand(lua_State *L) {
 
 static int
 callLS(lua_State *L) {
-	struct boxpointer *bp = (struct boxpointer *)lua_touserdata(L, 1);
+	struct boxstack *bp = (struct boxstack *)lua_touserdata(L, 1);
 	struct lastack *LS = bp->LS;
 	bool log = false;
 	int top = lua_gettop(L);
@@ -1912,7 +1902,7 @@ new_temp_vector4(lua_State *L) {
 		pushid(L, lastack_constant(LINEAR_CONSTANT_IVEC));
 		return 1;
 	}
-	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
 	struct lastack *LS = bp->LS;
 
 	float v[4];
@@ -1949,7 +1939,7 @@ new_temp_matrix(lua_State *L) {
 		pushid(L, lastack_constant(LINEAR_CONSTANT_IMAT));
 		return 1;
 	}
-	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
 	struct lastack *LS = bp->LS;
 	float m[16];
 	int i;
@@ -2014,7 +2004,7 @@ new_temp_matrix(lua_State *L) {
 
 static int
 new_temp_quaternion(lua_State *L) {
-	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
 	struct lastack *LS = bp->LS;
 
 	int top = lua_gettop(L);
@@ -2084,7 +2074,7 @@ new_temp_quaternion(lua_State *L) {
 
 static int
 new_temp_euler(lua_State *L) {
-	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
 	struct lastack *LS = bp->LS;
 
 	auto top = lua_gettop(L);
@@ -2107,7 +2097,7 @@ new_temp_euler(lua_State *L) {
 static int
 create_srt_matrix(lua_State *L) {	
 	const int numarg = lua_gettop(L);
-	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
 	struct lastack *LS = bp->LS;
 
 	glm::mat4x4 srtmat(1);
@@ -2166,7 +2156,7 @@ lpush_srt(lua_State *L) {
 		luaL_error(L, "invalid argument, at least 1:%d", numarg);
 	}
 
-	struct boxpointer *bp = (struct boxpointer*)lua_touserdata(L, 1);
+	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
 	lastack *LS = bp->LS;
 
 	switch (numarg) {
@@ -2200,7 +2190,7 @@ lpush_srt(lua_State *L) {
 
 static int
 lbase_axes_from_forward_vector(lua_State *L) {
-	struct boxpointer *bp = (struct boxpointer *)luaL_checkudata(L, 1, LINALG);
+	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
 	struct lastack* LS = bp->LS;
 
 	auto forwardid = get_stack_id(L, LS, 2);
@@ -2226,7 +2216,7 @@ lstackrefobject(lua_State *L) {
 
 static int
 lnew(lua_State *L) {	
-	struct boxpointer *bp = (struct boxpointer *)lua_newuserdata(L, sizeof(*bp));	
+	struct boxstack *bp = (struct boxstack *)lua_newuserdata(L, sizeof(*bp));
 
 	bp->LS = NULL;
 	if (luaL_newmetatable(L, LINALG)) {

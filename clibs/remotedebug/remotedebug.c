@@ -7,16 +7,12 @@
 
 static int DEBUG_HOST = 0;	// host L in client VM
 static int DEBUG_CLIENT = 0;	// client L in host VM for hook
-static int DEBUG_HOOK = 0;	// hook function in client VM (void * in host VM)
 
 void probe(lua_State* cL, lua_State* hL, const char* name);
 int init_visitor(lua_State *L);
 
 static void
 clear_client(lua_State *L) {
-	lua_pushnil(L);
-	lua_rawsetp(L, LUA_REGISTRYINDEX, &DEBUG_HOOK);	// clear hook
-
 	lua_State *cL = NULL;
 	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_CLIENT) != LUA_TNIL) {
 		cL = lua_touserdata(L, -1);
@@ -134,15 +130,13 @@ lhost_start(lua_State *L) {
 		clear_client(L);
 		return luaL_error(L, "debugger L stack overflow");
 	}
-	lua_pushlightuserdata(L, cL);
-	lua_rawsetp(L, LUA_REGISTRYINDEX, &DEBUG_HOOK);
 	return 0;
 }
 
 // use as hard break point
 static int
 lhost_probe(lua_State *L) {
-	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_HOOK) != LUA_TLIGHTUSERDATA) {
+	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_CLIENT) != LUA_TLIGHTUSERDATA) {
 		// debugger not start
 		return 0;
 	}

@@ -38,50 +38,78 @@ local buttonnames = {
 	['5'] = "BUTTON5"
 }
 
-local iupcodemap = {}
-for k, v in pairs(iup) do
-	if  type(v) == "number" and 
-		type(k) == "string" then 
-		local iup_name = k:match("K_([%w_%d]+)")
-		if iup_name then
-			iupcodemap[v] = iup_name
-		end
-	end
-end
+local iupmap = {
+	[10] = 'RETURN',		-- \n
+	[33] = '1',				-- !
+	[34] = 'OEM_7',			-- "
+	[35] = '3',				-- #
+	[36] = '4',				-- $
+	[37] = '5',				-- %
+	[38] = '7',				-- &
+	[39] = 'OEM_7',			-- '
+	[40] = '9',				-- (
+	[41] = '0',				-- )
+	[42] = '8',				-- *
+	[43] = 'OEM_PLUS',		-- +
+	[44] = 'OEM_COMMA',		-- ,
+	[45] = 'OEM_MINUS',		-- -
+	[46] = 'OEM_PERIOD',	-- .
+	[47] = 'OEM_2',			-- /
+	[58] = 'OEM_1',			-- :
+	[59] = 'OEM_1',			-- ;
+	[60] = 'OEM_COMMA',		-- <
+	[61] = 'OEM_PLUS',		-- =
+	[62] = 'OEM_PERIOD',	-- >
+	[63] = 'OEM_2',			-- ?
+	[64] = '2',				-- @
+	[91] = 'OEM_4',			-- [
+	[92] = 'OEM_5',			-- \
+	[93] = 'OEM_6',			-- ]
+	[94] = '6',				-- ^
+	[95] = 'OEM_MINUS',		-- _
+	[96] = 'OEM_3',			-- `
+	[123] = 'OEM_4',		-- {
+	[124] = 'OEM_5',		-- |
+	[125] = 'OEM_6',		-- }
+	[126] = 'OEM_3',		-- ~
 
-local iup_to_keymap = {
-	LCTRL = "LCONTROL",
-	RCTRL = "RCONTROL",
+	[0xFF0B] = 'CLEAR',
+	[0xFF13] = 'PAUSE',
+	[0xFF14] = 'NUMLOCK',
+	[0xFF1B] = 'ESCAPE',
+	[0xFF50] = 'HOME',
+	[0xFF51] = 'LEFT',
+	[0xFF52] = 'UP',
+	[0xFF53] = 'RIGHT',
+	[0xFF54] = 'DOWN',
+	[0xFF55] = 'PRIOR',
+	[0xFF56] = 'NEXT',
+	[0xFF57] = 'END',
+	[0xFF61] = 'PRINT',
+	[0xFF63] = 'INSERT',
+	[0xFF67] = 'APPS',
+	[0xFF7F] = 'CAPITAL',
+	[0xFFBE] = 'F1',
+	[0xFFBF] = 'F2',
+	[0xFFC0] = 'F3',
+	[0xFFC1] = 'F4',
+	[0xFFC2] = 'F5',
+	[0xFFC3] = 'F6',
+	[0xFFC4] = 'F7',
+	[0xFFC5] = 'F8',
+	[0xFFC6] = 'F9',
+	[0xFFC7] = 'F10',
+	[0xFFC8] = 'F11',
+	[0xFFC9] = 'F12',
+	[0xFFE1] = 'SHIFT',
+	[0xFFE2] = 'SHIFT',
+	[0xFFE3] = 'CONTROL',
+	[0xFFE4] = 'CONTROL',
+	[0xFFE5] = 'SCROLL',
+	[0xFFE9] = 'MENU',
+	[0xFFEA] = 'MENU',
+	[0xFFFF] = 'DELETE',
 }
-
-local keymapcache = {}
-local function translate_key(iupkey)
-	if keymapcache[iupkey] then
-		return keymapcache[iupkey]
-	end
-
-	local basekey = iup.XkeyBase(iupkey)
-
-	local function get_keyname(basekey)
-		local iupname = iupcodemap[basekey]
-		if iupname then				
-			local tname = iup_to_keymap[iupname]
-			if tname then
-				return tname
-			end
-
-			if keymap.code(iupname) then
-				return iupname
-			end
-		end		
-
-		return ''
-	end
-
-	local name = iup.isXkey(basekey) and get_keyname(basekey) or string.char(basekey)	
-	keymapcache[iupkey] = name
-	return name
-end
 
 return function (msgqueue, ctrl)	
 	ctrl.button_cb = function(_, btn, press, x, y, status)
@@ -98,23 +126,12 @@ return function (msgqueue, ctrl)
 	end
 
 	ctrl.keypress_cb = function(_, key, press)
-		local t = {}
-		if iup.isAltXkey(key) then
-			t["ALT"] = true
-		end
-
-		if iup.isCtrlXkey(key) then
-			t["CTRL"] = true
-		end
-
-		if iup.isSysXkey(key) then
-			t["SYS"] = true
-		end
-
-		if iup.isShiftXkey(key) then
-			t["SHIFT"] = true
-		end
-		msgqueue:push("keyboard", translate_key(key), pressnames[press], t)
+		msgqueue:push("keyboard", iupmap[key & 0x0FFFFFFF] or keymap[key & 0x0FFFFFFF], pressnames[press], {
+			SHIFT = (key | 0x10000000) ~= 0,
+			CTRL  = (key | 0x20000000) ~= 0,
+			ALT   = (key | 0x40000000) ~= 0,
+			SYS   = (key | 0x80000000) ~= 0,
+		})
 	end
 	ctrl.resize_cb = function(_, a, b)
 		msgqueue:push("resize", a, b)
