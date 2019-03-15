@@ -1949,20 +1949,16 @@ new_temp_matrix(lua_State *L) {
 		int type = lua_type(L, 2);
 		switch (type) {
 		case LUA_TNUMBER:
-		{
-			auto id = lua_tointeger(L, 2);
-			int valuetype;
-			auto value = lastack_value(LS, id, &valuetype);
-			if (valuetype != LINEAR_CONSTANT_IMAT) {
-				luaL_error(L, "arg: %d is not matrix, type : %d", top, valuetype);
-			}
-			memcpy(m, value, sizeof(m));
-		}
-			break;
+			// return this id;
+			return 1;
 		case LUA_TUSERDATA:
 		case LUA_TLIGHTUSERDATA:
 			memcpy(m, lua_touserdata(L, 2), sizeof(m));
 			break;
+		case LUA_TTABLE:
+			push_value(L, LS, 2);
+			lua_pushinteger(L, pop(L, LS));
+			return 1;
 		default:
 			luaL_error(L, "not support type in arg: %d, type is : %d", top, type);
 			break;
@@ -2150,7 +2146,7 @@ create_srt_matrix(lua_State *L) {
 }
 
 static int
-lpush_srt(lua_State *L) {
+lsrt_matrix(lua_State *L) {
 	const int numarg = lua_gettop(L);
 	if (numarg < 1) {
 		luaL_error(L, "invalid argument, at least 1:%d", numarg);
@@ -2233,7 +2229,8 @@ lnew(lua_State *L) {
 			{ "euler", new_temp_euler},
 			{ "base_axes", lbase_axes_from_forward_vector},
 			{ "create_srt_matrix", create_srt_matrix},
-			{ "push_srt_matrix", lpush_srt},
+			{ "push_srt_matrix", lsrt_matrix },
+			{ "srtmat", lsrt_matrix },
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
