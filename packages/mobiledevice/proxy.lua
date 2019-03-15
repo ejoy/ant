@@ -1,4 +1,7 @@
-dofile "libs/editor.lua"
+package.path = table.concat({
+    "packages/?.lua",
+    "packages/?/?.lua",
+}, ";")
 
 local network = require 'network'
 local usbmuxd = require 'mobiledevice.usbmuxd'
