@@ -2894,15 +2894,12 @@ uniform_size(lua_State *L, bgfx_uniform_handle_t uh) {
 }
 
 static int
-lsetUniform(lua_State *L) {
-	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
-	bgfx_uniform_handle_t uh = { uniformid };
+setUniform(lua_State *L, bgfx_uniform_handle_t uh, int sz) {
 	int number = lua_gettop(L) - 1;
 	int t = lua_type(L, 2);	// the first value type
 	switch(t) {
 	case LUA_TTABLE: {
 		// vector or matrix
-		int sz = uniform_size(L, uh);
 		float buffer[V(sz * number)];
 		int i,j;
 		for (i=0;i<number;i++) {
@@ -2928,7 +2925,6 @@ lsetUniform(lua_State *L) {
 				return luaL_error(L, "Uniform can't be NULL");
 			bgfx_set_uniform(uh, data, 1);
 		} else {
-			int sz = uniform_size(L, uh);
 			float buffer[V(sz * number)];
 			int i;
 			for (i=0;i<number;i++) {
@@ -2945,6 +2941,36 @@ lsetUniform(lua_State *L) {
 		return luaL_error(L, "Invalid value type : %s", lua_typename(L, t));
 	}
 	return 0;
+}
+
+static int
+lsetUniform(lua_State *L) {
+	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
+	bgfx_uniform_handle_t uh = { uniformid };
+	int sz = uniform_size(L, uh);
+	return setUniform(L, uh, sz);
+}
+
+static int
+lsetUniformMatrix(lua_State *L) {
+	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
+	bgfx_uniform_handle_t uh = { uniformid };
+	int sz = uniform_size(L, uh);
+	if (sz <= 4) {
+		return luaL_error(L, "Need a matrix");
+	}
+	return setUniform(L, uh, sz);
+}
+
+static int
+lsetUniformVector(lua_State *L) {
+	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
+	bgfx_uniform_handle_t uh = { uniformid };
+	int sz = uniform_size(L, uh);
+	if (sz != 4) {
+		return luaL_error(L, "Need a vector");
+	}
+	return setUniform(L, uh, sz);
 }
 
 static uint32_t
@@ -4186,6 +4212,8 @@ luaopen_bgfx(lua_State *L) {
 		{ "create_uniform", lcreateUniform },
 		{ "get_uniform_info", lgetUniformInfo },
 		{ "set_uniform", lsetUniform },
+		{ "set_uniform_matrix", lsetUniformMatrix },	// for adapter
+		{ "set_uniform_vector", lsetUniformVector },	// for adapter
 		{ "instance_buffer", lnewInstanceBuffer },
 		{ "memory_texture", lmemoryTexture },
 		{ "create_texture", lcreateTexture },	// create texture from data string (DDS, KTX or PVR texture data)

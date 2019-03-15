@@ -17,10 +17,13 @@ $(ODIR)/math3d.o : math3d.cpp | $(ODIR)
 $(ODIR)/mathbaselib.o : mathbaselib.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC)
 
-math3d.dll : $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathbaselib.o
+$(ODIR)/mathadapter.o : mathadapter.c | $(ODIR)
+	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
+
+math3d.dll : $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathbaselib.o $(ODIR)/mathadapter.o
 	$(CXX) $(LD_SHARED) $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB)
 
-libmath3d-$(PLAT).a : $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathbaselib.o
+libmath3d-$(PLAT).a : $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathbaselib.o $(ODIR)/mathadapter.o
 	ar rsv $@ $^
 
 $(ODIR) :
