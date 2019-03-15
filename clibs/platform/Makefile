@@ -8,8 +8,8 @@ else
 default : libplatform-$(PLAT).a
 endif
 
-$(ODIR)/lplatform.o : lplatform.c | $(ODIR)
-	$(CC) -c $(CFLAGS) $(LUAINC) -I$(BXSRC)/include -o $@ $<
+$(ODIR)/lplatform.o : lplatform.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) $(LUAINC) -I$(BXSRC)/include -o $@ $<
 
 platform.dll : $(ODIR)/lplatform.o
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
