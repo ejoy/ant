@@ -1243,11 +1243,31 @@ ref_pack_value(lua_State *L) {
 		n = 4;
 	}
 	int i;
-	for (i=0;i<n;i++) {
-		if (lua_isnoneornil(L, i+2)) {
-			vv[i] = v[i];
-		} else {
-			vv[i] = luaL_checknumber(L, i+2);
+	if (lua_type(L, 2) == LUA_TSTRING) {
+		const char * format = lua_tostring(L, 2);
+		for (i=0;i<n;i++) {
+			if (lua_isnoneornil(L, i+3)) {
+				vv[i] = v[i];
+			} else {
+				switch(format[i]) {
+				case 'f':
+					vv[i] = luaL_checknumber(L, i+3);
+					break;
+				case 'd':
+					*(uint32_t*)(vv+i) = luaL_checkinteger(L, i+3);
+					break;
+				default:
+					luaL_error(L, "Invalid format %s", format);
+				}
+			}
+		}
+	} else {
+		for (i=0;i<n;i++) {
+			if (lua_isnoneornil(L, i+2)) {
+				vv[i] = v[i];
+			} else {
+				vv[i] = luaL_checknumber(L, i+2);
+			}
 		}
 	}
 	lastack_pushobject(LS, vv, type);
