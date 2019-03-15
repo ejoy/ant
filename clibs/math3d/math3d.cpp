@@ -301,8 +301,8 @@ assign_ref(lua_State *L, struct refobject * ref, int64_t rid) {
 }
 
 static inline float
-get_table_value(lua_State *L, int idx) {
-	lua_geti(L, -1, idx);
+get_table_value(lua_State *L, int tblidx, int idx) {
+	lua_geti(L, tblidx, idx);
 	float s = lua_tonumber(L, -1);
 	lua_pop(L, 1);
 	return s;
@@ -328,11 +328,11 @@ extract_scale(lua_State *L, struct lastack *LS, int index){
 	} else if (stype == LUA_TTABLE) {
 		size_t len = lua_rawlen(L, index);		
 		if (len == 1) {
-			float s = get_table_value(L, 1);
+			float s = get_table_value(L, index, 1);
 			scale[0] = scale[1] = scale[2] = s;
 		} else if (len == 3) {
 			for (int i = 0; i < 3; ++i)
-				scale[i] = get_table_value(L, i+1);
+				scale[i] = get_table_value(L, index, i+1);
 		} else {
 			luaL_error(L, "using table for s element, format must be s = {1}/{1, 2, 3}, give number : %d", len);
 		}		
@@ -363,7 +363,7 @@ extract_translate(lua_State *L, struct lastack *LS, int index){
 			luaL_error(L, "t field should : t={1, 2, 3}, only accept 3 value, %d is give", len);
 
 		for (int i = 0; i < 3; ++i)
-			translate[i] = get_table_value(L, i + 1);
+			translate[i] = get_table_value(L, index, i + 1);
 
 	} else if (ttype != LUA_TNIL) {
 		luaL_error(L, "Invalid translate type %s", lua_typename(L, ttype));
@@ -372,9 +372,9 @@ extract_translate(lua_State *L, struct lastack *LS, int index){
 }
 
 static inline glm::mat4x4
-extract_rotation_mat(lua_State *L, struct lastack *LS, int index, glm::mat4x4 &m){
+extract_rotation_mat(lua_State *L, struct lastack *LS, int index){
+	glm::mat4x4 m;
 	const int rtype = lua_type(L, index);
-
 	if (rtype == LUA_TNUMBER || rtype == LUA_TUSERDATA) {
 		int64_t id = get_id_by_type(L, LS, rtype, index);
 		int type;
@@ -392,7 +392,7 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index, glm::mat4x4 &m
 
 		glm::vec3 e;
 		for (int ii = 0; ii < 3; ++ii)
-			e[ii] = get_table_value(L, ii + 1);		
+			e[ii] = get_table_value(L, index, ii + 1);		
 
 		// be careful here, glm::quat(euler_angles) result is different from eulerAngleXYZ()
 		// keep the same order with glm::quat
@@ -423,10 +423,11 @@ push_srt_from_table(lua_State *L, struct lastack *LS, int index) {
 	lua_getfield(L, index, "s");
 	const glm::vec3 scale = extract_scale(L, LS, -1);
 	lua_pop(L, 1);
-	glm::mat4x4 rotMat(1);
+	
 	lua_getfield(L, index, "r");
-	extract_rotation_mat(L, LS, -1, rotMat);
+	const glm::mat4x4 rotMat = extract_rotation_mat(L, LS, -1);
 	lua_pop(L, 1);
+
 	lua_getfield(L, index, "t");
 	const glm::vec3 translate = extract_translate(L, LS, -1);	
 	lua_pop(L, 1);
@@ -2182,14 +2183,10 @@ lpush_srt(lua_State *L) {
 	}
 	break;
 	case 4:
-	{
-		const auto scale = extract_scale(L, LS, 2);
-		glm::mat4x4 rotmat;
-		extract_rotation_mat(L, LS, 3, rotmat);
-
-		const auto translate = extract_translate(L, LS, 4);
-		make_srt(LS, scale, rotmat, translate);
-	}
+		make_srt(LS, 
+			extract_scale(L, LS, 2), 
+			extract_rotation_mat(L, LS, 3), 
+			extract_translate(L, LS, 4));
 	break;
 
 	default:
