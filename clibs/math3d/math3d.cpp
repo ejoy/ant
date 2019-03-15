@@ -1234,8 +1234,9 @@ lassign(lua_State *L) {
 		} else {
 			lastack_pushvec4(LS, v);
 		}
-		pushid(L, lastack_pop(LS));
-		break;
+		assign_ref(L, ref, lastack_pop(LS));
+		lua_settop(L, 1);
+		return 1;
 	default:
 		return luaL_error(L, "Invalid arg number %d, support 2/4(vector3)/5(vector4)/17(matrix)", top);
 	}
