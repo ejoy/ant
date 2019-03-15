@@ -328,47 +328,7 @@ get_type_size(int type) {
 }
 
 void
-lastack_pushvector(struct lastack *LS, float *vec4, int type) {
-	const int size = get_type_size(type);
-	assert(type != LINEAR_TYPE_MAT);
-	if (LS->temp_vector_top >= LS->temp_vector_cap) {
-		void * p = new_page(LS, LS->temp_vec);
-		LS->temp_vec = malloc(LS->temp_vector_cap * 2 * sizeof(float) * VECTOR4);
-		memcpy(LS->temp_vec, p, LS->temp_vector_cap * sizeof(float) * VECTOR4);
-		LS->temp_vector_cap *= 2;
-	}
-	memcpy(LS->temp_vec + LS->temp_vector_top * VECTOR4, vec4, sizeof(float) * size);
-	union stackid sid;
-	sid.s.type = type;
-	sid.s.persistent = 0;
-	sid.s.version = LS->version;
-	sid.s.id = LS->temp_vector_top;
-	push_id(LS, sid);
-	++ LS->temp_vector_top;
-}
-
-void
-lastack_pushvec4(struct lastack *LS, float *vec4) {
-	lastack_pushvector(LS, vec4, LINEAR_TYPE_VEC4);
-}
-
-void
-lastack_pushquat(struct lastack *LS, float *v) {
-	lastack_pushvector(LS, v, LINEAR_TYPE_QUAT);
-}
-
-void
-lastack_pusheuler(struct lastack *LS, float *v) {
-	lastack_pushvector(LS, v, LINEAR_TYPE_EULER);
-}
-
-void
-lastack_pushnumber(struct lastack *LS, float n) {
-	lastack_pushvector(LS, &n, LINEAR_TYPE_NUM);
-}
-
-void
-lastack_pushmatrix(struct lastack *LS, float *mat) {
+lastack_pushmatrix(struct lastack *LS, const float *mat) {
 	if (LS->temp_matrix_top >= LS->temp_matrix_cap) {
 		void * p = new_page(LS, LS->temp_mat);
 		LS->temp_mat = malloc(LS->temp_matrix_cap * 2 * sizeof(float) * MATRIX);
@@ -385,7 +345,50 @@ lastack_pushmatrix(struct lastack *LS, float *mat) {
 	++ LS->temp_matrix_top;
 }
 
-float *
+void
+lastack_pushobject(struct lastack *LS, const float *v, int type) {
+	if (type == LINEAR_TYPE_MAT) {
+		lastack_pushmatrix(LS, v);
+		return;
+	}
+	const int size = get_type_size(type);
+	if (LS->temp_vector_top >= LS->temp_vector_cap) {
+		void * p = new_page(LS, LS->temp_vec);
+		LS->temp_vec = malloc(LS->temp_vector_cap * 2 * sizeof(float) * VECTOR4);
+		memcpy(LS->temp_vec, p, LS->temp_vector_cap * sizeof(float) * VECTOR4);
+		LS->temp_vector_cap *= 2;
+	}
+	memcpy(LS->temp_vec + LS->temp_vector_top * VECTOR4, v, sizeof(float) * size);
+	union stackid sid;
+	sid.s.type = type;
+	sid.s.persistent = 0;
+	sid.s.version = LS->version;
+	sid.s.id = LS->temp_vector_top;
+	push_id(LS, sid);
+	++ LS->temp_vector_top;
+}
+
+void
+lastack_pushvec4(struct lastack *LS, const float *vec4) {
+	lastack_pushobject(LS, vec4, LINEAR_TYPE_VEC4);
+}
+
+void
+lastack_pushquat(struct lastack *LS, const float *v) {
+	lastack_pushobject(LS, v, LINEAR_TYPE_QUAT);
+}
+
+void
+lastack_pusheuler(struct lastack *LS, const float *v) {
+	lastack_pushobject(LS, v, LINEAR_TYPE_EULER);
+}
+
+void
+lastack_pushnumber(struct lastack *LS, float n) {
+	lastack_pushobject(LS, &n, LINEAR_TYPE_NUM);
+}
+
+const float *
 lastack_value(struct lastack *LS, int64_t ref, int *type) {
 	union stackid sid;
 	sid.i = ref;
@@ -433,7 +436,7 @@ lastack_pushref(struct lastack *LS, int64_t ref) {
 	union stackid id;
 	id.i = ref;
 	// check alive
-	void *address = lastack_value(LS, id.i, NULL);
+	const void *address = lastack_value(LS, id.i, NULL);
 	if (address == NULL)
 		return 1;
 	push_id(LS, id);
@@ -471,7 +474,7 @@ lastack_unmark(struct lastack *LS, int64_t markid) {
 int64_t
 lastack_mark(struct lastack *LS, int64_t tempid) {
 	int t;
-	float *address = lastack_value(LS, tempid, &t);
+	const float *address = lastack_value(LS, tempid, &t);
 	if (address == NULL) {
 		//printf("--- mark address = null ---");
 		return 0;
@@ -618,7 +621,7 @@ lastack_print(struct lastack *LS) {
 	for (i=0;i<LS->stack_top;i++) {
 		union stackid id = LS->stack[i];
 		int type;
-		float *address = lastack_value(LS, id.i, &type);
+		const float *address = lastack_value(LS, id.i, &type);
 		printf("\t[%d]", i);
 		if (id.s.persistent) {
 			printf("version = %d ", id.s.version);
@@ -648,7 +651,7 @@ lastack_dump(struct lastack *LS, int from) {
 	for (i=LS->stack_top-1;i>=from;i--) {
 		union stackid id = LS->stack[i];
 		int type;
-		float *address = lastack_value(LS, id.i, &type);
+		const float *address = lastack_value(LS, id.i, &type);
 		print_object(address, id.s.id, type);
 	}
 	if (from > 0) {
