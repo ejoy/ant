@@ -1215,6 +1215,30 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 static int
 lassign(lua_State *L) {
 	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
+	struct lastack *LS = ref->LS;
+	float v[16];
+	int i;
+	int top = lua_gettop(L);
+	switch(top) {
+	case 2:
+		break;
+	case 4:
+		v[3] = 0;
+		//fall-through
+	case 5:
+	case 17:
+		for (i=2;i<=top;i++)
+			v[i-2] = luaL_checknumber(L, i);
+		if (top == 17) {
+			lastack_pushmatrix(LS, v);
+		} else {
+			lastack_pushvec4(LS, v);
+		}
+		pushid(L, lastack_pop(LS));
+		break;
+	default:
+		return luaL_error(L, "Invalid arg number %d, support 2/4(vector3)/5(vector4)/17(matrix)", top);
+	}
 	int type = lua_type(L, 2);
 	switch(type) {
 	case LUA_TNIL:
@@ -1223,7 +1247,6 @@ lassign(lua_State *L) {
 		break;
 	case LUA_TTABLE:
 	case LUA_TNUMBER: {
-		struct lastack *LS = ref->LS;
 		if (LS == NULL) {
 			return luaL_error(L, "Init ref object first : use stack(ref, id, '=')");
 		}
