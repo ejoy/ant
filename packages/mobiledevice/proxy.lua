@@ -3,6 +3,12 @@ package.path = table.concat({
     "packages/?/?.lua",
 }, ";")
 
+function log()
+    return function(fmt, ...)
+        print(fmt:format(...))
+    end
+end
+
 local network = require 'network'
 local usbmuxd = require 'mobiledevice.usbmuxd'
 
@@ -55,6 +61,8 @@ local function update_event()
         elseif event.MessageType == 'Detached' then
             LOG('device add', devices[event.DeviceID].sn)
             devices[event.DeviceID].status = 'closed'
+        elseif event.MessageType == 'Paired' then
+            LOG('device paired', devices[event.DeviceID].sn)
         else
             assert(false, 'Unknown message: ' .. event.MessageType)
         end
