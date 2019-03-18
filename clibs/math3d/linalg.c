@@ -165,7 +165,7 @@ blob_alloc(struct blob *B, int version) {
 		static int alloc_count = 0;
 		alloc_count ++;
 		init_blob_slots(B, cap, B->cap);
-		printf("...... alloc new blob %d,s = %d,c = %d, freeslot = %d .......\n",alloc_count,B->size,B->cap,B->freeslot);
+//		printf("...... alloc new blob %d,s = %d,c = %d, freeslot = %d .......\n",alloc_count,B->size,B->cap,B->freeslot);
 	}
 	//printf("freeslot = %d \n",B->freeslot);
 	int ret = SLOT_INDEX(B->freeslot);

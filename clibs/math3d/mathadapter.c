@@ -31,7 +31,7 @@ typemismatch(lua_State *L, int t1, int t2) {
 static void *
 get_pointer(lua_State *L, struct lastack *LS, int index, int type) {
 	int t;
-	float *v;
+	const float *v;
 	if (lua_isinteger(L, index)) {
 		int64_t id = lua_tointeger(L, index);
 		v = lastack_value(LS, id, &t);
@@ -45,7 +45,7 @@ get_pointer(lua_State *L, struct lastack *LS, int index, int type) {
 	if (type != t) {
 		typemismatch(L, type, t);
 	}
-	return v;
+	return (void *)v;
 }
 
 static void *
@@ -59,7 +59,7 @@ getopt_pointer(lua_State *L, struct lastack *LS, int index, int type) {
 
 static void *
 get_pointer_type(lua_State *L, struct lastack *LS, int index, int *type) {
-	float *v;
+	const float *v;
 	if (lua_isinteger(L, index)) {
 		int64_t id = lua_tointeger(L, index);
 		v = lastack_value(LS, id, type);
@@ -70,13 +70,13 @@ get_pointer_type(lua_State *L, struct lastack *LS, int index, int *type) {
 		}
 		v = lastack_value(LS, ref->id, type);
 	}
-	return v;
+	return (void *)v;
 }
 
 static void *
 get_pointer_variant(lua_State *L, struct lastack *LS, int index, int ismatrix) {
 	int type;
-	float *v;
+	const float *v;
 	if (lua_isinteger(L, index)) {
 		int64_t id = lua_tointeger(L, index);
 		v = lastack_value(LS, id, &type);
@@ -96,7 +96,7 @@ get_pointer_variant(lua_State *L, struct lastack *LS, int index, int ismatrix) {
 		if (ismatrix)
 			typemismatch(L, LINEAR_TYPE_VEC4, type);
 	}
-	return v;
+	return (void *)v;
 }
 
 // upvalue1  mathstack
