@@ -8,7 +8,7 @@ float specular_blinn(vec3 lightdir, vec3 normal, vec3 viewdir, float shininess)
 {
 	vec3 halfdir = normalize(lightdir + viewdir);
 
-	float hdotn = dot(halfdir, normal);	// Phong need check dot result, but Blinn-Phong not	
+	float hdotn = max(0.0, dot(halfdir, normal));	// Phong need check dot result, but Blinn-Phong not	
 	return pow(hdotn, shininess * 128.0);
 }
 
