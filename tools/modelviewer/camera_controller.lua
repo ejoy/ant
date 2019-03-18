@@ -1,8 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-
-
 ecs.import "ant.inputmgr"
 
 local point2d = import_package "ant.math".point2d
@@ -17,6 +15,8 @@ camera_controller_system.singleton "control_state"
 
 camera_controller_system.depend "message_system"
 camera_controller_system.depend "camera_init"
+
+local platform = require "platform"
 
 local function camera_move(forward_axis, position, dx, dy, dz)
 	--ms(position, rotation, "b", position, "S", {dx}, "*+S", {dy}, "*+S", {dz}, "*+=")	
@@ -51,12 +51,22 @@ function camera_controller_system:init()
 	local camera = camera_entity.camera
 	camera_reset(camera, target)
 
-	local move_speed = 0.1
-	local rotation_speed = 0.01
+	local move_speed = 6000
+	local rotation_speed = 600
 	local wheel_speed = 1
 	local distance
 	local last_xy
+	local maxx, maxy
+	local xdpi, ydpi = platform.dpi()
+	xdpi = xdpi or 96
+	ydpi = ydpi or 96
 
+	local function convertxy(p2d)
+		p2d.x = p2d.x / maxx / xdpi
+		p2d.y = p2d.y / maxy / ydpi
+		return p2d
+	end
+	
 	local message = {}
 	function message:mouse_click(_, press, x, y)
 		last_xy = point2d(x, y)
@@ -69,18 +79,18 @@ function camera_controller_system:init()
 		local xy = point2d(x, y)
 		if last_xy then
 			if status.RIGHT then
-				local delta = (xy - last_xy) * move_speed
+				local delta = convertxy(xy - last_xy) * move_speed
 				camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
 				ms(target, camera.eyepos, camera.viewdir, {distance}, '*+=')
 			elseif status.LEFT then
-				local delta = (xy - last_xy) * rotation_speed
+				local delta = convertxy(xy - last_xy) * rotation_speed
 				rotate_round_point(camera, target, distance, delta.x, delta.y)
 			end
 		end
 		last_xy = xy
 	end
 
-	function message:mouse_wheel(x, y, delta)		
+	function message:mouse_wheel(_, _, delta)		
 		camera_move(camera.viewdir, camera.eyepos, 0, 0, delta * wheel_speed)
 	end
 
@@ -92,6 +102,7 @@ function camera_controller_system:init()
 	end
 
 	function message:resize(w, h)
+		maxx, maxy = w, h
 		rhwi.reset(nil, w, h)
 	end
 
