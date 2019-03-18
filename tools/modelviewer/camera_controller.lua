@@ -16,8 +16,6 @@ camera_controller_system.singleton "control_state"
 camera_controller_system.depend "message_system"
 camera_controller_system.depend "camera_init"
 
-local platform = require "platform"
-
 local function camera_move(forward_axis, position, dx, dy, dz)
 	--ms(position, rotation, "b", position, "S", {dx}, "*+S", {dy}, "*+S", {dz}, "*+=")	
 	local right_axis, up_axis = ms:base_axes(forward_axis)
@@ -51,19 +49,16 @@ function camera_controller_system:init()
 	local camera = camera_entity.camera
 	camera_reset(camera, target)
 
-	local move_speed = 6000
-	local rotation_speed = 600
+	local move_speed = 10
+	local rotation_speed = 1
 	local wheel_speed = 1
 	local distance
 	local last_xy
-	local maxx, maxy
-	local xdpi, ydpi = platform.dpi()
-	xdpi = xdpi or 96
-	ydpi = ydpi or 96
+	local xdpi, ydpi = rhwi.dpi()
 
 	local function convertxy(p2d)
-		p2d.x = p2d.x / maxx / xdpi
-		p2d.y = p2d.y / maxy / ydpi
+		p2d.x = p2d.x / xdpi
+		p2d.y = p2d.y / ydpi
 		return p2d
 	end
 	
@@ -102,7 +97,6 @@ function camera_controller_system:init()
 	end
 
 	function message:resize(w, h)
-		maxx, maxy = w, h
 		rhwi.reset(nil, w, h)
 	end
 
