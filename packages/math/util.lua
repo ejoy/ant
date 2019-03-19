@@ -72,6 +72,7 @@ function util.frustum_from_fov(frustum, n, f, fov, aspect)
 	frustum.r = hw
 	frustum.t = hh
 	frustum.b = -hh
+	return frustum
 end
 
 function util.create_persistent_vector(value)

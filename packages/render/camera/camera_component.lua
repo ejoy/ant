@@ -32,8 +32,6 @@ camera_init_sys.singleton "window"
 
 function camera_init_sys:init()
 	local fb_size = world.args.fb_size
-	local frustum = {type="mat"}
-	mu.frustum_from_fov(frustum, 0.1, 10000, 60, 1)
 
 	local camera_eid = world:create_entity {
 		main_camera = true,
@@ -41,7 +39,7 @@ function camera_init_sys:init()
 			type = "",
 			eyepos = {0, 0, 0, 1},
 			viewdir = {0, 0, 0, 0},
-			frustum = frustum,
+			frustum = mu.frustum_from_fov({type="mat"}, 0.1, 10000, 60, 1),
 			viewid = VIEWID_MAINCAMERA,
 		},
         view_rect = {

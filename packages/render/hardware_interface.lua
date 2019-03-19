@@ -2,6 +2,9 @@ local hw = {}
 hw.__index = hw
 
 local platform = require "platform"
+local math_adapter = require "math3d.adapter"
+local ms = import_package "ant.math".stack
+local bgfx = require "bgfx"
 local platos = platform.OS
 
 local caps = nil
@@ -38,9 +41,18 @@ local function get_flags()
 	return table.concat(t)
 end
 
-function hw.init(args)
+local function redirect_bgfx_function()
+	bgfx.set_transform = math_adapter.matrix(ms, bgfx.set_transform, 1, 1)
+	bgfx.set_view_transform = math_adapter.matrix(ms, bgfx.set_view_transform, 2, 2)
+	bgfx.set_uniform = math_adapter.variant(ms, bgfx.set_uniform_matrix, bgfx.set_uniform_vector, 2)
+	local idb = bgfx.instance_buffer_metatable()
+	idb.pack = math_adapter.format(ms, idb.pack, idb.format, 3)
+	idb.__call = idb.pack
+end
+
+local function bgfx_init(args)
 	w, h = args.width, args.height
-	local bgfx = require "bgfx"
+	
 	args.renderer = check_renderer(args.renderer)
 	args.getlog = args.getlog or true
 	if args.reset == nil then
@@ -55,6 +67,11 @@ function hw.init(args)
 	assert(caps == nil)
 	caps = bgfx.get_caps()
 
+	redirect_bgfx_function()
+end
+
+function hw.init(args)
+	bgfx_init(args)
 	local vfs = require "vfs"
 	vfs.identity(hw.identity())
 end

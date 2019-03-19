@@ -1,8 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-local filterutil = require "filter.util"
-
 local shadow_primitive_filter_sys = ecs.system "shadow_primitive_filter_system"
 
 shadow_primitive_filter_sys.depend "primitive_filter_system"
@@ -14,9 +12,7 @@ shadow_primitive_filter_sys.dependby "final_filter_system"
 local function get_shadow_properties(uniform_properties, texture_properties)
 	for _,l_eid in world:each("shadow_maker") do 
 		local  sm_ent   = world[l_eid]
-		local  uniforms = sm_ent.shadow_rt.uniforms 
-		-- print(" get shadow uniforms in filter",#uniforms )
-		-- uniforms.shadowMap
+		local  uniforms = sm_ent.shadow_rt.uniforms
 		uniform_properties["u_params1"] = { 
 			name = "u_params1", type="v4", 
 			value = {  

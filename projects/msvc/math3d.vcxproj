@@ -178,9 +178,11 @@
   <ItemGroup>
     <ClCompile Include="..\..\clibs\math3d\linalg.c" />
     <ClCompile Include="..\..\clibs\math3d\math3d.cpp" />
+    <ClCompile Include="..\..\clibs\math3d\mathadapter.c" />
     <ClCompile Include="..\..\clibs\math3d\mathbaselib.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\clibs\math3d\fastmath.h" />
     <ClInclude Include="..\..\clibs\math3d\linalg.h" />
     <ClInclude Include="..\..\clibs\math3d\refstack.h" />
   </ItemGroup>

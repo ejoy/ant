@@ -12,35 +12,6 @@ local property_types = {
     texture = "s",
 }
 
-local function update_texture(property, texture)
-	assert(texture.type == "texture")
-	assert(property_types[texture.type] == property.type)
-	local stage = assert(texture.stage)
-	bgfx.set_texture(stage, assert(property.handle), assert(texture.handle))
-end
-
-local function update_uniform(property, uniform)
-	assert(property_types[uniform.type] == property.type)
-
-	local value = uniform.value
-
-	local function need_unpack(val)
-		if type(val) == "table" then
-			local elemtype = type(val[1])
-			if elemtype == "table" or elemtype == "userdata" or elemtype == "luserdata" then
-				return true
-			end
-		end
-		return false
-	end
-	
-	if need_unpack(value) then
-		bgfx.set_uniform(assert(property.handle), table.unpack(value))
-	else
-		bgfx.set_uniform(assert(property.handle), value)
-	end
-end
-
 local function update_properties(shader, properties, render_properties)
 	local su = shader.uniforms	
 	for name, u in pairs(su) do
@@ -60,14 +31,15 @@ local function update_properties(shader, properties, render_properties)
 		p = p or find_property(name, render_properties.lighting)
 		p = p or find_property(name, render_properties.shadow)
 
-		if p == nil then
-			log(string.format("uniform : %s, not privided, but shader program needed", name))
-		else			
+		if p then
+			assert(property_types[p.type] == u.type)
 			if p.type == "texture" then
-				update_texture(u, p)
-			else
-				update_uniform(u, p)
+				bgfx.set_texture(assert(p.stage), u.handle, p.handle)
+			else				
+				bgfx.set_uniform(u.handle, p.value)
 			end
+		else
+			--log(string.format("uniform : %s, not privided, but shader program needed", name))
 		end
 	end
 end

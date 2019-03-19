@@ -12,7 +12,7 @@ function vector.init(s)
 end
 
 function vector.delete(m)
-    m()
+    m(nil)
 end
 
 function vector.save(v)

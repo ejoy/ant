@@ -83,7 +83,7 @@ function view_sys:update()
 		local camera = entity.camera
 		local vid = camera.viewid
 		local view, proj = mu.view_proj_matrix(entity)
-		bgfx.set_view_transform(vid, ms(view, "m"), ms(proj, "m"))
+		bgfx.set_view_transform(vid, view, proj)
 	end
 end
 --@]

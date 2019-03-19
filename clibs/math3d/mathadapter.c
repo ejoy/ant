@@ -14,6 +14,13 @@ static const char * linear_type[] = {
 	"EULER",
 };
 
+typedef enum {
+	SET_Mat = 0,
+	SET_Vec,
+	SET_Array,
+	SET_Unknown,
+}StackElemType;
+
 static const char *
 linear_typename(int t) {
 	if (t<0 || t>= LINEAR_TYPE_COUNT) {
@@ -74,7 +81,7 @@ get_pointer_type(lua_State *L, struct lastack *LS, int index, int *type) {
 }
 
 static void *
-get_pointer_variant(lua_State *L, struct lastack *LS, int index, int ismatrix) {
+get_pointer_variant(lua_State *L, struct lastack *LS, int index, int elemtype) {
 	int type;
 	float *v;
 	if (lua_isinteger(L, index)) {
@@ -90,10 +97,10 @@ get_pointer_variant(lua_State *L, struct lastack *LS, int index, int ismatrix) {
 		v = lastack_value(LS, ref->id, &type);
 	}
 	if (type == LINEAR_TYPE_MAT) {
-		if (!ismatrix)
+		if (elemtype != SET_Mat)
 			typemismatch(L, LINEAR_TYPE_MAT, type);
 	} else {
-		if (ismatrix)
+		if (elemtype == SET_Mat)
 			typemismatch(L, LINEAR_TYPE_VEC4, type);
 	}
 	return v;
@@ -186,6 +193,68 @@ lbind_matrix(lua_State *L) {
 	return 1;
 }
 
+static int
+check_elem_type(lua_State *L, struct lastack *LS, int index) {	
+	if (lua_type(L, index) == LUA_TTABLE) {
+		int fieldtype = lua_getfield(L, index, "n");	
+		lua_pop(L, 1);
+		if (fieldtype != LUA_TNIL)			
+			return SET_Array;
+
+		return lua_rawlen(L, index) >= 12 ? SET_Mat : SET_Vec;
+	}
+
+	int type;
+	get_pointer_type(L, LS, index, &type);
+	return type == LINEAR_TYPE_MAT ? SET_Mat : SET_Vec;
+}
+
+static void
+unpack_table_on_stack(lua_State *L, struct lastack *LS, int from, int top, int elemtype) {
+	for (int stackidx = from; stackidx <= top; ++stackidx) {
+		if (lua_getfield(L, stackidx, "n") != LUA_TNIL) {
+			const int num = (int)lua_tointeger(L, -1);
+			lua_pop(L, 1);	// pop 'n'	
+
+			const int tablenum = (int)lua_rawlen(L, stackidx);
+			if (num != tablenum) {
+				luaL_error(L, "'n' field: %d not equal to table count: %d", num, tablenum);
+			}
+
+			for (int tblidx = 0; tblidx < num; ++tblidx) {
+				lua_geti(L, stackidx, tblidx + 1);
+				if (lua_type(L, -1) == LUA_TTABLE) {
+					int debug = 0;
+				}
+				void * v = get_pointer_variant(L, LS, -1, elemtype);
+				if (v) {
+					lua_pop(L, 1);	// pop lua_geti value
+					lua_pushlightuserdata(L, v);
+				} else {
+					luaL_checktype(L, -1, LUA_TTABLE);
+				}
+
+				// v == NULL will not pop, make it in the stack
+			}
+		}
+	}
+
+	for (int ii = 0; ii <= top - from; ++ii) {
+		lua_remove(L, from);
+	}
+}
+
+static void
+convert_stack_value(lua_State *L, struct lastack *LS, int from, int top, int elemtype) {
+	for (int i = from; i <= top; i++) {
+		void * v = get_pointer_variant(L, LS, i, elemtype);
+		if (v) {
+			lua_pushlightuserdata(L, v);
+			lua_replace(L, i);
+		}
+	}
+}
+
 // upvalue1 mathstack
 // upvalue2 matrix cfunction
 // upvalue3 vector cfunction
@@ -195,29 +264,17 @@ lvariant(lua_State *L) {
 	struct boxstack *bp = lua_touserdata(L, lua_upvalueindex(1));
 	struct lastack *LS = bp->LS;
 	int from = lua_tointeger(L, lua_upvalueindex(4));
-	int ismatrix;
-	if (lua_type(L, from) == LUA_TTABLE) {
-		ismatrix = lua_rawlen(L, from) >= 12;
-	} else {
-		int type;
-		void *v = get_pointer_type(L, LS, from, &type);
-		ismatrix = (type == LINEAR_TYPE_MAT);
-		lua_pushlightuserdata(L, v);
-		lua_replace(L, from);
-	}
-	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(ismatrix ? 2 : 3));
-
-	int i;
 	int top = lua_gettop(L);
+	int elemtype = check_elem_type(L, LS, from);	
+	top = lua_gettop(L);
+	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(elemtype == SET_Mat ? 2 : 3));
 
-	for (i=from+1;i<=top;i++) {
-		void * v = get_pointer_variant(L, LS, i, ismatrix);
-		if (v) {
-			lua_pushlightuserdata(L, v);
-			lua_replace(L, i);
-		}
+	top = lua_gettop(L);
+	if (elemtype == SET_Array) {
+		unpack_table_on_stack(L, LS, from, top, elemtype);
+	} else {		
+		convert_stack_value(L, LS, from, top, elemtype);
 	}
-
 	return f(L);
 }
 

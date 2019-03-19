@@ -51,7 +51,7 @@ function primitive_filter_sys:update()
 				ru.insert_primitive(eid, 
 					assert(ce.mesh.assetinfo).handle,
 					assert(ce.material.content),
-					ms(ce.transform.world, "m"),
+					ce.transform.world,
 					filter)
 			end
 		end	

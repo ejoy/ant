@@ -6,13 +6,25 @@ local world = ecs.world
 local math = import_package "ant.math"
 local ms = math.stack
 
+local function update_uniforms(uniforms, properties)
+	for k, v in pairs(properties) do
+		assert(type(v) == "table")
+		local value = v.value
+		local n = #value
+		if n > 0 then
+			value.n = #value
+			uniforms[k] = v
+		end
+	end
+end
+
 local function append_lighting_properties(filter)
 
 	local function add_directional_light_properties(uniform_properties)
 		local dlight_info = {
-			dir = {},
-			color = {},
-			intensity = {}
+			directional_lightdir = {name="Light Direction", type="v4", value={}},
+			directional_color = {name="Light Color", type="color", value={}},
+			directional_intensity = {name="Light Intensity", type="v4",value={}},
 		}
 
 		local dirty = false
@@ -22,25 +34,16 @@ local function append_lighting_properties(filter)
 
 			if l.dirty then
 				dirty = true
-				-- point from vertex position to light position			
-				table.insert(dlight_info.dir, ms(dlight.rotation, "dim")) 
-				table.insert(dlight_info.color, l.color)
-				table.insert(dlight_info.intensity, {l.intensity, 0.28, 0, 0})
+				-- point from vertex position to light position				
+				table.insert(dlight_info.directional_lightdir.value, ms:ref "vector" (ms(dlight.rotation, "diP")))
+				table.insert(dlight_info.directional_color.value, l.color)
+				table.insert(dlight_info.directional_intensity.value, {l.intensity, 0.28, 0, 0})
 				l.dirty = nil
 			end
 		end
 
 		if dirty then
-			if next(dlight_info.dir) then
-				uniform_properties["directional_lightdir"] 	= {name="Light Direction", type="v4", value = dlight_info.dir}
-			end
-			
-			if next(dlight_info.color) then
-				uniform_properties["directional_color"] 	= {name="Light Color", type="color", value = dlight_info.color}
-			end
-			if next(dlight_info.intensity) then
-				uniform_properties["directional_intensity"] = {name="Light Intensity", type="v4", value = dlight_info.intensity}
-			end
+			update_uniforms(uniform_properties, dlight_info)
 		end
 	end
 
@@ -52,10 +55,10 @@ local function append_lighting_properties(filter)
 			-- skycolor = {1,1,1,1},
 			-- midcolor = {1,1,1,1},
 			-- groundcolor = {1,1,1,1},
-			mode = {},
-			skycolor = {},
-			midcolor = {},
-			groundcolor = {},
+			ambient_mode = {name ="ambient_mode",type="v4",value ={}},
+			ambient_skycolor = {name ="ambient_skycolor",type="color",value={}},
+			ambient_midcolor = {name ="ambient_midcolor",type="color",value={}},
+			ambient_groundcolor = {name ="ambient_groundcolor",type="color",value={}},
 		}
 
 		local dirty = false
@@ -72,30 +75,18 @@ local function append_lighting_properties(filter)
 				elseif l.mode == "gradient" then 
 					type = 2 
 				end 
-				table.insert( ambient_data.mode, {type, l.factor, 0, 0} )   
-				table.insert( ambient_data.skycolor,  l.skycolor )
-				table.insert( ambient_data.midcolor, l.midcolor )
-				table.insert( ambient_data.groundcolor, l.groundcolor )
+
+				table.insert( ambient_data.ambient_mode.value, {type, l.factor, 0, 0} )   
+				table.insert( ambient_data.ambient_skycolor.value,  l.skycolor )
+				table.insert( ambient_data.ambient_midcolor.value, l.midcolor )
+				table.insert( ambient_data.ambient_groundcolor.value, l.groundcolor )
 
 				l.dirty = nil
 			end
 		end 
 
 		if dirty then
-			if next(ambient_data.mode) then
-				uniform_properties["ambient_mode"] = { name ="ambient_mode",type="v4",value = ambient_data.mode }
-			end
-
-			if next(ambient_data.skycolor) then
-				uniform_properties["ambient_skycolor"] = { name ="ambient_skycolor",type="color",value=ambient_data.skycolor}
-			end
-
-			if next(ambient_data.midcolor) then
-				uniform_properties["ambient_midcolor"] = { name ="ambient_midcolor",type="color",value=ambient_data.midcolor}
-			end
-			if next(ambient_data.groundcolor) then
-				uniform_properties["ambient_groundcolor"] = { name ="ambient_groundcolor",type="color",value=ambient_data.groundcolor}
-			end
+			update_uniforms(uniform_properties, ambient_data)
 		end
 	end 
 
