@@ -153,7 +153,7 @@ function mt:__call(...)
 	local _ = upvalue1
 	local args = table.pack(...)
 	local stack = reverse(ms('@'))
-	local m = {}
+	local pop = {}
 	local rets = {}
 	local status = {
 		currentline = 0,
@@ -173,7 +173,10 @@ function mt:__call(...)
 	local function do_command(c)
 		if c == 'm' then
 			stack[#stack+1] = 'T'
-			m[#rets+1] = true
+			pop[#rets+1] = c
+		elseif c == 'P' then
+			stack[#stack+1] = 'T'
+			pop[#rets+1] = c
 		else
 			stack[#stack+1] = c
 		end
@@ -201,8 +204,8 @@ function mt:__call(...)
 	if stack.n ~= 0 then
 		ms(table.unpack(stack))
 	end
-	for i in pairs(m) do
-		rets[i] = ms(rets[i], 'm')
+	for i, c in pairs(pop) do
+		rets[i] = ms(rets[i], c)
 	end
 	return table.unpack(rets)
 end
