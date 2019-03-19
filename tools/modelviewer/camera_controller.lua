@@ -34,12 +34,11 @@ end
 
 local function rotate_round_point(camera, point, distance, dx, dy)
 	local right, up = ms:base_axes(camera.viewdir)
-	local forward = ms(
+	ms(camera.viewdir,
 				{type="q", axis=up, radian={dx}}, 
-				{type="q", axis=right, radian={dy}}, "*",	-- rotation quternion in stack
-				camera.viewdir, "i*nP")	-- get view dir from point to camera position, than multipy with rotation quternion
-	ms(camera.eyepos, point, forward, {distance}, '*+=',	--calculate new camera position: point + forward * distance
-		camera.viewdir, forward, 'i=')	--reverse forward vector, make camera position to point
+				{type="q", axis=right, radian={dy}},	-- rotation quternion in stack
+				"3**n=")	-- get view dir from point to camera position, than multipy with rotation quternion
+	ms(camera.eyepos, point, camera.viewdir, {distance}, '*-=')	--calculate new camera position: point - viewdir * distance
 end
 
 function camera_controller_system:init()	
