@@ -222,10 +222,7 @@ unpack_table_on_stack(lua_State *L, struct lastack *LS, int from, int top, int e
 			}
 
 			for (int tblidx = 0; tblidx < num; ++tblidx) {
-				lua_geti(L, stackidx, tblidx + 1);
-				if (lua_type(L, -1) == LUA_TTABLE) {
-					int debug = 0;
-				}
+				lua_geti(L, stackidx, tblidx + 1);				
 				void * v = get_pointer_variant(L, LS, -1, elemtype);
 				if (v) {
 					lua_pop(L, 1);	// pop lua_geti value
@@ -263,13 +260,10 @@ static int
 lvariant(lua_State *L) {
 	struct boxstack *bp = lua_touserdata(L, lua_upvalueindex(1));
 	struct lastack *LS = bp->LS;
-	int from = lua_tointeger(L, lua_upvalueindex(4));
-	int top = lua_gettop(L);
-	int elemtype = check_elem_type(L, LS, from);	
-	top = lua_gettop(L);
+	const int from = lua_tointeger(L, lua_upvalueindex(4));
+	const int top = lua_gettop(L);
+	const int elemtype = check_elem_type(L, LS, from);	
 	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(elemtype == SET_Mat ? 2 : 3));
-
-	top = lua_gettop(L);
 	if (elemtype == SET_Array) {
 		unpack_table_on_stack(L, LS, from, top, elemtype);
 	} else {		
