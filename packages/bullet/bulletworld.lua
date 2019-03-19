@@ -10,15 +10,26 @@ local bullet_sdk = bullet_module.new()
 
 local bullet_world = {}
 bullet_world.__index = function (tbl, key)	
-	return bullet_world[key] or tbl.world[key]
+	local bw = tbl.world
+	return bullet_world[key] or 
+		function (t, ...)
+			return bw[key](bw, ...)
+		end
 end
 
+local function bind_math3d_adapter(bw)
+	local bw_mt = getmetatable(bw)
+	bw_mt.new_obj = math_adapter.vector(ms, bw_mt.new_obj, 4)
+	bw_mt.set_obj_transform = math_adapter.vector(ms, bw_mt.set_obj_transform, 3);
+	bw_mt.set_obj_position = math_adapter.vector(ms, bw_mt.set_obj_position, 3);
+	bw_mt.set_obj_rotation = math_adapter.vector(ms, bw_mt.set_obj_rotation, 3);
+
+	return bw
+end
 
 function bullet_world.new()
-	local bw = bullet_sdk:new_world()
-
     return setmetatable({
-		world = bw
+		world = bind_math3d_adapter(bullet_sdk:new_world())
 	}, bullet_world)
 end 
 
@@ -27,11 +38,10 @@ function bullet_world:delete()
    self:delete_debug_drawer(true)
 end
 
-function bullet_world:create_collider(shapetype, shapeinfo, obj_idx, pos, rot)	
-	local shape = self:new_shape(shapetype, shapeinfo)
-	local object = self:new_obj(shape, obj_idx, pos, rot)
+function bullet_world:create_collider(shapehandle, obj_idx, pos, rot)
+	local object = self:new_obj(shapehandle, obj_idx, pos, rot)
 	self:add_obj(object)
-	return object, shape
+	return object
 end
 
 
@@ -60,28 +70,28 @@ end
 -- 	return obj, shape
 -- end 
 
-local default_quat = ms:ref "quaternion" (0, 0, 0, 1)
-function bullet_world:init_collider_component(collidercomp, obj_idx, srt, offset)		
-	local collider = collidercomp.collider
-	collider.obj_idx = obj_idx
+-- local default_quat = ms:ref "quaternion" (0, 0, 0, 1)
+-- function bullet_world:init_collider_component(collidercomp, obj_idx, srt, offset)		
+-- 	local collider = collidercomp.collider
+-- 	collider.obj_idx = obj_idx
 
-	local s, r, t = srt.s, srt.r, srt.t
-	local pos = offset and ms(t, offset, "+m") or ms(t, "m")
+-- 	local s, r, t = srt.s, srt.r, srt.t
+-- 	local pos = offset and ms(t, offset, "+m") or ms(t, "m")
 
-	local shapeinfo = collidercomp.shape
-	local obj, shape = self:create_collider(shapeinfo.type, shapeinfo, obj_idx, pos, ~default_quat)
+-- 	local shapeinfo = collidercomp.shape
+-- 	local obj, shape = self:create_collider(shapeinfo.type, shapeinfo, obj_idx, pos, ~default_quat)
 
-	collider.handle = obj
-	shapeinfo.handle = shape
+-- 	collider.handle = obj
+-- 	shapeinfo.handle = shape
 
-	self:set_obj_rot_euler(obj, ms(r, ms.toquat))
-	self:set_shape_scale(obj, ms(s, "m"))
-end
+-- 	self:set_obj_rot_euler(obj, ms(r, ms.toquat))
+-- 	self:set_shape_scale(obj, ms(s, "m"))
+-- end
 
-function bullet_world:add_component_collider(world, eid, collidername, offset)	
-	local e = world[eid]
-	self:init_collider_component(e[collidername], eid, e.transform, offset)
-end 
+-- function bullet_world:add_component_collider(world, eid, collidername, offset)	
+-- 	local e = world[eid]
+-- 	self:init_collider_component(e[collidername], eid, e.transform, offset)
+-- end 
 
 -- special handy function, for lazy auto create component terrain collider 
 -- function bullet_world:add_component_terCollider(world,eid,type,ms)

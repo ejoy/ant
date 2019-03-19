@@ -194,6 +194,44 @@ lbind_matrix(lua_State *L) {
 }
 
 static int
+lvector(lua_State *L) {
+	struct boxstack *bp = lua_touserdata(L, lua_upvalueindex(1));
+	struct lastack *LS = bp->LS;
+	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(2));
+	const int from = lua_tointeger(L, lua_upvalueindex(3));
+
+	const int top = lua_gettop(L);
+
+	for (int ii = from; ii <= top; ++ii) {
+		int type;
+		void* p = get_pointer_type(L, LS, ii, &type);
+		if (p == NULL) {
+			luaL_error(L, "arg index:%d, could not convert to light userdata with math3d stack object", ii);
+		}
+
+		lua_pushlightuserdata(L, p);
+		lua_replace(L, ii);
+	}
+
+	return f(L);
+}
+
+static int
+lbind_vector(lua_State *L) {
+	luaL_checkudata(L, 1, LINALG);
+	if (!lua_iscfunction(L, 2))
+		return luaL_error(L, "need a c function");
+	if (lua_getupvalue(L, 2, 1) != NULL)
+		luaL_error(L, "Only support light cfunction");
+
+	luaL_checkinteger(L, 3);
+	lua_settop(L, 3);
+	lua_pushcclosure(L, lvector, 3);
+	return 1;
+}
+
+
+static int
 check_elem_type(lua_State *L, struct lastack *LS, int index) {	
 	if (lua_type(L, index) == LUA_TTABLE) {
 		int fieldtype = lua_getfield(L, index, "n");	
@@ -360,6 +398,7 @@ luaopen_math3d_adapter(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "matrix", lbind_matrix },
+		{ "vector", lbind_vector},
 		{ "variant", lbind_variant },
 		{ "format", lbind_format },
 		{ NULL, NULL },

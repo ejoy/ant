@@ -1,6 +1,7 @@
 local ecs = ...
 local world = ecs.world
-		
+
+local Physics = assert(world.args.Physics)
 local ms = import_package "ant.math".stack
 ecs.tag "collider_tag"
 
@@ -17,6 +18,7 @@ end
 
 function coll:init()
 	self.obj_idx = collider_obj_idx_creator()
+	return self
 end
 
 ecs.component "plane_shape"
@@ -69,25 +71,21 @@ for _, pp in ipairs {
 	{"character_collider", "character_shape" },
 } do
 	local collidername, shapename = pp[1], pp[2]
-	ecs.component(collidername) { depend = "skeleton" }
-		.collider "collider"
-		.shape(shapename)
-
 	local s = ecs.component(shapename)
 	function s:init()
-		local Physics = assert(world.args.Physics)
 		self.handle = Physics:new_shape(self.type, self)
 		return self
 	end
 
 	function s:delete()
 		if self.handle then
-			local Physics = assert(world.args.Physics)			
 			Physics:del_shape(self.handle)		
 		end
 	end
 
-	local c = ecs.component(collidername) {depend = "transform"}
+	local c = ecs.component(collidername) { depend = "transform" }
+		.collider "collider"
+		.shape(shapename)
 
 	function c:postinit(e)
 		local collider = self.collider
@@ -95,12 +93,9 @@ for _, pp in ipairs {
 
 		local trans = e.transform
 		local pos = ms(trans.t, collider.center, "+P")
-		assert(shapeinfo.handle == nil)
+		
 		assert(collider.handle == nil)
-
-		local Physics = assert(world.args.Physics)
-		shapeinfo.handle, collider.handle = 
-		Physics:create_collider(shapeinfo.type, shapeinfo, collider.obj_idx, pos, ms(trans.r, "qP"))
+		collider.handle = Physics:create_collider(assert(shapeinfo.handle), collider.obj_idx, pos, ms(trans.r, "qP"))
 	end
 
 	function c:delete()

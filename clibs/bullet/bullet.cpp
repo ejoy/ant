@@ -669,13 +669,11 @@ lset_obj_trans(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
 	auto obj = (plCollisionObjectHandle)lua_touserdata(L, 2);
 
-	luaL_checktype(L, 3, LUA_TTABLE);
-	luaL_checktype(L, 4, LUA_TTABLE);
+	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+	plReal *pos = (plReal *)lua_touserdata(L, 3);
 
-	plVector3 pos;
-	extract_vec(L, 3, 3, pos);
-	plQuaternion quat;
-	extract_vec(L, 4, 4, quat);
+	luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
+	plReal* quat = (plReal *)lua_touserdata(L, 4);	
 
 	plSetCollisionObjectTransform(world->sdk, world->world, obj, pos, quat);
 	return 0;
@@ -689,10 +687,9 @@ lset_obj_pos(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
 	auto obj = (plCollisionObjectHandle)lua_touserdata(L, 2);
 
-	luaL_checktype(L, 3, LUA_TTABLE);
-	plVector3 pos;
-	extract_vec(L, 3, 3, pos);
-
+	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+	plReal *pos = (plReal *)lua_touserdata(L, 3);
+	
 	plSetCollisionObjectPosition(world->sdk, world->world, obj, pos);
 
 	return 0;
@@ -705,9 +702,8 @@ lset_obj_rot(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
 	auto obj = (plCollisionObjectHandle)lua_touserdata(L, 2);
 
-	luaL_checktype(L, 3, LUA_TTABLE);
-	plQuaternion quat;
-	extract_vec(L, 3, 4, quat);
+	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+	plReal *quat = (plReal *)lua_touserdata(L, 3);	
 
 	plSetCollisionObjectRotation(world->sdk, world->world, obj, quat);
 
@@ -733,8 +729,7 @@ register_bullet_world_node(lua_State *L) {
 		"remove_obj",			lremove_collision_obj,
 		"set_obj_transform",	lset_obj_trans,
 		"set_obj_position",		lset_obj_pos,
-		"set_obj_rotation",		lset_obj_rot,
-		"set_obj_pos",			lset_obj_pos,
+		"set_obj_rotation",		lset_obj_rot,		
 		"add_to_compound",		ladd_to_compound,
 	
 		"world_collide",		lworld_collide,
