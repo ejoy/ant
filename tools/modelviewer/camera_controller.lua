@@ -1,8 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-
-
 ecs.import "ant.inputmgr"
 
 local point2d = import_package "ant.math".point2d
@@ -34,15 +32,12 @@ local function camera_reset(camera, target)
 	ms(camera.viewdir, target, camera.eyepos, "-n=")
 end
 
-local function rotate_round_point(camera, point, dx, dy)
+local function rotate_round_point(camera, point, distance, dx, dy)
 	local right, up = ms:base_axes(camera.viewdir)
 	local forward = ms(
 				{type="q", axis=up, radian={dx}}, 
 				{type="q", axis=right, radian={dy}}, "*",	-- rotation quternion in stack
 				camera.viewdir, "i*nP")	-- get view dir from point to camera position, than multipy with rotation quternion
-
-	local distance = math.sqrt(ms(point, camera.eyepos, "-1.T")[1])	-- calculate 
-
 	ms(camera.eyepos, point, forward, {distance}, '*+=',	--calculate new camera position: point + forward * distance
 		camera.viewdir, forward, 'i=')	--reverse forward vector, make camera position to point
 end
@@ -54,37 +49,43 @@ function camera_controller_system:init()
 	local camera = camera_entity.camera
 	camera_reset(camera, target)
 
-	local move_speed = 1
+	local move_speed = 10
+	local rotation_speed = 1
 	local wheel_speed = 1
-	local message = {}
-
+	local distance
 	local last_xy
-	function message:mouse_click(btn, p, x, y, status)
+	local xdpi, ydpi = rhwi.dpi()
+
+	local function convertxy(p2d)
+		p2d.x = p2d.x / xdpi
+		p2d.y = p2d.y / ydpi
+		return p2d
+	end
+	
+	local message = {}
+	function message:mouse_click(_, press, x, y)
 		last_xy = point2d(x, y)
+		if press then
+			distance = math.sqrt(ms(target, camera.eyepos, "-1.T")[1])
+		end
 	end
 
 	function message:mouse_move(x, y, status)
 		local xy = point2d(x, y)
 		if last_xy then
 			if status.RIGHT then
-				local speed = move_speed * 0.1
-				local delta = (xy - last_xy) * speed
-				camera_move(camera.viewdir, target, -delta.x, delta.y, 0)
+				local delta = convertxy(xy - last_xy) * move_speed
 				camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
+				ms(target, camera.eyepos, camera.viewdir, {distance}, '*+=')
 			elseif status.LEFT then
-				local speed = move_speed * 0.01
-				local delta = (xy - last_xy) * speed
-				rotate_round_point(camera, target, delta.x, delta.y)
-				-- local distance = math.sqrt(ms(target, camera.eyepos, "-1.T")[1])
-				-- camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
-				-- ms(camera.viewdir, target, camera.eyepos, "-n=")
-				-- ms(camera.eyepos, target, {-distance}, camera.viewdir, "*+=")
+				local delta = convertxy(xy - last_xy) * rotation_speed
+				rotate_round_point(camera, target, distance, delta.x, delta.y)
 			end
 		end
 		last_xy = xy
 	end
 
-	function message:mouse_wheel(x, y, delta)		
+	function message:mouse_wheel(_, _, delta)		
 		camera_move(camera.viewdir, camera.eyepos, 0, 0, delta * wheel_speed)
 	end
 

@@ -19,7 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\platform\lplatform.c" />
+    <ClCompile Include="..\..\clibs\platform\lplatform.cpp" />
+    <ClCompile Include="..\..\clibs\platform\platform_mingw.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\clibs\platform\platform_ios.mm" />
+    <None Include="..\..\clibs\platform\platform_osx.mm" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

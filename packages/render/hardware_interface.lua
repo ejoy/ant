@@ -28,6 +28,7 @@ end
 
 local flags = {}
 local w, h
+local nwh
 
 local function get_flags()
 	local t = {}	
@@ -51,8 +52,8 @@ local function redirect_bgfx_function()
 end
 
 local function bgfx_init(args)
-	w, h = args.width, args.height
-	
+	nwh, w, h = args.nwh, args.width, args.height
+	local bgfx = require "bgfx"
 	args.renderer = check_renderer(args.renderer)
 	args.getlog = args.getlog or true
 	if args.reset == nil then
@@ -74,6 +75,10 @@ function hw.init(args)
 	bgfx_init(args)
 	local vfs = require "vfs"
 	vfs.identity(hw.identity())
+end
+
+function hw.dpi()
+	return platform.dpi(nwh)
 end
 
 function hw.reset(t, w_, h_)

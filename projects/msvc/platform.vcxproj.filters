@@ -15,8 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\platform\lplatform.c">
+    <ClCompile Include="..\..\clibs\platform\lplatform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\platform\platform_mingw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\clibs\platform\platform_ios.mm" />
+    <None Include="..\..\clibs\platform\platform_osx.mm" />
   </ItemGroup>
 </Project>

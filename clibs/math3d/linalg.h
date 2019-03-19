@@ -34,13 +34,14 @@ char * lastack_idstring(int64_t id, char tmp[64]);	// for debug
 
 struct lastack * lastack_new();
 void lastack_delete(struct lastack *LS);
-void lastack_pushvector(struct lastack *LS, float *vec4, int type);
-void lastack_pushvec4(struct lastack *LS, float *v);
-void lastack_pushquat(struct lastack *LS, float *v);
-void lastack_pusheuler(struct lastack *LS, float *v);
+void lastack_pushobject(struct lastack *LS, const float *v, int type);
+//void lastack_pushvector(struct lastack *LS, const float *vec4, int type);
+void lastack_pushvec4(struct lastack *LS, const float *v);
+void lastack_pushquat(struct lastack *LS, const float *v);
+void lastack_pusheuler(struct lastack *LS, const float *v);
 void lastack_pushnumber(struct lastack *LS, float number);
-void lastack_pushmatrix(struct lastack *LS, float *mat);
-float * lastack_value(struct lastack *LS, int64_t id, int *type);
+void lastack_pushmatrix(struct lastack *LS, const float *mat);
+const float * lastack_value(struct lastack *LS, int64_t id, int *type);
 int lastack_pushref(struct lastack *LS, int64_t id);
 int64_t lastack_mark(struct lastack *LS, int64_t tempid);
 int64_t lastack_unmark(struct lastack *LS, int64_t markid);

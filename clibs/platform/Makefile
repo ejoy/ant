@@ -1,20 +1,35 @@
 include ../common.mk
 include ../bgfx/bgfx_define.mk
 
-
 ifeq "$(PLAT)" "mingw"
 default : platform.dll
 else
 default : libplatform-$(PLAT).a
 endif
 
-$(ODIR)/lplatform.o : lplatform.c | $(ODIR)
-	$(CC) -c $(CFLAGS) $(LUAINC) -I$(BXSRC)/include -o $@ $<
+ifeq "$(PLAT)" "mingw"
+PLAT_LIB =
+PLAT_CXX = cpp
+else ifeq "$(PLAT)" "osx"
+PLAT_LIB =
+PLAT_CXX = mm
+else ifeq "$(PLAT)" "ios"
+PLAT_LIB =
+PLAT_CXX = mm
+endif
 
-platform.dll : $(ODIR)/lplatform.o
+OBJS = $(ODIR)/lplatform.o $(ODIR)/platform_$(PLAT).o
+
+$(ODIR)/platform_$(PLAT).o : platform_$(PLAT).$(PLAT_CXX) | $(ODIR)
+	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
+
+$(ODIR)/lplatform.o : lplatform.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) $(LUAINC) -I$(BXSRC)/include -o $@ $<
+
+platform.dll : $(OBJS)
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
 
-libplatform-$(PLAT).a : $(ODIR)/lplatform.o
+libplatform-$(PLAT).a : $(OBJS)
 	ar rsv $@ $^
 
 $(ODIR) :
