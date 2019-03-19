@@ -834,19 +834,26 @@ pop_value(lua_State *L, struct lastack *LS, int *type) {
 }
 
 static void
-normalize_vector(lua_State *L, struct lastack *LS) {
+normalize(lua_State *L, struct lastack *LS) {
 	int t;
 	const float *v = pop_value(L, LS, &t);
-	assert(t == LINEAR_TYPE_VEC4);
-
-	glm::vec4 r;
-	float invLen = 1.0f / glm::length(*((glm::vec3*)v));
-	r[0] = v[0] * invLen;
-	r[1] = v[1] * invLen;
-	r[2] = v[2] * invLen;
-	
-	r[3] = v[3];
-	lastack_pushvec4(LS, &r.x);
+	switch(t){
+	case LINEAR_TYPE_VEC4:{
+			glm::vec4 r;
+			*(glm::vec3*)&r.x = glm::normalize(*(glm::vec3*)(v));
+			r[3] = v[3];
+			lastack_pushvec4(LS, &r.x);
+		}		
+		break;
+	case LINEAR_TYPE_QUAT:{
+			glm::quat q = glm::normalize(*(glm::quat*)(v));
+			lastack_pushquat(LS, &q.x);
+		}
+		break;
+	default:
+		luaL_error(L, "normalize need quat or vec4");
+		break;
+	}
 }
 
 #define BINTYPE(v1, v2) (((v1) << LINEAR_TYPE_BITS_NUM) + (v2))
@@ -1614,7 +1621,7 @@ static FASTMATH(mulH)
 }
 
 static FASTMATH(normalize)
-	normalize_vector(L, LS);
+	normalize(L, LS);
 	refstack_1_1(RS);
 	return 0;
 }
