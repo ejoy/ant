@@ -67,14 +67,7 @@ public:
 												 plVector3 position ) = 0;
 	virtual void setCollisionObjectRotation( plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
 												 plQuaternion orientation ) = 0;
-
-	// friendly user interface
-	virtual void setCollisionObjectRotationEuler( plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
-												   plReal pitch, plReal yaw,  plReal roll) = 0;
-																		 
-	virtual void setCollisionObjectRotationAxisAngle( plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
-												 plVector3 axis, plReal angle) = 0;
-												 
+											 
 	// collide between two objects
 	virtual int collide(plCollisionWorldHandle world, plCollisionObjectHandle colA, plCollisionObjectHandle colB,
 						lwContactPoint* pointsOut, int pointCapacity) = 0;

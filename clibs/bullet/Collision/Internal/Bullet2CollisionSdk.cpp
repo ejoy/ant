@@ -426,47 +426,6 @@ void Bullet2CollisionSdk::setCollisionObjectRotation( plCollisionWorldHandle wor
 	world->updateSingleAabb(colObj);
 }
 
-void Bullet2CollisionSdk::setCollisionObjectRotationEuler( plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
-												plReal pitch, plReal yaw, plReal roll)
-{
-	btCollisionObject *colObj = (btCollisionObject*) objHandle;
-	btTransform &tr = colObj->getWorldTransform();
-	btQuaternion quat;
-	
-	quat.setEulerZYX(roll,yaw,pitch);
-	// we ant engine use extrinsic mode xyz (rpy)
-	// btQuaternion quat1; quat1.setRotation(btVector3(1,0,0),pitch);
-	// btQuaternion quat2; quat2.setRotation(btVector3(0,1,0),yaw);
-	// btQuaternion quat3; quat3.setRotation(btVector3(0,0,1),roll);
-	// zxy mode (惯性系)
-	// btQuaternion quat1; quat1.setRotation(btVector3(0,0,1),roll);
-	// btQuaternion quat2; quat2.setRotation(btVector3(1,0,0),pitch);
-	// btQuaternion quat3; quat3.setRotation(btVector3(0,1,0),yaw);
-	// quat = quat3*quat2*quat1;
-	// yxz mode 
-	// quat.setEuler(yaw,pitch,roll);
-
-	tr.setRotation( quat ); 
-	colObj->setWorldTransform(tr);
-	btCollisionWorld *world = (btCollisionWorld *) worldHandle; 
-	world->updateSingleAabb(colObj);
-}												   
-																		 
-void Bullet2CollisionSdk::setCollisionObjectRotationAxisAngle( plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
-												plVector3 axis, plReal angle)
-{
-	btCollisionObject *colObj = (btCollisionObject*) objHandle;
-	btTransform &tr = colObj->getWorldTransform();
-	tr.setRotation( btQuaternion( btVector3(axis[0],axis[1],axis[2]),(btScalar) angle) );
-	colObj->setWorldTransform(tr);
-	btCollisionWorld *world = (btCollisionWorld *) worldHandle; 
-	world->updateSingleAabb(colObj);
-#ifdef _DEBUG_OUTPUT_
-	printf(" axis  = { %.2f,%.2f,%2.f}, angle = %.2f \n", axis[0], axis[1], axis[2], angle);
-#endif 
-}												
-
-
 struct Bullet2ContactResultCallback : public btCollisionWorld::ContactResultCallback
 {
 	int m_numContacts;

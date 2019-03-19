@@ -78,12 +78,6 @@ public:
 	virtual void setCollisionObjectRotation(plCollisionWorldHandle worldHandle, plCollisionObjectHandle bodyHandle,
 		plQuaternion orientation);
 
-	// friendly function for setting quaternion
-	virtual void setCollisionObjectRotationEuler(plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
-		plReal pitch, plReal yaw, plReal roll);
-	virtual void setCollisionObjectRotationAxisAngle(plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
-		plVector3 axis, plReal angle);
-
 	//@}}
 	//@}
 

@@ -179,21 +179,6 @@ void plSetCollisionObjectRotation( plCollisionSdkHandle collisionSdkHandle, plCo
 	sdk->setCollisionObjectRotation( worldHandle, objHandle, orientation );
 }
 
-// user friendly interface
-void plSetCollisionObjectRotationEuler( plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
-												   plReal pitch, plReal yaw,  plReal roll)
-{
-	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
-	sdk->setCollisionObjectRotationEuler( worldHandle, objHandle, pitch, yaw, roll );
-}
-																								 
-void plSetCollisionObjectRotationAxisAngle( plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
-												   plVector3 axis,plReal angle )
-{
-	CollisionSdkInterface* sdk = (CollisionSdkInterface*) collisionSdkHandle;
-	sdk->setCollisionObjectRotationAxisAngle( worldHandle, objHandle, axis, angle );
-}												   
-
 void plAddCollisionObject(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle world, plCollisionObjectHandle object)
 {
 	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
