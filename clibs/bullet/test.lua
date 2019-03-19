@@ -169,7 +169,6 @@ local invRayFrom = { 1.5, 20, 0}
 local invRayTo = {  1.5,  -20, 0 }
 btworld:set_obj_position(object_plane, {0,0,0})
 --btworld:set_obj_rotation(object_plane, {0.7,0,0.7,0})
---btworld:set_obj_rot_euler(object_plane,math.rad(0),math.rad(-180),math.rad(0) )
 btworld:set_obj_rot_axis_angle(object_plane, {1,0,0}, math.rad(180) )
 local hit3, result3 = btworld:raycast(invRayFrom,invRayTo)
 if hit3  then 

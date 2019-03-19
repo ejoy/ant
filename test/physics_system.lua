@@ -38,9 +38,9 @@ function phys_sys:init()
     -- Physics:create_compoundShape()
 
     -- local obj_idx = 100
-    -- Physics:create_shape("capsule",{ radius = 10} )    
-    -- local object_plane = Physics:create_object(shape_plane,obj_idx,{0,-100,0},{0,0,0,1} )
-    -- Physics:add_object(object_plane)
+    -- Physics:new_shape("capsule",{ radius = 10} )    
+    -- local object_plane = Physics:new_obj(shape_plane,obj_idx,{0,-100,0},{0,0,0,1} )
+    -- Physics:add_obj(object_plane)
 
 
     -- -- user api test 
