@@ -52,7 +52,7 @@ local function save_rawdata(handle, respath)
 	local realpath = respath:localpath()
 	lfs.create_directories(realpath:parent_path())
 
-	hierarchy_module.save(handle, realpath:string())
+	handle:save(realpath:string())
 end
 
 local function update_transform(world, pe, psrt)

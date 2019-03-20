@@ -334,12 +334,19 @@ create_builddata_userdata(lua_State *L){
 	struct hierarchy_build_data *builddata = (struct hierarchy_build_data*)lua_newuserdata(L, sizeof(*builddata));
 
 	if (luaL_newmetatable(L, "HIERARCHY_BUILD_DATA")){
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
 		luaL_Reg l[] = {
-			"__gc", lbuilddata_del,
-			"__index", lbuilddata_get,
+			"__gc", lbuilddata_del,			
 			"__len", lbuilddata_len,
-			"__save", lbuilddata_save,
-			"__load", lbuilddata_load,
+			"save", lbuilddata_save,
+			"load", lbuilddata_load,
+			"isleaf", lbuilddata_isleaf,
+			"parent", lbuilddata_parent,
+			"isroot", lbuilddata_isroot,
+			"joint_index", lbuilddata_jointindex,
+			"joint_matrix", lbuilddata_jointmatrix,
+			"bindpose_result", lbuilddata_bindpose_result,
 			nullptr, nullptr,
 		};
 
@@ -633,35 +640,6 @@ lnewhierarchy(lua_State *L) {
 	return 1;
 }
 
-static int
-lsave(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	luaL_checktype(L, 2, LUA_TSTRING);
-
-	if (luaL_getmetafield(L, 1, "__save") == LUA_TNIL)	
-		luaL_error(L, "no __save in userdata metatable");
-
-	lua_pushvalue(L, 1);
-	lua_pushvalue(L, 2);
-	lua_call(L, 2, 0);
-	return 0;// nothing to return
-}
-
-static int
-lload(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	luaL_checktype(L, 2, LUA_TSTRING);
-
-	if (luaL_getmetafield(L, 1, "__load") == LUA_TNIL)
-		luaL_error(L, "no __load in userdata metatable");
-
-	lua_pushvalue(L, 1);
-	lua_pushvalue(L, 2);
-	lua_call(L, 2, 1);
-
-	return 1;	// will return the load result, userdata or table
-}
-
 static inline void
 fetch_srt(lua_State *L, int sidx, int ridx, int tidx, ozz::math::Transform &trans) {
 	auto fetchdata = [L](int idx, auto &value) {
@@ -774,17 +752,14 @@ lhnode_getnode(lua_State *L) {
 
 static void
 register_hierarchy_node(lua_State *L) {
-	luaL_newmetatable(L, "HIERARCHY_NODE");
-	//lua_pushcfunction(L, lhnodeset);
-	//lua_setfield(L, -2, "__newindex");
-	//lua_pushcfunction(L, lhnodeget);
+	luaL_newmetatable(L, "HIERARCHY_NODE");	
 	lua_pushvalue(L, -1);
 	lua_setfield(L, -2, "__index");
 
 	luaL_Reg l[] = {
 		"__len", lhnode_childcount,
-		"__save", lhnode_save,
-		"__load", lhnode_load,
+		"save", lhnode_save,
+		"load", lhnode_load,
 		"add_child", lhnode_addchild,
 		"remove_child", lhnode_removechild,
 		"transform", lhnode_transform,		
@@ -805,9 +780,7 @@ luaopen_hierarchy(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "new", lnewhierarchy },
 		{ "invalid", linvalidnode },
-		{ "build", lbuild},
-		{ "save", lsave},
-		{ "load", lload },
+		{ "build", lbuild},		
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

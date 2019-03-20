@@ -25,11 +25,11 @@ local function add_hierarchy_file(hiepath)
 		local localfs = require 'filesystem.local'
 		localfs.create_directories(realpath:parent_path())
 
-		hierarchy_module.save(handle, realpath:string())
+		handle:save(realpath:string())
 	end
 
 	local builddata = hierarchy_module.build(root)
-	save_rawdata(builddata, hiepath)	
+	save_rawdata(builddata, hiepath)
 end
 
 local function create_scene_node_test()

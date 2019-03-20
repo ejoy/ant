@@ -27,7 +27,7 @@ return function(filename)
 		["ozz-raw_skeleton"] = function (filename)
 			local hiemodule = require "hierarchy"
 			local editable_hie = hiemodule.new()
-			hiemodule.load(editable_hie, filename)
+			editable_hie:load(filename)
 			return editable_hie
 		end,
 		["ozz-skeleton"] = function(filename)
