@@ -2333,6 +2333,7 @@ lnew(lua_State *L) {
 			{ MFUNCTION(mul) },
 			{ MFUNCTION(pop) },
 			{ MFUNCTION(popnumber) },
+			{ MFUNCTION(toquaternion)},
 			{ "ref", lstackrefobject },
 			{ "command", gencommand },
 			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )

@@ -76,13 +76,6 @@ extern "C"
 	extern void plSetCollisionObjectRotation( plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
 												 plQuaternion orientation );
 
-    // user friendly interface
-	extern void plSetCollisionObjectRotationEuler( plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle,plCollisionObjectHandle objHandle,
-												   plReal pitch, plReal yaw, plReal rool);
-																								 
-	extern void plSetCollisionObjectRotationAxisAngle( plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle objHandle,
-												   plVector3 axis,plReal angle);
-
 	/* Collision Shape definition */
 	// addition staple shape: box 
 	extern plCollisionShapeHandle plCreateBoxShape(plCollisionSdkHandle sdk,plCollisionWorldHandle world,plVector3 size);

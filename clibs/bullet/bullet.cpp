@@ -669,13 +669,11 @@ lset_obj_trans(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
 	auto obj = (plCollisionObjectHandle)lua_touserdata(L, 2);
 
-	luaL_checktype(L, 3, LUA_TTABLE);
-	luaL_checktype(L, 4, LUA_TTABLE);
+	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+	plReal *pos = (plReal *)lua_touserdata(L, 3);
 
-	plVector3 pos;
-	extract_vec(L, 3, 3, pos);
-	plQuaternion quat;
-	extract_vec(L, 4, 4, quat);
+	luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
+	plReal* quat = (plReal *)lua_touserdata(L, 4);	
 
 	plSetCollisionObjectTransform(world->sdk, world->world, obj, pos, quat);
 	return 0;
@@ -689,10 +687,9 @@ lset_obj_pos(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
 	auto obj = (plCollisionObjectHandle)lua_touserdata(L, 2);
 
-	luaL_checktype(L, 3, LUA_TTABLE);
-	plVector3 pos;
-	extract_vec(L, 3, 3, pos);
-
+	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+	plReal *pos = (plReal *)lua_touserdata(L, 3);
+	
 	plSetCollisionObjectPosition(world->sdk, world->world, obj, pos);
 
 	return 0;
@@ -705,57 +702,17 @@ lset_obj_rot(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
 	auto obj = (plCollisionObjectHandle)lua_touserdata(L, 2);
 
-	luaL_checktype(L, 3, LUA_TTABLE);
-	plQuaternion quat;
-	extract_vec(L, 3, 4, quat);
+	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+	plReal *quat = (plReal *)lua_touserdata(L, 3);	
 
 	plSetCollisionObjectRotation(world->sdk, world->world, obj, quat);
 
 	return 0;
 }
 
-#ifndef M_PI
-#define M_PI (3.14159265358979323846)
-#endif
-#define TO_RADIAN(_ANGLE) ((_ANGLE)/180)*(float)M_PI
-
-// yaw,pitch,roll, not use table, avoid  different meanings
-static int 
-lset_obj_rot_euler(lua_State *L) {
-	auto world = to_world(L);
-
-	luaL_checktype(L,2,LUA_TLIGHTUSERDATA);
-	auto obj = (plCollisionObjectHandle)lua_touserdata(L,2);
-
-	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
-	plReal* euler = (plReal*)lua_touserdata(L, 3);	// pitch, yaw, roll
-	plReal pitch = TO_RADIAN(euler[0]), 
-			yaw = TO_RADIAN(euler[1]), 
-			roll = TO_RADIAN(euler[2]);
-	plSetCollisionObjectRotationEuler( world->sdk,world->world,obj, pitch, yaw, roll);
-	return 0;
-}
-static int 
-lset_obj_rot_axis_angle(lua_State *L) {
-	auto world = to_world(L);
-
-	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
-	auto obj = (plCollisionObjectHandle)lua_touserdata(L,2);
-
-	luaL_checktype(L, 3, LUA_TTABLE);
-	plVector3 axis;
-	extract_vec(L,3,3,axis);
-	btScalar angle = (btScalar)lua_tonumber(L, 4); 
-
-	plSetCollisionObjectRotationAxisAngle( world->sdk,world->world,obj,axis,angle);
-	return 0;
-}
-
 
 //-----------------------------------------------------------------------------------------
 //      debugDrawer
-
-
 static void
 register_bullet_world_node(lua_State *L) {
 	luaL_newmetatable(L, "BULLET_WORLD_NODE");
@@ -763,37 +720,32 @@ register_bullet_world_node(lua_State *L) {
 	lua_setfield(L, -2, "__index");	 // BULLET_NODE.__index = BULLET_NODE
 
 	luaL_Reg l[] = {
-		"new_shape", lnew_shape,
-		"del_shape", ldel_shape,
-		"set_shape_scale",lset_shape_scale,
-		"new_obj", lnew_collision_obj,
-		"del_obj", ldel_collision_obj,
-		"add_obj", ladd_collision_obj,
-		"remove_obj",lremove_collision_obj,
-		"set_obj_transform", lset_obj_trans,
-		"set_obj_position", lset_obj_pos,
-		"set_obj_rotation", lset_obj_rot,
-		"set_obj_pos", lset_obj_pos,
-		"set_obj_rot_euler",lset_obj_rot_euler,
-		"set_obj_rot_axis_angle",lset_obj_rot_axis_angle,
-		"add_to_compound", ladd_to_compound,
+		"new_shape",			lnew_shape,
+		"del_shape",			ldel_shape,
+		"set_shape_scale",		lset_shape_scale,
+		"new_obj",				lnew_collision_obj,
+		"del_obj",				ldel_collision_obj,
+		"add_obj",				ladd_collision_obj,
+		"remove_obj",			lremove_collision_obj,
+		"set_obj_transform",	lset_obj_trans,
+		"set_obj_position",		lset_obj_pos,
+		"set_obj_rotation",		lset_obj_rot,		
+		"add_to_compound",		ladd_to_compound,
 	
-		"world_collide",lworld_collide,
-		"world_collide_ucb", lworld_collide_ucb,
-		"collide_objects", lcollide_objects,
-		"raycast", lraycast,
+		"world_collide",		lworld_collide,
+		"world_collide_ucb",	lworld_collide_ucb,
+		"collide_objects",		lcollide_objects,
+		"raycast",				lraycast,
 		
-		"drawline",ldrawline,
-		"get_debug_info",lget_debug_info,
-		"create_debug_drawer",lcreate_debugDrawer,
-		"delete_debug_drawer",ldelete_debugDrawer,
-		"debug_begin_draw",ldebug_draw_world,
-		"debug_end_draw",ldebug_clear_world,
+		"drawline",				ldrawline,
+		"get_debug_info",		lget_debug_info,
+		"create_debug_drawer",	lcreate_debugDrawer,
+		"delete_debug_drawer",	ldelete_debugDrawer,
+		"debug_begin_draw",		ldebug_draw_world,
+		"debug_end_draw",		ldebug_clear_world,
 
-		"reset_world",lreset_bullet_world,
-		"del_bullet_world",ldel_bullet_world,    
-		//"__gc", ldel_bullet_world,          // gc is too late 
-											  // when you want to do fast create/delete world,remove this
+		"reset_world",			lreset_bullet_world,
+		"del_bullet_world",		ldel_bullet_world,    		
 
 		nullptr, nullptr,
 	};

@@ -10,21 +10,11 @@ local asset = import_package "ant.asset"
 local ms = (import_package "ant.math").stack
 local fs = require "filesystem"
 
--- system rules 
--- component for global state
--- util function for all system share
--- delay resolve
--- Systems can not call other systems 
-
--- mesh_shadow as utility 
--- 常规配置参数,调试对比方便配置
-local SHADOWMAP_SIZE = 1024     
+local SHADOWMAP_SIZE = 1024
 local NEAR = 0.3125
 local FAR  = 450 
 local SPLIT_WEIGHT = 0.7
 local NUM_SPLITS = 4
-
-local TEXTURE_UINT_START     = 4 
 
 local VIEWID_SHADOW          = 10
 
@@ -52,27 +42,9 @@ ctx.shadowMapSize = SHADOWMAP_SIZE
 ctx.shadowMapTexelSize = 1/SHADOWMAP_SIZE 
 ctx.s_flipV = false       -- d3d or ogl
 
--- make shadowmap as entity
--- 当存在 shadowmap entity 时，启动动态阴影，否则阴影系统不执行
--- 以一个 entity 作为控制阴影系统开关标志,应该有一定的便利性
--- 
--- 或者 shadowmap system 的配置和控制属性属于系统本身，可以依赖系统存在
--- 而属于 world entity 与外部交互的运行时数据仍旧保持独立性，
--- 不影响 system 与数据无关性原则?
-
--- shadowmap entity, other system get shadow texture from this entity
-
--- 定义 shadowmap entity 相关组件数据( 生成配置, 结果数据, ... )
--- shadowmap settings
 local shadow_config = ecs.component "shadow_config"
-
-
-
--- shadowmap runtime status, result id handle,result textures,matrixs,framebuffers
 local shadow_rt = ecs.component "shadow_rt"
 
--- setting & result  
--- 可修改设置集
 function shadow_config:init()
     -- should be read from config, and material asset
     self.shadowMapSize = SHADOWMAP_SIZE
@@ -119,22 +91,10 @@ end
 
 -- 使用结果集
 function shadow_rt:init()
-    local self = {}
-    -- runtime & result 
-    -- ctx overlay data
-    self.ready = true                 -- shadowmaps have generated , render system query this flag
-    -- comp_rt.shadowMapSize          -- shadow size
-    -- comp_rt.shadowMapTexelSize     -- shadow texel size
-    -- comp_rt.s_rtShadowMap = {}     -- framebuffers[] & shadowTextures[]
-    -- comp_rt.shadowMapMtx = {}      -- light shadow matrices 
-
-    -- comp_rt.lightView[4]           -- rumtime 
-    -- comp_rt.lightProj[4]           --  
     return self
 end 
 
 -- or combine mode 
--- 合并成一个 compoent 内的两个表? may be clear more,but not use now 
 local shadow = ecs.component "shadow_maker"
 
 function shadow:init()
@@ -143,37 +103,17 @@ function shadow:init()
     return self
 end 
 
--- shadowmap 相关结构数据整理，如何归纳使用，哪些属于 component ，哪些属于系统控制本身
---  按 ecs 原则，这些变量需要有个 component 或者 entity ，singleton 来定义或保存
---  这里先整理出需要的数据结构
-
--- read light parameters form direct light entity 
--- 运行中的动态数据，根据 shadow_config 来计算产生
--- 不属于任何其他system 自身需要的中间状态
--- overwatch system 也是有临时控制结构，表明系统自身动作,折中 
 local lightView = {}
 local lightProj = {}
 local frustumCorners = {}
-local mtxCropBias = {}       -- for point lights, do not need this time 
 
--- uniforms --
--- define all vars  and relative uniforms
--- 应该从 shadowmap material 材质创建 uniforms,实现可配置化
 local uniforms = {}
-local function uniform_def(name, t )
-    uniforms[name] = bgfx.create_uniform(name,t or "v4")
-end 
+
 local function var_def(tbl,name,...)
     local vec = math3d.ref "vector"  
     ms(vec,{...},"=")             
     tbl[name] = vec                  
-end 
-local function var_set(name,...)
-    ms(uniforms[name],{...},"=")
-end 
-local function var_undef(name)
-    math3d.unref( uniforms[name] )
-end 
+end
 
 
 local function init_uniforms()
@@ -257,7 +197,7 @@ function  shadow_maker:init( shadow_maker_entity )
         generate_shadowmap = load_material("shadow.material"),
         debug_drawDepth    = load_material("drawdepth.material"),
         debug_drawScene    = load_material("PVPScene/scene-mat-shadow.material"),
-    }
+	}
 
     init_uniforms()
     -- define var userdata for set_uniform
@@ -272,26 +212,12 @@ function  shadow_maker:init( shadow_maker_entity )
 		bgfx.create_uniform("s_shadowMap2", "s"),
 		bgfx.create_uniform("s_shadowMap3", "s"),
     }
-    -- ctx.s_shadowMap {}     -- shadowtexture uniforms 
-    -- ctx.shadowMapMtx{}     -- shadowMap Matrices 
-    -- ctx.s_rtShadowMap{}    -- framebuffers & textures
-    -- ctx.shadowMapSize      -- texture width
-    -- ctx.shadowMapTexelSize -- texel size 
-
-    -- light shadow matrices
-    -- initMatrices(ctx.shadowMapMtx,4)
+    
     uniforms.shadowMapMtx0 = ctx.shadowMapMtx[1]
     uniforms.shadowMapMtx1 = ctx.shadowMapMtx[2]
     uniforms.shadowMapMtx2 = ctx.shadowMapMtx[3]
-    uniforms.shadowMapMtx3 = ctx.shadowMapMtx[4]
-
-    -- uniforms.s_shadowMap0 = ctx.s_shadowMap[1]
-    -- uniforms.s_shadowMap1 = ctx.s_shadowMap[2]
-    -- uniforms.s_shadowMap2 = ctx.s_shadowMap[3]
-    -- uniforms.s_shadowMap3 = ctx.s_shadowMap[4]
-
-    -- not need,but for manually test 
-    -- debug draw depth 
+	uniforms.shadowMapMtx3 = ctx.shadowMapMtx[4]
+	
     ctx.state_rgba = bgfx.make_state {
         WRITE_MASK = "RGBA",
         CULL = "CCW",
@@ -308,9 +234,6 @@ function  shadow_maker:init( shadow_maker_entity )
 
     local comp_config = shadow_maker_entity.shadow_config     -- config
     local comp_rt = shadow_maker_entity.shadow_rt             -- render target ,runtime
-
-    local view_rc = shadow_maker_entity.view_rect 
-    local w,h = view_rc.w,view_rc.h 
 
     -- create shadow targets
     local shadowMapSize = comp_config.shadowMapSize;
@@ -363,7 +286,7 @@ local function splitFrustum(numSplits,near,far,splitWeight)
         ff = ff+2
     end 
     splits[numSlices] = far 
-    return splits 
+	return splits 
 end 
 
 local function worldSpaceFrustumCorners( corners, near, far, projW, projH, invViewMatrix)
@@ -472,7 +395,6 @@ local function debug_use_virtual_light( moveable, delta )
 end 
 
 local function collectSubmitUniforms(ctx,config)
-
     uniforms.activeLight = ctx.directionLight
 
     -- all uniforms & parameters for draw scene with shadowmap
@@ -741,24 +663,9 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
         bgfx.touch( viewId )
     end 
 
-    for i = 1,numSplits do 
-
-        local viewId = VIEWID_SHADOW_START + i - 1
-        -- do culling & render mesh
-        --   notify shadow_cast_system to do culling  -- 如何每次传递不同的 frustum 
-        --   exact shadow frustum culling system that we need 
+    for i = 1,numSplits do
+        local viewId = VIEWID_SHADOW_START + i - 1        
         culling_shadow_cast_filter(select_filter)
-
-        -- update immediately,check delay 
-        -- local filter = select_filter
-        -- filter.result = {}
-        -- for _,eid in world:each("can_render") do                   -- can_cast  
-        --      if render_cu.is_entity_visible(world[eid]) then       -- vis culling 
-        --          insert_shadow_primitive( eid, filter.result )
-        --      end 
-        -- end 
-    
-        --self:render_debug( entity, select_filter )
         self:render_to_texture( entity, select_filter, viewId, self.materials.generate_shadowmap )
     end 
 
@@ -827,16 +734,13 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
     end 
  
     -- render scene with shadow 
-    if config.debug_drawScene then           
+    if config.debug_drawScene then
         bgfx.set_view_rect(VIEWID_DRAWSCENE,0,0,ctx.width,ctx.height)
         bgfx.set_view_transform(VIEWID_DRAWSCENE,ms(camera_view,"m"),ms(camera_proj,"m") )   -- (id->pointer) bgfx need pointer     
-        self:render_debug_with_shadow( entity, select_filter, self.materials.debug_drawScene )
-    end 
-
-    -- if config.shadowMapSize changed then 
-    -- end 
-    shadow.ready = true   
-    -- print(" ")
+        self:render_debug_with_shadow(select_filter, self.materials.debug_drawScene)
+	end 
+	
+	shadow.ready = true
 end 
 
 local function get_shadow_properties()
@@ -844,13 +748,9 @@ local function get_shadow_properties()
 
     for _,l_eid in world:each("shadow_maker") do 
         local  sm_ent   = world[l_eid]
-        local  uniforms = sm_ent.shadow_rt.uniforms 
-        print(" get shadow uniforms",#uniforms )
-        -- local entity = world[ shadow_entid ]
-        -- local config = entity.shadow_config 
-        -- local shadow = entity.shadow_rt 
+        local  uniforms = sm_ent.shadow_rt.uniforms
 
-        properties["u_params1"] = { name = "u_params1",type="v4",value = { 0.0000015*FAR,0.20,0.5,1} }         -- ortho -far,far, h = false 
+        properties["u_params1"] = { name = "u_params1",type="v4",value = { 0.0000015*FAR,0.20,0.5,1} }
         properties["u_params2"] = { name = "u_params2",type="v4",
                                     value = { uniforms.depthValuePow,
                                               uniforms.showSmCoverage,
@@ -865,132 +765,56 @@ local function get_shadow_properties()
         properties["u_shadowMapMtx2"] = { name  = "u_shadowMapMtx2", type  = "m4", value = uniforms.shadowMapMtx2 }
         properties["u_shadowMapMtx3"] = { name  = "u_shadowMapMtx3", type  = "m4", value = uniforms.shadowMapMtx3 }
         -- shadow textures 
-        properties["s_shadowMap0"] = {  name = "s_shadowMap0", type = "texture", stage = 4, value = uniforms.s_shadowMap0 }
-        properties["s_shadowMap1"] = {  name = "s_shadowMap1", type = "texture", stage = 5, value = uniforms.s_shadowMap1 }
-        properties["s_shadowMap2"] = {  name = "s_shadowMap2", type = "texture", stage = 6, value = uniforms.s_shadowMap2 }
-        properties["s_shadowMap3"] = {  name = "s_shadowMap3", type = "texture", stage = 7, value = uniforms.s_shadowMap3 }
+        properties["s_shadowMap0"] = {name = "s_shadowMap0", type = "texture", stage = 4, value = uniforms.s_shadowMap0}
+        properties["s_shadowMap1"] = {name = "s_shadowMap1", type = "texture", stage = 5, value = uniforms.s_shadowMap1}
+        properties["s_shadowMap2"] = {name = "s_shadowMap2", type = "texture", stage = 6, value = uniforms.s_shadowMap2}
+        properties["s_shadowMap3"] = {name = "s_shadowMap3", type = "texture", stage = 7, value = uniforms.s_shadowMap3}
     end 
 
     return properties 
 end 
 
 
-function shadow_maker:render_debug_with_shadow(shadow_entity,select_filter,material)
-    local meshes = {
-        { result = select_filter.result, mode =''}    --, material = self.materials.generate_shadowmap},
-    }
-    local view_id = shadow_entity.viewid  
-    view_id  = VIEWID_DRAWSCENE 
-    bgfx.touch( view_id )
-
-    -- 注意 normal*2-1 的差别
-    -- print("u_params1",uniforms.shadowMapBias ,uniforms.shadowMapOffset,
-    --                  uniforms.shadowMapParam0,uniforms.shadowMapParam1 )
-    -- print("u_params2",uniforms.depthValuePow,uniforms.showSmCoverage, uniforms.shadowMapTexelSize )
-
-    for _, mq in ipairs( meshes ) do                 -- mesh queue 
-        bgfx.set_view_mode(view_id, mq.mode)
-        for _,prim in ipairs( mq.result) do          -- each single mesh
-            prim.material = material 
-             
-            prim.properties =  get_shadow_properties()
-            -- {
-            --     -- params1 = 
-            --     --self.shadowMapBias   = 0.0012    -- bias 
-            --     --self.shadowMapOffset = 0.0       -- offset shadowmap (normal offset)
-            --     --self.shadowMapParam0 = 0.05      -- shadowMapParam0 
-            --     --self.shadowMapParam1 = 1         -- shadowMapParam1
-            
-            --     -- bias,offset,  shadowMapParam0，shadowMapParam1
-            --     --               pcfMode ,        NoiseAmount
-            --     -- 值不能传到 shader 里的参数，容易犯错的坑! 必须使用表，而不是统一使用 userdata 模式，使用 vec4 不正确,但不报错
-            --     -- u_params1 = { name = "u_params1", type="v4", value = { 0.00128,1.38,0.5,1} },    -- near,far 
-            --     -- 塔门木头能出现明显的阴影,背影处能有遮挡，当仍然有头部留白
-            --     -- u_params1 = { name = "u_params1",type="v4",value = { 0.0005,0.75,0.5,1} },       -- ortho -far,far, 
-            --     -- 0.00075 
-            --     -- u_params1 = { name = "u_params1",type="v4",value = { 0.0000015*FAR*1.5,0.20,0.5,1} },   -- light 1-30 far 
-            --     u_params1 = { name = "u_params1",type="v4",value = { 0.0000015*FAR,0.20,0.5,1} },         -- ortho -far,far, h = false 
-            --     -- u_params1 = { name = "u_params1",type="v4",value = { 0.0000015*FAR*2,0.20*2,0.5,1} },  -- ortho -far,far, h = true 
-            --     -- depthPow, SmCoverage, SmTexelSize(u_shadowMapTexelSize)
-            --     -- x,        y,          z,
-            --    u_params2 = { name = "u_params2",type="v4", value = { uniforms.depthValuePow,uniforms.showSmCoverage,uniforms.shadowMapTexelSize, 0 } },
-            --    u_smSamplingParams = { name = "u_smSamplingParams",
-            --                           type="v4",
-            --                           value = { 0, 0, uniforms.ss_offsetx, uniforms.ss_offsety } },
-
-            --     u_shadowMapMtx0 = { name  = "u_shadowMapMtx0", type  = "m4", value = uniforms.shadowMapMtx0 },
-            --     u_shadowMapMtx1 = { name  = "u_shadowMapMtx1", type  = "m4", value = uniforms.shadowMapMtx1 },
-            --     u_shadowMapMtx2 = { name  = "u_shadowMapMtx2", type  = "m4", value = uniforms.shadowMapMtx2 },
-            --     u_shadowMapMtx3 = { name  = "u_shadowMapMtx3", type  = "m4", value = uniforms.shadowMapMtx3 },
-
-            --     s_shadowMap0 = {  name = "s_shadowMap0", type = "texture", stage = 4, value = uniforms.s_shadowMap0 },
-            --     s_shadowMap1 = {  name = "s_shadowMap1", type = "texture", stage = 5, value = uniforms.s_shadowMap1 },
-            --     s_shadowMap2 = {  name = "s_shadowMap2", type = "texture", stage = 6, value = uniforms.s_shadowMap2 },
-            --     s_shadowMap3 = {  name = "s_shadowMap3", type = "texture", stage = 7, value = uniforms.s_shadowMap3 },
-            -- }
-
-            local srt = prim.srt
-
-            local mat = ms({ type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
-            render_util.draw_primitive( view_id, prim, mat)
-
-        end 
-    end 
+function shadow_maker:render_debug_with_shadow(select_filter, material)
+    bgfx.touch( VIEWID_DRAWSCENE )
+	bgfx.set_view_mode(VIEWID_DRAWSCENE, '')
+	for _,prim in ipairs( select_filter.result) do
+		prim.material 	= material              
+		prim.properties =  get_shadow_properties()		
+		local mat = ms:create_srt_matrix(prim.srt)
+		render_util.draw_primitive(VIEWID_DRAWSCENE, prim, mat)
+	end
 end 
 
 
-function shadow_maker:render_debug(shadow_entity,select_filter)
-    -- use shadow material & matrix render 
-    local meshes = {
-        { result = select_filter.result, mode =''}    --, material = self.materials.generate_shadowmap},
-    }
-    local view_id = shadow_entity.viewid           -- shadow target
-    view_id = VIEWID_DRAWSCENE 
-    bgfx.touch( view_id )
-
-    for _, mq in ipairs( meshes ) do                  -- mesh queue 
-        bgfx.set_view_mode(view_id, mq.mode)
-        for _,prim in ipairs( mq.result) do           -- each single mesh
-        local srt = prim.srt
-        local mat = ms({ type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
-        render_util.draw_primitive( view_id, prim, mat)        
-        end 
-    end 
+function shadow_maker:render_debug(select_filter)    
+    bgfx.touch(VIEWID_DRAWSCENE)
+	bgfx.set_view_mode(VIEWID_DRAWSCENE, '')
+	for _,prim in ipairs(select_filter.result) do
+		local mat = ms:create_srt_matrix(prim.srt)
+		render_util.draw_primitive( VIEWID_DRAWSCENE, prim, mat)
+	end
 end 
 
--- get render state, gpu program from shadow material
--- so prog_shadow_id, renderState not needed
-function shadow_maker:render_to_texture( entity, select_filter, viewId, shadow_material  )
-    -- Mesh's matrix, prim.material, prim.properties, material.state, material.shader.prog
-    local meshes = {
-        { result = select_filter.result, mode='', material = shadow_material },
-    }
-    local view_id = viewId 
-    bgfx.touch( view_id )                   -- test
-    for _,mq in ipairs( meshes ) do 
-        for _,prim in ipairs(mq.result) do 
-
-            local surface_type = prim.material.surface_type
-
-             if surface_type.shadow.cast == "on" then
-
-                local cast_prim = {}
-                for k,v in pairs(prim) do 
-                    cast_prim[k] = v 
-                end 
-                cast_prim.material = mq.material  
-
-                cast_prim.properties = { }
-                -- debug output to framebuffer main camera viewid
-                render_util.draw_primitive( view_id, cast_prim, cast_prim.srt)
-                --print("do check generate shadow")
-            end 
-        end 
-    end 
+function shadow_maker:render_to_texture(select_filter, viewId, shadow_material)
+    bgfx.touch( viewId )                   -- test
+    bgfx.set_view_mode(viewId, '')
+	for _,prim in ipairs(select_filter.result) do
+		local surface_type = prim.material.surface_type
+		if surface_type.shadow.cast == "on" then
+			local cast_prim = {}
+			for k,v in pairs(prim) do 
+				cast_prim[k] = v 
+			end 
+			cast_prim.material = shadow_material
+			cast_prim.properties = {}
+			
+			render_util.draw_primitive( viewId, cast_prim, cast_prim.srt)
+		end 
+	end 
 
 end     
 
--- 调试显示 shadowmap
 function shadow_maker:debug_drawshadow()
 
 end 
@@ -1008,26 +832,6 @@ function shadow_cast_filter:init()
     }
 end 
 
--- shadow_cast_system 
--- local shadow_filter_system = ecs.system "shadow_cast_system"
--- shadow_filter_system.singleton "shadow_cast_filter"               -- single component global
--- -- 阴影网格剪裁系统也是 shadow_system 的一个子系统
--- -- 可以如下作为一个成对的子系统同步运行
--- -- function shadow_filter_system:update()
--- --     local filter = self.shadow_cast_filter
--- --     filter.result = {}
--- --     for _,eid in world:each("can_render") do                   -- can_cast  
--- --         if render_cu.is_entity_visible(world[eid]) then   -- vis culling 
--- --             insert_shadow_primitive( eid, filter.result )
--- --         end 
--- --     end 
--- -- end 
-
-
-
-
-------------------------------------------------------
--- generate shadow main system 
 local gen_shadow_system = ecs.system "generate_shadow_system"
 
 gen_shadow_system.singleton "shadow_cast_filter"
@@ -1037,9 +841,6 @@ gen_shadow_system.dependby "entity_rendering"
 
 function gen_shadow_system:init()
 	local function add_shadow_maker_entity()
-		local light_frustum = {type="mat"}
-		math_util.frustum_from_fov(light_frustum,0.1,1000,1,1)
-
         local eid = world:create_entity {
             shadow_maker = {},
 			shadow_config = {},
@@ -1050,7 +851,7 @@ function gen_shadow_system:init()
 				w = SHADOWMAP_SIZE,
 				h = SHADOWMAP_SIZE,
 			}, 
-			frustum = light_frustum,
+			frustum = math_util.frustum_from_fov({type="mat"},0.1,1000,1,1),
             clear_component = {
 				color = 0,
 				depth = 1,
@@ -1064,10 +865,6 @@ function gen_shadow_system:init()
     end 
 
     local entity = add_shadow_maker_entity()
-
-    -- 阴影生成器初始化,具体行为打包在一个类里，简化 shadow system 
-    -- shadow_maker 通过 shadow_maker entity 查询数据，执行动作    
-
     shadow_maker:init( entity )   
 end
 
@@ -1075,12 +872,12 @@ end
 --  可以扩充 shadow_maker 功能，使用不同的剪裁系统
 --  独立成辅助函数类
 function gen_shadow_system:update()
-    if shadow_maker.is_require then 
-        -- local shadow_entid = world:first_entity("shadow_rt")
-        local shadow_entid = world:first_entity_id("shadow_maker")
-        shadow_maker:generate_shadow(shadow_entid, self.shadow_cast_filter ) 
-    end 
-    shadow_maker:debug_drawshadow()
+    -- if shadow_maker.is_require then 
+    --     -- local shadow_entid = world:first_entity("shadow_rt")
+    --     local shadow_entid = world:first_entity_id("shadow_maker")
+    --     shadow_maker:generate_shadow(shadow_entid, self.shadow_cast_filter ) 
+    -- end 
+    -- shadow_maker:debug_drawshadow()
 end
 
 

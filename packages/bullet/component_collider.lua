@@ -1,13 +1,25 @@
 local ecs = ...
 local world = ecs.world
-		
+
+local Physics = assert(world.args.Physics)
 local ms = import_package "ant.math".stack
 ecs.tag "collider_tag"
 
-ecs.component "collider"
+local coll = ecs.component "collider"
 	.center "real[3]" {0, 0, 0}
 	.is_tigger "boolean" (true)
-	.obj_idx "int" (-1)
+	
+local objidx_counter = 0
+local function collider_obj_idx_creator()
+	local oi = objidx_counter
+	objidx_counter = objidx_counter + 1
+	return oi
+end
+
+function coll:init()
+	self.obj_idx = collider_obj_idx_creator()
+	return self
+end
 
 ecs.component "plane_shape"
 	.type "string" "plane"
@@ -59,66 +71,38 @@ for _, pp in ipairs {
 	{"character_collider", "character_shape" },
 } do
 	local collidername, shapename = pp[1], pp[2]
-	ecs.component(collidername)
-		.collider "collider"
-		.shape(shapename)
-
 	local s = ecs.component(shapename)
 	function s:init()
-		local Physics = assert(world.args.Physics)
-		self.handle = Physics:create_shape(self.type, self)
+		self.handle = Physics:new_shape(self.type, self)
 		return self
 	end
 
 	function s:delete()
 		if self.handle then
-			local Physics = assert(world.args.Physics)			
-			Physics:delete_shape(self.handle)		
+			Physics:del_shape(self.handle)		
 		end
 	end
 
-	local c = ecs.component(collidername)
+	local c = ecs.component(collidername) { depend = "transform" }
+		.collider "collider"
+		.shape(shapename)
+
+	function c:postinit(e)
+		local collider = self.collider
+		local shapeinfo = self.shape
+
+		local trans = e.transform
+		local pos = ms(trans.t, collider.center, "+P")
+		
+		assert(collider.handle == nil)
+		collider.handle = Physics:create_collider(assert(shapeinfo.handle), collider.obj_idx, pos, ms(trans.r, "qP"))
+	end
 
 	function c:delete()
 		local collider = self.collider
 		if collider.handle then
 			local Physics = assert(world.args.Physics)
-			Physics:delete_object(collider.handle)
+			Physics:del_obj(collider.handle)
 		end
-	end
-end
-
-local collider_post_init = ecs.system "collider_post_init"
-
-function collider_post_init:post_init()
-	local Physics = assert(world.args.Physics)
-	for eid in world:each_new("collider_tag") do
-		local e = world[eid]
-		local function get_collider(e)
-			for _, name in ipairs {
-				"plane_collider", "sphere_collider", "box_collider",
-				"capsule_collider", "cylinder_collider", "terrain_collider",
-				"character_collider",
-			} do
-				local c = e[name]
-				if c then
-					return c
-				end
-			end
-		end
-
-		local collidercomp = get_collider(e)
-		if collidercomp == nil then
-			error("using collider_tag but do not define any collider")
-		end
-
-		local collider = collidercomp.collider
-		collider.obj_idx = eid
-		local shapeinfo = collidercomp.shape
-		local trans = e.transform
-		local pos = ms(trans.t, collider.center, "+m")
-		assert(shapeinfo.handle == nil)
-		assert(collider.handle == nil)
-		shapeinfo.handle, collider.handle = Physics:create_collider(shapeinfo.type, shapeinfo, eid, pos, ms(trans.r, "qm"))
 	end
 end
