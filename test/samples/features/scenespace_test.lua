@@ -14,29 +14,10 @@ local hie_refpath = fs.path '//ant.resources' / 'hierarchy' / 'test_hierarchy.hi
 local function add_hierarchy_file(hiepath)
 	local hierarchy_module = require 'hierarchy'
 	local root = hierarchy_module.new()
-
-	root[1] = {
-		name = 'h1',
-		transform = {
-			t = {3, 4, 5},
-			s = {0.01, 0.01, 0.01}
-		}
-	}
-
-	root[2] = {
-		name = 'h2',
-		transform = {
-			t = {1, 2, 3},
-			s = {0.01, 0.01, 0.01}
-		}
-	}
-
-	root[1][1] = {
-		name = 'h1_h1',
-		transform = {
-			t = {0, 2, 0},
-		}
-	}
+	local s = ms({0.01, 0.01, 0.01}, "m")
+	local h1_node = root:add_child('h1', s, nil, ms({3, 4, 5}, "m"))
+	root:add_child('h2', s, nil, ms({1, 2, 3}, 'm'))
+	h1_node:add_child('h1_h1', nil, nil, ms({0, 2, 0}, 'm'))
 
 	local function save_rawdata(handle, respath)
 		local realpath = respath:localpath()
