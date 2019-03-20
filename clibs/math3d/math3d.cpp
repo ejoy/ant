@@ -998,10 +998,10 @@ lookat_matrix(lua_State *L, struct lastack *LS, int direction) {
 	int t0, t1;
 	const float *at = pop_value(L, LS, &t0);
 	const float *eye = pop_value(L, LS, &t1);
-	if (t0 != LINEAR_TYPE_VEC4 || t1 != LINEAR_TYPE_VEC4)
-		luaL_error(L, "lookat_matrix, arg0/arg1 need vec4, arg0/arg is : %d/", t0, t1);	
-	
-	
+	if (t0 != LINEAR_TYPE_VEC4 || t1 != LINEAR_TYPE_VEC4) {
+		luaL_error(L, "lookat_matrix, arg0/arg1 need vec4, arg0/arg1 is : %d/%d", t0, t1);
+	}	
+
 	glm::mat4x4 m;
 	if (direction) {
 		const glm::vec3 *dir = (const glm::vec3*)at;
@@ -1011,7 +1011,30 @@ lookat_matrix(lua_State *L, struct lastack *LS, int direction) {
 	} else {
 		m = glm::lookAtLH(*(const glm::vec3*)eye, *(const glm::vec3*)at, glm::vec3(0, 1, 0));
 	}
-		
+
+	lastack_pushmatrix(LS, &m[0][0]);
+}
+
+static void
+lookat3_matrix(lua_State *L, struct lastack *LS, int direction) {
+	int t0, t1, t2;
+	const float *at = pop_value(L, LS, &t0);
+	const float *eye = pop_value(L, LS, &t1);
+	const float *up = pop_value(L, LS, &t2);
+	if (t0 != LINEAR_TYPE_VEC4 || t1 != LINEAR_TYPE_VEC4 || t2 != LINEAR_TYPE_VEC4) {
+		luaL_error(L, "lookat_matrix, arg0/arg1/arg2 need vec4, arg0/arg1/arg2 is : %d/%d/%d", t0, t1, t1);	
+	}
+
+	glm::mat4x4 m;
+	if (direction) {
+		const glm::vec3 *dir = (const glm::vec3*)at;
+		const glm::vec3 *veye = (const glm::vec3*)eye;
+		const glm::vec3 vat = *veye + *dir;
+		m = glm::lookAtLH(*veye, vat, *(const glm::vec3*)up);
+	} else {
+		m = glm::lookAtLH(*(const glm::vec3*)eye, *(const glm::vec3*)at, *(const glm::vec3*)up);
+	}
+
 	lastack_pushmatrix(LS, &m[0][0]);
 }
 
@@ -1659,6 +1682,12 @@ static FASTMATH(lookat)
 static FASTMATH(lookfrom)
 	lookat_matrix(L, LS, 1);
 	refstack_2_1(RS);
+	return 0;
+}
+
+static FASTMATH(lookfrom3)
+	lookat3_matrix(L, LS, 1);
+	refstack_3_1(RS);
 	return 0;
 }
 
@@ -2334,6 +2363,7 @@ lnew(lua_State *L) {
 			{ MFUNCTION(pop) },
 			{ MFUNCTION(popnumber) },
 			{ MFUNCTION(toquaternion)},
+			{ MFUNCTION(lookfrom3)},
 			{ "ref", lstackrefobject },
 			{ "command", gencommand },
 			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )

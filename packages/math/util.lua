@@ -115,7 +115,7 @@ end
 
 function util.view_proj_matrix(e)
 	local camera = assert(e.camera)
-	local view = ms(camera.eyepos, camera.viewdir, "LP")
+	local view = ms(camera.updir, camera.eyepos, camera.viewdir, ms.lookfrom3, "P")
 	local vr = e.view_rect
 	local frustum = assert(camera.frustum)
 	update_frustum_from_aspect(vr, frustum)
