@@ -14,6 +14,7 @@
 { "hierarchy.ik", luaopen_hierarchy_ik },
 { "lsocket", luaopen_lsocket },
 { "math3d", luaopen_math3d },
+{ "math3d.adapter", luaopen_math3d_adapter },
 { "math3d.baselib", luaopen_math3d_baselib },
 { "platform", luaopen_platform },
 { "protocol", luaopen_protocol },
