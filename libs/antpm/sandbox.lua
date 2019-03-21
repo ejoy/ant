@@ -70,7 +70,10 @@ local function sandbox_env(root, pkgname)
         end
         if _LOADED[name] == nil then
             _LOADED[name] = true
-        end
+		end
+		if idx >= 3 then
+			package.loaded[name]= _LOADED[name]
+		end
         return _LOADED[name]
 	end
 
