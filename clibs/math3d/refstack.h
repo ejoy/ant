@@ -41,6 +41,14 @@ refstack_pop(struct ref_stack *RS) {
 }
 
 static inline void
+refstack_3_1(struct ref_stack *RS) {
+	refstack_pop(RS);
+	refstack_pop(RS);
+	refstack_pop(RS);
+	refstack_push(RS);
+}
+
+static inline void
 refstack_2_1(struct ref_stack *RS) {
 	refstack_pop(RS);
 	refstack_pop(RS);

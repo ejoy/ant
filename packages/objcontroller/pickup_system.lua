@@ -168,6 +168,7 @@ local default_camera = {
 	viewid = pickup_fb_viewid,
 	eyepos = {0, 0, 0, 1},
 	viewdir = {0, 0, 0, 0},
+	updir = {0, 1, 0, 0},
 	frustum = default_frustum,
 }
 

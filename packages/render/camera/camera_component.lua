@@ -22,9 +22,10 @@ ecs.component_alias("viewid", "int", 0)
 ecs.component "camera"
 	.type "string"
 	.eyepos	"vector"
-	.viewdir"vector"
+	.viewdir "vector"
+	.updir "vector"
 	.frustum"frustum"
-	.viewid	"viewid"	
+	.viewid	"viewid"
 
 local camera_init_sys = ecs.system "camera_init"
 camera_init_sys.singleton "message"
@@ -39,6 +40,7 @@ function camera_init_sys:init()
 			type = "",
 			eyepos = {0, 0, 0, 1},
 			viewdir = {0, 0, 0, 0},
+			updir = {0, 1, 0, 0},
 			frustum = mu.frustum_from_fov({type="mat"}, 0.1, 10000, 60, 1),
 			viewid = VIEWID_MAINCAMERA,
 		},

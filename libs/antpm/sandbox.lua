@@ -39,10 +39,10 @@ local function sandbox_env(root, pkgname)
         local msg = ''
         local _SEARCHERS = env.package.searchers
         assert(type(_SEARCHERS) == "table", "'package.searchers' must be a table")
-        for _, searcher in ipairs(_SEARCHERS) do
+        for i, searcher in ipairs(_SEARCHERS) do
             local f, extra = searcher(name)
             if type(f) == 'function' then
-                return f, extra
+                return f, extra, i
             elseif type(f) == 'string' then
                 msg = msg .. f
             elseif type(f) == 'boolean' then
@@ -58,9 +58,10 @@ local function sandbox_env(root, pkgname)
         if p ~= nil then
             return p
         end
-        local init, extra = require_load(name)
-        if not init then
-            return package.loaded[name]
+        local init, extra, idx = require_load(name)
+        if not init or (idx >= 3 and package.loaded[name]) then
+            _LOADED[name] = package.loaded[name]
+            return _LOADED[name]
         end
         debug.setupvalue(init, 1, env)
         local res = init(name, extra)
