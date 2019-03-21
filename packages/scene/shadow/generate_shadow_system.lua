@@ -851,7 +851,7 @@ function gen_shadow_system:init()
 				w = SHADOWMAP_SIZE,
 				h = SHADOWMAP_SIZE,
 			}, 
-			frustum = math_util.frustum_from_fov({type="mat"},0.1,1000,1,1),
+			frustum = {type="mat", n = 0.1, f = 1000, fov = 1, aspect = 1},
             clear_component = {
 				color = 0,
 				depth = 1,

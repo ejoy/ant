@@ -1,4 +1,3 @@
-local math3d = require "math3d"
 local ms = require "stack"
 
 local util = {}
@@ -21,59 +20,6 @@ function util.iszero(n, threshold)
     return -threshold <= n and n <= threshold
 end
 
-local function create_persistent_type(persistent_type, v)
-	local t = math3d.ref(persistent_type)
-	ms(t, v, "=")
-	return t
-end
-
-local function to_v(math_id)
-	return ms(math_id, "m")
-end
-
-function util.proj(frustum, ispersistent)
-	if ispersistent then
-		return create_persistent_type("matrix", frustum)
-	end
-	return ms(frustum, "P")
-end
-
-function util.proj_v(frustum, ispersistent)
-	return to_v(util.proj(frustum, ispersistent))
-end
-
-function util.degree_to_radian(angle)
-	return (angle / 180) * math.pi
-end
-
-function util.radian_to_degree(radian)
-	return (radian / math.pi) * 180
-end
-
-function util.frustum_from_fov(frustum, n, f, fov, aspect)
-	local hh = math.tan(util.degree_to_radian(fov * 0.5)) * n
-	local hw = aspect * hh
-	frustum.n = n
-	frustum.f = f
-	frustum.l = -hw
-	frustum.r = hw
-	frustum.t = hh
-	frustum.b = -hh
-	return frustum
-end
-
-function util.create_persistent_vector(value)
-	local v = math3d.ref "vector"
-	ms(v, value, "=")
-	return v
-end
-
-function util.create_persistent_matrix(value)
-	local m = math3d.ref "matrix"
-	ms(m, value, "=")
-	return m
-end
-
 function util.print_srt(e, numtab)
 	local tab = ""
 	if numtab then
@@ -92,22 +38,12 @@ function util.print_srt(e, numtab)
 	print(tab .. "position : ", t_str)
 end
 
-local function update_frustum_from_aspect(rt, frustum)
-	local aspect = rt.w / rt.h
-	local tmp_h = frustum.t - frustum.b
-	local tmp_hw = aspect * tmp_h * 0.5
-	frustum.l = -tmp_hw
-	frustum.r = tmp_hw
-end
-
 function util.view_proj_matrix(e)
 	local camera = assert(e.camera)
-	local view = ms(camera.updir, camera.eyepos, camera.viewdir, ms.lookfrom3, "P")
 	local vr = e.view_rect
-	local frustum = assert(camera.frustum)
-	update_frustum_from_aspect(vr, frustum)
-	
-	return view, util.proj(frustum)
+	local frustum = camera.frustum
+	frustum.aspect = vr.w / vr.h
+	return ms:view_proj(camera, camera.frustum)
 end
 
 return util

@@ -162,7 +162,9 @@ pickup_sys.depend "entity_rendering"
 pickup_sys.dependby "end_frame"
 
 local vr_w, vr_h = 8, 8
-local default_frustum = mu.frustum_from_fov({type="mat"}, 0.1, 100, 1, vr_w / vr_h)
+local default_frustum = {
+	type="mat", n=0.1, f=100, fov=1, aspect=vr_w / vr_h
+}
 
 local default_camera = {
 	viewid = pickup_fb_viewid,

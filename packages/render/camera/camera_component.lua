@@ -41,7 +41,7 @@ function camera_init_sys:init()
 			eyepos = {0, 0, 0, 1},
 			viewdir = {0, 0, 0, 0},
 			updir = {0, 1, 0, 0},
-			frustum = mu.frustum_from_fov({type="mat"}, 0.1, 10000, 60, 1),
+			frustum = {type="mat", n=0.1, f=10000, fov=60, aspect=fb_size.w / fb_size.h},
 			viewid = VIEWID_MAINCAMERA,
 		},
         view_rect = {
