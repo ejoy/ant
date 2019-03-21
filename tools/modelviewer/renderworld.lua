@@ -7,6 +7,7 @@ ecs.import "ant.render"
 ecs.import "ant.scene"
 ecs.import "ant.serialize"
 ecs.import "ant.event"
+ecs.import "ant.math.adapter"
 
 local math3d = import_package "ant.math"
 local ms = math3d.stack
@@ -19,6 +20,7 @@ model_review_system.dependby "message_system"
 model_review_system.depend "transparency_filter_system"
 model_review_system.depend "entity_rendering"
 model_review_system.depend "debug_system"
+model_review_system.depend "math_adapter"
 
 local lu = import_package "ant.render" .light
 local cu = import_package "ant.render" .components

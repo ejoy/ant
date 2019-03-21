@@ -15,6 +15,7 @@ ecs.import 'ant.bullet'
 ecs.import 'ant.animation'
 ecs.import 'ant.event'
 ecs.import 'ant.objcontroller'
+ecs.import 'ant.math.adapter'
 
 local renderpkg = import_package 'ant.render'
 local computil = renderpkg.components
@@ -32,6 +33,7 @@ init_loader.depend 'entity_rendering'
 init_loader.depend 'camera_controller'
 init_loader.depend 'skinning_system'
 init_loader.depend 'timesystem'
+init_loader.depend 'math_adapter'
 
 local function create_animation_test()
     local meshdir = fs.path 'meshes'

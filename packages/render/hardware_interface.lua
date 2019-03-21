@@ -42,15 +42,6 @@ local function get_flags()
 	return table.concat(t)
 end
 
-local function redirect_bgfx_function()
-	bgfx.set_transform = math_adapter.matrix(ms, bgfx.set_transform, 1, 1)
-	bgfx.set_view_transform = math_adapter.matrix(ms, bgfx.set_view_transform, 2, 2)
-	bgfx.set_uniform = math_adapter.variant(ms, bgfx.set_uniform_matrix, bgfx.set_uniform_vector, 2)
-	local idb = bgfx.instance_buffer_metatable()
-	idb.pack = math_adapter.format(ms, idb.pack, idb.format, 3)
-	idb.__call = idb.pack
-end
-
 local function bgfx_init(args)
 	nwh, w, h = args.nwh, args.width, args.height
 	local bgfx = require "bgfx"
@@ -67,8 +58,6 @@ local function bgfx_init(args)
 	bgfx.init(args)
 	assert(caps == nil)
 	caps = bgfx.get_caps()
-
-	redirect_bgfx_function()
 end
 
 function hw.init(args)

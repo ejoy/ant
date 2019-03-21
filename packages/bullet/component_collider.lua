@@ -106,3 +106,14 @@ for _, pp in ipairs {
 		end
 	end
 end
+
+local math3d_adapter = require "math3d.adapter"
+local physic_math_adapter = ecs.system "physic_math_adapter"
+function physic_math_adapter:bind_math_adapter()
+	local bw = Physics.world
+	local bw_mt = getmetatable(bw)
+	bw_mt.new_obj = math3d_adapter.vector(ms, bw_mt.new_obj, 4)
+	bw_mt.set_obj_transform = math3d_adapter.vector(ms, bw_mt.set_obj_transform, 3);
+	bw_mt.set_obj_position = math3d_adapter.vector(ms, bw_mt.set_obj_position, 3);
+	bw_mt.set_obj_rotation = math3d_adapter.vector(ms, bw_mt.set_obj_rotation, 3);
+end

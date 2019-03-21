@@ -257,101 +257,11 @@ lbuilddata_bindpose_result(lua_State *L) {
 	return 0;
 }
 
-std::unordered_map<std::string, lua_CFunction> s_builddata_methods = {
-	{"isleaf", lbuilddata_isleaf },
-	{"parent", lbuilddata_parent},
-	{"isroot", lbuilddata_isroot},
-	{"joint_index", lbuilddata_jointindex},
-	{"joint_matrix", lbuilddata_jointmatrix},
-	{"bindpose_result", lbuilddata_bindpose_result},
-};
-
-static int
-lbuilddata_get(lua_State *L){
-	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
-	switch (lua_type(L, 2)){
-		case LUA_TNUMBER:{
-			auto skeleton = builddata->skeleton;
-			int idx = (int)lua_tointeger(L, 2) - 1;
-			if (idx < 0)
-				luaL_error(L, "get build data index out of range, idx is %d", idx);
-
-			auto joints_num = skeleton->num_joints();
-			if (idx >= joints_num)
-				return 0;
-
-			auto poses = skeleton->joint_bind_poses();
-			auto names = skeleton->joint_names();
-
-			auto pose = poses[idx / 4];
-			
-			lua_createtable(L, 0, 4);
-			
-			lua_pushstring(L, names[idx]);
-			lua_setfield(L, -2, "name");
-
-			auto subidx = idx % 4;
-
-			char buffer[4 * sizeof(float) + 15];	// 4 float and 16 bytes align
-#define STACK_ALIGN(_ADDRESS) (float*)(((size_t)((char*)(_ADDRESS) + 15)) & ~0x0f)
-			float *a_buffer = STACK_ALIGN(buffer);
-			
-			auto create_transform_elem = [=](auto name, auto num, auto v) {
-				lua_createtable(L, num, 0);
-
-				for (int ii = 0; ii < num; ++ii) {
-					ozz::math::StorePtr(v[ii], a_buffer);
-					lua_pushnumber(L, a_buffer[subidx]);
-					lua_seti(L, -2, ii + 1);
-				}
-				lua_setfield(L, -2, name);
-			};
-
-			create_transform_elem("s", 3, &(pose.scale.x));
-			create_transform_elem("r", 4, &(pose.rotation.x));
-			create_transform_elem("t", 3, &(pose.translation.x));
-			return 1;			
-		}
-
-		case LUA_TSTRING:{
-			std::string name = lua_tostring(L, 2);
-			auto itFound = s_builddata_methods.find(name);
-			if (itFound != s_builddata_methods.end()) {
-				auto func = itFound->second;
-				lua_pushcfunction(L, func);
-				return 1;
-			} else {
-				luaL_error(L, "not support method : %s", name.c_str());
-			}
-		}
-		default:
-			return 0;
-	}
-}
-
 static struct hierarchy_build_data*
 create_builddata_userdata(lua_State *L){
 	struct hierarchy_build_data *builddata = (struct hierarchy_build_data*)lua_newuserdata(L, sizeof(*builddata));
 
-	if (luaL_newmetatable(L, "HIERARCHY_BUILD_DATA")){
-		lua_pushvalue(L, -1);
-		lua_setfield(L, -2, "__index");
-		luaL_Reg l[] = {
-			"__gc", lbuilddata_del,			
-			"__len", lbuilddata_len,
-			"save", lbuilddata_save,
-			"load", lbuilddata_load,
-			"isleaf", lbuilddata_isleaf,
-			"parent", lbuilddata_parent,
-			"isroot", lbuilddata_isroot,
-			"joint_index", lbuilddata_jointindex,
-			"joint_matrix", lbuilddata_jointmatrix,
-			"bindpose_result", lbuilddata_bindpose_result,
-			nullptr, nullptr,
-		};
-
-		luaL_setfuncs(L, l, 0);
-	}
+	luaL_getmetatable(L, "HIERARCHY_BUILD_DATA");
 	lua_setmetatable(L, -2);
 
 	return builddata;
@@ -751,6 +661,29 @@ lhnode_getnode(lua_State *L) {
 }
 
 static void
+register_hierarchy_builddata(lua_State *L) {
+	if (luaL_newmetatable(L, "HIERARCHY_BUILD_DATA")) {
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
+		luaL_Reg l[] = {
+			"__gc", lbuilddata_del,
+			"__len", lbuilddata_len,
+			"save", lbuilddata_save,
+			"load", lbuilddata_load,
+			"isleaf", lbuilddata_isleaf,
+			"parent", lbuilddata_parent,
+			"isroot", lbuilddata_isroot,
+			"joint_index", lbuilddata_jointindex,
+			"joint_matrix", lbuilddata_jointmatrix,
+			"bindpose_result", lbuilddata_bindpose_result,
+			nullptr, nullptr,
+		};
+
+		luaL_setfuncs(L, l, 0);
+	}
+}
+
+static void
 register_hierarchy_node(lua_State *L) {
 	luaL_newmetatable(L, "HIERARCHY_NODE");	
 	lua_pushvalue(L, -1);
@@ -770,17 +703,31 @@ register_hierarchy_node(lua_State *L) {
 	luaL_setfuncs(L, l, 0);	
 }
 
-extern "C" {
+static int
+lhnode_metatable(lua_State *L) {
+	luaL_getmetatable(L, "HIERARCHY_NODE");
+	return 1;
+}
 
+static int
+lbuilddata_metatable(lua_State *L) {
+	luaL_getmetatable(L, "HIERARCHY_BUILD_DATA");
+	return 1;
+}
+
+extern "C" {
 LUAMOD_API int
-luaopen_hierarchy(lua_State *L) {
+luaopen_hierarchy(lua_State *L) {	
 	luaL_checkversion(L);
 	register_hierarchy_node(L);
+	register_hierarchy_builddata(L);
 
 	luaL_Reg l[] = {
 		{ "new", lnewhierarchy },
 		{ "invalid", linvalidnode },
-		{ "build", lbuild},		
+		{ "build", lbuild},
+		{ "node_metatable", lhnode_metatable},
+		{ "builddata_metatable", lbuilddata_metatable},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

@@ -50,6 +50,7 @@ function util.start_new_world(input_queue, fbw, fbh, packages, systems)
 		},
 	}
 	
+	world:update_func("bind_math_adapter")()
 	world:update_func("init")()
     return world
 end

@@ -17,19 +17,9 @@ bullet_world.__index = function (tbl, key)
 		end
 end
 
-local function bind_math3d_adapter(bw)
-	local bw_mt = getmetatable(bw)
-	bw_mt.new_obj = math_adapter.vector(ms, bw_mt.new_obj, 4)
-	bw_mt.set_obj_transform = math_adapter.vector(ms, bw_mt.set_obj_transform, 3);
-	bw_mt.set_obj_position = math_adapter.vector(ms, bw_mt.set_obj_position, 3);
-	bw_mt.set_obj_rotation = math_adapter.vector(ms, bw_mt.set_obj_rotation, 3);
-
-	return bw
-end
-
 function bullet_world.new()
     return setmetatable({
-		world = bind_math3d_adapter(bullet_sdk:new_world())
+		world = bullet_sdk:new_world()
 	}, bullet_world)
 end 
 

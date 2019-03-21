@@ -203,14 +203,16 @@ lvector(lua_State *L) {
 	const int top = lua_gettop(L);
 
 	for (int ii = from; ii <= top; ++ii) {
-		int type;
-		void* p = get_pointer_type(L, LS, ii, &type);
-		if (p == NULL) {
-			luaL_error(L, "arg index:%d, could not convert to light userdata with math3d stack object", ii);
-		}
+		if (!lua_isnil(L, ii)) {
+			int type;
+			void* p = get_pointer_type(L, LS, ii, &type);
+			if (p == NULL) {
+				luaL_error(L, "arg index:%d, could not convert to light userdata with math3d stack object", ii);
+			}
 
-		lua_pushlightuserdata(L, p);
-		lua_replace(L, ii);
+			lua_pushlightuserdata(L, p);
+			lua_replace(L, ii);
+		}
 	}
 
 	return f(L);
