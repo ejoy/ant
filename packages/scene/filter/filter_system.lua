@@ -38,7 +38,7 @@ end
 --luacheck: ignore self
 function primitive_filter_sys:update()	
 	for _, prim_eid in world:each("primitive_filter") do
-		local e = world[prim_eid]		
+		local e = world[prim_eid]
 		local filter = e.primitive_filter
 		filter._cache_idx = 1
 		local viewtag = filter.view_tag
@@ -46,8 +46,7 @@ function primitive_filter_sys:update()
 		for _, eid in world:each(filtertag) do
 			local ce = world[eid]
 			local vt = ce[viewtag]
-			local ft = ce[filtertag]
-			if vt and ft then
+			if vt then
 				ru.insert_primitive(eid, 
 					assert(ce.mesh.assetinfo).handle,
 					assert(ce.material.content),
