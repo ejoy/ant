@@ -2162,12 +2162,29 @@ new_temp_quaternion(lua_State *L) {
 		}
 	} else if (top == 3) {
 		const int type = lua_type(L, 2);
-		const glm::vec3 *axis;
-		if (type == LUA_TUSERDATA || LUA_TLIGHTUSERDATA) {
-			axis = (const glm::vec3*)lua_touserdata(L, 2);
+		glm::vec3 axis;
+		if (type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA) {
+			axis = *((const glm::vec3*)lua_touserdata(L, 2));
+		} else if (type == LUA_TNUMBER) {
+			int64_t id = lua_tointeger(L, 2);
+			int valuetype;
+			axis = *((const glm::vec3 *)lastack_value(LS, id, &valuetype));
+		} else if (type == LUA_TTABLE){
+			int tblnum = (int)lua_rawlen(L, 2);
+			if (tblnum != 3) {
+				luaL_error(L, "[second] argument must provied 3 values in table array, only %d provided", tblnum);
+			}
+			for (int ii = 0; ii < 3; ++ii) {
+				lua_geti(L, 2, ii + 1);
+				axis[ii] = lua_tonumber(L, -1);
+				lua_pop(L, 1);
+			}
+		} else {
+			luaL_error(L, "invalid [second] argument, type = %d, should provided as: \
+							userdata/lightuserdata[as float*], stack id or table as array[x, y, z]", type);
 		}
 		const float radian = lua_tonumber(L, 3);
-		q = glm::angleAxis(radian, *axis);
+		q = glm::angleAxis(radian, axis);
 	} else if (top == 2) {
 		const int type = lua_type(L, 2);
 		if (type == LUA_TTABLE) {

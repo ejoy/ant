@@ -65,11 +65,11 @@ function camera_controller_system:init()
 		local function pixel2radian(pixel)
 			return pixel * 0.001
 		end
-		
-		local rotation = ms({pixel2radian(dy), pixel2radian(dx), 0, 0}, cameracomp.viewdir, "D+T")
-		local threshold = math.pi - 0.01
-		rotation[1] = mu.limit(rotation[1], -threshold, threshold)	-- only yaw angle should limit in [-90, 90]
-		ms(cameracomp.viewdir, rotation, "d=")
+
+		local right, up = ms:base_axes(cameracomp.viewdir)
+		local qy = ms:quaternion(right, pixel2radian(dy))
+		local qx = ms:quaternion(up, pixel2radian(dx))
+		ms(cameracomp.viewdir, qx, qy, "*", cameracomp.viewdir, "*n=")
 		hit[1], hit[2] = event.x, event.y
 	end)	
 end
