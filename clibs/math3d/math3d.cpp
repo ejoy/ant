@@ -839,9 +839,7 @@ normalize(lua_State *L, struct lastack *LS) {
 	const float *v = pop_value(L, LS, &t);
 	switch(t){
 	case LINEAR_TYPE_VEC4:{
-			glm::vec4 r;
-			*(glm::vec3*)&r.x = glm::normalize(*(glm::vec3*)(v));
-			r[3] = v[3];
+			glm::vec4 r(glm::normalize(*(glm::vec3*)(v)), v[3]);
 			lastack_pushvec4(LS, &r.x);
 		}		
 		break;
