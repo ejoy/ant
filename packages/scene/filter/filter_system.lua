@@ -14,7 +14,7 @@ primitive_filter_sys.singleton "event"
 
 local function update_transform(transform, hierarchy_cache)
 	local peid = transform.parent
-	local localmat = ms:push_srt_matrix(transform)
+	local localmat = ms:srtmat(transform)
 	if peid then
 		local parentresult = hierarchy_cache[peid]
 		local parentmat = parentresult.world

@@ -5,22 +5,6 @@ local asset = import_package "ant.asset"
 local timer = import_package "ant.timer"
 local animodule = require "hierarchy.animation"
 
-local math3d_adapter = require "math3d.adapter"
-local function bind_math3d_adapter_with_animation()
-	local function bind_animation()
-
-	end
-
-	local function bind_ik()
-
-	end
-
-	bind_animation()
-	bind_ik()
-end
-
-bind_math3d_adapter_with_animation()
-
 local animation_content = ecs.component "animation_content"		
 	.ref_path "respath" ()
 	.name "string"
@@ -118,7 +102,7 @@ function anisystem:update()
 		local fix_root = false
 		local ikcomp = e.ik
 		if ikcomp and ikcomp.enable then
-			local mat = ms:create_srt_matrix(e.transform)
+			local mat = ms:srtmat(e.transform)
 			local t = deep_copy(ikcomp)
 			t.target = ms(assert(t.target), "m")
 			t.pole_vector = ms(assert(t.pole_vector), "m")
@@ -168,6 +152,12 @@ function anisystem:update()
 			update_transform_from_animation(anicomp.aniresult, ske, e)
 		end
 	end
+end
+
+local math3d_adapter = require "math3d.adapter"
+local animation_math_adapter = ecs.system "animation_math_adapter"
+function animation_math_adapter:bind_math_adapter()
+	ik_module.do_ik = math3d_adapter.matrix(ms, ik_module.do_ik, 1)	
 end
 
 

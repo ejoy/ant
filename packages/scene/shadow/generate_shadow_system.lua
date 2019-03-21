@@ -430,7 +430,7 @@ local function insert_shadow_primitive(eid, result)
 	local materialcontent = entity.material.content
 	assert(#materialcontent >= 1)
 
-	local srt = ms:create_srt_matrix(entity.transform)
+	local srt = ms(ms:srtmat(entity.transform), "m")
 	local mgroups = mesh.handle.groups
 	for i=1, #mgroups do
 		local g = mgroups[i]
@@ -781,7 +781,7 @@ function shadow_maker:render_debug_with_shadow(select_filter, material)
 	for _,prim in ipairs( select_filter.result) do
 		prim.material 	= material              
 		prim.properties =  get_shadow_properties()		
-		local mat = ms:create_srt_matrix(prim.srt)
+		local mat = ms(ms:srtmat(prim.srt), "m")
 		render_util.draw_primitive(VIEWID_DRAWSCENE, prim, mat)
 	end
 end 
@@ -791,7 +791,7 @@ function shadow_maker:render_debug(select_filter)
     bgfx.touch(VIEWID_DRAWSCENE)
 	bgfx.set_view_mode(VIEWID_DRAWSCENE, '')
 	for _,prim in ipairs(select_filter.result) do
-		local mat = ms:create_srt_matrix(prim.srt)
+		local mat = ms(ms:srtmat(prim.srt), "m")
 		render_util.draw_primitive( VIEWID_DRAWSCENE, prim, mat)
 	end
 end 

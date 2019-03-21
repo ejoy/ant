@@ -45,7 +45,7 @@ local function mesh_bounding_sphere(entity)
 				
 					]]
 					local math3dlib = require "math3d.baselib"
-					local worldmat = ms:create_srt_matrix(entity.transform)
+					local worldmat = ms(ms:srtmat(entity.transform), "m")
 					math3dlib.transform_aabb(worldmat, aabb)
 					local center = ms(aabb.max, aabb.min, "-", {0.5}, "*P")
 				

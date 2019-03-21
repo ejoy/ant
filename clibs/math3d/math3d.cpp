@@ -2340,6 +2340,15 @@ lsrt_matrix(lua_State *L) {
 }
 
 static int
+lview_proj(lua_State *L) {
+	const int numarg = lua_gettop(L);
+	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
+	lastack *LS = bp->LS;
+
+
+}
+
+static int
 lbase_axes_from_forward_vector(lua_State *L) {
 	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
 	struct lastack* LS = bp->LS;
@@ -2386,9 +2395,8 @@ lnew(lua_State *L) {
 			{ "quaternion", new_temp_quaternion},
 			{ "euler", new_temp_euler},
 			{ "base_axes", lbase_axes_from_forward_vector},
-			{ "create_srt_matrix", create_srt_matrix},
-			{ "push_srt_matrix", lsrt_matrix },
 			{ "srtmat", lsrt_matrix },
+			{ "view_proj", lview_proj},			
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);

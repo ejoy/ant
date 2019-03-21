@@ -63,7 +63,7 @@ local function update_transform(world, pe, psrt)
 		hie.assetinfo = assetmgr.load(refpath)
 		for _, node in ipairs(hie.assetinfo.handle) do
 			local rot = ms(ms:quaternion(node.r), 'eP')			
-			local csrt = ms(psrt, ms:push_srt_matrix(node.s, rot, node.t), '*P')
+			local csrt = ms(psrt, ms:srtmat(node.s, rot, node.t), '*P')
 			local s, r, t = ms(csrt, '~PPP')
 			local ceid = mapper[node.name]
 			local ce = world[ceid]
@@ -93,7 +93,7 @@ function util.rebuild_hierarchy(world, eid_rebuild)
 		save_rawdata(builddata, rpath)
     end
 
-	local rootsrt = ms:push_srt_matrix(rootentity.transform)
+	local rootsrt = ms:srtmat(rootentity.transform)
     update_transform(world, rootentity, rootsrt)
 end
 

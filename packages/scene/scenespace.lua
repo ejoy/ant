@@ -89,7 +89,7 @@ local function tree_sort(tree)
 end
 
 local function update_world(trans)
-	local srt = ms:push_srt_matrix(trans)
+	local srt = ms:srtmat(trans)
 	local base = trans.base
 	local worldmat = trans.world
 	if base then

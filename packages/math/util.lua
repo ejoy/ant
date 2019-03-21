@@ -31,19 +31,6 @@ local function to_v(math_id)
 	return ms(math_id, "m")
 end
 
-function util.srt(s, r, t, ispersistent)
-	local srt = {type="srt", s=s, r=r, t=t}
-	if ispersistent then
-		return create_persistent_type("matrix", srt)
-	end
-
-	return ms(srt, "P")
-end
-
-function util.srt_v(s, r, t, ispersistent)
-	return to_v(util.srt(s, r, t, ispersistent))
-end
-
 function util.proj(frustum, ispersistent)
 	if ispersistent then
 		return create_persistent_type("matrix", frustum)
