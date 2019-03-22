@@ -125,7 +125,7 @@ function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_
 	return world:create_entity {
 		viewport = {
 			clear_state = {
-				color = 0x030303ff,
+				color = 0x303030ff,
 				depth = 1,
 				stencil = 0,
 			},

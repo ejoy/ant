@@ -99,9 +99,7 @@ end
 
 -- update material system
 local pickup_material_sys = ecs.system "pickup_material_system"
-
-pickup_material_sys.depend "final_filter_system"
-pickup_material_sys.dependby "entity_rendering"
+pickup_material_sys.depend "primitive_filter_system"
 
 function pickup_material_sys:update()
 	for _, eid in world:each("pickup") do
@@ -157,8 +155,6 @@ local pickup_sys = ecs.system "pickup_system"
 pickup_sys.singleton "frame_stat"
 pickup_sys.singleton "message"
 
-pickup_sys.depend "entity_rendering"
-
 pickup_sys.dependby "end_frame"
 
 local vr_w, vr_h = 8, 8
@@ -206,17 +202,11 @@ local function add_pick_entity()
 				}
 			},
 		},		
-		clear_component = {
-			color = 0,
-			depth = 1,
-			stencil = 0,
-		},		
-		view_rect = {
-			x = 0, y = 0,
-			w = vr_w, h = vr_h,
+		camera = {
+			viewdir = {},
 		},
-		name = "pickup",
-		pickup_viewtag = true,		
+		name = "pickup_renderqueue",
+		pickup_viewtag = true,
 	}
 
 	init_pickup_buffer(world[eid])	

@@ -149,8 +149,8 @@ function openMap(path)
         "ant.hierarchy.offline",
     }
     local systems = {
-        "pickup_material_system",
-        "pickup_system",
+        --"pickup_material_system",
+        --"pickup_system",
         "obj_transform_system",
         "build_hierarchy_system",
         "editor_system"

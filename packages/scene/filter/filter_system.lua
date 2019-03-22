@@ -5,6 +5,8 @@ local render = import_package "ant.render"
 local cu = render.components
 local ru = render.util
 
+local filterutil = require "filter.util"
+
 local ms = import_package "ant.math" .stack
 local math3d = require "math3d"
 
@@ -52,7 +54,8 @@ function primitive_filter_sys:update()
 		for _, eid in world:each(filtertag) do
 			local ce = world[eid]
 			local vt = ce[viewtag]
-			if vt then
+			local ft = ce[filtertag]
+			if vt and ft then
 				ru.insert_primitive(eid, 
 					assert(ce.mesh.assetinfo).handle,
 					assert(ce.material.content),
@@ -60,6 +63,8 @@ function primitive_filter_sys:update()
 					filter)
 			end
 		end	
+
+		filterutil.load_lighting_properties(world, filter)
 	end
 end
 

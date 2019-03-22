@@ -14,7 +14,6 @@ camera_controller_system.singleton "message"
 camera_controller_system.singleton "control_state"
 
 camera_controller_system.depend "message_system"
-camera_controller_system.depend "camera_init"
 
 local function camera_move(forward_axis, position, dx, dy, dz)
 	--ms(position, rotation, "b", position, "S", {dx}, "*+S", {dy}, "*+S", {dz}, "*+=")	

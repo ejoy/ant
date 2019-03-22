@@ -13,14 +13,16 @@ local math3d = import_package "ant.math"
 local ms = math3d.stack
 local model_review_system = ecs.system "model_review_system"
 
+local renderpkg = import_package "ant.render"
+local renderutil = renderpkg.util
+
 model_review_system.singleton "constant"
 model_review_system.depend "constant_init_sys"
 model_review_system.dependby "message_system"
---model_review_system.depend "shadow_primitive_filter_system"
-model_review_system.depend "transparency_filter_system"
-model_review_system.depend "entity_rendering"
+model_review_system.depend "primitive_filter_system"
 model_review_system.depend "debug_system"
 model_review_system.depend "math_adapter"
+model_review_system.depend "render_system"
 
 local lu = import_package "ant.render" .light
 local cu = import_package "ant.render" .components
@@ -40,6 +42,7 @@ local function create_light()
 end
 
 function model_review_system:init()
+	renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
 	create_light()
 	cu.create_grid_entity(world, "grid")
 	world:create_entity {
