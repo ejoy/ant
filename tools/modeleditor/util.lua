@@ -83,7 +83,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 			ref_path = fs.path "//ant.resources/simple_animation.sm",
 		},
 		name = "animation_sample",
-		main_viewtag = true,
+		main_view = true,
 	}
 
 	local e = world[eid]

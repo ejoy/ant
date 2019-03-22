@@ -98,7 +98,7 @@ local function create_animation_test()
             ref_path = fs.path '//ant.resources' / smpath
         },
         name = 'animation_sample',
-        main_viewtag = true
+        main_view = true
     }
 
     local e = world[eid]

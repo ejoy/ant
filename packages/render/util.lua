@@ -2,6 +2,7 @@
 local log = log and log(...) or print
 
 local bgfx = require "bgfx"
+local viewidmgr = require "viewid_mgr"
 local util = {}
 util.__index = util
 
@@ -81,36 +82,93 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 	end
 end
 
-function util.insert_primitive(eid, meshhandle, materials, srt, filter)	
+local function add_result(eid, group, materialinfo, properties, worldmat, result)
+	local idx = result.cacheidx
+	local r = result[idx]
+	if r == nil then
+		r = {}
+		result[idx] = r
+	end
+
+	r.eid 		= eid
+	r.mgroup 	= group
+
+	r.material 	= materialinfo
+	r.properties = properties
+	r.worldmat 	= worldmat
+
+	result.cacheidx = idx + 1
+end
+
+function util.insert_primitive(eid, meshhandle, materials, worldmat, filter)	
 	local mgroups = meshhandle.groups
-	local cacheidx = filter._cache_idx
-	local result = filter.result
 	for i=1, #mgroups do
 		local g = mgroups[i]
 		local mc = materials[i] or materials[1]
 
-		local r = result[cacheidx]
-		if r == nil then
-			r = {}
-			result[cacheidx] = r
+		local mi = mc.materialinfo
+		local results = filter.result
+		if mi.surface_type.transparency == "translucent" then
+			add_result(eid, g, mi, mc.properties, worldmat, results.translucent)
+		else
+			add_result(eid, g, mi, mc.properties, worldmat, results.opaque)
 		end
 
-		r.eid = eid
-		r.mgroup = g
-		r.material = mc.materialinfo
-		r.properties = mc.properties
-		r.srt = srt
-
-		cacheidx = cacheidx + 1
+		if mi.surface_type.shadow.cast then
+			add_result(eid, g, mi, mc.properties, worldmat, results.cast_shadow)
+		end
 	end
-
-	filter._cache_idx = cacheidx
 end
 
--- render to shadowmap
-
-
-
+function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_tag)
+	local w, h = viewsize.w, viewsize.h
+	return world:create_entity {
+		viewport = {
+			clear_state = {
+				color = 0x030303ff,
+				depth = 1,
+				stencil = 0,
+			},
+			rect = {
+				x = 0, y = 0,
+				w = w, h = h,
+			},
+		},
+		camera = {
+			type = "",
+			eyepos = eyepos,
+			viewdir = viewdir,
+			updir = {0, 1, 0, 0},
+			frustum = {
+				type = "mat",
+				n = 0.1, f = 100000,
+				fov = 60, aspect = w / h,
+			},
+		},
+		viewid = viewidmgr.get(view_tag),
+		render_target = {},	--default view
+		primitive_filter = {
+			view_tag = view_tag,
+			filter_tag = "can_render",
+			result = {
+				case_shadow = {},
+				translcuent = {},
+				opaque = {}
+			},
+			render_properties = {
+				lighting = {
+					uniforms = {},
+					textures = {},
+				},
+				shadow = {
+					uniforms = {},
+					textures = {},
+				}
+			}
+		},
+		main_camera = view_tag == "main_view" and true or nil,
+	}
+end
 
 function util.default_surface_type()
 	return {

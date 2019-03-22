@@ -835,9 +835,9 @@ end
 local gen_shadow_system = ecs.system "generate_shadow_system"
 
 gen_shadow_system.singleton "shadow_cast_filter"
-gen_shadow_system.depend   "view_system"       
-gen_shadow_system.dependby "lighting_primitive_filter_system"
-gen_shadow_system.dependby "entity_rendering" 
+--gen_shadow_system.depend   "view_system"       
+--gen_shadow_system.dependby "lighting_primitive_filter_system"
+--gen_shadow_system.dependby "entity_rendering" 
 
 function gen_shadow_system:init()
 	local function add_shadow_maker_entity()

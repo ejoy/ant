@@ -12,8 +12,6 @@ local objctrller = require "objcontroller"
 local camera_controller_system = ecs.system "camera_controller"
 
 camera_controller_system.singleton "control_state"
-
-camera_controller_system.depend "camera_init"
 camera_controller_system.depend "objcontroller_system"
 
 function camera_controller_system:init()

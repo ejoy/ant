@@ -91,7 +91,7 @@ return function(world, import, class)
 		setter = { "depend" , "dependby", "singleton" },
 	}
 
-	class_register.component = function (name, ...)
+	class_register.component = function (name)
 		return schema:type(name)
 	end
 

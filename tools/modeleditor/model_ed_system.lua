@@ -19,22 +19,24 @@ local math 		= import_package "ant.math"
 local renderpkg = import_package "ant.render"
 local ms 		= math.stack
 local camerautil= renderpkg.camera
+local renderutil= renderpkg.util
 local aniutil 	= import_package "ant.animation".util
  
 ecs.tag "sampleobj"
 
 local model_ed_sys = ecs.system "model_editor_system"
 model_ed_sys.singleton "debug_object"
-model_ed_sys.depend "camera_init"
---model_ed_sys.depend "character_controller"
-model_ed_sys.depend "camera_controller"
-model_ed_sys.depend "renderbone_system"
-model_ed_sys.depend "state_machine"
-model_ed_sys.depend "skinning_system"
-model_ed_sys.depend "math_adapter"
 
-model_ed_sys.dependby "transparency_filter_system"
-model_ed_sys.dependby "entity_rendering"
+--model_ed_sys.depend "character_controller"
+model_ed_sys.dependby "viewport_detect_system"
+model_ed_sys.dependby "camera_controller"
+model_ed_sys.dependby "renderbone_system"
+model_ed_sys.dependby "state_machine"
+model_ed_sys.dependby "skinning_system"
+model_ed_sys.dependby "math_adapter"
+
+model_ed_sys.dependby "primitive_filter_system"
+model_ed_sys.dependby "render_system"
 model_ed_sys.dependby "widget_system"
 
 -- luacheck: globals main_dialog
@@ -450,6 +452,8 @@ end
 
 -- luacheck: ignore self
 function model_ed_sys:init()	
+	renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "nT"), {5, 5, -5}, "main_view")
+
 	init_control()
 	init_lighting()
 

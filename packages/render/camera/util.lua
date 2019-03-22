@@ -80,7 +80,7 @@ function util.focus_selected_obj(world, eid)
 	local camera_entity = world:first_entity("main_camera")
 	local camera = camera_entity.camera
 	ms(camera.viewdir, sphere.center, camera.eyepos, "-n=")
-	ms(camera.eyepos, sphere.center, camera.viewdir, sphere.radius, "*-=")
+	ms(camera.eyepos, sphere.center, camera.viewdir, {sphere.radius}, "*-=")
 	return true
 end
 

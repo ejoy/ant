@@ -59,7 +59,7 @@ function model_review_system:init()
 				}
 			}
 		},
-		main_viewtag = true,		
+		main_view = true,		
 	}
 
 	world:create_entity {
@@ -79,7 +79,7 @@ function model_review_system:init()
 				}
 			}
 		},
-		main_viewtag = true,
+		main_view = true,
 	}
 
 	-- local mesh = model.mesh.assetinfo.handle.bounding

@@ -9,7 +9,6 @@ local fs = require "filesystem"
 
 local simplescene = ecs.system "simple_scene"
 
-simplescene.depend "camera_init"
 simplescene.depend "constant_init_sys"
 simplescene.dependby "message_system"
 simplescene.dependby "final_filter"
@@ -36,7 +35,7 @@ function simplescene:init()
 		},
 		can_render = true,
 		name = "demo_bunny",		
-		main_viewtag = true,
+		main_view = true,
 	}
 
 	camerautil.focus_selected_obj(world, bunnyeid)

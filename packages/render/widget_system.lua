@@ -15,8 +15,6 @@ ecs.component "widget"
 local widget_sys = ecs.system "widget_system"
 
 widget_sys.depend "primitive_filter_system"
-widget_sys.dependby "lighting_primitive_filter_system"
-widget_sys.dependby "transparency_filter_system"
 
 function widget_sys:update()
 	local camera = world:first_entity("main_camera")

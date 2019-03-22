@@ -36,11 +36,17 @@ local function update_transform(transform, hierarchy_cache)
 end
 
 --luacheck: ignore self
+local function reset_results(results)
+	for k, result in pairs(results) do
+		result.cacheidx = 1
+	end
+end
+
 function primitive_filter_sys:update()	
 	for _, prim_eid in world:each("primitive_filter") do
 		local e = world[prim_eid]
 		local filter = e.primitive_filter
-		filter._cache_idx = 1
+		reset_results(filter.result)
 		local viewtag = filter.view_tag
 		local filtertag = filter.filter_tag
 		for _, eid in world:each(filtertag) do

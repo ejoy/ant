@@ -288,7 +288,7 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 		editable_hierarchy = {ref_path = axis_hierarchyname},
 		hierarchy_name_mapper = {},
 		[tag_comp] = true,
-		main_viewtag = true,
+		main_view = true,
 	}
 
 	local namemapper = world[hie_eid].hierarchy_name_mapper
@@ -316,7 +316,7 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 			[tag_comp] = true,
 			editor = true,
 			parent = hie_eid,
-			main_viewtag = true,
+			main_view = true,
 		}
 		namemapper[name] = eid
 		return eid
@@ -352,7 +352,7 @@ local function add_axis_base_transform_entites(basename, headmeshfile, axismeshf
 		hierarchy_name_mapper = {},
 		name = basename,
 		[tag_comp] = true,
-		main_viewtag = true,
+		main_view = true,
 	}
 
 	local namemapper = world[rootaxis_eid].hierarchy_name_mapper
@@ -448,7 +448,7 @@ local function add_rotator_entities(colors)
 			ref_path = axisbase_controller_hierarchyname,
 		},
 		hierarchy_name_mapper = {},
-		main_viewtag = true,
+		main_view = true,
 	}
 	
 	local namemapper = world[root_eid].hierarchy_name_mapper
@@ -466,7 +466,7 @@ local function add_rotator_entities(colors)
 			hierarchy_name_mapper = {},
 			name = "rotator-elem-" .. elemname,
 			rotator_transform = true,
-			main_viewtag = true,
+			main_view = true,
 		}
 
 		local elem = world[elem_eid]
@@ -496,7 +496,7 @@ local function add_rotator_entities(colors)
 				},
 				can_render = false,
 				can_select = true,
-				main_viewtag = true,
+				main_view = true,
 			}			
 		end
 	
