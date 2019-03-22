@@ -46,7 +46,8 @@ function primitive_filter_sys:update()
 		for _, eid in world:each(filtertag) do
 			local ce = world[eid]
 			local vt = ce[viewtag]
-			if vt then
+			local ft = ce[filtertag]
+			if vt and ft then
 				ru.insert_primitive(eid, 
 					assert(ce.mesh.assetinfo).handle,
 					assert(ce.material.content),
