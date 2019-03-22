@@ -1763,6 +1763,17 @@ static FASTMATH(all)
 	return 1;
 }
 
+static FASTMATH(length)
+	int64_t id = pop(L, LS);
+	int type;
+	const glm::vec3 * v = (const glm::vec3 *)lastack_value(LS, id, &type);
+	
+	lastack_pushnumber(LS, glm::length(*v));
+	refstack_pop(RS);
+	refstack_push(RS);
+	return 0;
+}
+
 struct fastmath_function {
 	MFunction func;
 	const char *desc;
@@ -2379,6 +2390,65 @@ lview_proj(lua_State *L) {
 	return 2;
 }
 
+static inline glm::vec4 
+get_vec_value(lua_State *L, struct lastack *LS, int index) {
+	switch (lua_type(L, index)) {
+	case LUA_TUSERDATA:
+	case LUA_TNUMBER:
+	{
+		int type;
+		return *((const glm::vec4*)lastack_value(LS, get_stack_id(L, LS, index), &type));
+	}
+	case LUA_TTABLE:
+	{
+		glm::vec4 v;
+		v[3] = 0;
+		const size_t len = lua_rawlen(L, index);
+		
+		for (int ii = 0; ii < len; ++ii) {
+			lua_geti(L, index, ii + 1);
+			v[ii] = lua_tonumber(L, -1);
+			lua_pop(L, 1);
+		}
+		return v;
+	}
+	default:
+		luaL_error(L, "invalid data type, get_vec_value only support table/userdata(refvalue)/stack number");
+		return glm::vec4(0);
+	}
+}
+
+static int
+llength(lua_State *L) {
+	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
+	lastack *LS = bp->LS;
+
+	const int numarg = lua_gettop(L);
+	float len = 0.0f;
+	switch (numarg) {
+	case 2:
+	{
+		glm::vec4 v = get_vec_value(L, LS, 2);
+		len = glm::length(v);
+	}
+		break;
+	case 3:
+	{
+		auto lhs = get_vec_value(L, LS, 2);
+		auto rhs = get_vec_value(L, LS, 3);
+
+		len = glm::length(lhs - rhs);
+	}
+		break;
+	default:
+		luaL_error(L, "only support 2/3 arguments, 2 for (ms, vec4), 3 for (ms, vec4, vec4) as length([2 - 3]), %d provided", numarg);
+		break;
+	}
+	
+	lua_pushnumber(L, len);
+	return 1;
+}
+
 static int
 lbase_axes_from_forward_vector(lua_State *L) {
 	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
@@ -2419,6 +2489,7 @@ lnew(lua_State *L) {
 			{ MFUNCTION(popnumber) },
 			{ MFUNCTION(toquaternion)},
 			{ MFUNCTION(lookfrom3)},
+			{ MFUNCTION(length)},
 			{ "ref", lstackrefobject },
 			{ "command", gencommand },
 			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )
@@ -2428,6 +2499,7 @@ lnew(lua_State *L) {
 			{ "base_axes", lbase_axes_from_forward_vector},
 			{ "srtmat", lsrt_matrix },
 			{ "view_proj", lview_proj},			
+			{ "length", llength},
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);

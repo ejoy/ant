@@ -30,7 +30,7 @@ local function mesh_bounding_sphere(entity)
 			local handle = assetinfo.handle
 			local groups = handle.groups
 			if #groups > 0 then
-				local bounding = groups.bounding
+				local bounding = groups[1].bounding
 				if bounding then
 					local aabb = deep_copy(bounding.aabb)
 					--[[
@@ -56,7 +56,7 @@ local function mesh_bounding_sphere(entity)
 						3. '.': dot(dir, dir)	-> [dot result]	1
 						4. 'P': pop result
 					]]
-					local radius = ms(aabb.max, aabb.min, "-1.P")
+					local radius = ms:length(aabb.max, aabb.min)
 
 					return {center = center, radius = radius}
 				end
@@ -65,7 +65,7 @@ local function mesh_bounding_sphere(entity)
 		end
 	end
 
-	return {center = entity.transform.t, radius = 100}
+	return {center = entity.transform.t, radius = 5}
 end
 
 function util.focus_selected_obj(world, eid)

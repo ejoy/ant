@@ -19,14 +19,14 @@ widget_sys.depend "primitive_filter_system"
 function widget_sys:update()
 	local camera = world:first_entity("main_camera")
 
-	local filter = assert(camera.primitive_filter)
+	local filter = camera.primitive_filter
 	for _, eid in world:each("widget") do
 		local e = world[eid]
 		local widget = e.widget
 
 		if widget.can_render then
-			local meshhandle = assert(widget.mesh).assetinfo.handle		
-			local materials = assert(widget.material).content
+			local meshhandle = widget.mesh.assetinfo.handle		
+			local materials = widget.material.content
 
 			local srt = widget.srt
 			local mat = ms({type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")

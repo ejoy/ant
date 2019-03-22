@@ -452,7 +452,7 @@ end
 
 -- luacheck: ignore self
 function model_ed_sys:init()	
-	renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "nT"), {5, 5, -5}, "main_view")
+	renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "nT"), {1, 1, -1}, "main_view")
 
 	init_control()
 	init_lighting()
