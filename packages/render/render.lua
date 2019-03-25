@@ -23,23 +23,24 @@ function renderbuffer:init()
 	self.handle = bgfx.create_texture2d(self.w, self.h, false, self.layers, self.format, self.flags)
 end
 
-local rt = ecs.component "render_target" {depend = "viewid"}
+local fb = ecs.component "frame_buffer" 
 	['opt'].color "render_buffer"
 	['opt'].depth "render_buffer"
-
-function rt:init()
+function fb:init()
 	local c, d = self.color, self.depth	
 	if c or d then
 		self.handle = bgfx.create_frame_buffer({c.handle, d.handle}, true)		
 	end
 end
 
+local rt = ecs.component "render_target" {depend = "viewid"}
+	.frame_buffers "frame_buffer[]"
+
 function rt:postinit(e)
 	if self then
-		local fb = self.handle
-		if fb then
+		for _, fb in ipairs(self.frame_buffers) do
 			bgfx.set_view_frame_buffer(e.viewid, fb)
-		end		
+		end
 	end
 end
 
