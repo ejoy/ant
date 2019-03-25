@@ -2450,6 +2450,83 @@ llength(lua_State *L) {
 }
 
 static int
+lscreen_point_to_3d(lua_State *L) {
+	const int numarg = lua_gettop(L);
+	if (numarg < 4) {
+		luaL_error(L, "at least 4 arguments, %d provided. arguments: (camera component[with eyepos/viewdir/frustum], viewport[w, h], point at 2d", numarg);
+	}
+
+	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
+	lastack *LS = bp->LS;
+
+	// camera
+	luaL_checktype(L, 2, LUA_TTABLE);
+
+	auto matProj = create_proj_mat(L, LS, 2);
+
+	int type;
+	lua_getfield(L, 2, "eyepos");
+	const glm::vec3 *eyepos = (const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
+	lua_pop(L, 1);
+
+	lua_getfield(L, 2, "viewdir");
+	const glm::vec3 *viewdir = (const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
+	lua_pop(L, 1);
+
+	lua_getfield(L, 2, "updir");
+	const glm::vec3 *updir = (const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
+	lua_pop(L, 1);
+
+	glm::mat4x4 matView = glm::lookAtLH(*eyepos, *eyepos + *viewdir, *updir);
+
+	// view rect
+	luaL_checktype(L, 3, LUA_TTABLE);
+	lua_getfield(L, 3, "w");
+	const float width = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, 3, "h");
+	const float height = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+
+	//////////////////////////////////////////////////////////////////////////
+
+	const glm::mat4x4 matInverseVP = glm::inverse(matProj * matView);
+
+
+	// get 2d point, point.z is the depth in ndc space
+	const int num2dpoint = numarg - 3;
+
+	for (int ii = 0; ii < num2dpoint; ++ii) {
+		auto fetchpoint = [L, width, height](int index) {
+			glm::vec4 p;
+			for (int jj = 0; jj < 3; ++jj) {
+				lua_geti(L, index, jj+1);
+				p[jj] = lua_tonumber(L, -1);
+				lua_pop(L, 1);
+			}
+			auto remap0_1 = [](float v) {
+				return v * 2.f - 1.f;
+			};
+			p.x = remap0_1(p.x / width);
+			p.y = remap0_1((height - p.y) / height);
+			p.w = 1;
+			return p;
+		};
+
+		glm::vec4 p = fetchpoint(ii);
+		auto tmp = matInverseVP * p;
+		p = tmp / tmp.w;
+
+		lastack_pushvec4(LS, &p.x);
+		pushid(L, pop(L, LS));
+	}
+
+	return num2dpoint;
+}
+
+static int
 lbase_axes_from_forward_vector(lua_State *L) {
 	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
 	struct lastack* LS = bp->LS;
@@ -2500,6 +2577,7 @@ lnew(lua_State *L) {
 			{ "srtmat", lsrt_matrix },
 			{ "view_proj", lview_proj},			
 			{ "length", llength},
+			{"screenpt_to_3d", lscreen_point_to_3d},
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);

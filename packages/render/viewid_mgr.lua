@@ -12,6 +12,7 @@ local bindings = {
 
 	main_view = 30,
 	pickup = 31,
+	pickup_blit = 32,
 }
 
 local pool = {}

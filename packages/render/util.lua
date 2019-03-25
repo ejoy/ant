@@ -170,6 +170,91 @@ function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_
 	}
 end
 
+function util.default_sampler()
+	return {
+		U="MIRROR",
+		V="MIRROR",
+		W="MIRROR",
+		MIN="LINEAR",
+		MAG="LINEAR",
+		MIP="LINEAR",
+	}
+end
+
+function util.fill_default_sampler(sampler)
+	local d = util.default_sampler()
+	if sampler == nil then
+		return d
+	end
+
+	for k, v in pairs(d) do
+		if sampler[k] == nil then
+			sampler[k] = v
+		end
+	end
+
+	return sampler
+end
+
+local sample_types = {
+	U="u", V="v", W="w", 
+	MIN="-", MAG="+", MIP="*",
+
+	RT = "r", 
+	RT_READWRITE = "r", 
+	RT_MSAA="r",
+
+	BLIT = "b",
+	BLIT_READBACK = "b", 
+	BLIT_COMPUTE = "b",
+
+	SAMPLE = "s",
+}
+
+local sample_value = {
+	CLAMP="c", BORDER="b", MIRROR="",	--default
+	POINT="p", ANISOTROPIC="a", LINEAR="", --default,
+
+	-- RT
+	RT_ON='t', 
+	RT_READ="", RT_WRITE="w",
+	RT_MSAA2="2", RT_MSAA4="4", RT_MSAA8="8", RT_MSAAX="x",
+
+	-- BLIT
+	BLIT_AS_DST = 'w', 
+	BLIT_READBACK_ON = 'r',
+	BLIT_COMPUTEREAD = '',
+	BLIT_COMPUTEWRITE = 'c',	
+
+	--SAMPLE
+	SAMPLE_STENCIL='s', SAMPLE_DEPTH='d',
+}
+
+function util.generate_sampler_flag(sampler)
+	if sampler == nil then
+		return nil
+	end
+	local flag = ""	
+
+	for k, v in pairs(sampler) do
+		local value = sample_value[v]
+		if value == nil then
+			error("not support data, sample value : %s", v)
+		end
+
+		if #value ~= 0 then
+			local type = sample_types[k]
+			if type == nil then
+				error("not support data, sample type : %s", k)
+			end
+			
+			flag = flag .. type .. value
+		end
+	end
+
+	return flag
+end
+
 function util.default_surface_type()
 	return {
 		lighting = "on",			-- "on"/"off"

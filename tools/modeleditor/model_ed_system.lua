@@ -38,6 +38,7 @@ model_ed_sys.dependby "math_adapter"
 model_ed_sys.dependby "primitive_filter_system"
 model_ed_sys.dependby "render_system"
 model_ed_sys.dependby "widget_system"
+model_ed_sys.dependby "pickup_system"
 
 -- luacheck: globals main_dialog
 -- luacheck: globals iup

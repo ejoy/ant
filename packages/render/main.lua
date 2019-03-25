@@ -4,5 +4,6 @@ return {
     camera = require "camera.util",
     hardware_interface = require "hardware_interface",
     components = require "components.util",
-    light = require "light.util",
+	light = require "light.util",
+	viewidmgr = require "viewid_mgr"
 }
