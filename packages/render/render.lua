@@ -47,6 +47,18 @@ function rt:postinit(e)
 	return self
 end
 
+local cs = ecs.component "clear_state"
+    .color "int" (0x303030ff)
+    .depth "int" (1)
+    .stencil "int" (0)
+
+function cs:init()
+    self.clear_color = true
+    self.clear_depth = true
+	self.clear_stencil = true
+	return self
+end
+
 ecs.component "rect"
 	.x "real" (0)
 	.y "real" (0)
