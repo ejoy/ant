@@ -39,6 +39,7 @@ ru.createThread('debug', [[
     local dbgupdate = dbg.start_master(dbg_io)
     while true do
         dbgupdate()
+        thread.sleep(0.01)
     end
 ]])
 

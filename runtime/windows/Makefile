@@ -23,4 +23,6 @@ ant.exe : main.o libant-$(PLAT).a
 	$(STRIP) $@ 
 
 clean :
-	rm -f *.o && rm -f ant.exe
+	rm -f *.o
+	rm -f ant.exe
+	rm -rf $(ANT)/clibs/ant/o/$(PLAT)
