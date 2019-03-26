@@ -21,6 +21,7 @@ local renderbuffer = ecs.component "render_buffer"
 
 function renderbuffer:init()
 	self.handle = bgfx.create_texture2d(self.w, self.h, false, self.layers, self.format, self.flags)
+	return self
 end
 
 local fb = ecs.component "frame_buffer" 
@@ -29,8 +30,9 @@ local fb = ecs.component "frame_buffer"
 function fb:init()
 	local c, d = self.color, self.depth	
 	if c or d then
-		self.handle = bgfx.create_frame_buffer({c.handle, d.handle}, true)		
+		self.handle = bgfx.create_frame_buffer({c and c.handle or nil, d and d.handle or nil}, true)
 	end
+	return self
 end
 
 local rt = ecs.component "render_target" {depend = "viewid"}
@@ -39,9 +41,10 @@ local rt = ecs.component "render_target" {depend = "viewid"}
 function rt:postinit(e)
 	if self then
 		for _, fb in ipairs(self.frame_buffers) do
-			bgfx.set_view_frame_buffer(e.viewid, fb)
+			bgfx.set_view_frame_buffer(e.viewid, fb.handle)
 		end
 	end
+	return self
 end
 
 ecs.component "rect"

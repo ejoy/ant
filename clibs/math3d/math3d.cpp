@@ -464,6 +464,7 @@ push_srt_from_table(lua_State *L, struct lastack *LS, int index) {
 static int
 get_mat_type(lua_State *L, int index) {
 	const int ret_type = lua_getfield(L, index, "ortho");
+	lua_pop(L, 1);
 	if (ret_type == LUA_TNIL || ret_type == LUA_TNONE) {
 		return MAT_PERSPECTIVE;
 	}
@@ -488,8 +489,8 @@ create_proj_mat(lua_State *L, struct lastack *LS, int index) {
 	float far = luaL_optnumber(L, -1, 100.0f);
 	lua_pop(L, 1);
 
-	const int type = get_mat_type(L, index);
-	if (type == MAT_PERSPECTIVE && lua_getfield(L, index, "fov") == LUA_TNUMBER) {
+	int mattype = MAT_PERSPECTIVE;
+	if (lua_getfield(L, index, "fov") == LUA_TNUMBER) {
 		float fov = lua_tonumber(L, -1);
 		lua_pop(L, 1);
 		lua_getfield(L, index, "aspect");
@@ -502,6 +503,7 @@ create_proj_mat(lua_State *L, struct lastack *LS, int index) {
 		bottom = -ymax;
 		top = ymax;
 	} else {
+		const int type = get_mat_type(L, index);
 		lua_getfield(L, index, "l");
 		left = luaL_checknumber(L, -1);
 		lua_pop(L, 1);
@@ -516,7 +518,7 @@ create_proj_mat(lua_State *L, struct lastack *LS, int index) {
 		lua_pop(L, 1);
 	}
 
-	if (type == MAT_PERSPECTIVE) {
+	if (mattype == MAT_PERSPECTIVE) {
 		return g_default_homogeneous_depth ?
 			glm::frustumLH_NO(left, right, bottom, top, near, far) :
 			glm::frustumLH_ZO(left, right, bottom, top, near, far);
@@ -2462,7 +2464,9 @@ lscreen_point_to_3d(lua_State *L) {
 	// camera
 	luaL_checktype(L, 2, LUA_TTABLE);
 
-	auto matProj = create_proj_mat(L, LS, 2);
+	lua_getfield(L, 2, "frustum");
+	auto matProj = create_proj_mat(L, LS, -1);
+	lua_pop(L, 1);
 
 	int type;
 	lua_getfield(L, 2, "eyepos");
@@ -2496,7 +2500,8 @@ lscreen_point_to_3d(lua_State *L) {
 
 
 	// get 2d point, point.z is the depth in ndc space
-	const int num2dpoint = numarg - 3;
+	const int point_start_idx = 3;
+	const int num2dpoint = numarg - point_start_idx;
 
 	for (int ii = 0; ii < num2dpoint; ++ii) {
 		auto fetchpoint = [L, width, height](int index) {
@@ -2515,7 +2520,7 @@ lscreen_point_to_3d(lua_State *L) {
 			return p;
 		};
 
-		glm::vec4 p = fetchpoint(ii);
+		glm::vec4 p = fetchpoint(ii + 1 + point_start_idx);
 		auto tmp = matInverseVP * p;
 		p = tmp / tmp.w;
 

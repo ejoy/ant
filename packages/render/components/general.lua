@@ -89,6 +89,13 @@ function uniformdata.save(v)
 	end
 end
 
+function uniformdata.delete(v)
+	local tt = type(v)
+	if tt == "userdata" then
+		v(nil)
+	end
+end
+
 ecs.component "uniform"
 	.name "string"
 	.type "string"
