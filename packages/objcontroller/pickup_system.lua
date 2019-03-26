@@ -83,7 +83,7 @@ function pickup_material_sys:update()
 				if result then
 					for _, item in ipairs(result) do
 						item.material = material.materialinfo
-						item.properties = {
+						item.properties.uniforms = {
 							u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
 						}
 					end
@@ -208,7 +208,7 @@ local function add_pick_entity()
 			updir = {0, 1, 0, 0},
 			eyepos = {0, 0, 0, 1},
 			frustum = {
-				type="mat", n=0.1, f=100, fov=1, aspect=pickup_buffer_w / pickup_buffer_h
+				type="mat", n=0.1, f=100, fov=3, aspect=pickup_buffer_w / pickup_buffer_h
 			},
 		},
 		render_target = {
@@ -267,7 +267,20 @@ local function blit(blitviewid, blit_buffer, framebuffer)
 	local rb = blit_buffer.render_buffer.handle
 	
 	bgfx.blit(blitviewid, rb, 0, 0, assert(framebuffer.color.handle))
-	return bgfx.read_texture(rb, blit_buffer.raw_buffer.handle)
+	return bgfx.read_texture(rb, blit_buffer.raw_buffer.handle)	
+end
+
+local function print_raw_buffer(rawbuffer)
+	local data = rawbuffer.handle
+	for i=1, pickup_buffer_w do
+		print("line:", i)
+		local t = {}
+		for j=1, pickup_buffer_h do
+			t[#t+1] = data[(i-1)*pickup_buffer_w + j-1]
+		end
+
+		print(table.concat(t, ' '))
+	end
 end
 
 local function select_obj(blit_buffer, viewrect)
@@ -275,20 +288,19 @@ local function select_obj(blit_buffer, viewrect)
 	if selecteid then
 		local name = assert(world[selecteid]).name
 		print("pick entity id : ", selecteid, ", name : ", name)
+		world:update_func("pickup")(selecteid)
 	else
 		print("not found any eid")
 	end
-
-	world:update_func("pickup")(selecteid)
 end
 
 local state_list = {
 	blit = "wait",
-	wait = "select_obj"
+	wait = "select_obj",	
 }
 
 local function check_next_step(pickupcomp)
-	pickupcomp.nextstep = state_list[pickupcomp.nextstep]
+	pickupcomp.nextstep = state_list[pickupcomp.nextstep]	
 end
 
 function pickup_sys:update()

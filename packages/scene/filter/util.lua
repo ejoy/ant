@@ -86,21 +86,21 @@ function util.create_primitve_filter(viewtag, filtertag)
 	return {
 		view_tag = viewtag,
 		filter_tag = filtertag,
-		result = {
-			case_shadow = {},
-			translcuent = {},
-			opaque = {}
-		},
-		render_properties = {
-			lighting = {
-				uniforms = {},
-				textures = {},
-			},
-			shadow = {
-				uniforms = {},
-				textures = {},
-			}
-		}
+		-- result = {
+		-- 	case_shadow = {},
+		-- 	translcuent = {},
+		-- 	opaque = {}
+		-- },
+		-- render_properties = {
+		-- 	lighting = {
+		-- 		uniforms = {},
+		-- 		textures = {},
+		-- 	},
+		-- 	shadow = {
+		-- 		uniforms = {},
+		-- 		textures = {},
+		-- 	}
+		-- }
 	}
 end
 
