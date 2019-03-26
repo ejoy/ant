@@ -13,11 +13,27 @@ local bindings = {
 	main_view = 30,
 	pickup = 31,
 	pickup_blit = 32,
+
+	free_beg = 100,
 }
 
 local pool = {}
 for _, v in pairs(bindings) do
 	pool[v] = true
+end
+
+local freeidx = bindings[free_beg]
+function viewid_pool.generate(name)
+	if freeidx >= 256 then
+		--to do, need release function for not used viewid to mark which view id id released
+		return error("not enougth view id to alloc")
+	end
+
+	local vid = freeidx
+	freeidx = freeidx + 1
+
+	viewid_pool.bind(name, vid)
+	return vid
 end
 
 function viewid_pool.bind(name, viewid)

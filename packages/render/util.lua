@@ -120,6 +120,41 @@ function util.insert_primitive(eid, meshhandle, materials, worldmat, filter)
 	end
 end
 
+local rq_eid = create_render_queue_entity()
+
+local camera1 = {
+	type = "",
+	eyepos = eyepos,
+	viewdir = viewdir,
+	updir = {0, 1, 0, 0},
+	frustum = {
+		type = "mat",
+		n = 0.1, f = 100000,
+		fov = 60, aspect = w / h,
+	},
+}
+
+local camera2 = {
+	type = "",
+	eyepos = {0, 0, 1, 0},
+	viewdir = viewdir,
+	updir = {0, 1, 0, 0},
+	frustum = {
+		type = "mat",
+		n = 0.1, f = 100000,
+		fov = 60, aspect = w / h,
+	},
+}
+
+local rq = world[rq_eid]
+rq.camera = camera2
+
+world:create_component {
+	
+}
+
+
+
 function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_tag)
 	local w, h = viewsize.w, viewsize.h
 	return world:create_entity {
