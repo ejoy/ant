@@ -9,7 +9,6 @@ local fs = require "filesystem"
 
 local simplescene = ecs.system "simple_scene"
 
-simplescene.depend "constant_init_sys"
 simplescene.dependby "message_system"
 simplescene.dependby "final_filter"
 simplescene.dependby "entity_rendering"

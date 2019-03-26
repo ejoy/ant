@@ -17,7 +17,7 @@ local renderpkg = import_package "ant.render"
 local renderutil = renderpkg.util
 
 model_review_system.singleton "constant"
-model_review_system.depend "constant_init_sys"
+
 model_review_system.dependby "message_system"
 model_review_system.depend "primitive_filter_system"
 model_review_system.depend "debug_system"

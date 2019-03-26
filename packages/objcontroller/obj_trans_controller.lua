@@ -37,8 +37,6 @@ obj_trans_sys.singleton "constant"
 obj_trans_sys.singleton "control_state"
 obj_trans_sys.singleton "message"
 
-obj_trans_sys.depend "constant_init_sys"
-
 local function deep_copy(t)
 	if type(t) == "table" then
 		local tmp = {}
