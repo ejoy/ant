@@ -30,16 +30,39 @@ pull_frustum(lua_State *L, int index, Frustum &f) {
 
 	f.ortho = strcmp(type, "ortho") == 0;
 
-	float* fv = &f.l;
+	lua_getfield(L, index, "n");
+	f.n = luaL_optnumber(L, -1, 0.1f);
+	lua_pop(L, 1);
+	lua_getfield(L, index, "f");
+	f.f = luaL_optnumber(L, -1, 100.0f);
+	lua_pop(L, 1);
 
-	const char* elemnames[] = {
-		"l", "r", "t", "b", "n", "f",
-	};
-
-	for (auto name : elemnames) {
-		lua_getfield(L, index, name);
-		*fv++ = lua_tonumber(L, -1);
+	if (lua_getfield(L, index, "fov") == LUA_TNUMBER) {
+		float fov = lua_tonumber(L, -1);
 		lua_pop(L, 1);
+		lua_getfield(L, index, "aspect");
+		float aspect = luaL_checknumber(L, -1);
+		lua_pop(L, 1);
+		float ymax = f.n * tanf(fov * (M_PI / 360));
+		float xmax = ymax * aspect;
+		f.l = -xmax;
+		f.r = xmax;
+		f.b = -ymax;
+		f.t = ymax;
+		
+	} else {
+		lua_pop(L, 1);
+		float* fv = &f.l;
+
+		const char* elemnames[] = {
+			"l", "r", "t", "b",
+		};
+
+		for (auto name : elemnames) {
+			lua_getfield(L, index, name);
+			*fv++ = lua_tonumber(L, -1);
+			lua_pop(L, 1);
+		}
 	}
 }
 
@@ -78,7 +101,7 @@ lscreenpt_to_3d(lua_State *L){
 	luaL_checktype(L, 2, LUA_TTABLE);
 
 	Frustum f;
-	pull_frustum(L, 2, f);	
+	pull_frustum(L, 2, f);
 	glm::mat4x4 matProj = projection_mat(f);
 
 	// get camera position & rotation
@@ -114,11 +137,13 @@ lscreenpt_to_3d(lua_State *L){
 	}
 	
 	const auto count = vv.size();
-	lua_createtable(L, (int)count, 0);
+	lua_createtable(L, (int)count * 3, 0);
 	for (int ii = 0; ii < (int)count; ++ii) {
-		auto p = lua_newuserdata(L, sizeof(glm::vec3));
-		memcpy(p, &vv[ii].x, sizeof(glm::vec3));		
-		lua_seti(L, -2, ii + 1);
+		const auto &p = vv[ii];
+		for (int jj = 0; jj < 3; ++jj) {
+			lua_pushnumber(L, p[jj]);
+			lua_seti(L, -2, ii * 3 + jj + 1);
+		}		
 	}
 
 	return 1;

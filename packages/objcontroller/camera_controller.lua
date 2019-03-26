@@ -32,7 +32,7 @@ function camera_controller_system:init()
 	end)
 
 	local function step(axis, scale)
-		ms(cameracomp.eyepos, cameracomp.eyepos, axis, {calc_step(speed_persecond, timer.deltatime * 0.001) * scale}, "*+=")			
+		--ms(cameracomp.eyepos, cameracomp.eyepos, axis, {calc_step(speed_persecond, timer.deltatime * 0.001) * scale}, "*+=")			
 	end
 
 	objctrller.bind_constant("move_forward", function (scale)

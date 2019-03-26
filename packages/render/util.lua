@@ -122,7 +122,7 @@ end
 
 function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_tag)
 	local w, h = viewsize.w, viewsize.h
-	return world:create_entity {
+	local eid = world:create_entity {
 		viewport = {
 			clear_state = {
 				color = 0x303030ff,
@@ -168,6 +168,20 @@ function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_
 		},
 		main_camera = view_tag == "main_view" and true or nil,
 	}
+
+	-- local e = world[eid]
+	-- local old_eyepos = e.camera.eyepos
+	-- local ms = import_package "ant.math".stack
+	-- e.camera.eyepos = setmetatable({data=old_eyepos}, {
+	-- 	__index = function (t)
+	-- 		return t.data
+	-- 	end,
+	-- 	__newindex = function (t, k, v)
+	-- 		ms(t.data, v, "=")
+	-- 	end
+	-- })
+
+	return eid
 end
 
 function util.default_sampler()

@@ -73,7 +73,7 @@ pickup_material_sys.depend "primitive_filter_system"
 pickup_material_sys.dependby "render_system"
 
 function pickup_material_sys:update()
-	for _, eid in world:each "pickup_enable" do
+	for _, eid in world:each "pickup" do
 		local e = world[eid]
 		local filter = e.primitive_filter
 		if filter then
@@ -124,8 +124,6 @@ local pickupcomp = ecs.component "pickup"
 	.blit_buffer "blit_buffer"
 	.blit_viewid "blit_viewid"
 
-ecs.tag "pickup_enable"
-
 function pickupcomp:init()
 	local materials = self.materials
 	local opacity = materials.opacity
@@ -150,26 +148,7 @@ pickup_sys.depend "pickup_material_system"
 pickup_sys.dependby "end_frame"
 
 local pickup_buffer_w, pickup_buffer_h = 8, 8
-local pickup_frustum = {
-	type="mat", n=0.1, f=100, fov=1, aspect=pickup_buffer_w / pickup_buffer_h
-}
-
-local default_primitive_filter = filterutil.create_primitve_filter("main_view", "can_select")
 local pickupviewid = viewidmgr.get("pickup")
-
-local function enable_pickup(eid, enable)
-	if enable then
-		world:add_component(eid, "viewid", pickupviewid)
-		world:add_component(eid, "primitive_filter", default_primitive_filter)
-		local e = world[eid]
-		bgfx.set_view_frame_buffer(e.viewid, assert(e.render_target.frame_buffers[1].handle))
-		world:enable_system("pickup_system", true)
-	else
-		world:remove_component(eid, "viewid")
-		world:remove_component(eid, "primitive_filter")
-		world:enable_system("pickup_system", false)
-	end
-end
 
 local function add_pick_entity()
 	local fb_renderbuffer_flag = renderutil.generate_sampler_flag {
@@ -209,7 +188,7 @@ local function add_pick_entity()
 						U="CLAMP",
 						V="CLAMP",
 					}
-				},				
+				},
 			},
 			blit_viewid = viewidmgr.get("pickup_blit")
 		},	
@@ -228,7 +207,9 @@ local function add_pick_entity()
 			viewdir = {0, 0, 1, 0},
 			updir = {0, 1, 0, 0},
 			eyepos = {0, 0, 0, 1},
-			frustum = pickup_frustum,
+			frustum = {
+				type="mat", n=0.1, f=100, fov=1, aspect=pickup_buffer_w / pickup_buffer_h
+			},
 		},
 		render_target = {
 			frame_buffers = {
@@ -249,27 +230,34 @@ local function add_pick_entity()
 					},
 				},
 			}
-		},
-		viewid = viewidmgr.get("pickup"),
-		primitive_filter = default_primitive_filter,
+		},		
+		viewid = pickupviewid,
+		primitive_filter = filterutil.create_primitve_filter("main_view", "can_select"),
 		name = "pickup_renderqueue",
-		pickup_enable = true,
 		pickup_viewtag = true,
 	}
 end
 
+local function enable_pickup(enable)
+	world:enable_system("pickup_system", enable)
+	if enable then
+		return add_pick_entity()
+	end
+
+	local eid = world:first_entity_id "pickup"
+	world:remove_entity(eid)
+end
+
 function pickup_sys:init()	
-	local pickup_eid = add_pick_entity()
+	--local pickup_eid = add_pick_entity()
 
 	self.message.observers:add({
 		mouse_click = function (_, b, p, x, y)
 			if b == "LEFT" and p then
-				local entity = world[pickup_eid]
-				if entity then
-					enable_pickup(pickup_eid, true)
-					update_viewinfo(entity, point2d(x, y))
-					entity.pickup.nextstep = "blit"
-				end
+				local eid = enable_pickup(true)
+				local entity = world[eid]
+				update_viewinfo(entity, point2d(x, y))
+				entity.pickup.nextstep = "blit"
 			end
 		end
 	})
@@ -304,8 +292,7 @@ local function check_next_step(pickupcomp)
 end
 
 function pickup_sys:update()
-	local pickupeid = world:first_entity_id "pickup_enable"
-	local pickupentity = world[pickupeid]
+	local pickupentity = world:first_entity "pickup"
 	if pickupentity then
 		local pickupcomp = pickupentity.pickup
 		local nextstep = pickupcomp.nextstep
@@ -313,7 +300,7 @@ function pickup_sys:update()
 			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, pickupentity.render_target.frame_buffers[1])
 		elseif nextstep	== "select_obj" then
 			select_obj(pickupcomp.blit_buffer, pickupentity.viewport.rect)
-			enable_pickup(pickupeid, false)
+			enable_pickup(false)
 		end
 
 		check_next_step(pickupcomp)

@@ -479,7 +479,7 @@ get_mat_type(lua_State *L, int index) {
 	return mat_type;
 }
 
-static inline glm::mat4x4
+glm::mat4x4
 create_proj_mat(lua_State *L, struct lastack *LS, int index) {
 	float left, right, top, bottom;
 	lua_getfield(L, index, "n");
