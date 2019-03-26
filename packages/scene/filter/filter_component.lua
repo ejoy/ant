@@ -36,29 +36,29 @@ ecs.component "render_properties"
 	.lighting "properties"
 	.shadow "properties"
 
---local pf = 
+local pf = 
 ecs.component "primitive_filter"
 	.view_tag "view_tag" ("main_view")
 	.filter_tag "filter_tag" ("can_render")	
-	.result "filter_result"
-	.render_properties "render_properties"
+	-- .result "filter_result"
+	-- .render_properties "render_properties"
 
--- function pf:init()
--- 	local function default_properties()
--- 		return {
--- 			uniforoms = {},
--- 			texutres = {},
--- 		}
--- 	end
--- 	self.result = {
--- 		cast_shadow = {},
--- 		translucent = {},
--- 		opaque = {},
--- 	}
--- 	self.render_properties = {
--- 		lighting = default_properties(),
--- 		shadow = default_properties(),
--- 	}
+function pf:init()
+	local function default_properties()
+		return {
+			uniforms = {},
+			texutres = {},
+		}
+	end
+	self.result = {
+		cast_shadow = {},
+		translucent = {},
+		opaque = {},
+	}
+	self.render_properties = {
+		lighting = default_properties(),
+		shadow = default_properties(),
+	}
 
--- 	return self
--- end
+	return self
+end

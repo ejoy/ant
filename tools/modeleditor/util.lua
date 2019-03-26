@@ -84,6 +84,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 		},
 		name = "animation_sample",
 		main_view = true,
+		can_select = true,
 	}
 
 	local e = world[eid]
