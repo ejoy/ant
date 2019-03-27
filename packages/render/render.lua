@@ -28,7 +28,7 @@ end
 local fb = ecs.component "frame_buffer" 
 	["opt"].render_buffers "render_buffer[]"
 	["opt"].manager_buffer "boolean" (true)
-	["opt"].ref_viewid "viewid" (true)
+	["opt"].ref_viewid "viewid"
 
 function fb:init()
 	local refvid = self.ref_viewid
