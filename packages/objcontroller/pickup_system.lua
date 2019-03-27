@@ -212,23 +212,23 @@ local function add_pick_entity()
 			},
 		},
 		render_target = {
-			frame_buffers = {
-				{
-					color = {
+			frame_buffer = {
+				render_buffers = {
+					{
 						w = pickup_buffer_w,
 						h = pickup_buffer_h,
 						layers = 1,
 						format = "RGBA8",
 						flags = fb_renderbuffer_flag,
-					},
-					depth = {
+					},				
+					{
 						w = pickup_buffer_w,
 						h = pickup_buffer_h,
 						layers = 1,
 						format = "D24S8",
 						flags = fb_renderbuffer_flag,
-					},
-				},
+					}
+				}
 			}
 		},		
 		viewid = pickupviewid,
@@ -263,10 +263,10 @@ function pickup_sys:init()
 	})
 end
 
-local function blit(blitviewid, blit_buffer, framebuffer)		
+local function blit(blitviewid, blit_buffer, colorbuffer)		
 	local rb = blit_buffer.render_buffer.handle
 	
-	bgfx.blit(blitviewid, rb, 0, 0, assert(framebuffer.color.handle))
+	bgfx.blit(blitviewid, rb, 0, 0, assert(colorbuffer.handle))
 	return bgfx.read_texture(rb, blit_buffer.raw_buffer.handle)	
 end
 
@@ -309,7 +309,7 @@ function pickup_sys:update()
 		local pickupcomp = pickupentity.pickup
 		local nextstep = pickupcomp.nextstep
 		if nextstep == "blit" then
-			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, pickupentity.render_target.frame_buffers[1])
+			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, pickupentity.render_target.frame_buffer.render_buffers[1])
 		elseif nextstep	== "select_obj" then
 			select_obj(pickupcomp.blit_buffer, pickupentity.viewport.rect)
 			enable_pickup(false)

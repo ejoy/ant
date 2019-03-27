@@ -25,24 +25,27 @@ function renderbuffer:init()
 end
 
 local fb = ecs.component "frame_buffer" 
-	['opt'].color "render_buffer"
-	['opt'].depth "render_buffer"
+	.render_buffers "render_buffer[]"
+	["opt"].manager_buffer "boolean" (true)
+
 function fb:init()
-	local c, d = self.color, self.depth	
-	if c or d then
-		self.handle = bgfx.create_frame_buffer({c and c.handle or nil, d and d.handle or nil}, true)
+	local rbs = self.render_buffers
+	if #rbs > 0 then
+		local handles = {}
+		for _, rb in ipairs(rbs) do
+			handles[#handles+1] = rb.handle
+		end
+		self.handle = bgfx.create_frame_buffer(handles, self.manager_buffer or true)
 	end
 	return self
 end
 
 local rt = ecs.component "render_target" {depend = "viewid"}
-	.frame_buffers "frame_buffer[]"
+	["opt"].frame_buffer "frame_buffer"
 
 function rt:postinit(e)
-	if self then
-		for _, fb in ipairs(self.frame_buffers) do
-			bgfx.set_view_frame_buffer(e.viewid, fb.handle)
-		end
+	if self and self.frame_buffer and self.frame_buffer.handle then
+		bgfx.set_view_frame_buffer(e.viewid, self.frame_buffer.handle)
 	end
 	return self
 end
