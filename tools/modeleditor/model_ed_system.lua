@@ -35,9 +35,9 @@ model_ed_sys.dependby "state_machine"
 model_ed_sys.dependby "skinning_system"
 model_ed_sys.dependby "math_adapter"
 
+model_ed_sys.dependby "render_mesh_bounding"
 model_ed_sys.dependby "primitive_filter_system"
 model_ed_sys.dependby "render_system"
-model_ed_sys.dependby "widget_system"
 model_ed_sys.dependby "pickup_system"
 
 -- luacheck: globals main_dialog
@@ -469,13 +469,4 @@ function model_ed_sys:init()
 		local anicomp = sample.animation
 		aniutil.play_animation(anicomp, anicomp.pose_state.pose)
 	end
-end
-
-
-function model_ed_sys:post_init()
-	for eid in world:each_new("widget") do
-		assert(eid == sample_eid)
-		local e = world[eid]
-		util.create_aabb_widget(e)
-	end	
 end

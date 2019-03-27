@@ -2,35 +2,26 @@
 local ecs = ...
 local world = ecs.world
 
+local geometry_drawer = import_package "ant.geometry".drawer
 
-local ru = import_package "ant.render".util
-local ms = import_package "ant.math".stack
+ecs.component_alias("render_bounding", "boolean") {depend="can_render"}
 
-local w = ecs.component "widget" {depend="mesh"}
-	.mesh "mesh"
-	.material "material"
-	.srt "srt"
-	.can_render "boolean"
+local rmb = ecs.system "render_mesh_bounding"
+rmb.singleton "debug_object"
+rmb.dependby "debug_draw"
 
-local widget_sys = ecs.system "widget_system"
-
-widget_sys.depend "primitive_filter_system"
-
-function widget_sys:update()
-	local camera = world:first_entity("main_queue")
-
-	local filter = camera.primitive_filter
-	for _, eid in world:each "widget" do
+function rmb:update()
+	local dbgobj = self.debug_object
+	local renderobj = dbgobj.renderobjs.wireframe
+	local desc = renderobj.desc
+	for _, eid in world:each "render_bounding" do
 		local e = world[eid]
-		local widget = e.widget
-
-		if widget.can_render then
-			local meshhandle = widget.mesh.assetinfo.handle		
-			local materials = widget.material.content
-
-			local srt = widget.srt
-			local mat = ms({type="srt", s=srt.s, r=srt.r, t=srt.t}, "m")
-			ru.insert_primitive(eid, meshhandle, materials, mat, filter)
+		local m = e.mesh
+		for _, g in ipairs(m.assetinfo.handle.groups) do
+			local b = g.bounding
+			if b then
+				geometry_drawer.draw_aabb_box(b.aabb, 0xffffff00, nil, desc)
+			end
 		end
 	end
 end

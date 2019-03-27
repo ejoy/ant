@@ -4,7 +4,7 @@ local world = ecs.world
 local math = import_package "ant.math"
 local ms = math.stack
 
-local geometry_drawer = require "editor.ecs.render.geometry_drawer"
+local geometry_drawer = import_package "ant.geometry".drawer
 
 local generator = ecs.system "geometry_generator"
 generator.singleton "debug_object"

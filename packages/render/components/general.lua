@@ -118,7 +118,7 @@ ecs.component "material"
 	.content "material_content[]"
 
 
-ecs.component_alias("can_render", "boolean", true)
+ecs.component_alias("can_render", "boolean", true) {depend={"transform", "mesh", "material"}}
 ecs.component_alias("can_cast", "boolean", false)
 ecs.component_alias("name", "string", "")
 ecs.tag "can_select"
