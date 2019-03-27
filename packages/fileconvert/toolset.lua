@@ -161,8 +161,13 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 		local function check_msg(info)
 			local success, msg = true, ""
 			if info ~= "" then
-				local INFO = info:upper()
-				success = INFO:find("ERROR:", 1, true) == nil
+				local INFO = info:upper()				
+				for _, term in ipairs {
+					"ERROR:",
+					"FAILED TO BUILD SHADER"
+				} do
+					success = INFO:find(term, 1, true) == nil
+				end
 				msg = to_cmdline() .. "\n" .. info .. "\n"
 			end
 

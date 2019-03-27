@@ -234,4 +234,32 @@ function util.create_grid_entity(world, name, w, h, unit)
 	return gridid
 end
 
+function util.create_plane_entity(world, color, size, pos, name)
+	return world:create_entity {
+		transform = {
+			s = size or {0.08, 0.005, 0.08},
+			r = {0, 0, 0, 0},
+			t = pos or {0, 0, 0, 1}
+		},
+		mesh = {
+			ref_path = fs.path "//ant.resources/depiction/cube.mesh"
+		},
+		material = {
+			content = {
+				{
+					ref_path = fs.path "//ant.resources/depiction/simple_mesh.material",
+					properties = {
+						uniforms = {
+							u_color = {type="color", name="color", value=color}
+						},
+					}
+				}
+			}
+		},
+		can_render = true,
+		main_view = true,
+		name = name or "Plane",
+	}
+end
+
 return util
