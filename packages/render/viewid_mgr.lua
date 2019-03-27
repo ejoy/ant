@@ -22,7 +22,7 @@ for _, v in pairs(bindings) do
 	pool[v] = true
 end
 
-local freeidx = bindings[free_beg]
+local freeidx = bindings["free_beg"]
 function viewid_pool.generate(name)
 	if freeidx >= 256 then
 		--to do, need release function for not used viewid to mark which view id id released

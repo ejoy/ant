@@ -3,6 +3,7 @@ local world = ecs.world
 
 local bgfx = require "bgfx"
 local viewidmgr = require "viewid_mgr"
+local fbmgr = require "framebuffer_mgr"
 
 local ms = import_package "ant.math".stack
 local ru = require "util"
@@ -25,17 +26,24 @@ function renderbuffer:init()
 end
 
 local fb = ecs.component "frame_buffer" 
-	.render_buffers "render_buffer[]"
+	["opt"].render_buffers "render_buffer[]"
 	["opt"].manager_buffer "boolean" (true)
+	["opt"].ref_viewid "viewid" (true)
 
 function fb:init()
-	local rbs = self.render_buffers
-	if #rbs > 0 then
-		local handles = {}
-		for _, rb in ipairs(rbs) do
-			handles[#handles+1] = rb.handle
+	local refvid = self.ref_viewid
+	if refvid then
+		local fb = fbmgr.get(refvid)
+		self.frame_buffer = fb
+	else
+		local rbs = assert(self.render_buffers)
+		if #rbs > 0 then
+			local handles = {}
+			for _, rb in ipairs(rbs) do
+				handles[#handles+1] = rb.handle
+			end
+			self.handle = bgfx.create_frame_buffer(handles, self.manager_buffer or true)
 		end
-		self.handle = bgfx.create_frame_buffer(handles, self.manager_buffer or true)
 	end
 	return self
 end
@@ -45,8 +53,11 @@ local rt = ecs.component "render_target" {depend = "viewid"}
 	["opt"].frame_buffer "frame_buffer"
 
 function rt:postinit(e)
-	if self and self.frame_buffer and self.frame_buffer.handle then
-		bgfx.set_view_frame_buffer(e.viewid, self.frame_buffer.handle)
+	local fb = self.frame_buffer
+	if fb then
+		local viewid = e.viewid
+		bgfx.set_view_frame_buffer(viewid, assert(fb.handle))
+		fbmgr.bind(viewid, fb)
 	end
 	return self
 end
@@ -69,7 +80,7 @@ ecs.component "rect"
 	.w "real" (1)
 	.h "real" (1)
 local vp = 
-ecs.component "viewport" {depend = "viewid"}
+ecs.component "viewport"
 	.clear_state "clear_state"
 	.rect "rect"
 

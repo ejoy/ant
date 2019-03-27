@@ -107,11 +107,10 @@ function rb:init()
 	return self
 end
 
-ecs.component "blit_buffer"
+ecs.component_alias("blit_viewid", "viewid") 
+ecs.component "blit_buffer" {depend = "blit_viewid"}
 	.raw_buffer "raw_buffer"
 	.render_buffer "render_buffer"
-
-ecs.component_alias("blit_viewid", "viewid") {depend = "blit_buffer"}
 
 ecs.component "pickup_material"
 	.opaque 		"material_content"
@@ -220,7 +219,7 @@ local function add_pick_entity()
 						layers = 1,
 						format = "RGBA8",
 						flags = fb_renderbuffer_flag,
-					},				
+					},
 					{
 						w = pickup_buffer_w,
 						h = pickup_buffer_h,
