@@ -162,6 +162,8 @@ local function fileserver_update(obj)
 		for fd, v in pairs(debug) do
 			if v.server == obj then
 				network.close(fd)
+				debug[fd] = nil
+				break
 			end
 		end
 	end
