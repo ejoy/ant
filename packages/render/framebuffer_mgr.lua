@@ -1,6 +1,6 @@
 local mgr = {}; mgr.__index = mgr
 
-local fb_mapper = {}
+local fb_mapper = {__mode="v"}
 function mgr.bind(viewid, fb)
 	fb_mapper[viewid] = fb
 end
