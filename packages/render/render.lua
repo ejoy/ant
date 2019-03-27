@@ -8,7 +8,7 @@ local fbmgr = require "framebuffer_mgr"
 local ms = import_package "ant.math".stack
 local ru = require "util"
 
-ecs.tag "main_camera"
+ecs.tag "main_queue"
 ecs.component_alias("view_tag", "string")
 
 ecs.component_alias("viewid", "int", 0)

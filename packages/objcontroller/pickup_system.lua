@@ -55,7 +55,7 @@ local function which_entity_hitted(blitdata, viewrect)
 end
 
 local function update_viewinfo(e, clickpt) 
-	local maincamera = world:first_entity "main_camera"
+	local maincamera = world:first_entity "main_queue"
 	local cameracomp = maincamera.camera
 	local eye, at = ms:screenpt_to_3d(
 		cameracomp, maincamera.render_target.viewport.rect,

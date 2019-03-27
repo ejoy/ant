@@ -17,7 +17,7 @@ local function deep_copy(t)
 end
 
 function util.focus_point(world, pt)
-	local maincamera = world:first_entity("main_camera")
+	local maincamera = world:first_entity("main_queue")
 	local camera = maincamera.camera
 	ms(camera.viewdir, pt, camera.eyepos, "-n=")
 end
@@ -77,7 +77,7 @@ function util.focus_selected_obj(world, eid)
 
 	local sphere = mesh_bounding_sphere(entity)
 
-	local camera_entity = world:first_entity("main_camera")
+	local camera_entity = world:first_entity("main_queue")
 	local camera = camera_entity.camera
 	ms(camera.viewdir, sphere.center, camera.eyepos, "-n=")
 	ms(camera.eyepos, sphere.center, camera.viewdir, {sphere.radius}, "*-=")

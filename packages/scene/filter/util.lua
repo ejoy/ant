@@ -76,7 +76,7 @@ function util.load_lighting_properties(world, filter)
 	add_directional_light_properties(world, lighting_properties)
 	add_ambient_light_propertices(world, lighting_properties)
 
-	local camera_entity = world:first_entity("main_camera")	
+	local camera_entity = world:first_entity("main_queue")	
 	if camera_entity then
 		lighting_properties["u_eyepos"] = {name = "Eye Position", type="v4", value=camera_entity.camera.eyepos}
 	end

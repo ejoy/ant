@@ -10,7 +10,7 @@ function vp_detect:init()
 	-- ms(camera.eyepos, {5, 5, -5, 1}, "=")
 
 	local function update_camera_viewrect(w, h)
-		local maincamera = assert(world:first_entity("main_camera"))
+		local maincamera = assert(world:first_entity("main_queue"))
 		local vp = maincamera.render_target.viewport
 		vp.rect.w, vp.rect.h = w, h
         maincamera.camera.frustum.aspect = w / h        

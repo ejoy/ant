@@ -41,7 +41,7 @@ local function rotate_round_point(camera, point, distance, dx, dy)
 end
 
 function camera_controller_system:init()	
-	local camera_entity = world:first_entity("main_camera")
+	local camera_entity = world:first_entity("main_queue")
 
 	local target = math3d.ref "vector"
 	local camera = camera_entity.camera

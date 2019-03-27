@@ -6,7 +6,7 @@ local world = ecs.world
 local ru = import_package "ant.render".util
 local ms = import_package "ant.math".stack
 
-ecs.component "widget"
+local w = ecs.component "widget" {depend="mesh"}
 	.mesh "mesh"
 	.material "material"
 	.srt "srt"
@@ -17,10 +17,10 @@ local widget_sys = ecs.system "widget_system"
 widget_sys.depend "primitive_filter_system"
 
 function widget_sys:update()
-	local camera = world:first_entity("main_camera")
+	local camera = world:first_entity("main_queue")
 
 	local filter = camera.primitive_filter
-	for _, eid in world:each("widget") do
+	for _, eid in world:each "widget" do
 		local e = world[eid]
 		local widget = e.widget
 

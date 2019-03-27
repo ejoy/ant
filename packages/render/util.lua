@@ -167,7 +167,7 @@ function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_
 			-- 	}
 			-- }
 		},
-		main_camera = view_tag == "main_view" and true or nil,
+		main_queue = view_tag == "main_view" and true or nil,
 	}	
 end
 

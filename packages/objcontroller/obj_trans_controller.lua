@@ -91,7 +91,7 @@ local function play_object_transform(ot, dx, dy)
     local axis_name = name:match(".+-([xyz])$")
 
     local function select_step_value(dir)
-        local camera = world:first_entity("main_camera")
+        local camera = world:first_entity("main_queue")
         local view, proj = mu.view_proj_matrix(camera)
 
 		local originInWS = ctrlpos

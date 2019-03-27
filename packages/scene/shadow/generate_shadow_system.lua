@@ -475,7 +475,7 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
 
 
     -- main camera entity, get main camera's position,direction
-    local camera = world:first_entity("main_camera")
+    local camera = world:first_entity("main_queue")
     local camera_view_rc = camera.view_rect 
     local camera_view, camera_proj = math_util.view_proj_matrix(camera)
     

@@ -158,7 +158,7 @@ local function update_terrain( terrain )
 	-- must do this for dynamic light, if light do not move, could be run only once
 	gen_lighting_uniforms( terrain ) 
 	-- 找到获得 view，proj 的直接方法，不需要这里二次转换? 
-	local camera = world:first_entity("main_camera")
+	local camera = world:first_entity("main_queue")
     local camera_view, camera_proj = math_util.view_proj_matrix( camera ) -- ms, camera )
 
 	--bgfx.set_view_rect( VIEWID_TERRAIN, 0, 0, ctx.width,ctx.height)
