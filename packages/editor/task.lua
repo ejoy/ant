@@ -65,6 +65,7 @@ function task.add(f, traceback)
 end
 
 function task.loop(f, traceback)
+	assert(f)
 	local n = #tasklist
 	if n == 0 then
 		iup.SetIdle(idlefunc)        

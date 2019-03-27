@@ -155,6 +155,28 @@ function util.create_material(material)
 	material.materialinfo = materialinfo	
 end
 
+
+-- content:material_content
+-- texture_tbl:{
+--  s_basecolor = {type="texture", name="base color", stage=0, ref_path={"ant.resources", "PVPScene/siegeweapon_d.texture"}},
+--  s_normal = {type="texture", name="normal", stage=1, ref_path={"ant.resources", "PVPScene/siegeweapon_n.texture"}},
+-- },
+function util.change_textures(content, texture_tbl)
+    content.properties = content.properties or {}
+    local textures = content.properties.textures or {}
+    for name, tex in pairs(texture_tbl) do
+        textures[name] = util.load_texture(
+            tex.name,
+            tex.stage,
+            tex.ref_path[1],
+            fs.path(tex.ref_path[2])
+        )
+    end
+    content.properties.textures = textures
+    -- todo:modify materialinfo ?
+    -- if content.materialinfo.properties and content.materialinfo.properties.texture then
+    --  content.materialinfo = deep_copy(content.materialinfo)
+end
 function util.is_entity_visible(entity)
 	local can_render = entity.can_render
 	if can_render then
@@ -188,9 +210,9 @@ function util.create_mesh_handle(decl, vb, ib)
 	return {handle={groups = groups}}
 end
 
-function util.create_grid_entity(world, name, w, h, unit)
-	local geopkg= import_package "ant.geometry"
-	local geolib= geopkg.geometry
+function util.create_grid_entity(world, name, w, h, unit, view_tag)
+    local geopkg = import_package "ant.geometry"
+    local geolib = geopkg.geometry
 
 	local gridid = world:create_entity {
 		transform = {			
@@ -209,11 +231,9 @@ function util.create_grid_entity(world, name, w, h, unit)
 		},
 		name = name,
 		main_view = true,
-	}
-
-	
+    }
     local grid = world[gridid]
-    
+    if view_tag then world:add_component(gridid, view_tag, true) end
 	w = w or 64
 	h = h or 64
 	unit = unit or 1
@@ -260,6 +280,44 @@ function util.create_plane_entity(world, color, size, pos, name)
 		main_view = true,
 		name = name or "Plane",
 	}
+end
+
+
+function util.create_quad_entity(world, texture_tbl, view_tag)
+    local quadid = world:create_entity{
+        rotation = {0, 0, 0, 0},
+        position = {0, 0, 0, 1},
+        scale = {1, 1, 1, 0},
+        can_render = true,
+        mesh = {},
+        material = {
+            content = {
+                {
+                    ref_path = {
+                        package = "ant.resources",
+                        filename = fs.path "texture.material"
+                    }
+                }
+            }
+        },
+        name = name,
+    }
+    local quad = world[quadid]
+    if view_tag then world:add_component(quadid, view_tag, true) end
+    util.change_textures(quad.material.content[1], texture_tbl)
+    local vb = {
+        {-3, 3,  0,0.0, 0.0},
+        {3,  3, 0,1.0, 0.0},
+        {-3, -3, 0, 0.0, 1.0},
+        {3,  -3,0, 1.0, 1.0},
+    }
+
+    local gvb = {"fffff"}
+    for _, v in ipairs(vb) do for _, vv in ipairs(v) do table.insert(gvb, vv) end end
+    local ib = { 0, 1, 2, 3}
+    local vdecl = bgfx.vertex_decl{{"POSITION", 3, "FLOAT"}, {"TEXCOORD0", 2, "FLOAT"}}
+    quad.mesh.assetinfo = util.create_mesh_handle(vdecl, gvb, ib)
+    return quadid
 end
 
 return util
