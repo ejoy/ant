@@ -11,7 +11,7 @@ function vp_detect:init()
 
 	local function update_camera_viewrect(w, h)
 		local maincamera = assert(world:first_entity("main_camera"))
-		local vp = maincamera.viewport
+		local vp = maincamera.render_target.viewport
 		vp.rect.w, vp.rect.h = w, h
         maincamera.camera.frustum.aspect = w / h        
 		rhwi.reset(nil, w, h)

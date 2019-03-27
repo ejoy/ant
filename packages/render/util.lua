@@ -123,17 +123,6 @@ end
 function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_tag)
 	local w, h = viewsize.w, viewsize.h
 	return world:create_entity {
-		viewport = {
-			clear_state = {
-				color = 0x303030ff,
-				depth = 1,
-				stencil = 0,
-			},
-			rect = {
-				x = 0, y = 0,
-				w = w, h = h,
-			},
-		},
 		camera = {
 			type = "",
 			eyepos = eyepos,
@@ -146,7 +135,19 @@ function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_
 			},
 		},
 		viewid = viewidmgr.get(view_tag),
-		render_target = {},	--default view
+		render_target = {
+			viewport = {
+				clear_state = {
+					color = 0x303030ff,
+					depth = 1,
+					stencil = 0,
+				},
+				rect = {
+					x = 0, y = 0,
+					w = w, h = h,
+				},
+			},
+		},
 		primitive_filter = {
 			view_tag = view_tag,
 			filter_tag = "can_render",

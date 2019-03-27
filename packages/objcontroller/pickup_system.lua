@@ -58,7 +58,7 @@ local function update_viewinfo(e, clickpt)
 	local maincamera = world:first_entity "main_camera"
 	local cameracomp = maincamera.camera
 	local eye, at = ms:screenpt_to_3d(
-		cameracomp, maincamera.viewport.rect,
+		cameracomp, maincamera.render_target.viewport.rect,
 		{clickpt.x, clickpt.y, 0,},
 		{clickpt.x, clickpt.y, 1,})
 
@@ -191,16 +191,6 @@ local function add_pick_entity()
 				},
 			},
 			blit_viewid = viewidmgr.get("pickup_blit")
-		},	
-		viewport = {
-			rect = {
-				x = 0, y = 0, w = pickup_buffer_w, h = pickup_buffer_h,
-			},
-			clear_state = {
-				color = 0,
-				depth = 1,
-				stencil = 0,
-			},
 		},
 		camera = {
 			type = "pickup",
@@ -212,6 +202,16 @@ local function add_pick_entity()
 			},
 		},
 		render_target = {
+			viewport = {
+				rect = {
+					x = 0, y = 0, w = pickup_buffer_w, h = pickup_buffer_h,
+				},
+				clear_state = {
+					color = 0,
+					depth = 1,
+					stencil = 0,
+				},
+			},
 			frame_buffer = {
 				render_buffers = {
 					{
@@ -311,7 +311,7 @@ function pickup_sys:update()
 		if nextstep == "blit" then
 			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, pickupentity.render_target.frame_buffer.render_buffers[1])
 		elseif nextstep	== "select_obj" then
-			select_obj(pickupcomp.blit_buffer, pickupentity.viewport.rect)
+			select_obj(pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
 			enable_pickup(false)
 		end
 

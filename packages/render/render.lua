@@ -41,6 +41,7 @@ function fb:init()
 end
 
 local rt = ecs.component "render_target" {depend = "viewid"}
+	.viewport "viewport"
 	["opt"].frame_buffer "frame_buffer"
 
 function rt:postinit(e)
@@ -115,8 +116,8 @@ function rendersys:update()
 	for _, eid in world:each "viewid" do
 		local rq = world[eid]
 
-		local viewid = rq.viewid
-		update_viewport(viewid, rq.viewport)
+		local viewid = rq.viewid		
+		update_viewport(viewid, rq.render_target.viewport)
 		update_view_proj(viewid, rq.camera)
 
 		local filter = rq.primitive_filter
