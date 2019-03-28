@@ -1,8 +1,9 @@
 local rdebug = require 'remotedebug'
+local probe = rdebug.probe
 
 local function event(name, level, ...)
     local r
-    rdebug.probe(name)
+    probe(name)
     return r
 end
 
@@ -70,27 +71,15 @@ local function start_worker(wait)
     start_hook()
     rdebug.start(bootstrap(), package.searchers[3])
     if wait then
-        event('wait_client', 1, false)
+        event 'wait_client'
     end
     return function()
         event 'update'
     end
 end
 
-local function start_all(wait)
-    start_hook()
-    rdebug.start(bootstrap(), package.searchers[3])
-    if wait then
-        event('wait_client', 1, true)
-    end
-    return function()
-        event 'update_all'
-    end
-end
-
 return {
     start_master = start_master,
     start_worker = start_worker,
-    start_all = start_all,
     math3d = require "math3d",
 }

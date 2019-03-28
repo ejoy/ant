@@ -337,7 +337,7 @@ function hook.bp(line)
     if bp then
         if breakpoint.exec(bp) then
             state = 'stopped'
-            runLoop('breakpoint')
+            runLoop 'breakpoint'
             return
         end
     end
@@ -449,7 +449,7 @@ function event.exception()
     local level = getEventLevel()
     exceptionMsg, exceptionTrace = traceback(msg, level)
     state = 'stopped'
-    runLoop('exception')
+    runLoop 'exception'
 end
 
 function event.coroutine()
@@ -457,32 +457,10 @@ function event.coroutine()
     hookmgr.setcoroutine(co)
 end
 
-local createMaster = true
-function event.update_all()
-    if createMaster then
-        createMaster = false
-        local master = require 'debugger.backend.master'
-        if master.init() then
-            local master = master.update
-            local worker = workerThreadUpdate
-            function workerThreadUpdate()
-                master()
-                worker()
-            end
-        end
-    end
-    workerThreadUpdate()
-end
-
 function event.wait_client()
-    local _, all = getEventArgs(1)
     while not initialized do
         thread.sleep(0.01)
-        if all then
-            event.update_all()
-        else
-            event.update()
-        end
+        event.update()
     end
 end
 
