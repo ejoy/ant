@@ -1,0 +1,12 @@
+shader = {
+	vs = "//ant.resources/mesh_shadow/vs_simple",
+	fs = "//ant.resources/mesh_shadow/fs_simple",
+}
+
+state = "default.state"
+
+properties = {	
+	textures = {
+		s_shadowmap = {type="texture", stage=4, name = "shadow map"}
+	}
+}

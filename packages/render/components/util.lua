@@ -117,12 +117,11 @@ local function update_properties(dst_properties, src_properties)
 	if srctextures then
 		local dsttextures = dst_properties.textures or {}
 		for k, v in pairs(srctextures) do
-			local refpath = v.ref_path
-			local tex = util.load_texture(v.name, v.stage, fs.path(refpath))
-			if dsttextures[k] == nil then
-				dsttextures[k] = tex
-			else
-				dsttextures[k].handle = tex.handle
+			local tex = deep_copy(v)
+			dsttextures[k] = tex
+			local refpath = tex.ref_path
+			if refpath then
+				tex.handle = asset.load(refpath).handle
 			end
 		end
 		dst_properties.textures = dsttextures

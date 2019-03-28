@@ -12,3 +12,4 @@ uniform vec4 ambient_midcolor;
 uniform vec4 ambient_groundcolor;
 
 uniform vec4 u_eyepos;
+uniform vec4 u_lightPos;
