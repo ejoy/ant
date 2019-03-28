@@ -1,6 +1,6 @@
-#include "event_free.h"
+#include "rdebug_eventfree.h"
 
-namespace event_free {
+namespace remotedebug::eventfree {
     struct userdata {
         lua_Alloc l_allocf;
         void* l_ud;

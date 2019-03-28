@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "debugvar.h"
+#include "rdebug_debugvar.h"
 
 static int DEBUG_WATCH = 0;
 static int DEBUG_WATCH_FUNC = 0;
