@@ -466,7 +466,7 @@ end
 function event.wait_client()
     while not initialized do
         thread.sleep(0.01)
-        event.update()
+        workerThreadUpdate()
     end
 end
 

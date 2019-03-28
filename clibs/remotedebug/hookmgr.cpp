@@ -291,13 +291,7 @@ struct hookmgr {
         }
     }
     void updatehookmask(lua_State* hL) {
-        int mask = break_mask | step_mask;
-        if (mask) {
-            lua_sethook(hL, (lua_Hook)sc_hook->data, mask, 0);
-        }
-        else {
-            lua_sethook(hL, NULL, 0, 0);
-        }
+        lua_sethook(hL, (lua_Hook)sc_hook->data, break_mask | step_mask, 0);
     }
     void setcoroutine(lua_State* hL) {
         updatehookmask(hL);
