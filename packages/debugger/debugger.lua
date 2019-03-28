@@ -1,16 +1,16 @@
 local rdebug = require 'remotedebug'
-local probe = rdebug.probe
+local event = rdebug.probe
 
-local function event(name, level, ...)
+local function eventwp(name, ...)
     local r
-    probe(name)
+    event(name)
     return r
 end
 
 local function start_hook()
     local _print = print
     function print(...)
-        if not event('print', 1, ...) then
+        if not eventwp('print', ...) then
             _print(...)
         end
     end
@@ -18,21 +18,21 @@ local function start_hook()
     local _xpcall = xpcall
     function xpcall(f, msgh, ...)
         return _xpcall(f, function(msg)
-            event('exception', 2, 'xpcall', msg)
+            eventwp('exception', msg)
             return msgh(msg)
         end, ...)
     end
 
     function pcall(f, ...)
         return _xpcall(f, function(msg)
-            event('exception', 2, 'pcall', msg)
+            eventwp('exception', msg)
             return msg
         end, ...)
     end
     
     local _coroutine_resume = coroutine.resume
     function coroutine.resume(co, ...)
-        event('coroutine', 1, co)
+        eventwp('coroutine', co)
         return _coroutine_resume(co, ...)
     end
 end

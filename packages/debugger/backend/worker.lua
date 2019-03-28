@@ -371,18 +371,6 @@ function hook.newproto(proto, level)
     return breakpoint.newproto(proto, src, hookmgr.activeline(level))
 end
 
-local function getEventLevel()
-    local level = 0
-    local name, value = rdebug.getlocal(1, 2)
-    if name ~= nil then
-        local _, subtype = rdebug.type(value)
-        if subtype == 'integer' then
-            level = rdebug.value(value)
-        end
-    end
-    return level + 1
-end
-
 local function getEventArgs(i)
     local name, value = rdebug.getlocal(1, -i)
     if name == nil then
@@ -416,6 +404,25 @@ local function pairsEventArgs()
     end, nil, 1
 end
 
+local function getExceptionType()
+    local pcall = rdebug.value(rdebug.index(rdebug._G, 'pcall'))
+    local xpcall = rdebug.value(rdebug.index(rdebug._G, 'xpcall'))
+    local info = {}
+    local level = 1
+    while rdebug.getinfo(level, info) do
+        local f = rdebug.value(rdebug.getfunc(level))
+        if f ~= nil then
+            if f == pcall then
+                return level, 'pcall'
+            end
+            if f == xpcall then
+                return level, 'xpcall'
+            end
+        end
+        level = level + 1
+    end
+end
+
 local event = hook
 
 function event.update()
@@ -429,7 +436,7 @@ function event.print()
         res[#res + 1] = tostring(rdebug.value(arg))
     end
     res = table.concat(res, '\t')
-    local s = rdebug.getinfo(1 + getEventLevel(), info)
+    local s = rdebug.getinfo(2, info)
     local src = source.create(s.source)
     if source.valid(src) then
         ev.emit('output', 'stdout', res, src, s.currentline)
@@ -441,12 +448,11 @@ end
 
 function event.exception()
     if not initialized then return end
-    local _, type = getEventArgs(1)
+    local level, type = getExceptionType()
     if not type or not exceptionFilters[type] then
         return
     end
-    local _, msg = getEventArgs(2)
-    local level = getEventLevel()
+    local _, msg = getEventArgs(1)
     exceptionMsg, exceptionTrace = traceback(msg, level)
     state = 'stopped'
     runLoop 'exception'
