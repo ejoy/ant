@@ -82,6 +82,16 @@ function util.load_lighting_properties(world, filter)
 	end
 end
 
+function util.load_shadow_properties(world, filter)
+	local shadow_properties = filter.render_properties.shadow
+	local shadow_queue = world:first_entity "shadow"
+
+	local shadowmap = shadow_queue.render_target.frame_buffer.render_buffers[1].handle
+	shadow_properties.textures = {
+		s_shadowmap = {type="texture", stage=4, name="shadowmap", handle=shadowmap}
+	}
+end
+
 function util.create_primitve_filter(viewtag, filtertag)
 	return {
 		view_tag = viewtag,

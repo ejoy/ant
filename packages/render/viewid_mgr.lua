@@ -3,13 +3,7 @@ local viewid_pool = {}; viewid_pool.__index = viewid_pool
 local max_viewid = 256
 
 local bindings = {
-	shadow_beg = 1,
-	shadow1 = 1,
-	shadow2 = 2,
-	shadow3 = 3,
-	shadow4 = 4,
-	shadow_end = 4,
-
+	shadow_maker = 5,
 	main_view = 30,
 	pickup = 31,
 	pickup_blit = 32,

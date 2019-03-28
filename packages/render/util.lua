@@ -113,10 +113,6 @@ function util.insert_primitive(eid, meshhandle, materials, worldmat, filter)
 		else
 			add_result(eid, g, mi, mc.properties, worldmat, results.opaque)
 		end
-
-		if mi.surface_type.shadow.cast then
-			add_result(eid, g, mi, mc.properties, worldmat, results.cast_shadow)
-		end
 	end
 end
 
@@ -215,7 +211,7 @@ local sample_types = {
 local sample_value = {
 	CLAMP="c", BORDER="b", MIRROR="",	--default
 	POINT="p", ANISOTROPIC="a", LINEAR="", --default,
-
+	
 	-- RT
 	RT_ON='t', 
 	RT_READ="", RT_WRITE="w",

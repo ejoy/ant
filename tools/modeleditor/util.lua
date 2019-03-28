@@ -31,8 +31,6 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 		},
 		mesh = {}, 
 		material = {},
-		can_render = true,
-		sampleobj = true,
 		character = {
 			movespeed = 1
 		}, 
@@ -44,8 +42,12 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 		},
 		name = "animation_sample",
 		main_view = true,
-		can_select = true,
-		render_bounding = true,
+		sampleobj = true,
+
+		can_render 	= true,
+		can_select 	= true,
+		can_cast 	= true,
+		can_show_bounding = true,
 	}
 
 	local e = world[eid]

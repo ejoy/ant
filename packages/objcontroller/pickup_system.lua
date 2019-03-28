@@ -72,29 +72,25 @@ local pickup_material_sys = ecs.system "pickup_material_system"
 pickup_material_sys.depend "primitive_filter_system"
 pickup_material_sys.dependby "render_system"
 
-function pickup_material_sys:update()
-	for _, eid in world:each "pickup" do
-		local e = world[eid]
-		local filter = e.primitive_filter
-		if filter then
-			local materials = e.pickup.materials
-
-			local function replace_material(result, material)
-				if result then
-					for _, item in ipairs(result) do
-						item.material = material.materialinfo
-						item.properties.uniforms = {
-							u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
-						}
-					end
-				end
-			end
-
-			local result = filter.result
-			replace_material(result.opaque, materials.opaque)
-			replace_material(filter.translucent, result.translucent)
+local function replace_material(result, material)
+	if result then
+		for _, item in ipairs(result) do
+			item.material = material.materialinfo
+			item.properties.uniforms = {
+				u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
+			}
 		end
 	end
+end
+
+function pickup_material_sys:update()
+	local e = world:first_entity "pickup"	
+	local filter = e.primitive_filter
+
+	local materials = e.pickup.materials
+	local result = filter.result
+	replace_material(result.opaque, materials.opaque)
+	replace_material(filter.translucent, result.translucent)
 end
 
 -- pickup_system

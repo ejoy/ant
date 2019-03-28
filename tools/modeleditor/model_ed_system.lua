@@ -39,6 +39,7 @@ model_ed_sys.dependby "render_mesh_bounding"
 model_ed_sys.dependby "primitive_filter_system"
 model_ed_sys.dependby "render_system"
 model_ed_sys.dependby "pickup_system"
+model_ed_sys.dependby "shadow_maker11"
 
 -- luacheck: globals main_dialog
 -- luacheck: globals iup
@@ -82,7 +83,7 @@ local function enable_sample_boundingbox()
 	local sample = sample_entity()
 	if sample then
 		local bounding = dlg_item("SHOWSAMPLEBOUNDING")
-		sample.widget.can_render = bounding.VALUE ~= "OFF"
+		sample.can_show_bounding = bounding.VALUE ~= "OFF"
 	end
 end
 
