@@ -13,6 +13,6 @@ void main()
 
 	//gl_FragColor.xyz = directional_lightdir[0].xyz;
 	float shiness = 0.06;
-	gl_FragColor.xyz = calc_directional_light(normal, directional_lightdir[0].xyz, viewdir, shiness);// * color; 
+	gl_FragColor.xyz = calc_directional_light(normal, directional_lightdir[0].xyz, viewdir, shiness) * color; 
 	gl_FragColor.w = 1.0;
 }
