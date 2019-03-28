@@ -453,7 +453,7 @@ function event.exception()
         return
     end
     local _, msg = getEventArgs(1)
-    exceptionMsg, exceptionTrace = traceback(msg, level)
+    exceptionMsg, exceptionTrace = traceback(msg, level - 3)
     state = 'stopped'
     runLoop 'exception'
 end

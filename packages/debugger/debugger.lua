@@ -8,27 +8,28 @@ local function eventwp(name, ...)
 end
 
 local function start_hook()
+    local pm = require 'antpm'
     local _print = print
-    function print(...)
+    pm.setglobal('print', function (...)
         if not eventwp('print', ...) then
             _print(...)
         end
-    end
+    end)
 
     local _xpcall = xpcall
-    function xpcall(f, msgh, ...)
+    pm.setglobal('xpcall', function (f, msgh, ...)
         return _xpcall(f, function(msg)
             eventwp('exception', msg)
             return msgh(msg)
         end, ...)
-    end
+    end)
 
-    function pcall(f, ...)
+    pm.setglobal('pcall', function (f, ...)
         return _xpcall(f, function(msg)
             eventwp('exception', msg)
             return msg
         end, ...)
-    end
+    end)
     
     local _coroutine_resume = coroutine.resume
     function coroutine.resume(co, ...)

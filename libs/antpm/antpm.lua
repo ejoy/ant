@@ -87,10 +87,15 @@ local function m_loadfile(filename)
     return fs.loadfile(filename, 't', info.env)
 end
 
+local function setglobal(name, value)
+    _G[name] = value
+end
+
 return {
     find = find,
     register = register,
     import = import,
     test = test,
     loadfile = m_loadfile,
+    setglobal = setglobal,
 }
