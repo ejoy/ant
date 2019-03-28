@@ -15,7 +15,7 @@ camera_controller_system.singleton "message"
 camera_controller_system.singleton "control_state"
 
 camera_controller_system.depend "message_system"
-camera_controller_system.depend "camera_init"
+-- camera_controller_system.depend "camera_init"
 
 ecs.tag "test_remove_com"
 

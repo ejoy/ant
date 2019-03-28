@@ -149,10 +149,7 @@ function fs_hierarchy:get_selected_res()
     for index = 1,#(value_str) do
         local chr = string.byte(value_str,index)
         if chr == string.byte("+") then
-            local ref = {
-                package = package,
-                filename = fs.path(dir_package_base..self.file_list[index])
-            }
+            local ref = fs.path( dir_root_base.."/"..self.file_list[index])
             table.insert(selecteds,ref)
         end
     end
@@ -183,8 +180,8 @@ end
 
 --package_name:"ant.xxx"
 function fs_hierarchy:_show_package(package_name)
-    local assetmgr = import_package "ant.asset"
-    local assetdir = assetmgr.pkgdir(package_name)
+    -- local assetmgr = import_package "ant.asset"
+    local assetdir = fs.path("//"..package_name)
     self.cur_package_name = package_name
     self.dir_tree:clear()
     self.foucs_tb = nil

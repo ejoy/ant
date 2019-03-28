@@ -91,6 +91,19 @@ local function setglobal(name, value)
     _G[name] = value
 end
 
+
+local function get_registered_list(sort)
+    local t = {}
+    for name,_ in pairs(registered) do
+        table.insert(t,name)
+    end
+    if sort then
+        table.sort(t)
+    end
+    return t
+end
+
+
 return {
     find = find,
     register = register,
@@ -98,4 +111,5 @@ return {
     test = test,
     loadfile = m_loadfile,
     setglobal = setglobal,
+	get_registered_list = get_registered_list,
 }

@@ -36,7 +36,7 @@ local paths = vfs.list("/")
 
 
 local pm = require "antpm"
-pm.import(pm.register(fs.path "entry"))
+pm.import(pm.register("entry"))
 print("pm.register")
 
 

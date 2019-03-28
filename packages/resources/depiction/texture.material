@@ -1,6 +1,6 @@
 shader = {
-    vs ={"ant.resources", "simple/quad/vs_simplequad",},
-    fs ={"ant.resources", "simple/quad/fs_simplequad"},
+    vs = "//ant.resources/simple/quad/vs_simplequad",
+    fs = "//ant.resources/simple/quad/fs_simplequad",
 }
 
 state = {
@@ -14,7 +14,12 @@ state = {
 
 properties = {
     textures = {
-        s_texColor = {type="texture", name="tex color", stage=0, ref_path={"ant.resources", "PVPScene/siegeweapon_d.texture"}}
+        s_texColor = {
+            type="texture", 
+            name="tex color", 
+            stage=0, 
+            ref_path= "//ant.resources/PVPScene/siegeweapon_d.texture"
+        }
     }
 }
 

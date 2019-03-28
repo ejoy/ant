@@ -6,6 +6,9 @@ ecs.import "ant.inputmgr"
 ecs.import "ant.render"
 ecs.import "ant.scene"
 ecs.import "ant.serialize"
+ecs.import "ant.event"
+ecs.import "ant.math.adapter"
+
 
 local component_util = import_package "ant.render".components
 local math = import_package "ant.math"
@@ -13,11 +16,12 @@ local ms = math.stack
 local asset_view_render_sys = ecs.system "asset_view_render_sys"
 
 asset_view_render_sys.singleton "constant"
-asset_view_render_sys.depend "constant_init_sys"
+
 asset_view_render_sys.dependby "message_system"
 -- asset_view_render_sys.depend "shadow_primitive_filter_system"
-asset_view_render_sys.depend "transparency_filter_system"
-asset_view_render_sys.depend "entity_rendering"
+asset_view_render_sys.depend "primitive_filter_system"
+asset_view_render_sys.depend "math_adapter"
+asset_view_render_sys.depend "render_system"
 
 local lu = import_package "ant.render" .light
 local cu = import_package "ant.render" .components

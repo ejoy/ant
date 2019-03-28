@@ -2,7 +2,6 @@ local pkg = {}
 for _, name in ipairs {
     "addressnavigation_ctrl",
     "assetprobe",
-    "assetview",
     "hierarchyview",
     "listctrl",
     "matrixview",

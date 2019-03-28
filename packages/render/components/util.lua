@@ -101,45 +101,45 @@ end
 function util.add_material(material, filename)
 	local content = material.content
 	if content == nil then
-		content = {}
-		material.content = content
-	end
+        content = {}
+        material.content = content
+    end
 
 	local item = {
 		ref_path = filename,
 	}
 	util.create_material(item)
-	content[#content+1] = item
+    content[#content + 1] = item
 end
 
 local function update_properties(dst_properties, src_properties)
-	local srctextures = src_properties.textures
-	if srctextures then
-		local dsttextures = dst_properties.textures or {}
-		for k, v in pairs(srctextures) do
+    local srctextures = src_properties.textures
+    if srctextures then
+        local dsttextures = dst_properties.textures or {}
+        for k, v in pairs(srctextures) do
 			local refpath = v.ref_path
 			local tex = util.load_texture(v.name, v.stage, fs.path(refpath))
 			if dsttextures[k] == nil then
-				dsttextures[k] = tex
-			else
-				dsttextures[k].handle = tex.handle
-			end
-		end
-		dst_properties.textures = dsttextures
-	end
+                dsttextures[k] = tex
+            else
+                dsttextures[k].handle = tex.handle
+            end
+        end
+        dst_properties.textures = dsttextures
+    end
 
-	local srcuniforms = src_properties.uniforms
-	if srcuniforms then
-		local dstuniforms = dst_properties.uniforms or {}
-		for k, v in pairs(srcuniforms) do			
-			if dstuniforms[k] == nil then
-				assert(type(v.default) == "table")			
-				local value = deep_copy(v.default)
-				dstuniforms[k] = {name=v.name, type=v.type, value=value}
-			end
-		end
-		dst_properties.uniforms = dstuniforms
-	end
+    local srcuniforms = src_properties.uniforms
+    if srcuniforms then
+        local dstuniforms = dst_properties.uniforms or {}
+        for k, v in pairs(srcuniforms) do
+            if dstuniforms[k] == nil then
+                assert(type(v.default) == "table")
+                local value = deep_copy(v.default)
+                dstuniforms[k] = {name = v.name, type = v.type, value = value}
+            end
+        end
+        dst_properties.uniforms = dstuniforms
+    end
 end
 
 function util.create_material(material)
@@ -168,8 +168,7 @@ function util.change_textures(content, texture_tbl)
         textures[name] = util.load_texture(
             tex.name,
             tex.stage,
-            tex.ref_path[1],
-            fs.path(tex.ref_path[2])
+            tex.ref_path
         )
     end
     content.properties.textures = textures
@@ -177,27 +176,28 @@ function util.change_textures(content, texture_tbl)
     -- if content.materialinfo.properties and content.materialinfo.properties.texture then
     --  content.materialinfo = deep_copy(content.materialinfo)
 end
-function util.is_entity_visible(entity)
-	local can_render = entity.can_render
-	if can_render then
-		local mesh = entity.mesh
-		return mesh and mesh.assetinfo
-	end
 
-	return false
+function util.is_entity_visible(entity)
+    local can_render = entity.can_render
+    if can_render then
+        local mesh = entity.mesh
+        return mesh and mesh.assetinfo
+    end
+
+    return false
 end
 
 function util.create_mesh_handle(decl, vb, ib)
-	local groups = {}
-	
-	if type(decl) == "table" then
-		assert("not implement")
-	else
-		local group = {
-			vb = {
-				decls={decl}, 
-				handles={bgfx.create_vertex_buffer(vb, decl)},
-			},			
+    local groups = {}
+
+    if type(decl) == "table" then
+        assert("not implement")
+    else
+        local group = {
+            vb = {
+                decls = {decl},
+                handles = {bgfx.create_vertex_buffer(vb, decl)},
+            },
 		}
 
 		if ib then
@@ -205,9 +205,9 @@ function util.create_mesh_handle(decl, vb, ib)
 		end
 
 		table.insert(groups, group)
-	end
+    end
 
-	return {handle={groups = groups}}
+    return {handle = {groups = groups}}
 end
 
 function util.create_grid_entity(world, name, w, h, unit, view_tag)
@@ -220,9 +220,9 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
 			r = {0, 0, 0, 0},
 			t = {0, 0, 0, 1},
 		},
-		can_render = true, 
-		mesh = {},
-		material = {
+        can_render = true,
+        mesh = {},
+        material = {
 			content = {
 				{
 					ref_path = fs.path "//ant.resources/line.material"
@@ -245,13 +245,13 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
 		end
 	end
 
-    local vdecl = bgfx.vertex_decl {
-        { "POSITION", 3, "FLOAT" },
-        { "COLOR0", 4, "UINT8", true }
+    local vdecl = bgfx.vertex_decl{
+        {"POSITION", 3, "FLOAT"},
+        {"COLOR0", 4, "UINT8", true}
     }
 
-    grid.mesh.assetinfo = util.create_mesh_handle(vdecl, gvb, ib)
-	return gridid
+    grid.mesh.assetinfo = util.create_mesh_handle(vdecl,gvb, ib)
+    return gridid
 end
 
 function util.create_plane_entity(world, color, size, pos, name)
@@ -319,5 +319,9 @@ function util.create_quad_entity(world, texture_tbl, view_tag)
     quad.mesh.assetinfo = util.create_mesh_handle(vdecl, gvb, ib)
     return quadid
 end
+
+
+
+
 
 return util

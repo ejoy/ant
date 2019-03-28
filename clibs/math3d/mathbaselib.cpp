@@ -4,6 +4,8 @@
 extern "C" {
 	#include <lua.h>
 	#include <lauxlib.h>
+	#include "linalg.h"
+	#include "math3d.h"
 }
 
 #include <glm/glm.hpp>

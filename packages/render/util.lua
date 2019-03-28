@@ -3,6 +3,7 @@ local log = log and log(...) or print
 
 local bgfx = require "bgfx"
 local viewidmgr = require "viewid_mgr"
+local fbmgr = require "framebuffer_mgr"
 local util = {}
 util.__index = util
 
@@ -120,7 +121,7 @@ function util.insert_primitive(eid, meshhandle, materials, worldmat, filter)
 	end
 end
 
-function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_tag)
+function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_tag, viewid)
 	local w, h = viewsize.w, viewsize.h
 	return world:create_entity {
 		camera = {
@@ -134,7 +135,7 @@ function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_
 				fov = 60, aspect = w / h,
 			},
 		},
-		viewid = viewidmgr.get(view_tag),
+		viewid = viewid or viewidmgr.get(view_tag),
 		render_target = {
 			viewport = {
 				clear_state = {
@@ -168,6 +169,7 @@ function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_
 			-- }
 		},
 		main_queue = view_tag == "main_view" and true or nil,
+		visible = true,
 	}	
 end
 
@@ -267,5 +269,52 @@ function util.default_surface_type()
 		subsurface = "off",			-- "on"/"off"? maybe has other setting
 	}
 end
+
+function util.create_frame_buffer(world,hwnd,w,h,viewid)
+	local fb_handle = bgfx.create_frame_buffer(hwnd, w, h)
+	bgfx.set_view_frame_buffer(viewid, assert(fb_handle))
+	local frame_buffer = {
+		render_buffers = {},
+		viewid = viewid,
+	}
+	local frame_buffer_com = world:create_component("frame_buffer",frame_buffer)
+	frame_buffer_com.handle = fb_handle
+	fbmgr.bind(viewid,frame_buffer_com)
+end
+
+--frame_buffer:component
+function util.create_general_render_queue(world,viewsize,view_tag,viewid)
+	local default_viewdir = { -25, -45, 0, 0 }
+	local default_eyepos = { 5, 5, -5, 1 }
+	local entity_id = util.create_render_queue_entity(world,viewsize,
+					default_viewdir,
+					default_eyepos,
+					view_tag,
+					viewid)
+	local frame_buffer = {ref_viewid = viewid}
+	-- if not frame_buffer.ref_viewid then
+	-- 	local default_render_buffer = {
+	-- 			w = viewsize.w,
+	-- 			h = viewsize.h,
+	-- 			layers = 1,
+	-- 			format = "RGBA32",
+	-- 			flags = util.generate_sampler_flag {
+	-- 				RT="RT_ON",
+	-- 				MIN="POINT",
+	-- 				MAG="POINT",
+	-- 				U="CLAMP",
+	-- 				V="CLAMP"
+	-- 			}
+	-- 		}
+	-- 	frame_buffer.render_buffers = frame_buffer.render_buffers or {default_render_buffer}
+	-- 	frame_buffer.manager_buffer = true
+	-- end
+	-- world[entity_id].frame_buffer = frame_buffer
+	world:add_component(entity_id,"frame_buffer",frame_buffer)
+
+	return entity_id
+end
+
+
 
 return util

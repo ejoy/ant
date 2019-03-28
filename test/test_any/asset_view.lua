@@ -5,13 +5,14 @@ local inputmgr = import_package "ant.inputmgr"
 local pm = require "antpm"
 local bgfx = require "bgfx"
 -- local rhwi = import_package "ant.render".hardware_interface
-local scene = import_package "ant.scene"
+local scene = import_package "ant.scene".util
 local editor = import_package "ant.editor"
 local mapiup = editor.mapiup
 local task = editor.task
 local camera_util = import_package"ant.render".camera
+local render_util = import_package"ant.render".util
 local component_util = import_package"ant.render".components
-local view_id_mgr = import_package"ant.render".view_id_mgr
+local view_id_mgr = import_package"ant.render".viewidmgr
 local ms = import_package"ant.math".stack
 local math3d = require "math3d"
 
@@ -41,6 +42,8 @@ local CAM_CONTROL_CONFIG = {
 }
 
 local DEAULT_TITLE = "preview"
+
+local VIEW_TAG = "asset_view"
 
 
 local function camera_reset(camera, cfg)
@@ -142,16 +145,16 @@ function asset_view:_on_canvas_map()
         local hwnd = iup.GetAttributeData(self.canvas, "HWND")
         local fb_width, fb_height = self._canvas_size[1],self._canvas_size[2]
         print("self.canvas:DrawGetSize()",fb_width,fb_height)
-        self:_create_frame_buffer()
+        
         self.world = scene.start_new_world(input_queue, fb_width, fb_height, packages, systems)
+        self:_create_frame_buffer(hwnd,fb_width,fb_height,self.view_id)
 
         -----create 3d camera
-        local camera_eid_3d = camera_util.create_render_camera(
+        local camera_eid_3d = render_util.create_general_render_queue(
             self.world,
-            self.view_id,
-            hwnd,
-            self._current_frame_buffer,
-            {view_tag = "asset_viewtag_3d"}
+            {w=fb_width, h=fb_height},
+            "asset_viewtag_3d",
+            self.view_id
         )
         -- self.world:add_component(camera_eid_3d, "camera_control", true)
         self.world:add_component(camera_eid_3d, "show_light", true)
@@ -160,12 +163,11 @@ function asset_view:_on_canvas_map()
         self.world[camera_eid_3d].visible = false
 
         -----create 2d camera
-        local camera_eid_2d = camera_util.create_render_camera(
+        local camera_eid_2d = render_util.create_general_render_queue(
             self.world,
-            self.view_id,
-            hwnd,
-            self._current_frame_buffer,
-            {view_tag = "asset_viewtag_2d"}
+            {w=fb_width, h=fb_height},
+            "asset_viewtag_2d",
+            self.view_id
         )
 
         -- self.world:add_component(
@@ -189,10 +191,7 @@ function asset_view:_on_canvas_map()
         local texture_tbl = {
             s_texColor = {
                 name = "tex color",
-                ref_path = {
-                    "ant.resources",
-                    "PVPScene/siegeweapon_d.texture"
-                },
+                ref_path = fs.path "//ant.resources/PVPScene/siegeweapon_d.texture",
                 stage = 0,
                 type = "texture",
             }
@@ -200,12 +199,11 @@ function asset_view:_on_canvas_map()
         self.texture_id = component_util.create_quad_entity(self.world, texture_tbl, "asset_viewtag_2d")
 
         -----create empty camera
-        local camera_eid_empty = camera_util.create_render_camera(
+        local camera_eid_empty = render_util.create_general_render_queue(
             self.world,
-            self.view_id,
-            hwnd,
-            self._current_frame_buffer,
-            {view_tag = "asset_viewtag_empty"}
+            {w=fb_width, h=fb_height},
+            "asset_viewtag_empty",
+            self.view_id
         )
         -- self.world:add_component(camera_eid_3d, "camera_control", true)
         self.world[camera_eid_empty].testname = "camera_empty"
@@ -216,21 +214,23 @@ function asset_view:_on_canvas_map()
                             ["empty"]=camera_eid_empty}
         self:show_camera("empty")
 
-        task.loop(scene.loop{update = {"timesystem", "message_system"}})
+        task.loop(scene.loop(self.world,{update = {"timesystem", "message_system"}}))
         self.world_update_func = self.world:update_func("update", {"timesystem", "message_system"})
 
     end
     self.maped = true
 end
 
-function asset_view:_create_frame_buffer()
-    if self._current_frame_buffer then
-        bgfx.destroy(self._current_frame_buffer)
-        self._current_frame_buffer = nil
-    end
-    local hwnd = iup.GetAttributeData(self.canvas, "HWND")
-    local fb = bgfx.create_frame_buffer(hwnd, self._canvas_size[1], self._canvas_size[2])
-    self._current_frame_buffer = fb
+function asset_view:_create_frame_buffer(hwnd,w,h,viewid)
+    render_util.create_frame_buffer(self.world,hwnd,w,h,viewid)
+    -- if self._current_frame_buffer then
+    --     bgfx.destroy(self._current_frame_buffer)
+    --     self._current_frame_buffer = nil
+    -- end
+    -- local hwnd = iup.GetAttributeData(self.canvas, "HWND")
+    -- local fb = bgfx.create_frame_buffer(hwnd, self._canvas_size[1], self._canvas_size[2])
+    -- self._current_frame_buffer = fb
+
 end
 
 function asset_view:_on_canvas_unmap()
@@ -250,11 +250,7 @@ function asset_view:create_foucs_entity(mesh, material)
         material = {
             content = {
                 {
-                    ref_path = {
-                        package = "ant.resources",
-                        -- filename = fs.path "PVPScene/scene-mat.material"
-                        filename = fs.path "singlecolor.material"
-                    },
+                    ref_path = fs.path "//ant.resources/singlecolor.material"
                 }
             }
         }
@@ -262,10 +258,11 @@ function asset_view:create_foucs_entity(mesh, material)
     local math = require "math"
 
     local id = self.world:create_entity{
-        position = {0, 0, 0, 1},
-        -- position = {x, y, z, 1},
-        rotation = {-90, -90, 0, 0},
-        scale = {0.2, 0.2, 0.2, 0},
+        transform = {           
+            s = {1, 1, 1, 0},
+            r = {0, 0, 0, 0},
+            t = {0, 0, 0, 1},
+        },
         can_render = true,
         mesh = {ref_path = mesh},
         material = material,
@@ -339,13 +336,13 @@ function asset_view:set_select_files(selected_res)
         self.frame.title = DEAULT_TITLE
     else
         local first_ref_path = selected_res[1]
-        local filetype = ((first_ref_path.filename):extension()):string()
-        local filepath = (first_ref_path.filename):string()
-        local filename =  ((first_ref_path.filename):filename()):string()
+        local filetype = (first_ref_path:extension()):string()
+        -- local filepath = (first_ref_path.filename):string()
+        -- local filename =  ((first_ref_path.filename):filename()):string()
 
         print_a("first_ref_path:",first_ref_path,filetype)
         if filetype == ".texture" then
-            self:set_texture({first_ref_path.package,filepath})
+            self:set_texture(first_ref_path)
             self.frame.title = filename
         elseif filetype == ".mesh" then
             self:set_model(first_ref_path)
@@ -367,7 +364,7 @@ end
 
 function asset_view:destroy()
     bgfx.set_view_frame_buffer(self.view_id)
-    view_id_mgr.release_view_id(self.view_id)
+    -- view_id_mgr.release_view_id(self.view_id)
     self.view_id = nil
     bgfx.destroy(self.fbh)
     self.fbh = nil
@@ -378,7 +375,7 @@ function asset_view:update()
 end
 
 function asset_view.new(iup_args)
-    local view_id = view_id_mgr.gen_view_id("editor", "asset_view")
+    local view_id = view_id_mgr.generate(VIEW_TAG)
     if not view_id then log("Can't create more asset_view,max_num") end
     local ins = setmetatable({}, asset_view)
     ins.view_id = view_id

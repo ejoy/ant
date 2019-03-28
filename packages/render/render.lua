@@ -21,7 +21,9 @@ local renderbuffer = ecs.component "render_buffer"
 	.layers "real" (1)
 
 function renderbuffer:init()
-	self.handle = bgfx.create_texture2d(self.w, self.h, false, self.layers, self.format, self.flags)
+	if not self.handle then
+		self.handle = bgfx.create_texture2d(self.w, self.h, false, self.layers, self.format, self.flags)
+	end
 	return self
 end
 
@@ -91,6 +93,7 @@ ecs.component "camera" {depend = "viewid"}
 	.updir "vector"
 	.frustum"frustum"	
 
+ecs.component_alias("visible", "boolean", true) 
 
 local rendersys = ecs.system "render_system"
 rendersys.depend "primitive_filter_system"
@@ -126,25 +129,26 @@ end
 function rendersys:update()
 	for _, eid in world:each "viewid" do
 		local rq = world[eid]
+		if rq.visible ~= false then
+			local viewid = rq.viewid		
+			update_viewport(viewid, rq.render_target.viewport)
+			update_view_proj(viewid, rq.camera)
 
-		local viewid = rq.viewid		
-		update_viewport(viewid, rq.render_target.viewport)
-		update_view_proj(viewid, rq.camera)
+			local filter = rq.primitive_filter
+			local render_properties = filter.render_properties
+			local results = filter.result
 
-		local filter = rq.primitive_filter
-		local render_properties = filter.render_properties
-		local results = filter.result
-
-		local function draw_primitives(viewid, result, render_properties)
-			local numopaque = result.cacheidx - 1
-			for i=1, numopaque do
-				local prim = result[i]
-				ru.draw_primitive(viewid, prim, prim.worldmat, render_properties)
+			local function draw_primitives(viewid, result, render_properties)
+				local numopaque = result.cacheidx - 1
+				for i=1, numopaque do
+					local prim = result[i]
+					ru.draw_primitive(viewid, prim, prim.worldmat, render_properties)
+				end
 			end
-		end
 
-		draw_primitives(viewid, results.opaque, render_properties)
-		draw_primitives(viewid, results.translucent, render_properties)
+			draw_primitives(viewid, results.opaque, render_properties)
+			draw_primitives(viewid, results.translucent, render_properties)
+		end
 		
 	end
 end
