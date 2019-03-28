@@ -2,21 +2,21 @@ local viewid_pool = {}; viewid_pool.__index = viewid_pool
 
 local max_viewid = 256
 
+--1~99
 local bindings = {
 	shadow_maker = 5,
 	main_view = 30,
 	pickup = 31,
-	pickup_blit = 32,
-
-	free_beg = 100,
+	pickup_blit = 32
 }
+local freeidx = 100
 
 local pool = {}
 for _, v in pairs(bindings) do
 	pool[v] = true
 end
 
-local freeidx = bindings["free_beg"]
+
 function viewid_pool.generate(name)
 	if freeidx >= 256 then
 		--to do, need release function for not used viewid to mark which view id id released

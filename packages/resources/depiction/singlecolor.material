@@ -1,0 +1,12 @@
+shader = {
+    vs = "//ant.resources/mesh/vs_singlecolor",
+    fs = "//ant.resources/mesh/fs_singlecolor",
+}
+
+state = "default.state"
+
+properties = {
+	uniforms = {
+		u_color = {name="u_color", type="v4", default={1, 1, 1, 1}},
+	}	
+}

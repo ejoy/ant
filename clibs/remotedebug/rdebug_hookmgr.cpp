@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <new>
 #include <memory>
-#include "event_free.h"
+#include "rdebug_eventfree.h"
 
 static int HOOK_MGR = 0;
 static int HOOK_CALLBACK = 0;
@@ -291,13 +291,7 @@ struct hookmgr {
         }
     }
     void updatehookmask(lua_State* hL) {
-        int mask = break_mask | step_mask;
-        if (mask) {
-            lua_sethook(hL, (lua_Hook)sc_hook->data, mask, 0);
-        }
-        else {
-            lua_sethook(hL, NULL, 0, 0);
-        }
+        lua_sethook(hL, (lua_Hook)sc_hook->data, break_mask | step_mask, 0);
     }
     void setcoroutine(lua_State* hL) {
         updatehookmask(hL);
@@ -307,11 +301,11 @@ struct hookmgr {
     void start(lua_State* hL) {
         hostL = hL;
         thunk_bind((intptr_t)hL, (intptr_t)this);
-        event_free::create(hL, lua_freef, this);
+        remotedebug::eventfree::create(hL, lua_freef, this);
     }
     ~hookmgr() {
         if(hostL) {
-            event_free::destroy(hostL);
+            remotedebug::eventfree::destroy(hostL);
         }
     }
     static int clear(lua_State* L) {

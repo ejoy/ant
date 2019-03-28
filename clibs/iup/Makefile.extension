@@ -3,9 +3,13 @@ include ../common.mk
 IUPSRC = $(ANT3RD)/iup
 
 SRC = extension/iupextension.c extension/winshell.c
+# Windows 7 minimum
+WIN32VER = 0x0601
+
+DEFINES = _WIN32_WINNT=$(WIN32VER) _WIN32_IE=0x600 WINVER=$(WIN32VER) UNICODE IUP_DLL NTDDI_VERSION=0x06010000
 
 all : iupextension.dll
 
 iupextension.dll :  $(SRC)
-	$(CC) --shared -o $@ $^ -D UNICODE -I$(IUPSRC)/include -I$(IUPSRC)/srclua5 -I$(IUPSRC)/src/win $(LUAINC) $(LUALIB) -L. -liuplua -lgdi32
+	$(CC) --shared -o $@ $^ -D UNICODE -I$(IUPSRC)/include -I$(IUPSRC)/srclua5 -I$(IUPSRC)/src/win $(LUAINC) $(LUALIB) -L. -liuplua -lgdi32 -lcomctl32 -lole32 $(addprefix -D,$(DEFINES))
 

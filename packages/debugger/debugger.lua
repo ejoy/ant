@@ -1,37 +1,39 @@
 local rdebug = require 'remotedebug'
+local event = rdebug.probe
 
-local function event(name, level, ...)
+local function eventwp(name, ...)
     local r
-    rdebug.probe(name)
+    event(name)
     return r
 end
 
 local function start_hook()
+    local pm = require 'antpm'
     local _print = print
-    function print(...)
-        if not event('print', 1, ...) then
+    pm.setglobal('print', function (...)
+        if not eventwp('print', ...) then
             _print(...)
         end
-    end
+    end)
 
     local _xpcall = xpcall
-    function xpcall(f, msgh, ...)
+    pm.setglobal('xpcall', function (f, msgh, ...)
         return _xpcall(f, function(msg)
-            event('exception', 2, 'xpcall', msg)
+            eventwp('exception', msg)
             return msgh(msg)
         end, ...)
-    end
+    end)
 
-    function pcall(f, ...)
+    pm.setglobal('pcall', function (f, ...)
         return _xpcall(f, function(msg)
-            event('exception', 2, 'pcall', msg)
+            eventwp('exception', msg)
             return msg
         end, ...)
-    end
+    end)
     
     local _coroutine_resume = coroutine.resume
     function coroutine.resume(co, ...)
-        event('coroutine', 1, co)
+        eventwp('coroutine', co)
         return _coroutine_resume(co, ...)
     end
 end
@@ -70,27 +72,15 @@ local function start_worker(wait)
     start_hook()
     rdebug.start(bootstrap(), package.searchers[3])
     if wait then
-        event('wait_client', 1, false)
+        event 'wait_client'
     end
     return function()
         event 'update'
     end
 end
 
-local function start_all(wait)
-    start_hook()
-    rdebug.start(bootstrap(), package.searchers[3])
-    if wait then
-        event('wait_client', 1, true)
-    end
-    return function()
-        event 'update_all'
-    end
-end
-
 return {
     start_master = start_master,
     start_worker = start_worker,
-    start_all = start_all,
     math3d = require "math3d",
 }
