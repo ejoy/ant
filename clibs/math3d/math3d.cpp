@@ -503,7 +503,7 @@ create_proj_mat(lua_State *L, struct lastack *LS, int index) {
 		bottom = -ymax;
 		top = ymax;
 	} else {
-		const int type = get_mat_type(L, index);
+		mattype = get_mat_type(L, index);
 		lua_getfield(L, index, "l");
 		left = luaL_checknumber(L, -1);
 		lua_pop(L, 1);
@@ -2258,63 +2258,6 @@ new_temp_euler(lua_State *L) {
 }
 
 static int
-create_srt_matrix(lua_State *L) {	
-	const int numarg = lua_gettop(L);
-	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
-	struct lastack *LS = bp->LS;
-
-	glm::mat4x4 srtmat(1);
-	const glm::vec4 *scale = nullptr;
-	const glm::vec4 *rotation = nullptr;
-	const glm::vec4 *translation = nullptr;
-	switch (numarg) {
-	case 2:
-	{
-		luaL_checktype(L, 2, LUA_TTABLE);
-		const char* srtnames[] = { "s", "r", "t" };
-		const glm::vec4** srtvalues[] = { &scale, &rotation, &translation };
-		for (int ii = 0; ii < 3; ++ii){
-			auto name = srtnames[ii];
-			lua_getfield(L, 2, name);
-			int type;
-			*(srtvalues[ii]) = (const glm::vec4*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
-		}
-	}
-		break;
-	case 4:
-	{
-		int scaletype, rotationtype, translationtype;
-		scale = (const glm::vec4 *)lastack_value(LS, get_stack_id(L, LS, 2), &scaletype);
-		assert(scaletype == LINEAR_TYPE_VEC4);
-
-		rotation = (const glm::vec4 *)lastack_value(LS, get_stack_id(L, LS, 3), &rotationtype);
-		assert(rotationtype == LINEAR_TYPE_VEC4 || rotationtype == LINEAR_TYPE_EULER);
-
-		translation = (const glm::vec4 *)lastack_value(LS, get_stack_id(L, LS, 4), &translationtype);
-		assert(translationtype == LINEAR_TYPE_VEC4);
-	}
-		break;
-	default:
-		luaL_error(L, "invalid argument number:%d", numarg);
-		break;
-	}
-
-	assert(scale &&rotation && translation);
-	srtmat[0][0] = (*scale)[0];
-	srtmat[1][1] = (*scale)[1];
-	srtmat[2][2] = (*scale)[2];
-
-	srtmat = glm::mat4x4(glm::quat(*rotation)) * srtmat;
-
-	srtmat[3] = *translation;
-	srtmat[3][3] = 1;
-
-	lastack_pushmatrix(LS, &(srtmat[0][0]));
-	lua_pushlightuserdata(L, (void *)pop_value(L, LS, NULL));
-	return 1;
-}
-
-static int
 lsrt_matrix(lua_State *L) {
 	const int numarg = lua_gettop(L);
 	if (numarg < 1) {
@@ -2407,7 +2350,7 @@ get_vec_value(lua_State *L, struct lastack *LS, int index) {
 		v[3] = 0;
 		const size_t len = lua_rawlen(L, index);
 		
-		for (int ii = 0; ii < len; ++ii) {
+		for (size_t ii = 0; ii < len; ++ii) {
 			lua_geti(L, index, ii + 1);
 			v[ii] = lua_tonumber(L, -1);
 			lua_pop(L, 1);
