@@ -4055,10 +4055,12 @@ lgetShaderUniforms(lua_State *L) {
 	uint16_t n = bgfx_get_shader_uniforms(shader, NULL, 0);
 	lua_createtable(L, n, 0);
 	bgfx_uniform_handle_t u[V(n)];
-	bgfx_get_shader_uniforms(shader, u, n);
-	int i;
-	for (i=0;i<n;i++) {
-		int id = BGFX_LUAHANDLE(UNIFORM, u[i]);
+	bgfx_get_shader_uniforms(shader, u, n);	
+	for (int i=0;i<n;i++) {
+		const bgfx_uniform_handle_t handle = u[i];
+		bgfx_uniform_info_t info;
+		bgfx_get_uniform_info(handle, &info);
+		const int id = BGFX_LUAHANDLE_WITHTYPE(BGFX_LUAHANDLE(UNIFORM, handle), info.type);
 		lua_pushinteger(L, id);
 		lua_rawseti(L, -2, i+1);
 	}
