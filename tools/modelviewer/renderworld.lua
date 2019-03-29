@@ -23,6 +23,7 @@ model_review_system.depend "primitive_filter_system"
 model_review_system.depend "debug_system"
 model_review_system.depend "math_adapter"
 model_review_system.depend "render_system"
+model_review_system.depend "viewport_detect_system"
 
 local lu = import_package "ant.render" .light
 local cu = import_package "ant.render" .components
