@@ -15,6 +15,24 @@ local function start_hook()
             _print(...)
         end
     end)
+    
+    local io_output = debug.getregistry()._IO_output
+    local mt = debug.getmetatable(io_output)
+    local f_write = mt.write
+    function mt.write(f, ...)
+        if not eventwp('iowrite', ...) then
+            return f_write(f, ...)
+        end
+        return f
+    end
+
+    local io_write = io.write
+    function io.write(...)
+        if not eventwp('iowrite', ...) then
+            return io_write(...)
+        end
+        return io_output
+    end
 end
 
 local function start_master(io)
