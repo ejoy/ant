@@ -284,18 +284,17 @@ end
 
 function util.create_quad_entity(world, texture_tbl, view_tag)
     local quadid = world:create_entity{
-        rotation = {0, 0, 0, 0},
-        position = {0, 0, 0, 1},
-        scale = {1, 1, 1, 0},
+        transform = {           
+            s = {1, 1, 1, 0},
+            r = {0, 0, 0, 0},
+            t = {0, 0, 0, 1},
+        },
         can_render = true,
         mesh = {},
         material = {
             content = {
                 {
-                    ref_path = {
-                        package = "ant.resources",
-                        filename = fs.path "texture.material"
-                    }
+                    ref_path = fs.path "//ant.resources/texture.material"
                 }
             }
         },

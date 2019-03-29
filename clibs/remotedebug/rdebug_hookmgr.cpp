@@ -9,10 +9,15 @@
 static int HOOK_MGR = 0;
 static int HOOK_CALLBACK = 0;
 
+#if defined(LUA_HOOKEXCEPTION) && defined(LUA_MASKEXCEPTION)
+#define RDEBUG_ENABLE_EXCEPTION 1
+#endif
+
 extern "C" {
 lua_State* get_host(lua_State *L);
 void set_host(lua_State* L, lua_State* hL);
 lua_State* getthread(lua_State *L);
+int copyvalue(lua_State *cL, lua_State *hL);
 }
 
 #define BPMAP_SIZE (1 << 16)
@@ -239,6 +244,41 @@ struct hookmgr {
     }
 
     //
+    // exception
+    //
+    int exception_mask = 0;
+#if defined(RDEBUG_ENABLE_EXCEPTION)
+    void exception_hookmask(lua_State* hL, int mask) {
+        if (exception_mask != mask) {
+            exception_mask = mask;
+            updatehookmask(hL);
+        }
+    }
+    void exception_open(lua_State* hL) {
+        exception_hookmask(hL, LUA_MASKEXCEPTION);
+    }
+    void exception_close(lua_State* hL) {
+        exception_hookmask(hL, 0);
+    }
+    void exception_hook(lua_State* hL, lua_Debug* ar) {
+        if (ar->event != LUA_HOOKEXCEPTION) {
+            return;
+        }
+        if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+            lua_pop(cL, 1);
+            return;
+        }
+        set_host(cL, hL);
+        lua_pushstring(cL, "exception");
+        copyvalue(hL, cL);
+        if (lua_pcall(cL, 2, 0, 0) != LUA_OK) {
+            lua_pop(cL, 1);
+            return;
+        }
+    }
+#endif
+
+    //
     // common
     //
     lua_State* cL = 0;
@@ -267,6 +307,9 @@ struct hookmgr {
     void hook(lua_State* hL, lua_Debug* ar) {
         step_hook(hL, ar);
         break_hook(hL, ar);
+#if defined(RDEBUG_ENABLE_EXCEPTION)
+        exception_hook(hL, ar);
+#endif
         if (ar->event == LUA_HOOKLINE) {
             if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
                 lua_pop(cL, 1);
@@ -291,7 +334,7 @@ struct hookmgr {
         }
     }
     void updatehookmask(lua_State* hL) {
-        lua_sethook(hL, (lua_Hook)sc_hook->data, break_mask | step_mask, 0);
+        lua_sethook(hL, (lua_Hook)sc_hook->data, break_mask | step_mask | exception_mask, 0);
     }
     void setcoroutine(lua_State* hL) {
         updatehookmask(hL);
@@ -411,6 +454,17 @@ static int step_cancel(lua_State* L) {
     return 0;
 }
 
+#if defined(RDEBUG_ENABLE_EXCEPTION)
+static int exception_open(lua_State* L) {
+    hookmgr::get_self(L)->exception_open(get_host(L));
+    return 0;
+}
+static int exception_close(lua_State* L) {
+    hookmgr::get_self(L)->exception_close(get_host(L));
+    return 0;
+}
+#endif
+
 extern "C" 
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -447,6 +501,10 @@ int luaopen_remotedebug_hookmgr(lua_State* L) {
         { "step_out", step_out },
         { "step_over", step_over },
         { "step_cancel", step_cancel },
+#if defined(RDEBUG_ENABLE_EXCEPTION)
+        { "exception_open", exception_open },
+        { "exception_close", exception_close },
+#endif
         { NULL, NULL },
     };
     luaL_setfuncs(L, lib, 1);

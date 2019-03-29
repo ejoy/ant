@@ -557,3 +557,8 @@ getthread(lua_State *L) {
 	lua_pop(hL, 1);
 	return co;
 }
+
+int
+copyvalue(lua_State *hL, lua_State *cL) {
+	return eval_value(hL, cL);
+}
