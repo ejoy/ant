@@ -75,10 +75,12 @@ function rt:postinit(e)
 		fbmgr.bind(viewid, fb)
 	else
 		local fb = fbmgr.get(viewid)
-		if fb.wndhandle then
-			self.wnd_frame_buffer = fb
-		else
-			self.frame_buffer = fb
+		if fb then
+			if fb.wndhandle then
+				self.wnd_frame_buffer = fb
+			else
+				self.frame_buffer = fb
+			end
 		end
 	end
 	return self

@@ -233,7 +233,7 @@ function asset_view:_on_canvas_map()
 				viewport = default_viewport(),
 			},
 			viewid = self.view_id,
-			primitive_filter = default_primitive_filter "asset_viewtag_3d",
+			primitive_filter = default_primitive_filter "asset_viewtag_2d",
 			show_light = true,
 			name = "camera2d",
 			visible = false,
