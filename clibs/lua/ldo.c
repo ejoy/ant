@@ -660,6 +660,8 @@ LUA_API int lua_resume (lua_State *L, lua_State *from, int nargs) {
     return resume_error(L, "C stack overflow", nargs);
   luai_userstateresume(L, nargs);
   L->nny = 0;  /* allow yields */
+  if (L->hookmask & LUA_MASKTHREAD)
+    luaD_hook(L, LUA_HOOKTHREAD, -1);
   api_checknelems(L, (L->status == LUA_OK) ? nargs + 1 : nargs);
   status = luaD_rawrunprotected(L, resume, &nargs);
   if (status == -1)  /* error calling 'lua_resume'? */

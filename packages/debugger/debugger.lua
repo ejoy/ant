@@ -1,26 +1,20 @@
-local rdebug = require 'remotedebug'
-local event = rdebug.probe
-
-local function eventwp(name, ...)
-    local r
-    event(name)
-    return r
-end
-
 local function start_hook()
     local pm = require 'antpm'
+    local rdebug = require 'remotedebug'
+    local event = rdebug.probe
+
+    local function eventwp(name, ...)
+        local r
+        event(name)
+        return r
+    end
+
     local _print = print
     pm.setglobal('print', function (...)
         if not eventwp('print', ...) then
             _print(...)
         end
     end)
-    
-    local _coroutine_resume = coroutine.resume
-    function coroutine.resume(co, ...)
-        eventwp('coroutine', co)
-        return _coroutine_resume(co, ...)
-    end
 end
 
 local function start_master(io)
@@ -54,6 +48,8 @@ local function bootstrap()
 end
 
 local function start_worker(wait)
+    local rdebug = require 'remotedebug'
+    local event = rdebug.probe
     start_hook()
     rdebug.start(bootstrap(), package.searchers[3])
     if wait then

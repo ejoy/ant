@@ -474,9 +474,15 @@ else
     end
 end
 
-function event.coroutine()
-    local _, co = getEventArgsRaw(1)
-    hookmgr.setcoroutine(co)
+if hookmgr.thread_open then
+    function event.thread(co)
+        hookmgr.setcoroutine(co)
+    end
+else
+    function event.thread()
+        local _, co = getEventArgsRaw(1)
+        hookmgr.setcoroutine(co)
+    end
 end
 
 function event.wait_client()
