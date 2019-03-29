@@ -45,12 +45,15 @@ local function getPost(w)
 end
 
 local function _load_entity(w, tree)
-    local eid = entitys[tree.serialize]
-    if not eid then
-        eid = w:register_entity()
-        if entitys then
+    local eid
+    if entitys then
+        local eid = entitys[tree.serialize]
+        if not eid then
+            eid = w:register_entity()
             entitys[tree.serialize] = eid
         end
+    else
+        eid = w:register_entity()
     end
     w[eid] = tree
     for name in sortcomponent(w, tree) do
