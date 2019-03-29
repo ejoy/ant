@@ -424,6 +424,7 @@ local function getExceptionType()
         end
         level = level + 1
     end
+    return nil, 'lua_pcall'
 end
 
 local event = hook
