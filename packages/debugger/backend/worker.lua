@@ -262,10 +262,8 @@ function CMD.setExceptionBreakpoints(pkg)
     for _, filter in ipairs(pkg.filters) do
         exceptionFilters[filter] = true
     end
-    if next(exceptionFilters) == nil then
-        hookmgr.exception_close()
-    else
-        hookmgr.exception_open()
+    if hookmgr.exception_open then
+        hookmgr.exception_open(next(exceptionFilters) ~= nil)
     end
 end
 
@@ -451,27 +449,29 @@ function event.print()
     setEventRet(true)
 end
 
-function event.exception(msg)
-    if not initialized then return end
-    local _, type = getExceptionType()
-    if not type or not exceptionFilters[type] then
-        return
+if hookmgr.exception_open then
+    function event.exception(msg)
+        if not initialized then return end
+        local _, type = getExceptionType()
+        if not type or not exceptionFilters[type] then
+            return
+        end
+        exceptionMsg, exceptionTrace = traceback(msg, 0)
+        state = 'stopped'
+        runLoop 'exception'
     end
-    exceptionMsg, exceptionTrace = traceback(msg, 0)
-    state = 'stopped'
-    runLoop 'exception'
-end
-
-function event.probe_exception()
-    if not initialized then return end
-    local level, type = getExceptionType()
-    if not type or not exceptionFilters[type] then
-        return
+else
+    function event.exception()
+        if not initialized then return end
+        local level, type = getExceptionType()
+        if not type or not exceptionFilters[type] then
+            return
+        end
+        local _, msg = getEventArgs(1)
+        exceptionMsg, exceptionTrace = traceback(msg, level - 3)
+        state = 'stopped'
+        runLoop 'exception'
     end
-    local _, msg = getEventArgs(1)
-    exceptionMsg, exceptionTrace = traceback(msg, level - 3)
-    state = 'stopped'
-    runLoop 'exception'
 end
 
 function event.coroutine()

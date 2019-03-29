@@ -254,11 +254,8 @@ struct hookmgr {
             updatehookmask(hL);
         }
     }
-    void exception_open(lua_State* hL) {
-        exception_hookmask(hL, LUA_MASKEXCEPTION);
-    }
-    void exception_close(lua_State* hL) {
-        exception_hookmask(hL, 0);
+    void exception_open(lua_State* hL, int enable) {
+        exception_hookmask(hL, enable? LUA_MASKEXCEPTION: 0);
     }
     void exception_hook(lua_State* hL, lua_Debug* ar) {
         if (ar->event != LUA_HOOKEXCEPTION) {
@@ -456,11 +453,7 @@ static int step_cancel(lua_State* L) {
 
 #if defined(RDEBUG_ENABLE_EXCEPTION)
 static int exception_open(lua_State* L) {
-    hookmgr::get_self(L)->exception_open(get_host(L));
-    return 0;
-}
-static int exception_close(lua_State* L) {
-    hookmgr::get_self(L)->exception_close(get_host(L));
+    hookmgr::get_self(L)->exception_open(get_host(L), lua_toboolean(L, 1));
     return 0;
 }
 #endif
@@ -503,7 +496,6 @@ int luaopen_remotedebug_hookmgr(lua_State* L) {
         { "step_cancel", step_cancel },
 #if defined(RDEBUG_ENABLE_EXCEPTION)
         { "exception_open", exception_open },
-        { "exception_close", exception_close },
 #endif
         { NULL, NULL },
     };
