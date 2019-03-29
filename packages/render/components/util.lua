@@ -119,7 +119,8 @@ local function update_properties(dst_properties, src_properties)
 		for k, v in pairs(srctextures) do
 			local tex = deep_copy(v)
 			dsttextures[k] = tex
-			local refpath = tex.ref_path
+			local refpath = fs.path(tex.ref_path)
+			tex.ref_path = refpath
 			if refpath then
 				tex.handle = asset.load(refpath).handle
 			end
