@@ -450,6 +450,25 @@ function event.print()
     setEventRet(true)
 end
 
+
+function event.iowrite()
+    if not initialized then return end
+    local res = {}
+    for _, arg in pairsEventArgs() do
+        res[#res + 1] = tostring(rdebug.value(arg))
+    end
+    res = table.concat(res, '\t')
+    local s = rdebug.getinfo(2, info)
+    local src = source.create(s.source)
+    if source.valid(src) then
+        ev.emit('output', 'stdout', res, src, s.currentline)
+    else
+        ev.emit('output', 'stdout', res)
+    end
+    setEventRet(true)
+end
+
+
 if hookmgr.exception_open then
     function event.exception(msg)
         if not initialized then return end
