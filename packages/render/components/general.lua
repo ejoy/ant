@@ -24,10 +24,8 @@ ecs.component "transform"
 	.s "vector"
 	.r "vector"
 	.t "vector"
-	['opt'].parent "parent"	
 	['opt'].slotname "string"
-	['opt'].hierarchy "hierarchy"
-	
+	['opt'].parent "parent"
 
 ecs.tag "editor"
 
