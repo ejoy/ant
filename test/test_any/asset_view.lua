@@ -14,7 +14,7 @@ local camera_util 	= renderpkg.camera
 local render_util 	= renderpkg.util
 local component_util= renderpkg.components
 local view_id_mgr 	= renderpkg.viewidmgr
-local fbmgr 		= renderpkg.renderpkg
+local fbmgr 		= renderpkg.fbmgr
 local ms = import_package"ant.math".stack
 local math3d = require "math3d"
 
@@ -77,7 +77,7 @@ end
 function asset_view:_init()
     self._active = true
     self._mainloop = nil
-    self.canvas = iup.canvas {EXPAND = "YES",BORDER = "NO"}
+    self.canvas = iup.canvas {EXPAND = "YES",BORDER = "YES"}
     self.hbox = iup.hbox {
         iup.space {},
         iup.vbox {
@@ -103,7 +103,7 @@ function asset_view:_init()
     self:_init_update()
     asset_view_hub.subscribe(self)
     
-    self.canvas.resize_cb = function()
+    self.canvas.action = function()
         self:_on_canvas_resize()
     end
     self.canvas.map_cb = function()
@@ -145,7 +145,7 @@ function asset_view:_on_canvas_map()
         mapiup(input_queue, self.canvas)
         input_queue.world = "normal_world"
 		local hwnd = iup.GetAttributeData(self.canvas, "HWND")
-		fbmgr.bind_native_handle("assetview", hwnd)
+		fbmgr.bind_native_handle("asset_view", hwnd)
         local fb_width, fb_height = self._canvas_size[1],self._canvas_size[2]
         print("self.canvas:DrawGetSize()",fb_width,fb_height)
         
@@ -194,10 +194,10 @@ function asset_view:_on_canvas_map()
 		end
 
 		local function default_primitive_filter(viewtag)
-			{
+			return {
 				view_tag = viewtag,
 				filter_tag = "can_render",
-			},
+			}
 		end
 
 		local camera_eid_3d = self.world:create_entity {
@@ -207,6 +207,7 @@ function asset_view:_on_canvas_map()
 				wnd_frame_buffer = {
 					wndhandle = {
 						name = "asset_view",
+                        
 					},
 					w = fb_width,
 					h = fb_height,
@@ -268,15 +269,19 @@ function asset_view:_on_canvas_map()
         self.texture_id = component_util.create_quad_entity(self.world, texture_tbl, "asset_viewtag_2d")
 
         -----create empty camera
-        local camera_eid_empty = render_util.create_general_render_queue(
-            self.world,
-            {w=fb_width, h=fb_height},
-            "asset_viewtag_empty",
-            self.view_id
-        )
+        local camera_eid_empty = self.world:create_entity {
+			camera = default_camera(),
+			render_target = {
+				viewport = default_viewport(),
+			},
+			viewid = self.view_id,
+			primitive_filter = default_primitive_filter "asset_viewtag_empty",
+			show_light = false,
+			name = "camera_empty",
+			visible = true,
+		}
+
         -- self.world:add_component(camera_eid_3d, "camera_control", true)
-        self.world[camera_eid_empty].name = "camera_empty"
-        self.world[camera_eid_empty].visible = true
 
         self.camera_id_dic = {["2d"] = camera_eid_2d, 
                             ["3d"] = camera_eid_3d, 

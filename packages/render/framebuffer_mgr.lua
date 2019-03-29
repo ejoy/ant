@@ -15,7 +15,7 @@ end
 
 local nativehandles = {}
 function mgr.bind_native_handle(name, handle)
-	assert(type(handle) == "lightuserdata")
+	assert(type(handle) == "userdata",type(handle))
 	if nativehandles[name] then
 		error(string.format("%s have been binded!", name))
 	end
