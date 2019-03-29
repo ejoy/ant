@@ -9,10 +9,12 @@ local scene = import_package "ant.scene".util
 local editor = import_package "ant.editor"
 local mapiup = editor.mapiup
 local task = editor.task
-local camera_util = import_package"ant.render".camera
-local render_util = import_package"ant.render".util
-local component_util = import_package"ant.render".components
-local view_id_mgr = import_package"ant.render".viewidmgr
+local renderpkg 	= import_package"ant.render"
+local camera_util 	= renderpkg.camera
+local render_util 	= renderpkg.util
+local component_util= renderpkg.components
+local view_id_mgr 	= renderpkg.viewidmgr
+local fbmgr 		= renderpkg.renderpkg
 local ms = import_package"ant.math".stack
 local math3d = require "math3d"
 
@@ -142,46 +144,113 @@ function asset_view:_on_canvas_map()
         local input_queue = inputmgr.queue()
         mapiup(input_queue, self.canvas)
         input_queue.world = "normal_world"
-        local hwnd = iup.GetAttributeData(self.canvas, "HWND")
+		local hwnd = iup.GetAttributeData(self.canvas, "HWND")
+		fbmgr.bind_native_handle("assetview", hwnd)
         local fb_width, fb_height = self._canvas_size[1],self._canvas_size[2]
         print("self.canvas:DrawGetSize()",fb_width,fb_height)
         
-        self.world = scene.start_new_world(input_queue, fb_width, fb_height, packages, systems)
-        self:_create_frame_buffer(hwnd,fb_width,fb_height,self.view_id)
+		self.world = scene.start_new_world(input_queue, fb_width, fb_height, packages, systems)		
+		--self:_create_frame_buffer(hwnd,fb_width,fb_height,self.view_id)
+		
+        -- -----create 3d camera
+        -- local camera_eid_3d = render_util.create_general_render_queue(
+        --     self.world,
+        --     {w=fb_width, h=fb_height},
+        --     "asset_viewtag_3d",
+        --     self.view_id
+        -- )
+        -- -- self.world:add_component(camera_eid_3d, "camera_control", true)
+        -- self.world:add_component(camera_eid_3d, "show_light", true)
+        -- self.world:add_component(camera_eid_3d, "show_grid", true)
+        -- self.world[camera_eid_3d].testname = "camera3d"
+		-- self.world[camera_eid_3d].visible = false
+		
+		local default_viewdir = { -25, -45, 0, 0 }
+		local default_eyepos = { 5, 5, -5, 1 }
 
-        -----create 3d camera
-        local camera_eid_3d = render_util.create_general_render_queue(
-            self.world,
-            {w=fb_width, h=fb_height},
-            "asset_viewtag_3d",
-            self.view_id
-        )
-        -- self.world:add_component(camera_eid_3d, "camera_control", true)
-        self.world:add_component(camera_eid_3d, "show_light", true)
-        self.world:add_component(camera_eid_3d, "show_grid", true)
-        self.world[camera_eid_3d].testname = "camera3d"
-        self.world[camera_eid_3d].visible = false
+		local function default_camera()
+			return {
+				type = "assetview",
+				eyepos = default_eyepos,
+				viewdir = default_viewdir,
+				updir = {0, 1, 0, 0},
+				frustum = {
+					type = "mat",
+					n = 0.1, f = 100000,
+					fov = 60, aspect = fb_width / fb_height,
+				},
+			}
+		end
+
+		local function default_viewport()
+			return {
+				rect = {x=0,y=0,w=fb_width,h=fb_height},
+				clear_state = {
+					color = 0x303030ff,
+					depth = 1,
+					stencil = 0,
+				},
+			}
+		end
+
+		local function default_primitive_filter(viewtag)
+			{
+				view_tag = viewtag,
+				filter_tag = "can_render",
+			},
+		end
+
+		local camera_eid_3d = self.world:create_entity {
+			camera = default_camera(),
+			render_target = {
+				viewport = default_viewport(),
+				wnd_frame_buffer = {
+					wndhandle = {
+						name = "asset_view",
+					},
+					w = fb_width,
+					h = fb_height,
+				},
+			},
+			viewid = self.view_id,
+			primitive_filter = default_primitive_filter "asset_viewtag_3d",
+			name = "camera3d",
+			show_light = true,
+			show_grid = true,
+			visible = false,
+		}
 
         -----create 2d camera
-        local camera_eid_2d = render_util.create_general_render_queue(
-            self.world,
-            {w=fb_width, h=fb_height},
-            "asset_viewtag_2d",
-            self.view_id
-        )
+        -- local camera_eid_2d = render_util.create_general_render_queue(
+        --     self.world,
+        --     {w=fb_width, h=fb_height},
+        --     "asset_viewtag_2d",
+        --     self.view_id
+		-- )
+		local camera_eid_2d = self.world:create_entity {
+			camera = default_camera(),
+			render_target = {
+				viewport = default_viewport(),
+			},
+			viewid = self.view_id,
+			primitive_filter = default_primitive_filter "asset_viewtag_3d",
+			show_light = true,
+			name = "camera2d",
+			visible = false,
+		}
 
         -- self.world:add_component(
         --     camera_eid_2d,
         --     "camera_control",
         --     {move = false, scale = true}
         -- )
-        self.world:add_component(camera_eid_2d, "show_light", true)
+        -- self.world:add_component(camera_eid_2d, "show_light", true)
+        -- local camera_2d = self.world[camera_eid_2d]
+        -- camera_2d.testname = "camera2d"
+        -- camera_2d.visible = false
+        -- print_a(">.>>>>", camera_2d.camera_control)
+        -- -- camera_2d.camera_control.move = false
         local camera_2d = self.world[camera_eid_2d]
-        camera_2d.testname = "camera2d"
-        camera_2d.visible = false
-        print_a(">.>>>>", camera_2d.camera_control)
-        -- camera_2d.camera_control.move = false
-        
         camera_reset(
             camera_2d.camera,
             camera_init_config["2d"]
@@ -206,7 +275,7 @@ function asset_view:_on_canvas_map()
             self.view_id
         )
         -- self.world:add_component(camera_eid_3d, "camera_control", true)
-        self.world[camera_eid_empty].testname = "camera_empty"
+        self.world[camera_eid_empty].name = "camera_empty"
         self.world[camera_eid_empty].visible = true
 
         self.camera_id_dic = {["2d"] = camera_eid_2d, 

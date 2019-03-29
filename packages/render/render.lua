@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 
 local bgfx = require "bgfx"
-local viewidmgr = require "viewid_mgr"
 local fbmgr = require "framebuffer_mgr"
 
 local ms = import_package "ant.math".stack
@@ -27,39 +26,60 @@ function renderbuffer:init()
 	return self
 end
 
+local whandle = ecs.component "wnd_handle"
+	.name "string" ("")
+
+function whandle:init()
+	local name = assert(self.name)
+	self.handle = fbmgr.get_native_handle(name)
+	return self
+end
+
+local nfb = ecs.component "wnd_frame_buffer"
+	.wndhandle "wnd_handle"
+	.w "int" (1)
+	.h "int" (1)
+	["opt"].color_format "string" ("")
+	["opt"].depth_format "string" ("")
+
+function nfb:init()
+	local w = self.wndhandle
+	self.handle = bgfx.create_frame_buffer(assert(w.handle), self.w, self.h, self.color_format, self.depth_format)
+end
+
 local fb = ecs.component "frame_buffer" 
-	["opt"].render_buffers "render_buffer[]"
+	.render_buffers "render_buffer[]"
 	["opt"].manager_buffer "boolean" (true)
-	["opt"].ref_viewid "viewid"
+	
 
 function fb:init()
-	local refvid = self.ref_viewid
-	if refvid then
-		local fb = fbmgr.get(refvid)
-		self.frame_buffer = fb
-	else
-		local rbs = assert(self.render_buffers)
-		if #rbs > 0 then
-			local handles = {}
-			for _, rb in ipairs(rbs) do
-				handles[#handles+1] = rb.handle
-			end
-			self.handle = bgfx.create_frame_buffer(handles, self.manager_buffer or true)
-		end
+	local handles = {}
+	for _, rb in ipairs(self.render_buffers) do
+		handles[#handles+1] = rb.handle
 	end
+	assert(#handles > 0)
+	self.handle = bgfx.create_frame_buffer(handles, self.manager_buffer or true)
 	return self
 end
 
 local rt = ecs.component "render_target" {depend = "viewid"}
 	.viewport "viewport"
 	["opt"].frame_buffer "frame_buffer"
+	["opt"].wnd_frame_buffer "wnd_frame_buffer"	
 
 function rt:postinit(e)
-	local fb = self.frame_buffer
+	local viewid = e.viewid
+	local fb = self.frame_buffer or self.wnd_frame_buffer
 	if fb then
-		local viewid = e.viewid
 		bgfx.set_view_frame_buffer(viewid, assert(fb.handle))
 		fbmgr.bind(viewid, fb)
+	else
+		local fb = fbmgr.get(viewid)
+		if fb.wndhandle then
+			self.wnd_frame_buffer = fb
+		else
+			self.frame_buffer = fb
+		end
 	end
 	return self
 end

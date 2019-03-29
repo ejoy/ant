@@ -148,21 +148,6 @@ function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_
 		primitive_filter = {
 			view_tag = view_tag,
 			filter_tag = "can_render",
-			-- result = {
-			-- 	case_shadow = {},
-			-- 	translcuent = {},
-			-- 	opaque = {}
-			-- },
-			-- render_properties = {
-			-- 	lighting = {
-			-- 		uniforms = {},
-			-- 		textures = {},
-			-- 	},
-			-- 	shadow = {
-			-- 		uniforms = {},
-			-- 		textures = {},
-			-- 	}
-			-- }
 		},
 		main_queue = view_tag == "main_view" and true or nil,
 		visible = true,
@@ -266,17 +251,17 @@ function util.default_surface_type()
 	}
 end
 
-function util.create_frame_buffer(world,hwnd,w,h,viewid)
-	local fb_handle = bgfx.create_frame_buffer(hwnd, w, h)
-	bgfx.set_view_frame_buffer(viewid, assert(fb_handle))
-	local frame_buffer = {
-		render_buffers = {},
-		viewid = viewid,
-	}
-	local frame_buffer_com = world:create_component("frame_buffer",frame_buffer)
-	frame_buffer_com.handle = fb_handle
-	fbmgr.bind(viewid,frame_buffer_com)
-end
+-- function util.create_frame_buffer(world,hwnd,w,h,viewid)
+-- 	local fb_handle = bgfx.create_frame_buffer(hwnd, w, h)
+-- 	bgfx.set_view_frame_buffer(viewid, assert(fb_handle))
+-- 	local frame_buffer = {
+-- 		render_buffers = {},
+-- 		viewid = viewid,
+-- 	}
+-- 	local frame_buffer_com = world:create_component("frame_buffer",frame_buffer)
+-- 	frame_buffer_com.handle = fb_handle
+-- 	fbmgr.bind(viewid,frame_buffer_com)
+-- end
 
 --frame_buffer:component
 function util.create_general_render_queue(world,viewsize,view_tag,viewid)

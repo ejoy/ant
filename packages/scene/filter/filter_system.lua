@@ -66,7 +66,7 @@ function primitive_filter_sys:update()
 
 		filterutil.load_lighting_properties(world, filter)
 		if e.shadow == nil then
-			filterutil.load_shadow_properties(world, filter)
+			--filterutil.load_shadow_properties(world, filter)
 		end
 	end
 end
