@@ -84,13 +84,15 @@ local function replace_material(result, material)
 end
 
 function pickup_material_sys:update()
-	local e = world:first_entity "pickup"	
-	local filter = e.primitive_filter
+	local e = world:first_entity "pickup"
+	if e then
+		local filter = e.primitive_filter
 
-	local materials = e.pickup.materials
-	local result = filter.result
-	replace_material(result.opaque, materials.opaque)
-	replace_material(filter.translucent, result.translucent)
+		local materials = e.pickup.materials
+		local result = filter.result
+		replace_material(result.opaque, materials.opaque)
+		replace_material(filter.translucent, result.translucent)
+	end
 end
 
 -- pickup_system

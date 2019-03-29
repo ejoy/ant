@@ -13,7 +13,7 @@ ecs.component "shadow"
 	.shadowmap_height "int" (1024)
 
 local sm = ecs.system "shadow_maker11"
-sm.depend "primitive_filter"
+sm.depend "primitive_filter_system"
 sm.dependby "render_system"
 
 function sm:init()
@@ -26,7 +26,7 @@ function sm:init()
 	}
 	sampleflags = sampleflags .. "c0"	--border color=0
 	local sm_width, sm_height = 1024, 1024
-
+	local half_sm_width, half_sm_height = sm_width * 0.5, sm_height * 0.5
 	world:create_entity {
 		shadow = {
 			material = {
@@ -39,16 +39,17 @@ function sm:init()
 		viewid = viewidmgr.get "shadow_maker",
 		primitive_filter = {
 			view_tag = "main_view",
-			fitler_tag = "can_cast",
+			filter_tag = "can_cast",
 		},
 		camera = {
 			type = "shadow",
 			eyepos = {0, 0, 0, 1},
 			viewdir = {0, 0, 1, 0},
+			updir = {0, 1, 0, 0},
 			frustum = {
 				ortho = true,
-				l = -1, r = -1, 
-				t = 1, b = -1,
+				l = -half_sm_width, r = half_sm_width,
+				t = half_sm_height, b = -half_sm_height,
 				n = 0.1, f = 10000,
 			},
 		},
@@ -61,10 +62,10 @@ function sm:init()
 					stencil = 0,
 				}
 			},
-			framebuffer = {
+			frame_buffer = {
 				render_buffers = {
 					{
-						format = "R32",
+						format = "R32F",
 						w=sm_width,
 						h=sm_height,
 						layers=1,
