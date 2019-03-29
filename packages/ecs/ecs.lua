@@ -98,6 +98,7 @@ function world:create_entity(t)
 	for c, args in sortcomponent(self, t) do
 		entity[c] = self:create_component(c, args)
 		self:register_component(eid, c)
+		self:finish_component(entity, c)
 	end
 	return eid
 end
