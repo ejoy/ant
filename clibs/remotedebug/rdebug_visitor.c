@@ -478,7 +478,7 @@ lclient_unwatch(lua_State *L) {
 	if (lua_rawgetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH) == LUA_TNIL) {
 		return 0;
 	}
-	luaL_unref(hL, -1, ref);
+	luaL_unref(hL, -1, (int)ref);
 	return 0;
 }
 

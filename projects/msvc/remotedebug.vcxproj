@@ -19,16 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\remotedebug\event_free.cpp" />
-    <ClCompile Include="..\..\clibs\remotedebug\hookmgr.cpp" />
-    <ClCompile Include="..\..\clibs\remotedebug\remotedebug.c" />
-    <ClCompile Include="..\..\clibs\remotedebug\thunk.cpp" />
-    <ClCompile Include="..\..\clibs\remotedebug\visitor.c" />
+    <ClInclude Include="..\..\clibs\remotedebug\rdebug_debugvar.h" />
+    <ClInclude Include="..\..\clibs\remotedebug\rdebug_eventfree.h" />
+    <ClInclude Include="..\..\clibs\remotedebug\thunk.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\clibs\remotedebug\debugvar.h" />
-    <ClInclude Include="..\..\clibs\remotedebug\event_free.h" />
-    <ClInclude Include="..\..\clibs\remotedebug\thunk.h" />
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_eventfree.cpp" />
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_hookmgr.cpp" />
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_host.c" />
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_visitor.c" />
+    <ClCompile Include="..\..\clibs\remotedebug\thunk.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\clibs\remotedebug\thunk_linux_amd64.inl" />
@@ -118,6 +118,7 @@
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -135,6 +136,7 @@
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -154,6 +156,7 @@
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -175,6 +178,7 @@
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
