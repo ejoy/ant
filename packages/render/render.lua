@@ -45,6 +45,7 @@ local nfb = ecs.component "wnd_frame_buffer"
 function nfb:init()
 	local w = self.wndhandle
 	self.handle = bgfx.create_frame_buffer(assert(w.handle), self.w, self.h, self.color_format, self.depth_format)
+	return self
 end
 
 local fb = ecs.component "frame_buffer" 
@@ -65,16 +66,16 @@ end
 local rt = ecs.component "render_target" {depend = "viewid"}
 	.viewport "viewport"
 	["opt"].frame_buffer "frame_buffer"
-	["opt"].wnd_frame_buffer "wnd_frame_buffer"	
+	["opt"].wnd_frame_buffer "wnd_frame_buffer"
 
 function rt:postinit(e)
 	local viewid = e.viewid
 	local fb = self.frame_buffer or self.wnd_frame_buffer
 	if fb then
-		bgfx.set_view_frame_buffer(viewid, assert(fb.handle))
 		fbmgr.bind(viewid, fb)
+		bgfx.set_view_frame_buffer(viewid, assert(fb.handle))
 	else
-		local fb = fbmgr.get(viewid)
+		fb = fbmgr.get(viewid)
 		if fb then
 			if fb.wndhandle then
 				self.wnd_frame_buffer = fb
