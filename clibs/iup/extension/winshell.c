@@ -101,9 +101,8 @@ init_imagelist(int flag) {
 #if !defined(_MSC_VER)
 		// For MinGW:
 		static const IID iID_IImageList = { 0x46eb5926, 0x582e, 0x4017, {0x9f, 0xdf, 0xe8, 0x99, 0x8d, 0xaa, 0x9, 0x50} };
-		re = SHGetImageList(flag, (&iID_IImageList), (void**)&imageList);
-#else 
-		re = SHGetImageList(flag, IID_IImageList, (void**)&imageList);
+#else
+		re = SHGetImageList(flag, (&IID_IImageList), (void**)&imageList);
 #endif
 		if (re!= S_OK)
 			return FALSE;

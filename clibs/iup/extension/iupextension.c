@@ -48,12 +48,8 @@ licon_with_size(lua_State *L) {
 	const char *filename = luaL_checkstring(L, 1);
 	TCHAR * tfilename = iupwinStrToSystemFilename(filename);
 	struct icon_info info;
-	int size;
-	if (lua_isnoneornil(L, 2)) {
-		size = 1;
-	} else {
-		size = luaL_checkinteger(L, 2);
-	}
+	const int size = lua_isnoneornil(L, 2) ? 1 : (int)luaL_checkinteger(L, 2);
+	
 	void * mem = shell_geticon_with_size(tfilename, &info, size);
 	if (mem == NULL)
 		return 0;
