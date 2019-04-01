@@ -16,10 +16,6 @@ extern "C" {
 #include <array>
 #include <cstring>
 
-#ifndef M_PI
-#define M_PI       3.14159265358979323846
-#endif
-
 extern bool default_homogeneous_depth();
 extern glm::vec3 to_viewdir(const glm::vec3 &e);
 

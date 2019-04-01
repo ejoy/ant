@@ -34,7 +34,7 @@ function sm:init()
 			},
 			shaodwmap_width = sm_width,
 			shadowmap_height = sm_height,
-			shadow_distance = 10000,
+			shadow_distance = 10,
 		},
 		viewid = viewidmgr.get "shadow_maker",
 		primitive_filter = {
@@ -48,8 +48,8 @@ function sm:init()
 			updir = {0, 1, 0, 0},
 			frustum = {
 				ortho = true,
-				l = -half_sm_width, r = half_sm_width,
-				t = half_sm_height, b = -half_sm_height,
+				l = -5, r = 5,
+				t = 5, b = -5,
 				n = 0.1, f = 10000,
 			},
 		},
@@ -80,7 +80,7 @@ end
 
 local function update_shadow_camera(camera, directionallight, distance)
 	ms(camera.viewdir, directionallight.rotation, "din=")
-	ms(camera.eyepos, camera.viewdir, {distance}, "*=")
+	ms(camera.eyepos, {0, 0, 0, 1}, camera.viewdir, {distance}, "*+=")
 end
 
 function sm:update()

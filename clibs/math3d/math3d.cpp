@@ -462,18 +462,16 @@ push_srt_from_table(lua_State *L, struct lastack *LS, int index) {
 static int
 get_mat_type(lua_State *L, int index) {
 	const int ret_type = lua_getfield(L, index, "ortho");
-	lua_pop(L, 1);
-	if (ret_type == LUA_TNIL || ret_type == LUA_TNONE) {
-		return MAT_PERSPECTIVE;
+	
+	int mat_type = MAT_PERSPECTIVE;
+	if (ret_type != LUA_TNIL && ret_type != LUA_TNONE) {
+		if (ret_type != LUA_TBOOLEAN) {
+			luaL_error(L, "ortho field must be boolean type, get %d", ret_type);
+		}
+
+		mat_type = lua_toboolean(L, -1) != 0 ? MAT_ORTHO : MAT_PERSPECTIVE;
 	}
-
-	if (ret_type != LUA_TBOOLEAN) {
-		luaL_error(L, "ortho field must be boolean type, get %d", ret_type);
-	}
-
-	const int mat_type = lua_toboolean(L, -1) != 0 ? MAT_ORTHO : MAT_PERSPECTIVE;
 	lua_pop(L, 1);
-
 	return mat_type;
 }
 
@@ -2348,7 +2346,7 @@ get_vec_value(lua_State *L, struct lastack *LS, int index) {
 		v[3] = 0;
 		const size_t len = lua_rawlen(L, index);
 		
-		for (size_t ii = 0; ii < len; ++ii) {
+		for (int ii = 0; ii < len; ++ii) {
 			lua_geti(L, index, ii + 1);
 			v[ii] = lua_tonumber(L, -1);
 			lua_pop(L, 1);
