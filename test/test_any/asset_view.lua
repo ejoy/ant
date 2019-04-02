@@ -35,7 +35,7 @@ if __ANT_RUNTIME__ then
     return
 end
 
-local DEFAULT_CANVAS_SIZE = 300
+local DEFAULT_CANVAS_SIZE = 600
 
 local CAM_CONTROL_CONFIG = {
     ["2d"] = {move = false,scale = true},
@@ -106,6 +106,9 @@ function asset_view:_init()
     self.canvas.action = function()
         self:_on_canvas_resize()
     end
+    -- self.canvas.resize_cb = function()
+    --     self:_on_canvas_resize()
+    -- end
     self.canvas.map_cb = function()
         self:_on_canvas_map()
         self:_on_canvas_resize()
@@ -117,6 +120,7 @@ function asset_view:_init()
 end
 
 function asset_view:_on_canvas_resize()
+    local last_x,last_y = self._canvas_size[1],self._canvas_size[2]
     if not self.frame.clientsize then return end
     --make sure canvas.width == height and expand to biggest
     local w,h = string.match(self.frame.clientsize,"(%d*)x(%d*)")
@@ -137,6 +141,9 @@ function asset_view:_on_canvas_resize()
         self.hbox[2][3]["RASTERSIZE"] = string.format("%dx%d",w,fill_h-half_h)
     end
     self._canvas_size = {w,h}
+    if last_x~=w or last_y ~=h then
+        iup.Redraw(self.canvas,1)
+    end
 end
 
 function asset_view:_on_canvas_map()
@@ -366,6 +373,7 @@ function asset_view:show_camera(value)
     )
     new_camera.visible = true
     camera_reset(new_camera.camera, camera_init_config[value])
+    self:_on_canvas_resize()
 end
 
 function asset_view:clear_cur_models()
