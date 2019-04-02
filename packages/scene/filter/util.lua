@@ -19,6 +19,7 @@ local function add_directional_light_properties(world, uniform_properties)
 		directional_lightdir = {name="Light Direction", type="v4", value={}},
 		directional_color = {name="Light Color", type="color", value={}},
 		directional_intensity = {name="Light Intensity", type="v4",value={}},
+		directional_viewproj = {name = "Light View Project Matrix", type="m4", value={}},
 	}
 
 	for _, l_eid in world:each("directional_light") do
@@ -29,6 +30,7 @@ local function add_directional_light_properties(world, uniform_properties)
 		table.insert(dlight_info.directional_lightdir.value, ms:ref "vector" (ms(dlight.rotation, "diP")))
 		table.insert(dlight_info.directional_color.value, l.color)
 		table.insert(dlight_info.directional_intensity.value, {l.intensity, 0.28, 0, 0})
+		table.insert(dlight_info.directional_viewproj, )
 	end
 
 	
@@ -87,10 +89,13 @@ function util.load_shadow_properties(world, filter)
 	local shadow_queue = world:first_entity "shadow"
 
 	if shadow_queue then
-		local shadowmap = shadow_queue.render_target.frame_buffer.render_buffers[1].handle
-		shadow_properties.textures = {
-			s_shadowmap0 = {type="texture", stage=4, name="shadowmap", handle=shadowmap}
-		}
+		local textures = shadow_properties.textures
+		local sm_stage = 4
+		for idx, rb in ipairs(shadow_queue.render_target.frame_buffer.render_buffers) do
+			local shadowmap = rb.handle			
+			local samplername = "s_shadowmap" .. (idx - 1)
+			textures[samplername] = {type="texture", stage=sm_stage+idx-1, name="shadowmap0", handle=shadowmap}
+		end
 	end
 end
 

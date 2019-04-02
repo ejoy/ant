@@ -139,6 +139,7 @@ function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_
 					color = 0x303030ff,
 					depth = 1,
 					stencil = 0,
+					clear = "all",
 				},
 				rect = {
 					x = 0, y = 0,
@@ -185,6 +186,9 @@ local sample_types = {
 	U="u", V="v", W="w", 
 	MIN="-", MAG="+", MIP="*",
 
+	COMPARE="c",
+	BOARD_COLOR="c",
+
 	RT = "r", 
 	RT_READWRITE = "r", 
 	RT_MSAA="r",
@@ -199,7 +203,17 @@ local sample_types = {
 local sample_value = {
 	CLAMP="c", BORDER="b", MIRROR="",	--default
 	POINT="p", ANISOTROPIC="a", LINEAR="", --default,
-	
+
+	-- compare
+	COMPARE_LESS = '<',
+	COMPARE_LEQUAL = '[',
+	COMPARE_EQUAL = '=',
+	COMPARE_GEQUAL = ']',
+	COMPARE_GREATER = '>',
+	COMPARE_NOTEQUAL = '!',
+	COMPARE_NEVER = '-',
+	COMPARE_ALWAYS = '+',
+
 	-- RT
 	RT_ON='t', 
 	RT_READ="", RT_WRITE="w",
@@ -219,21 +233,25 @@ function util.generate_sampler_flag(sampler)
 	if sampler == nil then
 		return nil
 	end
-	local flag = ""	
+	local flag = ""
 
 	for k, v in pairs(sampler) do
-		local value = sample_value[v]
-		if value == nil then
-			error("not support data, sample value : %s", v)
-		end
-
-		if #value ~= 0 then
-			local type = sample_types[k]
-			if type == nil then
-				error("not support data, sample type : %s", k)
+		if k == "BOARD_COLOR" then
+			flag = flag .. sample_types[k] .. v
+		else
+			local value = sample_value[v]
+			if value == nil then
+				error("not support data, sample value : %s", v)
 			end
-			
-			flag = flag .. type .. value
+	
+			if #value ~= 0 then
+				local type = sample_types[k]
+				if type == nil then
+					error("not support data, sample type : %s", k)
+				end
+				
+				flag = flag .. type .. value
+			end
 		end
 	end
 
@@ -303,63 +321,6 @@ function util.identify_transform()
 		r = {0, 0, 0, 0},
 		t = {0, 0, 0, 1},
 	}
-end
-
-function util.quad_mesh(rect)
-	local decl = bgfx.vertex_decl {
-		{ "POSITION", 3, "FLOAT" },
-		{ "TEXCOORD0", 2, "FLOAT"},
-	}
-
-	local depth = 0
-
-	local vbhandle = bgfx.create_vertex_buffer(
-		{
-			"fffff",
-			rect.x, 		 rect.y, 			depth, 	0, 1,	--bottom left
-			rect.x, 		 rect.y + rect.h, 	depth, 	0, 0,	--top left
-			rect.x + rect.w, rect.y, 			depth, 	1, 1,	--bottom right
-			rect.x + rect.w, rect.y + rect.h, 	depth, 	1, 0,	--top right
-		}, decl
-	)
-
-	return {
-		handle = {
-			groups = {
-				{
-					decls = {
-						decl
-					},
-					vb = {
-						handles = {
-							vbhandle,
-						}
-					},
-				}
-			}
-		}
-	}
-end
-
-function util.create_shadow_quad_entity(world, rect)
-	local eid = world:create_entity {
-		transform = util.identify_transform(),
-		mesh = {},
-		material = {
-			content = {
-				{
-					ref_path = fs.path "//ant.resources/depiction/shadowmap_quad.material",
-				}
-			}
-		},
-		can_render = true,
-		main_view = true,
-		name = "quad",
-	}
-
-	local e = world[eid]
-	e.mesh.assetinfo = util.quad_mesh(rect)
-	return eid
 end
 
 return util

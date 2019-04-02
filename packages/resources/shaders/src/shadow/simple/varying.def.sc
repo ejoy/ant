@@ -16,8 +16,7 @@ vec3 v_normal	 : TEXCOORD3;
 vec3 v_tangent	 : TEXCOORD4;
 vec3 v_bitangent : TEXCOORD5;
 
-vec4 v_positionInWS:TEXCOORD6;
-vec4 v_depth	: TEXCOORD6;
+vec4 v_shadowcoord : TEXCOORD6;
 
 vec4 v_texcoord4 : TEXCOORD8;
 vec4 v_texcoord5 : TEXCOORD9;

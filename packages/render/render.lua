@@ -90,21 +90,15 @@ end
 local cs = ecs.component "clear_state"
     .color "int" (0x303030ff)
     .depth "int" (1)
-    .stencil "int" (0)
-
-function cs:init()
-    self.clear_color = true
-    self.clear_depth = true
-	self.clear_stencil = true
-	return self
-end
+	.stencil "int" (0)
+	.clear "string" ("all")
 
 ecs.component "rect"
 	.x "real" (0)
 	.y "real" (0)
 	.w "real" (1)
 	.h "real" (1)
-local vp = 
+
 ecs.component "viewport"
 	.clear_state "clear_state"
 	.rect "rect"
@@ -123,20 +117,20 @@ rendersys.depend "primitive_filter_system"
 rendersys.dependby "end_frame"
 
 local function update_viewport(viewid, viewport)
-	local clear_state = viewport.clear_state	
-	local cs = clear_state
-	local state = ''
-	if cs.clear_color then
-		state = state .. "C"
-	end
-	if cs.clear_depth then
-		state = state .. "D"
-	end
+	local clear_what = viewport.clear_state.clear
+	local statemap = {
+		all = "CDS",
+		color = "C",
+		depth = "D",
+		stencil = "S",
+		depthstencil = "DS",
+		DS = "DS",
+		C = "C",
+		D = "D",
+	}
 
-	if cs.clear_stencil then
-		state = state .. "S"
-	end
-	if state ~= '' then
+	local state = statemap[clear_what]
+	if state then
 		bgfx.set_view_clear(viewid, state, cs.color, cs.depth, cs.stencil)
 	end
 

@@ -189,6 +189,7 @@ function asset_view:_on_canvas_map()
 					color = 0x303030ff,
 					depth = 1,
 					stencil = 0,
+					clear = "all",
 				},
 			}
 		end

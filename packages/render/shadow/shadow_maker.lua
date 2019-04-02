@@ -16,15 +16,7 @@ local sm = ecs.system "shadow_maker11"
 sm.depend "primitive_filter_system"
 sm.dependby "render_system"
 
-function sm:init()
-	local sampleflags = renderutil.generate_sampler_flag{
-		RT="RT_ON",
-		MIN="LINEAR",
-		MAG="LINEAR",
-		U="CLAMP",
-		V="CLAMP",
-	}
-	sampleflags = sampleflags .. "c0"	--border color=0
+function sm:init()	
 	local sm_width, sm_height = 1024, 1024
 	--local half_sm_width, half_sm_height = sm_width * 0.5, sm_height * 0.5
 	world:create_entity {
@@ -60,16 +52,25 @@ function sm:init()
 					color = 0,
 					depth = 1,
 					stencil = 0,
+					clear = "depth",
 				}
 			},
 			frame_buffer = {
 				render_buffers = {
 					{
-						format = "RGBA8",
+						format = "D16F",
 						w=sm_width,
 						h=sm_height,
 						layers=1,
-						flags=sampleflags,
+						flags=renderutil.generate_sampler_flag{
+							RT="RT_ON",
+							MIN="LINEAR",
+							MAG="LINEAR",
+							U="CLAMP",
+							V="CLAMP",
+							COMPARE="COMPARE_LEQUAL",
+							BOARD_COLOR="0",
+						},
 					}
 				}
 			}

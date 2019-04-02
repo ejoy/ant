@@ -3,5 +3,5 @@ $input v_depth
 
 void main()
 {
-	gl_FragColor = v_depth;
+	gl_FragColor = vec4_splat(0.0);
 }

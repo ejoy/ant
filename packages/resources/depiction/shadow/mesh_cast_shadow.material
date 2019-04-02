@@ -4,10 +4,8 @@ shader = {
 }
 
 state = {
-	WRITE_MASK = "RGBA",
+	WRITE_MASK = "Z",
 	ALPHA_REF = 0,
 	CULL = "CCW",
-	--MSAA = true,
-	DEPTH_TEST = "ALWAYS",
-	--PT = "TRISTRIP"
+	DEPTH_TEST = "LESS",
 }

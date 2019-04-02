@@ -207,6 +207,7 @@ local function add_pick_entity()
 					color = 0,
 					depth = 1,
 					stencil = 0,
+					clear = "all"
 				},
 			},
 			frame_buffer = {

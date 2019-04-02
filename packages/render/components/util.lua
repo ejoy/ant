@@ -267,7 +267,7 @@ function util.create_plane_entity(world, color, size, pos, name)
 		material = {
 			content = {
 				{
-					ref_path = fs.path "//ant.resources/depiction/simple_mesh.material",
+					ref_path = fs.path "//ant.resources/depiction/mesh_receive_shadow.material",
 					properties = {
 						uniforms = {
 							u_color = {type="color", name="color", value=color}
@@ -283,8 +283,58 @@ function util.create_plane_entity(world, color, size, pos, name)
 	}
 end
 
+local quaddecl
+local function get_quaddecl()
+	if quaddecl == nil then
+		quaddecl = bgfx.vertex_decl {
+			{ "POSITION", 3, "FLOAT" },
+			{ "TEXCOORD0", 2, "FLOAT"},
+		}
+	end
 
-function util.create_quad_entity(world, texture_tbl, view_tag)
+	return quaddecl
+end
+
+function util.quad_mesh(rect)
+	local decl = get_quaddecl()
+	local depth = 0
+
+	local vbhandle = bgfx.create_vertex_buffer(
+		{
+			"fffff",
+			rect.x, 		 rect.y, 			depth, 	0, 1,	--bottom left
+			rect.x, 		 rect.y + rect.h, 	depth, 	0, 0,	--top left
+			rect.x + rect.w, rect.y, 			depth, 	1, 1,	--bottom right
+			rect.x + rect.w, rect.y + rect.h, 	depth, 	1, 0,	--top right
+		}, decl)
+
+	return {handle = {groups = {{
+					decls = {decl},
+					vb = {handles = {vbhandle,}
+					},
+	}}}}
+end
+
+function util.create_shadow_quad_entity(world, rect, name)
+	local eid = world:create_entity {
+		transform = util.identify_transform(),
+		mesh = {},
+		material = {
+			content = {{
+				ref_path = fs.path "//ant.resources/depiction/shadowmap_quad.material",
+			}}
+		},
+		can_render = true,
+		main_view = true,
+		name = name or "quad",
+	}
+
+	local e = world[eid]
+	e.mesh.assetinfo = util.quad_mesh(rect)
+	return eid
+end
+
+function util.create_quad_entity(world, texture_tbl, view_tag, name)
     local quadid = world:create_entity{
         transform = {           
             s = {1, 1, 1, 0},
@@ -315,13 +365,9 @@ function util.create_quad_entity(world, texture_tbl, view_tag)
     local gvb = {"fffff"}
     for _, v in ipairs(vb) do for _, vv in ipairs(v) do table.insert(gvb, vv) end end
     local ib = { 0, 1, 2, 3}
-    local vdecl = bgfx.vertex_decl{{"POSITION", 3, "FLOAT"}, {"TEXCOORD0", 2, "FLOAT"}}
+    local vdecl = get_quaddecl()
     quad.mesh.assetinfo = util.create_mesh_handle(vdecl, gvb, ib)
     return quadid
 end
-
-
-
-
 
 return util
