@@ -5,6 +5,7 @@ local source = require 'debugger.backend.worker.source'
 local breakpoint = require 'debugger.backend.worker.breakpoint'
 local evaluate = require 'debugger.backend.worker.evaluate'
 local traceback = require 'debugger.backend.worker.traceback'
+local stdout = require 'debugger.backend.worker.stdout'
 local ev = require 'debugger.event'
 local hookmgr = require 'remotedebug.hookmgr'
 local thread = require 'thread'
@@ -77,7 +78,7 @@ end)
 --    for i = 1, n do
 --        t[i] = tostring(select(i, ...))
 --    end
---    ev.emit('output', 'stdout', table.concat(t, '\t')..'\n')
+--    ev.emit('output', 'stderr', table.concat(t, '\t')..'\n')
 --end
 
 function CMD.initializing(pkg)
@@ -391,7 +392,7 @@ local function getEventArgsRaw(i)
 end
 
 local function setEventRet(v)
-    local name, value = rdebug.getlocal(1, 3)
+    local name, value = rdebug.getlocal(1, 2)
     if name ~= nil then
         return rdebug.assign(value, v)
     end
@@ -439,13 +440,13 @@ function event.print()
     for _, arg in pairsEventArgs() do
         res[#res + 1] = tostring(rdebug.value(arg))
     end
-    res = table.concat(res, '\t')
-    local s = rdebug.getinfo(2, info)
+    res = table.concat(res, '\t') .. '\n'
+    local s = rdebug.getinfo(3, info)
     local src = source.create(s.source)
     if source.valid(src) then
-        ev.emit('output', 'stdout', res, src, s.currentline)
+        stdout(res, src, s.currentline)
     else
-        ev.emit('output', 'stdout', res)
+        stdout(res)
     end
     setEventRet(true)
 end
@@ -458,12 +459,12 @@ function event.iowrite()
         res[#res + 1] = tostring(rdebug.value(arg))
     end
     res = table.concat(res, '\t')
-    local s = rdebug.getinfo(2, info)
+    local s = rdebug.getinfo(3, info)
     local src = source.create(s.source)
     if source.valid(src) then
-        ev.emit('output', 'stdout', res, src, s.currentline)
+        stdout(res, src, s.currentline)
     else
-        ev.emit('output', 'stdout', res)
+        stdout(res)
     end
     setEventRet(true)
 end
