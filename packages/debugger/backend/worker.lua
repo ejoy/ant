@@ -451,7 +451,6 @@ function event.print()
     setEventRet(true)
 end
 
-
 function event.iowrite()
     if not initialized then return end
     local res = {}
@@ -468,7 +467,6 @@ function event.iowrite()
     end
     setEventRet(true)
 end
-
 
 if hookmgr.exception_open then
     function event.exception(msg)
