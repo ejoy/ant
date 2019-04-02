@@ -88,7 +88,7 @@ function editor_mainwindow:run(config)
     iup.SetGlobal("GLOBALLAYOUTDLGKEY", "Yes");
   
     
-    print_a(bgfx.get_caps())
+    -- print_a(bgfx.get_caps())
     if (iup.MainLoopLevel()==0) then
         iup.MainLoop()
         iup.Close()
