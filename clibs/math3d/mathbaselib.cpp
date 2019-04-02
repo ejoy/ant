@@ -51,7 +51,7 @@ pull_frustum(lua_State *L, int index, Frustum &f) {
 		f.r = xmax;
 		f.b = -ymax;
 		f.t = ymax;
-		
+
 	} else {
 		lua_pop(L, 1);
 		float* fv = &f.l;
@@ -73,82 +73,10 @@ projection_mat(const Frustum &f) {
 	if (f.ortho) {
 		auto orthLH = default_homogeneous_depth() ? glm::orthoLH_NO<float> : glm::orthoLH_ZO<float>;
 		return orthLH(f.l, f.r, f.b, f.t, f.n, f.f);
-	} 
+	}
 
 	auto frustumLH = default_homogeneous_depth() ? glm::frustumLH_NO<float> : glm::frustumLH_ZO<float>;
-	return frustumLH(f.l, f.r, f.b, f.t, f.n, f.f);	
-}
-
-static int 
-lscreenpt_to_3d(lua_State *L){
-	int numarg = lua_gettop(L);
-	if (numarg < 5){
-		luaL_error(L, "5 arguments needed!", numarg);
-	}
-
-	// get 2d point, point.z is the depth in ndc space
-	luaL_checktype(L, 1, LUA_TTABLE);
-
-	size_t len = lua_rawlen(L, 1);
-	std::vector<glm::vec3>	vv(len / 3);
-	float * v = &vv[0].x;	
-
-	for (size_t ii = 0; ii < len; ++ii) {
-		lua_geti(L, 1, ii+1);
-		*v++ = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-	}
-
-	// get camera frustum
-	luaL_checktype(L, 2, LUA_TTABLE);
-
-	Frustum f;
-	pull_frustum(L, 2, f);
-	glm::mat4x4 matProj = projection_mat(f);
-
-	// get camera position & rotation
-	glm::vec3 *position = (glm::vec3*)lua_touserdata(L, 3);
-	glm::vec3 *viewDir = (glm::vec3*)lua_touserdata(L, 4);
-
-	glm::mat4x4 matView = glm::lookAtLH(*position, *position + *viewDir, glm::vec3(0, 1, 0));
-	
-	// get viewport size
-	lua_getfield(L, 5, "w");
-	float width = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, 5, "h");
-	float height = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-
-	//////////////////////////////////////////////////////////////////////////
-	glm::mat4x4 matInverseVP = glm::inverse(matProj * matView);
-	
-	
-	for (auto& pt : vv) {		
-		auto remap0_1 = [](float v) {
-			return v * 2.f - 1.f;
-		};
-		pt.x = remap0_1(pt.x / width);
-		pt.y = remap0_1((height - pt.y) / height);
-		
-
-		auto tmp = matInverseVP * glm::vec4(pt, 1);
-		pt = tmp / tmp.w;		
-	}
-	
-	const auto count = vv.size();
-	lua_createtable(L, (int)count * 3, 0);
-	for (int ii = 0; ii < (int)count; ++ii) {
-		const auto &p = vv[ii];
-		for (int jj = 0; jj < 3; ++jj) {
-			lua_pushnumber(L, p[jj]);
-			lua_seti(L, -2, ii * 3 + jj + 1);
-		}		
-	}
-
-	return 1;
+	return frustumLH(f.l, f.r, f.b, f.t, f.n, f.f);
 }
 
 struct AABB {
@@ -460,9 +388,8 @@ lfrustum_points(lua_State *L) {
 extern "C"{
 	LUAMOD_API int
 	luaopen_math3d_baselib(lua_State *L){
-		luaL_Reg l[] = {
-			{ "screenpt_to_3d", lscreenpt_to_3d },
-			{ "intersect", lintersect_frustum_and_aabb },
+		luaL_Reg l[] = {			
+			{ "intersect",		lintersect_frustum_and_aabb },
 			{ "extract_planes", lextract_planes},
 			{ "transform_aabb", ltransform_aabb},
 			{ "frustum_points", lfrustum_points},

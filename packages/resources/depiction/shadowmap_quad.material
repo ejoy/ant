@@ -1,0 +1,13 @@
+shader = {
+	vs = "//ant.resources/simple/quad/vs_shadowquad",
+	fs = "//ant.resources/simple/quad/fs_shadowquad",
+}
+
+state = {
+	WRITE_MASK = "RGBA",
+	ALPHA_REF = 0,
+	CULL = "CCW",
+	MSAA = true,
+	DEPTH_TEST = "ALWAYS",
+	PT = "TRISTRIP"
+}

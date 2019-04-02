@@ -3,7 +3,8 @@ local log = log and log(...) or print
 
 local bgfx = require "bgfx"
 local viewidmgr = require "viewid_mgr"
-local fbmgr = require "framebuffer_mgr"
+local fs = require "filesystem"
+
 local util = {}
 util.__index = util
 
@@ -296,6 +297,69 @@ function util.create_general_render_queue(world,viewsize,view_tag,viewid)
 	return entity_id
 end
 
+function util.identify_transform()
+	return {
+		s = {1, 1, 1, 0},
+		r = {0, 0, 0, 0},
+		t = {0, 0, 0, 1},
+	}
+end
 
+function util.quad_mesh(rect)
+	local decl = bgfx.vertex_decl {
+		{ "POSITION", 3, "FLOAT" },
+		{ "TEXCOORD0", 2, "FLOAT"},
+	}
+
+	local depth = 0
+
+	local vbhandle = bgfx.create_vertex_buffer(
+		{
+			"fffff",
+			rect.x, 		 rect.y, 			depth, 	0, 1,	--bottom left
+			rect.x, 		 rect.y + rect.h, 	depth, 	0, 0,	--top left
+			rect.x + rect.w, rect.y, 			depth, 	1, 1,	--bottom right
+			rect.x + rect.w, rect.y + rect.h, 	depth, 	1, 0,	--top right
+		}, decl
+	)
+
+	return {
+		handle = {
+			groups = {
+				{
+					decls = {
+						decl
+					},
+					vb = {
+						handles = {
+							vbhandle,
+						}
+					},
+				}
+			}
+		}
+	}
+end
+
+function util.create_shadow_quad_entity(world, rect)
+	local eid = world:create_entity {
+		transform = util.identify_transform(),
+		mesh = {},
+		material = {
+			content = {
+				{
+					ref_path = fs.path "//ant.resources/depiction/shadowmap_quad.material",
+				}
+			}
+		},
+		can_render = true,
+		main_view = true,
+		name = "quad",
+	}
+
+	local e = world[eid]
+	e.mesh.assetinfo = util.quad_mesh(rect)
+	return eid
+end
 
 return util

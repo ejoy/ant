@@ -47,7 +47,7 @@ function pf:init()
 	local function default_properties()
 		return {
 			uniforms = {},
-			texutres = {},
+			textures = {},
 		}
 	end
 	self.result = {

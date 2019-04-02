@@ -26,7 +26,7 @@ function sm:init()
 	}
 	sampleflags = sampleflags .. "c0"	--border color=0
 	local sm_width, sm_height = 1024, 1024
-	local half_sm_width, half_sm_height = sm_width * 0.5, sm_height * 0.5
+	--local half_sm_width, half_sm_height = sm_width * 0.5, sm_height * 0.5
 	world:create_entity {
 		shadow = {
 			material = {
@@ -48,9 +48,9 @@ function sm:init()
 			updir = {0, 1, 0, 0},
 			frustum = {
 				ortho = true,
-				l = -5, r = 5,
-				t = 5, b = -5,
-				n = 0.1, f = 10000,
+				l = -2, r = 2,
+				t = 2, b = -2,
+				n = -10000, f = 10000,
 			},
 		},
 		render_target = {
@@ -58,14 +58,14 @@ function sm:init()
 				rect = {x=0, y=0, w=sm_width, h=sm_height},
 				clear_state = {
 					color = 0,
-					depth = 0,	--must 0
+					depth = 1,
 					stencil = 0,
 				}
 			},
 			frame_buffer = {
 				render_buffers = {
 					{
-						format = "R32F",
+						format = "RGBA8",
 						w=sm_width,
 						h=sm_height,
 						layers=1,
@@ -74,8 +74,10 @@ function sm:init()
 				}
 			}
 		},
-		name = "direction light shadow maker",
+		name = "direction light shadow maker",		
 	}
+	local qw, qh = 256,256
+	renderutil.create_shadow_quad_entity(world, {x=0, y=0, w=qw, h=qh})
 end
 
 local function update_shadow_camera(camera, directionallight, distance)
@@ -85,7 +87,6 @@ end
 
 function sm:update()
 	local sm = world:first_entity "shadow"
-	update_shadow_camera(sm.camera, world:first_entity "directional_light", sm.shadow.distance)
 
 	local filter = sm.primitive_filter
 	local results = filter.result
@@ -96,7 +97,8 @@ function sm:update()
 	end
 
 	local shadowmat = sm.shadow.material.materialinfo
-	replace_material(results.opaque, shadowmat)
-	replace_material(results.translucent, shadowmat)
+	replace_material(results.opaque, 		shadowmat)
+	replace_material(results.translucent, 	shadowmat)
 
+	update_shadow_camera(sm.camera, world:first_entity "directional_light", sm.shadow.distance)
 end

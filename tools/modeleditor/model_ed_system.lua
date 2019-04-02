@@ -25,7 +25,6 @@ local aniutil 	= import_package "ant.animation".util
 ecs.tag "sampleobj"
 
 local model_ed_sys = ecs.system "model_editor_system"
-model_ed_sys.singleton "debug_object"
 
 --model_ed_sys.depend "character_controller"
 model_ed_sys.dependby "viewport_detect_system"

@@ -13,3 +13,8 @@ uniform vec4 ambient_groundcolor;
 
 uniform vec4 u_eyepos;
 uniform vec4 u_lightPos;
+
+SAMPLER2D(s_shadowmap0, 4);
+SAMPLER2D(s_shadowmap1, 4);
+SAMPLER2D(s_shadowmap2, 4);
+SAMPLER2D(s_shadowmap3, 4);

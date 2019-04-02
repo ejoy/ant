@@ -277,6 +277,7 @@ function util.create_plane_entity(world, color, size, pos, name)
 			}
 		},
 		can_render = true,
+		--can_cast = true,
 		main_view = true,
 		name = name or "Plane",
 	}
