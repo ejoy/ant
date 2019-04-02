@@ -307,7 +307,7 @@ get_id_by_type(lua_State *L, struct lastack *LS, int lType, int index) {
 	return lType == LUA_TNUMBER ? get_id(L, index) : get_ref_id(L, LS, index);
 }
 
-static inline int64_t
+int64_t
 get_stack_id(lua_State *L, struct lastack *LS, int index) {
 	const int type = lua_type(L, index);
 	return get_id_by_type(L, LS, type, index);
@@ -2521,7 +2521,7 @@ lnew(lua_State *L) {
 			{ "srtmat", lsrt_matrix },
 			{ "view_proj", lview_proj},			
 			{ "length", llength},
-			{"screenpt_to_3d", lscreen_point_to_3d},
+			{ "screenpt_to_3d", lscreen_point_to_3d},			
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);

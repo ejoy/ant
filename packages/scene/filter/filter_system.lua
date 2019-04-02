@@ -51,18 +51,24 @@ function primitive_filter_sys:update()
 		reset_results(filter.result)
 		local viewtag = filter.view_tag
 		local filtertag = filter.filter_tag
+		local boundings = {}
 		for _, eid in world:each(filtertag) do
 			local ce = world[eid]
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
 			if vt and ft then
+				local meshhandle = assert(ce.mesh.assetinfo).handle
+				local worldmat = ce.transform.world
+				boundings[#boundings+1] = {bounding = meshhandle.groups.bounding, transform=worldmat}
 				ru.insert_primitive(eid, 
-					assert(ce.mesh.assetinfo).handle,
+					meshhandle,
 					assert(ce.material.content),
-					ce.transform.world,
+					worldmat,
 					filter)
 			end
-		end	
+		end
+
+		filter.results.scenebounding = ms:merge_boundings(boundings)
 
 		filterutil.load_lighting_properties(world, filter)
 		if e.shadow == nil then

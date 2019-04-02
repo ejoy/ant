@@ -8,6 +8,8 @@ ASSIMPLIB = -L$(ASSIMPROOT)/build/assimp/$(PLAT)/code -lassimp -L$(ASSIMPROOT)/b
 IB_COMPRESSINC = -I$(ANT3RD)/ib-compress
 IB_COMPRESSLIB = -L$(ANT3RD)/ib-compress -lib-compress-$(PLAT)
 
+CLIBSINC = -I..
+
 default : meshconverter.dll
 
 GLM_INC := -I$(ANT3RD)/glm
@@ -23,7 +25,7 @@ SRC_FILES := meshconverter.cpp antmesh_converter.cpp fbx_helper.cpp bgfxmesh_hel
 OBJ_FILES := $(patsubst %.cpp,$(ODIR)/%.o,$(SRC_FILES))
 
 $(OBJ_FILES) : $(ODIR)/%.o : %.cpp | $(ODIR) $(OBGFX_DIR)
-	$(CXX) $(CFLAGS) -std=c++17 -c -o $@ $^ $(LUAINC) $(ASSIMPINC) $(BGFXINC) $(GLM_INC) $(IB_COMPRESSINC)
+	$(CXX) $(CFLAGS) -std=c++17 -c -o $@ $^ $(LUAINC) $(ASSIMPINC) $(BGFXINC) $(GLM_INC) $(IB_COMPRESSINC) $(CLIBSINC)
 	
 meshconverter.dll : $(OBJ_FILES)
 	$(CXX) $(CFLAGS) -lstdc++ $(LD_SHARED) -o $@ $^ -L. $(LUALIB) $(ASSIMPLIB) $(BGFXLIB) $(IB_COMPRESSLIB)

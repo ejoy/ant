@@ -1,7 +1,7 @@
 include ../common.mk
 
 GLM_INC = -I $(ANT3RD)/glm
-
+CLIBS_INC = -I..
 ifeq "$(PLAT)" "mingw"
 default : math3d.dll
 else
@@ -15,7 +15,7 @@ $(ODIR)/math3d.o : math3d.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -Wno-char-subscripts -o $@ $^ $(LUAINC) $(GLM_INC)
 
 $(ODIR)/mathbaselib.o : mathbaselib.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC) $(CLIBS_INC)
 
 $(ODIR)/mathadapter.o : mathadapter.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
@@ -30,4 +30,4 @@ $(ODIR) :
 	mkdir -p $@
 
 clean :
-	rm -rf $(OROOT) *.dll *.a
+	rm -rf $(ODIR) *.dll *.a

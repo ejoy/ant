@@ -104,12 +104,12 @@ end
 
 function util.insert_primitive(eid, meshhandle, materials, worldmat, filter)	
 	local mgroups = meshhandle.groups
+	local results = filter.result	
 	for i=1, #mgroups do
 		local g = mgroups[i]
 		local mc = materials[i] or materials[1]
-
 		local mi = mc.materialinfo
-		local results = filter.result
+		
 		if mi.surface_type.transparency == "translucent" then
 			add_result(eid, g, mi, mc.properties, worldmat, results.translucent)
 		else

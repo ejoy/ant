@@ -8,6 +8,8 @@ extern "C" {
 	#include "math3d.h"
 }
 
+#include "meshbase/meshbase.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/vector_relational.hpp>
@@ -78,11 +80,6 @@ projection_mat(const Frustum &f) {
 	auto frustumLH = default_homogeneous_depth() ? glm::frustumLH_NO<float> : glm::frustumLH_ZO<float>;
 	return frustumLH(f.l, f.r, f.b, f.t, f.n, f.f);
 }
-
-struct AABB {
-	glm::vec3 min, max;
-};
-
 
 static inline void
 pull_aabb(lua_State *L, int index, AABB &aabb) {
@@ -332,7 +329,8 @@ lintersect_frustum_and_aabb(lua_State *L) {
 
 static inline void
 transform_aabb(const glm::mat4x4 &trans, AABB &aabb) {
-	AABB result = { trans[3], trans[3] };
+	const glm::vec3 pos = trans[3];
+	AABB result(pos, pos);
 
 	for (int icol = 0; icol < 3; ++icol)
 		for (int irow = 0; irow < 3; ++irow) {
@@ -385,6 +383,134 @@ lfrustum_points(lua_State *L) {
 	return 1;
 }
 
+static int
+fetch_bounding(lua_State *L, int index, Bounding &bounding) {	
+	auto fetch_vec = [L](int index, int num, auto &v) {
+		for (int ii = 0; ii < num; ++ii) {
+			lua_geti(L, index, ii + 1);
+			v[ii] = lua_tonumber(L, -1);
+			lua_pop(L, 1);
+		}
+	};
+
+	luaL_checktype(L, index, LUA_TTABLE);
+	lua_getfield(L, index, "aabb");
+	{
+		lua_getfield(L, -1, "min");
+		fetch_vec(-1, 3, bounding.aabb.min);
+		lua_pop(L, 1);
+
+		lua_getfield(L, -1, "max");
+		fetch_vec(-1, 3, bounding.aabb.max);
+		lua_pop(L, 1);
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "sphere");
+	{
+		lua_getfield(L, -1, "center");
+		fetch_vec(-1, 3, bounding.sphere.center);
+		lua_pop(L, 1);
+
+		lua_getfield(L, -1, "radius");
+		bounding.sphere.radius = lua_tonumber(L, -1);
+		lua_pop(L, 2);
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "obb");
+	for (int ii = 0; ii < 4; ++ii)
+		fetch_vec(-1, 4, bounding.obb.m[ii]);
+	lua_pop(L, 1);
+
+	return 1;
+}
+
+extern int64_t
+get_stack_id(lua_State *L, struct lastack *LS, int index);
+
+static int
+push_bounding(lua_State *L, const Bounding &boundiing) {
+	auto push_vec = [L](int num, auto &v) {
+		lua_createtable(L, num, 0);
+		for (int ii = 0; ii < num; ++ii) {
+			lua_pushnumber(L, v[ii]);
+			lua_seti(L, -2, ii + 1);
+		}
+	};
+
+	lua_newtable(L);
+	{
+		lua_createtable(L, 0, 2);
+		{
+			push_vec(3, boundiing.aabb.min);
+			lua_setfield(L, -2, "min");
+
+			push_vec(3, boundiing.aabb.max);
+			lua_setfield(L, -2, "max");
+		}
+		lua_setfield(L, -2, "aabb");
+
+		lua_createtable(L, 0, 2);
+		{
+			push_vec(3, boundiing.sphere.center);
+			lua_setfield(L, -2, "center");
+
+			lua_pushnumber(L, boundiing.sphere.radius);
+			lua_setfield(L, -2, "radius");
+		}
+		lua_setfield(L, -2, "sphere");
+
+		lua_createtable(L, 16, 0);
+		{
+			for (int ii = 0; ii < 4; ++ii) {
+				for (int jj = 0; jj < 4; ++jj) {
+					lua_pushnumber(L, boundiing.obb.m[ii][jj]);
+					lua_seti(L, -2, ii * 4 + jj + 1);
+				}
+			}
+		}
+		lua_setfield(L, -2, "obb");
+	}
+	return 1;
+}
+
+static int
+lmerge_boundings(lua_State *L) {
+	struct boxstack* bs = (struct boxstack*)lua_touserdata(L, 1);
+	struct lastack *LS = bs->LS;
+
+	luaL_checktype(L, 2, LUA_TTABLE);
+	const int numboundings = (int)lua_rawlen(L, 2);
+	Bounding scenebounding;
+
+	for (int ii = 0; ii < numboundings; ++ii) {
+		lua_geti(L, 2, ii + 1);
+
+		luaL_checktype(L, -1, LUA_TTABLE);
+		lua_getfield(L, -1, "bounding");
+		Bounding bounding;
+		fetch_bounding(L, -1, bounding);
+		lua_pop(L, 1);
+
+		lua_getfield(L, -1, "transform");		
+		int type;
+		const glm::mat4x4 *trans = (const glm::mat4x4 *)lastack_value(LS, get_stack_id(L, LS, -1), &type);
+		lua_pop(L, 1);
+
+		lua_pop(L, 1);
+
+		AABB aabb = bounding.aabb;
+		transform_aabb(*trans, aabb);
+
+		scenebounding.aabb.Merge(aabb);
+	}
+
+	scenebounding.sphere.Init(scenebounding.aabb);
+	scenebounding.obb.Init(scenebounding.aabb);
+	return push_bounding(L, scenebounding);
+}
+
 extern "C"{
 	LUAMOD_API int
 	luaopen_math3d_baselib(lua_State *L){
@@ -393,6 +519,7 @@ extern "C"{
 			{ "extract_planes", lextract_planes},
 			{ "transform_aabb", ltransform_aabb},
 			{ "frustum_points", lfrustum_points},
+			{ "merge_boundings", lmerge_boundings},
 			{ NULL, NULL },
 		};
 
