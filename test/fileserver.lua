@@ -161,7 +161,7 @@ local function fileserver_update(obj)
 		LOG("LOGOFF", obj._peer)
 		for fd, v in pairs(debug) do
 			if v.server == obj then
-				network.close(fd)
+				network.close(v.client)
 				debug[fd] = nil
 				break
 			end
