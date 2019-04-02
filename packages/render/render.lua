@@ -149,12 +149,24 @@ local function update_view_proj(viewid, camera)
 	bgfx.set_view_transform(viewid, view, proj)
 end
 
+local function update_frame_buffer_view(viewid, rt)
+	local fb = rt.frame_buffer or rt.wnd_frame_buffer
+	if fb then
+		local handle = fb.handle
+		bgfx.set_view_frame_buffer(viewid, handle)
+	end
+end
+
 function rendersys:update()
 	for _, eid in world:each "viewid" do
 		local rq = world[eid]
 		if rq.visible ~= false then
 			local viewid = rq.viewid		
-			update_viewport(viewid, rq.render_target.viewport)
+			local rt = rq.render_target
+			-- TODO, only call after bgfx.reset has been call?
+			update_frame_buffer_view(viewid, rt)
+
+			update_viewport(viewid, rt.viewport)
 			update_view_proj(viewid, rq.camera)
 
 			local filter = rq.primitive_filter

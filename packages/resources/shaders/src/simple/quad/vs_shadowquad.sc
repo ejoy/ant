@@ -4,8 +4,8 @@ $output v_texcoord0
 
 void main()
 {
-    vec3 pos = a_position;
-	gl_Position.w = 1.0;
-	gl_Position.xyz = vec3(pos.xy * u_viewTexel.xy, pos.z);
+    vec3 pos = vec3(a_position.xy * u_viewTexel.xy, a_position.z);
+	pos.xy = pos.xy * 2.0 - 1.0;
+	gl_Position = vec4(pos, 1.0);
     v_texcoord0 = a_texcoord0;
 }
