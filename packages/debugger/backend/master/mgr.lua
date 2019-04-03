@@ -10,6 +10,7 @@ local state = 'birth'
 local stat = {}
 local queue = {}
 local exit = false
+local masterThread
 
 local workers_mt = {}
 function workers_mt:__index(id)
