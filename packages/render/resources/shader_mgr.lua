@@ -86,18 +86,18 @@ function shader_mgr.programLoad(vs, fs, uniform)
         end
         return prog
 	else		
-		local vsid = load_shader(vs[1], vs[2])
+		local vsid = load_shader(vs)
 		local fsid = nil
-		if fs then			
-			load_shader(fs[1], fs[2])
+		if fs then
+			load_shader(fs)
 		end
         
         return bgfx.create_program(vsid, fsid, true)
     end
 end
 
-function shader_mgr.computeLoad(pkgname, cs)
-    local csid = load_shader(pkgname, cs)
+function shader_mgr.computeLoad(pkgname)
+    local csid = load_shader(pkgname)
     return bgfx.create_program(csid, true)
 end
 

@@ -30,10 +30,10 @@ UNPACKLIBS= $(foreach v, $(LIBS), unpack_lib$(v).a) $(foreach v, $(LIBS2), unpac
 
 
 $(ODIR)/liblua.a : | $(ODIR)
-	@$(MAKE) --no-print-directory -f Makefile.lua
+	@$(MAKE) --no-print-directory -f MakefileLua
 
 $(ODIR)/libcjson.a : | $(ODIR)
-	@$(MAKE) -f Makefile.cjson
+	@$(MAKE) -f MakefileCJson
 
 $(ODIR)/libib-compress.a : | $(ODIR)
 	@cd ../../3rd/ib-compress/ && $(MAKE) --no-print-directory libib-compress-$(PLAT).a "ODIR=$(ODIR)" "PLAT=$(PLAT)" && mv libib-compress-$(PLAT).a ../../clibs/ant/$(ODIR)/libib-compress.a

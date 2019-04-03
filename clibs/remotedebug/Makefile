@@ -7,7 +7,7 @@ else
 default : libremotedebug-$(PLAT).a
 endif
 
-OBJS = $(ODIR)/rdebug_host.o $(ODIR)/rdebug_visitor.o $(ODIR)/rdebug_hookmgr.o $(ODIR)/rdebug_eventfree.o $(ODIR)/thunk.o
+OBJS = $(ODIR)/rdebug_host.o $(ODIR)/rdebug_visitor.o $(ODIR)/rdebug_hookmgr.o $(ODIR)/rdebug_eventfree.o $(ODIR)/rdebug_redirect.o $(ODIR)/rdebug_stdio.o $(ODIR)/thunk.o
 
 $(ODIR)/rdebug_host.o : rdebug_host.c | $(ODIR)
 	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC) $(RDEBUG_LUAFLAGS)
@@ -19,6 +19,12 @@ $(ODIR)/rdebug_hookmgr.o : rdebug_hookmgr.cpp rdebug_eventfree.h thunk.h | $(ODI
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
 $(ODIR)/rdebug_eventfree.o : rdebug_eventfree.cpp rdebug_eventfree.h | $(ODIR)
+	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
+
+$(ODIR)/rdebug_redirect.o : rdebug_redirect.cpp rdebug_redirect.h | $(ODIR)
+	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
+
+$(ODIR)/rdebug_stdio.o : rdebug_stdio.cpp rdebug_redirect.h | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
 $(ODIR)/thunk.o : thunk.cpp thunk.h thunk_windows.inl thunk_windows_i386.inl thunk_windows_amd64.inl thunk_linux_amd64.inl thunk_other.inl | $(ODIR)
