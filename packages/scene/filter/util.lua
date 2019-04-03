@@ -94,6 +94,7 @@ function util.load_shadow_properties(world, filter)
 		-- we can share this calculation
 		local camera = shadow_queue.camera
 		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
+		
 		local uniforms = shadow_properties.uniforms
 		uniforms["directional_viewproj"] = {
 			name = "Directional Light View proj", type = "m4",

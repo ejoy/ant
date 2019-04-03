@@ -9,7 +9,7 @@ void main()
 	vec3 normal = normalize(v_normal);
 	vec3 viewdir = normalize(v_viewdir);
 
-	float visible = hard_shadow(s_shadowmap0, v_shadowcoord, 0.01);
+	float visible = hard_shadow(s_shadowmap0, v_shadowcoord, 0);
 
 	float shiness = 0.06;
 	gl_FragColor.xyz = calc_directional_light(normal, directional_lightdir[0].xyz, viewdir, shiness)* visible; 
