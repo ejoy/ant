@@ -20,6 +20,7 @@ int luaopen_platform(lua_State* L);
 int luaopen_protocol(lua_State* L);
 int luaopen_remotedebug(lua_State* L);
 int luaopen_remotedebug_hookmgr(lua_State* L);
+int luaopen_remotedebug_stdio(lua_State* L);
 int luaopen_remotedebug_visitor(lua_State* L);
 int luaopen_thread(lua_State* L);
 int luaopen_window(lua_State* L);
