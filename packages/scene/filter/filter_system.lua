@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local render = import_package "ant.render"
-local cu = render.components
+local mathbaselib = require "math3d.baselib"
 local ru = render.util
 
 local filterutil = require "filter.util"
@@ -24,7 +24,7 @@ local function update_transform(transform, hierarchy_cache)
 			local hie_result = parentresult.hierarchy
 			local slotname = transform.slotname
 			if hie_result and slotname then
-				local hiemat = ms:matrix(hie_result[(slotname)])
+				local hiemat = ms:matrix(hie_result[slotname])
 				localmat = ms(parentmat, hiemat, localmat, "**P")
 			else
 				localmat = ms(parentmat, localmat, "*P")
@@ -68,7 +68,7 @@ function primitive_filter_sys:update()
 			end
 		end
 
-		filter.results.scenebounding = ms:merge_boundings(boundings)
+		filter.scenebounding = mathbaselib.merge_boundings(ms, boundings)
 
 		filterutil.load_lighting_properties(world, filter)
 		if e.shadow == nil then

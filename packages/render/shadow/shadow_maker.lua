@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local ms = import_package "ant.math".stack
+local mathbaselib = require "math3d.baselib"
 
 local viewidmgr = require "viewid_mgr"
 local renderutil = require "util"
@@ -102,4 +103,32 @@ function sm:update()
 	replace_material(results.translucent, 	shadowmat)
 
 	update_shadow_camera(sm.camera, world:first_entity "directional_light", sm.shadow.distance)
+end
+
+
+local maker_camera = ecs.system "shadowmaker_camera"
+maker_camera.dependby "shadow_maker11"
+maker_camera.depend "primitive_fiter_system"
+
+--TODO, this "update" function can be changed as "postinit" function
+-- just only listening new/delete/modify any objects boundings
+function maker_camera:update()
+	local sm = world:first_entity "shadow"
+	local dl = world:first_entity "directional_light"
+	local camera = sm.camera
+	local scenebounding = sm.primitive_filter.scenebounding
+	local sphere = scenebounding.sphere
+
+	ms(camera.viewdir, dl.rotation, "dn=")	
+	ms(camera.eyepos, sphere.center, {sphere.radius}, camera.viewdir, "i*+=")
+	
+	local viewmat = ms:lookfrom3(camera.eyepos, camera.viewdir, camera.updir)
+	local aabb_vs = mathbaselib.transform_aabb(ms, viewmat, scenebounding.aabb)
+	local lengthaxis = ms({0.5}, aabb_vs.max, aabb_vs.min, "-*T")
+	local frustum = camera.frustum
+	assert(frustum.ortho)
+
+	local half_w, half_h = lengthaxis[1], lengthaxis[2]
+	frustum.l, frustum.r = -half_w, half_w
+	frustum.t, frustum.b = half_h, -half_h
 end

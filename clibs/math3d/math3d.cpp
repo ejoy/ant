@@ -2295,7 +2295,7 @@ lsrt_matrix(lua_State *L) {
 static int
 lview_proj(lua_State *L) {
 	const int numarg = lua_gettop(L);
-	if (numarg != 3) {
+	if (numarg < 3) {
 		return luaL_error(L, "only support 3 argument, %d provided", numarg);
 	}
 
@@ -2322,11 +2322,20 @@ lview_proj(lua_State *L) {
 	luaL_checktype(L, 3, LUA_TTABLE);
 	auto projmat = create_proj_mat(L, LS, 3);
 
+	const bool combine = lua_isnoneornil(L, 4) ? false : (!!lua_toboolean(L, 4));
+
 	lastack_pushmatrix(LS, &viewmat[0][0]);
 	pushid(L, pop(L, LS));
 
 	lastack_pushmatrix(LS, &projmat[0][0]);
 	pushid(L, pop(L, LS));
+
+	if (combine) {
+		auto viewproj = projmat * viewmat;
+		lastack_pushmatrix(LS, &viewproj[0][0]);
+		pushid(L, pop(L, LS));
+		return 3;
+	}
 
 	return 2;
 }
