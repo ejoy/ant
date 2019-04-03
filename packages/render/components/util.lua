@@ -267,7 +267,7 @@ function util.create_plane_entity(world, color, size, pos, name)
 		material = {
 			content = {
 				{
-					ref_path = fs.path "//ant.resources/depiction/mesh_receive_shadow.material",
+					ref_path = fs.path "//ant.resources/depiction/shadow/mesh_receive_shadow.material",
 					properties = {
 						uniforms = {
 							u_color = {type="color", name="color", value=color}
@@ -317,7 +317,11 @@ end
 
 function util.create_shadow_quad_entity(world, rect, name)
 	local eid = world:create_entity {
-		transform = util.identify_transform(),
+		transform = {
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
+		},
 		mesh = {},
 		material = {
 			content = {{

@@ -41,12 +41,13 @@ local function gen_mesh_assetinfo(skinning_mesh_comp)
 	end
 
 	local ib_handle = create_idx_buffer()
-
+	local bounding = skinning_mesh:bounding()
 	return {
 		handle = {
+			bounding = bounding,
 			groups = {
 				{
-					bounding = skinning_mesh:bounding(),
+					bounding = bounding,
 					vb = {
 						decls = decls,
 						handles = vb_handles,

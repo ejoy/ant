@@ -6,6 +6,7 @@ local mathbaselib = require "math3d.baselib"
 
 local viewidmgr = require "viewid_mgr"
 local renderutil = require "util"
+local computil = require "components.util"
 local fs = require "filesystem"
 
 ecs.component "shadow"
@@ -13,8 +14,37 @@ ecs.component "shadow"
 	.shadowmap_with "int" (1024)
 	.shadowmap_height "int" (1024)
 
+local maker_camera = ecs.system "shadowmaker_camera"
+maker_camera.depend "primitive_filter_system"
+maker_camera.dependby "filter_properties"
+	
+--TODO, this "update" function can be changed as "postinit" function
+-- just only listening new/delete/modify any objects boundings
+function maker_camera:update()
+	local sm = world:first_entity "shadow"
+	local dl = world:first_entity "directional_light"
+	local camera = sm.camera
+	local scenebounding = sm.primitive_filter.scenebounding
+	local sphere = scenebounding.sphere
+
+	ms(camera.viewdir, dl.rotation, "dn=")	
+	ms(camera.eyepos, sphere.center, {sphere.radius}, camera.viewdir, "i*+=")
+	
+	local viewmat = ms(camera.eyepos, camera.viewdir, camera.updir, ms.lookfrom3, "P")
+	local aabb_vs = mathbaselib.transform_aabb(ms, viewmat, scenebounding.aabb)
+	local lengthaxis = ms({0.5}, aabb_vs.max, aabb_vs.min, "-*T")
+	local frustum = camera.frustum
+	assert(frustum.ortho)
+
+	local half_w, half_h = lengthaxis[1], lengthaxis[2]
+	frustum.l, frustum.r = -half_w, half_w
+	frustum.t, frustum.b = half_h, -half_h
+end
+	
+
 local sm = ecs.system "shadow_maker11"
 sm.depend "primitive_filter_system"
+sm.depend "shadowmaker_camera"
 sm.dependby "render_system"
 
 function sm:init()	
@@ -79,7 +109,7 @@ function sm:init()
 		name = "direction light shadow maker",		
 	}
 	local qw, qh = 256,256
-	renderutil.create_shadow_quad_entity(world, {x=0, y=0, w=qw, h=qh})
+	computil.create_shadow_quad_entity(world, {x=0, y=0, w=qw, h=qh})
 end
 
 local function update_shadow_camera(camera, directionallight, distance)
@@ -103,32 +133,4 @@ function sm:update()
 	replace_material(results.translucent, 	shadowmat)
 
 	update_shadow_camera(sm.camera, world:first_entity "directional_light", sm.shadow.distance)
-end
-
-
-local maker_camera = ecs.system "shadowmaker_camera"
-maker_camera.dependby "shadow_maker11"
-maker_camera.depend "primitive_fiter_system"
-
---TODO, this "update" function can be changed as "postinit" function
--- just only listening new/delete/modify any objects boundings
-function maker_camera:update()
-	local sm = world:first_entity "shadow"
-	local dl = world:first_entity "directional_light"
-	local camera = sm.camera
-	local scenebounding = sm.primitive_filter.scenebounding
-	local sphere = scenebounding.sphere
-
-	ms(camera.viewdir, dl.rotation, "dn=")	
-	ms(camera.eyepos, sphere.center, {sphere.radius}, camera.viewdir, "i*+=")
-	
-	local viewmat = ms:lookfrom3(camera.eyepos, camera.viewdir, camera.updir)
-	local aabb_vs = mathbaselib.transform_aabb(ms, viewmat, scenebounding.aabb)
-	local lengthaxis = ms({0.5}, aabb_vs.max, aabb_vs.min, "-*T")
-	local frustum = camera.frustum
-	assert(frustum.ortho)
-
-	local half_w, half_h = lengthaxis[1], lengthaxis[2]
-	frustum.l, frustum.r = -half_w, half_w
-	frustum.t, frustum.b = half_h, -half_h
 end

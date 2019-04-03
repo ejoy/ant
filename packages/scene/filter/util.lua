@@ -18,8 +18,7 @@ local function add_directional_light_properties(world, uniform_properties, scene
 	local dlight_info = {
 		directional_lightdir = {name="Light Direction", type="v4", value={}},
 		directional_color = {name="Light Color", type="color", value={}},
-		directional_intensity = {name="Light Intensity", type="v4",value={}},		
-		directional_viewproj = {name="Light View Projection", type="m4", value={}}
+		directional_intensity = {name="Light Intensity", type="v4",value={}},
 	}
 
 	local dlight = world:first_entity "directional_light"
@@ -96,7 +95,13 @@ function util.load_shadow_properties(world, filter)
 		local camera = shadow_queue.camera
 		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
 		local uniforms = shadow_properties.uniforms
-		uniforms["directional_viewproj"] = {name = "Directional Light View proj", type = "m4", value = ms:ref "matrix" (vp)}
+		uniforms["directional_viewproj"] = {
+			name = "Directional Light View proj", type = "m4",
+			value = {
+				n = 1,
+				ms:ref "matrix" (vp)
+			}
+		}
 	end
 end
 

@@ -2,12 +2,7 @@ $input v_normal, v_viewdir, v_shadowcoord
 #include "common.sh"
 #include "common/uniforms.sh"
 #include "common/lighting.sh"
-
-float hard_shadow(sampler2DShadow shadowSampler, vec4 shadowcoord, float bias)
-{
-	vec3 texcoord = shadowcoord.xyz/shadowcoord.w;
-	return shadow2D(shadowSampler, vec3(texcoord.xy, texcoord.z-bias));
-}
+#include "common/shadow.sh"
 
 void main()
 {

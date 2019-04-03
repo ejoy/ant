@@ -23,7 +23,7 @@
 #endif
 
 inline constexpr glm::vec3 minvalue(){
-	return glm::vec3(std::numeric_limits<float>::min());
+	return glm::vec3(std::numeric_limits<float>::lowest());
 }
 
 inline constexpr glm::vec3 maxvalue(){
@@ -44,13 +44,12 @@ struct AABB {
 	{}
 
 	bool IsValid() const {
-		return min != minvalue()
-			&& max != maxvalue();
+		return min.x < max.x && min.y < max.y && min.z < max.z;		
 	}
 
 	void Init(const glm::vec3 *vertiecs, uint32_t num) {
-		min = minvalue();
-		max = maxvalue();
+		min = maxvalue();
+		max = minvalue();
 
 		for (uint32_t ii = 0; ii < num; ++ii) {
 			const glm::vec3 &v = vertiecs[ii];
@@ -106,16 +105,16 @@ struct BoundingSphere {
 	glm::vec3 center;
 	float radius;
 
-	void Init(const AABB &bb) {
-		glm::vec3 delta = bb.max - bb.min;
-		center = bb.min + delta * 0.5f;
-		radius = glm::length(delta);
+	void Init(const AABB &aabb) {		
+		center = aabb.Center();
+		radius = aabb.DiagonalLength() * 0.5f;
 	}
 };
 
 struct OBB {
 	glm::mat4x4 m;
 	void Init(const AABB & aabb) {
+		m = glm::mat4x4(1.0f);
 		auto &trans = m[3];
 		const auto &c = aabb.Center();
 		trans[0] = c[0], trans[1] = c[1], trans[2] = c[2], trans[3] = 1;
@@ -134,10 +133,12 @@ struct Bounding {
 	void Init(const glm::vec3 *v, uint32_t num) {
 		aabb.Init(v, num);
 		sphere.Init(aabb);
+		obb.Init(aabb);
 	}
 
 	void Merge(const Bounding &other) {
 		aabb.Merge(other.aabb);
 		sphere.Init(aabb);
+		obb.Init(aabb);
 	}
 };

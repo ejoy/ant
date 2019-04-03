@@ -116,19 +116,20 @@ local rendersys = ecs.system "render_system"
 rendersys.depend "primitive_filter_system"
 rendersys.dependby "end_frame"
 
-local function update_viewport(viewid, viewport)
-	local clear_what = viewport.clear_state.clear
-	local statemap = {
-		all = "CDS",
-		color = "C",
-		depth = "D",
-		stencil = "S",
-		depthstencil = "DS",
-		DS = "DS",
-		C = "C",
-		D = "D",
-	}
+local statemap = {
+	all = "CDS",
+	color = "C",
+	depth = "D",
+	stencil = "S",
+	depthstencil = "DS",
+	DS = "DS",
+	C = "C",
+	D = "D",
+}
 
+local function update_viewport(viewid, viewport)
+	local cs = viewport.clear_state
+	local clear_what = cs.clear
 	local state = statemap[clear_what]
 	if state then
 		bgfx.set_view_clear(viewid, state, cs.color, cs.depth, cs.stencil)

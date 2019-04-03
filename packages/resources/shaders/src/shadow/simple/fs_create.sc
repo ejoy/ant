@@ -1,4 +1,3 @@
-$input v_depth
 #include "common.sh"
 
 void main()

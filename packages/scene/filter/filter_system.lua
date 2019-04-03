@@ -10,7 +10,20 @@ local filterutil = require "filter.util"
 local ms = import_package "ant.math" .stack
 local math3d = require "math3d"
 
+local filter_properties = ecs.system "filter_properties"
+function filter_properties:update()
+	for _, prim_eid in world:each("primitive_filter") do
+		local e = world[prim_eid]
+		local filter = e.primitive_filter
+		filterutil.load_lighting_properties(world, filter)
+		if e.shadow == nil then
+			filterutil.load_shadow_properties(world, filter)
+		end
+	end
+end
+
 local primitive_filter_sys = ecs.system "primitive_filter_system"
+primitive_filter_sys.dependby "filter_properties"
 primitive_filter_sys.singleton "hierarchy_transform_result"
 primitive_filter_sys.singleton "event"
 
@@ -59,7 +72,10 @@ function primitive_filter_sys:update()
 			if vt and ft then
 				local meshhandle = assert(ce.mesh.assetinfo).handle
 				local worldmat = ce.transform.world
-				boundings[#boundings+1] = {bounding = meshhandle.groups.bounding, transform=worldmat}
+				local bounding = meshhandle.bounding
+				if bounding then
+					boundings[#boundings+1] = {bounding = bounding, transform=worldmat}
+				end
 				ru.insert_primitive(eid, 
 					meshhandle,
 					assert(ce.material.content),
@@ -69,11 +85,6 @@ function primitive_filter_sys:update()
 		end
 
 		filter.scenebounding = mathbaselib.merge_boundings(ms, boundings)
-
-		filterutil.load_lighting_properties(world, filter)
-		if e.shadow == nil then
-			filterutil.load_shadow_properties(world, filter)
-		end
 	end
 end
 
@@ -112,6 +123,3 @@ function primitive_filter_sys:event_changed()
 	end
 end
 
--- all filter system need depend 
-local final_filter_sys = ecs.system "final_filter_system"
-final_filter_sys.depend "primitive_filter_system"

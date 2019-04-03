@@ -1,7 +1,9 @@
 $input a_position, a_normal
 $output v_normal, v_viewdir, v_shadowcoord
 
+#include "common.sh"
 #include "common/uniforms.sh"
+#include "common/shadow.sh"
 
 void main()
 {
@@ -14,6 +16,5 @@ void main()
 	v_normal = a_normal;
 
 	const float shadowMapOffset = 0.001;
-	vec3 posOffset = a_position + normal.xyz * shadowMapOffset;
-	v_shadowcoord = mul(u_lightingViewProj, vec4(posOffset, 1.0) );
+	v_shadowcoord = calc_shadow_texcoord(directional_viewproj[0], a_position, a_normal, shadowMapOffset);
 }

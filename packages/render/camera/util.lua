@@ -32,7 +32,7 @@ local function mesh_bounding_sphere(entity)
 			if #groups > 0 then
 				local bounding = groups[1].bounding
 				if bounding then
-					local aabb = deep_copy(bounding.aabb)
+					
 					--[[
 						here is what this code do:
 							1. get world mat in this entity ==> worldmat 
@@ -44,9 +44,8 @@ local function mesh_bounding_sphere(entity)
 							6. change camera direction as new direction
 				
 					]]
-					local math3dlib = require "math3d.baselib"
-					local worldmat = ms(ms:srtmat(entity.transform), "m")
-					math3dlib.transform_aabb(worldmat, aabb)
+					local math3dlib = require "math3d.baselib"					
+					local aabb = math3dlib.transform_aabb(ms, ms:srtmat(entity.transform), bounding.aabb)
 					local center = ms(aabb.max, aabb.min, "-", {0.5}, "*P")
 				
 					--[[

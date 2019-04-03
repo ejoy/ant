@@ -15,9 +15,9 @@ static const char * linear_type[] = {
 };
 
 typedef enum {
-	SET_Mat = 0,
-	SET_Vec,
-	SET_Array,
+	SET_Mat = 0x01,
+	SET_Vec = 0x02,
+	SET_Array = 0x10,
 	SET_Unknown,
 }StackElemType;
 
@@ -97,10 +97,10 @@ get_pointer_variant(lua_State *L, struct lastack *LS, int index, int elemtype) {
 		v = lastack_value(LS, ref->id, &type);
 	}
 	if (type == LINEAR_TYPE_MAT) {
-		if (elemtype != SET_Mat)
+		if (!(elemtype & SET_Mat))
 			typemismatch(L, LINEAR_TYPE_MAT, type);
 	} else {
-		if (elemtype == SET_Mat)
+		if (elemtype & SET_Mat)
 			typemismatch(L, LINEAR_TYPE_VEC4, type);
 	}
 	return (void *)v;
@@ -233,14 +233,20 @@ lbind_vector(lua_State *L) {
 }
 
 
-static int
+static uint8_t
 check_elem_type(lua_State *L, struct lastack *LS, int index) {	
 	if (lua_type(L, index) == LUA_TTABLE) {
-		int fieldtype = lua_getfield(L, index, "n");	
+		const int fieldtype = lua_getfield(L, index, "n");	
 		lua_pop(L, 1);
-		if (fieldtype != LUA_TNIL)			
-			return SET_Array;
 
+		if (fieldtype != LUA_TNIL){
+			lua_geti(L, index, 1);
+			int type;
+			get_pointer_type(L, LS, -1, &type);
+			lua_pop(L, 1);
+
+			return SET_Array | (type == LINEAR_TYPE_MAT ? SET_Mat : SET_Vec);
+		}
 		return lua_rawlen(L, index) >= 12 ? SET_Mat : SET_Vec;
 	}
 
@@ -302,9 +308,9 @@ lvariant(lua_State *L) {
 	struct lastack *LS = bp->LS;
 	const int from = lua_tointeger(L, lua_upvalueindex(4));
 	const int top = lua_gettop(L);
-	const int elemtype = check_elem_type(L, LS, from);	
-	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(elemtype == SET_Mat ? 2 : 3));
-	if (elemtype == SET_Array) {
+	const uint8_t elemtype = check_elem_type(L, LS, from);	
+	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex((elemtype & SET_Mat) ? 2 : 3));
+	if (elemtype & SET_Array) {
 		unpack_table_on_stack(L, LS, from, top, elemtype);
 	} else {		
 		convert_stack_value(L, LS, from, top, elemtype);
