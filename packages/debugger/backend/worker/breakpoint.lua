@@ -223,7 +223,6 @@ end
 
 ev.on('terminated', function()
     breakpoints = {}
-    currentBP = nil
     waitverify = {}
     info = {}
     m = {}
