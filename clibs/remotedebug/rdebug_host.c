@@ -9,6 +9,7 @@ static int DEBUG_HOST = 0;	// host L in client VM
 static int DEBUG_CLIENT = 0;	// client L in host VM for hook
 
 void probe(lua_State* cL, lua_State* hL, const char* name);
+int  event(lua_State* cL, lua_State* hL, const char* name);
 int init_visitor(lua_State *L);
 
 static void
@@ -145,6 +146,22 @@ lhost_probe(lua_State *L) {
 	return 0;
 }
 
+static int
+lhost_event(lua_State *L) {
+	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_CLIENT) != LUA_TLIGHTUSERDATA) {
+		// debugger not start
+		return 0;
+	}
+	lua_State *cL = lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	int ok = event(cL, L, luaL_checkstring(L, 1));
+	if (ok < 0) {
+		return 0;
+	}
+	lua_pushboolean(L, ok);
+	return 1;
+}
+
 lua_State *
 get_host(lua_State *L) {
 	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST) != LUA_TLIGHTUSERDATA) {
@@ -173,6 +190,7 @@ luaopen_remotedebug(lua_State *L) {
 			{ "start", lhost_start },
 			{ "clear", lhost_clear },
 			{ "probe", lhost_probe },
+			{ "event", lhost_event },
 			{ NULL, NULL },
 		};
 		luaL_newlib(L,l);

@@ -110,6 +110,26 @@ lclient_nextv(lua_State *L) {
 }
 
 static int
+client_getstack(lua_State *L, int getref) {
+	int index = (int)luaL_checkinteger(L, 1);
+	lua_State *hL = get_host(L);
+	if (get_stack(L, hL, index, getref)) {
+		return 1;
+	}
+	return 0;
+}
+
+static int
+lclient_getstack(lua_State *L) {
+	return client_getstack(L, 1);
+}
+
+static int
+lclient_getstackv(lua_State *L) {
+	return client_getstack(L, 0);
+}
+
+static int
 lclient_copytable(lua_State *L) {
 	lua_State *hL = get_host(L);
 	lua_settop(L, 1);
@@ -508,6 +528,8 @@ init_visitor(lua_State *L) {
 		{ "indexv", lclient_indexv },
 		{ "next", lclient_next },
 		{ "nextv", lclient_nextv },
+		{ "getstack", lclient_getstack },
+		{ "getstackv", lclient_getstackv },
 		{ "copytable", lclient_copytable },
 		{ "value", lclient_value },
 		{ "assign", lclient_assign },

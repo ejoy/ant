@@ -1,17 +1,11 @@
 local function start_hook()
     local pm = require 'antpm'
     local rdebug = require 'remotedebug'
-    local event = rdebug.probe
-
-    local function eventwp(name, ...)
-        local r
-        event(name)
-        return r
-    end
+    local event = rdebug.event
 
     local _print = print
     pm.setglobal('print', function (...)
-        if not eventwp('print', ...) then
+        if not event('print', ...) then
             _print(...)
         end
     end)
@@ -23,7 +17,7 @@ local function start_hook()
         if f ~= io_output then
             return f_write(f, ...)
         end
-        if not eventwp('iowrite', ...) then
+        if not event('iowrite', ...) then
             return f_write(f, ...)
         end
         return f
@@ -31,7 +25,7 @@ local function start_hook()
 
     local io_write = io.write
     function io.write(...)
-        if not eventwp('iowrite', ...) then
+        if not event('iowrite', ...) then
             return io_write(...)
         end
         return io_output
@@ -70,14 +64,14 @@ end
 
 local function start_worker(wait)
     local rdebug = require 'remotedebug'
-    local event = rdebug.probe
+    local probe = rdebug.probe
     start_hook()
     rdebug.start(bootstrap(), package.searchers[3])
     if wait then
-        event 'wait_client'
+        probe 'wait_client'
     end
     return function()
-        event 'update'
+        probe 'update'
     end
 end
 

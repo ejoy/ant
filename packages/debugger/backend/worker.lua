@@ -391,21 +391,15 @@ local function getEventArgsRaw(i)
     return true, value
 end
 
-local function setEventRet(v)
-    local name, value = rdebug.getlocal(1, 2)
-    if name ~= nil then
-        return rdebug.assign(value, v)
-    end
-    return false
-end
-
 local function pairsEventArgs()
-    return function(_, i)
-        local ok, value = getEventArgs(i)
-        if ok then
-            return i + 1, value
+    local n = 2
+    return function()
+        local value = rdebug.getstack(n)
+        if value ~= nil then
+            n = n + 1
+            return value
         end
-    end, nil, 1
+    end
 end
 
 local function getExceptionType()
@@ -437,7 +431,7 @@ end
 function event.print()
     if not initialized then return end
     local res = {}
-    for _, arg in pairsEventArgs() do
+    for arg in pairsEventArgs() do
         res[#res + 1] = tostring(rdebug.value(arg))
     end
     res = table.concat(res, '\t') .. '\n'
@@ -448,13 +442,13 @@ function event.print()
     else
         stdout(res)
     end
-    setEventRet(true)
+    return true
 end
 
 function event.iowrite()
     if not initialized then return end
     local res = {}
-    for _, arg in pairsEventArgs() do
+    for arg in pairsEventArgs() do
         res[#res + 1] = tostring(rdebug.value(arg))
     end
     res = table.concat(res, '\t')
@@ -465,7 +459,7 @@ function event.iowrite()
     else
         stdout(res)
     end
-    setEventRet(true)
+    return true
 end
 
 if hookmgr.exception_open then
