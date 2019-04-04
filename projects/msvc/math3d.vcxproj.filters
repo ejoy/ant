@@ -34,7 +34,12 @@
     <ClInclude Include="..\..\clibs\math3d\linalg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\clibs\math3d\fastmath.h" />
+    <ClInclude Include="..\..\clibs\math3d\fastmath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\math3d\math3d.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\clibs\math3d\test.lua" />

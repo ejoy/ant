@@ -21,9 +21,6 @@ extern "C" {
 extern bool default_homogeneous_depth();
 extern glm::vec3 to_viewdir(const glm::vec3 &e);
 
-extern int64_t
-get_stack_id(lua_State *L, struct lastack *LS, int index);
-
 template<class ValueType>
 static inline void
 push_vec(lua_State *L, int num, ValueType &v) {

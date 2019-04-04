@@ -232,6 +232,12 @@ lbind_vector(lua_State *L) {
 	return 1;
 }
 
+static int
+get_type(lua_State *L, struct lastack* LS, int index) {
+	int64_t id = get_stack_id(L, LS, index);
+	return lastack_type(LS, id);
+}
+
 
 static uint8_t
 check_elem_type(lua_State *L, struct lastack *LS, int index) {	
@@ -240,12 +246,15 @@ check_elem_type(lua_State *L, struct lastack *LS, int index) {
 		lua_pop(L, 1);
 
 		if (fieldtype != LUA_TNIL){
-			lua_geti(L, index, 1);
-			int type;
-			get_pointer_type(L, LS, -1, &type);
-			lua_pop(L, 1);
+			const int elemtype = lua_geti(L, index, 1);			
+			if (elemtype != LUA_TTABLE) {
+				int type = get_type(L, LS, -1);
+				lua_pop(L, 1);
+				return SET_Array | (type == LINEAR_TYPE_MAT ? SET_Mat : SET_Vec);
+			} 
 
-			return SET_Array | (type == LINEAR_TYPE_MAT ? SET_Mat : SET_Vec);
+			lua_pop(L, 1);
+			return SET_Array | (lua_rawlen(L, index) >= 12 ? SET_Mat : SET_Vec);
 		}
 		return lua_rawlen(L, index) >= 12 ? SET_Mat : SET_Vec;
 	}

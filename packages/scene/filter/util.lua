@@ -14,7 +14,7 @@ local function update_uniforms(uniforms, properties)
 	end
 end
 
-local function add_directional_light_properties(world, uniform_properties, scenebounding)
+local function add_directional_light_properties(world, uniform_properties)
 	local dlight_info = {
 		directional_lightdir = {name="Light Direction", type="v4", value={}},
 		directional_color = {name="Light Color", type="color", value={}},

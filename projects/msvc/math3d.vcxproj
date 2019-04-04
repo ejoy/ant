@@ -184,6 +184,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\clibs\math3d\fastmath.h" />
     <ClInclude Include="..\..\clibs\math3d\linalg.h" />
+    <ClInclude Include="..\..\clibs\math3d\math3d.h" />
     <ClInclude Include="..\..\clibs\math3d\refstack.h" />
   </ItemGroup>
   <ItemGroup>

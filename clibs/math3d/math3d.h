@@ -13,10 +13,13 @@ struct refobject {
 	int64_t id;
 };
 
-#endif
+int64_t
+get_stack_id(lua_State *L, struct lastack *LS, int index);
 
 #ifndef _MSC_VER
 #ifndef M_PI
 #define M_PI (3.14159265358979323846)
 #endif
 #endif // !_MSC_VER
+
+#endif

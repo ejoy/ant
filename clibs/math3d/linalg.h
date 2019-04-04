@@ -53,6 +53,7 @@ void lastack_reset(struct lastack *LS);
 void lastack_print(struct lastack *LS);	// for debug, dump all stack
 int lastack_gettop(struct lastack *LS); // for debug, get stack length
 void lastack_dump(struct lastack *LS, int from); // for debug, dump top values
+int lastack_type(struct lastack *LS, int64_t id);
 
 static inline int lastack_is_vec_type(int type) {
 	return (type == LINEAR_TYPE_VEC4) ? 1 : 0;
