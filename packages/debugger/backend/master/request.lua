@@ -93,6 +93,7 @@ function request.configurationDone(req)
     for _, w in ipairs(mgr.threads()) do
         initializeWorker(w)
     end
+    mgr.initConfig(config)
 end
 
 local breakpointID = 0
