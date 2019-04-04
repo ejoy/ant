@@ -2,7 +2,9 @@ local json = require 'cjson.safe' json.encode_empty_table_as_array 'on'
 local proto = require 'debugger.protocol'
 local ev = require 'debugger.event'
 local thread = require 'thread'
+local stdio = require 'remotedebug.stdio'
 
+local redirect = {}
 local mgr = {}
 local network
 local seq = 0
@@ -57,6 +59,32 @@ function mgr.init(io)
     network:event_close(event_close)
 end
 
+local function lst2map(t)
+    local r = {}
+    for _, v in ipairs(t) do
+        r[v] = true
+    end
+    return r
+end
+
+function mgr.initConfig(config)
+    if redirect.stdout then
+        redirect.stdout:close()
+        redirect.stdout = nil
+    end
+    if redirect.stderr then
+        redirect.stderr:close()
+        redirect.stderr = nil
+    end
+    local outputCapture = lst2map(config.initialize.outputCapture)
+    if outputCapture.stdout then
+        redirect.stdout = stdio.redirect 'stdout'
+    end
+    if outputCapture.stderr then
+        redirect.stderr = stdio.redirect 'stderr'
+    end
+end
+
 function mgr.sendToClient(pkg)
     network:send(proto.send(pkg))
 end
@@ -95,6 +123,20 @@ function mgr.update()
         local pkg = assert(json.decode(msg))
         if threads[pkg.cmd] then
             threads[pkg.cmd](w, pkg)
+        end
+    end
+    if redirect.stderr then
+        local res = redirect.stderr:read(redirect.stderr:peek())
+        if res then
+            local event = require 'debugger.backend.master.event'
+            event.output('stderr', res)
+        end
+    end
+    if redirect.stdout then
+        local res = redirect.stdout:read(redirect.stdout:peek())
+        if res then
+            local event = require 'debugger.backend.master.event'
+            event.output('stdout', res)
         end
     end
 end

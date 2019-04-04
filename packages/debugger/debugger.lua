@@ -20,6 +20,9 @@ local function start_hook()
     local mt = debug.getmetatable(io_output)
     local f_write = mt.write
     function mt.write(f, ...)
+        if f ~= io_output then
+            return f_write(f, ...)
+        end
         if not eventwp('iowrite', ...) then
             return f_write(f, ...)
         end
