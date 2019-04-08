@@ -1,37 +1,3 @@
-local function start_hook()
-    local pm = require 'antpm'
-    local rdebug = require 'remotedebug'
-    local event = rdebug.event
-
-    local _print = print
-    pm.setglobal('print', function (...)
-        if not event('print', ...) then
-            _print(...)
-        end
-    end)
-    
-    local io_output = debug.getregistry()._IO_output
-    local mt = debug.getmetatable(io_output)
-    local f_write = mt.write
-    function mt.write(f, ...)
-        if f ~= io_output then
-            return f_write(f, ...)
-        end
-        if not event('iowrite', ...) then
-            return f_write(f, ...)
-        end
-        return f
-    end
-
-    local io_write = io.write
-    function io.write(...)
-        if not event('iowrite', ...) then
-            return io_write(...)
-        end
-        return io_output
-    end
-end
-
 local function start_master(io)
     local master = require 'debugger.backend.master'
     if master.init(io) then
@@ -65,7 +31,6 @@ end
 local function start_worker(wait)
     local rdebug = require 'remotedebug'
     local probe = rdebug.probe
-    start_hook()
     rdebug.start(bootstrap(), package.searchers[3])
     if wait then
         probe 'wait_client'

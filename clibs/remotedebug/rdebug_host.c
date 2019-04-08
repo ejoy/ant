@@ -134,27 +134,27 @@ lhost_start(lua_State *L) {
 	return 0;
 }
 
-// use as hard break point
-static int
-lhost_probe(lua_State *L) {
+lua_State *
+get_client(lua_State *L) {
 	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_CLIENT) != LUA_TLIGHTUSERDATA) {
-		// debugger not start
 		return 0;
 	}
 	lua_State *cL = lua_touserdata(L, -1);
-	probe(cL, L, luaL_checkstring(L, 1));
+	lua_pop(L, 1);
+	return cL;
+}
+
+
+// use as hard break point
+static int
+lhost_probe(lua_State *L) {
+	probe(get_client(L), L, luaL_checkstring(L, 1));
 	return 0;
 }
 
 static int
 lhost_event(lua_State *L) {
-	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_CLIENT) != LUA_TLIGHTUSERDATA) {
-		// debugger not start
-		return 0;
-	}
-	lua_State *cL = lua_touserdata(L, -1);
-	lua_pop(L, 1);
-	int ok = event(cL, L, luaL_checkstring(L, 1));
+	int ok = event(get_client(L), L, luaL_checkstring(L, 1));
 	if (ok < 0) {
 		return 0;
 	}
