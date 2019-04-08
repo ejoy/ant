@@ -15,13 +15,13 @@ ev.on('initializing', function(config)
     sourceMaps = {}
     if config.skipFiles then
         for _, pattern in ipairs(config.skipFiles) do
-            skipFiles[#skipFiles + 1] = ('^%s$'):format(fs.normalize_native(pattern):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*'))
+            skipFiles[#skipFiles + 1] = ('^%s$'):format(fs.normalize_serverpath(pattern):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*'))
         end
     end
     if config.sourceMaps then
         for _, pattern in ipairs(config.sourceMaps) do
             local sm = {}
-            sm[1] = ('^%s$'):format(fs.normalize_native(pattern[1]):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'))
+            sm[1] = ('^%s$'):format(fs.normalize_serverpath(pattern[1]):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'))
             if sm[1]:find '%*' then
                 sm[1] = sm[1]:gsub('%*', '(.*)')
                 local r = {}
@@ -66,7 +66,7 @@ end
 local function serverPathToClientPath(p)
     -- TODO: utf8 or ansi
     local skip = false
-    local nativePath = fs.normalize_native(p)
+    local nativePath = fs.normalize_serverpath(p)
     for _, pattern in ipairs(skipFiles) do
         if glob_match(pattern, nativePath) then
             skip = true
@@ -149,9 +149,9 @@ function m.c2s(clientsrc)
             end
         end
     else
-        local nativepath = fs.normalize_native(clientsrc.path)
+        local nativepath = fs.normalize_clientpath(clientsrc.path)
         for _, source in pairs(sourcePool) do
-            if source.path and not source.sourceReference and fs.normalize_native(source.path) == nativepath then
+            if source.path and not source.sourceReference and fs.normalize_clientpath(source.path) == nativepath then
                 return source
             end
         end
