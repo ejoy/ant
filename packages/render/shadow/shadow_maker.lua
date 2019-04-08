@@ -79,7 +79,7 @@ function sm:init()
 				ortho = true,
 				l = -2, r = 2,
 				t = 2, b = -2,
-				n = 0, f = 100,
+				n = -100, f = 100,
 			},
 		},
 		render_target = {

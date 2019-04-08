@@ -1,4 +1,4 @@
-﻿#define LUA_LIB
+#define LUA_LIB
 #define GLM_ENABLE_EXPERIMENTAL
 
 extern "C" {
@@ -17,6 +17,7 @@ extern "C" {
 #include <vector>
 #include <array>
 #include <cstring>
+#include <unordered_map>
 
 extern bool default_homogeneous_depth();
 extern glm::vec3 to_viewdir(const glm::vec3 &e);
@@ -167,11 +168,11 @@ push_obb(lua_State *L, const OBB &obb) {
 }
 
 static inline void
-frustum_planes_intersection_points(std::array<glm::vec4, 6> &planes, std::array<glm::vec3, 8> &points) {
+frustum_planes_intersection_points(std::array<glm::vec4, 6> &planes, std::unordered_map<std::string, glm::vec3> &points) {
 	enum PlaneName {
 		left = 0, right,
 		top, bottom,
-		near, far
+		near, far,
 	};
 	enum FrustumPointName {
 		ltn = 0, rtn, ltf, rtf,
@@ -201,9 +202,15 @@ frustum_planes_intersection_points(std::array<glm::vec4, 6> &planes, std::array<
 		{PlaneName::right, PlaneName::bottom, PlaneName::far},
 	};
 
+	const std::string names[] = {
+		"ltn", "rtn", "ltf", "rtf",
+		"lbn", "rbn", "lbf", "rbf",
+	};
+
 	for (int ii = 0; ii < 8; ++ii) {
 		int idx0 = defines[ii][0], idx1 = defines[ii][1], idx2 = defines[ii][2];
-		points[ii] = calc_intersection_point(planes[idx0], planes[idx1], planes[idx2]);
+		const auto& name = names[ii];
+		points[name] = calc_intersection_point(planes[idx0], planes[idx1], planes[idx2]);
 	}
 }
 
@@ -317,7 +324,7 @@ pull_frustum_planes(lua_State *L, std::array<glm::vec4, 6> &planes, int index) {
 	if (type == LUA_TTABLE) {
 		const size_t tlen = lua_rawlen(L, 1);
 
-		if (tlen == 0) {
+		if (tlen == 24) {
 			for (int iPlane = 0; iPlane < 6; ++iPlane) {				
 				for (int ii = 0; ii < 4; ++ii) {
 					lua_geti(L, 1, iPlane * 4 + ii + 1);
@@ -433,15 +440,19 @@ lfrustum_points(lua_State *L) {
 	std::array<glm::vec4, 6> planes;
 	pull_frustum_planes(L, planes, 1);
 
-	std::array<glm::vec3, 8> points;
+	std::unordered_map<std::string, glm::vec3> points;
 	frustum_planes_intersection_points(planes, points);
 
-	lua_createtable(L, 3 * 8, 0);
-	for (int ipoint = 0; ipoint < 8; ++ipoint)
+	lua_createtable(L, 0, 8);	
+	for (const auto &p : points) {
+		lua_createtable(L, 3, 0);
+		const auto &point = p.second;
 		for (int ii = 0; ii < 3; ++ii) {
-			lua_pushnumber(L, points[ipoint][ii]);
-			lua_seti(L, -2, ipoint * 3 + ii+1);
+			lua_pushnumber(L, point[ii]);
+			lua_seti(L, -2, ii+1);
 		}
+		lua_setfield(L, -2, p.first.c_str());
+	}
 	return 1;
 }
 
