@@ -25,6 +25,7 @@ local function gen_color_vertices(pts, color, transform, vb)
 	else
 		for i=1, vnum do			
 			table.move(pts[i], 1, 3, #vb+1, vb)
+			vb[#vb+1] = color
 		end
 	end
 end

@@ -180,7 +180,7 @@ local function update_bounding_mesh()
 
 			local startvb = #desc.vb - 1
 			local startib = #desc.ib
-			geodrawer.draw_aabb_box(meshhandle.bounding.aabb, 0x0000f0ff, ms:srtmat(e.transform), desc)
+			geodrawer.draw_aabb_box(meshhandle.bounding.aabb, 0xff8f0000, ms:srtmat(e.transform), desc)
 
 			local endvb = #desc.vb - 1
 			local endib = #desc.ib

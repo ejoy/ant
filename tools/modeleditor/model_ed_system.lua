@@ -122,8 +122,8 @@ local function check_create_sample_entity(skepath, anipaths, smpath)
 	if sample_eid then
 		world:remove_entity(sample_eid)
 	end
-	sample_eid = util.create_sample_entity(world, skepath, anipaths, smpath)		
-	enable_sample_visible()
+	sample_eid = util.create_sample_entity(world, skepath, anipaths, smpath)
+	enable_sample_visible()	
 end
 
 local function get_sel_ani()
@@ -460,7 +460,7 @@ end
 
 local function init_scene()
 	local computil = renderpkg.components
-	--computil.create_grid_entity(world, "grid", 16, 16, 1)
+	computil.create_grid_entity(world, "grid", 16, 16, 1)
 	computil.create_plane_entity(world, {0.5, 0.5, 0.5, 1})
 end
 
@@ -478,6 +478,7 @@ function model_ed_sys:init()
 	focus_sample()
 
 	local sample = sample_entity()
+	--setmetatable(sample.transform)
 	if sample then
 		local anicomp = sample.animation
 		aniutil.play_animation(anicomp, anicomp.pose_state.pose)
