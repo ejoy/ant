@@ -2,7 +2,7 @@ local mgr = require 'debugger.backend.master.mgr'
 local response = require 'debugger.backend.master.response'
 local event = require 'debugger.backend.master.event'
 local ev = require 'debugger.event'
-local parser = require 'debugger.parser'
+local parser = require 'debugger.backend.parser'
 
 local request = {}
 

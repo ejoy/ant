@@ -1,7 +1,7 @@
-local fs = require 'debugger.fs'
-local parser = require 'debugger.parser'
+local fs = require 'debugger.backend.filesystem'
+local parser = require 'debugger.backend.parser'
 local ev = require 'debugger.event'
-local crc32 = require 'debugger.crc32'
+local crc32 = require 'debugger.backend.crc32'
 
 local sourcePool = {}
 local codePool = {}
