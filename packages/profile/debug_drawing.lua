@@ -3,28 +3,13 @@ local world = ecs.world
 
 local bgfx = require "bgfx"
 local fs = require "filesystem"
+local renderpkg = import_package "ant.render"
+local declmgr = renderpkg.declmgr
+local computil = renderpkg.components
 
 local function init_wireframe_mesh()
-	local decl, vertexsize = bgfx.vertex_decl {
-		{ "POSITION", 3, "FLOAT" },
-		{ "COLOR0", 4, "UINT8", true },
-	}
-	return	{
-		groups={
-			{
-				vb={
-					decls={	{decl, vertexsize}, },
-					handles={
-						bgfx.create_dynamic_vertex_buffer(1024*10, decl, "a")
-					}
-				},
-				ib={
-					handle=bgfx.create_dynamic_index_buffer(1024*10, "a")
-				},
-				primitives={}
-			},
-		}
-	}	
+	local decl = declmgr.get("p3|c40niu")
+	return	computil.create_dynamic_mesh_handle(decl.handle, 1024*10, 1024*10)
 end
 
 ecs.tag "debug_wireframe"
@@ -70,7 +55,7 @@ function wireframe_obj.init(self)
 
 	local dbentity = world[debugeid]
 	dbentity.mesh = {
-		assetinfo={handle=init_wireframe_mesh()}
+		assetinfo=init_wireframe_mesh()
 	}
 	return wo
 end

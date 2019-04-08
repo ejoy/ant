@@ -5,7 +5,8 @@ local bgfx = require "bgfx"
 local fs = require "filesystem"
 
 local asset = import_package "ant.asset"
-
+local mu = import_package "ant.math".util
+local declmgr = require "vertexdecl_mgr"
 
 local function deep_copy(t)
 	if type(t) == "table" then
@@ -16,80 +17,6 @@ local function deep_copy(t)
 		return tmp
 	end
 	return t
-end
-
-local function load_res(comp, filename, param, errmsg)
-	local res = asset.load(filename, param)	
-	if res == nil then
-		error(string.format("[%s]load resource failed, respath:%s", errmsg, filename))
-	end
-
-	comp.assetinfo = res
-	comp.ref_path = filename
-end
-
-function util.load_skeleton(comp, filename, param)
-	load_res(comp, filename, param, "load.skeleton")	
-end
-
-local function gen_mesh_assetinfo(skinning_mesh_comp)
-	local modelloader = import_package "ant.modelloader"
-
-	local skinning_mesh = skinning_mesh_comp.assetinfo.handle
-
-	local decls = {}
-	local vb_handles = {}
-	local vb_data = {"!", "", 1}
-	for _, type in ipairs {"dynamic", "static"} do
-		local layout = skinning_mesh:layout(type)
-		local decl = modelloader.create_decl(layout)
-		table.insert(decls, decl)
-
-		local buffer, size = skinning_mesh:buffer(type)
-		vb_data[2], vb_data[3] = buffer, size
-		if type == "dynamic" then
-			table.insert(vb_handles, bgfx.create_dynamic_vertex_buffer(vb_data, decl))
-		elseif type == "static" then
-			table.insert(vb_handles, bgfx.create_vertex_buffer(vb_data, decl))
-		end
-	end
-
-	local function create_idx_buffer()
-		local idx_buffer, ib_size = skinning_mesh:index_buffer()	
-		if idx_buffer then			
-			return bgfx.create_index_buffer({idx_buffer, ib_size})
-		end
-
-		return nil
-	end
-
-	local ib_handle = create_idx_buffer()
-
-	return {
-		handle = {
-			groups = {
-				{
-					bounding = skinning_mesh:bounding(),
-					vb = {
-						decls = decls,
-						handles = vb_handles,
-					},
-					ib = {
-						handle = ib_handle,
-					}
-				}
-			}
-		},			
-	}
-end
-
-function util.load_skinning_mesh(smcomp, meshcomp, filename, param)
-	load_res(smcomp, filename, param, "load.skinning_mesh")
-	meshcomp.assetinfo = gen_mesh_assetinfo(smcomp)
-end
-
-function util.load_mesh(comp, filename, param)
-	load_res(comp, filename, param, "load.mesh")
 end
 
 function util.load_texture(name, stage, filename)	
@@ -155,6 +82,14 @@ function util.create_material(material)
 	material.materialinfo = materialinfo	
 end
 
+function util.assign_material(filepath)
+	return {
+		content = {
+			{ref_path = filepath}
+		}
+	}
+end
+
 
 -- content:material_content
 -- texture_tbl:{
@@ -215,21 +150,11 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
     local geolib = geopkg.geometry
 
 	local gridid = world:create_entity {
-		transform = {			
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-        can_render = true,
+		transform = mu.identity_transform(),
         mesh = {},
-        material = {
-			content = {
-				{
-					ref_path = fs.path "//ant.resources/line.material"
-				}
-			}
-		},
+        material = util.assign_material(fs.path "//ant.resources" / "line.material"),
 		name = name,
+		can_render = true,
 		main_view = true,
     }
     local grid = world[gridid]
@@ -283,20 +208,12 @@ function util.create_plane_entity(world, color, size, pos, name)
 	}
 end
 
-local quaddecl
 local function get_quaddecl()
-	if quaddecl == nil then
-		quaddecl = bgfx.vertex_decl {
-			{ "POSITION", 3, "FLOAT" },
-			{ "TEXCOORD0", 2, "FLOAT"},
-		}
-	end
-
-	return quaddecl
+	return declmgr.get("p3|t2")
 end
 
 function util.quad_mesh(rect)
-	local decl = get_quaddecl()
+	local decl = get_quaddecl().handle
 	local depth = 0
 
 	local vbhandle = bgfx.create_vertex_buffer(
@@ -369,9 +286,30 @@ function util.create_quad_entity(world, texture_tbl, view_tag, name)
     local gvb = {"fffff"}
     for _, v in ipairs(vb) do for _, vv in ipairs(v) do table.insert(gvb, vv) end end
     local ib = { 0, 1, 2, 3}
-    local vdecl = get_quaddecl()
+    local vdecl = get_quaddecl().handle
     quad.mesh.assetinfo = util.create_mesh_handle(vdecl, gvb, ib)
     return quadid
+end
+
+
+function util.create_dynamic_mesh_handle(decl, vbsize, ibsize)
+	return {
+		handle = {
+			groups = {
+				{
+					vb = {
+						handles = {
+							bgfx.create_dynamic_vertex_buffer(vbsize, decl, "a")
+						}						
+					},
+					ib={
+						handle=bgfx.create_dynamic_index_buffer(ibsize, "a")
+					},
+					primitives = {},
+				}
+			}
+		}
+	}
 end
 
 return util

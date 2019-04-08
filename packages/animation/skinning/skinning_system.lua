@@ -1,6 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
+local declmgr = import_package "ant.render".declmgr
 local animodule = require "hierarchy.animation"
 local bgfx = require "bgfx"
 
@@ -10,8 +11,6 @@ local bgfx = require "bgfx"
 local sm = ecs.component_alias("skinning_mesh", "resource") {depend = {"mesh", "animation"}}
 
 local function gen_mesh_assetinfo(skinning_mesh_comp)
-	local modelloader = import_package "ant.modelloader"
-
 	local skinning_mesh = skinning_mesh_comp.assetinfo.handle
 
 	local decls = {}
@@ -19,7 +18,7 @@ local function gen_mesh_assetinfo(skinning_mesh_comp)
 	local vb_data = {"!", "", 1}
 	for _, type in ipairs {"dynamic", "static"} do
 		local layout = skinning_mesh:layout(type)
-		local decl = modelloader.create_decl(layout)
+		local decl = declmgr.get(layout).handle
 		table.insert(decls, decl)
 
 		local buffer, size = skinning_mesh:buffer(type)

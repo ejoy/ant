@@ -34,11 +34,13 @@ model_ed_sys.dependby "state_machine"
 model_ed_sys.dependby "skinning_system"
 model_ed_sys.dependby "math_adapter"
 
-model_ed_sys.dependby "render_mesh_bounding"
+--model_ed_sys.dependby "render_mesh_bounding"
 model_ed_sys.dependby "primitive_filter_system"
 model_ed_sys.dependby "render_system"
 model_ed_sys.dependby "pickup_system"
 model_ed_sys.dependby "shadow_maker11"
+model_ed_sys.dependby "debug_shadow_maker"
+--model_ed_sys.dependby "obj_transform_system"
 
 -- luacheck: globals main_dialog
 -- luacheck: globals iup
@@ -84,6 +86,15 @@ local function enable_sample_boundingbox()
 		local bounding = dlg_item("SHOWSAMPLEBOUNDING")
 		sample.can_show_bounding = bounding.VALUE ~= "OFF"
 	end
+end
+
+local function enable_using_lightview()
+	local main_queue = world:first_entity "main_queue"
+	local shadow_queue = world:first_entity "shadow"
+
+	local maincamera = main_queue.camera
+	main_queue.camera = shadow_queue.camera
+	shadow_queue.camera = maincamera
 end
 
 local function enable_bones_visible()
@@ -268,6 +279,7 @@ local function init_check_shower()
 		SHOWBONES=enable_bones_visible,
 		SHOWSAMPLE=enable_sample_visible,
 		SHOWSAMPLEBOUNDING=enable_sample_boundingbox,
+		USELIGHTVIEW=enable_using_lightview,
 	}
 
 	for k, v in pairs(checkers) do

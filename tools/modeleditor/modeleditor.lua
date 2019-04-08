@@ -167,6 +167,12 @@ local dlg = iup.dialog {
 								TITLE="Show Sample BoundingBox",
 								VALUE="OFF",
 							},
+							iup.space { SIZE="0x5", },
+							iup.toggle {
+								NAME="USELIGHTVIEW",
+								TITLE="Using Directional Light View",
+								VALUE="OFF",
+							},
 						}
 					},
 				},				
