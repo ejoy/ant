@@ -77,10 +77,4 @@ function m.filename(path)
     return paths[#paths]
 end
 
-function m.remove_filename(path)
-    local paths = normalize(path)
-    paths[#paths] = nil
-    return table.concat(paths, default_sep)
-end
-
 return m
