@@ -1,5 +1,5 @@
 local rdebug = require 'remotedebug'
-local json = require 'cjson.safe' json.encode_empty_table_as_array 'on'
+local json = require 'json'
 local variables = require 'backend.worker.variables'
 local source = require 'backend.worker.source'
 local breakpoint = require 'backend.worker.breakpoint'

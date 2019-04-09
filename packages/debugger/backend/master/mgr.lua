@@ -1,4 +1,4 @@
-local json = require 'cjson.safe' json.encode_empty_table_as_array 'on'
+local json = require 'json'
 local proto = require 'protocol'
 local ev = require 'event'
 local thread = require 'thread'
