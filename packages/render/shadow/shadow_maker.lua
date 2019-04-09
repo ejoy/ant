@@ -207,17 +207,8 @@ local function update_bounding_mesh()
 	local meshhandle = boundingdebug.mesh.assetinfo.handle
 	local group = meshhandle.groups[1]
 	group.primitives = desc.primitives
-	local vbhandle = group.vb.handles[1]
-	local ibhandle = group.ib.handle
-
-	local decl = get_line_decl()
-	local vb, ib = desc.vb, desc.ib
-	local numvertex = #desc.vb / 4
-	local vbsize = decl.stride * numvertex
-	local numib = #desc.ib
-	local ibsize = numib * 2 -- 16 bit index = 2 bytes
-	bgfx.update(vbhandle, 0, vb)
-	bgfx.update(ibhandle, 0, ib)
+	bgfx.update(group.vb.handles[1], 0, desc.vb)
+	bgfx.update(group.ib.handle, 0, desc.ib)
 
 	boundingdebug.can_render = true
 end
