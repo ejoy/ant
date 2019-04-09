@@ -2295,49 +2295,75 @@ lsrt_matrix(lua_State *L) {
 static int
 lview_proj(lua_State *L) {
 	const int numarg = lua_gettop(L);
-	if (numarg < 3) {
-		return luaL_error(L, "only support 3 argument, %d provided", numarg);
+	if (numarg < 2) {
+		return luaL_error(L, "argument should provided as: \
+							camera[view matrix, can be nil],\
+							frustum[project, can be nil],\
+							combine[view&proj or not], \
+							but camera, frustum must provided one of them.\
+							%d provided", numarg);
 	}
 
 	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
 	lastack *LS = bp->LS;
 
-	luaL_checktype(L, 2, LUA_TTABLE);	// view matrix
-	
-	lua_getfield(L, 2, "viewdir");
-	int type;
-	const glm::vec3 viewdir = *(const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
-	lua_pop(L, 1);
-	lua_getfield(L, 2, "eyepos");
-	const glm::vec3 eyepos = *(const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
-	lua_pop(L, 1);
-	
-	const glm::vec3 updir = (lua_getfield(L, 2, "updir") == LUA_TNIL) ?
-		glm::vec3(0, 1, 0) :
-		*((const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type));
-	lua_pop(L, 1);
+	glm::mat4x4 viewmat;
+	const bool hasviewmat = !lua_isnil(L, 2);
+	if (hasviewmat) {
+		luaL_checktype(L, 2, LUA_TTABLE);	// view matrix
 
-	auto viewmat = glm::lookAtLH(eyepos, eyepos + viewdir, updir);
+		lua_getfield(L, 2, "viewdir");
+		int type;
+		const glm::vec3 viewdir = *(const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
+		lua_pop(L, 1);
+		lua_getfield(L, 2, "eyepos");
+		const glm::vec3 eyepos = *(const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
+		lua_pop(L, 1);
 
-	luaL_checktype(L, 3, LUA_TTABLE);
-	auto projmat = create_proj_mat(L, LS, 3);
+		const glm::vec3 updir = (lua_getfield(L, 2, "updir") == LUA_TNIL) ?
+			glm::vec3(0, 1, 0) :
+			*((const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type));
+		lua_pop(L, 1);
+
+		viewmat = glm::lookAtLH(eyepos, eyepos + viewdir, updir);
+	}
+
+	glm::mat4x4 projmat;
+	const bool hasprojmat = !lua_isnil(L, 3);
+	if (hasprojmat) {
+		luaL_checktype(L, 3, LUA_TTABLE);
+		projmat = create_proj_mat(L, LS, 3);
+	}
 
 	const bool combine = lua_isnoneornil(L, 4) ? false : (!!lua_toboolean(L, 4));
 
-	lastack_pushmatrix(LS, &viewmat[0][0]);
-	pushid(L, pop(L, LS));
+	int numresult = 0;
 
-	lastack_pushmatrix(LS, &projmat[0][0]);
-	pushid(L, pop(L, LS));
-
-	if (combine) {
-		auto viewproj = projmat * viewmat;
-		lastack_pushmatrix(LS, &viewproj[0][0]);
+	if (hasviewmat) {
+		lastack_pushmatrix(LS, &viewmat[0][0]);
 		pushid(L, pop(L, LS));
-		return 3;
+		++numresult;
 	}
 
-	return 2;
+	if (hasprojmat) {
+		lastack_pushmatrix(LS, &projmat[0][0]);
+		pushid(L, pop(L, LS));
+		++numresult;
+	}
+
+	if (combine) {
+		if (hasviewmat && hasprojmat) {
+			auto viewproj = projmat * viewmat;
+			lastack_pushmatrix(LS, &viewproj[0][0]);
+			pushid(L, pop(L, LS));
+			return 3;
+		}
+
+		luaL_error(L, "one of view or proj matrix is not provided, matrix are not enough to combine");
+	}
+
+	assert(numresult >= 1);
+	return numresult;
 }
 
 static inline glm::vec4 

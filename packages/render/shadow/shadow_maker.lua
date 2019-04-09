@@ -165,7 +165,7 @@ end
 local function generate_lighting_frustum_vb()
 	local shadow = world:first_entity "shadow"
 
-	local _, proj = ms:view_proj(shadow.camera, shadow.camera.frustum)
+	local proj = ms:view_proj(nil, shadow.camera.frustum)
 	local points = mathbaselib.frustum_points(ms(proj, "m"))
 
 	local vb = {"fffd"}
