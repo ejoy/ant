@@ -1,4 +1,4 @@
-local undump = require 'debugger.backend.undump'
+local undump = require 'backend.undump'
 
 local function getproto(f)
     local cl = undump(string.dump(f))

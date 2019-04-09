@@ -1,5 +1,5 @@
 local function start_master(io)
-    local master = require 'debugger.backend.master'
+    local master = require 'backend.master'
     if master.init(io) then
         return master.update
     end
@@ -24,8 +24,8 @@ local function bootstrap()
         init_thread()
         package.path = [[%s]]
         require 'runtime.vfs'
-        require 'debugger.backend.worker'
-    ]=]):format(init_thread, "engine/libs/?.lua;engine/packages/?.lua")
+        require 'backend.worker'
+    ]=]):format(init_thread, "engine/libs/?.lua;engine/packages/debugger/?.lua")
 end
 
 local function start_worker(wait)

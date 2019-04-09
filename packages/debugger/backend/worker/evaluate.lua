@@ -1,5 +1,5 @@
 local rdebug = require 'remotedebug'
-local variables = require 'debugger.backend.worker.variables'
+local variables = require 'backend.worker.variables'
 
 local function readfile(filename)
     local vfs = require 'vfs.simplefs'
@@ -11,8 +11,8 @@ local function readfile(filename)
     return str
 end
 
-local eval_repl  = assert(rdebug.reffunc(readfile 'debugger.backend.worker.eval_repl'))
-local eval_watch = assert(rdebug.reffunc(readfile 'debugger.backend.worker.eval_watch'))
+local eval_repl  = assert(rdebug.reffunc(readfile 'backend.worker.eval_repl'))
+local eval_watch = assert(rdebug.reffunc(readfile 'backend.worker.eval_watch'))
 
 local function run_repl(frameId, expression)
     local res = table.pack(rdebug.evalwatch(eval_repl, 'return ' .. expression, frameId))

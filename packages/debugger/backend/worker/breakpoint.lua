@@ -1,8 +1,8 @@
 local rdebug = require 'remotedebug'
-local fs = require 'debugger.backend.filesystem'
-local source = require 'debugger.backend.worker.source'
-local evaluate = require 'debugger.backend.worker.evaluate'
-local ev = require 'debugger.event'
+local fs = require 'backend.filesystem'
+local source = require 'backend.worker.source'
+local evaluate = require 'backend.worker.evaluate'
+local ev = require 'event'
 local hookmgr = require 'remotedebug.hookmgr'
 
 local breakpoints = {}
