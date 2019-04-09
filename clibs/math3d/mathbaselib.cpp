@@ -57,11 +57,11 @@ struct Frustum {
 
 static inline void
 pull_frustum(lua_State *L, int index, Frustum &f) {
-	lua_getfield(L, 2, "type");
-	const char* type = lua_tostring(L, -1);
+	if (LUA_TNIL != lua_getfield(L, index, "ortho"))
+		f.ortho = lua_toboolean(L, -1);
+	else
+		f.ortho = false;
 	lua_pop(L, 1);
-
-	f.ortho = strcmp(type, "ortho") == 0;
 
 	lua_getfield(L, index, "n");
 	f.n = luaL_optnumber(L, -1, 0.1f);
@@ -167,18 +167,31 @@ push_obb(lua_State *L, const OBB &obb) {
 	}
 }
 
-static inline void
-frustum_planes_intersection_points(std::array<glm::vec4, 6> &planes, std::unordered_map<std::string, glm::vec3> &points) {
-	enum PlaneName {
-		left = 0, right,
-		top, bottom,
-		near, far,
-	};
-	enum FrustumPointName {
-		ltn = 0, rtn, ltf, rtf,
-		lbn, rbn, lbf, rbf,
+enum PlaneName : uint8_t {
+	left = 0, right,
+	top, bottom,
+	near, far,
+};
+
+struct FrustumConer {
+	PlaneName pnames[3];	
+};
+
+static inline std::string get_coner_name(const FrustumConer &c) {
+	std::string name;
+	const char* planenames[] = {
+		"l", "r", "t", "b", "n", "f"
 	};
 
+	for (auto pn : c.pnames) {
+		name += planenames[pn];
+	}
+
+	return name;
+}
+
+static inline void
+frustum_planes_intersection_points(std::array<glm::vec4, 6> &planes, std::unordered_map<std::string, glm::vec3> &points) {
 	auto calc_intersection_point = [](auto p0, auto p1, auto p2) {
 		auto crossp0p1 = (glm::cross(glm::vec3(p0), glm::vec3(p1)));
 		auto t = p0.w * (glm::cross(glm::vec3(p1), glm::vec3(p2))) +
@@ -188,7 +201,7 @@ frustum_planes_intersection_points(std::array<glm::vec4, 6> &planes, std::unorde
 		return t / glm::dot(crossp0p1, glm::vec3(p2));
 	};
 
-	uint8_t defines[8][3] = {
+	FrustumConer coners[8] = {
 		{PlaneName::left, PlaneName::top, PlaneName::near},
 		{PlaneName::right, PlaneName::top, PlaneName::near},
 
@@ -202,73 +215,66 @@ frustum_planes_intersection_points(std::array<glm::vec4, 6> &planes, std::unorde
 		{PlaneName::right, PlaneName::bottom, PlaneName::far},
 	};
 
-	const std::string names[] = {
-		"ltn", "rtn", "ltf", "rtf",
-		"lbn", "rbn", "lbf", "rbf",
-	};
-
-	for (int ii = 0; ii < 8; ++ii) {
-		int idx0 = defines[ii][0], idx1 = defines[ii][1], idx2 = defines[ii][2];
-		const auto& name = names[ii];
-		points[name] = calc_intersection_point(planes[idx0], planes[idx1], planes[idx2]);
+	for (const auto &c : coners) {		
+		const auto& name = get_coner_name(c);
+		points[name] = calc_intersection_point(planes[c.pnames[0]], planes[c.pnames[1]], planes[c.pnames[2]]);
 	}
 }
 
 
 static inline void 
-extract_planes(std::array<glm::vec4, 6> &planes, const glm::mat4x4 &projMat, bool normalize) {
-	// Left clipping plane
-	planes[0][0] = projMat[3][0] + projMat[0][0];
-	planes[0][1] = projMat[3][1] + projMat[0][1];
-	planes[0][2] = projMat[3][2] + projMat[0][2];
-	planes[0][3] = projMat[3][3] + projMat[0][3];
-	// Right clipping plane
-	planes[1][0] = projMat[3][0] - projMat[0][0];
-	planes[1][1] = projMat[3][1] - projMat[0][1];
-	planes[1][2] = projMat[3][2] - projMat[0][2];
-	planes[1][3] = projMat[3][3] - projMat[0][3];
-	// Top clipping plane
-	planes[2][0] = projMat[3][0] - projMat[1][0];
-	planes[2][1] = projMat[3][1] - projMat[1][1];
-	planes[2][2] = projMat[3][2] - projMat[1][2];
-	planes[2][3] = projMat[3][3] - projMat[1][3];
-	// Bottom clipping plane
-	planes[3][0] = projMat[3][0] + projMat[1][0];
-	planes[3][1] = projMat[3][1] + projMat[1][1];
-	planes[3][2] = projMat[3][2] + projMat[1][2];
-	planes[3][3] = projMat[3][3] + projMat[1][3];
-	// Near clipping plane
+extract_planes(std::array<glm::vec4, 6> &planes, const glm::mat4x4 &m, bool normalize) {
+	const auto &c0 = m[0], &c1 = m[1], &c2 = m[2], &c3 = m[3];
+
+	auto &leftplane = planes[PlaneName::left];
+	leftplane[0] = c0[0] + c0[3];
+	leftplane[1] = c1[0] + c1[3];
+	leftplane[2] = c2[0] + c2[3];
+	leftplane[3] = c3[0] + c3[3];
+
+	auto &rightplane = planes[PlaneName::right];	
+	rightplane[0] = c0[3] - c0[0];
+	rightplane[1] = c1[3] - c1[0];
+	rightplane[2] = c2[3] - c2[0];
+	rightplane[3] = c3[3] - c3[0];
+
+	auto &bottomplane = planes[PlaneName::bottom];
+	bottomplane[0] = c0[3] + c0[1];
+	bottomplane[1] = c1[3] + c1[1];
+	bottomplane[2] = c2[3] + c2[1];
+	bottomplane[3] = c3[3] + c3[1];
+
+	auto &topplane = planes[PlaneName::top];
+	topplane[0] = c0[3] - c0[1];
+	topplane[1] = c1[3] - c1[1];
+	topplane[2] = c2[3] - c2[1];
+	topplane[3] = c3[3] - c3[1];
+
+	auto &nearplane = planes[PlaneName::near];
 	if (default_homogeneous_depth()) {		
-		planes[4][0] = projMat[3][0] + projMat[2][0];
-		planes[4][1] = projMat[3][1] + projMat[2][1];
-		planes[4][2] = projMat[3][2] + projMat[2][2];
-		planes[4][3] = projMat[3][3] + projMat[2][3];
+		nearplane[0] = c0[3] + c0[2];
+		nearplane[1] = c1[3] + c1[2];
+		nearplane[2] = c2[3] + c2[2];
+		nearplane[3] = c3[3] + c3[2];
 	} else {
-		planes[4][0] = projMat[0][2];
-		planes[4][1] = projMat[1][2];
-		planes[4][2] = projMat[2][2];
-		planes[4][3] = projMat[3][2];
+		nearplane[0] = c0[2];
+		nearplane[1] = c1[2];
+		nearplane[2] = c2[2];
+		nearplane[3] = c3[2];
 	}
 
-	// Far clipping plane
-	planes[5][0] = projMat[3][0] - projMat[2][0];
-	planes[5][1] = projMat[3][1] - projMat[2][1];
-	planes[5][2] = projMat[3][2] - projMat[2][2];
-	planes[5][3] = projMat[3][3] - projMat[2][3];
-	// Normalize the plane equations, if requested
+	auto &farplane = planes[PlaneName::far];	
+	farplane[0] = c0[3] - c0[2];
+	farplane[1] = c1[3] - c1[2];
+	farplane[2] = c2[3] - c2[2];
+	farplane[3] = c3[3] - c3[2];
+
 	if (normalize){
 		for (auto &p : planes) {
 			auto len = glm::length(glm::vec3(p));
 			if (glm::abs(len) >= glm::epsilon<float>())
 				p /= len;
 		}
-			
-		//NormalizePlane(p_planes[0]);
-		//NormalizePlane(p_planes[1]);
-		//NormalizePlane(p_planes[2]);
-		//NormalizePlane(p_planes[3]);
-		//NormalizePlane(p_planes[4]);
-		//NormalizePlane(p_planes[5]);
 	}
 }
 

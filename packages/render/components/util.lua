@@ -302,9 +302,9 @@ function util.create_dynamic_mesh_handle(decl, vbsize, ibsize)
 							bgfx.create_dynamic_vertex_buffer(vbsize, decl, "a")
 						}						
 					},
-					ib={
-						handle=bgfx.create_dynamic_index_buffer(ibsize, "a")
-					},
+					ib = ibsize and {
+						handle= bgfx.create_dynamic_index_buffer(ibsize, "a")
+					} or nil,
 					primitives = {},
 				}
 			}

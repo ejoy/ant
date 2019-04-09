@@ -140,10 +140,11 @@ function sm:update()
 end
 
 ecs.tag "bounding_debug"
+ecs.tag "frustum_debug"
 local debug_sm = ecs.system "debug_shadow_maker"
 debug_sm.depend "shadow_maker11"
 
-local function get_bounding_decl()
+local function get_line_decl()
 	return declmgr.get("p3|c40niu")
 end
 
@@ -157,13 +158,25 @@ local function create_bounding_mesh_entity()
 		main_view = true,
 		bounding_debug = true,
 	}
-	world[eid].mesh.assetinfo = computil.create_dynamic_mesh_handle(get_bounding_decl().handle, 1024*10, 1024*10)
+	world[eid].mesh.assetinfo = computil.create_dynamic_mesh_handle(get_line_decl().handle, 1024*10, 1024*10)
 end
 
 function debug_sm:init()
 	local qw, qh = 128,128
 	computil.create_shadow_quad_entity(world, {x=0, y=0, w=qw, h=qh})
 	create_bounding_mesh_entity()
+
+	local eid = world:create_entity {
+		transform = mu.identity_transform(),
+		mesh = {},
+		material = computil.assign_material(fs.path "//ant.resources" / "line.material"),
+		can_render = true,
+		main_view = true,
+		frustum_debug = true,
+		name = "direction light frustum shape",
+	}
+
+	world[eid].mesh.assetinfo = computil.create_dynamic_mesh_handle(get_line_decl().handle, 100)
 end
 
 local function update_bounding_mesh()
@@ -197,7 +210,7 @@ local function update_bounding_mesh()
 	local vbhandle = group.vb.handles[1]
 	local ibhandle = group.ib.handle
 
-	local decl = get_bounding_decl()
+	local decl = get_line_decl()
 	local vb, ib = desc.vb, desc.ib
 	local numvertex = #desc.vb / 4
 	local vbsize = decl.stride * numvertex
@@ -207,6 +220,51 @@ local function update_bounding_mesh()
 	bgfx.update(ibhandle, 0, ib)
 
 	boundingdebug.can_render = true
+end
+
+local function create_lighting_frustum()
+	local shadow = world:first_entity "shadow"
+
+	local _, proj, vp = ms:view_proj(shadow.camera, shadow.camera.frustum, true)
+	local points = mathbaselib.frustum_points(ms(vp, "m"))
+
+	local vb = {"fffd"}
+	local function generate_line_vertices(conername, color, vb)
+		assert(#conername == 3)
+		local antimap = {
+			l = "r", t = "b", n = "f",
+			r = "l", b = "t", f = "n",
+		}
+		local first = conername:sub(1, 1)
+		local second = conername:sub(2, 2)
+		local third = conername:sub(3, 3)
+
+		local np_names = {
+			conername,
+			antimap[first] .. conername:sub(2, 3),
+			conername,
+			first .. antimap[second] .. third,
+			conername,
+			conername:sub(1, 2) .. antimap[third],
+		}
+	
+		for _, name in ipairs(np_names) do
+			local pt = points[name]
+			table.move(pt, 1, 3, #vb+1, vb)
+			vb[#vb+1] = color
+		end
+	end
+
+	for _, conername in ipairs {
+		"ltn", "rbn", "rtf", "lbf",
+	} do
+		generate_line_vertices(conername, 0xffffff00, vb)
+	end
+
+	local e = world:first_entity "frustum_debug"
+	local vbhandle = e.mesh.assetinfo.handle.groups[1].vb.handles[1]
+	bgfx.update(vbhandle, 0, vb)
+
 end
 
 function debug_sm:post_init()
@@ -226,7 +284,7 @@ function debug_sm:post_init()
 	end
 
 	if has_new_directional_light() then
-
+		create_lighting_frustum()
 	end
 end
 
@@ -239,5 +297,15 @@ function debug_sm:delete()
 
 	if check_has_entity_removed() then
 		update_bounding_mesh()
+	end
+
+	local function has_removed_directional_light()
+		for _ in world:each_removed "directional_light" do
+			return true
+		end
+	end
+
+	if has_removed_directional_light() then
+		create_lighting_frustum()
 	end
 end

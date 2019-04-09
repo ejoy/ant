@@ -2355,7 +2355,7 @@ get_vec_value(lua_State *L, struct lastack *LS, int index) {
 		v[3] = 0;
 		const size_t len = lua_rawlen(L, index);
 		
-		for (int ii = 0; ii < len; ++ii) {
+		for (int ii = 0; ii < (int)len; ++ii) {
 			lua_geti(L, index, ii + 1);
 			v[ii] = lua_tonumber(L, -1);
 			lua_pop(L, 1);
