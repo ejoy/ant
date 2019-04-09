@@ -139,10 +139,11 @@ function sm:update()
 	update_shadow_camera(sm.camera, world:first_entity "directional_light", sm.shadow.distance)
 end
 
-ecs.tag "bounding_debug"
+ecs.tag "mesh_bounding_debug"
 ecs.tag "frustum_debug"
 local debug_sm = ecs.system "debug_shadow_maker"
 debug_sm.depend "shadow_maker11"
+debug_sm.dependby "frustum_bounding_update"
 
 local function get_line_decl()
 	return declmgr.get("p3|c40niu")
@@ -153,10 +154,10 @@ local function create_bounding_mesh_entity()
 		mesh = {},
 		material = computil.assign_material(fs.path "//ant.resources" / "depiction"/ "line.material"),
 		transform = mu.identity_transform(),
-		name = "bounding_debug",
+		name = "mesh_bounding_debug",
 		can_render = false,
 		main_view = true,
-		bounding_debug = true,
+		mesh_bounding_debug = true,
 	}
 	world[eid].mesh.assetinfo = computil.create_dynamic_mesh_handle(get_line_decl().handle, 1024*10, 1024*10)
 end
@@ -226,7 +227,7 @@ function debug_sm:init()
 end
 
 local function update_bounding_mesh()
-	local boundingdebug = world:first_entity "bounding_debug"
+	local boundingdebug = world:first_entity "mesh_bounding_debug"
 	local desc = {
 		vb = {"fffd"}, ib = {},
 		primitives = {},
@@ -280,14 +281,13 @@ function debug_sm:delete()
 	if check_has_entity_removed() then
 		update_bounding_mesh()
 	end
+end
 
-	local function has_removed_directional_light()
-		for _ in world:each_removed "directional_light" do
-			return true
-		end
-	end
-
-	if has_removed_directional_light() then
-		create_lighting_frustum()
-	end
+local frustum_bounding_update = ecs.system "frustum_bounding_update"
+function frustum_bounding_update:update()
+	local frsutum_bounding = world:first_entity "frustum_debug"
+	local shadow = world:first_entity "shadow"
+	local shadowcamera = shadow.camera
+	frsutum_bounding.transform.watcher.t = shadowcamera.eyepos
+	frsutum_bounding.transform.watcher.r = ms(shadowcamera.viewdir, "DT")
 end
