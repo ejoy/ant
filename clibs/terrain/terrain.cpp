@@ -13,11 +13,6 @@ extern "C" {
 
 #include <bgfx/bgfx.h>
 
-extern "C" {
-#include <bgfx/c99/bgfx.h>
-#include <bgfx/c99/platform.h>
-}
-
 // #include <bgfx/bgfx.h>
 // #include <bx/allocator.h>
 
@@ -149,7 +144,7 @@ struct TerrainData_t
 	int 						rawSize;
 
 	// vertex stream
-	bgfx_vertex_decl_t * 		vdecl;				  	// terrain vertex declare
+	bgfx::VertexDecl * 			vdecl;				  	// terrain vertex declare
 	uint8_t *			    	vertices;			  	// maybe from lua
 	uint32_t					vertexCount;		  	//
 	uint32_t *					indices;			  	// short if terrain size clamp 256
@@ -157,10 +152,10 @@ struct TerrainData_t
 
 	// texture layers
 	int     				    numLayers;			    // 混合纹理层数
-	bgfx_texture_handle_t		t_baseTextures[4];		// mask textures, clamp to 4 layers
-	bgfx_texture_handle_t		t_maskTextures[4];		// mask textures
-	bgfx_texture_handle_t		t_baseTexture;			// paint texture   current process
-	bgfx_texture_handle_t		t_maskTexture;			// mask texture
+	bgfx::TextureHandle			t_baseTextures[4];		// mask textures, clamp to 4 layers
+	bgfx::TextureHandle			t_maskTextures[4];		// mask textures
+	bgfx::TextureHandle			t_baseTexture;			// paint texture   current process
+	bgfx::TextureHandle			t_maskTexture;			// mask texture
 
 	// two mode
 	// ib,vb											// lua maintains
@@ -231,14 +226,14 @@ lterrain_getVB(lua_State *L)
 	if(terData->vertices)
 	   return luaL_error(L,"vertices already exist.");
 
-	bgfx_vertex_decl_t *vd = terData->vdecl;
+	bgfx::VertexDecl *vd = terData->vdecl;
 	uint32_t num 	= terData->gridWidth * terData->gridLength;
 
 #ifdef MY_DEBUG	
-	printf("c terrain: new alloc vertex = %d, strid =%d\n",num ,vd->stride);
+	printf("c terrain: new alloc vertex = %d, strid =%d\n",num ,vd->getStride());
 #endif 	
 
-	terData->vertices = (uint8_t*) lua_newuserdata(L, num * vd->stride );
+	terData->vertices = (uint8_t*) lua_newuserdata(L, num * vd->getStride());
 
 	if (luaL_newmetatable(L, "TERRAIN_VB")) {
 		lua_pushcfunction(L, lterrain_vb_close);        // register gc function
@@ -356,7 +351,7 @@ getfield_toint(lua_State *L,int table,const char *key) {
 	if( lua_getfield(L,table,key) != LUA_TNUMBER) {
 		luaL_error(L,"Need %s as number",key );
 	}
-	int ivalue = luaL_checkinteger(L,-1);
+	int ivalue = (int)luaL_checkinteger(L,-1);
 	lua_pop(L,1);
 	return ivalue;
 }
@@ -365,7 +360,7 @@ getfield_tofloat(lua_State *L,int table,const char *key) {
 	if( lua_getfield(L,table,key)!=LUA_TNUMBER) {
 		luaL_error(L,"Need %s as number",key);
 	}
-	float value = luaL_checknumber(L,-1);
+	float value = (float)luaL_checknumber(L,-1);
 	lua_pop(L,1);
 	return value;
 }
@@ -469,10 +464,10 @@ lterrain_create(lua_State *L)
 	// todo： if size == 0 ....
     // save heightmap
 	terData->heightmap = heightmap;
-	terData->rawSize = size;
+	terData->rawSize = (int)size;
 
 	// param3：vertex decl
-    bgfx_vertex_decl_t *vd = (bgfx_vertex_decl_t *) lua_touserdata(L,3);
+    bgfx::VertexDecl *vd = (bgfx::VertexDecl *) lua_touserdata(L,3);
 	if(vd == NULL)
 	   return luaL_error(L,"Invalid vertex decl");
 
@@ -531,9 +526,10 @@ void update_terrain_mesh( struct TerrainData_t* terData )
 	{
 		for (uint32_t x = 0; x < width; x++)
 		{   //pos
-			if( terData->vdecl->attributes[ BGFX_ATTRIB_POSITION ] != UINT16_MAX ) {
-				int stride = terData->vdecl->stride;
-				int offset = terData->vdecl->offset[ BGFX_ATTRIB_POSITION ];
+			auto decl = terData->vdecl;
+			if( decl->has(bgfx::Attrib::Position)){
+				const int stride = decl->getStride();
+				const int offset = decl->getOffset(bgfx::Attrib::Position);
 				struct vec3* vert = (struct vec3*) &terData->vertices[ terData->vertexCount*stride + offset ];
 				vert->x = (float) x*xspace;
 				if( nBytes==1 )
@@ -548,36 +544,36 @@ void update_terrain_mesh( struct TerrainData_t* terData )
 				if( vert->y < min_height ) min_height = vert->y;
 			}
 			//uv0
-			if( terData->vdecl->attributes[ BGFX_ATTRIB_TEXCOORD0 ] != UINT16_MAX ) {
-				int stride = terData->vdecl->stride;
-				int offset = terData->vdecl->offset[ BGFX_ATTRIB_TEXCOORD0 ];
+			if( decl->has(bgfx::Attrib::TexCoord0)) {
+				const int stride = decl->getStride();
+				const int offset = decl->getOffset(bgfx::Attrib::TexCoord0);
 				struct vec2* vert = (struct vec2*) &terData->vertices[ terData->vertexCount*stride + offset ];
 
 				vert->u = (x + 0.5f) / width * uv0scale;
 				vert->v = (y + 0.5f) / height * -uv0scale;
 			}
 			//uv1 - for mask,color maps
-		    if( terData->vdecl->attributes[ BGFX_ATTRIB_TEXCOORD1 ] != UINT16_MAX ) {
-				int stride = terData->vdecl->stride;
-				int offset = terData->vdecl->offset[ BGFX_ATTRIB_TEXCOORD1 ];
+		    if( decl->has(bgfx::Attrib::TexCoord1)) {
+				int stride = decl->getStride();
+				int offset = decl->getOffset(bgfx::Attrib::TexCoord1);
 				struct vec2* vert = (struct vec2*) &terData->vertices[ terData->vertexCount*stride + offset ];
 
 				vert->u = ( /*width-1-*/ x + 0.01f) / width * uv1scale;
 				vert->v = (y + 0.01f) / height * -uv1scale;
 		    }
 			//normal
-		  	if( terData->vdecl->attributes[BGFX_ATTRIB_NORMAL] != UINT16_MAX ) {
-				int stride = terData->vdecl->stride;
-				int offset = terData->vdecl->offset[ BGFX_ATTRIB_NORMAL ];
+		  	if( decl->has(bgfx::Attrib::Normal)){
+				const int stride = decl->getStride();
+				const int offset = decl->getOffset(bgfx::Attrib::Normal);
 				struct vec3* vert = (struct vec3*) &terData->vertices[ terData->vertexCount*stride + offset ];
 
-				vert->x = vert->y = vert->z = 0;
+				vert->x = vert->z = 0;
 				vert->y = 1;
 		    }
 			//tangent
-		  	if( terData->vdecl->attributes[BGFX_ATTRIB_TANGENT] != UINT16_MAX ) {
-				int stride = terData->vdecl->stride;
-				int offset = terData->vdecl->offset[ BGFX_ATTRIB_TANGENT ];
+		  	if( decl->has(bgfx::Attrib::Tangent)){
+				const int stride = decl->getStride();
+				const int offset = decl->getOffset(bgfx::Attrib::Tangent);
 				struct vec3* vert = (struct vec3*) &terData->vertices[ terData->vertexCount*stride + offset ];
 
 				vert->x = vert->y = vert->z = 0;
@@ -630,8 +626,8 @@ float average( struct TerrainData_t *terData, const int i, const int  j,int r = 
 
 	struct vec3 { float x,y,z; };
 
-	int stride = terData->vdecl->stride;
-	int offset = terData->vdecl->offset[ BGFX_ATTRIB_POSITION ];
+	int stride = terData->vdecl->getStride();
+	int offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
 
 	uint8_t *vertices = terData->vertices;
 	for (int m = i - r; m <= i + r; ++m)
@@ -672,8 +668,8 @@ void smooth_terrain_gasslike( struct TerrainData_t *terData,int r)
 	int height  = terData->gridLength;
 	uint8_t *vertices = terData->vertices;
 
-	int stride = terData->vdecl->stride;
-	int offset = terData->vdecl->offset[ BGFX_ATTRIB_POSITION ];
+	int stride = terData->vdecl->getStride();
+	int offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
 	sum.x = sum.y = sum.z = 0;
 	for (j = 0; j< height; j++)
 	{
@@ -839,7 +835,7 @@ void update_terrain_normal_fast( struct TerrainData_t *terData)
 	printf("c terrain: fast calculate terrain normals.\n");
 #endif 	
 	// normal attrib does not exist
-	if( terData->vdecl->attributes[ BGFX_ATTRIB_NORMAL ] == UINT16_MAX )
+	if(!terData->vdecl->has(bgfx::Attrib::Normal))
 	 	return;
 
 	struct vec3 { float x, y, z; };
@@ -847,9 +843,9 @@ void update_terrain_normal_fast( struct TerrainData_t *terData)
 	struct vec3 vec1, vec2,sum;
 	int i, j,index,index1,index2,index3;
 
-	int stride = terData->vdecl->stride;
-	int offset = terData->vdecl->offset[ BGFX_ATTRIB_POSITION ];
-	int normal_offset = terData->vdecl->offset[ BGFX_ATTRIB_NORMAL ];
+	const int stride = terData->vdecl->getStride();
+	const int offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
+	const int normal_offset = terData->vdecl->getOffset(bgfx::Attrib::Normal);
 
 	int width  = terData->gridWidth;
 	int height = terData->gridLength;
@@ -1094,16 +1090,16 @@ bool check_height_of_triangle(float x,float z,float *height,float v0[3],float v1
 // get terrain height at x,z position
 bool terrain_get_height(struct TerrainData_t* terData,float x,float z,float *height)
 {
-	int stride = terData->vdecl->stride;
-	int offset = terData->vdecl->offset[ BGFX_ATTRIB_POSITION ];
+	int stride = terData->vdecl->getStride();
+	int offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
 	uint8_t* verts = terData->vertices;
 
 	int	   width = terData->gridWidth;
 	float  x_unit_grid_space = (1.0f*terData->width/terData->gridWidth);
 	float  z_unit_grid_space = (1.0f*terData->length/terData->gridLength);
 
-	int    xindex = x/x_unit_grid_space;
-	int    zindex = z/z_unit_grid_space;
+	int    xindex = (int)(x/x_unit_grid_space);
+	int    zindex = (int)(z/z_unit_grid_space);
 
 	int    left   = xindex - 1;
 	int    right  = xindex + 1;
@@ -1146,8 +1142,8 @@ bool terrain_get_height(struct TerrainData_t* terData,float x,float z,float *hei
 
 float terrain_get_raw_height(struct TerrainData_t* terData,int x,int z)
 {
-	int stride = terData->vdecl->stride;
-	int offset = terData->vdecl->offset[ BGFX_ATTRIB_POSITION ];
+	int stride = terData->vdecl->getStride();
+	int offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
 	uint8_t* verts = terData->vertices;
 
 	int	   width = terData->gridWidth;
@@ -1205,8 +1201,8 @@ lterrain_get_height( lua_State *L) {
 	// push bool result
 	// push height value
 	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
-	float x = luaL_checknumber(L,2);
-	float y = luaL_checknumber(L,3);
+	float x = (float)luaL_checknumber(L,2);
+	float y = (float)luaL_checknumber(L,3);
 
 	float height = 0.0f;
 	bool  hit = terrain_get_height(terData,x,y,&height);
@@ -1220,8 +1216,8 @@ lterrain_get_height( lua_State *L) {
 static int 
 lterrain_get_raw_height( lua_State *L) {
 	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
-	int x = luaL_checkinteger(L,2);
-	int y = luaL_checkinteger(L,3);
+	int x = (int)luaL_checkinteger(L,2);
+	int y = (int)luaL_checkinteger(L,3);
 
 	float height = 0.f;
 	height = terrain_get_raw_height(terData,x,y);
@@ -1300,11 +1296,11 @@ static int
 lterrain_render(lua_State *L)
 {
 	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
-	int memory_size = terData->vertexCount * terData->vdecl->stride;
+	const int memory_size = terData->vertexCount * terData->vdecl->getStride();
 #ifdef MY_DEBUG		
 	printf("grid width = %d,grid length = %d, vertex strid = %d.\n",terData->gridWidth,
 																	terData->gridLength,
-																	terData->vdecl->stride);
+																	terData->vdecl->getStride());
 	printf("width = %d,lenght=%d,height=%d\n",terData->width,terData->length,terData->height);
 	printf("memory size = %d m\n",int(memory_size/1024/1024.0f));
 #endif 	
