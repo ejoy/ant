@@ -123,26 +123,16 @@ function util.is_entity_visible(entity)
 end
 
 function util.create_mesh_handle(decl, vb, ib)
-    local groups = {}
-
-    if type(decl) == "table" then
-        assert("not implement")
-    else
-        local group = {
-            vb = {
-                decls = {decl},
-                handles = {bgfx.create_vertex_buffer(vb, decl)},
-            },
-		}
-
-		if ib then
-			group.ib = {handle = bgfx.create_index_buffer(ib)}
-		end
-
-		table.insert(groups, group)
-    end
-
-    return {handle = {groups = groups}}
+    return {
+		handle = {
+			groups = {
+				{
+					vb = {handles = {bgfx.create_vertex_buffer(vb, decl)},},
+					ib = ib and {handle = bgfx.create_index_buffer(ib)} or nil
+				}
+			}
+		} 
+	}
 end
 
 function util.create_grid_entity(world, name, w, h, unit, view_tag)
@@ -170,12 +160,7 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
 		end
 	end
 
-    local vdecl = bgfx.vertex_decl{
-        {"POSITION", 3, "FLOAT"},
-        {"COLOR0", 4, "UINT8", true}
-    }
-
-    grid.mesh.assetinfo = util.create_mesh_handle(vdecl,gvb, ib)
+    grid.mesh.assetinfo = util.create_mesh_handle(declmgr.get("p3|c40niu").handle,gvb, ib)
     return gridid
 end
 
@@ -257,20 +242,10 @@ end
 
 function util.create_quad_entity(world, texture_tbl, view_tag, name)
     local quadid = world:create_entity{
-        transform = {           
-            s = {1, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {0, 0, 0, 1},
-        },
+        transform = mu.identity_transform(),
         can_render = true,
         mesh = {},
-        material = {
-            content = {
-                {
-                    ref_path = fs.path "//ant.resources/texture.material"
-                }
-            }
-        },
+        material = util.assign_material(fs.path "//ant.resources/texture.material"),
         name = name,
     }
     local quad = world[quadid]
@@ -297,14 +272,8 @@ function util.create_dynamic_mesh_handle(decl, vbsize, ibsize)
 		handle = {
 			groups = {
 				{
-					vb = {
-						handles = {
-							bgfx.create_dynamic_vertex_buffer(vbsize, decl, "a")
-						}						
-					},
-					ib = ibsize and {
-						handle= bgfx.create_dynamic_index_buffer(ibsize, "a")
-					} or nil,
+					vb = {handles = {bgfx.create_dynamic_vertex_buffer(vbsize, decl, "a")}},
+					ib = ibsize and {handle= bgfx.create_dynamic_index_buffer(ibsize, "a")} or nil,
 					primitives = {},
 				}
 			}

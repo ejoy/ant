@@ -161,11 +161,49 @@ local function create_bounding_mesh_entity()
 	world[eid].mesh.assetinfo = computil.create_dynamic_mesh_handle(get_line_decl().handle, 1024*10, 1024*10)
 end
 
-function debug_sm:init()
-	local qw, qh = 128,128
-	computil.create_shadow_quad_entity(world, {x=0, y=0, w=qw, h=qh})
-	create_bounding_mesh_entity()
+local function generate_lighting_frustum_vb()
+	local shadow = world:first_entity "shadow"
 
+	local _, proj = ms:view_proj(shadow.camera, shadow.camera.frustum)
+	local points = mathbaselib.frustum_points(ms(proj, "m"))
+
+	local vb = {"fffd"}
+	local function generate_line_vertices(conername, color, vb)
+		assert(#conername == 3)
+		local antimap = {
+			l = "r", t = "b", n = "f",
+			r = "l", b = "t", f = "n",
+		}
+		local first = conername:sub(1, 1)
+		local second = conername:sub(2, 2)
+		local third = conername:sub(3, 3)
+
+		local np_names = {
+			conername,
+			antimap[first] .. conername:sub(2, 3),
+			conername,
+			first .. antimap[second] .. third,
+			conername,
+			conername:sub(1, 2) .. antimap[third],
+		}
+	
+		for _, name in ipairs(np_names) do
+			local pt = points[name]
+			table.move(pt, 1, 3, #vb+1, vb)
+			vb[#vb+1] = color
+		end
+	end
+
+	for _, conername in ipairs {
+		"ltn", "rbn", "rtf", "lbf",
+	} do
+		generate_line_vertices(conername, 0xffffff00, vb)
+	end
+
+	return vb
+end
+
+local function create_frustum_bounding_entity()
 	local eid = world:create_entity {
 		transform = mu.identity_transform(),
 		mesh = {},
@@ -176,7 +214,15 @@ function debug_sm:init()
 		name = "direction light frustum shape",
 	}
 
-	world[eid].mesh.assetinfo = computil.create_dynamic_mesh_handle(get_line_decl().handle, 100)
+	world[eid].mesh.assetinfo = computil.create_mesh_handle(
+		get_line_decl().handle, generate_lighting_frustum_vb())
+end
+
+function debug_sm:init()
+	local qw, qh = 128,128
+	computil.create_shadow_quad_entity(world, {x=0, y=0, w=qw, h=qh})
+	create_bounding_mesh_entity()
+	create_frustum_bounding_entity()
 end
 
 local function update_bounding_mesh()
@@ -213,51 +259,6 @@ local function update_bounding_mesh()
 	boundingdebug.can_render = true
 end
 
-local function create_lighting_frustum()
-	local shadow = world:first_entity "shadow"
-
-	local _, proj, vp = ms:view_proj(shadow.camera, shadow.camera.frustum, true)
-	local points = mathbaselib.frustum_points(ms(vp, "m"))
-
-	local vb = {"fffd"}
-	local function generate_line_vertices(conername, color, vb)
-		assert(#conername == 3)
-		local antimap = {
-			l = "r", t = "b", n = "f",
-			r = "l", b = "t", f = "n",
-		}
-		local first = conername:sub(1, 1)
-		local second = conername:sub(2, 2)
-		local third = conername:sub(3, 3)
-
-		local np_names = {
-			conername,
-			antimap[first] .. conername:sub(2, 3),
-			conername,
-			first .. antimap[second] .. third,
-			conername,
-			conername:sub(1, 2) .. antimap[third],
-		}
-	
-		for _, name in ipairs(np_names) do
-			local pt = points[name]
-			table.move(pt, 1, 3, #vb+1, vb)
-			vb[#vb+1] = color
-		end
-	end
-
-	for _, conername in ipairs {
-		"ltn", "rbn", "rtf", "lbf",
-	} do
-		generate_line_vertices(conername, 0xffffff00, vb)
-	end
-
-	local e = world:first_entity "frustum_debug"
-	local vbhandle = e.mesh.assetinfo.handle.groups[1].vb.handles[1]
-	bgfx.update(vbhandle, 0, vb)
-
-end
-
 function debug_sm:post_init()
 	local function has_new_render_entity()
 		for _ in world:each_new "can_render" do
@@ -266,16 +267,6 @@ function debug_sm:post_init()
 	end
 	if has_new_render_entity() then
 		update_bounding_mesh()
-	end
-
-	local function has_new_directional_light()
-		for _ in world:each_new "directional_light" do
-			return true
-		end
-	end
-
-	if has_new_directional_light() then
-		create_lighting_frustum()
 	end
 end
 
