@@ -1,45 +1,5 @@
-local function start_hook()
-    local pm = require 'antpm'
-    local rdebug = require 'remotedebug'
-    local event = rdebug.probe
-
-    local function eventwp(name, ...)
-        local r
-        event(name)
-        return r
-    end
-
-    local _print = print
-    pm.setglobal('print', function (...)
-        if not eventwp('print', ...) then
-            _print(...)
-        end
-    end)
-    
-    local io_output = debug.getregistry()._IO_output
-    local mt = debug.getmetatable(io_output)
-    local f_write = mt.write
-    function mt.write(f, ...)
-        if f ~= io_output then
-            return f_write(f, ...)
-        end
-        if not eventwp('iowrite', ...) then
-            return f_write(f, ...)
-        end
-        return f
-    end
-
-    local io_write = io.write
-    function io.write(...)
-        if not eventwp('iowrite', ...) then
-            return io_write(...)
-        end
-        return io_output
-    end
-end
-
 local function start_master(io)
-    local master = require 'debugger.backend.master'
+    local master = require 'backend.master'
     if master.init(io) then
         return master.update
     end
@@ -64,20 +24,19 @@ local function bootstrap()
         init_thread()
         package.path = [[%s]]
         require 'runtime.vfs'
-        require 'debugger.backend.worker'
-    ]=]):format(init_thread, "engine/libs/?.lua;engine/packages/?.lua")
+        require 'backend.worker'
+    ]=]):format(init_thread, "engine/libs/?.lua;engine/packages/debugger/?.lua")
 end
 
 local function start_worker(wait)
     local rdebug = require 'remotedebug'
-    local event = rdebug.probe
-    start_hook()
+    local probe = rdebug.probe
     rdebug.start(bootstrap(), package.searchers[3])
     if wait then
-        event 'wait_client'
+        probe 'wait_client'
     end
     return function()
-        event 'update'
+        probe 'update'
     end
 end
 

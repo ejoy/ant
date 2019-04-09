@@ -1,6 +1,6 @@
-local event = require 'debugger.backend.master.event'
-local response = require 'debugger.backend.master.response'
-local ev = require 'debugger.event'
+local event = require 'backend.master.event'
+local response = require 'backend.master.response'
+local ev = require 'event'
 
 local CMD = {}
 

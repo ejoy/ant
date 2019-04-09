@@ -1,6 +1,6 @@
-local json = require 'cjson.safe' json.encode_empty_table_as_array 'on'
-local proto = require 'debugger.protocol'
-local ev = require 'debugger.event'
+local json = require 'json'
+local proto = require 'protocol'
+local ev = require 'event'
 local thread = require 'thread'
 local stdio = require 'remotedebug.stdio'
 
@@ -113,7 +113,7 @@ function mgr.hasThread(w)
 end
 
 function mgr.update()
-    local threads = require 'debugger.backend.master.threads'
+    local threads = require 'backend.master.threads'
     while true do
         local ok, w, msg = masterThread:pop()
         if not ok then
@@ -128,14 +128,14 @@ function mgr.update()
     if redirect.stderr then
         local res = redirect.stderr:read(redirect.stderr:peek())
         if res then
-            local event = require 'debugger.backend.master.event'
+            local event = require 'backend.master.event'
             event.output('stderr', res)
         end
     end
     if redirect.stdout then
         local res = redirect.stdout:read(redirect.stdout:peek())
         if res then
-            local event = require 'debugger.backend.master.event'
+            local event = require 'backend.master.event'
             event.output('stdout', res)
         end
     end
@@ -156,12 +156,12 @@ function mgr.runIdle()
     end
     if req.type == 'request' then
         -- TODO
-        local request = require 'debugger.backend.master.request'
+        local request = require 'backend.master.request'
         if mgr.isState 'birth' then
             if req.command == 'initialize' then
                 request.initialize(req)
             else
-                local response = require 'debugger.backend.master.response'
+                local response = require 'backend.master.response'
                 response.error(req, ("`%s` not yet implemented.(birth)"):format(req.command))
             end
         else
@@ -171,7 +171,7 @@ function mgr.runIdle()
                     return true
                 end
             else
-                local response = require 'debugger.backend.master.response'
+                local response = require 'backend.master.response'
                 response.error(req, ("`%s` not yet implemented.(idle)"):format(req.command))
             end
         end

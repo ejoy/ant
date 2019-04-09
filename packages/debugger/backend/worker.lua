@@ -1,13 +1,14 @@
 local rdebug = require 'remotedebug'
-local json = require 'cjson.safe' json.encode_empty_table_as_array 'on'
-local variables = require 'debugger.backend.worker.variables'
-local source = require 'debugger.backend.worker.source'
-local breakpoint = require 'debugger.backend.worker.breakpoint'
-local evaluate = require 'debugger.backend.worker.evaluate'
-local traceback = require 'debugger.backend.worker.traceback'
-local stdout = require 'debugger.backend.worker.stdout'
-local ev = require 'debugger.event'
+local json = require 'json'
+local variables = require 'backend.worker.variables'
+local source = require 'backend.worker.source'
+local breakpoint = require 'backend.worker.breakpoint'
+local evaluate = require 'backend.worker.evaluate'
+local traceback = require 'backend.worker.traceback'
+local stdout = require 'backend.worker.stdout'
+local ev = require 'event'
 local hookmgr = require 'remotedebug.hookmgr'
+local stdio = require 'remotedebug.stdio'
 local thread = require 'thread'
 local err = thread.channel_produce 'errlog'
 
@@ -18,6 +19,7 @@ local stopReason = 'step'
 local exceptionFilters = {}
 local exceptionMsg = ''
 local exceptionTrace = ''
+local outputCapture = {}
 
 local CMD = {}
 
@@ -391,21 +393,15 @@ local function getEventArgsRaw(i)
     return true, value
 end
 
-local function setEventRet(v)
-    local name, value = rdebug.getlocal(1, 2)
-    if name ~= nil then
-        return rdebug.assign(value, v)
-    end
-    return false
-end
-
 local function pairsEventArgs()
-    return function(_, i)
-        local ok, value = getEventArgs(i)
-        if ok then
-            return i + 1, value
+    local n = 2
+    return function()
+        local value = rdebug.getstack(n)
+        if value ~= nil then
+            n = n + 1
+            return value
         end
-    end, nil, 1
+    end
 end
 
 local function getExceptionType()
@@ -437,35 +433,35 @@ end
 function event.print()
     if not initialized then return end
     local res = {}
-    for _, arg in pairsEventArgs() do
+    for arg in pairsEventArgs() do
         res[#res + 1] = tostring(rdebug.value(arg))
     end
     res = table.concat(res, '\t') .. '\n'
-    local s = rdebug.getinfo(3, info)
+    local s = rdebug.getinfo(1, info)
     local src = source.create(s.source)
     if source.valid(src) then
         stdout(res, src, s.currentline)
     else
         stdout(res)
     end
-    setEventRet(true)
+    return true
 end
 
 function event.iowrite()
     if not initialized then return end
     local res = {}
-    for _, arg in pairsEventArgs() do
+    for arg in pairsEventArgs() do
         res[#res + 1] = tostring(rdebug.value(arg))
     end
     res = table.concat(res, '\t')
-    local s = rdebug.getinfo(3, info)
+    local s = rdebug.getinfo(1, info)
     local src = source.create(s.source)
     if source.valid(src) then
         stdout(res, src, s.currentline)
     else
         stdout(res)
     end
-    setEventRet(true)
+    return true
 end
 
 if hookmgr.exception_open then
@@ -521,8 +517,32 @@ hookmgr.sethook(function(name, ...)
     return e
 end)
 
+local function lst2map(t)
+    local r = {}
+    for _, v in ipairs(t) do
+        r[v] = true
+    end
+    return r
+end
+
+ev.on('initializing', function(config)
+    outputCapture = lst2map(config.outputCapture)
+    if outputCapture["print"] then
+        stdio.open_print(true)
+    end
+    if outputCapture["io.write"] then
+        stdio.open_iowrite(true)
+    end
+end)
+
 ev.on('terminated', function()
     hookmgr.step_cancel()
+    if outputCapture["print"] then
+        stdio.open_print(false)
+    end
+    if outputCapture["io.write"] then
+        stdio.open_iowrite(false)
+    end
 end)
 
 sendToMaster {

@@ -1,4 +1,4 @@
-local ev = require 'debugger.event'
+local ev = require 'event'
 
 local foreground
 local background

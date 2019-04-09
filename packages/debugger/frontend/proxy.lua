@@ -1,7 +1,7 @@
 local server_factory = require 'debugger.frontend.server'
 local proto = require 'debugger.protocol'
 local socket = require 'debugger.socket'
-local fs = require 'debugger.fs'
+local fs = require 'filesystem'
 local server
 local client = {}
 local seq = 0
@@ -91,7 +91,7 @@ local function create_terminal(args, port)
     request_runinterminal {
         kind = args.console == 'integratedTerminal' and 'integrated' or 'external',
         title = 'Lua Debug',
-        cwd = args.cwd or fs.remove_filename(command[1]),
+        cwd = args.cwd or fs.path(command[1]):remove_filename():string(),
         env = args.env,
         args = command,
     }

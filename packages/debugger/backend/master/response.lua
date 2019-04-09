@@ -1,4 +1,4 @@
-local mgr = require 'debugger.backend.master.mgr'
+local mgr = require 'backend.master.mgr'
 
 local response = {}
 
@@ -35,7 +35,7 @@ function response.initialize(req)
         command = req.command,
         request_seq = req.seq,
         success = true,
-        body = require 'debugger.capabilities',
+        body = require 'capabilities',
     }
 end
 

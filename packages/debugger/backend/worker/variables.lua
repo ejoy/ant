@@ -1,6 +1,6 @@
 local rdebug = require 'remotedebug'
-local source = require 'debugger.backend.worker.source'
-local ev = require 'debugger.event'
+local source = require 'backend.worker.source'
+local ev = require 'event'
 
 local varPool = {}
 

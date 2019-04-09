@@ -34,6 +34,7 @@
 #define VAR_MAINTHREAD 7
 #define VAR_METATABLE 8	// table.metatable
 #define VAR_USERVALUE 9	// userdata.uservalue
+#define VAR_STACK 10
 #define VARKEY_INDEX 0
 #define VARKEY_NEXT 1
 
@@ -52,6 +53,7 @@ sizeof_value(struct value *v) {
 	case VAR_GLOBAL:
 	case VAR_REGISTRY:
 	case VAR_MAINTHREAD:
+	case VAR_STACK:
 		return 1;
 	case VAR_INDEX_OBJ:
 		return 1 + v->index + sizeof_value(v+1+v->index);
@@ -247,6 +249,9 @@ eval_value_(lua_State *L, lua_State *cL, struct value *v) {
 		lua_replace(cL, -2);
 		return t;
 	}
+	case VAR_STACK:
+		lua_pushvalue(cL, v->index);
+		return lua_type(cL, -1);
 	}
 	return LUA_TNONE;
 }
@@ -291,6 +296,7 @@ assign_value(lua_State *L, struct value * v, lua_State *cL) {
 	case VAR_REGISTRY:
 	case VAR_MAINTHREAD:
 	case VAR_FRAME_FUNC:
+	case VAR_STACK:
 		// Can't assign frame func, etc.
 		break;
 	case VAR_INDEX:
@@ -459,6 +465,28 @@ get_frame_func(lua_State *L, lua_State *cL, int frame) {
 	v->type = VAR_FRAME_FUNC;
 	v->frame = frame;
 	v->index = 0;
+	return 1;
+}
+
+static int
+get_stack(lua_State *L, lua_State *cL, int index, int getref) {
+	if (index > lua_gettop(cL)) {
+		return 0;
+	}
+	if (lua_checkstack(cL, 1) == 0) {
+		luaL_error(L, "stack overflow");
+	}
+	if (!getref) {
+		lua_pushvalue(cL, index);
+		if (copy_value(cL, L) != LUA_TNONE) {
+			lua_pop(cL, 1);
+			return 1;
+		}
+		lua_pop(cL, 1);
+	}
+	struct value *v = lua_newuserdata(L, sizeof(struct value));
+	v->type = VAR_STACK;
+	v->index = index;
 	return 1;
 }
 
