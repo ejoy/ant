@@ -393,7 +393,7 @@ struct hookmgr {
     }
     
     lua_State* hostL = 0;
-    void start(lua_State* hL) {
+    void init(lua_State* hL) {
         hostL = hL;
         thunk_bind((intptr_t)hL, (intptr_t)this);
         remotedebug::eventfree::create(hL, lua_freef, this);
@@ -419,10 +419,10 @@ struct hookmgr {
     }
 };
 
-static int sethook(lua_State* L) {
+static int init(lua_State* L) {
     luaL_checktype(L, 1, LUA_TFUNCTION);
     lua_settop(L, 1);
-    hookmgr::get_self(L)->start(get_host(L));
+    hookmgr::get_self(L)->init(get_host(L));
     lua_rawsetp(L, LUA_REGISTRYINDEX, &HOOK_CALLBACK);
     return 0;
 }
@@ -543,7 +543,7 @@ int luaopen_remotedebug_hookmgr(lua_State* L) {
     }
 
     static luaL_Reg lib[] = {
-        { "sethook", sethook },
+        { "init", init },
         { "setcoroutine", setcoroutine },
         { "activeline", activeline },
         { "stacklevel", stacklevel },

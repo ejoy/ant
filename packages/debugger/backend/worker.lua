@@ -507,7 +507,7 @@ function event.wait_client()
     end
 end
 
-hookmgr.sethook(function(name, ...)
+hookmgr.init(function(name, ...)
     local ok, e = xpcall(function(...)
         if event[name] then
             return event[name](...)
