@@ -6,6 +6,10 @@
 #include <memory>
 #include "rdebug_eventfree.h"
 
+#if LUA_VERSION_NUM < 504
+#define s2v(o) (o)
+#endif
+
 static int HOOK_MGR = 0;
 static int HOOK_CALLBACK = 0;
 
@@ -34,10 +38,10 @@ static T* checklightudata(lua_State* L, int idx) {
 
 static Proto* ci2proto(CallInfo* ci) {
     StkId func = ci->func;
-    if (!ttisLclosure(func)) {
+    if (!ttisLclosure(s2v(func))) {
         return 0;
     }
-    return clLvalue(func)->p;
+    return clLvalue(s2v(func))->p;
 }
 
 struct hookmgr {
