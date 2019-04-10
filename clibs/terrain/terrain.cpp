@@ -1,9 +1,8 @@
 #define LUA_LIB
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
+
+
+#include "bgfx/bgfx.h"
+#include "glm/glm.hpp"
 
 extern "C" {
 #include <lua.h>
@@ -11,8 +10,15 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-#include <bgfx/bgfx.h>
-#include <glm/glm.hpp>
+// stl
+#include <limits>
+#include <vector>
+
+// c std
+#include <cstdio>
+#include <cstdint>
+#include <cstring>
+#include <cstdlib>
 
 //@1:只负责地形几何相关的Pos,Normal,Uv,Tangent 的计算,创建，和编辑、更新
 //@2:只接受高度图，画刷，等更改几何形体，顶点索引内容等lua数据,不持有任何图形相关的handle
@@ -99,12 +105,12 @@ int16_t word_btol(uint16_t sw) {
 // 地形运行时数据
 struct TerrainData_t {
 	// setting
-	int		width;									// 地形宽度 x, 图形逻辑单位
-	int		length;									// 地形长度 z
-	int		height;									// 地形高度 y
+	uint32_t width;									// 地形宽度 x, 图形逻辑单位
+	uint32_t length;									// 地形长度 z
+	uint32_t height;									// 地形高度 y
 
-	int		gridWidth;								// 宽度格子数, 地形网格分辨率
-	int		gridLength;								// 长度格子数
+	uint32_t gridWidth;								// 宽度格子数, 地形网格分辨率
+	uint32_t gridLength;								// 长度格子数
 
 	float	uv0Scale;								// 0 layer texcoord
 	float   uv1Scale;								// 1 layer texcoord
@@ -311,12 +317,12 @@ lterrain_close(lua_State *L) {
 }
 
 
-static inline int
-getfield_toint(lua_State *L, int table, const char *key) {
+static inline uint32_t
+getfield_touint(lua_State *L, int table, const char *key) {
 	if (lua_getfield(L, table, key) != LUA_TNUMBER) {
 		luaL_error(L, "Need %s as number", key);
 	}
-	int ivalue = (int)luaL_checkinteger(L, -1);
+	uint32_t ivalue = (int)luaL_checkinteger(L, -1);
 	lua_pop(L, 1);
 	return ivalue;
 }
@@ -334,12 +340,12 @@ getfield_tofloat(lua_State *L, int table, const char *key) {
 int terrain_check_level(lua_State *L, int index, struct TerrainData_t* terData) {
 	luaL_checktype(L, index, LUA_TTABLE);
 
-	terData->gridWidth	= getfield_toint(L, index, "grid_width");
-	terData->gridLength = getfield_toint(L, index, "grid_length");
-	terData->rawBits	= getfield_toint(L, index, "bits");
-	terData->width		= getfield_toint(L, index, "width");   // maybe float is better
-	terData->length		= getfield_toint(L, index, "length");
-	terData->height		= getfield_toint(L, index, "height");
+	terData->gridWidth	= getfield_touint(L, index, "grid_width");
+	terData->gridLength = getfield_touint(L, index, "grid_length");
+	terData->rawBits	= getfield_touint(L, index, "bits");
+	terData->width		= getfield_touint(L, index, "width");   // maybe float is better
+	terData->length		= getfield_touint(L, index, "length");
+	terData->height		= getfield_touint(L, index, "height");
 
 	terData->uv0Scale	= getfield_tofloat(L, index, "uv0_scale");
 	terData->uv1Scale	= getfield_tofloat(L, index, "uv1_scale");
@@ -447,124 +453,107 @@ calc_uv(const glm::vec2 &uv, const glm::vec2 &size, float scale, float offset) {
 	return r;
 }
 
-// update terrain mesh from heightmap
-// **顶点数据类型需要优化压缩
 void update_terrain_mesh(struct TerrainData_t* terData) {	
-	float xspace = terData->grid_x_scale;
-	float zspace = terData->grid_z_scale;
-	float yscale = terData->height_scale;
+	const glm::vec3 vertexscale(terData->grid_x_scale, terData->height_scale, terData->grid_z_scale);
 
-	float uv0scale = terData->uv0Scale;
-	float uv1scale = terData->uv1Scale;
+	terData->min_height = std::numeric_limits<float>::max();
+	terData->max_height = std::numeric_limits<float>::lowest();
 
-	float min_height = 99999.99f;
-	float max_height = -99999.99f;
+	auto get_height_from_uint8 = [](uint8_t *v) {return float(*v);};
+	auto get_height_from_uint16 = [](uint8_t *v) {return float(*(uint16_t*)v);};
+	auto get_height = terData->rawBits == 8 ? get_height_from_uint8 : get_height_from_uint16;
 
-	int nBytes = terData->rawBits / 8;
-	uint32_t width = terData->gridWidth;
-	uint32_t height = terData->gridLength;
-	glm::vec2 invsize(1.f / width, 1.f / height);
+	const glm::vec2 invsize(1.f / terData->gridWidth, 1.f / terData->gridLength);
 
 	terData->vertexCount = 0;
-	for (uint32_t y = 0; y < height; y++) {
-		for (uint32_t x = 0; x < width; x++) {   //pos
+	for (uint32_t y = 0; y < terData->gridLength; ++y) {
+		for (uint32_t x = 0; x < terData->gridWidth; ++x) {
 			auto decl = terData->vdecl;
+			const uint16_t stride = decl->getStride();
+
 			if (decl->has(bgfx::Attrib::Position)) {
-				const int stride = decl->getStride();
-				const int offset = decl->getOffset(bgfx::Attrib::Position);
-				glm::vec3* vert = (glm::vec3*) &terData->vertices[terData->vertexCount*stride + offset];
-				vert->x = (float)x*xspace;
-				if (nBytes == 1)
-					vert->y = (float) *(uint8_t*)&terData->heightmap[(y* width + x)*nBytes];
-				else if (nBytes == 2) {
-					vert->y = (float) *(uint16_t*)&terData->heightmap[(y* width + x)*nBytes];					
-				}
-				vert->y *= yscale;
-				vert->z = y*zspace;
-				if (vert->y > max_height) max_height = vert->y;
-				if (vert->y < min_height) min_height = vert->y;
+				const uint16_t offset = decl->getOffset(bgfx::Attrib::Position);
+
+				glm::vec3* vert = (glm::vec3*) &terData->vertices[terData->vertexCount*stride + offset];				
+				auto hm = &terData->heightmap[y* terData->gridWidth + x];
+				*vert = vertexscale * glm::vec3(float(x), get_height(hm), float(y));
+
+				terData->max_height = glm::max(vert->y, terData->max_height);
+				terData->min_height = glm::min(vert->y, terData->min_height);
 			}
 			//uv0
 			if (decl->has(bgfx::Attrib::TexCoord0)) {
-				const int stride = decl->getStride();
-				const int offset = decl->getOffset(bgfx::Attrib::TexCoord0);
+				const uint16_t offset = decl->getOffset(bgfx::Attrib::TexCoord0);
 				glm::vec2* uv = (glm::vec2*) &terData->vertices[terData->vertexCount*stride + offset];
 				
-				*uv = calc_uv(glm::vec2(x, y), invsize, uv0scale, 0.5f);
-				//uv->x = (x + 0.5f) / width * uv0scale;
-				//uv->x = (y + 0.5f) / height * -uv0scale;
+				*uv = calc_uv(glm::vec2(x, y), invsize, terData->uv0Scale, 0.5f);
 			}
 			//uv1 - for mask,color maps
 			if (decl->has(bgfx::Attrib::TexCoord1)) {
-				int stride = decl->getStride();
-				int offset = decl->getOffset(bgfx::Attrib::TexCoord1);
+				const uint16_t offset = decl->getOffset(bgfx::Attrib::TexCoord1);
 				glm::vec2* uv = (glm::vec2*) &terData->vertices[terData->vertexCount*stride + offset];
-				*uv = calc_uv(glm::vec2(x, y), invsize, uv1scale, 0.01f);
-
-				//uv->u = (x + 0.01f) / width * uv1scale;
-				//uv->v = (y + 0.01f) / height * -uv1scale;
+				*uv = calc_uv(glm::vec2(x, y), invsize, terData->uv1Scale, 0.01f);
 			}
 			//normal
 			if (decl->has(bgfx::Attrib::Normal)) {
-				const int stride = decl->getStride();
-				const int offset = decl->getOffset(bgfx::Attrib::Normal);
-				glm::vec3* vert = (glm::vec3*) &terData->vertices[terData->vertexCount*stride + offset];
-
-				vert->x = vert->z = 0;
-				vert->y = 1;
+				const uint16_t offset = decl->getOffset(bgfx::Attrib::Normal);
+				glm::vec3* normal = (glm::vec3*) &terData->vertices[terData->vertexCount*stride + offset];
+				*normal = glm::vec3(0.f, 1.f, 0.f);				
 			}
 			//tangent
 			if (decl->has(bgfx::Attrib::Tangent)) {
-				const int stride = decl->getStride();
-				const int offset = decl->getOffset(bgfx::Attrib::Tangent);
-				glm::vec3* vert = (glm::vec3*) &terData->vertices[terData->vertexCount*stride + offset];
-
-				vert->x = vert->y = vert->z = 0;
+				const uint16_t offset = decl->getOffset(bgfx::Attrib::Tangent);
+				glm::vec3* tangent = (glm::vec3*) &terData->vertices[terData->vertexCount*stride + offset];
+				*tangent = glm::vec3(1.f, 0.f, 0.f);
 			}
 			terData->vertexCount++;
 		}
 	}
-	terData->min_height = min_height;
-	terData->max_height = max_height;
-#ifdef MY_DEBUG	
-	printf("c terrain: min_height(%.2f),max_height(%.2f)\n", min_height, max_height);
-	printf("c terrain: %d,%d, begin create index\n", width, height);
-#endif 	
+	 
 	terData->indexCount = 0;
-	for (uint16_t y = 0; y < (height - 1); y++) {
-		uint32_t y_offset = (y * width);
-		for (uint16_t x = 0; x < (width - 1); x++) {   // 可以继续优化
+	for (uint16_t y = 0; y < (terData->gridLength - 1); y++) {
+		uint32_t y_offset = (y * terData->gridWidth);
+		for (uint16_t x = 0; x < (terData->gridWidth - 1); x++) {
 			terData->indices[terData->indexCount + 0] = (uint32_t)y_offset + x + 1;
-			terData->indices[terData->indexCount + 1] = y_offset + x + width;
+			terData->indices[terData->indexCount + 1] = y_offset + x + terData->gridWidth;
 			terData->indices[terData->indexCount + 2] = y_offset + x;
-			terData->indices[terData->indexCount + 3] = y_offset + x + width + 1;
-			terData->indices[terData->indexCount + 4] = y_offset + x + width;
+			terData->indices[terData->indexCount + 3] = y_offset + x + terData->gridWidth + 1;
+			terData->indices[terData->indexCount + 4] = y_offset + x + terData->gridWidth;
 			terData->indices[terData->indexCount + 5] = y_offset + x + 1;
 			terData->indexCount += 6;
 		}
 	}
-#ifdef MY_DEBUG		
-	printf("c terrain: generate vertex count =%d\n", terData->vertexCount);
-	printf("c terrain: generate index count =%d\n", terData->indexCount);
-#endif 	
 }
 
-bool in_terrain_bounds(struct TerrainData_t* terData, int h, int w) {
-	if (h<0 || h> terData->gridLength - 1)
-		return false;
-	if (w<0 || w> terData->gridWidth - 1)
-		return false;
-	return true;
+static inline bool 
+in_terrain_bounds(struct TerrainData_t* terData, int h, int w) {
+	return 0<= h && h < (int)terData->gridLength && 
+			0 <= w && w < (int)terData->gridWidth;
+}
+
+enum SMOOTH_MODE {
+	NONE = 0,
+	SPEC,
+	QUAD,
+	GASSIAN,
+	DEFAULT = GASSIAN,
+};
+
+static inline int get_smooth_mode_range(SMOOTH_MODE mode) {
+	return (int)mode;
 }
 
 // fake gassiah smooth
 //  terrain context,pos x,y,smooth radius
-float average(struct TerrainData_t *terData, const int i, const int  j, int r = 1) {
+static inline 
+float average(struct TerrainData_t *terData, const int i, const int  j, SMOOTH_MODE mode) {
 	float avg = 0.0f;
 	float num = 0.0f;
 
 	int stride = terData->vdecl->getStride();
 	int offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
+
+	const int r = get_smooth_mode_range(mode);
 
 	uint8_t *vertices = terData->vertices;
 	for (int m = i - r; m <= i + r; ++m) {
@@ -581,35 +570,17 @@ float average(struct TerrainData_t *terData, const int i, const int  j, int r = 
 }
 
 
-enum SMOOTH_MODE {
-	NONE,
-	SPEC,
-	QUAD,
-	GASSIAN,
-};
-
-#define SMOOTH_DEFAULT SMOOTH_MODE::GASSIAN
-
-// not weight
-// default : r = 2
-void smooth_terrain_gasslike(struct TerrainData_t *terData, int r) {
-	glm::vec3 sum;
-	int i, j, index;
-
-	int width = terData->gridWidth;
-	int height = terData->gridLength;
-	uint8_t *vertices = terData->vertices;
-
-	int stride = terData->vdecl->getStride();
-	int offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
-	sum.x = sum.y = sum.z = 0;
-	for (j = 0; j < height; j++) {
-		for (i = 0; i < width; i++) {
-			//Gassiah like smooth without point weights
-			sum.y = average(terData, j, i, r);
-			index = (j * width) + i;
-			glm::vec3 *vert = (glm::vec3*) &vertices[index*stride + offset];
-			vert->y = (sum.y);
+static void 
+smooth_terrain_gasslike(struct TerrainData_t *terData, SMOOTH_MODE mode) {
+	const uint16_t stride = terData->vdecl->getStride();
+	const uint16_t offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
+	
+	for (uint32_t j = 0; j < terData->gridLength; j++) {
+		for (uint32_t i = 0; i < terData->gridWidth; i++) {
+			//Gassiah like smooth without point weights			
+			const uint32_t index = (j * terData->gridWidth) + i;
+			glm::vec3 *vert = (glm::vec3*) &(terData->vertices[index*stride + offset]);
+			vert->y = average(terData, j, i, mode);
 		}
 	}
 }
@@ -617,13 +588,14 @@ void smooth_terrain_quad(struct TerrainData_t *terData) {
 
 }
 
-void smooth_terrain_mesh(struct TerrainData_t *terData, int mode) {
+static void 
+smooth_terrain_mesh(struct TerrainData_t *terData, SMOOTH_MODE mode) {
 	if (terData->rawBits != 8)
 		return;
 #ifdef MY_DEBUG		
 	printf("c terrain: smooth terrain gradient.\n");
 #endif 	
-	if (mode == SMOOTH_DEFAULT) {
+	if (mode == SMOOTH_MODE::DEFAULT) {
 		smooth_terrain_gasslike(terData, mode);
 	}
 	return;
@@ -752,30 +724,21 @@ lterrain_update_mesh(lua_State *L) {
 		return luaL_error(L, "must alloc indices first.\n");
 
 	update_terrain_mesh(terData);
-	smooth_terrain_mesh(terData, SMOOTH_DEFAULT);
+	smooth_terrain_mesh(terData, SMOOTH_MODE::DEFAULT);
 	update_terrain_normal_fast(terData);
 	return 0;
 }
 
 void update_terrain_normal_fast(struct TerrainData_t *terData) {
-#ifdef MY_DEBUG		
-	printf("c terrain: fast calculate terrain normals.\n");
-#endif 	
 	// normal attrib does not exist
 	if (!terData->vdecl->has(bgfx::Attrib::Normal))
 		return;
 
-	glm::vec3 vert1, vert2, vert3;
-	glm::vec3 vec1, vec2, sum;
-	int i, j, index, index1, index2, index3;
-
 	const int stride = terData->vdecl->getStride();
-	const int offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
+	const uint16_t offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
 	const int normal_offset = terData->vdecl->getOffset(bgfx::Attrib::Normal);
 
-	int width = terData->gridWidth;
-	int height = terData->gridLength;
-	glm::vec3 *normals = new glm::vec3[(height - 1)*(width - 1)];
+	std::vector<glm::vec3> normals((terData->gridWidth - 1) * (terData->gridLength - 1));
 
 	uint8_t *verts = terData->vertices;
 
@@ -785,219 +748,129 @@ void update_terrain_normal_fast(struct TerrainData_t *terData) {
 	//         | /
 	//         |/
 	//  (v3) i,j+1
-	for (j = 0; j < (height - 1); j++)    // the last border not calc
-	{
-		for (i = 0; i < (width - 1); i++) {
-			index1 = (j * width) + i;
-			index2 = (j * width) + (i + 1);
-			index3 = ((j + 1) * width) + i;
 
-			vert1 = *(glm::vec3*) &verts[index1*stride + offset];
-			vert2 = *(glm::vec3*) &verts[index2*stride + offset];
-			vert3 = *(glm::vec3*) &verts[index3*stride + offset];
+	for (uint32_t j = 0; j < (terData->gridLength - 1); j++) {
+		for (uint32_t i = 0; i < (terData->gridWidth - 1); i++) {
+			const int index1 = (j * terData->gridWidth) + i;
+			const int index2 = (j * terData->gridWidth) + (i + 1);
+			const int index3 = ((j + 1) * terData->gridWidth) + i;
 
+			const auto v1 = *(glm::vec3*)(&verts[index1*stride + offset]);
+			const auto v2 = *(glm::vec3*)(&verts[index2*stride + offset]);
+			const auto v3 = *(glm::vec3*)(&verts[index3*stride + offset]);
 
-			vec1.x = vert1.x - vert3.x;
-			vec1.y = vert1.y - vert3.y;
-			vec1.z = vert1.z - vert3.z;
-			vec2.x = vert3.x - vert2.x;
-			vec2.y = vert3.y - vert2.y;
-			vec2.z = vert3.z - vert2.z;
+			const auto e1 = v1 - v3;
+			const auto e2 = v3 - v2;
 
-			index = (j * (width - 1)) + i;
-
-			// cross product ,get the un-normalized value
-			normals[index].x = (vec1.y*vec2.z) - (vec1.z*vec2.y);
-			normals[index].y = (vec1.z*vec2.x) - (vec1.x*vec2.z);
-			normals[index].z = (vec1.x*vec2.y) - (vec1.y*vec2.x);
+			const uint32_t index = (j * (terData->gridWidth - 1)) + i;
+			normals[index] = glm::cross(e1, e2);			
 		}
 	}
 
 	// go through all the vertices and take an average of each face normal
-	int   count = 0;
-	float length = 0;
-	for (j = 0; j < height; j++) {
-		for (i = 0; i < width; i++) {
-			sum.x = 0.0f;
-			sum.y = 0.0f;
-			sum.z = 0.0f;
-
-			count = 0;
+	for (uint32_t j = 0; j < terData->gridLength; j++) {
+		for (uint32_t i = 0; i < terData->gridWidth; i++) {
+			glm::vec3 sum(0.f);
+			int count = 0;
 
 			// Bottom left face.
 			if (((i - 1) >= 0) && ((j - 1) >= 0)) {
-				index = ((j - 1) * (width - 1)) + (i - 1);  //height
+				const uint32_t index = ((j - 1) * (terData->gridWidth - 1)) + (i - 1);  //height
 
-				sum.x += normals[index].x;
-				sum.y += normals[index].y;
-				sum.z += normals[index].z;
+				sum += normals[index];
 				count++;
 			}
 
 			// Bottom right face.
-			if ((i < (width - 1)) && ((j - 1) >= 0)) {
-				index = ((j - 1) * (width - 1)) + i;
-
-				sum.x += normals[index].x;
-				sum.y += normals[index].y;
-				sum.z += normals[index].z;
+			if ((i < (terData->gridWidth - 1)) && ((j - 1) >= 0)) {
+				const uint32_t index = ((j - 1) * (terData->gridWidth - 1)) + i;
+				sum += normals[index];				
 				count++;
 			}
 
 			// Upper left face.
-			if (((i - 1) >= 0) && (j < (height - 1))) {
-				index = (j * (width - 1)) + (i - 1);
-
-				sum.x += normals[index].x;
-				sum.y += normals[index].y;
-				sum.z += normals[index].z;
+			if ((0 <= (i - 1)) && (j < (terData->gridLength - 1))) {
+				const uint32_t index = (j * (terData->gridWidth - 1)) + (i - 1);
+				sum += normals[index];				
 				count++;
 			}
 
 			// Upper right face.
-			if ((i < (width - 1)) && (j < (height - 1))) {
-				index = (j * (width - 1)) + i;
+			if ((i < (terData->gridWidth - 1)) && (j < (terData->gridLength - 1))) {
+				const uint32_t index = (j * (terData->gridWidth - 1)) + i;
 
-				sum.x += normals[index].x;
-				sum.y += normals[index].y;
-				sum.z += normals[index].z;
+				sum += normals[index];				
 				count++;
 			}
 
-			// average
-			float invCount = 1.0f / count;
-			sum.x = (sum.x *invCount);
-			sum.y = (sum.y *invCount);
-			sum.z = (sum.z *invCount);
+			assert(count > 0);
 
-			length = sqrtf((sum.x * sum.x) + (sum.y * sum.y) + (sum.z * sum.z));
+			// average
+			sum /= count;
 
 			// Get an index to the vertex location in the height map array.
-			index = (j * width) + i;
+			const uint32_t index = (j * terData->gridWidth) + i;
 
-			// 如果不独立保存，则会产生很大差异，所以需要一个临时 normals 数组保存中间值
 			glm::vec3* dst_normals = (glm::vec3*) &verts[index*stride + normal_offset];
-			length = 1.0f / length;
-			dst_normals->x = (sum.x*length);
-			dst_normals->y = (sum.y*length);
-			dst_normals->z = (sum.z*length);
+			*dst_normals = glm::normalize(sum);
 		}
 	}
-
-	delete[] normals;
 }
 
-bool ray_triangle(float start[3], float dir[3], float *ip, float v0[3], float v1[3], float v2[3]) {
-	float edge1[3], edge2[3], normal[3];
-	float e1[3], e2[3], e3[3], edgeNormal[3];
-	float mag, dist, dn, sd, t, dtm, imp[3];
-	float temp[3];
+static inline bool 
+ray_triangle_intersection_point(const glm::vec3& start, const glm::vec3 &dir, 	
+	const glm::vec3 &v0, 
+	const glm::vec3 &v1, 
+	const glm::vec3 &v2,
+	glm::vec3 &intersection_point) {	
 
-	edge1[0] = v1[0] - v0[0];
-	edge1[1] = v1[1] - v0[1];
-	edge1[2] = v1[2] - v0[2];
+	const glm::vec3 edge[3] = {
+		v1 - v0,
+		v2 - v0,
+		v0 - v2, 
+	};
 
-	edge2[0] = v2[0] - v0[0];
-	edge2[1] = v2[1] - v0[1];
-	edge2[2] = v2[2] - v0[2];
+	const glm::vec3 vertices[3] = {
+		v0, v1, v2 };
 
-	normal[0] = (edge1[1] * edge2[2]) - (edge1[2] * edge2[1]);
-	normal[1] = (edge1[2] * edge2[0]) - (edge1[0] * edge2[2]);
-	normal[2] = (edge1[0] * edge2[1]) - (edge1[1] * edge2[0]);
-	// normalize
-	mag = (float)sqrt((normal[0] * normal[0]) + (normal[1] * normal[1]) + (normal[2] * normal[2]));
-	normal[0] = normal[0] / mag;
-	normal[1] = normal[1] / mag;
-	normal[2] = normal[2] / mag;
-
-	dist = ((-normal[0] * v0[0]) + (-normal[1] * v0[1]) + (-normal[2] * v0[2]));
+	const auto normal = glm::normalize(glm::cross(edge[0], edge[2]));
+	const float dist = -glm::dot(normal, v0);
 
 	// project the ray's direction
-	dn = ((normal[0] * dir[0]) + (normal[1] * dir[1]) + (normal[2] * dir[2]));
+	const float dn = glm::dot(normal, dir);
 	if (fabs(dn) < 0.0001f) {
 		return false;
 	}
 	// start point distance to the plane
-	sd = -1.0f * (((normal[0] * start[0]) + (normal[1] * start[1]) + (normal[2] * start[2])) + dist);
-	t = sd / dn;
+	const float sd = -1.0f * (glm::dot(normal, start)+ dist);
+	const float t = sd / dn;
 	// get impact point
-	imp[0] = start[0] + (dir[0] * t);
-	imp[1] = start[1] + (dir[1] * t);
-	imp[2] = start[2] + (dir[2] * t);
+	const auto intersetion = start + (dir * t);	
 
-	e1[0] = v1[0] - v0[0];
-	e1[1] = v1[1] - v0[1];
-	e1[2] = v1[2] - v0[2];
+	for (int ii = 0; ii < 3; ++ii) {
+		const auto edgeNormal = glm::cross(edge[ii], normal);
+		const auto temp = intersetion - vertices[ii];
 
-	e2[0] = v2[0] - v1[0];
-	e2[1] = v2[1] - v1[1];
-	e2[2] = v2[2] - v1[2];
-
-	e3[0] = v0[0] - v2[0];
-	e3[1] = v0[1] - v2[1];
-	e3[2] = v0[2] - v2[2];
-
-
-	edgeNormal[0] = (e1[1] * normal[2]) - (e1[2] * normal[1]);
-	edgeNormal[1] = (e1[2] * normal[0]) - (e1[0] * normal[2]);
-	edgeNormal[2] = (e1[0] * normal[1]) - (e1[1] * normal[0]);
-
-	temp[0] = imp[0] - v0[0];
-	temp[1] = imp[1] - v0[1];
-	temp[2] = imp[2] - v0[2];
-	// project temp vector
-	dtm = ((edgeNormal[0] * temp[0]) + (edgeNormal[1] * temp[1]) + (edgeNormal[2] * temp[2]));
-	if (dtm > 0.001f) {
-		return false;
+		// project temp vector
+		const float dtm = glm::dot(edgeNormal, temp);
+		if (dtm > 0.001f) {
+			return false;
+		}
 	}
 
-
-	edgeNormal[0] = (e2[1] * normal[2]) - (e2[2] * normal[1]);
-	edgeNormal[1] = (e2[2] * normal[0]) - (e2[0] * normal[2]);
-	edgeNormal[2] = (e2[0] * normal[1]) - (e2[1] * normal[0]);
-
-	temp[0] = imp[0] - v1[0];
-	temp[1] = imp[1] - v1[1];
-	temp[2] = imp[2] - v1[2];
-	dtm = ((edgeNormal[0] * temp[0]) + (edgeNormal[1] * temp[1]) + (edgeNormal[2] * temp[2]));
-	if (dtm > 0.001f) {
-		return false;
-	}
-
-
-	edgeNormal[0] = (e3[1] * normal[2]) - (e3[2] * normal[1]);
-	edgeNormal[1] = (e3[2] * normal[0]) - (e3[0] * normal[2]);
-	edgeNormal[2] = (e3[0] * normal[1]) - (e3[1] * normal[0]);
-
-	temp[0] = imp[0] - v2[0];
-	temp[1] = imp[1] - v2[1];
-	temp[2] = imp[2] - v2[2];
-	dtm = ((edgeNormal[0] * temp[0]) + (edgeNormal[1] * temp[1]) + (edgeNormal[2] * temp[2]));
-	if (dtm > 0.001f) {
-		return false;
-	}
-
-	ip[0] = imp[0];
-	ip[1] = imp[1];
-	ip[2] = imp[2];
+	intersection_point = intersetion;
 	return true;
 }
 
 // project x,z on triangle, return the height of this position
 // further should be add ray cast parameters
-bool check_height_of_triangle(float x, float z, float *height, float v0[3], float v1[3], float v2[3]) {
-	float start[3], dir[3], ip[3];
-	// ray start point
-	start[0] = x;
-	start[1] = 1000.0f;
-	start[2] = z;
+bool check_height_of_triangle(float x, float z, float *height, 
+	const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2) {
 
-	// ray direction
-	dir[0] = 0.0f;
-	dir[1] = -1000.0f;
-	dir[2] = 0.0f;
-
-	if (ray_triangle(start, dir, ip, v0, v1, v2)) {
+	const glm::vec3 start(x, 1000.f, z);
+	const glm::vec3 dir(0.f, -1000.f, 0.0);
+	glm::vec3 ip;
+	if (ray_triangle_intersection_point(start, dir, v0, v1, v2, ip)) {
 		*height = ip[1];
 		return true;
 	}
@@ -1005,25 +878,19 @@ bool check_height_of_triangle(float x, float z, float *height, float v0[3], floa
 }
 
 // get terrain height at x,z position
-bool terrain_get_height(struct TerrainData_t* terData, float x, float z, float *height) {
-	int stride = terData->vdecl->getStride();
-	int offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
+static bool 
+terrain_get_height(struct TerrainData_t* terData, float x, float z, float *height) {
+	const uint16_t stride = terData->vdecl->getStride();
+	const uint16_t offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
 	uint8_t* verts = terData->vertices;
 
-	int	   width = terData->gridWidth;
-	float  x_unit_grid_space = (float)terData->width / terData->gridWidth;
-	float  z_unit_grid_space = (float)terData->length / terData->gridLength;
+	const int    xindex = (int)(x / terData->grid_x_scale);
+	const int    zindex = (int)(z / terData->grid_z_scale);
 
-	int    xindex = (int)(x / x_unit_grid_space);
-	int    zindex = (int)(z / z_unit_grid_space);
-
-	int    left = xindex - 1;
-	int    right = xindex + 1;
-	int    top = zindex - 1;
-	int    bottom = zindex + 1;
-
-	int    index1, index2, index3, index4;
-	float  *vert1, *vert2, *vert3, *vert4;
+	const int    left = xindex - 1;
+	const int    right = xindex + 1;
+	const int    top = zindex - 1;
+	const int    bottom = zindex + 1;
 
 	for (int j = top; j < bottom; j++) {
 		for (int i = left; i < right; i++) {
@@ -1034,24 +901,25 @@ bool terrain_get_height(struct TerrainData_t* terData, float x, float z, float *
 			//  |  /  |
 			//  | /   |
 			// 3 ----- 4
-			index1 = (j * width) + i;
-			index2 = (j * width) + (i + 1);
-			index3 = ((j + 1) * width) + i;
-			index4 = ((j + 1) * width) + (i + 1);
+			const uint32_t index1 = (j * terData->gridWidth) + i;
+			const uint32_t index2 = (j * terData->gridWidth) + (i + 1);
+			const uint32_t index3 = ((j + 1) * terData->gridWidth) + i;
+			const uint32_t index4 = ((j + 1) * terData->gridWidth) + (i + 1);
 
-			vert1 = (float*)&verts[index1*stride + offset];
-			vert2 = (float*)&verts[index2*stride + offset];
-			vert3 = (float*)&verts[index3*stride + offset];
-			vert4 = (float*)&verts[index4*stride + offset];
+			const glm::vec3& v0 = *(const glm::vec3*)&verts[index1*stride + offset];
+			const glm::vec3& v1 = *(const glm::vec3*)&verts[index2*stride + offset];
+			const glm::vec3& v2 = *(const glm::vec3*)&verts[index3*stride + offset];
+			const glm::vec3& v3 = *(const glm::vec3*)&verts[index4*stride + offset];
 
-			if (check_height_of_triangle(x, z, height, vert1, vert2, vert3))
+			if (check_height_of_triangle(x, z, height, v0, v1, v2))
 				return true;
 
-			if (check_height_of_triangle(x, z, height, vert2, vert4, vert3))
+			if (check_height_of_triangle(x, z, height, v1, v3, v2))
 				return true;
 		}
 	}
-	if (*height)
+
+	if (height)
 		*height = 0.0f;
 	return false;
 }
@@ -1064,7 +932,7 @@ float terrain_get_raw_height(struct TerrainData_t* terData, int x, int z) {
 	int	   width = terData->gridWidth;
 
 	if (!in_terrain_bounds(terData, z, x))
-		return -99999.99f;
+		return std::numeric_limits<float>::lowest();
 
 
 	// 1 ----- 2
