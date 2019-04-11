@@ -817,33 +817,35 @@ void update_terrain_normal_fast(struct TerrainData_t *terData) {
 	}
 }
 
-// we have triangle:
-//		v1
-//	   /  \
-//	  / pt \
-//	 v0----v2
-// then:
-//	e0 = v2 - v0
-//  e1 = v1 - v0
-//  e2 = pt - v0
-//
-//if pt is inside triangle, then:
-//		pt = v0 + u * e0 + v * e1
-//	==>
-//		pt - v0 = u * e0 + v * e1
-//  ==>
-//		e2 = u * e0 + v * e1
-//	==>(here, we can dot any vector we want, replace e0 as vec3(1, 0, 0) or e1 as vec3(0, 1, 0) also get the same result)
-//		e2 dot e0 = (u * e0) dot e0 + (v * e1) dot e0
-//		e2 dot e1 = (u * e0) dot e1 + (v * e1) dot e1
-// solve these formula can get the u and v value
-//u and v is scalar
-//for this formula is correct
-//u ==> [0, 1] && v ==> [0, 1] && u + v <= 1
-//
-//	1. move v0 to origin
-//	2. pt - v0 is equal v * e1 + u * e0, because v * e1 is a vector lied on e1 and u * e0 also lied on e0(vector add)
-//	then the u/v value can determine what pt is
+/*
+ we have triangle:
+		v1
+	   /  \
+	  / pt \
+	 v0----v2
+ then:
+	e0 = v2 - v0
+  e1 = v1 - v0
+  e2 = pt - v0
+
+if pt is inside triangle, then:
+		pt = v0 + u * e0 + v * e1
+	==>
+		pt - v0 = u * e0 + v * e1
+  ==>
+		e2 = u * e0 + v * e1
+	==>(here, we can dot any vector we want, replace e0 as vec3(1, 0, 0) or e1 as vec3(0, 1, 0) also get the same result)
+		e2 dot e0 = (u * e0) dot e0 + (v * e1) dot e0
+		e2 dot e1 = (u * e0) dot e1 + (v * e1) dot e1
+ solve these formula can get the u and v value
+u and v is scalar
+for this formula is correct
+u ==> [0, 1] && v ==> [0, 1] && u + v <= 1
+
+	1. move v0 to origin
+	2. pt - v0 is equal v * e1 + u * e0, because v * e1 is a vector lied on e1 and u * e0 also lied on e0(vector add)
+	then the u/v value can determine what pt is
+*/
 
 static inline bool
 point_in_triangle(const glm::vec3 &pt, const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2) {
@@ -1019,12 +1021,9 @@ terrain_get_height(struct TerrainData_t* terData, float x, float z, float *heigh
 }
 
 float terrain_get_raw_height(struct TerrainData_t* terData, int x, int z) {
-	int stride = terData->vdecl->getStride();
-	int offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
-	uint8_t* verts = terData->vertices;
-
-	int	   width = terData->gridWidth;
-
+	const uint16_t stride = terData->vdecl->getStride();
+	const uint16_t offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
+	
 	if (!in_terrain_bounds(terData, z, x))
 		return std::numeric_limits<float>::lowest();
 
@@ -1034,8 +1033,8 @@ float terrain_get_raw_height(struct TerrainData_t* terData, int x, int z) {
 	//  |  /  |
 	//  | /   |
 	// 3 ----- 4
-	int   index = (z * width) + x;
-	glm::vec3 *vert = (glm::vec3*) &verts[index*stride + offset];
+	int   index = (z * terData->gridWidth) + x;
+	glm::vec3 *vert = (glm::vec3*) &terData->vertices[index*stride + offset];
 	return vert->y;
 }
 
