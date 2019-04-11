@@ -32,7 +32,6 @@ model_ed_sys.dependby "camera_controller"
 model_ed_sys.dependby "renderbone_system"
 model_ed_sys.dependby "state_machine"
 model_ed_sys.dependby "skinning_system"
-model_ed_sys.dependby "math_adapter"
 
 --model_ed_sys.dependby "render_mesh_bounding"
 model_ed_sys.dependby "primitive_filter_system"

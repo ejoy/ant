@@ -1,12 +1,22 @@
-local ecs = ...
+local adapter = {}; adapter.__index = adapter
 
-ecs.import 'ant.render'
-ecs.import 'ant.bullet'
-ecs.import 'ant.scene'
-ecs.import 'ant.animation'
+local bindings = {}
+local binded = {}
 
-local ma = ecs.system "math_adapter"
-ma.depend 'physic_math_adapter'
-ma.depend 'render_math_adapter'
-ma.depend 'hierarchy_bind_math'
-ma.depend 'animation_math_adapter'
+function adapter.bind(name, binding)
+	assert(bindings[name] == nil, string.format("%s already binded", name))
+	bindings[name] = assert(binding)
+end
+
+function adapter.bind_math_adapter()
+	for k, b in pairs(bindings) do
+		if binded[k] == nil then
+			b()
+			binded[k] = true
+		end
+	end
+
+	bindings = {}
+end
+
+return adapter

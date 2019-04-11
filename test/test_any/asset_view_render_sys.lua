@@ -20,7 +20,6 @@ asset_view_render_sys.singleton "constant"
 asset_view_render_sys.dependby "message_system"
 -- asset_view_render_sys.depend "shadow_primitive_filter_system"
 asset_view_render_sys.depend "primitive_filter_system"
-asset_view_render_sys.depend "math_adapter"
 asset_view_render_sys.depend "render_system"
 
 local lu = import_package "ant.render" .light

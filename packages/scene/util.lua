@@ -3,6 +3,7 @@ local util = {}; util.__index = util
 local ms = import_package "ant.math" .stack
 local log = log and log(...) or print
 local ecs = import_package "ant.ecs"
+local mathadapter = import_package "ant.math.adapter"
 
 local handlers = {	
 	parent = function (comp, value)
@@ -50,7 +51,7 @@ function util.start_new_world(input_queue, fbw, fbh, packages, systems)
 		},
 	}
 	
-	world:update_func("bind_math_adapter")()
+	mathadapter.bind_math_adapter()	
 	world:update_func("init")()
     return world
 end
