@@ -258,20 +258,6 @@ lterrain_getIB(lua_State *L) {
 	return 1;
 }
 
-
-// action，brush filter，brush data and size
-static
-int lterrain_updateVB(lua_State *L) {
-	return 0;
-}
-
-static
-int lterrain_updateIB(lua_State *L) {
-	return 0;
-}
-
-
-
 static
 int lterrain_width(lua_State *L) {
 	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
@@ -293,30 +279,6 @@ int lterrain_length(lua_State *L) {
 	return 1;
 }
 
-
-// 释放 terrainData 地形数据,gc 自动回收，lua 层直接使用无效
-static int
-lterrain_close(lua_State *L) {
-	struct TerrainData_t *terData = (struct TerrainData_t*) lua_touserdata(L, 1);
-
-#ifdef MY_DEBUG
-	printf("\ngc: close terrain start.\n");
-	if (terData->vertices)
-		printf("gc: got vertices.\n");
-	if (terData->indices)
-		printf("gc: got indices.\n");
-#endif
-
-	// 都改成 userdata ，由 gc 自动回收
-
-#ifdef MY_DEBUG
-	printf("gc: close terrain end. \ngc: terrain alloc memory release.\n");
-#endif
-
-	return 0;
-}
-
-
 static inline uint32_t
 getfield_touint(lua_State *L, int table, const char *key) {
 	if (lua_getfield(L, table, key) != LUA_TNUMBER) {
@@ -336,8 +298,8 @@ getfield_tofloat(lua_State *L, int table, const char *key) {
 	return value;
 }
 
-
-int terrain_check_level(lua_State *L, int index, struct TerrainData_t* terData) {
+static inline int 
+fetch_terrain_data(lua_State *L, int index, struct TerrainData_t* terData) {
 	luaL_checktype(L, index, LUA_TTABLE);
 
 	terData->gridWidth	= getfield_touint(L, index, "grid_width");
@@ -358,17 +320,8 @@ int terrain_check_level(lua_State *L, int index, struct TerrainData_t* terData) 
 	return 0;
 }
 
-//memset( terData, 0x0, sizeof(*terData) );
-// todo: get parameters from lua
-//    build terraindata from terrain level config
-//       alloc vertex memorty
-//           calc normal,uvs,smooth terrain height
-//    build vb，ib
-//  return  terraintata
-//          terraindata support access function
-// memset(terData,0x0,sizeof(*terData));
-
-void terrain_default_init(struct TerrainData_t *terData) {
+static inline void 
+terrain_default_init(struct TerrainData_t *terData) {
 	terData->gridWidth = 513;
 	terData->gridLength = 513;
 	terData->rawBits = 8;
@@ -380,29 +333,27 @@ void terrain_default_init(struct TerrainData_t *terData) {
 	terData->uv1Scale = 1.0f;
 }
 
-// parameters: raw heightmap data, terrainLevel decl, vertex decl
-// return:    terrainData
+static inline void
+load_heightmap_data(lua_State *L, int index, struct TerrainData_t *terData) {
+	size_t  size = 0;
+	uint8_t *heightmap = (uint8_t *)luaL_checklstring(L, index, &size);
+	if (size == 0) {
+		luaL_error(L, "no heightmap data");
+	}
+	terData->heightmap = heightmap;
+	terData->rawSize = (int)size;
+}
+
+static int
+lterrain_del(lua_State *L) {
+	return 0;
+}
+
 static int
 lterrain_create(lua_State *L) {
 	struct TerrainData_t* terData = (struct TerrainData_t*) lua_newuserdata(L, sizeof(TerrainData_t));
 	if (luaL_newmetatable(L, "TERRAIN_BASE")) {
-		// __index
-		// __len
-		// or other function
-		// allocVB
-		// allocIB
-		// updateVB
-		// updateIB
-		// etc ...
-		luaL_Reg l[] = {
-			{"allocVB",lterrain_getVB},
-			{"allocIB",lterrain_getIB},
-			{"getVB",lterrain_getVB},
-			{"getIB",lterrain_getIB},
-			{"getNumVerts",lterrain_getNumVerts},
-			{"getNumIndices",lterrain_getNumIndices},
-			{"updateVB",lterrain_updateVB},
-			{"updateIB",lterrain_updateIB},
+		luaL_Reg l[] = {			
 			{"width",lterrain_width},
 			{"length",lterrain_length},
 			{"height",lterrain_height},
@@ -410,50 +361,32 @@ lterrain_create(lua_State *L) {
 		};
 		luaL_newlib(L, l);
 		lua_setfield(L, -2, "__index");
-		lua_pushcfunction(L, lterrain_close);        // register gc function
+		lua_pushcfunction(L, lterrain_del);        // register gc function
 		lua_setfield(L, -2, "__gc");
 	}
-	lua_setmetatable(L, -2);                        // terrain Data inherit TERRAIN_BASE
-													// terrain data already on stack
-	terData->vertices = NULL;
-	terData->indices = NULL;
-	terData->heightmap = NULL;
-	terData->vdecl = NULL;
+	lua_setmetatable(L, -2);
 
-	// param1： heightmap
-	size_t  size = 0;
-	uint8_t *heightmap = (uint8_t *)luaL_checklstring(L, 1, &size);
-	// todo： if size == 0 ....
-	// save heightmap
-	terData->heightmap = heightmap;
-	terData->rawSize = (int)size;
+	memset(terData, 0, sizeof(TerrainData_t));
 
-	// param3：vertex decl
-	bgfx::VertexDecl *vd = (bgfx::VertexDecl *) lua_touserdata(L, 3);
-	if (vd == NULL)
+	load_heightmap_data(L, 1, terData);
+
+	terData->vdecl = (bgfx::VertexDecl *)lua_touserdata(L, 3);
+	if (terData->vdecl == NULL)
 		return luaL_error(L, "Invalid vertex decl");
 
-	// save vertex declare
-	terData->vdecl = vd;
-
-	// param3： terrainLevel
-	terrain_check_level(L, 2, terData);
-
-	// todo:  get terrain data from terrainLevel
-
-	// default init
-
+	fetch_terrain_data(L, 2, terData);
 	return 1;
 }
 
 static inline glm::vec2
-calc_uv(const glm::vec2 &uv, const glm::vec2 &size, float scale, float offset) {
-	auto r = (uv + offset) * size * scale;
+calc_uv(const glm::vec2 &gridIdx, const glm::vec2 &size, float scale, float offset) {
+	auto r = (gridIdx + offset) * size * scale;
 	r.y = -r.y;
 	return r;
 }
 
-void update_terrain_mesh(struct TerrainData_t* terData) {	
+static void 
+update_terrain_mesh(struct TerrainData_t* terData) {	
 	const glm::vec3 vertexscale(terData->grid_x_scale, terData->height_scale, terData->grid_z_scale);
 
 	terData->min_height = std::numeric_limits<float>::max();
@@ -584,9 +517,6 @@ smooth_terrain_gasslike(struct TerrainData_t *terData, SMOOTH_MODE mode) {
 		}
 	}
 }
-void smooth_terrain_quad(struct TerrainData_t *terData) {
-
-}
 
 static void 
 smooth_terrain_mesh(struct TerrainData_t *terData, SMOOTH_MODE mode) {
@@ -711,16 +641,12 @@ smooth_terrain_mesh(struct TerrainData_t *terData, SMOOTH_MODE mode) {
 	*/
 }
 
-// 如果是合并在bgfx 工程，静态引用有效，则交互会更方便些
 static int
 lterrain_update_mesh(lua_State *L) {
 	struct TerrainData_t* terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
-	uint8_t *vertices = (uint8_t *)luaL_checkudata(L, 2, "TERRAIN_VB");
-	uint32_t *indices = (uint32_t *)luaL_checkudata(L, 3, "TERRAIN_IB");
-
-	if (terData->vertices == NULL || vertices == NULL)
+	if (terData->vertices == NULL)
 		return luaL_error(L, "must alloc vertices first.\n");
-	if (terData->indices == NULL || indices == NULL)
+	if (terData->indices == NULL)
 		return luaL_error(L, "must alloc indices first.\n");
 
 	update_terrain_mesh(terData);
@@ -729,7 +655,8 @@ lterrain_update_mesh(lua_State *L) {
 	return 0;
 }
 
-void update_terrain_normal_fast(struct TerrainData_t *terData) {
+static void 
+update_terrain_normal_fast(struct TerrainData_t *terData) {
 	// normal attrib does not exist
 	if (!terData->vdecl->has(bgfx::Attrib::Normal))
 		return;
@@ -768,8 +695,8 @@ void update_terrain_normal_fast(struct TerrainData_t *terData) {
 	}
 
 	// go through all the vertices and take an average of each face normal
-	for (uint32_t j = 0; j < terData->gridLength; j++) {
-		for (uint32_t i = 0; i < terData->gridWidth; i++) {
+	for (int j = 0; j < (int)terData->gridLength; ++j) {
+		for (int i = 0; i < (int)terData->gridWidth; ++i) {
 			glm::vec3 sum(0.f);
 			int count = 0;
 
@@ -1134,49 +1061,6 @@ lterrain_update_normals(lua_State *L) {
 	return 0;
 }
 
-void update_terrain_tangent(struct TerrainData_t* terData) {
-	// todo:
-}
-
-void terrain_update_vb(struct TerrainData_t *terData) {
-	//const bgfx_memory_t* mem = NULL;
-	// todo:
-}
-
-// 几何形体改变，单独修改 IB 的需求
-void terrain_updata_ib(struct TerrainData_t *terData) {
-	//const bgfx_memory_t* mem = NULL;
-	// todo:
-}
-
-
-// update terrain by view point
-// params: TerrainData_t * data
-//         vertex buffer
-//         index buffer
-//         eyeView,eyeDir
-static int
-lterrain_update_view(lua_State *L) {
-	// todo: maybe ...
-	return 1;
-}
-
-// 不在 c 做渲染，只是存根测试函数
-static int
-lterrain_render(lua_State *L) {
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
-	const int memory_size = terData->vertexCount * terData->vdecl->getStride();
-#ifdef MY_DEBUG		
-	printf("grid width = %d,grid length = %d, vertex strid = %d.\n", terData->gridWidth,
-		terData->gridLength,
-		terData->vdecl->getStride());
-	printf("width = %d,lenght=%d,height=%d\n", terData->width, terData->length, terData->height);
-	printf("memory size = %d m\n", int(memory_size / 1024 / 1024.0f));
-#endif 	
-	return 0;
-}
-
-
 // 其他构思草稿，数据存放在那一段，简单性足够与否，以后如何扩充？
 
 // 或者地形关卡 level 文件内容由lua 加载
@@ -1243,11 +1127,7 @@ luaopen_lterrain(lua_State *L) {
 		{ "get_max_height",	lterrain_get_max_height},
 		{ "get_height_scale",lterrain_get_height_scale},
 		{ "get_width_scale",lterrain_get_width_scale},
-		{ "get_length_scale",lterrain_get_length_scale},
-		{ "update_view",	lterrain_update_view},
-		{ "update",			lterrain_update_view},
-		{ "render",			lterrain_render},
-		{ "close",			lterrain_close},
+		{ "get_length_scale",lterrain_get_length_scale},						
 
 		{ NULL, NULL },
 	};

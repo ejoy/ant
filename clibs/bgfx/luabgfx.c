@@ -1972,10 +1972,11 @@ create_from_table_decl(lua_State *L, int idx, bgfx_vertex_decl_t *vd) {
 static const bgfx_memory_t *
 create_from_table_int16(lua_State *L, int idx) {
 	luaL_checktype(L, idx, LUA_TTABLE);
-	if (lua_geti(L, idx, 1) != LUA_TNUMBER) {
-		lua_pop(L, 1);
+	int idxtype = lua_geti(L, idx, 1);
+	lua_pop(L, 1);
+	if (idxtype != LUA_TNUMBER) 		
 		return create_mem_from_table(L, idx, 1, NULL, NULL);
-	}
+
 	int n = lua_rawlen(L, idx);
 	const bgfx_memory_t *mem = bgfx_alloc(n * sizeof(uint16_t));
 	int i;
@@ -1991,10 +1992,11 @@ create_from_table_int16(lua_State *L, int idx) {
 static const bgfx_memory_t *
 create_from_table_int32(lua_State *L, int idx) {
 	luaL_checktype(L, idx, LUA_TTABLE);
-	if (lua_geti(L, idx, 1) != LUA_TNUMBER) {
-		lua_pop(L, 1);
+	int idxtype = lua_geti(L, idx, 1);
+	lua_pop(L, 1);
+	if (idxtype != LUA_TNUMBER)
 		return create_mem_from_table(L, idx, 1, NULL, NULL);
-	}
+
 	int n = lua_rawlen(L, idx);
 	const bgfx_memory_t *mem = bgfx_alloc(n * sizeof(uint32_t));
 	int i;

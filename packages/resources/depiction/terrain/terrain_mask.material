@@ -1,0 +1,6 @@
+shader = {
+	vs = "",
+	fs = "",
+}
+
+state = "mask.state"
