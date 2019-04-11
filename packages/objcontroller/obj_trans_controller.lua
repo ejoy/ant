@@ -37,8 +37,6 @@ obj_trans_sys.singleton "constant"
 obj_trans_sys.singleton "control_state"
 obj_trans_sys.singleton "message"
 
-obj_trans_sys.depend "constant_init_sys"
-
 local function deep_copy(t)
 	if type(t) == "table" then
 		local tmp = {}
@@ -93,7 +91,7 @@ local function play_object_transform(ot, dx, dy)
     local axis_name = name:match(".+-([xyz])$")
 
     local function select_step_value(dir)
-        local camera = world:first_entity("main_camera")
+        local camera = world:first_entity("main_queue")
         local view, proj = mu.view_proj_matrix(camera)
 
 		local originInWS = ctrlpos
@@ -288,7 +286,7 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 		editable_hierarchy = {ref_path = axis_hierarchyname},
 		hierarchy_name_mapper = {},
 		[tag_comp] = true,
-		main_viewtag = true,
+		main_view = true,
 	}
 
 	local namemapper = world[hie_eid].hierarchy_name_mapper
@@ -316,7 +314,7 @@ local function add_axis_entites(prefixname, suffixname, headmeshfile, axismeshfi
 			[tag_comp] = true,
 			editor = true,
 			parent = hie_eid,
-			main_viewtag = true,
+			main_view = true,
 		}
 		namemapper[name] = eid
 		return eid
@@ -352,7 +350,7 @@ local function add_axis_base_transform_entites(basename, headmeshfile, axismeshf
 		hierarchy_name_mapper = {},
 		name = basename,
 		[tag_comp] = true,
-		main_viewtag = true,
+		main_view = true,
 	}
 
 	local namemapper = world[rootaxis_eid].hierarchy_name_mapper
@@ -448,7 +446,7 @@ local function add_rotator_entities(colors)
 			ref_path = axisbase_controller_hierarchyname,
 		},
 		hierarchy_name_mapper = {},
-		main_viewtag = true,
+		main_view = true,
 	}
 	
 	local namemapper = world[root_eid].hierarchy_name_mapper
@@ -466,7 +464,7 @@ local function add_rotator_entities(colors)
 			hierarchy_name_mapper = {},
 			name = "rotator-elem-" .. elemname,
 			rotator_transform = true,
-			main_viewtag = true,
+			main_view = true,
 		}
 
 		local elem = world[elem_eid]
@@ -496,7 +494,7 @@ local function add_rotator_entities(colors)
 				},
 				can_render = false,
 				can_select = true,
-				main_viewtag = true,
+				main_view = true,
 			}			
 		end
 	

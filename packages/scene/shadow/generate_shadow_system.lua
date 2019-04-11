@@ -475,7 +475,7 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
 
 
     -- main camera entity, get main camera's position,direction
-    local camera = world:first_entity("main_camera")
+    local camera = world:first_entity("main_queue")
     local camera_view_rc = camera.view_rect 
     local camera_view, camera_proj = math_util.view_proj_matrix(camera)
     
@@ -835,9 +835,9 @@ end
 local gen_shadow_system = ecs.system "generate_shadow_system"
 
 gen_shadow_system.singleton "shadow_cast_filter"
-gen_shadow_system.depend   "view_system"       
-gen_shadow_system.dependby "lighting_primitive_filter_system"
-gen_shadow_system.dependby "entity_rendering" 
+--gen_shadow_system.depend   "view_system"       
+--gen_shadow_system.dependby "lighting_primitive_filter_system"
+--gen_shadow_system.dependby "entity_rendering" 
 
 function gen_shadow_system:init()
 	local function add_shadow_maker_entity()

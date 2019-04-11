@@ -17,9 +17,14 @@ ecs.import 'ant.event'
 ecs.import 'ant.objcontroller'
 ecs.import 'ant.math.adapter'
 
+local serialize = import_package 'ant.serialize'
+
 local renderpkg = import_package 'ant.render'
 local computil = renderpkg.components
+local renderutil=renderpkg.util
 local aniutil = import_package 'ant.animation'.util
+
+local ms = import_package 'ant.math'.stack
 
 local lu = renderpkg.light
 
@@ -27,13 +32,13 @@ local PVPScenLoader = require 'PVPSceneLoader'
 
 local init_loader = ecs.system 'init_loader'
 
---init_loader.depend 'shadow_primitive_filter_system'
-init_loader.depend 'transparency_filter_system'
-init_loader.depend 'entity_rendering'
-init_loader.depend 'camera_controller'
-init_loader.depend 'skinning_system'
 init_loader.depend 'timesystem'
-init_loader.depend 'math_adapter'
+
+init_loader.dependby 'render_system'
+init_loader.dependby 'primitive_filter_system'
+init_loader.dependby 'camera_controller'
+init_loader.dependby 'skinning_system'
+init_loader.dependby 'math_adapter'
 
 local function create_animation_test()
     local meshdir = fs.path 'meshes'
@@ -98,7 +103,7 @@ local function create_animation_test()
             ref_path = fs.path '//ant.resources' / smpath
         },
         name = 'animation_sample',
-        main_viewtag = true
+        main_view = true
     }
 
     local e = world[eid]
@@ -107,6 +112,7 @@ local function create_animation_test()
 end
 
 function init_loader:init()
+	renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
     do
         lu.create_directional_light_entity(world, 'directional_light')
         lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
@@ -120,21 +126,21 @@ function init_loader:init()
 
     create_animation_test()
 
-    -- local function save_file(file, data)
-    --     assert(assert(io.open(file, 'w')):write(data)):close()
-    -- end
-    -- -- test serialize world
-    -- local s = serialize.save_world(world)
-    -- save_file('serialize_world.txt', s)
-    -- for _, eid in world:each 'serialize' do
-    --     world:remove_entity(eid)
-    -- end
-    -- serialize.load_world(world, s)
+    local function save_file(file, data)
+        assert(assert(io.open(file, 'w')):write(data)):close()
+    end
+    -- test serialize world
+    local s = serialize.save_world(world)
+    save_file('serialize_world.txt', s)
+    for _, eid in world:each 'serialize' do
+        world:remove_entity(eid)
+    end
+    serialize.load_world(world, s)
 
-    -- test serialize entity
-    --local eid = world:first_entity_id 'serialize'
-    --local s = serialize.save_entity(world, eid)
-    --save_file('serialize_entity.txt', s)
-    --world:remove_entity(eid)
-    --serialize.load_entity(world, s)
+    --test serialize entity
+    local eid = world:first_entity_id 'serialize'
+    local s = serialize.save_entity(world, eid)
+    save_file('serialize_entity.txt', s)
+    world:remove_entity(eid)
+    serialize.load_entity(world, s)
 end

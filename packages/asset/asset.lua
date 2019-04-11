@@ -11,6 +11,7 @@ local support_list = {
 	"lk",
 	"ozz",
 	"sm",
+	"terrain",
 }
 
 local loaders = {}

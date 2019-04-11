@@ -17,11 +17,13 @@
 #define BGFX_HANDLE_OCCLUSION_QUERY 12
 
 #define BGFX_LUAHANDLE(type, handle) (BGFX_HANDLE_##type << 16 | handle.idx)
-#define BGFX_LUAHANDLE_ID(type, idx) check_handle_type(L, BGFX_HANDLE_##type, idx, #type)
+#define BGFX_LUAHANDLE_ID(type, idx) check_handle_type(L, BGFX_HANDLE_##type, (idx), #type)
+#define BGFX_LUAHANDLE_WITHTYPE(idx, subtype) ( (idx) | (subtype) << 20 )
+#define BGFX_LUAHANDLE_SUBTYPE(idx) ( (idx) >> 20 )
 
 static inline int
 check_handle_type(lua_State *L, int type, int id, const char * tname) {
-	int idtype = id >> 16;
+	int idtype = (id >> 16) & 0x0f;
 	if (idtype != type) {
 		return luaL_error(L, "Invalid handle type %s (id = %d:%d)", tname, idtype, id&0xffff);
 	}

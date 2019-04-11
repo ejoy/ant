@@ -1,0 +1,11 @@
+shader = {
+	vs = "//ant.resources/shadow/simple/vs_create",
+	fs = "//ant.resources/shadow/simple/fs_create",
+}
+
+state = {
+	WRITE_MASK = "Z",
+	ALPHA_REF = 0,
+	CULL = "CCW",
+	DEPTH_TEST = "LESS",
+}

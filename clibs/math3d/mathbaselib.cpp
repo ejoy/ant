@@ -1,10 +1,14 @@
-﻿#define LUA_LIB
+#define LUA_LIB
 #define GLM_ENABLE_EXPERIMENTAL
 
 extern "C" {
 	#include <lua.h>
 	#include <lauxlib.h>
+	#include "linalg.h"
+	#include "math3d.h"
 }
+
+#include "meshbase/meshbase.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -13,9 +17,38 @@ extern "C" {
 #include <vector>
 #include <array>
 #include <cstring>
+#include <unordered_map>
 
 extern bool default_homogeneous_depth();
 extern glm::vec3 to_viewdir(const glm::vec3 &e);
+
+template<class ValueType>
+static inline void
+push_vec(lua_State *L, int num, ValueType &v) {
+	lua_createtable(L, num, 0);
+	for (int ii = 0; ii < num; ++ii) {
+		lua_pushnumber(L, v[ii]);
+		lua_seti(L, -2, ii + 1);
+	}
+};
+
+template<class ValueType>
+static inline void
+fetch_vec(lua_State *L, int index, int num, ValueType &value) {
+	for (int ii = 0; ii < num; ++ii) {
+		lua_geti(L, index, ii + 1);
+		value[ii] = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+	}
+}
+
+template<class ValueType>
+static inline void
+fetch_vec(lua_State *L, int index, const char* name, int num, ValueType &value) {
+	lua_getfield(L, index, name);
+	fetch_vec(L, -1, num, value);
+	lua_pop(L, 1);
+};
 
 struct Frustum {
 	float l, r, t, b, n, f;
@@ -24,22 +57,45 @@ struct Frustum {
 
 static inline void
 pull_frustum(lua_State *L, int index, Frustum &f) {
-	lua_getfield(L, 2, "type");
-	const char* type = lua_tostring(L, -1);
+	if (LUA_TNIL != lua_getfield(L, index, "ortho"))
+		f.ortho = lua_toboolean(L, -1);
+	else
+		f.ortho = false;
 	lua_pop(L, 1);
 
-	f.ortho = strcmp(type, "ortho") == 0;
+	lua_getfield(L, index, "n");
+	f.n = luaL_optnumber(L, -1, 0.1f);
+	lua_pop(L, 1);
+	lua_getfield(L, index, "f");
+	f.f = luaL_optnumber(L, -1, 100.0f);
+	lua_pop(L, 1);
 
-	float* fv = &f.l;
-
-	const char* elemnames[] = {
-		"l", "r", "t", "b", "n", "f",
-	};
-
-	for (auto name : elemnames) {
-		lua_getfield(L, index, name);
-		*fv++ = lua_tonumber(L, -1);
+	if (lua_getfield(L, index, "fov") == LUA_TNUMBER) {
+		float fov = lua_tonumber(L, -1);
 		lua_pop(L, 1);
+		lua_getfield(L, index, "aspect");
+		float aspect = luaL_checknumber(L, -1);
+		lua_pop(L, 1);
+		float ymax = f.n * tanf(fov * (M_PI / 360));
+		float xmax = ymax * aspect;
+		f.l = -xmax;
+		f.r = xmax;
+		f.b = -ymax;
+		f.t = ymax;
+
+	} else {
+		lua_pop(L, 1);
+		float* fv = &f.l;
+
+		const char* elemnames[] = {
+			"l", "r", "t", "b",
+		};
+
+		for (auto name : elemnames) {
+			lua_getfield(L, index, name);
+			*fv++ = lua_tonumber(L, -1);
+			lua_pop(L, 1);
+		}
 	}
 }
 
@@ -48,116 +104,94 @@ projection_mat(const Frustum &f) {
 	if (f.ortho) {
 		auto orthLH = default_homogeneous_depth() ? glm::orthoLH_NO<float> : glm::orthoLH_ZO<float>;
 		return orthLH(f.l, f.r, f.b, f.t, f.n, f.f);
-	} 
+	}
 
 	auto frustumLH = default_homogeneous_depth() ? glm::frustumLH_NO<float> : glm::frustumLH_ZO<float>;
-	return frustumLH(f.l, f.r, f.b, f.t, f.n, f.f);	
+	return frustumLH(f.l, f.r, f.b, f.t, f.n, f.f);
 }
-
-static int 
-lscreenpt_to_3d(lua_State *L){
-	int numarg = lua_gettop(L);
-	if (numarg < 5){
-		luaL_error(L, "5 arguments needed!", numarg);
-	}
-
-	// get 2d point, point.z is the depth in ndc space
-	luaL_checktype(L, 1, LUA_TTABLE);
-
-	size_t len = lua_rawlen(L, 1);
-	std::vector<glm::vec3>	vv(len / 3);
-	float * v = &vv[0].x;	
-
-	for (size_t ii = 0; ii < len; ++ii) {
-		lua_geti(L, 1, ii+1);
-		*v++ = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-	}
-
-	// get camera frustum
-	luaL_checktype(L, 2, LUA_TTABLE);
-
-	Frustum f;
-	pull_frustum(L, 2, f);	
-	glm::mat4x4 matProj = projection_mat(f);
-
-	// get camera position & rotation
-	glm::vec3 *position = (glm::vec3*)lua_touserdata(L, 3);
-	glm::vec3 *viewDir = (glm::vec3*)lua_touserdata(L, 4);
-
-	glm::mat4x4 matView = glm::lookAtLH(*position, *position + *viewDir, glm::vec3(0, 1, 0));
-	
-	// get viewport size
-	lua_getfield(L, 5, "w");
-	float width = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, 5, "h");
-	float height = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-
-	//////////////////////////////////////////////////////////////////////////
-	glm::mat4x4 matInverseVP = glm::inverse(matProj * matView);
-	
-	
-	for (auto& pt : vv) {		
-		auto remap0_1 = [](float v) {
-			return v * 2.f - 1.f;
-		};
-		pt.x = remap0_1(pt.x / width);
-		pt.y = remap0_1((height - pt.y) / height);
-		
-
-		auto tmp = matInverseVP * glm::vec4(pt, 1);
-		pt = tmp / tmp.w;		
-	}
-	
-	const auto count = vv.size();
-	lua_createtable(L, (int)count, 0);
-	for (int ii = 0; ii < (int)count; ++ii) {
-		auto p = lua_newuserdata(L, sizeof(glm::vec3));
-		memcpy(p, &vv[ii].x, sizeof(glm::vec3));		
-		lua_seti(L, -2, ii + 1);
-	}
-
-	return 1;
-}
-
-struct AABB {
-	glm::vec3 min, max;
-};
-
 
 static inline void
 pull_aabb(lua_State *L, int index, AABB &aabb) {
-	auto fetch_vec3 = [L, index](auto name, auto value) {
-		lua_getfield(L, index, name);
-
-		for (int ii = 0; ii < 3; ++ii) {
-			lua_geti(L, -1, ii + 1);
-			*value++ = lua_tonumber(L, -1);
-			lua_pop(L, 1);
-		}
-		lua_pop(L, 1);
-	};
-
-	fetch_vec3("min", &aabb.min.x);
-	fetch_vec3("max", &aabb.max.x);
+	fetch_vec(L, index, "min", 3, aabb.min);
+	fetch_vec(L, index, "max", 3, aabb.max);
 }
 
 static inline void
-frustum_planes_intersection_points(std::array<glm::vec4, 6> &planes, std::array<glm::vec3, 8> &points) {
-	enum PlaneName{
-		left = 0, right,
-		top, bottom,
-		near, far
-	};
-	enum FrustumPointName {
-		ltn = 0, rtn, ltf, rtf,
-		lbn, rbn, lbf, rbf,
+pull_sphere(lua_State *L, int index, BoundingSphere &sphere) {
+	fetch_vec(L, index, "center", 3, sphere.center);	
+	lua_getfield(L, 3, "radius");
+	sphere.radius = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+}
+
+static inline void
+pull_obb(lua_State *L, int index, OBB &obb) {
+	for (int ii = 0; ii < 4; ++ii)
+		fetch_vec(L, index, 4, obb.m[ii]);
+}
+
+static inline void
+push_aabb(lua_State *L, const AABB &aabb) {
+	lua_createtable(L, 0, 2);
+	{
+		push_vec(L, 3, aabb.min);
+		lua_setfield(L, -2, "min");
+
+		push_vec(L, 3, aabb.max);
+		lua_setfield(L, -2, "max");
+	}
+}
+
+static inline void
+push_sphere(lua_State *L, const BoundingSphere &sphere) {
+	lua_createtable(L, 0, 2);
+	{
+		push_vec(L, 3, sphere.center);
+		lua_setfield(L, -2, "center");
+
+		lua_pushnumber(L, sphere.radius);
+		lua_setfield(L, -2, "radius");
+	}
+}
+
+static inline void
+push_obb(lua_State *L, const OBB &obb) {
+	lua_createtable(L, 16, 0);
+	{
+		for (int ii = 0; ii < 4; ++ii) {
+			for (int jj = 0; jj < 4; ++jj) {
+				lua_pushnumber(L, obb.m[ii][jj]);
+				lua_seti(L, -2, ii * 4 + jj + 1);
+			}
+		}
+	}
+}
+
+enum PlaneName : uint8_t {
+	left = 0, right,
+	top, bottom,
+	near, far,
+};
+
+struct FrustumConer {
+	PlaneName pnames[3];	
+};
+
+static inline std::string get_coner_name(const FrustumConer &c) {
+	std::string name;
+	const char* planenames[] = {
+		"l", "r", "t", "b", "n", "f"
 	};
 
+	for (auto pn : c.pnames) {
+		name += planenames[pn];
+	}
+
+	return name;
+}
+
+static inline void
+frustum_planes_intersection_points(std::array<glm::vec4, 6> &planes, std::unordered_map<std::string, glm::vec3> &points) {
 	auto calc_intersection_point = [](auto p0, auto p1, auto p2) {
 		auto crossp0p1 = (glm::cross(glm::vec3(p0), glm::vec3(p1)));
 		auto t = p0.w * (glm::cross(glm::vec3(p1), glm::vec3(p2))) +
@@ -167,7 +201,7 @@ frustum_planes_intersection_points(std::array<glm::vec4, 6> &planes, std::array<
 		return t / glm::dot(crossp0p1, glm::vec3(p2));
 	};
 
-	uint8_t defines[8][3] = {
+	FrustumConer coners[8] = {
 		{PlaneName::left, PlaneName::top, PlaneName::near},
 		{PlaneName::right, PlaneName::top, PlaneName::near},
 
@@ -181,80 +215,66 @@ frustum_planes_intersection_points(std::array<glm::vec4, 6> &planes, std::array<
 		{PlaneName::right, PlaneName::bottom, PlaneName::far},
 	};
 
-	for (int ii = 0; ii < 8; ++ii) {
-		int idx0 = defines[ii][0], idx1 = defines[ii][1], idx2 = defines[ii][2];
-		points[ii] = calc_intersection_point(planes[idx0], planes[idx1], planes[idx2]);
+	for (const auto &c : coners) {		
+		const auto& name = get_coner_name(c);
+		points[name] = calc_intersection_point(planes[c.pnames[0]], planes[c.pnames[1]], planes[c.pnames[2]]);
 	}
 }
 
-static inline void
-push_aabb(lua_State *L, const AABB &aabb, int32_t index) {
-	auto push_value = [L, index](auto name, auto value) {
-		lua_getfield(L, index, name);
-		for (int ii = 0; ii < 3; ++ii) {
-			lua_pushnumber(L, *value++);
-			lua_seti(L, -2, ii + 1);
-		}
-		lua_pop(L, 1);
-	};
-	push_value("min", &aabb.min.x);
-	push_value("max", &aabb.max.x);
-}
 
 static inline void 
-extract_planes(std::array<glm::vec4, 6> &planes, const glm::mat4x4 &projMat, bool normalize) {
-	// Left clipping plane
-	planes[0][0] = projMat[3][0] + projMat[0][0];
-	planes[0][1] = projMat[3][1] + projMat[0][1];
-	planes[0][2] = projMat[3][2] + projMat[0][2];
-	planes[0][3] = projMat[3][3] + projMat[0][3];
-	// Right clipping plane
-	planes[1][0] = projMat[3][0] - projMat[0][0];
-	planes[1][1] = projMat[3][1] - projMat[0][1];
-	planes[1][2] = projMat[3][2] - projMat[0][2];
-	planes[1][3] = projMat[3][3] - projMat[0][3];
-	// Top clipping plane
-	planes[2][0] = projMat[3][0] - projMat[1][0];
-	planes[2][1] = projMat[3][1] - projMat[1][1];
-	planes[2][2] = projMat[3][2] - projMat[1][2];
-	planes[2][3] = projMat[3][3] - projMat[1][3];
-	// Bottom clipping plane
-	planes[3][0] = projMat[3][0] + projMat[1][0];
-	planes[3][1] = projMat[3][1] + projMat[1][1];
-	planes[3][2] = projMat[3][2] + projMat[1][2];
-	planes[3][3] = projMat[3][3] + projMat[1][3];
-	// Near clipping plane
+extract_planes(std::array<glm::vec4, 6> &planes, const glm::mat4x4 &m, bool normalize) {
+	const auto &c0 = m[0], &c1 = m[1], &c2 = m[2], &c3 = m[3];
+
+	auto &leftplane = planes[PlaneName::left];
+	leftplane[0] = c0[0] + c0[3];
+	leftplane[1] = c1[0] + c1[3];
+	leftplane[2] = c2[0] + c2[3];
+	leftplane[3] = c3[0] + c3[3];
+
+	auto &rightplane = planes[PlaneName::right];	
+	rightplane[0] = c0[3] - c0[0];
+	rightplane[1] = c1[3] - c1[0];
+	rightplane[2] = c2[3] - c2[0];
+	rightplane[3] = c3[3] - c3[0];
+
+	auto &bottomplane = planes[PlaneName::bottom];
+	bottomplane[0] = c0[3] + c0[1];
+	bottomplane[1] = c1[3] + c1[1];
+	bottomplane[2] = c2[3] + c2[1];
+	bottomplane[3] = c3[3] + c3[1];
+
+	auto &topplane = planes[PlaneName::top];
+	topplane[0] = c0[3] - c0[1];
+	topplane[1] = c1[3] - c1[1];
+	topplane[2] = c2[3] - c2[1];
+	topplane[3] = c3[3] - c3[1];
+
+	auto &nearplane = planes[PlaneName::near];
 	if (default_homogeneous_depth()) {		
-		planes[4][0] = projMat[3][0] + projMat[2][0];
-		planes[4][1] = projMat[3][1] + projMat[2][1];
-		planes[4][2] = projMat[3][2] + projMat[2][2];
-		planes[4][3] = projMat[3][3] + projMat[2][3];
+		nearplane[0] = c0[3] + c0[2];
+		nearplane[1] = c1[3] + c1[2];
+		nearplane[2] = c2[3] + c2[2];
+		nearplane[3] = c3[3] + c3[2];
 	} else {
-		planes[4][0] = projMat[0][2];
-		planes[4][1] = projMat[1][2];
-		planes[4][2] = projMat[2][2];
-		planes[4][3] = projMat[3][2];
+		nearplane[0] = c0[2];
+		nearplane[1] = c1[2];
+		nearplane[2] = c2[2];
+		nearplane[3] = c3[2];
 	}
 
-	// Far clipping plane
-	planes[5][0] = projMat[3][0] - projMat[2][0];
-	planes[5][1] = projMat[3][1] - projMat[2][1];
-	planes[5][2] = projMat[3][2] - projMat[2][2];
-	planes[5][3] = projMat[3][3] - projMat[2][3];
-	// Normalize the plane equations, if requested
+	auto &farplane = planes[PlaneName::far];	
+	farplane[0] = c0[3] - c0[2];
+	farplane[1] = c1[3] - c1[2];
+	farplane[2] = c2[3] - c2[2];
+	farplane[3] = c3[3] - c3[2];
+
 	if (normalize){
 		for (auto &p : planes) {
 			auto len = glm::length(glm::vec3(p));
 			if (glm::abs(len) >= glm::epsilon<float>())
 				p /= len;
 		}
-			
-		//NormalizePlane(p_planes[0]);
-		//NormalizePlane(p_planes[1]);
-		//NormalizePlane(p_planes[2]);
-		//NormalizePlane(p_planes[3]);
-		//NormalizePlane(p_planes[4]);
-		//NormalizePlane(p_planes[5]);
 	}
 }
 
@@ -286,6 +306,12 @@ plane_intersect(const glm::vec4 &plane, const AABB &aabb) {
 	return 0;
 }
 
+static int
+plane_intersect(const glm::vec4 &plane, const BoundingSphere &sphere) {
+	assert(false && "not implement");
+	return 0;
+}
+
 static inline void
 pull_table_to_mat(lua_State *L, int index, glm::mat4x4 &matProj) {
 	for (int ii = 0; ii < 16; ++ii) {
@@ -304,7 +330,7 @@ pull_frustum_planes(lua_State *L, std::array<glm::vec4, 6> &planes, int index) {
 	if (type == LUA_TTABLE) {
 		const size_t tlen = lua_rawlen(L, 1);
 
-		if (tlen == 0) {
+		if (tlen == 24) {
 			for (int iPlane = 0; iPlane < 6; ++iPlane) {				
 				for (int ii = 0; ii < 4; ++ii) {
 					lua_geti(L, 1, iPlane * 4 + ii + 1);
@@ -346,8 +372,9 @@ lextract_planes(lua_State *L) {
 	return 1;
 }
 
+template<class BoundingType>
 static inline const char*
-planes_intersect(const std::array<glm::vec4, 6> &planes, AABB &aabb) {	
+planes_intersect(const std::array<glm::vec4, 6> &planes, const BoundingType &aabb) {
 	for (const auto &p : planes) {
 		const int r = plane_intersect(p, aabb);
 		if (r < 0)
@@ -361,23 +388,35 @@ planes_intersect(const std::array<glm::vec4, 6> &planes, AABB &aabb) {
 }
 
 static int
-lintersect_frustum_and_aabb(lua_State *L) {
+lintersect(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	std::array<glm::vec4, 6> planes;
 	pull_frustum_planes(L, planes, 1);
 
-	luaL_checktype(L, 2, LUA_TTABLE);
-	AABB aabb;
-	pull_aabb(L, 2, aabb);
+	const char* intersectresult = nullptr;
 
-	const char* result = planes_intersect(planes, aabb);
-	lua_pushstring(L, result);
+	const char*boundingtype = luaL_checkstring(L, 2);
+	if (strcmp(boundingtype, "aabb") == 0) {
+		AABB aabb;
+		pull_aabb(L, 3, aabb);
+
+		intersectresult = planes_intersect(planes, aabb);
+	} else if (strcmp(boundingtype, "sphere") == 0){
+		BoundingSphere sphere;
+		pull_sphere(L, 3, sphere);
+		intersectresult = planes_intersect(planes, sphere);
+	} else {
+		luaL_error(L, "not support bounding type:%s", boundingtype);
+	}
+
+	lua_pushstring(L, intersectresult);
 	return 1;
 }
 
 static inline void
 transform_aabb(const glm::mat4x4 &trans, AABB &aabb) {
-	AABB result = { trans[3], trans[3] };
+	const glm::vec3 pos = trans[3];
+	AABB result(pos, pos);
 
 	for (int icol = 0; icol < 3; ++icol)
 		for (int irow = 0; irow < 3; ++irow) {
@@ -387,29 +426,18 @@ transform_aabb(const glm::mat4x4 &trans, AABB &aabb) {
 }
 
 static int
-ltransform_aabb(lua_State *L) {
-	int type = lua_type(L, 1);
-	glm::mat4x4 trans;
-	if (type == LUA_TTABLE) {
-		size_t len = lua_rawlen(L, 1);
-		if (len == 16)
-			pull_table_to_mat(L, 1, trans);
-		else
-			luaL_error(L, "matrix need 16 element!");
-	} else if (type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA) {
-		const void* v = lua_touserdata(L, 1);
-		memcpy(&trans, v, sizeof(trans));
-	} else {
-		luaL_error(L, "not support format to get matrix");
-	}
+ltransform_aabb(lua_State *L) {	
+	struct boxstack *BS = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
+	struct lastack *LS = BS->LS;
+	
+	int type;
+	const glm::mat4x4 *trans = (const glm::mat4x4 *)lastack_value(LS, get_stack_id(L, LS, 2), &type);
 
-	luaL_checktype(L, 2, LUA_TTABLE);
+	luaL_checktype(L, 3, LUA_TTABLE);
 	AABB aabb;
-	pull_aabb(L, 2, aabb);
-
-	transform_aabb(trans, aabb);
-
-	push_aabb(L, aabb, 2);
+	pull_aabb(L, 3, aabb);
+	transform_aabb(*trans, aabb);
+	push_aabb(L, aabb);
 	return 1;
 }
 
@@ -418,27 +446,103 @@ lfrustum_points(lua_State *L) {
 	std::array<glm::vec4, 6> planes;
 	pull_frustum_planes(L, planes, 1);
 
-	std::array<glm::vec3, 8> points;
+	std::unordered_map<std::string, glm::vec3> points;
 	frustum_planes_intersection_points(planes, points);
 
-	lua_createtable(L, 3 * 8, 0);
-	for (int ipoint = 0; ipoint < 8; ++ipoint)
+	lua_createtable(L, 0, 8);	
+	for (const auto &p : points) {
+		lua_createtable(L, 3, 0);
+		const auto &point = p.second;
 		for (int ii = 0; ii < 3; ++ii) {
-			lua_pushnumber(L, points[ipoint][ii]);
-			lua_seti(L, -2, ipoint * 3 + ii+1);
+			lua_pushnumber(L, point[ii]);
+			lua_seti(L, -2, ii+1);
 		}
+		lua_setfield(L, -2, p.first.c_str());
+	}
 	return 1;
+}
+
+static int
+fetch_bounding(lua_State *L, int index, Bounding &bounding) {	
+	luaL_checktype(L, index, LUA_TTABLE);
+	lua_getfield(L, index, "aabb");
+	pull_aabb(L, -1, bounding.aabb);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "sphere");
+	pull_sphere(L, -1, bounding.sphere);
+	lua_pop(L, 1);
+
+	const int fieldtype = lua_getfield(L, index, "obb");
+	if (fieldtype != LUA_TNIL)
+		pull_obb(L, -1, bounding.obb);
+	lua_pop(L, 1);
+
+	return 1;
+}
+
+static int
+push_bounding(lua_State *L, const Bounding &boundiing) {
+	lua_newtable(L);
+	{
+		push_aabb(L, boundiing.aabb);
+		lua_setfield(L, -2, "aabb");
+
+		push_sphere(L, boundiing.sphere);
+		lua_setfield(L, -2, "sphere");
+
+		push_obb(L, boundiing.obb);
+		lua_setfield(L, -2, "obb");
+	}
+	return 1;
+}
+
+static int
+lmerge_boundings(lua_State *L) {
+	struct boxstack* bs = (struct boxstack*)lua_touserdata(L, 1);
+	struct lastack *LS = bs->LS;
+
+	luaL_checktype(L, 2, LUA_TTABLE);
+	const int numboundings = (int)lua_rawlen(L, 2);
+	Bounding scenebounding;
+
+	for (int ii = 0; ii < numboundings; ++ii) {
+		lua_geti(L, 2, ii + 1);
+
+		luaL_checktype(L, -1, LUA_TTABLE);
+		lua_getfield(L, -1, "bounding");
+		Bounding bounding;
+		fetch_bounding(L, -1, bounding);
+		lua_pop(L, 1);
+
+		const int fieldtype = lua_getfield(L, -1, "transform");
+		if (fieldtype != LUA_TNIL) {
+			int type;
+			const glm::mat4x4 *trans = (const glm::mat4x4 *)lastack_value(LS, get_stack_id(L, LS, -1), &type);
+			transform_aabb(*trans, bounding.aabb);
+		}
+		lua_pop(L, 1);
+
+		lua_pop(L, 1);
+
+		scenebounding.aabb.Merge(bounding.aabb);
+	}
+
+	scenebounding.sphere.Init(scenebounding.aabb);
+	scenebounding.obb.Init(scenebounding.aabb);
+	return push_bounding(L, scenebounding);
 }
 
 extern "C"{
 	LUAMOD_API int
 	luaopen_math3d_baselib(lua_State *L){
-		luaL_Reg l[] = {
-			{ "screenpt_to_3d", lscreenpt_to_3d },
-			{ "intersect", lintersect_frustum_and_aabb },
-			{ "extract_planes", lextract_planes},
-			{ "transform_aabb", ltransform_aabb},
+		luaL_Reg l[] = {			
+			{ "intersect",		lintersect },
+			{ "extract_planes", lextract_planes},			
 			{ "frustum_points", lfrustum_points},
+
+			{ "transform_aabb", ltransform_aabb},
+			{ "merge_boundings", lmerge_boundings},
 			{ NULL, NULL },
 		};
 

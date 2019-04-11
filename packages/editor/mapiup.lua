@@ -127,10 +127,10 @@ return function (msgqueue, ctrl)
 
 	ctrl.keypress_cb = function(_, key, press)
 		msgqueue:push("keyboard", iupmap[key & 0x0FFFFFFF] or keymap[key & 0x0FFFFFFF], pressnames[press], {
-			SHIFT = (key | 0x10000000) ~= 0,
-			CTRL  = (key | 0x20000000) ~= 0,
-			ALT   = (key | 0x40000000) ~= 0,
-			SYS   = (key | 0x80000000) ~= 0,
+			SHIFT = (key & 0x10000000) ~= 0,
+			CTRL  = (key & 0x20000000) ~= 0,
+			ALT   = (key & 0x40000000) ~= 0,
+			SYS   = (key & 0x80000000) ~= 0,
 		})
 	end
 	ctrl.resize_cb = function(_, a, b)

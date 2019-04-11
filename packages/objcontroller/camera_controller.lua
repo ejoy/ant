@@ -12,12 +12,10 @@ local objctrller = require "objcontroller"
 local camera_controller_system = ecs.system "camera_controller"
 
 camera_controller_system.singleton "control_state"
-
-camera_controller_system.depend "camera_init"
 camera_controller_system.depend "objcontroller_system"
 
 function camera_controller_system:init()
-	local camera_entity = world:first_entity("main_camera")
+	local camera_entity = world:first_entity("main_queue")
 	local cameracomp = camera_entity.camera
 	local speed_persecond = 30
 	local function calc_step(speed, delta)

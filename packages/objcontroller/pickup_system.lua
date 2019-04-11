@@ -7,16 +7,15 @@ ecs.import "ant.inputmgr"
 local math = import_package "ant.math"
 local point2d = math.point2d
 local bgfx = require "bgfx"
-local mu = math.util
 local ms = math.stack
 local fs = require "filesystem"
 
-local computil = import_package "ant.render".components
+local filterutil = import_package "ant.scene".filterutil
 
-local math_baselib = require "math3d.baselib"
-
-local pickup_fb_viewid = 101
-local pickup_blit_viewid = pickup_fb_viewid + 1
+local renderpkg = import_package "ant.render"
+local computil = renderpkg.components
+local renderutil = renderpkg.util
+local viewidmgr = renderpkg.viewidmgr
 
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,
@@ -34,40 +33,17 @@ local function unpackrgba_to_eid(rgba)
     return r + g + b + a
 end
 
-local function init_pickup_buffer(pickup_entity)
-    local comp = pickup_entity.pickup
-    --[@ init hardware resource
-    local vr = pickup_entity.view_rect
-	local w, h = vr.w, vr.h
-	comp.blitdata = bgfx.memory_texture(w*h * 4)
-    comp.pick_buffer = bgfx.create_texture2d(w, h, false, 1, "RGBA8", "rt-p+p*pucvc")
-    comp.pick_dbuffer = bgfx.create_texture2d(w, h, false, 1, "D24S8", "rt-p+p*pucvc")
-
-    comp.pick_fb = bgfx.create_frame_buffer({comp.pick_buffer, comp.pick_dbuffer}, true)
-    comp.rb_buffer = bgfx.create_texture2d(w, h, false, 1, "RGBA8", "bwbr-p+p*pucvc")
-	--@]
-end
-
-local function readback_render_data(pickup_entity)
-    local comp = pickup_entity.pickup    
-    bgfx.blit(pickup_blit_viewid, assert(comp.rb_buffer), 0, 0, assert(comp.pick_buffer))    
-    return bgfx.read_texture(comp.rb_buffer, comp.blitdata)
-end
-
-local function which_entity_hitted(pickup_entity)
-    local comp = pickup_entity.pickup
-    local vr = pickup_entity.view_rect
-	local w, h = vr.w, vr.h
+local function which_entity_hitted(blitdata, viewrect)    
+	local w, h = viewrect.w, viewrect.h
 	
 	local cw, ch = 2, 2	
 	local startidx = ((h - ch) * w + (w - cw)) * 0.5
-
 
 	local found_eid = nil
 	for ix = 1, cw do		
 		for iy = 1, ch do 
 			local cidx = startidx + (ix - 1) + (iy - 1) * w
-			local rgba = comp.blitdata[cidx]
+			local rgba = blitdata[cidx]
 			if rgba ~= 0 then
 				found_eid = unpackrgba_to_eid(rgba)
 				break
@@ -79,63 +55,71 @@ local function which_entity_hitted(pickup_entity)
 end
 
 local function update_viewinfo(e, clickpt) 
-	local maincamera = world:first_entity("main_camera")  
+	local maincamera = world:first_entity "main_queue"
 	local cameracomp = maincamera.camera
-	local mc_vr = maincamera.view_rect
-	local w, h = mc_vr.w, mc_vr.h
-
-	local result = math_baselib.screenpt_to_3d(
-		{
-			clickpt.x, clickpt.y, 0,
-			clickpt.x, clickpt.y, 1
-		}, cameracomp.frustum, ~cameracomp.eyepos, ~cameracomp.viewdir, {w=w, h=h})
+	local eye, at = ms:screenpt_to_3d(
+		cameracomp, maincamera.render_target.viewport.rect,
+		{clickpt.x, clickpt.y, 0,},
+		{clickpt.x, clickpt.y, 1,})
 
 	local pickupcamera = e.camera
-	local eye, at = ms:vector(result[1]), ms:vector(result[2])
-
 	pickupcamera.eyepos(eye)
 	pickupcamera.viewdir(ms(at, eye, "-nP"))
 end
 
 -- update material system
 local pickup_material_sys = ecs.system "pickup_material_system"
+pickup_material_sys.depend "primitive_filter_system"
+pickup_material_sys.dependby "render_system"
 
-pickup_material_sys.depend "final_filter_system"
-pickup_material_sys.dependby "entity_rendering"
-
-function pickup_material_sys:update()
-	for _, eid in world:each("pickup") do
-		local e = world[eid]
-		local filter = e.primitive_filter
-		if filter then
-			local materials = e.pickup.materials
-
-			local function replace_material(result, material)
-				if result then
-					for _, item in ipairs(result) do
-						item.material = material
-						item.properties = {
-							u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
-						}
-					end
-				end
-			end
-
-			replace_material(filter.result, materials.opaticy)
-			replace_material(filter.transparent_result, materials.transparent)
+local function replace_material(result, material)
+	if result then
+		for _, item in ipairs(result) do
+			item.material = material.materialinfo
+			item.properties.uniforms = {
+				u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
+			}
 		end
 	end
 end
 
+function pickup_material_sys:update()
+	local e = world:first_entity "pickup"
+	if e then
+		local filter = e.primitive_filter
+
+		local materials = e.pickup.materials
+		local result = filter.result
+		replace_material(result.opaque, materials.opaque)
+		replace_material(filter.translucent, result.translucent)
+	end
+end
+
 -- pickup_system
+local rb = ecs.component "raw_buffer"
+	.w "real" (1)
+	.h "real" (1)
+	.elemsize "int" (4)
+function rb:init()
+	self.handle = bgfx.memory_texture(self.w*self.h * self.elemsize)
+	return self
+end
+
+ecs.component_alias("blit_viewid", "viewid") 
+ecs.component "blit_buffer" {depend = "blit_viewid"}
+	.raw_buffer "raw_buffer"
+	.render_buffer "render_buffer"
+
 ecs.component "pickup_material"
-	.opacity "material_content"
-	.transparent "material_content"
+	.opaque 		"material_content"
+	.translucent 	"material_content"
 
 ecs.component_alias("pickup_viewtag", "boolean")
 
 local pickupcomp = ecs.component "pickup"
 	.materials "pickup_material"
+	.blit_buffer "blit_buffer"
+	.blit_viewid "blit_viewid"
 
 function pickupcomp:init()
 	local materials = self.materials
@@ -157,117 +141,178 @@ local pickup_sys = ecs.system "pickup_system"
 pickup_sys.singleton "frame_stat"
 pickup_sys.singleton "message"
 
-pickup_sys.depend "entity_rendering"
-
+pickup_sys.depend "pickup_material_system"
 pickup_sys.dependby "end_frame"
 
-local vr_w, vr_h = 8, 8
-local default_frustum = {
-	type="mat", n=0.1, f=100, fov=1, aspect=vr_w / vr_h
-}
-
-local default_camera = {
-	viewid = pickup_fb_viewid,
-	eyepos = {0, 0, 0, 1},
-	viewdir = {0, 0, 0, 0},
-	updir = {0, 1, 0, 0},
-	frustum = default_frustum,
-}
-
-local default_primitive_filter = {
-	view_tag  = "pickup_viewtag",
-	filter_tag = "can_select",
-	no_lighting = true,
-}
-
-local function enable_pickup(eid, enable)
-	if enable then
-		world:add_component(eid, "camera", default_camera)
-		world:add_component(eid, "primitive_filter", default_primitive_filter)
-		local e = world[eid]
-		local camera = e.camera
-		local comp = e.pickup
-		bgfx.set_view_frame_buffer(camera.viewid, assert(comp.pick_fb))
-	else
-		world:remove_component(eid, "camera")
-		world:remove_component(eid, "primitive_filter")
-	end
-end
+local pickup_buffer_w, pickup_buffer_h = 8, 8
+local pickupviewid = viewidmgr.get("pickup")
 
 local function add_pick_entity()
-	local eid = world:create_entity {
+	local fb_renderbuffer_flag = renderutil.generate_sampler_flag {
+		RT="RT_ON",
+		MIN="POINT",
+		MAG="POINT",
+		U="CLAMP",
+		V="CLAMP"
+	}
+
+	return world:create_entity {
 		pickup = {
 			materials = {
-				opacity = {
+				opaque = {
 					ref_path = fs.path '//ant.resources/pickup_opacity.material'
 				},
-				transparent = {
+				translucent = {
 					ref_path = fs.path '//ant.resources/pickup_transparent.material'
 				}
 			},
-		},		
-		clear_component = {
-			color = 0,
-			depth = 1,
-			stencil = 0,
-		},		
-		view_rect = {
-			x = 0, y = 0,
-			w = vr_w, h = vr_h,
+			blit_buffer = {
+				raw_buffer = {
+					w = pickup_buffer_w,
+					h = pickup_buffer_h,
+					elemsize = 4,
+				},
+				render_buffer = {
+					w = pickup_buffer_w,
+					h = pickup_buffer_h,
+					layers = 1,
+					format = "RGBA8",
+					flags = renderutil.generate_sampler_flag {
+						BLIT="BLIT_AS_DST",
+						BLIT_READBACK="BLIT_READBACK_ON",
+						MIN="POINT",
+						MAG="POINT",
+						U="CLAMP",
+						V="CLAMP",
+					}
+				},
+			},
+			blit_viewid = viewidmgr.get("pickup_blit")
 		},
-		name = "pickup",
-		pickup_viewtag = true,		
+		camera = {
+			type = "pickup",
+			viewdir = {0, 0, 1, 0},
+			updir = {0, 1, 0, 0},
+			eyepos = {0, 0, 0, 1},
+			frustum = {
+				type="mat", n=0.1, f=100, fov=3, aspect=pickup_buffer_w / pickup_buffer_h
+			},
+		},
+		render_target = {
+			viewport = {
+				rect = {
+					x = 0, y = 0, w = pickup_buffer_w, h = pickup_buffer_h,
+				},
+				clear_state = {
+					color = 0,
+					depth = 1,
+					stencil = 0,
+					clear = "all"
+				},
+			},
+			frame_buffer = {
+				render_buffers = {
+					{
+						w = pickup_buffer_w,
+						h = pickup_buffer_h,
+						layers = 1,
+						format = "RGBA8",
+						flags = fb_renderbuffer_flag,
+					},
+					{
+						w = pickup_buffer_w,
+						h = pickup_buffer_h,
+						layers = 1,
+						format = "D24S8",
+						flags = fb_renderbuffer_flag,
+					}
+				}
+			}
+		},		
+		viewid = pickupviewid,
+		primitive_filter = filterutil.create_primitve_filter("main_view", "can_select"),
+		name = "pickup_renderqueue",
+		pickup_viewtag = true,
 	}
+end
 
-	init_pickup_buffer(world[eid])	
-	return eid
+local function enable_pickup(enable)
+	world:enable_system("pickup_system", enable)
+	if enable then
+		return add_pick_entity()
+	end
+
+	local eid = world:first_entity_id "pickup"
+	world:remove_entity(eid)
 end
 
 function pickup_sys:init()	
-	local pickup_eid = add_pick_entity()
+	--local pickup_eid = add_pick_entity()
 
 	self.message.observers:add({
 		mouse_click = function (_, b, p, x, y)
 			if b == "LEFT" and p then
-				local entity = world[pickup_eid]
-				if entity then
-					enable_pickup(pickup_eid, true)
-					update_viewinfo(entity, point2d(x, y))					
-					entity.pickup.ispicking = true
-				end
+				local eid = enable_pickup(true)
+				local entity = world[eid]
+				update_viewinfo(entity, point2d(x, y))
+				entity.pickup.nextstep = "blit"
 			end
 		end
 	})
 end
 
-function pickup_sys:update()
-	local stat = self.frame_stat
-	for _, pickupeid in world:each("pickup") do
-		local e = world[pickupeid]
-		local pu_comp = e.pickup
-		if pu_comp.ispicking then
-			local reading_frame = pu_comp.reading_frame
-			if reading_frame == nil then
-				pu_comp.reading_frame = readback_render_data(e)
-			else
-				if stat.frame_num == reading_frame then
-					local eid = which_entity_hitted(e)
-					if eid then
-						local name = assert(world[eid]).name
-						print("pick entity id : ", eid, ", name : ", name)
-					else
-						print("not found any eid")
-					end
-		
-					pu_comp.last_eid_hit = eid
+local function blit(blitviewid, blit_buffer, colorbuffer)		
+	local rb = blit_buffer.render_buffer.handle
+	
+	bgfx.blit(blitviewid, rb, 0, 0, assert(colorbuffer.handle))
+	return bgfx.read_texture(rb, blit_buffer.raw_buffer.handle)	
+end
 
-					world:update_func("pickup")()
-		
-					enable_pickup(pickupeid, false)
-					pu_comp.ispicking = nil
-					pu_comp.reading_frame = nil					
-				end	
-			end
+local function print_raw_buffer(rawbuffer)
+	local data = rawbuffer.handle
+	for i=1, pickup_buffer_w do
+		print("line:", i)
+		local t = {}
+		for j=1, pickup_buffer_h do
+			t[#t+1] = data[(i-1)*pickup_buffer_w + j-1]
 		end
+
+		print(table.concat(t, ' '))
+	end
+end
+
+local function select_obj(blit_buffer, viewrect)
+	local selecteid = which_entity_hitted(blit_buffer.raw_buffer.handle, viewrect)
+	if selecteid then
+		local name = assert(world[selecteid]).name
+		print("pick entity id : ", selecteid, ", name : ", name)
+		world:update_func("pickup")(selecteid)
+	else
+		print("not found any eid")
+	end
+end
+
+local state_list = {
+	blit = "wait",
+	wait = "select_obj",	
+}
+
+local function check_next_step(pickupcomp)
+	pickupcomp.nextstep = state_list[pickupcomp.nextstep]	
+end
+
+function pickup_sys:update()
+	local pickupentity = world:first_entity "pickup"
+	if pickupentity then
+		local pickupcomp = pickupentity.pickup
+		local nextstep = pickupcomp.nextstep
+		if nextstep == "blit" then
+			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, pickupentity.render_target.frame_buffer.render_buffers[1])
+		elseif nextstep	== "select_obj" then
+			select_obj(pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
+			enable_pickup(false)
+		end
+
+		check_next_step(pickupcomp)
 	end
 end

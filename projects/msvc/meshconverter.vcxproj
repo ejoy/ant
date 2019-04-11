@@ -110,7 +110,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/build/assimp/msvc/include;../../3rd/ib-compress</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/build/assimp/msvc/include;../../3rd/ib-compress</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -127,7 +127,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -146,7 +146,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/assimp/$(ASSIMP_BUILD_SUBPATH)/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -167,7 +167,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/build/assimp/msvc/include;../../3rd/ib-compress</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/build/assimp/msvc/include;../../3rd/ib-compress</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

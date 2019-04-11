@@ -53,14 +53,14 @@ local function print_a( ... )
                 cache[ value ] = path
                 output( "{" )
                 for k, v in pairs( value ) do
-                    output( "[" )
+                    output( "" )
                     if type( k ) == "table" then
                         _dump( k, path..".&"..tostring( k ))
                         output( "(", tostring( k ), ")" )
                     else
                         _dump( k ) --k is string or number
                     end
-                    output( "]=" )
+                    output( "=" )
                     _dump( v, path.."."..tostring( k ))
                     output( next( value, k ) and "," or "" )
                 end

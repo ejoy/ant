@@ -20,6 +20,7 @@
 { "protocol", luaopen_protocol },
 { "remotedebug", luaopen_remotedebug },
 { "remotedebug.hookmgr", luaopen_remotedebug_hookmgr },
+{ "remotedebug.stdio", luaopen_remotedebug_stdio },
 { "remotedebug.visitor", luaopen_remotedebug_visitor },
 { "thread", luaopen_thread },
 { "window", luaopen_window },

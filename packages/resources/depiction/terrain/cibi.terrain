@@ -1,0 +1,26 @@
+heightmap = "//ant.resources.binary/terrain/chibi16.raw"
+grid_width  = 1025
+grid_length = 1025
+bits   = 16
+width  = 1024
+length = 1024
+height = 780
+
+uv0_scale  = 80*0.625
+uv1_scale  = 1
+
+numlayers = 4
+	
+	-- textures = {
+	--    "assets/build/terrain/ground_099-512.dds"
+	--    "assets/build/terrain/Scene_Texture_Terrain_BD_SOIL_0070_1.dds"
+	--    "assets/build/terrain/BH-Scene-JiangJunZong-Wall-02-D.dds"
+	--    "assets/build/terrain/Scene_Texture_Terrain_BD_ROCK_040_1.dds"
+	-- }
+	-- masks = {
+	--    "assets/build/terrain/pvp2_mask_a.dds"
+	--    "assets/build/terrain/pvp2_mask_r.dds"
+	--    "assets/build/terrain/pvp2_mask_g.dds"
+	--    "assets/build/terrain/pvp2_mask_b.dds"
+	-- }
+

@@ -1,4 +1,4 @@
-local json = require 'cjson.safe' json.encode_empty_table_as_array 'on'
+local json = require 'json'
 
 local m = {}
 
@@ -15,14 +15,14 @@ local function recv(s, bytes)
             end
             return
         end
-        local pos = s.bytes:find('\r\n', 1, true)
+        local pos = s.bytes:find('\r\n\r\n', 1, true)
         if not pos then
             return
         end
         if pos <= 15 or s.bytes:sub(1, 16) ~= 'Content-Length: ' then
             return error('Invalid protocol.')
         end
-        local length = tonumber(s.bytes:sub(17, pos))
+        local length = tonumber(s.bytes:sub(17, pos-1))
         if not length then
             return error('Invalid protocol.')
         end
@@ -34,7 +34,7 @@ end
 function m.recv(bytes, stat)
     local pkg = recv(stat, bytes)
     if pkg then
-        --if print then print('[recv]', pkg) end
+        if stat.debug then print('[recv]', pkg) end
         local res, err = json.decode(pkg)
         if res then
             return res
@@ -43,12 +43,12 @@ function m.recv(bytes, stat)
     end
 end
 
-function m.send(cmd)
+function m.send(cmd, stat)
     --if cmd.type == 'response' and cmd.success == false then
     --    error(debug.traceback(cmd.message))
     --end
     local pkg = assert(json.encode(cmd))
-    --if print then print('[send]', pkg) end
+    if stat.debug then print('[send]', pkg) end
     return ('Content-Length: %d\r\n\r\n%s'):format(#pkg, pkg)
 end
 

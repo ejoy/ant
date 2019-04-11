@@ -17,7 +17,7 @@ local function deep_copy(t)
 end
 
 function util.focus_point(world, pt)
-	local maincamera = world:first_entity("main_camera")
+	local maincamera = world:first_entity("main_queue")
 	local camera = maincamera.camera
 	ms(camera.viewdir, pt, camera.eyepos, "-n=")
 end
@@ -30,9 +30,9 @@ local function mesh_bounding_sphere(entity)
 			local handle = assetinfo.handle
 			local groups = handle.groups
 			if #groups > 0 then
-				local bounding = groups.bounding
+				local bounding = groups[1].bounding
 				if bounding then
-					local aabb = deep_copy(bounding.aabb)
+					
 					--[[
 						here is what this code do:
 							1. get world mat in this entity ==> worldmat 
@@ -44,9 +44,8 @@ local function mesh_bounding_sphere(entity)
 							6. change camera direction as new direction
 				
 					]]
-					local math3dlib = require "math3d.baselib"
-					local worldmat = ms(ms:srtmat(entity.transform), "m")
-					math3dlib.transform_aabb(worldmat, aabb)
+					local math3dlib = require "math3d.baselib"					
+					local aabb = math3dlib.transform_aabb(ms, ms:srtmat(entity.transform), bounding.aabb)
 					local center = ms(aabb.max, aabb.min, "-", {0.5}, "*P")
 				
 					--[[
@@ -56,7 +55,7 @@ local function mesh_bounding_sphere(entity)
 						3. '.': dot(dir, dir)	-> [dot result]	1
 						4. 'P': pop result
 					]]
-					local radius = ms(aabb.max, aabb.min, "-1.P")
+					local radius = ms:length(aabb.max, aabb.min)
 
 					return {center = center, radius = radius}
 				end
@@ -65,7 +64,7 @@ local function mesh_bounding_sphere(entity)
 		end
 	end
 
-	return {center = entity.transform.t, radius = 100}
+	return {center = entity.transform.t, radius = 5}
 end
 
 function util.focus_selected_obj(world, eid)
@@ -77,10 +76,10 @@ function util.focus_selected_obj(world, eid)
 
 	local sphere = mesh_bounding_sphere(entity)
 
-	local camera_entity = world:first_entity("main_camera")
+	local camera_entity = world:first_entity("main_queue")
 	local camera = camera_entity.camera
 	ms(camera.viewdir, sphere.center, camera.eyepos, "-n=")
-	ms(camera.eyepos, sphere.center, camera.viewdir, sphere.radius, "*-=")
+	ms(camera.eyepos, sphere.center, camera.viewdir, {sphere.radius}, "*-=")
 	return true
 end
 

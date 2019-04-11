@@ -5,11 +5,10 @@ IUPSRC = $(ANT3RD)/iup
 INCLUDES = include src
 INCLUDES += src/win
 
-# Windows XP minimum
-WIN32VER = 0x0501
+# Windows 7 minimum
+WIN32VER = 0x0601
 
-DEFINES = _WIN32_WINNT=$(WIN32VER) _WIN32_IE=0x600 WINVER=$(WIN32VER) UNICODE IUP_DLL
-
+DEFINES = _WIN32_WINNT=$(WIN32VER) _WIN32_IE=0x600 WINVER=$(WIN32VER) UNICODE IUP_DLL NTDDI_VERSION=0x06010000
 .PHONY: all mingw clean
 
 all : iup.exe | scintilla.dll iupluaimglib.dll iupluacontrols.dll iupextension.dll $(LUABIN)

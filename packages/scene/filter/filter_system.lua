@@ -2,13 +2,28 @@ local ecs = ...
 local world = ecs.world
 
 local render = import_package "ant.render"
-local cu = render.components
+local mathbaselib = require "math3d.baselib"
 local ru = render.util
+
+local filterutil = require "filter.util"
 
 local ms = import_package "ant.math" .stack
 local math3d = require "math3d"
 
+local filter_properties = ecs.system "filter_properties"
+function filter_properties:update()
+	for _, prim_eid in world:each("primitive_filter") do
+		local e = world[prim_eid]
+		local filter = e.primitive_filter
+		filterutil.load_lighting_properties(world, filter)
+		if e.shadow == nil then
+			filterutil.load_shadow_properties(world, filter)
+		end
+	end
+end
+
 local primitive_filter_sys = ecs.system "primitive_filter_system"
+primitive_filter_sys.dependby "filter_properties"
 primitive_filter_sys.singleton "hierarchy_transform_result"
 primitive_filter_sys.singleton "event"
 
@@ -22,7 +37,7 @@ local function update_transform(transform, hierarchy_cache)
 			local hie_result = parentresult.hierarchy
 			local slotname = transform.slotname
 			if hie_result and slotname then
-				local hiemat = ms:matrix(hie_result[(slotname)])
+				local hiemat = ms:matrix(hie_result[slotname])
 				localmat = ms(parentmat, hiemat, localmat, "**P")
 			else
 				localmat = ms(parentmat, localmat, "*P")
@@ -36,25 +51,40 @@ local function update_transform(transform, hierarchy_cache)
 end
 
 --luacheck: ignore self
+local function reset_results(results)
+	for k, result in pairs(results) do
+		result.cacheidx = 1
+	end
+end
+
 function primitive_filter_sys:update()	
 	for _, prim_eid in world:each("primitive_filter") do
 		local e = world[prim_eid]
 		local filter = e.primitive_filter
-		filter._cache_idx = 1
+		reset_results(filter.result)
 		local viewtag = filter.view_tag
 		local filtertag = filter.filter_tag
+		local boundings = {}
 		for _, eid in world:each(filtertag) do
 			local ce = world[eid]
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
 			if vt and ft then
+				local meshhandle = assert(ce.mesh.assetinfo).handle
+				local worldmat = ce.transform.world
+				local bounding = meshhandle.bounding
+				if bounding then
+					boundings[#boundings+1] = {bounding = bounding, transform=worldmat}
+				end
 				ru.insert_primitive(eid, 
-					assert(ce.mesh.assetinfo).handle,
+					meshhandle,
 					assert(ce.material.content),
-					ce.transform.world,
+					worldmat,
 					filter)
 			end
-		end	
+		end
+
+		filter.scenebounding = mathbaselib.merge_boundings(ms, boundings)
 	end
 end
 
@@ -93,6 +123,3 @@ function primitive_filter_sys:event_changed()
 	end
 end
 
--- all filter system need depend 
-local final_filter_sys = ecs.system "final_filter_system"
-final_filter_sys.depend "primitive_filter_system"

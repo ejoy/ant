@@ -1,8 +1,8 @@
-local mgr = require 'debugger.backend.master.mgr'
-local response = require 'debugger.backend.master.response'
-local event = require 'debugger.backend.master.event'
-local ev = require 'debugger.event'
-local parser = require 'debugger.parser'
+local mgr = require 'backend.master.mgr'
+local response = require 'backend.master.response'
+local event = require 'backend.master.event'
+local ev = require 'event'
+local parser = require 'backend.parser'
 
 local request = {}
 
@@ -93,6 +93,7 @@ function request.configurationDone(req)
     for _, w in ipairs(mgr.threads()) do
         initializeWorker(w)
     end
+    mgr.initConfig(config)
 end
 
 local breakpointID = 0

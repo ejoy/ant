@@ -34,11 +34,12 @@ ru.createThread('debug', [[
         self.fclose()
     end
 
-    package.path = 'engine/libs/?.lua;engine/packages/?.lua;engine/packages/?/?.lua'
+    package.path = 'engine/packages/debugger/?.lua;'
     local dbg = require 'debugger'
     local dbgupdate = dbg.start_master(dbg_io)
     while true do
         dbgupdate()
+        thread.sleep(0.01)
     end
 ]])
 

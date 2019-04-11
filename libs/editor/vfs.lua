@@ -124,12 +124,10 @@ local repopath = lfs.current_path()
 localvfs.mount({["engine"] = repopath}, repopath)
 
 local repo_cachepath = localvfs.repopath()
-if not lfs.exists(repo_cachepath) then
-	lfs.create_directories(repo_cachepath)
-	for i=0,0xff do
-		local abspath = repo_cachepath / string.format("%02x", i)
-		lfs.create_directories(abspath)
-	end
+lfs.create_directories(repo_cachepath)
+for i=0,0xff do
+	local abspath = repo_cachepath / string.format("%02x", i)
+	lfs.create_directories(abspath)
 end
 
 package.loaded.vfs = localvfs

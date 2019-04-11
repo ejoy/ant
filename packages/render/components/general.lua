@@ -24,10 +24,8 @@ ecs.component "transform"
 	.s "vector"
 	.r "vector"
 	.t "vector"
-	['opt'].parent "parent"	
 	['opt'].slotname "string"
-	['opt'].hierarchy "hierarchy"
-	
+	['opt'].parent "parent"
 
 ecs.tag "editor"
 
@@ -89,6 +87,13 @@ function uniformdata.save(v)
 	end
 end
 
+function uniformdata.delete(v)
+	local tt = type(v)
+	if tt == "userdata" then
+		v(nil)
+	end
+end
+
 ecs.component "uniform"
 	.name "string"
 	.type "string"
@@ -111,7 +116,7 @@ ecs.component "material"
 	.content "material_content[]"
 
 
-ecs.component_alias("can_render", "boolean", true)
+ecs.component_alias("can_render", "boolean", true) {depend={"transform", "mesh", "material"}}
 ecs.component_alias("can_cast", "boolean", false)
 ecs.component_alias("name", "string", "")
 ecs.tag "can_select"
@@ -130,3 +135,18 @@ ecs.component "character"
 
 ecs.component "physic_state"
 	.velocity "real[3]"
+
+local constant = ecs.singleton "constant"
+function constant.init()
+	return {
+		tcolors = {
+			red = {1, 0, 0, 1},
+			green = {0, 1, 0, 1},
+			blue = {0, 0, 1, 1},
+			black = {0, 0, 0, 1},
+			white = {1, 1, 1, 1},
+			yellow = {1, 1, 0, 1},
+			gray = {0.5, 0.5, 0.5, 1},
+		}
+	}
+end

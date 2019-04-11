@@ -643,6 +643,7 @@ EXPORTS
 	iupwinStrWide2Char
 	iupwinShowLastError
 	iupwinSetInstance
+	iupwinStrToSystemFilename
 
 EXPORTS
 	iuplua_open

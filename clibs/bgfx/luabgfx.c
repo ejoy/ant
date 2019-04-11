@@ -1972,10 +1972,11 @@ create_from_table_decl(lua_State *L, int idx, bgfx_vertex_decl_t *vd) {
 static const bgfx_memory_t *
 create_from_table_int16(lua_State *L, int idx) {
 	luaL_checktype(L, idx, LUA_TTABLE);
-	if (lua_geti(L, idx, 1) != LUA_TNUMBER) {
-		lua_pop(L, 1);
+	int idxtype = lua_geti(L, idx, 1);
+	lua_pop(L, 1);
+	if (idxtype != LUA_TNUMBER) 		
 		return create_mem_from_table(L, idx, 1, NULL, NULL);
-	}
+
 	int n = lua_rawlen(L, idx);
 	const bgfx_memory_t *mem = bgfx_alloc(n * sizeof(uint16_t));
 	int i;
@@ -1991,10 +1992,11 @@ create_from_table_int16(lua_State *L, int idx) {
 static const bgfx_memory_t *
 create_from_table_int32(lua_State *L, int idx) {
 	luaL_checktype(L, idx, LUA_TTABLE);
-	if (lua_geti(L, idx, 1) != LUA_TNUMBER) {
-		lua_pop(L, 1);
+	int idxtype = lua_geti(L, idx, 1);
+	lua_pop(L, 1);
+	if (idxtype != LUA_TNUMBER)
 		return create_mem_from_table(L, idx, 1, NULL, NULL);
-	}
+
 	int n = lua_rawlen(L, idx);
 	const bgfx_memory_t *mem = bgfx_alloc(n * sizeof(uint32_t));
 	int i;
@@ -2847,7 +2849,7 @@ lcreateUniform(lua_State *L) {
 	if (invalid_handle(handle)) {
 		return luaL_error(L, "create uniform failed");
 	}
-	lua_pushinteger(L, BGFX_LUAHANDLE(UNIFORM, handle));
+	lua_pushinteger(L, BGFX_LUAHANDLE_WITHTYPE(BGFX_LUAHANDLE(UNIFORM, handle), ut));
 	return 1;
 }
 
@@ -2878,19 +2880,15 @@ lgetUniformInfo(lua_State *L) {
 	return 3;
 }
 
-static int
-uniform_size(lua_State *L, bgfx_uniform_handle_t uh) {
+static inline int
+uniform_size(lua_State *L, int id) {
 	int sz;
-	bgfx_uniform_info_t uinfo;
-	bgfx_get_uniform_info(uh, &uinfo);
-
-	switch (uinfo.type) {
-//	case BGFX_UNIFORM_TYPE_SAMPLER: sz = 4; break;	// 1 int32 never be INT1
+	switch (BGFX_LUAHANDLE_SUBTYPE(id)) {
 	case BGFX_UNIFORM_TYPE_VEC4: sz = 4; break;	// 4 float
 	case BGFX_UNIFORM_TYPE_MAT3: sz = 3*4; break;	// 3*4 float
 	case BGFX_UNIFORM_TYPE_MAT4: sz = 4*4; break;	// 4*4 float
 	default:
-		return luaL_error(L, "Invalid uniform type %d", uinfo.type);
+		return luaL_error(L, "Invalid uniform type %d", BGFX_LUAHANDLE_SUBTYPE(id));
 	}
 	return sz;
 }
@@ -2919,7 +2917,7 @@ setUniform(lua_State *L, bgfx_uniform_handle_t uh, int sz) {
 	}
 	case LUA_TUSERDATA:
 	case LUA_TLIGHTUSERDATA:
-		// vectir or matrix
+		// vector or matrix
 		if (number == 1) {
 			// only one
 			void *data = lua_touserdata(L, 2);
@@ -2947,17 +2945,19 @@ setUniform(lua_State *L, bgfx_uniform_handle_t uh, int sz) {
 
 static int
 lsetUniform(lua_State *L) {
-	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
+	int id = luaL_checkinteger(L, 1);
+	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
 	bgfx_uniform_handle_t uh = { uniformid };
-	int sz = uniform_size(L, uh);
+	int sz = uniform_size(L, id);
 	return setUniform(L, uh, sz);
 }
 
 static int
 lsetUniformMatrix(lua_State *L) {
-	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
+	int id = luaL_checkinteger(L, 1);
+	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
 	bgfx_uniform_handle_t uh = { uniformid };
-	int sz = uniform_size(L, uh);
+	int sz = uniform_size(L, id);
 	if (sz <= 4) {
 		return luaL_error(L, "Need a matrix");
 	}
@@ -2966,9 +2966,10 @@ lsetUniformMatrix(lua_State *L) {
 
 static int
 lsetUniformVector(lua_State *L) {
-	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
+	int id = luaL_checkinteger(L, 1);
+	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
 	bgfx_uniform_handle_t uh = { uniformid };
-	int sz = uniform_size(L, uh);
+	int sz = uniform_size(L, id);
 	if (sz != 4) {
 		return luaL_error(L, "Need a vector");
 	}
@@ -3253,7 +3254,11 @@ texture_sampler_flags(lua_State *L, uint64_t flags) {
 static int
 lsetTexture(lua_State *L) {
 	int stage = luaL_checkinteger(L, 1);
-	int uniform_id = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 2));
+	int uid = luaL_checkinteger(L, 2);
+	int uniform_id = BGFX_LUAHANDLE_ID(UNIFORM, uid);
+	if (BGFX_LUAHANDLE_SUBTYPE(uid) != BGFX_UNIFORM_TYPE_SAMPLER) {
+		return luaL_error(L, "The uniform is not a sampler");
+	}
 	int texture_id = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 3));
 	uint64_t flags = UINT32_MAX;
 	if (!lua_isnoneornil(L, 4)) {
@@ -4052,10 +4057,12 @@ lgetShaderUniforms(lua_State *L) {
 	uint16_t n = bgfx_get_shader_uniforms(shader, NULL, 0);
 	lua_createtable(L, n, 0);
 	bgfx_uniform_handle_t u[V(n)];
-	bgfx_get_shader_uniforms(shader, u, n);
-	int i;
-	for (i=0;i<n;i++) {
-		int id = BGFX_LUAHANDLE(UNIFORM, u[i]);
+	bgfx_get_shader_uniforms(shader, u, n);	
+	for (int i=0;i<n;i++) {
+		const bgfx_uniform_handle_t handle = u[i];
+		bgfx_uniform_info_t info;
+		bgfx_get_uniform_info(handle, &info);
+		const int id = BGFX_LUAHANDLE_WITHTYPE(BGFX_LUAHANDLE(UNIFORM, handle), info.type);
 		lua_pushinteger(L, id);
 		lua_rawseti(L, -2, i+1);
 	}

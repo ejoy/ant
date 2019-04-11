@@ -110,7 +110,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bx/include/compat/msvc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bx/include/compat/msvc;../../3rd/glm</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -127,7 +127,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bx/include/compat/msvc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bx/include/compat/msvc;../../3rd/glm</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -146,7 +146,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bx/include/compat/msvc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bx/include/compat/msvc;../../3rd/glm</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -167,7 +167,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bx/include/compat/msvc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bx/include/compat/msvc;../../3rd/glm</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

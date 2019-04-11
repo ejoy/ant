@@ -5,7 +5,8 @@ local bgfx = require "bgfx"
 local fs = require "filesystem"
 
 local asset = import_package "ant.asset"
-
+local mu = import_package "ant.math".util
+local declmgr = require "vertexdecl_mgr"
 
 local function deep_copy(t)
 	if type(t) == "table" then
@@ -18,80 +19,6 @@ local function deep_copy(t)
 	return t
 end
 
-local function load_res(comp, filename, param, errmsg)
-	local res = asset.load(filename, param)	
-	if res == nil then
-		error(string.format("[%s]load resource failed, respath:%s", errmsg, filename))
-	end
-
-	comp.assetinfo = res
-	comp.ref_path = filename
-end
-
-function util.load_skeleton(comp, filename, param)
-	load_res(comp, filename, param, "load.skeleton")	
-end
-
-local function gen_mesh_assetinfo(skinning_mesh_comp)
-	local modelloader = import_package "ant.modelloader"
-
-	local skinning_mesh = skinning_mesh_comp.assetinfo.handle
-
-	local decls = {}
-	local vb_handles = {}
-	local vb_data = {"!", "", 1}
-	for _, type in ipairs {"dynamic", "static"} do
-		local layout = skinning_mesh:layout(type)
-		local decl = modelloader.create_decl(layout)
-		table.insert(decls, decl)
-
-		local buffer, size = skinning_mesh:buffer(type)
-		vb_data[2], vb_data[3] = buffer, size
-		if type == "dynamic" then
-			table.insert(vb_handles, bgfx.create_dynamic_vertex_buffer(vb_data, decl))
-		elseif type == "static" then
-			table.insert(vb_handles, bgfx.create_vertex_buffer(vb_data, decl))
-		end
-	end
-
-	local function create_idx_buffer()
-		local idx_buffer, ib_size = skinning_mesh:index_buffer()	
-		if idx_buffer then			
-			return bgfx.create_index_buffer({idx_buffer, ib_size})
-		end
-
-		return nil
-	end
-
-	local ib_handle = create_idx_buffer()
-
-	return {
-		handle = {
-			groups = {
-				{
-					bounding = skinning_mesh:bounding(),
-					vb = {
-						decls = decls,
-						handles = vb_handles,
-					},
-					ib = {
-						handle = ib_handle,
-					}
-				}
-			}
-		},			
-	}
-end
-
-function util.load_skinning_mesh(smcomp, meshcomp, filename, param)
-	load_res(smcomp, filename, param, "load.skinning_mesh")
-	meshcomp.assetinfo = gen_mesh_assetinfo(smcomp)
-end
-
-function util.load_mesh(comp, filename, param)
-	load_res(comp, filename, param, "load.mesh")
-end
-
 function util.load_texture(name, stage, filename)	
 	assert(type(filename) == "table", "texture type's default value should be path to texture file")
 	local assetinfo = asset.load(filename)
@@ -101,15 +28,15 @@ end
 function util.add_material(material, filename)
 	local content = material.content
 	if content == nil then
-		content = {}
-		material.content = content
-	end
+        content = {}
+        material.content = content
+    end
 
 	local item = {
 		ref_path = filename,
 	}
 	util.create_material(item)
-	content[#content+1] = item
+    content[#content + 1] = item
 end
 
 local function update_properties(dst_properties, src_properties)
@@ -117,12 +44,12 @@ local function update_properties(dst_properties, src_properties)
 	if srctextures then
 		local dsttextures = dst_properties.textures or {}
 		for k, v in pairs(srctextures) do
-			local refpath = v.ref_path
-			local tex = util.load_texture(v.name, v.stage, fs.path(refpath))
-			if dsttextures[k] == nil then
-				dsttextures[k] = tex
-			else
-				dsttextures[k].handle = tex.handle
+			local tex = deep_copy(v)
+			dsttextures[k] = tex
+			local refpath = fs.path(tex.ref_path)
+			tex.ref_path = refpath
+			if refpath then
+				tex.handle = asset.load(refpath).handle
 			end
 		end
 		dst_properties.textures = dsttextures
@@ -155,65 +82,73 @@ function util.create_material(material)
 	material.materialinfo = materialinfo	
 end
 
-function util.is_entity_visible(entity)
-	local can_render = entity.can_render
-	if can_render then
-		local mesh = entity.mesh
-		return mesh and mesh.assetinfo
-	end
+function util.assign_material(filepath)
+	return {
+		content = {
+			{ref_path = filepath}
+		}
+	}
+end
 
-	return false
+
+-- content:material_content
+-- texture_tbl:{
+--  s_basecolor = {type="texture", name="base color", stage=0, ref_path={"ant.resources", "PVPScene/siegeweapon_d.texture"}},
+--  s_normal = {type="texture", name="normal", stage=1, ref_path={"ant.resources", "PVPScene/siegeweapon_n.texture"}},
+-- },
+function util.change_textures(content, texture_tbl)
+    content.properties = content.properties or {}
+    local textures = content.properties.textures or {}
+    for name, tex in pairs(texture_tbl) do
+        textures[name] = util.load_texture(
+            tex.name,
+            tex.stage,
+            tex.ref_path
+        )
+    end
+    content.properties.textures = textures
+    -- todo:modify materialinfo ?
+    -- if content.materialinfo.properties and content.materialinfo.properties.texture then
+    --  content.materialinfo = deep_copy(content.materialinfo)
+end
+
+function util.is_entity_visible(entity)
+    local can_render = entity.can_render
+    if can_render then
+        local mesh = entity.mesh
+        return mesh and mesh.assetinfo
+    end
+
+    return false
 end
 
 function util.create_mesh_handle(decl, vb, ib)
-	local groups = {}
-	
-	if type(decl) == "table" then
-		assert("not implement")
-	else
-		local group = {
-			vb = {
-				decls={decl}, 
-				handles={bgfx.create_vertex_buffer(vb, decl)},
-			},			
-		}
-
-		if ib then
-			group.ib = {handle = bgfx.create_index_buffer(ib)}
-		end
-
-		table.insert(groups, group)
-	end
-
-	return {handle={groups = groups}}
-end
-
-function util.create_grid_entity(world, name, w, h, unit)
-	local geopkg= import_package "ant.geometry"
-	local geolib= geopkg.geometry
-
-	local gridid = world:create_entity {
-		transform = {			
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
-		can_render = true, 
-		mesh = {},
-		material = {
-			content = {
+    return {
+		handle = {
+			groups = {
 				{
-					ref_path = fs.path "//ant.resources/line.material"
+					vb = {handles = {bgfx.create_vertex_buffer(vb, decl)},},
+					ib = ib and {handle = bgfx.create_index_buffer(ib)} or nil
 				}
 			}
-		},
-		name = name,
-		main_viewtag = true,
+		} 
 	}
+end
 
-	
+function util.create_grid_entity(world, name, w, h, unit, view_tag)
+    local geopkg = import_package "ant.geometry"
+    local geolib = geopkg.geometry
+
+	local gridid = world:create_entity {
+		transform = mu.identity_transform(),
+        mesh = {},
+        material = util.assign_material(fs.path "//ant.resources" / "line.material"),
+		name = name,
+		can_render = true,
+		main_view = true,
+    }
     local grid = world[gridid]
-    
+    if view_tag then world:add_component(gridid, view_tag, true) end
 	w = w or 64
 	h = h or 64
 	unit = unit or 1
@@ -225,13 +160,125 @@ function util.create_grid_entity(world, name, w, h, unit)
 		end
 	end
 
-    local vdecl = bgfx.vertex_decl {
-        { "POSITION", 3, "FLOAT" },
-        { "COLOR0", 4, "UINT8", true }
+    grid.mesh.assetinfo = util.create_mesh_handle(declmgr.get("p3|c40niu").handle,gvb, ib)
+    return gridid
+end
+
+function util.create_plane_entity(world, color, size, pos, name)
+	return world:create_entity {
+		transform = {
+			s = size or {0.08, 0.005, 0.08},
+			r = {0, 0, 0, 0},
+			t = pos or {0, 0, 0, 1}
+		},
+		mesh = {
+			ref_path = fs.path "//ant.resources/depiction/cube.mesh"
+		},
+		material = {
+			content = {
+				{
+					ref_path = fs.path "//ant.resources/depiction/shadow/mesh_receive_shadow.material",
+					properties = {
+						uniforms = {
+							u_color = {type="color", name="color", value=color}
+						},
+					}
+				}
+			}
+		},
+		can_render = true,
+		--can_cast = true,
+		main_view = true,
+		name = name or "Plane",
+	}
+end
+
+local function get_quaddecl()
+	return declmgr.get("p3|t2")
+end
+
+function util.quad_mesh(rect)
+	local decl = get_quaddecl().handle
+	local depth = 0
+
+	local vbhandle = bgfx.create_vertex_buffer(
+		{
+			"fffff",
+			rect.x, 		 rect.y, 			depth, 	0, 1,	--bottom left
+			rect.x, 		 rect.y + rect.h, 	depth, 	0, 0,	--top left
+			rect.x + rect.w, rect.y, 			depth, 	1, 1,	--bottom right
+			rect.x + rect.w, rect.y + rect.h, 	depth, 	1, 0,	--top right
+		}, decl)
+
+	return {handle = {groups = {{
+					decls = {decl},
+					vb = {handles = {vbhandle,}
+					},
+	}}}}
+end
+
+function util.create_shadow_quad_entity(world, rect, name)
+	local eid = world:create_entity {
+		transform = {
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
+		},
+		mesh = {},
+		material = {
+			content = {{
+				ref_path = fs.path "//ant.resources/depiction/shadowmap_quad.material",
+			}}
+		},
+		can_render = true,
+		main_view = true,
+		name = name or "quad",
+	}
+
+	local e = world[eid]
+	e.mesh.assetinfo = util.quad_mesh(rect)
+	return eid
+end
+
+function util.create_quad_entity(world, texture_tbl, view_tag, name)
+    local quadid = world:create_entity{
+        transform = mu.identity_transform(),
+        can_render = true,
+        mesh = {},
+        material = util.assign_material(fs.path "//ant.resources/texture.material"),
+        name = name,
+    }
+    local quad = world[quadid]
+    if view_tag then world:add_component(quadid, view_tag, true) end
+    util.change_textures(quad.material.content[1], texture_tbl)
+    local vb = {
+        {-3, 3,  0,0.0, 0.0},
+        {3,  3, 0,1.0, 0.0},
+        {-3, -3, 0, 0.0, 1.0},
+        {3,  -3,0, 1.0, 1.0},
     }
 
-    grid.mesh.assetinfo = util.create_mesh_handle(vdecl, gvb, ib)
-	return gridid
+    local gvb = {"fffff"}
+    for _, v in ipairs(vb) do for _, vv in ipairs(v) do table.insert(gvb, vv) end end
+    local ib = { 0, 1, 2, 3}
+    local vdecl = get_quaddecl().handle
+    quad.mesh.assetinfo = util.create_mesh_handle(vdecl, gvb, ib)
+    return quadid
+end
+
+
+function util.create_dynamic_mesh_handle(decl, vbsize, ibsize)
+	return {
+		handle = {
+			groups = {
+				{
+					vb = {handles = {bgfx.create_dynamic_vertex_buffer(vbsize, decl, "a")}},
+					ib = ibsize and {handle= bgfx.create_dynamic_index_buffer(ibsize, "a")} or nil,
+					primitives = {},
+				}
+			}
+		}
+	}
 end
 
 return util

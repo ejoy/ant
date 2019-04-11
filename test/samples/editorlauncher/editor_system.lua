@@ -30,7 +30,7 @@ local function build_hierarchy_tree()
         table.insert(htree, name)
 	end
 
-	for _, maincomp in ipairs {"main_camera", } do
+	for _, maincomp in ipairs {"main_queue", } do
 		for _, eid in world:each(maincomp) do
 			local defname = maincomp
 			add_entity(eid, defname)

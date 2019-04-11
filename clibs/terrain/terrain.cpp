@@ -1,9 +1,8 @@
 #define LUA_LIB
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
+
+
+#include "bgfx/bgfx.h"
+#include "glm/glm.hpp"
 
 extern "C" {
 #include <lua.h>
@@ -11,15 +10,15 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-#include <bgfx/bgfx.h>
+// stl
+#include <limits>
+#include <vector>
 
-extern "C" {
-#include <bgfx/c99/bgfx.h>
-#include <bgfx/c99/platform.h>
-}
-
-// #include <bgfx/bgfx.h>
-// #include <bx/allocator.h>
+// c std
+#include <cstdio>
+#include <cstdint>
+#include <cstring>
+#include <cstdlib>
 
 //@1:只负责地形几何相关的Pos,Normal,Uv,Tangent 的计算,创建，和编辑、更新
 //@2:只接受高度图，画刷，等更改几何形体，顶点索引内容等lua数据,不持有任何图形相关的handle
@@ -38,28 +37,9 @@ extern "C" {
 #elif  __WIN64
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define MY_DEBUG
 
-#define TERRAIN_CONFIG_IMPLEMENT_DEFAULT_ALLOCATOR  1
-
-// #if TERRAIN_CONFIG_IMPLEMENT_DEFAULT_ALLOCATOR
-// 	bx::AllocatorI* getDefaultAllocator()
-// 	{
-// 		BX_PRAGMA_DIAGNOSTIC_PUSH();
-// 		BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4459);							// warning C4459: declaration of 's_allocator' hides global declaration
-// 		BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wshadow");
-// 		static bx::DefaultAllocator s_allocator;
-// 		return &s_allocator;
-// 		BX_PRAGMA_DIAGNOSTIC_POP();
-// 	}
-// #endif
-
-int is_little_endian(void)
-{
+int is_little_endian(void) {
 	union check_endian {
 		short ivalue;
 		char  cvalue;
@@ -75,16 +55,15 @@ int is_little_endian(void)
 	return word.cvalue;
 }
 // big to small
-int16_t word_btol(uint16_t sw)
-{
+int16_t word_btol(uint16_t sw) {
 	uint8_t *p = (uint8_t*)&sw;
-	int16_t dw = ((int16_t)p[0]<<8) + (int16_t)p[1];
+	int16_t dw = ((int16_t)p[0] << 8) + (int16_t)p[1];
 
 #ifdef MY_DEBUG
-	printf("c terrain: sw = %x",sw);
-	printf("c terrain: sw[0] =%x,sw[1] = %x\n",p[0],p[1]);
-	printf("c terrain: dw = %x",dw);
-	printf("c terrain: dw[0] =%x,dw[1] = %x\n",dw&0x00ff,(dw&0xff00)>>8);
+	printf("c terrain: sw = %x", sw);
+	printf("c terrain: sw[0] =%x,sw[1] = %x\n", p[0], p[1]);
+	printf("c terrain: dw = %x", dw);
+	printf("c terrain: dw[0] =%x,dw[1] = %x\n", dw & 0x00ff, (dw & 0xff00) >> 8);
 #endif
 	return dw;
 }
@@ -124,15 +103,14 @@ int16_t word_btol(uint16_t sw)
 
 // TerrainData userdata return to lua as terrain Context data
 // 地形运行时数据
-struct TerrainData_t
-{
+struct TerrainData_t {
 	// setting
-	int		width;									// 地形宽度 x, 图形逻辑单位
-	int		length;									// 地形长度 z
-	int		height;									// 地形高度 y
+	uint32_t width;									// 地形宽度 x, 图形逻辑单位
+	uint32_t length;									// 地形长度 z
+	uint32_t height;									// 地形高度 y
 
-	int		gridWidth;								// 宽度格子数, 地形网格分辨率
-	int		gridLength;								// 长度格子数
+	uint32_t gridWidth;								// 宽度格子数, 地形网格分辨率
+	uint32_t gridLength;								// 长度格子数
 
 	float	uv0Scale;								// 0 layer texcoord
 	float   uv1Scale;								// 1 layer texcoord
@@ -149,7 +127,7 @@ struct TerrainData_t
 	int 						rawSize;
 
 	// vertex stream
-	bgfx_vertex_decl_t * 		vdecl;				  	// terrain vertex declare
+	bgfx::VertexDecl * 			vdecl;				  	// terrain vertex declare
 	uint8_t *			    	vertices;			  	// maybe from lua
 	uint32_t					vertexCount;		  	//
 	uint32_t *					indices;			  	// short if terrain size clamp 256
@@ -157,16 +135,16 @@ struct TerrainData_t
 
 	// texture layers
 	int     				    numLayers;			    // 混合纹理层数
-	bgfx_texture_handle_t		t_baseTextures[4];		// mask textures, clamp to 4 layers
-	bgfx_texture_handle_t		t_maskTextures[4];		// mask textures
-	bgfx_texture_handle_t		t_baseTexture;			// paint texture   current process
-	bgfx_texture_handle_t		t_maskTexture;			// mask texture
+	bgfx::TextureHandle			t_baseTextures[4];		// mask textures, clamp to 4 layers
+	bgfx::TextureHandle			t_maskTextures[4];		// mask textures
+	bgfx::TextureHandle			t_baseTexture;			// paint texture   current process
+	bgfx::TextureHandle			t_maskTexture;			// mask texture
 
 	// two mode
 	// ib,vb											// lua maintains
 	//bgfx_dynamic_vertex_buffer_handle_t	vbh;	  	// VertexBuffer
 	//bgfx_dynamic_index_buffer_handle_t  	ibh;
-    // dynamic ib,vb
+	// dynamic ib,vb
 	//bgfx_dynamic_vertex_buffer_handle_t 	dvbh;	  	// Dynamic VertexBuffer
 	//bgfx_dynamic_index_buffer_handle_t  	dibh;
 
@@ -177,12 +155,12 @@ struct TerrainData_t
 };
 
 
-void update_terrain_mesh( struct TerrainData_t* terData );
-void smooth_terrain_mesh( struct TerrainData_t* terData,int mode );
-void update_terrain_normal_fast( struct TerrainData_t *terData );
-void update_terrain_tangent( struct TerrainData_t* terData);
-void terrain_update_vb( struct TerrainData_t *terData );
-void terrain_updata_ib( struct TerrainData_t *terData );
+void update_terrain_mesh(struct TerrainData_t* terData);
+void smooth_terrain_mesh(struct TerrainData_t* terData, int mode);
+void update_terrain_normal_fast(struct TerrainData_t *terData);
+void update_terrain_tangent(struct TerrainData_t* terData);
+void terrain_update_vb(struct TerrainData_t *terData);
+void terrain_updata_ib(struct TerrainData_t *terData);
 
 //--------------------------------
 // tested
@@ -201,23 +179,21 @@ lterrain_attrib(lua_State *L)
 */
 
 static int
-lterrain_vb_close(lua_State *L)
-{
-	uint8_t *vertices = (uint8_t *) lua_touserdata(L, 1);
+lterrain_vb_close(lua_State *L) {
+	uint8_t *vertices = (uint8_t *)lua_touserdata(L, 1);
 	// do nothing
 #ifdef MY_DEBUG		
-	printf("gc: vb %p destroy.\n",vertices);
+	printf("gc: vb %p destroy.\n", vertices);
 #endif
 	return 0;
 }
 
 static int
-lterrain_ib_close(lua_State *L)
-{
-	uint32_t *indices = (uint32_t *) lua_touserdata(L, 1);
+lterrain_ib_close(lua_State *L) {
+	uint32_t *indices = (uint32_t *)lua_touserdata(L, 1);
 	// do nothing
 #ifdef MY_DEBUG		
-	printf("gc: ib %p destroy.\n",indices);
+	printf("gc: ib %p destroy.\n", indices);
 #endif 	
 	return 0;
 }
@@ -225,20 +201,19 @@ lterrain_ib_close(lua_State *L)
 
 // alloc vertex buffer and return to lua
 static int
-lterrain_getVB(lua_State *L)
-{
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
-	if(terData->vertices)
-	   return luaL_error(L,"vertices already exist.");
+lterrain_getVB(lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	if (terData->vertices)
+		return luaL_error(L, "vertices already exist.");
 
-	bgfx_vertex_decl_t *vd = terData->vdecl;
-	uint32_t num 	= terData->gridWidth * terData->gridLength;
+	bgfx::VertexDecl *vd = terData->vdecl;
+	uint32_t num = terData->gridWidth * terData->gridLength;
 
 #ifdef MY_DEBUG	
-	printf("c terrain: new alloc vertex = %d, strid =%d\n",num ,vd->stride);
+	printf("c terrain: new alloc vertex = %d, strid =%d\n", num, vd->getStride());
 #endif 	
 
-	terData->vertices = (uint8_t*) lua_newuserdata(L, num * vd->stride );
+	terData->vertices = (uint8_t*)lua_newuserdata(L, num * vd->getStride());
 
 	if (luaL_newmetatable(L, "TERRAIN_VB")) {
 		lua_pushcfunction(L, lterrain_vb_close);        // register gc function
@@ -250,32 +225,29 @@ lterrain_getVB(lua_State *L)
 }
 
 static int
-lterrain_getNumVerts(lua_State *L)
-{
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
-	lua_pushnumber(L,terData->vertexCount);
+lterrain_getNumVerts(lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	lua_pushnumber(L, terData->vertexCount);
 	return 1;
 }
 
 static int
-lterrain_getNumIndices(lua_State *L)
-{
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
-	lua_pushnumber(L,terData->indexCount);
+lterrain_getNumIndices(lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	lua_pushnumber(L, terData->indexCount);
 	return 1;
 }
 // alloc inddex and return to lua
 static int
-lterrain_getIB(lua_State *L)
-{
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
-	if(terData->indices)
-	   return luaL_error(L,"indices already exist.");
+lterrain_getIB(lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	if (terData->indices)
+		return luaL_error(L, "indices already exist.");
 
-	uint32_t num 	= terData->gridWidth * terData->gridLength;
-	terData->indices = (uint32_t*) lua_newuserdata(L, num * sizeof(uint32_t) * 6 );
+	uint32_t num = terData->gridWidth * terData->gridLength;
+	terData->indices = (uint32_t*)lua_newuserdata(L, num * sizeof(uint32_t) * 6);
 #ifdef MY_DEBUG	
-	printf("c terrain: new alloc vertex = %d, index =%d(%d)\n",num ,(uint32_t)(num*6),(uint32_t) (num * sizeof(uint32_t) * 6)  );
+	printf("c terrain: new alloc vertex = %d, index =%d(%d)\n", num, (uint32_t)(num * 6), (uint32_t)(num * sizeof(uint32_t) * 6));
 #endif 	
 
 	if (luaL_newmetatable(L, "TERRAIN_IB")) {
@@ -286,362 +258,242 @@ lterrain_getIB(lua_State *L)
 	return 1;
 }
 
-
-// action，brush filter，brush data and size
 static
-int lterrain_updateVB(lua_State *L)
-{
-	return 0;
-}
-
-static
-int lterrain_updateIB(lua_State *L)
-{
-	return 0;
-}
-
-
-
-static
-int lterrain_width(lua_State *L)
-{
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
-	lua_pushnumber(L,terData->width);
+int lterrain_width(lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	lua_pushnumber(L, terData->width);
 	return 1;
 }
 
 static
-int lterrain_height(lua_State *L)
-{
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
-	lua_pushnumber(L,terData->height);
+int lterrain_height(lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	lua_pushnumber(L, terData->height);
 	return 1;
 }
 
 static
-int lterrain_length(lua_State *L)
-{
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
-	lua_pushnumber(L,terData->length);
+int lterrain_length(lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	lua_pushnumber(L, terData->length);
 	return 1;
 }
 
-
-// 释放 terrainData 地形数据,gc 自动回收，lua 层直接使用无效
-static int
-lterrain_close(lua_State *L)
-{
-	struct TerrainData_t *terData = (struct TerrainData_t*) lua_touserdata(L, 1);
-
-#ifdef MY_DEBUG
-		printf("\ngc: close terrain start.\n");
-		if(terData->vertices)
-			printf("gc: got vertices.\n");
-		if(terData->indices )
-			printf("gc: got indices.\n");
-#endif
-
-    // 都改成 userdata ，由 gc 自动回收
-
-#ifdef MY_DEBUG
-	printf("gc: close terrain end. \ngc: terrain alloc memory release.\n");
-#endif
-
-	return 0;
-}
-
-
-static inline int
-getfield_toint(lua_State *L,int table,const char *key) {
-	if( lua_getfield(L,table,key) != LUA_TNUMBER) {
-		luaL_error(L,"Need %s as number",key );
+static inline uint32_t
+getfield_touint(lua_State *L, int table, const char *key) {
+	if (lua_getfield(L, table, key) != LUA_TNUMBER) {
+		luaL_error(L, "Need %s as number", key);
 	}
-	int ivalue = luaL_checkinteger(L,-1);
-	lua_pop(L,1);
+	uint32_t ivalue = (int)luaL_checkinteger(L, -1);
+	lua_pop(L, 1);
 	return ivalue;
 }
 static inline float
-getfield_tofloat(lua_State *L,int table,const char *key) {
-	if( lua_getfield(L,table,key)!=LUA_TNUMBER) {
-		luaL_error(L,"Need %s as number",key);
+getfield_tofloat(lua_State *L, int table, const char *key) {
+	if (lua_getfield(L, table, key) != LUA_TNUMBER) {
+		luaL_error(L, "Need %s as number", key);
 	}
-	float value = luaL_checknumber(L,-1);
-	lua_pop(L,1);
+	float value = (float)luaL_checknumber(L, -1);
+	lua_pop(L, 1);
 	return value;
 }
 
+static inline int 
+fetch_terrain_data(lua_State *L, int index, struct TerrainData_t* terData) {
+	luaL_checktype(L, index, LUA_TTABLE);
 
-int terrain_check_level(lua_State *L,int index,struct TerrainData_t* terData)
-{
-	luaL_checktype(L,index,LUA_TTABLE);
+	terData->gridWidth	= getfield_touint(L, index, "grid_width");
+	terData->gridLength = getfield_touint(L, index, "grid_length");
+	terData->rawBits	= getfield_touint(L, index, "bits");
+	terData->width		= getfield_touint(L, index, "width");   // maybe float is better
+	terData->length		= getfield_touint(L, index, "length");
+	terData->height		= getfield_touint(L, index, "height");
 
-	terData->gridWidth  = getfield_toint(L,index,"grid_width");
-	terData->gridLength = getfield_toint(L,index,"grid_length");
-	terData->rawBits = getfield_toint(L,index,"bits");
-	terData->width  = getfield_toint(L,index,"width");   // maybe float is better
-	terData->length = getfield_toint(L,index,"length");
-	terData->height = getfield_toint(L,index,"height");
+	terData->uv0Scale	= getfield_tofloat(L, index, "uv0_scale");
+	terData->uv1Scale	= getfield_tofloat(L, index, "uv1_scale");
 
-	terData->uv0Scale = getfield_tofloat(L,index,"uv0_scale");
-	terData->uv1Scale = getfield_tofloat(L,index,"uv1_scale");
-
-	terData->grid_x_scale  = terData->width *1.0f/ terData->gridWidth;
-	terData->grid_z_scale  = terData->length*1.0f/ terData->gridLength;
-	terData->height_scale  = terData->height*1.0f;
-	if( terData->rawBits == 8)
-		terData->height_scale = terData->height/ 256.0f;   	   
-	else
-		terData->height_scale = terData->height / 65536.0f;    
-
-	terData->min_height = terData->max_height = 0;
+	terData->grid_x_scale	= (float)terData->width / terData->gridWidth;
+	terData->grid_z_scale	= (float)terData->length / terData->gridLength;
+	terData->height_scale	= terData->height / ((terData->rawBits == 8) ? 256.0f : 65536.0f);
+	terData->min_height		= terData->max_height = 0;
 
 	return 0;
 }
 
-//memset( terData, 0x0, sizeof(*terData) );
-// todo: get parameters from lua
-//    build terraindata from terrain level config
-//       alloc vertex memorty
-//           calc normal,uvs,smooth terrain height
-//    build vb，ib
-//  return  terraintata
-//          terraindata support access function
-// memset(terData,0x0,sizeof(*terData));
-
-void terrain_default_init( struct TerrainData_t *terData)
-{
-	terData->gridWidth  = 513;
+static inline void 
+terrain_default_init(struct TerrainData_t *terData) {
+	terData->gridWidth = 513;
 	terData->gridLength = 513;
 	terData->rawBits = 8;
-	terData->width  = 513;
+	terData->width = 513;
 	terData->length = 513;
 	terData->height = 385;
 
-	terData->uv0Scale = 80*0.625f;
+	terData->uv0Scale = 80 * 0.625f;
 	terData->uv1Scale = 1.0f;
 }
 
-// 根据传入的关卡配置数据，创建地形
-// parameters：raw heightmap data, terrainLevel decalre, vertex decalre
-// returan:    terrainData
+static inline void
+load_heightmap_data(lua_State *L, int index, struct TerrainData_t *terData) {
+	size_t  size = 0;
+	uint8_t *heightmap = (uint8_t *)luaL_checklstring(L, index, &size);
+	if (size == 0) {
+		luaL_error(L, "no heightmap data");
+	}
+	terData->heightmap = heightmap;
+	terData->rawSize = (int)size;
+}
+
 static int
-lterrain_create(lua_State *L)
-{
+lterrain_del(lua_State *L) {
+	return 0;
+}
+
+static int
+lterrain_create(lua_State *L) {
 	struct TerrainData_t* terData = (struct TerrainData_t*) lua_newuserdata(L, sizeof(TerrainData_t));
 	if (luaL_newmetatable(L, "TERRAIN_BASE")) {
-		// __index
-		// __len
-		// or other function
-		// allocVB
-		// allocIB
-		// updateVB
-		// updateIB
-		// etc ...
-		luaL_Reg l[] = {
-			{"allocVB",lterrain_getVB},
-			{"allocIB",lterrain_getIB},
-			{"getVB",lterrain_getVB},
-			{"getIB",lterrain_getIB},
-			{"getNumVerts",lterrain_getNumVerts},
-			{"getNumIndices",lterrain_getNumIndices},
-			{"updateVB",lterrain_updateVB},
-			{"updateIB",lterrain_updateIB},
+		luaL_Reg l[] = {			
 			{"width",lterrain_width},
 			{"length",lterrain_length},
 			{"height",lterrain_height},
 			{NULL,NULL},
 		};
-		luaL_newlib(L,l);
+		luaL_newlib(L, l);
 		lua_setfield(L, -2, "__index");
-		lua_pushcfunction(L, lterrain_close);        // register gc function
+		lua_pushcfunction(L, lterrain_del);        // register gc function
 		lua_setfield(L, -2, "__gc");
 	}
-	lua_setmetatable(L, -2);                        // terrain Data inherit TERRAIN_BASE
-												    // terrain data already on stack
-	terData->vertices = NULL;
-	terData->indices = NULL;
-	terData->heightmap = NULL;
-	terData->vdecl = NULL;
+	lua_setmetatable(L, -2);
 
-	// param1： heightmap
-	size_t  size = 0;
-	uint8_t *heightmap =  (uint8_t *)luaL_checklstring(L,1,&size);
-	// todo： if size == 0 ....
-    // save heightmap
-	terData->heightmap = heightmap;
-	terData->rawSize = size;
+	memset(terData, 0, sizeof(TerrainData_t));
 
-	// param3：vertex decl
-    bgfx_vertex_decl_t *vd = (bgfx_vertex_decl_t *) lua_touserdata(L,3);
-	if(vd == NULL)
-	   return luaL_error(L,"Invalid vertex decl");
+	load_heightmap_data(L, 1, terData);
 
-	// save vertex declare
-    terData->vdecl = vd;
+	terData->vdecl = (bgfx::VertexDecl *)lua_touserdata(L, 3);
+	if (terData->vdecl == NULL)
+		return luaL_error(L, "Invalid vertex decl");
 
-	// param3： terrainLevel
-	terrain_check_level(L,2,terData);
-
-	// todo:  get terrain data from terrainLevel
-
-	// default init
-
+	fetch_terrain_data(L, 2, terData);
 	return 1;
 }
 
-// update terrain mesh from heightmap
-// **顶点数据类型需要优化压缩
-void update_terrain_mesh( struct TerrainData_t* terData )
-{
-	// float xspace  = terData->width *1.0f/ terData->gridWidth;
-	// float zspace  = terData->length*1.0f/ terData->gridLength;
-	// float yscale  = terData->height*1.0f;
-	float xspace = terData->grid_x_scale;
-	float zspace = terData->grid_z_scale;
-	float yscale = terData->height_scale;
+static inline glm::vec2
+calc_uv(const glm::vec2 &gridIdx, const glm::vec2 &size, float scale, float offset) {
+	auto r = (gridIdx + offset) * size * scale;
+	r.y = -r.y;
+	return r;
+}
 
-	float uv0scale = terData->uv0Scale;
-	float uv1scale = terData->uv1Scale;
+static void 
+update_terrain_mesh(struct TerrainData_t* terData) {	
+	const glm::vec3 vertexscale(terData->grid_x_scale, terData->height_scale, terData->grid_z_scale);
 
-	float min_height = 99999.99f;
-	float max_height = -99999.99f;
+	terData->min_height = std::numeric_limits<float>::max();
+	terData->max_height = std::numeric_limits<float>::lowest();
 
-	struct vec3 { float x,y,z; };
-	struct vec2 { float u,v; };
+	auto get_height_from_uint8 = [](uint8_t *v) {return float(*v);};
+	auto get_height_from_uint16 = [](uint8_t *v) {return float(*(uint16_t*)v);};
+	auto get_height = terData->rawBits == 8 ? get_height_from_uint8 : get_height_from_uint16;
 
-	if( is_little_endian() ) {  //tested 
-#ifdef MY_DEBUG	
-		printf("c terrain: little_endian supported.\n");
-		word_btol( 0x1234 );
-#endif 		
-	}
+	const glm::vec2 invsize(1.f / terData->gridWidth, 1.f / terData->gridLength);
 
-
-	int nBytes = terData->rawBits / 8;
-	uint32_t width = terData->gridWidth;
-	uint32_t height = terData->gridLength;
 	terData->vertexCount = 0;
-#ifdef MY_DEBUG		
-	printf("c terrain: %d,%d, begin create mesh\n",width,height);
-#endif 	
-	// printf("c terrain: width = %d,height=%d\n",width,height);
-    // terrain 本身具备多个的 ATTRIB，用户可以选则全部或部分，实现一定的可定制
+	for (uint32_t y = 0; y < terData->gridLength; ++y) {
+		for (uint32_t x = 0; x < terData->gridWidth; ++x) {
+			auto decl = terData->vdecl;
+			const uint16_t stride = decl->getStride();
 
-	for (uint32_t y = 0; y < height; y++)
-	{
-		for (uint32_t x = 0; x < width; x++)
-		{   //pos
-			if( terData->vdecl->attributes[ BGFX_ATTRIB_POSITION ] != UINT16_MAX ) {
-				int stride = terData->vdecl->stride;
-				int offset = terData->vdecl->offset[ BGFX_ATTRIB_POSITION ];
-				struct vec3* vert = (struct vec3*) &terData->vertices[ terData->vertexCount*stride + offset ];
-				vert->x = (float) x*xspace;
-				if( nBytes==1 )
-					vert->y = (float) *(uint8_t*)&terData->heightmap[ ( ( ( /*height-1-*/ y) * width) + ( /*(width-1)-*/ x))*nBytes];  
-				else if( nBytes==2 ) {
-					vert->y = (float) *(uint16_t*)&terData->heightmap[ ( ( ( /*height-1-*/ y) * width) + (/* (width-1)-*/x) )*nBytes];  
-					//vert->y = word_btol(vert->y);
-				}
-				vert->y *= yscale;
-				vert->z  = (float) y*zspace;
-				if( vert->y > max_height ) max_height = vert->y;
-				if( vert->y < min_height ) min_height = vert->y;
+			if (decl->has(bgfx::Attrib::Position)) {
+				const uint16_t offset = decl->getOffset(bgfx::Attrib::Position);
+
+				glm::vec3* vert = (glm::vec3*) &terData->vertices[terData->vertexCount*stride + offset];				
+				auto hm = &terData->heightmap[y* terData->gridWidth + x];
+				*vert = vertexscale * glm::vec3(float(x), get_height(hm), float(y));
+
+				terData->max_height = glm::max(vert->y, terData->max_height);
+				terData->min_height = glm::min(vert->y, terData->min_height);
 			}
 			//uv0
-			if( terData->vdecl->attributes[ BGFX_ATTRIB_TEXCOORD0 ] != UINT16_MAX ) {
-				int stride = terData->vdecl->stride;
-				int offset = terData->vdecl->offset[ BGFX_ATTRIB_TEXCOORD0 ];
-				struct vec2* vert = (struct vec2*) &terData->vertices[ terData->vertexCount*stride + offset ];
-
-				vert->u = (x + 0.5f) / width * uv0scale;
-				vert->v = (y + 0.5f) / height * -uv0scale;
+			if (decl->has(bgfx::Attrib::TexCoord0)) {
+				const uint16_t offset = decl->getOffset(bgfx::Attrib::TexCoord0);
+				glm::vec2* uv = (glm::vec2*) &terData->vertices[terData->vertexCount*stride + offset];
+				
+				*uv = calc_uv(glm::vec2(x, y), invsize, terData->uv0Scale, 0.5f);
 			}
 			//uv1 - for mask,color maps
-		    if( terData->vdecl->attributes[ BGFX_ATTRIB_TEXCOORD1 ] != UINT16_MAX ) {
-				int stride = terData->vdecl->stride;
-				int offset = terData->vdecl->offset[ BGFX_ATTRIB_TEXCOORD1 ];
-				struct vec2* vert = (struct vec2*) &terData->vertices[ terData->vertexCount*stride + offset ];
-
-				vert->u = ( /*width-1-*/ x + 0.01f) / width * uv1scale;
-				vert->v = (y + 0.01f) / height * -uv1scale;
-		    }
+			if (decl->has(bgfx::Attrib::TexCoord1)) {
+				const uint16_t offset = decl->getOffset(bgfx::Attrib::TexCoord1);
+				glm::vec2* uv = (glm::vec2*) &terData->vertices[terData->vertexCount*stride + offset];
+				*uv = calc_uv(glm::vec2(x, y), invsize, terData->uv1Scale, 0.01f);
+			}
 			//normal
-		  	if( terData->vdecl->attributes[BGFX_ATTRIB_NORMAL] != UINT16_MAX ) {
-				int stride = terData->vdecl->stride;
-				int offset = terData->vdecl->offset[ BGFX_ATTRIB_NORMAL ];
-				struct vec3* vert = (struct vec3*) &terData->vertices[ terData->vertexCount*stride + offset ];
-
-				vert->x = vert->y = vert->z = 0;
-				vert->y = 1;
-		    }
+			if (decl->has(bgfx::Attrib::Normal)) {
+				const uint16_t offset = decl->getOffset(bgfx::Attrib::Normal);
+				glm::vec3* normal = (glm::vec3*) &terData->vertices[terData->vertexCount*stride + offset];
+				*normal = glm::vec3(0.f, 1.f, 0.f);				
+			}
 			//tangent
-		  	if( terData->vdecl->attributes[BGFX_ATTRIB_TANGENT] != UINT16_MAX ) {
-				int stride = terData->vdecl->stride;
-				int offset = terData->vdecl->offset[ BGFX_ATTRIB_TANGENT ];
-				struct vec3* vert = (struct vec3*) &terData->vertices[ terData->vertexCount*stride + offset ];
-
-				vert->x = vert->y = vert->z = 0;
-		    }
+			if (decl->has(bgfx::Attrib::Tangent)) {
+				const uint16_t offset = decl->getOffset(bgfx::Attrib::Tangent);
+				glm::vec3* tangent = (glm::vec3*) &terData->vertices[terData->vertexCount*stride + offset];
+				*tangent = glm::vec3(1.f, 0.f, 0.f);
+			}
 			terData->vertexCount++;
 		}
 	}
-	terData->min_height = min_height;
-	terData->max_height = max_height;
-#ifdef MY_DEBUG	
-	printf("c terrain: min_height(%.2f),max_height(%.2f)\n",min_height,max_height);
-    printf("c terrain: %d,%d, begin create index\n",width,height);
-#endif 	
+	 
 	terData->indexCount = 0;
-	for (uint16_t y = 0; y < (height-1 ); y++)
-	{
-		uint32_t y_offset = (y * width);
-		for (uint16_t x = 0; x < (width-1 ); x++)
-		{   // 可以继续优化
-			terData->indices[terData->indexCount + 0] = (uint32_t) y_offset + x + 1;
-			terData->indices[terData->indexCount + 1] = y_offset + x + width;
+	for (uint16_t y = 0; y < (terData->gridLength - 1); y++) {
+		uint32_t y_offset = (y * terData->gridWidth);
+		for (uint16_t x = 0; x < (terData->gridWidth - 1); x++) {
+			terData->indices[terData->indexCount + 0] = (uint32_t)y_offset + x + 1;
+			terData->indices[terData->indexCount + 1] = y_offset + x + terData->gridWidth;
 			terData->indices[terData->indexCount + 2] = y_offset + x;
-			terData->indices[terData->indexCount + 3] = y_offset + x + width + 1;
-			terData->indices[terData->indexCount + 4] = y_offset + x + width;
+			terData->indices[terData->indexCount + 3] = y_offset + x + terData->gridWidth + 1;
+			terData->indices[terData->indexCount + 4] = y_offset + x + terData->gridWidth;
 			terData->indices[terData->indexCount + 5] = y_offset + x + 1;
 			terData->indexCount += 6;
 		}
 	}
-#ifdef MY_DEBUG		
-	printf("c terrain: generate vertex count =%d\n",terData->vertexCount);
-	printf("c terrain: generate index count =%d\n",terData->indexCount);
-#endif 	
 }
 
-bool in_terrain_bounds(struct TerrainData_t* terData,int h,int w)
-{
-	if (h<0 || h> terData->gridLength - 1 )
-		return false;
-	if (w<0 || w> terData->gridWidth - 1 )
-		return false;
-	return true;
+static inline bool 
+in_terrain_bounds(struct TerrainData_t* terData, int h, int w) {
+	return 0<= h && h < (int)terData->gridLength && 
+			0 <= w && w < (int)terData->gridWidth;
+}
+
+enum SMOOTH_MODE {
+	NONE = 0,
+	SPEC,
+	QUAD,
+	GASSIAN,
+	DEFAULT = GASSIAN,
+};
+
+static inline int get_smooth_mode_range(SMOOTH_MODE mode) {
+	return (int)mode;
 }
 
 // fake gassiah smooth
 //  terrain context,pos x,y,smooth radius
-float average( struct TerrainData_t *terData, const int i, const int  j,int r = 1 )
-{
+static inline 
+float average(struct TerrainData_t *terData, const int i, const int  j, SMOOTH_MODE mode) {
 	float avg = 0.0f;
 	float num = 0.0f;
 
-	struct vec3 { float x,y,z; };
+	int stride = terData->vdecl->getStride();
+	int offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
 
-	int stride = terData->vdecl->stride;
-	int offset = terData->vdecl->offset[ BGFX_ATTRIB_POSITION ];
+	const int r = get_smooth_mode_range(mode);
 
 	uint8_t *vertices = terData->vertices;
-	for (int m = i - r; m <= i + r; ++m)
-	{
-		for (int n = j - r; n <= j + r; ++n)
-		{
-			if( in_terrain_bounds( terData,m, n ) )
-			{
+	for (int m = i - r; m <= i + r; ++m) {
+		for (int n = j - r; n <= j + r; ++n) {
+			if (in_terrain_bounds(terData, m, n)) {
 				int vertCount = (m * terData->gridWidth) + n;
-				struct vec3* vert = (struct vec3*) &vertices[ vertCount*stride + offset ];
+				glm::vec3* vert = (glm::vec3*) &vertices[vertCount*stride + offset];
 				avg += vert->y;
 				++num;
 			}
@@ -651,209 +503,169 @@ float average( struct TerrainData_t *terData, const int i, const int  j,int r = 
 }
 
 
-enum SMOOTH_MODE {
-	NONE,
-	SPEC,
-	QUAD,
-	GASSIAN,
-};
-
-#define SMOOTH_DEFAULT SMOOTH_MODE::GASSIAN
-
-// not weight
-// default : r = 2
-void smooth_terrain_gasslike( struct TerrainData_t *terData,int r)
-{
-	struct vec3 { float x, y, z; };
-	struct vec3 sum;
-	int i, j,index;
-
-	int width   = terData->gridWidth;
-	int height  = terData->gridLength;
-	uint8_t *vertices = terData->vertices;
-
-	int stride = terData->vdecl->stride;
-	int offset = terData->vdecl->offset[ BGFX_ATTRIB_POSITION ];
-	sum.x = sum.y = sum.z = 0;
-	for (j = 0; j< height; j++)
-	{
-		for (i = 0; i< width; i++)
-		{
-			//Gassiah like smooth without point weights
-			sum.y = average(terData,j, i, r);
-			index = (j * width) + i;
-			struct vec3 *vert = (struct vec3*) &vertices[ index*stride + offset ];
-			vert->y = (sum.y);
+static void 
+smooth_terrain_gasslike(struct TerrainData_t *terData, SMOOTH_MODE mode) {
+	const uint16_t stride = terData->vdecl->getStride();
+	const uint16_t offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
+	
+	for (uint32_t j = 0; j < terData->gridLength; j++) {
+		for (uint32_t i = 0; i < terData->gridWidth; i++) {
+			//Gassiah like smooth without point weights			
+			const uint32_t index = (j * terData->gridWidth) + i;
+			glm::vec3 *vert = (glm::vec3*) &(terData->vertices[index*stride + offset]);
+			vert->y = average(terData, j, i, mode);
 		}
 	}
 }
-void smooth_terrain_quad( struct TerrainData_t *terData) {
 
-}
-
-void smooth_terrain_mesh( struct TerrainData_t *terData,int mode )
-{
-	if ( terData->rawBits != 8)
-	  return ;
+static void 
+smooth_terrain_mesh(struct TerrainData_t *terData, SMOOTH_MODE mode) {
+	if (terData->rawBits != 8)
+		return;
 #ifdef MY_DEBUG		
 	printf("c terrain: smooth terrain gradient.\n");
 #endif 	
-	if( mode == SMOOTH_DEFAULT ) {
-		smooth_terrain_gasslike( terData,mode );
+	if (mode == SMOOTH_MODE::DEFAULT) {
+		smooth_terrain_gasslike(terData, mode);
 	}
 	return;
-/*
-void smoothTerrain(enum SMOOTH_MODE mode = SMOOTH_MODE::DEFAULT )
-{
-	int width   = m_terrain.m_gridWidth;
-	int height  = m_terrain.m_gridLength;
-	int i, j,index;
-	struct vec3 { float x, y, z; };
-	struct vec3 sum;
-	PosTexCoord0Vertex *vertices = m_terrain.m_vertices;
-	if (mode == SMOOTH_MODE::NONE)
-		return;
-	for (j = 0; j< height; j++)
+	/*
+	void smoothTerrain(enum SMOOTH_MODE mode = SMOOTH_MODE::DEFAULT )
 	{
-		for (i = 0; i< width; i++)
+		int width   = m_terrain.m_gridWidth;
+		int height  = m_terrain.m_gridLength;
+		int i, j,index;
+		glm::vec3 { float x, y, z; };
+		glm::vec3 sum;
+		PosTexCoord0Vertex *vertices = m_terrain.m_vertices;
+		if (mode == SMOOTH_MODE::NONE)
+			return;
+		for (j = 0; j< height; j++)
 		{
-			if (mode == SMOOTH_MODE::DEFAULT) {
-				//Gassiah Smooth
-				sum.y = Average(j, i, 2);
+			for (i = 0; i< width; i++)
+			{
+				if (mode == SMOOTH_MODE::DEFAULT) {
+					//Gassiah Smooth
+					sum.y = Average(j, i, 2);
+					index = (j * width) + i;
+					vertices[index].m_y = (sum.y);
+					continue;
+				}
+
+				int count = 0;
+				// Initialize the sum.
+				sum.x = 0.0f;
+				sum.y = 0.0f;
+				sum.z = 0.0f;
+
+				// Initialize the count.
+				count = 0;
+
+				// Bottom left face.
+				if ( mode == SMOOTH_MODE::QUAD ) {  // quad
+					if (((i - 1) >= 0) && ((j - 1) >= 0))
+					{
+						index = ((j - 1) * (width)) + (i - 1);
+						sum.x += vertices[index].m_x;
+						sum.y += vertices[index].m_y;
+						sum.z += vertices[index].m_z;
+						count++;
+
+					}
+
+					// Bottom right face.
+					if ((i < (width - 1)) && ((j - 1) >= 0))
+					{
+						index = ((j - 1) * (width)) + (i + 1);
+
+						sum.x += vertices[index].m_x;
+						sum.y += vertices[index].m_y;
+						sum.z += vertices[index].m_z;
+						count++;
+					}
+
+					// Upper left face.
+					if (((i - 1) >= 0) && (j < (height - 1)))
+					{
+						index = ((j + 1) * (width)) + (i - 1);
+						sum.x += vertices[index].m_x;
+						sum.y += vertices[index].m_y;
+						sum.z += vertices[index].m_z;
+						count++;
+					}
+
+					// Upper right face.
+					if ((i < (width - 1)) && (j < (height - 1)))
+					{
+						index = ((j + 1) * (width)) + (i + 1);
+						sum.x += vertices[index].m_x;
+						sum.y += vertices[index].m_y;
+						sum.z += vertices[index].m_z;
+						count++;
+					}
+				}
+
+				if ( mode == SMOOTH_MODE::SPEC )  {
+					if( i<width-1 && j<height-1 )
+					{
+						index = (j * width) + (i + 1);
+						sum.y += vertices[index].m_y;
+						count++;
+
+						index = (j+1) * width + i ;
+						sum.y += vertices[index].m_y;
+						count++;
+
+						index = (j+1) * width + (i+1) ;
+						sum.y += vertices[index].m_y;
+						count++;
+					}
+				}
+
 				index = (j * width) + i;
-				vertices[index].m_y = (sum.y);
-				continue;
+				sum.y += vertices[index].m_y;
+				count++;
+
+				// Take the average of the faces touching this vertex.
+				sum.y = (sum.y / (float)count);
+
+				// Get an index to the vertex location in the height map array.
+				index = (j * width) + i;
+
+				// Normalize the final shared normal for this vertex and store it in the height map array.
+				vertices[index].m_y = (sum.y );
+
 			}
-
-			int count = 0;
-			// Initialize the sum.
-			sum.x = 0.0f;
-			sum.y = 0.0f;
-			sum.z = 0.0f;
-
-			// Initialize the count.
-			count = 0;
-
-			// Bottom left face.
-			if ( mode == SMOOTH_MODE::QUAD ) {  // quad
-				if (((i - 1) >= 0) && ((j - 1) >= 0))
-				{
-					index = ((j - 1) * (width)) + (i - 1);
-					sum.x += vertices[index].m_x;
-					sum.y += vertices[index].m_y;
-					sum.z += vertices[index].m_z;
-					count++;
-
-				}
-
-				// Bottom right face.
-				if ((i < (width - 1)) && ((j - 1) >= 0))
-				{
-					index = ((j - 1) * (width)) + (i + 1);
-
-					sum.x += vertices[index].m_x;
-					sum.y += vertices[index].m_y;
-					sum.z += vertices[index].m_z;
-					count++;
-				}
-
-				// Upper left face.
-				if (((i - 1) >= 0) && (j < (height - 1)))
-				{
-					index = ((j + 1) * (width)) + (i - 1);
-					sum.x += vertices[index].m_x;
-					sum.y += vertices[index].m_y;
-					sum.z += vertices[index].m_z;
-					count++;
-				}
-
-				// Upper right face.
-				if ((i < (width - 1)) && (j < (height - 1)))
-				{
-					index = ((j + 1) * (width)) + (i + 1);
-					sum.x += vertices[index].m_x;
-					sum.y += vertices[index].m_y;
-					sum.z += vertices[index].m_z;
-					count++;
-				}
-			}
-
-			if ( mode == SMOOTH_MODE::SPEC )  {
-				if( i<width-1 && j<height-1 )
-				{
-					index = (j * width) + (i + 1);
-					sum.y += vertices[index].m_y;
-					count++;
-
-					index = (j+1) * width + i ;
-					sum.y += vertices[index].m_y;
-					count++;
-
-					index = (j+1) * width + (i+1) ;
-					sum.y += vertices[index].m_y;
-					count++;
-				}
-			}
-
-			index = (j * width) + i;
-			sum.y += vertices[index].m_y;
-			count++;
-
-			// Take the average of the faces touching this vertex.
-			sum.y = (sum.y / (float)count);
-
-			// Get an index to the vertex location in the height map array.
-			index = (j * width) + i;
-
-			// Normalize the final shared normal for this vertex and store it in the height map array.
-			vertices[index].m_y = (sum.y );
-
 		}
 	}
-}
-*/
+	*/
 }
 
-// 如果是合并在bgfx 工程，静态引用有效，则交互会更方便些
 static int
-lterrain_update_mesh(lua_State *L)
-{
+lterrain_update_mesh(lua_State *L) {
 	struct TerrainData_t* terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
-	uint8_t *vertices = (uint8_t *) luaL_checkudata(L, 2, "TERRAIN_VB");
-	uint32_t *indices  = (uint32_t *) luaL_checkudata(L, 3, "TERRAIN_IB");
-
-	if( terData->vertices == NULL || vertices == NULL)
-	   return luaL_error(L,"must alloc vertices first.\n");
-	if( terData->indices == NULL || indices == NULL)
-	   return luaL_error(L,"must alloc indices first.\n");
+	if (terData->vertices == NULL)
+		return luaL_error(L, "must alloc vertices first.\n");
+	if (terData->indices == NULL)
+		return luaL_error(L, "must alloc indices first.\n");
 
 	update_terrain_mesh(terData);
-	smooth_terrain_mesh(terData,SMOOTH_DEFAULT);
-	update_terrain_normal_fast( terData );
+	smooth_terrain_mesh(terData, SMOOTH_MODE::DEFAULT);
+	update_terrain_normal_fast(terData);
 	return 0;
 }
 
-void update_terrain_normal_fast( struct TerrainData_t *terData)
-{
-#ifdef MY_DEBUG		
-	printf("c terrain: fast calculate terrain normals.\n");
-#endif 	
+static void 
+update_terrain_normal_fast(struct TerrainData_t *terData) {
 	// normal attrib does not exist
-	if( terData->vdecl->attributes[ BGFX_ATTRIB_NORMAL ] == UINT16_MAX )
-	 	return;
+	if (!terData->vdecl->has(bgfx::Attrib::Normal))
+		return;
 
-	struct vec3 { float x, y, z; };
-	struct vec3 vert1, vert2, vert3;
-	struct vec3 vec1, vec2,sum;
-	int i, j,index,index1,index2,index3;
+	const int stride = terData->vdecl->getStride();
+	const uint16_t offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
+	const int normal_offset = terData->vdecl->getOffset(bgfx::Attrib::Normal);
 
-	int stride = terData->vdecl->stride;
-	int offset = terData->vdecl->offset[ BGFX_ATTRIB_POSITION ];
-	int normal_offset = terData->vdecl->offset[ BGFX_ATTRIB_NORMAL ];
-
-	int width  = terData->gridWidth;
-	int height = terData->gridLength;
-	struct vec3 *normals = new struct vec3[(height - 1)*(width - 1)];
+	std::vector<glm::vec3> normals((terData->gridWidth - 1) * (terData->gridLength - 1));
 
 	uint8_t *verts = terData->vertices;
 
@@ -863,228 +675,225 @@ void update_terrain_normal_fast( struct TerrainData_t *terData)
 	//         | /
 	//         |/
 	//  (v3) i,j+1
-	for (j = 0; j<( height - 1); j++)    // the last border not calc
-	{
-		for (i = 0; i<( width - 1); i++)
-		{
-			index1 = (j * width) + i;
-			index2 = (j * width) + (i + 1);
-			index3 = ((j + 1) * width) + i;
 
-			vert1 = *(struct vec3*) &verts[ index1*stride + offset ];
-			vert2 = *(struct vec3*) &verts[ index2*stride + offset ];
-			vert3 = *(struct vec3*) &verts[ index3*stride + offset ];
+	for (uint32_t j = 0; j < (terData->gridLength - 1); j++) {
+		for (uint32_t i = 0; i < (terData->gridWidth - 1); i++) {
+			const int index1 = (j * terData->gridWidth) + i;
+			const int index2 = (j * terData->gridWidth) + (i + 1);
+			const int index3 = ((j + 1) * terData->gridWidth) + i;
 
+			const auto v1 = *(glm::vec3*)(&verts[index1*stride + offset]);
+			const auto v2 = *(glm::vec3*)(&verts[index2*stride + offset]);
+			const auto v3 = *(glm::vec3*)(&verts[index3*stride + offset]);
 
-			vec1.x = vert1.x - vert3.x;
-			vec1.y = vert1.y - vert3.y;
-			vec1.z = vert1.z - vert3.z;
-			vec2.x = vert3.x - vert2.x;
-			vec2.y = vert3.y - vert2.y;
-			vec2.z = vert3.z - vert2.z;
+			const auto e1 = v1 - v3;
+			const auto e2 = v3 - v2;
 
-			index = (j * (width - 1)) + i;
-
-			// cross product ,get the un-normalized value
-			normals[index].x = (vec1.y*vec2.z) - (vec1.z*vec2.y);
-			normals[index].y = (vec1.z*vec2.x) - (vec1.x*vec2.z);
-			normals[index].z = (vec1.x*vec2.y) - (vec1.y*vec2.x);
+			const uint32_t index = (j * (terData->gridWidth - 1)) + i;
+			normals[index] = glm::cross(e1, e2);			
 		}
 	}
 
 	// go through all the vertices and take an average of each face normal
-	int   count = 0;
-	float length = 0;
-	for (j = 0; j< height; j++)
-	{
-		for (i = 0; i< width ; i++)
-		{
-			sum.x = 0.0f;
-			sum.y = 0.0f;
-			sum.z = 0.0f;
-
-			count = 0;
+	for (int j = 0; j < (int)terData->gridLength; ++j) {
+		for (int i = 0; i < (int)terData->gridWidth; ++i) {
+			glm::vec3 sum(0.f);
+			int count = 0;
 
 			// Bottom left face.
-			if (((i - 1) >= 0) && ((j - 1) >= 0))
-			{
-				index = ((j - 1) * ( width - 1)) + (i - 1);  //height
+			if (((i - 1) >= 0) && ((j - 1) >= 0)) {
+				const uint32_t index = ((j - 1) * (terData->gridWidth - 1)) + (i - 1);  //height
 
-				sum.x += normals[index].x;
-				sum.y += normals[index].y;
-				sum.z += normals[index].z;
+				sum += normals[index];
 				count++;
 			}
 
 			// Bottom right face.
-			if ((i < (width - 1)) && ((j - 1) >= 0))
-			{
-				index = ((j - 1) * ( width - 1)) + i;
-
-				sum.x += normals[index].x;
-				sum.y += normals[index].y;
-				sum.z += normals[index].z;
+			if ((i < (terData->gridWidth - 1)) && ((j - 1) >= 0)) {
+				const uint32_t index = ((j - 1) * (terData->gridWidth - 1)) + i;
+				sum += normals[index];				
 				count++;
 			}
 
 			// Upper left face.
-			if (((i - 1) >= 0) && (j < (height - 1)))
-			{
-				index = (j * ( width - 1)) + (i - 1);
-
-				sum.x += normals[index].x;
-				sum.y += normals[index].y;
-				sum.z += normals[index].z;
+			if ((0 <= (i - 1)) && (j < (terData->gridLength - 1))) {
+				const uint32_t index = (j * (terData->gridWidth - 1)) + (i - 1);
+				sum += normals[index];				
 				count++;
 			}
 
 			// Upper right face.
-			if ((i < (width - 1)) && (j < (height - 1)))
-			{
-				index = (j * (width - 1)) + i;
+			if ((i < (terData->gridWidth - 1)) && (j < (terData->gridLength - 1))) {
+				const uint32_t index = (j * (terData->gridWidth - 1)) + i;
 
-				sum.x += normals[index].x;
-				sum.y += normals[index].y;
-				sum.z += normals[index].z;
+				sum += normals[index];				
 				count++;
 			}
 
-			// average
-			float invCount = 1.0f/count;
-			sum.x = (sum.x *invCount );
-			sum.y = (sum.y *invCount );
-			sum.z = (sum.z *invCount );
+			assert(count > 0);
 
-			length = sqrtf((sum.x * sum.x) + (sum.y * sum.y) + (sum.z * sum.z) );
+			// average
+			sum /= count;
 
 			// Get an index to the vertex location in the height map array.
-			index = (j * width) + i;
+			const uint32_t index = (j * terData->gridWidth) + i;
 
-			// 如果不独立保存，则会产生很大差异，所以需要一个临时 normals 数组保存中间值
-			struct vec3* dst_normals = (struct vec3*) &verts[ index*stride + normal_offset ];
-			length = 1.0f/length;
-			dst_normals->x = (sum.x*length );
-			dst_normals->y = (sum.y*length);
-			dst_normals->z = (sum.z*length);
+			glm::vec3* dst_normals = (glm::vec3*) &verts[index*stride + normal_offset];
+			*dst_normals = glm::normalize(sum);
 		}
 	}
-
-	delete[] normals;
 }
 
-bool ray_triangle(float start[3],float dir[3],float *ip,float v0[3],float v1[3],float v2[3])
-{
-	float edge1[3], edge2[3], normal[3];
-	float e1[3], e2[3], e3[3], edgeNormal[3];
-	float mag, dist, dn, sd, t, dtm, imp[3];
-	float temp[3];
+/*
+ we have triangle:
+		v1
+	   /  \
+	  / pt \
+	 v0----v2
+ then:
+	e0 = v2 - v0
+  e1 = v1 - v0
+  e2 = pt - v0
 
-	edge1[0] = v1[0] - v0[0];
-	edge1[1] = v1[1] - v0[1];
-	edge1[2] = v1[2] - v0[2];
+if pt is inside triangle, then:
+		pt = v0 + u * e0 + v * e1
+	==>
+		pt - v0 = u * e0 + v * e1
+  ==>
+		e2 = u * e0 + v * e1
+	==>(here, we can dot any vector we want, replace e0 as vec3(1, 0, 0) or e1 as vec3(0, 1, 0) also get the same result)
+		e2 dot e0 = (u * e0) dot e0 + (v * e1) dot e0
+		e2 dot e1 = (u * e0) dot e1 + (v * e1) dot e1
+ solve these formula can get the u and v value
+u and v is scalar
+for this formula is correct
+u ==> [0, 1] && v ==> [0, 1] && u + v <= 1
 
-	edge2[0] = v2[0] - v0[0];
-	edge2[1] = v2[1] - v0[1];
-	edge2[2] = v2[2] - v0[2];
+	1. move v0 to origin
+	2. pt - v0 is equal v * e1 + u * e0, because v * e1 is a vector lied on e1 and u * e0 also lied on e0(vector add)
+	then the u/v value can determine what pt is
+*/
 
-	normal[0] = (edge1[1] * edge2[2]) - (edge1[2] * edge2[1]);
-	normal[1] = (edge1[2] * edge2[0]) - (edge1[0] * edge2[2]);
-	normal[2] = (edge1[0] * edge2[1]) - (edge1[1] * edge2[0]);
-	// normalize
-	mag = (float)sqrt((normal[0] * normal[0]) + (normal[1] * normal[1]) + (normal[2] * normal[2]));
-	normal[0] = normal[0] / mag;
-	normal[1] = normal[1] / mag;
-	normal[2] = normal[2] / mag;
+static inline bool
+point_in_triangle(const glm::vec3 &pt, const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2) {
+	const auto e0 = v2 - v0;
+	const auto e1 = v1 - v0;
+	const auto e2 = pt - v0;
 
-	dist = ((-normal[0] * v0[0]) + (-normal[1] * v0[1]) + (-normal[2] * v0[2]));
+	const float dot00 = glm::dot(e0, e0);
+	const float dot01 = glm::dot(e0, e1);
+	const float dot02 = glm::dot(e0, e2);
+	const float dot11 = glm::dot(e1, e1);
+	const float dot12 = glm::dot(e1, e2);
 
-	// project the ray's direction
-	dn   = ((normal[0] * dir[0]) + (normal[1] * dir[1]) + (normal[2] * dir[2]));
-	if(fabs(dn) < 0.0001f) 	{
-		return false;
-	}
-	// start point distance to the plane
-	sd  = -1.0f * (((normal[0] * start[0]) + (normal[1] * start[1]) + (normal[2] * start[2])) + dist);
-	t = sd / dn;
-	// get impact point
-	imp[0] = start[0] + (dir[0] * t);
-	imp[1] = start[1] + (dir[1] * t);
-	imp[2] = start[2] + (dir[2] * t);
+	const float inverDeno = 1 / (dot00 * dot11 - dot01 * dot01);
 
-	e1[0] = v1[0] - v0[0];
-	e1[1] = v1[1] - v0[1];
-	e1[2] = v1[2] - v0[2];
-
-	e2[0] = v2[0] - v1[0];
-	e2[1] = v2[1] - v1[1];
-	e2[2] = v2[2] - v1[2];
-
-	e3[0] = v0[0] - v2[0];
-	e3[1] = v0[1] - v2[1];
-	e3[2] = v0[2] - v2[2];
-
-
-	edgeNormal[0] = (e1[1] * normal[2]) - (e1[2] * normal[1]);
-	edgeNormal[1] = (e1[2] * normal[0]) - (e1[0] * normal[2]);
-	edgeNormal[2] = (e1[0] * normal[1]) - (e1[1] * normal[0]);
-
-	temp[0] = imp[0] - v0[0];
-	temp[1] = imp[1] - v0[1];
-	temp[2] = imp[2] - v0[2];
-	// project temp vector
-	dtm = ((edgeNormal[0] * temp[0]) + (edgeNormal[1] * temp[1]) + (edgeNormal[2] * temp[2]));
-	if(dtm > 0.001f) 	{
+	const float u = (dot11 * dot02 - dot01 * dot12) * inverDeno;
+	if (u < 0 || u > 1) // if u out of range, return directly
+	{
 		return false;
 	}
 
-
-	edgeNormal[0] = (e2[1] * normal[2]) - (e2[2] * normal[1]);
-	edgeNormal[1] = (e2[2] * normal[0]) - (e2[0] * normal[2]);
-	edgeNormal[2] = (e2[0] * normal[1]) - (e2[1] * normal[0]);
-
-	temp[0] = imp[0] - v1[0];
-	temp[1] = imp[1] - v1[1];
-	temp[2] = imp[2] - v1[2];
-	dtm = ((edgeNormal[0] * temp[0]) + (edgeNormal[1] * temp[1]) + (edgeNormal[2] * temp[2]));
-	if (dtm > 0.001f) {
+	const float v = (dot00 * dot12 - dot01 * dot02) * inverDeno;
+	if (v < 0 || v > 1) // if v out of range, return directly
+	{
 		return false;
 	}
 
+	return u + v <= 1;
+}
 
-	edgeNormal[0] = (e3[1] * normal[2]) - (e3[2] * normal[1]);
-	edgeNormal[1] = (e3[2] * normal[0]) - (e3[0] * normal[2]);
-	edgeNormal[2] = (e3[0] * normal[1]) - (e3[1] * normal[0]);
+struct ray {
+	glm::vec3 start;
+	glm::vec3 dir;
+};
 
-	temp[0] = imp[0] - v2[0];
-	temp[1] = imp[1] - v2[1];
-	temp[2] = imp[2] - v2[2];
-	dtm = ((edgeNormal[0] * temp[0]) + (edgeNormal[1] * temp[1]) + (edgeNormal[2] * temp[2]));
-	if(dtm > 0.001f) 	{
+
+// make ray as line function:
+//		p(t) = start + t * dir	
+// make plane function as:
+//		n dot p + d = 0
+// here:
+//		start : 3d point
+//		dir : a 3d vector	(no need to be a unit vector)
+//		t : scalar
+//		n : 3d vector,		(no need to be a unit vector)
+//		p : a point lied on plane, 
+//		d : the distance to origin(when n is unit vector)
+// we need to calculate intersetion point between ray and plane, so p is also lied on ray
+// we can replace p as:
+//	n dot (start + t * dir) + d = 0
+// solve t as :
+//	n dot start + t * (dir dot n) + d = 0
+//	t = -(d + n dot start) / (dir dot n)
+//  then we can get what p is
+static inline bool
+ray_interset_plane(const ray& r, const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2, glm::vec3 &intersetion) {
+	const glm::vec3 e0 = v1 - v0, e1 = v2 - v0;
+
+	const auto normal = glm::cross(e0, e1);		// no need to be a unit vector
+	const float dist = -glm::dot(normal, v0);	
+
+	const float dn = glm::dot(normal, r.dir);	
+	if (fabs(dn) < 0.0001f) {
 		return false;
 	}
-
-	ip[0] = imp[0];
-	ip[1] = imp[1];
-	ip[2] = imp[2];
+	
+	const float sd = -1.0f * (glm::dot(normal, r.start) + dist);
+	const float t = sd / dn;
+	
+	intersetion = r.start + (r.dir * t);
 	return true;
 }
 
-// project x,z on triange, return the height of this position
+static inline bool 
+ray_triangle_intersection_point(const ray &r,
+	const glm::vec3 &v0, 
+	const glm::vec3 &v1, 
+	const glm::vec3 &v2,
+	glm::vec3 &intersection_point) {
+
+	glm::vec3 intersetion;
+	if (ray_interset_plane(r, v0, v1, v2, intersetion)) {
+		if (point_in_triangle(intersetion, v0, v1, v2)) {
+			intersection_point = intersetion;
+			return true;
+		}
+	}
+	return false;
+
+	//const glm::vec3 edges[3] = {
+	//	v1 - v0,
+	//	v2 - v1,
+	//	v0 - v2,
+	//};
+
+	//const glm::vec3 vertices[3] = {
+	//	v0, v1, v2 };
+
+	//for (int ii = 0; ii < 3; ++ii) {
+	//	const auto edgeNormal = glm::cross(edges[ii], normal);
+	//	const auto temp = intersetion - vertices[ii];
+
+	//	// project temp vector
+	//	const float dtm = glm::dot(edgeNormal, temp);
+	//	if (dtm > 0.001f) {
+	//		return false;
+	//	}
+	//}
+}
+
+// project x,z on triangle, return the height of this position
 // further should be add ray cast parameters
-bool check_height_of_triangle(float x,float z,float *height,float v0[3],float v1[3],float v2[3])
-{
-	float start[3],dir[3],ip[3];
-		// ray start point
-	start[0] = x;
-	start[1] = 1000.0f;
-	start[2] = z;
+bool check_height_of_triangle(float x, float z, float *height, 
+	const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2) {
 
-	// ray direction
-	dir[0] = 0.0f;
-	dir[1] = -1000.0f;
-	dir[2] = 0.0f;
-
-	if(ray_triangle(start,dir,ip,v0,v1,v2)) {
+	const ray r = {
+		glm::vec3(x, 1000.f, z),
+		glm::vec3(0.f, -1000.f, 0.0)
+	};
+	glm::vec3 ip;
+	if (ray_triangle_intersection_point(r, v0, v1, v2, ip)) {
 		*height = ip[1];
 		return true;
 	}
@@ -1092,68 +901,58 @@ bool check_height_of_triangle(float x,float z,float *height,float v0[3],float v1
 }
 
 // get terrain height at x,z position
-bool terrain_get_height(struct TerrainData_t* terData,float x,float z,float *height)
-{
-	int stride = terData->vdecl->stride;
-	int offset = terData->vdecl->offset[ BGFX_ATTRIB_POSITION ];
+static bool 
+terrain_get_height(struct TerrainData_t* terData, float x, float z, float *height) {
+	const uint16_t stride = terData->vdecl->getStride();
+	const uint16_t offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
 	uint8_t* verts = terData->vertices;
 
-	int	   width = terData->gridWidth;
-	float  x_unit_grid_space = (1.0f*terData->width/terData->gridWidth);
-	float  z_unit_grid_space = (1.0f*terData->length/terData->gridLength);
+	const int    xindex = (int)(x / terData->grid_x_scale);
+	const int    zindex = (int)(z / terData->grid_z_scale);
 
-	int    xindex = x/x_unit_grid_space;
-	int    zindex = z/z_unit_grid_space;
+	const int    left = xindex - 1;
+	const int    right = xindex + 1;
+	const int    top = zindex - 1;
+	const int    bottom = zindex + 1;
 
-	int    left   = xindex - 1;
-	int    right  = xindex + 1;
-	int    top    = zindex - 1;
-	int    bottom = zindex + 1;
-
-	int    index1, index2, index3,index4;
-	float  *vert1, *vert2, *vert3,*vert4;
-
-	for(int j = top; j<bottom; j++) {
-		for(int i = left; i<right; i++) {
-			if( !in_terrain_bounds(terData, j,i) || !in_terrain_bounds(terData,j+1,i+1) )
-			   continue;
+	for (int j = top; j < bottom; j++) {
+		for (int i = left; i < right; i++) {
+			if (!in_terrain_bounds(terData, j, i) || !in_terrain_bounds(terData, j + 1, i + 1))
+				continue;
 			// 1 ----- 2
 			//  |   / |
-            //  |  /  |
- 			//  | /   |
+			//  |  /  |
+			//  | /   |
 			// 3 ----- 4
-			index1 = (j * width) + i;
-			index2 = (j * width) + (i + 1);
-			index3 = ((j + 1) * width) + i;
-			index4 = ((j + 1) * width) + (i+1);
+			const uint32_t index1 = (j * terData->gridWidth) + i;
+			const uint32_t index2 = (j * terData->gridWidth) + (i + 1);
+			const uint32_t index3 = ((j + 1) * terData->gridWidth) + i;
+			const uint32_t index4 = ((j + 1) * terData->gridWidth) + (i + 1);
 
-			vert1 = (float*) &verts[ index1*stride + offset ];
-			vert2 = (float*) &verts[ index2*stride + offset ];
-			vert3 = (float*) &verts[ index3*stride + offset ];
-			vert4 = (float*) &verts[ index4*stride + offset ];
+			const glm::vec3& v0 = *(const glm::vec3*)&verts[index1*stride + offset];
+			const glm::vec3& v1 = *(const glm::vec3*)&verts[index2*stride + offset];
+			const glm::vec3& v2 = *(const glm::vec3*)&verts[index3*stride + offset];
+			const glm::vec3& v3 = *(const glm::vec3*)&verts[index4*stride + offset];
 
-			if( check_height_of_triangle(x,z,height,vert1,vert2,vert3) )
+			if (check_height_of_triangle(x, z, height, v0, v1, v2))
 				return true;
 
-			if( check_height_of_triangle(x,z,height,vert2,vert4,vert3) )
+			if (check_height_of_triangle(x, z, height, v1, v3, v2))
 				return true;
 		}
 	}
-	if(*height)
+
+	if (height)
 		*height = 0.0f;
 	return false;
 }
 
-float terrain_get_raw_height(struct TerrainData_t* terData,int x,int z)
-{
-	int stride = terData->vdecl->stride;
-	int offset = terData->vdecl->offset[ BGFX_ATTRIB_POSITION ];
-	uint8_t* verts = terData->vertices;
-
-	int	   width = terData->gridWidth;
-
-	if( !in_terrain_bounds(terData, z,x) )
-	   return -99999.99f;
+float terrain_get_raw_height(struct TerrainData_t* terData, int x, int z) {
+	const uint16_t stride = terData->vdecl->getStride();
+	const uint16_t offset = terData->vdecl->getOffset(bgfx::Attrib::Position);
+	
+	if (!in_terrain_bounds(terData, z, x))
+		return std::numeric_limits<float>::lowest();
 
 
 	// 1 ----- 2
@@ -1161,88 +960,87 @@ float terrain_get_raw_height(struct TerrainData_t* terData,int x,int z)
 	//  |  /  |
 	//  | /   |
 	// 3 ----- 4
-	struct vec3 { float x, y, z; };
-	int   index = (z * width) + x;
-	struct vec3 *vert = (struct vec3*) &verts[ index*stride + offset ];
+	int   index = (z * terData->gridWidth) + x;
+	glm::vec3 *vert = (glm::vec3*) &terData->vertices[index*stride + offset];
 	return vert->y;
 }
 
 
-static int 
-lterrain_get_height_scale( lua_State *L) {
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");	
-	lua_pushnumber(L,terData->height_scale );
+static int
+lterrain_get_height_scale(lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	lua_pushnumber(L, terData->height_scale);
 	return 1;
 }
-static int 
-lterrain_get_width_scale( lua_State *L) {
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");	
-	lua_pushnumber(L,terData->grid_x_scale );
+static int
+lterrain_get_width_scale(lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	lua_pushnumber(L, terData->grid_x_scale);
 	return 1;
 }
-static int 
-lterrain_get_length_scale( lua_State *L) {
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");	
-	lua_pushnumber(L,terData->grid_z_scale );
+static int
+lterrain_get_length_scale(lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	lua_pushnumber(L, terData->grid_z_scale);
 	return 1;
 }
-static int 
-lterrain_get_min_height( lua_State *L) {
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");	
-	lua_pushnumber(L,terData->min_height );
+static int
+lterrain_get_min_height(lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	lua_pushnumber(L, terData->min_height);
 	return 1;
 }
-static int 
-lterrain_get_max_height( lua_State *L) {
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");	
-	lua_pushnumber(L,terData->max_height );
+static int
+lterrain_get_max_height(lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	lua_pushnumber(L, terData->max_height);
 	return 1;
 }
 
 static int
-lterrain_get_height( lua_State *L) {
-    // terrain context data, x, z
+lterrain_get_height(lua_State *L) {
+	// terrain context data, x, z
 	// push bool result
 	// push height value
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
-	float x = luaL_checknumber(L,2);
-	float y = luaL_checknumber(L,3);
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	float x = (float)luaL_checknumber(L, 2);
+	float y = (float)luaL_checknumber(L, 3);
 
 	float height = 0.0f;
-	bool  hit = terrain_get_height(terData,x,y,&height);
+	bool  hit = terrain_get_height(terData, x, y, &height);
 
-	lua_pushboolean(L,hit);
-	lua_pushnumber(L,height);
+	lua_pushboolean(L, hit);
+	lua_pushnumber(L, height);
 
 	return 2;
 }
 
-static int 
-lterrain_get_raw_height( lua_State *L) {
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
-	int x = luaL_checkinteger(L,2);
-	int y = luaL_checkinteger(L,3);
+static int
+lterrain_get_raw_height(lua_State *L) {
+	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	int x = (int)luaL_checkinteger(L, 2);
+	int y = (int)luaL_checkinteger(L, 3);
 
 	float height = 0.f;
-	height = terrain_get_raw_height(terData,x,y);
-	lua_pushnumber(L,height);
+	height = terrain_get_raw_height(terData, x, y);
+	lua_pushnumber(L, height);
 
 #ifdef MY_DEBUG_OUT
 	float min_height = 99999.f;
 	float max_height = -99999.f;
-	FILE *out = fopen("ter_raw_height.txt","w+");
-	if(out) {
-		for(int y =0 ;y< terData->gridLength; y++) {
-			for(int x =0 ; x< terData->gridWidth; x++) {
-				float hi = terrain_get_raw_height(terData,x,y);
-				fprintf(out,"%06.2f ",hi);
-				if( hi <min_height) min_height = hi;
-				if( hi >max_height) max_height = hi;
+	FILE *out = fopen("ter_raw_height.txt", "w+");
+	if (out) {
+		for (int y = 0; y < terData->gridLength; y++) {
+			for (int x = 0; x < terData->gridWidth; x++) {
+				float hi = terrain_get_raw_height(terData, x, y);
+				fprintf(out, "%06.2f ", hi);
+				if (hi < min_height) min_height = hi;
+				if (hi > max_height) max_height = hi;
 			}
-			fprintf(out,"\r");
+			fprintf(out, "\r");
 		}
-		fprintf(out,"max = %06.2f ",max_height);
-		fprintf(out,"min = %06.2f ",min_height);
+		fprintf(out, "max = %06.2f ", max_height);
+		fprintf(out, "min = %06.2f ", min_height);
 		fclose(out);
 	}
 #endif 	
@@ -1252,65 +1050,16 @@ lterrain_get_raw_height( lua_State *L) {
 
 
 static int
-lterrain_update_normals( lua_State *L )
-{
+lterrain_update_normals(lua_State *L) {
 	struct TerrainData_t* terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
-	uint8_t *vertices = (uint8_t *) luaL_checkudata(L, 2, "TERRAIN_VB");
-	if( terData->vertices == NULL || vertices ==NULL)
-	   return luaL_error(L,"must alloc vertices first.\n");
+	uint8_t *vertices = (uint8_t *)luaL_checkudata(L, 2, "TERRAIN_VB");
+	if (terData->vertices == NULL || vertices == NULL)
+		return luaL_error(L, "must alloc vertices first.\n");
 
-	update_terrain_normal_fast( terData );
+	update_terrain_normal_fast(terData);
 
 	return 0;
 }
-
-void update_terrain_tangent( struct TerrainData_t* terData)
-{
-	// todo:
-}
-
-void terrain_update_vb( struct TerrainData_t *terData)
-{
-	//const bgfx_memory_t* mem = NULL;
-	// todo:
-}
-
-// 几何形体改变，单独修改 IB 的需求
-void terrain_updata_ib( struct TerrainData_t *terData)
-{
-	//const bgfx_memory_t* mem = NULL;
-	// todo:
-}
-
-
-// update terrain by view point
-// params: TerrainData_t * data
-//         vertex buffer
-//         index buffer
-//         eyeView,eyeDir
-static int
-lterrain_update_view(lua_State *L)
-{
-	// todo: maybe ...
-	return 1;
-}
-
-// 不在 c 做渲染，只是存根测试函数
-static int
-lterrain_render(lua_State *L)
-{
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L,1,"TERRAIN_BASE");
-	int memory_size = terData->vertexCount * terData->vdecl->stride;
-#ifdef MY_DEBUG		
-	printf("grid width = %d,grid length = %d, vertex strid = %d.\n",terData->gridWidth,
-																	terData->gridLength,
-																	terData->vdecl->stride);
-	printf("width = %d,lenght=%d,height=%d\n",terData->width,terData->length,terData->height);
-	printf("memory size = %d m\n",int(memory_size/1024/1024.0f));
-#endif 	
-	return 0;
-}
-
 
 // 其他构思草稿，数据存放在那一段，简单性足够与否，以后如何扩充？
 
@@ -1368,22 +1117,17 @@ LUAMOD_API int
 luaopen_lterrain(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "init", lterrain_create},
-		{ "create", lterrain_create},
-		{ "update_mesh",lterrain_update_mesh},
-		{ "update_normals",lterrain_update_normals},
+		{ "create",			lterrain_create},
+		{ "update_mesh",	lterrain_update_mesh},
+		{ "update_normals",	lterrain_update_normals},
 		{ "calculate_normals",lterrain_update_normals},
-		{ "get_raw_height",lterrain_get_raw_height},
-		{ "get_height",lterrain_get_height},
-		{ "get_min_height",lterrain_get_min_height},
-		{ "get_max_height",lterrain_get_max_height},
+		{ "get_raw_height",	lterrain_get_raw_height},
+		{ "get_height",		lterrain_get_height},
+		{ "get_min_height",	lterrain_get_min_height},
+		{ "get_max_height",	lterrain_get_max_height},
 		{ "get_height_scale",lterrain_get_height_scale},
 		{ "get_width_scale",lterrain_get_width_scale},
-		{ "get_length_scale",lterrain_get_length_scale},
-		{ "update_view",lterrain_update_view},
-		{ "update",lterrain_update_view},
-		{ "render",lterrain_render},
-		{ "close", lterrain_close},
+		{ "get_length_scale",lterrain_get_length_scale},						
 
 		{ NULL, NULL },
 	};
@@ -1393,10 +1137,6 @@ luaopen_lterrain(lua_State *L) {
 	//luaL_setfuncs(L, l, 1);
 	return 1;
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 
 

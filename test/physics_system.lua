@@ -135,7 +135,7 @@ function phys_sys:update()
    
 
     --[raycast]
-    -- local camera = world:first_entity("main_camera")
+    -- local camera = world:first_entity("main_queue")
     -- local pos = self.math_stack(camera.position,"T")
     -- print_r("camera pos", pos[1],pos[2],pos[3] )
 

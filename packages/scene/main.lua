@@ -1,4 +1,5 @@
 return {
 	util = require "util",
-	hierarchy = require "hierarchy.util"
+	filterutil = require "filter.util",
+	hierarchy = require "hierarchy.util",	
 }

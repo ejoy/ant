@@ -23,6 +23,23 @@ local function sortcomponent(w, t)
     end
 end
 
+local function sortpairs(t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    table.sort(sort)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
 local function init_entitys(w)
     local res = {}
     for _, eid in w:each "serialize" do
@@ -44,19 +61,28 @@ local function getPost(w)
     return postPool[w]
 end
 
+local function finish_entity(w, e)
+    for name in sortcomponent(w, e) do
+        w:finish_component(e, name)
+    end
+end
+
 local function _load_entity(w, tree)
-    local eid = entitys[tree.serialize]
-    if not eid then
-        eid = w:register_entity()
-        if entitys then
+    local eid
+    if entitys then
+        local eid = entitys[tree.serialize]
+        if not eid then
+            eid = w:register_entity()
             entitys[tree.serialize] = eid
         end
+    else
+        eid = w:register_entity()
     end
     w[eid] = tree
-    for name in sortcomponent(w, tree) do
+    for name in sortpairs(tree) do
         w:register_component(eid, name)
     end
-    return eid
+    return tree
 end
 
 local function load_start(w, s)
@@ -95,7 +121,7 @@ local function load_start(w, s)
     return res[1]
 end
 
-local function load_end(w)
+local function load_end()
     for _, cs in ipairs(component) do
         local type = cs[1]
         for i = 2, #cs do
@@ -106,16 +132,21 @@ end
 
 local function load_world(w, s)
     local entity = load_start(w, s)
+    local l = {}
     for _, tree in ipairs(entity) do
-        _load_entity(w, tree)
+        l[#l+1] = _load_entity(w, tree)
     end
     load_end()
+    for _, e in ipairs(l) do
+        finish_entity(w, e)
+    end 
 end
 
 local function load_entity(w, s)
     local entity = load_start(w, s)
-    _load_entity(w, entity)
+    local e = _load_entity(w, entity)
     load_end()
+    finish_entity(w, e)
 end
 
 return {

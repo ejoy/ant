@@ -1,43 +1,5 @@
-local rdebug = require 'remotedebug'
-
-local function event(name, level, ...)
-    local r
-    rdebug.probe(name)
-    return r
-end
-
-local function start_hook()
-    local _print = print
-    function print(...)
-        if not event('print', 1, ...) then
-            _print(...)
-        end
-    end
-
-    local _xpcall = xpcall
-    function xpcall(f, msgh, ...)
-        return _xpcall(f, function(msg)
-            event('exception', 2, 'xpcall', msg)
-            return msgh(msg)
-        end, ...)
-    end
-
-    function pcall(f, ...)
-        return _xpcall(f, function(msg)
-            event('exception', 2, 'pcall', msg)
-            return msg
-        end, ...)
-    end
-    
-    local _coroutine_resume = coroutine.resume
-    function coroutine.resume(co, ...)
-        event('coroutine', 1, co)
-        return _coroutine_resume(co, ...)
-    end
-end
-
 local function start_master(io)
-    local master = require 'debugger.backend.master'
+    local master = require 'backend.master'
     if master.init(io) then
         return master.update
     end
@@ -62,35 +24,24 @@ local function bootstrap()
         init_thread()
         package.path = [[%s]]
         require 'runtime.vfs'
-        require 'debugger.backend.worker'
-    ]=]):format(init_thread, "engine/libs/?.lua;engine/packages/?.lua")
+        require 'backend.worker'
+    ]=]):format(init_thread, "engine/libs/?.lua;engine/packages/debugger/?.lua")
 end
 
 local function start_worker(wait)
-    start_hook()
+    local rdebug = require 'remotedebug'
+    local probe = rdebug.probe
     rdebug.start(bootstrap(), package.searchers[3])
     if wait then
-        event('wait_client', 1, false)
+        probe 'wait_client'
     end
     return function()
-        event 'update'
-    end
-end
-
-local function start_all(wait)
-    start_hook()
-    rdebug.start(bootstrap(), package.searchers[3])
-    if wait then
-        event('wait_client', 1, true)
-    end
-    return function()
-        event 'update_all'
+        probe 'update'
     end
 end
 
 return {
     start_master = start_master,
     start_worker = start_worker,
-    start_all = start_all,
     math3d = require "math3d",
 }

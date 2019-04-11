@@ -1,51 +1,13 @@
 local bgfx = require "bgfx"
 local fs = require "filesystem"
 
+local declmgr = import_package "ant.render".declmgr
 local antmeshloader = require "antmeshloader"
 
 local loader = {}
 
 
 -- need move to bgfx c module
-local function create_decl(vb_layout)
-	local decl = {}
-	for e in vb_layout:gmatch("%w+") do 
-		assert(#e == 6)
-		local function get_attrib(e)
-			local t = {	
-				p = "POSITION",	n = "NORMAL", T = "TANGENT",	b = "BITANGENT",
-				i = "INDICES",	w = "WEIGHT",
-				c = "COLOR", t = "TEXCOORD",
-			}
-			local a = e:sub(1, 1)
-			local attrib = assert(t[a])
-			if attrib == "COLOR" or attrib == "TEXCOORD" then
-				local channel = e:sub(3, 3)
-				return attrib .. channel
-			end
-
-			return attrib
-		end
-		local attrib = get_attrib(e)
-		local num = tonumber(e:sub(2, 2))
-
-		local function get_type(v)					
-			local t = {	
-				u = "UINT8", U = "UINT10", i = "INT16",
-				h = "HALF",	f = "FLOAT",
-			}
-			return assert(t[v])
-		end
-
-		local normalize = e:sub(4, 4) == "n"
-		local asint= e:sub(5, 5) == "i"
-		local type = get_type(e:sub(6, 6))
-
-		table.insert(decl, {attrib, num, type, normalize, asint})
-	end
-
-	return bgfx.vertex_decl(decl)
-end
 
 local function load_from_source(filepath)
 	if not __ANT_RUNTIME__ then
@@ -55,22 +17,19 @@ local function load_from_source(filepath)
 end
 
 local function create_vb(vb)
-	local handles = {}
-	local decls = {}
+	local handles = {}	
 	local vb_data = {"!", "", 1, 0}
 
 	local vbraws = vb.vbraws
 	local num_vertices = vb.num_vertices
 	for layout, vbraw in pairs(vbraws) do
-		local decl, stride = create_decl(layout)
+		local decl = declmgr.get(layout)
+		local declhandle, stride = decl.handle, decl.stride
 		vb_data[2], vb_data[4] = vbraw, num_vertices * stride
-
-		table.insert(decls, decl)
-		table.insert(handles, bgfx.create_vertex_buffer(vb_data, decl))
+		table.insert(handles, bgfx.create_vertex_buffer(vb_data, declhandle))
 	end
 
-	vb.handles 	= handles
-	vb.decls 	= decls
+	vb.handles 	= handles	
 end
 
 local function create_ib(ib)
@@ -93,7 +52,4 @@ function loader.load(filepath)
 		return meshgroup
 	end
 end
-
-loader.create_decl = create_decl
-
 return loader

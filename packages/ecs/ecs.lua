@@ -16,17 +16,6 @@ function world:create_component(c, args)
 end
 
 function world:register_component(eid, c)
-	local ti = assert(self._components[c], c)
-	if ti.depend then
-		local e = self[eid]
-		for _, name in ipairs(ti.depend) do
-			assert(e[name], ("`%s` depend `%s`"):format(c, name))
-		end
-	end
-	if ti.method and ti.method.postinit then
-		local e = self[eid]
-		ti.method.postinit(e[c], e)
-	end
 	local set = self._set[c]
 	if set then
 		set[#set+1] = eid
@@ -34,6 +23,18 @@ function world:register_component(eid, c)
 	local newset = self._newset[c]
 	if newset then
 		newset[#newset+1] = eid
+	end
+end
+
+function world:finish_component(e, c)
+	local ti = assert(self._components[c], c)
+	if ti.depend then
+		for _, name in ipairs(ti.depend) do
+			assert(e[name], ("`%s` depend `%s`"):format(c, name))
+		end
+	end
+	if ti.method and ti.method.postinit then
+		ti.method.postinit(e[c], e)
 	end
 end
 
@@ -48,6 +49,7 @@ function world:add_component(eid, component_type, args)
 	local e = self[eid]
 	e[component_type] = self:create_component(component_type, args)
 	self:register_component(eid, component_type)
+	self:finish_component(e, component_type)
 end
 
 function world:remove_component(eid, component_type)
@@ -96,6 +98,7 @@ function world:create_entity(t)
 	for c, args in sortcomponent(self, t) do
 		entity[c] = self:create_component(c, args)
 		self:register_component(eid, c)
+		self:finish_component(entity, c)
 	end
 	return eid
 end

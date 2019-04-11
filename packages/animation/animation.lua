@@ -81,13 +81,13 @@ local function deep_copy(t)
 	return t
 end
 
-local function update_transform_from_animation(aniresult, ske, e)
-	local rootidx = 1
-	assert(ske:isroot(rootidx))
-	local trans = aniresult:joint(rootidx)
-	local s, r, t = ms(ms:matrix(trans), "~PPP")
-	e.transform.t(t)
-end
+-- local function update_transform_from_animation(aniresult, ske, e)
+-- 	local rootidx = 1
+-- 	assert(ske:isroot(rootidx))
+-- 	local trans = aniresult:joint(rootidx)
+-- 	local s, r, t = ms(ms:matrix(trans), "~PPP")
+-- 	e.transform.t(t)
+-- end
 
 function anisystem:update()	
 	local current_counter = timer.current_counter
@@ -148,9 +148,9 @@ function anisystem:update()
 			end
 		end
 
-		if not fix_root then
-			update_transform_from_animation(anicomp.aniresult, ske, e)
-		end
+		-- if not fix_root then
+		-- 	update_transform_from_animation(anicomp.aniresult, ske, e)
+		-- end
 	end
 end
 

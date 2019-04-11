@@ -50,7 +50,7 @@ local function create_scene_node_test()
 		},
         name = 'root',
         hierarchy_tag = true,
-        main_viewtag = true
+        main_view = true
     }
 
     local hie_level1_1 =
@@ -63,7 +63,7 @@ local function create_scene_node_test()
 		},
         name = 'level1_1',
         hierarchy_tag = true,
-        main_viewtag = true
+        main_view = true
 	}
 
     local hie_level1_2 =
@@ -76,7 +76,7 @@ local function create_scene_node_test()
 		},
         name = 'level1_2',
         hierarchy_tag = true,
-        main_viewtag = true
+        main_view = true
 	}
 	
     local hie_level2_1 =
@@ -92,7 +92,7 @@ local function create_scene_node_test()
 		},
         name = 'level2_1',
         hierarchy_tag = true,
-        main_viewtag = true
+        main_view = true
     }
     --[[
 								hie_root
@@ -123,7 +123,7 @@ local function create_scene_node_test()
         },
         material = material,
         can_render = true,
-        main_viewtag = true
+        main_view = true
 	}
 	
 	
@@ -141,7 +141,7 @@ local function create_scene_node_test()
         },
         material = material,
         can_render = true,
-        main_viewtag = true
+        main_view = true
     }
 
     local render_child2_1 =
@@ -159,7 +159,7 @@ local function create_scene_node_test()
         },
         material = material,
         can_render = true,
-        main_viewtag = true
+        main_view = true
 	}
 end
 

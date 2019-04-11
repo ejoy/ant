@@ -11,6 +11,7 @@
 #include "iupwin_str.h"
 #include "shell.h"
 
+
 static int
 licon(lua_State *L) {
 	const char *filename = luaL_checkstring(L, 1);
@@ -35,16 +36,52 @@ licon(lua_State *L) {
 
 	Ihandle *ih = IupImageRGBA(info.width, info.height, mem);
 	iuplua_pushihandle(L, ih);
+	lua_pushinteger(L, info.width);
+	lua_pushinteger(L, info.height);
 	shell_releaseicon(&info);
 
-	return 1;
+	return 3;
 }
+
+static int
+licon_with_size(lua_State *L) {
+	const char *filename = luaL_checkstring(L, 1);
+	TCHAR * tfilename = iupwinStrToSystemFilename(filename);
+	struct icon_info info;
+	const int size = lua_isnoneornil(L, 2) ? 1 : (int)luaL_checkinteger(L, 2);
+	
+	void * mem = shell_geticon_with_size(tfilename, &info, size);
+	if (mem == NULL)
+		return 0;
+
+	Ihandle *ih = IupImageRGBA(info.width, info.height, mem);
+	iuplua_pushihandle(L, ih);
+	lua_pushinteger(L, info.width);
+	lua_pushinteger(L, info.height);
+	shell_releaseicon(&info);
+
+	return 3;
+}
+
+//static int co_initialize(lua_State *L) {
+//	shell_co_initialize();
+//	return 0;
+//}
+//
+//static int co_uninitialize(lua_State *L) {
+//	shell_co_uninitialize();
+//	return 0;
+//}
+
 
 LUAMOD_API int
 luaopen_iupextension(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "icon" , licon },
+		{ "icon_with_size" , licon_with_size },
+		//{ "co_initialize" , co_initialize },
+		//{ "co_uninitialize" , co_uninitialize },
 		{ NULL, NULL },
 	};
 

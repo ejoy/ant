@@ -661,6 +661,13 @@ lastack_dump(struct lastack *LS, int from) {
 	}
 }
 
+int 
+lastack_type(struct lastack *LS, int64_t id) {
+	union stackid sid;
+	sid.i = id;
+	return sid.s.type;
+}
+
 char *
 lastack_idstring(int64_t id, char tmp[64]) {
 	union stackid sid;

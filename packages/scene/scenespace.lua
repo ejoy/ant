@@ -13,8 +13,12 @@ local hie_util = import_package "ant.scene".hierarchy
 
 ecs.tag "hierarchy_tag"
 
-ecs.component_alias("world_srt", "srt")
-ecs.component_alias("hierarchy_transform", "transform")
+ecs.component "hierarchy_transform"
+	.s "vector"
+	.r "vector"
+	.t "vector"
+	['opt'].parent "parent"
+	['opt'].hierarchy "hierarchy"
 
 ecs.component_alias("attach", "entityid")
 

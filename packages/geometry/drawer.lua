@@ -18,12 +18,14 @@ local function gen_color_vertices(pts, color, transform, vb)
 	local vnum = #pts
 	if transform then
 		for i=1, vnum do
-			table.insert(vb, gen_color_vertex(pts[i], color, transform))
+			local v = gen_color_vertex(pts[i], color, transform)
+			
+			table.move(v, 1, #v, #vb+1, vb)
 		end
 	else
-		for i=1, vnum do
-			local pt = pts[i]
-			table.insert(vb, {pt[1], pt[2], pt[3], color})
+		for i=1, vnum do			
+			table.move(pts[i], 1, 3, #vb+1, vb)
+			vb[#vb+1] = color
 		end
 	end
 end
@@ -141,13 +143,10 @@ local function draw_primitve(color, transform, desc, buffer_generator)
 	--local vb, ib = geo.sphere(1, sphere.radius, true, true)
 	local vb, ib = buffer_generator()
 
-	local desc_vb = assert(desc.vb)
-	local offset = #desc_vb
+	local desc_vb = assert(desc.vb)	
 	gen_color_vertices(vb, color, transform, desc_vb)
-	local desc_ib = assert(desc.ib)
-	local ioffset = #desc_ib
+	local desc_ib = assert(desc.ib)	
 	append_array(ib, desc_ib)
-	add_primitive(desc.primitives, offset, #vb, ioffset, #ib)
 end
 
 function draw.draw_cone(cone, color, transform, desc)
@@ -161,6 +160,16 @@ function draw.draw_sphere(sphere, color, transform, desc)
 	draw_primitve(color, transform, desc, function()
 		return geo.sphere(sphere.tessellation, sphere.radius, true, true)
 	end)
+end
+
+function draw.draw_aabb_box(aabb, color, transform, desc)
+	draw_primitve(color, transform, desc, function()
+		return geo.box_from_aabb(aabb, true, true)
+	end)
+end
+
+function draw.draw_frustum(frustum, color, transform, desc)
+
 end
 
 return draw

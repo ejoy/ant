@@ -1,12 +1,14 @@
 local rdebug = require 'remotedebug'
-local json = require 'cjson.safe' json.encode_empty_table_as_array 'on'
-local variables = require 'debugger.backend.worker.variables'
-local source = require 'debugger.backend.worker.source'
-local breakpoint = require 'debugger.backend.worker.breakpoint'
-local evaluate = require 'debugger.backend.worker.evaluate'
-local traceback = require 'debugger.backend.worker.traceback'
-local ev = require 'debugger.event'
+local json = require 'json'
+local variables = require 'backend.worker.variables'
+local source = require 'backend.worker.source'
+local breakpoint = require 'backend.worker.breakpoint'
+local evaluate = require 'backend.worker.evaluate'
+local traceback = require 'backend.worker.traceback'
+local stdout = require 'backend.worker.stdout'
+local ev = require 'event'
 local hookmgr = require 'remotedebug.hookmgr'
+local stdio = require 'remotedebug.stdio'
 local thread = require 'thread'
 local err = thread.channel_produce 'errlog'
 
@@ -17,6 +19,7 @@ local stopReason = 'step'
 local exceptionFilters = {}
 local exceptionMsg = ''
 local exceptionTrace = ''
+local outputCapture = {}
 
 local CMD = {}
 
@@ -77,7 +80,7 @@ end)
 --    for i = 1, n do
 --        t[i] = tostring(select(i, ...))
 --    end
---    ev.emit('output', 'stdout', table.concat(t, '\t')..'\n')
+--    ev.emit('output', 'stderr', table.concat(t, '\t')..'\n')
 --end
 
 function CMD.initializing(pkg)
@@ -262,6 +265,9 @@ function CMD.setExceptionBreakpoints(pkg)
     for _, filter in ipairs(pkg.filters) do
         exceptionFilters[filter] = true
     end
+    if hookmgr.exception_open then
+        hookmgr.exception_open(next(exceptionFilters) ~= nil)
+    end
 end
 
 function CMD.exceptionInfo(pkg)
@@ -337,7 +343,7 @@ function hook.bp(line)
     if bp then
         if breakpoint.exec(bp) then
             state = 'stopped'
-            runLoop('breakpoint')
+            runLoop 'breakpoint'
             return
         end
     end
@@ -371,18 +377,6 @@ function hook.newproto(proto, level)
     return breakpoint.newproto(proto, src, hookmgr.activeline(level))
 end
 
-local function getEventLevel()
-    local level = 0
-    local name, value = rdebug.getlocal(1, 2)
-    if name ~= nil then
-        local _, subtype = rdebug.type(value)
-        if subtype == 'integer' then
-            level = rdebug.value(value)
-        end
-    end
-    return level + 1
-end
-
 local function getEventArgs(i)
     local name, value = rdebug.getlocal(1, -i)
     if name == nil then
@@ -399,21 +393,35 @@ local function getEventArgsRaw(i)
     return true, value
 end
 
-local function setEventRet(v)
-    local name, value = rdebug.getlocal(1, 3)
-    if name ~= nil then
-        return rdebug.assign(value, v)
+local function pairsEventArgs()
+    local n = 2
+    return function()
+        local value = rdebug.getstack(n)
+        if value ~= nil then
+            n = n + 1
+            return value
+        end
     end
-    return false
 end
 
-local function pairsEventArgs()
-    return function(_, i)
-        local ok, value = getEventArgs(i)
-        if ok then
-            return i + 1, value
+local function getExceptionType()
+    local pcall = rdebug.value(rdebug.index(rdebug._G, 'pcall'))
+    local xpcall = rdebug.value(rdebug.index(rdebug._G, 'xpcall'))
+    local info = {}
+    local level = 1
+    while rdebug.getinfo(level, info) do
+        local f = rdebug.value(rdebug.getfunc(level))
+        if f ~= nil then
+            if f == pcall then
+                return level, 'pcall'
+            end
+            if f == xpcall then
+                return level, 'xpcall'
+            end
         end
-    end, nil, 1
+        level = level + 1
+    end
+    return nil, 'lua_pcall'
 end
 
 local event = hook
@@ -425,68 +433,91 @@ end
 function event.print()
     if not initialized then return end
     local res = {}
-    for _, arg in pairsEventArgs() do
+    for arg in pairsEventArgs() do
+        res[#res + 1] = tostring(rdebug.value(arg))
+    end
+    res = table.concat(res, '\t') .. '\n'
+    local s = rdebug.getinfo(1, info)
+    local src = source.create(s.source)
+    if source.valid(src) then
+        stdout(res, src, s.currentline)
+    else
+        stdout(res)
+    end
+    return true
+end
+
+function event.iowrite()
+    if not initialized then return end
+    local res = {}
+    for arg in pairsEventArgs() do
         res[#res + 1] = tostring(rdebug.value(arg))
     end
     res = table.concat(res, '\t')
-    local s = rdebug.getinfo(1 + getEventLevel(), info)
+    local s = rdebug.getinfo(1, info)
     local src = source.create(s.source)
     if source.valid(src) then
-        ev.emit('output', 'stdout', res, src, s.currentline)
+        stdout(res, src, s.currentline)
     else
-        ev.emit('output', 'stdout', res)
+        stdout(res)
     end
-    setEventRet(true)
+    return true
 end
 
-function event.exception()
+function event.panic(msg)
     if not initialized then return end
-    local _, type = getEventArgs(1)
-    if not type or not exceptionFilters[type] then
+    if not exceptionFilters['lua_panic'] then
         return
     end
-    local _, msg = getEventArgs(2)
-    local level = getEventLevel()
-    exceptionMsg, exceptionTrace = traceback(msg, level)
+    exceptionMsg, exceptionTrace = traceback(msg, 0)
     state = 'stopped'
-    runLoop('exception')
+    runLoop 'exception'
 end
 
-function event.coroutine()
-    local _, co = getEventArgsRaw(1)
-    hookmgr.setcoroutine(co)
-end
-
-local createMaster = true
-function event.update_all()
-    if createMaster then
-        createMaster = false
-        local master = require 'debugger.backend.master'
-        if master.init() then
-            local master = master.update
-            local worker = workerThreadUpdate
-            function workerThreadUpdate()
-                master()
-                worker()
-            end
+if hookmgr.exception_open then
+    function event.exception(msg)
+        if not initialized then return end
+        local _, type = getExceptionType()
+        if not type or not exceptionFilters[type] then
+            return
         end
+        exceptionMsg, exceptionTrace = traceback(msg, 0)
+        state = 'stopped'
+        runLoop 'exception'
     end
-    workerThreadUpdate()
+else
+    function event.exception()
+        if not initialized then return end
+        local level, type = getExceptionType()
+        if not type or not exceptionFilters[type] then
+            return
+        end
+        local _, msg = getEventArgs(1)
+        exceptionMsg, exceptionTrace = traceback(msg, level - 3)
+        state = 'stopped'
+        runLoop 'exception'
+    end
+end
+
+if hookmgr.thread_open then
+    function event.thread(co)
+        hookmgr.setcoroutine(co)
+    end
+else
+    function event.thread()
+        local _, co = getEventArgsRaw(1)
+        hookmgr.setcoroutine(co)
+    end
 end
 
 function event.wait_client()
-    local _, all = getEventArgs(1)
     while not initialized do
         thread.sleep(0.01)
-        if all then
-            event.update_all()
-        else
-            event.update()
-        end
+        workerThreadUpdate()
     end
 end
 
-hookmgr.sethook(function(name, ...)
+hookmgr.init(function(name, ...)
     local ok, e = xpcall(function(...)
         if event[name] then
             return event[name](...)
@@ -496,8 +527,32 @@ hookmgr.sethook(function(name, ...)
     return e
 end)
 
+local function lst2map(t)
+    local r = {}
+    for _, v in ipairs(t) do
+        r[v] = true
+    end
+    return r
+end
+
+ev.on('initializing', function(config)
+    outputCapture = lst2map(config.outputCapture)
+    if outputCapture["print"] then
+        stdio.open_print(true)
+    end
+    if outputCapture["io.write"] then
+        stdio.open_iowrite(true)
+    end
+end)
+
 ev.on('terminated', function()
     hookmgr.step_cancel()
+    if outputCapture["print"] then
+        stdio.open_print(false)
+    end
+    if outputCapture["io.write"] then
+        stdio.open_iowrite(false)
+    end
 end)
 
 sendToMaster {

@@ -13,14 +13,17 @@ local math3d = import_package "ant.math"
 local ms = math3d.stack
 local model_review_system = ecs.system "model_review_system"
 
+local renderpkg = import_package "ant.render"
+local renderutil = renderpkg.util
+
 model_review_system.singleton "constant"
-model_review_system.depend "constant_init_sys"
+
 model_review_system.dependby "message_system"
---model_review_system.depend "shadow_primitive_filter_system"
-model_review_system.depend "transparency_filter_system"
-model_review_system.depend "entity_rendering"
+model_review_system.depend "primitive_filter_system"
 model_review_system.depend "debug_system"
 model_review_system.depend "math_adapter"
+model_review_system.depend "render_system"
+model_review_system.depend "viewport_detect_system"
 
 local lu = import_package "ant.render" .light
 local cu = import_package "ant.render" .components
@@ -36,10 +39,11 @@ local function create_light()
 
 	ms(lentity.rotation, {to_radian(123.4), to_radian(-34.22), to_radian(-28.2)}, "=")
 
-	lu.create_ambient_light_entity(world, "ambient light", {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
+	lu.create_ambient_light_entity(world, "ambient light", 'color', {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end
 
 function model_review_system:init()
+	renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
 	create_light()
 	cu.create_grid_entity(world, "grid")
 	world:create_entity {
@@ -59,7 +63,7 @@ function model_review_system:init()
 				}
 			}
 		},
-		main_viewtag = true,		
+		main_view = true,		
 	}
 
 	world:create_entity {
@@ -79,7 +83,7 @@ function model_review_system:init()
 				}
 			}
 		},
-		main_viewtag = true,
+		main_view = true,
 	}
 
 	-- local mesh = model.mesh.assetinfo.handle.bounding

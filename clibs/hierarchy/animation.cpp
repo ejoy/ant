@@ -1,6 +1,8 @@
 #include "hierarchy.h"
 #include "ozz_mesh/mesh.h"
 
+#include "meshbase/meshbase.h"
+
 extern "C" {
 #define LUA_LIB
 #include "lua.h"
@@ -39,79 +41,6 @@ struct animation_node {
 
 struct sampling_node {
 	ozz::animation::SamplingCache *		cache;	
-};
-
-#include <limits>
-
-static const glm::vec3 min_v3(
-	std::numeric_limits<float>::min(),
-	std::numeric_limits<float>::min(),
-	std::numeric_limits<float>::min());
-
-static const glm::vec3 max_v3(
-	std::numeric_limits<float>::max(),
-	std::numeric_limits<float>::max(),
-	std::numeric_limits<float>::max());
-
-struct Bounding {
-	struct AABB {
-		glm::vec3 min, max;
-
-		AABB()
-			: min(min_v3)
-			, max(max_v3){}
-
-		bool isvalid() const {
-			return min != min_v3 && max != max_v3;
-		}
-
-		void init(const glm::vec3 &base) {
-			min = max = base;
-		}
-
-		void merge(const glm::vec3 &p) {
-			for (auto ii = 0; ii < 3; ++ii) {
-				min[ii] = std::min(p[ii], min[ii]);
-				max[ii] = std::max(p[ii], max[ii]);
-			}
-		}
-
-		glm::vec3 center() const {
-			return (max + min) * 0.5f;
-		}
-
-		float length() const {
-			return glm::length(max - min);
-		}
-	};
-
-	struct Sphere {
-		glm::vec3 center;
-		float radius;
-		void from_aabb(const AABB &aabb) {
-			radius = aabb.length() * 0.5f;
-			center = aabb.center();
-		}
-	};
-
-	struct OBB {
-		glm::mat4 m;
-		void from_aabb(const AABB &aabb) {
-
-			auto &trans = m[3];
-			const auto &c = aabb.center();
-			trans[0] = c[0], trans[1] = c[1], trans[2] = c[2], trans[3] = 1;
-
-			float scale = aabb.length() * 0.5f;
-			m[0][0] = m[1][1] = m[2][2] = scale;
-
-			// no rotation here
-		}
-	};
-
-	AABB aabb;
-	Sphere sphere;
-	OBB obb;
 };
 
 struct ozzmesh {
@@ -923,15 +852,15 @@ create_buffer(ozzmesh *om) {
 
 		if (!om->mesh->parts.empty()) {
 			auto v = (const glm::vec3*)(&om->mesh->parts.front().positions[0]);
-			assert(!aabb.isvalid());
-			aabb.init(*v);
+			assert(!aabb.IsValid());
+			aabb.Init(v, 3);
 		}
 
 		for (const auto &part : om->mesh->parts) {
 			assert(0 != part.vertex_count());			
 			for (auto iv = 0; iv < part.vertex_count(); ++iv) {
 				auto posptr = &(part.positions[iv * ozz::sample::Mesh::Part::kPositionsCpnts]);				
-				aabb.merge(*(glm::vec3*)(posptr));
+				aabb.Append(*(glm::vec3*)(posptr));
 				memcpy(db, posptr, posstep);
 				db += posstep;
 
@@ -950,8 +879,8 @@ create_buffer(ozzmesh *om) {
 		om->dynamic_buffer = nullptr;
 	}	
 	
-	om->bounding.sphere.from_aabb(aabb);
-	om->bounding.obb.from_aabb(aabb);
+	om->bounding.sphere.Init(aabb);
+	om->bounding.obb.Init(aabb);
 
 	const size_t static_stride = static_vertex_elem_stride(om);
 	if (static_stride != 0) {

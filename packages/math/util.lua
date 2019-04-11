@@ -46,4 +46,12 @@ function util.view_proj_matrix(e)
 	return ms:view_proj(camera, camera.frustum)
 end
 
+function util.identity_transform()
+	return {
+		s = {1, 1, 1, 0},
+		r = {0, 0, 0, 0},
+		t = {0, 0, 0, 1},
+	}
+end
+
 return util

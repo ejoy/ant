@@ -9,9 +9,7 @@ local function sandbox_env(root, pkgname)
         name = string.gsub(name, '%.', '/')
         for c in string.gmatch(path, '[^;]+') do
             local filename = string.gsub(c, '%?', name)
-            local f = fs.open(fs.path(filename))
-            if f then
-                f:close()
+            if fs.exists(fs.path(filename)) then
                 return filename
             end
             err = err .. ("\n\tno file '%s'"):format(filename)

@@ -6,7 +6,7 @@ local geometry = import_package "ant.geometry"
 local geodrawer = geometry.drawer
 
 local renderbonesys = ecs.system "renderbone_system"
-renderbonesys.singleton "debug_object"
+--renderbonesys.singleton "debug_object"
 renderbonesys.dependby "debug_draw"
 
 local ms = import_package "ant.math".stack
@@ -61,19 +61,17 @@ local function append_desc(buffer, desc)
 	end
 end
 
-local cache
-
 function renderbonesys:update()
-	local descbuffer = self.debug_object.renderobjs.wireframe.desc
+	-- local descbuffer = self.debug_object.renderobjs.wireframe.desc
 
-	local sample = world:first_entity("sampleobj")
-	if sample then
-		local dbgprim = sample.debug_skeleton
-		if dbgprim then
-			local desc = draw_skeleton(sample)
-			if desc then
-				append_desc(descbuffer, desc)
-			end
-		end	
-	end
+	-- local sample = world:first_entity("sampleobj")
+	-- if sample then
+	-- 	local dbgprim = sample.debug_skeleton
+	-- 	if dbgprim then
+	-- 		local desc = draw_skeleton(sample)
+	-- 		if desc then
+	-- 			append_desc(descbuffer, desc)
+	-- 		end
+	-- 	end	
+	-- end
 end

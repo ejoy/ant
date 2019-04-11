@@ -19,23 +19,28 @@ local math 		= import_package "ant.math"
 local renderpkg = import_package "ant.render"
 local ms 		= math.stack
 local camerautil= renderpkg.camera
+local renderutil= renderpkg.util
 local aniutil 	= import_package "ant.animation".util
  
 ecs.tag "sampleobj"
 
 local model_ed_sys = ecs.system "model_editor_system"
-model_ed_sys.singleton "debug_object"
-model_ed_sys.depend "camera_init"
---model_ed_sys.depend "character_controller"
-model_ed_sys.depend "camera_controller"
-model_ed_sys.depend "renderbone_system"
-model_ed_sys.depend "state_machine"
-model_ed_sys.depend "skinning_system"
-model_ed_sys.depend "math_adapter"
 
-model_ed_sys.dependby "transparency_filter_system"
-model_ed_sys.dependby "entity_rendering"
-model_ed_sys.dependby "widget_system"
+--model_ed_sys.depend "character_controller"
+model_ed_sys.dependby "viewport_detect_system"
+model_ed_sys.dependby "camera_controller"
+model_ed_sys.dependby "renderbone_system"
+model_ed_sys.dependby "state_machine"
+model_ed_sys.dependby "skinning_system"
+model_ed_sys.dependby "math_adapter"
+
+--model_ed_sys.dependby "render_mesh_bounding"
+model_ed_sys.dependby "primitive_filter_system"
+model_ed_sys.dependby "render_system"
+model_ed_sys.dependby "pickup_system"
+model_ed_sys.dependby "shadow_maker11"
+model_ed_sys.dependby "debug_shadow_maker"
+--model_ed_sys.dependby "obj_transform_system"
 
 -- luacheck: globals main_dialog
 -- luacheck: globals iup
@@ -79,8 +84,17 @@ local function enable_sample_boundingbox()
 	local sample = sample_entity()
 	if sample then
 		local bounding = dlg_item("SHOWSAMPLEBOUNDING")
-		sample.widget.can_render = bounding.VALUE ~= "OFF"
+		sample.can_show_bounding = bounding.VALUE ~= "OFF"
 	end
+end
+
+local function enable_using_lightview()
+	local main_queue = world:first_entity "main_queue"
+	local shadow_queue = world:first_entity "shadow"
+
+	local maincamera = main_queue.camera
+	main_queue.camera = shadow_queue.camera
+	shadow_queue.camera = maincamera
 end
 
 local function enable_bones_visible()
@@ -108,8 +122,8 @@ local function check_create_sample_entity(skepath, anipaths, smpath)
 	if sample_eid then
 		world:remove_entity(sample_eid)
 	end
-	sample_eid = util.create_sample_entity(world, skepath, anipaths, smpath)		
-	enable_sample_visible()
+	sample_eid = util.create_sample_entity(world, skepath, anipaths, smpath)
+	enable_sample_visible()	
 end
 
 local function get_sel_ani()
@@ -265,6 +279,7 @@ local function init_check_shower()
 		SHOWBONES=enable_bones_visible,
 		SHOWSAMPLE=enable_sample_visible,
 		SHOWSAMPLEBOUNDING=enable_sample_boundingbox,
+		USELIGHTVIEW=enable_using_lightview,
 	}
 
 	for k, v in pairs(checkers) do
@@ -446,10 +461,13 @@ end
 local function init_scene()
 	local computil = renderpkg.components
 	computil.create_grid_entity(world, "grid", 16, 16, 1)
+	computil.create_plane_entity(world, {0.5, 0.5, 0.5, 1})
 end
 
 -- luacheck: ignore self
 function model_ed_sys:init()	
+	renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "nT"), {1, 1, -1}, "main_view")
+
 	init_control()
 	init_lighting()
 
@@ -460,17 +478,9 @@ function model_ed_sys:init()
 	focus_sample()
 
 	local sample = sample_entity()
+	--setmetatable(sample.transform)
 	if sample then
 		local anicomp = sample.animation
 		aniutil.play_animation(anicomp, anicomp.pose_state.pose)
 	end
-end
-
-
-function model_ed_sys:post_init()
-	for eid in world:each_new("widget") do
-		assert(eid == sample_eid)
-		local e = world[eid]
-		util.create_aabb_widget(e)
-	end	
 end

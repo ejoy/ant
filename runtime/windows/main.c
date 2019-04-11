@@ -5,6 +5,7 @@
 #include <ant.h>
 #include <shlobj.h>
 #include <shlwapi.h>
+#include <fcntl.h>
 
 static const char* lua_pushutf8string(lua_State* L, const wchar_t* wstr, size_t wsz) {
     int usz = WideCharToMultiByte(CP_UTF8, 0, wstr, wsz, 0, 0, NULL, NULL);
@@ -103,7 +104,20 @@ static int pmain(lua_State *L) {
     return 0;
 }
 
+
+void init_stdio() {
+    int hCrt = _open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
+    FILE *hf = _fdopen(hCrt, "w");
+    *stdout = *hf;
+    setvbuf(stdout, NULL, _IONBF, 0 );
+    hCrt = _open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
+    hf = _fdopen(hCrt, "w");
+    *stderr = *hf;
+    setvbuf(stderr, NULL, _IONBF, 0);
+}
+
 int wmain(int argc, wchar_t** argv) {
+    init_stdio();
     lua_State* L = luaL_newstate();
     if (!L) {
         lua_writestringerror("%s\n", "cannot create state: not enough memory");

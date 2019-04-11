@@ -14,7 +14,6 @@ camera_controller_system.singleton "message"
 camera_controller_system.singleton "control_state"
 
 camera_controller_system.depend "message_system"
-camera_controller_system.depend "camera_init"
 
 local function camera_move(forward_axis, position, dx, dy, dz)
 	--ms(position, rotation, "b", position, "S", {dx}, "*+S", {dy}, "*+S", {dz}, "*+=")	
@@ -42,7 +41,7 @@ local function rotate_round_point(camera, point, distance, dx, dy)
 end
 
 function camera_controller_system:init()	
-	local camera_entity = world:first_entity("main_camera")
+	local camera_entity = world:first_entity("main_queue")
 
 	local target = math3d.ref "vector"
 	local camera = camera_entity.camera

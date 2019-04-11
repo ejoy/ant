@@ -1,5 +1,5 @@
 /*
-** $Id: lua.h,v 1.332 2016/12/22 15:51:20 roberto Exp $
+** $Id: lua.h,v 1.332.1.2 2018/06/13 16:58:17 roberto Exp $
 ** Lua - A Scripting Language
 ** Lua.org, PUC-Rio, Brazil (http://www.lua.org)
 ** See Copyright Notice at the end of this file
@@ -19,11 +19,11 @@
 #define LUA_VERSION_MAJOR	"5"
 #define LUA_VERSION_MINOR	"3"
 #define LUA_VERSION_NUM		503
-#define LUA_VERSION_RELEASE	"4"
+#define LUA_VERSION_RELEASE	"5"
 
 #define LUA_VERSION	"Lua " LUA_VERSION_MAJOR "." LUA_VERSION_MINOR
 #define LUA_RELEASE	LUA_VERSION "." LUA_VERSION_RELEASE
-#define LUA_COPYRIGHT	LUA_RELEASE "  Copyright (C) 1994-2017 Lua.org, PUC-Rio"
+#define LUA_COPYRIGHT	LUA_RELEASE "  Copyright (C) 1994-2018 Lua.org, PUC-Rio"
 #define LUA_AUTHORS	"R. Ierusalimschy, L. H. de Figueiredo, W. Celes"
 
 
@@ -405,6 +405,7 @@ LUA_API void      (lua_setallocf) (lua_State *L, lua_Alloc f, void *ud);
 #define LUA_HOOKCOUNT	3
 #define LUA_HOOKTAILCALL 4
 #define LUA_HOOKEXCEPTION 5
+#define LUA_HOOKTHREAD 6
 
 
 /*
@@ -415,6 +416,7 @@ LUA_API void      (lua_setallocf) (lua_State *L, lua_Alloc f, void *ud);
 #define LUA_MASKLINE	(1 << LUA_HOOKLINE)
 #define LUA_MASKCOUNT	(1 << LUA_HOOKCOUNT)
 #define LUA_MASKEXCEPTION	(1 << LUA_HOOKEXCEPTION)
+#define LUA_MASKTHREAD	(1 << LUA_HOOKTHREAD)
 
 typedef struct lua_Debug lua_Debug;  /* activation record */
 
@@ -462,7 +464,7 @@ struct lua_Debug {
 
 
 /******************************************************************************
-* Copyright (C) 1994-2017 Lua.org, PUC-Rio.
+* Copyright (C) 1994-2018 Lua.org, PUC-Rio.
 *
 * Permission is hereby granted, free of charge, to any person obtaining
 * a copy of this software and associated documentation files (the

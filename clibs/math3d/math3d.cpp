@@ -37,9 +37,7 @@ extern "C" {
 #define MAT_PERSPECTIVE 0
 #define MAT_ORTHO 1
 
-#ifndef M_PI
-#define M_PI (3.14159265358979323846)
-#endif
+
 
 static bool g_default_homogeneous_depth = false;
 
@@ -309,7 +307,7 @@ get_id_by_type(lua_State *L, struct lastack *LS, int lType, int index) {
 	return lType == LUA_TNUMBER ? get_id(L, index) : get_ref_id(L, LS, index);
 }
 
-static inline int64_t
+int64_t
 get_stack_id(lua_State *L, struct lastack *LS, int index) {
 	const int type = lua_type(L, index);
 	return get_id_by_type(L, LS, type, index);
@@ -464,21 +462,20 @@ push_srt_from_table(lua_State *L, struct lastack *LS, int index) {
 static int
 get_mat_type(lua_State *L, int index) {
 	const int ret_type = lua_getfield(L, index, "ortho");
-	if (ret_type == LUA_TNIL || ret_type == LUA_TNONE) {
-		return MAT_PERSPECTIVE;
-	}
+	
+	int mat_type = MAT_PERSPECTIVE;
+	if (ret_type != LUA_TNIL && ret_type != LUA_TNONE) {
+		if (ret_type != LUA_TBOOLEAN) {
+			luaL_error(L, "ortho field must be boolean type, get %d", ret_type);
+		}
 
-	if (ret_type != LUA_TBOOLEAN) {
-		luaL_error(L, "ortho field must be boolean type, get %d", ret_type);
+		mat_type = lua_toboolean(L, -1) != 0 ? MAT_ORTHO : MAT_PERSPECTIVE;
 	}
-
-	const int mat_type = lua_toboolean(L, -1) != 0 ? MAT_ORTHO : MAT_PERSPECTIVE;
 	lua_pop(L, 1);
-
 	return mat_type;
 }
 
-static inline glm::mat4x4
+glm::mat4x4
 create_proj_mat(lua_State *L, struct lastack *LS, int index) {
 	float left, right, top, bottom;
 	lua_getfield(L, index, "n");
@@ -488,8 +485,8 @@ create_proj_mat(lua_State *L, struct lastack *LS, int index) {
 	float far = luaL_optnumber(L, -1, 100.0f);
 	lua_pop(L, 1);
 
-	const int type = get_mat_type(L, index);
-	if (type == MAT_PERSPECTIVE && lua_getfield(L, index, "fov") == LUA_TNUMBER) {
+	int mattype = MAT_PERSPECTIVE;
+	if (lua_getfield(L, index, "fov") == LUA_TNUMBER) {
 		float fov = lua_tonumber(L, -1);
 		lua_pop(L, 1);
 		lua_getfield(L, index, "aspect");
@@ -502,6 +499,7 @@ create_proj_mat(lua_State *L, struct lastack *LS, int index) {
 		bottom = -ymax;
 		top = ymax;
 	} else {
+		mattype = get_mat_type(L, index);
 		lua_getfield(L, index, "l");
 		left = luaL_checknumber(L, -1);
 		lua_pop(L, 1);
@@ -516,7 +514,7 @@ create_proj_mat(lua_State *L, struct lastack *LS, int index) {
 		lua_pop(L, 1);
 	}
 
-	if (type == MAT_PERSPECTIVE) {
+	if (mattype == MAT_PERSPECTIVE) {
 		return g_default_homogeneous_depth ?
 			glm::frustumLH_NO(left, right, bottom, top, near, far) :
 			glm::frustumLH_ZO(left, right, bottom, top, near, far);
@@ -1763,6 +1761,17 @@ static FASTMATH(all)
 	return 1;
 }
 
+static FASTMATH(length)
+	int64_t id = pop(L, LS);
+	int type;
+	const glm::vec3 * v = (const glm::vec3 *)lastack_value(LS, id, &type);
+	
+	lastack_pushnumber(LS, glm::length(*v));
+	refstack_pop(RS);
+	refstack_push(RS);
+	return 0;
+}
+
 struct fastmath_function {
 	MFunction func;
 	const char *desc;
@@ -2245,63 +2254,6 @@ new_temp_euler(lua_State *L) {
 }
 
 static int
-create_srt_matrix(lua_State *L) {	
-	const int numarg = lua_gettop(L);
-	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
-	struct lastack *LS = bp->LS;
-
-	glm::mat4x4 srtmat(1);
-	const glm::vec4 *scale = nullptr;
-	const glm::vec4 *rotation = nullptr;
-	const glm::vec4 *translation = nullptr;
-	switch (numarg) {
-	case 2:
-	{
-		luaL_checktype(L, 2, LUA_TTABLE);
-		const char* srtnames[] = { "s", "r", "t" };
-		const glm::vec4** srtvalues[] = { &scale, &rotation, &translation };
-		for (int ii = 0; ii < 3; ++ii){
-			auto name = srtnames[ii];
-			lua_getfield(L, 2, name);
-			int type;
-			*(srtvalues[ii]) = (const glm::vec4*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
-		}
-	}
-		break;
-	case 4:
-	{
-		int scaletype, rotationtype, translationtype;
-		scale = (const glm::vec4 *)lastack_value(LS, get_stack_id(L, LS, 2), &scaletype);
-		assert(scaletype == LINEAR_TYPE_VEC4);
-
-		rotation = (const glm::vec4 *)lastack_value(LS, get_stack_id(L, LS, 3), &rotationtype);
-		assert(rotationtype == LINEAR_TYPE_VEC4 || rotationtype == LINEAR_TYPE_EULER);
-
-		translation = (const glm::vec4 *)lastack_value(LS, get_stack_id(L, LS, 4), &translationtype);
-		assert(translationtype == LINEAR_TYPE_VEC4);
-	}
-		break;
-	default:
-		luaL_error(L, "invalid argument number:%d", numarg);
-		break;
-	}
-
-	assert(scale &&rotation && translation);
-	srtmat[0][0] = (*scale)[0];
-	srtmat[1][1] = (*scale)[1];
-	srtmat[2][2] = (*scale)[2];
-
-	srtmat = glm::mat4x4(glm::quat(*rotation)) * srtmat;
-
-	srtmat[3] = *translation;
-	srtmat[3][3] = 1;
-
-	lastack_pushmatrix(LS, &(srtmat[0][0]));
-	lua_pushlightuserdata(L, (void *)pop_value(L, LS, NULL));
-	return 1;
-}
-
-static int
 lsrt_matrix(lua_State *L) {
 	const int numarg = lua_gettop(L);
 	if (numarg < 1) {
@@ -2343,40 +2295,214 @@ lsrt_matrix(lua_State *L) {
 static int
 lview_proj(lua_State *L) {
 	const int numarg = lua_gettop(L);
-	if (numarg != 3) {
-		return luaL_error(L, "only support 3 argument, %d provided", numarg);
+	if (numarg < 2) {
+		return luaL_error(L, "argument should provided as: \
+							camera[view matrix, can be nil],\
+							frustum[project, can be nil],\
+							combine[view&proj or not], \
+							but camera, frustum must provided one of them.\
+							%d provided", numarg);
 	}
 
 	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
 	lastack *LS = bp->LS;
 
-	luaL_checktype(L, 2, LUA_TTABLE);	// view matrix
+	glm::mat4x4 viewmat;
+	const bool hasviewmat = !lua_isnil(L, 2);
+	if (hasviewmat) {
+		luaL_checktype(L, 2, LUA_TTABLE);	// view matrix
+
+		lua_getfield(L, 2, "viewdir");
+		int type;
+		const glm::vec3 viewdir = *(const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
+		lua_pop(L, 1);
+		lua_getfield(L, 2, "eyepos");
+		const glm::vec3 eyepos = *(const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
+		lua_pop(L, 1);
+
+		const glm::vec3 updir = (lua_getfield(L, 2, "updir") == LUA_TNIL) ?
+			glm::vec3(0, 1, 0) :
+			*((const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type));
+		lua_pop(L, 1);
+
+		viewmat = glm::lookAtLH(eyepos, eyepos + viewdir, updir);
+	}
+
+	glm::mat4x4 projmat;
+	const bool hasprojmat = !lua_isnil(L, 3);
+	if (hasprojmat) {
+		luaL_checktype(L, 3, LUA_TTABLE);
+		projmat = create_proj_mat(L, LS, 3);
+	}
+
+	const bool combine = lua_isnoneornil(L, 4) ? false : (!!lua_toboolean(L, 4));
+
+	int numresult = 0;
+
+	if (hasviewmat) {
+		lastack_pushmatrix(LS, &viewmat[0][0]);
+		pushid(L, pop(L, LS));
+		++numresult;
+	}
+
+	if (hasprojmat) {
+		lastack_pushmatrix(LS, &projmat[0][0]);
+		pushid(L, pop(L, LS));
+		++numresult;
+	}
+
+	if (combine) {
+		if (hasviewmat && hasprojmat) {
+			auto viewproj = projmat * viewmat;
+			lastack_pushmatrix(LS, &viewproj[0][0]);
+			pushid(L, pop(L, LS));
+			return 3;
+		}
+
+		luaL_error(L, "one of view or proj matrix is not provided, matrix are not enough to combine");
+	}
+
+	assert(numresult >= 1);
+	return numresult;
+}
+
+static inline glm::vec4 
+get_vec_value(lua_State *L, struct lastack *LS, int index) {
+	switch (lua_type(L, index)) {
+	case LUA_TUSERDATA:
+	case LUA_TNUMBER:
+	{
+		int type;
+		return *((const glm::vec4*)lastack_value(LS, get_stack_id(L, LS, index), &type));
+	}
+	case LUA_TTABLE:
+	{
+		glm::vec4 v;
+		v[3] = 0;
+		const size_t len = lua_rawlen(L, index);
+		
+		for (int ii = 0; ii < (int)len; ++ii) {
+			lua_geti(L, index, ii + 1);
+			v[ii] = lua_tonumber(L, -1);
+			lua_pop(L, 1);
+		}
+		return v;
+	}
+	default:
+		luaL_error(L, "invalid data type, get_vec_value only support table/userdata(refvalue)/stack number");
+		return glm::vec4(0);
+	}
+}
+
+static int
+llength(lua_State *L) {
+	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
+	lastack *LS = bp->LS;
+
+	const int numarg = lua_gettop(L);
+	float len = 0.0f;
+	switch (numarg) {
+	case 2:
+	{
+		glm::vec4 v = get_vec_value(L, LS, 2);
+		len = glm::length(v);
+	}
+		break;
+	case 3:
+	{
+		auto lhs = get_vec_value(L, LS, 2);
+		auto rhs = get_vec_value(L, LS, 3);
+
+		len = glm::length(lhs - rhs);
+	}
+		break;
+	default:
+		luaL_error(L, "only support 2/3 arguments, 2 for (ms, vec4), 3 for (ms, vec4, vec4) as length([2 - 3]), %d provided", numarg);
+		break;
+	}
 	
-	lua_getfield(L, 2, "viewdir");
+	lua_pushnumber(L, len);
+	return 1;
+}
+
+static int
+lscreen_point_to_3d(lua_State *L) {
+	const int numarg = lua_gettop(L);
+	if (numarg < 4) {
+		luaL_error(L, "at least 4 arguments, %d provided. arguments: (camera component[with eyepos/viewdir/frustum], viewport[w, h], point at 2d", numarg);
+	}
+
+	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
+	lastack *LS = bp->LS;
+
+	// camera
+	luaL_checktype(L, 2, LUA_TTABLE);
+
+	lua_getfield(L, 2, "frustum");
+	auto matProj = create_proj_mat(L, LS, -1);
+	lua_pop(L, 1);
+
 	int type;
-	const glm::vec3 viewdir = *(const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
-	lua_pop(L, 1);
 	lua_getfield(L, 2, "eyepos");
-	const glm::vec3 eyepos = *(const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
-	lua_pop(L, 1);
-	
-	const glm::vec3 updir = (lua_getfield(L, 2, "updir") == LUA_TNIL) ?
-		glm::vec3(0, 1, 0) :
-		*((const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type));
+	const glm::vec3 *eyepos = (const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
 	lua_pop(L, 1);
 
-	auto viewmat = glm::lookAtLH(eyepos, eyepos + viewdir, updir);
+	lua_getfield(L, 2, "viewdir");
+	const glm::vec3 *viewdir = (const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
+	lua_pop(L, 1);
 
+	lua_getfield(L, 2, "updir");
+	const glm::vec3 *updir = (const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
+	lua_pop(L, 1);
+
+	glm::mat4x4 matView = glm::lookAtLH(*eyepos, *eyepos + *viewdir, *updir);
+
+	// view rect
 	luaL_checktype(L, 3, LUA_TTABLE);
-	auto projmat = create_proj_mat(L, LS, 3);
+	lua_getfield(L, 3, "w");
+	const float width = lua_tonumber(L, -1);
+	lua_pop(L, 1);
 
-	lastack_pushmatrix(LS, &viewmat[0][0]);
-	pushid(L, pop(L, LS));
+	lua_getfield(L, 3, "h");
+	const float height = lua_tonumber(L, -1);
+	lua_pop(L, 1);
 
-	lastack_pushmatrix(LS, &projmat[0][0]);
-	pushid(L, pop(L, LS));
 
-	return 2;
+	//////////////////////////////////////////////////////////////////////////
+
+	const glm::mat4x4 matInverseVP = glm::inverse(matProj * matView);
+
+
+	// get 2d point, point.z is the depth in ndc space
+	const int point_start_idx = 3;
+	const int num2dpoint = numarg - point_start_idx;
+
+	for (int ii = 0; ii < num2dpoint; ++ii) {
+		auto fetchpoint = [L, width, height](int index) {
+			glm::vec4 p;
+			for (int jj = 0; jj < 3; ++jj) {
+				lua_geti(L, index, jj+1);
+				p[jj] = lua_tonumber(L, -1);
+				lua_pop(L, 1);
+			}
+			auto remap0_1 = [](float v) {
+				return v * 2.f - 1.f;
+			};
+			p.x = remap0_1(p.x / width);
+			p.y = remap0_1((height - p.y) / height);
+			p.w = 1;
+			return p;
+		};
+
+		glm::vec4 p = fetchpoint(ii + 1 + point_start_idx);
+		auto tmp = matInverseVP * p;
+		p = tmp / tmp.w;
+
+		lastack_pushvec4(LS, &p.x);
+		pushid(L, pop(L, LS));
+	}
+
+	return num2dpoint;
 }
 
 static int
@@ -2419,6 +2545,7 @@ lnew(lua_State *L) {
 			{ MFUNCTION(popnumber) },
 			{ MFUNCTION(toquaternion)},
 			{ MFUNCTION(lookfrom3)},
+			{ MFUNCTION(length)},
 			{ "ref", lstackrefobject },
 			{ "command", gencommand },
 			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )
@@ -2428,6 +2555,8 @@ lnew(lua_State *L) {
 			{ "base_axes", lbase_axes_from_forward_vector},
 			{ "srtmat", lsrt_matrix },
 			{ "view_proj", lview_proj},			
+			{ "length", llength},
+			{ "screenpt_to_3d", lscreen_point_to_3d},			
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
