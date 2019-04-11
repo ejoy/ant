@@ -5,6 +5,7 @@
 #include <new>
 #include <memory>
 #include "rdebug_eventfree.h"
+#include "rdebug_timer.h"
 
 #if LUA_VERSION_NUM < 504
 #define s2v(o) (o)
@@ -363,10 +364,16 @@ struct hookmgr {
                 ;
             return;
         case LUA_HOOKRET:
+            if (update_mask) {
+                update_hook(hL);
+            }
             break_mask
                 ? break_hook_return(hL, ar)
                 : step_hook_return(hL, ar)
                 ;
+            return;
+        case LUA_HOOKCOUNT:
+            update_hook(hL);
             return;
 #if defined(LUA_HOOKEXCEPTION)
         case LUA_HOOKEXCEPTION:
@@ -403,12 +410,40 @@ struct hookmgr {
         }
     }
     void updatehookmask(lua_State* hL) {
-        lua_sethook(hL, (lua_Hook)sc_hook->data, break_mask | step_mask | exception_mask | thread_mask, 0);
+        int mask = update_mask | break_mask | step_mask | exception_mask | thread_mask;
+        if (mask) {
+            lua_sethook(hL, (lua_Hook)sc_hook->data, mask, update_mask? 0xfffff: 0);
+        }
+        else {
+            lua_sethook(hL, 0, 0, 0);
+        }
     }
     void setcoroutine(lua_State* hL) {
         updatehookmask(hL);
     }
     
+    int update_mask = 0;
+    void update_open(lua_State* hL, int enable) {
+        update_mask = enable? LUA_MASKRET: 0;
+        updatehookmask(hL);
+    }
+    void update_hook(lua_State* hL) {
+        static remotedebug::timer t;
+        if (!t.update(200)) {
+            return;
+        }
+        if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+            lua_pop(cL, 1);
+            return;
+        }
+        set_host(cL, hL);
+        lua_pushstring(cL, "update");
+        if (lua_pcall(cL, 1, 0, 0) != LUA_OK) {
+            lua_pop(cL, 1);
+            return;
+        }
+    }
+
     lua_State* hostL = 0;
     void init(lua_State* hL) {
         hostL = hL;
@@ -528,6 +563,11 @@ static int step_cancel(lua_State* L) {
     return 0;
 }
 
+static int update_open(lua_State* L) {
+    hookmgr::get_self(L)->update_open(get_host(L), lua_toboolean(L, 1));
+    return 0;
+}
+
 #if defined(LUA_HOOKEXCEPTION)
 static int exception_open(lua_State* L) {
     hookmgr::get_self(L)->exception_open(get_host(L), lua_toboolean(L, 1));
@@ -578,6 +618,7 @@ int luaopen_remotedebug_hookmgr(lua_State* L) {
         { "step_out", step_out },
         { "step_over", step_over },
         { "step_cancel", step_cancel },
+        { "update_open", update_open },
 #if defined(LUA_HOOKEXCEPTION)
         { "exception_open", exception_open },
 #endif

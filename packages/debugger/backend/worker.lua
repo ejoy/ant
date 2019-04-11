@@ -333,6 +333,7 @@ end
 local hook = {}
 
 function hook.bp(line)
+    if not initialized then return end
     local s = rdebug.getinfo(0, info)
     local src = source.create(s.source)
     if not source.valid(src) then
@@ -350,6 +351,7 @@ function hook.bp(line)
 end
 
 function hook.step()
+    if not initialized then return end
     local s = rdebug.getinfo(0, info)
     local src = source.create(s.source)
     if not source.valid(src) then
@@ -369,6 +371,7 @@ function hook.step()
 end
 
 function hook.newproto(proto, level)
+    if not initialized then return end
     local s = rdebug.getinfo(level, info)
     local src = source.create(s.source)
     if not source.valid(src) then

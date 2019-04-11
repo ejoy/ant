@@ -1,0 +1,11 @@
+path = "//pbr/assets/textures/pbr/gold/albedo.dds"
+
+sampler = {
+	U = "MIRROR",
+	V = "MIRROR",
+	MIN = "LINEAR",
+	MAG = "LINEAR",	
+}
+
+sRGB 		= true
+normalmap 	= false

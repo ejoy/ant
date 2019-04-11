@@ -15,7 +15,7 @@ $(ODIR)/rdebug_host.o : rdebug_host.c | $(ODIR)
 $(ODIR)/rdebug_visitor.o : rdebug_visitor.c rdebug_debugvar.h | $(ODIR)
 	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC)
 
-$(ODIR)/rdebug_hookmgr.o : rdebug_hookmgr.cpp rdebug_eventfree.h thunk.h | $(ODIR)
+$(ODIR)/rdebug_hookmgr.o : rdebug_hookmgr.cpp rdebug_eventfree.h rdebug_timer.h thunk.h | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
 $(ODIR)/rdebug_eventfree.o : rdebug_eventfree.cpp rdebug_eventfree.h | $(ODIR)

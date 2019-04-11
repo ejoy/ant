@@ -1,0 +1,3 @@
+config = { flags = { invert_normal = false,flip_uv = true,ib_32 = false,},layout = { "p3|n30nIf|T|b|t20|c40",},animation = { cpu_skinning = false,ani_list = "all",load_skeleton = true,},}
+sourcetype = "fbx"
+type = "mesh"
