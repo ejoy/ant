@@ -817,49 +817,141 @@ void update_terrain_normal_fast(struct TerrainData_t *terData) {
 	}
 }
 
-static inline bool 
-ray_triangle_intersection_point(const glm::vec3& start, const glm::vec3 &dir, 	
-	const glm::vec3 &v0, 
-	const glm::vec3 &v1, 
-	const glm::vec3 &v2,
-	glm::vec3 &intersection_point) {	
+// we have triangle:
+//		v1
+//	   /  \
+//	  / pt \
+//	 v0----v2
+// then:
+//	e0 = v2 - v0
+//  e1 = v1 - v0
+//  e2 = pt - v0
+//
+//if pt is inside triangle, then:
+//		pt = v0 + u * e0 + v * e1
+//	==>
+//		pt - v0 = u * e0 + v * e1
+//  ==>
+//		e2 = u * e0 + v * e1
+//	==>(here, we can dot any vector we want, replace e0 as vec3(1, 0, 0) or e1 as vec3(0, 1, 0) also get the same result)
+//		e2 dot e0 = (u * e0) dot e0 + (v * e1) dot e0
+//		e2 dot e1 = (u * e0) dot e1 + (v * e1) dot e1
+// solve these formula can get the u and v value
+//u and v is scalar
+//for this formula is correct
+//u ==> [0, 1] && v ==> [0, 1] && u + v <= 1
+//
+//	1. move v0 to origin
+//	2. pt - v0 is equal v * e1 + u * e0, because v * e1 is a vector lied on e1 and u * e0 also lied on e0(vector add)
+//	then the u/v value can determine what pt is
 
-	const glm::vec3 edge[3] = {
-		v1 - v0,
-		v2 - v0,
-		v0 - v2, 
-	};
+static inline bool
+point_in_triangle(const glm::vec3 &pt, const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2) {
+	const auto e0 = v2 - v0;
+	const auto e1 = v1 - v0;
+	const auto e2 = pt - v0;
 
-	const glm::vec3 vertices[3] = {
-		v0, v1, v2 };
+	const float dot00 = glm::dot(e0, e0);
+	const float dot01 = glm::dot(e0, e1);
+	const float dot02 = glm::dot(e0, e2);
+	const float dot11 = glm::dot(e1, e1);
+	const float dot12 = glm::dot(e1, e2);
 
-	const auto normal = glm::normalize(glm::cross(edge[0], edge[2]));
-	const float dist = -glm::dot(normal, v0);
+	const float inverDeno = 1 / (dot00 * dot11 - dot01 * dot01);
 
-	// project the ray's direction
-	const float dn = glm::dot(normal, dir);
+	const float u = (dot11 * dot02 - dot01 * dot12) * inverDeno;
+	if (u < 0 || u > 1) // if u out of range, return directly
+	{
+		return false;
+	}
+
+	const float v = (dot00 * dot12 - dot01 * dot02) * inverDeno;
+	if (v < 0 || v > 1) // if v out of range, return directly
+	{
+		return false;
+	}
+
+	return u + v <= 1;
+}
+
+struct ray {
+	glm::vec3 start;
+	glm::vec3 dir;
+};
+
+
+// make ray as line function:
+//		p(t) = start + t * dir	
+// make plane function as:
+//		n dot p + d = 0
+// here:
+//		start : 3d point
+//		dir : a 3d vector	(no need to be a unit vector)
+//		t : scalar
+//		n : 3d vector,		(no need to be a unit vector)
+//		p : a point lied on plane, 
+//		d : the distance to origin(when n is unit vector)
+// we need to calculate intersetion point between ray and plane, so p is also lied on ray
+// we can replace p as:
+//	n dot (start + t * dir) + d = 0
+// solve t as :
+//	n dot start + t * (dir dot n) + d = 0
+//	t = -(d + n dot start) / (dir dot n)
+//  then we can get what p is
+static inline bool
+ray_interset_plane(const ray& r, const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2, glm::vec3 &intersetion) {
+	const glm::vec3 e0 = v1 - v0, e1 = v2 - v0;
+
+	const auto normal = glm::cross(e0, e1);		// no need to be a unit vector
+	const float dist = -glm::dot(normal, v0);	
+
+	const float dn = glm::dot(normal, r.dir);	
 	if (fabs(dn) < 0.0001f) {
 		return false;
 	}
-	// start point distance to the plane
-	const float sd = -1.0f * (glm::dot(normal, start)+ dist);
+	
+	const float sd = -1.0f * (glm::dot(normal, r.start) + dist);
 	const float t = sd / dn;
-	// get impact point
-	const auto intersetion = start + (dir * t);	
+	
+	intersetion = r.start + (r.dir * t);
+	return true;
+}
 
-	for (int ii = 0; ii < 3; ++ii) {
-		const auto edgeNormal = glm::cross(edge[ii], normal);
-		const auto temp = intersetion - vertices[ii];
+static inline bool 
+ray_triangle_intersection_point(const ray &r,
+	const glm::vec3 &v0, 
+	const glm::vec3 &v1, 
+	const glm::vec3 &v2,
+	glm::vec3 &intersection_point) {
 
-		// project temp vector
-		const float dtm = glm::dot(edgeNormal, temp);
-		if (dtm > 0.001f) {
-			return false;
+	glm::vec3 intersetion;
+	if (ray_interset_plane(r, v0, v1, v2, intersetion)) {
+		if (point_in_triangle(intersetion, v0, v1, v2)) {
+			intersection_point = intersetion;
+			return true;
 		}
 	}
+	return false;
 
-	intersection_point = intersetion;
-	return true;
+	//const glm::vec3 edges[3] = {
+	//	v1 - v0,
+	//	v2 - v1,
+	//	v0 - v2,
+	//};
+
+	//const glm::vec3 vertices[3] = {
+	//	v0, v1, v2 };
+
+	//for (int ii = 0; ii < 3; ++ii) {
+	//	const auto edgeNormal = glm::cross(edges[ii], normal);
+	//	const auto temp = intersetion - vertices[ii];
+
+	//	// project temp vector
+	//	const float dtm = glm::dot(edgeNormal, temp);
+	//	if (dtm > 0.001f) {
+	//		return false;
+	//	}
+	//}
 }
 
 // project x,z on triangle, return the height of this position
@@ -867,10 +959,12 @@ ray_triangle_intersection_point(const glm::vec3& start, const glm::vec3 &dir,
 bool check_height_of_triangle(float x, float z, float *height, 
 	const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2) {
 
-	const glm::vec3 start(x, 1000.f, z);
-	const glm::vec3 dir(0.f, -1000.f, 0.0);
+	const ray r = {
+		glm::vec3(x, 1000.f, z),
+		glm::vec3(0.f, -1000.f, 0.0)
+	};
 	glm::vec3 ip;
-	if (ray_triangle_intersection_point(start, dir, v0, v1, v2, ip)) {
+	if (ray_triangle_intersection_point(r, v0, v1, v2, ip)) {
 		*height = ip[1];
 		return true;
 	}
