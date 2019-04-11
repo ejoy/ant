@@ -18,6 +18,7 @@ ecs.import 'ant.objcontroller'
 ecs.import 'ant.math.adapter'
 
 local renderpkg = import_package 'ant.render'
+local renderutil=renderpkg.util
 local computil = renderpkg.components
 local aniutil = import_package 'ant.animation'.util
 local timer = import_package "ant.timer"
@@ -28,9 +29,11 @@ local pbr_scene = require "pbr_scene"
 
 local pbr_demo = ecs.system 'pbr_demo'
 
-pbr_demo.depend 'transparency_filter_system'
-pbr_demo.depend 'entity_rendering'
-pbr_demo.depend 'camera_controller'
+--pbr_demo.depend 'transparency_filter_system'
+--pbr_demo.depend 'entity_rendering'
+pbr_demo.dependby 'render_system'
+pbr_demo.dependby 'primitive_filter_system'
+pbr_demo.dependby 'camera_controller'
 pbr_demo.depend 'timesystem'
 pbr_demo.depend 'math_adapter'
 
@@ -48,6 +51,7 @@ local function to_radian(angles)
 end
 
 function pbr_demo:init()
+    renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
     do
         local rotation = to_radian({45,-90,0,0})
         lu.create_directional_light_entity(world, 'directional_light',{1,1,1,0}, 1, rotation )
@@ -65,8 +69,8 @@ function pbr_demo:update()
     local deltaTime =  timer.deltatime
     print("deltaTime",deltaTime)
 
-    local camera = world:first_entity("main_camera")
-    local pos = ms(camera.camera.eyepos,"T")
+    local camera = world:first_entity("main_view")
+    local pos = ms(camera.transform.t,"T")
     print("camera :",string.format("%08.4f",pos[1]), string.format("%08.4f",pos[2]),string.format("%08.4f",pos[3]) )
 
 end 

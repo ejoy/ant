@@ -20,7 +20,7 @@ local function create_pbr_entity(world,name,pos,rot,scl,mesh_desc,material_desc,
         mesh = {
              ref_path = fs.path ( mesh_desc ),
         },
-        main_viewtag = true
+        main_view = true
     }
 
     local entity = world[eid]    
