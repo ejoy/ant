@@ -6,6 +6,10 @@
 #include <memory>
 #include "rdebug_eventfree.h"
 
+#if LUA_VERSION_NUM < 504
+#define s2v(o) (o)
+#endif
+
 static int HOOK_MGR = 0;
 static int HOOK_CALLBACK = 0;
 
@@ -34,10 +38,10 @@ static T* checklightudata(lua_State* L, int idx) {
 
 static Proto* ci2proto(CallInfo* ci) {
     StkId func = ci->func;
-    if (!ttisLclosure(func)) {
+    if (!ttisLclosure(s2v(func))) {
         return 0;
     }
-    return clLvalue(func)->p;
+    return clLvalue(s2v(func))->p;
 }
 
 struct hookmgr {
@@ -68,14 +72,14 @@ struct hookmgr {
         }
     }
     void break_del(lua_State* hL, Proto* p) {
-		size_t key = break_hash(p);
+        size_t key = break_hash(p);
         if (break_map[key] != BP::Ignore) {
             break_map[key] = BP::Ignore;
             break_proto[key] = p;
         }
     }
     void break_freeobj(Proto* p) {
-		size_t key = break_hash(p);
+        size_t key = break_hash(p);
         if (break_proto[key] == p) {
             break_map[key] = BP::None;
             break_proto[key] = 0;
@@ -94,7 +98,7 @@ struct hookmgr {
         if (!p) {
             return false;
         }
-		size_t key = break_hash(p);
+        size_t key = break_hash(p);
         switch (break_map[key]) {
         case BP::None: {
             if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
@@ -307,12 +311,20 @@ struct hookmgr {
     // common
     //
     lua_State* cL = 0;
+    lua_CFunction oldpanic;
     std::unique_ptr<thunk> sc_hook;
+    std::unique_ptr<thunk> sc_panic;
     hookmgr(lua_State* L)
         : cL(L)
+        , oldpanic(lua_atpanic(L, 0))
         , sc_hook(thunk_create_hook(
             reinterpret_cast<intptr_t>(this),
             reinterpret_cast<intptr_t>(&hook_callback)
+        ))
+        , sc_panic(thunk_create_panic(
+            reinterpret_cast<intptr_t>(this),
+            reinterpret_cast<intptr_t>(&panic_callback),
+            reinterpret_cast<intptr_t>(oldpanic)
         ))
     { }
 
@@ -347,6 +359,20 @@ struct hookmgr {
         }
         lua_pop(cL, 1);
         return -1;
+    }
+
+    void panic(lua_State* hL) {
+        if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+            lua_pop(cL, 1);
+            return;
+        }
+        set_host(cL, hL);
+        lua_pushstring(cL, "panic");
+        copyvalue(hL, cL);
+        if (lua_pcall(cL, 2, 0, 0) != LUA_OK) {
+            lua_pop(cL, 1);
+            return;
+        }
     }
 
     void hook(lua_State* hL, lua_Debug* ar) {
@@ -389,7 +415,7 @@ struct hookmgr {
     }
     
     lua_State* hostL = 0;
-    void start(lua_State* hL) {
+    void init(lua_State* hL) {
         hostL = hL;
         thunk_bind((intptr_t)hL, (intptr_t)this);
         remotedebug::eventfree::create(hL, lua_freef, this);
@@ -398,6 +424,8 @@ struct hookmgr {
         if(hostL) {
             remotedebug::eventfree::destroy(hostL);
         }
+        lua_sethook(cL, 0, 0, 0);
+        lua_atpanic(cL, oldpanic);
     }
     static int clear(lua_State* L) {
         hookmgr* self = (hookmgr*)lua_touserdata(L, 1);
@@ -413,12 +441,15 @@ struct hookmgr {
     static void lua_freef(void* mgr, void* ptr) {
         ((hookmgr*)mgr)->break_freeobj((Proto*)ptr);
     }
+    static void panic_callback(hookmgr* mgr, lua_State* hL) {
+        mgr->panic(hL);
+    }
 };
 
-static int sethook(lua_State* L) {
+static int init(lua_State* L) {
     luaL_checktype(L, 1, LUA_TFUNCTION);
     lua_settop(L, 1);
-    hookmgr::get_self(L)->start(get_host(L));
+    hookmgr::get_self(L)->init(get_host(L));
     lua_rawsetp(L, LUA_REGISTRYINDEX, &HOOK_CALLBACK);
     return 0;
 }
@@ -521,7 +552,7 @@ extern "C"
 __declspec(dllexport)
 #endif
 int luaopen_remotedebug_hookmgr(lua_State* L) {
-	get_host(L);
+    get_host(L);
 
     lua_newtable(L);
     if (LUA_TUSERDATA != lua_rawgetp(L, LUA_REGISTRYINDEX, &HOOK_MGR)) {
@@ -529,17 +560,17 @@ int luaopen_remotedebug_hookmgr(lua_State* L) {
         hookmgr* thd = (hookmgr*)lua_newuserdata(L, sizeof(hookmgr));
         new (thd) hookmgr(L);
 
-		lua_createtable(L, 0, 1);
-		lua_pushcfunction(L, hookmgr::clear);
-		lua_setfield(L, -2, "__gc");
-		lua_setmetatable(L, -2);
+        lua_createtable(L, 0, 1);
+        lua_pushcfunction(L, hookmgr::clear);
+        lua_setfield(L, -2, "__gc");
+        lua_setmetatable(L, -2);
 
         lua_pushvalue(L, -1);
         lua_rawsetp(L, LUA_REGISTRYINDEX, &HOOK_MGR);
     }
 
     static luaL_Reg lib[] = {
-        { "sethook", sethook },
+        { "init", init },
         { "setcoroutine", setcoroutine },
         { "activeline", activeline },
         { "stacklevel", stacklevel },
