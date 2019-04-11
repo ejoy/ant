@@ -1,0 +1,14 @@
+shader = {
+    vs = "//ant.resources/mesh/vs_colormesh_old",  -- 新的shader 修改了，但没有对应的传递颜色,仍旧使用旧版本测试
+    fs = "//ant.resources/mesh/fs_colormesh",
+}
+
+--state = "default.state"
+state = {
+	CULL = "CCW",
+	WRITE_MASK = "RGBAZ",
+	DEPTH_TEST = "LESS"
+}
+properties = {
+	u_time = {name="u_time", type="v4", default={1, 1, 1, 1}},
+}
