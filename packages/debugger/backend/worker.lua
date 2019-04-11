@@ -464,6 +464,16 @@ function event.iowrite()
     return true
 end
 
+function event.panic(msg)
+    if not initialized then return end
+    if not exceptionFilters['lua_panic'] then
+        return
+    end
+    exceptionMsg, exceptionTrace = traceback(msg, 0)
+    state = 'stopped'
+    runLoop 'exception'
+end
+
 if hookmgr.exception_open then
     function event.exception(msg)
         if not initialized then return end
