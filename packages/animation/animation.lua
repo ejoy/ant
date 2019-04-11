@@ -154,11 +154,11 @@ function anisystem:update()
 	end
 end
 
+local mathadapter_util = import_package "ant.math.adapter"
 local math3d_adapter = require "math3d.adapter"
-local animation_math_adapter = ecs.system "animation_math_adapter"
-function animation_math_adapter:bind_math_adapter()
+mathadapter_util.bind("animation", function ()
 	ik_module.do_ik = math3d_adapter.matrix(ms, ik_module.do_ik, 1)	
-end
+end)
 
 
 

@@ -1,3 +1,4 @@
 return {
-	name = "ant.math.adapter"
+	name = "ant.math.adapter",
+	entry = "math_adapter",
 }

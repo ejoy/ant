@@ -154,14 +154,6 @@ struct TerrainData_t {
 	//bgfx_uniform_handle_t		u_maskTexture;		  	// mask Uniform
 };
 
-
-void update_terrain_mesh(struct TerrainData_t* terData);
-void smooth_terrain_mesh(struct TerrainData_t* terData, int mode);
-void update_terrain_normal_fast(struct TerrainData_t *terData);
-void update_terrain_tangent(struct TerrainData_t* terData);
-void terrain_update_vb(struct TerrainData_t *terData);
-void terrain_updata_ib(struct TerrainData_t *terData);
-
 //--------------------------------
 // tested
 /*
@@ -178,85 +170,85 @@ lterrain_attrib(lua_State *L)
 }
 */
 
-static int
-lterrain_vb_close(lua_State *L) {
-	uint8_t *vertices = (uint8_t *)lua_touserdata(L, 1);
-	// do nothing
-#ifdef MY_DEBUG		
-	printf("gc: vb %p destroy.\n", vertices);
-#endif
-	return 0;
-}
+//static int
+//lterrain_vb_close(lua_State *L) {
+//	uint8_t *vertices = (uint8_t *)lua_touserdata(L, 1);
+//	// do nothing
+//#ifdef MY_DEBUG		
+//	printf("gc: vb %p destroy.\n", vertices);
+//#endif
+//	return 0;
+//}
+//
+//static int
+//lterrain_ib_close(lua_State *L) {
+//	uint32_t *indices = (uint32_t *)lua_touserdata(L, 1);
+//	// do nothing
+//#ifdef MY_DEBUG		
+//	printf("gc: ib %p destroy.\n", indices);
+//#endif 	
+//	return 0;
+//}
 
-static int
-lterrain_ib_close(lua_State *L) {
-	uint32_t *indices = (uint32_t *)lua_touserdata(L, 1);
-	// do nothing
-#ifdef MY_DEBUG		
-	printf("gc: ib %p destroy.\n", indices);
-#endif 	
-	return 0;
-}
 
+//// alloc vertex buffer and return to lua
+//static int
+//lterrain_getVB(lua_State *L) {
+//	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+//	if (terData->vertices)
+//		return luaL_error(L, "vertices already exist.");
+//
+//	bgfx::VertexDecl *vd = terData->vdecl;
+//	uint32_t num = terData->gridWidth * terData->gridLength;
+//
+//#ifdef MY_DEBUG	
+//	printf("c terrain: new alloc vertex = %d, strid =%d\n", num, vd->getStride());
+//#endif 	
+//
+//	terData->vertices = (uint8_t*)lua_newuserdata(L, num * vd->getStride());
+//
+//	if (luaL_newmetatable(L, "TERRAIN_VB")) {
+//		lua_pushcfunction(L, lterrain_vb_close);        // register gc function
+//		lua_setfield(L, -2, "__gc");
+//	}
+//	lua_setmetatable(L, -2);
+//
+//	return 1;
+//}
 
-// alloc vertex buffer and return to lua
-static int
-lterrain_getVB(lua_State *L) {
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
-	if (terData->vertices)
-		return luaL_error(L, "vertices already exist.");
+//static int
+//lterrain_getNumVerts(lua_State *L) {
+//	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+//	lua_pushnumber(L, terData->vertexCount);
+//	return 1;
+//}
 
-	bgfx::VertexDecl *vd = terData->vdecl;
-	uint32_t num = terData->gridWidth * terData->gridLength;
-
-#ifdef MY_DEBUG	
-	printf("c terrain: new alloc vertex = %d, strid =%d\n", num, vd->getStride());
-#endif 	
-
-	terData->vertices = (uint8_t*)lua_newuserdata(L, num * vd->getStride());
-
-	if (luaL_newmetatable(L, "TERRAIN_VB")) {
-		lua_pushcfunction(L, lterrain_vb_close);        // register gc function
-		lua_setfield(L, -2, "__gc");
-	}
-	lua_setmetatable(L, -2);
-
-	return 1;
-}
-
-static int
-lterrain_getNumVerts(lua_State *L) {
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
-	lua_pushnumber(L, terData->vertexCount);
-	return 1;
-}
-
-static int
-lterrain_getNumIndices(lua_State *L) {
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
-	lua_pushnumber(L, terData->indexCount);
-	return 1;
-}
+//static int
+//lterrain_getNumIndices(lua_State *L) {
+//	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+//	lua_pushnumber(L, terData->indexCount);
+//	return 1;
+//}
 // alloc inddex and return to lua
-static int
-lterrain_getIB(lua_State *L) {
-	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
-	if (terData->indices)
-		return luaL_error(L, "indices already exist.");
-
-	uint32_t num = terData->gridWidth * terData->gridLength;
-	terData->indices = (uint32_t*)lua_newuserdata(L, num * sizeof(uint32_t) * 6);
-#ifdef MY_DEBUG	
-	printf("c terrain: new alloc vertex = %d, index =%d(%d)\n", num, (uint32_t)(num * 6), (uint32_t)(num * sizeof(uint32_t) * 6));
-#endif 	
-
-	if (luaL_newmetatable(L, "TERRAIN_IB")) {
-		lua_pushcfunction(L, lterrain_ib_close);        // register gc function
-		lua_setfield(L, -2, "__gc");
-	}
-	lua_setmetatable(L, -2);
-	return 1;
-}
+//static int
+//lterrain_getIB(lua_State *L) {
+//	struct TerrainData_t *terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+//	if (terData->indices)
+//		return luaL_error(L, "indices already exist.");
+//
+//	uint32_t num = terData->gridWidth * terData->gridLength;
+//	terData->indices = (uint32_t*)lua_newuserdata(L, num * sizeof(uint32_t) * 6);
+//#ifdef MY_DEBUG	
+//	printf("c terrain: new alloc vertex = %d, index =%d(%d)\n", num, (uint32_t)(num * 6), (uint32_t)(num * sizeof(uint32_t) * 6));
+//#endif 	
+//
+//	if (luaL_newmetatable(L, "TERRAIN_IB")) {
+//		lua_pushcfunction(L, lterrain_ib_close);        // register gc function
+//		lua_setfield(L, -2, "__gc");
+//	}
+//	lua_setmetatable(L, -2);
+//	return 1;
+//}
 
 static
 int lterrain_width(lua_State *L) {
@@ -641,21 +633,7 @@ smooth_terrain_mesh(struct TerrainData_t *terData, SMOOTH_MODE mode) {
 	*/
 }
 
-static int
-lterrain_update_mesh(lua_State *L) {
-	struct TerrainData_t* terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
-	if (terData->vertices == NULL)
-		return luaL_error(L, "must alloc vertices first.\n");
-	if (terData->indices == NULL)
-		return luaL_error(L, "must alloc indices first.\n");
-
-	update_terrain_mesh(terData);
-	smooth_terrain_mesh(terData, SMOOTH_MODE::DEFAULT);
-	update_terrain_normal_fast(terData);
-	return 0;
-}
-
-static void 
+static void
 update_terrain_normal_fast(struct TerrainData_t *terData) {
 	// normal attrib does not exist
 	if (!terData->vdecl->has(bgfx::Attrib::Normal))
@@ -690,7 +668,7 @@ update_terrain_normal_fast(struct TerrainData_t *terData) {
 			const auto e2 = v3 - v2;
 
 			const uint32_t index = (j * (terData->gridWidth - 1)) + i;
-			normals[index] = glm::cross(e1, e2);			
+			normals[index] = glm::cross(e1, e2);
 		}
 	}
 
@@ -709,24 +687,24 @@ update_terrain_normal_fast(struct TerrainData_t *terData) {
 			}
 
 			// Bottom right face.
-			if ((i < (terData->gridWidth - 1)) && ((j - 1) >= 0)) {
+			if ((i < int(terData->gridWidth - 1)) && ((j - 1) >= 0)) {
 				const uint32_t index = ((j - 1) * (terData->gridWidth - 1)) + i;
-				sum += normals[index];				
+				sum += normals[index];
 				count++;
 			}
 
 			// Upper left face.
-			if ((0 <= (i - 1)) && (j < (terData->gridLength - 1))) {
+			if ((0 <= (i - 1)) && (j < int(terData->gridLength - 1))) {
 				const uint32_t index = (j * (terData->gridWidth - 1)) + (i - 1);
-				sum += normals[index];				
+				sum += normals[index];
 				count++;
 			}
 
 			// Upper right face.
-			if ((i < (terData->gridWidth - 1)) && (j < (terData->gridLength - 1))) {
+			if ((i < int(terData->gridWidth - 1)) && (j < int(terData->gridLength - 1))) {
 				const uint32_t index = (j * (terData->gridWidth - 1)) + i;
 
-				sum += normals[index];				
+				sum += normals[index];
 				count++;
 			}
 
@@ -742,6 +720,20 @@ update_terrain_normal_fast(struct TerrainData_t *terData) {
 			*dst_normals = glm::normalize(sum);
 		}
 	}
+}
+
+static int
+lterrain_update_mesh(lua_State *L) {
+	struct TerrainData_t* terData = (struct TerrainData_t*) luaL_checkudata(L, 1, "TERRAIN_BASE");
+	if (terData->vertices == NULL)
+		return luaL_error(L, "must alloc vertices first.\n");
+	if (terData->indices == NULL)
+		return luaL_error(L, "must alloc indices first.\n");
+
+	update_terrain_mesh(terData);
+	smooth_terrain_mesh(terData, SMOOTH_MODE::DEFAULT);
+	update_terrain_normal_fast(terData);
+	return 0;
 }
 
 /*
