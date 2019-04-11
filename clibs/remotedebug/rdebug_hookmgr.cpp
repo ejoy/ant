@@ -135,19 +135,11 @@ struct hookmgr {
             break_hookmask(hL, LUA_MASKCALL | LUA_MASKRET);
         }
     }
-    void break_hook(lua_State* hL, lua_Debug* ar) {
-        if (!break_mask) {
-            return;
-        }
-        switch (ar->event) {
-        case LUA_HOOKCALL:
-        case LUA_HOOKTAILCALL:
-            break_update(hL, ar->i_ci, ar->event);
-            return;
-        case LUA_HOOKRET:
-            break_update(hL, ar->i_ci->previous, ar->event);
-            return;
-        }
+    void break_hook_call(lua_State* hL, lua_Debug* ar) {
+        break_update(hL, ar->i_ci, ar->event);
+    }
+    void break_hook_return(lua_State* hL, lua_Debug* ar) {
+        break_update(hL, ar->i_ci->previous, ar->event);
     }
     void break_hookmask(lua_State* hL, int mask) {
         if (break_mask != mask) {
@@ -208,32 +200,22 @@ struct hookmgr {
         stepL = 0;
         step_hookmask(hL, 0);
     }
-    void step_hook(lua_State* hL, lua_Debug* ar) {
-        if (stepL != hL) {
-            return;
+    void step_hook_call(lua_State* hL, lua_Debug* ar) {
+        step_current_level++;
+        if (step_current_level > step_target_level) {
+            step_hookmask(hL, LUA_MASKCALL | LUA_MASKRET);
         }
-        switch (ar->event) {
-        case LUA_HOOKCALL:
-        case LUA_HOOKTAILCALL:
-            step_current_level++;
-            if (step_current_level > step_target_level) {
-                step_hookmask(hL, LUA_MASKCALL | LUA_MASKRET);
-            }
-            else {
-                step_hookmask(hL, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE);
-            }
-            return;
-        case LUA_HOOKRET:
-            step_current_level = stacklevel(hL, step_current_level) - 1;
-            if (step_current_level > step_target_level) {
-                step_hookmask(hL, LUA_MASKCALL | LUA_MASKRET);
-            }
-            else {
-                step_hookmask(hL, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE);
-            }
-            return;
-        default:
-            break;
+        else {
+            step_hookmask(hL, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE);
+        }
+    }
+    void step_hook_return(lua_State* hL, lua_Debug* ar) {
+        step_current_level = stacklevel(hL, step_current_level) - 1;
+        if (step_current_level > step_target_level) {
+            step_hookmask(hL, LUA_MASKCALL | LUA_MASKRET);
+        }
+        else {
+            step_hookmask(hL, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE);
         }
     }
     void step_hookmask(lua_State* hL, int mask) {
@@ -258,9 +240,6 @@ struct hookmgr {
         exception_hookmask(hL, enable? LUA_MASKEXCEPTION: 0);
     }
     void exception_hook(lua_State* hL, lua_Debug* ar) {
-        if (ar->event != LUA_HOOKEXCEPTION) {
-            return;
-        }
         if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
             lua_pop(cL, 1);
             return;
@@ -290,9 +269,6 @@ struct hookmgr {
         thread_hookmask(hL, enable? LUA_MASKTHREAD: 0);
     }
     void thread_hook(lua_State* hL, lua_Debug* ar) {
-        if (ar->event != LUA_HOOKTHREAD) {
-            return;
-        }
         if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
             lua_pop(cL, 1);
             return;
@@ -376,34 +352,53 @@ struct hookmgr {
     }
 
     void hook(lua_State* hL, lua_Debug* ar) {
-        step_hook(hL, ar);
-        break_hook(hL, ar);
+        switch (ar->event) {
+        case LUA_HOOKLINE:
+            break;
+        case LUA_HOOKCALL:
+        case LUA_HOOKTAILCALL:
+            break_mask
+                ? break_hook_call(hL, ar)
+                : step_hook_call(hL, ar)
+                ;
+            return;
+        case LUA_HOOKRET:
+            break_mask
+                ? break_hook_return(hL, ar)
+                : step_hook_return(hL, ar)
+                ;
+            return;
 #if defined(LUA_HOOKEXCEPTION)
-        exception_hook(hL, ar);
+        case LUA_HOOKEXCEPTION:
+            exception_hook(hL, ar);
+            return;
 #endif
 #if defined(LUA_HOOKTHREAD)
-        thread_hook(hL, ar);
+        case LUA_HOOKTHREAD:
+            thread_hook(hL, ar);
+            return;
 #endif
-        if (ar->event == LUA_HOOKLINE) {
-            if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+        default:
+            return;
+        }
+        if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+            lua_pop(cL, 1);
+            return;
+        }
+        set_host(cL, hL);
+        if (step_mask & LUA_MASKLINE) {
+            lua_pushstring(cL, "step");
+            if (lua_pcall(cL, 1, 0, 0) != LUA_OK) {
                 lua_pop(cL, 1);
                 return;
             }
-            set_host(cL, hL);
-            if (step_mask & LUA_MASKLINE) {
-                lua_pushstring(cL, "step");
-                if (lua_pcall(cL, 1, 0, 0) != LUA_OK) {
-                    lua_pop(cL, 1);
-                    return;
-                }
-            }
-            else {
-                lua_pushstring(cL, "bp");
-                lua_pushinteger(cL, ar->currentline);
-                if (lua_pcall(cL, 2, 0, 0) != LUA_OK) {
-                    lua_pop(cL, 1);
-                    return;
-                }
+        }
+        else {
+            lua_pushstring(cL, "bp");
+            lua_pushinteger(cL, ar->currentline);
+            if (lua_pcall(cL, 2, 0, 0) != LUA_OK) {
+                lua_pop(cL, 1);
+                return;
             }
         }
     }
