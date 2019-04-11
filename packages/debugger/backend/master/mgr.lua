@@ -86,7 +86,7 @@ function mgr.initConfig(config)
 end
 
 function mgr.sendToClient(pkg)
-    network:send(proto.send(pkg))
+    network:send(proto.send(pkg, stat))
 end
 
 function mgr.sendToWorker(w, pkg)
