@@ -35,7 +35,7 @@ pbr_demo.dependby 'render_system'
 pbr_demo.dependby 'primitive_filter_system'
 pbr_demo.dependby 'camera_controller'
 pbr_demo.depend 'timesystem'
-pbr_demo.depend 'math_adapter'
+--pbr_demo.depend 'math_adapter'
 
 -- move it to common math utils
 local function to_radian(angles)
