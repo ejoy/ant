@@ -20,13 +20,19 @@ return function(filename)
         if loader then
 			if type(v) == "string" then
 				-- read file under .material file folder, if not found try from assets path
-				local pkgname = filename:root_name()
-				local dir = filename:parent_path()
-				local fullpath = dir / v
-				if not fs.exists(fullpath) then
-					fullpath = pkgname /v
+				local subrespath = fs.path(v)
+				if not subrespath:is_absolute() then
+					local pkgname = filename:root_name()
+					local dir = filename:parent_path()
+					local fullpath = dir / subrespath
+					if not fs.exists(fullpath) then
+						fullpath = pkgname / subrespath
+					end
+					subrespath = fullpath
 				end
-                material_info[k] = assetmgr.load(fullpath)
+
+				material_info[k] = assetmgr.load(subrespath)
+
 			elseif type(v) == "table" then
 				material_info[k] = loader(v)
             end
