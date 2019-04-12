@@ -1,14 +1,15 @@
 local rdebug = require 'remotedebug'
 local variables = require 'backend.worker.variables'
 
-local function readfile(filename)
-    local vfs = require 'vfs.simplefs'
-    local fullpath = assert(package.searchpath(filename, package.path))
-    local fullpath = assert(vfs.realpath(fullpath))
-    local f = assert(io.open(fullpath))
-    local str = f:read 'a'
-    f:close()
-    return str
+local readfile = package.readfile
+if not readfile then
+    function readfile(filename)
+        local fullpath = assert(package.searchpath(filename, package.path))
+        local f = assert(io.open(fullpath))
+        local str = f:read 'a'
+        f:close()
+        return str
+    end
 end
 
 local eval_repl  = assert(rdebug.reffunc(readfile 'backend.worker.eval_repl'))
