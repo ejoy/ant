@@ -8,8 +8,7 @@ local terraincomp =
 }
 
 local function create_buffer(terrainhandle, dynamic, declname)
-    local vb, ib = terrainhandle:buffer()
-    local numvertices, numindices = terrainhandle:buffersize()
+    local vb, numvertices, ib, numindices = terrainhandle:buffer()
 
     local decl = declmgr.get(declname)
 

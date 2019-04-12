@@ -1,15 +1,19 @@
-heightmap = "//ant.resources.binary/terrain/chibi16.raw"
 grid_width  = 1025
 grid_length = 1025
-bits   = 16
+
 width  = 1024
 length = 1024
 height = 780
 
+heightmap = {
+	bits   = 16,
+	ref_path = "//ant.resources.binary/terrain/chibi16.raw"
+}
+
 uv0_scale  = 80*0.625
 uv1_scale  = 1
 
-numlayers = 4
+num_layers = 4
 	
 	-- textures = {
 	--    "assets/build/terrain/ground_099-512.dds"

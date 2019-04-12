@@ -1,6 +1,13 @@
 shader = {
-	vs = "",
-	fs = "",
+	vs = "//ant.resources/terrain_shadow/vs_terrain_shadow",
+    fs = "//ant.resources/terrain_shadow/fs_terrain_shadow",
 }
 
 state = "normal.state"
+
+properties = {
+	textures = {
+		s_baseTexture = { name = "base texture", type = "texture", stage = 0, ref_path = "" },
+		s_maskTexture = { name = "mask texture", type = "texture", stage = 1, ref_path = "" },
+	}
+}

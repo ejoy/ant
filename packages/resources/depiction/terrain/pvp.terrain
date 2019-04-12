@@ -1,15 +1,20 @@
-heightmap = "//ant.resources.binary/terrain/pvp1.raw"
-num_layers = 4
+width  = 400
+length = 400
+height = 385   --785,
+
 grid_width  = 513
 grid_length = 513
-bits   = 8
-width  = 400
-length = 400   
-height = 385   --785,
-	
+
+num_layers = 4
+
+heightmap = {
+	bits   = 8,	-- get from ref_path?
+	ref_path = "//ant.resources.binary/terrain/pvp1.raw"
+}
+
 uv0_scale  = 50 --80*0.625,   -- 140
 uv1_scale  = 1
-	
+
 -- textures = {   -- ios 文件名大小写敏感，需要注意
 --    "assets/build/terrain/ground_099-512.dds",
 --    "assets/build/terrain/Scene_Texture_Terrain_BD_SOIL_0070_1.dds",
