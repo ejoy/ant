@@ -77,7 +77,7 @@ local function print_tree(tr, offset_pr)
             ", rotation : ", transform.r, 
             ", translation : ", transform.t)
 
-        if child_num ~= 0 then            
+        if child_num ~= 0 then
             print_tree(child, offset_pr .. "\t")
         end
     end    

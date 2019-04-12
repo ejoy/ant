@@ -131,8 +131,8 @@ local function create_scene_node_test()
         },
         material = material,
         can_render = true,
-		main_view = true,
-		serialize = seriazlizeutil.create(),
+        main_view = true
+        can_select = true,
 	}
 	
 	
@@ -150,8 +150,8 @@ local function create_scene_node_test()
         },
         material = material,
         can_render = true,
-		main_view = true,
-		serialize = seriazlizeutil.create(),
+        main_view = true
+        can_select = true,
     }
 
     local render_child2_1 =
@@ -169,7 +169,7 @@ local function create_scene_node_test()
         },
         material = material,
         can_render = true,
-		main_view = true,
+        main_view = true
 		serialize = seriazlizeutil.create(),
 	}
 
@@ -241,7 +241,7 @@ local function create_scene_node_test()
 			ref_path = fs.path '//ant.resources/cube.mesh'
 		},
 		material = material,
-		can_render = true,
+        can_select = true,
 		main_view = true,
 		serialize = seriazlizeutil.create(),
 	}
@@ -368,6 +368,53 @@ local function print_scene_nodes()
 	print_tree(rooteids, 1)
 end
 
+local function print_tree()
+    local hi = {}
+    hi[0] = {}
+    for i = 1,#world do
+        local e = world[i]
+        if e then
+            local pid = e.parent
+            if not pid and e.transform then
+                pid = e.transform.parent
+            elseif not pid and e.hierarchy_transform then
+                pid = e.hierarchy_transform.parent
+            end
+            if pid then
+                hi[pid] = hi[pid] or {}
+                table.insert(hi[pid],i)
+            else
+                table.insert(hi[0],i)
+            end
+        end
+    end
+    do
+        local function bfs(id,tab)
+            if hi[id] then
+                local next_tab = tab.."    "
+                
+                for i,v in ipairs(hi[id]) do
+                    local o = ""
+                    o = o .. next_tab..v..":"..(world[v].name or "nil")
+                    if world[v].hierarchy_transform then
+                        o = o .. " hierarchy_transform"
+                    end
+                    if world[v].transform then
+                        o = o .. " transform"
+                    end
+                    print(o)
+                    bfs(v,next_tab)
+                end
+            end
+        end
+        print("tree_begin")
+        bfs(0,"")
+        print("tree_end")
+
+    end
+end
+
+
 local function move_root_node(rootnodename)
 	local eid = find_entity_by_name(rootnodename, 'hierarchy_transform')
 	local e = world[eid]
@@ -380,14 +427,17 @@ function scenespace_test:event_changed()
 
 	if whichframe == nil then
 		print_scene_nodes()
+        print_tree()
 		whichframe = self.frame_stat.frame_num
 	elseif self.frame_stat.frame_num == whichframe + 1 then
 		print_scene_nodes()
+        print_tree()
 	elseif self.frame_stat.frame_num == whichframe + 2 then 
 		local level1_1_eid = find_entity_by_name('level1_1', 'hierarchy_transform')
 		world:remove_entity(level1_1_eid)
 	elseif self.frame_stat.frame_num == whichframe + 3 then
 		print_scene_nodes()
+        print_tree()
 	elseif self.frame_stat.frame_num == whichframe + 4 then
 		move_root_node('hie_root2')
 	end

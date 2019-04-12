@@ -12,15 +12,21 @@ local elog          = iupcontrols.logview
 local tree = iupcontrols.tree
 local fs_hierarchy = require "fs_hierarchy"
 local asset_view = require "asset_view"
+local SceneControl = require "scene_controll"
 local editor_mainwindow = {}
 editor_mainwindow.__index = editor_mainwindow
 local math = require "math"
+
 
 
 local nodes = {}
 function editor_mainwindow:build_window(fbw, fbh)
     
     -- self.tree = tree.new({SHOWTOGGLE = "YES"})
+    self:build_menu()
+    
+    local scene_control = SceneControl.new(self.menu)
+
     self.fs_hierarchy = fs_hierarchy.new {
         rastersize = math.floor(fbw*0.25) .. "x" .. math.floor(fbh - fbw*0.25-50)
     }
@@ -48,12 +54,27 @@ function editor_mainwindow:build_window(fbw, fbh)
             showgrip = "NO",
             ORIENTATION="VERTICAL"
         },
+        menu = self.menu:get_view(),
         title = "Editor",
         rastersize = string.format("%dx%d",math.floor(fbw),math.floor(fbh)),
         shrink="YES",    -- logger box should be allow shrink
     }
 
     
+end
+
+function editor_mainwindow:build_menu()
+    local MenuBar          = iupcontrols.menubar
+    self.menu = MenuBar.new({{"File",iup.menu({})},
+                            {"Edit",iup.menu({})},
+                            {"Asset",iup.menu({})},
+                            {"Component",iup.menu({})},
+                            {"Tool",iup.menu({})},
+                            {"Test",iup.menu({})}})
+    local function exit()
+        return iup.CLOSE
+    end
+    self.menu:add_item(iup.item({title="Exit",action=exit}),{"File"})
 end
 
 

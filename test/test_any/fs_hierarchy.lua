@@ -91,7 +91,7 @@ function fs_hierarchy:_build()
             },
             MARGIN = "1x1",
         },
-        title = "hierarchy",
+        -- title = "hierarchy",
     }
     for arg_k,arg_v in pairs(self.iup_args) do
         self.view[arg_k] = arg_v
@@ -125,7 +125,6 @@ function fs_hierarchy:_init()
     end
     self.dir_tree.view.executeleaf_cb = function(view,id)
         print("executeleaf_cb")
-
         self:set_foucs(id)
     end
     self.dir_tree.view.branchopen_cb = function(view,id)

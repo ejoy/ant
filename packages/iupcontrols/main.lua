@@ -11,6 +11,7 @@ for _, name in ipairs {
     "vectorview",
     "icon",
     "util",
+    "menubar",
 } do
     pkg[name] =     require(name)
 end
