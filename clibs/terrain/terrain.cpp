@@ -1094,18 +1094,20 @@ register_terrain_data_mt(lua_State *L) {
 	}
 }
 
-
-LUAMOD_API int
-luaopen_lterrain(lua_State *L) {
-	luaL_checkversion(L);
-	register_terrain_data_mt(L);
-	luaL_Reg l[] = {		
-		{ "create",			lterrain_create},
-		{ NULL, NULL },
-	};
-	luaL_newlib(L, l);
-	return 1;
+extern "C" {
+	LUAMOD_API int
+		luaopen_lterrain(lua_State *L) {
+		luaL_checkversion(L);
+		register_terrain_data_mt(L);
+		luaL_Reg l[] = {
+			{ "create",			lterrain_create},
+			{ NULL, NULL },
+		};
+		luaL_newlib(L, l);
+		return 1;
+	}
 }
+
 
 
 
