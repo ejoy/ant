@@ -989,6 +989,22 @@ terraindata_update_normals(struct terrain_data *terrain) {
 }
 
 static int
+lterraindata_smooth_height(lua_State *L) {
+	terrain_data* terrain = (terrain_data*)lua_newuserdata(L, sizeof(terrain_data));
+	smooth_terrain_mesh(terrain, SMOOTH_MODE::DEFAULT);
+	return 0;
+}
+
+static int
+lterraindata_smooth_normal(lua_State *L) {
+	terrain_data* terrain = (terrain_data*)lua_newuserdata(L, sizeof(terrain_data));
+	terraindata_update_normals(terrain);
+	return 0;
+}
+
+
+
+static int
 lterrain_create(lua_State *L) {
 	terrain_data* terrain = (terrain_data*)lua_newuserdata(L, sizeof(terrain_data));
 	luaL_getmetatable(L, "TERRAIN_DATA");
@@ -1000,8 +1016,12 @@ lterrain_create(lua_State *L) {
 
 		init_stream_buffer(terrain->buffer, terrain->grid_width, terrain->grid_length);
 		init_terrain_mesh(terrain);
-		smooth_terrain_mesh(terrain, SMOOTH_MODE::DEFAULT);
-		terraindata_update_normals(terrain);
+		
+		if (terrain->heightmap.data) {
+			smooth_terrain_mesh(terrain, SMOOTH_MODE::DEFAULT);
+			terraindata_update_normals(terrain);
+		}
+		
 	}
 	return 1;
 }
@@ -1062,8 +1082,9 @@ register_terrain_data_mt(lua_State *L) {
 			{"raw_height",	lterraindata_raw_height},
 			{"buffer",		lterraindata_buffer},
 			{"buffersize",	lterraindata_buffersize},
-			{"bounding",	lterraindata_bounding},			
-			//{"update_normals",	lterraindata_update_normals},			
+			{"bounding",	lterraindata_bounding},
+			{"smooth_height",lterraindata_smooth_height},
+			{"smooth_normal",lterraindata_smooth_normal},			
 			{NULL,NULL},
 		};
 		luaL_setfuncs(L, l, 0);
