@@ -44,14 +44,15 @@ local function update_properties(dst_properties, src_properties)
 	if srctextures then
 		local dsttextures = dst_properties.textures or {}
 		for k, v in pairs(srctextures) do
-			local tex = deep_copy(v)
-			dsttextures[k] = tex
-			if tex.ref_path then
-				local refpath = fs.path(tex.ref_path)
-				tex.ref_path = refpath
-				if refpath then
-					tex.handle = asset.load(refpath).handle
-				end
+			local tex = dsttextures[k]
+			if tex == nil then
+				tex = {name=v.name, type=v.type, stage=v.stage, ref_path=fs.path(v.ref_path)}
+				dsttextures[k] = tex
+			end
+
+			local refpath = tex.ref_path
+			if refpath then
+				tex.handle = asset.load(refpath).handle
 			end
 		end
 		dst_properties.textures = dsttextures

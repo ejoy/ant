@@ -10,13 +10,16 @@ local terraincomp =
 }
 
 local function create_buffer(terrainhandle, dynamic, declname)
-    local vb, numvertices, ib, numindices = terrainhandle:buffer()
+    local vb, ib = terrainhandle:buffer()
+	local vbsize, ibsize = terrainhandle:buffersize()
 
     local decl = declmgr.get(declname)
 
     local create_vb = dynamic and bgfx.create_dynamic_vertex_buffer or bgfx.create_vertex_buffer
-    local create_ib = dynamic and bgfx.create_dynamic_index_buffer or bgfx.create_index_buffer
-    return create_vb({'!', vb, numvertices}, decl.handle), create_ib({'!', ib, numindices})
+	local create_ib = dynamic and bgfx.create_dynamic_index_buffer or bgfx.create_index_buffer
+	local vbflags = dynamic and "wa" or ""
+	local ibflags = dynamic and "wad" or "d"
+    return create_vb({"!", vb, vbsize}, decl.handle, vbflags), create_ib({ib, ibsize}, ibflags)
 end
 
 function terraincomp:postinit(e)

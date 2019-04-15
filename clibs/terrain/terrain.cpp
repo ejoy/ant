@@ -276,12 +276,8 @@ lterraindata_buffer(lua_State *L) {
 	const auto &buffer = terrain->buffer;
 
 	lua_pushlightuserdata(L, buffer.vertices);
-	lua_pushinteger(L, buffer.vertex_count);
-
 	lua_pushlightuserdata(L, buffer.indices);
-	lua_pushinteger(L, buffer.index_count);
-
-	return 4;
+	return 2;
 }
 
 template<class ValueType>
@@ -358,8 +354,9 @@ lterraindata_bounding(lua_State *L) {
 static int
 lterraindata_buffersize(lua_State *L) {
 	terrain_data *terrain = (terrain_data*) luaL_checkudata(L, 1, "TERRAIN_DATA");
-	lua_pushinteger(L, terrain->buffer.vertex_count);
-	lua_pushinteger(L, terrain->buffer.index_count);
+	const auto& buffer = terrain->buffer;
+	lua_pushinteger(L, buffer.vertex_count * buffer.vdecl->getStride());
+	lua_pushinteger(L, buffer.index_count * sizeof(buffer.indices[0]));
 	return 2;
 }
 
@@ -415,9 +412,9 @@ load_heightmap_data(lua_State *L, int index, terrain_data::heightmapdata &height
 	if (!iff) {
 		luaL_error(L, "load heightmap file: %d", path);
 	}
-	iff.seekg(std::ios::beg);
+	iff.seekg(0, std::ios::end);
 	heightmap.sizebytes = (uint32_t)iff.tellg();
-	iff.seekg(std::ios::end);
+	iff.seekg(0, std::ios::beg);
 	heightmap.data = new uint8_t[heightmap.sizebytes];
 	iff.read((char*)(heightmap.data), heightmap.sizebytes);
 	iff.close();
@@ -509,6 +506,7 @@ init_terrain_mesh(terrain_data* terrain) {
 	auto get_height_from_uint8 = [](uint8_t *v) {return float(*v); };
 	auto get_height_from_uint16 = [](uint8_t *v) {return float(*(uint16_t*)v); };
 	auto get_height = terrain->heightmap.elembits == 8 ? get_height_from_uint8 : get_height_from_uint16;
+	const uint32_t elemsize = terrain->heightmap.elembits == 8 ? 1 : 2;
 
 	const glm::vec2 invsize(1.f / terrain->grid_width, 1.f / terrain->grid_length);
 	auto &buffer = terrain->buffer;
@@ -522,7 +520,7 @@ init_terrain_mesh(terrain_data* terrain) {
 
 			if (decl->has(bgfx::Attrib::Position)) {
 				auto &v = get_vertex(terrain->buffer, vertexidx);
-				auto hm = &terrain->heightmap.data[y* terrain->grid_width + x];
+				auto hm = &terrain->heightmap.data[(y * terrain->grid_width + x) * elemsize];
 				v = vertexscale * glm::vec3(float(x), get_height(hm), float(y));
 
 				terrain->bounding.aabb.Append(v);
