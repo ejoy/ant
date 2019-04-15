@@ -339,7 +339,7 @@ get_scale(terrain_data *terrain, const char* which) {
 
 static inline void
 load_heightmap_data(lua_State *L, int index, terrain_data::heightmapdata &heightmap) {
-	lua_getfield(L, index, "ref_path");
+	lua_getfield(L, index, "path");
 	const char* path = lua_tostring(L, -1);
 	lua_pop(L, 1);
 
