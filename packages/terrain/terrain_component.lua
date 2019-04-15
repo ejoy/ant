@@ -1,5 +1,7 @@
 local ecs = ...
 
+local bgfx = require "bgfx"
+
 local declmgr = import_package 'ant.render'.declmgr
 
 local terraincomp =

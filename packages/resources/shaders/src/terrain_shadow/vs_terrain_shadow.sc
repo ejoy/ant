@@ -7,8 +7,8 @@ void main()
 {
 	v_texcoord0 = a_texcoord0;
 	v_texcoord1 = a_texcoord1;
-	v_normal = normalize(a_normal);   					// modelviewproj *a_normal 
+	v_normal 	= normalize(mul(u_modelViewProj, a_normal));
   
-	gl_Position = mul(u_modelViewProj, vec4(v_position.xyz, 1.0));
+	gl_Position = mul(u_modelViewProj, vec4(a_position, 1.0));
 }   
 

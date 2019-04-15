@@ -49,16 +49,24 @@ local function rawtable(filepath)
 	return env
 end
 
-function assetmgr.get_depiction(fullpath)
-	local orig = fullpath
+function assetmgr.get_depiction_path(fullpath)	
 	if not fs.exists(fullpath) then
 		local pkgname = fullpath:root_name()
 		fullpath = pkgname / "depiction" / fs.relative(fullpath, pkgname)
 		if not fs.exists(fullpath) then
-			error(string.format("not found res, filename:%s", orig:string()))
+			return nil
 		end
 	end
-	return rawtable(fullpath)
+
+	return fullpath
+end
+
+function assetmgr.get_depiction(fullpath)
+	local newfullpath = assetmgr.get_depiction_path(fullpath)
+	if newfullpath == nil then
+		error(string.format("not found file:%s", fullpath:string()))
+	end
+	return rawtable(newfullpath)
 end
 
 local function res_key(filename)

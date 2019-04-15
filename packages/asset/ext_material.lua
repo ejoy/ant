@@ -26,7 +26,10 @@ return function(filename)
 					local dir = filename:parent_path()
 					local fullpath = dir / subrespath
 					if not fs.exists(fullpath) then
-						fullpath = pkgname / subrespath
+						fullpath = assetmgr.get_depiction_path(fullpath)
+						if fullpath == nil or not fs.exists(fullpath) then
+							fullpath = pkgname / subrespath
+						end						
 					end
 					subrespath = fullpath
 				end
