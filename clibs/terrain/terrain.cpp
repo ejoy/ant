@@ -348,6 +348,9 @@ load_heightmap_data(lua_State *L, int index, terrain_data::heightmapdata &height
 	lua_pop(L, 1);		
 
 	std::ifstream iff(path, std::ios::in | std::ios::binary);
+	if (!iff) {
+		luaL_error(L, "load heightmap file: %d", path);
+	}
 	iff.seekg(std::ios::beg);
 	heightmap.sizebytes = (uint32_t)iff.tellg();
 	iff.seekg(std::ios::end);
@@ -490,13 +493,13 @@ init_terrain_mesh(terrain_data* terrain) {
 		const uint32_t y_offset = y * terrain->grid_width;
 
 		for (uint32_t x = 0; x < (terrain->grid_width - 1); ++x) {
-			const auto ibidx = (y_offset + x) * 6;
-			buffer.indices[ibidx + 0] = y_offset + x + 1;
-			buffer.indices[ibidx + 1] = y_offset + x + terrain->grid_width;
-			buffer.indices[ibidx + 2] = y_offset + x;
-			buffer.indices[ibidx + 3] = y_offset + x + terrain->grid_width + 1;
-			buffer.indices[ibidx + 4] = y_offset + x + terrain->grid_width;
-			buffer.indices[ibidx + 5] = y_offset + x + 1;
+			const auto quadidx = ((terrain->grid_width - 1) * y + x) * 6;
+			buffer.indices[quadidx + 0] = y_offset + x + 1;
+			buffer.indices[quadidx + 1] = y_offset + x + terrain->grid_width;
+			buffer.indices[quadidx + 2] = y_offset + x;
+			buffer.indices[quadidx + 3] = y_offset + x + terrain->grid_width + 1;
+			buffer.indices[quadidx + 4] = y_offset + x + terrain->grid_width;
+			buffer.indices[quadidx + 5] = y_offset + x + 1;
 		}
 	}
 }
@@ -529,21 +532,18 @@ in_terrain_bounds(terrain_data* terrain, int h, int w) {
 static inline float 
 average(terrain_data *terrain, int i, int  j, uint8_t range) {
 	float avg = 0.0f;
-	float num = 0.0f;
-
-	const auto decl = terrain->buffer.vdecl;
-	const uint16_t stride = decl->getStride();
-	const uint16_t offset = decl->getOffset(bgfx::Attrib::Position);
+	uint32_t num = 0;
 
 	uint8_t *vertices = terrain->buffer.vertices;
-	for (int m = i - range; m <= i + range; ++m) {
-		for (int n = j - range; n <= j + range; ++n) {
-			if (in_terrain_bounds(terrain, m, n)) {
-				int vertCount = (m * terrain->grid_width) + n;
-				const glm::vec3* vert = (const glm::vec3*) &vertices[vertCount*stride + offset];
-				avg += vert->y;
-				++num;
-			}
+	const int endlength = glm::min(int(terrain->grid_length), i + range);
+	const int endwidth = glm::min(int(terrain->grid_width), j + range);
+
+	for (int m = glm::max(0, i - range); m < endlength; ++m) {
+		for (int n = glm::max(0, j - range); n < endwidth; ++n) {			
+			const uint32_t vertexidx = (m * terrain->grid_width) + n;
+			const auto &v = get_vertex(terrain->buffer, vertexidx);
+			avg += v.y;
+			++num;
 		}
 	}
 	return avg / num;
@@ -552,17 +552,19 @@ average(terrain_data *terrain, int i, int  j, uint8_t range) {
 
 static void 
 smooth_terrain_gaussian(terrain_data *terrain, uint8_t range) {
-	const auto decl = terrain->buffer.vdecl;
-	const uint16_t stride = decl->getStride();
-	const uint16_t offset = decl->getOffset(bgfx::Attrib::Position);
-	
+	// problem here
+	std::vector<float>heights(terrain->grid_width * terrain->grid_length);
+
 	for (uint32_t j = 0; j < terrain->grid_length; j++) {
 		for (uint32_t i = 0; i < terrain->grid_width; i++) {
 			//Gassiah like smooth without point weights
 			const uint32_t index = (j * terrain->grid_width) + i;
-			auto &v = get_vertex(terrain->buffer, index);
-			v.y = average(terrain, j, i, range);
+			heights[index] = average(terrain, j, i, range);
 		}
+	}
+	assert(heights.size() == terrain->buffer.vertex_count);
+	for (uint32_t ii = 0; ii < terrain->buffer.vertex_count; ++ii) {
+		get_vertex(terrain->buffer, ii).y = heights[ii];
 	}
 }
 

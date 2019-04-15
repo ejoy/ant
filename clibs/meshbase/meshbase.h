@@ -157,6 +157,8 @@ struct Bounding {
 	}
 
 	void Reset() {
-
+		aabb.Reset();
+		sphere.Reset();
+		obb.Reset();
 	}
 };
