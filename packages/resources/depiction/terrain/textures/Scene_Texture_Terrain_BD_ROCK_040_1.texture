@@ -1,0 +1,8 @@
+path = "//ant.resources.binary/terrain/Scene_Texture_Terrain_BD_ROCK_040_1.dds"
+
+sampler = {
+	U = "CLAMP",
+	V = "CLAMP",
+	MIN = "LINEAR",
+	MAG = "LINEAR",		
+}
