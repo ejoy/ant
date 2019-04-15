@@ -16,7 +16,7 @@ local function create_buffer(terrainhandle, dynamic, declname)
 
     local create_vb = dynamic and bgfx.create_dynamic_vertex_buffer or bgfx.create_vertex_buffer
     local create_ib = dynamic and bgfx.create_dynamic_index_buffer or bgfx.create_index_buffer
-    return create_vb(decl, {'!', vb, numvertices}), create_ib({'!', ib, numindices})
+    return create_vb({'!', vb, numvertices}, decl.handle), create_ib({'!', ib, numindices})
 end
 
 function terraincomp:postinit(e)

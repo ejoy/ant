@@ -284,10 +284,74 @@ lterraindata_buffer(lua_State *L) {
 	return 4;
 }
 
+template<class ValueType>
+static inline void
+push_vec(lua_State *L, int num, ValueType &v) {
+	lua_createtable(L, num, 0);
+	for (int ii = 0; ii < num; ++ii) {
+		lua_pushnumber(L, v[ii]);
+		lua_seti(L, -2, ii + 1);
+	}
+};
+
+static inline void
+push_aabb(lua_State *L, const AABB &aabb) {
+	lua_createtable(L, 0, 2);
+	{
+		push_vec(L, 3, aabb.min);
+		lua_setfield(L, -2, "min");
+
+		push_vec(L, 3, aabb.max);
+		lua_setfield(L, -2, "max");
+	}
+}
+
+static inline void
+push_sphere(lua_State *L, const BoundingSphere &sphere) {
+	lua_createtable(L, 0, 2);
+	{
+		push_vec(L, 3, sphere.center);
+		lua_setfield(L, -2, "center");
+
+		lua_pushnumber(L, sphere.radius);
+		lua_setfield(L, -2, "radius");
+	}
+}
+
+static inline void
+push_obb(lua_State *L, const OBB &obb) {
+	lua_createtable(L, 16, 0);
+	{
+		for (int ii = 0; ii < 4; ++ii) {
+			for (int jj = 0; jj < 4; ++jj) {
+				lua_pushnumber(L, obb.m[ii][jj]);
+				lua_seti(L, -2, ii * 4 + jj + 1);
+			}
+		}
+	}
+}
+
+
+static int
+push_bounding(lua_State *L, const Bounding &boundiing) {
+	lua_newtable(L);
+	{
+		push_aabb(L, boundiing.aabb);
+		lua_setfield(L, -2, "aabb");
+
+		push_sphere(L, boundiing.sphere);
+		lua_setfield(L, -2, "sphere");
+
+		push_obb(L, boundiing.obb);
+		lua_setfield(L, -2, "obb");
+	}
+	return 1;
+}
+
 static int
 lterraindata_bounding(lua_State *L) {
 	terrain_data *terrain = (terrain_data*) luaL_checkudata(L, 1, "TERRAIN_DATA");
-	assert("not implement");
+	push_bounding(L, terrain->bounding);
 	return 1;
 }
 
