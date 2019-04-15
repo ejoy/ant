@@ -338,14 +338,21 @@ get_scale(terrain_data *terrain, const char* which) {
 
 
 static inline void
-load_heightmap_data(lua_State *L, int index, terrain_data *terrain) {
-	const char* path = lua_tostring(L, index);
+load_heightmap_data(lua_State *L, int index, terrain_data::heightmapdata &heightmap) {
+	lua_getfield(L, index, "ref_path");
+	const char* path = lua_tostring(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "bits");
+	heightmap.elembits = (uint8_t)lua_tointeger(L, -1);
+	lua_pop(L, 1);		
+
 	std::ifstream iff(path, std::ios::in | std::ios::binary);
 	iff.seekg(std::ios::beg);
-	terrain->heightmap.sizebytes = (uint32_t)iff.tellg();
+	heightmap.sizebytes = (uint32_t)iff.tellg();
 	iff.seekg(std::ios::end);
-	terrain->heightmap.data = new uint8_t[terrain->heightmap.sizebytes];
-	iff.read((char*)(terrain->heightmap.data), terrain->heightmap.sizebytes);
+	heightmap.data = new uint8_t[heightmap.sizebytes];
+	iff.read((char*)(heightmap.data), heightmap.sizebytes);
 	iff.close();
 }
 
@@ -363,7 +370,7 @@ fetch_terrain_data(lua_State *L, int index, terrain_data* terrain) {
 	terrain->uv1Scale	= getfield_tofloat(L, index, "uv1_scale");
 
 	lua_getfield(L, index, "heightmap");
-	load_heightmap_data(L, -1, terrain);
+	load_heightmap_data(L, -1, terrain->heightmap);
 	lua_pop(L, 1);
 
 	if (terrain->width == 0 || 
@@ -398,7 +405,24 @@ lterrain_del(lua_State *L) {
 	terrain_data* terrain = (terrain_data*) lua_newuserdata(L, sizeof(terrain_data));
 	if (terrain->heightmap.data) {
 		delete[]terrain->heightmap.data;
+		terrain->heightmap.data = NULL;
+		terrain->heightmap.elembits = 0;
+		terrain->heightmap.sizebytes = 0;
 	}
+
+	if (terrain->buffer.indices) {
+		delete[] terrain->buffer.indices;
+		terrain->buffer.indices = NULL;
+		terrain->buffer.index_count = 0;
+	}
+
+	if (terrain->buffer.vertices) {
+		delete[] terrain->buffer.vertices;
+		terrain->buffer.vertices = NULL;
+		terrain->buffer.vertex_count = 0;
+	}
+
+	terrain->buffer.vdecl = NULL;
 	return 0;
 }
 
@@ -1074,6 +1098,8 @@ textures = {}
 static void
 register_terrain_data_mt(lua_State *L) {
 	if (luaL_newmetatable(L, "TERRAIN_DATA")) {
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
 		luaL_Reg l[] = {
 			{"grid_width",	lterraindata_gridwidth},
 			{"grid_length",	lterraindata_gridlength},
@@ -1085,12 +1111,10 @@ register_terrain_data_mt(lua_State *L) {
 			{"bounding",	lterraindata_bounding},
 			{"smooth_height",lterraindata_smooth_height},
 			{"smooth_normal",lterraindata_smooth_normal},			
+			{"__gc",		lterrain_del},
 			{NULL,NULL},
 		};
 		luaL_setfuncs(L, l, 0);
-		lua_setfield(L, -2, "__index");
-		lua_pushcfunction(L, lterrain_del);        // register gc function
-		lua_setfield(L, -2, "__gc");
 	}
 }
 
