@@ -99,6 +99,11 @@ struct AABB {
 	float DiagonalLength() const {
 		return glm::length(max - min);
 	}
+
+	void Reset() {
+		min = maxvalue();
+		max = minvalue();
+	}
 };
 
 struct BoundingSphere {
@@ -108,6 +113,11 @@ struct BoundingSphere {
 	void Init(const AABB &aabb) {		
 		center = aabb.Center();
 		radius = aabb.DiagonalLength() * 0.5f;
+	}
+
+	void Reset() {
+		center = glm::vec3(0.f);
+		radius = 0.f;
 	}
 };
 
@@ -123,6 +133,10 @@ struct OBB {
 		m[0][0] = scale[0];
 		m[1][1] = scale[1];
 		m[2][2] = scale[2];
+	}
+
+	void Reset() {
+		m = glm::mat4x4(1.f);
 	}
 };
 
@@ -140,5 +154,9 @@ struct Bounding {
 		aabb.Merge(other.aabb);
 		sphere.Init(aabb);
 		obb.Init(aabb);
+	}
+
+	void Reset() {
+
 	}
 };

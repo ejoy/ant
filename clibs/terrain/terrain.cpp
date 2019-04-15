@@ -1,8 +1,10 @@
 #define LUA_LIB
 
+#include "meshbase/meshbase.h"
 
 #include "bgfx/bgfx.h"
 #include "glm/glm.hpp"
+
 
 extern "C" {
 #include <lua.h>
@@ -14,6 +16,7 @@ extern "C" {
 #include <limits>
 #include <vector>
 #include <fstream>
+#include <bitset>
 
 // c std
 #include <cstdio>
@@ -89,8 +92,7 @@ struct terrain_data {
 	float	uv0Scale;			// 0 layer texcoord
 	float   uv1Scale;			// 1 layer texcoord
 
-	float   min_height;
-	float   max_height;
+	Bounding	bounding;
 
 	struct heightmapdata {
 		uint8_t *	data;
@@ -220,6 +222,28 @@ lterrain_attrib(lua_State *L)
 //	return 1;
 //}
 
+template<typename ElemType>
+static ElemType&
+get_elem(const terrain_data::streambuffer &buffer, bgfx::Attrib::Enum type, uint32_t idx) {
+	const auto decl = buffer.vdecl;
+	const auto stride = decl->getStride();
+	const auto offset = decl->getOffset(type);
+
+	return *(ElemType*)(buffer.vertices + (idx * stride + offset));
+}
+
+
+static inline glm::vec3&
+get_vertex(const terrain_data::streambuffer &buffer, uint32_t idx) {
+	return get_elem<glm::vec3>(buffer, bgfx::Attrib::Position, idx);
+}
+
+static inline glm::vec3&
+get_normal(const terrain_data::streambuffer &buffer, uint32_t idx) {
+	return get_elem<glm::vec3>(buffer, bgfx::Attrib::Normal, idx);
+}
+
+
 static inline int get_smooth_mode_range(SMOOTH_MODE mode) {
 	return (int)mode;
 }
@@ -338,8 +362,6 @@ fetch_terrain_data(lua_State *L, int index, terrain_data* terrain) {
 	terrain->uv0Scale	= getfield_tofloat(L, index, "uv0_scale");
 	terrain->uv1Scale	= getfield_tofloat(L, index, "uv1_scale");
 
-	terrain->min_height	= terrain->max_height = 0;
-
 	lua_getfield(L, index, "heightmap");
 	load_heightmap_data(L, -1, terrain);
 	lua_pop(L, 1);
@@ -390,9 +412,8 @@ calc_uv(const glm::vec2 &gridIdx, const glm::vec2 &size, float scale, float offs
 static void
 init_terrain_mesh(terrain_data* terrain) {
 	const glm::vec3 vertexscale(get_scale(terrain, "width"), get_scale(terrain, "height"), get_scale(terrain, "length"));
-
-	terrain->min_height = std::numeric_limits<float>::max();
-	terrain->max_height = std::numeric_limits<float>::lowest();
+	
+	terrain->bounding.Reset();
 
 	auto get_height_from_uint8 = [](uint8_t *v) {return float(*v); };
 	auto get_height_from_uint16 = [](uint8_t *v) {return float(*(uint16_t*)v); };
@@ -409,42 +430,37 @@ init_terrain_mesh(terrain_data* terrain) {
 			const uint32_t vertexidx = terrain->grid_width * y + x;
 
 			if (decl->has(bgfx::Attrib::Position)) {
-				const uint16_t offset = decl->getOffset(bgfx::Attrib::Position);
-
-				glm::vec3* vert = (glm::vec3*) &buffer.vertices[vertexidx * stride + offset];
+				auto &v = get_vertex(terrain->buffer, vertexidx);
 				auto hm = &terrain->heightmap.data[y* terrain->grid_width + x];
-				*vert = vertexscale * glm::vec3(float(x), get_height(hm), float(y));
+				v = vertexscale * glm::vec3(float(x), get_height(hm), float(y));
 
-				terrain->max_height = glm::max(vert->y, terrain->max_height);
-				terrain->min_height = glm::min(vert->y, terrain->min_height);
+				terrain->bounding.aabb.Append(v);
 			}
-			//uv0
+			
 			if (decl->has(bgfx::Attrib::TexCoord0)) {
-				const uint16_t offset = decl->getOffset(bgfx::Attrib::TexCoord0);
-				glm::vec2* uv = (glm::vec2*) &buffer.vertices[vertexidx*stride + offset];
-
-				*uv = calc_uv(glm::vec2(x, y), invsize, terrain->uv0Scale, 0.5f);
+				auto &t0 = get_elem<glm::vec2>(terrain->buffer, bgfx::Attrib::TexCoord0, vertexidx);
+				t0 = calc_uv(glm::vec2(x, y), invsize, terrain->uv0Scale, 0.5f);
 			}
-			//uv1 - for mask,color maps
+			
 			if (decl->has(bgfx::Attrib::TexCoord1)) {
-				const uint16_t offset = decl->getOffset(bgfx::Attrib::TexCoord1);
-				glm::vec2* uv = (glm::vec2*) &buffer.vertices[vertexidx*stride + offset];
-				*uv = calc_uv(glm::vec2(x, y), invsize, terrain->uv1Scale, 0.01f);
+				auto &t1 = get_elem<glm::vec2>(terrain->buffer, bgfx::Attrib::TexCoord1, vertexidx);
+				t1 = calc_uv(glm::vec2(x, y), invsize, terrain->uv1Scale, 0.01f);
 			}
-			//normal
+			
 			if (decl->has(bgfx::Attrib::Normal)) {
-				const uint16_t offset = decl->getOffset(bgfx::Attrib::Normal);
-				glm::vec3* normal = (glm::vec3*) &buffer.vertices[vertexidx*stride + offset];
-				*normal = glm::vec3(0.f, 1.f, 0.f);
+				auto& normal = get_normal(buffer, vertexidx);
+				normal = glm::vec3(0.f, 1.f, 0.f);
 			}
-			//tangent
+			
 			if (decl->has(bgfx::Attrib::Tangent)) {
-				const uint16_t offset = decl->getOffset(bgfx::Attrib::Tangent);
-				glm::vec3* tangent = (glm::vec3*) &buffer.vertices[vertexidx*stride + offset];
-				*tangent = glm::vec3(1.f, 0.f, 0.f);
+				auto & t = get_elem<glm::vec3>(terrain->buffer, bgfx::Attrib::Tangent, vertexidx);				
+				t = glm::vec3(1.f, 0.f, 0.f);
 			}
 		}
 	}
+
+	terrain->bounding.sphere.Init(terrain->bounding.aabb);
+	terrain->bounding.obb.Init(terrain->bounding.aabb);
 
 	for (uint32_t y = 0; y < (terrain->grid_length - 1); ++y) {
 		const uint32_t y_offset = y * terrain->grid_width;
@@ -518,10 +534,10 @@ smooth_terrain_gaussian(terrain_data *terrain, uint8_t range) {
 	
 	for (uint32_t j = 0; j < terrain->grid_length; j++) {
 		for (uint32_t i = 0; i < terrain->grid_width; i++) {
-			//Gassiah like smooth without point weights			
+			//Gassiah like smooth without point weights
 			const uint32_t index = (j * terrain->grid_width) + i;
-			glm::vec3 *vert = (glm::vec3*) &(terrain->buffer.vertices[index*stride + offset]);
-			vert->y = average(terrain, j, i, range);
+			auto &v = get_vertex(terrain->buffer, index);
+			v.y = average(terrain, j, i, range);
 		}
 	}
 }
@@ -645,91 +661,6 @@ smooth_terrain_mesh(terrain_data *terrain, SMOOTH_MODE mode) {
 		}
 	}
 	*/
-}
-
-static void
-update_terrain_normal_fast(terrain_data *terrain) {
-	// normal attrib does not exist
-	const auto decl = terrain->buffer.vdecl;
-	if (!decl->has(bgfx::Attrib::Normal))
-		return;
-
-	const int stride = decl->getStride();
-	const uint16_t offset = decl->getOffset(bgfx::Attrib::Position);
-	const int normal_offset = decl->getOffset(bgfx::Attrib::Normal);
-
-	std::vector<glm::vec3> normals((terrain->grid_width - 1) * (terrain->grid_length - 1));
-
-	uint8_t *verts = terrain->buffer.vertices;
-
-	// Go through all the faces in the terrain mesh and calculate their normals.
-	//  (v1) i +---+ (v2) i+1
-	//         |  /
-	//         | /
-	//         |/
-	//  (v3) i,j+1
-
-	for (uint32_t j = 0; j < (terrain->grid_length - 1); j++) {
-		for (uint32_t i = 0; i < (terrain->grid_width - 1); i++) {
-			const int index1 = (j * terrain->grid_width) + i;
-			const int index2 = (j * terrain->grid_width) + (i + 1);
-			const int index3 = ((j + 1) * terrain->grid_width) + i;
-
-			const auto v1 = *(glm::vec3*)(&verts[index1*stride + offset]);
-			const auto v2 = *(glm::vec3*)(&verts[index2*stride + offset]);
-			const auto v3 = *(glm::vec3*)(&verts[index3*stride + offset]);
-
-			const auto e1 = v1 - v3;
-			const auto e2 = v3 - v2;
-
-			const uint32_t index = (j * (terrain->grid_width - 1)) + i;
-			normals[index] = glm::cross(e1, e2);
-		}
-	}
-
-	// go through all the vertices and take an average of each face normal
-	for (int j = 0; j < (int)terrain->grid_length; ++j) {
-		for (int i = 0; i < (int)terrain->grid_width; ++i) {
-			int indices[4] = { -1 };
-			// Bottom left face.
-			if (((i - 1) >= 0) && ((j - 1) >= 0)) {
-				indices[0] = ((j - 1) * (terrain->grid_width - 1)) + (i - 1);  //height
-			}
-
-			// Bottom right face.
-			if ((i < int(terrain->grid_width - 1)) && ((j - 1) >= 0)) {
-				indices[1] = ((j - 1) * (terrain->grid_width - 1)) + i;				
-			}
-
-			// Upper left face.
-			if ((0 <= (i - 1)) && (j < int(terrain->grid_length - 1))) {
-				indices[2] = (j * (terrain->grid_width - 1)) + (i - 1);
-				
-			}
-
-			// Upper right face.
-			if ((i < int(terrain->grid_width - 1)) && (j < int(terrain->grid_length - 1))) {
-				indices[3] = (j * (terrain->grid_width - 1)) + i;
-			}
-
-			glm::vec3 sum(0.f);
-			int count = 0;
-			for (int ii = 0; ii < 4; ++ii) {
-				const int idx = indices[ii];
-				if (idx >= 0) {
-					sum += normals[idx];
-					++count;
-				}
-			}
-			sum /= count;
-
-			// Get an index to the vertex location in the height map array.
-			const uint32_t index = (j * terrain->grid_width) + i;
-
-			glm::vec3* dst_normals = (glm::vec3*) &verts[index*stride + normal_offset];
-			*dst_normals = glm::normalize(sum);
-		}
-	}
 }
 
 /*
@@ -1003,16 +934,58 @@ lterraindata_raw_height(lua_State *L) {
 	return 1;
 }
 
+static bool
+terraindata_update_normals(struct terrain_data *terrain) {
+	const auto& buffer = terrain->buffer;
+	if (buffer.vertices == NULL || buffer.indices == NULL)
+		return false;
 
-static int
-lterraindata_update_normals(lua_State *L) {
-	terrain_data* terrain = (terrain_data*) luaL_checkudata(L, 1, "TERRAIN_DATA");	
-	if (terrain->buffer.vertices == NULL)
-		return luaL_error(L, "must alloc vertices first.\n");
+	std::vector<bool>	marked_vertices(buffer.vertex_count, false);
 
-	update_terrain_normal_fast(terrain);
+	for (uint32_t idx = 0; idx < buffer.index_count; idx += 3) {
+		/*
+			 v2
+			 |\
+			 | \
+			 |  \
+			 |   \
+			 |    \
+		  v0 +-----+ v1
+		*/
 
-	return 0;
+		const uint32_t vidx[] = {
+			buffer.indices[idx + 0],
+			buffer.indices[idx + 1],
+			buffer.indices[idx + 2]
+		};
+
+		const auto& v0 = get_vertex(buffer, vidx[0]);
+		const auto& v1 = get_vertex(buffer, vidx[1]);
+		const auto& v2 = get_vertex(buffer, vidx[2]);
+
+		// left hand
+		const auto v0v1 = v1 - v0;
+		const auto v0v2 = v2 - v0;
+		
+		const auto normal = glm::cross(v0v2, v0v1);
+
+		for (auto iv : vidx) {
+			auto &n0 = get_normal(buffer, iv);
+			if (marked_vertices[iv]) {
+				n0 += normal;
+			} else {
+				marked_vertices[iv] = true;
+				n0 = normal;
+			}
+		}
+	}
+
+	for (uint32_t iv = 0; iv < buffer.vertex_count; ++iv) {
+		auto& n = get_normal(buffer, iv);
+		n = glm::normalize(n);
+	}
+
+	return true;
 }
 
 static int
@@ -1028,7 +1001,7 @@ lterrain_create(lua_State *L) {
 		init_stream_buffer(terrain->buffer, terrain->grid_width, terrain->grid_length);
 		init_terrain_mesh(terrain);
 		smooth_terrain_mesh(terrain, SMOOTH_MODE::DEFAULT);
-		update_terrain_normal_fast(terrain);
+		terraindata_update_normals(terrain);
 	}
 	return 1;
 }
