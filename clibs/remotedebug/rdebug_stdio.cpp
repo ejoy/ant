@@ -116,6 +116,9 @@ static int redirect_f_write(lua_State* L) {
                 return 1;
             }
         }
+        else {
+            lua_pop(L, 1);
+        }
     }
     return callfunc(L);
 }
