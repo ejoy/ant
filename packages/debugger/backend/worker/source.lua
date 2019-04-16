@@ -3,19 +3,27 @@ local parser = require 'backend.parser'
 local ev = require 'common.event'
 local crc32 = require 'backend.crc32'
 
+local globalSkipFiles = {}
 local sourcePool = {}
 local codePool = {}
 local skipFiles = {}
 local sourceMaps = {}
 local workspaceFolder = nil
 
+local function makeSkipFile(pattern)
+    skipFiles[#skipFiles + 1] = ('^%s$'):format(fs.narive_normalize_serverpath(pattern):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*'))
+end
+
 ev.on('initializing', function(config)
     workspaceFolder = config.workspaceFolder
     skipFiles = {}
     sourceMaps = {}
+    for _, pattern in ipairs(globalSkipFiles) do
+        makeSkipFile(pattern)
+    end
     if config.skipFiles then
         for _, pattern in ipairs(config.skipFiles) do
-            skipFiles[#skipFiles + 1] = ('^%s$'):format(fs.normalize_serverpath(pattern):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*'))
+            makeSkipFile(pattern)
         end
     end
     if config.sourceMaps then
@@ -188,6 +196,10 @@ function m.all_loaded()
     for _, source in pairs(sourcePool) do
         ev.emit('loadedSource', 'new', source)
     end
+end
+
+function m.skipfiles(v)
+    globalSkipFiles = v
 end
 
 return m

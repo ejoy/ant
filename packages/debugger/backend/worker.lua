@@ -561,3 +561,16 @@ end)
 sendToMaster {
     cmd = 'ready',
 }
+
+local w = {}
+
+function w.skipfiles(v)
+    source.skipfiles(v)
+end
+
+function w.openupdate()
+    hookmgr.update_open(true)
+end
+
+
+return w
