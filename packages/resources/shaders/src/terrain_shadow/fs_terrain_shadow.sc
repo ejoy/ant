@@ -15,13 +15,13 @@ void main()
 	float lightIntensity= ntol * directional_intensity[0];
     vec4 lightColor 	= vec4(directional_color[0].xyz * lightIntensity, 1.0);
 
-	vec4 textureColor 	= vec4(texture2D(s_baseTexture, v_texcoord0).rbg, 1.4);
+	vec4 textureColor 	= vec4(texture2D(s_baseTexture, v_texcoord0).rgb, 1.4);
 	vec4 maskColor    	= vec4(1.0, 1.0, 1.0, texture2D(s_maskTexture,v_texcoord1).r);
 	//vec4 mask 			= vec4(v_position.y/20.0, v_position.y/20.0, v_position.y/20.0 , 1.0);
 
-	vec4  ambientColor = vec4(calc_ambient_color(ambient_mode.x, v_normal.xyz).rbg, 0.0) * textureColor;
+	vec4  ambientColor = vec4(calc_ambient_color(ambient_mode.x, v_normal.xyz).rgb, 0.0) * textureColor;
 	vec4  diffuseColor = lightColor * textureColor * maskColor;
 	
-	gl_FragColor = saturate((ambientColor + diffuseColor));
+	gl_FragColor 		= saturate((ambientColor + diffuseColor));
 }      
                 
