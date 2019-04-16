@@ -1,34 +1,42 @@
 local fs = require 'backend.filesystem'
 local parser = require 'backend.parser'
-local ev = require 'event'
+local ev = require 'common.event'
 local crc32 = require 'backend.crc32'
 
+local globalSkipFiles = {}
 local sourcePool = {}
 local codePool = {}
 local skipFiles = {}
 local sourceMaps = {}
 local workspaceFolder = nil
 
+local function makeSkipFile(pattern)
+    skipFiles[#skipFiles + 1] = ('^%s$'):format(fs.narive_normalize_serverpath(pattern):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*'))
+end
+
 ev.on('initializing', function(config)
     workspaceFolder = config.workspaceFolder
     skipFiles = {}
     sourceMaps = {}
+    for _, pattern in ipairs(globalSkipFiles) do
+        makeSkipFile(pattern)
+    end
     if config.skipFiles then
         for _, pattern in ipairs(config.skipFiles) do
-            skipFiles[#skipFiles + 1] = ('^%s$'):format(fs.normalize_serverpath(pattern):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*'))
+            makeSkipFile(pattern)
         end
     end
     if config.sourceMaps then
         for _, pattern in ipairs(config.sourceMaps) do
             local sm = {}
-            sm[1] = ('^%s$'):format(fs.normalize_serverpath(pattern[1]):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'))
+            sm[1] = ('^%s$'):format(fs.narive_normalize_serverpath(pattern[1]):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'))
             if sm[1]:find '%*' then
                 sm[1] = sm[1]:gsub('%*', '(.*)')
                 local r = {}
-                fs.normalize(pattern[2]):gsub('[^%*]+', function (w) r[#r+1] = w end)
+                fs.normalize_clientpath(pattern[2]):gsub('[^%*]+', function (w) r[#r+1] = w end)
                 sm[2] = r
             else
-                sm[2] = fs.normalize(pattern[2])
+                sm[2] = fs.normalize_clientpath(pattern[2])
             end
             sourceMaps[#sourceMaps + 1] = sm
         end
@@ -66,7 +74,7 @@ end
 local function serverPathToClientPath(p)
     -- TODO: utf8 or ansi
     local skip = false
-    local nativePath = fs.normalize_serverpath(p)
+    local nativePath = fs.narive_normalize_serverpath(p)
     for _, pattern in ipairs(skipFiles) do
         if glob_match(pattern, nativePath) then
             skip = true
@@ -80,7 +88,7 @@ local function serverPathToClientPath(p)
         end
     end
     -- TODO: 忽略没有映射的source？
-    return skip, fs.normalize(p)
+    return skip, fs.normalize_serverpath(p)
 end
 
 local function codeReference(s)
@@ -149,9 +157,9 @@ function m.c2s(clientsrc)
             end
         end
     else
-        local nativepath = fs.normalize_clientpath(clientsrc.path)
+        local nativepath = fs.narive_normalize_clientpath(clientsrc.path)
         for _, source in pairs(sourcePool) do
-            if source.path and not source.sourceReference and fs.normalize_clientpath(source.path) == nativepath then
+            if source.path and not source.sourceReference and fs.narive_normalize_clientpath(source.path) == nativepath then
                 return source
             end
         end
@@ -171,7 +179,7 @@ function m.output(s)
     elseif s.path ~= nil then
         return {
             name = fs.filename(s.path),
-            path = fs.normalize(s.path),
+            path = fs.normalize_clientpath(s.path),
         }
     end
 end
@@ -188,6 +196,10 @@ function m.all_loaded()
     for _, source in pairs(sourcePool) do
         ev.emit('loadedSource', 'new', source)
     end
+end
+
+function m.skipfiles(v)
+    globalSkipFiles = v
 end
 
 return m

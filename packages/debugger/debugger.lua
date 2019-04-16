@@ -23,6 +23,15 @@ local function bootstrap()
         end
         init_thread()
         package.path = [[%s]]
+        package.readfile = function(filename)
+            local vfs = require 'vfs.simplefs'
+            local fullpath = assert(package.searchpath(filename, package.path))
+            local fullpath = assert(vfs.realpath(fullpath))
+            local f = assert(io.open(fullpath))
+            local str = f:read 'a'
+            f:close()
+            return str
+        end
         require 'runtime.vfs'
         require 'backend.worker'
     ]=]):format(init_thread, "engine/libs/?.lua;engine/packages/debugger/?.lua")

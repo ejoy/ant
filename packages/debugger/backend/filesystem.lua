@@ -1,9 +1,15 @@
+local fs = require 'common.filesystem'
+
 local default_sep = package.config:sub(1, 1)
 
 local function split(str)
     local r = {}
     str:gsub('[^/\\]*', function (w) r[#r+1] = w end)
     return r
+end
+
+local function absolute(p)
+    return fs.absolute(fs.path(p)):string()
 end
 
 local function normalize(p)
@@ -21,16 +27,32 @@ end
 
 local m = {}
 
-function m.normalize(path, sep)
+local sourceFormat = "string"
+
+local function m_normalize(path, sep)
     return table.concat(normalize(path), sep or default_sep)
 end
 
-function m.normalize_serverpath(path)
-    return m.normalize(path, '/'):lower()
+function m.normalize_serverpath(path, sep)
+    if sourceFormat == "string" then
+        return path
+    end
+    return m_normalize(absolute(path), sep)
 end
 
-function m.normalize_clientpath(path)
-    return m.normalize(path, '/'):lower()
+function m.normalize_clientpath(path, sep)
+    return m_normalize(path, sep)
+end
+
+function m.narive_normalize_serverpath(path)
+    if sourceFormat == "string" then
+        return path
+    end
+    return m_normalize(absolute(path), '/'):lower()
+end
+
+function m.narive_normalize_clientpath(path)
+    return m_normalize(path, '/'):lower()
 end
 
 function m.relative(path, base, sep)

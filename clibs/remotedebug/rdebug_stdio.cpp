@@ -22,7 +22,7 @@ static int redirect_read(lua_State* L) {
     luaL_Buffer b;
     luaL_buffinit(L, &b);
     char* buf = luaL_prepbuffsize(&b, (size_t)len);
-    size_t rc = self.read(buf, len);
+    size_t rc = self.read(buf, (size_t)len);
     if (rc == 0) {
         return 0;
     }
@@ -115,6 +115,9 @@ static int redirect_f_write(lua_State* L) {
                 lua_settop(L, 1);
                 return 1;
             }
+        }
+        else {
+            lua_pop(L, 1);
         }
     }
     return callfunc(L);

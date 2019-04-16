@@ -1,15 +1,15 @@
 local rdebug = require 'remotedebug'
-local json = require 'json'
+local json = require 'common.json'
 local variables = require 'backend.worker.variables'
 local source = require 'backend.worker.source'
 local breakpoint = require 'backend.worker.breakpoint'
 local evaluate = require 'backend.worker.evaluate'
 local traceback = require 'backend.worker.traceback'
 local stdout = require 'backend.worker.stdout'
-local ev = require 'event'
+local ev = require 'common.event'
 local hookmgr = require 'remotedebug.hookmgr'
 local stdio = require 'remotedebug.stdio'
-local thread = require 'thread'
+local thread = require 'common.thread'
 local err = thread.channel_produce 'errlog'
 
 local initialized = false
@@ -561,3 +561,16 @@ end)
 sendToMaster {
     cmd = 'ready',
 }
+
+local w = {}
+
+function w.skipfiles(v)
+    source.skipfiles(v)
+end
+
+function w.openupdate()
+    hookmgr.update_open(true)
+end
+
+
+return w

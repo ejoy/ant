@@ -367,10 +367,12 @@ struct hookmgr {
             if (update_mask) {
                 update_hook(hL);
             }
-            break_mask
-                ? break_hook_return(hL, ar)
-                : step_hook_return(hL, ar)
-                ;
+            if (break_mask & LUA_MASKRET) {
+                break_hook_return(hL, ar);
+            }
+            if (step_mask & LUA_MASKRET) {
+                step_hook_return(hL, ar);
+            }
             return;
         case LUA_HOOKCOUNT:
             update_hook(hL);

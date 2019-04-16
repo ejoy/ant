@@ -2,7 +2,7 @@ local rdebug = require 'remotedebug'
 local fs = require 'backend.filesystem'
 local source = require 'backend.worker.source'
 local evaluate = require 'backend.worker.evaluate'
-local ev = require 'event'
+local ev = require 'common.event'
 local hookmgr = require 'remotedebug.hookmgr'
 
 local breakpoints = {}
@@ -75,7 +75,7 @@ local function bpKey(src)
     if src.sourceReference then
         return src.sourceReference
     end
-    return fs.normalize_clientpath(src.path)
+    return fs.narive_normalize_clientpath(src.path)
 end
 
 local function verifyBreakpoint(src, bps)

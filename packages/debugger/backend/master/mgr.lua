@@ -1,7 +1,7 @@
-local json = require 'json'
-local proto = require 'protocol'
-local ev = require 'event'
-local thread = require 'thread'
+local json = require 'common.json'
+local proto = require 'common.protocol'
+local ev = require 'common.event'
+local thread = require 'common.thread'
 local stdio = require 'remotedebug.stdio'
 
 local redirect = {}
