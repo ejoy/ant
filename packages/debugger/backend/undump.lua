@@ -14,6 +14,10 @@ end
 local function unpack(fmt)
     return unpack_setpos(fmt:unpack(unpack_buf, unpack_pos))
 end
+local function undo()
+    unpack_pos = unpack_pos - 1
+end
+
 
 local function LoadByte()
     return unpack 'B'
@@ -57,14 +61,14 @@ local function LoadRawInt()
     return unpack 'i'
 end
 
-local Version = 0x53
+local Version = 503
 local LoadInt = LoadRawInt
 local LoadLineInfo = LoadRawInt
 
 local function InitCompat()
     local version = LoadByte()
     if version == 0x53 then
-        Version = 0x53
+        Version = 503
         LoadLength = LoadLength53
         LoadInt = LoadRawInt
         LoadLineInfo = LoadRawInt
@@ -72,18 +76,24 @@ local function InitCompat()
         LUA_TNUMINT = 3 | (1 << 4)
         LUA_TSHRSTR = 4 | (0 << 4)
         LUA_TLNGSTR = 4 | (1 << 4)
-    elseif version == 0x54 then
-        Version = 0x54
+        return
+    end
+    if version == 0x03 then
         LoadLength = LoadLength54
-        LoadInt = LoadLength53
+        LoadInt = LoadLength54
         LoadLineInfo = LoadByte
         LUA_TNUMFLT = 3 | (1 << 4)
         LUA_TNUMINT = 3 | (2 << 4)
         LUA_TSHRSTR = 4 | (1 << 4)
         LUA_TLNGSTR = 4 | (2 << 4)
-    else
-        assert(false)
+        undo()
+        version = LoadLength()
+        if version == 504 then
+            Version = 504
+            return
+        end
     end
+    assert(false, tostring(version))
 end
 
 local function CheckHeader()
@@ -91,8 +101,10 @@ local function CheckHeader()
     InitCompat()
     assert(LoadByte() == 0)
     assert(LoadCharN(6) == '\x19\x93\r\n\x1a\n')
-    LoadByte() -- int
-    LoadByte() -- size_t
+    if Version < 504 then
+        LoadByte() -- int
+        LoadByte() -- size_t
+    end
     assert(LoadByte() == 4) -- Instruction
     LoadByte() -- lua_Integer
     LoadByte() -- lua_Number
@@ -165,7 +177,7 @@ local function LoadDebug(f)
     for i = 1, f.sizelineinfo do
         f.lineinfo[i] = LoadLineInfo()
     end
-    if Version >= 0x54 then
+    if Version >= 504 then
         f.sizeabslineinfo = LoadInt()
         f.abslineinfo = {}
         for i = 1, f.sizeabslineinfo do
