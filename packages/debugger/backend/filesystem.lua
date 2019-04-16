@@ -27,11 +27,16 @@ end
 
 local m = {}
 
+local sourceFormat = "string"
+
 local function m_normalize(path, sep)
     return table.concat(normalize(path), sep or default_sep)
 end
 
 function m.normalize_serverpath(path, sep)
+    if sourceFormat == "string" then
+        return path
+    end
     return m_normalize(absolute(path), sep)
 end
 
@@ -40,6 +45,9 @@ function m.normalize_clientpath(path, sep)
 end
 
 function m.narive_normalize_serverpath(path)
+    if sourceFormat == "string" then
+        return path
+    end
     return m_normalize(absolute(path), '/'):lower()
 end
 
