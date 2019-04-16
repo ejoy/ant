@@ -1,6 +1,6 @@
 local fs = require 'backend.filesystem'
 local parser = require 'backend.parser'
-local ev = require 'event'
+local ev = require 'common.event'
 local crc32 = require 'backend.crc32'
 
 local sourcePool = {}

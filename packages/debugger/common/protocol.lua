@@ -1,4 +1,4 @@
-local json = require 'json'
+local json = require 'common.json'
 
 local m = {}
 

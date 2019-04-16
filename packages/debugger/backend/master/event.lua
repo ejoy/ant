@@ -15,7 +15,7 @@ function event.capabilities()
         seq = mgr.newSeq(),
         event = 'capabilities',
         body = {
-            capabilities = require 'capabilities'
+            capabilities = require 'common.capabilities'
         }
     }
 end

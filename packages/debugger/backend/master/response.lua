@@ -35,7 +35,7 @@ function response.initialize(req)
         command = req.command,
         request_seq = req.seq,
         success = true,
-        body = require 'capabilities',
+        body = require 'common.capabilities',
     }
 end
 
