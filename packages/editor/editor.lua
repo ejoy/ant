@@ -27,7 +27,9 @@ function editor.run(fbw, fbh, canvas, packages, systems)
 	world = su.start_new_world(iq, fbw, fbh, packages, systems)
 	task.loop(su.loop(world, {
 		update = {"timesystem", "message_system"},
-	}))
+	}), function (co, status)
+		iup.Message("Error", string.format("Error:%s\n%s", status, debug.traceback(co)))
+	end)
 
 	if (iup.MainLoopLevel()==0) then
 		iup.MainLoop()

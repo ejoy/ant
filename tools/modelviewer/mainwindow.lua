@@ -54,7 +54,9 @@ rhwi.init {
 local world = scene.start_new_world(input_queue, fb_width, fb_height, packages, systems)
 task.loop(scene.loop(world, {
 	update = {"timesystem", "message_system"}
-}))
+}), function (co, status)
+	iup.Message("Error", string.format("Error:%s\n%s", status, debug.traceback(co)))
+end)
 
 if iup.MainLoopLevel() == 0 then
 	iup.MainLoop()

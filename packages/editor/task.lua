@@ -15,6 +15,8 @@ local function idlefunc()
 			local tb = tasktraceback[co]
 			if tb then
 				tb(co, status)
+			else
+				io.stderr:write(string.format("Error:\n%s\n%s", status, debug.traceback(co)))
 			end
 			table.insert(exit_coroutines, index)
 		elseif status == "EXIT" then

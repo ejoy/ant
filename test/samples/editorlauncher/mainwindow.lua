@@ -80,7 +80,9 @@ function editor_mainwindow:new_world(packages, systems)
 	self.world = scene.start_new_world(self.iq, self.config.fbw, self.config.fbh, packages, systems)		
 	task.loop(scene.loop(self.world, {
 		update = {"timesystem", "message_system"}
-	}))
+	}), function (co, status)
+		iup.Message("Error", string.format("Error:%s\n%s", status, debug.traceback(co)))
+	end)
 end
 
 function editor_mainwindow:run(config)
