@@ -1,6 +1,12 @@
 local fs = require 'common.filesystem'
+local ev = require 'common.event'
 
+local sourceFormat = "path"
 local default_sep = package.config:sub(1, 1)
+
+ev.on('initializing', function(config)
+    sourceFormat = config.sourceFormat or "path"
+end)
 
 local function split(str)
     local r = {}
@@ -27,8 +33,6 @@ end
 
 local m = {}
 
-local sourceFormat = "string"
-
 local function m_normalize(path, sep)
     return table.concat(normalize(path), sep or default_sep)
 end
@@ -40,19 +44,22 @@ function m.normalize_serverpath(path, sep)
     return m_normalize(absolute(path), sep)
 end
 
-function m.normalize_clientpath(path, sep)
-    return m_normalize(path, sep)
-end
-
 function m.narive_normalize_serverpath(path)
     if sourceFormat == "string" then
         return path
     end
+    if sourceFormat == "linuxpath" then
+        return m_normalize(absolute(path), '/')
+    end
     return m_normalize(absolute(path), '/'):lower()
 end
 
+function m.normalize_clientpath(path, _)
+    return path
+end
+
 function m.narive_normalize_clientpath(path)
-    return m_normalize(path, '/'):lower()
+    return path
 end
 
 function m.relative(path, base, sep)
