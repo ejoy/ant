@@ -513,8 +513,7 @@ init_terrain_mesh(terrain_data* terrain) {
 
 	for (uint32_t y = 0; y < terrain->grid_length; ++y) {
 		for (uint32_t x = 0; x < terrain->grid_width; ++x) {
-			auto decl = terrain->buffer.vdecl;
-			const uint16_t stride = decl->getStride();
+			auto decl = terrain->buffer.vdecl;			
 
 			const uint32_t vertexidx = terrain->grid_width * y + x;
 
@@ -596,7 +595,6 @@ average(terrain_data *terrain, int i, int  j, uint8_t range) {
 	float avg = 0.0f;
 	uint32_t num = 0;
 
-	uint8_t *vertices = terrain->buffer.vertices;
 	const int endlength = glm::min(int(terrain->grid_length), i + range);
 	const int endwidth = glm::min(int(terrain->grid_width), j + range);
 
@@ -1090,7 +1088,23 @@ lterraindata_smooth_normal(lua_State *L) {
 	return 0;
 }
 
+static inline void
+init_terrain_data(terrain_data *terrain) {
+	terrain->width = 0;
+	terrain->height = 0;
+	terrain->length = 0;
 
+	terrain->grid_width = 0;
+	terrain->grid_length = 0;
+
+	terrain->uv0Scale = 0.f;
+	terrain->uv1Scale = 0.f;
+
+	terrain->bounding.Reset();
+
+	memset(&terrain->heightmap, 0, sizeof(terrain->heightmap));
+	memset(&terrain->buffer, 0, sizeof(terrain->buffer));
+}
 
 static int
 lterrain_create(lua_State *L) {
@@ -1098,7 +1112,7 @@ lterrain_create(lua_State *L) {
 	luaL_getmetatable(L, "TERRAIN_DATA");
 	lua_setmetatable(L, -2);
 
-	memset(terrain, 0, sizeof(terrain_data));
+	init_terrain_data(terrain);
 	if (fetch_terrain_data(L, 1, terrain)) {
 		terrain->buffer.vdecl = (bgfx::VertexDecl *)lua_touserdata(L, 2);
 

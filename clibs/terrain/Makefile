@@ -9,9 +9,10 @@ default : libterrain-$(PLAT).a
 endif
 
 GLM_DIR = -I$(ANT3RD)/glm
+CLIBS = -I..
 
 $(ODIR)/terrain.o : terrain.cpp | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC) $(GLM_DIR)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC) $(CLIBS) $(GLM_DIR)
 
 lterrain.dll : $(ODIR)/terrain.o 
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) $(BGFXUTILLIB) $(BGFXLIB)
