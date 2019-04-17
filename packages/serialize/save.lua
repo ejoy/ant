@@ -102,8 +102,9 @@ end
 
 local function _save_entity(w, eid)
     local e = assert(w[eid])
+    ids[e] = ids[e] and ids[e] or crypt.uuid64()
     local t = {
-        __id = ids[e] and ids[e] or crypt.uuid64()
+        __id = ids[e]
     }
     for name, cv in sortpairs(e) do
         t[#t+1] = { name, foreach_save_1(cv, name) }
@@ -111,7 +112,7 @@ local function _save_entity(w, eid)
     return t
 end
 
-local function update_deserialize(w)
+local function update_deserialize_1(w)
     ids = {}
     if not w.__deserialize then
         return
@@ -121,16 +122,24 @@ local function update_deserialize(w)
     end
 end
 
+local function update_deserialize_2(w)
+    w.__deserialize = {}
+    for t, id in pairs(ids) do
+        w.__deserialize[id] = t
+    end
+end
+
 local function save_start(w)
     world = w
     method.init(w)
     pool = {}
     load = {}
     typeinfo = w._components
-    update_deserialize(w)
+    update_deserialize_1(w)
 end
 
-local function save_end()
+local function save_end(w)
+    update_deserialize_2(w)
     local component = {}
     for name, v in pairs(load) do
         component[#component+1] = { name, v }
@@ -146,13 +155,13 @@ local function save_world(w)
         entity[#entity+1] = _save_entity(w, eid)
     end
     table.sort(entity, function(a, b) return a.__id < b.__id end)
-    return { entity, save_end() }
+    return { entity, save_end(w) }
 end
 
 local function save_entity(w, eid)
     save_start(w)
     local entity = _save_entity(w, eid)
-    return { entity, save_end() }
+    return { entity, save_end(w) }
 end
 
 return {
