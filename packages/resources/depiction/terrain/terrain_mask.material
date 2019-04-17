@@ -1,6 +1,6 @@
 shader = {
-	vs = "//ant.resources/terrain_shadow/vs_terrain_shadow",
-    fs = "//ant.resources/terrain_shadow/fs_terrain_shadow",
+	vs = "//ant.resources/terrain/vs_terrain",
+    fs = "//ant.resources/terrain/fs_terrain",
 }
 
 state = "mask.state"

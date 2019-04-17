@@ -1,11 +1,13 @@
 $input  a_position, a_normal, a_texcoord0,a_tangent
 $output v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent,  v_texcoord4,v_texcoord5,v_texcoord6,v_texcoord7
 
+#include <bgfx_shader.sh>
+
 // for shadow
 #include "mesh_shadow/vs_ext_shadowmaps_color_lighting_csm.sc"
    
 #include "common/uniforms.sh"
-#include <bgfx_shader.sh>
+
     
 void main() 
 {
