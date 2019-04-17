@@ -1,8 +1,9 @@
 path = "//ant.resources.binary/terrain/Scene_Texture_Terrain_BD_SOIL_0070_1.dds"
 
 sampler = {
-	U = "CLAMP",
-	V = "CLAMP",
+	-- U = "CLAMP",
+	-- V = "CLAMP",
 	MIN = "LINEAR",
-	MAG = "LINEAR",		
+	MAG = "LINEAR",
+	MIP = "LINEAR",
 }

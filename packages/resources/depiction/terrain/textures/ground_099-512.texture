@@ -1,8 +1,9 @@
 path = "//ant.resources.binary/terrain/ground_099-512.dds"
 
 sampler = {
-	U = "CLAMP",
-	V = "CLAMP",
+	-- U = "CLAMP",
+	-- V = "CLAMP",
 	MIN = "LINEAR",
-	MAG = "LINEAR",		
+	MAG = "LINEAR",
+	MIP = "LINEAR",
 }
