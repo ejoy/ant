@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <new>
 #include <memory>
+#include <array>
 #include "rdebug_eventfree.h"
 #include "rdebug_timer.h"
 
@@ -55,8 +56,8 @@ struct hookmgr {
     // 
     // break
     //
-    BP     break_map[BPMAP_SIZE] = { BP::None };
-    Proto* break_proto[BPMAP_SIZE] = { 0 };
+    std::array<BP, BPMAP_SIZE>     break_map;
+    std::array<Proto*, BPMAP_SIZE> break_proto;
     int    break_mask = 0;
 
     size_t break_hash(Proto* p) {
@@ -303,7 +304,10 @@ struct hookmgr {
             reinterpret_cast<intptr_t>(&panic_callback),
             reinterpret_cast<intptr_t>(oldpanic)
         ))
-    { }
+    {
+        break_map.fill(BP::None);
+        break_proto.fill(0);
+    }
 
     void probe(lua_State* hL, const char* name) {
         if (lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {

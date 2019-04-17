@@ -1,4 +1,3 @@
-#define LUA_LIB
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
@@ -178,8 +177,10 @@ set_host(lua_State* L, lua_State* hL) {
     lua_rawsetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST);
 }
 
-LUAMOD_API int
-luaopen_remotedebug(lua_State *L) {
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
+int luaopen_remotedebug(lua_State *L) {
 	luaL_checkversion(L);
 	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST) != LUA_TNIL) {
 		// It's client
