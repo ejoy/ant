@@ -81,7 +81,7 @@ local function InitCompat()
     if version == 0x03 then
         LoadLength = LoadLength54
         LoadInt = LoadLength54
-        LoadLineInfo = LoadByte
+        LoadLineInfo = function () return unpack 'b' end
         LUA_TNUMFLT = 3 | (1 << 4)
         LUA_TNUMINT = 3 | (2 << 4)
         LUA_TSHRSTR = 4 | (1 << 4)
@@ -228,7 +228,7 @@ local function undump(bytes)
     LoadFunction(cl.f, nil)
     assert(unpack_pos == #unpack_buf + 1)
     assert(cl.nupvalues == cl.f.sizeupvalues)
-    return cl
+    return cl, Version
 end
 
 return undump
