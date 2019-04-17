@@ -59,7 +59,7 @@ local function create_animation_test()
         transform = {
             s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
-            t = {0, 0, 0, 1}
+            t = {0, 2, 0, 1}
         },
         can_render = true,
         mesh = {},
