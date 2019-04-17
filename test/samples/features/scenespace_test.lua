@@ -3,6 +3,10 @@ local world = ecs.world
 
 local ms = import_package "ant.math".stack
 local fs = require "filesystem"
+
+local seriazlizeutil = import_package "ant.serialize"
+
+
 local scenespace_test = ecs.system "scenespace_test"
 scenespace_test.singleton 'event'
 scenespace_test.singleton 'frame_stat'
@@ -50,7 +54,8 @@ local function create_scene_node_test()
 		},
         name = 'root',
         hierarchy_tag = true,
-        main_view = true
+		main_view = true,
+		serialize = seriazlizeutil.create(),
     }
 
     local hie_level1_1 =
@@ -63,7 +68,8 @@ local function create_scene_node_test()
 		},
         name = 'level1_1',
         hierarchy_tag = true,
-        main_view = true
+		main_view = true,
+		serialize = seriazlizeutil.create(),
 	}
 
     local hie_level1_2 =
@@ -76,7 +82,8 @@ local function create_scene_node_test()
 		},
         name = 'level1_2',
         hierarchy_tag = true,
-        main_view = true
+		main_view = true,
+		serialize = seriazlizeutil.create(),
 	}
 	
     local hie_level2_1 =
@@ -92,7 +99,8 @@ local function create_scene_node_test()
 		},
         name = 'level2_1',
         hierarchy_tag = true,
-        main_view = true
+		main_view = true,
+		serialize = seriazlizeutil.create(),
     }
     --[[
 								hie_root
@@ -123,7 +131,8 @@ local function create_scene_node_test()
         },
         material = material,
         can_render = true,
-        main_view = true
+		main_view = true,
+		serialize = seriazlizeutil.create(),
 	}
 	
 	
@@ -141,7 +150,8 @@ local function create_scene_node_test()
         },
         material = material,
         can_render = true,
-        main_view = true
+		main_view = true,
+		serialize = seriazlizeutil.create(),
     }
 
     local render_child2_1 =
@@ -159,7 +169,8 @@ local function create_scene_node_test()
         },
         material = material,
         can_render = true,
-        main_view = true
+		main_view = true,
+		serialize = seriazlizeutil.create(),
 	}
 end
 
