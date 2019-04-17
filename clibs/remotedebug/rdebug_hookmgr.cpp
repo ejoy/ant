@@ -358,10 +358,12 @@ struct hookmgr {
             break;
         case LUA_HOOKCALL:
         case LUA_HOOKTAILCALL:
-            break_mask
-                ? break_hook_call(hL, ar)
-                : step_hook_call(hL, ar)
-                ;
+            if (break_mask & LUA_MASKCALL) {
+                break_hook_call(hL, ar);
+            }
+            if (step_mask & LUA_MASKCALL) {
+                step_hook_call(hL, ar);
+            }
             return;
         case LUA_HOOKRET:
             if (update_mask) {
