@@ -10,8 +10,7 @@ local VAR_UPVALUE = 0xFFFD
 local VAR_GLOBAL = 0xFFFC
 local VAR_STANDARD = 0xFFFB
 
-local standard = {}
-for _, v in ipairs{
+local lstandard = {
     "ipairs",
     "error",
     "utf8",
@@ -47,8 +46,16 @@ for _, v in ipairs{
     "assert",
     "type",
     "pairs",
-    "bit32",
-} do
+}
+
+if _VERSION == "Lua 5.3" then
+    table.insert(lstandard, "bit32")
+elseif _VERSION == "Lua 5.4" then
+    table.insert(lstandard, "warn")
+end
+
+local standard = {}
+for _, v in ipairs(lstandard) do
     standard[v] = true
 end
 
