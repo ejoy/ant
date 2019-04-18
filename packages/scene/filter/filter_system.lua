@@ -107,7 +107,7 @@ function primitive_filter_sys:event_changed()
 			assert(not next(events))
 			update_transform(e.transform, hierarchy_cache)
 		else
-			for k, v in pairs(events) do			
+			for k, v in pairs(events) do
 				if k == 's' or k == 'r' or k == 't' then
 					ms(trans[k], v, "=")
 					update_transform(e.transform, hierarchy_cache)

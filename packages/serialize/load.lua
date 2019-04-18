@@ -70,7 +70,7 @@ end
 local function _load_entity(w, tree)
     local eid
     if entitys then
-        local eid = entitys[tree.serialize]
+        eid = entitys[tree.serialize]
         if not eid then
             eid = w:register_entity()
             entitys[tree.serialize] = eid

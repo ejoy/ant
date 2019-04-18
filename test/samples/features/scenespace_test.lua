@@ -172,6 +172,97 @@ local function create_scene_node_test()
 		main_view = true,
 		serialize = seriazlizeutil.create(),
 	}
+
+    --[[
+								hie_root2
+								/		\
+							   /		 \
+							  /		 	  \
+							 /		 	   \
+						hie2_level1_1	render2_rootchild
+							/
+						   /
+						  /
+					render2_child1
+	]]
+
+	local hie_root2 =
+		world:create_entity {
+		hierarchy_transform = {
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {3, 0, -3, 1},
+		},
+		name = 'hie_root2',
+		hierarchy_tag = true,
+		main_view = true,
+		serialize = seriazlizeutil.create(),
+	}
+
+	local hie2_level1_1 =
+		world:create_entity {
+		hierarchy_transform = {
+			s = {1, 1, 1, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 5, 0, 1},
+			parent = hie_root2,
+		},
+		name = 'hie2_level1_1',
+		hierarchy_tag = true,
+		main_view = true,
+		serialize = seriazlizeutil.create(),
+	}
+
+	local function color_material(colorvalue)
+		return {
+			content = {
+				{
+					ref_path = fs.path "//ant.resources/simple_mesh.material",
+				}
+			},
+			properties = {
+				uniforms = {
+					u_color = {type="color", name = "color", value=colorvalue},
+				}
+			}
+		}
+	end
+
+	local render2_rootchild =
+		world:create_entity {
+		transform = {
+			parent = hie_root2, 
+			s = {0.01, 0.01, 0.01, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, -3, 1},
+		},
+		name = 'render2_rootchild',
+		mesh = {
+			ref_path = fs.path '//ant.resources/cube.mesh'
+		},
+		material = material,
+		can_render = true,
+		main_view = true,
+		serialize = seriazlizeutil.create(),
+	}
+
+	local render2_child1 =
+		world:create_entity {
+		transform = {
+			parent = hie2_level1_1, 
+			s = {0.01, 0.01, 0.01, 0},
+			r = {0, 0, 0, 0},
+			t = {0, 0, 0, 1},
+		},
+		name = 'render2_child1',
+		mesh = {
+			ref_path = fs.path '//ant.resources/sphere.mesh'
+		},
+		material = material,
+		can_render = true,
+		main_view = true,
+		serialize = seriazlizeutil.create(),
+	}
 end
 
 function scenespace_test:init()
@@ -277,6 +368,12 @@ local function print_scene_nodes()
 	print_tree(rooteids, 1)
 end
 
+local function move_root_node(rootnodename)
+	local eid = find_entity_by_name(rootnodename, 'hierarchy_transform')
+	local e = world[eid]
+	e.hierarchy_transform.watcher.t = {10, 0, 0, 1}
+end
+
 local whichframe
 function scenespace_test:event_changed()
 	change_scene_node_test()
@@ -291,6 +388,8 @@ function scenespace_test:event_changed()
 		world:remove_entity(level1_1_eid)
 	elseif self.frame_stat.frame_num == whichframe + 3 then
 		print_scene_nodes()
+	elseif self.frame_stat.frame_num == whichframe + 4 then
+		move_root_node('hie_root2')
 	end
 end
 

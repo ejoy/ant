@@ -29,7 +29,13 @@ scene_space.dependby "primitive_filter_system"
 scene_space.singleton "event"
 scene_space.singleton "hierarchy_transform_result"
 
+local pseudoroot_eid = -1
+
 local function find_children(marked, eid, componenttype)
+	if eid == pseudoroot_eid then
+		marked[pseudoroot_eid] = false
+		return false
+	end
 	local e = world[eid]
 	local pid = e[componenttype].parent
 	if pid and marked[pid] then
@@ -111,44 +117,41 @@ local function update_world(trans)
 	return worldmat
 end
 
-local function fetch_sort_tree_result(tree, mark_mt, componenttype)
+local function fetch_sort_tree_result(tree, mark_mt, componenttype)	
 	setmetatable(tree, mark_mt)
-	mark_tree(tree, componenttype)
+	mark_tree(tree, componenttype)	
 	return tree_sort(tree)
 end
 
-local function build_world_hierarchy(trans)
-	local hierarchy = trans.hierarhcy
-	local hiehandle = hierarchy.assetinfo.handle
-	return hie_util.generate_joints_worldpos(hiehandle)
+local function mark_cache(eid, cache_result)
+	local e = world[eid]
+	local t = e.hierarchy_transform
+	local cachemat = update_world(t)
+	assert(type(cachemat) == 'userdata')
+
+	local hie = t.hierarchy
+	if hie then
+		local hiehandle = hie.assetinfo.handle
+		if t.hierarchy_result == nil then
+			local bpresult = animodule.new_bind_pose_result(#hiehandle)
+			hiehandle:bindpose_result(bpresult)
+			t.hierarchy_result = setmetatable({}, {__index=function(t, key)
+				local jointidx = hiehandle:joint_index(key)
+				local j = bpresult:joint(jointidx)
+				t[key] = j
+				return j
+			end})
+		end
+	end
+	cache_result[eid] = {world=cachemat, hierarchy=t.hierarchy_result}
 end
 
 local function update_scene_tree(tree, cache_result)
 	if next(tree) then
 		local sort_result = fetch_sort_tree_result(tree, mark_mt, "hierarchy_transform")
-
 		for i = #sort_result, 1, -1 do
 			local eid = sort_result[i]
-			local e = world[eid]
-			local t = e.hierarchy_transform
-			local cachemat = update_world(t)
-			assert(type(cachemat) == 'userdata')
-
-			local hie = t.hierarchy
-			if hie then
-				local hiehandle = hie.assetinfo.handle
-				if t.hierarchy_result == nil then
-					local bpresult = animodule.new_bind_pose_result(#hiehandle)
-					hiehandle:bindpose_result(bpresult)
-					t.hierarchy_result = setmetatable({}, {__index=function(t, key)
-						local jointidx = hiehandle:joint_index(key)
-						local j = bpresult:joint(jointidx)
-						t[key] = j
-						return j
-					end})
-				end
-			end
-			cache_result[eid] = {world=cachemat, hierarchy=t.hierarchy_result}
+			mark_cache(eid, cache_result)
 		end
 	end
 end
@@ -160,7 +163,7 @@ local function notify_render_child_changed(tree, tell)
 			local eid = sort_result[i]
 			local e = world[eid]
 			if e.hierarchy_transform then
-				-- mean all the render child have been updated
+				-- mean all the render child have been updatedupdated
 				break
 			end
 
@@ -231,8 +234,7 @@ function scene_space:delete()
 end
 
 function scene_space:event_changed()	
-	local tree = {}	
-	local changed_parent = false
+	local trees = {}	
 	for eid, events in self.event:each("hierarchy_transform") do
 		local e = world[eid]
 		local trans = e.hierarchy_transform
@@ -242,17 +244,16 @@ function scene_space:event_changed()
 		local newparent = trans.parent
 		if newparent ~= oldparent then
 			local parentparent = world[newparent].hierarchy_transform.parent
-			tree[newparent] = parentparent
-			changed_parent = true
+			trees[newparent] = parentparent
 		end
 		
-		tree[eid] = newparent
+		trees[eid] = newparent or pseudoroot_eid
 	end
 
-	update_scene_tree(tree, self.hierarchy_transform_result)
-	if changed_parent then
-		notify_render_child_changed(tree, function (trans) 
-			trans.watcher._marked_init = true 
-		end)
-	end
+	update_scene_tree(trees, self.hierarchy_transform_result)
+	
+	notify_render_child_changed(trees, function (trans) 
+		trans.watcher._marked_init = true 
+	end)
+
 end
