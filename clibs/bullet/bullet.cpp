@@ -137,22 +137,23 @@ lnew_shape(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TSTRING);
 	const char* type = lua_tostring(L, 2);
 
-	luaL_checktype(L, 3, LUA_TTABLE);
-
 	plCollisionShapeHandle shape = nullptr;
 	if (strcmp(type, "sphere") == 0) {
+		luaL_checktype(L, 3, LUA_TTABLE);
 		lua_getfield(L, 3, "radius");
 		const plReal radius = (plReal)lua_tonumber(L, -1);
 		lua_pop(L, 1);
 		shape = plCreateSphereShape(world->sdk, world->world, radius);
 
 	} else if (strcmp(type, "box") == 0) {		
+		luaL_checktype(L, 3, LUA_TTABLE);
 		plVector3 size;
 		lua_getfield(L, 3, "size");
 		get_vec(L, -1, 3, size);
 		lua_pop(L, 1);
 		shape = plCreateBoxShape(world->sdk, world->world, size);
 	} else if (strcmp(type, "plane") == 0) {
+		luaL_checktype(L, 3, LUA_TTABLE);
 		plReal plane[4];
 		lua_getfield(L, 3, "normal");
 		get_vec(L, -1, 4, plane);
@@ -162,6 +163,7 @@ lnew_shape(lua_State *L) {
 		lua_pop(L, 1);
 		shape = plCreatePlaneShape(world->sdk, world->world, plane[0], plane[1], plane[2], plane[3]);
 	} else if (strcmp(type, "cylinder") == 0 || strcmp(type, "capsule") == 0) {
+		luaL_checktype(L, 3, LUA_TTABLE);
 		lua_getfield(L, 3, "radius");		
 		const plReal radius = (plReal)lua_tonumber(L, -1);
 		lua_pop(L, 1);
@@ -184,6 +186,7 @@ lnew_shape(lua_State *L) {
 	} else if (strcmp(type, "compound") == 0) {
 		shape = plCreateCompoundShape(world->sdk, world->world);
 	} else if (strcmp(type,"terrain") == 0 ) {
+		luaL_checktype(L, 3, LUA_TTABLE);
 		shape = createTerrainShape(L, world, 3);
 	}
 
@@ -332,13 +335,11 @@ ladd_to_compound(lua_State *L) {
 	auto child = (plCollisionShapeHandle)lua_touserdata(L, 3);
 
 
-	luaL_checktype(L, 4, LUA_TTABLE);
-	plVector3 pos;
-	extract_vec(L, 4, 3, pos);
+	luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
+	plReal *pos = (plReal *)lua_touserdata(L, 4);	
 
-	luaL_checktype(L, 5, LUA_TTABLE);
-	plQuaternion quat;
-	extract_vec(L, 5, 4, quat);
+	luaL_checktype(L, 5, LUA_TLIGHTUSERDATA);
+	plReal *quat = (plReal *)lua_touserdata(L, 5);	
 
 	plAddChildShape(world->sdk, world->world, compound, child, pos, quat);
 	return 0;
@@ -612,9 +613,8 @@ static int
 lraycast(lua_State *L) {
 	auto world = to_world(L);
 
-	plVector3 from, to;
-	extract_vec(L, 2, 3, from);
-	extract_vec(L, 3, 3, to);
+	plReal* from = (plReal*)lua_touserdata(L, 2);
+	plReal* to = (plReal*)lua_touserdata(L, 3);
 
 	ClosestRayResult result;
 	const bool hitted = plRaycast(world->sdk, world->world, from, to, result);

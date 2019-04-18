@@ -1,17 +1,19 @@
 
-local bullet_module = require "bullet"
+package.path = package.path .. ";./packages/bullet/?.lua"
 
-local bullet = bullet_module.new()
-local btworld = bullet:new_world()
-local bu = require "lua.util"
+local math3d = require "math3d"
+local ms = math3d.new()
 
+local bt = require "bulletworld"
+local btworld = bt.new()
 
 local shapes = {
-	cylinder = btworld:new_shape("cylinder", 6, 2, 1),
-	plane = btworld:new_shape("plane", 0, -1, 1, 3),
-	sphere = btworld:new_shape("sphere", 5),
-	capsule = btworld:new_shape("capsule", 2, 6, 1),
-	compound = btworld:new_shape("compound"),
+	cylinder 	= btworld:new_shape("cylinder", {radius=6, height=2, axis=1}),
+	plane 		= btworld:new_shape("plane", {normal = {0, 1, 0}, distance=3}),
+	sphere 		= btworld:new_shape("sphere", {radius = 5}),
+	capsule 	= btworld:new_shape("capsule", {radius=2, height=6, axis=1}),
+	compound 	= btworld:new_shape "compound",
+	box 		= btworld:new_shape("box", {size={1, 1, 1}}),
 }
 
 local function get_user_idx_op()
@@ -26,14 +28,15 @@ end
 local gen_user_idx = get_user_idx_op()
 
 local useridx = gen_user_idx()
-local object_plane = btworld:new_obj(shapes.plane, useridx, {0,0,0}, {0,0,0,1})
+local object_plane = btworld:new_obj(shapes.plane, useridx, ms({0,0,0}, "m"), ms({0,0,0,1}, "m"))
 btworld:add_obj(object_plane)
 
 
-btworld:add_to_compound(shapes.compound, shapes.sphere, {0,0,0},{90,0,0,1})
+btworld:add_to_compound(shapes.compound, shapes.sphere, ms({0,0,0}, "m"), ms({90,0,0,1}, "m"))
 
 local compound_idx = gen_user_idx()
-local compound_obj = btworld:new_obj(shapes.compound, compound_idx, {2,2,2},{45,0,0,1})
+local compound_obj = btworld:new_obj(shapes.compound, compound_idx, ms({2,2,2}, "m"), ms({45,0,0,1}, "m"))
+btworld:add_obj(compound_obj)
 
 local radius = 1
 local num_compounds = 5
@@ -42,19 +45,20 @@ local num_spheres = 1
 local objs = {} 
  
 for i = 1, num_compounds do 
-    local compound_shape = bu.create_compoundShape(btworld)
+    local compound_shape = btworld:new_shape "compound"
     for j = 1, num_spheres do 
-       local pos = { j*1.5, 0, 0 }
-	   local rot = { 0, 0, 0, 1 }
-       local child_shape = bu.create_sphereShape(btworld, radius)
+       local pos = ms({ j*1.5, 0, 0 }, "m")
+	   local rot = ms({ 0, 0, 0, 1 }, "m")
+       local child_shape = btworld:new_shape("sphere", {radius=radius})
        btworld:add_to_compound(compound_shape, child_shape, pos, rot)
     end 
     -- object
-    local pos = { i*1*1.5, -2.4, 0 }
-	local rot = { 0, 0, 0, 1}
-	local idx = gen_user_idx()
-	local object = btworld:new_obj(compound_shape, idx, pos, rot)
-	btworld:add_obj(object)        
+	local object = btworld:new_obj(compound_shape, 
+					gen_user_idx(), 
+					ms({ i*1*1.5, -2.4, 0 }, "m"), 
+					ms({ 0, 0, 0, 1}, "m"))
+
+	btworld:add_obj(object)
     objs[i] = object 
 end 
   
@@ -119,8 +123,9 @@ print("");
 
 
 -- raycast 
-local rayFrom = { 1.5, 20, 0}
-local rayTo = {  1.5, -5, 0 }
+local rayFrom = ms({ 1.5, 20, 0}, "m")
+local rayTo = ms({  1.5, -5, 0 }, "m")
+
 local hit, result = btworld:raycast(rayFrom, rayTo)
 
 local function print_raycast_result(result)
@@ -141,7 +146,7 @@ end
 
 print("")
 -- move up 3 unit
-btworld:set_obj_transform(object_plane, {0,3,0}, {0,0,0,1})
+btworld:set_obj_transform(object_plane, ms({0,3,0}, "m"), ms({0,0,0,1}, "m"))
 
 local hit1, result1 = btworld:raycast(rayFrom,rayTo)
 
@@ -154,7 +159,7 @@ end
 
 print("")
 -- move up 6 unit
-btworld:set_obj_position(object_plane, {0,6,0})
+btworld:set_obj_position(object_plane, ms({0,6,0}, "m"))
 local hit2, result2 = btworld:raycast(rayFrom,rayTo)
 if hit2 then 
     print("move plane to {0,6,0}")
@@ -165,11 +170,11 @@ end
 print("")
 
 -- rotate 
-local invRayFrom = { 1.5, 20, 0}
-local invRayTo = {  1.5,  -20, 0 }
-btworld:set_obj_position(object_plane, {0,0,0})
+local invRayFrom = ms({ 1.5, 20, 0}, "m")
+local invRayTo = ms({1.5,  -20, 0 }, "m")
+btworld:set_obj_position(object_plane, ms({0,0,0}, "m"))
 --btworld:set_obj_rotation(object_plane, {0.7,0,0.7,0})
-btworld:set_obj_rot_axis_angle(object_plane, {1,0,0}, math.rad(180) )
+btworld:set_obj_rotation(object_plane, ms({type="q", axis={1,0,0}, radian={math.rad(180)}}, "m"))
 local hit3, result3 = btworld:raycast(invRayFrom,invRayTo)
 if hit3  then 
     print("rotate plane to {0,-6,0}")
@@ -184,10 +189,10 @@ print("")
 -- collide between thin box and capsule 
 local ent_box = gen_user_idx()
 local ent_capsule = gen_user_idx()
-local tshape_box = btworld:new_shape("cube", 3, 0.5, 3)
-local tshape_capsule = btworld:new_shape("capsule", 2,6,1)
-local tobj_box = btworld:new_obj(tshape_box, ent_box, {0,0,0},{0,0,0,1})
-local tobj_capsule = btworld:new_obj(tshape_capsule, ent_capsule, {0,5.5,0},{0,0,0,1})
+local tshape_box = btworld:new_shape("box", {size={3, 0.5, 3}})
+local tshape_capsule = btworld:new_shape("capsule", {radius=2, height=6, axis=1})
+local tobj_box = btworld:new_obj(tshape_box, ent_box, ms({0,0,0}, "m"), ms({0,0,0,1}, "m"))
+local tobj_capsule = btworld:new_obj(tshape_capsule, ent_capsule, ms({0,5.5,0}, "m"), ms({0,0,0,1}, "m"))
 
 local box_capsule_points = btworld:collide_objects(tobj_box, tobj_capsule)
 if box_capsule_points then 
@@ -202,6 +207,8 @@ btworld:del_shape(shapes.sphere);
 btworld:del_obj(tobj_box);
 
 print("")
+
+math3d.reset(ms)
 
 btworld = nil		-- gc world
 bullet = nil		-- gc bullet sdk

@@ -484,8 +484,7 @@ struct ClosestRayResultCallback: btCollisionWorld::ClosestRayResultCallback {
 
 	virtual btScalar addSingleResult( btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
 	{
-		//caller already does the filter on the m_closestHitFraction
-		btAssert(rayResult.m_hitFraction >= m_closestHitFraction);
+		//caller already does the filter on the m_closestHitFraction		
 		if(rayResult.m_hitFraction >= m_closestHitFraction)
 			printf("****** error fraction ******");
 		m_closestHitFraction = rayResult.m_hitFraction;

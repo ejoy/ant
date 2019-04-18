@@ -1,11 +1,5 @@
 
 local bullet_module = require "bullet"
-local fs = require "filesystem"
-
-local mathpkg = import_package "ant.math"
-local ms = mathpkg.stack
-local math_adapter = require "math3d.adapter"
-
 local bullet_sdk = bullet_module.new()
 
 local bullet_world = {}
