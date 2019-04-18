@@ -56,7 +56,13 @@ local guiMain = iupex.menu(
     {
         "File",
         guiFile,
-    },
+	},
+	{
+		"Serizalize",
+		iupex.menu({
+			{"serialize_world", "SerializeWorld"},
+		}, bind)
+	}
 }, bind)
 
 local guiOpenMap = iup.GetChild(iup.GetChild(guiMain, 0), 0)
@@ -191,6 +197,51 @@ function CMD.CleanRecentlyOpened(e)
     config.recent = {}
     recentUpdate()
     recentSave()
+end
+
+local serialize = import_package 'ant.serialize'
+function CMD.SerializeWorld()
+	local world = editor_mainwindow.world
+	if world == nil then
+		return
+	end
+    local function save_file(file, data)
+        assert(assert(io.open(file, 'w')):write(data)):close()
+    end
+    -- test serialize world
+    local s = serialize.save_world(world)
+    save_file('serialize_world1.txt', s)
+
+    -- s = serialize.save_world(world)
+    -- save_file('serialize_world2.txt', s)
+
+    for _, eid in world:each 'serialize' do
+        world:remove_entity(eid)
+	end
+	
+	local updatelist = {
+		"post_init", "event_changed", "delete"
+	}
+
+	for _, updatetype in ipairs(updatelist) do
+		world:update_func(updatetype)()
+	end
+
+	world:clear_removed()
+
+
+    serialize.load_world(world, s)
+
+    s = serialize.save_world(world)
+    save_file('serialize_world3.txt', s)
+
+
+    --test serialize entity
+    local eid = world:first_entity_id 'serialize'
+    local s = serialize.save_entity(world, eid)
+    save_file('serialize_entity.txt', s)
+    world:remove_entity(eid)
+    serialize.load_entity(world, s)
 end
 
 recentInit()
