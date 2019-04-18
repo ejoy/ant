@@ -51,18 +51,24 @@ local guiFile = iupex.menu({
     {"Clean Recently Opened", "CleanRecentlyOpened"},
 }, bind)
 
+local guiDebug = iupex.menu({
+    {"Dump Enities", "DumpEnities"},
+    {"Serialize World", "SerializeWorld"},
+}, bind)
+
+
+
 local guiMain = iupex.menu(
 {
     {
         "File",
         guiFile,
-	},
-	{
-		"Serizalize",
-		iupex.menu({
-			{"serialize_world", "SerializeWorld"},
-		}, bind)
-	}
+    },
+    {
+        "Debug",
+        guiDebug,
+
+    },
 }, bind)
 
 local guiOpenMap = iup.GetChild(iup.GetChild(guiMain, 0), 0)
@@ -138,9 +144,9 @@ local function load_package(path)
 	local mapcfg = localfs.dofile(path)	
 	return mapcfg.name, mapcfg.systems
 end
-
+local pkg_name
 function openMap(path)
-	guiOpenMap.active = "OFF"
+	-- guiOpenMap.active = "OFF"
 	recentAddAndUpdate(path)
 
 	local pkgname, pkgsystems = load_package(path)
@@ -165,7 +171,9 @@ function openMap(path)
 	vfs.remove_mount("currentmap")
 	vfs.add_mount("currentmap", path:parent_path())
 	local pm = require "antpm"
-	pm.register("currentmap")
+    if not pm.find(pkg_name) then
+    	pkg_name = pm.register("currentmap")
+    end
     
     packages[#packages+1] = pkgname
     table.move(pkgsystems, 1, #pkgsystems, #systems+1, systems)
@@ -197,6 +205,79 @@ function CMD.CleanRecentlyOpened(e)
     config.recent = {}
     recentUpdate()
     recentSave()
+end
+
+function CMD.DumpEnities()
+    local world = editor_mainwindow.world
+    print("asdasdasd")
+    local hi = {}
+    hi[0] = {}
+    for i = 1,#world do
+        local e = world[i]
+        if e then
+            local pid = e.parent
+            if not pid and e.transform then
+                pid = e.transform.parent
+            elseif not pid and e.hierarchy_transform then
+                pid = e.hierarchy_transform.parent
+            end
+            if pid then
+                hi[pid] = hi[pid] or {}
+                table.insert(hi[pid],i)
+            else
+                table.insert(hi[0],i)
+            end
+        end
+    end
+    -- print_a(hi)
+
+    do
+        local function bfs(id,tab)
+            if hi[id] then
+                local next_tab = tab.."    "
+                
+                for i,v in ipairs(hi[id]) do
+                    local o = ""
+                    o = o .. next_tab..v..":"..(world[v].name or "nil")
+                    if world[v].hierarchy_transform then
+                        o = o .. " hierarchy_transform"
+                    end
+                    if world[v].transform then
+                        o = o .. " transform"
+                    end
+                    print(o)
+                    bfs(v,next_tab)
+                end
+            end
+        end
+        print("tree_begin")
+        bfs(0,"")
+        print("tree_end")
+
+    end
+
+
+    -- do
+    --     local function bfs(id,tab)
+    --         if hi[id] then
+    --             local count = 1
+    --             local next_tab = tab.."    "
+    --             print(tab.."children:{\n")
+    --             for i,v in ipairs(hi[id]) do
+    --                 print(next_tab..tostring(count)..":{\n")
+    --                 print(next_tab.."entity_"..v..":`\n")
+    --                 print_a(world[v])
+    --                 print(next_tab.."`,\n")
+    --                 bfs(v,next_tab)
+    --                 print(next_tab.."},\n")
+    --             end
+    --             print(tab.."},\n")
+    --         end
+    --     end
+    --     print("{\n")    
+    --     bfs(0,"    ")
+    --     print("}\n")
+    -- end
 end
 
 local serialize = import_package 'ant.serialize'

@@ -110,13 +110,20 @@ function asset_view:_init()
     --     self:_on_canvas_resize()
     -- end
     self.canvas.map_cb = function()
-        self:_on_canvas_map()
-        self:_on_canvas_resize()
+        if self._main_canvas_maped then
+            self:_on_canvas_map()
+            self:_on_canvas_resize()
+        end
     end
 
     self.canvas.unmap_cb = function()
         self:_on_canvas_unmap()
     end
+end
+
+function asset_view:on_main_canvas_map()
+    self._main_canvas_maped = true
+    self.canvas.map_cb()
 end
 
 function asset_view:_on_canvas_resize()
