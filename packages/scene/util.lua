@@ -55,7 +55,6 @@ function util.start_new_world(input_queue, fbw, fbh, packages, systems)
 	world:update_func("init")()
     return world
 end
-
 function util.loop(world, arg)	
 	local queue = {}
 	for _, updatetype in ipairs {
@@ -75,6 +74,9 @@ function util.loop(world, arg)
 		end
 
 		world:clear_removed()
+		if world.need_stop then
+			world.stop()
+		end
 	end
 end
 

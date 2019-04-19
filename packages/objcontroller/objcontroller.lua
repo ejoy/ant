@@ -183,7 +183,7 @@ local function add_event(event)
 end
 
 function objcontroller.init(msg)
-	assert(msgqueue == nil)
+	-- assert(msgqueue == nil)
 	msgqueue = {}
 	msg.observers:add  {
 		mouse_click = function (_, what, press, x, y)

@@ -83,6 +83,9 @@ function editor_mainwindow:new_world(packages, systems)
 	}), function (co, status)
 		iup.Message("Error", string.format("Error:%s\n%s", status, debug.traceback(co)))
 	end)
+    self.world.stop = function()
+        task.exit()
+    end
 end
 
 function editor_mainwindow:run(config)

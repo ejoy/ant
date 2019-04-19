@@ -30,17 +30,33 @@ function fs_hierarchy:_build()
     }
     
     self.file_list = iup.list{
-        "[Empty]";
         -- "[Empty]";
         -- DROPDOWN="YES",
         EXPAND = "YES",
-        VALUE = 1,
+        -- VALUE = 1,
         AUTOHIDE = "YES",
         SCROLLBAR = "YES",
         MULTIPLE = "YES",
         SHOWIMAGE="Yes",
     }
-
+    -------------------
+    self.filter_text = iup.text {
+        CUEBANNER = "(enter filter string)",
+        MULTILINE="NO",
+        EXPAND = "HORIZONTAL",
+    }
+    self.filter_text.valuechanged_cb = function()
+        self:_on_filter_change()
+    end
+    self.clear_filter_btn = iup.button {
+        TITLE = "Clear"
+    }
+    self.clear_filter_btn.action = function()
+        self.filter_text.value = ""
+        self:_on_filter_change()
+        print(iup.COMCTL32VER6 )
+    end
+    -----------------------------
     self.view = iup.frame {
         iup.vbox {
             -- iup.label { title = "hierarchy",EXPAND = "HORIZONTAL" },
@@ -57,17 +73,25 @@ function fs_hierarchy:_build()
             },
             iup.split {
                 self.dir_tree.view,
-                iup.scrollbox{
-                    self.file_list,
+                iup.vbox{
+                    iup.hbox{
+                        iup.label { TITLE = "Filter: " },
+                        self.filter_text,
+                        self.clear_filter_btn,
+                        ALIGNMENT = "ACENTER"
+                    },
+                    iup.scrollbox{
+                        self.file_list,
+                        LAYOUTDRAG = "NO"
+                    },
                 },
-                iup.fill {},
                 ORIENTATION="HORIZONTAL",
                 SHOWGRIP = "NO",
                 VALUE = 300,
             },
-            MARGIN = "3x3",
+            MARGIN = "1x1",
         },
-        title = "hierarchy",
+        -- title = "hierarchy",
     }
     for arg_k,arg_v in pairs(self.iup_args) do
         self.view[arg_k] = arg_v
@@ -91,12 +115,16 @@ function fs_hierarchy:_init()
     self.dir_tree.view.map_cb = function()
         self:_load_package()
     end
+    self.file_list.map_cb = function()
+        if self._file_list_data then
+            self:_update_file_list_by_filter()
+        end
+    end
     self.package_list.action = function( ... )
         self:_list_value_change(...)
     end
     self.dir_tree.view.executeleaf_cb = function(view,id)
         print("executeleaf_cb")
-
         self:set_foucs(id)
     end
     self.dir_tree.view.branchopen_cb = function(view,id)
@@ -211,10 +239,11 @@ function fs_hierarchy:set_foucs(node_id)
         end
     end
     self.dir_tree:remove_child(node)
+    -----------update file list
     local parent_path_obj = node.path_obj
     local childs = parent_path_obj:list_directory()
-    self.file_list["REMOVEITEM"] = "ALL"
-    local list_count = 0
+    
+    local file_list_data = {}
     for child_obj in childs do
         
         -- local child_obj = parent_path_obj / file_name
@@ -226,15 +255,55 @@ function fs_hierarchy:set_foucs(node_id)
             child.path_obj = child_obj
         else
             local localpath = child_obj:localpath()
-            self.file_list["APPENDITEM"] = (child_obj:filename()):string()
-            list_count = list_count + 1
+            -- self.file_list["APPENDITEM"] = (child_obj:filename()):string()
+            local file_name = (child_obj:filename()):string()
+            -- list_count = list_count + 1
             local icona,w,h = icon.get_icon_ex(string.gsub(localpath:string(),"/","\\"),"small")
-            self.file_list["IMAGE"..list_count] = icona
-
+            -- self.file_list["IMAGE"..list_count] = icona
+            table.insert(file_list_data,{file_name,icona})
         end
     end
+    self._file_list_data = file_list_data
+    self:_update_file_list_by_filter(self._file_list_data,self.filter_text,self.enable_regex)
+end
+
+function fs_hierarchy:_on_filter_change()
+    self:_update_file_list_by_filter()
+end
 
 
+function fs_hierarchy:_update_file_list_by_filter()
+    local file_list = self._file_list_data
+    local str = self.filter_text.value
+
+    local is_regex_vaild = pcall(string.match,"",str)
+
+    local filter_fun = function(value)
+        if (not str) or (#str == 0) then
+            return true
+        elseif is_regex_vaild then
+            return string.match(value,str)
+        else
+            return true
+        end
+    end
+    local list_count = 0
+    self.file_list["AUTOREDRAW"] = "NO" 
+    self.file_list["REMOVEITEM"] = "ALL"
+
+    for k,v in ipairs(file_list) do
+        local value = v[1]
+        local icona = v[2]
+        if filter_fun(value) then
+            self.file_list["APPENDITEM"] = value
+            list_count = list_count + 1
+            self.file_list["IMAGE"..list_count] = icona
+        end
+    end
+    if self.file_list["COUNT"] == 0 then
+        self.file_list["APPENDITEM"] = "[Empty]"
+    end
+    self.file_list["AUTOREDRAW"] = "YES"
 end
 
 
