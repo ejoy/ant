@@ -45,4 +45,11 @@ function util.fill_collider_info(collidercomp, boundings)
 	collider.center = vec_add(aabb.max, aabb.min)	
 end
 
+function util.create_collider_comp(Physics, shape, collider, transform)	
+	local pos = ms(transform.t, collider.center, "+P")
+	
+	assert(collider.handle == nil)
+	collider.handle = Physics:create_collider(assert(shape.handle), collider.obj_idx, pos, ms(transform.r, "qP"))
+end
+
 return util

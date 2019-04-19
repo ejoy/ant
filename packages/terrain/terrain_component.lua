@@ -1,13 +1,57 @@
 local ecs = ...
-
+local world = ecs.world
 local bgfx = require "bgfx"
 
 local declmgr = import_package 'ant.render'.declmgr
+local ms = import_package "ant.math".stack
+local colliderutil = import_package "ant.bullet".util
 
 local terraincomp =
     ecs.component_alias('terrain', 'resource') {
     depend = {'mesh', 'material'}
 }
+
+local Physics = assert(world.args.Physics)
+local terrainshape = ecs.component "terrain_shape"
+	.up_axis 	"int" (0)
+	.flip_quad_edges "boolean" (false)
+
+function terrainshape:delete()
+	local handle = self.handle
+	if handle then
+		Physics:del_shape(self.handle)
+	end
+end
+
+local terrain_collider = ecs.component "terrain_collider" {depend = {"transform", "terrain"}}
+	.shape "terrain_shape"
+	.collider "collider"
+
+local function create_terrain_shape(shape, terraincomp)
+	local terraininfo = terraincomp.terraininfo
+	local terrain = terraininfo.handle
+	local heightmap = terrain:heightmap_data()
+	shape.hm = heightmap
+	local bounding = terrain:bounding()
+	local aabb = bounding.aabb
+	shape.handle = Physics:new_shape("terrain", {
+		width = terraininfo.grid_width, height = terraininfo.grid_length, 
+		heightmap_scale = 1.0, 
+		min_height = aabb.min[2], max_height = aabb.max[2],
+		heightmapdata = heightmap,
+		up_axis = shape.up_axis, flip_quad_edges = shape.flip_quad_edges
+	})
+
+	local heightrange = aabb.max[2] - aabb.min[2]
+
+	local scale = {terraininfo.width / terraininfo.grid_width, terraininfo.height / heightrange, terraininfo.length / terraininfo.grid_length}
+	Physics:set_shape_scale(shape.handle, ms(scale, "P"))
+end
+
+function terrain_collider:postinit(e)
+	create_terrain_shape(self.shape, e.terrain)
+	colliderutil.create_collider_comp(Physics, self.shape, self.collider, e.transform)
+end
 
 local function create_buffer(terrainhandle, dynamic, declname)
     local vb, ib = terrainhandle:buffer()

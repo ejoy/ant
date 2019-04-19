@@ -3,11 +3,22 @@ local world = ecs.world
 
 local Physics = assert(world.args.Physics)
 local ms = import_package "ant.math".stack
+
+local colliderutil = require "util"
+
 ecs.tag "collider_tag"
 
 local coll = ecs.component "collider"
 	.center "real[3]" {0, 0, 0}
 	.is_tigger "boolean" (true)
+
+function coll:delete()	
+	local handle = self.handle
+	if handle then
+		local Physics = assert(world.args.Physics)
+		Physics:del_obj(handle)
+	end
+end
 	
 local objidx_counter = 0
 local function collider_obj_idx_creator()
@@ -41,17 +52,6 @@ ecs.component "capsule_shape"
 
 ecs.component_alias("cylinder_shape", "capsule_shape")
 
-ecs.component "terrain_shape"
-	.width "int" (1)
-	.height "int" (1)
-	.grid_scale "real" (1)
-	.height_scale "real" (1)
-	.min_height "real" (1)
-	.max_height "real" (1)
-	.axis "int" (0)
-	.datatype "string" ("uchar")
-	.flip_quad_edges "boolean" (false)
-
 ecs.component "custom_shape"
 	.type "string" "compound"	
 
@@ -66,8 +66,7 @@ for _, pp in ipairs {
 	{"sphere_collider", "sphere_shape"},
 	{"box_collider", 	"box_shape"},
 	{"capsule_collider","capsule_shape"},
-	{"cylinder_collider","cylinder_shape"},
-	{"terrain_collider","terrain_shape"},
+	{"cylinder_collider","cylinder_shape"},	
 	{"character_collider", "character_shape" },
 } do
 	local collidername, shapename = pp[1], pp[2]
@@ -88,22 +87,7 @@ for _, pp in ipairs {
 		.shape(shapename)
 
 	function c:postinit(e)
-		local collider = self.collider
-		local shapeinfo = self.shape
-
-		local trans = e.transform
-		local pos = ms(trans.t, collider.center, "+P")
-		
-		assert(collider.handle == nil)
-		collider.handle = Physics:create_collider(assert(shapeinfo.handle), collider.obj_idx, pos, ms(trans.r, "qP"))
-	end
-
-	function c:delete()
-		local collider = self.collider
-		if collider.handle then
-			local Physics = assert(world.args.Physics)
-			Physics:del_obj(collider.handle)
-		end
+		colliderutil.create_collider_comp(Physics, self.shape, self.collider, e.transform)
 	end
 end
 
