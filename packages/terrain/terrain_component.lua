@@ -48,20 +48,8 @@ local function create_terrain_shape(shape, terraincomp)
 	Physics:set_shape_scale(shape.handle, ms(scale, "P"))
 end
 
-function terrain_collider:postinit(e)
-	local terraincomp = e.terrain
+function terrain_collider:postinit(e)	
 	create_terrain_shape(self.shape, e.terrain)
-
-	local bounding = terraincomp.assetinfo.handle:bounding()
-	local center = self.collider.center
-	if center == nil then
-		center = {}		
-		for idx, v in ipairs(bounding.sphere.center) do
-			center[idx] = v
-		end
-		self.collider.center = center
-	end
-
 	colliderutil.create_collider_comp(Physics, self.shape, self.collider, e.transform)
 end
 

@@ -89,14 +89,6 @@ for _, pp in ipairs {
 	function c:postinit(e)
 		local shape = self.shape
 		local collider = self.collider
-
-		if collider.center == nil then
-			local boundings = e.mesh.assetinfo.boundings
-			if boundings then
-				colliderutil.fill_collider_info(self, boundings)
-			end
-		end
-
 		colliderutil.create_collider_comp(Physics, shape, collider, e.transform)
 	end
 end
@@ -106,7 +98,7 @@ local mathadapter_util = import_package "ant.math.adapter"
 mathadapter_util.bind("bullet", function ()
 	local bw = Physics.world
 	local bw_mt = getmetatable(bw)
-	bw_mt.new_obj = math3d_adapter.vector(ms, bw_mt.new_obj, 4)
+	bw_mt.new_obj 			= math3d_adapter.vector(ms, bw_mt.new_obj, 4)
 	bw_mt.set_obj_transform = math3d_adapter.vector(ms, bw_mt.set_obj_transform, 3)
 	bw_mt.set_obj_position 	= math3d_adapter.vector(ms, bw_mt.set_obj_position, 3)
 	bw_mt.set_obj_rotation 	= math3d_adapter.vector(ms, bw_mt.set_obj_rotation, 3)
