@@ -206,21 +206,19 @@ void printTerrainShape(int w,int h,HeightfieldTerrainShape *shape) {
 // do grid scale setting 
 plCollisionShapeHandle Bullet2CollisionSdk::createTerrainShape(plCollisionWorldHandle worldHandle,
 	int width, int height,
-	const void *heightData, int phyDataType,
-	plReal gridScale,
+	const void *heightData, int phyDataType,	
 	plReal heightScale, plReal minHeight, plReal maxHeight,
 	int upAxis,
 	bool filpQuadEdges)
 {
-	btHeightfieldTerrainShape *terrainShape = 
+	return (plCollisionShapeHandle)
 		new btHeightfieldTerrainShape( width, height,
 			heightData, 
-			(btScalar)heightScale,  (btScalar)minHeight,  (btScalar)maxHeight,upAxis,
-			(PHY_ScalarType)phyDataType, filpQuadEdges );
-	terrainShape->setLocalScaling(btVector3(gridScale,1.0f,gridScale));
-
-	//printTerrainShape(width,height,terrainShape);
-	return (plCollisionShapeHandle)terrainShape;
+			(btScalar)heightScale,  
+			(btScalar)minHeight,  
+			(btScalar)maxHeight,upAxis,
+			(PHY_ScalarType)phyDataType, filpQuadEdges );	
+	
 }									
 
 
@@ -307,6 +305,13 @@ void Bullet2CollisionSdk::setShapeScale(plCollisionWorldHandle worldHandle,plCol
 	btCollisionWorld* world = (btCollisionWorld*)worldHandle;
 	btCollisionObject* colObj = (btCollisionObject*)objectHandle;
 	world->updateSingleAabb(colObj);
+}
+
+
+void Bullet2CollisionSdk::setShapeScaleEx(plCollisionWorldHandle worldHandle, plCollisionShapeHandle shapeHandle, plVector3 scale) 
+{
+	btCollisionShape* shape = (btCollisionShape*)shapeHandle;
+	shape->setLocalScaling(btVector3(scale[0], scale[1], scale[2]));
 }
 
 void Bullet2CollisionSdk::deleteShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle shapeHandle)

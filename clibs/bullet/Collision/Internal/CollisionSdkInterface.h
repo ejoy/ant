@@ -38,8 +38,7 @@ public:
 
 	virtual plCollisionShapeHandle createTerrainShape(plCollisionWorldHandle worldHandle,
 													int width,int height, 
-													const void *heightData, int phyDataType,
-													plReal gridSize,
+													const void *heightData, int phyDataType,													
 													plReal heightScale, plReal minHeight, plReal maxHeight,
 													int upAxis,
 													bool filpQuadEdges) = 0;													
@@ -51,6 +50,7 @@ public:
 
 	virtual void deleteShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle shape) = 0;
 	virtual void setShapeScale(plCollisionWorldHandle worldHandle, plCollisionObjectHandle objectHandle, plCollisionShapeHandle shapeHandle,plVector3 scale) =0;
+	virtual void setShapeScaleEx(plCollisionWorldHandle worldHandle, plCollisionShapeHandle shapeHandle, plVector3 scale) = 0;
 
 	virtual void addCollisionObject(plCollisionWorldHandle world, plCollisionObjectHandle object) = 0;
 	virtual void removeCollisionObject(plCollisionWorldHandle world, plCollisionObjectHandle object) = 0;

@@ -14,22 +14,3 @@ heightmap = {
 
 uv0_scale  = 50 --80*0.625,   -- 140
 uv1_scale  = 1
-
--- textures = {   -- ios 文件名大小写敏感，需要注意
---    "assets/build/terrain/ground_099-512.dds",
---    "assets/build/terrain/Scene_Texture_Terrain_BD_SOIL_0070_1.dds",
---    "assets/build/terrain/BH-Scene-JiangJunZong-Wall-02-D.dds",
---    "assets/build/terrain/Scene_Texture_Terrain_BD_ROCK_040_1.dds",
--- }
-
--- masks = {
--- 	"assets/build/terrain/pvp2_mask_a.dds",
--- 	"assets/build/terrain/pvp2_mask_r.dds",
--- 	"assets/build/terrain/pvp2_mask_g.dds",
--- 	"assets/build/terrain/pvp2_mask_b.dds",
--- }
-
--- uniforms = {
--- 	{ name = "u_mask",s_name ="s_maskTexture",type = "s",texchannel = 1 },
--- 	{ name = "u_base",s_name ="s_baseTexture",type = "s",texchannel = 0 },		
--- }

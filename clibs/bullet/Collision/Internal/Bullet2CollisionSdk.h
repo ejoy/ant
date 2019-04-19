@@ -40,11 +40,9 @@ public:
 
 	virtual plCollisionShapeHandle createTerrainShape(plCollisionWorldHandle worldHandle,
 		int width, int height,
-		const void *heightData, int phyDataType,
-		plReal gridSize,
+		const void *heightData, int phyDataType,		
 		plReal heightScale, plReal minHeight, plReal maxHeight,
-		int upAxis,
-		bool filpQuadEdges);
+		int upAxis,	bool filpQuadEdges);
 
 	virtual plCollisionShapeHandle createCompoundShape(plCollisionWorldHandle worldHandle);
 	virtual plCollisionShapeHandle getCompoundChildShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle compoundShape, int childidx);
@@ -52,6 +50,7 @@ public:
 	virtual void addChildShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle compoundShape, plCollisionShapeHandle childShape, plVector3 childPos, plQuaternion childOrn);
 	// add for setposition dynamic change
 	virtual void setShapeScale(plCollisionWorldHandle worldHandle, plCollisionObjectHandle objectHandle,plCollisionShapeHandle shapeHandle,plVector3 scale);
+	virtual void setShapeScaleEx(plCollisionWorldHandle worldHandle, plCollisionShapeHandle shapeHandle, plVector3 scale);
 
 	virtual void deleteShape(plCollisionWorldHandle worldHandle, plCollisionShapeHandle shape);
 	//@}

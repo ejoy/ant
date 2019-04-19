@@ -51,28 +51,63 @@ get_arg_vec(lua_State *L, int index, int num, T &obj) {
 	}	
 }
 
+struct heightmapdata {
+	const uint8_t *data;
+	uint32_t sizebytes;
+	uint8_t elembits;
+};
+
+
+static inline void
+fetch_heightmap_data(lua_State *L, int index, heightmapdata &hm) {
+	lua_getfield(L, index, "heightmapdata");
+	{
+		lua_getfield(L, -1, "data");
+		hm.data = (const uint8_t*)lua_touserdata(L, -1);
+		lua_pop(L, 1);
+
+		lua_getfield(L, -1, "sizebytes");
+		hm.sizebytes = (uint32_t)lua_tointeger(L, -1);
+		lua_pop(L, 1);
+
+		lua_getfield(L, -1, "bits");
+		hm.elembits = (uint8_t)lua_tointeger(L, -1);
+		lua_pop(L, 1);
+	}
+}
+
+static inline PHY_ScalarType
+get_phys_datatype(uint8_t elembits) {
+	const PHY_ScalarType phytypes[] = {
+		PHY_ScalarType(-1), PHY_ScalarType::PHY_UCHAR, PHY_ScalarType::PHY_SHORT,
+		PHY_ScalarType(-1), PHY_ScalarType::PHY_FLOAT,
+	};
+
+	const auto bytenum = elembits / 8;
+	assert(bytenum < sizeof(phytypes) / sizeof(phytypes[0]));
+
+	return phytypes[bytenum];
+}
+
+
 plCollisionShapeHandle 
-createTerrainShape(lua_State *L, world_node* world, int index) {
+create_terrain_shape(lua_State *L, world_node* world, int index) {
 	lua_getfield(L, index, "width");
-	const int  width = (int)lua_tointeger(L, -1);
+	const uint32_t  width = (uint32_t)lua_tointeger(L, -1);
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "height");	
-	const int  height = (int)lua_tointeger(L, -1);
+	const uint32_t  height = (uint32_t)lua_tointeger(L, -1);
 	lua_pop(L, 1);
 
-	lua_getfield(L, index, "data");	
-	size_t dataLen = 0;
-	luaL_checktype(L, -1, LUA_TSTRING);
-	auto terData = lua_tolstring(L, -1, &dataLen);
-	lua_pop(L, 1);
+	heightmapdata hm = { 0 };
+	fetch_heightmap_data(L, index, hm);
+	if (width * height < hm.sizebytes / (hm.elembits / 8)) {
+		luaL_error(L, "terrain width=%d, height=%d, exceed heightmap elem numbers: %d", width, height, hm.sizebytes / (hm.elembits / 8));
+	}
 
-	lua_getfield(L, index, "grid_scale");
-	const plReal gridScale = (plReal) lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, index, "height_scale");
-	const plReal heightScale = (plReal) lua_tonumber(L, -1);
+	lua_getfield(L, index, "heightmap_scale");
+	const plReal heightmap_scale = (plReal) lua_tonumber(L, -1);
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "min_height");
@@ -83,26 +118,12 @@ createTerrainShape(lua_State *L, world_node* world, int index) {
 	const plReal maxHeight = (plReal)lua_tonumber(L, -1);
 	lua_pop(L, 1);
 
-	lua_getfield(L, index, "axis");
+	lua_getfield(L, index, "up_axis");
 	const int upAxis = (int)lua_tointeger(L, 10);
 	if (upAxis < 0 || upAxis > 2) {
 		luaL_error(L, "invalid axis type : %d", upAxis);
 	}
 	lua_pop(L, 1);
-
-	lua_getfield(L, index, "datatype");
-	const char* datatype = lua_tostring(L, -1);
-	lua_pop(L, 1);
-
-	int phyDataType = (int) PHY_ScalarType::PHY_SHORT;
-	if( strcmp(datatype,"uchar") == 0 ) {
-		phyDataType = (int) PHY_ScalarType::PHY_UCHAR;
-	} else if(strcmp(datatype,"short") == 0 ) {
-		phyDataType = (int) PHY_ScalarType::PHY_SHORT;
-	} else if(strcmp(datatype,"float") == 0 ) {
-		phyDataType = (int) PHY_ScalarType::PHY_FLOAT;
-	}
-
 
 	lua_getfield(L, index, "flip_quad_edges");
 	const bool flip_quad_edges = lua_toboolean(L, -1);
@@ -114,9 +135,8 @@ createTerrainShape(lua_State *L, world_node* world, int index) {
 	
 	return plCreateTerrainShape(world->sdk,world->world,
 						width, height, 
-						terData, phyDataType,
-						gridScale, 
-						heightScale, minHeight, maxHeight, 
+						hm.data, get_phys_datatype(hm.elembits),
+						heightmap_scale, minHeight, maxHeight, 
 						upAxis,						
 						flip_quad_edges);
 }
@@ -187,7 +207,7 @@ lnew_shape(lua_State *L) {
 		shape = plCreateCompoundShape(world->sdk, world->world);
 	} else if (strcmp(type,"terrain") == 0 ) {
 		luaL_checktype(L, 3, LUA_TTABLE);
-		shape = createTerrainShape(L, world, 3);
+		shape = create_terrain_shape(L, world, 3);
 	}
 
 	assert(shape);
@@ -346,7 +366,7 @@ ladd_to_compound(lua_State *L) {
 }
 
 static int 
-lset_shape_scale(lua_State *L) {
+lupdate_object_shape(lua_State *L) {
 	auto world = to_world(L);
 
 	luaL_checktype(L,2,LUA_TLIGHTUSERDATA);
@@ -360,6 +380,20 @@ lset_shape_scale(lua_State *L) {
 		luaL_error(L, "collision object do not have shape");
 	}
 	plSetShapeScale(world->sdk,world->world, object, shape, scale);
+	return 0;
+}
+
+static int
+lset_shape_scale(lua_State *L) {
+	auto world = to_world(L);
+
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	auto shape = (plCollisionShapeHandle)lua_touserdata(L, 2);
+
+	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+	plReal *scale = (plReal*)lua_touserdata(L, 3);
+
+	plSetShapeScaleEx(world->sdk, world->world, shape, scale);
 	return 0;
 }
 
@@ -613,7 +647,9 @@ static int
 lraycast(lua_State *L) {
 	auto world = to_world(L);
 
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
 	plReal* from = (plReal*)lua_touserdata(L, 2);
+	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
 	plReal* to = (plReal*)lua_touserdata(L, 3);
 
 	ClosestRayResult result;
@@ -722,6 +758,7 @@ register_bullet_world_node(lua_State *L) {
 	luaL_Reg l[] = {
 		"new_shape",			lnew_shape,
 		"del_shape",			ldel_shape,
+		"update_object_shape",	lupdate_object_shape,
 		"set_shape_scale",		lset_shape_scale,
 		"new_obj",				lnew_collision_obj,
 		"del_obj",				ldel_collision_obj,

@@ -92,8 +92,7 @@ extern "C"
 	// for terrain ,must do convert 
 	extern plCollisionShapeHandle plCreateTerrainShape(plCollisionSdkHandle sdk, plCollisionWorldHandle worldHandle,
 													int width,int height, 
-													const void *heightData, int phyDataType,
-													plReal gridScale,
+													const void *heightData, int phyDataType,													
 													plReal heightScale,plReal minHeight,plReal maxHeight, 
 													int upAxis,													
 													bool filpQuadEdges);
@@ -102,6 +101,7 @@ extern "C"
 	extern void plAddChildShape(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionShapeHandle compoundShape, plCollisionShapeHandle childShape, plVector3 childPos, plQuaternion childOrn);
 	extern void plDeleteShape(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionShapeHandle shape);
 	extern void plSetShapeScale(plCollisionSdkHandle collisionSdkHandle,plCollisionWorldHandle worldHandle, plCollisionObjectHandle objectHandle, plCollisionShapeHandle shapeHandle,plVector3 scale);
+	extern void plSetShapeScaleEx(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionShapeHandle shapeHandle, plVector3 scale);
 
 	/* Contact Results */
 

@@ -99,8 +99,7 @@ plCollisionShapeHandle plCreatePlaneShape( plCollisionSdkHandle collisionSdkHand
 plCollisionShapeHandle plCreateTerrainShape(
 	plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle,
 	int width, int height,
-	const void *heightData, int phyDataType,
-	plReal gridScale,
+	const void *heightData, int phyDataType,	
 	plReal heightScale, plReal minHeight, plReal maxHeight,
 	int upAxis,
 	bool filpQuadEdgess)
@@ -110,7 +109,7 @@ plCollisionShapeHandle plCreateTerrainShape(
 	return sdk->createTerrainShape(worldHandle,
 					width, height,
 					heightData, phyDataType,
-					gridScale, heightScale, minHeight,maxHeight,
+					heightScale, minHeight,maxHeight,
 					upAxis,
 					filpQuadEdgess);
 }
@@ -148,6 +147,11 @@ void plSetShapeScale(plCollisionSdkHandle collisionSdkHandle,plCollisionWorldHan
 {
 	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
 	sdk->setShapeScale(worldHandle,objectHandle,shapeHandle,scale);
+}
+
+void plSetShapeScaleEx(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionShapeHandle shapeHandle, plVector3 scale)
+{
+	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
 }
 
 plCollisionObjectHandle plCreateCollisionObject(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, void* userData, int userIndex, plCollisionShapeHandle cshape, plVector3 childPos, plQuaternion childOrn)

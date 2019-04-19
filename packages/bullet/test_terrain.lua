@@ -1,40 +1,55 @@
 
-package.path = package.path..';./clibs/terrain/?.lua;./test/?.lua;'
-package.path = package.path..';./clibs/bullet/?.lua;'
+package.path = package.path .. ";./packages/bullet/?.lua"
 
+local terrainmodule = require "lterrain"
+local math3d = require "math3d"
+local ms = math3d.new()
 
-local bullet_module = require "bullet"
-local terrainClass = require "terrainclass"
+local bt = require "bulletworld"
+local btworld = bt.new()
 
-local bullet = bullet_module.new()
-local btworld = bullet:new_world()
-local bu = require "lua.util"
+local terraininfo = {
+	width  = 400,
+	length = 400,
+	height = 385,
+	
+	grid_width  = 513,
+	grid_length = 513,
+	
+	num_layers = 4,
+	
+	heightmap = {
+		bits   = 8,	-- get from ref_path?
+		ref_path = "packages/resources.binary/terrain/pvp1.raw",
+		path = "packages/resources.binary/terrain/pvp1.raw",
+	},
+	
+	uv0_scale  = 50, --80*0.625,   -- 140
+	uv1_scale  = 1,
+}
 
-local terrain = terrainClass.new() 
-terrain:load( "assets/build/terrain/pvp1.lvl" )
+local terrain 		= terrainmodule.create(terraininfo)
 
-local imgData = terrain:get_heightmap()
-local grid_width = terrain:get_grid_width()
-local grid_height = terrain:get_grid_length()
-local grid_scale = terrain:get_width_scale()
-local height_scale = terrain:get_height_scale()
-local min_height = terrain:get_min_height()
-local max_height = terrain:get_max_height()
-local data_type = terrain:get_data_type()
-local upAxis = 1
-
-local terInfo = terrain:get_terrain_info()
+local heightmapdata = terrain:hieghtmap_data()
+local bounding 		= terrain:calc_heightmap_bounding()
+local aabb = bounding.aabb
+local bouding_height = aabb.max[2] - aabb.min[2]
+local heightmap_scale = terraininfo.height / bouding_height
+local width_scale = terraininfo.width / terraininfo.grid_width
+local length_scale = terraininfo.length / terraininfo.grid_length
 
 local shapes = {
-	cylinder = btworld:new_shape("cylinder", 16, 3, 1),
-	plane = btworld:new_shape("plane", 0, 1, 0, 0),
-	-- sphere = btworld:new_shape("sphere", 5),
-	-- capsule = btworld:new_shape("capsule", 2, 6, 1),
-	-- compound = btworld:new_shape("compound"),
-	terrain = btworld:new_shape("terrain",grid_width, grid_height ,imgData, 
-										  grid_scale, height_scale, min_height,max_height,
-										  upAxis, data_type, false )
+	cylinder 	= btworld:new_shape("cylinder", {radius=16, height=3, axis=1}),
+	plane 		= btworld:new_shape("plane", {normal={0, 1, 0}, distance=0}),
+	terrain 	= btworld:new_shape("terrain", {
+							width = terraininfo.grid_width, height = terraininfo.grid_length, 
+							heightmap_scale = heightmap_scale, 
+							min_height = aabb.min[2], max_height = aabb.max[2],
+							heightmapdata = heightmapdata,
+							up_axis = 1, flip_quad_edges=false})
 }
+
+btworld:set_shape_scale(shapes.terrain, ms({width_scale, 1, length_scale}, "m"))
 
 local function get_user_idx_op()
 	local start_user_idx = 100
@@ -48,19 +63,21 @@ end
 local gen_user_idx = get_user_idx_op()
 
 local useridx = gen_user_idx()
-print("plane eid ="..useridx)
-local object_plane = btworld:new_obj(shapes.plane, useridx, {0,-200,0}, {0,0,0,1})
+print("plane useridx:", useridx)
+local object_plane = btworld:new_obj(shapes.plane, useridx, ms({0,-200,0}, "m"), ms({0,0,0,1}, "m"))
 --btworld:add_obj(object_plane)
 
 useridx = gen_user_idx()
-print("cylinder eid ="..useridx)
-local obj_cylinder = btworld:new_obj(shapes.cylinder,useridx,{0,-200,0},{0,0,0,1})
+print("cylinder eid : ", useridx)
+local obj_cylinder = btworld:new_obj(shapes.cylinder, useridx, ms({0,-200,0}, "m"), ms({0,0,0,1}, "m"))
 --btworld:add_obj(obj_cylinder)
 
 useridx = gen_user_idx()
-print("terrain eid ="..useridx)
-local ofs = terrain:get_phys_offset()
-local obj_terrain = btworld:new_obj(shapes.terrain,useridx, {  ofs[1],ofs[2],ofs[3]}, {0,0,0,1} )
+print("terrain eid : ", useridx)
+
+local center = bounding.sphere.center
+local offset = {center[1] * width_scale, center[2] * heightmap_scale, center[3] * length_scale}
+local obj_terrain = btworld:new_obj(shapes.terrain, useridx, ms(offset, "m"), ms({0,0,0,1}, "m"))
 btworld:add_obj(obj_terrain)
 
 local print_r = function(name,x,y,z)
@@ -91,21 +108,19 @@ end
 -- end 
 -- f:close()
 
-
-local height =  terrain:get_raw_height( 0,0 )
 -- check correctness
 for i = -200,200 do 
-		local x,y = i*grid_scale, i*grid_scale 
-		local rayFrom = { x+(256*grid_scale),  1000, y+(256*grid_scale) }
-		local rayTo   = { x+(256*grid_scale), -1000, y+(256*grid_scale) }
-		local hit3, result3 = btworld:raycast(rayFrom,rayTo)
+		local x,y = i*width_scale, i*length_scale 
+		local rayFrom = { x+(256*width_scale),  1000, y+(256*length_scale) }
+		local rayTo   = { x+(256*width_scale), -1000, y+(256*length_scale) }
+		local hit3, result3 = btworld:raycast(ms(rayFrom, "m"), ms(rayTo, "m"))
 		print("-- i ("..i..")")
 		print(" x, z : "..rayFrom[1].."  "..rayFrom[3])    
-		local height =  terrain:get_raw_height( i+256,i+256 )
-		local ix = x+(256*grid_scale)
-		local iy = y+(256*grid_scale)
-		local hit,height1 = terrain:get_height( ix,iy );
-		print("height, height1 = ", height,height1)
+		-- local height =  terrain:raw_height( i+256,i+256 )
+		-- local ix = x+(256*width_scale)
+		-- local iy = y+(256*length_scale)
+		-- local hit,height1 = terrain:height( ix,iy );
+		-- print("height, height1 = ", height,height1)
 		print("-- raycast result: ")
 		if hit3  then 
 			print_raycast_result(result3)
@@ -116,6 +131,8 @@ for i = -200,200 do
 end 		
 
 print("")
+
+math3d.reset(ms)
 
 btworld = nil		-- gc world
 bullet = nil		-- gc bullet sdk

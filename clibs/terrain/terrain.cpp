@@ -95,7 +95,7 @@ struct terrain_data {
 	Bounding	bounding;
 
 	struct heightmapdata {
-		uint8_t *	data;
+		uint8_t * data;	
 		uint32_t 	sizebytes;
 		uint8_t     elembits;
 	};
@@ -221,6 +221,23 @@ lterrain_attrib(lua_State *L)
 //	lua_setmetatable(L, -2);
 //	return 1;
 //}
+
+static inline float
+get_scale(terrain_data *terrain, const char* which) {
+	if (strcmp(which, "width") == 0) {
+		return (float)terrain->width / terrain->grid_width;
+	}
+	if (strcmp(which, "height") == 0) {
+		return (float)terrain->height / (terrain->heightmap.elembits == 8 ? 256.f : 65536.f);
+	}
+
+	if (strcmp(which, "length") == 0) {
+		return (float)terrain->length / terrain->grid_length;
+	}
+
+	assert(false && "not support!");
+	return std::numeric_limits<float>::lowest();
+}
 
 template<typename ElemType>
 static ElemType&
@@ -352,6 +369,41 @@ lterraindata_bounding(lua_State *L) {
 }
 
 static int
+lterraindata_calc_heightmapbounding(lua_State *L) {
+	terrain_data *terrain = (terrain_data*)luaL_checkudata(L, 1, "TERRAIN_DATA");
+
+	const auto& heightmap = terrain->heightmap;
+	if (heightmap.data == NULL) {
+		luaL_error(L, "no heightmap data");
+	}
+
+	if (terrain->grid_width < 1 || terrain->grid_length < 1) {
+		luaL_error(L, "wrong terrain size, width=%d, length=%d", terrain->grid_width, terrain->grid_length);
+	}
+
+	const uint8_t elemsize = heightmap.elembits == 8 ? 1 : 2;
+	const glm::vec3 vertexscale(get_scale(terrain, "width"), get_scale(terrain, "height"), get_scale(terrain, "length"));
+
+	auto get_height_from_uint8 = [](uint8_t *v) {return float(*v); };
+	auto get_height_from_uint16 = [](uint8_t *v) {return float(*(uint16_t*)v); };
+	auto get_height = terrain->heightmap.elembits == 8 ? get_height_from_uint8 : get_height_from_uint16;
+
+	Bounding bounding;
+
+	for (uint32_t y = 0; y < terrain->grid_length; ++y) {		
+		for (uint32_t x = 0; x < terrain->grid_width; ++x) {
+			const uint32_t vertexidx = y * terrain->grid_width + x;
+			auto hm = terrain->heightmap.data + vertexidx * elemsize;
+			const auto v = vertexscale * glm::vec3(float(x), get_height(hm), float(y));
+			bounding.aabb.Append(v);
+		}
+	}
+
+	push_bounding(L, bounding);
+	return 1;
+}
+
+static int
 lterraindata_buffersize(lua_State *L) {
 	terrain_data *terrain = (terrain_data*) luaL_checkudata(L, 1, "TERRAIN_DATA");
 	const auto& buffer = terrain->buffer;
@@ -378,25 +430,6 @@ getfield_tofloat(lua_State *L, int table, const char *key) {
 	lua_pop(L, 1);
 	return value;
 }
-
-static inline float
-get_scale(terrain_data *terrain, const char* which) {
-	if (strcmp(which, "width") == 0) {
-		return (float)terrain->width / terrain->grid_width;
-	} 
-	if (strcmp(which, "height") == 0) {
-		return (float)terrain->height / (terrain->heightmap.elembits == 8 ? 256.f : 65536.f);
-	} 
-	
-	if (strcmp(which, "length") == 0) {
-		return (float)terrain->length / terrain->grid_length;
-	}
-
-	assert(false && "not support!");
-	return std::numeric_limits<float>::lowest();
-}
-
-
 
 static inline void
 load_heightmap_data(lua_State *L, int index, terrain_data::heightmapdata &heightmap) {
@@ -466,7 +499,7 @@ terrain_default_init(terrain_data *terrain) {
 
 static int
 lterrain_del(lua_State *L) {
-	terrain_data* terrain = (terrain_data*) lua_newuserdata(L, sizeof(terrain_data));
+	terrain_data* terrain = (terrain_data*)luaL_checkudata(L, 1, "TERRAIN_DATA");
 	if (terrain->heightmap.data) {
 		delete[]terrain->heightmap.data;
 		terrain->heightmap.data = NULL;
@@ -502,7 +535,6 @@ init_terrain_mesh(terrain_data* terrain) {
 	const glm::vec3 vertexscale(get_scale(terrain, "width"), get_scale(terrain, "height"), get_scale(terrain, "length"));
 	
 	terrain->bounding.Reset();
-
 	auto get_height_from_uint8 = [](uint8_t *v) {return float(*v); };
 	auto get_height_from_uint16 = [](uint8_t *v) {return float(*(uint16_t*)v); };
 	auto get_height = terrain->heightmap.elembits == 8 ? get_height_from_uint8 : get_height_from_uint16;
@@ -519,7 +551,7 @@ init_terrain_mesh(terrain_data* terrain) {
 
 			if (decl->has(bgfx::Attrib::Position)) {
 				auto &v = get_vertex(terrain->buffer, vertexidx);
-				auto hm = &terrain->heightmap.data[(y * terrain->grid_width + x) * elemsize];
+				auto hm = &terrain->heightmap.data[vertexidx * elemsize];
 				v = vertexscale * glm::vec3(float(x), get_height(hm), float(y));
 
 				terrain->bounding.aabb.Append(v);
@@ -953,11 +985,12 @@ terrain_get_height(terrain_data* terrain, float x, float z, float *height) {
 	return false;
 }
 
-float terrain_get_raw_height(terrain_data* terrain, int x, int z) {
-	const auto decl = terrain->buffer.vdecl;
+static float 
+terrain_get_raw_height(terrain_data* terrain, int x, int z) {
+	const auto decl = terrain->buffer.vdecl;	
 	const uint16_t stride = decl->getStride();
 	const uint16_t offset = decl->getOffset(bgfx::Attrib::Position);
-	
+
 	if (!in_terrain_bounds(terrain, z, x))
 		return std::numeric_limits<float>::lowest();
 
@@ -975,6 +1008,10 @@ float terrain_get_raw_height(terrain_data* terrain, int x, int z) {
 static int
 lterraindata_height(lua_State *L) {
 	terrain_data *terrain = (terrain_data*) luaL_checkudata(L, 1, "TERRAIN_DATA");
+	if (terrain->buffer.vdecl == NULL) {
+		return luaL_error(L, "vertex buffer is not valid");
+	}
+
 	float x = (float)luaL_checknumber(L, 2);
 	float y = (float)luaL_checknumber(L, 3);
 
@@ -990,11 +1027,15 @@ lterraindata_height(lua_State *L) {
 static int
 lterraindata_raw_height(lua_State *L) {
 	terrain_data *terrain = (terrain_data*) luaL_checkudata(L, 1, "TERRAIN_DATA");
+
+	if (terrain->buffer.vdecl == NULL) {
+		return luaL_error(L, "vertex buffer is not valid");
+	}
+
 	int x = (int)luaL_checkinteger(L, 2);
 	int y = (int)luaL_checkinteger(L, 3);
 
-	float height = 0.f;
-	height = terrain_get_raw_height(terrain, x, y);
+	const float height = terrain_get_raw_height(terrain, x, y);
 	lua_pushnumber(L, height);
 
 #ifdef MY_DEBUG_OUT
@@ -1076,15 +1117,35 @@ terraindata_update_normals(struct terrain_data *terrain) {
 
 static int
 lterraindata_smooth_height(lua_State *L) {
-	terrain_data* terrain = (terrain_data*)lua_newuserdata(L, sizeof(terrain_data));
+	terrain_data* terrain = (terrain_data*)luaL_checkudata(L, 1, "TERRAIN_DATA");
 	smooth_terrain_mesh(terrain, SMOOTH_MODE::DEFAULT);
 	return 0;
 }
 
 static int
 lterraindata_smooth_normal(lua_State *L) {
-	terrain_data* terrain = (terrain_data*)lua_newuserdata(L, sizeof(terrain_data));
+	terrain_data* terrain = (terrain_data*)luaL_checkudata(L, 1, "TERRAIN_DATA");
 	terraindata_update_normals(terrain);
+	return 0;
+}
+
+static int
+lterraindata_heightmapdata(lua_State *L) {
+	terrain_data* terrain = (terrain_data*)luaL_checkudata(L, 1, "TERRAIN_DATA");
+	if (terrain->heightmap.data) {
+		lua_createtable(L, 0, 3);
+		lua_pushlightuserdata(L, terrain->heightmap.data);
+		lua_setfield(L, -2, "data");
+
+		lua_pushinteger(L, terrain->heightmap.sizebytes);
+		lua_setfield(L, -2, "sizebytes");
+
+		lua_pushinteger(L, terrain->heightmap.elembits);
+		lua_setfield(L, -2, "bits");
+
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -1108,22 +1169,24 @@ init_terrain_data(terrain_data *terrain) {
 
 static int
 lterrain_create(lua_State *L) {
+	const bool hasdecl = lua_isnoneornil(L, 2);
 	terrain_data* terrain = (terrain_data*)lua_newuserdata(L, sizeof(terrain_data));
 	luaL_getmetatable(L, "TERRAIN_DATA");
 	lua_setmetatable(L, -2);
 
 	init_terrain_data(terrain);
 	if (fetch_terrain_data(L, 1, terrain)) {
-		terrain->buffer.vdecl = (bgfx::VertexDecl *)lua_touserdata(L, 2);
+		if (!hasdecl) {
+			terrain->buffer.vdecl = (bgfx::VertexDecl *)lua_touserdata(L, 2);
 
-		init_stream_buffer(terrain->buffer, terrain->grid_width, terrain->grid_length);
-		init_terrain_mesh(terrain);
-		
-		if (terrain->heightmap.data) {
-			smooth_terrain_mesh(terrain, SMOOTH_MODE::DEFAULT);
-			terraindata_update_normals(terrain);
-		}
-		
+			init_stream_buffer(terrain->buffer, terrain->grid_width, terrain->grid_length);
+			init_terrain_mesh(terrain);
+
+			if (terrain->heightmap.data) {
+				smooth_terrain_mesh(terrain, SMOOTH_MODE::DEFAULT);
+				terraindata_update_normals(terrain);
+			}
+		}		
 	}
 	return 1;
 }
@@ -1187,6 +1250,8 @@ register_terrain_data_mt(lua_State *L) {
 			{"buffer",		lterraindata_buffer},
 			{"buffersize",	lterraindata_buffersize},
 			{"bounding",	lterraindata_bounding},
+			{"calc_heightmap_bounding", lterraindata_calc_heightmapbounding},
+			{ "hieghtmap_data", lterraindata_heightmapdata},
 			{"smooth_height",lterraindata_smooth_height},
 			{"smooth_normal",lterraindata_smooth_normal},			
 			{"__gc",		lterrain_del},
