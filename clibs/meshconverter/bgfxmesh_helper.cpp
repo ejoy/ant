@@ -7,8 +7,6 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-#include <indexbufferdecompression.h>
-
 //bgfx include
 #include <bx/string.h>
 #include <bx/file.h>
@@ -71,19 +69,7 @@ LoadBGFXMesh(const std::string& filePath, mesh_data &md) {
 		}
 								  break;
 		case BGFX_CHUNK_MAGIC_IBC: {
-			uint32_t numIndices;
-			bx::read(&reader, numIndices);
-			auto &ib = group.ib;
-			ib.ibraw = new uint8_t[numIndices * 2];
-
-			uint32_t compressedSize;
-			bx::read(&reader, compressedSize);
-
-			std::vector<uint8_t> compressedIndices(compressedSize);
-			bx::read(&reader, &compressedIndices[0], compressedSize);
-
-			ReadBitstream rbs(compressedIndices.data(), compressedSize);
-			DecompressIndexBuffer((uint16_t*)ib.ibraw, numIndices / 3, rbs);
+			assert(false && "not support");
 		}
 								   break;
 		case BGFX_CHUNK_MAGIC_PRI: {
