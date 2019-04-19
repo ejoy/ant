@@ -9,7 +9,7 @@ local colliderutil = require "util"
 ecs.tag "collider_tag"
 
 local coll = ecs.component "collider"
-	.center "real[3]" {0, 0, 0}
+	["opt"].center "real[3]" {0, 0, 0}
 	.is_tigger "boolean" (true)
 
 function coll:delete()	
@@ -82,12 +82,22 @@ for _, pp in ipairs {
 		end
 	end
 
-	local c = ecs.component(collidername) { depend = "transform" }
+	local c = ecs.component(collidername) { depend = {"mesh", "transform"} }
 		.collider "collider"
 		.shape(shapename)
 
 	function c:postinit(e)
-		colliderutil.create_collider_comp(Physics, self.shape, self.collider, e.transform)
+		local shape = self.shape
+		local collider = self.collider
+
+		if collider.center == nil then
+			local boundings = e.mesh.assetinfo.boundings
+			if boundings then
+				colliderutil.fill_collider_info(self, boundings)
+			end
+		end
+
+		colliderutil.create_collider_comp(Physics, shape, collider, e.transform)
 	end
 end
 

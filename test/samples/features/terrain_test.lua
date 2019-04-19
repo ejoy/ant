@@ -62,7 +62,18 @@ function terrain_test:init()
         },
         terrain = {
             ref_path = terrainfolder / 'pvp.terrain'
-        },
+		},
+		terrain_collider = {
+			shape = {
+				up_axis = 1,
+				flip_quad_edges = false,
+			},
+			collider = {
+				center = {0, 0, 0, 1},
+				is_tigger = true,
+				obj_idx = -1,
+			},
+		},
         mesh = {},
         name = "pvp",
         can_render = true,
