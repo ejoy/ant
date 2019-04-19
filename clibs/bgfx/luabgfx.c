@@ -14,7 +14,7 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 
-#if BGFX_API_VERSION != 97
+#if BGFX_API_VERSION != 99
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -2368,41 +2368,6 @@ lcreateDynamicIndexBuffer(lua_State *L) {
 	return 1;
 }
 
-// from ibcompress.cpp
-uint16_t create_compressed_ib(uint32_t num, uint32_t csize, const void * src);
-
-/*
-	integer num
-	string data
-	integer start
-	integer end
- */
-static int
-lcreateIndexBufferCompress(lua_State *L) {
-	uint32_t num = (uint32_t)luaL_checkinteger(L, 1);
-	size_t sz = 0;
-	const char * data = luaL_checklstring(L, 2, &sz);
-	int start = luaL_optinteger(L, 3, 1);
-	int end = luaL_optinteger(L, 4, -1);
-	if (start < 0) {
-		start = sz + start + 1;
-	}
-	if (end < 0) {
-		end = sz + end + 1;
-	}
-	if (end < start)
-		luaL_error(L, "empty compressed data");
-	int s = end - start + 1;
-	data += start - 1;
-	uint16_t id = create_compressed_ib(num, s, data);
-	bgfx_index_buffer_handle_t handle = { id };
-	if (invalid_handle(handle)) {
-		return luaL_error(L, "create index buffer failed");
-	}
-	lua_pushinteger(L, BGFX_LUAHANDLE(INDEX_BUFFER, handle));
-	return 1;
-}
-
 static int
 lsetViewTransform(lua_State *L) {
 	bgfx_view_id_t viewid = luaL_checkinteger(L, 1);
@@ -4224,7 +4189,6 @@ luaopen_bgfx(lua_State *L) {
 		{ "create_dynamic_vertex_buffer", lcreateDynamicVertexBuffer },
 		{ "create_index_buffer", lcreateIndexBuffer },
 		{ "create_dynamic_index_buffer", lcreateDynamicIndexBuffer },
-		{ "create_index_buffer_compress", lcreateIndexBufferCompress },
 		{ "set_vertex_buffer", lsetVertexBuffer },
 		{ "set_index_buffer", lsetIndexBuffer },
 		{ "destroy", ldestroy },
