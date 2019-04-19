@@ -13,9 +13,6 @@ else
 default : libbgfx-$(PLAT).a
 endif
 
-$(ODIR)/ibcompress.o : ibcompress.cpp | $(ODIR)
-	$(CXX) $(CFLAGS) -c -o $@ $^ $(BGFXINC) $(IB_COMPRESSINC)
-
 $(ODIR)/baselib.o : baselib.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC)
 
@@ -28,10 +25,10 @@ $(ODIR)/luabgfxutil.o : luabgfxutil.c  | $(ODIR)
 $(ODIR)/nuklearlua.o : nuklearlua.c | $(ODIR)
 	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC)
 
-bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/ibcompress.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o $(ODIR)/nuklearlua.o
-	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) $(IB_COMPRESSLIB) $(BGFXLIB) 
+bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o $(ODIR)/nuklearlua.o
+	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) $(BGFXLIB) 
 
-libbgfx-$(PLAT).a : $(ODIR)/luabgfx.o $(ODIR)/ibcompress.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o $(ODIR)/nuklearlua.o
+libbgfx-$(PLAT).a : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o $(ODIR)/nuklearlua.o
 	ar rsv $@ $^
 
 $(ODIR) :
