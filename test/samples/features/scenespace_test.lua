@@ -131,7 +131,7 @@ local function create_scene_node_test()
         },
         material = material,
         can_render = true,
-        main_view = true
+        main_view = true,
         can_select = true,
 	}
 	
@@ -150,7 +150,7 @@ local function create_scene_node_test()
         },
         material = material,
         can_render = true,
-        main_view = true
+        main_view = true,
         can_select = true,
     }
 
@@ -169,7 +169,7 @@ local function create_scene_node_test()
         },
         material = material,
         can_render = true,
-        main_view = true
+        main_view = true,
 		serialize = seriazlizeutil.create(),
 	}
 

@@ -1251,7 +1251,7 @@ register_terrain_data_mt(lua_State *L) {
 			{"buffersize",	lterraindata_buffersize},
 			{"bounding",	lterraindata_bounding},
 			{"calc_heightmap_bounding", lterraindata_calc_heightmapbounding},
-			{ "hieghtmap_data", lterraindata_heightmapdata},
+			{ "heightmap_data", lterraindata_heightmapdata},
 			{"smooth_height",lterraindata_smooth_height},
 			{"smooth_normal",lterraindata_smooth_normal},			
 			{"__gc",		lterrain_del},

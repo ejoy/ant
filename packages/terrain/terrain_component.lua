@@ -28,10 +28,9 @@ local terrain_collider = ecs.component "terrain_collider" {depend = {"transform"
 	.collider "collider"
 
 local function create_terrain_shape(shape, terraincomp)
-	local terraininfo = terraincomp.terraininfo
+	local terraininfo = terraincomp.assetinfo
 	local terrain = terraininfo.handle
-	local heightmap = terrain:heightmap_data()
-	shape.hm = heightmap
+	local heightmap = terrain:heightmap_data()	
 	local bounding = terrain:bounding()
 	local aabb = bounding.aabb
 	shape.handle = Physics:new_shape("terrain", {
