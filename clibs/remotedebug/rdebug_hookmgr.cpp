@@ -295,15 +295,6 @@ struct hookmgr {
     hookmgr(lua_State* L)
         : cL(L)
         , oldpanic(lua_atpanic(L, 0))
-        , sc_hook(thunk_create_hook(
-            reinterpret_cast<intptr_t>(this),
-            reinterpret_cast<intptr_t>(&hook_callback)
-        ))
-        , sc_panic(thunk_create_panic(
-            reinterpret_cast<intptr_t>(this),
-            reinterpret_cast<intptr_t>(&panic_callback),
-            reinterpret_cast<intptr_t>(oldpanic)
-        ))
     {
         break_map.fill(BP::None);
         break_proto.fill(0);
@@ -456,6 +447,15 @@ struct hookmgr {
     void init(lua_State* hL) {
         hostL = hL;
         thunk_bind((intptr_t)hL, (intptr_t)this);
+        sc_hook.reset(thunk_create_hook(
+            reinterpret_cast<intptr_t>(this),
+            reinterpret_cast<intptr_t>(&hook_callback)
+        ));
+        sc_panic.reset(thunk_create_panic(
+            reinterpret_cast<intptr_t>(this),
+            reinterpret_cast<intptr_t>(&panic_callback),
+            reinterpret_cast<intptr_t>(oldpanic)
+        ));
         remotedebug::eventfree::create(hL, lua_freef, this);
     }
     ~hookmgr() {
