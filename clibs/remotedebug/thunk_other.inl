@@ -4,6 +4,7 @@
 static int DBG = 0;
 static int PARAM1 = 0;
 static int PARAM2 = 0;
+static lua_State* GL = 0;
 
 static intptr_t get(lua_State* L, void* key) {
     if (LUA_TLIGHTUSERDATA != lua_rawgetp(L, LUA_REGISTRYINDEX, key)) {
@@ -21,7 +22,8 @@ static void set(lua_State* L, void* key, intptr_t v) {
 }
 
 void thunk_bind(intptr_t L, intptr_t dbg) {
-    set(L, &DBG, dbg);
+    GL = (lua_State*)L;
+    set(GL, &DBG, dbg);
 }
 
 static void static_hook(lua_State* L, lua_Debug* ar) {
@@ -37,7 +39,7 @@ static void static_hook(lua_State* L, lua_Debug* ar) {
 }
 
 thunk* thunk_create_hook(intptr_t dbg, intptr_t hook) {
-    set(L, &PARAM1, hook);
+    set(GL, &PARAM1, hook);
     thunk* t = new thunk;
     t->data = (void*)static_hook;
     return t;
@@ -72,7 +74,7 @@ static int static_panic_2(lua_State* L) {
 }
 
 thunk* thunk_create_panic(intptr_t dbg, intptr_t panic) {
-    set(L, &PARAM1, panic);
+    set(GL, &PARAM1, panic);
     thunk* t = new thunk;
     t->data = (void*)static_panic_1;
     return t;
@@ -82,8 +84,8 @@ thunk* thunk_create_panic(intptr_t dbg, intptr_t panic, intptr_t old_panic) {
     if (!old_panic) {
         return thunk_create_panic(dbg, panic);
     }
-    set(L, &PARAM1, panic);
-    set(L, &PARAM2, old_panic);
+    set(GL, &PARAM1, panic);
+    set(GL, &PARAM2, old_panic);
     thunk* t = new thunk;
     t->data = (void*)static_panic_2;
     return t;

@@ -1,7 +1,6 @@
 #include <lua.hpp>
 #include <new>
 #include <limits>
-#include <Windows.h>
 #include "rdebug_redirect.h"
 
 extern "C" {
