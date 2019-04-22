@@ -25,3 +25,4 @@
 { "thread", luaopen_thread },
 { "window", luaopen_window },
 { "window.native", luaopen_window_native },
+{ "terrain", luaopen_terrain},

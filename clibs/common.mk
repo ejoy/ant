@@ -47,7 +47,7 @@ LUA_FLAGS =
 LUALIB = -L../lua
 LUABIN = ../lua/lua
 LD_SHARED = -fPIC -dynamiclib -Wl,-undefined,dynamic_lookup
-STRIP = strip -u -r -x
+STRIP = echo # -u -r -x
 CFLAGS= $(DEBUG_INFO) -Wall -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk -miphoneos-version-min=10.0 -fembed-bitcode
 
 endif
