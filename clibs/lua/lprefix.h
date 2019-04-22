@@ -7,6 +7,8 @@
 #ifndef lprefix_h
 #define lprefix_h
 
+#include <assert.h>
+#define lua_assert(e) assert(e) 
 
 /*
 ** Allows POSIX/XSI stuff
