@@ -9,7 +9,7 @@ local colliderutil = require "util"
 ecs.tag "collider_tag"
 
 local coll = ecs.component "collider"
-	["opt"].center "real[3]" {0, 0, 0}
+	.center "real[3]" {0, 0, 0}
 	.is_tigger "boolean" (true)
 
 function coll:delete()	
