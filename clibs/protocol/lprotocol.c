@@ -80,7 +80,7 @@ get_chunk(lua_State *L, int idx, int message_size, const char * msg, size_t sz, 
 	char * ptr = buffer + 2;
 	memcpy(ptr, msg, sz);
 	ptr+=sz;
-	message_size -= sz;
+	message_size -= (int)sz;
 	lua_pop(L, 1);
 	int input_index;
 	for (input_index = idx+1; input_index<=n; input_index++) {
@@ -101,7 +101,7 @@ get_chunk(lua_State *L, int idx, int message_size, const char * msg, size_t sz, 
 		}
 		memcpy(ptr, msg, sz);
 		ptr += sz;
-		message_size -= sz;
+		message_size -= (int)sz;
 	}
 	sz = ptr - buffer - 2;
 	write_size(buffer, orig_sz);
@@ -160,7 +160,7 @@ readchunk(lua_State *L, char *buffer, int *size) {
 	}
 
 	// little endian size
-	const char * chunk = get_chunk(L, index, message_size, msg, sz, n, buffer);
+	const char * chunk = get_chunk(L, index, message_size, msg, sz, (int)n, buffer);
 	*size = message_size;
 	return chunk;
 }
@@ -231,7 +231,7 @@ lreadmessage(lua_State *L) {
 		size -= sz;
 		index++;
 	}
-	clear_table(L, 2, index, lua_rawlen(L, 2));
+	clear_table(L, 2, index, (int)lua_rawlen(L, 2));
 	
 	return 1;
 }
@@ -239,7 +239,7 @@ lreadmessage(lua_State *L) {
 static int
 lpackmessage(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
-	int n = lua_rawlen(L, 1);
+	int n = (int)lua_rawlen(L, 1);
 	int size = 0;
 	int i;
 	char temp[MAX_MSG_SIZE + 2];
@@ -250,10 +250,10 @@ lpackmessage(lua_State *L) {
 		}
 		size_t sz;
 		const char *msg = lua_tolstring(L, -1, &sz);
-		size += sz + 2;
+		size += (int)sz + 2;
 		if (size > MAX_MSG_SIZE)
 			return luaL_error(L, "Message is too long");
-		write_size(ptr, sz);
+		write_size(ptr, (int)sz);
 		ptr += 2;
 		memcpy(ptr, msg, sz);
 		ptr += sz;

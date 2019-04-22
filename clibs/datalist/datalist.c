@@ -472,7 +472,7 @@ push_token(lua_State *L, struct lex_state *LS, struct token *t) {
 
 static inline int
 token_length(struct token *t) {
-	return (t->to - t->from);
+	return (int)(t->to - t->from);
 }
 
 static inline int

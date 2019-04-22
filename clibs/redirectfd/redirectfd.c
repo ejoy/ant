@@ -111,8 +111,8 @@ redirect(lua_State *L, SOCKET fd, int stdfd) {
 
 static int
 linit(lua_State *L) {
-	int sock = luaL_checkinteger(L, 1);
-	int stdfd = luaL_optinteger(L, 2, STDOUT_FILENO);
+	int sock = (int)luaL_checkinteger(L, 1);
+	int stdfd = (int)luaL_optinteger(L, 2, STDOUT_FILENO);
 	redirect(L, sock, stdfd);
 	return 0;
 }
