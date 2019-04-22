@@ -20,7 +20,6 @@ model_review_system.singleton "constant"
 
 model_review_system.dependby "message_system"
 model_review_system.depend "primitive_filter_system"
-model_review_system.depend "debug_system"
 model_review_system.depend "render_system"
 model_review_system.depend "viewport_detect_system"
 

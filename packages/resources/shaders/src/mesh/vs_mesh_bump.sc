@@ -1,10 +1,8 @@
 $input a_position, a_normal, a_texcoord0, a_tangent, a_bitangent
 $output v_texcoord0, v_lightdir, v_viewdir,v_normal
 
-
-#include "common/uniforms.sh"
-
 #include <bgfx_shader.sh>
+#include "common/uniforms.sh"
 #include "common/transform.sh"	// must define after bgfx_shader.sh
 
 void main()
