@@ -1,7 +1,7 @@
 
 package.path = package.path .. ";./packages/bullet/?.lua"
 
-local terrainmodule = require "lterrain"
+local terrainmodule = require "terrain"
 local math3d = require "math3d"
 local ms = math3d.new()
 

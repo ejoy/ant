@@ -20,6 +20,8 @@ local exceptionFilters = {}
 local exceptionMsg = ''
 local exceptionTrace = ''
 local outputCapture = {}
+local noDebug = false
+local openUpdate = false
 
 local CMD = {}
 
@@ -254,7 +256,7 @@ function CMD.evaluate(pkg)
 end
 
 function CMD.setBreakpoints(pkg)
-    if not source.valid(pkg.source) then
+    if noDebug or not source.valid(pkg.source) then
         return
     end
     breakpoint.update(pkg.source, pkg.source.si, pkg.breakpoints)
@@ -288,6 +290,9 @@ function CMD.loadedSources()
 end
 
 function CMD.stop(pkg)
+    if noDebug then
+        return
+    end
     state = 'stopped'
     stopReason = pkg.reason
     hookmgr.step_in()
@@ -299,16 +304,25 @@ function CMD.run()
 end
 
 function CMD.stepOver()
+    if noDebug then
+        return
+    end
     state = 'stepOver'
     hookmgr.step_over()
 end
 
 function CMD.stepIn()
+    if noDebug then
+        return
+    end
     state = 'stepIn'
     hookmgr.step_in()
 end
 
 function CMD.stepOut()
+    if noDebug then
+        return
+    end
     state = 'stepOut'
     hookmgr.step_out()
 end
@@ -539,6 +553,8 @@ local function lst2map(t)
 end
 
 ev.on('initializing', function(config)
+    noDebug = config.noDebug
+    hookmgr.update_open(not noDebug and openUpdate)
     outputCapture = lst2map(config.outputCapture)
     if outputCapture["print"] then
         stdio.open_print(true)
@@ -569,6 +585,7 @@ function w.skipfiles(v)
 end
 
 function w.openupdate()
+    openUpdate = true
     hookmgr.update_open(true)
 end
 

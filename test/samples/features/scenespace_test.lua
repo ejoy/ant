@@ -146,7 +146,7 @@ local function create_scene_node_test()
         },
         name = 'render_child1_2',
         mesh = {
-            ref_path = fs.path '//ant.resources/cylinder.mesh'
+            ref_path = fs.path '//ant.resources/sphere.mesh'
         },
         material = material,
         can_render = true,
@@ -158,10 +158,10 @@ local function create_scene_node_test()
         world:create_entity {
         transform = {
             parent = hie_level2_1, 
-            s = {1, 1, 1, 0},
+            s = {0.01, 0.01, 0.01, 0},
             r = {0, 0, 0, 0},
-            t = {0, 0, 0, 1},
-            slotname = "h1_h1",
+            t = {0, 2, 0, 1},
+            --slotname = "h1_h1",
         },
         name = 'render_child2_1',
         mesh = {
@@ -266,7 +266,8 @@ local function create_scene_node_test()
 end
 
 function scenespace_test:init()
-    add_hierarchy_file(hie_refpath)
+    --add_hierarchy_file(hie_refpath)
+    assert(fs.exists(hie_refpath))
     create_scene_node_test()
 end
 

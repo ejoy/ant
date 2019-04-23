@@ -1263,7 +1263,7 @@ register_terrain_data_mt(lua_State *L) {
 
 extern "C" {
 	LUAMOD_API int
-		luaopen_lterrain(lua_State *L) {
+		luaopen_terrain(lua_State *L) {
 		luaL_checkversion(L);
 		register_terrain_data_mt(L);
 		luaL_Reg l[] = {

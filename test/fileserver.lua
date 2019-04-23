@@ -116,6 +116,7 @@ end
 function message:DBG(data)
 	if data == "" then
 		local fd = network.listen('127.0.0.1', 4278)
+		LOG("LISTEN DEBUG", '127.0.0.1', 4278)
 		debug[fd] = { server = self }
 		return
 	end

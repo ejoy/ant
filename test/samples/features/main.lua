@@ -3,7 +3,8 @@ local packages = {
 }
 local systems = {
 	"init_loader",
-	"scenespace_test",	
+	"scenespace_test",
+	"terrain_test",	
 }
 
 if __ANT_RUNTIME__ then

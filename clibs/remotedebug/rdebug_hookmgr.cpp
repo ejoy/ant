@@ -15,9 +15,9 @@
 static int HOOK_MGR = 0;
 static int HOOK_CALLBACK = 0;
 
+void set_host(lua_State* L, lua_State* hL);
 extern "C" {
 lua_State* get_host(lua_State *L);
-void set_host(lua_State* L, lua_State* hL);
 lua_State* getthread(lua_State *L);
 int copyvalue(lua_State *cL, lua_State *hL);
 }
@@ -639,7 +639,6 @@ int luaopen_remotedebug_hookmgr(lua_State* L) {
     return 1;
 }
 
-extern "C"
 void probe(lua_State* cL, lua_State* hL, const char* name) {
     if (LUA_TUSERDATA != lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_MGR)) {
         lua_pop(cL, 1);
@@ -649,7 +648,6 @@ void probe(lua_State* cL, lua_State* hL, const char* name) {
     lua_pop(cL, 1);
 }
 
-extern "C"
 int event(lua_State* cL, lua_State* hL, const char* name) {
     if (LUA_TUSERDATA != lua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_MGR)) {
         lua_pop(cL, 1);

@@ -1,6 +1,5 @@
 #include "lua.h"
 #include "lauxlib.h"
-#include "lualib.h"
 
 static void hook_openlibs(lua_State *L);
 

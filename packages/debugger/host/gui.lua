@@ -13,7 +13,6 @@ local function window_create(title)
     local window = iup.scintilla {
         FONT = 'Consolas',
         FONTSIZE = '12',
-        MARGINWIDTH0 = '30',	-- line number
         STYLEFONT33 = 'Consolas',
         STYLEFONTSIZE33 = '12',
         STYLEVISIBLE33 = 'NO',

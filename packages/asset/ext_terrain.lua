@@ -1,5 +1,5 @@
 local assetmgr = require "asset"
-local terrain_module = require "lterrain"
+local terrain_module = require "terrain"
 local fs = require "filesystem"
 local declmgr = import_package "ant.render".declmgr
 
