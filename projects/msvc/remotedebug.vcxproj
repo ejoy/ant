@@ -20,13 +20,19 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\remotedebug\rdebug_debugvar.h" />
+    <ClInclude Include="..\..\clibs\remotedebug\rdebug_delayload.h" />
     <ClInclude Include="..\..\clibs\remotedebug\rdebug_eventfree.h" />
+    <ClInclude Include="..\..\clibs\remotedebug\rdebug_redirect.h" />
+    <ClInclude Include="..\..\clibs\remotedebug\rdebug_timer.h" />
     <ClInclude Include="..\..\clibs\remotedebug\thunk.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_delayload.cpp" />
     <ClCompile Include="..\..\clibs\remotedebug\rdebug_eventfree.cpp" />
     <ClCompile Include="..\..\clibs\remotedebug\rdebug_hookmgr.cpp" />
-    <ClCompile Include="..\..\clibs\remotedebug\rdebug_host.c" />
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_host.cpp" />
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_redirect.cpp" />
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_stdio.cpp" />
     <ClCompile Include="..\..\clibs\remotedebug\rdebug_visitor.c" />
     <ClCompile Include="..\..\clibs\remotedebug\thunk.cpp" />
   </ItemGroup>
@@ -115,7 +121,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -133,7 +139,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -153,7 +159,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -175,7 +181,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>

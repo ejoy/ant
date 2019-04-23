@@ -33,9 +33,6 @@
     <ClInclude Include="..\..\clibs\lua\luaconf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\clibs\lua\lua.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\clibs\lua\lua.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -138,9 +135,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\clibs\lua\lstate.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\clibs\lua\lprofile.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\clibs\lua\lparser.c">

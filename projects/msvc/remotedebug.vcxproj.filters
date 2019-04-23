@@ -24,6 +24,15 @@
     <ClInclude Include="..\..\clibs\remotedebug\thunk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\clibs\remotedebug\rdebug_delayload.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\remotedebug\rdebug_redirect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\remotedebug\rdebug_timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\remotedebug\rdebug_eventfree.cpp">
@@ -32,10 +41,19 @@
     <ClCompile Include="..\..\clibs\remotedebug\rdebug_hookmgr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\remotedebug\rdebug_host.c">
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_visitor.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\remotedebug\rdebug_visitor.c">
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_delayload.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_host.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_redirect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_stdio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\clibs\remotedebug\thunk.cpp">
