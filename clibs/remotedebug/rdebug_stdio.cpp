@@ -5,9 +5,9 @@
 
 extern "C" {
 lua_State* get_host(lua_State *L);
+}
 lua_State* get_client(lua_State *L);
 int  event(lua_State* cL, lua_State* hL, const char* name);
-}
 
 static int redirect_read(lua_State* L) {
     remotedebug::redirect& self = *(remotedebug::redirect*)luaL_checkudata(L, 1, "redirect");

@@ -8,8 +8,8 @@ endif
 
 OBJS = $(ODIR)/rdebug_host.o $(ODIR)/rdebug_visitor.o $(ODIR)/rdebug_hookmgr.o $(ODIR)/rdebug_eventfree.o $(ODIR)/rdebug_redirect.o $(ODIR)/rdebug_stdio.o $(ODIR)/thunk.o
 
-$(ODIR)/rdebug_host.o : rdebug_host.c | $(ODIR)
-	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC)
+$(ODIR)/rdebug_host.o : rdebug_host.cpp | $(ODIR)
+	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC)
 
 $(ODIR)/rdebug_visitor.o : rdebug_visitor.c rdebug_debugvar.h | $(ODIR)
 	$(CC) $(CFLAGS) -c -o $@ $< $(LUAINC)

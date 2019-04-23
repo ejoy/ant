@@ -1,21 +1,20 @@
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
+#include <lua.hpp>
 #include <string.h>
 #include <stdio.h>
+#include "rdebug_delayload.h"
 
 static int DEBUG_HOST = 0;	// host L in client VM
 static int DEBUG_CLIENT = 0;	// client L in host VM for hook
 
 void probe(lua_State* cL, lua_State* hL, const char* name);
 int  event(lua_State* cL, lua_State* hL, const char* name);
-int init_visitor(lua_State *L);
+extern "C" int init_visitor(lua_State *L);
 
 static void
 clear_client(lua_State *L) {
 	lua_State *cL = NULL;
 	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_CLIENT) != LUA_TNIL) {
-		cL = lua_touserdata(L, -1);
+		cL = (lua_State *)lua_touserdata(L, -1);
 	}
 	lua_pop(L, 1);
 	lua_pushnil(L);
@@ -60,7 +59,7 @@ copy_package_path(lua_State *hL, lua_State *L) {
 // 2. lightuserdata host_L
 static int
 client_main(lua_State *L) {
-	lua_State *hL = lua_touserdata(L, 2);
+	lua_State *hL = (lua_State *)lua_touserdata(L, 2);
 	luaL_openlibs(L);
 	copy_package_path(hL, L);
 
@@ -138,7 +137,7 @@ get_client(lua_State *L) {
 	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_CLIENT) != LUA_TLIGHTUSERDATA) {
 		return 0;
 	}
-	lua_State *cL = lua_touserdata(L, -1);
+	lua_State *cL = (lua_State *)lua_touserdata(L, -1);
 	lua_pop(L, 1);
 	return cL;
 }
@@ -161,12 +160,12 @@ lhost_event(lua_State *L) {
 	return 1;
 }
 
-lua_State *
+extern "C" lua_State *
 get_host(lua_State *L) {
 	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST) != LUA_TLIGHTUSERDATA) {
 		luaL_error(L, "Must call in debug client");
 	}
-	lua_State *hL = lua_touserdata(L, -1);
+	lua_State *hL = (lua_State *)lua_touserdata(L, -1);
 	lua_pop(L, 1);
 	return hL;
 }
@@ -177,6 +176,7 @@ set_host(lua_State* L, lua_State* hL) {
     lua_rawsetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST);
 }
 
+extern "C" 
 #if defined(_WIN32)
 __declspec(dllexport)
 #endif
@@ -186,6 +186,9 @@ int luaopen_remotedebug(lua_State *L) {
 		// It's client
 		return init_visitor(L);
 	} else {
+#if defined(_MSC_VER)
+	remotedebug::delayload::caller_is_luadll(_ReturnAddress());
+#endif
 		// It's host
 		luaL_Reg l[] = {
 			{ "start", lhost_start },
