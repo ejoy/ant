@@ -75,7 +75,7 @@ function mgr.get(layout)
 
 	decl = declmapper[newlayout]
 	if decl == nil then
-		decl = create_decl(layout)
+		decl = create_decl(newlayout)
 		declmapper[layout] = decl
 	end
 

@@ -278,17 +278,17 @@
 				);
 				OTHER_LDFLAGS = (
 					"-lant-ios",
-					"-lbgfxRelease",
-					"-lbxRelease",
-					"-lbimgRelease",
-					"-lbxRelease",
+					"-lbgfxDebug",
+					"-lbxDebug",
+					"-lbimgDebug",
+					"-lbxDebug",
 					"-lBulletDynamics",
 					"-lBulletCollision",
 					"-lLinearMath",
-					"-lozz_animation_r",
-					"-lozz_animation_offline_r",
-					"-lozz_geometry_r",
-					"-lozz_base_r",
+					"-lozz_animation_d",
+					"-lozz_animation_offline_d",
+					"-lozz_geometry_d",
+					"-lozz_base_d",
 					"-lstdc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ejoy.fileserver;
