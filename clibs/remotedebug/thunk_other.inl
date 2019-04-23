@@ -4,6 +4,7 @@
 static int DBG = 0;
 static int PARAM1 = 0;
 static int PARAM2 = 0;
+static int PARAM3 = 0;
 static lua_State* GL = 0;
 
 static intptr_t get(lua_State* L, void* key) {
@@ -34,7 +35,7 @@ static void static_hook(lua_State* L, lua_Debug* ar) {
     }
     intptr_t hook = get(L, &PARAM1);
     if (hook) {
-       ((void (*)(intptr_t dbg, lua_State* L, lua_Debug* ar))hook)(dbg, L, ar);
+        ((void (*)(intptr_t dbg, lua_State* L, lua_Debug* ar))hook)(dbg, L, ar);
     }
 }
 
@@ -50,7 +51,7 @@ static int static_panic_1(lua_State* L) {
     if (!dbg) {
         return 0;
     }
-    intptr_t panic = get(L, &PARAM1);
+    intptr_t panic = get(L, &PARAM2);
     if (panic) {
         ((void (*)(intptr_t dbg, lua_State* L))panic)(dbg, L);
     }
@@ -62,11 +63,11 @@ static int static_panic_2(lua_State* L) {
     if (!dbg) {
         return 0;
     }
-    intptr_t panic = get(L, &PARAM1);
+    intptr_t panic = get(L, &PARAM2);
     if (panic) {
         ((void (*)(intptr_t dbg, lua_State* L))panic)(dbg, L);
     }
-    intptr_t old_panic = get(L, &PARAM2);
+    intptr_t old_panic = get(L, &PARAM3);
     if (!old_panic) {
         return 0;
     }
@@ -74,7 +75,7 @@ static int static_panic_2(lua_State* L) {
 }
 
 thunk* thunk_create_panic(intptr_t dbg, intptr_t panic) {
-    set(GL, &PARAM1, panic);
+    set(GL, &PARAM2, panic);
     thunk* t = new thunk;
     t->data = (void*)static_panic_1;
     return t;
@@ -84,8 +85,8 @@ thunk* thunk_create_panic(intptr_t dbg, intptr_t panic, intptr_t old_panic) {
     if (!old_panic) {
         return thunk_create_panic(dbg, panic);
     }
-    set(GL, &PARAM1, panic);
-    set(GL, &PARAM2, old_panic);
+    set(GL, &PARAM2, panic);
+    set(GL, &PARAM3, old_panic);
     thunk* t = new thunk;
     t->data = (void*)static_panic_2;
     return t;
