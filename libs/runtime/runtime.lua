@@ -8,7 +8,7 @@ require "filesystem"
 
 local keymap = import_package "ant.inputmgr".keymap
 
-local dbgupdate = function()end--require 'runtime.debug'
+local dbgupdate = require 'runtime.debug'
 
 dprint = print
 
