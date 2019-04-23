@@ -67,11 +67,13 @@ end
 
 function mgr.get(layout)	
 	local decl = declmapper[layout]	
-	if decl == nil then
-		layout = correct_layout(layout)
+	if decl then
+		return decl
 	end
 
-	decl = declmapper[layout]
+	local newlayout = correct_layout(layout)
+
+	decl = declmapper[newlayout]
 	if decl == nil then
 		decl = create_decl(layout)
 		declmapper[layout] = decl
