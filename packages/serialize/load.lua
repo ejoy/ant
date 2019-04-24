@@ -116,9 +116,12 @@ local function load_start(w, s)
         end
         return doPost(t[1], t[2])
     end)
+    for _, name in ipairs(res[1]) do
+        w:import(name)
+    end
     w.__deserialize = ids
-    component = res[2]
-    return res[1]
+    component = res[3]
+    return res[2]
 end
 
 local function load_end()

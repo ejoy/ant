@@ -45,7 +45,25 @@
         "program": "${workspaceRoot}\\test\\samples\\editorlauncher\\main.lua",
         "cwd": "${workspaceRoot}",
         "internalModule": "vscode-dbg",
-        "stopOnEntry": true
+        "stopOnEntry": true,
+        "sourceFormat": "string",
+        "skipFiles": [
+            "//ant.debugger/*"
+        ],
+        "sourceMaps": [
+            [
+                "/vfs/engine/*",
+                "${workspaceRoot}/*"
+            ],
+            [
+                "//ant.modelviewer/*",
+                "${workspaceRoot}/tools/modelviewer/*"
+            ],
+            [
+                "//ant.*",
+                "${workspaceRoot}/packages/*"
+            ]
+        ]
     },
     {
         "type": "lua",
@@ -55,13 +73,22 @@
         "port": 4278,
         "noInject": true,
         "runtimeExecutable": "${workspaceFolder}/runtime/windows/ant.exe",
+        "sourceFormat": "string",
         "skipFiles": [
-            "/vfs/engine/packages/debugger/*"
+            "//ant.debugger/*"
         ],
         "sourceMaps": [
             [
                 "/vfs/engine/*",
                 "${workspaceRoot}/*"
+            ],
+            [
+                "//ant.modelviewer/*",
+                "${workspaceRoot}/tools/modelviewer/*"
+            ],
+            [
+                "//ant.*",
+                "${workspaceRoot}/packages/*"
             ]
         ]
     }

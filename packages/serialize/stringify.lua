@@ -168,10 +168,18 @@ local function stringify_start(w)
     out1, out2, out3 = {}, {}, {}
 end
 
+local function stringify_package(t)
+    out = out1
+    out[#out+1] = '---'
+    for _, name in ipairs(t[1]) do
+        out[#out+1] = ('  --- %s'):format(name)
+    end
+end
+
 local function stringify_end(t)
     out = out2
     out[#out+1] = '---'
-    for _, cs in ipairs(t[2]) do
+    for _, cs in ipairs(t[3]) do
         out[#out+1] = '  ---'
         out[#out+1] = ('    --- %s'):format(cs[1])
         local l = {}
@@ -192,8 +200,9 @@ end
 
 local function stringify_world(w, t)
     stringify_start(w)
+    stringify_package(t)
 
-    local entity = t[1]
+    local entity = t[2]
 
     out = out1
     out[#out+1] = '---'
@@ -211,8 +220,9 @@ end
 
 local function stringify_entity(w, t)
     stringify_start(w)
+    stringify_package(t)
 
-    local e = t[1]
+    local e = t[2]
 
     out = out1
     out[#out+1] = '---'

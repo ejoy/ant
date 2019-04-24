@@ -136,8 +136,9 @@ return function (class)
 
 	local schema = {}
 
-	function schema:type(typename)
+	function schema:type(package, typename)
 		local typeobject = _newtype(class, {
+			package = package,
 			name = typename
 		})
 		local typegen = {
@@ -150,8 +151,9 @@ return function (class)
 		return setmetatable(typegen, fields_mt)
 	end
 
-	function schema:typedef(typename, aliastype, ...)
+	function schema:typedef(package, typename, aliastype, ...)
 		local typeobject = _newtype(class, parse_type {
+			package = package,
 			name = typename,
 			type = aliastype,
 			has_default = select('#', ...) > 0,
@@ -167,8 +169,9 @@ return function (class)
 		return setmetatable(typegen, fields_mt)
 	end
 
-	function schema:primtype(typename, ...)
+	function schema:primtype(package, typename, ...)
 		_newtype(class, {
+			package = package,
 			name = typename,
 			type = "primtype",
 			has_default = select('#', ...) > 0,

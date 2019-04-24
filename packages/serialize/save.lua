@@ -6,6 +6,7 @@ local pool
 local load
 local typeinfo
 local ids
+local packages
 
 local function sortpairs(t)
     local sort = {}
@@ -22,6 +23,14 @@ local function sortpairs(t)
         n = n + 1
         return k, t[k]
     end
+end
+
+local function map2lst(t)
+    local r = {}
+    for k in sortpairs(t) do
+        r[#r+1] = k
+    end
+    return r
 end
 
 local foreach_save_1
@@ -108,6 +117,7 @@ local function _save_entity(w, eid)
     }
     for name, cv in sortpairs(e) do
         t[#t+1] = { name, foreach_save_1(cv, name) }
+        packages[w._components[name].package] = true
     end
     return t
 end
@@ -134,6 +144,7 @@ local function save_start(w)
     method.init(w)
     pool = {}
     load = {}
+    packages = {}
     typeinfo = w._components
     update_deserialize_1(w)
 end
@@ -155,13 +166,13 @@ local function save_world(w)
         entity[#entity+1] = _save_entity(w, eid)
     end
     table.sort(entity, function(a, b) return a.__id < b.__id end)
-    return { entity, save_end(w) }
+    return { map2lst(packages), entity, save_end(w) }
 end
 
 local function save_entity(w, eid)
     save_start(w)
     local entity = _save_entity(w, eid)
-    return { entity, save_end(w) }
+    return { map2lst(packages), entity, save_end(w) }
 end
 
 return {
