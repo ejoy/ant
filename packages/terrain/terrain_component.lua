@@ -52,6 +52,10 @@ function terrain_collider:postinit(e)
 	colliderutil.create_collider_comp(Physics, self.shape, self.collider, e.transform)
 end
 
+function terrain_collider:delete()
+	self.shape.handle = nil -- collider own this handle, will delete in collider:delete function
+end
+
 local function create_buffer(terrainhandle, dynamic, declname)
     local vb, ib = terrainhandle:buffer()
 	local vbsize, ibsize = terrainhandle:buffersize()

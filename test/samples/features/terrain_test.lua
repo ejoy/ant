@@ -5,6 +5,8 @@ ecs.import "ant.terrain"
 
 local fs = require "filesystem"
 
+local serialize = import_package "ant.serialize"
+
 local terrain_test = ecs.system "terrain_test"
 terrain_test.depend 'init_loader'
 
@@ -77,7 +79,8 @@ function terrain_test:init()
         mesh = {},
         name = "pvp",
         can_render = true,
-        main_view = true
+		main_view = true,
+		serialize = serialize.create(),
 	}
 		
 	-- world:create_entity {

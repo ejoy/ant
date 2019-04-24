@@ -76,7 +76,8 @@ local function create_animation_test()
                     anirefs = {
                         {idx = 1, weight = 0.5},
                         {idx = 2, weight = 0.5}
-                    }
+					},
+					name = "walk",
                 }
             },
             anilist = {
@@ -102,7 +103,8 @@ local function create_animation_test()
             ref_path = fs.path '//ant.resources' / smpath
         },
         name = 'animation_sample',
-        main_view = true
+		main_view = true,
+		serialize = serialize.create(),
     }
 
     local e = world[eid]
