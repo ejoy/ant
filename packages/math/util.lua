@@ -54,4 +54,11 @@ function util.identity_transform()
 	}
 end
 
+util.XAXIS = ms:ref "vector" {1, 0, 0, 0}
+util.NXAXIS = ms:ref "vector" {-1, 0, 0, 0}
+util.YAXIS = ms:ref "vector" {0, 1, 0, 0}
+util.NYAXIS = ms:ref "vector" {0, -1, 0, 0}
+util.ZAXIS = ms:ref "vector" {0, 0, 1, 0}
+util.NZAXIS = ms:ref "vector" {0, 0, -1, 0}
+
 return util
