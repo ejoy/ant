@@ -44,6 +44,9 @@ static bool g_default_homogeneous_depth = false;
 bool default_homogeneous_depth(){
 	return g_default_homogeneous_depth;
 }
+
+#define tov3(v4)	(const glm::vec3*)(&(v4))		
+
 /*
 static inline float
 get_angle(lua_State *L, int index) {
@@ -1218,9 +1221,7 @@ base_axes_from_forward_vector(const glm::vec4& forward, glm::vec4& right, glm::v
 		up = glm::vec4(0, 1, 0, 0);
 		right = glm::vec4(1, 0, 0, 0);
 	} else {
-#define tov3(v4)	(const glm::vec3*)(&(v4))
-		const auto& upref = glm::dot(glm::vec3(0, 0, 1), *tov3(forward)) > 0 ? glm::vec4(0, 0, 1, 0) : glm::vec4(0, -1, 0, 0);
-		
+
 		if (is_zero(forward - glm::vec4(0, 1, 0, 0))) {
 			up = glm::vec4(0, 0, 1, 0);
 			right = glm::vec4(1, 0, 0, 0);
@@ -1228,7 +1229,7 @@ base_axes_from_forward_vector(const glm::vec4& forward, glm::vec4& right, glm::v
 			up = glm::vec4(0, 0, -1, 0);
 			right = glm::vec4(1, 0, 0, 0);
 		} else {
-			right = glm::vec4(glm::normalize(glm::cross(*tov3(upref), *((glm::vec3*)&forward.x))), 0);
+			right = glm::vec4(glm::normalize(glm::cross(glm::vec3(0, 1, 0), *((glm::vec3*)&forward.x))), 0);
 			up = glm::vec4(glm::normalize(glm::cross(*(glm::vec3*)(&forward.x), *((glm::vec3*)&right.x))), 0);
 		}
 	}
@@ -2456,6 +2457,25 @@ ldot(lua_State *L) {
 }
 
 static int
+lis_parallel(lua_State *L) {
+	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
+	lastack *LS = bp->LS;
+
+	const int numarg = lua_gettop(L);
+	if (numarg < 3) {
+		luaL_error(L, "need argument: v0, v1, and threshold value[opt], argument provided:%d", numarg);
+	}
+
+	const auto v0 = get_vec_value(L, LS, 2);
+	const auto v1 = get_vec_value(L, LS, 3);
+
+	const float threshold = luaL_optnumber(L, 4, 0.01f);
+
+	lua_pushboolean(L, is_zero(glm::cross(*tov3(v0), *tov3(v1)), glm::vec3(threshold)));
+	return 1;
+}
+
+static int
 lscreen_point_to_3d(lua_State *L) {
 	const int numarg = lua_gettop(L);
 	if (numarg < 4) {
@@ -2688,6 +2708,7 @@ register_linalg_mt(lua_State *L) {
 			{ "view_proj", lview_proj},
 			{ "length", llength},
 			{ "dot", ldot},
+			{ "is_parallel", lis_parallel},
 			{ "screenpt_to_3d", lscreen_point_to_3d},
 			{ NULL, NULL },
 		};
