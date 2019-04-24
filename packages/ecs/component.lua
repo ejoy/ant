@@ -75,7 +75,6 @@ end
 function foreach_delete_1(w, c, component)
     if c.method and c.method.delete then
         c.method.delete(component)
-        return
     end
     if not c.type then
 		for _, v in ipairs(c) do
