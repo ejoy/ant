@@ -32,22 +32,20 @@ thunk* thunk_create_hook(intptr_t dbg, intptr_t hook)
 	// }
 	static unsigned char sc[] = {
 		0x50,                                                       // push rax
-		0x48, 0x83, 0xec, 0x28,                                     // sub rsp, 40
 		0x48, 0x89, 0xf2,                                           // mov rdx, rsi
 		0x48, 0x89, 0xfe,                                           // mov rsi, rdi
 		0x48, 0xbf, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rdi, dbg
 		0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rax, hook
 		0xff, 0xd0,                                                 // call rax
-		0x48, 0x83, 0xc4, 0x28,                                     // add rsp, 40
 		0x58,                                                       // pop rax
 		0xc3,                                                       // ret
 	};
 	std::unique_ptr<thunk> t(new thunk);
-	if (!shellcode_create(t.get(), sizeof(sc))) {
+	if (!t->create(sizeof(sc))) {
 		return 0;
 	}
-	memcpy(sc + 13, &dbg, sizeof(dbg));
-	memcpy(sc + 23, &hook, sizeof(hook));
+	memcpy(sc + 9, &dbg, sizeof(dbg));
+	memcpy(sc + 19, &hook, sizeof(hook));
 	if (!t->write(&sc)) {
 		return 0;
 	}
@@ -63,21 +61,19 @@ thunk* thunk_create_panic(intptr_t dbg, intptr_t panic)
 	// }
 	static unsigned char sc[] = {
 		0x50,                                                       // push rax
-		0x48, 0x83, 0xec, 0x28,                                     // sub rsp, 40
 		0x48, 0x89, 0xfe,                                           // mov rsi, rdi
 		0x48, 0xbf, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rdi, dbg
 		0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rax, panic
 		0xff, 0xd0,                                                 // call rax
-		0x48, 0x83, 0xc4, 0x28,                                     // add rsp, 40
 		0x58,                                                       // pop rax
 		0xc3,                                                       // ret
 	};
 	std::unique_ptr<thunk> t(new thunk);
-	if (!shellcode_create(t.get(), sizeof(sc))) {
+	if (!t->create(sizeof(sc))) {
 		return 0;
 	}
-	memcpy(sc + 10, &dbg, sizeof(dbg));
-	memcpy(sc + 20, &panic, sizeof(panic));
+	memcpy(sc + 6, &dbg, sizeof(dbg));
+	memcpy(sc + 16, &panic, sizeof(panic));
 	if (!t->write(&sc)) {
 		return 0;
 	}
@@ -98,30 +94,25 @@ thunk* thunk_create_panic(intptr_t dbg, intptr_t panic, intptr_t old_panic)
 	static unsigned char sc[] = {
 		0x50,                                                       // push rax
 		0x57,                                                       // push rdi
-		0x48, 0x83, 0xec, 0x28,                                     // sub rsp, 40
 		0x48, 0x89, 0xfe,                                           // mov rsi, rdi
 		0x48, 0xbf, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rdi, dbg
 		0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rax, panic
 		0xff, 0xd0,                                                 // call rax
-		0x48, 0x83, 0xc4, 0x28,                                     // add rsp, 40
 		0x5f,                                                       // pop rdi
-		0x48, 0x83, 0xec, 0x28,                                     // sub rsp, 40
 		0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rax, old_panic
 		0xff, 0xd0,                                                 // call rax
-		0x48, 0x83, 0xc4, 0x28,                                     // add rsp, 40
 		0x58,                                                       // pop rax
 		0xc3,                                                       // ret
 	};
 	std::unique_ptr<thunk> t(new thunk);
-	if (!shellcode_create(t.get(), sizeof(sc))) {
+	if (!t->create(sizeof(sc))) {
 		return 0;
 	}
-	memcpy(sc + 11, &dbg, sizeof(dbg));
-	memcpy(sc + 21, &panic, sizeof(panic));
-	memcpy(sc + 42, &old_panic, sizeof(old_panic));
+	memcpy(sc + 7, &dbg, sizeof(dbg));
+	memcpy(sc + 17, &panic, sizeof(panic));
+	memcpy(sc + 30, &old_panic, sizeof(old_panic));
 	if (!t->write(&sc)) {
 		return 0;
 	}
 	return t.release();
 }
-

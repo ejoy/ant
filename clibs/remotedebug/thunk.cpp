@@ -7,8 +7,8 @@
 #	else
 #		include "thunk_windows_i386.inl"
 #	endif
-#elif defined(__linux__)
-#	include "thunk_linux_amd64.inl"
+#elif defined(__linux__) || defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
+#	include "thunk_linux.inl"
 #else
 #	include "thunk_other.inl"
 #endif
