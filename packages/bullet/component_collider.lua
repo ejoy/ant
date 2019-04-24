@@ -91,6 +91,10 @@ for _, pp in ipairs {
 		local collider = self.collider
 		colliderutil.create_collider_comp(Physics, shape, collider, e.transform)
 	end
+
+	function c:delete()
+		self.shape.handle = nil	-- collider object has own this shape handle
+	end
 end
 
 local math3d_adapter = require "math3d.adapter"
