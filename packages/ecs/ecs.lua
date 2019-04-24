@@ -272,6 +272,7 @@ local function init_modules(w, packages, systems, loader)
 			return
 		end
 		imported[name] = true
+		table.insert(class.packages, 1, name)
 		local modules = assert(loader(name) , "load module " .. name .. " failed")
 		if type(modules) == "table" then
 			for _, m in ipairs(modules) do
@@ -280,11 +281,15 @@ local function init_modules(w, packages, systems, loader)
 		else
 			modules(reg)
 		end
+		table.remove(class.packages, 1)
 	end
 	reg = typeclass(w, import, class)
 
 	for _, name in ipairs(packages) do
 		import(name)
+	end
+	w.import = function(_, name)
+		return import(name)
 	end
 
 	local cut = {}
