@@ -1,3 +1,5 @@
+package.path = package.path .. ";packages/modelloader/glb/?.lua"
+
 local glb = require "glb"
 local json = require "json"
 local stringify = require "stringify"
