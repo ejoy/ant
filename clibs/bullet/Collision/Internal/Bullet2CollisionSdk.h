@@ -83,7 +83,7 @@ public:
 	//{@	scene query
 	
 	virtual int collide(plCollisionWorldHandle world, plCollisionObjectHandle colA, plCollisionObjectHandle colB,
-						lwContactPoint* pointsOut, int pointCapacity);
+						contact_point* pointsOut, int pointCapacity);
 	//add raycast 
 	virtual bool raycast(plCollisionWorldHandle worldHandle, plVector3 rayFrom, plVector3 rayTo,
 		ClosestRayResult &result);

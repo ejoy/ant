@@ -75,29 +75,6 @@ local function print_collide_points(points)
 	end
 end
 
-local collide_points = {}
--- lua callback 
--- 这样使用回调的方式
--- 1. 复杂度较高，对lua使用者稍不友好，也容易出错
--- 2. 速度慢，多次的lua 回调，多次的创建回收points 表，再合并，维护开销大
--- 3. 没有终止约束条件
--- 4. 如果是回调方式，建议从名称上就体现
-btworld:world_collide_ucb(function (objA, objB, userdata)
-	assert(type(objA) == type(objB))	
-	assert(type(objA) == "userdata")
-	assert(type(userdata) == "userdata")
-	local pts = btworld:collide_objects(objA, objB, userdata)
-	if pts then
-		for k,v in pairs(pts) do 
-			table.insert(collide_points,v)
-		end 
-		--table.move(pts, 1, #pts, #collide_points, collide_points)
-	end
-end)
-print("total points = ",#collide_points)
-print_collide_points(collide_points)
-print("world collide end ---")
-
 print("")
 
 -- 简单直接的另一个方法 
@@ -210,6 +187,5 @@ print("")
 
 math3d.reset(ms)
 
-btworld = nil		-- gc world
-bullet = nil		-- gc bullet sdk
+btworld = nil
 

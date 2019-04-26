@@ -20,15 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\bullet\bullet.cpp" />
-    <ClCompile Include="..\..\clibs\bullet\Collision\CollisionSdkC_Api.cpp" />
-    <ClCompile Include="..\..\clibs\bullet\Collision\Internal\Bullet2CollisionSdk.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/utf-8 %(AdditionalOptions)</AdditionalOptions>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\clibs\bullet\Collision\CollisionSdkC_Api.h" />
-    <ClInclude Include="..\..\clibs\bullet\Collision\Internal\Bullet2CollisionSdk.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

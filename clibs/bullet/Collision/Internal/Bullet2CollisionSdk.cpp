@@ -434,10 +434,10 @@ void Bullet2CollisionSdk::setCollisionObjectRotation( plCollisionWorldHandle wor
 struct Bullet2ContactResultCallback : public btCollisionWorld::ContactResultCallback
 {
 	int m_numContacts;
-	lwContactPoint* m_pointsOut;
+	contact_point* m_pointsOut;
 	int m_pointCapacity;
 
-	Bullet2ContactResultCallback(lwContactPoint* pointsOut, int pointCapacity) : m_numContacts(0),
+	Bullet2ContactResultCallback(contact_point* pointsOut, int pointCapacity) : m_numContacts(0),
 																				 m_pointsOut(pointsOut),
 																				 m_pointCapacity(pointCapacity)
 	{
@@ -446,7 +446,7 @@ struct Bullet2ContactResultCallback : public btCollisionWorld::ContactResultCall
 	{
 		if (m_numContacts < m_pointCapacity)
 		{
-			lwContactPoint& ptOut = m_pointsOut[m_numContacts];
+			contact_point& ptOut = m_pointsOut[m_numContacts];
 			ptOut.m_distance = cp.m_distance1;
 			ptOut.m_normalOnB[0] = cp.m_normalWorldOnB.getX();
 			ptOut.m_normalOnB[1] = cp.m_normalWorldOnB.getY();
@@ -465,7 +465,7 @@ struct Bullet2ContactResultCallback : public btCollisionWorld::ContactResultCall
 };
 
 int Bullet2CollisionSdk::collide(plCollisionWorldHandle worldHandle, plCollisionObjectHandle colA, plCollisionObjectHandle colB,
-								 lwContactPoint* pointsOut, int pointCapacity)
+								 contact_point* pointsOut, int pointCapacity)
 {
 	btCollisionWorld* world = (btCollisionWorld*)worldHandle;
 	btCollisionObject* colObjA = (btCollisionObject*)colA;
