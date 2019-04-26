@@ -360,7 +360,7 @@ local function varCreate(vars, frameId, varRef, name, value, evaluateName, calcV
         type = type,
         value = text,
         variablesReference = ref,
-        evaluateName = evaluateName,
+        evaluateName = evaluateName and evaluateName or nil,
     }
     local maps = varRef[3]
     if maps[name] then
@@ -411,8 +411,9 @@ local function extandTable(frameId, varRef)
     local vars = {}
     local loct = rdebug.copytable(t)
     for key, value in pairs(loct) do
+        local evalKey = getTabelKey(key)
         varCreate(vars, frameId, varRef, varGetName(key), value
-            , ('%s%s'):format(evaluateName, getTabelKey(key))
+            , evaluateName and evalKey and ('%s%s'):format(evaluateName, evalKey)
             , function() return rdebug.index(t, key) end
         )
     end
@@ -421,7 +422,7 @@ local function extandTable(frameId, varRef)
     local meta = rdebug.getmetatablev(t)
     if meta ~= nil then
         varCreateInsert(vars, frameId, varRef, '[metatable]', meta
-            , ('debug.getmetatable(%s)'):format(evaluateName)
+            , evaluateName and ('debug.getmetatable(%s)'):format(evaluateName)
             , function() return rdebug.getmetatable(t) end
         )
     end
@@ -441,7 +442,7 @@ local function extandFunction(frameId, varRef)
         end
         local fi = i
         varCreate(vars, frameId, varRef, name, value
-            , ('select(2, debug.getupvalue(%s,%d))'):format(evaluateName, i)
+            , evaluateName and ('select(2, debug.getupvalue(%s,%d))'):format(evaluateName, i)
             , function() local _, r = rdebug.getupvalue(f, fi) return r end
         )
         i = i + 1
@@ -459,14 +460,14 @@ local function extandUserdata(frameId, varRef)
     local uv = rdebug.getuservaluev(u)
     if uv ~= nil then
         varCreateInsert(vars, frameId, varRef, '[uservalue]', uv
-            , ('debug.getuservalue(%s)'):format(evaluateName)
+            , evaluateName and ('debug.getuservalue(%s)'):format(evaluateName)
             , function() return rdebug.getuservalue(u) end
         )
     end
     local meta = rdebug.getmetatablev(u)
     if meta ~= nil then
         varCreateInsert(vars, frameId, varRef, '[metatable]', meta
-            , ('debug.getmetatable(%s)'):format(evaluateName)
+            , evaluateName and ('debug.getmetatable(%s)'):format(evaluateName)
             , function() return rdebug.getmetatable(u) end
         )
     end
@@ -527,6 +528,8 @@ local children = {
     [VAR_STANDARD] = {},
 }
 
+local TEMPORARY = _VERSION == "Lua 5.4" and '(temporary)' or '(*temporary)'
+
 extand[VAR_LOCAL] = function(frameId)
     children[VAR_LOCAL][3] = {}
     local vars = {}
@@ -536,7 +539,7 @@ extand[VAR_LOCAL] = function(frameId)
         if name == nil then
             break
         end
-        if name ~= '(*temporary)' then
+        if name ~= TEMPORARY then
             local fi = i
             varCreate(vars, frameId, children[VAR_LOCAL], name, value
                 , name
