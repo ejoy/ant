@@ -1,9 +1,10 @@
-package.path = package.path .. ";packages/modelloader/glb/?.lua"
+local relate_path = "packages/modelloader/glb"
+package.path = package.path .. ";" .. relate_path .. "/?.lua"
 
 local glb = require "glb"
 local json = require "json"
 local stringify = require "stringify"
-local _, jsonData, binData = glb.decode "Bee.glb"
+local _, jsonData, binData = glb.decode(relate_path .. "/Bee.glb")
 local t = json.decode(jsonData)
 
 local function savefile(filename, data)
@@ -13,9 +14,9 @@ local function savefile(filename, data)
 end
 local luaData = stringify(t, true)
 
-savefile("test-bee.lua", luaData)
-savefile("test-bee.json", jsonData)
-savefile("test-bee.bin", binData)
+savefile(relate_path .. "/test-bee.lua", luaData)
+savefile(relate_path .. "/test-bee.json", jsonData)
+savefile(relate_path .. "/test-bee.bin", binData)
 
 local function EQUAL(a, b)
 	for k, v in pairs(a) do
