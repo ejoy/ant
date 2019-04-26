@@ -269,7 +269,7 @@ local function init_modules(w, packages, systems, loader)
 	local reg
 	local function import(name)
 		if imported[name] then
-			return
+			return false
 		end
 		imported[name] = true
 		table.insert(class.packages, 1, name)
@@ -282,6 +282,7 @@ local function init_modules(w, packages, systems, loader)
 			modules(reg)
 		end
 		table.remove(class.packages, 1)
+		return true
 	end
 	reg = typeclass(w, import, class)
 
@@ -363,8 +364,8 @@ function world:enable_system(name, enable)
 	end
 end
 
-local function check_comonpent(w)
-	local typeinfo = w._schema
+function world:slove_comonpent()
+	local typeinfo = self._schema
 	for k,v in ipairs(typeinfo.list) do
 		if v.uncomplete then
 			error( v.name .. " is uncomplete")
@@ -377,6 +378,7 @@ local function check_comonpent(w)
 			error( k .. " is undefined in " .. typeinfo._undefined[k])
 		end
 	end
+	component.solve(self)
 end
 
 -- config.packages
@@ -400,8 +402,7 @@ function ecs.new_world(config)
 	-- load systems and components from modules
 	local class = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
 
-	check_comonpent(w)
-	component.solve(w)
+	w:slove_comonpent()
 
 	-- init system
 	w._systems = system.lists(class.system)

@@ -103,10 +103,35 @@ function foreach_delete_1(w, c, component)
     foreach_delete_2(w, c, component)
 end
 
+local typeinfo
+local function gen_ref(c)
+    if c.ref ~= nil then
+        return c.ref
+    end
+	if not c.type then
+		c.ref = true
+        for _,v in ipairs(c) do
+            v.ref = gen_ref(v)
+        end        
+        return c.ref
+    end
+    if c.type == 'primtype' then
+        c.ref = false
+        return c.ref
+    end
+    assert(typeinfo[c.type], "unknown type:" .. c.type)
+	c.ref = gen_ref(typeinfo[c.type])
+	return c.ref
+end
+
 local function solve(w)
-    local res = solve_depend(w._components)
+    typeinfo = w._components
+    local res = solve_depend(typeinfo)
     for i, name in ipairs(res) do
-        w._components[name].sortid = i
+        typeinfo[name].sortid = i
+    end
+    for _,v in pairs(typeinfo) do
+        gen_ref(v)
     end
 end
 

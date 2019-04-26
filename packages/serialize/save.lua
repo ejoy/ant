@@ -1,4 +1,3 @@
-local method = require "method"
 local crypt = require "crypt"
 
 local world
@@ -141,7 +140,6 @@ end
 
 local function save_start(w)
     world = w
-    method.init(w)
     pool = {}
     load = {}
     packages = {}
