@@ -7,6 +7,12 @@ local stringify = require "stringify"
 local _, jsonData, binData = glb.decode(relate_path .. "/Bee.glb")
 local t = json.decode(jsonData)
 
+local ff = io.open(relate_path .. "/2CylinderEngine.gltf", "rb")
+local content = ff:read("all")
+ff:close()
+local gltf = json.decode(content)
+print(gltf)
+
 local function savefile(filename, data)
     local f = assert(io.open(filename, "w"))
     f:write(data)
