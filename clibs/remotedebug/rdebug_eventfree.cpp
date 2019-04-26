@@ -4,19 +4,19 @@ namespace remotedebug::eventfree {
     struct userdata {
         lua_Alloc l_allocf;
         void* l_ud;
-        notify notify;
+        notify n;
         void* ud;
     };
     static void* fake_allocf(void *ud, void *ptr, size_t osize, size_t nsize) {
         userdata* self = (userdata*)ud;
-        if (ptr != NULL && nsize == 0 && self->notify) {
-            self->notify(self->ud, ptr);
+        if (ptr != NULL && nsize == 0 && self->n) {
+            self->n(self->ud, ptr);
         }
         return self->l_allocf(ud, ptr, osize, nsize);
     }
-    void create(lua_State* L, notify notify, void* ud) {
+    void create(lua_State* L, notify n, void* ud) {
         userdata* self = new userdata;
-        self->notify = notify;
+        self->n = n;
         self->ud = ud;
         self->l_allocf = lua_getallocf(L, &self->l_ud);
         lua_setallocf(L, fake_allocf, self);
