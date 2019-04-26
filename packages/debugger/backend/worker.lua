@@ -36,8 +36,13 @@ local function workerThreadUpdate()
             break
         end
         local pkg = assert(json.decode(msg))
+        local ok, e = xpcall(function()
         if CMD[pkg.cmd] then
             CMD[pkg.cmd](pkg)
+        end
+        end, debug.traceback)
+        if not ok then
+            err:push(e)
         end
     end
 end
@@ -84,6 +89,11 @@ end)
 --    end
 --    ev.emit('output', 'stderr', table.concat(t, '\t')..'\n')
 --end
+
+--local log = require 'common.log'
+--local fs = require 'common.filesystem'
+--log.file = (fs.dll_path():parent_path():parent_path():parent_path():parent_path() / "worker.log"):string()
+--print = log.info
 
 function CMD.initializing(pkg)
     ev.emit('initializing', pkg.config)
@@ -486,7 +496,7 @@ function event.panic(msg)
     if not exceptionFilters['lua_panic'] then
         return
     end
-    exceptionMsg, exceptionTrace = traceback(msg, 0)
+    exceptionMsg, exceptionTrace = traceback(tostring(msg), 0)
     state = 'stopped'
     runLoop 'exception'
 end
@@ -498,7 +508,7 @@ if hookmgr.exception_open then
         if not type or not exceptionFilters[type] then
             return
         end
-        exceptionMsg, exceptionTrace = traceback(msg, 0)
+        exceptionMsg, exceptionTrace = traceback(tostring(msg), 0)
         state = 'stopped'
         runLoop 'exception'
     end
@@ -540,7 +550,10 @@ hookmgr.init(function(name, ...)
             return event[name](...)
         end
     end, debug.traceback, ...)
-    if not ok then err:push(e) end
+    if not ok then
+        err:push(e)
+        return
+    end
     return e
 end)
 

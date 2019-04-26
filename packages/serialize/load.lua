@@ -116,8 +116,12 @@ local function load_start(w, s)
         end
         return doPost(t[1], t[2])
     end)
+    local slove = false
     for _, name in ipairs(res[1]) do
-        w:import(name)
+        slove = w:import(name) or slove
+    end
+    if slove then
+        w:slove_comonpent()
     end
     w.__deserialize = ids
     component = res[3]

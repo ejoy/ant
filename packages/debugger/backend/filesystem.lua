@@ -1,19 +1,28 @@
 local fs = require 'common.filesystem'
 local ev = require 'common.event'
 
+local default_sep = package.config:sub(1, 1)
 local sourceFormat = "path"
 local pathFormat = "path"
-local default_sep = package.config:sub(1, 1)
+local useWSL = false
 
 ev.on('initializing', function(config)
     sourceFormat = config.sourceFormat or "path"
     pathFormat = config.pathFormat or "path"
+    useWSL = config.useWSL
 end)
 
 local function split(str)
     local r = {}
     str:gsub('[^/\\]*', function (w) r[#r+1] = w end)
     return r
+end
+
+local function fromwsl(s)
+    if not useWSL or not s:match "^/mnt/%a" then
+        return s
+    end
+    return s:gsub("^/mnt/(%a)", "%1:")
 end
 
 local function absolute(p)
@@ -43,7 +52,7 @@ function m.normalize_serverpath(path)
     if sourceFormat == "string" then
         return path
     end
-    return m_normalize(absolute(path))
+    return fromwsl(m_normalize(absolute(path)))
 end
 
 function m.narive_normalize_serverpath(path)
