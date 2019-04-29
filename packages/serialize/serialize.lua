@@ -31,4 +31,5 @@ return {
     load_world = load_world,
     load_entity = load_entity,
     create = create,
+    watch = require "watch",
 }

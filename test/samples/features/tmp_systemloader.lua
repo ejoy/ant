@@ -127,6 +127,13 @@ function init_loader:init()
 
     create_animation_test()
 
+	local eid = world:first_entity_id "main_queue"
+	local watch = import_package "ant.serialize".watch
+	local res1 = watch.query(world, nil, eid.."/camera")
+	local res2 = watch.query(world, res1.__id, "")
+	watch.set(world, res1.__id, "", "type", "test")
+	local res3 = watch.query(world, res1.__id, "")
+    
     -- local function save_file(file, data)
     --     assert(assert(io.open(file, 'w')):write(data)):close()
     -- end
