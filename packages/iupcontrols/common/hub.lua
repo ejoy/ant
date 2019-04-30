@@ -26,10 +26,7 @@ local function init()
         end
     end
     hub._update = update_hub
-    local function tb(...)
-        print_a("ERROR",...)
-    end
-    task.loop(update_hub,tb)
+    task.safe_loop(update_hub)
 end 
 
 local function shallow_copy_array(arr,arr_size)

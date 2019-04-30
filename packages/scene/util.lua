@@ -55,6 +55,21 @@ function util.start_new_world(input_queue, fbw, fbh, packages, systems)
 	world:update_func("init")()
     return world
 end
+
+-- static_world use for editor module,only data needed
+function util.start_static_world(packages,systems)
+	local world = ecs.new_world {
+		packages = packages,
+		systems = systems,
+		args = {
+			Physics = bullet_world.new(),
+		},
+	}
+	mathadapter.bind_math_adapter()	
+	world:update_func("init")()
+    return world
+end
+
 function util.loop(world, arg)	
 	local queue = {}
 	for _, updatetype in ipairs {

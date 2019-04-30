@@ -2,6 +2,7 @@
 local save = require "save"
 local load = require "load"
 local stringify = require "stringify"
+local datalist = require 'datalist'
 
 local function save_world(w)
     return stringify.world(w, save.world(w))
@@ -25,6 +26,9 @@ local function create()
     return crypt.uuid()
 end
 
+local function parse(str)
+    return datalist.parse(str)
+end
 return {
     save_world = save_world,
     save_entity = save_entity,
@@ -32,4 +36,5 @@ return {
     load_entity = load_entity,
     create = create,
     watch = require "watch",
+	parse = parse,
 }

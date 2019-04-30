@@ -15,7 +15,7 @@ LUAINC = -I../lua
 CC= gcc -std=c11
 CXX = g++ -std=c++17
 
-BUILD_CONFIG = Release
+BUILD_CONFIG = Debug
 
 ifeq ("$(BUILD_CONFIG)","Release")
 DEBUG_INFO = -O2

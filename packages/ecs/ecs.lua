@@ -364,6 +364,17 @@ function world:enable_system(name, enable)
 	end
 end
 
+function world:set_serialize2eid(serialize_id,eid)
+	assert(serialize_id,
+		"function world:set_serialize2eid\nserialize_id can't be nil")
+	self._serialize_to_eid[serialize_id] = eid
+end
+
+function world:find_serialize(serialize_id)
+	assert(serialize_id,
+		"function world:set_serialize2eid\nserialize_id can't be nil")
+	return self._serialize_to_eid[serialize_id]
+end
 function world:slove_comonpent()
 	local typeinfo = self._schema
 	for k,v in ipairs(typeinfo.list) do
@@ -397,6 +408,7 @@ function ecs.new_world(config)
 		_newset = {},
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
+		_serialize_to_eid = {},
 	}, world)
 
 	-- load systems and components from modules

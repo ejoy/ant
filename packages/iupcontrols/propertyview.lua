@@ -38,6 +38,9 @@ local function create_tree_branch(node, parent, treeview)
 end
 
 function propertyview:build(properties, extend_trees)
+	print_a("propertyview:build:",properties, extend_trees)
+	--todo unserialize properties
+	
 	local treeview = self.tree
 	treeview:clear()
 
@@ -95,118 +98,117 @@ local function fill_matrixview(detail, node)
 end
 
 function propertyview.new(config)
-	config.tree.NAME = "RESVIEW"
+    config.tree.NAME = "RESVIEW"
 	config.detail.NAME = "RESDETAIL"
 
-	return ctrlutil.create_ctrl_wrapper(function ()
-		local tree = treecontrol.new(config.tree)
-		local detail = mv_control.new(config.detail)
+	local tree = treecontrol.new(config.tree)
+	local detail = mv_control.new(config.detail)
 
-		function tree.view:selection_cb(id, status)
-			if status == 0 then
-				return 
-			end
-
-			local node = tree:findchild_byid(id)
-			fill_matrixview(detail, node)
+	function tree.view:selection_cb(id, status)
+		if status == 0 then
+			return 
 		end
 
-		function tree.view:executeleaf_cb(id)
-			local child = tree:findchild_byid(id)
-			local nodevalue = child.userdata
-			if nodevalue then
-				tree.view.ADDEXPANDED = "YES"
-				create_tree_branch(nodevalue, child, self)
-			end
+		local node = tree:findchild_byid(id)
+		fill_matrixview(detail, node)
+	end
+
+	function tree.view:executeleaf_cb(id)
+		local child = tree:findchild_byid(id)
+		local nodevalue = child.userdata
+		if nodevalue then
+			tree.view.ADDEXPANDED = "YES"
+			create_tree_branch(nodevalue, child, self)
 		end
+	end
 
-		function detail.view:click_cb(lin, col, status)	
-			local isleftbtn = status:sub(3, 3) == '1'
-			local isdbclick = status:sub(6, 6) == 'D'
+	function detail.view:click_cb(lin, col, status)	
+		local isleftbtn = status:sub(3, 3) == '1'
+		local isdbclick = status:sub(6, 6) == 'D'
 
-			if not isleftbtn or not isdbclick then
-				return 
-			end
-		
-			local ud = detail:getuserdata(lin, col)
-			if ud then
-				local node = ud.node
-				if not tree:isbranch(node) then
-					create_tree_branch(node.userdata, node, tree)
-				end
-
-				tree:clear_selections()
-				local selectnode = tree:findchild_byname(node, ud.name)
-				tree:select_node(selectnode)
-
-				fill_matrixview(detail, selectnode)
-			end
+		if not isleftbtn or not isdbclick then
+			return 
 		end
-
-		function detail:value_edit_cb(lin, col, newstring)
-			local function get_ud()
-				local selnode = tree:get_selected_node()
-				local ud = selnode.userdata
-				if ud then				
-					if col == 1 then
-						local parentnode = tree:parent_node(selnode.id)
-						return parentnode.userdata, selnode.name
-					end
-					assert(col == 2)
-					return ud, self:getcell(lin, col - 1)
-				end
-
-				local parentnode = tree:parent_node(selnode.id)
-				return assert(parentnode.userdata), selnode.name
-			end
-
-			local ud, elemname = get_ud()
-
-			if ud then
-				local function check_name_is_number(t, name)
-					if #t > 0 then
-						local n = tonumber(name)
-						if n then
-							return n
-						end
-					end
-					return name
-				end
-
-				elemname = check_name_is_number(ud, elemname)
-
-				local nodevaluetype = type(assert(ud[tonumber(elemname) or elemname]))
-				if nodevaluetype == "string" then
-					ud[elemname] = newstring
-				elseif nodevaluetype == "number" then
-					ud[elemname] = tonumber(newstring)
-				elseif nodevaluetype == "boolean" then
-					local mm = {
-						['true'] = true,
-						['True'] = true,
-						['TRUE'] = true,
-						['false'] = false,
-						['False'] = false,
-						['FALSE'] = false,
-					}
-					local newvalue = mm[newstring]				
-					ud[elemname] = newvalue or (tonumber(newstring) ~= 0)				
-				else
-					iup.Message("Warning", 
-						string.format("only support modify string/number/boolean, current type is : ", nodevaluetype))
-				end
-			end
-		end
-
-		return iup.split {
-			tree.view,
-			iup.tabs {
-				TABTITLE0 = "Detail",
-				detail.view,
-			}
-		}
-		end, propertyview)
 	
+		local ud = detail:getuserdata(lin, col)
+		if ud then
+			local node = ud.node
+			if not tree:isbranch(node) then
+				create_tree_branch(node.userdata, node, tree)
+			end
+
+			tree:clear_selections()
+			local selectnode = tree:findchild_byname(node, ud.name)
+			tree:select_node(selectnode)
+
+			fill_matrixview(detail, selectnode)
+		end
+	end
+
+	function detail:value_edit_cb(lin, col, newstring)
+		local function get_ud()
+			local selnode = tree:get_selected_node()
+			local ud = selnode.userdata
+			if ud then				
+				if col == 1 then
+					local parentnode = tree:parent_node(selnode.id)
+					return parentnode.userdata, selnode.name
+				end
+				assert(col == 2)
+				return ud, self:getcell(lin, col - 1)
+			end
+
+			local parentnode = tree:parent_node(selnode.id)
+			return assert(parentnode.userdata), selnode.name
+		end
+
+		local ud, elemname = get_ud()
+
+		if ud then
+			local function check_name_is_number(t, name)
+				if #t > 0 then
+					local n = tonumber(name)
+					if n then
+						return n
+					end
+				end
+				return name
+			end
+
+			elemname = check_name_is_number(ud, elemname)
+
+			local nodevaluetype = type(assert(ud[tonumber(elemname) or elemname]))
+			if nodevaluetype == "string" then
+				ud[elemname] = newstring
+			elseif nodevaluetype == "number" then
+				ud[elemname] = tonumber(newstring)
+			elseif nodevaluetype == "boolean" then
+				local mm = {
+					['true'] = true,
+					['True'] = true,
+					['TRUE'] = true,
+					['false'] = false,
+					['False'] = false,
+					['FALSE'] = false,
+				}
+				local newvalue = mm[newstring]				
+				ud[elemname] = newvalue or (tonumber(newstring) ~= 0)				
+			else
+				iup.Message("Warning", 
+					string.format("only support modify string/number/boolean, current type is : ", nodevaluetype))
+			end
+		end
+	end
+
+	local view = iup.split {
+		tree.view,
+		iup.tabs {
+			TABTITLE0 = "Detail",
+			detail.view,
+		}
+	}
+	local owner = setmetatable({view=view,tree=tree}, propertyview)
+	return owner
 end
 
 return propertyview

@@ -70,7 +70,7 @@ function asset_view:_init_update()
             self:update()
         end
     end
-    task.loop(mainloop)
+    task.safe_loop(mainloop)
     self._mainloop = mainloop
 end
 
@@ -303,7 +303,7 @@ function asset_view:_on_canvas_map()
                             ["empty"]=camera_eid_empty}
         self:show_camera("empty")
 
-        task.loop(scene.loop(self.world,{update = {"timesystem", "message_system"}}))
+        task.safe_loop(scene.loop(self.world,{update = {"timesystem", "message_system"}}))
         self.world_update_func = self.world:update_func("update", {"timesystem", "message_system"})
 
     end

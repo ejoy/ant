@@ -59,6 +59,9 @@ function camera_controller_system:init()
 	end)	
 
 	objctrller.bind_tigger("rotate", function (event)
+		if not hit[1] then
+			return 0
+		end
 		local dx, dy = event.x - hit[1], event.y - hit[2]
 		local function pixel2radian(pixel)
 			return pixel * 0.001

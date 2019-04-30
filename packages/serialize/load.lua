@@ -85,7 +85,7 @@ local function _load_entity(w, tree)
     return tree
 end
 
-local function load_start(w, s)
+local function load_start(w, s)  
     local post = getPost(w)
     function doPost(type, value)
         if type == 'entity' then
@@ -146,7 +146,7 @@ local function load_world(w, s)
     load_end()
     for _, e in ipairs(l) do
         finish_entity(w, e)
-    end 
+    end
 end
 
 local function load_entity(w, s)
