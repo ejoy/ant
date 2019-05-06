@@ -77,7 +77,7 @@ function entity_value_controller_factory.string( name,value,fun )
 end
 
 function entity_value_controller_factory.int( name,value,fun )
-    local value_str = string.format("%d",name)
+    local value_str = string.format("%s",name)
     local text_ctrl = iup.text {
         value = value_str,
         MASK = iup.MASK_INT,
@@ -120,6 +120,10 @@ function entity_value_controller_factory.vector( name,value,fun )
     end
 
     return mb
+end
+
+function entity_value_controller_factory.uniformdata(name,value,fun)
+    return entity_value_controller_factory.vector(name,value,fun)
 end
 
 function entity_value_controller_factory.matrix( name,value,fun )

@@ -39,24 +39,45 @@ function entity_property_builder.build_array_component(parent_tbl,com_name,compo
     local map_com_type = com_schema.type
     local array_param = com_schema.array
     local vbox_ctrl = iup.vbox {
-        iup.label { title = tostring(alias_name) }
+        iup.label { title = "["..tostring(alias_name).."]" }
     }
+    local typ = map_com_type
+    if typ == nil or typ == "primtype" then
+        typ = com_name
+    end
     for index,data in ipairs(component_data) do
-        local child_ctrl = entity_property_builder.build_component(component_data,com_name,data,schema,index)
+        local child_ctrl = entity_property_builder.build_component(component_data,typ,data,schema,index)
         iup.Append(vbox_ctrl,child_ctrl)
     end
     return vbox_ctrl
 end
 
+function entity_property_builder.build_map_component(parent_tbl,com_name,component_data,schema,alias_name)
+    local com_schema = schema[com_name]
+    local map_com_type = com_schema.type
+    local map = com_schema.map
+    local vbox_ctrl = iup.vbox {
+        iup.label { title = "["..tostring(alias_name).."]" }
+    }
+    for child_name,data in pairs(component_data) do
+        local child_ctrl = entity_property_builder.build_component(component_data,com_name,data,schema,child_name)
+        iup.Append(vbox_ctrl,child_ctrl)
+    end
+    return vbox_ctrl
+end
+
+
 function entity_property_builder.build_com_component(parent_tbl,com_name,component_data,schema,alias_name)
     local container = iup.vbox {
-        POSITION = "15,0",
     }
     local expander = iup.expander {
-        iup.backgroundbox {
-            container,
-            POSITION = "15,0",
+        iup.hbox{
+            iup.label {title = " ",rastersize="20x5"},
+            iup.backgroundbox {
+                container,
+            },
         },
+        
         title = tostring(alias_name),
     }
     local com_schema = schema[com_name]
@@ -69,6 +90,8 @@ function entity_property_builder.build_com_component(parent_tbl,com_name,compone
                 child_ctrl = entity_property_builder.build_com_component(component_data,sub_schema.type,sub_data,schema,sub_schema.name)
             elseif sub_schema.array then -- has type & array
                 child_ctrl = entity_property_builder.build_array_component(component_data,sub_schema.type,sub_data,schema,sub_schema.name)
+            elseif sub_schema.map then -- has type & map
+                child_ctrl = entity_property_builder.build_map_component(component_data,sub_schema.type,sub_data,schema,sub_schema.name)
             elseif  entity_property_builder.is_direct(sub_schema.type)  then
                 child_ctrl = entity_property_builder.build_primtype_component(component_data,sub_schema.type,sub_data,schema,sub_schema.name)
             else -- has type & not array
@@ -94,6 +117,8 @@ function entity_property_builder.build_component(parent_tbl,com_name,component_d
         controller = entity_property_builder.build_com_component(parent_tbl,com_name,component_data,schema,alias_name)
     elseif com_schema.array then -- has type & array
         controller = entity_property_builder.build_array_component(parent_tbl,com_name,component_data,schema,alias_name)
+    elseif com_schema.map then -- has type & map
+        child_ctrl = entity_property_builder.build_map_component(component_data,sub_schema.type,sub_data,schema,sub_schema.name)
     elseif entity_property_builder.is_direct(com_name) then
         controller = entity_property_builder.build_primtype_component(parent_tbl,com_name,component_data,schema,alias_name)
     else -- has type & not array
