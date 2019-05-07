@@ -3,9 +3,7 @@
 #include <limits>
 #include "rdebug_redirect.h"
 
-extern "C" {
 lua_State* get_host(lua_State *L);
-}
 lua_State* get_client(lua_State *L);
 int  event(lua_State* cL, lua_State* hL, const char* name);
 
