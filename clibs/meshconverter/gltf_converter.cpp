@@ -358,20 +358,38 @@ lrearrange_buffers(lua_State *L) {
 }
 
 static int
-lto_string(lua_State *L) {
+lseriazlie_buffers(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 
-	lua_pushnil(L);
-
 	std::map<uint32_t, uint32_t>	attriboffset;
-
 	std::ostringstream oss;
-	while (lua_next(L, 1) != 0) {
-		const uint32_t attribname = luaL_checkinteger(L, -2);
 
-		luaL_checktype(L, -1, LUA_TUSERDATA);
+	uint32_t offset = 0;
+	lua_pushnil(L);
+	while (lua_next(L, 1) != 0) {
+		const uint32_t attribname = (uint32_t)luaL_checkinteger(L, -2);
+
+		luaL_checktype(L, -1, LUA_TTABLE);
+		lua_getfield(L, -1, "sizebytes");
+		const uint32_t sizebytes = (uint32_t)lua_tointeger(L, -1);
+		lua_pop(L, 1);
+
+		lua_getfield(L, -1, "data");
 		const uint8_t *data = (const uint8_t*)lua_touserdata(L, -1);
-	
+		lua_pop(L, 1);
+		
+		oss.write((const char*)data, sizebytes);
+		attriboffset[attribname] = offset;
+		offset += sizebytes;
+	}
+
+	const std::string buffer = oss.str();
+	lua_pushlstring(L, buffer.c_str(), buffer.size());
+
+	lua_createtable(L, 0, (int)attriboffset.size());
+	for (const auto &p : attriboffset) {
+		lua_pushinteger(L, p.second);
+		lua_seti(L, -2, p.first);
 	}
 
 	return 1;
@@ -383,7 +401,7 @@ extern "C" {
 		const struct luaL_Reg libs[] = {	
 			{ "fetch_buffers", lfetch_attribute_buffers, },
 			{ "rearrange_buffers", lrearrange_buffers,},
-			{ "to_string", lto_string},
+			{ "seriazlie_buffers", lseriazlie_buffers},
 			{ NULL, NULL },
 		};
 		luaL_newlib(L, libs);

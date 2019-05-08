@@ -261,17 +261,15 @@ return function (srcname, dstname, cfg)
 	for meshidx, buffers in pairs(mesh_buffers) do
 		local mesh = meshes[meshidx]
 		for idx, prim in ipairs(mesh.primitives) do
-			local prim_buffers = buffers[idx]
-			--local bvmapper = gen_attrib_bv_mapper(prim)
+			local prim_buffers = buffers[idx]			
 			local rearrange_result = gltf_converter.rearrange_buffers(prim_buffers, cfg)
-			local serilize_buffer_result = gltf_converter.to_string(rearrange_result.buffers)
+			local attrib_binary_buffers, attrib_binary_offsets = gltf_converter.seriazlie_buffers(rearrange_result.buffers)
 			
 			local new_bufferviews = deserialize_bufferviews(assert(rearrange_result.bufferviews_data))
 			
 			local startidx = #bufferviews + 1
 			table.move(new_bufferviews, 1, #new_bufferviews, startidx, bufferviews)
 
-			local attrib_binary_offsets = serilize_buffer_result.binary_offsets
 			for attribname, info in pairs(rearrange_result.mapper) do
 				local attrib_offset = attrib_binary_offsets[attribname]
 				local accidx = assert(find_accessor_idx(prim.attributes, attribname))
@@ -284,8 +282,8 @@ return function (srcname, dstname, cfg)
 				bv.byteoffset = bindata_offset + attrib_offset
 			end
 
-			new_bindata_table[#new_bindata_table+1] = serilize_buffer_result.binary_buffers
-			bindata_offset = #serilize_buffer_result.binary_buffers
+			new_bindata_table[#new_bindata_table+1] = attrib_binary_buffers
+			bindata_offset = #attrib_binary_buffers
 		end
 	end
 
