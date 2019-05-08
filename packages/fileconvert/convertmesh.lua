@@ -44,6 +44,7 @@ local config = {
 local convert_op = {
 	bin = meshconverter.convert_BGFXBin,
 	fbx = meshconverter.convert_FBX,
+	glb = require "glb_convertor",
 }
 
 return function (identity, sourcefile, param, outfile)

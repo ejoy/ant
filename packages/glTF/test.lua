@@ -4,7 +4,7 @@ package.path = package.path .. ";" .. relate_path .. "/?.lua"
 local glb = require "glb"
 local json = require "json"
 local stringify = require "stringify"
-local _, jsonData, binData = glb.decode(relate_path .. "/test_resources/Bee.glb")
+local _, jsonData, binData = glb.decode(relate_path .. "/test_resources/BoxTextured.glb")
 local t = json.decode(jsonData)
 
 local function savefile(filename, data)

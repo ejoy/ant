@@ -36,12 +36,18 @@
     <ClCompile Include="..\..\clibs\meshconverter\bgfx\util.cpp">
       <Filter>bgfx</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\meshconverter\gltf_converter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\meshconverter\meshdata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\clibs\meshconverter\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\meshconverter\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

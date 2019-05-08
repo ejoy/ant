@@ -73,6 +73,8 @@ function mesh:init()
 	return self
 end
 
+ecs.component_alias("new_mesh", "mesh")
+
 ecs.component "texture"
 	.name "string"
 	.type "string"

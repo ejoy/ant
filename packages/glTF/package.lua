@@ -1,4 +1,4 @@
 return {
-	name = "ant.gltf",
+	name = "ant.glTF",
 	entry = "main"
 }

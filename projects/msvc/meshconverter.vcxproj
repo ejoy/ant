@@ -23,10 +23,12 @@
     <ClCompile Include="..\..\clibs\meshconverter\bgfxmesh_helper.cpp" />
     <ClCompile Include="..\..\clibs\meshconverter\bgfx\util.cpp" />
     <ClCompile Include="..\..\clibs\meshconverter\fbx_helper.cpp" />
+    <ClCompile Include="..\..\clibs\meshconverter\gltf_converter.cpp" />
     <ClCompile Include="..\..\clibs\meshconverter\utils.cpp" />
     <ClCompile Include="..\..\clibs\meshconverter\meshconverter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\clibs\meshconverter\common.h" />
     <ClInclude Include="..\..\clibs\meshconverter\meshdata.h" />
     <ClInclude Include="..\..\clibs\meshconverter\utils.h" />
   </ItemGroup>

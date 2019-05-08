@@ -18,6 +18,16 @@ local function decode(filename)
     return version, json, bin
 end
 
+local function encode(filename, version, json, bindata)
+	local f = assert(io.open(filename, "wb"))
+	local header = string.pack("<c4I4I4", "glTF", version, 0)
+	f:write(header)
+	f:write(json)
+	f:write(bindata)
+	f:close()
+end
+
 return {
-    decode = decode,
+	decode = decode,
+	encode = encode,
 }
