@@ -23,9 +23,27 @@ local accessor_types = {
 	MAT4 = 6,
 }
 
+local function find_accessor_type(t)
+	for k, v in pairs(accessor_types) do
+		if v == t then
+			return k
+		end
+	end
+end
+
 local ENUM_ARRAY_BUFFER = 34962
 local ENUM_ELEMENT_ARRAY_BUFFER = 34963
 
+
+local bufferview_sizebytes = 4 + 4 + 4 + 4 + 4
+
+local function is_4_byte_align(num)
+	if num // 4 ~= num / 4 then
+		error("not 4 byte align")
+	end
+end
+
+is_4_byte_align(bufferview_sizebytes)
 
 local function compile_bufferview(scene, bvidx)	
 	local bufferview = scene.bufferviews[bvidx]
@@ -46,20 +64,23 @@ local function compile_number_array(numberarray)
 	return string.pack("<I4ffffffffffffffff", num, table.unpack(numberarray))
 end
 
+local accessor_sizebytes = bufferview_sizebytes + (4 + 1 + 1 + 1 + 1) + (4 + 16 * 4) + (4 + 16 * 4)
+is_4_byte_align(accessor_sizebytes)
 
 local function compile_accessor(scene, accessor)
 	local bufferviews = scene.bufferviews
-	return string.pack("<zI4I4I1I1I1I1zz", 
-		compile_bufferview(scene, bufferviews[accessor.bufferview]), 
+	local bv_str = compile_bufferview(scene, bufferviews[accessor.bufferview])
+	assert(#bv_str == bufferview_sizebytes)
+	return bv_str .. string.pack("<I4I4I1I1I1I1", 
+		bv_str,
 		accessor.byteoffset,
 		accessor.componenttype,
 		accessor.normalized and 1 or 0,
 		accessor.count,
 		accessor_types[accessor.type],
-		0,	-- padding data for 4 bytes align
-		compile_number_array(accessor.min or {}),
-		compile_number_array(accessor.max or {})
-	)
+		0)	-- padding data for 4 bytes align
+		.. compile_number_array(accessor.min or {})
+		.. compile_number_array(accessor.max or {})
 end
 
 local attribname_mapper = {
@@ -97,36 +118,106 @@ local function compile_primitive(scene, primitive)
 
 	for attribname, accessoridx in pairs(attributes) do
 		local accessor = accessors[accessoridx]
-		a[#a+1] = string.pack("<I4z", assert(attribname_mapper[attribname]), compile_accessor(scene, accessor))
+		local acc_str =  compile_accessor(scene, accessor)
+		assert(#acc_str == accessor_sizebytes)
+		a[#a+1] = string.pack("<I4", assert(attribname_mapper[attribname])) .. acc_str
 	end
 
-	local bin = string.pack("<I4z", #a, table.concat(a, ""))
+	local bin = string.pack("<I4", #a) .. table.concat(a, "")
 	if primitive.indices then
-		return bin .. string.pack("<z", compile_accessor(scene, accessors[primitive.indices]))
+		local acc_str = compile_accessor(scene, accessors[primitive.indices])
+		assert(#acc_str == accessor_sizebytes)
+		return bin .. acc_str
 	end
 
 	return bin
 end
 
-local function deserialize_primitve(seri_prim)
-
-end
-
-local function serialize_mesh_bindata(mesh_bindata)
-
-end
-
-local function deserialize_bufferviews(bvs)
-
-end
-
-local function write_bin_buffer(scene, prim, bin, buffers)
-	local accessors = scene.accessors
-
-	local offset = #bin
-	for k, buffer in pairs(buffers)do
-		local accessor
+local function find_attrib_name(attribname_idx)
+	for k, v in pairs(attribname_mapper)do
+		if v == attribname_idx then
+			return k
+		end
 	end
+end
+
+local function find_accessor_idx(attributes, attribname_idx)
+	local name = find_attrib_name(attribname_idx)
+	local accidx = attributes[name]
+	return accidx or attributes[name .. "_0"]
+end
+
+local function deserialize_bufferview(seri_bv)
+	local bv = {}
+	bv.index, bv.byteoffset, bv.bytelength, bv.stride, bv.target = 
+	string.unpack("<I4I4I4I4I4", seri_bv)
+	return bv
+end
+
+local function deserialize_accessor(seri_accessor)
+	local acc = {
+		bv = deserialize_bufferview(seri_accessor)
+	}
+	
+	local seri_accessor_members = seri_accessor:sub(bufferview_sizebytes)
+	acc.byteoffset,	acc.componenttype,	acc.normalized,	acc.count,	acc.type = 
+	string.unpack("<I4I4I1I1I1I1", seri_accessor_members)
+	
+	acc.normalized = acc.normalized ~= 0 and true or false
+	acc.type = find_accessor_type(acc.type)
+
+	local arraysize = 4 + 16 * 4
+	local seri_arrays = seri_accessor:sub(accessor_sizebytes - 2 * arraysize)
+
+	local function unpack_array(seri_array)			
+		local array_fmt = "<I4ffffffffffffffff"
+		local nummin, min = string.unpack(array_fmt, seri_array)
+		local t = {}
+		for i = 1, nummin do
+			t[i] = min[1]
+		end
+		return t
+	end
+
+	acc.min = unpack_array(seri_arrays)
+	acc.max = unpack_array(seri_arrays:sub(arraysize))
+	return acc
+end
+
+local function deserialize_primitve(seri_prim)	
+	local numattrib = string.unpack("<I4", seri_prim)
+
+	local seri_attributes = seri_prim:sub(4)
+
+	local prim = {}
+
+	local seri_attrib = seri_attributes
+	for i=1, numattrib do
+		local attribname = string.unpack("<I4", seri_attrib)
+		local name = find_attrib_name(attribname)
+
+		prim[name] = deserialize_accessor(seri_attrib:sub(4))
+
+		seri_attrib = seri_attrib:sub(4+accessor_sizebytes)
+	end
+
+	
+	local seri_indices = seri_attrib
+	assert(#seri_indices == accessor_sizebytes)
+	prim.indices = deserialize_accessor(seri_indices)
+
+	return prim
+end
+
+local function deserialize_bufferviews(seri_bvs)
+	local num_bv = string.unpack("<I4", seri_bvs)
+	local bvs = {}
+	local seri_bv = seri_bvs:sub(4)
+	for i=1, num_bv do
+		deserialize_bufferview(seri_bv)
+		bvs[#bvs+1] = seri_bv:sub(bufferview_sizebytes)
+	end
+	return bvs
 end
 
 return function (srcname, dstname, cfg)
@@ -164,40 +255,6 @@ return function (srcname, dstname, cfg)
 	end
 
 	process_node(scenes[scene.scene])
-
-
--- 	config = {
---     flags = {invert_normal = false, flip_uv = true, ib_32 = false},
---     layout = {'p3|n30nIf|T|b|t20|c40'},
--- }
-
-	-- local function gen_attrib_bv_mapper(prim)
-	-- 	local mapper = {}
-	-- 	local attributes = prim.attributes
-	-- 	for k, accidx in pairs(attributes) do
-	-- 		local attribname = attribname_mapper[k]
-	-- 		local accessor = accessors[accidx]
-	-- 		mapper[attribname] = accessor.bufferview
-	-- 	end
-
-	-- 	return mapper
-	-- end
-
-	
-	local function find_attrib_name(attribname_idx)
-		for k, v in pairs(attribname_mapper)do
-			if v == attribname_idx then
-				return k
-			end
-		end
-	end
-
-	local function find_accessor_idx(attributes, attribname_idx)
-		local name = find_attrib_name(attribname_idx)
-		local accidx = attributes[name]
-		return accidx or attributes[name .. "_0"]
-	end
-
 	
 	local new_bindata_table = {}
 	local bindata_offset = 0
