@@ -57,8 +57,8 @@ local function foreach_save_2(component, c)
     end
     if c.map then
 		local ret = {}
-        for k, v in sortpairs(component) do
-			ret[#ret+1] = {k , foreach_save_1(v, c.type)}
+        for k, v in pairs(component) do
+			ret[k] = foreach_save_1(v, c.type)
 		end
         return ret
     end
