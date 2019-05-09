@@ -10,6 +10,23 @@ local function split(s)
     return r
 end
 
+local function sortpairs(t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    table.sort(sort)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
 local function path2component(o, name, sp)
     if #sp == 0 then
         return o, name
@@ -44,6 +61,7 @@ local function path2entity(o, sp)
 end
 
 local function getobject(w, id, path)
+    path = tostring(path)
     typeinfo = w._components
     local sp = split(path)
     if id then
@@ -64,11 +82,25 @@ end
 
 function m.query(w, id, path)
     local component, name = getobject(w, id, path)
+    if name == 'entity' then
+        local t = {}
+        for name, cv in sortpairs(component) do
+            t[name] = save.component(w, cv, name)
+        end
+        return t
+    end
     return save.component(w, component, name)
 end
 
 function m.set(w, id, path, key, value)
     local component, name = getobject(w, id, path)
+    if name == 'entity' then
+        assert(id == nil)
+        local eid = tonumber(path)
+        w[eid] = {}
+        w:set_entity(eid, value)
+        return
+    end
     local c = typeinfo[name]
     assert(not c.type)
     for _, v in ipairs(c) do

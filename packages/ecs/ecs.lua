@@ -89,17 +89,21 @@ local function sortcomponent(w, t)
     end
 end
 
-function world:create_entity(t)
-	local eid = self._entity_id + 1
-	self._entity_id = eid
-	self[eid] = {}
-	self._entity[eid] = true
+function world:set_entity(eid, t)
 	local entity = self[eid]
 	for c, args in sortcomponent(self, t) do
 		entity[c] = self:create_component(c, args)
 		self:register_component(eid, c)
 		self:finish_component(entity, c)
 	end
+end
+
+function world:create_entity(t)
+	local eid = self._entity_id + 1
+	self._entity_id = eid
+	self[eid] = {}
+	self._entity[eid] = true
+	self:set_entity(eid, t)
 	return eid
 end
 
