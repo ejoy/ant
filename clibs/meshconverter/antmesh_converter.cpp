@@ -36,8 +36,8 @@ extern "C" {
 //c std
 #include <cassert>
 
-static void
-ExtractLoadConfig(lua_State *L, int idx, load_config &config) {
+void
+fetch_load_config(lua_State *L, int idx, load_config &config) {
 	luaL_checktype(L, idx, LUA_TTABLE);
 
 	verify(lua_getfield(L, idx, "layout") == LUA_TTABLE);
@@ -45,7 +45,8 @@ ExtractLoadConfig(lua_State *L, int idx, load_config &config) {
 	config.layouts.resize(numStreams);
 	for (size_t ii = 0; ii < numStreams; ++ii) {
 		lua_geti(L, -1, ii + 1);
-		config.layouts[ii] = lua_tostring(L, -1);
+		std::string elem = lua_tostring(L, -1);
+		config.layouts[ii] = refine_layouts(elem);
 		lua_pop(L, 1);
 	}	
 	lua_pop(L, 1);
@@ -64,7 +65,7 @@ ExtractLoadConfig(lua_State *L, int idx, load_config &config) {
 
 	LayoutArray elems;
 	for (const auto &layout : config.layouts) {
-		auto ee = Split(layout, '|');
+		auto ee = split_string(layout, '|');
 		elems.insert(elems.end(), ee.begin(), ee.end());
 	}
 	
@@ -234,7 +235,7 @@ convertSource(lua_State *L, std::function<bool (lua_State *, const std::string&,
 	const std::string output_path = lua_tostring(L, 2);
 
 	load_config config;
-	ExtractLoadConfig(L, 3, config);
+	fetch_load_config(L, 3, config);
 	convertop(L, src_path, output_path, config);
 	return 0;
 }

@@ -5,17 +5,17 @@
 
 #include <bgfx/bgfx.h>
 
-#if defined(DISABLE_ASSERTS)
-# define verify(expr) ((void)(expr))
-#else
-# define verify(expr) assert(expr)
-#endif	
+std::vector<std::string>
+split_string(const std::string &ss, char delim);
+
+std::string&
+refine_layout(std::string &elem);
 
 std::vector<std::string>
-Split(const std::string &ss, char delim);
+split_layout_elems(const std::string &layout);
 
-std::vector<std::string>
-AdjustLayoutElem(const std::string &layout);
+std::string&
+refine_layouts(std::string &layout);
 
 size_t
 CalcVertexSize(const std::string &layout);

@@ -14,3 +14,9 @@
 #define MC_IMPORT
 #pragma warning Unknown dynamic link import/export semantics.
 #endif
+
+#if defined(DISABLE_ASSERTS)
+# define verify(expr) ((void)(expr))
+#else
+# define verify(expr) assert(expr)
+#endif	

@@ -1,4 +1,6 @@
 #include "common.h"
+#include "meshdata.h"
+#include "utils.h"
 
 extern "C"
 {
@@ -92,6 +94,11 @@ static elem_type elem_type_mapper[] = {
 	{"MAT4", 16},	
 };
 
+struct attribute_buffer {
+	uint32_t buffersize;
+	uint8_t *data;
+};
+
 struct bufferinfo {
 	uint32_t attribname;
 	primitive::accessor *accessor;
@@ -101,7 +108,10 @@ using bufferview_index = uint32_t;
 using buffer_desc = std::vector<std::pair<bufferview_index, bufferinfo_array>>;
 
 static bool 
-read_primitive(const char* serializedata, size_t size_bytes, primitive &prim) {
+fetch_primitive(lua_State *L, int index,  primitive &prim) {
+	size_t size_bytes = 0;
+	const char* serializedata = luaL_checklstring(L, index, &size_bytes);
+
 	const uint32_t numattrib = *((uint32_t*)serializedata);	
 
 	// read attributes
@@ -282,18 +292,11 @@ write_primitive(const primitive &prim) {
 }
 
 static int
-lfetch_attribute_buffers(lua_State *L) {
-	size_t size_bytes = 0;
-	const char* serializedata = luaL_checklstring(L, 1, &size_bytes);
+lfetch_attribute_buffers(lua_State *L) {	
 	primitive prim;
-	read_primitive(serializedata, size_bytes, prim);
+	fetch_primitive(L, 1, prim);
 
 	const char* bindata = luaL_checkstring(L, 2);
-
-	struct attribute_buffer {		
-		uint32_t buffersize;
-		uint8_t *data;
-	};
 
 	primitive newprim = prim;
 	std::map<uint32_t, attribute_buffer>	attribbuffers;
@@ -342,18 +345,114 @@ lfetch_attribute_buffers(lua_State *L) {
 		memcpy(buf, ab.second.data, ab.second.buffersize);
 		lua_setfield(L, -2, "data");
 
+		delete[] ab.second.data;
+		ab.second.data;
+
 		lua_setfield(L, -2, attribname_mapper[ab.first].name);	
 	}
 
 	return 2;
 }
 
-static int
-lrearrange_buffers(lua_State *L) {
-	const int numarg = lua_gettop(L);
-	if (numarg != 3) {
-		luaL_error(L, "need 3 arguments");
+static inline void
+fetch_attrib_buffer(lua_State *L, int idx, attribute_buffer &ab) {
+	lua_getfield(L, idx, "sizebytes");
+	ab.buffersize = (uint32_t)lua_tointeger(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, idx, "data");
+	ab.data = (uint8_t*)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+}
+
+extern void 
+fetch_load_config(lua_State *L, int idx, load_config &config);
+
+static inline uint32_t find_attrib_name(const std::string &elem) {
+	const char et = elem[0];
+	for (uint32_t attribname = 0;
+		attribname < sizeof(attribname_mapper) / sizeof(attribname_mapper[0]);
+		++attribname) {
+		const auto& a = attribname_mapper[attribname];
+
+		if (a.sname[0] == et) {
+			return attribname;
+		}
 	}
+
+	return (uint32_t)-1;
+};
+
+static bool
+convert_buffer(const attribute_buffer &ab) {
+
+	return false;
+}
+
+static int
+lrearrange_buffers(lua_State *L) {	
+	primitive prim;
+	fetch_primitive(L, 1, prim);
+
+	luaL_checktype(L, 2, LUA_TTABLE);
+	luaL_checktype(L, 3, LUA_TTABLE);
+	load_config cfg;
+	fetch_load_config(L, 3, cfg);
+
+	lua_pushnil(L);
+
+	std::map<uint32_t, attribute_buffer>	attribute_buffers;
+
+	while (lua_next(L, 2) != 0) {
+		const uint32_t attribname = (uint32_t)luaL_checkinteger(L, -2);
+
+		luaL_checktype(L, -1, LUA_TTABLE);
+		attribute_buffer ab;
+		fetch_attrib_buffer(L, -1, ab);
+
+		attribute_buffers[attribname] = ab;
+	}
+	
+	std::map<uint32_t, uint32_t>	attribmapper;
+
+	std::vector<primitive::bufferview>	bufferviews(cfg.layouts.size());
+
+	for (uint32_t ii = 0; ii < cfg.layouts.size(); ++ii) {
+		const auto& layout = cfg.layouts[ii];
+
+		auto elems = split_layout_elems(layout);
+
+		attribute_buffer layout_ab = { 0 };
+		std::vector<uint32_t> attribs;
+		for (const auto &e : elems) {
+			const uint32_t attribname = find_attrib_name(e);
+			const auto &ab = attribute_buffers[attribname];
+			layout_ab.buffersize += ab.buffersize;
+			attribs.push_back(attribname);
+		}
+
+		auto& bv = bufferviews[ii];
+		bv.index = ii;
+
+		const auto& attributes = prim.attributes;
+		layout_ab.data = new uint8_t[layout_ab.buffersize];
+		uint8_t *data = layout_ab.data;
+		uint32_t offset = 0;
+		for (const auto &attribname : attribs) {
+			const auto& ab = attribute_buffers[attribname];
+			memcpy(data, ab.data, ab.buffersize);
+
+			auto itFound = attributes.find(attribname);
+			if (itFound == attributes.end()) {
+				luaL_error(L, "could name found attribute in seri primitive data:%s", attribname_mapper[attribname].name);
+			}
+
+			const primitive::accessor& acc = itFound->second;
+			attribmapper[attribname] = offset;
+			offset += acc.bv.stride;
+		}
+	}
+
 	return 3;
 }
 
@@ -370,17 +469,12 @@ lseriazlie_buffers(lua_State *L) {
 		const uint32_t attribname = (uint32_t)luaL_checkinteger(L, -2);
 
 		luaL_checktype(L, -1, LUA_TTABLE);
-		lua_getfield(L, -1, "sizebytes");
-		const uint32_t sizebytes = (uint32_t)lua_tointeger(L, -1);
-		lua_pop(L, 1);
-
-		lua_getfield(L, -1, "data");
-		const uint8_t *data = (const uint8_t*)lua_touserdata(L, -1);
-		lua_pop(L, 1);
+		attribute_buffer ab;
+		fetch_attrib_buffer(L, -1, ab);
 		
-		oss.write((const char*)data, sizebytes);
+		oss.write((const char*)ab.data, ab.buffersize);
 		attriboffset[attribname] = offset;
-		offset += sizebytes;
+		offset += ab.buffersize;
 	}
 
 	const std::string buffer = oss.str();

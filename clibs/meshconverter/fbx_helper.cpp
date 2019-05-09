@@ -83,7 +83,7 @@ CreateVertexLayout(aiMesh *mesh, const LayoutArray &layouts) {
 	LayoutArray new_layouts = layouts;
 
 	for (auto &layout : new_layouts) {
-		auto elems = AdjustLayoutElem(layout);
+		auto elems = split_layout_elems(layout);
 		std::string new_layout;
 		auto append_elem = [&new_layout](const std::string &e) {
 			if (!new_layout.empty())
@@ -170,7 +170,7 @@ CopyMeshVertices(const aiMesh *mesh, size_t startVB, const std::string &layout, 
 	
 	uint8_t *vertices = buffer.get() + startVB * vertexSizeInBytes;
 
-	auto elems = AdjustLayoutElem(layout);
+	auto elems = split_layout_elems(layout);
 	for (uint32_t ii = 0; ii < mesh->mNumVertices; ++ii) {
 		for (const auto& e : elems) {
 

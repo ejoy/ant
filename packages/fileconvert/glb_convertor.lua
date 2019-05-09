@@ -230,63 +230,60 @@ return function (srcname, dstname, cfg)
 	local accessors = scene.accessors
 	local bufferviews = scene.bufferviews
 
-	local mesh_buffers = {}
-	local function process_node(scenenodes)
+	local function rearrange_attributes(seri_prim, attributes, attrib_buffers, bufferoffset)
+		local rearrange_result = gltf_converter.rearrange_buffers(seri_prim, attrib_buffers, cfg)
+		local attrib_binary_buffers, attrib_binary_offsets = gltf_converter.seriazlie_buffers(rearrange_result.buffers)
+		
+		local new_bufferviews = deserialize_bufferviews(assert(rearrange_result.bufferviews_data))
+		
+		local startidx = #bufferviews + 1
+		table.move(new_bufferviews, 1, #new_bufferviews, startidx, bufferviews)
+
+		for attribname, info in pairs(rearrange_result.mapper) do
+			local attrib_offset = attrib_binary_offsets[attribname]
+			local accidx = assert(find_accessor_idx(attributes, attribname))
+			local accessor = accessors[accidx]
+			local bvidx = info.bvidx + startidx
+			accessor.bufferview = bvidx
+			accessor.byteoffset = info.accessor_offset
+			
+			local bv = bufferviews[bvidx]
+			bv.byteoffset = bufferoffset + attrib_offset
+		end
+
+		return attrib_binary_buffers
+	end
+
+	local new_bindata_table = {}
+	local bindata_offset = 0
+
+	
+	local function fetch_mesh_buffers(scenenodes)
 		for _, nodeidx in ipairs(scenenodes) do
 			local node = nodes[nodeidx + 1]
 			if node.children then
-				process_node(node.children)
+				fetch_mesh_buffers(node.children)
 			end
 			
 			if node.mesh then
 				local meshidx = node.mesh + 1
 				local mesh = meshes[meshidx]
 				local primitives = mesh.primitives
-				local prim_buffers = {}				
-				for idx, prim in ipairs(mesh.primitives) do
+				for idx, prim in ipairs(primitives) do
 					local seri_prim = compile_primitive(scene, prim)
-					local new_seri_prim, attrib_buffers = gltf_converter.fetch_buffers(seri_prim, bindata)					
-					prim_buffers[idx] = attrib_buffers
-					primitives[idx] = deserialize_primitve(new_seri_prim)
+					local new_seri_prim, attrib_buffers = gltf_converter.fetch_buffers(seri_prim, bindata)
+					local newprim = deserialize_primitve(new_seri_prim)
+					primitives[idx] = newprim
+					local binary_buffers = rearrange_attributes(new_seri_prim, newprim.attributes, attrib_buffers, cfg)
+					new_bindata_table[#new_bindata_table+1] = binary_buffers
+					bindata_offset = bindata_offset + #binary_buffers
 				end
-				mesh_buffers[meshidx] = prim_buffers
 			end
 		end
 	end
 
-	process_node(scenes[scene.scene])
+	fetch_mesh_buffers(scenes[scene.scene])
 	
-	local new_bindata_table = {}
-	local bindata_offset = 0
-	for meshidx, buffers in pairs(mesh_buffers) do
-		local mesh = meshes[meshidx]
-		for idx, prim in ipairs(mesh.primitives) do
-			local prim_buffers = buffers[idx]			
-			local rearrange_result = gltf_converter.rearrange_buffers(prim_buffers, cfg)
-			local attrib_binary_buffers, attrib_binary_offsets = gltf_converter.seriazlie_buffers(rearrange_result.buffers)
-			
-			local new_bufferviews = deserialize_bufferviews(assert(rearrange_result.bufferviews_data))
-			
-			local startidx = #bufferviews + 1
-			table.move(new_bufferviews, 1, #new_bufferviews, startidx, bufferviews)
-
-			for attribname, info in pairs(rearrange_result.mapper) do
-				local attrib_offset = attrib_binary_offsets[attribname]
-				local accidx = assert(find_accessor_idx(prim.attributes, attribname))
-				local accessor = accessors[accidx]
-				local bvidx = info.bvidx + startidx
-				accessor.bufferview = bvidx
-				accessor.byteoffset = info.accessor_offset
-				
-				local bv = bufferviews[bvidx]
-				bv.byteoffset = bindata_offset + attrib_offset
-			end
-
-			new_bindata_table[#new_bindata_table+1] = attrib_binary_buffers
-			bindata_offset = #attrib_binary_buffers
-		end
-	end
-
 	local new_bindata = table.concat(new_bindata_table, "")
 
 	local newscene = {

@@ -1,5 +1,8 @@
 #pragma once
 
+#include "meshbase/meshbase.h"
+#include "common.h"
+
 #include <glm/vec4.hpp>
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
@@ -8,8 +11,6 @@
 #include <map>
 #include <memory>
 #include <string>
-
-#include "meshbase/meshbase.h"
 
 using LayoutArray = std::vector<std::string>;
 

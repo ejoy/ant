@@ -3,7 +3,7 @@
 #include <sstream>
 
 std::vector<std::string>
-Split(const std::string &ss, char delim) {
+split_string(const std::string &ss, char delim) {
 	std::istringstream iss(ss);
 	std::vector<std::string> vv;
 	std::string elem;
@@ -19,18 +19,39 @@ GetDefaultVertexLayoutElem() {
 	return "_30NIf";
 }
 
+std::string&
+refine_layout(std::string &elem) {
+	assert(elem.empty());
+
+	char defaultlayout[] = "_30NIf";
+
+	if (elem.size() < 6) {
+		elem += defaultlayout + elem.size() - 1;
+	}
+
+	return elem;
+}
+
 std::vector<std::string>
-AdjustLayoutElem(const std::string &layout) {
-	auto elems = Split(layout, '|');
+split_layout_elems(const std::string &layout) {
+	auto elems = split_string(layout, '|');
 	for (auto &e : elems) {
-		char newelem[] = "_30NIf";
-		for (size_t ii = 0; ii < e.size(); ++ii) {
-			newelem[ii] = e[ii];
-		}
-		e = newelem;
+		refine_layout(e);
 	}
 
 	return elems;
+}
+
+std::string&
+refine_layouts(std::string &layout) {
+	auto elems = split_layout_elems(layout);
+
+	std::string fulllayout;
+	for (const auto &e : elems) {
+		fulllayout += e;
+	}
+
+	return fulllayout;
 }
 
 bgfx::Attrib::Enum 
@@ -59,7 +80,7 @@ GetAttribFromLayoutElem(const std::string &elem) {
 
 bgfx::VertexDecl
 GenVertexDeclFromVBLayout(const std::string &vblayout) {
-	auto elems = AdjustLayoutElem(vblayout);
+	auto elems = split_layout_elems(vblayout);
 	bgfx::VertexDecl decl;
 	decl.begin();
 	for (const auto &e : elems) {
