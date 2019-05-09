@@ -45,14 +45,12 @@ end
 
 is_4_byte_align(bufferview_sizebytes)
 
-local function compile_bufferview(scene, bvidx)	
-	local bufferview = scene.bufferviews[bvidx]
-	return string.pack("<I4I4I4I4I4", 
-		bvidx,
-		bufferview.byteoffset, 
-		bufferview.bytelength,
-		bufferview.stride or 0,
-		bufferview.target or ENUM_ARRAY_BUFFER)
+local function compile_bufferview(bv)
+	return string.pack("<I4I4I4I4I4",
+		bv.byteoffset, 
+		bv.bytelength,
+		bv.stride or 0,
+		bv.target or ENUM_ARRAY_BUFFER)
 end
 
 local function compile_number_array(numberarray)
@@ -67,12 +65,9 @@ end
 local accessor_sizebytes = bufferview_sizebytes + (4 + 1 + 1 + 1 + 1) + (4 + 16 * 4) + (4 + 16 * 4)
 is_4_byte_align(accessor_sizebytes)
 
-local function compile_accessor(scene, accessor)
-	local bufferviews = scene.bufferviews
-	local bv_str = compile_bufferview(scene, bufferviews[accessor.bufferview])
-	assert(#bv_str == bufferview_sizebytes)
-	return bv_str .. string.pack("<I4I4I1I1I1I1", 
-		bv_str,
+local function compile_accessor(accessor, new_bvidx)
+	return string.pack("<I4I4I4I1I1I1I1", 
+		new_bvidx,
 		accessor.byteoffset,
 		accessor.componenttype,
 		accessor.normalized and 1 or 0,
@@ -114,23 +109,38 @@ local function compile_primitive(scene, primitive)
 	local attributes = primitive.attributes
 
 	local accessors = scene.accessors
-	local a = {}
+	local bufferviews = scene.bufferviews
 
-	for attribname, accessoridx in pairs(attributes) do
-		local accessor = accessors[accessoridx]
-		local acc_str =  compile_accessor(scene, accessor)
-		assert(#acc_str == accessor_sizebytes)
-		a[#a+1] = string.pack("<I4", assert(attribname_mapper[attribname])) .. acc_str
+	local seri_attrib = {}
+	local seri_accessor = {}
+	local seri_bufferview = {}
+
+	local function serialize_accessor(accessor)
+		local new_bvidx = #seri_bufferview+1
+		seri_accessor[#seri_accessor+1] = compile_accessor(accessor, new_bvidx-1)
+		seri_bufferview[#seri_bufferview+1] = compile_bufferview(bufferviews[accessor.buffview])
 	end
 
-	local bin = string.pack("<I4", #a) .. table.concat(a, "")
+	for name, accidx in pairs(attributes) do
+		local accessor = accessors[accidx]
+		local attribidx = attribname_mapper[name]
+		seri_attrib[#seri_attrib+1] = string.pack("<I4I4", attribidx, #seri_accessor)
+
+		serialize_accessor(accessor)
+	end
+
 	if primitive.indices then
-		local acc_str = compile_accessor(scene, accessors[primitive.indices])
-		assert(#acc_str == accessor_sizebytes)
-		return bin .. acc_str
+		serialize_accessor(accessors[primitive.indices])
 	end
 
-	return bin
+	local function concat_table(t)
+		return string.pack("<I4", #t) .. table.concat(t, "")
+	end
+
+	return concat_table(seri_attrib) .. 
+			string.pack("<I4", primitive.indices or 0xffffffff) .. 
+			concat_table(seri_accessor) .. 
+			concat_table(seri_bufferview)
 end
 
 local function find_attrib_name(attribname_idx)
