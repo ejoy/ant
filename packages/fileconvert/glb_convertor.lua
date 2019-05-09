@@ -219,17 +219,6 @@ local function deserialize_primitve(seri_prim)
 	return prim
 end
 
-local function deserialize_bufferviews(seri_bvs)
-	local num_bv = string.unpack("<I4", seri_bvs)
-	local bvs = {}
-	local seri_bv = seri_bvs:sub(4)
-	for i=1, num_bv do
-		deserialize_bufferview(seri_bv)
-		bvs[#bvs+1] = seri_bv:sub(bufferview_sizebytes)
-	end
-	return bvs
-end
-
 return function (srcname, dstname, cfg)
 	local version, jsondata, bindata = glbloader.decode(srcname)
 	local scene = gltfloader.decode(jsondata)
@@ -240,34 +229,31 @@ return function (srcname, dstname, cfg)
 	local accessors = scene.accessors
 	local bufferviews = scene.bufferviews
 
-	local function rearrange_attributes(seri_prim, attributes, attrib_buffers, bufferoffset)
-		local rearrange_result = gltf_converter.rearrange_buffers(seri_prim, attrib_buffers, cfg)
-		local attrib_binary_buffers, attrib_binary_offsets = gltf_converter.seriazlie_buffers(rearrange_result.buffers)
-		
-		local new_bufferviews = deserialize_bufferviews(assert(rearrange_result.bufferviews_data))
-		
-		local startidx = #bufferviews + 1
-		table.move(new_bufferviews, 1, #new_bufferviews, startidx, bufferviews)
-
-		for attribname, info in pairs(rearrange_result.mapper) do
-			local attrib_offset = attrib_binary_offsets[attribname]
-			local accidx = assert(find_accessor_idx(attributes, attribname))
-			local accessor = accessors[accidx]
-			local bvidx = info.bvidx + startidx
-			accessor.bufferview = bvidx
-			accessor.byteoffset = info.accessor_offset
-			
-			local bv = bufferviews[bvidx]
-			bv.byteoffset = bufferoffset + attrib_offset
-		end
-
-		return attrib_binary_buffers
-	end
-
 	local new_bindata_table = {}
 	local bindata_offset = 0
 
+	local new_accessors = {}
+	local new_bufferviews = {}	
+
 	
+	local function refine_prim_offset(newprim, newacc, newbvs)
+		local accessor_index_offset = #new_accessors
+		local bufferview_index_offset = #new_bufferviews
+
+		for _, acc in ipairs(newacc) do
+			acc.bufferview = acc.bufferview + bufferview_index_offset
+		end
+
+		local newattributes = newprim.attributes
+		for k, v in pairs(newattributes) do
+			newattributes[k] = v + accessor_index_offset
+		end
+
+		for _, bv in ipairs(newbvs) do
+			bv.offset = bv.offset + bindata_offset
+		end
+	end
+
 	local function fetch_mesh_buffers(scenenodes)
 		for _, nodeidx in ipairs(scenenodes) do
 			local node = nodes[nodeidx + 1]
@@ -281,12 +267,17 @@ return function (srcname, dstname, cfg)
 				local primitives = mesh.primitives
 				for idx, prim in ipairs(primitives) do
 					local seri_prim = compile_primitive(scene, prim)
-					local new_seri_prim, attrib_buffers = gltf_converter.fetch_buffers(seri_prim, bindata)
-					local newprim = deserialize_primitve(new_seri_prim)
+					local new_seri_prim, prim_binary_buffers = gltf_converter.convert_buffers(seri_prim, bindata, cfg)
+					local newprim, newacc, newbvs = deserialize_primitve(new_seri_prim)
+
+					refine_prim_offset(newprim, newacc, newbvs)
+
 					primitives[idx] = newprim
-					local binary_buffers = rearrange_attributes(new_seri_prim, newprim.attributes, attrib_buffers, cfg)
-					new_bindata_table[#new_bindata_table+1] = binary_buffers
-					bindata_offset = bindata_offset + #binary_buffers
+					table.move(newacc, 1, #newacc, #new_accessors+1, new_accessors)
+					table.move(newbvs, 1, #newbvs, #new_bufferviews+1, new_bufferviews)
+
+					new_bindata_table[#new_bindata_table+1] = prim_binary_buffers
+					bindata_offset = bindata_offset + #prim_binary_buffers
 				end
 			end
 		end
@@ -301,8 +292,8 @@ return function (srcname, dstname, cfg)
 		scenes = scenes,
 		nodes = nodes,
 		meshes = meshes,
-		accessors = accessors,
-		bufferviews = bufferviews,
+		accessors = new_accessors,
+		bufferviews = new_bufferviews,
 		buffers = {
 			{bytelength = #new_bindata,}
 		},
