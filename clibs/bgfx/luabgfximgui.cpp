@@ -652,6 +652,7 @@ create_new_editbuf(lua_State *L) {
 static int
 edit_callback(ImGuiInputTextCallbackData *data) {
 	struct editbuf * ebuf = (struct editbuf *)data->UserData;
+	lua_State *L = ebuf->L;
 	switch (data->EventFlag) {
 	case ImGuiInputTextFlags_CallbackResize: {
 		size_t newsize = ebuf->size;
@@ -665,6 +666,73 @@ edit_callback(ImGuiInputTextCallbackData *data) {
 		} else {
 			ebuf->buf = data->Buf;
 			ebuf->size = newsize;
+		}
+		break;
+	}
+	case ImGuiInputTextFlags_CallbackCharFilter: {
+		if (!lua_checkstack(L, 3)) {
+			break;
+		}
+		if (lua_getfield(L, 1, "filter") == LUA_TFUNCTION) {
+			int c = data->EventChar;
+			lua_pushvalue(L, 1);
+			lua_pushinteger(L, c);
+			if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
+				break;
+			}
+			if (lua_type(L, -1) == LUA_TNUMBER && lua_isinteger(L, -1)) {
+				data->EventChar = (ImWchar)lua_tointeger(L, -1);
+				lua_pop(L, 1);
+			} else {
+				// discard char
+				lua_pop(L, 1);
+				return 1;
+			}
+		} else {
+			lua_pop(L, 1);
+		}
+		break;
+	}
+	case ImGuiInputTextFlags_CallbackHistory: {
+		if (!lua_checkstack(L, 3)) {
+			break;
+		}
+		const char * what = data->EventKey == ImGuiKey_UpArrow ? "up" : "down";
+		if (lua_getfield(L, 1, what) == LUA_TFUNCTION) {
+			lua_pushvalue(L, 1);
+			if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
+				break;
+			}
+			if (lua_type(L, -1) == LUA_TSTRING) {
+				size_t sz;
+				const char *str = lua_tolstring(L, -1, &sz);
+				data->DeleteChars(0, data->BufTextLen);
+				data->InsertChars(0, str, str+sz);
+			}
+			lua_pop(L, 1);
+		} else {
+			lua_pop(L, 1);
+		}
+		break;
+	}
+	case ImGuiInputTextFlags_CallbackCompletion: {
+		if (!lua_checkstack(L, 3)) {
+			break;
+		}
+		if (lua_getfield(L, 1, "tab") == LUA_TFUNCTION) {
+			lua_pushvalue(L, 1);
+			lua_pushinteger(L, data->CursorPos);
+			if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
+				break;
+			}
+			if (lua_type(L, -1) == LUA_TSTRING) {
+				size_t sz;
+				const char *str = lua_tolstring(L, -1, &sz);
+				data->InsertChars(data->CursorPos, str, str+sz);
+			}
+			lua_pop(L, 1);
+		} else {
+			lua_pop(L, 1);
 		}
 		break;
 	}
@@ -689,6 +757,7 @@ wInputText(lua_State *L) {
 	ebuf->L = L;
 	bool change;
 	flags |= ImGuiInputTextFlags_CallbackResize;
+	int top = lua_gettop(L);
 	if (flags & ImGuiInputTextFlags_Multiline) {
 		float width = read_field_float(L, "width", 0);
 		float height = read_field_float(L, "height", 0);
@@ -699,6 +768,9 @@ wInputText(lua_State *L) {
 		} else {
 			change = ImGui::InputText(label, ebuf->buf, ebuf->size, flags, edit_callback, ebuf);
 		}
+	}
+	if (lua_gettop(L) != top) {
+		lua_error(L);
 	}
 	lua_pushboolean(L, change);
 	return 1;
@@ -816,7 +888,8 @@ static struct enum_pair eInputTextFlags[] = {
 	ENUM(ImGuiInputTextFlags, EnterReturnsTrue),
 	ENUM(ImGuiInputTextFlags, CallbackCompletion),
 	ENUM(ImGuiInputTextFlags, CallbackHistory),
-	ENUM(ImGuiInputTextFlags, CallbackAlways),
+// Todo : support CallbackAlways
+//	ENUM(ImGuiInputTextFlags, CallbackAlways),
 	ENUM(ImGuiInputTextFlags, CallbackCharFilter),
 	ENUM(ImGuiInputTextFlags, AllowTabInput),
 	ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),

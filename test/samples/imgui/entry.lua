@@ -82,7 +82,32 @@ end
 
 local editbox = {
 	label = "Edit",
+	flags = enum.InputTextFlags { "CallbackCharFilter", "CallbackHistory", "CallbackCompletion" },
 }
+
+function editbox:filter(c)
+	if c == 65 then
+		-- filter 'A'
+		return
+	end
+	return c
+end
+
+local t = 0
+function editbox:up()
+	t = t - 1
+	return tostring(t)
+end
+
+function editbox:down()
+	t = t + 1
+	return tostring(t)
+end
+
+function editbox:tab(pos)
+	local text = tostring(self.text)
+	return text:sub(1, pos)
+end
 
 local function update_ui()
 	widget.Button "Test"
