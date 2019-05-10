@@ -109,6 +109,12 @@ function editbox:tab(pos)
 	return text:sub(1, pos)
 end
 
+local editfloat = {
+	0,
+	step = 0.1,
+	step_fast = 10,
+}
+
 local function update_ui()
 	widget.Button "Test"
 	widget.SmallButton "Small"
@@ -119,6 +125,7 @@ local function update_ui()
 	if widget.InputText(editbox) then
 		print(editbox.text)
 	end
+	widget.InputFloat(editfloat)
 end
 
 function callback.update()

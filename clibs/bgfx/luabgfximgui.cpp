@@ -166,8 +166,8 @@ wBullet(lua_State *L) {
 	return 0;
 }
 
-static float
-read_field_float(lua_State *L, const char * field, float v) {
+static double
+read_field_float(lua_State *L, const char * field, double v) {
 	if (lua_getfield(L, 1, field) == LUA_TNUMBER) {
 		v = lua_tonumber(L, -1);
 	}
@@ -272,9 +272,11 @@ drag_float(lua_State *L, int n) {
 		change = ImGui::DragFloat4(label, v, speed, min, max, format, power);
 		break;
 	}
-	for (i=0;i<n;i++) {
-		lua_pushnumber(L, v[i]);
-		lua_seti(L, 1, i+1);
+	if (change) {
+		for (i=0;i<n;i++) {
+			lua_pushnumber(L, v[i]);
+			lua_seti(L, 1, i+1);
+		}
 	}
 	return change;
 }
@@ -315,9 +317,11 @@ drag_int(lua_State *L, int n) {
 		change = ImGui::DragInt4(label, v, speed, min, max, format);
 		break;
 	}
-	for (i=0;i<n;i++) {
-		lua_pushinteger(L, v[i]);
-		lua_seti(L, 1, i+1);
+	if (change) {
+		for (i=0;i<n;i++) {
+			lua_pushinteger(L, v[i]);
+			lua_seti(L, 1, i+1);
+		}
 	}
 	return change;
 }
@@ -352,9 +356,11 @@ slider_float(lua_State *L, int n) {
 		change = ImGui::SliderFloat4(label, v, min, max, format);
 		break;
 	}
-	for (i=0;i<n;i++) {
-		lua_pushnumber(L, v[i]);
-		lua_seti(L, 1, i+1);
+	if (change) {
+		for (i=0;i<n;i++) {
+			lua_pushnumber(L, v[i]);
+			lua_seti(L, 1, i+1);
+		}
 	}
 	return change;
 }
@@ -389,9 +395,11 @@ slider_int(lua_State *L, int n) {
 		change = ImGui::SliderInt4(label, v, min, max, format);
 		break;
 	}
-	for (i=0;i<n;i++) {
-		lua_pushinteger(L, v[i]);
-		lua_seti(L, 1, i+1);
+	if (change) {
+		for (i=0;i<n;i++) {
+			lua_pushinteger(L, v[i]);
+			lua_seti(L, 1, i+1);
+		}
 	}
 	return change;
 }
@@ -409,8 +417,10 @@ slider_angle(lua_State *L) {
 	float max = read_field_float(L, "max", +360.0f);
 	const char * format = read_field_string(L, "format", "%.0f deg");
 	float change = ImGui::SliderAngle(label, &r, min, max, format);
-	lua_pushnumber(L, r);
-	lua_seti(L, -2, 1);
+	if (change) {
+		lua_pushnumber(L, r);
+		lua_seti(L, -2, 1);
+	}
 	return change;
 }
 
@@ -430,8 +440,10 @@ vslider_float(lua_State *L) {
 	const char * format = read_field_string(L, "format", "%.3f");
 	float power = read_field_float(L, "power", 1.0f);
 	float change = ImGui::VSliderFloat(label, ImVec2(width, height), &r, min, max, format, power);
-	lua_pushnumber(L, r);
-	lua_seti(L, -2, 1);
+	if (change) {
+		lua_pushnumber(L, r);
+		lua_seti(L, -2, 1);
+	}
 	return change;
 }
 
@@ -450,8 +462,10 @@ vslider_int(lua_State *L) {
 	int max = read_field_checkint(L, "max");
 	const char * format = read_field_string(L, "format", "%d");
 	float change = ImGui::VSliderInt(label, ImVec2(width, height), &r, min, max, format);
-	lua_pushinteger(L, r);
-	lua_seti(L, -2, 1);
+	if (change) {
+		lua_pushinteger(L, r);
+		lua_seti(L, -2, 1);
+	}
 	return change;
 }
 
@@ -580,9 +594,11 @@ wColor(lua_State *L, int type) {
 			change = ImGui::ColorPicker4(label, v, flags, (const float *)ref);
 		}
 	}
-	for (i=0;i<n;i++) {
-		lua_pushnumber(L, v[i]);
-		lua_seti(L, 1, i+1);
+	if (change) {
+		for (i=0;i<n;i++) {
+			lua_pushnumber(L, v[i]);
+			lua_seti(L, 1, i+1);
+		}
 	}
 	lua_pushboolean(L, change);
 	return 1;
@@ -775,6 +791,131 @@ wInputText(lua_State *L) {
 	lua_pushboolean(L, change);
 	return 1;
 }
+
+static bool
+input_float(lua_State *L, const char *label, const char *format, ImGuiInputTextFlags flags, int n) {
+	if (n == 1) {
+		double step = read_field_float(L, "step", 0);
+		double step_fast = read_field_float(L, "step_fast", 0);
+		lua_geti(L, 1, 1);
+		double v = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+		bool r = ImGui::InputDouble(label, &v, step, step_fast, format, flags);
+		if (r) {
+			lua_pushnumber(L, v);
+			lua_seti(L, 1, 1);
+		}
+		return r;
+	} else {
+		float v[4];
+		int i;
+		for (i=0;i<n;i++) {
+			lua_geti(L, 1, i+1);
+			v[i] = lua_tonumber(L, -1);
+			lua_pop(L, 1);
+		}
+		bool r = false;
+		switch (n) {
+		case 2:
+			r = ImGui::InputFloat2(label, v, format, flags);
+			break;
+		case 3:
+			r = ImGui::InputFloat3(label, v, format, flags);
+			break;
+		case 4:
+			r = ImGui::InputFloat4(label, v, format, flags);
+			break;
+		}
+		if (r) {
+			for (i=0;i<n;i++) {
+				lua_pushnumber(L, v[i]);
+				lua_seti(L, 1, i+1);
+			}
+		}
+		return r;
+	}
+}
+
+static bool
+input_int(lua_State *L, const char *label, ImGuiInputTextFlags flags, int n) {
+	int step = 1;
+	int step_fast = 100;
+	if (n > 1) {
+		step = read_field_int(L, "step", 1);
+		step_fast = read_field_int(L, "step_fast", 100);
+	}
+	int v[4];
+	int i;
+	for (i=0;i<n;i++) {
+		lua_geti(L, 1, i+1);
+		v[i] = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+	}
+	bool r = false;
+	switch (n) {
+	case 1:
+		r = ImGui::InputInt(label, v, step, step_fast, flags);
+		break;
+	case 2:
+		r = ImGui::InputInt2(label, v, flags);
+		break;
+	case 3:
+		r = ImGui::InputInt3(label, v, flags);
+		break;
+	case 4:
+		r = ImGui::InputInt4(label, v, flags);
+		break;
+	}
+	if (r) {
+		for (i=0;i<n;i++) {
+			lua_pushinteger(L, v[i]);
+			lua_seti(L, 1, i+1);
+		}
+	}
+	return r;
+}
+
+static int
+wInputFloat(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	lua_len(L, 1);
+	int n = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+	if (n < 1 || n > 4)
+		return luaL_error(L, "Need 1-4 numbers");
+	const char * label = read_field_string(L, "label", "InputFloat");
+	ImGuiInputTextFlags flags = read_field_int(L, "flags", 0);
+	const char * format = read_field_string(L, "format", "%.3f");
+	bool change = input_float(L, label, format, flags, n);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+wInputInt(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	lua_len(L, 1);
+	int n = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+	if (n < 1 || n > 4)
+		return luaL_error(L, "Need 1-4 int");
+	const char * label = read_field_string(L, "label", "InputInt");
+	ImGuiInputTextFlags flags = read_field_int(L, "flags", 0);
+	bool change = input_int(L, label, flags, n);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+/*
+    IMGUI_API bool          InputFloat(const char* label, float* v, float step = 0.0f, float step_fast = 0.0f, const char* format = "%.3f", ImGuiInputTextFlags flags = 0);
+    IMGUI_API bool          InputFloat2(const char* label, float v[2], const char* format = "%.3f", ImGuiInputTextFlags flags = 0);
+    IMGUI_API bool          InputFloat3(const char* label, float v[3], const char* format = "%.3f", ImGuiInputTextFlags flags = 0);
+    IMGUI_API bool          InputFloat4(const char* label, float v[4], const char* format = "%.3f", ImGuiInputTextFlags flags = 0);
+    IMGUI_API bool          InputInt(const char* label, int* v, int step = 1, int step_fast = 100, ImGuiInputTextFlags flags = 0);
+    IMGUI_API bool          InputInt2(const char* label, int v[2], ImGuiInputTextFlags flags = 0);
+    IMGUI_API bool          InputInt3(const char* label, int v[3], ImGuiInputTextFlags flags = 0);
+    IMGUI_API bool          InputInt4(const char* label, int v[4], ImGuiInputTextFlags flags = 0);
+*/
 
 // enums
 struct enum_pair {
@@ -999,6 +1140,8 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "ColorPicker", wColorPicker },
 		{ "ColorButton", wColorButton },
 		{ "InputText", wInputText },
+		{ "InputFloat", wInputFloat },
+		{ "InputInt", wInputInt },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, widgets);
