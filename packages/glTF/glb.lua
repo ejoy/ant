@@ -6,6 +6,13 @@ local function chunk(f, checktype)
     return f:read(length)
 end
 
+local function write_chunk(f, datatype, data)
+	local length = #data
+	local chunkinfo = string.pack("<I4c4", length, datatype)
+	f:write(chunkinfo)
+	f:write(data)
+end
+
 local function decode(filename)
     local f = assert(io.open(filename, "rb"))
     local header = f:read(12)
@@ -22,8 +29,8 @@ local function encode(filename, version, json, bindata)
 	local f = assert(io.open(filename, "wb"))
 	local header = string.pack("<c4I4I4", "glTF", version, 0)
 	f:write(header)
-	f:write(json)
-	f:write(bindata)
+	write_chunk(f, "JSON", json)
+	write_chunk(f, "BIN\0", bindata)	
 	f:close()
 end
 

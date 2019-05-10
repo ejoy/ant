@@ -72,7 +72,7 @@ function model_review_system:init()
 		},
 		can_render = true,
 		mesh = {
-			ref_path = fs.path "//ant.resources/cube.mesh",
+			ref_path = fs.path "//ant.resources/depiction/test_glb.mesh",
 		},
 		material = {
 			content = {

@@ -21,20 +21,20 @@ extern "C"
 
 struct primitive {
 	struct bufferview {		
-		uint32_t offset;
-		uint32_t length;
+		uint32_t byteOffset;
+		uint32_t byteLength;
 		uint32_t stride;
 		uint32_t target;
 	};
 
 	struct accessor {
-		uint32_t bufferview;
-		uint32_t offset;
-		uint32_t comptype;
+		uint32_t bufferView;
+		uint32_t byteOffset;
+		uint32_t componentType;
+		uint32_t count;
 		uint8_t normalized;
-		uint8_t elemcount;
 		uint8_t type;
-		uint8_t padding;
+		uint8_t padding[2];
 		uint32_t minvalue_count;
 		float minvalues[16];
 		uint32_t maxvalue_count;
@@ -105,6 +105,24 @@ static elem_type elem_type_mapper[] = {
 struct attribute_buffer {
 	uint32_t buffersize;
 	uint8_t *data;
+	attribute_buffer()
+		: buffersize(0)
+		, data(nullptr){}
+
+	attribute_buffer(attribute_buffer &&other) {
+		data = other.data;
+		buffersize = other.buffersize;
+		other.data = nullptr;
+		other.buffersize = 0;
+	}
+
+	~attribute_buffer() {
+		if (data) {
+			delete[]data;
+			data = nullptr;
+			buffersize = 0;
+		}
+	}
 };
 
 struct bufferinfo {
@@ -121,12 +139,19 @@ fetch_load_config(lua_State *L, int idx, load_config &config);
 
 static inline void
 valid_primitive_data(const primitive &prim) {
-	for (const auto&a : prim.attributes) {
-		const uint32_t accidx = a.second;
+	auto valid_accessor = [&prim](uint32_t accidx) {		
 		assert(accidx < prim.accessors.size());
 
 		const auto& acc = prim.accessors[accidx];
-		assert(acc.bufferview < prim.bufferviews.size());
+		assert(acc.bufferView < prim.bufferviews.size());
+	};
+
+	for (const auto&a : prim.attributes) {
+		valid_accessor(a.second);
+	}
+
+	if (prim.indices != 0xffffffff) {
+		valid_accessor(prim.indices);
 	}
 }
 
@@ -200,11 +225,11 @@ decl_desc(uint32_t attribname, const primitive::accessor *accessor) {
 	const auto& attrib = attribname_mapper[attribname];
 
 	elem[0] = attrib.sname[0];
-	elem[1] = '0' + accessor->elemcount;
+	elem[1] = '0' + accessor->count;
 	elem[2] = '0' + attrib.channel;
 	elem[3] = accessor->normalized ? 'n' : 'N';
 	elem[4] = 'I';	//not always to int
-	elem[5] = to_type(accessor->comptype);
+	elem[5] = to_type(accessor->componentType);
 
 	return elem;
 }
@@ -254,7 +279,7 @@ buffer_elemsize(const bufferinfo_array &bia) {
 	uint32_t sizebytes = 0;
 	for (const auto &bi : bia) {
 		const auto& accessor = bi.accessor;
-		sizebytes += elem_size(accessor->type, accessor->comptype);
+		sizebytes += elem_size(accessor->type, accessor->componentType);
 	}
 
 	return sizebytes;
@@ -267,7 +292,7 @@ get_num_vertices(const primitive &prim) {
 	auto itpos = prim.attributes.find(posattrib);
 	if (itpos != prim.attributes.end()) {
 		const auto &accidx = itpos->second;
-		return prim.accessors[accidx].elemcount;
+		return prim.accessors[accidx].count;
 	}
 
 	return 0;
@@ -277,21 +302,52 @@ static std::string
 serialize_primitive(const primitive &prim) {
 	std::ostringstream oss;
 
-	oss << (uint32_t)prim.attributes.size();
+	auto write_u32 = [&oss](uint32_t v) {		
+		oss.write((const char*)&v, sizeof(uint32_t));
+	};
 
+	write_u32((uint32_t)prim.attributes.size());
 	for (const auto& attrib : prim.attributes) {
-		oss << attrib.first << attrib.second;		
+		write_u32(attrib.first);
+		write_u32(attrib.second);		
 	}
 
-	oss << prim.indices;
-
-	oss << (uint32_t)prim.accessors.size();
+	write_u32(prim.indices);
+	write_u32((uint32_t)prim.accessors.size());
+	
 	oss.write((const char*)(&prim.accessors[0]), sizeof(primitive::accessor) * prim.accessors.size());
 
-	oss << (uint32_t)prim.bufferviews.size();
+	write_u32((uint32_t)prim.bufferviews.size());
 	oss.write((const char*)(&prim.bufferviews[0]), sizeof(primitive::bufferview) * prim.bufferviews.size());
 
 	return oss.str();
+}
+
+static uint32_t
+fetch_buffer(const primitive &prim, const primitive::accessor &acc, const char* bindata, 
+	uint32_t num_elem, attribute_buffer &abuffer) {
+	const primitive::bufferview& bv = prim.bufferviews[acc.bufferView];
+	const uint32_t offset = acc.byteOffset + bv.byteOffset;
+	const char* srcbuf = bindata + offset;
+
+	const uint32_t elemsize = elem_size(acc.type, acc.componentType);
+
+	abuffer.buffersize = elemsize * num_elem;
+	abuffer.data = new uint8_t[abuffer.buffersize];
+
+	if (bv.stride != 0) {
+		const uint32_t srcstride = bv.stride;
+		uint8_t *data = abuffer.data;
+		for (uint32_t iv = 0; iv < num_elem; ++iv) {
+			memcpy(data, srcbuf, elemsize);
+			srcbuf += srcstride;
+			data += elemsize;
+		}
+	} else {
+		memcpy(abuffer.data, srcbuf, abuffer.buffersize);
+	}
+
+	return abuffer.buffersize;
 }
 
 static void
@@ -301,37 +357,10 @@ fetch_attribute_buffers(const primitive &prim, const char* bindata, attrib_buffe
 	for (const auto& attrib : prim.attributes) {
 		const uint32_t attribname = attrib.first;
 		const primitive::accessor& acc = prim.accessors[attrib.second];
-		const primitive::bufferview& bv = prim.bufferviews[acc.bufferview];
 
-		const uint32_t offset = acc.offset + bv.offset;
-
-		const char* srcbuf = bindata + offset;
-
-		const uint32_t elemsize = elem_size(acc.type, acc.comptype);
 		auto& abuffer = abuffers[attribname];
-
-		abuffer.buffersize = elemsize * num_vertices;
-		abuffer.data = new uint8_t[abuffer.buffersize];
-		const uint32_t srcstride = bv.stride != 0 ? bv.stride : elemsize;
-
-		uint8_t *data = abuffer.data;
-		for (uint32_t iv = 0; iv < num_vertices; ++iv) {
-			memcpy(data, srcbuf, elemsize);
-			srcbuf += srcstride;
-			data += elemsize;
-		}
+		fetch_buffer(prim, acc, bindata, num_vertices, abuffer);
 	}
-}
-
-static inline void
-fetch_attrib_buffer(lua_State *L, int idx, attribute_buffer &ab) {
-	lua_getfield(L, idx, "sizebytes");
-	ab.buffersize = (uint32_t)lua_tointeger(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, idx, "data");
-	ab.data = (uint8_t*)lua_touserdata(L, -1);
-	lua_pop(L, 1);
 }
 
 static inline uint32_t 
@@ -348,120 +377,101 @@ find_attrib_name(const std::string &elem) {
 	}
 
 	return (uint32_t)-1;
-};
-
-static uint32_t
-calc_stride(const primitive &prim, const std::vector<uint32_t> &attribs) {
-	uint32_t stride = 0;
-	for (uint32_t a : attribs) {
-		auto it = prim.attributes.find(a);
-		assert(it != prim.attributes.end());
-		const uint32_t accidx = it->second;
-		const auto& accessor = prim.accessors[accidx];
-		
-		stride += elem_size(accessor.type, accessor.comptype);
-	}
-
-	return stride;
 }
 
 static void
+rearrange_indices_buffer(primitive &prim, uint32_t binaryoffset, const char* bindata, 
+	std::vector<primitive::bufferview> &new_bvs, std::vector<attribute_buffer> &newbuffers) {
+
+	if (prim.indices != 0xffffffff) {
+		auto& acc = prim.accessors[prim.indices];
+		primitive::bufferview bv = prim.bufferviews[acc.bufferView];
+		bv.byteOffset = binaryoffset;
+		acc.bufferView = (uint32_t)new_bvs.size();
+		new_bvs.push_back(bv);
+
+		newbuffers.push_back(attribute_buffer());
+		fetch_buffer(prim, acc, bindata, acc.count, newbuffers.back());
+	}
+}
+
+static uint32_t
 rearrange_buffers(
 	const attrib_buffers& abuffers, 
-	const load_config& cfg, 
+	const load_config& cfg, 	
 	primitive& prim, 
+	std::vector<primitive::bufferview>&	newbufferviews,
 	std::vector<attribute_buffer> &newbuffers) {
 
-	std::vector<primitive::bufferview>	newbufferviews(cfg.layouts.size());
 	uint32_t binary_offset = 0;
-
+	newbufferviews.resize(cfg.layouts.size());
 	newbuffers.resize(cfg.layouts.size());
 
-	for (uint32_t ii = 0; ii < cfg.layouts.size(); ++ii) {
-		const auto& layout = cfg.layouts[ii];
+	for (uint32_t bvidx = 0; bvidx < cfg.layouts.size(); ++bvidx) {
+		const auto& layout = cfg.layouts[bvidx];
 
 		auto elems = split_layout_elems(layout);
 
-		auto &newbuf = newbuffers[ii];
-		std::vector<uint32_t> attribs;
+		auto &newbuf = newbuffers[bvidx];
+		struct attrib_info {
+			uint32_t name;
+			uint32_t elemsize;
+			uint8_t *data;
+		};
+		std::vector<attrib_info> attribs;
+
+		const auto& attributes = prim.attributes;
+
+		uint32_t stride = 0;
 		for (const auto &e : elems) {
 			const uint32_t attribname = find_attrib_name(e);
-			auto it = abuffers.find(attribname);
-			if (it != abuffers.end()) {
-				const auto& ab = it->second;
+			auto itAB = abuffers.find(attribname);
+			if (itAB != abuffers.end()) {
+				const auto& ab = itAB->second;
 				newbuf.buffersize += ab.buffersize;
-				attribs.push_back(attribname);
+
+				auto itAttrib = attributes.find(attribname);
+				if (itAttrib == attributes.end()) {
+					assert("could name found attribute in seri primitive data");
+				}
+
+				primitive::accessor& acc = prim.accessors[itAttrib->second];
+				const uint32_t elemsize = elem_size(acc.type, acc.componentType);
+
+				acc.byteOffset = stride;
+				acc.bufferView = bvidx;
+				stride += elemsize;
+
+				attribs.push_back(attrib_info{attribname, elemsize, ab.data});
 			} else {
 				assert("not found attribute need create new buffer or error this");
 			}
 		}
 
-		auto &newbv = newbufferviews[ii];
-		newbv.offset = binary_offset;
-		newbv.length = newbuf.buffersize;
-		newbv.stride = calc_stride(prim, attribs);
-		newbv.target = target_type::ARRAY_BUFFER;		
+		auto &newbv = newbufferviews[bvidx];
+		newbv.byteOffset = binary_offset;
+		newbv.byteLength = newbuf.buffersize;
+		newbv.stride	= stride;
+		newbv.target	= target_type::ARRAY_BUFFER;		
 
-		const auto& attributes = prim.attributes;
+		assert(newbuf.data == nullptr);
 		newbuf.data = new uint8_t[newbuf.buffersize];
-		uint8_t *data = newbuf.data;
-		uint32_t attriboffset = 0;
+		
+		const uint32_t num_vertices = get_num_vertices(prim);
 
-		for (const auto &attribname : attribs) {
-			auto it = abuffers.find(attribname);
-			assert(it != abuffers.end());
-			const auto& ab = it->second;
-			memcpy(data, ab.data, ab.buffersize);
-
-			auto itFound = attributes.find(attribname);
-			if (itFound == attributes.end()) {
-				assert("could name found attribute in seri primitive data");				
+		for (uint32_t ii = 0; ii < num_vertices; ++ii) {
+			uint8_t *vertex = newbuf.data + ii * stride;
+			for (const auto &ainfo : attribs) {
+				const uint8_t *srcdata = ainfo.data;
+				memcpy(vertex, srcdata + ii * ainfo.elemsize, ainfo.elemsize);
+				vertex += ainfo.elemsize;
 			}
-
-			primitive::accessor& acc = prim.accessors[itFound->second];
-			const uint32_t elemsize = elem_size(acc.type, acc.elemcount);
-
-			acc.offset = attriboffset;
-			attriboffset += elemsize;
 		}
 
-		binary_offset = newbuf.buffersize;
+		binary_offset += newbuf.buffersize;
 	}
 
-	prim.bufferviews.swap(newbufferviews);
-}
-
-static int
-lseriazlie_buffers(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-
-	std::map<uint32_t, uint32_t>	attriboffset;
-	std::ostringstream oss;
-
-	uint32_t offset = 0;
-	lua_pushnil(L);
-	while (lua_next(L, 1) != 0) {
-		const uint32_t attribname = (uint32_t)luaL_checkinteger(L, -2);
-
-		luaL_checktype(L, -1, LUA_TTABLE);
-		attribute_buffer ab;
-		fetch_attrib_buffer(L, -1, ab);
-
-		oss.write((const char*)ab.data, ab.buffersize);
-		attriboffset[attribname] = offset;
-		offset += ab.buffersize;
-	}
-
-	const std::string buffer = oss.str();
-	lua_pushlstring(L, buffer.c_str(), buffer.size());
-
-	lua_createtable(L, 0, (int)attriboffset.size());
-	for (const auto &p : attriboffset) {
-		lua_pushinteger(L, p.second);
-		lua_seti(L, -2, p.first);
-	}
-
-	return 1;
+	return binary_offset;
 }
 
 static std::string
@@ -488,7 +498,11 @@ lconvert_buffers(lua_State *L) {
 	fetch_attribute_buffers(prim, bindata, abuffers);
 
 	std::vector<attribute_buffer> newbuffers;
-	rearrange_buffers(abuffers, cfg, prim, newbuffers);
+	std::vector<primitive::bufferview>	newbufferviews;
+	const uint32_t binary_offset = rearrange_buffers(abuffers, cfg, prim, newbufferviews, newbuffers);
+	rearrange_indices_buffer(prim, binary_offset, bindata, newbufferviews, newbuffers);
+
+	prim.bufferviews.swap(newbufferviews);
 
 	const std::string seri_prim = serialize_primitive(prim);
 	const std::string newbin = serialize_buffers(newbuffers);
@@ -501,7 +515,7 @@ lconvert_buffers(lua_State *L) {
 
 extern "C" {
 	MC_EXPORT int
-		luaopen_gltf_converter(lua_State *L) {
+		luaopen_meshconverter_gltf(lua_State *L) {
 		const struct luaL_Reg libs[] = {	
 			{ "convert_buffers", lconvert_buffers, },
 			{ NULL, NULL },

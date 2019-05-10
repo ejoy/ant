@@ -14,7 +14,7 @@ refine_layout(std::string &elem);
 std::vector<std::string>
 split_layout_elems(const std::string &layout);
 
-std::string&
+std::string
 refine_layouts(std::string &layout);
 
 size_t

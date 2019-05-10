@@ -14,19 +14,18 @@ split_string(const std::string &ss, char delim) {
 	return vv;
 }
 
+const char* s_default_layout = "_30NIf";
+
 std::string
 GetDefaultVertexLayoutElem() {
-	return "_30NIf";
+	return s_default_layout;
 }
 
 std::string&
 refine_layout(std::string &elem) {
-	assert(elem.empty());
-
-	char defaultlayout[] = "_30NIf";
-
+	assert(!elem.empty());
 	if (elem.size() < 6) {
-		elem += defaultlayout + elem.size() - 1;
+		elem += s_default_layout + elem.size();
 	}
 
 	return elem;
@@ -42,15 +41,17 @@ split_layout_elems(const std::string &layout) {
 	return elems;
 }
 
-std::string&
+std::string
 refine_layouts(std::string &layout) {
 	auto elems = split_layout_elems(layout);
-
+	
 	std::string fulllayout;
-	for (const auto &e : elems) {
+	for (const auto &e : elems){
+		if (!fulllayout.empty()) {
+			fulllayout += "|";
+		}
 		fulllayout += e;
 	}
-
 	return fulllayout;
 }
 

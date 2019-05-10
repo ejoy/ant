@@ -2,7 +2,7 @@ local glTF = import_package "ant.glTF"
 local glbloader = glTF.glb
 local gltfloader = glTF.gltf
 
-local gltf_converter = require "gltf.converter"
+local gltf_converter = require "meshconverter.gltf"
 
 local componenttype_bgfxtype_maper = {
 	[5120] = "", 		--"BYTE",
@@ -47,8 +47,8 @@ is_4_byte_align(bufferview_sizebytes)
 
 local function compile_bufferview(bv)
 	return string.pack("<I4I4I4I4",
-		bv.byteoffset, 
-		bv.bytelength,
+		bv.byteOffset, 
+		bv.byteLength,
 		bv.stride or 0,
 		bv.target or ENUM_ARRAY_BUFFER)
 end
@@ -62,16 +62,16 @@ local function compile_number_array(numberarray)
 	return string.pack("<I4ffffffffffffffff", num, table.unpack(numberarray))
 end
 
-local accessor_sizebytes = (4 + 4 + 4 + 1 + 1 + 1 + 1) + (4 + 16 * 4) + (4 + 16 * 4)
+local accessor_sizebytes = (4 + 4 + 4 + 4 + 1 + 1 + 2) + (4 + 16 * 4) + (4 + 16 * 4)
 is_4_byte_align(accessor_sizebytes)
 
 local function compile_accessor(accessor, new_bvidx)
-	return string.pack("<I4I4I4I1I1I1I1", 
+	return string.pack("<I4I4I4I4I1I1I2", 
 		new_bvidx,
-		accessor.byteoffset,
-		accessor.componenttype,
-		accessor.normalized and 1 or 0,
+		accessor.byteOffset,
+		accessor.componentType,
 		accessor.count,
+		accessor.normalized and 1 or 0,
 		accessor_types[accessor.type],
 		0)	-- padding data for 4 bytes align
 		.. compile_number_array(accessor.min or {})
@@ -109,7 +109,7 @@ local function compile_primitive(scene, primitive)
 	local attributes = primitive.attributes
 
 	local accessors = scene.accessors
-	local bufferviews = scene.bufferviews
+	local bufferViews = scene.bufferViews
 
 	local seri_attrib = {}
 	local seri_accessor = {}
@@ -118,11 +118,18 @@ local function compile_primitive(scene, primitive)
 	local function serialize_accessor(accessor)
 		local new_bvidx = #seri_bufferview+1
 		seri_accessor[#seri_accessor+1] = compile_accessor(accessor, new_bvidx-1)
-		seri_bufferview[#seri_bufferview+1] = compile_bufferview(bufferviews[accessor.buffview])
+		seri_bufferview[new_bvidx] = compile_bufferview(bufferViews[accessor.bufferView + 1])
 	end
 
-	for name, accidx in pairs(attributes) do
-		local accessor = accessors[accidx]
+	local sort_attributes = {}
+	for name in pairs(attributes) do
+		sort_attributes[#sort_attributes+1] = name
+	end
+	table.sort(sort_attributes, function (lhs, rhs) return attribname_mapper[lhs] < attribname_mapper[rhs] end)
+
+	for _, name in ipairs(sort_attributes) do
+		local accidx = attributes[name]
+		local accessor = accessors[accidx+1]
 		local attribidx = attribname_mapper[name]
 		seri_attrib[#seri_attrib+1] = string.pack("<I4I4", attribidx, #seri_accessor)
 
@@ -130,7 +137,9 @@ local function compile_primitive(scene, primitive)
 	end
 
 	if primitive.indices then
-		serialize_accessor(accessors[primitive.indices])
+		local indices_acc = accessors[primitive.indices + 1]
+		primitive.indices = #seri_accessor
+		serialize_accessor(indices_acc)
 	end
 
 	local function concat_table(t)
@@ -153,7 +162,7 @@ end
 
 local function deserialize_bufferview(seri_data, seri_offset)
 	local bv = {}
-	bv.byteoffset, bv.bytelength, bv.stride, bv.target = 
+	bv.byteOffset, bv.byteLength, bv.stride, bv.target = 
 	string.unpack("<I4I4I4I4", seri_data, seri_offset)	
 	seri_offset = seri_offset + 4 + 4 + 4 + 4
 	return bv, seri_offset
@@ -161,22 +170,22 @@ end
 
 local function deserialize_accessor(seri_data, seri_offset)
 	local acc = {}
-	acc.bufferview, acc.byteoffset,	acc.componenttype,	
-	acc.normalized,	acc.count,	acc.type = 
-	string.unpack("<I4I4I4I1I1I1I1", seri_data, seri_offset)
+	acc.bufferView, acc.byteOffset,	acc.componentType,	acc.count, 
+	acc.normalized,	acc.type = 
+	string.unpack("<I4I4I4I4I1I1", seri_data, seri_offset)
 	
-	seri_offset = seri_offset + 4 + 4 + 4 + 1 + 1 + 1 + 1
+	seri_offset = seri_offset + 4 + 4 + 4 + 4 + 1 + 1 + 2	-- 2 for padding
 
-	acc.normalized = acc.normalized ~= 0 and true or false
+	acc.normalized = acc.normalized ~= 0
 	acc.type = find_accessor_type(acc.type)
 
 	local function unpack_array(seri_data, seri_offset)
-		local array_fmt = "<I4ffffffffffffffff"
-		local nummin, min = string.unpack(array_fmt, seri_data, seri_offset)
+		local num = string.unpack("<I4", seri_data, seri_offset)
+		seri_offset = seri_offset + 4
+
+		local value = table.pack(string.unpack("<ffffffffffffffff", seri_data, seri_offset))		
 		local t = {}
-		for i = 1, nummin do
-			t[i] = min[1]
-		end
+		table.move(value, 1, num, 1, t)
 		return t
 	end
 
@@ -193,12 +202,15 @@ local function deserialize_primitive_itself(seri_data, seri_offset)
 
 	local prim = {}
 
+	local attributes = {}
 	for _=1, numattrib do
 		local attribidx, accidx = string.unpack("<I4I4", seri_data, seri_offset)
 		local name = find_attrib_name(attribidx)
-		prim[name] = accidx
+		attributes[name] = accidx
 		seri_offset = seri_offset + 4 + 4
 	end
+
+	prim.attributes = attributes
 
 	local index_buffer_idx = string.unpack("<I4", seri_data, seri_offset)
 	seri_offset = seri_offset + 4
@@ -207,7 +219,7 @@ local function deserialize_primitive_itself(seri_data, seri_offset)
 end
 
 local function deserialize_primitive(seri_data)	
-	local prim, seri_offset = deserialize_primitive_itself(seri_data, 0)
+	local prim, seri_offset = deserialize_primitive_itself(seri_data, 1)
 
 	local accessors = {}	
 	local num_accessor = string.unpack("<I4", seri_data, seri_offset)
@@ -242,17 +254,23 @@ return function (srcname, dstname, cfg)
 		local accessor_index_offset = #new_accessors
 		local bufferview_index_offset = #new_bufferviews
 
-		for _, acc in ipairs(newacc) do
-			acc.bufferview = acc.bufferview + bufferview_index_offset
+		if bufferview_index_offset ~= 0 then
+			for _, acc in ipairs(newacc) do
+				acc.bufferView = acc.bufferView + bufferview_index_offset
+			end
 		end
 
-		local newattributes = newprim.attributes
-		for k, v in pairs(newattributes) do
-			newattributes[k] = v + accessor_index_offset
+		if accessor_index_offset ~= 0 then
+			local newattributes = newprim.attributes
+			for k, v in pairs(newattributes) do
+				newattributes[k] = v + accessor_index_offset
+			end
 		end
 
-		for _, bv in ipairs(newbvs) do
-			bv.offset = bv.offset + bindata_offset
+		if bindata_offset ~= 0 then
+			for _, bv in ipairs(newbvs) do
+				bv.byteOffset = bv.byteOffset + bindata_offset
+			end
 		end
 	end
 
@@ -285,7 +303,7 @@ return function (srcname, dstname, cfg)
 		end
 	end
 
-	fetch_mesh_buffers(scenes[scene.scene])
+	fetch_mesh_buffers(scenes[scene.scene+1].nodes)
 	
 	local new_bindata = table.concat(new_bindata_table, "")
 
@@ -295,7 +313,7 @@ return function (srcname, dstname, cfg)
 		nodes = nodes,
 		meshes = meshes,
 		accessors = new_accessors,
-		bufferviews = new_bufferviews,
+		bufferViews = new_bufferviews,
 		buffers = {
 			{bytelength = #new_bindata,}
 		},
