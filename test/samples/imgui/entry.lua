@@ -46,7 +46,7 @@ function callback.size(width,height,type)
 end
 
 function callback.char(code)
-	print("CHAR", code)
+	attribs.input_char = code
 end
 
 function callback.error(err)
@@ -77,12 +77,7 @@ function callback.mouse_click(x, y, what, pressed)
 end
 
 function callback.keyboard(key, press, state)
-	local ctrl = state & 0x01
-	local alt = state & 0x02
-	local shift = state & 0x04
-	local sys = state & 0x08
-	local leftOrright = state & 0x10
-	print("KEYBOARD", key, "ctrl", ctrl, "alt", alt, "shift", shift, "sys", sys, "left|right", leftOrright, "is pressed", press)
+	imgui.key_state(key, press, state)
 end
 
 local function update_ui()

@@ -646,6 +646,26 @@ lSetColorEditOptions(lua_State *L) {
 	return 0;
 }
 
+// key, press, state
+static int
+lkeyState(lua_State *L) {
+	int key = luaL_checkinteger(L, 1);
+	int press = lua_toboolean(L, 2);
+	int state = luaL_checkinteger(L, 3);
+
+	ImGuiIO& io = ImGui::GetIO();
+
+	io.KeyCtrl = state & 0x01;
+	io.KeyShift = state & 0x04;
+	io.KeyAlt = state & 0x02;
+	io.KeySuper = state & 0x08;
+
+	if (key >=0 && key < 512) {
+		io.KeysDown[key] = press;
+	}
+	return 0;
+}
+
 extern "C" LUAMOD_API int
 luaopen_bgfx_imgui(lua_State *L) {
 	luaL_checkversion(L);
@@ -654,6 +674,7 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "destroy", ldestroy },
 		{ "begin_frame", lbeginFrame },
 		{ "end_frame", lendFrame },
+		{ "key_state", lkeyState },
 		{ "SetColorEditOptions", lSetColorEditOptions },
 		{ NULL, NULL },
 	};
