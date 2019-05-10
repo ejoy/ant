@@ -38,6 +38,17 @@ function callback.init(nwh, context, width, height)
 --	bgfx.set_debug "ST"
 end
 
+function callback.size(width,height,type)
+	attribs.width = width
+	attribs.height = height
+	bgfx.reset(width, height, "")
+	bgfx.set_view_rect(0, 0, 0, width, height)
+end
+
+function callback.char(code)
+	print("CHAR", code)
+end
+
 function callback.error(err)
 	print(err)
 end

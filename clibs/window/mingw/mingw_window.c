@@ -4,7 +4,7 @@
 
 // project path in my documents
 #define CLASSNAME L"ANTCLIENT"
-#define WINDOWSTYLE (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX)
+#define WINDOWSTYLE (WS_OVERLAPPEDWINDOW)
 
 static void
 get_xy(LPARAM lParam, int *x, int *y) {
@@ -41,6 +41,14 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
 		cb = (struct ant_window_callback *)cs->lpCreateParams;
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)cb);
+
+		msg.type = ANT_WINDOW_INIT;
+		msg.u.init.window = hWnd;
+		msg.u.init.context = 0;
+		msg.u.init.w = cs->cx;
+		msg.u.init.h = cs->cy;
+		cb->message(cb->ud, &msg);
+
 		break;
 	}
 	case WM_DESTROY:
@@ -103,6 +111,30 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		msg.u.keyboard.key = (int)wParam;
 		cb->message(cb->ud, &msg);
 		break;
+	case WM_SIZE:
+		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		msg.type = ANT_WINDOW_SIZE;
+		msg.u.size.x = LOWORD(lParam);
+		msg.u.size.y = HIWORD(lParam);
+		switch (wParam) {
+		case SIZE_MINIMIZED:
+			msg.u.size.type = 1;
+			break;
+		case SIZE_MAXIMIZED:
+			msg.u.size.type = 2;
+			break;
+		default:
+			msg.u.size.type = 0;
+			break;
+		}
+		cb->message(cb->ud, &msg);
+		break;
+	case WM_CHAR:
+		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		msg.type = ANT_WINDOW_CHAR_UTF16;
+		msg.u.unichar.code = wParam;
+		cb->message(cb->ud, &msg);
+		break;
 	}
 	return DefWindowProcW(hWnd, message, wParam, lParam);
 }
@@ -162,13 +194,6 @@ int window_create(struct ant_window_callback* cb, int w, int h, const char* titl
 	ShowWindow(wnd, SW_SHOWDEFAULT);
 	UpdateWindow(wnd);
 
-	struct ant_window_message msg;
-	msg.type = ANT_WINDOW_INIT;
-	msg.u.init.window = wnd;
-	msg.u.init.context = 0;
-	msg.u.init.w = w;
-	msg.u.init.h = h;
-	cb->message(cb->ud, &msg);
 	return 0;
 }
 
@@ -178,11 +203,11 @@ void window_mainloop(struct ant_window_callback* cb) {
 	update_msg.type = ANT_WINDOW_UPDATE;
 
 	for (;;) {
-		if (PeekMessage (&msg, NULL, 0, 0, PM_REMOVE)) {
+		if (PeekMessageW (&msg, NULL, 0, 0, PM_REMOVE)) {
 			if (msg.message == WM_QUIT)
 				break;
 			TranslateMessage(&msg); 
-			DispatchMessage(&msg); 
+			DispatchMessageW(&msg); 
 		} else {
 			cb->message(cb->ud, &update_msg);
 			Sleep(0);
