@@ -142,20 +142,18 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 static void
 register_class()
 {
-	WNDCLASSW wndclass;
-
-	wndclass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+	WNDCLASSEXW wndclass;
+	memset(&wndclass, 0, sizeof(wndclass));
+	wndclass.cbSize = sizeof(wndclass);
+	wndclass.style = CS_HREDRAW | CS_VREDRAW;// | CS_OWNDC;
 	wndclass.lpfnWndProc = WndProc;
-	wndclass.cbClsExtra = 0;
-	wndclass.cbWndExtra = 0;
 	wndclass.hInstance = GetModuleHandleW(0);
-	wndclass.hIcon = 0;
-	wndclass.hCursor = 0;
-	wndclass.hbrBackground = 0;
-	wndclass.lpszMenuName = 0; 
+	wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wndclass.lpszClassName = CLASSNAME;
+	wndclass.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 
-	RegisterClassW(&wndclass);
+	RegisterClassExW(&wndclass);
 }
 
 int window_init(struct ant_window_callback* cb) {
