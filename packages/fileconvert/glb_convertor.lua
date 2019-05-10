@@ -35,7 +35,7 @@ local ENUM_ARRAY_BUFFER = 34962
 local ENUM_ELEMENT_ARRAY_BUFFER = 34963
 
 
-local bufferview_sizebytes = 4 + 4 + 4 + 4 + 4
+local bufferview_sizebytes = 4 + 4 + 4 + 4
 
 local function is_4_byte_align(num)
 	if num // 4 ~= num / 4 then
@@ -46,7 +46,7 @@ end
 is_4_byte_align(bufferview_sizebytes)
 
 local function compile_bufferview(bv)
-	return string.pack("<I4I4I4I4I4",
+	return string.pack("<I4I4I4I4",
 		bv.byteoffset, 
 		bv.bytelength,
 		bv.stride or 0,
@@ -62,7 +62,7 @@ local function compile_number_array(numberarray)
 	return string.pack("<I4ffffffffffffffff", num, table.unpack(numberarray))
 end
 
-local accessor_sizebytes = bufferview_sizebytes + (4 + 1 + 1 + 1 + 1) + (4 + 16 * 4) + (4 + 16 * 4)
+local accessor_sizebytes = (4 + 4 + 4 + 1 + 1 + 1 + 1) + (4 + 16 * 4) + (4 + 16 * 4)
 is_4_byte_align(accessor_sizebytes)
 
 local function compile_accessor(accessor, new_bvidx)
@@ -151,37 +151,28 @@ local function find_attrib_name(attribname_idx)
 	end
 end
 
-local function find_accessor_idx(attributes, attribname_idx)
-	local name = find_attrib_name(attribname_idx)
-	local accidx = attributes[name]
-	return accidx or attributes[name .. "_0"]
-end
-
-local function deserialize_bufferview(seri_bv)
+local function deserialize_bufferview(seri_data, seri_offset)
 	local bv = {}
-	bv.index, bv.byteoffset, bv.bytelength, bv.stride, bv.target = 
-	string.unpack("<I4I4I4I4I4", seri_bv)
-	return bv
+	bv.byteoffset, bv.bytelength, bv.stride, bv.target = 
+	string.unpack("<I4I4I4I4", seri_data, seri_offset)	
+	seri_offset = seri_offset + 4 + 4 + 4 + 4
+	return bv, seri_offset
 end
 
-local function deserialize_accessor(seri_accessor)
-	local acc = {
-		bv = deserialize_bufferview(seri_accessor)
-	}
+local function deserialize_accessor(seri_data, seri_offset)
+	local acc = {}
+	acc.bufferview, acc.byteoffset,	acc.componenttype,	
+	acc.normalized,	acc.count,	acc.type = 
+	string.unpack("<I4I4I4I1I1I1I1", seri_data, seri_offset)
 	
-	local seri_accessor_members = seri_accessor:sub(bufferview_sizebytes)
-	acc.byteoffset,	acc.componenttype,	acc.normalized,	acc.count,	acc.type = 
-	string.unpack("<I4I4I1I1I1I1", seri_accessor_members)
-	
+	seri_offset = seri_offset + 4 + 4 + 4 + 1 + 1 + 1 + 1
+
 	acc.normalized = acc.normalized ~= 0 and true or false
 	acc.type = find_accessor_type(acc.type)
 
-	local arraysize = 4 + 16 * 4
-	local seri_arrays = seri_accessor:sub(accessor_sizebytes - 2 * arraysize)
-
-	local function unpack_array(seri_array)			
+	local function unpack_array(seri_data, seri_offset)
 		local array_fmt = "<I4ffffffffffffffff"
-		local nummin, min = string.unpack(array_fmt, seri_array)
+		local nummin, min = string.unpack(array_fmt, seri_data, seri_offset)
 		local t = {}
 		for i = 1, nummin do
 			t[i] = min[1]
@@ -189,52 +180,63 @@ local function deserialize_accessor(seri_accessor)
 		return t
 	end
 
-	acc.min = unpack_array(seri_arrays)
-	acc.max = unpack_array(seri_arrays:sub(arraysize))
-	return acc
+	acc.min = unpack_array(seri_data, seri_offset)
+	seri_offset = seri_offset + 4 + 16 * 4
+	acc.max = unpack_array(seri_data, seri_offset)
+	seri_offset = seri_offset + 4 + 16 * 4
+	return acc, seri_offset
 end
 
-local function deserialize_primitve(seri_prim)	
-	local numattrib = string.unpack("<I4", seri_prim)
-
-	local seri_attributes = seri_prim:sub(4)
+local function deserialize_primitive_itself(seri_data, seri_offset)
+	local numattrib = string.unpack("<I4", seri_data, seri_offset)
+	seri_offset = seri_offset + 4
 
 	local prim = {}
 
-	local seri_attrib = seri_attributes
-	for i=1, numattrib do
-		local attribname = string.unpack("<I4", seri_attrib)
-		local name = find_attrib_name(attribname)
-
-		prim[name] = deserialize_accessor(seri_attrib:sub(4))
-
-		seri_attrib = seri_attrib:sub(4+accessor_sizebytes)
+	for _=1, numattrib do
+		local attribidx, accidx = string.unpack("<I4I4", seri_data, seri_offset)
+		local name = find_attrib_name(attribidx)
+		prim[name] = accidx
+		seri_offset = seri_offset + 4 + 4
 	end
 
-	
-	local seri_indices = seri_attrib
-	assert(#seri_indices == accessor_sizebytes)
-	prim.indices = deserialize_accessor(seri_indices)
+	local index_buffer_idx = string.unpack("<I4", seri_data, seri_offset)
+	seri_offset = seri_offset + 4
+	prim.indices = index_buffer_idx ~= 0xffffffff and index_buffer_idx or nil
+	return prim, seri_offset
+end
 
-	return prim
+local function deserialize_primitive(seri_data)	
+	local prim, seri_offset = deserialize_primitive_itself(seri_data, 0)
+
+	local accessors = {}	
+	local num_accessor = string.unpack("<I4", seri_data, seri_offset)
+	seri_offset = seri_offset + 4
+	for ii=1, num_accessor do
+		accessors[ii], seri_offset = deserialize_accessor(seri_data, seri_offset)
+	end
+
+	local bufferviews = {}	
+	local num_bufferview = string.unpack("<I4", seri_data, seri_offset)
+	seri_offset = seri_offset + 4
+	for ii=1, num_bufferview do
+		bufferviews[ii], seri_offset = deserialize_bufferview(seri_data, seri_offset)
+	end
+
+	return prim, accessors, bufferviews
 end
 
 return function (srcname, dstname, cfg)
 	local version, jsondata, bindata = glbloader.decode(srcname)
 	local scene = gltfloader.decode(jsondata)
 
-	local scenes = scene.scenes
-	local nodes = scene.nodes
-	local meshes = scene.meshes	
-	local accessors = scene.accessors
-	local bufferviews = scene.bufferviews
+	local scenes, nodes, meshes = scene.scenes, scene.nodes, scene.meshes
 
 	local new_bindata_table = {}
 	local bindata_offset = 0
 
 	local new_accessors = {}
 	local new_bufferviews = {}	
-
 	
 	local function refine_prim_offset(newprim, newacc, newbvs)
 		local accessor_index_offset = #new_accessors
@@ -268,7 +270,7 @@ return function (srcname, dstname, cfg)
 				for idx, prim in ipairs(primitives) do
 					local seri_prim = compile_primitive(scene, prim)
 					local new_seri_prim, prim_binary_buffers = gltf_converter.convert_buffers(seri_prim, bindata, cfg)
-					local newprim, newacc, newbvs = deserialize_primitve(new_seri_prim)
+					local newprim, newacc, newbvs = deserialize_primitive(new_seri_prim)
 
 					refine_prim_offset(newprim, newacc, newbvs)
 
