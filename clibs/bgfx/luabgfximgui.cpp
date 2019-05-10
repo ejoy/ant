@@ -7,6 +7,7 @@ extern "C" {
 
 #include "imgui/imgui.h"
 #include <cstring>
+#include <cstdlib>
 
 static int
 lcreate(lua_State *L) {
@@ -31,13 +32,13 @@ lbeginFrame(lua_State *L) {
 	int32_t scroll = luaL_checkinteger(L, 6);
 	uint16_t width = luaL_checkinteger(L, 7);
 	uint16_t height = luaL_checkinteger(L, 8);
-	int inputChar = luaL_checkinteger(L, 9);
-	bgfx::ViewId view = luaL_checkinteger(L, 10);
+	bgfx::ViewId view = luaL_checkinteger(L, 9);
 	uint8_t button = 
 		(button1 ? IMGUI_MBUT_LEFT : 0) |
 		(button2 ? IMGUI_MBUT_RIGHT : 0) |
 		(button3 ? IMGUI_MBUT_MIDDLE : 0);
-	imguiBeginFrame(mx, my, button, scroll, width, height, inputChar, view);
+	// todo: use -1
+	imguiBeginFrame(mx, my, button, scroll, width, height, 0, view);
 	return 0;
 }
 
@@ -597,6 +598,112 @@ wColorPicker(lua_State *L) {
 	return wColor(L, COLOR_PICKER);
 }
 
+struct editbuf {
+	char * buf;
+	size_t size;
+	lua_State *L;
+};
+
+static int
+editbuf_tostring(lua_State *L) {
+	struct editbuf * ebuf = (struct editbuf *)lua_touserdata(L, 1);
+	lua_pushstring(L, ebuf->buf);
+	return 1;
+}
+
+static int
+editbuf_release(lua_State *L) {
+	struct editbuf * ebuf = (struct editbuf *)lua_touserdata(L, 1);
+	free(ebuf->buf);
+	ebuf->buf = NULL;
+	ebuf->size = 0;
+	return 0;
+}
+
+static void
+create_new_editbuf(lua_State *L) {
+	size_t sz;
+	const char * text = lua_tolstring(L, -1, &sz);
+	if (text == NULL) {
+		sz = 64;	// default buf size 64
+	} else {
+		++sz;
+	}
+	struct editbuf *ebuf = (struct editbuf *)lua_newuserdata(L, sizeof(*ebuf));
+	ebuf->buf = (char *)malloc(sz);
+	if (ebuf->buf == NULL)
+		luaL_error(L, "Edit buffer oom %u", (unsigned)sz);
+	ebuf->size = sz;
+	if (text) {
+		memcpy(ebuf->buf, text, sz);
+	} else {
+		ebuf->buf[0] = 0;
+	}
+	if (luaL_newmetatable(L, "IMGUI_EDITBUF")) {
+		lua_pushcfunction(L, editbuf_tostring);
+		lua_setfield(L, -2, "__tostring");
+		lua_pushcfunction(L, editbuf_release);
+		lua_setfield(L, -2, "__gc");
+	}
+	lua_setmetatable(L, -2);
+	lua_replace(L, -2);
+}
+
+static int
+edit_callback(ImGuiInputTextCallbackData *data) {
+	struct editbuf * ebuf = (struct editbuf *)data->UserData;
+	switch (data->EventFlag) {
+	case ImGuiInputTextFlags_CallbackResize: {
+		size_t newsize = ebuf->size;
+		while (newsize < (size_t)data->BufTextLen) {
+			newsize *= 2;
+		}
+		data->Buf = (char *)realloc(ebuf->buf, newsize);
+		if (data->Buf == NULL) {
+			data->Buf = ebuf->buf;
+			data->BufTextLen = 0;
+		} else {
+			ebuf->buf = data->Buf;
+			ebuf->size = newsize;
+		}
+		break;
+	}
+	}
+
+	return 0;
+}
+
+static int
+wInputText(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	const char * label = read_field_string(L, "label", "InputText");
+	ImGuiInputTextFlags flags = read_field_int(L, "flags", 0);
+	const char * hint = read_field_string(L, "hint", NULL);
+	int t = lua_getfield(L, 1, "text");
+	if (t == LUA_TSTRING || t == LUA_TNIL) {
+		create_new_editbuf(L);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, 1, "text");
+	}
+	struct editbuf * ebuf = (struct editbuf *)luaL_checkudata(L, -1, "IMGUI_EDITBUF");
+	ebuf->L = L;
+	bool change;
+	flags |= ImGuiInputTextFlags_CallbackResize;
+	if (flags & ImGuiInputTextFlags_Multiline) {
+		float width = read_field_float(L, "width", 0);
+		float height = read_field_float(L, "height", 0);
+		change = ImGui::InputTextMultiline(label, ebuf->buf, ebuf->size, ImVec2(width, height), flags, edit_callback, ebuf);
+	} else {
+		if (hint) {
+			change = ImGui::InputTextWithHint(label, hint, ebuf->buf, ebuf->size, flags, edit_callback, ebuf);
+		} else {
+			change = ImGui::InputText(label, ebuf->buf, ebuf->size, flags, edit_callback, ebuf);
+		}
+	}
+	lua_pushboolean(L, change);
+	return 1;
+}
+
 // enums
 struct enum_pair {
 	const char * name;
@@ -655,13 +762,129 @@ lkeyState(lua_State *L) {
 
 	ImGuiIO& io = ImGui::GetIO();
 
-	io.KeyCtrl = state & 0x01;
-	io.KeyShift = state & 0x04;
-	io.KeyAlt = state & 0x02;
-	io.KeySuper = state & 0x08;
+	io.KeyCtrl = (state & 0x01) != 0;
+	io.KeyAlt = (state & 0x02) != 0;
+	io.KeyShift = (state & 0x04) != 0;
+	io.KeySuper = (state & 0x08) != 0;
 
-	if (key >=0 && key < 512) {
+	if (key >=0 && key < 256) {
 		io.KeysDown[key] = press;
+	}
+	return 0;
+}
+
+static int
+linputChar(lua_State *L) {
+	int c = luaL_checkinteger(L, 1);
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddInputCharacter(c);
+	return 0;
+}
+
+static struct enum_pair eColorEditFlags[] = {
+	ENUM(ImGuiColorEditFlags, NoAlpha),
+	ENUM(ImGuiColorEditFlags, NoPicker),
+	ENUM(ImGuiColorEditFlags, NoOptions),
+	ENUM(ImGuiColorEditFlags, NoSmallPreview),
+	ENUM(ImGuiColorEditFlags, NoInputs),
+	ENUM(ImGuiColorEditFlags, NoTooltip),
+	ENUM(ImGuiColorEditFlags, NoLabel),
+	ENUM(ImGuiColorEditFlags, NoSidePreview),
+	ENUM(ImGuiColorEditFlags, NoDragDrop),
+	ENUM(ImGuiColorEditFlags, AlphaBar),
+	ENUM(ImGuiColorEditFlags, AlphaPreview),
+	ENUM(ImGuiColorEditFlags, AlphaPreviewHalf),
+	ENUM(ImGuiColorEditFlags, HDR),
+	ENUM(ImGuiColorEditFlags, DisplayRGB),
+	ENUM(ImGuiColorEditFlags, DisplayHSV),
+	ENUM(ImGuiColorEditFlags, DisplayHex),
+	ENUM(ImGuiColorEditFlags, Uint8),
+	ENUM(ImGuiColorEditFlags, Float),
+	ENUM(ImGuiColorEditFlags, PickerHueBar),
+	ENUM(ImGuiColorEditFlags, PickerHueWheel),
+	ENUM(ImGuiColorEditFlags, InputRGB),
+	ENUM(ImGuiColorEditFlags, InputHSV),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eInputTextFlags[] = {
+	ENUM(ImGuiInputTextFlags, CharsDecimal),
+	ENUM(ImGuiInputTextFlags, CharsHexadecimal),
+	ENUM(ImGuiInputTextFlags, CharsUppercase),
+	ENUM(ImGuiInputTextFlags, CharsNoBlank),
+	ENUM(ImGuiInputTextFlags, AutoSelectAll),
+	ENUM(ImGuiInputTextFlags, EnterReturnsTrue),
+	ENUM(ImGuiInputTextFlags, CallbackCompletion),
+	ENUM(ImGuiInputTextFlags, CallbackHistory),
+	ENUM(ImGuiInputTextFlags, CallbackAlways),
+	ENUM(ImGuiInputTextFlags, CallbackCharFilter),
+	ENUM(ImGuiInputTextFlags, AllowTabInput),
+	ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),
+	ENUM(ImGuiInputTextFlags, NoHorizontalScroll),
+	ENUM(ImGuiInputTextFlags, AlwaysInsertMode),
+	ENUM(ImGuiInputTextFlags, ReadOnly),
+	ENUM(ImGuiInputTextFlags, Password),
+	ENUM(ImGuiInputTextFlags, NoUndoRedo),
+	ENUM(ImGuiInputTextFlags, CharsScientific),
+	ENUM(ImGuiInputTextFlags, CallbackResize),
+	ENUM(ImGuiInputTextFlags, Multiline),
+	{ NULL, 0 },
+};
+
+struct keymap {
+	const char * name;
+	int index;
+};
+
+static int
+lkeymap(lua_State *L) {
+	static struct keymap map[] = {
+		{ "Tab", ImGuiKey_Tab },
+		{ "Left", ImGuiKey_LeftArrow },
+		{ "Right", ImGuiKey_RightArrow },
+		{ "Up", ImGuiKey_UpArrow },
+		{ "Down", ImGuiKey_DownArrow },
+		{ "PageUp", ImGuiKey_PageUp },
+		{ "PageDown", ImGuiKey_PageDown },
+		{ "Home", ImGuiKey_Home },
+		{ "End", ImGuiKey_End },
+		{ "Insert", ImGuiKey_Insert },
+		{ "Delete", ImGuiKey_Delete },
+		{ "Backspace", ImGuiKey_Backspace },
+		{ "Space", ImGuiKey_Space },
+		{ "Enter", ImGuiKey_Enter },
+		{ "Escape", ImGuiKey_Escape },
+		{ "A", 'A' },
+		{ "C", 'C' },
+		{ "V", 'V' },
+		{ "X", 'X' },
+		{ "Y", 'Y' },
+		{ "Z", 'Z' },
+		{ NULL, 0 },
+	};
+	ImGuiIO& io = ImGui::GetIO();
+	io.KeyMap[ImGuiKey_A] = 'A';
+	io.KeyMap[ImGuiKey_C] = 'C';
+	io.KeyMap[ImGuiKey_V] = 'V';
+	io.KeyMap[ImGuiKey_X] = 'X';
+	io.KeyMap[ImGuiKey_Y] = 'Y';
+	io.KeyMap[ImGuiKey_Z] = 'Z';
+
+	luaL_checktype(L, 1, LUA_TTABLE);
+	lua_pushnil(L);
+	while (lua_next(L, 1) != 0) {
+		if (lua_type(L, -2) == LUA_TSTRING && lua_type(L, -1) == LUA_TNUMBER && lua_isinteger(L, -1)) {
+			const char * key = lua_tostring(L, -2);
+			int value = lua_tointeger(L, -1);
+			int i;
+			for (i=0;map[i].name;i++) {
+				if (strcmp(map[i].name, key) == 0) {
+					io.KeyMap[map[i].index] = value;
+					break;
+				}
+			}
+		}
+		lua_pop(L, 1);
 	}
 	return 0;
 }
@@ -672,9 +895,11 @@ luaopen_bgfx_imgui(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "create", lcreate },
 		{ "destroy", ldestroy },
+		{ "keymap", lkeymap },
 		{ "begin_frame", lbeginFrame },
 		{ "end_frame", lendFrame },
 		{ "key_state", lkeyState },
+		{ "input_char", linputChar },
 		{ "SetColorEditOptions", lSetColorEditOptions },
 		{ NULL, NULL },
 	};
@@ -700,38 +925,16 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "ColorEdit", wColorEdit },
 		{ "ColorPicker", wColorPicker },
 		{ "ColorButton", wColorButton },
+		{ "InputText", wInputText },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, widgets);
 	lua_setfield(L, -2, "widget");
 
+
 	lua_newtable(L);
-	static struct enum_pair eColorEditFlags[] = {
-		ENUM(ImGuiColorEditFlags, NoAlpha),
-		ENUM(ImGuiColorEditFlags, NoPicker),
-		ENUM(ImGuiColorEditFlags, NoOptions),
-		ENUM(ImGuiColorEditFlags, NoSmallPreview),
-		ENUM(ImGuiColorEditFlags, NoInputs),
-		ENUM(ImGuiColorEditFlags, NoTooltip),
-		ENUM(ImGuiColorEditFlags, NoLabel),
-		ENUM(ImGuiColorEditFlags, NoSidePreview),
-		ENUM(ImGuiColorEditFlags, NoDragDrop),
-		ENUM(ImGuiColorEditFlags, AlphaBar),
-		ENUM(ImGuiColorEditFlags, AlphaPreview),
-		ENUM(ImGuiColorEditFlags, AlphaPreviewHalf),
-		ENUM(ImGuiColorEditFlags, HDR),
-		ENUM(ImGuiColorEditFlags, DisplayRGB),
-		ENUM(ImGuiColorEditFlags, DisplayHSV),
-		ENUM(ImGuiColorEditFlags, DisplayHex),
-		ENUM(ImGuiColorEditFlags, Uint8),
-		ENUM(ImGuiColorEditFlags, Float),
-		ENUM(ImGuiColorEditFlags, PickerHueBar),
-		ENUM(ImGuiColorEditFlags, PickerHueWheel),
-		ENUM(ImGuiColorEditFlags, InputRGB),
-		ENUM(ImGuiColorEditFlags, InputHSV),
-		{ NULL, 0 },
-	};
 	enum_gen(L, "ColorEditFlags", eColorEditFlags);
+	enum_gen(L, "InputTextFlags", eInputTextFlags);
 	lua_setfield(L, -2, "enum");
 
 	return 1;

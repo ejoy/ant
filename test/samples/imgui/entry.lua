@@ -28,10 +28,10 @@ function callback.init(nwh, context, width, height)
 	attribs.scroll = 0
 	attribs.width = width
 	attribs.height = height
-	attribs.input_char = 0
 	attribs.viewid = 255
 
 	imgui.create(attribs.font_size)
+	imgui.keymap(native.keymap)
 
 	bgfx.set_view_rect(0, 0, 0, width, height)
 	bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
@@ -46,7 +46,7 @@ function callback.size(width,height,type)
 end
 
 function callback.char(code)
-	attribs.input_char = code
+	imgui.input_char(code)
 end
 
 function callback.error(err)
@@ -80,12 +80,19 @@ function callback.keyboard(key, press, state)
 	imgui.key_state(key, press, state)
 end
 
+local editbox = {
+	label = "Edit",
+}
+
 local function update_ui()
 	widget.Button "Test"
 	widget.SmallButton "Small"
 	change, checked = widget.Checkbox("Checkbox", checked)
 	if change then
 		print("Click Checkbox", checked)
+	end
+	if widget.InputText(editbox) then
+		print(editbox.text)
 	end
 end
 
@@ -99,7 +106,6 @@ function callback.update()
 		attribs.scroll,
 		attribs.width,
 		attribs.height,
-		attribs.input_char,
 		attribs.viewid
 	)
 	update_ui()

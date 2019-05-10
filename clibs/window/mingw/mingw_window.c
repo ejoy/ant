@@ -23,11 +23,16 @@ get_screen_xy(HWND hwnd, LPARAM lParam, int *x, int *y) {
 
 static uint8_t get_keystate(LPARAM lParam) {
 	return 0
-		| GetKeyState(VK_SHIFT)                          ? (uint8_t)(1 << KB_SHIFT)    : 0
-		| GetKeyState(VK_MENU)                           ? (uint8_t)(1 << KB_ALT)      : 0
-		| GetKeyState(VK_CONTROL)                        ? (uint8_t)(1 << KB_CTRL)     : 0
-		| (GetKeyState(VK_LWIN) || GetKeyState(VK_RWIN)) ? (uint8_t)(1 << KB_SYS)      : 0
-		| (lParam & (0x1 << 24))                         ? (uint8_t)(1 << KB_CAPSLOCK) : 0
+		| ((GetKeyState(VK_CONTROL) < 0)
+			? (uint8_t)(1 << KB_CTRL) : 0)
+		| ((GetKeyState(VK_MENU) < 0)
+			? (uint8_t)(1 << KB_ALT) : 0)
+		| ((GetKeyState(VK_SHIFT) < 0)
+			? (uint8_t)(1 << KB_SHIFT) : 0)
+		| (((GetKeyState(VK_LWIN) < 0) || (GetKeyState(VK_RWIN) < 0)) 
+			? (uint8_t)(1 << KB_SYS) : 0)
+		| ((lParam & (0x1 << 24))
+			? (uint8_t)(1 << KB_CAPSLOCK) : 0)
 		;
 }
 
@@ -212,4 +217,27 @@ void window_mainloop(struct ant_window_callback* cb) {
 		}
 	}
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
+}
+
+int window_keymap(int whatkey) {
+	static const int keymap[ANT_KEYMAP_COUNT] = {
+		VK_TAB,
+		VK_LEFT,
+		VK_RIGHT,
+		VK_UP,
+		VK_DOWN,
+		VK_PRIOR,
+		VK_NEXT,
+		VK_HOME,
+		VK_END,
+		VK_INSERT,
+		VK_DELETE,
+		VK_BACK,
+		VK_SPACE,
+		VK_RETURN,
+		VK_ESCAPE,
+	};
+	if (whatkey < 0 || whatkey >= ANT_KEYMAP_COUNT)
+		return -1;
+	return keymap[whatkey];
 }
