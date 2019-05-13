@@ -1,7 +1,7 @@
 local asset_view_hub = {}
 local fs_hierarchy_hub = require "fs_hierarchy_hub"
-local iupcontrols = import_package "ant.iupcontrols"
-local hub = iupcontrols.common.hub
+local editor = import_package "ant.editor"
+local hub = editor.hub
 
 function asset_view_hub.subscribe(ins)
     hub.subscibe(fs_hierarchy_hub.CH_SELECT_FILES,

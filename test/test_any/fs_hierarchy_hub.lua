@@ -1,5 +1,5 @@
-local iupcontrols = import_package "ant.iupcontrols"
-local hub = iupcontrols.common.hub
+local editor = import_package "ant.editor"
+local hub = editor.hub
 
 local fs_hierarchy_hub = {}
 

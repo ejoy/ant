@@ -1,5 +1,5 @@
-local iupcontrols = import_package "ant.iupcontrols"
-local hub = iupcontrols.common.hub
+local editor = import_package "ant.editor"
+local hub = editor.hub
 local Serialize = import_package 'ant.serialize'
 local scene_control_hub = {}
 
@@ -41,9 +41,10 @@ function scene_control_hub.subscibe(ins)
                 ins.open_scene_file,
                 ins)
     local scene_hierarchy_hub = require "scene_hierarchy_hub"
-    hub.subscibe(scene_hierarchy_hub.CH_FOCUS_ENTITY,
+    hub.subscibe(scene_hierarchy_hub.FOCUS_ENTITY,
                 ins.on_foucs_entity,
                 ins)
+    
 
 end
 
