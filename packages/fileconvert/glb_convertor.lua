@@ -4,15 +4,6 @@ local gltfloader = glTF.gltf
 
 local gltf_converter = require "meshconverter.gltf"
 
-local componenttype_bgfxtype_maper = {
-	[5120] = "", 		--"BYTE",
-	[5121] = "UINT8", 	--"UNSIGNED_BYTE",
-	[5122] = "INT16", 	--"SHORT",
-	[5123] = "", 		--UNSIGNED_SHORT",
-	[5125] = "", 		--"UNSIGNED_INT",
-	[5126] = "FLOAT",	--"FLOAT"
-}
-
 local accessor_types = {
 	SCALAR = 0,
 	VEC2 = 1,
