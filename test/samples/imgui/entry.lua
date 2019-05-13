@@ -135,6 +135,15 @@ local function update_ui()
 		widget.Selectable("C", combobox)
 		widget.EndCombo()
 	end
+	if widget.TreeNode "TreeNodeA" then
+		widget.TreePop()
+	end
+	if widget.TreeNode "TreeNodeB" then
+		widget.TreePop()
+	end
+	if widget.TreeNode "TreeNodeC" then
+		widget.TreePop()
+	end
 end
 
 function callback.update()

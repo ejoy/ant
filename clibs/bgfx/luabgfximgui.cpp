@@ -1058,6 +1058,69 @@ wSelectable(lua_State *L) {
 	return 1;
 }
 
+// todo: TreePush/CollapsingHeader (with p_open)
+static int
+wTreeNode(lua_State *L) {
+	const char * label = luaL_checkstring(L, INDEX_ID);
+	ImGuiTreeNodeFlags flags = luaL_optinteger(L, 2, 0);
+	bool change = ImGui::TreeNodeEx(label, flags);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+wTreePop(lua_State *L) {
+	ImGui::TreePop();
+	return 0;
+}
+
+static ImGuiCond
+get_cond(lua_State *L, int index) {
+	int t = lua_type(L, 2);
+	switch (t) {
+	case LUA_TSTRING: {
+		const char *cond = lua_tostring(L, 2);
+		switch(cond[0]) {
+		case 'a':
+		case 'A':
+			return ImGuiCond_Appearing;
+		case 'o':
+		case 'O':
+			return ImGuiCond_Once;
+		case 'f':
+		case 'F':
+			return ImGuiCond_FirstUseEver;
+		default:
+			luaL_error(L, "Invalid ImGuiCond %s", cond);
+			break;
+		}
+	}
+	case LUA_TNIL:
+	case LUA_TNONE:
+		return 0;
+	default:
+		luaL_error(L, "Invalid ImGuiCond type %s", lua_typename(L, t));
+	}
+	return 0;
+}
+
+static int
+wSetNextTreeNodeOpen(lua_State *L) {
+	bool is_open = lua_toboolean(L, 1);
+	ImGuiCond c = get_cond(L, 2);
+	ImGui::SetNextTreeNodeOpen(is_open, c);
+	return 0;
+}
+
+static int
+wCollapsingHeader(lua_State *L) {
+	const char *label = luaL_checkstring(L, INDEX_ID);
+	ImGuiTreeNodeFlags flags = luaL_optinteger(L, 2, 0);
+	bool change = ImGui::CollapsingHeader(label, flags);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
 // cursor and layout
 
 static int
@@ -1191,6 +1254,19 @@ cGetFrameHeight(lua_State *L) {
 static int
 cGetFrameHeightWithSpacing(lua_State *L) {
 	float v = ImGui::GetFrameHeightWithSpacing();
+	lua_pushnumber(L, v);
+	return 1;
+}
+
+static int
+cTreeAdvanceToLabelPos(lua_State *L) {
+	ImGui::TreeAdvanceToLabelPos();
+	return 0;
+}
+
+static int
+cGetTreeNodeToLabelSpacing(lua_State *L) {
+	float v = ImGui::GetTreeNodeToLabelSpacing();
 	lua_pushnumber(L, v);
 	return 1;
 }
@@ -1343,6 +1419,23 @@ static struct enum_pair eSelectableFlags[] = {
 	{ NULL, 0 },
 };
 
+static struct enum_pair eTreeNodeFlags[] = {
+	ENUM(ImGuiTreeNodeFlags, Selected),
+	ENUM(ImGuiTreeNodeFlags, Framed),
+	ENUM(ImGuiTreeNodeFlags, AllowItemOverlap),
+	ENUM(ImGuiTreeNodeFlags, NoTreePushOnOpen),
+	ENUM(ImGuiTreeNodeFlags, NoAutoOpenOnLog),
+	ENUM(ImGuiTreeNodeFlags, DefaultOpen),
+	ENUM(ImGuiTreeNodeFlags, OpenOnDoubleClick),
+	ENUM(ImGuiTreeNodeFlags, OpenOnArrow),
+	ENUM(ImGuiTreeNodeFlags, Leaf),
+	ENUM(ImGuiTreeNodeFlags, Bullet),
+	ENUM(ImGuiTreeNodeFlags, FramePadding),
+	ENUM(ImGuiTreeNodeFlags, NavLeftJumpsBackHere),
+	ENUM(ImGuiTreeNodeFlags, CollapsingHeader),
+	{ NULL, 0 },
+};
+
 struct keymap {
 	const char * name;
 	int index;
@@ -1448,6 +1541,10 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "BeginCombo", wBeginCombo },
 		{ "EndCombo", wEndCombo },
 		{ "Selectable", wSelectable },
+		{ "TreeNode", wTreeNode },
+		{ "TreePop", wTreePop },
+		{ "CollapsingHeader", wCollapsingHeader },
+		{ "SetNextTreeNodeOpen", wSetNextTreeNodeOpen },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, widgets);
@@ -1473,6 +1570,8 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "GetTextLineHeightWithSpacing", cGetTextLineHeightWithSpacing },
 		{ "GetFrameHeight", cGetFrameHeight },
 		{ "GetFrameHeightWithSpacing", cGetFrameHeightWithSpacing },
+		{ "TreeAdvanceToLabelPos", cTreeAdvanceToLabelPos },
+		{ "GetTreeNodeToLabelSpacing", cGetTreeNodeToLabelSpacing },
 		{ NULL, NULL },
 	};
 
@@ -1484,6 +1583,7 @@ luaopen_bgfx_imgui(lua_State *L) {
 	enum_gen(L, "InputTextFlags", eInputTextFlags);
 	enum_gen(L, "ComboFlags", eComboFlags);
 	enum_gen(L, "SelectableFlags", eSelectableFlags);
+	enum_gen(L, "TreeNodeFlags", eTreeNodeFlags);
 
 	lua_setfield(L, -2, "enum");
 
