@@ -68,7 +68,7 @@ is_4_byte_align(accessor_sizebytes)
 local function compile_accessor(accessor, new_bvidx)
 	return string.pack("<I4I4I4I4I1I1I2", 
 		new_bvidx,
-		accessor.byteOffset,
+		accessor.byteOffset or 0,
 		accessor.componentType,
 		accessor.count,
 		accessor.normalized and 1 or 0,
@@ -101,8 +101,12 @@ local attribname_mapper = {
 	TEXCOORD_6 = 14,
 	TEXCOORD_7 = 15,
 
-	WEIGHT = 16,
-	INDICES = 17,
+	WEIGHTS_0 = 16,
+	WEIGHTS_1 = 17,
+
+	JOINTS_0 = 18,
+	JOINTS_1 = 19,
+
 }
 
 local function compile_primitive(scene, primitive)
@@ -186,12 +190,14 @@ local function deserialize_accessor(seri_data, seri_offset)
 
 	local function unpack_array(seri_data, seri_offset)
 		local num = string.unpack("<I4", seri_data, seri_offset)
-		seri_offset = seri_offset + 4
+		if num ~= 0 then
+			seri_offset = seri_offset + 4
 
-		local value = table.pack(string.unpack("<ffffffffffffffff", seri_data, seri_offset))		
-		local t = {}
-		table.move(value, 1, num, 1, t)
-		return t
+			local value = table.pack(string.unpack("<ffffffffffffffff", seri_data, seri_offset))		
+			local t = {}
+			table.move(value, 1, num, 1, t)
+			return t
+		end
 	end
 
 	acc.min = unpack_array(seri_data, seri_offset)

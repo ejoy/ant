@@ -83,8 +83,11 @@ static attrib_name attribname_mapper[] = {
 	{ "TEXCOORD_6", "t", 6 },
 	{ "TEXCOORD_7", "t", 7 },
 
-	{"WEIGHT", "w", 0},
-	{"INDICES", "i", 0},
+	{"WEIGHT_0", "w", 0},
+	{"WEIGHT_1", "w", 1},
+
+	{"JOINTS_0", "i", 0},
+	{"JOINTS_1", "i", 1},
 };
 
 
