@@ -1058,6 +1058,143 @@ wSelectable(lua_State *L) {
 	return 1;
 }
 
+// cursor and layout
+
+static int
+cSeparator(lua_State *L) {
+	ImGui::Separator();
+	return 0;
+}
+
+static int
+cSameLine(lua_State *L) {
+	float offset_from_start_x = luaL_optnumber(L, 1, 0.0f);
+	float spacing=luaL_optnumber(L, 2, -1.0f);
+	ImGui::SameLine(offset_from_start_x, spacing);
+	return 0;
+}
+
+static int
+cNewLine(lua_State *L) {
+	ImGui::NewLine();
+	return 0;
+}
+
+static int
+cSpacing(lua_State *L) {
+	ImGui::Spacing();
+	return 0;
+}
+
+static int
+cDummy(lua_State *L) {
+	float x = luaL_checkinteger(L, 1);
+	float y = luaL_checkinteger(L, 2);
+	ImGui::Dummy(ImVec2(x,y));
+	return 0;
+}
+
+static int
+cIndent(lua_State *L) {
+	ImGui::Indent();
+	return 0;
+}
+
+static int
+cUnindent(lua_State *L) {
+	ImGui::Unindent();
+	return 0;
+}
+
+static int
+cBeginGroup(lua_State *L) {
+	ImGui::BeginGroup();
+	return 0;
+}
+
+static int
+cEndGroup(lua_State *L) {
+	ImGui::EndGroup();
+	return 0;
+}
+
+static int
+cGetCursorPos(lua_State *L) {
+	ImVec2 c = ImGui::GetCursorPos();
+	lua_pushnumber(L, c.x);
+	lua_pushnumber(L, c.y);
+	return 2;
+}
+
+static int
+cSetCursorPos(lua_State *L) {
+	if (lua_type(L, 1) == LUA_TNUMBER) {
+		ImGui::SetCursorPosX(lua_tonumber(L, 1));
+	}
+	if (lua_type(L, 2) == LUA_TNUMBER) {
+		ImGui::SetCursorPosY(lua_tonumber(L, 2));
+	}
+	return 0;
+}
+
+static int
+cGetCursorStartPos(lua_State *L) {
+	ImVec2 c = ImGui::GetCursorStartPos();
+	lua_pushnumber(L, c.x);
+	lua_pushnumber(L, c.y);
+	return 2;
+}
+
+static int
+cGetCursorScreenPos(lua_State *L) {
+	ImVec2 c = ImGui::GetCursorScreenPos();
+	lua_pushnumber(L, c.x);
+	lua_pushnumber(L, c.y);
+	return 2;
+}
+
+static int
+cSetCursorScreenPos(lua_State *L) {
+	float x = luaL_checknumber(L, 1);
+	float y = luaL_checknumber(L, 1);
+	ImGui::SetCursorScreenPos(ImVec2(x,y));
+	return 0;
+}
+
+static int
+cAlignTextToFramePadding(lua_State *L) {
+	ImGui::AlignTextToFramePadding();
+	return 0;
+}
+
+static int
+cGetTextLineHeight(lua_State *L) {
+	float v = ImGui::GetTextLineHeight();
+	lua_pushnumber(L, v);
+	return 1;
+}
+
+static int
+cGetTextLineHeightWithSpacing(lua_State *L) {
+	float v = ImGui::GetTextLineHeightWithSpacing();
+	lua_pushnumber(L, v);
+	return 1;
+}
+
+static int
+cGetFrameHeight(lua_State *L) {
+	float v = ImGui::GetFrameHeight();
+	lua_pushnumber(L, v);
+	return 1;
+}
+
+static int
+cGetFrameHeightWithSpacing(lua_State *L) {
+	float v = ImGui::GetFrameHeightWithSpacing();
+	lua_pushnumber(L, v);
+	return 1;
+}
+
 // enums
 struct enum_pair {
 	const char * name;
@@ -1316,6 +1453,31 @@ luaopen_bgfx_imgui(lua_State *L) {
 	luaL_newlib(L, widgets);
 	lua_setfield(L, -2, "widget");
 
+	luaL_Reg cursor[] = {
+		{ "Separator", cSeparator },
+		{ "SameLine", cSameLine },
+		{ "NewLine", cNewLine },
+		{ "Spacing", cSpacing },
+		{ "Dummy", cDummy },
+		{ "Indent", cIndent },
+		{ "Unindent", cUnindent },
+		{ "BeginGroup", cBeginGroup },
+		{ "EndGroup", cEndGroup },
+		{ "GetCursorPos", cGetCursorPos },
+		{ "SetCursorPos", cSetCursorPos },
+		{ "GetCursorStartPos", cGetCursorStartPos },
+		{ "GetCursorScreenPos", cGetCursorScreenPos },
+		{ "SetCursorScreenPos", cSetCursorScreenPos },
+		{ "AlignTextToFramePadding", cAlignTextToFramePadding },
+		{ "GetTextLineHeight", cGetTextLineHeight },
+		{ "GetTextLineHeightWithSpacing", cGetTextLineHeightWithSpacing },
+		{ "GetFrameHeight", cGetFrameHeight },
+		{ "GetFrameHeightWithSpacing", cGetFrameHeightWithSpacing },
+		{ NULL, NULL },
+	};
+
+	luaL_newlib(L, cursor);
+	lua_setfield(L, -2, "cursor");
 
 	lua_newtable(L);
 	enum_gen(L, "ColorEditFlags", eColorEditFlags);
