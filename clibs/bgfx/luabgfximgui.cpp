@@ -248,10 +248,9 @@ read_index_string(lua_State *L, int index, const char *v) {
 }
 
 static bool
-read_field_boolean(lua_State *L, const char *field) {
-	int v = false;
+read_field_boolean(lua_State *L, const char *field, bool v) {
 	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TBOOLEAN) {
-		v = lua_toboolean(L, 1);
+		v = (bool)lua_toboolean(L, 1);
 	}
 	lua_pop(L, 1);
 	return v;
@@ -279,7 +278,7 @@ drag_float(lua_State *L, const char *label, int n) {
 		change = ImGui::DragFloat(label, v, speed, min, max, format, power);
 		break;
 	case 2:
-		if (read_field_boolean(L, "range")) {
+		if (read_field_boolean(L, "range", false)) {
 			const char *format_max = read_field_string(L, "format_max", NULL);
 			change = ImGui::DragFloatRange2(label, v+0, v+1, speed, min, max, format, format_max, power);
 		} else {
@@ -323,7 +322,7 @@ drag_int(lua_State *L, const char *label, int n) {
 		change = ImGui::DragInt(label, v, speed, min, max, format);
 		break;
 	case 2:
-		if (read_field_boolean(L, "range")) {
+		if (read_field_boolean(L, "range", false)) {
 			const char *format_max = read_field_string(L, "format_max", NULL);
 			change = ImGui::DragIntRange2(label, v+0, v+1, speed, min, max, format, format_max);
 		} else {
@@ -984,11 +983,6 @@ wBulletText(lua_State *L) {
 	return 0;
 }
 
-/*
-    IMGUI_API bool          BeginCombo(const char* label, const char* preview_value, ImGuiComboFlags flags = 0);
-    IMGUI_API void          EndCombo(); // only call EndCombo() if BeginCombo() returns true!
-    IMGUI_API bool          Combo(const char* label, int* current_item, const char* const items[], int items_count, int popup_max_height_in_items = -1);
-*/
 static int
 wBeginCombo(lua_State *L) {
 	const char *label = luaL_checkstring(L, INDEX_ID);
@@ -1190,6 +1184,188 @@ static int
 wPlotHistogram(lua_State *L) {
 	plot(L, PLOT_HISTOGRAM);
 	return 0;
+}
+
+static int
+wBeginTooltip(lua_State *L) {
+	ImGui::BeginTooltip();
+	return 0;
+}
+
+static int
+wEndTooltip(lua_State *L) {
+	ImGui::EndTooltip();
+	return 0;
+}
+
+static int
+wSetTooltip(lua_State *L) {
+	const char *tooltip = luaL_checkstring(L, 1);
+	ImGui::SetTooltip("%s", tooltip);
+	return 0;
+}
+
+/*
+    IMGUI_API bool          BeginMainMenuBar();                                                 // create and append to a full screen menu-bar.
+    IMGUI_API void          EndMainMenuBar();                                                   // only call EndMainMenuBar() if BeginMainMenuBar() returns true!
+    IMGUI_API bool          BeginMenuBar();                                                     // append to menu-bar of current window (requires ImGuiWindowFlags_MenuBar flag set on parent window).
+    IMGUI_API void          EndMenuBar();                                                       // only call EndMenuBar() if BeginMenuBar() returns true!
+    IMGUI_API bool          BeginMenu(const char* label, bool enabled = true);                  // create a sub-menu entry. only call EndMenu() if this returns true!
+    IMGUI_API void          EndMenu();                                                          // only call EndMenu() if BeginMenu() returns true!
+    IMGUI_API bool          MenuItem(const char* label, const char* shortcut = NULL, bool selected = false, bool enabled = true);  // return true when activated. shortcuts are displayed for convenience but not processed by ImGui at the moment
+*/
+
+static int
+wBeginMainMenuBar(lua_State *L) {
+	bool change = ImGui::BeginMainMenuBar();
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+wEndMainMenuBar(lua_State *L) {
+	ImGui::EndMainMenuBar();
+	return 0;
+}
+
+static int
+wBeginMenuBar(lua_State *L) {
+	bool change = ImGui::BeginMenuBar();
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+wEndMenuBar(lua_State *L) {
+	ImGui::EndMenuBar();
+	return 0;
+}
+
+static int
+wBeginMenu(lua_State *L) {
+	const char * label = luaL_checkstring(L, INDEX_ID);
+	bool enabled = true;
+	if (lua_isboolean(L, 2)) {
+		enabled = lua_toboolean(L, 2);
+	}
+	bool change = ImGui::BeginMenu(label, enabled);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+wEndMenu(lua_State *L) {
+	ImGui::EndMenu();
+	return 0;
+}
+
+static int
+wMenuItem(lua_State *L) {
+	const char * label = luaL_checkstring(L, INDEX_ID);
+	const char *shortcut = luaL_optstring(L, 2, NULL);
+	bool selected = lua_toboolean(L, 3);
+	bool enabled = true;
+	if (lua_isboolean(L, 4)) {
+		enabled = lua_toboolean(L, 4);
+	}
+	bool change = ImGui::MenuItem(label, shortcut, selected, enabled);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+winBegin(lua_State *L) {
+	const char *name = luaL_checkstring(L, INDEX_ID);
+	ImGuiWindowFlags flags = luaL_optinteger(L, 2, 0);
+	bool *p_open = NULL;
+	bool opened = true;
+	if (lua_isboolean(L, 3)) {
+		p_open = &opened;
+		opened = lua_toboolean(L, 3);
+		if (!opened) {
+			lua_pushboolean(L, false);
+			return 1;
+		}
+	}
+	bool change = ImGui::Begin(name, p_open, flags);
+	if (change) {
+		lua_pushboolean(L, change);
+		lua_pushboolean(L, opened);
+		return 2;
+	} else {
+		lua_pushboolean(L, change);
+		return 1;
+	}
+}
+
+static int
+winEnd(lua_State *L) {
+	ImGui::End();
+	return 0;
+}
+
+static int
+winBeginChild(lua_State *L) {
+	const char * id = luaL_checkstring(L, INDEX_ID);
+	float width = luaL_optinteger(L, 2, 0);
+	float height = luaL_optinteger(L, 3, 0);
+	bool border = lua_toboolean(L, 4);
+	ImGuiWindowFlags flags = luaL_optinteger(L, 5, 0);
+	bool change = ImGui::BeginChild(id, ImVec2(width, height), border, flags);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+winEndChild(lua_State *L) {
+	ImGui::EndChild();
+	return 0;
+}
+
+static int
+winIsWindowAppearing(lua_State *L) {
+	bool v = ImGui::IsWindowAppearing();
+	lua_pushboolean(L, v);
+	return 1;
+}
+
+static int
+winIsWindowCollapsed(lua_State *L) {
+	bool v = ImGui::IsWindowCollapsed();
+	lua_pushboolean(L, v);
+	return 1;
+}
+
+static int
+winIsWindowFocused(lua_State *L) {
+	ImGuiFocusedFlags flags = luaL_optinteger(L, 1, 0);
+	bool v = ImGui::IsWindowFocused(flags);
+	lua_pushboolean(L, v);
+	return 1;
+}
+
+static int
+winIsWindowHovered(lua_State *L) {
+	ImGuiHoveredFlags flags = luaL_optinteger(L, 1, 0);
+	bool v = ImGui::IsWindowHovered(flags);
+	lua_pushboolean(L, v);
+	return 1;
+}
+
+static int
+winGetWindowPos(lua_State *L) {
+	ImVec2 v = ImGui::GetWindowPos();
+	lua_pushnumber(L, v.x);
+	lua_pushnumber(L, v.y);
+	return 2;
+}
+
+static int
+winGetWindowSize(lua_State *L) {
+	ImVec2 v = ImGui::GetWindowSize();
+	lua_pushnumber(L, v.x);
+	lua_pushnumber(L, v.y);
+	return 2;
 }
 
 // cursor and layout
@@ -1507,6 +1683,54 @@ static struct enum_pair eTreeNodeFlags[] = {
 	{ NULL, 0 },
 };
 
+static struct enum_pair eWindowFlags[] = {
+	ENUM(ImGuiWindowFlags, NoTitleBar),
+	ENUM(ImGuiWindowFlags, NoResize),
+	ENUM(ImGuiWindowFlags, NoMove),
+	ENUM(ImGuiWindowFlags, NoScrollbar),
+	ENUM(ImGuiWindowFlags, NoScrollWithMouse),
+	ENUM(ImGuiWindowFlags, NoCollapse),
+	ENUM(ImGuiWindowFlags, AlwaysAutoResize),
+	ENUM(ImGuiWindowFlags, NoBackground),
+	ENUM(ImGuiWindowFlags, NoSavedSettings),
+	ENUM(ImGuiWindowFlags, NoMouseInputs),
+	ENUM(ImGuiWindowFlags, MenuBar),
+	ENUM(ImGuiWindowFlags, HorizontalScrollbar),
+	ENUM(ImGuiWindowFlags, NoFocusOnAppearing),
+	ENUM(ImGuiWindowFlags, NoBringToFrontOnFocus),
+	ENUM(ImGuiWindowFlags, AlwaysVerticalScrollbar),
+	ENUM(ImGuiWindowFlags, AlwaysHorizontalScrollbar),
+	ENUM(ImGuiWindowFlags, AlwaysUseWindowPadding),
+	ENUM(ImGuiWindowFlags, NoNavInputs),
+	ENUM(ImGuiWindowFlags, NoNavFocus),
+	ENUM(ImGuiWindowFlags, UnsavedDocument),
+	ENUM(ImGuiWindowFlags, NoNav),
+	ENUM(ImGuiWindowFlags, NoDecoration),
+	ENUM(ImGuiWindowFlags, NoInputs),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eFocusedFlags[] = {
+	ENUM(ImGuiFocusedFlags, ChildWindows),
+	ENUM(ImGuiFocusedFlags, RootWindow),
+	ENUM(ImGuiFocusedFlags, AnyWindow),
+	ENUM(ImGuiFocusedFlags, RootAndChildWindows),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eHoveredFlags[] = {
+	ENUM(ImGuiHoveredFlags, ChildWindows),
+	ENUM(ImGuiHoveredFlags, RootWindow),
+	ENUM(ImGuiHoveredFlags, AnyWindow),
+	ENUM(ImGuiHoveredFlags, AllowWhenBlockedByPopup),
+	ENUM(ImGuiHoveredFlags, AllowWhenBlockedByActiveItem),
+	ENUM(ImGuiHoveredFlags, AllowWhenOverlapped),
+	ENUM(ImGuiHoveredFlags, AllowWhenDisabled),
+	ENUM(ImGuiHoveredFlags, RectOnly),
+	ENUM(ImGuiHoveredFlags, RootAndChildWindows),
+	{ NULL, 0 },
+};
+
 struct keymap {
 	const char * name;
 	int index;
@@ -1618,6 +1842,16 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "SetNextTreeNodeOpen", wSetNextTreeNodeOpen },
 		{ "PlotLines", wPlotLines },
 		{ "PlotHistogram", wPlotHistogram },
+		{ "BeginTooltip", wBeginTooltip },
+		{ "EndTooltip", wEndTooltip },
+		{ "SetTooltip", wSetTooltip },
+		{ "BeginMainMenuBar", wBeginMainMenuBar },
+		{ "EndMainMenuBar", wEndMainMenuBar },
+		{ "BeginMenuBar", wBeginMenuBar },
+		{ "EndMenuBar", wEndMenuBar },
+		{ "BeginMenu", wBeginMenu },
+		{ "EndMenu", wEndMenu },
+		{ "MenuItem", wMenuItem },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, widgets);
@@ -1651,12 +1885,32 @@ luaopen_bgfx_imgui(lua_State *L) {
 	luaL_newlib(L, cursor);
 	lua_setfield(L, -2, "cursor");
 
+	luaL_Reg windows[] = {
+		{ "Begin", winBegin },
+		{ "End", winEnd },
+		{ "BeginChild", winBeginChild },
+		{ "EndChild", winEndChild },
+		{ "IsWindowAppearing", winIsWindowAppearing },
+		{ "IsWindowCollapsed", winIsWindowCollapsed },
+		{ "IsWindowFocused", winIsWindowFocused },
+		{ "IsWindowHovered", winIsWindowHovered },
+		{ "GetWindowPos", winGetWindowPos },
+		{ "GetWindowSize", winGetWindowSize },
+		{ NULL, NULL },
+	};
+
+	luaL_newlib(L, windows);
+	lua_setfield(L, -2, "windows");
+
 	lua_newtable(L);
 	enum_gen(L, "ColorEditFlags", eColorEditFlags);
 	enum_gen(L, "InputTextFlags", eInputTextFlags);
 	enum_gen(L, "ComboFlags", eComboFlags);
 	enum_gen(L, "SelectableFlags", eSelectableFlags);
 	enum_gen(L, "TreeNodeFlags", eTreeNodeFlags);
+	enum_gen(L, "WindowFlags", eWindowFlags);
+	enum_gen(L, "FocusedFlags", eFocusedFlags);
+	enum_gen(L, "HoveredFlags", eHoveredFlags);
 
 	lua_setfield(L, -2, "enum");
 

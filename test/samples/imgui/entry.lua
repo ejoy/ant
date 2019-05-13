@@ -4,6 +4,7 @@ local bgfx = require "bgfx"
 local imgui = require "bgfx.imgui"
 local widget = imgui.widget
 local enum = imgui.enum
+local windows = imgui.windows
 
 local callback = {}
 local attribs = {}
@@ -120,7 +121,27 @@ local combobox = { "B" }
 
 local lines = { 1,2,3,2,1 }
 
-local function update_ui()
+local test_window = {
+	id = "Test",
+	closed = true,
+	flags = enum.WindowFlags { "MenuBar" },
+}
+
+local function run_window(wnd)
+	local touch, closed = windows.Begin(wnd.id, wnd.flags, wnd.closed)
+	if touch then
+		wnd:update()
+		windows.End()
+		wnd.closed = closed
+	end
+end
+
+function test_window:update()
+	if widget.BeginMenuBar() then
+		widget.MenuItem("M1")
+		widget.MenuItem("M2")
+		widget.EndMenuBar()
+	end
 	widget.Button "Test"
 	widget.SmallButton "Small"
 	if widget.Checkbox("Checkbox", checkbox) then
@@ -149,6 +170,10 @@ local function update_ui()
 
 	widget.PlotLines("lines", lines)
 	widget.PlotHistogram("histogram", lines)
+end
+
+local function update_ui()
+	run_window(test_window)
 end
 
 function callback.update()
