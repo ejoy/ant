@@ -29,8 +29,7 @@ local function write_chunk(f, datatype, data, length)
 	f:write(data)
 end
 
-local function decode(filename)
-    local f = assert(io.open(filename, "rb"))
+local function decode_from_filehandle(f)
     local header = f:read(12)
     local magic, version, _ = ("<c4I4I4"):unpack(header)
     assert(magic == "glTF")
@@ -39,6 +38,11 @@ local function decode(filename)
 	assert(f:read(1) == nil)
     f:close()
     return version, json, bin
+end
+
+local function decode(filename)
+    local f = assert(io.open(filename, "rb"))
+	return decode_from_file(f)
 end
 
 local function encode(filename, version, json, bindata)
@@ -61,5 +65,6 @@ end
 
 return {
 	decode = decode,
+	decode_from_filehandle = decode_from_filehandle,
 	encode = encode,
 }

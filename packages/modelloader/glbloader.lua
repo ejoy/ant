@@ -74,10 +74,10 @@ local function create_decl(attri_class)
 	return decls
 end
 
-return function (filepath)
+return function (meshfile)
 	local glbloader = gltf.glb
 	local gltfloader = gltf.gltf
-	local _, jsondata, bindata = glbloader.decode(filepath:string())
+	local _, jsondata, bindata = glbloader.decode_from_filehandle(meshfile)
 	local scene = gltfloader.decode(jsondata)
 
 	local nodes, meshes, accessors, bufferviews = 

@@ -3,17 +3,15 @@ local fs = require "filesystem"
 
 local declmgr = import_package "ant.render".declmgr
 local antmeshloader = require "antmeshloader"
+local glbloader = require "glbloader"
 
 local loader = {}
 
-
--- need move to bgfx c module
-
-local function load_from_source(filepath)
-	if not __ANT_RUNTIME__ then
-		assert(fs.exists(filepath .. ".lk"))
-	end
-	return antmeshloader(filepath)
+local function is_glb(meshfile)
+	meshfile:seek("set", 0)
+	local content = meshfile:read(4) 
+	meshfile:seek("set", 0)
+	return content == "glTF"
 end
 
 local function create_vb(vb)
@@ -41,8 +39,18 @@ local function create_ib(ib)
 	end
 end
 
-function loader.load(filepath)	
-	local meshgroup = load_from_source(filepath)	
+function loader.load(filepath)
+	if not __ANT_RUNTIME__ then
+		assert(fs.exists(filepath .. ".lk"))
+	end
+
+	local meshfile = fs.open(filepath, "rb")
+
+	if is_glb(meshfile) then
+		return glbloader(meshfile)
+	end
+
+	local meshgroup = antmeshloader(meshfile)
 	if meshgroup then
 		for _, g in ipairs(meshgroup.groups) do
 			create_vb(g.vb)

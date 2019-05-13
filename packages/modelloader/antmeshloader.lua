@@ -38,9 +38,9 @@ end
 -- 	return s:match("([^:]+):(.*)$")
 -- end
 
-return function (filepath)
-	local function openfile(filepath)
-		local ff = assert(fs.open(filepath, "rb"))		
+return function (meshfile)
+	local function openfile(meshfile)
+		local ff = assert(meshfile)
 		-- local content = ff:read("a")
 		-- ff:close()
 		-- local readit = 1
@@ -68,7 +68,7 @@ return function (filepath)
 		-- end
 		local function read(size)
 			if ff == nil then
-				error("file is close and release, but still accessed, filepath : ", filepath)
+				error("file is close and release, but still accessed")
 			end
 			return ff:read(size)
 		end
@@ -102,7 +102,7 @@ return function (filepath)
 		end
 	end
 	
-	local kvpairs = openfile(filepath)
+	local kvpairs = openfile(meshfile)
 
 	local function struct_unpack(v, mapper)
 		assert(v == nil or v == "")

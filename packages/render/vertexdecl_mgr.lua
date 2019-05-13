@@ -4,14 +4,27 @@ local bgfx = require "bgfx"
 
 local declmapper = {}
 
+local name_mapper = {
+	p = "POSITION",	n = "NORMAL", T = "TANGENT",	b = "BITANGENT",
+	i = "INDICES",	w = "WEIGHT",
+	c = "COLOR", t = "TEXCOORD",
+}
+
+local name_remapper = {
+	JOINTS = "i",
+}
+for k, v in pairs(name_mapper) do
+	name_remapper[v] = k
+end
+
+function mgr.parse_attri_name(fullname)
+	local name, channel = fullname:match("(%w+)_?(%d+)")
+	return name_remapper[name], channel
+end
+
 local function get_attrib(e)
-	local t = {	
-		p = "POSITION",	n = "NORMAL", T = "TANGENT",	b = "BITANGENT",
-		i = "INDICES",	w = "WEIGHT",
-		c = "COLOR", t = "TEXCOORD",
-	}
 	local a = e:sub(1, 1)
-	local attrib = assert(t[a])
+	local attrib = assert(name_mapper[a])
 	if attrib == "COLOR" or attrib == "TEXCOORD" then
 		local channel = e:sub(3, 3)
 		return attrib .. channel
@@ -20,7 +33,7 @@ local function get_attrib(e)
 	return attrib
 end
 
-local function get_type(v)					
+local function get_type(v)
 	local t = {	
 		u = "UINT8", U = "UINT10", i = "INT16",
 		h = "HALF",	f = "FLOAT",
