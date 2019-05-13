@@ -12,6 +12,11 @@ extern "C" {
 #define INDEX_ID 1
 #define INDEX_ARGS 2
 
+struct table_args {
+	lua_State *L;
+	bool err;
+};
+
 static int
 lcreate(lua_State *L) {
 	float fontSize = luaL_checknumber(L, 1);
@@ -1118,11 +1123,6 @@ wCollapsingHeader(lua_State *L) {
 #define PLOT_LINES 0
 #define PLOT_HISTOGRAM 1
 
-struct plot_args {
-	lua_State *L;
-	bool err;
-};
-
 static int
 get_plot_func(lua_State *L) {
 	int n = lua_tointeger(L, 2);
@@ -1134,7 +1134,7 @@ get_plot_func(lua_State *L) {
 
 static float
 get_plot(void* data, int idx) {
-	struct plot_args *args = (struct plot_args *)data;
+	struct table_args *args = (struct table_args *)data;
 	lua_State *L = args->L;
 	if (args->err)
 		return 0;
@@ -1163,7 +1163,7 @@ plot(lua_State *L, int t) {
 	float scale_max = read_field_float(L, "max", FLT_MAX);
 	float width = read_field_float(L, "width", 0);
 	float height = read_field_float(L, "height", 0);
-	struct plot_args args = { L, false };
+	struct table_args args = { L, false };
 	if (t == PLOT_LINES) {
 		ImGui::PlotLines(label, get_plot, &args, n, values_offset, overlay_text, scale_min, scale_max, ImVec2(width, height));
 	} else {
@@ -1204,16 +1204,6 @@ wSetTooltip(lua_State *L) {
 	ImGui::SetTooltip("%s", tooltip);
 	return 0;
 }
-
-/*
-    IMGUI_API bool          BeginMainMenuBar();                                                 // create and append to a full screen menu-bar.
-    IMGUI_API void          EndMainMenuBar();                                                   // only call EndMainMenuBar() if BeginMainMenuBar() returns true!
-    IMGUI_API bool          BeginMenuBar();                                                     // append to menu-bar of current window (requires ImGuiWindowFlags_MenuBar flag set on parent window).
-    IMGUI_API void          EndMenuBar();                                                       // only call EndMenuBar() if BeginMenuBar() returns true!
-    IMGUI_API bool          BeginMenu(const char* label, bool enabled = true);                  // create a sub-menu entry. only call EndMenu() if this returns true!
-    IMGUI_API void          EndMenu();                                                          // only call EndMenu() if BeginMenu() returns true!
-    IMGUI_API bool          MenuItem(const char* label, const char* shortcut = NULL, bool selected = false, bool enabled = true);  // return true when activated. shortcuts are displayed for convenience but not processed by ImGui at the moment
-*/
 
 static int
 wBeginMainMenuBar(lua_State *L) {
@@ -1272,6 +1262,82 @@ wMenuItem(lua_State *L) {
 	lua_pushboolean(L, change);
 	return 1;
 }
+
+static int
+wBeginListBox(lua_State *L) {
+	const char *label = luaL_checkstring(L, INDEX_ID);
+	int width = luaL_optinteger(L, 2, 0);
+	int height = luaL_optinteger(L, 3, 0);
+	bool change = ImGui::ListBoxHeader(label, ImVec2(width, height));
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+wBeginListBoxN(lua_State *L) {
+	const char *label = luaL_checkstring(L, INDEX_ID);
+	int count = luaL_checkinteger(L, 2);
+	int height_in_items = luaL_optinteger(L, 3, -1);
+	bool change = ImGui::ListBoxHeader(label, count, height_in_items);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+wEndListBox(lua_State *L) {
+	ImGui::ListBoxFooter();
+	return 0;
+}
+
+static int
+get_listitem_func(lua_State *L) {
+	int n = lua_tointeger(L, 2);
+	lua_geti(L, 1, n);
+	return 1;
+}
+
+static bool
+get_listitem(void* data, int idx, const char **out_text) {
+	struct table_args *args = (struct table_args *)data;
+	lua_State *L = args->L;
+	if (args->err)
+		return 0;
+	lua_pushcfunction(L, get_listitem_func);
+	lua_pushvalue(L, INDEX_ARGS);
+	lua_pushinteger(L, idx+1);
+	if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
+		args->err = true;
+		return 0;
+	}
+	if (lua_type(L, -1) == LUA_TSTRING) {
+		*out_text = lua_tostring(L, -1);
+		return true;
+	}
+	lua_pop(L, 1);
+	*out_text = NULL;
+	return false;
+}
+
+static int
+wListBox(lua_State *L) {
+	const char *label = luaL_checkstring(L, INDEX_ID);
+	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
+	lua_len(L, INDEX_ARGS);
+	int n = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+	int height_in_items = read_field_int(L, "height", -1);
+	struct table_args args = { L, false };
+	int current = read_field_int(L, "current", 0) - 1;
+	bool change = ImGui::ListBox(label, &current, get_listitem, &args, n, height_in_items);
+	if (change) {
+		lua_pushinteger(L, current+1);
+		lua_setfield(L, INDEX_ARGS, "current");
+	}
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+// windows api
 
 static int
 winBegin(lua_State *L) {
@@ -1852,6 +1918,10 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "BeginMenu", wBeginMenu },
 		{ "EndMenu", wEndMenu },
 		{ "MenuItem", wMenuItem },
+		{ "BeginListBox", wBeginListBox },
+		{ "BeginListBoxN", wBeginListBoxN },
+		{ "EndListBox", wEndListBox },
+		{ "ListBox", wListBox },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, widgets);

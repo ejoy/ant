@@ -136,6 +136,8 @@ local function run_window(wnd)
 	end
 end
 
+local lists = { "Alice", "Bob" }
+
 function test_window:update()
 	if widget.BeginMenuBar() then
 		widget.MenuItem("M1")
@@ -170,6 +172,10 @@ function test_window:update()
 
 	widget.PlotLines("lines", lines)
 	widget.PlotHistogram("histogram", lines)
+
+	if widget.ListBox("##list",lists) then
+		print(lists.current)
+	end
 end
 
 local function update_ui()
