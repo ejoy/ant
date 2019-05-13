@@ -23,7 +23,7 @@ struct primitive {
 	struct bufferview {		
 		uint32_t byteOffset;
 		uint32_t byteLength;
-		uint32_t stride;
+		uint32_t byteStride;
 		uint32_t target;
 	};
 
@@ -44,6 +44,7 @@ struct primitive {
 	
 	std::map<uint32_t, uint32_t> attributes;	// need order
 	uint32_t	indices;
+	uint32_t	mode;
 
 	std::vector<accessor> accessors;
 	std::vector<bufferview> bufferviews;
@@ -171,6 +172,7 @@ fetch_primitive(lua_State *L, int index,  primitive &prim) {
 	}
 
 	prim.indices = *uint32_data++;
+	prim.mode = *uint32_data++;
 
 	// read accessors
 	const uint32_t num_accessors = *uint32_data++;
@@ -313,6 +315,8 @@ serialize_primitive(const primitive &prim) {
 	}
 
 	write_u32(prim.indices);
+	write_u32(prim.mode);
+
 	write_u32((uint32_t)prim.accessors.size());
 	
 	oss.write((const char*)(&prim.accessors[0]), sizeof(primitive::accessor) * prim.accessors.size());
@@ -335,8 +339,8 @@ fetch_buffer(const primitive &prim, const primitive::accessor &acc, const char* 
 	abuffer.buffersize = elemsize * num_elem;
 	abuffer.data = new uint8_t[abuffer.buffersize];
 
-	if (bv.stride != 0) {
-		const uint32_t srcstride = bv.stride;
+	if (bv.byteStride != 0) {
+		const uint32_t srcstride = bv.byteStride;
 		uint8_t *data = abuffer.data;
 		for (uint32_t iv = 0; iv < num_elem; ++iv) {
 			memcpy(data, srcbuf, elemsize);
@@ -385,13 +389,13 @@ rearrange_indices_buffer(primitive &prim, uint32_t binaryoffset, const char* bin
 
 	if (prim.indices != 0xffffffff) {
 		auto& acc = prim.accessors[prim.indices];
+		newbuffers.push_back(attribute_buffer());
+		fetch_buffer(prim, acc, bindata, acc.count, newbuffers.back());
+
 		primitive::bufferview bv = prim.bufferviews[acc.bufferView];
 		bv.byteOffset = binaryoffset;
 		acc.bufferView = (uint32_t)new_bvs.size();
 		new_bvs.push_back(bv);
-
-		newbuffers.push_back(attribute_buffer());
-		fetch_buffer(prim, acc, bindata, acc.count, newbuffers.back());
 	}
 }
 
@@ -451,7 +455,7 @@ rearrange_buffers(
 		auto &newbv = newbufferviews[bvidx];
 		newbv.byteOffset = binary_offset;
 		newbv.byteLength = newbuf.buffersize;
-		newbv.stride	= stride;
+		newbv.byteStride	= stride;
 		newbv.target	= target_type::ARRAY_BUFFER;		
 
 		assert(newbuf.data == nullptr);

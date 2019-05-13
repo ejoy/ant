@@ -49,7 +49,7 @@ local function compile_bufferview(bv)
 	return string.pack("<I4I4I4I4",
 		bv.byteOffset, 
 		bv.byteLength,
-		bv.stride or 0,
+		bv.byteStride or 0,
 		bv.target or ENUM_ARRAY_BUFFER)
 end
 
@@ -148,6 +148,7 @@ local function compile_primitive(scene, primitive)
 
 	return concat_table(seri_attrib) .. 
 			string.pack("<I4", primitive.indices or 0xffffffff) .. 
+			string.pack("<I4", primitive.mode or 4) .. 
 			concat_table(seri_accessor) .. 
 			concat_table(seri_bufferview)
 end
@@ -162,8 +163,12 @@ end
 
 local function deserialize_bufferview(seri_data, seri_offset)
 	local bv = {}
-	bv.byteOffset, bv.byteLength, bv.stride, bv.target = 
+	bv.byteOffset, bv.byteLength, bv.byteStride, bv.target = 
 	string.unpack("<I4I4I4I4", seri_data, seri_offset)	
+	if bv.byteStride == 0 then
+		bv.byteStride = nil
+	end
+
 	seri_offset = seri_offset + 4 + 4 + 4 + 4
 	return bv, seri_offset
 end
@@ -215,6 +220,9 @@ local function deserialize_primitive_itself(seri_data, seri_offset)
 	local index_buffer_idx = string.unpack("<I4", seri_data, seri_offset)
 	seri_offset = seri_offset + 4
 	prim.indices = index_buffer_idx ~= 0xffffffff and index_buffer_idx or nil
+
+	prim.mode = string.unpack("<I4", seri_data, seri_offset)
+	seri_offset = seri_offset + 4
 	return prim, seri_offset
 end
 
@@ -233,6 +241,7 @@ local function deserialize_primitive(seri_data)
 	seri_offset = seri_offset + 4
 	for ii=1, num_bufferview do
 		bufferviews[ii], seri_offset = deserialize_bufferview(seri_data, seri_offset)
+		bufferviews[ii].buffer = 0
 	end
 
 	return prim, accessors, bufferviews
@@ -289,7 +298,7 @@ return function (srcname, dstname, cfg)
 					local seri_prim = compile_primitive(scene, prim)
 					local new_seri_prim, prim_binary_buffers = gltf_converter.convert_buffers(seri_prim, bindata, cfg)
 					local newprim, newacc, newbvs = deserialize_primitive(new_seri_prim)
-
+					
 					refine_prim_offset(newprim, newacc, newbvs)
 
 					primitives[idx] = newprim
@@ -315,8 +324,12 @@ return function (srcname, dstname, cfg)
 		accessors = new_accessors,
 		bufferViews = new_bufferviews,
 		buffers = {
-			{bytelength = #new_bindata,}
+			{byteLength = #new_bindata,}
 		},
+		asset = {
+			version = scene.asset.version,
+			generator = "ant(" .. scene.asset.generator .. ")",
+		}
 	}
 
 	local new_jsondata = gltfloader.encode(newscene)

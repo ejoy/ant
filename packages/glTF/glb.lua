@@ -6,8 +6,24 @@ local function chunk(f, checktype)
     return f:read(length)
 end
 
-local function write_chunk(f, datatype, data)
-	local length = #data
+local function aligh_data(data, alignbytes, align_char)
+	local length = #data	
+	local align_length = ((length // alignbytes) + 1) * alignbytes
+	local padding_length = align_length - length
+
+	if padding_length < alignbytes then
+		local t = {data}
+		for _=1, padding_length do
+			t[#t+1] = align_char
+		end
+		return table.concat(t, ""), align_length
+	end
+
+	assert(padding_length > 0)
+	return data, length
+end
+
+local function write_chunk(f, datatype, data, length)
 	local chunkinfo = string.pack("<I4c4", length, datatype)
 	f:write(chunkinfo)
 	f:write(data)
@@ -27,10 +43,19 @@ end
 
 local function encode(filename, version, json, bindata)
 	local f = assert(io.open(filename, "wb"))
-	local header = string.pack("<c4I4I4", "glTF", version, 0)
+	local headersize = 12
+	local chunk_headersize = 8
+
+	local align_json, align_json_length = aligh_data(json, 4, " ")
+	local align_bindata, align_bindata_length = aligh_data(bindata, 4, "\0")
+
+	local header = string.pack("<c4I4I4", "glTF", version, 
+		headersize + 
+		chunk_headersize + align_json_length + 
+		chunk_headersize + align_bindata_length)
 	f:write(header)
-	write_chunk(f, "JSON", json)
-	write_chunk(f, "BIN\0", bindata)	
+	write_chunk(f, "JSON", align_json, align_json_length)
+	write_chunk(f, "BIN\0", align_bindata, align_bindata_length)
 	f:close()
 end
 
