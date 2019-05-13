@@ -1626,10 +1626,181 @@ enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
 	lua_setfield(L, -2, name);
 }
 
+// Utils
+
 static int
-lSetColorEditOptions(lua_State *L) {
+uSetColorEditOptions(lua_State *L) {
 	ImGuiColorEditFlags flags = luaL_checkinteger(L, 1);
 	ImGui::SetColorEditOptions(flags);
+	return 0;
+}
+
+/*
+		{ "PushClipRect", uPushClipRect },
+		{ "PopClipRect", uPopClipRect },
+		{ "SetItemDefaultFocus", uSetItemDefaultFocus },
+		{ "SetKeyboardFocusHere", uSetKeyboardFocusHere },
+		{ "IsItemHovered", uHoveredFlags },
+		{ "IsItemActive", uIsItemActive },
+		{ "IsItemFocused", uIsItemFocused },
+		{ "IsItemClicked", uIsItemClicked },
+		{ "IsItemVisible", uIsItemVisible },
+		{ "IsItemEdited", uIsItemEdited },
+		{ "IsItemActivated", uIsItemActivated },
+		{ "IsItemDeactivated", uIsItemDeactivated },
+		{ "IsItemDeactivatedAfterEdit", uIsItemDeactivatedAfterEdit },
+		{ "IsAnyItemHovered", uIsAnyItemHovered },
+		{ "IsAnyItemActive", uIsAnyItemActive },
+		{ "IsAnyItemFocused", uIsAnyItemFocused },
+		{ "GetItemRectMin", uGetItemRectMin },
+		{ "GetItemRectMax", uGetItemRectMax },
+		{ "GetItemRectSize", uGetItemRectSize },
+		{ "SetItemAllowOverlap", uSetItemAllowOverlap },
+*/
+
+static int
+uPushClipRect(lua_State *L) {
+	float left = luaL_checkinteger(L, 1);
+	float top = luaL_checkinteger(L, 2);
+	float right = luaL_checkinteger(L, 3);
+	float buttom = luaL_checkinteger(L, 4);
+	bool intersect_with_current_clip_rect = lua_toboolean(L, 5);
+	ImGui::PushClipRect(ImVec2(left,top), ImVec2(right, buttom), intersect_with_current_clip_rect);
+	return 0;
+}
+
+static int
+uPopClipRect(lua_State *L) {
+	ImGui::PopClipRect();
+	return 0;
+}
+
+static int
+uSetItemDefaultFocus(lua_State *L) {
+	ImGui::SetItemDefaultFocus();
+	return 0;
+}
+
+static int
+uSetKeyboardFocusHere(lua_State *L) {
+	int offset = luaL_optinteger(L, 1, 0);
+	ImGui::SetKeyboardFocusHere(offset);
+	return 0;
+}
+
+static int
+uIsItemHovered(lua_State *L) {
+	ImGuiHoveredFlags flags = luaL_optinteger(L, 1, 0);
+	bool change = ImGui::IsItemHovered(flags);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+uIsItemActive(lua_State *L) {
+	bool change = ImGui::IsItemActive();
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+uIsItemFocused(lua_State *L) {
+	bool change = ImGui::IsItemFocused();
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+uIsItemClicked(lua_State *L) {
+	int mouse_button = luaL_optinteger(L, 1, 0);
+	bool change = ImGui::IsItemClicked(mouse_button);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+uIsItemVisible(lua_State *L) {
+	bool change = ImGui::IsItemVisible();
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+uIsItemEdited(lua_State *L) {
+	bool change = ImGui::IsItemEdited();
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+uIsItemActivated(lua_State *L) {
+	bool change = ImGui::IsItemActivated();
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+uIsItemDeactivated(lua_State *L) {
+	bool change = ImGui::IsItemDeactivated();
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+uIsItemDeactivatedAfterEdit(lua_State *L) {
+	bool change = ImGui::IsItemDeactivatedAfterEdit();
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+uIsAnyItemHovered(lua_State *L) {
+	bool change = ImGui::IsAnyItemHovered();
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+uIsAnyItemActive(lua_State *L) {
+	bool change = ImGui::IsAnyItemActive();
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+uIsAnyItemFocused(lua_State *L) {
+	bool change = ImGui::IsAnyItemFocused();
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+uGetItemRectMin(lua_State *L) {
+	ImVec2 v = ImGui::GetItemRectMin();
+	lua_pushinteger(L, v.x);
+	lua_pushinteger(L, v.y);
+	return 2;
+}
+
+static int
+uGetItemRectMax(lua_State *L) {
+	ImVec2 v = ImGui::GetItemRectMax();
+	lua_pushinteger(L, v.x);
+	lua_pushinteger(L, v.y);
+	return 2;
+}
+
+static int
+uGetItemRectSize(lua_State *L) {
+	ImVec2 v = ImGui::GetItemRectSize();
+	lua_pushinteger(L, v.x);
+	lua_pushinteger(L, v.y);
+	return 2;
+}
+
+static int
+uSetItemAllowOverlap(lua_State *L) {
+	ImGui::SetItemAllowOverlap();
 	return 0;
 }
 
@@ -1866,7 +2037,6 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "end_frame", lendFrame },
 		{ "key_state", lkeyState },
 		{ "input_char", linputChar },
-		{ "SetColorEditOptions", lSetColorEditOptions },
 		{ NULL, NULL },
 	};
 
@@ -1971,6 +2141,34 @@ luaopen_bgfx_imgui(lua_State *L) {
 
 	luaL_newlib(L, windows);
 	lua_setfield(L, -2, "windows");
+
+	luaL_Reg util[] = {
+		{ "SetColorEditOptions", uSetColorEditOptions },
+		{ "PushClipRect", uPushClipRect },
+		{ "PopClipRect", uPopClipRect },
+		{ "SetItemDefaultFocus", uSetItemDefaultFocus },
+		{ "SetKeyboardFocusHere", uSetKeyboardFocusHere },
+		{ "IsItemHovered", uIsItemHovered },
+		{ "IsItemActive", uIsItemActive },
+		{ "IsItemFocused", uIsItemFocused },
+		{ "IsItemClicked", uIsItemClicked },
+		{ "IsItemVisible", uIsItemVisible },
+		{ "IsItemEdited", uIsItemEdited },
+		{ "IsItemActivated", uIsItemActivated },
+		{ "IsItemDeactivated", uIsItemDeactivated },
+		{ "IsItemDeactivatedAfterEdit", uIsItemDeactivatedAfterEdit },
+		{ "IsAnyItemHovered", uIsAnyItemHovered },
+		{ "IsAnyItemActive", uIsAnyItemActive },
+		{ "IsAnyItemFocused", uIsAnyItemFocused },
+		{ "GetItemRectMin", uGetItemRectMin },
+		{ "GetItemRectMax", uGetItemRectMax },
+		{ "GetItemRectSize", uGetItemRectSize },
+		{ "SetItemAllowOverlap", uSetItemAllowOverlap },
+		{ NULL, NULL },
+	};
+
+	luaL_newlib(L, util);
+	lua_setfield(L, -2, "util");
 
 	lua_newtable(L);
 	enum_gen(L, "ColorEditFlags", eColorEditFlags);
