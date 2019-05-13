@@ -915,16 +915,65 @@ wInputInt(lua_State *L) {
 	return 1;
 }
 
-/*
-    IMGUI_API bool          InputFloat(const char* label, float* v, float step = 0.0f, float step_fast = 0.0f, const char* format = "%.3f", ImGuiInputTextFlags flags = 0);
-    IMGUI_API bool          InputFloat2(const char* label, float v[2], const char* format = "%.3f", ImGuiInputTextFlags flags = 0);
-    IMGUI_API bool          InputFloat3(const char* label, float v[3], const char* format = "%.3f", ImGuiInputTextFlags flags = 0);
-    IMGUI_API bool          InputFloat4(const char* label, float v[4], const char* format = "%.3f", ImGuiInputTextFlags flags = 0);
-    IMGUI_API bool          InputInt(const char* label, int* v, int step = 1, int step_fast = 100, ImGuiInputTextFlags flags = 0);
-    IMGUI_API bool          InputInt2(const char* label, int v[2], ImGuiInputTextFlags flags = 0);
-    IMGUI_API bool          InputInt3(const char* label, int v[3], ImGuiInputTextFlags flags = 0);
-    IMGUI_API bool          InputInt4(const char* label, int v[4], ImGuiInputTextFlags flags = 0);
-*/
+static int
+wText(lua_State *L) {
+	size_t sz;
+	const char * text = luaL_checklstring(L, 1, &sz);
+	float color[4];
+	switch (lua_gettop(L)) {
+	case 1:	// no color
+		ImGui::TextUnformatted(text, text+sz);
+		break;
+	case 4:	// RGB
+	case 5: // RGBA
+		color[0] = luaL_checknumber(L, 2);
+		color[1] = luaL_checknumber(L, 3);
+		color[2] = luaL_checknumber(L, 4);
+		color[3] = luaL_optnumber(L, 5, 1.0);
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(color[0], color[1], color[2], color[3]));
+		ImGui::TextUnformatted(text, text+sz);
+		ImGui::PopStyleColor();
+		break;
+	default:
+		luaL_error(L, "Invalid args number for Text");
+	}
+	return 0;
+}
+
+static int
+wTextDisabled(lua_State *L) {
+	size_t sz;
+	const char * text = luaL_checklstring(L, 1, &sz);
+	ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
+	ImGui::TextUnformatted(text, text+sz);
+	ImGui::PopStyleColor();
+	return 0;
+}
+
+static int
+wTextWrapped(lua_State *L) {
+	size_t sz;
+	const char * text = luaL_checklstring(L, 1, &sz);
+	ImGui::PushTextWrapPos(0.0f);
+	ImGui::TextUnformatted(text, text+sz);
+	ImGui::PopTextWrapPos();
+	return 0;
+}
+
+static int
+wLabelText(lua_State *L) {
+	const char * label = luaL_checkstring(L, 1);
+	const char * text = luaL_checkstring(L, 2);
+	ImGui::LabelText(label, "%s", text);
+	return 0;
+}
+
+static int
+wBulletText(lua_State *L) {
+	const char * text = luaL_checkstring(L, 1);
+	ImGui::BulletText("%s", text);
+	return 0;
+}
 
 // enums
 struct enum_pair {
@@ -1151,6 +1200,11 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "InputText", wInputText },
 		{ "InputFloat", wInputFloat },
 		{ "InputInt", wInputInt },
+		{ "Text", wText },
+		{ "TextDisabled", wTextDisabled },
+		{ "TextWrapped", wTextWrapped },
+		{ "LabelText", wLabelText },
+		{ "BulletText", wBulletText },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, widgets);

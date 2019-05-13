@@ -126,6 +126,7 @@ local function update_ui()
 		print(editbox.text)
 	end
 	widget.InputFloat("InputFloat", editfloat)
+	widget.Text("Hello World", 1,0,0)
 end
 
 function callback.update()
