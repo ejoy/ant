@@ -2,6 +2,8 @@ local save = require "save"
 
 local m = {}
 
+m.split = "/"
+
 local typeinfo
 
 local function split(s)
@@ -105,7 +107,7 @@ function m.set(w, id, path, key, value)
     assert(not c.type)
     for _, v in ipairs(c) do
         if v.name == key then
-            component[v.name] = w:create_component(v.type, value)
+            w:add_component_child(component,key,v.type, value)
             return
         end
     end
