@@ -1434,6 +1434,63 @@ winGetWindowSize(lua_State *L) {
 	return 2;
 }
 
+static int
+winGetScrollX(lua_State *L) {
+	float v = ImGui::GetScrollX();
+	lua_pushnumber(L, v);
+	return 1;
+}
+
+static int
+winGetScrollY(lua_State *L) {
+	float v = ImGui::GetScrollY();
+	lua_pushnumber(L, v);
+	return 1;
+}
+
+static int
+winGetScrollMaxX(lua_State *L) {
+	float v = ImGui::GetScrollMaxX();
+	lua_pushnumber(L, v);
+	return 1;
+}
+
+static int
+winGetScrollMaxY(lua_State *L) {
+	float v = ImGui::GetScrollMaxY();
+	lua_pushnumber(L, v);
+	return 1;
+}
+
+static int
+winSetScrollX(lua_State *L) {
+	float v = luaL_checknumber(L, 1);
+	ImGui::SetScrollX(v);
+	return 0;
+}
+
+static int
+winSetScrollY(lua_State *L) {
+	float v = luaL_checknumber(L, 1);
+	ImGui::SetScrollY(v);
+	return 0;
+}
+
+static int
+winSetScrollHereY(lua_State *L) {
+	float v = luaL_optnumber(L, 1, 0.5);
+	ImGui::SetScrollHereY(v);
+	return 0;
+}
+
+static int
+winSetScrollFromPosY(lua_State *L) {
+	float local_y = luaL_checknumber(L, 1);
+	float v = luaL_optnumber(L, 2, 0.5);
+	ImGui::SetScrollFromPosY(local_y, v);
+	return 0;
+}
+
 // cursor and layout
 
 static int
@@ -2136,6 +2193,14 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "IsWindowHovered", winIsWindowHovered },
 		{ "GetWindowPos", winGetWindowPos },
 		{ "GetWindowSize", winGetWindowSize },
+		{ "GetScrollX", winGetScrollX },
+		{ "GetScrollY", winGetScrollY },
+		{ "GetScrollMaxX", winGetScrollMaxX },
+		{ "GetScrollMaxY", winGetScrollMaxY },
+		{ "SetScrollX", winSetScrollX },
+		{ "SetScrollY", winSetScrollY },
+		{ "SetScrollHereY", winSetScrollHereY },
+		{ "SetScrollFromPosY", winSetScrollFromPosY },
 		{ NULL, NULL },
 	};
 
