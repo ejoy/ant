@@ -118,6 +118,8 @@ local checkbox = {}
 
 local combobox = { "B" }
 
+local lines = { 1,2,3,2,1 }
+
 local function update_ui()
 	widget.Button "Test"
 	widget.SmallButton "Small"
@@ -144,6 +146,9 @@ local function update_ui()
 	if widget.TreeNode "TreeNodeC" then
 		widget.TreePop()
 	end
+
+	widget.PlotLines("lines", lines)
+	widget.PlotHistogram("histogram", lines)
 end
 
 function callback.update()

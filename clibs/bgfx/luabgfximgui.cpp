@@ -1121,6 +1121,77 @@ wCollapsingHeader(lua_State *L) {
 	return 1;
 }
 
+#define PLOT_LINES 0
+#define PLOT_HISTOGRAM 1
+
+struct plot_args {
+	lua_State *L;
+	bool err;
+};
+
+static int
+get_plot_func(lua_State *L) {
+	int n = lua_tointeger(L, 2);
+	if (lua_geti(L, 1, n) != LUA_TNUMBER) {
+		return luaL_error(L, "Need a number at [%d], it's a %s", n, lua_typename(L, lua_type(L, -1)));
+	}
+	return 1;
+}
+
+static float
+get_plot(void* data, int idx) {
+	struct plot_args *args = (struct plot_args *)data;
+	lua_State *L = args->L;
+	if (args->err)
+		return 0;
+	lua_pushcfunction(L, get_plot_func);
+	lua_pushvalue(L, INDEX_ARGS);
+	lua_pushinteger(L, idx+1);
+	if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
+		args->err = true;
+		return 0;
+	}
+	float r = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+	return r;
+}
+
+static void
+plot(lua_State *L, int t) {
+	const char *label = luaL_checkstring(L, INDEX_ID);
+	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
+	lua_len(L, INDEX_ARGS);
+	int n = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+	int values_offset = read_field_int(L, "offset", 0);
+	const char * overlay_text = read_field_string(L, "text", NULL);
+	float scale_min = read_field_float(L, "min", FLT_MAX);
+	float scale_max = read_field_float(L, "max", FLT_MAX);
+	float width = read_field_float(L, "width", 0);
+	float height = read_field_float(L, "height", 0);
+	struct plot_args args = { L, false };
+	if (t == PLOT_LINES) {
+		ImGui::PlotLines(label, get_plot, &args, n, values_offset, overlay_text, scale_min, scale_max, ImVec2(width, height));
+	} else {
+		ImGui::PlotHistogram(label, get_plot, &args, n, values_offset, overlay_text, scale_min, scale_max, ImVec2(width, height));
+	}
+	if (args.err) {
+		lua_error(L);
+	}
+}
+
+static int
+wPlotLines(lua_State *L) {
+	plot(L, PLOT_LINES);
+	return 0;
+}
+
+static int
+wPlotHistogram(lua_State *L) {
+	plot(L, PLOT_HISTOGRAM);
+	return 0;
+}
+
 // cursor and layout
 
 static int
@@ -1545,6 +1616,8 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "TreePop", wTreePop },
 		{ "CollapsingHeader", wCollapsingHeader },
 		{ "SetNextTreeNodeOpen", wSetNextTreeNodeOpen },
+		{ "PlotLines", wPlotLines },
+		{ "PlotHistogram", wPlotHistogram },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, widgets);
