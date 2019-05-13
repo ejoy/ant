@@ -81,7 +81,6 @@ function callback.keyboard(key, press, state)
 end
 
 local editbox = {
-	label = "Edit",
 	flags = enum.InputTextFlags { "CallbackCharFilter", "CallbackHistory", "CallbackCompletion" },
 }
 
@@ -115,17 +114,18 @@ local editfloat = {
 	step_fast = 10,
 }
 
+local checkbox = {}
+
 local function update_ui()
 	widget.Button "Test"
 	widget.SmallButton "Small"
-	change, checked = widget.Checkbox("Checkbox", checked)
-	if change then
-		print("Click Checkbox", checked)
+	if widget.Checkbox("Checkbox", checkbox) then
+		print("Click Checkbox", checkbox[1])
 	end
-	if widget.InputText(editbox) then
+	if widget.InputText("Edit", editbox) then
 		print(editbox.text)
 	end
-	widget.InputFloat(editfloat)
+	widget.InputFloat("InputFloat", editfloat)
 end
 
 function callback.update()

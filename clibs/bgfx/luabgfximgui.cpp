@@ -9,6 +9,9 @@ extern "C" {
 #include <cstring>
 #include <cstdlib>
 
+#define INDEX_ID 1
+#define INDEX_ARGS 2
+
 static int
 lcreate(lua_State *L) {
 	float fontSize = luaL_checknumber(L, 1);
@@ -50,7 +53,7 @@ lendFrame(lua_State *L) {
 // Widgets bindings
 static int
 wButton(lua_State *L) {
-	const char * text = luaL_checkstring(L, 1);
+	const char * text = luaL_checkstring(L, INDEX_ID);
 	int w = luaL_optnumber(L, 2, 0);
 	int h = luaL_optnumber(L, 3, 0);
 	bool click = ImGui::Button(text, ImVec2(w,h));
@@ -60,7 +63,7 @@ wButton(lua_State *L) {
 
 static int
 wSmallButton(lua_State *L) {
-	const char * text = luaL_checkstring(L, 1);
+	const char * text = luaL_checkstring(L, INDEX_ID);
 	bool click = ImGui::SmallButton(text);
 	lua_pushboolean(L, click);
 	return 1;
@@ -68,7 +71,7 @@ wSmallButton(lua_State *L) {
 
 static int
 wInvisibleButton(lua_State *L) {
-	const char * text = luaL_checkstring(L, 1);
+	const char * text = luaL_checkstring(L, INDEX_ID);
 	int w = luaL_optnumber(L, 2, 0);
 	int h = luaL_optnumber(L, 3, 0);
 	bool click = ImGui::InvisibleButton(text, ImVec2(w,h));
@@ -78,7 +81,7 @@ wInvisibleButton(lua_State *L) {
 
 static int
 wArrowButton(lua_State *L) {
-	const char * text = luaL_checkstring(L, 1);
+	const char * text = luaL_checkstring(L, INDEX_ID);
 	const char * dir = luaL_checkstring(L, 2);
 	ImGuiDir d;
 	switch (dir[0]) {
@@ -106,7 +109,7 @@ wArrowButton(lua_State *L) {
 
 static int
 wColorButton(lua_State *L) {
-	const char * desc = luaL_checkstring(L, 1);
+	const char * desc = luaL_checkstring(L, INDEX_ID);
 	float c1 = luaL_checknumber(L, 2);
 	float c2 = luaL_checknumber(L, 3);
 	float c3 = luaL_checknumber(L, 4);
@@ -123,17 +126,28 @@ wColorButton(lua_State *L) {
 
 static int
 wCheckbox(lua_State *L) {
-	const char * text = luaL_checkstring(L, 1);
-	bool v = lua_toboolean(L, 2);
-	bool change = ImGui::Checkbox(text, &v);
-	lua_pushboolean(L, change);
-	lua_pushboolean(L, v);
-	return 2;
+	const char * text = luaL_checkstring(L, INDEX_ID);
+	if (lua_type(L, INDEX_ARGS) == LUA_TTABLE) {
+		lua_geti(L, INDEX_ARGS, 1);
+		bool v = lua_toboolean(L, -1);
+		lua_pop(L, 1);
+		bool change = ImGui::Checkbox(text, &v);
+		lua_pushboolean(L, v);
+		lua_seti(L, INDEX_ARGS, 1);
+		lua_pushboolean(L, change);
+		return 1;
+	} else {
+		bool v = lua_toboolean(L, 2);
+		bool change = ImGui::Checkbox(text, &v);
+		lua_pushboolean(L, change);
+		lua_pushboolean(L, v);
+		return 2;
+	}
 }
 
 static int
 wRadioButton(lua_State *L) {
-	const char * text = luaL_checkstring(L, 1);
+	const char * text = luaL_checkstring(L, INDEX_ID);
 	bool v = lua_toboolean(L, 2);
 	v = ImGui::RadioButton(text, v);
 	lua_pushboolean(L, v);
@@ -167,7 +181,7 @@ wBullet(lua_State *L) {
 
 static double
 read_field_float(lua_State *L, const char * field, double v) {
-	if (lua_getfield(L, 1, field) == LUA_TNUMBER) {
+	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TNUMBER) {
 		v = lua_tonumber(L, -1);
 	}
 	lua_pop(L, 1);
@@ -177,7 +191,7 @@ read_field_float(lua_State *L, const char * field, double v) {
 static float
 read_field_checkfloat(lua_State *L, const char * field) {
 	float v;
-	if (lua_getfield(L, 1, field) == LUA_TNUMBER) {
+	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TNUMBER) {
 		v = lua_tonumber(L, -1);
 	} else {
 		v = 0;
@@ -189,7 +203,7 @@ read_field_checkfloat(lua_State *L, const char * field) {
 
 static int
 read_field_int(lua_State *L, const char * field, int v) {
-	if (lua_getfield(L, 1, field) == LUA_TNUMBER) {
+	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TNUMBER) {
 		if (!lua_isinteger(L, -1)) {
 			luaL_error(L, "Not an integer");
 		}
@@ -202,7 +216,7 @@ read_field_int(lua_State *L, const char * field, int v) {
 static int
 read_field_checkint(lua_State *L, const char * field) {
 	int v;
-	if (lua_getfield(L, 1, field) == LUA_TNUMBER) {
+	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TNUMBER) {
 		if (!lua_isinteger(L, -1)) {
 			luaL_error(L, "Not an integer");
 		}
@@ -217,7 +231,7 @@ read_field_checkint(lua_State *L, const char * field) {
 
 static const char *
 read_field_string(lua_State *L, const char * field, const char *v) {
-	if (lua_getfield(L, 1, field) == LUA_TSTRING) {
+	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TSTRING) {
 		v = lua_tostring(L, -1);
 	}
 	lua_pop(L, 1);
@@ -227,7 +241,7 @@ read_field_string(lua_State *L, const char * field, const char *v) {
 static bool
 read_field_boolean(lua_State *L, const char *field) {
 	int v = false;
-	if (lua_getfield(L, 1, field) == LUA_TBOOLEAN) {
+	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TBOOLEAN) {
 		v = lua_toboolean(L, 1);
 	}
 	lua_pop(L, 1);
@@ -235,17 +249,16 @@ read_field_boolean(lua_State *L, const char *field) {
 }
 
 static bool
-drag_float(lua_State *L, int n) {
+drag_float(lua_State *L, const char *label, int n) {
 	float v[4];
 	int i;
 	for (i=0;i<n;i++) {
-		if (lua_geti(L, 1, i+1) != LUA_TNUMBER) {
+		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER) {
 			luaL_error(L, "Need float [%d]", i+1);
 		}
 		v[i] = lua_tonumber(L, -1);
 		lua_pop(L, 1);
 	}
-	const char * label = read_field_string(L, "label", "DragFloat");
 	float speed = read_field_float(L, "speed", 1.0f);
 	float min = read_field_float(L, "min", 0.0f);
 	float max = read_field_float(L, "max", 0.0f);
@@ -274,24 +287,23 @@ drag_float(lua_State *L, int n) {
 	if (change) {
 		for (i=0;i<n;i++) {
 			lua_pushnumber(L, v[i]);
-			lua_seti(L, 1, i+1);
+			lua_seti(L, INDEX_ARGS, i+1);
 		}
 	}
 	return change;
 }
 
 static bool
-drag_int(lua_State *L, int n) {
+drag_int(lua_State *L, const char *label, int n) {
 	int v[4];
 	int i;
 	for (i=0;i<n;i++) {
-		if (lua_geti(L, 1, i+1) != LUA_TNUMBER || !lua_isinteger(L, -1)) {
+		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER || !lua_isinteger(L, -1)) {
 			luaL_error(L, "Need integer [%d]", i+1);
 		}
 		v[i] = lua_tointeger(L, -1);
 		lua_pop(L, 1);
 	}
-	const char * label = read_field_string(L, "label", "DragInt");
 	float speed = read_field_float(L, "speed", 1.0f);
 	int min = read_field_int(L, "min", 0);
 	int max = read_field_int(L, "max", 0);
@@ -319,24 +331,23 @@ drag_int(lua_State *L, int n) {
 	if (change) {
 		for (i=0;i<n;i++) {
 			lua_pushinteger(L, v[i]);
-			lua_seti(L, 1, i+1);
+			lua_seti(L, INDEX_ARGS, i+1);
 		}
 	}
 	return change;
 }
 
 static bool
-slider_float(lua_State *L, int n) {
+slider_float(lua_State *L, const char *label, int n) {
 	float v[4];
 	int i;
 	for (i=0;i<n;i++) {
-		if (lua_geti(L, 1, i+1) != LUA_TNUMBER) {
+		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER) {
 			luaL_error(L, "Need float [%d]", i+1);
 		}
 		v[i] = lua_tonumber(L, -1);
 		lua_pop(L, 1);
 	}
-	const char * label = read_field_string(L, "label", "SliderFloat");
 	float min = read_field_checkfloat(L, "min");
 	float max = read_field_checkfloat(L, "max");
 	const char * format = read_field_string(L, "format", "%.3f");
@@ -358,24 +369,23 @@ slider_float(lua_State *L, int n) {
 	if (change) {
 		for (i=0;i<n;i++) {
 			lua_pushnumber(L, v[i]);
-			lua_seti(L, 1, i+1);
+			lua_seti(L, INDEX_ARGS, i+1);
 		}
 	}
 	return change;
 }
 
 static bool
-slider_int(lua_State *L, int n) {
+slider_int(lua_State *L, const char *label, int n) {
 	int v[4];
 	int i;
 	for (i=0;i<n;i++) {
-		if (lua_geti(L, 1, i+1) != LUA_TNUMBER || !lua_isinteger(L, -1)) {
+		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER || !lua_isinteger(L, -1)) {
 			luaL_error(L, "Need integer [%d]", i+1);
 		}
 		v[i] = lua_tointeger(L, -1);
 		lua_pop(L, 1);
 	}
-	const char * label = read_field_string(L, "label", "SliderInt");
 	int min = read_field_checkint(L, "min");
 	int max = read_field_checkint(L, "max");
 	const char * format = read_field_string(L, "format", "%d");
@@ -397,41 +407,39 @@ slider_int(lua_State *L, int n) {
 	if (change) {
 		for (i=0;i<n;i++) {
 			lua_pushinteger(L, v[i]);
-			lua_seti(L, 1, i+1);
+			lua_seti(L, INDEX_ARGS, i+1);
 		}
 	}
 	return change;
 }
 
 static bool
-slider_angle(lua_State *L) {
+slider_angle(lua_State *L, const char *label) {
 	float r;
-	if (lua_geti(L, 1, 1) != LUA_TNUMBER) {
+	if (lua_geti(L, INDEX_ARGS, 1) != LUA_TNUMBER) {
 		luaL_error(L, "Need float deg");
 	}
 	r = lua_tonumber(L, -1);
 	lua_pop(L, 1);
-	const char * label = read_field_string(L, "label", "SliderAngle");
 	float min = read_field_float(L, "min", -360.0f);
 	float max = read_field_float(L, "max", +360.0f);
 	const char * format = read_field_string(L, "format", "%.0f deg");
 	float change = ImGui::SliderAngle(label, &r, min, max, format);
 	if (change) {
 		lua_pushnumber(L, r);
-		lua_seti(L, -2, 1);
+		lua_seti(L, INDEX_ARGS, 1);
 	}
 	return change;
 }
 
 static bool
-vslider_float(lua_State *L) {
+vslider_float(lua_State *L, const char *label) {
 	float r;
-	if (lua_geti(L, 1, 1) != LUA_TNUMBER) {
+	if (lua_geti(L, INDEX_ARGS, 1) != LUA_TNUMBER) {
 		luaL_error(L, "Need float");
 	}
 	r = lua_tonumber(L, -1);
 	lua_pop(L, 1);
-	const char * label = read_field_string(L, "label", "VSliderFloat");
 	float width = read_field_checkfloat(L, "width");
 	float height = read_field_checkfloat(L, "height");
 	float min = read_field_checkfloat(L, "min");
@@ -441,20 +449,19 @@ vslider_float(lua_State *L) {
 	float change = ImGui::VSliderFloat(label, ImVec2(width, height), &r, min, max, format, power);
 	if (change) {
 		lua_pushnumber(L, r);
-		lua_seti(L, -2, 1);
+		lua_seti(L, INDEX_ARGS, 1);
 	}
 	return change;
 }
 
 static bool
-vslider_int(lua_State *L) {
+vslider_int(lua_State *L, const char *label) {
 	int r;
-	if (lua_geti(L, 1, 1) != LUA_TNUMBER) {
+	if (lua_geti(L, INDEX_ARGS, 1) != LUA_TNUMBER) {
 		luaL_error(L, "Need float");
 	}
 	r = lua_tointeger(L, -1);
 	lua_pop(L, 1);
-	const char * label = read_field_string(L, "label", "VSliderInt");
 	float width = read_field_checkfloat(L, "width");
 	float height = read_field_checkfloat(L, "height");
 	int min = read_field_checkint(L, "min");
@@ -463,7 +470,7 @@ vslider_int(lua_State *L) {
 	float change = ImGui::VSliderInt(label, ImVec2(width, height), &r, min, max, format);
 	if (change) {
 		lua_pushinteger(L, r);
-		lua_seti(L, -2, 1);
+		lua_seti(L, INDEX_ARGS, 1);
 	}
 	return change;
 }
@@ -481,8 +488,9 @@ vslider_int(lua_State *L) {
 
 static int
 wDrag(lua_State *L, int type) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	lua_len(L, 1);
+	const char * label = luaL_checkstring(L, INDEX_ID);
+	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
+	lua_len(L, INDEX_ARGS);
 	int n = lua_tointeger(L, -1);
 	lua_pop(L, 1);
 	if (n < 1 || n > 4)
@@ -491,25 +499,25 @@ wDrag(lua_State *L, int type) {
 	// todo: DragScalar/DragScalarN/SliderScalar/SliderScalarN/VSliderScalar
 	switch(type) {
 	case DRAG_FLOAT:
-		change = drag_float(L, n);
+		change = drag_float(L, label, n);
 		break;
 	case DRAG_INT:
-		change = drag_int(L, n);
+		change = drag_int(L, label,  n);
 		break;
 	case SLIDER_FLOAT:
-		change = slider_float(L, n);
+		change = slider_float(L, label, n);
 		break;
 	case SLIDER_INT:
-		change = slider_int(L, n);
+		change = slider_int(L, label, n);
 		break;
 	case SLIDER_ANGLE:
-		change = slider_angle(L);
+		change = slider_angle(L, label);
 		break;
 	case VSLIDER_FLOAT:
-		change = vslider_float(L);
+		change = vslider_float(L, label);
 		break;
 	case VSLIDER_INT:
-		change = vslider_int(L);
+		change = vslider_int(L, label);
 		break;
 	}
 	lua_pushboolean(L, change);
@@ -553,18 +561,18 @@ wVSliderInt(lua_State *L) {
 
 static int
 wColor(lua_State *L, int type) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	lua_len(L, 1);
+	const char *label = luaL_checkstring(L, INDEX_ID);
+	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
+	lua_len(L, INDEX_ARGS);
 	int n = lua_tointeger(L, -1);
 	lua_pop(L, 1);
 	if (n < 3 || n > 4)
 		return luaL_error(L, "Need 3-4 numbers");
-	const char * label = read_field_string(L, "label", "Color");
 	ImGuiColorEditFlags flags = read_field_int(L, "flags", 0);
 	float v[4];
 	int i;
 	for (i=0;i<n;i++) {
-		if (lua_geti(L, 1, i+1) != LUA_TNUMBER) {
+		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER) {
 			luaL_error(L, "Color should be a number");
 		}
 		v[i] = lua_tonumber(L, -1);
@@ -582,7 +590,7 @@ wColor(lua_State *L, int type) {
 			change = ImGui::ColorPicker3(label, v, flags);
 		} else {
 			const char * ref = NULL;
-			if (lua_getfield(L, 1, "ref") == LUA_TSTRING) {
+			if (lua_getfield(L, INDEX_ARGS, "ref") == LUA_TSTRING) {
 				size_t sz;
 				ref = lua_tolstring(L, -1, &sz);
 				if (sz != 4 * sizeof(float)) {
@@ -596,7 +604,7 @@ wColor(lua_State *L, int type) {
 	if (change) {
 		for (i=0;i<n;i++) {
 			lua_pushnumber(L, v[i]);
-			lua_seti(L, 1, i+1);
+			lua_seti(L, INDEX_ARGS, i+1);
 		}
 	}
 	lua_pushboolean(L, change);
@@ -688,7 +696,7 @@ edit_callback(ImGuiInputTextCallbackData *data) {
 		if (!lua_checkstack(L, 3)) {
 			break;
 		}
-		if (lua_getfield(L, 1, "filter") == LUA_TFUNCTION) {
+		if (lua_getfield(L, INDEX_ARGS, "filter") == LUA_TFUNCTION) {
 			int c = data->EventChar;
 			lua_pushvalue(L, 1);
 			lua_pushinteger(L, c);
@@ -713,7 +721,7 @@ edit_callback(ImGuiInputTextCallbackData *data) {
 			break;
 		}
 		const char * what = data->EventKey == ImGuiKey_UpArrow ? "up" : "down";
-		if (lua_getfield(L, 1, what) == LUA_TFUNCTION) {
+		if (lua_getfield(L, INDEX_ARGS, what) == LUA_TFUNCTION) {
 			lua_pushvalue(L, 1);
 			if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
 				break;
@@ -734,7 +742,7 @@ edit_callback(ImGuiInputTextCallbackData *data) {
 		if (!lua_checkstack(L, 3)) {
 			break;
 		}
-		if (lua_getfield(L, 1, "tab") == LUA_TFUNCTION) {
+		if (lua_getfield(L, INDEX_ARGS, "tab") == LUA_TFUNCTION) {
 			lua_pushvalue(L, 1);
 			lua_pushinteger(L, data->CursorPos);
 			if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
@@ -760,15 +768,15 @@ edit_callback(ImGuiInputTextCallbackData *data) {
 
 static int
 wInputText(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	const char * label = read_field_string(L, "label", "InputText");
+	const char * label = luaL_checkstring(L, INDEX_ID);
+	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
 	ImGuiInputTextFlags flags = read_field_int(L, "flags", 0);
 	const char * hint = read_field_string(L, "hint", NULL);
-	int t = lua_getfield(L, 1, "text");
+	int t = lua_getfield(L, INDEX_ARGS, "text");
 	if (t == LUA_TSTRING || t == LUA_TNIL) {
 		create_new_editbuf(L);
 		lua_pushvalue(L, -1);
-		lua_setfield(L, 1, "text");
+		lua_setfield(L, INDEX_ARGS, "text");
 	}
 	struct editbuf * ebuf = (struct editbuf *)luaL_checkudata(L, -1, "IMGUI_EDITBUF");
 	ebuf->L = L;
@@ -798,20 +806,20 @@ input_float(lua_State *L, const char *label, const char *format, ImGuiInputTextF
 	if (n == 1) {
 		double step = read_field_float(L, "step", 0);
 		double step_fast = read_field_float(L, "step_fast", 0);
-		lua_geti(L, 1, 1);
+		lua_geti(L, INDEX_ARGS, 1);
 		double v = lua_tonumber(L, -1);
 		lua_pop(L, 1);
 		bool r = ImGui::InputDouble(label, &v, step, step_fast, format, flags);
 		if (r) {
 			lua_pushnumber(L, v);
-			lua_seti(L, 1, 1);
+			lua_seti(L, INDEX_ARGS, 1);
 		}
 		return r;
 	} else {
 		float v[4];
 		int i;
 		for (i=0;i<n;i++) {
-			lua_geti(L, 1, i+1);
+			lua_geti(L, INDEX_ARGS, i+1);
 			v[i] = lua_tonumber(L, -1);
 			lua_pop(L, 1);
 		}
@@ -830,7 +838,7 @@ input_float(lua_State *L, const char *label, const char *format, ImGuiInputTextF
 		if (r) {
 			for (i=0;i<n;i++) {
 				lua_pushnumber(L, v[i]);
-				lua_seti(L, 1, i+1);
+				lua_seti(L, INDEX_ARGS, i+1);
 			}
 		}
 		return r;
@@ -848,7 +856,7 @@ input_int(lua_State *L, const char *label, ImGuiInputTextFlags flags, int n) {
 	int v[4];
 	int i;
 	for (i=0;i<n;i++) {
-		lua_geti(L, 1, i+1);
+		lua_geti(L, INDEX_ARGS, i+1);
 		v[i] = lua_tointeger(L, -1);
 		lua_pop(L, 1);
 	}
@@ -870,7 +878,7 @@ input_int(lua_State *L, const char *label, ImGuiInputTextFlags flags, int n) {
 	if (r) {
 		for (i=0;i<n;i++) {
 			lua_pushinteger(L, v[i]);
-			lua_seti(L, 1, i+1);
+			lua_seti(L, INDEX_ARGS, i+1);
 		}
 	}
 	return r;
@@ -878,13 +886,13 @@ input_int(lua_State *L, const char *label, ImGuiInputTextFlags flags, int n) {
 
 static int
 wInputFloat(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	lua_len(L, 1);
+	const char * label = luaL_checkstring(L, INDEX_ID);
+	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
+	lua_len(L, INDEX_ARGS);
 	int n = lua_tointeger(L, -1);
 	lua_pop(L, 1);
 	if (n < 1 || n > 4)
 		return luaL_error(L, "Need 1-4 numbers");
-	const char * label = read_field_string(L, "label", "InputFloat");
 	ImGuiInputTextFlags flags = read_field_int(L, "flags", 0);
 	const char * format = read_field_string(L, "format", "%.3f");
 	bool change = input_float(L, label, format, flags, n);
@@ -894,13 +902,13 @@ wInputFloat(lua_State *L) {
 
 static int
 wInputInt(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	lua_len(L, 1);
+	const char * label = luaL_checkstring(L, INDEX_ID);
+	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
+	lua_len(L, INDEX_ARGS);
 	int n = lua_tointeger(L, -1);
 	lua_pop(L, 1);
 	if (n < 1 || n > 4)
 		return luaL_error(L, "Need 1-4 int");
-	const char * label = read_field_string(L, "label", "InputInt");
 	ImGuiInputTextFlags flags = read_field_int(L, "flags", 0);
 	bool change = input_int(L, label, flags, n);
 	lua_pushboolean(L, change);
