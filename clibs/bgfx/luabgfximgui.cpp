@@ -238,6 +238,15 @@ read_field_string(lua_State *L, const char * field, const char *v) {
 	return v;
 }
 
+static const char *
+read_index_string(lua_State *L, int index, const char *v) {
+	if (lua_geti(L, INDEX_ARGS, index) == LUA_TSTRING) {
+		v = lua_tostring(L, -1);
+	}
+	lua_pop(L, 1);
+	return v;
+}
+
 static bool
 read_field_boolean(lua_State *L, const char *field) {
 	int v = false;
@@ -975,6 +984,80 @@ wBulletText(lua_State *L) {
 	return 0;
 }
 
+/*
+    IMGUI_API bool          BeginCombo(const char* label, const char* preview_value, ImGuiComboFlags flags = 0);
+    IMGUI_API void          EndCombo(); // only call EndCombo() if BeginCombo() returns true!
+    IMGUI_API bool          Combo(const char* label, int* current_item, const char* const items[], int items_count, int popup_max_height_in_items = -1);
+*/
+static int
+wBeginCombo(lua_State *L) {
+	const char *label = luaL_checkstring(L, INDEX_ID);
+	const char * preview_value;
+	ImGuiComboFlags flags = 0;
+	switch (lua_type(L, INDEX_ARGS)) {
+	case LUA_TTABLE:
+		preview_value = read_index_string(L, 1, NULL);
+		flags = read_field_int(L, "flags", 0);
+		break;
+	case LUA_TSTRING:
+		preview_value = lua_tostring(L, INDEX_ARGS);
+		break;
+	case LUA_TNIL:
+	case LUA_TNONE:
+		preview_value = NULL;
+		break;
+	default:
+		return luaL_error(L, "Invalid preview value type %s", lua_typename(L, lua_type(L, INDEX_ARGS)));
+	}
+	bool change = ImGui::BeginCombo(label, preview_value, flags);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+wEndCombo(lua_State *L) {
+	ImGui::EndCombo();
+	return 0;
+}
+
+static int
+wSelectable(lua_State *L) {
+	const char *label = luaL_checkstring(L, INDEX_ID);
+	bool selected;
+	ImGuiSelectableFlags flags = 0;
+	ImVec2 size(0,0);
+	int t = lua_type(L, INDEX_ARGS);
+	switch (t) {
+	case LUA_TBOOLEAN:
+		selected = lua_toboolean(L, INDEX_ARGS);
+		break;
+	case LUA_TTABLE:
+		if (lua_geti(L, INDEX_ARGS, 1) == LUA_TSTRING &&
+			lua_compare(L, INDEX_ID, -1, LUA_OPEQ)) {
+			selected = true;
+		} else {
+			selected = false;
+		}
+		lua_pop(L, 1);
+		flags = read_field_int(L, "item_flags", 0);
+		size.x = read_field_float(L, "width", 0);
+		size.y = read_field_float(L, "height", 0);
+		break;
+	default:
+		return luaL_error(L, "Invalid selected type %s", lua_typename(L, t));
+	}
+	if (lua_toboolean(L, 3)) {
+		flags |= ImGuiSelectableFlags_Disabled;
+	}
+	bool change = ImGui::Selectable(label, selected, flags, size);
+	if (change && t == LUA_TTABLE) {
+		lua_pushvalue(L, INDEX_ID);
+		lua_seti(L, INDEX_ARGS, 1);
+	}
+	lua_pushboolean(L, change);
+	return 1;
+}
+
 // enums
 struct enum_pair {
 	const char * name;
@@ -1103,6 +1186,26 @@ static struct enum_pair eInputTextFlags[] = {
 	{ NULL, 0 },
 };
 
+static struct enum_pair eComboFlags[] = {
+	ENUM(ImGuiComboFlags, PopupAlignLeft),
+	ENUM(ImGuiComboFlags, HeightSmall),
+	ENUM(ImGuiComboFlags, HeightRegular),
+	ENUM(ImGuiComboFlags, HeightLarge),
+	ENUM(ImGuiComboFlags, HeightLargest),
+	ENUM(ImGuiComboFlags, NoArrowButton),
+	ENUM(ImGuiComboFlags, NoPreview),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eSelectableFlags[] = {
+	ENUM(ImGuiSelectableFlags, DontClosePopups),
+	ENUM(ImGuiSelectableFlags, SpanAllColumns),
+	ENUM(ImGuiSelectableFlags, AllowDoubleClick),
+// Use boolean(disabled) in Selectable(_,_, disabled)
+//	ENUM(ImGuiSelectableFlags, Disabled),
+	{ NULL, 0 },
+};
+
 struct keymap {
 	const char * name;
 	int index;
@@ -1205,6 +1308,9 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "TextWrapped", wTextWrapped },
 		{ "LabelText", wLabelText },
 		{ "BulletText", wBulletText },
+		{ "BeginCombo", wBeginCombo },
+		{ "EndCombo", wEndCombo },
+		{ "Selectable", wSelectable },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, widgets);
@@ -1214,6 +1320,9 @@ luaopen_bgfx_imgui(lua_State *L) {
 	lua_newtable(L);
 	enum_gen(L, "ColorEditFlags", eColorEditFlags);
 	enum_gen(L, "InputTextFlags", eInputTextFlags);
+	enum_gen(L, "ComboFlags", eComboFlags);
+	enum_gen(L, "SelectableFlags", eSelectableFlags);
+
 	lua_setfield(L, -2, "enum");
 
 	return 1;

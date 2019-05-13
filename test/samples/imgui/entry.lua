@@ -116,6 +116,8 @@ local editfloat = {
 
 local checkbox = {}
 
+local combobox = { "B" }
+
 local function update_ui()
 	widget.Button "Test"
 	widget.SmallButton "Small"
@@ -127,6 +129,12 @@ local function update_ui()
 	end
 	widget.InputFloat("InputFloat", editfloat)
 	widget.Text("Hello World", 1,0,0)
+	if widget.BeginCombo( "Combo", combobox ) then
+		widget.Selectable("A", combobox)
+		widget.Selectable("B", combobox)
+		widget.Selectable("C", combobox)
+		widget.EndCombo()
+	end
 end
 
 function callback.update()
