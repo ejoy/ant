@@ -1,8 +1,8 @@
 local log = log and log(...) or print
 local scene_control = {}; scene_control.__index = scene_control
 local FILE_MEMU = {"File"}
-local iupcontrols   = import_package "ant.iupcontrols"
-local hub           = iupcontrols.common.hub
+local editor = import_package "ant.editor"
+local hub = editor.hub
 local editor        = import_package "ant.editor"
 local mapiup        = editor.mapiup
 local task          = editor.task
@@ -63,6 +63,7 @@ function scene_control:openMap(path)
     local packages = {
         -- "ant.EditorLauncher",
         -- "ant.objcontroller",
+        "ant.testempty",
         "ant.hierarchy.offline",
     }
     local systems = {
@@ -70,6 +71,7 @@ function scene_control:openMap(path)
         --"pickup_system",
         "obj_transform_system",
         "build_hierarchy_system",
+        "editor_watcher_system",
         -- "editor_system"
     }
 
@@ -93,7 +95,7 @@ function scene_control:new_world(packages, systems)
         fbw=1024, fbh=768,
     }
 
-    self.world = scene.start_new_world(self.input_queue, self.config.fbw, self.config.fbh, packages, systems)        
+    self.world = scene.start_new_world(self.input_queue, self.config.fbw, self.config.fbh, packages, systems,{hub = hub})        
     task.loop(scene.loop(self.world, {
         update = {"timesystem", "message_system"}
     }))
@@ -133,7 +135,7 @@ function scene_control:on_foucs_entity(serialize)
 end
 
 function scene_control:on_open_world(eid)
-
+    
 end
 
 function scene_control:new_scene_click()

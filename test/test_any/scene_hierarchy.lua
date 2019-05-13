@@ -9,6 +9,7 @@ local scene_hierarchy_hub = require "scene_hierarchy_hub"
 local Serialize = import_package 'ant.serialize'
 local scene_hierarchy = setmetatable({},{__index = tree})
 
+--to be delete
 function scene_hierarchy:on_open_world(serialize_world)
     local world = self.editor_window:get_editor_world()
     for _, eid in world:each 'serialize' do
@@ -17,10 +18,15 @@ function scene_hierarchy:on_open_world(serialize_world)
     Serialize.load_world(world, serialize_world)
     local htree, ud_table = self:build_hierarchy_tree(world)
     print("sssssssssssssssssssssssssssssssssssssssssssssssssssss")
-    print_a(world._schema.map)
+    -- print_a(world._schema.map)
     self:build(htree, ud_table)
 end
 
+function scene_hierarchy:on_refresh_hierarchy(tbl)
+    self:build(tbl)
+end
+
+--to be delete
 function scene_hierarchy:build_hierarchy_tree(world)
     local htree = {}
     local ud_table = {}
@@ -120,34 +126,45 @@ local function ordered_pairs(t)
 end
 
 
-function scene_hierarchy:build(htree, ud_table)       
-    local function constrouct_treeview(tr, parent)
-        for k, v in ordered_pairs(tr) do
-            local ktype = type(k)
-            if ktype == "string" or ktype == "number" then
-                local vtype = type(v)
-                local function add_child(parent, name)
-                    local child = self:add_child(parent, name)
-                    local eid = assert(ud_table[name])
-                    child.eid = eid        
-                    return child
-                end
+function scene_hierarchy:build(tbl)       
+    -- local function constrouct_treeview(tr, parent)
+    --     for k, v in ordered_pairs(tr) do
+    --         local ktype = type(k)
+    --         if ktype == "string" or ktype == "number" then
+    --             local vtype = type(v)
+    --             local function add_child(parent, name)
+    --                 local child = self:add_child(parent, name)
+    --                 local eid = assert(ud_table[name])
+    --                 child.eid = eid        
+    --                 return child
+    --             end
                 
-                if vtype == "table" then
-                    local child = add_child(parent, k)
-                    constrouct_treeview(v, child)
-                elseif vtype == "string" then
-                    add_child(parent, v)
-                end
-            else
-                log("not support ktype : ", ktype)
-            end
+    --             if vtype == "table" then
+    --                 local child = add_child(parent, k)
+    --                 constrouct_treeview(v, child)
+    --             elseif vtype == "string" then
+    --                 add_child(parent, v)
+    --             end
+    --         else
+    --             log("not support ktype : ", ktype)
+    --         end
     
+    --     end
+    -- end
+    local add_tbl = function(tbl,parent)
+        for id, data in ordered_pairs(tbl) do
+            local children = data.children
+            local name = data.name
+            local child = self:add_child(parent, string.format("[%d]%s",id,name or "[nil]"))
+            child.eid = id
+            if children then
+                add_tbl(children,child)
+            end
         end
     end
 
     self:clear()
-    constrouct_treeview(htree, nil) 
+    add_tbl(tbl, nil)
     self:clear_selections()
 end
 
@@ -161,11 +178,12 @@ function scene_hierarchy:init( )
                 local world = self.editor_window:get_editor_world()
                 
                 -- build_pv(eid, get_extendtree(eid))
-                print("todo build pv")
+                print("todo build pv",eid)
                 -- local camerautil = import_package "ant.render".camera
                 -- local world = self.editor_window:get_editor_world()
                 -- camerautil.focus_selected_obj(world, eid)
                 scene_hierarchy_hub.publish_foucs_entity(eid)
+
             end
         end
     end

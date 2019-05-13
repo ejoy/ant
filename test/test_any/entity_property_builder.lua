@@ -11,18 +11,35 @@ local factory = require "entity_value_controller_factory"
 
 local entity_property_builder = {}
 
+--todo pass a modify function to builder
+function entity_property_builder.notify_modify(eid,id,key,value)
+    local entity_property_hub = require "entity_property_hub"
+    entity_property_hub.publish_modify_component(eid,id,key,value)
+end
+
 function entity_property_builder.build_primtype_component(parent_tbl,com_name,component_data,schema,alias_name)
     local com_schema = schema[com_name]
     local typ = com_schema.type
     local function modify_function(value)
+        print(">>>>>>>>>>>>>>>>>>>>>")
+        print_a("    before:",parent_tbl)
+        print_a("    modify:",alias_name,value)
         parent_tbl[alias_name] = value
+        print_a("    after:",parent_tbl)
+        print("<<<<<<<<<<<<<<<<<<")
+        local eid = nil
+        if not parent_tbl.__id then
+            --entity has nor __id,but has __entity_id
+            eid = parent_tbl.__entity_id
+        end
+        entity_property_builder.notify_modify(eid,parent_tbl.__id,alias_name,value)
         return true -- if return nil, modify will be ignored
     end
     local builder = factory[com_name]
     local value = component_data
-    if com_schema.method and com_schema.method.save then
-        value = com_schema.method.save(value)
-    end
+    -- if com_schema.method and com_schema.method.save then
+    --     value = com_schema.method.save(value)
+    -- end
     local value_ctrl = builder(alias_name,value,modify_function)
     
     return value_ctrl
@@ -59,10 +76,16 @@ function entity_property_builder.build_map_component(parent_tbl,com_name,compone
     local vbox_ctrl = iup.vbox {
         iup.label { title = "["..tostring(alias_name).."]" }
     }
+    -- normal table
     for child_name,data in pairs(component_data) do
         local child_ctrl = entity_property_builder.build_component(component_data,com_name,data,schema,child_name)
         iup.Append(vbox_ctrl,child_ctrl)
     end
+    -- listize table
+    -- for _,data in pairs(component_data) do
+    --     local child_ctrl = entity_property_builder.build_component(component_data,com_name,data[2],schema,data[1])
+    --     iup.Append(vbox_ctrl,child_ctrl)
+    -- end
     return vbox_ctrl
 end
 
@@ -134,11 +157,13 @@ end
 --container:iup container
 --entity:...
 --schema:world._schema
-function entity_property_builder.build_enity(container,entity,schema)
+function entity_property_builder.build_enity(container,eid,entity,schema)
+    
     for com_name,component_data in pairs( entity ) do
         local iup_item = entity_property_builder.build_component(entity,com_name,component_data,schema,com_name)
         iup.Append(container,iup_item)
     end
+    entity.__entity_id = eid
     iup.Append(container,iup.fill {})
 
 end

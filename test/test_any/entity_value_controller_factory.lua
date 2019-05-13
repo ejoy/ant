@@ -12,7 +12,7 @@ local entity_value_controller_factory = {}
 
 function  entity_value_controller_factory.real( name,value,fun )
     -- body
-    local value_str = string.format("%7g",value)
+    local value_str = tostring(value)
     local text_ctrl = iup.text {
         value = value_str,
         MASK = iup.MASK_FLOAT,
@@ -20,7 +20,8 @@ function  entity_value_controller_factory.real( name,value,fun )
         EXPAND = "HORIZONTAL",
     }
     local old_str = value_str
-    function text_ctrl:valuechanged_cb(value)
+    function text_ctrl:valuechanged_cb()
+        local value = text_ctrl.value
         if fun(tonumber(value)) then
             old_str = value
         else
@@ -62,7 +63,8 @@ function entity_value_controller_factory.string( name,value,fun )
         EXPAND = "HORIZONTAL",
     }
     local old_str = value_str
-    function text_ctrl:valuechanged_cb(value)
+    function text_ctrl:valuechanged_cb()
+        local value = text_ctrl.value
         if fun(value) then
             old_str = value
         else
@@ -77,7 +79,7 @@ function entity_value_controller_factory.string( name,value,fun )
 end
 
 function entity_value_controller_factory.int( name,value,fun )
-    local value_str = string.format("%s",name)
+    local value_str = string.format("%d",value)
     local text_ctrl = iup.text {
         value = value_str,
         MASK = iup.MASK_INT,
@@ -85,7 +87,8 @@ function entity_value_controller_factory.int( name,value,fun )
         EXPAND = "HORIZONTAL",
     }
     local old_str = value_str
-    function text_ctrl:valuechanged_cb(value)
+    function text_ctrl:valuechanged_cb()
+        local value = text_ctrl.value
         if fun(tonumber(value)) then
             old_str = value
         else
@@ -109,13 +112,25 @@ function entity_value_controller_factory.vector( name,value,fun )
         gridbox,
     })
     for i = 1,4 do
-        local value_str = string.format("%7g",real4[i])
+        local value_str = tostring(real4[i])
+        
         local text_ctrl = iup.text {
             value = value_str,
             MASK = iup.MASK_FLOAT,
             MULTILINE = "NO",
             EXPAND = "HORIZONTAL",
         }
+        function text_ctrl:valuechanged_cb()
+            local v = text_ctrl.value
+            local old_v = value[i]
+            value[i] = tonumber(v)
+            if fun(value) then
+                old_str = v
+            else
+                print("false")
+                value[i] = old_v
+            end
+        end
         iup.Append(gridbox,text_ctrl)
     end
 
@@ -136,13 +151,24 @@ function entity_value_controller_factory.matrix( name,value,fun )
         gridbox,
     })
     for i = 1,16 do
-        local value_str = string.format("%7g",real16[i])
+        local value_str = tostring(real16[i])
         local text_ctrl = iup.text {
             value = value_str,
             MASK = iup.MASK_FLOAT,
             MULTILINE = "NO",
             EXPAND = "HORIZONTAL",
         }
+        function text_ctrl:valuechanged_cb()
+            local v = text_ctrl.value
+            local old_v = value[i]
+            value[i] = tonumber(v)
+            if fun(value) then
+                old_str = v
+            else
+                print("false")
+                value[i] = old_v
+            end
+        end
         iup.Append(gridbox,text_ctrl)
     end
 
