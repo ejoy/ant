@@ -10,7 +10,8 @@ local iupcontrols   = import_package "ant.iupcontrols"
 local rhwi          = import_package "ant.render".hardware_interface
 local elog          = iupcontrols.logview
 local tree          = iupcontrols.tree
-local hub          = iupcontrols.common.hub
+local editor = import_package "ant.editor"
+local hub = editor.hub
 local MenuBar          = iupcontrols.menubar
 
 local editor_mainwindow = {}

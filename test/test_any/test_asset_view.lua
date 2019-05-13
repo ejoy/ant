@@ -19,8 +19,8 @@ local editor = import_package "ant.editor"
 local mapiup = editor.mapiup
 local fs = require "filesystem"
 local iupcontrols = import_package "ant.iupcontrols"
-local hub = iupcontrols.common.hub
-
+local editor = import_package "ant.editor"
+local hub = editor.hub
 local asset_view_wnd = {}
 asset_view_wnd.__index = asset_view_wnd
 

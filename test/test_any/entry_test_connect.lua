@@ -28,7 +28,7 @@ end
 -- print(world)
 task.safe_loop(world.update)
 -- print(11)
-local mainwin = require "test_hub_win"
+local mainwin = require "test_connect_win"
 -- local mainwin = require "test_tree_window"
 mainwin:run {
     fbw=1024, fbh=768,

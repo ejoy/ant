@@ -26,9 +26,14 @@ local function create()
     return crypt.uuid()
 end
 
-local function parse(str)
-    return datalist.parse(str)
+local thread = require "thread"
+
+local watch = require "watch"
+local function entity2tbl(w,eid)
+    local tbl = watch.query(w,nil,tostring(eid))
+    return tbl
 end
+
 return {
     save_world = save_world,
     save_entity = save_entity,
@@ -36,5 +41,10 @@ return {
     load_entity = load_entity,
     create = create,
     watch = require "watch",
-	parse = parse,
+    --binary pack&unpack table
+    pack = thread.pack,
+	unpack = thread.unpack,
+    --convert betweend table and entity/component
+    entity2tbl = entity2tbl,
+    world2tbl = save.world,
 }

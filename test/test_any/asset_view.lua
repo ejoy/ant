@@ -27,7 +27,7 @@ asset_view.__index = asset_view
 
 local packages = {"ant.testempty"}
 
-local systems = {"asset_view_render_sys", "camera_controller",}
+local systems = {"asset_view_render_sys", "editor_camera_controller",}
 
 if __ANT_RUNTIME__ then
     local rt = require "runtime"

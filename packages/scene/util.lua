@@ -36,19 +36,26 @@ end
 
 local bullet_world = import_package "ant.bullet".bulletworld
 
-function util.start_new_world(input_queue, fbw, fbh, packages, systems)
+function util.start_new_world(input_queue, fbw, fbh, packages, systems,other_args)
 	if input_queue == nil then
 		log("input queue is not privided, no input event will be received!")
+	end
+
+	local args =  { 
+		mq = input_queue, 
+		fb_size={w=fbw, h=fbh},
+		Physics = bullet_world.new(),
+	}
+	if other_args then
+		for k,v in pairs(other_args) do
+			args[k] = v
+		end
 	end
 
 	local world = ecs.new_world {
 		packages = packages,
 		systems = systems,		
-		args = { 
-			mq = input_queue, 
-			fb_size={w=fbw, h=fbh},
-			Physics = bullet_world.new(),
-		},
+		args = args,
 	}
 	
 	mathadapter.bind_math_adapter()	

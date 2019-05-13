@@ -11,6 +11,7 @@ local elog          = iupcontrols.logview
 local tree          = iupcontrols.tree
 local editor = import_package "ant.editor"
 local hub = editor.hub
+local Connect = editor.connect
 local editor_mainwindow = {}
 editor_mainwindow.__index = editor_mainwindow
 
@@ -30,30 +31,29 @@ function editor_mainwindow:build_window(fbw, fbh)
     
 end
 
+function editor_mainwindow:listen1(data)
+    print_a("receive>>>listen1",data)
+end
+
 function editor_mainwindow:init_event()
     local key_funcs = {}
+    local connect = Connect.new()
+    connect:listen("111",self.listen1,self)
     key_funcs[iup.K_1] = function()
-        hub.subscibe("a channel",self.foo,self)
-        hub.subscibe_mult("a channel",self.foo_all,self)
+        print("connect:call")
+        connect:call("111",{a = "asdad",b="asd"})
     end
     local count = 0
     key_funcs[iup.K_2] = function()
-        count = count + 1
-        hub.publish("a channel","hello world","~~~~",count) 
+
     end
-    local time = 1
     key_funcs[iup.K_3] = function()
-        time = time + 1
-        hub.set_channel("a channel",{interval=time})
     end
     key_funcs[iup.K_4] = function()
-        hub.unsubscibe("a channel",self.foo,self)
     end
     key_funcs[iup.K_5] = function()
-        hub.unsubscibe_mult("a channel",self.foo_all,self)
     end
     key_funcs[iup.K_6] = function()
-        hub.unsubscibe_all_by_target(self)
     end
     local k_any = function(dlg,c)
         if key_funcs[c] then
