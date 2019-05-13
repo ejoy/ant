@@ -37,8 +37,7 @@ lbeginFrame(lua_State *L) {
 		(button1 ? IMGUI_MBUT_LEFT : 0) |
 		(button2 ? IMGUI_MBUT_RIGHT : 0) |
 		(button3 ? IMGUI_MBUT_MIDDLE : 0);
-	// todo: use -1
-	imguiBeginFrame(mx, my, button, scroll, width, height, 0, view);
+	imguiBeginFrame(mx, my, button, scroll, width, height, -1, view);
 	return 0;
 }
 
@@ -744,7 +743,9 @@ edit_callback(ImGuiInputTextCallbackData *data) {
 			if (lua_type(L, -1) == LUA_TSTRING) {
 				size_t sz;
 				const char *str = lua_tolstring(L, -1, &sz);
-				data->InsertChars(data->CursorPos, str, str+sz);
+				data->DeleteChars(0, data->CursorPos);
+				data->InsertChars(0, str, str+sz);
+				data->CursorPos = sz;
 			}
 			lua_pop(L, 1);
 		} else {

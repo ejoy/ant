@@ -105,8 +105,8 @@ function editbox:down()
 end
 
 function editbox:tab(pos)
-	local text = tostring(self.text)
-	return text:sub(1, pos)
+	t = t + 1
+	return tostring(t)
 end
 
 local editfloat = {
