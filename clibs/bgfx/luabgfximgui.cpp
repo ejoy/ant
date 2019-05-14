@@ -22,6 +22,10 @@ static int
 lcreate(lua_State *L) {
 	float fontSize = luaL_checknumber(L, 1);
 	imguiCreate(fontSize);
+
+	ImGuiIO& io = ImGui::GetIO();
+	io.IniFilename = NULL;
+
 	return 0;
 }
 
@@ -1972,6 +1976,28 @@ uSetItemAllowOverlap(lua_State *L) {
 	return 0;
 }
 
+static int
+uLoadIniSettings(lua_State *L) {
+	size_t sz;
+	const char * ini = luaL_checklstring(L, 1, &sz);
+	ImGui::LoadIniSettingsFromMemory(ini, sz);
+	return 0;
+}
+
+static int
+uSaveIniSettings(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	if (io.WantSaveIniSettings) {
+		size_t sz = 0;
+		const char * ini = ImGui::SaveIniSettingsToMemory(&sz);
+		io.WantSaveIniSettings = false;
+		lua_pushlstring(L, ini, sz);
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
 // key, press, state
 static int
 lkeyState(lua_State *L) {
@@ -2371,6 +2397,8 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "GetItemRectMax", uGetItemRectMax },
 		{ "GetItemRectSize", uGetItemRectSize },
 		{ "SetItemAllowOverlap", uSetItemAllowOverlap },
+		{ "LoadIniSettings", uLoadIniSettings },
+		{ "SaveIniSettings", uSaveIniSettings },
 		{ NULL, NULL },
 	};
 

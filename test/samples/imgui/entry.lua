@@ -5,6 +5,7 @@ local imgui = require "bgfx.imgui"
 local widget = imgui.widget
 local flags = imgui.flags
 local windows = imgui.windows
+local util = imgui.util
 
 local callback = {}
 local attribs = {}
@@ -151,7 +152,9 @@ function test_window:update()
 			windows.EndTabItem()
 		end
 		if windows.BeginTabItem ("Tab2",tab_noclosed) then
-			widget.Text "Hello Tab"
+			if widget.Button "Save Ini" then
+				print(util.SaveIniSettings())
+			end
 			windows.EndTabItem()
 		end
 		windows.EndTabBar()
