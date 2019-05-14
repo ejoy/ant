@@ -11,7 +11,6 @@ extern "C" {
 
 #define INDEX_ID 1
 #define INDEX_ARGS 2
-#define NO_CLOSED ((lua_Integer)1 << 32)
 
 struct lua_args {
 	lua_State *L;
@@ -1344,19 +1343,34 @@ wListBox(lua_State *L) {
 
 // windows api
 
+#define NO_CLOSED ((lua_Integer)1 << 32)
+
+struct window_args {
+	const char * id;
+	bool *p_open;
+	bool opened;
+	unsigned int flags;
+};
+
+static void
+get_window_args(lua_State *L, struct window_args *args) {
+	args->id = luaL_checkstring(L, INDEX_ID);
+	lua_Integer flagsx = luaL_optinteger(L, 2, 0);
+	args->flags = (unsigned int)(flagsx & 0xffffffff);
+	args->opened = true;
+	args->p_open = &args->opened;
+	if (flagsx & NO_CLOSED) {
+		args->p_open = NULL;
+	}
+}
+
 static int
 winBegin(lua_State *L) {
-	const char *name = luaL_checkstring(L, INDEX_ID);
-	lua_Integer flagsx = luaL_optinteger(L, 2, 0);
-	ImGuiWindowFlags flags = (ImGuiWindowFlags)(flagsx & 0xffffffff);
-	bool opened = true;
-	bool *p_open = &opened;
-	if (flagsx & NO_CLOSED) {
-		p_open = NULL;
-	}
-	bool change = ImGui::Begin(name, p_open, flags);
+	struct window_args args;
+	get_window_args(L, &args);
+	bool change = ImGui::Begin(args.id, args.p_open, args.flags);
 	lua_pushboolean(L, change);
-	lua_pushboolean(L, opened);
+	lua_pushboolean(L, args.opened);
 	return 2;
 }
 
@@ -1401,17 +1415,11 @@ winEndTabBar(lua_State *L) {
 
 static int
 winBeginTabItem(lua_State *L) {
-	const char *name = luaL_checkstring(L, INDEX_ID);
-	lua_Integer flagsx = luaL_optinteger(L, 2, 0);
-	ImGuiTabItemFlags flags = (ImGuiTabItemFlags)(flagsx & 0xffffffff);
-	bool opened = true;
-	bool *p_open = &opened;
-	if (flagsx & NO_CLOSED) {
-		p_open = NULL;
-	}
-	bool change = ImGui::BeginTabItem(name, p_open, flags);
+	struct window_args args;
+	get_window_args(L, &args);
+	bool change = ImGui::BeginTabItem(args.id, args.p_open, args.flags);
 	lua_pushboolean(L, change);
-	lua_pushboolean(L, opened);
+	lua_pushboolean(L, args.opened);
 	return 2;
 }
 
@@ -1425,6 +1433,110 @@ static int
 winSetTabItemClosed(lua_State *L) {
 	const char * tab_or_docked_window_label = luaL_checkstring(L, 1);
 	ImGui::SetTabItemClosed(tab_or_docked_window_label);
+	return 0;
+}
+
+static int
+winOpenPopup(lua_State *L) {
+	const char * id = luaL_checkstring(L, INDEX_ID);
+	ImGui::OpenPopup(id);
+	return 0;
+}
+
+static int
+winBeginPopup(lua_State *L) {
+	const char * id = luaL_checkstring(L, INDEX_ID);
+	ImGuiWindowFlags flags = (ImGuiWindowFlags)(luaL_optinteger(L, 2,0) & 0xffffffff);
+	bool change = ImGui::BeginPopup(id, flags);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+struct popup_args {
+	const char *id;
+	int mouse_button;
+	bool b;
+};
+
+static void
+get_popup_args(lua_State *L, struct popup_args *args) {
+	int index = INDEX_ID;
+	int t = lua_type(L, index);
+	if (t == LUA_TSTRING || t == LUA_TNIL || t == LUA_TNONE) {
+		args->id = lua_tostring(L, index);
+		++index;
+	}
+	args->mouse_button = luaL_optinteger(L, index++, 1);
+	if (lua_type(L, index) == LUA_TBOOLEAN) {
+		args->b = lua_toboolean(L, index);
+	} else {
+		args->b = true;
+	}
+}
+
+static int
+winBeginPopupContextItem(lua_State *L) {
+	struct popup_args args;
+	get_popup_args(L, &args);
+	int change = ImGui::BeginPopupContextItem(args.id, args.mouse_button);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+winBeginPopupContextWindow(lua_State *L) {
+	struct popup_args args;
+	get_popup_args(L, &args);
+	int change = ImGui::BeginPopupContextWindow(args.id, args.mouse_button, args.b);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+winBeginPopupContextVoid(lua_State *L) {
+	struct popup_args args;
+	get_popup_args(L, &args);
+	int change = ImGui::BeginPopupContextVoid(args.id, args.mouse_button);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+winBeginPopupModal(lua_State *L) {
+	struct window_args args;
+	get_window_args(L, &args);
+	bool change = ImGui::BeginPopupModal(args.id, args.p_open, args.flags);
+	lua_pushboolean(L, change);
+	lua_pushboolean(L, args.opened);
+	return 2;
+}
+
+static int
+winEndPopup(lua_State *L) {
+	ImGui::EndPopup();
+	return 0;
+}
+
+static int
+winOpenPopupOnItemClick(lua_State *L) {
+	struct popup_args args;
+	get_popup_args(L, &args);
+	int change = ImGui::OpenPopupOnItemClick(args.id, args.mouse_button);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+winIsPopupOpen(lua_State *L) {
+	const char * id = luaL_checkstring(L, INDEX_ID);
+	bool change = ImGui::IsPopupOpen(id);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+winCloseCurrentPopup(lua_State *L) {
+	ImGui::CloseCurrentPopup();
 	return 0;
 }
 
@@ -2343,6 +2455,16 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "BeginTabItem", winBeginTabItem },
 		{ "EndTabItem", winEndTabItem },
 		{ "SetTabItemClosed", winSetTabItemClosed },
+		{ "OpenPopup", winOpenPopup },
+		{ "BeginPopup", winBeginPopup },
+		{ "BeginPopupContextItem", winBeginPopupContextItem },
+		{ "BeginPopupContextWindow", winBeginPopupContextWindow },
+		{ "BeginPopupContextVoid", winBeginPopupContextVoid },
+		{ "BeginPopupModal", winBeginPopupModal },
+		{ "EndPopup", winEndPopup },
+		{ "OpenPopupOnItemClick", winOpenPopupOnItemClick },
+		{ "IsPopupOpen", winIsPopupOpen },
+		{ "CloseCurrentPopup", winCloseCurrentPopup },
 		{ "IsWindowAppearing", winIsWindowAppearing },
 		{ "IsWindowCollapsed", winIsWindowCollapsed },
 		{ "IsWindowFocused", winIsWindowFocused },

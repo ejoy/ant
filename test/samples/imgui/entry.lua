@@ -155,6 +155,13 @@ function test_window:update()
 			if widget.Button "Save Ini" then
 				print(util.SaveIniSettings())
 			end
+			if windows.BeginPopupModal "Popup window" then
+				widget.Text "Pop up"
+				windows.EndPopup()
+			end
+			if widget.Button "Popup" then
+				windows.OpenPopup "Popup window"
+			end
 			windows.EndTabItem()
 		end
 		windows.EndTabBar()
