@@ -128,7 +128,7 @@ local test_window = {
 }
 
 local function run_window(wnd)
-	local touch, closed = windows.Begin(wnd.id, wnd.flags, wnd.closed)
+	local touch, closed = windows.Begin(wnd.id, wnd.closed, wnd.flags)
 	if touch then
 		wnd:update()
 		windows.End()

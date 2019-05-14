@@ -1342,12 +1342,21 @@ wListBox(lua_State *L) {
 static int
 winBegin(lua_State *L) {
 	const char *name = luaL_checkstring(L, INDEX_ID);
-	ImGuiWindowFlags flags = luaL_optinteger(L, 2, 0);
+	ImGuiWindowFlags flags = 0;
 	bool *p_open = NULL;
 	bool opened = true;
-	if (lua_isboolean(L, 3)) {
+	int open_index = 0;
+	if (lua_isboolean(L, 2)) {
+		open_index = 2;
+	} else {
+		flags = luaL_optinteger(L, 2, 0);
+		if (lua_isboolean(L, 3)) {
+			open_index = 3;
+		}
+	}
+	if (open_index) {
 		p_open = &opened;
-		opened = lua_toboolean(L, 3);
+		opened = lua_toboolean(L, open_index);
 		if (!opened) {
 			lua_pushboolean(L, false);
 			return 1;
