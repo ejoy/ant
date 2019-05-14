@@ -1,8 +1,9 @@
 local gltf = import_package "ant.glTF"
+local gltfutil = gltf.util
 local bgfx = require "bgfx"
 local declmgr = import_package "ant.render".declmgr
 
-local comptype_mapper = {
+local comptype_shortname_mapper = {
 	BYTE 			= "u",
 	UNSIGNED_BYTE 	= "u",
 	SHORT 			= "i",
@@ -11,26 +12,16 @@ local comptype_mapper = {
 	FLOAT 			= "f",
 }
 
-local elemtype_mapper = {
-	SCALAR = 1,
-	VEC2 = 2,
-	VEC3 = 3,
-	VEC4 = 4,
-	MAT2 = 4,
-	MAT3 = 9,
-	MAT4 = 16,
-}
-
 local function get_desc(name, accessor)
 	local shortname, channel = declmgr.parse_attri_name(name)
+	local comptype_name = gltfutil.comptype_name_mapper[accessor.componentType]
 
 	return 	shortname .. 
-			elemtype_mapper[accessor.componentType] .. 
+			gltfutil.type_count_mapper[accessor.type] .. 
 			channel .. 
 			accessor.normalized and "n" or "N" .. 
 			"I" .. 
-			comptype_mapper[accessor.componentType]
-	
+			comptype_shortname_mapper[comptype_name]	
 end
 
 local function classfiy_attri(attributes, accessors)
@@ -81,7 +72,7 @@ return function (meshfile)
 	local scene = gltfloader.decode(jsondata)
 
 	local nodes, meshes, accessors, bufferviews = 
-	scene.nodes, scene.meshes, scene.accessors, scene.bufferviews
+	scene.nodes, scene.meshes, scene.accessors, scene.bufferViews
 
 	local function create_buffers(scenenodes)
 		for _, nodeidx in ipairs(scenenodes) do
@@ -99,13 +90,16 @@ return function (meshfile)
 					bv.handle = bgfx.create_vertex_buffer(decl, {
 						"!", bindata, bv.byteOffset, bv.byteLength,
 					})
+					bv.byteOffset = 0
 				end
 
 				local indices_accessor = accessors[prim.indices+1]
-				local indices_bv = bufferviews[indices_accessor.bufferView+1]
+				local indices_bvidx = indices_accessor.bufferView+1
+				local indices_bv = bufferviews[indices_bvidx]
 				indices_bv.handle = bgfx.create_index_buffer{
 					bindata, indices_bv.byteOffset, indices_bv.byteLength
 				}
+				indices_bv.byteOffset = 0
 			end
 		end
 	end

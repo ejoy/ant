@@ -70,17 +70,56 @@ function primitive_filter_sys:update()
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
 			if vt and ft then
-				local meshhandle = assert(ce.mesh.assetinfo).handle
+				local assetinfo = ce.mesh.assetinfo
 				local worldmat = ce.transform.world
-				local bounding = meshhandle.bounding
-				if bounding then
-					boundings[#boundings+1] = {bounding = bounding, transform=worldmat}
+				local materialcontent = assert(ce.material.content)
+				if assetinfo then
+					local meshhandle = assetinfo.handle
+					local bounding = meshhandle.bounding
+					if bounding then
+						boundings[#boundings+1] = {bounding = bounding, transform=worldmat}
+					end
+					ru.insert_primitive(eid, 
+						meshhandle,
+						materialcontent,
+						worldmat,
+						filter)
+				else
+					local scene = ce.mesh.handle
+					local nodes, meshes = scene.nodes, scene.meshes
+					local function traverse_scene(scenenodes, trans)
+						for _, nodeidx in ipairs(scenenodes) do
+							local node = nodes[nodeidx+1]
+							if node.children then
+								traverse_scene(node.children)
+							end
+
+							local function get_transform(node)
+								if node.matrix then
+									return ms:matrix(node.matrix)
+								end
+
+								if node.scale or node.rotation or node.translation then
+									return ms:srtmat(node.scale, node.rotation, node.translation)
+								end
+							end
+
+							local nodetrans = ms(trans, get_transform(node), "*P")
+
+							local meshidx = node.mesh
+							local mesh = meshes[meshidx+1]
+							
+							for idx, prim in ipairs(mesh.primitives) do
+								ru.insert_primitive_glb(eid, prim, scene, 
+									materialcontent[idx] or materialcontent[1], 
+									nodetrans, filter)
+							end
+							
+						end
+					end
+
+					traverse_scene(scene.scenes, worldmat)
 				end
-				ru.insert_primitive(eid, 
-					meshhandle,
-					assert(ce.material.content),
-					worldmat,
-					filter)
 			end
 		end
 
