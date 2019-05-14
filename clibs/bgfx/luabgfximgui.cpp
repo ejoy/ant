@@ -11,6 +11,7 @@ extern "C" {
 
 #define INDEX_ID 1
 #define INDEX_ARGS 2
+#define NO_CLOSED ((lua_Integer)1 << 32)
 
 struct lua_args {
 	lua_State *L;
@@ -1342,35 +1343,17 @@ wListBox(lua_State *L) {
 static int
 winBegin(lua_State *L) {
 	const char *name = luaL_checkstring(L, INDEX_ID);
-	ImGuiWindowFlags flags = 0;
-	bool *p_open = NULL;
+	lua_Integer flagsx = luaL_optinteger(L, 2, 0);
+	ImGuiWindowFlags flags = (ImGuiWindowFlags)(flagsx & 0xffffffff);
 	bool opened = true;
-	int open_index = 0;
-	if (lua_isboolean(L, 2)) {
-		open_index = 2;
-	} else {
-		flags = luaL_optinteger(L, 2, 0);
-		if (lua_isboolean(L, 3)) {
-			open_index = 3;
-		}
-	}
-	if (open_index) {
-		p_open = &opened;
-		opened = lua_toboolean(L, open_index);
-		if (!opened) {
-			lua_pushboolean(L, false);
-			return 1;
-		}
+	bool *p_open = &opened;
+	if (flagsx & NO_CLOSED) {
+		p_open = NULL;
 	}
 	bool change = ImGui::Begin(name, p_open, flags);
-	if (change) {
-		lua_pushboolean(L, change);
-		lua_pushboolean(L, opened);
-		return 2;
-	} else {
-		lua_pushboolean(L, change);
-		return 1;
-	}
+	lua_pushboolean(L, change);
+	lua_pushboolean(L, opened);
+	return 2;
 }
 
 static int
@@ -1394,6 +1377,50 @@ winBeginChild(lua_State *L) {
 static int
 winEndChild(lua_State *L) {
 	ImGui::EndChild();
+	return 0;
+}
+
+static int
+winBeginTabBar(lua_State *L) {
+	const char * id = luaL_checkstring(L, INDEX_ID);
+	ImGuiTabBarFlags flags = luaL_optinteger(L, 2, 0);
+	bool change = ImGui::BeginTabBar(id, flags);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+winEndTabBar(lua_State *L) {
+	ImGui::EndTabBar();
+	return 0;
+}
+
+static int
+winBeginTabItem(lua_State *L) {
+	const char *name = luaL_checkstring(L, INDEX_ID);
+	lua_Integer flagsx = luaL_optinteger(L, 2, 0);
+	ImGuiTabItemFlags flags = (ImGuiTabItemFlags)(flagsx & 0xffffffff);
+	bool opened = true;
+	bool *p_open = &opened;
+	if (flagsx & NO_CLOSED) {
+		p_open = NULL;
+	}
+	bool change = ImGui::BeginTabItem(name, p_open, flags);
+	lua_pushboolean(L, change);
+	lua_pushboolean(L, opened);
+	return 2;
+}
+
+static int
+winEndTabItem(lua_State *L) {
+	ImGui::EndTabItem();
+	return 0;
+}
+
+static int
+winSetTabItemClosed(lua_State *L) {
+	const char * tab_or_docked_window_label = luaL_checkstring(L, 1);
+	ImGui::SetTabItemClosed(tab_or_docked_window_label);
 	return 0;
 }
 
@@ -1751,7 +1778,7 @@ cGetTreeNodeToLabelSpacing(lua_State *L) {
 // enums
 struct enum_pair {
 	const char * name;
-	int value;
+	lua_Integer value;
 };
 
 #define ENUM(prefix, name) { #name, prefix##_##name }
@@ -1760,7 +1787,7 @@ static int
 make_enum(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	int i,t;
-	int r = 0;
+	lua_Integer r = 0;
 
 	for (i=1;(t = lua_geti(L, 1, i)) != LUA_TNIL;i++) {
 		if (t != LUA_TSTRING)
@@ -1769,7 +1796,7 @@ make_enum(lua_State *L) {
 			lua_geti(L, 1, i);
 			luaL_error(L, "Invalid enum %s.%s", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, -1));
 		}
-		int v = lua_tointeger(L, -1);
+		lua_Integer v = lua_tointeger(L, -1);
 		lua_pop(L, 1);
 		r |= v;
 	}
@@ -2085,6 +2112,7 @@ static struct enum_pair eWindowFlags[] = {
 	ENUM(ImGuiWindowFlags, NoNav),
 	ENUM(ImGuiWindowFlags, NoDecoration),
 	ENUM(ImGuiWindowFlags, NoInputs),
+	{ "NoClosed", (lua_Integer)1<<32 },
 	{ NULL, 0 },
 };
 
@@ -2106,6 +2134,19 @@ static struct enum_pair eHoveredFlags[] = {
 	ENUM(ImGuiHoveredFlags, AllowWhenDisabled),
 	ENUM(ImGuiHoveredFlags, RectOnly),
 	ENUM(ImGuiHoveredFlags, RootAndChildWindows),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eTabBarFlags[] = {
+	ENUM(ImGuiTabBarFlags, Reorderable),
+	ENUM(ImGuiTabBarFlags, AutoSelectNewTabs),
+	ENUM(ImGuiTabBarFlags, TabListPopupButton),
+	ENUM(ImGuiTabBarFlags, NoCloseWithMiddleMouseButton),
+	ENUM(ImGuiTabBarFlags, NoTabListScrollingButtons),
+	ENUM(ImGuiTabBarFlags, NoTooltip),
+	ENUM(ImGuiTabBarFlags, FittingPolicyResizeDown),
+	ENUM(ImGuiTabBarFlags, FittingPolicyScroll),
+	{ "NoClosed", (lua_Integer)1<<32 },
 	{ NULL, 0 },
 };
 
@@ -2271,6 +2312,11 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "End", winEnd },
 		{ "BeginChild", winBeginChild },
 		{ "EndChild", winEndChild },
+		{ "BeginTabBar", winBeginTabBar },
+		{ "EndTabBar", winEndTabBar },
+		{ "BeginTabItem", winBeginTabItem },
+		{ "EndTabItem", winEndTabItem },
+		{ "SetTabItemClosed", winSetTabItemClosed },
 		{ "IsWindowAppearing", winIsWindowAppearing },
 		{ "IsWindowCollapsed", winIsWindowCollapsed },
 		{ "IsWindowFocused", winIsWindowFocused },
@@ -2332,16 +2378,17 @@ luaopen_bgfx_imgui(lua_State *L) {
 	lua_setfield(L, -2, "util");
 
 	lua_newtable(L);
-	enum_gen(L, "ColorEditFlags", eColorEditFlags);
-	enum_gen(L, "InputTextFlags", eInputTextFlags);
-	enum_gen(L, "ComboFlags", eComboFlags);
-	enum_gen(L, "SelectableFlags", eSelectableFlags);
-	enum_gen(L, "TreeNodeFlags", eTreeNodeFlags);
-	enum_gen(L, "WindowFlags", eWindowFlags);
-	enum_gen(L, "FocusedFlags", eFocusedFlags);
-	enum_gen(L, "HoveredFlags", eHoveredFlags);
+	enum_gen(L, "ColorEdit", eColorEditFlags);
+	enum_gen(L, "InputText", eInputTextFlags);
+	enum_gen(L, "Combo", eComboFlags);
+	enum_gen(L, "Selectable", eSelectableFlags);
+	enum_gen(L, "TreeNode", eTreeNodeFlags);
+	enum_gen(L, "Window", eWindowFlags);
+	enum_gen(L, "Focused", eFocusedFlags);
+	enum_gen(L, "Hovered", eHoveredFlags);
+	enum_gen(L, "TabBar", eTabBarFlags);
 
-	lua_setfield(L, -2, "enum");
+	lua_setfield(L, -2, "flags");
 
 	return 1;
 }

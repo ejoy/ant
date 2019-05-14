@@ -3,7 +3,7 @@ local window = require "window"
 local bgfx = require "bgfx"
 local imgui = require "bgfx.imgui"
 local widget = imgui.widget
-local enum = imgui.enum
+local flags = imgui.flags
 local windows = imgui.windows
 
 local callback = {}
@@ -82,7 +82,7 @@ function callback.keyboard(key, press, state)
 end
 
 local editbox = {
-	flags = enum.InputTextFlags { "CallbackCharFilter", "CallbackHistory", "CallbackCompletion" },
+	flags = flags.InputText { "CallbackCharFilter", "CallbackHistory", "CallbackCompletion" },
 }
 
 function editbox:filter(c)
@@ -123,27 +123,50 @@ local lines = { 1,2,3,2,1 }
 
 local test_window = {
 	id = "Test",
-	closed = true,
-	flags = enum.WindowFlags { "MenuBar" },
+	open = true,
+	flags = flags.Window { "MenuBar" },	-- "NoClosed"
 }
 
 local function run_window(wnd)
-	local touch, closed = windows.Begin(wnd.id, wnd.closed, wnd.flags)
+	if not wnd.open then
+		return
+	end
+	local touch, open = windows.Begin(wnd.id, wnd.flags)
 	if touch then
 		wnd:update()
 		windows.End()
-		wnd.closed = closed
+		wnd.open = open
 	end
 end
 
 local lists = { "Alice", "Bob" }
 
+local tab_noclosed = flags.TabBar { "NoClosed" }
+
 function test_window:update()
+	self:menu()
+	if windows.BeginTabBar "tab_bar" then
+		if windows.BeginTabItem ("Tab1",tab_noclosed) then
+			self:tab_update()
+			windows.EndTabItem()
+		end
+		if windows.BeginTabItem ("Tab2",tab_noclosed) then
+			widget.Text "Hello Tab"
+			windows.EndTabItem()
+		end
+		windows.EndTabBar()
+	end
+end
+
+function test_window:menu()
 	if widget.BeginMenuBar() then
 		widget.MenuItem("M1")
 		widget.MenuItem("M2")
 		widget.EndMenuBar()
 	end
+end
+
+function test_window:tab_update()
 	widget.Button "Test"
 	widget.SmallButton "Small"
 	if widget.Checkbox("Checkbox", checkbox) then
