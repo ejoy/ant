@@ -179,6 +179,7 @@ function test_window:update()
 end
 
 local function update_ui()
+	windows.SetNextWindowSizeConstraints(300, 300, 500, 500)
 	run_window(test_window)
 end
 

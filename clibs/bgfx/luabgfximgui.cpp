@@ -12,7 +12,7 @@ extern "C" {
 #define INDEX_ID 1
 #define INDEX_ARGS 2
 
-struct table_args {
+struct lua_args {
 	lua_State *L;
 	bool err;
 };
@@ -52,6 +52,36 @@ lbeginFrame(lua_State *L) {
 static int
 lendFrame(lua_State *L) {
 	imguiEndFrame();
+	return 0;
+}
+
+static ImGuiCond
+get_cond(lua_State *L, int index) {
+	int t = lua_type(L, 2);
+	switch (t) {
+	case LUA_TSTRING: {
+		const char *cond = lua_tostring(L, 2);
+		switch(cond[0]) {
+		case 'a':
+		case 'A':
+			return ImGuiCond_Appearing;
+		case 'o':
+		case 'O':
+			return ImGuiCond_Once;
+		case 'f':
+		case 'F':
+			return ImGuiCond_FirstUseEver;
+		default:
+			luaL_error(L, "Invalid ImGuiCond %s", cond);
+			break;
+		}
+	}
+	case LUA_TNIL:
+	case LUA_TNONE:
+		return 0;
+	default:
+		luaL_error(L, "Invalid ImGuiCond type %s", lua_typename(L, t));
+	}
 	return 0;
 }
 
@@ -1073,36 +1103,6 @@ wTreePop(lua_State *L) {
 	return 0;
 }
 
-static ImGuiCond
-get_cond(lua_State *L, int index) {
-	int t = lua_type(L, 2);
-	switch (t) {
-	case LUA_TSTRING: {
-		const char *cond = lua_tostring(L, 2);
-		switch(cond[0]) {
-		case 'a':
-		case 'A':
-			return ImGuiCond_Appearing;
-		case 'o':
-		case 'O':
-			return ImGuiCond_Once;
-		case 'f':
-		case 'F':
-			return ImGuiCond_FirstUseEver;
-		default:
-			luaL_error(L, "Invalid ImGuiCond %s", cond);
-			break;
-		}
-	}
-	case LUA_TNIL:
-	case LUA_TNONE:
-		return 0;
-	default:
-		luaL_error(L, "Invalid ImGuiCond type %s", lua_typename(L, t));
-	}
-	return 0;
-}
-
 static int
 wSetNextTreeNodeOpen(lua_State *L) {
 	bool is_open = lua_toboolean(L, 1);
@@ -1134,7 +1134,7 @@ get_plot_func(lua_State *L) {
 
 static float
 get_plot(void* data, int idx) {
-	struct table_args *args = (struct table_args *)data;
+	struct lua_args *args = (struct lua_args *)data;
 	lua_State *L = args->L;
 	if (args->err)
 		return 0;
@@ -1163,7 +1163,7 @@ plot(lua_State *L, int t) {
 	float scale_max = read_field_float(L, "max", FLT_MAX);
 	float width = read_field_float(L, "width", 0);
 	float height = read_field_float(L, "height", 0);
-	struct table_args args = { L, false };
+	struct lua_args args = { L, false };
 	if (t == PLOT_LINES) {
 		ImGui::PlotLines(label, get_plot, &args, n, values_offset, overlay_text, scale_min, scale_max, ImVec2(width, height));
 	} else {
@@ -1298,7 +1298,7 @@ get_listitem_func(lua_State *L) {
 
 static bool
 get_listitem(void* data, int idx, const char **out_text) {
-	struct table_args *args = (struct table_args *)data;
+	struct lua_args *args = (struct lua_args *)data;
 	lua_State *L = args->L;
 	if (args->err)
 		return 0;
@@ -1326,7 +1326,7 @@ wListBox(lua_State *L) {
 	int n = lua_tointeger(L, -1);
 	lua_pop(L, 1);
 	int height_in_items = read_field_int(L, "height", -1);
-	struct table_args args = { L, false };
+	struct lua_args args = { L, false };
 	int current = read_field_int(L, "current", 0) - 1;
 	bool change = ImGui::ListBox(label, &current, get_listitem, &args, n, height_in_items);
 	if (change) {
@@ -1489,6 +1489,104 @@ winSetScrollFromPosY(lua_State *L) {
 	float v = luaL_optnumber(L, 2, 0.5);
 	ImGui::SetScrollFromPosY(local_y, v);
 	return 0;
+}
+
+static int
+winSetNextWindowPos(lua_State *L) {
+	float x = luaL_checkinteger(L, 1);
+	float y = luaL_checkinteger(L, 2);
+	ImGuiCond cond = get_cond(L, 3);
+	float px = luaL_optinteger(L, 4, 0);
+	float py = luaL_optinteger(L, 5, 0);
+	ImGui::SetNextWindowPos(ImVec2(x,y), cond, ImVec2(px,py));
+	return 0;
+}
+
+static int
+winSetNextWindowSize(lua_State *L) {
+	float x = luaL_checkinteger(L, 1);
+	float y = luaL_checkinteger(L, 2);
+	ImGuiCond cond = get_cond(L, 3);
+	ImGui::SetNextWindowSize(ImVec2(x,y), cond);
+	return 0;
+}
+
+static int
+winSetNextWindowSizeConstraints(lua_State *L) {
+	float min_w = luaL_checkinteger(L, 1);
+	float min_h = luaL_checkinteger(L, 2);
+	float max_w = luaL_checkinteger(L, 3);
+	float max_h = luaL_checkinteger(L, 4);
+	ImGui::SetNextWindowSizeConstraints(ImVec2(min_w,min_h), ImVec2(max_w, max_h));
+	return 0;
+}
+
+static int
+winSetNextWindowContentSize(lua_State *L) {
+	float x = luaL_checkinteger(L, 1);
+	float y = luaL_checkinteger(L, 2);
+	ImGui::SetNextWindowContentSize(ImVec2(x,y));
+	return 0;
+}
+
+static int
+winSetNextWindowCollapsed(lua_State *L) {
+	bool collapsed = lua_toboolean(L, 1);
+	ImGuiCond cond = get_cond(L, 2);
+	ImGui::SetNextWindowCollapsed(collapsed, cond);
+	return 0;
+}
+
+static int
+winSetNextWindowFocus(lua_State *L) {
+	ImGui::SetNextWindowFocus();
+	return 0;
+}
+
+static int
+winSetNextWindowBgAlpha(lua_State *L) {
+	float alpha = luaL_checknumber(L,1);
+	ImGui::SetNextWindowBgAlpha(alpha);
+	return 0;
+}
+
+static int
+winGetContentRegionMax(lua_State *L) {
+	ImVec2 v = ImGui::GetContentRegionMax();
+	lua_pushnumber(L, v.x);
+	lua_pushnumber(L, v.y);
+	return 2;
+}
+
+static int
+winGetContentRegionAvail(lua_State *L) {
+	ImVec2 v = ImGui::GetContentRegionAvail();
+	lua_pushnumber(L, v.x);
+	lua_pushnumber(L, v.y);
+	return 2;
+}
+
+static int
+winGetWindowContentRegionMin(lua_State *L) {
+	ImVec2 v = ImGui::GetWindowContentRegionMin();
+	lua_pushnumber(L, v.x);
+	lua_pushnumber(L, v.y);
+	return 2;
+}
+
+static int
+winGetWindowContentRegionMax(lua_State *L) {
+	ImVec2 v = ImGui::GetWindowContentRegionMax();
+	lua_pushnumber(L, v.x);
+	lua_pushnumber(L, v.y);
+	return 2;
+}
+
+static int
+winGetWindowContentRegionWidth(lua_State *L) {
+	float w = ImGui::GetWindowContentRegionWidth();
+	lua_pushnumber(L, w);
+	return 1;
 }
 
 // cursor and layout
@@ -1692,37 +1790,14 @@ uSetColorEditOptions(lua_State *L) {
 	return 0;
 }
 
-/*
-		{ "PushClipRect", uPushClipRect },
-		{ "PopClipRect", uPopClipRect },
-		{ "SetItemDefaultFocus", uSetItemDefaultFocus },
-		{ "SetKeyboardFocusHere", uSetKeyboardFocusHere },
-		{ "IsItemHovered", uHoveredFlags },
-		{ "IsItemActive", uIsItemActive },
-		{ "IsItemFocused", uIsItemFocused },
-		{ "IsItemClicked", uIsItemClicked },
-		{ "IsItemVisible", uIsItemVisible },
-		{ "IsItemEdited", uIsItemEdited },
-		{ "IsItemActivated", uIsItemActivated },
-		{ "IsItemDeactivated", uIsItemDeactivated },
-		{ "IsItemDeactivatedAfterEdit", uIsItemDeactivatedAfterEdit },
-		{ "IsAnyItemHovered", uIsAnyItemHovered },
-		{ "IsAnyItemActive", uIsAnyItemActive },
-		{ "IsAnyItemFocused", uIsAnyItemFocused },
-		{ "GetItemRectMin", uGetItemRectMin },
-		{ "GetItemRectMax", uGetItemRectMax },
-		{ "GetItemRectSize", uGetItemRectSize },
-		{ "SetItemAllowOverlap", uSetItemAllowOverlap },
-*/
-
 static int
 uPushClipRect(lua_State *L) {
 	float left = luaL_checkinteger(L, 1);
 	float top = luaL_checkinteger(L, 2);
 	float right = luaL_checkinteger(L, 3);
-	float buttom = luaL_checkinteger(L, 4);
+	float bottom = luaL_checkinteger(L, 4);
 	bool intersect_with_current_clip_rect = lua_toboolean(L, 5);
-	ImGui::PushClipRect(ImVec2(left,top), ImVec2(right, buttom), intersect_with_current_clip_rect);
+	ImGui::PushClipRect(ImVec2(left,top), ImVec2(right, bottom), intersect_with_current_clip_rect);
 	return 0;
 }
 
@@ -2201,6 +2276,18 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "SetScrollY", winSetScrollY },
 		{ "SetScrollHereY", winSetScrollHereY },
 		{ "SetScrollFromPosY", winSetScrollFromPosY },
+		{ "SetNextWindowPos", winSetNextWindowPos },
+		{ "SetNextWindowSize", winSetNextWindowSize },
+		{ "SetNextWindowSizeConstraints", winSetNextWindowSizeConstraints },
+		{ "SetNextWindowContentSize", winSetNextWindowContentSize },
+		{ "SetNextWindowCollapsed", winSetNextWindowCollapsed },
+		{ "SetNextWindowFocus", winSetNextWindowFocus },
+		{ "SetNextWindowBgAlpha", winSetNextWindowBgAlpha },
+		{ "GetContentRegionMax", winGetContentRegionMax },
+		{ "GetContentRegionAvail", winGetContentRegionAvail },
+		{ "GetWindowContentRegionMin", winGetWindowContentRegionMin },
+		{ "GetWindowContentRegionMax", winGetWindowContentRegionMax },
+		{ "GetWindowContentRegionWidth", winGetWindowContentRegionWidth },
 		{ NULL, NULL },
 	};
 
