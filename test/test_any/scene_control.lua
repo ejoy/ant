@@ -1,14 +1,14 @@
 local log = log and log(...) or print
 local scene_control = {}; scene_control.__index = scene_control
 local FILE_MEMU = {"File"}
-local iupcontrols   = import_package "ant.iupcontrols"
-local hub           = iupcontrols.common.hub
+local editor = import_package "ant.editor"
+local hub = editor.hub
 local editor        = import_package "ant.editor"
 local mapiup        = editor.mapiup
 local task          = editor.task
 local vfs           = require "vfs"
 local inputmgr      = import_package "ant.inputmgr"
-
+local scene_control_hub = require "scene_control_hub"
 
 function scene_control:init_submenu()
     self.open_scene_item = iup.item({title="Open Scene"})
@@ -34,12 +34,10 @@ end
 
 function scene_control:init_hub()
     --listen hub for scene open event
-    local fs_hierarchy_hub = require "fs_hierarchy_hub"
-    hub.subscibe(fs_hierarchy_hub.CH_OPEN_FILE,
-                self.open_scene_file,
-                self)
+    scene_control_hub.subscibe(self)
 end
 
+--hub_call
 function scene_control:open_scene_file(ref_file)
     print_a("open_scene_file:",ref_file)
 
@@ -65,6 +63,7 @@ function scene_control:openMap(path)
     local packages = {
         -- "ant.EditorLauncher",
         -- "ant.objcontroller",
+        "ant.testempty",
         "ant.hierarchy.offline",
     }
     local systems = {
@@ -72,6 +71,7 @@ function scene_control:openMap(path)
         --"pickup_system",
         "obj_transform_system",
         "build_hierarchy_system",
+        "editor_watcher_system",
         -- "editor_system"
     }
 
@@ -95,13 +95,14 @@ function scene_control:new_world(packages, systems)
         fbw=1024, fbh=768,
     }
 
-    self.world = scene.start_new_world(self.input_queue, self.config.fbw, self.config.fbh, packages, systems)        
+    self.world = scene.start_new_world(self.input_queue, self.config.fbw, self.config.fbh, packages, systems,{hub = hub})        
     task.loop(scene.loop(self.world, {
         update = {"timesystem", "message_system"}
     }))
     self.world.stop = function()
         task.exit()
     end
+    scene_control_hub.publish_open_world(self.world)
 end
 
 function scene_control:open_scene_click()
@@ -124,6 +125,17 @@ function scene_control:open_scene_click()
         seletfileop(localfs.path(filedlg.value))
     end
     filedlg:destroy()
+end
+
+function scene_control:on_foucs_entity(serialize)
+    print_a("on_foucs_entity",serialize)
+    local camerautil = import_package "ant.render".camera
+    local eid = self.world:find_serialize(serialize)
+    camerautil.focus_selected_obj(self.world, eid)
+end
+
+function scene_control:on_open_world(eid)
+    
 end
 
 function scene_control:new_scene_click()

@@ -82,10 +82,10 @@ local function _load_entity(w, tree)
     for name in sortpairs(tree) do
         w:register_component(eid, name)
     end
-    return tree
+    return tree, eid
 end
 
-local function load_start(w, s)
+local function load_start(w, s)  
     local post = getPost(w)
     function doPost(type, value)
         if type == 'entity' then
@@ -141,19 +141,20 @@ local function load_world(w, s)
     local entity = load_start(w, s)
     local l = {}
     for _, tree in ipairs(entity) do
-        l[#l+1] = _load_entity(w, tree)
+        l[#l+1], eid = _load_entity(w, tree)
     end
     load_end()
     for _, e in ipairs(l) do
         finish_entity(w, e)
-    end 
+    end
 end
 
 local function load_entity(w, s)
     local entity = load_start(w, s)
-    local e = _load_entity(w, entity)
+    local e, eid = _load_entity(w, entity)
     load_end()
     finish_entity(w, e)
+    return eid
 end
 
 return {

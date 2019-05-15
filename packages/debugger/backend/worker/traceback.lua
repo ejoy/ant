@@ -1,4 +1,4 @@
-local rdebug = require 'remotedebug'
+local rdebug = require 'remotedebug.visitor'
 local source = require 'backend.worker.source'
 local hookmgr = require 'remotedebug.hookmgr'
 
@@ -55,7 +55,7 @@ local function getshortsrc(info)
 end
 
 local function findfield(t, f, level, name)
-    local loct = rdebug.copytable(t)
+    local loct = rdebug.copytable(t, 5000)
     for key, value in pairs(loct) do
         if rdebug.type(key) == 'string' then
             local skey = rdebug.value(key)

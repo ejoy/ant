@@ -52,6 +52,15 @@ function world:add_component(eid, component_type, args)
 	self:finish_component(e, component_type)
 end
 
+function world:add_component_child(parent_com,child_name,child_type,child_value)
+	local child_com = self:create_component(child_type, child_value)
+	if parent_com.watcher then
+        parent_com.watcher[child_name] =  child_com
+    else
+        parent_com[child_name] = child_com
+    end
+end
+
 function world:remove_component(eid, component_type)
 	local e = assert(self[eid])
 	assert(e[component_type] ~= nil)
@@ -89,17 +98,21 @@ local function sortcomponent(w, t)
     end
 end
 
-function world:create_entity(t)
-	local eid = self._entity_id + 1
-	self._entity_id = eid
-	self[eid] = {}
-	self._entity[eid] = true
+function world:set_entity(eid, t)
 	local entity = self[eid]
 	for c, args in sortcomponent(self, t) do
 		entity[c] = self:create_component(c, args)
 		self:register_component(eid, c)
 		self:finish_component(entity, c)
 	end
+end
+
+function world:create_entity(t)
+	local eid = self._entity_id + 1
+	self._entity_id = eid
+	self[eid] = {}
+	self._entity[eid] = true
+	self:set_entity(eid, t)
 	return eid
 end
 
@@ -364,6 +377,17 @@ function world:enable_system(name, enable)
 	end
 end
 
+function world:set_serialize2eid(serialize_id,eid)
+	assert(serialize_id,
+		"function world:set_serialize2eid\nserialize_id can't be nil")
+	self._serialize_to_eid[serialize_id] = eid
+end
+
+function world:find_serialize(serialize_id)
+	assert(serialize_id,
+		"function world:set_serialize2eid\nserialize_id can't be nil")
+	return self._serialize_to_eid[serialize_id]
+end
 function world:slove_comonpent()
 	local typeinfo = self._schema
 	for k,v in ipairs(typeinfo.list) do
@@ -397,6 +421,7 @@ function ecs.new_world(config)
 		_newset = {},
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
+		_serialize_to_eid = {},
 	}, world)
 
 	-- load systems and components from modules

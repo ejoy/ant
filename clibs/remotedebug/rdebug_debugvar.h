@@ -1,8 +1,6 @@
-#ifndef DEBUGVAR_H
-#define DEBUGVAR_H
+#pragma once
 
-#include <lua.h>
-#include <lauxlib.h>
+#include <lua.hpp>
 #include <stdint.h>
 #include <string.h>
 
@@ -267,7 +265,7 @@ eval_value(lua_State *L, lua_State *cL) {
 	}
 	t = lua_type(L, -1);
 	if (t == LUA_TUSERDATA) {
-		struct value *v = lua_touserdata(L, -1);
+		struct value *v = (struct value *)lua_touserdata(L, -1);
 		lua_getuservalue(L, -1);
 		t = eval_value_(L, cL, v);
 		lua_pop(L, 1);	// pop uservalue
@@ -350,7 +348,7 @@ assign_value(lua_State *L, struct value * v, lua_State *cL) {
 		}
 		break;
 	}
-	case VAR_METATABLE:
+	case VAR_METATABLE: {
 		if (v->frame == 1) {
 			switch(v->index) {
 			case LUA_TNIL:
@@ -389,6 +387,7 @@ assign_value(lua_State *L, struct value * v, lua_State *cL) {
 		lua_setmetatable(cL, -2);
 		lua_pop(cL, 1);
 		return 1;
+	}
 	case VAR_USERVALUE: {
 		int t = eval_value_(L, cL, v+1);
 		if (t != LUA_TUSERDATA) {
@@ -423,6 +422,33 @@ get_value(lua_State *L, lua_State *cL) {
 	lua_pop(cL,1);
 }
 
+static int
+safetostring(lua_State *L) {
+	luaL_tolstring(L, 1, 0);
+	return 1;
+}
+
+static void
+tostring(lua_State *L, lua_State *cL) {
+	if (eval_value(L, cL) == LUA_TNONE) {
+		lua_pop(L, 1);
+		lua_pushstring(L, "nil");
+		// failed
+		return;
+	}
+	lua_pop(L, 1);
+	lua_pushcfunction(cL, safetostring);
+	lua_insert(cL, -2);
+	lua_pcall(cL, 1, 1, 0);
+	if (copy_value(cL, L) == LUA_TNONE) {
+		lua_pushfstring(L, "[%s: %p]", 
+			lua_typename(cL, lua_type(cL, -1)),
+			lua_topointer(cL, -1)
+			);
+	}
+	lua_pop(cL,1);
+}
+
 static const char *
 get_frame_local(lua_State *L, lua_State *cL, int frame, int index, int getref) {
 	lua_Debug ar;
@@ -440,7 +466,7 @@ get_frame_local(lua_State *L, lua_State *cL, int frame, int index, int getref) {
 		return name;
 	}
 	lua_pop(cL, 1);
-	struct value *v = lua_newuserdata(L, sizeof(struct value));
+	struct value *v = (struct value *)lua_newuserdata(L, sizeof(struct value));
 	v->type = VAR_FRAME_LOCAL;
 	v->frame = frame;
 	v->index = index;
@@ -461,7 +487,7 @@ get_frame_func(lua_State *L, lua_State *cL, int frame) {
 	}
 	lua_pop(cL, 1);
 
-	struct value *v = lua_newuserdata(L, sizeof(struct value));
+	struct value *v = (struct value *)lua_newuserdata(L, sizeof(struct value));
 	v->type = VAR_FRAME_FUNC;
 	v->frame = frame;
 	v->index = 0;
@@ -484,7 +510,7 @@ get_stack(lua_State *L, lua_State *cL, int index, int getref) {
 		}
 		lua_pop(cL, 1);
 	}
-	struct value *v = lua_newuserdata(L, sizeof(struct value));
+	struct value *v = (struct value *)lua_newuserdata(L, sizeof(struct value));
 	v->type = VAR_STACK;
 	v->index = index;
 	return 1;
@@ -509,9 +535,9 @@ copy_table(lua_State *L, int index) {
 // table key
 static void
 new_index(lua_State *L, int type) {
-	struct value *t = lua_touserdata(L, -2);
+	struct value *t = (struct value *)lua_touserdata(L, -2);
 	int sz = sizeof_value(t);
-	struct value *v = lua_newuserdata(L, sizeof(struct value) * (sz + 1));
+	struct value *v = (struct value *)lua_newuserdata(L, sizeof(struct value) * (sz + 1));
 	v->type = VAR_INDEX;
 	v->frame = type;
 	memcpy(v+1,t,sz * sizeof(struct value));
@@ -566,12 +592,12 @@ append_table(lua_State *L, int index) {
 // table key
 static void
 new_index_object(lua_State *L, int type) {
-	struct value *t = lua_touserdata(L, -2);
+	struct value *t = (struct value *)lua_touserdata(L, -2);
 	int ts = sizeof_value(t);
-	struct value *k = lua_touserdata(L, -1);
+	struct value *k = (struct value *)lua_touserdata(L, -1);
 	int ks = sizeof_value(k);
 
-	struct value *v = lua_newuserdata(L, sizeof(struct value) * (ts + ks + 1));
+	struct value *v = (struct value *)lua_newuserdata(L, sizeof(struct value) * (ts + ks + 1));
 	v->type = VAR_INDEX_OBJ;
 	v->frame = type;
 	v->index = ts;
@@ -734,9 +760,9 @@ get_upvalue(lua_State *L, lua_State *cL, int index, int getref) {
 		return name;
 	}
 	lua_pop(cL, 2);	// remove func / upvalue
-	struct value *f = lua_touserdata(L, -1);
+	struct value *f = (struct value *)lua_touserdata(L, -1);
 	int sz = sizeof_value(f);
-	struct value *v = lua_newuserdata(L, sizeof(struct value) * (1+sz));
+	struct value *v = (struct value *)lua_newuserdata(L, sizeof(struct value) * (1+sz));
 	v->type = VAR_UPVALUE;
 	v->frame = 0;
 	v->index = index;
@@ -756,7 +782,7 @@ get_registry(lua_State *L, int type) {
 	default:
 		return NULL;
 	}
-	struct value * v = lua_newuserdata(L, sizeof(struct value));
+	struct value * v = (struct value *)lua_newuserdata(L, sizeof(struct value));
 	v->frame = 0;
 	v->index = 0;
 	v->type = type;
@@ -783,9 +809,9 @@ get_metatable(lua_State *L, lua_State *cL, int getref) {
 		lua_pop(cL, 1);
 	}
 	if (t == LUA_TTABLE || t == LUA_TUSERDATA) {
-		struct value *t = lua_touserdata(L, -1);
+		struct value *t = (struct value *)lua_touserdata(L, -1);
 		int sz = sizeof_value(t);
-		struct value *v = lua_newuserdata(L, sizeof(struct value) * (sz + 1));
+		struct value *v = (struct value *)lua_newuserdata(L, sizeof(struct value) * (sz + 1));
 		v->type = VAR_METATABLE;
 		v->frame = 0;
 		v->index = 0;
@@ -796,7 +822,7 @@ get_metatable(lua_State *L, lua_State *cL, int getref) {
 		return v;
 	} else {
 		lua_pop(L, 1);
-		struct value *v = lua_newuserdata(L, sizeof(struct value));
+		struct value *v = (struct value *)lua_newuserdata(L, sizeof(struct value));
 		v->type = VAR_METATABLE;
 		v->frame = 1;
 		v->index = t;
@@ -834,9 +860,9 @@ get_uservalue(lua_State *L, lua_State *cL, int getref) {
 
 	// L : value
 	// cL : value uservalue
-	struct value *u = lua_touserdata(L, -1);
+	struct value *u = (struct value *)lua_touserdata(L, -1);
 	int sz = sizeof_value(u);
-	struct value *v = lua_newuserdata(L, sizeof(struct value) * (sz + 1));
+	struct value *v = (struct value *)lua_newuserdata(L, sizeof(struct value) * (sz + 1));
 	v->type = VAR_USERVALUE;
 	v->frame = 0;
 	v->index = 0;
@@ -929,7 +955,7 @@ show_detail_(lua_State *L, luaL_Buffer *b, struct value *v, int top) {
 static int
 show_detail(lua_State *L) {
 	if (lua_type(L, -1) == LUA_TUSERDATA) {
-		struct value *v = lua_touserdata(L, -1);
+		struct value *v = (struct value *)lua_touserdata(L, -1);
 		lua_getuservalue(L, -1);
 		int top = lua_gettop(L);
 		luaL_Buffer b;
@@ -941,5 +967,3 @@ show_detail(lua_State *L) {
 	}
 	return 1;
 }
-
-#endif

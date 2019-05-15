@@ -1,7 +1,6 @@
 local os = require "os"
-local editor = import_package   "ant.editor"
-local task = editor.task
-
+local task = require "task"
+local thread = require "thread"
 local hub = {   
                 _inited = false
             }
@@ -26,10 +25,7 @@ local function init()
         end
     end
     hub._update = update_hub
-    local function tb(...)
-        print_a("ERROR",...)
-    end
-    task.loop(update_hub,tb)
+    task.safe_loop(update_hub)
 end 
 
 local function shallow_copy_array(arr,arr_size)
@@ -61,25 +57,26 @@ local function init_channel(channel)
         if cur_time - last_update_time >= interval then
             -- print(".")
             local msg_num = hub._channel_msg_num[channel]
+            hub._channel_msg_num[channel] = 0
             if msg_num > 0 then
                 local msgs = hub._channel_msg[channel]
-                local new_msg = msgs[msg_num]
-                local m1,m2,m3,m4,m5 = new_msg[1],new_msg[2],new_msg[3],new_msg[4],new_msg[5]
+                hub._channel_msg[channel] = {}
+                local msg_obj = msgs[msg_num]
+                local msg_tbl = thread.unpack(msg_obj)
                 local one = hub._channel_one_func[channel]
                 for target,funcs in pairs(one) do
-                    --todo
                     if target == hub then
                         for _,func in ipairs(funcs) do
-                            func(m1,m2,m3,m4,m5)
+                            func(table.unpack(msg_tbl))
                         end
                     else
                         for _,func in ipairs(funcs) do
-                            func(target,m1,m2,m3,m4,m5)
+                            func(target,table.unpack(msg_tbl))
                         end
                     end
                 end
                 local mult = hub._channel_mult_func[channel]
-                local msg_copy = shallow_copy_array(msgs)
+                local msg_copy = shallow_copy_array(msg_tbl)
                 for target,funcs in pairs(mult) do
                     if target == hub then
                         for _,func in ipairs(funcs) do
@@ -91,8 +88,8 @@ local function init_channel(channel)
                         end
                     end
                 end
-                hub._channel_msg_num[channel] = 0
-                hub._channel_msg[channel] = {}
+                
+               
             end
             last_update_time = cur_time
         end
@@ -103,6 +100,8 @@ end
 
 --only get newest message in one intercal
 function hub.subscibe(channel,func,func_target)
+    assert(func,"func is nil")
+    assert(channel,"channel is nil")
     print("subscibe:",channel)
     init_channel(channel)
     func_target = func_target or hub
@@ -118,6 +117,8 @@ function hub.subscibe(channel,func,func_target)
 end
 
 function hub.unsubscibe(channel,func,func_target)
+    assert(func,"func is nil")
+    assert(channel,"channel is nil")
     if ( not hub._inited ) or ( not hub._channel_cfg[channel] ) then
         return
     end
@@ -137,6 +138,8 @@ end
 
 --get all message in one intercal
 function hub.subscibe_mult(channel,func,func_target)
+    assert(func,"func is nil")
+    assert(channel,"channel is nil")
     init_channel(channel)
     func_target = func_target or hub
     local funcs = hub._channel_mult_func[channel]
@@ -151,6 +154,8 @@ function hub.subscibe_mult(channel,func,func_target)
 end
 
 function hub.unsubscibe_mult(channel,func,func_target)
+    assert(func,"func is nil")
+    assert(channel,"channel is nil")
     if ( not hub._inited ) or ( not hub._channel_cfg[channel] ) then
         return
     end
@@ -187,11 +192,14 @@ function hub.set_channel(channel,args)
     end
 end
 
-function hub.publish(channel,message,...)
-    print("publish:",channel,message,...)
+function hub.publish(channel,...)
+    assert(channel,"channel is nil")
+    local args = {...}
+    print("publish:",channel,...)
     init_channel(channel)
     local msg_num = hub._channel_msg_num[channel]
-    hub._channel_msg[channel][msg_num+1] = {message,...}
+    local args_obj = thread.pack(args)
+    hub._channel_msg[channel][msg_num+1] = args_obj
     hub._channel_msg_num[channel] = msg_num+1
 end
 

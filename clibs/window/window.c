@@ -16,6 +16,8 @@ typedef enum {
 	CALLBACK_MOUSE_MOVE,
 	CALLBACK_MOUSE_WHEEL,
 	CALLBACK_MOUSE_CLICK,
+	CALLBACK_SIZE,
+	CALLBACK_CHAR,
 	CALLBACK_COUNT,
 } CallBackType;
 
@@ -23,6 +25,7 @@ typedef enum {
 struct callback_context {
 	lua_State *callback;
 	lua_State *functions;
+	int surrogate;
 };
 
 static int
@@ -86,6 +89,18 @@ push_mouse_click_arg(lua_State *L, struct ant_window_mouse_click *mouse) {
 	lua_pushinteger(L, mouse->y);
 	lua_pushinteger(L, mouse->type);
 	lua_pushboolean(L, mouse->press);
+}
+
+static void
+push_size_arg(lua_State *L, struct ant_window_size *size) {
+	lua_pushinteger(L, size->x);
+	lua_pushinteger(L, size->y);
+	lua_pushinteger(L, size->type);
+}
+
+static void
+push_char_arg(lua_State *L, struct ant_window_char *c) {
+	lua_pushinteger(L, c->code);
 }
 
 static int
@@ -199,6 +214,33 @@ callback(void *ud, struct ant_window_message *msg) {
 		} else {
 			return;
 		}
+	case ANT_WINDOW_SIZE:
+		if (push_callback_function(context, CALLBACK_SIZE)) {
+			push_size_arg(L, &msg->u.size);
+			break;
+		} else {
+			return;
+		}
+	case ANT_WINDOW_CHAR_UTF16: {
+		int c = msg->u.unichar.code;
+		if (c >= 0xD800 && c <= 0xDBFF) {
+			context->surrogate = c;
+			return;
+		} else {
+			if (c >= 0xDC00 && c <= 0xDFFF) {
+				msg->u.unichar.code = ((context->surrogate - 0xD800) << 10) + (c - 0xDC00) + 0x10000;
+				context->surrogate = 0;
+			}
+		}
+	}
+	// fall-through
+	case ANT_WINDOW_CHAR:
+		if (push_callback_function(context, CALLBACK_CHAR)) {
+			push_char_arg(L, &msg->u.unichar);
+			break;
+		} else {
+			return;
+		}
 	default:
 		raise_error_string(context, "Unknown callback");
 		return;
@@ -232,6 +274,8 @@ register_functions(lua_State *L, int index, lua_State *fL) {
 	register_function(L, index, "mouse_move", fL, CALLBACK_MOUSE_MOVE);
 	register_function(L, index, "mouse_wheel", fL, CALLBACK_MOUSE_WHEEL);
 	register_function(L, index, "mouse_click", fL, CALLBACK_MOUSE_CLICK);
+	register_function(L, index, "size", fL, CALLBACK_SIZE);
+	register_function(L, index, "char", fL, CALLBACK_CHAR);
 }
 
 static int
@@ -256,6 +300,7 @@ lregistercallback(lua_State *L) {
 	lua_pop(L, 1);
 
 	struct callback_context * context = lua_newuserdata(L, sizeof(*context));
+	context->surrogate = 0;
 	lua_createtable(L, 2, 0);	// for callback and functions thread
 	context->callback = lua_newthread(L);
 	lua_pushcfunction(context->callback, ltraceback);	// push traceback function

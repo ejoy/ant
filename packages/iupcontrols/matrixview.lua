@@ -151,8 +151,8 @@ function matrixview.new(config)
 	local c = ctrlutil.create_ctrl_wrapper(function ()
 		return create_view(config)
 	end, matrixview)
-	
 	c.observers = observer.new()
+	c.ud = {}
 	return c
 end
 

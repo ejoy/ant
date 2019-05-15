@@ -9,7 +9,7 @@ local point2d = import_package "ant.math".point2d
 local math3d = require "math3d"
 local ms = import_package "ant.math".stack
 
-local camera_controller_system = ecs.system "camera_controller"
+local camera_controller_system = ecs.system "editor_camera_controller"
 
 camera_controller_system.singleton "message"
 camera_controller_system.singleton "control_state"

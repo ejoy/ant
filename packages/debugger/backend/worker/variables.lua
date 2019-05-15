@@ -1,4 +1,4 @@
-local rdebug = require 'remotedebug'
+local rdebug = require 'remotedebug.visitor'
 local source = require 'backend.worker.source'
 local ev = require 'common.event'
 
@@ -9,6 +9,9 @@ local VAR_VARARG = 0xFFFE
 local VAR_UPVALUE = 0xFFFD
 local VAR_GLOBAL = 0xFFFC
 local VAR_STANDARD = 0xFFFB
+
+local TEMPORARY = _VERSION == "Lua 5.4" and '(temporary)' or '(*temporary)'
+local MAX_TABLE_FIELD = 300
 
 local lstandard = {
     "ipairs",
@@ -40,7 +43,6 @@ local lstandard = {
     "dofile",
     "pcall",
     "load",
-    "module",
     "rawget",
     "debug",
     "assert",
@@ -66,7 +68,7 @@ local function hasLocal(frameId)
         if name == nil then
             return false
         end
-        if name ~= '(*temporary)' then
+        if name ~= TEMPORARY then
             return true
         end
         i = i + 1
@@ -204,7 +206,7 @@ end
 
 local TABLE_VALUE_MAXLEN = 32
 local function varGetTableValue(t)
-    local loct = rdebug.copytable(t)
+    local loct = rdebug.copytable(t,MAX_TABLE_FIELD)
     local str = ''
     local mark = {}
     for i, v in ipairs(loct) do
@@ -380,6 +382,9 @@ local function varCreateInsert(vars, frameId, varRef, name, value, evaluateName,
         value = text,
         variablesReference = ref,
         evaluateName = evaluateName,
+        presentationHint = {
+            kind = "virtual"
+        }
     }
     local maps = varRef[3]
     if maps[name] then
@@ -409,7 +414,7 @@ local function extandTable(frameId, varRef)
     local t = varRef[1]
     local evaluateName = varRef[2]
     local vars = {}
-    local loct = rdebug.copytable(t)
+    local loct = rdebug.copytable(t,MAX_TABLE_FIELD)
     for key, value in pairs(loct) do
         local evalKey = getTabelKey(key)
         varCreate(vars, frameId, varRef, varGetName(key), value
@@ -528,8 +533,6 @@ local children = {
     [VAR_STANDARD] = {},
 }
 
-local TEMPORARY = _VERSION == "Lua 5.4" and '(temporary)' or '(*temporary)'
-
 extand[VAR_LOCAL] = function(frameId)
     children[VAR_LOCAL][3] = {}
     local vars = {}
@@ -593,7 +596,7 @@ end
 extand[VAR_GLOBAL] = function(frameId)
     children[VAR_GLOBAL][3] = {}
     local vars = {}
-    local loct = rdebug.copytable(rdebug._G)
+    local loct = rdebug.copytable(rdebug._G,MAX_TABLE_FIELD)
     for key, value in pairs(loct) do
         local name = varGetName(key)
         if not standard[name] then
@@ -610,7 +613,7 @@ end
 extand[VAR_STANDARD] = function(frameId)
     children[VAR_STANDARD][3] = {}
     local vars = {}
-    local loct = rdebug.copytable(rdebug._G)
+    local loct = rdebug.copytable(rdebug._G,MAX_TABLE_FIELD)
     for key, value in pairs(loct) do
         local name = varGetName(key)
         if standard[name] then

@@ -1,6 +1,4 @@
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
+#include <lua.hpp>
 #include <string.h>
 #include <stdio.h>
 
@@ -131,6 +129,7 @@ lclient_getstackv(lua_State *L) {
 static int
 lclient_copytable(lua_State *L) {
 	lua_State *hL = get_host(L);
+	lua_Integer maxn = luaL_optinteger(L, 2, 0xffff);
 	lua_settop(L, 1);
 	if (lua_checkstack(hL, 4) == 0) {
 		return luaL_error(L, "stack overflow");
@@ -146,6 +145,11 @@ lclient_copytable(lua_State *L) {
 	lua_pushnil(hL);
 	// hL : table nil
 	while(next_kv(L, hL)) {
+		if (--maxn < 0) {
+			lua_pop(hL, 2);
+			lua_pop(L, 3);
+			return 1;
+		}
 		// L: result tableref nextkey value
 		lua_pushvalue(L, -2);
 		lua_insert(L, -2);
@@ -161,6 +165,14 @@ lclient_value(lua_State *L) {
 	lua_State *hL = get_host(L);
 	lua_settop(L, 1);
 	get_value(L, hL);
+	return 1;
+}
+
+static int
+lclient_tostring(lua_State *L) {
+	lua_State *hL = get_host(L);
+	lua_settop(L, 1);
+	tostring(L, hL);
 	return 1;
 }
 
@@ -191,7 +203,7 @@ lclient_assign(lua_State *L) {
 		return luaL_error(L, "Invalid value type %s", lua_typename(L, vtype));
 	}
 	luaL_checktype(L, 1, LUA_TUSERDATA);
-	struct value * ref = lua_touserdata(L, 1);
+	struct value * ref = (struct value *)lua_touserdata(L, 1);
 	lua_getuservalue(L, 1);
 	int r = assign_value(L, ref, hL);
 	lua_pushboolean(L, r);
@@ -417,10 +429,10 @@ lclient_eval(lua_State *L) {
 	}
 	lua_pushboolean(L, 1);
 	if (LUA_TNONE == copy_value(hL, L)) {
-		lua_pushboolean(L, 0);
-		lua_pushfstring(L, "invalid value type `%s`", lua_typename(hL, lua_type(hL, -1)));
-		lua_pop(hL, 1);
-		return 2;
+		lua_pushfstring(L, "[%s: %p]", 
+			lua_typename(hL, lua_type(hL, -1)),
+			lua_topointer(hL, -1)
+		);
 	}
 	lua_pop(hL, 1);
 	return 2;
@@ -531,6 +543,7 @@ init_visitor(lua_State *L) {
 		{ "getstackv", lclient_getstackv },
 		{ "copytable", lclient_copytable },
 		{ "value", lclient_value },
+		{ "tostring", lclient_tostring },
 		{ "assign", lclient_assign },
 		{ "type", lclient_type },
 		{ "getinfo", lclient_getinfo },
@@ -551,6 +564,7 @@ init_visitor(lua_State *L) {
 	return 1;
 }
 
+extern "C"
 #if defined(_WIN32)
 __declspec(dllexport)
 #endif

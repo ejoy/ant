@@ -1,11 +1,16 @@
+local fs = require "filesystem"
+
+local function loadfile(path)
+	local f = assert(fs.open(fs.path(path)))
+	local str = f:read 'a'
+	f:close()
+	return str
+end
+
 local function requirefile(name)
 	local path = assert(package.searchpath(name, package.path))
-	local fs = require "filesystem"
 	--do return assert(fs.loadfile(fs.path(path))) end
-	local file = assert(fs.open(fs.path(path)))
-	local ret = assert(load(file:read 'a', '=(MATH3D)'))
-	file:close()
-	return ret
+	return assert(load(loadfile(path), '=(MATH3D)'))
 end
 
 return function (ms)

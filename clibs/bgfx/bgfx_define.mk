@@ -13,7 +13,7 @@ endif
 
 #BGFXINC = -I$(BGFXSRC)/include -I$(BXSRC)/include/compat/$(PLAT) -I$(BXSRC)/include -I$(BGFXSRC)/src -I$(BGFXSRC)/examples/common -I$(BIMGSRC)/include
 BGFXINC = -I$(BGFXSRC)/include -I$(BXSRC)/include/compat/$(PLAT) -I$(BXSRC)/include -I$(BGFXSRC)/src -I$(BIMGSRC)/include
-BGFX3RDINC = -I$(BGFXSRC)/3rdparty
+BGFX3RDINC = -I$(BGFXSRC)/3rdparty -I$(BGFXSRC)/examples/common
 
 BXLIB = -lbx$(BUILD_CONFIG)
 BIMG_DECODELIB = -lbimg_decode$(BUILD_CONFIG)

@@ -7,6 +7,7 @@
 #include <array>
 #include "rdebug_eventfree.h"
 #include "rdebug_timer.h"
+#include "thunk/thunk.h"
 
 #if LUA_VERSION_NUM < 504
 #define s2v(o) (o)
@@ -16,15 +17,12 @@ static int HOOK_MGR = 0;
 static int HOOK_CALLBACK = 0;
 
 void set_host(lua_State* L, lua_State* hL);
-extern "C" {
 lua_State* get_host(lua_State *L);
 lua_State* getthread(lua_State *L);
 int copyvalue(lua_State *cL, lua_State *hL);
-}
+
 
 #define BPMAP_SIZE (1 << 16)
-
-#include "thunk.h"
 
 #define LOG(...) do { \
     FILE* f = fopen("dbg.log", "a"); \
@@ -644,7 +642,10 @@ void probe(lua_State* cL, lua_State* hL, const char* name) {
         lua_pop(cL, 1);
         return;
     }
+    lu_byte oldah = hL->allowhook;
+    hL->allowhook = 0;
     ((hookmgr*)lua_touserdata(cL, -1))->probe(hL, name);
+    hL->allowhook = oldah;
     lua_pop(cL, 1);
 }
 
@@ -653,7 +654,10 @@ int event(lua_State* cL, lua_State* hL, const char* name) {
         lua_pop(cL, 1);
         return -1;
     }
+    lu_byte oldah = hL->allowhook;
+    hL->allowhook = 0;
     int ok = ((hookmgr*)lua_touserdata(cL, -1))->event(hL, name);
+    hL->allowhook = oldah;
     lua_pop(cL, 1);
     return ok;
 }

@@ -22,13 +22,13 @@ $(ODIR)/luabgfx.o : luabgfx.c  | $(ODIR)
 $(ODIR)/luabgfxutil.o : luabgfxutil.c  | $(ODIR)
 	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC)
 
-$(ODIR)/nuklearlua.o : nuklearlua.c | $(ODIR)
-	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC)
+$(ODIR)/luabgfximgui.o : luabgfximgui.cpp  | $(ODIR)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC)
 
-bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o $(ODIR)/nuklearlua.o
-	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) $(BGFXLIB) 
+bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o $(ODIR)/luabgfximgui.o
+	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) $(BGFXLIB) $(BGFXUTILLIB)
 
-libbgfx-$(PLAT).a : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o $(ODIR)/nuklearlua.o
+libbgfx-$(PLAT).a : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o $(ODIR)/luabgfximgui.o
 	ar rsv $@ $^
 
 $(ODIR) :

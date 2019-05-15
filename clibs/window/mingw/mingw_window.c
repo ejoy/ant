@@ -4,7 +4,7 @@
 
 // project path in my documents
 #define CLASSNAME L"ANTCLIENT"
-#define WINDOWSTYLE (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX)
+#define WINDOWSTYLE (WS_OVERLAPPEDWINDOW)
 
 static void
 get_xy(LPARAM lParam, int *x, int *y) {
@@ -23,11 +23,16 @@ get_screen_xy(HWND hwnd, LPARAM lParam, int *x, int *y) {
 
 static uint8_t get_keystate(LPARAM lParam) {
 	return 0
-		| GetKeyState(VK_SHIFT)                          ? (uint8_t)(1 << KB_SHIFT)    : 0
-		| GetKeyState(VK_MENU)                           ? (uint8_t)(1 << KB_ALT)      : 0
-		| GetKeyState(VK_CONTROL)                        ? (uint8_t)(1 << KB_CTRL)     : 0
-		| (GetKeyState(VK_LWIN) || GetKeyState(VK_RWIN)) ? (uint8_t)(1 << KB_SYS)      : 0
-		| (lParam & (0x1 << 24))                         ? (uint8_t)(1 << KB_CAPSLOCK) : 0
+		| ((GetKeyState(VK_CONTROL) < 0)
+			? (uint8_t)(1 << KB_CTRL) : 0)
+		| ((GetKeyState(VK_MENU) < 0)
+			? (uint8_t)(1 << KB_ALT) : 0)
+		| ((GetKeyState(VK_SHIFT) < 0)
+			? (uint8_t)(1 << KB_SHIFT) : 0)
+		| (((GetKeyState(VK_LWIN) < 0) || (GetKeyState(VK_RWIN) < 0)) 
+			? (uint8_t)(1 << KB_SYS) : 0)
+		| ((lParam & (0x1 << 24))
+			? (uint8_t)(1 << KB_CAPSLOCK) : 0)
 		;
 }
 
@@ -41,6 +46,14 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
 		cb = (struct ant_window_callback *)cs->lpCreateParams;
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)cb);
+
+		msg.type = ANT_WINDOW_INIT;
+		msg.u.init.window = hWnd;
+		msg.u.init.context = 0;
+		msg.u.init.w = cs->cx;
+		msg.u.init.h = cs->cy;
+		cb->message(cb->ud, &msg);
+
 		break;
 	}
 	case WM_DESTROY:
@@ -103,6 +116,30 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		msg.u.keyboard.key = (int)wParam;
 		cb->message(cb->ud, &msg);
 		break;
+	case WM_SIZE:
+		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		msg.type = ANT_WINDOW_SIZE;
+		msg.u.size.x = LOWORD(lParam);
+		msg.u.size.y = HIWORD(lParam);
+		switch (wParam) {
+		case SIZE_MINIMIZED:
+			msg.u.size.type = 1;
+			break;
+		case SIZE_MAXIMIZED:
+			msg.u.size.type = 2;
+			break;
+		default:
+			msg.u.size.type = 0;
+			break;
+		}
+		cb->message(cb->ud, &msg);
+		break;
+	case WM_CHAR:
+		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		msg.type = ANT_WINDOW_CHAR_UTF16;
+		msg.u.unichar.code = wParam;
+		cb->message(cb->ud, &msg);
+		break;
 	}
 	return DefWindowProcW(hWnd, message, wParam, lParam);
 }
@@ -110,20 +147,18 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 static void
 register_class()
 {
-	WNDCLASSW wndclass;
-
-	wndclass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+	WNDCLASSEXW wndclass;
+	memset(&wndclass, 0, sizeof(wndclass));
+	wndclass.cbSize = sizeof(wndclass);
+	wndclass.style = CS_HREDRAW | CS_VREDRAW;// | CS_OWNDC;
 	wndclass.lpfnWndProc = WndProc;
-	wndclass.cbClsExtra = 0;
-	wndclass.cbWndExtra = 0;
 	wndclass.hInstance = GetModuleHandleW(0);
-	wndclass.hIcon = 0;
-	wndclass.hCursor = 0;
-	wndclass.hbrBackground = 0;
-	wndclass.lpszMenuName = 0; 
+	wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wndclass.lpszClassName = CLASSNAME;
+	wndclass.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 
-	RegisterClassW(&wndclass);
+	RegisterClassExW(&wndclass);
 }
 
 int window_init(struct ant_window_callback* cb) {
@@ -162,13 +197,6 @@ int window_create(struct ant_window_callback* cb, int w, int h, const char* titl
 	ShowWindow(wnd, SW_SHOWDEFAULT);
 	UpdateWindow(wnd);
 
-	struct ant_window_message msg;
-	msg.type = ANT_WINDOW_INIT;
-	msg.u.init.window = wnd;
-	msg.u.init.context = 0;
-	msg.u.init.w = w;
-	msg.u.init.h = h;
-	cb->message(cb->ud, &msg);
 	return 0;
 }
 
@@ -178,15 +206,38 @@ void window_mainloop(struct ant_window_callback* cb) {
 	update_msg.type = ANT_WINDOW_UPDATE;
 
 	for (;;) {
-		if (PeekMessage (&msg, NULL, 0, 0, PM_REMOVE)) {
+		if (PeekMessageW (&msg, NULL, 0, 0, PM_REMOVE)) {
 			if (msg.message == WM_QUIT)
 				break;
 			TranslateMessage(&msg); 
-			DispatchMessage(&msg); 
+			DispatchMessageW(&msg); 
 		} else {
 			cb->message(cb->ud, &update_msg);
 			Sleep(0);
 		}
 	}
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
+}
+
+int window_keymap(int whatkey) {
+	static const int keymap[ANT_KEYMAP_COUNT] = {
+		VK_TAB,
+		VK_LEFT,
+		VK_RIGHT,
+		VK_UP,
+		VK_DOWN,
+		VK_PRIOR,
+		VK_NEXT,
+		VK_HOME,
+		VK_END,
+		VK_INSERT,
+		VK_DELETE,
+		VK_BACK,
+		VK_SPACE,
+		VK_RETURN,
+		VK_ESCAPE,
+	};
+	if (whatkey < 0 || whatkey >= ANT_KEYMAP_COUNT)
+		return -1;
+	return keymap[whatkey];
 }

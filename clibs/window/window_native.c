@@ -54,6 +54,36 @@ init(lua_State *L) {
 	window_init(cb);
 }
 
+static void
+init_keymap(lua_State *L) {
+	static const char * name[ANT_KEYMAP_COUNT] = {
+		"Tab",
+		"Left",
+		"Right",
+		"Up",
+		"Down",
+		"PageUp",
+		"PageDown",
+		"Home",
+		"End",
+		"Insert",
+		"Delete",
+		"Backspace",
+		"Space",
+		"Enter",
+		"Escape",
+	};
+	lua_createtable(L, 0, ANT_KEYMAP_COUNT);
+	int i;
+	for (i=0;i<ANT_KEYMAP_COUNT;i++) {
+		int c = window_keymap(i);
+		if (c >= 0) {
+			lua_pushinteger(L, c);
+			lua_setfield(L, -2, name[i]);
+		}
+	}
+}
+
 LUAMOD_API int
 luaopen_window_native(lua_State *L) {
 	init(L);
@@ -64,5 +94,9 @@ luaopen_window_native(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
+
+	init_keymap(L);
+	lua_setfield(L, -2, "keymap");
+
 	return 1;
 }

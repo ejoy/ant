@@ -1,7 +1,6 @@
 --luacheck: globals iup import
 require "iuplua"
 
-
 local bgfx          = require "bgfx"
 
 local editor        = import_package "ant.editor"
@@ -10,8 +9,8 @@ local iupcontrols   = import_package "ant.iupcontrols"
 local rhwi          = import_package "ant.render".hardware_interface
 local elog          = iupcontrols.logview
 local tree          = iupcontrols.tree
-local hub          = iupcontrols.common.hub
-
+local editor = import_package "ant.editor"
+local hub = editor.hub
 local editor_mainwindow = {}
 editor_mainwindow.__index = editor_mainwindow
 
@@ -93,18 +92,20 @@ function editor_mainwindow:run(config)
     self.dlg:showxy(iup.CENTER,iup.CENTER)
     self.dlg.usersize = nil
 
+    function self.canvas:map_cb()
+        local nwh = iup.GetAttributeData(self.canvas,"HWND")
+        rhwi.init {
+            nwh = nwh,
+            width = fb_width,
+            height = fb_height,
+        }
+    end
 
 
-    local nwh = iup.GetAttributeData(self.canvas,"HWND")
-    rhwi.init {
-        nwh = nwh,
-        width = fb_width,
-        height = fb_height,
-    }
+    
     if (iup.MainLoopLevel()==0) then
         iup.MainLoop()
         iup.Close()
-
         bgfx.shutdown()
     end
 end

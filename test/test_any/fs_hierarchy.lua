@@ -27,6 +27,7 @@ function fs_hierarchy:_build()
         HIDEBUTTONS ="YES",
         HIDELINES   ="YES",
         IMAGELEAF = "IMGCOLLAPSED",
+        DASTERSIZE = "100*100",
     }
     
     self.file_list = iup.list{

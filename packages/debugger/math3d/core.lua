@@ -138,13 +138,15 @@ local function scope_to_value(ms, scope, value)
 	end
 end
 
-local function event_line(ms, status, stack, rets)
+local function event_line(ms, ok, status, stack, rets)
 	status.scope[1].value = {}
 	status.scope[2].value = {}
 	value_to_scope(ms, status.scope[1].value, stack)
 	value_to_scope(ms, status.scope[2].value, rets)
 	status.currentline = status.currentline + 1
-	vscdbg:event('line', status.currentline, status.scope)
+	if ok then
+		vscdbg:event('line', status.currentline, status.scope)
+	end
 	scope_to_value(ms, status.scope[1].value, stack)
 	scope_to_value(ms, status.scope[2].value, rets)
 end
@@ -168,7 +170,7 @@ function mt:__call(...)
 			}
 		}
 	}
-	vscdbg:event('call', compile(ms, args), '<math3d>')
+	local ok = vscdbg:event('call', compile(ms, args), '<math3d>')
 
 	local function do_command(c)
 		if c == 'm' then
@@ -191,15 +193,15 @@ function mt:__call(...)
 		local arg = args[i]
 		if type(arg) == 'string' then
 			for j = 1, #arg do
-				event_line(ms, status, stack, rets)
+				event_line(ms, ok, status, stack, rets)
 				do_command(arg:sub(j,j))
 			end
 		else
-			event_line(ms, status, stack, rets)
+			event_line(ms, ok, status, stack, rets)
 			do_command(arg)
 		end
 	end
-	event_line(ms, status, stack, rets)
+	event_line(ms, ok, status, stack, rets)
 	vscdbg:event('return')
 	if stack.n ~= 0 then
 		ms(table.unpack(stack))

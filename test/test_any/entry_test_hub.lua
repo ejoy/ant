@@ -26,7 +26,7 @@ world.update = function()
 
 end
 -- print(world)
-task.loop(world.update)
+task.safe_loop(world.update)
 -- print(11)
 local mainwin = require "test_hub_win"
 -- local mainwin = require "test_tree_window"

@@ -12,8 +12,12 @@ local elog          = iupcontrols.logview
 local tree = iupcontrols.tree
 local fs_hierarchy = require "fs_hierarchy"
 local asset_view = require "asset_view"
-local SceneControl = require "scene_controll"
+local SceneControl = require "scene_control"
+local SceneHierarchy = require "scene_hierarchy"
+local EntityProperty = require "entity_property2"
 local mapiup        = editor.mapiup
+local task          = editor.task
+local scene         = import_package "ant.scene".util
 local editor_mainwindow = {}
 editor_mainwindow.__index = editor_mainwindow
 local math = require "math"
@@ -27,21 +31,31 @@ function editor_mainwindow:build_window(fbw, fbh)
     self:build_menu()
     
     self.fs_hierarchy = fs_hierarchy.new {
-        rastersize = math.floor(fbw*0.25) .. "x" .. math.floor(fbh - fbw*0.25-50)
+        rastersize = math.floor(fbw*0.23) .. "x" .. math.floor(fbh - fbw*0.23-50)
     }
     self.asset_view = asset_view.new {
-        rastersize = math.floor(fbw*0.25) .. "x" .. math.floor(fbw*0.25)
+        rastersize = math.floor(fbw*0.23) .. "x" .. math.floor(fbw*0.23)
     }
 
     
     self.canvas = iup.canvas {
-        rastersize = fbw*0.7 .. "x" .. fbh*0.7
+        rastersize = math.floor(fbw*0.53) .. "x" .. math.floor(fbh*0.53)
     }
 
     self.input_queue = inputmgr.queue()
     mapiup(self.input_queue, self.canvas)
 
     self.scene_control = SceneControl.new(self.menu,self.input_queue)
+
+    self.scene_hierarchy = SceneHierarchy.new({
+        rastersize = math.floor(fbw*0.23) .. "x" .. math.floor(fbh*0.5)
+    },self)
+
+    self.entity_property = EntityProperty.new({
+        tree= {},
+        detail = {},
+        view = {rastersize = math.floor(fbw*0.23) .. "x" .. math.floor(fbh*0.5)},
+    },self)
     
     self.dlg = iup.dialog {
         iup.split {
@@ -52,9 +66,18 @@ function editor_mainwindow:build_window(fbw, fbh)
                 ORIENTATION="HORIZONTAL",
             },
             iup.split {
-                self.canvas,
-                elog.window,
-                ORIENTATION="HORIZONTAL",
+                iup.split {
+                    self.canvas,
+                    elog.window,
+                    ORIENTATION="HORIZONTAL",
+                    showgrip = "NO",
+                },
+                iup.split {
+                    self.scene_hierarchy:get_view(),
+                    self.entity_property:get_view(),
+                    ORIENTATION="HORIZONTAL",
+                    showgrip = "NO",
+                },
                 showgrip = "NO",
             },
             showgrip = "NO",
@@ -88,6 +111,30 @@ function editor_mainwindow:new_world(packages, systems)
     local world = scene.start_new_world(self.iq, self.config.fbw, self.config.fbh, packages, systems)
     task.loop(world.update)
 end
+
+function editor_mainwindow:get_editor_world()
+    if not self._editor_world then
+        local packages = {
+            -- "ant.EditorLauncher",
+            "ant.objcontroller",
+            "ant.hierarchy.offline",
+            "ant.test.features",
+            "ant.scene",
+        }
+        local systems = {"serialize_index_system"}
+        local world = scene.start_static_world(packages,systems)
+        task.loop(scene.loop(world, {
+            update = {"serialize_index_system",}
+        }))
+        world.stop = function()
+            task.exit()
+        end
+        self._editor_world = world
+    end
+    return self._editor_world
+end
+
+
 
 
 
