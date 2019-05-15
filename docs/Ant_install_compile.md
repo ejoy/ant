@@ -18,9 +18,10 @@
 		.下载工具,源码仓库及对应的地址,版本
 		.编译 , 配置修改
 		.运行测试 
+
   
-  
-  
+
+
 # 1. 开发环境安装 #
 
 ## 1.1. MSys2 安装 ##
@@ -32,33 +33,35 @@
 下载地址：  
 > www.msys2.org  
 > msys2-x86_64-20161025.exe
-	
+
 S1: $执行 msys2-x86_64-20161025.exe ，选择安装目录
 
 	例如：C:/msys64 或 D:/msys64 
 		
 	Windows/任务导航/Msys2 msys ，建立快捷桌面，方便使用
-
-	$执行桌面应用 msys2 msys ，进入msys shell
 	
+	$执行桌面应用 msys2 msys ，进入msys shell
+
 S2: $执行 pacman -Syu，同步更新 mingw 等软件包
 
 	msys2-runtime 与 catgets 有冲突？ ！！  
 	按提示安装，若有冲突出现，关闭重启 msys2 msys 再次执行  
 	pacman -Syu 即可。
-	 
-	
+
+
+​	
 S3: $执行 pacman -S mingw-w64-x86_64-gcc 安装统一版本号的gcc  
 
 S4: mingw 的访问的配置 
 
 	打开 D:/MSys64/home/ejoy/.bash_profile
-
+	
 	export MINGW=/mingw64
-
+	
 	export PATH=$MINGW/bin:$PATH
 
-		
+
+​		
 S5:  
 
 	$pacman -S make  
@@ -66,18 +69,18 @@ S5:
 	$pacman -S svn   
 	$pacman -S mingw-w64-x86_64-cmake 
 > 目前gcc使用的是7.3版本，支持C++17
-	
+
 辅助配置:
 
 	pacman 中国镜像,速度较快  
 	在 D:/msys64/etc/pacman.d/mirrorlist.msys         // 添加，最前面
-
+	
 	Server = http://mirrors.aliyun.com/archlinux/     // ALI mirror 
-        
+
 ## 1.2. 工作目录组织 ##
-  
+
 	构建后的目录样例	
-    |-D:/WORK
+	|-D:/WORK
 		|- ant         	    //ant  引擎目录
 			|--assets   	//ant  引擎资源目录 
 			|- libs      	//ant  引擎通用源代码，具体文件夹下的内容是干什么用的，应该查看libs/libs_doc.md文件
@@ -107,10 +110,10 @@ S5:
 				|- ozz-animation
 				|- zlib
 				|- glm			  // 通用的c++数学库，使用方式与GLSL类似
-
+	
 	clibs下的库都都会依赖clibs/lua，因为放在clibs的库都是lua-binding。而相应的库会依赖ant/3rd下的第三方库
 	通常情况下，3rd下的库编译的情况应该很少。
-	  
+
 ### 1.2.1. 下载及构建工作环境 ###
 	以 D：盘为例	  
 	在 D：盘建立 D:/WORK 目录，作为 ant  等项目的存放目录 
@@ -123,8 +126,9 @@ S1: ant 工作目录
 	
 	$git clone http://github.com/ejoy/ant
 	ant clone 生成 D:/WORK/ant
-	
-	
+
+
+​	
 	//---------------------------------------
 	// (略）以下iup,lua等工具可略，建议使用 ant 目录下bin,clibs 都已经生成的工具版本
 	cd /D/WORK
@@ -132,17 +136,17 @@ S1: ant 工作目录
 	$cd iup  进入iup目录克隆iupmingw.git 仓库,增加mingw的iup编译支持
 	$git clone https://github.com/cloudwu/iupmingw.git mingw
 	//---------------------------------------
-		
+
 S2: 第三方库配置
 
 	第三方库我们进行了统一管理, 一部分放在gz-tea的服务器上，一部分在github，具体通过3rd/.gitmodules文件查看
 	运行命令:
-
+	
 	$git submodule update --init	//更新子仓库
 	$cd 3rd
 	$make init PLAT=OSX/iOS/MingW/msvc		//构建各个子项目工程,PLAT不指定的话默认是OSX(mac)或者MingW(PC)
 	$make all 						//构建所有子项目
-
+	
 	如果成功即完成第三方库配置, 下方是各个库的单独配置方法, 可以跳过
 >所有 git clone 下载的文件，可能会自动转换成Windows(CR/LF) 模式。这在同步项目仓库时会有修改警告,需要执行 
 > >$git checkout .  
@@ -170,8 +174,8 @@ MSVC的工程位于ant/projects/msvc目录下。由于没有使用类似CMake这
 S1: 编译MSVC的第三方库工程  
 
 	进入ant/3rd目录，执行：
-	$make init msvc=ON	初始化相应的工程  
-
+	$make init PLAT=msvc	初始化相应的工程  
+	
 	执行：build_msvc_all.bat
 		需要注意的是，该bat文件无法在msys的命令行工具下执行
 
@@ -200,7 +204,7 @@ S4: 配合Visual Studio Code使用
 	},
 
 	其中，runtimeExecutable需要是必须要配置的，env下的BIN_PATH也是必须的，否则工程无法在MSVC编译下的路径中找到对应的C模块
-
+	
 	详细的VSCode可以查看ant/docs/debug_with_vscode.md文件
 
 ## 1.3. VSCode插件
