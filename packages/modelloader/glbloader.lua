@@ -1,5 +1,7 @@
 local gltf = import_package "ant.glTF"
+local glbloader = gltf.glb
 local gltfutil = gltf.util
+
 local bgfx = require "bgfx"
 local declmgr = import_package "ant.render".declmgr
 
@@ -90,10 +92,9 @@ local function create_index_buffer(accessor, bufferviews, bindata)
 end
 
 return function (meshfile)
-	local glbloader = gltf.glb
-	local gltfloader = gltf.gltf
-	local _, jsondata, bindata = glbloader.decode_from_filehandle(meshfile)
-	local scene = gltfloader.decode(jsondata)
+	local glbdata = glbloader.decode_from_filehandle(meshfile)
+	local scene = glbdata.info
+	local bindata = glbdata.bin
 
 	local nodes, meshes, accessors, bufferviews = 
 	scene.nodes, scene.meshes, scene.accessors, scene.bufferViews

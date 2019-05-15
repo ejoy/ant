@@ -56,7 +56,8 @@ local function encode(filename, data)
 	local headersize = 12
 	local chunk_headersize = 8
 
-	local align_json, align_json_length = aligh_data(data.info, 4, " ")
+	local jsondata = jsonEncode(data.info)
+	local align_json, align_json_length = aligh_data(jsondata, 4, " ")
 	local align_bindata, align_bindata_length = aligh_data(data.bin, 4, "\0")
 
 	local header = string.pack("<c4I4I4", "glTF", data.version, 

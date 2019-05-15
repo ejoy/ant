@@ -1,6 +1,5 @@
 local glTF = import_package "ant.glTF"
 local glbloader = glTF.glb
-local gltfloader = glTF.gltf
 
 local gltf_converter = require "meshconverter.gltf"
 
@@ -245,8 +244,8 @@ local function deserialize_primitive(seri_data)
 end
 
 return function (srcname, dstname, cfg)
-	local version, jsondata, bindata = glbloader.decode(srcname)
-	local scene = gltfloader.decode(jsondata)
+	local glbdata = glbloader.decode(srcname)
+	local scene = glbdata.info
 
 	local scenes, nodes, meshes = scene.scenes, scene.nodes, scene.meshes
 
@@ -329,7 +328,5 @@ return function (srcname, dstname, cfg)
 		}
 	}
 
-	local new_jsondata = gltfloader.encode(newscene)
-	glbloader.encode(dstname, version, new_jsondata, new_bindata)
-
+	glbloader.encode(dstname, {version=glbdata.version, info=newscene, bin=new_bindata})
 end
