@@ -66,7 +66,7 @@ function model_review_system:init()
 
 	world:create_entity {
 		transform = {
-			s = {0.01, 0.01, 0.01},
+			s = {1, 1, 1},
 			r = {0, 0, 0, 0},
 			t = {2, 2, 2},
 		},
@@ -77,7 +77,7 @@ function model_review_system:init()
 		material = {
 			content = {
 				{
-					ref_path = fs.path "//ant.resources/bunny.material"
+					ref_path = fs.path "//ant.resources/depiction/test_glb.material"
 				}
 			}
 		},

@@ -65,9 +65,10 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 		end
 
 		local start_v, num_v = vb.start, vb.num
-		for _, handle in ipairs(vb.handles) do
-			bgfx.set_vertex_buffer(handle, start_v, num_v)
+		for idx, handle in pairs(vb.handles) do
+			bgfx.set_vertex_buffer(idx, handle, start_v, num_v)
 		end
+		bgfx.submit(vid, prog, 0, false)
 	else	
 		local prims = mg.primitives
 		if prims == nil or next(prims) == nil then
@@ -137,7 +138,11 @@ function util.insert_primitive_glb(eid, prim, meshscene, material, worldmat, fil
 		local vbhandles = {}
 		for _, accidx in pairs(prim.attributes) do
 			local acc = meshscene.accessors[accidx+1]
-			vbhandles[acc.bufferView] = meshscene.bufferViews[acc.bufferView+1].handle
+			local bvidx = acc.bufferView
+			local vbhandle = vbhandles[bvidx]
+			if vbhandle == nil then
+				vbhandles[bvidx] = meshscene.bufferViews[bvidx+1].handle
+			end
 		end
 
 		return {
@@ -151,7 +156,7 @@ function util.insert_primitive_glb(eid, prim, meshscene, material, worldmat, fil
 		local indices = prim.indices
 		if indices then
 			local idxacc = meshscene.accessors[indices+1]
-			local idxbv = meshscene.bufferViews[idxacc.bufferView]
+			local idxbv = meshscene.bufferViews[idxacc.bufferView+1]
 			return {
 				handle = idxbv.handle,
 				start = gltfutil.start_index(prim, meshscene),
@@ -169,7 +174,7 @@ function util.insert_primitive_glb(eid, prim, meshscene, material, worldmat, fil
 	local resulttarget = mi.surface_type.transparency == "translucent" and
 		result.translucent or result.opaque
 
-	local r = add_result(resulttarget, eid, group, mi, material.properties, worldmat)
+	local r = add_result(eid, group, mi, material.properties, worldmat, resulttarget)
 	r.using_glb = true
 end
 

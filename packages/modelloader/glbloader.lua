@@ -17,9 +17,9 @@ local function get_desc(name, accessor)
 	local comptype_name = gltfutil.comptype_name_mapper[accessor.componentType]
 
 	return 	shortname .. 
-			gltfutil.type_count_mapper[accessor.type] .. 
-			channel .. 
-			accessor.normalized and "n" or "N" .. 
+			tostring(gltfutil.type_count_mapper[accessor.type]) .. 
+			tostring(channel) .. 
+			(accessor.normalized and "n" or "N") .. 
 			"I" .. 
 			comptype_shortname_mapper[comptype_name]	
 end
@@ -37,6 +37,7 @@ local function classfiy_attri(attributes, accessors)
 
 		class[attriname] = acc
 	end
+	return attri_class
 end
 
 local function create_decl(attri_class)
@@ -65,6 +66,29 @@ local function create_decl(attri_class)
 	return decls
 end
 
+local function gen_indices_flags(accessor)
+	local elemsize = gltfutil.accessor_elemsize(accessor)
+	local flags = ""
+	if elemsize == 4 then
+		flags = 'd'
+	end
+
+	return flags
+end
+
+local function create_index_buffer(accessor, bufferviews, bindata)	
+	local bvidx = accessor.bufferView+1
+	local bv = bufferviews[bvidx]
+
+	local start_offset = bv.byteOffset + 1
+	local end_offset = start_offset + bv.byteLength
+
+	bv.handle = bgfx.create_index_buffer({
+		bindata, start_offset, end_offset,
+	}, gen_indices_flags(accessor))
+	bv.byteOffset = 0
+end
+
 return function (meshfile)
 	local glbloader = gltf.glb
 	local gltfloader = gltf.gltf
@@ -79,31 +103,32 @@ return function (meshfile)
 			local node = nodes[nodeidx + 1]
 			if node.children then
 				create_buffers(node.children)
-			end
-			local meshidx = assert(node.mesh)
-			local mesh = meshes[meshidx]
-			for _, prim in ipairs(mesh.primitives) do
-				local attribclass = classfiy_attri(prim.attributes, accessors)
-				local decls = create_decl(attribclass)
-				for bvidx, decl in pairs(decls)do
-					local bv = bufferviews[bvidx + 1]
-					bv.handle = bgfx.create_vertex_buffer(decl, {
-						"!", bindata, bv.byteOffset, bv.byteLength,
-					})
-					bv.byteOffset = 0
-				end
+			end			
+			local meshidx = node.mesh
+			if meshidx then
+				local mesh = meshes[meshidx+1]
+				for _, prim in ipairs(mesh.primitives) do
+					local attribclass = classfiy_attri(prim.attributes, accessors)
+					local decls = create_decl(attribclass)
+					for bvidx, decl in pairs(decls)do
+						local bv = bufferviews[bvidx + 1]
+						local start_offset = bv.byteOffset + 1
+						local end_offset = start_offset + bv.byteLength
+						bv.handle = bgfx.create_vertex_buffer({
+							"!", bindata, start_offset, end_offset
+						}, decl.handle)
+						bv.byteOffset = 0
+					end
 
-				local indices_accessor = accessors[prim.indices+1]
-				local indices_bvidx = indices_accessor.bufferView+1
-				local indices_bv = bufferviews[indices_bvidx]
-				indices_bv.handle = bgfx.create_index_buffer{
-					bindata, indices_bv.byteOffset, indices_bv.byteLength
-				}
-				indices_bv.byteOffset = 0
+					local indices_accidx = prim.indices
+					if indices_accidx then
+						create_index_buffer(accessors[indices_accidx+1], bufferviews, bindata)
+					end
+				end
 			end
 		end
 	end
 
-	create_buffers(scene.scenes[scene.scene+1])
+	create_buffers(scene.scenes[scene.scene+1].nodes)
 	return scene
 end

@@ -19,7 +19,10 @@ end
 
 function mgr.parse_attri_name(fullname)
 	local name, channel = fullname:match("(%w+)_?(%d+)")
-	return name_remapper[name], channel
+	if name then
+		return name_remapper[name], channel
+	end
+	return name_remapper[fullname], 0
 end
 
 local function get_attrib(e)
@@ -57,8 +60,8 @@ local function create_decl(vb_layout)
 		decl[#decl+1] = decl_name(e)
 	end
 
-	local decl, stride = bgfx.vertex_decl(decl)
-	return {handle=decl, stride=stride}
+	local d, stride = bgfx.vertex_decl(decl)
+	return {handle=d, stride=stride}
 end
 
 local default_vbelem = "_30NIf"

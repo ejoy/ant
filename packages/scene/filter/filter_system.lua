@@ -57,6 +57,21 @@ local function reset_results(results)
 	end
 end
 
+local function node_matrix(node)
+	if node.matrix then
+		return ms:matrix(node.matrix)
+	end
+
+	if node.scale or node.rotation or node.translation then
+		return ms:srtmat(node.scale, node.rotation, node.translation)
+	end
+end
+
+local function calc_node_transform(node, parentmat)
+	local nodetrans = node_matrix(node)
+	return nodetrans and ms(parentmat, nodetrans, "*P") or parentmat
+end
+
 function primitive_filter_sys:update()	
 	for _, prim_eid in world:each("primitive_filter") do
 		local e = world[prim_eid]
@@ -71,10 +86,11 @@ function primitive_filter_sys:update()
 			local ft = ce[filtertag]
 			if vt and ft then
 				local assetinfo = ce.mesh.assetinfo
+				local meshhandle = assetinfo.handle
 				local worldmat = ce.transform.world
 				local materialcontent = assert(ce.material.content)
-				if assetinfo then
-					local meshhandle = assetinfo.handle
+
+				if meshhandle.scene == nil then
 					local bounding = meshhandle.bounding
 					if bounding then
 						boundings[#boundings+1] = {bounding = bounding, transform=worldmat}
@@ -85,40 +101,31 @@ function primitive_filter_sys:update()
 						worldmat,
 						filter)
 				else
-					local scene = ce.mesh.handle
+					local scene = meshhandle
 					local nodes, meshes = scene.nodes, scene.meshes
-					local function traverse_scene(scenenodes, trans)
+					local function traverse_scene(scenenodes, parentmat)
 						for _, nodeidx in ipairs(scenenodes) do
 							local node = nodes[nodeidx+1]
+
+							local nodetrans = calc_node_transform(node, parentmat)
 							if node.children then
-								traverse_scene(node.children)
+								traverse_scene(node.children, nodetrans)
 							end
-
-							local function get_transform(node)
-								if node.matrix then
-									return ms:matrix(node.matrix)
-								end
-
-								if node.scale or node.rotation or node.translation then
-									return ms:srtmat(node.scale, node.rotation, node.translation)
-								end
-							end
-
-							local nodetrans = ms(trans, get_transform(node), "*P")
 
 							local meshidx = node.mesh
-							local mesh = meshes[meshidx+1]
+							if meshidx then
+								local mesh = meshes[meshidx+1]
 							
-							for idx, prim in ipairs(mesh.primitives) do
-								ru.insert_primitive_glb(eid, prim, scene, 
-									materialcontent[idx] or materialcontent[1], 
-									nodetrans, filter)
+								for idx, prim in ipairs(mesh.primitives) do
+									ru.insert_primitive_glb(eid, prim, scene, 
+										materialcontent[idx] or materialcontent[1], 
+										nodetrans, filter)
+								end
 							end
-							
 						end
 					end
 
-					traverse_scene(scene.scenes, worldmat)
+					traverse_scene(scene.scenes[scene.scene+1].nodes, worldmat)
 				end
 			end
 		end
