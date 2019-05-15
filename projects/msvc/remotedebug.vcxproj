@@ -24,7 +24,7 @@
     <ClInclude Include="..\..\clibs\remotedebug\rdebug_eventfree.h" />
     <ClInclude Include="..\..\clibs\remotedebug\rdebug_redirect.h" />
     <ClInclude Include="..\..\clibs\remotedebug\rdebug_timer.h" />
-    <ClInclude Include="..\..\clibs\remotedebug\thunk.h" />
+    <ClInclude Include="..\..\clibs\remotedebug\thunk\thunk.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\remotedebug\rdebug_delayload.cpp" />
@@ -33,15 +33,15 @@
     <ClCompile Include="..\..\clibs\remotedebug\rdebug_host.cpp" />
     <ClCompile Include="..\..\clibs\remotedebug\rdebug_redirect.cpp" />
     <ClCompile Include="..\..\clibs\remotedebug\rdebug_stdio.cpp" />
-    <ClCompile Include="..\..\clibs\remotedebug\rdebug_visitor.c" />
-    <ClCompile Include="..\..\clibs\remotedebug\thunk.cpp" />
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_visitor.cpp" />
+    <ClCompile Include="..\..\clibs\remotedebug\thunk\thunk.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\clibs\remotedebug\thunk_linux_amd64.inl" />
-    <None Include="..\..\clibs\remotedebug\thunk_other.inl" />
-    <None Include="..\..\clibs\remotedebug\thunk_windows.inl" />
-    <None Include="..\..\clibs\remotedebug\thunk_windows_amd64.inl" />
-    <None Include="..\..\clibs\remotedebug\thunk_windows_i386.inl" />
+    <None Include="..\..\clibs\remotedebug\thunk\thunk_linux.inl" />
+    <None Include="..\..\clibs\remotedebug\thunk\thunk_other.inl" />
+    <None Include="..\..\clibs\remotedebug\thunk\thunk_windows.inl" />
+    <None Include="..\..\clibs\remotedebug\thunk\thunk_windows_amd64.inl" />
+    <None Include="..\..\clibs\remotedebug\thunk\thunk_windows_i386.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
