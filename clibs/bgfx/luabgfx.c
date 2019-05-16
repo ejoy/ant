@@ -40,7 +40,38 @@
 // 64K log ring buffer
 #define MAX_LOGBUFFER (64*1024)
 
-#define BGFX(api) bgfx_##api
+
+static bgfx_interface_vtbl_t* bgfx_inf_ = 0;
+static spinlock_t             bgfx_inf_lock;
+
+static void init_interface(lua_State* L) {
+	atom_spinlock(&bgfx_inf_lock);
+	if (bgfx_inf_) {
+		atom_spinunlock(&bgfx_inf_lock);
+		return;
+	}
+	if (LUA_TFUNCTION != lua_getfield(L, LUA_REGISTRYINDEX, "BGFX_GET_INTERFACE")) {
+		atom_spinunlock(&bgfx_inf_lock);
+		luaL_error(L, "BGFX_GET_INTERFACE is missing.");
+		return;
+	}
+	lua_CFunction fn = lua_tocfunction(L, -1);
+	if (!fn) {
+		atom_spinunlock(&bgfx_inf_lock);
+		luaL_error(L, "BGFX_GET_INTERFACE is not a C function.");
+		return;
+	}
+	bgfx_inf_ = ((PFN_BGFX_GET_INTERFACE)fn)(BGFX_API_VERSION);
+	if (!bgfx_inf_) {
+		atom_spinunlock(&bgfx_inf_lock);
+		luaL_error(L, "BGFX_API_VERSION mismatch.");
+		return;
+	}
+	lua_pop(L, 1);
+	atom_spinunlock(&bgfx_inf_lock);
+}
+
+#define BGFX(api) bgfx_inf_->api
 
 struct screenshot {
 	uint32_t width;
@@ -4140,6 +4171,8 @@ lgetLog(lua_State *L) {
 LUAMOD_API int
 luaopen_bgfx(lua_State *L) {
 	luaL_checkversion(L);
+	init_interface(L);
+
 	int tfn = sizeof(c_texture_formats) / sizeof(c_texture_formats[0]);
 	lua_createtable(L, 0, tfn);
 	int i;
@@ -4245,9 +4278,5 @@ luaopen_bgfx(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
-
-	lua_pushlightuserdata(L, bgfx_get_interface);
-	lua_setfield(L, LUA_REGISTRYINDEX, "BGFX_GET_INTERFACE");
-
 	return 1;
 }

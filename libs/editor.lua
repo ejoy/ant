@@ -10,6 +10,7 @@ package.cpath = table.concat({
 }, ";")
 
 require "editor.vfs"
+require "editor.init_bgfx"
 require "filesystem"
 
 require "common.log"

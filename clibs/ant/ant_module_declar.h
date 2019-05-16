@@ -1,6 +1,5 @@
 int luaopen_bgfx(lua_State* L);
 int luaopen_bgfx_baselib(lua_State* L);
-int luaopen_bgfx_nuklear(lua_State* L);
 int luaopen_bgfx_util(lua_State* L);
 int luaopen_bullet(lua_State* L);
 int luaopen_cjson(lua_State* L);
