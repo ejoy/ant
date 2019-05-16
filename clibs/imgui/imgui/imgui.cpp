@@ -17,7 +17,7 @@
 static bgfx_interface_vtbl_t* bgfx_inf_ = 0;
 #define BGFX(api) bgfx_inf_->api
 
-#define BGFX_IS_VALID_HANDLE(h) (h.idx == UINT16_MAX)
+#define BGFX_IS_VALID_HANDLE(h) (h.idx != UINT16_MAX)
 
 #include "vs_ocornut_imgui.bin.h"
 #include "fs_ocornut_imgui.bin.h"
