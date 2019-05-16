@@ -1,7 +1,7 @@
 local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"
-local imgui = require "bgfx.imgui"
+local imgui = require "imgui"
 local widget = imgui.widget
 local flags = imgui.flags
 local windows = imgui.windows

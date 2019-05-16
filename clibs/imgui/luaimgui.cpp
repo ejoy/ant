@@ -6,6 +6,7 @@ extern "C" {
 }
 
 #include "imgui/imgui.h"
+#include "bgfx_interface.h"
 #include <cstring>
 #include <cstdlib>
 
@@ -20,7 +21,7 @@ struct lua_args {
 static int
 lcreate(lua_State *L) {
 	float fontSize = luaL_checknumber(L, 1);
-	imguiCreate(fontSize);
+	imguiCreate(bgfx_inf_, fontSize);
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
@@ -2347,8 +2348,10 @@ lkeymap(lua_State *L) {
 }
 
 extern "C" LUAMOD_API int
-luaopen_bgfx_imgui(lua_State *L) {
+luaopen_imgui(lua_State *L) {
 	luaL_checkversion(L);
+	init_interface(L);
+
 	luaL_Reg l[] = {
 		{ "create", lcreate },
 		{ "destroy", ldestroy },
