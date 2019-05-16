@@ -8,6 +8,7 @@
 #include <bx/allocator.h>
 #include <bx/math.h>
 #include <bx/timer.h>
+#include <bx/string.h>
 #include <bgfx/c99/bgfx.h>
 #include <dear-imgui/imgui.h>
 
@@ -17,19 +18,6 @@ static bgfx_interface_vtbl_t* bgfx_inf_ = 0;
 #define BGFX(api) bgfx_inf_->api
 
 #define BGFX_IS_VALID_HANDLE(h) (h.idx == UINT16_MAX)
-
-#include "bgfx_utils.h"
-
-//#define USE_ENTRY 1
-
-#ifndef USE_ENTRY
-#	define USE_ENTRY 0
-#endif // USE_ENTRY
-
-#if USE_ENTRY
-#	include "../entry/entry.h"
-#	include "../entry/input.h"
-#endif // USE_ENTRY
 
 #include "vs_ocornut_imgui.bin.h"
 #include "fs_ocornut_imgui.bin.h"
@@ -41,7 +29,20 @@ static bgfx_interface_vtbl_t* bgfx_inf_ = 0;
 #include "icons_kenney.ttf.h"
 #include "icons_font_awesome.ttf.h"
 
-static const bgfx_util::EmbeddedShader s_embeddedShaders[] =
+struct EmbeddedShader
+{
+	struct Data
+	{
+		bgfx::RendererType::Enum type;
+		const uint8_t* data;
+		uint32_t size;
+	};
+
+	const char* name;
+	Data data[bgfx::RendererType::Count];
+};
+
+static const EmbeddedShader s_embeddedShaders[] =
 {
 	BGFX_EMBEDDED_SHADER(vs_ocornut_imgui),
 	BGFX_EMBEDDED_SHADER(fs_ocornut_imgui),
@@ -50,6 +51,47 @@ static const bgfx_util::EmbeddedShader s_embeddedShaders[] =
 
 	BGFX_EMBEDDED_SHADER_END()
 };
+
+
+/// Returns true if both internal transient index and vertex buffer have
+/// enough space.
+///
+/// @param[in] _numVertices Number of vertices.
+/// @param[in] _decl Vertex declaration.
+/// @param[in] _numIndices Number of indices.
+///
+static bool checkAvailTransientBuffers(uint32_t _numVertices, const bgfx_vertex_decl_t& _decl, uint32_t _numIndices)
+{
+	return _numVertices == BGFX(get_avail_transient_vertex_buffer)(_numVertices, &_decl)
+		&& (0 == _numIndices || _numIndices == BGFX(get_avail_transient_index_buffer)(_numIndices) )
+		;
+}
+
+static bgfx_shader_handle_t createEmbeddedShader(const EmbeddedShader* _es, bgfx_renderer_type_t _type, const char* _name)
+{
+	for (const EmbeddedShader* es = _es; NULL != es->name; ++es)
+	{
+		if (0 == bx::strCmp(_name, es->name) )
+		{
+			for (const EmbeddedShader::Data* esd = es->data; bgfx::RendererType::Count != esd->type; ++esd)
+			{
+				if ((bgfx::RendererType::Enum)_type == esd->type
+				&&  1 < esd->size)
+				{
+					bgfx_shader_handle_t handle = BGFX(create_shader)(BGFX(make_ref)(esd->data, esd->size) );
+					if (BGFX_IS_VALID_HANDLE(handle))
+					{
+						BGFX(set_shader_name)(handle, _name, INT32_MAX);
+					}
+					return handle;
+				}
+			}
+		}
+	}
+
+	bgfx_shader_handle_t handle = BGFX_INVALID_HANDLE;
+	return handle;
+}
 
 struct FontRangeMerge
 {
@@ -194,63 +236,17 @@ struct OcornutImguiContext
 
 		setupStyle(true);
 
-#if USE_ENTRY
-		io.KeyMap[ImGuiKey_Tab]        = (int)entry::Key::Tab;
-		io.KeyMap[ImGuiKey_LeftArrow]  = (int)entry::Key::Left;
-		io.KeyMap[ImGuiKey_RightArrow] = (int)entry::Key::Right;
-		io.KeyMap[ImGuiKey_UpArrow]    = (int)entry::Key::Up;
-		io.KeyMap[ImGuiKey_DownArrow]  = (int)entry::Key::Down;
-		io.KeyMap[ImGuiKey_PageUp]     = (int)entry::Key::PageUp;
-		io.KeyMap[ImGuiKey_PageDown]   = (int)entry::Key::PageDown;
-		io.KeyMap[ImGuiKey_Home]       = (int)entry::Key::Home;
-		io.KeyMap[ImGuiKey_End]        = (int)entry::Key::End;
-		io.KeyMap[ImGuiKey_Insert]     = (int)entry::Key::Insert;
-		io.KeyMap[ImGuiKey_Delete]     = (int)entry::Key::Delete;
-		io.KeyMap[ImGuiKey_Backspace]  = (int)entry::Key::Backspace;
-		io.KeyMap[ImGuiKey_Space]      = (int)entry::Key::Space;
-		io.KeyMap[ImGuiKey_Enter]      = (int)entry::Key::Return;
-		io.KeyMap[ImGuiKey_Escape]     = (int)entry::Key::Esc;
-		io.KeyMap[ImGuiKey_A]          = (int)entry::Key::KeyA;
-		io.KeyMap[ImGuiKey_C]          = (int)entry::Key::KeyC;
-		io.KeyMap[ImGuiKey_V]          = (int)entry::Key::KeyV;
-		io.KeyMap[ImGuiKey_X]          = (int)entry::Key::KeyX;
-		io.KeyMap[ImGuiKey_Y]          = (int)entry::Key::KeyY;
-		io.KeyMap[ImGuiKey_Z]          = (int)entry::Key::KeyZ;
-
-		io.ConfigFlags |= 0
-			| ImGuiConfigFlags_NavEnableGamepad
-			| ImGuiConfigFlags_NavEnableKeyboard
-			;
-
-		io.NavInputs[ImGuiNavInput_Activate]    = (int)entry::Key::GamepadA;
-		io.NavInputs[ImGuiNavInput_Cancel]      = (int)entry::Key::GamepadB;
-//		io.NavInputs[ImGuiNavInput_Input]       = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_Menu]        = (int)entry::Key::;
-		io.NavInputs[ImGuiNavInput_DpadLeft]    = (int)entry::Key::GamepadLeft;
-		io.NavInputs[ImGuiNavInput_DpadRight]   = (int)entry::Key::GamepadRight;
-		io.NavInputs[ImGuiNavInput_DpadUp]      = (int)entry::Key::GamepadUp;
-		io.NavInputs[ImGuiNavInput_DpadDown]    = (int)entry::Key::GamepadDown;
-//		io.NavInputs[ImGuiNavInput_LStickLeft]  = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_LStickRight] = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_LStickUp]    = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_LStickDown]  = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_FocusPrev]   = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_FocusNext]   = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_TweakSlow]   = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_TweakFast]   = (int)entry::Key::;
-#endif // USE_ENTRY
-
 		bgfx_renderer_type_t type = BGFX(get_renderer_type)();
 		m_program = BGFX(create_program)(
-			  bgfx_util::createEmbeddedShader(s_embeddedShaders, type, "vs_ocornut_imgui")
-			, bgfx_util::createEmbeddedShader(s_embeddedShaders, type, "fs_ocornut_imgui")
+			  createEmbeddedShader(s_embeddedShaders, type, "vs_ocornut_imgui")
+			, createEmbeddedShader(s_embeddedShaders, type, "fs_ocornut_imgui")
 			, true
 			);
 
 		u_imageLodEnabled = BGFX(create_uniform)("u_imageLodEnabled", BGFX_UNIFORM_TYPE_VEC4, 1);
 		m_imageProgram = BGFX(create_program)(
-			  bgfx_util::createEmbeddedShader(s_embeddedShaders, type, "vs_imgui_image")
-			, bgfx_util::createEmbeddedShader(s_embeddedShaders, type, "fs_imgui_image")
+			  createEmbeddedShader(s_embeddedShaders, type, "vs_imgui_image")
+			, createEmbeddedShader(s_embeddedShaders, type, "fs_imgui_image")
 			, true
 			);
 
@@ -372,17 +368,6 @@ struct OcornutImguiContext
 		io.MouseDown[2] = 0 != (_button & IMGUI_MBUT_MIDDLE);
 		io.MouseWheel = (float)(_scroll - m_lastScroll);
 		m_lastScroll = _scroll;
-
-#if USE_ENTRY
-		uint8_t modifiers = inputGetModifiersState();
-		io.KeyShift = 0 != (modifiers & (entry::Modifier::LeftShift | entry::Modifier::RightShift) );
-		io.KeyCtrl  = 0 != (modifiers & (entry::Modifier::LeftCtrl  | entry::Modifier::RightCtrl ) );
-		io.KeyAlt   = 0 != (modifiers & (entry::Modifier::LeftAlt   | entry::Modifier::RightAlt  ) );
-		for (int32_t ii = 0; ii < (int32_t)entry::Key::Count; ++ii)
-		{
-			io.KeysDown[ii] = inputGetKeyState(entry::Key::Enum(ii) );
-		}
-#endif // USE_ENTRY
 
 		ImGui::NewFrame();
 

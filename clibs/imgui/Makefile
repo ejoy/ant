@@ -15,23 +15,23 @@ endif
 
 OBJS = $(ODIR)/luaimgui.o $(ODIR)/bgfximgui.o $(ODIR)/imgui.o $(ODIR)/imgui_draw.o $(ODIR)/imgui_widgets.o
 
-$(ODIR)/luaimgui.o : luaimgui.cpp  | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC) -I../bgfx -I../thread
+$(ODIR)/luaimgui.o : luaimgui.cpp imgui/imgui.h | $(ODIR)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(BGFXINC) $(BGFX3RDINC) -I../bgfx -I../thread
 
-$(ODIR)/bgfximgui.o : imgui/imgui.cpp  | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC) -I../bgfx -I../thread
+$(ODIR)/bgfximgui.o : imgui/imgui.cpp  imgui/imgui.h | $(ODIR) 
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(BGFXINC) $(BGFX3RDINC) -I../bgfx -I../thread
 
 IMGUI_INC=$(BGFXSRC)/3rdparty/
 IMGUI_SRC=$(BGFXSRC)/3rdparty/dear-imgui/
 
 $(ODIR)/imgui.o : $(IMGUI_SRC)/imgui.cpp  | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ -I$(IMGUI_INC) $(BGFXINC)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< -I$(IMGUI_INC) $(BGFXINC)
 
 $(ODIR)/imgui_draw.o : $(IMGUI_SRC)/imgui_draw.cpp  | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ -I$(IMGUI_INC) $(BGFXINC)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< -I$(IMGUI_INC) $(BGFXINC)
 
 $(ODIR)/imgui_widgets.o : $(IMGUI_SRC)/imgui_widgets.cpp  | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ -I$(IMGUI_INC) $(BGFXINC)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< -I$(IMGUI_INC) $(BGFXINC)
 
 imgui.dll : $(OBJS)
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -L$(BGFXLIBDIR) $(BXLIB) -lstdc++
