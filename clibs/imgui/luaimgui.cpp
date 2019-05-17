@@ -42,7 +42,7 @@ lbeginFrame(lua_State *L) {
 	int32_t scroll = luaL_checkinteger(L, 6);
 	uint16_t width = luaL_checkinteger(L, 7);
 	uint16_t height = luaL_checkinteger(L, 8);
-	bgfx::ViewId view = luaL_checkinteger(L, 9);
+	bgfx_view_id_t view = luaL_checkinteger(L, 9);
 	uint8_t button = 
 		(button1 ? IMGUI_MBUT_LEFT : 0) |
 		(button2 ? IMGUI_MBUT_RIGHT : 0) |

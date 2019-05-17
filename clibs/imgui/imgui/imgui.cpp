@@ -3,9 +3,7 @@
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
-#include <bgfx/bgfx.h>
 #include <bgfx/embedded_shader.h>
-#include <bx/allocator.h>
 #include <bx/math.h>
 #include <bx/timer.h>
 #include <bx/string.h>
@@ -186,16 +184,8 @@ struct OcornutImguiContext
 		}
 	}
 
-	void create(bx::AllocatorI* _allocator)
+	void create()
 	{
-		m_allocator = _allocator;
-
-		if (NULL == _allocator)
-		{
-			static bx::DefaultAllocator allocator;
-			m_allocator = &allocator;
-		}
-
 		m_viewId = 255;
 		m_lastScroll = 0;
 		m_last = bx::getHPCounter();
@@ -247,8 +237,6 @@ struct OcornutImguiContext
 		BGFX(destroy_uniform)(u_imageLodEnabled);
 		BGFX(destroy_program)(m_imageProgram);
 		BGFX(destroy_program)(m_program);
-
-		m_allocator = NULL;
 	}
 
 	void setupStyle(bool _dark)
@@ -315,7 +303,6 @@ struct OcornutImguiContext
 	}
 
 	ImGuiContext*         m_imgui;
-	bx::AllocatorI*       m_allocator;
 	bgfx_vertex_decl_t    m_decl;
 	bgfx_program_handle_t m_program;
 	bgfx_program_handle_t m_imageProgram;
@@ -331,19 +318,19 @@ static OcornutImguiContext s_ctx;
 static void* memAlloc(size_t _size, void* _userData)
 {
 	BX_UNUSED(_userData);
-	return BX_ALLOC(s_ctx.m_allocator, _size);
+	return malloc(_size);
 }
 
 static void memFree(void* _ptr, void* _userData)
 {
 	BX_UNUSED(_userData);
-	BX_FREE(s_ctx.m_allocator, _ptr);
+	free(_ptr);
 }
 
-void imguiCreate(void* bgfx, bx::AllocatorI* _allocator)
+void imguiCreate(void* bgfx)
 {
 	bgfx_inf_ = (bgfx_interface_vtbl_t*)bgfx;
-	s_ctx.create(_allocator);
+	s_ctx.create();
 }
 
 void imguiDestroy()
