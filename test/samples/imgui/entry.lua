@@ -6,9 +6,17 @@ local widget = imgui.widget
 local flags = imgui.flags
 local windows = imgui.windows
 local util = imgui.util
+local font = imgui.font
 
 local callback = {}
 local attribs = {}
+
+local function Font(name)
+	local f = assert(io.open([[c:\windows\fonts\]]..name, "rb"))
+	local ttf = f:read "a"
+	f:close()
+	return ttf
+end
 
 function callback.init(nwh, context, width, height)
 	bgfx.init {
@@ -32,12 +40,16 @@ function callback.init(nwh, context, width, height)
 	attribs.height = height
 	attribs.viewid = 255
 
-	imgui.create(attribs.font_size)
+	imgui.create()
 	imgui.keymap(native.keymap)
 
 	bgfx.set_view_rect(0, 0, 0, width, height)
 	bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
 --	bgfx.set_debug "ST"
+
+	font.Create {
+		{ Font "simhei.ttf", 18, "ChineseSimplifiedCommon"},
+	}
 end
 
 function callback.size(width,height,type)

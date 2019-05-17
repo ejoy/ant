@@ -9,8 +9,6 @@
 #include <bgfx/bgfx.h>
 #include <bgfx/c99/bgfx.h>
 #include <dear-imgui/imgui.h>
-#include <iconfontheaders/icons_kenney.h>
-#include <iconfontheaders/icons_font_awesome.h>
 
 #define IMGUI_MBUT_LEFT   0x01
 #define IMGUI_MBUT_RIGHT  0x02
@@ -28,7 +26,7 @@ inline uint32_t imguiRGBA(uint8_t _r, uint8_t _g, uint8_t _b, uint8_t _a = 255)
 
 namespace bx { struct AllocatorI; }
 
-void imguiCreate(void* bgfx, float _fontSize = 18.0f, bx::AllocatorI* _allocator = NULL);
+void imguiCreate(void* bgfx, bx::AllocatorI* _allocator = NULL);
 void imguiDestroy();
 
 void imguiBeginFrame(int32_t _mx, int32_t _my, uint8_t _button, int32_t _scroll, uint16_t _width, uint16_t _height, int _inputChar = -1, bgfx_view_id_t _view = 255);
