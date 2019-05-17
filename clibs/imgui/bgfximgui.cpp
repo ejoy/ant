@@ -15,8 +15,6 @@
 static bgfx_interface_vtbl_t* bgfx_inf_ = 0;
 #define BGFX(api) bgfx_inf_->api
 
-#define BGFX_IS_VALID_HANDLE(h) (h.idx != UINT16_MAX)
-
 #include "vs_ocornut_imgui.bin.h"
 #include "fs_ocornut_imgui.bin.h"
 #include "vs_imgui_image.bin.h"
@@ -72,7 +70,7 @@ static bgfx_shader_handle_t createEmbeddedShader(const EmbeddedShader* _es, bgfx
 				&&  1 < esd->size)
 				{
 					bgfx_shader_handle_t handle = BGFX(create_shader)(BGFX(make_ref)(esd->data, esd->size) );
-					if (BGFX_IS_VALID_HANDLE(handle))
+					if (BGFX_HANDLE_IS_VALID(handle))
 					{
 						BGFX(set_shader_name)(handle, _name, INT32_MAX);
 					}
