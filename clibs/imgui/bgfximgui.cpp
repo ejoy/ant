@@ -8,9 +8,9 @@
 #include <bx/timer.h>
 #include <bx/string.h>
 #include <bgfx/c99/bgfx.h>
-#include <dear-imgui/imgui.h>
+#include <imgui.h>
 
-#include "imgui.h"
+#include "bgfximgui.h"
 
 static bgfx_interface_vtbl_t* bgfx_inf_ = 0;
 #define BGFX(api) bgfx_inf_->api
@@ -223,13 +223,10 @@ struct OcornutImguiContext
 		BGFX(vertex_decl_end)(&m_decl);
 
 		s_tex = BGFX(create_uniform)("s_tex", BGFX_UNIFORM_TYPE_SAMPLER, 1);
-
-		ImGui::InitDockContext();
 	}
 
 	void destroy()
 	{
-		ImGui::ShutdownDockContext();
 		ImGui::DestroyContext(m_imgui);
 
 		BGFX(destroy_uniform)(s_tex);
@@ -292,8 +289,6 @@ struct OcornutImguiContext
 		m_lastScroll = _scroll;
 
 		ImGui::NewFrame();
-
-		ImGuizmo::BeginFrame();
 	}
 
 	void endFrame()
@@ -348,14 +343,6 @@ void imguiEndFrame()
 	s_ctx.endFrame();
 }
 
-namespace ImGui
-{
-	void PushFont(Font::Enum _font)
-	{
-		// TODO： delete it?
-	}
-} // namespace ImGui
-
 BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4505); // error C4505: '' : unreferenced local function has been removed
 BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wunused-function"); // warning: ‘int rect_width_compare(const void*, const void*)’ defined but not used
 BX_PRAGMA_DIAGNOSTIC_PUSH();
@@ -365,7 +352,7 @@ BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wtype-limits"); // warning: comparison 
 #define STBTT_malloc(_size, _userData) memAlloc(_size, _userData)
 #define STBTT_free(_ptr, _userData) memFree(_ptr, _userData)
 #define STB_RECT_PACK_IMPLEMENTATION
-#include <stb/stb_rect_pack.h>
+#include <imstb_rectpack.h>
 #define STB_TRUETYPE_IMPLEMENTATION
-#include <stb/stb_truetype.h>
+#include <imstb_truetype.h>
 BX_PRAGMA_DIAGNOSTIC_POP();

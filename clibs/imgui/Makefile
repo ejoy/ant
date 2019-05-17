@@ -13,25 +13,26 @@ else
 default : libimgui-$(PLAT).a
 endif
 
-IMGUI_INC=$(BGFXSRC)/3rdparty/
-IMGUI_SRC=$(BGFXSRC)/3rdparty/dear-imgui/
+IMGUI_INC=-I$(ANT3RD)/imgui
+IMGUI_SRC=$(ANT3RD)/imgui
+
 OBJS = $(ODIR)/luaimgui.o $(ODIR)/bgfximgui.o $(ODIR)/imgui.o $(ODIR)/imgui_draw.o $(ODIR)/imgui_widgets.o
 
-$(ODIR)/luaimgui.o : luaimgui.cpp imgui/imgui.h | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(BGFXINC) $(BGFX3RDINC) -I../bgfx -I../thread
+$(ODIR)/luaimgui.o : luaimgui.cpp bgfximgui.h | $(ODIR)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(BGFXINC) -I../bgfx -I../thread
 
-$(ODIR)/bgfximgui.o : imgui/imgui.cpp  imgui/imgui.h $(IMGUI_SRC)../stb/stb_truetype.h | $(ODIR) 
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(BGFXINC) $(BGFX3RDINC) -I../bgfx -I../thread
+$(ODIR)/bgfximgui.o : bgfximgui.cpp  bgfximgui.h $(IMGUI_SRC)/imstb_truetype.h | $(ODIR) 
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC) $(BGFXINC) -I../bgfx -I../thread
 
 
 $(ODIR)/imgui.o : $(IMGUI_SRC)/imgui.cpp  | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< -I$(IMGUI_INC) $(BGFXINC)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC)
 
-$(ODIR)/imgui_draw.o : $(IMGUI_SRC)/imgui_draw.cpp $(IMGUI_SRC)../stb/stb_truetype.h | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< -I$(IMGUI_INC) $(BGFXINC)
+$(ODIR)/imgui_draw.o : $(IMGUI_SRC)/imgui_draw.cpp $(IMGUI_SRC)/imstb_truetype.h | $(ODIR)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC)
 
 $(ODIR)/imgui_widgets.o : $(IMGUI_SRC)/imgui_widgets.cpp  | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< -I$(IMGUI_INC) $(BGFXINC)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC)
 
 imgui.dll : $(OBJS)
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -L$(BGFXLIBDIR) $(BXLIB) -lstdc++

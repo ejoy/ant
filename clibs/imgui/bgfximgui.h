@@ -7,7 +7,7 @@
 #define IMGUI_H_HEADER_GUARD
 
 #include <bgfx/c99/bgfx.h>
-#include <dear-imgui/imgui.h>
+#include <imgui.h>
 
 #define IMGUI_MBUT_LEFT   0x01
 #define IMGUI_MBUT_RIGHT  0x02

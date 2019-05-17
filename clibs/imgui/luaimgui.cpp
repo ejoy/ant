@@ -5,7 +5,7 @@ extern "C" {
 	#include <lauxlib.h>
 }
 
-#include "imgui/imgui.h"
+#include "bgfximgui.h"
 #include "bgfx_interface.h"
 #include <cstring>
 #include <cstdlib>
