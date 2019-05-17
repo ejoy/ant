@@ -20,12 +20,9 @@ struct lua_args {
 
 static int
 lcreate(lua_State *L) {
-	float fontSize = luaL_checknumber(L, 1);
-	imguiCreate(bgfx_inf_, fontSize);
-
+	imguiCreate(bgfx_inf_);
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
-
 	return 0;
 }
 
@@ -45,7 +42,7 @@ lbeginFrame(lua_State *L) {
 	int32_t scroll = luaL_checkinteger(L, 6);
 	uint16_t width = luaL_checkinteger(L, 7);
 	uint16_t height = luaL_checkinteger(L, 8);
-	bgfx::ViewId view = luaL_checkinteger(L, 9);
+	bgfx_view_id_t view = luaL_checkinteger(L, 9);
 	uint8_t button = 
 		(button1 ? IMGUI_MBUT_LEFT : 0) |
 		(button2 ? IMGUI_MBUT_RIGHT : 0) |
@@ -2111,6 +2108,131 @@ uSaveIniSettings(lua_State *L) {
 	}
 }
 
+static int
+fPush(lua_State *L) {
+	lua_Integer id = luaL_checkinteger(L, 1);
+	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
+	if (id <= 0 || id > atlas->Fonts.Size) {
+		luaL_error(L, "Invalid font ID.");
+		return 0;
+	}
+	ImGui::PushFont(atlas->Fonts[id-1]);
+	return 0;
+}
+
+static int
+fPop(lua_State *L) {
+	ImGui::PopFont();
+	return 0;
+}
+
+static const ImWchar*
+GetGlyphRanges(ImFontAtlas* atlas, const char* type) {
+	if (strcmp(type, "Default") == 0) {
+		return atlas->GetGlyphRangesDefault();
+	}
+	if (strcmp(type, "Korean") == 0) {
+		return atlas->GetGlyphRangesKorean();
+	}
+	if (strcmp(type, "Japanese") == 0) {
+		return atlas->GetGlyphRangesJapanese();
+	}
+	if (strcmp(type, "ChineseFull") == 0) {
+		return atlas->GetGlyphRangesChineseFull();
+	}
+	if (strcmp(type, "ChineseSimplifiedCommon") == 0) {
+		return atlas->GetGlyphRangesChineseSimplifiedCommon();
+	}
+	if (strcmp(type, "Cyrillic") == 0) {
+		return atlas->GetGlyphRangesCyrillic();
+	}
+	if (strcmp(type, "Thai") == 0) {
+		return atlas->GetGlyphRangesThai();
+	}
+	if (strcmp(type, "Vietnamese") == 0) {
+		return atlas->GetGlyphRangesVietnamese();
+	}
+	return (const ImWchar*)type;
+}
+
+static void
+CreateFont(lua_State *L, ImFontAtlas* atlas, ImFontConfig* config) {
+	lua_rawgeti(L, -1, 1);
+	size_t ttf_len = 0;
+	const char* ttf_buf = luaL_checklstring(L, -1, &ttf_len);
+	lua_pop(L, 1);
+	
+	lua_rawgeti(L, -1, 2);
+	lua_Number size = luaL_checknumber(L, -1);
+	lua_pop(L, 1);
+
+	const ImWchar* glyphranges = 0;
+	if (LUA_TSTRING == lua_rawgeti(L, -1, 3)) {
+		glyphranges = GetGlyphRanges(atlas, luaL_checkstring(L, -1));
+	}
+	lua_pop(L, 1);
+
+	atlas->AddFontFromMemoryTTF((void*)ttf_buf, ttf_len, (float)size, config, glyphranges);
+}
+
+static int
+fCreate(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
+	atlas->Clear();
+
+	ImFontConfig config;
+	config.FontDataOwnedByAtlas = false;
+
+	lua_Integer in = luaL_len(L, 1);
+	for (lua_Integer i = 1; i <= in; ++i) {
+		lua_rawgeti(L, 1, i);
+		luaL_checktype(L, -1, LUA_TTABLE);
+		bool merge = (LUA_TTABLE == lua_rawgeti(L, -1, 1)); lua_pop(L, 1);
+		if (merge) {
+			lua_Integer jn = luaL_len(L, -1);
+			for (lua_Integer j = 1; j <= jn; ++j) {
+				lua_rawgeti(L, -1, i);
+				luaL_checktype(L, -1, LUA_TTABLE);
+				config.MergeMode = (j != 1);
+				CreateFont(L, atlas, &config);
+				lua_pop(L, 1);
+			}
+		}
+		else {
+			config.MergeMode = false;
+			CreateFont(L, atlas, &config);
+		}
+		lua_pop(L, 1);
+	}
+
+	if (!atlas->Build()) {
+		luaL_error(L, "Create font failed.");
+		return 0;
+	}
+
+	uint8_t* data;
+	int32_t width;
+	int32_t height;
+	atlas->GetTexDataAsRGBA32(&data, &width, &height);
+
+	union { ImTextureID ptr; struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; } texture;
+	texture.s.handle = BGFX(create_texture_2d)(
+		  (uint16_t)width
+		, (uint16_t)height
+		, false
+		, 1
+		, BGFX_TEXTURE_FORMAT_BGRA8
+		, 0
+		, BGFX(copy)(data, width*height*4)
+		);
+	texture.s.flags = IMGUI_FLAGS_ALPHA_BLEND;
+	texture.s.mip = 0;
+	atlas->TexID = texture.ptr;
+	return 0;
+}
+
+
 // key, press, state
 static int
 lkeyState(lua_State *L) {
@@ -2529,6 +2651,16 @@ luaopen_imgui(lua_State *L) {
 
 	luaL_newlib(L, util);
 	lua_setfield(L, -2, "util");
+
+	luaL_Reg font[] = {
+		{ "Push", fPush },
+		{ "Pop", fPop },
+		{ "Create", fCreate },
+		{ NULL, NULL },
+	};
+
+	luaL_newlib(L, font);
+	lua_setfield(L, -2, "font");
 
 	lua_newtable(L);
 	enum_gen(L, "ColorEdit", eColorEditFlags);
