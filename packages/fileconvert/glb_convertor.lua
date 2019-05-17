@@ -292,7 +292,7 @@ return function (srcname, dstname, cfg)
 				local primitives = mesh.primitives
 				for idx, prim in ipairs(primitives) do
 					local seri_prim = compile_primitive(scene, prim)
-					local new_seri_prim, prim_binary_buffers = gltf_converter.convert_buffers(seri_prim, bindata, cfg)
+					local new_seri_prim, prim_binary_buffers = gltf_converter.convert_buffers(seri_prim, glbdata.bin, cfg)
 					local newprim, newacc, newbvs = deserialize_primitive(new_seri_prim)
 					
 					refine_prim_offset(newprim, newacc, newbvs)

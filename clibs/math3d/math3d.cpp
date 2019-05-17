@@ -415,18 +415,28 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index){
 
 		m = glm::mat4x4(glm::quat(*(const glm::vec3*)value));
 	} else if (rtype == LUA_TTABLE) {
-		size_t len = lua_rawlen(L, index);
-		if (len != 3)
-			luaL_error(L, "r field should : r={1, 2, 3}, only accept 3 value, %d is give", len);
-		//the table is define as : rotate x-axis(pitch), rotate y-axis(yaw), rotate z-axis(roll)
+		const size_t len = lua_rawlen(L, index);
 
-		glm::vec3 e;
-		for (int ii = 0; ii < 3; ++ii)
-			e[ii] = get_table_value(L, index, ii + 1);		
+		if (len == 3) {
+			//the table is define as : rotate x-axis(pitch), rotate y-axis(yaw), rotate z-axis(roll)
+			glm::vec3 e;
+			for (int ii = 0; ii < 3; ++ii)
+				e[ii] = get_table_value(L, index, ii + 1);
 
-		// be careful here, glm::quat(euler_angles) result is different from eulerAngleXYZ()
-		// keep the same order with glm::quat
-		m = glm::mat4x4(glm::quat(e));	
+			// be careful here, glm::quat(euler_angles) result is different from eulerAngleXYZ()
+			// keep the same order with glm::quat
+			m = glm::mat4x4(glm::quat(e));
+		} else if (len == 4) {
+			glm::quat q;
+			for (int ii = 0; ii < 4; ++ii)
+				q[ii] = get_table_value(L, index, ii + 1);
+			m = glm::mat4x4(q);
+		} else {
+			luaL_error(L, "r field should : \
+							1. with 3 element(euler angle): r={1, 2, 3}, only accept 3 value;\n\
+							2. with 4 element(quaternion): r={0, 0, 0, 1};\n\
+							%d is give", len);
+		}
 	} else {
 		m = glm::mat4x4(1.f);
 		if (rtype != LUA_TNIL)
