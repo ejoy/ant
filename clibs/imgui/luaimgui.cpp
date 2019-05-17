@@ -1109,10 +1109,10 @@ wTreePop(lua_State *L) {
 }
 
 static int
-wSetNextTreeNodeOpen(lua_State *L) {
+wSetNextItemOpen(lua_State *L) {
 	bool is_open = lua_toboolean(L, 1);
 	ImGuiCond c = get_cond(L, 2);
-	ImGui::SetNextTreeNodeOpen(is_open, c);
+	ImGui::SetNextItemOpen(is_open, c);
 	return 0;
 }
 
@@ -2398,7 +2398,7 @@ luaopen_imgui(lua_State *L) {
 		{ "TreeNode", wTreeNode },
 		{ "TreePop", wTreePop },
 		{ "CollapsingHeader", wCollapsingHeader },
-		{ "SetNextTreeNodeOpen", wSetNextTreeNodeOpen },
+		{ "SetNextItemOpen", wSetNextItemOpen },
 		{ "PlotLines", wPlotLines },
 		{ "PlotHistogram", wPlotHistogram },
 		{ "BeginTooltip", wBeginTooltip },

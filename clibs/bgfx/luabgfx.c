@@ -977,15 +977,13 @@ lsetDebug(lua_State *L) {
 	return 0;
 }
 
-#define invalid_handle(h) (h.idx == UINT16_MAX)
-
 static int
 lcreateShader(lua_State *L) {
 	size_t sz;
 	const char *s = luaL_checklstring(L, 1, &sz);
 	const bgfx_memory_t * m = BGFX(copy)(s, sz);
 	bgfx_shader_handle_t handle = BGFX(create_shader)(m);
-	if (invalid_handle(handle)) {
+	if (!BGFX_HANDLE_IS_VALID(handle)) {
 		return luaL_error(L, "create shader failed");
 	}
 	lua_pushinteger(L, BGFX_LUAHANDLE(SHADER, handle));
@@ -1093,7 +1091,7 @@ lcreateProgram(lua_State *L) {
 		bgfx_shader_handle_t fsh = { fs };
 		ph = BGFX(create_program)(vsh, fsh, d);
 	}
-	if (invalid_handle(ph)) {
+	if (!BGFX_HANDLE_IS_VALID(ph)) {
 		return luaL_error(L, "create program failed");
 	}
 	lua_pushinteger(L, BGFX_LUAHANDLE(PROGRAM, ph));
@@ -2205,7 +2203,7 @@ lcreateVertexBuffer(lua_State *L) {
 		calc_tangent_vb(L, mem, vd, 4);	// todo
 	}
 	bgfx_vertex_buffer_handle_t handle = BGFX(create_vertex_buffer)(mem, vd, flags);
-	if (invalid_handle(handle)) {
+	if (!BGFX_HANDLE_IS_VALID(handle)) {
 		return luaL_error(L, "create vertex buffer failed");
 	}
 	lua_pushinteger(L, BGFX_LUAHANDLE(VERTEX_BUFFER, handle));
@@ -2247,7 +2245,7 @@ lcreateDynamicVertexBuffer(lua_State *L) {
 		handle = BGFX(create_dynamic_vertex_buffer_mem)(mem, vd, flags);
 	}
 
-	if (invalid_handle(handle)) {
+	if (!BGFX_HANDLE_IS_VALID(handle)) {
 		return luaL_error(L, "create dynamic vertex buffer failed");
 	}
 
@@ -2306,7 +2304,7 @@ lcreateIndexBuffer(lua_State *L) {
 
 
 	bgfx_index_buffer_handle_t handle = BGFX(create_index_buffer)(mem, flags);
-	if (invalid_handle(handle)) {
+	if (!BGFX_HANDLE_IS_VALID(handle)) {
 		return luaL_error(L, "create index buffer failed");
 	}
 	lua_pushinteger(L, BGFX_LUAHANDLE(INDEX_BUFFER, handle));
@@ -2357,7 +2355,7 @@ lcreateDynamicIndexBuffer(lua_State *L) {
 		handle = BGFX(create_dynamic_index_buffer_mem)(mem, flags);
 	}
 
-	if (invalid_handle(handle)) {
+	if (!BGFX_HANDLE_IS_VALID(handle)) {
 		return luaL_error(L, "create dynamic index buffer failed");
 	}
 
@@ -2812,7 +2810,7 @@ lcreateUniform(lua_State *L) {
 	}
 	int num = luaL_optinteger(L, 3, 1);
 	bgfx_uniform_handle_t handle = BGFX(create_uniform)(name, ut, num);
-	if (invalid_handle(handle)) {
+	if (!BGFX_HANDLE_IS_VALID(handle)) {
 		return luaL_error(L, "create uniform failed");
 	}
 	lua_pushinteger(L, BGFX_LUAHANDLE_WITHTYPE(BGFX_LUAHANDLE(UNIFORM, handle), ut));
@@ -3161,7 +3159,7 @@ lcreateTexture(lua_State *L) {
 	} else {
 		h = BGFX(create_texture)(mem, flags, skip, NULL);
 	}
-	if (invalid_handle(h)) {
+	if (!BGFX_HANDLE_IS_VALID(h)) {
 		return luaL_error(L, "create texture failed");
 	}
 	lua_pushinteger(L, BGFX_LUAHANDLE(TEXTURE, h));
@@ -3362,7 +3360,7 @@ lcreateFrameBuffer(lua_State *L) {
 	default:
 		return luaL_error(L, "Invalid argument type %s for create_frame_buffer", lua_typename(L, t));
 	}
-	if (invalid_handle(handle)) {
+	if (!BGFX_HANDLE_IS_VALID(handle)) {
 		return luaL_error(L, "create frame buffer failed");
 	}
 	lua_pushinteger(L, BGFX_LUAHANDLE(FRAME_BUFFER, handle));
@@ -3436,7 +3434,7 @@ lcreateTexture2D(lua_State *L) {
 		}
 		handle = BGFX(create_texture_2d)(width, height, hasMips, layers, fmt, flags, mem);
 	}
-	if (invalid_handle(handle)) {
+	if (!BGFX_HANDLE_IS_VALID(handle)) {
 		return luaL_error(L, "create texture 2d failed");
 	}
 	lua_pushinteger(L, BGFX_LUAHANDLE(TEXTURE, handle));
@@ -3571,7 +3569,7 @@ lgetTexture(lua_State *L) {
 
 	bgfx_frame_buffer_handle_t h = {hid};
 	bgfx_texture_handle_t th = BGFX(get_texture)(h, attachment);
-	if (invalid_handle(th)) {
+	if (!BGFX_HANDLE_IS_VALID(th)) {
 		return luaL_error(L, "get texture failed");
 	}
 	lua_pushinteger(L, BGFX_LUAHANDLE(TEXTURE, th));
@@ -3796,7 +3794,7 @@ lsetScissor(lua_State *L) {
 static int
 lcreateOcclusionQuery(lua_State *L) {
 	bgfx_occlusion_query_handle_t h = BGFX(create_occlusion_query)();
-	if (invalid_handle(h)) {
+	if (!BGFX_HANDLE_IS_VALID(h)) {
 		return luaL_error(L, "create occlusion query failed");
 	}
 	lua_pushinteger(L, BGFX_LUAHANDLE(OCCLUSION_QUERY, h));
@@ -3869,7 +3867,7 @@ static int
 lcreateIndirectBuffer(lua_State *L) {
 	int num = luaL_checkinteger(L, 1);
 	bgfx_indirect_buffer_handle_t h = BGFX(create_indirect_buffer)(num);
-	if (invalid_handle(h)) {
+	if (!BGFX_HANDLE_IS_VALID(h)) {
 		return luaL_error(L, "create occlusion query failed");
 	}
 	lua_pushinteger(L, BGFX_LUAHANDLE(INDIRECT_BUFFER, h));
