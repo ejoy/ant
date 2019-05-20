@@ -90,42 +90,44 @@ function primitive_filter_sys:update()
 				local worldmat = ce.transform.world
 				local materialcontent = assert(ce.material.content)
 
-				if meshhandle.scene == nil then
-					local bounding = meshhandle.bounding
-					if bounding then
-						boundings[#boundings+1] = {bounding = bounding, transform=worldmat}
-					end
-					ru.insert_primitive(eid, 
-						meshhandle,
-						materialcontent,
-						worldmat,
-						filter)
-				else
-					local scene = meshhandle
-					local nodes, meshes = scene.nodes, scene.meshes
-					local function traverse_scene(scenenodes, parentmat)
-						for _, nodeidx in ipairs(scenenodes) do
-							local node = nodes[nodeidx+1]
+				if meshhandle then
+					if meshhandle.scene == nil then
+						local bounding = meshhandle.bounding
+						if bounding then
+							boundings[#boundings+1] = {bounding = bounding, transform=worldmat}
+						end
+						ru.insert_primitive(eid, 
+							meshhandle,
+							materialcontent,
+							worldmat,
+							filter)
+					else
+						local scene = meshhandle
+						local nodes, meshes = scene.nodes, scene.meshes
+						local function traverse_scene(scenenodes, parentmat)
+							for _, nodeidx in ipairs(scenenodes) do
+								local node = nodes[nodeidx+1]
 
-							local nodetrans = calc_node_transform(node, parentmat)
-							if node.children then
-								traverse_scene(node.children, nodetrans)
-							end
+								local nodetrans = calc_node_transform(node, parentmat)
+								if node.children then
+									traverse_scene(node.children, nodetrans)
+								end
 
-							local meshidx = node.mesh
-							if meshidx then
-								local mesh = meshes[meshidx+1]
-							
-								for idx, prim in ipairs(mesh.primitives) do
-									ru.insert_primitive_glb(eid, prim, scene, 
-										materialcontent[idx] or materialcontent[1], 
-										nodetrans, filter)
+								local meshidx = node.mesh
+								if meshidx then
+									local mesh = meshes[meshidx+1]
+								
+									for idx, prim in ipairs(mesh.primitives) do
+										ru.insert_primitive_glb(eid, prim, scene, 
+											materialcontent[idx] or materialcontent[1], 
+											nodetrans, filter)
+									end
 								end
 							end
 						end
-					end
 
-					traverse_scene(scene.scenes[scene.scene+1].nodes, worldmat)
+						traverse_scene(scene.scenes[scene.scene+1].nodes, worldmat)
+					end
 				end
 			end
 		end

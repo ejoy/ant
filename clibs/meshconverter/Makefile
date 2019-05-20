@@ -17,7 +17,7 @@ OBGFX_DIR:=$(ODIR)/bgfx
 $(OBGFX_DIR) : | $(ODIR)
 	mkdir -p $@
 
-SRC_FILES := meshconverter.cpp antmesh_converter.cpp fbx_helper.cpp bgfxmesh_helper.cpp utils.cpp bgfx/util.cpp
+SRC_FILES := meshconverter.cpp antmesh_converter.cpp fbx_helper.cpp bgfxmesh_helper.cpp utils.cpp bgfx/util.cpp gltf_converter.cpp
 
 OBJ_FILES := $(patsubst %.cpp,$(ODIR)/%.o,$(SRC_FILES))
 

@@ -30,6 +30,7 @@ end
 package.cpath = table.concat(cpaths, ";")
 
 require "editor.vfs"
+require "editor.init_bgfx"
 require "filesystem"
 
 require "common.log"
