@@ -49,7 +49,22 @@ local function sortpairs(t)
     end
 end
 
-local function stringify_array(t)
+local function end_table(isroot)
+	if not isroot then
+		res[#res] = res[#res]:sub(1,-2)
+	end
+	
+	res[#res+1] = isroot and getindent() or (getindent() .. "}")
+    return isroot and "" or "{"
+end
+
+local function step_indent(step, isroot)
+	if not isroot then
+		indent = indent + step
+	end
+end
+
+local function stringify_array(t, isroot)
     local max = 0
     for k in pairs(t) do
         if math.type(k) ~= "integer" then
@@ -57,21 +72,20 @@ local function stringify_array(t)
         end
         max = max > k and max or k
     end
-    if max == 0 then
-        res[#res+1] = getindent().."}"
-        return "{"
+	if max ~= 0 then
+		step_indent(1, isroot)
+		for i = 1, max do
+			local pos = #res+1
+			res[pos] = false
+			res[pos] = getindent()..stringify_value(t[i])
+			if not isroot then
+				res[#res] = res[#res] .. ","
+			end
+		end
+		step_indent(-1, isroot)
     end
-    indent = indent + 1
-    for i = 1, max do
-        local pos = #res+1
-        res[pos] = false
-        res[pos] = getindent()..stringify_value(t[i])
-        res[#res] = res[#res] .. ","
-    end
-    indent = indent - 1
-    res[#res] = res[#res]:sub(1,-2)
-    res[#res+1] = getindent().."}"
-    return "{"
+   
+	return end_table(isroot)
 end
 
 local function stringify_key(v)
@@ -81,25 +95,25 @@ local function stringify_key(v)
     return ("[%q]"):format(v)
 end
 
-local function stringify_object(t)
+local function stringify_object(t, isroot)
     local fmt = pretty and "%s = %s" or "%s=%s"
-    indent = indent + 1
+    step_indent(1, isroot)
     for k, v in sortpairs(t) do
         if type(k) ~= "string" then
             error("invalid table: mixed or invalid key types")
         end
         local pos = #res+1
         res[pos] = false
-        res[pos] = getindent()..fmt:format(stringify_key(k), stringify_value(v))
-        res[#res] = res[#res] .. ","
+		res[pos] = getindent()..fmt:format(stringify_key(k), stringify_value(v))
+		if not isroot then
+			res[#res] = res[#res] .. ","
+		end
     end
-    indent = indent - 1
-    res[#res] = res[#res]:sub(1,-2)
-    res[#res+1] = getindent().."}"
-    return "{"
+    step_indent(-1, isroot)
+	return end_table(isroot)
 end
 
-function stringify_value(v)
+function stringify_value(v, isroot)
     local t = type(v)
     if t == "nil" then
         return "nil"
@@ -114,24 +128,25 @@ function stringify_value(v)
         return t and "true" or "false"
     elseif t == "table" then
         if isarray(v) then
-            return stringify_array(v)
+            return stringify_array(v, isroot)
         end
-        return stringify_object(v)
+        return stringify_object(v, isroot)
     else
         error("invalid type: "..t)
     end
 end
 
-local function stringify(v, p)
+local function init(p)
     pretty = p
     indent = 0
-    res = {false}
-    if pretty then
-        res[1] = "return "..stringify_value(v)
-        return table.concat(res, "\n")
-    end
-    res[1] = "return"..stringify_value(v)
-    return table.concat(res)
+	res = {false}	
+end
+
+local function stringify(v, p, asroot)
+	init(p)
+	local str = stringify_value(v, asroot)
+    res[1] = asroot and str or "return"..str
+    return table.concat(res, pretty and "\n" or nil)
 end
 
 return stringify
