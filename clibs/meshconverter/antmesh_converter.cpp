@@ -76,8 +76,11 @@ fetch_load_config(lua_State *L, int idx, load_config &config) {
 		config.flags |= load_config::CreateTangent|load_config::CreateBitangent;
 
 	extract_boolean("invert_normal", load_config::InvertNormal);
-	extract_boolean("flip_uv", load_config::FlipUV);
+	extract_boolean("flip_u", load_config::FlipU);
+	extract_boolean("flip_v", load_config::FlipV);
+
 	extract_boolean("ib_32", load_config::IndexBuffer32Bit);
+	extract_boolean("reset_root_pos", load_config::ResetRootPos);
 }
 
 static inline void WriteSize(std::ostream &os, const std::string &elem, size_t valueSize) {

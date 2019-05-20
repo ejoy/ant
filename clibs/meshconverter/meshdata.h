@@ -26,13 +26,18 @@ struct load_config {
 		return flags & (CreateTangent | CreateBitangent);
 	}
 
-	bool NeedFlipUV()const {
-		return flags & FlipUV;
+	bool NeedFlipU()const {
+		return flags & FlipU;
 	}
 
-	bool NeedPackAsSOA() const {
-		return flags & PackAsSOA;
+	bool NeedFlipV() const {
+		return flags & FlipV;
 	}
+
+	bool NeedResetRootPosition() const {
+		return flags & ResetRootPos;
+	}
+
 
 	bool IsLoadSkeleton() const {
 		return flags & LoadSkeleton;
@@ -50,9 +55,10 @@ struct load_config {
 		CreateBitangent = 0x00000004,
 
 		InvertNormal	= 0x00000010,
-		FlipUV			= 0x00000020,
-		IndexBuffer32Bit= 0x00000040,
-		PackAsSOA		= 0x00000080,
+		FlipU			= 0x00000020,
+		FlipV			= 0x00000040,
+		IndexBuffer32Bit= 0x00000080,
+		ResetRootPos	= 0x00000100,
 
 		AnimationMask	= 0xffff0000,
 		LoadSkeleton	= 0x00010000,

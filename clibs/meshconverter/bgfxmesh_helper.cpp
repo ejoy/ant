@@ -227,7 +227,7 @@ convertBGFX(lua_State *L, const std::string &srcpath, const std::string &outputf
 		calc_tangents(md);
 	}
 
-	if (config.NeedFlipUV()) {
+	if (config.NeedFlipV()) {
 		flip_uv(md);
 	}
 

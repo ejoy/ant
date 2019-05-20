@@ -331,7 +331,7 @@ convertFBX(lua_State *L, const std::string &srcpath, const std::string &outputfi
 		import_flags |= aiProcess_CalcTangentSpace;
 	}
 
-	if (config.NeedFlipUV()) {
+	if (config.NeedFlipV()) {
 		import_flags |= aiProcess_FlipUVs;
 	}
 
