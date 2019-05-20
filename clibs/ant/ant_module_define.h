@@ -1,6 +1,5 @@
 { "bgfx", luaopen_bgfx },
 { "bgfx.baselib", luaopen_bgfx_baselib },
-{ "bgfx.nuklear", luaopen_bgfx_nuklear },
 { "bgfx.util", luaopen_bgfx_util },
 { "bullet", luaopen_bullet },
 { "cjson", luaopen_cjson },

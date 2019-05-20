@@ -44,6 +44,9 @@ copy_$(1): build_$(1)
 	cp $(1)/$(1).dll $(BIN)/$(1).dll
 endef
 
+copy_bgfx-core: build_bgfx
+	cp bgfx/bgfx-core.dll $(BIN)/bgfx-core.dll
+
 define MAKE_temp
 build_$(1) : build_lua	
 	cd $(1) && $(MAKE) "PLAT=$(PLAT)"
@@ -57,7 +60,7 @@ $(foreach v, $(LIBS), $(eval $(call COPY_DLL_func,$(v))))
 
 $(foreach v, $(LIBS) lua iup, $(eval $(call TARG_func,$(v))))
 
-copy: $(addprefix copy_,$(LIBS) iup lua)
+copy: $(addprefix copy_,$(LIBS) iup lua bgfx-core)
 	
 clean : $(addprefix clean_,$(LIBS) iup lua)
 	rm -f *.dll && rm -f *.exe
