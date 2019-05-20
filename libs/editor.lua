@@ -8,16 +8,10 @@ local cpaths = {
 	"bin/?.dll",
 }
 
-local numarg = select("#", ...)
-if numarg > 0 then
-	local args = {}
-	for i=1, numarg do
-		args[#args+1] = select(i, ...)
-	end
-	
+if #arg > 0 then
 	local function has_arg(name)
-		for _, arg in ipairs(args) do
-			if arg == name then
+		for _, a in ipairs(arg) do
+			if a == name then
 				return true
 			end
 		end
