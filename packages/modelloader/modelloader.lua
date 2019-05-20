@@ -44,7 +44,7 @@ function loader.load(filepath)
 		assert(fs.exists(filepath .. ".lk"))
 	end
 
-	local meshfile = fs.open(filepath, "rb")
+	local meshfile = assert(fs.open(filepath, "rb"))
 
 	if is_glb(meshfile) then
 		return glbloader(meshfile)

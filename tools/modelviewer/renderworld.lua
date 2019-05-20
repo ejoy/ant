@@ -11,6 +11,7 @@ ecs.import "ant.math.adapter"
 
 local math3d = import_package "ant.math"
 local ms = math3d.stack
+local mu = math3d.util
 local model_review_system = ecs.system "model_review_system"
 
 local renderpkg = import_package "ant.render"
@@ -45,11 +46,7 @@ function model_review_system:init()
 	create_light()
 	cu.create_grid_entity(world, "grid")
 	world:create_entity {
-		transform = {			
-			s = {0.2, 0.2, 0.2, 0},
-			r = {-math.pi * 0.5, -math.pi * 0.5, 0, 0},
-			t = {0, 0, 0, 1},
-		},
+		transform = mu.srt({0.2, 0.2, 0.2}),
 		can_render = true,
 		mesh = {
 			ref_path = fs.path "//ant.resources/PVPScene/campsite-door.mesh"

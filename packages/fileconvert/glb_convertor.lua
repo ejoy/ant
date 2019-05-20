@@ -246,8 +246,24 @@ end
 return function (srcname, dstname, cfg)
 	local glbdata = glbloader.decode(srcname)
 	local scene = glbdata.info
-
 	local scenes, nodes, meshes = scene.scenes, scene.nodes, scene.meshes
+
+	local scenerootnode = scenes[scene.scene+1].nodes
+	
+	if cfg.flags.reset_root_pos then
+		for _, nodeidx in ipairs(scenerootnode) do
+			local node = nodes[nodeidx+1]
+			local matrix = node.matrix
+			if matrix then
+				matrix[15], matrix[14], matrix[13] = 0, 0, 0
+			end
+
+			local tran = node.translation
+			if tran then
+				tran[1], tran[2], tran[3] = 0, 0, 0
+			end
+		end
+	end
 
 	local new_bindata_table = {}
 	local bindata_offset = 0
@@ -308,7 +324,7 @@ return function (srcname, dstname, cfg)
 		end
 	end
 
-	fetch_mesh_buffers(scenes[scene.scene+1].nodes)
+	fetch_mesh_buffers(scenerootnode)
 	
 	local new_bindata = table.concat(new_bindata_table, "")
 
