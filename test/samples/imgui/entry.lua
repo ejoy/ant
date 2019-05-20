@@ -48,6 +48,7 @@ function callback.init(nwh, context, width, height)
 --	bgfx.set_debug "ST"
 
 	font.Create {
+		{ Font "simsun.ttc", 18, "\x20\x00\xFF\xFF\x00"},
 		{ Font "simhei.ttf", 18, "ChineseSimplifiedCommon"},
 	}
 end
