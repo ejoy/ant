@@ -114,7 +114,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin;../../3rd/ib-compress/vs_bin/$(PlatformTarget)/$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua53.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;bimg$(Configuration).lib;example-common$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
