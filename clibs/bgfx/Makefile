@@ -26,7 +26,7 @@ bgfx-core.dll : bgfx-core.def
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(BGFXLIB)
 
 bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o | bgfx-core.dll
-	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) $(BGFXLIB)
+	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB)
 
 libbgfx-$(PLAT).a : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o
 	ar rsv $@ $^

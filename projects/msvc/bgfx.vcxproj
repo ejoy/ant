@@ -21,7 +21,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\clibs\bgfx\baselib.cpp" />
     <ClCompile Include="..\..\clibs\bgfx\luabgfx.c" />
-    <ClCompile Include="..\..\clibs\bgfx\luabgfximgui.cpp" />
     <ClCompile Include="..\..\clibs\bgfx\luabgfxutil.c" />
   </ItemGroup>
   <ItemGroup>
@@ -115,7 +114,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;bimg$(Configuration).lib;example-common$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -177,7 +176,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin;../../3rd/ib-compress/vs_bin/$(Configuration)/$(PlatformName);../../3rd/ib-compress/$(PlatformTarget)/$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;bimg$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
