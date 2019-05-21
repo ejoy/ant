@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="lua_State">
+    <DisplayString>[thread top=]{top-(ci->func+1)}</DisplayString>
+    <Expand>
+      <Item Name="[stack size]">top-(ci->func+1)</Item>
+      <IndexListItems>
+        <Size>top-(ci->func+1)</Size>
+        <ValueNode>ci->func[$i]</ValueNode>
+      </IndexListItems>
+      <Item Name="[registry]">l_G->l_registry</Item>
+      <!-- <Item Name="[globals]">l_gt</Item> -->
+      <Item Name="[call]" Condition="ci->func->tt_!=0">ci->func</Item>
+      <Item Name="[callinfo list]">"------------------------------------"</Item>
+      <LinkedListItems>
+        <!-- <Size>m_nElements</Size> -->
+        <HeadPointer>ci</HeadPointer>
+        <NextPointer>previous</NextPointer>
+        <ValueNode>this</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+  <Type Name="Node">
+    <DisplayString>{i_key.tvk} = {i_val}</DisplayString>
+    <Expand>
+      <Item Name="[val]">i_val</Item>
+    </Expand>
+  </Type>
+  <Type Name="lua_TValue">
+    <DisplayString Condition="(tt_)==0">[nil]</DisplayString>
+    <DisplayString Condition="(tt_)==1">[boolean] {(bool)(value_).b}</DisplayString>
+    <DisplayString Condition="(tt_)==2">[lightuserdata] {(void *)(value_).p}</DisplayString>
+    <DisplayString Condition="(tt_)==3">[number] {(lua_Number)((value_).n)}</DisplayString>
+    <DisplayString Condition="(tt_)==19">[int] {(lua_Integer)(value_).i}</DisplayString>
+    <DisplayString Condition="(tt_&amp;0x0f)==4">[string] {((union GCUnion *)(value_.gc))->ts}</DisplayString>
+    <DisplayString Condition="(tt_)==69">[table] {((union GCUnion *)(value_).gc)->h}</DisplayString>
+    <DisplayString Condition="(tt_)==102">[cclosuse] {((union GCUnion *)(value_).gc)->cl.c}</DisplayString>
+    <DisplayString Condition="(tt_)==70">[lclosuse] {((union GCUnion *)(value_).gc)->cl.l}</DisplayString>
+    <DisplayString Condition="(tt_&amp;0x1f)==6">[closure] {((union GCUnion *)(value_).gc)->cl}</DisplayString>
+    <DisplayString Condition="(tt_&amp;0xf)==6">[function] {value_.p}</DisplayString>
+
+    <DisplayString Condition="(tt_)==71">[userdata] {((union GCUnion *)(value_).gc)->u}</DisplayString>
+    <DisplayString Condition="(tt_)==72">[thread] {((union GCUnion *)(value_).gc)->th}</DisplayString>
+    <DisplayString>[unknown]</DisplayString>
+    <Expand>
+      <Item Name="[lua_TValue type]">tt_&amp;0xf</Item>
+      <Item Name="[lua_TValue tag]">tt_</Item>
+      <Item Name="[GCUnion]">(union GCUnion *)(value_.gc)</Item>
+      <Item Name="[lightuserdata]" Condition="(tt_)==2">(const char *)value_.p</Item>
+      <Item Name="[table]" Condition="(tt_)==69">((union GCUnion *)(value_).gc)->h</Item>
+      <Item Name="[function]" Condition="(tt_&amp;0x1f)==6">((union GCUnion *)(value_).gc)->cl</Item>
+      <Item Name="[userdata]" Condition="(tt_)==71">((union GCUnion *)(value_).gc)->u</Item>
+      <Item Name="[thread]" Condition="(tt_)==72">((union GCUnion *)(value_).gc)->th</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="Udata">
+    <DisplayString>userdata</DisplayString>
+  </Type>
+  <Type Name="CClosure">
+    <DisplayString>{f}</DisplayString>
+  </Type>
+  <Type Name="LClosure">
+    <DisplayString>{(p->source)} : {*(p->lineinfo)} )</DisplayString>
+  </Type>
+  <Type Name="Closure">
+    <DisplayString Condition="c.tt==6" >{c}{l}</DisplayString>
+    <DisplayString  >[tag]{c}{c.tt}</DisplayString>
+    <Expand>
+      <Item Name="[CClosure]">c</Item>
+      <Item Name="[LClosure]">l</Item>
+    </Expand>
+  </Type>
+  <Type Name="Table">
+    <DisplayString>table</DisplayString>
+    <Expand>
+      <Item Name="[array size]">sizearray</Item>
+      <Item Name="metatable" Condition="metatable!=0">metatable</Item>
+      <IndexListItems>
+        <Size>sizearray</Size>
+        <ValueNode>array[$i]</ValueNode>
+      </IndexListItems>
+      <Item Name="[hash size]">1&lt;&lt;lsizenode</Item>
+      <IndexListItems>
+        <Size>1&lt;&lt;lsizenode</Size>
+        <ValueNode>node[$i]</ValueNode>
+      </IndexListItems>
+    </Expand>
+  </Type>
+  <!--Type Name="TString">   
+           <DisplayString>{(char *)(&amp;tsv+sizeof(*this)/sizeof(tsv)),s}</DisplayString>  
+      </Type-->
+  <Type Name="TString">
+    <DisplayString>{(char *)(this)+24}</DisplayString>
+  </Type>
+  <Type Name="UTString">
+    <DisplayString>{(char *)(&amp;tsv+sizeof(*this)/sizeof(tsv)),s}</DisplayString>
+  </Type>
+  <Type Name="TKey">
+    <DisplayString>{tvk}</DisplayString>
+  </Type>
+  <Type Name="CallInfo">
+    <DisplayString Condition="(func->tt_&amp;0x1f)==6">{((union GCUnion *)(func->value_).gc)->cl},{u}</DisplayString>
+    <DisplayString>{func},{u}</DisplayString>
+    <Expand>
+      <Item Name="[func]">func</Item>
+      <Item Name="[LClosure]">((union GCUnion *)(func->value_).gc)->cl</Item>
+    </Expand>
+
+  </Type>
+</AutoVisualizer>
