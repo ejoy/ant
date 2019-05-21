@@ -391,6 +391,12 @@ linit(lua_State *L) {
 	init.debug = false;
 	init.profile = false;
 
+	init.platformData.ndt = NULL;
+	init.platformData.nwh = NULL;
+	init.platformData.context = NULL;
+	init.platformData.backBuffer = NULL;
+	init.platformData.backBufferDS = NULL;
+
 	if (!lua_isnoneornil(L, 1)) {
 		luaL_checktype(L, 1, LUA_TTABLE);
 		lua_settop(L, 1);
