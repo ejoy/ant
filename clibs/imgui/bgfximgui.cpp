@@ -185,10 +185,8 @@ struct OcornutImguiContext
 	void create(bgfx_view_id_t _viewId)
 	{
 		m_viewId = _viewId;
-		m_last = bx::getHPCounter();
 		ImGui::SetAllocatorFunctions(memAlloc, memFree, NULL);
 		m_imgui = ImGui::CreateContext();
-		setupStyle(true);
 		bgfx_renderer_type_t type = BGFX(get_renderer_type)();
 		m_program = BGFX(create_program)(
 			  createEmbeddedShader(s_embeddedShaders, type, "vs_ocornut_imgui")
@@ -218,31 +216,12 @@ struct OcornutImguiContext
 		BGFX(destroy_program)(m_program);
 	}
 
-	void setupStyle(bool _dark)
-	{
-		// Doug Binks' darl color scheme
-		// https://gist.github.com/dougbinks/8089b4bbaccaaf6fa204236978d165a9
-		ImGuiStyle& style = ImGui::GetStyle();
-		if (_dark)
-		{
-			ImGui::StyleColorsDark(&style);
-		}
-		else
-		{
-			ImGui::StyleColorsLight(&style);
-		}
-
-		style.FrameRounding    = 4.0f;
-		style.WindowBorderSize = 0.0f;
-	}
-
 	ImGuiContext*         m_imgui;
 	bgfx_vertex_decl_t    m_decl;
 	bgfx_program_handle_t m_program;
 	bgfx_program_handle_t m_imageProgram;
 	bgfx_uniform_handle_t s_tex;
 	bgfx_uniform_handle_t u_imageLodEnabled;
-	int64_t m_last;
 	bgfx_view_id_t m_viewId;
 };
 
