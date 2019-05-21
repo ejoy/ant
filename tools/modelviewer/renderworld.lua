@@ -65,12 +65,12 @@ function model_review_system:init()
 		transform = mu.translate_mat({2, 2, 2, 0}),
 		can_render = true,
 		mesh = {
-			ref_path = fs.path "//ant.resources/depiction/test_glb.mesh",
+			ref_path = fs.path "//ant.resources/depiction/meshes/test_glb.mesh",
 		},
 		material = {
 			content = {
 				{
-					ref_path = fs.path "//ant.resources/depiction/test_glb.material"
+					ref_path = fs.path "//ant.resources/depiction/materials/test_glb.material"
 				}
 			}
 		},

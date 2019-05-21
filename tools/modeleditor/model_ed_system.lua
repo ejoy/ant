@@ -39,7 +39,6 @@ model_ed_sys.dependby "render_system"
 model_ed_sys.dependby "pickup_system"
 model_ed_sys.dependby "shadow_maker11"
 model_ed_sys.dependby "debug_shadow_maker"
---model_ed_sys.dependby "obj_transform_system"
 
 -- luacheck: globals main_dialog
 -- luacheck: globals iup

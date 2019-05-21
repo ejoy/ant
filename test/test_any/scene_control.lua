@@ -69,8 +69,6 @@ function scene_control:openMap(path)
     local systems = {
         --"pickup_material_system",
         --"pickup_system",
-        "obj_transform_system",
-        "build_hierarchy_system",
         "editor_watcher_system",
         -- "editor_system"
     }
