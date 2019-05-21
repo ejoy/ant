@@ -5,7 +5,6 @@
 
 #include <bgfx/embedded_shader.h>
 #include <bx/math.h>
-#include <bx/timer.h>
 #include <bx/string.h>
 #include <bgfx/c99/bgfx.h>
 #include <imgui.h>
@@ -83,9 +82,6 @@ static bgfx_shader_handle_t createEmbeddedShader(const EmbeddedShader* _es, bgfx
 	bgfx_shader_handle_t handle = BGFX_INVALID_HANDLE;
 	return handle;
 }
-
-static void* memAlloc(size_t _size, void* _userData);
-static void memFree(void* _ptr, void* _userData);
 
 struct OcornutImguiContext
 {
@@ -185,7 +181,6 @@ struct OcornutImguiContext
 	void create(bgfx_view_id_t _viewId)
 	{
 		m_viewId = _viewId;
-		ImGui::SetAllocatorFunctions(memAlloc, memFree, NULL);
 		m_imgui = ImGui::CreateContext();
 		bgfx_renderer_type_t type = BGFX(get_renderer_type)();
 		m_program = BGFX(create_program)(
@@ -227,18 +222,6 @@ struct OcornutImguiContext
 
 static OcornutImguiContext s_ctx;
 
-static void* memAlloc(size_t _size, void* _userData)
-{
-	BX_UNUSED(_userData);
-	return malloc(_size);
-}
-
-static void memFree(void* _ptr, void* _userData)
-{
-	BX_UNUSED(_userData);
-	free(_ptr);
-}
-
 void imguiCreate(void* bgfx, bgfx_view_id_t _viewId)
 {
 	bgfx_inf_ = (bgfx_interface_vtbl_t*)bgfx;
@@ -255,16 +238,7 @@ void imguiRender(ImDrawData* _drawData)
 	s_ctx.render(_drawData);
 }
 
-BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4505); // error C4505: '' : unreferenced local function has been removed
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wunused-function"); // warning: ‘int rect_width_compare(const void*, const void*)’ defined but not used
-BX_PRAGMA_DIAGNOSTIC_PUSH();
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG("-Wunknown-pragmas")
-//BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wunused-but-set-variable"); // warning: variable ‘L1’ set but not used
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wtype-limits"); // warning: comparison is always true due to limited range of data type
-#define STBTT_malloc(_size, _userData) memAlloc(_size, _userData)
-#define STBTT_free(_ptr, _userData) memFree(_ptr, _userData)
 #define STB_RECT_PACK_IMPLEMENTATION
 #include <imstb_rectpack.h>
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <imstb_truetype.h>
-BX_PRAGMA_DIAGNOSTIC_POP();
