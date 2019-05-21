@@ -2,10 +2,6 @@ local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"
 local imgui = require "imgui"
-local registry = require "registry"
-local fs = require "filesystem"
-local localfs = require "filesystem.local"
-local shader_mgr = import_package "ant.render".shader_mgr
 local widget = imgui.widget
 local flags = imgui.flags
 local windows = imgui.windows
@@ -35,14 +31,16 @@ end
 
 
 local FontMapper = (function ()
+	local registry = require "registry"
+	local fs = require "filesystem.local"
 	local res = {}
-	local FONTS = localfs.path(os.getenv "SystemRoot") / "Fonts"
+	local FONTS = fs.path(os.getenv "SystemRoot") / "Fonts"
 	for name, file in registry.values [[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts]] do
-		local font = localfs.path(file)
+		local font = fs.path(file)
 		if not font:is_absolute() then
-			font = localfs.absolute(font, FONTS)
+			font = fs.absolute(font, FONTS)
 		end
-		assert(localfs.exists(font))
+		assert(fs.exists(font))
 		res[name] = font:string()
 	end
 	return res
@@ -57,6 +55,7 @@ local function Font(name)
 end
 
 local function Shader(shader)
+	local shader_mgr = import_package "ant.render".shader_mgr
 	local uniforms = {}
 	shader.prog = shader_mgr.programLoad(assert(shader.vs), assert(shader.fs), uniforms)
 	assert(shader.prog ~= nil)
