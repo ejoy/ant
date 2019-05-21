@@ -88,4 +88,65 @@ function util.vertex_size(prim, meshscene)
 	return vertexsize
 end
 
+function util.generate_accessor(bvidx, comptype, elemtype, offset, count, normalized)
+	return {
+		bufferView = bvidx,
+		componentType = comptype_name_remapper[comptype],
+		type = elemtype,
+		byteOffset = offset,
+		count = count,
+		normalized = normalized,
+	}
+end
+
+local target_mapper = {
+	vertex = 34962,	--ARRAY_BUFFER
+	index = 34963,	--ELEMENT_ARRAY_BUFFER
+}
+
+function util.generate_bufferview(bufferidx, offset, length, stride, target)
+	return {
+		buffer = bufferidx,
+		byteOffset = offset,
+		byteLength = length,
+		byteStride = stride ~= 0 and stride or nil,
+		target = target_mapper[target],
+	}
+end
+
+function util.generate_accessors(t)
+	local accessors = {}
+	for _, acc_desc in ipairs(t) do
+		accessors[#accessors+1] = util.generate_accessor(table.unpack(acc_desc))
+	end
+	return accessors
+end
+
+function util.generate_bufferviews(t)
+	local bvs = {}
+	for _, bv_desc in ipairs(t) do
+		bvs[#bvs+1] = util.generate_bufferview(table.unpack(bv_desc))
+	end
+	return bvs
+end
+
+function util.target(name)
+	return target_mapper[name]
+end
+
+function util.generate_buffer(buffer, size)
+	return {
+		byteLength = size,
+		extras = buffer,
+	}
+end
+
+function util.generate_buffers(buffers)
+	local b = {}
+	for _, buf in ipairs(buffers) do
+		b[#b+1] = util.generate_buffer(table.unpack(buf))
+	end
+	return b
+end
+
 return util

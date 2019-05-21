@@ -36,12 +36,13 @@ local function get_attrib(e)
 	return attrib
 end
 
+local shortname_mapper = {	
+	u = "UINT8", U = "UINT10", i = "INT16",
+	h = "HALF",	f = "FLOAT",
+}
+
 local function get_type(v)
-	local t = {	
-		u = "UINT8", U = "UINT10", i = "INT16",
-		h = "HALF",	f = "FLOAT",
-	}
-	return assert(t[v])
+	return assert(shortname_mapper[v])
 end
 
 local function decl_name(elemname)
