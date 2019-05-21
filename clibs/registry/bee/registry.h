@@ -478,12 +478,17 @@ namespace bee::registry {
 
     template <typename C, typename T, typename K>
     inline basic_value<C, T, K>::basic_value(key_type& key, const string_type& name)
-        : m_key(key), m_name(name), m_type(REG_NONE), m_bTypeRetrieved(false) {}
+        : m_key(key)
+        , m_name(name)
+        , m_type(REG_NONE)
+        , m_bTypeRetrieved(false) {}
 
     template <typename C, typename T, typename K>
     inline basic_value<C, T, K>::basic_value(class_type&& rhs)
-        : m_key(rhs.m_key), m_name(rhs.m_name), m_type(rhs.m_type),
-          m_bTypeRetrieved(rhs.m_bTypeRetrieved) {}
+        : m_key(rhs.m_key)
+        , m_name(rhs.m_name)
+        , m_type(rhs.m_type)
+        , m_bTypeRetrieved(rhs.m_bTypeRetrieved) {}
 
     template <typename C, typename T, typename K>
     inline basic_value<C, T, K>::~basic_value() {}
@@ -726,17 +731,62 @@ namespace bee::registry {
         typedef std::map<string_type, std::unique_ptr<value_type>> value_map_type;
 
         basic_key(hkey_type keybase, open_access accessfix = open_access::none)
-            : m_keybase(keybase), m_keypath(), m_keyname(), m_key(NULL),
-              m_access(open_access::read), m_accessfix(accessfix), m_valuemap() {}
+            : m_keybase(keybase)
+            , m_keyname()
+            , m_key(NULL)
+            , m_access(open_access::read)
+            , m_accessfix(accessfix)
+            , m_valuemap() {}
 
-        basic_key(hkey_type keybase, const string_type& keypath, const string_type& keyname, open_access accessfix = open_access::none)
-            : m_keybase(keybase), m_keypath(keypath), m_keyname(keyname), m_key(NULL),
-              m_access(open_access::read), m_accessfix(accessfix), m_valuemap() {}
+        basic_key(hkey_type keybase, const string_type& keyname, open_access accessfix = open_access::none)
+            : m_keybase(keybase)
+            , m_keyname(keyname)
+            , m_key(NULL)
+            , m_access(open_access::read)
+            , m_accessfix(accessfix)
+            , m_valuemap() {}
+
+        basic_key(const string_type& keyname, open_access accessfix = open_access::none)
+            : m_keybase(0)
+            , m_keyname(keyname)
+            , m_key(NULL)
+            , m_access(open_access::read)
+            , m_accessfix(accessfix)
+            , m_valuemap() {
+            size_t pos = keyname.find(char_type('\\'));
+            if (pos == std::wstring::npos) {
+                throw std::runtime_error("Need predefined key.");
+            }
+            m_keyname = keyname.substr(pos + 1);
+            string_type            base = keyname.substr(0, pos);
+            static const char_type LocalMachine[] = {
+                'H', 'K', 'E', 'Y', '_',
+                'L', 'O', 'C', 'A', 'L', '_',
+                'M', 'A', 'C', 'H', 'I', 'N', 'E',
+                '\0'};
+            static const char_type CurrentUser[] = {
+                'H', 'K', 'E', 'Y', '_',
+                'C', 'U', 'R', 'R', 'E', 'N', 'T', '_',
+                'U', 'S', 'E', 'R',
+                '\0'};
+            if (base == LocalMachine) {
+                m_keybase = HKEY_LOCAL_MACHINE;
+            }
+            else if (base == CurrentUser) {
+                m_keybase = HKEY_CURRENT_USER;
+            }
+            else {
+                throw std::runtime_error("Unknown predefined key.");
+            }
+        }
 
         basic_key(class_type const& rhs)
-            : m_keybase(rhs.m_keybase), m_keypath(rhs.m_keypath),
-              m_keyname(rhs.m_keyname), m_key(rhs.m_key), m_access(rhs.m_access),
-              m_accessfix(rhs.m_accessfix), m_valuemap() {}
+            : m_keybase(rhs.m_keybase)
+            , m_keyname(rhs.m_keyname)
+            , m_key(rhs.m_key)
+            , m_access(rhs.m_access)
+            , m_accessfix(rhs.m_accessfix)
+            , m_valuemap() {}
 
         ~basic_key() throw() {
             if (m_key != NULL) {
@@ -752,7 +802,6 @@ namespace bee::registry {
 
         void swap(class_type& rhs) throw() {
             std::swap(m_keybase, rhs.m_keybase);
-            std::swap(m_keypath, rhs.m_keypath);
             std::swap(m_keyname, rhs.m_keyname);
             std::swap(m_key, rhs.m_key);
             std::swap(m_access, rhs.m_access);
@@ -761,15 +810,12 @@ namespace bee::registry {
         }
 
         class_type key(const string_type& key_name) const {
-            static const char_type s_separator[] = {'\\', '\0'};
-            if (!m_keypath.empty()) {
-                return class_type(m_keybase, m_keypath + s_separator + m_keyname, key_name, m_accessfix);
-            }
-            else if (!m_keyname.empty()) {
-                return class_type(m_keybase, m_keyname, key_name, m_accessfix);
+            if (!m_keyname.empty()) {
+                static const char_type s_separator[] = {'\\', '\0'};
+                return class_type(m_keybase, m_keyname + s_separator + key_name, m_accessfix);
             }
             else {
-                return class_type(m_keybase, string_type(), key_name, m_accessfix);
+                return class_type(m_keybase, key_name, m_accessfix);
             }
         }
 
@@ -820,11 +866,14 @@ namespace bee::registry {
         }
 
         bool del() {
-            hkey_type key = open_key_(m_keybase, m_keypath, (REGSAM)open_access::write | (REGSAM)m_accessfix, open_option::fail_if_not_exists);
+            auto      pos = m_keyname.find_last_of(L"\\");
+            auto      path = m_keyname.substr(0, pos);
+            auto      name = m_keyname.substr(pos + 1);
+            hkey_type key = open_key_(m_keybase, path, (REGSAM)open_access::write | (REGSAM)m_accessfix, open_option::fail_if_not_exists);
             if (key == NULL) {
                 return false;
             }
-            result_type res = traits_type::delete_tree(key, m_keyname.c_str());
+            result_type res = traits_type::delete_tree(key, name.c_str());
             bool        suc = false;
             switch (res) {
             case ERROR_SUCCESS:
@@ -886,8 +935,7 @@ namespace bee::registry {
         }
 
         string_type key_name_() {
-            static const char_type s_separator[] = {'\\', '\0'};
-            return m_keypath.empty() ? m_keyname : m_keypath + s_separator + m_keyname;
+            return m_keyname;
         }
 
         void close_key_() {
@@ -927,7 +975,6 @@ namespace bee::registry {
 
     protected:
         hkey_type      m_keybase;
-        string_type    m_keypath;
         string_type    m_keyname;
         hkey_type      m_key;
         open_access    m_access;
@@ -948,7 +995,8 @@ namespace bee::registry {
     class predefined_key {
     public:
         typedef HKEY hkey_type;
-        predefined_key(hkey_type hkey) : m_hkey(hkey) {}
+        predefined_key(hkey_type hkey)
+            : m_hkey(hkey) {}
         hkey_type handle() const { return m_hkey; }
 
     private:
@@ -958,7 +1006,7 @@ namespace bee::registry {
     template <typename C>
     inline basic_key<C> operator/(const predefined_key&       lhs,
                                   const std::basic_string<C>& rhs) {
-        return basic_key<C>(lhs.handle(), rhs);
+        return basic_key<C>(lhs.handle(), rhs, open_access::none);
     }
 
     template <typename C>

@@ -2,6 +2,8 @@ local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"
 local imgui = require "imgui"
+local registry = require "registry"
+local fs = require "filesystem.local"
 local widget = imgui.widget
 local flags = imgui.flags
 local windows = imgui.windows
@@ -11,8 +13,24 @@ local font = imgui.font
 local callback = {}
 local attribs = {}
 
+
+local FontMapper = (function ()
+	local res = {}
+	local FONTS = fs.path(os.getenv "SystemRoot") / "Fonts"
+	for name, file in registry.values [[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts]] do
+		local font = fs.path(file)
+		if not font:is_absolute() then
+			font = fs.absolute(font, FONTS)
+		end
+		assert(fs.exists(font))
+		res[name] = font:string()
+	end
+	return res
+end)()
+
+
 local function Font(name)
-	local f = assert(io.open([[c:\windows\fonts\]]..name, "rb"))
+	local f = assert(io.open(FontMapper[name], "rb"))
 	local ttf = f:read "a"
 	f:close()
 	return ttf
@@ -48,8 +66,7 @@ function callback.init(nwh, context, width, height)
 --	bgfx.set_debug "ST"
 
 	font.Create {
-		{ Font "simsun.ttc", 18, "\x20\x00\xFF\xFF\x00"},
-		{ Font "simhei.ttf", 18, "ChineseSimplifiedCommon"},
+		{ Font "SimHei (TrueType)", 18, "\x20\x00\xFF\xFF\x00"},
 	}
 end
 
