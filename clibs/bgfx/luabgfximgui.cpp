@@ -1257,14 +1257,25 @@ static int
 wMenuItem(lua_State *L) {
 	const char * label = luaL_checkstring(L, INDEX_ID);
 	const char *shortcut = luaL_optstring(L, 2, NULL);
-	bool selected = lua_toboolean(L, 3);
 	bool enabled = true;
 	if (lua_isboolean(L, 4)) {
 		enabled = lua_toboolean(L, 4);
 	}
-	bool change = ImGui::MenuItem(label, shortcut, selected, enabled);
-	lua_pushboolean(L, change);
-	return 1;
+	if (lua_isboolean(L, 3)) {
+		bool selected = lua_toboolean(L, 3);
+		bool change = ImGui::MenuItem(label, shortcut, &selected, enabled);
+		lua_pushboolean(L, change);
+		lua_pushboolean(L, selected);
+		return 2;
+	}
+	else 
+	{
+		bool change = ImGui::MenuItem(label, shortcut, false, enabled);
+		lua_pushboolean(L, change);
+		return 1;
+	}
+	
+	
 }
 
 static int
