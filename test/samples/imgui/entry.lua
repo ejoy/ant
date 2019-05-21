@@ -3,7 +3,9 @@ local window = require "window"
 local bgfx = require "bgfx"
 local imgui = require "imgui"
 local registry = require "registry"
-local fs = require "filesystem.local"
+local fs = require "filesystem"
+local localfs = require "filesystem.local"
+local shader_mgr = import_package "ant.render".shader_mgr
 local widget = imgui.widget
 local flags = imgui.flags
 local windows = imgui.windows
@@ -13,16 +15,34 @@ local font = imgui.font
 local callback = {}
 local attribs = {}
 
+local function init_identity()
+	local shadertypes = {
+		NOOP       = "d3d9",
+		DIRECT3D9  = "d3d9",
+		DIRECT3D11 = "d3d11",
+		DIRECT3D12 = "d3d11",
+		GNM        = "pssl",
+		METAL      = "metal",
+		OPENGL     = "glsl",
+		OPENGLES   = "essl",
+		VULKAN     = "spirv",
+	}
+	local platform = require "platform"
+	local vfs = require "vfs"
+	local caps =  bgfx.get_caps()
+	vfs.identity(platform.OS .. "-" .. shadertypes[caps.rendererType])
+end
+
 
 local FontMapper = (function ()
 	local res = {}
-	local FONTS = fs.path(os.getenv "SystemRoot") / "Fonts"
+	local FONTS = localfs.path(os.getenv "SystemRoot") / "Fonts"
 	for name, file in registry.values [[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts]] do
-		local font = fs.path(file)
+		local font = localfs.path(file)
 		if not font:is_absolute() then
-			font = fs.absolute(font, FONTS)
+			font = localfs.absolute(font, FONTS)
 		end
-		assert(fs.exists(font))
+		assert(localfs.exists(font))
 		res[name] = font:string()
 	end
 	return res
@@ -36,6 +56,15 @@ local function Font(name)
 	return ttf
 end
 
+local function Shader(shader)
+	local uniforms = {}
+	shader.prog = shader_mgr.programLoad(assert(shader.vs), assert(shader.fs), uniforms)
+	assert(shader.prog ~= nil)
+	shader.uniforms = uniforms
+	return shader
+end
+
+
 function callback.init(nwh, context, width, height)
 	bgfx.init {
 		nwh = nwh,
@@ -46,6 +75,7 @@ function callback.init(nwh, context, width, height)
 		height = height,
 	--	reset = "v",
 	}
+	init_identity()
 
 	attribs.font_size = 18
 	attribs.mx = 0
@@ -58,7 +88,22 @@ function callback.init(nwh, context, width, height)
 	attribs.height = height
 	attribs.viewid = 255
 
-	imgui.create(attribs.viewid)
+	local ocornut_imgui = Shader {
+		vs = "//ant.ImguiSample/shader/vs_ocornut_imgui",
+		fs = "//ant.ImguiSample/shader/fs_ocornut_imgui",
+	}
+	local imgui_image = Shader {
+		vs = "//ant.ImguiSample/shader/vs_imgui_image",
+		fs = "//ant.ImguiSample/shader/fs_imgui_image",
+	}
+
+	imgui.create(
+		attribs.viewid,
+		ocornut_imgui.prog,
+		imgui_image.prog,
+		ocornut_imgui.uniforms.s_tex.handle,
+		imgui_image.uniforms.u_imageLodEnabled.handle
+	)
 	imgui.resize(attribs.width, attribs.height)
 	imgui.keymap(native.keymap)
 

@@ -7,7 +7,13 @@ path_mt.__name = 'pkg-filesystem'
 path_mt.__index = path_mt
 
 local function constructor(str)
-    return setmetatable({_value = str or ""}, path_mt)
+    if str == nil then
+        return setmetatable({_value = "" }, path_mt)
+    end
+    if type(str) == "string" then
+        return setmetatable({_value = str }, path_mt)
+    end
+    return setmetatable({_value = str._value }, path_mt)
 end
 
 local function normalize(fullname)

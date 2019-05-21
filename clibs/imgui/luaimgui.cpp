@@ -7,6 +7,7 @@ extern "C" {
 
 #include "bgfximgui.h"
 #include "bgfx_interface.h"
+#include "luabgfx.h"
 #include <cstring>
 #include <cstdlib>
 
@@ -20,8 +21,13 @@ struct lua_args {
 
 static int
 lcreate(lua_State *L) {
-	bgfx_view_id_t view = luaL_checkinteger(L, 1);
-	imguiCreate(bgfx_inf_, view);
+	imguiCreate(bgfx_inf_,
+		luaL_checkinteger(L, 1),
+		bgfx_program_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2)) },
+		bgfx_program_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 3)) },
+		bgfx_uniform_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 4)) },
+		bgfx_uniform_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 5)) }
+	);
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
 	return 0;
