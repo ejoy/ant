@@ -54,6 +54,23 @@ function util.srt(s, r, t)
 	}
 end
 
+function util.scale_mat(s)
+	local stype = type(s)
+	if type(s) == "number" then
+		return util.srt {s, s, s, 0}
+	end
+	assert(stype == "table")
+	return util.srt(s)
+end
+
+function util.rotation_mat(r)
+	return util.srt(nil, r)
+end
+
+function util.translate_mat(t)
+	return util.srt(nil, nil, t)
+end
+
 function util.identity_transform()
 	return util.srt()
 end
