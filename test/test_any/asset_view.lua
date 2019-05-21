@@ -339,7 +339,7 @@ function asset_view:create_foucs_entity(mesh, material)
         material = {
             content = {
                 {
-                    ref_path = fs.path "//ant.resources/singlecolor.material"
+                    ref_path = fs.path "//ant.resources/materials/singlecolor.material"
                 }
             }
         }

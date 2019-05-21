@@ -4,7 +4,7 @@ shader = {
 	fs = "//ant.resources/mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm",
 } 
     
-state = "default.state"
+state = "materials/states/default.state"
 
 properties = { 
 	--s_basecolor = {type="texture", name="base color", stage=0, ref_path="//ant.resources/PVPScene/siegeweapon_d.texture"},

@@ -44,7 +44,7 @@ function wireframe_obj.init(self)
 		material = {
 			content = {
 				{
-					ref_path = fs.path "//ant.resources/line.material"
+					ref_path = fs.path "//ant.resources/materials/line.material"
 				}				
 			}
 		},		

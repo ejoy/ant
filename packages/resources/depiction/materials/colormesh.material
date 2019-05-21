@@ -3,4 +3,4 @@ shader={
     fs="mesh/fs_colormesh",
 }
 
-state = "default.state"
+state = "materials/states/default.state"

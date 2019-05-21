@@ -67,7 +67,7 @@ local function create_animation_test()
         material = {
             content = {
                 {
-                    ref_path = fs.path "//ant.resources/skin_model_sample.material"
+                    ref_path = fs.path "//ant.resources/materials/skin_model_sample.material"
                 }
             }
         },

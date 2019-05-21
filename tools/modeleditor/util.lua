@@ -89,7 +89,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 
 		world:add_component(eid, "material", {
 			content = {
-				{ref_path = fs.path "//ant.resources/skin_model_sample.material"}
+				{ref_path = fs.path "//ant.resources/materials/skin_model_sample.material"}
 			}
 		})
 	end

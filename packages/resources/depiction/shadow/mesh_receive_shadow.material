@@ -3,4 +3,4 @@ shader = {
 	fs = "//ant.resources/shadow/simple/fs_simple",
 }
 
-state = "default.state"
+state = "materials/states/default.state"

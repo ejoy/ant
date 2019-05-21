@@ -194,8 +194,8 @@ function  shadow_maker:init( shadow_maker_entity )
 	end
 
     self.materials = {
-        generate_shadowmap = load_material("shadow.material"),
-        debug_drawDepth    = load_material("drawdepth.material"),
+        generate_shadowmap = load_material("materials/shadow.material"),
+        debug_drawDepth    = load_material("materials/drawdepth.material"),
         debug_drawScene    = load_material("PVPScene/scene-mat-shadow.material"),
 	}
 

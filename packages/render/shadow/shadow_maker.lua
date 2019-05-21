@@ -152,7 +152,7 @@ end
 local function create_bounding_mesh_entity()
 	local eid = world:create_entity {
 		mesh = {},
-		material = computil.assign_material(fs.path "//ant.resources" / "depiction"/ "line.material"),
+		material = computil.assign_material(fs.path "//ant.resources" / "depiction"/ "materials" / "line.material"),
 		transform = mu.identity_transform(),
 		name = "mesh_bounding_debug",
 		can_render = false,
@@ -208,7 +208,7 @@ local function create_frustum_bounding_entity()
 	local eid = world:create_entity {
 		transform = mu.identity_transform(),
 		mesh = {},
-		material = computil.assign_material(fs.path "//ant.resources" / "line.material"),
+		material = computil.assign_material(fs.path "//ant.resources" / "depiction" / "materials" / "line.material"),
 		can_render = true,
 		main_view = true,
 		frustum_debug = true,

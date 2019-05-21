@@ -3,7 +3,7 @@ shader = {
 	fs = "//ant.resources/mesh/fs_mesh_bumpex_shadow",
 }
 
-state = "default.state"
+state = "materials/states/default.state"
 
 properties = {
 	uniforms = {

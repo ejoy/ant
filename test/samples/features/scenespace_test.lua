@@ -40,7 +40,7 @@ local function create_scene_node_test()
     local material = {
         content = {
             {
-                ref_path = fs.path '//ant.resources/bunny.material'
+                ref_path = fs.path '//ant.resources/materials/bunny.material'
             }
         }
     }
@@ -127,7 +127,7 @@ local function create_scene_node_test()
         },
         name = 'render_child1_1',
         mesh = {
-            ref_path = fs.path '//ant.resources/sphere.mesh'
+            ref_path = fs.path '//ant.resources/meshes/sphere.mesh'
         },
         material = material,
         can_render = true,
@@ -146,7 +146,7 @@ local function create_scene_node_test()
         },
         name = 'render_child1_2',
         mesh = {
-            ref_path = fs.path '//ant.resources/sphere.mesh'
+            ref_path = fs.path '//ant.resources/meshes/sphere.mesh'
         },
         material = material,
         can_render = true,
@@ -165,7 +165,7 @@ local function create_scene_node_test()
         },
         name = 'render_child2_1',
         mesh = {
-            ref_path = fs.path '//ant.resources/cube.mesh'
+            ref_path = fs.path '//ant.resources/meshes/cube.mesh'
         },
         material = material,
         can_render = true,
@@ -217,7 +217,7 @@ local function create_scene_node_test()
         return {
             content = {
                 {
-                    ref_path = fs.path "//ant.resources/simple_mesh.material",
+                    ref_path = fs.path "//ant.resources/materials/simple_mesh.material",
                 }
             },
             properties = {
@@ -238,7 +238,7 @@ local function create_scene_node_test()
         },
         name = 'render2_rootchild',
         mesh = {
-            ref_path = fs.path '//ant.resources/cube.mesh'
+            ref_path = fs.path '//ant.resources/meshes/cube.mesh'
         },
         material = material,
         can_render = true,
@@ -256,7 +256,7 @@ local function create_scene_node_test()
         },
         name = 'render2_child1',
         mesh = {
-            ref_path = fs.path '//ant.resources/sphere.mesh'
+            ref_path = fs.path '//ant.resources/meshes/sphere.mesh'
         },
         material = material,
         can_render = true,

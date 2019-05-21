@@ -1,4 +1,3 @@
-local meshconverter = require "meshconverter"
 local lfs = require "filesystem.local"
 
 local config = {
@@ -41,16 +40,10 @@ local config = {
 	},
 }
 
-local convert_op = {
-	bin = meshconverter.convert_BGFXBin,
-	fbx = meshconverter.convert_FBX,
-	glb = require "glb_convertor",
-}
+local glb_cvt = require "glb_convertor"
 
 return function (identity, sourcefile, param, outfile)
-	local t = param.sourcetype
-	local c = convert_op[t]
-	local cfg = param.config or config
-	c(sourcefile:string(), outfile:string(), cfg)
+	assert(param.sourcetype == "glb")
+	glb_cvt(sourcefile:string(), outfile:string(), param.config or config)
 	return lfs.exists(outfile)
 end

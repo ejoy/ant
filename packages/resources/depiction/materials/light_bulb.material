@@ -2,7 +2,7 @@ shader = {
 	vs = "//ant.resources/simple/mesh/vs_mesh",
 	fs = "//ant.resources/simple/mesh/fs_mesh",
 }
-state = "default.state"
+state = "materials/states/default.state"
 properties = {
 	uniforms = {
 		u_color = {type="color", name = "color", default={1, 1, 1, 1}}

@@ -3,4 +3,4 @@ shader = {
     fs = "//ant.resources/picking/fs_picking.sc",
 }
 
-state = "default.state"
+state = "materials/states/default.state"

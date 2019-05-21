@@ -145,7 +145,7 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
 	local gridid = world:create_entity {
 		transform = mu.identity_transform(),
         mesh = {},
-        material = util.assign_material(fs.path "//ant.resources" / "line.material"),
+        material = util.assign_material(fs.path "//ant.resources" / "materials" / "line.material"),
 		name = name,
 		can_render = true,
 		main_view = true,
@@ -248,7 +248,7 @@ function util.create_quad_entity(world, texture_tbl, view_tag, name)
         transform = mu.identity_transform(),
         can_render = true,
         mesh = {},
-        material = util.assign_material(fs.path "//ant.resources/texture.material"),
+        material = util.assign_material(fs.path "//ant.resources/materials/texture.material"),
         name = name,
     }
     local quad = world[quadid]

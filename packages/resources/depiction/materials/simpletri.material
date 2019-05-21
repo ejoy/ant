@@ -3,4 +3,4 @@ shader = {
     fs = "//ant.resources/simple/triangle/fs_simpletri",
 }
 
-state = "default.state"
+state = "materials/states/default.state"

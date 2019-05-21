@@ -3,7 +3,6 @@ shader = {
     fs = "//ant.resources/mesh/fs_colormesh",
 }
 
---state = "default.state"
 state = {
 	CULL = "CCW",
 	WRITE_MASK = "RGBAZ",
