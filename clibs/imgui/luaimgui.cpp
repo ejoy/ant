@@ -20,7 +20,8 @@ struct lua_args {
 
 static int
 lcreate(lua_State *L) {
-	imguiCreate(bgfx_inf_);
+	bgfx_view_id_t view = luaL_checkinteger(L, 1);
+	imguiCreate(bgfx_inf_, view);
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
 	return 0;
@@ -33,27 +34,24 @@ ldestroy(lua_State *L) {
 }
 
 static int
+lresize(lua_State *L) {
+	float width = (float)luaL_checknumber(L, 1);
+	float height = (float)luaL_checknumber(L, 2);
+	ImGui::GetIO().DisplaySize = ImVec2(width, height);
+	return 0;
+}
+
+static int
 lbeginFrame(lua_State *L) {
-	int32_t mx = luaL_checkinteger(L, 1);
-	int32_t my = luaL_checkinteger(L, 2);
-	int button1 = lua_toboolean(L, 3);
-	int button2 = lua_toboolean(L, 4);
-	int button3 = lua_toboolean(L, 5);
-	int32_t scroll = luaL_checkinteger(L, 6);
-	uint16_t width = luaL_checkinteger(L, 7);
-	uint16_t height = luaL_checkinteger(L, 8);
-	bgfx_view_id_t view = luaL_checkinteger(L, 9);
-	uint8_t button = 
-		(button1 ? IMGUI_MBUT_LEFT : 0) |
-		(button2 ? IMGUI_MBUT_RIGHT : 0) |
-		(button3 ? IMGUI_MBUT_MIDDLE : 0);
-	imguiBeginFrame(mx, my, button, scroll, width, height, -1, view);
+	ImGui::GetIO().DeltaTime = (float)luaL_checknumber(L, 1);
+	ImGui::NewFrame();
 	return 0;
 }
 
 static int
 lendFrame(lua_State *L) {
-	imguiEndFrame();
+	ImGui::Render();
+	imguiRender(ImGui::GetDrawData());
 	return 0;
 }
 
@@ -2254,6 +2252,17 @@ lkeyState(lua_State *L) {
 }
 
 static int
+lmouseState(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	io.MouseDown[0] = lua_toboolean(L, 3);
+	io.MouseDown[1] = lua_toboolean(L, 4);
+	io.MouseDown[2] = lua_toboolean(L, 5);
+	io.MouseWheel = (float)luaL_checknumber(L, 6);
+	return 0;
+}
+
+static int
 linputChar(lua_State *L) {
 	int c = luaL_checkinteger(L, 1);
 	ImGuiIO& io = ImGui::GetIO();
@@ -2482,6 +2491,8 @@ luaopen_imgui(lua_State *L) {
 		{ "end_frame", lendFrame },
 		{ "key_state", lkeyState },
 		{ "input_char", linputChar },
+		{ "mouse_state", lmouseState },
+		{ "resize", lresize },
 		{ NULL, NULL },
 	};
 

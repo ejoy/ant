@@ -58,7 +58,8 @@ function callback.init(nwh, context, width, height)
 	attribs.height = height
 	attribs.viewid = 255
 
-	imgui.create()
+	imgui.create(attribs.viewid)
+	imgui.resize(attribs.width, attribs.height)
 	imgui.keymap(native.keymap)
 
 	bgfx.set_view_rect(0, 0, 0, width, height)
@@ -73,6 +74,7 @@ end
 function callback.size(width,height,type)
 	attribs.width = width
 	attribs.height = height
+	imgui.resize(attribs.width, attribs.height)
 	bgfx.reset(width, height, "")
 	bgfx.set_view_rect(0, 0, 0, width, height)
 end
@@ -247,17 +249,15 @@ local function update_ui()
 end
 
 function callback.update()
-	imgui.begin_frame(
+	imgui.mouse_state(
 		attribs.mx,
 		attribs.my,
 		attribs.button1,
 		attribs.button2,
 		attribs.button3,
-		attribs.scroll,
-		attribs.width,
-		attribs.height,
-		attribs.viewid
+		attribs.scroll
 	)
+	imgui.begin_frame(1/60)
 	update_ui()
 	imgui.end_frame()
 

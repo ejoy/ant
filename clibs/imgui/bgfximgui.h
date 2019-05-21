@@ -15,9 +15,8 @@
 #define IMGUI_FLAGS_NONE        UINT8_C(0x00)
 #define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
 
-void imguiCreate(void* bgfx);
+void imguiCreate(void* bgfx, bgfx_view_id_t _viewId);
 void imguiDestroy();
-void imguiBeginFrame(int32_t _mx, int32_t _my, uint8_t _button, int32_t _scroll, uint16_t _width, uint16_t _height, int _inputChar = -1, bgfx_view_id_t _view = 255);
-void imguiEndFrame();
+void imguiRender(ImDrawData* _drawData);
 
 #endif // IMGUI_H_HEADER_GUARD

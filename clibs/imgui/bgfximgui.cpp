@@ -182,53 +182,37 @@ struct OcornutImguiContext
 		}
 	}
 
-	void create()
+	void create(bgfx_view_id_t _viewId)
 	{
-		m_viewId = 255;
-		m_lastScroll = 0;
+		m_viewId = _viewId;
 		m_last = bx::getHPCounter();
-
 		ImGui::SetAllocatorFunctions(memAlloc, memFree, NULL);
-
 		m_imgui = ImGui::CreateContext();
-
-		ImGuiIO& io = ImGui::GetIO();
-
-		io.DisplaySize = ImVec2(1280.0f, 720.0f);
-		io.DeltaTime   = 1.0f / 60.0f;
-		io.IniFilename = NULL;
-
 		setupStyle(true);
-
 		bgfx_renderer_type_t type = BGFX(get_renderer_type)();
 		m_program = BGFX(create_program)(
 			  createEmbeddedShader(s_embeddedShaders, type, "vs_ocornut_imgui")
 			, createEmbeddedShader(s_embeddedShaders, type, "fs_ocornut_imgui")
 			, true
 			);
-
 		u_imageLodEnabled = BGFX(create_uniform)("u_imageLodEnabled", BGFX_UNIFORM_TYPE_VEC4, 1);
 		m_imageProgram = BGFX(create_program)(
 			  createEmbeddedShader(s_embeddedShaders, type, "vs_imgui_image")
 			, createEmbeddedShader(s_embeddedShaders, type, "fs_imgui_image")
 			, true
 			);
-
 		BGFX(vertex_decl_begin)(&m_decl, BGFX_RENDERER_TYPE_NOOP);
 		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_POSITION,  2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
 		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
 		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_COLOR0,    4, BGFX_ATTRIB_TYPE_UINT8,  true, false);
 		BGFX(vertex_decl_end)(&m_decl);
-
 		s_tex = BGFX(create_uniform)("s_tex", BGFX_UNIFORM_TYPE_SAMPLER, 1);
 	}
 
 	void destroy()
 	{
 		ImGui::DestroyContext(m_imgui);
-
 		BGFX(destroy_uniform)(s_tex);
-
 		BGFX(destroy_uniform)(u_imageLodEnabled);
 		BGFX(destroy_program)(m_imageProgram);
 		BGFX(destroy_program)(m_program);
@@ -252,49 +236,6 @@ struct OcornutImguiContext
 		style.WindowBorderSize = 0.0f;
 	}
 
-	void beginFrame(
-		  int32_t _mx
-		, int32_t _my
-		, uint8_t _button
-		, int32_t _scroll
-		, int _width
-		, int _height
-		, int _inputChar
-		, bgfx_view_id_t _viewId
-		)
-	{
-		m_viewId = _viewId;
-
-		ImGuiIO& io = ImGui::GetIO();
-		if (_inputChar >= 0)
-		{
-			io.AddInputCharacter(_inputChar);
-		}
-
-		io.DisplaySize = ImVec2( (float)_width, (float)_height);
-
-		const int64_t now = bx::getHPCounter();
-		const int64_t frameTime = now - m_last;
-		m_last = now;
-		const double freq = double(bx::getHPFrequency() );
-		io.DeltaTime = float(frameTime/freq);
-
-		io.MousePos = ImVec2( (float)_mx, (float)_my);
-		io.MouseDown[0] = 0 != (_button & IMGUI_MBUT_LEFT);
-		io.MouseDown[1] = 0 != (_button & IMGUI_MBUT_RIGHT);
-		io.MouseDown[2] = 0 != (_button & IMGUI_MBUT_MIDDLE);
-		io.MouseWheel = (float)(_scroll - m_lastScroll);
-		m_lastScroll = _scroll;
-
-		ImGui::NewFrame();
-	}
-
-	void endFrame()
-	{
-		ImGui::Render();
-		render(ImGui::GetDrawData() );
-	}
-
 	ImGuiContext*         m_imgui;
 	bgfx_vertex_decl_t    m_decl;
 	bgfx_program_handle_t m_program;
@@ -302,7 +243,6 @@ struct OcornutImguiContext
 	bgfx_uniform_handle_t s_tex;
 	bgfx_uniform_handle_t u_imageLodEnabled;
 	int64_t m_last;
-	int32_t m_lastScroll;
 	bgfx_view_id_t m_viewId;
 };
 
@@ -320,10 +260,10 @@ static void memFree(void* _ptr, void* _userData)
 	free(_ptr);
 }
 
-void imguiCreate(void* bgfx)
+void imguiCreate(void* bgfx, bgfx_view_id_t _viewId)
 {
 	bgfx_inf_ = (bgfx_interface_vtbl_t*)bgfx;
-	s_ctx.create();
+	s_ctx.create(_viewId);
 }
 
 void imguiDestroy()
@@ -331,14 +271,9 @@ void imguiDestroy()
 	s_ctx.destroy();
 }
 
-void imguiBeginFrame(int32_t _mx, int32_t _my, uint8_t _button, int32_t _scroll, uint16_t _width, uint16_t _height, int _inputChar, bgfx_view_id_t _viewId)
+void imguiRender(ImDrawData* _drawData)
 {
-	s_ctx.beginFrame(_mx, _my, _button, _scroll, _width, _height, _inputChar, _viewId);
-}
-
-void imguiEndFrame()
-{
-	s_ctx.endFrame();
+	s_ctx.render(_drawData);
 }
 
 BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4505); // error C4505: '' : unreferenced local function has been removed
