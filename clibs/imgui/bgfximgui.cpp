@@ -3,11 +3,11 @@
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
-#include <bx/math.h>
-#include <bgfx/c99/bgfx.h>
-#include <imgui.h>
-
 #include "bgfximgui.h"
+#include <algorithm>
+#include <glm/glm.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+
 
 static bgfx_interface_vtbl_t* bgfx_inf_ = 0;
 #define BGFX(api) bgfx_inf_->api
@@ -40,9 +40,11 @@ struct OcornutImguiContext
 
 		const bgfx_caps_t* caps = BGFX(get_caps)();
 		{
-			float ortho[16];
-			bx::mtxOrtho(ortho, 0.0f, width, height, 0.0f, 0.0f, 1000.0f, 0.0f, caps->homogeneousDepth);
-			BGFX(set_view_transform)(m_viewId, NULL, ortho);
+			auto ortho = caps->homogeneousDepth
+				? glm::orthoLH_NO(0.0f, width, height, 0.0f, 0.0f, 1000.0f)
+				: glm::orthoLH_ZO(0.0f, width, height, 0.0f, 0.0f, 1000.0f)
+				;
+			BGFX(set_view_transform)(m_viewId, NULL, (const void*)&ortho[0]);
 			BGFX(set_view_rect)(m_viewId, 0, 0, uint16_t(width), uint16_t(height) );
 		}
 
@@ -64,10 +66,10 @@ struct OcornutImguiContext
 			BGFX(alloc_transient_index_buffer)(&tib, numIndices);
 
 			ImDrawVert* verts = (ImDrawVert*)tvb.data;
-			bx::memCopy(verts, drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert) );
+			memcpy(verts, drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert) );
 
 			ImDrawIdx* indices = (ImDrawIdx*)tib.data;
-			bx::memCopy(indices, drawList->IdxBuffer.begin(), numIndices * sizeof(ImDrawIdx) );
+			memcpy(indices, drawList->IdxBuffer.begin(), numIndices * sizeof(ImDrawIdx) );
 
 			uint32_t offset = 0;
 			for (const ImDrawCmd* cmd = drawList->CmdBuffer.begin(), *cmdEnd = drawList->CmdBuffer.end(); cmd != cmdEnd; ++cmd) {
@@ -88,11 +90,11 @@ struct OcornutImguiContext
 						state |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
 					}
 
-					const uint16_t xx = uint16_t(bx::max(cmd->ClipRect.x, 0.0f));
-					const uint16_t yy = uint16_t(bx::max(cmd->ClipRect.y, 0.0f));
+					const uint16_t xx = uint16_t(std::max(cmd->ClipRect.x, 0.0f));
+					const uint16_t yy = uint16_t(std::max(cmd->ClipRect.y, 0.0f));
 					BGFX(set_scissor)(xx, yy
-						, uint16_t(bx::min(cmd->ClipRect.z, 65535.0f)-xx)
-						, uint16_t(bx::min(cmd->ClipRect.w, 65535.0f)-yy)
+						, uint16_t(std::min(cmd->ClipRect.z, 65535.0f)-xx)
+						, uint16_t(std::min(cmd->ClipRect.w, 65535.0f)-yy)
 						);
 
 					BGFX(set_state)(state, 0);
