@@ -19,13 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\meshconverter\antmesh_converter.cpp" />
-    <ClCompile Include="..\..\clibs\meshconverter\bgfxmesh_helper.cpp" />
-    <ClCompile Include="..\..\clibs\meshconverter\bgfx\util.cpp" />
-    <ClCompile Include="..\..\clibs\meshconverter\fbx_helper.cpp" />
     <ClCompile Include="..\..\clibs\meshconverter\gltf_converter.cpp" />
     <ClCompile Include="..\..\clibs\meshconverter\utils.cpp" />
-    <ClCompile Include="..\..\clibs\meshconverter\meshconverter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\meshconverter\common.h" />
@@ -112,7 +107,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/build/assimp/msvc/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs;../../3rd/glm</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -169,7 +164,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs;../../3rd;../../3rd/bx/include/compat/msvc;../../3rd/bx/include;../../3rd/bgfx/src;../../3rd/bgfx/include;../../3rd/assimp/include;../../3rd/ozz-animation/include;../../3rd/glm;../../3rd/build/assimp/msvc/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs;../../3rd/glm</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

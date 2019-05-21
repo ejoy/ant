@@ -1,7 +1,7 @@
 package.path = "./?.lua;libs/?.lua;libs/?/?.lua;packages/glTF/?.lua"
+package.cpath = "projects/msvc/vs_bin/x64/Debug/?.dll"
 
 local fs = require "filesystem.local"
-local fbxsrcpath = fs.path(select(1, ...))
 
 local function list_files(subpath, filter, excludes, files)
 	local prefilter = {}
@@ -39,8 +39,7 @@ end
 local files = {}
 
 for _, srcpath in ipairs {
-	fs.path "packages/resources.binary", 
-	fs.path "packages/resources" 
+	fs.path "packages/resources.binary/meshes/base",
 } do
 	list_files(srcpath, ".fbx", {
 		[".git"] = true, 
@@ -76,13 +75,40 @@ local function rawtable(filepath)
 	return env
 end
 
+local defaultlk_content = {
+	config = {
+		animation = {
+			ani_list = 'all',
+			cpu_skinning = true,
+			load_skeleton = true
+		},
+		flags = {
+			flip_uv = true,
+			ib_32 = true,
+			invert_normal = true
+		},
+		layout = {
+			'p3|n30nIf|T|b|t20|c40'
+		}
+	},
+	sourcetype = 'glb',
+	type = 'mesh'
+}
+
+local function get_glb_lk_content(srclk)	
+	if fs.exists(fs.path(srclk)) then
+		local c = rawtable(srclk)
+		c.sourcetype = "glb"
+		return c
+	end
+	return defaultlk_content
+end
+
 local function generate_lkfile(filename)
 	local fn = fs.path(filename)
 	local srclkfile = fn:string() .. ".lk"
 	local lkfile = fn:replace_extension(".glb"):string() .. ".lk"
-
-	local c = rawtable(srclkfile)
-	c.sourcetype = "glb"
+	local c = get_glb_lk_content(srclkfile)
 	local r = stringify(c, true, true)
 	local glblk = io.open(lkfile, "w")
 	glblk:write(r)

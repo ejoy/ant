@@ -57,43 +57,16 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 	local prog = material.shader.prog
 
 	local mg = assert(primgroup.mgroup)
-	local ib, vb = mg.ib, mg.vb
-
-	if primgroup.using_glb then
-		if ib then
-			bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
-		end
-
-		local start_v, num_v = vb.start, vb.num
-		for idx, handle in pairs(vb.handles) do
-			bgfx.set_vertex_buffer(idx, handle, start_v, num_v)
-		end
-		bgfx.submit(vid, prog, 0, false)
-	else	
-		local prims = mg.primitives
-		if prims == nil or next(prims) == nil then
-			if ib then
-				bgfx.set_index_buffer(ib.handle)
-			end
-			for idx, v in ipairs(vb.handles) do
-				bgfx.set_vertex_buffer(idx - 1, v)
-			end
-			
-			bgfx.submit(vid, prog, 0, false)
-		else
-			local numprim = #prims
-			for i=1, numprim do
-				local prim = prims[i]
-				if ib and prim.start_index and prim.num_indices then
-					bgfx.set_index_buffer(ib.handle, prim.start_index, prim.num_indices)
-				end
-				for idx, v in ipairs(vb.handles) do
-					bgfx.set_vertex_buffer(idx - 1, v, prim.start_vertex, prim.num_vertices)
-				end
-				bgfx.submit(vid, prog, 0, i~=numprim)
-			end
-		end
+	local ib, vb = mg.ib, mg.vb	
+	if ib then
+		bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
 	end
+
+	local start_v, num_v = vb.start, vb.num
+	for idx, handle in pairs(vb.handles) do
+		bgfx.set_vertex_buffer(idx, handle, start_v, num_v)
+	end
+	bgfx.submit(vid, prog, 0, false)
 end
 
 local function add_result(eid, group, materialinfo, properties, worldmat, result)
@@ -116,23 +89,7 @@ local function add_result(eid, group, materialinfo, properties, worldmat, result
 	return r
 end
 
-function util.insert_primitive(eid, meshhandle, materials, worldmat, filter)	
-	local mgroups = meshhandle.groups
-	local results = filter.result	
-	for i=1, #mgroups do
-		local g = mgroups[i]
-		local mc = materials[i] or materials[1]
-		local mi = mc.materialinfo
-		
-		if mi.surface_type.transparency == "translucent" then
-			add_result(eid, g, mi, mc.properties, worldmat, results.translucent)
-		else
-			add_result(eid, g, mi, mc.properties, worldmat, results.opaque)
-		end
-	end
-end
-
-function util.insert_primitive_glb(eid, prim, meshscene, material, worldmat, filter)
+function util.insert_primitive(eid, prim, meshscene, material, worldmat, filter)
 	local result = filter.result
 	local function vb_info(prim, meshscene)
 		local vbhandles = {}

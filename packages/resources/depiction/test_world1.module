@@ -1,5 +1,0 @@
-modules = {	
-	-- for test
-	"render.add_entity_system",
-	"editor.ecs.camera_controller",
-}

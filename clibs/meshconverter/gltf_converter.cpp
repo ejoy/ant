@@ -9,8 +9,6 @@ extern "C"
 #include <lauxlib.h>
 }
 
-#include <bgfx/bgfx.h>
-
 #include <string>
 #include <vector>
 #include <map>
@@ -138,8 +136,52 @@ using bufferview_index	= uint32_t;
 using buffer_desc		= std::vector<std::pair<bufferview_index, bufferinfo_array>>;
 using attrib_buffers	= std::map<uint32_t, attribute_buffer>;
 
-extern void
-fetch_load_config(lua_State *L, int idx, load_config &config);
+void
+fetch_load_config(lua_State *L, int idx, load_config &config) {
+	luaL_checktype(L, idx, LUA_TTABLE);
+
+	verify(lua_getfield(L, idx, "layout") == LUA_TTABLE);
+	const size_t numStreams = lua_rawlen(L, -1);
+	config.layouts.resize(numStreams);
+	for (size_t ii = 0; ii < numStreams; ++ii) {
+		lua_geti(L, -1, ii + 1);
+		std::string elem = lua_tostring(L, -1);
+		config.layouts[ii] = refine_layouts(elem);
+		lua_pop(L, 1);
+	}
+	lua_pop(L, 1);
+
+	verify(LUA_TTABLE == lua_getfield(L, idx, "flags"));
+
+	auto extract_boolean = [&](auto name, auto bit) {
+		const int type = lua_getfield(L, -1, name);
+		const bool need = type == LUA_TBOOLEAN ? lua_toboolean(L, -1) != 0 : false;
+		if (need)
+			config.flags |= bit;
+		else
+			config.flags &= ~bit;
+		lua_pop(L, 1);
+	};
+
+	LayoutArray elems;
+	for (const auto &layout : config.layouts) {
+		auto ee = split_string(layout, '|');
+		elems.insert(elems.end(), ee.begin(), ee.end());
+	}
+
+	if (std::find_if(std::begin(elems), std::end(elems), [](auto e) {return e[0] == 'n'; }) != std::end(elems))
+		config.flags |= load_config::CreateNormal;
+
+	if (std::find_if(std::begin(elems), std::end(elems), [](auto e) {return e[0] == 'T' || e[0] == 'b'; }) != std::end(elems))
+		config.flags |= load_config::CreateTangent | load_config::CreateBitangent;
+
+	extract_boolean("invert_normal", load_config::InvertNormal);
+	extract_boolean("flip_u", load_config::FlipU);
+	extract_boolean("flip_v", load_config::FlipV);
+
+	extract_boolean("ib_32", load_config::IndexBuffer32Bit);
+	extract_boolean("reset_root_pos", load_config::ResetRootPos);
+}
 
 static inline void
 valid_primitive_data(const primitive &prim) {
@@ -205,53 +247,53 @@ enum ComponentType : uint16_t {
 	FLOAT = 5126,
 };
 
-static std::string
-decl_desc(uint32_t attribname, const primitive::accessor *accessor) {
-	char elem[6];
+//static std::string
+//decl_desc(uint32_t attribname, const primitive::accessor *accessor) {
+//	char elem[6];
+//
+//	auto to_type = [](auto v) {
+//		switch (v) {
+//		case ComponentType::BYTE:
+//		case ComponentType::UNSIGNED_BYTE:
+//			return 'u';
+//		case ComponentType::SHORT:
+//		case ComponentType::UNSIGNED_SHORT:
+//			return 'i';
+//		case ComponentType::FLOAT:
+//			return 'f';
+//		default:
+//			return 'f';
+//		}
+//	};
+//
+//
+//	assert(attribname < sizeof(attribname_mapper[0]) / sizeof(attribname_mapper[0]));
+//
+//	const auto& attrib = attribname_mapper[attribname];
+//
+//	elem[0] = attrib.sname[0];
+//	elem[1] = '0' + accessor->count;
+//	elem[2] = '0' + attrib.channel;
+//	elem[3] = accessor->normalized ? 'n' : 'N';
+//	elem[4] = 'I';	//not always to int
+//	elem[5] = to_type(accessor->componentType);
+//
+//	return elem;
+//}
 
-	auto to_type = [](auto v) {
-		switch (v) {
-		case ComponentType::BYTE:
-		case ComponentType::UNSIGNED_BYTE:
-			return 'u';
-		case ComponentType::SHORT:
-		case ComponentType::UNSIGNED_SHORT:
-			return 'i';
-		case ComponentType::FLOAT:
-			return 'f';
-		default:
-			return 'f';
-		}
-	};
-
-
-	assert(attribname < sizeof(attribname_mapper[0]) / sizeof(attribname_mapper[0]));
-
-	const auto& attrib = attribname_mapper[attribname];
-
-	elem[0] = attrib.sname[0];
-	elem[1] = '0' + accessor->count;
-	elem[2] = '0' + attrib.channel;
-	elem[3] = accessor->normalized ? 'n' : 'N';
-	elem[4] = 'I';	//not always to int
-	elem[5] = to_type(accessor->componentType);
-
-	return elem;
-}
-
-static std::string
-decl_desc(const bufferinfo_array &bia) {
-	std::string desc;
-	for (const auto &bi : bia) {
-		const std::string dd = decl_desc(bi.attribname, bi.accessor);
-		if (!desc.empty()) {
-			desc += "|";
-		}
-		desc += dd;
-	}
-
-	return desc;
-}
+//static std::string
+//decl_desc(const bufferinfo_array &bia) {
+//	std::string desc;
+//	for (const auto &bi : bia) {
+//		const std::string dd = decl_desc(bi.attribname, bi.accessor);
+//		if (!desc.empty()) {
+//			desc += "|";
+//		}
+//		desc += dd;
+//	}
+//
+//	return desc;
+//}
 
 
 static uint32_t
@@ -279,21 +321,21 @@ elem_size(uint32_t elemtype, uint32_t componenttype) {
 	return elem_type_mapper[elemtype].elem_count * component_size(componenttype);
 }
 
-static uint32_t 
-buffer_elemsize(const bufferinfo_array &bia) {
-	uint32_t sizebytes = 0;
-	for (const auto &bi : bia) {
-		const auto& accessor = bi.accessor;
-		sizebytes += elem_size(accessor->type, accessor->componentType);
-	}
-
-	return sizebytes;
-}
+//static uint32_t 
+//buffer_elemsize(const bufferinfo_array &bia) {
+//	uint32_t sizebytes = 0;
+//	for (const auto &bi : bia) {
+//		const auto& accessor = bi.accessor;
+//		sizebytes += elem_size(accessor->type, accessor->componentType);
+//	}
+//
+//	return sizebytes;
+//}
 
 static inline uint32_t
 get_num_vertices(const primitive &prim) {
 	const uint32_t posattrib = 0;
-	assert("POSITION" == attribname_mapper[posattrib].name);
+	assert(std::string("POSITION") == std::string(attribname_mapper[posattrib].name));
 	auto itpos = prim.attributes.find(posattrib);
 	if (itpos != prim.attributes.end()) {
 		const auto &accidx = itpos->second;

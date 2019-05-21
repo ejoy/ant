@@ -121,7 +121,7 @@ local function create_scene_node_test()
         world:create_entity {
         transform = {
             parent = hie_level1_1, 
-            s = {0.01, 0.01, 0.01, 0},
+            s = {100, 100, 100, 0},
             r = {0, 0, 0, 0},
             t = {0, 0, 0, 1},
         },
@@ -140,7 +140,7 @@ local function create_scene_node_test()
         world:create_entity {
         transform = {
             parent = hie_level1_2, 
-            s = {0.01, 0.01, 0.01, 0},
+            s = {100, 100, 100, 0},
             r = {0, 0, 0, 0},
             t = {0, 0, 0, 1},
         },
@@ -158,7 +158,7 @@ local function create_scene_node_test()
         world:create_entity {
         transform = {
             parent = hie_level2_1, 
-            s = {0.01, 0.01, 0.01, 0},
+            s = {100, 100, 100, 0},
             r = {0, 0, 0, 0},
             t = {0, 2, 0, 1},
             --slotname = "h1_h1",

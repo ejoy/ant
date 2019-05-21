@@ -1,7 +1,0 @@
-modules = {
-	"bullet.component_collider",
-	"scene.terrain.terrain_system",
-	"editor.ecs.camera_controller",
-	"editor.ecs.editable_hierarchy",
-	"scene.hierarchy.hierarchy",
-}

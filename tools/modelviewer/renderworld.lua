@@ -44,9 +44,9 @@ end
 function model_review_system:init()
 	renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
 	create_light()
-	cu.create_grid_entity(world, "grid")
+	--cu.create_grid_entity(world, "grid")
 	world:create_entity {
-		transform = mu.srt({0.2, 0.2, 0.2}),
+		transform = mu.scale_mat(0.2),
 		can_render = true,
 		mesh = {
 			ref_path = fs.path "//ant.resources/PVPScene/campsite-door.mesh"
@@ -62,11 +62,7 @@ function model_review_system:init()
 	}
 
 	world:create_entity {
-		transform = {
-			s = {1, 1, 1},
-			r = {0, 0, 0, 0},
-			t = {2, 2, 2},
-		},
+		transform = mu.translate_mat({2, 2, 2, 0}),
 		can_render = true,
 		mesh = {
 			ref_path = fs.path "//ant.resources/depiction/test_glb.mesh",
