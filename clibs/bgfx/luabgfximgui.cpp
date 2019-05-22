@@ -12,6 +12,8 @@ extern "C" {
 #define INDEX_ID 1
 #define INDEX_ARGS 2
 
+#undef LUA_ENABLE_DOCKING
+
 struct lua_args {
 	lua_State *L;
 	bool err;
@@ -61,10 +63,10 @@ lendFrame(lua_State *L) {
 
 static ImGuiCond
 get_cond(lua_State *L, int index) {
-	int t = lua_type(L, 2);
+	int t = lua_type(L, index);
 	switch (t) {
 	case LUA_TSTRING: {
-		const char *cond = lua_tostring(L, 2);
+		const char *cond = lua_tostring(L, index);
 		switch(cond[0]) {
 		case 'a':
 		case 'A':
@@ -1752,6 +1754,65 @@ winGetWindowContentRegionWidth(lua_State *L) {
 	return 1;
 }
 
+static int
+winPushStyleColor(lua_State *L) {
+	const char * stylecol = luaL_checkstring(L, 1);
+	
+	lua_pushstring(L, "StyleCol");
+	lua_gettable(L, LUA_REGISTRYINDEX);
+	lua_pushstring(L, stylecol);
+	lua_gettable(L, -2);
+	int flag= luaL_optinteger(L, -1, -1);
+	
+	if (flag > 0) {
+		float c1 = luaL_checknumber(L, 2);
+		float c2 = luaL_checknumber(L, 3);
+		float c3 = luaL_checknumber(L, 4);
+		float c4 = luaL_optnumber(L, 5, 1.0f);
+		ImGui::PushStyleColor(flag, ImVec4(c1, c2, c3, c4));
+	}
+	return 0;
+}
+
+static int
+winPopStyleColor(lua_State *L) {
+	int count = luaL_optinteger(L, 1, 1);
+	ImGui::PopStyleColor(count);
+	return 0;
+}
+
+static int
+winPushStyleVar(lua_State *L) {
+	const char * stylevar = luaL_checkstring(L, 1);
+
+	lua_pushstring(L, "StyleVar");
+	lua_gettable(L, LUA_REGISTRYINDEX);
+	lua_pushstring(L, stylevar);
+	lua_gettable(L, -2);
+	int flag = luaL_optinteger(L, -1, -1);
+	
+	if (flag >= 0) {
+		float v1 = luaL_checknumber(L, 2);
+		if (lua_isnumber(L, 3)) {
+			float v2 = luaL_checknumber(L, 3);
+			ImGui::PushStyleVar(flag, ImVec2(v1,v2));
+		}
+		else {
+			ImGui::PushStyleVar(flag, v1);
+		}
+	}
+	return 0;
+}
+
+static int
+winPopStyleVar(lua_State *L) {
+	int count = luaL_optinteger(L, 1, 1);
+	ImGui::PopStyleVar(count);
+	return 0;
+}
+
+
+
 // cursor and layout
 
 static int
@@ -1942,6 +2003,18 @@ enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
 	lua_pushstring(L, name);
 	lua_pushcclosure(L, make_enum, 2);
 	lua_setfield(L, -2, name);
+}
+
+static void
+enum_register(lua_State *L, const char *name, struct enum_pair *enums) {
+	int i;
+	lua_pushstring(L, name);
+	lua_newtable(L);
+	for (i = 0; enums[i].name; i++) {
+		lua_pushinteger(L, enums[i].value);
+		lua_setfield(L, -2, enums[i].name);
+	}
+	lua_settable(L, LUA_REGISTRYINDEX);
 }
 
 // Utils
@@ -2299,6 +2372,91 @@ static struct enum_pair eTabBarFlags[] = {
 	{ NULL, 0 },
 };
 
+static struct enum_pair eStyleCol[] = {
+	ENUM(ImGuiCol, Text),
+	ENUM(ImGuiCol, TextDisabled),
+	ENUM(ImGuiCol, WindowBg),              // Background of normal windows
+	ENUM(ImGuiCol, ChildBg),               // Background of child windows
+	ENUM(ImGuiCol, PopupBg),               // Background of popups, menus, tooltips windows
+	ENUM(ImGuiCol, Border),
+	ENUM(ImGuiCol, BorderShadow),
+	ENUM(ImGuiCol, FrameBg),               // Background of checkbox, radio button, plot, slider, text input
+	ENUM(ImGuiCol, FrameBgHovered),
+	ENUM(ImGuiCol, FrameBgActive),
+	ENUM(ImGuiCol, TitleBg),
+	ENUM(ImGuiCol, TitleBgActive),
+	ENUM(ImGuiCol, TitleBgCollapsed),
+	ENUM(ImGuiCol, MenuBarBg),
+	ENUM(ImGuiCol, ScrollbarBg),
+	ENUM(ImGuiCol, ScrollbarGrab),
+	ENUM(ImGuiCol, ScrollbarGrabHovered),
+	ENUM(ImGuiCol, ScrollbarGrabActive),
+	ENUM(ImGuiCol, CheckMark),
+	ENUM(ImGuiCol, SliderGrab),
+	ENUM(ImGuiCol, SliderGrabActive),
+	ENUM(ImGuiCol, Button),
+	ENUM(ImGuiCol, ButtonHovered),
+	ENUM(ImGuiCol, ButtonActive),
+	ENUM(ImGuiCol, Header),
+	ENUM(ImGuiCol, HeaderHovered),
+	ENUM(ImGuiCol, HeaderActive),
+	ENUM(ImGuiCol, Separator),
+	ENUM(ImGuiCol, SeparatorHovered),
+	ENUM(ImGuiCol, SeparatorActive),
+	ENUM(ImGuiCol, ResizeGrip),
+	ENUM(ImGuiCol, ResizeGripHovered),
+	ENUM(ImGuiCol, ResizeGripActive),
+	ENUM(ImGuiCol, Tab),
+	ENUM(ImGuiCol, TabHovered),
+	ENUM(ImGuiCol, TabActive),
+	ENUM(ImGuiCol, TabUnfocused),
+	ENUM(ImGuiCol, TabUnfocusedActive),
+#ifdef LUA_ENABLE_DOCKING
+	ENUM(ImGuiCol, DockingPreview),
+	ENUM(ImGuiCol, DockingEmptyBg),        // Background color for empty node (e.g. CentralNode with no window docked into it)
+#endif
+	ENUM(ImGuiCol, PlotLines),
+	ENUM(ImGuiCol, PlotLinesHovered),
+	ENUM(ImGuiCol, PlotHistogram),
+	ENUM(ImGuiCol, PlotHistogramHovered),
+	ENUM(ImGuiCol, TextSelectedBg),
+	ENUM(ImGuiCol, DragDropTarget),
+	ENUM(ImGuiCol, NavHighlight),          // Gamepad/keyboard: current highlighted item
+	ENUM(ImGuiCol, NavWindowingHighlight), // Highlight window when using CTRL+TAB
+	ENUM(ImGuiCol, NavWindowingDimBg),     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
+	ENUM(ImGuiCol, ModalWindowDimBg),      // Darken/colorize entire screen behind a modal window, when one is active
+	ENUM(ImGuiCol, COUNT),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eStyleVar[] = {
+	ENUM(ImGuiStyleVar,Alpha),               // float     Alpha
+	ENUM(ImGuiStyleVar,WindowPadding),       // ImVec2    WindowPadding
+	ENUM(ImGuiStyleVar,WindowRounding),      // float     WindowRounding
+	ENUM(ImGuiStyleVar,WindowBorderSize),    // float     WindowBorderSize
+	ENUM(ImGuiStyleVar,WindowMinSize),       // ImVec2    WindowMinSize
+	ENUM(ImGuiStyleVar,WindowTitleAlign),    // ImVec2    WindowTitleAlign
+	ENUM(ImGuiStyleVar,ChildRounding),       // float     ChildRounding
+	ENUM(ImGuiStyleVar,ChildBorderSize),     // float     ChildBorderSize
+	ENUM(ImGuiStyleVar,PopupRounding),       // float     PopupRounding
+	ENUM(ImGuiStyleVar,PopupBorderSize),     // float     PopupBorderSize
+	ENUM(ImGuiStyleVar,FramePadding),        // ImVec2    FramePadding
+	ENUM(ImGuiStyleVar,FrameRounding),       // float     FrameRounding
+	ENUM(ImGuiStyleVar,FrameBorderSize),     // float     FrameBorderSize
+	ENUM(ImGuiStyleVar,ItemSpacing),         // ImVec2    ItemSpacing
+	ENUM(ImGuiStyleVar,ItemInnerSpacing),    // ImVec2    ItemInnerSpacing
+	ENUM(ImGuiStyleVar,IndentSpacing),       // float     IndentSpacing
+	ENUM(ImGuiStyleVar,ScrollbarSize),       // float     ScrollbarSize
+	ENUM(ImGuiStyleVar,ScrollbarRounding),   // float     ScrollbarRounding
+	ENUM(ImGuiStyleVar,GrabMinSize),         // float     GrabMinSize
+	ENUM(ImGuiStyleVar,GrabRounding),        // float     GrabRounding
+	ENUM(ImGuiStyleVar,TabRounding),         // float     TabRounding
+	ENUM(ImGuiStyleVar,ButtonTextAlign),     // ImVec2    ButtonTextAlign
+	ENUM(ImGuiStyleVar,SelectableTextAlign), // ImVec2    SelectableTextAlign
+	ENUM(ImGuiStyleVar,COUNT),
+	{ NULL, 0 },
+};
+
 struct keymap {
 	const char * name;
 	int index;
@@ -2502,6 +2660,10 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "GetWindowContentRegionMin", winGetWindowContentRegionMin },
 		{ "GetWindowContentRegionMax", winGetWindowContentRegionMax },
 		{ "GetWindowContentRegionWidth", winGetWindowContentRegionWidth },
+		{ "PushStyleColor", winPushStyleColor },
+		{ "PopStyleColor", winPopStyleColor },
+		{ "PushStyleVar", winPushStyleVar },
+		{ "PopStyleVar", winPopStyleVar },
 		{ NULL, NULL },
 	};
 
@@ -2548,6 +2710,8 @@ luaopen_bgfx_imgui(lua_State *L) {
 	enum_gen(L, "Focused", eFocusedFlags);
 	enum_gen(L, "Hovered", eHoveredFlags);
 	enum_gen(L, "TabBar", eTabBarFlags);
+	enum_register(L, "StyleCol", eStyleCol);
+	enum_register(L, "StyleVar", eStyleVar);
 
 	lua_setfield(L, -2, "flags");
 
