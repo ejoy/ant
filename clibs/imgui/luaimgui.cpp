@@ -2380,13 +2380,30 @@ lkeyState(lua_State *L) {
 }
 
 static int
-lmouseState(lua_State *L) {
+lmouseMove(lua_State *L) {
 	ImGuiIO& io = ImGui::GetIO();
 	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
-	io.MouseDown[0] = lua_toboolean(L, 3);
-	io.MouseDown[1] = lua_toboolean(L, 4);
-	io.MouseDown[2] = lua_toboolean(L, 5);
-	io.MouseWheel = (float)luaL_checknumber(L, 6);
+	return 0;
+}
+
+static int
+lmouseWheel(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	io.MouseWheel = (float)luaL_checknumber(L, 3);
+	return 0;
+}
+
+static int
+lmouseClick(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	switch (luaL_checkinteger(L, 3)) {
+	case 0: io.MouseDown[0] = lua_toboolean(L, 4); break;
+	case 1: io.MouseDown[1] = lua_toboolean(L, 4); break;
+	case 2: io.MouseDown[2] = lua_toboolean(L, 4); break;
+	default: break;
+	}
 	return 0;
 }
 
@@ -2619,7 +2636,9 @@ luaopen_imgui(lua_State *L) {
 		{ "end_frame", lendFrame },
 		{ "key_state", lkeyState },
 		{ "input_char", linputChar },
-		{ "mouse_state", lmouseState },
+		{ "mouse_move", lmouseMove },
+		{ "mouse_wheel", lmouseWheel },
+		{ "mouse_click", lmouseClick },
 		{ "resize", lresize },
 		{ "viewid", lviewId },
 		{ "program", lprogram },

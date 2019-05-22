@@ -10,7 +10,6 @@ local util = imgui.util
 local font = imgui.font
 
 local callback = {}
-local attribs = {}
 
 local function init_identity()
 	local shadertypes = {
@@ -77,15 +76,6 @@ function callback.init(nwh, context, width, height)
 	}
 	init_identity()
 
-	attribs.mx = 0
-	attribs.my = 0
-	attribs.button1 = false
-	attribs.button2 = false
-	attribs.button3 = false
-	attribs.wheel = 0
-	attribs.width = width
-	attribs.height = height
-
 	local ocornut_imgui = Shader {
 		vs = "//ant.ImguiSample/shader/vs_ocornut_imgui",
 		fs = "//ant.ImguiSample/shader/fs_ocornut_imgui",
@@ -103,7 +93,7 @@ function callback.init(nwh, context, width, height)
 		ocornut_imgui.uniforms.s_tex.handle,
 		imgui_image.uniforms.u_imageLodEnabled.handle
 	)
-	imgui.resize(attribs.width, attribs.height)
+	imgui.resize(width, height)
 	imgui.keymap(native.keymap)
 
 	bgfx.set_view_rect(0, 0, 0, width, height)
@@ -116,9 +106,7 @@ function callback.init(nwh, context, width, height)
 end
 
 function callback.size(width,height,type)
-	attribs.width = width
-	attribs.height = height
-	imgui.resize(attribs.width, attribs.height)
+	imgui.resize(width,height)
 	bgfx.reset(width, height, "")
 	bgfx.set_view_rect(0, 0, 0, width, height)
 end
@@ -131,27 +119,16 @@ function callback.error(err)
 	print(err)
 end
 
-function callback.mouse_move(x,y)
-	attribs.mx = x
-	attribs.my = y
+function callback.mouse_move(x, yy)
+	imgui.mouse_move(x, y)
 end
 
-function callback.mouse_wheel(x,y,delta)
-	attribs.wheel = delta
-	attribs.mx = x
-	attribs.my = y
+function callback.mouse_wheel(x, y, delta)
+	imgui.mouse_wheel(x, y, delta)
 end
 
 function callback.mouse_click(x, y, what, pressed)
-	if what == 0 then
-		attribs.button1 = pressed
-	elseif what == 1 then
-		attribs.button2 = pressed
-	elseif what == 2 then
-		attribs.button3 = pressed
-	end
-	attribs.mx = x
-	attribs.my = y
+	imgui.mouse_click(x, y, what, pressed)
 end
 
 function callback.keyboard(key, press, state)
@@ -293,14 +270,6 @@ local function update_ui()
 end
 
 function callback.update()
-	imgui.mouse_state(
-		attribs.mx,
-		attribs.my,
-		attribs.button1,
-		attribs.button2,
-		attribs.button3,
-		attribs.wheel
-	)
 	imgui.begin_frame(1/60)
 	update_ui()
 	imgui.end_frame()
