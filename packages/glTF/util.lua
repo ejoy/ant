@@ -38,11 +38,28 @@ local comptype_size_mapper = {
 	[5126] = 4,
 }
 
+local decl_comptype_mapper = {
+	BYTE 			= "u",
+	UNSIGNED_BYTE 	= "u",
+	SHORT 			= "i",
+	UNSIGNED_SHORT 	= "i",
+	UNSIGNED_INT 	= "",	-- bgfx not support
+	FLOAT 			= "f",
+}
+
+local decl_comptype_remapper = {
+	u = "UNSIGNED_BYTE",
+	i = "UNSIGNED_SHORT",
+	f = "FLOAT",
+}
+
 util.comptype_name_mapper 	= comptype_name_mapper
 util.comptype_name_remapper = comptype_name_remapper
 util.comptype_size_mapper	= comptype_size_mapper
 util.type_count_mapper 		= type_count_mapper
 util.type_count_remapper 	= type_count_remapper
+util.decl_comptype_mapper	= decl_comptype_mapper
+util.decl_comptype_remapper = decl_comptype_remapper
 
 function util.accessor(name, prim, meshscene)
 	local accessors = meshscene.accessors
@@ -105,6 +122,10 @@ function util.generate_accessor(bvidx, comptype, elemtype, offset, count, normal
 	}
 end
 
+function util.generate_index_accessor(bvidx, offset, count, int32)
+	return util.generate_accessor(bvidx, int32 and "UNSIGNED_INT" or "UNSIGNED_SHORT", "SCALAR", offset, count, false)
+end
+
 local target_mapper = {
 	vertex = 34962,	--ARRAY_BUFFER
 	index = 34963,	--ELEMENT_ARRAY_BUFFER
@@ -120,6 +141,10 @@ function util.generate_bufferview(bufferidx, offset, length, stride, target)
 	}
 end
 
+function util.generate_index_bufferview(bufferidx, offset, length)
+	return util.generate_bufferview(bufferidx, offset, length, 0, "index")
+end
+
 function util.target(name)
 	return target_mapper[name]
 end
@@ -129,14 +154,6 @@ function util.generate_buffer(buffer, size)
 		byteLength = size,
 		extras = buffer,
 	}
-end
-
-function util.generate_buffers(buffers)
-	local b = {}
-	for _, buf in ipairs(buffers) do
-		b[#b+1] = util.generate_buffer(table.unpack(buf))
-	end
-	return b
 end
 
 return util

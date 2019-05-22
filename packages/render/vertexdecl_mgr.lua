@@ -17,6 +17,9 @@ for k, v in pairs(name_mapper) do
 	name_remapper[v] = k
 end
 
+mgr.name_mapper = name_mapper
+mgr.name_remapper = name_remapper
+
 function mgr.parse_attri_name(fullname)
 	local name, channel = fullname:match("(%w+)_?(%d+)")
 	if name then

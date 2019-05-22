@@ -956,6 +956,23 @@ lnew_ozzmesh(lua_State *L) {
 	return 1;
 }
 
+static int
+lnum_vertices(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
+	lua_pushinteger(L, om->mesh->vertex_count());
+	
+	return 1;
+}
+
+static int
+lnum_indices(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
+	lua_pushinteger(L, om->mesh->triangle_index_count());
+	return 1;
+}
+
 static int 
 lbuffer_ozzmesh(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
@@ -1087,6 +1104,8 @@ register_ozzmesh_mt(lua_State *L) {
 
 	luaL_Reg l[] = {		
 		"buffer", lbuffer_ozzmesh,
+		"num_vertices", lnum_vertices,
+		"num_indices", lnum_indices,
 		"index_buffer", lindexbuffer_ozzmesh,
 		"layout", llayout_ozzmesh,		
 		"bounding", lbounding_ozzmesh,

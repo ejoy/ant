@@ -6,21 +6,6 @@ local gltfutil = gltf.util
 local bgfx = require "bgfx"
 local declmgr = import_package "ant.render".declmgr
 
-local comptype_shortname_mapper = {
-	BYTE 			= "u",
-	UNSIGNED_BYTE 	= "u",
-	SHORT 			= "i",
-	UNSIGNED_SHORT 	= "i",
-	UNSIGNED_INT 	= "",
-	FLOAT 			= "f",
-}
-
-local comptype_shortname_remapper = {
-	u = "UNSIGNED_BYTE",
-	i = "UNSIGNED_SHORT",
-	f = "FLOAT",
-}
-
 local function get_desc(name, accessor)
 	local shortname, channel = declmgr.parse_attri_name(name)
 	local comptype_name = gltfutil.comptype_name_mapper[accessor.componentType]
@@ -30,7 +15,7 @@ local function get_desc(name, accessor)
 			tostring(channel) .. 
 			(accessor.normalized and "n" or "N") .. 
 			"I" .. 
-			comptype_shortname_mapper[comptype_name]	
+			gltfutil.decl_comptype_mapper[comptype_name]
 end
 
 local function classfiy_attri(attributes, accessors)
