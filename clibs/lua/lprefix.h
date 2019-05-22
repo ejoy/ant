@@ -38,12 +38,12 @@
 #define _CRT_SECURE_NO_WARNINGS  /* avoid warnings about ISO C functions */
 #endif
 
-#include <assert.h>
-#define lua_assert(e) assert(e)
-
 #include "utf8_prefix.h"
 
 #endif			/* } */
+
+#include <assert.h>
+#define lua_assert(e) assert(e)
 
 #endif
 
