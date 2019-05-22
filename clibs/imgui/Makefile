@@ -16,13 +16,10 @@ endif
 IMGUI_INC=-I$(ANT3RD)/imgui
 IMGUI_SRC=$(ANT3RD)/imgui
 
-OBJS = $(ODIR)/luaimgui.o $(ODIR)/bgfximgui.o $(ODIR)/imgui.o $(ODIR)/imgui_draw.o $(ODIR)/imgui_widgets.o
+OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui.o $(ODIR)/imgui_draw.o $(ODIR)/imgui_widgets.o
 
-$(ODIR)/luaimgui.o : luaimgui.cpp bgfximgui.h | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(BGFXINC) -I../bgfx
-
-$(ODIR)/bgfximgui.o : bgfximgui.cpp  bgfximgui.h $(IMGUI_SRC)/imstb_truetype.h | $(ODIR) 
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
+$(ODIR)/luaimgui.o : luaimgui.cpp | $(ODIR)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
 
 
 $(ODIR)/imgui.o : $(IMGUI_SRC)/imgui.cpp  | $(ODIR)

@@ -96,8 +96,9 @@ function callback.init(nwh, context, width, height)
 		fs = "//ant.ImguiSample/shader/fs_imgui_image",
 	}
 
-	imgui.create(
-		attribs.viewid,
+	imgui.create();
+	imgui.viewid(attribs.viewid);
+	imgui.program(
 		ocornut_imgui.prog,
 		imgui_image.prog,
 		ocornut_imgui.uniforms.s_tex.handle,
