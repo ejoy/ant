@@ -119,7 +119,7 @@ function callback.error(err)
 	print(err)
 end
 
-function callback.mouse_move(x, yy)
+function callback.mouse_move(x, y)
 	imgui.mouse_move(x, y)
 end
 
