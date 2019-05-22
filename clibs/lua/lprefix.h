@@ -7,9 +7,6 @@
 #ifndef lprefix_h
 #define lprefix_h
 
-#include <assert.h>
-#define lua_assert(e) assert(e)
-
 /*
 ** Allows POSIX/XSI stuff
 */
@@ -40,6 +37,9 @@
 #if !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS  /* avoid warnings about ISO C functions */
 #endif
+
+#include <assert.h>
+#define lua_assert(e) assert(e)
 
 #include "utf8_prefix.h"
 
