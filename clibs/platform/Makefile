@@ -8,7 +8,7 @@ default : libplatform-$(PLAT).a
 endif
 
 ifeq "$(PLAT)" "mingw"
-PLAT_LIB =
+PLAT_LIB = -lgdi32 -lstdc++
 PLAT_CXX = cpp
 else ifeq "$(PLAT)" "osx"
 PLAT_LIB =
@@ -27,7 +27,7 @@ $(ODIR)/lplatform.o : lplatform.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -I$(BXSRC)/include -o $@ $<
 
 platform.dll : $(OBJS)
-	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
+	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB) $(PLAT_LIB)
 
 libplatform-$(PLAT).a : $(OBJS)
 	ar rsv $@ $^

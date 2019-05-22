@@ -2,6 +2,7 @@ local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"
 local imgui = require "imgui"
+local platform = require "platform"
 local widget = imgui.widget
 local flags = imgui.flags
 local windows = imgui.windows
@@ -23,7 +24,6 @@ local function init_identity()
 		OPENGLES   = "essl",
 		VULKAN     = "spirv",
 	}
-	local platform = require "platform"
 	local vfs = require "vfs"
 	local caps =  bgfx.get_caps()
 	vfs.identity(platform.OS .. "-" .. shadertypes[caps.rendererType])
@@ -54,6 +54,8 @@ local function Font(name)
 	return ttf
 end
 
+local Font = platform.font
+
 local function Shader(shader)
 	local shader_mgr = import_package "ant.render".shader_mgr
 	local uniforms = {}
@@ -62,7 +64,6 @@ local function Shader(shader)
 	shader.uniforms = uniforms
 	return shader
 end
-
 
 function callback.init(nwh, context, width, height)
 	bgfx.init {
@@ -112,7 +113,7 @@ function callback.init(nwh, context, width, height)
 --	bgfx.set_debug "ST"
 
 	font.Create {
-		{ Font "SimHei (TrueType)", 18, "\x20\x00\xFF\xFF\x00"},
+		{ Font "黑体" , 18, "\x20\x00\xFF\xFF\x00"},
 	}
 end
 
