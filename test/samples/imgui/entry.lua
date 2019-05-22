@@ -9,7 +9,12 @@ local windows = imgui.windows
 local util = imgui.util
 local font = imgui.font
 
-local callback = {}
+local callback = {
+	mouse_move = imgui.mouse_move,
+	mouse_wheel = imgui.mouse_wheel,
+	mouse_click = imgui.mouse_click,
+	keyboard = imgui.key_state,
+}
 
 local function init_identity()
 	local shadertypes = {
@@ -117,22 +122,6 @@ end
 
 function callback.error(err)
 	print(err)
-end
-
-function callback.mouse_move(x, y)
-	imgui.mouse_move(x, y)
-end
-
-function callback.mouse_wheel(x, y, delta)
-	imgui.mouse_wheel(x, y, delta)
-end
-
-function callback.mouse_click(x, y, what, pressed)
-	imgui.mouse_click(x, y, what, pressed)
-end
-
-function callback.keyboard(key, press, state)
-	imgui.key_state(key, press, state)
 end
 
 local editbox = {
