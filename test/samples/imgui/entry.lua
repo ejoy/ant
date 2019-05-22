@@ -77,16 +77,14 @@ function callback.init(nwh, context, width, height)
 	}
 	init_identity()
 
-	attribs.font_size = 18
 	attribs.mx = 0
 	attribs.my = 0
 	attribs.button1 = false
 	attribs.button2 = false
 	attribs.button3 = false
-	attribs.scroll = 0
+	attribs.wheel = 0
 	attribs.width = width
 	attribs.height = height
-	attribs.viewid = 255
 
 	local ocornut_imgui = Shader {
 		vs = "//ant.ImguiSample/shader/vs_ocornut_imgui",
@@ -98,7 +96,7 @@ function callback.init(nwh, context, width, height)
 	}
 
 	imgui.create();
-	imgui.viewid(attribs.viewid);
+	imgui.viewid(255);
 	imgui.program(
 		ocornut_imgui.prog,
 		imgui_image.prog,
@@ -139,7 +137,7 @@ function callback.mouse_move(x,y)
 end
 
 function callback.mouse_wheel(x,y,delta)
-	attribs.scroll = delta
+	attribs.wheel = delta
 	attribs.mx = x
 	attribs.my = y
 end
@@ -301,7 +299,7 @@ function callback.update()
 		attribs.button1,
 		attribs.button2,
 		attribs.button3,
-		attribs.scroll
+		attribs.wheel
 	)
 	imgui.begin_frame(1/60)
 	update_ui()
