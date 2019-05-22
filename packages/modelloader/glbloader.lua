@@ -1,11 +1,6 @@
-local gltf = import_package "ant.glTF"
-local glbloader = gltf.glb
-
+local util = require "util"
+local glbloader = import_package "ant.glTF".glb
 return function (meshfile)
 	local glbdata = glbloader.decode_from_filehandle(meshfile)
-	local scene = glbdata.info
-	local bindata = glbdata.bin
-
-	init_glb_scene(scene, bindata)
-	return scene
+	return util.init_scene(glbdata.info, glbdata.bin)
 end

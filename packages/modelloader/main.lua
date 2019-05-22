@@ -1,4 +1,4 @@
 return {
-	loader = require "glbloader",
+	loader = require "modelloader",
 	util = require "util",
 }

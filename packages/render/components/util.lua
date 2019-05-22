@@ -6,6 +6,8 @@ local fs = require "filesystem"
 
 local asset = import_package "ant.asset"
 local mu = import_package "ant.math".util
+local gltfutil = import_package "ant.glTF".util
+
 local declmgr = require "vertexdecl_mgr"
 
 local function deep_copy(t)
@@ -125,21 +127,55 @@ function util.is_entity_visible(entity)
     return false
 end
 
-function util.create_mesh_handle(meshdesc, accessors, bvs, buffers)
-	local scene = {
-			scene = 0,
-			scenes = {nodes = {0},},
-			nodes = {mesh=0},
-			meshes = meshdesc,
-			accessors = accessors,
-			bufferViews = bvs,
-			buffers = buffers,
-		}
+function util.create_simple_mesh(vertex_desc, vb, num_vertices, ib, num_indices)
+	local stride = vertex_desc.stride
+	local attributes = {}	
+	local accessors = {}
+	local primitve = {}
 	
-	local ml = import_package "ant.modelloader"
-	local mlutil = ml.util
-	mlutil.init_scene(scene)
-	return {handle = scene,}
+	local vertex_bvidx = 0
+	for idx, d in ipairs(vertex_desc) do
+		attributes[d.name] = idx-1
+		accessors[#accessors+1] = gltfutil.generate_accessor(vertex_bvidx, 
+								d.elemtype, 
+								assert(gltfutil.type_count_remapper[d.elemcount]), 
+								d.offset, num_vertices, d.normalized)
+	end
+
+	local bufferviews = {
+		gltfutil.generate_bufferview(0, 0, stride * num_vertices, stride, "vertex"),
+	}
+	
+	local buffers = {
+		gltfutil.generate_buffer(vb, stride * num_vertices)
+	}
+
+	if ib then
+		local index_bvidx = 1
+		primitve.indices = #accessors
+		accessors[#accessors+1] = gltfutil.generate_accessor(index_bvidx, "UNSIGNED_SHORT", "SCALAR", 0, num_indices, false)
+		bufferviews[#bufferviews+1] = gltfutil.generate_bufferview(1, 0, 2 * num_indices, 0, "index")
+		buffers[#buffers+1] = gltfutil.generate_buffer(ib, 2 * num_indices)
+	end
+
+	primitve.attributes = attributes
+
+	local scene = {
+		scene = 0,
+		scenes = {{nodes = {0}},},
+		nodes = {{mesh=0}},
+		meshes = {
+			{primitives={
+				primitve,
+			}}
+		},
+		accessors = accessors,
+		bufferViews = bufferviews,
+		buffers = buffers,
+	}
+
+	local mlutil = import_package "ant.modelloader".util
+	return {handle = mlutil.init_scene(scene),}
 end
 
 function util.create_grid_entity(world, name, w, h, unit, view_tag)
@@ -167,47 +203,14 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
 		end
 	end
 
-	--grid.mesh.assetinfo = util.create_mesh_handle(declmgr.get("p3|c40niu").handle, gvb, ib)
-	local meshdesc = {
-		primitives = {
-			{
-				attributes = {
-					POSITION = 1,
-					COLOR_0 = 2,
-				},
-				indices = 0,
-			},
-		},
-	}
-
-	local num_verites = #vb
+	local num_vertices = #vb
 	local num_indices = #ib
-	local stride = 16 -- "fffd"
 
-	local gltfutil = import_package "ant.glTF".util
-	local accessors = gltfutil.generate_accessors {
-		{0, "UNSIGNED_SHORT", "SCALAR", 0, num_indices},
-		{1, "FLOAT", "VEC3", 0, num_verites,},
-		{1, "UNSIGNED_BYTE", "VEC4", 12, num_verites},
-	}
-	
-	local bufferviews = gltfutil.generate_bufferviews {
-		{0, 0, num_indices * 2, 0, "index",},
-		{1, 0, num_verites * stride, stride, "vertex"},
-	}
-
-	local buffers = {
-		{
-			byteLength = stride * num_verites,
-			extras = {data = gvb,},
-		},
-		{
-			byteLength = num_indices * 2,
-			extras = {data = ib,}
-		}
-	}
-
-	grid.mesh.assetinfo = util.create_mesh_handle(meshdesc, accessors, bvs, buffers)
+	grid.mesh.assetinfo = util.create_simple_mesh({
+		stride = 16, -- "fffd"
+		{name="POSITION", offset=0, elemtype="FLOAT", elemcount=3},
+		{name="COLOR_0", offset=12, elemtype="UNSIGNED_BYTE", elemcount=4, normalized=true},
+	}, gvb, num_vertices, ib, num_indices)
     return gridid
 end
 
@@ -240,21 +243,12 @@ function util.create_plane_entity(world, color, size, pos, name)
 	}
 end
 
-local function get_quaddecl()
-	return declmgr.get("p3|t2")
-end
-
-local function quad_mesh(vb)
-	local stride = 20
-	return util.create_mesh_handle({primitives = {{attributes = {POSITION=0, TEXCOORD_0=1}}}}, 
-		gltfutil.generate_accessors {
-			{0, "FLOAT", "VEC3", 0, 4, false},
-			{1, "FLOAT", "VEC2", 12, 4, false},
-		},
-		gltfutil.generate_bufferviews {
-			{0, 0, 4 * stride, stride, "vertex"}
-		},
-		{{byteLength = stride * 4, extras = {data=vb},}})
+local function quad_mesh(vb)	
+	return util.create_simple_mesh({
+		stride = 20, --"fffff"
+		{name="POSTIION", offset=0, elemtype="FLOAT", elemcount=3},
+		{name="TEXCOORD_0", offset=12, elemtype="FLOAT", elemcount=2},
+	}, vb, 4)
 end
 
 function util.quad_mesh(rect)
@@ -314,28 +308,6 @@ function util.create_quad_entity(world, texture_tbl, view_tag, name)
     
     quad.mesh.assetinfo = quad_mesh(vb)
     return quadid
-end
-
-
-function util.create_dynamic_mesh_handle(attributes, vbsize, ibsize)
-	return {
-		handle = {
-			bufferViews = {
-				handle = bgfx.create_dynamic_vertex_buffer(vbsize, decl, "a"),
-				byteOffset = 0,
-				byteLength = vbsize,
-				
-
-			}
-			-- groups = {
-			-- 	{
-			-- 		vb = {handles = {bgfx.create_dynamic_vertex_buffer(vbsize, decl, "a")}},
-			-- 		ib = ibsize and {handle= bgfx.create_dynamic_index_buffer(ibsize, "a")} or nil,
-			-- 		primitives = {},
-			-- 	}
-			-- }
-		}
-	}
 end
 
 return util

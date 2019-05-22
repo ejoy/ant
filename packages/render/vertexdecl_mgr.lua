@@ -99,19 +99,4 @@ function mgr.get(layout)
 	return decl
 end
 
-function mgr.decl_str(layout)
-	local s = ""
-	for e in layout:gmatch("%w+") do
-		local ce = correct_elem(e)
-		local num 		= tonumber(ce:sub(2, 2))
-		local asint		= ce:sub(5, 5) == "i"
-		local n = asint and "i" or "f"
-		for i=1, num do
-			s = s .. n
-		end
-	end
-
-	return s
-end
-
 return mgr

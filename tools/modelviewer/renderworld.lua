@@ -44,7 +44,7 @@ end
 function model_review_system:init()
 	renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
 	create_light()
-	--cu.create_grid_entity(world, "grid")
+	cu.create_grid_entity(world, "grid")
 	world:create_entity {
 		transform = mu.scale_mat(0.2),
 		can_render = true,

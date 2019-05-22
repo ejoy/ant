@@ -2,7 +2,7 @@ shader = {
 	vs = "vs_mesh",
 	fs = "fs_mesh",
 }
-state = "default.state"
+state = "materials/states/default.state"
 
 property = {
 	color = {type="v4", default={1, 0, 0, 1}},

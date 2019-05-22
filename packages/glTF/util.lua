@@ -24,6 +24,11 @@ local type_count_mapper = {
 	MAT4 = 16,
 }
 
+local type_count_remapper = {}
+for k, v in pairs(type_count_mapper) do
+	type_count_remapper[v] = k
+end
+
 local comptype_size_mapper = {
 	[5120] = 1,
 	[5121] = 1,
@@ -37,6 +42,7 @@ util.comptype_name_mapper 	= comptype_name_mapper
 util.comptype_name_remapper = comptype_name_remapper
 util.comptype_size_mapper	= comptype_size_mapper
 util.type_count_mapper 		= type_count_mapper
+util.type_count_remapper 	= type_count_remapper
 
 function util.accessor(name, prim, meshscene)
 	local accessors = meshscene.accessors
@@ -112,22 +118,6 @@ function util.generate_bufferview(bufferidx, offset, length, stride, target)
 		byteStride = stride ~= 0 and stride or nil,
 		target = target_mapper[target],
 	}
-end
-
-function util.generate_accessors(t)
-	local accessors = {}
-	for _, acc_desc in ipairs(t) do
-		accessors[#accessors+1] = util.generate_accessor(table.unpack(acc_desc))
-	end
-	return accessors
-end
-
-function util.generate_bufferviews(t)
-	local bvs = {}
-	for _, bv_desc in ipairs(t) do
-		bvs[#bvs+1] = util.generate_bufferview(table.unpack(bv_desc))
-	end
-	return bvs
 end
 
 function util.target(name)

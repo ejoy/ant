@@ -160,6 +160,8 @@ function util.init_scene(scene, bindata)
 	end
 
 	create_buffers(scene.scenes[scene.scene+1].nodes)
+
+	return scene
 end
 
 

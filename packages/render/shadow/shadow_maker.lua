@@ -162,7 +162,7 @@ local function create_bounding_mesh_entity()
 	}
 	local stride = 16 -- "fffd"
 	local vbsize, ibsize = 1024 * stride, 1024 * 2
-	local decl = declmgr.get("p3|c40niu")	-- mean primitve.attributes only support POSITION and COLOR
+	local decl = get_line_decl()	-- mean primitve.attributes only support POSITION and COLOR
 	world[eid].mesh.assetinfo = {
 		handle = {
 			scene = 0,
@@ -242,22 +242,12 @@ local function create_frustum_bounding_entity()
 		name = "direction light frustum shape",
 	}
 
-	local stride = 16
 	local num_vertices = 8
-	local num_indices = 8 * 2
-	world[eid].mesh.assetinfo = computil.create_mesh_handle({
-		{primitives={{attributes={POSITION=0, COLOR_0=1}}}},
-		gltfutil.generate_accessors {
-			{0, "FLOAT", "VEC3", 0, num_vertices, false},
-			{0, "UNSIGNED_BYTE", "VEC4", 12, num_vertices, false},			
-		},
-		gltfutil.generate_bufferviews {
-			{0, 0, stride * num_vertices, stride, "vertex"},
-		},
-		gltfutil.generate_buffers {
-			{generate_lighting_frustum_vb(), stride * num_vertices},
-		}
-	}
+	world[eid].mesh.assetinfo = gltfutil.create_simple_mesh({
+			stride = 16,
+			{name="POSITION", offset=0, elemcount=3, elemtype="FLOAT"},
+			{name="COLOR_0", offset=12, elemcount=4, elemtype="UNSIGNED_BYTE"},
+		}, generate_lighting_frustum_vb(), num_vertices)
 end
 
 function debug_sm:init()
