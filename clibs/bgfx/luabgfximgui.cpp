@@ -12,6 +12,8 @@ extern "C" {
 #define INDEX_ID 1
 #define INDEX_ARGS 2
 
+#undef LUA_ENABLE_DOCKING
+
 struct lua_args {
 	lua_State *L;
 	bool err;
