@@ -1,16 +1,8 @@
-local fs = require 'backend.filesystem'
+local fs = require 'backend.worker.filesystem'
 local parser = require 'backend.parser'
 local ev = require 'common.event'
 local crc32 = require 'backend.crc32'
-local function prequire(name)
-    local ok, res = pcall(require, name)
-    if ok then
-        return res
-    end
-end
-local unicode = prequire 'remotedebug.unicode'
 
-local globalSkipFiles = {}
 local sourcePool = {}
 local codePool = {}
 local skipFiles = {}
@@ -27,9 +19,6 @@ ev.on('initializing', function(config)
     sourceUtf8 = config.sourceCoding == 'utf8'
     skipFiles = {}
     sourceMaps = {}
-    for _, pattern in ipairs(globalSkipFiles) do
-        makeSkipFile(pattern)
-    end
     if config.skipFiles then
         for _, pattern in ipairs(config.skipFiles) do
             makeSkipFile(pattern)
@@ -81,8 +70,8 @@ local function glob_replace(pattern, target)
 end
 
 local function serverPathToClientPath(p)
-    if not sourceUtf8 and unicode then
-        p = unicode.a2u(p)
+    if not sourceUtf8 and fs.unicode then
+        p = fs.unicode.a2u(p)
     end
     local skip = false
     local nativePath = fs.narive_normalize_serverpath(p)
@@ -215,10 +204,6 @@ function m.all_loaded()
     for _, source in pairs(sourcePool) do
         ev.emit('loadedSource', 'new', source)
     end
-end
-
-function m.skipfiles(v)
-    globalSkipFiles = v
 end
 
 return m

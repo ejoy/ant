@@ -10,56 +10,78 @@ local VAR_UPVALUE = 0xFFFD
 local VAR_GLOBAL = 0xFFFC
 local VAR_STANDARD = 0xFFFB
 
-local TEMPORARY = _VERSION == "Lua 5.4" and '(temporary)' or '(*temporary)'
 local MAX_TABLE_FIELD = 300
 
-local lstandard = {
-    "ipairs",
-    "error",
-    "utf8",
-    "rawset",
-    "tostring",
-    "select",
-    "tonumber",
-    "_VERSION",
-    "loadfile",
-    "xpcall",
-    "string",
-    "rawlen",
-    "print",
-    "rawequal",
-    "setmetatable",
-    "require",
-    "getmetatable",
-    "next",
-    "package",
-    "coroutine",
-    "io",
-    "_G",
-    "math",
-    "collectgarbage",
-    "os",
-    "table",
-    "dofile",
-    "pcall",
-    "load",
-    "rawget",
-    "debug",
-    "assert",
-    "type",
-    "pairs",
-}
+local TEMPORARY = "(temporary)"
 
-if _VERSION == "Lua 5.3" then
-    table.insert(lstandard, "bit32")
-elseif _VERSION == "Lua 5.4" then
-    table.insert(lstandard, "warn")
-end
+local LUAVERSION = 54
 
 local standard = {}
-for _, v in ipairs(lstandard) do
-    standard[v] = true
+
+local function init_standard()
+    local lstandard = {
+        "ipairs",
+        "error",
+        "utf8",
+        "rawset",
+        "tostring",
+        "select",
+        "tonumber",
+        "_VERSION",
+        "loadfile",
+        "xpcall",
+        "string",
+        "rawlen",
+        "print",
+        "rawequal",
+        "setmetatable",
+        "require",
+        "getmetatable",
+        "next",
+        "package",
+        "coroutine",
+        "io",
+        "_G",
+        "math",
+        "collectgarbage",
+        "os",
+        "table",
+        "dofile",
+        "pcall",
+        "load",
+        "rawget",
+        "debug",
+        "assert",
+        "type",
+        "pairs",
+    }
+
+    if LUAVERSION == 53 then
+        table.insert(lstandard, "bit32")
+    elseif LUAVERSION == 54 then
+        table.insert(lstandard, "warn")
+    end
+    standard = {}
+    for _, v in ipairs(lstandard) do
+        standard[v] = true
+    end
 end
+
+local function init_luaver()
+    local version = rdebug.indexv(rdebug._G, "_VERSION")
+    local ver = 0
+    for n in version:gmatch "%d" do
+        ver = ver * 10 + math.tointeger(n) or 0
+    end
+    LUAVERSION = ver
+end
+
+ev.on('initializing', function()
+    init_luaver()
+    init_standard()
+    TEMPORARY = LUAVERSION >= 54 and "(temporary)" or "(*temporary)"
+end)
+
 
 local function hasLocal(frameId)
     local i = 1
@@ -332,6 +354,13 @@ local function varGetValue(type, subtype, value)
     elseif type == 'userdata' then
         local meta = rdebug.getmetatablev(value)
         if meta ~= nil then
+            local fn = rdebug.indexv(meta, '__debugger_tostring')
+            if fn ~= nil and rdebug.type(fn) == 'function' then
+                local ok, res = rdebug.evalref(fn, value)
+                if ok then
+                    return res
+                end
+            end
             local name = rdebug.indexv(meta, '__name')
             if name ~= nil then
                 return 'userdata: ' .. tostring(rdebug.value(name))
@@ -355,7 +384,7 @@ local function varCreateReference(frameId, value, evaluateName)
     return text, type
 end
 
-local function varCreate(vars, frameId, varRef, name, value, evaluateName, calcValue)
+local function varCreateObject(frameId, name, value, evaluateName)
     local text, type, ref = varCreateReference(frameId, value, evaluateName)
     local var = {
         name = name,
@@ -364,6 +393,11 @@ local function varCreate(vars, frameId, varRef, name, value, evaluateName, calcV
         variablesReference = ref,
         evaluateName = evaluateName and evaluateName or nil,
     }
+    return var
+end
+
+local function varCreate(vars, frameId, varRef, name, value, evaluateName, calcValue)
+    local var = varCreateObject(frameId, name, value, evaluateName)
     local maps = varRef[3]
     if maps[name] then
         vars[maps[name][3]] = var
@@ -372,19 +406,13 @@ local function varCreate(vars, frameId, varRef, name, value, evaluateName, calcV
         vars[#vars + 1] = var
         maps[name] = { calcValue, evaluateName, #vars }
     end
+    return var
 end
 
 local function varCreateInsert(vars, frameId, varRef, name, value, evaluateName, calcValue)
-    local text, type, ref = varCreateReference(frameId, value, evaluateName)
-    local var = {
-        name = name,
-        type = type,
-        value = text,
-        variablesReference = ref,
-        evaluateName = evaluateName,
-        presentationHint = {
-            kind = "virtual"
-        }
+    local var = varCreateObject(frameId, name, value, evaluateName)
+    var.presentationHint = {
+        kind = "virtual"
     }
     local maps = varRef[3]
     if maps[name] then
@@ -392,6 +420,7 @@ local function varCreateInsert(vars, frameId, varRef, name, value, evaluateName,
     end
     table.insert(vars, 1, var)
     maps[name] = { calcValue, evaluateName }
+    return var
 end
 
 local function getTabelKey(key)
@@ -440,19 +469,24 @@ local function extandFunction(frameId, varRef)
     local evaluateName = varRef[2]
     local vars = {}
     local i = 1
+    local _, subtype = rdebug.type(f)
+    local isCFunction = subtype == "c"
     while true do
         local name, value = rdebug.getupvaluev(f, i)
         if name == nil then
             break
         end
+        local displayName = isCFunction and ("[%d]"):format(i) or name
         local fi = i
-        varCreate(vars, frameId, varRef, name, value
+        local var = varCreate(vars, frameId, varRef, displayName, value
             , evaluateName and ('select(2, debug.getupvalue(%s,%d))'):format(evaluateName, i)
             , function() local _, r = rdebug.getupvalue(f, fi) return r end
         )
+        var.presentationHint = {
+            kind = "virtual"
+        }
         i = i + 1
     end
-    table.sort(vars, function(a, b) return a.name < b.name end)
     return vars
 end
 
@@ -461,14 +495,35 @@ local function extandUserdata(frameId, varRef)
     local u = varRef[1]
     local evaluateName = varRef[2]
     local vars = {}
-    --TODO
-    local uv = rdebug.getuservaluev(u)
-    if uv ~= nil then
-        varCreateInsert(vars, frameId, varRef, '[uservalue]', uv
-            , evaluateName and ('debug.getuservalue(%s)'):format(evaluateName)
-            , function() return rdebug.getuservalue(u) end
-        )
+    if LUAVERSION >= 54 then
+        local i = 1
+        while true do
+            local uv, ok = rdebug.getuservaluev(u, i)
+            if not ok then
+                break
+            end
+            if uv ~= nil then
+                local fi = i
+                local var = varCreate(vars, frameId, varRef, ('[uservalue:%d]'):format(i), uv
+                    , evaluateName and ('debug.getuservalue(%s,%d)'):format(evaluateName,i)
+                    , function() return rdebug.getuservalue(u, fi) end
+                )
+                var.presentationHint = {
+                    kind = "virtual"
+                }
+            end
+            i = i + 1
+        end
+    else
+        local uv = rdebug.getuservaluev(u)
+        if uv ~= nil then
+            varCreateInsert(vars, frameId, varRef, '[uservalue]', uv
+                , evaluateName and ('debug.getuservalue(%s)'):format(evaluateName)
+                , function() return rdebug.getuservalue(u) end
+            )
+        end
     end
+
     local meta = rdebug.getmetatablev(u)
     if meta ~= nil then
         varCreateInsert(vars, frameId, varRef, '[metatable]', meta

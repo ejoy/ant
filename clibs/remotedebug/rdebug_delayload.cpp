@@ -14,35 +14,47 @@
 #endif
 
 namespace remotedebug::delayload {
-	static HMODULE luadll_handle = 0;
-	static GetLuaApi get_lua_api = ::GetProcAddress;
+	typedef FARPROC (*FindLuaApi)(const char* name);
+	static HMODULE    luadll = 0;
+	static FindLuaApi luaapi = 0;
 
-	void set_luadll(HMODULE handle, GetLuaApi fn) {
-		if (luadll_handle) return;
-		luadll_handle = handle;
-		get_lua_api = fn ? fn : ::GetProcAddress;
+	void set_luadll(HMODULE handle) {
+		if (luadll) return;
+		luadll = handle;
 	}
 
-    void caller_is_luadll(void* callerAddress) {
-        HMODULE  caller = NULL;
-        if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)callerAddress, &caller) && caller) {
-            if (GetProcAddress(caller, "lua_newstate")) {
-                set_luadll(caller, ::GetProcAddress);
-            }
-        }
-    }
+	void set_luaapi(void* fn) {
+		if (luaapi) return;
+		luaapi = (FindLuaApi)fn;
+	}
+
+	void caller_is_luadll(void* callerAddress) {
+		if (luadll) return;
+		HMODULE caller = NULL;
+		if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)callerAddress, &caller) && caller) {
+			if (GetProcAddress(caller, "lua_newstate")) {
+				set_luadll(caller);
+			}
+		}
+	}
 
 	static FARPROC WINAPI hook(unsigned dliNotify, PDelayLoadInfo pdli) {
 		switch (dliNotify) {
 		case dliNotePreLoadLibrary:
 			if (strcmp(LUA_DLL_NAME, pdli->szDll) == 0) {
-				if (luadll_handle) {
-					return (FARPROC)luadll_handle;
+				if (luadll) {
+					return (FARPROC)luadll;
 				}
 			}
-			break;
+			return NULL;
 		case dliNotePreGetProcAddress: {
-			FARPROC ret = get_lua_api(pdli->hmodCur, pdli->dlp.szProcName);
+			if (luaapi) {
+				FARPROC fn = luaapi(pdli->dlp.szProcName);
+				if (fn) {
+					return fn;
+				}
+			}
+			FARPROC ret = ::GetProcAddress(pdli->hmodCur, pdli->dlp.szProcName);
 			if (ret) {
 				return ret;
 			}
@@ -51,8 +63,7 @@ namespace remotedebug::delayload {
 			MessageBoxA(0, str, "Fatal Error.", 0);
 			return NULL;
 		}
-			break;
-        case dliStartProcessing:
+		case dliStartProcessing:
 		case dliFailLoadLib:
 		case dliFailGetProc:
 		case dliNoteEndProcessing:

@@ -1,5 +1,5 @@
 local rdebug = require 'remotedebug.visitor'
-local fs = require 'backend.filesystem'
+local fs = require 'backend.worker.filesystem'
 local source = require 'backend.worker.source'
 local evaluate = require 'backend.worker.evaluate'
 local ev = require 'common.event'
