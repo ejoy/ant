@@ -1754,20 +1754,14 @@ winGetWindowContentRegionWidth(lua_State *L) {
 
 static int
 winPushStyleColor(lua_State *L) {
-	const char * stylecol = luaL_checkstring(L, 1);
+	int stylecol = luaL_checkinteger(L, 1);
 	
-	lua_pushstring(L, "StyleCol");
-	lua_gettable(L, LUA_REGISTRYINDEX);
-	lua_pushstring(L, stylecol);
-	lua_gettable(L, -2);
-	int flag= luaL_optinteger(L, -1, -1);
-	
-	if (flag > 0) {
+	if (stylecol > 0) {
 		float c1 = luaL_checknumber(L, 2);
 		float c2 = luaL_checknumber(L, 3);
 		float c3 = luaL_checknumber(L, 4);
 		float c4 = luaL_optnumber(L, 5, 1.0f);
-		ImGui::PushStyleColor(flag, ImVec4(c1, c2, c3, c4));
+		ImGui::PushStyleColor(stylecol, ImVec4(c1, c2, c3, c4));
 	}
 	return 0;
 }
@@ -1781,22 +1775,15 @@ winPopStyleColor(lua_State *L) {
 
 static int
 winPushStyleVar(lua_State *L) {
-	const char * stylevar = luaL_checkstring(L, 1);
-
-	lua_pushstring(L, "StyleVar");
-	lua_gettable(L, LUA_REGISTRYINDEX);
-	lua_pushstring(L, stylevar);
-	lua_gettable(L, -2);
-	int flag = luaL_optinteger(L, -1, -1);
-	
-	if (flag >= 0) {
+	int stylevar = luaL_checkinteger(L, 1);
+	if (stylevar >= 0) {
 		float v1 = luaL_checknumber(L, 2);
 		if (lua_isnumber(L, 3)) {
 			float v2 = luaL_checknumber(L, 3);
-			ImGui::PushStyleVar(flag, ImVec2(v1,v2));
+			ImGui::PushStyleVar(stylevar, ImVec2(v1,v2));
 		}
 		else {
-			ImGui::PushStyleVar(flag, v1);
+			ImGui::PushStyleVar(stylevar, v1);
 		}
 	}
 	return 0;
@@ -1970,17 +1957,17 @@ struct enum_pair {
 #define ENUM(prefix, name) { #name, prefix##_##name }
 
 static int
-make_enum(lua_State *L) {
+make_flag(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	int i,t;
 	lua_Integer r = 0;
 
 	for (i=1;(t = lua_geti(L, 1, i)) != LUA_TNIL;i++) {
 		if (t != LUA_TSTRING)
-			luaL_error(L, "Enum name should be string, it's %s", lua_typename(L, t));
+			luaL_error(L, "Flag name should be string, it's %s", lua_typename(L, t));
 		if (lua_gettable(L, lua_upvalueindex(1)) != LUA_TNUMBER) {
 			lua_geti(L, 1, i);
-			luaL_error(L, "Invalid enum %s.%s", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, -1));
+			luaL_error(L, "Invalid flag %s.%s", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, -1));
 		}
 		lua_Integer v = lua_tointeger(L, -1);
 		lua_pop(L, 1);
@@ -1991,7 +1978,7 @@ make_enum(lua_State *L) {
 }
 
 static void
-enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
+flag_gen(lua_State *L, const char *name, struct enum_pair *enums) {
 	int i;
 	lua_newtable(L);
 	for (i=0;enums[i].name;i++) {
@@ -1999,20 +1986,19 @@ enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
 		lua_setfield(L, -2, enums[i].name);
 	}
 	lua_pushstring(L, name);
-	lua_pushcclosure(L, make_enum, 2);
+	lua_pushcclosure(L, make_flag, 2);
 	lua_setfield(L, -2, name);
 }
 
 static void
-enum_register(lua_State *L, const char *name, struct enum_pair *enums) {
+enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
 	int i;
-	lua_pushstring(L, name);
 	lua_newtable(L);
 	for (i = 0; enums[i].name; i++) {
 		lua_pushinteger(L, enums[i].value);
 		lua_setfield(L, -2, enums[i].name);
 	}
-	lua_settable(L, LUA_REGISTRYINDEX);
+	lua_setfield(L,  -2, name);
 }
 
 // Utils
@@ -2699,19 +2685,21 @@ luaopen_bgfx_imgui(lua_State *L) {
 	lua_setfield(L, -2, "util");
 
 	lua_newtable(L);
-	enum_gen(L, "ColorEdit", eColorEditFlags);
-	enum_gen(L, "InputText", eInputTextFlags);
-	enum_gen(L, "Combo", eComboFlags);
-	enum_gen(L, "Selectable", eSelectableFlags);
-	enum_gen(L, "TreeNode", eTreeNodeFlags);
-	enum_gen(L, "Window", eWindowFlags);
-	enum_gen(L, "Focused", eFocusedFlags);
-	enum_gen(L, "Hovered", eHoveredFlags);
-	enum_gen(L, "TabBar", eTabBarFlags);
-	enum_register(L, "StyleCol", eStyleCol);
-	enum_register(L, "StyleVar", eStyleVar);
-
+	flag_gen(L, "ColorEdit", eColorEditFlags);
+	flag_gen(L, "InputText", eInputTextFlags);
+	flag_gen(L, "Combo", eComboFlags);
+	flag_gen(L, "Selectable", eSelectableFlags);
+	flag_gen(L, "TreeNode", eTreeNodeFlags);
+	flag_gen(L, "Window", eWindowFlags);
+	flag_gen(L, "Focused", eFocusedFlags);
+	flag_gen(L, "Hovered", eHoveredFlags);
+	flag_gen(L, "TabBar", eTabBarFlags);
 	lua_setfield(L, -2, "flags");
+
+	lua_newtable(L);
+	enum_gen(L, "StyleCol", eStyleCol);
+	enum_gen(L, "StyleVar", eStyleVar);
+	lua_setfield(L, -2, "enum");
 
 	return 1;
 }
