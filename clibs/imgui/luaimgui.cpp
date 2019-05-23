@@ -5,10 +5,124 @@ extern "C" {
 	#include <lauxlib.h>
 }
 
-#include "bgfximgui.h"
-#include "bgfx_interface.h"
+#include <bgfx/c99/bgfx.h>
+#include <imgui.h>
+#include <algorithm>
+#include <glm/glm.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
 #include <cstring>
 #include <cstdlib>
+#include "bgfx_interface.h"
+#include "luabgfx.h"
+
+#define IMGUI_FLAGS_NONE        UINT8_C(0x00)
+#define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
+
+struct context {
+	void render(ImDrawData* _drawData) {
+		const ImGuiIO& io = ImGui::GetIO();
+		const float width  = io.DisplaySize.x;
+		const float height = io.DisplaySize.y;
+
+		BGFX(set_view_name)(m_viewId, "ImGui");
+		BGFX(set_view_mode)(m_viewId, BGFX_VIEW_MODE_SEQUENTIAL);
+
+		const bgfx_caps_t* caps = BGFX(get_caps)();
+		auto ortho = caps->homogeneousDepth
+			? glm::orthoLH_NO(0.0f, width, height, 0.0f, 0.0f, 1000.0f)
+			: glm::orthoLH_ZO(0.0f, width, height, 0.0f, 0.0f, 1000.0f)
+			;
+		BGFX(set_view_transform)(m_viewId, NULL, (const void*)&ortho[0]);
+		BGFX(set_view_rect)(m_viewId, 0, 0, uint16_t(width), uint16_t(height));
+
+		for (int32_t ii = 0, num = _drawData->CmdListsCount; ii < num; ++ii) {
+			const ImDrawList* drawList = _drawData->CmdLists[ii];
+			uint32_t numVertices = (uint32_t)drawList->VtxBuffer.size();
+			uint32_t numIndices  = (uint32_t)drawList->IdxBuffer.size();
+
+			if (numVertices != BGFX(get_avail_transient_vertex_buffer)(numVertices, &m_decl)
+				|| numIndices != BGFX(get_avail_transient_index_buffer)(numIndices)){
+				break;
+			}
+
+			bgfx_transient_vertex_buffer_t tvb;
+			bgfx_transient_index_buffer_t tib;
+			BGFX(alloc_transient_vertex_buffer)(&tvb, numVertices, &m_decl);
+			BGFX(alloc_transient_index_buffer)(&tib, numIndices);
+			ImDrawVert* verts = (ImDrawVert*)tvb.data;
+			memcpy(verts, drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert));
+			ImDrawIdx* indices = (ImDrawIdx*)tib.data;
+			memcpy(indices, drawList->IdxBuffer.begin(), numIndices * sizeof(ImDrawIdx));
+
+			uint32_t offset = 0;
+			for (const ImDrawCmd& cmd : drawList->CmdBuffer) {
+				if (cmd.UserCallback) {
+					cmd.UserCallback(drawList, &cmd);
+					offset += cmd.ElemCount;
+					continue;
+				}
+				if (0 == cmd.ElemCount) {
+					continue;
+				}
+				assert (NULL != cmd.TextureId);
+				union { ImTextureID ptr; struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; } texture = {cmd.TextureId };
+
+				const uint16_t xx = uint16_t(std::max(cmd.ClipRect.x, 0.0f));
+				const uint16_t yy = uint16_t(std::max(cmd.ClipRect.y, 0.0f));
+				BGFX(set_scissor)(xx, yy
+					, uint16_t(std::min(cmd.ClipRect.z, 65535.0f)-xx)
+					, uint16_t(std::min(cmd.ClipRect.w, 65535.0f)-yy)
+				);
+	
+				uint64_t state = 0
+					| BGFX_STATE_WRITE_RGB
+					| BGFX_STATE_WRITE_A
+					| BGFX_STATE_MSAA
+					;
+				if (IMGUI_FLAGS_ALPHA_BLEND & texture.s.flags) {
+					state |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
+				}
+				BGFX(set_state)(state, 0);
+
+				BGFX(set_transient_vertex_buffer)(0, &tvb, 0, numVertices);
+				BGFX(set_transient_index_buffer)(&tib, offset, cmd.ElemCount);
+				if (texture.s.mip) {
+					const float lodEnabled[4] = { float(texture.s.mip), 1.0f, 0.0f, 0.0f };
+					BGFX(set_uniform)(u_imageLodEnabled, lodEnabled, 1);
+					BGFX(submit)(m_viewId, m_imageProgram, 0, false);
+				}
+				else {
+					BGFX(set_texture)(0, s_tex, texture.s.handle, UINT32_MAX);
+					BGFX(submit)(m_viewId, m_program, 0, false);
+				}
+				offset += cmd.ElemCount;
+			}
+		}
+	}
+
+	void create() {
+		m_imgui = ImGui::CreateContext();
+		BGFX(vertex_decl_begin)(&m_decl, BGFX_RENDERER_TYPE_NOOP);
+		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_POSITION,  2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
+		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
+		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_COLOR0,    4, BGFX_ATTRIB_TYPE_UINT8,  true, false);
+		BGFX(vertex_decl_end)(&m_decl);
+	}
+
+	void destroy() {
+		ImGui::DestroyContext(m_imgui);
+	}
+
+	ImGuiContext*         m_imgui;
+	bgfx_view_id_t        m_viewId;
+	bgfx_vertex_decl_t    m_decl;
+	bgfx_program_handle_t m_program;
+	bgfx_program_handle_t m_imageProgram;
+	bgfx_uniform_handle_t s_tex;
+	bgfx_uniform_handle_t u_imageLodEnabled;
+};
+
+static context s_ctx;
 
 #define INDEX_ID 1
 #define INDEX_ARGS 2
@@ -20,7 +134,7 @@ struct lua_args {
 
 static int
 lcreate(lua_State *L) {
-	imguiCreate(bgfx_inf_);
+	s_ctx.create();
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
 	return 0;
@@ -28,32 +142,44 @@ lcreate(lua_State *L) {
 
 static int
 ldestroy(lua_State *L) {
-	imguiDestroy();
+	s_ctx.destroy();
+	return 0;
+}
+
+static int
+lviewId(lua_State *L) {
+	s_ctx.m_viewId = luaL_checkinteger(L, 1);
+	return 0;
+}
+
+static int
+lprogram(lua_State *L) {
+	s_ctx.m_program         = bgfx_program_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 1)) };
+	s_ctx.m_imageProgram    = bgfx_program_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2)) };
+	s_ctx.u_imageLodEnabled = bgfx_uniform_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 3)) };
+	s_ctx.s_tex             = bgfx_uniform_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 4)) };
+	return 0;
+}
+
+static int
+lresize(lua_State *L) {
+	float width = (float)luaL_checknumber(L, 1);
+	float height = (float)luaL_checknumber(L, 2);
+	ImGui::GetIO().DisplaySize = ImVec2(width, height);
 	return 0;
 }
 
 static int
 lbeginFrame(lua_State *L) {
-	int32_t mx = luaL_checkinteger(L, 1);
-	int32_t my = luaL_checkinteger(L, 2);
-	int button1 = lua_toboolean(L, 3);
-	int button2 = lua_toboolean(L, 4);
-	int button3 = lua_toboolean(L, 5);
-	int32_t scroll = luaL_checkinteger(L, 6);
-	uint16_t width = luaL_checkinteger(L, 7);
-	uint16_t height = luaL_checkinteger(L, 8);
-	bgfx_view_id_t view = luaL_checkinteger(L, 9);
-	uint8_t button = 
-		(button1 ? IMGUI_MBUT_LEFT : 0) |
-		(button2 ? IMGUI_MBUT_RIGHT : 0) |
-		(button3 ? IMGUI_MBUT_MIDDLE : 0);
-	imguiBeginFrame(mx, my, button, scroll, width, height, -1, view);
+	ImGui::GetIO().DeltaTime = (float)luaL_checknumber(L, 1);
+	ImGui::NewFrame();
 	return 0;
 }
 
 static int
 lendFrame(lua_State *L) {
-	imguiEndFrame();
+	ImGui::Render();
+	s_ctx.render(ImGui::GetDrawData());
 	return 0;
 }
 
@@ -2254,6 +2380,34 @@ lkeyState(lua_State *L) {
 }
 
 static int
+lmouseMove(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	return 0;
+}
+
+static int
+lmouseWheel(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	io.MouseWheel = (float)luaL_checknumber(L, 3);
+	return 0;
+}
+
+static int
+lmouseClick(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	switch (luaL_checkinteger(L, 3)) {
+	case 0: io.MouseDown[0] = lua_toboolean(L, 4); break;
+	case 1: io.MouseDown[1] = lua_toboolean(L, 4); break;
+	case 2: io.MouseDown[2] = lua_toboolean(L, 4); break;
+	default: break;
+	}
+	return 0;
+}
+
+static int
 linputChar(lua_State *L) {
 	int c = luaL_checkinteger(L, 1);
 	ImGuiIO& io = ImGui::GetIO();
@@ -2482,6 +2636,12 @@ luaopen_imgui(lua_State *L) {
 		{ "end_frame", lendFrame },
 		{ "key_state", lkeyState },
 		{ "input_char", linputChar },
+		{ "mouse_move", lmouseMove },
+		{ "mouse_wheel", lmouseWheel },
+		{ "mouse_click", lmouseClick },
+		{ "resize", lresize },
+		{ "viewid", lviewId },
+		{ "program", lprogram },
 		{ NULL, NULL },
 	};
 
@@ -2677,4 +2837,3 @@ luaopen_imgui(lua_State *L) {
 
 	return 1;
 }
-

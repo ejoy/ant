@@ -4,6 +4,7 @@
 
 #if defined(_WIN32)
 int linit_dpi(lua_State* L);
+int lfont(lua_State* L);
 #endif
 int ldpi(lua_State* L);
 
@@ -15,6 +16,7 @@ int luaopen_platform(lua_State* L) {
     static luaL_Reg lib[] = {
 #if defined(_WIN32)
         { "init_dpi", linit_dpi },
+        { "font", lfont },
 #endif
         { "dpi", ldpi },
         { NULL, NULL },

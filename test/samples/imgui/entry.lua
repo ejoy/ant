@@ -2,20 +2,71 @@ local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"
 local imgui = require "imgui"
+local platform = require "platform"
 local widget = imgui.widget
 local flags = imgui.flags
 local windows = imgui.windows
 local util = imgui.util
 local font = imgui.font
 
-local callback = {}
-local attribs = {}
+local callback = {
+	mouse_move = imgui.mouse_move,
+	mouse_wheel = imgui.mouse_wheel,
+	mouse_click = imgui.mouse_click,
+	keyboard = imgui.key_state,
+}
+
+local function init_identity()
+	local shadertypes = {
+		NOOP       = "d3d9",
+		DIRECT3D9  = "d3d9",
+		DIRECT3D11 = "d3d11",
+		DIRECT3D12 = "d3d11",
+		GNM        = "pssl",
+		METAL      = "metal",
+		OPENGL     = "glsl",
+		OPENGLES   = "essl",
+		VULKAN     = "spirv",
+	}
+	local vfs = require "vfs"
+	local caps =  bgfx.get_caps()
+	vfs.identity(platform.OS .. "-" .. shadertypes[caps.rendererType])
+end
+
+
+local FontMapper = (function ()
+	local registry = require "registry"
+	local fs = require "filesystem.local"
+	local res = {}
+	local FONTS = fs.path(os.getenv "SystemRoot") / "Fonts"
+	for name, file in registry.values [[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts]] do
+		local font = fs.path(file)
+		if not font:is_absolute() then
+			font = fs.absolute(font, FONTS)
+		end
+		assert(fs.exists(font))
+		res[name] = font:string()
+	end
+	return res
+end)()
+
 
 local function Font(name)
-	local f = assert(io.open([[c:\windows\fonts\]]..name, "rb"))
+	local f = assert(io.open(FontMapper[name], "rb"))
 	local ttf = f:read "a"
 	f:close()
 	return ttf
+end
+
+local Font = platform.font
+
+local function Shader(shader)
+	local shader_mgr = import_package "ant.render".shader_mgr
+	local uniforms = {}
+	shader.prog = shader_mgr.programLoad(assert(shader.vs), assert(shader.fs), uniforms)
+	assert(shader.prog ~= nil)
+	shader.uniforms = uniforms
+	return shader
 end
 
 function callback.init(nwh, context, width, height)
@@ -28,19 +79,26 @@ function callback.init(nwh, context, width, height)
 		height = height,
 	--	reset = "v",
 	}
+	init_identity()
 
-	attribs.font_size = 18
-	attribs.mx = 0
-	attribs.my = 0
-	attribs.button1 = false
-	attribs.button2 = false
-	attribs.button3 = false
-	attribs.scroll = 0
-	attribs.width = width
-	attribs.height = height
-	attribs.viewid = 255
+	local ocornut_imgui = Shader {
+		vs = "//ant.ImguiSample/shader/vs_ocornut_imgui",
+		fs = "//ant.ImguiSample/shader/fs_ocornut_imgui",
+	}
+	local imgui_image = Shader {
+		vs = "//ant.ImguiSample/shader/vs_imgui_image",
+		fs = "//ant.ImguiSample/shader/fs_imgui_image",
+	}
 
-	imgui.create()
+	imgui.create();
+	imgui.viewid(255);
+	imgui.program(
+		ocornut_imgui.prog,
+		imgui_image.prog,
+		ocornut_imgui.uniforms.s_tex.handle,
+		imgui_image.uniforms.u_imageLodEnabled.handle
+	)
+	imgui.resize(width, height)
 	imgui.keymap(native.keymap)
 
 	bgfx.set_view_rect(0, 0, 0, width, height)
@@ -48,13 +106,12 @@ function callback.init(nwh, context, width, height)
 --	bgfx.set_debug "ST"
 
 	font.Create {
-		{ Font "simhei.ttf", 18, "ChineseSimplifiedCommon"},
+		{ Font "黑体" , 18, "\x20\x00\xFF\xFF\x00"},
 	}
 end
 
 function callback.size(width,height,type)
-	attribs.width = width
-	attribs.height = height
+	imgui.resize(width,height)
 	bgfx.reset(width, height, "")
 	bgfx.set_view_rect(0, 0, 0, width, height)
 end
@@ -65,33 +122,6 @@ end
 
 function callback.error(err)
 	print(err)
-end
-
-function callback.mouse_move(x,y)
-	attribs.mx = x
-	attribs.my = y
-end
-
-function callback.mouse_wheel(x,y,delta)
-	attribs.scroll = delta
-	attribs.mx = x
-	attribs.my = y
-end
-
-function callback.mouse_click(x, y, what, pressed)
-	if what == 0 then
-		attribs.button1 = pressed
-	elseif what == 1 then
-		attribs.button2 = pressed
-	elseif what == 2 then
-		attribs.button3 = pressed
-	end
-	attribs.mx = x
-	attribs.my = y
-end
-
-function callback.keyboard(key, press, state)
-	imgui.key_state(key, press, state)
 end
 
 local editbox = {
@@ -229,17 +259,7 @@ local function update_ui()
 end
 
 function callback.update()
-	imgui.begin_frame(
-		attribs.mx,
-		attribs.my,
-		attribs.button1,
-		attribs.button2,
-		attribs.button3,
-		attribs.scroll,
-		attribs.width,
-		attribs.height,
-		attribs.viewid
-	)
+	imgui.begin_frame(1/60)
 	update_ui()
 	imgui.end_frame()
 

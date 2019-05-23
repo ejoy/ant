@@ -1,5 +1,10 @@
 #include <lua.hpp>
 #include <windows.h>
+#include <string>
+#include <string_view>
+#include <memory>
+#include <algorithm>
+
 #if !defined(__MINGW32__)
 #include <shellscalingapi.h>
 #else
@@ -15,6 +20,25 @@ enum PROCESS_DPI_AWARENESS {
   PROCESS_PER_MONITOR_DPI_AWARE
 };
 #endif
+
+static std::wstring u2w(const std::string_view& str) {
+    if (str.empty()) {
+        return L"";
+    }
+    int wlen = ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), NULL, 0);
+    if (wlen <= 0)  {
+        return L"";
+    }
+    std::unique_ptr<wchar_t[]> result(new wchar_t[wlen]);
+    ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), result.get(), wlen);
+    return std::wstring(result.release(), wlen);
+}
+
+static std::wstring towstring(lua_State* L, int idx) {
+    size_t len = 0;
+    const char* str = luaL_checklstring(L, idx, &len);
+    return u2w(std::string_view(str, len));
+}
 
 struct shcore {
     bool init();
@@ -80,4 +104,36 @@ int ldpi(lua_State* L) {
     lua_pushinteger(L, xdpi);
     lua_pushinteger(L, ydpi);
     return 2;
+}
+
+int lfont(lua_State* L) {
+    auto familyName = towstring(L, 1);
+    HDC hdc = CreateCompatibleDC(0);
+    LOGFONTW lf;
+    memset(&lf, 0, sizeof(LOGFONT));
+    memcpy(lf.lfFaceName, familyName.c_str(), std::min((size_t)LF_FACESIZE, familyName.size()) * sizeof(wchar_t));
+    lf.lfCharSet = DEFAULT_CHARSET;
+    HFONT hfont = CreateFontIndirectW(&lf); 
+    if (!hfont) {
+        DeleteDC(hdc);
+        return luaL_error(L, "Create font failed: %d", GetLastError());
+    }
+    bool ok = false;
+    HGDIOBJ oldobj = SelectObject(hdc, hfont);
+    DWORD bytes = GetFontData(hdc, 0, 0, 0, 0);
+    if (bytes != GDI_ERROR) {
+        void* table = lua_newuserdata(L, bytes);
+        bytes = GetFontData(hdc, 0, 0, (unsigned char*)table, bytes);
+        if (bytes != GDI_ERROR) {
+            lua_pushlstring(L, (const char*)table, bytes);
+            ok = true;
+        }
+    }
+    SelectObject(hdc, oldobj);
+    DeleteObject(hfont);
+    DeleteDC(hdc);
+    if (!ok) {
+        return luaL_error(L, "Read font data failed");
+    }
+    return 1;
 }
