@@ -5,6 +5,7 @@ local bgfx = require "bgfx"
 local declmgr = import_package 'ant.render'.declmgr
 local ms = import_package "ant.math".stack
 local colliderutil = import_package "ant.bullet".util
+local gltfutil = import_package "ant.glTF".util
 
 local terraincomp =
     ecs.component_alias('terrain', 'resource') {
@@ -56,19 +57,6 @@ function terrain_collider:delete()
 	self.shape.handle = nil -- collider own this handle, will delete in collider:delete function
 end
 
-local function create_buffer(terrainhandle, dynamic, declname)
-    local vb, ib = terrainhandle:buffer()
-	local vbsize, ibsize = terrainhandle:buffersize()
-
-    local decl = declmgr.get(declname)
-
-    local create_vb = dynamic and bgfx.create_dynamic_vertex_buffer or bgfx.create_vertex_buffer
-	local create_ib = dynamic and bgfx.create_dynamic_index_buffer or bgfx.create_index_buffer
-	local vbflags = dynamic and "wa" or ""
-	local ibflags = dynamic and "wad" or "d"
-    return create_vb({"!", vb, vbsize}, decl.handle, vbflags), create_ib({ib, ibsize}, ibflags)
-end
-
 function terraincomp:postinit(e)
     local mesh = e.mesh
     local terraininfo = e.terrain.assetinfo
@@ -77,22 +65,49 @@ function terraincomp:postinit(e)
     local numlayers = terraininfo.num_layers
     if numlayers ~= #e.material.content then
         error('terrain layer number is not equal material defined numbers')
-    end
+	end
+	
+	local primitive = {
+		attributes = {}
+	}
 
-    local vbh, ibh = create_buffer(terrainhandle, terraininfo.dynamic, terraininfo.declname)
+	local accessors, bufferviews = {}, {}
+	local vb, ib = terrainhandle:buffer()
+	local vbsize, ibsize = terrainhandle:buffer_size()
+	local num_vertices, num_indices = terrainhandle:buffer_count()
+	local vblayout = declmgr.correct_layout(terraininfo.declname)
+	gltfutil.create_vertex_info(vblayout, declmgr.name_mapper, num_vertices, #bufferviews, accessors, primitive.attributes)
 
-    local groups = {}
-    for i = 1, numlayers do
-        groups[#groups + 1] = {
-            vb = {handles = {vbh}},
-            ib = {handle = ibh}
-        }
-    end
+	local dynamic = terraininfo.dynamic
 
-    mesh.assetinfo = {
-        handle = {
-            bounding = terrainhandle:bounding(),
-            groups = groups
-        }
-    }
+	local stride = vbsize // num_vertices
+	local bv = gltfutil.generate_bufferview(nil, 0, vbsize, stride, "vertex")
+	local create_vb = dynamic and bgfx.create_dynamic_vertex_buffer or bgfx.create_vertex_buffer
+	bv.handle = create_vb({"!", vb, vbsize}, declmgr.get(vblayout).handle, dynamic and "wa" or "")
+	bufferviews[#bufferviews+1] = bv
+
+	primitive.indices = #accessors
+	accessors[#accessors+1] = gltfutil.generate_index_accessor(#bufferviews, 0, num_indices)
+	local idxbv = gltfutil.generate_index_bufferview(nil, 0, ibsize)
+	local create_ib = dynamic and bgfx.create_dynamic_index_buffer or bgfx.create_index_buffer	
+	idxbv.handle = create_ib({ib, ibsize}, dynamic and "wad" or "d")
+	bufferviews[#bufferviews+1] = idxbv
+
+	local primitives = {}
+	for _=1, numlayers do
+		primitives[#primitives+1] = primitive
+	end
+
+	mesh.assetinfo = {
+		handle = {
+			scene = 0,
+			scenes = {{nodes={0}}},
+			nodes = {{mesh=0}},
+			meshes = {
+				{primitives=primitives}
+			},
+			accessors = accessors,
+			bufferViews = bufferviews,
+		}
+	}
 end

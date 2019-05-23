@@ -69,17 +69,17 @@ local function create_decl(vb_layout)
 end
 
 local default_vbelem = "_30NIf"
-local function correct_elem(elem)
+function mgr.correct_elem(elem)
 	local len = #elem
 	return len == #default_vbelem and 
 			elem or 
 			elem .. default_vbelem:sub(len+1)
 end
 
-local function correct_layout(layout)
+function mgr.correct_layout(layout)
 	local t = {}	
 	for e in layout:gmatch("%w+") do
-		t[#t+1] = correct_elem(e)
+		t[#t+1] = mgr.correct_elem(e)
 	end
 
 	return table.concat(t, "|")
@@ -91,7 +91,7 @@ function mgr.get(layout)
 		return decl
 	end
 
-	local newlayout = correct_layout(layout)
+	local newlayout = mgr.correct_layout(layout)
 
 	decl = declmapper[newlayout]
 	if decl == nil then

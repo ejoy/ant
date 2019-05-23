@@ -156,4 +156,28 @@ function util.generate_buffer(buffer, size)
 	}
 end
 
+local function elem_size(t, c)
+	return comptype_size_mapper[comptype_name_remapper[t]] * c
+end
+
+function util.create_vertex_info(decllayout, namemapper, num_vertices, bvidx, accessors, attributes)	
+	local offset = 0
+	for elem in decllayout:gmatch "%w+" do
+		local shortname = elem:sub(1, 1)
+		local attribname = namemapper[shortname]
+		attributes[attribname] = #accessors
+
+		local elemtype = elem:sub(6, 6)			
+		local elemcount = tonumber(elem:sub(2, 2))
+		local normalized = elem:sub(4, 4) == "n"
+		local ct = decl_comptype_remapper[elemtype]
+		accessors[#accessors+1] = util.generate_accessor(bvidx, 
+			ct,	type_count_remapper[elemcount],
+			offset,
+			num_vertices,
+			normalized)
+		offset = offset + elem_size(ct, elemcount)
+	end
+end
+
 return util

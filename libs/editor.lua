@@ -3,7 +3,8 @@ package.path = table.concat({
     "libs/?/?.lua",
 }, ";")
 
-local cpaths = {	
+local cpaths = {
+	"projects/msvc/vs_bin/x64/Debug/?.dll",
     "clibs/?.dll",
 	"bin/?.dll",
 }

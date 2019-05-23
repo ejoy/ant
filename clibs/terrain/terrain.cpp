@@ -412,6 +412,15 @@ lterraindata_buffersize(lua_State *L) {
 	return 2;
 }
 
+static int
+lterraindata_buffercount(lua_State *L) {
+	terrain_data *terrain = (terrain_data*)luaL_checkudata(L, 1, "TERRAIN_DATA");
+	const auto& buffer = terrain->buffer;
+	lua_pushinteger(L, buffer.vertex_count);
+	lua_pushinteger(L, buffer.index_count);
+	return 2;
+}
+
 static inline uint32_t
 getfield_touint(lua_State *L, int table, const char *key) {
 	if (lua_getfield(L, table, key) != LUA_TNUMBER) {
@@ -1248,7 +1257,8 @@ register_terrain_data_mt(lua_State *L) {
 			{"height",		lterraindata_height},
 			{"raw_height",	lterraindata_raw_height},
 			{"buffer",		lterraindata_buffer},
-			{"buffersize",	lterraindata_buffersize},
+			{"buffer_size",	lterraindata_buffersize},
+			{"buffer_count", lterraindata_buffercount},			
 			{"bounding",	lterraindata_bounding},
 			{"calc_heightmap_bounding", lterraindata_calc_heightmapbounding},
 			{ "heightmap_data", lterraindata_heightmapdata},
