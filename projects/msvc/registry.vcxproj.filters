@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="bee">
+      <UniqueIdentifier>{1e9a9586-3c23-4894-8f03-9d06fe68468a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="bee\lua">
+      <UniqueIdentifier>{85f8c81b-ba5a-4014-ad26-690b56120d6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="bee\nonstd">
+      <UniqueIdentifier>{f6be299b-6976-432d-94b7-44ebfbd63a9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="bee\utility">
+      <UniqueIdentifier>{94b58b05-970c-460c-95c0-e79219e56596}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\clibs\registry\lregistry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\registry\lua_registry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\registry\bee\utility\unicode_win.cpp">
+      <Filter>bee\utility</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\clibs\registry\bee\lua\binding.h">
+      <Filter>bee\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\registry\bee\nonstd\dynarray.h">
+      <Filter>bee\nonstd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\registry\bee\nonstd\span.h">
+      <Filter>bee\nonstd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\registry\bee\utility\unicode_win.h">
+      <Filter>bee\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\registry\bee\config.h">
+      <Filter>bee</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\registry\bee\registry.h">
+      <Filter>bee</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

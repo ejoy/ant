@@ -138,6 +138,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "meshbase", "meshbase.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bgfx-core", "bgfx-core.vcxproj", "{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "imgui", "imgui.vcxproj", "{04B09448-A2A0-40A6-BE06-9C80F30B1681}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -410,6 +412,14 @@ Global
 		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Release|x64.Build.0 = Release|x64
 		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Release|x86.ActiveCfg = Release|Win32
 		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Release|x86.Build.0 = Release|Win32
+		{04B09448-A2A0-40A6-BE06-9C80F30B1681}.Debug|x64.ActiveCfg = Debug|x64
+		{04B09448-A2A0-40A6-BE06-9C80F30B1681}.Debug|x64.Build.0 = Debug|x64
+		{04B09448-A2A0-40A6-BE06-9C80F30B1681}.Debug|x86.ActiveCfg = Debug|Win32
+		{04B09448-A2A0-40A6-BE06-9C80F30B1681}.Debug|x86.Build.0 = Debug|Win32
+		{04B09448-A2A0-40A6-BE06-9C80F30B1681}.Release|x64.ActiveCfg = Release|x64
+		{04B09448-A2A0-40A6-BE06-9C80F30B1681}.Release|x64.Build.0 = Release|x64
+		{04B09448-A2A0-40A6-BE06-9C80F30B1681}.Release|x86.ActiveCfg = Release|Win32
+		{04B09448-A2A0-40A6-BE06-9C80F30B1681}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
