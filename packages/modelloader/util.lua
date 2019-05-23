@@ -149,13 +149,4 @@ function util.init_scene(scene, bindata)
 	return scene
 end
 
-
-local default_vbelem = "_30NIf"
-local function correct_elem(elem)
-	local len = #elem
-	return len == #default_vbelem and 
-			elem or 
-			elem .. default_vbelem:sub(len+1)
-end
-
 return util

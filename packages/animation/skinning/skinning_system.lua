@@ -1,7 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
-local declmgr = import_package "ant.render".declmgr
+local renderpkg = import_package "ant.render"
+local declmgr = renderpkg.declmgr
 local animodule = require "hierarchy.animation"
 local bgfx = require "bgfx"
 
@@ -44,68 +45,8 @@ local function gen_mesh_assetinfo(skinning_mesh_comp)
 	local bv = gltfutil.generate_index_bufferview(nil, 0, indices_sizebyte)
 	bv.handle = bgfx.create_index_buffer({idxbuffer, indices_sizebyte})
 	bufferviews[#bufferviews+1] = bv
-	
 
-	return {
-		handle = {
-			scene = 0,
-			scenes={{nodes={0}}},
-			nodes = {{mesh=0}},
-			meshes = {
-				{
-					primitives={primitive}
-				}
-			},
-			accessors 	= accessors,
-			bufferViews = bufferviews,
-		}
-	}
-
-	-- local decls = {}
-	-- local vb_handles = {}
-	-- local vb_data = {"!", "", 1}
-	-- for _, type in ipairs {"dynamic", "static"} do
-	-- 	local layout = skinning_mesh:layout(type)
-	-- 	local decl = declmgr.get(layout).handle
-	-- 	table.insert(decls, decl)
-
-	-- 	local buffer, size = skinning_mesh:buffer(type)
-	-- 	vb_data[2], vb_data[3] = buffer, size
-	-- 	if type == "dynamic" then
-	-- 		table.insert(vb_handles, bgfx.create_dynamic_vertex_buffer(vb_data, decl))
-	-- 	elseif type == "static" then
-	-- 		table.insert(vb_handles, bgfx.create_vertex_buffer(vb_data, decl))
-	-- 	end
-	-- end
-
-	-- local function create_idx_buffer()
-	-- 	local idx_buffer, ib_size = skinning_mesh:index_buffer()	
-	-- 	if idx_buffer then			
-	-- 		return bgfx.create_index_buffer({idx_buffer, ib_size})
-	-- 	end
-
-	-- 	return nil
-	-- end
-
-	-- local ib_handle = create_idx_buffer()
-	-- local bounding = skinning_mesh:bounding()
-	-- return {
-	-- 	handle = {
-	-- 		bounding = bounding,
-	-- 		groups = {
-	-- 			{
-	-- 				bounding = bounding,
-	-- 				vb = {
-	-- 					decls = decls,
-	-- 					handles = vb_handles,
-	-- 				},
-	-- 				ib = {
-	-- 					handle = ib_handle,
-	-- 				}
-	-- 			}
-	-- 		}
-	-- 	},			
-	-- }
+	return {handle=gltfutil.create_mesh_handle(primitive, accessors, bufferviews)}
 end
 
 function sm:postinit(e)

@@ -131,7 +131,7 @@ function util.create_simple_mesh(vertex_desc, vb, num_vertices, ib, num_indices)
 	local stride = vertex_desc.stride
 	local attributes = {}	
 	local accessors = {}
-	local primitve = {}
+	local primitive = {}
 	
 	local vertex_bvidx = 0
 	for idx, d in ipairs(vertex_desc) do
@@ -152,30 +152,16 @@ function util.create_simple_mesh(vertex_desc, vb, num_vertices, ib, num_indices)
 
 	if ib then
 		local index_bvidx = 1
-		primitve.indices = #accessors
+		primitive.indices = #accessors
 		accessors[#accessors+1] = gltfutil.generate_accessor(index_bvidx, "UNSIGNED_SHORT", "SCALAR", 0, num_indices, false)
 		bufferviews[#bufferviews+1] = gltfutil.generate_bufferview(1, 0, 2 * num_indices, 0, "index")
 		buffers[#buffers+1] = gltfutil.generate_buffer(ib, 2 * num_indices)
 	end
 
-	primitve.attributes = attributes
-
-	local scene = {
-		scene = 0,
-		scenes = {{nodes = {0}},},
-		nodes = {{mesh=0}},
-		meshes = {
-			{primitives={
-				primitve,
-			}}
-		},
-		accessors = accessors,
-		bufferViews = bufferviews,
-		buffers = buffers,
-	}
+	primitive.attributes = attributes
 
 	local mlutil = import_package "ant.modelloader".util
-	return {handle = mlutil.init_scene(scene),}
+	return {handle = mlutil.init_scene(gltfutil.create_mesh_handle(primitive, accessors, bufferviews, buffers)),}
 end
 
 function util.create_grid_entity(world, name, w, h, unit, view_tag)
