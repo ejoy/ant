@@ -15,6 +15,7 @@
 { "math3d", luaopen_math3d },
 { "math3d.adapter", luaopen_math3d_adapter },
 { "math3d.baselib", luaopen_math3d_baselib },
+{ "meshconverter.gltf", luaopen_meshconverter_gltf },
 { "platform", luaopen_platform },
 { "protocol", luaopen_protocol },
 { "remotedebug", luaopen_remotedebug },

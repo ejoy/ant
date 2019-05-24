@@ -25,7 +25,7 @@ BUILD_PATH := build
 ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles
   BGFX_INIT_CMD = make .build/projects/gmake-osx
-  BGFX_MAKE_CMD = make osx-$(BGFX_CONFIG_TYPE)64 $(MP)
+  BGFX_MAKE_CMD = make -C .build/projects/gmake-osx config=$(BGFX_CONFIG_TYPE)64 -j8
   BGFX_CPRC_CMD = cp bgfx/.build/osx64_clang/bin/shaderc$(BGFX_CONFIG_TYPE) ../clibs/
   
   CD_MAKE_CMD	= TEC_UNAME=clang make cd $(MP)

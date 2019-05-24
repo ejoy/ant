@@ -3,7 +3,11 @@ include ../bgfx/bgfx_define.mk
 
 CLIBSINC = -I..
 
+ifeq "$(PLAT)" "mingw"
 default : meshconverter.dll
+else
+default : libmeshconverter-$(PLAT).a
+endif
 
 GLM_INC := -I$(ANT3RD)/glm
 $(ODIR) : 
@@ -17,6 +21,9 @@ $(OBJ_FILES) : $(ODIR)/%.o : %.cpp | $(ODIR)
 	
 meshconverter.dll : $(OBJ_FILES)
 	$(CXX) $(CFLAGS) -lstdc++ $(LD_SHARED) -o $@ $^ -L. $(LUALIB)
+
+libmeshconverter-$(PLAT).a : $(OBJ_FILES)
+	ar rsv $@ $^
 
 clean :
 	rm -f meshconverter.dll && rm -rf o
