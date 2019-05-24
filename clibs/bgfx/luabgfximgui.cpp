@@ -58,6 +58,75 @@ lendFrame(lua_State *L) {
 	imguiEndFrame();
 	return 0;
 }
+#define push_str(name) lua_pushstring(L, #name);lua_rawseti(L, -2, i++)
+
+static int
+lgetIOKey(lua_State * L) {
+	lua_newtable(L);
+	int i = 1;
+	push_str(WantCaptureMouse);               // When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
+	push_str(WantCaptureKeyboard);            // When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
+	push_str(WantTextInput);                  // Mobile/console: when io.WantTextInput is true, you may display an on-screen keyboard. This is set by ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
+	push_str(WantSetMousePos);                // MousePos has been altered, back-end should reposition mouse on next frame. Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
+	push_str(WantSaveIniSettings);            // When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. IMPORTANT: You need to clear io.WantSaveIniSettings yourself.
+	push_str(NavActive);                      // Directional navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
+	push_str(NavVisible);                     // Directional navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
+	push_str(Framerate);                      // Application framerate estimation, in frame per second. Solely for convenience. Rolling average estimation based on IO.DeltaTime over 120 frames
+	push_str(MetricsRenderVertices);          // Vertices output during last call to Render()
+	push_str(MetricsRenderIndices);           // Indices output during last call to Render() = number of triangles * 3
+	push_str(MetricsRenderWindows);           // Number of visible windows
+	push_str(MetricsActiveWindows);           // Number of active windows
+	push_str(MetricsActiveAllocations);       // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
+	push_str(MouseDelta);                     // Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
+	return 1;
+}
+
+#define push_io(name) _push_io(L, io.##name );lua_rawseti(L, -2, i++)
+
+void _push_io(lua_State *L, int val) {
+	lua_pushinteger(L, val);
+}
+void _push_io(lua_State *L, float val) {
+	lua_pushnumber(L, val);
+}
+void _push_io(lua_State *L, bool val) {
+	lua_pushboolean(L, val);
+}
+void _push_io(lua_State *L, ImVec2 val) {
+	lua_newtable(L);
+	lua_pushnumber(L, val.x);
+	lua_setfield(L, -2, "x");
+	lua_pushnumber(L, val.y);
+	lua_setfield(L, -2, "y");
+}
+
+static int
+lgetIOValue(lua_State * L) {
+	lua_newtable(L);
+	if (ImGui::GetCurrentContext() != NULL)
+	{
+		ImGuiIO io = ImGui::GetIO();
+		int i = 1;
+		push_io(WantCaptureMouse);               // When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
+		push_io(WantCaptureKeyboard);            // When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
+		push_io(WantTextInput);                  // Mobile/console: when io.WantTextInput is true, you may display an on-screen keyboard. This is set by ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
+		push_io(WantSetMousePos);                // MousePos has been altered, back-end should reposition mouse on next frame. Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
+		push_io(WantSaveIniSettings);            // When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. IMPORTANT: You need to clear io.WantSaveIniSettings yourself.
+		push_io(NavActive);                      // Directional navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
+		push_io(NavVisible);                     // Directional navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
+		push_io(Framerate);                      // Application framerate estimation, in frame per second. Solely for convenience. Rolling average estimation based on IO.DeltaTime over 120 frames
+		push_io(MetricsRenderVertices);          // Vertices output during last call to Render()
+		push_io(MetricsRenderIndices);           // Indices output during last call to Render() = number of triangles * 3
+		push_io(MetricsRenderWindows);           // Number of visible windows
+		push_io(MetricsActiveWindows);           // Number of active windows
+		push_io(MetricsActiveAllocations);       // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
+		push_io(MouseDelta);                     // Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
+		return 1;
+	}
+	else{
+		return 0;
+	}
+}
 
 static ImGuiCond
 get_cond(lua_State *L, int index) {
@@ -2499,6 +2568,8 @@ lkeymap(lua_State *L) {
 	return 0;
 }
 
+
+
 extern "C" LUAMOD_API int
 luaopen_bgfx_imgui(lua_State *L) {
 	luaL_checkversion(L);
@@ -2510,6 +2581,8 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "end_frame", lendFrame },
 		{ "key_state", lkeyState },
 		{ "input_char", linputChar },
+		{ "get_io_value", lgetIOValue },
+		{ "get_io_key", lgetIOKey },
 		{ NULL, NULL },
 	};
 
@@ -2700,6 +2773,9 @@ luaopen_bgfx_imgui(lua_State *L) {
 	enum_gen(L, "StyleCol", eStyleCol);
 	enum_gen(L, "StyleVar", eStyleVar);
 	lua_setfield(L, -2, "enum");
+
+
+
 
 	return 1;
 }
