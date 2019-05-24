@@ -65,7 +65,9 @@ function callback.init(nwh, context, width, height)
 --	bgfx.set_debug "ST"
 
 	font.Create {
-		{ Font "黑体" , 18, "\x20\x00\xFF\xFF\x00"},
+		platform.OS == "Windows"
+		and { Font "黑体" ,    18, "\x20\x00\xFF\xFF\x00"}
+		or  { Font "华文细黑" , 18, "\x20\x00\xFF\xFF\x00"},
 	}
 end
 

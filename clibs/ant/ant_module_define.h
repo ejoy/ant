@@ -11,6 +11,7 @@
 { "hierarchy", luaopen_hierarchy },
 { "hierarchy.animation", luaopen_hierarchy_animation },
 { "hierarchy.ik", luaopen_hierarchy_ik },
+{ "imgui", luaopen_imgui },
 { "lsocket", luaopen_lsocket },
 { "math3d", luaopen_math3d },
 { "math3d.adapter", luaopen_math3d_adapter },
