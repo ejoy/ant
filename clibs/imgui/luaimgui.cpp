@@ -2629,7 +2629,11 @@ lkeymap(lua_State *L) {
 	return 0;
 }
 
-extern "C" LUAMOD_API int
+extern "C"
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
+int
 luaopen_imgui(lua_State *L) {
 	luaL_checkversion(L);
 	init_interface(L);

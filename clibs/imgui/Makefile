@@ -1,12 +1,6 @@
 include ../common.mk
 include ../bgfx/bgfx_define.mk
 
-THREADINC=-I ../thread
-
-ifeq "$(PLAT)" "mingw"
-CFLAGS += -Wno-misleading-indentation -Wno-unused-but-set-variable
-endif
-
 ifeq "$(PLAT)" "mingw"
 default : imgui.dll
 else
@@ -19,9 +13,17 @@ IMGUI_SRC=$(ANT3RD)/imgui
 OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui.o $(ODIR)/imgui_draw.o $(ODIR)/imgui_widgets.o
 
 ifeq "$(PLAT)" "mingw"
+CFLAGS += -Wno-misleading-indentation -Wno-unused-but-set-variable
 OBJS += $(ODIR)/imgui_win32.o
 
 $(ODIR)/imgui_win32.o : imgui_win32.cpp | $(ODIR)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC)
+endif
+
+ifeq "$(PLAT)" "osx"
+OBJS += $(ODIR)/imgui_osx.o
+
+$(ODIR)/imgui_osx.o : imgui_osx.mm | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC)
 endif
 
