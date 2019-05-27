@@ -49,7 +49,7 @@ function callback.init(nwh, context, width, height)
 		fs = "//ant.ImguiSample/shader/fs_imgui_image",
 	}
 
-	imgui.create();
+	imgui.create(nwh);
 	imgui.viewid(255);
 	imgui.program(
 		ocornut_imgui.prog,
@@ -212,7 +212,7 @@ local function update_ui()
 end
 
 function callback.update()
-	imgui.begin_frame(1/30)
+	imgui.begin_frame(1/60)
 	update_ui()
 	imgui.end_frame()
 

@@ -137,6 +137,7 @@ lcreate(lua_State *L) {
 	s_ctx.create();
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
+	io.ImeWindowHandle = lua_touserdata(L, 1);
 	return 0;
 }
 
