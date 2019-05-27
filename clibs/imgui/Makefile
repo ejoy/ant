@@ -18,6 +18,14 @@ IMGUI_SRC=$(ANT3RD)/imgui
 
 OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui.o $(ODIR)/imgui_draw.o $(ODIR)/imgui_widgets.o
 
+ifeq "$(PLAT)" "mingw"
+OBJS += $(ODIR)/imgui_win32.o
+
+$(ODIR)/imgui_win32.o : imgui_win32.cpp | $(ODIR)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC)
+endif
+
+
 $(ODIR)/luaimgui.o : luaimgui.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
 

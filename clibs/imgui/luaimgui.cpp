@@ -15,6 +15,8 @@ extern "C" {
 #include "bgfx_interface.h"
 #include "luabgfx.h"
 
+void set_cursor(ImGuiMouseCursor cursor);
+
 #define IMGUI_FLAGS_NONE        UINT8_C(0x00)
 #define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
 
@@ -132,6 +134,8 @@ lcreate(lua_State *L) {
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
 	io.ImeWindowHandle = lua_touserdata(L, 1);
+	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+	s_ctx.create();
 	return 0;
 }
 
@@ -166,7 +170,14 @@ lresize(lua_State *L) {
 
 static int
 lbeginFrame(lua_State *L) {
-	ImGui::GetIO().DeltaTime = (float)luaL_checknumber(L, 1);
+	ImGuiIO& io = ImGui::GetIO();
+	io.DeltaTime = (float)luaL_checknumber(L, 1);
+	if (!(io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)) {
+		set_cursor(io.MouseDrawCursor
+			? ImGuiMouseCursor_None
+			: ImGui::GetMouseCursor()
+		);
+	}
 	ImGui::NewFrame();
 	return 0;
 }
