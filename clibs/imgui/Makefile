@@ -22,13 +22,13 @@ $(ODIR)/luaimgui.o : luaimgui.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
 
 
-$(ODIR)/imgui.o : $(IMGUI_SRC)/imgui.cpp  | $(ODIR)
+$(ODIR)/imgui.o : $(IMGUI_SRC)/imgui.cpp  $(IMGUI_SRC)/imgui_internal.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC)
 
-$(ODIR)/imgui_draw.o : $(IMGUI_SRC)/imgui_draw.cpp $(IMGUI_SRC)/imstb_truetype.h | $(ODIR)
+$(ODIR)/imgui_draw.o : $(IMGUI_SRC)/imgui_draw.cpp $(IMGUI_SRC)/imstb_truetype.h $(IMGUI_SRC)/imgui_internal.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC)
 
-$(ODIR)/imgui_widgets.o : $(IMGUI_SRC)/imgui_widgets.cpp  | $(ODIR)
+$(ODIR)/imgui_widgets.o : $(IMGUI_SRC)/imgui_widgets.cpp $(IMGUI_SRC)/imgui_internal.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC)
 
 imgui.dll : $(OBJS)
