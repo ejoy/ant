@@ -18,22 +18,6 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\clibs\debugger\event_free.cpp" />
-    <ClCompile Include="..\..\clibs\debugger\hookmgr.cpp" />
-    <ClCompile Include="..\..\clibs\debugger\thunk.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\clibs\debugger\event_free.h" />
-    <ClInclude Include="..\..\clibs\debugger\thunk.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\clibs\debugger\thunk_linux_amd64.inl" />
-    <None Include="..\..\clibs\debugger\thunk_other.inl" />
-    <None Include="..\..\clibs\debugger\thunk_windows.inl" />
-    <None Include="..\..\clibs\debugger\thunk_windows_amd64.inl" />
-    <None Include="..\..\clibs\debugger\thunk_windows_i386.inl" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{88d212ad-b140-420b-8ce7-9d22f76476ef}</ProjectGuid>

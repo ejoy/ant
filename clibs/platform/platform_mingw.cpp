@@ -111,7 +111,7 @@ int lfont(lua_State* L) {
     HDC hdc = CreateCompatibleDC(0);
     LOGFONTW lf;
     memset(&lf, 0, sizeof(LOGFONT));
-    memcpy(lf.lfFaceName, familyName.c_str(), std::min((size_t)LF_FACESIZE, familyName.size()) * sizeof(wchar_t));
+    memcpy(lf.lfFaceName, familyName.c_str(), (std::min)((size_t)LF_FACESIZE, familyName.size()) * sizeof(wchar_t));
     lf.lfCharSet = DEFAULT_CHARSET;
     HFONT hfont = CreateFontIndirectW(&lf); 
     if (!hfont) {
