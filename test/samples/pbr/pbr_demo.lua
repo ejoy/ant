@@ -50,6 +50,17 @@ local function to_radian(angles)
     return radians
 end
 
+local function to_angle(rad)
+    local function angle(rad)
+        return (180/math.pi)*rad
+    end 
+    local angles = {}
+    for i=1,#rad do 
+        angles[i] = angle(rad[i])
+    end 
+    return angles
+end 
+
 function pbr_demo:init()
     renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
     do
@@ -69,8 +80,10 @@ function pbr_demo:update()
     local deltaTime =  timer.deltatime
     print("deltaTime",deltaTime)
 
-    local camera = world:first_entity("main_view")
-    local pos = ms(camera.transform.t,"T")
+	local camera_entity = world:first_entity("main_queue")
+	local camera = camera_entity.camera
+
+    local pos = ms(camera.eyepos,"T")
     print("camera :",string.format("%08.4f",pos[1]), string.format("%08.4f",pos[2]),string.format("%08.4f",pos[3]) )
 
 end 
