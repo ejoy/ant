@@ -155,3 +155,8 @@ int ldpi(lua_State* L) {
     lua_pushinteger(L, it->second);
     return 2;
 }
+
+int lfont(lua_State* L) {
+    (void)L;
+    return 0;
+}

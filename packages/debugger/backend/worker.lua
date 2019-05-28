@@ -344,14 +344,15 @@ function CMD.stepOut()
     hookmgr.step_out()
 end
 
-local function runLoop(reason)
+local function runLoop(reason, description)
+    --TODO: 只在lua栈帧时需要description？
     sendToMaster {
         cmd = 'eventStop',
         reason = reason,
+        text = description,
     }
 
     while true do
-        thread.sleep(0.01)
         workerThreadUpdate()
         if state ~= 'stopped' then
             break
@@ -505,48 +506,43 @@ function event.panic(msg)
     end
     exceptionMsg, exceptionTrace = traceback(tostring(msg), 0)
     state = 'stopped'
-    runLoop 'exception'
+    runLoop('exception', exceptionMsg)
 end
 
-if hookmgr.exception_open then
-    function event.exception(msg)
-        if not initialized then return end
-        local _, type = getExceptionType()
-        if not type or not exceptionFilters[type] then
-            return
-        end
-        exceptionMsg, exceptionTrace = traceback(tostring(msg), 0)
-        state = 'stopped'
-        runLoop 'exception'
+function event.r_exception(msg)
+    if not initialized then return end
+    local _, type = getExceptionType()
+    if not type or not exceptionFilters[type] then
+        return
     end
-else
-    function event.exception()
-        if not initialized then return end
-        local level, type = getExceptionType()
-        if not type or not exceptionFilters[type] then
-            return
-        end
-        local _, msg = getEventArgs(1)
-        exceptionMsg, exceptionTrace = traceback(msg, level - 3)
-        state = 'stopped'
-        runLoop 'exception'
-    end
+    exceptionMsg, exceptionTrace = traceback(tostring(msg), 0)
+    state = 'stopped'
+    runLoop('exception', exceptionMsg)
 end
 
-if hookmgr.thread_open then
-    function event.thread(co)
-        hookmgr.setcoroutine(co)
+function event.exception()
+    if not initialized then return end
+    local level, type = getExceptionType()
+    if not type or not exceptionFilters[type] then
+        return
     end
-else
-    function event.thread()
-        local _, co = getEventArgsRaw(1)
-        hookmgr.setcoroutine(co)
-    end
+    local _, msg = getEventArgs(1)
+    exceptionMsg, exceptionTrace = traceback(msg, level - 3)
+    state = 'stopped'
+    runLoop('exception', exceptionMsg)
+end
+
+function event.r_thread(co)
+    hookmgr.setcoroutine(co)
+end
+
+function event.thread()
+    local _, co = getEventArgsRaw(1)
+    hookmgr.setcoroutine(co)
 end
 
 function event.wait_client()
     while not initialized do
-        thread.sleep(0.01)
         workerThreadUpdate()
     end
 end
@@ -595,9 +591,22 @@ local function lst2map(t)
     return r
 end
 
+local function init_internalmodule(config)
+    local mod = config.internalModule
+    if not mod then
+        return
+    end
+    local newvalue = rdebug.index(rdebug.index(rdebug.index(rdebug._G, "package"), "loaded"), mod)
+    local oldvalue = rdebug.index(rdebug._REGISTRY, "lua-debug")
+    rdebug.assign(newvalue, oldvalue)
+end
+
 ev.on('initializing', function(config)
     noDebug = config.noDebug
     hookmgr.update_open(not noDebug and openUpdate)
+    if hookmgr.thread_open then
+        hookmgr.thread_open(true)
+    end
     outputCapture = lst2map(config.outputCapture)
     if outputCapture["print"] then
         stdio.open_print(true)
@@ -605,6 +614,7 @@ ev.on('initializing', function(config)
     if outputCapture["io.write"] then
         stdio.open_iowrite(true)
     end
+    init_internalmodule(config)
 end)
 
 ev.on('terminated', function()
@@ -622,10 +632,6 @@ sendToMaster {
 }
 
 local w = {}
-
-function w.skipfiles(v)
-    source.skipfiles(v)
-end
 
 function w.openupdate()
     openUpdate = true

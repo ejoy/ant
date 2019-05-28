@@ -3,62 +3,22 @@ local window = require "window"
 local bgfx = require "bgfx"
 local imgui = require "imgui"
 local platform = require "platform"
+local hw = import_package "ant.render".hardware_interface
 local widget = imgui.widget
 local flags = imgui.flags
 local windows = imgui.windows
 local util = imgui.util
 local font = imgui.font
+local Font = platform.font
 
 local callback = {
 	mouse_move = imgui.mouse_move,
 	mouse_wheel = imgui.mouse_wheel,
 	mouse_click = imgui.mouse_click,
 	keyboard = imgui.key_state,
+	char = imgui.input_char,
+	error = print
 }
-
-local function init_identity()
-	local shadertypes = {
-		NOOP       = "d3d9",
-		DIRECT3D9  = "d3d9",
-		DIRECT3D11 = "d3d11",
-		DIRECT3D12 = "d3d11",
-		GNM        = "pssl",
-		METAL      = "metal",
-		OPENGL     = "glsl",
-		OPENGLES   = "essl",
-		VULKAN     = "spirv",
-	}
-	local vfs = require "vfs"
-	local caps =  bgfx.get_caps()
-	vfs.identity(platform.OS .. "-" .. shadertypes[caps.rendererType])
-end
-
-
-local FontMapper = (function ()
-	local registry = require "registry"
-	local fs = require "filesystem.local"
-	local res = {}
-	local FONTS = fs.path(os.getenv "SystemRoot") / "Fonts"
-	for name, file in registry.values [[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts]] do
-		local font = fs.path(file)
-		if not font:is_absolute() then
-			font = fs.absolute(font, FONTS)
-		end
-		assert(fs.exists(font))
-		res[name] = font:string()
-	end
-	return res
-end)()
-
-
-local function Font(name)
-	local f = assert(io.open(FontMapper[name], "rb"))
-	local ttf = f:read "a"
-	f:close()
-	return ttf
-end
-
-local Font = platform.font
 
 local function Shader(shader)
 	local shader_mgr = import_package "ant.render".shader_mgr
@@ -70,7 +30,7 @@ local function Shader(shader)
 end
 
 function callback.init(nwh, context, width, height)
-	bgfx.init {
+	hw.init {
 		nwh = nwh,
 		context = context,
 	--	renderer = "DIRECT3D9",
@@ -79,7 +39,6 @@ function callback.init(nwh, context, width, height)
 		height = height,
 	--	reset = "v",
 	}
-	init_identity()
 
 	local ocornut_imgui = Shader {
 		vs = "//ant.ImguiSample/shader/vs_ocornut_imgui",
@@ -90,7 +49,7 @@ function callback.init(nwh, context, width, height)
 		fs = "//ant.ImguiSample/shader/fs_imgui_image",
 	}
 
-	imgui.create();
+	imgui.create(nwh);
 	imgui.viewid(255);
 	imgui.program(
 		ocornut_imgui.prog,
@@ -106,22 +65,16 @@ function callback.init(nwh, context, width, height)
 --	bgfx.set_debug "ST"
 
 	font.Create {
-		{ Font "黑体" , 18, "\x20\x00\xFF\xFF\x00"},
+		platform.OS == "Windows"
+		and { Font "黑体" ,    18, "\x20\x00\xFF\xFF\x00"}
+		or  { Font "华文细黑" , 18, "\x20\x00\xFF\xFF\x00"},
 	}
 end
 
 function callback.size(width,height,type)
 	imgui.resize(width,height)
-	bgfx.reset(width, height, "")
+	hw.reset(nil, width, height)
 	bgfx.set_view_rect(0, 0, 0, width, height)
-end
-
-function callback.char(code)
-	imgui.input_char(code)
-end
-
-function callback.error(err)
-	print(err)
 end
 
 local editbox = {
@@ -274,7 +227,7 @@ end
 function callback.exit()
 	print("Exit")
 	imgui.destroy()
-	bgfx.shutdown()
+	hw.shutdown()
 end
 
 window.register(callback)

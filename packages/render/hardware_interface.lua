@@ -2,10 +2,6 @@ local hw = {}
 hw.__index = hw
 
 local platform = require "platform"
-local math_adapter = require "math3d.adapter"
-local ms = import_package "ant.math".stack
-local bgfx = require "bgfx"
-local platos = platform.OS
 
 local caps = nil
 function hw.get_caps()
@@ -17,7 +13,7 @@ local function check_renderer(renderer)
 		return hw.default_renderer()
 	end
 
-	if platos == "iOS" and renderer ~= "METAL" then
+	if platform.OS == "iOS" and renderer ~= "METAL" then
 		assert(false, 'iOS platform context layer is select before bgfx renderer created \
 			the default layter is metal, if we need to test OpenGLES on iOS platform \
 			we need to change the context layter to OpenGLES')
@@ -150,7 +146,7 @@ function hw.default_shader_type(plat)
 end
 
 function hw.default_renderer(plat)
-	plat = plat or platos
+	plat = plat or platform.OS
 	local PLAT=plat:upper()
 	local pi = platform_relates[PLAT]
 	if pi then
@@ -167,7 +163,7 @@ function hw.shutdown()
 end
 
 function hw.identity()
-	return platos .. "-" .. assert(hw.shader_type())
+	return platform.OS .. "-" .. assert(hw.shader_type())
 end
 
 return hw

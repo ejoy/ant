@@ -218,26 +218,3 @@ void window_mainloop(struct ant_window_callback* cb) {
 	}
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
 }
-
-int window_keymap(int whatkey) {
-	static const int keymap[ANT_KEYMAP_COUNT] = {
-		VK_TAB,
-		VK_LEFT,
-		VK_RIGHT,
-		VK_UP,
-		VK_DOWN,
-		VK_PRIOR,
-		VK_NEXT,
-		VK_HOME,
-		VK_END,
-		VK_INSERT,
-		VK_DELETE,
-		VK_BACK,
-		VK_SPACE,
-		VK_RETURN,
-		VK_ESCAPE,
-	};
-	if (whatkey < 0 || whatkey >= ANT_KEYMAP_COUNT)
-		return -1;
-	return keymap[whatkey];
-}

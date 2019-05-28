@@ -15,6 +15,8 @@ extern "C" {
 #include "bgfx_interface.h"
 #include "luabgfx.h"
 
+void set_cursor(ImGuiMouseCursor cursor);
+
 #define IMGUI_FLAGS_NONE        UINT8_C(0x00)
 #define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
 
@@ -101,7 +103,6 @@ struct context {
 	}
 
 	void create() {
-		m_imgui = ImGui::CreateContext();
 		BGFX(vertex_decl_begin)(&m_decl, BGFX_RENDERER_TYPE_NOOP);
 		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_POSITION,  2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
 		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
@@ -109,11 +110,6 @@ struct context {
 		BGFX(vertex_decl_end)(&m_decl);
 	}
 
-	void destroy() {
-		ImGui::DestroyContext(m_imgui);
-	}
-
-	ImGuiContext*         m_imgui;
 	bgfx_view_id_t        m_viewId;
 	bgfx_vertex_decl_t    m_decl;
 	bgfx_program_handle_t m_program;
@@ -134,15 +130,18 @@ struct lua_args {
 
 static int
 lcreate(lua_State *L) {
-	s_ctx.create();
+	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
+	io.ImeWindowHandle = lua_touserdata(L, 1);
+	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+	s_ctx.create();
 	return 0;
 }
 
 static int
 ldestroy(lua_State *L) {
-	s_ctx.destroy();
+	ImGui::DestroyContext();
 	return 0;
 }
 
@@ -171,7 +170,14 @@ lresize(lua_State *L) {
 
 static int
 lbeginFrame(lua_State *L) {
-	ImGui::GetIO().DeltaTime = (float)luaL_checknumber(L, 1);
+	ImGuiIO& io = ImGui::GetIO();
+	io.DeltaTime = (float)luaL_checknumber(L, 1);
+	if (!(io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)) {
+		set_cursor(io.MouseDrawCursor
+			? ImGuiMouseCursor_None
+			: ImGui::GetMouseCursor()
+		);
+	}
 	ImGui::NewFrame();
 	return 0;
 }
@@ -2623,7 +2629,11 @@ lkeymap(lua_State *L) {
 	return 0;
 }
 
-extern "C" LUAMOD_API int
+extern "C"
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
+int
 luaopen_imgui(lua_State *L) {
 	luaL_checkversion(L);
 	init_interface(L);

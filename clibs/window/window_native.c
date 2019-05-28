@@ -4,6 +4,7 @@
 #include <lauxlib.h>
 #include <stdint.h>
 #include "window_native.h"
+#include "virtual_keys.h"
 
 static void
 default_message_handle(void *ud, struct ant_window_message *msg) {
@@ -52,6 +53,30 @@ init(lua_State *L) {
 	cb->message = default_message_handle;
 	lua_setfield(L, LUA_REGISTRYINDEX, ANT_WINDOW_CALLBACK);
 	window_init(cb);
+}
+
+static int
+window_keymap(int whatkey) {
+	static const int keymap[ANT_KEYMAP_COUNT] = {
+		VK_TAB,
+		VK_LEFT,
+		VK_RIGHT,
+		VK_UP,
+		VK_DOWN,
+		VK_PRIOR,
+		VK_NEXT,
+		VK_HOME,
+		VK_END,
+		VK_INSERT,
+		VK_DELETE,
+		VK_BACK,
+		VK_SPACE,
+		VK_RETURN,
+		VK_ESCAPE,
+	};
+	if (whatkey < 0 || whatkey >= ANT_KEYMAP_COUNT)
+		return -1;
+	return keymap[whatkey];
 }
 
 static void

@@ -1,15 +1,66 @@
 local fs = require 'common.filesystem'
 local ev = require 'common.event'
+local rdebug = require 'remotedebug.visitor'
+
+local function prequire(name)
+    local ok, res = pcall(require, name)
+    if ok then
+        return res
+    end
+end
+local unicode = prequire 'remotedebug.unicode'
 
 local default_sep = package.config:sub(1, 1)
 local sourceFormat = "path"
 local pathFormat = "path"
 local useWSL = false
+local useUtf8 = false
+
+local function towsl(s)
+    if not useWSL or not s:match "^%a:" then
+        return s
+    end
+    return s:gsub("\\", "/"):gsub("^(%a):", function(c)
+        return "/mnt/"..c:lower()
+    end)
+end
+
+local function nativepath(s)
+    if not useWSL and not useUtf8 then
+        return unicode.u2a(s)
+    end
+    return towsl(s)
+end
+
+local function init_searchpath(config, name)
+    if not config[name] then
+        return
+    end
+    local value = config[name]
+    if type(value) == 'table' then
+        local path = {}
+        for _, v in ipairs(value) do
+            if type(v) == "string" then
+                path[#path+1] = nativepath(v)
+            end
+        end
+        value = table.concat(path, ";")
+    else
+        value = nativepath(value)
+    end
+    local visitor = rdebug.index(rdebug.index(rdebug._G, "package"), name)
+    if not rdebug.assign(visitor, value) then
+        return
+    end
+end
 
 ev.on('initializing', function(config)
     sourceFormat = config.sourceFormat or "path"
     pathFormat = config.pathFormat or "path"
     useWSL = config.useWSL
+    useUtf8 = config.sourceCoding == "utf8"
+    init_searchpath(config, 'path')
+    init_searchpath(config, 'cpath')
 end)
 
 local function split(str)
@@ -101,5 +152,7 @@ function m.filename(path)
     local paths = normalize(path)
     return paths[#paths]
 end
+
+m.unicode = unicode
 
 return m

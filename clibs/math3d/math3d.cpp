@@ -118,7 +118,7 @@ value_tostring(lua_State *L, const char * prefix, const float *r, int type) {
 	char buffer[512] = { 0 };
 	switch (type) {
 	case LINEAR_TYPE_MAT:		
-		sprintf_s(buffer, "%sMAT (%.2f,%.2f,%.2f,%.2f : %.2f,%.2f,%.2f,%.2f : %.2f,%.2f,%.2f,%.2f : %.2f,%.2f,%.2f,%.2f)",
+		sprintf(buffer, "%sMAT (%.2f,%.2f,%.2f,%.2f : %.2f,%.2f,%.2f,%.2f : %.2f,%.2f,%.2f,%.2f : %.2f,%.2f,%.2f,%.2f)",
 			prefix,
 			r[0],r[1],r[2],r[3],
 			r[4],r[5],r[6],r[7],
@@ -127,19 +127,19 @@ value_tostring(lua_State *L, const char * prefix, const float *r, int type) {
 		);		
 		break;
 	case LINEAR_TYPE_VEC4:
-		sprintf_s(buffer, "%sVEC4 (%.2f,%.2f,%.2f,%.2f)", prefix, r[0],r[1],r[2],r[3]);		
+		sprintf(buffer, "%sVEC4 (%.2f,%.2f,%.2f,%.2f)", prefix, r[0],r[1],r[2],r[3]);		
 		break;	
 	case LINEAR_TYPE_QUAT:
-		sprintf_s(buffer, "%sQUAT (%.2f,%.2f,%.2f,%.2f)", prefix, r[0],r[1],r[2],r[3]);
+		sprintf(buffer, "%sQUAT (%.2f,%.2f,%.2f,%.2f)", prefix, r[0],r[1],r[2],r[3]);
 		break;
 	case LINEAR_TYPE_NUM:
-		sprintf_s(buffer, "%sNUMBER (%.2f)", prefix, r[0]);
+		sprintf(buffer, "%sNUMBER (%.2f)", prefix, r[0]);
 		break;
 	case LINEAR_TYPE_EULER:
-		sprintf_s(buffer, "%sEULER (yaw(y) = %.2f, pitch(x) = %.2f, roll(z) = %.2f)", prefix, r[0], r[1], r[2]);
+		sprintf(buffer, "%sEULER (yaw(y) = %.2f, pitch(x) = %.2f, roll(z) = %.2f)", prefix, r[0], r[1], r[2]);
 		break;
 	default:
-		sprintf_s(buffer, "%sUNKNOWN", prefix);
+		sprintf(buffer, "%sUNKNOWN", prefix);
 		break;
 	}
 
