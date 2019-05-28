@@ -26,7 +26,7 @@ local function wrap_table(tbl,path)
     return result
 end
 
-local imgui_c = require "bgfx.imgui"
+local imgui_c = require "imgui"
 local widget_c = imgui_c.widget
 local flags_c = imgui_c.flags
 local windows_c = imgui_c.windows

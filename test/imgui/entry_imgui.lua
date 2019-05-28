@@ -6,12 +6,12 @@ local args = {
 }
 local main = {}
 function main.init()
-    local TestGuiBase = require "test_gui_base"
-    local GuiSceneMenu = require "gui_scene_menu"
-    local GuiScene = import_package "ant.imgui".gui_scene
-    gui_mgr.register(TestGuiBase.GuiName,TestGuiBase.new())
+local TestGuiBase = require "test_gui_base"
+    -- local GuiSceneMenu = require "gui_scene_menu"
+    local GuiScene = require "gui_scene"
     gui_mgr.register(GuiScene.GuiName,GuiScene.new())
-    gui_mgr.register(GuiSceneMenu.GuiName,GuiSceneMenu.new())
+    -- gui_mgr.register(GuiSceneMenu.GuiName,GuiSceneMenu.new())
+    gui_mgr.register(TestGuiBase.GuiName,TestGuiBase.new())
 end
 
 gui_main.run(main,args)

@@ -1,7 +1,8 @@
 local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"
-
+local platform = require "platform"
+local hw = import_package "ant.render".hardware_interface
 local imgui   = import_package "ant.imgui".imgui
 -- local imgui = require "bgfx.imgui"
 local widget = imgui.widget
@@ -9,8 +10,27 @@ local flags = imgui.flags
 local windows = imgui.windows
 local util = imgui.util
 local enum = imgui.enum
+local font = imgui.font
+local Font = platform.font
 
-local callback = {}
+local callback = {
+    mouse_move = imgui.mouse_move,
+    mouse_wheel = imgui.mouse_wheel,
+    mouse_click = imgui.mouse_click,
+    keyboard = imgui.key_state,
+    char = imgui.input_char,
+    error = print
+}
+
+local function Shader(shader)
+    local shader_mgr = import_package "ant.render".shader_mgr
+    local uniforms = {}
+    shader.prog = shader_mgr.programLoad(assert(shader.vs), assert(shader.fs), uniforms)
+    assert(shader.prog ~= nil)
+    shader.uniforms = uniforms
+    return shader
+end
+
 local attribs = {}
 
 
@@ -21,7 +41,7 @@ print_a(imgui.get_io_value())
 
 
 function callback.init(nwh, context, width, height)
-    bgfx.init {
+    hw.init {
         nwh = nwh,
         context = context,
     --  renderer = "DIRECT3D9",
@@ -31,18 +51,24 @@ function callback.init(nwh, context, width, height)
     --  reset = "v",
     }
 
-    attribs.font_size = 18
-    attribs.mx = 0
-    attribs.my = 0
-    attribs.button1 = false
-    attribs.button2 = false
-    attribs.button3 = false
-    attribs.scroll = 0
-    attribs.width = width
-    attribs.height = height
-    attribs.viewid = 255
+    local ocornut_imgui = Shader {
+        vs = "//ant.testimgui/shader/vs_ocornut_imgui",
+        fs = "//ant.testimgui/shader/fs_ocornut_imgui",
+    }
+    local imgui_image = Shader {
+        vs = "//ant.testimgui/shader/vs_imgui_image",
+        fs = "//ant.testimgui/shader/fs_imgui_image",
+    }
 
-    imgui.create(attribs.font_size)
+    imgui.create(nwh);
+    imgui.viewid(255);
+    imgui.program(
+        ocornut_imgui.prog,
+        imgui_image.prog,
+        ocornut_imgui.uniforms.s_tex.handle,
+        imgui_image.uniforms.u_imageLodEnabled.handle
+    )
+    imgui.resize(width, height)
     imgui.keymap(native.keymap)
 
     bgfx.set_view_rect(0, 0, 0, width, height)
@@ -51,52 +77,21 @@ function callback.init(nwh, context, width, height)
     bgfx.set_view_rect(1, 200, 200, width-100, height-100)
     bgfx.set_view_clear(1, "CD", 0xffff00ff, 1, 0)
 
---  bgfx.set_debug "ST"
+ bgfx.set_debug "ST"
+    font.Create {
+        platform.OS == "Windows"
+        and { Font "黑体" ,    18, "\x20\x00\xFF\xFF\x00"}
+        or  { Font "华文细黑" , 18, "\x20\x00\xFF\xFF\x00"},
+    }
 end
 
 function callback.size(width,height,type)
     print("callback.size",width,height,type)
-    attribs.width = width
-    attribs.height = height
-    bgfx.reset(width, height, "")
+    imgui.resize(width,height)
+    hw.reset(nil, width, height)
     bgfx.set_view_rect(0, 0, 0, width, height)
 end
 
-function callback.char(code)
-    imgui.input_char(code)
-end
-
-function callback.error(err)
-    print(err)
-end
-
-function callback.mouse_move(x,y)
-    attribs.mx = x
-    attribs.my = y
-end
-
-function callback.mouse_wheel(x,y,delta)
-    attribs.scroll = delta
-    attribs.mx = x
-    attribs.my = y
-end
-
-function callback.mouse_click(x, y, what, pressed)
-    if what == 0 then
-        attribs.button1 = pressed
-    elseif what == 1 then
-        attribs.button2 = pressed
-    elseif what == 2 then
-        attribs.button3 = pressed
-    end
-    attribs.mx = x
-    attribs.my = y
-    print("mouse_click")
-end
-
-function callback.keyboard(key, press, state)
-    imgui.key_state(key, press, state)
-end
 
 local editbox = {
     flags = flags.InputText { "CallbackCharFilter", "CallbackHistory", "CallbackCompletion" },
@@ -241,19 +236,15 @@ local function update_ui()
 end
 
 local ioo
-function callback.update()
-    
-    imgui.begin_frame(
-        attribs.mx,
-        attribs.my,
-        attribs.button1,
-        attribs.button2,
-        attribs.button3,
-        attribs.scroll,
-        attribs.width,
-        attribs.height,
-        attribs.viewid
-    )
+local os = require "os"
+local last = os.clock()
+function callback.update(delta)
+    local now = os.clock()
+    delta = now - last
+    last = now
+    print(delta)
+    imgui.begin_frame( delta + 0.0001)
+
     if not ioo then
         ioo = imgui.get_io_value()
         print_a(ioo)
@@ -267,14 +258,17 @@ function callback.update()
 
 --  bgfx.dbg_text_clear()
 --  bgfx.dbg_text_print(0, 1, 0xf, "Color can be changed with ANSI \x1b[9;me\x1b[10;ms\x1b[11;mc\x1b[12;ma\x1b[13;mp\x1b[14;me\x1b[0m code too.");
-
+    
     bgfx.frame()
+    local thread = require "thread"
+    thread.sleep(0.015)
+
 end
 
 function callback.exit()
     print("Exit")
     imgui.destroy()
-    bgfx.shutdown()
+    hw.shutdown()
 end
 
 window.register(callback)

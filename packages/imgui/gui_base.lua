@@ -40,12 +40,12 @@ function GuiBase:on_close_click()
 end
 
 --call by gui_mgr each frame
-function GuiBase:on_gui()
+function GuiBase:on_gui(delta)
     if self._is_opened then
         if self.before_update then self:before_update() end
         local fold, opening = windows.Begin(self.title_id, self.win_flags or nil)
         if fold then
-            self:on_update()
+            self:on_update(delta)
             if not opening then
                 self:on_close_click()
             end
@@ -56,7 +56,7 @@ function GuiBase:on_gui()
 end
 
 
-function GuiBase:on_update()
+function GuiBase:on_update(delta)
     
 end
 

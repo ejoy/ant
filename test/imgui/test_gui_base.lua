@@ -151,9 +151,9 @@ end
 
 --main menu
 function TestGuiBase:get_mainmenu()
-    local parent_path_1 = {"MainTest1"}
-    local parent_path_2 = {"MainTest2"}
-    local parent_path_3 = {"MainTest2","MainTest22"}
+    local parent_path_1 = {"TestMainMenu1"}
+    local parent_path_2 = {"TestMainMenu2"}
+    local parent_path_3 = {"TestMainMenu2","TestMainMenu22"}
     return {{parent_path_1,self._main_menu_test1},
             {parent_path_2,self._main_menu_test2},
             {parent_path_3,self._main_menu_test3}}

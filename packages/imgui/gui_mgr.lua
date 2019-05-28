@@ -12,40 +12,24 @@ function gui_mgr.init()
     gui_mgr.mainmenu_list = {}
     ----
     local menu_list = {
-        {{"views"},gui_mgr._update_mainmenu_view}
+        {{"Views"},gui_mgr._update_mainmenu_view}
     }
     gui_mgr._register_mainmenu(nil,menu_list)
 end
 
 
-function gui_mgr.update(attribs,attribs_dirty)
+function gui_mgr.update(delta)
     --update main_menu_bar
     --update gui
-    imgui.begin_frame(
-        attribs.mx,
-        attribs.my,
-        attribs.button1,
-        attribs.button2,
-        attribs.button3,
-        attribs.scroll,
-        attribs.width,
-        attribs.height,
-        attribs.viewid
-    )
-    gui_mgr.attribs = attribs
-    gui_mgr.attribs_dirty = attribs_dirty
+    imgui.begin_frame(delta)
     gui_mgr._update_mainmenu()
-    gui_mgr._update_window()
+    gui_mgr._update_window(delta)
     imgui.end_frame()
 end
 
-function gui_mgr.get_attribs()
-    return gui_mgr.attribs,gui_mgr.attribs_dirty
-end
-
-function gui_mgr._update_window()
+function gui_mgr._update_window(delta)
     for ui_name,ui_ins in pairs(gui_mgr.gui_tbl) do
-        ui_ins:on_gui(attribs)
+        ui_ins:on_gui(delta)
     end
 end
 
