@@ -1,14 +1,24 @@
 local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"
-local imgui = require "imgui_wrap"
+
+local imgui   = import_package "ant.imgui".imgui
+-- local imgui = require "bgfx.imgui"
 local widget = imgui.widget
 local flags = imgui.flags
 local windows = imgui.windows
 local util = imgui.util
+local enum = imgui.enum
 
 local callback = {}
 local attribs = {}
+
+
+
+local map = imgui.get_io_key()
+print_a(map)
+print_a(imgui.get_io_value())
+
 
 function callback.init(nwh, context, width, height)
     bgfx.init {
@@ -230,6 +240,7 @@ local function update_ui()
     run_window(test_window)
 end
 
+local ioo
 function callback.update()
     
     imgui.begin_frame(
@@ -243,6 +254,11 @@ function callback.update()
         attribs.height,
         attribs.viewid
     )
+    if not ioo then
+        ioo = imgui.get_io_value()
+        print_a(ioo)
+    end
+
     update_ui()
     imgui.end_frame()
 

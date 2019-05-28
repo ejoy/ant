@@ -1,12 +1,13 @@
-local imgui = require "imgui_wrap"
+local imgui   = import_package "ant.imgui".imgui
 local widget = imgui.widget
 local flags = imgui.flags
 local windows = imgui.windows
 local util = imgui.util
 local cursor = imgui.cursor
+local enum = imgui.enum
 
 
-local GuiBase = require "gui_base"
+local GuiBase = import_package "ant.imgui".gui_base
 
 local TestGuiBase = class("TestGuiBase",GuiBase)
 
@@ -19,12 +20,19 @@ function TestGuiBase:_init()
     self.id = "Test"
     self.title_id = self.title.."###"..self.id
     self.win_flags = flags.Window { "MenuBar" }
-    self.is_opened = true
+    self._is_opened = true
 end
+
 local tab_noclosed = flags.TabBar { "NoClosed" }
 function TestGuiBase:on_update()
+    windows.PushStyleVar( enum.StyleVar.WindowPadding,0,0)
     if widget.BeginMenuBar() then
-        widget.MenuItem("M1")
+        if widget.MenuItem("hello") then
+            -- local scene_control = require "scene_control"
+            -- scene_control.test_new_world()
+            print("hello")
+        end
+        
         widget.MenuItem("M2")
         widget.EndMenuBar()
     end
@@ -48,6 +56,7 @@ function TestGuiBase:on_update()
         end
         windows.EndTabBar()
     end
+    windows.PopStyleVar()
 end
 
 local editfloat = {
@@ -94,9 +103,12 @@ local editfloat = {
 
 
 function TestGuiBase:tab_update()
+    windows.PushStyleColor(enum.StyleCol.Button,1,1,1,1)
     if widget.Button "Test" then
         print("test1")
     end
+    windows.PopStyleColor()
+
     if widget.Button "Test" then
         print("test2")
     end
@@ -152,7 +164,7 @@ function TestGuiBase:_main_menu_test1()
         print("menu t1 click")
     end
     cursor.Separator()
-    if widget.MenuItem("t2","graytext") then
+    if widget.MenuItem("wantcapturemouse","graytext") then
         print("menu t2 click")
     end
     -- cursor.Separator()
