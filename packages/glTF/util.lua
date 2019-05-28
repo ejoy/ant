@@ -180,4 +180,31 @@ function util.create_vertex_info(decllayout, namemapper, num_vertices, bvidx, ac
 	end
 end
 
+function util.default_mesh_handle()
+	return {
+		scene = 0,
+		scenes = {{nodes={0}}},
+		nodes = {{mesh=0}},
+		meshes = {},
+	}
+end
+
+function util.create_mesh_handle(primitive, accessors, bufferviews, buffers)
+	local scene = util.default_mesh_handle()
+	local m = scene.meshes
+	m[#m+1] = {primitives={primitive}}
+	scene.accessors = accessors
+	scene.bufferViews = bufferviews
+	scene.buffers = buffers
+	return scene
+end
+
+function util.load_material_info(filepath)
+	local glb = require "glb"
+	local glbdata = glb.decode(filepath:string())
+	local scene = glbdata.info
+
+	return scene.materials
+end
+
 return util

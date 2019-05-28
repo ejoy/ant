@@ -1,0 +1,10 @@
+s_basecolor = "//pbr/assets/textures/gold_d.texture"
+s_normal = "//pbr/assets/textures/gold_n.texture"
+s_metalroughness = "//pbr/assets/textures/gold_m.texture"
+s_irr = "//pbr/assets/textures/bolonga_irr.texture"
+
+u_basecolor_factor = {1, 1, 1, 1}
+u_emissive_factor = {1, 1, 1, 1}
+u_param_factor = {1, 1, 1, 1}
+
+material_path = "//ant.resources/depiction/materials/pbr.material"

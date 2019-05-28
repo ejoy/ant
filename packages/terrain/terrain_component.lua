@@ -98,16 +98,9 @@ function terraincomp:postinit(e)
 		primitives[#primitives+1] = primitive
 	end
 
-	mesh.assetinfo = {
-		handle = {
-			scene = 0,
-			scenes = {{nodes={0}}},
-			nodes = {{mesh=0}},
-			meshes = {
-				{primitives=primitives}
-			},
-			accessors = accessors,
-			bufferViews = bufferviews,
-		}
-	}
+	local scene = gltfutil.default_mesh_handle()
+	scene.bufferViews 	= bufferviews
+	scene.accessors 	= accessors
+	scene.meshes[#scene.meshes+1] = {primitives=primitives}
+	mesh.assetinfo = {handle=scene}
 end
