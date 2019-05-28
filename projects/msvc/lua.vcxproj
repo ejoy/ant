@@ -195,6 +195,9 @@
     <ClInclude Include="..\..\clibs\lua\lvm.h" />
     <ClInclude Include="..\..\clibs\lua\lzio.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="lua53.natvis" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

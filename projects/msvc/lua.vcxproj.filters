@@ -105,4 +105,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="lua53.natvis" />
+  </ItemGroup>
 </Project>

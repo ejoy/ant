@@ -35,3 +35,5 @@ local print_func = require "common.print_r"
 print_r = print_func.print_r
 print_a = print_func.print_a
 function dprint(...) print(...) end
+
+class = require "common.class"

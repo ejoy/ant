@@ -189,12 +189,82 @@ lendFrame(lua_State *L) {
 	return 0;
 }
 
+#define push_str(name) lua_pushstring(L, #name);lua_rawseti(L, -2, i++)
+
+static int
+lgetIOKey(lua_State * L) {
+	lua_newtable(L);
+	int i = 1;
+	push_str(WantCaptureMouse);               // When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
+	push_str(WantCaptureKeyboard);            // When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
+	push_str(WantTextInput);                  // Mobile/console: when io.WantTextInput is true, you may display an on-screen keyboard. This is set by ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
+	push_str(WantSetMousePos);                // MousePos has been altered, back-end should reposition mouse on next frame. Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
+	push_str(WantSaveIniSettings);            // When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. IMPORTANT: You need to clear io.WantSaveIniSettings yourself.
+	push_str(NavActive);                      // Directional navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
+	push_str(NavVisible);                     // Directional navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
+	push_str(Framerate);                      // Application framerate estimation, in frame per second. Solely for convenience. Rolling average estimation based on IO.DeltaTime over 120 frames
+	push_str(MetricsRenderVertices);          // Vertices output during last call to Render()
+	push_str(MetricsRenderIndices);           // Indices output during last call to Render() = number of triangles * 3
+	push_str(MetricsRenderWindows);           // Number of visible windows
+	push_str(MetricsActiveWindows);           // Number of active windows
+	push_str(MetricsActiveAllocations);       // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
+	push_str(MouseDelta);                     // Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
+	return 1;
+}
+
+#define push_io(name) _push_io(L, io.##name );lua_rawseti(L, -2, i++)
+
+void _push_io(lua_State *L, int val) {
+	lua_pushinteger(L, val);
+}
+void _push_io(lua_State *L, float val) {
+	lua_pushnumber(L, val);
+}
+void _push_io(lua_State *L, bool val) {
+	lua_pushboolean(L, val);
+}
+void _push_io(lua_State *L, ImVec2 val) {
+	lua_newtable(L);
+	lua_pushnumber(L, val.x);
+	lua_setfield(L, -2, "x");
+	lua_pushnumber(L, val.y);
+	lua_setfield(L, -2, "y");
+}
+
+static int
+lgetIOValue(lua_State * L) {
+	lua_newtable(L);
+	if (ImGui::GetCurrentContext() != NULL)
+	{
+		ImGuiIO io = ImGui::GetIO();
+		int i = 1;
+		push_io(WantCaptureMouse);               // When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
+		push_io(WantCaptureKeyboard);            // When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
+		push_io(WantTextInput);                  // Mobile/console: when io.WantTextInput is true, you may display an on-screen keyboard. This is set by ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
+		push_io(WantSetMousePos);                // MousePos has been altered, back-end should reposition mouse on next frame. Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
+		push_io(WantSaveIniSettings);            // When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. IMPORTANT: You need to clear io.WantSaveIniSettings yourself.
+		push_io(NavActive);                      // Directional navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
+		push_io(NavVisible);                     // Directional navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
+		push_io(Framerate);                      // Application framerate estimation, in frame per second. Solely for convenience. Rolling average estimation based on IO.DeltaTime over 120 frames
+		push_io(MetricsRenderVertices);          // Vertices output during last call to Render()
+		push_io(MetricsRenderIndices);           // Indices output during last call to Render() = number of triangles * 3
+		push_io(MetricsRenderWindows);           // Number of visible windows
+		push_io(MetricsActiveWindows);           // Number of active windows
+		push_io(MetricsActiveAllocations);       // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
+		push_io(MouseDelta);                     // Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
+		return 1;
+	}
+	else{
+		return 0;
+	}
+}
+
 static ImGuiCond
 get_cond(lua_State *L, int index) {
-	int t = lua_type(L, 2);
+	int t = lua_type(L, index);
 	switch (t) {
 	case LUA_TSTRING: {
-		const char *cond = lua_tostring(L, 2);
+		const char *cond = lua_tostring(L, index);
 		switch(cond[0]) {
 		case 'a':
 		case 'A':
@@ -1387,14 +1457,25 @@ static int
 wMenuItem(lua_State *L) {
 	const char * label = luaL_checkstring(L, INDEX_ID);
 	const char *shortcut = luaL_optstring(L, 2, NULL);
-	bool selected = lua_toboolean(L, 3);
 	bool enabled = true;
 	if (lua_isboolean(L, 4)) {
 		enabled = lua_toboolean(L, 4);
 	}
-	bool change = ImGui::MenuItem(label, shortcut, selected, enabled);
-	lua_pushboolean(L, change);
-	return 1;
+	if (lua_isboolean(L, 3)) {
+		bool selected = lua_toboolean(L, 3);
+		bool change = ImGui::MenuItem(label, shortcut, &selected, enabled);
+		lua_pushboolean(L, change);
+		lua_pushboolean(L, selected);
+		return 2;
+	}
+	else 
+	{
+		bool change = ImGui::MenuItem(label, shortcut, false, enabled);
+		lua_pushboolean(L, change);
+		return 1;
+	}
+	
+	
 }
 
 static int
@@ -1871,6 +1952,52 @@ winGetWindowContentRegionWidth(lua_State *L) {
 	return 1;
 }
 
+static int
+winPushStyleColor(lua_State *L) {
+	int stylecol = luaL_checkinteger(L, 1);
+	
+	if (stylecol > 0) {
+		float c1 = luaL_checknumber(L, 2);
+		float c2 = luaL_checknumber(L, 3);
+		float c3 = luaL_checknumber(L, 4);
+		float c4 = luaL_optnumber(L, 5, 1.0f);
+		ImGui::PushStyleColor(stylecol, ImVec4(c1, c2, c3, c4));
+	}
+	return 0;
+}
+
+static int
+winPopStyleColor(lua_State *L) {
+	int count = luaL_optinteger(L, 1, 1);
+	ImGui::PopStyleColor(count);
+	return 0;
+}
+
+static int
+winPushStyleVar(lua_State *L) {
+	int stylevar = luaL_checkinteger(L, 1);
+	if (stylevar >= 0) {
+		float v1 = luaL_checknumber(L, 2);
+		if (lua_isnumber(L, 3)) {
+			float v2 = luaL_checknumber(L, 3);
+			ImGui::PushStyleVar(stylevar, ImVec2(v1,v2));
+		}
+		else {
+			ImGui::PushStyleVar(stylevar, v1);
+		}
+	}
+	return 0;
+}
+
+static int
+winPopStyleVar(lua_State *L) {
+	int count = luaL_optinteger(L, 1, 1);
+	ImGui::PopStyleVar(count);
+	return 0;
+}
+
+
+
 // cursor and layout
 
 static int
@@ -2030,17 +2157,17 @@ struct enum_pair {
 #define ENUM(prefix, name) { #name, prefix##_##name }
 
 static int
-make_enum(lua_State *L) {
+make_flag(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	int i,t;
 	lua_Integer r = 0;
 
 	for (i=1;(t = lua_geti(L, 1, i)) != LUA_TNIL;i++) {
 		if (t != LUA_TSTRING)
-			luaL_error(L, "Enum name should be string, it's %s", lua_typename(L, t));
+			luaL_error(L, "Flag name should be string, it's %s", lua_typename(L, t));
 		if (lua_gettable(L, lua_upvalueindex(1)) != LUA_TNUMBER) {
 			lua_geti(L, 1, i);
-			luaL_error(L, "Invalid enum %s.%s", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, -1));
+			luaL_error(L, "Invalid flag %s.%s", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, -1));
 		}
 		lua_Integer v = lua_tointeger(L, -1);
 		lua_pop(L, 1);
@@ -2051,7 +2178,7 @@ make_enum(lua_State *L) {
 }
 
 static void
-enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
+flag_gen(lua_State *L, const char *name, struct enum_pair *enums) {
 	int i;
 	lua_newtable(L);
 	for (i=0;enums[i].name;i++) {
@@ -2059,8 +2186,19 @@ enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
 		lua_setfield(L, -2, enums[i].name);
 	}
 	lua_pushstring(L, name);
-	lua_pushcclosure(L, make_enum, 2);
+	lua_pushcclosure(L, make_flag, 2);
 	lua_setfield(L, -2, name);
+}
+
+static void
+enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
+	int i;
+	lua_newtable(L);
+	for (i = 0; enums[i].name; i++) {
+		lua_pushinteger(L, enums[i].value);
+		lua_setfield(L, -2, enums[i].name);
+	}
+	lua_setfield(L,  -2, name);
 }
 
 // Utils
@@ -2364,6 +2502,31 @@ fCreate(lua_State *L) {
 	return 0;
 }
 
+static int
+uCaptureKeyboardFromApp(lua_State * L){
+	bool val = true;
+	if (lua_isboolean(L, 1))
+		val = lua_toboolean(L, 1);
+	ImGui::CaptureKeyboardFromApp(val);
+	return 0;
+}
+
+static int
+uCaptureMouseFromApp(lua_State * L){
+	bool val = true;
+	if (lua_isboolean(L, 1))
+		val = lua_toboolean(L, 1);
+	ImGui::CaptureMouseFromApp(val);
+	return 0;
+}
+
+static int
+uIsMouseDoubleClicked(lua_State * L){
+	int btn = luaL_checkinteger(L, 1);
+	bool clicked = ImGui::IsMouseDoubleClicked(btn);
+	lua_pushboolean(L, clicked);
+	return 1;
+}
 
 // key, press, state
 static int
@@ -2571,6 +2734,91 @@ static struct enum_pair eTabBarFlags[] = {
 	{ NULL, 0 },
 };
 
+static struct enum_pair eStyleCol[] = {
+	ENUM(ImGuiCol, Text),
+	ENUM(ImGuiCol, TextDisabled),
+	ENUM(ImGuiCol, WindowBg),              // Background of normal windows
+	ENUM(ImGuiCol, ChildBg),               // Background of child windows
+	ENUM(ImGuiCol, PopupBg),               // Background of popups, menus, tooltips windows
+	ENUM(ImGuiCol, Border),
+	ENUM(ImGuiCol, BorderShadow),
+	ENUM(ImGuiCol, FrameBg),               // Background of checkbox, radio button, plot, slider, text input
+	ENUM(ImGuiCol, FrameBgHovered),
+	ENUM(ImGuiCol, FrameBgActive),
+	ENUM(ImGuiCol, TitleBg),
+	ENUM(ImGuiCol, TitleBgActive),
+	ENUM(ImGuiCol, TitleBgCollapsed),
+	ENUM(ImGuiCol, MenuBarBg),
+	ENUM(ImGuiCol, ScrollbarBg),
+	ENUM(ImGuiCol, ScrollbarGrab),
+	ENUM(ImGuiCol, ScrollbarGrabHovered),
+	ENUM(ImGuiCol, ScrollbarGrabActive),
+	ENUM(ImGuiCol, CheckMark),
+	ENUM(ImGuiCol, SliderGrab),
+	ENUM(ImGuiCol, SliderGrabActive),
+	ENUM(ImGuiCol, Button),
+	ENUM(ImGuiCol, ButtonHovered),
+	ENUM(ImGuiCol, ButtonActive),
+	ENUM(ImGuiCol, Header),
+	ENUM(ImGuiCol, HeaderHovered),
+	ENUM(ImGuiCol, HeaderActive),
+	ENUM(ImGuiCol, Separator),
+	ENUM(ImGuiCol, SeparatorHovered),
+	ENUM(ImGuiCol, SeparatorActive),
+	ENUM(ImGuiCol, ResizeGrip),
+	ENUM(ImGuiCol, ResizeGripHovered),
+	ENUM(ImGuiCol, ResizeGripActive),
+	ENUM(ImGuiCol, Tab),
+	ENUM(ImGuiCol, TabHovered),
+	ENUM(ImGuiCol, TabActive),
+	ENUM(ImGuiCol, TabUnfocused),
+	ENUM(ImGuiCol, TabUnfocusedActive),
+#ifdef LUA_ENABLE_DOCKING
+	ENUM(ImGuiCol, DockingPreview),
+	ENUM(ImGuiCol, DockingEmptyBg),        // Background color for empty node (e.g. CentralNode with no window docked into it)
+#endif
+	ENUM(ImGuiCol, PlotLines),
+	ENUM(ImGuiCol, PlotLinesHovered),
+	ENUM(ImGuiCol, PlotHistogram),
+	ENUM(ImGuiCol, PlotHistogramHovered),
+	ENUM(ImGuiCol, TextSelectedBg),
+	ENUM(ImGuiCol, DragDropTarget),
+	ENUM(ImGuiCol, NavHighlight),          // Gamepad/keyboard: current highlighted item
+	ENUM(ImGuiCol, NavWindowingHighlight), // Highlight window when using CTRL+TAB
+	ENUM(ImGuiCol, NavWindowingDimBg),     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
+	ENUM(ImGuiCol, ModalWindowDimBg),      // Darken/colorize entire screen behind a modal window, when one is active
+	ENUM(ImGuiCol, COUNT),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eStyleVar[] = {
+	ENUM(ImGuiStyleVar,Alpha),               // float     Alpha
+	ENUM(ImGuiStyleVar,WindowPadding),       // ImVec2    WindowPadding
+	ENUM(ImGuiStyleVar,WindowRounding),      // float     WindowRounding
+	ENUM(ImGuiStyleVar,WindowBorderSize),    // float     WindowBorderSize
+	ENUM(ImGuiStyleVar,WindowMinSize),       // ImVec2    WindowMinSize
+	ENUM(ImGuiStyleVar,WindowTitleAlign),    // ImVec2    WindowTitleAlign
+	ENUM(ImGuiStyleVar,ChildRounding),       // float     ChildRounding
+	ENUM(ImGuiStyleVar,ChildBorderSize),     // float     ChildBorderSize
+	ENUM(ImGuiStyleVar,PopupRounding),       // float     PopupRounding
+	ENUM(ImGuiStyleVar,PopupBorderSize),     // float     PopupBorderSize
+	ENUM(ImGuiStyleVar,FramePadding),        // ImVec2    FramePadding
+	ENUM(ImGuiStyleVar,FrameRounding),       // float     FrameRounding
+	ENUM(ImGuiStyleVar,FrameBorderSize),     // float     FrameBorderSize
+	ENUM(ImGuiStyleVar,ItemSpacing),         // ImVec2    ItemSpacing
+	ENUM(ImGuiStyleVar,ItemInnerSpacing),    // ImVec2    ItemInnerSpacing
+	ENUM(ImGuiStyleVar,IndentSpacing),       // float     IndentSpacing
+	ENUM(ImGuiStyleVar,ScrollbarSize),       // float     ScrollbarSize
+	ENUM(ImGuiStyleVar,ScrollbarRounding),   // float     ScrollbarRounding
+	ENUM(ImGuiStyleVar,GrabMinSize),         // float     GrabMinSize
+	ENUM(ImGuiStyleVar,GrabRounding),        // float     GrabRounding
+	ENUM(ImGuiStyleVar,TabRounding),         // float     TabRounding
+	ENUM(ImGuiStyleVar,ButtonTextAlign),     // ImVec2    ButtonTextAlign
+	ENUM(ImGuiStyleVar,SelectableTextAlign), // ImVec2    SelectableTextAlign
+	ENUM(ImGuiStyleVar,COUNT),
+	{ NULL, 0 },
+};
+
 struct keymap {
 	const char * name;
 	int index;
@@ -2652,6 +2900,8 @@ luaopen_imgui(lua_State *L) {
 		{ "resize", lresize },
 		{ "viewid", lviewId },
 		{ "program", lprogram },
+		{ "get_io_value", lgetIOValue },
+		{ "get_io_key", lgetIOKey },
 		{ NULL, NULL },
 	};
 
@@ -2786,6 +3036,10 @@ luaopen_imgui(lua_State *L) {
 		{ "GetWindowContentRegionMin", winGetWindowContentRegionMin },
 		{ "GetWindowContentRegionMax", winGetWindowContentRegionMax },
 		{ "GetWindowContentRegionWidth", winGetWindowContentRegionWidth },
+		{ "PushStyleColor", winPushStyleColor },
+		{ "PopStyleColor", winPopStyleColor },
+		{ "PushStyleVar", winPushStyleVar },
+		{ "PopStyleVar", winPopStyleVar },
 		{ NULL, NULL },
 	};
 
@@ -2816,6 +3070,9 @@ luaopen_imgui(lua_State *L) {
 		{ "SetItemAllowOverlap", uSetItemAllowOverlap },
 		{ "LoadIniSettings", uLoadIniSettings },
 		{ "SaveIniSettings", uSaveIniSettings },
+		{ "CaptureKeyboardFromApp", uCaptureKeyboardFromApp },
+		{ "CaptureMouseFromApp", uCaptureMouseFromApp },
+		{ "IsMouseDoubleClicked",uIsMouseDoubleClicked},
 		{ NULL, NULL },
 	};
 
@@ -2831,19 +3088,26 @@ luaopen_imgui(lua_State *L) {
 
 	luaL_newlib(L, font);
 	lua_setfield(L, -2, "font");
+	lua_newtable(L);
+	flag_gen(L, "ColorEdit", eColorEditFlags);
+	flag_gen(L, "InputText", eInputTextFlags);
+	flag_gen(L, "Combo", eComboFlags);
+	flag_gen(L, "Selectable", eSelectableFlags);
+	flag_gen(L, "TreeNode", eTreeNodeFlags);
+	flag_gen(L, "Window", eWindowFlags);
+	flag_gen(L, "Focused", eFocusedFlags);
+	flag_gen(L, "Hovered", eHoveredFlags);
+	flag_gen(L, "TabBar", eTabBarFlags);
+	lua_setfield(L, -2, "flags");
 
 	lua_newtable(L);
-	enum_gen(L, "ColorEdit", eColorEditFlags);
-	enum_gen(L, "InputText", eInputTextFlags);
-	enum_gen(L, "Combo", eComboFlags);
-	enum_gen(L, "Selectable", eSelectableFlags);
-	enum_gen(L, "TreeNode", eTreeNodeFlags);
-	enum_gen(L, "Window", eWindowFlags);
-	enum_gen(L, "Focused", eFocusedFlags);
-	enum_gen(L, "Hovered", eHoveredFlags);
-	enum_gen(L, "TabBar", eTabBarFlags);
+	enum_gen(L, "StyleCol", eStyleCol);
+	enum_gen(L, "StyleVar", eStyleVar);
+	lua_setfield(L, -2, "enum");
 
-	lua_setfield(L, -2, "flags");
+
+
 
 	return 1;
 }
+
