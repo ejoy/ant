@@ -170,4 +170,23 @@ function hw.identity()
 	return platos .. "-" .. assert(hw.shader_type())
 end
 
+hw.frames = nil
+local _ui_dirty = false
+
+function hw.ui_frame()
+	_ui_dirty = true
+end
+
+function hw.frame()
+	hw.frames = bgfx.frame()
+	_ui_dirty = false
+	return hw.frames
+end
+
+function hw.on_update_end()
+	if _ui_dirty then
+		hw.frame()
+	end
+end
+
 return hw

@@ -178,8 +178,9 @@ function util.insert_primitive_glb(eid, prim, meshscene, material, worldmat, fil
 	r.using_glb = true
 end
 
-function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_tag, viewid)
-	local w, h = viewsize.w, viewsize.h
+function util.create_render_queue_entity(world, view_rect, viewdir, eyepos, view_tag, viewid)
+	local x, y = view_rect.x or 0, view_rect.y or 0
+	local w, h = view_rect.w, view_rect.h
 	return world:create_entity {
 		camera = {
 			type = "",
@@ -202,7 +203,7 @@ function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_
 					clear = "all",
 				},
 				rect = {
-					x = 0, y = 0,
+					x = x, y = y,
 					w = w, h = h,
 				},
 			},
@@ -343,10 +344,10 @@ end
 -- end
 
 --frame_buffer:component
-function util.create_general_render_queue(world,viewsize,view_tag,viewid)
+function util.create_general_render_queue(world,view_rect,view_tag,viewid)
 	local default_viewdir = { -25, -45, 0, 0 }
 	local default_eyepos = { 5, 5, -5, 1 }
-	local entity_id = util.create_render_queue_entity(world,viewsize,
+	local entity_id = util.create_render_queue_entity(world,view_rect,
 					default_viewdir,
 					default_eyepos,
 					view_tag,
@@ -381,6 +382,17 @@ function util.identify_transform()
 		r = {0, 0, 0, 0},
 		t = {0, 0, 0, 1},
 	}
+end
+
+function util.modify_view_rect(world,rect)
+	for _,eid in world:each("render_target") do
+		local e = world[eid]
+		world:add_component_child(
+			e["render_target"]["viewport"],
+			"rect",
+			"rect",
+			rect)
+	end
 end
 
 return util
