@@ -1,0 +1,9 @@
+ path = "//unity_demo/Assets/Textures/Environment/Ground/Sand_Pebbles_A/Sand_Pebbles_A_Normal.dds"
+ sampler = {
+   U = "MIRROR",
+   V = "MIRROR",
+   MIN = "LINEAR",
+   MAG = "LINEAR",
+ }
+ sRGB 		= true
+ normalmap 	= true

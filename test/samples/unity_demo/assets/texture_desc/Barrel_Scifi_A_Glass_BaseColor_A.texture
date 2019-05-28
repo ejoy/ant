@@ -1,0 +1,9 @@
+ path = "//unity_demo/Assets/Textures/Environment/Props/Barrels/Barrel_Scifi_A/Barrel_Scifi_A_Glass_BaseColor_A.dds"
+ sampler = {
+   U = "MIRROR",
+   V = "MIRROR",
+   MIN = "LINEAR",
+   MAG = "LINEAR",
+ }
+ sRGB 		= true
+ normalmap 	= false

@@ -170,6 +170,7 @@ function rendersys:update()
 
 			local function draw_primitives(viewid, result, render_properties)
 				local numopaque = result.cacheidx - 1
+				print(" Draw Entities = ".. numopaque )
 				for i=1, numopaque do
 					local prim = result[i]
 					ru.draw_primitive(viewid, prim, prim.worldmat, render_properties)

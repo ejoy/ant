@@ -1,0 +1,9 @@
+ path = "//unity_demo/Assets/Textures/Environment/Metal/Metal_Roller_Wall_A/Metal_Roller_Wall_A_Color_A_Albedo.dds"
+ sampler = {
+   U = "MIRROR",
+   V = "MIRROR",
+   MIN = "LINEAR",
+   MAG = "LINEAR",
+ }
+ sRGB 		= true
+ normalmap 	= false

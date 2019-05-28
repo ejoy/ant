@@ -34,9 +34,10 @@ extern "C" {
 
 #include <vector>
 
+//#define __CLOCKWISE 1
+
 #define MAT_PERSPECTIVE 0
 #define MAT_ORTHO 1
-
 
 
 static bool g_default_homogeneous_depth = false;
@@ -430,10 +431,15 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index){
 	return m;
 }
 
+
 static void inline
 make_srt(struct lastack*LS, const glm::vec3 &scale, const glm::mat4x4 &rotmat, const glm::vec3 &translate) {
 	glm::mat4x4 srt(1);
+	#ifdef __CLOCKWISE
+	srt[0][0] = -scale[0];
+	#else 
 	srt[0][0] = scale[0];
+	#endif  
 	srt[1][1] = scale[1];
 	srt[2][2] = scale[2];
 

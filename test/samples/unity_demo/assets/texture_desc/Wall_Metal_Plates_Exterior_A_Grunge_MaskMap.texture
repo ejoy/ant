@@ -1,0 +1,9 @@
+ path = "//unity_demo/Assets/Textures/Generic/Walls/Wall_Metal_Plates_Exterior_A/Wall_Metal_Plates_Exterior_A_Grunge_MaskMap.dds"
+ sampler = {
+   U = "MIRROR",
+   V = "MIRROR",
+   MIN = "LINEAR",
+   MAG = "LINEAR",
+ }
+ sRGB 		= true
+ normalmap 	= false

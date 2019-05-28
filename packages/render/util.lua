@@ -71,16 +71,32 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 		bgfx.submit(vid, prog, 0, false)
 	else
 		local numprim = #prims
+
+		for idx, v in ipairs(vb.handles) do
+			bgfx.set_vertex_buffer(idx - 1, v)
+		end
 		for i=1, numprim do
 			local prim = prims[i]
 			if ib and prim.start_index and prim.num_indices then
 				bgfx.set_index_buffer(ib.handle, prim.start_index, prim.num_indices)
 			end
-			for idx, v in ipairs(vb.handles) do
-				bgfx.set_vertex_buffer(idx - 1, v, prim.start_vertex, prim.num_vertices)
-			end
 			bgfx.submit(vid, prog, 0, i~=numprim)
 		end
+
+		-- for i=1, numprim do
+		-- 	local prim = prims[i]
+
+		-- 	if ib and prim.start_index and prim.num_indices then
+		-- 		bgfx.set_index_buffer(ib.handle, prim.start_index, prim.num_indices)
+		-- 	end
+		-- 	for idx, v in ipairs(vb.handles) do
+		-- 		bgfx.set_vertex_buffer(idx - 1, v, prim.start_vertex, prim.num_vertices)
+		-- 		--bgfx.set_vertex_buffer(idx - 1, v)
+		-- 	end
+
+		-- 	bgfx.submit(vid, prog, 0, i~=numprim)
+		-- end
+
 	end
 end
 
@@ -102,20 +118,36 @@ local function add_result(eid, group, materialinfo, properties, worldmat, result
 	result.cacheidx = idx + 1
 end
 
-function util.insert_primitive(eid, meshhandle, materials, worldmat, filter)	
+
+function util.insert_primitive(eid, meshhandle, materials, worldmat, filter,group_id)	
 	local mgroups = meshhandle.groups
 	local results = filter.result	
-	for i=1, #mgroups do
-		local g = mgroups[i]
-		local mc = materials[i] or materials[1]
-		local mi = mc.materialinfo
-		
-		if mi.surface_type.transparency == "translucent" then
-			add_result(eid, g, mi, mc.properties, worldmat, results.translucent)
+
+	if group_id ~= nil then 
+		local g = mgroups[ group_id ]
+		local mc = materials[ group_id ] or materials[1] 
+		local mat_info = mc.materialinfo  				-- maybe need materials[] for primitives[],futhur extend
+		local mat_properties = mc.properties 
+
+		if mat_info.surface_type.transparency == "translucent" then
+			add_result(eid, g, mat_info, mat_properties, worldmat, results.translucent)
 		else
-			add_result(eid, g, mi, mc.properties, worldmat, results.opaque)
+			add_result(eid, g, mat_info, mat_properties, worldmat, results.opaque)
 		end
-	end
+	else
+		--   compatible with the one mode
+		for i=1, #mgroups do
+			local g = mgroups[i]
+			local mc = materials[i] or materials[1]
+			local mi = mc.materialinfo
+			
+			if mi.surface_type.transparency == "translucent" then
+				add_result(eid, g, mi, mc.properties, worldmat, results.translucent)
+			else
+				add_result(eid, g, mi, mc.properties, worldmat, results.opaque)
+			end
+		end
+	end 
 end
 
 function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_tag, viewid)

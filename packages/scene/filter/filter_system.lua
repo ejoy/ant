@@ -58,6 +58,7 @@ local function reset_results(results)
 end
 
 function primitive_filter_sys:update()	
+
 	for _, prim_eid in world:each("primitive_filter") do
 		local e = world[prim_eid]
 		local filter = e.primitive_filter
@@ -76,11 +77,14 @@ function primitive_filter_sys:update()
 				if bounding then
 					boundings[#boundings+1] = {bounding = bounding, transform=worldmat}
 				end
+				-- change here 
+				-- make draw filter
 				ru.insert_primitive(eid, 
 					meshhandle,
 					assert(ce.material.content),
 					worldmat,
-					filter)
+					filter,
+					ce.mesh.group_id )
 			end
 		end
 

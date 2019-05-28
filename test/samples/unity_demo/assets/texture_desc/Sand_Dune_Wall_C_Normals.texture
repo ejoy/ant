@@ -1,0 +1,9 @@
+ path = "//unity_demo/Assets/Textures/Environment/Props/Terrain/Sand_Dune_Wall_C/Sand_Dune_Wall_C_Normals.dds"
+ sampler = {
+   U = "MIRROR",
+   V = "MIRROR",
+   MIN = "LINEAR",
+   MAG = "LINEAR",
+ }
+ sRGB 		= true
+ normalmap 	= true

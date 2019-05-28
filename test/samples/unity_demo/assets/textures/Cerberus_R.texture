@@ -1,0 +1,11 @@
+path = "//unity_demo/assets/textures/pbr/Cerberus_R.dds"
+
+sampler = {
+	U = "MIRROR",
+	V = "MIRROR",
+	MIN = "LINEAR",
+	MAG = "LINEAR",	
+}
+
+sRGB 		= true
+normalmap 	= false

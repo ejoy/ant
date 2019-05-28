@@ -1,0 +1,9 @@
+ path = "//unity_demo/Assets/Textures/Environment/Props/Rocks/Rock_Planet_C/Rock_Planet_C_DirectionalMask.dds"
+ sampler = {
+   U = "MIRROR",
+   V = "MIRROR",
+   MIN = "LINEAR",
+   MAG = "LINEAR",
+ }
+ sRGB 		= true
+ normalmap 	= false

@@ -1,0 +1,9 @@
+ path = "//unity_demo/Assets/Textures/Environment/Metal/Metal_Aircraft_Panels_A/Metal_Aircraft_Panels_A_Color_A_Grunge_Albedo.dds"
+ sampler = {
+   U = "MIRROR",
+   V = "MIRROR",
+   MIN = "LINEAR",
+   MAG = "LINEAR",
+ }
+ sRGB 		= true
+ normalmap 	= false

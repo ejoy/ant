@@ -1,0 +1,9 @@
+ path = "//unity_demo/Assets/Textures/Environment/Ground/Sand_Dunes_A/Sand_Dunes_A_Height.dds"
+ sampler = {
+   U = "MIRROR",
+   V = "MIRROR",
+   MIN = "LINEAR",
+   MAG = "LINEAR",
+ }
+ sRGB 		= true
+ normalmap 	= false

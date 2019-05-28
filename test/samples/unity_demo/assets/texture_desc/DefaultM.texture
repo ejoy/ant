@@ -1,0 +1,11 @@
+path = "//unity_demo/assets/textures/pbr/gold/metallic.dds"
+
+sampler = {
+	U = "MIRROR",
+	V = "MIRROR",
+	MIN = "LINEAR",
+	MAG = "LINEAR",	
+}
+
+sRGB 		= true
+normalmap 	= true 

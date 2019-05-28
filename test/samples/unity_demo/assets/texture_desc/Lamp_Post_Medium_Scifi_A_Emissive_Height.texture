@@ -1,0 +1,9 @@
+ path = "//unity_demo/Assets/Textures/Environment/Props/Lamps/Lamp_Post_Medium_Scifi_A/Lamp_Post_Medium_Scifi_A_Emissive_Height.dds"
+ sampler = {
+   U = "MIRROR",
+   V = "MIRROR",
+   MIN = "LINEAR",
+   MAG = "LINEAR",
+ }
+ sRGB 		= true
+ normalmap 	= false
