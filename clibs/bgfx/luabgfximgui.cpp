@@ -2247,6 +2247,32 @@ uSaveIniSettings(lua_State *L) {
 	}
 }
 
+static int
+uCaptureKeyboardFromApp(lua_State * L){
+	bool val = true;
+	if (lua_isboolean(L, 1))
+		val = lua_toboolean(L, 1);
+	ImGui::CaptureKeyboardFromApp(val);
+	return 0;
+}
+
+static int
+uCaptureMouseFromApp(lua_State * L){
+	bool val = true;
+	if (lua_isboolean(L, 1))
+		val = lua_toboolean(L, 1);
+	ImGui::CaptureMouseFromApp(val);
+	return 0;
+}
+
+static int
+uIsMouseDoubleClicked(lua_State * L){
+	int btn = luaL_checkinteger(L, 1);
+	bool clicked = ImGui::IsMouseDoubleClicked(btn);
+	lua_pushboolean(L, clicked);
+	return 1;
+}
+
 // key, press, state
 static int
 lkeyState(lua_State *L) {
@@ -2751,6 +2777,9 @@ luaopen_bgfx_imgui(lua_State *L) {
 		{ "SetItemAllowOverlap", uSetItemAllowOverlap },
 		{ "LoadIniSettings", uLoadIniSettings },
 		{ "SaveIniSettings", uSaveIniSettings },
+		{ "CaptureKeyboardFromApp", uCaptureKeyboardFromApp },
+		{ "CaptureMouseFromApp", uCaptureMouseFromApp },
+		{ "IsMouseDoubleClicked",uIsMouseDoubleClicked},
 		{ NULL, NULL },
 	};
 
