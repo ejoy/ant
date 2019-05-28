@@ -199,4 +199,12 @@ function util.create_mesh_handle(primitive, accessors, bufferviews, buffers)
 	return scene
 end
 
+function util.load_material_info(filepath)
+	local glb = require "glb"
+	local glbdata = glb.decode(filepath:string())
+	local scene = glbdata.info
+
+	return scene.materials
+end
+
 return util
