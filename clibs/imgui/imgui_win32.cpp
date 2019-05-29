@@ -1,6 +1,10 @@
 #include <imgui.h>
 #include <Windows.h>
 
+void init_cursor() {
+    // empty
+}
+
 void set_cursor(ImGuiMouseCursor cursor) {
     switch (cursor) {
     default: [[fallthrough]];

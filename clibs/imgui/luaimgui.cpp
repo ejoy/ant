@@ -15,6 +15,7 @@ extern "C" {
 #include "bgfx_interface.h"
 #include "luabgfx.h"
 
+void init_cursor();
 void set_cursor(ImGuiMouseCursor cursor);
 
 #define IMGUI_FLAGS_NONE        UINT8_C(0x00)
@@ -158,6 +159,7 @@ lcreate(lua_State *L) {
 #if defined(__MINGW32__)
     io.ImeSetInputScreenPosFn = ImeSetInputScreenPosFn_DefaultImpl;
 #endif
+	init_cursor();
 	s_ctx.create();
 	return 0;
 }
