@@ -128,6 +128,26 @@ struct lua_args {
 	bool err;
 };
 
+#if defined(__MINGW32__)
+
+#include <Windows.h>
+#include <imm.h>
+
+static void
+ImeSetInputScreenPosFn_DefaultImpl(int x, int y) {
+    if (HWND hwnd = (HWND)ImGui::GetIO().ImeWindowHandle)
+        if (HIMC himc = ::ImmGetContext(hwnd)) {
+            COMPOSITIONFORM cf;
+            cf.ptCurrentPos.x = x;
+            cf.ptCurrentPos.y = y;
+            cf.dwStyle = CFS_FORCE_POSITION;
+            ::ImmSetCompositionWindow(himc, &cf);
+            ::ImmReleaseContext(hwnd, himc);
+        }
+}
+
+#endif
+
 static int
 lcreate(lua_State *L) {
 	ImGui::CreateContext();
@@ -135,6 +155,9 @@ lcreate(lua_State *L) {
 	io.IniFilename = NULL;
 	io.ImeWindowHandle = lua_touserdata(L, 1);
 	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+#if defined(__MINGW32__)
+    io.ImeSetInputScreenPosFn = ImeSetInputScreenPosFn_DefaultImpl;
+#endif
 	s_ctx.create();
 	return 0;
 }
