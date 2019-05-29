@@ -1,3 +1,6 @@
+local fs = require "filesystem"
+local bgfx = require "bgfx"
+
 local ENABLE_LUA_WRAP = true
 local ENABLE_LUA_TRACE = false
 
@@ -52,6 +55,36 @@ local function trace_call(src,dst,name)
             dst[k] = w
         end
     end
+end
+
+local handle_cache = {}
+--path:"//ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.dds"
+local function path2tex_handle(path)
+    if type(path) == "string" then
+        if not handle_cache[path] then
+            local fs = require "filesystem"
+            local texrefpath = fs.path(path)
+            local f = assert(fs.open(texrefpath, "rb"))
+            local imgdata = f:read "a"
+            f:close()
+            handle_cache[path] = bgfx.create_texture(imgdata, "")
+        end
+        return handle_cache[path]
+    else
+        return path
+    end
+end
+
+function imgui_lua.widget.Image(...)
+    local args = {...}
+    args[1] = path2tex_handle(args[1])
+    return widget_c.Image(table.unpack(args))
+end
+
+function imgui_lua.widget.ImageButton(...)
+    local args = {...}
+    args[1] = path2tex_handle(args[1])
+    return widget_c.ImageButton(table.unpack(args))
 end
 
 if ENABLE_LUA_TRACE then

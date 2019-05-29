@@ -21,6 +21,8 @@ void set_cursor(ImGuiMouseCursor cursor);
 #define IMGUI_FLAGS_NONE        UINT8_C(0x00)
 #define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
 
+#pragma region IMP_IMGUI
+
 struct context {
 	void render(ImDrawData* _drawData) {
 		const ImGuiIO& io = ImGui::GetIO();
@@ -129,6 +131,7 @@ struct lua_args {
 	bool err;
 };
 
+
 #if defined(__MINGW32__)
 
 #include <Windows.h>
@@ -136,15 +139,15 @@ struct lua_args {
 
 static void
 ImeSetInputScreenPosFn_DefaultImpl(int x, int y) {
-    if (HWND hwnd = (HWND)ImGui::GetIO().ImeWindowHandle)
-        if (HIMC himc = ::ImmGetContext(hwnd)) {
-            COMPOSITIONFORM cf;
-            cf.ptCurrentPos.x = x;
-            cf.ptCurrentPos.y = y;
-            cf.dwStyle = CFS_FORCE_POSITION;
-            ::ImmSetCompositionWindow(himc, &cf);
-            ::ImmReleaseContext(hwnd, himc);
-        }
+	if (HWND hwnd = (HWND)ImGui::GetIO().ImeWindowHandle)
+		if (HIMC himc = ::ImmGetContext(hwnd)) {
+			COMPOSITIONFORM cf;
+			cf.ptCurrentPos.x = x;
+			cf.ptCurrentPos.y = y;
+			cf.dwStyle = CFS_FORCE_POSITION;
+			::ImmSetCompositionWindow(himc, &cf);
+			::ImmReleaseContext(hwnd, himc);
+		}
 }
 
 #endif
@@ -157,7 +160,7 @@ lcreate(lua_State *L) {
 	io.ImeWindowHandle = lua_touserdata(L, 1);
 	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 #if defined(__MINGW32__)
-    io.ImeSetInputScreenPosFn = ImeSetInputScreenPosFn_DefaultImpl;
+	io.ImeSetInputScreenPosFn = ImeSetInputScreenPosFn_DefaultImpl;
 #endif
 	init_cursor();
 	s_ctx.create();
@@ -237,7 +240,7 @@ lgetIOKey(lua_State * L) {
 	return 1;
 }
 
-#define push_io(name) _push_io(L, io.name);lua_rawseti(L, -2, i++)
+#define push_io(name) _push_io(L, io.name );lua_rawseti(L, -2, i++)
 
 void _push_io(lua_State *L, int val) {
 	lua_pushinteger(L, val);
@@ -314,7 +317,67 @@ get_cond(lua_State *L, int index) {
 	return 0;
 }
 
+// key, press, state
+static int
+lkeyState(lua_State *L) {
+	int key = luaL_checkinteger(L, 1);
+	int press = lua_toboolean(L, 2);
+	int state = luaL_checkinteger(L, 3);
+
+	ImGuiIO& io = ImGui::GetIO();
+
+	io.KeyCtrl = (state & 0x01) != 0;
+	io.KeyAlt = (state & 0x02) != 0;
+	io.KeyShift = (state & 0x04) != 0;
+	io.KeySuper = (state & 0x08) != 0;
+
+	if (key >= 0 && key < 256) {
+		io.KeysDown[key] = press;
+	}
+	return 0;
+}
+
+static int
+lmouseMove(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	return 0;
+}
+
+static int
+lmouseWheel(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	io.MouseWheel = (float)luaL_checknumber(L, 3);
+	return 0;
+}
+
+static int
+lmouseClick(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	switch (luaL_checkinteger(L, 3)) {
+	case 0: io.MouseDown[0] = lua_toboolean(L, 4); break;
+	case 1: io.MouseDown[1] = lua_toboolean(L, 4); break;
+	case 2: io.MouseDown[2] = lua_toboolean(L, 4); break;
+	default: break;
+	}
+	return 0;
+}
+
+static int
+linputChar(lua_State *L) {
+	int c = luaL_checkinteger(L, 1);
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddInputCharacter(c);
+	return 0;
+}
+
+#pragma endregion IMP_IMGUI
+
 // Widgets bindings
+#pragma region IMP_WIDGET
+
 static int
 wButton(lua_State *L) {
 	const char * text = luaL_checkstring(L, INDEX_ID);
@@ -444,8 +507,8 @@ wBullet(lua_State *L) {
 }
 
 static double
-read_field_float(lua_State *L, const char * field, double v) {
-	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TNUMBER) {
+read_field_float(lua_State *L, const char * field, double v,int tidx = INDEX_ARGS) {
+	if (lua_getfield(L, tidx, field) == LUA_TNUMBER) {
 		v = lua_tonumber(L, -1);
 	}
 	lua_pop(L, 1);
@@ -453,9 +516,9 @@ read_field_float(lua_State *L, const char * field, double v) {
 }
 
 static float
-read_field_checkfloat(lua_State *L, const char * field) {
+read_field_checkfloat(lua_State *L, const char * field, int tidx = INDEX_ARGS) {
 	float v;
-	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TNUMBER) {
+	if (lua_getfield(L, tidx, field) == LUA_TNUMBER) {
 		v = lua_tonumber(L, -1);
 	} else {
 		v = 0;
@@ -466,8 +529,8 @@ read_field_checkfloat(lua_State *L, const char * field) {
 }
 
 static int
-read_field_int(lua_State *L, const char * field, int v) {
-	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TNUMBER) {
+read_field_int(lua_State *L, const char * field, int v, int tidx = INDEX_ARGS) {
+	if (lua_getfield(L, tidx, field) == LUA_TNUMBER) {
 		if (!lua_isinteger(L, -1)) {
 			luaL_error(L, "Not an integer");
 		}
@@ -478,9 +541,9 @@ read_field_int(lua_State *L, const char * field, int v) {
 }
 
 static int
-read_field_checkint(lua_State *L, const char * field) {
+read_field_checkint(lua_State *L, const char * field, int tidx = INDEX_ARGS) {
 	int v;
-	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TNUMBER) {
+	if (lua_getfield(L, tidx, field) == LUA_TNUMBER) {
 		if (!lua_isinteger(L, -1)) {
 			luaL_error(L, "Not an integer");
 		}
@@ -494,8 +557,8 @@ read_field_checkint(lua_State *L, const char * field) {
 }
 
 static const char *
-read_field_string(lua_State *L, const char * field, const char *v) {
-	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TSTRING) {
+read_field_string(lua_State *L, const char * field, const char *v, int tidx = INDEX_ARGS) {
+	if (lua_getfield(L, tidx, field) == LUA_TSTRING) {
 		v = lua_tostring(L, -1);
 	}
 	lua_pop(L, 1);
@@ -503,8 +566,8 @@ read_field_string(lua_State *L, const char * field, const char *v) {
 }
 
 static const char *
-read_index_string(lua_State *L, int index, const char *v) {
-	if (lua_geti(L, INDEX_ARGS, index) == LUA_TSTRING) {
+read_index_string(lua_State *L, int index, const char *v, int tidx = INDEX_ARGS) {
+	if (lua_geti(L, tidx, index) == LUA_TSTRING) {
 		v = lua_tostring(L, -1);
 	}
 	lua_pop(L, 1);
@@ -512,13 +575,46 @@ read_index_string(lua_State *L, int index, const char *v) {
 }
 
 static bool
-read_field_boolean(lua_State *L, const char *field, bool v) {
-	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TBOOLEAN) {
-		v = (bool)lua_toboolean(L, 1);
+read_field_boolean(lua_State *L, const char *field, bool v, int tidx = INDEX_ARGS) {
+	if (lua_getfield(L, tidx, field) == LUA_TBOOLEAN) {
+		v = (bool)lua_toboolean(L, -1);
 	}
 	lua_pop(L, 1);
 	return v;
 }
+
+//read table { x, y }
+static ImVec2
+read_field_vec2(lua_State *L, const char *field, ImVec2 def_val, int tidx = INDEX_ARGS) {
+	if (lua_getfield(L, tidx, field) == LUA_TTABLE) {
+		if (lua_geti(L, -1, 1) == LUA_TNUMBER)
+			def_val.x = lua_tonumber(L, -1);
+		if (lua_geti(L, -2, 2) == LUA_TNUMBER)
+			def_val.y = lua_tonumber(L, -1);
+		lua_pop(L, 2);
+	}
+	lua_pop(L, 1);
+	return def_val;
+}
+
+//read table { x, y, z, w }
+static ImVec4
+read_field_vec4(lua_State *L,  const char *field, ImVec4 def_val, int tidx = INDEX_ARGS) {
+	if (lua_getfield(L, tidx, field) == LUA_TTABLE) {
+		if (lua_geti(L, -1, 1) == LUA_TNUMBER)
+			def_val.x = lua_tonumber(L, -1);
+		if (lua_geti(L, -2, 2) == LUA_TNUMBER)
+			def_val.y = lua_tonumber(L, -1);
+		if (lua_geti(L, -3, 3) == LUA_TNUMBER)
+			def_val.z = lua_tonumber(L, -1);
+		if (lua_geti(L, -4, 4) == LUA_TNUMBER)
+			def_val.w = lua_tonumber(L, -1);
+		lua_pop(L, 4);
+	}
+	lua_pop(L, 1);
+	return def_val;
+}
+
 
 static bool
 drag_float(lua_State *L, const char *label, int n) {
@@ -1577,7 +1673,86 @@ wListBox(lua_State *L) {
 	return 1;
 }
 
+inline static ImTextureID
+bgfx_to_imgui_texture_id(lua_State*L, int lua_handle) {
+	int texture_id = BGFX_LUAHANDLE_ID(TEXTURE, lua_handle);
+	bgfx_texture_handle_t th = { texture_id };
+	union { struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; ImTextureID ptr; } texture;
+	texture.s.handle = th;
+	texture.s.flags = IMGUI_FLAGS_ALPHA_BLEND;
+	texture.s.mip = 0;
+	return texture.ptr;
+}
+
+#pragma endregion IMP_WIDGET
+
+static int wImage(lua_State *L) {
+	int lua_handle = luaL_checkinteger(L, 1);
+	ImTextureID tex_id = bgfx_to_imgui_texture_id(L, lua_handle);
+	int size_x = luaL_checkinteger(L, 2);
+	int size_y = luaL_checkinteger(L, 3);
+	ImVec2 size = { (float)size_x,(float)size_y };
+
+	ImVec2 uv0 = { 0.0f,0.0f };
+	ImVec2 uv1 = { 1.0f,1.0f };
+	ImVec4 tint_col = { 1.0f,1.0f,1.0f,1.0f };
+	ImVec4 border_col = { 0.0f,0.0f,0.0f,0.0f };
+	int flags = IMGUI_FLAGS_ALPHA_BLEND;
+	int mip = 0;
+
+	if (lua_type(L, 4) == LUA_TTABLE)
+	{
+		uv0 = read_field_vec2(L, "uv0", uv0, 4);
+		uv1 = read_field_vec2(L, "uv1", uv1, 4);
+		tint_col = read_field_vec4(L, "tint_col", tint_col, 4);
+		border_col = read_field_vec4(L, "border_col", border_col, 4);
+	}
+	ImGui::Image(tex_id, size, uv0, uv1, tint_col, border_col);
+	return 0;
+}
+
+/**ImageButton( handle,size_x,size_y, 
+						opt [
+							{ uv0={0,0},
+							uv1={1,1},
+							frame_padding=-1,
+							bg_col={0f,0f,0f,0f},
+							tint_col={1f,1f,1f,1f},
+							flags=0x01,
+							mip = 0 }
+						] );
+**/
+static int
+wImageButton(lua_State *L){
+	int lua_handle = luaL_checkinteger(L, 1);
+	ImTextureID tex_id = bgfx_to_imgui_texture_id(L, lua_handle);
+	int size_x = luaL_checkinteger(L, 2);
+	int size_y = luaL_checkinteger(L, 3);
+	ImVec2 size = { (float)size_x,(float)size_y };
+
+	ImVec2 uv0 = { 0.0f,0.0f };
+	ImVec2 uv1 = { 1.0f,1.0f };
+	int frame_padding = -1;
+	ImVec4 bg_col = { 0.0f,0.0f,0.0f,0.0f };
+	ImVec4 tint_col = { 1.0f,1.0f,1.0f,1.0f};
+	int flags = IMGUI_FLAGS_ALPHA_BLEND;
+	int mip = 0;
+
+	if (lua_type( L,4) == LUA_TTABLE )
+	{
+		uv0 = read_field_vec2( L, "uv0", uv0, 4);
+		uv1 = read_field_vec2( L, "uv1", uv1, 4);
+		frame_padding = read_field_int(L, "frame_padding", frame_padding, 4);
+		bg_col = read_field_vec4(L, "bg_col", bg_col, 4);
+		tint_col = read_field_vec4(L, "tint_col", tint_col, 4);
+	}
+	bool clicked = ImGui::ImageButton(tex_id, size, uv0, uv1, frame_padding, bg_col, tint_col);
+	lua_pushboolean(L, clicked);
+	return 1;
+}
+
 // windows api
+#pragma region IMP_WINDOWS
 
 #define NO_CLOSED ((lua_Integer)1 << 32)
 
@@ -2021,9 +2196,10 @@ winPopStyleVar(lua_State *L) {
 	return 0;
 }
 
-
+#pragma endregion IMP_WINDOWS
 
 // cursor and layout
+#pragma region IMP_CURSOR
 
 static int
 cSeparator(lua_State *L) {
@@ -2173,60 +2349,10 @@ cGetTreeNodeToLabelSpacing(lua_State *L) {
 	return 1;
 }
 
-// enums
-struct enum_pair {
-	const char * name;
-	lua_Integer value;
-};
-
-#define ENUM(prefix, name) { #name, prefix##_##name }
-
-static int
-make_flag(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	int i,t;
-	lua_Integer r = 0;
-
-	for (i=1;(t = lua_geti(L, 1, i)) != LUA_TNIL;i++) {
-		if (t != LUA_TSTRING)
-			luaL_error(L, "Flag name should be string, it's %s", lua_typename(L, t));
-		if (lua_gettable(L, lua_upvalueindex(1)) != LUA_TNUMBER) {
-			lua_geti(L, 1, i);
-			luaL_error(L, "Invalid flag %s.%s", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, -1));
-		}
-		lua_Integer v = lua_tointeger(L, -1);
-		lua_pop(L, 1);
-		r |= v;
-	}
-	lua_pushinteger(L, r);
-	return 1;
-}
-
-static void
-flag_gen(lua_State *L, const char *name, struct enum_pair *enums) {
-	int i;
-	lua_newtable(L);
-	for (i=0;enums[i].name;i++) {
-		lua_pushinteger(L, enums[i].value);
-		lua_setfield(L, -2, enums[i].name);
-	}
-	lua_pushstring(L, name);
-	lua_pushcclosure(L, make_flag, 2);
-	lua_setfield(L, -2, name);
-}
-
-static void
-enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
-	int i;
-	lua_newtable(L);
-	for (i = 0; enums[i].name; i++) {
-		lua_pushinteger(L, enums[i].value);
-		lua_setfield(L, -2, enums[i].name);
-	}
-	lua_setfield(L,  -2, name);
-}
+#pragma endregion IMP_CURSOR
 
 // Utils
+#pragma region IMP_UTIL
 
 static int
 uSetColorEditOptions(lua_State *L) {
@@ -2553,60 +2679,50 @@ uIsMouseDoubleClicked(lua_State * L){
 	return 1;
 }
 
-// key, press, state
+#pragma endregion IMP_UTIL
+
+#pragma region IMP_FLAG
+
+// enums
+struct enum_pair {
+	const char * name;
+	lua_Integer value;
+};
+
+#define ENUM(prefix, name) { #name, prefix##_##name }
+
 static int
-lkeyState(lua_State *L) {
-	int key = luaL_checkinteger(L, 1);
-	int press = lua_toboolean(L, 2);
-	int state = luaL_checkinteger(L, 3);
+make_flag(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	int i, t;
+	lua_Integer r = 0;
 
-	ImGuiIO& io = ImGui::GetIO();
-
-	io.KeyCtrl = (state & 0x01) != 0;
-	io.KeyAlt = (state & 0x02) != 0;
-	io.KeyShift = (state & 0x04) != 0;
-	io.KeySuper = (state & 0x08) != 0;
-
-	if (key >=0 && key < 256) {
-		io.KeysDown[key] = press;
+	for (i = 1; (t = lua_geti(L, 1, i)) != LUA_TNIL; i++) {
+		if (t != LUA_TSTRING)
+			luaL_error(L, "Flag name should be string, it's %s", lua_typename(L, t));
+		if (lua_gettable(L, lua_upvalueindex(1)) != LUA_TNUMBER) {
+			lua_geti(L, 1, i);
+			luaL_error(L, "Invalid flag %s.%s", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, -1));
+		}
+		lua_Integer v = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+		r |= v;
 	}
-	return 0;
+	lua_pushinteger(L, r);
+	return 1;
 }
 
-static int
-lmouseMove(lua_State *L) {
-	ImGuiIO& io = ImGui::GetIO();
-	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
-	return 0;
-}
-
-static int
-lmouseWheel(lua_State *L) {
-	ImGuiIO& io = ImGui::GetIO();
-	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
-	io.MouseWheel = (float)luaL_checknumber(L, 3);
-	return 0;
-}
-
-static int
-lmouseClick(lua_State *L) {
-	ImGuiIO& io = ImGui::GetIO();
-	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
-	switch (luaL_checkinteger(L, 3)) {
-	case 0: io.MouseDown[0] = lua_toboolean(L, 4); break;
-	case 1: io.MouseDown[1] = lua_toboolean(L, 4); break;
-	case 2: io.MouseDown[2] = lua_toboolean(L, 4); break;
-	default: break;
+static void
+flag_gen(lua_State *L, const char *name, struct enum_pair *enums) {
+	int i;
+	lua_newtable(L);
+	for (i = 0; enums[i].name; i++) {
+		lua_pushinteger(L, enums[i].value);
+		lua_setfield(L, -2, enums[i].name);
 	}
-	return 0;
-}
-
-static int
-linputChar(lua_State *L) {
-	int c = luaL_checkinteger(L, 1);
-	ImGuiIO& io = ImGui::GetIO();
-	io.AddInputCharacter(c);
-	return 0;
+	lua_pushstring(L, name);
+	lua_pushcclosure(L, make_flag, 2);
+	lua_setfield(L, -2, name);
 }
 
 static struct enum_pair eColorEditFlags[] = {
@@ -2758,6 +2874,20 @@ static struct enum_pair eTabBarFlags[] = {
 	{ "NoClosed", (lua_Integer)1<<32 },
 	{ NULL, 0 },
 };
+#pragma endregion IMP_FLAG
+
+#pragma region IMP_ENUM
+
+static void
+enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
+	int i;
+	lua_newtable(L);
+	for (i = 0; enums[i].name; i++) {
+		lua_pushinteger(L, enums[i].value);
+		lua_setfield(L, -2, enums[i].name);
+	}
+	lua_setfield(L, -2, name);
+}
 
 static struct enum_pair eStyleCol[] = {
 	ENUM(ImGuiCol, Text),
@@ -2798,7 +2928,7 @@ static struct enum_pair eStyleCol[] = {
 	ENUM(ImGuiCol, TabActive),
 	ENUM(ImGuiCol, TabUnfocused),
 	ENUM(ImGuiCol, TabUnfocusedActive),
-#ifdef LUA_ENABLE_DOCKING
+#ifdef IMGUI_HAS_DOCK
 	ENUM(ImGuiCol, DockingPreview),
 	ENUM(ImGuiCol, DockingEmptyBg),        // Background color for empty node (e.g. CentralNode with no window docked into it)
 #endif
@@ -2843,6 +2973,8 @@ static struct enum_pair eStyleVar[] = {
 	ENUM(ImGuiStyleVar,COUNT),
 	{ NULL, 0 },
 };
+
+#pragma endregion IMP_ENUM
 
 struct keymap {
 	const char * name;
@@ -2982,6 +3114,8 @@ luaopen_imgui(lua_State *L) {
 		{ "BeginListBoxN", wBeginListBoxN },
 		{ "EndListBox", wEndListBox },
 		{ "ListBox", wListBox },
+		{ "Image", wImage },
+		{ "ImageButton", wImageButton },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, widgets);

@@ -59,6 +59,8 @@ function widget.BeginListBox() end
 function widget.BeginListBoxN() end
 function widget.EndListBox() end
 function widget.ListBox() end
+function widget.Image() end
+function widget.ImageButton() end
 
 function cursor.Separator() end
 function cursor.SameLine() end
