@@ -105,7 +105,7 @@ extern "C"
 
 	/* Contact Results */
 
-	struct lwContactPoint
+	struct contact_point
 	{
 		plVector3 m_ptOnAWorld;
 		plVector3 m_ptOnBWorld;
@@ -139,7 +139,7 @@ extern "C"
 
 	/* Collision Queries */
 	extern int plCollide(plCollisionSdkHandle sdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle colA, plCollisionObjectHandle colB,
-						 lwContactPoint* pointsOut, int pointCapacity);
+						 contact_point* pointsOut, int pointCapacity);
 
 	extern void plWorldCollide(plCollisionSdkHandle sdkHandle, plCollisionWorldHandle world,
 							   plNearCallback filter, void* userData);

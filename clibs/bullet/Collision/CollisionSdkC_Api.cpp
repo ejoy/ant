@@ -204,7 +204,7 @@ plGetCollisionObjectShape(plCollisionSdkHandle sdkHandle, plCollisionWorldHandle
 
 /* Collision Queries */
 int plCollide(plCollisionSdkHandle collisionSdkHandle, plCollisionWorldHandle worldHandle, plCollisionObjectHandle colA, plCollisionObjectHandle colB,
-			  lwContactPoint* pointsOut, int pointCapacity)
+			  contact_point* pointsOut, int pointCapacity)
 {
 	CollisionSdkInterface* sdk = (CollisionSdkInterface*)collisionSdkHandle;
 	return sdk->collide(worldHandle, colA, colB, pointsOut, pointCapacity);

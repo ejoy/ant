@@ -4,14 +4,33 @@ local bgfx = require "bgfx"
 
 local declmapper = {}
 
+local name_mapper = {
+	p = "POSITION",	n = "NORMAL", T = "TANGENT",	b = "BITANGENT",
+	i = "INDICES",	w = "WEIGHT",
+	c = "COLOR", t = "TEXCOORD",
+}
+
+local name_remapper = {
+	JOINTS = "i",
+}
+for k, v in pairs(name_mapper) do
+	name_remapper[v] = k
+end
+
+mgr.name_mapper = name_mapper
+mgr.name_remapper = name_remapper
+
+function mgr.parse_attri_name(fullname)
+	local name, channel = fullname:match("(%w+)_?(%d+)")
+	if name then
+		return name_remapper[name], channel
+	end
+	return name_remapper[fullname], 0
+end
+
 local function get_attrib(e)
-	local t = {	
-		p = "POSITION",	n = "NORMAL", T = "TANGENT",	b = "BITANGENT",
-		i = "INDICES",	w = "WEIGHT",
-		c = "COLOR", t = "TEXCOORD",
-	}
 	local a = e:sub(1, 1)
-	local attrib = assert(t[a])
+	local attrib = assert(name_mapper[a])
 	if attrib == "COLOR" or attrib == "TEXCOORD" then
 		local channel = e:sub(3, 3)
 		return attrib .. channel
@@ -20,12 +39,13 @@ local function get_attrib(e)
 	return attrib
 end
 
-local function get_type(v)					
-	local t = {	
-		u = "UINT8", U = "UINT10", i = "INT16",
-		h = "HALF",	f = "FLOAT",
-	}
-	return assert(t[v])
+local shortname_mapper = {	
+	u = "UINT8", U = "UINT10", i = "INT16",
+	h = "HALF",	f = "FLOAT",
+}
+
+local function get_type(v)
+	return assert(shortname_mapper[v])
 end
 
 local function decl_name(elemname)
@@ -44,22 +64,22 @@ local function create_decl(vb_layout)
 		decl[#decl+1] = decl_name(e)
 	end
 
-	local decl, stride = bgfx.vertex_decl(decl)
-	return {handle=decl, stride=stride}
+	local d, stride = bgfx.vertex_decl(decl)
+	return {handle=d, stride=stride}
 end
 
 local default_vbelem = "_30NIf"
-local function correct_elem(elem)
+function mgr.correct_elem(elem)
 	local len = #elem
 	return len == #default_vbelem and 
 			elem or 
 			elem .. default_vbelem:sub(len+1)
 end
 
-local function correct_layout(layout)
+function mgr.correct_layout(layout)
 	local t = {}	
 	for e in layout:gmatch("%w+") do
-		t[#t+1] = correct_elem(e)
+		t[#t+1] = mgr.correct_elem(e)
 	end
 
 	return table.concat(t, "|")
@@ -67,32 +87,19 @@ end
 
 function mgr.get(layout)	
 	local decl = declmapper[layout]	
-	if decl == nil then
-		layout = correct_layout(layout)
+	if decl then
+		return decl
 	end
 
-	decl = declmapper[layout]
+	local newlayout = mgr.correct_layout(layout)
+
+	decl = declmapper[newlayout]
 	if decl == nil then
-		decl = create_decl(layout)
+		decl = create_decl(newlayout)
 		declmapper[layout] = decl
 	end
 
 	return decl
-end
-
-function mgr.decl_str(layout)
-	local s = ""
-	for e in layout:gmatch("%w+") do
-		local ce = correct_elem(e)
-		local num 		= tonumber(ce:sub(2, 2))
-		local asint		= ce:sub(5, 5) == "i"
-		local n = asint and "i" or "f"
-		for i=1, num do
-			s = s .. n
-		end
-	end
-
-	return s
 end
 
 return mgr

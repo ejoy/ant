@@ -7,7 +7,13 @@ path_mt.__name = 'pkg-filesystem'
 path_mt.__index = path_mt
 
 local function constructor(str)
-    return setmetatable({_value = str or ""}, path_mt)
+    if str == nil then
+        return setmetatable({_value = "" }, path_mt)
+    end
+    if type(str) == "string" then
+        return setmetatable({_value = str }, path_mt)
+    end
+    return setmetatable({_value = str._value }, path_mt)
 end
 
 local function normalize(fullname)
@@ -88,23 +94,23 @@ function path_mt:string()
 end
 
 function path_mt:filename()
-    return constructor(self._value:match("[/]?([%w*?_.-]*)$"))
+    return constructor(self._value:match("[/]?([%w*?_.%-]*)$"))
 end
 
 function path_mt:parent_path()
-    return constructor(self._value:match("^(.+)/[%w*?_.-]*$"))
+    return constructor(self._value:match("^(.+)/[%w*?_.%-]*$"))
 end
 
 function path_mt:stem()
-    return constructor(self._value:match("[/]?([%w*?_.-]+)%.[%w*?_-]*$") or self._value:match("[/]?([.]?[%w*?_-]*)$"))
+    return constructor(self._value:match("[/]?([%w*?_.%-]+)%.[%w*?_%-]*$") or self._value:match("[/]?([.]?[%w*?_%-]*)$"))
 end
 
 function path_mt:extension()
-    return constructor(self._value:match("[^/](%.[%w*?_-]*)$"))
+    return constructor(self._value:match("[^/](%.[%w*?_%-]*)$"))
 end
 
 function path_mt:remove_filename()
-    self._value = self._value:match("^(.+/)[%w*?_.-]*$") or ""
+    self._value = self._value:match("^(.+/)[%w*?_.%-]*$") or ""
     return self
 end
 
@@ -120,7 +126,7 @@ end
 
 function path_mt:equal_extension(ext)
     ext = (type(ext) == 'string') and ext or ext._value
-    local selfext = self._value:match("[^/](%.[%w*?_-]*)$") or ""
+    local selfext = self._value:match("[^/](%.[%w*?_%-]*)$") or ""
     if selfext == "" then
         return ext == ""
     end

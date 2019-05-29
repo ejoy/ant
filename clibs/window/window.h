@@ -12,6 +12,9 @@
 #define ANT_WINDOW_MOUSE_MOVE 5
 #define ANT_WINDOW_MOUSE_WHEEL 6
 #define ANT_WINDOW_MOUSE_CLICK 7
+#define ANT_WINDOW_SIZE 8
+#define ANT_WINDOW_CHAR 9
+#define ANT_WINDOW_CHAR_UTF16 10
 
 #define ANT_WINDOW_CALLBACK "ANT_WINDOW_CALLBACK"
 
@@ -69,6 +72,16 @@ struct ant_window_mouse_click {
 	uint8_t press; // 0: up ; 1: down
 };
 
+struct ant_window_size {
+	int x;
+	int y;
+	uint8_t type;	// 0: SIZE_RESTORED 1: SIZE_MINIMIZED 2: SIZE_MAXIMIZED
+};
+
+struct ant_window_char {
+	int code;
+};
+
 struct ant_window_message {
 	int type;
 	union {
@@ -80,6 +93,8 @@ struct ant_window_message {
 		struct ant_window_mouse_move mouse_move;
 		struct ant_window_mouse_wheel mouse_wheel;
 		struct ant_window_mouse_click mouse_click;
+		struct ant_window_size size;
+		struct ant_window_char unichar;
 	} u;
 };
 

@@ -1,5 +1,5 @@
-CMAKE_PROJ := assimp freetype ozz-animation bullet3 zlib
-RUNTIME_PROJ := ozz-animation bullet3 bgfx ib-compress
+CMAKE_PROJ := freetype ozz-animation bullet3 zlib
+RUNTIME_PROJ := ozz-animation bullet3 bgfx
 ALL_PROJ := $(RUNTIME_PROJ) $(CMAKE_PROJ)
 BUILD_CONFIG = release
 
@@ -25,7 +25,7 @@ BUILD_PATH := build
 ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles
   BGFX_INIT_CMD = make .build/projects/gmake-osx
-  BGFX_MAKE_CMD = make osx-$(BGFX_CONFIG_TYPE)64 $(MP)
+  BGFX_MAKE_CMD = make -C .build/projects/gmake-osx config=$(BGFX_CONFIG_TYPE)64 -j8
   BGFX_CPRC_CMD = cp bgfx/.build/osx64_clang/bin/shaderc$(BGFX_CONFIG_TYPE) ../clibs/
   
   CD_MAKE_CMD	= TEC_UNAME=clang make cd $(MP)
@@ -70,10 +70,11 @@ else
   ALL_PROJ := $(ALL_PROJ) cd
 endif
 
-ASSIMP_FMT_NAMES := AMF 3DS AC ASE ASSBIN ASSXML B3D BVH COLLADA DXF CSM IRR LWO LWS MD2 MD3 MD5 MDC NFF NDO OFF OBJ OGRE OPENGEX PLY MS3D COB BLEND IFC XGL Q3D Q3BSP RAW SIB SMD STL TERRAGEN 3D X X3D GLTF 3MF MMD HMP MDL
-ASSIMP_IMPORT_DISABLE_OPT := $(patsubst %,-DASSIMP_BUILD_%_IMPORTER=OFF,$(ASSIMP_FMT_NAMES))
+# ASSIMP_FMT_NAMES := AMF 3DS AC ASE ASSBIN ASSXML B3D BVH COLLADA DXF CSM IRR LWO LWS MD2 MD3 MD5 MDC NFF NDO OFF OBJ OGRE OPENGEX PLY MS3D COB BLEND IFC XGL Q3D Q3BSP RAW SIB SMD STL TERRAGEN 3D X X3D GLTF 3MF MMD HMP MDL
+# #ASSIMP_FMT_NAMES := IFC
+# ASSIMP_IMPORT_DISABLE_OPT := $(patsubst %,-DASSIMP_BUILD_%_IMPORTER=OFF,$(ASSIMP_FMT_NAMES))
 
-CMAKE_OPT_assimp :=$(ASSIMP_IMPORT_DISABLE_OPT) -DBUILD_SHARED_LIBS=OFF -DASSIMP_BUILD_TESTS=OFF
+# CMAKE_OPT_assimp :=$(ASSIMP_IMPORT_DISABLE_OPT) -DBUILD_SHARED_LIBS=OFF -DASSIMP_BUILD_TESTS=OFF
 CMAKE_OPT_freetype :=-DCMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_ZLIB=TRUE
 # disable build bullet demos and tests
 
@@ -142,12 +143,6 @@ cd_make : | $(BUILD_PATH)
 	cd cd && $(CD_MAKE_CMD)
 cd_clean:
 	cd cd && make clean
-
-ib-compress_init: | $(BUILD_PATH)
-ib-compress_make: | $(BUILD_PATH)
-	cd ib-compress && make PLAT=$(PLAT)
-ib-compress_clean:
-	cd ib-compress && make clean
 
 define CMAKE_TEMP
   $(BUILD_PATH)/$(1)/$(PLAT) : | $(BUILD_PATH)

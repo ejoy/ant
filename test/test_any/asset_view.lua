@@ -27,7 +27,7 @@ asset_view.__index = asset_view
 
 local packages = {"ant.testempty"}
 
-local systems = {"asset_view_render_sys", "camera_controller",}
+local systems = {"asset_view_render_sys", "editor_camera_controller",}
 
 if __ANT_RUNTIME__ then
     local rt = require "runtime"
@@ -70,7 +70,7 @@ function asset_view:_init_update()
             self:update()
         end
     end
-    task.loop(mainloop)
+    task.safe_loop(mainloop)
     self._mainloop = mainloop
 end
 
@@ -303,7 +303,7 @@ function asset_view:_on_canvas_map()
                             ["empty"]=camera_eid_empty}
         self:show_camera("empty")
 
-        task.loop(scene.loop(self.world,{update = {"timesystem", "message_system"}}))
+        task.safe_loop(scene.loop(self.world,{update = {"timesystem", "message_system"}}))
         self.world_update_func = self.world:update_func("update", {"timesystem", "message_system"})
 
     end
@@ -339,7 +339,7 @@ function asset_view:create_foucs_entity(mesh, material)
         material = {
             content = {
                 {
-                    ref_path = fs.path "//ant.resources/singlecolor.material"
+                    ref_path = fs.path "//ant.resources/materials/singlecolor.material"
                 }
             }
         }

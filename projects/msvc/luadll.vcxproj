@@ -180,7 +180,6 @@
     <ClInclude Include="..\..\clibs\lua\ltable.h" />
     <ClInclude Include="..\..\clibs\lua\ltm.h" />
     <ClInclude Include="..\..\clibs\lua\lua.h" />
-    <ClInclude Include="..\..\clibs\lua\lua.hpp" />
     <ClInclude Include="..\..\clibs\lua\luaconf.h" />
     <ClInclude Include="..\..\clibs\lua\lualib.h" />
     <ClInclude Include="..\..\clibs\lua\lundump.h" />
@@ -214,7 +213,6 @@
     <ClCompile Include="..\..\clibs\lua\lopcodes.c" />
     <ClCompile Include="..\..\clibs\lua\loslib.c" />
     <ClCompile Include="..\..\clibs\lua\lparser.c" />
-    <ClCompile Include="..\..\clibs\lua\lprofile.c" />
     <ClCompile Include="..\..\clibs\lua\lstate.c" />
     <ClCompile Include="..\..\clibs\lua\lstring.c" />
     <ClCompile Include="..\..\clibs\lua\lstrlib.c" />

@@ -82,7 +82,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)vs_bin\$(PlatformTarget)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vs_bin\obj\$(PlatformTarget)\$(Configuration)\$(ProjectName)\</IntDir>
-    <TargetName>lterrain</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -100,7 +100,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)vs_bin\$(PlatformTarget)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vs_bin\obj\$(PlatformTarget)\$(Configuration)\$(ProjectName)\</IntDir>
-    <TargetName>lterrain</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

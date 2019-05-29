@@ -1,6 +1,5 @@
 
 local bullet_module = require "bullet"
-local bullet_sdk = bullet_module.new()
 
 local bullet_world = {}
 bullet_world.__index = function (tbl, key)	
@@ -13,7 +12,7 @@ end
 
 function bullet_world.new()
     return setmetatable({
-		world = bullet_sdk:new_world()
+		world = bullet_module.new_collision_world()
 	}, bullet_world)
 end 
 

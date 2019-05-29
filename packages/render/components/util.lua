@@ -6,6 +6,8 @@ local fs = require "filesystem"
 
 local asset = import_package "ant.asset"
 local mu = import_package "ant.math".util
+local gltfutil = import_package "ant.glTF".util
+
 local declmgr = require "vertexdecl_mgr"
 
 local function deep_copy(t)
@@ -125,17 +127,41 @@ function util.is_entity_visible(entity)
     return false
 end
 
-function util.create_mesh_handle(decl, vb, ib)
-    return {
-		handle = {
-			groups = {
-				{
-					vb = {handles = {bgfx.create_vertex_buffer(vb, decl)},},
-					ib = ib and {handle = bgfx.create_index_buffer(ib)} or nil
-				}
-			}
-		} 
+function util.create_simple_mesh(vertex_desc, vb, num_vertices, ib, num_indices)
+	local stride = vertex_desc.stride
+	local attributes = {}	
+	local accessors = {}
+	local primitive = {}
+	
+	local vertex_bvidx = 0
+	for idx, d in ipairs(vertex_desc) do
+		attributes[d.name] = idx-1
+		accessors[#accessors+1] = gltfutil.generate_accessor(vertex_bvidx, 
+								d.elemtype, 
+								assert(gltfutil.type_count_remapper[d.elemcount]), 
+								d.offset, num_vertices, d.normalized)
+	end
+
+	local bufferviews = {
+		gltfutil.generate_bufferview(0, 0, stride * num_vertices, stride, "vertex"),
 	}
+	
+	local buffers = {
+		gltfutil.generate_buffer(vb, stride * num_vertices)
+	}
+
+	if ib then
+		local index_bvidx = 1
+		primitive.indices = #accessors
+		accessors[#accessors+1] = gltfutil.generate_accessor(index_bvidx, "UNSIGNED_SHORT", "SCALAR", 0, num_indices, false)
+		bufferviews[#bufferviews+1] = gltfutil.generate_bufferview(1, 0, 2 * num_indices, 0, "index")
+		buffers[#buffers+1] = gltfutil.generate_buffer(ib, 2 * num_indices)
+	end
+
+	primitive.attributes = attributes
+
+	local mlutil = import_package "ant.modelloader".util
+	return {handle = mlutil.init_scene(gltfutil.create_mesh_handle(primitive, accessors, bufferviews, buffers)),}
 end
 
 function util.create_grid_entity(world, name, w, h, unit, view_tag)
@@ -145,7 +171,7 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
 	local gridid = world:create_entity {
 		transform = mu.identity_transform(),
         mesh = {},
-        material = util.assign_material(fs.path "//ant.resources" / "line.material"),
+        material = util.assign_material(fs.path "//ant.resources" / "materials" / "line.material"),
 		name = name,
 		can_render = true,
 		main_view = true,
@@ -163,7 +189,14 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
 		end
 	end
 
-    grid.mesh.assetinfo = util.create_mesh_handle(declmgr.get("p3|c40niu").handle,gvb, ib)
+	local num_vertices = #vb
+	local num_indices = #ib
+
+	grid.mesh.assetinfo = util.create_simple_mesh({
+		stride = 16, -- "fffd"
+		{name="POSITION", offset=0, elemtype="FLOAT", elemcount=3},
+		{name="COLOR_0", offset=12, elemtype="UNSIGNED_BYTE", elemcount=4, normalized=true},
+	}, gvb, num_vertices, ib, num_indices)
     return gridid
 end
 
@@ -196,28 +229,24 @@ function util.create_plane_entity(world, color, size, pos, name)
 	}
 end
 
-local function get_quaddecl()
-	return declmgr.get("p3|t2")
+local function quad_mesh(vb)	
+	return util.create_simple_mesh({
+		stride = 20, --"fffff"
+		{name="POSTIION", offset=0, elemtype="FLOAT", elemcount=3},
+		{name="TEXCOORD_0", offset=12, elemtype="FLOAT", elemcount=2},
+	}, vb, 4)
 end
 
 function util.quad_mesh(rect)
-	local decl = get_quaddecl().handle
-	local depth = 0
+	local vb = 	{
+		"fffff",
+		rect.x, 		 rect.y, 			0, 	0, 1,	--bottom left
+		rect.x, 		 rect.y + rect.h, 	0, 	0, 0,	--top left
+		rect.x + rect.w, rect.y, 			0, 	1, 1,	--bottom right
+		rect.x + rect.w, rect.y + rect.h, 	0, 	1, 0,	--top right
+	}
 
-	local vbhandle = bgfx.create_vertex_buffer(
-		{
-			"fffff",
-			rect.x, 		 rect.y, 			depth, 	0, 1,	--bottom left
-			rect.x, 		 rect.y + rect.h, 	depth, 	0, 0,	--top left
-			rect.x + rect.w, rect.y, 			depth, 	1, 1,	--bottom right
-			rect.x + rect.w, rect.y + rect.h, 	depth, 	1, 0,	--top right
-		}, decl)
-
-	return {handle = {groups = {{
-					decls = {decl},
-					vb = {handles = {vbhandle,}
-					},
-	}}}}
+	return quad_mesh(vb)
 end
 
 function util.create_shadow_quad_entity(world, rect, name)
@@ -248,40 +277,23 @@ function util.create_quad_entity(world, texture_tbl, view_tag, name)
         transform = mu.identity_transform(),
         can_render = true,
         mesh = {},
-        material = util.assign_material(fs.path "//ant.resources/texture.material"),
+        material = util.assign_material(fs.path "//ant.resources/materials/texture.material"),
         name = name,
     }
     local quad = world[quadid]
     if view_tag then world:add_component(quadid, view_tag, true) end
     util.change_textures(quad.material.content[1], texture_tbl)
-    local vb = {
-        {-3, 3,  0,0.0, 0.0},
-        {3,  3, 0,1.0, 0.0},
-        {-3, -3, 0, 0.0, 1.0},
-        {3,  -3,0, 1.0, 1.0},
-    }
 
-    local gvb = {"fffff"}
-    for _, v in ipairs(vb) do for _, vv in ipairs(v) do table.insert(gvb, vv) end end
-    local ib = { 0, 1, 2, 3}
-    local vdecl = get_quaddecl().handle
-    quad.mesh.assetinfo = util.create_mesh_handle(vdecl, gvb, ib)
-    return quadid
-end
-
-
-function util.create_dynamic_mesh_handle(decl, vbsize, ibsize)
-	return {
-		handle = {
-			groups = {
-				{
-					vb = {handles = {bgfx.create_dynamic_vertex_buffer(vbsize, decl, "a")}},
-					ib = ibsize and {handle= bgfx.create_dynamic_index_buffer(ibsize, "a")} or nil,
-					primitives = {},
-				}
-			}
-		}
+	local vb = {
+		"fffff",
+		-3,  3, 0, 0, 0,
+		 3,  3, 0, 1, 0,
+		-3, -3, 0, 0, 1,
+		 3, -3, 0, 1, 1,
 	}
+    
+    quad.mesh.assetinfo = quad_mesh(vb)
+    return quadid
 end
 
 return util

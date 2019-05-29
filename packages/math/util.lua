@@ -46,12 +46,40 @@ function util.view_proj_matrix(e)
 	return ms:view_proj(camera, camera.frustum)
 end
 
-function util.identity_transform()
+function util.srt(s, r, t)
 	return {
-		s = {1, 1, 1, 0},
-		r = {0, 0, 0, 0},
-		t = {0, 0, 0, 1},
+		s = s or {1, 1, 1, 0},
+		r = r or {0, 0, 0, 0},
+		t = t or {0, 0, 0, 1},
 	}
 end
+
+function util.scale_mat(s)
+	local stype = type(s)
+	if type(s) == "number" then
+		return util.srt {s, s, s, 0}
+	end
+	assert(stype == "table")
+	return util.srt(s)
+end
+
+function util.rotation_mat(r)
+	return util.srt(nil, r)
+end
+
+function util.translate_mat(t)
+	return util.srt(nil, nil, t)
+end
+
+function util.identity_transform()
+	return util.srt()
+end
+
+util.XAXIS = ms:ref "vector" {1, 0, 0, 0}
+util.NXAXIS = ms:ref "vector" {-1, 0, 0, 0}
+util.YAXIS = ms:ref "vector" {0, 1, 0, 0}
+util.NYAXIS = ms:ref "vector" {0, -1, 0, 0}
+util.ZAXIS = ms:ref "vector" {0, 0, 1, 0}
+util.NZAXIS = ms:ref "vector" {0, 0, -1, 0}
 
 return util

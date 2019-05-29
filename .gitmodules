@@ -52,3 +52,6 @@
 [submodule "packages/resources.binary"]
 	path = packages/resources.binary
 	url = https://gz-tea.ejoy.com/git/Ant/assets.git
+[submodule "3rd/imgui"]
+	path = 3rd/imgui
+	url = https://github.com/ocornut/imgui

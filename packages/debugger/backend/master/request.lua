@@ -218,7 +218,7 @@ end
 function request.evaluate(req)
     local args = req.arguments
     if type(args.frameId) ~= 'number' then
-        response.error(req, "Not found frame")
+        response.error(req, "Please pause to evaluate expressions")
         return
     end
     if type(args.expression) ~= 'string' then

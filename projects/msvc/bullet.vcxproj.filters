@@ -13,36 +13,10 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\Collision">
-      <UniqueIdentifier>{2cd22c4b-52d5-43e6-affd-5a361fcccc3b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Collision\Internal">
-      <UniqueIdentifier>{f79e0920-0d08-458b-af2f-2368b67e158c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Collision">
-      <UniqueIdentifier>{906c6fef-5c82-49a2-a350-9ac1ac186f1f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Collision\Internal">
-      <UniqueIdentifier>{4084bafa-b540-4ff5-ab9d-3220d1d4231a}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\bullet\bullet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\bullet\Collision\CollisionSdkC_Api.cpp">
-      <Filter>Source Files\Collision</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\clibs\bullet\Collision\Internal\Bullet2CollisionSdk.cpp">
-      <Filter>Source Files\Collision\Internal</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\clibs\bullet\Collision\Internal\Bullet2CollisionSdk.h">
-      <Filter>Header Files\Collision\Internal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\clibs\bullet\Collision\CollisionSdkC_Api.h">
-      <Filter>Header Files\Collision</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

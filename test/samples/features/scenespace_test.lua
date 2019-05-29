@@ -40,7 +40,7 @@ local function create_scene_node_test()
     local material = {
         content = {
             {
-                ref_path = fs.path '//ant.resources/bunny.material'
+                ref_path = fs.path '//ant.resources/materials/bunny.material'
             }
         }
     }
@@ -121,13 +121,13 @@ local function create_scene_node_test()
         world:create_entity {
         transform = {
             parent = hie_level1_1, 
-            s = {0.01, 0.01, 0.01, 0},
+            s = {100, 100, 100, 0},
             r = {0, 0, 0, 0},
             t = {0, 0, 0, 1},
         },
         name = 'render_child1_1',
         mesh = {
-            ref_path = fs.path '//ant.resources/sphere.mesh'
+            ref_path = fs.path '//ant.resources/meshes/sphere.mesh'
         },
         material = material,
         can_render = true,
@@ -140,13 +140,13 @@ local function create_scene_node_test()
         world:create_entity {
         transform = {
             parent = hie_level1_2, 
-            s = {0.01, 0.01, 0.01, 0},
+            s = {100, 100, 100, 0},
             r = {0, 0, 0, 0},
             t = {0, 0, 0, 1},
         },
         name = 'render_child1_2',
         mesh = {
-            ref_path = fs.path '//ant.resources/cylinder.mesh'
+            ref_path = fs.path '//ant.resources/meshes/sphere.mesh'
         },
         material = material,
         can_render = true,
@@ -158,14 +158,14 @@ local function create_scene_node_test()
         world:create_entity {
         transform = {
             parent = hie_level2_1, 
-            s = {1, 1, 1, 0},
+            s = {100, 100, 100, 0},
             r = {0, 0, 0, 0},
-            t = {0, 0, 0, 1},
-            slotname = "h1_h1",
+            t = {0, 2, 0, 1},
+            --slotname = "h1_h1",
         },
         name = 'render_child2_1',
         mesh = {
-            ref_path = fs.path '//ant.resources/cube.mesh'
+            ref_path = fs.path '//ant.resources/meshes/cube.mesh'
         },
         material = material,
         can_render = true,
@@ -217,7 +217,7 @@ local function create_scene_node_test()
         return {
             content = {
                 {
-                    ref_path = fs.path "//ant.resources/simple_mesh.material",
+                    ref_path = fs.path "//ant.resources/materials/simple_mesh.material",
                 }
             },
             properties = {
@@ -238,7 +238,7 @@ local function create_scene_node_test()
         },
         name = 'render2_rootchild',
         mesh = {
-            ref_path = fs.path '//ant.resources/cube.mesh'
+            ref_path = fs.path '//ant.resources/meshes/cube.mesh'
         },
         material = material,
         can_render = true,
@@ -256,7 +256,7 @@ local function create_scene_node_test()
         },
         name = 'render2_child1',
         mesh = {
-            ref_path = fs.path '//ant.resources/sphere.mesh'
+            ref_path = fs.path '//ant.resources/meshes/sphere.mesh'
         },
         material = material,
         can_render = true,
@@ -266,7 +266,8 @@ local function create_scene_node_test()
 end
 
 function scenespace_test:init()
-    add_hierarchy_file(hie_refpath)
+    --add_hierarchy_file(hie_refpath)
+    assert(fs.exists(hie_refpath))
     create_scene_node_test()
 end
 

@@ -14,6 +14,7 @@ local fs = require "filesystem"
 local geodrawer = import_package "ant.geometry".drawer
 local declmgr = require "vertexdecl_mgr"
 local bgfx = require "bgfx"
+local gltfutil = import_package "ant.glTF".util
 
 ecs.component "shadow"
 	.material "material_content"
@@ -152,14 +153,40 @@ end
 local function create_bounding_mesh_entity()
 	local eid = world:create_entity {
 		mesh = {},
-		material = computil.assign_material(fs.path "//ant.resources" / "depiction"/ "line.material"),
+		material = computil.assign_material(fs.path "//ant.resources" / "depiction"/ "materials" / "line.material"),
 		transform = mu.identity_transform(),
 		name = "mesh_bounding_debug",
 		can_render = false,
 		main_view = true,
 		mesh_bounding_debug = true,
 	}
-	world[eid].mesh.assetinfo = computil.create_dynamic_mesh_handle(get_line_decl().handle, 1024*10, 1024*10)
+	local stride = 16 -- "fffd"
+	local vbsize, ibsize = 1024 * stride, 1024 * 2
+	local decl = get_line_decl()	-- mean primitve.attributes only support POSITION and COLOR
+	world[eid].mesh.assetinfo = {
+		handle = {
+			scene = 0,
+			scenes = {nodes={0}},
+			nodes = {mesh=0},
+			meshes={{}},
+			accessors={},
+			bufferViews={
+				{
+					handle = bgfx.create_dynamic_vertex_buffer(vbsize, decl.handle, "a"),
+					byteOffset = 0,
+					byteLength = 1024 * stride,
+					byteStride = 16,
+					target = gltfutil.target("vertex")
+				},
+				{
+					handle = bgfx.create_dynamic_index_buffer(ibsize, "a"),
+					byteOffset = 0,
+					byteLength = 1024 * 2,
+					target = gltfutil.target("index"),
+				}
+			}
+		}
+	}
 end
 
 local function generate_lighting_frustum_vb()
@@ -208,15 +235,19 @@ local function create_frustum_bounding_entity()
 	local eid = world:create_entity {
 		transform = mu.identity_transform(),
 		mesh = {},
-		material = computil.assign_material(fs.path "//ant.resources" / "line.material"),
+		material = computil.assign_material(fs.path "//ant.resources" / "depiction" / "materials" / "line.material"),
 		can_render = true,
 		main_view = true,
 		frustum_debug = true,
 		name = "direction light frustum shape",
 	}
 
-	world[eid].mesh.assetinfo = computil.create_mesh_handle(
-		get_line_decl().handle, generate_lighting_frustum_vb())
+	local num_vertices = 8
+	world[eid].mesh.assetinfo = gltfutil.create_simple_mesh({
+			stride = 16,
+			{name="POSITION", offset=0, elemcount=3, elemtype="FLOAT"},
+			{name="COLOR_0", offset=12, elemcount=4, elemtype="UNSIGNED_BYTE"},
+		}, generate_lighting_frustum_vb(), num_vertices)
 end
 
 function debug_sm:init()

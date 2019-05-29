@@ -6,7 +6,7 @@ shader = {
 	 --fs = "//ant.resources/mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm",
 }
 
-state = "default.state"
+state = "materials/states/default.state"
 
 properties = {
 	textures = {

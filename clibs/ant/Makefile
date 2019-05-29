@@ -9,7 +9,7 @@ else
 default : libant-$(PLAT).a
 endif
 
-LIBS= bgfx bullet hierarchy math3d thread terrain crypt lsocket protocol remotedebug firmware platform window datalist filesystem
+LIBS= bgfx bullet hierarchy math3d thread terrain crypt lsocket protocol remotedebug firmware platform window datalist filesystem meshconverter imgui
 
 define MakeLibs
 $(ODIR)/lib$(1).a : | $(ODIR)
@@ -39,7 +39,7 @@ $(ODIR)/libib-compress.a : | $(ODIR)
 	@cd ../../3rd/ib-compress/ && $(MAKE) --no-print-directory libib-compress-$(PLAT).a "ODIR=$(ODIR)" "PLAT=$(PLAT)" && mv libib-compress-$(PLAT).a ../../clibs/ant/$(ODIR)/libib-compress.a
 
 $(ODIR)/ant_searcher.o : ant_searcher.c ant.h ant_module_define.h ant_module_declar.h | $(ODIR)
-	$(CC) -c $(CFLAGS) $(LUAINC) -o $@ $<
+	$(CC) -c $(CFLAGS) $(LUAINC) $(BGFXINC) -o $@ $<
 
 $(ODIR)/main.o : main.c | $(ODIR)
 	$(CC) -c $(CFLAGS) $(LUAINC) -o $@ $<

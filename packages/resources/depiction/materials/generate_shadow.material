@@ -1,0 +1,6 @@
+shader = {
+    vs = "//ant.resources/picking/vs_picking.sc",
+    fs = "//ant.resources/picking/fs_picking.sc",
+}
+
+state = "materials/states/default.state"

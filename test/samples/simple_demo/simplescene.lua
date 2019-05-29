@@ -28,7 +28,7 @@ function simplescene:init()
 		material = {
 			content = {
 				{
-					ref_path = fs.path "//ant.resources/bunny.material",
+					ref_path = fs.path "//ant.resources/materials/bunny.material",
 				}
 			}
 		},

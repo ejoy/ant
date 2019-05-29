@@ -18,6 +18,7 @@ extern "C" {
 #include <array>
 #include <cstring>
 #include <unordered_map>
+#include <string>
 
 extern bool default_homogeneous_depth();
 extern glm::vec3 to_viewdir(const glm::vec3 &e);

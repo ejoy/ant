@@ -3,9 +3,12 @@ local world = ecs.world
 
 ecs.import "ant.inputmgr"
 
-local point2d = import_package "ant.math".point2d
+local mathpkg = import_package "ant.math"
+local point2d = mathpkg.point2d
+local ms = mathpkg.stack
+local mu = mathpkg.util
+
 local math3d = require "math3d"
-local ms = import_package "ant.math".stack
 local rhwi = import_package "ant.render".hardware_interface
 
 local camera_controller_system = ecs.system "camera_controller"
@@ -31,12 +34,20 @@ local function camera_reset(camera, target)
 	ms(camera.viewdir, target, camera.eyepos, "-n=")
 end
 
-local function rotate_round_point(camera, point, distance, dx, dy)
+local function rotate_round_point(camera, point, distance, dx, dy)	
 	local right, up = ms:base_axes(camera.viewdir)
-	ms(camera.viewdir,
-				{type="q", axis=up, radian={dx}}, 
-				{type="q", axis=right, radian={dy}},	-- rotation quternion in stack
-				"3**n=")	-- get view dir from point to camera position, than multipy with rotation quternion
+
+	if ms:is_parallel(mu.YAXIS, camera.viewdir, 0.05) then	
+		ms(camera.viewdir,
+		{type="q", axis=up, radian={dx}}, 
+		camera.viewdir,
+		"*n=")								-- get view dir from point to camera position, than multipy with rotation quternion
+	else
+		ms(camera.viewdir,
+		{type="q", axis=up, radian={dx}}, 
+		{type="q", axis=right, radian={dy}},	-- rotation quternion in stack
+		"3**n=")								-- get view dir from point to camera position, than multipy with rotation quternion
+	end
 	ms(camera.eyepos, point, camera.viewdir, {distance}, '*-=')	--calculate new camera position: point - viewdir * distance
 end
 

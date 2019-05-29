@@ -1,4 +1,3 @@
-local method = require "method"
 local crypt = require "crypt"
 
 local world
@@ -6,6 +5,7 @@ local pool
 local load
 local typeinfo
 local ids
+local packages
 
 local function sortpairs(t)
     local sort = {}
@@ -22,6 +22,14 @@ local function sortpairs(t)
         n = n + 1
         return k, t[k]
     end
+end
+
+local function map2lst(t)
+    local r = {}
+    for k in sortpairs(t) do
+        r[#r+1] = k
+    end
+    return r
 end
 
 local foreach_save_1
@@ -49,8 +57,8 @@ local function foreach_save_2(component, c)
     end
     if c.map then
 		local ret = {}
-        for k, v in sortpairs(component) do
-			ret[#ret+1] = {k , foreach_save_1(v, c.type)}
+        for k, v in pairs(component) do
+			ret[k] = foreach_save_1(v, c.type)
 		end
         return ret
     end
@@ -74,9 +82,13 @@ function foreach_save_1(component, name)
     end
     local ret 
     if not c.type then
+        if not ids[component] then
+            ids[component] = crypt.uuid64()
+        end
         ret = {
-            __id = ids[component] and ids[component] or crypt.uuid64()
+            __id = ids[component],
         }
+        component.__type = name
         for _, v in ipairs(c) do
             if component[v.name] == nil and v.attrib and v.attrib.opt then
                 goto continue
@@ -104,10 +116,11 @@ local function _save_entity(w, eid)
     local e = assert(w[eid])
     ids[e] = ids[e] and ids[e] or crypt.uuid64()
     local t = {
-        __id = ids[e]
+        __id = ids[e],
     }
     for name, cv in sortpairs(e) do
         t[#t+1] = { name, foreach_save_1(cv, name) }
+        packages[w._components[name].package] = true
     end
     return t
 end
@@ -131,9 +144,9 @@ end
 
 local function save_start(w)
     world = w
-    method.init(w)
     pool = {}
     load = {}
+    packages = {}
     typeinfo = w._components
     update_deserialize_1(w)
 end
@@ -155,16 +168,24 @@ local function save_world(w)
         entity[#entity+1] = _save_entity(w, eid)
     end
     table.sort(entity, function(a, b) return a.__id < b.__id end)
-    return { entity, save_end(w) }
+    return { map2lst(packages), entity, save_end(w) }
 end
 
 local function save_entity(w, eid)
     save_start(w)
     local entity = _save_entity(w, eid)
-    return { entity, save_end(w) }
+    return { map2lst(packages), entity, save_end(w) }
+end
+
+local function save_component(w, component, name)
+    save_start(w)
+    local res = foreach_save_1(component, name)
+    update_deserialize_2(w)
+    return res
 end
 
 return {
     world = save_world,
     entity = save_entity,
+    component = save_component,
 }

@@ -66,6 +66,14 @@ function task.add(f, traceback)
 	tasktraceback[co] = traceback
 end
 
+function task.default_tb(co, status)
+	iup.Message("Error", string.format("Error:%s\n%s", status, debug.traceback(co)))
+end
+
+function task.safe_loop(f,traceback)
+	task.loop(f, traceback or task.default_tb)
+end
+
 function task.loop(f, traceback)
 	assert(f)
 	local n = #tasklist

@@ -13,28 +13,13 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="bgfx">
-      <UniqueIdentifier>{3cb98176-b9a1-493e-8797-19359b469444}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\meshconverter\antmesh_converter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\clibs\meshconverter\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\meshconverter\bgfxmesh_helper.cpp">
+    <ClCompile Include="..\..\clibs\meshconverter\gltf_converter.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\clibs\meshconverter\fbx_helper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\clibs\meshconverter\meshconverter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\clibs\meshconverter\bgfx\util.cpp">
-      <Filter>bgfx</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -42,6 +27,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\clibs\meshconverter\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\meshconverter\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

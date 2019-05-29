@@ -4,6 +4,7 @@
 #include <lauxlib.h>
 #include <stdint.h>
 #include "window_native.h"
+#include "virtual_keys.h"
 
 static void
 default_message_handle(void *ud, struct ant_window_message *msg) {
@@ -54,6 +55,60 @@ init(lua_State *L) {
 	window_init(cb);
 }
 
+static int
+window_keymap(int whatkey) {
+	static const int keymap[ANT_KEYMAP_COUNT] = {
+		VK_TAB,
+		VK_LEFT,
+		VK_RIGHT,
+		VK_UP,
+		VK_DOWN,
+		VK_PRIOR,
+		VK_NEXT,
+		VK_HOME,
+		VK_END,
+		VK_INSERT,
+		VK_DELETE,
+		VK_BACK,
+		VK_SPACE,
+		VK_RETURN,
+		VK_ESCAPE,
+	};
+	if (whatkey < 0 || whatkey >= ANT_KEYMAP_COUNT)
+		return -1;
+	return keymap[whatkey];
+}
+
+static void
+init_keymap(lua_State *L) {
+	static const char * name[ANT_KEYMAP_COUNT] = {
+		"Tab",
+		"Left",
+		"Right",
+		"Up",
+		"Down",
+		"PageUp",
+		"PageDown",
+		"Home",
+		"End",
+		"Insert",
+		"Delete",
+		"Backspace",
+		"Space",
+		"Enter",
+		"Escape",
+	};
+	lua_createtable(L, 0, ANT_KEYMAP_COUNT);
+	int i;
+	for (i=0;i<ANT_KEYMAP_COUNT;i++) {
+		int c = window_keymap(i);
+		if (c >= 0) {
+			lua_pushinteger(L, c);
+			lua_setfield(L, -2, name[i]);
+		}
+	}
+}
+
 LUAMOD_API int
 luaopen_window_native(lua_State *L) {
 	init(L);
@@ -64,5 +119,9 @@ luaopen_window_native(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
+
+	init_keymap(L);
+	lua_setfield(L, -2, "keymap");
+
 	return 1;
 }

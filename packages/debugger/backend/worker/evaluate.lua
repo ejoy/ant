@@ -1,4 +1,4 @@
-local rdebug = require 'remotedebug'
+local rdebug = require 'remotedebug.visitor'
 local variables = require 'backend.worker.variables'
 
 local readfile = package.readfile

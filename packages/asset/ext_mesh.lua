@@ -1,6 +1,6 @@
 local log = log and log(...) or print
 
-local mesh_loader = import_package "ant.modelloader"
+local mesh_loader = import_package "ant.modelloader".loader
 local assetmgr = require "asset"
 local fs = require "filesystem"
 

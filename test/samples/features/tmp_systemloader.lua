@@ -33,6 +33,7 @@ local PVPScenLoader = require 'PVPSceneLoader'
 local init_loader = ecs.system 'init_loader'
 
 init_loader.depend 'timesystem'
+init_loader.depend "serialize_index_system"
 
 init_loader.dependby 'render_system'
 init_loader.dependby 'primitive_filter_system'
@@ -66,7 +67,7 @@ local function create_animation_test()
         material = {
             content = {
                 {
-                    ref_path = fs.path "//ant.resources/skin_model_sample.material"
+                    ref_path = fs.path "//ant.resources/materials/skin_model_sample.material"
                 }
             }
         },
@@ -76,7 +77,8 @@ local function create_animation_test()
                     anirefs = {
                         {idx = 1, weight = 0.5},
                         {idx = 2, weight = 0.5}
-                    }
+					},
+					name = "walk",
                 }
             },
             anilist = {
@@ -102,7 +104,8 @@ local function create_animation_test()
             ref_path = fs.path '//ant.resources' / smpath
         },
         name = 'animation_sample',
-        main_view = true
+		main_view = true,
+		serialize = serialize.create(),
     }
 
     local e = world[eid]
@@ -125,6 +128,13 @@ function init_loader:init()
 
     create_animation_test()
 
+	local eid = world:first_entity_id "main_queue"
+	local watch = import_package "ant.serialize".watch
+	local res1 = watch.query(world, nil, eid.."/camera")
+	local res2 = watch.query(world, res1.__id, "")
+	watch.set(world, res1.__id, "", "type", "test")
+	local res3 = watch.query(world, res1.__id, "")
+    
     -- local function save_file(file, data)
     --     assert(assert(io.open(file, 'w')):write(data)):close()
     -- end

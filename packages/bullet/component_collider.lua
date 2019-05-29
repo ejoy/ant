@@ -9,7 +9,7 @@ local colliderutil = require "util"
 ecs.tag "collider_tag"
 
 local coll = ecs.component "collider"
-	["opt"].center "real[3]" {0, 0, 0}
+	.center "real[3]" {0, 0, 0}
 	.is_tigger "boolean" (true)
 
 function coll:delete()	
@@ -90,6 +90,10 @@ for _, pp in ipairs {
 		local shape = self.shape
 		local collider = self.collider
 		colliderutil.create_collider_comp(Physics, shape, collider, e.transform)
+	end
+
+	function c:delete()
+		self.shape.handle = nil	-- collider object has own this shape handle
 	end
 end
 

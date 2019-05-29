@@ -45,6 +45,9 @@ static bool g_default_homogeneous_depth = false;
 bool default_homogeneous_depth(){
 	return g_default_homogeneous_depth;
 }
+
+#define tov3(v4)	(const glm::vec3*)(&(v4))		
+
 /*
 static inline float
 get_angle(lua_State *L, int index) {
@@ -113,32 +116,35 @@ delLS(lua_State *L) {
 
 static void
 value_tostring(lua_State *L, const char * prefix, const float *r, int type) {
+	char buffer[512] = { 0 };
 	switch (type) {
-	case LINEAR_TYPE_MAT:
-		lua_pushfstring(L, "%sMAT (%f,%f,%f,%f : %f,%f,%f,%f : %f,%f,%f,%f : %f,%f,%f,%f)",
+	case LINEAR_TYPE_MAT:		
+		sprintf(buffer, "%sMAT (%.2f,%.2f,%.2f,%.2f : %.2f,%.2f,%.2f,%.2f : %.2f,%.2f,%.2f,%.2f : %.2f,%.2f,%.2f,%.2f)",
 			prefix,
 			r[0],r[1],r[2],r[3],
 			r[4],r[5],r[6],r[7],
 			r[8],r[9],r[10],r[11],
 			r[12],r[13],r[14],r[15]
-		);
+		);		
 		break;
 	case LINEAR_TYPE_VEC4:
-		lua_pushfstring(L, "%sVEC4 (%f,%f,%f,%f)", prefix, r[0],r[1],r[2],r[3]);
+		sprintf(buffer, "%sVEC4 (%.2f,%.2f,%.2f,%.2f)", prefix, r[0],r[1],r[2],r[3]);		
 		break;	
 	case LINEAR_TYPE_QUAT:
-		lua_pushfstring(L, "%sQUAT (%f,%f,%f,%f)", prefix, r[0],r[1],r[2],r[3]);
+		sprintf(buffer, "%sQUAT (%.2f,%.2f,%.2f,%.2f)", prefix, r[0],r[1],r[2],r[3]);
 		break;
 	case LINEAR_TYPE_NUM:
-		lua_pushfstring(L, "%sNUMBER (%f)", prefix, r[0]);
+		sprintf(buffer, "%sNUMBER (%.2f)", prefix, r[0]);
 		break;
 	case LINEAR_TYPE_EULER:
-		lua_pushfstring(L, "%sEULER (yaw(y) = %f, pitch(x) = %f, roll(z) = %f)", prefix, r[0], r[1], r[2]);
+		sprintf(buffer, "%sEULER (yaw(y) = %.2f, pitch(x) = %.2f, roll(z) = %.2f)", prefix, r[0], r[1], r[2]);
 		break;
 	default:
-		lua_pushfstring(L, "%sUNKNOWN", prefix);
+		sprintf(buffer, "%sUNKNOWN", prefix);
 		break;
 	}
+
+	lua_pushstring(L, buffer);
 }
 
 static int
@@ -410,18 +416,28 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index){
 
 		m = glm::mat4x4(glm::quat(*(const glm::vec3*)value));
 	} else if (rtype == LUA_TTABLE) {
-		size_t len = lua_rawlen(L, index);
-		if (len != 3)
-			luaL_error(L, "r field should : r={1, 2, 3}, only accept 3 value, %d is give", len);
-		//the table is define as : rotate x-axis(pitch), rotate y-axis(yaw), rotate z-axis(roll)
+		const size_t len = lua_rawlen(L, index);
 
-		glm::vec3 e;
-		for (int ii = 0; ii < 3; ++ii)
-			e[ii] = get_table_value(L, index, ii + 1);		
+		if (len == 3) {
+			//the table is define as : rotate x-axis(pitch), rotate y-axis(yaw), rotate z-axis(roll)
+			glm::vec3 e;
+			for (int ii = 0; ii < 3; ++ii)
+				e[ii] = get_table_value(L, index, ii + 1);
 
-		// be careful here, glm::quat(euler_angles) result is different from eulerAngleXYZ()
-		// keep the same order with glm::quat
-		m = glm::mat4x4(glm::quat(e));	
+			// be careful here, glm::quat(euler_angles) result is different from eulerAngleXYZ()
+			// keep the same order with glm::quat
+			m = glm::mat4x4(glm::quat(e));
+		} else if (len == 4) {
+			glm::quat q;
+			for (int ii = 0; ii < 4; ++ii)
+				q[ii] = get_table_value(L, index, ii + 1);
+			m = glm::mat4x4(q);
+		} else {
+			luaL_error(L, "r field should : \
+							1. with 3 element(euler angle): r={1, 2, 3}, only accept 3 value;\n\
+							2. with 4 element(quaternion): r={0, 0, 0, 1};\n\
+							%d is give", len);
+		}
 	} else {
 		m = glm::mat4x4(1.f);
 		if (rtype != LUA_TNIL)
@@ -925,14 +941,13 @@ mul_2values(lua_State *L, struct lastack *LS) {
 
 template<typename T>
 inline bool
-is_zero(const T &a) {	
-	return glm::all(glm::equal(a, glm::zero<T>(), T(glm::epsilon<float>())));
+is_zero(const T &a, const T &e = T(glm::epsilon<float>())) {
+	return glm::all(glm::equal(a, glm::zero<T>(), e));
 }
 
-template<>
 inline bool 
-is_zero<float>(const float &a) {
-	return glm::equal(a, glm::zero<float>(), glm::epsilon<float>());
+is_zero(const float &a, float e = glm::epsilon<float>()) {
+	return glm::equal(a, glm::zero<float>(), e);
 }
 
 static void mulH_2values(lua_State *L, struct lastack *LS){
@@ -1222,8 +1237,17 @@ base_axes_from_forward_vector(const glm::vec4& forward, glm::vec4& right, glm::v
 		up = glm::vec4(0, 1, 0, 0);
 		right = glm::vec4(1, 0, 0, 0);
 	} else {
-		right = glm::vec4(glm::cross(glm::vec3(0, 1, 0), *((glm::vec3*)&forward.x)), 0);
-		up = glm::vec4(glm::cross(*(glm::vec3*)(&forward.x), *((glm::vec3*)&right.x)), 0);
+
+		if (is_zero(forward - glm::vec4(0, 1, 0, 0))) {
+			up = glm::vec4(0, 0, 1, 0);
+			right = glm::vec4(1, 0, 0, 0);
+		} else if (is_zero(forward - glm::vec4(0, -1, 0, 0))) {
+			up = glm::vec4(0, 0, -1, 0);
+			right = glm::vec4(1, 0, 0, 0);
+		} else {
+			right = glm::vec4(glm::normalize(glm::cross(glm::vec3(0, 1, 0), *((glm::vec3*)&forward.x))), 0);
+			up = glm::vec4(glm::normalize(glm::cross(*(glm::vec3*)(&forward.x), *((glm::vec3*)&right.x))), 0);
+		}
 	}
 }
 
@@ -2432,6 +2456,42 @@ llength(lua_State *L) {
 }
 
 static int
+ldot(lua_State *L) {
+	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
+	lastack *LS = bp->LS;
+
+	const int numarg = lua_gettop(L);
+	if (numarg != 3) {
+		luaL_error(L, "only support 2 arguments:%d", numarg - 1);
+	}
+
+	const auto v0 = get_vec_value(L, LS, 2);
+	const auto v1 = get_vec_value(L, LS, 3);
+
+	lua_pushnumber(L, glm::dot(v0, v1));
+	return 1;
+}
+
+static int
+lis_parallel(lua_State *L) {
+	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
+	lastack *LS = bp->LS;
+
+	const int numarg = lua_gettop(L);
+	if (numarg < 3) {
+		luaL_error(L, "need argument: v0, v1, and threshold value[opt], argument provided:%d", numarg);
+	}
+
+	const auto v0 = get_vec_value(L, LS, 2);
+	const auto v1 = get_vec_value(L, LS, 3);
+
+	const float threshold = luaL_optnumber(L, 4, 0.01f);
+
+	lua_pushboolean(L, is_zero(glm::cross(*tov3(v0), *tov3(v1)), glm::vec3(threshold)));
+	return 1;
+}
+
+static int
 lscreen_point_to_3d(lua_State *L) {
 	const int numarg = lua_gettop(L);
 	if (numarg < 4) {
@@ -2542,37 +2602,13 @@ lnew(lua_State *L) {
 	struct boxstack *bp = (struct boxstack *)lua_newuserdata(L, sizeof(*bp));
 
 	bp->LS = NULL;
-	if (luaL_newmetatable(L, LINALG)) {
-		luaL_Reg l[] = {
-			{ "__gc", delLS },
-			{ "__call", callLS },
-			{ MFUNCTION(mul) },
-			{ MFUNCTION(pop) },
-			{ MFUNCTION(popnumber) },
-			{ MFUNCTION(toquaternion)},
-			{ MFUNCTION(lookfrom3)},
-			{ MFUNCTION(length)},
-			{ "ref", lstackrefobject },
-			{ "command", gencommand },
-			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )
-			{ "matrix", new_temp_matrix },
-			{ "quaternion", new_temp_quaternion},
-			{ "euler", new_temp_euler},
-			{ "base_axes", lbase_axes_from_forward_vector},
-			{ "srtmat", lsrt_matrix },
-			{ "view_proj", lview_proj},			
-			{ "length", llength},
-			{ "screenpt_to_3d", lscreen_point_to_3d},			
-			{ NULL, NULL },
-		};
-		luaL_setfuncs(L, l, 0);
-		lua_pushvalue(L, -1);
-		lua_setfield(L, -2, "__index");
-	}
-
-	lua_setmetatable(L, -2);
-	bp->LS = lastack_new();
-	return 1;
+	if (luaL_getmetatable(L, LINALG)) {
+		lua_setmetatable(L, -2);
+		bp->LS = lastack_new();
+		return 1;
+	} 
+	
+	return luaL_error(L, "not %s metatable register!", LINALG);
 }
 
 static int
@@ -2665,6 +2701,39 @@ lhomogeneous_depth(lua_State *L){
 	return 1;
 }
 
+static void
+register_linalg_mt(lua_State *L) {
+	if (luaL_newmetatable(L, LINALG)) {
+		luaL_Reg l[] = {
+			{ "__gc", delLS },
+			{ "__call", callLS },
+			{ MFUNCTION(mul) },
+			{ MFUNCTION(pop) },
+			{ MFUNCTION(popnumber) },
+			{ MFUNCTION(toquaternion)},
+			{ MFUNCTION(lookfrom3)},
+			{ MFUNCTION(length)},
+			{ "ref", lstackrefobject },
+			{ "command", gencommand },
+			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )
+			{ "matrix", new_temp_matrix },
+			{ "quaternion", new_temp_quaternion},
+			{ "euler", new_temp_euler},
+			{ "base_axes", lbase_axes_from_forward_vector},
+			{ "srtmat", lsrt_matrix },
+			{ "view_proj", lview_proj},
+			{ "length", llength},
+			{ "dot", ldot},
+			{ "is_parallel", lis_parallel},
+			{ "screenpt_to_3d", lscreen_point_to_3d},
+			{ NULL, NULL },
+		};
+		luaL_setfuncs(L, l, 0);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
+	}
+}
+
 extern "C" {
 	LUAMOD_API int
 	luaopen_math3d(lua_State *L) {
@@ -2684,6 +2753,9 @@ extern "C" {
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
 		lua_pop(L, 1);
+
+
+		register_linalg_mt(L);
 
 		luaL_Reg l[] = {
 			{ "new", lnew },

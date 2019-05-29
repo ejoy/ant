@@ -1,6 +1,0 @@
-shader={
-    vs="mesh/vs_colormeshex",
-    fs="mesh/fs_colormesh",
-}
-
-state = "default.state"

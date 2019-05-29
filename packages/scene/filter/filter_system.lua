@@ -57,6 +57,48 @@ local function reset_results(results)
 	end
 end
 
+local function node_matrix(node)
+	if node.matrix then
+		return ms:matrix(node.matrix)
+	end
+
+	if node.scale or node.rotation or node.translation then
+		return ms:srtmat(node.scale, node.rotation, node.translation)
+	end
+end
+
+local function calc_node_transform(node, parentmat)
+	local nodetrans = node_matrix(node)
+	return nodetrans and ms(parentmat, nodetrans, "*P") or parentmat
+end
+
+local function traverse_scene(scene, eid, materialcontent, worldmat, filter)
+	local nodes, meshes = scene.nodes, scene.meshes
+	local function traverse_scene_ex(scenenodes, parentmat)
+		for _, nodeidx in ipairs(scenenodes) do
+			local node = nodes[nodeidx+1]
+
+			local nodetrans = calc_node_transform(node, parentmat)
+			if node.children then
+				traverse_scene(node.children, nodetrans)
+			end
+
+			local meshidx = node.mesh
+			if meshidx then
+				local mesh = meshes[meshidx+1]
+			
+				for idx, prim in ipairs(mesh.primitives) do
+					ru.insert_primitive(eid, prim, scene, 
+						materialcontent[idx] or materialcontent[1], 
+						nodetrans, filter)
+				end
+			end
+		end
+	end
+
+	traverse_scene_ex(scene.scenes[scene.scene+1].nodes, worldmat)
+end
+
 function primitive_filter_sys:update()	
 
 	for _, prim_eid in world:each("primitive_filter") do
@@ -71,20 +113,24 @@ function primitive_filter_sys:update()
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
 			if vt and ft then
-				local meshhandle = assert(ce.mesh.assetinfo).handle
+				local assetinfo = ce.mesh.assetinfo
+				local meshhandle = assetinfo.handle
 				local worldmat = ce.transform.world
-				local bounding = meshhandle.bounding
-				if bounding then
-					boundings[#boundings+1] = {bounding = bounding, transform=worldmat}
+				local materialcontent = assert(ce.material.content)
+
+				local scene = meshhandle
+				if scene then
+					if scene.scene then
+						traverse_scene(scene, eid, materialcontent, worldmat, filter)
+					else
+						ru.insert_primitive_old(eid, 
+						meshhandle,
+						assert(ce.material.content),
+						worldmat,
+						filter,
+						ce.mesh.group_id)
+					end
 				end
-				-- change here 
-				-- make draw filter
-				ru.insert_primitive(eid, 
-					meshhandle,
-					assert(ce.material.content),
-					worldmat,
-					filter,
-					ce.mesh.group_id )
 			end
 		end
 

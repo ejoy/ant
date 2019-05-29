@@ -1,0 +1,6 @@
+shader = {
+    vs = "//ant.resources/simple/triangle/vs_simpletri",
+    fs = "//ant.resources/simple/triangle/fs_simpletri",
+}
+
+state = "materials/states/default.state"

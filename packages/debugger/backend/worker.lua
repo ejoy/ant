@@ -1,4 +1,4 @@
-local rdebug = require 'remotedebug'
+local rdebug = require 'remotedebug.visitor'
 local json = require 'common.json'
 local variables = require 'backend.worker.variables'
 local source = require 'backend.worker.source'
@@ -6,6 +6,7 @@ local breakpoint = require 'backend.worker.breakpoint'
 local evaluate = require 'backend.worker.evaluate'
 local traceback = require 'backend.worker.traceback'
 local stdout = require 'backend.worker.stdout'
+local emulator = require 'backend.worker.emulator'
 local ev = require 'common.event'
 local hookmgr = require 'remotedebug.hookmgr'
 local stdio = require 'remotedebug.stdio'
@@ -20,6 +21,8 @@ local exceptionFilters = {}
 local exceptionMsg = ''
 local exceptionTrace = ''
 local outputCapture = {}
+local noDebug = false
+local openUpdate = false
 
 local CMD = {}
 
@@ -34,8 +37,13 @@ local function workerThreadUpdate()
             break
         end
         local pkg = assert(json.decode(msg))
+        local ok, e = xpcall(function()
         if CMD[pkg.cmd] then
             CMD[pkg.cmd](pkg)
+        end
+        end, debug.traceback)
+        if not ok then
+            err:push(e)
         end
     end
 end
@@ -83,6 +91,11 @@ end)
 --    ev.emit('output', 'stderr', table.concat(t, '\t')..'\n')
 --end
 
+--local log = require 'common.log'
+--local fs = require 'common.filesystem'
+--log.file = (fs.dll_path():parent_path():parent_path():parent_path():parent_path() / "worker.log"):string()
+--print = log.info
+
 function CMD.initializing(pkg)
     ev.emit('initializing', pkg.config)
 end
@@ -101,9 +114,15 @@ function CMD.stackTrace(pkg)
     local startFrame = pkg.startFrame
     local endFrame = pkg.endFrame
     local curFrame = 0
+    local virtualFrame = 0
     local depth = 0
     local info = {}
     local res = {}
+
+    if startFrame == 0 then
+        res = emulator.stackTrace()
+        virtualFrame = #res
+    end
 
     while rdebug.getinfo(depth, info) do
         if curFrame ~= 0 and ((curFrame < startFrame) or (curFrame >= endFrame)) then
@@ -166,7 +185,7 @@ function CMD.stackTrace(pkg)
         command = pkg.command,
         seq = pkg.seq,
         stackFrames = res,
-        totalFrames = curFrame
+        totalFrames = curFrame + virtualFrame,
     }
 end
 
@@ -175,7 +194,7 @@ function CMD.source(pkg)
         cmd = 'source',
         command = pkg.command,
         seq = pkg.seq,
-        content = source.getCode(pkg.sourceReference),
+        content = emulator.getCode(pkg.sourceReference),
     }
 end
 
@@ -184,7 +203,7 @@ function CMD.scopes(pkg)
         cmd = 'scopes',
         command = pkg.command,
         seq = pkg.seq,
-        scopes = variables.scopes(pkg.frameId),
+        scopes = emulator.scopes(pkg.frameId),
     }
 end
 
@@ -254,7 +273,7 @@ function CMD.evaluate(pkg)
 end
 
 function CMD.setBreakpoints(pkg)
-    if not source.valid(pkg.source) then
+    if noDebug or not source.valid(pkg.source) then
         return
     end
     breakpoint.update(pkg.source, pkg.source.si, pkg.breakpoints)
@@ -288,6 +307,9 @@ function CMD.loadedSources()
 end
 
 function CMD.stop(pkg)
+    if noDebug then
+        return
+    end
     state = 'stopped'
     stopReason = pkg.reason
     hookmgr.step_in()
@@ -299,28 +321,38 @@ function CMD.run()
 end
 
 function CMD.stepOver()
+    if noDebug then
+        return
+    end
     state = 'stepOver'
     hookmgr.step_over()
 end
 
 function CMD.stepIn()
+    if noDebug then
+        return
+    end
     state = 'stepIn'
     hookmgr.step_in()
 end
 
 function CMD.stepOut()
+    if noDebug then
+        return
+    end
     state = 'stepOut'
     hookmgr.step_out()
 end
 
-local function runLoop(reason)
+local function runLoop(reason, description)
+    --TODO: 只在lua栈帧时需要description？
     sendToMaster {
         cmd = 'eventStop',
         reason = reason,
+        text = description,
     }
 
     while true do
-        thread.sleep(0.01)
         workerThreadUpdate()
         if state ~= 'stopped' then
             break
@@ -437,7 +469,7 @@ function event.print()
     if not initialized then return end
     local res = {}
     for arg in pairsEventArgs() do
-        res[#res + 1] = tostring(rdebug.value(arg))
+        res[#res + 1] = rdebug.tostring(arg)
     end
     res = table.concat(res, '\t') .. '\n'
     local s = rdebug.getinfo(1, info)
@@ -454,7 +486,7 @@ function event.iowrite()
     if not initialized then return end
     local res = {}
     for arg in pairsEventArgs() do
-        res[#res + 1] = tostring(rdebug.value(arg))
+        res[#res + 1] = rdebug.tostring(arg)
     end
     res = table.concat(res, '\t')
     local s = rdebug.getinfo(1, info)
@@ -472,51 +504,69 @@ function event.panic(msg)
     if not exceptionFilters['lua_panic'] then
         return
     end
-    exceptionMsg, exceptionTrace = traceback(msg, 0)
+    exceptionMsg, exceptionTrace = traceback(tostring(msg), 0)
     state = 'stopped'
-    runLoop 'exception'
+    runLoop('exception', exceptionMsg)
 end
 
-if hookmgr.exception_open then
-    function event.exception(msg)
-        if not initialized then return end
-        local _, type = getExceptionType()
-        if not type or not exceptionFilters[type] then
-            return
-        end
-        exceptionMsg, exceptionTrace = traceback(msg, 0)
-        state = 'stopped'
-        runLoop 'exception'
+function event.r_exception(msg)
+    if not initialized then return end
+    local _, type = getExceptionType()
+    if not type or not exceptionFilters[type] then
+        return
     end
-else
-    function event.exception()
-        if not initialized then return end
-        local level, type = getExceptionType()
-        if not type or not exceptionFilters[type] then
-            return
-        end
-        local _, msg = getEventArgs(1)
-        exceptionMsg, exceptionTrace = traceback(msg, level - 3)
-        state = 'stopped'
-        runLoop 'exception'
-    end
+    exceptionMsg, exceptionTrace = traceback(tostring(msg), 0)
+    state = 'stopped'
+    runLoop('exception', exceptionMsg)
 end
 
-if hookmgr.thread_open then
-    function event.thread(co)
-        hookmgr.setcoroutine(co)
+function event.exception()
+    if not initialized then return end
+    local level, type = getExceptionType()
+    if not type or not exceptionFilters[type] then
+        return
     end
-else
-    function event.thread()
-        local _, co = getEventArgsRaw(1)
-        hookmgr.setcoroutine(co)
-    end
+    local _, msg = getEventArgs(1)
+    exceptionMsg, exceptionTrace = traceback(msg, level - 3)
+    state = 'stopped'
+    runLoop('exception', exceptionMsg)
+end
+
+function event.r_thread(co)
+    hookmgr.setcoroutine(co)
+end
+
+function event.thread()
+    local _, co = getEventArgsRaw(1)
+    hookmgr.setcoroutine(co)
 end
 
 function event.wait_client()
     while not initialized do
-        thread.sleep(0.01)
         workerThreadUpdate()
+    end
+end
+
+function event.event_call()
+    local code = rdebug.value(rdebug.getstack(2))
+    local name = rdebug.value(rdebug.getstack(3))
+    if emulator.eventCall(state, code, name) then
+        return true
+    end
+end
+
+function event.event_return()
+    emulator.eventReturn()
+end
+
+function event.event_line()
+    local line = rdebug.value(rdebug.getstack(2))
+    local scope = rdebug.getstack(3)
+    if emulator.eventLine(state, line, scope) then
+        emulator.open()
+        state = 'stopped'
+        runLoop 'step'
+        emulator.close()
     end
 end
 
@@ -526,7 +576,10 @@ hookmgr.init(function(name, ...)
             return event[name](...)
         end
     end, debug.traceback, ...)
-    if not ok then err:push(e) end
+    if not ok then
+        err:push(e)
+        return
+    end
     return e
 end)
 
@@ -538,7 +591,22 @@ local function lst2map(t)
     return r
 end
 
+local function init_internalmodule(config)
+    local mod = config.internalModule
+    if not mod then
+        return
+    end
+    local newvalue = rdebug.index(rdebug.index(rdebug.index(rdebug._G, "package"), "loaded"), mod)
+    local oldvalue = rdebug.index(rdebug._REGISTRY, "lua-debug")
+    rdebug.assign(newvalue, oldvalue)
+end
+
 ev.on('initializing', function(config)
+    noDebug = config.noDebug
+    hookmgr.update_open(not noDebug and openUpdate)
+    if hookmgr.thread_open then
+        hookmgr.thread_open(true)
+    end
     outputCapture = lst2map(config.outputCapture)
     if outputCapture["print"] then
         stdio.open_print(true)
@@ -546,6 +614,7 @@ ev.on('initializing', function(config)
     if outputCapture["io.write"] then
         stdio.open_iowrite(true)
     end
+    init_internalmodule(config)
 end)
 
 ev.on('terminated', function()
@@ -564,11 +633,8 @@ sendToMaster {
 
 local w = {}
 
-function w.skipfiles(v)
-    source.skipfiles(v)
-end
-
 function w.openupdate()
+    openUpdate = true
     hookmgr.update_open(true)
 end
 

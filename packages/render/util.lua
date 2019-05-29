@@ -1,9 +1,9 @@
 -- luacheck: globals log
 local log = log and log(...) or print
 
-local bgfx = require "bgfx"
+local bgfx 		= require "bgfx"
 local viewidmgr = require "viewid_mgr"
-local fs = require "filesystem"
+local gltfutil = import_package "ant.glTF".util
 
 local util = {}
 util.__index = util
@@ -50,53 +50,50 @@ end
 function util.draw_primitive(vid, primgroup, mat, render_properties)
     bgfx.set_transform(mat)
 
-    local material = primgroup.material
-    bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
-    update_properties(material.shader, primgroup.properties, render_properties)
+	local material = primgroup.material
+	bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
+	update_properties(material.shader, primgroup.properties, render_properties)
 
 	local prog = material.shader.prog
-	
-	local mg = assert(primgroup.mgroup)
-	local ib, vb = mg.ib, mg.vb
 
-	local prims = mg.primitives
-	if prims == nil or next(prims) == nil then
+	local mg = assert(primgroup.mgroup)
+	local ib, vb = mg.ib, mg.vb	
+
+	if primgroup.using_glb then
 		if ib then
-			bgfx.set_index_buffer(ib.handle)
+			bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
 		end
-		for idx, v in ipairs(vb.handles) do
-			bgfx.set_vertex_buffer(idx - 1, v)
+
+		local start_v, num_v = vb.start, vb.num
+		for idx, handle in pairs(vb.handles) do
+			bgfx.set_vertex_buffer(idx, handle, start_v, num_v)
 		end
-		
 		bgfx.submit(vid, prog, 0, false)
 	else
-		local numprim = #prims
-
-		for idx, v in ipairs(vb.handles) do
-			bgfx.set_vertex_buffer(idx - 1, v)
-		end
-		for i=1, numprim do
-			local prim = prims[i]
-			if ib and prim.start_index and prim.num_indices then
-				bgfx.set_index_buffer(ib.handle, prim.start_index, prim.num_indices)
+		local prims = mg.primitives
+		if prims == nil or next(prims) == nil then
+			if ib then
+				bgfx.set_index_buffer(ib.handle)
 			end
-			bgfx.submit(vid, prog, 0, i~=numprim)
+			for idx, v in ipairs(vb.handles) do
+				bgfx.set_vertex_buffer(idx - 1, v)
+			end
+			
+			bgfx.submit(vid, prog, 0, false)
+		else
+			local numprim = #prims
+
+			for idx, v in ipairs(vb.handles) do
+				bgfx.set_vertex_buffer(idx - 1, v)
+			end
+			for i=1, numprim do
+				local prim = prims[i]
+				if ib and prim.start_index and prim.num_indices then
+					bgfx.set_index_buffer(ib.handle, prim.start_index, prim.num_indices)
+				end
+				bgfx.submit(vid, prog, 0, i~=numprim)
+			end
 		end
-
-		-- for i=1, numprim do
-		-- 	local prim = prims[i]
-
-		-- 	if ib and prim.start_index and prim.num_indices then
-		-- 		bgfx.set_index_buffer(ib.handle, prim.start_index, prim.num_indices)
-		-- 	end
-		-- 	for idx, v in ipairs(vb.handles) do
-		-- 		bgfx.set_vertex_buffer(idx - 1, v, prim.start_vertex, prim.num_vertices)
-		-- 		--bgfx.set_vertex_buffer(idx - 1, v)
-		-- 	end
-
-		-- 	bgfx.submit(vid, prog, 0, i~=numprim)
-		-- end
-
 	end
 end
 
@@ -116,10 +113,12 @@ local function add_result(eid, group, materialinfo, properties, worldmat, result
 	r.worldmat 	= worldmat
 
 	result.cacheidx = idx + 1
+
+	return r
 end
 
 
-function util.insert_primitive(eid, meshhandle, materials, worldmat, filter,group_id)	
+function util.insert_primitive_old(eid, meshhandle, materials, worldmat, filter,group_id)	
 	local mgroups = meshhandle.groups
 	local results = filter.result	
 
@@ -148,6 +147,52 @@ function util.insert_primitive(eid, meshhandle, materials, worldmat, filter,grou
 			end
 		end
 	end 
+end
+
+function util.insert_primitive(eid, prim, meshscene, material, worldmat, filter)
+	local result = filter.result
+	local function vb_info(prim, meshscene)
+		local vbhandles = {}
+		for _, accidx in pairs(prim.attributes) do
+			local acc = meshscene.accessors[accidx+1]
+			local bvidx = acc.bufferView
+			local vbhandle = vbhandles[bvidx]
+			if vbhandle == nil then
+				vbhandles[bvidx] = meshscene.bufferViews[bvidx+1].handle
+			end
+		end
+
+		return {
+			handles = vbhandles,
+			start = gltfutil.start_vertex(prim, meshscene),
+			num = gltfutil.num_vertices(prim, meshscene),
+		}
+	end
+
+	local function ib_info(prim, meshscene)
+		local indices = prim.indices
+		if indices then
+			local idxacc = meshscene.accessors[indices+1]
+			local idxbv = meshscene.bufferViews[idxacc.bufferView+1]
+			return {
+				handle = idxbv.handle,
+				start = gltfutil.start_index(prim, meshscene),
+				num = gltfutil.num_indices(prim, meshscene),
+			}
+		end
+	end
+
+	local group = {
+		vb = vb_info(prim, meshscene),
+		ib = ib_info(prim, meshscene),
+	}
+
+	local mi = material.materialinfo
+	local resulttarget = mi.surface_type.transparency == "translucent" and
+		result.translucent or result.opaque
+
+	local r = add_result(eid, group, mi, material.properties, worldmat, resulttarget)
+	r.using_glb = true
 end
 
 function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_tag, viewid)

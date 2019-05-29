@@ -1,5 +1,6 @@
 #include <lua.h>
 #include <lauxlib.h>
+#include <bgfx/c99/bgfx.h>
 
 #include "ant.h"
 #include <string.h>
@@ -26,13 +27,21 @@ ant_searcher_c(lua_State *L) {
 	return 1;
 }
 
+static void
+init_bgfx(lua_State *L) {
+	lua_pushcfunction(L, (lua_CFunction)(void*)bgfx_get_interface);
+	lua_setfield(L, LUA_REGISTRYINDEX, "BGFX_GET_INTERFACE");
+}
+
 int
 ant_searcher_init(lua_State *L, int loadlib) {
+    init_bgfx(L);
     if (LUA_TTABLE != lua_getglobal(L, "package")) {
+        lua_pop(L, 1);
         return 0;
     }
     if (LUA_TTABLE != lua_getfield(L, -1, "searchers")) {
-        lua_pop(L, 1);
+        lua_pop(L, 2);
         return 0;
     }
     if (loadlib) {

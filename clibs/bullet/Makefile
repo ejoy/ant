@@ -7,14 +7,7 @@ else
 default : libbullet-$(PLAT).a
 endif
 
-BULLET_SRC= Collision/CollisionSdkC_Api.cpp Collision/Internal/Bullet2CollisionSdk.cpp bullet.cpp
-BULLET_OBJ= $(ODIR)/CollisionSdkC_Api.o $(ODIR)/Bullet2CollisionSdk.o $(ODIR)/bullet.o 
-
-$(ODIR)/CollisionSdkC_Api.o : Collision/CollisionSdkC_Api.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) $(CXXFLAGS) -o $@ $^ $(BULLETINC) $(LUAINC)
-
-$(ODIR)/Bullet2CollisionSdk.o : Collision/Internal/Bullet2CollisionSdk.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) $(CXXFLAGS) -o $@ $^ $(BULLETINC) $(LUAINC)
+BULLET_OBJ= $(ODIR)/bullet.o 
 
 $(ODIR)/bullet.o : bullet.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(CXXFLAGS) -o $@ $^ $(BULLETINC) $(LUAINC)

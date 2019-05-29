@@ -27,6 +27,74 @@
     <ClCompile Include="..\..\clibs\ant\ant_searcher.c" />
     <ClCompile Include="..\..\clibs\ant\main.c" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="bgfx.vcxproj">
+      <Project>{50b83d8c-7938-4814-bc5a-738cba9bf0e6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="bullet.vcxproj">
+      <Project>{457e974d-2c6d-44f9-a5fe-77f96c17c8e8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="crypt.vcxproj">
+      <Project>{45cab35b-9a30-4657-93c1-4e676e4ea412}</Project>
+    </ProjectReference>
+    <ProjectReference Include="datalist.vcxproj">
+      <Project>{c7c5b671-3ffe-4af9-9edd-55b33d96542e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="filesystem.vcxproj">
+      <Project>{e8872bdc-3e50-4224-963b-fa202217d028}</Project>
+    </ProjectReference>
+    <ProjectReference Include="filewatch.vcxproj">
+      <Project>{e953ab6b-1e18-478e-9081-7765fb314352}</Project>
+    </ProjectReference>
+    <ProjectReference Include="firmware.vcxproj">
+      <Project>{4e00a5a9-ec1a-442e-8e9d-4a44a4bc5898}</Project>
+    </ProjectReference>
+    <ProjectReference Include="hierarchy.vcxproj">
+      <Project>{434d019f-f121-4391-87fe-a369ac0cdf31}</Project>
+    </ProjectReference>
+    <ProjectReference Include="imgui.vcxproj">
+      <Project>{04b09448-a2a0-40a6-be06-9c80f30b1681}</Project>
+    </ProjectReference>
+    <ProjectReference Include="lsocket.vcxproj">
+      <Project>{71768b68-06b5-4df9-95f9-c7ae080e8c28}</Project>
+    </ProjectReference>
+    <ProjectReference Include="luadll.vcxproj">
+      <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="math3d.vcxproj">
+      <Project>{42edbe70-a46d-4ab7-bdfa-c608c06ac1f0}</Project>
+    </ProjectReference>
+    <ProjectReference Include="meshbase.vcxproj">
+      <Project>{0a244ad6-90bc-4ce5-a618-83a497f843d2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="meshconverter.vcxproj">
+      <Project>{6941669e-1992-4f61-8f0e-c0617175597c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="platform.vcxproj">
+      <Project>{c1f1965c-b68c-4cdf-87a8-89f5aae79d60}</Project>
+    </ProjectReference>
+    <ProjectReference Include="protocol.vcxproj">
+      <Project>{cf016076-47e5-40cf-875d-dcade7c9055e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="redirectfd.vcxproj">
+      <Project>{ad2e16b7-601f-4189-88ad-d439329322e3}</Project>
+    </ProjectReference>
+    <ProjectReference Include="remotedebug.vcxproj">
+      <Project>{d1b7638b-572f-4212-915c-512395553224}</Project>
+    </ProjectReference>
+    <ProjectReference Include="subprocess.vcxproj">
+      <Project>{43ebc525-120e-430c-9e79-f351a13f11be}</Project>
+    </ProjectReference>
+    <ProjectReference Include="terrain.vcxproj">
+      <Project>{e982c1e8-8419-41bb-bc1f-afd4ffad1b40}</Project>
+    </ProjectReference>
+    <ProjectReference Include="thread.vcxproj">
+      <Project>{808a256d-3605-4475-854a-0cbe06ab3130}</Project>
+    </ProjectReference>
+    <ProjectReference Include="window.vcxproj">
+      <Project>{a80cb258-1cc5-4aaf-8d38-f0a6b86d2ae4}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{cae93060-febe-40d9-898f-d1ab52956b0d}</ProjectGuid>
@@ -107,13 +175,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/imgui</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\build_msvc\lua-cjson\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;platform.lib;firmware.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;platform.lib;datalist.lib;filesystem.lib;firmware.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
@@ -170,7 +238,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/imgui</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -178,7 +246,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\build_msvc\lua-cjson\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;debugger.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;platform.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;platform.lib;datalist.lib;filesystem.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>

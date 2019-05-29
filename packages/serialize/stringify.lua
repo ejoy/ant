@@ -6,6 +6,23 @@ local stack
 local typeinfo
 local out1, out2, out3
 
+local function sortpairs(t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    table.sort(sort)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
 local function convertreal(v)
     local g = ('%.16g'):format(v)
     if tonumber(g) == v then
@@ -62,8 +79,8 @@ local function stringify_map_value(c, v, load)
         return stringify_map_value(typeinfo[c.type], v, load)
     end
     local s = {}
-    for i = 1, #v do
-        s[#s+1] = v[i][1]..':'..stringify_basetype(c.name, v[i][2])
+    for k, o in sortpairs(v) do
+        s[#s+1] = k..':'..stringify_basetype(c.name, o)
     end
     if load then
         return '['..load..',{'..table.concat(s, ',')..'}]'
@@ -118,8 +135,8 @@ local function stringify_component_children(c, v)
         return
     end
     if c.map then
-        for i = 1, #v do
-            out[#out+1] = ('  %s:%s'):format(v[i][1], stringify_component_value(typeinfo[c.type].name, v[i][2]))
+        for k, o in sortpairs(v) do
+            out[#out+1] = ('  %s:%s'):format(k, stringify_component_value(typeinfo[c.type].name, o))
         end
         return
     end
@@ -168,10 +185,18 @@ local function stringify_start(w)
     out1, out2, out3 = {}, {}, {}
 end
 
+local function stringify_package(t)
+    out = out1
+    out[#out+1] = '---'
+    for _, name in ipairs(t[1]) do
+        out[#out+1] = ('  --- %s'):format(name)
+    end
+end
+
 local function stringify_end(t)
     out = out2
     out[#out+1] = '---'
-    for _, cs in ipairs(t[2]) do
+    for _, cs in ipairs(t[3]) do
         out[#out+1] = '  ---'
         out[#out+1] = ('    --- %s'):format(cs[1])
         local l = {}
@@ -192,8 +217,9 @@ end
 
 local function stringify_world(w, t)
     stringify_start(w)
+    stringify_package(t)
 
-    local entity = t[1]
+    local entity = t[2]
 
     out = out1
     out[#out+1] = '---'
@@ -211,8 +237,9 @@ end
 
 local function stringify_entity(w, t)
     stringify_start(w)
+    stringify_package(t)
 
-    local e = t[1]
+    local e = t[2]
 
     out = out1
     out[#out+1] = '---'

@@ -1,9 +1,0 @@
-modules = {	
-	"bullet.component_collider",
-	-- "clibs/bullet/physics_system.lua",
-	"scene.terrain.terrain_system",
-	"charcontroller.charcontroller_sys", 
-	"editor.ecs.camera_controller",
-	"editor.ecs.editable_hierarchy",
-	"scene.hierarchy.hierarchy",
-}

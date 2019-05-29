@@ -21,7 +21,16 @@
     <ClInclude Include="..\..\clibs\remotedebug\rdebug_eventfree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\clibs\remotedebug\thunk.h">
+    <ClInclude Include="..\..\clibs\remotedebug\rdebug_delayload.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\remotedebug\rdebug_redirect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\remotedebug\rdebug_timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\remotedebug\thunk\thunk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -32,31 +41,40 @@
     <ClCompile Include="..\..\clibs\remotedebug\rdebug_hookmgr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\remotedebug\rdebug_host.c">
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_delayload.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\remotedebug\rdebug_visitor.c">
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_host.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\remotedebug\thunk.cpp">
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_redirect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_stdio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\remotedebug\thunk\thunk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_visitor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\clibs\remotedebug\thunk_linux_amd64.inl">
-      <Filter>Header Files</Filter>
+    <None Include="..\..\clibs\remotedebug\thunk\thunk_linux.inl">
+      <Filter>Source Files</Filter>
     </None>
-    <None Include="..\..\clibs\remotedebug\thunk_other.inl">
-      <Filter>Header Files</Filter>
+    <None Include="..\..\clibs\remotedebug\thunk\thunk_other.inl">
+      <Filter>Source Files</Filter>
     </None>
-    <None Include="..\..\clibs\remotedebug\thunk_windows.inl">
-      <Filter>Header Files</Filter>
+    <None Include="..\..\clibs\remotedebug\thunk\thunk_windows.inl">
+      <Filter>Source Files</Filter>
     </None>
-    <None Include="..\..\clibs\remotedebug\thunk_windows_amd64.inl">
-      <Filter>Header Files</Filter>
+    <None Include="..\..\clibs\remotedebug\thunk\thunk_windows_amd64.inl">
+      <Filter>Source Files</Filter>
     </None>
-    <None Include="..\..\clibs\remotedebug\thunk_windows_i386.inl">
-      <Filter>Header Files</Filter>
+    <None Include="..\..\clibs\remotedebug\thunk\thunk_windows_i386.inl">
+      <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
 </Project>

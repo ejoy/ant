@@ -19,6 +19,5 @@ end
 pkg["logview"] =    require "log.logview"
 pkg.common = {
     observer =      require "common.observer",
-    hub =           require "common.hub",
 }
 return pkg

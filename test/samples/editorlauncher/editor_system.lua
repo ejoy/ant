@@ -104,12 +104,12 @@ end
 function editor_sys:init()
 	local hv = editor_mainwin.hierarchyview
 	
-	-- local function build_hv()
-	-- 	local htree, ud_table = build_hierarchy_tree()
-	-- 	hv:build(htree, ud_table)
-	-- end
+	local function build_hv()
+		local htree, ud_table = build_hierarchy_tree()
+		hv:build(htree, ud_table)
+	end
 
-	--build_hv()
+	build_hv()
 
 	hv.extend_trees = {}
 
@@ -237,6 +237,7 @@ function editor_sys:init()
 			load_comp_op(entity[edited_comp], properties[edited_comp], args)
 		end
 	end
+	
 	function hv.view:selection_cb(id, status)
 		if status == 1 then
 			local tree = self.owner

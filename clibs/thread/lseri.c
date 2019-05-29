@@ -574,7 +574,7 @@ seri_unpack_(lua_State *L) {
 }
 
 int
-seri_unpack(lua_State *L, void *buffer) {
+seri_unpackptr(lua_State *L, void *buffer) {
 	int top = lua_gettop(L);
 	lua_pushcfunction(L, seri_unpack_);
 	lua_pushlightuserdata(L, buffer);
@@ -586,8 +586,20 @@ seri_unpack(lua_State *L, void *buffer) {
 	return lua_gettop(L) - top;
 }
 
+int
+seri_unpack(lua_State *L) {
+	const char * buffer = luaL_checkstring(L, 1);
+	lua_settop(L, 1);
+	lua_pushcfunction(L, seri_unpack_);
+	lua_pushlightuserdata(L, (void *)buffer);
+	if (lua_pcall(L, 1, LUA_MULTRET, 0) != LUA_OK) {
+		lua_error(L);
+	}
+	return lua_gettop(L) - 1;
+}
+
 void *
-seri_pack(lua_State *L, int from) {
+seri_pack(lua_State *L, int from, int *sz) {
 	struct block temp;
 	temp.next = NULL;
 	struct write_block wb;
@@ -597,6 +609,10 @@ seri_pack(lua_State *L, int from) {
 	assert(wb.head == &temp);
 
 	void * buffer = seri(&temp, wb.len);
+
+	if (sz) {
+		*sz = wb.len + 4;
+	}
 
 	wb_free(&wb);
 

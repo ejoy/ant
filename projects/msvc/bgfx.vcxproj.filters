@@ -24,9 +24,6 @@
     <ClCompile Include="..\..\clibs\bgfx\baselib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\bgfx\nuklearlua.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\bgfx\luabgfx.h">

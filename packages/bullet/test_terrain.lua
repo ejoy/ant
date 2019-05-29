@@ -1,7 +1,7 @@
 
 package.path = package.path .. ";./packages/bullet/?.lua"
 
-local terrainmodule = require "lterrain"
+local terrainmodule = require "terrain"
 local math3d = require "math3d"
 local ms = math3d.new()
 
@@ -30,7 +30,7 @@ local terraininfo = {
 
 local terrain 		= terrainmodule.create(terraininfo)
 
-local heightmapdata = terrain:hieghtmap_data()
+local heightmapdata = terrain:heightmap_data()
 local bounding 		= terrain:calc_heightmap_bounding()
 local aabb = bounding.aabb
 local bouding_height = aabb.max[2] - aabb.min[2]

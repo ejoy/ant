@@ -11,6 +11,7 @@ ecs.import "ant.math.adapter"
 
 local math3d = import_package "ant.math"
 local ms = math3d.stack
+local mu = math3d.util
 local model_review_system = ecs.system "model_review_system"
 
 local renderpkg = import_package "ant.render"
@@ -20,7 +21,6 @@ model_review_system.singleton "constant"
 
 model_review_system.dependby "message_system"
 model_review_system.depend "primitive_filter_system"
-model_review_system.depend "debug_system"
 model_review_system.depend "render_system"
 model_review_system.depend "viewport_detect_system"
 
@@ -46,11 +46,7 @@ function model_review_system:init()
 	create_light()
 	cu.create_grid_entity(world, "grid")
 	world:create_entity {
-		transform = {			
-			s = {0.2, 0.2, 0.2, 0},
-			r = {-math.pi * 0.5, -math.pi * 0.5, 0, 0},
-			t = {0, 0, 0, 1},
-		},
+		transform = mu.scale_mat(0.2),
 		can_render = true,
 		mesh = {
 			ref_path = fs.path "//ant.resources/PVPScene/campsite-door.mesh"
@@ -66,19 +62,15 @@ function model_review_system:init()
 	}
 
 	world:create_entity {
-		transform = {
-			s = {0.01, 0.01, 0.01},
-			r = {0, 0, 0, 0},
-			t = {2, 2, 2},
-		},
+		transform = mu.translate_mat({2, 2, 2, 0}),
 		can_render = true,
 		mesh = {
-			ref_path = fs.path "//ant.resources/cube.mesh",
+			ref_path = fs.path "//ant.resources/depiction/meshes/test_glb.mesh",
 		},
 		material = {
 			content = {
 				{
-					ref_path = fs.path "//ant.resources/bunny.material"
+					ref_path = fs.path "//ant.resources/depiction/materials/test_glb.material"
 				}
 			}
 		},

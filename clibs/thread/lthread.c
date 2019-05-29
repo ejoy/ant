@@ -108,7 +108,7 @@ static int
 lpush(lua_State *L) {
 	struct boxchannel * bc = luaL_checkudata(L, 1, "THREAD_PRODUCE");
 	struct channel *c = bc->c;
-	void * buffer = seri_pack(L, 1);
+	void * buffer = seri_pack(L, 1, NULL);
 	struct simple_queue_slot slot = { buffer };
 	push_channel(c, &slot);
 	return 0;
@@ -133,7 +133,7 @@ lblockedpop(lua_State *L) {
 	struct channel *c = bc->c;
 	struct simple_queue_slot slot;
 	while(!timed_pop(L, c, &slot, -1)) {};
-	int n = seri_unpack(L, slot.data);
+	int n = seri_unpackptr(L, slot.data);
 	return n;
 }
 
@@ -157,7 +157,7 @@ lpop(lua_State *L) {
 		}
 	}
 	lua_pushboolean(L, 1);
-	int n = seri_unpack(L, slot.data);
+	int n = seri_unpackptr(L, slot.data);
 	return n+1;
 }
 
@@ -370,6 +370,15 @@ lreset(lua_State *L) {
 }
 
 static int
+lpack(lua_State *L) {
+	int sz = 0;
+	void * buffer = seri_pack(L, 0, &sz);
+	lua_pushlstring(L, buffer, sz);
+	free(buffer);
+	return 1;
+}
+
+static int
 luaopen_thread_worker(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
@@ -380,6 +389,8 @@ luaopen_thread_worker(lua_State *L) {
 		{ "channel_consume", lcchannel },
 		{ "channel_produce", lpchannel },
 		{ "reset", lreset },
+		{ "pack", lpack },
+		{ "unpack", seri_unpack },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L,l);

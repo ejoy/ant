@@ -63,7 +63,17 @@ function resource:init()
 	return self
 end
 
-ecs.component_alias("mesh", "resource")
+local mesh = ecs.component "mesh"
+	["opt"].ref_path "respath"
+
+function mesh:init()
+	if self.ref_path then
+		self.assetinfo = asset.load(self.ref_path)
+	end
+	return self
+end
+
+ecs.component_alias("new_mesh", "mesh")
 
 ecs.component "texture"
 	.name "string"

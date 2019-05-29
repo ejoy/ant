@@ -91,16 +91,18 @@ return function(world, import, class)
 		setter = { "depend" , "dependby", "singleton" },
 	}
 
+	class.packages = {}
+
 	class_register.component = function (name)
-		return schema:type(name)
+		return schema:type(class.packages[1], name)
 	end
 
 	class_register.component_alias = function (name, ...)
-		return schema:typedef(name, ...)
+		return schema:typedef(class.packages[1], name, ...)
 	end
 	
 	class_register.component_base = function (name, ...)
-		schema:primtype(name, ...)
+		schema:primtype(class.packages[1], name, ...)
 	end
 
 	class_register.tag = function (name)
