@@ -232,19 +232,19 @@ function mathconv.getEulerFromMatrix(m,order)
         angles[2] =  math.asin( clamp( m13, -1, 1 ) )
 
         if ( math.abs( m13 ) < 1-1e-6 ) then 
-            angles[1] = math.atan2( - m23, m33 );
-            angles[3] = math.atan2( - m12, m11 );
+            angles[1] = math.atan( - m23, m33 );
+            angles[3] = math.atan( - m12, m11 );
         else 
-            angles[1] = math.atan2( m32, m22 );
+            angles[1] = math.atan( m32, m22 );
             angles[3] = 0;
         end 
         -- glm does'not work，only two function protocols are correct. 
-        -- local T1 = math.atan2(m32,m33);
+        -- local T1 = math.atan(m32,m33);
         -- local C2 = math.sqrt(m11*m11+m21*m21)
-        -- local T2 = math.atan2(-m31,C2)
+        -- local T2 = math.atan(-m31,C2)
         -- local S1 = math.sin(T1)
         -- local C1 = math.cos(T1)
-        -- local T3 = math.atan2(m13*S1-C1*m12,C1*m22-S1*m23)
+        -- local T3 = math.atan(m13*S1-C1*m12,C1*m22-S1*m23)
         -- angles[1] = - T1  -- x2
         -- angles[2] = - T2
         -- angles[3] = - T3 
@@ -252,11 +252,11 @@ function mathconv.getEulerFromMatrix(m,order)
     elseif ( order == 'ZYX') then 
         angles[2] = math.asin( -clamp(m31,-1,1))
         if( math.abs(m31)< 1-1e-6) then 
-            angles[1] = math.atan2(m32,m33)
-            angles[3] = math.atan2(m21,m11)
+            angles[1] = math.atan(m32,m33)
+            angles[3] = math.atan(m21,m11)
         else 
             angles[1] = 0
-            angles[3] = math.atan2(-m12,m22);
+            angles[3] = math.atan(-m12,m22);
         end 
 
     elseif ( order == 'ZXY' ) then 
@@ -264,20 +264,20 @@ function mathconv.getEulerFromMatrix(m,order)
         angles[1] = math.asin( clamp( m32, -1, 1 ) );
 
         if ( math.abs( m32 ) < 1-1e-6 ) then
-            angles[2] = math.atan2( - m31, m33 );
-            angles[3] = math.atan2( - m12, m22 );
+            angles[2] = math.atan( - m31, m33 );
+            angles[3] = math.atan( - m12, m22 );
         else 
             angles[2] = 0;
-            angles[3] = math.atan2( m21, m11 );
+            angles[3] = math.atan( m21, m11 );
         end
     elseif( order == "YXZ") then 
 
         angles[1] = math.asin(-clamp(m23,-1,1));
         if( math.abs(m23)<1-1e-6 ) then 
-            angles[2] = math.atan2(m13,m33)
-            angles[3] = math.atan2(m21,m22)
+            angles[2] = math.atan(m13,m33)
+            angles[3] = math.atan(m21,m22)
         else 
-            angles[2] = math.atan2(-m31,m11)
+            angles[2] = math.atan(-m31,m11)
             angles[3] = 0
         end 
     end 
