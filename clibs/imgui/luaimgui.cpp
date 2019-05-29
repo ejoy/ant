@@ -235,7 +235,7 @@ lgetIOKey(lua_State * L) {
 	return 1;
 }
 
-#define push_io(name) _push_io(L, io.##name );lua_rawseti(L, -2, i++)
+#define push_io(name) _push_io(L, io.name);lua_rawseti(L, -2, i++)
 
 void _push_io(lua_State *L, int val) {
 	lua_pushinteger(L, val);
@@ -259,7 +259,7 @@ lgetIOValue(lua_State * L) {
 	lua_newtable(L);
 	if (ImGui::GetCurrentContext() != NULL)
 	{
-		ImGuiIO io = ImGui::GetIO();
+		ImGuiIO& io = ImGui::GetIO();
 		int i = 1;
 		push_io(WantCaptureMouse);               // When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
 		push_io(WantCaptureKeyboard);            // When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
