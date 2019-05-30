@@ -139,6 +139,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "imgui", "imgui.vcxproj", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ALL_BUILD", "ALL_BUILD.vcxproj", "{630E16CF-85BE-4E19-AFDC-239AFAAE6E0E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bgfx-core", "bgfx-core.vcxproj", "{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -411,6 +413,14 @@ Global
 		{630E16CF-85BE-4E19-AFDC-239AFAAE6E0E}.Release|x64.Build.0 = Release|x64
 		{630E16CF-85BE-4E19-AFDC-239AFAAE6E0E}.Release|x86.ActiveCfg = Release|Win32
 		{630E16CF-85BE-4E19-AFDC-239AFAAE6E0E}.Release|x86.Build.0 = Release|Win32
+		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Debug|x64.ActiveCfg = Debug|x64
+		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Debug|x64.Build.0 = Debug|x64
+		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Debug|x86.ActiveCfg = Debug|Win32
+		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Debug|x86.Build.0 = Debug|Win32
+		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Release|x64.ActiveCfg = Release|x64
+		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Release|x64.Build.0 = Release|x64
+		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Release|x86.ActiveCfg = Release|Win32
+		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
