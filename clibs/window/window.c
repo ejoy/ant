@@ -4,6 +4,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include "window.h"
+#include "window_native.h"
 
 
 typedef enum {

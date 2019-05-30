@@ -165,6 +165,12 @@ lprogram(lua_State *L) {
 }
 
 static int
+limeHandle(lua_State *L) {
+	lua_pushlightuserdata(L, ImGui::GetIO().ImeWindowHandle);
+	return 1;
+}
+
+static int
 lresize(lua_State *L) {
 	float width = (float)luaL_checknumber(L, 1);
 	float height = (float)luaL_checknumber(L, 2);
@@ -3032,6 +3038,7 @@ luaopen_imgui(lua_State *L) {
 		{ "resize", lresize },
 		{ "viewid", lviewId },
 		{ "program", lprogram },
+		{ "ime_handle", limeHandle },
 		{ "get_io_value", lgetIOValue },
 		{ "get_io_key", lgetIOKey },
 		{ NULL, NULL },
