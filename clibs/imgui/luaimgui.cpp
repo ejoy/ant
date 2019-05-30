@@ -197,7 +197,7 @@ struct lua_imgui_io
 	int         MetricsActiveWindows;           // Number of active windows
 	int         MetricsActiveAllocations;       // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
 };
-#define sync_io_val(name,init)  _sync_io_val(L, io_index,#name, io_cache.##name, io.##name, init )
+#define sync_io_val(name,init)  _sync_io_val(L, io_index,#name, io_cache.name, io.name, init )
 
 static void
 _sync_io_val(lua_State * L, int io_index, const char * name, bool& cache_value, bool new_value, bool init) {
