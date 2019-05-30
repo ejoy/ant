@@ -13,6 +13,9 @@ static bool           g_MouseCursorHidden = false;
 @end
 
 void init_cursor() {
+    ImGuiIO& io = ImGui::GetIO();
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+
     g_MouseCursorHidden = false;
     g_MouseCursors[ImGuiMouseCursor_Arrow] = [NSCursor arrowCursor];
     g_MouseCursors[ImGuiMouseCursor_TextInput] = [NSCursor IBeamCursor];
@@ -48,4 +51,102 @@ void set_cursor(ImGuiMouseCursor cursor) {
             [NSCursor unhide];
         }
     }
+}
+
+
+static const NSRange kEmptyRange = { NSNotFound, 0 };
+
+@interface IMEView : NSView <NSTextInputClient> {
+    int m_x;
+    int m_y;
+}
+- (void)setPosX:(int)x setPosY:(int)y;
+@end
+
+@implementation IMEView
+
+- (void)setPosX:(int)x setPosY:(int)y {
+    m_x = x;
+    m_y = y;
+}
+
+- (void)insertText:(id)aString replacementRange:(NSRange)replacementRange {
+    NSString* characters = [aString isKindOfClass: [NSAttributedString class]]
+        ? [aString string]
+        : aString;
+    ImGuiIO& io = ImGui::GetIO();
+    NSUInteger len = [characters length];
+    for (NSUInteger i = 0; i < len; ++i) {
+        const unichar codepoint = [characters characterAtIndex:i];
+        if ((codepoint & 0xff00) == 0xf700)
+            continue;
+        io.AddInputCharacter(codepoint);
+    }
+}
+
+- (BOOL)hasMarkedText {
+    return false;
+}
+
+- (NSRange)markedRange {
+    return kEmptyRange;
+}
+
+- (NSRange)selectedRange {
+    return kEmptyRange;
+}
+
+- (void)setMarkedText:(id)string selectedRange:(NSRange)selectedRange replacementRange:(NSRange)replacementRange {
+}
+
+- (void)unmarkText {
+}
+
+- (NSRect)firstRectForCharacterRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange {
+    if (actualRange) {
+        *actualRange = aRange;
+    }
+    NSWindow* window = [self window];
+    NSRect contentRect = [window contentRectForFrameRect:[window frame]];
+    NSRect rect = NSMakeRect(m_x, contentRect.size.height - m_y, 0, 0);
+    return [window convertRectToScreen:rect];
+}
+
+- (NSAttributedString *)attributedSubstringForProposedRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange {
+    return nil;
+}
+
+- (NSInteger)conversationIdentifier {
+    return (NSInteger) self;
+}
+
+- (NSUInteger)characterIndexForPoint:(NSPoint)thePoint {
+    return 0;
+}
+
+- (NSArray *)validAttributesForMarkedText {
+    return [NSArray array];
+}
+
+- (void)interpretKeyEvents:(NSArray<NSEvent *> *)eventArray {
+    [super interpretKeyEvents: eventArray];
+}
+
+@end
+
+
+static void ImeSetInputScreenPosFn_DefaultImpl(int x, int y) {
+    if (IMEView* view = (IMEView*)ImGui::GetIO().ImeWindowHandle) {
+        [view setPosX: x setPosY:y];
+    }
+}
+
+void init_ime(void* window) {
+    NSWindow* nswindow = (NSWindow*)window;
+    IMEView* ime = [[IMEView alloc] initWithFrame: NSMakeRect(0.0, 0.0, 0.0, 0.0)];
+    [nswindow setContentView: ime];
+    [nswindow makeFirstResponder: ime];
+    ImGuiIO& io = ImGui::GetIO();
+    io.ImeWindowHandle = ime;
+    io.ImeSetInputScreenPosFn = ImeSetInputScreenPosFn_DefaultImpl;
 }

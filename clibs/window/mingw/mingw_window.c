@@ -218,3 +218,7 @@ void window_mainloop(struct ant_window_callback* cb) {
 	}
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
 }
+
+void window_ime(void* ime) {
+    // do nothing
+}

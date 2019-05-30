@@ -165,3 +165,7 @@ int window_create(struct ant_window_callback* cb, int w, int h, const char* titl
 void window_mainloop(struct ant_window_callback* cb) {
     // do nothing
 }
+
+void window_ime(void* ime) {
+    // do nothing
+}

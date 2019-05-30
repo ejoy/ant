@@ -15,6 +15,7 @@ extern "C" {
 #include "bgfx_interface.h"
 #include "luabgfx.h"
 
+void init_ime(void* window);
 void init_cursor();
 void set_cursor(ImGuiMouseCursor cursor);
 
@@ -131,37 +132,12 @@ struct lua_args {
 	bool err;
 };
 
-
-#if defined(__MINGW32__)
-
-#include <Windows.h>
-#include <imm.h>
-
-static void
-ImeSetInputScreenPosFn_DefaultImpl(int x, int y) {
-	if (HWND hwnd = (HWND)ImGui::GetIO().ImeWindowHandle)
-		if (HIMC himc = ::ImmGetContext(hwnd)) {
-			COMPOSITIONFORM cf;
-			cf.ptCurrentPos.x = x;
-			cf.ptCurrentPos.y = y;
-			cf.dwStyle = CFS_FORCE_POSITION;
-			::ImmSetCompositionWindow(himc, &cf);
-			::ImmReleaseContext(hwnd, himc);
-		}
-}
-
-#endif
-
 static int
 lcreate(lua_State *L) {
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
-	io.ImeWindowHandle = lua_touserdata(L, 1);
-	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
-#if defined(__MINGW32__)
-	io.ImeSetInputScreenPosFn = ImeSetInputScreenPosFn_DefaultImpl;
-#endif
+	init_ime(lua_touserdata(L, 1));
 	init_cursor();
 	s_ctx.create();
 	return 0;
@@ -181,11 +157,17 @@ lviewId(lua_State *L) {
 
 static int
 lprogram(lua_State *L) {
-	s_ctx.m_program         = bgfx_program_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 1)) };
-	s_ctx.m_imageProgram    = bgfx_program_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2)) };
-	s_ctx.u_imageLodEnabled = bgfx_uniform_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 3)) };
-	s_ctx.s_tex             = bgfx_uniform_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 4)) };
+	s_ctx.m_program         = bgfx_program_handle_t { BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 1)) };
+	s_ctx.m_imageProgram    = bgfx_program_handle_t { BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2)) };
+	s_ctx.u_imageLodEnabled = bgfx_uniform_handle_t { BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 3)) };
+	s_ctx.s_tex             = bgfx_uniform_handle_t { BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 4)) };
 	return 0;
+}
+
+static int
+limeHandle(lua_State *L) {
+	lua_pushlightuserdata(L, ImGui::GetIO().ImeWindowHandle);
+	return 1;
 }
 
 static int
@@ -1675,8 +1657,7 @@ wListBox(lua_State *L) {
 
 inline static ImTextureID
 bgfx_to_imgui_texture_id(lua_State*L, int lua_handle) {
-	int texture_id = BGFX_LUAHANDLE_ID(TEXTURE, lua_handle);
-	bgfx_texture_handle_t th = { texture_id };
+	bgfx_texture_handle_t th = { BGFX_LUAHANDLE_ID(TEXTURE, lua_handle) };
 	union { struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; ImTextureID ptr; } texture;
 	texture.s.handle = th;
 	texture.s.flags = IMGUI_FLAGS_ALPHA_BLEND;
@@ -3057,6 +3038,7 @@ luaopen_imgui(lua_State *L) {
 		{ "resize", lresize },
 		{ "viewid", lviewId },
 		{ "program", lprogram },
+		{ "ime_handle", limeHandle },
 		{ "get_io_value", lgetIOValue },
 		{ "get_io_key", lgetIOKey },
 		{ NULL, NULL },

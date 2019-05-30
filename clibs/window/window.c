@@ -4,6 +4,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include "window.h"
+#include "window_native.h"
 
 
 typedef enum {
@@ -318,11 +319,19 @@ lregistercallback(lua_State *L) {
 	return 0;
 }
 
+static int
+lset_ime(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+	window_ime(lua_touserdata(L, 1));
+	return 0;
+}
+
 LUAMOD_API int
 luaopen_window(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "register", lregistercallback },
+		{ "set_ime", lset_ime },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
