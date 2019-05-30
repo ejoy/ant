@@ -155,14 +155,13 @@ static int32_t clamp(int32_t v, int32_t min, int32_t max) {
 @end
 
 @interface WindowDelegate : NSObject<NSWindowDelegate> {
-	uint32_t m_count;
+    uint32_t m_count;
     NSWindow* m_window;
     struct ant_window_callback* m_cb;
 }
 - (id)init;
-- (void)initAntCallback:(struct ant_window_callback*)callback;
 - (void)getMouseX:(int32_t*)outx getMouseY:(int32_t*)outy;
-- (void)windowCreated:(NSWindow*)window;
+- (void)windowCreated:(NSWindow*)window initCallback:(struct ant_window_callback*)callback ;
 - (void)windowWillClose:(NSNotification*)notification;
 - (BOOL)windowShouldClose:(NSWindow*)window;
 @end
@@ -176,9 +175,6 @@ static int32_t clamp(int32_t v, int32_t min, int32_t max) {
 	self->m_count = 0;
 	return self;
 }
-- (void)initAntCallback:(struct ant_window_callback*)callback {
-    m_cb = callback;
-}
 - (void)getMouseX:(int32_t*)outx getMouseY:(int32_t*)outy {
 	NSRect  originalFrame = [m_window frame];
 	NSPoint location      = [m_window mouseLocationOutsideOfEventStream];
@@ -188,9 +184,10 @@ static int32_t clamp(int32_t v, int32_t min, int32_t max) {
 	*outx = clamp(x, 0, (int32_t)adjustFrame.size.width);
 	*outy = clamp(y, 0, (int32_t)adjustFrame.size.height);
 }
-- (void)windowCreated:(NSWindow*)window {
+- (void)windowCreated:(NSWindow*)window initCallback:(struct ant_window_callback*)callback {
 	assert(window);
     m_window = window;
+    m_cb = callback;
 	[window setDelegate:self];
 	assert(self->m_count < ~0u);
 	self->m_count += 1;
@@ -214,9 +211,10 @@ static int32_t clamp(int32_t v, int32_t min, int32_t max) {
 }
 @end
 
-WindowDelegate* g_wd;
-int32_t g_mx;
-int32_t g_my;
+WindowDelegate* g_wd = nil;
+NSView* g_ime = nil;
+int32_t g_mx = 0;
+int32_t g_my = 0;
 
 int window_init(struct ant_window_callback* cb) {
     // do noting
@@ -234,16 +232,17 @@ int window_create(struct ant_window_callback* cb, int w, int h, const char* titl
     NSWindow* win = [[NSWindow alloc]
         initWithContentRect:rc
         styleMask:uiStyle
-		backing:NSBackingStoreBuffered defer:NO
+        backing:NSBackingStoreBuffered defer:NO
     ];
+
     NSString* nsTitle = [[NSString alloc] initWithUTF8String:title];
     [win setTitle:nsTitle];
     [win center];
     [win makeKeyAndOrderFront:win];
     [win makeMainWindow];
+
     g_wd = [WindowDelegate new];
-	[g_wd windowCreated:win];
-    [g_wd initAntCallback: cb];
+    [g_wd windowCreated:win initCallback:cb];
     [nsTitle release];
 
 	struct ant_window_message msg;
@@ -253,6 +252,7 @@ int window_create(struct ant_window_callback* cb, int w, int h, const char* titl
 	msg.u.init.w = w;
 	msg.u.init.h = h;
 	cb->message(cb->ud, &msg);
+
     return 0;
 }
 
@@ -326,11 +326,11 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
 		cb->message(cb->ud, &msg);
         break;
 	case NSEventTypeKeyDown:
+        if (g_ime) [g_ime interpretKeyEvents:@[event]];
 	case NSEventTypeKeyUp:
 		msg.type = ANT_WINDOW_KEYBOARD;
 		msg.u.keyboard.state = keyboard_state(event);
 		msg.u.keyboard.press = (eventType == NSEventTypeKeyDown) ? 1 : 0;
-		msg.u.keyboard.press = 1;
 		msg.u.keyboard.key = keyboard_key(event);
 		cb->message(cb->ud, &msg);
 		break;
@@ -356,8 +356,12 @@ void window_mainloop(struct ant_window_callback* cb) {
         [NSApp activateIgnoringOtherApps:YES];
         [NSApp finishLaunching];
         while (![dg applicationHasTerminated]) {
-			cb->message(cb->ud, &update_msg);
+            cb->message(cb->ud, &update_msg);
             while (dispatch_event(cb, peek_event())) { }
         }
     }
+}
+
+void window_ime(void* ime) {
+    g_ime = (NSView*)ime;
 }

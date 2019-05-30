@@ -30,6 +30,8 @@ local function Shader(shader)
 end
 
 function callback.init(nwh, context, width, height)
+	imgui.create(nwh);
+
 	hw.init {
 		nwh = nwh,
 		context = context,
@@ -49,7 +51,6 @@ function callback.init(nwh, context, width, height)
 		fs = "//ant.ImguiSample/shader/fs_imgui_image",
 	}
 
-	imgui.create(nwh);
 	imgui.viewid(255);
 	imgui.program(
 		ocornut_imgui.prog,
@@ -59,6 +60,7 @@ function callback.init(nwh, context, width, height)
 	)
 	imgui.resize(width, height)
 	imgui.keymap(native.keymap)
+	window.set_ime(imgui.ime_handle());
 
 	bgfx.set_view_rect(0, 0, 0, width, height)
 	bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
