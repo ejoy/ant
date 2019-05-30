@@ -180,7 +180,7 @@ function test_window:tab_update()
 	if widget.Button "Open File" then
 		local dialog = require "filedialog"
 		local ok, res = dialog.open {
-			Owener = native_window,
+			Owner = native_window,
 			Title = "Test",
 			FileTypes = { "All Files (*.*)", "*.*" }
 		}

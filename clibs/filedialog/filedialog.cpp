@@ -106,7 +106,7 @@ static HWND dlgGetOwnerWindow(lua_State* L, int idx) {
     return res;
 }
 
-void dlgPushPathFromItem(lua_State* L, const ComPtr<IShellItem>& item) {
+static void dlgPushPathFromItem(lua_State* L, const ComPtr<IShellItem>& item) {
     wchar_t* name = nullptr;
     item->GetDisplayName(SIGDN_FILESYSPATH, &name);
     if (name)
@@ -125,13 +125,10 @@ static int lcreate(lua_State* L, bool open_or_save) {
     dlgSetTitle(L, dialog, 1);
     dlgSetFileTypes(L, dialog, 1);
     if (HRESULT hr = dialog->Show(dlgGetOwnerWindow(L, 1)); FAILED(hr)) {
-        if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
-            lua_pushboolean(L, 0);
-            lua_pushstring(L, "Cancelled");
-            return 2;
-        }
         lua_pushboolean(L, 0);
-        lua_pushfstring(L, "IFileDialog::Show failed: %p", hr);
+        (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED)) 
+            ? lua_pushstring(L, "Cancelled")
+            : lua_pushfstring(L, "IFileDialog::Show failed: %p", hr);
         return 2;
     }
     if (!open_or_save) {
@@ -180,7 +177,7 @@ static int lopen(lua_State* L) {
 }
 
 static int lsave(lua_State* L) {
-    return lcreate(L, true);
+    return lcreate(L, false);
 }
 
 
