@@ -113,7 +113,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin;../../3rd/build/assimp/msvc/code/$(Configuration);../../3rd/build/assimp/msvc/contrib/irrXML/$(Configuration);../../3rd/build/assimp/msvc/contrib/zlib/$(Configuration);../../3rd/build/ozz-animation/msvc/src/animation/runtime/$(Configuration);../../3rd/build/ozz-animation/msvc/src/animation/offline/$(Configuration);../../3rd/build/ozz-animation/msvc/src/base/$(Configuration);../../3rd/ib-compress/vs_bin/$(PlatformTarget)/$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;gdi32.lib;psapi.lib;uuid.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;assimp-vc140-mt.lib;IrrXML.lib;zlibstaticd.lib;ozz_base_d.lib;ozz_animation_d.lib;ozz_animation_offline_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -172,7 +172,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2017/bin;../../3rd/build/assimp/msvc/code/$(Configuration);../../3rd/build/assimp/msvc/contrib/irrXML/$(Configuration);../../3rd/build/assimp/msvc/contrib/zlib/$(Configuration);../../3rd/build/ozz-animation/msvc/src/animation/runtime/$(Configuration);../../3rd/build/ozz-animation/msvc/src/animation/offline/$(Configuration);../../3rd/build/ozz-animation/msvc/src/base/$(Configuration);../../3rd/ib-compress/vs_bin/$(Configuration)/$(PlatformTarget)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;gdi32.lib;psapi.lib;uuid.lib;bgfx$(Configuration).lib;bx$(Configuration).lib;assimp-vc140-mt.lib;IrrXML.lib;zlibstatic.lib;ozz_base_r.lib;ozz_animation_r.lib;ozz_animation_offline_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

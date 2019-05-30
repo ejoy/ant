@@ -6,11 +6,9 @@ local args = {
 }
 local main = {}
 function main.init()
-local TestGuiBase = require "test_gui_base"
-    -- local GuiSceneMenu = require "gui_scene_menu"
+    local TestGuiBase = require "test_gui_base"
     local GuiScene = require "gui_scene"
     gui_mgr.register(GuiScene.GuiName,GuiScene.new())
-    -- gui_mgr.register(GuiSceneMenu.GuiName,GuiSceneMenu.new())
     gui_mgr.register(TestGuiBase.GuiName,TestGuiBase.new())
 end
 

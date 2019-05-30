@@ -5,6 +5,7 @@ local windows = imgui.windows
 local util = imgui.util
 local cursor = imgui.cursor
 local enum = imgui.enum
+local bgfx = require "bgfx"
 
 
 local GuiBase = import_package "ant.imgui".gui_base
@@ -13,7 +14,6 @@ local TestGuiBase = class("TestGuiBase",GuiBase)
 
 
 TestGuiBase.GuiName = "TestGuiBase"
-
 function TestGuiBase:_init()
     GuiBase._init(self)
     self.title = "test windows"
@@ -21,6 +21,12 @@ function TestGuiBase:_init()
     self.title_id = self.title.."###"..self.id
     self.win_flags = flags.Window { "MenuBar" }
     self._is_opened = true
+    local fs = require "filesystem"
+    local texrefpath = fs.path("//ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.dds")
+    local f = assert(fs.open(texrefpath, "rb"))
+    local imgdata = f:read "a"
+    f:close()
+    self.texhandle = bgfx.create_texture(imgdata, "")
 end
 
 local tab_noclosed = flags.TabBar { "NoClosed" }
@@ -103,6 +109,18 @@ local editfloat = {
 
 
 function TestGuiBase:tab_update()
+    -- windows.PushStyleVar(enum.StyleVar.FrameBorderSize,2.0)
+    -- windows.PushStyleVar(enum.StyleVar.WindowBorderSize,2.0)
+    local dds_path = "//ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.dds"
+    widget.Image(dds_path,200,200,{border_col={1.0,0.0,1.0,1.0},tint_col={0.0,1.0,1.0,0.5}})
+    if  widget.ImageButton(self.texhandle,50,50,
+            {uv0={0.5,0.5},
+            uv1={1,1},
+            bg_col={0.5,0.5,0.5,0.5},
+            frame_padding=10}) then
+        print("clicked")
+    end
+    -- windows.PopStyleVar(2)
     windows.PushStyleColor(enum.StyleCol.Button,1,1,1,1)
     if widget.Button "Test" then
         print("test1")
