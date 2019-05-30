@@ -112,7 +112,7 @@ end
 function task.start_run(start)
 	task.running = start
 	if iup and iup.SetIdle then
-		if running then
+		if task.running then
 			iup.SetIdle(idlefunc)
 		else
 			iup.SetIdle(nil)
