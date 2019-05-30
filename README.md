@@ -39,14 +39,14 @@ Ant 游戏引擎
 > 需要注意的是，如果$(antfolder)/packages/*packagename*，*packagename*目前下如果没有package.lua文件，会报错。所以不用的包文件夹要及时清理
 
 #### 运行的例子
-> bin/lua.exe test/samples/editorlauncher/main.lua	#会打开一个场景观察期的UI框架
+> bin/lua.exe test/samples/editorlauncher/main.lua	#会打开一个场景观察器的UI框架
 > projects/msvc/vs_bin/x64/Debug/lua.exe tools/modelviewer/main.lua with-msvc #会使用msvc编译的程序进行启动
 
 ### 关于ant目录结构
--- **bin**：用于存放mingw下的dll
--- **libs**：用于存放lua程序必要的lua文件
--- **clibs**：存放lua binding的c/c++库
--- **packages**：引擎提供的系统包（包与包之间有依赖）
--- **projects**：工程相关的目录（目前只用msvc）
--- **tools**：引擎相关的工具，实际上目录下的所有文件夹都是相应的包
--- **test**：测试文件存放的地方（应该很多例子都跑不起来了）
+- **bin**：用于存放mingw下的dll
+- **libs**：用于存放lua程序必要的lua文件
+- **clibs**：存放lua binding的c/c++库
+- **packages**：引擎提供的系统包（包与包之间有依赖）
+- **projects**：工程相关的目录（目前只用msvc）
+- **tools**：引擎相关的工具，实际上目录下的所有文件夹都是相应的包
+- **test**：测试文件存放的地方（应该很多例子都跑不起来了）
