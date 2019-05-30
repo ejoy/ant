@@ -3,9 +3,9 @@ $output v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_tex
 
 // for shadow
 #include "mesh_shadow/vs_ext_shadowmaps_color_lighting_csm.sc"
-   
+
+#include <bgfx_shader.sh>   
 #include "common/uniforms.sh"
-#include <bgfx_shader.sh>
      
 void main() 
 {
