@@ -178,10 +178,10 @@ lviewId(lua_State *L) {
 
 static int
 lprogram(lua_State *L) {
-	s_ctx.m_program         = bgfx_program_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 1)) };
-	s_ctx.m_imageProgram    = bgfx_program_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2)) };
-	s_ctx.u_imageLodEnabled = bgfx_uniform_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 3)) };
-	s_ctx.s_tex             = bgfx_uniform_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 4)) };
+	s_ctx.m_program         = bgfx_program_handle_t { BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 1)) };
+	s_ctx.m_imageProgram    = bgfx_program_handle_t { BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2)) };
+	s_ctx.u_imageLodEnabled = bgfx_uniform_handle_t { BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 3)) };
+	s_ctx.s_tex             = bgfx_uniform_handle_t { BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 4)) };
 	return 0;
 }
 
@@ -1672,8 +1672,7 @@ wListBox(lua_State *L) {
 
 inline static ImTextureID
 bgfx_to_imgui_texture_id(lua_State*L, int lua_handle) {
-	int texture_id = BGFX_LUAHANDLE_ID(TEXTURE, lua_handle);
-	bgfx_texture_handle_t th = { texture_id };
+	bgfx_texture_handle_t th = { BGFX_LUAHANDLE_ID(TEXTURE, lua_handle) };
 	union { struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; ImTextureID ptr; } texture;
 	texture.s.handle = th;
 	texture.s.flags = IMGUI_FLAGS_ALPHA_BLEND;
