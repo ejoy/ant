@@ -14,6 +14,7 @@ extern "C"
 #include <map>
 #include <algorithm>
 #include <sstream>
+#include <tuple>
 
 #include <cassert>
 
@@ -53,42 +54,6 @@ enum target_type {
 	ELEMENT_ARRAY_BUFFER	= 34963,
 };
 
-
-struct attrib_name {
-	const char* name;
-	const char* sname;
-	uint32_t channel;
-};
-
-static attrib_name attribname_mapper[] = {
-	{"POSITION", "p", 0},
-
-	{"NORMAL", "n", 0},
-	{"TANGENT", "T", 0},
-	{"BITANGENT", "b", 0},
-
-	{"COLOR_0", "c", 0},
-	{"COLOR_1", "c", 1},
-	{"COLOR_2", "c", 2},
-	{"COLOR_3",	"c", 3 },
-
-	{ "TEXCOORD_0", "t", 0 },
-	{ "TEXCOORD_1", "t", 1 },
-	{ "TEXCOORD_2", "t", 2 },
-	{ "TEXCOORD_3", "t", 3 },
-	{ "TEXCOORD_4", "t", 4 },
-	{ "TEXCOORD_5", "t", 5 },
-	{ "TEXCOORD_6", "t", 6 },
-	{ "TEXCOORD_7", "t", 7 },
-
-	{"WEIGHT_0", "w", 0},
-	{"WEIGHT_1", "w", 1},
-
-	{"JOINTS_0", "i", 0},
-	{"JOINTS_1", "i", 1},
-};
-
-
 struct elem_type {
 	const char* name;
 	uint32_t elem_count;
@@ -104,28 +69,24 @@ static elem_type elem_type_mapper[] = {
 	{"MAT4", 16},	
 };
 
-struct data_buffer {
-	uint32_t buffersize;
-	uint8_t *data;
-	data_buffer()
-		: buffersize(0)
-		, data(nullptr){}
+template<typename T, uint32_t N>
+static constexpr uint32_t 
+array_count(T(&arr)[N]) {
+	return N;
+}
 
-	data_buffer(data_buffer &&other) {
-		data = other.data;
-		buffersize = other.buffersize;
-		other.data = nullptr;
-		other.buffersize = 0;
-	}
 
-	~data_buffer() {
-		if (data) {
-			delete[]data;
-			data = nullptr;
-			buffersize = 0;
+static inline uint32_t 
+get_type_name(const std::string &type) {
+	for (uint32_t ii = 0; ii < array_count(elem_type_mapper); ++ii){
+		const auto &et = elem_type_mapper[ii];
+		if (et.name == type) {
+			return ii;
 		}
 	}
-};
+
+	return array_count(elem_type_mapper);
+}
 
 struct bufferinfo {
 	uint32_t attribname;
@@ -134,7 +95,6 @@ struct bufferinfo {
 using bufferinfo_array	= std::vector<bufferinfo>;
 using bufferview_index	= uint32_t;
 using buffer_desc		= std::vector<std::pair<bufferview_index, bufferinfo_array>>;
-using attrib_buffers	= std::map<uint32_t, data_buffer>;
 
 void
 fetch_load_config(lua_State *L, int idx, load_config &config) {
@@ -412,20 +372,12 @@ fetch_attribute_buffers(const primitive &prim, const char* bindata, attrib_buffe
 	}
 }
 
-static inline uint32_t 
-find_attrib_name(const std::string &elem) {
-	const char et = elem[0];
-	for (uint32_t attribname = 0;
-		attribname < sizeof(attribname_mapper) / sizeof(attribname_mapper[0]);
-		++attribname) {
-		const auto& a = attribname_mapper[attribname];
-
-		if (a.sname[0] == et) {
-			return attribname;
-		}
+static void
+fetch_index_buffer(const primitive&prim, const char*bindata, data_buffer &buffer) {
+	if (prim.indices != 0xffffffff) {
+		auto& acc = prim.accessors[prim.indices];
+		fetch_buffer(prim, acc, bindata, acc.count, buffer);
 	}
-
-	return (uint32_t)-1;
 }
 
 static void
@@ -567,12 +519,61 @@ create_tangent_bitangent(
 
 static void
 check_and_generate_new_attribute(const load_config &cfg, const char* bindata, primitive &prim) {
-	if (cfg.NeedCreateNormal()) {
 
+}
+
+static primitive::accessor
+create_accessor(uint32_t count, uint32_t bvidx, uint32_t elemcount, uint32_t offset = 0) {
+	primitive::accessor acc;
+	acc.bufferView = bvidx;
+	acc.byteOffset = offset;
+	acc.count = count;
+	acc.componentType = ComponentType::FLOAT;
+	acc.type = elemcount;
+	acc.maxvalue_count = acc.minvalue_count = 0;
+
+	return acc;
+}
+
+static primitive::bufferview
+create_bufferview(uint32_t len, uint32_t stride, uint32_t offset) {
+	primitive::bufferview bv;
+	bv.target = target_type::ARRAY_BUFFER;
+	bv.byteOffset = 0;
+	bv.byteLength = len;
+	bv.byteStride = stride;
+	return bv;
+}
+
+static void
+create_tangent_bitangent_primitive_info(primitive &prim, attrib_buffers &abuffers, uint32_t num_vertices) {
+	std::tuple<const char*, const char*, size_t>	attribs[] = {
+		{"t40", "VEC4", sizeof(glm::vec4) },
+		{"b30", "VEC3", sizeof(glm::vec3) },
+	};
+	
+	for (auto attrib : attribs) {
+		auto attribname = find_attrib_name(std::get<0>(attrib));
+		const auto &buffer = abuffers.find(attribname)->second;
+
+		const uint32_t stride = (uint32_t)std::get<2>(attrib);
+
+		uint32_t bvidx = (uint32_t)prim.bufferviews.size();
+		prim.bufferviews.push_back(create_bufferview(buffer.buffersize, stride, 0));
+
+		uint32_t accidx = (uint32_t)prim.accessors.size();
+		prim.accessors.push_back(create_accessor(num_vertices, bvidx, get_type_name(std::get<1>(attrib))));
+
+		prim.attributes[attribname] = accidx;
 	}
+}
 
+static void
+check_create_tangent_bitangent(const load_config &cfg, primitive &prim, attrib_buffers &abuffers, data_buffer &indexbuffer) {
 	if (cfg.NeedCreateTangentSpaceData()) {
-
+		const uint32_t num_vertices = get_num_vertices(prim);
+		calc_tangents(abuffers, num_vertices, indexbuffer, prim.accessors[prim.indices].count);
+		create_tangent_bitangent_primitive_info(prim, abuffers, num_vertices);
 	}
 }
 
@@ -589,10 +590,14 @@ lconvert_buffers(lua_State *L) {
 	attrib_buffers abuffers;
 	fetch_attribute_buffers(prim, bindata, abuffers);
 
+	data_buffer indexbuffer;
+	fetch_index_buffer(prim, bindata, indexbuffer);
+
+	check_create_tangent_bitangent(cfg, prim, abuffers, indexbuffer);
+
 	std::vector<data_buffer> newbuffers;
 	std::vector<primitive::bufferview>	newbufferviews;
 	const uint32_t binary_offset = rearrange_buffers(abuffers, cfg, prim, newbufferviews, newbuffers);
-	rearrange_indices_buffer(prim, binary_offset, bindata, newbufferviews, newbuffers);
 
 	prim.bufferviews.swap(newbufferviews);
 
