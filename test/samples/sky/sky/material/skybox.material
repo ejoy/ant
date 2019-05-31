@@ -1,0 +1,25 @@
+shader = {
+    vs = "skybox/vs_skybox",
+    fs = "skybox/fs_skybox"
+}
+
+state = {
+    WRITE_MASK = "RGBAZ",
+    ALPHA_REF = 0,
+    CULL = "CCW",
+    MSAA = true,
+    DEPTH_TEST = "LESS",
+}
+
+surface_type = {
+    transparency = "opaticy",
+    shadow = {
+        cast = "off",
+        receive = "off",
+    },	
+}
+
+properties = {
+	s_texCube = { type="texture", name="s_texCube",  stage=0, default="textures/skybox/cloud_skycube.texture"},
+    u_lightScale = { type="v4", name = "u_lightScale", default={ 1.2, 0, 0, 0 } },
+}
