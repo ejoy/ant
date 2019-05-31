@@ -72,12 +72,15 @@ local pairs_map_widget = {
 
 local function pop_until_idx(idx)
     local top = pop()
-    while top ~= idx and stack_top>0 do
+    while top ~= idx do
         --todo call top and alter
         local fname = EndFunNameTbl[top]
         log(string.format("[ERROR]:Forget to call %s,call it automaticly",fname))
         local temp_ef =  PureEndFunTbl[top]
         temp_ef()
+        if stack_top <= 0 then
+            break
+        end
         top = pop()
     end
 end
@@ -155,7 +158,7 @@ local wrap_end = function(ef,idx)
 end
 
 
-
+--cache EndFunNameTbl and PureEndFunTbl
 local function init(imgui)
     local cfgs = {
         [100] = {imgui,pairs_map_imgui,},
@@ -175,7 +178,9 @@ local function init(imgui)
 end
 
 local function wrap_pairs(imgui)
+    --cache EndFunNameTbl and PureEndFunTbl
     init(imgui)
+
     local cur_idx = 101
     local cur_item = pairs_map_imgui[1]
     imgui[cur_item[2]] = wrap_begin_frame(imgui[cur_item[2]],cur_idx)
