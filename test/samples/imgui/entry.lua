@@ -10,6 +10,7 @@ local windows = imgui.windows
 local util = imgui.util
 local font = imgui.font
 local Font = platform.font
+local native_window
 
 local callback = {
 	mouse_move = imgui.mouse_move,
@@ -30,6 +31,10 @@ local function Shader(shader)
 end
 
 function callback.init(nwh, context, width, height)
+	native_window = nwh
+
+	imgui.create(nwh)
+
 	hw.init {
 		nwh = nwh,
 		context = context,
@@ -49,7 +54,6 @@ function callback.init(nwh, context, width, height)
 		fs = "//ant.ImguiSample/shader/fs_imgui_image",
 	}
 
-	imgui.create(nwh);
 	imgui.viewid(255);
 	imgui.program(
 		ocornut_imgui.prog,
@@ -59,6 +63,7 @@ function callback.init(nwh, context, width, height)
 	)
 	imgui.resize(width, height)
 	imgui.keymap(native.keymap)
+	window.set_ime(imgui.ime_handle());
 
 	bgfx.set_view_rect(0, 0, 0, width, height)
 	bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
@@ -172,7 +177,21 @@ function test_window:menu()
 end
 
 function test_window:tab_update()
-	widget.Button "Test"
+	if widget.Button "Open File" then
+		local dialog = require "filedialog"
+		local ok, res = dialog.open {
+			Owner = native_window,
+			Title = "Test",
+			FileTypes = { "All Files (*.*)", "*.*" }
+		}
+		if ok then
+			for _, path in ipairs(res) do
+				print("Open:", path)
+			end
+		else
+			print(res)
+		end
+	end
 	widget.SmallButton "Small"
 	if widget.Checkbox("Checkbox", checkbox) then
 		print("Click Checkbox", checkbox[1])

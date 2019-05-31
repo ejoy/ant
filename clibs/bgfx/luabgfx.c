@@ -1068,8 +1068,8 @@ ldestroy(lua_State *L) {
 
 static int
 lcreateProgram(lua_State *L) {
-	int vs = BGFX_LUAHANDLE_ID(SHADER, luaL_checkinteger(L, 1));
-	int fs = UINT16_MAX;
+	uint16_t vs = BGFX_LUAHANDLE_ID(SHADER, luaL_checkinteger(L, 1));
+	uint16_t fs = UINT16_MAX;
 	int t = lua_type(L, 2);
 	int d = 0;
 	int compute = 0;
@@ -1107,7 +1107,7 @@ lcreateProgram(lua_State *L) {
 static int
 lsubmit(lua_State *L) {
 	bgfx_view_id_t id = luaL_checkinteger(L, 1);
-	int progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
+	uint16_t progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	uint32_t depth = luaL_optinteger(L, 3, 0);
 	int preserveState = lua_toboolean(L, 4);
 	bgfx_program_handle_t ph = { progid };
@@ -2825,7 +2825,7 @@ lcreateUniform(lua_State *L) {
 
 static int
 lgetUniformInfo(lua_State *L) {
-	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
+	uint16_t uniformid = BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 1));
 	bgfx_uniform_handle_t uh = { uniformid };
 	bgfx_uniform_info_t ut;
 	BGFX(get_uniform_info)(uh, &ut);
@@ -2916,7 +2916,7 @@ setUniform(lua_State *L, bgfx_uniform_handle_t uh, int sz) {
 static int
 lsetUniform(lua_State *L) {
 	int id = luaL_checkinteger(L, 1);
-	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
+	uint16_t uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
 	bgfx_uniform_handle_t uh = { uniformid };
 	int sz = uniform_size(L, id);
 	return setUniform(L, uh, sz);
@@ -2925,7 +2925,7 @@ lsetUniform(lua_State *L) {
 static int
 lsetUniformMatrix(lua_State *L) {
 	int id = luaL_checkinteger(L, 1);
-	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
+	uint16_t uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
 	bgfx_uniform_handle_t uh = { uniformid };
 	int sz = uniform_size(L, id);
 	if (sz <= 4) {
@@ -2937,7 +2937,7 @@ lsetUniformMatrix(lua_State *L) {
 static int
 lsetUniformVector(lua_State *L) {
 	int id = luaL_checkinteger(L, 1);
-	int uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
+	uint16_t uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
 	bgfx_uniform_handle_t uh = { uniformid };
 	int sz = uniform_size(L, id);
 	if (sz != 4) {
@@ -3225,11 +3225,11 @@ static int
 lsetTexture(lua_State *L) {
 	int stage = luaL_checkinteger(L, 1);
 	int uid = luaL_checkinteger(L, 2);
-	int uniform_id = BGFX_LUAHANDLE_ID(UNIFORM, uid);
+	uint16_t uniform_id = BGFX_LUAHANDLE_ID(UNIFORM, uid);
 	if (BGFX_LUAHANDLE_SUBTYPE(uid) != BGFX_UNIFORM_TYPE_SAMPLER) {
 		return luaL_error(L, "The uniform is not a sampler");
 	}
-	int texture_id = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 3));
+	uint16_t texture_id = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 3));
 	uint64_t flags = UINT32_MAX;
 	if (!lua_isnoneornil(L, 4)) {
 		const char * f = lua_tostring(L, 4);
@@ -3809,7 +3809,7 @@ lcreateOcclusionQuery(lua_State *L) {
 
 static int
 lsetCondition(lua_State *L) {
-	int oqid = BGFX_LUAHANDLE_ID(OCCLUSION_QUERY, luaL_checkinteger(L, 1));
+	uint16_t oqid = BGFX_LUAHANDLE_ID(OCCLUSION_QUERY, luaL_checkinteger(L, 1));
 	luaL_checktype(L, 2, LUA_TBOOLEAN);
 	int visible = lua_toboolean(L, 2);
 	bgfx_occlusion_query_handle_t handle = { oqid };
@@ -3820,8 +3820,8 @@ lsetCondition(lua_State *L) {
 static int
 lsubmitOcclusionQuery(lua_State *L) {
 	int id = luaL_checkinteger(L, 1);
-	int progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
-	int oqid = BGFX_LUAHANDLE_ID(OCCLUSION_QUERY, luaL_checkinteger(L, 3));
+	uint16_t progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
+	uint16_t oqid = BGFX_LUAHANDLE_ID(OCCLUSION_QUERY, luaL_checkinteger(L, 3));
 	uint32_t depth = luaL_optinteger(L, 4, 0);
 	int preserveState = lua_toboolean(L, 5);
 	bgfx_program_handle_t ph = { progid };
@@ -3833,8 +3833,8 @@ lsubmitOcclusionQuery(lua_State *L) {
 static int
 lsubmitIndirect(lua_State *L) {
 	int id = luaL_checkinteger(L, 1);
-	int progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
-	int iid = BGFX_LUAHANDLE_ID(INDIRECT_BUFFER, luaL_checkinteger(L, 3));
+	uint16_t progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
+	uint16_t iid = BGFX_LUAHANDLE_ID(INDIRECT_BUFFER, luaL_checkinteger(L, 3));
 	uint16_t start = luaL_optinteger(L, 4, 0);
 	uint16_t num = luaL_optinteger(L, 5, 1);
 	uint32_t depth = luaL_optinteger(L, 6, 0);
@@ -3848,7 +3848,7 @@ lsubmitIndirect(lua_State *L) {
 
 static int
 lgetResult(lua_State *L) {
-	int oqid = BGFX_LUAHANDLE_ID(OCCLUSION_QUERY, luaL_checkinteger(L, 1));
+	uint16_t oqid = BGFX_LUAHANDLE_ID(OCCLUSION_QUERY, luaL_checkinteger(L, 1));
 	int32_t num=0;
 	bgfx_occlusion_query_handle_t oqh = { oqid };
 	bgfx_occlusion_query_result_t r = BGFX(get_result)(oqh, &num);
@@ -3994,7 +3994,7 @@ dispatch_opt(lua_State *L, int *num, int n, int index) {
 static int
 ldispatch(lua_State *L) {
 	bgfx_view_id_t viewid = luaL_checkinteger(L, 1);
-	int pid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
+	uint16_t pid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	int num[3] = {1,1,1};
 	dispatch_opt(L, num, 3, 3);
 
@@ -4008,8 +4008,8 @@ ldispatch(lua_State *L) {
 static int
 ldispatchIndirect(lua_State *L) {
 	bgfx_view_id_t viewid = luaL_checkinteger(L, 1);
-	int pid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
-	int iid = BGFX_LUAHANDLE_ID(INDIRECT_BUFFER, luaL_checkinteger(L, 3));
+	uint16_t pid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
+	uint16_t iid = BGFX_LUAHANDLE_ID(INDIRECT_BUFFER, luaL_checkinteger(L, 3));
 	int num[2] = { 0, 1 };
 	dispatch_opt(L, num, 2, 4);
 	bgfx_program_handle_t  phandle = { pid };
@@ -4022,7 +4022,7 @@ ldispatchIndirect(lua_State *L) {
 
 static int
 lgetShaderUniforms(lua_State *L) {
-	int sid = BGFX_LUAHANDLE_ID(SHADER, luaL_checkinteger(L, 1));
+	uint16_t sid = BGFX_LUAHANDLE_ID(SHADER, luaL_checkinteger(L, 1));
 	bgfx_shader_handle_t shader = { sid };
 	uint16_t n = BGFX(get_shader_uniforms)(shader, NULL, 0);
 	lua_createtable(L, n, 0);
@@ -4061,7 +4061,7 @@ lsetViewMode(lua_State *L) {
 static int
 lsetImage(lua_State *L) {
 	int stage = luaL_checkinteger(L, 1);
-	int tid = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 2));
+	uint16_t tid = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 2));
 	bgfx_texture_handle_t handle = { tid };
 	int mip = luaL_checkinteger(L, 3);
 	bgfx_access_t access = access_string(L, luaL_checkstring(L, 4));
@@ -4079,8 +4079,7 @@ static int
 lrequestScreenshot(lua_State *L) {
 	bgfx_frame_buffer_handle_t handle = { UINT16_MAX };	// Invalid handle (main window)
 	if (lua_type(L,1) == LUA_TNUMBER) {
-		int id = BGFX_LUAHANDLE_ID(FRAME_BUFFER, luaL_checkinteger(L, 1));
-		handle.idx = id;
+		handle.idx = BGFX_LUAHANDLE_ID(FRAME_BUFFER, luaL_checkinteger(L, 1));
 	}
 	const char * file = luaL_optstring(L, 2, "");
 	BGFX(request_screen_shot)(handle, file);

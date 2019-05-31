@@ -47,10 +47,12 @@ local function idlefunc()
 		end
 		if i1 == 1 then
 			-- remove all
-			iup.SetIdle(nil)
+			task.start_run(false)
 		end
 	end
 end
+
+
 
 function task.add(f, traceback)
 	local n = #tasklist
@@ -78,7 +80,7 @@ function task.loop(f, traceback)
 	assert(f)
 	local n = #tasklist
 	if n == 0 then
-		iup.SetIdle(idlefunc)        
+		task.start_run(true)
 	end
 	local co = coroutine.create(
 		function()
@@ -97,6 +99,25 @@ end
 
 function task.exit()
 	coroutine.yield "EXIT"
+end
+
+--
+function task.update()
+	if task.running then
+		idlefunc()
+	end
+end
+
+--iup only
+function task.start_run(start)
+	task.running = start
+	if iup and iup.SetIdle then
+		if task.running then
+			iup.SetIdle(idlefunc)
+		else
+			iup.SetIdle(nil)
+		end
+	end
 end
 
 return task

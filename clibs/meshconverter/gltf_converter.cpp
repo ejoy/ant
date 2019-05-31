@@ -104,21 +104,21 @@ static elem_type elem_type_mapper[] = {
 	{"MAT4", 16},	
 };
 
-struct attribute_buffer {
+struct data_buffer {
 	uint32_t buffersize;
 	uint8_t *data;
-	attribute_buffer()
+	data_buffer()
 		: buffersize(0)
 		, data(nullptr){}
 
-	attribute_buffer(attribute_buffer &&other) {
+	data_buffer(data_buffer &&other) {
 		data = other.data;
 		buffersize = other.buffersize;
 		other.data = nullptr;
 		other.buffersize = 0;
 	}
 
-	~attribute_buffer() {
+	~data_buffer() {
 		if (data) {
 			delete[]data;
 			data = nullptr;
@@ -134,7 +134,7 @@ struct bufferinfo {
 using bufferinfo_array	= std::vector<bufferinfo>;
 using bufferview_index	= uint32_t;
 using buffer_desc		= std::vector<std::pair<bufferview_index, bufferinfo_array>>;
-using attrib_buffers	= std::map<uint32_t, attribute_buffer>;
+using attrib_buffers	= std::map<uint32_t, data_buffer>;
 
 void
 fetch_load_config(lua_State *L, int idx, load_config &config) {
@@ -374,7 +374,7 @@ serialize_primitive(const primitive &prim) {
 
 static uint32_t
 fetch_buffer(const primitive &prim, const primitive::accessor &acc, const char* bindata, 
-	uint32_t num_elem, attribute_buffer &abuffer) {
+	uint32_t num_elem, data_buffer &abuffer) {
 	const primitive::bufferview& bv = prim.bufferviews[acc.bufferView];
 	const uint32_t offset = acc.byteOffset + bv.byteOffset;
 	const char* srcbuf = bindata + offset;
@@ -430,11 +430,11 @@ find_attrib_name(const std::string &elem) {
 
 static void
 rearrange_indices_buffer(primitive &prim, uint32_t binaryoffset, const char* bindata, 
-	std::vector<primitive::bufferview> &new_bvs, std::vector<attribute_buffer> &newbuffers) {
+	std::vector<primitive::bufferview> &new_bvs, std::vector<data_buffer> &newbuffers) {
 
 	if (prim.indices != 0xffffffff) {
 		auto& acc = prim.accessors[prim.indices];
-		newbuffers.push_back(attribute_buffer());
+		newbuffers.push_back(data_buffer());
 		fetch_buffer(prim, acc, bindata, acc.count, newbuffers.back());
 
 		primitive::bufferview bv = prim.bufferviews[acc.bufferView];
@@ -450,12 +450,14 @@ rearrange_buffers(
 	const load_config& cfg, 	
 	primitive& prim, 
 	std::vector<primitive::bufferview>&	newbufferviews,
-	std::vector<attribute_buffer> &newbuffers) {
+	std::vector<data_buffer> &newbuffers) {
 
 	uint32_t binary_offset = 0;
 	newbufferviews.resize(cfg.layouts.size());
 	newbuffers.resize(cfg.layouts.size());
 
+	const auto& attributes = prim.attributes;
+	std::map<uint32_t, uint32_t>	new_attributes;
 	for (uint32_t bvidx = 0; bvidx < cfg.layouts.size(); ++bvidx) {
 		const auto& layout = cfg.layouts[bvidx];
 
@@ -469,8 +471,6 @@ rearrange_buffers(
 		};
 		std::vector<attrib_info> attribs;
 
-		const auto& attributes = prim.attributes;
-
 		uint32_t stride = 0;
 		for (const auto &e : elems) {
 			const uint32_t attribname = find_attrib_name(e);
@@ -481,10 +481,12 @@ rearrange_buffers(
 
 				auto itAttrib = attributes.find(attribname);
 				if (itAttrib == attributes.end()) {
-					assert("could name found attribute in seri primitive data");
+					assert("could not found attribute in seri primitive data");
 				}
 
-				primitive::accessor& acc = prim.accessors[itAttrib->second];
+				const uint32_t accidx = itAttrib->second;
+				new_attributes[attribname] = accidx;
+				primitive::accessor& acc = prim.accessors[accidx];
 				const uint32_t elemsize = elem_size(acc.type, acc.componentType);
 
 				acc.byteOffset = stride;
@@ -519,18 +521,59 @@ rearrange_buffers(
 
 		binary_offset += newbuf.buffersize;
 	}
-
+	
+	std::swap(prim.attributes, new_attributes);
 	return binary_offset;
 }
 
 static std::string
-serialize_buffers(const std::vector<attribute_buffer> &buffers) {
+serialize_buffers(const std::vector<data_buffer> &buffers) {
 	std::ostringstream oss;
 	for (const auto &b : buffers) {
 		oss.write((const char*)b.data, b.buffersize);
 	}
 
 	return oss.str();
+}
+
+static void
+create_normal(const attrib_buffers &buffers, const data_buffer&indicesbuffer, const primitive& prim, data_buffer &buffer) {
+	primitive::accessor normalaccessor;
+	normalaccessor.bufferView = -1;
+	normalaccessor.byteOffset = 0;
+	normalaccessor.componentType = ComponentType::FLOAT;
+	normalaccessor.type = 3;
+	
+	normalaccessor.count = get_num_vertices(prim);
+	normalaccessor.normalized = true;
+
+	normalaccessor.maxvalue_count = 0;
+	normalaccessor.minvalue_count = 0;
+
+
+	for (uint32_t ii = 0; ii < normalaccessor.count; ++ii) {
+
+	}
+}
+
+static void
+create_tangent_bitangent(
+	const char* bindata, 
+	const primitive &prim, 
+	data_buffer &tangentbuffer, 
+	data_buffer &bitangentbuffer) {
+
+}
+
+static void
+check_and_generate_new_attribute(const load_config &cfg, const char* bindata, primitive &prim) {
+	if (cfg.NeedCreateNormal()) {
+
+	}
+
+	if (cfg.NeedCreateTangentSpaceData()) {
+
+	}
 }
 
 static int
@@ -546,7 +589,7 @@ lconvert_buffers(lua_State *L) {
 	attrib_buffers abuffers;
 	fetch_attribute_buffers(prim, bindata, abuffers);
 
-	std::vector<attribute_buffer> newbuffers;
+	std::vector<data_buffer> newbuffers;
 	std::vector<primitive::bufferview>	newbufferviews;
 	const uint32_t binary_offset = rearrange_buffers(abuffers, cfg, prim, newbufferviews, newbuffers);
 	rearrange_indices_buffer(prim, binary_offset, bindata, newbufferviews, newbuffers);

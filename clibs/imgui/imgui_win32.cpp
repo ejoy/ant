@@ -1,6 +1,11 @@
 #include <imgui.h>
 #include <Windows.h>
 
+void init_cursor() {
+    ImGuiIO& io = ImGui::GetIO();
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+}
+
 void set_cursor(ImGuiMouseCursor cursor) {
     switch (cursor) {
     default: [[fallthrough]];
@@ -14,4 +19,32 @@ void set_cursor(ImGuiMouseCursor cursor) {
     case ImGuiMouseCursor_Hand:       ::SetCursor(::LoadCursor(NULL, IDC_HAND));     break;
     case ImGuiMouseCursor_None:       ::SetCursor(NULL); break;
     }
+}
+
+#if defined(__MINGW32__)
+
+#include <Windows.h>
+#include <imm.h>
+
+static void
+ImeSetInputScreenPosFn_DefaultImpl(int x, int y) {
+    if (HWND hwnd = (HWND)ImGui::GetIO().ImeWindowHandle)
+        if (HIMC himc = ::ImmGetContext(hwnd)) {
+            COMPOSITIONFORM cf;
+            cf.ptCurrentPos.x = x;
+            cf.ptCurrentPos.y = y;
+            cf.dwStyle = CFS_FORCE_POSITION;
+            ::ImmSetCompositionWindow(himc, &cf);
+            ::ImmReleaseContext(hwnd, himc);
+        }
+}
+
+#endif
+
+void init_ime(void* window) {
+    ImGuiIO& io = ImGui::GetIO();
+	io.ImeWindowHandle = window;
+#if defined(__MINGW32__)
+    io.ImeSetInputScreenPosFn = ImeSetInputScreenPosFn_DefaultImpl;
+#endif
 }

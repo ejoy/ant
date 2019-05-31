@@ -21,13 +21,13 @@
 #define BGFX_LUAHANDLE_WITHTYPE(idx, subtype) ( (idx) | (subtype) << 20 )
 #define BGFX_LUAHANDLE_SUBTYPE(idx) ( (idx) >> 20 )
 
-static inline int
+static inline uint16_t
 check_handle_type(lua_State *L, int type, int id, const char * tname) {
 	int idtype = (id >> 16) & 0x0f;
 	if (idtype != type) {
 		return luaL_error(L, "Invalid handle type %s (id = %d:%d)", tname, idtype, id&0xffff);
 	}
-	return id & 0xffff;
+	return (uint16_t)(id & 0xffff);
 }
 
 static int inline

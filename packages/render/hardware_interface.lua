@@ -2,6 +2,7 @@ local hw = {}
 hw.__index = hw
 
 local platform = require "platform"
+local bgfx = require "bgfx"
 
 local caps = nil
 function hw.get_caps()
@@ -46,7 +47,7 @@ local function bgfx_init(args)
 	args.getlog = args.getlog or true
 	if args.reset == nil then
 		flags = {
-			v = true,
+			-- v = true,
 			m = 4,
 		}
 		args.reset = get_flags()
@@ -164,6 +165,24 @@ end
 
 function hw.identity()
 	return platform.OS .. "-" .. assert(hw.shader_type())
+end
+
+hw.frames = nil
+local _ui_dirty = false
+
+function hw.ui_frame()
+	_ui_dirty = true
+end
+function hw.frame()
+	hw.frames = bgfx.frame()
+	_ui_dirty = false
+	return hw.frames
+end
+
+function hw.on_update_end()
+	if _ui_dirty then
+		hw.frame()
+	end
 end
 
 return hw

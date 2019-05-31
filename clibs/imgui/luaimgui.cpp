@@ -1,8 +1,8 @@
 #define LUA_LIB
 
 extern "C" {
-	#include <lua.h>
-	#include <lauxlib.h>
+#include <lua.h>
+#include <lauxlib.h>
 }
 
 #include <bgfx/c99/bgfx.h>
@@ -15,15 +15,21 @@ extern "C" {
 #include "bgfx_interface.h"
 #include "luabgfx.h"
 
+void init_ime(void* window);
+void init_cursor();
 void set_cursor(ImGuiMouseCursor cursor);
 
 #define IMGUI_FLAGS_NONE        UINT8_C(0x00)
 #define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
 
+#ifdef _MSC_VER
+#pragma region IMP_IMGUI
+#endif
+
 struct context {
 	void render(ImDrawData* _drawData) {
 		const ImGuiIO& io = ImGui::GetIO();
-		const float width  = io.DisplaySize.x;
+		const float width = io.DisplaySize.x;
 		const float height = io.DisplaySize.y;
 
 		BGFX(set_view_name)(m_viewId, "ImGui");
@@ -40,10 +46,10 @@ struct context {
 		for (int32_t ii = 0, num = _drawData->CmdListsCount; ii < num; ++ii) {
 			const ImDrawList* drawList = _drawData->CmdLists[ii];
 			uint32_t numVertices = (uint32_t)drawList->VtxBuffer.size();
-			uint32_t numIndices  = (uint32_t)drawList->IdxBuffer.size();
+			uint32_t numIndices = (uint32_t)drawList->IdxBuffer.size();
 
 			if (numVertices != BGFX(get_avail_transient_vertex_buffer)(numVertices, &m_decl)
-				|| numIndices != BGFX(get_avail_transient_index_buffer)(numIndices)){
+				|| numIndices != BGFX(get_avail_transient_index_buffer)(numIndices)) {
 				break;
 			}
 
@@ -66,16 +72,16 @@ struct context {
 				if (0 == cmd.ElemCount) {
 					continue;
 				}
-				assert (NULL != cmd.TextureId);
-				union { ImTextureID ptr; struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; } texture = {cmd.TextureId };
+				assert(NULL != cmd.TextureId);
+				union { ImTextureID ptr; struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; } texture = { cmd.TextureId };
 
 				const uint16_t xx = uint16_t(std::max(cmd.ClipRect.x, 0.0f));
 				const uint16_t yy = uint16_t(std::max(cmd.ClipRect.y, 0.0f));
 				BGFX(set_scissor)(xx, yy
-					, uint16_t(std::min(cmd.ClipRect.z, 65535.0f)-xx)
-					, uint16_t(std::min(cmd.ClipRect.w, 65535.0f)-yy)
-				);
-	
+					, uint16_t(std::min(cmd.ClipRect.z, 65535.0f) - xx)
+					, uint16_t(std::min(cmd.ClipRect.w, 65535.0f) - yy)
+					);
+
 				uint64_t state = 0
 					| BGFX_STATE_WRITE_RGB
 					| BGFX_STATE_WRITE_A
@@ -104,9 +110,9 @@ struct context {
 
 	void create() {
 		BGFX(vertex_decl_begin)(&m_decl, BGFX_RENDERER_TYPE_NOOP);
-		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_POSITION,  2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
+		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_POSITION, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
 		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
-		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_COLOR0,    4, BGFX_ATTRIB_TYPE_UINT8,  true, false);
+		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_UINT8, true, false);
 		BGFX(vertex_decl_end)(&m_decl);
 	}
 
@@ -128,13 +134,14 @@ struct lua_args {
 	bool err;
 };
 
+
 static int
 lcreate(lua_State *L) {
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
-	io.ImeWindowHandle = lua_touserdata(L, 1);
-	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+	init_ime(lua_touserdata(L, 1));
+	init_cursor();
 	s_ctx.create();
 	return 0;
 }
@@ -153,11 +160,17 @@ lviewId(lua_State *L) {
 
 static int
 lprogram(lua_State *L) {
-	s_ctx.m_program         = bgfx_program_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 1)) };
-	s_ctx.m_imageProgram    = bgfx_program_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2)) };
-	s_ctx.u_imageLodEnabled = bgfx_uniform_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 3)) };
-	s_ctx.s_tex             = bgfx_uniform_handle_t { (uint16_t)BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 4)) };
+	s_ctx.m_program = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 1)) };
+	s_ctx.m_imageProgram = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2)) };
+	s_ctx.u_imageLodEnabled = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 3)) };
+	s_ctx.s_tex = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 4)) };
 	return 0;
+}
+
+static int
+limeHandle(lua_State *L) {
+	lua_pushlightuserdata(L, ImGui::GetIO().ImeWindowHandle);
+	return 1;
 }
 
 static int
@@ -166,6 +179,71 @@ lresize(lua_State *L) {
 	float height = (float)luaL_checknumber(L, 2);
 	ImGui::GetIO().DisplaySize = ImVec2(width, height);
 	return 0;
+}
+
+struct lua_imgui_io
+{
+	bool        WantCaptureMouse;               // When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
+	bool        WantCaptureKeyboard;            // When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
+	bool        WantTextInput;                  // Mobile/console: when io.WantTextInput is true, you may display an on-screen keyboard. This is set by ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
+	bool        WantSetMousePos;                // MousePos has been altered, back-end should reposition mouse on next frame. Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
+	bool        WantSaveIniSettings;            // When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. IMPORTANT: You need to clear io.WantSaveIniSettings yourself.
+	bool        NavActive;                      // Directional navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
+	bool        NavVisible;                     // Directional navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
+	float       Framerate;                      // Application framerate estimation, in frame per second. Solely for convenience. Rolling average estimation based on IO.DeltaTime over 120 frames
+	int         MetricsRenderVertices;          // Vertices output during last call to Render()
+	int         MetricsRenderIndices;           // Indices output during last call to Render() = number of triangles * 3
+	int         MetricsRenderWindows;           // Number of visible windows
+	int         MetricsActiveWindows;           // Number of active windows
+	int         MetricsActiveAllocations;       // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
+};
+#define sync_io_val(name,init)  _sync_io_val(L, io_index,#name, io_cache.name, io.name, init )
+
+static void
+_sync_io_val(lua_State * L, int io_index, const char * name, bool& cache_value, bool new_value, bool init) {
+	if (init || (cache_value != new_value)) {
+		cache_value = new_value;
+		lua_pushboolean(L, cache_value);
+		lua_setfield(L, io_index, name);
+	}
+}
+static void
+_sync_io_val(lua_State * L, int io_index, const char * name, int& cache_value, int new_value, bool init) {
+	if (init || (cache_value != new_value)) {
+		cache_value = new_value;
+		lua_pushinteger(L, cache_value);
+		lua_setfield(L, io_index, name);
+	}
+}
+static void
+_sync_io_val(lua_State * L, int io_index, const char * name, float& cache_value, float new_value, bool init) {
+	if (init || (cache_value != new_value)) {
+		cache_value = new_value;
+		lua_pushnumber(L, cache_value);
+		lua_setfield(L, io_index, name);
+	}
+}
+
+static void
+sync_io(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	static lua_imgui_io io_cache;
+	static bool init = true;
+	int io_index = lua_upvalueindex(1);
+	sync_io_val(WantCaptureMouse, init);
+	sync_io_val(WantCaptureKeyboard, init);
+	sync_io_val(WantTextInput, init);
+	sync_io_val(WantSetMousePos, init);
+	sync_io_val(WantSaveIniSettings, init);
+	sync_io_val(NavActive, init);
+	sync_io_val(NavVisible, init);
+	sync_io_val(Framerate, init);
+	sync_io_val(MetricsRenderVertices, init);
+	sync_io_val(MetricsRenderIndices, init);
+	sync_io_val(MetricsRenderWindows, init);
+	sync_io_val(MetricsActiveWindows, init);
+	sync_io_val(MetricsActiveAllocations, init);
+	init = false;
 }
 
 static int
@@ -179,6 +257,7 @@ lbeginFrame(lua_State *L) {
 		);
 	}
 	ImGui::NewFrame();
+	sync_io(L);
 	return 0;
 }
 
@@ -191,11 +270,11 @@ lendFrame(lua_State *L) {
 
 static ImGuiCond
 get_cond(lua_State *L, int index) {
-	int t = lua_type(L, 2);
+	int t = lua_type(L, index);
 	switch (t) {
 	case LUA_TSTRING: {
-		const char *cond = lua_tostring(L, 2);
-		switch(cond[0]) {
+		const char *cond = lua_tostring(L, index);
+		switch (cond[0]) {
 		case 'a':
 		case 'A':
 			return ImGuiCond_Appearing;
@@ -219,13 +298,77 @@ get_cond(lua_State *L, int index) {
 	return 0;
 }
 
+// key, press, state
+static int
+lkeyState(lua_State *L) {
+	int key = luaL_checkinteger(L, 1);
+	int press = lua_toboolean(L, 2);
+	int state = luaL_checkinteger(L, 3);
+
+	ImGuiIO& io = ImGui::GetIO();
+
+	io.KeyCtrl = (state & 0x01) != 0;
+	io.KeyAlt = (state & 0x02) != 0;
+	io.KeyShift = (state & 0x04) != 0;
+	io.KeySuper = (state & 0x08) != 0;
+
+	if (key >= 0 && key < 256) {
+		io.KeysDown[key] = press;
+	}
+	return 0;
+}
+
+static int
+lmouseMove(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	return 0;
+}
+
+static int
+lmouseWheel(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	io.MouseWheel = (float)luaL_checknumber(L, 3);
+	return 0;
+}
+
+static int
+lmouseClick(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	switch (luaL_checkinteger(L, 3)) {
+	case 0: io.MouseDown[0] = lua_toboolean(L, 4); break;
+	case 1: io.MouseDown[1] = lua_toboolean(L, 4); break;
+	case 2: io.MouseDown[2] = lua_toboolean(L, 4); break;
+	default: break;
+	}
+	return 0;
+}
+
+static int
+linputChar(lua_State *L) {
+	int c = luaL_checkinteger(L, 1);
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddInputCharacter(c);
+	return 0;
+}
+
+#ifdef _MSC_VER
+#pragma endregion IMP_IMGUI
+#endif
+
 // Widgets bindings
+#ifdef _MSC_VER
+#pragma region IMP_WIDGET
+#endif
+
 static int
 wButton(lua_State *L) {
 	const char * text = luaL_checkstring(L, INDEX_ID);
 	int w = luaL_optnumber(L, 2, 0);
 	int h = luaL_optnumber(L, 3, 0);
-	bool click = ImGui::Button(text, ImVec2(w,h));
+	bool click = ImGui::Button(text, ImVec2(w, h));
 	lua_pushboolean(L, click);
 	return 1;
 }
@@ -243,7 +386,7 @@ wInvisibleButton(lua_State *L) {
 	const char * text = luaL_checkstring(L, INDEX_ID);
 	int w = luaL_optnumber(L, 2, 0);
 	int h = luaL_optnumber(L, 3, 0);
-	bool click = ImGui::InvisibleButton(text, ImVec2(w,h));
+	bool click = ImGui::InvisibleButton(text, ImVec2(w, h));
 	lua_pushboolean(L, click);
 	return 1;
 }
@@ -286,7 +429,7 @@ wColorButton(lua_State *L) {
 	ImGuiColorEditFlags flags = luaL_optinteger(L, 6, 0);
 	float w = luaL_optnumber(L, 7, 0);
 	float h = luaL_optnumber(L, 8, 0);
-	bool click = ImGui::ColorButton(desc, ImVec4(c1,c2,c3,c4), flags, ImVec2(w,h));
+	bool click = ImGui::ColorButton(desc, ImVec4(c1, c2, c3, c4), flags, ImVec2(w, h));
 	lua_pushboolean(L, click);
 	return 1;
 }
@@ -338,7 +481,7 @@ wProgressBar(lua_State *L) {
 			overlay = lua_tostring(L, 4);
 		}
 	}
-	ImGui::ProgressBar(fraction, ImVec2(w,h), overlay);
+	ImGui::ProgressBar(fraction, ImVec2(w, h), overlay);
 	return 0;
 }
 
@@ -349,8 +492,8 @@ wBullet(lua_State *L) {
 }
 
 static double
-read_field_float(lua_State *L, const char * field, double v) {
-	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TNUMBER) {
+read_field_float(lua_State *L, const char * field, double v, int tidx = INDEX_ARGS) {
+	if (lua_getfield(L, tidx, field) == LUA_TNUMBER) {
 		v = lua_tonumber(L, -1);
 	}
 	lua_pop(L, 1);
@@ -358,9 +501,9 @@ read_field_float(lua_State *L, const char * field, double v) {
 }
 
 static float
-read_field_checkfloat(lua_State *L, const char * field) {
+read_field_checkfloat(lua_State *L, const char * field, int tidx = INDEX_ARGS) {
 	float v;
-	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TNUMBER) {
+	if (lua_getfield(L, tidx, field) == LUA_TNUMBER) {
 		v = lua_tonumber(L, -1);
 	} else {
 		v = 0;
@@ -371,8 +514,8 @@ read_field_checkfloat(lua_State *L, const char * field) {
 }
 
 static int
-read_field_int(lua_State *L, const char * field, int v) {
-	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TNUMBER) {
+read_field_int(lua_State *L, const char * field, int v, int tidx = INDEX_ARGS) {
+	if (lua_getfield(L, tidx, field) == LUA_TNUMBER) {
 		if (!lua_isinteger(L, -1)) {
 			luaL_error(L, "Not an integer");
 		}
@@ -383,9 +526,9 @@ read_field_int(lua_State *L, const char * field, int v) {
 }
 
 static int
-read_field_checkint(lua_State *L, const char * field) {
+read_field_checkint(lua_State *L, const char * field, int tidx = INDEX_ARGS) {
 	int v;
-	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TNUMBER) {
+	if (lua_getfield(L, tidx, field) == LUA_TNUMBER) {
 		if (!lua_isinteger(L, -1)) {
 			luaL_error(L, "Not an integer");
 		}
@@ -399,8 +542,8 @@ read_field_checkint(lua_State *L, const char * field) {
 }
 
 static const char *
-read_field_string(lua_State *L, const char * field, const char *v) {
-	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TSTRING) {
+read_field_string(lua_State *L, const char * field, const char *v, int tidx = INDEX_ARGS) {
+	if (lua_getfield(L, tidx, field) == LUA_TSTRING) {
 		v = lua_tostring(L, -1);
 	}
 	lua_pop(L, 1);
@@ -408,8 +551,8 @@ read_field_string(lua_State *L, const char * field, const char *v) {
 }
 
 static const char *
-read_index_string(lua_State *L, int index, const char *v) {
-	if (lua_geti(L, INDEX_ARGS, index) == LUA_TSTRING) {
+read_index_string(lua_State *L, int index, const char *v, int tidx = INDEX_ARGS) {
+	if (lua_geti(L, tidx, index) == LUA_TSTRING) {
 		v = lua_tostring(L, -1);
 	}
 	lua_pop(L, 1);
@@ -417,21 +560,54 @@ read_index_string(lua_State *L, int index, const char *v) {
 }
 
 static bool
-read_field_boolean(lua_State *L, const char *field, bool v) {
-	if (lua_getfield(L, INDEX_ARGS, field) == LUA_TBOOLEAN) {
-		v = (bool)lua_toboolean(L, 1);
+read_field_boolean(lua_State *L, const char *field, bool v, int tidx = INDEX_ARGS) {
+	if (lua_getfield(L, tidx, field) == LUA_TBOOLEAN) {
+		v = (bool)lua_toboolean(L, -1);
 	}
 	lua_pop(L, 1);
 	return v;
 }
 
+//read table { x, y }
+static ImVec2
+read_field_vec2(lua_State *L, const char *field, ImVec2 def_val, int tidx = INDEX_ARGS) {
+	if (lua_getfield(L, tidx, field) == LUA_TTABLE) {
+		if (lua_geti(L, -1, 1) == LUA_TNUMBER)
+			def_val.x = lua_tonumber(L, -1);
+		if (lua_geti(L, -2, 2) == LUA_TNUMBER)
+			def_val.y = lua_tonumber(L, -1);
+		lua_pop(L, 2);
+	}
+	lua_pop(L, 1);
+	return def_val;
+}
+
+//read table { x, y, z, w }
+static ImVec4
+read_field_vec4(lua_State *L, const char *field, ImVec4 def_val, int tidx = INDEX_ARGS) {
+	if (lua_getfield(L, tidx, field) == LUA_TTABLE) {
+		if (lua_geti(L, -1, 1) == LUA_TNUMBER)
+			def_val.x = lua_tonumber(L, -1);
+		if (lua_geti(L, -2, 2) == LUA_TNUMBER)
+			def_val.y = lua_tonumber(L, -1);
+		if (lua_geti(L, -3, 3) == LUA_TNUMBER)
+			def_val.z = lua_tonumber(L, -1);
+		if (lua_geti(L, -4, 4) == LUA_TNUMBER)
+			def_val.w = lua_tonumber(L, -1);
+		lua_pop(L, 4);
+	}
+	lua_pop(L, 1);
+	return def_val;
+}
+
+
 static bool
 drag_float(lua_State *L, const char *label, int n) {
 	float v[4];
 	int i;
-	for (i=0;i<n;i++) {
-		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER) {
-			luaL_error(L, "Need float [%d]", i+1);
+	for (i = 0; i < n; i++) {
+		if (lua_geti(L, INDEX_ARGS, i + 1) != LUA_TNUMBER) {
+			luaL_error(L, "Need float [%d]", i + 1);
 		}
 		v[i] = lua_tonumber(L, -1);
 		lua_pop(L, 1);
@@ -442,7 +618,7 @@ drag_float(lua_State *L, const char *label, int n) {
 	const char * format = read_field_string(L, "format", "%.3f");
 	float power = read_field_float(L, "power", 1.0f);
 	bool change = false;
-	switch(n) {
+	switch (n) {
 	case 1:
 		change = ImGui::DragFloat(label, v, speed, min, max, format, power);
 		break;
@@ -462,9 +638,9 @@ drag_float(lua_State *L, const char *label, int n) {
 		break;
 	}
 	if (change) {
-		for (i=0;i<n;i++) {
+		for (i = 0; i < n; i++) {
 			lua_pushnumber(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i+1);
+			lua_seti(L, INDEX_ARGS, i + 1);
 		}
 	}
 	return change;
@@ -474,9 +650,9 @@ static bool
 drag_int(lua_State *L, const char *label, int n) {
 	int v[4];
 	int i;
-	for (i=0;i<n;i++) {
-		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER || !lua_isinteger(L, -1)) {
-			luaL_error(L, "Need integer [%d]", i+1);
+	for (i = 0; i < n; i++) {
+		if (lua_geti(L, INDEX_ARGS, i + 1) != LUA_TNUMBER || !lua_isinteger(L, -1)) {
+			luaL_error(L, "Need integer [%d]", i + 1);
 		}
 		v[i] = lua_tointeger(L, -1);
 		lua_pop(L, 1);
@@ -486,7 +662,7 @@ drag_int(lua_State *L, const char *label, int n) {
 	int max = read_field_int(L, "max", 0);
 	const char * format = read_field_string(L, "format", "%d");
 	bool change = false;
-	switch(n) {
+	switch (n) {
 	case 1:
 		change = ImGui::DragInt(label, v, speed, min, max, format);
 		break;
@@ -506,9 +682,9 @@ drag_int(lua_State *L, const char *label, int n) {
 		break;
 	}
 	if (change) {
-		for (i=0;i<n;i++) {
+		for (i = 0; i < n; i++) {
 			lua_pushinteger(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i+1);
+			lua_seti(L, INDEX_ARGS, i + 1);
 		}
 	}
 	return change;
@@ -518,9 +694,9 @@ static bool
 slider_float(lua_State *L, const char *label, int n) {
 	float v[4];
 	int i;
-	for (i=0;i<n;i++) {
-		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER) {
-			luaL_error(L, "Need float [%d]", i+1);
+	for (i = 0; i < n; i++) {
+		if (lua_geti(L, INDEX_ARGS, i + 1) != LUA_TNUMBER) {
+			luaL_error(L, "Need float [%d]", i + 1);
 		}
 		v[i] = lua_tonumber(L, -1);
 		lua_pop(L, 1);
@@ -529,7 +705,7 @@ slider_float(lua_State *L, const char *label, int n) {
 	float max = read_field_checkfloat(L, "max");
 	const char * format = read_field_string(L, "format", "%.3f");
 	bool change = false;
-	switch(n) {
+	switch (n) {
 	case 1:
 		change = ImGui::SliderFloat(label, v, min, max, format);
 		break;
@@ -544,9 +720,9 @@ slider_float(lua_State *L, const char *label, int n) {
 		break;
 	}
 	if (change) {
-		for (i=0;i<n;i++) {
+		for (i = 0; i < n; i++) {
 			lua_pushnumber(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i+1);
+			lua_seti(L, INDEX_ARGS, i + 1);
 		}
 	}
 	return change;
@@ -556,9 +732,9 @@ static bool
 slider_int(lua_State *L, const char *label, int n) {
 	int v[4];
 	int i;
-	for (i=0;i<n;i++) {
-		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER || !lua_isinteger(L, -1)) {
-			luaL_error(L, "Need integer [%d]", i+1);
+	for (i = 0; i < n; i++) {
+		if (lua_geti(L, INDEX_ARGS, i + 1) != LUA_TNUMBER || !lua_isinteger(L, -1)) {
+			luaL_error(L, "Need integer [%d]", i + 1);
 		}
 		v[i] = lua_tointeger(L, -1);
 		lua_pop(L, 1);
@@ -567,7 +743,7 @@ slider_int(lua_State *L, const char *label, int n) {
 	int max = read_field_checkint(L, "max");
 	const char * format = read_field_string(L, "format", "%d");
 	bool change = false;
-	switch(n) {
+	switch (n) {
 	case 1:
 		change = ImGui::SliderInt(label, v, min, max, format);
 		break;
@@ -582,9 +758,9 @@ slider_int(lua_State *L, const char *label, int n) {
 		break;
 	}
 	if (change) {
-		for (i=0;i<n;i++) {
+		for (i = 0; i < n; i++) {
 			lua_pushinteger(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i+1);
+			lua_seti(L, INDEX_ARGS, i + 1);
 		}
 	}
 	return change;
@@ -674,12 +850,12 @@ wDrag(lua_State *L, int type) {
 		return luaL_error(L, "Need 1-4 numbers");
 	bool change = false;
 	// todo: DragScalar/DragScalarN/SliderScalar/SliderScalarN/VSliderScalar
-	switch(type) {
+	switch (type) {
 	case DRAG_FLOAT:
 		change = drag_float(L, label, n);
 		break;
 	case DRAG_INT:
-		change = drag_int(L, label,  n);
+		change = drag_int(L, label, n);
 		break;
 	case SLIDER_FLOAT:
 		change = slider_float(L, label, n);
@@ -748,8 +924,8 @@ wColor(lua_State *L, int type) {
 	ImGuiColorEditFlags flags = read_field_int(L, "flags", 0);
 	float v[4];
 	int i;
-	for (i=0;i<n;i++) {
-		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER) {
+	for (i = 0; i < n; i++) {
+		if (lua_geti(L, INDEX_ARGS, i + 1) != LUA_TNUMBER) {
 			luaL_error(L, "Color should be a number");
 		}
 		v[i] = lua_tonumber(L, -1);
@@ -779,9 +955,9 @@ wColor(lua_State *L, int type) {
 		}
 	}
 	if (change) {
-		for (i=0;i<n;i++) {
+		for (i = 0; i < n; i++) {
 			lua_pushnumber(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i+1);
+			lua_seti(L, INDEX_ARGS, i + 1);
 		}
 	}
 	lua_pushboolean(L, change);
@@ -907,7 +1083,7 @@ edit_callback(ImGuiInputTextCallbackData *data) {
 				size_t sz;
 				const char *str = lua_tolstring(L, -1, &sz);
 				data->DeleteChars(0, data->BufTextLen);
-				data->InsertChars(0, str, str+sz);
+				data->InsertChars(0, str, str + sz);
 			}
 			lua_pop(L, 1);
 		} else {
@@ -929,7 +1105,7 @@ edit_callback(ImGuiInputTextCallbackData *data) {
 				size_t sz;
 				const char *str = lua_tolstring(L, -1, &sz);
 				data->DeleteChars(0, data->CursorPos);
-				data->InsertChars(0, str, str+sz);
+				data->InsertChars(0, str, str + sz);
 				data->CursorPos = sz;
 			}
 			lua_pop(L, 1);
@@ -996,7 +1172,7 @@ input_float(lua_State *L, const char *label, const char *format, ImGuiInputTextF
 		float v[4];
 		int i;
 		for (i=0;i<n;i++) {
-			lua_geti(L, INDEX_ARGS, i+1);
+			lua_geti(L, INDEX_ARGS, i + 1);
 			v[i] = lua_tonumber(L, -1);
 			lua_pop(L, 1);
 		}
@@ -1013,9 +1189,9 @@ input_float(lua_State *L, const char *label, const char *format, ImGuiInputTextF
 			break;
 		}
 		if (r) {
-			for (i=0;i<n;i++) {
+			for (i = 0; i < n; i++) {
 				lua_pushnumber(L, v[i]);
-				lua_seti(L, INDEX_ARGS, i+1);
+				lua_seti(L, INDEX_ARGS, i + 1);
 			}
 		}
 		return r;
@@ -1032,8 +1208,8 @@ input_int(lua_State *L, const char *label, ImGuiInputTextFlags flags, int n) {
 	}
 	int v[4];
 	int i;
-	for (i=0;i<n;i++) {
-		lua_geti(L, INDEX_ARGS, i+1);
+	for (i = 0; i < n; i++) {
+		lua_geti(L, INDEX_ARGS, i + 1);
 		v[i] = lua_tointeger(L, -1);
 		lua_pop(L, 1);
 	}
@@ -1053,9 +1229,9 @@ input_int(lua_State *L, const char *label, ImGuiInputTextFlags flags, int n) {
 		break;
 	}
 	if (r) {
-		for (i=0;i<n;i++) {
+		for (i = 0; i < n; i++) {
 			lua_pushinteger(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i+1);
+			lua_seti(L, INDEX_ARGS, i + 1);
 		}
 	}
 	return r;
@@ -1099,7 +1275,7 @@ wText(lua_State *L) {
 	float color[4];
 	switch (lua_gettop(L)) {
 	case 1:	// no color
-		ImGui::TextUnformatted(text, text+sz);
+		ImGui::TextUnformatted(text, text + sz);
 		break;
 	case 4:	// RGB
 	case 5: // RGBA
@@ -1108,7 +1284,7 @@ wText(lua_State *L) {
 		color[2] = luaL_checknumber(L, 4);
 		color[3] = luaL_optnumber(L, 5, 1.0);
 		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(color[0], color[1], color[2], color[3]));
-		ImGui::TextUnformatted(text, text+sz);
+		ImGui::TextUnformatted(text, text + sz);
 		ImGui::PopStyleColor();
 		break;
 	default:
@@ -1122,7 +1298,7 @@ wTextDisabled(lua_State *L) {
 	size_t sz;
 	const char * text = luaL_checklstring(L, 1, &sz);
 	ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
-	ImGui::TextUnformatted(text, text+sz);
+	ImGui::TextUnformatted(text, text + sz);
 	ImGui::PopStyleColor();
 	return 0;
 }
@@ -1132,7 +1308,7 @@ wTextWrapped(lua_State *L) {
 	size_t sz;
 	const char * text = luaL_checklstring(L, 1, &sz);
 	ImGui::PushTextWrapPos(0.0f);
-	ImGui::TextUnformatted(text, text+sz);
+	ImGui::TextUnformatted(text, text + sz);
 	ImGui::PopTextWrapPos();
 	return 0;
 }
@@ -1188,7 +1364,7 @@ wSelectable(lua_State *L) {
 	const char *label = luaL_checkstring(L, INDEX_ID);
 	bool selected;
 	ImGuiSelectableFlags flags = 0;
-	ImVec2 size(0,0);
+	ImVec2 size(0, 0);
 	int t = lua_type(L, INDEX_ARGS);
 	switch (t) {
 	case LUA_TBOOLEAN:
@@ -1274,7 +1450,7 @@ get_plot(void* data, int idx) {
 		return 0;
 	lua_pushcfunction(L, get_plot_func);
 	lua_pushvalue(L, INDEX_ARGS);
-	lua_pushinteger(L, idx+1);
+	lua_pushinteger(L, idx + 1);
 	if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
 		args->err = true;
 		return 0;
@@ -1387,14 +1563,25 @@ static int
 wMenuItem(lua_State *L) {
 	const char * label = luaL_checkstring(L, INDEX_ID);
 	const char *shortcut = luaL_optstring(L, 2, NULL);
-	bool selected = lua_toboolean(L, 3);
 	bool enabled = true;
 	if (lua_isboolean(L, 4)) {
 		enabled = lua_toboolean(L, 4);
 	}
-	bool change = ImGui::MenuItem(label, shortcut, selected, enabled);
-	lua_pushboolean(L, change);
-	return 1;
+	if (lua_isboolean(L, 3)) {
+		bool selected = lua_toboolean(L, 3);
+		bool change = ImGui::MenuItem(label, shortcut, &selected, enabled);
+		lua_pushboolean(L, change);
+		lua_pushboolean(L, selected);
+		return 2;
+	}
+	else
+	{
+		bool change = ImGui::MenuItem(label, shortcut, false, enabled);
+		lua_pushboolean(L, change);
+		return 1;
+	}
+
+
 }
 
 static int
@@ -1438,7 +1625,7 @@ get_listitem(void* data, int idx, const char **out_text) {
 		return 0;
 	lua_pushcfunction(L, get_listitem_func);
 	lua_pushvalue(L, INDEX_ARGS);
-	lua_pushinteger(L, idx+1);
+	lua_pushinteger(L, idx + 1);
 	if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
 		args->err = true;
 		return 0;
@@ -1464,14 +1651,93 @@ wListBox(lua_State *L) {
 	int current = read_field_int(L, "current", 0) - 1;
 	bool change = ImGui::ListBox(label, &current, get_listitem, &args, n, height_in_items);
 	if (change) {
-		lua_pushinteger(L, current+1);
+		lua_pushinteger(L, current + 1);
 		lua_setfield(L, INDEX_ARGS, "current");
 	}
 	lua_pushboolean(L, change);
 	return 1;
 }
 
+inline static ImTextureID
+bgfx_to_imgui_texture_id(lua_State*L, int lua_handle) {
+	bgfx_texture_handle_t th = { BGFX_LUAHANDLE_ID(TEXTURE, lua_handle) };
+	union { struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; ImTextureID ptr; } texture;
+	texture.s.handle = th;
+	texture.s.flags = IMGUI_FLAGS_ALPHA_BLEND;
+	texture.s.mip = 0;
+	return texture.ptr;
+}
+
+
+static int wImage(lua_State *L) {
+	int lua_handle = luaL_checkinteger(L, 1);
+	ImTextureID tex_id = bgfx_to_imgui_texture_id(L, lua_handle);
+	int size_x = luaL_checkinteger(L, 2);
+	int size_y = luaL_checkinteger(L, 3);
+	ImVec2 size = { (float)size_x,(float)size_y };
+
+	ImVec2 uv0 = { 0.0f,0.0f };
+	ImVec2 uv1 = { 1.0f,1.0f };
+	ImVec4 tint_col = { 1.0f,1.0f,1.0f,1.0f };
+	ImVec4 border_col = { 0.0f,0.0f,0.0f,0.0f };
+
+	if (lua_type(L, 4) == LUA_TTABLE)
+	{
+		uv0 = read_field_vec2(L, "uv0", uv0, 4);
+		uv1 = read_field_vec2(L, "uv1", uv1, 4);
+		tint_col = read_field_vec4(L, "tint_col", tint_col, 4);
+		border_col = read_field_vec4(L, "border_col", border_col, 4);
+	}
+	ImGui::Image(tex_id, size, uv0, uv1, tint_col, border_col);
+	return 0;
+}
+
+/**ImageButton( handle,size_x,size_y,
+						opt [
+							{ uv0={0,0},
+							uv1={1,1},
+							frame_padding=-1,
+							bg_col={0f,0f,0f,0f},
+							tint_col={1f,1f,1f,1f},
+							flags=0x01,
+							mip = 0 }
+						] );
+**/
+static int
+wImageButton(lua_State *L) {
+	int lua_handle = luaL_checkinteger(L, 1);
+	ImTextureID tex_id = bgfx_to_imgui_texture_id(L, lua_handle);
+	int size_x = luaL_checkinteger(L, 2);
+	int size_y = luaL_checkinteger(L, 3);
+	ImVec2 size = { (float)size_x,(float)size_y };
+
+	ImVec2 uv0 = { 0.0f,0.0f };
+	ImVec2 uv1 = { 1.0f,1.0f };
+	int frame_padding = -1;
+	ImVec4 bg_col = { 0.0f,0.0f,0.0f,0.0f };
+	ImVec4 tint_col = { 1.0f,1.0f,1.0f,1.0f };
+
+	if (lua_type(L, 4) == LUA_TTABLE)
+	{
+		uv0 = read_field_vec2(L, "uv0", uv0, 4);
+		uv1 = read_field_vec2(L, "uv1", uv1, 4);
+		frame_padding = read_field_int(L, "frame_padding", frame_padding, 4);
+		bg_col = read_field_vec4(L, "bg_col", bg_col, 4);
+		tint_col = read_field_vec4(L, "tint_col", tint_col, 4);
+	}
+	bool clicked = ImGui::ImageButton(tex_id, size, uv0, uv1, frame_padding, bg_col, tint_col);
+	lua_pushboolean(L, clicked);
+	return 1;
+}
+
+#ifdef _MSC_VER
+#pragma endregion IMP_WIDGET
+#endif
+
 // windows api
+#ifdef _MSC_VER
+#pragma region IMP_WINDOWS
+#endif
 
 #define NO_CLOSED ((lua_Integer)1 << 32)
 
@@ -1576,7 +1842,7 @@ winOpenPopup(lua_State *L) {
 static int
 winBeginPopup(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
-	ImGuiWindowFlags flags = (ImGuiWindowFlags)(luaL_optinteger(L, 2,0) & 0xffffffff);
+	ImGuiWindowFlags flags = (ImGuiWindowFlags)(luaL_optinteger(L, 2, 0) & 0xffffffff);
 	bool change = ImGui::BeginPopup(id, flags);
 	lua_pushboolean(L, change);
 	return 1;
@@ -1780,7 +2046,7 @@ winSetNextWindowPos(lua_State *L) {
 	ImGuiCond cond = get_cond(L, 3);
 	float px = luaL_optinteger(L, 4, 0);
 	float py = luaL_optinteger(L, 5, 0);
-	ImGui::SetNextWindowPos(ImVec2(x,y), cond, ImVec2(px,py));
+	ImGui::SetNextWindowPos(ImVec2(x, y), cond, ImVec2(px, py));
 	return 0;
 }
 
@@ -1789,7 +2055,7 @@ winSetNextWindowSize(lua_State *L) {
 	float x = luaL_checkinteger(L, 1);
 	float y = luaL_checkinteger(L, 2);
 	ImGuiCond cond = get_cond(L, 3);
-	ImGui::SetNextWindowSize(ImVec2(x,y), cond);
+	ImGui::SetNextWindowSize(ImVec2(x, y), cond);
 	return 0;
 }
 
@@ -1799,7 +2065,7 @@ winSetNextWindowSizeConstraints(lua_State *L) {
 	float min_h = luaL_checkinteger(L, 2);
 	float max_w = luaL_checkinteger(L, 3);
 	float max_h = luaL_checkinteger(L, 4);
-	ImGui::SetNextWindowSizeConstraints(ImVec2(min_w,min_h), ImVec2(max_w, max_h));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(min_w, min_h), ImVec2(max_w, max_h));
 	return 0;
 }
 
@@ -1807,7 +2073,7 @@ static int
 winSetNextWindowContentSize(lua_State *L) {
 	float x = luaL_checkinteger(L, 1);
 	float y = luaL_checkinteger(L, 2);
-	ImGui::SetNextWindowContentSize(ImVec2(x,y));
+	ImGui::SetNextWindowContentSize(ImVec2(x, y));
 	return 0;
 }
 
@@ -1827,7 +2093,7 @@ winSetNextWindowFocus(lua_State *L) {
 
 static int
 winSetNextWindowBgAlpha(lua_State *L) {
-	float alpha = luaL_checknumber(L,1);
+	float alpha = luaL_checknumber(L, 1);
 	ImGui::SetNextWindowBgAlpha(alpha);
 	return 0;
 }
@@ -1871,7 +2137,58 @@ winGetWindowContentRegionWidth(lua_State *L) {
 	return 1;
 }
 
+static int
+winPushStyleColor(lua_State *L) {
+	int stylecol = luaL_checkinteger(L, 1);
+
+	if (stylecol > 0) {
+		float c1 = luaL_checknumber(L, 2);
+		float c2 = luaL_checknumber(L, 3);
+		float c3 = luaL_checknumber(L, 4);
+		float c4 = luaL_optnumber(L, 5, 1.0f);
+		ImGui::PushStyleColor(stylecol, ImVec4(c1, c2, c3, c4));
+	}
+	return 0;
+}
+
+static int
+winPopStyleColor(lua_State *L) {
+	int count = luaL_optinteger(L, 1, 1);
+	ImGui::PopStyleColor(count);
+	return 0;
+}
+
+static int
+winPushStyleVar(lua_State *L) {
+	int stylevar = luaL_checkinteger(L, 1);
+	if (stylevar >= 0) {
+		float v1 = luaL_checknumber(L, 2);
+		if (lua_isnumber(L, 3)) {
+			float v2 = luaL_checknumber(L, 3);
+			ImGui::PushStyleVar(stylevar, ImVec2(v1, v2));
+		}
+		else {
+			ImGui::PushStyleVar(stylevar, v1);
+		}
+	}
+	return 0;
+}
+
+static int
+winPopStyleVar(lua_State *L) {
+	int count = luaL_optinteger(L, 1, 1);
+	ImGui::PopStyleVar(count);
+	return 0;
+}
+
+#ifdef _MSC_VER
+#pragma endregion IMP_WINDOWS
+#endif
+
 // cursor and layout
+#ifdef _MSC_VER
+#pragma region IMP_CURSOR
+#endif
 
 static int
 cSeparator(lua_State *L) {
@@ -1882,7 +2199,7 @@ cSeparator(lua_State *L) {
 static int
 cSameLine(lua_State *L) {
 	float offset_from_start_x = luaL_optnumber(L, 1, 0.0f);
-	float spacing=luaL_optnumber(L, 2, -1.0f);
+	float spacing = luaL_optnumber(L, 2, -1.0f);
 	ImGui::SameLine(offset_from_start_x, spacing);
 	return 0;
 }
@@ -1903,7 +2220,7 @@ static int
 cDummy(lua_State *L) {
 	float x = luaL_checkinteger(L, 1);
 	float y = luaL_checkinteger(L, 2);
-	ImGui::Dummy(ImVec2(x,y));
+	ImGui::Dummy(ImVec2(x, y));
 	return 0;
 }
 
@@ -1970,7 +2287,7 @@ static int
 cSetCursorScreenPos(lua_State *L) {
 	float x = luaL_checknumber(L, 1);
 	float y = luaL_checknumber(L, 1);
-	ImGui::SetCursorScreenPos(ImVec2(x,y));
+	ImGui::SetCursorScreenPos(ImVec2(x, y));
 	return 0;
 }
 
@@ -2021,49 +2338,14 @@ cGetTreeNodeToLabelSpacing(lua_State *L) {
 	return 1;
 }
 
-// enums
-struct enum_pair {
-	const char * name;
-	lua_Integer value;
-};
-
-#define ENUM(prefix, name) { #name, prefix##_##name }
-
-static int
-make_enum(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	int i,t;
-	lua_Integer r = 0;
-
-	for (i=1;(t = lua_geti(L, 1, i)) != LUA_TNIL;i++) {
-		if (t != LUA_TSTRING)
-			luaL_error(L, "Enum name should be string, it's %s", lua_typename(L, t));
-		if (lua_gettable(L, lua_upvalueindex(1)) != LUA_TNUMBER) {
-			lua_geti(L, 1, i);
-			luaL_error(L, "Invalid enum %s.%s", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, -1));
-		}
-		lua_Integer v = lua_tointeger(L, -1);
-		lua_pop(L, 1);
-		r |= v;
-	}
-	lua_pushinteger(L, r);
-	return 1;
-}
-
-static void
-enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
-	int i;
-	lua_newtable(L);
-	for (i=0;enums[i].name;i++) {
-		lua_pushinteger(L, enums[i].value);
-		lua_setfield(L, -2, enums[i].name);
-	}
-	lua_pushstring(L, name);
-	lua_pushcclosure(L, make_enum, 2);
-	lua_setfield(L, -2, name);
-}
+#ifdef _MSC_VER
+#pragma endregion IMP_CURSOR
+#endif
 
 // Utils
+#ifdef _MSC_VER
+#pragma region IMP_UTIL
+#endif
 
 static int
 uSetColorEditOptions(lua_State *L) {
@@ -2079,7 +2361,7 @@ uPushClipRect(lua_State *L) {
 	float right = luaL_checkinteger(L, 3);
 	float bottom = luaL_checkinteger(L, 4);
 	bool intersect_with_current_clip_rect = lua_toboolean(L, 5);
-	ImGui::PushClipRect(ImVec2(left,top), ImVec2(right, bottom), intersect_with_current_clip_rect);
+	ImGui::PushClipRect(ImVec2(left, top), ImVec2(right, bottom), intersect_with_current_clip_rect);
 	return 0;
 }
 
@@ -2248,7 +2530,7 @@ fPush(lua_State *L) {
 		luaL_error(L, "Invalid font ID.");
 		return 0;
 	}
-	ImGui::PushFont(atlas->Fonts[id-1]);
+	ImGui::PushFont(atlas->Fonts[id - 1]);
 	return 0;
 }
 
@@ -2293,7 +2575,7 @@ CreateFont(lua_State *L, ImFontAtlas* atlas, ImFontConfig* config) {
 	size_t ttf_len = 0;
 	const char* ttf_buf = luaL_checklstring(L, -1, &ttf_len);
 	lua_pop(L, 1);
-	
+
 	lua_rawgeti(L, -1, 2);
 	lua_Number size = luaL_checknumber(L, -1);
 	lua_pop(L, 1);
@@ -2350,13 +2632,13 @@ fCreate(lua_State *L) {
 
 	union { ImTextureID ptr; struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; } texture;
 	texture.s.handle = BGFX(create_texture_2d)(
-		  (uint16_t)width
+		(uint16_t)width
 		, (uint16_t)height
 		, false
 		, 1
 		, BGFX_TEXTURE_FORMAT_BGRA8
 		, 0
-		, BGFX(copy)(data, width*height*4)
+		, BGFX(copy)(data, width*height * 4)
 		);
 	texture.s.flags = IMGUI_FLAGS_ALPHA_BLEND;
 	texture.s.mip = 0;
@@ -2364,61 +2646,80 @@ fCreate(lua_State *L) {
 	return 0;
 }
 
-
-// key, press, state
 static int
-lkeyState(lua_State *L) {
-	int key = luaL_checkinteger(L, 1);
-	int press = lua_toboolean(L, 2);
-	int state = luaL_checkinteger(L, 3);
+uCaptureKeyboardFromApp(lua_State * L) {
+	bool val = true;
+	if (lua_isboolean(L, 1))
+		val = lua_toboolean(L, 1);
+	ImGui::CaptureKeyboardFromApp(val);
+	return 0;
+}
 
-	ImGuiIO& io = ImGui::GetIO();
+static int
+uCaptureMouseFromApp(lua_State * L) {
+	bool val = true;
+	if (lua_isboolean(L, 1))
+		val = lua_toboolean(L, 1);
+	ImGui::CaptureMouseFromApp(val);
+	return 0;
+}
 
-	io.KeyCtrl = (state & 0x01) != 0;
-	io.KeyAlt = (state & 0x02) != 0;
-	io.KeyShift = (state & 0x04) != 0;
-	io.KeySuper = (state & 0x08) != 0;
+static int
+uIsMouseDoubleClicked(lua_State * L) {
+	int btn = luaL_checkinteger(L, 1);
+	bool clicked = ImGui::IsMouseDoubleClicked(btn);
+	lua_pushboolean(L, clicked);
+	return 1;
+}
 
-	if (key >=0 && key < 256) {
-		io.KeysDown[key] = press;
+#ifdef _MSC_VER
+#pragma endregion IMP_UTIL
+#endif
+
+#ifdef _MSC_VER
+#pragma region IMP_FLAG
+#endif
+
+// enums
+struct enum_pair {
+	const char * name;
+	lua_Integer value;
+};
+
+#define ENUM(prefix, name) { #name, prefix##_##name }
+
+static int
+make_flag(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	int i, t;
+	lua_Integer r = 0;
+
+	for (i = 1; (t = lua_geti(L, 1, i)) != LUA_TNIL; i++) {
+		if (t != LUA_TSTRING)
+			luaL_error(L, "Flag name should be string, it's %s", lua_typename(L, t));
+		if (lua_gettable(L, lua_upvalueindex(1)) != LUA_TNUMBER) {
+			lua_geti(L, 1, i);
+			luaL_error(L, "Invalid flag %s.%s", lua_tostring(L, lua_upvalueindex(2)), lua_tostring(L, -1));
+		}
+		lua_Integer v = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+		r |= v;
 	}
-	return 0;
+	lua_pushinteger(L, r);
+	return 1;
 }
 
-static int
-lmouseMove(lua_State *L) {
-	ImGuiIO& io = ImGui::GetIO();
-	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
-	return 0;
-}
-
-static int
-lmouseWheel(lua_State *L) {
-	ImGuiIO& io = ImGui::GetIO();
-	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
-	io.MouseWheel = (float)luaL_checknumber(L, 3);
-	return 0;
-}
-
-static int
-lmouseClick(lua_State *L) {
-	ImGuiIO& io = ImGui::GetIO();
-	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
-	switch (luaL_checkinteger(L, 3)) {
-	case 0: io.MouseDown[0] = lua_toboolean(L, 4); break;
-	case 1: io.MouseDown[1] = lua_toboolean(L, 4); break;
-	case 2: io.MouseDown[2] = lua_toboolean(L, 4); break;
-	default: break;
+static void
+flag_gen(lua_State *L, const char *name, struct enum_pair *enums) {
+	int i;
+	lua_newtable(L);
+	for (i = 0; enums[i].name; i++) {
+		lua_pushinteger(L, enums[i].value);
+		lua_setfield(L, -2, enums[i].name);
 	}
-	return 0;
-}
-
-static int
-linputChar(lua_State *L) {
-	int c = luaL_checkinteger(L, 1);
-	ImGuiIO& io = ImGui::GetIO();
-	io.AddInputCharacter(c);
-	return 0;
+	lua_pushstring(L, name);
+	lua_pushcclosure(L, make_flag, 2);
+	lua_setfield(L, -2, name);
 }
 
 static struct enum_pair eColorEditFlags[] = {
@@ -2456,20 +2757,20 @@ static struct enum_pair eInputTextFlags[] = {
 	ENUM(ImGuiInputTextFlags, EnterReturnsTrue),
 	ENUM(ImGuiInputTextFlags, CallbackCompletion),
 	ENUM(ImGuiInputTextFlags, CallbackHistory),
-// Todo : support CallbackAlways
-//	ENUM(ImGuiInputTextFlags, CallbackAlways),
-	ENUM(ImGuiInputTextFlags, CallbackCharFilter),
-	ENUM(ImGuiInputTextFlags, AllowTabInput),
-	ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),
-	ENUM(ImGuiInputTextFlags, NoHorizontalScroll),
-	ENUM(ImGuiInputTextFlags, AlwaysInsertMode),
-	ENUM(ImGuiInputTextFlags, ReadOnly),
-	ENUM(ImGuiInputTextFlags, Password),
-	ENUM(ImGuiInputTextFlags, NoUndoRedo),
-	ENUM(ImGuiInputTextFlags, CharsScientific),
-	ENUM(ImGuiInputTextFlags, CallbackResize),
-	ENUM(ImGuiInputTextFlags, Multiline),
-	{ NULL, 0 },
+	// Todo : support CallbackAlways
+	//	ENUM(ImGuiInputTextFlags, CallbackAlways),
+		ENUM(ImGuiInputTextFlags, CallbackCharFilter),
+		ENUM(ImGuiInputTextFlags, AllowTabInput),
+		ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),
+		ENUM(ImGuiInputTextFlags, NoHorizontalScroll),
+		ENUM(ImGuiInputTextFlags, AlwaysInsertMode),
+		ENUM(ImGuiInputTextFlags, ReadOnly),
+		ENUM(ImGuiInputTextFlags, Password),
+		ENUM(ImGuiInputTextFlags, NoUndoRedo),
+		ENUM(ImGuiInputTextFlags, CharsScientific),
+		ENUM(ImGuiInputTextFlags, CallbackResize),
+		ENUM(ImGuiInputTextFlags, Multiline),
+		{ NULL, 0 },
 };
 
 static struct enum_pair eComboFlags[] = {
@@ -2487,9 +2788,9 @@ static struct enum_pair eSelectableFlags[] = {
 	ENUM(ImGuiSelectableFlags, DontClosePopups),
 	ENUM(ImGuiSelectableFlags, SpanAllColumns),
 	ENUM(ImGuiSelectableFlags, AllowDoubleClick),
-// Use boolean(disabled) in Selectable(_,_, disabled)
-//	ENUM(ImGuiSelectableFlags, Disabled),
-	{ NULL, 0 },
+	// Use boolean(disabled) in Selectable(_,_, disabled)
+	//	ENUM(ImGuiSelectableFlags, Disabled),
+		{ NULL, 0 },
 };
 
 static struct enum_pair eTreeNodeFlags[] = {
@@ -2533,7 +2834,7 @@ static struct enum_pair eWindowFlags[] = {
 	ENUM(ImGuiWindowFlags, NoNav),
 	ENUM(ImGuiWindowFlags, NoDecoration),
 	ENUM(ImGuiWindowFlags, NoInputs),
-	{ "NoClosed", (lua_Integer)1<<32 },
+	{ "NoClosed", (lua_Integer)1 << 32 },
 	{ NULL, 0 },
 };
 
@@ -2567,9 +2868,116 @@ static struct enum_pair eTabBarFlags[] = {
 	ENUM(ImGuiTabBarFlags, NoTooltip),
 	ENUM(ImGuiTabBarFlags, FittingPolicyResizeDown),
 	ENUM(ImGuiTabBarFlags, FittingPolicyScroll),
-	{ "NoClosed", (lua_Integer)1<<32 },
+	{ "NoClosed", (lua_Integer)1 << 32 },
 	{ NULL, 0 },
 };
+#ifdef _MSC_VER
+#pragma endregion IMP_FLAG
+#endif
+
+#ifdef _MSC_VER
+#pragma region IMP_ENUM
+#endif
+
+static void
+enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
+	int i;
+	lua_newtable(L);
+	for (i = 0; enums[i].name; i++) {
+		lua_pushinteger(L, enums[i].value);
+		lua_setfield(L, -2, enums[i].name);
+	}
+	lua_setfield(L, -2, name);
+}
+
+static struct enum_pair eStyleCol[] = {
+	ENUM(ImGuiCol, Text),
+	ENUM(ImGuiCol, TextDisabled),
+	ENUM(ImGuiCol, WindowBg),              // Background of normal windows
+	ENUM(ImGuiCol, ChildBg),               // Background of child windows
+	ENUM(ImGuiCol, PopupBg),               // Background of popups, menus, tooltips windows
+	ENUM(ImGuiCol, Border),
+	ENUM(ImGuiCol, BorderShadow),
+	ENUM(ImGuiCol, FrameBg),               // Background of checkbox, radio button, plot, slider, text input
+	ENUM(ImGuiCol, FrameBgHovered),
+	ENUM(ImGuiCol, FrameBgActive),
+	ENUM(ImGuiCol, TitleBg),
+	ENUM(ImGuiCol, TitleBgActive),
+	ENUM(ImGuiCol, TitleBgCollapsed),
+	ENUM(ImGuiCol, MenuBarBg),
+	ENUM(ImGuiCol, ScrollbarBg),
+	ENUM(ImGuiCol, ScrollbarGrab),
+	ENUM(ImGuiCol, ScrollbarGrabHovered),
+	ENUM(ImGuiCol, ScrollbarGrabActive),
+	ENUM(ImGuiCol, CheckMark),
+	ENUM(ImGuiCol, SliderGrab),
+	ENUM(ImGuiCol, SliderGrabActive),
+	ENUM(ImGuiCol, Button),
+	ENUM(ImGuiCol, ButtonHovered),
+	ENUM(ImGuiCol, ButtonActive),
+	ENUM(ImGuiCol, Header),
+	ENUM(ImGuiCol, HeaderHovered),
+	ENUM(ImGuiCol, HeaderActive),
+	ENUM(ImGuiCol, Separator),
+	ENUM(ImGuiCol, SeparatorHovered),
+	ENUM(ImGuiCol, SeparatorActive),
+	ENUM(ImGuiCol, ResizeGrip),
+	ENUM(ImGuiCol, ResizeGripHovered),
+	ENUM(ImGuiCol, ResizeGripActive),
+	ENUM(ImGuiCol, Tab),
+	ENUM(ImGuiCol, TabHovered),
+	ENUM(ImGuiCol, TabActive),
+	ENUM(ImGuiCol, TabUnfocused),
+	ENUM(ImGuiCol, TabUnfocusedActive),
+#ifdef IMGUI_HAS_DOCK
+	ENUM(ImGuiCol, DockingPreview),
+	ENUM(ImGuiCol, DockingEmptyBg),        // Background color for empty node (e.g. CentralNode with no window docked into it)
+#endif
+	ENUM(ImGuiCol, PlotLines),
+	ENUM(ImGuiCol, PlotLinesHovered),
+	ENUM(ImGuiCol, PlotHistogram),
+	ENUM(ImGuiCol, PlotHistogramHovered),
+	ENUM(ImGuiCol, TextSelectedBg),
+	ENUM(ImGuiCol, DragDropTarget),
+	ENUM(ImGuiCol, NavHighlight),          // Gamepad/keyboard: current highlighted item
+	ENUM(ImGuiCol, NavWindowingHighlight), // Highlight window when using CTRL+TAB
+	ENUM(ImGuiCol, NavWindowingDimBg),     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
+	ENUM(ImGuiCol, ModalWindowDimBg),      // Darken/colorize entire screen behind a modal window, when one is active
+	ENUM(ImGuiCol, COUNT),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eStyleVar[] = {
+	ENUM(ImGuiStyleVar,Alpha),               // float     Alpha
+	ENUM(ImGuiStyleVar,WindowPadding),       // ImVec2    WindowPadding
+	ENUM(ImGuiStyleVar,WindowRounding),      // float     WindowRounding
+	ENUM(ImGuiStyleVar,WindowBorderSize),    // float     WindowBorderSize
+	ENUM(ImGuiStyleVar,WindowMinSize),       // ImVec2    WindowMinSize
+	ENUM(ImGuiStyleVar,WindowTitleAlign),    // ImVec2    WindowTitleAlign
+	ENUM(ImGuiStyleVar,ChildRounding),       // float     ChildRounding
+	ENUM(ImGuiStyleVar,ChildBorderSize),     // float     ChildBorderSize
+	ENUM(ImGuiStyleVar,PopupRounding),       // float     PopupRounding
+	ENUM(ImGuiStyleVar,PopupBorderSize),     // float     PopupBorderSize
+	ENUM(ImGuiStyleVar,FramePadding),        // ImVec2    FramePadding
+	ENUM(ImGuiStyleVar,FrameRounding),       // float     FrameRounding
+	ENUM(ImGuiStyleVar,FrameBorderSize),     // float     FrameBorderSize
+	ENUM(ImGuiStyleVar,ItemSpacing),         // ImVec2    ItemSpacing
+	ENUM(ImGuiStyleVar,ItemInnerSpacing),    // ImVec2    ItemInnerSpacing
+	ENUM(ImGuiStyleVar,IndentSpacing),       // float     IndentSpacing
+	ENUM(ImGuiStyleVar,ScrollbarSize),       // float     ScrollbarSize
+	ENUM(ImGuiStyleVar,ScrollbarRounding),   // float     ScrollbarRounding
+	ENUM(ImGuiStyleVar,GrabMinSize),         // float     GrabMinSize
+	ENUM(ImGuiStyleVar,GrabRounding),        // float     GrabRounding
+	ENUM(ImGuiStyleVar,TabRounding),         // float     TabRounding
+	ENUM(ImGuiStyleVar,ButtonTextAlign),     // ImVec2    ButtonTextAlign
+	ENUM(ImGuiStyleVar,SelectableTextAlign), // ImVec2    SelectableTextAlign
+	ENUM(ImGuiStyleVar,COUNT),
+	{ NULL, 0 },
+};
+
+#ifdef _MSC_VER
+#pragma endregion IMP_ENUM
+#endif
 
 struct keymap {
 	const char * name;
@@ -2617,7 +3025,7 @@ lkeymap(lua_State *L) {
 			const char * key = lua_tostring(L, -2);
 			int value = lua_tointeger(L, -1);
 			int i;
-			for (i=0;map[i].name;i++) {
+			for (i = 0; map[i].name; i++) {
 				if (strcmp(map[i].name, key) == 0) {
 					io.KeyMap[map[i].index] = value;
 					break;
@@ -2652,11 +3060,18 @@ luaopen_imgui(lua_State *L) {
 		{ "resize", lresize },
 		{ "viewid", lviewId },
 		{ "program", lprogram },
+		{ "ime_handle", limeHandle },
 		{ NULL, NULL },
 	};
 
 	luaL_newlib(L, l);
 
+	lua_newtable(L);
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -3, "IO");
+	lua_pushcclosure(L, lbeginFrame, 1);
+	lua_setfield(L, -2, "begin_frame");
+	
 	luaL_Reg widgets[] = {
 		{ "Button", wButton },
 		{ "SmallButton", wSmallButton },
@@ -2707,6 +3122,8 @@ luaopen_imgui(lua_State *L) {
 		{ "BeginListBoxN", wBeginListBoxN },
 		{ "EndListBox", wEndListBox },
 		{ "ListBox", wListBox },
+		{ "Image", wImage },
+		{ "ImageButton", wImageButton },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, widgets);
@@ -2786,6 +3203,10 @@ luaopen_imgui(lua_State *L) {
 		{ "GetWindowContentRegionMin", winGetWindowContentRegionMin },
 		{ "GetWindowContentRegionMax", winGetWindowContentRegionMax },
 		{ "GetWindowContentRegionWidth", winGetWindowContentRegionWidth },
+		{ "PushStyleColor", winPushStyleColor },
+		{ "PopStyleColor", winPopStyleColor },
+		{ "PushStyleVar", winPushStyleVar },
+		{ "PopStyleVar", winPopStyleVar },
 		{ NULL, NULL },
 	};
 
@@ -2816,6 +3237,9 @@ luaopen_imgui(lua_State *L) {
 		{ "SetItemAllowOverlap", uSetItemAllowOverlap },
 		{ "LoadIniSettings", uLoadIniSettings },
 		{ "SaveIniSettings", uSaveIniSettings },
+		{ "CaptureKeyboardFromApp", uCaptureKeyboardFromApp },
+		{ "CaptureMouseFromApp", uCaptureMouseFromApp },
+		{ "IsMouseDoubleClicked",uIsMouseDoubleClicked},
 		{ NULL, NULL },
 	};
 
@@ -2831,19 +3255,23 @@ luaopen_imgui(lua_State *L) {
 
 	luaL_newlib(L, font);
 	lua_setfield(L, -2, "font");
+	lua_newtable(L);
+	flag_gen(L, "ColorEdit", eColorEditFlags);
+	flag_gen(L, "InputText", eInputTextFlags);
+	flag_gen(L, "Combo", eComboFlags);
+	flag_gen(L, "Selectable", eSelectableFlags);
+	flag_gen(L, "TreeNode", eTreeNodeFlags);
+	flag_gen(L, "Window", eWindowFlags);
+	flag_gen(L, "Focused", eFocusedFlags);
+	flag_gen(L, "Hovered", eHoveredFlags);
+	flag_gen(L, "TabBar", eTabBarFlags);
+	lua_setfield(L, -2, "flags");
 
 	lua_newtable(L);
-	enum_gen(L, "ColorEdit", eColorEditFlags);
-	enum_gen(L, "InputText", eInputTextFlags);
-	enum_gen(L, "Combo", eComboFlags);
-	enum_gen(L, "Selectable", eSelectableFlags);
-	enum_gen(L, "TreeNode", eTreeNodeFlags);
-	enum_gen(L, "Window", eWindowFlags);
-	enum_gen(L, "Focused", eFocusedFlags);
-	enum_gen(L, "Hovered", eHoveredFlags);
-	enum_gen(L, "TabBar", eTabBarFlags);
-
-	lua_setfield(L, -2, "flags");
+	enum_gen(L, "StyleCol", eStyleCol);
+	enum_gen(L, "StyleVar", eStyleVar);
+	lua_setfield(L, -2, "enum");
 
 	return 1;
 }
+

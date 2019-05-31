@@ -1,6 +1,7 @@
 local ecs = ...
 
 local bgfx = require "bgfx"
+local rhwi      = import_package "ant.render".hardware_interface
 
 local frame_stat = ecs.singleton "frame_stat"
 function frame_stat:init()
@@ -28,7 +29,7 @@ local ms = math.stack
 function end_frame_sys:update() 
     local stat = self.frame_stat
 	stat.frame_num = stat.frame_num + 1
-	stat.bgfx_frames = bgfx.frame()
+	stat.bgfx_frames = rhwi.frame()
 	
 	math3d.reset(ms)	
 end
