@@ -183,6 +183,7 @@ lresize(lua_State *L) {
 
 struct lua_imgui_io
 {
+	bool		   inited = false;
 	bool        WantCaptureMouse;               // When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
 	bool        WantCaptureKeyboard;            // When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
 	bool        WantTextInput;                  // Mobile/console: when io.WantTextInput is true, you may display an on-screen keyboard. This is set by ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
@@ -197,7 +198,7 @@ struct lua_imgui_io
 	int         MetricsActiveWindows;           // Number of active windows
 	int         MetricsActiveAllocations;       // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
 };
-#define sync_io_val(name,init)  _sync_io_val(L, io_index,#name, io_cache.name, io.name, init )
+#define sync_io_val(name,init)  _sync_io_val(L, io_index,#name, io_cache->name, io.name, init )
 
 static void
 _sync_io_val(lua_State * L, int io_index, const char * name, bool& cache_value, bool new_value, bool init) {
@@ -227,23 +228,27 @@ _sync_io_val(lua_State * L, int io_index, const char * name, float& cache_value,
 static void
 sync_io(lua_State *L) {
 	ImGuiIO& io = ImGui::GetIO();
-	static lua_imgui_io io_cache;
-	static bool init = true;
+
+	int io_cache_index = lua_upvalueindex(2);
+	lua_imgui_io * io_cache =  (lua_imgui_io*)lua_touserdata(L, io_cache_index);
+	bool inited = io_cache->inited;
+	
+
 	int io_index = lua_upvalueindex(1);
-	sync_io_val(WantCaptureMouse, init);
-	sync_io_val(WantCaptureKeyboard, init);
-	sync_io_val(WantTextInput, init);
-	sync_io_val(WantSetMousePos, init);
-	sync_io_val(WantSaveIniSettings, init);
-	sync_io_val(NavActive, init);
-	sync_io_val(NavVisible, init);
-	sync_io_val(Framerate, init);
-	sync_io_val(MetricsRenderVertices, init);
-	sync_io_val(MetricsRenderIndices, init);
-	sync_io_val(MetricsRenderWindows, init);
-	sync_io_val(MetricsActiveWindows, init);
-	sync_io_val(MetricsActiveAllocations, init);
-	init = false;
+	sync_io_val(WantCaptureMouse, inited);
+	sync_io_val(WantCaptureKeyboard, inited);
+	sync_io_val(WantTextInput, inited);
+	sync_io_val(WantSetMousePos, inited);
+	sync_io_val(WantSaveIniSettings, inited);
+	sync_io_val(NavActive, inited);
+	sync_io_val(NavVisible, inited);
+	sync_io_val(Framerate, inited);
+	sync_io_val(MetricsRenderVertices, inited);
+	sync_io_val(MetricsRenderIndices, inited);
+	sync_io_val(MetricsRenderWindows, inited);
+	sync_io_val(MetricsActiveWindows, inited);
+	sync_io_val(MetricsActiveAllocations, inited);
+	inited = false;
 }
 
 static int
@@ -3037,6 +3042,21 @@ lkeymap(lua_State *L) {
 	return 0;
 }
 
+static void
+push_beginframe( lua_State * L ){
+	//set field IO and begin_frame( and IO is its upvalue) 
+	lua_newtable(L);
+
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -3, "IO");
+
+	size_t io_size = sizeof(lua_imgui_io);
+	lua_imgui_io * io_cache =  (lua_imgui_io *)lua_newuserdata(L, io_size);
+	io_cache->inited = false;
+
+	lua_pushcclosure(L, lbeginFrame, 2);
+}
+
 extern "C"
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -3050,7 +3070,6 @@ luaopen_imgui(lua_State *L) {
 		{ "create", lcreate },
 		{ "destroy", ldestroy },
 		{ "keymap", lkeymap },
-		{ "begin_frame", lbeginFrame },
 		{ "end_frame", lendFrame },
 		{ "key_state", lkeyState },
 		{ "input_char", linputChar },
@@ -3066,10 +3085,7 @@ luaopen_imgui(lua_State *L) {
 
 	luaL_newlib(L, l);
 
-	lua_newtable(L);
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -3, "IO");
-	lua_pushcclosure(L, lbeginFrame, 1);
+	push_beginframe(L);
 	lua_setfield(L, -2, "begin_frame");
 	
 	luaL_Reg widgets[] = {
