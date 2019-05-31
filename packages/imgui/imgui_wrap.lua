@@ -1,8 +1,8 @@
 local fs = require "filesystem"
 local bgfx = require "bgfx"
-
-local ENABLE_LUA_WRAP = true
+local ENABLE_LUA_WRAP = true --main switch
 local ENABLE_LUA_TRACE = false
+local ENABLE_CHECK_PAIR = true
 
 --print error when tryint to index a unexist key
 local function asset_index(tbl,path)
@@ -57,6 +57,7 @@ local function trace_call(src,dst,name)
     end
 end
 
+--todo
 local handle_cache = {}
 --path:"//ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.dds"
 local function path2tex_handle(path)
@@ -95,6 +96,12 @@ if ENABLE_LUA_TRACE then
     trace_call(util_c,imgui_lua.util,"imgui.util")
     trace_call(cursor_c,imgui_lua.cursor,"imgui.cursor")
 end
+
+if ENABLE_CHECK_PAIR then
+    local check_pairs = require "imgui_check_pairs"
+    check_pairs(imgui_lua)
+end
+
 
 if ENABLE_LUA_WRAP then
     return imgui_lua
