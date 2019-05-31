@@ -92,7 +92,7 @@ static void dlgSetFileTypes(lua_State* L, ComPtr<IFileDialog>& dialog, int idx) 
 
             lua_pop(L, 1);
         }
-        dialog->SetFileTypes(n, spec.get());
+        dialog->SetFileTypes((uint32_t)n, spec.get());
     }
     lua_pop(L, 1);
 }
