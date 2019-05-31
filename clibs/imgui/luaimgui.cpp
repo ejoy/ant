@@ -198,27 +198,27 @@ struct lua_imgui_io
 	int         MetricsActiveWindows;           // Number of active windows
 	int         MetricsActiveAllocations;       // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
 };
-#define sync_io_val(name,init)  _sync_io_val(L, io_index,#name, io_cache->name, io.name, init )
+#define sync_io_val(name,inited)  _sync_io_val(L, io_index,#name, io_cache->name, io.name, inited )
 
 static void
-_sync_io_val(lua_State * L, int io_index, const char * name, bool& cache_value, bool new_value, bool init) {
-	if (init || (cache_value != new_value)) {
+_sync_io_val(lua_State * L, int io_index, const char * name, bool& cache_value, bool new_value, bool inited) {
+	if (!inited || (cache_value != new_value)) {
 		cache_value = new_value;
 		lua_pushboolean(L, cache_value);
 		lua_setfield(L, io_index, name);
 	}
 }
 static void
-_sync_io_val(lua_State * L, int io_index, const char * name, int& cache_value, int new_value, bool init) {
-	if (init || (cache_value != new_value)) {
+_sync_io_val(lua_State * L, int io_index, const char * name, int& cache_value, int new_value, bool inited) {
+	if (!inited || (cache_value != new_value)) {
 		cache_value = new_value;
 		lua_pushinteger(L, cache_value);
 		lua_setfield(L, io_index, name);
 	}
 }
 static void
-_sync_io_val(lua_State * L, int io_index, const char * name, float& cache_value, float new_value, bool init) {
-	if (init || (cache_value != new_value)) {
+_sync_io_val(lua_State * L, int io_index, const char * name, float& cache_value, float new_value, bool inited) {
+	if (!inited || (cache_value != new_value)) {
 		cache_value = new_value;
 		lua_pushnumber(L, cache_value);
 		lua_setfield(L, io_index, name);
@@ -232,7 +232,6 @@ sync_io(lua_State *L) {
 	int io_cache_index = lua_upvalueindex(2);
 	lua_imgui_io * io_cache =  (lua_imgui_io*)lua_touserdata(L, io_cache_index);
 	bool inited = io_cache->inited;
-	
 
 	int io_index = lua_upvalueindex(1);
 	sync_io_val(WantCaptureMouse, inited);
@@ -248,7 +247,8 @@ sync_io(lua_State *L) {
 	sync_io_val(MetricsRenderWindows, inited);
 	sync_io_val(MetricsActiveWindows, inited);
 	sync_io_val(MetricsActiveAllocations, inited);
-	inited = false;
+	if(!inited)
+		io_cache->inited = true;
 }
 
 static int
