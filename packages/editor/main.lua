@@ -1,8 +1,6 @@
 return {
-	task = require "task",	
-	util = require "util",	
-	editor = require "editor",	
-    mapiup = require "mapiup",
+	task = require "task",
+	util = require "util",
 	map_imgui = require "map_imgui",
     hub = require "hub",
     connect = require "connect",

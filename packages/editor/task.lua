@@ -57,7 +57,7 @@ end
 function task.add(f, traceback)
 	local n = #tasklist
 	if n == 0 then
-		iup.SetIdle(idlefunc)
+		--TODO: SetIdle?
 	end
 	local co = coroutine.create(
 		function()
@@ -69,7 +69,8 @@ function task.add(f, traceback)
 end
 
 function task.default_tb(co, status)
-	iup.Message("Error", string.format("Error:%s\n%s", status, debug.traceback(co)))
+	--TODO:?
+	io.stderr:write("Error:%s\n%s", status, debug.traceback(co))
 end
 
 function task.safe_loop(f,traceback)
@@ -108,16 +109,9 @@ function task.update()
 	end
 end
 
---iup only
 function task.start_run(start)
 	task.running = start
-	if iup and iup.SetIdle then
-		if task.running then
-			iup.SetIdle(idlefunc)
-		else
-			iup.SetIdle(nil)
-		end
-	end
+	--TODO
 end
 
 return task
