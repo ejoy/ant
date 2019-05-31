@@ -1,8 +1,8 @@
 #define LUA_LIB
 
 extern "C" {
-	#include <lua.h>
-	#include <lauxlib.h>
+#include <lua.h>
+#include <lauxlib.h>
 }
 
 #include <bgfx/c99/bgfx.h>
@@ -22,12 +22,14 @@ void set_cursor(ImGuiMouseCursor cursor);
 #define IMGUI_FLAGS_NONE        UINT8_C(0x00)
 #define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
 
+#ifdef _MSC_VER
 #pragma region IMP_IMGUI
+#endif
 
 struct context {
 	void render(ImDrawData* _drawData) {
 		const ImGuiIO& io = ImGui::GetIO();
-		const float width  = io.DisplaySize.x;
+		const float width = io.DisplaySize.x;
 		const float height = io.DisplaySize.y;
 
 		BGFX(set_view_name)(m_viewId, "ImGui");
@@ -44,10 +46,10 @@ struct context {
 		for (int32_t ii = 0, num = _drawData->CmdListsCount; ii < num; ++ii) {
 			const ImDrawList* drawList = _drawData->CmdLists[ii];
 			uint32_t numVertices = (uint32_t)drawList->VtxBuffer.size();
-			uint32_t numIndices  = (uint32_t)drawList->IdxBuffer.size();
+			uint32_t numIndices = (uint32_t)drawList->IdxBuffer.size();
 
 			if (numVertices != BGFX(get_avail_transient_vertex_buffer)(numVertices, &m_decl)
-				|| numIndices != BGFX(get_avail_transient_index_buffer)(numIndices)){
+				|| numIndices != BGFX(get_avail_transient_index_buffer)(numIndices)) {
 				break;
 			}
 
@@ -70,16 +72,16 @@ struct context {
 				if (0 == cmd.ElemCount) {
 					continue;
 				}
-				assert (NULL != cmd.TextureId);
-				union { ImTextureID ptr; struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; } texture = {cmd.TextureId };
+				assert(NULL != cmd.TextureId);
+				union { ImTextureID ptr; struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; } texture = { cmd.TextureId };
 
 				const uint16_t xx = uint16_t(std::max(cmd.ClipRect.x, 0.0f));
 				const uint16_t yy = uint16_t(std::max(cmd.ClipRect.y, 0.0f));
 				BGFX(set_scissor)(xx, yy
-					, uint16_t(std::min(cmd.ClipRect.z, 65535.0f)-xx)
-					, uint16_t(std::min(cmd.ClipRect.w, 65535.0f)-yy)
-				);
-	
+					, uint16_t(std::min(cmd.ClipRect.z, 65535.0f) - xx)
+					, uint16_t(std::min(cmd.ClipRect.w, 65535.0f) - yy)
+					);
+
 				uint64_t state = 0
 					| BGFX_STATE_WRITE_RGB
 					| BGFX_STATE_WRITE_A
@@ -108,9 +110,9 @@ struct context {
 
 	void create() {
 		BGFX(vertex_decl_begin)(&m_decl, BGFX_RENDERER_TYPE_NOOP);
-		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_POSITION,  2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
+		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_POSITION, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
 		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
-		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_COLOR0,    4, BGFX_ATTRIB_TYPE_UINT8,  true, false);
+		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_UINT8, true, false);
 		BGFX(vertex_decl_end)(&m_decl);
 	}
 
@@ -131,6 +133,7 @@ struct lua_args {
 	lua_State *L;
 	bool err;
 };
+
 
 static int
 lcreate(lua_State *L) {
@@ -157,10 +160,10 @@ lviewId(lua_State *L) {
 
 static int
 lprogram(lua_State *L) {
-	s_ctx.m_program         = bgfx_program_handle_t { BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 1)) };
-	s_ctx.m_imageProgram    = bgfx_program_handle_t { BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2)) };
-	s_ctx.u_imageLodEnabled = bgfx_uniform_handle_t { BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 3)) };
-	s_ctx.s_tex             = bgfx_uniform_handle_t { BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 4)) };
+	s_ctx.m_program = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 1)) };
+	s_ctx.m_imageProgram = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2)) };
+	s_ctx.u_imageLodEnabled = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 3)) };
+	s_ctx.s_tex = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, luaL_checkinteger(L, 4)) };
 	return 0;
 }
 
@@ -178,6 +181,71 @@ lresize(lua_State *L) {
 	return 0;
 }
 
+struct lua_imgui_io
+{
+	bool        WantCaptureMouse;               // When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
+	bool        WantCaptureKeyboard;            // When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
+	bool        WantTextInput;                  // Mobile/console: when io.WantTextInput is true, you may display an on-screen keyboard. This is set by ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
+	bool        WantSetMousePos;                // MousePos has been altered, back-end should reposition mouse on next frame. Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
+	bool        WantSaveIniSettings;            // When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. IMPORTANT: You need to clear io.WantSaveIniSettings yourself.
+	bool        NavActive;                      // Directional navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
+	bool        NavVisible;                     // Directional navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
+	float       Framerate;                      // Application framerate estimation, in frame per second. Solely for convenience. Rolling average estimation based on IO.DeltaTime over 120 frames
+	int         MetricsRenderVertices;          // Vertices output during last call to Render()
+	int         MetricsRenderIndices;           // Indices output during last call to Render() = number of triangles * 3
+	int         MetricsRenderWindows;           // Number of visible windows
+	int         MetricsActiveWindows;           // Number of active windows
+	int         MetricsActiveAllocations;       // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
+};
+#define sync_io_val(name,init)  _sync_io_val(L, io_index,#name, io_cache.name, io.name, init )
+
+static void
+_sync_io_val(lua_State * L, int io_index, const char * name, bool& cache_value, bool new_value, bool init) {
+	if (init || (cache_value != new_value)) {
+		cache_value = new_value;
+		lua_pushboolean(L, cache_value);
+		lua_setfield(L, io_index, name);
+	}
+}
+static void
+_sync_io_val(lua_State * L, int io_index, const char * name, int& cache_value, int new_value, bool init) {
+	if (init || (cache_value != new_value)) {
+		cache_value = new_value;
+		lua_pushinteger(L, cache_value);
+		lua_setfield(L, io_index, name);
+	}
+}
+static void
+_sync_io_val(lua_State * L, int io_index, const char * name, float& cache_value, float new_value, bool init) {
+	if (init || (cache_value != new_value)) {
+		cache_value = new_value;
+		lua_pushnumber(L, cache_value);
+		lua_setfield(L, io_index, name);
+	}
+}
+
+static void
+sync_io(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	static lua_imgui_io io_cache;
+	static bool init = true;
+	int io_index = lua_upvalueindex(1);
+	sync_io_val(WantCaptureMouse, init);
+	sync_io_val(WantCaptureKeyboard, init);
+	sync_io_val(WantTextInput, init);
+	sync_io_val(WantSetMousePos, init);
+	sync_io_val(WantSaveIniSettings, init);
+	sync_io_val(NavActive, init);
+	sync_io_val(NavVisible, init);
+	sync_io_val(Framerate, init);
+	sync_io_val(MetricsRenderVertices, init);
+	sync_io_val(MetricsRenderIndices, init);
+	sync_io_val(MetricsRenderWindows, init);
+	sync_io_val(MetricsActiveWindows, init);
+	sync_io_val(MetricsActiveAllocations, init);
+	init = false;
+}
+
 static int
 lbeginFrame(lua_State *L) {
 	ImGuiIO& io = ImGui::GetIO();
@@ -189,6 +257,7 @@ lbeginFrame(lua_State *L) {
 		);
 	}
 	ImGui::NewFrame();
+	sync_io(L);
 	return 0;
 }
 
@@ -199,83 +268,13 @@ lendFrame(lua_State *L) {
 	return 0;
 }
 
-#define push_str(name) lua_pushstring(L, #name);lua_rawseti(L, -2, i++)
-
-static int
-lgetIOKey(lua_State * L) {
-	lua_newtable(L);
-	int i = 1;
-	push_str(WantCaptureMouse);               // When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
-	push_str(WantCaptureKeyboard);            // When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
-	push_str(WantTextInput);                  // Mobile/console: when io.WantTextInput is true, you may display an on-screen keyboard. This is set by ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
-	push_str(WantSetMousePos);                // MousePos has been altered, back-end should reposition mouse on next frame. Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
-	push_str(WantSaveIniSettings);            // When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. IMPORTANT: You need to clear io.WantSaveIniSettings yourself.
-	push_str(NavActive);                      // Directional navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
-	push_str(NavVisible);                     // Directional navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
-	push_str(Framerate);                      // Application framerate estimation, in frame per second. Solely for convenience. Rolling average estimation based on IO.DeltaTime over 120 frames
-	push_str(MetricsRenderVertices);          // Vertices output during last call to Render()
-	push_str(MetricsRenderIndices);           // Indices output during last call to Render() = number of triangles * 3
-	push_str(MetricsRenderWindows);           // Number of visible windows
-	push_str(MetricsActiveWindows);           // Number of active windows
-	push_str(MetricsActiveAllocations);       // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
-	push_str(MouseDelta);                     // Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
-	return 1;
-}
-
-#define push_io(name) _push_io(L, io.name );lua_rawseti(L, -2, i++)
-
-void _push_io(lua_State *L, int val) {
-	lua_pushinteger(L, val);
-}
-void _push_io(lua_State *L, float val) {
-	lua_pushnumber(L, val);
-}
-void _push_io(lua_State *L, bool val) {
-	lua_pushboolean(L, val);
-}
-void _push_io(lua_State *L, ImVec2 val) {
-	lua_newtable(L);
-	lua_pushnumber(L, val.x);
-	lua_setfield(L, -2, "x");
-	lua_pushnumber(L, val.y);
-	lua_setfield(L, -2, "y");
-}
-
-static int
-lgetIOValue(lua_State * L) {
-	lua_newtable(L);
-	if (ImGui::GetCurrentContext() != NULL)
-	{
-		ImGuiIO& io = ImGui::GetIO();
-		int i = 1;
-		push_io(WantCaptureMouse);               // When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
-		push_io(WantCaptureKeyboard);            // When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
-		push_io(WantTextInput);                  // Mobile/console: when io.WantTextInput is true, you may display an on-screen keyboard. This is set by ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
-		push_io(WantSetMousePos);                // MousePos has been altered, back-end should reposition mouse on next frame. Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
-		push_io(WantSaveIniSettings);            // When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. IMPORTANT: You need to clear io.WantSaveIniSettings yourself.
-		push_io(NavActive);                      // Directional navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
-		push_io(NavVisible);                     // Directional navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
-		push_io(Framerate);                      // Application framerate estimation, in frame per second. Solely for convenience. Rolling average estimation based on IO.DeltaTime over 120 frames
-		push_io(MetricsRenderVertices);          // Vertices output during last call to Render()
-		push_io(MetricsRenderIndices);           // Indices output during last call to Render() = number of triangles * 3
-		push_io(MetricsRenderWindows);           // Number of visible windows
-		push_io(MetricsActiveWindows);           // Number of active windows
-		push_io(MetricsActiveAllocations);       // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
-		push_io(MouseDelta);                     // Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
-		return 1;
-	}
-	else{
-		return 0;
-	}
-}
-
 static ImGuiCond
 get_cond(lua_State *L, int index) {
 	int t = lua_type(L, index);
 	switch (t) {
 	case LUA_TSTRING: {
 		const char *cond = lua_tostring(L, index);
-		switch(cond[0]) {
+		switch (cond[0]) {
 		case 'a':
 		case 'A':
 			return ImGuiCond_Appearing;
@@ -355,17 +354,21 @@ linputChar(lua_State *L) {
 	return 0;
 }
 
+#ifdef _MSC_VER
 #pragma endregion IMP_IMGUI
+#endif
 
 // Widgets bindings
+#ifdef _MSC_VER
 #pragma region IMP_WIDGET
+#endif
 
 static int
 wButton(lua_State *L) {
 	const char * text = luaL_checkstring(L, INDEX_ID);
 	int w = luaL_optnumber(L, 2, 0);
 	int h = luaL_optnumber(L, 3, 0);
-	bool click = ImGui::Button(text, ImVec2(w,h));
+	bool click = ImGui::Button(text, ImVec2(w, h));
 	lua_pushboolean(L, click);
 	return 1;
 }
@@ -383,7 +386,7 @@ wInvisibleButton(lua_State *L) {
 	const char * text = luaL_checkstring(L, INDEX_ID);
 	int w = luaL_optnumber(L, 2, 0);
 	int h = luaL_optnumber(L, 3, 0);
-	bool click = ImGui::InvisibleButton(text, ImVec2(w,h));
+	bool click = ImGui::InvisibleButton(text, ImVec2(w, h));
 	lua_pushboolean(L, click);
 	return 1;
 }
@@ -426,7 +429,7 @@ wColorButton(lua_State *L) {
 	ImGuiColorEditFlags flags = luaL_optinteger(L, 6, 0);
 	float w = luaL_optnumber(L, 7, 0);
 	float h = luaL_optnumber(L, 8, 0);
-	bool click = ImGui::ColorButton(desc, ImVec4(c1,c2,c3,c4), flags, ImVec2(w,h));
+	bool click = ImGui::ColorButton(desc, ImVec4(c1, c2, c3, c4), flags, ImVec2(w, h));
 	lua_pushboolean(L, click);
 	return 1;
 }
@@ -478,7 +481,7 @@ wProgressBar(lua_State *L) {
 			overlay = lua_tostring(L, 4);
 		}
 	}
-	ImGui::ProgressBar(fraction, ImVec2(w,h), overlay);
+	ImGui::ProgressBar(fraction, ImVec2(w, h), overlay);
 	return 0;
 }
 
@@ -489,7 +492,7 @@ wBullet(lua_State *L) {
 }
 
 static double
-read_field_float(lua_State *L, const char * field, double v,int tidx = INDEX_ARGS) {
+read_field_float(lua_State *L, const char * field, double v, int tidx = INDEX_ARGS) {
 	if (lua_getfield(L, tidx, field) == LUA_TNUMBER) {
 		v = lua_tonumber(L, -1);
 	}
@@ -581,7 +584,7 @@ read_field_vec2(lua_State *L, const char *field, ImVec2 def_val, int tidx = INDE
 
 //read table { x, y, z, w }
 static ImVec4
-read_field_vec4(lua_State *L,  const char *field, ImVec4 def_val, int tidx = INDEX_ARGS) {
+read_field_vec4(lua_State *L, const char *field, ImVec4 def_val, int tidx = INDEX_ARGS) {
 	if (lua_getfield(L, tidx, field) == LUA_TTABLE) {
 		if (lua_geti(L, -1, 1) == LUA_TNUMBER)
 			def_val.x = lua_tonumber(L, -1);
@@ -602,9 +605,9 @@ static bool
 drag_float(lua_State *L, const char *label, int n) {
 	float v[4];
 	int i;
-	for (i=0;i<n;i++) {
-		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER) {
-			luaL_error(L, "Need float [%d]", i+1);
+	for (i = 0; i < n; i++) {
+		if (lua_geti(L, INDEX_ARGS, i + 1) != LUA_TNUMBER) {
+			luaL_error(L, "Need float [%d]", i + 1);
 		}
 		v[i] = lua_tonumber(L, -1);
 		lua_pop(L, 1);
@@ -615,7 +618,7 @@ drag_float(lua_State *L, const char *label, int n) {
 	const char * format = read_field_string(L, "format", "%.3f");
 	float power = read_field_float(L, "power", 1.0f);
 	bool change = false;
-	switch(n) {
+	switch (n) {
 	case 1:
 		change = ImGui::DragFloat(label, v, speed, min, max, format, power);
 		break;
@@ -635,9 +638,9 @@ drag_float(lua_State *L, const char *label, int n) {
 		break;
 	}
 	if (change) {
-		for (i=0;i<n;i++) {
+		for (i = 0; i < n; i++) {
 			lua_pushnumber(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i+1);
+			lua_seti(L, INDEX_ARGS, i + 1);
 		}
 	}
 	return change;
@@ -647,9 +650,9 @@ static bool
 drag_int(lua_State *L, const char *label, int n) {
 	int v[4];
 	int i;
-	for (i=0;i<n;i++) {
-		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER || !lua_isinteger(L, -1)) {
-			luaL_error(L, "Need integer [%d]", i+1);
+	for (i = 0; i < n; i++) {
+		if (lua_geti(L, INDEX_ARGS, i + 1) != LUA_TNUMBER || !lua_isinteger(L, -1)) {
+			luaL_error(L, "Need integer [%d]", i + 1);
 		}
 		v[i] = lua_tointeger(L, -1);
 		lua_pop(L, 1);
@@ -659,7 +662,7 @@ drag_int(lua_State *L, const char *label, int n) {
 	int max = read_field_int(L, "max", 0);
 	const char * format = read_field_string(L, "format", "%d");
 	bool change = false;
-	switch(n) {
+	switch (n) {
 	case 1:
 		change = ImGui::DragInt(label, v, speed, min, max, format);
 		break;
@@ -679,9 +682,9 @@ drag_int(lua_State *L, const char *label, int n) {
 		break;
 	}
 	if (change) {
-		for (i=0;i<n;i++) {
+		for (i = 0; i < n; i++) {
 			lua_pushinteger(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i+1);
+			lua_seti(L, INDEX_ARGS, i + 1);
 		}
 	}
 	return change;
@@ -691,9 +694,9 @@ static bool
 slider_float(lua_State *L, const char *label, int n) {
 	float v[4];
 	int i;
-	for (i=0;i<n;i++) {
-		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER) {
-			luaL_error(L, "Need float [%d]", i+1);
+	for (i = 0; i < n; i++) {
+		if (lua_geti(L, INDEX_ARGS, i + 1) != LUA_TNUMBER) {
+			luaL_error(L, "Need float [%d]", i + 1);
 		}
 		v[i] = lua_tonumber(L, -1);
 		lua_pop(L, 1);
@@ -702,7 +705,7 @@ slider_float(lua_State *L, const char *label, int n) {
 	float max = read_field_checkfloat(L, "max");
 	const char * format = read_field_string(L, "format", "%.3f");
 	bool change = false;
-	switch(n) {
+	switch (n) {
 	case 1:
 		change = ImGui::SliderFloat(label, v, min, max, format);
 		break;
@@ -717,9 +720,9 @@ slider_float(lua_State *L, const char *label, int n) {
 		break;
 	}
 	if (change) {
-		for (i=0;i<n;i++) {
+		for (i = 0; i < n; i++) {
 			lua_pushnumber(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i+1);
+			lua_seti(L, INDEX_ARGS, i + 1);
 		}
 	}
 	return change;
@@ -729,9 +732,9 @@ static bool
 slider_int(lua_State *L, const char *label, int n) {
 	int v[4];
 	int i;
-	for (i=0;i<n;i++) {
-		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER || !lua_isinteger(L, -1)) {
-			luaL_error(L, "Need integer [%d]", i+1);
+	for (i = 0; i < n; i++) {
+		if (lua_geti(L, INDEX_ARGS, i + 1) != LUA_TNUMBER || !lua_isinteger(L, -1)) {
+			luaL_error(L, "Need integer [%d]", i + 1);
 		}
 		v[i] = lua_tointeger(L, -1);
 		lua_pop(L, 1);
@@ -740,7 +743,7 @@ slider_int(lua_State *L, const char *label, int n) {
 	int max = read_field_checkint(L, "max");
 	const char * format = read_field_string(L, "format", "%d");
 	bool change = false;
-	switch(n) {
+	switch (n) {
 	case 1:
 		change = ImGui::SliderInt(label, v, min, max, format);
 		break;
@@ -755,9 +758,9 @@ slider_int(lua_State *L, const char *label, int n) {
 		break;
 	}
 	if (change) {
-		for (i=0;i<n;i++) {
+		for (i = 0; i < n; i++) {
 			lua_pushinteger(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i+1);
+			lua_seti(L, INDEX_ARGS, i + 1);
 		}
 	}
 	return change;
@@ -847,12 +850,12 @@ wDrag(lua_State *L, int type) {
 		return luaL_error(L, "Need 1-4 numbers");
 	bool change = false;
 	// todo: DragScalar/DragScalarN/SliderScalar/SliderScalarN/VSliderScalar
-	switch(type) {
+	switch (type) {
 	case DRAG_FLOAT:
 		change = drag_float(L, label, n);
 		break;
 	case DRAG_INT:
-		change = drag_int(L, label,  n);
+		change = drag_int(L, label, n);
 		break;
 	case SLIDER_FLOAT:
 		change = slider_float(L, label, n);
@@ -921,8 +924,8 @@ wColor(lua_State *L, int type) {
 	ImGuiColorEditFlags flags = read_field_int(L, "flags", 0);
 	float v[4];
 	int i;
-	for (i=0;i<n;i++) {
-		if (lua_geti(L, INDEX_ARGS, i+1) != LUA_TNUMBER) {
+	for (i = 0; i < n; i++) {
+		if (lua_geti(L, INDEX_ARGS, i + 1) != LUA_TNUMBER) {
 			luaL_error(L, "Color should be a number");
 		}
 		v[i] = lua_tonumber(L, -1);
@@ -952,9 +955,9 @@ wColor(lua_State *L, int type) {
 		}
 	}
 	if (change) {
-		for (i=0;i<n;i++) {
+		for (i = 0; i < n; i++) {
 			lua_pushnumber(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i+1);
+			lua_seti(L, INDEX_ARGS, i + 1);
 		}
 	}
 	lua_pushboolean(L, change);
@@ -1080,7 +1083,7 @@ edit_callback(ImGuiInputTextCallbackData *data) {
 				size_t sz;
 				const char *str = lua_tolstring(L, -1, &sz);
 				data->DeleteChars(0, data->BufTextLen);
-				data->InsertChars(0, str, str+sz);
+				data->InsertChars(0, str, str + sz);
 			}
 			lua_pop(L, 1);
 		} else {
@@ -1102,7 +1105,7 @@ edit_callback(ImGuiInputTextCallbackData *data) {
 				size_t sz;
 				const char *str = lua_tolstring(L, -1, &sz);
 				data->DeleteChars(0, data->CursorPos);
-				data->InsertChars(0, str, str+sz);
+				data->InsertChars(0, str, str + sz);
 				data->CursorPos = sz;
 			}
 			lua_pop(L, 1);
@@ -1169,7 +1172,7 @@ input_float(lua_State *L, const char *label, const char *format, ImGuiInputTextF
 		float v[4];
 		int i;
 		for (i=0;i<n;i++) {
-			lua_geti(L, INDEX_ARGS, i+1);
+			lua_geti(L, INDEX_ARGS, i + 1);
 			v[i] = lua_tonumber(L, -1);
 			lua_pop(L, 1);
 		}
@@ -1186,9 +1189,9 @@ input_float(lua_State *L, const char *label, const char *format, ImGuiInputTextF
 			break;
 		}
 		if (r) {
-			for (i=0;i<n;i++) {
+			for (i = 0; i < n; i++) {
 				lua_pushnumber(L, v[i]);
-				lua_seti(L, INDEX_ARGS, i+1);
+				lua_seti(L, INDEX_ARGS, i + 1);
 			}
 		}
 		return r;
@@ -1205,8 +1208,8 @@ input_int(lua_State *L, const char *label, ImGuiInputTextFlags flags, int n) {
 	}
 	int v[4];
 	int i;
-	for (i=0;i<n;i++) {
-		lua_geti(L, INDEX_ARGS, i+1);
+	for (i = 0; i < n; i++) {
+		lua_geti(L, INDEX_ARGS, i + 1);
 		v[i] = lua_tointeger(L, -1);
 		lua_pop(L, 1);
 	}
@@ -1226,9 +1229,9 @@ input_int(lua_State *L, const char *label, ImGuiInputTextFlags flags, int n) {
 		break;
 	}
 	if (r) {
-		for (i=0;i<n;i++) {
+		for (i = 0; i < n; i++) {
 			lua_pushinteger(L, v[i]);
-			lua_seti(L, INDEX_ARGS, i+1);
+			lua_seti(L, INDEX_ARGS, i + 1);
 		}
 	}
 	return r;
@@ -1272,7 +1275,7 @@ wText(lua_State *L) {
 	float color[4];
 	switch (lua_gettop(L)) {
 	case 1:	// no color
-		ImGui::TextUnformatted(text, text+sz);
+		ImGui::TextUnformatted(text, text + sz);
 		break;
 	case 4:	// RGB
 	case 5: // RGBA
@@ -1281,7 +1284,7 @@ wText(lua_State *L) {
 		color[2] = luaL_checknumber(L, 4);
 		color[3] = luaL_optnumber(L, 5, 1.0);
 		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(color[0], color[1], color[2], color[3]));
-		ImGui::TextUnformatted(text, text+sz);
+		ImGui::TextUnformatted(text, text + sz);
 		ImGui::PopStyleColor();
 		break;
 	default:
@@ -1295,7 +1298,7 @@ wTextDisabled(lua_State *L) {
 	size_t sz;
 	const char * text = luaL_checklstring(L, 1, &sz);
 	ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
-	ImGui::TextUnformatted(text, text+sz);
+	ImGui::TextUnformatted(text, text + sz);
 	ImGui::PopStyleColor();
 	return 0;
 }
@@ -1305,7 +1308,7 @@ wTextWrapped(lua_State *L) {
 	size_t sz;
 	const char * text = luaL_checklstring(L, 1, &sz);
 	ImGui::PushTextWrapPos(0.0f);
-	ImGui::TextUnformatted(text, text+sz);
+	ImGui::TextUnformatted(text, text + sz);
 	ImGui::PopTextWrapPos();
 	return 0;
 }
@@ -1361,7 +1364,7 @@ wSelectable(lua_State *L) {
 	const char *label = luaL_checkstring(L, INDEX_ID);
 	bool selected;
 	ImGuiSelectableFlags flags = 0;
-	ImVec2 size(0,0);
+	ImVec2 size(0, 0);
 	int t = lua_type(L, INDEX_ARGS);
 	switch (t) {
 	case LUA_TBOOLEAN:
@@ -1447,7 +1450,7 @@ get_plot(void* data, int idx) {
 		return 0;
 	lua_pushcfunction(L, get_plot_func);
 	lua_pushvalue(L, INDEX_ARGS);
-	lua_pushinteger(L, idx+1);
+	lua_pushinteger(L, idx + 1);
 	if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
 		args->err = true;
 		return 0;
@@ -1571,14 +1574,14 @@ wMenuItem(lua_State *L) {
 		lua_pushboolean(L, selected);
 		return 2;
 	}
-	else 
+	else
 	{
 		bool change = ImGui::MenuItem(label, shortcut, false, enabled);
 		lua_pushboolean(L, change);
 		return 1;
 	}
-	
-	
+
+
 }
 
 static int
@@ -1622,7 +1625,7 @@ get_listitem(void* data, int idx, const char **out_text) {
 		return 0;
 	lua_pushcfunction(L, get_listitem_func);
 	lua_pushvalue(L, INDEX_ARGS);
-	lua_pushinteger(L, idx+1);
+	lua_pushinteger(L, idx + 1);
 	if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
 		args->err = true;
 		return 0;
@@ -1648,7 +1651,7 @@ wListBox(lua_State *L) {
 	int current = read_field_int(L, "current", 0) - 1;
 	bool change = ImGui::ListBox(label, &current, get_listitem, &args, n, height_in_items);
 	if (change) {
-		lua_pushinteger(L, current+1);
+		lua_pushinteger(L, current + 1);
 		lua_setfield(L, INDEX_ARGS, "current");
 	}
 	lua_pushboolean(L, change);
@@ -1665,7 +1668,6 @@ bgfx_to_imgui_texture_id(lua_State*L, int lua_handle) {
 	return texture.ptr;
 }
 
-#pragma endregion IMP_WIDGET
 
 static int wImage(lua_State *L) {
 	int lua_handle = luaL_checkinteger(L, 1);
@@ -1678,8 +1680,6 @@ static int wImage(lua_State *L) {
 	ImVec2 uv1 = { 1.0f,1.0f };
 	ImVec4 tint_col = { 1.0f,1.0f,1.0f,1.0f };
 	ImVec4 border_col = { 0.0f,0.0f,0.0f,0.0f };
-	int flags = IMGUI_FLAGS_ALPHA_BLEND;
-	int mip = 0;
 
 	if (lua_type(L, 4) == LUA_TTABLE)
 	{
@@ -1692,7 +1692,7 @@ static int wImage(lua_State *L) {
 	return 0;
 }
 
-/**ImageButton( handle,size_x,size_y, 
+/**ImageButton( handle,size_x,size_y,
 						opt [
 							{ uv0={0,0},
 							uv1={1,1},
@@ -1704,7 +1704,7 @@ static int wImage(lua_State *L) {
 						] );
 **/
 static int
-wImageButton(lua_State *L){
+wImageButton(lua_State *L) {
 	int lua_handle = luaL_checkinteger(L, 1);
 	ImTextureID tex_id = bgfx_to_imgui_texture_id(L, lua_handle);
 	int size_x = luaL_checkinteger(L, 2);
@@ -1715,14 +1715,12 @@ wImageButton(lua_State *L){
 	ImVec2 uv1 = { 1.0f,1.0f };
 	int frame_padding = -1;
 	ImVec4 bg_col = { 0.0f,0.0f,0.0f,0.0f };
-	ImVec4 tint_col = { 1.0f,1.0f,1.0f,1.0f};
-	int flags = IMGUI_FLAGS_ALPHA_BLEND;
-	int mip = 0;
+	ImVec4 tint_col = { 1.0f,1.0f,1.0f,1.0f };
 
-	if (lua_type( L,4) == LUA_TTABLE )
+	if (lua_type(L, 4) == LUA_TTABLE)
 	{
-		uv0 = read_field_vec2( L, "uv0", uv0, 4);
-		uv1 = read_field_vec2( L, "uv1", uv1, 4);
+		uv0 = read_field_vec2(L, "uv0", uv0, 4);
+		uv1 = read_field_vec2(L, "uv1", uv1, 4);
 		frame_padding = read_field_int(L, "frame_padding", frame_padding, 4);
 		bg_col = read_field_vec4(L, "bg_col", bg_col, 4);
 		tint_col = read_field_vec4(L, "tint_col", tint_col, 4);
@@ -1732,8 +1730,14 @@ wImageButton(lua_State *L){
 	return 1;
 }
 
+#ifdef _MSC_VER
+#pragma endregion IMP_WIDGET
+#endif
+
 // windows api
+#ifdef _MSC_VER
 #pragma region IMP_WINDOWS
+#endif
 
 #define NO_CLOSED ((lua_Integer)1 << 32)
 
@@ -1838,7 +1842,7 @@ winOpenPopup(lua_State *L) {
 static int
 winBeginPopup(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
-	ImGuiWindowFlags flags = (ImGuiWindowFlags)(luaL_optinteger(L, 2,0) & 0xffffffff);
+	ImGuiWindowFlags flags = (ImGuiWindowFlags)(luaL_optinteger(L, 2, 0) & 0xffffffff);
 	bool change = ImGui::BeginPopup(id, flags);
 	lua_pushboolean(L, change);
 	return 1;
@@ -2042,7 +2046,7 @@ winSetNextWindowPos(lua_State *L) {
 	ImGuiCond cond = get_cond(L, 3);
 	float px = luaL_optinteger(L, 4, 0);
 	float py = luaL_optinteger(L, 5, 0);
-	ImGui::SetNextWindowPos(ImVec2(x,y), cond, ImVec2(px,py));
+	ImGui::SetNextWindowPos(ImVec2(x, y), cond, ImVec2(px, py));
 	return 0;
 }
 
@@ -2051,7 +2055,7 @@ winSetNextWindowSize(lua_State *L) {
 	float x = luaL_checkinteger(L, 1);
 	float y = luaL_checkinteger(L, 2);
 	ImGuiCond cond = get_cond(L, 3);
-	ImGui::SetNextWindowSize(ImVec2(x,y), cond);
+	ImGui::SetNextWindowSize(ImVec2(x, y), cond);
 	return 0;
 }
 
@@ -2061,7 +2065,7 @@ winSetNextWindowSizeConstraints(lua_State *L) {
 	float min_h = luaL_checkinteger(L, 2);
 	float max_w = luaL_checkinteger(L, 3);
 	float max_h = luaL_checkinteger(L, 4);
-	ImGui::SetNextWindowSizeConstraints(ImVec2(min_w,min_h), ImVec2(max_w, max_h));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(min_w, min_h), ImVec2(max_w, max_h));
 	return 0;
 }
 
@@ -2069,7 +2073,7 @@ static int
 winSetNextWindowContentSize(lua_State *L) {
 	float x = luaL_checkinteger(L, 1);
 	float y = luaL_checkinteger(L, 2);
-	ImGui::SetNextWindowContentSize(ImVec2(x,y));
+	ImGui::SetNextWindowContentSize(ImVec2(x, y));
 	return 0;
 }
 
@@ -2089,7 +2093,7 @@ winSetNextWindowFocus(lua_State *L) {
 
 static int
 winSetNextWindowBgAlpha(lua_State *L) {
-	float alpha = luaL_checknumber(L,1);
+	float alpha = luaL_checknumber(L, 1);
 	ImGui::SetNextWindowBgAlpha(alpha);
 	return 0;
 }
@@ -2136,7 +2140,7 @@ winGetWindowContentRegionWidth(lua_State *L) {
 static int
 winPushStyleColor(lua_State *L) {
 	int stylecol = luaL_checkinteger(L, 1);
-	
+
 	if (stylecol > 0) {
 		float c1 = luaL_checknumber(L, 2);
 		float c2 = luaL_checknumber(L, 3);
@@ -2161,7 +2165,7 @@ winPushStyleVar(lua_State *L) {
 		float v1 = luaL_checknumber(L, 2);
 		if (lua_isnumber(L, 3)) {
 			float v2 = luaL_checknumber(L, 3);
-			ImGui::PushStyleVar(stylevar, ImVec2(v1,v2));
+			ImGui::PushStyleVar(stylevar, ImVec2(v1, v2));
 		}
 		else {
 			ImGui::PushStyleVar(stylevar, v1);
@@ -2177,10 +2181,14 @@ winPopStyleVar(lua_State *L) {
 	return 0;
 }
 
+#ifdef _MSC_VER
 #pragma endregion IMP_WINDOWS
+#endif
 
 // cursor and layout
+#ifdef _MSC_VER
 #pragma region IMP_CURSOR
+#endif
 
 static int
 cSeparator(lua_State *L) {
@@ -2191,7 +2199,7 @@ cSeparator(lua_State *L) {
 static int
 cSameLine(lua_State *L) {
 	float offset_from_start_x = luaL_optnumber(L, 1, 0.0f);
-	float spacing=luaL_optnumber(L, 2, -1.0f);
+	float spacing = luaL_optnumber(L, 2, -1.0f);
 	ImGui::SameLine(offset_from_start_x, spacing);
 	return 0;
 }
@@ -2212,7 +2220,7 @@ static int
 cDummy(lua_State *L) {
 	float x = luaL_checkinteger(L, 1);
 	float y = luaL_checkinteger(L, 2);
-	ImGui::Dummy(ImVec2(x,y));
+	ImGui::Dummy(ImVec2(x, y));
 	return 0;
 }
 
@@ -2279,7 +2287,7 @@ static int
 cSetCursorScreenPos(lua_State *L) {
 	float x = luaL_checknumber(L, 1);
 	float y = luaL_checknumber(L, 1);
-	ImGui::SetCursorScreenPos(ImVec2(x,y));
+	ImGui::SetCursorScreenPos(ImVec2(x, y));
 	return 0;
 }
 
@@ -2330,10 +2338,14 @@ cGetTreeNodeToLabelSpacing(lua_State *L) {
 	return 1;
 }
 
+#ifdef _MSC_VER
 #pragma endregion IMP_CURSOR
+#endif
 
 // Utils
+#ifdef _MSC_VER
 #pragma region IMP_UTIL
+#endif
 
 static int
 uSetColorEditOptions(lua_State *L) {
@@ -2349,7 +2361,7 @@ uPushClipRect(lua_State *L) {
 	float right = luaL_checkinteger(L, 3);
 	float bottom = luaL_checkinteger(L, 4);
 	bool intersect_with_current_clip_rect = lua_toboolean(L, 5);
-	ImGui::PushClipRect(ImVec2(left,top), ImVec2(right, bottom), intersect_with_current_clip_rect);
+	ImGui::PushClipRect(ImVec2(left, top), ImVec2(right, bottom), intersect_with_current_clip_rect);
 	return 0;
 }
 
@@ -2518,7 +2530,7 @@ fPush(lua_State *L) {
 		luaL_error(L, "Invalid font ID.");
 		return 0;
 	}
-	ImGui::PushFont(atlas->Fonts[id-1]);
+	ImGui::PushFont(atlas->Fonts[id - 1]);
 	return 0;
 }
 
@@ -2563,7 +2575,7 @@ CreateFont(lua_State *L, ImFontAtlas* atlas, ImFontConfig* config) {
 	size_t ttf_len = 0;
 	const char* ttf_buf = luaL_checklstring(L, -1, &ttf_len);
 	lua_pop(L, 1);
-	
+
 	lua_rawgeti(L, -1, 2);
 	lua_Number size = luaL_checknumber(L, -1);
 	lua_pop(L, 1);
@@ -2620,13 +2632,13 @@ fCreate(lua_State *L) {
 
 	union { ImTextureID ptr; struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; } texture;
 	texture.s.handle = BGFX(create_texture_2d)(
-		  (uint16_t)width
+		(uint16_t)width
 		, (uint16_t)height
 		, false
 		, 1
 		, BGFX_TEXTURE_FORMAT_BGRA8
 		, 0
-		, BGFX(copy)(data, width*height*4)
+		, BGFX(copy)(data, width*height * 4)
 		);
 	texture.s.flags = IMGUI_FLAGS_ALPHA_BLEND;
 	texture.s.mip = 0;
@@ -2635,7 +2647,7 @@ fCreate(lua_State *L) {
 }
 
 static int
-uCaptureKeyboardFromApp(lua_State * L){
+uCaptureKeyboardFromApp(lua_State * L) {
 	bool val = true;
 	if (lua_isboolean(L, 1))
 		val = lua_toboolean(L, 1);
@@ -2644,7 +2656,7 @@ uCaptureKeyboardFromApp(lua_State * L){
 }
 
 static int
-uCaptureMouseFromApp(lua_State * L){
+uCaptureMouseFromApp(lua_State * L) {
 	bool val = true;
 	if (lua_isboolean(L, 1))
 		val = lua_toboolean(L, 1);
@@ -2653,16 +2665,20 @@ uCaptureMouseFromApp(lua_State * L){
 }
 
 static int
-uIsMouseDoubleClicked(lua_State * L){
+uIsMouseDoubleClicked(lua_State * L) {
 	int btn = luaL_checkinteger(L, 1);
 	bool clicked = ImGui::IsMouseDoubleClicked(btn);
 	lua_pushboolean(L, clicked);
 	return 1;
 }
 
+#ifdef _MSC_VER
 #pragma endregion IMP_UTIL
+#endif
 
+#ifdef _MSC_VER
 #pragma region IMP_FLAG
+#endif
 
 // enums
 struct enum_pair {
@@ -2741,20 +2757,20 @@ static struct enum_pair eInputTextFlags[] = {
 	ENUM(ImGuiInputTextFlags, EnterReturnsTrue),
 	ENUM(ImGuiInputTextFlags, CallbackCompletion),
 	ENUM(ImGuiInputTextFlags, CallbackHistory),
-// Todo : support CallbackAlways
-//	ENUM(ImGuiInputTextFlags, CallbackAlways),
-	ENUM(ImGuiInputTextFlags, CallbackCharFilter),
-	ENUM(ImGuiInputTextFlags, AllowTabInput),
-	ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),
-	ENUM(ImGuiInputTextFlags, NoHorizontalScroll),
-	ENUM(ImGuiInputTextFlags, AlwaysInsertMode),
-	ENUM(ImGuiInputTextFlags, ReadOnly),
-	ENUM(ImGuiInputTextFlags, Password),
-	ENUM(ImGuiInputTextFlags, NoUndoRedo),
-	ENUM(ImGuiInputTextFlags, CharsScientific),
-	ENUM(ImGuiInputTextFlags, CallbackResize),
-	ENUM(ImGuiInputTextFlags, Multiline),
-	{ NULL, 0 },
+	// Todo : support CallbackAlways
+	//	ENUM(ImGuiInputTextFlags, CallbackAlways),
+		ENUM(ImGuiInputTextFlags, CallbackCharFilter),
+		ENUM(ImGuiInputTextFlags, AllowTabInput),
+		ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),
+		ENUM(ImGuiInputTextFlags, NoHorizontalScroll),
+		ENUM(ImGuiInputTextFlags, AlwaysInsertMode),
+		ENUM(ImGuiInputTextFlags, ReadOnly),
+		ENUM(ImGuiInputTextFlags, Password),
+		ENUM(ImGuiInputTextFlags, NoUndoRedo),
+		ENUM(ImGuiInputTextFlags, CharsScientific),
+		ENUM(ImGuiInputTextFlags, CallbackResize),
+		ENUM(ImGuiInputTextFlags, Multiline),
+		{ NULL, 0 },
 };
 
 static struct enum_pair eComboFlags[] = {
@@ -2772,9 +2788,9 @@ static struct enum_pair eSelectableFlags[] = {
 	ENUM(ImGuiSelectableFlags, DontClosePopups),
 	ENUM(ImGuiSelectableFlags, SpanAllColumns),
 	ENUM(ImGuiSelectableFlags, AllowDoubleClick),
-// Use boolean(disabled) in Selectable(_,_, disabled)
-//	ENUM(ImGuiSelectableFlags, Disabled),
-	{ NULL, 0 },
+	// Use boolean(disabled) in Selectable(_,_, disabled)
+	//	ENUM(ImGuiSelectableFlags, Disabled),
+		{ NULL, 0 },
 };
 
 static struct enum_pair eTreeNodeFlags[] = {
@@ -2818,7 +2834,7 @@ static struct enum_pair eWindowFlags[] = {
 	ENUM(ImGuiWindowFlags, NoNav),
 	ENUM(ImGuiWindowFlags, NoDecoration),
 	ENUM(ImGuiWindowFlags, NoInputs),
-	{ "NoClosed", (lua_Integer)1<<32 },
+	{ "NoClosed", (lua_Integer)1 << 32 },
 	{ NULL, 0 },
 };
 
@@ -2852,12 +2868,16 @@ static struct enum_pair eTabBarFlags[] = {
 	ENUM(ImGuiTabBarFlags, NoTooltip),
 	ENUM(ImGuiTabBarFlags, FittingPolicyResizeDown),
 	ENUM(ImGuiTabBarFlags, FittingPolicyScroll),
-	{ "NoClosed", (lua_Integer)1<<32 },
+	{ "NoClosed", (lua_Integer)1 << 32 },
 	{ NULL, 0 },
 };
+#ifdef _MSC_VER
 #pragma endregion IMP_FLAG
+#endif
 
+#ifdef _MSC_VER
 #pragma region IMP_ENUM
+#endif
 
 static void
 enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
@@ -2955,7 +2975,9 @@ static struct enum_pair eStyleVar[] = {
 	{ NULL, 0 },
 };
 
+#ifdef _MSC_VER
 #pragma endregion IMP_ENUM
+#endif
 
 struct keymap {
 	const char * name;
@@ -3003,7 +3025,7 @@ lkeymap(lua_State *L) {
 			const char * key = lua_tostring(L, -2);
 			int value = lua_tointeger(L, -1);
 			int i;
-			for (i=0;map[i].name;i++) {
+			for (i = 0; map[i].name; i++) {
 				if (strcmp(map[i].name, key) == 0) {
 					io.KeyMap[map[i].index] = value;
 					break;
@@ -3039,13 +3061,17 @@ luaopen_imgui(lua_State *L) {
 		{ "viewid", lviewId },
 		{ "program", lprogram },
 		{ "ime_handle", limeHandle },
-		{ "get_io_value", lgetIOValue },
-		{ "get_io_key", lgetIOKey },
 		{ NULL, NULL },
 	};
 
 	luaL_newlib(L, l);
 
+	lua_newtable(L);
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -3, "IO");
+	lua_pushcclosure(L, lbeginFrame, 1);
+	lua_setfield(L, -2, "begin_frame");
+	
 	luaL_Reg widgets[] = {
 		{ "Button", wButton },
 		{ "SmallButton", wSmallButton },
@@ -3245,9 +3271,6 @@ luaopen_imgui(lua_State *L) {
 	enum_gen(L, "StyleCol", eStyleCol);
 	enum_gen(L, "StyleVar", eStyleVar);
 	lua_setfield(L, -2, "enum");
-
-
-
 
 	return 1;
 }

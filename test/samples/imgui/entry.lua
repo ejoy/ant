@@ -10,6 +10,7 @@ local windows = imgui.windows
 local util = imgui.util
 local font = imgui.font
 local Font = platform.font
+local native_window
 
 local callback = {
 	mouse_move = imgui.mouse_move,
@@ -30,7 +31,9 @@ local function Shader(shader)
 end
 
 function callback.init(nwh, context, width, height)
-	imgui.create(nwh);
+	native_window = nwh
+
+	imgui.create(nwh)
 
 	hw.init {
 		nwh = nwh,
@@ -174,7 +177,21 @@ function test_window:menu()
 end
 
 function test_window:tab_update()
-	widget.Button "Test"
+	if widget.Button "Open File" then
+		local dialog = require "filedialog"
+		local ok, res = dialog.open {
+			Owner = native_window,
+			Title = "Test",
+			FileTypes = { "All Files (*.*)", "*.*" }
+		}
+		if ok then
+			for _, path in ipairs(res) do
+				print("Open:", path)
+			end
+		else
+			print(res)
+		end
+	end
 	widget.SmallButton "Small"
 	if widget.Checkbox("Checkbox", checkbox) then
 		print("Click Checkbox", checkbox[1])

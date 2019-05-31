@@ -33,10 +33,11 @@ local tab_noclosed = flags.TabBar { "NoClosed" }
 function TestGuiBase:on_update()
     windows.PushStyleVar( enum.StyleVar.WindowPadding,0,0)
     if widget.BeginMenuBar() then
-        if widget.MenuItem("hello") then
+        if widget.MenuItem("Print IO") then
             -- local scene_control = require "scene_control"
             -- scene_control.test_new_world()
             print("hello")
+            print_a(imgui.IO)
         end
         
         widget.MenuItem("M2")
