@@ -19,7 +19,7 @@ unpack_lib$(1).a : $(ODIR)/lib$(1).a
 endef
 $(foreach v, $(LIBS), $(eval $(call MakeLibs,$(v))))
 
-LIBS2= ib-compress cjson lua
+LIBS2= cjson lua
 define UnpackLibs2
 unpack_lib$(1).a : $(ODIR)/lib$(1).a
 	@cd $(ODIR) && ar x lib$(1).a
@@ -34,9 +34,6 @@ $(ODIR)/liblua.a : | $(ODIR)
 
 $(ODIR)/libcjson.a : | $(ODIR)
 	@$(MAKE) -f MakefileCJson
-
-$(ODIR)/libib-compress.a : | $(ODIR)
-	@cd ../../3rd/ib-compress/ && $(MAKE) --no-print-directory libib-compress-$(PLAT).a "ODIR=$(ODIR)" "PLAT=$(PLAT)" && mv libib-compress-$(PLAT).a ../../clibs/ant/$(ODIR)/libib-compress.a
 
 $(ODIR)/ant_searcher.o : ant_searcher.c ant.h ant_module_define.h ant_module_declar.h | $(ODIR)
 	$(CC) -c $(CFLAGS) $(LUAINC) $(BGFXINC) -o $@ $<
