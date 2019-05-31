@@ -34,12 +34,6 @@ end
 local attribs = {}
 
 
-
-local map = imgui.get_io_key()
-print_a(map)
-print_a(imgui.get_io_value())
-
-
 function callback.init(nwh, context, width, height)
     hw.init {
         nwh = nwh,
@@ -242,13 +236,9 @@ function callback.update(delta)
     local now = os.clock()
     delta = now - last
     last = now
-    print(delta)
+    -- print(delta)
+    -- print("-----------------------------")
     imgui.begin_frame( delta + 0.0001)
-
-    if not ioo then
-        ioo = imgui.get_io_value()
-        print_a(ioo)
-    end
 
     update_ui()
     imgui.end_frame()
