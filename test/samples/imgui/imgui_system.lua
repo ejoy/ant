@@ -65,9 +65,9 @@ local function run_window(wnd)
 	local touch, open = windows.Begin(wnd.id, wnd.flags)
 	if touch then
 		wnd:update()
-		windows.End()
 		wnd.open = open
 	end
+	windows.End()
 end
 
 local lists = { "Alice", "Bob" }

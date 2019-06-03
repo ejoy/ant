@@ -119,8 +119,7 @@ function camera_controller_system:update()
 	local flags = imgui.flags
 	imgui.begin_frame(1/60)
 	windows.SetNextWindowSizeConstraints(300, 300, 500, 500)
-	if windows.Begin("Test", flags.Window { "MenuBar" }) then
-		windows.End()
-	end
+	windows.Begin("Test", flags.Window { "MenuBar" })
+	windows.End()
 	imgui.end_frame()
 end
