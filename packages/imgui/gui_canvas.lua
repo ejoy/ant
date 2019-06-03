@@ -5,6 +5,7 @@ local windows   = imgui.windows
 local util      = imgui.util
 local cursor    = imgui.cursor
 local enum      = imgui.enum
+local IO      = imgui.IO
 local class     = require "common.class"
 
 local GuiBase = require "gui_base"
@@ -43,8 +44,8 @@ function GuiCanvas:before_update()
     windows.PushStyleVar(enum.StyleVar.WindowPadding,0,0)
 end
 
+local focus_flag = flags.Focused {"ChildWindows"}
 function GuiCanvas:on_update()
-    local hover = windows.IsWindowHovered(flags.Hovered({"RootAndChildWindows"}))
     local w,h = windows.GetContentRegionAvail()
     local x,y = cursor.GetCursorScreenPos()
     local r = self.rect
@@ -56,13 +57,16 @@ function GuiCanvas:on_update()
             ru.modify_view_rect(self.world,self.rect)
         end
     end
-
     widget.InvisibleButton("###InvisibleButton",w,h)
-    -- self:on_capture_input()
-    self:on_dispatch_msg()
+    local focus = windows.IsWindowFocused(focus_flag)
+    if focus and IO.WantCaptureMouse then
+        --todo:split mouse and keyboard
+        self:on_dispatch_msg()
+    end
 end
 
 function GuiCanvas:on_dispatch_msg()
+    --todo:split mouse and keyboard
     local gui_input = gui_input
     local in_mouse = gui_input.mouse
     local in_key = gui_input.key_state
