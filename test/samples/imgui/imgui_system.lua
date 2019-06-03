@@ -1,7 +1,7 @@
 local ecs = ...
 
+ecs.import "ant.inputmgr"
 ecs.import 'ant.basic_components'
-
 
 local imgui = require "imgui"
 local widget = imgui.widget
@@ -11,6 +11,9 @@ local util = imgui.util
 local native_window
 
 local imgui_system = ecs.system "imgui_system"
+
+imgui_system.singleton "message"
+imgui_system.depend "message_system"
 
 local editbox = {
 	flags = flags.InputText { "CallbackCharFilter", "CallbackHistory", "CallbackCompletion" },
@@ -160,25 +163,22 @@ local function update_ui()
 	run_window(test_window)
 end
 
+local bgfx = require "bgfx"
+local rhwi = import_package "ant.render".hardware_interface
 function imgui_system:update()
     imgui.begin_frame(1/60)
     update_ui()
-    imgui.end_frame()
+	imgui.end_frame()
+	
+	bgfx.touch(0)
+	bgfx.frame()
 end
 
-
---TODO
-local world = ecs.world
-
-ecs.import "ant.render"
-
-local ms = import_package "ant.math".stack
-local cu = import_package "ant.render".components
-local ru = import_package "ant.render".util
-
-imgui_system.depend "render_system"
-
 function imgui_system:init()
-	ru.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
-	cu.create_grid_entity(world, "grid")
+	local message = {}
+	function message:resize(w, h)
+		bgfx.set_view_rect(0, 0, 0, w, h)
+		bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
+	end
+	self.message.observers:add(message)
 end

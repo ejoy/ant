@@ -134,6 +134,7 @@ callback.char = imgui.input_char
 
 function callback.size(width,height,_)
 	imgui.resize(width,height)
+	iq:push("resize", width,height)
 	rhwi.reset(nil, width, height)
 end
 
