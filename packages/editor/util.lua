@@ -1,14 +1,9 @@
---luacheck: globals iup
+--luacheck: globals
 local util = {}
 
 local counter = 0
 function util.get_new_entity_counter()
 	return counter + 1
-end
-
-function util.get_cursor_pos()
-	local cursorpos = iup.GetGlobal("CURSORPOS")
-	return cursorpos:match("(%d+)x(%d+)")
 end
 
 function util.add_callbacks(ctrl, inst, funcs)

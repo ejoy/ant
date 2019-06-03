@@ -28,6 +28,11 @@
     <ClInclude Include="..\..\clibs\thread\simplequeue.h" />
     <ClInclude Include="..\..\clibs\thread\simplethread.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="luadll.vcxproj">
+      <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{808a256d-3605-4475-854a-0cbe06ab3130}</ProjectGuid>

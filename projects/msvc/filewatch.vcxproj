@@ -31,6 +31,11 @@
     <ClCompile Include="..\..\clibs\filewatch\lfilewatch.cpp" />
     <ClCompile Include="..\..\clibs\filewatch\unicode.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="luadll.vcxproj">
+      <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{e953ab6b-1e18-478e-9081-7765fb314352}</ProjectGuid>

@@ -1,3 +1,0 @@
-LIBRARY scintilla
-EXPORTS
-	luaopen_scintilla

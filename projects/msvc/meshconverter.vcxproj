@@ -27,6 +27,11 @@
     <ClInclude Include="..\..\clibs\meshconverter\meshdata.h" />
     <ClInclude Include="..\..\clibs\meshconverter\utils.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="luadll.vcxproj">
+      <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{6941669e-1992-4f61-8f0e-c0617175597c}</ProjectGuid>

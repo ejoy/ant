@@ -1,4 +1,4 @@
-CMAKE_PROJ := freetype ozz-animation bullet3 zlib
+CMAKE_PROJ := ozz-animation bullet3 zlib
 RUNTIME_PROJ := ozz-animation bullet3 bgfx
 ALL_PROJ := $(RUNTIME_PROJ) $(CMAKE_PROJ)
 BUILD_CONFIG = release
@@ -27,8 +27,6 @@ ifeq "$(PLAT)" "osx"
   BGFX_INIT_CMD = make .build/projects/gmake-osx
   BGFX_MAKE_CMD = make -C .build/projects/gmake-osx config=$(BGFX_CONFIG_TYPE)64 -j8
   BGFX_CPRC_CMD = cp bgfx/.build/osx64_clang/bin/shaderc$(BGFX_CONFIG_TYPE) ../clibs/
-  
-  CD_MAKE_CMD	= TEC_UNAME=clang make cd $(MP)
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
@@ -36,8 +34,6 @@ else ifeq "$(PLAT)" "ios"
   CMAKE_PROJ_TYPE = Unix Makefiles
   BGFX_INIT_CMD = make .build/projects/gmake-ios-arm64
   BGFX_MAKE_CMD = make ios-arm64-$(BGFX_CONFIG_TYPE) $(MP)
-  
-  CD_MAKE_CMD	= TEC_UNAME=clang make cd $(MP)
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
@@ -50,24 +46,16 @@ else ifeq "$(PLAT)" "msvc"
   BGFX_INIT_CMD = ../bx/tools/bin/windows/genie --with-examples --with-tools  --with-dynamic-runtime --with-shared-lib --with-windows=10.0.16299.0 vs2017
   BGFX_MAKE_CMD = $(MSVC_MAKE_INFO)
 
-  #cd lib only support Debug configuration
-  CD_MAKE_CMD = $(MSVC_MAKE_INFO)
-
   CMAKE_PROJ_MAKE = $(MSVC_MAKE_INFO)
   CMAKE_PROJ_CLEAN = $(MSVC_MAKE_INFO) 
-
-  ALL_PROJ := $(ALL_PROJ) cd
 else
   CMAKE_PROJ_TYPE = MSYS Makefiles
   BGFX_INIT_CMD = make .build/projects/gmake-mingw-gcc
   BGFX_MAKE_CMD = make mingw-gcc-$(BGFX_CONFIG_TYPE)64 $(MP)
   BGFX_CPRC_CMD = cp bgfx/.build/win64_mingw-gcc/bin/shaderc$(BGFX_CONFIG_TYPE).exe ../clibs/
-  
-  CD_MAKE_CMD	= TEC_UNAME=mingw6_64 MINGW6_64=$(MINGW) make cd $(MP)
 
   CMAKE_PROJ_MAKE = make
-  CMAKE_PROJ_CLEAN = make clean   
-  ALL_PROJ := $(ALL_PROJ) cd
+  CMAKE_PROJ_CLEAN = make clean
 endif
 
 # ASSIMP_FMT_NAMES := AMF 3DS AC ASE ASSBIN ASSXML B3D BVH COLLADA DXF CSM IRR LWO LWS MD2 MD3 MD5 MDC NFF NDO OFF OBJ OGRE OPENGEX PLY MS3D COB BLEND IFC XGL Q3D Q3BSP RAW SIB SMD STL TERRAGEN 3D X X3D GLTF 3MF MMD HMP MDL
@@ -137,12 +125,6 @@ bgfx_make : | $(BUILD_PATH)
 	$(BGFX_CPRC_CMD)
 bgfx_clean :
 	cd bgfx && make clean
-
-cd_init : | $(BUILD_PATH)
-cd_make : | $(BUILD_PATH)
-	cd cd && $(CD_MAKE_CMD)
-cd_clean:
-	cd cd && make clean
 
 define CMAKE_TEMP
   $(BUILD_PATH)/$(1)/$(PLAT) : | $(BUILD_PATH)

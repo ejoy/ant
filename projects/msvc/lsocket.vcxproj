@@ -25,6 +25,11 @@
   <ItemGroup>
     <ClInclude Include="..\..\clibs\lsocket\win_compat.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="luadll.vcxproj">
+      <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{71768B68-06B5-4DF9-95F9-C7AE080E8C28}</ProjectGuid>

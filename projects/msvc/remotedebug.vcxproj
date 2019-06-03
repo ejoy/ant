@@ -43,6 +43,11 @@
     <None Include="..\..\clibs\remotedebug\thunk\thunk_windows_amd64.inl" />
     <None Include="..\..\clibs\remotedebug\thunk\thunk_windows_i386.inl" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="luadll.vcxproj">
+      <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{d1b7638b-572f-4212-915c-512395553224}</ProjectGuid>
