@@ -1,4 +1,4 @@
-CMAKE_PROJ := ozz-animation bullet3 zlib
+CMAKE_PROJ := ozz-animation bullet3
 RUNTIME_PROJ := ozz-animation bullet3 bgfx
 ALL_PROJ := $(RUNTIME_PROJ) $(CMAKE_PROJ)
 BUILD_CONFIG = release
@@ -43,7 +43,7 @@ else ifeq "$(PLAT)" "msvc"
   CMAKE_PROJ_TYPE = Visual Studio 15 2017 Win64
 
   # only build debug project in msvc
-  BGFX_INIT_CMD = ../bx/tools/bin/windows/genie --with-examples --with-tools  --with-dynamic-runtime --with-shared-lib --with-windows=10.0.16299.0 vs2017
+  BGFX_INIT_CMD = ../bx/tools/bin/windows/genie --with-examples --with-tools  --with-dynamic-runtime --with-shared-lib --with-windows=10.0.18362.0 vs2017
   BGFX_MAKE_CMD = $(MSVC_MAKE_INFO)
 
   CMAKE_PROJ_MAKE = $(MSVC_MAKE_INFO)
