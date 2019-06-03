@@ -7,8 +7,14 @@ function imgui.begin_frame() end
 function imgui.end_frame() end
 function imgui.key_state() end
 function imgui.input_char() end
-function imgui.get_io_value() end
-function imgui.get_io_key() end
+function imgui.mouse_move() end
+function imgui.input_char() end
+function imgui.mouse_click() end
+function imgui.resize() end
+function imgui.viewid() end
+function imgui.program() end
+function imgui.ime_handle() end
+function imgui.IO() end
 
 function widget.Button() end
 function widget.SmallButton() end

@@ -3,13 +3,12 @@ LIBS := math3d lsocket redirectfd bgfx filesystem remotedebug memoryfile \
  crypt meshconverter hierarchy thread protocol bullet \
  window filewatch platform subprocess datalist
 
-ALL_LIBS := $(LIBS) lua iup
+ALL_LIBS := $(LIBS) lua
 
 include common.mk
 
 .PHONY: $(ALL_LIBS) $(foreach v,$(ALL_LIBS),build_$(v) clean_$(v) copy_$(v))
 
-IUPLIBS = iuplua scintilla iupluaimglib iupluacontrols iupextension
 TARS = $(foreach v,$(LIBS) $(IUPLIBS),$(BIN)/$(v).dll)
 
 ifeq "$(PLAT)" "osx"
@@ -18,7 +17,6 @@ else
 LUA_PLAT = $(PLAT)
 endif
 
-#all : $(TARS) $(BIN)/iup.exe $(BIN)/lua53.dll $(BIN)/lua.exe 
 all: $(ALL_LIBS)
 
 ## lua
@@ -28,10 +26,6 @@ build_lua:
 	cd lua && $(MAKE) $(LUA_PLAT)
 clean_lua:
 	cd lua && $(MAKE) clean
-
-IUP_DLL_NAMES := $(foreach v,$(IUPLIBS),iup/$(v).dll)
-copy_iup: build_iup
-	cp $(IUP_DLL_NAMES) iup/iup.exe $(BIN)
 
 define TARG_func
 $(1): build_$(1) copy_$(1)
@@ -55,12 +49,12 @@ clean_$(1) :
 	cd $(1) && $(MAKE) clean
 endef
 
-$(foreach v, $(LIBS) iup, $(eval $(call MAKE_temp,$(v))))
+$(foreach v, $(LIBS), $(eval $(call MAKE_temp,$(v))))
 $(foreach v, $(LIBS), $(eval $(call COPY_DLL_func,$(v))))
 
-$(foreach v, $(LIBS) lua iup, $(eval $(call TARG_func,$(v))))
+$(foreach v, $(LIBS) lua, $(eval $(call TARG_func,$(v))))
 
-copy: $(addprefix copy_,$(LIBS) iup lua bgfx-core)
+copy: $(addprefix copy_,$(LIBS) lua bgfx-core)
 	
-clean : $(addprefix clean_,$(LIBS) iup lua)
+clean : $(addprefix clean_,$(LIBS) lua)
 	rm -f *.dll && rm -f *.exe

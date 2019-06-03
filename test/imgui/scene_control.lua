@@ -1,5 +1,4 @@
 local editor        = import_package "ant.editor"
-local mapiup        = editor.mapiup
 local task          = editor.task
 local vfs           = require "vfs"
 local scene         = import_package "ant.scene".util
