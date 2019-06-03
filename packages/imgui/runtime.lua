@@ -7,6 +7,7 @@ local imgui = require "imgui"
 local platform = require "platform"
 local font = imgui.font
 local Font = platform.font
+local imguiIO = imgui.IO
 
 local LOGERROR = __ANT_RUNTIME__ and log.error or print
 local debug_update = __ANT_RUNTIME__ and require 'runtime.debug'
@@ -98,35 +99,43 @@ end
 
 function callback.mouse_move(x, y, state)
 	imgui.mouse_move(x, y, state)
-	iq:push("mouse_move", x, y, mouse_status[(state & 7) + 1])
+	if not imguiIO.WantCaptureMouse then
+		iq:push("mouse_move", x, y, mouse_status[(state & 7) + 1])
+	end
 end
 
 function callback.mouse_wheel(x, y, delta)
 	imgui.mouse_move(x, y, delta)
-	iq:push("mouse_wheel", delta, x, y)
+	if not imguiIO.WantCaptureMouse then
+		iq:push("mouse_wheel", delta, x, y)
+	end
 end
 
 function callback.mouse_click(x, y, what, press)
 	imgui.mouse_click(x, y, what, press)
-	iq:push("mouse_click", mouse_click_what[what + 1] or 'UNKNOWN', press, x, y)
+	if not imguiIO.WantCaptureMouse then
+		iq:push("mouse_click", mouse_click_what[what + 1] or 'UNKNOWN', press, x, y)
+	end
 end
 
 function callback.keyboard(key, press, state)
 	imgui.key_state(key, press, state)
-	local status = {}
-	status['CTRL'] = what_state(state, 0x01)
-	status['ALT'] = what_state(state, 0x02)
-	status['SHIFT'] = what_state(state, 0x04)
-	status['SYS'] = what_state(state, 0x08)
-	iq:push("keyboard", keymap[key], press, status)
+	if not imguiIO.WantCaptureKeyboard then
+		local status = {}
+		status['CTRL'] = what_state(state, 0x01)
+		status['ALT'] = what_state(state, 0x02)
+		status['SHIFT'] = what_state(state, 0x04)
+		status['SYS'] = what_state(state, 0x08)
+		iq:push("keyboard", keymap[key], press, status)
+	end 
 end
 
 callback.char = imgui.input_char
 
---function callback.size(width,height,_)
---	imgui.resize(width,height)
---	rhwi.reset(nil, width, height)
---end
+function callback.size(width,height,_)
+	imgui.resize(width,height)
+	rhwi.reset(nil, width, height)
+end
 
 function callback.exit()
 	imgui.destroy()
