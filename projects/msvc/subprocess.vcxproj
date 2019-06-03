@@ -26,6 +26,11 @@
     <ClInclude Include="..\..\clibs\subprocess\subprocess.h" />
     <ClInclude Include="..\..\clibs\subprocess\subprocess_win.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="luadll.vcxproj">
+      <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{43ebc525-120e-430c-9e79-f351a13f11be}</ProjectGuid>

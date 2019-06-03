@@ -19,12 +19,6 @@
 [submodule "3rd/libplist"]
 	path = 3rd/libplist
 	url = https://github.com/libimobiledevice/libplist.git
-[submodule "3rd/assimp"]
-	path = 3rd/assimp
-	url = https://github.com/assimp/assimp
-[submodule "3rd/zlib"]
-	path = 3rd/zlib
-	url = https://github.com/madler/zlib.git
 [submodule "3rd/glm"]
 	path = 3rd/glm
 	url = https://github.com/g-truc/glm.git

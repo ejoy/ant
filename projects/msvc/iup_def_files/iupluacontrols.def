@@ -1,6 +1,0 @@
-LIBRARY iupluacontrols
-EXPORTS
-	iupcontrolslua_open
-	luaopen_iupluacontrols
-	IupMatrixSetFormula
-	IupMatrixSetDynamic

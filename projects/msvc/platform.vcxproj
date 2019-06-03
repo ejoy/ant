@@ -26,6 +26,11 @@
     <None Include="..\..\clibs\platform\platform_ios.mm" />
     <None Include="..\..\clibs\platform\platform_osx.mm" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="luadll.vcxproj">
+      <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{c1f1965c-b68c-4cdf-87a8-89f5aae79d60}</ProjectGuid>

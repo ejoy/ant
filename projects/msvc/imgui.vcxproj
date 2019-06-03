@@ -25,6 +25,11 @@
     <ClCompile Include="..\..\clibs\imgui\imgui_win32.cpp" />
     <ClCompile Include="..\..\clibs\imgui\luaimgui.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="luadll.vcxproj">
+      <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{04b09448-a2a0-40a6-be06-9c80f30b1681}</ProjectGuid>

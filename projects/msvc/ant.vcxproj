@@ -28,6 +28,9 @@
     <ClCompile Include="..\..\clibs\ant\main.c" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="bgfx-core.vcxproj">
+      <Project>{5de848f5-6bfb-4f23-8f23-071dd7c5f770}</Project>
+    </ProjectReference>
     <ProjectReference Include="bgfx.vcxproj">
       <Project>{50b83d8c-7938-4814-bc5a-738cba9bf0e6}</Project>
     </ProjectReference>
@@ -63,9 +66,6 @@
     </ProjectReference>
     <ProjectReference Include="math3d.vcxproj">
       <Project>{42edbe70-a46d-4ab7-bdfa-c608c06ac1f0}</Project>
-    </ProjectReference>
-    <ProjectReference Include="meshbase.vcxproj">
-      <Project>{0a244ad6-90bc-4ce5-a618-83a497f843d2}</Project>
     </ProjectReference>
     <ProjectReference Include="meshconverter.vcxproj">
       <Project>{6941669e-1992-4f61-8f0e-c0617175597c}</Project>
@@ -181,7 +181,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\build_msvc\lua-cjson\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;platform.lib;datalist.lib;filesystem.lib;firmware.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;platform.lib;datalist.lib;filesystem.lib;firmware.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
@@ -246,7 +246,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\build_msvc\lua-cjson\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;lfs.lib;cjson.lib;platform.lib;datalist.lib;filesystem.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;crypt.lib;lsocket.lib;memoryfile.lib;protocol.lib;remotedebug.lib;terrain.lib;platform.lib;datalist.lib;filesystem.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>

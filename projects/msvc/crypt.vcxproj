@@ -22,6 +22,11 @@
     <ClCompile Include="..\..\clibs\crypt\lsha1.c" />
     <ClCompile Include="..\..\clibs\crypt\lua-crypt.c" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="luadll.vcxproj">
+      <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{45cab35b-9a30-4657-93c1-4e676e4ea412}</ProjectGuid>

@@ -21,6 +21,11 @@
   <ItemGroup>
     <ClCompile Include="..\..\clibs\bullet\bullet.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="luadll.vcxproj">
+      <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{457e974d-2c6d-44f9-a5fe-77f96c17c8e8}</ProjectGuid>
