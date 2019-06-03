@@ -10,8 +10,6 @@ local keymap = import_package "ant.inputmgr".keymap
 
 local dbgupdate = require 'runtime.debug'
 
-dprint = print
-
 require "common/log"
 
 local native = require "window.native"
@@ -90,7 +88,7 @@ function callback.keyboard(key, press, state)
 end
 
 function callback.exit()
-    dprint("exit")
+    print "exit"
 end
 
 function callback.update()
