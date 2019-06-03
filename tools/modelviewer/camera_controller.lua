@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+local imgui = require "imgui"
+
 ecs.import "ant.inputmgr"
 
 local mathpkg = import_package "ant.math"
@@ -110,4 +112,15 @@ function camera_controller_system:init()
 	end
 
 	self.message.observers:add(message)
+end
+
+function camera_controller_system:update()
+	local windows = imgui.windows
+	local flags = imgui.flags
+	imgui.begin_frame(1/60)
+	windows.SetNextWindowSizeConstraints(300, 300, 500, 500)
+	if windows.Begin("Test", flags.Window { "MenuBar" }) then
+		windows.End()
+	end
+	imgui.end_frame()
 end

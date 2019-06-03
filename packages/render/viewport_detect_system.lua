@@ -1,5 +1,8 @@
 local ecs = ...
 local world = ecs.world
+
+ecs.import "ant.inputmgr"
+
 local rhwi = require "hardware_interface"
 local vp_detect = ecs.system "viewport_detect_system"
 vp_detect.singleton "message"

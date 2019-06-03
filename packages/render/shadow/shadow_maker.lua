@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "ant.scene"
+
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 local mu = mathpkg.util
