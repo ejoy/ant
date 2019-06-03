@@ -28,11 +28,9 @@ require "editor.vfs"
 require "editor.init_bgfx"
 require "filesystem"
 
-require "common.log"
 import_package = (require "antpm").import
 
 local print_func = require "common.print_r"
 print_r = print_func.print_r
 print_a = print_func.print_a
 
-class = require "common.class"

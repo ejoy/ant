@@ -1,4 +1,4 @@
-local log = log and log(...) or print
+local log = log and log.info(...) or print
 
 local createschema = require "schema"
 

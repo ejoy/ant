@@ -93,7 +93,7 @@ function gui_mgr._register_mainmenu(gui_ins,cfg)
         end
         table.insert(cur_list,{target=gui_ins,fun=fun,type="fun"})
     end
-    print_a(gui_mgr.mainmenu_list)
+    --print_a(gui_mgr.mainmenu_list)
 end
 
 function gui_mgr._update_mainmenu_view()

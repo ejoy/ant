@@ -1,7 +1,7 @@
 local util = {}; util.__index = util
 
 local ms = import_package "ant.math" .stack
-local log = log and log(...) or print
+local log = log and log.info(...) or print
 local ecs = import_package "ant.ecs"
 local mathadapter = import_package "ant.math.adapter"
 

@@ -1,5 +1,5 @@
 --luacheck: globals log
-local log = log and log(...) or print
+local log = log and log.info(...) or print
 
 local typeclass = require "typeclass"
 local system = require "system"

@@ -1,3 +1,4 @@
+local class = require "common.class"
 local List = class("ImguiList")
 
 function List:_init(listname)
