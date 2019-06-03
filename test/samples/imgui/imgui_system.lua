@@ -3,12 +3,13 @@ local ecs = ...
 ecs.import "ant.inputmgr"
 ecs.import 'ant.basic_components'
 
+local bgfx = require "bgfx"
 local imgui = require "imgui"
+local rhwi = import_package "ant.render".hardware_interface
 local widget = imgui.widget
 local flags = imgui.flags
 local windows = imgui.windows
 local util = imgui.util
-local native_window
 
 local imgui_system = ecs.system "imgui_system"
 
@@ -113,7 +114,7 @@ function test_window:tab_update()
 	if widget.Button "Open File" then
 		local dialog = require "filedialog"
 		local ok, res = dialog.open {
-			Owner = native_window,
+			Owner = rhwi.native_window(),
 			Title = "Test",
 			FileTypes = { "All Files (*.*)", "*.*" }
 		}
@@ -163,17 +164,6 @@ local function update_ui()
 	run_window(test_window)
 end
 
-local bgfx = require "bgfx"
-local rhwi = import_package "ant.render".hardware_interface
-function imgui_system:update()
-    imgui.begin_frame(1/60)
-    update_ui()
-	imgui.end_frame()
-	
-	bgfx.touch(0)
-	bgfx.frame()
-end
-
 function imgui_system:init()
 	local message = {}
 	function message:resize(w, h)
@@ -181,4 +171,12 @@ function imgui_system:init()
 		bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
 	end
 	self.message.observers:add(message)
+end
+
+function imgui_system:update()
+    imgui.begin_frame(1/60)
+    update_ui()
+	imgui.end_frame()
+	bgfx.touch(0)
+	bgfx.frame()
 end

@@ -68,6 +68,10 @@ function hw.dpi()
 	return platform.dpi(nwh)
 end
 
+function hw.native_window()
+	return nwh
+end
+
 function hw.reset(t, w_, h_)
 	if t then flags = t end
 	local bgfx = require "bgfx"
