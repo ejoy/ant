@@ -46,12 +46,12 @@ function callback.init(nwh, context, width, height)
 	}
 
 	local ocornut_imgui = Shader {
-		vs = "//ant.ImguiSample/shader/vs_ocornut_imgui",
-		fs = "//ant.ImguiSample/shader/fs_ocornut_imgui",
+		vs = "//ant.imgui/shader/vs_ocornut_imgui",
+		fs = "//ant.imgui/shader/fs_ocornut_imgui",
 	}
 	local imgui_image = Shader {
-		vs = "//ant.ImguiSample/shader/vs_imgui_image",
-		fs = "//ant.ImguiSample/shader/fs_imgui_image",
+		vs = "//ant.imgui/shader/vs_imgui_image",
+		fs = "//ant.imgui/shader/fs_imgui_image",
 	}
 
 	imgui.viewid(255);
