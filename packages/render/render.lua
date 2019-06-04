@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "ant.scene"
+
 local bgfx = require "bgfx"
 local fbmgr = require "framebuffer_mgr"
 

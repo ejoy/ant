@@ -30,9 +30,6 @@
 #### hierarchy
 ozz-animation模块的binding库，其中，hierarchy是用于层次结构和骨骼，animation是用于动画
 
-#### iup
-主程序iup
-
 #### libimobiledevice
 
 #### lodepng

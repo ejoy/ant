@@ -1,3 +1,4 @@
+local class     = require "common.class"
 local GuiBase   = class("GuiBase")
 local imgui     = require "imgui_wrap"
 local widget    = imgui.widget

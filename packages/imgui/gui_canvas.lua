@@ -5,6 +5,7 @@ local windows   = imgui.windows
 local util      = imgui.util
 local cursor    = imgui.cursor
 local enum      = imgui.enum
+local class     = require "common.class"
 
 local GuiBase = require "gui_base"
 local gui_input = require "gui_input"

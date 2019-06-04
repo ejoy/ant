@@ -19,7 +19,7 @@ unpack_lib$(1).a : $(ODIR)/lib$(1).a
 endef
 $(foreach v, $(LIBS), $(eval $(call MakeLibs,$(v))))
 
-LIBS2= cjson lua
+LIBS2= lua
 define UnpackLibs2
 unpack_lib$(1).a : $(ODIR)/lib$(1).a
 	@cd $(ODIR) && ar x lib$(1).a
@@ -28,12 +28,8 @@ $(foreach v, $(LIBS2), $(eval $(call UnpackLibs2,$(v))))
 
 UNPACKLIBS= $(foreach v, $(LIBS), unpack_lib$(v).a) $(foreach v, $(LIBS2), unpack_lib$(v).a)
 
-
 $(ODIR)/liblua.a : | $(ODIR)
 	@$(MAKE) --no-print-directory -f MakefileLua
-
-$(ODIR)/libcjson.a : | $(ODIR)
-	@$(MAKE) -f MakefileCJson
 
 $(ODIR)/ant_searcher.o : ant_searcher.c ant.h ant_module_define.h ant_module_declar.h | $(ODIR)
 	$(CC) -c $(CFLAGS) $(LUAINC) $(BGFXINC) -o $@ $<

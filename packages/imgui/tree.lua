@@ -4,6 +4,7 @@ local flags = imgui.flags
 local windows = imgui.windows
 local util = imgui.util
 local cursor = imgui.cursor
+local class = import_package "ant.imgui".class
 
 --
 

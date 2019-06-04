@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "ant.event"
+
 local render = import_package "ant.render"
 local mathbaselib = require "math3d.baselib"
 local ru = render.util

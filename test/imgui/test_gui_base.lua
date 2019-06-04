@@ -6,6 +6,7 @@ local util = imgui.util
 local cursor = imgui.cursor
 local enum = imgui.enum
 local bgfx = require "bgfx"
+local class = import_package "ant.imgui".class
 
 
 local GuiBase = import_package "ant.imgui".gui_base

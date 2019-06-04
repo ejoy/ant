@@ -6,6 +6,8 @@ local t = {
     gui_base = require "gui_base",
     gui_canvas = require "gui_canvas",
     gui_main = require "gui_main",
+    class = require "common.class",
+    runtime = require "runtime",
     controls = {
         -- list = require "list"
     },

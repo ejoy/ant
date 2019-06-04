@@ -255,13 +255,17 @@ static int
 lbeginFrame(lua_State *L) {
 	ImGuiIO& io = ImGui::GetIO();
 	io.DeltaTime = (float)luaL_checknumber(L, 1);
-	if (!(io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)) {
-		set_cursor(io.MouseDrawCursor
-			? ImGuiMouseCursor_None
-			: ImGui::GetMouseCursor()
-		);
-	}
+
+	ImGuiMouseCursor cursor_type = io.MouseDrawCursor
+		? ImGuiMouseCursor_None
+		: ImGui::GetMouseCursor();
+
 	ImGui::NewFrame();
+
+	if (io.WantCaptureMouse && !(io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)) {
+		set_cursor(cursor_type);
+	}
+
 	sync_io(L);
 	return 0;
 }
