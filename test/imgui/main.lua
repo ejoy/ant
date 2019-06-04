@@ -1,5 +1,19 @@
 ----------------modify package.lua------------------
-local entry_name = ...
+local function get_entry_name()	
+	if #arg > 0 then
+		for _, a in ipairs(arg) do
+			local en = a:match("-e=(.+)")
+			if en == nil then
+				en = a:match("--entryname=(.+)")
+			end
+			if en then
+				return en
+			end
+		end
+	end
+end
+
+local entry_name = get_entry_name()
 if entry_name then
     local main_path = debug.getinfo(1, 'S').source:sub(2)
     local package_path = io.open(string.gsub(main_path,"main.lua","package.lua"),"w")

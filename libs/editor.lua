@@ -3,8 +3,7 @@ package.path = table.concat({
     "libs/?/?.lua",
 }, ";")
 
-local cpaths = {
-	"projects/msvc/vs_bin/x64/Debug/?.dll",
+local cpaths = {	
     "clibs/?.dll",
 	"bin/?.dll",
 }
@@ -17,7 +16,7 @@ if #arg > 0 then
 			end
 		end
 	end
-	if has_arg("with-msvc") then
+	if has_arg("--bin=msvc") then
 		table.insert(cpaths, 1, "projects/msvc/vs_bin/x64/Debug/?.dll")
 	end
 end
