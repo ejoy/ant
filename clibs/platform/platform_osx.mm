@@ -1,5 +1,6 @@
 #include <lua.hpp>
 #include <Cocoa/Cocoa.h>
+#include <CoreText/CoreText.h>
 
 int ldpi(lua_State* L) {
     NSWindow* window = (lua_type(L, 1) == LUA_TLIGHTUSERDATA)

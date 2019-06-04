@@ -53,9 +53,10 @@ local ui_viewid = viewidmgr.generate "ui"
 
 function callback.init(nwh, context, w, h)
 	width, height = w, h
-    local su = import_package "ant.scene".util
-	imgui.create(nwh)
-    rhwi.init {
+	
+	local xdpi, ydpi = rhwi.dpi()
+	imgui.create(nwh, xdpi/96, ydpi/96)
+	rhwi.init {
 		nwh = nwh,
 		context = context,
 		width = width,
@@ -81,12 +82,15 @@ function callback.init(nwh, context, w, h)
 	imgui.resize(width, height)
 	imgui.keymap(native.keymap)
 	window.set_ime(imgui.ime_handle())
-	font.Create {
-		platform.OS == "Windows"
-		and { Font "黑体" ,    18, "\x20\x00\xFF\xFF\x00"}
-		or  { Font "华文细黑" , 18, "\x20\x00\xFF\xFF\x00"},
-	}
+	if platform.OS == "Windows" then
+		font.Create { { Font "黑体" ,    18, "\x20\x00\xFF\xFF\x00"} }
+	elseif platform.OS == "macOS" then
+		font.Create { { Font "华文细黑" , 18, "\x20\x00\xFF\xFF\x00"} }
+	else -- iOS
+		font.Create { { Font "Heiti SC" ,    18, "\x20\x00\xFF\xFF\x00"} }
+	end
 
+	local su = import_package "ant.scene".util
 	world = su.start_new_world(iq, width, height, packages, systems)
 	world_update = su.loop(world, {
 		update = {"timesystem", "message_system"}
@@ -107,7 +111,7 @@ end
 function callback.mouse_wheel(x, y, delta)
 	imgui.mouse_move(x, y, delta)
 	if not imguiIO.WantCaptureMouse then
-		iq:push("mouse_wheel", delta, x, y)
+		iq:push("mouse_wheel", x, y, delta)
 	end
 end
 

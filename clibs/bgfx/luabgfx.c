@@ -137,20 +137,29 @@ append_log(struct log_cache *lc, const char * buffer, int n) {
 	spin_unlock(lc);
 }
 
+static const char*
+fatal_code_str(bgfx_fatal_t code) {
+	switch (code) {
+	case BGFX_FATAL_DEBUG_CHECK:
+		return "DebugCheck";
+	case BGFX_FATAL_INVALID_SHADER:
+		return "InvalidShader";
+	case BGFX_FATAL_UNABLE_TO_INITIALIZE:
+		return "UnableToInitialize";
+	case BGFX_FATAL_UNABLE_TO_CREATE_TEXTURE:
+		return "UnableToCreateTexture";
+	case BGFX_FATAL_DEVICE_LOST:
+		return "DeviceLost";
+	default:
+		return "Unknown";
+	}
+}
+
 static void
 cb_fatal(bgfx_callback_interface_t *self, const char* filePath, uint16_t line, bgfx_fatal_t code, const char *str) {
-	char tmp[MAX_LOGBUFFER];
-	int n = snprintf(tmp, sizeof(tmp), "Fatal error at %s(%d): 0x%08x: %s", filePath, line, code, str);
-	if (n > MAX_LOGBUFFER) {
-		// truncated
-		n = MAX_LOGBUFFER;
-	}
-	struct callback * cb = (struct callback *)self;
-	if (cb->getlog) {
-		append_log(&(cb->lc), tmp, n);
-	} else {
-		fputs(tmp, stdout);
-	}
+	fprintf(stderr, "Fatal error at %s(%d): [%s] %s\n", filePath, line, fatal_code_str(code), str);
+	fflush(stderr);
+	abort();
 }
 
 static void
