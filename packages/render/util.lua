@@ -4,6 +4,7 @@ local log = log and log.info(...) or print
 local bgfx 		= require "bgfx"
 local viewidmgr = require "viewid_mgr"
 local gltfutil = import_package "ant.glTF".util
+local default_comp = require "components.default"
 
 local util = {}
 util.__index = util
@@ -135,41 +136,50 @@ function util.insert_primitive(eid, prim, meshscene, material, worldmat, filter)
 	r.using_glb = true
 end
 
-function util.create_render_queue_entity(world, view_rect, viewdir, eyepos, view_tag, viewid)
-	local x, y = view_rect.x or 0, view_rect.y or 0
-	local w, h = view_rect.w, view_rect.h
+function util.create_render_queue_entity(world, view_rect, viewdir, eyepos, view_tag, viewid)	
 	return world:create_entity {
-		camera = {
-			type = "",
-			eyepos = eyepos,
-			viewdir = viewdir,
-			updir = {0, 1, 0, 0},
-			frustum = {
-				type = "mat",
-				n = 0.1, f = 100000,
-				fov = 60, aspect = w / h,
-			},
-		},
+		camera = default_comp.camera(eyepos, viewdir, 
+				default_comp.frustum(view_rect.w, view_rect.h)),
 		viewid = viewid or viewidmgr.get(view_tag),
 		render_target = {
-			viewport = {
-				clear_state = {
-					color = 0x303030ff,
-					depth = 1,
-					stencil = 0,
-					clear = "all",
-				},
-				rect = {
-					x = x, y = y,
-					w = w, h = h,
-				},
-			},
+			viewport = default_comp.viewport(view_rect),
 		},
 		primitive_filter = {
 			view_tag = view_tag,
 			filter_tag = "can_render",
 		},
 		main_queue = view_tag == "main_view" and true or nil,
+		visible = true,
+	}	
+end
+
+function util.create_main_queue(world, view_rect, eyepos, viewdir)
+	local fb_renderbuffer_flag = util.generate_sampler_flag {
+		RT="RT_ON",
+		MIN="LINEAR",
+		MAG="LINEAR",
+		U="CLAMP",
+		V="CLAMP"
+	}
+
+	return world:create_entity {
+		camera = default_comp.camera(eyepos, viewdir, 
+				default_comp.frustum(view_rect.w, view_rect.h)),
+		viewid = viewidmgr.get "main_view",
+		render_target = {
+			viewport = default_comp.viewport(view_rect),
+			frame_buffer = {
+				render_buffers = {
+					default_comp.render_buffer(view_rect.w, view_rect.h, "RGBA8", fb_renderbuffer_flag),
+					default_comp.render_buffer(view_rect.w, view_rect.h, "D24S8", fb_renderbuffer_flag),
+				},
+			},
+		},
+		primitive_filter = {
+			view_tag = "main_view",
+			filter_tag = "can_render",
+		},
+		main_queue = true,
 		visible = true,
 	}	
 end
