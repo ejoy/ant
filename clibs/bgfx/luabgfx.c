@@ -145,12 +145,9 @@ cb_fatal(bgfx_callback_interface_t *self, const char* filePath, uint16_t line, b
 		// truncated
 		n = MAX_LOGBUFFER;
 	}
-	struct callback * cb = (struct callback *)self;
-	if (cb->getlog) {
-		append_log(&(cb->lc), tmp, n);
-	} else {
-		fputs(tmp, stdout);
-	}
+	lua_writestringerror(tmp, n);
+	lua_writestringerror("\n", 1);
+	abort();
 }
 
 static void
