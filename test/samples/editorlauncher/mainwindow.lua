@@ -8,6 +8,7 @@ local editor 		= import_package "ant.editor"
 local inputmgr 		= import_package "ant.inputmgr"
 local rhwi 			= import_package "ant.render".hardware_interface
 local scene 		= import_package "ant.scene".util
+local iupcontrols 	= import_package "ant.iupcontrols"
 local elog 			= iupcontrols.logview
 local hierarchyview = iupcontrols.hierarchyview
 local propertycontrol = iupcontrols.propertyview
