@@ -6,7 +6,6 @@ local bgfx 			= require "bgfx"
 
 local editor 		= import_package "ant.editor"
 local inputmgr 		= import_package "ant.inputmgr"
-local iupcontrols 	= import_package "ant.iupcontrols"
 local rhwi 			= import_package "ant.render".hardware_interface
 local scene 		= import_package "ant.scene".util
 local elog 			= iupcontrols.logview

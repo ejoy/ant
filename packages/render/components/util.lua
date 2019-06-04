@@ -1,14 +1,11 @@
 local util = {}
 util.__index = util
 
-local bgfx = require "bgfx"
 local fs = require "filesystem"
 
-local asset = import_package "ant.asset"
+local asset = import_package "ant.asset".mgr
 local mu = import_package "ant.math".util
 local gltfutil = import_package "ant.glTF".util
-
-local declmgr = require "vertexdecl_mgr"
 
 local function deep_copy(t)
 	if type(t) == "table" then

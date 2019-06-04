@@ -2,7 +2,11 @@ local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"
 local platform = require "platform"
-local hw = import_package "ant.render".hardware_interface
+local renderpkg = import_package "ant.render"
+local hw = renderpkg.hardware_interface
+local viewidmgr = renderpkg.viewidmgr
+
+local assetutil = import_package "ant.asset".util
 local imgui   = import_package "ant.imgui".imgui
 -- local imgui = require "bgfx.imgui"
 local widget = imgui.widget
@@ -22,17 +26,7 @@ local callback = {
     error = print
 }
 
-local function Shader(shader)
-    local shader_mgr = import_package "ant.render".shader_mgr
-    local uniforms = {}
-    shader.prog = shader_mgr.programLoad(assert(shader.vs), assert(shader.fs), uniforms)
-    assert(shader.prog ~= nil)
-    shader.uniforms = uniforms
-    return shader
-end
-
 local attribs = {}
-
 
 function callback.init(nwh, context, width, height)
     hw.init {
@@ -45,17 +39,17 @@ function callback.init(nwh, context, width, height)
     --  reset = "v",
     }
 
-    local ocornut_imgui = Shader {
+    local ocornut_imgui = assetutil.shader_loader {
         vs = "//ant.testimgui/shader/vs_ocornut_imgui",
         fs = "//ant.testimgui/shader/fs_ocornut_imgui",
     }
-    local imgui_image = Shader {
+    local imgui_image = assetutil.shader_loader {
         vs = "//ant.testimgui/shader/vs_imgui_image",
         fs = "//ant.testimgui/shader/fs_imgui_image",
     }
 
     imgui.create(nwh);
-    imgui.viewid(255);
+    imgui.viewid(viewidmgr.generate "ui");
     imgui.program(
         ocornut_imgui.prog,
         imgui_image.prog,

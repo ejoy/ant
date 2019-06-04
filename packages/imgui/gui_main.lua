@@ -3,8 +3,13 @@ local window    = require "window"
 local imgui     = require "imgui_wrap"
 local bgfx      = require "bgfx"
 local platform = require "platform"
-local rhwi      = import_package "ant.render".hardware_interface
+local renderpkg = import_package "ant.render"
+local rhwi      = renderpkg.hardware_interface
+local viewidmgr = renderpkg.viewidmgr
+
+local assetutil = import_package "ant.asset".util
 local editor    = import_package "ant.editor"
+
 local task      = editor.task
 local gui_mgr   = require "gui_mgr"
 local gui_input = require "gui_input"
@@ -14,38 +19,27 @@ local gui_main  = {}
 local attribs   = {}
 local main = nil
 
-local function Shader(shader)
-    local shader_mgr = import_package "ant.render".shader_mgr
-    local uniforms = {}
-    shader.prog = shader_mgr.programLoad(assert(shader.vs), assert(shader.fs), uniforms)
-    assert(shader.prog ~= nil)
-    shader.uniforms = uniforms
-    return shader
-end
-
+local uieditor_viewid = viewidmgr.generate("uieditor")
 
 function gui_main.init(nwh, context, width, height)
     rhwi.init {
         nwh = nwh,
         context = context,
-    --  renderer = "DIRECT3D9",
-    --  renderer = "OPENGL",
         width = width,
         height = height,
-    --  reset = "v",
-    }
+	}
 
-    local ocornut_imgui = Shader {
+    local ocornut_imgui = assetutil.shader_loader {
         vs = "//ant.imgui/shader/vs_ocornut_imgui",
         fs = "//ant.imgui/shader/fs_ocornut_imgui",
     }
-    local imgui_image = Shader {
+    local imgui_image = assetutil.shader_loader {
         vs = "//ant.imgui/shader/vs_imgui_image",
         fs = "//ant.imgui/shader/fs_imgui_image",
     }
 
-    imgui.create(attribs.font_size)
-    imgui.viewid(255);
+	imgui.create(attribs.font_size)	
+    imgui.viewid(viewidmgr.generate("ui"));
     imgui.program(
         ocornut_imgui.prog,
         imgui_image.prog,
@@ -55,8 +49,8 @@ function gui_main.init(nwh, context, width, height)
     imgui.resize(width, height)
     imgui.keymap(native.keymap)
 
-    bgfx.set_view_rect(0, 0, 0, width, height)
-    bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
+    bgfx.set_view_rect(uieditor_viewid, 0, 0, width, height)
+    bgfx.set_view_clear(uieditor_viewid, "CD", 0x303030ff, 1, 0)
 
     -- bgfx.set_view_rect(1, 200, 200, width-100, height-100)
     -- bgfx.set_view_clear(1, "CD", 0xffff00ff, 1, 0)
@@ -69,8 +63,6 @@ function gui_main.init(nwh, context, width, height)
     if main.init then
         main.init(nwh, context, width, height)
     end
-    
-
 end
 
 function gui_main.size(width,height,type)
@@ -138,12 +130,11 @@ end
 function _update(delta)
     gui_mgr.update(delta)
     gui_input.clean()
-    rhwi.ui_frame()
-    bgfx.touch(0)
-    bgfx.touch(1)
+
     task.update()
-    --todo delete this bgfx code
-    rhwi.on_update_end()
+	
+	bgfx.touch(uieditor_viewid)
+    rhwi.frame()
     if main.update then
         main.update()
     end

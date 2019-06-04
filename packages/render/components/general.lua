@@ -5,7 +5,7 @@ ecs.import "ant.math"
 local fs = require "filesystem"
 
 local component_util = require "components.util"
-local asset = import_package "ant.asset"
+local asset = import_package "ant.asset".mgr
 local math3d = import_package "ant.math"
 local ms = math3d.stack
 

@@ -6,7 +6,7 @@ local render_util = import_package "ant.render".util
 local math_util = (import_package "ant.math").util
 local math3d = require "math3d"
 local bgfx = require "bgfx"
-local asset = import_package "ant.asset"
+local asset = import_package "ant.asset".mgr
 local ms = (import_package "ant.math").stack
 local fs = require "filesystem"
 

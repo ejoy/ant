@@ -1,8 +1,14 @@
 local native = require "window.native"
 local window = require "window"
-local keymap = import_package "ant.inputmgr".keymap
+
 local inputmgr = import_package "ant.inputmgr"
-local rhwi = import_package "ant.render".hardware_interface
+local keymap = inputmgr.keymap
+
+local assetutil = import_package "ant.asset".util
+local renderpkg = import_package "ant.render"
+local viewidmgr = renderpkg.viewidmgr
+local rhwi = renderpkg.hardware_interface
+
 local imgui = require "imgui"
 local platform = require "platform"
 local font = imgui.font
@@ -35,15 +41,6 @@ local function what_state(state, bit)
 	end
 end
 
-local function Shader(shader)
-	local shader_mgr = import_package "ant.render".shader_mgr
-	local uniforms = {}
-	shader.prog = shader_mgr.programLoad(assert(shader.vs), assert(shader.fs), uniforms)
-	assert(shader.prog ~= nil)
-	shader.uniforms = uniforms
-	return shader
-end
-
 local callback = {}
 
 local width, height
@@ -62,16 +59,16 @@ function callback.init(nwh, context, w, h)
 		height = height,
 	}
 	
-	local ocornut_imgui = Shader {
+	local ocornut_imgui = assetutil.shader_loader {
 		vs = "//ant.imgui/shader/vs_ocornut_imgui",
 		fs = "//ant.imgui/shader/fs_ocornut_imgui",
 	}
-	local imgui_image = Shader {
+	local imgui_image = assetutil.shader_loader {
 		vs = "//ant.imgui/shader/vs_imgui_image",
 		fs = "//ant.imgui/shader/fs_imgui_image",
 	}
 
-	imgui.viewid(255);
+	imgui.viewid(viewidmgr.generate("ui"));
 	imgui.program(
 		ocornut_imgui.prog,
 		imgui_image.prog,

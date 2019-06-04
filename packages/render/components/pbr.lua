@@ -2,7 +2,7 @@
 
 -- local computil = require "components.util"
 -- local fs = require "filesystem"
--- local assetmgr = import_package "ant.asset"
+-- local assetmgr = import_package "ant.asset".mgr
 
 -- -- ecs.component_alias("pbr_texture", "resource")
 	

@@ -1,7 +1,7 @@
 local util = {}; util.__index = util
 
 local animodule = require "hierarchy.animation"		
-local asset = import_package "ant.asset"
+local asset = import_package "ant.asset".mgr
 local timer = import_package "ant.timer"
 -- for animation
 function util.add_animation(comp, respath)	
