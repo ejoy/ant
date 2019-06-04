@@ -1,0 +1,7 @@
+shader = {
+	vs = "//ant.resources/simple/quad/vs_shadowquad",
+	fs = "//ant.resources/simple/quad/fs_shadowquad",
+}
+
+state = "states/quad.state"
+

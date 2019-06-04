@@ -153,7 +153,7 @@ function util.create_render_queue_entity(world, view_rect, viewdir, eyepos, view
 	}	
 end
 
-function util.create_main_queue(world, view_rect, eyepos, viewdir)
+function util.create_main_queue(world, view_rect, viewdir, eyepos)
 	local fb_renderbuffer_flag = util.generate_sampler_flag {
 		RT="RT_ON",
 		MIN="LINEAR",

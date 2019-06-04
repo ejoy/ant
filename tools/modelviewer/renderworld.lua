@@ -24,9 +24,13 @@ model_review_system.depend "primitive_filter_system"
 model_review_system.depend "render_system"
 model_review_system.depend "viewport_detect_system"
 
-local lu = import_package "ant.render" .light
-local cu = import_package "ant.render" .components
+local renderpkg = import_package "ant.render"
+local lu = renderpkg.light
+local cu = renderpkg.components
+local viedidmgr = renderpkg.viewidmgr
 local fs = require "filesystem"
+
+ecs.tag "blit_view"
 
 local function to_radian(angle)
 	return (math.pi / 180) * angle
@@ -42,7 +46,7 @@ local function create_light()
 end
 
 function model_review_system:init()
-	renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
+	local mqeid = renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
 	create_light()
 	cu.create_grid_entity(world, "grid")
 	world:create_entity {
@@ -58,7 +62,7 @@ function model_review_system:init()
 				}
 			}
 		},
-		main_view = true,		
+		main_view = true,
 	}
 
 	world:create_entity {
@@ -76,6 +80,19 @@ function model_review_system:init()
 		},
 		main_view = true,
 	}
+
+	-- local fullrect = {x=0, y=0, w=world.args.fb_size.w, h=world.args.fb_size.h}
+	-- renderutil.create_render_queue_entity(world, fullrect, nil, nil, "blit_view", viedidmgr.generate "blit")
+
+	-- local mq = world[mqeid]
+	-- local fullscreen_texhandle = mq.render_target.frame_buffer.render_buffers[1].handle
+	-- local fseid = cu.create_quad_entity(world, fullrect,
+	-- 	fs.path "//ant.resources/depiction/materials/fullscreen.material", nil, "full_quad")
+	-- local fsentity = world[fseid]
+	-- fsentity.material.content[1].properties = {textures={s_texColor={handle=fullscreen_texhandle}}}
+	-- fsentity.main_view = nil
+	-- world:add_component(fseid, "blit_view", true)
+
 
 	-- local mesh = model.mesh.assetinfo.handle.bounding
 	--local bound = ms(mesh.aabb.max, mesh.aabb.min, "-T")

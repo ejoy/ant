@@ -8,6 +8,7 @@ local assetutil = import_package "ant.asset".util
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
 local rhwi = renderpkg.hardware_interface
+local bgfx = require "bgfx"
 
 local imgui = require "imgui"
 local platform = require "platform"
@@ -48,6 +49,8 @@ local packages, systems
 local world
 local world_update
 
+local ui_viewid = viewidmgr.generate "ui"
+
 function callback.init(nwh, context, w, h)
 	width, height = w, h
     local su = import_package "ant.scene".util
@@ -68,7 +71,7 @@ function callback.init(nwh, context, w, h)
 		fs = "//ant.imgui/shader/fs_imgui_image",
 	}
 
-	imgui.viewid(viewidmgr.generate("ui"));
+	imgui.viewid(ui_viewid);
 	imgui.program(
 		ocornut_imgui.prog,
 		imgui_image.prog,
@@ -143,7 +146,10 @@ end
 
 function callback.update()
 	if debug_update then debug_update() end
-	if world_update then world_update() end
+	if world_update then
+		world_update()
+		bgfx.frame()
+	end
 end
 
 local function start(m1, m2)
