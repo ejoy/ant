@@ -107,7 +107,7 @@ end
 function callback.mouse_wheel(x, y, delta)
 	imgui.mouse_move(x, y, delta)
 	if not imguiIO.WantCaptureMouse then
-		iq:push("mouse_wheel", delta, x, y)
+		iq:push("mouse_wheel", x, y, delta)
 	end
 end
 
