@@ -11,7 +11,7 @@ endif
 DEVENV_CMD = devenv
 
 ifeq "$(BUILD_CONFIG)" "release"
-  BGFX_CONFIG_TYPE = release
+  BGFX_CONFIG_TYPE = debug
   CMAKE_BUILD = -DCMAKE_BUILD_TYPE=Release
 else
   BGFX_CONFIG_TYPE = debug
