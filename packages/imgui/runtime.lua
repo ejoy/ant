@@ -53,9 +53,10 @@ local world_update
 
 function callback.init(nwh, context, w, h)
 	width, height = w, h
-    local su = import_package "ant.scene".util
-	imgui.create(nwh)
-    rhwi.init {
+	
+	local xdpi, ydpi = rhwi.dpi()
+	imgui.create(nwh, xdpi/96, ydpi/96)
+	rhwi.init {
 		nwh = nwh,
 		context = context,
 		width = width,
@@ -89,6 +90,7 @@ function callback.init(nwh, context, w, h)
 		font.Create { { Font "Heiti SC" ,    18, "\x20\x00\xFF\xFF\x00"} }
 	end
 
+	local su = import_package "ant.scene".util
 	world = su.start_new_world(iq, width, height, packages, systems)
 	world_update = su.loop(world, {
 		update = {"timesystem", "message_system"}

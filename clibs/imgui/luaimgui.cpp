@@ -140,6 +140,9 @@ lcreate(lua_State *L) {
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
+	lua_Number xscale = luaL_optnumber(L, 2, 1.0);
+	lua_Number yscale = luaL_optnumber(L, 3, 1.0);
+	io.DisplayFramebufferScale = ImVec2((float)xscale, (float)yscale);
 	init_ime(lua_touserdata(L, 1));
 	init_cursor();
 	s_ctx.create();
