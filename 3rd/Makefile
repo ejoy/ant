@@ -4,14 +4,22 @@ ALL_PROJ := $(RUNTIME_PROJ) $(CMAKE_PROJ)
 BUILD_CONFIG = release
 
 ifeq "$(PLAT)" ""
-PLAT=mingw
+	ifeq ($(shell uname), Darwin)
+		PLAT = osx
+	else
+		PLAT = mingw
+	endif
 endif
 
 # should add devenv command's path to system path
 DEVENV_CMD = devenv
 
 ifeq "$(BUILD_CONFIG)" "release"
-  BGFX_CONFIG_TYPE = debug
+  ifeq "$(PLAT)" "ios"
+    BGFX_CONFIG_TYPE = release
+  else
+    BGFX_CONFIG_TYPE = debug
+  endif
   CMAKE_BUILD = -DCMAKE_BUILD_TYPE=Release
 else
   BGFX_CONFIG_TYPE = debug

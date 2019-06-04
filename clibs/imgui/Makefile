@@ -27,6 +27,12 @@ $(ODIR)/imgui_osx.o : imgui_osx.mm | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC)
 endif
 
+ifeq "$(PLAT)" "ios"
+OBJS += $(ODIR)/imgui_ios.o
+
+$(ODIR)/imgui_ios.o : imgui_ios.mm | $(ODIR)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC)
+endif
 
 $(ODIR)/luaimgui.o : luaimgui.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
