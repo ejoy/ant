@@ -59,6 +59,7 @@ function pf:init()
 	self.render_properties = {
 		lighting = default_properties(),
 		shadow = default_properties(),
+		postprocess = default_properties(),
 	}
 
 	return self

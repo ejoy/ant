@@ -22,3 +22,6 @@ SAMPLER2DSHADOW(s_shadowmap0, 4);
 SAMPLER2DSHADOW(s_shadowmap1, 5);
 SAMPLER2DSHADOW(s_shadowmap2, 6);
 SAMPLER2DSHADOW(s_shadowmap3, 7);
+
+//postprocess
+SAMPLER2D(s_mianview, 0);

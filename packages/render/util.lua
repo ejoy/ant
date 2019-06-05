@@ -34,8 +34,14 @@ local function update_properties(shader, properties, render_properties)
 		end
 
 		local p = find_property(name, properties)
-		p = p or find_property(name, render_properties.lighting)
-		p = p or find_property(name, render_properties.shadow)
+		if p == nil then
+			for _, v in pairs(render_properties) do
+				p = find_property(name, v)
+				if p then
+					break
+				end
+			end
+		end
 
 		if p then
 			assert(property_types[p.type] == u.type)
@@ -364,6 +370,19 @@ function util.create_blit_queue(world, viewrect)
 			s_texColor={handle=fullscreen_texhandle,type="texture",stage=0}
 		}
 	}
+end
+
+function util.create_renderbuffer(desc)
+	return bgfx.create_texture2d(desc.w, desc.h, false, desc.layers, desc.format, desc.flags)
+end
+
+function util.create_framebuffer(renderbuffers, manager_buffer)
+	local handles = {}
+	for _, rb in ipairs(renderbuffers) do
+		handles[#handles+1] = rb.handle
+	end
+	assert(#handles > 0)
+	return bgfx.create_frame_buffer(handles, manager_buffer or true)
 end
 
 function util.modify_view_rect(world,rect)

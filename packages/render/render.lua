@@ -23,7 +23,7 @@ local renderbuffer = ecs.component "render_buffer"
 
 function renderbuffer:init()
 	if not self.handle then
-		self.handle = bgfx.create_texture2d(self.w, self.h, false, self.layers, self.format, self.flags)
+		self.handle = ru.create_renderbuffer(self)
 	end
 	return self
 end
@@ -56,12 +56,8 @@ local fb = ecs.component "frame_buffer"
 	
 
 function fb:init()
-	local handles = {}
-	for _, rb in ipairs(self.render_buffers) do
-		handles[#handles+1] = rb.handle
-	end
-	assert(#handles > 0)
-	self.handle = bgfx.create_frame_buffer(handles, self.manager_buffer or true)
+	assert(self.handle == nil)
+	self.handle = ru.create_framebuffer(self.render_buffers, self.manager_buffer)
 	return self
 end
 

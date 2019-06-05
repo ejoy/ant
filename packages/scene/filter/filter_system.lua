@@ -21,6 +21,8 @@ function filter_properties:update()
 		if e.shadow == nil then
 			filterutil.load_shadow_properties(world, filter)
 		end
+
+		filterutil.load_postprocess_properties(world, filter)
 	end
 end
 
