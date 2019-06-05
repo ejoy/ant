@@ -27,10 +27,12 @@ void set_cursor(ImGuiMouseCursor cursor);
 #endif
 
 struct context {
-	void render(ImDrawData* _drawData) {
+	void render(ImDrawData* drawData) {
 		const ImGuiIO& io = ImGui::GetIO();
 		const float width = io.DisplaySize.x;
 		const float height = io.DisplaySize.y;
+		const float fb_width = io.DisplaySize.x * drawData->FramebufferScale.x;
+		const float fb_height = io.DisplaySize.y * drawData->FramebufferScale.y;
 
 		BGFX(set_view_name)(m_viewId, "ImGui");
 		BGFX(set_view_mode)(m_viewId, BGFX_VIEW_MODE_SEQUENTIAL);
@@ -41,10 +43,13 @@ struct context {
 			: glm::orthoLH_ZO(0.0f, width, height, 0.0f, 0.0f, 1000.0f)
 			;
 		BGFX(set_view_transform)(m_viewId, NULL, (const void*)&ortho[0]);
-		BGFX(set_view_rect)(m_viewId, 0, 0, uint16_t(width), uint16_t(height));
+		BGFX(set_view_rect)(m_viewId, 0, 0, uint16_t(fb_width), uint16_t(fb_height));
 
-		for (int32_t ii = 0, num = _drawData->CmdListsCount; ii < num; ++ii) {
-			const ImDrawList* drawList = _drawData->CmdLists[ii];
+		ImVec2 clip_off = drawData->DisplayPos;
+		ImVec2 clip_scale = drawData->FramebufferScale;
+
+		for (int32_t ii = 0, num = drawData->CmdListsCount; ii < num; ++ii) {
+			const ImDrawList* drawList = drawData->CmdLists[ii];
 			uint32_t numVertices = (uint32_t)drawList->VtxBuffer.size();
 			uint32_t numIndices = (uint32_t)drawList->IdxBuffer.size();
 
@@ -75,11 +80,17 @@ struct context {
 				assert(NULL != cmd.TextureId);
 				union { ImTextureID ptr; struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; } texture = { cmd.TextureId };
 
-				const uint16_t xx = uint16_t(std::max(cmd.ClipRect.x, 0.0f));
-				const uint16_t yy = uint16_t(std::max(cmd.ClipRect.y, 0.0f));
+				ImVec4 clip_rect;
+				clip_rect.x = (cmd.ClipRect.x - clip_off.x) * clip_scale.x;
+				clip_rect.y = (cmd.ClipRect.y - clip_off.y) * clip_scale.y;
+				clip_rect.z = (cmd.ClipRect.z - clip_off.x) * clip_scale.x;
+				clip_rect.w = (cmd.ClipRect.w - clip_off.y) * clip_scale.y;
+
+				const uint16_t xx = uint16_t(std::max(clip_rect.x, 0.0f));
+				const uint16_t yy = uint16_t(std::max(clip_rect.y, 0.0f));
 				BGFX(set_scissor)(xx, yy
-					, uint16_t(std::min(cmd.ClipRect.z, 65535.0f) - xx)
-					, uint16_t(std::min(cmd.ClipRect.w, 65535.0f) - yy)
+					, uint16_t(std::min(clip_rect.z, 65535.0f) - xx)
+					, uint16_t(std::min(clip_rect.w, 65535.0f) - yy)
 					);
 
 				uint64_t state = 0
@@ -140,9 +151,6 @@ lcreate(lua_State *L) {
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
-	lua_Number xscale = luaL_optnumber(L, 2, 1.0);
-	lua_Number yscale = luaL_optnumber(L, 3, 1.0);
-	io.DisplayFramebufferScale = ImVec2((float)xscale, (float)yscale);
 	init_ime(lua_touserdata(L, 1));
 	init_cursor();
 	s_ctx.create();
@@ -178,9 +186,13 @@ limeHandle(lua_State *L) {
 
 static int
 lresize(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
 	float width = (float)luaL_checknumber(L, 1);
 	float height = (float)luaL_checknumber(L, 2);
-	ImGui::GetIO().DisplaySize = ImVec2(width, height);
+	float xscale = (float)luaL_optnumber(L, 3, 1.0);
+	float yscale = (float)luaL_optnumber(L, 4, 1.0);
+	io.DisplaySize = ImVec2(width, height);
+	io.DisplayFramebufferScale = ImVec2(xscale, yscale);
 	return 0;
 }
 

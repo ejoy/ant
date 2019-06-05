@@ -51,11 +51,17 @@ local world_update
 
 local ui_viewid = viewidmgr.generate "ui"
 
+local function imgui_resize(width, height)
+	local xdpi, ydpi = rhwi.dpi()
+	local xscale = math.floor(xdpi/96.0+0.5)
+	local yscale = math.floor(ydpi/96.0+0.5)
+	imgui.resize(width, height, xscale, yscale)
+end
+
 function callback.init(nwh, context, w, h)
 	width, height = w, h
-	
-	local xdpi, ydpi = rhwi.dpi()
-	imgui.create(nwh, xdpi/96, ydpi/96)
+
+	imgui.create(nwh)
 	rhwi.init {
 		nwh = nwh,
 		context = context,
@@ -79,7 +85,7 @@ function callback.init(nwh, context, w, h)
 		ocornut_imgui.uniforms.s_tex.handle,
 		imgui_image.uniforms.u_imageLodEnabled.handle
 	)
-	imgui.resize(width, height)
+	imgui_resize(width, height)
 	imgui.keymap(native.keymap)
 	window.set_ime(imgui.ime_handle())
 	if platform.OS == "Windows" then
@@ -137,7 +143,7 @@ end
 callback.char = imgui.input_char
 
 function callback.size(width,height,_)
-	imgui.resize(width,height)
+	imgui_resize(width,height)
 	iq:push("resize", width,height)
 	rhwi.reset(nil, width, height)
 end
