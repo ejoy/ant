@@ -315,11 +315,11 @@ get_cond(lua_State *L, int index) {
 	}
 	case LUA_TNIL:
 	case LUA_TNONE:
-		return 0;
+		return ImGuiCond_Always;
 	default:
 		luaL_error(L, "Invalid ImGuiCond type %s", lua_typename(L, t));
 	}
-	return 0;
+	return ImGuiCond_Always;
 }
 
 // key, press, state
