@@ -5,6 +5,8 @@ local bgfx 		= require "bgfx"
 local viewidmgr = require "viewid_mgr"
 local gltfutil = import_package "ant.glTF".util
 local default_comp = require "components.default"
+local computil = require "components.util"
+local fs = require "filesystem"
 
 local util = {}
 util.__index = util
@@ -343,11 +345,24 @@ function util.create_general_render_queue(world,view_rect,view_tag,viewid)
 	return entity_id
 end
 
-function util.identify_transform()
-	return {
-		s = {1, 1, 1, 0},
-		r = {0, 0, 0, 0},
-		t = {0, 0, 0, 1},
+local blitviewid = viewidmgr.generate "blit"
+
+function util.get_main_view_rendertexture(world)
+	local mq = world:first_entity "main_queue"
+	return mq.render_target.frame_buffer.render_buffers[1].handle	
+end
+
+function util.create_blit_queue(world, viewrect)
+	util.create_render_queue_entity(world, viewrect, nil, nil, "blit_view", blitviewid)
+	local fullscreen_texhandle = util.get_main_view_rendertexture(world)
+
+	local fseid = computil.create_quad_entity(world, viewrect,
+		fs.path "//ant.resources/depiction/materials/fullscreen.material", nil, "full_quad", "blit_view")
+	local fsentity = world[fseid]
+	fsentity.material.content[1].properties = {
+		textures={
+			s_texColor={handle=fullscreen_texhandle,type="texture",stage=0}
+		}
 	}
 end
 

@@ -246,13 +246,14 @@ function util.quad_mesh(rect)
 	return quad_mesh(vb)
 end
 
-function util.create_quad_entity(world, rect, materialpath, properties, name)
+function util.create_quad_entity(world, rect, materialpath, properties, name, view_tag)
+	view_tag = view_tag or "main_view"
 	local eid = world:create_entity {
 		transform = mu.identity_transform(),
 		mesh = {},
 		material = util.assign_material(materialpath, properties),
 		can_render = true,
-		main_view = true,
+		[view_tag] = true,
 		name = name or "quad",
 	}
 

@@ -19,7 +19,7 @@ function vp_detect:init()
 		end
 		local vp = maincamera.render_target.viewport
 		vp.rect.w, vp.rect.h = w, h
-        maincamera.camera.frustum.aspect = w / h        
+        maincamera.camera.frustum.aspect = w / h
 		rhwi.reset(nil, w, h)
     end
 	
