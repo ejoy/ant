@@ -6,10 +6,10 @@ local util          = imgui.util
 local cursor        = imgui.cursor
 local class         = import_package "ant.imgui".class
 local GuiCanvas     = import_package "ant.imgui".gui_canvas
-local GuiScene      = class("GuiScene",GuiCanvas)
 local scene         = import_package "ant.scene".util
 local ru            = import_package "ant.render".util
 
+local GuiScene = GuiCanvas.derive("GuiScene")
 GuiScene.GuiName = "GuiScene"
 
 function GuiScene:_init()

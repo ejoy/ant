@@ -24,8 +24,6 @@ function GuiSceneMenu:get_mainmenu()
     return {{parent_path,self._scene_menu}}
 end
 
-
-
 function  GuiSceneMenu:_scene_menu()
     
     local box = self:_get_editbox()
