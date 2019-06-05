@@ -47,6 +47,7 @@ function gui_main.init(nwh, context, width, height)
         imgui_image.uniforms.u_imageLodEnabled.handle
     )
     imgui.resize(width, height)
+    gui_input.size(width,height)
     imgui.keymap(native.keymap)
 
     bgfx.set_view_rect(uieditor_viewid, 0, 0, width, height)
@@ -70,6 +71,7 @@ function gui_main.size(width,height,type)
     imgui.resize(width,height)
     rhwi.reset(nil, width, height)
     bgfx.set_view_rect(0, 0, 0, width, height)
+    gui_input.size(width,height,type)
     if main.size then
         main.size(width,height,type)
     end
