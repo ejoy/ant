@@ -11,7 +11,7 @@ GuiBase.GuiName = "GuiBase"
 
 function GuiBase:_init()
     --use by imgui,keep ID the same value
-    self.title_id = "this_is_title###this_is_id"
+    self.title_id = string.format("this_is_title###%s",self.GuiName)
     -- self.win_flags = flags.Window { "MenuBar" }
     self._is_opened = true
 end

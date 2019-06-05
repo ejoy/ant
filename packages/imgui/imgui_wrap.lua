@@ -102,7 +102,9 @@ end
 
 function imgui_lua.widget.ImageButton(...)
     local args = {...}
-    args[1] = path2tex_handle(args[1])
+    if type(args[1]) == "string" then
+        args[1] = path2tex_handle(args[1])
+    end
     return widget_c.ImageButton(table.unpack(args))
 end
 
