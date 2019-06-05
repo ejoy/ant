@@ -48,7 +48,7 @@ function widget.Selectable() end
 function widget.TreeNode() end
 function widget.TreePop() end
 function widget.CollapsingHeader() end
-function widget.SetNextTreeNodeOpen() end
+function widget.SetNextItemOpen() end
 function widget.PlotLines() end
 function widget.PlotHistogram() end
 function widget.BeginTooltip() end
