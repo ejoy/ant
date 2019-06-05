@@ -26,7 +26,7 @@ end
 function GuiCanvas:bind_world( world,msgqueue )
     self.world = world
     local rect = {x=0,y=0,w=self.rect.w,h=self.rect.h}
-    ru.modify_view_rect(self.world,rect)
+    -- ru.modify_view_rect(self.world,rect)
     map_imgui(msgqueue,self)
     local mq = self.world:first_entity "main_queue"
     print_a("mq",mq)
@@ -35,15 +35,10 @@ function GuiCanvas:bind_world( world,msgqueue )
 end
 
 function GuiCanvas:on_close_click()
-    --dont close now
+    --dont close
 end
 
 function GuiCanvas:before_update()
-    -- if self.world then
-    --     windows.SetNextWindowBgAlpha(0.0)
-    -- else
-    --     windows.SetNextWindowBgAlpha(1.0)
-    -- end
     windows.SetNextWindowSize(self.rect.w,self.rect.h, "f")
     windows.PushStyleVar(enum.StyleVar.WindowPadding,0,0)
 end
@@ -57,18 +52,15 @@ function GuiCanvas:on_update()
     if w~=r.w or h~=r.h or x~=r.x or y ~= r.y then
         self.size_change = (w~=r.w) or (h~=r.h)
         self.rect = {x=x,y=y,w=w,h=h}
-        print_a(self.rect)
+        -- print_a(self.rect)
         -- if self.world then
         --     local rect = {x=0,y=0,w=self.rect.w,h=self.rect.h}
         --     print_a(self.rect)
         --     -- ru.modify_view_rect(self.world,rect)
         -- end
     end
-    -- widget.InvisibleButton("###InvisibleButton",w,h)
-    -- local dds_path = "//ant.resources.binary/textures/border.dds"
-    -- widget.Image(dds_path,self.rect.w,self.rect.h,{border_col={0.0,0.0,1.0,1.0}})
     if self.world_tex then
-        widget.Image(self.world_tex,self.rect.w,self.rect.h,{border_col={1.0,1.0,1.0,1.0}})
+        widget.Image(self.world_tex,w,h)
     end
     local focus = windows.IsWindowFocused(focus_flag)
     if focus and IO.WantCaptureMouse then
