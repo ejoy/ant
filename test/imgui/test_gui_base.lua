@@ -6,12 +6,10 @@ local util = imgui.util
 local cursor = imgui.cursor
 local enum = imgui.enum
 local bgfx = require "bgfx"
-local class = import_package "ant.imgui".class
-
 
 local GuiBase = import_package "ant.imgui".gui_base
 
-local TestGuiBase = class("TestGuiBase",GuiBase)
+local TestGuiBase = GuiBase.derive("TestGuiBase")
 
 
 TestGuiBase.GuiName = "TestGuiBase"
@@ -46,7 +44,7 @@ function TestGuiBase:on_update()
     end
     if windows.BeginTabBar "tab_bar" then
         if windows.BeginTabItem ("Tab1",tab_noclosed) then
-            self:tab_update()
+            self:tab1_update()
             windows.EndTabItem()
         end
         if windows.BeginTabItem ("Tab2",tab_noclosed) then
@@ -60,6 +58,10 @@ function TestGuiBase:on_update()
             if widget.Button "Popup" then
                 windows.OpenPopup "Popup window"
             end
+            windows.EndTabItem()
+        end
+        if windows.BeginTabItem ("Tab3",tab_noclosed) then
+            self:tab3_update()
             windows.EndTabItem()
         end
         windows.EndTabBar()
@@ -110,7 +112,7 @@ local editfloat = {
 }
 
 
-function TestGuiBase:tab_update()
+function TestGuiBase:tab1_update()
     -- windows.PushStyleVar(enum.StyleVar.FrameBorderSize,2.0)
     -- windows.PushStyleVar(enum.StyleVar.WindowBorderSize,2.0)
     local dds_path = "//ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.dds"
@@ -204,5 +206,80 @@ function TestGuiBase:_main_menu_test3()
     end
 end
 --main menu
+
+local Tree = import_package "ant.imgui".controls.tree
+local List = import_package "ant.imgui".controls.list
+local ComboBox = import_package "ant.imgui".controls.combobox
+function TestGuiBase:tab3_update()
+    if not self.tree then
+        local root = Tree.Node.new( "Root",nil,{"this is root's data"},true)
+        local node1 = Tree.Node.new( "Node1",root,{"this is Node1's data"},true)
+        local node1_1 = Tree.Node.new( "node1_1",node1,nil,true)
+        local node2 = Tree.Node.new( "Node2",root,nil,true)
+        local node2_1 = Tree.Node.new( "node2_1",node2,nil,true)
+        local node2_2 = Tree.Node.new( "node2_2",node2,nil,false)
+        local node2_2_1 = Tree.Node.new( "node2_2_1",node2_2,nil,false,true)
+        
+        local tree = Tree.new()
+        tree:set_root(root)
+        local function cb(node,change)
+            print("Tree cb",node.title,node.data,change)
+        end
+        tree:set_node_change_cb(cb)
+        self.tree = tree
+    end
+    self.tree:update()
+
+    if not self.list then
+        local list = List.new("List Example")
+        local datalist = {
+            "ItemA",
+            "ItemB",
+            "ItemC",
+            "ItemD",
+            "ItemE",
+            "ItemF",
+            height = 4,
+        }
+        local function cb(index)
+            print("List:selected_change_cb",index)
+        end 
+        list:set_selected_change_cb(cb)
+        list:set_data(datalist,nil)
+        self.list = list
+    end
+    self.list:update()
+    
+    if not self.combo then
+        local combo = ComboBox.new("ComboBox Example")
+        local datalist = {
+            "ItemA0",
+            "ItemB0",
+            "ItemC0",
+            "ItemD0",
+            "ItemE0",
+            "ItemF0",
+            "ItemA1",
+            "ItemB1",
+            "ItemC1",
+            "ItemD1",
+            "ItemE1",
+            "ItemF1",
+            "ItemA2",
+            "ItemB2",
+            "ItemC2",
+            "ItemD2",
+            "ItemE2",
+            "ItemF2",
+        }
+        combo:set_data(datalist,2)
+        local function cb(index)
+            print("Combo:selected_change_cb",index)
+        end 
+        combo:set_selected_change_cb(cb)
+        self.combo = combo
+    end
+    self.combo:update()
+end
 
 return TestGuiBase

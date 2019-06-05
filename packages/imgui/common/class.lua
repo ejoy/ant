@@ -35,7 +35,7 @@ print(class_a._type)       -- 输出 class_a
 print(base_type._type)  -- 输出 base_type
 
 --test is_instance
-class_aa = class("class_aa",class_a)
+class_aa = class_a.derive("class_aa") 等价于 class("class_aa",class_a)
 class_b=class("class_b",base_type)
 print(a:is_instance(class_a) and class_a.is_instance(a))  -- true
 print(a:is_instance(base_type) and base_type.is_instance(a)) -- true
@@ -53,7 +53,10 @@ local function class(class_name,super)
         end
         return obj
     end
-    --2 equivalent way to use
+    class_type.derive = function (class_name)
+        return class(class_name,class_type)
+    end
+    --there are 2 equivalent way to use
     --1、ClassA.is_instance(objA) 
     --2、objA:is_instance(ClassA)
     local is_instance

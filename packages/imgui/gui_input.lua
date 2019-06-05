@@ -2,6 +2,7 @@ local gui_input = {}
 gui_input.key_state = {}
 gui_input.mouse = {}
 gui_input.key_down = {}
+gui_input.screen_size = {0,0}
 local called = {}
 gui_input.called = called
 function gui_input.mouse_move(x,y)
@@ -42,6 +43,12 @@ function gui_input.clean()
     gui_input.called = called
     gui_input.key_down = {}
 
+end
+
+function gui_input.size(w,h,t)
+    gui_input.screen_size[1] = w
+    gui_input.screen_size[2] = h
+    gui_input.screen_size["type"] = t
 end
 
 

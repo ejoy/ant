@@ -65,7 +65,7 @@ function callback.init(nwh, context, width, height)
     bgfx.set_view_rect(1, 200, 200, width-100, height-100)
     bgfx.set_view_clear(1, "CD", 0xffff00ff, 1, 0)
 
- bgfx.set_debug "ST"
+ -- bgfx.set_debug "ST"
     font.Create {
         platform.OS == "Windows"
         and { Font "黑体" ,    18, "\x20\x00\xFF\xFF\x00"}
@@ -175,14 +175,16 @@ function test_window:menu()
     end
 end
 
+local TreeOpen = {true}
 function test_window:tab_update()
-    if widget.Button "Test" then
-        print("test1")
+    if widget.Button "Print imgui.IO" then
+        print_a(imgui.IO)
     end
     if widget.Button "Test" then
         print("test2")
     end
     widget.SmallButton "Small"
+    widget.Checkbox("TreeOpen",TreeOpen)
     if widget.Checkbox("Checkbox", checkbox) then
         print("Click Checkbox", checkbox[1])
     end
@@ -198,7 +200,21 @@ function test_window:tab_update()
         widget.EndCombo()
     end
     if widget.TreeNode "TreeNodeA" then
-        if widget.TreeNode "TreeNodeAA" then
+        widget.SetNextItemOpen(TreeOpen[1])
+        TreeOpen[1] =  widget.TreeNode "TreeNodeAA"
+        if TreeOpen[1] then
+            if widget.TreeNode("TreeNodeAA1",flags.TreeNode.DefaultOpen) then
+                if widget.TreeNode "TreeNodeAA11" then
+                    widget.TreePop()
+                end
+                if widget.TreeNode "TreeNodeAA12" then
+                    widget.TreePop()
+                end
+                widget.TreePop()
+            end
+            if widget.TreeNode "TreeNodeAA2" then
+                widget.TreePop()
+            end
             widget.TreePop()
         end
         widget.TreePop()

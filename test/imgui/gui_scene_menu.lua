@@ -7,7 +7,7 @@ local cursor = imgui.cursor
 local enum = imgui.enum
 
 local GuiBase = import_package "ant.imgui".gui_base
-local GuiSceneMenu = class("GuiSceneMenu",GuiBase)
+local GuiSceneMenu = GuiBase.derive("GuiSceneMenu")
 
 GuiSceneMenu.GuiName = "GuiSceneMenu"
 function GuiSceneMenu:_get_editbox()
@@ -23,8 +23,6 @@ function GuiSceneMenu:get_mainmenu()
     local parent_path = {"TestScene"}
     return {{parent_path,self._scene_menu}}
 end
-
-
 
 function  GuiSceneMenu:_scene_menu()
     
