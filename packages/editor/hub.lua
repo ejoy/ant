@@ -13,8 +13,8 @@ local function init()
     if hub._inited then return end
     hub._inited = true
     hub._channel_update = {}
-    hub._channel_one_func = {}  -- subscibe
-    hub._channel_mult_func = {} -- subscibe_mult
+    hub._channel_one_func = {}  -- subscribe
+    hub._channel_mult_func = {} -- subscribe_mult
     hub._channel_cfg = {}
     hub._channel_msg = {}
     hub._channel_msg_num = {}
@@ -99,10 +99,10 @@ end
 
 
 --only get newest message in one intercal
-function hub.subscibe(channel,func,func_target)
+function hub.subscribe(channel,func,func_target)
     assert(func,"func is nil")
     assert(channel,"channel is nil")
-    print("subscibe:",channel)
+    print("subscribe:",channel)
     init_channel(channel)
     func_target = func_target or hub
     local funcs = hub._channel_one_func[channel]
@@ -116,7 +116,7 @@ function hub.subscibe(channel,func,func_target)
     table.insert(func_in_target,func)
 end
 
-function hub.unsubscibe(channel,func,func_target)
+function hub.unsubscribe(channel,func,func_target)
     assert(func,"func is nil")
     assert(channel,"channel is nil")
     if ( not hub._inited ) or ( not hub._channel_cfg[channel] ) then
@@ -137,7 +137,7 @@ function hub.unsubscibe(channel,func,func_target)
 end
 
 --get all message in one intercal
-function hub.subscibe_mult(channel,func,func_target)
+function hub.subscribe_mult(channel,func,func_target)
     assert(func,"func is nil")
     assert(channel,"channel is nil")
     init_channel(channel)
@@ -153,7 +153,7 @@ function hub.subscibe_mult(channel,func,func_target)
     table.insert(func_in_target,func)
 end
 
-function hub.unsubscibe_mult(channel,func,func_target)
+function hub.unsubscribe_mult(channel,func,func_target)
     assert(func,"func is nil")
     assert(channel,"channel is nil")
     if ( not hub._inited ) or ( not hub._channel_cfg[channel] ) then
@@ -173,7 +173,7 @@ function hub.unsubscibe_mult(channel,func,func_target)
     end
 end
 
-function hub.unsubscibe_all_by_target(func_target)
+function hub.unsubscribe_all_by_target(func_target)
     assert(func_target)
     for channel,_ in pairs(hub._channel_cfg ) do
         local funcs_mult = hub._channel_mult_func[channel]

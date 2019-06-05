@@ -13,7 +13,7 @@ function connect:_init()
     self._response_handle_tbl = {}
     self._session_tbl = {}
     self._session_id = 1
-    hub.subscibe_mult(CONNECT_CHANNEL,self._on_message_receive,self)
+    hub.subscribe_mult(CONNECT_CHANNEL,self._on_message_receive,self)
 end
 
 function connect:_gen_session_id()
