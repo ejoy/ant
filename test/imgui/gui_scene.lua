@@ -4,8 +4,7 @@ local flags         = imgui.flags
 local windows       = imgui.windows
 local util          = imgui.util
 local cursor        = imgui.cursor
-local class         = import_package "ant.imgui".class
-local GuiCanvas     = import_package "ant.imgui".gui_canvas
+local GuiCanvas     = import_package "ant.imgui".editor.gui_canvas
 local scene         = import_package "ant.scene".util
 local ru            = import_package "ant.render".util
 

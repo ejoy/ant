@@ -45,7 +45,6 @@ local paths = vfs.list("/")
 -- print_r(paths)
 -- print("vfs.list end")
 
-
 local pm = require "antpm"
 pm.import(pm.register("entry"))
 print("pm.register")

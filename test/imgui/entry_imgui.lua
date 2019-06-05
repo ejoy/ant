@@ -1,6 +1,6 @@
 local gui_main = import_package "ant.imgui".gui_main
 -- local GuiLogView = import_package "ant.imgui".gui_logview
-local GuiSysInfo = import_package "ant.imgui".gui_sysinfo
+local GuiSysInfo = import_package "ant.imgui".editor.gui_sysinfo
 local gui_mgr = import_package "ant.imgui".gui_mgr
 local args = {
     sceen_width = 1024,
