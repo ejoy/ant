@@ -16,6 +16,15 @@ local map_imgui   = import_package "ant.editor".map_imgui
 
 GuiCanvas.GuiName = "GuiCanvas"
 
+function try(fun,...)
+    local status,err,ret = xpcall( fun,debug.traceback,... )
+    if not status then
+        io.stderr:write("Error:%s\n%s", status, err)
+    end
+    return ret
+end
+
+
 function GuiCanvas:_init()
     GuiBase._init(self)
     self.win_flags = flags.Window { "NoCollapse","NoClosed","NoScrollbar"}
@@ -28,9 +37,7 @@ function GuiCanvas:bind_world( world,msgqueue )
     local rect = {x=0,y=0,w=self.rect.w,h=self.rect.h}
     -- ru.modify_view_rect(self.world,rect)
     map_imgui(msgqueue,self)
-    local mq = self.world:first_entity "main_queue"
-    print_a("mq",mq)
-    self.world_tex = mq.render_target.frame_buffer.render_buffers[1].handle
+    self.world_tex =  ru.get_main_view_rendertexture(self.world)
     print_a("world_tex",self.world_tex)
 end
 
@@ -102,6 +109,7 @@ function GuiCanvas:on_dispatch_msg()
     end
     if self.resize_cb and self.size_change then
         self.resize_cb(self,rect.w,rect.h)
+        self.world_tex =  ru.get_main_view_rendertexture(self.world)
     end
 end
 function GuiCanvas:after_update()

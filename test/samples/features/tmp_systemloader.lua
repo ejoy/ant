@@ -39,6 +39,7 @@ init_loader.dependby 'render_system'
 init_loader.dependby 'primitive_filter_system'
 init_loader.dependby 'camera_controller'
 init_loader.dependby 'skinning_system'
+init_loader.dependby 'viewport_detect_system'
 
 local function create_animation_test()
     local meshdir = fs.path 'meshes'
