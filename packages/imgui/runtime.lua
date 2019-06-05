@@ -55,7 +55,7 @@ local function imgui_resize(width, height)
 	local xdpi, ydpi = rhwi.dpi()
 	local xscale = math.floor(xdpi/96.0+0.5)
 	local yscale = math.floor(ydpi/96.0+0.5)
-	imgui.resize(width, height, xscale, yscale)
+	imgui.resize(width/xscale, height/yscale, xscale, yscale)
 end
 
 function callback.init(nwh, context, w, h)

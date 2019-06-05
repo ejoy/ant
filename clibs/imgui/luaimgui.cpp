@@ -345,14 +345,20 @@ lkeyState(lua_State *L) {
 static int
 lmouseMove(lua_State *L) {
 	ImGuiIO& io = ImGui::GetIO();
-	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	io.MousePos = ImVec2(
+		(float)luaL_checknumber(L, 1)/io.DisplayFramebufferScale.x,
+		(float)luaL_checknumber(L, 2)/io.DisplayFramebufferScale.y
+	);
 	return 0;
 }
 
 static int
 lmouseWheel(lua_State *L) {
 	ImGuiIO& io = ImGui::GetIO();
-	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	io.MousePos = ImVec2(
+		(float)luaL_checknumber(L, 1)/io.DisplayFramebufferScale.x,
+		(float)luaL_checknumber(L, 2)/io.DisplayFramebufferScale.y
+	);
 	io.MouseWheel = (float)luaL_checknumber(L, 3);
 	return 0;
 }
@@ -360,7 +366,10 @@ lmouseWheel(lua_State *L) {
 static int
 lmouseClick(lua_State *L) {
 	ImGuiIO& io = ImGui::GetIO();
-	io.MousePos = ImVec2((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2));
+	io.MousePos = ImVec2(
+		(float)luaL_checknumber(L, 1)/io.DisplayFramebufferScale.x,
+		(float)luaL_checknumber(L, 2)/io.DisplayFramebufferScale.y
+	);
 	switch (luaL_checkinteger(L, 3)) {
 	case 0: io.MouseDown[0] = lua_toboolean(L, 4); break;
 	case 1: io.MouseDown[1] = lua_toboolean(L, 4); break;
