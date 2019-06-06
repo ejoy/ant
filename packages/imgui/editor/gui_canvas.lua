@@ -15,6 +15,8 @@ local scene         = import_package "ant.scene".util
 local ru = import_package "ant.render".util
 local map_imgui   = import_package "ant.editor".map_imgui
 
+local DEFAULT_FPS = 30
+
 GuiCanvas.GuiName = "GuiCanvas"
 
 function try(fun,...)
@@ -26,24 +28,40 @@ function try(fun,...)
 end
 
 
+local function get_time()
+    return os.clock()
+end
+
+
 function GuiCanvas:_init()
     GuiBase._init(self)
     self.win_flags = flags.Window { "NoCollapse","NoClosed","NoScrollbar"}
     self.rect = {x=0,y=0,w=600,h=400}
     self.title_id = "Scene###Scene"
     self.vp_dirty = false
+    self.time_count = 0
+    self:set_fps(DEFAULT_FPS)
     hub.subscribe("framebuffer_change",self.on_framebuffer_change,self)
+end
+
+function GuiCanvas:set_fps(fps)
+    assert(fps>0)
+    self.fps = fps
+    self.frame_time = 1/fps
 end
 
 function GuiCanvas:on_framebuffer_change()
     self.world_tex =  ru.get_main_view_rendertexture(self.world)
 end
 
-function GuiCanvas:bind_world( world,msgqueue )
+function GuiCanvas:bind_world( world,world_update,msgqueue )
     self.world = world
+    self.world_update = world_update
     local rect = {x=0,y=0,w=self.rect.w,h=self.rect.h}
     map_imgui(msgqueue,self)
     self.world_tex =  ru.get_main_view_rendertexture(self.world)
+    self.next_frame_time = 0
+    self.time_count = 0
 end
 
 function GuiCanvas:on_close_click()
@@ -56,7 +74,7 @@ function GuiCanvas:before_update()
 end
 
 local focus_flag = flags.Focused {"ChildWindows"}
-function GuiCanvas:on_update()
+function GuiCanvas:on_update(delta)
     local w,h = windows.GetContentRegionAvail()
     local x,y = cursor.GetCursorScreenPos()
     local r = self.rect
@@ -72,12 +90,26 @@ function GuiCanvas:on_update()
         --todo:split mouse and keyboard
         self:on_dispatch_msg()
     end
+    if self.world_update then
+        self:_update_world(delta)
+    end
+end
+
+function GuiCanvas:_update_world(delta)
+    local now = self.time_count + delta
+    self.time_count = now
+    if now >= self.next_frame_time then
+        self.next_frame_time = now + self.frame_time
+        --update world
+        try(self.world_update)
+    end
+
 end
 
 
 
 function GuiCanvas:on_dispatch_msg()
-    --todo:split mouse and keyboard
+    --todo:split mouse and keyboard``
     local gui_input = gui_input
     local in_mouse = gui_input.mouse
     local in_key = gui_input.key_state

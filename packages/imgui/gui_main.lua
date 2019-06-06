@@ -121,12 +121,12 @@ function gui_main.update()
     local delta = now - last_update
     last_update = now
     _update(delta+0.00000001)
-    local after_update = os.clock()
-    local wait = next_update-after_update
-    if wait >0 then
-        thread.sleep(wait)
-    end
-    next_update = next_update + FRAME_TIME
+    -- local after_update = os.clock()
+    -- local wait = next_update-after_update
+    -- if wait >0 then
+    --     thread.sleep(wait)
+    -- end
+    -- next_update = next_update + FRAME_TIME
 end
 
 function _update(delta)
