@@ -26,7 +26,7 @@ function world:register_component(eid, c)
 	end
 end
 
-function world:finish_component(e, c)
+function world:init_component(e, c)
 	local ti = assert(self._components[c], c)
 	if ti.depend then
 		for _, name in ipairs(ti.depend) do
@@ -49,7 +49,7 @@ function world:add_component(eid, component_type, args)
 	local e = self[eid]
 	e[component_type] = self:create_component(component_type, args)
 	self:register_component(eid, component_type)
-	self:finish_component(e, component_type)
+	self:init_component(e, component_type)
 end
 
 function world:add_component_child(parent_com,child_name,child_type,child_value)
@@ -80,13 +80,17 @@ function world:component_list(eid)
 	return r
 end
 
-local function sortcomponent(w, t)
+local function sortcomponent(w, t, r)
     local sort = {}
     for k in pairs(t) do
         sort[#sort+1] = k
     end
-    local ti = w._components
-    table.sort(sort, function (a, b) return ti[a].sortid < ti[b].sortid end)
+	local ti = w._components
+	if not r then
+		table.sort(sort, function (a, b) return ti[a].sortid < ti[b].sortid end)
+	else
+		table.sort(sort, function (a, b) return ti[a].sortid > ti[b].sortid end)
+	end
     local n = 1
     return function ()
         local k = sort[n]
@@ -103,7 +107,7 @@ function world:set_entity(eid, t)
 	for c, args in sortcomponent(self, t) do
 		entity[c] = self:create_component(c, args)
 		self:register_component(eid, c)
-		self:finish_component(entity, c)
+		self:init_component(entity, c)
 	end
 end
 
@@ -235,9 +239,9 @@ function world:clear_removed()
 		else
 			local e = item[2]
 			-- delete entity
-			for component_type, c in pairs(e) do
+			for component_type, c in sortcomponent(self, e, true) do
 				local ti = assert(self._components[component_type], component_type)
-				component_delete(self, ti, c)
+				component_delete(self, ti, c, e)
 			end
 		end
 	end
