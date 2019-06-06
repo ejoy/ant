@@ -84,7 +84,7 @@ local function traverse_scene(scene, eid, materialcontent, worldmat, filter)
 
 			local nodetrans = calc_node_transform(node, parentmat)
 			if node.children then
-				traverse_scene(node.children, nodetrans)
+				traverse_scene_ex(node.children, nodetrans)
 			end
 
 			local meshidx = node.mesh

@@ -88,6 +88,7 @@ get_type_name(const std::string &type) {
 	return array_count(elem_type_mapper);
 }
 
+
 struct bufferinfo {
 	uint32_t attribname;
 	primitive::accessor *accessor;
@@ -305,6 +306,29 @@ get_num_vertices(const primitive &prim) {
 	return 0;
 }
 
+static primitive::accessor
+create_accessor(uint32_t count, uint32_t bvidx, uint32_t elemcount, uint32_t offset = 0) {
+	primitive::accessor acc;
+	acc.bufferView = bvidx;
+	acc.byteOffset = offset;
+	acc.count = count;
+	acc.componentType = ComponentType::FLOAT;
+	acc.type = elemcount;
+	acc.maxvalue_count = acc.minvalue_count = 0;
+
+	return acc;
+}
+
+static primitive::bufferview
+create_bufferview(uint32_t len, uint32_t stride, uint32_t offset, uint32_t target = target_type::ARRAY_BUFFER) {
+	primitive::bufferview bv;
+	bv.target = target;
+	bv.byteOffset = offset;
+	bv.byteLength = len;
+	bv.byteStride = stride;
+	return bv;
+}
+
 static std::string
 serialize_primitive(const primitive &prim) {
 	std::ostringstream oss;
@@ -380,20 +404,17 @@ fetch_index_buffer(const primitive&prim, const char*bindata, data_buffer &buffer
 	}
 }
 
-static void
-rearrange_indices_buffer(primitive &prim, uint32_t binaryoffset, const char* bindata, 
+static uint32_t
+rearrange_indices_buffer(primitive &prim, uint32_t binaryoffset, data_buffer &indexbuffer,
 	std::vector<primitive::bufferview> &new_bvs, std::vector<data_buffer> &newbuffers) {
+	auto& acc = prim.accessors[prim.indices];
+	acc.bufferView = (uint32_t)new_bvs.size();
 
-	if (prim.indices != 0xffffffff) {
-		auto& acc = prim.accessors[prim.indices];
-		newbuffers.push_back(data_buffer());
-		fetch_buffer(prim, acc, bindata, acc.count, newbuffers.back());
+	const uint32_t numbytes = acc.count * 2;
+	new_bvs.push_back(create_bufferview(numbytes, 0, binaryoffset, target_type::ELEMENT_ARRAY_BUFFER));
+	newbuffers.push_back(std::move(indexbuffer));
 
-		primitive::bufferview bv = prim.bufferviews[acc.bufferView];
-		bv.byteOffset = binaryoffset;
-		acc.bufferView = (uint32_t)new_bvs.size();
-		new_bvs.push_back(bv);
-	}
+	return binaryoffset + numbytes;
 }
 
 static uint32_t
@@ -489,63 +510,6 @@ serialize_buffers(const std::vector<data_buffer> &buffers) {
 }
 
 static void
-create_normal(const attrib_buffers &buffers, const data_buffer&indicesbuffer, const primitive& prim, data_buffer &buffer) {
-	primitive::accessor normalaccessor;
-	normalaccessor.bufferView = -1;
-	normalaccessor.byteOffset = 0;
-	normalaccessor.componentType = ComponentType::FLOAT;
-	normalaccessor.type = 3;
-	
-	normalaccessor.count = get_num_vertices(prim);
-	normalaccessor.normalized = true;
-
-	normalaccessor.maxvalue_count = 0;
-	normalaccessor.minvalue_count = 0;
-
-
-	for (uint32_t ii = 0; ii < normalaccessor.count; ++ii) {
-
-	}
-}
-
-static void
-create_tangent_bitangent(
-	const char* bindata, 
-	const primitive &prim, 
-	data_buffer &tangentbuffer, 
-	data_buffer &bitangentbuffer) {
-
-}
-
-static void
-check_and_generate_new_attribute(const load_config &cfg, const char* bindata, primitive &prim) {
-
-}
-
-static primitive::accessor
-create_accessor(uint32_t count, uint32_t bvidx, uint32_t elemcount, uint32_t offset = 0) {
-	primitive::accessor acc;
-	acc.bufferView = bvidx;
-	acc.byteOffset = offset;
-	acc.count = count;
-	acc.componentType = ComponentType::FLOAT;
-	acc.type = elemcount;
-	acc.maxvalue_count = acc.minvalue_count = 0;
-
-	return acc;
-}
-
-static primitive::bufferview
-create_bufferview(uint32_t len, uint32_t stride, uint32_t offset) {
-	primitive::bufferview bv;
-	bv.target = target_type::ARRAY_BUFFER;
-	bv.byteOffset = 0;
-	bv.byteLength = len;
-	bv.byteStride = stride;
-	return bv;
-}
-
-static void
 create_tangent_bitangent_primitive_info(primitive &prim, attrib_buffers &abuffers, uint32_t num_vertices) {
 	std::tuple<const char*, const char*, size_t>	attribs[] = {
 		{"T40", "VEC4", sizeof(glm::vec4) },
@@ -598,7 +562,9 @@ lconvert_buffers(lua_State *L) {
 	std::vector<data_buffer> newbuffers;
 	std::vector<primitive::bufferview>	newbufferviews;
 	const uint32_t binary_offset = rearrange_buffers(abuffers, cfg, prim, newbufferviews, newbuffers);
-
+	if (prim.indices != 0xffffffff) {
+		rearrange_indices_buffer(prim, binary_offset, indexbuffer, newbufferviews, newbuffers);
+	}	
 	prim.bufferviews.swap(newbufferviews);
 
 	const std::string seri_prim = serialize_primitive(prim);
