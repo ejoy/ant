@@ -61,9 +61,9 @@ local function getPost(w)
     return postPool[w]
 end
 
-local function finish_entity(w, e)
+local function init_entity(w, e)
     for name in sortcomponent(w, e) do
-        w:finish_component(e, name)
+        w:init_component(e, name)
     end
 end
 
@@ -145,7 +145,7 @@ local function load_world(w, s)
     end
     load_end()
     for _, e in ipairs(l) do
-        finish_entity(w, e)
+        init_entity(w, e)
     end
 end
 
@@ -153,7 +153,7 @@ local function load_entity(w, s)
     local entity = load_start(w, s)
     local e, eid = _load_entity(w, entity)
     load_end()
-    finish_entity(w, e)
+    init_entity(w, e)
     return eid
 end
 

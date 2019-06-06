@@ -72,9 +72,9 @@ local function foreach_delete_2(w, c, component)
     foreach_delete_1(w, w._components[c.type], component)
 end
 
-function foreach_delete_1(w, c, component)
+function foreach_delete_1(w, c, component, e)
     if c.method and c.method.delete then
-        c.method.delete(component)
+        c.method.delete(component, e)
     end
     if not c.type then
 		for _, v in ipairs(c) do
