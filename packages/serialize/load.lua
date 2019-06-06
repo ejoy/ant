@@ -11,7 +11,7 @@ local function sortcomponent(w, t)
         sort[#sort+1] = k
     end
     local ti = w._components
-    table.sort(sort, function (a, b) return ti[a].sortid < ti[b].sortid end)
+    table.sort(sort, function (a, b) return ti[a]._sortid < ti[b]._sortid end)
     local n = 1
     return function ()
         local k = sort[n]
