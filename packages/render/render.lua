@@ -102,6 +102,15 @@ function rt:postinit(e)
 	return self
 end
 
+function rt:delete(e)
+	local fb = self.frame_buffer or self.wnd_frame_buffer
+	if fb then
+		fbmgr.unbind(e.viewid)
+		self.frame_buffer = nil
+		self.wnd_frame_buffer = nil
+	end
+end
+
 local cs = ecs.component "clear_state"
     .color "int" (0x303030ff)
     .depth "int" (1)
