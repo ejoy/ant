@@ -40,6 +40,7 @@ function GuiCanvas:_init()
     self.title_id = "Scene###Scene"
     self.vp_dirty = false
     self.time_count = 0
+    self.cur_frame_time = 0.0
     self:set_fps(DEFAULT_FPS)
     hub.subscribe("framebuffer_change",self.on_framebuffer_change,self)
 end
@@ -52,6 +53,7 @@ end
 
 function GuiCanvas:on_framebuffer_change()
     self.world_tex =  ru.get_main_view_rendertexture(self.world)
+    --print("self.world_tex",self.world_tex)
 end
 
 function GuiCanvas:bind_world( world,world_update,msgqueue )
@@ -60,8 +62,11 @@ function GuiCanvas:bind_world( world,world_update,msgqueue )
     local rect = {x=0,y=0,w=self.rect.w,h=self.rect.h}
     map_imgui(msgqueue,self)
     self.world_tex =  ru.get_main_view_rendertexture(self.world)
+
     self.next_frame_time = 0
     self.time_count = 0
+    self.last_update = nil
+
 end
 
 function GuiCanvas:on_close_click()
@@ -80,9 +85,13 @@ function GuiCanvas:on_update(delta)
     local r = self.rect
     if w~=r.w or h~=r.h or x~=r.x or y ~= r.y then
         self.vp_dirty = self.vp_dirty or (w~=r.w) or (h~=r.h)
+        if  (w~=r.w) or (h~=r.h) then
+            print(">>>>>>",w,r.w,h,r.h)
+        end
         self.rect = {x=x,y=y,w=w,h=h}
     end
     if self.world_tex then
+        --print(".",self.world_tex)
         widget.Image(self.world_tex,w,h)
     end
     local focus = windows.IsWindowFocused(focus_flag)
@@ -99,7 +108,11 @@ function GuiCanvas:_update_world(delta)
     local now = self.time_count + delta
     self.time_count = now
     if now >= self.next_frame_time then
+        if self.last_update then
+            self.cur_frame_time = now - self.last_update
+        end
         self.next_frame_time = now + self.frame_time
+        self.last_update = now
         --update world
         try(self.world_update)
     end

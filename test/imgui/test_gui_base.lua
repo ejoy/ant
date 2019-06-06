@@ -13,7 +13,7 @@ local TestGuiBase = GuiBase.derive("TestGuiBase")
 
 
 TestGuiBase.GuiName = "TestGuiBase"
-function TestGuiBase:_init()
+function TestGuiBase:_init(default_collapsed)
     GuiBase._init(self)
     self.title = "test windows"
     self.id = "Test"
@@ -26,6 +26,11 @@ function TestGuiBase:_init()
     local imgdata = f:read "a"
     f:close()
     self.texhandle = bgfx.create_texture(imgdata, "")
+    self.default_collapsed = default_collapsed
+end
+
+function TestGuiBase:before_update()
+    windows.SetNextWindowCollapsed(self.default_collapsed,"A")
 end
 
 local tab_noclosed = flags.TabBar { "NoClosed" }
