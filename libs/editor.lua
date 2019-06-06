@@ -3,8 +3,7 @@ package.path = table.concat({
     "libs/?/?.lua",
 }, ";")
 
-local cpaths = {
-	"projects/msvc/vs_bin/x64/Debug/?.dll",
+local cpaths = {	
     "clibs/?.dll",
 	"bin/?.dll",
 }
@@ -17,7 +16,7 @@ if #arg > 0 then
 			end
 		end
 	end
-	if has_arg("with-msvc") then
+	if has_arg("--bin=msvc") then
 		table.insert(cpaths, 1, "projects/msvc/vs_bin/x64/Debug/?.dll")
 	end
 end
@@ -28,12 +27,9 @@ require "editor.vfs"
 require "editor.init_bgfx"
 require "filesystem"
 
-require "common.log"
 import_package = (require "antpm").import
 
 local print_func = require "common.print_r"
 print_r = print_func.print_r
 print_a = print_func.print_a
-function dprint(...) print(...) end
 
-class = require "common.class"

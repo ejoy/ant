@@ -3,12 +3,6 @@ package.path = "engine/libs/?.lua;engine/libs/?/?.lua;?.lua"
 require 'runtime.vfs'
 require 'runtime.errlog'
 
-function dprint(...)
-	print(...)
-	local nio = io	
-	nio.stdout:flush()
-end
-
 local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"

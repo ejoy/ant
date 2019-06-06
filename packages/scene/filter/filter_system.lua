@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "ant.event"
+
 local render = import_package "ant.render"
 local mathbaselib = require "math3d.baselib"
 local ru = render.util
@@ -19,6 +21,8 @@ function filter_properties:update()
 		if e.shadow == nil then
 			filterutil.load_shadow_properties(world, filter)
 		end
+
+		filterutil.load_postprocess_properties(world, filter)
 	end
 end
 

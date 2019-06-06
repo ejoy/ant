@@ -3,6 +3,7 @@ local ecs = ...
 ecs.component_alias("view_tag", "string")
 ecs.component_alias("filter_tag", "string")
 ecs.component_alias("main_view", "boolean")
+ecs.component_alias("blit_view", "boolean")
 
 -- ecs.component "handle"
 
@@ -58,6 +59,7 @@ function pf:init()
 	self.render_properties = {
 		lighting = default_properties(),
 		shadow = default_properties(),
+		postprocess = default_properties(),
 	}
 
 	return self

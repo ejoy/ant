@@ -19,7 +19,7 @@ end
 
 function viewid_pool.generate(name)
 	if freeidx >= 256 then
-		--to do, need release function for not used viewid to mark which view id id released
+		--to do, need release function for not used viewid to mark which view id released
 		return error("not enougth view id to alloc")
 	end
 

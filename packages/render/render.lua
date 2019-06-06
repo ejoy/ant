@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "ant.scene"
+
 local bgfx = require "bgfx"
 local fbmgr = require "framebuffer_mgr"
 
@@ -12,6 +14,13 @@ ecs.component_alias("view_tag", "string")
 
 ecs.component_alias("viewid", "int", 0)
 
+local function delete_handle(self)
+	if self.handle then
+		bgfx.destroy(self.handle)
+		self.handle = nil
+	end
+end
+
 local renderbuffer = ecs.component "render_buffer"
 	.format "string"
 	.flags "string"
@@ -21,10 +30,12 @@ local renderbuffer = ecs.component "render_buffer"
 
 function renderbuffer:init()
 	if not self.handle then
-		self.handle = bgfx.create_texture2d(self.w, self.h, false, self.layers, self.format, self.flags)
+		self.handle = ru.create_renderbuffer(self)
 	end
 	return self
 end
+
+renderbuffer.delete = delete_handle
 
 local whandle = ecs.component "wnd_handle"
 	.name "string" ("")
@@ -48,19 +59,23 @@ function nfb:init()
 	return self
 end
 
+nfb.delete = delete_handle
+
 local fb = ecs.component "frame_buffer" 
 	.render_buffers "render_buffer[]"
 	["opt"].manager_buffer "boolean" (true)
 	
 
 function fb:init()
-	local handles = {}
-	for _, rb in ipairs(self.render_buffers) do
-		handles[#handles+1] = rb.handle
-	end
-	assert(#handles > 0)
-	self.handle = bgfx.create_frame_buffer(handles, self.manager_buffer or true)
+	assert(self.handle == nil)
+	self.handle = ru.create_framebuffer(self.render_buffers, self.manager_buffer)
 	return self
+end
+
+function fb:delete()
+	if not self.manager_buffer then
+		delete_handle(self)
+	end
 end
 
 local rt = ecs.component "render_target" {depend = "viewid"}

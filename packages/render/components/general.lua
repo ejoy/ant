@@ -5,7 +5,7 @@ ecs.import "ant.math"
 local fs = require "filesystem"
 
 local component_util = require "components.util"
-local asset = import_package "ant.asset"
+local asset = import_package "ant.asset".mgr
 local math3d = import_package "ant.math"
 local ms = math3d.stack
 
@@ -73,13 +73,32 @@ function mesh:init()
 	return self
 end
 
+function mesh:delete()
+	local scene = self.assetinfo
+	if scene then
+		for _, bv in ipairs(scene.bufferViews) do
+			if bv.handle then
+				bgfx.destroy(bv.handle)
+				bv.handle = nil
+			end
+		end
+	end
+end
+
 ecs.component_alias("new_mesh", "mesh")
 
-ecs.component "texture"
+local tex = ecs.component "texture"
 	.name "string"
 	.type "string"
 	.stage "int"
-	.ref_path "respath"	
+	.ref_path "respath"
+
+function tex:delete()
+	if tex.handle then
+		bgfx.destroy(tex.handle)
+		tex.handle = nil
+	end
+end
 
 local uniformdata = ecs.component_alias("uniformdata", "real[]")
 

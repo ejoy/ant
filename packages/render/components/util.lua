@@ -1,14 +1,11 @@
 local util = {}
 util.__index = util
 
-local bgfx = require "bgfx"
 local fs = require "filesystem"
 
-local asset = import_package "ant.asset"
+local asset = import_package "ant.asset".mgr
 local mu = import_package "ant.math".util
 local gltfutil = import_package "ant.glTF".util
-
-local declmgr = require "vertexdecl_mgr"
 
 local function deep_copy(t)
 	if type(t) == "table" then
@@ -87,10 +84,10 @@ function util.create_material(material)
 	material.materialinfo = materialinfo	
 end
 
-function util.assign_material(filepath)
+function util.assign_material(filepath, properties)
 	return {
 		content = {
-			{ref_path = filepath}
+			{ref_path = filepath, properties = properties}
 		}
 	}
 end
@@ -232,7 +229,7 @@ end
 local function quad_mesh(vb)	
 	return util.create_simple_mesh({
 		stride = 20, --"fffff"
-		{name="POSTIION", offset=0, elemtype="FLOAT", elemcount=3},
+		{name="POSITION", offset=0, elemtype="FLOAT", elemcount=3},
 		{name="TEXCOORD_0", offset=12, elemtype="FLOAT", elemcount=2},
 	}, vb, 4)
 end
@@ -249,21 +246,14 @@ function util.quad_mesh(rect)
 	return quad_mesh(vb)
 end
 
-function util.create_shadow_quad_entity(world, rect, name)
+function util.create_quad_entity(world, rect, materialpath, properties, name, view_tag)
+	view_tag = view_tag or "main_view"
 	local eid = world:create_entity {
-		transform = {
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
+		transform = mu.identity_transform(),
 		mesh = {},
-		material = {
-			content = {{
-				ref_path = fs.path "//ant.resources/depiction/shadowmap_quad.material",
-			}}
-		},
+		material = util.assign_material(materialpath, properties),
 		can_render = true,
-		main_view = true,
+		[view_tag] = true,
 		name = name or "quad",
 	}
 
@@ -272,18 +262,23 @@ function util.create_shadow_quad_entity(world, rect, name)
 	return eid
 end
 
-function util.create_quad_entity(world, texture_tbl, view_tag, name)
+function util.create_shadow_quad_entity(world, rect, name)
+	return util.create_quad_entity(world, rect, 
+		fs.path "//ant.resources/depiction/shadowmap_quad.material", nil, name)
+end
+
+function util.create_texture_quad_entity(world, texture_tbl, view_tag, name)
     local quadid = world:create_entity{
         transform = mu.identity_transform(),
         can_render = true,
         mesh = {},
-        material = util.assign_material(fs.path "//ant.resources/materials/texture.material"),
-        name = name,
+        material = util.assign_material(
+			fs.path "//ant.resources/materials/texture.material", 
+			{textures = texture_tbl,}),
+		name = name,
+		[view_tag] = true,
     }
     local quad = world[quadid]
-    if view_tag then world:add_component(quadid, view_tag, true) end
-    util.change_textures(quad.material.content[1], texture_tbl)
-
 	local vb = {
 		"fffff",
 		-3,  3, 0, 0, 0,

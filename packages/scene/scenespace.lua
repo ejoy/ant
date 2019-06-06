@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "ant.event"
+
 local su = require "util"
 
 local mathpkg = import_package "ant.math"

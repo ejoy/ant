@@ -4,11 +4,11 @@ local flags         = imgui.flags
 local windows       = imgui.windows
 local util          = imgui.util
 local cursor        = imgui.cursor
-local GuiCanvas     = import_package "ant.imgui".gui_canvas
-local GuiScene      = class("GuiScene",GuiCanvas)
+local GuiCanvas     = import_package "ant.imgui".editor.gui_canvas
 local scene         = import_package "ant.scene".util
 local ru            = import_package "ant.render".util
 
+local GuiScene = GuiCanvas.derive("GuiScene")
 GuiScene.GuiName = "GuiScene"
 
 function GuiScene:_init()

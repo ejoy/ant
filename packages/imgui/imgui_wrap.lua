@@ -1,8 +1,9 @@
 local fs = require "filesystem"
 local bgfx = require "bgfx"
-local ENABLE_LUA_WRAP = true --main switch
-local ENABLE_LUA_TRACE = false
-local ENABLE_CHECK_PAIR = true
+local EnableLuaWrap = true --main switch
+local EnableLuaTrace = false
+local EnableCheckPair = true
+local EnabelFlagsWrap = true
 
 --print error when tryint to index a unexist key
 local function asset_index(tbl,path)
@@ -27,6 +28,21 @@ local function wrap_table(tbl,path)
         end
     end
     return result
+end
+
+--make flags.flagA.KeyA <=> flags.flagA({KeyA})
+local function wrap_flags(flags_c,flags)
+    for fname,_ in pairs(flags_c) do
+        local fun = flags[fname]
+        local mt = {}
+        mt.__call = function(self,arr)
+            return fun(arr)
+        end
+        mt.__index = function(self,k)
+            return fun({k})
+        end
+        flags[fname] = setmetatable({},mt)
+    end
 end
 
 local imgui_c = require "imgui"
@@ -78,17 +94,21 @@ end
 
 function imgui_lua.widget.Image(...)
     local args = {...}
-    args[1] = path2tex_handle(args[1])
+    if type(args[1]) == "string" then
+        args[1] = path2tex_handle(args[1])
+    end
     return widget_c.Image(table.unpack(args))
 end
 
 function imgui_lua.widget.ImageButton(...)
     local args = {...}
-    args[1] = path2tex_handle(args[1])
+    if type(args[1]) == "string" then
+        args[1] = path2tex_handle(args[1])
+    end
     return widget_c.ImageButton(table.unpack(args))
 end
 
-if ENABLE_LUA_TRACE then
+if EnableLuaTrace then
     trace_call(imgui_c,imgui_lua,"imgui")
     trace_call(widget_c,imgui_lua.widget,"imgui.widget")
     trace_call(flags_c,imgui_lua.flags,"imgui.flags")
@@ -97,13 +117,17 @@ if ENABLE_LUA_TRACE then
     trace_call(cursor_c,imgui_lua.cursor,"imgui.cursor")
 end
 
-if ENABLE_CHECK_PAIR then
+if EnabelFlagsWrap then
+    wrap_flags(flags_c,imgui_lua.flags)
+end
+
+if EnableCheckPair then
     local check_pairs = require "imgui_check_pairs"
     check_pairs(imgui_lua)
 end
 
 
-if ENABLE_LUA_WRAP then
+if EnableLuaWrap then
     return imgui_lua
 else
     return imgui_c

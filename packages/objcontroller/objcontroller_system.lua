@@ -1,5 +1,7 @@
 local ecs = ...
 
+ecs.import "ant.inputmgr"
+
 local oc_sys = ecs.system "objcontroller_system"
 oc_sys.singleton "message"
 oc_sys.depend "message_system"

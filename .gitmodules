@@ -22,9 +22,6 @@
 [submodule "3rd/glm"]
 	path = 3rd/glm
 	url = https://github.com/g-truc/glm.git
-[submodule "3rd/lua-cjson"]
-	path = 3rd/lua-cjson
-	url = https://github.com/cloudwu/lua-cjson.git
 [submodule "3rd/bullet3"]
 	path = 3rd/bullet3
 	url = https://github.com/bulletphysics/bullet3.git

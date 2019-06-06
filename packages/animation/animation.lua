@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local asset = import_package "ant.asset"
+local asset = import_package "ant.asset".mgr
 local timer = import_package "ant.timer"
 local animodule = require "hierarchy.animation"
 

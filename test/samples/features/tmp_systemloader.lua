@@ -39,6 +39,7 @@ init_loader.dependby 'render_system'
 init_loader.dependby 'primitive_filter_system'
 init_loader.dependby 'camera_controller'
 init_loader.dependby 'skinning_system'
+init_loader.dependby 'viewport_detect_system'
 
 local function create_animation_test()
     local meshdir = fs.path 'meshes'
@@ -114,7 +115,8 @@ local function create_animation_test()
 end
 
 function init_loader:init()
-	renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
+    renderutil.create_main_queue(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
+	-- renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
     do
         lu.create_directional_light_entity(world, 'directional_light')
         lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})

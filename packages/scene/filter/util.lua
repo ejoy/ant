@@ -71,9 +71,9 @@ function util.load_lighting_properties(world, filter)
 	add_directional_light_properties(world, lighting_properties)
 	add_ambient_light_propertices(world, lighting_properties)
 
-	local camera_entity = world:first_entity("main_queue")
-	if camera_entity then
-		lighting_properties["u_eyepos"] = {name = "Eye Position", type="v4", value=camera_entity.camera.eyepos}
+	local mq = world:first_entity "main_queue"
+	if mq then
+		lighting_properties["u_eyepos"] = {name = "Eye Position", type="v4", value=mq.camera.eyepos}
 	end
 end
 
@@ -103,6 +103,21 @@ function util.load_shadow_properties(world, filter)
 				ms:ref "matrix" (vp)
 			}
 		}
+	end
+end
+
+function util.load_postprocess_properties(world, filter)
+	local mq = world:first_entity("main_queue")
+	if mq then
+		local postprocess = filter.render_properties.postprocess
+		local fb = mq.render_target.frame_buffer
+		if fb then
+			local rendertex = fb.render_buffers[1].handle
+			postprocess.textures["s_mianview"] = {
+				name = "Main view render texture", type = "texture",
+				stage = 0, handle = rendertex,
+			}
+		end
 	end
 end
 

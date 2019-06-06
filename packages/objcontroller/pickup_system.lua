@@ -3,6 +3,7 @@ local ecs = ...
 local world = ecs.world
 
 ecs.import "ant.inputmgr"
+ecs.import "ant.scene"
 
 local math = import_package "ant.math"
 local point2d = math.point2d

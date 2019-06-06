@@ -24,25 +24,24 @@ model_review_system.depend "primitive_filter_system"
 model_review_system.depend "render_system"
 model_review_system.depend "viewport_detect_system"
 
-local lu = import_package "ant.render" .light
-local cu = import_package "ant.render" .components
+local lu = renderpkg.light
+local cu = renderpkg.components
+local viedidmgr = renderpkg.viewidmgr
 local fs = require "filesystem"
-
-local function to_radian(angle)
-	return (math.pi / 180) * angle
-end
 
 local function create_light()
 	local leid = lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2)
 	local lentity = world[leid]
 
-	ms(lentity.rotation, {to_radian(123.4), to_radian(-34.22), to_radian(-28.2)}, "=")
+	ms(lentity.rotation, {math.rad(123.4), math.rad(-34.22), math.rad(-28.2)}, "=")
 
 	lu.create_ambient_light_entity(world, "ambient light", 'color', {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end
 
 function model_review_system:init()
-	renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
+	local fbsize = world.args.fb_size
+	renderutil.create_main_queue(world, fbsize, ms({1, 1, -1}, "inT"), {5, 5, -5})
+	renderutil.create_blit_queue(world, {x=0, y=0, w=fbsize.w, h=fbsize.h})
 	create_light()
 	cu.create_grid_entity(world, "grid")
 	world:create_entity {
@@ -58,7 +57,7 @@ function model_review_system:init()
 				}
 			}
 		},
-		main_view = true,		
+		main_view = true,
 	}
 
 	world:create_entity {

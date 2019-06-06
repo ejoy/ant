@@ -281,7 +281,7 @@ function asset_view:_on_canvas_map()
                 type = "texture",
             }
         }
-        self.texture_id = component_util.create_quad_entity(self.world, texture_tbl, "asset_viewtag_2d")
+        self.texture_id = component_util.create_texture_quad_entity(self.world, texture_tbl, "asset_viewtag_2d")
 
         -----create empty camera
         local camera_eid_empty = self.world:create_entity {

@@ -67,6 +67,7 @@ local pairs_map_widget = {
     {ReturnType.WhenReturnTrue,"BeginListBox","BeginListBoxN","EndListBox",}, --type1
     {ReturnType.NoReturn,"BeginGroup","EndGroup",}, --type 0
     {ReturnType.WhenReturnTrue,"BeginMenuBar","EndMenuBar"}, --type1
+    {ReturnType.WhenReturnTrue,"TreeNode","TreePop"}, --type1
 
 }
 

@@ -3,7 +3,8 @@ package.path = table.concat({
     "packages/?/?.lua",
 }, ";")
 
-function log()
+log = {}
+function log.info()
     return function(fmt, ...)
         print(fmt:format(...))
     end

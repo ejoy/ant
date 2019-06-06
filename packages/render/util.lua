@@ -1,9 +1,12 @@
 -- luacheck: globals log
-local log = log and log(...) or print
+local log = log and log.info(...) or print
 
 local bgfx 		= require "bgfx"
 local viewidmgr = require "viewid_mgr"
 local gltfutil = import_package "ant.glTF".util
+local default_comp = require "components.default"
+local computil = require "components.util"
+local fs = require "filesystem"
 
 local util = {}
 util.__index = util
@@ -31,8 +34,14 @@ local function update_properties(shader, properties, render_properties)
 		end
 
 		local p = find_property(name, properties)
-		p = p or find_property(name, render_properties.lighting)
-		p = p or find_property(name, render_properties.shadow)
+		if p == nil then
+			for _, v in pairs(render_properties) do
+				p = find_property(name, v)
+				if p then
+					break
+				end
+			end
+		end
 
 		if p then
 			assert(property_types[p.type] == u.type)
@@ -195,41 +204,50 @@ function util.insert_primitive(eid, prim, meshscene, material, worldmat, filter)
 	r.using_glb = true
 end
 
-function util.create_render_queue_entity(world, view_rect, viewdir, eyepos, view_tag, viewid)
-	local x, y = view_rect.x or 0, view_rect.y or 0
-	local w, h = view_rect.w, view_rect.h
+function util.create_render_queue_entity(world, view_rect, viewdir, eyepos, view_tag, viewid)	
 	return world:create_entity {
-		camera = {
-			type = "",
-			eyepos = eyepos,
-			viewdir = viewdir,
-			updir = {0, 1, 0, 0},
-			frustum = {
-				type = "mat",
-				n = 0.1, f = 100000,
-				fov = 60, aspect = w / h,
-			},
-		},
+		camera = default_comp.camera(eyepos, viewdir, 
+				default_comp.frustum(view_rect.w, view_rect.h)),
 		viewid = viewid or viewidmgr.get(view_tag),
 		render_target = {
-			viewport = {
-				clear_state = {
-					color = 0x303030ff,
-					depth = 1,
-					stencil = 0,
-					clear = "all",
-				},
-				rect = {
-					x = x, y = y,
-					w = w, h = h,
-				},
-			},
+			viewport = default_comp.viewport(view_rect),
 		},
 		primitive_filter = {
 			view_tag = view_tag,
 			filter_tag = "can_render",
 		},
 		main_queue = view_tag == "main_view" and true or nil,
+		visible = true,
+	}	
+end
+
+function util.create_main_queue(world, view_rect, viewdir, eyepos)
+	local fb_renderbuffer_flag = util.generate_sampler_flag {
+		RT="RT_ON",
+		MIN="LINEAR",
+		MAG="LINEAR",
+		U="CLAMP",
+		V="CLAMP"
+	}
+
+	return world:create_entity {
+		camera = default_comp.camera(eyepos, viewdir, 
+				default_comp.frustum(view_rect.w, view_rect.h)),
+		viewid = viewidmgr.get "main_view",
+		render_target = {
+			viewport = default_comp.viewport(view_rect),
+			frame_buffer = {
+				render_buffers = {
+					default_comp.render_buffer(view_rect.w, view_rect.h, "RGBA8", fb_renderbuffer_flag),
+					default_comp.render_buffer(view_rect.w, view_rect.h, "D24S8", fb_renderbuffer_flag),
+				},
+			},
+		},
+		primitive_filter = {
+			view_tag = "main_view",
+			filter_tag = "can_render",
+		},
+		main_queue = true,
 		visible = true,
 	}	
 end
@@ -393,12 +411,38 @@ function util.create_general_render_queue(world,view_rect,view_tag,viewid)
 	return entity_id
 end
 
-function util.identify_transform()
-	return {
-		s = {1, 1, 1, 0},
-		r = {0, 0, 0, 0},
-		t = {0, 0, 0, 1},
+local blitviewid = viewidmgr.generate "blit"
+
+function util.get_main_view_rendertexture(world)
+	local mq = world:first_entity "main_queue"
+	return mq.render_target.frame_buffer.render_buffers[1].handle	
+end
+
+function util.create_blit_queue(world, viewrect)
+	util.create_render_queue_entity(world, viewrect, nil, nil, "blit_view", blitviewid)
+	local fullscreen_texhandle = util.get_main_view_rendertexture(world)
+
+	local fseid = computil.create_quad_entity(world, viewrect,
+		fs.path "//ant.resources/depiction/materials/fullscreen.material", nil, "full_quad", "blit_view")
+	local fsentity = world[fseid]
+	fsentity.material.content[1].properties = {
+		textures={
+			s_texColor={handle=fullscreen_texhandle,type="texture",stage=0}
+		}
 	}
+end
+
+function util.create_renderbuffer(desc)
+	return bgfx.create_texture2d(desc.w, desc.h, false, desc.layers, desc.format, desc.flags)
+end
+
+function util.create_framebuffer(renderbuffers, manager_buffer)
+	local handles = {}
+	for _, rb in ipairs(renderbuffers) do
+		handles[#handles+1] = rb.handle
+	end
+	assert(#handles > 0)
+	return bgfx.create_frame_buffer(handles, manager_buffer or true)
 end
 
 function util.modify_view_rect(world,rect)

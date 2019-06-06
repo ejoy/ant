@@ -15,8 +15,8 @@
 .vs
 .repo
 
-/clibs/iup/o
 /clibs/shadercrelease
+/clibs/shadercdebug
 /log
 
 /projects/msvc/vs_bin
