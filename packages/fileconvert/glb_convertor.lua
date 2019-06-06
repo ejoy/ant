@@ -74,9 +74,7 @@ local attribname_mapper = {
 	NORMAL = 1,
 	TANGENT = 2,
 	BITANGENT = 3,
-	BINORMAL = 3,
 
-	COLOR = 4,
 	COLOR_0 = 4,
 	COLOR_1 = 5,
 	COLOR_2 = 6,

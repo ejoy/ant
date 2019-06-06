@@ -83,11 +83,11 @@ attrib_name attribname_mapper[NUM_ATTIRBUTE_NAME] = {
 uint32_t
 find_attrib_name(const std::string &elem) {
 	const char et = elem[0];
-	const char channel = elem[2];
+	const uint8_t channel = elem[2] - '0';
 	for (uint32_t attribname = 0; attribname < NUM_ATTIRBUTE_NAME; ++attribname) {
 		const auto& a = attribname_mapper[attribname];
 
-		if (a.sname[0] == et && a.channel == (uint32_t)channel) {
+		if (a.sname[0] == et && a.channel == channel) {
 			return attribname;
 		}
 	}
@@ -165,9 +165,6 @@ calc_tangents(attrib_buffers &abuffers, uint32_t num_vertices, const data_buffer
 	const auto tangentname = find_attrib_name_by_fullname("TANGENT");
 	const auto bitangentname = find_attrib_name_by_fullname("BITANGENT");
 
-	abuffers.insert(std::make_pair(tangentname, std::move(tangents)));
-	abuffers.insert(std::make_pair(bitangentname, std::move(bitangents)));
-
 	for (uint32_t iv = 0; iv < num_vertices; ++iv) {
 		glm::vec4* t = (glm::vec4*)tangents.data + iv;
 		glm::vec3* b = (glm::vec3*)bitangents.data + iv;
@@ -185,5 +182,8 @@ calc_tangents(attrib_buffers &abuffers, uint32_t num_vertices, const data_buffer
 		*t = glm::vec4(glm::normalize(tt), sign);
 		*b = glm::cross(*n, tt);
 	}
+
+	abuffers.insert(std::make_pair(tangentname, std::move(tangents)));
+	abuffers.insert(std::make_pair(bitangentname, std::move(bitangents)));
 }
 

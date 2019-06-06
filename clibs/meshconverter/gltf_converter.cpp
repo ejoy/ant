@@ -548,7 +548,7 @@ create_bufferview(uint32_t len, uint32_t stride, uint32_t offset) {
 static void
 create_tangent_bitangent_primitive_info(primitive &prim, attrib_buffers &abuffers, uint32_t num_vertices) {
 	std::tuple<const char*, const char*, size_t>	attribs[] = {
-		{"t40", "VEC4", sizeof(glm::vec4) },
+		{"T40", "VEC4", sizeof(glm::vec4) },
 		{"b30", "VEC3", sizeof(glm::vec3) },
 	};
 	
