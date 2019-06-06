@@ -27,11 +27,9 @@ function try(fun,...)
     return ret
 end
 
-
 local function get_time()
     return os.clock()
 end
-
 
 function GuiCanvas:_init()
     GuiBase._init(self)
@@ -42,7 +40,6 @@ function GuiCanvas:_init()
     self.time_count = 0
     self.cur_frame_time = 0.0
     self:set_fps(DEFAULT_FPS)
-    hub.subscribe("framebuffer_change",self.on_framebuffer_change,self)
 end
 
 function GuiCanvas:set_fps(fps)
@@ -51,17 +48,11 @@ function GuiCanvas:set_fps(fps)
     self.frame_time = 1/fps
 end
 
-function GuiCanvas:on_framebuffer_change()
-    self.world_tex =  ru.get_main_view_rendertexture(self.world)
-    --print("self.world_tex",self.world_tex)
-end
-
 function GuiCanvas:bind_world( world,world_update,msgqueue )
     self.world = world
     self.world_update = world_update
     local rect = {x=0,y=0,w=self.rect.w,h=self.rect.h}
     map_imgui(msgqueue,self)
-    self.world_tex =  ru.get_main_view_rendertexture(self.world)
 
     self.next_frame_time = 0
     self.time_count = 0
@@ -90,9 +81,11 @@ function GuiCanvas:on_update(delta)
         end
         self.rect = {x=x,y=y,w=w,h=h}
     end
-    if self.world_tex then
-        --print(".",self.world_tex)
-        widget.Image(self.world_tex,w,h)
+    if self.world then
+        local world_tex =  ru.get_main_view_rendertexture(self.world)
+        if world_tex then
+            widget.ImageButton(world_tex,w,h,{frame_padding=0,bg_col={0,0,0,1}})
+        end
     end
     local focus = windows.IsWindowFocused(focus_flag)
     if focus and IO.WantCaptureMouse then
