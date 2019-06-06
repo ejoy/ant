@@ -9,6 +9,7 @@ local util = require "util"
 local bgfx = require "bgfx"
 
 local vp_detect = ecs.system "viewport_detect_system"
+vp_detect.dependby "primitive_filter_system"
 vp_detect.singleton "message"
 
 local function resize_renderbuffer(w, h, rb)
