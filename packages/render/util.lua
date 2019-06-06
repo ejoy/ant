@@ -420,16 +420,8 @@ end
 
 function util.create_blit_queue(world, viewrect)
 	util.create_render_queue_entity(world, viewrect, nil, nil, "blit_view", blitviewid)
-	local fullscreen_texhandle = util.get_main_view_rendertexture(world)
-
-	local fseid = computil.create_quad_entity(world, viewrect,
-		fs.path "//ant.resources/depiction/materials/fullscreen.material", nil, "full_quad", "blit_view")
-	local fsentity = world[fseid]
-	fsentity.material.content[1].properties = {
-		textures={
-			s_texColor={handle=fullscreen_texhandle,type="texture",stage=0}
-		}
-	}
+	computil.create_quad_entity(world, viewrect,
+	fs.path "//ant.resources/depiction/materials/fullscreen.material", nil, "full_quad", "blit_view")
 end
 
 function util.create_renderbuffer(desc)

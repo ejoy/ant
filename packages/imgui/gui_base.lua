@@ -14,6 +14,7 @@ function GuiBase:_init()
     self.title_id = string.format("this_is_title###%s",self.GuiName)
     -- self.win_flags = flags.Window { "MenuBar" }
     self._is_opened = true
+    -- self.default_size = {200,100}
 end
 
 function GuiBase:on_open_click()
@@ -43,6 +44,10 @@ end
 --call by gui_mgr each frame
 function GuiBase:on_gui(delta)
     if self._is_opened then
+        local default_size = self.default_size
+        if self.default_size then
+            windows.SetNextWindowSize(default_size[1],default_size[2],"FirstUseEver")
+        end
         if self.before_update then self:before_update() end
         local fold, opening = windows.Begin(self.title_id, self.win_flags or nil)
         if fold then

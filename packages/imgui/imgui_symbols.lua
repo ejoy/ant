@@ -124,7 +124,7 @@ function windows.SetScrollY() end
 function windows.SetScrollHereY() end
 function windows.SetScrollFromPosY() end
 function windows.SetNextWindowPos() end
-function windows.SetNextWindowSize() end
+function windows.SetNextWindowSize(x,y,ImGuiCond) end
 function windows.SetNextWindowSizeConstraints() end
 function windows.SetNextWindowContentSize() end
 function windows.SetNextWindowCollapsed() end
