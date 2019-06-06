@@ -14,6 +14,13 @@ ecs.component_alias("view_tag", "string")
 
 ecs.component_alias("viewid", "int", 0)
 
+local function delete_handle(self)
+	if self.handle then
+		bgfx.destroy(self.handle)
+		self.handle = nil
+	end
+end
+
 local renderbuffer = ecs.component "render_buffer"
 	.format "string"
 	.flags "string"
@@ -27,6 +34,8 @@ function renderbuffer:init()
 	end
 	return self
 end
+
+renderbuffer.delete = delete_handle
 
 local whandle = ecs.component "wnd_handle"
 	.name "string" ("")
@@ -50,6 +59,8 @@ function nfb:init()
 	return self
 end
 
+nfb.delete = delete_handle
+
 local fb = ecs.component "frame_buffer" 
 	.render_buffers "render_buffer[]"
 	["opt"].manager_buffer "boolean" (true)
@@ -59,6 +70,12 @@ function fb:init()
 	assert(self.handle == nil)
 	self.handle = ru.create_framebuffer(self.render_buffers, self.manager_buffer)
 	return self
+end
+
+function fb:delete()
+	if not self.manager_buffer then
+		delete_handle(self)
+	end
 end
 
 local rt = ecs.component "render_target" {depend = "viewid"}
