@@ -6,6 +6,7 @@ local util      = imgui.util
 local cursor    = imgui.cursor
 local enum      = imgui.enum
 local IO      = imgui.IO
+local hub       = import_package "ant.editor".hub
 
 local GuiBase = require "gui_base"
 local gui_input = require "gui_input"
@@ -30,15 +31,19 @@ function GuiCanvas:_init()
     self.win_flags = flags.Window { "NoCollapse","NoClosed","NoScrollbar"}
     self.rect = {x=0,y=0,w=600,h=400}
     self.title_id = "Scene###Scene"
+    self.vp_dirty = false
+    hub.subscribe("framebuffer_change",self.on_framebuffer_change,self)
+end
+
+function GuiCanvas:on_framebuffer_change()
+    self.world_tex =  ru.get_main_view_rendertexture(self.world)
 end
 
 function GuiCanvas:bind_world( world,msgqueue )
     self.world = world
     local rect = {x=0,y=0,w=self.rect.w,h=self.rect.h}
-    -- ru.modify_view_rect(self.world,rect)
     map_imgui(msgqueue,self)
     self.world_tex =  ru.get_main_view_rendertexture(self.world)
-    print_a("world_tex",self.world_tex)
 end
 
 function GuiCanvas:on_close_click()
@@ -55,16 +60,9 @@ function GuiCanvas:on_update()
     local w,h = windows.GetContentRegionAvail()
     local x,y = cursor.GetCursorScreenPos()
     local r = self.rect
-    self.size_change = false
     if w~=r.w or h~=r.h or x~=r.x or y ~= r.y then
-        self.size_change = (w~=r.w) or (h~=r.h)
+        self.vp_dirty = self.vp_dirty or (w~=r.w) or (h~=r.h)
         self.rect = {x=x,y=y,w=w,h=h}
-        -- print_a(self.rect)
-        -- if self.world then
-        --     local rect = {x=0,y=0,w=self.rect.w,h=self.rect.h}
-        --     print_a(self.rect)
-        --     -- ru.modify_view_rect(self.world,rect)
-        -- end
     end
     if self.world_tex then
         widget.Image(self.world_tex,w,h)
@@ -75,6 +73,8 @@ function GuiCanvas:on_update()
         self:on_dispatch_msg()
     end
 end
+
+
 
 function GuiCanvas:on_dispatch_msg()
     --todo:split mouse and keyboard
@@ -107,9 +107,10 @@ function GuiCanvas:on_dispatch_msg()
             keypress_cb(self,record[1],record[2],in_key,in_mouse)
         end
     end
-    if self.resize_cb and self.size_change then
+    local mouse_pressed =  gui_input.is_mouse_pressed(0)
+    if not mouse_pressed and self.resize_cb and self.vp_dirty then
+        self.vp_dirty = false
         self.resize_cb(self,rect.w,rect.h)
-        self.world_tex =  ru.get_main_view_rendertexture(self.world)
     end
 end
 function GuiCanvas:after_update()

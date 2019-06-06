@@ -51,5 +51,11 @@ function gui_input.size(w,h,t)
     gui_input.screen_size["type"] = t
 end
 
+-----------------------------------------------------
+--0:Left 1:Right 2:Middle 3:Button4 4:Button5
+function gui_input.is_mouse_pressed(what)
+    return gui_input.mouse[what]
+end
+-----------------------------------------------------
 
 return gui_input
