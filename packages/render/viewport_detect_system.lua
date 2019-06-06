@@ -53,6 +53,10 @@ function vp_detect:init()
 		mq.camera.frustum.aspect = w / h
 		
 		resize_framebuffer(w, h, mq.render_target.frame_buffer, mq.viewid)
+		local hub = world.args.hub
+		if hub then
+			hub.publish("framebuffer_change")
+		end
     end
 	
 	local fb_size = world.args.fb_size
