@@ -15,24 +15,35 @@ function GuiScene:_init()
     GuiCanvas._init(self)
 end
 
-function GuiScene:_get_editbox()
-    if self.editbox == nil then
-        local editbox = {}
-        editbox.text = "test/samples/features/package.lua"
-        self.editbox = editbox
+function GuiScene:_get_editpath()
+    if self.editpath == nil then
+        local editpath = {}
+        editpath.text = "test/samples/features/package.lua"
+        self.editpath = editpath
     end
-    return self.editbox
+    return self.editpath
 end
+
+function GuiScene:_get_editfps()
+    if self.editfps == nil then
+        self.editfps = {
+            30,
+            step = 1,
+        }
+    end
+    return self.editfps
+end
+
 --main menu
 function GuiScene:get_mainmenu()
     local parent_path = {"TestScene"}
-    return {{parent_path,self._scene_menu}}
+    return {{parent_path,self._scene_menu},}
 end
 
 
 
 function  GuiScene:_scene_menu()
-    local box = self:_get_editbox()
+    local box = self:_get_editpath()
     if  widget.Button("OpenScene") then
         local scene_control = require "scene_control"
         print_a(box)
@@ -40,7 +51,14 @@ function  GuiScene:_scene_menu()
     end
     cursor.SameLine()
     widget.InputText("", box)
-
+    cursor.Separator()
+    local fps = self:_get_editfps()
+    if widget.InputInt("FPS",fps) then
+        if fps[1]> 0 then
+            self:set_fps(fps[1])
+        end
+    end
 end
+
 
 return GuiScene
