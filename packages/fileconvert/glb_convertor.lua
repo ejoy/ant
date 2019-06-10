@@ -265,18 +265,6 @@ return function (srcname, dstname, cfg)
 	local scenes, nodes, meshes = scene.scenes, scene.nodes, scene.meshes
 
 	local scenerootnode = scenes[scene.scene+1].nodes
-	
-	if cfg.flags.reset_root_pos then
-		reset_root_pos(scene)
-	end
-
-	if cfg.lod then
-		filtermesh.spiltlod(scene, cfg.lod)
-	end
-
-	if cfg.flags.extract_colider_mesh then
-		filtermesh.extract_colider_mesh(scene)
-	end
 
 	local new_bindata_table = {}
 	local bindata_offset = 0
@@ -357,6 +345,18 @@ return function (srcname, dstname, cfg)
 			generator = "ant(" .. scene.asset.generator .. ")",
 		}
 	}
+
+	if cfg.flags.reset_root_pos then
+		reset_root_pos(newscene)
+	end
+
+	if cfg.lod then
+		filtermesh.spiltlod(newscene, cfg.lod)
+	end
+
+	if cfg.flags.extract_colider_mesh then
+		filtermesh.extract_colider_mesh(newscene)
+	end
 
 	glbloader.encode(dstname, {version=glbdata.version, info=newscene, bin=new_bindata})
 end

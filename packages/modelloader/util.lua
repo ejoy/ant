@@ -73,6 +73,9 @@ end
 local function create_index_buffer(accessor, bufferviews, bindata, buffers)
 	local bvidx = accessor.bufferView+1
 	local bv = bufferviews[bvidx]
+	if bv.handle then
+		return
+	end
 
 	if bindata then
 		local start_offset = bv.byteOffset + 1
@@ -114,7 +117,8 @@ local function create_vertex_buffer(bv, declhandle, bindata, buffers)
 	bv.byteOffset = 0
 end
 
-function util.init_scene(scene, bindata)
+function util.init_scene(scene, sceneidx, bindata)
+	sceneidx = sceneidx or scene.scene
 	local nodes, meshes, accessors, bufferviews = 
 	scene.nodes, scene.meshes, scene.accessors, scene.bufferViews
 	local buffers = scene.buffers
@@ -132,7 +136,10 @@ function util.init_scene(scene, bindata)
 					local attribclass = classfiy_attri(prim.attributes, accessors)
 					local decls = create_decl(attribclass)
 					for bvidx, decl in pairs(decls)do
-						create_vertex_buffer(bufferviews[bvidx+1], decl.handle, bindata, buffers)
+						local bv = bufferviews[bvidx+1]
+						if bv.handle == nil then
+							create_vertex_buffer(bv, decl.handle, bindata, buffers)
+						end
 					end
 
 					local indices_accidx = prim.indices
@@ -144,7 +151,7 @@ function util.init_scene(scene, bindata)
 		end
 	end
 
-	create_buffers(scene.scenes[scene.scene+1].nodes)
+	create_buffers(scene.scenes[sceneidx+1].nodes)
 
 	return scene
 end
