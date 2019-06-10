@@ -1,21 +1,24 @@
-package.path = "./?.lua;libs/?.lua;libs/?/?.lua;packages/glTF/?.lua"
+package.path = "tools/fbx2gltf/?.lua;./?.lua;libs/?.lua;libs/?/?.lua;packages/glTF/?.lua"
 package.cpath = "projects/msvc/vs_bin/x64/Debug/?.dll"
 
 local fs = require "filesystem.local"
 local util = require "util"
+local glbloader = require "glb"
 
-local files = {}
+local files = {
+	fs.path "packages/resources/meshes/Factory_Antenna_Scifi_B.fbx"
+}
 
-for _, srcpath in ipairs {
-	fs.path "packages/resources.binary/meshes/base",
-} do
-	util.list_files(srcpath, ".fbx", {
-		[".git"] = true, 
-		[".repo"] = true, 
-		[".vscode"] = true,
-		[".vs"] = true
-	}, files)
-end
+-- for _, srcpath in ipairs {
+-- 	fs.path "packages/resources/meshes",
+-- } do
+-- 	util.list_files(srcpath, ".fbx", {
+-- 		[".git"] = true, 
+-- 		[".repo"] = true, 
+-- 		[".vscode"] = true,
+-- 		[".vs"] = true
+-- 	}, files)
+-- end
 
 local subprocess = require "subprocess"
 
@@ -34,14 +37,7 @@ local function convert(filename)
 	return subprocess.spawn(commands)	
 end
 
-local stringify = require "packages/glTF/stringify"
-
-local function rawtable(filepath)
-	local env = {}
-	local r = assert(loadfile(filepath, "t", env))
-	r()
-	return env
-end
+local stringify = require "stringify"
 
 local defaultlk_content = {
 	config = {
@@ -65,7 +61,7 @@ local defaultlk_content = {
 
 local function get_glb_lk_content(srclk)	
 	if fs.exists(fs.path(srclk)) then
-		local c = rawtable(srclk)
+		local c = util.rawtable(srclk)
 		c.sourcetype = "glb"
 		return c
 	end
@@ -83,27 +79,23 @@ local function generate_lkfile(filename)
 	glblk:close()
 end
 
-local function reset_PVPScene_object_root_pos(glbfile)
-	local function is_PVPScene_obj()
-		local ff = fs.path(glbfile)
-		while ff:string() ~= "" do
-			local tt = ff:filename()
-			if tt:string() == "PVPScene" then
-				return true
-			end
-
-			ff = ff:parent_path()
+local function is_PVPScene_obj(glbfile)
+	local ff = fs.path(glbfile)
+	while ff:string() ~= "" do
+		local tt = ff:filename()
+		if tt:string() == "PVPScene" then
+			return true
 		end
-	end
 
-	if not is_PVPScene_obj() then
+		ff = ff:parent_path()
+	end
+end
+
+local function reset_PVPScene_object_root_pos(glbfile, scene)
+	if not is_PVPScene_obj(glbfile) then
 		return
 	end
 
-	
-	local glbloader = require "glb"
-	local glbdata = glbloader.decode(glbfile:string())
-	local scene = glbdata.info
 	local nodes = scene.nodes
 	local filename = glbfile:filename()
 	filename:replace_extension("")
@@ -136,8 +128,6 @@ local function reset_PVPScene_object_root_pos(glbfile)
 	if t then
 		t[1], t[2], t[3] = 0, 0, 0
 	end
-
-	glbloader.encode(glbfile:string(), glbdata)
 end
 
 local progs = {}
@@ -151,6 +141,14 @@ for _, prog in ipairs(progs) do
 end
 
 for _, f in ipairs(files) do
-	reset_PVPScene_object_root_pos(fs.path(f):replace_extension(".glb"))
+	local filename = f:string()
+	local glbdata = glbloader.decode(filename)
+	local scene = glbdata.info
+
+	if is_PVPScene_obj(f) then
+		reset_PVPScene_object_root_pos(fs.path(f):replace_extension(".glb"), scene)
+	end
+
+	glbloader.encode(filename, glbdata)
 end
 

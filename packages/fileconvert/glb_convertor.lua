@@ -2,6 +2,7 @@ local glTF = import_package "ant.glTF"
 local glbloader = glTF.glb
 
 local gltf_converter = require "meshconverter.gltf"
+local filtermesh = require "filter_mesh"
 
 local accessor_types = {
 	SCALAR = 0,
@@ -241,6 +242,23 @@ local function deserialize_primitive(seri_data)
 	return prim, accessors, bufferviews
 end
 
+local function reset_root_pos(scene)
+	local nodes = scene.nodes
+	local scenerootnodes = scene.scenes[scene.scene+1].nodes
+	for _, nodeidx in ipairs(scenerootnodes) do
+		local node = nodes[nodeidx+1]
+		local matrix = node.matrix
+		if matrix then
+			matrix[15], matrix[14], matrix[13] = 0, 0, 0
+		end
+
+		local tran = node.translation
+		if tran then
+			tran[1], tran[2], tran[3] = 0, 0, 0
+		end
+	end
+end
+
 return function (srcname, dstname, cfg)
 	local glbdata = glbloader.decode(srcname)
 	local scene = glbdata.info
@@ -249,18 +267,15 @@ return function (srcname, dstname, cfg)
 	local scenerootnode = scenes[scene.scene+1].nodes
 	
 	if cfg.flags.reset_root_pos then
-		for _, nodeidx in ipairs(scenerootnode) do
-			local node = nodes[nodeidx+1]
-			local matrix = node.matrix
-			if matrix then
-				matrix[15], matrix[14], matrix[13] = 0, 0, 0
-			end
+		reset_root_pos(scene)
+	end
 
-			local tran = node.translation
-			if tran then
-				tran[1], tran[2], tran[3] = 0, 0, 0
-			end
-		end
+	if cfg.flags.split_lod_mesh then
+		filtermesh.spiltlod(scene)
+	end
+
+	if cfg.flags.extract_colider_mesh then
+		filtermesh.extract_colider_mesh(scene)
 	end
 
 	local new_bindata_table = {}
