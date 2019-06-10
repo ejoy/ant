@@ -270,8 +270,8 @@ return function (srcname, dstname, cfg)
 		reset_root_pos(scene)
 	end
 
-	if cfg.flags.split_lod_mesh then
-		filtermesh.spiltlod(scene)
+	if cfg.lod then
+		filtermesh.spiltlod(scene, cfg.lod)
 	end
 
 	if cfg.flags.extract_colider_mesh then
@@ -344,6 +344,7 @@ return function (srcname, dstname, cfg)
 	local newscene = {
 		scene = scene.scene,
 		scenes = scenes,
+		scenelods = scene.scenelods,
 		nodes = nodes,
 		meshes = meshes,
 		accessors = new_accessors,
