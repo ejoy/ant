@@ -75,6 +75,17 @@ function util.identity_transform()
 	return util.srt()
 end
 
+local function list_op(l, op)
+	local t = {}
+	for _, v in ipairs(l) do
+		t[#t+1] = op(v)
+	end
+	return t
+end
+
+function util.to_radian(angles) return list_op(angles, math.rad) end
+function util.to_angle(radians) return list_op(radians, math.deg) end
+
 util.XAXIS = ms:ref "vector" {1, 0, 0, 0}
 util.NXAXIS = ms:ref "vector" {-1, 0, 0, 0}
 util.YAXIS = ms:ref "vector" {0, 1, 0, 0}

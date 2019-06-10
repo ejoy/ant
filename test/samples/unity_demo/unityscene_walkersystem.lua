@@ -6,6 +6,7 @@ local Statics = require("statics")
 local fs = require 'filesystem'
 local math3d = import_package "ant.math"
 local ms = math3d.stack
+local mu = math3d.util
 
 ecs.import 'ant.basic_components'
 ecs.import 'ant.render'
@@ -28,8 +29,6 @@ local timer = import_package "ant.timer"
 
 local lu = renderpkg.light
  
-
-local helpTool = require "helptool"
 local unitySceneMaker = require "unitySceneMaker"
 
 local scene_walker = ecs.system 'scene_walker'
@@ -49,7 +48,7 @@ function scene_walker:init()
     renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 350, 5}, "main_view")
 
     do
-        local rotation = helpTool.to_radian({75,-75,0,0})
+        local rotation = mu.to_radian {75,-75,0,0}
         lu.create_directional_light_entity(world, 'directional_light',{1,1,1,0}, 1, rotation )
         lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     end
