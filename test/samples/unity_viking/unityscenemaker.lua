@@ -65,7 +65,7 @@ end
 local function get_matlist(material_desc)
     local l = {}
     for _, d in ipairs(material_desc) do
-        l[#l + 1] = {ref_path = fs.path(d)}
+        l[#l + 1] = {ref_path = d}
     end
     return l
     -- local num_mats = #material_desc
@@ -84,8 +84,8 @@ local function get_matlist(material_desc)
     -- return assert(load(data))()
 end
 
-local function create_entity(world, name, pos, rot, scl, mesh_desc, material_desc)
-    local mats = get_matlist(material_desc)
+local function create_entity(world, name, pos, rot, scl, meshpath, material_refpaths)
+    local mats = material_refpaths
     if #mats > 1 then
         print('check')
     end
@@ -108,7 +108,7 @@ local function create_entity(world, name, pos, rot, scl, mesh_desc, material_des
             -- }
         },
         mesh = {
-            ref_path = fs.path(mesh_desc)
+            ref_path = meshpath,
         },
         main_view = true
     }
@@ -211,8 +211,7 @@ local function makeEntityFromFbxMesh(world, scene, ent, lodFlag)
         return
     end
 
-    local mesh_desc = stripextension(strippath(mesh_path))
-    mesh_desc = '//unity_viking/' .. 'assets/mesh_desc/' .. mesh_desc .. '.mesh'
+    local meshpath = fs.path'//unity_viking/assets/mesh_desc/' / fs.path(mesh_path):filename():replace_extension('mesh')
 
     local numEntities = sceneInfo:getNumEntities()
 
@@ -234,31 +233,32 @@ local function makeEntityFromFbxMesh(world, scene, ent, lodFlag)
     -- material_path = stripextension( strippath(material_path) )
     -- material_desc = material_desc..material_path..".material"
 
-    local material_desc = {}
+	local material_refpaths = {}
+	local material_rootpath = fs.path '//unity_viking/assets/materials/'
+	local function add_material_refpath(material_filename)
+		local filepath = material_rootpath / fs.path(material_filename):filename():replace_extension('material')
+		table.insert(material_refpaths, {ref_path = filepath})
+	end
+
     -- multi materials
     if ent.NumMats ~= nil and ent.NumMats >= 1 then
-        for i = 1, ent.NumMats do
-            local desc = '//unity_viking/assets/materials/'
-            material_path = scene.Materials[ent.Mats[i]]
-            if string.find(material_path, 'unity_builtin_extra') then
-                material_path = default_mat
-            end
-            material_path = stripextension(strippath(material_path))
-            desc = desc .. material_path .. '.material'
-            table.insert(material_desc, desc)
+        for i = 1, ent.NumMats do            
+            local material_filename = scene.Materials[ent.Mats[i]]
+            if material_filename:match 'unity_builtin_extra' then
+                material_filename = default_mat
+			end
+			
+			add_material_refpath(material_filename)
         end
-    else
-        local desc = '//unity_viking/' .. 'assets/materials/'
-        material_path = stripextension(strippath(material_path))
-        desc = desc .. material_path .. '.material'
-        table.insert(material_desc, desc)
+	else
+		add_material_refpath(material_path)
     end
 
     if string.find(name, 'build_gate_01') then
         print('check ')
     end
 
-    create_entity(world, name, ent.iPos, ent.iRot, ent.iScl, mesh_desc, material_desc)
+    create_entity(world, name, ent.iPos, ent.iRot, ent.iScl, meshpath, material_refpaths)
 
     sceneInfo:countEntity()
     sceneInfo:countActiveEntity()
