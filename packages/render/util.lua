@@ -50,10 +50,13 @@ end
 function util.draw_primitive(vid, primgroup, mat, render_properties)
     bgfx.set_transform(mat)
 
-    local material = primgroup.material
-    bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
-    update_properties(material.shader, primgroup.properties, render_properties)
+	-- local material = primgroup.material[3]  or primgroup.material
+	-- local properties = primgroup.properties[3] or primgroup.properties
+    -- bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
+    -- update_properties(material.shader, properties, render_properties)
 
+	-- 保留兼容，最好按实验结果重构
+	local material = primgroup.material[i]  or primgroup.material
 	local prog = material.shader.prog
 	
 	local mg = assert(primgroup.mgroup)
@@ -76,6 +79,14 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 			bgfx.set_vertex_buffer(idx - 1, v)
 		end
 		for i=1, numprim do
+			-- 这部分后续需要优化，提供机制判断一个mesh 是否具备多个材质，分开处理
+			local material = primgroup.material[i]  or primgroup.material
+		    local properties = primgroup.properties[i] or primgroup.properties
+			bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
+			update_properties(material.shader, properties, render_properties)
+
+			local prog = material.shader.prog
+
 			local prim = prims[i]
 			if ib and prim.start_index and prim.num_indices then
 				bgfx.set_index_buffer(ib.handle, prim.start_index, prim.num_indices)
@@ -126,8 +137,47 @@ function util.insert_primitive(eid, meshhandle, materials, worldmat, filter,grou
 	if group_id ~= nil then 
 		local g = mgroups[ group_id ]
 		local mc = materials[ group_id ] or materials[1] 
+
+		-- this two variable trans to table parameters
 		local mat_info = mc.materialinfo  				-- maybe need materials[] for primitives[],futhur extend
 		local mat_properties = mc.properties 
+
+		-- 一个primitive 带 n 个materials ，需要把这些materials 传到render 
+		-- 这部分需要重写，合并到加载时候，不需要每次动态装配
+		-- 存在这使用一个子材质，两个拷贝的现象，这个流程数据结构相关，也需要优化
+		-- tested 
+		local num_primitives = #g.primitives 
+		if num_primitives > 1 and mat_info.ajust ~= 1 then 
+			local base = g.primitives[1].material_idx
+			-- for i=1,num_primitives do 
+			-- 	local idx = g.primitives[i].material_idx
+			-- 	if base > idx then 
+			-- 		base = idx 
+			-- 	end 
+			-- end  
+			--local base = g.primitives[1].material_idx
+			for i=1,num_primitives do 
+				local m_idx = g.primitives[i].material_idx
+				m_idx = m_idx - base + 1
+				local m_content = materials[m_idx] or materials[1]   -- some prim 
+				table.insert(mat_info,m_content.materialinfo)
+				--table.insert(mat_properties,m_content.properties)
+			end 
+			mat_info.ajust = 1
+		end 
+
+		if num_primitives > 1 and mat_properties.ajust ~= 1 then  
+			local base = g.primitives[1].material_idx
+			for i=1,num_primitives do 
+				local m_idx = g.primitives[i].material_idx
+				m_idx = m_idx - base + 1
+				local m_content = materials[m_idx] or materials[1]   -- some prim 
+				table.insert(mat_properties,m_content.properties)
+			end 
+			mat_properties.ajust = 1
+		end 
+
+		 
 
 		if mat_info.surface_type.transparency == "translucent" then
 			add_result(eid, g, mat_info, mat_properties, worldmat, results.translucent)
@@ -139,6 +189,8 @@ function util.insert_primitive(eid, meshhandle, materials, worldmat, filter,grou
 		for i=1, #mgroups do
 			local g = mgroups[i]
 			local mc = materials[i] or materials[1]
+
+
 			local mi = mc.materialinfo
 			
 			if mi.surface_type.transparency == "translucent" then
@@ -160,7 +212,7 @@ function util.create_render_queue_entity(world, viewsize, viewdir, eyepos, view_
 			updir = {0, 1, 0, 0},
 			frustum = {
 				type = "mat",
-				n = 0.1, f = 100000,
+				n = 0.1, f = 1000,
 				fov = 60, aspect = w / h,
 			},
 		},
