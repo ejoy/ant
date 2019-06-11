@@ -35,8 +35,8 @@ function testMat:read()
         f:close() 
         return load(content)()
     end 
-     local context = readfile("testActiveMat.lua")
-     self.curMat = CUR_MAT    
+     --local context = readfile("testActiveMat.lua")
+     self.curMat = 1 --CUR_MAT    
 end 
 function testMat:write()
     local writefile = function( fname, content)
@@ -64,20 +64,25 @@ function  get_mesh_group_id(mesh,name)
 end 
 
 local function get_matlist( material_desc )
-    local num_mats = #material_desc
+	local l = {}
+	for _, d in ipairs(material_desc) do
+		l[#l+1] = {ref_path = fs.path(d)}
+	end
+	return l
+    -- local num_mats = #material_desc
 
-    local data = "local fs = require 'filesystem'\n"
-    data = data.."return {\n"  
-    if num_mats>=1 then 
-        for i=1,num_mats do 
-          data = data.."{".."ref_path = fs.path("..'"'..material_desc[i]..'"'.."),},\n"
-        end 
-    else 
-        -- need ajust default 
-        data = data.."{".."ref_path = fs.path("..'"'..material_desc..'"'.."),},\n"
-    end 
-    data = data.."}"
-    return assert(load(data))()
+    -- local data = "local fs = require 'filesystem'\n"
+    -- data = data.."return {\n"  
+    -- if num_mats>=1 then 
+    --     for i=1,num_mats do 
+    --       data = data.."{".."ref_path = fs.path("..'"'..material_desc[i]..'"'.."),},\n"
+    --     end 
+    -- else 
+    --     -- need ajust default 
+    --     data = data.."{".."ref_path = fs.path("..'"'..material_desc..'"'.."),},\n"
+    -- end 
+    -- data = data.."}"
+    -- return assert(load(data))()
 end 
 
 local function create_entity(world,name,pos,rot,scl,mesh_desc,material_desc)
