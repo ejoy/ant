@@ -1,0 +1,9 @@
+ path = "//unity_viking/Assets/Textures/Props/prop_barrel_01_sg.dds"
+ sampler = {
+   U = "MIRROR",
+   V = "MIRROR",
+   MIN = "ANISOTROPIC",
+   MAG = "ANISOTROPIC",
+ }
+ sRGB 		= true
+ normalmap 	= false

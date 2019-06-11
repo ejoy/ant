@@ -1,0 +1,9 @@
+ path = "//unity_viking/Assets/Textures/Props/prop_shield_02_o.dds"
+ sampler = {
+   U = "MIRROR",
+   V = "MIRROR",
+   MIN = "ANISOTROPIC",
+   MAG = "ANISOTROPIC",
+ }
+ sRGB 		= true
+ normalmap 	= false
