@@ -3,9 +3,11 @@ local fs = require "filesystem.local"
 
 function util.list_files(subpath, filter, excludes, files)
 	local prefilter = {}
-	for f in filter:gmatch("([.%w]+)") do
-		local ext = f:upper()
-		prefilter[ext] = true
+	if type(filter) == "string" then
+		for f in filter:gmatch("([.%w]+)") do
+			local ext = f:upper()
+			prefilter[ext] = true
+		end
 	end
 
 	local function list_fiels_1(subpath, filter, excludes, files)
