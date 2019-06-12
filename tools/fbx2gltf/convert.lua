@@ -62,9 +62,12 @@ end
 
 return function (files, cfg)
 	local progs = {}
+	local genlk = not cfg.no_lk
 	for _, f in ipairs(files) do
 		progs[#progs+1] = convert(f)
-		generate_lkfile(f)
+		if genlk then
+			generate_lkfile(f)
+		end
 	end
 
 	for _, prog in ipairs(progs) do
