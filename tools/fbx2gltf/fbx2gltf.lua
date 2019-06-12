@@ -21,4 +21,12 @@ local files = {
 -- 	}, files)
 -- end
 
-convert(files)
+local defconfig = {
+	postconvert = function(filepath, scene)
+		if util.is_PVPScene_obj(filepath) then
+			util.reset_PVPScene_object_root_pos(filepath, scene)
+		end
+	end
+}
+
+convert(files, defconfig)

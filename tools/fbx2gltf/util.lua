@@ -41,4 +41,56 @@ function util.raw_table(filepath)
 	return env
 end
 
+function util.is_PVPScene_obj(glbfile)
+	local ff = fs.path(glbfile)
+	while ff:string() ~= "" do
+		local tt = ff:filename()
+		if tt:string() == "PVPScene" then
+			return true
+		end
+
+		ff = ff:parent_path()
+	end
+end
+
+function util.reset_root_position(node)
+	local m = node.matrix
+	if m then
+		m[13], m[14], m[15] = 0, 0, 0
+	end
+
+	local t = node.translation
+	if t then
+		t[1], t[2], t[3] = 0, 0, 0
+	end
+end
+
+function util.reset_PVPScene_object_root_pos(glbfile, scene)
+	local nodes = scene.nodes
+	local filename = glbfile:filename()
+	filename:replace_extension("")
+
+	local function find_PVPScene_obj_root_node(scenenodes)
+		for _, nodeidx in ipairs(scenenodes) do
+			local node = nodes[nodeidx+1]
+			if node.name == filename:string() then
+				return node
+			end
+
+			if node.children then
+				return find_PVPScene_obj_root_node(node.children)
+			end
+		end
+	end
+
+	local myrootnode = find_PVPScene_obj_root_node(scene.scenes[scene.scene+1].nodes)
+	if myrootnode == nil then
+		print(string.format("not found root name, no node name equal filename\n\
+							 glb file : %s\n filename : %s", glbfile:string(), filename:string()))
+		return
+	end
+
+	util.reset_root_position(myrootnode)
+end
+
 return util

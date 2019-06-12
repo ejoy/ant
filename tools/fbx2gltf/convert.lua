@@ -60,59 +60,7 @@ local function generate_lkfile(filename)
 	glblk:close()
 end
 
-local function is_PVPScene_obj(glbfile)
-	local ff = fs.path(glbfile)
-	while ff:string() ~= "" do
-		local tt = ff:filename()
-		if tt:string() == "PVPScene" then
-			return true
-		end
-
-		ff = ff:parent_path()
-	end
-end
-
-local function reset_PVPScene_object_root_pos(glbfile, scene)
-	if not is_PVPScene_obj(glbfile) then
-		return
-	end
-
-	local nodes = scene.nodes
-	local filename = glbfile:filename()
-	filename:replace_extension("")
-
-	local function find_PVPScene_obj_root_node(scenenodes)
-		for _, nodeidx in ipairs(scenenodes) do
-			local node = nodes[nodeidx+1]
-			if node.name == filename:string() then
-				return node
-			end
-
-			if node.children then
-				return find_PVPScene_obj_root_node(node.children)
-			end
-		end
-	end
-
-	local myrootnode = find_PVPScene_obj_root_node(scene.scenes[scene.scene+1].nodes)
-	if myrootnode == nil then
-		print(string.format("not found root name, no node name equal filename\n\
-							 glb file : %s\n filename : %s", glbfile:string(), filename:string()))
-		return
-	end
-	local m = myrootnode.matrix
-	if m then
-		m[13], m[14], m[15] = 0, 0, 0
-	end
-
-	local t = myrootnode.translation
-	if t then
-		t[1], t[2], t[3] = 0, 0, 0
-	end
-end
-
-
-return function (files)
+return function (files, cfg)
 	local progs = {}
 	for _, f in ipairs(files) do
 		progs[#progs+1] = convert(f)
@@ -123,15 +71,17 @@ return function (files)
 		prog:wait()
 	end
 
-	for _, f in ipairs(files) do
-		local filename = fs.path(f):replace_extension("glb"):string()
-		local glbdata = glbloader.decode(filename)
-		local scene = glbdata.info
+	local postconvert = cfg.postconvert
+	if postconvert then
+		for _, f in ipairs(files) do
+			local glbfilepath = fs.path(f):replace_extension("glb")
+			local glbfilename = glbfilepath:string()
+			local glbdata = glbloader.decode(glbfilename)
+			local scene = glbdata.info
 
-		if is_PVPScene_obj(f) then
-			reset_PVPScene_object_root_pos(fs.path(f):replace_extension(".glb"), scene)
+			postconvert(glbfilepath, scene)
+
+			glbloader.encode(glbfilename, glbdata)
 		end
-
-		glbloader.encode(filename, glbdata)
 	end
 end
