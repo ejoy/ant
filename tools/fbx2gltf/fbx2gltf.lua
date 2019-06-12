@@ -6,7 +6,7 @@ local util = require "util"
 local glbloader = require "glb"
 
 local files = {
-	fs.path "packages/resources/meshes/Factory_Antenna_Scifi_B.fbx"
+	fs.path "packages/resources/meshes/build_boat_01.FBX"
 }
 
 -- for _, srcpath in ipairs {
@@ -141,7 +141,7 @@ for _, prog in ipairs(progs) do
 end
 
 for _, f in ipairs(files) do
-	local filename = f:string()
+	local filename = fs.path(f):replace_extension("glb"):string()
 	local glbdata = glbloader.decode(filename)
 	local scene = glbdata.info
 

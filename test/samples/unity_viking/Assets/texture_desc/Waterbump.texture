@@ -1,0 +1,9 @@
+ path = "//unity_viking/Assets/Standard Assets/Water (Pro Only)/Sources/Textures/Waterbump.dds"
+ sampler = {
+   U = "MIRROR",
+   V = "MIRROR",
+   MIN = "LINEAR",
+   MAG = "LINEAR",
+ }
+ sRGB 		= true
+ normalmap 	= false
