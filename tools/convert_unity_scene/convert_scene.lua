@@ -9,14 +9,19 @@ if not fs.exists(scenefile) then
 	error(string.format("file not found:%s", scenefile:string()))
 end
 
-local r, err = loadfile(scenefile:string())
-if r == nil then
-	error(string.format("load file error:", err))
+local function loadscene(scenefile)
+	local c, err = loadfile(scenefile:string())
+	if c == nil then
+		error(string.format("load file error:", err))
+	end
+	return c()
 end
-local scene = r()
+
+local scene = loadscene(scenefile)
 
 local fbxfilepaths = {}
-for _, fn in ipairs(scene.Meshes) do
+local meshfiles = scene.Meshes
+for _, fn in ipairs(meshfiles) do
 	fbxfilepaths = fs.path(fn)
 end
 
@@ -57,7 +62,7 @@ local function reset_scene_transform(scene)
 		for _, nodeidx in ipairs(nodes)do
 			local node = scene.nodes[nodeidx+1]
 			if is_root_node(node, level) or 
-				is_geometric_node(node) then
+				not is_geometric_node(node) then
 				reset_transform(node)
 			end
 
@@ -82,3 +87,18 @@ fbxconvert(fbxfilepaths, {
 	end
 })
 
+
+for idx, f in ipairs(meshfiles) do
+	local p = fs.path(f):replace_extension "glb"
+	if fs.exists(p) then
+		meshfiles[idx] = f:string()
+	else
+		meshfiles[idx] = false
+		print("convert file failed:", f:string())
+	end
+end
+
+local stringify = require "stringify"
+local f = fs.open(scenefile, "w")
+f:write(stringify(scene, true, false))
+f:close()
