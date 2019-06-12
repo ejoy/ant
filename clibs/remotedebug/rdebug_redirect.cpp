@@ -122,12 +122,13 @@ namespace remotedebug {
 	}
 
 #if defined(__APPLE__)
-    static void no_blocking(int s) {
-        int flags = fcntl(s, F_GETFL, 0);
-        int rc = fcntl(s, F_SETFL, flags | O_NONBLOCK);
-        assert(rc == 0);
-    }
-    static int pipe2(int pipefd[2], int flags) {
+	static void no_blocking(int s) {
+		int flags = fcntl(s, F_GETFL, 0);
+		int rc = fcntl(s, F_SETFL, flags | O_NONBLOCK);
+		(void)rc;
+		assert(rc == 0);
+	}
+	static int pipe2(int pipefd[2], int flags) {
 		assert(flags == O_NONBLOCK);
 		int ok = pipe(pipefd);
 		if (ok == -1) {

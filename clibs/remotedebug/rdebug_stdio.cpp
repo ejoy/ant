@@ -98,6 +98,7 @@ static int redirect_print(lua_State* L) {
         if (ok > 0) {
             return 0;
         }
+        lua_remove(L, 1);
     }
     return callfunc(L);
 }
@@ -130,6 +131,7 @@ static int redirect_io_write(lua_State* L) {
             lua_getfield(L, LUA_REGISTRYINDEX, "_IO_output");
             return 1;
         }
+        lua_remove(L, 1);
     }
     return callfunc(L);
 }
@@ -140,7 +142,7 @@ static int open_print(rlua_State* L) {
     lua_getglobal(hL, "print");
     enable
         ? lua_pushcclosure(hL, redirect_print, 1)
-        : (lua_getuservalue(hL, 1), lua_remove(hL, -2))
+        : (lua_getupvalue(hL, -1, 1)? lua_remove(hL, -2):(void)0)
         ;
     lua_setglobal(hL, "print");
     return 0;
@@ -156,7 +158,7 @@ static int open_iowrite(rlua_State* L) {
             lua_rawget(hL, -3);
             enable
                 ? lua_pushcclosure(hL, redirect_f_write, 1)
-                : (lua_getuservalue(hL, 1), lua_remove(hL, -2))
+                : (lua_getupvalue(hL, -1, 1)? lua_remove(hL, -2):(void)0)
                 ;
             lua_rawset(hL, -3);
             lua_pop(hL, 1);
@@ -169,7 +171,7 @@ static int open_iowrite(rlua_State* L) {
         lua_rawget(hL, -3);
         enable
             ? lua_pushcclosure(hL, redirect_io_write, 1)
-            : (lua_getuservalue(hL, 1), lua_remove(hL, -2))
+            : (lua_getupvalue(hL, -1, 1)? lua_remove(hL, -2):(void)0)
             ;
         lua_rawset(hL, -3);
     }

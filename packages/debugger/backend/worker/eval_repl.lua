@@ -65,13 +65,13 @@ while true do
 	if name == nil then
 		break
 	end
-	local local_value = local_id[name]
-	if local_value then
-		debug.setupvalue(func, i, local_value)
-	end
 	local upvalue_id = uv_id[name]
 	if upvalue_id then
 		debug.upvaluejoin(func, i, f, upvalue_id)
+	end
+	local local_value = local_id[name]
+	if local_value then
+		debug.setupvalue(func, i, local_value)
 	end
 	i = i + 1
 end

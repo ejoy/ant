@@ -336,7 +336,7 @@ local function varGetValue(type, subtype, value)
         if subtype == 'c' then
             return 'C function'
         end
-        local info = rdebug.getinfo(value)
+        local info = rdebug.getinfo(value, "S")
         if not info then
             return tostring(rdebug.value(value))
         end
@@ -366,6 +366,9 @@ local function varGetValue(type, subtype, value)
                 return 'userdata: ' .. tostring(rdebug.value(name))
             end
         end
+        if subtype == 'light' then
+            return 'light' .. tostring(rdebug.value(value))
+        end
         return 'userdata'
     elseif type == 'thread' then
         return 'thread'
@@ -373,15 +376,41 @@ local function varGetValue(type, subtype, value)
     return tostring(rdebug.value(value))
 end
 
+local function varGetType(type, subtype)
+    if type == 'string'
+        or type == 'boolean'
+        or type == 'nil'
+        or type == 'table'
+        or type == 'table'
+        or type == 'thread'
+    then
+        return type
+    elseif type == 'number' then
+        return subtype
+    elseif type == 'function' then
+        if subtype == 'c' then
+            return 'C function'
+        end
+        return 'function'
+    elseif type == 'userdata' then
+        if subtype == 'light' then
+            return 'lightuserdata'
+        end
+        return 'userdata'
+    end
+    return type
+end
+
 local function varCreateReference(frameId, value, evaluateName)
     local type, subtype = rdebug.type(value)
-    local text = varGetValue(type, subtype, value)
+    local textType = varGetType(type, subtype)
+    local textValue = varGetValue(type, subtype, value)
     if varCanExtand(type, subtype, value) then
         local pool = varPool[frameId]
         pool[#pool + 1] = { value, evaluateName }
-        return text, type, (frameId << 16) | #pool
+        return textValue, textType, (frameId << 16) | #pool
     end
-    return text, type
+    return textValue, textType
 end
 
 local function varCreateObject(frameId, name, value, evaluateName)
@@ -400,6 +429,8 @@ local function varCreate(vars, frameId, varRef, name, value, evaluateName, calcV
     local var = varCreateObject(frameId, name, value, evaluateName)
     local maps = varRef[3]
     if maps[name] then
+        local log = require 'common.log'
+        log.warn(false, "same name variables: "..name)
         vars[maps[name][3]] = var
         maps[name][1] = calcValue
     else
@@ -416,6 +447,8 @@ local function varCreateInsert(vars, frameId, varRef, name, value, evaluateName,
     }
     local maps = varRef[3]
     if maps[name] then
+        local log = require 'common.log'
+        log.warn(false, "same name variables: "..name)
         table.remove(vars, maps[name][3])
     end
     table.insert(vars, 1, var)
@@ -590,6 +623,7 @@ local children = {
 
 extand[VAR_LOCAL] = function(frameId)
     children[VAR_LOCAL][3] = {}
+    local tempVar = {}
     local vars = {}
     local i = 1
     while true do
@@ -598,6 +632,10 @@ extand[VAR_LOCAL] = function(frameId)
             break
         end
         if name ~= TEMPORARY then
+            if name:sub(1,1) == "(" then
+                tempVar[name] = tempVar[name] and (tempVar[name] + 1) or 1
+                name = ("(%s #%d)"):format(name:sub(2,-2), tempVar[name])
+            end
             local fi = i
             varCreate(vars, frameId, children[VAR_LOCAL], name, value
                 , name
@@ -606,6 +644,23 @@ extand[VAR_LOCAL] = function(frameId)
         end
         i = i + 1
     end
+
+    local info = {}
+    rdebug.getinfo(frameId, "r", info)
+    if info.ftransfer > 0 and info.ntransfer > 0 then
+        for i = info.ftransfer, info.ftransfer + info.ntransfer do
+            local name, value = rdebug.getlocalv(frameId, i)
+            if name ~= nil then
+                name = ("(return #%d)"):format(i - info.ftransfer + 1)
+                local fi = i
+                varCreate(vars, frameId, children[VAR_LOCAL], name, value
+                    , name
+                    , function() local _, r = rdebug.getlocal(frameId, fi) return r end
+                )
+            end
+        end
+    end
+
     return vars
 end
 
@@ -789,7 +844,8 @@ function m.createRef(frameId, value, evaluateName)
     if not varPool[frameId] then
         varPool[frameId] = {}
     end
-    return varCreateReference(frameId, value, evaluateName)
+    local text, _, ref =  varCreateReference(frameId, value, evaluateName)
+    return text, ref
 end
 
 ev.on('terminated', function()

@@ -388,6 +388,12 @@ struct hookmgr {
             if (step_mask & LUA_MASKRET) {
                 step_hook_return(hL, ar);
             }
+#if LUA_VERSION_NUM >= 504
+            if (step_mask == LUA_MASKLINE) {
+                // step in
+                break;
+            }
+#endif
             return;
         case LUA_HOOKCOUNT:
             update_hook(hL);

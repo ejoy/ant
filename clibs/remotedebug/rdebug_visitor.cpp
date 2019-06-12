@@ -315,11 +315,28 @@ lclient_getuservaluev(rlua_State *L) {
 
 static int
 lclient_getinfo(rlua_State *L) {
-	rlua_settop(L, 2);
-	if (rlua_type(L, 2) != LUA_TTABLE) {
-		rlua_pop(L, 1);
-		rlua_createtable(L, 0, 7);
+	rlua_settop(L, 3);
+	size_t optlen = 0;
+	const char* options = rluaL_checklstring(L, 2, &optlen);
+	if (optlen > 5) {
+		return rluaL_error(L, "invalid option");
 	}
+	int size = 0;
+	for (const char* what = options; *what; what++) {
+		switch (*what) {
+		case 'S': size += 5; break;
+		case 'l': size += 1; break;
+		case 'n': size += 2; break;
+		case 't': size += 1; break;
+		case 'r': size += 2; break;
+		default: return rluaL_error(L, "invalid option");
+		}
+	}
+	if (rlua_type(L, 3) != LUA_TTABLE) {
+		rlua_pop(L, 1);
+		rlua_createtable(L, 0, size);
+	}
+
 	lua_State *hL = get_host(L);
 	lua_Debug ar;
 
@@ -327,7 +344,7 @@ lclient_getinfo(rlua_State *L) {
 	case LUA_TNUMBER:
 		if (lua_getstack(hL, (int)rluaL_checkinteger(L, 1), &ar) == 0)
 			return 0;
-		if (lua_getinfo(hL, "Slnt", &ar) == 0)
+		if (lua_getinfo(hL, options, &ar) == 0)
 			return 0;
 		break;
 	case LUA_TUSERDATA: {
@@ -340,7 +357,10 @@ lclient_getinfo(rlua_State *L) {
 			return rluaL_error(L, "Need a function ref, It's %s", rlua_typename(L, t));
 		}
 		rlua_pop(L, 1);
-		if (lua_getinfo(hL, ">Slnt", &ar) == 0)
+		char what[8];
+		what[0] = '>';
+		strcpy(what+1, options);
+		if (lua_getinfo(hL, what, &ar) == 0)
 			return 0;
 		break;
 	}
@@ -348,28 +368,57 @@ lclient_getinfo(rlua_State *L) {
 		return rluaL_error(L, "Need stack level (integer) or function ref, It's %s", rlua_typename(L, rlua_type(L, 1)));
 	}
 
-	rlua_pushstring(L, ar.source);
-	rlua_setfield(L, 2, "source");
-	rlua_pushstring(L, ar.short_src);
-	rlua_setfield(L, 2, "short_src");
-	rlua_pushinteger(L, ar.currentline);
-	rlua_setfield(L, 2, "currentline");
-	rlua_pushinteger(L, ar.linedefined);
-	rlua_setfield(L, 2, "linedefined");
-	rlua_pushinteger(L, ar.lastlinedefined);
-	rlua_setfield(L, 2, "lastlinedefined");
-	rlua_pushstring(L, ar.name? ar.name : "?");
-	rlua_setfield(L, 2, "name");
-	rlua_pushstring(L, ar.what? ar.what : "?");
-	rlua_setfield(L, 2, "what");
-	if (ar.namewhat) {
-		rlua_pushstring(L, ar.namewhat);
-	} else {
-		rlua_pushnil(L);
+	for (const char* what = options; *what; what++) {
+		switch (*what) {
+		case 'S':
+#if LUA_VERSION_NUM >= 504
+			rlua_pushlstring(L, ar.source, ar.srclen);
+#else
+			rlua_pushstring(L, ar.source);
+#endif
+			rlua_setfield(L, 3, "source");
+			rlua_pushstring(L, ar.short_src);
+			rlua_setfield(L, 3, "short_src");
+			rlua_pushinteger(L, ar.linedefined);
+			rlua_setfield(L, 3, "linedefined");
+			rlua_pushinteger(L, ar.lastlinedefined);
+			rlua_setfield(L, 3, "lastlinedefined");
+			rlua_pushstring(L, ar.what? ar.what : "?");
+			rlua_setfield(L, 3, "what");
+			break;
+		case 'l':
+			rlua_pushinteger(L, ar.currentline);
+			rlua_setfield(L, 3, "currentline");
+			break;
+		case 'n':
+			rlua_pushstring(L, ar.name? ar.name : "?");
+			rlua_setfield(L, 3, "name");
+			if (ar.namewhat) {
+				rlua_pushstring(L, ar.namewhat);
+			} else {
+				rlua_pushnil(L);
+			}
+			rlua_setfield(L, 3, "namewhat");
+			break;
+		case 't':
+			rlua_pushboolean(L, ar.istailcall? 1 : 0);
+			rlua_setfield(L, 3, "istailcall");
+			break;
+		case 'r':
+#if LUA_VERSION_NUM >= 504
+			rlua_pushinteger(L, ar.ftransfer);
+			rlua_setfield(L, 3, "ftransfer");
+			rlua_pushinteger(L, ar.ntransfer);
+			rlua_setfield(L, 3, "ntransfer");
+#else
+			rlua_pushinteger(L, 0);
+			rlua_setfield(L, 3, "ftransfer");
+			rlua_pushinteger(L, 0);
+			rlua_setfield(L, 3, "ntransfer");
+#endif
+			break;
+		}
 	}
-	rlua_setfield(L, 2, "namewhat");
-	rlua_pushboolean(L, ar.istailcall? 1 : 0);
-	rlua_setfield(L, 2, "istailcall");
 
 	return 1;
 }

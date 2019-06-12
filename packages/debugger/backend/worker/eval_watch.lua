@@ -52,16 +52,16 @@ while true do
 	if name == nil then
 		break
 	end
+	local upvalue_id = uv_id[name]
+	if upvalue_id then
+		local upname, upvalue = debug.getupvalue(f, upvalue_id)
+		if upname ~= nil then
+			debug.setupvalue(func, i, upvalue)
+		end
+	end
 	local local_value = local_id[name]
 	if local_value then
 		debug.setupvalue(func, i, local_value)
-	end
-	local upvalue_id = uv_id[name]
-	if upvalue_id then
-		local name, upvalue = debug.getupvalue(f, upvalue_id)
-		if name ~= nil then
-			debug.setupvalue(func, i, upvalue)
-		end
 	end
 	i = i + 1
 end
