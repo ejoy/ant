@@ -63,18 +63,14 @@ end
 --     end
 -- end
 
-local function create_entity(world, name, pos, rot, scl, meshpath, material_refpaths)    
+local function create_entity(world, name, trans, meshpath, material_refpaths)    
     if #material_refpaths > 1 then
         print('check')
     end
-    local eid =
+    return
         world:create_entity {
         name = name,
-        transform = {
-            s = scl,
-            r = rot,
-            t = pos
-        },
+        transform = trans,
         can_render = true,
         can_select = true,
         material = {
@@ -121,53 +117,68 @@ end
 --     return radians
 -- end
 
-local function makeEntityFromFbxMesh(world, scene, ent, lodFlag)
-    --print("create entity ".. ent.Name)
+local function fetch_mesh_path(scene, ent, lodname, lodidx)
+	local name = ent.Name
+	if name:match 'PlayerCollision' 
+	or name:match 'collider' then
+		return
+	end
 
-    if ent.Mesh <= 0 then
+	local mesh = assert(ent.Mesh)
+    if mesh < 0 then
         return
-    end
+	end
+	
+	local mesh_path = scene.Meshes[mesh]
+    if mesh_path == '' then
+        return
+	end
+	
+	return fs.path'//unity_viking/assets/mesh_desc/' / fs.path(mesh_path):filename():replace_extension('mesh')
+end
 
+local function fetch_transform(ent)
     local posScale = 1
     local scale = sceneInfo.scale
-    local name = ent.Name
-    local mesh = -1
 
-    local Pos = {0, 0, 0}
-    local Rot = {0, 0, 0}
-    local Scl = {1, 1, 1}
-    local Lod = 0
-    if ent.Lod then
-        Lod = 1
-    end
-    if ent.Mesh then
-        mesh = ent.Mesh
-    end
-    if ent.Pos then
-        Pos = ent.Pos
-    end
-    if ent.Rot then
-        Rot = ent.Rot
-    end
-    if ent.Scl then
-        Scl = ent.Scl
-    end
-
+    local Pos = ent.Pos or {0, 0, 0}
+    local Rot = ent.Rot or {0, 0, 0}
+    local Scl = ent.Scl or {1, 1, 1}
+    local Lod = ent.Lod and 1 or 0
+    
     local m = mc.getMatrixFromEuler(Rot, 'YXZ')
     local Angles = mc.getEulerFromMatrix(m, 'ZYX')
     Scl[1] = -Scl[1] * scale
     Scl[2] = Scl[2] * scale
-    Scl[3] = Scl[3] * scale
+	Scl[3] = Scl[3] * scale
+	
     Pos[1] = Pos[1] * posScale
     Pos[2] = Pos[2] * posScale
     Pos[2] = Pos[2] * posScale
 
-    ent.iRot = mu.to_radian(Angles)
-    ent.iPos = Pos
-    ent.iScl = Scl
+	return {
+		s = Scl,
+		r = mu.to_radian(Angles),
+		t = Pos,
+	}
+end
 
-    local len = string.len(name)
-    local tag = string.sub(name, len - 1, len)
+local default_material_path = '//ant.resources/depiction/materials/bunny.material' -- "DefaultHDMaterial.material"
+
+local function get_defautl_material_path(scene, ent)
+	local numEntities = sceneInfo:getNumEntities()
+	if numEntities < 20000 then
+		local num_material = ent.NumMats
+		if num_material and num_material >= 1 then
+			local mp = scene.Materials[ent.Mats[1]]
+			return mp:match "unity_builtin_extra" and default_material_path or mp
+		end 
+	end
+
+	return default_material_path
+end
+
+local function fetch_material_paths(scene, ent)
     -- "Cerberus_LP.material"     --"Pipes_D160_Tileset_A.material"
     -- "Pipes_D160_Tileset_A.material"     --"bunny.material"
     -- "assets/materials/Cerberus_LP.material"   --"gold.material"
@@ -176,24 +187,16 @@ local function makeEntityFromFbxMesh(world, scene, ent, lodFlag)
     -- "assets/materials/Lamp_Wall_Big_Scifi_A_Emissive.material"
     -- "assets/materials/gold.material"
 	-- local material_path = 'assets/materials/Concrete_Foundation_A.material'
-	local default_material_path = 'assets/materials/bunny.material' -- "DefaultHDMaterial.material"
-    local mesh_path = scene.Meshes[mesh]
-    if mesh_path == '' then
-        return
-    end
 
-    local meshpath = fs.path'//unity_viking/assets/mesh_desc/' / fs.path(mesh_path):filename():replace_extension('mesh')
-
-    local numEntities = sceneInfo:getNumEntities()
 	local material_refpaths = {}
-	local material_rootpath = fs.path '//unity_viking/assets/materials/'
+	local material_rootpath = fs.path '//unity_viking/Assets/materials/'
 	local function add_material_refpath(material_filename)
 		local filepath = material_rootpath / fs.path(material_filename):filename():replace_extension('material')
 		table.insert(material_refpaths, {ref_path = filepath})
 	end
 
     -- multi materials
-    if ent.NumMats ~= nil and ent.NumMats >= 1 then
+    if ent.NumMats then
         for i = 1, ent.NumMats do            
             local material_filename = scene.Materials[ent.Mats[i]]
             if material_filename:match 'unity_builtin_extra' then
@@ -203,62 +206,42 @@ local function makeEntityFromFbxMesh(world, scene, ent, lodFlag)
 			add_material_refpath(material_filename)
         end
 	else
-		local function get_defautl_material_path()
-			if numEntities < 20000 then
-				local num_material = ent.NumMats
-				if num_material and num_material >= 1 then
-					local mp = scene.Materials[ent.Mats[1]]
-					return mp:match "unity_builtin_extra" and default_material_path or mp
-				end 
-			end
+		add_material_refpath(get_defautl_material_path(scene, ent))
+	end
+	
+	return material_refpaths
+end
 
-			return default_material_path
-		end
+local function makeEntity(world, scene, ent, lodname, lodidx)
+    --print("create entity ".. ent.Name)
+	
+    -- local len = string.len(name)
+    -- local tag = string.sub(name, len - 1, len)
 
-		add_material_refpath(get_defautl_material_path())
-    end
 
     -- if string.find(name, 'build_gate_01') then
     --     print('check ')
     -- end
 
-    create_entity(world, name, ent.iPos, ent.iRot, ent.iScl, meshpath, material_refpaths)
+	create_entity(world, ent.Name, 
+		fetch_transform(ent), 
+		fetch_mesh_path(scene, ent, lodname, lodidx), 
+		fetch_material_paths(scene, ent))
 
     sceneInfo:countEntity()
     sceneInfo:countActiveEntity()
 end
 
-function entityWalk(world, scene, ent, lodName, lodFlag)
-    local scale = 0.01
-    if #ent then
-        for i = 1, #ent do
-            local name = ent[i].Name
-            local mesh = -1
-            local lod = 0
-            if ent[i].Lod then
-                lod = 1
-            end
-            if ent[i].Mesh then
-                mesh = ent[i].Mesh
-            end
+local function entityWalk(world, scene, entlist, lodName, lodFlag)
+	local scale = 0.01
+	for _, ent in ipairs(entlist) do
+		makeEntity(world, scene, ent, lodName, lodFlag)
 
-            if string.find(name, 'PlayerCollision') then
-                mesh = -1
-            elseif string.find(name, 'collider') then
-                mesh = -1
-            elseif string.find(name, lodName) == nil and lodFlag == 1 then
-                mesh = -1
-            end
+		if ent.Ent then
+			entityWalk(world, scene, ent.Ent, lodName, lodFlag)
+		end
+	end
 
-            if mesh > 0 then
-                makeEntityFromFbxMesh(world, scene, ent[i], lod)
-            end
-
-            if ent[i].Ent and #ent[i].Ent then
-                entityWalk(world, scene, ent[i].Ent, lodName, lod)
-            end
-        end
-    end
 end
 
 -- "//ant.test.unitydemo/scene/scene.lua"
