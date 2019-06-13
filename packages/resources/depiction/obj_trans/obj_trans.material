@@ -1,6 +1,6 @@
 shader = {
-    vs = "//ant.resources/objtrans/vs_objtrans",
-    fs = "//ant.resources/objtrans/fs_objtrans",
+    vs = "/pkg/ant.resources/objtrans/vs_objtrans",
+    fs = "/pkg/ant.resources/objtrans/fs_objtrans",
 }
 
 state = "transparent.state"

@@ -268,12 +268,12 @@ function PVPScene.create_entitices(world)
 					},
 					can_render = true, 
 					mesh = {
-						ref_path = fs.path "//ant.resources" / scenedata.mesh,						
+						ref_path = fs.path "/pkg/ant.resources" / scenedata.mesh,						
 					},
 					material = {
 						content = {
 							{
-								ref_path = fs.path "//ant.resources" / scenedata.material
+								ref_path = fs.path "/pkg/ant.resources" / scenedata.material
 							}
 						}
 					}, 

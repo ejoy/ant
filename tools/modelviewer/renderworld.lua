@@ -48,12 +48,12 @@ function model_review_system:init()
 		transform = mu.scale_mat(0.2),
 		can_render = true,
 		mesh = {
-			ref_path = fs.path "//ant.resources/PVPScene/campsite-door.mesh"
+			ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh"
 		},
 		material = {
 			content = {
 				{
-					ref_path = fs.path "//ant.resources/PVPScene/scene-mat.material",
+					ref_path = fs.path "/pkg/ant.resources/PVPScene/scene-mat.material",
 				}
 			}
 		},
@@ -64,12 +64,12 @@ function model_review_system:init()
 		transform = mu.translate_mat({2, 2, 2, 0}),
 		can_render = true,
 		mesh = {
-			ref_path = fs.path "//ant.resources/depiction/meshes/test_glb.mesh",
+			ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test_glb.mesh",
 		},
 		material = {
 			content = {
 				{
-					ref_path = fs.path "//ant.resources/depiction/materials/test_glb.material"
+					ref_path = fs.path "/pkg/ant.resources/depiction/materials/test_glb.material"
 				}
 			}
 		},

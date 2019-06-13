@@ -62,7 +62,7 @@ function sm:init()
 	world:create_entity {
 		shadow = {
 			material = {
-				ref_path = fs.path "//ant.resources/depiction/shadow/mesh_cast_shadow.material"
+				ref_path = fs.path "/pkg/ant.resources/depiction/shadow/mesh_cast_shadow.material"
 			},
 			shaodwmap_width = sm_width,
 			shadowmap_height = sm_height,
@@ -155,7 +155,7 @@ end
 local function create_bounding_mesh_entity()
 	local eid = world:create_entity {
 		mesh = {},
-		material = computil.assign_material(fs.path "//ant.resources" / "depiction"/ "materials" / "line.material"),
+		material = computil.assign_material(fs.path "/pkg/ant.resources" / "depiction"/ "materials" / "line.material"),
 		transform = mu.identity_transform(),
 		name = "mesh_bounding_debug",
 		can_render = false,
@@ -237,7 +237,7 @@ local function create_frustum_bounding_entity()
 	local eid = world:create_entity {
 		transform = mu.identity_transform(),
 		mesh = {},
-		material = computil.assign_material(fs.path "//ant.resources" / "depiction" / "materials" / "line.material"),
+		material = computil.assign_material(fs.path "/pkg/ant.resources" / "depiction" / "materials" / "line.material"),
 		can_render = true,
 		main_view = true,
 		frustum_debug = true,

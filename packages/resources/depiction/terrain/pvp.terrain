@@ -9,7 +9,7 @@ num_layers = 4
 
 heightmap = {
 	bits   = 8,	-- get from ref_path?
-	ref_path = "//ant.resources.binary/terrain/pvp1.raw"
+	ref_path = "/pkg/ant.resources.binary/terrain/pvp1.raw"
 }
 
 uv0_scale  = 50 --80*0.625,   -- 140

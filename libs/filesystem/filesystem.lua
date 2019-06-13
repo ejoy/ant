@@ -17,7 +17,7 @@ local function constructor(str)
 end
 
 local function normalize(fullname)
-    local first = (fullname:sub(1, 2) == "//") and "//" or ""
+    local first = (fullname:sub(1, 5) == "/pkg/") and "/pkg/" or ""
     local last = (fullname:sub(-1, -1) == "/") and "/" or ""
 	local t = {}
 	for m in fullname:gmatch("([^/\\]+)[/\\]?") do
@@ -31,7 +31,7 @@ local function normalize(fullname)
 end
 
 local function normalize_split(fullname)
-    local root = (fullname:sub(1, 2) == "//") and "//" or ""
+    local root = (fullname:sub(1, 5) == "/pkg/") and "/pkg/" or ""
     local stack = {}
 	for elem in fullname:gmatch("([^/\\]+)[/\\]?") do
         if #elem == 0 and #stack ~= 0 then
@@ -48,16 +48,16 @@ local function vfspath(self)
     local pm = require "antpm"
     assert(self:is_absolute())
     local value = self._value
-    local pos = value:find('/', 3, true)
+    local pos = value:find('/', 6, true)
     if not pos then
-        local root = pm.find(value:sub(3))
+        local root = pm.find(value:sub(6))
         if not root then
 		    error(("No file '%s'"):format(value))
             return
         end
         return root
     end
-	local root = pm.find(value:sub(3, pos-1))
+	local root = pm.find(value:sub(6, pos-1))
 	if not root then
         error(("No file '%s'"):format(value))
 		return
@@ -71,7 +71,7 @@ end
 
 function path_mt:__div(other)
     other = (type(other) == 'string') and other or other._value
-    if other:sub(1, 1) == '//' then
+    if other:sub(1, 5) == '/pkg/' then
         return constructor(other)
     end
     local value = self._value:gsub("(.-)/?$", "%1")
@@ -135,11 +135,11 @@ function path_mt:equal_extension(ext)
 end
 
 function path_mt:is_absolute()
-    return self._value:sub(1,2) == '//'
+    return self._value:sub(1,5) == '/pkg/'
 end
 
 function path_mt:is_relative()
-    return self._value:sub(1,2) ~= '//'
+    return self._value:sub(1,5) ~= '/pkg/'
 end
 
 function path_mt:list_directory()
@@ -175,7 +175,7 @@ function path_mt:root_name()
         return constructor('')
     end
     local value = self._value
-    local pos = value:find('/', 3, true)
+    local pos = value:find('/', 6, true)
     if not pos then
         return constructor(value)
     end
@@ -216,7 +216,7 @@ end
 
 function fs.absolute(path, base)
     path = normalize(path._value)
-    if path:sub(1, 2) == '//' then
+    if path:sub(1, 5) == '/pkg/' then
         return constructor(path)
     end
     base = base or fs.current_path()

@@ -1,4 +1,4 @@
-path = "//ant.resources.binary/textures/pbr/bolonga_irr.dds"
+path = "/pkg/ant.resources.binary/textures/pbr/bolonga_irr.dds"
 
 sampler = {
 	U = "MIRROR",

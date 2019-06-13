@@ -1,6 +1,6 @@
 shader = {
-    vs = "//ant.resources/simple/quad/vs_simplequad",
-    fs = "//ant.resources/simple/quad/fs_simplequad",
+    vs = "/pkg/ant.resources/simple/quad/vs_simplequad",
+    fs = "/pkg/ant.resources/simple/quad/fs_simplequad",
 }
 
 state = {
@@ -18,7 +18,7 @@ properties = {
             type="texture", 
             name="tex color", 
             stage=0, 
-            ref_path= "//ant.resources/PVPScene/siegeweapon_d.texture"
+            ref_path= "/pkg/ant.resources/PVPScene/siegeweapon_d.texture"
         }
     }
 }

@@ -38,7 +38,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 			velocity = {1, 0, 0},
 		}, 
 		state_chain = {
-			ref_path = fs.path "//ant.resources/simple_animation.sm",
+			ref_path = fs.path "/pkg/ant.resources/simple_animation.sm",
 		},
 		name = "animation_sample",
 		main_view = true,
@@ -89,7 +89,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 
 		world:add_component(eid, "material", {
 			content = {
-				{ref_path = fs.path "//ant.resources/materials/skin_model_sample.material"}
+				{ref_path = fs.path "/pkg/ant.resources/materials/skin_model_sample.material"}
 			}
 		})
 	end

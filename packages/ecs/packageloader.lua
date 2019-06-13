@@ -8,7 +8,7 @@ return function(name)
 		error(("package '%s' not found"):format(name))
 		return
 	end
-	local root = fs.path('//'..name)
+	local root = fs.path('/pkg/'..name)
 	local modules = config.ecs_modules
 	if modules then
 		local tmp = {}

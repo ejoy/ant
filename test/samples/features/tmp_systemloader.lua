@@ -68,7 +68,7 @@ local function create_animation_test()
         material = {
             content = {
                 {
-                    ref_path = fs.path "//ant.resources/materials/skin_model_sample.material"
+                    ref_path = fs.path "/pkg/ant.resources/materials/skin_model_sample.material"
                 }
             }
         },
@@ -84,13 +84,13 @@ local function create_animation_test()
             },
             anilist = {
                 {
-                    ref_path = fs.path '//ant.resources' / meshdir / 'animation' / 'animation1.ozz',
+                    ref_path = fs.path '/pkg/ant.resources' / meshdir / 'animation' / 'animation1.ozz',
                     scale = 1,
                     looptimes = 0,
                     name = 'ani1'
                 },
                 {
-                    ref_path = fs.path '//ant.resources' / meshdir / 'animation' / 'animation2.ozz',
+                    ref_path = fs.path '/pkg/ant.resources' / meshdir / 'animation' / 'animation2.ozz',
                     scale = 1,
                     looptimes = 0,
                     name = 'ani2'
@@ -99,10 +99,10 @@ local function create_animation_test()
             blendtype = 'blend'
         },
         skeleton = {
-            ref_path = fs.path '//ant.resources' / skepath
+            ref_path = fs.path '/pkg/ant.resources' / skepath
         },
         skinning_mesh = {
-            ref_path = fs.path '//ant.resources' / smpath
+            ref_path = fs.path '/pkg/ant.resources' / smpath
         },
         name = 'animation_sample',
 		main_view = true,

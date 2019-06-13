@@ -1,8 +1,8 @@
 shader = {
-   vs = "//ant.resources/shadow/vs_shadowmaps_packdepth_linear",
-   fs = "//ant.resources/shadow/fs_shadowmaps_packdepth_linear",
-   --vs = "//ant.resources/line/vs_line.sc",
-   --fs = "//ant.resources/line/fs_line.sc",
+   vs = "/pkg/ant.resources/shadow/vs_shadowmaps_packdepth_linear",
+   fs = "/pkg/ant.resources/shadow/fs_shadowmaps_packdepth_linear",
+   --vs = "/pkg/ant.resources/line/vs_line.sc",
+   --fs = "/pkg/ant.resources/line/fs_line.sc",
 }
 
 state = {

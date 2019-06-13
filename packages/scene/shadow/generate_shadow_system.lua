@@ -188,7 +188,7 @@ shadow_maker.__index = shadow_maker
 -- shadow_maker init 
 function  shadow_maker:init( shadow_maker_entity )
 	local function load_material(name)		
-		local material = asset.load(fs.path "//ant.resources" / name)
+		local material = asset.load(fs.path "/pkg/ant.resources" / name)
 		material.name = name 
 		return material
 	end

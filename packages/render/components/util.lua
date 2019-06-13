@@ -168,7 +168,7 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
 	local gridid = world:create_entity {
 		transform = mu.identity_transform(),
         mesh = {},
-        material = util.assign_material(fs.path "//ant.resources" / "materials" / "line.material"),
+        material = util.assign_material(fs.path "/pkg/ant.resources" / "materials" / "line.material"),
 		name = name,
 		can_render = true,
 		main_view = true,
@@ -205,12 +205,12 @@ function util.create_plane_entity(world, color, size, pos, name)
 			t = pos or {0, 0, 0, 1}
 		},
 		mesh = {
-			ref_path = fs.path "//ant.resources/depiction/cube.mesh"
+			ref_path = fs.path "/pkg/ant.resources/depiction/cube.mesh"
 		},
 		material = {
 			content = {
 				{
-					ref_path = fs.path "//ant.resources/depiction/shadow/mesh_receive_shadow.material",
+					ref_path = fs.path "/pkg/ant.resources/depiction/shadow/mesh_receive_shadow.material",
 					properties = {
 						uniforms = {
 							u_color = {type="color", name="color", value=color}
@@ -264,7 +264,7 @@ end
 
 function util.create_shadow_quad_entity(world, rect, name)
 	return util.create_quad_entity(world, rect, 
-		fs.path "//ant.resources/depiction/shadowmap_quad.material", nil, name)
+		fs.path "/pkg/ant.resources/depiction/shadowmap_quad.material", nil, name)
 end
 
 function util.create_texture_quad_entity(world, texture_tbl, view_tag, name)
@@ -273,7 +273,7 @@ function util.create_texture_quad_entity(world, texture_tbl, view_tag, name)
         can_render = true,
         mesh = {},
         material = util.assign_material(
-			fs.path "//ant.resources/materials/texture.material", 
+			fs.path "/pkg/ant.resources/materials/texture.material", 
 			{textures = texture_tbl,}),
 		name = name,
 		[view_tag] = true,

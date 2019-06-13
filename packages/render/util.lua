@@ -361,7 +361,7 @@ end
 function util.create_blit_queue(world, viewrect)
 	util.create_render_queue_entity(world, viewrect, nil, nil, "blit_view", blitviewid)
 	computil.create_quad_entity(world, viewrect,
-	fs.path "//ant.resources/depiction/materials/fullscreen.material", nil, "full_quad", "blit_view")
+	fs.path "/pkg/ant.resources/depiction/materials/fullscreen.material", nil, "full_quad", "blit_view")
 end
 
 function util.create_renderbuffer(desc)

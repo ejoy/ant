@@ -9,8 +9,8 @@ state = 'materials/states/default.state'
 --    WRITE_MASK = "RGBAZ",
 --    DEPTH_TEST = "LESS"
 -- }
-local deftexpath = '//ant.resources/materials/textures/default.texture'
-local defirrtexpath = '//ant.resources/materials/textures/defautl_cube.texture'
+local deftexpath = '/pkg/ant.resources/materials/textures/default.texture'
+local defirrtexpath = '/pkg/ant.resources/materials/textures/defautl_cube.texture'
 local deffactor = {1, 1, 1, 1}
 properties = {
     textures = {

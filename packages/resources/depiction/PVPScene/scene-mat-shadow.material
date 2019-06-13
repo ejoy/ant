@@ -1,17 +1,17 @@
 shader = {
-	 vs = "//ant.resources/mesh/vs_mesh_bump_shadow",
-	 fs = "//ant.resources/mesh/fs_mesh_bumpex_shadow",
+	 vs = "/pkg/ant.resources/mesh/vs_mesh_bump_shadow",
+	 fs = "/pkg/ant.resources/mesh/fs_mesh_bumpex_shadow",
 
-	 --vs = "//ant.resources/mesh_shadow/vs_shadowmaps_color_lighting_csm",
-	 --fs = "//ant.resources/mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm",
+	 --vs = "/pkg/ant.resources/mesh_shadow/vs_shadowmaps_color_lighting_csm",
+	 --fs = "/pkg/ant.resources/mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm",
 }
 
 state = "materials/states/default.state"
 
 properties = {
 	textures = {
-		s_basecolor = {type="texture", name="base color", stage=0, ref_path="//ant.resources/PVPScene/siegeweapon_d.texture"},
-		s_normal = {type="texture", name="normal", stage=1, ref_path="//ant.resources/PVPScene/siegeweapon_n.texture"},
+		s_basecolor = {type="texture", name="base color", stage=0, ref_path="/pkg/ant.resources/PVPScene/siegeweapon_d.texture"},
+		s_normal = {type="texture", name="normal", stage=1, ref_path="/pkg/ant.resources/PVPScene/siegeweapon_n.texture"},
 	},
 	uniforms = {
 		u_specularColor = {type="v4", name="specular color", default= {200/255, 200/255, 200/255, 0.08}},

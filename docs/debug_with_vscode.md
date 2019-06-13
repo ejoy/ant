@@ -48,7 +48,7 @@
         "stopOnEntry": true,
         "sourceFormat": "string",
         "skipFiles": [
-            "//ant.debugger/*"
+            "/pkg/ant.debugger/*"
         ],
         "sourceMaps": [
             [
@@ -56,11 +56,11 @@
                 "${workspaceRoot}/*"
             ],
             [
-                "//ant.modelviewer/*",
+                "/pkg/ant.modelviewer/*",
                 "${workspaceRoot}/tools/modelviewer/*"
             ],
             [
-                "//ant.*",
+                "/pkg/ant.*",
                 "${workspaceRoot}/packages/*"
             ]
         ]
@@ -75,7 +75,7 @@
         "runtimeExecutable": "${workspaceFolder}/runtime/windows/ant.exe",
         "sourceFormat": "string",
         "skipFiles": [
-            "//ant.debugger/*"
+            "/pkg/ant.debugger/*"
         ],
         "sourceMaps": [
             [
@@ -83,11 +83,11 @@
                 "${workspaceRoot}/*"
             ],
             [
-                "//ant.modelviewer/*",
+                "/pkg/ant.modelviewer/*",
                 "${workspaceRoot}/tools/modelviewer/*"
             ],
             [
-                "//ant.*",
+                "/pkg/ant.*",
                 "${workspaceRoot}/packages/*"
             ]
         ]

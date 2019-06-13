@@ -36,7 +36,7 @@ local function require_package(name)
     end
     local info = registered[name]
     if not info.env then
-		info.env = sandbox.env("//"..name, name)
+		info.env = sandbox.env("/pkg/"..name, name)
     end
     return info.env.require(info.config.entry)
 end
@@ -78,10 +78,10 @@ local function find(name)
 end
 
 local function m_loadfile(filename)
-    local name = filename:root_name():string():sub(3)
+    local name = filename:root_name():string():sub(6)
     local info = registered[name]
     if not info.env then
-        info.env = sandbox.env("//"..name, name)
+        info.env = sandbox.env("/pkg/"..name, name)
     end
     local fs = require "filesystem"
     return fs.loadfile(filename, 't', info.env)

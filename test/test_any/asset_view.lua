@@ -276,7 +276,7 @@ function asset_view:_on_canvas_map()
         local texture_tbl = {
             s_texColor = {
                 name = "tex color",
-                ref_path = fs.path "//ant.resources/PVPScene/siegeweapon_d.texture",
+                ref_path = fs.path "/pkg/ant.resources/PVPScene/siegeweapon_d.texture",
                 stage = 0,
                 type = "texture",
             }
@@ -339,7 +339,7 @@ function asset_view:create_foucs_entity(mesh, material)
         material = {
             content = {
                 {
-                    ref_path = fs.path "//ant.resources/materials/singlecolor.material"
+                    ref_path = fs.path "/pkg/ant.resources/materials/singlecolor.material"
                 }
             }
         }

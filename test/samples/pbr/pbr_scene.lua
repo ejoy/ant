@@ -47,7 +47,7 @@ function pbr_scene.create_scene(world)
                        {0,0,0,1},
                        {0,0,0},
                        {0.1,0.1,0.1},
-                      "//ant.resources/sphere.mesh",
+                      "/pkg/ant.resources/sphere.mesh",
                       "//pbr/assets/material/Cerberus_LP.material"
                     )
     local rotation = to_radian({-90,90,0})
@@ -67,7 +67,7 @@ function pbr_scene.create_scene(world)
                                 {12.0+j*6, 7.7867187, -4.0 -i*6},
                                 {0,0,0},
                                 {0.05,0.05,0.05},
-                                "//ant.resources/sphere.mesh",
+                                "/pkg/ant.resources/sphere.mesh",
                                 "//pbr/assets/material/gold.material",
                                 metal, rough )
         end 
@@ -81,7 +81,7 @@ function pbr_scene.create_scene(world)
                                 {50.0+j*6, 7.7867187, -4.0 -i*6},
                                 {0,0,0},
                                 {0.05,0.05,0.05},
-                                "//ant.resources/sphere.mesh",
+                                "/pkg/ant.resources/sphere.mesh",
                                 "//pbr/assets/material/plastic.material",
                                 metal, rough )
         end 

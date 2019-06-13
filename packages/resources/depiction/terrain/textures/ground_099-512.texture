@@ -1,4 +1,4 @@
-path = "//ant.resources.binary/terrain/ground_099-512.dds"
+path = "/pkg/ant.resources.binary/terrain/ground_099-512.dds"
 
 sampler = {
 	-- U = "CLAMP",

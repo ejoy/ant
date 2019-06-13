@@ -1,4 +1,4 @@
-path = "//ant.resources.binary/terrain/pvp2_mask_a.dds"
+path = "/pkg/ant.resources.binary/terrain/pvp2_mask_a.dds"
 sampler = {
 	-- U = "CLAMP",
 	-- V = "CLAMP",

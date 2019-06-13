@@ -7,4 +7,4 @@ u_basecolor_factor = {1, 1, 1, 1}
 u_emissive_factor = {1, 1, 1, 1}
 u_param_factor = {1, 1, 1, 1}
 
-material_path = "//ant.resources/depiction/materials/pbr.material"
+material_path = "/pkg/ant.resources/depiction/materials/pbr.material"

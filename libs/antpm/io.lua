@@ -4,17 +4,17 @@ local nio = io
 
 local function vfspath(value)
     local pm = require "antpm"
-    assert(value:sub(1, 2) == '//')
-    local pos = value:find('/', 3, true)
+    assert(value:sub(1, 5) == '/pkg/')
+    local pos = value:find('/', 6, true)
     if not pos then
-        local root = pm.find(value:sub(3))
+        local root = pm.find(value:sub(6))
         if not root then
 		    error(("No file '%s'"):format(value))
             return
         end
         return root
     end
-	local root = pm.find(value:sub(3, pos-1))
+	local root = pm.find(value:sub(6, pos-1))
 	if not root then
         error(("No file '%s'"):format(value))
 		return
