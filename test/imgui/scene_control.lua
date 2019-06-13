@@ -33,11 +33,9 @@ function scene_control.test_new_world(raw_path)
         -- "editor_system"
     }
 
-    vfs.remove_mount("currentmap")
-    vfs.add_mount("currentmap", path:parent_path())
     local pm = require "antpm"
     if not pm.find(pkg_name) then
-        pkg_name = pm.register("currentmap")
+        pkg_name = pm.register(path:parent_path())
     end
     
     packages[#packages+1] = pkgname

@@ -1,30 +1,33 @@
 local sandbox = require "antpm.sandbox"
 local vfs = require "vfs.simplefs"
+require "editor.vfs"
+local editorvfs = require "vfs"
+local lfs = require "filesystem.cpp"
 local dofile = dofile
 
 local registered = {}
 local loaded = {}
 
-local function register(pkg)
-    if not vfs.type(pkg) then
-        error(('Cannot find package `%s`.'):format(pkg))
+local function register(localpath)
+    if not lfs.is_directory(localpath) then
+        error(('`%s` is not a directory.'):format(localpath:string()))
     end
-    local cfg = vfs.join(pkg, "package.lua")
-    if not vfs.type(cfg) then
-        error(('Cannot find package config `%s`.'):format(cfg))
+    local cfgpath = localpath / "package.lua"
+    if not lfs.exists(cfgpath) then
+        error(('`%s` does not exist.'):format(cfgpath:string()))
     end
-    local cfgpath = assert(vfs.realpath(cfg))
-    local config = dofile(cfgpath)
+    local config = dofile(cfgpath:string())
     for _, field in ipairs {'name'} do
         if not config[field] then
-            error(('Missing `%s` field in `%s`.'):format(field, cfg))
+            error(('Missing `%s` field in `%s`.'):format(field, cfgpath:string()))
         end 
     end
     if registered[config.name] then
-        error(('Duplicate definition package `%s` in `%s`.'):format(config.name, pkg))
+        error(('Duplicate definition package `%s` in `%s`.'):format(config.name, localpath:string()))
     end
+    editorvfs.add_mount("pkg/"..config.name, localpath)
     registered[config.name] = {
-        root = pkg,
+        root = "/pkg/"..config.name,
         config = config,
     }
     return config.name
@@ -43,7 +46,7 @@ end
 
 local packagedir = 'engine/packages'
 for pkg in vfs.each(packagedir) do
-    register(vfs.join(packagedir, pkg))
+    register(lfs.path(vfs.realpath(vfs.join(packagedir, pkg))))
 end
 
 local function import(name)

@@ -3,7 +3,7 @@ local vfs = require "vfs.simplefs"
 local pkgio = require "antpm.io"
 
 local path_mt = {}
-path_mt.__name = 'pkg-filesystem'
+path_mt.__name = 'vfs-filesystem'
 path_mt.__index = path_mt
 
 local function constructor(str)
@@ -45,24 +45,7 @@ local function normalize_split(fullname)
 end
 
 local function vfspath(self)
-    local pm = require "antpm"
-    assert(self:is_absolute())
-    local value = self._value
-    local pos = value:find('/', 6, true)
-    if not pos then
-        local root = pm.find(value:sub(6))
-        if not root then
-		    error(("No file '%s'"):format(value))
-            return
-        end
-        return root
-    end
-	local root = pm.find(value:sub(6, pos-1))
-	if not root then
-        error(("No file '%s'"):format(value))
-		return
-	end
-    return vfs.join(root, value:sub(pos+1))
+    return self._value
 end
 
 function path_mt:__tostring()
