@@ -2371,6 +2371,36 @@ cGetTreeNodeToLabelSpacing(lua_State *L) {
 	return 1;
 }
 
+static int 
+cColumns(lua_State *L) {
+	int count = 1;
+	const char * id = 0;
+	bool border = true;
+	if (lua_isinteger(L, 1)) {
+		count = lua_tointeger(L, 1);
+		if (lua_isstring(L, 2)) {
+			id = lua_tostring(L, 2);
+			if (lua_isboolean(L, 3))
+				border = lua_toboolean(L, 3);
+		}
+	}
+	ImGui::Columns(count, id, border);
+	return 0;
+}
+
+static int
+cNextColumn(lua_State *L) {
+	ImGui::NextColumn();
+	return 0;
+}
+
+static int
+cSetNextItemWidth(lua_State * L) {
+	float w = lua_tonumber(L, 1);
+	ImGui::SetNextItemWidth(w);
+	return 0;
+}
+
 #ifdef _MSC_VER
 #pragma endregion IMP_CURSOR
 #endif
@@ -3195,6 +3225,9 @@ luaopen_imgui(lua_State *L) {
 		{ "GetFrameHeightWithSpacing", cGetFrameHeightWithSpacing },
 		{ "TreeAdvanceToLabelPos", cTreeAdvanceToLabelPos },
 		{ "GetTreeNodeToLabelSpacing", cGetTreeNodeToLabelSpacing },
+		{ "Columns", cColumns },
+		{ "NextColumn", cNextColumn },
+		{ "SetNextItemWidth", cSetNextItemWidth },
 		{ NULL, NULL },
 	};
 
