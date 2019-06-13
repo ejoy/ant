@@ -65,10 +65,19 @@ end
 
 local mesh = ecs.component "mesh"
 	["opt"].ref_path "respath"
+	.lodidx "int" (1)
 
 function mesh:init()
 	if self.ref_path then
 		self.assetinfo = asset.load(self.ref_path)
+		local scene = self.assetinfo.handle
+		if scene.scenelods then
+			assert(0 <= scene.scene < scene.scenelods)
+			if self.lodidx <= 0 or self.lodidx > #scene.scenelods then
+				self.lodidx = 1
+			end
+			scene.scene = self.lodidx - 1
+		end
 	end
 	return self
 end
