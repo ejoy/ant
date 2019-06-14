@@ -34,7 +34,7 @@ local function bootstrap()
         end
         require 'runtime.vfs'
         require 'backend.worker'
-    ]=]):format(init_thread, "engine/libs/?.lua;engine/packages/debugger/?.lua")
+    ]=]):format(init_thread, "engine/?.lua;pkg/ant.debugger/?.lua")
 end
 
 local function start_worker(wait)

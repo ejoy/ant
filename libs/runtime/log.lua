@@ -49,7 +49,7 @@ for i, name in ipairs(modes) do
         if info.short_src:sub(-12) == 'debugger.lua' then
             info = debug.getinfo(3, 'Sl')
         end
-        if info.short_src:sub(1, 18) == 'vfs://engine/libs/' then
+        if info.short_src:sub(1, 18) == 'vfs://engine/' then
             info.short_src = info.short_src:sub(19)
         end
         if info.short_src:sub(1, 6) == 'vfs://' then

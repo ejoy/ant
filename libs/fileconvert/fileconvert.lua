@@ -1,7 +1,7 @@
 local lfs = require "filesystem.local"
 
 local converter_names = {
-	shader = "compileshadersource",
+	shader = "fileconvert.compileshadersource",
 	mesh = "convertmesh",
 	texture = "",
 }

@@ -199,33 +199,21 @@ end
 		xxx = mountxxx,
 	}
 ]]
-function repo.init(mount)
-	local rootpath = mount[1]
+function repo.init(rootpath)
 	assert(lfs.is_directory(rootpath), "Not a dir")
 	local mountpath = rootpath / ".mount"
 	if lfs.is_regular_file(mountpath) then
 		for name, path in pairs(access.readmount(mountpath)) do
 			print("Mount", name, path)
 		end
-	else
-		local mountfile = {}
-		for name, path in pairs(mount) do
-			print("Mount", name, path)
-			if name ~= 1 then
-				table.insert(mountfile, string.format("%s %s", name, path:string()))
-			end
-		end
-		if #mountfile > 0 then
-			table.sort(mountfile)
-			local f = assert(lfs.open(mountpath, "wb"))
-			f:write(table.concat(mountfile,"\n"))
-			f:close()
-		end
 	end
 	local repopath = rootpath / ".repo"
 	if not lfs.is_directory(repopath) then
 		-- already has .repo
 		assert(lfs.create_directories(repopath))
+	end
+	if not lfs.is_directory(rootpath / "pkg") then
+		assert(lfs.create_directories(rootpath / "pkg"))
 	end
 
 	-- mkdir dirs

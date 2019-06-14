@@ -25,8 +25,20 @@ function access.readmount(filename)
 				error ("Invalid .mount file : " .. line)
 			end
 		end
-		path = path:gsub("%s*#.*$","")	-- strip comment
-		ret[name] = lfs.path(path)
+		path = lfs.path(path:gsub("%s*#.*$",""))	-- strip comment
+		if name == '@pkg-one' then
+			local pm = require "antpm"
+			local pkgname = pm.load_package(path)
+			ret['pkg/'..pkgname] = path
+		elseif name == '@pkg' then
+			local pm = require "antpm"
+			local pkgs = pm.load_packages(path)
+			for pkgname, pkgpath in pairs(pkgs) do
+				ret['pkg/'..pkgname] = pkgpath
+			end
+		else
+			ret[name] = path
+		end
 	end
 	f:close()
 	return ret
@@ -62,10 +74,12 @@ end
 function access.list_files(repo, filepath)
 	local rpath = access.realpath(repo, filepath)
 	local files = {}
-	for name in rpath:list_directory() do
-		local filename = name:filename():string()
-		if filename:sub(1,1) ~= '.' then	-- ignore .xxx file
-			files[filename] = true
+	if lfs.exists(rpath) then
+		for name in rpath:list_directory() do
+			local filename = name:filename():string()
+			if filename:sub(1,1) ~= '.' then	-- ignore .xxx file
+				files[filename] = true
+			end
 		end
 	end
 	local ignorepaths = rpath / ".ignore"
@@ -125,7 +139,7 @@ function access.sha1_from_file(filename)
 end
 
 local function build(identity, source, lk, tmp)
-	local fileconvert = import_package "ant.fileconvert"
+	local fileconvert = require "fileconvert"
 	return fileconvert(identity, source, lk, tmp)
 end
 

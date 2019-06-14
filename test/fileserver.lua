@@ -1,4 +1,14 @@
-dofile "libs/editor.lua"
+package.path = table.concat({
+	"libs/?.lua",
+	"libs/?/?.lua",
+	"packages/?/?.lua"
+}, ";")
+
+package.cpath = table.concat({
+    "clibs/?.dll",
+	"bin/?.dll",
+}, ";")
+require "editor.vfs"
 
 local reponame = assert(...,  "Need repo name")
 local config = {
@@ -12,24 +22,25 @@ end
 
 local fw = require "filewatch"
 local repo = require "vfs.repo"
-local network = import_package "ant.network"
 local protocol = require "protocol"
 
+require "editor.vfs"
 local vfs = require "vfs.simplefs"
 local lfs = require "filesystem.local"
 
 local WORKDIR = lfs.current_path()
 local repopath = lfs.path(reponame)
 
-assert(loadfile "tools/repo/newrepo.lua")(repopath)
-
 LOG ("Open repo : ", repopath)
 
+repo.init(repopath)
 local repo = assert(repo.new(repopath))
 
 LOG ("Rebuild repo")
 repo:index()
 repo:rebuild()
+
+local network = require "network"
 
 local watch = {}
 assert(fw.add(repopath:string()))

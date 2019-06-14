@@ -40,7 +40,7 @@ local config = {
 	},
 }
 
-local glb_cvt = require "glb_convertor"
+local glb_cvt = require "fileconvert.glb_convertor"
 
 return function (identity, sourcefile, param, outfile)
 	assert(param.sourcetype == "glb")

@@ -1,8 +1,7 @@
-local toolset = require "toolset"
+local toolset = require "fileconvert.toolset"
 local lfs = require "filesystem.local"
-local fs = require "filesystem"
 
-local engine_shader_srcpath = fs.path("/pkg/ant.resources/shaders/src"):localpath()
+local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders/src"
 
 local function compile_shader(plat, srcfilepath, outfilepath, shadertype)
 	local config = {
