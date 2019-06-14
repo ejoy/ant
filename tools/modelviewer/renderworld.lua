@@ -61,7 +61,7 @@ function model_review_system:init()
 	}
 
 	world:create_entity {
-		transform = mu.translate_mat({2, 2, 2, 0}),
+		transform = mu.srt({0.01, 0.01, 0.01}),
 		can_render = true,
 		mesh = {
 			ref_path = fs.path "//ant.resources/depiction/meshes/test_glb.mesh",

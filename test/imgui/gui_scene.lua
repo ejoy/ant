@@ -18,7 +18,7 @@ end
 function GuiScene:_get_editpath()
     if self.editpath == nil then
         local editpath = {}
-        editpath.text = "test/samples/features/package.lua"
+        editpath.text = "test/samples/unity_viking/package.lua"
         self.editpath = editpath
     end
     return self.editpath
@@ -49,8 +49,8 @@ function  GuiScene:_scene_menu()
         print_a(box)
         scene_control.test_new_world(box.text)
     end
-    cursor.SameLine()
-    widget.InputText("", box)
+	cursor.SameLine()
+	widget.InputText("", box)
     cursor.Separator()
     local fps = self:_get_editfps()
     if widget.InputInt("FPS",fps) then

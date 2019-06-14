@@ -91,9 +91,9 @@ local function traverse_scene(scene, eid, materialcontent, worldmat, filter)
 			if meshidx then
 				local mesh = meshes[meshidx+1]
 			
-				for idx, prim in ipairs(mesh.primitives) do
+				for _, prim in ipairs(mesh.primitives) do
 					ru.insert_primitive(eid, prim, scene, 
-						materialcontent[idx] or materialcontent[1], 
+						materialcontent,
 						nodetrans, filter)
 				end
 			end

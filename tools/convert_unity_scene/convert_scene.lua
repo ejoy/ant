@@ -10,15 +10,9 @@ if not fs.exists(scenefile) then
 	error(string.format("file not found:%s", scenefile:string()))
 end
 
-local function loadscene(scenefile)
-	local c, err = loadfile(scenefile:string())
-	if c == nil then
-		error(string.format("load file error:", err))
-	end
-	return c()
-end
+local util = require "convert_unity_scene.util"
 
-local world = loadscene(scenefile)
+local world = util.loadworld(scenefile)
 for _, scene in ipairs(world) do
 	local fbxfilepaths = {}
 	local meshfiles = scene.Meshes

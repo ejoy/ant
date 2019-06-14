@@ -46,7 +46,7 @@ scene_walker.depend 'timesystem'
 
 
 function scene_walker:init()
-    renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 50, 5}, "main_view")
+    renderutil.create_main_queue(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, 5})
 
     do
         local rotation = helpTool.to_radian({-220,-235,0,0})
@@ -61,7 +61,7 @@ function scene_walker:init()
     -- fpsscene.lua 280000
     -- buildingc_scene.lua
     -- sample.lua
-    unitySceneMaker.create(world,"//unity_viking/assets/scene/viking.lua") 
+    unitySceneMaker.create(world,"//unity_viking/assets/scene/viking_glb.lua") 
 
     --computil.create_grid_entity(world, 'grid', 64, 64, 1)
 
