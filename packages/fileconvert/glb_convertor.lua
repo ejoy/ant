@@ -141,6 +141,7 @@ local function compile_primitive(scene, primitive)
 
 	return concat_table(seri_attrib) .. 
 			string.pack("<I4", primitive.indices or 0xffffffff) .. 
+			string.pack("<I4", primitive.material or 0xffffffff) .. 
 			string.pack("<I4", primitive.mode or 4) .. 
 			concat_table(seri_accessor) .. 
 			concat_table(seri_bufferview)
@@ -216,6 +217,10 @@ local function deserialize_primitive_itself(seri_data, seri_offset)
 	seri_offset = seri_offset + 4
 	prim.indices = index_buffer_idx ~= 0xffffffff and index_buffer_idx or nil
 
+	local material_idx = string.unpack("<I4", seri_data, seri_offset)
+	seri_offset = seri_offset + 4
+	prim.material = material_idx ~= 0xffffffff and material_idx or nil
+
 	prim.mode = string.unpack("<I4", seri_data, seri_offset)
 	seri_offset = seri_offset + 4
 	return prim, seri_offset
@@ -259,6 +264,38 @@ local function reset_root_pos(scene)
 	end
 end
 
+local function refine_prim_offset(newprim, newacc, newbvs, newscene)
+	local accessor_index_offset = #newscene.accessors
+	local bufferview_index_offset = #newscene.bufferViews
+
+	if bufferview_index_offset ~= 0 then
+		for _, acc in ipairs(newacc) do
+			acc.bufferView = acc.bufferView + bufferview_index_offset
+		end
+	end
+
+	if accessor_index_offset ~= 0 then
+		local newattributes = newprim.attributes
+		for k, v in pairs(newattributes) do
+			newattributes[k] = v + accessor_index_offset
+		end
+
+		if newprim.indices then
+			newprim.indices = newprim.indices + accessor_index_offset
+		end
+	end
+
+	local bindata_offset = newscene.buffers[1].byteLength
+	if bindata_offset ~= 0 then
+		for _, bv in ipairs(newbvs) do
+			bv.byteOffset = bv.byteOffset + bindata_offset
+		end
+	end
+
+	table.move(newacc, 1, #newacc, #newscene.accessors+1, newscene.accessors)
+	table.move(newbvs, 1, #newbvs, #newscene.bufferViews+1, newscene.bufferViews)
+end
+
 return function (srcname, dstname, cfg)
 	local glbdata = glbloader.decode(srcname)
 	local scene = glbdata.info
@@ -267,34 +304,22 @@ return function (srcname, dstname, cfg)
 	local scenerootnode = scenes[scene.scene+1].nodes
 
 	local new_bindata_table = {}
-	local bindata_offset = 0
-
-	local new_accessors = {}
-	local new_bufferviews = {}	
-	
-	local function refine_prim_offset(newprim, newacc, newbvs)
-		local accessor_index_offset = #new_accessors
-		local bufferview_index_offset = #new_bufferviews
-
-		if bufferview_index_offset ~= 0 then
-			for _, acc in ipairs(newacc) do
-				acc.bufferView = acc.bufferView + bufferview_index_offset
-			end
-		end
-
-		if accessor_index_offset ~= 0 then
-			local newattributes = newprim.attributes
-			for k, v in pairs(newattributes) do
-				newattributes[k] = v + accessor_index_offset
-			end
-		end
-
-		if bindata_offset ~= 0 then
-			for _, bv in ipairs(newbvs) do
-				bv.byteOffset = bv.byteOffset + bindata_offset
-			end
-		end
-	end
+	local newscene = {
+		scene = scene.scene,
+		scenes = scenes,
+		scenelods = scene.scenelods,
+		nodes = nodes,
+		meshes = meshes,
+		accessors = {},
+		bufferViews = {},
+		buffers = {
+			{byteLength = 0,}
+		},
+		asset = {
+			version = scene.asset.version,
+			generator = "ant(" .. scene.asset.generator .. ")",
+		}
+	}
 
 	local function fetch_mesh_buffers(scenenodes)
 		for _, nodeidx in ipairs(scenenodes) do
@@ -312,14 +337,12 @@ return function (srcname, dstname, cfg)
 					local new_seri_prim, prim_binary_buffers = gltf_converter.convert_buffers(seri_prim, glbdata.bin, cfg)
 					local newprim, newacc, newbvs = deserialize_primitive(new_seri_prim)
 					
-					refine_prim_offset(newprim, newacc, newbvs)
+					refine_prim_offset(newprim, newacc, newbvs, newscene)
 
 					primitives[idx] = newprim
-					table.move(newacc, 1, #newacc, #new_accessors+1, new_accessors)
-					table.move(newbvs, 1, #newbvs, #new_bufferviews+1, new_bufferviews)
 
 					new_bindata_table[#new_bindata_table+1] = prim_binary_buffers
-					bindata_offset = bindata_offset + #prim_binary_buffers
+					newscene.buffers[1].byteLength = newscene.buffers[1].byteLength + #prim_binary_buffers
 				end
 			end
 		end
@@ -328,23 +351,6 @@ return function (srcname, dstname, cfg)
 	fetch_mesh_buffers(scenerootnode)
 	
 	local new_bindata = table.concat(new_bindata_table, "")
-
-	local newscene = {
-		scene = scene.scene,
-		scenes = scenes,
-		scenelods = scene.scenelods,
-		nodes = nodes,
-		meshes = meshes,
-		accessors = new_accessors,
-		bufferViews = new_bufferviews,
-		buffers = {
-			{byteLength = #new_bindata,}
-		},
-		asset = {
-			version = scene.asset.version,
-			generator = "ant(" .. scene.asset.generator .. ")",
-		}
-	}
 
 	if cfg.flags.reset_root_pos then
 		reset_root_pos(newscene)

@@ -43,6 +43,7 @@ struct primitive {
 	
 	std::map<uint32_t, uint32_t> attributes;	// need order
 	uint32_t	indices;
+	uint32_t	materialidx;
 	uint32_t	mode;
 
 	std::vector<accessor> accessors;
@@ -178,6 +179,7 @@ fetch_primitive(lua_State *L, int index,  primitive &prim) {
 	}
 
 	prim.indices = *uint32_data++;
+	prim.materialidx = *uint32_data++;
 	prim.mode = *uint32_data++;
 
 	// read accessors
@@ -307,13 +309,13 @@ get_num_vertices(const primitive &prim) {
 }
 
 static primitive::accessor
-create_accessor(uint32_t count, uint32_t bvidx, uint32_t elemcount, uint32_t offset = 0) {
+create_accessor(uint32_t count, uint32_t bvidx, uint32_t elemtype, uint32_t offset = 0) {
 	primitive::accessor acc;
 	acc.bufferView = bvidx;
 	acc.byteOffset = offset;
 	acc.count = count;
 	acc.componentType = ComponentType::FLOAT;
-	acc.type = elemcount;
+	acc.type = elemtype;
 	acc.maxvalue_count = acc.minvalue_count = 0;
 
 	return acc;
@@ -344,6 +346,7 @@ serialize_primitive(const primitive &prim) {
 	}
 
 	write_u32(prim.indices);
+	write_u32(prim.materialidx);
 	write_u32(prim.mode);
 
 	write_u32((uint32_t)prim.accessors.size());
@@ -415,6 +418,50 @@ rearrange_indices_buffer(primitive &prim, uint32_t binaryoffset, data_buffer &in
 	newbuffers.push_back(std::move(indexbuffer));
 
 	return binaryoffset + numbytes;
+}
+
+static void
+refine_primitive(primitive &prim, std::map<uint32_t, uint32_t>&new_attributes) {
+	auto fetch_attribute_remapper = [](const std::map<uint32_t, uint32_t> &attributes) {
+		std::map<uint32_t, uint32_t>	remapper;
+		for (auto &a : attributes) {
+			assert(remapper.find(a.second) == remapper.end());
+			remapper[a.second] = a.first;
+		}
+		return remapper;
+	};
+
+	auto new_rempper = fetch_attribute_remapper(new_attributes);
+
+	uint32_t offset = 0;
+	std::vector<uint32_t> removed_accessors;
+	for (auto &a : prim.attributes) {
+		const uint32_t accidx = a.second;
+		if (new_rempper.find(accidx) == new_rempper.end()) {
+			const uint32_t correct_accidx = accidx - offset;
+			prim.accessors.erase(prim.accessors.begin() + correct_accidx);
+			for (auto& a : new_attributes) {
+				if (a.second > correct_accidx) {
+					--a.second;
+				}
+			}
+
+			if (prim.indices > correct_accidx) {
+				--prim.indices;
+			}
+
+			++offset;
+		}
+	}
+
+#ifdef _DEBUG
+	for (auto& a : new_attributes) {
+		assert(a.second < prim.accessors.size());
+	}
+	assert(prim.indices < prim.accessors.size());
+#endif // DEBUG
+
+	std::swap(prim.attributes, new_attributes);
 }
 
 static uint32_t
@@ -495,7 +542,7 @@ rearrange_buffers(
 		binary_offset += newbuf.buffersize;
 	}
 	
-	std::swap(prim.attributes, new_attributes);
+	refine_primitive(prim, new_attributes);
 	return binary_offset;
 }
 
@@ -518,26 +565,34 @@ create_tangent_bitangent_primitive_info(primitive &prim, attrib_buffers &abuffer
 	
 	for (auto attrib : attribs) {
 		auto attribname = find_attrib_name(std::get<0>(attrib));
-		const auto &buffer = abuffers.find(attribname)->second;
 
-		const uint32_t stride = (uint32_t)std::get<2>(attrib);
+		if (prim.attributes.find(attribname) == prim.attributes.end()) {
+			const auto &buffer = abuffers.find(attribname)->second;
 
-		uint32_t bvidx = (uint32_t)prim.bufferviews.size();
-		prim.bufferviews.push_back(create_bufferview(buffer.buffersize, stride, 0));
+			const uint32_t stride = (uint32_t)std::get<2>(attrib);
 
-		uint32_t accidx = (uint32_t)prim.accessors.size();
-		prim.accessors.push_back(create_accessor(num_vertices, bvidx, get_type_name(std::get<1>(attrib))));
+			uint32_t bvidx = (uint32_t)prim.bufferviews.size();
+			prim.bufferviews.push_back(create_bufferview(buffer.buffersize, stride, 0));
 
-		prim.attributes[attribname] = accidx;
+			uint32_t accidx = (uint32_t)prim.accessors.size();
+			prim.accessors.push_back(create_accessor(num_vertices, bvidx, get_type_name(std::get<1>(attrib))));
+
+			prim.attributes[attribname] = accidx;
+		}
 	}
 }
 
 static void
 check_create_tangent_bitangent(const load_config &cfg, primitive &prim, attrib_buffers &abuffers, data_buffer &indexbuffer) {
 	if (cfg.NeedCreateTangentSpaceData()) {
-		const uint32_t num_vertices = get_num_vertices(prim);
-		calc_tangents(abuffers, num_vertices, indexbuffer, prim.accessors[prim.indices].count);
-		create_tangent_bitangent_primitive_info(prim, abuffers, num_vertices);
+		const auto tangentname = find_attrib_name_by_fullname("TANGENT");
+		const auto bitangentname = find_attrib_name_by_fullname("BITANGENT");
+
+		if (abuffers.find(tangentname) == abuffers.end() || abuffers.find(bitangentname) == abuffers.end()) {
+			const uint32_t num_vertices = get_num_vertices(prim);
+			calc_tangents(abuffers, num_vertices, indexbuffer, prim.accessors[prim.indices].count);
+			create_tangent_bitangent_primitive_info(prim, abuffers, num_vertices);
+		}
 	}
 }
 

@@ -60,5 +60,8 @@ extern attrib_name attribname_mapper[NUM_ATTIRBUTE_NAME];
 uint32_t
 find_attrib_name(const std::string &elem);
 
+uint32_t
+find_attrib_name_by_fullname(const std::string &fullname);
+
 void
 calc_tangents(attrib_buffers &abuffers, uint32_t num_vertices, const data_buffer &indices, uint32_t num_indices);

@@ -95,7 +95,7 @@ find_attrib_name(const std::string &elem) {
 	return NUM_ATTIRBUTE_NAME;
 }
 
-static uint32_t 
+uint32_t 
 find_attrib_name_by_fullname(const std::string &fullname) {
 	for (uint32_t attribname = 0; attribname < NUM_ATTIRBUTE_NAME; ++attribname) {
 		const auto& a = attribname_mapper[attribname];
@@ -122,14 +122,6 @@ calc_tangents(attrib_buffers &abuffers, uint32_t num_vertices, const data_buffer
 	const data_buffer *texcoord0 = getbuffer(abuffers, "TEXCOORD_0");
 	const data_buffer* normals = getbuffer(abuffers, "NORMAL");
 	
-	if (getbuffer(abuffers, "TANGENT") != nullptr) {
-		std::cerr << "already has TANGENT" << std::endl;
-	}
-
-	if (getbuffer(abuffers, "BITANGENT") != nullptr) {
-		std::cerr << "alread has BITANGENT" << std::endl;
-	}
-
 	assert(num_vertices < std::numeric_limits<uint16_t>::max());
 
 	for (uint32_t ii = 0, num = num_indices / 3; ii < num; ++ii) {
@@ -183,7 +175,12 @@ calc_tangents(attrib_buffers &abuffers, uint32_t num_vertices, const data_buffer
 		*b = glm::cross(*n, tt);
 	}
 
-	abuffers.insert(std::make_pair(tangentname, std::move(tangents)));
-	abuffers.insert(std::make_pair(bitangentname, std::move(bitangents)));
+	if (getbuffer(abuffers, "TANGENT") == nullptr) {
+		abuffers.insert(std::make_pair(tangentname, std::move(tangents)));
+	}
+
+	if (getbuffer(abuffers, "BITANGENT") == nullptr) {
+		abuffers.insert(std::make_pair(bitangentname, std::move(bitangents)));
+	}	
 }
 

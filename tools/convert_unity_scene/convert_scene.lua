@@ -112,3 +112,18 @@ local newscenefile = scenefile:parent_path() / "viking_glb.lua"
 local f = fs.open(newscenefile, "w")
 f:write(stringify(world, true, false))
 f:close()
+
+-- local meshdesc_path = viking_projpath / "Assets/mesh_desc"
+-- local cu = require "fbx2gltf.util"
+
+-- local files = {}
+-- cu.list_files(meshdesc_path, function(p) return p:extension():string():lower() == ".mesh" end, {}, files)
+
+-- for _, f in ipairs(files)do
+-- 	local t = cu.raw_table(f)
+-- 	t.mesh_path = fs.path(t.mesh_path):replace_extension("glb"):string()
+	
+-- 	local ff = fs.open(f, "w")
+-- 	ff:write(stringify(t, false, true))
+-- 	ff:close()
+-- end
