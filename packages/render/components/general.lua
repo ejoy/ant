@@ -65,19 +65,28 @@ end
 
 local mesh = ecs.component "mesh"
 	["opt"].ref_path "respath"
+	["opt"].material_refs "int[]"
 	.lodidx "int" (1)
+
+local function check_mesh_lod(mesh)
+	local scene = mesh.assetinfo.handle
+	if scene.scenelods then
+		assert(0 <= scene.scene < scene.scenelods)
+		if mesh.lodidx <= 0 or mesh.lodidx > #scene.scenelods then
+			print("invalid lod:", mesh.lodidx, "max lod:", scene.scenelods)
+			mesh.lodidx = 1
+		end
+	else
+		if scene.scene ~= mesh.lodidx - 1 then
+			print("default lod scene is not equal to lodidx")
+		end
+	end
+end
 
 function mesh:init()
 	if self.ref_path then
 		self.assetinfo = asset.load(self.ref_path)
-		local scene = self.assetinfo.handle
-		if scene.scenelods then
-			assert(0 <= scene.scene < scene.scenelods)
-			if self.lodidx <= 0 or self.lodidx > #scene.scenelods then
-				self.lodidx = 1
-			end
-			scene.scene = self.lodidx - 1
-		end
+		check_mesh_lod(self)
 	end
 	return self
 end
