@@ -32,16 +32,14 @@ BUILD_PATH := build
 
 ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles
-  BGFX_INIT_CMD = make .build/projects/gmake-osx
-  BGFX_MAKE_CMD = make -C .build/projects/gmake-osx config=$(BGFX_CONFIG_TYPE)64 -j8
+  BGFX_MAKEFILE = .build/projects/gmake-osx
   BGFX_CPRC_CMD = cp bgfx/.build/osx64_clang/bin/shaderc$(BGFX_CONFIG_TYPE) ../clibs/
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
 else ifeq "$(PLAT)" "ios"
   CMAKE_PROJ_TYPE = Unix Makefiles
-  BGFX_INIT_CMD = make .build/projects/gmake-ios-arm64
-  BGFX_MAKE_CMD = make ios-arm64-$(BGFX_CONFIG_TYPE) $(MP)
+  BGFX_MAKEFILE = .build/projects/gmake-ios-arm64
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
@@ -58,12 +56,20 @@ else ifeq "$(PLAT)" "msvc"
   CMAKE_PROJ_CLEAN = $(MSVC_MAKE_INFO) 
 else
   CMAKE_PROJ_TYPE = MSYS Makefiles
-  BGFX_INIT_CMD = make .build/projects/gmake-mingw-gcc
-  BGFX_MAKE_CMD = make mingw-gcc-$(BGFX_CONFIG_TYPE)64 $(MP)
+  BGFX_MAKEFILE = .build/projects/gmake-mingw-gcc
   BGFX_CPRC_CMD = cp bgfx/.build/win64_mingw-gcc/bin/shaderc$(BGFX_CONFIG_TYPE).exe ../clibs/
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
+endif
+
+ifneq "$(PLAT)" "msvc"
+BGFX_TARGET = bgfx bimg bx
+ifneq "$(BGFX_CPRC_CMD)" ""
+BGFX_TARGET += shaderc
+endif
+BGFX_INIT_CMD = make $(BGFX_MAKEFILE)
+BGFX_MAKE_CMD = make -R -C $(BGFX_MAKEFILE) config=$(BGFX_CONFIG_TYPE)64 -j8 $(BGFX_TARGET)
 endif
 
 # ASSIMP_FMT_NAMES := AMF 3DS AC ASE ASSBIN ASSXML B3D BVH COLLADA DXF CSM IRR LWO LWS MD2 MD3 MD5 MDC NFF NDO OFF OBJ OGRE OPENGEX PLY MS3D COB BLEND IFC XGL Q3D Q3BSP RAW SIB SMD STL TERRAGEN 3D X X3D GLTF 3MF MMD HMP MDL
