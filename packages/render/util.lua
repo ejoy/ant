@@ -261,13 +261,14 @@ end
 function util.insert_primitive(eid, prim, meshscene, material, worldmat, filter)
 	local result = filter.result
 	local function vb_info(prim, meshscene)
+		local bvidx_mapper = {}
 		local vbhandles = {}
 		for _, accidx in pairs(prim.attributes) do
 			local acc = meshscene.accessors[accidx+1]
 			local bvidx = acc.bufferView
-			local vbhandle = vbhandles[bvidx]
-			if vbhandle == nil then
-				vbhandles[bvidx] = meshscene.bufferViews[bvidx+1].handle
+			if not bvidx_mapper[bvidx] then
+				vbhandles[#vbhandles+1] = meshscene.bufferViews[bvidx+1].handle
+				bvidx_mapper[bvidx] = true
 			end
 		end
 
