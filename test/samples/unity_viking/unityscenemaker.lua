@@ -117,16 +117,18 @@ end
 --     return radians
 -- end
 
+local viking_assetpath = fs.path '//unity_viking/Assets'
+
 local function fetch_mesh_path(scene, ent, lodname, lodidx)
+	local mesh = ent.Mesh
+    if mesh == nil or mesh <= 0 then
+        return
+	end
+
 	local name = ent.Name
 	if name:match 'PlayerCollision' 
 	or name:match 'collider' then
 		return
-	end
-
-	local mesh = assert(ent.Mesh)
-    if mesh < 0 then
-        return
 	end
 	
 	local mesh_path = scene.Meshes[mesh]
@@ -134,7 +136,7 @@ local function fetch_mesh_path(scene, ent, lodname, lodidx)
         return
 	end
 	
-	return fs.path'//unity_viking/assets/mesh_desc/' / fs.path(mesh_path):filename():replace_extension('mesh')
+	return viking_assetpath / 'mesh_desc/' / fs.path(mesh_path):filename():replace_extension('mesh')
 end
 
 local function fetch_transform(ent)
@@ -189,7 +191,7 @@ local function fetch_material_paths(scene, ent)
 	-- local material_path = 'assets/materials/Concrete_Foundation_A.material'
 
 	local material_refpaths = {}
-	local material_rootpath = fs.path '//unity_viking/Assets/materials/'
+	local material_rootpath = viking_assetpath / 'materials'
 	local function add_material_refpath(material_filename)
 		local filepath = material_rootpath / fs.path(material_filename):filename():replace_extension('material')
 		table.insert(material_refpaths, {ref_path = filepath})
@@ -223,10 +225,12 @@ local function makeEntity(world, scene, ent, lodname, lodidx)
     --     print('check ')
     -- end
 
-	create_entity(world, ent.Name, 
-		fetch_transform(ent), 
-		fetch_mesh_path(scene, ent, lodname, lodidx), 
-		fetch_material_paths(scene, ent))
+	local mesh_path = fetch_mesh_path(scene, ent, lodname, lodidx)
+	if mesh_path then
+		local trans = fetch_transform(ent)
+		local material_paths = fetch_material_paths(scene, ent)
+		create_entity(world, ent.Name, trans, mesh_path, material_paths)
+	end
 
     sceneInfo:countEntity()
     sceneInfo:countActiveEntity()
