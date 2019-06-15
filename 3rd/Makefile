@@ -30,6 +30,8 @@ MSVC_MAKE_INFO := @echo msvc not support make single project, use 'make all plat
 
 BUILD_PATH := build
 
+WIN_SDK = 10.0.16299.0
+
 ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles
   BGFX_INIT_CMD = make .build/projects/gmake-osx
@@ -51,7 +53,7 @@ else ifeq "$(PLAT)" "msvc"
   CMAKE_PROJ_TYPE = Visual Studio 15 2017 Win64
 
   # only build debug project in msvc
-  BGFX_INIT_CMD = ../bx/tools/bin/windows/genie --with-examples --with-tools  --with-dynamic-runtime --with-shared-lib --with-windows=10.0.18362.0 vs2017
+  BGFX_INIT_CMD = ../bx/tools/bin/windows/genie --with-examples --with-tools  --with-dynamic-runtime --with-shared-lib --with-windows=$(WIN_SDK) vs2017
   BGFX_MAKE_CMD = $(MSVC_MAKE_INFO)
 
   CMAKE_PROJ_MAKE = $(MSVC_MAKE_INFO)
