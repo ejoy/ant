@@ -11,9 +11,7 @@ local util =require "convert_unity_scene.util"
 
 local world = util.loadworld(worldfile)
 
-local groups = {}
-
-local function classify_mesh_reference(scene, entitylist, parent)
+local function classify_mesh_reference(scene, entitylist, parent, groups)
 	for _, e in ipairs(entitylist) do
 		local meshidx = e.Mesh
 		if meshidx and e.Name:match "[Cc]ollider" then
@@ -42,50 +40,55 @@ local function classify_mesh_reference(scene, entitylist, parent)
 		end
 
 		if e.Ent then
-			if classify_mesh_reference(scene, e.Ent, e) then
+			if classify_mesh_reference(scene, e.Ent, e, groups) then
 				return true
 			end
 		end
 	end
 end
 
+local world_groups = {}
 for _, s in ipairs(world)do
-	classify_mesh_reference(s, s.Ent)
+	local groups = {}
+	classify_mesh_reference(s, s.Ent, nil, groups)
+	world_groups[#world_groups+1] = groups
 end
 
-local scene = world[1]
-for groupname, group in pairs(groups) do
-	print("group name:", groupname)
-	for meshidx, meshlist in pairs(group)do
-		local meshpath = scene.Meshes[meshidx]
-		print("mesh reference:", meshpath)
-		for _, mesh in ipairs(meshlist)do
-			print("mesh name:", mesh.name)
-			local function print_transform(trans)
-				local function print_list(l)
-					local t = {}
-					for _, v in ipairs(l) do
-						t[#t+1] = v
+for idx, scene in ipairs(world) do
+	local groups = world_groups[idx]
+	for groupname, group in pairs(groups) do
+		print("group name:", groupname)
+		for meshidx, meshlist in pairs(group)do
+			local meshpath = scene.Meshes[meshidx]
+			print("mesh reference:", meshpath)
+			for _, mesh in ipairs(meshlist)do
+				print("mesh name:", mesh.name)
+				local function print_transform(trans)
+					local function print_list(l)
+						local t = {}
+						for _, v in ipairs(l) do
+							t[#t+1] = v
+						end
+
+						print("[" .. table.concat(t, ',') .. "]")
 					end
 
-					print("[" .. table.concat(t, ',') .. "]")
+					print_list(trans.Scl)
+					print_list(trans.Rot)
+					print_list(trans.Pos)
 				end
 
-				print_list(trans.Scl)
-				print_list(trans.Rot)
-				print_list(trans.Pos)
-			end
-
-			print_transform(mesh.transform)
-			local function print_material(material_indices)
-				local t = {}
-				for _, mi in ipairs(material_indices) do
-					t[#t+1] = mi
+				print_transform(mesh.transform)
+				local function print_material(material_indices)
+					local t = {}
+					for _, mi in ipairs(material_indices) do
+						t[#t+1] = mi
+					end
+					print("material indices:[" .. table.concat(t, ',') .. "]")
 				end
-				print("material indices:[" .. table.concat(t, ',') .. "]")
+				print_material(mesh.material_indices)
 			end
-			print_material(mesh.material_indices)
 		end
+		
 	end
-	
 end
