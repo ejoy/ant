@@ -6,6 +6,8 @@ local fs = require 'filesystem'
 local unityLoader = require 'unitysceneloader'
 local mc = require 'mathconvert'
 
+local assetmgr = import_package 'ant.asset'.mgr
+
 local unityScene = {}
 unityScene.__index = unityScene
 
@@ -165,6 +167,30 @@ local function fetch_transform(ent)
 	}
 end
 
+local function recalculate_transform(trans)
+    local posScale = 1
+    local scale = sceneInfo.scale
+
+    local m = mc.getMatrixFromEuler(trans.r, 'YXZ')
+    local Angles = mc.getEulerFromMatrix(m, 'ZYX')
+
+    local scalevalue = {}
+    scalevalue[1] = -trans.s[1] * scale
+    scalevalue[2] = trans.s[2] * scale
+	scalevalue[3] = trans.s[3] * scale
+    
+    local posvalue = {}
+    posvalue[1] = trans.p[1] * posScale
+    posvalue[2] = trans.p[2] * posScale
+    posvalue[2] = trans.p[2] * posScale
+
+	return {
+		s = scalevalue,
+		r = mu.to_radian(Angles),
+		t = posvalue,
+	}
+end
+
 local default_material_path = '//ant.resources/depiction/materials/bunny.material' -- "DefaultHDMaterial.material"
 
 local function get_defautl_material_path(scene, ent)
@@ -180,6 +206,11 @@ local function get_defautl_material_path(scene, ent)
 	return default_material_path
 end
 
+local function get_material_refpath(material_filename)
+    local filepath = viking_assetpath / 'materials' / fs.path(material_filename):filename():replace_extension('material')
+    return {ref_path = filepath}
+end
+
 local function fetch_material_paths(scene, ent)
     -- "Cerberus_LP.material"     --"Pipes_D160_Tileset_A.material"
     -- "Pipes_D160_Tileset_A.material"     --"bunny.material"
@@ -190,25 +221,19 @@ local function fetch_material_paths(scene, ent)
     -- "assets/materials/gold.material"
 	-- local material_path = 'assets/materials/Concrete_Foundation_A.material'
 
-	local material_refpaths = {}
-	local material_rootpath = viking_assetpath / 'materials'
-	local function add_material_refpath(material_filename)
-		local filepath = material_rootpath / fs.path(material_filename):filename():replace_extension('material')
-		table.insert(material_refpaths, {ref_path = filepath})
-	end
-
+	local material_refpaths = {}    
+    
     -- multi materials
     if ent.NumMats then
-        for i = 1, ent.NumMats do            
+        for i = 1, ent.NumMats do
             local material_filename = scene.Materials[ent.Mats[i]]
             if material_filename:match 'unity_builtin_extra' then
                 material_filename = default_material_path
 			end
-			
-			add_material_refpath(material_filename)
+			material_refpaths[#material_refpaths+1] = get_material_refpath(material_filename)
         end
-	else
-		add_material_refpath(get_defautl_material_path(scene, ent))
+    else
+        material_refpaths[#material_refpaths+1] = get_material_refpath(get_defautl_material_path(scene, ent))
 	end
 	
 	return material_refpaths
@@ -248,16 +273,122 @@ local function entityWalk(world, scene, entlist, lodName, lodFlag)
 
 end
 
+local function classify_mesh_reference(scene, entitylist, parent, groups)
+	for _, e in ipairs(entitylist) do
+		local meshidx = e.Mesh
+        if meshidx and 
+        not e.Name:match "[Cc]ollider" and
+        not e.Name:match "PlayerCollision" then
+			local group = groups[assert(parent).Name]
+			if group == nil then
+				group = {}
+				groups[parent.Name] = group
+			end
+
+			local meshlist = group[meshidx]
+			if meshlist == nil then
+				meshlist = {}
+				group[meshidx] = meshlist
+			end
+
+			meshlist[#meshlist+1] = {
+				transform = {
+					s=e.Scl, r=e.Rot, t=e.Pos,
+				},
+				material_indices = e.Mats,
+				name = e.Name,
+			}
+
+			assert(e.Ent == nil)
+			return true
+		end
+
+		if e.Ent then
+			if classify_mesh_reference(scene, e.Ent, e, groups) then
+				return true
+			end
+		end
+	end
+end
+
 -- "//ant.test.unitydemo/scene/scene.lua"
 function unityScene.create(world, scenepath)
     -- do single material check
     testMat:read()
 
     local sceneworld = unityLoader.load(scenepath)
-    local entity = sceneworld[1].Ent
-	print("load scene world name : ", sceneworld[1].Scene)
+    local scene = sceneworld[1]
+    print("load scene world name : ", scene.Scene)
 
-    entityWalk(world, sceneworld[1], entity, 'LOD00', 0)
+    local groups = {}
+    classify_mesh_reference(scene, scene.Ent, nil, groups)
+
+    for groupname, group in pairs(groups) do
+        for meshidx, meshlist in pairs(group)do
+            local mesh_pathname = scene.Meshes[meshidx]
+            if mesh_pathname ~= '' then
+                local meshpath = viking_assetpath / 'mesh_desc/' / fs.path(mesh_pathname):filename():replace_extension('mesh')
+
+                assert(#meshlist > 1)
+                local trans = recalculate_transform(meshlist[1].transform)
+
+                -- try to recreate material content
+                local meshscene = assetmgr.load(meshpath)
+                local function find_mesh_node(meshscene, nodename)
+                    local function find_mesh_node_ex(scenenodes)
+                        for _, nodeidx in ipairs(scenenodes) do
+                            local node = meshscene.nodes[nodeidx+1]
+                            if node.name == nodename then
+                                return node
+                            end
+
+                            if node.children then
+                                return find_mesh_node_ex(node.children)
+                            end
+                        end
+                    end
+
+                    return find_mesh_node_ex(meshscene.scenes[meshscene.scene+1].nodes)
+                end
+
+                local material_paths = {}
+                for _, mesh in ipairs(meshlist) do
+                    local meshnode = find_mesh_node(meshscene, mesh.name)
+                    local material_indices = mesh.material_indices
+                    assert(#meshnode.primitives == #material_indices)
+                    for idx, material_idx in ipairs(material_indices) do
+                        local material_filename = scene.Materials[material_idx]
+                        if material_filename:match 'unity_builtin_extra' then
+                            material_filename = default_material_path
+                        end
+
+                        local prim = meshnode.primitives[idx]
+                        prim.material = #material_paths -- meshscene's index is base on 0
+
+                        material_paths[#material_paths+1] = get_material_refpath(material_filename)
+                    end
+                end
+
+                local eid = world:create_entity {
+                    name = groupname,
+                    transform = trans,
+                    mesh = {
+                        ref_path = meshpath,
+                    },
+                    material = {
+                        content = material_paths,
+                    },
+                    can_render = true,
+                    can_select = true,
+                    main_view = true,
+                }
+
+                print("create entity:", eid, groupname)
+            end
+        end
+    end
+
+    --entityWalk(world, sceneworld[1], entity, 'LOD00', 0)
 
     print('Total Entities:', sceneInfo:getNumEntities())
     print('Total Active Entities:', sceneInfo:getNumActiveEntities())
