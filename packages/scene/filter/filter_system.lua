@@ -76,7 +76,20 @@ local function calc_node_transform(node, parentmat)
 	return nodetrans and ms(parentmat, nodetrans, "*P") or parentmat
 end
 
-local function traverse_scene(scene, eid, materialcontent, worldmat, filter)
+local function get_material(meshscene, materialcontent, material_refs, materialidx)
+	if materialidx == nil then
+		return materialcontent[1]
+	end
+
+	materialidx = materialidx + 1
+	if material_refs then
+		materialidx = assert(material_refs[materialidx])
+	end
+
+	return materialcontent[materialidx] or materialcontent[1]
+end
+
+local function traverse_scene(scene, eid, materialcontent, material_refs, worldmat, filter)
 	local nodes, meshes = scene.nodes, scene.meshes
 	local function traverse_scene_ex(scenenodes, parentmat)
 		for _, nodeidx in ipairs(scenenodes) do
@@ -93,7 +106,7 @@ local function traverse_scene(scene, eid, materialcontent, worldmat, filter)
 			
 				for _, prim in ipairs(mesh.primitives) do
 					ru.insert_primitive(eid, prim, scene, 
-						materialcontent,
+						get_material(scene, materialcontent, material_refs, prim.material),
 						nodetrans, filter)
 				end
 			end
@@ -117,7 +130,8 @@ function primitive_filter_sys:update()
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
 			if vt and ft then
-				local assetinfo = ce.mesh.assetinfo
+				local mesh = ce.mesh
+				local assetinfo = mesh.assetinfo				
 				local meshhandle = assetinfo.handle
 				local worldmat = ce.transform.world
 				local materialcontent = assert(ce.material.content)
@@ -125,7 +139,7 @@ function primitive_filter_sys:update()
 				local scene = meshhandle
 				if scene then
 					if scene.scene then
-						traverse_scene(scene, eid, materialcontent, worldmat, filter)
+						traverse_scene(scene, eid, materialcontent, mesh.material_refs, worldmat, filter)
 					else
 						ru.insert_primitive_old(eid, 
 						meshhandle,
