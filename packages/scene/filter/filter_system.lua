@@ -76,16 +76,15 @@ local function calc_node_transform(node, parentmat)
 	return nodetrans and ms(parentmat, nodetrans, "*P") or parentmat
 end
 
-local function get_material(materialcontent, material_refs, primidx, materialidx)
-	if materialidx == nil then
-		return materialcontent[1]
-	end
-
+local function get_material(prim, primidx, materialcontent, material_refs, meshname)
 	if material_refs then
-		materialidx = assert(material_refs[primidx])
+		local material_indices = material_refs[assert(meshname)]
+		local idx = material_indices[primidx]
+		return materialcontent[idx] or materialcontent[1]
 	end
 
-	return materialcontent[materialidx+1] or materialcontent[1]
+	local materialidx = prim.material or 0
+	return materialcontent[materialidx+1]
 end
 
 local function traverse_scene(scene, eid, materialcontent, material_refs, worldmat, filter)
@@ -105,7 +104,7 @@ local function traverse_scene(scene, eid, materialcontent, material_refs, worldm
 			
 				for idx, prim in ipairs(mesh.primitives) do
 					ru.insert_primitive(eid, prim, scene, 
-						get_material(materialcontent, material_refs[prim.name], idx, prim.material),
+						get_material(prim, idx, materialcontent, material_refs, mesh.name),
 						nodetrans, filter)
 				end
 			end
