@@ -76,19 +76,38 @@ local function calc_node_transform(node, parentmat)
 	return nodetrans and ms(parentmat, nodetrans, "*P") or parentmat
 end
 
-local function get_material(prim, primidx, materialcontent, material_refs, meshname)
+local function get_material(prim, primidx, materialcontent, material_refs)
 	if material_refs then
-		local material_indices = material_refs[assert(meshname)]
-		local idx = material_indices[primidx]
-		return materialcontent[idx] or materialcontent[1]
+		local idx = material_refs[primidx] or 1
+		return materialcontent[idx]
 	end
 
 	local materialidx = prim.material or 0
 	return materialcontent[materialidx+1]
 end
 
-local function traverse_scene(scene, eid, materialcontent, material_refs, worldmat, filter)
+local function traverse_scene(scene, eid, materialcontent, submesh_refs, worldmat, filter)
 	local nodes, meshes = scene.nodes, scene.meshes
+	local function is_visible(meshname)
+		if submesh_refs == nil then
+			return true
+		end
+
+		if submesh_refs then
+			local ref = submesh_refs[meshname]
+			if ref then
+				return ref.visible
+			end
+		end
+	end
+
+	local function get_material_refs(meshname)
+		if submesh_refs then
+			local ref = assert(submesh_refs[meshname])
+			return assert(ref.material_refs)
+		end
+	end
+
 	local function traverse_scene_ex(scenenodes, parentmat)
 		for _, nodeidx in ipairs(scenenodes) do
 			local node = nodes[nodeidx+1]
@@ -101,11 +120,14 @@ local function traverse_scene(scene, eid, materialcontent, material_refs, worldm
 			local meshidx = node.mesh
 			if meshidx then
 				local mesh = meshes[meshidx+1]
-			
-				for idx, prim in ipairs(mesh.primitives) do
-					ru.insert_primitive(eid, prim, scene, 
-						get_material(prim, idx, materialcontent, material_refs, mesh.name),
-						nodetrans, filter)
+				local meshname = mesh.name
+				if is_visible(meshname) then
+					local material_refs = get_material_refs(meshname)
+					for idx, prim in ipairs(mesh.primitives) do
+						ru.insert_primitive(eid, prim, scene, 
+							get_material(prim, idx, materialcontent, material_refs),
+							nodetrans, filter)
+					end
 				end
 			end
 		end
@@ -137,7 +159,7 @@ function primitive_filter_sys:update()
 				local scene = meshhandle
 				if scene then
 					if scene.scene then
-						traverse_scene(scene, eid, materialcontent, mesh.material_refs, worldmat, filter)
+						traverse_scene(scene, eid, materialcontent, mesh.submesh_refs, worldmat, filter)
 					else
 						ru.insert_primitive_old(eid, 
 						meshhandle,

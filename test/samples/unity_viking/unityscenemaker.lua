@@ -180,9 +180,9 @@ local function recalculate_transform(trans)
 	scalevalue[3] = trans.s[3] * scale
     
     local posvalue = {}
-    posvalue[1] = trans.p[1] * posScale
-    posvalue[2] = trans.p[2] * posScale
-    posvalue[2] = trans.p[2] * posScale
+    posvalue[1] = trans.t[1] * posScale
+    posvalue[2] = trans.t[2] * posScale
+    posvalue[3] = trans.t[3] * posScale
 
 	return {
 		s = scalevalue,
@@ -273,59 +273,65 @@ local function entityWalk(world, scene, entlist, lodName, lodFlag)
 
 end
 
+local function find_sub_list(meshlist, trans, groupname)
+	local function is_list_equal(lhs, rhs)
+		if #lhs == #rhs then
+			for i=1, #lhs do
+				if lhs[i] ~= rhs[i] then
+					return nil
+				end
+			end
+			return true
+		end
+	end
+	for _, sm in ipairs(meshlist)do
+		local t = sm.transform
+		if is_list_equal(t.s, trans.s) and
+		is_list_equal(t.r, trans.r) and
+		is_list_equal(t.t, trans.t) then
+			return sm
+		end
+	end
+	local new = {transform = trans, groupname=groupname}
+	meshlist[#meshlist+1] = new
+	return new
+end
+
 local function classify_mesh_reference(scene, entitylist, parent, groups)
 	for _, e in ipairs(entitylist) do
 		local meshidx = e.Mesh
         if meshidx and 
         not e.Name:match "[Cc]ollider" and
-        not e.Name:match "PlayerCollision" then
-			local group = groups[assert(parent).Name]
-			if group == nil then
-				group = {}
-				groups[parent.Name] = group
+		not e.Name:match "PlayerCollision" then
+
+			local mesh_pathname = scene.Meshes[meshidx]
+			if mesh_pathname ~= '' then
+				local meshlist = groups[meshidx]
+				if meshlist == nil then
+					meshlist = {}
+					groups[meshidx] = meshlist
+				end
+	
+				local submeshlist = find_sub_list(meshlist, {s=e.Scl, r=e.Rot, t=e.Pos}, parent.Name)
+				submeshlist[#submeshlist+1] = {
+					material_indices = e.Mats,
+					name = e.Name,
+				}
 			end
-
-			local meshlist = group[meshidx]
-			if meshlist == nil then
-				meshlist = {}
-				group[meshidx] = meshlist
-			end
-
-			meshlist[#meshlist+1] = {
-				transform = {
-					s=e.Scl, r=e.Rot, t=e.Pos,
-				},
-				material_indices = e.Mats,
-				name = e.Name,
-			}
-
-			assert(e.Ent == nil)
-			return true
 		end
 
 		if e.Ent then
-			if classify_mesh_reference(scene, e.Ent, e, groups) then
-				return true
-			end
+			classify_mesh_reference(scene, e.Ent, e, groups)
 		end
 	end
 end
 
-local function find_mesh_node(meshscene, nodename)
-	local function find_mesh_node_ex(scenenodes)
-		for _, nodeidx in ipairs(scenenodes) do
-			local node = meshscene.nodes[nodeidx+1]
-			if node.name == nodename then
-				return node
-			end
-
-			if node.children then
-				return find_mesh_node_ex(node.children)
-			end
+local function find_mesh_ref(meshscene, meshname)
+	for _, mesh in ipairs(meshscene.meshes) do
+		if mesh.name == meshname then
+			return mesh
 		end
 	end
-
-	return find_mesh_node_ex(meshscene.scenes[meshscene.scene+1].nodes)
 end
 
 -- "//ant.test.unitydemo/scene/scene.lua"
@@ -340,58 +346,58 @@ function unityScene.create(world, scenepath)
     local groups = {}
     classify_mesh_reference(scene, scene.Ent, nil, groups)
 
-    for groupname, group in pairs(groups) do
-        for meshidx, meshlist in pairs(group)do
-            local mesh_pathname = scene.Meshes[meshidx]
-            if mesh_pathname ~= '' then
-                local meshpath = viking_assetpath / 'mesh_desc' / fs.path(mesh_pathname):filename():replace_extension('mesh')
+	for meshidx, meshlist in pairs(groups) do
+		for _, submeshlist in ipairs(meshlist) do
+			local groupname = submeshlist.groupname
+			local meshpath = viking_assetpath / 'mesh_desc' / fs.path(scene.Meshes[meshidx]):filename():replace_extension('mesh')
 
-                assert(#meshlist > 1)
-                local trans = recalculate_transform(meshlist[1].transform)
+			local trans = recalculate_transform(submeshlist.transform)
 
-				-- try to recreate material content and setup material_refs for mesh component
+			-- try to recreate material content and setup material_refs for mesh component
+			local submesh_refs = {}
+			local meshscene = assetmgr.load(meshpath).handle
+			local material_paths = {}
+			for submeshidx, mesh in ipairs(submeshlist) do
+				local material_indices = mesh.material_indices
+				local meshref = find_mesh_ref(meshscene, mesh.name)
+				if meshref == nil then
+					meshref = meshscene.meshes[submeshidx]
+				end
+				if #meshref.primitives ~= #material_indices then
+					print("glb mesh primitives size is not equal to material numbers", groupname, meshref.name)
+				end
+				
 				local material_refs = {}
-                local meshscene = assetmgr.load(meshpath)
-                local material_paths = {}
-                for _, mesh in ipairs(meshlist) do
-                    local meshnode = find_mesh_node(meshscene, mesh.name)
-                    local material_indices = mesh.material_indices
-					assert(#meshnode.primitives == #material_indices)
-					local mrefs = {}
-					material_refs[mesh.name] = mrefs
-                    for idx, material_idx in ipairs(material_indices) do
-                        local material_filename = scene.Materials[material_idx]
-                        if material_filename:match 'unity_builtin_extra' then
-                            material_filename = default_material_path
-                        end
+				for _, material_idx in ipairs(material_indices) do
+					local material_filename = scene.Materials[material_idx]
+					if material_filename:match 'unity_builtin_extra' then
+						material_filename = default_material_path
+					end
+					
+					local last_materialidx = #material_paths+1
+					material_paths[last_materialidx] = get_material_refpath(material_filename)
+					material_refs[#material_refs+1] = last_materialidx
+				end
+				submesh_refs[meshref.name] = {material_refs=material_refs, visible=true}
+			end
 
-                        local prim = meshnode.primitives[idx]
-                        prim.material = #material_paths -- meshscene's index is base on 0
+			local eid = world:create_entity {
+				name = groupname,
+				transform = trans,
+				mesh = {
+					ref_path = meshpath,
+					submesh_refs = submesh_refs,
+				},
+				material = {
+					content = material_paths,
+				},
+				can_render = true,
+				can_select = true,
+				main_view = true,
+			}
 
-						local last_materialidx = #material_paths+1
-						material_paths[last_materialidx] = get_material_refpath(material_filename)
-						mrefs[#mrefs+1] = last_materialidx
-                    end
-                end
-
-                local eid = world:create_entity {
-                    name = groupname,
-                    transform = trans,
-                    mesh = {
-						ref_path = meshpath,
-						material_refs = material_refs,
-                    },
-                    material = {
-                        content = material_paths,
-                    },
-                    can_render = true,
-                    can_select = true,
-                    main_view = true,
-                }
-
-                print("create entity:", eid, groupname)
-            end
-        end
+			print("create entity:", eid, name)
+		end
     end
 
     --entityWalk(world, sceneworld[1], entity, 'LOD00', 0)

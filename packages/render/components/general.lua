@@ -63,11 +63,13 @@ function resource:init()
 	return self
 end
 
-ecs.component_alias("material_ref", "int[]")
+ecs.component "submesh_ref"
+	.material_refs "int[]"
+	.visible "boolean"
 
 local mesh = ecs.component "mesh"
 	["opt"].ref_path "respath"
-	["opt"].material_refs "material_ref{}"
+	["opt"].submesh_refs "submesh_ref{}"
 	.lodidx "int" (1)
 
 local function check_mesh_lod(mesh)
