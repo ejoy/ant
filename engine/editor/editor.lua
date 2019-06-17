@@ -1,8 +1,3 @@
-package.path = table.concat({
-    "libs/?.lua",
-    "libs/?/?.lua",
-}, ";")
-
 local cpaths = {	
     "clibs/?.dll",
 	"bin/?.dll",
@@ -26,4 +21,11 @@ package.cpath = table.concat(cpaths, ";")
 require "editor.vfs"
 require "editor.init_bgfx"
 require "filesystem"
-import_package = (require "antpm").import
+
+local fs = require "filesystem.local"
+local vfs = require "vfs"
+vfs.new(fs.path(arg[0]):remove_filename())
+
+local pm = require "antpm"
+pm.init()
+import_package = pm.import

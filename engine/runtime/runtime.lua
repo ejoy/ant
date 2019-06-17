@@ -1,3 +1,7 @@
+if not __ANT_RUNTIME__ then
+    return require "editor"
+end
+
 require 'runtime.vfs'
 require 'runtime.errlog'
 local pm = require "antpm"

@@ -1,4 +1,4 @@
 @pkg packages
 @pkg-one tools/modelviewer
-engine libs
+engine engine
 firmware runtime/core/firmware
