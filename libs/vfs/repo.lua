@@ -24,6 +24,8 @@ local function refname(self, hash)
 end
 
 function repo.new(rootpath)
+	repo.init(rootpath)
+
 	local repopath = rootpath / ".repo"
 
 	if not lfs.is_directory(repopath) then

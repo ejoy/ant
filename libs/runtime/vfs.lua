@@ -39,4 +39,3 @@ function vfs.identity(identity)
 end
 
 package.loaded.vfs = vfs
-

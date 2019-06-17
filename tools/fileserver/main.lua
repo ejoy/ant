@@ -1,6 +1,7 @@
 package.path = table.concat({
 	"libs/?.lua",
 	"libs/?/?.lua",
+	"tools/fileserver/?.lua",
 	"tools/fileserver/?/?.lua"
 }, ";")
 
@@ -33,7 +34,6 @@ local repopath = lfs.path(reponame)
 
 LOG ("Open repo : ", repopath)
 
-repo.init(repopath)
 local repo = assert(repo.new(repopath))
 
 LOG ("Rebuild repo")

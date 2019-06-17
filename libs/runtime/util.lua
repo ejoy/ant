@@ -17,7 +17,7 @@ local function createThread(name, code)
         end
         local str = f:read 'a'
 		f:close()
-		assert(load(str, 'vfs://firmware/init_thread.lua'))()
+		assert(load(str, '@/firmware/init_thread.lua'))()
 	end
 	init_thread()
 	package.path = [[%s]]
