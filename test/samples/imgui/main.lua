@@ -1,5 +1,9 @@
-dofile "libs/editor.lua"
-local localfs = require "filesystem.local"
+package.path = table.concat({
+	"engine/?.lua",
+	"engine/?/?.lua",
+	"?.lua",
+}, ";")
+
+require "runtime"
 local pm = require "antpm"
-local PKGDIR = localfs.current_path() / localfs.path(debug.getinfo(1, 'S').source:sub(2)):parent_path()
-pm.import(pm.register(PKGDIR))
+pm.import "ant.ImguiSample"

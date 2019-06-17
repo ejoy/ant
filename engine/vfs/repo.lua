@@ -23,8 +23,41 @@ local function refname(self, hash)
 	return self._repo / hash:sub(1,2) / (hash .. ".ref")
 end
 
+--[[
+	all path should be absolute path
+
+	{ rootpath,
+		xxx = mountxxx,
+	}
+]]
+local function init(rootpath)
+	assert(lfs.is_directory(rootpath), "Not a dir")
+	local mountpath = rootpath / ".mount"
+	if lfs.is_regular_file(mountpath) then
+		for name, path in pairs(access.readmount(mountpath)) do
+			print("Mount", name, path)
+		end
+	end
+	local repopath = rootpath / ".repo"
+	if not lfs.is_directory(repopath) then
+		-- already has .repo
+		assert(lfs.create_directories(repopath))
+	end
+	if not lfs.is_directory(rootpath / "pkg") then
+		assert(lfs.create_directories(rootpath / "pkg"))
+	end
+
+	-- mkdir dirs
+	for i=0,0xff do
+		local path = repopath / string.format("%02x", i)
+		if not lfs.is_directory(path) then
+			assert(lfs.create_directories(path))
+		end
+	end
+end
+
 function repo.new(rootpath)
-	repo.init(rootpath)
+	init(rootpath)
 
 	local repopath = rootpath / ".repo"
 
@@ -35,7 +68,7 @@ function repo.new(rootpath)
 	local mountpoint = access.readmount(rootpath / ".mount")
 	rootpath = mountpoint[''] or rootpath
 	local mountname = access.mountname(mountpoint)
-	return setmetatable({
+	local r = setmetatable({
 		_mountname = mountname,
 		_mountpoint = mountpoint,
 		_root = rootpath,
@@ -43,6 +76,11 @@ function repo.new(rootpath)
 		_namecache = {},
 		_lock = filelock(repopath),	-- lock repo
 	}, repo)
+	if not lfs.is_regular_file(repopath / "root") then
+		r:rebuild()
+		r:close()
+	end
+	return r
 end
 
 local sha1_from_file = access.sha1_from_file
@@ -192,48 +230,6 @@ function repo:close()
 	self._root = nil
 	self._repo = nil
 	self._namecache = nil
-end
-
---[[
-	all path should be absolute path
-
-	{ rootpath,
-		xxx = mountxxx,
-	}
-]]
-function repo.init(rootpath)
-	assert(lfs.is_directory(rootpath), "Not a dir")
-	local mountpath = rootpath / ".mount"
-	if lfs.is_regular_file(mountpath) then
-		for name, path in pairs(access.readmount(mountpath)) do
-			print("Mount", name, path)
-		end
-	end
-	local repopath = rootpath / ".repo"
-	if not lfs.is_directory(repopath) then
-		-- already has .repo
-		assert(lfs.create_directories(repopath))
-	end
-	if not lfs.is_directory(rootpath / "pkg") then
-		assert(lfs.create_directories(rootpath / "pkg"))
-	end
-
-	-- mkdir dirs
-	for i=0,0xff do
-		local path = repopath / string.format("%02x", i)
-		if not lfs.is_directory(path) then
-			assert(lfs.create_directories(path))
-		end
-	end
-
-	local rootf = repopath / "root"
-	if not lfs.is_regular_file(rootf) then
-		-- rebuild repo
-		local r = repo.new(rootpath)
-		r:rebuild()
-		-- unlock repo
-		r:close()
-	end
 end
 
 -- make file dirty, would build later
