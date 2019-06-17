@@ -20,11 +20,11 @@ local function LOG(...)
 	print(...)
 end
 
+require "editor.vfs"
 local fw = require "filewatch"
 local repo = require "vfs.repo"
 local protocol = require "protocol"
-
-require "editor.vfs"
+local network = require "network"
 local vfs = require "vfs.simplefs"
 local lfs = require "filesystem.local"
 
@@ -39,8 +39,6 @@ local repo = assert(repo.new(repopath))
 LOG ("Rebuild repo")
 repo:index()
 repo:rebuild()
-
-local network = require "network"
 
 local watch = {}
 assert(fw.add(repopath:string()))
@@ -57,23 +55,6 @@ local function response(obj, ...)
 	network.send(obj, protocol.packmessage({...}))
 end
 
-local rtlog = {}
-
-function rtlog.init()
-	lfs.create_directories(WORKDIR / 'log' / 'runtime')
-	if lfs.exists(WORKDIR / 'log' / 'runtime.log') then
-		lfs.rename(WORKDIR / 'log' / 'runtime.log', WORKDIR / 'log' / 'runtime' / ('%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
-	end
-end
-
-function rtlog.write(data)
-	local fp = assert(lfs.open(WORKDIR / 'log' / 'runtime.log', 'a'))
-	fp:write(data)
-	fp:write('\n')
-	fp:close()
-end
-
-
 local debug = {}
 local message = {}
 
@@ -81,7 +62,12 @@ function message:ROOT()
 	repo:build()
 	local roothash = repo:root()
 	response(self, "ROOT", roothash)
-	rtlog.init()
+
+	-- init logger
+	lfs.create_directories(WORKDIR / 'log' / 'runtime')
+	if lfs.exists(WORKDIR / 'log' / 'runtime.log') then
+		lfs.rename(WORKDIR / 'log' / 'runtime.log', WORKDIR / 'log' / 'runtime' / ('%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
+	end
 end
 
 function message:GET(hash)
@@ -142,7 +128,10 @@ function message:DBG(data)
 end
 
 function message:LOG(data)
-	rtlog.write(data)
+	local fp = assert(lfs.open(WORKDIR / 'log' / 'runtime.log', 'a'))
+	fp:write(data)
+	fp:write('\n')
+	fp:close()
 end
 
 local output = {}
