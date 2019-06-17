@@ -1,5 +1,5 @@
 local fs = require "filesystem.local"
-local util = require "util"
+local util = require "fbx2gltf.util"
 local glbloader = require "glb"
 
 local subprocess = require "subprocess"
