@@ -1,6 +1,5 @@
 local sandbox = require "antpm.sandbox"
 local vfs = require "vfs.simplefs"
-local editorvfs = require "vfs"
 local lfs = require "filesystem.cpp"
 local dofile = dofile
 
@@ -138,9 +137,18 @@ local function load_packages(dir)
     return res
 end
 
+local function register_package(path)
+    if __ANT_RUNTIME__ then
+        return false
+    end
+    local name = load_package(path)
+    local editorvfs = require "vfs"
+    editorvfs.add_mount("pkg/"..name, path)
+    return register(vfs.join('/pkg', name))
+end
+
 return {
     find = find,
-    register = register,
     import = import,
     test = test,
     loadfile = m_loadfile,
@@ -150,4 +158,5 @@ return {
     init = init,
     load_package = load_package,
     load_packages = load_packages,
+    register_package = register_package,
 }

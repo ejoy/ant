@@ -49,4 +49,20 @@ function localvfs.new(path)
 	self = repo.new(path)
 end
 
+function localvfs.add_mount(name, mountpath)
+	local mnames = self._mountname
+	for _, n in ipairs(mnames) do
+		if n == name then
+			return 
+		end
+	end
+	if not lfs.is_directory(mountpath) then
+		return
+	end
+	table.insert(mnames, name)
+	table.sort(mnames, function(a, b) return a>b end)
+	self._mountpoint[name] = mountpath
+	return true
+end
+
 package.loaded.vfs = localvfs

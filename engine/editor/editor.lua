@@ -29,3 +29,6 @@ vfs.new(fs.path(arg[0]):remove_filename())
 local pm = require "antpm"
 pm.init()
 import_package = pm.import
+
+print_r       = require "common.print_r".print_r
+print_a       = require "common.print_r".print_a
