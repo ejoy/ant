@@ -7,9 +7,9 @@ default : libfirmware-$(PLAT).a
 endif
 
 $(ODIR)/firmware.o : firmware.cpp incbin.h \
-	$(ANT3RD)/../runtime/core/firmware/bootstrap.lua \
-	$(ANT3RD)/../runtime/core/firmware/io.lua \
-	$(ANT3RD)/../runtime/core/firmware/vfs.lua | $(ODIR)
+	$(ANT3RD)/../engine/firmware/bootstrap.lua \
+	$(ANT3RD)/../engine/firmware/io.lua \
+	$(ANT3RD)/../engine/firmware/vfs.lua | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC)
 
 firmware.dll : $(ODIR)/firmware.o

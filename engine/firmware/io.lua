@@ -79,7 +79,7 @@ local function init_config()
 end
 
 local function init_repo()
-	local vfs = assert(loadfile(config.vfspath, 'firmware/vfs.lua'))()
+	local vfs = assert(loadfile(config.vfspath, 'engine/firmware/vfs.lua'))()
 	repo.repo = vfs.new(config.repopath)
 end
 

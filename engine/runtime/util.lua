@@ -4,7 +4,7 @@ require 'runtime.log'
 
 local function createThread(name, code)
 	local vfs = require 'vfs'
-	local init_thread = vfs.realpath('firmware/init_thread.lua')
+	local init_thread = vfs.realpath('engine/firmware/init_thread.lua')
 	thread.thread(([=[
 	--%s
 	__ANT_RUNTIME__ = %q
@@ -13,11 +13,11 @@ local function createThread(name, code)
 	local function init_thread()
         local f, err = io.open(%q)
         if not f then
-            error('firmware/init_thread.lua:No such file or directory.')
+            error('engine/firmware/init_thread.lua:No such file or directory.')
         end
         local str = f:read 'a'
 		f:close()
-		assert(load(str, '@/firmware/init_thread.lua'))()
+		assert(load(str, '@/engine/firmware/init_thread.lua'))()
 	end
 	init_thread()
 	package.path = [[%s]]

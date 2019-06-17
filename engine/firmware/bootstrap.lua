@@ -47,15 +47,15 @@ local function vfs_init()
 end
 
 local function fetchfirmware()
-	io_req("FETCHALL", false, 'firmware')
+	io_req("FETCHALL", false, 'engine/firmware')
 
 	-- wait finish
-	io_req("LIST", threadid, 'firmware')
+	io_req("LIST", threadid, 'engine/firmware')
 	local l = io_resp()
 	local result
 	for name, type in pairs(l) do
 		assert(type == false)
-		io_req("GET", threadid, 'firmware/' .. name)
+		io_req("GET", threadid, 'engine/firmware/' .. name)
 		if name == 'bootloader.lua' then
 			result = io_resp()
 		else
@@ -88,4 +88,4 @@ local function loadfile(path, name)
 	f:close()
 	return load(str, "@/" .. name)
 end
-assert(loadfile(bootloader, 'firmware/bootloader.lua'))(config)
+assert(loadfile(bootloader, 'engine/firmware/bootloader.lua'))(config)

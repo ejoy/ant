@@ -28,7 +28,7 @@ local function vfs_dofile(path)
     return assert(load(str, "@/" .. path))()
 end
 
-local vfs = vfs_dofile 'firmware/vfs.lua'
+local vfs = vfs_dofile 'engine/firmware/vfs.lua'
 repo = vfs.new(config.repopath)
 
 local thread = require "thread"
@@ -53,17 +53,17 @@ thread.thread (([[
         f:close()
 		return load(str, "@/" .. name)
     end
-    assert(loadfile(firmware_io, 'firmware/io.lua'))(loadfile)
-]]):format(repo:realpath("firmware/io.lua")), package.searchers[3])
+    assert(loadfile(firmware_io, 'engine/firmware/io.lua'))(loadfile)
+]]):format(repo:realpath("engine/firmware/io.lua")), package.searchers[3])
 
 local function vfs_init()
-    config.vfspath = repo:realpath("firmware/vfs.lua")
+    config.vfspath = repo:realpath("engine/firmware/vfs.lua")
 	io_req:push(config)
 end
 
 vfs_init()
 
-local openfile = vfs_dofile "firmware/init_thread.lua"
+local openfile = vfs_dofile "engine/firmware/init_thread.lua"
 
 local function loadfile(path)
     local f, err = openfile(path)
