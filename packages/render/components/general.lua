@@ -86,6 +86,7 @@ end
 function mesh:init()
 	if self.ref_path then
 		self.assetinfo = asset.load(self.ref_path)
+		self.lodidx = self.lodidx or 1
 		check_mesh_lod(self)
 	end
 	return self

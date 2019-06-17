@@ -311,6 +311,23 @@ local function classify_mesh_reference(scene, entitylist, parent, groups)
 	end
 end
 
+local function find_mesh_node(meshscene, nodename)
+	local function find_mesh_node_ex(scenenodes)
+		for _, nodeidx in ipairs(scenenodes) do
+			local node = meshscene.nodes[nodeidx+1]
+			if node.name == nodename then
+				return node
+			end
+
+			if node.children then
+				return find_mesh_node_ex(node.children)
+			end
+		end
+	end
+
+	return find_mesh_node_ex(meshscene.scenes[meshscene.scene+1].nodes)
+end
+
 -- "//ant.test.unitydemo/scene/scene.lua"
 function unityScene.create(world, scenepath)
     -- do single material check
@@ -327,35 +344,21 @@ function unityScene.create(world, scenepath)
         for meshidx, meshlist in pairs(group)do
             local mesh_pathname = scene.Meshes[meshidx]
             if mesh_pathname ~= '' then
-                local meshpath = viking_assetpath / 'mesh_desc/' / fs.path(mesh_pathname):filename():replace_extension('mesh')
+                local meshpath = viking_assetpath / 'mesh_desc' / fs.path(mesh_pathname):filename():replace_extension('mesh')
 
                 assert(#meshlist > 1)
                 local trans = recalculate_transform(meshlist[1].transform)
 
-                -- try to recreate material content
+				-- try to recreate material content and setup material_refs for mesh component
+				local material_refs = {}
                 local meshscene = assetmgr.load(meshpath)
-                local function find_mesh_node(meshscene, nodename)
-                    local function find_mesh_node_ex(scenenodes)
-                        for _, nodeidx in ipairs(scenenodes) do
-                            local node = meshscene.nodes[nodeidx+1]
-                            if node.name == nodename then
-                                return node
-                            end
-
-                            if node.children then
-                                return find_mesh_node_ex(node.children)
-                            end
-                        end
-                    end
-
-                    return find_mesh_node_ex(meshscene.scenes[meshscene.scene+1].nodes)
-                end
-
                 local material_paths = {}
                 for _, mesh in ipairs(meshlist) do
                     local meshnode = find_mesh_node(meshscene, mesh.name)
                     local material_indices = mesh.material_indices
-                    assert(#meshnode.primitives == #material_indices)
+					assert(#meshnode.primitives == #material_indices)
+					local mrefs = {}
+					material_refs[mesh.name] = mrefs
                     for idx, material_idx in ipairs(material_indices) do
                         local material_filename = scene.Materials[material_idx]
                         if material_filename:match 'unity_builtin_extra' then
@@ -365,7 +368,9 @@ function unityScene.create(world, scenepath)
                         local prim = meshnode.primitives[idx]
                         prim.material = #material_paths -- meshscene's index is base on 0
 
-                        material_paths[#material_paths+1] = get_material_refpath(material_filename)
+						local last_materialidx = #material_paths+1
+						material_paths[last_materialidx] = get_material_refpath(material_filename)
+						mrefs[#mrefs+1] = last_materialidx
                     end
                 end
 
@@ -373,7 +378,8 @@ function unityScene.create(world, scenepath)
                     name = groupname,
                     transform = trans,
                     mesh = {
-                        ref_path = meshpath,
+						ref_path = meshpath,
+						material_refs = material_refs,
                     },
                     material = {
                         content = material_paths,
