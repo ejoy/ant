@@ -126,6 +126,9 @@ local function traverse_scene(scene, eid, materialcontent, submesh_refs, worldma
 				local meshname = mesh.name
 				if is_visible(meshname) then
 					local material_refs = get_material_refs(meshname)
+					if test_worldmat then
+						print(ms(nodetrans, "V"))
+					end
 					for idx, prim in ipairs(mesh.primitives) do
 						ru.insert_primitive(eid, prim, scene, 
 							get_material(prim, idx, materialcontent, material_refs),
@@ -137,6 +140,15 @@ local function traverse_scene(scene, eid, materialcontent, submesh_refs, worldma
 	end
 
 	traverse_scene_ex(scene.scenes[scene.scene+1].nodes, worldmat)
+end
+
+local function get_scale_mat(worldmat, scene)
+	local scenescale = scene.scenescale
+						
+	if scenescale and scenescale ~= 1 then
+		return ms(worldmat, ms:srtmat(mu.scale_mat(scenescale)), "*P")
+	end
+	return worldmat
 end
 
 function primitive_filter_sys:update()	
@@ -162,11 +174,7 @@ function primitive_filter_sys:update()
 				local scene = meshhandle
 				if scene then
 					if scene.scene then
-						local scenescale = scene.scenescale
-						if scenescale and scenescale ~= 1 then
-							ms(worldmat, worldmat, mu.scale_mat(scenescale), "*=")
-						end
-						traverse_scene(scene, eid, materialcontent, mesh.submesh_refs, worldmat, filter)
+						traverse_scene(scene, eid, materialcontent, mesh.submesh_refs, get_scale_mat(worldmat, scene), filter)
 					else
 						ru.insert_primitive_old(eid, 
 						meshhandle,
@@ -185,9 +193,6 @@ end
 
 function primitive_filter_sys:post_init()	
 	for eid in world:each_new("transform") do
-		local e = world[eid]
-		e.transform.world = math3d.ref "matrix"
-
 		self.event:new(eid, "transform")
 	end
 end

@@ -361,7 +361,7 @@ extract_scale(lua_State *L, struct lastack *LS, int index){
 		if (len == 1) {
 			float s = get_table_value(L, index, 1);
 			scale[0] = scale[1] = scale[2] = s;
-		} else if (len == 3) {
+		} else if (len == 3||len == 4) {
 			for (int i = 0; i < 3; ++i)
 				scale[i] = get_table_value(L, index, i+1);
 		} else {

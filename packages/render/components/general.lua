@@ -6,8 +6,9 @@ local fs = require "filesystem"
 
 local component_util = require "components.util"
 local asset = import_package "ant.asset".mgr
-local math3d = import_package "ant.math"
-local ms = math3d.stack
+local mathpkg = import_package "ant.math"
+local ms = mathpkg.stack
+local math3d = require "math3d"
 
 
 ecs.component_alias("point", "vector")
@@ -20,12 +21,18 @@ ecs.component "srt"
 	.r "vector"
 	.t "vector"
 
-ecs.component "transform"
+local trans = ecs.component "transform"
 	.s "vector"
 	.r "vector"
 	.t "vector"
 	['opt'].slotname "string"
 	['opt'].parent "parent"
+
+function trans:init()
+	self.world = math3d.ref "matrix"
+	ms(self.world, ms:srtmat(self), "=")
+	return self
+end
 
 ecs.tag "editor"
 

@@ -44,7 +44,7 @@ for _, scene in ipairs(world) do
 			local metacontent = metafile_loader(metafilepath)
 			local mesh_setting = metacontent.ModelImporter.meshes
 
-			local scale = mesh_setting.useFileScale == 1 and 0.01 or 1
+			local scale = mesh_setting.useFileScale == 1 and 1 or 100
 			return mesh_setting.globalScale * scale
 		end
 
@@ -116,11 +116,11 @@ for _, scene in ipairs(world) do
 	local fbxconvert = require "fbx2gltf.convert"
 	fbxconvert(fbxfilepaths, {
 		processlk = function(filepath, lkcontent)
-			if lkcontent.mesh == nil then
-				lkcontent.mesh = {}
+			if lkcontent.config.mesh == nil then
+				lkcontent.config.mesh = {}
 			end
 
-			lkcontent.mesh.scale = get_scale(filepath)
+			lkcontent.config.mesh.scale = get_scale(filepath)
 		end,
 		postconvert = function (filepath, scene)
 			reset_scene_transform(scene)

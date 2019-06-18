@@ -12,10 +12,10 @@ config = {
   },
   layout = {
     "p3|n30nIf|T|b|t20|c40"
+  },
+  mesh = {
+    scale = 1
   }
-}
-mesh = {
-  scale = 1
 }
 sourcetype = "glb"
 type = "mesh"
