@@ -51,11 +51,14 @@ local function get_glb_lk_content(srclk)
 	return defaultlk_content
 end
 
-local function generate_lkfile(filename)
+local function generate_lkfile(filename, processor)
 	local fn = fs.path(filename)
 	local srclkfile = fn:string() .. ".lk"
 	local lkfile = fn:replace_extension(".glb"):string() .. ".lk"
 	local c = get_glb_lk_content(srclkfile)
+	if processor then
+		processor(fn, c)
+	end
 	local r = stringify(c, true, true)
 	local glblk = io.open(lkfile, "w")
 	glblk:write(r)
@@ -69,7 +72,7 @@ return function (files, cfg)
 		if f and fs.is_regular_file(f) then
 			progs[#progs+1] = convert(f)
 			if genlk then
-				generate_lkfile(f)
+				generate_lkfile(f, cfg.processlk)
 			end
 		end
 	end

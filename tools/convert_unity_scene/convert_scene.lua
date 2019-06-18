@@ -50,19 +50,35 @@ for _, scene in ipairs(world) do
 
 		return 1
 	end
+
+	local function get_scale(glbfilepath)
+		local glbfile = fs.path(glbfilepath):replace_extension("fbx"):string():lower()
+		local meshfile
+		for _, mf in ipairs(meshfiles) do
+			if glbfile:match(mf:lower()) then
+				meshfile = mf
+				break
+			end
+		end
+		
+		if meshfile then
+			return read_scale_from_meta_file(viking_originpath / meshfile)
+		end
+		return 1
+	end
 	
-	local function reset_transform(node, scale)
+	local function reset_transform(node)
 		if node.matrix then
 			node.matrix = {
-				scale, 0, 0, 0,
-				0, scale, 0, 0,
-				0, 0, scale, 0,
+				1, 0, 0, 0,
+				0, 1, 0, 0,
+				0, 0, 1, 0,
 				0, 0, 0, 1,
 			}
 		else
 			local s, r, t = node.scale, node.rotation, node.translation
 			if s then
-				s[1], s[2], s[3] = scale, scale, scale
+				s[1], s[2], s[3] = 1, 1, 1
 			end
 			if r then
 				assert(#r==4)	--queration
@@ -102,20 +118,15 @@ for _, scene in ipairs(world) do
 	
 	local fbxconvert = require "fbx2gltf.convert"
 	fbxconvert(fbxfilepaths, {
+		processlk = function(filepath, lkcontent)
+			if lkcontent.mesh == nil then
+				lkcontent.mesh = {}
+			end
+
+			lkcontent.mesh.scale = get_scale(filepath)
+		end,
 		postconvert = function (filepath, scene)
-			local glbfile = fs.path(filepath):replace_extension("fbx"):string():lower()
-			local meshfile
-			for _, mf in ipairs(meshfiles) do
-				if glbfile:match(mf:lower()) then
-					meshfile = mf
-					break
-				end
-			end
-			local scale = 1
-			if meshfile then
-				scale = read_scale_from_meta_file(viking_originpath / meshfile)
-			end
-			reset_scene_transform(scene, scale)
+			reset_scene_transform(scene)
 		end
 	})
 

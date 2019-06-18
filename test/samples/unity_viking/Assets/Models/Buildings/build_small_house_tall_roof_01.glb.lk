@@ -14,5 +14,8 @@ config = {
     "p3|n30nIf|T|b|t20|c40"
   }
 }
+mesh = {
+  scale = 0.01
+}
 sourcetype = "glb"
 type = "mesh"

@@ -9,7 +9,10 @@ local ru = render.util
 
 local filterutil = require "filter.util"
 
-local ms = import_package "ant.math" .stack
+local mathpkg = import_package "ant.math"
+local ms = mathpkg.stack
+local mu = mathpkg.util
+
 local math3d = require "math3d"
 
 local filter_properties = ecs.system "filter_properties"
@@ -159,6 +162,10 @@ function primitive_filter_sys:update()
 				local scene = meshhandle
 				if scene then
 					if scene.scene then
+						local scenescale = scene.scenescale
+						if scenescale and scenescale ~= 1 then
+							ms(worldmat, worldmat, mu.scale_mat(scenescale), "*=")
+						end
 						traverse_scene(scene, eid, materialcontent, mesh.submesh_refs, worldmat, filter)
 					else
 						ru.insert_primitive_old(eid, 

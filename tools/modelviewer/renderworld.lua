@@ -79,12 +79,12 @@ function model_review_system:init()
 	local meshes = {
 		{
 			path = fs.path "//ant.resources/depiction/meshes/build_boat_01.mesh",
-			transform = mu.srt({100, 100, 100}, nil, {0, 0, 0}),
+			transform = mu.srt({1, 1, 1}, nil, {0, 0, 0}),
 			material = create_material_item(singlecolor_material, {1, 0, 0, 0}),
 		},
 		{
 			path = fs.path "//ant.resources/depiction/meshes/build_small_house_tall_roof_01.mesh",
-			transform = mu.srt({0.1, 0.1, 0.1}, nil, {-10, 0, 0}),
+			transform = mu.srt({1, 1, 1}, nil, {-10, 0, 0}),
 			material = create_material_item(singlecolor_material, {0, 1, 0, 0}),
 		},
 		{

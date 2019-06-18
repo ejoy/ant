@@ -296,6 +296,14 @@ local function refine_prim_offset(newprim, newacc, newbvs, newscene)
 	table.move(newbvs, 1, #newbvs, #newscene.bufferViews+1, newscene.bufferViews)
 end
 
+local function get_scale(cfg)
+	local m = cfg.mesh
+	if m then
+		return m.scale or 1
+	end
+	return 1
+end
+
 return function (srcname, dstname, cfg)
 	local glbdata = glbloader.decode(srcname)
 	local scene = glbdata.info
@@ -308,6 +316,7 @@ return function (srcname, dstname, cfg)
 		scene = scene.scene,
 		scenes = scenes,
 		scenelods = scene.scenelods,
+		scenescale = get_scale(cfg),
 		nodes = nodes,
 		meshes = meshes,
 		accessors = {},
