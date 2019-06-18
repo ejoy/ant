@@ -83,7 +83,7 @@ local function get_material(prim, primidx, materialcontent, material_refs)
 	end
 
 	local materialidx = prim.material or 0
-	return materialcontent[materialidx+1]
+	return materialcontent[materialidx+1] or materialcontent[1]
 end
 
 local function traverse_scene(scene, eid, materialcontent, submesh_refs, worldmat, filter)

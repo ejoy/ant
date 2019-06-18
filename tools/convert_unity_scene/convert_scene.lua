@@ -4,6 +4,8 @@ package.cpath = "projects/msvc/vs_bin/x64/Debug/?.dll"
 local fs = require "filesystem.local"
 
 local viking_projpath = fs.path "test/samples/unity_viking"
+local viking_originpath = fs.path "D:/Code/github/Viking-Village"	--should be passed by argument
+
 local scenefile = viking_projpath / "Assets/scene/viking.lua"
 
 if not fs.exists(scenefile) then
@@ -11,6 +13,8 @@ if not fs.exists(scenefile) then
 end
 
 local util = require "convert_unity_scene.util"
+local metafile_loader = require "convert_unity_scene.metafile_loader"
+
 
 local world = util.loadworld(scenefile)
 for _, scene in ipairs(world) do
@@ -33,19 +37,32 @@ for _, scene in ipairs(world) do
 	local function is_geometric_node(node)
 		return node.mesh and node.name:match "_Geometric$"
 	end
+
+	local function read_scale_from_meta_file(fbxfilepath)
+		local metafilepath = fs.path(fbxfilepath:string() .. ".meta")
+		if fs.exists(metafilepath) then
+			local metacontent = metafile_loader(metafilepath)
+			local mesh_setting = metacontent.ModelImporter.meshes
+
+			local scale = mesh_setting.useFileScale == 1 and 0.01 or 1
+			return mesh_setting.globalScale * scale
+		end
+
+		return 1
+	end
 	
-	local function reset_transform(node)
+	local function reset_transform(node, scale)
 		if node.matrix then
 			node.matrix = {
-				1, 0, 0, 0,
-				0, 1, 0, 0,
-				0, 0, 1, 0,
+				scale, 0, 0, 0,
+				0, scale, 0, 0,
+				0, 0, scale, 0,
 				0, 0, 0, 1,
 			}
 		else
 			local s, r, t = node.scale, node.rotation, node.translation
 			if s then
-				s[1], s[2], s[3] = 1, 1, 1
+				s[1], s[2], s[3] = scale, scale, scale
 			end
 			if r then
 				assert(#r==4)	--queration
@@ -86,10 +103,22 @@ for _, scene in ipairs(world) do
 	local fbxconvert = require "fbx2gltf.convert"
 	fbxconvert(fbxfilepaths, {
 		postconvert = function (filepath, scene)
-			reset_scene_transform(scene)
+			local glbfile = fs.path(filepath):replace_extension("fbx"):string():lower()
+			local meshfile
+			for _, mf in ipairs(meshfiles) do
+				if glbfile:match(mf:lower()) then
+					meshfile = mf
+					break
+				end
+			end
+			local scale = 1
+			if meshfile then
+				scale = read_scale_from_meta_file(viking_originpath / meshfile)
+			end
+			reset_scene_transform(scene, scale)
 		end
 	})
-	
+
 	for idx, f in ipairs(meshfiles) do
 		local p = fs.path(f):replace_extension "glb"
 		if fs.is_regular_file(viking_projpath / p) then

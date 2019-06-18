@@ -76,32 +76,78 @@ function model_review_system:init()
 		return {material_refs=material_refs, visible=true}
 	end
 
-	world:create_entity {
-		transform = mu.srt({1, 1, 1}),
-		can_render = true,
-		mesh = {
-			ref_path = fs.path "//ant.resources/depiction/meshes/test_glb.mesh",
-			material_refs = {
-				["build_big_storage_01_fence_02"] = create_submesh_item {1}, 
-				["build_big_storage_01_pillars_01"] = create_submesh_item {2, 3},
-				["build_big_storage_01_straw_roof_002"] = create_submesh_item {4, 5, 6, 7},
-				["build_big_storage_01_walls_down"] = create_submesh_item {2},
-				["build_big_storage_01_walls_up"] = create_submesh_item {2},
-			}
+	local meshes = {
+		{
+			path = fs.path "//ant.resources/depiction/meshes/build_boat_01.mesh",
+			transform = mu.srt({100, 100, 100}, nil, {0, 0, 0}),
+			material = create_material_item(singlecolor_material, {1, 0, 0, 0}),
 		},
-		material = {
-			content = {
-				create_material_item(singlecolor_material, {1, 0, 0, 0}),
-				create_material_item(singlecolor_material, {0, 1, 0, 0}),
-				create_material_item(singlecolor_material, {0, 0, 1, 0}),
-				create_material_item(singlecolor_material, {1, 1, 0, 0}),
-				create_material_item(singlecolor_material, {1, 0, 1, 0}),
-				create_material_item(singlecolor_material, {0, 1, 1, 0}),
-				create_material_item(singlecolor_material, {1, 1, 1, 0}),
-			}
+		{
+			path = fs.path "//ant.resources/depiction/meshes/build_small_house_tall_roof_01.mesh",
+			transform = mu.srt({0.1, 0.1, 0.1}, nil, {-10, 0, 0}),
+			material = create_material_item(singlecolor_material, {0, 1, 0, 0}),
 		},
-		main_view = true,
+		{
+			path = fs.path "//ant.resources/depiction/meshes/build_big_storage_01.mesh",
+			transform = mu.srt({1, 1, 1}, nil, {10, 0, 0}),
+			material = create_material_item(singlecolor_material, {0, 0, 1, 0}),
+		},
+		
 	}
+
+	for _, m in ipairs(meshes)do
+		world:create_entity {
+			transform = m.transform,
+			can_render = true,
+			mesh = {
+				ref_path = m.path,
+				-- submesh_refs = {
+				-- 	material_refs = {
+	
+				-- 	},
+				-- }
+				-- material_refs = {
+				-- 	["build_big_storage_01_fence_02"] = create_submesh_item {1}, 
+				-- 	["build_big_storage_01_pillars_01"] = create_submesh_item {2, 3},
+				-- 	["build_big_storage_01_straw_roof_002"] = create_submesh_item {4, 5, 6, 7},
+				-- 	["build_big_storage_01_walls_down"] = create_submesh_item {2},
+				-- 	["build_big_storage_01_walls_up"] = create_submesh_item {2},
+				-- }
+			},
+			material = {
+				content = {
+					m.material,
+				}
+			},
+			main_view = true,
+		}
+	end
+
+	-- world:create_entity {
+	-- 	transform = mu.srt({100,100,100}, {0, 134.039, 0.625}, {0, 0, 0,}),--{-73.84, 2.253, 33.53}),
+	-- 	can_render = true,
+	-- 	mesh = {
+	-- 		ref_path = fs.path "//ant.resources/depiction/meshes/test_glb.mesh",
+	-- 		-- submesh_refs = {
+	-- 		-- 	material_refs = {
+
+	-- 		-- 	},
+	-- 		-- }
+	-- 		-- material_refs = {
+	-- 		-- 	["build_big_storage_01_fence_02"] = create_submesh_item {1}, 
+	-- 		-- 	["build_big_storage_01_pillars_01"] = create_submesh_item {2, 3},
+	-- 		-- 	["build_big_storage_01_straw_roof_002"] = create_submesh_item {4, 5, 6, 7},
+	-- 		-- 	["build_big_storage_01_walls_down"] = create_submesh_item {2},
+	-- 		-- 	["build_big_storage_01_walls_up"] = create_submesh_item {2},
+	-- 		-- }
+	-- 	},
+	-- 	material = {
+	-- 		content = {
+	-- 			create_material_item(singlecolor_material, {1, 0, 0, 0}),
+	-- 		}
+	-- 	},
+	-- 	main_view = true,
+	-- }
 
 	-- local mesh = model.mesh.assetinfo.handle.bounding
 	--local bound = ms(mesh.aabb.max, mesh.aabb.min, "-T")

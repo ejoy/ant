@@ -12,7 +12,7 @@ local unityScene = {}
 unityScene.__index = unityScene
 
 local sceneInfo = {}
-sceneInfo.scale = 0.1 -- setting
+sceneInfo.scale = 1 -- setting
 sceneInfo.numEntities = 0 -- output statistics
 sceneInfo.numActiveEntities = 0
 function sceneInfo:countEntity()
