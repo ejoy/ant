@@ -98,13 +98,10 @@ for _, scene in ipairs(world) do
 				if is_root_node(node, level) or 
 					not is_geometric_node(node) then
 					reset_transform(node)
-					return true
 				end
 	
 				if node.children then
-					if iter_nodes(node.children, level+1) then
-						return true
-					end
+					iter_nodes(node.children, level+1)
 				end
 			end
 		end
