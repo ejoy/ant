@@ -1876,7 +1876,7 @@ static struct fastmath_function s_fastmath[256] = {
 	{ NULL, NULL }, //A
 	{ NULL, NULL }, //B
 	{ NULL, NULL }, //C
-	{ m_todirection, "to direction" }, //D
+	{ m_torotation, "to rotation" }, //D	
 	{ NULL, NULL }, //E
 	{ NULL, NULL }, //F
 	{ NULL, NULL }, //G
@@ -1908,7 +1908,7 @@ static struct fastmath_function s_fastmath[256] = {
 	{ NULL, NULL }, //a
 	{ m_tobase, "split matrix as x, y, z axis" }, //b
 	{ NULL, NULL }, //c
-	{ m_torotation, "to rotation" }, //d
+	{ m_todirection, "to direction" }, //d
 	{ m_toeuler, "to euler" }, //e
 	{ NULL, NULL }, //f
 	{ NULL, NULL }, //g
