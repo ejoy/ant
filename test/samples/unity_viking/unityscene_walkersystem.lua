@@ -3,9 +3,9 @@ local world = ecs.world
 
 local Statics = require("statics")
 
-local fs = require 'filesystem'
-local math3d = import_package "ant.math"
-local ms = math3d.stack
+local mathpkg = import_package "ant.math"
+local ms = mathpkg.stack
+local mu = mathpkg.util
 
 ecs.import 'ant.basic_components'
 ecs.import 'ant.render'
@@ -22,36 +22,23 @@ ecs.import 'ant.math.adapter'
 
 local renderpkg = import_package 'ant.render'
 local renderutil=renderpkg.util
-local computil = renderpkg.components
-local aniutil = import_package 'ant.animation'.util
-local timer = import_package "ant.timer"
-
 local lu = renderpkg.light
  
-
-local helpTool = require "helptool"
 local unitySceneMaker = require "unitySceneMaker"
 
 local scene_walker = ecs.system 'scene_walker'
 
---scene_walker.depend 'shadow_primitive_filter_system'
---scene_walker.depend 'transparency_filter_system'
-scene_walker.dependby 'render_system'
-scene_walker.depend 'primitive_filter_system'
-scene_walker.dependby 'camera_controller'
-scene_walker.depend 'timesystem'
---scene_walker.depend 'math_adapter'
-
-
+scene_walker.dependby 	'render_system'
+scene_walker.dependby 	'primitive_filter_system'
+scene_walker.dependby 	'camera_controller'
+scene_walker.depend 	'timesystem'
 
 
 function scene_walker:init()
-    renderutil.create_main_queue(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, 5})
-
+	renderutil.create_main_queue(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 50, 5})
     do
-        local rotation = helpTool.to_radian({-220,-235,0,0})
         -- 255,209,172
-        lu.create_directional_light_entity(world, 'directional_light',{1,0.81*0.70,0.67*0.6,0}, 5.5, rotation )     --{1,0.81,0.67,0}
+        lu.create_directional_light_entity(world, 'directional_light',{1,0.81*0.70,0.67*0.6,0}, 5.5, mu.to_radian {-220,-235,0,0} )     --{1,0.81,0.67,0}
         lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     end
    

@@ -131,6 +131,7 @@ for _, scene in ipairs(world) do
 		local p = fs.path(f):replace_extension "glb"
 		if fs.is_regular_file(viking_projpath / p) then
 			meshfiles[idx] = p:string()
+			print("file converted:", f)
 		else
 			meshfiles[idx] = ""
 			print("convert file failed:", f)

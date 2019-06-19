@@ -168,27 +168,34 @@ local function fetch_transform(ent)
 end
 
 local function recalculate_transform(trans)
-    local posScale = 1
-    local scale = sceneInfo.scale
+	local scenescale = sceneInfo.scale
+	local s, r, t = trans.s, trans.r, trans.t
+	local translation = {t[1], t[2], t[3], t[4]}
+	local rotation = mu.to_radian(r)
+	local scale = {s[1] * scenescale, s[2] * scenescale, s[3] * scenescale}
 
-    local m = mc.getMatrixFromEuler(trans.r, 'YXZ')
-    local Angles = mc.getEulerFromMatrix(m, 'ZYX')
+	return {s=scale, r=rotation, t=translation}
+    -- local posScale = 1
+    -- local scale = sceneInfo.scale
 
-    local scalevalue = {}
-    scalevalue[1] = -trans.s[1] * scale
-    scalevalue[2] = trans.s[2] * scale
-	scalevalue[3] = trans.s[3] * scale
+    -- local m = mc.getMatrixFromEuler(trans.r, 'YXZ')
+    -- local Angles = mc.getEulerFromMatrix(m, 'ZYX')
+
+    -- local scalevalue = {}
+    -- scalevalue[1] = -trans.s[1] * scale
+    -- scalevalue[2] = trans.s[2] * scale
+	-- scalevalue[3] = trans.s[3] * scale
     
-    local posvalue = {}
-    posvalue[1] = trans.t[1] * posScale
-    posvalue[2] = trans.t[2] * posScale
-    posvalue[3] = trans.t[3] * posScale
+    -- local posvalue = {}
+    -- posvalue[1] = trans.t[1] * posScale
+    -- posvalue[2] = trans.t[2] * posScale
+    -- posvalue[3] = trans.t[3] * posScale
 
-	return {
-		s = scalevalue,
-		r = mu.to_radian(Angles),
-		t = posvalue,
-	}
+	-- return {
+	-- 	s = scalevalue,
+	-- 	r = mu.to_radian(Angles),
+	-- 	t = posvalue,
+	-- }
 end
 
 local default_material_path = '//ant.resources/depiction/materials/bunny.material' -- "DefaultHDMaterial.material"
