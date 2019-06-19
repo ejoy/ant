@@ -1741,13 +1741,13 @@ static FASTMATH(toquaternion)
 }
 
 static FASTMATH(torotation)
-	convert_rotation_to_viewdir(L, LS);
+	convert_viewdir_to_rotation(L, LS);
 	refstack_1_1(RS);
 	return 0;
 }
 
 static FASTMATH(todirection)
-	convert_viewdir_to_rotation(L, LS);
+	convert_rotation_to_viewdir(L, LS);
 	refstack_1_1(RS);
 	return 0;
 }
