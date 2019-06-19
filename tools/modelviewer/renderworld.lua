@@ -39,7 +39,7 @@ local function create_light()
 end
 
 function model_review_system:init()
-	local fbsize = world.args.fb_size
+	local fbsize = world.args.fb_size	
 	renderutil.create_main_queue(world, fbsize, ms({1, 1, -1}, "inT"), {5, 5, -5})
 	renderutil.create_blit_queue(world, {x=0, y=0, w=fbsize.w, h=fbsize.h})
 	create_light()
@@ -79,17 +79,17 @@ function model_review_system:init()
 	local meshes = {
 		{
 			path = fs.path "//ant.resources/depiction/meshes/build_boat_01.mesh",
-			transform = mu.srt({1, 1, 1, 0}, nil, {0, 0, 0, 1}),
+			transform = mu.srt({1, 1, 1, 0}, nil, {15, 0, 0, 1}),
 			material = create_material_item(singlecolor_material, {1, 0, 0, 0}),
 		},
 		{
 			path = fs.path "//ant.resources/depiction/meshes/build_small_house_tall_roof_01.mesh",
-			transform = mu.srt({1, 1, 1, 0}, nil, {-10, 0, 0, 1}),
+			transform = mu.srt({1, 1, 1, 0}, nil, {-15, 0, 0, 1}),
 			material = create_material_item(singlecolor_material, {0, 1, 0, 0}),
 		},
 		{
 			path = fs.path "//ant.resources/depiction/meshes/build_big_storage_01.mesh",
-			transform = mu.srt({1, 1, 1, 0}, nil, {10, 0, 0, 1}),
+			transform = mu.srt({1, 1, 1, 0}, mu.to_radian {0, 23.248, 0, 0}, {-35.40032, 2.527851, 35.10002, 1}),
 			material = create_material_item(singlecolor_material, {0, 0, 1, 0}),
 		},
 		
@@ -101,18 +101,6 @@ function model_review_system:init()
 			can_render = true,
 			mesh = {
 				ref_path = m.path,
-				-- submesh_refs = {
-				-- 	material_refs = {
-	
-				-- 	},
-				-- }
-				-- material_refs = {
-				-- 	["build_big_storage_01_fence_02"] = create_submesh_item {1}, 
-				-- 	["build_big_storage_01_pillars_01"] = create_submesh_item {2, 3},
-				-- 	["build_big_storage_01_straw_roof_002"] = create_submesh_item {4, 5, 6, 7},
-				-- 	["build_big_storage_01_walls_down"] = create_submesh_item {2},
-				-- 	["build_big_storage_01_walls_up"] = create_submesh_item {2},
-				-- }
 			},
 			material = {
 				content = {
@@ -122,6 +110,33 @@ function model_review_system:init()
 			main_view = true,
 		}
 	end
+
+	world:create_entity {
+		transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),
+		can_render = true,
+		mesh = {
+			ref_path = fs.path "//ant.resources/depiction/meshes/test_glb.mesh",
+			submesh_refs = {
+				["build_big_storage_01_fence_02"] 		= create_submesh_item {1}, 
+				["build_big_storage_01_pillars_01"] 	= create_submesh_item {2, 3},
+				["build_big_storage_01_straw_roof_002"] = create_submesh_item {4, 5, 6, 7},
+				["build_big_storage_01_walls_down"] 	= create_submesh_item {2},
+				["build_big_storage_01_walls_up"] 		= create_submesh_item {2},
+			},
+		},
+		material = {
+			content = {
+				create_material_item(singlecolor_material, {1, 0, 0, 0}),
+				create_material_item(singlecolor_material, {0, 1, 0, 0}),
+				create_material_item(singlecolor_material, {0, 0, 1, 0}),
+				create_material_item(singlecolor_material, {1, 1, 0, 0}),
+				create_material_item(singlecolor_material, {1, 0, 1, 0}),
+				create_material_item(singlecolor_material, {0, 1, 1, 0}),
+				create_material_item(singlecolor_material, {1, 1, 1, 0}),
+			}
+		},
+		main_view = true,
+	}
 
 	-- world:create_entity {
 	-- 	transform = mu.srt({100,100,100}, {0, 134.039, 0.625}, {0, 0, 0,}),--{-73.84, 2.253, 33.53}),

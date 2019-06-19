@@ -89,27 +89,28 @@ local function get_material(prim, primidx, materialcontent, material_refs)
 	return materialcontent[materialidx+1] or materialcontent[1]
 end
 
+local function is_visible(meshname, submesh_refs)
+	if submesh_refs == nil then
+		return true
+	end
+
+	if submesh_refs then
+		local ref = submesh_refs[meshname]
+		if ref then
+			return ref.visible
+		end
+	end
+end
+
+local function get_material_refs(meshname, submesh_refs)
+	if submesh_refs then
+		local ref = assert(submesh_refs[meshname])
+		return assert(ref.material_refs)
+	end
+end
+
 local function traverse_scene(scene, eid, materialcontent, submesh_refs, worldmat, filter)
 	local nodes, meshes = scene.nodes, scene.meshes
-	local function is_visible(meshname)
-		if submesh_refs == nil then
-			return true
-		end
-
-		if submesh_refs then
-			local ref = submesh_refs[meshname]
-			if ref then
-				return ref.visible
-			end
-		end
-	end
-
-	local function get_material_refs(meshname)
-		if submesh_refs then
-			local ref = assert(submesh_refs[meshname])
-			return assert(ref.material_refs)
-		end
-	end
 
 	local function traverse_scene_ex(scenenodes, parentmat)
 		for _, nodeidx in ipairs(scenenodes) do
@@ -124,11 +125,8 @@ local function traverse_scene(scene, eid, materialcontent, submesh_refs, worldma
 			if meshidx then
 				local mesh = meshes[meshidx+1]
 				local meshname = mesh.name
-				if is_visible(meshname) then
-					local material_refs = get_material_refs(meshname)
-					if test_worldmat then
-						print(ms(nodetrans, "V"))
-					end
+				if is_visible(meshname, submesh_refs) then
+					local material_refs = get_material_refs(meshname, submesh_refs)
 					for idx, prim in ipairs(mesh.primitives) do
 						ru.insert_primitive(eid, prim, scene, 
 							get_material(prim, idx, materialcontent, material_refs),
