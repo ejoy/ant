@@ -1,4 +1,4 @@
-path = "//unity_viking/assets/textures/pbr/Cerberus_N.dds"
+path = "/pkg/unity_viking/assets/textures/pbr/Cerberus_N.dds"
 
 sampler = {
 	U = "MIRROR",

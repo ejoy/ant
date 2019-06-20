@@ -1,4 +1,4 @@
- path = "//unity_viking/Assets/Textures/Props/prop_barrel_01_m.dds"
+ path = "/pkg/unity_viking/Assets/Textures/Props/prop_barrel_01_m.dds"
  sampler = {
    U = "MIRROR",
    V = "MIRROR",

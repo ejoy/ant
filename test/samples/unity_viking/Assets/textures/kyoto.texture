@@ -1,4 +1,4 @@
-path = "//unity_viking/assets/textures/pbr/kyoto_lod.dds"
+path = "/pkg/unity_viking/assets/textures/pbr/kyoto_lod.dds"
 
 sampler = {
 	U = "MIRROR",

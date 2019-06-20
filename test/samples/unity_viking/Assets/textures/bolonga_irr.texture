@@ -1,4 +1,4 @@
-path = "//unity_viking/assets/textures/pbr/bolonga_irr.dds"
+path = "/pkg/unity_viking/assets/textures/pbr/bolonga_irr.dds"
 
 sampler = {
 	U = "MIRROR",

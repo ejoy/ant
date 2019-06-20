@@ -1,4 +1,4 @@
- path = "//unity_viking/Assets/Standard Assets/Water (Pro Only)/Sources/Textures/Waterbump.dds"
+ path = "/pkg/unity_viking/Assets/Standard Assets/Water (Pro Only)/Sources/Textures/Waterbump.dds"
  sampler = {
    U = "MIRROR",
    V = "MIRROR",
