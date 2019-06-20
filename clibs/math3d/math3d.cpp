@@ -2396,21 +2396,20 @@ lview_proj(lua_State *L) {
 	return numresult;
 }
 
-static inline glm::vec4 
-get_vec_value(lua_State *L, struct lastack *LS, int index) {
+template<typename T>
+static T 
+get_value(lua_State *L, struct lastack *LS, int index) {
 	switch (lua_type(L, index)) {
 	case LUA_TUSERDATA:
 	case LUA_TNUMBER:
 	{
 		int type;
-		return *((const glm::vec4*)lastack_value(LS, get_stack_id(L, LS, index), &type));
+		return *((const T*)lastack_value(LS, get_stack_id(L, LS, index), &type));
 	}
 	case LUA_TTABLE:
 	{
-		glm::vec4 v;
-		v[3] = 0;
+		T v;		
 		const size_t len = lua_rawlen(L, index);
-		
 		for (int ii = 0; ii < (int)len; ++ii) {
 			lua_geti(L, index, ii + 1);
 			v[ii] = lua_tonumber(L, -1);
@@ -2419,9 +2418,14 @@ get_vec_value(lua_State *L, struct lastack *LS, int index) {
 		return v;
 	}
 	default:
-		luaL_error(L, "invalid data type, get_vec_value only support table/userdata(refvalue)/stack number");
-		return glm::vec4(0);
+		luaL_error(L, "invalid data type, only support table/userdata(refvalue)/stack number");
+		return T(0);
 	}
+}
+
+static inline glm::vec4 
+get_vec_value(lua_State *L, struct lastack *LS, int index) {
+	return get_value<glm::vec4>(L, LS, index);
 }
 
 static int
@@ -2569,6 +2573,103 @@ lscreen_point_to_3d(lua_State *L) {
 	}
 
 	return num2dpoint;
+}
+
+static int
+llhs_rotation(lua_State *L) {
+	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
+	lastack *LS = bp->LS;
+
+	glm::vec4 euler = get_vec_value(L, LS, 2);
+	const glm::mat3 scale(
+		-1, 0, 0,
+		0, 1, 0,
+		0, 0, 1);
+
+	const glm::mat3 r_mat = glm::mat3(glm::quat(euler));
+	
+	const glm::mat3 l_mat = scale * r_mat * scale;
+	
+	glm::vec3 neweuler = glm::eulerAngles(glm::quat_cast(l_mat));
+	lua_createtable(L, 3, 0);
+	for (int ii = 0; ii < 3; ++ii) {
+		lua_pushnumber(L, neweuler[ii]);
+		lua_seti(L, -2, ii + 1);
+	}
+
+	return 1;
+}
+
+static int
+llhs_matrix(lua_State *L) {
+	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
+	lastack *LS = bp->LS;
+
+	const glm::mat3 scale(
+		-1, 0, 0,
+		0, 1, 0,
+		0, 0, 1);
+		
+
+	const auto type = lua_type(L, 2);
+	glm::mat4 r_mat(1);
+	switch (type) {
+	case LUA_TNUMBER:
+	case LUA_TUSERDATA: {
+		int datatype = 0;
+		const float* v = lastack_value(LS, get_stack_id(L, LS, 2), &datatype);
+		if (datatype != LINEAR_TYPE_MAT) {
+			luaL_error(L, "not support datatype:%d", datatype);
+		}
+
+		r_mat = *(glm::mat4*)v;
+	}
+		break;
+	case LUA_TTABLE: {
+		const auto checktype = lua_getfield(L, 2, "s");
+		lua_pop(L, 1);
+		if (checktype == LUA_TTABLE) {
+			lua_getfield(L, 2, "s");
+			const glm::vec3 scale = extract_scale(L, LS, -1);
+			lua_pop(L, 1);
+
+			lua_getfield(L, 2, "r");
+			const glm::mat4x4 rotMat = extract_rotation_mat(L, LS, -1);
+			lua_pop(L, 1);
+
+			lua_getfield(L, 2, "t");
+			const glm::vec3 translate = extract_translate(L, LS, -1);
+			lua_pop(L, 1);
+
+			
+			r_mat[0][0] = scale[0];
+			r_mat[1][1] = scale[1];
+			r_mat[2][2] = scale[2];
+			r_mat = rotMat * r_mat;
+			r_mat[3] = glm::vec4(translate, 1);
+		} else {
+			for (int ii = 0; ii < 4; ++ii) {
+				for (int jj = 0; jj < 4; ++jj) {
+					lua_geti(L, 2, ii * 4 + jj + 1);
+					r_mat[ii][jj] = lua_tonumber(L, -1);
+					lua_pop(L, 1);
+				}				
+			}
+		}
+	}
+		break;
+	default:
+		break;
+	}
+
+	const glm::mat3 rot = r_mat;
+	glm::mat4 l_mat = scale * rot * scale;
+	const glm::vec4 &translate = r_mat[3];
+	l_mat[3] = glm::vec4(-translate[0], translate[1], translate[2], 1);
+
+	lastack_pushmatrix(LS, (const float*)(&l_mat));
+	lua_pushinteger(L, lastack_pop(LS));
+	return 1;
 }
 
 static int
@@ -2726,6 +2827,8 @@ register_linalg_mt(lua_State *L) {
 			{ "dot", ldot},
 			{ "is_parallel", lis_parallel},
 			{ "screenpt_to_3d", lscreen_point_to_3d},
+			{ "lhs_rotation", llhs_rotation},
+			{ "lhs_mat", llhs_matrix},
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
