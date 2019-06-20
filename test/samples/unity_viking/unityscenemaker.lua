@@ -172,7 +172,7 @@ local function recalculate_transform(trans)
 	local s, r, t = trans.s, trans.r, trans.t
 	local translation = {t[1], t[2], t[3], t[4]}
 	local rotation = mu.to_radian(r)
-	local scale = {-s[1] * scenescale, s[2] * scenescale, s[3] * scenescale}
+	local scale = {s[1] * scenescale, s[2] * scenescale, s[3] * scenescale}
 
 	return {s=scale, r=rotation, t=translation}
     -- local posScale = 1
@@ -403,7 +403,7 @@ function unityScene.create(world, scenepath)
 				main_view = true,
 			}
 
-			print("create entity:", eid, name)
+			print("create entity:", eid, groupname)
 		end
     end
 

@@ -121,6 +121,8 @@ for _, scene in ipairs(world) do
 			end
 
 			lkcontent.config.mesh.scale = get_scale(filepath)
+			lkcontent.config.mesh.coord_system = "right"
+			lkcontent.config.mesh.negative_axis = "X"
 		end,
 		postconvert = function (filepath, scene)
 			reset_scene_transform(scene)

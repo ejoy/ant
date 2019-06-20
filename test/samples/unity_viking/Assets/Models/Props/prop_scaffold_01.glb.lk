@@ -14,6 +14,8 @@ config = {
     "p3|n30nIf|T|b|t20|c40"
   },
   mesh = {
+    coord_system = "right",
+    negative_axis = "X",
     scale = 1
   }
 }

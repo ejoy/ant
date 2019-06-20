@@ -1,4 +1,8 @@
 local glTF = import_package "ant.glTF"
+local mathpkg = import_package "ant.math"
+local ms = mathpkg.stack
+local mu = mathpkg.util
+
 local glbloader = glTF.glb
 
 local gltf_converter = require "meshconverter.gltf"
@@ -304,6 +308,61 @@ local function get_scale(cfg)
 	return 1
 end
 
+local function get_convert_matrix(negative_axis)
+	local reverse_matrix = {
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1,
+	}
+	local indices = {
+		X = 1, Y = 6, Z = 11,
+	}
+	reverse_matrix[indices[negative_axis]] = -1
+	return reverse_matrix
+end
+
+local function convert_coord_system(scene, meshcfg)
+	if meshcfg.coord_system == "right" then
+		local scenelods = scene.scenelods or {scene.scene}
+		for _, sceneidx in ipairs(scenelods)do
+			local rootnodes = scene.scenes[sceneidx+1].nodes
+			for _, nodeidx in ipairs(rootnodes)do
+				local node = scene.nodes[nodeidx+1]
+				if node.matrix then
+					-- local function split_matrix(m)
+					-- 	local m3x3 = {}
+					-- 	for idx, v in ipairs(m) do
+					-- 		m3x3[idx] = v
+					-- 	end
+
+					-- 	for _, idx in ipairs {4, 8, 12, 13, 14, 15} do
+					-- 		m3x3[idx] = 0
+					-- 	end
+					-- 	m3x3[16] = 1
+
+					-- 	return m3x3, {m[13], m[14], m[15], 1}
+					-- end
+
+					-- local rot, translate = split_matrix(node.matrix)
+					-- local m = ms(convert_matrix, rot, convert_matrix, "**T")
+					-- m.type = nil
+					-- local t = ms(convert_matrix, translate, "*T")
+					-- m[13], m[14], m[15] = t[1], t[2], t[3]
+					local indices = {X=1, Y=6, Z=11}
+					local index = indices[meshcfg.negative_axis]
+					node.matrix[index] = -node.matrix[index]
+				else
+					assert(node.scale and node.rotation and node.translation)
+					local indices = {X=1, Y=2, Z=3}
+					local index = indices[meshcfg.negative_axis]
+					node.scale[index] = -node.scale[index]
+				end
+			end
+		end
+	end
+end
+
 return function (srcname, dstname, cfg)
 	local glbdata = glbloader.decode(srcname)
 	local scene = glbdata.info
@@ -371,6 +430,11 @@ return function (srcname, dstname, cfg)
 
 	if cfg.flags.extract_colider_mesh then
 		filtermesh.extract_colider_mesh(newscene)
+	end
+
+	local meshcfg = cfg.mesh
+	if meshcfg then
+		convert_coord_system(newscene, meshcfg)
 	end
 
 	glbloader.encode(dstname, {version=glbdata.version, info=newscene, bin=new_bindata})

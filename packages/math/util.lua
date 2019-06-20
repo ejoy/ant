@@ -86,6 +86,20 @@ end
 function util.to_radian(angles) return list_op(angles, math.rad) end
 function util.to_angle(radians) return list_op(radians, math.deg) end
 
+function util.AXIS(name)
+	if name == "X" then
+		return {1, 0, 0, 0}
+	end
+
+	if name == "Y" then
+		return {0, 1, 0, 0}
+	end
+
+	if name == "Z" then
+		return {0, 0, 1, 0}
+	end
+end
+
 util.XAXIS = ms:ref "vector" {1, 0, 0, 0}
 util.NXAXIS = ms:ref "vector" {-1, 0, 0, 0}
 util.YAXIS = ms:ref "vector" {0, 1, 0, 0}
