@@ -28,9 +28,9 @@ end
 
 function world:init_component(e, c)
 	local ti = assert(self._components[c], c)
-	if ti.depend then
-		for _, name in ipairs(ti.depend) do
-			assert(e[name], ("`%s` depend `%s`"):format(c, name))
+	if ti._depend then
+		for name in pairs(ti._depend) do
+			assert(e[name], ("Can't init `%s` because `%s` depends on it."):format(c, name))
 		end
 	end
 	if ti.method and ti.method.postinit then
@@ -61,14 +61,20 @@ function world:add_component_child(parent_com,child_name,child_type,child_value)
     end
 end
 
-function world:remove_component(eid, component_type)
+function world:remove_component(eid, c)
 	local e = assert(self[eid])
-	assert(e[component_type] ~= nil)
-	self._set[component_type] = nil
+	local ti = assert(self._components[c], c)
+	if ti._dependby then
+		for name in pairs(ti._dependby) do
+			assert(e[name] == nil, ("Can't delete `%s` because `%s` depends on it."):format(c, name))
+		end
+	end
+	assert(e[c] ~= nil)
+	self._set[c] = nil
 	-- defer delete , see world:remove_reset
 	local removed = self._removed
-	removed[#removed+1] = { eid, component_type, e[component_type] }
-	e[component_type] = nil
+	removed[#removed+1] = { eid, e, c }
+	e[c] = nil
 end
 
 function world:component_list(eid)
@@ -87,9 +93,9 @@ local function sortcomponent(w, t, r)
     end
 	local ti = w._components
 	if not r then
-		table.sort(sort, function (a, b) return ti[a].sortid < ti[b].sortid end)
+		table.sort(sort, function (a, b) return ti[a]._sortid < ti[b]._sortid end)
 	else
-		table.sort(sort, function (a, b) return ti[a].sortid > ti[b].sortid end)
+		table.sort(sort, function (a, b) return ti[a]._sortid > ti[b]._sortid end)
 	end
     local n = 1
     return function ()
@@ -230,14 +236,13 @@ function world:clear_removed()
 	for i = #set,1,-1 do
 		local item = set[i]
 		set[i] = nil
-		local c = item[3]
-		if c ~= nil then
+		local e = item[2]
+		local component_type = item[3]
+		if component_type ~= nil then
 			-- delete component
-			local component_type = item[2]
 			local ti = assert(self._components[component_type], component_type)
-			component_delete(self, ti, c)
+			component_delete(self, ti, e[component_type], e)
 		else
-			local e = item[2]
 			-- delete entity
 			for component_type, c in sortcomponent(self, e, true) do
 				local ti = assert(self._components[component_type], component_type)

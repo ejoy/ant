@@ -161,10 +161,10 @@ local function add_pick_entity()
 		pickup = {
 			materials = {
 				opaque = {
-					ref_path = fs.path '//ant.resources/materials/pickup_opacity.material'
+					ref_path = fs.path '/pkg/ant.resources/materials/pickup_opacity.material'
 				},
 				translucent = {
-					ref_path = fs.path '//ant.resources/materials/pickup_transparent.material'
+					ref_path = fs.path '/pkg/ant.resources/materials/pickup_transparent.material'
 				}
 			},
 			blit_buffer = {

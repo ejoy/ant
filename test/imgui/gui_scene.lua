@@ -36,7 +36,7 @@ end
 
 --main menu
 function GuiScene:get_mainmenu()
-    local parent_path = {"TestScene"}
+    local parent_path = {"Scene"}
     return {{parent_path,self._scene_menu},}
 end
 
@@ -58,6 +58,7 @@ function  GuiScene:_scene_menu()
             self:set_fps(fps[1])
         end
     end
+    widget.Text(string.format("real frame time:%f/(%.2f)",self.cur_frame_time,1/self.cur_frame_time))
 end
 
 

@@ -3,7 +3,7 @@ local ecs = ...
 ecs.import "ant.math"
 
 local fs = require "filesystem"
-
+local bgfx = require "bgfx"
 local component_util = require "components.util"
 local asset = import_package "ant.asset".mgr
 local mathpkg = import_package "ant.math"
@@ -209,3 +209,5 @@ function constant.init()
 		}
 	}
 end
+
+local mqdata = ecs.singleton "mian_queue_data"

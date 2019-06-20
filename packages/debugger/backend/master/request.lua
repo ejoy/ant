@@ -44,10 +44,10 @@ function request.attach(req)
         initialize = req.arguments,
         breakpoints = {},
     }
+    mgr.termOnExit(req.arguments.termOnExit)
 end
 
 function request.launch(req)
-    mgr.exitWhenClose()
     return request.attach(req)
 end
 

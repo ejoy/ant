@@ -1,6 +1,6 @@
 shader = {
-	vs = "//ant.resources/terrain/vs_terrain",
-    fs = "//ant.resources/terrain/fs_terrain",
+	vs = "/pkg/ant.resources/terrain/vs_terrain",
+    fs = "/pkg/ant.resources/terrain/fs_terrain",
 }
 
 state = "normal.state"

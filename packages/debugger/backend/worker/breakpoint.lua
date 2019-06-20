@@ -185,10 +185,10 @@ function m.exec(bp)
             end
             return tostring(r)
         end)
-        local s = rdebug.getinfo(1, info)
-        local src = source.create(s.source)
+        rdebug.getinfo(1, "Sl", info)
+        local src = source.create(info.source)
         if source.valid(src) then
-            ev.emit('output', 'stdout', res, src, s.currentline)
+            ev.emit('output', 'stdout', res, src, info.currentline)
         else
             ev.emit('output', 'stdout', res)
         end

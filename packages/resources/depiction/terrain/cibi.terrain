@@ -7,7 +7,7 @@ height = 780
 
 heightmap = {
 	bits   = 16,
-	ref_path = "//ant.resources.binary/terrain/chibi16.raw"
+	ref_path = "/pkg/ant.resources.binary/terrain/chibi16.raw"
 }
 
 uv0_scale  = 80*0.625

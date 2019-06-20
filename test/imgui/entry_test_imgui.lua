@@ -40,12 +40,12 @@ function callback.init(nwh, context, width, height)
     }
 
     local ocornut_imgui = assetutil.shader_loader {
-        vs = "//ant.testimgui/shader/vs_ocornut_imgui",
-        fs = "//ant.testimgui/shader/fs_ocornut_imgui",
+        vs = "/pkg/ant.testimgui/shader/vs_ocornut_imgui",
+        fs = "/pkg/ant.testimgui/shader/fs_ocornut_imgui",
     }
     local imgui_image = assetutil.shader_loader {
-        vs = "//ant.testimgui/shader/vs_imgui_image",
-        fs = "//ant.testimgui/shader/fs_imgui_image",
+        vs = "/pkg/ant.testimgui/shader/vs_imgui_image",
+        fs = "/pkg/ant.testimgui/shader/fs_imgui_image",
     }
 
     imgui.create(nwh);

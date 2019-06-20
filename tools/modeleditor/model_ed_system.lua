@@ -207,13 +207,13 @@ local function init_paths_ctrl()
 	-- aniview:add(fs.path "meshes/animation/animation1.ozz")
 	-- aniview:add(fs.path "meshes/animation/animation2.ozz")
 
-	sminputer:set_input("//ant.resources.binary/meshes/female/female.ozz")
-	skeinputer:set_input("//ant.resources.binary/meshes/female/skeleton.ozz")
+	sminputer:set_input("/pkg/ant.resources.binary/meshes/female/female.ozz")
+	skeinputer:set_input("/pkg/ant.resources.binary/meshes/female/skeleton.ozz")
 	
 	assert(aniview:count() == 0)
-	aniview:add("//ant.resources.binary/meshes/female/animations/idle.ozz")
-	aniview:add("//ant.resources.binary/meshes/female/animations/walking.ozz")
-	aniview:add("//ant.resources.binary/meshes/female/animations/running.ozz")
+	aniview:add("/pkg/ant.resources.binary/meshes/female/animations/idle.ozz")
+	aniview:add("/pkg/ant.resources.binary/meshes/female/animations/walking.ozz")
+	aniview:add("/pkg/ant.resources.binary/meshes/female/animations/running.ozz")
 	
 	local blender = iup.GetDialogChild(dlg, "BLENDER").owner
 	aniview:set_blender(blender)

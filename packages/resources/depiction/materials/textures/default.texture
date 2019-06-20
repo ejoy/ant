@@ -1,4 +1,4 @@
-path = "//ant.resources.binary/textures/default.dds"
+path = "/pkg/ant.resources.binary/textures/default.dds"
 
 sampler = {
 	U = "MIRROR",

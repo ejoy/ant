@@ -55,7 +55,7 @@ print 'hello world'
                 ]
             ],
             "skipFiles": [
-                "vfs:/engine/libs/debugger/*",
+                "vfs:/engine/debugger/*",
             ]
         }
 ```

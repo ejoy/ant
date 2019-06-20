@@ -99,7 +99,7 @@ local function replacewhere(msg, level)
     if f then
         msg = msg:sub(l + 1)
     end
-    if not rdebug.getinfo(level + 1, info) then
+    if not rdebug.getinfo(level + 1, "Sl", info) then
         return msg
     end
     return ('%s:%d: %s'):format(getshortsrc(info), info.currentline, msg)
@@ -113,7 +113,7 @@ return function(msg, level)
     s[#s + 1] = 'stack traceback:'
     local last = hookmgr.stacklevel()
     local n1 = last - level > 21 and 10 or -1
-    while rdebug.getinfo(level, info) do
+    while rdebug.getinfo(level, "Slnt", info) do
         local f = rdebug.getfunc(level)
         level = level + 1
         n1 = n1 - 1

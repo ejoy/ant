@@ -160,7 +160,7 @@ function Tree:_render_node(tree_node)
         tree_node._opened = cur_open
         self:_on_node_change(tree_node,cur_open)
     end
-    if tree_node._opened then
+    if cur_open then
         self:_render_children(tree_node)
         widget.TreePop()
     end

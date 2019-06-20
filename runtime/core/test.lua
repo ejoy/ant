@@ -1,6 +1,5 @@
 dofile "libs/editor.lua"
 
---package.path = "runtime/core/firmware/?.lua;"..package.path
 
 local reponame = assert((...), "Need repo name")
 

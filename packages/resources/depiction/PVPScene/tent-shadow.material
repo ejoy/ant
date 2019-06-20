@@ -1,6 +1,6 @@
 shader = {
-	vs = "//ant.resources/mesh/vs_mesh_bump_shadow",
-	fs = "//ant.resources/mesh/fs_mesh_bumpex_shadow",
+	vs = "/pkg/ant.resources/mesh/vs_mesh_bump_shadow",
+	fs = "/pkg/ant.resources/mesh/fs_mesh_bumpex_shadow",
 }
 
 state = "materials/states/default.state"
@@ -11,7 +11,7 @@ properties = {
 		u_specularLight = {type="v4", name="specular light factor", default={5.5, 0, 0,0}},
 	},
 	textures = {
-		s_basecolor = {type="texture", name="base color", stage=0, ref_path="//ant.resources/PVPScene/tent_d.texture"},
-		s_normal = {type="texture", name="normal", stage=1, ref_path="//ant.resources/PVPScene/tent_n.texture"},
+		s_basecolor = {type="texture", name="base color", stage=0, ref_path="/pkg/ant.resources/PVPScene/tent_d.texture"},
+		s_normal = {type="texture", name="normal", stage=1, ref_path="/pkg/ant.resources/PVPScene/tent_n.texture"},
 	}
 }

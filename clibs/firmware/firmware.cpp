@@ -3,9 +3,9 @@
 #include <string_view>
 #include <map>
 
-INCBIN(FirmwareBootstrap, "../../runtime/core/firmware/bootstrap.lua");
-INCBIN(FirmwareIo, "../../runtime/core/firmware/io.lua");
-INCBIN(FirmwareVfs, "../../runtime/core/firmware/vfs.lua");
+INCBIN(FirmwareBootstrap, "../../engine/firmware/bootstrap.lua");
+INCBIN(FirmwareIo, "../../engine/firmware/io.lua");
+INCBIN(FirmwareVfs, "../../engine/firmware/vfs.lua");
 
 struct bin {
 	const char* data;

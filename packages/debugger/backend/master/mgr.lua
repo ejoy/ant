@@ -187,8 +187,8 @@ function mgr.setState(s)
     state = s
 end
 
-function mgr.exitWhenClose()
-    exit = true
+function mgr.termOnExit(v)
+    exit = v
 end
 
 function mgr.close()

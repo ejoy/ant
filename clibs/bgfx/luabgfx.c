@@ -1083,9 +1083,6 @@ lcreateProgram(lua_State *L) {
 	int d = 0;
 	int compute = 0;
 	switch (t) {
-	case LUA_TNUMBER:
-		fs = BGFX_LUAHANDLE_ID(SHADER, luaL_checkinteger(L, 2));
-		break;
 	case LUA_TBOOLEAN:
 		d = lua_toboolean(L, 2);
 		compute = 1;
@@ -1093,6 +1090,9 @@ lcreateProgram(lua_State *L) {
 	case LUA_TNONE:
 		compute = 1;
 		break;
+	case LUA_TNUMBER:
+		fs = BGFX_LUAHANDLE_ID(SHADER, luaL_checkinteger(L, 2));
+		// FALLTHROUGH
 	case LUA_TNIL:
 		d = lua_toboolean(L, 3);
 		break;

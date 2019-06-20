@@ -75,7 +75,7 @@ end
 
 --todo
 local handle_cache = {}
---path:"//ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.dds"
+--path:"/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.dds"
 local function path2tex_handle(path)
     if type(path) == "string" then
         if not handle_cache[path] then

@@ -1,4 +1,4 @@
-path = "//ant.resources.binary/textures/brickwall_normal.dds"
+path = "/pkg/ant.resources.binary/textures/brickwall_normal.dds"
 sampler = {
 	U = "CLAMP",
 	V = "CLAMP",

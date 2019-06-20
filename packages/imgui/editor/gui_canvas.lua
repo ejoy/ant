@@ -27,11 +27,9 @@ function try(fun,...)
     return ret
 end
 
-
 local function get_time()
     return os.clock()
 end
-
 
 function GuiCanvas:_init()
     GuiBase._init(self)
@@ -40,8 +38,8 @@ function GuiCanvas:_init()
     self.title_id = "Scene###Scene"
     self.vp_dirty = false
     self.time_count = 0
+    self.cur_frame_time = 0.0
     self:set_fps(DEFAULT_FPS)
-    hub.subscribe("framebuffer_change",self.on_framebuffer_change,self)
 end
 
 function GuiCanvas:set_fps(fps)
@@ -50,18 +48,16 @@ function GuiCanvas:set_fps(fps)
     self.frame_time = 1/fps
 end
 
-function GuiCanvas:on_framebuffer_change()
-    self.world_tex =  ru.get_main_view_rendertexture(self.world)
-end
-
 function GuiCanvas:bind_world( world,world_update,msgqueue )
     self.world = world
     self.world_update = world_update
     local rect = {x=0,y=0,w=self.rect.w,h=self.rect.h}
     map_imgui(msgqueue,self)
-    self.world_tex =  ru.get_main_view_rendertexture(self.world)
+
     self.next_frame_time = 0
     self.time_count = 0
+    self.last_update = nil
+
 end
 
 function GuiCanvas:on_close_click()
@@ -80,10 +76,16 @@ function GuiCanvas:on_update(delta)
     local r = self.rect
     if w~=r.w or h~=r.h or x~=r.x or y ~= r.y then
         self.vp_dirty = self.vp_dirty or (w~=r.w) or (h~=r.h)
+        if  (w~=r.w) or (h~=r.h) then
+            print(">>>>>>",w,r.w,h,r.h)
+        end
         self.rect = {x=x,y=y,w=w,h=h}
     end
-    if self.world_tex then
-        widget.Image(self.world_tex,w,h)
+    if self.world then
+        local world_tex =  ru.get_main_view_rendertexture(self.world)
+        if world_tex then
+            widget.ImageButton(world_tex,w,h,{frame_padding=0,bg_col={0,0,0,1}})
+        end
     end
     local focus = windows.IsWindowFocused(focus_flag)
     if focus and IO.WantCaptureMouse then
@@ -99,7 +101,11 @@ function GuiCanvas:_update_world(delta)
     local now = self.time_count + delta
     self.time_count = now
     if now >= self.next_frame_time then
+        if self.last_update then
+            self.cur_frame_time = now - self.last_update
+        end
         self.next_frame_time = now + self.frame_time
+        self.last_update = now
         --update world
         try(self.world_update)
     end

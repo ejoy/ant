@@ -27,8 +27,8 @@ local function run_repl(frameId, expression)
     if #res == 1 then
         return true, 'nil'
     end
-    local _, ref
-    res[2], _, ref = variables.createRef(frameId, res[2], expression)
+    local ref
+    res[2], ref = variables.createRef(frameId, res[2], expression)
     for i = 3, res.n do
         res[i] = variables.createText(res[i])
     end
@@ -40,7 +40,7 @@ local function run_hover(frameId, expression)
     if not ok then
         return false, res
     end
-    local res, _, ref = variables.createRef(frameId, res, expression)
+    local res, ref = variables.createRef(frameId, res, expression)
     return true, res, ref
 end
 
@@ -52,8 +52,8 @@ local function run_watch(frameId, expression)
     if #res == 0 then
         return true, 'nil'
     end
-    local _, ref
-    res[2], _, ref = variables.createRef(frameId, res[2], expression)
+    local ref
+    res[2], ref = variables.createRef(frameId, res[2], expression)
     for i = 3, res.n do
         res[i] = variables.createText(res[i])
     end

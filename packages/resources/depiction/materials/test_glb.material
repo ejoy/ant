@@ -8,8 +8,8 @@ state = {
 }
 
 shader = {
-    vs = "//ant.resources/mesh/vs_colormeshex",
-    fs = "//ant.resources/mesh/fs_colormesh",
+    vs = "/pkg/ant.resources/mesh/vs_colormeshex",
+    fs = "/pkg/ant.resources/mesh/fs_colormesh",
 }
 
 properties = {

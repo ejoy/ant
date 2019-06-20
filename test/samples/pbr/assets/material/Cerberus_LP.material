@@ -5,7 +5,7 @@ shader = {
 
 -- 系统包目录不成立，解读成包目录下需要有个 depiction 目录
 -- 仍旧从depiction 目录去读取，需要修改独立不依赖更好
--- state = "//ant.resources/default.state"  
+-- state = "/pkg/ant.resources/default.state"  
 -- 本地包目录不成立，固定要求在包目录下增加depiction目录
 -- state = "//pbr/assets/default.state"
 -- 同时，以这个方法读入到内存，绘制不了东西，请查看转译是否有误？
