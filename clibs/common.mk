@@ -29,7 +29,11 @@ LUA_FLAGS = -DLUA_BUILD_AS_DLL
 LUALIB = -L../lua -llua53
 LUABIN = ../lua/lua.exe
 LD_SHARED = --shared
+ifeq ("$(BUILD_CONFIG)","release")
 STRIP = strip --strip-unneeded
+else
+STRIP = echo
+endif
 CFLAGS = $(DEBUG_INFO) -Wall
 
 else ifeq "$(PLAT)" "osx"
@@ -38,7 +42,11 @@ LUA_FLAGS = -DLUA_USE_MACOSX
 LUALIB = -L../lua
 LUABIN = ../lua/lua
 LD_SHARED = -fPIC -dynamiclib -Wl,-undefined,dynamic_lookup
+ifeq ("$(BUILD_CONFIG)","release")
 STRIP = strip -u -r -x
+else
+STRIP = echo
+endif
 CFLAGS = $(DEBUG_INFO) -Wall
 
 else ifeq "$(PLAT)" "ios"
