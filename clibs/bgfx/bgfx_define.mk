@@ -40,4 +40,8 @@ BGFXLIB = -L$(BGFXLIBDIR) -lbgfx$(BGFX_BUILD_CONFIG) $(BIMGLIB) $(BXLIB) -lstdc+
 BGFXLIB += -framework CoreFoundation -framework Foundation -framework OpenGLES -framework UIKit -framework QuartzCore -weak_framework Metal
 endif
 
-BGFXUTILLIB = -lexample-common$(BUILD_CONFIG)
+ifeq ("$(BUILD_CONFIG)","release")
+BGFXUTILLIB = -lexample-commonRelease
+else
+BGFXUTILLIB = -lexample-commonDebug
+endif

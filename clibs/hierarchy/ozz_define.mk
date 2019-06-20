@@ -1,4 +1,4 @@
-ifeq ("$(BUILD_CONFIG)","Release")
+ifeq ("$(BUILD_CONFIG)","release")
 LIB_SUFFIX := _r
 else
 LIB_SUFFIX := _d

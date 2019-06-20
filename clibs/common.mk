@@ -7,7 +7,7 @@ ifeq "$(PLAT)" ""
 endif
 
 OROOT = o
-ODIR := $(OROOT)/$(PLAT)
+ODIR := $(OROOT)/$(PLAT)/$(BUILD_CONFIG)
 ANT3RD = ../../3rd
 
 LUAINC = -I../lua
@@ -15,9 +15,9 @@ LUAINC = -I../lua
 CC= gcc -std=c11
 CXX = g++ -std=c++17
 
-BUILD_CONFIG = Release
+BUILD_CONFIG = release
 
-ifeq ("$(BUILD_CONFIG)","Release")
+ifeq ("$(BUILD_CONFIG)","release")
 DEBUG_INFO = -O2
 else
 DEBUG_INFO = -g
