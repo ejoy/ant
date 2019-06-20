@@ -119,7 +119,7 @@ end
 --     return radians
 -- end
 
-local viking_assetpath = fs.path '//unity_viking/Assets'
+local viking_assetpath = fs.path '/pkg/unity_viking/Assets'
 
 local function fetch_mesh_path(scene, ent, lodname, lodidx)
 	local mesh = ent.Mesh
@@ -198,7 +198,7 @@ local function recalculate_transform(trans)
 	-- }
 end
 
-local default_material_path = '//ant.resources/depiction/materials/bunny.material' -- "DefaultHDMaterial.material"
+local default_material_path = '/pkg/ant.resources/depiction/materials/bunny.material' -- "DefaultHDMaterial.material"
 
 local function get_defautl_material_path(scene, ent)
 	local numEntities = sceneInfo:getNumEntities()

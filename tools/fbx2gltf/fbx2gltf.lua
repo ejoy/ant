@@ -1,4 +1,4 @@
-package.path = "tools/fbx2gltf/?.lua;tools/?.lua;./?.lua;libs/?.lua;libs/?/?.lua;packages/glTF/?.lua"
+package.path = "tools/fbx2gltf/?.lua;tools/?.lua;./?.lua;engine/?.lua;engine/?/?.lua;packages/glTF/?.lua"
 package.cpath = "projects/msvc/vs_bin/x64/Debug/?.dll"
 
 local fs = require "filesystem.local"
