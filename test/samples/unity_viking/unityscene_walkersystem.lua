@@ -48,7 +48,7 @@ function scene_walker:init()
     -- fpsscene.lua 280000
     -- buildingc_scene.lua
     -- sample.lua
-    unitySceneMaker.create(world,"//unity_viking/assets/scene/viking_glb.lua") 
+    unitySceneMaker.create(world,"/pkg/unity_viking/assets/scene/viking_glb.lua") 
 
     --computil.create_grid_entity(world, 'grid', 64, 64, 1)
 
