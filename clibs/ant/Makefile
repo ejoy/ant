@@ -9,7 +9,7 @@ else
 default : libant-$(PLAT).a
 endif
 
-LIBS= bgfx bullet hierarchy math3d thread terrain crypt lsocket protocol remotedebug firmware platform window datalist filesystem meshconverter imgui
+LIBS= lua bgfx bullet hierarchy math3d thread terrain crypt lsocket protocol remotedebug firmware platform window datalist filesystem meshconverter imgui
 
 define MakeLibs
 $(ODIR)/lib$(1).a : | $(ODIR)
@@ -19,17 +19,7 @@ unpack_lib$(1).a : $(ODIR)/lib$(1).a
 endef
 $(foreach v, $(LIBS), $(eval $(call MakeLibs,$(v))))
 
-LIBS2= lua
-define UnpackLibs2
-unpack_lib$(1).a : $(ODIR)/lib$(1).a
-	@cd $(ODIR) && ar x lib$(1).a
-endef
-$(foreach v, $(LIBS2), $(eval $(call UnpackLibs2,$(v))))
-
-UNPACKLIBS= $(foreach v, $(LIBS), unpack_lib$(v).a) $(foreach v, $(LIBS2), unpack_lib$(v).a)
-
-$(ODIR)/liblua.a : | $(ODIR)
-	@$(MAKE) --no-print-directory -f MakefileLua
+UNPACKLIBS= $(foreach v, $(LIBS), unpack_lib$(v).a)
 
 $(ODIR)/ant_searcher.o : ant_searcher.c ant.h ant_module_define.h ant_module_declar.h | $(ODIR)
 	$(CC) -c $(CFLAGS) $(LUAINC) $(BGFXINC) -o $@ $<
@@ -44,7 +34,7 @@ libant-$(PLAT).a : $(ODIR)/ant_searcher.o $(UNPACKLIBS)
 	mv $(ODIR)/$@ $@
 
 ant.exe : $(ODIR)/main.o libant-$(PLAT).a
-	gcc -o $@ $^ $(LINKLIBANT)
+	$(CC) -o $@ $^ $(LINKLIBANT)
 	$(STRIP) $@ 
 
 $(ODIR) :

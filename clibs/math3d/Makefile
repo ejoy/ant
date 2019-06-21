@@ -21,7 +21,7 @@ $(ODIR)/mathadapter.o : mathadapter.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
 math3d.dll : $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathbaselib.o $(ODIR)/mathadapter.o
-	$(CXX) $(LD_SHARED) $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB)
+	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB)
 
 libmath3d-$(PLAT).a : $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathbaselib.o $(ODIR)/mathadapter.o
 	ar rsv $@ $^

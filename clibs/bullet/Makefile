@@ -10,10 +10,10 @@ endif
 BULLET_OBJ= $(ODIR)/bullet.o 
 
 $(ODIR)/bullet.o : bullet.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) $(CXXFLAGS) -o $@ $^ $(BULLETINC) $(LUAINC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ $(BULLETINC) $(LUAINC)
 
 bullet.dll : $(BULLET_OBJ)
-	$(CXX) $(LD_SHARED) $(CFLAGS) $(CXXFLAGS) -o $@ $^ -lstdc++ $(LUALIB) $(BULLETLIB) $(BULLETINC)
+	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB) $(BULLETLIB) $(BULLETINC)
 
 libbullet-$(PLAT).a : $(BULLET_OBJ)
 	ar rsv $@ $^

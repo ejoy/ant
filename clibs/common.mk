@@ -7,7 +7,7 @@ ifeq "$(PLAT)" ""
 endif
 
 OROOT = o
-ODIR := $(OROOT)/$(PLAT)/$(BUILD_CONFIG)
+ODIR = $(OROOT)/$(PLAT)/$(BUILD_CONFIG)
 ANT3RD = ../../3rd
 
 LUAINC = -I../lua

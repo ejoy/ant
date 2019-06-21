@@ -1,34 +1,15 @@
-# Makefile for building Lua
-# See ../doc/readme.html for installation and customization instructions.
+include ../common.mk
 
-# == CHANGE THE SETTINGS BELOW TO SUIT YOUR ENVIRONMENT =======================
+ifeq "$(PLAT)" "mingw"
+default : lua53.dll
+else
+default : liblua-$(PLAT).a
+endif
 
-# Your platform. See PLATS for possible values.
-PLAT= none
+ifeq "$(PLAT)" "mingw"
+MYOBJS=utf8_unicode.o utf8_crt.o
+endif
 
-CC= gcc -std=gnu99
-CFLAGS= -O2 -Wall -Wextra $(SYSCFLAGS) $(MYCFLAGS)
-LDFLAGS= $(SYSLDFLAGS) $(MYLDFLAGS)
-LIBS= -lm $(SYSLIBS) $(MYLIBS)
-
-AR= ar rcu
-RANLIB= ranlib
-RM= rm -f
-
-SYSCFLAGS=
-SYSLDFLAGS=
-SYSLIBS=
-
-MYCFLAGS=
-MYLDFLAGS=
-MYLIBS=
-MYOBJS=
-
-# == END OF USER SETTINGS -- NO NEED TO CHANGE ANYTHING BELOW THIS LINE =======
-
-PLATS= aix bsd c89 freebsd generic linux macosx mingw posix solaris
-
-LUA_A=	liblua.a
 CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o \
 	lmem.o lobject.o lopcodes.o lparser.o lstate.o lstring.o ltable.o \
 	ltm.o lundump.o lvm.o lzio.o
@@ -36,101 +17,30 @@ LIB_O=	lauxlib.o lbaselib.o lbitlib.o lcorolib.o ldblib.o liolib.o \
 	lmathlib.o loslib.o lstrlib.o ltablib.o lutf8lib.o loadlib.o linit.o
 BASE_O= $(CORE_O) $(LIB_O) $(MYOBJS)
 
-LUA_T=	lua
-LUA_O=	lua.o
 
-LUAC_T=	luac
-LUAC_O=	luac.o
+define build_lua
+$(ODIR)/$(1) : $(subst .o,.c,$(1))  | $(ODIR)
+	$(CC) -c $(CFLAGS) $(LUA_FLAGS) -o $(ODIR)/$(1) $(subst .o,.c,$(1))
+endef
+$(foreach v, $(BASE_O), $(eval $(call build_lua,$(v))))
+$(eval $(call build_lua,lua.o))
 
-ALL_O= $(BASE_O) $(LUA_O) $(LUAC_O)
-ALL_T= $(LUA_A) $(LUA_T) $(LUAC_T)
-ALL_A= $(LUA_A)
+liblua-$(PLAT).a : $(foreach v, $(BASE_O), $(ODIR)/$(v))
+	ar rsv $@ $^
 
-# Targets start here.
-default: $(PLAT)
+lua53.dll : $(foreach v, $(BASE_O), $(ODIR)/$(v))
+	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^
 
-all:	$(ALL_T)
+lua.exe : $(ODIR)/lua.o | lua53.dll
+	$(CC) -o $@ $^ $(LUALIB)
+	$(STRIP) $@ 
 
-o:	$(ALL_O)
+$(ODIR) :
+	mkdir -p $@
 
-a:	$(ALL_A)
+clean :
+	rm -rf $(OROOT) *.dll *.a
 
-$(LUA_A): $(BASE_O)
-	$(AR) $@ $(BASE_O)
-	$(RANLIB) $@
-
-$(LUA_T): $(LUA_O) $(LUA_A)
-	$(CC) -o $@ $(LDFLAGS) $(LUA_O) $(LUA_A) $(LIBS)
-
-$(LUAC_T): $(LUAC_O) $(LUA_A)
-	$(CC) -o $@ $(LDFLAGS) $(LUAC_O) $(LUA_A) $(LIBS)
-
-clean:
-	$(RM) $(ALL_T) $(ALL_O)
-
-depend:
-	@$(CC) $(CFLAGS) -MM l*.c
-
-echo:
-	@echo "PLAT= $(PLAT)"
-	@echo "CC= $(CC)"
-	@echo "CFLAGS= $(CFLAGS)"
-	@echo "LDFLAGS= $(SYSLDFLAGS)"
-	@echo "LIBS= $(LIBS)"
-	@echo "AR= $(AR)"
-	@echo "RANLIB= $(RANLIB)"
-	@echo "RM= $(RM)"
-
-# Convenience targets for popular platforms
-ALL= all
-
-none:
-	@echo "Please do 'make PLATFORM' where PLATFORM is one of these:"
-	@echo "   $(PLATS)"
-
-aix:
-	$(MAKE) $(ALL) CC="xlc" CFLAGS="-O2 -DLUA_USE_POSIX -DLUA_USE_DLOPEN" SYSLIBS="-ldl" SYSLDFLAGS="-brtl -bexpall"
-
-bsd:
-	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_POSIX -DLUA_USE_DLOPEN" SYSLIBS="-Wl,-E"
-
-c89:
-	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_C89" CC="gcc -std=c89"
-	@echo ''
-	@echo '*** C89 does not guarantee 64-bit integers for Lua.'
-	@echo ''
-
-
-freebsd:
-	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_LINUX" SYSLIBS="-Wl,-E -lreadline"
-
-generic: $(ALL)
-
-linux:
-	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_LINUX" SYSLIBS="-Wl,-E -ldl -lreadline"
-
-macosx:
-	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_MACOSX" SYSLIBS="-lreadline" CC=cc
-
-mingw:
-	$(MAKE) "LUA_A=lua53.dll" "LUA_T=lua.exe" "MYOBJS=utf8_unicode.o utf8_crt.o" "LUA_O=utf8_lua.o utf8_unicode.o" \
-	"AR=$(CC) -shared -o" "RANLIB=strip --strip-unneeded" \
-	"SYSCFLAGS=-DLUA_BUILD_AS_DLL" "SYSLIBS=" "SYSLDFLAGS=-s" lua.exe
-	$(MAKE) "LUAC_T=luac.exe" "MYOBJS=utf8_unicode.o utf8_crt.o" luac.exe
-
-posix:
-	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_POSIX"
-
-solaris:
-	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_POSIX -DLUA_USE_DLOPEN -D_REENTRANT" SYSLIBS="-ldl"
-
-ios:
-	$(MAKE) SYSCFLAGS="-arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk -miphoneos-version-min=10.0 -fembed-bitcode" $(LUA_A)
-
-# list targets that do not create files (but not all makes understand .PHONY)
-.PHONY: all $(PLATS) default o a clean depend echo none
-
-# DO NOT DELETE
 
 lapi.o: lapi.c lprefix.h lua.h luaconf.h lapi.h llimits.h lstate.h \
  lobject.h ltm.h lzio.h lmem.h ldebug.h ldo.h lfunc.h lgc.h lstring.h \
@@ -200,5 +110,3 @@ lzio.o: lzio.c lprefix.h lua.h luaconf.h llimits.h lmem.h lstate.h \
 utf8_unicode.o: utf8_unicode.c utf8_unicode.h
 utf8_crt.o: utf8_crt.c utf8_crt.h utf8_unicode.h
 utf8_lua.o: utf8_lua.c utf8_unicode.h lua.c lprefix.h lua.h luaconf.h lauxlib.h lualib.h
-
-# (end of Makefile)
