@@ -1,6 +1,6 @@
 CMAKE_PROJ := ozz-animation bullet3
 ALL_PROJ := bgfx $(CMAKE_PROJ)
-BUILD_CONFIG = release
+MODE = release
 
 ifeq "$(PLAT)" ""
 	ifeq ($(shell uname), Darwin)
@@ -10,15 +10,15 @@ ifeq "$(PLAT)" ""
 	endif
 endif
 
-ifeq "$(BUILD_CONFIG)" "release"
+ifeq "$(MODE)" "release"
   ifeq "$(PLAT)" "ios"
-    BGFX_CONFIG_TYPE = release
+    BGFX_BUILD_MODE = Release
   else
-    BGFX_CONFIG_TYPE = debug
+    BGFX_BUILD_MODE = Debug
   endif
   CMAKE_BUILD = -DCMAKE_BUILD_TYPE=Release
 else
-  BGFX_CONFIG_TYPE = debug
+  BGFX_BUILD_MODE = Debug
   CMAKE_BUILD = -DCMAKE_BUILD_TYPE=Debug
 endif
 
@@ -31,7 +31,7 @@ WIN_SDK = 10.0.16299.0
 ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles
   BGFX_MAKEFILE = .build/projects/gmake-osx
-  BGFX_CPRC_CMD = cp bgfx/.build/osx64_clang/bin/shaderc$(BGFX_CONFIG_TYPE) ../clibs/
+  BGFX_CPRC_CMD = cp bgfx/.build/osx64_clang/bin/shaderc$(BGFX_BUILD_MODE) ../clibs/
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
@@ -55,7 +55,7 @@ else ifeq "$(PLAT)" "msvc"
 else
   CMAKE_PROJ_TYPE = MSYS Makefiles
   BGFX_MAKEFILE = .build/projects/gmake-mingw-gcc
-  BGFX_CPRC_CMD = cp bgfx/.build/win64_mingw-gcc/bin/shaderc$(BGFX_CONFIG_TYPE).exe ../clibs/
+  BGFX_CPRC_CMD = cp bgfx/.build/win64_mingw-gcc/bin/shaderc$(BGFX_BUILD_MODE).exe ../clibs/
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
@@ -67,7 +67,7 @@ ifneq "$(BGFX_CPRC_CMD)" ""
 BGFX_TARGET += shaderc
 endif
 BGFX_INIT_CMD = make $(BGFX_MAKEFILE)
-BGFX_MAKE_CMD = make -R -C $(BGFX_MAKEFILE) config=$(BGFX_CONFIG_TYPE)64 -j8 $(BGFX_TARGET)
+BGFX_MAKE_CMD = make -R -C $(BGFX_MAKEFILE) config=$(BGFX_BUILD_MODE)64 -j8 $(BGFX_TARGET)
 endif
 
 CMAKE_OPT_bullet3 = -DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF -DBUILD_EXTRAS=OFF

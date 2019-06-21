@@ -1,5 +1,3 @@
-BUILD_CONFIG = release
-
 include $(ANT3RD)/../clibs/bgfx/bgfx_define.mk
 include $(ANT3RD)/../clibs/hierarchy/ozz_define.mk
 include $(ANT3RD)/../clibs/bullet/bullet.mk

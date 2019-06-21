@@ -7,7 +7,7 @@ ifeq "$(PLAT)" ""
 endif
 
 OROOT = o
-ODIR = $(OROOT)/$(PLAT)/$(BUILD_CONFIG)
+ODIR = $(OROOT)/$(PLAT)/$(MODE)
 ANT3RD = ../../3rd
 
 LUAINC = -I../lua
@@ -15,9 +15,9 @@ LUAINC = -I../lua
 CC= gcc -std=c11
 CXX = g++ -std=c++17
 
-BUILD_CONFIG = release
+MODE = release
 
-ifeq ("$(BUILD_CONFIG)","release")
+ifeq ("$(MODE)","release")
 DEBUG_INFO = -O2
 else
 DEBUG_INFO = -g
@@ -29,7 +29,7 @@ LUA_FLAGS = -DLUA_BUILD_AS_DLL
 LUALIB = -L../lua -llua53
 LUABIN = ../lua/lua.exe
 LD_SHARED = --shared
-ifeq ("$(BUILD_CONFIG)","release")
+ifeq ("$(MODE)","release")
 STRIP = strip --strip-unneeded
 else
 STRIP = echo
@@ -42,7 +42,7 @@ LUA_FLAGS = -DLUA_USE_MACOSX
 LUALIB = -L../lua
 LUABIN = ../lua/lua
 LD_SHARED = -fPIC -dynamiclib -Wl,-undefined,dynamic_lookup
-ifeq ("$(BUILD_CONFIG)","release")
+ifeq ("$(MODE)","release")
 STRIP = strip -u -r -x
 else
 STRIP = echo
