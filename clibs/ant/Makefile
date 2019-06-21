@@ -6,15 +6,16 @@ include ant_define.mk
 ifeq "$(PLAT)" "mingw"
 default : ant.exe
 else
-default : libant-$(PLAT).a
+default : libant.a
 endif
 
 LIBS= lua bgfx bullet hierarchy math3d thread terrain crypt lsocket protocol remotedebug firmware platform window datalist filesystem meshconverter imgui
 
 define MakeLibs
-$(ODIR)/lib$(1).a : | $(ODIR)
-	@cd ../$(1)/ && $(MAKE) --no-print-directory lib$(1)-$(PLAT).a && cp lib$(1)-$(PLAT).a ../ant/$(ODIR)/lib$(1).a
-unpack_lib$(1).a : $(ODIR)/lib$(1).a 
+../$(1)/$(ODIR)/lib$(1).a : | $(ODIR)
+	$(MAKE) --no-print-directory -C ../$(1) $(ODIR)/lib$(1).a
+unpack_lib$(1).a : ../$(1)/$(ODIR)/lib$(1).a
+	@cp ../$(1)/$(ODIR)/lib$(1).a $(ODIR)/lib$(1).a
 	@cd $(ODIR) && ar x lib$(1).a && rm -f lib$(1).a
 endef
 $(foreach v, $(LIBS), $(eval $(call MakeLibs,$(v))))
@@ -27,13 +28,15 @@ $(ODIR)/ant_searcher.o : ant_searcher.c ant.h ant_module_define.h ant_module_dec
 $(ODIR)/main.o : main.c | $(ODIR)
 	$(CC) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
-libant-$(PLAT).a : $(ODIR)/ant_searcher.o $(UNPACKLIBS)
+$(ODIR)/libant.a : $(ODIR)/ant_searcher.o $(UNPACKLIBS)
 	rm -f "$(ODIR)/__.SYMDEF"
 	rm -f "$(ODIR)/__.SYMDEF SORTED"
-	cd $(ODIR) && ar rs $@ *.o
-	mv $(ODIR)/$@ $@
+	cd $(ODIR) && ar rs libant.a *.o
 
-ant.exe : $(ODIR)/main.o libant-$(PLAT).a
+libant.a : $(ODIR)/libant.a
+	cp $(ODIR)/$@ $@
+
+ant.exe : $(ODIR)/main.o $(ODIR)/libant.a
 	$(CC) -o $@ $^ $(LINKLIBANT)
 	$(STRIP) $@ 
 

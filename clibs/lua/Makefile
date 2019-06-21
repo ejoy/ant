@@ -3,7 +3,7 @@ include ../common.mk
 ifeq "$(PLAT)" "mingw"
 default : lua53.dll
 else
-default : liblua-$(PLAT).a
+default : $(ODIR)/liblua.a
 endif
 
 ifeq "$(PLAT)" "mingw"
@@ -25,13 +25,13 @@ endef
 $(foreach v, $(BASE_O), $(eval $(call build_lua,$(v))))
 $(eval $(call build_lua,lua.o))
 
-liblua-$(PLAT).a : $(foreach v, $(BASE_O), $(ODIR)/$(v))
+$(ODIR)/liblua.a : $(foreach v, $(BASE_O), $(ODIR)/$(v))
 	ar rsv $@ $^
 
-lua53.dll : $(foreach v, $(BASE_O), $(ODIR)/$(v))
+$(ODIR)/lua53.dll : $(foreach v, $(BASE_O), $(ODIR)/$(v))
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^
 
-lua.exe : $(ODIR)/lua.o | lua53.dll
+$(ODIR)/lua.exe : $(ODIR)/lua.o | lua53.dll
 	$(CC) -o $@ $^ $(LUALIB)
 	$(STRIP) $@ 
 

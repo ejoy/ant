@@ -8,7 +8,7 @@ CLIBS = -I..
 ifeq "$(PLAT)" "mingw"
 default : hierarchy.dll
 else
-default : libhierarchy-$(PLAT).a
+default : $(ODIR)/libhierarchy.a
 endif
 
 OBJ_FILES := $(ODIR)/hierarchy.o $(ODIR)/animation.o $(ODIR)/mesh.o	$(ODIR)/ik.o
@@ -25,10 +25,10 @@ $(ODIR)/animation.o: animation.cpp | $(ODIR)
 $(ODIR)/mesh.o: ozz_mesh/mesh.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC)
 
-hierarchy.dll : $(OBJ_FILES)
+$(ODIR)/hierarchy.dll : $(OBJ_FILES)
 	$(CXX) $(LD_SHARED) -lstdc++ -o $@ $^ $(LUALIB) $(GLM_DIR) $(OZZINC) $(OZZRUNTIME) $(OZZOFFLINE) $(OZZGEOMERTY) $(OZZBASE)
 
-libhierarchy-$(PLAT).a : $(OBJ_FILES)
+$(ODIR)/libhierarchy.a : $(OBJ_FILES)
 	ar rsv $@ $^
 
 $(ODIR) :

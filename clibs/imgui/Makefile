@@ -4,7 +4,7 @@ include ../bgfx/bgfx_define.mk
 ifeq "$(PLAT)" "mingw"
 default : imgui.dll
 else
-default : libimgui-$(PLAT).a
+default : $(ODIR)/libimgui.a
 endif
 
 IMGUI_INC=-I$(ANT3RD)/imgui
@@ -48,10 +48,10 @@ $(ODIR)/imgui_draw.o : $(IMGUI_SRC)/imgui_draw.cpp $(IMGUI_SRC)/imstb_truetype.h
 $(ODIR)/imgui_widgets.o : $(IMGUI_SRC)/imgui_widgets.cpp $(IMGUI_SRC)/imgui_internal.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
 
-imgui.dll : $(OBJS)
+$(ODIR)/imgui.dll : $(OBJS)
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -lstdc++ -limm32
 
-libimgui-$(PLAT).a : $(OBJS)
+$(ODIR)/libimgui.a : $(OBJS)
 	ar rsv $@ $^
 
 $(ODIR) :

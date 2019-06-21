@@ -3,7 +3,7 @@ include ../common.mk
 ifeq "$(PLAT)" "mingw"
 default : crypt.dll
 else
-default : libcrypt-$(PLAT).a
+default : $(ODIR)/libcrypt.a
 endif
 
 $(ODIR)/lua-crypt.o : lua-crypt.c | $(ODIR)
@@ -12,10 +12,10 @@ $(ODIR)/lua-crypt.o : lua-crypt.c | $(ODIR)
 $(ODIR)/lsha1.o : lsha1.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
-crypt.dll : $(ODIR)/lua-crypt.o $(ODIR)/lsha1.o
+$(ODIR)/crypt.dll : $(ODIR)/lua-crypt.o $(ODIR)/lsha1.o
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
 
-libcrypt-$(PLAT).a : $(ODIR)/lua-crypt.o $(ODIR)/lsha1.o
+$(ODIR)/libcrypt.a : $(ODIR)/lua-crypt.o $(ODIR)/lsha1.o
 	ar rsv $@ $^
 
 $(ODIR) :

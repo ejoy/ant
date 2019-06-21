@@ -3,7 +3,7 @@ include ../common.mk
 ifeq "$(PLAT)" "mingw"
 default : remotedebug.dll
 else
-default : libremotedebug-$(PLAT).a
+default : $(ODIR)/libremotedebug.a
 endif
 
 OBJS = $(ODIR)/rdebug_host.o $(ODIR)/rdebug_visitor.o $(ODIR)/rdebug_hookmgr.o $(ODIR)/rdebug_eventfree.o $(ODIR)/rdebug_redirect.o $(ODIR)/rdebug_stdio.o $(ODIR)/thunk.o
@@ -29,10 +29,10 @@ $(ODIR)/rdebug_stdio.o : rdebug_stdio.cpp rdebug_redirect.h | $(ODIR)
 $(ODIR)/thunk.o : thunk/thunk.cpp thunk/thunk.h thunk/thunk_windows.inl thunk/thunk_windows_i386.inl thunk/thunk_windows_amd64.inl thunk/thunk_linux.inl thunk/thunk_other.inl | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
-remotedebug.dll : $(OBJS)
+$(ODIR)/remotedebug.dll : $(OBJS)
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -lstdc++
 
-libremotedebug-$(PLAT).a : $(OBJS)
+$(ODIR)/libremotedebug.a : $(OBJS)
 	ar rsv $@ $^
 
 $(ODIR) :

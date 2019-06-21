@@ -5,7 +5,7 @@ CLIBS_INC = -I..
 ifeq "$(PLAT)" "mingw"
 default : math3d.dll
 else
-default : libmath3d-$(PLAT).a
+default : $(ODIR)/libmath3d.a
 endif
 
 $(ODIR)/linalg.o : linalg.c | $(ODIR)
@@ -20,10 +20,10 @@ $(ODIR)/mathbaselib.o : mathbaselib.cpp | $(ODIR)
 $(ODIR)/mathadapter.o : mathadapter.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
-math3d.dll : $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathbaselib.o $(ODIR)/mathadapter.o
+$(ODIR)/math3d.dll : $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathbaselib.o $(ODIR)/mathadapter.o
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB)
 
-libmath3d-$(PLAT).a : $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathbaselib.o $(ODIR)/mathadapter.o
+$(ODIR)/libmath3d.a : $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathbaselib.o $(ODIR)/mathadapter.o
 	ar rsv $@ $^
 
 $(ODIR) :

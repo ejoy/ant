@@ -10,7 +10,7 @@ endif
 ifeq "$(PLAT)" "mingw"
 default : bgfx.dll
 else
-default : libbgfx-$(PLAT).a
+default : $(ODIR)/libbgfx.a
 endif
 
 $(ODIR)/baselib.o : baselib.cpp | $(ODIR)
@@ -22,13 +22,13 @@ $(ODIR)/luabgfx.o : luabgfx.c  | $(ODIR)
 $(ODIR)/luabgfxutil.o : luabgfxutil.c  | $(ODIR)
 	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC)
 
-bgfx-core.dll : bgfx-core.def
+$(ODIR)/bgfx-core.dll : bgfx-core.def
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(BGFXLIB)
 
-bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o | bgfx-core.dll
+$(ODIR)/bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o | bgfx-core.dll
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB)
 
-libbgfx-$(PLAT).a : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o
+$(ODIR)/libbgfx.a : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o
 	ar rsv $@ $^
 
 $(ODIR) :

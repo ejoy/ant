@@ -3,7 +3,7 @@ include ../common.mk
 ifeq "$(PLAT)" "mingw"
 default : lsocket.dll
 else
-default : liblsocket-$(PLAT).a
+default : $(ODIR)/liblsocket.a
 endif
 
 ifeq "$(PLAT)" "mingw"
@@ -18,10 +18,10 @@ $(ODIR)/lsocket.o : lsocket.c win_compat.h | $(ODIR)
 $(ODIR)/win_compat.o : win_compat.c win_compat.h | $(ODIR)
 	$(CC) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
-lsocket.dll : $(OBJS)
+$(ODIR)/lsocket.dll : $(OBJS)
 	$(CXX) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB) -lws2_32
 
-liblsocket-$(PLAT).a : $(OBJS)
+$(ODIR)/liblsocket.a : $(OBJS)
 	ar rsv $@ $^
 
 $(ODIR) :

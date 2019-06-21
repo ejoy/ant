@@ -3,7 +3,7 @@ include ../common.mk
 ifeq "$(PLAT)" "mingw"
 default : firmware.dll
 else
-default : libfirmware-$(PLAT).a
+default : $(ODIR)/libfirmware.a
 endif
 
 $(ODIR)/firmware.o : firmware.cpp incbin.h \
@@ -12,10 +12,10 @@ $(ODIR)/firmware.o : firmware.cpp incbin.h \
 	$(ANT3RD)/../engine/firmware/vfs.lua | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC)
 
-firmware.dll : $(ODIR)/firmware.o
+$(ODIR)/firmware.dll : $(ODIR)/firmware.o
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
 
-libfirmware-$(PLAT).a : $(ODIR)/firmware.o
+$(ODIR)/libfirmware.a : $(ODIR)/firmware.o
 	ar rsv $@ $^
 
 $(ODIR) :

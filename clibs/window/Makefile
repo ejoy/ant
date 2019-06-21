@@ -3,7 +3,7 @@ include ../common.mk
 ifeq "$(PLAT)" "mingw"
 default : window.dll
 else
-default : libwindow-$(PLAT).a
+default : $(ODIR)/libwindow.a
 endif
 
 ifeq "$(PLAT)" "mingw"
@@ -26,10 +26,10 @@ $(ODIR)/window_native.o : window_native.c window_native.h window.h | $(ODIR)
 $(ODIR)/$(PLAT)_window.o : $(PLAT)/$(PLAT)_window.$(PLAT_C) window_native.h | $(ODIR)
 	$(CC) -g $(CFLAGS) -c -o $@ $<
 
-window.dll : $(ODIR)/window.o $(ODIR)/window_native.o $(ODIR)/$(PLAT)_window.o
+$(ODIR)/window.dll : $(ODIR)/window.o $(ODIR)/window_native.o $(ODIR)/$(PLAT)_window.o
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(PLAT_LIB) $(LUALIB)
 
-libwindow-$(PLAT).a : $(ODIR)/window.o $(ODIR)/window_native.o $(ODIR)/$(PLAT)_window.o
+$(ODIR)/libwindow.a : $(ODIR)/window.o $(ODIR)/window_native.o $(ODIR)/$(PLAT)_window.o
 	ar rsv $@ $^
 
 $(ODIR) :

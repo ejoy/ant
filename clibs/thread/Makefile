@@ -3,7 +3,7 @@ include ../common.mk
 ifeq "$(PLAT)" "mingw"
 default : thread.dll
 else
-default : libthread-$(PLAT).a
+default : $(ODIR)/libthread.a
 endif
 
 $(ODIR)/lthread.o : lthread.c | $(ODIR)
@@ -12,10 +12,10 @@ $(ODIR)/lthread.o : lthread.c | $(ODIR)
 $(ODIR)/lseri.o : lseri.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
-thread.dll : $(ODIR)/lthread.o $(ODIR)/lseri.o
+$(ODIR)/thread.dll : $(ODIR)/lthread.o $(ODIR)/lseri.o
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
 
-libthread-$(PLAT).a : $(ODIR)/lthread.o $(ODIR)/lseri.o
+$(ODIR)/libthread.a : $(ODIR)/lthread.o $(ODIR)/lseri.o
 	ar rsv $@ $^
 
 $(ODIR) :

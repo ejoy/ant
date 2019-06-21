@@ -4,7 +4,7 @@ include bullet.mk
 ifeq "$(PLAT)" "mingw"
 default : bullet.dll
 else
-default : libbullet-$(PLAT).a
+default : $(ODIR)/libbullet.a
 endif
 
 BULLET_OBJ= $(ODIR)/bullet.o 
@@ -12,10 +12,10 @@ BULLET_OBJ= $(ODIR)/bullet.o
 $(ODIR)/bullet.o : bullet.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ $(BULLETINC) $(LUAINC)
 
-bullet.dll : $(BULLET_OBJ)
+$(ODIR)/bullet.dll : $(BULLET_OBJ)
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB) $(BULLETLIB) $(BULLETINC)
 
-libbullet-$(PLAT).a : $(BULLET_OBJ)
+$(ODIR)/libbullet.a : $(BULLET_OBJ)
 	ar rsv $@ $^
 
 $(ODIR) :

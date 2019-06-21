@@ -27,10 +27,10 @@ $(ODIR)/file_helper.o : file_helper.cpp | $(ODIR)
 $(ODIR)/lua_filesystem.o : lua_filesystem.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
-filesystem.dll : $(OBJS)
+$(ODIR)/filesystem.dll : $(OBJS)
 	$(CXX) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB) $(LIBS)
 
-libfilesystem-$(PLAT).a : $(OBJS)
+$(ODIR)/libfilesystem.a : $(OBJS)
 	ar rsv $@ $^
 
 $(ODIR) :

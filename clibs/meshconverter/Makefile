@@ -6,7 +6,7 @@ CLIBSINC = -I..
 ifeq "$(PLAT)" "mingw"
 default : meshconverter.dll
 else
-default : libmeshconverter-$(PLAT).a
+default : $(ODIR)/libmeshconverter.a
 endif
 
 GLM_INC := -I$(ANT3RD)/glm
@@ -19,10 +19,10 @@ OBJ_FILES := $(patsubst %.cpp,$(ODIR)/%.o,$(SRC_FILES))
 $(OBJ_FILES) : $(ODIR)/%.o : %.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -std=c++17 -c -o $@ $^ $(LUAINC) $(GLM_INC) $(CLIBSINC)
 	
-meshconverter.dll : $(OBJ_FILES)
+$(ODIR)/meshconverter.dll : $(OBJ_FILES)
 	$(CXX) $(CFLAGS) -lstdc++ $(LD_SHARED) -o $@ $^ -L. $(LUALIB)
 
-libmeshconverter-$(PLAT).a : $(OBJ_FILES)
+$(ODIR)/libmeshconverter.a : $(OBJ_FILES)
 	ar rsv $@ $^
 
 clean :

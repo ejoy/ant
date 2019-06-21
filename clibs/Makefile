@@ -1,5 +1,5 @@
 BIN = .
-LIBS := math3d lsocket redirectfd bgfx filesystem remotedebug \
+LIBS := math3d lsocket bgfx filesystem remotedebug \
  crypt meshconverter hierarchy thread protocol bullet \
  window filewatch platform subprocess datalist imgui
 
@@ -15,11 +15,11 @@ all: $(ALL_LIBS)
 
 ## lua
 copy_lua: build_lua
-	cp lua/lua53.dll lua/lua.exe $(BIN)
+	cp lua/$(ODIR)/lua53.dll lua/$(ODIR)/lua.exe $(BIN)
 build_lua:
-	cd lua && $(MAKE) "PLAT=$(PLAT)" lua53.dll lua.exe
+	$(MAKE) -C lua $(ODIR)/lua53.dll $(ODIR)/lua.exe
 clean_lua:
-	cd lua && $(MAKE) clean
+	$(MAKE) -C lua clean
 
 define TARG_func
 $(1): build_$(1) copy_$(1)
@@ -29,7 +29,7 @@ define COPY_DLL_func
 $(BIN)/$(1).dll : copy_$(1)
 
 copy_$(1): build_$(1)
-	cp $(1)/$(1).dll $(BIN)/$(1).dll
+	cp $(1)/$(ODIR)/$(1).dll $(BIN)/$(1).dll
 endef
 
 copy_bgfx-core: build_bgfx
@@ -37,10 +37,10 @@ copy_bgfx-core: build_bgfx
 
 define MAKE_temp
 build_$(1) : build_lua
-	cd $(1) && $(MAKE) "PLAT=$(PLAT)"
+	$(MAKE) -C $(1) $(ODIR)/$(1).dll
 
 clean_$(1) :
-	cd $(1) && $(MAKE) clean
+	$(MAKE) -C $(1) clean
 endef
 
 $(foreach v, $(LIBS), $(eval $(call MAKE_temp,$(v))))

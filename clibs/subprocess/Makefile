@@ -20,7 +20,7 @@ $(ODIR)/subprocess_win.o : subprocess_win.cpp subprocess.h | $(ODIR)
 $(ODIR)/subprocess_posix.o : subprocess_posix.cpp subprocess.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
-subprocess.dll : $(OBJS)
+$(ODIR)/subprocess.dll : $(OBJS)
 	$(CC) $(CFLAGS) $(LD_SHARED) $(LUALIB) -o $@ $^ -lstdc++
 
 $(ODIR) :
