@@ -30,7 +30,7 @@ $(ODIR)/thunk.o : thunk/thunk.cpp thunk/thunk.h thunk/thunk_windows.inl thunk/th
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
 remotedebug.dll : $(OBJS)
-	$(CXX) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB)
+	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB)
 
 libremotedebug-$(PLAT).a : $(OBJS)
 	ar rsv $@ $^
