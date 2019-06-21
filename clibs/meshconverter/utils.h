@@ -2,6 +2,7 @@
 #include <vector>
 #include <map>
 #include <cassert>
+#include <cstring>
 
 std::vector<std::string>
 split_string(const std::string &ss, char delim);
