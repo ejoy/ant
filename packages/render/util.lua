@@ -324,7 +324,7 @@ end
 
 function util.create_main_queue(world, view_rect, viewdir, eyepos)
 	local fb_renderbuffer_flag = util.generate_sampler_flag {
-		RT="RT_ON",
+		RT="RT_MSAA2",
 		MIN="LINEAR",
 		MAG="LINEAR",
 		U="CLAMP",
