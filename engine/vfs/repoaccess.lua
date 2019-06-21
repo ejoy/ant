@@ -195,7 +195,7 @@ function access.build_from_path(repo, identity, pathname)
 	local lk = access.realpath(repo, pathname .. ".lk")
 	local source = access.realpath(repo, pathname)
 	local source_time = lfs.last_write_time(source)
-	local lk_time = lfs.last_write_time(source)
+	local lk_time = lfs.last_write_time(lk)
 	if not source_time or not lk_time then
 		return
 	end
