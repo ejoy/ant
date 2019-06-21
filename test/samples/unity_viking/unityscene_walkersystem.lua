@@ -28,10 +28,12 @@ local unitySceneMaker = require "unitySceneMaker"
 
 local scene_walker = ecs.system 'scene_walker'
 
-scene_walker.dependby 	'render_system'
-scene_walker.dependby 	'primitive_filter_system'
-scene_walker.dependby 	'camera_controller'
 scene_walker.depend 	'timesystem'
+scene_walker.depend 	"viewport_detect_system"
+scene_walker.depend 	'render_system'
+scene_walker.depend 	'primitive_filter_system'
+
+scene_walker.dependby 	'camera_controller'
 
 
 function scene_walker:init()
