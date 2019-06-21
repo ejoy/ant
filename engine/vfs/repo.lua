@@ -78,7 +78,6 @@ function repo.new(rootpath)
 	}, repo)
 	if not lfs.is_regular_file(repopath / "root") then
 		r:rebuild()
-		r:close()
 	end
 	return r
 end
