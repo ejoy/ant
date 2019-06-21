@@ -11,19 +11,13 @@ include common.mk
 
 TARS = $(foreach v,$(LIBS) $(IUPLIBS),$(BIN)/$(v).dll)
 
-ifeq "$(PLAT)" "osx"
-LUA_PLAT = macosx
-else
-LUA_PLAT = $(PLAT)
-endif
-
 all: $(ALL_LIBS)
 
 ## lua
 copy_lua: build_lua
 	cp lua/lua53.dll lua/lua.exe $(BIN)
 build_lua:
-	cd lua && $(MAKE) $(LUA_PLAT)
+	cd lua && $(MAKE) "PLAT=$(PLAT)" lua53.dll lua.exe
 clean_lua:
 	cd lua && $(MAKE) clean
 
@@ -42,7 +36,7 @@ copy_bgfx-core: build_bgfx
 	cp bgfx/bgfx-core.dll $(BIN)/bgfx-core.dll
 
 define MAKE_temp
-build_$(1) : build_lua	
+build_$(1) : build_lua
 	cd $(1) && $(MAKE) "PLAT=$(PLAT)"
 
 clean_$(1) :

@@ -1,6 +1,5 @@
 CMAKE_PROJ := ozz-animation bullet3
-RUNTIME_PROJ := ozz-animation bullet3 bgfx
-ALL_PROJ := $(RUNTIME_PROJ) $(CMAKE_PROJ)
+ALL_PROJ := bgfx $(CMAKE_PROJ)
 BUILD_CONFIG = release
 
 ifeq "$(PLAT)" ""
@@ -10,9 +9,6 @@ ifeq "$(PLAT)" ""
 		PLAT = mingw
 	endif
 endif
-
-# should add devenv command's path to system path
-DEVENV_CMD = devenv
 
 ifeq "$(BUILD_CONFIG)" "release"
   ifeq "$(PLAT)" "ios"
@@ -74,14 +70,6 @@ BGFX_INIT_CMD = make $(BGFX_MAKEFILE)
 BGFX_MAKE_CMD = make -R -C $(BGFX_MAKEFILE) config=$(BGFX_CONFIG_TYPE)64 -j8 $(BGFX_TARGET)
 endif
 
-# ASSIMP_FMT_NAMES := AMF 3DS AC ASE ASSBIN ASSXML B3D BVH COLLADA DXF CSM IRR LWO LWS MD2 MD3 MD5 MDC NFF NDO OFF OBJ OGRE OPENGEX PLY MS3D COB BLEND IFC XGL Q3D Q3BSP RAW SIB SMD STL TERRAGEN 3D X X3D GLTF 3MF MMD HMP MDL
-# #ASSIMP_FMT_NAMES := IFC
-# ASSIMP_IMPORT_DISABLE_OPT := $(patsubst %,-DASSIMP_BUILD_%_IMPORTER=OFF,$(ASSIMP_FMT_NAMES))
-
-# CMAKE_OPT_assimp :=$(ASSIMP_IMPORT_DISABLE_OPT) -DBUILD_SHARED_LIBS=OFF -DASSIMP_BUILD_TESTS=OFF
-CMAKE_OPT_freetype :=-DCMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_ZLIB=TRUE
-# disable build bullet demos and tests
-
 CMAKE_OPT_bullet3 = -DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF -DBUILD_EXTRAS=OFF
 
 WITH_OZZ_SAMPLES := OFF
@@ -105,11 +93,7 @@ CMAKE_OPT_ozz-animation=-Dozz_build_samples=$(WITH_OZZ_SAMPLES) -Dozz_build_fbx=
 info :
 	@echo Please do 'make init' or 'make init msvc=on' for the first time , and then 'make all' or 'make all msvc=on' . when msvc=on is passed, it not support the make single project, like 'make bgfx_make msvc=on'
 
-ifeq "$(PLAT)" "ios"
-init : $(addsuffix _init,$(RUNTIME_PROJ))
-else
 init : $(addsuffix _init,$(ALL_PROJ))
-endif
 
 ifeq "$(PLAT)" "msvc"
   MAKE_ALL_DEPEND = msvc_all
@@ -119,17 +103,11 @@ endif
 
 all : $(MAKE_ALL_DEPEND)
 
-runtime : $(addsuffix _make,$(RUNTIME_PROJ))
-
 msvc_all : 
 	start build_msvc_all.bat
 
 clean : $(addsuffix _clean,$(ALL_PROJ))
 
-# $(BUILD_PATH) :
-# 	mkdir $@
-
-# $(BUILD_PATH)/bgfx : | $(BUILD_PATH)
 
 $(BUILD_PATH):
 	mkdir $@
