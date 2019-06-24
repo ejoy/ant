@@ -43,7 +43,7 @@ function default.camera(eyepos, viewdir, frustum, camtype)
 		eyepos = eyepos or {0, 0, 0, 1},
 		viewdir = viewdir or {0, 0, 1, 0},
 		updir = {0, 1, 0, 0},
-		frustum = frustum or util.default_frustum_component(),
+		frustum = assert(frustum),
 	}
 end
 
