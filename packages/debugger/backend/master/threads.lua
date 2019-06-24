@@ -4,10 +4,6 @@ local ev = require 'common.event'
 
 local CMD = {}
 
-function CMD.ready(w)
-    ev.emit('worker-ready', w)
-end
-
 function CMD.eventStop(w, req)
     event.stopped(w, req.reason)
 end
@@ -83,6 +79,11 @@ end
 
 function CMD.eventOutput(_, req)
     event.output(req.category, req.output, req.source, req.line)
+end
+
+function CMD.eventThread(w, req)
+    ev.emit('thread', req.reason, w)
+    event.thread(req.reason, w)
 end
 
 function CMD.exceptionInfo(_, req)

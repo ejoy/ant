@@ -20,40 +20,40 @@ local standard = {}
 
 local function init_standard()
     local lstandard = {
-        "ipairs",
-        "error",
-        "utf8",
-        "rawset",
-        "tostring",
-        "select",
-        "tonumber",
+        "_G",
         "_VERSION",
+        "assert",
+        "collectgarbage",
+        "coroutine",
+        "debug",
+        "dofile",
+        "error",
+        "getmetatable",
+        "io",
+        "ipairs",
+        "load",
         "loadfile",
-        "xpcall",
-        "string",
-        "rawlen",
+        "math",
+        "next",
+        "os",
+        "package",
+        "pairs",
+        "pcall",
         "print",
         "rawequal",
-        "setmetatable",
-        "require",
-        "getmetatable",
-        "next",
-        "package",
-        "coroutine",
-        "io",
-        "_G",
-        "math",
-        "collectgarbage",
-        "os",
-        "table",
-        "dofile",
-        "pcall",
-        "load",
         "rawget",
-        "debug",
-        "assert",
+        "rawlen",
+        "rawset",
+        "require",
+        "select",
+        "setmetatable",
+        "string",
+        "table",
+        "tonumber",
+        "tostring",
         "type",
-        "pairs",
+        "utf8",
+        "xpcall",
     }
 
     if LUAVERSION == 53 then
@@ -645,18 +645,20 @@ extand[VAR_LOCAL] = function(frameId)
         i = i + 1
     end
 
-    local info = {}
-    rdebug.getinfo(frameId, "r", info)
-    if info.ftransfer > 0 and info.ntransfer > 0 then
-        for i = info.ftransfer, info.ftransfer + info.ntransfer do
-            local name, value = rdebug.getlocalv(frameId, i)
-            if name ~= nil then
-                name = ("(return #%d)"):format(i - info.ftransfer + 1)
-                local fi = i
-                varCreate(vars, frameId, children[VAR_LOCAL], name, value
-                    , name
-                    , function() local _, r = rdebug.getlocal(frameId, fi) return r end
-                )
+    if LUAVERSION >= 54 then
+        local info = {}
+        rdebug.getinfo(frameId, "r", info)
+        if info.ftransfer > 0 and info.ntransfer > 0 then
+            for i = info.ftransfer, info.ftransfer + info.ntransfer do
+                local name, value = rdebug.getlocalv(frameId, i)
+                if name ~= nil then
+                    name = ("(return #%d)"):format(i - info.ftransfer + 1)
+                    local fi = i
+                    varCreate(vars, frameId, children[VAR_LOCAL], name, value
+                        , name
+                        , function() local _, r = rdebug.getlocal(frameId, fi) return r end
+                    )
+                end
             end
         end
     end
@@ -771,7 +773,7 @@ function m.scopes(frameId)
     end
     if hasVararg(frameId) then
         scopes[#scopes + 1] = {
-            name = "Var Args",
+            name = "Varargs",
             variablesReference = (frameId << 16) | VAR_VARARG,
             expensive = false,
         }

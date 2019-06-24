@@ -102,12 +102,17 @@ local function CheckHeader()
     assert(LoadByte() == 0)
     assert(LoadCharN(6) == '\x19\x93\r\n\x1a\n')
     if Version < 504 then
-        LoadByte() -- int
-        LoadByte() -- size_t
+        -- int
+        assert(string.packsize 'i' == LoadByte())
+        -- size_t
+        assert(string.packsize 'T' == LoadByte())
     end
-    assert(LoadByte() == 4) -- Instruction
-    LoadByte() -- lua_Integer
-    LoadByte() -- lua_Number
+    -- Instruction
+    assert(LoadByte() == 4)
+    -- lua_Integer
+    assert(string.packsize 'j' == LoadByte())
+    -- lua_Number
+    assert(string.packsize 'n' == LoadByte())
     assert(LoadInteger() == 0x5678)
     assert(LoadNumber() == 370.5)
 end

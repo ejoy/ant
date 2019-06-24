@@ -103,9 +103,15 @@ function CMD.initialized()
 end
 
 function CMD.terminated()
-    initialized = false
-    state = 'running'
-    ev.emit('terminated')
+    if initialized then
+        initialized = false
+        state = 'running'
+        ev.emit('terminated')
+        sendToMaster {
+            cmd = 'eventThread',
+            reason = 'exited',
+        }
+    end
 end
 
 function CMD.stackTrace(pkg)
@@ -569,6 +575,10 @@ function event.event_line()
     end
 end
 
+function event.exit()
+    CMD.terminated()
+end
+
 hookmgr.init(function(name, ...)
     local ok, e = xpcall(function(...)
         if event[name] then
@@ -627,7 +637,8 @@ ev.on('terminated', function()
 end)
 
 sendToMaster {
-    cmd = 'ready',
+    cmd = 'eventThread',
+    reason = 'started',
 }
 
 local w = {}

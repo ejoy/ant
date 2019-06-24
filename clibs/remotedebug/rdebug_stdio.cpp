@@ -179,10 +179,7 @@ static int open_iowrite(rlua_State* L) {
     return 0;
 }
 
-extern "C" 
-#if defined(_WIN32)
-__declspec(dllexport)
-#endif
+RLUA_FUNC
 int luaopen_remotedebug_stdio(rlua_State* L) {
     rlua_newtable(L);
     static rluaL_Reg lib[] = {
