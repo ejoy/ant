@@ -72,21 +72,17 @@ function model_review_system:init()
 		}
 	end
 
-	local function create_submesh_item(material_refs)
-		return {material_refs=material_refs, visible=true}
-	end
-
 	world:create_entity {
 		transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),
 		can_render = true,
 		mesh = {
 			ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test_glb.mesh",
 			submesh_refs = {
-				["build_big_storage_01_fence_02"] 		= create_submesh_item {1}, 
-				["build_big_storage_01_pillars_01"] 	= create_submesh_item {2, 3},
-				["build_big_storage_01_straw_roof_002"] = create_submesh_item {4, 5, 6, 7},
-				["build_big_storage_01_walls_down"] 	= create_submesh_item {2},
-				["build_big_storage_01_walls_up"] 		= create_submesh_item {2},
+				["build_big_storage_01_fence_02"] 		= cu.create_submesh_item {1}, 
+				["build_big_storage_01_pillars_01"] 	= cu.create_submesh_item {2, 3},
+				["build_big_storage_01_straw_roof_002"] = cu.create_submesh_item {4, 5, 6, 7},
+				["build_big_storage_01_walls_down"] 	= cu.create_submesh_item {2},
+				["build_big_storage_01_walls_up"] 		= cu.create_submesh_item {2},
 			},
 		},
 		material = {
