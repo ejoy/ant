@@ -92,6 +92,10 @@ function util.assign_material(filepath, properties)
 	}
 end
 
+function util.create_submesh_item(material_refs)
+	return {material_refs=material_refs, visible=true}
+end
+
 
 -- content:material_content
 -- texture_tbl:{

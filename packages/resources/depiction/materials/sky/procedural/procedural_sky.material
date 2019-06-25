@@ -1,0 +1,12 @@
+shader = {
+	vs = "/pkg/ant.resources/shaders/src/sky/procedural/vs_sky",
+	fs = "/pkg/ant.resources/shaders/src/sky/procedural/fs_sky_color_banding_fix",
+}
+
+state = "depiction/states/default.state"
+
+properties = {
+	uniforms = {
+
+	},
+}
