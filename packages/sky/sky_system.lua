@@ -170,6 +170,8 @@ local function fill_procedural_sky_mesh(skyentity)
 	}, vb, w * h, ib, #ib)
 end
 
+local shader_parameters = {0.02, 3.0, 0.1, 0}
+
 function sky_system:init()
 	local skyeid = world:create_entity {
 		transform = mu.identity_transform(),
@@ -182,7 +184,7 @@ function sky_system:init()
 					u_sunLuminance = {type="v4", name="sky luminace in RGB color space", value={0, 0, 0, 0}},
 					u_skyLuminanceXYZ = {type="v4", name="sky luminance in XYZ color space", value={0, 0, 0, 0}},
 					u_parameters = {type="v4", name="parameter include: x=sun size, y=sun bloom, z=exposition, w=time", 
-						value={0.02, 3.0, 0.1, 0}},
+						value=shader_parameters},
 					u_perezCoeff = {type="v4", name="Perez coefficients", value = ABCDE},
 				}
 			}),
@@ -274,6 +276,8 @@ local function update_sky_parameters(skyentity)
 	sky_uniforms["u_sunLuminance"].value 	= xyz2rgb(sun_luminance_fetch(time))
 	sky_uniforms["u_skyLuminanceXYZ"].value = sky_luminance_fetch(time)
 	sky_uniforms["u_perezCoeff"].value 		= computePerezCoeff(skycomp.turbidity)
+	shader_parameters[4] = time
+	sky_uniforms["u_parameters"].value 		= shader_parameters
 end
 
 function sky_system:update()
