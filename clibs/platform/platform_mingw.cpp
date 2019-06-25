@@ -120,13 +120,16 @@ int lfont(lua_State* L) {
     }
     bool ok = false;
     HGDIOBJ oldobj = SelectObject(hdc, hfont);
-    DWORD bytes = GetFontData(hdc, 0, 0, 0, 0);
-    if (bytes != GDI_ERROR) {
-        void* table = lua_newuserdata(L, bytes);
-        bytes = GetFontData(hdc, 0, 0, (unsigned char*)table, bytes);
+    for (uint32_t tag : {0x66637474/*ttcf*/, 0}) {
+        DWORD bytes = GetFontData(hdc, tag, 0, 0, 0);
         if (bytes != GDI_ERROR) {
-            lua_pushlstring(L, (const char*)table, bytes);
-            ok = true;
+            void* table = lua_newuserdata(L, bytes);
+            bytes = GetFontData(hdc, tag, 0, (unsigned char*)table, bytes);
+            if (bytes != GDI_ERROR) {
+                lua_pushlstring(L, (const char*)table, bytes);
+                ok = true;
+                break;
+            }
         }
     }
     SelectObject(hdc, oldobj);
