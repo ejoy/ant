@@ -26,7 +26,10 @@ MSVC_MAKE_INFO := @echo msvc not support make single project, use 'make all plat
 
 BUILD_PATH := build
 
-WIN_SDK = 10.0.16299.0
+WIN_SDK = 10.0.17763.0
+MSVC_VERSION = vs2019
+
+CMAKE_OPT = 
 
 ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles
@@ -44,10 +47,15 @@ else ifeq "$(PLAT)" "ios"
 
   CMAKE_BUILD += -DCMAKE_TOOLCHAIN_FILE=../ios-cmake/ios.toolchain.cmake -DIOS_PLATFORM=OS64 -DENABLE_BITCODE=TRUE
 else ifeq "$(PLAT)" "msvc"
-  CMAKE_PROJ_TYPE = Visual Studio 15 2017 Win64
+  ifeq "$(MSVC_VERSION)" "vs2019"
+    CMAKE_PROJ_TYPE = Visual Studio 16 2019
+    CMAKE_OPT = -A x64
+  else
+    CMAKE_PROJ_TYPE = Visual Studio 15 2017 Win64
+  endif  
 
   # only build debug project in msvc
-  BGFX_INIT_CMD = ../bx/tools/bin/windows/genie --with-examples --with-tools  --with-dynamic-runtime --with-shared-lib --with-windows=$(WIN_SDK) vs2017
+  BGFX_INIT_CMD = ../bx/tools/bin/windows/genie --with-examples --with-tools  --with-dynamic-runtime --with-shared-lib --with-windows=$(WIN_SDK) $(MSVC_VERSION)
   BGFX_MAKE_CMD = $(MSVC_MAKE_INFO)
 
   CMAKE_PROJ_MAKE = $(MSVC_MAKE_INFO)
@@ -125,7 +133,7 @@ define CMAKE_TEMP
 	mkdir -p $$@
 
   $(1)_init : | $(BUILD_PATH)/$(1)/$(PLAT)
-	cd $$(BUILD_PATH)/$(1)/$(PLAT) && cmake $(CMAKE_BUILD) $$(CMAKE_OPT_$(1)) -G "$(CMAKE_PROJ_TYPE)" ../../../$(1)
+	cd $$(BUILD_PATH)/$(1)/$(PLAT) && cmake $(CMAKE_BUILD) $$(CMAKE_OPT_$(1)) -G "$(CMAKE_PROJ_TYPE)" $(CMAKE_OPT) ../../../$(1)
 
   $(1)_make : | $(BUILD_PATH)/$(1)/$(PLAT)
 	cd $$(BUILD_PATH)/$(1)/$(PLAT) && make $(MP)
