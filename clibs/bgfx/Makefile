@@ -25,7 +25,7 @@ $(ODIR)/luabgfxutil.o : luabgfxutil.c  | $(ODIR)
 $(ODIR)/bgfx-core.dll : bgfx-core.def
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(BGFXLIB)
 
-$(ODIR)/bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o | bgfx-core.dll
+$(ODIR)/bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o | $(ODIR)/bgfx-core.dll
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB)
 
 $(ODIR)/libbgfx.a : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/baselib.o
