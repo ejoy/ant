@@ -3,10 +3,21 @@ shader = {
 	fs = "/pkg/ant.resources/shaders/src/sky/procedural/fs_sky_color_banding_fix",
 }
 
-state = "depiction/states/default.state"
+state = "depiction/materials/states/default.state"
 
 properties = {
 	uniforms = {
-
+		u_sunDirection = {type="v4", name="sub direction", value = {0, 0, 1, 0}},
+		u_sunLuminance = {type="v4", name="sky luminace in RGB color space", value={0, 0, 0, 0}},
+		u_skyLuminanceXYZ = {type="v4", name="sky luminance in XYZ color space", value={0, 0, 0, 0}},
+		u_parameters = {type="v4", name="parameter include: x=sun size, y=sun bloom, z=exposition, w=time", 
+			value={0, 0, 0, 0}},
+		u_perezCoeff = {type="v4", name="Perez coefficients", value = {
+			{0, 0, 0, 0},
+			{0, 0, 0, 0},
+			{0, 0, 0, 0},
+			{0, 0, 0, 0},
+			{0, 0, 0, 0},
+		}},
 	},
 }

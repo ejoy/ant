@@ -4,7 +4,7 @@ local world = ecs.world
 local fs = require "filesystem"
 
 local renderpkg = import_package "ant.render"
-local computil = renderpkg.component
+local computil = renderpkg.components
 
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
@@ -40,7 +40,7 @@ ecs.component "procedural_sky"
 	
 
 -- HDTV rec. 709 matrix.
-local M_XYZ2RGB = math3d.ref "matrix" {
+local M_XYZ2RGB = ms:ref "matrix" {
 	--  3.240479, -0.969256,  0.055648,
 	-- -1.53715,   1.875991, -0.204043,
 	-- -0.49853,   0.041556,  1.057311,
@@ -258,12 +258,6 @@ local function computePerezCoeff(turbidity)
 	end
 	
 	return result
-	
-		-- const bx::Vec3 tmp = bx::mad(ABCDE_t[ii], turbidity, ABCDE[ii]);
-		-- float* out = _outPerezCoeff + 4 * ii;
-		-- bx::store(out, tmp);
-		-- out[3] = 0.0f;
-	
 end
 
 local function update_sky_parameters(skyentity)
