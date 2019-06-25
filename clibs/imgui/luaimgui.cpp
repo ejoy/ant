@@ -2634,9 +2634,21 @@ GetGlyphRanges(ImFontAtlas* atlas, const char* type) {
 
 static void
 CreateFont(lua_State *L, ImFontAtlas* atlas, ImFontConfig* config) {
-	lua_rawgeti(L, -1, 1);
 	size_t ttf_len = 0;
-	const char* ttf_buf = luaL_checklstring(L, -1, &ttf_len);
+	const char* ttf_buf = 0;
+	switch (lua_rawgeti(L, -1, 1)) {
+	case LUA_TSTRING:
+		ttf_buf = luaL_checklstring(L, -1, &ttf_len);
+		break;
+	case LUA_TUSERDATA:
+		ttf_buf = (const char*)lua_touserdata(L, -1);
+		ttf_len = (size_t)*(uint32_t*)ttf_buf;
+		ttf_buf += 4;
+		break;
+	default:
+		luaL_checktype(L, -1, LUA_TSTRING);
+		break;
+	}
 	lua_pop(L, 1);
 
 	lua_rawgeti(L, -1, 2);

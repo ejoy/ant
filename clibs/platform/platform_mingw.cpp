@@ -123,10 +123,10 @@ int lfont(lua_State* L) {
     for (uint32_t tag : {0x66637474/*ttcf*/, 0}) {
         DWORD bytes = GetFontData(hdc, tag, 0, 0, 0);
         if (bytes != GDI_ERROR) {
-            void* table = lua_newuserdata(L, bytes);
-            bytes = GetFontData(hdc, tag, 0, (unsigned char*)table, bytes);
+            void* table = lua_newuserdata(L, bytes + 4);
+            bytes = GetFontData(hdc, tag, 0, (unsigned char*)table+4, bytes);
             if (bytes != GDI_ERROR) {
-                lua_pushlstring(L, (const char*)table, bytes);
+                *(uint32_t*)table = (uint32_t)bytes;
                 ok = true;
                 break;
             }

@@ -89,11 +89,11 @@ function callback.init(nwh, context, w, h)
 	imgui.keymap(native.keymap)
 	window.set_ime(imgui.ime_handle())
 	if platform.OS == "Windows" then
-		font.Create { { Font "黑体" ,    18, "\x20\x00\xFF\xFF\x00"} }
+		font.Create { { Font "黑体" ,     18, "\x20\x00\xFF\xFF\x00"} }
 	elseif platform.OS == "macOS" then
 		font.Create { { Font "华文细黑" , 18, "\x20\x00\xFF\xFF\x00"} }
 	else -- iOS
-		font.Create { { Font "Heiti SC" ,    18, "\x20\x00\xFF\xFF\x00"} }
+		font.Create { { Font "Heiti SC" , 18, "\x20\x00\xFF\xFF\x00"} }
 	end
 
 	local su = import_package "ant.scene".util
