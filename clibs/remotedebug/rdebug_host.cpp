@@ -62,10 +62,12 @@ client_main(rlua_State *L) {
 	rlua_pushboolean(L, 1);
 	rlua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
 	rluaL_openlibs(L);
-#if !defined(LUA_GCGEN)
-#define LUA_GCGEN 10
+#if !defined(RLUA_DISABLE) || LUA_VERSION_NUM >= 504
+#	if !defined(LUA_GCGEN)
+#		define LUA_GCGEN 10
+#	endif
+	rlua_gc(L, LUA_GCGEN, 0, 0);
 #endif
-    rlua_gc(L, LUA_GCGEN, 0, 0);
 	const char* mainscript = (const char *)rlua_touserdata(L, 1);
 	if (rluaL_loadstring(L, mainscript) != LUA_OK) {
 		return rlua_error(L);
