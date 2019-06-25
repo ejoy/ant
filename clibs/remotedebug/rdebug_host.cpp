@@ -47,6 +47,8 @@ clear_client(lua_State *L) {
 
 static int
 lhost_clear(lua_State *L) {
+	rlua_State *cL = get_client(L);
+	probe(cL, L, "exit");
 	clear_client(L);
 	return 0;
 }
@@ -60,6 +62,10 @@ client_main(rlua_State *L) {
 	rlua_pushboolean(L, 1);
 	rlua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
 	rluaL_openlibs(L);
+#if !defined(LUA_GCGEN)
+#define LUA_GCGEN 10
+#endif
+    rlua_gc(L, LUA_GCGEN, 0, 0);
 	const char* mainscript = (const char *)rlua_touserdata(L, 1);
 	if (rluaL_loadstring(L, mainscript) != LUA_OK) {
 		return rlua_error(L);
@@ -147,10 +153,7 @@ lhost_event(lua_State *L) {
 	return 1;
 }
 
-extern "C" 
-#if defined(_WIN32)
-__declspec(dllexport)
-#endif
+RLUA_FUNC
 int luaopen_remotedebug(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "start", lhost_start },

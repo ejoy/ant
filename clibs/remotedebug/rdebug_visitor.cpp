@@ -328,7 +328,9 @@ lclient_getinfo(rlua_State *L) {
 		case 'l': size += 1; break;
 		case 'n': size += 2; break;
 		case 't': size += 1; break;
+#if LUA_VERSION_NUM >= 504
 		case 'r': size += 2; break;
+#endif
 		default: return rluaL_error(L, "invalid option");
 		}
 	}
@@ -404,19 +406,14 @@ lclient_getinfo(rlua_State *L) {
 			rlua_pushboolean(L, ar.istailcall? 1 : 0);
 			rlua_setfield(L, 3, "istailcall");
 			break;
-		case 'r':
 #if LUA_VERSION_NUM >= 504
+		case 'r':
 			rlua_pushinteger(L, ar.ftransfer);
 			rlua_setfield(L, 3, "ftransfer");
 			rlua_pushinteger(L, ar.ntransfer);
 			rlua_setfield(L, 3, "ntransfer");
-#else
-			rlua_pushinteger(L, 0);
-			rlua_setfield(L, 3, "ftransfer");
-			rlua_pushinteger(L, 0);
-			rlua_setfield(L, 3, "ntransfer");
-#endif
 			break;
+#endif
 		}
 	}
 
@@ -646,10 +643,7 @@ init_visitor(rlua_State *L) {
 	return 1;
 }
 
-extern "C"
-#if defined(_WIN32)
-__declspec(dllexport)
-#endif
+RLUA_FUNC
 int luaopen_remotedebug_visitor(rlua_State *L) {
 	get_host(L);
 	return init_visitor(L);

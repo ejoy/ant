@@ -13,15 +13,16 @@ local stat = {}
 local queue = {}
 local exit = false
 local masterThread
+local workers = {}
 
-local workers_mt = {}
-function workers_mt:__index(id)
-    assert(type(id) == "number")
-    local c = assert(thread.channel_produce("DbgWorker" .. id))
-    self[id] = c
-    return c
-end
-local workers = setmetatable({}, workers_mt)
+ev.on('thread', function(reason, threadId)
+    if reason == "started" then
+        workers[threadId] = assert(thread.channel_produce("DbgWorker" .. threadId))
+        ev.emit('worker-ready', threadId)
+    elseif reason == "exited" then
+        workers[threadId] = nil
+    end
+end)
 
 local function event_in(data)
     local msg = proto.recv(data, stat)
@@ -57,6 +58,7 @@ function mgr.init(io)
     masterThread = thread.channel_consume 'DbgMaster'
     network:event_in(event_in)
     network:event_close(event_close)
+    return true
 end
 
 local function lst2map(t)
@@ -112,7 +114,7 @@ function mgr.hasThread(w)
     return rawget(workers, w) ~= nil
 end
 
-function mgr.update()
+local function updateOnce()
     local threads = require 'backend.master.threads'
     while true do
         local ok, w, msg = masterThread:pop()
@@ -139,10 +141,7 @@ function mgr.update()
             event.output('stdout', res)
         end
     end
-end
 
-function mgr.runIdle()
-    mgr.update()
     if mgr.isState 'terminated' then
         mgr.setState 'birth'
         return false
@@ -177,6 +176,14 @@ function mgr.runIdle()
         end
     end
     return false
+end
+
+function mgr.update()
+    while true do
+        if updateOnce() then
+            return
+        end
+    end
 end
 
 function mgr.isState(s)

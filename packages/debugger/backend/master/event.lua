@@ -81,4 +81,16 @@ function event.loadedSource(reason, source)
     }
 end
 
+function event.thread(reason, threadId)
+    mgr.sendToClient {
+        type = 'event',
+        seq = mgr.newSeq(),
+        event = 'thread',
+        body = {
+            reason = reason,
+            threadId = threadId,
+        }
+    }
+end
+
 return event

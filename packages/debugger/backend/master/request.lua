@@ -102,10 +102,21 @@ local function genBreakpointID()
     return breakpointID
 end
 
+local function skipBOM(s)
+    if s:sub(1,3) == "\xEF\xBB\xBF" then
+        s = s:sub(4)
+    end
+    if s:sub(1,1) == "#" then
+        local pos = s:find('\r\n', 2, true)
+        s = pos and s:sub(pos+1) or s
+    end
+    return s
+end
+
 function request.setBreakpoints(req)
     local args = req.arguments
     if args.sourceContent then
-        local f = load(args.sourceContent)
+        local f = load(skipBOM(args.sourceContent))
         if f then
             local source = args.source
             source.si = {}

@@ -64,6 +64,7 @@ const char *(rlua_typename) (rlua_State *L, int tp);
 int  (rlua_error) (rlua_State *L);
 int  (rluaL_error) (rlua_State *L, const char *fmt, ...);
 void (rluaL_traceback) (rlua_State *L, rlua_State *L1, const char *msg, int level);
+int  (rlua_gc) (rlua_State *L, int what, ...);
 
 void *(rlua_newuserdatauv) (rlua_State *L, size_t sz, int nuvalue);
 const char *(rlua_getupvalue) (rlua_State *L, int funcindex, int n);
@@ -104,6 +105,7 @@ int  (rlua_gettop) (rlua_State *L);
 void (rlua_settop) (rlua_State *L, int idx);
 void (rlua_rotate) (rlua_State *L, int idx, int n);
 void (rlua_copy) (rlua_State *L, int fromidx, int toidx);
+int  (rlua_checkstack) (rlua_State *L, int n);
 
 void  (rluaL_buffinit) (rlua_State *L, rluaL_Buffer *B);
 char *(rluaL_prepbuffsize) (rluaL_Buffer *B, size_t sz);
@@ -540,4 +542,11 @@ void  (rluaL_pushresultsize) (rluaL_Buffer *B, size_t sz);
 #define rluaopen_table luaopen_table
 #define rluaopen_utf8 luaopen_utf8
 
+#endif
+
+
+#if defined(_WIN32)
+#define RLUA_FUNC extern "C" __declspec(dllexport)
+#else
+#define RLUA_FUNC extern "C" __attribute__((visibility("default"))) 
 #endif
