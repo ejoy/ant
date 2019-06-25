@@ -2,11 +2,8 @@ local ecs = ...
 local world = ecs.world
 
 local fs = require "filesystem"
-local mathpkg = import_package "ant.math"
-local mu = mathpkg.util
 
 local renderpkg = import_package "ant.render"
-local declmgr = renderpkg.declmgr
 local computil = renderpkg.component
 
 local mathpkg = import_package "ant.math"
@@ -15,7 +12,7 @@ local mu = mathpkg.util
 
 local math3d = require "math3d"
 
-local months = {
+local MONTHS = {
 	"January",
 	"February",
 	"March",
@@ -30,11 +27,12 @@ local months = {
 	"December",
 }
 
-local procedural_sky = ecs.component "procedural_sky"
+ecs.component "procedural_sky"
 	.w "int" (1)
 	.h "int" (1)
 	.sun_dir "real[4]" {0, -1, 0, 0}
 	.time "real" (12)
+	.turbidity "real" (0.5)
 	["opt"].northDir "real[4]"
 	["opt"].updir "real[4]"
 	["opt"].latitude "real"
@@ -61,11 +59,11 @@ end
 -- Precomputed luminance of sunlight in XYZ colorspace.
 -- Computed using code from Game Engine Gems, Volume One, chapter 15. Implementation based on Dr. Richard Bird model.
 -- This table is used for piecewise linear interpolation. Transitions from and to 0.0 at sunset and sunrise are highly inaccurate
-local sunLuminanceXYZ = {
-	[5.0] =  {  0.000000,  0.000000,  0.000000 },
-	[7.0] =  { 12.703322, 12.989393,  9.100411 },
-	[8.0] =  { 13.202644, 13.597814, 11.524929 },
-	[9.0] =  { 13.192974, 13.597458, 12.264488 },
+local sun_luminance_XYZ = {
+	[5.0]  =  {  0.000000,  0.000000,  0.000000 },
+	[7.0]  =  { 12.703322, 12.989393,  9.100411 },
+	[8.0]  =  { 13.202644, 13.597814, 11.524929 },
+	[9.0]  =  { 13.192974, 13.597458, 12.264488 },
 	[10.0] =  { 13.132943, 13.535914, 12.560032 },
 	[11.0] =  { 13.088722, 13.489535, 12.692996 },
 	[12.0] =  { 13.067827, 13.467483, 12.745179 },
@@ -84,16 +82,16 @@ local sunLuminanceXYZ = {
 -- This table is used for piecewise linear interpolation. Day/night transitions are highly inaccurate.
 -- The scale of luminance change in Day/night transitions is not preserved.
 -- Luminance at night was increased to eliminate need the of HDR render.
-local skyLuminanceXYZ = {
-	[0.0] =  { 0.308,    0.308,    0.411    },
-	[1.0] =  { 0.308,    0.308,    0.410    },
-	[2.0] =  { 0.301,    0.301,    0.402    },
-	[3.0] =  { 0.287,    0.287,    0.382    },
-	[4.0] =  { 0.258,    0.258,    0.344    },
-	[5.0] =  { 0.258,    0.258,    0.344    },
-	[7.0] =  { 0.962851, 1.000000, 1.747835 },
-	[8.0] =  { 0.967787, 1.000000, 1.776762 },
-	[9.0] =  { 0.970173, 1.000000, 1.788413 },
+local sky_luminance_XYZ = {
+	[0.0]  =  { 0.308,    0.308,    0.411    },
+	[1.0]  =  { 0.308,    0.308,    0.410    },
+	[2.0]  =  { 0.301,    0.301,    0.402    },
+	[3.0]  =  { 0.287,    0.287,    0.382    },
+	[4.0]  =  { 0.258,    0.258,    0.344    },
+	[5.0]  =  { 0.258,    0.258,    0.344    },
+	[7.0]  =  { 0.962851, 1.000000, 1.747835 },
+	[8.0]  =  { 0.967787, 1.000000, 1.776762 },
+	[9.0]  =  { 0.970173, 1.000000, 1.788413 },
 	[10.0] =  { 0.971431, 1.000000, 1.794102 },
 	[11.0] =  { 0.972099, 1.000000, 1.797096 },
 	[12.0] =  { 0.972385, 1.000000, 1.798389 },
@@ -192,6 +190,7 @@ function sky_system:init()
 			w = 32, h = 32,
 			sun_dir = {0, -1, 0, 0},
 			time = 12,	-- high noon
+			turbidity = 0.5,
 		},
 		main_view = true,
 		can_render = true,
@@ -232,11 +231,38 @@ local function fetch_value_operation(t)
 		return math.max(from, 1), math.min(to, #tt)
 	end
 	
-	return binary_search
+	return function(time)
+		local l,h = binary_search(time)
+		if l == h then
+			return t[l]
+		end
+
+		local lowvalue, highvalue = t[l], t[h]
+		local ratio = (time-l) / (h-l)
+		return lowvalue * ratio + (1-ratio) * highvalue
+	end
 end
 
-local sun_luminance_fetch = fetch_value_operation(sunLuminanceXYZ)
-local sky_luminance_fetch = fetch_value_operation(skyLuminanceXYZ)
+local sun_luminance_fetch = fetch_value_operation(sun_luminance_XYZ)
+local sky_luminance_fetch = fetch_value_operation(sky_luminance_XYZ)
+
+
+local function computePerezCoeff(turbidity)
+	assert(#ABCDE == #ABCDE_t)
+	local result = {}
+	for i=1, #ABCDE do
+		local v0, v1 = ABCDE_t[i], ABCDE[i]
+		result[#result+1] = ms(v1, {turbidity}, v0, "*+P")
+	end
+	
+	return result
+	
+		-- const bx::Vec3 tmp = bx::mad(ABCDE_t[ii], turbidity, ABCDE[ii]);
+		-- float* out = _outPerezCoeff + 4 * ii;
+		-- bx::store(out, tmp);
+		-- out[3] = 0.0f;
+	
+end
 
 local function update_sky_parameters(skyentity)
 	local skycomp = skyentity.procedural_sky
@@ -247,6 +273,7 @@ local function update_sky_parameters(skyentity)
 	sky_uniforms["u_sunDirection"].value 	= skycomp.sun_dir
 	sky_uniforms["u_sunLuminance"].value 	= xyz2rgb(sun_luminance_fetch(time))
 	sky_uniforms["u_skyLuminanceXYZ"].value = sky_luminance_fetch(time)
+	sky_uniforms["u_perezCoeff"].value 		= computePerezCoeff(skycomp.turbidity)
 end
 
 function sky_system:update()
