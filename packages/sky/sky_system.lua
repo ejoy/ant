@@ -164,7 +164,7 @@ local function fill_procedural_sky_mesh(skyentity)
 
 	local meshcomp = skyentity.mesh
 
-	meshcomp.assetinfo = util.create_simple_mesh({
+	meshcomp.assetinfo = computil.create_simple_mesh({
 		stride = 8, -- "ff"
 		{name="POSITION", offset=0, elemtype="FLOAT", elemcount=2},
 	}, vb, w * h, ib, #ib)
@@ -262,13 +262,13 @@ end
 
 local function update_sky_parameters(skyentity)
 	local skycomp = skyentity.procedural_sky
-	local sky_uniforms = skyentity.material.properties.uniforms
+	local sky_uniforms = skyentity.material.content[1].properties.uniforms
 
 	local time = skycomp.time
 
 	sky_uniforms["u_sunDirection"].value 	= skycomp.sun_dir
 	sky_uniforms["u_sunLuminance"].value 	= xyz2rgb(sun_luminance_fetch(time))
-	sky_uniforms["u_skyLuminanceXYZ"].value = sky_luminance_fetch(time)
+	sky_uniforms["u_skyLuminanceXYZ"].value = ms(sky_luminance_fetch(time), "P")
 	sky_uniforms["u_perezCoeff"].value 		= computePerezCoeff(skycomp.turbidity)
 	shader_parameters[4] = time
 	sky_uniforms["u_parameters"].value 		= shader_parameters
