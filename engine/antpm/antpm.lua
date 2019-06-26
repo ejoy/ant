@@ -60,7 +60,7 @@ local function test(name, entry)
     end
     local info = registered[name]
     if not info.env then
-		info.env = sandbox.env("//"..name, name)
+		info.env = sandbox.env("/pkg/"..name, name)
     end
     return info.env.require(entry or 'test')
 end
