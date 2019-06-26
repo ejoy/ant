@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 local WatcherEvent = require "hub_event"
 local serialize = import_package 'ant.serialize'
+local fs = require "filesystem"
 
 ecs.tag "editor_watching"
 
@@ -66,16 +67,6 @@ local function copy_table(tbl)
         end
     end
     return new_tbl
-end
-
-local function publish_world_info()
-    local pm = require "antpm"
-    local packages = pm.get_registered_list()
-    local schemas = copy_table(world._schema.map)
-    -- local pack = 
-    -- hub.subscribe(WatcherEvent.RESPONSE_WORLD_INFO,)
-    local hub = world.args.hub
-    hub.publish(WatcherEvent.RESPONSE_WORLD_INFO,{packages = packages,schemas = schemas})
 end
 
 function editor_watcher_system:init()

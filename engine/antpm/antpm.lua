@@ -25,8 +25,7 @@ local function register(pkg)
         error(('Duplicate definition package `%s` in `%s`.'):format(config.name, pkg))
     end
     registered[config.name] = {
-        root = pkg,
-        config = config,
+        config = config
     }
     return config.name
 end
@@ -66,14 +65,14 @@ local function test(name, entry)
     return info.env.require(entry or 'test')
 end
 
-local function find(name)
+local function config(name)
     if not registered[name] then
         return
     end
-    return registered[name].root, registered[name].config
+    return registered[name].config
 end
 
-local function m_loadfile(filename)
+local function pm_loadfile(filename)
     local name = filename:package_name()
     local info = registered[name]
     if not info.env then
@@ -82,23 +81,6 @@ local function m_loadfile(filename)
     local fs = require "filesystem"
     return fs.loadfile(filename, 't', info.env)
 end
-
-local function setglobal(name, value)
-    _G[name] = value
-end
-
-
-local function get_registered_list(sort)
-    local t = {}
-    for name,_ in pairs(registered) do
-        table.insert(t,name)
-    end
-    if sort then
-        table.sort(t)
-    end
-    return t
-end
-
 
 local function init()
     for pkg in vfs.each('/pkg') do
@@ -148,14 +130,11 @@ local function register_package(path)
 end
 
 return {
-    find = find,
     import = import,
     test = test,
-    loadfile = m_loadfile,
-    setglobal = setglobal,
-    get_registered_list = get_registered_list,
-    
+    loadfile = pm_loadfile,
     init = init,
+    config = config,
     load_package = load_package,
     load_packages = load_packages,
     register_package = register_package,

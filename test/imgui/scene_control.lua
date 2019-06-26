@@ -34,7 +34,7 @@ function scene_control.test_new_world(raw_path)
     }
 
     local pm = require "antpm"
-    if not pm.find(pkg_name) then
+    if not fs.exists("/pkg/"..pkg_name) then
         pkg_name = pm.register_package(path:parent_path())
     end
     

@@ -3,8 +3,8 @@ local fs = require "filesystem"
 local get_modules = require "modules"
 
 return function(name)
-	local _, config = pm.find(name)
-	if not _ then
+	local config = pm.config(name)
+	if not config then
 		error(("package '%s' not found"):format(name))
 		return
 	end
