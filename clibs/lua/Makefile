@@ -31,7 +31,7 @@ $(ODIR)/liblua.a : $(foreach v, $(BASE_O), $(ODIR)/$(v))
 $(ODIR)/lua53.dll : $(foreach v, $(BASE_O), $(ODIR)/$(v))
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^
 
-$(ODIR)/lua.exe : $(ODIR)/lua.o | lua53.dll
+$(ODIR)/lua.exe : $(ODIR)/lua.o | $(ODIR)/lua53.dll
 	$(CC) -o $@ $^ $(LUALIB)
 	$(STRIP) $@ 
 
