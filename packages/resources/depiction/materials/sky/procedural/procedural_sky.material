@@ -3,7 +3,7 @@ shader = {
 	fs = "/pkg/ant.resources/shaders/src/sky/procedural/fs_sky_color_banding_fix",
 }
 
-state = "depiction/materials/states/default.state"
+state = "depiction/materials/states/procedural_sky.state"
 
 properties = {
 	uniforms = {

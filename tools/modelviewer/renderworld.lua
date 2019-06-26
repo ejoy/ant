@@ -8,6 +8,7 @@ ecs.import "ant.scene"
 ecs.import "ant.serialize"
 ecs.import "ant.event"
 ecs.import "ant.math.adapter"
+ecs.import "ant.sky"
 
 local math3d = import_package "ant.math"
 local ms = math3d.stack
@@ -22,6 +23,7 @@ model_review_system.singleton "constant"
 model_review_system.depend "primitive_filter_system"
 model_review_system.depend "render_system"
 model_review_system.depend "viewport_detect_system"
+model_review_system.depend "sky_system"
 model_review_system.dependby "camera_controller"
 
 local lu = renderpkg.light
