@@ -75,6 +75,10 @@ function util.identity_transform()
 	return util.srt()
 end
 
+function util.ratio(start, to, t)
+	return (t - start) / (to - start)
+end
+
 local function list_op(l, op)
 	local t = {}
 	for _, v in ipairs(l) do

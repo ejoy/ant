@@ -2673,6 +2673,25 @@ llhs_matrix(lua_State *L) {
 }
 
 static int
+llerp(lua_State* L) {
+	struct boxstack* bp = (struct boxstack*)lua_touserdata(L, 1);
+	lastack* LS = bp->LS;
+
+	const auto v0 = get_vec_value(L, LS, 2);
+	const auto v1 = get_vec_value(L, LS, 3);
+
+	const auto ratio = lua_tonumber(L, 4);
+
+#define to_v3(v)	*(const glm::vec3*)(&v)
+
+	const auto l = glm::vec4(to_v3(v0) + (to_v3(v1) - to_v3(v0)) * (float)ratio, 0.f);
+
+	lastack_pushvec4(LS, &l.x);
+	lua_pushinteger(L, lastack_pop(LS));
+	return 1;
+}
+
+static int
 lbase_axes_from_forward_vector(lua_State *L) {
 	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
 	struct lastack* LS = bp->LS;
@@ -2829,6 +2848,7 @@ register_linalg_mt(lua_State *L) {
 			{ "screenpt_to_3d", lscreen_point_to_3d},
 			{ "lhs_rotation", llhs_rotation},
 			{ "lhs_mat", llhs_matrix},
+			{ "lerp", llerp},			
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);

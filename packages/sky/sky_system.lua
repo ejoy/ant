@@ -10,8 +10,6 @@ local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 local mu = mathpkg.util
 
-local math3d = require "math3d"
-
 local MONTHS = {
 	"January",
 	"February",
@@ -26,18 +24,6 @@ local MONTHS = {
 	"November",
 	"December",
 }
-
-ecs.component "procedural_sky"
-	.w "int" (1)
-	.h "int" (1)
-	.sun_dir "real[4]" {0, -1, 0, 0}
-	.time "real" (12)
-	.turbidity "real" (0.5)
-	["opt"].northDir "real[4]"
-	["opt"].updir "real[4]"
-	["opt"].latitude "real"
-	["opt"].month "string"
-	
 
 -- HDTV rec. 709 matrix.
 local M_XYZ2RGB = ms:ref "matrix" {
@@ -112,20 +98,92 @@ local sky_luminance_XYZ = {
 -- A. J. Preetham, P. Shirley, and B. Smits. A Practical Analytic Model for Daylight. SIGGRAPH ’99
 -- Coefficients correspond to xyY colorspace.
 local ABCDE = {
-	{ -0.2592, -0.2608, -1.4630 },
-	{  0.0008,  0.0092,  0.4275 },
-	{  0.2125,  0.2102,  5.3251 },
-	{ -0.8989, -1.6537, -2.5771 },
-	{  0.0452,  0.0529,  0.3703 },
+	ms:ref "vector" { -0.2592, -0.2608, -1.4630 },
+	ms:ref "vector" {  0.0008,  0.0092,  0.4275 },
+	ms:ref "vector" {  0.2125,  0.2102,  5.3251 },
+	ms:ref "vector" { -0.8989, -1.6537, -2.5771 },
+	ms:ref "vector" {  0.0452,  0.0529,  0.3703 },
 }
 
 local ABCDE_t = {
-	{ -0.0193, -0.0167,  0.1787 },
-	{ -0.0665, -0.0950, -0.3554 },
-	{ -0.0004, -0.0079, -0.0227 },
-	{ -0.0641, -0.0441,  0.1206 },
-	{ -0.0033, -0.0109, -0.0670 },
+	ms:ref "vector" { -0.0193, -0.0167,  0.1787 },
+	ms:ref "vector" { -0.0665, -0.0950, -0.3554 },
+	ms:ref "vector" { -0.0004, -0.0079, -0.0227 },
+	ms:ref "vector" { -0.0641, -0.0441,  0.1206 },
+	ms:ref "vector" { -0.0033, -0.0109, -0.0670 },
 }
+
+-- Controls sun position according to time, month, and observer's latitude.
+-- this data get from: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
+local ps = ecs.component "procedural_sky"
+	.w 			"int" (1)
+	.h 			"int" (1)
+	.which_hour "real" (12)
+	.turbidity 	"real" (0.5)
+	.month 		"string" ("June")
+	.latitude 	"real" (math.rad(50))
+
+local function compute_PerezCoeff(turbidity)
+	assert(#ABCDE == #ABCDE_t)
+	local result = {}
+	for i=1, #ABCDE do
+		local v0, v1 = ABCDE_t[i], ABCDE[i]
+		result[#result+1] = ms(v1, {turbidity}, v0, "*+P")
+	end
+	
+	return result
+end
+
+local function fetch_month_index_op()
+	local remapper = {}
+	for idx, m in ipairs(MONTHS) do
+		remapper[m] = idx
+	end
+
+	return function (whichmonth)
+		return remapper[whichmonth]
+	end
+end
+
+local which_month_index = fetch_month_index_op()
+
+local function calc_sun_orbit_delta(whichmonth, ecliptic_obliquity)
+	local month = which_month_index(whichmonth) - 1
+	local day = 30 * month + 15
+	local lambda = math.rad(280.46 + 0.9856474 * day);
+	return math.asin(math.sin(ecliptic_obliquity) * math.sin(lambda))
+end
+
+local function calc_sun_direction(skycomp)
+	local latitude = skycomp.latitude
+	local whichhour = skycomp.which_hour
+	local delta = calc_sun_orbit_delta(skycomp.month, skycomp.ecliptic_obliquity)
+
+	local hh = whichhour * math.pi / 12
+	local azimuth = math.atan(
+			math.sin(hh), 
+			math.cos(hh) * math.cos(latitude) - math.tan(delta) * math.cos(latitude))
+
+	local altitude = math.asin(math.sin(latitude) * math.sin(delta) + 
+								math.cos(latitude) * math.cos(delta) * math.cos(hh))
+
+	local rot0 = ms:quaternion(skycomp.updir, azimuth)
+	local dir = ms(skycomp.northdir, rot0, "*P")
+	local uxd = ms(skycomp.updir, dir, "xP")
+	
+	local rot1 = ms:quaternion(uxd, altitude)
+	
+	return ms(dir, rot1, "*P")
+end
+
+function ps:init()
+	self.northdir =	ms:ref "vector" {1, 0, 0, 0}
+	self.updir  = ms:ref "vector" {0, 1, 0, 0}
+	self.ecliptic_obliquity = math.rad(23.44)	--the earth's ecliptic obliquity is 23.44
+
+	self.sundir = ms:ref "vector"(calc_sun_direction(self))
+	return self
+end
 
 local sky_system = ecs.system "sky_system"
 sky_system.dependby "primitive_filter_system"
@@ -190,9 +248,10 @@ function sky_system:init()
 			}),
 		procedural_sky = {
 			w = 32, h = 32,
-			sun_dir = {0, -1, 0, 0},
-			time = 12,	-- high noon
-			turbidity = 0.5,
+			which_hour 	= 12,	-- high noon
+			turbidity 	= 0.5,
+			month 		= "June",
+			latitude 	= math.rad(50),
 		},
 		main_view = true,
 		can_render = true,
@@ -239,38 +298,24 @@ local function fetch_value_operation(t)
 			return t[l]
 		end
 
-		local lowvalue, highvalue = t[l], t[h]
-		local ratio = (time-l) / (h-l)
-		return lowvalue * ratio + (1-ratio) * highvalue
+		return ms:lerp(t[l], t[h], mu.ratio(l, h, time))
 	end
 end
 
 local sun_luminance_fetch = fetch_value_operation(sun_luminance_XYZ)
 local sky_luminance_fetch = fetch_value_operation(sky_luminance_XYZ)
 
-
-local function computePerezCoeff(turbidity)
-	assert(#ABCDE == #ABCDE_t)
-	local result = {}
-	for i=1, #ABCDE do
-		local v0, v1 = ABCDE_t[i], ABCDE[i]
-		result[#result+1] = ms(v1, {turbidity}, v0, "*+P")
-	end
-	
-	return result
-end
-
 local function update_sky_parameters(skyentity)
 	local skycomp = skyentity.procedural_sky
 	local sky_uniforms = skyentity.material.content[1].properties.uniforms
 
-	local time = skycomp.time
+	local hour = skycomp.which_hour
 
-	sky_uniforms["u_sunDirection"].value 	= skycomp.sun_dir
-	sky_uniforms["u_sunLuminance"].value 	= xyz2rgb(sun_luminance_fetch(time))
-	sky_uniforms["u_skyLuminanceXYZ"].value = ms(sky_luminance_fetch(time), "P")
-	sky_uniforms["u_perezCoeff"].value 		= computePerezCoeff(skycomp.turbidity)
-	shader_parameters[4] = time
+	sky_uniforms["u_sunDirection"].value 	= skycomp.sundir
+	sky_uniforms["u_sunLuminance"].value 	= xyz2rgb(sun_luminance_fetch(hour))
+	sky_uniforms["u_skyLuminanceXYZ"].value = ms(sky_luminance_fetch(hour), "P")
+	sky_uniforms["u_perezCoeff"].value 		= compute_PerezCoeff(skycomp.turbidity)
+	shader_parameters[4] = hour
 	sky_uniforms["u_parameters"].value 		= shader_parameters
 end
 
@@ -288,20 +333,16 @@ sun_update_system.depend "timesystem"
 
 local timer = import_package "ant.timer"
 
-local function update_sun_direction(skycomp)
-	local time = skycomp.time
-end
-
-local function update_time(skycomp)
-	skycomp.time = timer.from_counter(timer.current_counter)
+local function update_hour(skycomp, deltatime, unit)
+	unit = unit or 24
+	skycomp.which_hour = (skycomp.which_hour + deltatime) % unit
 end
 
 function sun_update_system:update()
 	for _, eid in world:each "procedural_sky" do
 		local e = world[eid]
 		local skycomp = e.procedural_sky
-		update_time(skycomp)
-		update_sun_direction(skycomp)
-
+		update_hour(skycomp, timer.deltatime)
+		calc_sun_direction(skycomp)
 	end
 end
