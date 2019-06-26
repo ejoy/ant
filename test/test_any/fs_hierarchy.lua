@@ -210,7 +210,7 @@ end
 --package_name:"ant.xxx"
 function fs_hierarchy:_show_package(package_name)
     -- local assetmgr = import_package "ant.asset".mgr
-    local assetdir = fs.path("//"..package_name)
+    local assetdir = fs.path("/pkg/"..package_name)
     self.cur_package_name = package_name
     self.dir_tree:clear()
     self.foucs_tb = nil
