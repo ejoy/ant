@@ -16,7 +16,8 @@ local function gen_shader_filepath(filename)
 	if fs.exists(shadername_withext) then
 		return shadername_withext 
     end
-	shadername_withext = shadername_withext:root_name() / "shaders" / "src" / fs.relative(shadername_withext, shadername_withext:root_name())
+    local pkgdir = fs.path("/pkg") / shadername_withext:package_name()
+	shadername_withext = pkgdir / "shaders" / "src" / fs.relative(shadername_withext, pkgdir)
 	if fs.exists(shadername_withext) then
 		return shadername_withext 
     end

@@ -51,8 +51,8 @@ end
 
 function assetmgr.get_depiction_path(fullpath)	
 	if not fs.exists(fullpath) then
-		local pkgname = fullpath:root_name()
-		fullpath = pkgname / "depiction" / fs.relative(fullpath, pkgname)
+		local pkgdir = fs.path("/pkg") / fullpath:package_name()
+		fullpath = pkgdir / "depiction" / fs.relative(fullpath, pkgdir)
 		if not fs.exists(fullpath) then
 			return nil
 		end
