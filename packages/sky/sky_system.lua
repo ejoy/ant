@@ -167,7 +167,7 @@ local function calc_sun_direction(skycomp)
 	local altitude = math.asin(math.sin(latitude) * math.sin(delta) + 
 								math.cos(latitude) * math.cos(delta) * math.cos(hh))
 
-	local rot0 = ms:quaternion(skycomp.updir, azimuth)
+	local rot0 = ms:quaternion(skycomp.updir, -azimuth)
 	local dir = ms(skycomp.northdir, rot0, "*P")
 	local uxd = ms(skycomp.updir, dir, "xP")
 	

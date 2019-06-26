@@ -2127,7 +2127,16 @@ new_temp_matrix(lua_State *L) {
 		case LUA_TNUMBER:
 			// return this id;
 			return 1;
-		case LUA_TUSERDATA:
+		case LUA_TUSERDATA:{
+			if (luaL_testudata(L, 2, LINALG_REF)){
+				int valuetype;
+				memcpy(m, lastack_value(LS, get_ref_id(L, LS, 2), &valuetype), sizeof(m));
+			} else {
+				memcpy(m, lua_touserdata(L, 2), sizeof(m));
+			}
+			
+			break;
+		}
 		case LUA_TLIGHTUSERDATA:
 			memcpy(m, lua_touserdata(L, 2), sizeof(m));
 			break;
@@ -2203,7 +2212,14 @@ new_temp_quaternion(lua_State *L) {
 	} else if (top == 3) {
 		const int type = lua_type(L, 2);
 		glm::vec3 axis;
-		if (type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA) {
+		if (type == LUA_TUSERDATA) {
+			if (luaL_testudata(L, 2, LINALG_REF)){
+				int valuetype;
+				axis = *(const glm::vec3*)lastack_value(LS, get_ref_id(L, LS, 2), &valuetype);
+			} else {
+				axis = *((const glm::vec3*)lua_touserdata(L, 2));
+			}		
+		} else if(type == LUA_TLIGHTUSERDATA) {
 			axis = *((const glm::vec3*)lua_touserdata(L, 2));
 		} else if (type == LUA_TNUMBER) {
 			int64_t id = lua_tointeger(L, 2);
@@ -2246,11 +2262,23 @@ new_temp_quaternion(lua_State *L) {
 			} else {
 				luaL_error(L, "need 3/4 element in array as euler radian or quaternion:%d", arraynum);
 			}
-		} else if (type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA) {
-			memcpy(&q, (float*)lua_touserdata(L, 2), sizeof(q));
-		} else {
+		} else if (type == LUA_TUSERDATA) {
+			const float* ptr = nullptr;
+			if (luaL_testudata(L, 2, LINALG_REF)){
+				int valuetype;
+				ptr = lastack_value(LS, get_ref_id(L, LS, 2), &valuetype);
+			}else{
+				ptr = (const float*)lua_touserdata(L, 2);
+			}
+
+			q = *((const glm::quat*)ptr);
+			
+		} else if (type == LUA_TLIGHTUSERDATA){
+			q = *((const glm::quat*)lua_touserdata(L, 2));
+		}
+		else {
 			luaL_error(L, "invalid type, only support 'table(array 3/4)' or 'userdata(quaternion data)' : %d", type);
-		}		
+		}
 	} else {
 		luaL_error(L, "need 5/6 argument, %d provided", top);
 	}
