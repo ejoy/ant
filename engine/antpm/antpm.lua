@@ -74,7 +74,7 @@ local function find(name)
 end
 
 local function m_loadfile(filename)
-    local name = filename:root_name():string():sub(6)
+    local name = filename:package_name()
     local info = registered[name]
     if not info.env then
         info.env = sandbox.env("/pkg/"..name, name)

@@ -22,14 +22,13 @@ return function(filename)
 				-- read file under .material file folder, if not found try from assets path
 				local subrespath = fs.path(v)
 				if not subrespath:is_absolute() then
-					local pkgname = filename:root_name()
 					local dir = filename:parent_path()
 					local fullpath = dir / subrespath
 					if not fs.exists(fullpath) then
 						fullpath = assetmgr.get_depiction_path(fullpath)
 						if fullpath == nil or not fs.exists(fullpath) then
-							fullpath = pkgname / subrespath
-						end						
+							fullpath = fs.path("/pkg") / filename:package_name() / subrespath
+						end
 					end
 					subrespath = fullpath
 				end

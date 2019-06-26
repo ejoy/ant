@@ -1,6 +1,63 @@
 local lfs = require "filesystem.local"
 local vfs = require "vfs.simplefs"
-local pkgio = require "antpm.io"
+local nio = io
+
+local function errmsg(err, filename, real_filename)
+    local first, last = err:find(real_filename, 1, true)
+    if not first then
+        return err
+    end
+    return err:sub(1, first-1) .. filename .. err:sub(last+1)
+end
+
+local function vfs_open(filename, mode)
+    if mode ~= nil and mode ~= 'r' and mode ~= 'rb' then
+        return nil, ('%s:Permission denied.'):format(filename)
+    end
+    local real_filename = vfs.realpath(filename)
+    if not real_filename then
+        return nil, ('%s:No such file or directory.'):format(filename)
+    end
+    local f, err, ec = nio.open(real_filename, mode)
+    if not f then
+        err = errmsg(err, filename, real_filename)
+        return nil, err, ec
+    end
+    return f
+end
+
+local function vfs_lines(filename, ...)
+    if type(filename) ~= 'string' then
+        return nio.lines(filename, ...)
+    end
+    local real_filename = vfs.realpath(filename)
+    if not real_filename then
+        error(('%s:No such file or directory.'):format(filename))
+    end
+    local ok, res = pcall(nio.lines, real_filename, ...)
+    if ok then
+        return res
+    end
+    error(errmsg(res, filename, real_filename))
+end
+
+local function vfs_loadfile(path, ...)
+    local f, err = vfs_open(path, 'r')
+    if not f then
+        return nil, err
+    end
+    local str = f:read 'a'
+    f:close()
+    return load(str, '@' .. path, ...)
+end
+
+local function vfs_dofile(path)
+    local f, err = vfs_loadfile(path)
+    if not f then
+        error(err)
+    end
+    return f()
+end
 
 local path_mt = {}
 path_mt.__name = 'vfs-filesystem'
@@ -17,7 +74,7 @@ local function constructor(str)
 end
 
 local function normalize(fullname)
-    local first = (fullname:sub(1, 5) == "/pkg/") and "/pkg/" or ""
+    local first = (fullname:sub(1, 1) == "/") and "/" or ""
     local last = (fullname:sub(-1, -1) == "/") and "/" or ""
 	local t = {}
 	for m in fullname:gmatch("([^/\\]+)[/\\]?") do
@@ -31,7 +88,7 @@ local function normalize(fullname)
 end
 
 local function normalize_split(fullname)
-    local root = (fullname:sub(1, 5) == "/pkg/") and "/pkg/" or ""
+    local root = (fullname:sub(1, 1) == "/") and "/" or ""
     local stack = {}
 	for elem in fullname:gmatch("([^/\\]+)[/\\]?") do
         if #elem == 0 and #stack ~= 0 then
@@ -44,17 +101,13 @@ local function normalize_split(fullname)
     return root, stack
 end
 
-local function vfspath(self)
-    return self._value
-end
-
 function path_mt:__tostring()
     return self._value
 end
 
 function path_mt:__div(other)
     other = (type(other) == 'string') and other or other._value
-    if other:sub(1, 5) == '/pkg/' then
+    if other:sub(1, 1) == '/' then
         return constructor(other)
     end
     local value = self._value:gsub("(.-)/?$", "%1")
@@ -118,15 +171,15 @@ function path_mt:equal_extension(ext)
 end
 
 function path_mt:is_absolute()
-    return self._value:sub(1,5) == '/pkg/'
+    return self._value:sub(1,1) == '/'
 end
 
 function path_mt:is_relative()
-    return self._value:sub(1,5) ~= '/pkg/'
+    return self._value:sub(1,1) ~= '/'
 end
 
 function path_mt:list_directory()
-    local next = vfs.each(vfspath(self))
+    local next = vfs.each(self._value)
     local name
     return function()
         name = next()
@@ -150,19 +203,15 @@ function path_mt:remove_permissions()
 end
 
 function path_mt:localpath()
-    return lfs.path(vfs.realpath(vfspath(self)))
+    return lfs.path(vfs.realpath(self._value))
 end
 
-function path_mt:root_name()
-    if not self:is_absolute() then
-        return constructor('')
+function path_mt:package_name()
+    local root, stack = normalize_split(self._value)
+    if root ~= "/" or #stack <= 1 or stack[1] ~= "pkg" then
+        error("Invalid package path")
     end
-    local value = self._value
-    local pos = value:find('/', 6, true)
-    if not pos then
-        return constructor(value)
-    end
-    return constructor(value:sub(1, pos-1))
+    return stack[2]
 end
 
 local fs = {}
@@ -174,15 +223,15 @@ function fs.current_path()
 end
 
 function fs.exists(path)
-    return vfs.type(vfspath(path)) ~= nil
+    return vfs.type(path._value) ~= nil
 end
 
 function fs.is_directory(path)
-    return vfs.type(vfspath(path)) == 'dir'
+    return vfs.type(path._value) == 'dir'
 end
 
 function fs.is_regular_file(path)
-    return vfs.type(vfspath(path)) == 'file'
+    return vfs.type(path._value) == 'file'
 end
 
 function fs.rename()
@@ -199,7 +248,7 @@ end
 
 function fs.absolute(path, base)
     path = normalize(path._value)
-    if path:sub(1, 5) == '/pkg/' then
+    if path:sub(1, 1) == '/' then
         return constructor(path)
     end
     base = base or fs.current_path()
@@ -257,18 +306,18 @@ function fs.filelock()
 end
 
 function fs.open(filepath, ...)
-    return pkgio.open(filepath:string(), ...)
+    return vfs_open(filepath:string(), ...)
 end
 function fs.lines(filepath, ...)
-    return pkgio.lines(filepath:string(), ...)
+    return vfs_lines(filepath:string(), ...)
 end
 
 if __ANT_RUNTIME__ then
     function fs.loadfile(filepath, ...)
-        return pkgio.loadfile(filepath:string(), ...)
+        return vfs_loadfile(filepath:string(), ...)
     end
     function fs.dofile(filepath)
-        return pkgio.dofile(filepath:string())
+        return vfs_dofile(filepath:string())
     end
 else
     function fs.loadfile(filepath, ...)
