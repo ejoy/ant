@@ -114,6 +114,7 @@ local ABCDE_t = {
 local ps = ecs.component "procedural_sky"
 	.grid_width	"int" (1)
 	.grid_height"int" (1)
+	.follow_by_directional_light "boolean" (true)
 	.which_hour "real" (12)
 	.turbidity 	"real" (2.15)
 	.month 		"string" ("June")
@@ -183,6 +184,7 @@ end
 
 local sky_system = ecs.system "sky_system"
 sky_system.dependby "primitive_filter_system"
+sky_system.dependby "filter_properties"
 
 local function fill_procedural_sky_mesh(skyentity)
 	local skycomp = skyentity.procedural_sky
@@ -245,7 +247,7 @@ function sky_system:init()
 		procedural_sky = {
 			grid_width = 32, 
 			grid_height = 32,
-			
+			follow_by_directional_light = true,
 			which_hour 	= 12,	-- high noon
 			turbidity 	= 2.15,
 			month 		= "June",
@@ -318,10 +320,19 @@ local function update_sky_parameters(skyentity)
 	sky_uniforms["u_parameters"].value 		= shader_parameters
 end
 
+local function sync_directional_light(skyentity)
+	local skycomp = skyentity.procedural_sky
+	if skycomp.follow_by_directional_light then
+		local dlight = world:first_entity "directional_light"
+		dlight.rotation = ms(skycomp.sundir, "DT")
+	end
+end
+
 function sky_system:update()
 	for _, eid in world:each "procedural_sky" do
 		local e = world[eid]
 		update_sky_parameters(e)
+		sync_directional_light(e)
 	end
 end
 
