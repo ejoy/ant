@@ -1,3 +1,4 @@
+
 local cpaths = {	
     "clibs/?.dll",
 	"bin/?.dll",
@@ -31,4 +32,6 @@ pm.init()
 import_package = pm.import
 
 print_r       = require "common.print_r".print_r
+dump_a       = require "common.print_r".dump_a
 print_a       = require "common.print_r".print_a
+

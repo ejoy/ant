@@ -28,61 +28,85 @@ local function print_r( root )
     print( _dump( root, "", "" ))
 end
 
---print all args in_single_line
-local function print_a( ... )
+local function dump_a(args,indent_str)
     local cache = { }
     local temp = { }
+    local need_indent = indent_str
+    local indent_str = indent_str or ""
     local function output( ... )
         local args = { ... }
         for k = 1, #args do
             tinsert( temp, args[ k ])
         end
     end
-    local function _dump( value, path )
+    local function _dump( value, path,is_key,indent )
+        local my_indent = ""
+        if  is_key then
+            my_indent = indent 
+        end
         local typev = type( value )
         if typev ~= "table" then
             if typev == "string" then
-                output( "\"", value, "\"" )
+                output( my_indent,"\"", value, "\"" )
             else
-                output( tostring( value ))
+                output( my_indent,tostring( value ))
             end
         else --table
             if cache[ value ] then
                 output( "{", cache[ value ], "}" )
             else
                 cache[ value ] = path
-                output( "{" )
+                output( my_indent,"{" )
+                if need_indent then
+                    output("\n")
+                end
+                local next_indent = indent..indent_str
                 for k, v in pairs( value ) do
                     if not string.find(k,"raw") then
-
-                        output( "" )
                         if type( k ) == "table" then
-                            _dump( k, path..".&"..tostring( k ))
+                            _dump( k, path..".&"..tostring( k ),true,next_indent)
                             output( "(", tostring( k ), ")" )
                         else
-                            _dump( k ) --k is string or number
+                            _dump( k,nil,true,next_indent ) --k is string or number
                         end
                         output( "=" )
-                        _dump( v, path.."."..tostring( k ))
+                        _dump( v, path.."."..tostring( k ),false,next_indent)
                         output( next( value, k ) and "," or "" )
+                        if need_indent then
+                            output("\n")
+                        end
                     end
                 end
-                output( "}" )
+                output( indent,"}" )
                 
             end
         end
     end
-    local args = { ... }
+    
     if #args > 0 then
-        output( _dump( args[ 1 ], "" ))
+        output( _dump( args[ 1 ], "",false, "" ))
         for i = 2, #args do
             cache = { }
-            output( "\t" )
-            _dump( args[ i ], "" )
+            if need_indent then
+                output( "\n" )
+            else
+                output( "\t" )
+            end
+            _dump( args[ i ], "",false, "" )
         end
     end
-    print( tconcat( temp ))
+    return tconcat( temp )
 end
 
-return {print_r = print_r,
-        print_a = print_a }
+--print all args in_single_line
+local function print_a( ... )
+    local args = { ... }
+    local str = dump_a(args)
+    print( str)
+end
+
+return {
+    print_r = print_r,
+    dump_a = dump_a,
+    print_a = print_a, 
+}
