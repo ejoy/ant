@@ -7,6 +7,7 @@ local localfs = require "filesystem.local"
 local inputmgr      = import_package "ant.inputmgr"
 local gui_mgr = import_package "ant.imgui".gui_mgr
 local scene_control = {}
+local fs = require "filesystem"
 
 function scene_control.test_new_world(raw_path)
     print("raw_path",raw_path,type(raw_path))
@@ -34,8 +35,8 @@ function scene_control.test_new_world(raw_path)
     }
 
     local pm = require "antpm"
-    if not fs.exists("/pkg/"..pkg_name) then
-        pkg_name = pm.register_package(path:parent_path())
+    if not fs.exists(fs.path ("/pkg/"..pkgname)) then
+        pkgname = pm.register_package(path:parent_path())
     end
     
     packages[#packages+1] = pkgname
