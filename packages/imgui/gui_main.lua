@@ -28,7 +28,7 @@ function gui_main.init(nwh, context, width, height)
         width = width,
         height = height,
 	}
-
+    imgui.create(nwh)
     local ocornut_imgui = assetutil.shader_loader {
         vs = "/pkg/ant.imgui/shader/vs_ocornut_imgui",
         fs = "/pkg/ant.imgui/shader/fs_ocornut_imgui",
@@ -37,8 +37,6 @@ function gui_main.init(nwh, context, width, height)
         vs = "/pkg/ant.imgui/shader/vs_imgui_image",
         fs = "/pkg/ant.imgui/shader/fs_imgui_image",
     }
-
-	imgui.create(attribs.font_size)
     imgui.setDockEnable(true)
     imgui.viewid(viewidmgr.generate("ui"));
     imgui.program(
