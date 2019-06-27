@@ -19,6 +19,7 @@ ecs.import 'ant.animation'
 ecs.import 'ant.event'
 ecs.import 'ant.objcontroller'
 ecs.import 'ant.math.adapter'
+ecs.import 'ant.sky'
 
 local renderpkg = import_package 'ant.render'
 local renderutil=renderpkg.util
@@ -32,6 +33,7 @@ scene_walker.depend 	'timesystem'
 scene_walker.depend 	"viewport_detect_system"
 scene_walker.depend 	'render_system'
 scene_walker.depend 	'primitive_filter_system'
+scene_walker.depend     'sky_system'
 
 scene_walker.dependby 	'camera_controller'
 
