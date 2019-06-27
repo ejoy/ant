@@ -36,9 +36,13 @@ local function start_watch_entities(eids)
     end
     local setialize_result = {}
     for _,eid in ipairs(eids) do
-        world:add_component(eid,"editor_watching",false)
-        print(">>add_component editor_watching:",eid)
-        setialize_result[eid] = serialize.entity2tbl(world,eid)
+        if world[eid] then
+            world:add_component(eid,"editor_watching",false)
+            print(">>add_component editor_watching:",eid)
+            setialize_result[eid] = serialize.entity2tbl(world,eid)
+        else
+            print("not eid:",eid)
+        end
     end
 
     -- print_a(setialize_result)
