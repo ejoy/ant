@@ -60,6 +60,8 @@ static void ImGui_ImplWin32_SetImeInputPos(ImGuiViewport * viewport, ImVec2 pos)
 #endif
 
 void init_ime(void* window) {
+	ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+	main_viewport->PlatformHandle = window;
 	//io.ImeWindowHandle = window;
 	ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
 #if HAS_WIN32_IME
