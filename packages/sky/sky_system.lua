@@ -31,9 +31,14 @@ local M_XYZ2RGB = ms:ref "matrix" {
 	-- -1.53715,   1.875991, -0.204043,
 	-- -0.49853,   0.041556,  1.057311,
 	-- we need transpose
-	3.240479, 	-1.53715, 	-0.49853, 0, 
-	-0.969256, 	1.875991, 	0.041556, 0,
-	0.055648,  	-0.204043,  1.057311, 0,
+	-- 3.240479, 	-1.53715, 	-0.49853, 0, 
+	-- -0.969256, 	1.875991, 	0.041556, 0,
+	-- 0.055648,  	-0.204043,  1.057311, 0,
+	-- 0, 			0, 			0, 		  1,
+
+	3.240479, -0.969256,  0.055648, 0, 
+	-1.53715,   1.875991, -0.204043, 0,
+	-0.49853,   0.041556,  1.057311, 0,
 	0, 			0, 			0, 		  1,
 }
 
@@ -119,7 +124,7 @@ local ps = ecs.component "procedural_sky"
 	.w 			"int" (1)
 	.h 			"int" (1)
 	.which_hour "real" (12)
-	.turbidity 	"real" (0.5)
+	.turbidity 	"real" (2.15)
 	.month 		"string" ("June")
 	.latitude 	"real" (math.rad(50))
 
@@ -249,7 +254,7 @@ function sky_system:init()
 		procedural_sky = {
 			w = 32, h = 32,
 			which_hour 	= 12,	-- high noon
-			turbidity 	= 0.5,
+			turbidity 	= 2.15,
 			month 		= "June",
 			latitude 	= math.rad(50),
 		},
@@ -295,10 +300,11 @@ local function fetch_value_operation(t)
 	return function(time)
 		local l,h = binary_search(time)
 		if l == h then
-			return t[l]
+			return t[tt[l]]
 		end
 
-		return ms:lerp(t[l], t[h], mu.ratio(l, h, time))
+		local li, hi = tt[l], tt[h]
+		return ms:lerp(t[li], t[hi], mu.ratio(li, hi, time))
 	end
 end
 

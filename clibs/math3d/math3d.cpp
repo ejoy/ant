@@ -917,17 +917,17 @@ mul_2values(lua_State *L, struct lastack *LS) {
 	}
 	case BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_VEC4):
 	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_QUAT): {
-		const glm::quat *q = (const glm::quat*)(BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_VEC4) ? val0 : val1);
-		const glm::vec4 *v = (const glm::vec4 *)(BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_VEC4) ? val1 : val0);
+		const glm::quat *q = (const glm::quat*)(type == BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_VEC4) ? val0 : val1);
+		const glm::vec4 *v = (const glm::vec4 *)(type == BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_VEC4) ? val1 : val0);
 
 		glm::vec4 r = glm::rotate(*q, *v);
 		lastack_pushvec4(LS, &r.x);
 		break;
 	}
 	case BINTYPE(LINEAR_TYPE_EULER, LINEAR_TYPE_VEC4):
-	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_EULER): {
-		const glm::vec3 *e = (const glm::vec3*)(BINTYPE(LINEAR_TYPE_EULER, LINEAR_TYPE_VEC4) ? val0 : val1);
-		const glm::vec4 *v = (const glm::vec4 *)(BINTYPE(LINEAR_TYPE_EULER, LINEAR_TYPE_VEC4) ? val1 : val0);
+	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_EULER): {		
+		const glm::vec3 *e = (const glm::vec3*)(type == BINTYPE(LINEAR_TYPE_EULER, LINEAR_TYPE_VEC4) ? val0 : val1);
+		const glm::vec4 *v = (const glm::vec4 *)(type == BINTYPE(LINEAR_TYPE_EULER, LINEAR_TYPE_VEC4) ? val1 : val0);
 
 		glm::vec4 r = glm::rotate(glm::quat(*e), *v);
 		lastack_pushvec4(LS, &r.x);
