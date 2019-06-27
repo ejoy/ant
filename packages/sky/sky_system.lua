@@ -112,8 +112,8 @@ local ABCDE_t = {
 -- Controls sun position according to time, month, and observer's latitude.
 -- this data get from: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
 local ps = ecs.component "procedural_sky"
-	.w 			"int" (1)
-	.h 			"int" (1)
+	.grid_width	"int" (1)
+	.grid_height"int" (1)
 	.which_hour "real" (12)
 	.turbidity 	"real" (2.15)
 	.month 		"string" ("June")
@@ -186,7 +186,7 @@ sky_system.dependby "primitive_filter_system"
 
 local function fill_procedural_sky_mesh(skyentity)
 	local skycomp = skyentity.procedural_sky
-	local w, h = skycomp.w, skycomp.h
+	local w, h = skycomp.grid_width, skycomp.grid_height
 
 	local vb = {"ff",}
 	local ib = {}
@@ -243,7 +243,9 @@ function sky_system:init()
 				}
 			}),
 		procedural_sky = {
-			w = 32, h = 32,
+			grid_width = 32, 
+			grid_height = 32,
+			
 			which_hour 	= 12,	-- high noon
 			turbidity 	= 2.15,
 			month 		= "June",
