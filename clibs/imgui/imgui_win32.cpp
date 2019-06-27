@@ -26,25 +26,49 @@ void set_cursor(ImGuiMouseCursor cursor) {
 #include <Windows.h>
 #include <imm.h>
 
-static void
-ImeSetInputScreenPosFn_DefaultImpl(int x, int y) {
-    if (HWND hwnd = (HWND)ImGui::GetIO().ImeWindowHandle)
-        if (HIMC himc = ::ImmGetContext(hwnd)) {
-            COMPOSITIONFORM cf;
-            cf.ptCurrentPos.x = x;
-            cf.ptCurrentPos.y = y;
-            cf.dwStyle = CFS_FORCE_POSITION;
-            ::ImmSetCompositionWindow(himc, &cf);
-            ::ImmReleaseContext(hwnd, himc);
-        }
+static void 
+ImGui_ImplWin32_SetImeInputPos(ImGuiViewport* viewport, ImVec2 pos)
+{
+	COMPOSITIONFORM cf = { CFS_FORCE_POSITION,{ (LONG)(pos.x - viewport->Pos.x), (LONG)(pos.y - viewport->Pos.y) },{ 0, 0, 0, 0 } };
+	if (HWND hwnd = (HWND)viewport->PlatformHandle)
+		if (HIMC himc = ::ImmGetContext(hwnd))
+		{
+			::ImmSetCompositionWindow(himc, &cf);
+			::ImmReleaseContext(hwnd, himc);
+		}
 }
 
 #endif
+#if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS) && !defined(IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS) && !defined(__GNUC__)
+#define HAS_WIN32_IME   1
+#include <imm.h>
+#ifdef _MSC_VER
+#pragma comment(lib, "imm32")
+#endif
+static void ImGui_ImplWin32_SetImeInputPos(ImGuiViewport * viewport, ImVec2 pos)
+{
+	COMPOSITIONFORM cf = { CFS_FORCE_POSITION,{ (LONG)(pos.x - viewport->Pos.x), (LONG)(pos.y - viewport->Pos.y) },{ 0, 0, 0, 0 } };
+	if (HWND hwnd = (HWND)viewport->PlatformHandle)
+		if (HIMC himc = ::ImmGetContext(hwnd))
+		{
+			::ImmSetCompositionWindow(himc, &cf);
+			::ImmReleaseContext(hwnd, himc);
+		}
+}
+#else
+#define HAS_WIN32_IME   0
+#endif
 
 void init_ime(void* window) {
-    ImGuiIO& io = ImGui::GetIO();
-	io.ImeWindowHandle = window;
+	//io.ImeWindowHandle = window;
+	ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+#if HAS_WIN32_IME
+	platform_io.Platform_SetImeInputPos = ImGui_ImplWin32_SetImeInputPos;
+#endif
+
 #if defined(__MINGW32__)
-    io.ImeSetInputScreenPosFn = ImeSetInputScreenPosFn_DefaultImpl;
+	/*ImGuiIO& io = ImGui::GetIO();
+	io.ImeSetInputScreenPosFn = ImeSetInputScreenPosFn_DefaultImpl;*/
+	platform_io.Platform_SetImeInputPos = ImGui_ImplWin32_SetImeInputPos;
 #endif
 }
