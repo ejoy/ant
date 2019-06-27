@@ -27,7 +27,13 @@ function GuiSysInfo:_init()
     self.corner = 2
     self.winpos = {0,0}
     self.povit = {0,0}
+end
 
+function GuiSysInfo:before_open()
+    self.frame_count = 0
+    self.frame_time_count = 0
+    self.fps = 0
+    self.ft = 0
 end
 
 function GuiSysInfo:before_update()
@@ -60,11 +66,12 @@ end
 
 local btns = {"Custom","Top-left","Top-right","Bottom-left","Bottom-right"}
 
-function GuiSysInfo:on_update()
+function GuiSysInfo:on_update(deltatime)
+    self:update_fps(deltatime)
     local corner = self.corner
-    local framerate = imgui.IO.Framerate
-    widget.Text( string.format("fps:%f",framerate) )
-    widget.Text( string.format("frame time:%f",1/framerate) )
+    local mouse = gui_input.mouse
+    local delta = gui_input.mouse.delta
+    widget.Text( string.format("mouse pos:%d/%d delta:%d/%d",mouse.x,mouse.y,delta.x,delta.y) )
     if windows.BeginPopupContextWindow() then
         for i = -1,3 do
             local btn_str = btns[i+2]
@@ -78,6 +85,20 @@ function GuiSysInfo:on_update()
         end
         windows.EndPopup()
     end
+end
+
+function GuiSysInfo:update_fps(deltatime)
+    self.frame_count = self.frame_count + 1
+    self.frame_time_count = self.frame_time_count + deltatime
+    if self.frame_count >= 1 and self.frame_time_count >= 1.0 then
+        self.fps = self.frame_count/self.frame_time_count
+        self.ft = 1/self.fps
+        self.frame_count = 0
+        self.frame_time_count = 0
+    end
+
+    widget.Text( string.format("fps:%g",self.fps) )
+    widget.Text( string.format("frame time:%.3g",self.ft) )
 end
 
 return GuiSysInfo

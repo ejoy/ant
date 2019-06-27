@@ -21,11 +21,18 @@ function TestGuiBase:_init(default_collapsed)
     self.win_flags = flags.Window { "MenuBar" }
     self._is_opened = true
     local fs = require "filesystem"
-    local texrefpath = fs.path("/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.dds")
-    local f = assert(fs.open(texrefpath, "rb"))
-    local imgdata = f:read "a"
+    local texrefpath1 = fs.path("/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.dds")
+    local f = assert(fs.open(texrefpath1, "rb"))
+    local imgdata1 = f:read "a"
     f:close()
-    self.texhandle = bgfx.create_texture(imgdata, "")
+    self.texhandle1 = bgfx.create_texture(imgdata1, "")
+
+    local texrefpath2 = fs.path("/pkg/ant.resources.binary/textures/brickwall.dds")
+    local f2 = assert(fs.open(texrefpath2, "rb"))
+    local imgdata2 = f2:read "a"
+    f2:close()
+    self.texhandle2 = bgfx.create_texture(imgdata2, "")
+
     self.default_collapsed = default_collapsed
 end
 
@@ -81,7 +88,7 @@ local editfloat = {
 }
 local checkbox = {}
 local combobox = { "B" }
-local lines = { 1,2,3,2,1 }
+local lines = { 1000,2,3,2,1 }
 local lists = { "Alice", "Bob" }
 local editbox = {
     flags = flags.InputText { "CallbackCharFilter", "CallbackHistory", "CallbackCompletion" },
@@ -122,7 +129,9 @@ function TestGuiBase:tab1_update()
     -- windows.PushStyleVar(enum.StyleVar.WindowBorderSize,2.0)
     local dds_path = "/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.dds"
     widget.Image(dds_path,200,200,{border_col={1.0,0.0,1.0,1.0},tint_col={0.0,1.0,1.0,0.5}})
-    if  widget.ImageButton(self.texhandle,50,50,
+    local dds_path2 = "/pkg/ant.resources.binary/textures/brickwall.dds"
+    widget.Image(dds_path2,200,200,{border_col={1.0,1.0,1.0,1.0},tint_col={1.0,1.0,1.0,0.5}})
+    if  widget.ImageButton(self.texhandle1,50,50,
             {uv0={0.5,0.5},
             uv1={1,1},
             bg_col={0.5,0.5,0.5,0.5},
@@ -285,6 +294,8 @@ function TestGuiBase:tab3_update()
         self.combo = combo
     end
     self.combo:update()
+
+
 end
 
 return TestGuiBase

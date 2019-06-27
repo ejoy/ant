@@ -38,7 +38,8 @@ function gui_main.init(nwh, context, width, height)
         fs = "/pkg/ant.imgui/shader/fs_imgui_image",
     }
 
-	imgui.create(attribs.font_size)	
+	imgui.create(attribs.font_size)
+    imgui.setDockEnable(true)
     imgui.viewid(viewidmgr.generate("ui"));
     imgui.program(
         ocornut_imgui.prog,
@@ -55,22 +56,25 @@ function gui_main.init(nwh, context, width, height)
 
     -- bgfx.set_view_rect(1, 200, 200, width-100, height-100)
     -- bgfx.set_view_clear(1, "CD", 0xffff00ff, 1, 0)
-    --bgfx.set_debug "ST"
-    font.Create {
-        platform.OS == "Windows"
-        and { Font "黑体" ,    18, "\x20\x00\xFF\xFF\x00"}
-        or  { Font "华文细黑" , 18, "\x20\x00\xFF\xFF\x00"},
-    }
+    -- bgfx.set_debug "ST"
+    if platform.OS == "Windows" then
+        font.Create { {Font "Arial",16,"Default"},{ Font "黑体" ,16, "ChineseFull"} }
+    elseif platform.OS == "macOS" then
+        font.Create { { Font "华文细黑" , 16, "\x20\x00\xFF\xFF\x00"} }
+    else -- iOS
+        font.Create { { Font "Heiti SC" ,    16, "\x20\x00\xFF\xFF\x00"} }
+    end
     if main.init then
         main.init(nwh, context, width, height)
     end
+    gui_mgr.after_init()
 end
 
 function gui_main.size(width,height,type)
-    print("callback.size",width,height,type)
+    -- print("callback.size",width,height,type)
     imgui.resize(width,height)
     rhwi.reset(nil, width, height)
-    bgfx.set_view_rect(0, 0, 0, width, height)
+    bgfx.set_view_rect(uieditor_viewid, 0, 0, width, height)
     gui_input.size(width,height,type)
     if main.size then
         main.size(width,height,type)
@@ -130,8 +134,8 @@ function gui_main.update()
 end
 
 function _update(delta)
+    local pm = require "antpm"
     gui_mgr.update(delta)
-    gui_input.clean()
 
     task.update()
 	
@@ -140,6 +144,7 @@ function _update(delta)
     if main.update then
         main.update()
     end
+    gui_input.clean()
 end
 
 function gui_main.exit()

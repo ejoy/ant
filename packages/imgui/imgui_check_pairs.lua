@@ -68,7 +68,8 @@ local pairs_map_widget = {
     {ReturnType.NoReturn,"BeginGroup","EndGroup",}, --type 0
     {ReturnType.WhenReturnTrue,"BeginMenuBar","EndMenuBar"}, --type1
     {ReturnType.WhenReturnTrue,"TreeNode","TreePop"}, --type1
-
+    {ReturnType.WhenReturnTrue,"BeginDragDropSource","EndDragDropSource"}, --type1
+    {ReturnType.WhenReturnTrue,"BeginDragDropTarget","EndDragDropTarget"}, --type1
 }
 
 local function pop_until_idx(idx)
