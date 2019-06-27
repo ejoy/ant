@@ -1,16 +1,24 @@
 local gui_input = {}
 gui_input.key_state = {}
-gui_input.mouse = {}
+gui_input.mouse = {x=0,y=0,delta = {x=0,y=0},last={x=0,y=0}}
+local last_mouse = gui_input.mouse.last
+local mouse_delta = gui_input.mouse.delta
 gui_input.key_down = {}
 gui_input.screen_size = {0,0}
 local called = {}
 gui_input.called = called
+
+
 function gui_input.mouse_move(x,y)
     local gm = gui_input.mouse
     gm.x = x
     gm.y = y
+    -- print(x,last_mouse.x)
+    mouse_delta.x = x-last_mouse.x
+    mouse_delta.y = y-last_mouse.y
     called.mouse_move = true
 end
+
 
 function gui_input.mouse_wheel(x,y,delta)
     local gm = gui_input.mouse
@@ -38,10 +46,16 @@ function gui_input.keyboard( key, press, state )
     table.insert(gui_input.key_down,{key,press})
 end
 
+
+
 function gui_input.clean()
     called = {}
     gui_input.called = called
     gui_input.key_down = {}
+    last_mouse.x = gui_input.mouse.x
+    last_mouse.y = gui_input.mouse.y
+    mouse_delta.x = 0
+    mouse_delta.y = 0
 
 end
 
@@ -49,6 +63,10 @@ function gui_input.size(w,h,t)
     gui_input.screen_size[1] = w
     gui_input.screen_size[2] = h
     gui_input.screen_size["type"] = t
+end
+
+function gui_input.get_mouse_delta()
+    return mouse_delta
 end
 
 -----------------------------------------------------

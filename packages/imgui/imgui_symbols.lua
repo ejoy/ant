@@ -15,12 +15,15 @@ function imgui.viewid() end
 function imgui.program() end
 function imgui.ime_handle() end
 function imgui.IO() end
+function imgui.setDockEnable(boolean) end
+function imgui.showDockSpace() end
 
 function widget.Button() end
 function widget.SmallButton() end
 function widget.InvisibleButton() end
 function widget.ArrowButton() end
-function widget.Checkbox() end
+--return change,new_value
+function widget.Checkbox(field,value) end 
 function widget.RadioButton() end
 function widget.ProgressBar() end
 function widget.Bullet() end
@@ -48,7 +51,7 @@ function widget.Selectable() end
 function widget.TreeNode() end
 function widget.TreePop() end
 function widget.CollapsingHeader() end
-function widget.SetNextItemOpen() end
+function widget.SetNextItemOpen(is_open,ImGuiCond) end
 function widget.PlotLines() end
 function widget.PlotHistogram() end
 function widget.BeginTooltip() end
@@ -67,6 +70,18 @@ function widget.EndListBox() end
 function widget.ListBox() end
 function widget.Image() end
 function widget.ImageButton() end
+--return bool
+function widget.BeginDragDropSource(ImGuiDragDropFlags flag) end
+function widget.EndDragDropSource() end
+--ImGuiCond = "A/a"=Appearing,"O/o"=Once,"F/f"=FirstUseEver,default = "Always"
+--return bool
+function widget.SetDragDropPayload(string type,string data,opt ImGuiCond cond) end
+--return bool
+function widget.BeginDragDropTarget() end
+function widget.EndDragDropTarget() end
+--data or nil = AcceptDragDropPayload( type,ImGuiDragDropFlags );
+--change = AcceptDragDropPayload( { type=[in],flags==[in],data=[out],isPreview=[out],isDelivery=[out] } );
+function widget.AcceptDragDropPayload(type,ImGuiDragDropFlags) end
 
 function cursor.Separator() end
 function cursor.SameLine() end
@@ -89,6 +104,10 @@ function cursor.GetFrameHeight() end
 function cursor.GetFrameHeightWithSpacing() end
 function cursor.TreeAdvanceToLabelPos() end
 function cursor.GetTreeNodeToLabelSpacing() end
+function cursor.Columns() end
+function cursor.NextColumn() end
+function cursor.SetNextItemWidth() end
+function cursor.SetMouseCursor( cursor = enum.MouseCursor.Arrow ) end
 
 function windows.Begin() end
 function windows.End() end
@@ -162,7 +181,7 @@ function util.GetItemRectMax() end
 function util.GetItemRectSize() end
 function util.SetItemAllowOverlap() end
 function util.LoadIniSettings() end
-function util.SaveIniSettings() end
+function util.SaveIniSettings(clear_want_save_flag) end
 function util.CaptureKeyboardFromApp() end
 function util.CaptureMouseFromApp() end
 function util.IsMouseDoubleClicked() end
@@ -284,6 +303,18 @@ function flags.TabBar.NoTooltip() end
 function flags.TabBar.FittingPolicyResizeDown() end
 function flags.TabBar.FittingPolicyScroll() end
 
+
+function flags.DragDrop.SourceNoPreviewTooltip() end
+function flags.DragDrop.SourceNoDisableHover() end
+function flags.DragDrop.SourceNoHoldToOpenOthers() end
+function flags.DragDrop.SourceAllowNullID() end
+function flags.DragDrop.SourceExtern() end
+function flags.DragDrop.SourceAutoExpirePayload() end
+function flags.DragDrop.AcceptBeforeDelivery() end
+function flags.DragDrop.AcceptNoDrawDefaultRect() end
+function flags.DragDrop.AcceptNoPreviewTooltip() end
+function flags.DragDrop.AcceptPeekOnly() end
+
 function enum.StyleCol.Text() end
 function enum.StyleCol.TextDisabled() end
 function enum.StyleCol.WindowBg() end              -- Background of normal windows
@@ -361,17 +392,27 @@ function enum.StyleVar.ButtonTextAlign() end     -- ImVec2    ButtonTextAlign
 function enum.StyleVar.SelectableTextAlign() end -- ImVec2    SelectableTextAlign
 function enum.StyleVar.COUNT() end
 
-function io.WantCaptureMouse()          -- When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
-function io.WantCaptureKeyboard()       -- When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
-function io.WantTextInput()             -- Mobile/console: when io.WantTextInput is true, you may display an on-screen keyboard. This is set by ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
-function io.WantSetMousePos()           -- MousePos has been altered, back-end should reposition mouse on next frame. Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
-function io.WantSaveIniSettings()       -- When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. IMPORTANT: You need to clear io.WantSaveIniSettings yourself.
-function io.NavActive()                 -- Directional navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
-function io.NavVisible()                -- Directional navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
-function io.Framerate()                 -- Application framerate estimation, in frame per second. Solely for convenience. Rolling average estimation based on IO.DeltaTime over 120 frames
-function io.MetricsRenderVertices()     -- Vertices output during last call to Render()
-function io.MetricsRenderIndices()      -- Indices output during last call to Render() = number of triangles * 3
-function io.MetricsRenderWindows()      -- Number of visible windows
-function io.MetricsActiveWindows()      -- Number of active windows
-function io.MetricsActiveAllocations()  -- Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
-function io.MouseDelta()                -- Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
+function enum.MouseCursor.None() end
+function enum.MouseCursor.Arrow() end
+function enum.MouseCursor.TextInput() end
+function enum.MouseCursor.ResizeAll() end
+function enum.MouseCursor.ResizeNS() end
+function enum.MouseCursor.ResizeEW() end
+function enum.MouseCursor.ResizeNESW() end
+function enum.MouseCursor.ResizeNWSE() end
+function enum.MouseCursor.Hand() end
+function enum.MouseCursor.COUNT() end
+
+function IO.WantCaptureMouse()          -- When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
+function IO.WantCaptureKeyboard()       -- When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
+function IO.WantTextInput()             -- Mobile/console: when io.WantTextInput is true, you may display an on-screen keyboard. This is set by ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
+function IO.WantSetMousePos()           -- MousePos has been altered, back-end should reposition mouse on next frame. Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
+function IO.WantSaveIniSettings()       -- When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. IMPORTANT: You need to clear io.WantSaveIniSettings yourself.
+function IO.NavActive()                 -- Directional navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
+function IO.NavVisible()                -- Directional navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
+function IO.Framerate()                 -- Application framerate estimation, in frame per second. Solely for convenience. Rolling average estimation based on IO.DeltaTime over 120 frames
+function IO.MetricsRenderVertices()     -- Vertices output during last call to Render()
+function IO.MetricsRenderIndices()      -- Indices output during last call to Render() = number of triangles * 3
+function IO.MetricsRenderWindows()      -- Number of visible windows
+function IO.MetricsActiveWindows()      -- Number of active windows
+function IO.MetricsActiveAllocations()  -- Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.

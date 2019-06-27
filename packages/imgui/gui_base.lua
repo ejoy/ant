@@ -15,6 +15,7 @@ function GuiBase:_init()
     -- self.win_flags = flags.Window { "MenuBar" }
     self._is_opened = true
     -- self.default_size = {200,100}
+    self._last_frame_opened = false
 end
 
 function GuiBase:on_open_click()
@@ -23,6 +24,10 @@ end
 
 function GuiBase:is_opened()
     return self._is_opened
+end
+
+function GuiBase:before_open()
+    self.before_open = false
 end
 
 --override if needed
@@ -37,6 +42,11 @@ function GuiBase:after_update()
     self.after_update = false
 end
 
+function GuiBase:after_close()
+    self.after_close = false
+end
+
+
 function GuiBase:on_close_click()
     self._is_opened = false
 end
@@ -44,6 +54,12 @@ end
 --call by gui_mgr each frame
 function GuiBase:on_gui(delta)
     if self._is_opened then
+        if not self._last_frame_opened then
+            self._last_frame_opened = true
+            if self.before_open then
+                self:before_open()
+            end 
+        end
         local default_size = self.default_size
         if self.default_size then
             windows.SetNextWindowSize(default_size[1],default_size[2],"FirstUseEver")
@@ -58,6 +74,13 @@ function GuiBase:on_gui(delta)
         end
         windows.End()
         if self.after_update then self:after_update() end
+    else
+        if self._last_frame_opened then
+            self._last_frame_opened = false
+            if self.after_close then
+                self:after_close()
+            end 
+        end
     end
 end
 

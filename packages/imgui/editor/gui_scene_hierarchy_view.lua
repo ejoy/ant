@@ -8,39 +8,46 @@ local enum = imgui.enum
 local IO = imgui.IO
 
 local GuiBase = require "gui_base"
-local GuiPropertyView = GuiBase.derive("GuiPropertyView")
-GuiPropertyView.GuiName = "GuiPropertyView"
+local GuiHierarchyView = GuiBase.derive("GuiHierarchyView")
+GuiHierarchyView.GuiName = "GuiHierarchyView"
 
 local hub = import_package("ant.editor").hub
 local Event = require "hub_event"
 
 local LeafFlag = flags.TreeNode.Leaf
-local ParentFlag = 0
+local ParentFlag = flags.TreeNode.OpenOnDoubleClick
 
-function GuiPropertyView:_init()
+function GuiHierarchyView:_init()
     GuiBase._init(self)
     self.hierarchy_data = {}
     self.sorted_map = {}
     self.default_size = {250,600}
+    self.title_id = string.format("SceneHierarchy###%s",self.GuiName)
     ---
     self:_init_subcribe()
 end
 
-function GuiPropertyView:_init_subcribe()
+-------hub begin
+function GuiHierarchyView:_init_subcribe()
     hub.subscribe(Event.HierarchyChange,self._on_refresh_hierarchy,self)
 end
 
-function GuiPropertyView:_on_refresh_hierarchy(tbl)
+function GuiHierarchyView:publish_selected_entity(eid)
+    hub.publish(Event.WatchEntity, eid)
+end
+-------hub end
+
+function GuiHierarchyView:_on_refresh_hierarchy(tbl)
     print_a("_on_refresh_hierarchy",tbl)
     self.hierarchy_data = tbl
     self.sorted_map = {}
 end
 
-function GuiPropertyView:on_update()
+function GuiHierarchyView:on_update()
     self:_render_children(self.hierarchy_data)
 end
 
-function GuiPropertyView:_render_children(children)
+function GuiHierarchyView:_render_children(children)
     local sorted = self.sorted_map[children]
     if not sorted then
         local cache = {}
@@ -56,14 +63,27 @@ function GuiPropertyView:_render_children(children)
     end
 end
 
-function GuiPropertyView:_render_entity(id,entity)
+function GuiHierarchyView:_render_entity(id,entity)
     local children = entity.children
-    local flags = 0
+    local flags = ParentFlag
     if not children then
         flags = LeafFlag
     end
     local name = string.format("[%s]%s",tostring(id),entity.name)
     local cur_open = widget.TreeNode(name,flags)
+    if util.IsItemClicked() then
+        self:publish_selected_entity(id)
+    end
+    if util.IsItemHovered() then
+        widget.BeginTooltip()
+        widget.Text("Detail")
+        cursor.Separator()
+        widget.BulletText(string.format("EntityID:%d",id));
+        widget.BulletText("...")
+        widget.EndTooltip()
+    end
+    
+
     if cur_open then
         if children then
             self:_render_children(children)
@@ -72,4 +92,4 @@ function GuiPropertyView:_render_entity(id,entity)
     end
 end
 
-return GuiPropertyView
+return GuiHierarchyView

@@ -3,34 +3,49 @@ local widget    = imgui.widget
 local flags     = imgui.flags
 local windows   = imgui.windows
 local util      = imgui.util
+local gui_util  = require "editor.gui_util"
 
 
 local gui_mgr = {}
+local test = false
+
+local DefaultImguiIni = "editor.default.ini"
+local UserImguiIni = "editor.user.ini"
 
 function gui_mgr.init()
     gui_mgr.gui_tbl = {}
     gui_mgr.mainmenu_list = {}
-    ----
     local menu_list = {
-        {{"Views"},gui_mgr._update_mainmenu_view}
+        {{"Views"},gui_mgr._update_mainmenu_view},
     }
     gui_mgr._register_mainmenu(nil,menu_list)
 end
 
+function gui_mgr.after_init()
+    gui_mgr.load_ini()
+
+end
 
 function gui_mgr.update(delta)
     --update main_menu_bar
     --update gui
     imgui.begin_frame(delta)
     gui_mgr._update_mainmenu()
+    imgui.showDockSpace()
     gui_mgr._update_window(delta)
+    gui_util.loop_popup()
     imgui.end_frame()
+    gui_mgr.check_and_save_ini()
 end
 
 function gui_mgr._update_window(delta)
     for ui_name,ui_ins in pairs(gui_mgr.gui_tbl) do
-        ui_ins:on_gui(delta)
+        if ui_ins.on_gui then
+            ui_ins:on_gui(delta)
+        end
     end
+    
+    
 end
 
 function gui_mgr._update_mainmenu()
@@ -124,6 +139,57 @@ function gui_mgr.get(name)
     assert(type(name)=="string","ui name must be string!")
     return gui_mgr.gui_tbl[name]
 end
+
+---------------setting---------------------------------
+function gui_mgr.load_ini()
+    local path = UserImguiIni
+    local inifile = gui_util.open_current_pkg_path(path,"r")
+    if not inifile then
+        path = DefaultImguiIni
+        inifile = gui_util.open_current_pkg_path(path,"r")
+    end
+    if inifile then
+        local config = inifile:read('*all')
+        util.LoadIniSettings(config)
+        print("Load Imgui ini:",path)
+        inifile:close()
+    else
+        print("Can't find Imgui ini:",path)
+    end
+end
+
+--frame update
+function gui_mgr.check_and_save_ini()
+    if imgui.IO.WantSaveIniSettings then
+        -- print("imgui.IO.WantSaveIniSettings",imgui.IO.WantSaveIniSettings)
+        local cfg_data = util.SaveIniSettings(true)
+        config = gui_util.open_current_pkg_path(UserImguiIni,"w")
+        config:write(cfg_data)
+        config:close()
+    end
+end
+
+function gui_mgr.save_ini(path)
+    path = path or "editor.default.ini"
+    local fs = require "filesystem"
+    local localfs = require "filesystem.local"
+    local pm = require "antpm"
+    local pkg_path = fs.path(pm.get_entry_pkg().."/"..path)
+    local local_path = pkg_path:localpath()
+    local f = localfs.open(local_path,"w")
+    local cfg_data = util.SaveIniSettings(false)
+    f:write(cfg_data)
+    f:close()
+    -- if windows.BeginPopupModal(popup) then
+    --     local str = string.format("Save to successfully\nPath:%s",pkg_path)
+    --     widget.Text(str)
+    --     windows.EndPopup()
+    -- end
+    local str = string.format("Save to successfully\nPath:%s",local_path)
+    gui_util.notice({msg =str})
+end
+---------------setting---------------------------------
+
 
 gui_mgr.init()
 

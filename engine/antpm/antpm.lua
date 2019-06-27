@@ -5,6 +5,7 @@ local dofile = dofile
 
 local registered = {}
 local loaded = {}
+local entry_pkg = nil
 
 local function register(pkg)
     if not vfs.type(pkg) then
@@ -42,6 +43,7 @@ local function require_package(name)
 end
 
 local function import(name)
+    entry_pkg = entry_pkg or name
     if loaded[name] then
         return loaded[name]
     end
@@ -80,6 +82,15 @@ local function pm_loadfile(filename)
     end
     local fs = require "filesystem"
     return fs.loadfile(filename, 't', info.env)
+end
+
+local function get_pkg_list()
+    pkg_list = {} 
+    for pkg in vfs.each('/pkg') do
+        local pkgpath = pkg
+        table.insert(pkg_list,pkgpath)
+    end
+    return pkg_list
 end
 
 local function init()
@@ -129,10 +140,20 @@ local function register_package(path)
     return register(vfs.join('/pkg', name))
 end
 
+local function get_entry_pkg()
+    if entry_pkg then
+        return vfs.join('/pkg', entry_pkg)
+    end
+end
+
 return {
+    find = find,
     import = import,
     test = test,
     loadfile = pm_loadfile,
+    get_pkg_list = get_pkg_list,
+    get_entry_pkg = get_entry_pkg,
+    
     init = init,
     config = config,
     load_package = load_package,

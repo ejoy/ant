@@ -170,6 +170,17 @@ lviewId(lua_State *L) {
 }
 
 static int
+lsetDockEnable(lua_State *L) {
+	bool enable = lua_toboolean(L, 1);
+	ImGuiIO& io = ImGui::GetIO();
+	if (enable)
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	else
+		io.ConfigFlags ^= ImGuiConfigFlags_DockingEnable;
+	return 0;
+}
+
+static int
 lprogram(lua_State *L) {
 	s_ctx.m_program = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 1)) };
 	s_ctx.m_imageProgram = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2)) };
@@ -180,7 +191,9 @@ lprogram(lua_State *L) {
 
 static int
 limeHandle(lua_State *L) {
-	lua_pushlightuserdata(L, ImGui::GetIO().ImeWindowHandle);
+	//TODO:Docking branch remove ImGui::GetIO().ImeWindowHandle
+	//lua_pushlightuserdata(L, ImGui::GetIO().ImeWindowHandle);
+	lua_pushlightuserdata(L, NULL);
 	return 1;
 }
 
@@ -198,6 +211,7 @@ lresize(lua_State *L) {
 
 struct lua_imgui_io
 {
+	
 	bool		   inited = false;
 	bool        WantCaptureMouse;               // When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
 	bool        WantCaptureKeyboard;            // When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
@@ -213,6 +227,7 @@ struct lua_imgui_io
 	int         MetricsActiveWindows;           // Number of active windows
 	int         MetricsActiveAllocations;       // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
 };
+
 #define sync_io_val(name,inited)  _sync_io_val(L, io_index,#name, io_cache->name, io.name, inited )
 
 static void
@@ -266,6 +281,41 @@ sync_io(lua_State *L) {
 		io_cache->inited = true;
 }
 
+static int lshowDockSpace(lua_State * L) {
+	static bool opt_fullscreen_persistant = true;
+	bool opt_fullscreen = opt_fullscreen_persistant;
+	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+
+	// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
+	// because it would be confusing to have two docking targets within each others.
+	ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+
+	ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(viewport->Pos);
+	ImGui::SetNextWindowSize(viewport->Size);
+	ImGui::SetNextWindowViewport(viewport->ID);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+	window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+	window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+	bool p_open = true;
+	ImGui::Begin("DockSpace Demo", &p_open, window_flags);
+	ImGui::PopStyleVar();
+
+	ImGui::PopStyleVar(2);
+
+	ImGuiIO& io = ImGui::GetIO();
+	if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+	{
+		ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+		ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+	}
+	ImGui::End();
+	return 0;
+}
+
 static int
 lbeginFrame(lua_State *L) {
 	ImGuiIO& io = ImGui::GetIO();
@@ -284,6 +334,7 @@ lbeginFrame(lua_State *L) {
 	sync_io(L);
 	return 0;
 }
+
 
 static int
 lendFrame(lua_State *L) {
@@ -578,6 +629,19 @@ static const char *
 read_field_string(lua_State *L, const char * field, const char *v, int tidx = INDEX_ARGS) {
 	if (lua_getfield(L, tidx, field) == LUA_TSTRING) {
 		v = lua_tostring(L, -1);
+	}
+	lua_pop(L, 1);
+	return v;
+}
+
+static const char *
+read_field_checkstring(lua_State *L, const char * field, int tidx = INDEX_ARGS) {
+	const char * v = NULL;
+	if (lua_getfield(L, tidx, field) == LUA_TSTRING) {
+		v = lua_tostring(L, -1);
+	}
+	else {
+		luaL_error(L, "no string %s", field);
 	}
 	lua_pop(L, 1);
 	return v;
@@ -1763,6 +1827,83 @@ wImageButton(lua_State *L) {
 	return 1;
 }
 
+static int
+wBeginDragDropSource(lua_State * L) {
+	ImGuiDragDropFlags flag = luaL_optinteger(L, 1, 0);
+	bool change = ImGui::BeginDragDropSource(flag);
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+wEndDragDropSource(lua_State * L) {
+	ImGui::EndDragDropSource();
+	return 0;
+}
+
+static int
+wSetDragDropPayload(lua_State * L) {
+	const char * type = luaL_checkstring(L, 1);
+	const char * data = luaL_optstring(L, 2,NULL);
+	ImGuiCond cond = get_cond(L, 3);
+	bool change = ImGui::SetDragDropPayload(type, data, strlen(data), cond);
+	lua_pushboolean(L, change);
+	return 0;
+}
+
+static int
+wBeginDragDropTarget(lua_State * L) {
+	bool change = ImGui::BeginDragDropTarget();
+	lua_pushboolean(L, change);
+	return 1;
+}
+
+static int
+wEndDragDropTarget(lua_State * L) {
+	ImGui::EndDragDropTarget();
+	return 0;
+}
+
+//data or nil = AcceptDragDropPayload( type,ImGuiDragDropFlags );
+//change = AcceptDragDropPayload( { type=[in],flags==[in],data=[out],isPreview=[out],isDelivery=[out] } );
+static int
+wAcceptDragDropPayload(lua_State * L) {
+	bool is_table_arg = lua_istable(L, 1);
+	const char * type;
+	ImGuiDragDropFlags flag;
+	if ( is_table_arg ){
+		type = read_field_checkstring(L, "type", 1);
+		flag = read_field_int(L, "flags", 0, 1);
+	}
+	else {
+		type = luaL_checkstring(L, 1);
+		flag = luaL_optinteger(L, 2, 0);
+	}
+	const ImGuiPayload * payload = ImGui::AcceptDragDropPayload(type, flag);
+	if (payload != NULL){
+		if (is_table_arg){
+			lua_pushlstring(L, (const char *)payload->Data,payload->DataSize);
+			lua_setfield(L, 1, "data");
+			lua_pushboolean(L, payload->IsPreview());
+			lua_setfield(L, 1, "isPreview");
+			lua_pushboolean(L, payload->IsDelivery());
+			lua_setfield(L, 1, "isDelivery");
+			lua_pushboolean(L, true);
+		}
+		else {
+			const char * data = (const char *)payload->Data;
+			lua_pushlstring(L, data, payload->DataSize);
+		}
+	}
+	else{
+		if (is_table_arg)
+			lua_pushboolean(L, false);
+		else
+			lua_pushnil(L);
+	}
+	return 1;
+}
+
 #ifdef _MSC_VER
 #pragma endregion IMP_WIDGET
 #endif
@@ -2401,6 +2542,13 @@ cSetNextItemWidth(lua_State * L) {
 	return 0;
 }
 
+static int
+cSetMouseCursor(lua_State * L) {
+	int mouseCursorType = luaL_optinteger(L, 1,1);
+	ImGui::SetMouseCursor(mouseCursorType);
+	return 0;
+}
+
 #ifdef _MSC_VER
 #pragma endregion IMP_CURSOR
 #endif
@@ -2573,16 +2721,14 @@ uLoadIniSettings(lua_State *L) {
 
 static int
 uSaveIniSettings(lua_State *L) {
-	ImGuiIO& io = ImGui::GetIO();
-	if (io.WantSaveIniSettings) {
-		size_t sz = 0;
-		const char * ini = ImGui::SaveIniSettingsToMemory(&sz);
-		io.WantSaveIniSettings = false;
-		lua_pushlstring(L, ini, sz);
-		return 1;
-	} else {
-		return 0;
-	}
+	size_t len = 0;
+	const char * ini_data = ImGui::SaveIniSettingsToMemory(&len);
+	lua_pushlstring(L, ini_data, len);
+	ImGuiIO * io = &ImGui::GetIO();
+	bool clear_want_save_flag = lua_toboolean(L, 1);
+	if (clear_want_save_flag)
+		io->WantSaveIniSettings = false;
+	return 1;
 }
 
 static int
@@ -2946,6 +3092,21 @@ static struct enum_pair eTabBarFlags[] = {
 	{ "NoClosed", (lua_Integer)1 << 32 },
 	{ NULL, 0 },
 };
+
+static struct enum_pair eDragDropFlags[] = {
+	ENUM(ImGuiDragDropFlags, SourceNoPreviewTooltip),
+	ENUM(ImGuiDragDropFlags, SourceNoDisableHover),
+	ENUM(ImGuiDragDropFlags, SourceNoHoldToOpenOthers),
+	ENUM(ImGuiDragDropFlags, SourceAllowNullID),
+	ENUM(ImGuiDragDropFlags, SourceExtern),
+	ENUM(ImGuiDragDropFlags, SourceAutoExpirePayload),
+	ENUM(ImGuiDragDropFlags, AcceptBeforeDelivery),
+	ENUM(ImGuiDragDropFlags, AcceptNoDrawDefaultRect),
+	ENUM(ImGuiDragDropFlags, AcceptNoPreviewTooltip),
+	ENUM(ImGuiDragDropFlags, AcceptPeekOnly),
+	{ NULL, 0 },
+};
+
 #ifdef _MSC_VER
 #pragma endregion IMP_FLAG
 #endif
@@ -3050,6 +3211,21 @@ static struct enum_pair eStyleVar[] = {
 	{ NULL, 0 },
 };
 
+static struct enum_pair eMouseCursor[] = {
+	ENUM(ImGuiMouseCursor,None),
+	ENUM(ImGuiMouseCursor,Arrow),
+	ENUM(ImGuiMouseCursor,TextInput),
+	ENUM(ImGuiMouseCursor,ResizeAll),
+	ENUM(ImGuiMouseCursor,ResizeNS),
+	ENUM(ImGuiMouseCursor,ResizeEW),
+	ENUM(ImGuiMouseCursor,ResizeNESW),
+	ENUM(ImGuiMouseCursor,ResizeNWSE),
+	ENUM(ImGuiMouseCursor,Hand),
+	ENUM(ImGuiMouseCursor,COUNT),
+	{ NULL, 0 },
+};
+
+
 #ifdef _MSC_VER
 #pragma endregion IMP_ENUM
 #endif
@@ -3150,6 +3326,8 @@ luaopen_imgui(lua_State *L) {
 		{ "viewid", lviewId },
 		{ "program", lprogram },
 		{ "ime_handle", limeHandle },
+		{ "setDockEnable", lsetDockEnable },
+		{ "showDockSpace", lshowDockSpace },
 		{ NULL, NULL },
 	};
 
@@ -3210,6 +3388,12 @@ luaopen_imgui(lua_State *L) {
 		{ "ListBox", wListBox },
 		{ "Image", wImage },
 		{ "ImageButton", wImageButton },
+		{ "BeginDragDropSource", wBeginDragDropSource },
+		{ "EndDragDropSource", wEndDragDropSource },
+		{ "SetDragDropPayload", wSetDragDropPayload },
+		{ "BeginDragDropTarget", wBeginDragDropTarget },
+		{ "EndDragDropTarget", wEndDragDropTarget },
+		{ "AcceptDragDropPayload", wAcceptDragDropPayload },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, widgets);
@@ -3240,6 +3424,7 @@ luaopen_imgui(lua_State *L) {
 		{ "Columns", cColumns },
 		{ "NextColumn", cNextColumn },
 		{ "SetNextItemWidth", cSetNextItemWidth },
+		{ "SetMouseCursor", cSetMouseCursor },
 		{ NULL, NULL },
 	};
 
@@ -3354,11 +3539,13 @@ luaopen_imgui(lua_State *L) {
 	flag_gen(L, "Focused", eFocusedFlags);
 	flag_gen(L, "Hovered", eHoveredFlags);
 	flag_gen(L, "TabBar", eTabBarFlags);
+	flag_gen(L, "DragDrop", eDragDropFlags);
 	lua_setfield(L, -2, "flags");
 
 	lua_newtable(L);
 	enum_gen(L, "StyleCol", eStyleCol);
 	enum_gen(L, "StyleVar", eStyleVar);
+	enum_gen(L, "MouseCursor", eMouseCursor);
 	lua_setfield(L, -2, "enum");
 
 	return 1;

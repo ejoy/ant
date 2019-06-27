@@ -87,8 +87,7 @@ function GuiCanvas:on_update(delta)
             widget.ImageButton(world_tex,w,h,{frame_padding=0,bg_col={0,0,0,1}})
         end
     end
-    local focus = windows.IsWindowFocused(focus_flag)
-    if focus and IO.WantCaptureMouse then
+    if IO.WantCaptureMouse then
         --todo:split mouse and keyboard
         self:on_dispatch_msg()
     end
@@ -126,27 +125,30 @@ function GuiCanvas:on_dispatch_msg()
     if in_mouse.x then
         rx,ry = in_mouse.x - rect.x,in_mouse.y - rect.y
     end
-    if self.button_cb then
+    local focus = windows.IsWindowFocused(focus_flag)
+    local hovered = windows.IsWindowHovered(focus_flag)
+
+    if focus and self.button_cb then
         for i = 0,4 do
             if called[i] then
                 self.button_cb(self,i,in_mouse[i],rx,ry,in_key,in_mouse)
             end
         end
     end
-    if self.motion_cb and called.mouse_move then
+    if focus and self.motion_cb and called.mouse_move then
         self.motion_cb(self,rx,ry,in_key,in_mouse)
     end
-    if self.wheel_cb and called.mouse_wheel then
+    if hovered and self.wheel_cb and called.mouse_wheel then
         self.wheel_cb(self,in_mouse.scroll,rx,ry)
     end
     local keypress_cb = self.keypress_cb
-    if keypress_cb and #key_down > 0 then
+    if focus and keypress_cb and #key_down > 0 then
         for _,record in ipairs(key_down) do
             keypress_cb(self,record[1],record[2],in_key,in_mouse)
         end
     end
     local mouse_pressed =  gui_input.is_mouse_pressed(0)
-    if not mouse_pressed and self.resize_cb and self.vp_dirty then
+    if focus and not mouse_pressed and self.resize_cb and self.vp_dirty then
         self.vp_dirty = false
         self.resize_cb(self,rect.w,rect.h)
     end
