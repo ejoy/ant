@@ -1,3 +1,4 @@
 return {
-	name = "ant.sky"
+	name = "ant.sky",
+	entry = "main"
 }

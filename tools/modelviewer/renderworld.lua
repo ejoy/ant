@@ -18,6 +18,9 @@ local model_review_system = ecs.system "model_review_system"
 local renderpkg = import_package "ant.render"
 local renderutil = renderpkg.util
 
+local skypkg = import_package "ant.sky"
+local skyutil = skypkg.util
+
 model_review_system.singleton "constant"
 
 model_review_system.depend "primitive_filter_system"
@@ -45,6 +48,8 @@ function model_review_system:init()
 	renderutil.create_main_queue(world, fbsize, ms({1, 1, -1}, "inT"), {5, 5, -5})
 	renderutil.create_blit_queue(world, {x=0, y=0, w=fbsize.w, h=fbsize.h})
 	create_light()
+	skyutil.create_procedural_sky(world)
+	
 	cu.create_grid_entity(world, "grid")
 	world:create_entity {
 		transform = mu.scale_mat(0.2),
