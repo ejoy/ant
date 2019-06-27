@@ -219,14 +219,22 @@ local function fetch_value_operation(t)
 		return math.max(from, 1), math.min(to, #tt)
 	end
 	
+	local cache = {}
 	return function(time)
-		local l,h = binary_search(time)
-		if l == h then
-			return t[tt[l]]
-		end
+		local result = cache[time]
+		if result == nil then
+			local l,h = binary_search(time)
+			if l == h then
+				result = t[tt[l]]
+			else
+				local li, hi = tt[l], tt[h]
+				result = ms:lerp(t[li], t[hi], mu.ratio(li, hi, time))
+			end
 
-		local li, hi = tt[l], tt[h]
-		return ms:lerp(t[li], t[hi], mu.ratio(li, hi, time))
+			cache[time] = result
+		end
+		
+		return result
 	end
 end
 
