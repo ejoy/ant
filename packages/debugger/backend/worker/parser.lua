@@ -1,4 +1,4 @@
-local undump = require 'backend.undump'
+local undump = require 'backend.worker.undump'
 
 local version
 
@@ -77,12 +77,21 @@ local function normalize(src, maxline)
     end
 end
 
-return function (src, f)
+local function parser_lines(src, f)
     local tmp = { n = 0, maxline = 0 }
     src.maxline = 0
     src.activelines = { }
     src.definelines = { }
     calc_lines(getproto(f), src, tmp)
     normalize(src, tmp.maxline)
+    return src
+end
+
+return function (src, content)
+    local f = load(content)
+    if f then
+        src.si = {}
+        parser_lines(src.si, f)
+    end
     return src
 end

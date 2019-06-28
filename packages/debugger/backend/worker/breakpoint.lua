@@ -78,7 +78,10 @@ local function bpKey(src)
     return fs.narive_normalize_clientpath(src.path)
 end
 
-local function verifyBreakpoint(src, bps)
+local function verifyBreakpoint(src, clientsrc, bps)
+    if not clientsrc.si then
+        return
+    end
     local key = bpKey(src)
     local oldBP = breakpoints[key]
     local hits = {}
@@ -90,7 +93,7 @@ local function verifyBreakpoint(src, bps)
 
     local res = {}
     for _, bp in ipairs(bps) do
-        local activeline = nextActiveLine(src.si, bp.line)
+        local activeline = nextActiveLine(clientsrc.si, bp.line)
         if activeline then
             bp.source = src
             bp.realLine = bp.line
@@ -129,34 +132,15 @@ function m.find(src, currentline)
     return currentBP[currentline]
 end
 
-function m.update(clientsrc, si, bps)
-    if not clientsrc.sourceReference then
-        if not si then
-            return
-        end
-        local src = source.c2s(clientsrc)
-        if src then
-            src.si = si
-            verifyBreakpoint(src, bps)
-            return
-        end
-        for _, bp in ipairs(bps) do
-            bp.source = clientsrc
-        end
-        waitverify[bpKey(clientsrc)] = { bps, si }
-        updateHook()
-    else
-        local src = source.c2s(clientsrc)
-        if src then
-            verifyBreakpoint(src, bps)
-            return
-        end
-        for _, bp in ipairs(bps) do
-            bp.source = clientsrc
-        end
-        waitverify[bpKey(clientsrc)] = { bps, si }
-        updateHook()
+function m.update(clientsrc, bps)
+    local src = source.c2s(clientsrc)
+    if src then
+        clientsrc.si = clientsrc.si or src.si
+        verifyBreakpoint(src, clientsrc, bps)
+        return
     end
+    waitverify[bpKey(clientsrc)] = { clientsrc, bps }
+    updateHook()
 end
 
 function m.exec(bp)
@@ -199,13 +183,10 @@ end
 
 local function sourceUpdateBreakpoint(src)
     local key = bpKey(src)
-    local bpssi = waitverify[key]
-    if bpssi then
+    local wv = waitverify[key]
+    if wv then
         waitverify[key] = nil
-        if not src.sourceReference then
-            src.si = bpssi[2]
-        end
-        verifyBreakpoint(src, bpssi[1])
+        verifyBreakpoint(src, wv[1], wv[2])
         return
     end
     local bps = breakpoints[key]
