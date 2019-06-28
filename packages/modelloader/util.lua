@@ -5,6 +5,9 @@ local gltfutil = gltf.util
 
 local bgfx = require "bgfx"
 local declmgr = import_package "ant.render".declmgr
+local mathpkg = import_package "ant.math"
+local ms = mathpkg.stack
+local boundings = mathpkg.boundings
 
 local function get_desc(name, accessor)
 	local shortname, channel = declmgr.parse_attri_name(name)
@@ -117,17 +120,24 @@ local function create_vertex_buffer(bv, declhandle, bindata, buffers)
 	bv.byteOffset = 0
 end
 
+local function create_prim_boundings(meshscene, mesh)
+	local primitves = mesh.primitives
+	local posaccidx = assert(primitves["POSITION"])
+	local posacc = meshscene.accessors[posaccidx+1]
+	mesh.boundings = boundings.new(assert(posacc.min), assert(posacc.max))
+end
+
 function util.init_scene(scene, sceneidx, bindata)
 	sceneidx = sceneidx or scene.scene
 	local nodes, meshes, accessors, bufferviews = 
 	scene.nodes, scene.meshes, scene.accessors, scene.bufferViews
 	local buffers = scene.buffers
 
-	local function create_buffers(scenenodes)
+	local function prepare_scene(scenenodes)
 		for _, nodeidx in ipairs(scenenodes) do
 			local node = nodes[nodeidx + 1]
 			if node.children then
-				create_buffers(node.children)
+				prepare_scene(node.children)
 			end
 			local meshidx = node.mesh
 			if meshidx then
@@ -147,11 +157,12 @@ function util.init_scene(scene, sceneidx, bindata)
 						create_index_buffer(accessors[indices_accidx+1], bufferviews, bindata, buffers)
 					end
 				end
+				create_prim_boundings(scene, mesh)
 			end
 		end
 	end
 
-	create_buffers(scene.scenes[sceneidx+1].nodes)
+	prepare_scene(scene.scenes[sceneidx+1].nodes)
 
 	return scene
 end
