@@ -8,6 +8,8 @@ extern "C" {
 	#include "math3d.h"
 }
 
+#include "util.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -39,14 +41,11 @@ extern "C" {
 #define MAT_PERSPECTIVE 0
 #define MAT_ORTHO 1
 
-
 static bool g_default_homogeneous_depth = false;
 
 bool default_homogeneous_depth(){
 	return g_default_homogeneous_depth;
 }
-
-#define tov3(v4)	(const glm::vec3*)(&(v4))		
 
 /*
 static inline float
@@ -86,22 +85,6 @@ pop(lua_State *L, struct lastack *LS) {
 	if (v == 0)
 		luaL_error(L, "pop empty stack");
 	return v;
-}
-
-static struct lastack *
-getLS(lua_State *L, int index) {
-	int type = lua_type(L, index);
-	struct boxstack * ret;
-	if (type == LUA_TFUNCTION) {
-		if (lua_getupvalue(L, index, 1) == NULL) {
-			luaL_error(L, "Can't get linalg object");
-		}
-		ret = (struct boxstack *)luaL_checkudata(L, -1, LINALG);
-		lua_pop(L, 1);
-	} else {
-		ret =  (struct boxstack *)luaL_checkudata(L, index, LINALG);
-	}
-	return ret->LS;
 }
 
 static int
@@ -320,7 +303,7 @@ get_stack_id(lua_State *L, struct lastack *LS, int index) {
 	return get_id_by_type(L, LS, type, index);
 }
 
-static void
+void
 assign_ref(lua_State *L, struct refobject * ref, int64_t rid) {
 	int64_t markid = lastack_mark(ref->LS, rid);
 	if (markid == 0) {
@@ -329,14 +312,6 @@ assign_ref(lua_State *L, struct refobject * ref, int64_t rid) {
 	}
 	lastack_unmark(ref->LS, ref->id);
 	ref->id = markid;
-}
-
-static inline float
-get_table_value(lua_State *L, int tblidx, int idx) {
-	lua_geti(L, tblidx, idx);
-	float s = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-	return s;
 }
 
 static inline glm::vec3
@@ -359,11 +334,10 @@ extract_scale(lua_State *L, struct lastack *LS, int index){
 	} else if (stype == LUA_TTABLE) {
 		size_t len = lua_rawlen(L, index);		
 		if (len == 1) {
-			float s = get_table_value(L, index, 1);
+			float s = get_table_item(L, index, 1);
 			scale[0] = scale[1] = scale[2] = s;
 		} else if (len == 3||len == 4) {
-			for (int i = 0; i < 3; ++i)
-				scale[i] = get_table_value(L, index, i+1);
+			get_table_value(L, index, 3, scale);			
 		} else {
 			luaL_error(L, "using table for s element, format must be s = {1}/{1, 2, 3}, give number : %d", len);
 		}		
@@ -393,9 +367,7 @@ extract_translate(lua_State *L, struct lastack *LS, int index){
 		if (len < 3)
 			luaL_error(L, "t field should : t={1, 2, 3}, only accept 3 value, %d is give", len);
 
-		for (int i = 0; i < 3; ++i)
-			translate[i] = get_table_value(L, index, i + 1);
-
+		get_table_value(L, index, 3, translate);
 	} else if (ttype != LUA_TNIL) {
 		luaL_error(L, "Invalid translate type %s", lua_typename(L, ttype));
 	}
@@ -422,15 +394,14 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index){
 			//the table is define as : rotate x-axis(pitch), rotate y-axis(yaw), rotate z-axis(roll)
 			glm::vec3 e;
 			for (int ii = 0; ii < 3; ++ii)
-				e[ii] = get_table_value(L, index, ii + 1);
+				e[ii] = get_table_item(L, index, ii + 1);
 
 			// be careful here, glm::quat(euler_angles) result is different from eulerAngleXYZ()
 			// keep the same order with glm::quat
 			m = glm::mat4x4(glm::quat(e));
 		} else if (len == 4) {
 			glm::quat q;
-			for (int ii = 0; ii < 4; ++ii)
-				q[ii] = get_table_value(L, index, ii + 1);
+			get_table_value(L, index, 4, q);
 			m = glm::mat4x4(q);
 		} else {
 			luaL_error(L, "r field should : \
@@ -578,11 +549,7 @@ push_quat_with_axis_radian(lua_State* L, struct lastack *LS, int index) {
 	int axis_type = lua_type(L, -1);
 	switch (axis_type) {
 	case LUA_TTABLE: {
-		for (int i = 0; i < 3; ++i) {
-			lua_geti(L, -1, i + 1);
-			axis[i] = lua_tonumber(L, -1);
-			lua_pop(L, 1);
-		}
+		get_table_value(L, -1, 3, axis);		
 		break;
 	}
 	case LUA_TNUMBER: {
@@ -617,10 +584,7 @@ push_quat_with_axis_radian(lua_State* L, struct lastack *LS, int index) {
 	if (radian_type != LUA_TTABLE) {
 		luaL_error(L, "radian should define as radian = {xx}");
 	}
-	lua_geti(L, -1, 1);
-	float radian = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
+	const float radian = get_table_item(L, -1, 1);
 	lua_pop(L, 1);
 
 	glm::quat q = glm::angleAxis(radian, axis);
@@ -634,15 +598,9 @@ push_quat_with_euler(lua_State* L, struct lastack *LS, int index) {
 	int luaType = lua_type(L, -1);
 	switch (luaType)
 	{
-	case LUA_TTABLE: {		
-		for (int i = 0; i < 3; ++i) {
-			lua_geti(L, -1, i + 1);
-			e[i] = lua_tonumber(L, -1);
-			lua_pop(L, 1);
-		}
-
+	case LUA_TTABLE: 
+		get_table_value(L, -1, 3, e);		
 		break;
-	}
 	case LUA_TNUMBER: {
 		int64_t stackid = get_id(L, -1);
 		int type;
@@ -681,14 +639,10 @@ push_quat(lua_State* L, struct lastack *LS, int index) {
 static inline void
 push_euler(lua_State *L, struct lastack *LS, int index) {
 	glm::vec3 e;
-	uint32_t n = (uint32_t)lua_rawlen(L, index);
+	const uint32_t n = (uint32_t)lua_rawlen(L, index);
 	
-	if (n == 3) {		
-		for (uint32_t i = 0; i < n; ++i) {
-			lua_geti(L, index, i + 1);
-			e[i] = lua_tonumber(L, -1);
-			lua_pop(L, 1);
-		}
+	if (n == 3) {
+		get_table_value(L, index, 3, e);		
 	} else {
 		const char* names[] = { "pitch", "yaw", "roll" };		
 		for (uint32_t i = 0; i < (sizeof(names) / sizeof(names[0])); ++i) {
@@ -704,8 +658,7 @@ push_euler(lua_State *L, struct lastack *LS, int index) {
 
 static void
 push_value(lua_State *L, struct lastack *LS, int index) {
-	size_t n = lua_rawlen(L, index);
-	size_t i;
+	int n = (int)lua_rawlen(L, index);	
 	float v[16];
 	if (n > 16) {
 		luaL_error(L, "Invalid value %d", n);
@@ -725,12 +678,10 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 		}
 		return;
 	}
-	luaL_checkstack(L, (int)n, NULL);
-	for (i = 0; i < n; ++i) {
-		lua_geti(L, index, i + 1);
-		v[i] = lua_tonumber(L, -1);
-		lua_pop(L, 1);
-	}
+	luaL_checkstack(L, n, NULL);
+
+	get_table_value(L, index, n, v);
+	
 	switch (n) {	
 	case 1:
 		lastack_pushnumber(LS, v[0]);
@@ -1430,34 +1381,40 @@ lpointer(lua_State *L) {
 	return 1;
 }
 
+struct refobject*
+new_refobj(struct lua_State *L, struct lastack *LS, int64_t id){
+	struct refobject* ref = (struct refobject*)lua_newuserdata(L, sizeof(struct refobject));
+	luaL_setmetatable(L, LINALG_REF);
+	ref->LS = LS;
+
+	assign_ref(L, ref, id);
+	return ref;
+}
+
+static inline int
+const_type(const char* t){
+	if (strcmp(t, "vector") == 0) 
+		return LINEAR_CONSTANT_IVEC; 
+	
+	if (strcmp(t, "matrix") == 0) 
+		return LINEAR_CONSTANT_IMAT;
+	
+	if (strcmp(t, "quaternion") == 0)
+		return LINEAR_CONSTANT_QUAT;
+	
+	if (strcmp(t, "euler") == 0) 
+		return LINEAR_CONSTANT_EULER;
+
+	return LINEAR_CONSTANT_COUNT;
+}
+
 static int
 lref(lua_State *L) {
 	const char * t = luaL_checkstring(L, 1);
-	int cons;
-	if (strcmp(t, "vector") == 0) {
-		cons = LINEAR_CONSTANT_IVEC;
-	} else if (strcmp(t, "matrix") == 0) {
-		cons = LINEAR_CONSTANT_IMAT;
-	} else if (strcmp(t, "quaternion") == 0) {
-		cons = LINEAR_CONSTANT_QUAT;
-	} else if (strcmp(t, "euler") == 0) {
-		cons = LINEAR_CONSTANT_EULER;
-	} else {
-		return luaL_error(L, "Unsupport type %s", t);
-	}
-
 	const bool has_LS = !lua_isnoneornil(L, 2);
+	auto LS = has_LS ? ((struct boxstack*)lua_touserdata(L, 2))->LS : nullptr;
+	new_refobj(L, LS, lastack_constant(const_type(t)));
 
-	struct refobject * ref = (struct refobject *)lua_newuserdata(L, sizeof(*ref));
-	if (has_LS) {
-		struct boxstack *bp = (struct boxstack *)lua_touserdata(L, 2);
-		ref->LS = bp->LS;
-	} else {
-		ref->LS = nullptr;
-	}
-	ref->id = lastack_constant(cons);
-
-	luaL_setmetatable(L, LINALG_REF);
 	return 1;
 }
 
@@ -2078,8 +2035,7 @@ new_temp_vector4(lua_State *L) {
 		pushid(L, lastack_constant(LINEAR_CONSTANT_IVEC));
 		return 1;
 	}
-	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
-	struct lastack *LS = bp->LS;
+	struct lastack* LS = getLS(L, 1);
 
 	float v[4];
 	switch(top) {
@@ -2115,8 +2071,7 @@ new_temp_matrix(lua_State *L) {
 		pushid(L, lastack_constant(LINEAR_CONSTANT_IMAT));
 		return 1;
 	}
-	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
-	struct lastack *LS = bp->LS;
+	struct lastack* LS = getLS(L, 1);
 	float m[16];
 	int i;
 	switch(top) {
@@ -2185,8 +2140,7 @@ new_temp_matrix(lua_State *L) {
 
 static int
 new_temp_quaternion(lua_State *L) {
-	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
-	struct lastack *LS = bp->LS;
+	struct lastack* LS = getLS(L, 1);
 
 	int top = lua_gettop(L);
 
@@ -2230,11 +2184,7 @@ new_temp_quaternion(lua_State *L) {
 			if (tblnum != 3) {
 				luaL_error(L, "[second] argument must provied 3 values in table array, only %d provided", tblnum);
 			}
-			for (int ii = 0; ii < 3; ++ii) {
-				lua_geti(L, 2, ii + 1);
-				axis[ii] = lua_tonumber(L, -1);
-				lua_pop(L, 1);
-			}
+			get_table_value(L, 2, 3, axis);			
 		} else {
 			luaL_error(L, "invalid [second] argument, type = %d, should provided as: \
 							userdata/lightuserdata[as float*], stack id or table as array[x, y, z]", type);
@@ -2246,18 +2196,10 @@ new_temp_quaternion(lua_State *L) {
 		if (type == LUA_TTABLE) {
 			const size_t arraynum = lua_rawlen(L, 2);
 			if (arraynum == 4) {
-				for (int ii = 0; ii < 4; ++ii) {
-					lua_geti(L, -1, ii + 1);
-					q[ii] = lua_tonumber(L, -1);
-					lua_pop(L, 1);
-				}
+				get_table_value(L, -1, 4, q);
 			} else if (arraynum == 3) {
 				glm::vec3 euler;
-				for (int ii = 0; ii < 3; ++ii) {
-					lua_geti(L, -1, ii + 1);
-					euler[ii] = lua_tonumber(L, -1);
-					lua_pop(L, 1);
-				}
+				get_table_value(L, -1, 3, euler);				
 				q = glm::quat(euler);
 			} else {
 				luaL_error(L, "need 3/4 element in array as euler radian or quaternion:%d", arraynum);
@@ -2291,8 +2233,7 @@ new_temp_quaternion(lua_State *L) {
 
 static int
 new_temp_euler(lua_State *L) {
-	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
-	struct lastack *LS = bp->LS;
+	struct lastack* LS = getLS(L, 1);
 
 	auto top = lua_gettop(L);
 	if (top == 1) {
@@ -2318,8 +2259,7 @@ lsrt_matrix(lua_State *L) {
 		luaL_error(L, "invalid argument, at least 1:%d", numarg);
 	}
 
-	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
-	lastack *LS = bp->LS;
+	struct lastack* LS = getLS(L, 1);
 
 	switch (numarg) {
 	case 1:
@@ -2437,12 +2377,8 @@ get_value(lua_State *L, struct lastack *LS, int index) {
 	case LUA_TTABLE:
 	{
 		T v;		
-		const size_t len = lua_rawlen(L, index);
-		for (int ii = 0; ii < (int)len; ++ii) {
-			lua_geti(L, index, ii + 1);
-			v[ii] = lua_tonumber(L, -1);
-			lua_pop(L, 1);
-		}
+		const int len = (int)lua_rawlen(L, index);
+		get_table_value(L, index, len, v);		
 		return v;
 	}
 	default:
@@ -2451,15 +2387,14 @@ get_value(lua_State *L, struct lastack *LS, int index) {
 	}
 }
 
-static inline glm::vec4 
+glm::vec4 
 get_vec_value(lua_State *L, struct lastack *LS, int index) {
 	return get_value<glm::vec4>(L, LS, index);
 }
 
 static int
 llength(lua_State *L) {
-	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
-	lastack *LS = bp->LS;
+	struct lastack* LS = getLS(L, 1);
 
 	const int numarg = lua_gettop(L);
 	float len = 0.0f;
@@ -2489,8 +2424,7 @@ llength(lua_State *L) {
 
 static int
 ldot(lua_State *L) {
-	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
-	lastack *LS = bp->LS;
+	struct lastack* LS = getLS(L, 1);
 
 	const int numarg = lua_gettop(L);
 	if (numarg != 3) {
@@ -2506,8 +2440,7 @@ ldot(lua_State *L) {
 
 static int
 lis_parallel(lua_State *L) {
-	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
-	lastack *LS = bp->LS;
+	struct lastack* LS = getLS(L, 1);
 
 	const int numarg = lua_gettop(L);
 	if (numarg < 3) {
@@ -2530,8 +2463,7 @@ lscreen_point_to_3d(lua_State *L) {
 		luaL_error(L, "at least 4 arguments, %d provided. arguments: (camera component[with eyepos/viewdir/frustum], viewport[w, h], point at 2d", numarg);
 	}
 
-	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
-	lastack *LS = bp->LS;
+	struct lastack* LS = getLS(L, 1);
 
 	// camera
 	luaL_checktype(L, 2, LUA_TTABLE);
@@ -2605,8 +2537,7 @@ lscreen_point_to_3d(lua_State *L) {
 
 static int
 llhs_rotation(lua_State *L) {
-	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
-	lastack *LS = bp->LS;
+	struct lastack* LS = getLS(L, 1);
 
 	glm::vec4 euler = get_vec_value(L, LS, 2);
 	const glm::mat3 scale(
@@ -2630,8 +2561,7 @@ llhs_rotation(lua_State *L) {
 
 static int
 llhs_matrix(lua_State *L) {
-	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
-	lastack *LS = bp->LS;
+	struct lastack* LS = getLS(L, 1);
 
 	const glm::mat3 scale(
 		-1, 0, 0,
@@ -2702,17 +2632,14 @@ llhs_matrix(lua_State *L) {
 
 static int
 llerp(lua_State* L) {
-	struct boxstack* bp = (struct boxstack*)lua_touserdata(L, 1);
-	lastack* LS = bp->LS;
+	struct lastack* LS = getLS(L, 1);
 
 	const auto v0 = get_vec_value(L, LS, 2);
 	const auto v1 = get_vec_value(L, LS, 3);
 
 	const auto ratio = lua_tonumber(L, 4);
 
-#define to_v3(v)	*(const glm::vec3*)(&v)
-
-	const auto l = glm::vec4(to_v3(v0) + (to_v3(v1) - to_v3(v0)) * (float)ratio, 0.f);
+	const auto l = glm::vec4(*tov3(v0) + (*tov3(v1) - *tov3(v0)) * (float)ratio, 0.f);
 
 	lastack_pushvec4(LS, &l.x);
 	lua_pushinteger(L, lastack_pop(LS));

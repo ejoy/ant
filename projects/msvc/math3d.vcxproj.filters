@@ -26,6 +26,9 @@
     <ClCompile Include="..\..\clibs\math3d\mathadapter.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\math3d\util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\math3d\refstack.h">
@@ -38,6 +41,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\clibs\math3d\math3d.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\math3d\util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

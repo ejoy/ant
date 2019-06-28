@@ -14,7 +14,13 @@ struct refobject {
 };
 
 int64_t
-get_stack_id(lua_State *L, struct lastack *LS, int index);
+get_stack_id(struct lua_State *L, struct lastack *LS, int index);
+
+struct lastack*
+getLS(struct lua_State* L, int index);
+
+struct refobject*
+new_refobj(struct lua_State* L, struct lastack* LS, int64_t id);
 
 #ifndef _MSC_VER
 #ifndef M_PI

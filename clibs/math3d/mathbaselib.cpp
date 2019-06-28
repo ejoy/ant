@@ -8,6 +8,8 @@ extern "C" {
 	#include "math3d.h"
 }
 
+#include "util.h"
+
 #include "meshbase/meshbase.h"
 
 #include <glm/glm.hpp>
@@ -534,6 +536,76 @@ lmerge_boundings(lua_State *L) {
 	return push_bounding(L, scenebounding);
 }
 
+
+static int
+lboundings(lua_State* L) {
+	struct lastack* LS = getLS(L, 1);
+
+	const int numarg = lua_gettop(L);
+	if (numarg < 3) {
+		luaL_error(L, "need 3 arguments(ms, min, max)");
+	}
+
+	glm::vec4 min = get_vec_value(L, LS, 2);
+	glm::vec4 max = get_vec_value(L, LS, 3);
+
+	glm::mat4x4 trans(1.f);
+	if (!lua_isnoneornil(L, 4)) {
+		int valuetype;
+		const float* v = lastack_value(LS, get_stack_id(L, LS, 4), &valuetype);
+		if (valuetype != LINEAR_TYPE_MAT) {
+			luaL_error(L, "argument 4 should be matrix, value given: %d", valuetype);
+		}
+
+		trans = *(glm::mat4x4*)v;
+
+		min = trans * min;
+		max = trans * max;
+	}
+
+	const float radius = glm::length((*tov3(max) - *tov3(min)) * 0.5f);
+	const glm::vec4 sphere((*tov3(min) + *tov3(max)) * 0.5f, radius);
+
+	glm::mat4x4 obb;
+	obb[3][0] = sphere[0];
+	obb[3][1] = sphere[1];
+	obb[3][2] = sphere[2];
+
+	obb[0][0] = radius;
+	obb[1][1] = radius;
+	obb[2][2] = radius;
+
+	lua_createtable(L, 0, 3);
+	{
+		lua_createtable(L, 0, 2);
+		{
+			lastack_pushvec4(LS, &min.x);
+			new_refobj(L, LS, lastack_pop(LS));
+			lua_setfield(L, -2, "min");
+
+			lastack_pushvec4(LS, &max.x);
+			new_refobj(L, LS, lastack_pop(LS));
+			lua_setfield(L, -2, "max");
+		}
+		lua_setfield(L, -2, "aabb");
+	}
+
+	{
+		lastack_pushvec4(LS, &sphere.x);
+		new_refobj(L, LS, lastack_pop(LS));
+
+		lua_setfield(L, -2, "sphere");
+	}
+
+	{
+		lastack_pushmatrix(LS, (const float*)& obb);
+		new_refobj(L, LS, lastack_pop(LS));
+		lua_setfield(L, -2, "obb");
+	}
+
+	return 1;
+}
+
 extern "C"{
 	LUAMOD_API int
 	luaopen_math3d_baselib(lua_State *L){
@@ -544,6 +616,7 @@ extern "C"{
 
 			{ "transform_aabb", ltransform_aabb},
 			{ "merge_boundings", lmerge_boundings},
+			{ "boundings", lboundings},
 			{ NULL, NULL },
 		};
 
