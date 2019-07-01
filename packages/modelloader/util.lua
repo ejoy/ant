@@ -122,9 +122,11 @@ end
 
 local function create_prim_bounding(meshscene, prim)	
 	local posacc = meshscene.accessors[assert(prim.attributes.POSITION)+1]
-	local bounding = mathbaselib.new_bounding(ms, assert(posacc.min), assert(posacc.max))
-	prim.bounding = bounding
-	return bounding
+	if posacc.min then
+		local bounding = mathbaselib.new_bounding(ms, assert(posacc.min), assert(posacc.max))
+		prim.bounding = bounding
+		return bounding
+	end
 end
 
 function util.init_scene(scene, sceneidx, bindata)
@@ -158,9 +160,15 @@ function util.init_scene(scene, sceneidx, bindata)
 						create_index_buffer(accessors[indices_accidx+1], bufferviews, bindata, buffers)
 					end
 
-					meshbounding:merge(ms, create_prim_bounding(scene, prim))
+					local bb = create_prim_bounding(scene, prim)
+					if bb then
+						meshbounding:merge(bb)
+					end
 				end
-				mesh.boundings = meshbounding
+
+				if meshbounding:isvalid() then
+					mesh.boundings = meshbounding
+				end
 			end
 		end
 	end

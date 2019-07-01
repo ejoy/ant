@@ -109,9 +109,9 @@ local function get_material_refs(meshname, submesh_refs)
 	end
 end
 
-local function traverse_scene(scene, eid, materialcontent, submesh_refs, worldmat, filter)
+local function traverse_scene(scene, eid, materialcontent, submesh_refs, worldmat, filter, boundinginfo)
 	local nodes, meshes = scene.nodes, scene.meshes
-
+	local boundings, transforms = boundinginfo.boundings, boundinginfo.transforms
 	local function traverse_scene_ex(scenenodes, parentmat)
 		for _, nodeidx in ipairs(scenenodes) do
 			local node = nodes[nodeidx+1]
@@ -128,6 +128,11 @@ local function traverse_scene(scene, eid, materialcontent, submesh_refs, worldma
 				if is_visible(meshname, submesh_refs) then
 					local material_refs = get_material_refs(meshname, submesh_refs)
 					for idx, prim in ipairs(mesh.primitives) do
+						local bounding = prim.bounding
+						if bounding then
+							boundings[#boundings+1] = bounding
+							transforms[#transforms+1] = nodetrans
+						end
 						ru.insert_primitive(eid, prim, scene, 
 							get_material(prim, idx, materialcontent, material_refs),
 							nodetrans, filter)
@@ -157,7 +162,16 @@ function primitive_filter_sys:update()
 		reset_results(filter.result)
 		local viewtag = filter.view_tag
 		local filtertag = filter.filter_tag
-		local boundings = {}
+
+		local scenebounding = filter.scenebounding
+		if scenebounding == nil then
+			scenebounding = mathbaselib.new_bounding(ms)
+			filter.scenebounding = scenebounding
+		else
+			scenebounding:reset()
+		end
+
+		local boundinginfo = {boundings={}, transforms={}}
 		for _, eid in world:each(filtertag) do
 			local ce = world[eid]
 			local vt = ce[viewtag]
@@ -165,27 +179,17 @@ function primitive_filter_sys:update()
 			if vt and ft then
 				local mesh = ce.mesh
 				local assetinfo = mesh.assetinfo				
-				local meshhandle = assetinfo.handle
+				local scene = assetinfo.handle
 				local worldmat = ce.transform.world
 				local materialcontent = assert(ce.material.content)
 
-				local scene = meshhandle
 				if scene then
-					if scene.scene then
-						traverse_scene(scene, eid, materialcontent, mesh.submesh_refs, get_scale_mat(worldmat, scene), filter)
-					else
-						ru.insert_primitive_old(eid, 
-						meshhandle,
-						assert(ce.material.content),
-						worldmat,
-						filter,
-						ce.mesh.group_id)
-					end
+					traverse_scene(scene, eid, materialcontent, mesh.submesh_refs, get_scale_mat(worldmat, scene), filter, boundinginfo)
 				end
 			end
 		end
 
-		filter.scenebounding = mathbaselib.merge_boundings(ms, boundings)
+		scenebounding:merge_list(boundinginfo.boundings, boundinginfo.transforms)
 	end
 end
 

@@ -387,6 +387,33 @@ fetch_buffer(const primitive &prim, const primitive::accessor &acc, const char* 
 }
 
 static void
+calc_min_max_value(const attrib_buffers& abuffers, primitive &prim){
+	const auto pos_attribname = find_attrib_name_by_fullname("POSITION");
+	const auto& itPos = abuffers.find(pos_attribname);
+	if (itPos != abuffers.end()) {
+		auto& acc = prim.accessors[prim.attributes[pos_attribname]];
+
+		if (acc.minvalue_count == 0 || acc.maxvalue_count == 0) {
+			const auto& buffer = itPos->second;
+
+			const uint32_t num_vertices = acc.count;
+
+			const glm::vec3* data = (glm::vec3*)buffer.data;
+			glm::vec3 min(std::numeric_limits<float>::max()), max(std::numeric_limits<float>::lowest());
+			for (uint32_t ii = 0; ii < num_vertices; ++ii) {
+				const auto& v = data[ii];
+				min = glm::min(min, v);
+				max = glm::max(max, v);
+			}
+
+			acc.maxvalue_count = acc.minvalue_count = 3;
+			memcpy(acc.minvalues, &min.x, sizeof(glm::vec3));
+			memcpy(acc.maxvalues, &max.x, sizeof(glm::vec3));
+		}
+	}
+}
+
+static void
 fetch_attribute_buffers(const primitive &prim, const char* bindata, attrib_buffers &abuffers) {
 	const uint32_t num_vertices = get_num_vertices(prim);
 
@@ -608,6 +635,8 @@ lconvert_buffers(lua_State *L) {
 
 	attrib_buffers abuffers;
 	fetch_attribute_buffers(prim, bindata, abuffers);
+
+	calc_min_max_value(abuffers, prim);
 
 	data_buffer indexbuffer;
 	fetch_index_buffer(prim, bindata, indexbuffer);

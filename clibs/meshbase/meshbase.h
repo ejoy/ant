@@ -162,6 +162,10 @@ struct Bounding {
 		obb.Init(aabb);
 	}
 
+	bool IsValid() const {
+		return aabb.IsValid();
+	}
+
 	void Init(const glm::vec3 *v, uint32_t num) {
 		aabb.Init(v, num);
 		sphere.Init(aabb);

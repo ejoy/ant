@@ -512,6 +512,48 @@ lbounding_merge(lua_State *L) {
 }
 
 static int
+lbounding_merge_list(lua_State *L){
+	Bounding* scenebounding = fetch_bounding(L, 1);
+	auto LS = fetch_LS(L, 1);
+
+	const uint32_t len = (uint32_t)lua_rawlen(L, 2);
+
+	const bool has_trans = !lua_isnoneornil(L, 3);
+	if (has_trans){
+		const uint32_t len2 = (uint32_t)lua_rawlen(L, 3);
+		if (len != len2) {
+			luaL_error(L, "boundings numbers should equal to transform's list number:%d, %d", len, len2);
+		}
+	}
+
+	AABB sceneaabb;
+	for (uint32_t ii = 0; ii < len; ++ii){
+		lua_geti(L, 2, ii + 1);
+		const Bounding *b = fetch_bounding(L, -1);
+		lua_pop(L, 1);
+
+		if (has_trans){
+			lua_geti(L, 3, ii + 1);
+			int type;
+			auto trans = (glm::mat4x4*)lastack_value(LS, get_stack_id(L, LS, -1), &type);			
+			lua_pop(L, 1);
+
+			AABB aabb = b->aabb;
+			transform_aabb(*trans, aabb);
+			sceneaabb.Merge(aabb);
+		} else {
+			sceneaabb.Merge(b->aabb);
+		}
+	}
+
+	scenebounding->aabb.Merge(sceneaabb);
+	scenebounding->sphere.Init(scenebounding->aabb);
+	scenebounding->obb.Init(scenebounding->aabb);
+
+	return 0;
+}
+
+static int
 lbounding_append_point(lua_State* L) {	
 	Bounding* b = fetch_bounding(L, 1);
 	auto LS = fetch_LS(L, 1);
@@ -532,9 +574,10 @@ lbounding_new(lua_State* L) {
 
 	Bounding bounding;
 	for (int ii = 1; ii < numarg; ++ii) {
-		auto v = get_vec_value(L, LS, ii+1);
+		auto v = get_vec_value(L, LS, ii + 1);
 		bounding.aabb.Append(v);
 	}
+	
 
 	bounding.sphere.Init(bounding.aabb);
 	bounding.obb.Init(bounding.aabb);
@@ -572,13 +615,32 @@ obb:\n\
 	return 1;
 }
 
+static int
+lbounding_isvalid(lua_State *L){
+	auto bounding = fetch_bounding(L, 1);
+	lua_pushboolean(L, bounding->IsValid());
+	return 1;
+}
+
+static int
+lbounding_reset(lua_State *L){
+	auto bounding = fetch_bounding(L, 1);
+	bounding->Reset();
+
+	return 0;
+}
+
+
 static void
 register_bounding_mt(lua_State *L){
 	if (luaL_newmetatable(L, "BOUNDING_MT")){
 		luaL_Reg l[] = {			
 			{ "transform",	lbounding_transform},
 			{ "merge",		lbounding_merge},
+			{ "merge_list", lbounding_merge_list},
 			{ "append",		lbounding_append_point},
+			{ "isvalid",	lbounding_isvalid},
+			{ "reset",		lbounding_reset},
 			{ "__tostring", lbounding_string},
 
 			{nullptr, nullptr}
