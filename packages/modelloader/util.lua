@@ -120,11 +120,12 @@ local function create_vertex_buffer(bv, declhandle, bindata, buffers)
 	bv.byteOffset = 0
 end
 
-local function create_prim_boundings(meshscene, mesh)
-	local primitves = mesh.primitives
-	local posaccidx = assert(primitves["POSITION"])
+local function create_prim_bounding(meshscene, prim)
+	local posaccidx = assert(prim["POSITION"])
 	local posacc = meshscene.accessors[posaccidx+1]
-	mesh.boundings = boundings.new(assert(posacc.min), assert(posacc.max))
+	local bounding = boundings.new(assert(posacc.min), assert(posacc.max))
+	prim.bounding = bounding
+	return bounding
 end
 
 function util.init_scene(scene, sceneidx, bindata)
@@ -142,6 +143,7 @@ function util.init_scene(scene, sceneidx, bindata)
 			local meshidx = node.mesh
 			if meshidx then
 				local mesh = meshes[meshidx+1]
+				local meshbounding = boundings.new()
 				for _, prim in ipairs(mesh.primitives) do
 					local attribclass = classfiy_attri(prim.attributes, accessors)
 					local decls = create_decl(attribclass)
@@ -156,8 +158,10 @@ function util.init_scene(scene, sceneidx, bindata)
 					if indices_accidx then
 						create_index_buffer(accessors[indices_accidx+1], bufferviews, bindata, buffers)
 					end
+
+					meshbounding:merge(create_prim_bounding(scene, prim))
 				end
-				create_prim_boundings(scene, mesh)
+				mesh.boundings = meshbounding
 			end
 		end
 	end

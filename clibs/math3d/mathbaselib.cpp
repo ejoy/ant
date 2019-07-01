@@ -429,7 +429,7 @@ transform_aabb(const glm::mat4x4 &trans, AABB &aabb) {
 }
 
 static int
-ltransform_aabb(lua_State *L) {	
+lbounding_transform(lua_State *L) {	
 	struct boxstack *BS = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
 	struct lastack *LS = BS->LS;
 	
@@ -501,7 +501,7 @@ push_bounding(lua_State *L, const Bounding &boundiing) {
 }
 
 static int
-lmerge_boundings(lua_State *L) {
+lbounding_merge(lua_State *L) {
 	struct boxstack* bs = (struct boxstack*)lua_touserdata(L, 1);
 	struct lastack *LS = bs->LS;
 
@@ -536,18 +536,29 @@ lmerge_boundings(lua_State *L) {
 	return push_bounding(L, scenebounding);
 }
 
+static int
+lbounding_append_point(lua_State* L) {
+	return 1;
+}
+
 
 static int
-lboundings(lua_State* L) {
+lbounding_new(lua_State* L) {
 	struct lastack* LS = getLS(L, 1);
 
 	const int numarg = lua_gettop(L);
-	if (numarg < 3) {
-		luaL_error(L, "need 3 arguments(ms, min, max)");
+
+	if (1 < numarg && numarg < 3){
+		luaL_error(L, "invalid argument. it should be: (stack, min, max, [transform]) 3/4 argument or (stack) only 1 argument");
+		return 0;
 	}
 
-	glm::vec4 min = get_vec_value(L, LS, 2);
-	glm::vec4 max = get_vec_value(L, LS, 3);
+	glm::vec4 min(0.f), max(0.f);
+
+	if (numarg >= 3) {
+		min = get_vec_value(L, LS, 2);
+		max = get_vec_value(L, LS, 3);
+	}
 
 	glm::mat4x4 trans(1.f);
 	if (!lua_isnoneornil(L, 4)) {
@@ -614,9 +625,10 @@ extern "C"{
 			{ "extract_planes", lextract_planes},			
 			{ "frustum_points", lfrustum_points},
 
-			{ "transform_aabb", ltransform_aabb},
-			{ "merge_boundings", lmerge_boundings},
-			{ "boundings", lboundings},
+			{ "bounding_transform",	lbounding_transform},
+			{ "bounding_merge",		lbounding_merge},
+			{ "bounding_append",	lbounding_append_point},
+			{ "bounding_new",		lbounding_new},
 			{ NULL, NULL },
 		};
 
