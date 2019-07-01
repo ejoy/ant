@@ -1386,8 +1386,16 @@ new_refobj(struct lua_State *L, struct lastack *LS, int64_t id){
 	struct refobject* ref = (struct refobject*)lua_newuserdata(L, sizeof(struct refobject));
 	luaL_setmetatable(L, LINALG_REF);
 	ref->LS = LS;
-
-	assign_ref(L, ref, id);
+	int t = 0;
+	if (lastack_marked(id, &t)) {
+		ref->id = id;
+	} else {
+		int64_t markid = lastack_mark(LS, id);
+		if (markid == 0) {
+			luaL_error(L, "cound not mark id : %ld", id);
+		}
+		ref->id = markid;
+	}
 	return ref;
 }
 

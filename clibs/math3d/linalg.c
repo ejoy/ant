@@ -64,8 +64,6 @@ lastack_constant(int cons) {
 	sid.s.version = 0;
 	sid.s.id = cons;
 	sid.s.persistent = 1;
-
-	assert((int)LINEAR_TYPE_COUNT == (int)LINEAR_CONSTANT_COUNT);
 	sid.s.type = cons;
 	
 	return sid.i;
