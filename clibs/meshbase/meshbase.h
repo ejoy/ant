@@ -110,7 +110,13 @@ struct BoundingSphere {
 	glm::vec3 center;
 	float radius;
 
-	void Init(const AABB &aabb) {		
+	BoundingSphere(){}
+
+	BoundingSphere(const AABB &aabb){
+		Init(aabb);
+	}
+
+	void Init(const AABB &aabb) {
 		center = aabb.Center();
 		radius = aabb.DiagonalLength() * 0.5f;
 	}
@@ -123,6 +129,10 @@ struct BoundingSphere {
 
 struct OBB {
 	glm::mat4x4 m;
+	OBB(){}
+	OBB(const AABB &aabb){
+		Init(aabb);
+	}
 	void Init(const AABB & aabb) {
 		m = glm::mat4x4(1.0f);
 		auto &trans = m[3];
@@ -144,6 +154,14 @@ struct Bounding {
 	AABB aabb;
 	BoundingSphere sphere;
 	OBB obb;
+	Bounding(){}
+	Bounding(const glm::vec3 &min, const glm::vec3 &max)
+		: aabb(min, max)
+	{
+		sphere.Init(aabb);
+		obb.Init(aabb);
+	}
+
 	void Init(const glm::vec3 *v, uint32_t num) {
 		aabb.Init(v, num);
 		sphere.Init(aabb);

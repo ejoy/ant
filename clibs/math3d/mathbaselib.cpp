@@ -429,22 +429,6 @@ transform_aabb(const glm::mat4x4 &trans, AABB &aabb) {
 }
 
 static int
-lbounding_transform(lua_State *L) {	
-	struct boxstack *BS = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
-	struct lastack *LS = BS->LS;
-	
-	int type;
-	const glm::mat4x4 *trans = (const glm::mat4x4 *)lastack_value(LS, get_stack_id(L, LS, 2), &type);
-
-	luaL_checktype(L, 3, LUA_TTABLE);
-	AABB aabb;
-	pull_aabb(L, 3, aabb);
-	transform_aabb(*trans, aabb);
-	push_aabb(L, aabb);
-	return 1;
-}
-
-static int
 lfrustum_points(lua_State *L) {
 	std::array<glm::vec4, 6> planes;
 	pull_frustum_planes(L, planes, 1);
@@ -465,170 +449,165 @@ lfrustum_points(lua_State *L) {
 	return 1;
 }
 
-static int
-fetch_bounding(lua_State *L, int index, Bounding &bounding) {	
-	luaL_checktype(L, index, LUA_TTABLE);
-	lua_getfield(L, index, "aabb");
-	pull_aabb(L, -1, bounding.aabb);
-	lua_pop(L, 1);
-
-	lua_getfield(L, index, "sphere");
-	pull_sphere(L, -1, bounding.sphere);
-	lua_pop(L, 1);
-
-	const int fieldtype = lua_getfield(L, index, "obb");
-	if (fieldtype != LUA_TNIL)
-		pull_obb(L, -1, bounding.obb);
-	lua_pop(L, 1);
-
-	return 1;
+static inline struct lastack*
+fetch_LS(lua_State* L, int index) {
+	lua_getuservalue(L, index);
+	struct boxstack* BS = (struct boxstack*)luaL_checkudata(L, -1, LINALG);
+	return BS->LS;
 }
 
 static int
-push_bounding(lua_State *L, const Bounding &boundiing) {
-	lua_newtable(L);
-	{
-		push_aabb(L, boundiing.aabb);
-		lua_setfield(L, -2, "aabb");
+push_bounding(lua_State *L, const Bounding &bounding, int BS_index) {
+	auto b = (Bounding*)lua_newuserdata(L, sizeof(Bounding));
+	memcpy(b, &bounding, sizeof(Bounding));
 
-		push_sphere(L, boundiing.sphere);
-		lua_setfield(L, -2, "sphere");
-
-		push_obb(L, boundiing.obb);
-		lua_setfield(L, -2, "obb");
+	if (luaL_getmetatable(L, "BOUNDING_MT")){
+		lua_setmetatable(L, -2);
+	} else {
+		luaL_error(L, "no meta table BOUNDING_MT");
 	}
+
+	luaL_checkudata(L, BS_index, LINALG);
+	lua_pushvalue(L, BS_index);
+	lua_setuservalue(L, -2);
+
 	return 1;
 }
+
+static inline Bounding*
+fetch_bounding(lua_State *L, int index){
+	return (Bounding*)luaL_checkudata(L, index, "BOUNDING_MT");
+}
+
+static int
+lbounding_transform(lua_State* L) {
+	Bounding* b = fetch_bounding(L, 1);
+	auto LS = fetch_LS(L, 1);
+
+	int type;
+	const glm::mat4x4* trans = (const glm::mat4x4*)lastack_value(LS, get_stack_id(L, LS, 2), &type);
+
+	transform_aabb(*trans, b->aabb);
+	b->sphere.Init(b->aabb);
+	b->obb.Init(b->aabb);
+	
+	return 0;
+}
+
 
 static int
 lbounding_merge(lua_State *L) {
-	struct boxstack* bs = (struct boxstack*)lua_touserdata(L, 1);
-	struct lastack *LS = bs->LS;
+	const int numboundings = lua_gettop(L);
+	if (numboundings < 2){
+		luaL_error(L, "invalid argument, at least 3 argument:(ms, bounding1, bounding2)");
+	}
+;
+	Bounding *bounding = fetch_bounding(L, 1);
 
-	luaL_checktype(L, 2, LUA_TTABLE);
-	const int numboundings = (int)lua_rawlen(L, 2);
-	Bounding scenebounding;
-
-	for (int ii = 0; ii < numboundings; ++ii) {
-		lua_geti(L, 2, ii + 1);
-
-		luaL_checktype(L, -1, LUA_TTABLE);
-		lua_getfield(L, -1, "bounding");
-		Bounding bounding;
-		fetch_bounding(L, -1, bounding);
-		lua_pop(L, 1);
-
-		const int fieldtype = lua_getfield(L, -1, "transform");
-		if (fieldtype != LUA_TNIL) {
-			int type;
-			const glm::mat4x4 *trans = (const glm::mat4x4 *)lastack_value(LS, get_stack_id(L, LS, -1), &type);
-			transform_aabb(*trans, bounding.aabb);
-		}
-		lua_pop(L, 1);
-
-		lua_pop(L, 1);
-
-		scenebounding.aabb.Merge(bounding.aabb);
+	for (int ii = 1; ii < numboundings; ++ii) {
+		bounding->Merge(*fetch_bounding(L, ii+1));
 	}
 
-	scenebounding.sphere.Init(scenebounding.aabb);
-	scenebounding.obb.Init(scenebounding.aabb);
-	return push_bounding(L, scenebounding);
+	return 0;
 }
 
 static int
-lbounding_append_point(lua_State* L) {
-	return 1;
-}
+lbounding_append_point(lua_State* L) {	
+	Bounding* b = fetch_bounding(L, 1);
+	auto LS = fetch_LS(L, 1);
 
+	auto pt = get_vec_value(L, LS, 2);
+
+	b->aabb.Append(*tov3(pt));
+	b->sphere.Init(b->aabb);
+	b->obb.Init(b->aabb);
+
+	return 0;
+}
 
 static int
 lbounding_new(lua_State* L) {
+	const int numarg = lua_gettop(L);
 	struct lastack* LS = getLS(L, 1);
 
-	const int numarg = lua_gettop(L);
-
-	if (1 < numarg && numarg < 3){
-		luaL_error(L, "invalid argument. it should be: (stack, min, max, [transform]) 3/4 argument or (stack) only 1 argument");
-		return 0;
+	Bounding bounding;
+	for (int ii = 1; ii < numarg; ++ii) {
+		auto v = get_vec_value(L, LS, ii+1);
+		bounding.aabb.Append(v);
 	}
 
-	glm::vec4 min(0.f), max(0.f);
+	bounding.sphere.Init(bounding.aabb);
+	bounding.obb.Init(bounding.aabb);
 
-	if (numarg >= 3) {
-		min = get_vec_value(L, LS, 2);
-		max = get_vec_value(L, LS, 3);
-	}
+	return push_bounding(L, bounding, 1);
+}
 
-	glm::mat4x4 trans(1.f);
-	if (!lua_isnoneornil(L, 4)) {
-		int valuetype;
-		const float* v = lastack_value(LS, get_stack_id(L, LS, 4), &valuetype);
-		if (valuetype != LINEAR_TYPE_MAT) {
-			luaL_error(L, "argument 4 should be matrix, value given: %d", valuetype);
-		}
+static int
+lbounding_string(lua_State *L){
+	char buffers[512] = { 0 };
+	const Bounding *b = fetch_bounding(L, 1);
+	const auto& min = b->aabb.min;
+	const auto& max = b->aabb.max;
+	const auto& sphere = b->sphere;
+	const auto& obb = b->obb;
 
-		trans = *(glm::mat4x4*)v;
+	sprintf_s(buffers, "\
+aabb:\n\
+\tmin:(%2f, %2f, %2f), max:(%2f, %2f, %2f)\n\
+sphere:\n\
+\tcenter:(%2f, %2f, %2f), radius:%2f\n\
+obb:\n\
+\t(%2f, %2f, %2f, %2f,\n\
+\t %2f, %2f, %2f, %2f,\n\
+\t %2f, %2f, %2f, %2f,\n\
+\t %2f, %2f, %2f, %2f)",
+		min.x, min.y, min.z, max.x, max.y, max.z,
+		sphere.center.x, sphere.center.y, sphere.center.z, sphere.radius,
+		obb.m[0][0], obb.m[0][1], obb.m[0][2], obb.m[0][3],
+		obb.m[1][0], obb.m[1][1], obb.m[1][2], obb.m[1][3],
+		obb.m[2][0], obb.m[2][1], obb.m[2][2], obb.m[2][3],
+		obb.m[3][0], obb.m[3][1], obb.m[3][2], obb.m[3][3]);
 
-		min = trans * min;
-		max = trans * max;
-	}
-
-	const float radius = glm::length((*tov3(max) - *tov3(min)) * 0.5f);
-	const glm::vec4 sphere((*tov3(min) + *tov3(max)) * 0.5f, radius);
-
-	glm::mat4x4 obb;
-	obb[3][0] = sphere[0];
-	obb[3][1] = sphere[1];
-	obb[3][2] = sphere[2];
-
-	obb[0][0] = radius;
-	obb[1][1] = radius;
-	obb[2][2] = radius;
-
-	lua_createtable(L, 0, 3);
-	{
-		lua_createtable(L, 0, 2);
-		{
-			lastack_pushvec4(LS, &min.x);
-			new_refobj(L, LS, lastack_pop(LS));
-			lua_setfield(L, -2, "min");
-
-			lastack_pushvec4(LS, &max.x);
-			new_refobj(L, LS, lastack_pop(LS));
-			lua_setfield(L, -2, "max");
-		}
-		lua_setfield(L, -2, "aabb");
-	}
-
-	{
-		lastack_pushvec4(LS, &sphere.x);
-		new_refobj(L, LS, lastack_pop(LS));
-
-		lua_setfield(L, -2, "sphere");
-	}
-
-	{
-		lastack_pushmatrix(LS, (const float*)& obb);
-		new_refobj(L, LS, lastack_pop(LS));
-		lua_setfield(L, -2, "obb");
-	}
-
+	lua_pushstring(L, buffers);
 	return 1;
 }
+
+static void
+register_bounding_mt(lua_State *L){
+	if (luaL_newmetatable(L, "BOUNDING_MT")){
+		luaL_Reg l[] = {			
+			{ "transform",	lbounding_transform},
+			{ "merge",		lbounding_merge},
+			{ "append",		lbounding_append_point},
+			{ "__tostring", lbounding_string},
+
+			{nullptr, nullptr}
+		};
+
+		luaL_setfuncs(L, l, 0);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
+	}
+}
+
+static void
+register_frustum_mt(lua_State *L){
+
+}
+
 
 extern "C"{
 	LUAMOD_API int
 	luaopen_math3d_baselib(lua_State *L){
+		register_bounding_mt(L);
+		register_frustum_mt(L);
+
 		luaL_Reg l[] = {			
 			{ "intersect",		lintersect },
 			{ "extract_planes", lextract_planes},			
 			{ "frustum_points", lfrustum_points},
 
-			{ "bounding_transform",	lbounding_transform},
-			{ "bounding_merge",		lbounding_merge},
-			{ "bounding_append",	lbounding_append_point},
-			{ "bounding_new",		lbounding_new},
+			{ "new_bounding",	lbounding_new},
 			{ NULL, NULL },
 		};
 

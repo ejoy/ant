@@ -7,7 +7,7 @@ local bgfx = require "bgfx"
 local declmgr = import_package "ant.render".declmgr
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
-local boundings = mathpkg.boundings
+local mathbaselib = require "math3d.baselib"
 
 local function get_desc(name, accessor)
 	local shortname, channel = declmgr.parse_attri_name(name)
@@ -120,10 +120,9 @@ local function create_vertex_buffer(bv, declhandle, bindata, buffers)
 	bv.byteOffset = 0
 end
 
-local function create_prim_bounding(meshscene, prim)
-	local posaccidx = assert(prim["POSITION"])
-	local posacc = meshscene.accessors[posaccidx+1]
-	local bounding = boundings.new(assert(posacc.min), assert(posacc.max))
+local function create_prim_bounding(meshscene, prim)	
+	local posacc = meshscene.accessors[assert(prim.attributes.POSITION)+1]
+	local bounding = mathbaselib.new_bounding(ms, assert(posacc.min), assert(posacc.max))
 	prim.bounding = bounding
 	return bounding
 end
@@ -143,7 +142,7 @@ function util.init_scene(scene, sceneidx, bindata)
 			local meshidx = node.mesh
 			if meshidx then
 				local mesh = meshes[meshidx+1]
-				local meshbounding = boundings.new()
+				local meshbounding = mathbaselib.new_bounding(ms)
 				for _, prim in ipairs(mesh.primitives) do
 					local attribclass = classfiy_attri(prim.attributes, accessors)
 					local decls = create_decl(attribclass)
@@ -159,7 +158,7 @@ function util.init_scene(scene, sceneidx, bindata)
 						create_index_buffer(accessors[indices_accidx+1], bufferviews, bindata, buffers)
 					end
 
-					meshbounding:merge(create_prim_bounding(scene, prim))
+					meshbounding:merge(ms, create_prim_bounding(scene, prim))
 				end
 				mesh.boundings = meshbounding
 			end
