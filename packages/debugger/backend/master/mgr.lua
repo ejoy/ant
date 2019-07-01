@@ -1,7 +1,7 @@
 local json = require 'common.json'
 local proto = require 'common.protocol'
 local ev = require 'common.event'
-local thread = require 'common.thread'
+local thread = require 'remotedebug.thread'
 local stdio = require 'remotedebug.stdio'
 
 local redirect = {}
@@ -17,7 +17,7 @@ local workers = {}
 
 ev.on('thread', function(reason, threadId)
     if reason == "started" then
-        workers[threadId] = assert(thread.channel_produce("DbgWorker" .. threadId))
+        workers[threadId] = assert(thread.channel("DbgWorker" .. threadId))
         ev.emit('worker-ready', threadId)
     elseif reason == "exited" then
         workers[threadId] = nil
@@ -55,7 +55,7 @@ end
 
 function mgr.init(io)
     network = io
-    masterThread = thread.channel_consume 'DbgMaster'
+    masterThread = thread.channel 'DbgMaster'
     network:event_in(event_in)
     network:event_close(event_close)
     return true

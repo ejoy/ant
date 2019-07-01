@@ -1,7 +1,7 @@
 local fs = require 'backend.worker.filesystem'
-local parser = require 'backend.parser'
+local parser = require 'backend.worker.parser'
 local ev = require 'common.event'
-local crc32 = require 'backend.crc32'
+local crc32 = require 'backend.worker.crc32'
 
 local sourcePool = {}
 local codePool = {}
@@ -125,11 +125,7 @@ local function create(source)
             sourceReference = codeReference(source),
             protos = {},
         }
-        local f = load(source)
-        if f then
-            src.si = {}
-            parser(src.si, f)
-        end
+        parser(src, source)
         return src
     end
 end

@@ -10,8 +10,8 @@ local emulator = require 'backend.worker.emulator'
 local ev = require 'common.event'
 local hookmgr = require 'remotedebug.hookmgr'
 local stdio = require 'remotedebug.stdio'
-local thread = require 'common.thread'
-local err = thread.channel_produce 'errlog'
+local thread = require 'remotedebug.thread'
+local err = thread.channel 'errlog'
 
 local initialized = false
 local info = {}
@@ -27,8 +27,8 @@ local openUpdate = false
 local CMD = {}
 
 thread.newchannel ('DbgWorker' .. thread.id)
-local masterThread = thread.channel_produce 'DbgMaster'
-local workerThread = thread.channel_consume ('DbgWorker' .. thread.id)
+local masterThread = thread.channel 'DbgMaster'
+local workerThread = thread.channel ('DbgWorker' .. thread.id)
 
 local function workerThreadUpdate(timeout)
     while true do
@@ -107,10 +107,6 @@ function CMD.terminated()
         initialized = false
         state = 'running'
         ev.emit('terminated')
-        sendToMaster {
-            cmd = 'eventThread',
-            reason = 'exited',
-        }
     end
 end
 
@@ -280,7 +276,7 @@ function CMD.setBreakpoints(pkg)
     if noDebug or not source.valid(pkg.source) then
         return
     end
-    breakpoint.update(pkg.source, pkg.source.si, pkg.breakpoints)
+    breakpoint.update(pkg.source, pkg.breakpoints)
 end
 
 function CMD.setExceptionBreakpoints(pkg)
@@ -546,7 +542,7 @@ function event.thread()
     hookmgr.setcoroutine(co)
 end
 
-function event.wait_client()
+function event.wait()
     while not initialized do
         workerThreadUpdate(0.01)
     end
@@ -576,7 +572,14 @@ function event.event_line()
 end
 
 function event.exit()
+    local exit = initialized
     CMD.terminated()
+    if exit then
+        sendToMaster {
+            cmd = 'eventThread',
+            reason = 'exited',
+        }
+    end
 end
 
 hookmgr.init(function(name, ...)
@@ -647,6 +650,5 @@ function w.openupdate()
     openUpdate = true
     hookmgr.update_open(true)
 end
-
 
 return w

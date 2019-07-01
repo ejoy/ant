@@ -1,4 +1,4 @@
-local fs = require 'common.filesystem'
+local fs = require 'remotedebug.filesystem'
 local ev = require 'common.event'
 local rdebug = require 'remotedebug.visitor'
 

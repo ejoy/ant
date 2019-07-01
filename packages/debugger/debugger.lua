@@ -1,5 +1,5 @@
 local function start_master(io)
-    local master = require 'backend.master'
+    local master = require 'backend.master.mgr'
     if master.init(io) then
         return master.update
     end
@@ -34,7 +34,7 @@ local function bootstrap()
         end
         require 'runtime.vfs'
         require 'backend.worker'
-    ]=]):format(init_thread, "engine/?.lua;pkg/ant.debugger/?.lua")
+    ]=]):format(init_thread, "engine/?.lua;engine/?/?.lua;pkg/ant.debugger/?.lua")
 end
 
 local function start_worker(wait)

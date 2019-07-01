@@ -2,7 +2,7 @@ local mgr = require 'backend.master.mgr'
 local response = require 'backend.master.response'
 local event = require 'backend.master.event'
 local ev = require 'common.event'
-local parser = require 'backend.parser'
+local parser = require 'backend.worker.parser'
 
 local request = {}
 
@@ -116,12 +116,7 @@ end
 function request.setBreakpoints(req)
     local args = req.arguments
     if args.sourceContent then
-        local f = load(skipBOM(args.sourceContent))
-        if f then
-            local source = args.source
-            source.si = {}
-            parser(source.si, f)
-        end
+        parser(args.source, skipBOM(args.sourceContent))
     end
     for _, bp in ipairs(args.breakpoints) do
         bp.id = genBreakpointID()

@@ -5,7 +5,7 @@ wchar_t* u2w(const char *str) {
 	int len = 0;
 	int out_len = 0;
 	wchar_t *buf = NULL;
-	if (!str || !*str) {
+	if (!str) {
 		return NULL;
 	}
 	len = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
@@ -38,7 +38,7 @@ char* w2u(const wchar_t *str)
 	int len = 0;
 	int out_len = 0;
 	char *buf = NULL;
-	if (!str || !*str) {
+	if (!str) {
 		return NULL;
 	}
 	len = WideCharToMultiByte(CP_UTF8, 0, str, -1, NULL, 0, NULL, NULL);

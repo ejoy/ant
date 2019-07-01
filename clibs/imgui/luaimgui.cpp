@@ -2823,21 +2823,8 @@ fCreate(lua_State *L) {
 	for (lua_Integer i = 1; i <= in; ++i) {
 		lua_rawgeti(L, 1, i);
 		luaL_checktype(L, -1, LUA_TTABLE);
-		bool merge = (LUA_TTABLE == lua_rawgeti(L, -1, 1)); lua_pop(L, 1);
-		if (merge) {
-			lua_Integer jn = luaL_len(L, -1);
-			for (lua_Integer j = 1; j <= jn; ++j) {
-				lua_rawgeti(L, -1, i);
-				luaL_checktype(L, -1, LUA_TTABLE);
-				config.MergeMode = (j != 1);
-				CreateFont(L, atlas, &config);
-				lua_pop(L, 1);
-			}
-		}
-		else {
-			config.MergeMode = false;
-			CreateFont(L, atlas, &config);
-		}
+		config.MergeMode = (i != 1);
+		CreateFont(L, atlas, &config);
 		lua_pop(L, 1);
 	}
 

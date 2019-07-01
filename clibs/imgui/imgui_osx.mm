@@ -135,9 +135,9 @@ static const NSRange kEmptyRange = { NSNotFound, 0 };
 @end
 
 
-static void ImeSetInputScreenPosFn_DefaultImpl(int x, int y) {
-    if (IMEView* view = (IMEView*)ImGui::GetIO().ImeWindowHandle) {
-        [view setPosX: x setPosY:y];
+static void ImeSetInputScreenPosFn_DefaultImpl(ImGuiViewport* viewport, ImVec2 pos) {
+    if (IMEView* view = (IMEView*)viewport->PlatformHandle) {
+        [view setPosX:(pos.x - viewport->Pos.x) setPosY:(pos.y - viewport->Pos.y)];
     }
 }
 
@@ -146,7 +146,10 @@ void init_ime(void* window) {
     IMEView* ime = [[IMEView alloc] initWithFrame: NSMakeRect(0.0, 0.0, 0.0, 0.0)];
     [nswindow setContentView: ime];
     [nswindow makeFirstResponder: ime];
-    ImGuiIO& io = ImGui::GetIO();
-    io.ImeWindowHandle = ime;
-    io.ImeSetInputScreenPosFn = ImeSetInputScreenPosFn_DefaultImpl;
+
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    viewport->PlatformHandle = window;
+
+    ImGuiPlatformIO& io = ImGui::GetPlatformIO();
+    io.Platform_SetImeInputPos = ImeSetInputScreenPosFn_DefaultImpl;
 }
