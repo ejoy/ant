@@ -12,13 +12,13 @@ endif
 
 ifeq "$(MODE)" "release"
   ifeq "$(PLAT)" "ios"
-    BGFX_BUILD_MODE = Release
+    BGFX_BUILD_MODE = release
   else
-    BGFX_BUILD_MODE = Debug
+    BGFX_BUILD_MODE = debug
   endif
   CMAKE_BUILD = -DCMAKE_BUILD_TYPE=Release
 else
-  BGFX_BUILD_MODE = Debug
+  BGFX_BUILD_MODE = debug
   CMAKE_BUILD = -DCMAKE_BUILD_TYPE=Debug
 endif
 
