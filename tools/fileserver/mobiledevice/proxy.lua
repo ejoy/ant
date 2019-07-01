@@ -1,6 +1,6 @@
 package.path = table.concat({
-    "packages/?.lua",
-    "packages/?/?.lua",
+	"tools/fileserver/?.lua",
+	"tools/fileserver/?/?.lua"
 }, ";")
 
 log = {}

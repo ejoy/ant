@@ -268,7 +268,7 @@
 					"@executable_path/Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = (
-					../../clibs/ant,
+					../../clibs/ant/o/ios/release,
 					"../../3rd/bgfx/.build/ios-arm64/bin",
 					../../3rd/build/bullet3/ios/lib,
 					"../../3rd/build/ozz-animation/ios/src/animation/runtime",
@@ -277,7 +277,7 @@
 					"../../3rd/build/ozz-animation/ios/src/base",
 				);
 				OTHER_LDFLAGS = (
-					"-lant-ios",
+					"-lant",
 					"-lbgfxDebug",
 					"-lbxDebug",
 					"-lbimgDebug",
@@ -318,7 +318,7 @@
 					"@executable_path/Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = (
-					../../clibs/ant,
+					../../clibs/ant/o/ios/release,
 					"../../3rd/bgfx/.build/ios-arm64/bin",
 					../../3rd/build/bullet3/ios/lib,
 					"../../3rd/build/ozz-animation/ios/src/animation/runtime",
@@ -327,7 +327,7 @@
 					"../../3rd/build/ozz-animation/ios/src/base",
 				);
 				OTHER_LDFLAGS = (
-					"-lant-ios",
+					"-lant",
 					"-lbgfxRelease",
 					"-lbxRelease",
 					"-lbimgRelease",
