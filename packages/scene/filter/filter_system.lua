@@ -99,6 +99,32 @@ local function get_scale_mat(worldmat, scenescale)
 	return worldmat
 end
 
+local function filter_mesh(meshcomp, worldmat, materialcontent)
+	local meshscene = meshcomp.assetinfo.handle
+
+	local lodlevel = meshcomp.lod or 1
+	local sceneidx = meshscene.scenelods and (meshscene.scenelods[lodlevel]) or meshscene.sceneidx
+
+	local scenes = meshscene.scenes[sceneidx]
+	local submesh_refs = meshcomp.submesh_refs
+	for _, meshnode in ipairs(scenes) do
+		local name = meshnode.name
+		if is_visible(name, submesh_refs) then
+			local trans = get_scale_mat(worldmat, meshscene.scenescale)
+			if meshnode.transform then
+				trans = ms(trans, meshnode.transform, "*P")
+			end
+
+			local material_refs = get_material_refs(name, submesh_refs)
+
+			for groupidx, group in ipairs(meshnode) do
+				local material = get_material(group, groupidx, materialcontent, material_refs)
+				ru.insert_primitive(eid, group, material, trans, filter)
+			end
+		end
+	end
+end
+
 function primitive_filter_sys:update()	
 
 	for _, prim_eid in world:each("primitive_filter") do
@@ -108,58 +134,14 @@ function primitive_filter_sys:update()
 		local viewtag = filter.view_tag
 		local filtertag = filter.filter_tag
 
-		local scenebounding = filter.scenebounding
-		if scenebounding == nil then
-			scenebounding = mathbaselib.new_bounding(ms)
-			filter.scenebounding = scenebounding
-		else
-			scenebounding:reset()
-		end
-
-		local boundings, transforms = {}, {}
-
 		for _, eid in world:each(filtertag) do
 			local ce = world[eid]
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
 			if vt and ft then
-				local mesh = ce.mesh
-				local meshscene = mesh.assetinfo.handle
-				local worldmat = ce.transform.world
-				local materialcontent = assert(ce.material.content)
-
-				if meshscene then
-					local lodlevel = mesh.lod or 1
-					local sceneidx = meshscene.scenelods and (meshscene.scenelods[lodlevel]) or meshscene.sceneidx
-
-					local scenes = meshscene.scenes[sceneidx]
-					local submesh_refs = mesh.submesh_refs
-					for _, meshnode in ipairs(scenes) do
-						local name = meshnode.name
-						if is_visible(name, submesh_refs) then
-							local trans = get_scale_mat(worldmat, meshscene.scenescale)
-							if meshnode.transform then
-								trans = ms(trans, meshnode.transform, "*P")
-							end
-
-							if meshnode.bounding then
-								boundings[#boundings+1] = meshnode.bounding
-								transforms[#transforms+1] = trans
-							end
-				
-							local material_refs = get_material_refs(name, submesh_refs)
-
-							for groupidx, group in ipairs(meshnode) do
-								local material = get_material(group, groupidx, materialcontent, material_refs)
-								ru.insert_primitive(eid, group, material, trans, filter)
-							end
-						end
-					end
-				end
+				filter_mesh(ce.mesh, ce.transform.world, ce.material.content)
 			end
 		end
-
-		scenebounding:merge_list(boundings, transforms)
 	end
 end
 

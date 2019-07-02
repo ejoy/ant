@@ -3,10 +3,12 @@ local log = log and log.info(...) or print
 
 local bgfx 		= require "bgfx"
 local viewidmgr = require "viewid_mgr"
-local gltfutil = import_package "ant.glTF".util
 local default_comp = require "components.default"
 local computil = require "components.util"
 local fs = require "filesystem"
+local mathbaselib = require "math3d.baselib"
+local mathpkg = import_package "ant.math"
+local ms = mathpkg.stack
 
 local util = {}
 util.__index = util
@@ -79,6 +81,21 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 	bgfx.submit(vid, prog, 0, false)
 end
 
+local function add_tranformed_bounding(r, bounding)
+	if bounding then
+		local tb = r.tranformed_bounding
+		if tb == nil then
+			tb = mathbaselib.new_bounding(ms)
+			r.tranformed_bounding = tb
+		else
+			tb:reset()
+		end
+		
+		tb:merge(bounding)
+		tb:transform(worldmat)
+	end
+end
+
 local function add_result(eid, group, materialinfo, properties, worldmat, result)
 	local idx = result.cacheidx
 	local r = result[idx]
@@ -93,6 +110,8 @@ local function add_result(eid, group, materialinfo, properties, worldmat, result
 	r.material 	= materialinfo
 	r.properties = properties
 	r.worldmat 	= worldmat
+
+	add_tranformed_bounding(r, group.bounding)
 
 	result.cacheidx = idx + 1
 
