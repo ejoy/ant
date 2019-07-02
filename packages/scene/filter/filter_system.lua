@@ -13,8 +13,6 @@ local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 local mu = mathpkg.util
 
-local math3d = require "math3d"
-
 local filter_properties = ecs.system "filter_properties"
 function filter_properties:update()
 	for _, prim_eid in world:each("primitive_filter") do
@@ -64,21 +62,6 @@ local function reset_results(results)
 	end
 end
 
-local function node_matrix(node)
-	if node.matrix then
-		return ms:matrix(node.matrix)
-	end
-
-	if node.scale or node.rotation or node.translation then
-		return ms:srtmat(node.scale, node.rotation, node.translation)
-	end
-end
-
-local function calc_node_transform(node, parentmat)
-	local nodetrans = node_matrix(node)
-	return nodetrans and ms(parentmat, nodetrans, "*P") or parentmat
-end
-
 local function get_material(prim, primidx, materialcontent, material_refs)
 	if material_refs then
 		local idx = material_refs[primidx] or 1
@@ -109,42 +92,6 @@ local function get_material_refs(meshname, submesh_refs)
 	end
 end
 
-local function traverse_scene(scene, eid, materialcontent, submesh_refs, worldmat, filter, boundinginfo)
-	local nodes, meshes = scene.nodes, scene.meshes
-	local boundings, transforms = boundinginfo.boundings, boundinginfo.transforms
-	local function traverse_scene_ex(scenenodes, parentmat)
-		for _, nodeidx in ipairs(scenenodes) do
-			local node = nodes[nodeidx+1]
-
-			local nodetrans = calc_node_transform(node, parentmat)
-			if node.children then
-				traverse_scene_ex(node.children, nodetrans)
-			end
-
-			local meshidx = node.mesh
-			if meshidx then
-				local mesh = meshes[meshidx+1]
-				local meshname = mesh.name
-				if is_visible(meshname, submesh_refs) then
-					local material_refs = get_material_refs(meshname, submesh_refs)
-					for idx, prim in ipairs(mesh.primitives) do
-						local bounding = prim.bounding
-						if bounding then
-							boundings[#boundings+1] = bounding
-							transforms[#transforms+1] = nodetrans
-						end
-						ru.insert_primitive(eid, prim, scene, 
-							get_material(prim, idx, materialcontent, material_refs),
-							nodetrans, filter)
-					end
-				end
-			end
-		end
-	end
-
-	traverse_scene_ex(scene.scenes[scene.scene+1].nodes, worldmat)
-end
-
 local function get_scale_mat(worldmat, scenescale)
 	if scenescale and scenescale ~= 1 then
 		return ms(worldmat, ms:srtmat(mu.scale_mat(scenescale)), "*P")
@@ -169,7 +116,8 @@ function primitive_filter_sys:update()
 			scenebounding:reset()
 		end
 
-		local boundinginfo = {boundings={}, transforms={}}
+		local boundings, transforms = {}, {}
+
 		for _, eid in world:each(filtertag) do
 			local ce = world[eid]
 			local vt = ce[viewtag]
@@ -194,6 +142,11 @@ function primitive_filter_sys:update()
 								trans = ms(trans, meshnode.transform, "*P")
 							end
 
+							if meshnode.bounding then
+								boundings[#boundings+1] = meshnode.bounding
+								transforms[#transforms+1] = trans
+							end
+				
 							local material_refs = get_material_refs(name, submesh_refs)
 
 							for groupidx, group in ipairs(meshnode) do
@@ -202,12 +155,11 @@ function primitive_filter_sys:update()
 							end
 						end
 					end
-					--traverse_scene(scene, eid, materialcontent, mesh.submesh_refs, get_scale_mat(worldmat, scene), filter, boundinginfo)
 				end
 			end
 		end
 
-		scenebounding:merge_list(boundinginfo.boundings, boundinginfo.transforms)
+		scenebounding:merge_list(boundings, transforms)
 	end
 end
 
