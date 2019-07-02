@@ -192,7 +192,7 @@ function rendersys:update()
 			local render_properties = filter.render_properties
 			local results = filter.result
 
-			local function draw_primitives(viewid, result, render_properties)
+			local function draw_primitives(result)
 				local numopaque = result.cacheidx - 1
 				for i=1, numopaque do
 					local prim = result[i]
@@ -200,8 +200,8 @@ function rendersys:update()
 				end
 			end
 
-			draw_primitives(viewid, results.opaque, render_properties)
-			draw_primitives(viewid, results.translucent, render_properties)
+			draw_primitives(results.opaticy)
+			draw_primitives(results.translucent)
 		end
 		
 	end

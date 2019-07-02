@@ -56,72 +56,6 @@ local function update_properties(shader, properties, render_properties)
 	end
 end
 
--- function util.draw_primitive_OLDCOLD(vid, primgroup, mat, render_properties)
---     bgfx.set_transform(mat)
-
--- 	-- 保留兼容，最好按实验结果重构
--- 	local material = primgroup.material[1]
--- 	local properties =  primgroup.properties[1]
-	
--- 	local mg = assert(primgroup.mgroup)
--- 	local ib, vb = mg.ib, mg.vb
-
--- 	local prims = mg.primitives
--- 	if prims == nil or next(prims) == nil then
--- 		-- 地形走的是这个分支? 
--- 		bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
--- 		update_properties(material.shader, properties, render_properties)
--- 		local prog = material.shader.prog
-
--- 		if ib then
--- 			bgfx.set_index_buffer(ib.handle)
--- 		end
--- 		for idx, v in ipairs(vb.handles) do
--- 			bgfx.set_vertex_buffer(idx - 1, v)
--- 		end
-		
--- 		bgfx.submit(vid, prog, 0, false)
--- 	else
--- 		local numprim = #prims
-
--- 		for idx, v in ipairs(vb.handles) do
--- 			bgfx.set_vertex_buffer(idx - 1, v)
--- 		end
-
--- 		for i=1, numprim do
--- 			-- 这部分后续需要优化，提供机制判断一个mesh 是否具备多个材质，分开处理
--- 			local material = primgroup.material[i]  or primgroup.material[1]
--- 			local properties = primgroup.properties[i] or primgroup.properties[1]
--- 			local prog = material.shader.prog
-
--- 			bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
--- 			update_properties(material.shader, properties, render_properties)
-
--- 			local prim = prims[i]
--- 			if ib and prim.start_index and prim.num_indices then
--- 				bgfx.set_index_buffer(ib.handle, prim.start_index, prim.num_indices)
--- 			end
--- 			bgfx.submit(vid, prog, 0, i~=numprim)
--- 		end
-
--- 		-- for i=1, numprim do
--- 		-- 	local prim = prims[i]
-
--- 		-- 	if ib and prim.start_index and prim.num_indices then
--- 		-- 		bgfx.set_index_buffer(ib.handle, prim.start_index, prim.num_indices)
--- 		-- 	end
--- 		-- 	for idx, v in ipairs(vb.handles) do
--- 		-- 		bgfx.set_vertex_buffer(idx - 1, v, prim.start_vertex, prim.num_vertices)
--- 		-- 		--bgfx.set_vertex_buffer(idx - 1, v)
--- 		-- 	end
-
--- 		-- 	bgfx.submit(vid, prog, 0, i~=numprim)
--- 		-- end
-
--- 	end
--- end
-
-
 function util.draw_primitive(vid, primgroup, mat, render_properties)
     bgfx.set_transform(mat)
 
@@ -134,42 +68,15 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 	local mg = assert(primgroup.mgroup)
 	local ib, vb = mg.ib, mg.vb	
 
-	if primgroup.using_glb then
-		if ib then
-			bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
-		end
-
-		local start_v, num_v = vb.start, vb.num
-		for idx, handle in pairs(vb.handles) do
-			bgfx.set_vertex_buffer(idx, handle, start_v, num_v)
-		end
-		bgfx.submit(vid, prog, 0, false)
-	else
-		local prims = mg.primitives
-		if prims == nil or next(prims) == nil then
-			if ib then
-				bgfx.set_index_buffer(ib.handle)
-			end
-			for idx, v in ipairs(vb.handles) do
-				bgfx.set_vertex_buffer(idx - 1, v)
-			end
-			
-			bgfx.submit(vid, prog, 0, false)
-		else
-			local numprim = #prims
-
-			for idx, v in ipairs(vb.handles) do
-				bgfx.set_vertex_buffer(idx - 1, v)
-			end
-			for i=1, numprim do
-				local prim = prims[i]
-				if ib and prim.start_index and prim.num_indices then
-					bgfx.set_index_buffer(ib.handle, prim.start_index, prim.num_indices)
-				end
-				bgfx.submit(vid, prog, 0, i~=numprim)
-			end
-		end
+	if ib then
+		bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
 	end
+
+	local start_v, num_v = vb.start, vb.num
+	for idx, handle in ipairs(vb.handles) do
+		bgfx.set_vertex_buffer(idx, handle, start_v, num_v)
+	end
+	bgfx.submit(vid, prog, 0, false)
 end
 
 local function add_result(eid, group, materialinfo, properties, worldmat, result)
@@ -192,117 +99,10 @@ local function add_result(eid, group, materialinfo, properties, worldmat, result
 	return r
 end
 
-
-function util.insert_primitive_old(eid, meshhandle, materials, worldmat, filter,group_id)	
-	local mgroups = meshhandle.groups
-	local results = filter.result	
-
-	if group_id ~= nil then 
-		local g = mgroups[ group_id ]
-		local mc = materials[ group_id ] or materials[1] 
-
-		-- this two variable trans to table parameters
-		local mat_info = {} --mc.materialinfo  				-- maybe need materials[] for primitives[],futhur extend
-		local mat_properties = {}  --mc.properties 
-
-		-- 一个primitive 带 n 个materials ，需要把这些materials 传到render 
-		-- 这部分需要重写，合并到加载时候，不需要每次动态装配
-		-- 原mat_info,mat_properties 存在一个引用关系，需要从加载时，就为每个mesh 提供 materials，properties
-		-- 这里需要从整个fbx materials 去找出对应material 装备，推前到加载时完成，需要新需求修改统一
-		-- tested install mat&properties for submesh'submesh
-		local num_primitives = #g.primitives 
-		if num_primitives >= 1 and mat_info.ajust ~= 1 then 
-			local base = g.primitives[1].material_idx
-			for i=1,num_primitives do 
-				local m_idx = g.primitives[i].material_idx
-				m_idx = m_idx - base + 1
-				local m_content = materials[m_idx] or materials[1]   -- some prim 
-				table.insert(mat_info,m_content.materialinfo)
-			end 
-			mat_info.ajust = 1
-		end 
-
-		if num_primitives >= 1 and mat_properties.ajust ~= 1 then  
-			local base = g.primitives[1].material_idx
-			for i=1,num_primitives do 
-				local m_idx = g.primitives[i].material_idx
-				m_idx = m_idx - base + 1
-				local m_content = materials[m_idx] or materials[1]   -- some prim 
-				table.insert(mat_properties,m_content.properties)
-			end 
-			mat_properties.ajust = 1
-		end 
-        -- tested 
-
-		if mat_info[1].surface_type.transparency == "translucent" then
-			add_result(eid, g, mat_info, mat_properties, worldmat, results.translucent)
-		else
-			add_result(eid, g, mat_info, mat_properties, worldmat, results.opaque)
-		end
-	else
-		--   compatible with the one mode
-		for i=1, #mgroups do
-			local g = mgroups[i]
-			local mc = materials[i] or materials[1]
-
-
-			local mi = { mc.materialinfo }
-			local properties = { mc.properties }
-			
-			if mi[1].surface_type.transparency == "translucent" then
-				add_result(eid, g, mi, properties, worldmat, results.translucent)
-			else
-				add_result(eid, g, mi, properties, worldmat, results.opaque)
-			end
-		end
-	end 
-end
-
-function util.insert_primitive(eid, prim, meshscene, material, worldmat, filter)
-	local result = filter.result
-	local function vb_info(prim, meshscene)
-		local bvidx_mapper = {}
-		local vbhandles = {}
-		for _, accidx in pairs(prim.attributes) do
-			local acc = meshscene.accessors[accidx+1]
-			local bvidx = acc.bufferView
-			if not bvidx_mapper[bvidx] then
-				vbhandles[#vbhandles+1] = meshscene.bufferViews[bvidx+1].handle
-				bvidx_mapper[bvidx] = true
-			end
-		end
-
-		return {
-			handles = vbhandles,
-			start = gltfutil.start_vertex(prim, meshscene),
-			num = gltfutil.num_vertices(prim, meshscene),
-		}
-	end
-
-	local function ib_info(prim, meshscene)
-		local indices = prim.indices
-		if indices then
-			local idxacc = meshscene.accessors[indices+1]
-			local idxbv = meshscene.bufferViews[idxacc.bufferView+1]
-			return {
-				handle = idxbv.handle,
-				start = gltfutil.start_index(prim, meshscene),
-				num = gltfutil.num_indices(prim, meshscene),
-			}
-		end
-	end
-
-	local group = {
-		vb = vb_info(prim, meshscene),
-		ib = ib_info(prim, meshscene),
-	}
-
+function util.insert_primitive(eid, group, material, worldmat, filter)
 	local mi = material.materialinfo
-	local resulttarget = mi.surface_type.transparency == "translucent" and
-		result.translucent or result.opaque
-
-	local r = add_result(eid, group, mi, material.properties, worldmat, resulttarget)
-	r.using_glb = true
+	local resulttarget = assert(filter.result[mi.surface_type.transparency])
+	add_result(eid, group, mi, material.properties, worldmat, resulttarget)
 end
 
 function util.create_render_queue_entity(world, view_rect, viewdir, eyepos, view_tag, viewid)	

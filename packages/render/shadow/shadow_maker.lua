@@ -245,11 +245,7 @@ local function create_frustum_bounding_entity()
 	}
 
 	local num_vertices = 8
-	world[eid].mesh.assetinfo = gltfutil.create_simple_mesh({
-			stride = 16,
-			{name="POSITION", offset=0, elemcount=3, elemtype="FLOAT"},
-			{name="COLOR_0", offset=12, elemcount=4, elemtype="UNSIGNED_BYTE"},
-		}, generate_lighting_frustum_vb(), num_vertices)
+	world[eid].mesh.assetinfo = gltfutil.create_simple_mesh( "p3|c40niu", generate_lighting_frustum_vb(), num_vertices)
 end
 
 function debug_sm:init()

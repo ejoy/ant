@@ -41,11 +41,7 @@ local function fill_procedural_sky_mesh(skyentity)
 	end
 
 	local meshcomp = skyentity.mesh
-
-	meshcomp.assetinfo = computil.create_simple_mesh({
-		stride = 8, -- "ff"
-		{name="POSITION", offset=0, elemtype="FLOAT", elemcount=2},
-	}, vb, w * h, ib, #ib)
+	meshcomp.assetinfo = computil.create_simple_mesh("p2", vb, w * h, ib, #ib)
 end
 
 function util.create_procedural_sky(world, whichhour, whichmonth, whichlatitude, turbidity, follow_by_directional_light)

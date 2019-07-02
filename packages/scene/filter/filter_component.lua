@@ -54,7 +54,7 @@ function pf:init()
 	self.result = {
 		cast_shadow = {},
 		translucent = {},
-		opaque = {},
+		opaticy = {},
 	}
 	self.render_properties = {
 		lighting = default_properties(),

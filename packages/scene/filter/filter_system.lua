@@ -145,9 +145,7 @@ local function traverse_scene(scene, eid, materialcontent, submesh_refs, worldma
 	traverse_scene_ex(scene.scenes[scene.scene+1].nodes, worldmat)
 end
 
-local function get_scale_mat(worldmat, scene)
-	local scenescale = scene.scenescale
-						
+local function get_scale_mat(worldmat, scenescale)
 	if scenescale and scenescale ~= 1 then
 		return ms(worldmat, ms:srtmat(mu.scale_mat(scenescale)), "*P")
 	end
@@ -178,13 +176,33 @@ function primitive_filter_sys:update()
 			local ft = ce[filtertag]
 			if vt and ft then
 				local mesh = ce.mesh
-				local assetinfo = mesh.assetinfo				
-				local scene = assetinfo.handle
+				local meshscene = mesh.assetinfo.handle
 				local worldmat = ce.transform.world
 				local materialcontent = assert(ce.material.content)
 
-				if scene then
-					traverse_scene(scene, eid, materialcontent, mesh.submesh_refs, get_scale_mat(worldmat, scene), filter, boundinginfo)
+				if meshscene then
+					local lodlevel = mesh.lod or 1
+					local sceneidx = meshscene.scenelods and (meshscene.scenelods[lodlevel]) or meshscene.sceneidx
+
+					local scenes = meshscene.scenes[sceneidx]
+					local submesh_refs = mesh.submesh_refs
+					for _, meshnode in ipairs(scenes) do
+						local name = meshnode.name
+						if is_visible(name, submesh_refs) then
+							local trans = get_scale_mat(worldmat, meshscene.scenescale)
+							if meshnode.transform then
+								trans = ms(trans, meshnode.transform, "*P")
+							end
+
+							local material_refs = get_material_refs(name, submesh_refs)
+
+							for groupidx, group in ipairs(meshnode) do
+								local material = get_material(group, groupidx, materialcontent, material_refs)
+								ru.insert_primitive(eid, group, material, trans, filter)
+							end
+						end
+					end
+					--traverse_scene(scene, eid, materialcontent, mesh.submesh_refs, get_scale_mat(worldmat, scene), filter, boundinginfo)
 				end
 			end
 		end
