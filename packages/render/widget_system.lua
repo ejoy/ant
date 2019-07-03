@@ -67,25 +67,27 @@ function rmb:update()
 	for _, eid in world:each "mesh" do
 		local e = world[eid]
 
-		local m = e.mesh
-		local meshscene = m.assetinfo.handle
+		if e.mesh_bounding_drawer_tag == nil and e.main_view then
+			local m = e.mesh
+			local meshscene = m.assetinfo.handle
 
-		local worldmat = ms:srtmat(e.transform)
+			local worldmat = ms:srtmat(e.transform)
 
-		for _, scene in ipairs(meshscene.scenes) do
-			for _, mn in ipairs(scene)	do
-				local trans = worldmat
-				if mn.transform then
-					trans = ms(worldmat, trans, "*P")
-				end
+			for _, scene in ipairs(meshscene.scenes) do
+				for _, mn in ipairs(scene)	do
+					local trans = worldmat
+					if mn.transform then
+						trans = ms(trans, mn.transform, "*P")
+					end
 
-				for _, g in ipairs(mn) do
-					local b = g.bounding
-					if b then
-						local tb = mathbaselib.new_bounding(ms)
-						tb:merge(b)
-						tb:transform(trans)
-						add_aabb_bounding(dmesh, tb:get "aabb")
+					for _, g in ipairs(mn) do
+						local b = g.bounding
+						if b then
+							local tb = mathbaselib.new_bounding(ms)
+							tb:merge(b)
+							tb:transform(trans)
+							add_aabb_bounding(dmesh, tb:get "aabb")
+						end
 					end
 				end
 			end
