@@ -82,13 +82,13 @@ local mesh = ecs.component "mesh"
 local function check_mesh_lod(mesh)
 	local scene = mesh.assetinfo.handle
 	if scene.scenelods then
-		assert(0 <= scene.scene < scene.scenelods)
-		if mesh.lodidx <= 0 or mesh.lodidx > #scene.scenelods then
+		assert(1 <= scene.sceneidx and scene.sceneidx <= #scene.scenelods)
+		if mesh.lodidx < 1 or mesh.lodidx > #scene.scenelods then
 			print("invalid lod:", mesh.lodidx, "max lod:", scene.scenelods)
 			mesh.lodidx = 1
 		end
 	else
-		if scene.scene ~= mesh.lodidx - 1 then
+		if scene.sceneidx ~= mesh.lodidx then
 			print("default lod scene is not equal to lodidx")
 		end
 	end
@@ -104,12 +104,26 @@ function mesh:init()
 end
 
 function mesh:delete()
-	local scene = self.assetinfo
-	if scene then
-		for _, bv in ipairs(scene.bufferViews) do
-			if bv.handle then
-				bgfx.destroy(bv.handle)
-				bv.handle = nil
+	local meshscene = self.assetinfo.handle
+	if meshscene then
+		local handles = {}
+		for _, scene in ipairs(meshscene.scenes) do
+			for _, node in ipairs(scene) do
+				for _, group in ipairs(node) do
+					for _, vh in ipairs(group.vb.handles) do
+						handles[vh] = true
+					end
+
+					if group.ib then
+						handles[group.ib.handle] = true
+					end
+				end
+			end
+		end
+
+		for handle in pairs(handles) do
+			if handle then
+				bgfx.destroy(handle)
 			end
 		end
 	end

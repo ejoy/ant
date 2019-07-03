@@ -75,57 +75,44 @@ local function gen_indices_flags(accessor)
 	return flags
 end
 
-local function create_ib_info(accessor, bufferviews, bindata, buffers)
-	local bvidx = accessor.bufferView+1
-	local bv = bufferviews[bvidx]
-	if bv.handle == nil then
-		if bindata then
-			local start_offset = bv.byteOffset + 1
-			local end_offset = start_offset + bv.byteLength
-	
-			bv.handle = bgfx.create_index_buffer({
-				bindata, start_offset, end_offset,
-			}, gen_indices_flags(accessor))
-		else
-			assert(buffers)
-			local buffer = buffers[assert(bv.buffer)+1]
-			local appdata = buffer.extras
-			if buffer.extras then
-				bv.handle = bgfx.create_index_buffer(appdata)
-			else
-				assert("not implement from uri")
-			end
-		end
-		bv.byteOffset = 0
+local function create_ib_handle(bv, bufferflag, bindata, buffers)
+	if bindata then
+		local start_offset = bv.byteOffset + 1
+		local end_offset = start_offset + bv.byteLength
+
+		return bgfx.create_index_buffer({
+			bindata, start_offset, end_offset,
+		}, bufferflag)
 	end
 
-	local elemsize = gltfutil.accessor_elemsize(accessor)
+	assert(buffers)
+	local buffer = buffers[assert(bv.buffer)+1]
+	local appdata = buffer.extras
+	if buffer.extras then
+		return bgfx.create_index_buffer(appdata)
+	end
 
-	return {
-		handle = bv.handle,
-		start = accessor.byteOffset // elemsize,
-		num = accessor.count,
-	}
+	assert("not implement from uri")
 end
 
 local function create_vb_handle(bv, declhandle, bindata, buffers)
 	local start_offset = bv.byteOffset + 1
 	local end_offset = start_offset + bv.byteLength
+	
 	if bindata then
-		bv.handle = bgfx.create_vertex_buffer({
+		return bgfx.create_vertex_buffer({
 			"!", bindata, start_offset, end_offset
 		}, declhandle)
-	else
-		assert(buffers)
-		local buffer = buffers[assert(bv.buffer)+1]
-		local appdata = buffer.extras
-		if buffer.extras then
-			bv.handle = bgfx.create_vertex_buffer(appdata, declhandle)
-		else
-			assert("not implement from uri")
-		end
 	end
-	bv.byteOffset = 0
+
+	assert(buffers)
+	local buffer = buffers[assert(bv.buffer)+1]
+	local appdata = buffer.extras
+	if buffer.extras then
+		return bgfx.create_vertex_buffer(appdata, declhandle)
+	end
+
+	assert("not implement from uri")
 end
 
 local function create_prim_bounding(meshscene, prim)	
@@ -153,6 +140,7 @@ local function calc_node_transform(node, parentmat)
 end
 
 local function init_scene(gltfscene, bindata)
+	local bvhandles = {}
 	local function create_mesh_scene(gltfnodes, parentmat, scenegroups)
 		for _, nodeidx in ipairs(gltfnodes) do
 			local node = gltfscene.nodes[nodeidx + 1]
@@ -184,11 +172,12 @@ local function init_scene(gltfscene, bindata)
 					
 					local handles = {}
 					for bvidx, decl in pairs(decls) do
+						local handle = bvhandles[bvidx+1]
 						local bv = gltfscene.bufferViews[bvidx+1]
-						if bv.handle == nil then
-							create_vb_handle(bv, decl.handle, bindata, gltfscene.buffers)
+						if handle == nil then
+							handle = create_vb_handle(bv, decl.handle, bindata, gltfscene.buffers)
 						end
-						handles[#handles+1] = bv.handle
+						handles[#handles+1] = handle
 					end
 
 					group.vb = {
@@ -199,7 +188,20 @@ local function init_scene(gltfscene, bindata)
 
 					local indices_accidx = prim.indices
 					if indices_accidx then
-						group.ib = create_ib_info(gltfscene.accessors[indices_accidx+1], gltfscene.bufferViews, bindata, gltfscene.buffers)
+						local idxacc = gltfscene.accessors[indices_accidx+1]
+						local elemsize = gltfutil.accessor_elemsize(idxacc)
+						local bv = gltfscene.bufferViews[idxacc.bufferView+1]
+
+						local handle = bvhandles[idxacc.bufferView+1]
+						if handle == nil then
+							handle = create_ib_handle(bv, gen_indices_flags(idxacc), bindata, gltfscene.buffers)
+						end
+
+						group.ib = {
+							handle = handle,
+							start = idxacc.byteOffset // elemsize,
+							num = idxacc.count,
+						}
 					end
 
 					local bb = create_prim_bounding(gltfscene, prim)
