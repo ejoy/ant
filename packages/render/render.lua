@@ -194,9 +194,16 @@ function rendersys:update()
 
 			local function draw_primitives(result)
 				local num = result.cacheidx - 1
+				local visibleset = result.visible_set
+				--assert(#visibleset == num)
 				for i=1, num do
 					local prim = result[i]
-					ru.draw_primitive(viewid, prim, prim.worldmat, render_properties)
+					local visible = visibleset and visibleset[i] or true
+					if visible ~= "outside" then
+						ru.draw_primitive(viewid, prim, prim.worldmat, render_properties)
+					else
+						print("eid:", prim.eid, "name : ", prim.name or "", "is not visible")
+					end
 				end
 			end
 
