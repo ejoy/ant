@@ -2,7 +2,7 @@ include ../common.mk
 include ../bgfx/bgfx_define.mk
 
 ifeq "$(PLAT)" "mingw"
-default : imgui.dll
+default : $(ODIR)/imgui.dll
 else
 default : $(ODIR)/libimgui.a
 endif

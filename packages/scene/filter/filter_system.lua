@@ -99,7 +99,7 @@ local function get_scale_mat(worldmat, scenescale)
 	return worldmat
 end
 
-local function filter_mesh(meshcomp, worldmat, materialcontent)
+local function filter_mesh(eid, meshcomp, worldmat, materialcontent, filter)
 	local meshscene = meshcomp.assetinfo.handle
 
 	local lodlevel = meshcomp.lod or 1
@@ -139,7 +139,7 @@ function primitive_filter_sys:update()
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
 			if vt and ft then
-				filter_mesh(ce.mesh, ce.transform.world, ce.material.content)
+				filter_mesh(eid, ce.mesh, ce.transform.world, ce.material.content, filter)
 			end
 		end
 	end

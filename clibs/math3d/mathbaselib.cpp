@@ -269,11 +269,15 @@ lfrustum_interset_list(lua_State* L) {
 	lua_createtable(L, len, 0);
 	for (int ii = 0; ii < len ; ++ii){
 		lua_geti(L, 2, ii + 1);
-		auto b = fetch_bounding(L, -1);
+		const Bounding* b = LUA_TUSERDATA == lua_type(L, -1) ? fetch_bounding(L, -1) : nullptr;		
 		lua_pop(L, 1);
 
-		auto result = planes_intersect(f->planes, b->aabb);
-		lua_pushstring(L, result);
+		if (b){
+			auto result = planes_intersect(f->planes, b->aabb);
+			lua_pushstring(L, result);
+		} else {
+			lua_pushstring(L, "inside");
+		}
 		lua_seti(L, 3, ii + 1);
 	}
 

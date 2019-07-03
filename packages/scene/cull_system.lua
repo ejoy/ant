@@ -13,25 +13,31 @@ local cull_sys = ecs.system "cull_system"
 cull_sys.depend "primitive_filter_system"
 
 function cull_sys:update()
-	local mq = world:first_entity "main_queue"
-	local filter = mq.primitive_filter
-	local camera = mq.camera
-	local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
-	-- plane is in world space
-	local planes = mathbaselib.extract_planes()
-	local frustum = mathbaselib.new_frustum(ms(proj, view, "*m"))
-	
-	local results = filter.result
-	for _, resulttarget in pairs(results) do
-		local boundings = {}
-		for _, prim in ipairs(resulttarget) do
-			local tb = prim.transformed_bounding
-			boundings[#boundings+1] = tb or true
+	for _, tag in ipairs {"main_queue", "shadow"} do
+		local e = world:first_entity(tag)
+		if e then
+			local filter = e.primitive_filter
+			local camera = e.camera
+			local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
+			local frustum = mathbaselib.new_frustum(ms, viewproj)
+			
+			local results = filter.result
+			for _, resulttarget in pairs(results) do
+				local boundings = {}
+				local num = resulttarget.cacheidx - 1
+				for i=1, num do
+					local prim = resulttarget[i]
+					local tb = prim.transformed_bounding
+					boundings[#boundings+1] = tb == nil and true or tb
+				end
+
+				if num > 0 then
+					local visible_set = frustum:interset_list(boundings)
+					assert(#visible_set == #boundings)
+
+					resulttarget.visible_set = visible_set
+				end
+			end
 		end
-
-		local visible_set = frustum:interset_list(boundings)
-		assert(#visible_set == #boundings)
-
-		resulttarget.visible_set = visible_set
 	end
 end

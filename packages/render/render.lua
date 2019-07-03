@@ -193,8 +193,8 @@ function rendersys:update()
 			local results = filter.result
 
 			local function draw_primitives(result)
-				local numopaque = result.cacheidx - 1
-				for i=1, numopaque do
+				local num = result.cacheidx - 1
+				for i=1, num do
 					local prim = result[i]
 					ru.draw_primitive(viewid, prim, prim.worldmat, render_properties)
 				end

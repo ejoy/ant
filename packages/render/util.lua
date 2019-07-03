@@ -81,12 +81,12 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 	bgfx.submit(vid, prog, 0, false)
 end
 
-local function add_tranformed_bounding(r, bounding)
+local function add_tranformed_bounding(r, worldmat, bounding)
 	if bounding then
-		local tb = r.tranformed_bounding
+		local tb = r.transformed_bounding
 		if tb == nil then
 			tb = mathbaselib.new_bounding(ms)
-			r.tranformed_bounding = tb
+			r.transformed_bounding = tb
 		else
 			tb:reset()
 		end
@@ -111,7 +111,7 @@ local function add_result(eid, group, materialinfo, properties, worldmat, result
 	r.properties = properties
 	r.worldmat 	= worldmat
 
-	add_tranformed_bounding(r, group.bounding)
+	add_tranformed_bounding(r, worldmat, group.bounding)
 
 	result.cacheidx = idx + 1
 
