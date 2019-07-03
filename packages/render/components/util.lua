@@ -129,20 +129,7 @@ function util.is_entity_visible(entity)
     return false
 end
 
-function util.create_simple_mesh(vertex_desc, vb, num_vertices, ib, num_indices)
-	local group = {
-		vb = {
-			handles = {
-				bgfx.create_vertex_buffer(vb, declmgr.get(vertex_desc).handle),
-			},
-			start = 0, num = num_vertices,
-		},
-		ib = ib and {
-			handle = bgfx.create_index_buffer(ib),
-			start = 0, num = num_indices,
-		} or nil
-	}
-
+local function assign_group_as_mesh(group)
 	return {handle = {
 		sceneidx = 1,
 		scenes = {
@@ -155,6 +142,39 @@ function util.create_simple_mesh(vertex_desc, vb, num_vertices, ib, num_indices)
 			}
 		}
 	}}
+end
+
+function util.create_simple_mesh(vertex_desc, vb, num_vertices, ib, num_indices)
+	return assign_group_as_mesh {
+		vb = {
+			handles = {
+				bgfx.create_vertex_buffer(vb, declmgr.get(vertex_desc).handle),
+			},
+			start = 0, num = num_vertices,
+		},
+		ib = ib and {
+			handle = bgfx.create_index_buffer(ib),
+			start = 0, num = num_indices,
+		} or nil
+	}
+end
+
+function util.create_simple_dynamic_mesh(vertex_desc, num_vertices, num_indices)
+	local decl = declmgr.get(vertex_desc)
+	return assign_group_as_mesh {
+		vb = {
+			handles = {
+				bgfx.create_dynamic_vertex_buffer(num_vertices * decl.stride, decl.handle, "a"),
+			},
+			start = 0,
+			num = num_vertices,
+		},
+		ib = num_indices and {
+			handle = bgfx.create_dynamic_index_buffer(num_indices * 2, "a"),
+			start = 0,
+			num = num_indices,
+		}
+	}
 end
 
 function util.create_grid_entity(world, name, w, h, unit, view_tag)

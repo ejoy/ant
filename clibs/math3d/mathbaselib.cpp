@@ -490,6 +490,45 @@ lbounding_reset(lua_State *L){
 	return 0;
 }
 
+static int
+lbounding_get(lua_State *L){
+	auto bounding = fetch_bounding(L, 1);
+
+	const std::string name = lua_tostring(L, 2);
+	lua_createtable(L, 0, 0);
+	if (name == "aabb"){
+		lua_createtable(L, 3, 0);
+		for (int ii = 0; ii < 3; ++ii){
+			lua_pushnumber(L, bounding->aabb.min[ii]);
+			lua_seti(L, -2, ii + 1);
+		}
+		lua_setfield(L, -2, "min");
+
+		lua_createtable(L, 3, 0);
+		for (int ii = 0; ii < 3; ++ii) {
+			lua_pushnumber(L, bounding->aabb.max[ii]);
+			lua_seti(L, -2, ii + 1);
+		}
+		lua_setfield(L, -2, "max");
+	} else if (name == "sphere"){
+		for (int ii = 0; ii < 3; ++ii){
+			lua_pushnumber(L, bounding->sphere.center[ii]);
+			lua_seti(L, -2, ii + 1);
+		}
+
+		lua_pushnumber(L, bounding->sphere.radius);
+		lua_seti(L, -2, 4);
+	} else if (name == "obb"){
+		for (int ii = 0; ii < 4; ++ii)
+			for(int jj = 0; jj < 4; ++jj){
+				lua_pushnumber(L, bounding->obb.m[ii][jj]);
+				lua_seti(L, -2, jj + 1 + ii * 4);
+			}
+	}
+
+	return 1;
+}
+
 static void
 register_bounding_mt(lua_State* L) {
 	if (luaL_newmetatable(L, "BOUNDING_MT")) {
@@ -500,6 +539,7 @@ register_bounding_mt(lua_State* L) {
 			{ "append",		lbounding_append_point},
 			{ "isvalid",	lbounding_isvalid},
 			{ "reset",		lbounding_reset},
+			{ "get",		lbounding_get},
 			{ "__tostring", lbounding_string},
 
 			{nullptr, nullptr}
