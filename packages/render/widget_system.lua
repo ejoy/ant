@@ -38,27 +38,57 @@ function rmb:init()
 	m.assetinfo = computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048)
 end
 
+local function reset_buffers(buffers)
+	buffers.vb = {"fffd"}
+	buffers.ib = {}
+end
+
+local function append_buffer(desc, buffers)
+	local vb, ib = desc.vb, desc.ib
+	local gvb, gib = buffers.vb, buffers.ib
+
+	local offsetib = (#gvb - 1) // 4	--yes, gvb not gib
+	table.move(vb, 1, #vb, #gvb+1, gvb)
+
+	for _, i in ipairs(ib) do
+		gib[#gib+1] = i + offsetib
+	end
+end
+
 local function add_aabb_bounding(dmesh, aabb)
 	local m = dmesh.mesh
 
 	local buffers = m.buffers
 	if buffers == nil then
-		buffers = {
-			vb = {"fffd"},
-			ib = {},
-		}
+		buffers = {}
 		m.buffers = buffers
+		reset_buffers(buffers)
 	end
 
-	geometry_drawer.draw_aabb_box(aabb, 0xffffff00, nil, buffers)
+	local desc={vb={}, ib={}}
+	geometry_drawer.draw_aabb_box(aabb, 0xffffff00, nil, desc)
+
+	append_buffer(desc, buffers)
 end
 
 local function update_buffers(dmesh)
 	local m = dmesh.mesh
 	local meshscene = m.assetinfo.handle
 	local group = meshscene.scenes[1][1][1]
-	bgfx.update(group.vb.handles[1], 0, m.buffers.vb)
-	bgfx.update(group.ib.handle, 0, m.buffers.ib)
+	local buffers = m.buffers
+
+	local vb, ib = buffers.vb, buffers.ib
+
+	group.vb.num = (#vb - 1) // 4
+	group.ib.num = #ib
+
+	group.vb.start = 0
+	group.ib.start = 0
+
+	bgfx.update(group.vb.handles[1], 0, vb)
+	bgfx.update(group.ib.handle, 0, ib)
+
+	reset_buffers(buffers)
 end
 
 function rmb:update()
