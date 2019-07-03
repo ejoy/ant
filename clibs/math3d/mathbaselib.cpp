@@ -219,13 +219,22 @@ planes_intersect(const Frustum::Planes &planes, const BoundingType &aabb) {
 static inline void
 transform_aabb(const glm::mat4x4 &trans, AABB &aabb) {
 	const glm::vec3 pos = trans[3];
-	AABB result(pos, pos);
 
-	for (int icol = 0; icol < 3; ++icol)
-		for (int irow = 0; irow < 3; ++irow) {
-			calc_extreme_value(trans[icol][irow], aabb.min[irow], aabb.max[irow], result.min[irow], result.max[irow]);
-		}
-	aabb = result;
+	glm::vec3 right = trans[0];
+	glm::vec3 up = trans[1];
+	glm::vec3 forward = trans[2];
+
+	glm::vec3 xa = right * aabb.min.x;
+	glm::vec3 xb = right * aabb.max.x;
+
+	glm::vec3 ya = up * aabb.min.y;
+	glm::vec3 yb = up * aabb.max.y;
+
+	glm::vec3 za = forward * aabb.min.z;
+	glm::vec3 zb = forward * aabb.max.z;
+
+	aabb = AABB(glm::min(xa, xb) + glm::min(ya, yb) + glm::min(za, zb) + pos,
+			glm::max(xa, xb) + glm::max(ya, yb) + glm::max(za, zb) + pos);
 }
 
 static int
