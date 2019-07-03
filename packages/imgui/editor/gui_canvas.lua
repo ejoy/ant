@@ -20,9 +20,13 @@ local DEFAULT_FPS = 30
 GuiCanvas.GuiName = "GuiCanvas"
 
 function try(fun,...)
+    if debug.getregistry()["lua-debug"] then
+        return fun(...)
+    end
+
     local status,err,ret = xpcall( fun,debug.traceback,... )
     if not status then
-        io.stderr:write("Error:%s\n%s", status, err)
+        io.stderr:write("Error:%s\n%s", status or "nil", err)
     end
     return ret
 end
