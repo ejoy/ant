@@ -1,8 +1,4 @@
-local glTF = import_package "ant.glTF"
-local mathpkg = import_package "ant.math"
-local ms = mathpkg.stack
-local mu = mathpkg.util
-
+local glTF = require "vfs.fileconvert.glTF"
 local glbloader = glTF.glb
 
 local gltf_converter = require "meshconverter.gltf"

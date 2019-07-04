@@ -1,4 +1,4 @@
-local gltf = import_package "ant.glTF"
+local gltf = require "vfs.fileconvert.glTF"
 local gltfutil = gltf.util
 local glbloader = gltf.glb
 
