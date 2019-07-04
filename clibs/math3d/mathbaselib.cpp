@@ -288,8 +288,6 @@ static int
 lfrustum_string(lua_State* L) {
 	char buffer[512] = { 0 };
 
-	sprintf_s(buffer, "planes:\n");
-
 	lua_pushstring(L, buffer);
 	return 1;
 }
@@ -454,7 +452,7 @@ lbounding_string(lua_State *L){
 	const auto& sphere = b->sphere;
 	const auto& obb = b->obb;
 
-	sprintf_s(buffers, "\
+	sprintf(buffers, "\
 aabb:\n\
 \tmin:(%2f, %2f, %2f), max:(%2f, %2f, %2f)\n\
 sphere:\n\

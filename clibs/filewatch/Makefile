@@ -24,6 +24,8 @@ $(ODIR)/filewatch.dll : $(ODIR)/lfilewatch.o $(ODIR)/fsevent_osx.o
 	$(CXX) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
 endif
 
+filewatch.dll : $(ODIR)/filewatch.dll | $(ODIR)
+	cp $^ $@
 
 $(ODIR) :
 	mkdir -p $@
