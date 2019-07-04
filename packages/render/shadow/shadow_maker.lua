@@ -14,9 +14,7 @@ local renderutil = require "util"
 local computil = require "components.util"
 local fs = require "filesystem"
 local geodrawer = import_package "ant.geometry".drawer
-local declmgr = require "vertexdecl_mgr"
 local bgfx = require "bgfx"
-local gltfutil = import_package "ant.glTF".util
 
 ecs.component "shadow"
 	.material "material_content"
@@ -29,11 +27,23 @@ maker_camera.dependby "filter_properties"
 	
 --TODO, this "update" function can be changed as "postinit" function
 -- just only listening new/delete/modify any objects boundings
+
+local function calc_scene_bounding()
+	local sb = mathbaselib.new_bounding(ms)
+	local transformed_boundings = {}
+	computil.calc_transform_boundings(world, transformed_boundings)
+	for _, tb in ipairs(transformed_boundings) do
+		sb:merge(tb)
+	end
+	return sb
+end
+
 function maker_camera:update()
 	local sm = world:first_entity "shadow"
 	local dl = world:first_entity "directional_light"
 	local camera = sm.camera
-	local scenebounding = sm.primitive_filter.scenebounding
+	local scenebounding = calc_scene_bounding()
+	
 	local sphere = scenebounding.sphere
 
 	ms(camera.viewdir, dl.rotation, "dn=")	
@@ -148,54 +158,12 @@ local debug_sm = ecs.system "debug_shadow_maker"
 debug_sm.depend "shadow_maker11"
 debug_sm.dependby "frustum_bounding_update"
 
-local function get_line_decl()
-	return declmgr.get("p3|c40niu")
-end
-
-local function create_bounding_mesh_entity()
-	local eid = world:create_entity {
-		mesh = {},
-		material = computil.assign_material(fs.path "/pkg/ant.resources" / "depiction"/ "materials" / "line.material"),
-		transform = mu.identity_transform(),
-		name = "mesh_bounding_debug",
-		can_render = false,
-		main_view = true,
-		mesh_bounding_debug = true,
-	}
-	local stride = 16 -- "fffd"
-	local vbsize, ibsize = 1024 * stride, 1024 * 2
-	local decl = get_line_decl()	-- mean primitve.attributes only support POSITION and COLOR
-	world[eid].mesh.assetinfo = {
-		handle = {
-			scene = 0,
-			scenes = {nodes={0}},
-			nodes = {mesh=0},
-			meshes={{}},
-			accessors={},
-			bufferViews={
-				{
-					handle = bgfx.create_dynamic_vertex_buffer(vbsize, decl.handle, "a"),
-					byteOffset = 0,
-					byteLength = 1024 * stride,
-					byteStride = 16,
-					target = gltfutil.target("vertex")
-				},
-				{
-					handle = bgfx.create_dynamic_index_buffer(ibsize, "a"),
-					byteOffset = 0,
-					byteLength = 1024 * 2,
-					target = gltfutil.target("index"),
-				}
-			}
-		}
-	}
-end
-
 local function generate_lighting_frustum_vb()
 	local shadow = world:first_entity "shadow"
 
 	local proj = ms:view_proj(nil, shadow.camera.frustum)
-	local points = mathbaselib.frustum_points(ms(proj, "m"))
+	local frustum = mathbaselib.new_frustum(ms)
+	local points = frustum:point(proj)
 
 	local vb = {"fffd"}
 	local function generate_line_vertices(conername, color, vb)
@@ -245,13 +213,12 @@ local function create_frustum_bounding_entity()
 	}
 
 	local num_vertices = 8
-	world[eid].mesh.assetinfo = gltfutil.create_simple_mesh( "p3|c40niu", generate_lighting_frustum_vb(), num_vertices)
+	world[eid].mesh.assetinfo = computil.create_simple_mesh( "p3|c40niu", generate_lighting_frustum_vb(), num_vertices)
 end
 
 function debug_sm:init()
 	local qw, qh = 128,128
 	computil.create_shadow_quad_entity(world, {x=0, y=0, w=qw, h=qh})
-	create_bounding_mesh_entity()
 	create_frustum_bounding_entity()
 end
 

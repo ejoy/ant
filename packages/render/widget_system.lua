@@ -94,34 +94,11 @@ end
 function rmb:update()
 	local dmesh = world:first_entity "mesh_bounding_drawer_tag"
 
-	for _, eid in world:each "mesh" do
-		local e = world[eid]
+	local transformed_boundings = {}
+	computil.calc_transform_boundings(world, transformed_boundings)
 
-		if e.mesh_bounding_drawer_tag == nil and e.main_view then
-			local m = e.mesh
-			local meshscene = m.assetinfo.handle
-
-			local worldmat = ms:srtmat(e.transform)
-
-			for _, scene in ipairs(meshscene.scenes) do
-				for _, mn in ipairs(scene)	do
-					local trans = worldmat
-					if mn.transform then
-						trans = ms(trans, mn.transform, "*P")
-					end
-
-					for _, g in ipairs(mn) do
-						local b = g.bounding
-						if b then
-							local tb = mathbaselib.new_bounding(ms)
-							tb:merge(b)
-							tb:transform(trans)
-							add_aabb_bounding(dmesh, tb:get "aabb")
-						end
-					end
-				end
-			end
-		end
+	for _, tb in ipairs(transformed_boundings) do
+		add_aabb_bounding(dmesh, tb:get "aabb")
 	end
 
 	update_buffers(dmesh)

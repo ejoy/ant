@@ -1,5 +1,6 @@
-local gltf = import_package "ant.glTF"
+local gltf = require "vfs.fileconvert.glTF"
 local gltfutil = gltf.util
+local glbloader = gltf.glb
 
 local bgfx = require "bgfx"
 local declmgr = import_package "ant.render".declmgr
@@ -7,9 +8,7 @@ local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 local mu = mathpkg.util
 
-local glbloader = import_package "ant.glTF".glb
 local mathbaselib = require "math3d.baselib"
-
 
 local function get_desc(name, accessor)
 	local shortname, channel = declmgr.parse_attri_name(name)

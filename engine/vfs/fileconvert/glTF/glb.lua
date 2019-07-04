@@ -1,5 +1,6 @@
-local jsonDecode = require "json".decode
-local jsonEncode = require "json".encode
+local JSON = require "vfs.fileconvert.glTF.json"
+local jsonDecode = JSON.decode
+local jsonEncode = JSON.encode
 
 local function decode_chunk(f, checktype)
     local header = f:read(8)

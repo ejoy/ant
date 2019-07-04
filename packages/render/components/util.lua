@@ -1,12 +1,15 @@
 local util = {}
 util.__index = util
 
-local fs = require "filesystem"
+local fs 		= require "filesystem"
+local bgfx 		= require "bgfx"
+local declmgr 	= require "vertexdecl_mgr"
+local mathbaselib = require "math3d.baselib"
 
-local asset = import_package "ant.asset".mgr
-local mu = import_package "ant.math".util
-local bgfx = require "bgfx"
-local declmgr = require "vertexdecl_mgr"
+local asset 	= import_package "ant.asset".mgr
+local mathpkg 	= import_package "ant.math"
+local mu = mathpkg.util
+local ms = mathpkg.stack
 
 local function deep_copy(t)
 	if type(t) == "table" then
@@ -297,6 +300,38 @@ function util.create_texture_quad_entity(world, texture_tbl, view_tag, name)
     
     quad.mesh.assetinfo = quad_mesh(vb)
     return quadid
+end
+
+function util.calc_transform_boundings(world, transformed_boundings)
+	for _, eid in world:each "can_render" do
+		local e = world[eid]
+
+		if e.mesh_bounding_drawer_tag == nil and e.main_view then
+			local m = e.mesh
+			local meshscene = m.assetinfo.handle
+
+			local worldmat = ms:srtmat(e.transform)
+
+			for _, scene in ipairs(meshscene.scenes) do
+				for _, mn in ipairs(scene)	do
+					local trans = worldmat
+					if mn.transform then
+						trans = ms(trans, mn.transform, "*P")
+					end
+
+					for _, g in ipairs(mn) do
+						local b = g.bounding
+						if b then
+							local tb = mathbaselib.new_bounding(ms)
+							tb:merge(b)
+							tb:transform(trans)
+							transformed_boundings[#transformed_boundings+1] = tb
+						end
+					end
+				end
+			end
+		end
+	end
 end
 
 return util

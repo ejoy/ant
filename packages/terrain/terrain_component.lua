@@ -8,7 +8,6 @@ local computil = renderpkg.components
 
 local ms = import_package "ant.math".stack
 local colliderutil = import_package "ant.bullet".util
-local gltfutil = import_package "ant.glTF".util
 
 local terraincomp =
     ecs.component_alias('terrain', 'resource') {
