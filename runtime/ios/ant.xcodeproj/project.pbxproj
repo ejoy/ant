@@ -268,7 +268,7 @@
 					"@executable_path/Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = (
-					../../clibs/ant/o/ios/release,
+					../../clibs/ant/o/ios/debug,
 					"../../3rd/bgfx/.build/ios-arm64/bin",
 					../../3rd/build/bullet3/ios/lib,
 					"../../3rd/build/ozz-animation/ios/src/animation/runtime",
