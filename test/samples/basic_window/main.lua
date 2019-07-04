@@ -1,7 +1,10 @@
-package.path = "engine/libs/?.lua;engine/libs/?/?.lua;?.lua"
+package.path = table.concat({
+	"engine/?.lua",
+	"engine/?/?.lua",
+	"?.lua",
+}, ";")
 
-require 'runtime.vfs'
-require 'runtime.errlog'
+require "runtime"
 
 local native = require "window.native"
 local window = require "window"
@@ -14,7 +17,7 @@ local width, height
 
 local callback = {}
 
-local plat = plat_module.os():upper()
+local plat = plat_module.OS:upper()
 local platform_relates = {
 	WINDOWS={
 		shadertype="d3d11",
@@ -41,7 +44,7 @@ local function default_renderer()
 	local pi = platform_relates[plat]
 	return pi.renderer
 end
-local shaderpath = "shaders/" .. default_shader_type()
+local shaderpath = "shaders/src"
 
 local cube = {}
 
@@ -59,6 +62,20 @@ local function init_hw(nwh, context, w, h)
 	bgfx.set_view_rect(0, 0, 0, width, height)
 	bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
 	bgfx.set_debug "T"
+
+	local shadertypes = {
+		NOOP       = "d3d9",
+		DIRECT3D9  = "d3d9",
+		DIRECT3D11 = "d3d11",
+		DIRECT3D12 = "d3d11",
+		GNM        = "pssl",
+		METAL      = "metal",
+		OPENGL     = "glsl",
+		OPENGLES   = "essl",
+		VULKAN     = "spirv",
+	}
+	local vfs = require "vfs"
+	vfs.identity(plat_module.OS .. "-" .. assert(shadertypes[bgfx.get_caps().rendererType]))
 end
 
 local function program_load(vspath, fspath)
@@ -66,7 +83,7 @@ local function program_load(vspath, fspath)
 		local vfs = require "vfs"
 		local rp = vfs.realpath(filepath)
 		print("realpath:", filepath, rp)
-		local fh = io.open(filepath)
+		local fh = io.open(rp)
 		if fh == nil then
 			error(string.format("not found path:", filepath))
 		end
@@ -89,7 +106,7 @@ local function program_load(vspath, fspath)
 end
 
 local function init_cube()
-	cube.prog = program_load(shaderpath .. "/cubes/vs_cubes.bin", shaderpath .. "/cubes/fs_cubes.bin")
+	cube.prog = program_load(shaderpath .. "/cubes/vs_cubes.sc", shaderpath .. "/cubes/fs_cubes.sc")
 	
 	cube.state = bgfx.make_state({ PT = "TRISTRIP" } , nil)	-- from BGFX_STATE_DEFAULT
 	cube.vdecl = bgfx.vertex_decl {
