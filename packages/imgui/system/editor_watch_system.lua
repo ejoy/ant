@@ -75,8 +75,8 @@ function editor_watcher_system:init()
     local hub = world.args.hub
     hub.subscribe(WatcherEvent.WatchEntity,start_watch_entitiy)
     hub.subscribe(WatcherEvent.ModifyComponent,on_component_modified)
-    hub.subscribe(WatcherEvent.RequestWorldInfo,publish_world_info)
-    publish_world_info()
+    -- hub.subscribe(WatcherEvent.RequestWorldInfo,publish_world_info)
+    -- publish_world_info()
 end
 
 function editor_watcher_system:after_update()

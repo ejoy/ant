@@ -2,7 +2,10 @@ local ecs = ...
 local world = ecs.world
 local bgfx = require "bgfx"
 
-local declmgr = import_package 'ant.render'.declmgr
+local renderpkg = import_package 'ant.render'
+local declmgr = renderpkg.declmgr
+local computil = renderpkg.components
+
 local ms = import_package "ant.math".stack
 local colliderutil = import_package "ant.bullet".util
 local gltfutil = import_package "ant.glTF".util
@@ -75,32 +78,41 @@ function terraincomp:postinit(e)
 	local vb, ib = terrainhandle:buffer()
 	local vbsize, ibsize = terrainhandle:buffer_size()
 	local num_vertices, num_indices = terrainhandle:buffer_count()
-	local vblayout = declmgr.correct_layout(terraininfo.declname)
-	gltfutil.create_vertex_info(vblayout, declmgr.name_mapper, num_vertices, #bufferviews, accessors, primitive.attributes)
+	local decl = declmgr.get(terraininfo.declname)
 
 	local dynamic = terraininfo.dynamic
 
 	local stride = vbsize // num_vertices
-	local bv = gltfutil.generate_bufferview(nil, 0, vbsize, stride, "vertex")
+	
 	local create_vb = dynamic and bgfx.create_dynamic_vertex_buffer or bgfx.create_vertex_buffer
-	bv.handle = create_vb({"!", vb, vbsize}, declmgr.get(vblayout).handle, dynamic and "wa" or "")
-	bufferviews[#bufferviews+1] = bv
+	local vbhandle = create_vb({"!", vb, vbsize}, decl.handle, dynamic and "wa" or "")
 
-	primitive.indices = #accessors
-	accessors[#accessors+1] = gltfutil.generate_index_accessor(#bufferviews, 0, num_indices)
-	local idxbv = gltfutil.generate_index_bufferview(nil, 0, ibsize)
 	local create_ib = dynamic and bgfx.create_dynamic_index_buffer or bgfx.create_index_buffer	
-	idxbv.handle = create_ib({ib, ibsize}, dynamic and "wad" or "d")
-	bufferviews[#bufferviews+1] = idxbv
+	local ibhandle = create_ib({ib, ibsize}, dynamic and "wad" or "d")
 
-	local primitives = {}
+	local group = {
+		vb = {
+			handles = {
+				vbhandle
+			},
+			start = 0,
+			num = num_vertices,
+		},
+		ib = {
+			handle = ibhandle,
+			start = 0,
+			num = num_indices,
+		}
+	}
+
+	local meshscene = computil.assign_group_as_mesh()
+
+	local groups = {}
 	for _=1, numlayers do
-		primitives[#primitives+1] = primitive
+		groups[#groups+1] = group
 	end
 
-	local scene = gltfutil.default_mesh_handle()
-	scene.bufferViews 	= bufferviews
-	scene.accessors 	= accessors
-	scene.meshes[#scene.meshes+1] = {primitives=primitives}
-	mesh.assetinfo = {handle=scene}
+	meshscene.handle.scenes[1][1] = groups
+
+	mesh.assetinfo = meshscene
 end

@@ -129,7 +129,7 @@ function util.is_entity_visible(entity)
     return false
 end
 
-local function assign_group_as_mesh(group)
+function util.assign_group_as_mesh(group)
 	return {handle = {
 		sceneidx = 1,
 		scenes = {
@@ -145,7 +145,7 @@ local function assign_group_as_mesh(group)
 end
 
 function util.create_simple_mesh(vertex_desc, vb, num_vertices, ib, num_indices)
-	return assign_group_as_mesh {
+	return util.assign_group_as_mesh {
 		vb = {
 			handles = {
 				bgfx.create_vertex_buffer(vb, declmgr.get(vertex_desc).handle),
@@ -161,7 +161,7 @@ end
 
 function util.create_simple_dynamic_mesh(vertex_desc, num_vertices, num_indices)
 	local decl = declmgr.get(vertex_desc)
-	return assign_group_as_mesh {
+	return util.assign_group_as_mesh {
 		vb = {
 			handles = {
 				bgfx.create_dynamic_vertex_buffer(num_vertices * decl.stride, decl.handle, "a"),

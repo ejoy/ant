@@ -3,10 +3,10 @@ local world = ecs.world
 
 local renderpkg = import_package "ant.render"
 local declmgr = renderpkg.declmgr
+local computil = renderpkg.components
+
 local animodule = require "hierarchy.animation"
 local bgfx = require "bgfx"
-
-local gltfutil = import_package "ant.glTF".util
 
 -- skinning_mesh component is different from mesh component.
 -- mesh component is used for render purpose.
@@ -18,35 +18,28 @@ local function gen_mesh_assetinfo(skinning_mesh_comp)
 
 	local num_vertices, num_indices = skinning_mesh:num_vertices(), skinning_mesh:num_indices()
 
-	local primitive = {
-		attributes = {}
-	}
-	
-	local accessors, bufferviews = {}, {}
-
+	local vbhandles = {}
 	local create_buffer_op = {dynamic=bgfx.create_dynamic_vertex_buffer, static=bgfx.create_vertex_buffer}
 
 	for _, buffertype in ipairs {"dynamic", "static"} do
 		local layout = skinning_mesh:layout(buffertype)
-		gltfutil.create_vertex_info(layout, declmgr.name_mapper, num_vertices, #bufferviews, 
-				accessors, primitive.attributes)
-
 		local buffer, size = skinning_mesh:buffer(buffertype)
-		local stride = size // num_vertices
-		local bv = gltfutil.generate_bufferview(nil, 0, size, stride, "vertex")
-		bv.handle = create_buffer_op[buffertype]({"!", buffer, size}, declmgr.get(layout).handle)
-		bufferviews[#bufferviews+1] = bv
+		vbhandles[#vbhandles+1] = create_buffer_op[buffertype]({"!", buffer, size}, declmgr.get(layout).handle)
 	end
 
-	primitive.indices = #accessors
-
-	local idxbuffer, indices_sizebyte = skinning_mesh:index_buffer()
-	accessors[#accessors+1] 	= gltfutil.generate_index_accessor(#bufferviews, 0, num_indices)
-	local bv = gltfutil.generate_index_bufferview(nil, 0, indices_sizebyte)
-	bv.handle = bgfx.create_index_buffer({idxbuffer, indices_sizebyte})
-	bufferviews[#bufferviews+1] = bv
-
-	return {handle=gltfutil.create_mesh_handle(primitive, accessors, bufferviews)}
+	local idxbuffer, indices_sizebyte = skinning_mesh:index_buffer()	
+	return computil.assign_group_as_mesh {
+		vb = {
+			handles = vbhandles,
+			start = 0,
+			num = num_vertices,
+		},
+		ib = {
+			handle = bgfx.create_index_buffer {idxbuffer, indices_sizebyte},
+			start = 0,
+			num = num_indices,
+		}
+	}
 end
 
 function sm:postinit(e)
@@ -64,7 +57,7 @@ function skinning_sys:update()
 	for _, eid in world:each("skinning_mesh") do
 		local e = world[eid]
 
-		local mesh 		= e.mesh.assetinfo.handle
+		local meshscene = e.mesh.assetinfo.handle
 		local sm 		= e.skinning_mesh.assetinfo.handle
 		local aniresult = e.animation.aniresult
 		
@@ -72,10 +65,8 @@ function skinning_sys:update()
 		animodule.skinning(sm, aniresult)
 
 		-- update mesh dynamic buffer
-		local bufferviews = mesh.bufferViews
-		local bv = bufferviews[1]
-
+		local group = meshscene.scenes[1][1][1]
 		local buffer, size = sm:buffer("dynamic")
-		bgfx.update(bv.handle, 0, {"!", buffer, size})
+		bgfx.update(group.vb.handles[1], 0, {"!", buffer, size})
 	end
 end

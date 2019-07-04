@@ -18,7 +18,7 @@ end
 function GuiScene:_get_editpath()
     if self.editpath == nil then
         local editpath = {}
-        editpath.text = "test/samples/unity_viking/package.lua"
+        editpath.text = "test/samples/features/package.lua"
         self.editpath = editpath
     end
     return self.editpath
