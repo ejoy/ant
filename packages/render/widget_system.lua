@@ -77,18 +77,20 @@ local function update_buffers(dmesh)
 	local group = meshscene.scenes[1][1][1]
 	local buffers = m.buffers
 
-	local vb, ib = buffers.vb, buffers.ib
+	if buffers then
+		local vb, ib = buffers.vb, buffers.ib
 
-	group.vb.num = (#vb - 1) // 4
-	group.ib.num = #ib
-
-	group.vb.start = 0
-	group.ib.start = 0
-
-	bgfx.update(group.vb.handles[1], 0, vb)
-	bgfx.update(group.ib.handle, 0, ib)
-
-	reset_buffers(buffers)
+		group.vb.num = (#vb - 1) // 4
+		group.ib.num = #ib
+	
+		group.vb.start = 0
+		group.ib.start = 0
+	
+		bgfx.update(group.vb.handles[1], 0, vb)
+		bgfx.update(group.ib.handle, 0, ib)
+	
+		reset_buffers(buffers)
+	end
 end
 
 function rmb:update()

@@ -17,20 +17,22 @@ $(ODIR)/math3d.o : math3d.cpp | $(ODIR)
 $(ODIR)/mathbaselib.o : mathbaselib.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC) $(CLIBS_INC)
 
-$(ODIR)/util.o : mathbaselib.cpp | $(ODIR)
+$(ODIR)/util.o : util.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC) $(CLIBS_INC)
 
 $(ODIR)/mathadapter.o : mathadapter.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
-$(ODIR)/math3d.dll : $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathbaselib.o $(ODIR)/util.o $(ODIR)/mathadapter.o
+OBJS = $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathbaselib.o $(ODIR)/util.o $(ODIR)/mathadapter.o
+
+$(ODIR)/math3d.dll : $(OBJS)
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB)
 
-$(ODIR)/libmath3d.a : $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathbaselib.o $(ODIR)/mathadapter.o
+$(ODIR)/libmath3d.a : $(OBJS)
 	ar rsv $@ $^
 
 $(ODIR) :
 	mkdir -p $@
 
 clean :
-	rm -rf $(ODIR) *.dll *.a
+	rm -rf $(OROOT) *.dll *.a

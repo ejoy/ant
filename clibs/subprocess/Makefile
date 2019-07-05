@@ -23,6 +23,9 @@ $(ODIR)/subprocess_posix.o : subprocess_posix.cpp subprocess.h | $(ODIR)
 $(ODIR)/subprocess.dll : $(OBJS)
 	$(CC) $(CFLAGS) $(LD_SHARED) $(LUALIB) -o $@ $^ -lstdc++
 
+subprocess.dll: $(ODIR)/subprocess.dll | $(ODIR)
+	cp $^ $@
+
 $(ODIR) :
 	mkdir -p $@
 
