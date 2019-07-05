@@ -83,7 +83,7 @@ local function program_load(vspath, fspath)
 		local vfs = require "vfs"
 		local rp = vfs.realpath(filepath)
 		print("realpath:", filepath, rp)
-		local fh = io.open(rp)
+		local fh = io.open(rp, "rb")
 		if fh == nil then
 			error(string.format("not found path:", filepath))
 		end
@@ -174,7 +174,7 @@ end
 function callback.update()
 	bgfx.touch(0)
 
-	bgfx.set_view_clear(0, "CD", 0xff3f30ff, 1, 0)
+	bgfx.set_view_clear(0, "CD", 0xffff0000, 1, 0)
 
 	bgfx.set_state(cube.state)
 	
