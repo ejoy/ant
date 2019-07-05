@@ -4,7 +4,9 @@ package.path = table.concat({
 	"?.lua",
 }, ";")
 
-require "runtime"
+require 'runtime.vfs'
+require 'runtime.errlog'
+require "filesystem"
 
 local native = require "window.native"
 local window = require "window"
