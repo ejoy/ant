@@ -76,7 +76,7 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 
 	local start_v, num_v = vb.start, vb.num
 	for idx, handle in ipairs(vb.handles) do
-		bgfx.set_vertex_buffer(idx, handle, start_v, num_v)
+		bgfx.set_vertex_buffer(idx-1, handle, start_v, num_v)
 	end
 	bgfx.submit(vid, prog, 0, false)
 end
