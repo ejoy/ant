@@ -35,4 +35,4 @@ $(ODIR) :
 	mkdir -p $@
 
 clean :
-	rm -rf $(ODIR) *.dll *.a
+	rm -rf $(OROOT) *.dll *.a

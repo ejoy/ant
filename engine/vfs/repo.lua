@@ -30,7 +30,7 @@ end
 		xxx = mountxxx,
 	}
 ]]
-local function init(rootpath)
+local function init(rootpath, repopath)
 	assert(lfs.is_directory(rootpath), "Not a dir")
 	local mountpath = rootpath / ".mount"
 	if lfs.is_regular_file(mountpath) then
@@ -38,7 +38,6 @@ local function init(rootpath)
 			print("Mount", name, path)
 		end
 	end
-	local repopath = rootpath / ".repo"
 	if not lfs.is_directory(repopath) then
 		-- already has .repo
 		assert(lfs.create_directories(repopath))
@@ -56,15 +55,9 @@ local function init(rootpath)
 	end
 end
 
-function repo.new(rootpath)
-	init(rootpath)
-
-	local repopath = rootpath / ".repo"
-
-	if not lfs.is_directory(repopath) then
-		return
-	end
-
+function repo.new(rootpath, reponame)
+	local repopath = rootpath / (reponame or ".repo")
+	init(rootpath, repopath)
 	local mountpoint = access.readmount(rootpath / ".mount")
 	rootpath = mountpoint[''] or rootpath
 	local mountname = access.mountname(mountpoint)

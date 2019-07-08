@@ -334,9 +334,11 @@ local function classify_mesh_reference(scene, entitylist, parent, groups)
 end
 
 local function find_mesh_ref(meshscene, meshname)
-	for _, mesh in ipairs(meshscene.meshes) do
-		if mesh.name == meshname then
-			return mesh
+	for _, scene in ipairs(meshscene.scenes) do
+		for _, node in ipairs(scene) do
+			if node.meshname == meshname then
+				return node
+			end
 		end
 	end
 end
@@ -368,9 +370,9 @@ function unityScene.create(world, scenepath)
 				local material_indices = mesh.material_indices
 				local meshref = find_mesh_ref(meshscene, mesh.name)
 				if meshref == nil then
-					meshref = meshscene.meshes[submeshidx]
+					meshref = meshscene.scenes[1][submeshidx]
 				end
-				if #meshref.primitives ~= #material_indices then
+				if #meshref ~= #material_indices then
 					print("glb mesh primitives size is not equal to material numbers", groupname, meshref.name)
 				end
 				
@@ -385,7 +387,7 @@ function unityScene.create(world, scenepath)
 					material_paths[last_materialidx] = get_material_refpath(material_filename)
 					material_refs[#material_refs+1] = last_materialidx
 				end
-				submesh_refs[meshref.name] = {material_refs=material_refs, visible=true}
+				submesh_refs[meshref.meshname] = {material_refs=material_refs, visible=true}
 			end
 
 			local eid = world:create_entity {
