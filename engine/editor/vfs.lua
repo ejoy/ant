@@ -46,7 +46,7 @@ function localvfs.identity(identity)
 end
 
 function localvfs.new(path)
-	self = assert(repo.new(path, ".repo-loc"))
+	self = assert(repo.new(path, true))
 end
 
 function localvfs.add_mount(name, mountpath)
