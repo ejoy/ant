@@ -37,7 +37,7 @@ LOG ("Open repo : ", repopath)
 local repo = assert(repo.new(repopath))
 
 LOG ("Rebuild repo")
-if lfs.is_regular_file(repopath / "root") then
+if lfs.is_regular_file(repopath / ".repo" / "root") then
 	repo:index()
 else
 	repo:rebuild()
