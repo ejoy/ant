@@ -18,3 +18,8 @@ do
     print("after merged, bouding:", bounding)
 end
 
+do
+    local _, _, vp = ms:view_proj({viewdir={0, 0, 1, 0}, eyepos={0, 0, -8, 1}}, {fov=90, aspect=1, n=1, f=1000}, true)
+    local frustum = mathbaselib.new_frustum(ms, vp)
+    print("frustum:\n", frustum)
+end

@@ -2318,17 +2318,15 @@ lview_proj(lua_State *L) {
 	if (hasviewmat) {
 		luaL_checktype(L, 2, LUA_TTABLE);	// view matrix
 
-		lua_getfield(L, 2, "viewdir");
-		int type;
-		const glm::vec3 viewdir = *(const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
+		lua_getfield(L, 2, "viewdir");		
+		const glm::vec3 viewdir = get_vec_value(L, LS, -1);
 		lua_pop(L, 1);
 		lua_getfield(L, 2, "eyepos");
-		const glm::vec3 eyepos = *(const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type);
+		const glm::vec3 eyepos = get_vec_value(L, LS, -1);
 		lua_pop(L, 1);
 
 		const glm::vec3 updir = (lua_getfield(L, 2, "updir") == LUA_TNIL) ?
-			glm::vec3(0, 1, 0) :
-			*((const glm::vec3*)lastack_value(LS, get_stack_id(L, LS, -1), &type));
+			glm::vec3(0, 1, 0) : get_vec_value(L, LS, -1);
 		lua_pop(L, 1);
 
 		viewmat = glm::lookAtLH(eyepos, eyepos + viewdir, updir);

@@ -21,6 +21,7 @@ extern "C" {
 #include <cstring>
 #include <unordered_map>
 #include <string>
+#include <sstream>
 
 extern bool default_homogeneous_depth();
 extern glm::vec3 to_viewdir(const glm::vec3 &e);
@@ -181,16 +182,40 @@ calc_extreme_value(float v, float min, float max, float &tmin, float &tmax) {
 
 static int
 plane_intersect(const glm::vec4 &plane, const AABB &aabb) {
-	float minD = 0, maxD = 0;
-	for (int ii = 0; ii < 3; ++ii) {
-		calc_extreme_value(plane[ii], aabb.min[ii], aabb.max[ii], minD, maxD);
+	auto min = aabb.min, max = aabb.max;
+	float minD, maxD;
+	const auto n = tov3(plane);
+	if (n->x > 0.0f){
+		minD = n->x * min.x;
+		maxD = n->x * max.x;
+	} else {
+		minD = n->x * max.x;
+		maxD = n->x * min.x;
 	}
-	
-	if (minD >= plane.w)
-		return 1;
 
-	if (maxD <= plane.w)
+	if (n->y > 0.0f){
+		minD += n->y * min.y;
+		maxD += n->y * max.y;
+	} else {
+		minD += n->y * max.y;
+		maxD += n->y * min.y;
+	}
+
+	if (n->z > 0.0f){
+		minD += n->z * min.z;
+		maxD += n->z * max.z;
+	} else {
+		minD += n->z * max.z;
+		maxD += n->z * min.z;
+	}
+
+	if (minD >= plane.w){
+		return 1;
+	}
+
+	if (maxD <= plane.w){
 		return -1;
+	}
 
 	return 0;
 }
@@ -206,7 +231,7 @@ static inline const char*
 planes_intersect(const Frustum::Planes &planes, const BoundingType &aabb) {
 	for (const auto &p : planes) {
 		const int r = plane_intersect(p, aabb);
-		if (r < 0)
+		if (r > 0)
 			return "outside";
 
 		if (r == 0)
@@ -295,7 +320,34 @@ lfrustum_interset_list(lua_State* L) {
 
 static int
 lfrustum_string(lua_State* L) {
+	auto f = fetch_frustum(L, 1);
 	char buffer[512] = { 0 };
+
+	const char* planenames[] = { "left", "right", "top", "bottom", "near", "far" };
+
+	sprintf(buffer,
+"mat:\n\
+\t(%2f, %2f, %2f, %2f,\n\
+\t %2f, %2f, %2f, %2f,\n\
+\t %2f, %2f, %2f, %2f,\n\
+\t %2f, %2f, %2f, %2f)\n\
+planes:\n\
+\t%s: (%2f, %2f, %2f, %2f)\n\
+\t%s: (%2f, %2f, %2f, %2f)\n\
+\t%s: (%2f, %2f, %2f, %2f)\n\
+\t%s: (%2f, %2f, %2f, %2f)\n\
+\t%s: (%2f, %2f, %2f, %2f)\n\
+\t%s: (%2f, %2f, %2f, %2f)\n",
+f->mat[0][0], f->mat[0][1], f->mat[0][2], f->mat[0][3],
+f->mat[1][0], f->mat[1][1], f->mat[1][2], f->mat[1][3],
+f->mat[2][0], f->mat[2][1], f->mat[2][2], f->mat[2][3],
+f->mat[3][0], f->mat[3][1], f->mat[3][2], f->mat[3][3],
+planenames[Frustum::PlaneName::left], f->planes[0][0], f->planes[0][1], f->planes[0][2], f->planes[0][3],
+planenames[Frustum::PlaneName::right], f->planes[1][0], f->planes[1][1], f->planes[1][2], f->planes[1][3],
+planenames[Frustum::PlaneName::top], f->planes[2][0], f->planes[2][1], f->planes[2][2], f->planes[2][3],
+planenames[Frustum::PlaneName::bottom], f->planes[3][0], f->planes[3][1], f->planes[3][2], f->planes[3][3],
+planenames[Frustum::PlaneName::near], f->planes[4][0], f->planes[4][1], f->planes[4][2], f->planes[4][3],
+planenames[Frustum::PlaneName::far], f->planes[5][0], f->planes[5][1], f->planes[5][2], f->planes[5][3]);
 
 	lua_pushstring(L, buffer);
 	return 1;
