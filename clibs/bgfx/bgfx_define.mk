@@ -3,7 +3,7 @@ BGFXSRC = $(BGFXROOT)/bgfx
 BXSRC 	= $(BGFXROOT)/bx
 BIMGSRC = $(BGFXROOT)/bimg
 
-ifeq ("$(MODE)","release")
+ifeq ("$(PLAT)","ios")
 BGFX_BUILD_MODE=Release
 else
 BGFX_BUILD_MODE=Debug
