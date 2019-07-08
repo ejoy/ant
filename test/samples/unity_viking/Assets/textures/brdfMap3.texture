@@ -1,4 +1,4 @@
-path = "/pkg/unity_viking/assets/textures/pbr/brdfMap3.dds"
+path = "/pkg/unity_viking/Assets/textures/pbr/brdfMap3.dds"
 
 sampler = {
 	U = "MIRROR",

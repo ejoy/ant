@@ -1,4 +1,4 @@
-path = "/pkg/unity_viking/assets/textures/pbr/gold/albedo.dds"
+path = "/pkg/unity_viking/Assets/textures/pbr/gold/albedo.dds"
 
 sampler = {
 	U = "MIRROR",
