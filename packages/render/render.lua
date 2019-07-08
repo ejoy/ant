@@ -138,6 +138,7 @@ ecs.component_alias("visible", "boolean", true)
 
 local rendersys = ecs.system "render_system"
 rendersys.depend "primitive_filter_system"
+rendersys.depend "filter_properties"
 rendersys.dependby "end_frame"
 
 local statemap = {
