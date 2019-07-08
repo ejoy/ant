@@ -37,8 +37,11 @@ LOG ("Open repo : ", repopath)
 local repo = assert(repo.new(repopath))
 
 LOG ("Rebuild repo")
-repo:index()
-repo:rebuild()
+if lfs.is_regular_file(repopath / "root") then
+	repo:index()
+else
+	repo:rebuild()
+end
 
 local watch = {}
 assert(fw.add(repopath:string()))

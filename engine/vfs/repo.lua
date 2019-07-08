@@ -69,9 +69,6 @@ function repo.new(rootpath, LOC)
 		_namecache = {},
 		_lock = filelock(repopath),	-- lock repo
 	}, repo)
-	if not LOC and not lfs.is_regular_file(repopath / "root") then
-		r:rebuild()
-	end
 	return r
 end
 
