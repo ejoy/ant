@@ -10,9 +10,10 @@ ecs.import "ant.event"
 ecs.import "ant.math.adapter"
 ecs.import "ant.sky"
 
-local math3d = import_package "ant.math"
-local ms = math3d.stack
-local mu = math3d.util
+local mathpkg = import_package "ant.math"
+local ms = mathpkg.stack
+local mu = mathpkg.util
+
 local model_review_system = ecs.system "model_review_system"
 
 local renderpkg = import_package "ant.render"
@@ -27,13 +28,12 @@ model_review_system.depend "primitive_filter_system"
 model_review_system.depend "render_system"
 model_review_system.depend "viewport_detect_system"
 model_review_system.depend "sky_system"
---model_review_system.depend "cull_system"
+model_review_system.depend "cull_system"
 model_review_system.depend "render_mesh_bounding"
 model_review_system.dependby "camera_controller"
 
 local lu = renderpkg.light
 local cu = renderpkg.components
-local viedidmgr = renderpkg.viewidmgr
 local fs = require "filesystem"
 
 local function create_light()
