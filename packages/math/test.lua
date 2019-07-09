@@ -30,8 +30,8 @@ do
     ms:view_proj({viewdir = {0, 0, 1, 0}, eyepos = {0, 0, -5}}, {type = "mat", n = 0.1, f = 1000, fov = 60, aspect = 806/1024,}, true)
     local frustum1 = mathbaselib.new_frustum(ms, vp)
     local b0 = mathbaselib.new_bounding(ms, {-4.257135, 0.025428, -1.035961}, {4.257135, 4.760269, 1.041766})
-    frustum:intersect(b0)
-    frustum1:intersect(b0)
+    print(frustum:intersect(b0))
+    print(frustum1:intersect(b0))
     print("frustum:\n", frustum)
 
     local b1, b2 = 

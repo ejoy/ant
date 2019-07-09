@@ -186,11 +186,34 @@ get_aabb_points(const AABB& aabb, Frustum::Points& points) {
 }
 
 
-static float
-which_plane_side(const glm::vec4& plane, const glm::vec4& p) {
-	const glm::vec3* n = tov3(plane);
-	return glm::dot(*n, *tov3(p)) - plane.w;
-}
+//static float
+//which_plane_side(const glm::vec4& plane, const glm::vec4& p) {
+//	const glm::vec3* n = tov3(plane);
+//	return glm::dot(*n, *tov3(p)) + plane.w;
+//}
+//
+//static int
+//plane_intersect1(const glm::vec4& plane, const AABB& aabb) {
+//	Frustum::Points points;
+//	get_aabb_points(aabb, points);
+//
+//	int result = 0;
+//	for (const auto &pt : points){
+//		const float r = which_plane_side(plane, glm::vec4(pt.second, 1.f));
+//		if (r < 0){
+//			--result;
+//		} else if (r > 0){
+//			++result;
+//		}
+//	}
+//	if (result == 8)
+//		return 1;
+//
+//	if (result == -8)
+//		return -1;
+//
+//	return 0;
+//}
 
 static int
 plane_intersect(const glm::vec4 &plane, const AABB &aabb) {
@@ -222,12 +245,12 @@ plane_intersect(const glm::vec4 &plane, const AABB &aabb) {
 	}
 
 	// in front of the plane
-	if (minD > plane.w){
+	if (minD > -plane.w){
 		return 1;
 	}
 
 	// in back of the plane
-	if (maxD < plane.w){
+	if (maxD < -plane.w){
 		return -1;
 	}
 
