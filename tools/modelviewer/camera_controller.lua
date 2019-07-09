@@ -105,6 +105,21 @@ function camera_controller_system:init()
 			camera_reset(camera, target)
 			return 
 		end
+
+		if press and code == "SPACE" then
+			for _, eid in world:each "can_render" do
+				local e = world[eid]
+				if e.name == "frustum" then
+					world:remove_entity(eid)
+				end
+			end
+
+			local computil = import_package "ant.render".components
+			local _, _, vp = ms:view_proj(camera, camera.frustum, true)
+			local mathbaselib = require "math3d.baselib"
+			local frustum = mathbaselib.new_frustum(ms, vp)
+			computil.create_frustum_entity(world, frustum)
+		end
 	end
 
 	function message:resize(w, h)
