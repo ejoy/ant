@@ -141,7 +141,7 @@ local function load_world(w, s)
     local entity = load_start(w, s)
     local l = {}
     for _, tree in ipairs(entity) do
-        l[#l+1], eid = _load_entity(w, tree)
+        l[#l+1] = _load_entity(w, tree)
     end
     load_end()
     for _, e in ipairs(l) do
