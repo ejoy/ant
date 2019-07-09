@@ -34,6 +34,7 @@ scene_walker.depend 	"viewport_detect_system"
 scene_walker.depend 	'render_system'
 scene_walker.depend 	'primitive_filter_system'
 scene_walker.depend     'sky_system'
+scene_walker.depend     'cull_system'
 
 scene_walker.dependby 	'camera_controller'
 

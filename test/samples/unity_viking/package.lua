@@ -1,4 +1,7 @@
 return {
     name = "unity_viking",	
-    entry = "entry"
+    entry = "entry",
+    systems = {
+        "scene_walker",
+    },
 }
