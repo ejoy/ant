@@ -32,7 +32,7 @@ function cull_sys:update()
 				end
 
 				if num > 0 then
-					local visible_set = frustum:interset_list(boundings)
+					local visible_set = frustum:intersect_list(boundings)
 					assert(#visible_set == #boundings)
 
 					resulttarget.visible_set = visible_set

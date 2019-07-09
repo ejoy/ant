@@ -22,7 +22,7 @@ function default.frustum(w, h)
 	h = h or 600
 	return {
 		type = "mat",
-		n = 0.1, f = 100000,
+		n = 0.1, f = 1000,
 		fov = 60, aspect = w / h,
 	}
 end

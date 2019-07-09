@@ -93,6 +93,8 @@ local function add_tranformed_bounding(r, worldmat, bounding)
 		
 		tb:merge(bounding)
 		tb:transform(worldmat)
+	else
+		r.transformed_bounding = nil
 	end
 end
 

@@ -53,7 +53,7 @@ struct Frustum {
 
 	Frustum(const glm::mat4x4& m)
 		: mat(m) {
-		extract_planes(planes, mat, true);
+		extract_planes(planes, mat, false);
 	}
 
 	static inline void
@@ -171,34 +171,54 @@ calc_extreme_value(float v, float min, float max, float &tmin, float &tmax) {
 	}
 }
 
+static void
+get_aabb_points(const AABB& aabb, Frustum::Points& points) {
+	points["ltn"] = glm::vec4(aabb.min.x, aabb.max.y, aabb.min.z, 1.f);
+	points["lbn"] = glm::vec4(aabb.min, 1.f);
+	points["rtn"] = glm::vec4(aabb.max.x, aabb.max.y, aabb.min.z, 1.f);
+	points["rbn"] = glm::vec4(aabb.max.x, aabb.min.y, aabb.min.z, 1.f);
+
+	points["ltf"] = glm::vec4(aabb.min.x, aabb.max.y, aabb.max.z, 1.f);
+	points["rtf"] = glm::vec4(aabb.max, 1.f);
+
+	points["lbf"] = glm::vec4(aabb.min.x, aabb.min.y, aabb.max.z, 1.f);
+	points["rbf"] = glm::vec4(aabb.max.x, aabb.min.y, aabb.max.z, 1.f);
+}
+
+
+static float
+which_plane_side(const glm::vec4& plane, const glm::vec4& p) {
+	const glm::vec3* n = tov3(plane);
+	return glm::dot(*n, *tov3(p)) - plane.w;
+}
 
 static int
 plane_intersect(const glm::vec4 &plane, const AABB &aabb) {
-	auto min = aabb.min, max = aabb.max;
-	float minD, maxD;
-	const auto n = tov3(plane);
-	if (n->x > 0.0f){
-		minD = n->x * min.x;
-		maxD = n->x * max.x;
+	const glm::vec3& min = aabb.min;
+	const glm::vec3& max = aabb.max;
+	float minD, maxD;	
+	if (plane.x > 0.0f){
+		minD = plane.x * min.x;
+		maxD = plane.x * max.x;
 	} else {
-		minD = n->x * max.x;
-		maxD = n->x * min.x;
+		minD = plane.x * max.x;
+		maxD = plane.x * min.x;
 	}
 
-	if (n->y > 0.0f){
-		minD += n->y * min.y;
-		maxD += n->y * max.y;
+	if (plane.y > 0.0f){
+		minD += plane.y * min.y;
+		maxD += plane.y * max.y;
 	} else {
-		minD += n->y * max.y;
-		maxD += n->y * min.y;
+		minD += plane.y * max.y;
+		maxD += plane.y * min.y;
 	}
 
-	if (n->z > 0.0f){
-		minD += n->z * min.z;
-		maxD += n->z * max.z;
+	if (plane.z > 0.0f){
+		minD += plane.z * min.z;
+		maxD += plane.z * max.z;
 	} else {
-		minD += n->z * max.z;
-		maxD += n->z * min.z;
+		minD += plane.z * max.z;
+		maxD += plane.z * min.z;
 	}
 
 	// in front of the plane
@@ -217,15 +237,15 @@ plane_intersect(const glm::vec4 &plane, const AABB &aabb) {
 
 static int
 plane_intersect(const glm::vec4 &plane, const BoundingSphere &sphere) {
-	assert(false && "not implement");
+	
 	return 0;
 }
 
 template<class BoundingType>
 static inline const char*
-planes_intersect(const Frustum::Planes &planes, const BoundingType &aabb) {
+planes_intersect(const Frustum::Planes &planes, const BoundingType &bt) {
 	for (const auto &p : planes) {
-		const int r = plane_intersect(p, aabb);
+		const int r = plane_intersect(p, bt);
 		if (r < 0)
 			return "outside";
 
@@ -258,19 +278,14 @@ transform_aabb(const glm::mat4x4 &trans, AABB &aabb) {
 }
 
 static int
-lfrustum_points(lua_State *L) {
-	auto f = fetch_frustum(L, 1);
-	
-	Frustum::Points points;
-	f->frustum_planes_intersection_points(points);
-
+push_box_points(lua_State *L, const Frustum::Points &points){
 	lua_createtable(L, 0, 8);
-	for (const auto &p : points) {
+	for (const auto& p : points) {
 		lua_createtable(L, 3, 0);
-		const auto &point = p.second;
+		const auto& point = p.second;
 		for (int ii = 0; ii < 3; ++ii) {
 			lua_pushnumber(L, point[ii]);
-			lua_seti(L, -2, ii+1);
+			lua_seti(L, -2, ii + 1);
 		}
 		lua_setfield(L, -2, p.first.c_str());
 	}
@@ -278,7 +293,17 @@ lfrustum_points(lua_State *L) {
 }
 
 static int
-lfrustum_interset(lua_State* L) {
+lfrustum_points(lua_State *L) {
+	auto f = fetch_frustum(L, 1);
+	
+	Frustum::Points points;
+	f->frustum_planes_intersection_points(points);
+
+	return push_box_points(L, points);
+}
+
+static int
+lfrustum_intersect(lua_State* L) {
 	auto *f = fetch_frustum(L, 1);
 	auto* bounding = fetch_bounding(L, 2);
 
@@ -289,7 +314,7 @@ lfrustum_interset(lua_State* L) {
 }
 
 static int
-lfrustum_interset_list(lua_State* L) {
+lfrustum_intersect_list(lua_State* L) {
 	auto* f = fetch_frustum(L, 1);
 
 	luaL_checktype(L, 2, LUA_TTABLE);
@@ -583,6 +608,14 @@ lbounding_get(lua_State *L){
 	return 1;
 }
 
+static int
+lbounding_aabb_points(lua_State *L){
+	auto b = fetch_bounding(L, 1);
+	Frustum::Points points;
+	get_aabb_points(b->aabb, points);
+	return push_box_points(L, points);
+}
+
 static void
 register_bounding_mt(lua_State* L) {
 	if (luaL_newmetatable(L, "BOUNDING_MT")) {
@@ -594,6 +627,7 @@ register_bounding_mt(lua_State* L) {
 			{ "isvalid",	lbounding_isvalid},
 			{ "reset",		lbounding_reset},
 			{ "get",		lbounding_get},
+			{ "aabb_points",lbounding_aabb_points},
 			{ "__tostring", lbounding_string},
 
 			{nullptr, nullptr}
@@ -609,8 +643,8 @@ static void
 register_frustum_mt(lua_State *L){
 	if (luaL_newmetatable(L, "FRUSTUM_MT")) {
 		luaL_Reg l[] = {
-			{ "interset",	lfrustum_interset},
-			{ "interset_list", lfrustum_interset_list},
+			{ "intersect",	lfrustum_intersect},
+			{ "intersect_list", lfrustum_intersect_list},
 			{ "points", lfrustum_points},
 			{ "__tostring", lfrustum_string},
 
@@ -624,7 +658,7 @@ register_frustum_mt(lua_State *L){
 }
 
 static int
-lplane_interset(lua_State *L){
+lplane_intersect(lua_State *L){
 	auto LS = getLS(L, 1);
 	const glm::vec4 plane = get_vec_value(L, LS, 2);	
 	auto b = fetch_bounding(L, 3);
@@ -641,7 +675,7 @@ extern "C"{
 		luaL_Reg l[] = {			
 			{ "new_bounding",	lbounding_new},
 			{ "new_frustum",	lfrustum_new},
-			{ "plane_interset",	lplane_interset},
+			{ "plane_interset",	lplane_intersect},
 			{ NULL, NULL },
 		};
 
