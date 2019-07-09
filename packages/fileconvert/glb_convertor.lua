@@ -1,8 +1,8 @@
-local glTF = require "vfs.fileconvert.glTF"
+local glTF = import_package "ant.glTF"
 local glbloader = glTF.glb
 
 local gltf_converter = require "meshconverter.gltf"
-local filtermesh = require "vfs.fileconvert.filter_mesh"
+local filtermesh = require "filter_mesh"
 
 local accessor_types = {
 	SCALAR = 0,

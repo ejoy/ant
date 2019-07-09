@@ -6,7 +6,7 @@ package.path = table.concat({
 }, ";")
 
 package.cpath = table.concat({
-    "clibs/?.dll",
+	"clibs/?.dll",
 	"bin/?.dll",
 }, ";")
 require "editor.vfs"
@@ -21,34 +21,115 @@ local function LOG(...)
 	print(...)
 end
 
-require "editor.vfs"
 local fw = require "filewatch"
-local repo = require "vfs.repo"
+local repo_new = require "vfs.repo".new
 local protocol = require "protocol"
 local network = require "network"
 local vfs = require "vfs.simplefs"
 local lfs = require "filesystem.local"
 
 local WORKDIR = lfs.current_path()
-local repopath = lfs.path(reponame)
-
-LOG ("Open repo : ", repopath)
-
-local repo = assert(repo.new(repopath))
-
-LOG ("Rebuild repo")
-if lfs.is_regular_file(repopath / ".repo" / "root") then
-	repo:index()
-else
-	repo:rebuild()
-end
 
 local watch = {}
-assert(fw.add(repopath:string()))
-watch[#watch+1] = {'', repopath}
-for k, v in pairs(repo._mountpoint) do
-	assert(fw.add(v:string()))
-	watch[#watch+1] = {k, v}
+local repos = {}
+local clients = {1}
+
+local function watch_add_path(path, repo, url)
+	path = path:string()
+	if watch[path] then
+		local info = watch[path].info
+		info[#info+1] = {
+			repo = repo,
+			url = url,
+		}
+	else
+		watch[path] = {
+			id = assert(fw.add(path)),
+			info = {{
+				repo = repo,
+				url = url,
+			}}
+		}
+	end
+end
+
+local function watch_add(repo, repopath)
+	watch_add_path(repopath, repo, '')
+	for k, v in pairs(repo._mountpoint) do
+		watch_add_path(v, repo, k)
+	end
+end
+
+local function watch_remove(repo)
+	local del = {}
+	for path, w in pairs(watch) do
+		for i, v in ipairs(w.info) do
+			if v.repo == repo then
+				table.remove(w.info, i)
+				break
+			end
+		end
+		if #w.info == 0 then
+			fw.remove(w.id)
+			del[path] = true
+		end
+	end
+	for _, path in pairs(del) do
+		watch[path] = nil
+	end
+end
+
+local function repo_add(reponame)
+	if repos[reponame] then
+		return repos[reponame]
+	end
+	local repopath = lfs.path(reponame)
+	LOG ("Open repo : ", repopath)
+	local repo = assert(repo_new(repopath))
+	LOG ("Rebuild repo")
+	if lfs.is_regular_file(repopath / ".repo" / "root") then
+		repo:index()
+	else
+		repo:rebuild()
+	end
+	watch_add(repo, repopath)
+	repos[reponame] = repo
+	return repo
+end
+
+local function repo_remove(reponame)
+	local repo = repos[reponame]
+	if repo then
+		watch_remove(repo)
+	end
+end
+
+local function clients_add()
+	local ret = clients[1]
+	if #clients == 1 then
+		clients[1] = ret + 1
+	else
+		table.remove(clients, 1)
+	end
+	return ret
+end
+
+local function clients_remove(id)
+	clients[#clients+1] = id
+	table.sort(clients)
+end
+
+
+local function logger_finish(id)
+	local logfile = WORKDIR / 'log' / ('runtime-%d.log'):format(id)
+	if lfs.exists(logfile) then
+		lfs.rename(logfile, WORKDIR / 'log' / 'runtime' / ('%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
+	end
+end
+
+local function logger_init(id)
+	lfs.create_directories(WORKDIR / 'log' / 'runtime')
+	logger_finish(id)
 end
 
 local filelisten = network.listen(config.address, config.port)
@@ -62,18 +143,22 @@ local debug = {}
 local message = {}
 
 function message:ROOT()
+	local repo = repo_add(reponame)
+	self._repo = repo
+
+	if not self._id then
+		self._id = clients_add()
+	end
+
 	repo:build()
 	local roothash = repo:root()
 	response(self, "ROOT", roothash)
 
-	-- init logger
-	lfs.create_directories(WORKDIR / 'log' / 'runtime')
-	if lfs.exists(WORKDIR / 'log' / 'runtime.log') then
-		lfs.rename(WORKDIR / 'log' / 'runtime.log', WORKDIR / 'log' / 'runtime' / ('%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
-	end
+	logger_init(self._id)
 end
 
 function message:GET(hash)
+	local repo = self._repo
 	local filename = repo:hash(hash)
 	if filename == nil then
 		response(self, "MISSING", hash)
@@ -104,6 +189,7 @@ function message:GET(hash)
 end
 
 function message:LINK(hash, identity, source_hash, lk_hash)
+	local repo = self._repo
 	local binhash = repo:link(hash, identity, source_hash, lk_hash)
 	LOG("LINK", hash, binhash, identity, source_hash, lk_hash)
 	if binhash then
@@ -131,7 +217,8 @@ function message:DBG(data)
 end
 
 function message:LOG(data)
-	local fp = assert(lfs.open(WORKDIR / 'log' / 'runtime.log', 'a'))
+	local logfile = WORKDIR / 'log' / ('runtime-%d.log'):format(self._id)
+	local fp = assert(lfs.open(logfile, 'a'))
 	fp:write(data)
 	fp:write('\n')
 	fp:close()
@@ -163,6 +250,9 @@ local function fileserver_update(obj)
 		--LOG("New", obj._peer, obj._ref)
 	elseif obj._status == "CLOSED" then
 		LOG("LOGOFF", obj._peer)
+		clients_remove(obj._id)
+		logger_finish(obj._id)
+		obj._id = nil
 		for fd, v in pairs(debug) do
 			if v.server == obj then
 				if v.client then
@@ -214,14 +304,15 @@ local function filewatch()
 			print(path)
 			goto continue
 		end
-		for _, v in ipairs(watch) do
-			local vpath, rpath = v[1], v[2]
-			local rel_path = lfs.relative(lfs.path(path), rpath):string()
+		for rpath, w in pairs(watch) do
+			local rel_path = lfs.relative(lfs.path(path), lfs.path(rpath)):string()
 			if rel_path ~= '' and rel_path:sub(1, 1) ~= '.' then
-				local newpath = vfs.join(vpath, rel_path)
-				if newpath:sub(1, 5) ~= '.repo' then
-					print('[FileWatch]', type, newpath)
-					repo:touch(newpath)
+				for _, v in ipairs(w.info) do
+					local newpath = vfs.join(v.url, rel_path)
+					if newpath:sub(1, 5) ~= '.repo' then
+						print('[FileWatch]', type, newpath)
+						v.repo:touch(newpath)
+					end
 				end
 			end
 		end
