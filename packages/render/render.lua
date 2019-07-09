@@ -202,8 +202,8 @@ function rendersys:update()
 					local visible = visibleset and visibleset[i] or true
 					if visible ~= "outside" then
 						ru.draw_primitive(viewid, prim, prim.worldmat, render_properties)
-					else
-						print("eid:", prim.eid, "name : ", prim.name or "", "is not visible")
+					-- else
+					-- 	print("eid:", prim.eid, "name : ", prim.name or "", "is not visible")
 					end
 				end
 			end

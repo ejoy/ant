@@ -29,7 +29,7 @@ model_review_system.depend "render_system"
 model_review_system.depend "viewport_detect_system"
 model_review_system.depend "sky_system"
 model_review_system.depend "cull_system"
-model_review_system.depend "render_mesh_bounding"
+--model_review_system.depend "render_mesh_bounding"
 model_review_system.dependby "camera_controller"
 
 local lu = renderpkg.light
