@@ -1,4 +1,4 @@
-local JSON = require "vfs.fileconvert.glTF.json"
+local JSON = require "json"
 local jsonDecode = JSON.decode
 local jsonEncode = JSON.encode
 

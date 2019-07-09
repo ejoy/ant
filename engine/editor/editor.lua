@@ -22,7 +22,6 @@ package.cpath = table.concat(cpaths, ";")
 require "editor.vfs"
 require "editor.init_bgfx"
 require "filesystem"
-require "vfs.fileconvert.glTF"
 
 local fs = require "filesystem.local"
 local vfs = require "vfs"

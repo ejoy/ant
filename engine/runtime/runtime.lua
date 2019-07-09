@@ -9,5 +9,4 @@ pm.init()
 import_package = pm.import
 require 'runtime.debug'
 require "filesystem"
-require "vfs.fileconvert.glTF"
 return import_package "ant.imgui".runtime

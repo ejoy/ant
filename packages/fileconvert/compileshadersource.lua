@@ -1,4 +1,4 @@
-local toolset = require "vfs.fileconvert.toolset"
+local toolset = require "toolset"
 local lfs = require "filesystem.local"
 
 local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders/src"
