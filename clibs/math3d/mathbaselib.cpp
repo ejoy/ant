@@ -128,32 +128,24 @@ struct Frustum {
 
 	inline void
 		frustum_planes_intersection_points(Points& points) {
-		auto calc_intersection_point = [](auto p0, auto p1, auto p2) {
-			auto crossp0p1 = (glm::cross(glm::vec3(p0), glm::vec3(p1)));
-			auto t = p0.w * (glm::cross(glm::vec3(p1), glm::vec3(p2))) +
-				p1.w * (glm::cross(glm::vec3(p2), glm::vec3(p0))) +
-				p2.w * crossp0p1;
+		auto invmat = glm::inverse(this->mat);
 
-			return t / glm::dot(crossp0p1, glm::vec3(p2));
+		const std::tuple<const char*, glm::vec4> pp[] = {
+			{"lbn", glm::vec4(-1.f,-1.f,-1.f, 1.f)},
+			{"ltn", glm::vec4(-1.f,1.f, -1.f, 1.f)},
+			{"rbn", glm::vec4(1.f, -1.f,-1.f, 1.f)},
+			{"rtn", glm::vec4(1.f, 1.f, -1.f, 1.f)},
+
+			{"lbf", glm::vec4(-1.f,-1.f, 1.f, 1.f)},
+			{"ltf", glm::vec4(-1.f,1.f,  1.f, 1.f)},
+			{"rbf", glm::vec4(1.f, -1.f, 1.f, 1.f)},
+			{"rtf", glm::vec4(1.f, 1.f,  1.f, 1.f)},
 		};
 
-		Corner coners[8] = {
-			{PlaneName::left, PlaneName::top, PlaneName::near},
-			{PlaneName::right, PlaneName::top, PlaneName::near},
-
-			{PlaneName::left, PlaneName::top, PlaneName::far},
-			{PlaneName::right, PlaneName::top, PlaneName::far},
-
-			{PlaneName::left, PlaneName::bottom, PlaneName::near},
-			{PlaneName::right, PlaneName::bottom, PlaneName::near},
-
-			{PlaneName::left, PlaneName::bottom, PlaneName::far},
-			{PlaneName::right, PlaneName::bottom, PlaneName::far},
-		};
-
-		for (const auto& c : coners) {
-			const auto& name = get_coner_name(c);
-			points[name] = calc_intersection_point(planes[c.pnames[0]], planes[c.pnames[1]], planes[c.pnames[2]]);
+		for (const auto p : pp){
+			auto t = invmat * std::get<1>(p);
+			t /= t.w;			
+			points[std::get<0>(p)] = t;
 		}
 	}
 };
@@ -209,14 +201,17 @@ plane_intersect(const glm::vec4 &plane, const AABB &aabb) {
 		maxD += n->z * min.z;
 	}
 
-	if (minD >= plane.w){
+	// in front of the plane
+	if (minD > plane.w){
 		return 1;
 	}
 
-	if (maxD <= plane.w){
+	// in back of the plane
+	if (maxD < plane.w){
 		return -1;
 	}
 
+	// straddle of the plane
 	return 0;
 }
 
@@ -231,7 +226,7 @@ static inline const char*
 planes_intersect(const Frustum::Planes &planes, const BoundingType &aabb) {
 	for (const auto &p : planes) {
 		const int r = plane_intersect(p, aabb);
-		if (r > 0)
+		if (r < 0)
 			return "outside";
 
 		if (r == 0)
@@ -628,6 +623,14 @@ register_frustum_mt(lua_State *L){
 	}
 }
 
+static int
+lplane_interset(lua_State *L){
+	auto LS = getLS(L, 1);
+	const glm::vec4 plane = get_vec_value(L, LS, 2);	
+	auto b = fetch_bounding(L, 3);
+	lua_pushinteger(L, plane_intersect(plane, b->aabb));
+	return 1;
+}
 
 extern "C"{
 	LUAMOD_API int
@@ -638,6 +641,7 @@ extern "C"{
 		luaL_Reg l[] = {			
 			{ "new_bounding",	lbounding_new},
 			{ "new_frustum",	lfrustum_new},
+			{ "plane_interset",	lplane_interset},
 			{ NULL, NULL },
 		};
 

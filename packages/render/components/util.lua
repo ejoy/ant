@@ -334,4 +334,50 @@ function util.calc_transform_boundings(world, transformed_boundings)
 	end
 end
 
+function util.create_frustum_entity(world, frustum, name, transform, color)
+	local points = frustum:points()
+	local eid = world:create_entity {
+		transform = transform or mu.srt(),
+		mesh = {},
+		material = util.assign_material(fs.path "/pkg/ant.resources/depiction/materials/line.material"),
+		can_render = true,
+		main_view = true,
+		name = name or "frustum"
+	}
+
+	local e = world[eid]
+	local m = e.mesh
+	local vb = {"fffd",}
+	local cornernames = {
+		"ltn", "lbn", "rtn", "rbn",
+		"ltf", "lbf", "rtf", "rbf",
+	}
+
+	color = color or 0xff00000f
+	for _, n in ipairs(cornernames) do
+		local p = points[n]
+		table.move(p, 1, 3, #vb+1, vb)
+		vb[#vb+1] = color
+	end
+
+	local ib = {
+		-- front
+		0, 1, 2, 3,
+		0, 2, 1, 3,
+
+		-- back
+		4, 5, 6, 7,
+		4, 6, 5, 7,
+
+		-- left
+		0, 4, 1, 5,
+		-- right
+		2, 6, 3, 7,
+	}
+	
+	
+	m.assetinfo = util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib)
+	return eid
+end
+
 return util

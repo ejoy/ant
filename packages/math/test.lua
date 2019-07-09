@@ -22,4 +22,45 @@ do
     local _, _, vp = ms:view_proj({viewdir={0, 0, 1, 0}, eyepos={0, 0, -8, 1}}, {fov=90, aspect=1, n=1, f=1000}, true)
     local frustum = mathbaselib.new_frustum(ms, vp)
     print("frustum:\n", frustum)
+
+    local b1, b2 = 
+    mathbaselib.new_bounding(ms, {0, 0, 0}, {1, 1, 1}), 
+    mathbaselib.new_bounding(ms, {0, 0, 2}, {2, 2, 4})
+
+    local b3 = mathbaselib.new_bounding(ms, {3000, 0, 0}, {1, 1, 1})
+
+    local boundings = {b1, b2, b3}
+    local vis = frustum:interset_list(boundings)
+
+    for _, v in ipairs(vis)do
+        print(v)
+    end
+
+end
+
+do
+    local b1 = mathbaselib.new_bounding(ms, {0, 1, 0, 0}, {1, 2, 1, 0})
+    print(b1)
+    
+    local planes = {
+    left = {0.707107, 0.000000, 0.707107, 5.656854},
+	right = {-0.707107, 0.000000, 0.707107, 5.656854},
+	top = {0.000000, -0.707107, 0.707107, 5.656854},
+	bottom = {0.000000, 0.707107, 0.707107, 5.656854},
+	near = {0.000000, 0.000000, 1.000000, 7.000000},
+    far = {0.000000, 0.000000, -1.000000, 992.000488},
+    }
+
+    for k, p in pairs(planes) do
+        print(k, "result : ", mathbaselib.plane_interset(ms, p, b1))
+    end
+end
+
+do
+    local _, _, vp = ms:view_proj({viewdir={0, 0, 1, 0}, eyepos={0, 0, -8, 1}}, {fov=90, aspect=1, n=1, f=1000}, true)
+    local frustum = mathbaselib.new_frustum(ms, vp)
+    local points = frustum:points()
+    for k, p in pairs(points) do
+        print(k, p[1], p[2], p[3])
+    end
 end
