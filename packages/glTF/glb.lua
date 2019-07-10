@@ -39,7 +39,6 @@ local function decode_from_filehandle(f)
     local json = decode_chunk(f, "JSON")
 	local bin = decode_chunk(f, "BIN\0")
 	assert(f:read(1) == nil)
-    f:close()
     return {
         version = version,
         info = jsonDecode(json),
@@ -49,7 +48,9 @@ end
 
 local function decode(filename)
     local f = assert(io.open(filename, "rb"))
-	return decode_from_filehandle(f)
+	local c = decode_from_filehandle(f)
+	f:close()
+	return c
 end
 
 local function encode(filename, data)
