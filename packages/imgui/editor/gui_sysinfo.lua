@@ -1,11 +1,12 @@
-local imgui   = require "imgui_wrap"
-local widget = imgui.widget
-local flags = imgui.flags
-local windows = imgui.windows
-local util = imgui.util
-local cursor = imgui.cursor
-local enum = imgui.enum
+local imgui     = require "imgui_wrap"
+local widget    = imgui.widget
+local flags     = imgui.flags
+local windows   = imgui.windows
+local util      = imgui.util
+local cursor    = imgui.cursor
+local enum      = imgui.enum
 local gui_input = require "gui_input"
+local bgfx      = require "bgfx"
 
 local GuiBase = require "gui_base"
 local GuiSysInfo = GuiBase.derive("GuiSysInfo")
@@ -87,6 +88,22 @@ function GuiSysInfo:on_update(deltatime)
     end
 end
 
+local function memory_info()
+    local memstat = bgfx.get_stats("m")
+    local s = {"memory:"}
+    local keys = {}
+    for k in pairs(memstat) do
+        keys[#keys+1] = k
+    end
+    table.sort(keys, function(lhs, rhs) return lhs < rhs end)
+    for _, k in ipairs(keys) do
+        local v = memstat[k]
+        s[#s+1] = "\t" .. k .. ":" .. v
+    end
+
+    return table.concat(s, "\n")
+end
+
 function GuiSysInfo:update_fps(deltatime)
     self.frame_count = self.frame_count + 1
     self.frame_time_count = self.frame_time_count + deltatime
@@ -99,6 +116,7 @@ function GuiSysInfo:update_fps(deltatime)
 
     widget.Text( string.format("fps:%g",self.fps) )
     widget.Text( string.format("frame time:%.3g",self.ft) )
+    widget.Text( memory_info() )
 end
 
 return GuiSysInfo
