@@ -26,10 +26,9 @@ function scene_control.test_new_world(raw_path)
     }
     local systems = {
         --"pickup_material_system",
-        --"pickup_system",
+        "pickup_system",
         -- "obj_transform_system",
         "build_hierarchy_system",
-        "editor_camera_controller",
         "editor_watcher_system",
         -- "editor_system"
     }
