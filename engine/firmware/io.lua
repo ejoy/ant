@@ -1,4 +1,4 @@
-local loadfile = ...
+local loadfile, name = ...
 
 local INTERVAL = 0.01 -- socket select timeout
 
@@ -481,7 +481,7 @@ end
 local function waiting_for_root()
 	local resp = {}
 	local reading = connection.recvq
-	connection_send "ROOT"
+	connection_send("ROOT", name)
 	while true do
 		local ok, err = connection_dispose(INTERVAL)
 		if not ok then

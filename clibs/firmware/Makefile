@@ -13,10 +13,13 @@ $(ODIR)/firmware.o : firmware.cpp incbin.h \
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC)
 
 $(ODIR)/firmware.dll : $(ODIR)/firmware.o
-	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
+	$(CXX) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB)
 
 $(ODIR)/libfirmware.a : $(ODIR)/firmware.o
 	ar rsv $@ $^
+
+firmware.dll : $(ODIR)/firmware.dll | $(ODIR)
+	cp $^ $@
 
 $(ODIR) :
 	mkdir -p $@
