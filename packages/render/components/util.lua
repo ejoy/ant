@@ -11,6 +11,9 @@ local mathpkg 	= import_package "ant.math"
 local mu = mathpkg.util
 local ms = mathpkg.stack
 
+local geopkg 	= import_package "ant.geometry"
+local geodrawer	= geopkg.drawer
+
 local function deep_copy(t)
 	if type(t) == "table" then
 		local tmp = {}
@@ -378,6 +381,28 @@ function util.create_frustum_entity(world, frustum, name, transform, color)
 	
 	m.assetinfo = util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib)
 	return eid
+end
+
+function util.create_skybox(world, material)
+    local eid = world:create_entity {
+        transform = mu.srt(),
+        mesh = {},
+        material = material or util.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skybox.material"),
+        can_render = true,
+        main_view = true,
+        name = "sky_box",
+    }
+    local e = world[eid]
+    local m = e.mesh
+
+    local desc = {vb={}, ib={}}
+    geodrawer.draw_box({1, 1, 1}, nil, nil, desc)
+    local gvb = {"fff",}
+    for _, v in ipairs(desc.vb)do
+        table.move(v, 1, 3, #gvb+1, gvb)
+    end
+    m.handle = util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib)
+    return eid
 end
 
 return util
