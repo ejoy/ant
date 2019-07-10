@@ -1,5 +1,6 @@
-local mgr = {}; 
-mgr.__index = mgr
+local mgr = {}; mgr.__index = mgr
+
+local bgfx = require "bgfx"
 
 local resources = {}
 function mgr.mark(restype, sizebytes, resinfo)
@@ -20,5 +21,6 @@ function mgr.tell_size(restype)
     end
 end
 
+mgr.bgfx_stat = bgfx.stat
 
 return mgr
