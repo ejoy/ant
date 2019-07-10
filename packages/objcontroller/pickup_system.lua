@@ -91,7 +91,7 @@ function pickup_material_sys:update()
 
 		local materials = e.pickup.materials
 		local result = filter.result
-		replace_material(result.opaque, materials.opaque)
+		replace_material(result.opaticy, materials.opaticy)
 		replace_material(filter.translucent, result.translucent)
 	end
 end
@@ -112,7 +112,7 @@ ecs.component "blit_buffer" {depend = "blit_viewid"}
 	.render_buffer "render_buffer"
 
 ecs.component "pickup_material"
-	.opaque 		"material_content"
+	.opaticy 		"material_content"
 	.translucent 	"material_content"
 
 ecs.component_alias("pickup_viewtag", "boolean")
@@ -160,7 +160,7 @@ local function add_pick_entity()
 	return world:create_entity {
 		pickup = {
 			materials = {
-				opaque = {
+				opaticy = {
 					ref_path = fs.path '/pkg/ant.resources/materials/pickup_opacity.material'
 				},
 				translucent = {

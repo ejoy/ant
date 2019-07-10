@@ -267,6 +267,7 @@ function PVPScene.create_entitices(world)
 						t = t,
 					},
 					can_render = true, 
+					can_select = true,
 					mesh = {
 						ref_path = fs.path "/pkg/ant.resources" / scenedata.mesh,						
 					},
