@@ -5,12 +5,15 @@ local imgui = require "imgui"
 
 ecs.import "ant.inputmgr"
 
+local math3d = require "math3d"
+
 local mathpkg = import_package "ant.math"
 local point2d = mathpkg.point2d
 local ms = mathpkg.stack
 local mu = mathpkg.util
 
-local math3d = require "math3d"
+local memmgr = import_package "ant.memory_stat"
+
 local rhwi = import_package "ant.render".hardware_interface
 
 local camera_controller_system = ecs.system "camera_controller"
@@ -129,12 +132,32 @@ function camera_controller_system:init()
 	self.message.observers:add(message)
 end
 
+
+local function memory_info()
+    local memstat = memmgr.bgfx_stat("m")
+    local s = {"memory:"}
+    local keys = {}
+    for k in pairs(memstat) do
+        keys[#keys+1] = k
+    end
+    table.sort(keys, function(lhs, rhs) return lhs < rhs end)
+    for _, k in ipairs(keys) do
+        local v = memstat[k]
+        s[#s+1] = "\t" .. k .. ":" .. v
+    end
+
+    return table.concat(s, "\n")
+end
+
+
 function camera_controller_system:update()
 	local windows = imgui.windows
+	local widget = imgui.widget
 	local flags = imgui.flags
 	imgui.begin_frame(1/60)
 	windows.SetNextWindowSizeConstraints(300, 300, 500, 500)
 	windows.Begin("Test", flags.Window { "MenuBar" })
+	widget.Text(memory_info())
 	windows.End()
 	imgui.end_frame()
 end

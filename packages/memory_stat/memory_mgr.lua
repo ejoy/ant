@@ -21,6 +21,6 @@ function mgr.tell_size(restype)
     end
 end
 
-mgr.bgfx_stat = bgfx.stat
+mgr.bgfx_stat = bgfx.get_stats
 
 return mgr
