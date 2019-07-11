@@ -1,3 +1,4 @@
+#define LUA_LIB
 #include <lua.h>
 #include <lauxlib.h>
 
@@ -418,7 +419,7 @@ snapshot(lua_State *L) {
 	return 1;
 }
 
-int
+LUAMOD_API int
 luaopen_snapshot(lua_State *L) {
 	luaL_checkversion(L);
 	lua_pushcfunction(L, snapshot);
