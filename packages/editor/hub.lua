@@ -102,7 +102,7 @@ end
 function hub.subscribe(channel,func,func_target)
     assert(func,"func is nil")
     assert(channel,"channel is nil")
-    print("subscribe:",channel)
+    log.trace("subscribe:",channel)
     init_channel(channel)
     func_target = func_target or hub
     local funcs = hub._channel_one_func[channel]
@@ -195,7 +195,7 @@ end
 function hub.publish(channel,...)
     assert(channel,"channel is nil")
     local args = {...}
-    print("publish:",channel,...)
+    log.trace("publish:",channel,...)
     init_channel(channel)
     local msg_num = hub._channel_msg_num[channel]
     local args_obj = thread.pack(args)

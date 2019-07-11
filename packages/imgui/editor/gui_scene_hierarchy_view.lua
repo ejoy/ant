@@ -38,7 +38,7 @@ end
 -------hub end
 
 function GuiHierarchyView:_on_refresh_hierarchy(tbl)
-    print_a("_on_refresh_hierarchy",tbl)
+    log.info_a("_on_refresh_hierarchy",tbl)
     self.hierarchy_data = tbl
     self.sorted_map = {}
 end

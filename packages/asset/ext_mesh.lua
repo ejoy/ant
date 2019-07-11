@@ -1,4 +1,4 @@
-local log = log and log.info(...) or print
+local log = log or print
 
 local mesh_loader = import_package "ant.modelloader".loader
 local assetmgr = require "asset"
@@ -10,7 +10,7 @@ return function (filename)
 	if fs.exists(meshpath) then
 		mesh.handle = mesh_loader.load(meshpath)
 	else
-		log(string.format("load mesh path failed, mesh file:[%s], .mesh file:[%s],", meshpath, filename))
+		log.warn(string.format("load mesh path failed, mesh file:[%s], .mesh file:[%s],", meshpath, filename))
 	end 
     return mesh
 end

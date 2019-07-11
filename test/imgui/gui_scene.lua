@@ -46,7 +46,7 @@ function  GuiScene:_scene_menu()
     local box = self:_get_editpath()
     if  widget.Button("OpenScene") then
         local scene_control = require "scene_control"
-        print_a(box)
+        log.info_a(box)
         scene_control.test_new_world(box.text)
     end
 	cursor.SameLine()

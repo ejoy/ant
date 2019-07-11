@@ -12,10 +12,11 @@ local t = {
         list = require "controls.list",
         tree = require "controls.tree",
         combobox = require "controls.combobox",
+        scroll_list = require "controls.scroll_list",
     },
     editor = {
         gui_canvas = require "editor.gui_canvas",
-        -- gui_logview = require "common.gui_logview",
+        gui_logview = require "editor.gui_logview",
         gui_sysinfo = require "editor.gui_sysinfo",
         gui_scene_hierarchy_view = require "editor.gui_scene_hierarchy_view",
         gui_property_view = require "editor.gui_property_view",
