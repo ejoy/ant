@@ -16,6 +16,7 @@ function GuiBase:_init()
     self._is_opened = true
     -- self.default_size = {200,100}
     self._last_frame_opened = false
+    self._err_count = 0
 end
 
 function GuiBase:on_open_click()
@@ -66,8 +67,14 @@ function GuiBase:on_gui(delta)
         end
         if self.before_update then self:before_update() end
         local fold, opening = windows.Begin(self.title_id, self.win_flags or nil)
-        if fold then
-            self:on_update(delta)
+        if self._err_count < 60 and  fold then
+            local ok , err = xpcall(self.on_update, debug.traceback,self,delta)
+            if not ok then
+                log.error(err)
+                self._err_count = self._err_count + 1
+            else
+                self._err_count = 0
+            end
             if not opening then
                 self:on_close_click()
             end

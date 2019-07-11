@@ -23,10 +23,10 @@ function try(fun,...)
     if debug.getregistry()["lua-debug"] then
         return fun(...)
     end
-
     local status,err,ret = xpcall( fun,debug.traceback,... )
     if not status then
         io.stderr:write("Error:%s\n%s", status or "nil", err)
+        log.error_a("Error:%s\n%s", status, err)
     end
     return ret
 end
@@ -80,9 +80,9 @@ function GuiCanvas:on_update(delta)
     local r = self.rect
     if w~=r.w or h~=r.h or x~=r.x or y ~= r.y then
         self.vp_dirty = self.vp_dirty or (w~=r.w) or (h~=r.h)
-        if  (w~=r.w) or (h~=r.h) then
-            print(">>>>>>",w,r.w,h,r.h)
-        end
+        -- if  (w~=r.w) or (h~=r.h) then
+        --     log.trace(">>>>>>",w,r.w,h,r.h)
+        -- end
         self.rect = {x=x,y=y,w=w,h=h}
     end
     if self.world then
@@ -152,7 +152,7 @@ function GuiCanvas:on_dispatch_msg()
         end
     end
     local mouse_pressed =  gui_input.is_mouse_pressed(0)
-    if focus and not mouse_pressed and self.resize_cb and self.vp_dirty then
+    if not mouse_pressed and self.resize_cb and self.vp_dirty then
         self.vp_dirty = false
         self.resize_cb(self,rect.w,rect.h)
     end
