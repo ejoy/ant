@@ -5,15 +5,15 @@ local EnableLuaTrace = false
 local EnableCheckPair = true
 local EnabelFlagsWrap = true
 
---print error when tryint to index a unexist key
+--log error when tryint to index a unexist key
 local function asset_index(tbl,path)
     return function( _,key )
         local v = tbl[key]
         if v then
             return v
         else
-            print(string.format("[Imgui Error]:%s<%s> not exist!",path,key))
-            print(debug.traceback())
+            log(string.format("[Imgui Error]:%s<%s> not exist!",path,key))
+            log(debug.traceback())
         end
     end
 end
@@ -65,7 +65,7 @@ local function trace_call(src,dst,name)
         if type(v) == "function" then
             local f = dst[k]
             local function w(...)
-                print(string.format("call function %s.%s",name, k),...)
+                log(string.format("call function %s.%s",name, k),...)
                 return f(...)
             end
             dst[k] = w

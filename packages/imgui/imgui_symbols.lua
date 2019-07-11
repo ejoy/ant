@@ -18,7 +18,7 @@ function imgui.IO() end
 function imgui.setDockEnable(boolean) end
 function imgui.showDockSpace() end
 
-function widget.Button() end
+function widget.Button(label,w,h) end
 function widget.SmallButton() end
 function widget.InvisibleButton() end
 function widget.ArrowButton() end
@@ -81,7 +81,9 @@ function widget.BeginDragDropTarget() end
 function widget.EndDragDropTarget() end
 --data or nil = AcceptDragDropPayload( type,ImGuiDragDropFlags );
 --change = AcceptDragDropPayload( { type=[in],flags==[in],data=[out],isPreview=[out],isDelivery=[out] } );
-function widget.AcceptDragDropPayload(type,ImGuiDragDropFlags) end
+function widget.AcceptDragDropPayload(string type,ImGuiDragDropFlags f) end
+function widget.PushTextWrapPos(float pos) end
+function widget.PopTextWrapPos() end
 
 function cursor.Separator() end
 function cursor.SameLine() end
@@ -104,14 +106,20 @@ function cursor.GetFrameHeight() end
 function cursor.GetFrameHeightWithSpacing() end
 function cursor.TreeAdvanceToLabelPos() end
 function cursor.GetTreeNodeToLabelSpacing() end
-function cursor.Columns() end
+function cursor.Columns(num,strid,withborder) end
 function cursor.NextColumn() end
+function cursor.GetColumnIndex() end --start from 1
+--index = 0 or nil:get current column offset
+--return float offset
+function cursor.GetColumnOffset(int index) end
+-- index = 0:set current column
+function cursor.SetColumnOffset(int index,float offset) end
 function cursor.SetNextItemWidth() end
 function cursor.SetMouseCursor( cursor = enum.MouseCursor.Arrow ) end
 
 function windows.Begin() end
 function windows.End() end
-function windows.BeginChild() end
+function windows.BeginChild(strid,w,h,has_border,flags) end --return change
 function windows.EndChild() end
 function windows.BeginTabBar() end
 function windows.EndTabBar() end
@@ -158,6 +166,7 @@ function windows.PushStyleColor() end
 function windows.PopStyleColor() end
 function windows.PushStyleVar() end
 function windows.PopStyleVar() end
+function windows.SetWindowFontScale() end
 
 function util.SetColorEditOptions() end
 function util.PushClipRect() end
@@ -185,6 +194,8 @@ function util.SaveIniSettings(clear_want_save_flag) end
 function util.CaptureKeyboardFromApp() end
 function util.CaptureMouseFromApp() end
 function util.IsMouseDoubleClicked() end
+function util.PushID()
+function util.PopID()
 
 function flags.ColorEdit.NoAlpha() end
 function flags.ColorEdit.NoPicker() end
