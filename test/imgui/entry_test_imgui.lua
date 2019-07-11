@@ -23,7 +23,7 @@ local callback = {
     mouse_click = imgui.mouse_click,
     keyboard = imgui.key_state,
     char = imgui.input_char,
-    error = print
+    error = log
 }
 
 local attribs = {}
@@ -74,7 +74,7 @@ function callback.init(nwh, context, width, height)
 end
 
 function callback.size(width,height,type)
-    print("callback.size",width,height,type)
+    log("callback.size",width,height,type)
     imgui.resize(width,height)
     hw.reset(nil, width, height)
     bgfx.set_view_rect(0, 0, 0, width, height)
@@ -152,7 +152,7 @@ function test_window:update()
         end
         if windows.BeginTabItem ("Tab2",tab_noclosed) then
             if widget.Button "Save Ini" then
-                print(util.SaveIniSettings())
+                log(util.SaveIniSettings())
             end
             if windows.BeginPopupModal "Popup window" then
                 widget.Text "Pop up"
@@ -178,18 +178,18 @@ end
 local TreeOpen = {true}
 function test_window:tab_update()
     if widget.Button "Print imgui.IO" then
-        print_a(imgui.IO)
+        log.info_a(imgui.IO)
     end
     if widget.Button "Test" then
-        print("test2")
+        log("test2")
     end
     widget.SmallButton "Small"
     widget.Checkbox("TreeOpen",TreeOpen)
     if widget.Checkbox("Checkbox", checkbox) then
-        print("Click Checkbox", checkbox[1])
+        log("Click Checkbox", checkbox[1])
     end
     if widget.InputText("Edit", editbox) then
-        print(editbox.text)
+        log(editbox.text)
     end
     widget.InputFloat("InputFloat", editfloat)
     widget.Text("Hello World", 1,0,0)
@@ -230,7 +230,7 @@ function test_window:tab_update()
     widget.PlotHistogram("histogram", lines)
 
     if widget.ListBox("##list",lists) then
-        print(lists.current)
+        log(lists.current)
     end
 end
 
@@ -246,8 +246,8 @@ function callback.update(delta)
     local now = os.clock()
     delta = now - last
     last = now
-    -- print(delta)
-    -- print("-----------------------------")
+    -- log(delta)
+    -- log("-----------------------------")
     imgui.begin_frame( delta + 0.0001)
 
     update_ui()
@@ -257,7 +257,7 @@ function callback.update(delta)
     bgfx.touch(1)
 
 --  bgfx.dbg_text_clear()
---  bgfx.dbg_text_print(0, 1, 0xf, "Color can be changed with ANSI \x1b[9;me\x1b[10;ms\x1b[11;mc\x1b[12;ma\x1b[13;mp\x1b[14;me\x1b[0m code too.");
+--  bgfx.dbg_text_log(0, 1, 0xf, "Color can be changed with ANSI \x1b[9;me\x1b[10;ms\x1b[11;mc\x1b[12;ma\x1b[13;mp\x1b[14;me\x1b[0m code too.");
     
     bgfx.frame()
     local thread = require "thread"
@@ -266,7 +266,7 @@ function callback.update(delta)
 end
 
 function callback.exit()
-    print("Exit")
+    log("Exit")
     imgui.destroy()
     hw.shutdown()
 end

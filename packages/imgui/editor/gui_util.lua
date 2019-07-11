@@ -16,7 +16,7 @@ function gui_util.get_all_schema()
             break
         end
     end
-    -- print_a("all_package:",packages)
+    -- log.info_a("all_package:",packages)
     local systems = {"timesystem", "message_system"}
     local inputmgr      = import_package "ant.inputmgr"
     local scene         = import_package "ant.scene".util
@@ -26,15 +26,15 @@ function gui_util.get_all_schema()
             update = {"timesystem", "message_system"}
         })
     -- world_update()
-    -- print_a(world._schema.map)
-    -- print(world._schema.map)
+    -- log.info_a(world._schema.map)
+    -- log(world._schema.map)
     return world._schema.map
 end
 
 -----------------------------------------------------------------------------
 -- example
 -- gui_util.notice({msg="123"})
--- gui_util.message({msg="1234",close_cb=function(result) print(result) end})
+-- gui_util.message({msg="1234",close_cb=function(result) log(result) end})
 -----------------------------------------------------------------------------
 
 --arg.msg = * 
@@ -162,6 +162,33 @@ function gui_util.open_current_pkg_path(path,...)
     local local_path = pkg_path:localpath()
     local f = localfs.open(local_path,...)
     return f
+end
+
+local DefaultComponentSettingPath = "editor.com_sytle.default.cfg"
+--schema_map to update component list
+function gui_util.read_component_setting(schema_map)
+    local ComponentSetting = require "editor.component_setting"
+    local thread = require "thread"
+    local f = gui_util.open_current_pkg_path(DefaultComponentSettingPath,"rb")
+    local packed_data = f:read("*all")
+    f:close()
+    local com_setting_data = thread.unpack(packed_data)
+    local com_setting = ComponentSetting.new("")
+    com_setting:load_setting(schema_map,com_setting_data)
+    return com_setting
+end
+
+function gui_util.save_component_setting(com_setting)
+    local data = com_setting:get_save_data()
+    log.info_a("after:",data)
+    local thread = require "thread"
+    local packed_data = thread.pack(data)
+    -- local after = thread.unpack(packed_data)
+    local path = DefaultComponentSettingPath
+    local f = gui_util.open_current_pkg_path(path,"wb")
+    f:write(packed_data)
+    f:close()
+    return path
 end
 
 return gui_util

@@ -1,5 +1,5 @@
 local gui_main = import_package "ant.imgui".gui_main
--- local GuiLogView = import_package "ant.imgui".gui_logview
+local GuiLogView = import_package "ant.imgui".editor.gui_logview
 local GuiSysInfo = import_package "ant.imgui".editor.gui_sysinfo
 local GuiSceneHierarchyView = import_package "ant.imgui".editor.gui_scene_hierarchy_view
 local GuiPropertyView = import_package "ant.imgui".editor.gui_property_view
@@ -22,14 +22,16 @@ function main.init()
     gui_mgr.register(GuiSceneHierarchyView.GuiName,GuiSceneHierarchyView.new())
     gui_mgr.register(GuiPropertyView.GuiName,GuiPropertyView.new())
     gui_mgr.register(GuiComponentStyle.GuiName,GuiComponentStyle.new())
-    -- gui_mgr.register(GuiLogView.GuiName,GuiLogView.new())
+    local log_view = GuiLogView.new()
+
+    gui_mgr.register(GuiLogView.GuiName,log_view)
 
     local testgui = TestGuiBase.new(true)
     gui_mgr.register(TestGuiBase.GuiName,testgui)
 end
 
 pm = require "antpm"
-print_a(pm.get_entry_pkg())
+log.info_a(pm.get_entry_pkg())
 
 
 gui_main.run(main,args)

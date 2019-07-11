@@ -8,7 +8,7 @@ local function TAppend(a,b)
 end
 
 local NormalCfgList = {
-    "DefaultOpen","DisplayName",
+    "DefaultOpen","DisplayName","HideHeader","ArrayAsVector"
 }
 
 local ArrayCfgList = {
@@ -21,19 +21,26 @@ local MapCfgList = {
 TAppend(MapCfgList,NormalCfgList)
 
 local ComCfgList = {
-    
 }
 TAppend(ComCfgList,NormalCfgList)
 
-local CfgList = {
-    Normal = NormalCfgList,
-    Array = ArrayCfgList,
-    Map = MapCfgList,
-    Com = ComCfgList,
+local ComType = {
+    Normal = "Normal",
+    Array = "Array",
+    Map = "Map",
+    Com = "Com",
 }
+
+local CfgList = {}
+CfgList[ComType.Normal] = NormalCfgList
+CfgList[ComType.Array] = ArrayCfgList
+CfgList[ComType.Map] = MapCfgList
+CfgList[ComType.Com] = ComCfgList
+
 
 
 local ComponentSetting = class("ComponentSetting")
+ComponentSetting.ComType = ComType
 ComponentSetting.CfgList = CfgList
 
 
@@ -52,7 +59,8 @@ function ComponentSetting:_init_default_setting()
         setting[field] = define.defaultValue
     end
     self.default_setting = setting
-    print_a("default_setting",self.default_setting)
+    log.info_a("SettingDefine",SettingDefine)
+    log.info_a("default_setting",self.default_setting)
 end
 
 function ComponentSetting:load_setting(schema_map,data)
@@ -119,7 +127,7 @@ function ComponentSetting:_get_setting_by_path(path_tbl,create_if_nil,key)
                 if not children_setting then
                     return self:_get_setting_by_path(path_tbl[2],false,key)
                 end
-                local cur_setting_tbl = children_setting[name]
+                cur_setting_tbl = children_setting[name]
                 if not cur_setting_tbl then
                     return self:_get_setting_by_path(path_tbl[2],false,key)
                 end
@@ -147,7 +155,7 @@ function ComponentSetting:_get_setting_by_path(path_tbl,create_if_nil,key)
                 cur_setting_tbl.children = children_setting
                 self.dirty = true
             end
-            local cur_setting_tbl = children_setting[name]
+            cur_setting_tbl = children_setting[name]
             if not cur_setting_tbl then
                 cur_setting_tbl = {}
                 children_setting[name] = cur_setting_tbl
@@ -183,7 +191,18 @@ function ComponentSetting:getv(path_tbl,key)
     return value,source_path_tbl
 end
 
+--typ:Type.XXX
+function ComponentSetting:get_com_cfg(path_tbl,typ)
+    local cfg_list = CfgList[typ]
+    local result = {}
+    for i,k in ipairs(cfg_list) do
+        result[k] = self:getv(path_tbl,k)
+    end
+    return result
+end
+
 function ComponentSetting:setv(path_tbl,k,v)
+    log.info_a("setv",path_tbl,k,v)
     --once,value will set into setting,don't use default now
     local setting,source_path_tbl = self:_get_setting_by_path(path_tbl,true)
     if setting[k] == v then
@@ -196,6 +215,30 @@ end
 
 function ComponentSetting:get_sort_cfg()
     return self.sort_cfg
+end
+
+function ComponentSetting:get_com_num()
+    return self.sort_cfg and #self.sort_cfg or 0
+end
+
+function ComponentSetting.ComparePath(path_a,path_b)
+    if path_a == path_b then
+        return true
+    end
+    if not (path_a and path_b) and (path_a or path_b) then
+        return false
+    end
+    while(path_a and path_a[1]) do
+        if not (path_b and path_b[1]) then
+            return false
+        end
+        if path_a[1].name ~=  path_b[1].name or path_a[1].type ~=  path_b[1].type then
+            return false
+        end
+        path_a = path_a[2]
+        path_b = path_b[2]
+    end
+    return not (path_b and path_b[1])
 end
 
 function ComponentSetting.CreateChildPath(parent,child_name,child_type)
@@ -223,5 +266,6 @@ function ComponentSetting.Path2Desc(path_tbl)
     end
     return table.concat(con,".")
 end
+
 
 return ComponentSetting
