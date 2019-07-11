@@ -108,7 +108,7 @@ function gui_mgr._register_mainmenu(gui_ins,cfg)
         end
         table.insert(cur_list,{target=gui_ins,fun=fun,type="fun"})
     end
-    --print_a(gui_mgr.mainmenu_list)
+    --log.info_a(gui_mgr.mainmenu_list)
 end
 
 function gui_mgr._update_mainmenu_view()
@@ -151,17 +151,17 @@ function gui_mgr.load_ini()
     if inifile then
         local config = inifile:read('*all')
         util.LoadIniSettings(config)
-        print("Load Imgui ini:",path)
+        log("Load Imgui ini:",path)
         inifile:close()
     else
-        print("Can't find Imgui ini:",path)
+        log("Can't find Imgui ini:",path)
     end
 end
 
 --frame update
 function gui_mgr.check_and_save_ini()
     if imgui.IO.WantSaveIniSettings then
-        -- print("imgui.IO.WantSaveIniSettings",imgui.IO.WantSaveIniSettings)
+        -- log("imgui.IO.WantSaveIniSettings",imgui.IO.WantSaveIniSettings)
         local cfg_data = util.SaveIniSettings(true)
         config = gui_util.open_current_pkg_path(UserImguiIni,"w")
         config:write(cfg_data)

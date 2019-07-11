@@ -56,7 +56,7 @@ function gui_main.init(nwh, context, width, height)
     -- bgfx.set_view_clear(1, "CD", 0xffff00ff, 1, 0)
     -- bgfx.set_debug "ST"
     if platform.OS == "Windows" then
-        font.Create { {Font "Arial",16,"Default"},{ Font "黑体" ,16, "ChineseFull"} }
+        font.Create { { Font "Arial" ,16, "Default"},{ Font "黑体" ,16, "ChineseFull"} }
     elseif platform.OS == "macOS" then
         font.Create { { Font "华文细黑" , 16, "\x20\x00\xFF\xFF\x00"} }
     else -- iOS
@@ -69,7 +69,7 @@ function gui_main.init(nwh, context, width, height)
 end
 
 function gui_main.size(width,height,type)
-    -- print("callback.size",width,height,type)
+    -- log("callback.size",width,height,type)
     imgui.resize(width,height)
     rhwi.reset(nil, width, height)
     bgfx.set_view_rect(uieditor_viewid, 0, 0, width, height)
@@ -84,7 +84,7 @@ function gui_main.char(code)
 end
 
 function gui_main.error(err)
-    print(err)
+    log.error(err)
     if main.error then
         main.error(err)
     end
@@ -102,14 +102,14 @@ function gui_main.mouse_wheel(x,y,delta)
 end
 
 function gui_main.mouse_click(x, y, what, pressed)
-    -- print("mouse_click",what,pressed)
+    -- log("mouse_click",what,pressed)
     imgui.mouse_click(x, y, what, pressed)
     gui_input.mouse_click(x, y, what, pressed)
 end
 
 function gui_main.keyboard(key, press, state)
     imgui.key_state(key, press, state)
-    print("key",key,press,state)
+    log.trace("key",key,press,state)
     gui_input.keyboard(key, press, state)
 end
 
@@ -146,7 +146,7 @@ function _update(delta)
 end
 
 function gui_main.exit()
-    print("Exit")
+    log("Exit")
     imgui.destroy()
     rhwi.shutdown()
     if main.exit then

@@ -13,7 +13,7 @@ function gui_input.mouse_move(x,y)
     local gm = gui_input.mouse
     gm.x = x
     gm.y = y
-    -- print(x,last_mouse.x)
+    -- log(x,last_mouse.x)
     mouse_delta.x = x-last_mouse.x
     mouse_delta.y = y-last_mouse.y
     called.mouse_move = true

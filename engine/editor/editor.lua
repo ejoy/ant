@@ -31,7 +31,9 @@ local pm = require "antpm"
 pm.init()
 import_package = pm.import
 
-print_r       = require "common.print_r".print_r
-dump_a       = require "common.print_r".dump_a
-print_a       = require "common.print_r".print_a
+print_r 	= require "common.print_r".print_r
+dump_a 		= require "common.print_r".dump_a
+print_a 	= require "common.print_r".print_a
+
+log 		= require "common.log"
 
