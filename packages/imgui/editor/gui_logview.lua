@@ -201,7 +201,7 @@ function GuiLogView:on_update()
                     table.insert(str_t,"--------------------------------------")
                 end
                 table.insert(str_t,msg_item.time_str)
-                table.insert(str_t,msg_item.msg)
+                table.insert(str_t,msg_item.msg_expand or msg_item.msg)
                 local display_str = table.concat(str_t,"\n")
                 ui_cache = {
                     text = display_str,

@@ -17,8 +17,10 @@ local gen_log = function(typ)
 end
 local gen_log_a = function(typ)
     return function(...)
-        local dump = dump_a({...})
-        log[typ](dump)
+        local dump_line = dump_a({...})
+        local dump_t = dump_a({...},"\t")
+        local cfg = {type=typ,msg_expand=dump_t}
+        log.print(cfg,dump_line)
     end
 end
 
