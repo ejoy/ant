@@ -32,17 +32,11 @@ function util.load_texture(name, stage, filename)
 end
 
 function util.add_material(material, filename)
-	local content = material.content
-	if content == nil then
-        content = {}
-        material.content = content
-    end
-
 	local item = {
 		ref_path = filename,
 	}
 	util.create_material(item)
-    content[#content + 1] = item
+    material[#material + 1] = item
 end
 
 local function update_properties(dst_properties, src_properties)
@@ -91,11 +85,9 @@ function util.create_material(material)
 	material.materialinfo = materialinfo	
 end
 
-function util.assign_material(filepath, properties)
+function util.assign_material(filepath, properties, asyn_load)
 	return {
-		content = {
-			{ref_path = filepath, properties = properties}
-		}
+		{ref_path = filepath, properties = properties, asyn_load=asyn_load}
 	}
 end
 
@@ -226,17 +218,13 @@ function util.create_plane_entity(world, color, size, pos, name)
 		mesh = {
 			ref_path = fs.path "/pkg/ant.resources/depiction/cube.mesh"
 		},
-		material = {
-			content = {
+		material = computil.assign_material(
+				fs.path "/pkg/ant.resources/depiction/shadow/mesh_receive_shadow.material",
 				{
-					ref_path = fs.path "/pkg/ant.resources/depiction/shadow/mesh_receive_shadow.material",
-					properties = {
-						uniforms = {
-							u_color = {type="color", name="color", value=color}
-						},
-					}
+					uniforms = {
+						u_color = {type="color", name="color", value=color}
+					},
 				}
-			}
 		},
 		can_render = true,
 		--can_cast = true,
@@ -404,6 +392,27 @@ function util.create_skybox(world, material)
     end
     rm.handle = util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib)
     return eid
+end
+
+local function check_rendermesh_lod(rm)
+	local scene = rm.handle
+	if scene.scenelods then
+		assert(1 <= scene.sceneidx and scene.sceneidx <= #scene.scenelods)
+		if rm.lodidx < 1 or rm.lodidx > #scene.scenelods then
+			print("invalid lod:", rm.lodidx, "max lod:", scene.scenelods)
+			rm.lodidx = 1
+		end
+	else
+		if scene.sceneidx ~= rm.lodidx then
+			print("default lod scene is not equal to lodidx")
+		end
+	end
+end
+
+function util.transmit_mesh(mesh, rendermesh)
+	rendermesh.handle 	= mesh.assetinfo.handle
+	mesh.assetinfo 		= nil	-- transmit to rendermesh
+	check_rendermesh_lod(rendermesh)
 end
 
 return util

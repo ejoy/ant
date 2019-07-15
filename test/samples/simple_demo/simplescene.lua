@@ -1,6 +1,9 @@
 local ecs = ...
 local world = ecs.world
 
+local mathpkg = import_package "ant.math"
+local mu = mathpkg.util
+
 local renderpkg = import_package "ant.render"
 local computil = renderpkg.components
 local camerautil = renderpkg.camera
@@ -17,24 +20,12 @@ function simplescene:init()
 	computil.create_grid_entity(world)
 
 	local bunnyeid = world:create_entity {
-		transform = {			
-			s = {1, 1, 1, 0},
-			r = {0, 0, 0, 0},
-			t = {0, 0, 0, 1},
-		},
+		transform = mu.srt(),
 		rendermesh = {},
-		mesh = {
-			ref_path = fs.path "/pkg/ant.resources/bunny.mesh",
-		},
-		material = {
-			content = {
-				{
-					ref_path = fs.path "/pkg/ant.resources/materials/bunny.material",
-				}
-			}
-		},
+		mesh = {ref_path = fs.path "/pkg/ant.resources/bunny.mesh",},
+		material = computil.assign_material(fs.path "/pkg/ant.resources/materials/bunny.material"),
+		name = "demo_bunny",
 		can_render = true,
-		name = "demo_bunny",		
 		main_view = true,
 	}
 

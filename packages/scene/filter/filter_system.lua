@@ -139,7 +139,7 @@ function primitive_filter_sys:update()
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
 			if vt and ft then
-				filter_mesh(eid, ce.rendermesh, ce.transform.world, ce.material.content, filter)
+				filter_mesh(eid, ce.rendermesh, ce.transform.world, ce.material, filter)
 			end
 		end
 	end

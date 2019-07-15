@@ -243,7 +243,7 @@ local sky_luminance_fetch = fetch_value_operation(sky_luminance_XYZ)
 
 local function update_sky_parameters(skyentity)
 	local skycomp = skyentity.procedural_sky
-	local sky_uniforms = skyentity.material.content[1].properties.uniforms
+	local sky_uniforms = skyentity.material[1].properties.uniforms
 
 	local hour = skycomp.which_hour
 

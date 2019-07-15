@@ -54,19 +54,13 @@ function model_review_system:init()
 	
 	cu.create_grid_entity(world, "grid")
 	world:create_entity {
-		transform = mu.scale_mat(0.2),
-		rendermesh = {},
-		mesh = {ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh"},
-		material = {
-			content = {
-				{
-					ref_path = fs.path "/pkg/ant.resources/PVPScene/scene-mat.material",
-				}
-			}
-		},
-		can_render = true,
-		main_view = true,
-		name = "door",
+		transform 	= mu.scale_mat(0.2),
+		rendermesh 	= {},
+		mesh 		= {ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh"},
+		material 	= {{ref_path = fs.path "/pkg/ant.resources/PVPScene/scene-mat.material",}},
+		can_render 	= true,
+		main_view 	= true,
+		name 		= "door",
 	}
 
 	local singlecolor_material = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material"
@@ -96,15 +90,13 @@ function model_review_system:init()
 			-- },
 		},
 		material = {
-			content = {
-				create_material_item(singlecolor_material, {1, 0, 0, 0}),
-				create_material_item(singlecolor_material, {0, 1, 0, 0}),
-				create_material_item(singlecolor_material, {0, 0, 1, 0}),
-				create_material_item(singlecolor_material, {1, 1, 0, 0}),
-				create_material_item(singlecolor_material, {1, 0, 1, 0}),
-				create_material_item(singlecolor_material, {0, 1, 1, 0}),
-				create_material_item(singlecolor_material, {1, 1, 1, 0}),
-			}
+			create_material_item(singlecolor_material, {1, 0, 0, 0}),
+			create_material_item(singlecolor_material, {0, 1, 0, 0}),
+			create_material_item(singlecolor_material, {0, 0, 1, 0}),
+			create_material_item(singlecolor_material, {1, 1, 0, 0}),
+			create_material_item(singlecolor_material, {1, 0, 1, 0}),
+			create_material_item(singlecolor_material, {0, 1, 1, 0}),
+			create_material_item(singlecolor_material, {1, 1, 1, 0}),
 		},
 		main_view = true,
 		name = "test_glb",

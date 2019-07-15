@@ -1,5 +1,6 @@
-local math3d = import_package "ant.math"
-local ms = math3d.stack
+local mathpkg = import_package "ant.math"
+local ms = mathpkg.stack
+local mu = mathpkg.util
 local fs = require "filesystem"
 
 local unityLoader = require "unitysceneloader"
@@ -66,26 +67,15 @@ end
 
 local function create_entity(world,name,pos,rot,scl,mesh_desc,material_desc)
     local eid = world:create_entity {
-        name = name,
-        transform = {
-            s = scl,
-            r = rot,
-            t = pos,
-        },
-        can_render = true,
-        can_select = true,
-        material = { 
-            content = {
-                {
-                    ref_path =  fs.path ( material_desc ),
-                }
-            }
-        },
-        rendermesh = {},
-        mesh = {
-             ref_path = fs.path ( mesh_desc ),
-        },
-        main_view = true
+        name        = name,
+        transform   = mu.srt(scl, rot, pos),
+        rendermesh  = {},
+        mesh        = {ref_path = fs.path ( mesh_desc ),},
+        material    = {{ref_path = fs.path (material_desc),},
+
+        can_render  = true,
+        can_select  = true,
+        main_view   = true,
     }
 
     local entity = world[eid]

@@ -66,7 +66,7 @@ function terraincomp:postinit(e)
     local terrainhandle = terraininfo.handle
 
     local numlayers = terraininfo.num_layers
-    if numlayers ~= #e.material.content then
+    if numlayers ~= #e.material then
         error('terrain layer number is not equal material defined numbers')
 	end
 

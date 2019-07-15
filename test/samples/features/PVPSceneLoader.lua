@@ -1,5 +1,7 @@
 local math3d = import_package "ant.math"
 local ms = math3d.stack
+local renderpkg = import_package "ant.render"
+local computil = renderpkg.components
 local fs = require "filesystem"
 
 local PVPScene = {}
@@ -272,13 +274,7 @@ function PVPScene.create_entitices(world)
 					mesh = {
 						ref_path = fs.path "/pkg/ant.resources" / scenedata.mesh,
 					},
-					material = {
-						content = {
-							{
-								ref_path = fs.path "/pkg/ant.resources" / scenedata.material
-							}
-						}
-					},
+					material = computil.assign_material(fs.path "/pkg/ant.resources" / scenedata.material),
 					serialize = import_package 'ant.serialize'.create(), 
 					name = name,
 					main_view = true,

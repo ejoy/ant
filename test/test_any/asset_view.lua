@@ -392,7 +392,7 @@ function asset_view:set_texture(texture_res)
                 type = "texture",
             }
         }
-        component_util.change_textures(entity["material"].content[1], texture_tbl)
+        component_util.change_textures(entity.material[1], texture_tbl)
         self:show_camera("2d")
     else
         print("not model to set")

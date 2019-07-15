@@ -62,9 +62,10 @@ end
 
 local resource = ecs.component "resource"
 	.ref_path "respath" ()
+	["opt"].asyn_load "boolean" (false)
 
 function resource:init()
-	if self.ref_path then
+	if self.ref_path and not self.asyn_load then
 		self.assetinfo = asset.load(self.ref_path)
 	end
 	return self
@@ -112,27 +113,8 @@ end
 
 local mesh = ecs.component_alias("mesh", "resource") {depend="rendermesh"}
 
-local function check_rendermesh_lod(rm)
-	local scene = rm.handle
-	if scene.scenelods then
-		assert(1 <= scene.sceneidx and scene.sceneidx <= #scene.scenelods)
-		if rm.lodidx < 1 or rm.lodidx > #scene.scenelods then
-			print("invalid lod:", rm.lodidx, "max lod:", scene.scenelods)
-			rm.lodidx = 1
-		end
-	else
-		if scene.sceneidx ~= rm.lodidx then
-			print("default lod scene is not equal to lodidx")
-		end
-	end
-end
-
 function mesh:postinit(e)
-	local rm = e.rendermesh
-	rm.handle = self.assetinfo.handle
-	self.assetinfo = nil	-- transmit to rendermesh
-
-	check_rendermesh_lod(rm)
+	component_util.transmit_mesh(self, e.rendermesh)
 end
 
 local tex = ecs.component "texture"
@@ -182,16 +164,17 @@ ecs.component "properties"
 
 local material_content = ecs.component "material_content"
 	.ref_path "respath"
-	["opt"].properties "properties"	
+	["opt"].properties "properties"
+	["opt"].asyn_load "boolean" (false)
 
 function material_content:init()
-	component_util.create_material(self)
+	if not self.asyn_load then
+		component_util.create_material(self)
+	end
 	return self
 end
 
-ecs.component "material"
-	.content "material_content[]"
-
+ecs.component_alias("material", "material_content[]")
 
 ecs.component_alias("can_render", "boolean", true) {depend={"transform", "rendermesh", "material"}}
 ecs.component_alias("can_cast", "boolean", false)

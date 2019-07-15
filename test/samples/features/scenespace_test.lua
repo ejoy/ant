@@ -1,11 +1,13 @@
 local ecs = ...
 local world = ecs.world
 
+
 local ms = import_package "ant.math".stack
 local fs = require "filesystem"
 
 local seriazlizeutil = import_package "ant.serialize"
-
+local renderpkg = import_package "ant.render"
+local computil = renderpkg.components
 
 local scenespace_test = ecs.system "scenespace_test"
 scenespace_test.singleton 'event'
@@ -37,13 +39,7 @@ local function add_hierarchy_file(hiepath)
 end
 
 local function create_scene_node_test()
-    local material = {
-        content = {
-            {
-                ref_path = fs.path '/pkg/ant.resources/materials/bunny.material'
-            }
-        }
-    }
+    local materialpath = fs.path '/pkg/ant.resources/materials/bunny.material'
 
     local hie_root =
         world:create_entity {
@@ -130,7 +126,7 @@ local function create_scene_node_test()
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/sphere.mesh'
         },
-        material = material,
+        material = computil.assign_material(materialpath),
         can_render = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
@@ -150,7 +146,7 @@ local function create_scene_node_test()
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/sphere.mesh'
         },
-        material = material,
+        material = computil.assign_material(materialpath),
         can_render = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
@@ -170,7 +166,7 @@ local function create_scene_node_test()
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/cube.mesh'
         },
-        material = material,
+        material = computil.assign_material(materialpath),
         can_render = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
@@ -217,18 +213,12 @@ local function create_scene_node_test()
     }
 
     local function color_material(colorvalue)
-        return {
-            content = {
+        return computil.assign_material(fs.path "/pkg/ant.resources/materials/simple_mesh.material",
                 {
-                    ref_path = fs.path "/pkg/ant.resources/materials/simple_mesh.material",
-                }
-            },
-            properties = {
-                uniforms = {
-                    u_color = {type="color", name = "color", value=colorvalue},
-                }
-            }
-        }
+                    uniforms = {
+                        u_color = {type="color", name = "color", value=colorvalue},
+                    }
+                })
     end
 
     local render2_rootchild =
@@ -244,7 +234,7 @@ local function create_scene_node_test()
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/cube.mesh'
         },
-        material = material,
+        material = computil.assign_material(materialpath),
         can_render = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
@@ -263,7 +253,7 @@ local function create_scene_node_test()
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/sphere.mesh'
         },
-        material = material,
+        material = computil.assign_material(materialpath),
         can_render = true,
         main_view = true,
         serialize = seriazlizeutil.create(),

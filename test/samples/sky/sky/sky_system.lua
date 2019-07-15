@@ -79,9 +79,9 @@ end
 
 local function load_material(sky_comp)
     local cu 	= require "render.components.util"
-    local material = { content= {}, }
+    local material = {}
     cu.load_material( material, {sky_comp.info.material_name} )
-    sky_comp.info.sky_obj.prog = material.content[1].materialinfo.shader.prog 
+    sky_comp.info.sky_obj.prog = material[1].materialinfo.shader.prog 
     sky_comp.info.sky_obj.material = material       -- how to destroy?
     return material 
 end 
@@ -115,7 +115,7 @@ local function create_skybox(sky_comp,sky_obj)
     sky_obj.vbh = bgfx.create_vertex_buffer( vertices, sky_obj.vdecl)
     sky_obj.ibh = bgfx.create_index_buffer( indices )
     sky_obj.material = load_material( sky_comp ) 
-    sky_obj.texh = material.content[1].properties["s_texCube"].value 
+    sky_obj.texh = material[1].properties["s_texCube"].value 
     sky_obj.type = "skybox"
 end 
 
@@ -391,7 +391,7 @@ local function update_procedural_sky( sky_obj, time )
 
     local properties = {} 
     
-    local prop = sky_obj.material.content[1].properties["u_parameters"]
+    local prop = sky_obj.material[1].properties["u_parameters"]
     properties["u_parameters"] = { 
         name = "u_parameters", type="v4", 
         value = { prop.value[1], prop.value[2] , prop.value[3], time  },
@@ -463,11 +463,11 @@ local function update_skybox_property( sky  )
     -- update_properties( nil, properties);
 
     -- from setting 
-    update_properties( sky.material, sky.material.content[1].properties )    -- material file
+    update_properties( sky.material, sky.material[1].properties )    -- material file
 end 
 
 local function render_sky( viewId, sky )
-    -- update_properties( sky.material, sky.material.content[1].properties ) 
+    -- update_properties( sky.material, sky.material[1].properties ) 
     local prim_type = "TRISTRIP"
     local state =  bgfx.make_state( { CULL="CW", PT = prim_type ,
                                       WRITE_MASK = "RGBAZ",
