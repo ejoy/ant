@@ -106,12 +106,12 @@ end
 
 --override if needed
 --return tbl
-function GuiBase:get_setting()
+function GuiBase:save_setting_to_memory(clear_dirty_flag)
     
 end
 
 --override if needed
-function GuiBase:set_setting(seting_tbl)
+function GuiBase:load_setting_from_memory(seting_tbl)
     self.set_setting = false
 end
 
@@ -119,6 +119,7 @@ end
 function GuiBase:is_setting_dirty()
     return false
 end
+
 
 
 ----------------custom_setting----------------

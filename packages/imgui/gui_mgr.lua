@@ -147,10 +147,10 @@ function gui_mgr.register(name,gui_ins)
     if cfg then
         gui_mgr._register_mainmenu(gui_ins,cfg)
     end
-    if gui_ins.set_setting then
+    if gui_ins.load_setting_from_memory then
         local setting = gui_mgr.setting_tbl[name]
         if setting then
-            gui_ins:set_setting(setting)
+            gui_ins:load_setting_from_memory(setting)
         end
         local setting_open = gui_mgr.setting_tbl[SettingGuiOpen][name]
         if setting_open~= nil then
@@ -199,8 +199,8 @@ function gui_mgr._load_setting_to_gui(tbl)
     end
     for ui_name,ui_ins in pairs(gui_mgr.gui_tbl) do
         local gui_cfg = tbl[ui_name]
-        if gui_cfg and ui_ins.set_setting then
-            ui_ins:set_setting(gui_cfg)
+        if gui_cfg and ui_ins.load_setting_from_memory then
+            ui_ins:load_setting_from_memory(gui_cfg)
         end
         local setting_open = tbl[SettingGuiOpen][ui_name]
         if setting_open ~= nil then
@@ -227,7 +227,7 @@ function gui_mgr.check_and_save_setting()
     for ui_name,ui_ins in pairs(gui_mgr.gui_tbl) do
         if ui_ins:is_setting_dirty() then
             need_save = true
-            setting_tbl[ui_name] = ui_ins:get_setting()
+            setting_tbl[ui_name] = ui_ins:save_setting_to_memory(true)
         end
     end
     setting_tbl[SettingGuiOpen] =  setting_tbl[SettingGuiOpen] or {}

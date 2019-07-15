@@ -143,14 +143,16 @@ function GuiSysInfo:is_setting_dirty()
     return self._setting_dirty
 end
 
-function GuiSysInfo:set_setting(setting)
+function GuiSysInfo:load_setting_from_memory(setting)
     if setting.status_open ~= nil then
         self.status_open = setting.status_open
     end
 end
 
-function GuiSysInfo:get_setting()
-    self._setting_dirty = false
+function GuiSysInfo:save_setting_to_memory(clear_dirty_flag)
+    if clear_dirty_flag then
+        self._setting_dirty = false
+    end
     return {
         status_open = self.status_open
     }
