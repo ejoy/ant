@@ -275,6 +275,7 @@ function TestGuiBase:_main_menu_test3()
 end
 --main menu
 local tab2_selected = false
+local tab2_vector = {1.0,1.0,1.0,1.0}
 function TestGuiBase:tab2_update()
     --display a TreeNode with arrow on righthand
     local change = widget.Selectable("TreeNode",tab2_selected,nil,nil,flags.Selectable.SpanAllColumns)
@@ -287,6 +288,12 @@ function TestGuiBase:tab2_update()
         widget.Text("child")
         widget.TreePop()
     end
+    local change = widget.DragFloat("Test",tab2_vector)
+    if change then
+        log.info_a(tab2_vector)
+    end
+    --
+
 end
 
 local Tree = import_package "ant.imgui".controls.tree

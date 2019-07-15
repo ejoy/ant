@@ -250,11 +250,11 @@ function GuiLogView:_update_menu_bar()
         widget.Button("Filter")
         self:_show_filter_popup()
         local change
-        change,self.follow_tail = widget.Checkbox("Follow Tail",self.follow_tail)
+        change,self.follow_tail = widget.Checkbox("FollowTail",self.follow_tail)
         if change and self.follow_tail then
             self.scroll_list:scroll_to_last()
         end
-        change,self.show_time = widget.Checkbox("Show Time",self.show_time)
+        change,self.show_time = widget.Checkbox("Time",self.show_time)
         if widget.Button("AddItem") then
             for i = 1,100 do
                 local msg_item = {type="trace", msg = "asdasdasdas\ndasd\nasdasdasdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}

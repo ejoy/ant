@@ -111,7 +111,7 @@ local function vector(ui_cache,name,value)
     widget.Text(name)
     cursor.NextColumn()
     cursor.SetNextItemWidth(-1)
-    local change = widget.DragFloat("###"..name,vt)
+    local change = widget.DragFloat("###DragFloat"..name,vt)
     EndColunms()
     return change,{vt[1],vt[2],vt[3],vt[4]}
 end

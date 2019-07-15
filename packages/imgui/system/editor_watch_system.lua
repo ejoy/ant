@@ -48,14 +48,15 @@ local function start_watch_entitiy(eid)
     end
 end
 
-local function on_component_modified(eid,id,key,value)
-    log.trace_a("on_component_modified",id,key,value)
-    if not id then
+local function on_component_modified(eid,com_id,key,value)
+    log.trace_a("on_component_modified",com_id,key,value)
+    if not com_id then
         serialize.watch.set(world,nil,eid,key,value)
+        log.trace_a("after_component_modified:",serialize.watch.query(world,nil,eid))
     else
-        serialize.watch.set(world,id,"",key,value)
+        serialize.watch.set(world,com_id,"",key,value)
+        log.trace_a("after_component_modified:",serialize.watch.query(world,com_id,""))
     end
-    log.trace_a("after_component_modified:",serialize.watch.query(world,id,""))
 end
 
 

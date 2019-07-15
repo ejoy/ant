@@ -37,6 +37,21 @@ function GuiEntityWidget:set_com_setting(com_setting)
     end
 end
 
+function GuiEntityWidget:set_change_cb(cb,obj)
+    if obj then
+        local obj_cb = function(...)
+            cb(obj,...)
+        end
+        self.change_cb = obj_cb
+    else
+        self.change_cb = cb
+    end
+end
+
+function GuiEntityWidget:set_debug_mode(val)
+    self.debug_mode = val
+end
+
 local donothing = function() end
 function GuiEntityWidget:CustomTreeNode(name,path_tbl,typ)
     local cfg = self.com_setting:get_com_cfg(path_tbl,typ)
@@ -102,7 +117,11 @@ function GuiEntityWidget:create_child_path( parent_path,schema)
     return child_path
 end
 
-
+function GuiEntityWidget:on_base_component_change(eid,com_id,name,value)
+    if self.change_cb then
+        return self.change_cb(eid,com_id,name,value)
+    end
+end
 
 function GuiEntityWidget:render_base_component(parent_tbl,com_name,component_data,alias_name,path_tbl)
     local schema = self.schema
@@ -121,15 +140,18 @@ function GuiEntityWidget:render_base_component(parent_tbl,com_name,component_dat
     local change,new_value =  base_widget(ui_cache,display_name,value)
         --todo something
     if change then
+        log.trace_a("base_component",display_name,new_value)
         parent_tbl[alias_name] = new_value
         local eid = parent_tbl.__id
         if not eid then
             --entity has nor __id,but has __entity_id
             eid = parent_tbl.__entity_id
         end
+        self:on_base_component_change(eid,parent_tbl.__id,alias_name,new_value)
+
         --todo
         -- entity_property_builder.notify_modify(eid,parent_tbl.__id,alias_name,value)
-        -- return true -- if return nil, modify will be ignored
+        --return true -- if return nil, modify will be ignored
     end
     if self.debug_mode then
         if util.IsItemHovered() then
@@ -255,10 +277,9 @@ function GuiEntityWidget:_refresh_sorted_entity(entity)
     self._last_entity = entity
 end
 
-function GuiEntityWidget:update(eid,entity,debug_mode)
+function GuiEntityWidget:update(eid,entity)
     local schema = self.schema
     entity.__entity_id = eid
-    self.debug_mode = debug_mode
     if self._last_entity ~= entity then
         self:_refresh_sorted_entity(entity)
     end
