@@ -5,6 +5,8 @@ local fs = require 'filesystem'
 
 
 ecs.import 'ant.basic_components'
+ecs.import 'ant.math.adapter'
+ecs.import 'ant.asset'
 ecs.import 'ant.render'
 ecs.import 'ant.editor'
 ecs.import 'ant.inputmgr'
@@ -15,7 +17,7 @@ ecs.import 'ant.bullet'
 ecs.import 'ant.animation'
 ecs.import 'ant.event'
 ecs.import 'ant.objcontroller'
-ecs.import 'ant.math.adapter'
+
 
 local serialize = import_package 'ant.serialize'
 

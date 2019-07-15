@@ -114,7 +114,10 @@ end
 local mesh = ecs.component_alias("mesh", "resource") {depend="rendermesh"}
 
 function mesh:postinit(e)
-	component_util.transmit_mesh(self, e.rendermesh)
+	if not self.asyn_load then
+		assert(self.asyn_load == nil)
+		component_util.transmit_mesh(self, e.rendermesh)
+	end
 end
 
 local tex = ecs.component "texture"
@@ -179,6 +182,17 @@ ecs.component_alias("material", "material_content[]")
 ecs.component_alias("can_render", "boolean", true) {depend={"transform", "rendermesh", "material"}}
 ecs.component_alias("can_cast", "boolean", false)
 ecs.component_alias("name", "string", "")
+
+local al = ecs.component_alias("asyn_load", "boolean", true) {depend={"mesh", "material"}}
+function al:postinit(e)
+	if self == true then
+		assert(e.mesh.asyn_load)
+		for _, m in ipairs(e.material) do
+			assert(m.asyn_load)
+		end
+	end
+end
+
 ecs.tag "can_select"
 
 local control_state = ecs.singleton "control_state"

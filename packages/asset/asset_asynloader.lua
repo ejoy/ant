@@ -6,8 +6,6 @@ local assetmgr = require "asset"
 local renderpkg = import_package "ant.render"
 local computil = renderpkg.util
 
-ecs.component_alias("asyn_load", "boolean", true) {depend={"mesh", "material"}}
-
 local asyn_asset_loader = ecs.system "asyn_asset_loader"
 
 function asyn_asset_loader.update()

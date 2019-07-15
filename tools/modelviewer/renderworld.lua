@@ -9,6 +9,7 @@ ecs.import "ant.serialize"
 ecs.import "ant.event"
 ecs.import "ant.math.adapter"
 ecs.import "ant.sky"
+ecs.import "ant.asset"
 
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
@@ -56,10 +57,11 @@ function model_review_system:init()
 	world:create_entity {
 		transform 	= mu.scale_mat(0.2),
 		rendermesh 	= {},
-		mesh 		= {ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh"},
-		material 	= {{ref_path = fs.path "/pkg/ant.resources/PVPScene/scene-mat.material",}},
+		mesh 		= {ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh", asyn_load=true},
+		material 	= {{ref_path = fs.path "/pkg/ant.resources/PVPScene/scene-mat.material", asyn_load=true}},
 		can_render 	= true,
 		main_view 	= true,
+		asyn_load	= true,
 		name 		= "door",
 	}
 

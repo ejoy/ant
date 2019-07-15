@@ -1,5 +1,6 @@
-local math3d = import_package "ant.math"
-local ms = math3d.stack
+local mathpkg = import_package "ant.math"
+local ms = mathpkg.stack
+local mu = mathpkg.util
 local renderpkg = import_package "ant.render"
 local computil = renderpkg.components
 local fs = require "filesystem"
@@ -261,23 +262,20 @@ function PVPScene.create_entitices(world)
 					t = ms(t, rsrt[3], "+T")
 				end
 
-
 				local eid = world:create_entity  {
-					transform = {						
-						s = s,
-						r = r,
-						t = t,
-					},
+					transform = mu.srt(s, r, t),
 					can_render = true, 
 					can_select = true,
 					rendermesh = {},
 					mesh = {
 						ref_path = fs.path "/pkg/ant.resources" / scenedata.mesh,
+						asyn_load = true,
 					},
-					material = computil.assign_material(fs.path "/pkg/ant.resources" / scenedata.material),
+					material = computil.assign_material(fs.path "/pkg/ant.resources" / scenedata.material, nil, true),
 					serialize = import_package 'ant.serialize'.create(), 
 					name = name,
 					main_view = true,
+					asyn_load = true,
 				}
 
 				if collision_array then
