@@ -26,7 +26,7 @@ function rmb:init()
 	local eid = world:create_entity {
 		transform = mu.identity_transform(),
 		material = computil.assign_material "/pkg/ant.resources/depiction/materials/line.material",
-		mesh = {},
+		rendermesh = {},
 		name = "mesh's bounding renderer",
 		can_render = true,
 		main_view = true,
@@ -34,8 +34,8 @@ function rmb:init()
 		can_show_bounding = true,
 	}
 
-	local m = world[eid].mesh
-	m.assetinfo = computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048)
+	local rm = world[eid].rendermesh
+	rm.handle = computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048)
 end
 
 local function reset_buffers(buffers)
@@ -56,12 +56,12 @@ local function append_buffer(desc, buffers)
 end
 
 local function add_aabb_bounding(dmesh, aabb)
-	local m = dmesh.mesh
+	local rm = dmesh.rendermesh
 
-	local buffers = m.buffers
+	local buffers = rm.buffers
 	if buffers == nil then
 		buffers = {}
-		m.buffers = buffers
+		rm.buffers = buffers
 		reset_buffers(buffers)
 	end
 

@@ -82,7 +82,7 @@ for _, pp in ipairs {
 		end
 	end
 
-	local c = ecs.component(collidername) { depend = {"mesh", "transform"} }
+	local c = ecs.component(collidername) { depend = {"rendermesh", "transform"} }
 		.collider "collider"
 		.shape(shapename)
 

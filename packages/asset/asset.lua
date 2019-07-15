@@ -74,17 +74,21 @@ local function res_key(filename)
 	return filename:string()
 end
 
+local function module_name(filepath)
+	return filepath:extension():string():match("%.(.+)$")
+end
+
 function assetmgr.load(filename, param)	
 	assert(type(filename) ~= "string")
 
 	local reskey = res_key(filename)
 	local res = resources[reskey]
 	if res == nil then
-		local moudlename = filename:extension():string():match("%.(.+)$")
-		if moudlename == nil then
+		local modulename = module_name(filename)
+		if modulename == nil then
 			error(string.format("not found ext from file:%s", filename:string()))
 		end
-		local loader = assetmgr.get_loader(moudlename)
+		local loader = assetmgr.get_loader(modulename)
 		res = loader(filename, param)
 		resources[reskey] = res
 	end

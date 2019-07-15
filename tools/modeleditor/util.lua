@@ -29,7 +29,7 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 			r = {0, 0, 0, 0},
 			t = {0, 0, 0, 1},
 		},
-		mesh = {}, 
+		rendermesh = {}, 
 		material = {},
 		character = {
 			movespeed = 1

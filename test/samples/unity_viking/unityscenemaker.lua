@@ -8,6 +8,8 @@ local mc = require 'mathconvert'
 
 local assetmgr = import_package 'ant.asset'.mgr
 
+local bgfx = require "bgfx"
+
 local unityScene = {}
 unityScene.__index = unityScene
 
@@ -52,72 +54,6 @@ function testMat:write()
     writefile('testActiveMat.lua', content)
 end
 
--- this function need move to mesh postinit，as component post action
--- function get_mesh_group_id(mesh, name)
---     local groups = mesh.assetinfo.handle.groups
---     for i = 1, #groups do
---         local prims = groups[i].primitives -- group.name could be more correct
---         if #prims > 0 then
---             if prims[1].name == name then
---                 return i
---             end
---         end
---     end
--- end
-
-local function create_entity(world, name, trans, meshpath, material_refpaths)    
-    if #material_refpaths > 1 then
-        print('check')
-    end
-    return
-        world:create_entity {
-        name = name,
-        transform = trans,
-        can_render = true,
-        can_select = true,
-        material = {
-            content = material_refpaths
-        },
-        mesh = {
-            ref_path = meshpath,
-        },
-        main_view = true
-    }
-
-    -- local entity = world[eid]
-    -- entity.mesh.group_id = get_mesh_group_id(entity.mesh, name)
-    -- if entity.mesh.group_id == nil then
-    --     if string.find(name, 'pf_') then
-    --         local pf_name = string.sub(name, 4, -1)
-    --         entity.mesh.group_id = get_mesh_group_id(entity.mesh, pf_name)
-    --     end
-    -- --assert(false,"entity name not equal mesh")
-    -- end
-end
-
--- function strippath(filename)
---     return string.match(filename, '.+/([^/]*%.%w+)$')
--- end
--- function stripextension(filename)
---     local idx = filename:match('.+()%.%w+$')
---     if (idx) then
---         return filename:sub(1, idx - 1)
---     else
---         return filename
---     end
--- end
-
--- local function to_radian(angles)
---     local function radian(angle)
---         return (math.pi / 180) * angle
---     end
-
---     local radians = {}
---     for i = 1, #angles do
---         radians[i] = radian(angles[i])
---     end
---     return radians
--- end
 
 local viking_assetpath = fs.path '/pkg/unity_viking/Assets'
 
@@ -200,84 +136,9 @@ end
 
 local default_material_path = '/pkg/ant.resources/depiction/materials/bunny.material' -- "DefaultHDMaterial.material"
 
-local function get_defautl_material_path(scene, ent)
-	local numEntities = sceneInfo:getNumEntities()
-	if numEntities < 20000 then
-		local num_material = ent.NumMats
-		if num_material and num_material >= 1 then
-			local mp = scene.Materials[ent.Mats[1]]
-			return mp:match "unity_builtin_extra" and default_material_path or mp
-		end 
-	end
-
-	return default_material_path
-end
-
 local function get_material_refpath(material_filename)
     local filepath = viking_assetpath / 'materials' / fs.path(material_filename):filename():replace_extension('material')
     return {ref_path = filepath}
-end
-
-local function fetch_material_paths(scene, ent)
-    -- "Cerberus_LP.material"     --"Pipes_D160_Tileset_A.material"
-    -- "Pipes_D160_Tileset_A.material"     --"bunny.material"
-    -- "assets/materials/Cerberus_LP.material"   --"gold.material"
-    --  crash
-    -- "assets/materials/Concrete_Foundation_A.material"
-    -- "assets/materials/Lamp_Wall_Big_Scifi_A_Emissive.material"
-    -- "assets/materials/gold.material"
-	-- local material_path = 'assets/materials/Concrete_Foundation_A.material'
-
-	local material_refpaths = {}    
-    
-    -- multi materials
-    if ent.NumMats then
-        for i = 1, ent.NumMats do
-            local material_filename = scene.Materials[ent.Mats[i]]
-            if material_filename:match 'unity_builtin_extra' then
-                material_filename = default_material_path
-			end
-			material_refpaths[#material_refpaths+1] = get_material_refpath(material_filename)
-        end
-    else
-        material_refpaths[#material_refpaths+1] = get_material_refpath(get_defautl_material_path(scene, ent))
-	end
-	
-	return material_refpaths
-end
-
-local function makeEntity(world, scene, ent, lodname, lodidx)
-    --print("create entity ".. ent.Name)
-	
-    -- local len = string.len(name)
-    -- local tag = string.sub(name, len - 1, len)
-
-
-    -- if string.find(name, 'build_gate_01') then
-    --     print('check ')
-    -- end
-
-	local mesh_path = fetch_mesh_path(scene, ent, lodname, lodidx)
-	if mesh_path then
-		local trans = fetch_transform(ent)
-		local material_paths = fetch_material_paths(scene, ent)
-		create_entity(world, ent.Name, trans, mesh_path, material_paths)
-	end
-
-    sceneInfo:countEntity()
-    sceneInfo:countActiveEntity()
-end
-
-local function entityWalk(world, scene, entlist, lodName, lodFlag)
-	local scale = 0.01
-	for _, ent in ipairs(entlist) do
-		makeEntity(world, scene, ent, lodName, lodFlag)
-
-		if ent.Ent then
-			entityWalk(world, scene, ent.Ent, lodName, lodFlag)
-		end
-	end
-
 end
 
 local function find_sub_list(meshlist, trans, groupname)
@@ -393,13 +254,13 @@ function unityScene.create(world, scenepath)
 			local eid = world:create_entity {
 				name = groupname,
 				transform = trans,
-				mesh = {
-					ref_path = meshpath,
+				rendermesh = {
 					submesh_refs = submesh_refs,
 				},
 				material = {
 					content = material_paths,
 				},
+				mesh = {ref_path = meshpath,},
 				can_render = true,
 				can_select = true,
 				main_view = true,

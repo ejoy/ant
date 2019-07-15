@@ -11,23 +11,23 @@ local bgfx = require "bgfx"
 -- skinning_mesh component is different from mesh component.
 -- mesh component is used for render purpose.
 -- skinning_mesh component is used for producing mesh component render data.
-local sm = ecs.component_alias("skinning_mesh", "resource") {depend = {"mesh", "animation"}}
+local sm = ecs.component_alias("skinning_mesh", "resource") {depend = {"rendermesh", "animation"}}
 
-local function gen_mesh_assetinfo(skinning_mesh_comp)
-	local skinning_mesh = skinning_mesh_comp.assetinfo.handle
+local function gen_mesh_assetinfo(sm)
+	local smhandle = sm.assetinfo.handle
 
-	local num_vertices, num_indices = skinning_mesh:num_vertices(), skinning_mesh:num_indices()
+	local num_vertices, num_indices = smhandle:num_vertices(), smhandle:num_indices()
 
 	local vbhandles = {}
 	local create_buffer_op = {dynamic=bgfx.create_dynamic_vertex_buffer, static=bgfx.create_vertex_buffer}
 
 	for _, buffertype in ipairs {"dynamic", "static"} do
-		local layout = skinning_mesh:layout(buffertype)
-		local buffer, size = skinning_mesh:buffer(buffertype)
+		local layout = smhandle:layout(buffertype)
+		local buffer, size = smhandle:buffer(buffertype)
 		vbhandles[#vbhandles+1] = create_buffer_op[buffertype]({"!", buffer, size}, declmgr.get(layout).handle)
 	end
 
-	local idxbuffer, indices_sizebyte = skinning_mesh:index_buffer()	
+	local idxbuffer, indices_sizebyte = smhandle:index_buffer()	
 	return computil.assign_group_as_mesh {
 		vb = {
 			handles = vbhandles,
@@ -43,9 +43,8 @@ local function gen_mesh_assetinfo(skinning_mesh_comp)
 end
 
 function sm:postinit(e)
-	local mesh = e.mesh
-	assert(mesh.ref_path == nil)
-	mesh.assetinfo = gen_mesh_assetinfo(e.skinning_mesh)
+	local rm = e.rendermesh
+	rm.handle = gen_mesh_assetinfo(self)
 end
 
 -- skinning system
@@ -57,7 +56,7 @@ function skinning_sys:update()
 	for _, eid in world:each("skinning_mesh") do
 		local e = world[eid]
 
-		local meshscene = e.mesh.assetinfo.handle
+		local meshscene = e.rendermesh.handle
 		local sm 		= e.skinning_mesh.assetinfo.handle
 		local aniresult = e.animation.aniresult
 		

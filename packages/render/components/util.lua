@@ -136,7 +136,7 @@ function util.is_entity_visible(entity)
 end
 
 function util.assign_group_as_mesh(group)
-	return {handle = {
+	return {
 		sceneidx = 1,
 		scenes = {
 			-- scene 1
@@ -147,7 +147,7 @@ function util.assign_group_as_mesh(group)
 				}
 			}
 		}
-	}}
+	}
 end
 
 function util.create_simple_mesh(vertex_desc, vb, num_vertices, ib, num_indices)
@@ -189,7 +189,7 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
 
 	local gridid = world:create_entity {
 		transform = mu.identity_transform(),
-        mesh = {},
+        rendermesh = {},
         material = util.assign_material(fs.path "/pkg/ant.resources" / "materials" / "line.material"),
 		name = name,
 		can_render = true,
@@ -211,7 +211,7 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
 	local num_vertices = #vb
 	local num_indices = #ib
 
-	grid.mesh.assetinfo = util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)
+	grid.rendermesh.handle = util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)
     return gridid
 end
 
@@ -222,6 +222,7 @@ function util.create_plane_entity(world, color, size, pos, name)
 			r = {0, 0, 0, 0},
 			t = pos or {0, 0, 0, 1}
 		},
+		rendermesh = {},
 		mesh = {
 			ref_path = fs.path "/pkg/ant.resources/depiction/cube.mesh"
 		},
@@ -264,7 +265,7 @@ function util.create_quad_entity(world, rect, materialpath, properties, name, vi
 	view_tag = view_tag or "main_view"
 	local eid = world:create_entity {
 		transform = mu.identity_transform(),
-		mesh = {},
+		rendermesh = {},
 		material = util.assign_material(materialpath, properties),
 		can_render = true,
 		[view_tag] = true,
@@ -272,7 +273,7 @@ function util.create_quad_entity(world, rect, materialpath, properties, name, vi
 	}
 
 	local e = world[eid]
-	e.mesh.assetinfo = util.quad_mesh(rect)
+	e.rendermesh.handle = util.quad_mesh(rect)
 	return eid
 end
 
@@ -285,7 +286,7 @@ function util.create_texture_quad_entity(world, texture_tbl, view_tag, name)
     local quadid = world:create_entity{
         transform = mu.identity_transform(),
         can_render = true,
-        mesh = {},
+        rendermesh = {},
         material = util.assign_material(
 			fs.path "/pkg/ant.resources/materials/texture.material", 
 			{textures = texture_tbl,}),
@@ -301,7 +302,7 @@ function util.create_texture_quad_entity(world, texture_tbl, view_tag, name)
 		 3, -3, 0, 1, 1,
 	}
     
-    quad.mesh.assetinfo = quad_mesh(vb)
+    quad.rendermesh.handle = quad_mesh(vb)
     return quadid
 end
 
@@ -341,7 +342,7 @@ function util.create_frustum_entity(world, frustum, name, transform, color)
 	local points = frustum:points()
 	local eid = world:create_entity {
 		transform = transform or mu.srt(),
-		mesh = {},
+		rendermesh = {},
 		material = util.assign_material(fs.path "/pkg/ant.resources/depiction/materials/line.material"),
 		can_render = true,
 		main_view = true,
@@ -349,7 +350,7 @@ function util.create_frustum_entity(world, frustum, name, transform, color)
 	}
 
 	local e = world[eid]
-	local m = e.mesh
+	local m = e.rendermesh
 	local vb = {"fffd",}
 	local cornernames = {
 		"ltn", "lbn", "rtn", "rbn",
@@ -379,21 +380,21 @@ function util.create_frustum_entity(world, frustum, name, transform, color)
 	}
 	
 	
-	m.assetinfo = util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib)
+	m.handle = util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib)
 	return eid
 end
 
 function util.create_skybox(world, material)
     local eid = world:create_entity {
         transform = mu.srt(),
-        mesh = {},
+        rendermesh = {},
         material = material or util.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skybox.material"),
         can_render = true,
         main_view = true,
         name = "sky_box",
     }
     local e = world[eid]
-    local m = e.mesh
+    local rm = e.rendermesh
 
     local desc = {vb={}, ib={}}
     geodrawer.draw_box({1, 1, 1}, nil, nil, desc)
@@ -401,7 +402,7 @@ function util.create_skybox(world, material)
     for _, v in ipairs(desc.vb)do
         table.move(v, 1, 3, #gvb+1, gvb)
     end
-    m.handle = util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib)
+    rm.handle = util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib)
     return eid
 end
 

@@ -81,6 +81,7 @@ local function create_entity(world,name,pos,rot,scl,mesh_desc,material_desc)
                 }
             }
         },
+        rendermesh = {},
         mesh = {
              ref_path = fs.path ( mesh_desc ),
         },

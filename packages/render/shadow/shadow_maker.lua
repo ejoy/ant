@@ -158,68 +158,14 @@ local debug_sm = ecs.system "debug_shadow_maker"
 debug_sm.depend "shadow_maker11"
 debug_sm.dependby "frustum_bounding_update"
 
-local function generate_lighting_frustum_vb()
-	local shadow = world:first_entity "shadow"
-
-	local proj = ms:view_proj(nil, shadow.camera.frustum)
-	local frustum = mathbaselib.new_frustum(ms)
-	local points = frustum:point(proj)
-
-	local vb = {"fffd"}
-	local function generate_line_vertices(conername, color, vb)
-		assert(#conername == 3)
-		local antimap = {
-			l = "r", t = "b", n = "f",
-			r = "l", b = "t", f = "n",
-		}
-		local first = conername:sub(1, 1)
-		local second = conername:sub(2, 2)
-		local third = conername:sub(3, 3)
-
-		local np_names = {
-			conername,
-			antimap[first] .. conername:sub(2, 3),
-			conername,
-			first .. antimap[second] .. third,
-			conername,
-			conername:sub(1, 2) .. antimap[third],
-		}
-	
-		for _, name in ipairs(np_names) do
-			local pt = points[name]
-			table.move(pt, 1, 3, #vb+1, vb)
-			vb[#vb+1] = color
-		end
-	end
-
-	for _, conername in ipairs {
-		"ltn", "rbn", "rtf", "lbf",
-	} do
-		generate_line_vertices(conername, 0xffffff00, vb)
-	end
-
-	return vb
-end
-
-local function create_frustum_bounding_entity()
-	local eid = world:create_entity {
-		transform = mu.identity_transform(),
-		mesh = {},
-		material = computil.assign_material(fs.path "/pkg/ant.resources" / "depiction" / "materials" / "line.material"),
-		can_render = true,
-		main_view = true,
-		frustum_debug = true,
-		name = "direction light frustum shape",
-	}
-
-	local num_vertices = 8
-	world[eid].mesh.assetinfo = computil.create_simple_mesh( "p3|c40niu", generate_lighting_frustum_vb(), num_vertices)
-end
-
 function debug_sm:init()
 	local qw, qh = 128,128
-	computil.create_shadow_quad_entity(world, {x=0, y=0, w=qw, h=qh})
-	create_frustum_bounding_entity()
+	local eidshadow = computil.create_shadow_quad_entity(world, {x=0, y=0, w=qw, h=qh})
+	local shadow_entity = world[eidshadow]
+
+	local _, _, vp = ms:view_proj(shadow_entity.camera, shadow_entity.camera.frustum)
+	local frustum = mathbaselib.new_frustum(ms, vp)
+	computil.create_frustum_entity(world, frustum, "shadow frustum")
 end
 
 local function update_bounding_mesh()
@@ -232,7 +178,7 @@ local function update_bounding_mesh()
 	for _, eid in world:each "can_render" do
 		local e = world[eid]
 		if e.can_render and e.can_cast then
-			local meshhandle = e.mesh.assetinfo.handle
+			local meshhandle = e.rendermesh.handle
 
 			local startvb = #desc.vb - 1
 			local startib = #desc.ib
@@ -247,7 +193,7 @@ local function update_bounding_mesh()
 		end
 	end
 
-	local meshhandle = boundingdebug.mesh.assetinfo.handle
+	local meshhandle = boundingdebug.rendermesh.handle
 	local group = meshhandle.groups[1]
 	group.primitives = desc.primitives
 	bgfx.update(group.vb.handles[1], 0, desc.vb)

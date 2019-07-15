@@ -74,37 +74,17 @@ ecs.component "submesh_ref"
 	.material_refs "int[]"
 	.visible "boolean"
 
-local mesh = ecs.component "mesh"
-	["opt"].ref_path "respath"
+local rendermesh = ecs.component "rendermesh"
 	["opt"].submesh_refs "submesh_ref{}"
-	.lodidx "int" (1)
+	["opt"].lodidx "int" (1)
 
-local function check_mesh_lod(mesh)
-	local scene = mesh.assetinfo.handle
-	if scene.scenelods then
-		assert(1 <= scene.sceneidx and scene.sceneidx <= #scene.scenelods)
-		if mesh.lodidx < 1 or mesh.lodidx > #scene.scenelods then
-			print("invalid lod:", mesh.lodidx, "max lod:", scene.scenelods)
-			mesh.lodidx = 1
-		end
-	else
-		if scene.sceneidx ~= mesh.lodidx then
-			print("default lod scene is not equal to lodidx")
-		end
-	end
-end
-
-function mesh:init()
-	if self.ref_path then
-		self.assetinfo = asset.load(self.ref_path)
-		self.lodidx = self.lodidx or 1
-		check_mesh_lod(self)
-	end
+function rendermesh:init()
+	self.lodidx = self.lodidx or 1
 	return self
 end
 
-function mesh:delete()
-	local meshscene = self.assetinfo.handle
+function rendermesh:delete()
+	local meshscene = self.handle
 	if meshscene then
 		local handles = {}
 		for _, scene in ipairs(meshscene.scenes) do
@@ -126,10 +106,34 @@ function mesh:delete()
 				bgfx.destroy(handle)
 			end
 		end
+		self.handle = nil
 	end
 end
 
-ecs.component_alias("new_mesh", "mesh")
+local mesh = ecs.component_alias("mesh", "resource") {depend="rendermesh"}
+
+local function check_rendermesh_lod(rm)
+	local scene = rm.handle
+	if scene.scenelods then
+		assert(1 <= scene.sceneidx and scene.sceneidx <= #scene.scenelods)
+		if rm.lodidx < 1 or rm.lodidx > #scene.scenelods then
+			print("invalid lod:", rm.lodidx, "max lod:", scene.scenelods)
+			rm.lodidx = 1
+		end
+	else
+		if scene.sceneidx ~= rm.lodidx then
+			print("default lod scene is not equal to lodidx")
+		end
+	end
+end
+
+function mesh:postinit(e)
+	local rm = e.rendermesh
+	rm.handle = self.assetinfo.handle
+	self.assetinfo = nil	-- transmit to rendermesh
+
+	check_rendermesh_lod(rm)
+end
 
 local tex = ecs.component "texture"
 	.name "string"
@@ -189,7 +193,7 @@ ecs.component "material"
 	.content "material_content[]"
 
 
-ecs.component_alias("can_render", "boolean", true) {depend={"transform", "mesh", "material"}}
+ecs.component_alias("can_render", "boolean", true) {depend={"transform", "rendermesh", "material"}}
 ecs.component_alias("can_cast", "boolean", false)
 ecs.component_alias("name", "string", "")
 ecs.tag "can_select"

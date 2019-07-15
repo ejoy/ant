@@ -126,6 +126,7 @@ local function create_scene_node_test()
             t = {0, 0, 0, 1},
         },
         name = 'render_child1_1',
+        rendermesh = {},
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/sphere.mesh'
         },
@@ -145,6 +146,7 @@ local function create_scene_node_test()
             t = {0, 0, 0, 1},
         },
         name = 'render_child1_2',
+        rendermesh = {},
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/sphere.mesh'
         },
@@ -164,6 +166,7 @@ local function create_scene_node_test()
             --slotname = "h1_h1",
         },
         name = 'render_child2_1',
+        rendermesh = {},
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/cube.mesh'
         },
@@ -237,6 +240,7 @@ local function create_scene_node_test()
             t = {0, 0, -3, 1},
         },
         name = 'render2_rootchild',
+        rendermesh = {},
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/cube.mesh'
         },
@@ -255,6 +259,7 @@ local function create_scene_node_test()
             t = {0, 0, 0, 1},
         },
         name = 'render2_child1',
+        rendermesh = {},
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/sphere.mesh'
         },

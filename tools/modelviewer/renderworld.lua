@@ -55,10 +55,8 @@ function model_review_system:init()
 	cu.create_grid_entity(world, "grid")
 	world:create_entity {
 		transform = mu.scale_mat(0.2),
-		can_render = true,
-		mesh = {
-			ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh"
-		},
+		rendermesh = {},
+		mesh = {ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh"},
 		material = {
 			content = {
 				{
@@ -66,6 +64,7 @@ function model_review_system:init()
 				}
 			}
 		},
+		can_render = true,
 		main_view = true,
 		name = "door",
 	}
@@ -85,6 +84,7 @@ function model_review_system:init()
 	world:create_entity {
 		transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),
 		can_render = true,
+		rendermesh = {},
 		mesh = {
 			ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test_glb.mesh",
 			-- submesh_refs = {

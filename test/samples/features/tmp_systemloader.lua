@@ -64,7 +64,7 @@ local function create_animation_test()
             t = {0, 2, 0, 1}
         },
         can_render = true,
-        mesh = {},
+        rendermesh = {},
         material = {
             content = {
                 {

@@ -268,8 +268,9 @@ function PVPScene.create_entitices(world)
 					},
 					can_render = true, 
 					can_select = true,
+					rendermesh = {},
 					mesh = {
-						ref_path = fs.path "/pkg/ant.resources" / scenedata.mesh,						
+						ref_path = fs.path "/pkg/ant.resources" / scenedata.mesh,
 					},
 					material = {
 						content = {
@@ -277,7 +278,7 @@ function PVPScene.create_entitices(world)
 								ref_path = fs.path "/pkg/ant.resources" / scenedata.material
 							}
 						}
-					}, 
+					},
 					serialize = import_package 'ant.serialize'.create(), 
 					name = name,
 					main_view = true,

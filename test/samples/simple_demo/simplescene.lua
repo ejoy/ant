@@ -22,6 +22,7 @@ function simplescene:init()
 			r = {0, 0, 0, 0},
 			t = {0, 0, 0, 1},
 		},
+		rendermesh = {},
 		mesh = {
 			ref_path = fs.path "/pkg/ant.resources/bunny.mesh",
 		},
