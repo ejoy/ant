@@ -7,6 +7,7 @@ local t = {
     -- gui_logview = require "gui_logview",
     gui_main = require "gui_main",
     class = require "common.class",
+    dbgutil = require "common.debugutil",
     runtime = require "runtime",
     controls = {
         list = require "controls.list",

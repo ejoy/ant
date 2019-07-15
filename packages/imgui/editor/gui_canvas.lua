@@ -15,21 +15,11 @@ local scene         = import_package "ant.scene".util
 local ru = import_package "ant.render".util
 local map_imgui   = import_package "ant.editor".map_imgui
 
+local dbgutil = require "common.debugutil"
+
 local DEFAULT_FPS = 30
 
 GuiCanvas.GuiName = "GuiCanvas"
-
-function try(fun,...)
-    if debug.getregistry()["lua-debug"] then
-        return fun(...)
-    end
-    local status,err,ret = xpcall( fun,debug.traceback,... )
-    if not status then
-        io.stderr:write("Error:%s\n%s", status or "nil", err)
-        log.error_a("Error:%s\n%s", status, err)
-    end
-    return ret
-end
 
 local function get_time()
     return os.clock()
@@ -110,7 +100,7 @@ function GuiCanvas:_update_world(delta)
         self.next_frame_time = now + self.frame_time
         self.last_update = now
         --update world
-        try(self.world_update)
+        dbgutil.try(self.world_update)
     end
 
 end

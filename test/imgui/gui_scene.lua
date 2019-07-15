@@ -1,4 +1,6 @@
-local imgui         = import_package "ant.imgui".imgui
+local imguipkg      = import_package "ant.imgui"
+local dbgutil       = imguipkg.dbgutil
+local imgui         = imguipkg.imgui
 local widget        = imgui.widget
 local flags         = imgui.flags
 local windows       = imgui.windows
@@ -40,14 +42,12 @@ function GuiScene:get_mainmenu()
     return {{parent_path,self._scene_menu},}
 end
 
-
-
 function  GuiScene:_scene_menu()
     local box = self:_get_editpath()
     if  widget.Button("OpenScene") then
         local scene_control = require "scene_control"
         log.info_a(box)
-        scene_control.test_new_world(box.text)
+        dbgutil.try(function () scene_control.test_new_world(box.text) end)
     end
 	cursor.SameLine()
 	widget.InputText("", box)
