@@ -4,6 +4,7 @@ local flags     = imgui.flags
 local windows   = imgui.windows
 local util      = imgui.util
 local gui_util  = require "editor.gui_util"
+local thread    = require "thread"
 
 
 local gui_mgr = {}
@@ -12,18 +13,29 @@ local test = false
 local DefaultImguiIni = "editor.default.ini"
 local UserImguiIni = "editor.user.ini"
 
+local DefaultImguiSetting = "editor.default.setting"
+local UserImguiSetting = "editor.user.setting"
+local SettingIni = "SettingIni"
+local SettingGuiOpen = "SettingGuiOpen"
+local CreateDefaultSetting = function()
+    return {
+        SettingGuiOpen = {}
+    }
+end
+
 function gui_mgr.init()
     gui_mgr.gui_tbl = {}
     gui_mgr.mainmenu_list = {}
-    local menu_list = {
-        {{"Views"},gui_mgr._update_mainmenu_view},
-    }
-    gui_mgr._register_mainmenu(nil,menu_list)
+    gui_mgr.setting_tbl = CreateDefaultSetting()
+    -- local menu_list = {
+    --     {{"Views"},gui_mgr._update_mainmenu_view},
+    -- }
+    -- gui_mgr._register_mainmenu(nil,menu_list)
 end
 
 function gui_mgr.after_init()
-    gui_mgr.load_ini()
-
+    -- gui_mgr.load_ini()
+    gui_mgr.load_setting()
 end
 
 function gui_mgr.update(delta)
@@ -35,7 +47,7 @@ function gui_mgr.update(delta)
     gui_mgr._update_window(delta)
     gui_util.loop_popup()
     imgui.end_frame()
-    gui_mgr.check_and_save_ini()
+    gui_mgr.check_and_save_setting()
 end
 
 function gui_mgr._update_window(delta)
@@ -44,8 +56,6 @@ function gui_mgr._update_window(delta)
             ui_ins:on_gui(delta)
         end
     end
-    
-    
 end
 
 function gui_mgr._update_mainmenu()
@@ -70,6 +80,10 @@ function gui_mgr._update_mainmenu()
 
     if widget.BeginMainMenuBar() then
         render_list(cur_list)
+        if widget.BeginMenu( "Views") then
+            gui_mgr._update_mainmenu_view()
+            widget.EndMenu()
+        end
         widget.EndMainMenuBar()
     end
 
@@ -133,6 +147,22 @@ function gui_mgr.register(name,gui_ins)
     if cfg then
         gui_mgr._register_mainmenu(gui_ins,cfg)
     end
+    if gui_ins.set_setting then
+        local setting = gui_mgr.setting_tbl[name]
+        if setting then
+            gui_ins:set_setting(setting)
+        end
+        local setting_open = gui_mgr.setting_tbl[SettingGuiOpen][name]
+        if setting_open~= nil then
+            if (not gui_ins:is_opened()) ~= (not setting_open) then
+                if setting_open then
+                    gui_ins:on_open_click()
+                else
+                    gui_ins:on_close_click()
+                end
+            end
+        end
+    end
 end
 
 function gui_mgr.get(name)
@@ -140,55 +170,94 @@ function gui_mgr.get(name)
     return gui_mgr.gui_tbl[name]
 end
 
----------------setting---------------------------------
-function gui_mgr.load_ini()
-    local path = UserImguiIni
-    local inifile = gui_util.open_current_pkg_path(path,"r")
-    if not inifile then
-        path = DefaultImguiIni
-        inifile = gui_util.open_current_pkg_path(path,"r")
+---------------gui_setting-------------------------------
+function gui_mgr.load_setting()
+    local path = UserImguiSetting
+    local setting_file = gui_util.open_current_pkg_path(path,"rb")
+    if not setting_file then
+        path = DefaultImguiSetting
+        setting_file = gui_util.open_current_pkg_path(path,"rb")
     end
-    if inifile then
-        local config = inifile:read('*all')
-        util.LoadIniSettings(config)
-        log("Load Imgui ini:",path)
-        inifile:close()
+    if setting_file then
+        local packed_data = setting_file:read('*all')
+        setting_file:close()
+        local tbl = thread.unpack(packed_data) or CreateDefaultSetting()
+        tbl[SettingGuiOpen] = tbl[SettingGuiOpen] or {}
+        gui_mgr._load_setting_to_gui(tbl)
+        log.trace("Load Imgui setting:",path)
     else
-        log("Can't find Imgui ini:",path)
+        gui_mgr.setting_tbl = CreateDefaultSetting()
+        log.trace("Can't find Imgui setting:",path)
+    end
+
+end
+
+function gui_mgr._load_setting_to_gui(tbl)
+    gui_mgr.setting_tbl = tbl
+    if tbl[SettingIni] then
+        util.LoadIniSettings(tbl[SettingIni])
+    end
+    for ui_name,ui_ins in pairs(gui_mgr.gui_tbl) do
+        local gui_cfg = tbl[ui_name]
+        if gui_cfg and ui_ins.set_setting then
+            ui_ins:set_setting(gui_cfg)
+        end
+        local setting_open = tbl[SettingGuiOpen][ui_name]
+        if setting_open ~= nil then
+            if (not ui_ins:is_opened()) ~= (not setting_open) then
+                if setting_open then
+                    ui_ins:on_open_click()
+                else
+                    ui_ins:on_close_click()
+                end
+            end
+        end
     end
 end
 
---frame update
-function gui_mgr.check_and_save_ini()
+function gui_mgr.check_and_save_setting()
+    gui_mgr.setting_tbl = gui_mgr.setting_tbl or {}
+    local setting_tbl = gui_mgr.setting_tbl
+    local need_save = false
     if imgui.IO.WantSaveIniSettings then
-        -- log("imgui.IO.WantSaveIniSettings",imgui.IO.WantSaveIniSettings)
+        need_save = true
         local cfg_data = util.SaveIniSettings(true)
-        config = gui_util.open_current_pkg_path(UserImguiIni,"w")
-        config:write(cfg_data)
-        config:close()
+        setting_tbl[SettingIni] = cfg_data
+    end
+    for ui_name,ui_ins in pairs(gui_mgr.gui_tbl) do
+        if ui_ins:is_setting_dirty() then
+            need_save = true
+            setting_tbl[ui_name] = ui_ins:get_setting()
+        end
+    end
+    setting_tbl[SettingGuiOpen] =  setting_tbl[SettingGuiOpen] or {}
+    local gui_opens = setting_tbl[SettingGuiOpen]
+    for ui_name,ui_ins in pairs(gui_mgr.gui_tbl) do
+        if ui_ins:is_opened() ~= gui_opens[ui_name] then
+            gui_opens[ui_name] = ui_ins:is_opened()
+            need_save = true
+        end
+    end
+    if need_save then
+        -- log.trace("Setting changed,save to path:",UserImguiSetting)
+        local file = gui_util.open_current_pkg_path(UserImguiSetting,"wb")
+        local data = thread.pack(setting_tbl)
+        file:write(data)
+        file:close()
     end
 end
 
-function gui_mgr.save_ini(path)
-    path = path or "editor.default.ini"
-    local fs = require "filesystem"
-    local localfs = require "filesystem.local"
-    local pm = require "antpm"
-    local pkg_path = fs.path(pm.get_entry_pkg().."/"..path)
-    local local_path = pkg_path:localpath()
-    local f = localfs.open(local_path,"w")
-    local cfg_data = util.SaveIniSettings(false)
-    f:write(cfg_data)
-    f:close()
-    -- if windows.BeginPopupModal(popup) then
-    --     local str = string.format("Save to successfully\nPath:%s",pkg_path)
-    --     widget.Text(str)
-    --     windows.EndPopup()
-    -- end
-    local str = string.format("Save to successfully\nPath:%s",local_path)
+function gui_mgr.save_setting_to(path)
+    path = path or DefaultImguiSetting
+    local file = gui_util.open_current_pkg_path(path,"wb")
+    local data = thread.pack(gui_mgr.setting_tbl)
+    file:write(data)
+    file:close()
+    local str = string.format("Save to successfully\nPath:%s",path)
     gui_util.notice({msg =str})
 end
----------------setting---------------------------------
+
+---------------gui_setting-------------------------------
 
 
 gui_mgr.init()

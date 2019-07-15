@@ -28,6 +28,8 @@ function GuiSysInfo:_init()
     self.corner = 2
     self.winpos = {0,0}
     self.povit = {0,0}
+    self.status_open = true
+    self._setting_dirty = false
 end
 
 function GuiSysInfo:before_open()
@@ -61,7 +63,11 @@ function GuiSysInfo:before_update()
     else
         self.win_flags = self.win_flags2 --can move
     end
-    windows.SetNextWindowBgAlpha(0.35)
+    if self.status_open then
+        windows.SetNextWindowBgAlpha(0.75)
+    else
+        windows.SetNextWindowBgAlpha(0.35)
+    end
     windows.SetNextWindowPos( winpos[1],winpos[2],nil,povit[1],povit[2] )
 end
 
@@ -70,9 +76,6 @@ local btns = {"Custom","Top-left","Top-right","Bottom-left","Bottom-right"}
 function GuiSysInfo:on_update(deltatime)
     self:update_fps(deltatime)
     local corner = self.corner
-    local mouse = gui_input.mouse
-    local delta = gui_input.mouse.delta
-    widget.Text( string.format("mouse pos:%d/%d delta:%d/%d",mouse.x,mouse.y,delta.x,delta.y) )
     if windows.BeginPopupContextWindow() then
         for i = -1,3 do
             local btn_str = btns[i+2]
@@ -113,10 +116,44 @@ function GuiSysInfo:update_fps(deltatime)
         self.frame_count = 0
         self.frame_time_count = 0
     end
+    local fps_str = string.format("fps:%g###TreeHeader",self.fps)
+    widget.SetNextItemOpen(self.status_open)
+    if widget.TreeNode(fps_str) then
+        self:set_status_open(true)
+        widget.Text( string.format("frame time:%.3g",self.ft) )
+        widget.Text( memory_info() )
+            
+        local mouse = gui_input.mouse
+        local delta = gui_input.mouse.delta
+        widget.Text( string.format("mouse pos:%d/%d delta:%d/%d",mouse.x,mouse.y,delta.x,delta.y) )
+        widget.TreePop()
+    else
+        self:set_status_open(false)
+    end
+end
 
-    widget.Text( string.format("fps:%g",self.fps) )
-    widget.Text( string.format("frame time:%.3g",self.ft) )
-    widget.Text( memory_info() )
+function GuiSysInfo:set_status_open(value)
+    if self.status_open~= value then
+        self.status_open= value
+        self._setting_dirty = true
+    end
+end
+
+function GuiSysInfo:is_setting_dirty()
+    return self._setting_dirty
+end
+
+function GuiSysInfo:set_setting(setting)
+    if setting.status_open ~= nil then
+        self.status_open = setting.status_open
+    end
+end
+
+function GuiSysInfo:get_setting()
+    self._setting_dirty = false
+    return {
+        status_open = self.status_open
+    }
 end
 
 return GuiSysInfo

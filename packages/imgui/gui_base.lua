@@ -101,4 +101,26 @@ function GuiBase:get_mainmenu()
     self.get_mainmenu = false
 end
 
+
+----------------custom_setting----------------
+
+--override if needed
+--return tbl
+function GuiBase:get_setting()
+    
+end
+
+--override if needed
+function GuiBase:set_setting(seting_tbl)
+    self.set_setting = false
+end
+
+--override if needed
+function GuiBase:is_setting_dirty()
+    return false
+end
+
+
+----------------custom_setting----------------
+
 return GuiBase
