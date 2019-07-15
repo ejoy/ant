@@ -215,17 +215,10 @@ function util.create_plane_entity(world, color, size, pos, name)
 			t = pos or {0, 0, 0, 1}
 		},
 		rendermesh = {},
-		mesh = {
-			ref_path = fs.path "/pkg/ant.resources/depiction/cube.mesh"
-		},
+		mesh = {ref_path = fs.path "/pkg/ant.resources/depiction/cube.mesh"},
 		material = computil.assign_material(
 				fs.path "/pkg/ant.resources/depiction/shadow/mesh_receive_shadow.material",
-				{
-					uniforms = {
-						u_color = {type="color", name="color", value=color}
-					},
-				}
-		},
+				{uniforms = {u_color = {type="color", name="color", value=color}},}),
 		can_render = true,
 		--can_cast = true,
 		main_view = true,

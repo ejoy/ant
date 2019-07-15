@@ -54,9 +54,7 @@ function terrain_test:init()
 	end
 
 	world:create_entity {
-        material = {
-            content = create_material_content()
-        },
+        material = create_material_content(),
         transform = {
             s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
