@@ -83,10 +83,10 @@ end
 
 local function add_tranformed_bounding(r, worldmat, bounding)
 	if bounding then
-		local tb = r.transformed_bounding
+		local tb = r.tb	-- transformed bounding
 		if tb == nil then
 			tb = mathbaselib.new_bounding(ms)
-			r.transformed_bounding = tb
+			r.tb = tb
 		else
 			tb:reset()
 		end
@@ -94,7 +94,7 @@ local function add_tranformed_bounding(r, worldmat, bounding)
 		tb:merge(bounding)
 		tb:transform(worldmat)
 	else
-		r.transformed_bounding = nil
+		r.tb = nil
 	end
 end
 

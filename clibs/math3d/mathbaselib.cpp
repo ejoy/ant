@@ -336,6 +336,26 @@ lfrustum_intersect(lua_State* L) {
 	return 1;
 }
 
+static inline
+bool is_prim_visible(lua_State *L, const Frustum *f, int tableidx, int idx){
+	const Bounding* b;
+	lua_geti(L, tableidx, idx);
+	{
+		luaL_checktype(L, -1, LUA_TTABLE);
+		const int luatype = lua_getfield(L, -1, "tb");	//transformed bounding
+		b = (luatype == LUA_TUSERDATA) ? fetch_bounding(L, -1) : nullptr;
+		lua_pop(L, 1);
+	}
+	lua_pop(L, 1);
+
+	if (b) {
+		auto result = planes_intersect(f->planes, b->aabb);
+		return result[0] != 'o';
+	}
+
+	return true;
+}
+
 static int
 lfrustum_intersect_list(lua_State* L) {
 	auto* f = fetch_frustum(L, 1);
@@ -347,19 +367,15 @@ lfrustum_intersect_list(lua_State* L) {
 	}
 
 	const int len = lua_tointeger(L, 3);
-	lua_createtable(L, len, 0);
+	lua_createtable(L, 0, 0);
+	int visibleset_idx = 0;
 	for (int ii = 0; ii < len ; ++ii){
-		lua_geti(L, 2, ii + 1);
-		const Bounding* b = LUA_TUSERDATA == lua_type(L, -1) ? fetch_bounding(L, -1) : nullptr;		
-		lua_pop(L, 1);
+		const int idx = ii + 1;
 
-		if (b){
-			auto result = planes_intersect(f->planes, b->aabb);
-			lua_pushboolean(L, 0 != strcmp(result, "outside"));
-		} else {
-			lua_pushboolean(L, true);
+		if (is_prim_visible(L, f, 2, idx)){
+			lua_pushinteger(L, idx);
+			lua_seti(L, -2, ++visibleset_idx);
 		}
-		lua_seti(L, -2, ii + 1);
 	}
 
 	return 1;
