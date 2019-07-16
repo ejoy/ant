@@ -2384,7 +2384,7 @@ get_value(lua_State *L, struct lastack *LS, int index) {
 	{
 		T v;		
 		const int len = (int)lua_rawlen(L, index);
-		get_table_value(L, index, len, v);		
+		get_table_value(L, index, len, v);
 		return v;
 	}
 	default:
@@ -2396,6 +2396,11 @@ get_value(lua_State *L, struct lastack *LS, int index) {
 glm::vec4 
 get_vec_value(lua_State *L, struct lastack *LS, int index) {
 	return get_value<glm::vec4>(L, LS, index);
+}
+
+glm::mat4x4
+get_mat_value(lua_State* L, struct lastack* LS, int index){
+	return get_value<glm::mat4x4>(L, LS, index);
 }
 
 static int

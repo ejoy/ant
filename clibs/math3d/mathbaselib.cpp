@@ -559,7 +559,6 @@ lbounding_new(lua_State* L) {
 		auto v = get_vec_value(L, LS, ii + 1);
 		bounding.aabb.Append(v);
 	}
-	
 
 	bounding.sphere.Init(bounding.aabb);
 	bounding.obb.Init(bounding.aabb);
@@ -606,7 +605,22 @@ lbounding_isvalid(lua_State *L){
 
 static int
 lbounding_reset(lua_State *L){
+	const int numarg = lua_gettop(L);
 	auto bounding = fetch_bounding(L, 1);
+	auto LS = fetch_LS(L, 1);
+
+	if (numarg > 1){
+		if (lua_type(L, 2) != LUA_TUSERDATA){
+			luaL_error(L, "argument 2 must a bounding box");
+		}
+		auto b = fetch_bounding(L, 2);
+		bounding->Merge(*b);
+		if (!lua_isnoneornil(L, 3)) {
+			auto trans = get_mat_value(L, LS, 3);
+			transform_aabb(trans, bounding->aabb);
+		}
+	}
+
 	bounding->Reset();
 
 	return 0;
