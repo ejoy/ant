@@ -342,7 +342,11 @@ lfrustum_intersect_list(lua_State* L) {
 
 	luaL_checktype(L, 2, LUA_TTABLE);
 
-	const int len = (int)lua_rawlen(L, 2);
+	if (lua_isnoneornil(L, 3)){
+		luaL_error(L, "need 3 argument");
+	}
+
+	const int len = lua_tointeger(L, 3);
 	lua_createtable(L, len, 0);
 	for (int ii = 0; ii < len ; ++ii){
 		lua_geti(L, 2, ii + 1);
@@ -351,11 +355,11 @@ lfrustum_intersect_list(lua_State* L) {
 
 		if (b){
 			auto result = planes_intersect(f->planes, b->aabb);
-			lua_pushstring(L, result);
+			lua_pushboolean(L, 0 != strcmp(result, "outside"));
 		} else {
-			lua_pushstring(L, "inside");
+			lua_pushboolean(L, true);
 		}
-		lua_seti(L, 3, ii + 1);
+		lua_seti(L, -2, ii + 1);
 	}
 
 	return 1;
