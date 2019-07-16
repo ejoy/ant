@@ -183,14 +183,21 @@ ecs.component_alias("can_render", "boolean", true) {depend={"transform", "render
 ecs.component_alias("can_cast", "boolean", false)
 ecs.component_alias("name", "string", "")
 
-local al = ecs.component_alias("asyn_load", "boolean", true) {depend={"mesh", "material"}}
-function al:postinit(e)
-	if self == true then
-		assert(e.mesh.asyn_load)
-		for _, m in ipairs(e.material) do
-			assert(m.asyn_load)
-		end
+local asynload_state = ecs.component_alias("asyn_load", "string", "") {depend={"mesh", "material"}}
+function asynload_state.init()
+	return ""	-- always true
+end
+
+function asynload_state:postinit(e)
+	assert(self == "")
+	assert(e.mesh.asyn_load)
+	for _, m in ipairs(e.material) do
+		assert(m.asyn_load)
 	end
+end
+
+function asynload_state.save()
+	return ""	--always save empty string
 end
 
 ecs.tag "can_select"

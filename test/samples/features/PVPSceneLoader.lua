@@ -275,7 +275,7 @@ function PVPScene.create_entitices(world)
 					serialize = import_package 'ant.serialize'.create(), 
 					name = name,
 					main_view = true,
-					asyn_load = true,
+					asyn_load = "",
 				}
 
 				if collision_array then

@@ -61,7 +61,7 @@ function model_review_system:init()
 		material 	= {{ref_path = fs.path "/pkg/ant.resources/PVPScene/scene-mat.material", asyn_load=true}},
 		can_render 	= true,
 		main_view 	= true,
-		asyn_load	= true,
+		asyn_load	= "",
 		name 		= "door",
 	}
 
@@ -73,16 +73,15 @@ function model_review_system:init()
 				uniforms = {
 					u_color = {type = "color", name = "Color", value = color},
 				}
-			}
+			},
+			asyn_load = true,
 		}
 	end
 
 	world:create_entity {
 		transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),
 		can_render = true,
-		rendermesh = {},
-		mesh = {
-			ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test_glb.mesh",
+		rendermesh = {
 			-- submesh_refs = {
 			-- 	["build_big_storage_01_fence_02"] 		= cu.create_submesh_item {1}, 
 			-- 	["build_big_storage_01_pillars_01"] 	= cu.create_submesh_item {2, 3},
@@ -90,6 +89,10 @@ function model_review_system:init()
 			-- 	["build_big_storage_01_walls_down"] 	= cu.create_submesh_item {2},
 			-- 	["build_big_storage_01_walls_up"] 		= cu.create_submesh_item {2},
 			-- },
+		},
+		mesh = {
+			ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test_glb.mesh",
+			asyn_load = true,
 		},
 		material = {
 			create_material_item(singlecolor_material, {1, 0, 0, 0}),
@@ -101,6 +104,7 @@ function model_review_system:init()
 			create_material_item(singlecolor_material, {1, 1, 1, 0}),
 		},
 		main_view = true,
+		asyn_load = "",
 		name = "test_glb",
 	}
 end

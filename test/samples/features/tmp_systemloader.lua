@@ -38,6 +38,7 @@ init_loader.depend 'timesystem'
 init_loader.depend "serialize_index_system"
 
 init_loader.dependby 'render_system'
+init_loader.dependby 'cull_system'
 init_loader.dependby 'primitive_filter_system'
 init_loader.dependby 'camera_controller'
 init_loader.dependby 'skinning_system'

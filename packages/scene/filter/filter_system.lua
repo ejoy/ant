@@ -141,6 +141,7 @@ function primitive_filter_sys:update()
 			if vt and ft then
 				local rm = ce.rendermesh
 				if rm.handle then
+					assert(ce.asyn_load == nil or ce.asyn_load == "loaded")
 					filter_mesh(eid, ce.rendermesh, ce.transform.world, ce.material, filter)
 				end
 			end
