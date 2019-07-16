@@ -102,21 +102,25 @@ local function add_result(eid, group, materialinfo, properties, worldmat, result
 	local idx = result.cacheidx
 	local r = result[idx]
 	if r == nil then
-		r = {}
+		r = {
+			tb = false,
+			mgroup 	= group,
+			material 	= materialinfo,
+			properties = properties,
+			worldmat 	= worldmat,
+			eid = eid,
+		}
 		result[idx] = r
+	else
+		r.mgroup 	= group
+		r.material 	= materialinfo
+		r.properties = properties
+		r.worldmat 	= worldmat
+		r.eid 		= eid
 	end
 
-	r.eid 		= eid
-	r.mgroup 	= group
-
-	r.material 	= materialinfo
-	r.properties = properties
-	r.worldmat 	= worldmat
-
 	add_tranformed_bounding(r, worldmat, group.bounding)
-
 	result.cacheidx = idx + 1
-
 	return r
 end
 
