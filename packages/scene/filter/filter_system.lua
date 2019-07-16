@@ -4,7 +4,6 @@ local world = ecs.world
 ecs.import "ant.event"
 
 local render = import_package "ant.render"
-local mathbaselib = require "math3d.baselib"
 local ru = render.util
 
 local filterutil = require "filter.util"
@@ -29,6 +28,7 @@ end
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
 primitive_filter_sys.dependby "filter_properties"
+primitive_filter_sys.depend "asyn_asset_loader"
 primitive_filter_sys.singleton "hierarchy_transform_result"
 primitive_filter_sys.singleton "event"
 
@@ -139,7 +139,10 @@ function primitive_filter_sys:update()
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
 			if vt and ft then
-				filter_mesh(eid, ce.rendermesh, ce.transform.world, ce.material, filter)
+				local rm = ce.rendermesh
+				if rm.handle then
+					filter_mesh(eid, ce.rendermesh, ce.transform.world, ce.material, filter)
+				end
 			end
 		end
 	end

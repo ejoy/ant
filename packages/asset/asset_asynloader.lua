@@ -1,10 +1,10 @@
 local ecs = ...
-local world = ecs
+local world = ecs.world
 
 local assetmgr = require "asset"
 
 local renderpkg = import_package "ant.render"
-local computil = renderpkg.util
+local computil = renderpkg.components
 
 local asyn_asset_loader = ecs.system "asyn_asset_loader"
 
@@ -16,7 +16,7 @@ function asyn_asset_loader.update()
         do
             assert(mesh.asyn_load)
             mesh.assetinfo = assetmgr.load(assert(mesh.ref_path))
-            computil.transmit_mesh(e.rendermesh, mesh)
+            computil.transmit_mesh(mesh, e.rendermesh)
         end
 
         local materials = e.material
@@ -31,9 +31,6 @@ function asyn_asset_loader.update()
     end
 
     if #loaded_assets > 0 then
-        for _, eid in ipairs(loaded_assets) do
-            world:remove_component(eid, "asset_post_load")
-        end
         world:update_func "asset_loaded"()
     end
     
