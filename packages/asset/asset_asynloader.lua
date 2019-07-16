@@ -11,6 +11,7 @@ local loadlist = ecs.singleton "asyn_load_list"
 local function reset_loadlist(ll)
     ll.i = 1
     ll.n = 0
+    ll.loaded_assets = nil
 end
 
 function loadlist.init()
@@ -43,7 +44,6 @@ end
 
 function asyn_asset_loader:post_init()
     local loadlist = self.asyn_load_list
-    
     local loaded_assets = {}
     local max_entity = 5
     for eid in world:each_new "asyn_load" do
@@ -68,6 +68,7 @@ function asyn_asset_loader:post_init()
 
     local loadnum = #loaded_assets
     if loadnum > 0 then
+        loadlist.loaded_assets = loaded_assets
         loadlist.i = loadlist.i + loadnum
         world:update_func "asset_loaded"()
     end
