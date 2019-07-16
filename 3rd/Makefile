@@ -90,6 +90,7 @@ else ifeq "$(PLAT)" "msvc"
   WITH_OZZ_SAMPLES := ON
 else ifeq "$(PLAT)" "ios"
   OZZ_ENABLE_EMSCRIPTEN := TRUE
+  CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../lib
 else
   CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../lib
 endif
