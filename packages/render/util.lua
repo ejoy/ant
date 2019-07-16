@@ -103,7 +103,6 @@ local function add_result(eid, group, materialinfo, properties, worldmat, result
 	local r = result[idx]
 	if r == nil then
 		r = {
-			tb = false,
 			mgroup 	= group,
 			material 	= materialinfo,
 			properties = properties,

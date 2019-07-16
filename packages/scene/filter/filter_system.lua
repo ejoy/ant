@@ -68,7 +68,7 @@ local function get_material(prim, primidx, materialcontent, material_refs)
 		return materialcontent[idx]
 	end
 
-	local materialidx = prim.material or 0
+	local materialidx = prim.material or primidx
 	return materialcontent[materialidx+1] or materialcontent[1]
 end
 
@@ -102,7 +102,7 @@ end
 local function filter_mesh(eid, meshcomp, worldmat, materialcontent, filter)
 	local meshscene = meshcomp.handle
 
-	local lodlevel = meshcomp.lod or 1
+	local lodlevel = meshcomp.lodidx or 1
 	local sceneidx = meshscene.scenelods and (meshscene.scenelods[lodlevel]) or meshscene.sceneidx
 
 	local scenes = meshscene.scenes[sceneidx]
