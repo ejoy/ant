@@ -20,6 +20,7 @@ ecs.import 'ant.event'
 ecs.import 'ant.objcontroller'
 ecs.import 'ant.math.adapter'
 ecs.import 'ant.sky'
+ecs.import 'ant.asset'
 
 local renderpkg = import_package 'ant.render'
 local renderutil=renderpkg.util
@@ -35,6 +36,7 @@ scene_walker.depend 	'render_system'
 scene_walker.depend 	'primitive_filter_system'
 scene_walker.depend     'procedural_sky_system'
 scene_walker.depend     'cull_system'
+scene_walker.depend     'asyn_asset_loader'
 
 scene_walker.dependby 	'camera_controller'
 

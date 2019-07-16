@@ -138,7 +138,7 @@ local default_material_path = '/pkg/ant.resources/depiction/materials/bunny.mate
 
 local function get_material_refpath(material_filename)
     local filepath = viking_assetpath / 'materials' / fs.path(material_filename):filename():replace_extension('material')
-    return {ref_path = filepath}
+    return {ref_path = filepath, asyn_load = true}
 end
 
 local function find_sub_list(meshlist, trans, groupname)
@@ -257,13 +257,12 @@ function unityScene.create(world, scenepath)
 				rendermesh = {
 					submesh_refs = submesh_refs,
 				},
-				material = {
-					content = material_paths,
-				},
-				mesh = {ref_path = meshpath,},
-				can_render = true,
-				can_select = true,
-				main_view = true,
+				material = material_paths,
+				mesh = {ref_path = meshpath, asyn_load=true},
+				asyn_load 	= "",
+				can_render 	= true,
+				can_select 	= true,
+				main_view 	= true,
 			}
 
 			print("create entity:", eid, groupname)
