@@ -25,8 +25,8 @@ function GuiEditorMenu:get_mainmenu()
 end
 
 function GuiEditorMenu:_editor_menu()
-    if widget.MenuItem("Save Layout") then
-        gui_mgr.save_ini()
+    if widget.MenuItem("Save to DefaultSetting") then
+        gui_mgr.save_setting_to()
     end
 end
 

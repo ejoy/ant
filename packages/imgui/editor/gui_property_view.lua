@@ -23,8 +23,15 @@ function GuiPropertyView:_init()
     self.default_size = {250,600}
     self.title_id = string.format("Property###%s",self.GuiName)
     self.widget_entity = EntityWidget.new()
+    self.debug_mode = false
+    self.widget_entity:set_debug_mode(self.debug_mode)
+    self.widget_entity:set_change_cb(self.on_component_value_change,self)
     ---
     self:_init_subcribe()
+end
+
+function GuiPropertyView:on_component_value_change(eid,com_id,name,value)
+    hub.publish(Event.ModifyComponent,eid,com_id,name,value)
 end
 
 -------hub begin
@@ -68,6 +75,9 @@ function GuiPropertyView:on_update()
         end
         local change
         change,self.debug_mode = widget.Checkbox("Debug",self.debug_mode)
+        if change then
+            self.widget_entity:set_debug_mode(self.debug_mode)
+        end
         widget.EndMenuBar()
     end
     if self.entity_tbl then
@@ -87,7 +97,7 @@ function GuiPropertyView:on_update()
 
         local eid,entity = next(self.entity_tbl)
         if eid then
-            self.widget_entity:update(eid,entity,self.debug_mode)
+            self.widget_entity:update(eid,entity)
         end
     else
         widget.Text("Not Entity")
