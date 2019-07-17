@@ -76,11 +76,11 @@ static void push_message(struct ant_window_message* msg) {
     pt.x *= self.contentScaleFactor;
     pt.y *= self.contentScaleFactor;
     struct ant_window_message msg;
-    msg.type = ANT_WINDOW_MOUSE_CLICK;
-    msg.u.mouse_click.type = 0;
-    msg.u.mouse_click.press = 1;
-    msg.u.mouse_click.x = pt.x;
-    msg.u.mouse_click.y = pt.y;
+    msg.type = ANT_WINDOW_TOUCH;
+    msg.u.touch.id = (uintptr_t)touch;
+    msg.u.touch.state = 1;
+    msg.u.touch.x = pt.x;
+    msg.u.touch.y = pt.y;
     push_message(&msg);
 }
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -89,11 +89,11 @@ static void push_message(struct ant_window_message* msg) {
     pt.x *= self.contentScaleFactor;
     pt.y *= self.contentScaleFactor;
     struct ant_window_message msg;
-    msg.type = ANT_WINDOW_MOUSE_CLICK;
-    msg.u.mouse_click.type = 0;
-    msg.u.mouse_click.press = 0;
-    msg.u.mouse_click.x = pt.x;
-    msg.u.mouse_click.y = pt.y;
+    msg.type = ANT_WINDOW_TOUCH;
+    msg.u.touch.id = (uintptr_t)touch;
+    msg.u.touch.state = 3;
+    msg.u.touch.x = pt.x;
+    msg.u.touch.y = pt.y;
     push_message(&msg);
 }
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -102,11 +102,11 @@ static void push_message(struct ant_window_message* msg) {
     pt.x *= self.contentScaleFactor;
     pt.y *= self.contentScaleFactor;
     struct ant_window_message msg;
-    msg.type = ANT_WINDOW_MOUSE_CLICK;
-    msg.u.mouse_click.type = 0;
-    msg.u.mouse_click.press = 0;
-    msg.u.mouse_click.x = pt.x;
-    msg.u.mouse_click.y = pt.y;
+    msg.type = ANT_WINDOW_TOUCH;
+    msg.u.touch.id = (uintptr_t)touch;
+    msg.u.touch.state = 3;
+    msg.u.touch.x = pt.x;
+    msg.u.touch.y = pt.y;
     push_message(&msg);
 }
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -115,10 +115,11 @@ static void push_message(struct ant_window_message* msg) {
     pt.x *= self.contentScaleFactor;
     pt.y *= self.contentScaleFactor;
     struct ant_window_message msg;
-    msg.type = ANT_WINDOW_MOUSE_MOVE;
-    msg.u.mouse_move.type = 0;
-    msg.u.mouse_move.x = pt.x;
-    msg.u.mouse_move.y = pt.y;
+    msg.type = ANT_WINDOW_TOUCH;
+    msg.u.touch.id = (uintptr_t)touch;
+    msg.u.touch.state = 2;
+    msg.u.touch.x = pt.x;
+    msg.u.touch.y = pt.y;
     push_message(&msg);
 }
 @end

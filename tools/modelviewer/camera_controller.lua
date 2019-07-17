@@ -77,24 +77,21 @@ function camera_controller_system:init()
 	end
 	
 	local message = {}
-	function message:mouse_click(_, press, x, y)
-		last_xy = point2d(x, y)
-		if press then
-			distance = math.sqrt(ms(target, camera.eyepos, "-1.T")[1])
-		end
-	end
-
-	function message:mouse_move(what, x, y)
+	function message:mouse(what, state, x, y)
 		local xy = point2d(x, y)
-		if last_xy then
-			if what == "RIGHT" then
-				local delta = convertxy(xy - last_xy) * move_speed
-				camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
-				ms(target, camera.eyepos, camera.viewdir, {distance}, '*+=')
-			elseif what == "LEFT" then
-				local delta = convertxy(xy - last_xy) * rotation_speed
-				rotate_round_point(camera, target, distance, delta.x, delta.y)
+		if state == "MOVE" then
+			if last_xy then
+				if what == "RIGHT" then
+					local delta = convertxy(xy - last_xy) * move_speed
+					camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
+					ms(target, camera.eyepos, camera.viewdir, {distance}, '*+=')
+				elseif what == "LEFT" then
+					local delta = convertxy(xy - last_xy) * rotation_speed
+					rotate_round_point(camera, target, distance, delta.x, delta.y)
+				end
 			end
+		elseif state == "DOWN" then
+			distance = math.sqrt(ms(target, camera.eyepos, "-1.T")[1])
 		end
 		last_xy = xy
 	end

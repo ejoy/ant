@@ -64,24 +64,25 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return 0;
 	case WM_MOUSEMOVE:
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		msg.type = ANT_WINDOW_MOUSE_MOVE;
-		get_xy(lParam, &msg.u.mouse_move.x, &msg.u.mouse_move.y);
+		msg.type = ANT_WINDOW_MOUSE;
+		msg.u.mouse.state = 2;
+		get_xy(lParam, &msg.u.mouse.x, &msg.u.mouse.y);
 		if ((wParam & (MK_LBUTTON | MK_RBUTTON | MK_RBUTTON)) == 0) {
-			msg.u.mouse_move.type = 0;
+			msg.u.mouse.type = 0;
 			cb->message(cb->ud, &msg);
 		}
 		else {
 
 			if (wParam & MK_LBUTTON) {
-				msg.u.mouse_move.type = 1;
+				msg.u.mouse.type = 1;
 				cb->message(cb->ud, &msg);
 			}
 			if (wParam & MK_RBUTTON) {
-				msg.u.mouse_move.type = 2;
+				msg.u.mouse.type = 2;
 				cb->message(cb->ud, &msg);
 			}
 			if (wParam & MK_MBUTTON) {
-				msg.u.mouse_move.type = 3;
+				msg.u.mouse.type = 3;
 				cb->message(cb->ud, &msg);
 			}
 		}
@@ -96,28 +97,28 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_LBUTTONDOWN:
 	case WM_LBUTTONUP:
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		msg.type = ANT_WINDOW_MOUSE_CLICK;
-		msg.u.mouse_click.type = 1;
-		msg.u.mouse_click.press = (message == WM_LBUTTONDOWN) ? 1 : 0;
-		get_xy(lParam, &msg.u.mouse_click.x, &msg.u.mouse_click.y);
+		msg.type = ANT_WINDOW_MOUSE;
+		msg.u.mouse.type = 1;
+		msg.u.mouse.state = (message == WM_LBUTTONDOWN) ? 1 : 3;
+		get_xy(lParam, &msg.u.mouse.x, &msg.u.mouse.y);
 		cb->message(cb->ud, &msg);
 		break;
 	case WM_RBUTTONDOWN:
 	case WM_RBUTTONUP:
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		msg.type = ANT_WINDOW_MOUSE_CLICK;
-		msg.u.mouse_click.type = 2;
-		msg.u.mouse_click.press = (message == WM_RBUTTONDOWN) ? 1 : 0;
-		get_xy(lParam, &msg.u.mouse_click.x, &msg.u.mouse_click.y);
+		msg.type = ANT_WINDOW_MOUSE;
+		msg.u.mouse.type = 2;
+		msg.u.mouse.state = (message == WM_RBUTTONDOWN) ? 1 : 3;
+		get_xy(lParam, &msg.u.mouse.x, &msg.u.mouse.y);
 		cb->message(cb->ud, &msg);
 		break;
 	case WM_MBUTTONDOWN:
 	case WM_MBUTTONUP:
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		msg.type = ANT_WINDOW_MOUSE_CLICK;
-		msg.u.mouse_click.type = 3;
-		msg.u.mouse_click.press = (message == WM_MBUTTONDOWN) ? 1 : 0;
-		get_xy(lParam, &msg.u.mouse_click.x, &msg.u.mouse_click.y);
+		msg.type = ANT_WINDOW_MOUSE;
+		msg.u.mouse.type = 3;
+		msg.u.mouse.state = (message == WM_MBUTTONDOWN) ? 1 : 3;
+		get_xy(lParam, &msg.u.mouse.x, &msg.u.mouse.y);
 		cb->message(cb->ud, &msg);
 		break;
 	case WM_KEYDOWN:

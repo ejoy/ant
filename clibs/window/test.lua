@@ -28,16 +28,12 @@ function callback.error(err)
 	print(err)
 end
 
-function callback.mouse_move(x,y)
-	print("mouse_move", x, y)
-end
-
 function callback.mouse_wheel(delta, x,y)
 	print("mouse_wheel", x, y, delta)
 end
 
-function callback.mouse_click(what, press, x, y)
-	print("mouse_click", what, press, x, y)
+function callback.mouse(what, state, x, y)
+	print("mouse", what, state, x, y)
 end
 
 function callback.keyboard(key, press, state)

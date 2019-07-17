@@ -21,19 +21,12 @@ local debug_update = __ANT_RUNTIME__ and require 'runtime.debug'
 
 local iq = inputmgr.queue()
 
-local mouse_status = {
-	{},
-	{ LEFT = true },
-	{ RIGHT = true },
-	{ LEFT = true, RIGHT = true },
-	{ MIDDLE = true },
-	{ LEFT = true, MIDDLE = true },
-	{ RIGHT = true, MIDDLE = true },
-	{ LEFT = true, RIGHT = true, MIDDLE = true },
-}
-
 local mouse_what = {
 	'LEFT', 'RIGHT', 'MIDDLE'
+}
+
+local mouse_state = {
+	'DOWN', 'MOVE', 'UP'
 }
 
 local function what_state(state, bit)
@@ -107,13 +100,6 @@ function callback.error(err)
 	LOGERROR(err)
 end
 
-function callback.mouse_move(x, y, what)
-	imgui.mouse_move(x, y, what)
-	if not imguiIO.WantCaptureMouse then
-		iq:push("mouse_move", mouse_what[what] or 'UNKNOWN', x, y)
-	end
-end
-
 function callback.mouse_wheel(x, y, delta)
 	imgui.mouse_move(x, y, delta)
 	if not imguiIO.WantCaptureMouse then
@@ -121,10 +107,31 @@ function callback.mouse_wheel(x, y, delta)
 	end
 end
 
-function callback.mouse_click(x, y, what, press)
-	imgui.mouse_click(x, y, what, press)
+function callback.mouse(x, y, what, state)
+	imgui.mouse(x, y, what, state)
 	if not imguiIO.WantCaptureMouse then
-		iq:push("mouse_click", mouse_what[what] or 'UNKNOWN', press, x, y)
+		iq:push("mouse", mouse_what[what] or 'UNKNOWN', mouse_state[state] or 'UNKNOWN', x, y)
+	end
+end
+
+local touchid
+
+function callback.touch(x, y, id, state)
+	if state == 1 then
+		if touchid then
+			return
+		end
+		touchid = id
+		callback.mouse(x, y, 1, state)
+	elseif state == 2 then
+		if touchid == id then
+			callback.mouse(x, y, 1, state)
+		end
+	elseif state == 3 then
+		if touchid == id then
+			callback.mouse(x, y, 1, state)
+			touchid = nil
+		end
 	end
 end
 
