@@ -90,9 +90,13 @@ function gui_main.error(err)
     end
 end
 
-function gui_main.mouse_move(x,y)
-    imgui.mouse_move(x,y)
-    gui_input.mouse_move(x,y)
+function gui_main.mouse(x,y,what,state)
+    imgui.mouse(x,y,what,state)
+    if state == 2 then
+        gui_input.mouse_move(x,y)
+    else
+        gui_input.mouse_click(x,y,what,state==1)
+    end
 end
 
 function gui_main.mouse_wheel(x,y,delta)
@@ -101,11 +105,11 @@ function gui_main.mouse_wheel(x,y,delta)
 
 end
 
-function gui_main.mouse_click(x, y, what, pressed)
-    -- log("mouse_click",what,pressed)
-    imgui.mouse_click(x, y, what, pressed)
-    gui_input.mouse_click(x, y, what, pressed)
-end
+-- function gui_main.mouse_click(x, y, what, pressed)
+--     -- log("mouse_click",what,pressed)
+--     imgui.mouse_click(x, y, what, pressed)
+--     gui_input.mouse_click(x, y, what, pressed)
+-- end
 
 function gui_main.keyboard(key, press, state)
     imgui.key_state(key, press, state)
