@@ -79,8 +79,8 @@ function camera_controller_system:init()
 	local message = {}
 
 	function message:mouse(what, state, x, y)
-		local xy = point2d(x, y)
 		if state == "MOVE" then
+			local xy = point2d(x, y)
 			if last_xy then
 				if what == "RIGHT" then
 					local delta = convertxy(xy - last_xy) * move_speed
@@ -91,19 +91,19 @@ function camera_controller_system:init()
 					rotate_round_point(camera, target, distance, delta.x, delta.y)
 				end
 			end
+			last_xy = xy
 		elseif state == "DOWN" then
+			last_xy = point2d(x, y)
 			distance = math.sqrt(ms(target, camera.eyepos, "-1.T")[1])
 		end
-		last_xy = xy
 	end
 
 	local touchState = "NONE"
 	local touchFinger1
 	local touchFinger2
+	local touchf1 = {}
+	local touchf2 = {}
 	function message:touch(id, state, x, y)
-		if state ~= "MOVE" then
-			print(touchState, id, state, x, y)
-		end
 		if touchState == "NONE" then
 			if state == "DOWN" then
 				touchFinger1 = id
@@ -120,6 +120,8 @@ function camera_controller_system:init()
 				touchState = "NONE"
 				message:mouse("RIGHT", "UP", x, y)
 			else
+				touchf1.x = x
+				touchf1.y = y
 				message:mouse("RIGHT", "MOVE", x, y)
 			end
 		elseif touchState == "PANIC" then
@@ -127,15 +129,24 @@ function camera_controller_system:init()
 			elseif state == "UP" then
 				if touchFinger1 == id then
 					touchFinger1 = touchFinger2
+					touchf1.x = touchf2.x
+					touchf1.y = touchf2.y
 					touchFinger2 = nil
 					touchState = "PAN"
-					message:mouse("RIGHT", "DOWN", x, y)
+					message:mouse("RIGHT", "DOWN", touchf1.x, touchf1.y)
 				elseif touchFinger2 == id then
 					touchFinger2 = nil
 					touchState = "PAN"
-					message:mouse("RIGHT", "DOWN", x, y)
+					message:mouse("RIGHT", "DOWN", touchf1.x, touchf1.y)
 				end
 			else
+				if touchFinger1 == id then
+					touchf1.x = x
+					touchf1.y = y
+				elseif touchFinger2 == id then
+					touchf2.x = x
+					touchf2.y = y
+				end
 				-- TODO
 			end
 		end
