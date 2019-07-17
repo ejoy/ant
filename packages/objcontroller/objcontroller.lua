@@ -189,8 +189,8 @@ function objcontroller.init(msg)
 		mouse_click = function (_, what, press, x, y)
 			add_event {name = "mouse_click", what=what, value=1, press=press, x=x, y=y}
 		end,
-		mouse_move = function (_, x, y, state)
-			add_event {name = "mouse_move", value=1, x=x, y=y, state=state}
+		mouse_move = function (_, what, x, y)
+			add_event {name = "mouse_move", value=1, x=x, y=y, what=what}
 		end,
 		mouse_wheel = function (_, x, y, delta)
 			add_event {name = "mouse_wheel", value=1, x=x, y=y, delta=delta, press=delta ~= 0}

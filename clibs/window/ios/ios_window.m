@@ -116,7 +116,7 @@ static void push_message(struct ant_window_message* msg) {
     pt.y *= self.contentScaleFactor;
     struct ant_window_message msg;
     msg.type = ANT_WINDOW_MOUSE_MOVE;
-    msg.u.mouse_move.state = 1;
+    msg.u.mouse_move.type = 0;
     msg.u.mouse_move.x = pt.x;
     msg.u.mouse_move.y = pt.y;
     push_message(&msg);

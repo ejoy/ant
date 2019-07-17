@@ -422,9 +422,9 @@ lmouseClick(lua_State *L) {
 		(float)luaL_checknumber(L, 2)/io.DisplayFramebufferScale.y
 	);
 	switch (luaL_checkinteger(L, 3)) {
-	case 0: io.MouseDown[0] = lua_toboolean(L, 4); break;
-	case 1: io.MouseDown[1] = lua_toboolean(L, 4); break;
-	case 2: io.MouseDown[2] = lua_toboolean(L, 4); break;
+	case 1: io.MouseDown[0] = lua_toboolean(L, 4); break;
+	case 2: io.MouseDown[1] = lua_toboolean(L, 4); break;
+	case 3: io.MouseDown[2] = lua_toboolean(L, 4); break;
 	default: break;
 	}
 	return 0;

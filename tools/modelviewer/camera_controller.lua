@@ -84,14 +84,14 @@ function camera_controller_system:init()
 		end
 	end
 
-	function message:mouse_move(x, y, status)
+	function message:mouse_move(what, x, y)
 		local xy = point2d(x, y)
 		if last_xy then
-			if status.RIGHT then
+			if what == "RIGHT" then
 				local delta = convertxy(xy - last_xy) * move_speed
 				camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
 				ms(target, camera.eyepos, camera.viewdir, {distance}, '*+=')
-			elseif status.LEFT then
+			elseif what == "LEFT" then
 				local delta = convertxy(xy - last_xy) * rotation_speed
 				rotate_round_point(camera, target, distance, delta.x, delta.y)
 			end

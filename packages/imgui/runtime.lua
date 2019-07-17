@@ -32,7 +32,7 @@ local mouse_status = {
 	{ LEFT = true, RIGHT = true, MIDDLE = true },
 }
 
-local mouse_click_what = {
+local mouse_what = {
 	'LEFT', 'RIGHT', 'MIDDLE'
 }
 
@@ -107,10 +107,10 @@ function callback.error(err)
 	LOGERROR(err)
 end
 
-function callback.mouse_move(x, y, state)
-	imgui.mouse_move(x, y, state)
+function callback.mouse_move(x, y, what)
+	imgui.mouse_move(x, y, what)
 	if not imguiIO.WantCaptureMouse then
-		iq:push("mouse_move", x, y, mouse_status[(state & 7) + 1])
+		iq:push("mouse_move", mouse_what[what] or 'UNKNOWN', x, y)
 	end
 end
 
@@ -124,7 +124,7 @@ end
 function callback.mouse_click(x, y, what, press)
 	imgui.mouse_click(x, y, what, press)
 	if not imguiIO.WantCaptureMouse then
-		iq:push("mouse_click", mouse_click_what[what + 1] or 'UNKNOWN', press, x, y)
+		iq:push("mouse_click", mouse_what[what] or 'UNKNOWN', press, x, y)
 	end
 end
 

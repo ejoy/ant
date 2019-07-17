@@ -74,7 +74,7 @@ static void
 push_mouse_move_args(lua_State *L, struct ant_window_mouse_move *mouse) {
 	lua_pushinteger(L, mouse->x);
 	lua_pushinteger(L, mouse->y);
-	lua_pushinteger(L, mouse->state);
+	lua_pushinteger(L, mouse->type);
 }
 
 static void

@@ -62,13 +62,13 @@ struct ant_window_mouse_wheel {
 struct ant_window_mouse_move {
 	int x;
 	int y;
-	uint8_t state; // lbutton, rbutton, mbutton
+	uint8_t type; // 1: lbutton; 2: rbutton; 3: mbutton
 };
 
 struct ant_window_mouse_click {
 	int x;
 	int y;
-	uint8_t type;  // 0: lbutton; 1: rbutton up; 2 mbutton
+	uint8_t type;  // 1: lbutton; 2: rbutton; 3: mbutton
 	uint8_t press; // 0: up ; 1: down
 };
 
