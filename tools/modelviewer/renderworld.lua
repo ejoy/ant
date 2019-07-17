@@ -65,6 +65,17 @@ function model_review_system:init()
 		name 		= "door",
 	}
 
+	world:create_entity {
+		transform 	= mu.scale_mat(0.2),
+		rendermesh 	= {},
+		mesh 		= {ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh", asyn_load=true},
+		material 	= {{ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material", asyn_load=true}},
+		can_render 	= true,
+		main_view 	= true,
+		asyn_load	= "",
+		name 		= "door",
+	}
+
 	local singlecolor_material = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material"
 	local function create_material_item(filepath, color)
 		return {
