@@ -112,15 +112,13 @@ end
 
 --override if needed
 function GuiBase:load_setting_from_memory(seting_tbl)
-    self.set_setting = false
+    self.load_setting_from_memory = false
 end
 
 --override if needed
 function GuiBase:is_setting_dirty()
     return false
 end
-
-
 
 ----------------custom_setting----------------
 

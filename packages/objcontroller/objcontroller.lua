@@ -96,7 +96,7 @@ local function match_tigger_event(tigger, event)
 	if event.name ~= tigger.name then
 		return false
 	end
-
+	log.info_a(event,tigger)
 	if name == "mouse_click" then
 		return 	event.what == tigger.what and 
 				event.press == tigger.press

@@ -36,6 +36,7 @@ local function EndColunms()
         local new_offset = cursor.GetColumnOffset(2)
         cur_tbl.column2_cur_change = cur_tbl.offset_2 and (new_offset ~= cur_tbl.offset_2)
         cur_tbl.offset_2 = new_offset
+        cur_tbl.dirty = true
     end
     cursor.Columns(1)
     windows.PopStyleColor()
@@ -145,6 +146,29 @@ local function matrix(ui_cache,name,value)
     return change,value
 end
 
+local function entityid(ui_cache,name,value)
+    --todo:use button to jump
+    BeginColunms()
+    widget.Text(name)
+    cursor.NextColumn()
+    cursor.SetNextItemWidth(-1)
+    widget.Button(value)
+    if util.IsItemHovered() then
+        widget.SetTooltip("Jump to entity\nTo be implement...")
+    end
+    EndColunms()
+    return false,value
+end
+
+local function primtype(ui_cache,name,value)
+    BeginColunms()
+    widget.Text(name)
+    cursor.NextColumn()
+    widget.Text(dump_a({value}))
+    EndColunms()
+    return false,value
+end
+
 return {
     real = real,
     boolean = boolean,
@@ -154,6 +178,8 @@ return {
     uniformdata = vector,
     matrix = matrix,
     color = color,
+    entityid = entityid,
+    primtype = primtype,
     BeginProperty = BeginProperty,
     EndProperty = EndProperty,
 }

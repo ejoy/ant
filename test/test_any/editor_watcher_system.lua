@@ -9,9 +9,26 @@ ecs.tag "editor_watching"
 local editor_watcher_system = ecs.system "editor_watcher_system"
 
 local function send_hierarchy()
-    local result = {}
+    local temp = {}
     for _,eid in world:each("name") do
-        result[eid] = {name = world[eid].name,children = nil}
+        temp[eid] = {name = world[eid].name,children = nil}
+    end
+    local result = {}
+    for eid,node in pairs(temp) do
+        local e = world[eid]
+        local pid = e.parent
+        if not pid and e.transform then
+            pid = e.transform.parent
+        elseif not pid and e.hierarchy_transform then
+            pid = e.hierarchy_transform.parent
+        end
+        if pid then
+            local parent = temp[pid]
+            parent.children = parent.children or {}
+            parent.children[eid] = node
+        else
+            result[eid] = node
+        end
     end
     local hub = world.args.hub
     hub.publish(WatcherEvent.SEND_HIERARCHY,result)

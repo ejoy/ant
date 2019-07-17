@@ -128,6 +128,7 @@ local function create_scene_node_test()
         },
         material = computil.assign_material(materialpath),
         can_render = true,
+        can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -148,6 +149,7 @@ local function create_scene_node_test()
         },
         material = computil.assign_material(materialpath),
         can_render = true,
+        can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -168,6 +170,7 @@ local function create_scene_node_test()
         },
         material = computil.assign_material(materialpath),
         can_render = true,
+        can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -236,6 +239,7 @@ local function create_scene_node_test()
         },
         material = computil.assign_material(materialpath),
         can_render = true,
+        can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -255,6 +259,7 @@ local function create_scene_node_test()
         },
         material = computil.assign_material(materialpath),
         can_render = true,
+        can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
     }

@@ -6,5 +6,6 @@ local Evt ={
     ModifyComponent ="Imgui_ModifyComponent",
     ResponseWorldInfo ="Imgui_ResponseWorldInfo",
     RequestWorldInfo ="Imgui_RequestWorldInfo",
+    ScenePick = "Imgui_ScenePick"
 }
 return Evt

@@ -6,15 +6,18 @@ local flags         = imgui.flags
 local windows       = imgui.windows
 local util          = imgui.util
 local cursor        = imgui.cursor
-local GuiCanvas     = import_package "ant.imgui".editor.gui_canvas
+local GuiCanvas     = imguipkg.editor.gui_canvas
+local gui_util     = imguipkg.editor.gui_util
 local scene         = import_package "ant.scene".util
 local ru            = import_package "ant.render".util
+local scene_control = require "scene_control"
 
 local GuiScene = GuiCanvas.derive("GuiScene")
 GuiScene.GuiName = "GuiScene"
 
 function GuiScene:_init()
     GuiCanvas._init(self)
+    self.message_shown = true
 end
 
 function GuiScene:_get_editpath()
@@ -42,10 +45,27 @@ function GuiScene:get_mainmenu()
     return {{parent_path,self._scene_menu},}
 end
 
+function GuiScene:on_gui(delta)
+    if (not self.world) and (not self.message_shown) then
+        local box = self:_get_editpath()
+        local message_cb = function(result)
+            if result == 1 then
+                scene_control.test_new_world(box.text)
+            end
+        end
+        local arg = {
+            msg = string.format("Open default scene:%s",box.text),
+            close_cb = message_cb,
+        }
+        gui_util.message(arg)
+        self.message_shown = true
+    end
+    GuiCanvas.on_gui(self,delta)
+end
+
 function  GuiScene:_scene_menu()
     local box = self:_get_editpath()
     if  widget.Button("OpenScene") then
-        local scene_control = require "scene_control"
         log.info_a(box)
         dbgutil.try(function () scene_control.test_new_world(box.text) end)
     end

@@ -41,7 +41,9 @@ end
 --arg.title = "notice"
 --arg.show_btn1 = true
 --arg.btn1 = "confirm"
+--arg.id = arg.id or arg.msg
 function gui_util.notice(arg)
+    arg.id = arg.id or arg.msg
     if arg.show_btn1 == nil then  arg.show_btn1 = true end
     if arg.btn1 == nil then  arg.btn1 = "Confirm" end
     if arg.title == nil then  arg.title = "Notice" end
@@ -69,11 +71,13 @@ end
 --arg.close_cb = nil, function close_cb(1 or 2 or 0)
 --arg.btn1 = "Confirm"
 --arg.btn2 = "Cancel"
+--arg.id = arg.id or arg.msg
 function gui_util.message(arg)
+    arg.id = arg.id or arg.msg
     if arg.show_btn1 == nil then  arg.show_btn1 = true end
     if arg.show_btn2 == nil then  arg.show_btn2 = true end
-    if arg.btn1 == nil then  arg.btn1 = "Confirm" end
-    if arg.btn2 == nil then  arg.btn2 = "Cancel" end
+    if arg.btn1 == nil then  arg.btn1 = "Yes" end
+    if arg.btn2 == nil then  arg.btn2 = "No" end
     if arg.title == nil then  arg.title = "Message" end
     assert(arg.msg)
     arg.loop_func = function()
@@ -102,6 +106,7 @@ end
 
 
 gui_util.popup_idx = 0
+gui_util.popup_list = {}
 gui_util.popup_tbl = {}
 
 --arg.flags
@@ -112,19 +117,29 @@ function gui_util.popup(arg)
     local title = arg.title or "Popup"
     gui_util.popup_idx = gui_util.popup_idx + 1
     local titleid = string.format( "%s###Popup%d", title, gui_util.popup_idx)
+    local popup_list = gui_util.popup_list
     local popup_tbl = gui_util.popup_tbl
+    if popup_tbl[arg.id] then
+        log.trace("repeat message,ignoded")
+        return
+    end
     local pf = nil
     local first_time = true
     pf = function()
+        if first_time then
+            windows.OpenPopup(titleid)
+            first_time = false
+        end
         windows.PushStyleVar(enum.StyleVar.WindowPadding,16,16)
         if windows.BeginPopupModal(titleid,flags) then
             arg.loop_func()
             windows.EndPopup()
         elseif not first_time then
             --closed
-            for i,f in ipairs(popup_tbl) do
+            for i,f in ipairs(popup_list) do
                 if f == pf then
-                    table.remove(popup_tbl,i)
+                    table.remove(popup_list,i)
+                    popup_tbl[arg.id] = nil
                     break
                 end
             end
@@ -133,23 +148,20 @@ function gui_util.popup(arg)
             end
 
         end
-        if first_time then
-            windows.OpenPopup(titleid)
-        end
-        first_time = false
+        
         windows.PopStyleVar()
     end
-    table.insert(popup_tbl,pf)
-    
+    table.insert(popup_list,pf)
+    popup_tbl[arg.id] = true
 end
 
 function gui_util.loop_popup()
-    local popup_tbl = gui_util.popup_tbl
-    local f = popup_tbl[#popup_tbl]
+    local popup_list = gui_util.popup_list
+    local f = popup_list[#popup_list]
     if f then
         f()
     end
-    -- for i,f in ipairs(popup_tbl) do
+    -- for i,f in ipairs(popup_list) do
     --     f()
     -- end
 end

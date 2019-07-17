@@ -11,16 +11,34 @@ local editor_watcher_system = ecs.system "editor_watcher_system"
 
 
 local function send_hierarchy()
-    local result = {}
+    local temp = {}
     for _,eid in world:each("name") do
-        result[eid] = {name = world[eid].name,children = nil}
+        temp[eid] = {name = world[eid].name,children = nil,childnum=0}
+    end
+    local result = {}
+    for eid,node in pairs(temp) do
+        local e = world[eid]
+        local pid = e.parent
+        if not pid and e.transform then
+            pid = e.transform.parent
+        elseif not pid and e.hierarchy_transform then
+            pid = e.hierarchy_transform.parent
+        end
+        if pid then
+            local parent = temp[pid]
+            parent.children = parent.children or {}
+            parent.children[eid] = node
+            parent.childnum = parent.childnum + 1
+        else
+            result[eid] = node
+        end
     end
     local hub = world.args.hub
     hub.publish(WatcherEvent.HierarchyChange,result)
     return
 end
 
-local function start_watch_entitiy(eid)
+local function start_watch_entitiy(eid,is_pick)
     log.trace_a("start_watch_entitiy",eid)
     if eid then
         -- local camerautil = import_package "ant.render".camera
@@ -44,7 +62,11 @@ local function start_watch_entitiy(eid)
         setialize_result[eid] = serialize.entity2tbl(world,eid)
 
         -- log.info_a(setialize_result)
-        hub.publish(WatcherEvent.EntityChange,setialize_result)
+        if is_pick then
+            hub.publish(WatcherEvent.ScenePick,setialize_result)
+        else
+            hub.publish(WatcherEvent.EntityChange,setialize_result)
+        end
     end
 end
 
@@ -90,6 +112,18 @@ function editor_watcher_system:init()
     hub.subscribe(WatcherEvent.ModifyComponent,on_component_modified)
     -- hub.subscribe(WatcherEvent.RequestWorldInfo,publish_world_info)
     -- publish_world_info()
+end
+
+function editor_watcher_system:pickup()
+    local pickupentity = world:first_entity "pickup"
+    if pickupentity then
+        local pickupcomp = pickupentity.pickup
+        local eid = pickupcomp.pickup_cache.last_pick
+        if world[eid] then
+            start_watch_entitiy(eid,true)
+        end
+    end
+
 end
 
 function editor_watcher_system:after_update()

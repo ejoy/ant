@@ -10,16 +10,13 @@ local thread    = require "thread"
 local gui_mgr = {}
 local test = false
 
-local DefaultImguiIni = "editor.default.ini"
-local UserImguiIni = "editor.user.ini"
-
 local DefaultImguiSetting = "editor.default.setting"
 local UserImguiSetting = "editor.user.setting"
 local SettingIni = "SettingIni"
 local SettingGuiOpen = "SettingGuiOpen"
 local CreateDefaultSetting = function()
     return {
-        SettingGuiOpen = {}
+        SettingGuiOpen = {},
     }
 end
 
@@ -27,6 +24,11 @@ function gui_mgr.init()
     gui_mgr.gui_tbl = {}
     gui_mgr.mainmenu_list = {}
     gui_mgr.setting_tbl = CreateDefaultSetting()
+    gui_mgr.setting_status = {
+        try_count = 0,
+        can_save = nil, -- setting loaded successfully OR user confirm
+        max_try_count = 1,
+    }
     -- local menu_list = {
     --     {{"Views"},gui_mgr._update_mainmenu_view},
     -- }
@@ -41,13 +43,19 @@ end
 function gui_mgr.update(delta)
     --update main_menu_bar
     --update gui
+    gui_mgr.check_can_save()
+    local setting_can_save = gui_mgr.setting_status.can_save
     imgui.begin_frame(delta)
     gui_mgr._update_mainmenu()
     imgui.showDockSpace()
-    gui_mgr._update_window(delta)
+    if setting_can_save ~= nil then 
+        gui_mgr._update_window(delta)
+    end
     gui_util.loop_popup()
     imgui.end_frame()
-    gui_mgr.check_and_save_setting()
+    if setting_can_save then
+        gui_mgr.check_and_save_setting()
+    end
 end
 
 function gui_mgr._update_window(delta)
@@ -184,6 +192,7 @@ function gui_mgr.load_setting()
         local tbl = thread.unpack(packed_data) or CreateDefaultSetting()
         tbl[SettingGuiOpen] = tbl[SettingGuiOpen] or {}
         gui_mgr._load_setting_to_gui(tbl)
+        gui_mgr.setting_status.can_save = true
         log.trace("Load Imgui setting:",path)
     else
         gui_mgr.setting_tbl = CreateDefaultSetting()
@@ -193,6 +202,7 @@ function gui_mgr.load_setting()
 end
 
 function gui_mgr._load_setting_to_gui(tbl)
+    print("_load_setting_to_gui")
     gui_mgr.setting_tbl = tbl
     if tbl[SettingIni] then
         util.LoadIniSettings(tbl[SettingIni])
@@ -211,6 +221,22 @@ function gui_mgr._load_setting_to_gui(tbl)
                     ui_ins:on_close_click()
                 end
             end
+        end
+    end
+end
+
+function gui_mgr.check_can_save()
+    local setting_status = gui_mgr.setting_status
+    if setting_status.can_save == nil then
+        if setting_status.try_count >= setting_status.max_try_count then
+            setting_status.can_save = false
+            local arg = {
+                msg = "Fail to load gui setting,auto save layout is disabled."
+            }
+            gui_util.notice(arg)
+        else
+            setting_status.try_count = setting_status.try_count + 1
+            gui_mgr.load_setting()
         end
     end
 end

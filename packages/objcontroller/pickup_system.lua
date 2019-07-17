@@ -117,10 +117,17 @@ ecs.component "pickup_material"
 
 ecs.component_alias("pickup_viewtag", "boolean")
 
+--pick_ids:array of pick_eid
+--last_pick:last pick id when mult pick supported
+ecs.component "pickup_cache"
+	.last_pick "int" (-1)
+	.pick_ids "int[]"
+
 local pickupcomp = ecs.component "pickup"
 	.materials "pickup_material"
 	.blit_buffer "blit_buffer"
 	.blit_viewid "blit_viewid"
+	.pickup_cache "pickup_cache"
 
 function pickupcomp:init()
 	local materials = self.materials
@@ -188,7 +195,12 @@ local function add_pick_entity()
 					}
 				},
 			},
-			blit_viewid = viewidmgr.get("pickup_blit")
+			blit_viewid = viewidmgr.get("pickup_blit"),
+			pickup_cache = {
+				last_pick = -1,
+				pick_ids = {},
+			},
+
 		},
 		camera = {
 			type = "pickup",
@@ -282,12 +294,14 @@ local function print_raw_buffer(rawbuffer)
 	end
 end
 
-local function select_obj(blit_buffer, viewrect)
+local function select_obj(pickup_com,blit_buffer, viewrect)
 	local selecteid = which_entity_hitted(blit_buffer.raw_buffer.handle, viewrect)
 	if selecteid then
+		pickup_com.pickup_cache.last_pick = selecteid
+		pickup_com.pickup_cache.pick_ids = {selecteid}
 		local name = assert(world[selecteid]).name
 		print("pick entity id : ", selecteid, ", name : ", name)
-		world:update_func("pickup")(selecteid)
+		world:update_func("pickup")()
 	else
 		print("not found any eid")
 	end
@@ -310,7 +324,7 @@ function pickup_sys:update()
 		if nextstep == "blit" then
 			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, pickupentity.render_target.frame_buffer.render_buffers[1])
 		elseif nextstep	== "select_obj" then
-			select_obj(pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
+			select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
 			enable_pickup(false)
 		end
 

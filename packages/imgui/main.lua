@@ -4,7 +4,6 @@ local t = {
     gui_input = require "gui_input",
     gui_packages = require "gui_packages",
     gui_base = require "gui_base",
-    -- gui_logview = require "gui_logview",
     gui_main = require "gui_main",
     class = require "common.class",
     dbgutil = require "common.debugutil",
@@ -22,6 +21,7 @@ local t = {
         gui_scene_hierarchy_view = require "editor.gui_scene_hierarchy_view",
         gui_property_view = require "editor.gui_property_view",
         gui_component_style = require "editor.gui_component_style",
+        gui_util = require "editor.gui_util",
     },
 
 }

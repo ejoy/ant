@@ -125,8 +125,8 @@ end
 
 function GuiEntityWidget:render_base_component(parent_tbl,com_name,component_data,alias_name,path_tbl)
     local schema = self.schema
-    local com_schema = schema[com_name]
-    local typ = com_schema.type
+    -- local com_schema = schema[com_name]
+    -- local typ = com_schema.type
     local base_widget = factory[com_name]
     local value = component_data
     local ui_cache = parent_tbl.__ui_cache or {}
@@ -244,7 +244,9 @@ end
 function GuiEntityWidget:render_component(parent_tbl,com_name,component_data,alias_name,path_tbl)
     local schema = self.schema
     local com_schema = schema[com_name]
-    if not com_schema then
+    if is_direct_type(com_name) then
+        return self:render_base_component(parent_tbl,com_name,component_data,alias_name,path_tbl)
+    elseif not com_schema then
         widget.Text("not found component schema:"..com_name)
         return false
     elseif not com_schema.type then
@@ -253,8 +255,6 @@ function GuiEntityWidget:render_component(parent_tbl,com_name,component_data,ali
         return self:render_array_component(parent_tbl,com_name,component_data,alias_name,path_tbl)
     elseif com_schema.map then -- has type & map
         return self:render_map_component(component_data,sub_schema.type,sub_data,sub_schema.name,path_tbl)
-    elseif is_direct_type(com_name) then
-        return self:render_base_component(parent_tbl,com_name,component_data,alias_name,path_tbl)
     else -- has type & not array
         return self:render_alias_component(parent_tbl,com_name,component_data,alias_name,path_tbl)
     end
@@ -277,14 +277,13 @@ function GuiEntityWidget:_refresh_sorted_entity(entity)
     self._last_entity = entity
 end
 
-function GuiEntityWidget:update(eid,entity)
+function GuiEntityWidget:update(eid,entity,base_component_cache)
     local schema = self.schema
     entity.__entity_id = eid
     if self._last_entity ~= entity then
         self:_refresh_sorted_entity(entity)
     end
-    self.base_component_cache = self.base_component_cache or {}
-    factory.BeginProperty(self.base_component_cache)
+    factory.BeginProperty(base_component_cache)
     for i,data in ipairs(self._sorted_entity) do
         local com_name = data.com_name 
         local component_data = data.data

@@ -26,7 +26,10 @@ function GuiPropertyView:_init()
     self.debug_mode = false
     self.widget_entity:set_debug_mode(self.debug_mode)
     self.widget_entity:set_change_cb(self.on_component_value_change,self)
+    self._dirty_flag = false
+    self.base_component_cfg = {offset_2 = 200}
     ---
+    
     self:_init_subcribe()
 end
 
@@ -37,6 +40,7 @@ end
 -------hub begin
 function GuiPropertyView:_init_subcribe()
     hub.subscribe(Event.EntityChange,self._on_refresh_entity,self)
+    hub.subscribe(Event.ScenePick,self._on_refresh_entity,self)
     -- hub.subscribe(Event.ResponseWorldInfo,
     --             self.on_response_world_info,
     --             self)
@@ -97,11 +101,37 @@ function GuiPropertyView:on_update()
 
         local eid,entity = next(self.entity_tbl)
         if eid then
-            self.widget_entity:update(eid,entity)
+            self.widget_entity:update(eid,entity,self.base_component_cfg)
+            if self.base_component_cfg.dirty then
+                self._dirty_flag = true
+            end
         end
     else
         widget.Text("Not Entity")
     end
 end
+
+----------------custom_setting----------------
+
+--override if needed
+--return tbl
+function GuiPropertyView:save_setting_to_memory(clear_dirty_flag)
+    if clear_dirty_flag then
+        self._dirty_flag = false
+    end
+    return {
+    }
+end
+
+--override if needed
+function GuiPropertyView:load_setting_from_memory(seting_tbl)
+end
+
+--override if needed
+function GuiPropertyView:is_setting_dirty()
+    return self._dirty_flag
+end
+
+----------------custom_setting----------------
 
 return GuiPropertyView
