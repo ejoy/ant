@@ -244,9 +244,11 @@ local function fileserver_update(obj)
 		--LOG("New", obj._peer, obj._ref)
 	elseif obj._status == "CLOSED" then
 		LOG("LOGOFF", obj._peer)
-		clients_remove(obj._id)
-		logger_finish(obj._id)
-		obj._id = nil
+		if obj._id then
+			clients_remove(obj._id)
+			logger_finish(obj._id)
+			obj._id = nil
+		end
 		for fd, v in pairs(debug) do
 			if v.server == obj then
 				if v.client then
