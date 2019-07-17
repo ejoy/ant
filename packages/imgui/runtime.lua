@@ -118,20 +118,22 @@ local touchid
 
 function callback.touch(x, y, id, state)
 	if state == 1 then
-		if touchid then
-			return
+		if not touchid then
+			touchid = id
+			imgui.mouse(x, y, 1, state)
 		end
-		touchid = id
-		callback.mouse(x, y, 1, state)
 	elseif state == 2 then
 		if touchid == id then
-			callback.mouse(x, y, 1, state)
+			imgui.mouse(x, y, 1, state)
 		end
 	elseif state == 3 then
 		if touchid == id then
-			callback.mouse(x, y, 1, state)
+			imgui.mouse(x, y, 1, state)
 			touchid = nil
 		end
+	end
+	if not imguiIO.WantCaptureMouse then
+		iq:push("touch", id, mouse_state[state] or 'UNKNOWN', x, y)
 	end
 end
 

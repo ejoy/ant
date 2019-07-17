@@ -77,6 +77,7 @@ function camera_controller_system:init()
 	end
 	
 	local message = {}
+
 	function message:mouse(what, state, x, y)
 		local xy = point2d(x, y)
 		if state == "MOVE" then
@@ -96,7 +97,51 @@ function camera_controller_system:init()
 		last_xy = xy
 	end
 
-	function message:mouse_wheel(_, _, delta)		
+	local touchState = "NONE"
+	local touchFinger1
+	local touchFinger2
+	function message:touch(id, state, x, y)
+		if state ~= "MOVE" then
+			print(touchState, id, state, x, y)
+		end
+		if touchState == "NONE" then
+			if state == "DOWN" then
+				touchFinger1 = id
+				touchState = "PAN"
+				message:mouse("RIGHT", "DOWN", x, y)
+			end
+		elseif touchState == "PAN" then
+			if state == "DOWN" then
+				touchFinger2 = id
+				touchState = "PANIC"
+				message:mouse("RIGHT", "UP", x, y)
+			elseif state == "UP" then
+				touchFinger1 = nil
+				touchState = "NONE"
+				message:mouse("RIGHT", "UP", x, y)
+			else
+				message:mouse("RIGHT", "MOVE", x, y)
+			end
+		elseif touchState == "PANIC" then
+			if state == "DOWN" then
+			elseif state == "UP" then
+				if touchFinger1 == id then
+					touchFinger1 = touchFinger2
+					touchFinger2 = nil
+					touchState = "PAN"
+					message:mouse("RIGHT", "DOWN", x, y)
+				elseif touchFinger2 == id then
+					touchFinger2 = nil
+					touchState = "PAN"
+					message:mouse("RIGHT", "DOWN", x, y)
+				end
+			else
+				-- TODO
+			end
+		end
+	end
+
+	function message:mouse_wheel(_, _, delta)
 		camera_move(camera.viewdir, camera.eyepos, 0, 0, delta * wheel_speed)
 	end
 
