@@ -22,6 +22,7 @@ local t = {
         gui_property_view = require "editor.gui_property_view",
         gui_component_style = require "editor.gui_component_style",
         gui_util = require "editor.gui_util",
+        gui_script_runner = require "editor.gui_script_runner",
     },
 
 }

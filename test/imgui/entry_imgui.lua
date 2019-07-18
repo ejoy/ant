@@ -4,6 +4,8 @@ local GuiSysInfo = import_package "ant.imgui".editor.gui_sysinfo
 local GuiSceneHierarchyView = import_package "ant.imgui".editor.gui_scene_hierarchy_view
 local GuiPropertyView = import_package "ant.imgui".editor.gui_property_view
 local GuiComponentStyle = import_package "ant.imgui".editor.gui_component_style
+local GuiComponentStyle = import_package "ant.imgui".editor.gui_component_style
+local GuiScriptRunner = import_package "ant.imgui".editor.gui_script_runner
 local gui_mgr = import_package "ant.imgui".gui_mgr
 local args = {
     sceen_width = 1024,
@@ -28,6 +30,9 @@ function main.init()
 
     local testgui = TestGuiBase.new(true)
     gui_mgr.register(TestGuiBase.GuiName,testgui)
+
+    gui_mgr.register(GuiScriptRunner.GuiName,GuiScriptRunner.new())
+
 end
 
 pm = require "antpm"

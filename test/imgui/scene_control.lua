@@ -30,6 +30,7 @@ function scene_control.test_new_world(raw_path)
         -- "obj_transform_system",
         "build_hierarchy_system",
         "editor_watcher_system",
+        "editor_tool_system",
         -- "editor_system"
     }
 
