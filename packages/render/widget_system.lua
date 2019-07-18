@@ -72,10 +72,10 @@ local function add_aabb_bounding(dmesh, aabb)
 end
 
 local function update_buffers(dmesh)
-	local m = dmesh.mesh
-	local meshscene = m.assetinfo.handle
+	local rm = dmesh.rendermesh
+	local meshscene = rm.handle
 	local group = meshscene.scenes[1][1][1]
-	local buffers = m.buffers
+	local buffers = rm.buffers
 
 	if buffers then
 		local vb, ib = buffers.vb, buffers.ib
