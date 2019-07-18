@@ -24,10 +24,8 @@ camera_controller_system.singleton "control_state"
 camera_controller_system.depend "message_system"
 
 local function camera_move(forward_axis, position, dx, dy, dz)
-	--ms(position, rotation, "b", position, "S", {dx}, "*+S", {dy}, "*+S", {dz}, "*+=")	
 	local right_axis, up_axis = ms:base_axes(forward_axis)
-	ms(position, 
-		position, 
+	ms(position, position, 
 			right_axis, {dx}, "*+", 
 			up_axis, {dy}, "*+", 
 			forward_axis, {dz}, "*+=")
@@ -84,7 +82,10 @@ function camera_controller_system:init()
 			if last_xy then
 				if what == "RIGHT" then
 					local delta = convertxy(xy - last_xy) * move_speed
-					camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
+					local dx, dy = -delta.x, delta.y
+					local right_axis, up_axis = ms:base_axes(camera.viewdir)
+					local t = ms(target, 'T');t[1] = 0;t[3] = 0
+					ms(camera.eyepos, camera.eyepos, right_axis, {dx}, "*+", up_axis, {dy}, "*+", t, "-=")
 					ms(target, camera.eyepos, camera.viewdir, {distance}, '*+=')
 				elseif what == "LEFT" then
 					local delta = convertxy(xy - last_xy) * rotation_speed
@@ -153,7 +154,8 @@ function camera_controller_system:init()
 	end
 
 	function message:mouse_wheel(_, _, delta)
-		camera_move(camera.viewdir, camera.eyepos, 0, 0, delta * wheel_speed)
+		local dz = delta * wheel_speed
+		ms(camera.eyepos, camera.eyepos, camera.viewdir, {dz}, "*+=")
 	end
 
 	function message:keyboard(code, press)
