@@ -5,6 +5,7 @@ ecs.import "ant.event"
 
 local render = import_package "ant.render"
 local ru = render.util
+local computil = render.components
 
 local filterutil = require "filter.util"
 
@@ -101,9 +102,7 @@ end
 
 local function filter_mesh(eid, meshcomp, worldmat, materialcontent, filter)
 	local meshscene = meshcomp.handle
-
-	local lodlevel = meshcomp.lodidx or 1
-	local sceneidx = meshscene.scenelods and (meshscene.scenelods[lodlevel]) or meshscene.sceneidx
+	local sceneidx = computil.scene_index(meshcomp)
 
 	local scenes = meshscene.scenes[sceneidx]
 	local submesh_refs = meshcomp.submesh_refs

@@ -3,6 +3,8 @@ local util = {}; util.__index = util
 local math = import_package "ant.math"
 local ms = math.stack
 
+local mathbaselib = require "math3d.baselib"
+
 local cu = require "components.util"
 
 local function deep_copy(t)
@@ -22,64 +24,43 @@ function util.focus_point(world, pt)
 	ms(camera.viewdir, pt, camera.eyepos, "-n=")
 end
 
-local function mesh_bounding_sphere(entity)
-	local mesh = entity.mesh		
-	if mesh then
-		local assetinfo = mesh.assetinfo
-		if assetinfo then
-			local handle = assetinfo.handle
-			local groups = handle.groups
-			if #groups > 0 then
-				local bounding = groups[1].bounding
-				if bounding then
-					
-					--[[
-						here is what this code do:
-							1. get world mat in this entity ==> worldmat 
-							2. transform aabb ==> aabb
-							3. get aabb center and square aabb radius ==> center, radius
-							4. calculate current camera position to aabb center direction ==> dir
-							5. calculate new camera position ==> 
-									newposition = center - radius * dir, here, minus dir is for negative the direction
-							6. change camera direction as new direction
-				
-					]]
-					local math3dlib = require "math3d.baselib"					
-					local aabb = math3dlib.transform_aabb(ms, ms:srtmat(entity.transform), bounding.aabb)
-					local center = ms(aabb.max, aabb.min, "-", {0.5}, "*P")
-				
-					--[[
-						init stack size: 2
-						1. '-': dir = max - min	-> [dir]		1(stack size)
-						2. '1': duplicate dir	-> [dir, dir]	2
-						3. '.': dot(dir, dir)	-> [dot result]	1
-						4. 'P': pop result
-					]]
-					local radius = ms:length(aabb.max, aabb.min)
-
-					return {center = center, radius = radius}
-				end
-			end
-
-		end
-	end
-
-	return {center = entity.transform.t, radius = 5}
+local function move_camera_along_viewdir(camera, delta)
+	local pos, dir = camera.eyepos, camera.viewdir
+	return ms(pos, pos, dir, {delta}, "*-=")
 end
 
-function util.focus_selected_obj(world, eid)
-	local entity = assert(world[eid])
+local function calc_camera_distance(camera, bounding, delta)
+	local maxcount = 10
+	local count = 0
+	while true do
+		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
+		local frustum = mathbaselib.new_frustum(ms, vp)
 
-	if not cu.is_entity_visible(assert(entity)) then
-		return 
+		count = count + 1
+		local result = frustum:intersect(bounding)
+		if result == "inside" or count >= maxcount then
+			break
+		end
+
+		move_camera_along_viewdir(camera, delta * count)
 	end
+end
 
-	local sphere = mesh_bounding_sphere(entity)
+function util.focus_obj(world, eid)
+	local entity = assert(world[eid])
+	local bounding = cu.entity_bounding(entity)
+	local sphere = bounding:get "sphere"
 
-	local camera_entity = world:first_entity("main_queue")
-	local camera = camera_entity.camera
-	ms(camera.viewdir, sphere.center, camera.eyepos, "-n=")
-	ms(camera.eyepos, sphere.center, camera.viewdir, {sphere.radius}, "*-=")
+	local mq = world:first_entity("main_queue")
+	local camera = mq.camera
+	local center = ms({sphere[1], sphere[2], sphere[3], 1.0}, "P")
+	ms(camera.viewdir, center, camera.eyepos, "-n=")
+
+	ms(camera.eyepos, center, "=")
+	move_camera_along_viewdir(camera, sphere[4] * 2)
+	calc_camera_distance(camera, bounding, 1)
+
+	--print(ms(camera.eyepos, "V"))
 	return true
 end
 

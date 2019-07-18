@@ -29,5 +29,5 @@ function simplescene:init()
 		main_view = true,
 	}
 
-	camerautil.focus_selected_obj(world, bunnyeid)
+	camerautil.focus_obj(world, bunnyeid)
 end

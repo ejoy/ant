@@ -69,16 +69,23 @@ struct AABB {
 	}
 
 	void Transform(const glm::mat4x4 &trans) {
-		glm::vec3 tmin = trans * glm::vec4(min, 0);
-		glm::vec3 tmax = trans * glm::vec4(max, 0);
+		const glm::vec3 pos = trans[3];
 
-		min.x = glm::min(tmin.x, tmax.x);
-		min.y = glm::min(tmin.y, tmax.y);
-		min.z = glm::min(tmin.z, tmax.z);
+		const glm::vec3 right = trans[0];
+		const glm::vec3 up = trans[1];
+		const glm::vec3 forward = trans[2];
 
-		max.x = glm::max(tmin.x, tmax.x);
-		max.y = glm::max(tmin.y, tmax.y);
-		max.z = glm::max(tmin.z, tmax.z);
+		const glm::vec3 xa = right * min.x;
+		const glm::vec3 xb = right * max.x;
+
+		const glm::vec3 ya = up * min.y;
+		const glm::vec3 yb = up * max.y;
+
+		const glm::vec3 za = forward * min.z;
+		const glm::vec3 zb = forward * max.z;
+
+		min = glm::min(xa, xb) + glm::min(ya, yb) + glm::min(za, zb) + pos;
+		max = glm::max(xa, xb) + glm::max(ya, yb) + glm::max(za, zb) + pos;
 	}
 
 
@@ -145,6 +152,10 @@ struct OBB {
 		m[2][2] = scale[2];
 	}
 
+	void Transform(const glm::mat4x4 &trans){
+		m *= trans;
+	}
+
 	void Reset() {
 		m = glm::mat4x4(1.f);
 	}
@@ -172,10 +183,26 @@ struct Bounding {
 		obb.Init(aabb);
 	}
 
-	void Merge(const Bounding &other) {
-		aabb.Merge(other.aabb);
+	void AppendPoint(const glm::vec3 &pt){
+		aabb.Append(pt);
 		sphere.Init(aabb);
 		obb.Init(aabb);
+	}
+
+	void Merge(const AABB &otheraabb){
+		aabb.Merge(otheraabb);
+		sphere.Init(aabb);
+		obb.Init(aabb);
+	}
+
+	void Merge(const Bounding &other) {
+		Merge(other.aabb);
+	}
+
+	void Transform(const glm::mat4x4 &trans){
+		aabb.Transform(trans);
+		sphere.Init(aabb);
+		obb.Transform(trans);
 	}
 
 	void Reset() {
