@@ -30,6 +30,7 @@ function GuiSysInfo:_init()
     self.povit = {0,0}
     self.status_open = true
     self._setting_dirty = false
+    self._dirty_flag = false
 end
 
 function GuiSysInfo:before_open()
@@ -83,7 +84,11 @@ function GuiSysInfo:on_update(deltatime)
                 corner = i
             end
         end
-        self.corner = corner
+        if corner ~= self.corner then
+            self.corner = corner
+            self._dirty_flag = true
+        end
+
         if widget.MenuItem("close") then
             self:on_close_click()
         end
@@ -147,6 +152,9 @@ function GuiSysInfo:load_setting_from_memory(setting)
     if setting.status_open ~= nil then
         self.status_open = setting.status_open
     end
+    if setting.corner ~= nil then
+        self.corner = setting.corner
+    end
 end
 
 function GuiSysInfo:save_setting_to_memory(clear_dirty_flag)
@@ -154,8 +162,10 @@ function GuiSysInfo:save_setting_to_memory(clear_dirty_flag)
         self._setting_dirty = false
     end
     return {
-        status_open = self.status_open
+        status_open = self.status_open,
+        corner = self.corner,
     }
 end
+
 
 return GuiSysInfo

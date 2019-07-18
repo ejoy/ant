@@ -155,7 +155,10 @@ function GuiEntityWidget:render_base_component(parent_tbl,com_name,component_dat
     end
     if self.debug_mode then
         if util.IsItemHovered() then
-            widget.SetTooltip(dump_a({path_tbl},"\t"))
+            local tips = string.format("data:\n%s\npath:\n%s",
+                dump_a({component_data},"\t"),
+                dump_a({path_tbl},"\t"))
+            widget.SetTooltip(tips)
         end
     end
     return true
