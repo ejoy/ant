@@ -13,7 +13,7 @@ local gui_input = require "gui_input"
 local GuiCanvas = GuiBase.derive("GuiCanvas")
 local scene         = import_package "ant.scene".util
 local ru = import_package "ant.render".util
-local map_imgui   = import_package "ant.editor".map_imgui
+--local map_imgui   = import_package "ant.editor".map_imgui
 
 local dbgutil = require "common.debugutil"
 
@@ -42,16 +42,13 @@ function GuiCanvas:set_fps(fps)
     self.frame_time = 1/fps
 end
 
-function GuiCanvas:bind_world( world,world_update,msgqueue )
+function GuiCanvas:bind_world( world, world_update)
     self.world = world
     self.world_update = world_update
-    local rect = {x=0,y=0,w=self.rect.w,h=self.rect.h}
-    map_imgui(msgqueue,self)
 
     self.next_frame_time = 0
     self.time_count = 0
     self.last_update = nil
-
 end
 
 function GuiCanvas:on_close_click()
@@ -105,7 +102,25 @@ function GuiCanvas:_update_world(delta)
 
 end
 
+local mouse_what = {
+	'LEFT', 'RIGHT', 'MIDDLE'
+}
 
+local mouse_state = {
+	'DOWN', 'MOVE', 'UP'
+}
+
+local function which_mouse_state(call, pressed)
+    if call.mouse_move then
+        return "MOVE"
+    end
+
+    if call.mouse_click then
+        return pressed and "DOWN" or "UP"
+    end
+
+    return "UNKNOWN"
+end
 
 function GuiCanvas:on_dispatch_msg()
     --todo:split mouse and keyboard``
@@ -122,23 +137,34 @@ function GuiCanvas:on_dispatch_msg()
     local focus = windows.IsWindowFocused(focus_flag)
     local hovered = windows.IsWindowHovered(focus_flag)
 
-    if focus and self.button_cb then
-        for i = 0,4 do
-            if called[i] then
-                self.button_cb(self,i,in_mouse[i],rx,ry,in_key,in_mouse)
+    local msgqueue = self.world.mq
+
+    if focus then
+        for what = 0,4 do
+            if called[what] then
+                msgqueue:push("mouse", 
+                    mouse_what[what] or 'UNKNOWN', 
+                    which_mouse_state(called, in_mouse[what]), rx, ry)
             end
         end
     end
-    if focus and self.motion_cb and called.mouse_move then
-        self.motion_cb(self,rx,ry,in_key,in_mouse)
-    end
+    -- if focus and self.motion_cb and called.mouse_move then
+    --     self.motion_cb(self,rx,ry,in_key,in_mouse)
+    -- end
     if hovered and self.wheel_cb and called.mouse_wheel then
         self.wheel_cb(self,in_mouse.scroll,rx,ry)
     end
     local keypress_cb = self.keypress_cb
     if focus and keypress_cb and #key_down > 0 then
         for _,record in ipairs(key_down) do
-            keypress_cb(self,record[1],record[2],in_key,in_mouse)
+            
+            status['CTRL'] = what_state(state, 0x01)
+            status['ALT'] = what_state(state, 0x02)
+            status['SHIFT'] = what_state(state, 0x04)
+            status['SYS'] = what_state(state, 0x08)
+            msgqueue:push("keyboard", keymap[key], press, status)
+
+            --keypress_cb(self,record[1],record[2],in_key,in_mouse)
         end
     end
     local mouse_pressed =  gui_input.is_mouse_pressed(gui_input.MouseLeft)
