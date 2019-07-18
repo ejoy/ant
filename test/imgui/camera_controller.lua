@@ -49,42 +49,41 @@ local function add_msg_callback(self)
     local message = {}
 
     local last_xy
-    function message:mouse_click(btn, p, x, y, status)
+    local mouse_state = {}
+    function message:mouse(what, state, x, y)
         last_xy = point2d(x, y)
-    end
-
-    function message:mouse_move(x, y, status)
-        local camera_entity = get_camera()
-        if not camera_entity then
-            return
-        end
-        local camera = camera_entity.camera
-        local xy = point2d(x, y)
-        if last_xy then
-            if status.RIGHT then
-                
-                local speed = move_speed * 0.1
-                local delta = (xy - last_xy) * speed
-                camera_move(camera.viewdir, target, -delta.x, delta.y, 0)
-                camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
-            elseif status.LEFT then
-                local speed = move_speed * 0.1
-                local delta = (xy - last_xy) * speed
-                local distance = math.sqrt(ms(target, camera.eyepos, "-1.T")[1])
-                camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
-                ms(camera.viewdir, target, camera.eyepos, "-n=")
-                ms(camera.eyepos, target, {-distance}, camera.viewdir, "*+=")
+        if state == "MOVE" then
+            local mq = world:first_entity "main_queue"
+            if not mq then
+                return
+            end
+            local camera = mq.camera
+            local xy = point2d(x, y)
+            if last_xy then
+                if what == "RIGHT" then
+                    local speed = move_speed * 0.1
+                    local delta = (xy - last_xy) * speed
+                    camera_move(camera.viewdir, target, -delta.x, delta.y, 0)
+                    camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
+                elseif what == "LEFT" then
+                    local speed = move_speed * 0.1
+                    local delta = (xy - last_xy) * speed
+                    local distance = math.sqrt(ms(target, camera.eyepos, "-1.T")[1])
+                    camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
+                    ms(camera.viewdir, target, camera.eyepos, "-n=")
+                    ms(camera.eyepos, target, {-distance}, camera.viewdir, "*+=")
+                end
             end
         end
-        last_xy = xy
+        
     end
 
     function message:mouse_wheel(x, y, delta)       
-        local camera_entity = get_camera()
-        if not camera_entity then
+        local mq = world:first_entity "main_queue"
+        if not mq then
             return
         end
-        local camera = camera_entity.camera
+        local camera = mq.camera
         camera_move(camera.viewdir, camera.eyepos, 0, 0, delta * wheel_speed)
     end
 

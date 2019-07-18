@@ -124,6 +124,10 @@ end
 
 function GuiCanvas:on_dispatch_msg()
     --todo:split mouse and keyboard``
+    if self.world == nil then
+        return
+    end
+
     local gui_input = gui_input
     local in_mouse = gui_input.mouse
     local in_key = gui_input.key_state
@@ -137,7 +141,7 @@ function GuiCanvas:on_dispatch_msg()
     local focus = windows.IsWindowFocused(focus_flag)
     local hovered = windows.IsWindowHovered(focus_flag)
 
-    local msgqueue = self.world.mq
+    local msgqueue = self.world.args.mq
 
     if focus then
         for what = 0,4 do
@@ -148,29 +152,26 @@ function GuiCanvas:on_dispatch_msg()
             end
         end
     end
-    -- if focus and self.motion_cb and called.mouse_move then
-    --     self.motion_cb(self,rx,ry,in_key,in_mouse)
-    -- end
-    if hovered and self.wheel_cb and called.mouse_wheel then
-        self.wheel_cb(self,in_mouse.scroll,rx,ry)
+    
+    if hovered and called.mouse_wheel then
+        msgqueue:push("mouse_wheel", rx, ry, in_mouse.scroll)
     end
-    local keypress_cb = self.keypress_cb
-    if focus and keypress_cb and #key_down > 0 then
+    
+    if focus and #key_down > 0 then
+        local status = {
+            CTRL = in_key.ctrl,
+            ALT = in_key.alt,
+            SHIFT = in_key.shift,
+            SYS = in_key.sys,
+        }
         for _,record in ipairs(key_down) do
-            
-            status['CTRL'] = what_state(state, 0x01)
-            status['ALT'] = what_state(state, 0x02)
-            status['SHIFT'] = what_state(state, 0x04)
-            status['SYS'] = what_state(state, 0x08)
-            msgqueue:push("keyboard", keymap[key], press, status)
-
-            --keypress_cb(self,record[1],record[2],in_key,in_mouse)
+            msgqueue:push("keyboard", record[1], record[2], status)
         end
     end
     local mouse_pressed =  gui_input.is_mouse_pressed(gui_input.MouseLeft)
-    if not mouse_pressed and self.resize_cb and self.vp_dirty then
+    if not mouse_pressed and self.vp_dirty then
         self.vp_dirty = false
-        self.resize_cb(self,rect.w,rect.h)
+        msgqueue:push("resize", rect.w, rect.h)
     end
 end
 function GuiCanvas:after_update()

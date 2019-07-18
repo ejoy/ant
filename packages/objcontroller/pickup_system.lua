@@ -263,8 +263,8 @@ function pickup_sys:init()
 	--local pickup_eid = add_pick_entity()
 
 	self.message.observers:add({
-		mouse_click = function (_, b, p, x, y)
-			if b == "LEFT" and p then
+		mouse = function (_, what, state, x, y)
+			if what == "LEFT" and state == "DOWN" then
 				local eid = enable_pickup(true)
 				local entity = world[eid]
 				update_viewinfo(entity, point2d(x, y))
