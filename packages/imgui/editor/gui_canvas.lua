@@ -141,7 +141,7 @@ function GuiCanvas:on_dispatch_msg()
             keypress_cb(self,record[1],record[2],in_key,in_mouse)
         end
     end
-    local mouse_pressed =  gui_input.is_mouse_pressed(0)
+    local mouse_pressed =  gui_input.is_mouse_pressed(gui_input.MouseLeft)
     if not mouse_pressed and self.resize_cb and self.vp_dirty then
         self.vp_dirty = false
         self.resize_cb(self,rect.w,rect.h)

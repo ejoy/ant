@@ -17,7 +17,7 @@ GuiScene.GuiName = "GuiScene"
 
 function GuiScene:_init()
     GuiCanvas._init(self)
-    self.message_shown = true
+    self.message_shown = false
 end
 
 function GuiScene:_get_editpath()

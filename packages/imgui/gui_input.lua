@@ -8,6 +8,12 @@ gui_input.screen_size = {0,0}
 local called = {}
 gui_input.called = called
 
+gui_input.MouseLeft = 1
+gui_input.MouseRight = 2
+gui_input.MouseMiddle = 3
+gui_input.MouseButton4 = 4
+gui_input.MouseButton5 = 5
+
 
 function gui_input.mouse_move(x,y)
     local gm = gui_input.mouse
@@ -70,7 +76,7 @@ function gui_input.get_mouse_delta()
 end
 
 -----------------------------------------------------
---0:Left 1:Right 2:Middle 3:Button4 4:Button5
+--gui_input.MouseXXX
 function gui_input.is_mouse_pressed(what)
     return gui_input.mouse[what]
 end
