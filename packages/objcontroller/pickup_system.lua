@@ -77,9 +77,10 @@ local function replace_material(result, material)
 	if result then
 		for _, item in ipairs(result) do
 			item.material = material.materialinfo
-			item.properties.uniforms = {
-				u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
-			}
+			if item.properties.uniforms == nil then
+				item.properties.uniforms = {}
+			end
+			item.properties.uniforms.u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
 		end
 	end
 end
