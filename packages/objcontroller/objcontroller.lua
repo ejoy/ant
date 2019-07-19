@@ -57,81 +57,41 @@ end
 local tiggers = binding.new()
 local constants = binding.new()
 
-local function is_state_match(state1, state2)
-	local function key_names(state)
-		local t = {}
-		for k, v in pairs(state) do
-			if v then
-				t[#t+1] = k
-			end
-		end
-		return t
-	end
-
-	local keys1 = key_names(state1)
-	local keys2 = key_names(state2)
-	if #keys1 ~= #keys2 then
-		return false
-	end
-
-	for idx, k1 in ipairs(keys1) do
-		local k2 = keys2[idx]
-		if k1 ~= k2 then
-			return false
-		end
-
-		local v1 = state1[k1]
-		local v2 = state2[k2]
-		if v1 ~= v2 then
-			return false
-		end
-	end
-
-	return true
-end
-
--- local function match_tigger_event(tigger, event)	
--- 	local name = event.name
--- 	if event.name ~= tigger.name then
--- 		return false
--- 	end
--- 	log.info_a(event,tigger)
--- 	if name == "mouse_click" then
--- 		return 	event.what == tigger.what and 
--- 				event.press == tigger.press
--- 	elseif name == "mouse_move" then
--- 		return is_state_match(event.state, tigger.state)
--- 	elseif name == "mouse_wheel" then
--- 		return true
--- 	elseif name == "keyboard" then		
--- 		return event.key == tigger.key and 
--- 				event.press == tigger.press and
--- 				is_state_match(event.state, tigger.state)
--- 	end
--- 	error "not implement"
--- end
-
 local event_check_offsets = {
 	mouse = 2,
-	keyboard = 0,
+	keyboard = 0
 }
 
-local function match_event(event, const)
+local function match_event(event, record)
 	local name = event.name
-	if const.name ~= name then
+	if record.name ~= name then
 		return false
 	end
 
-	local num_arg = #const
+	local num_arg = #record
 	if num_arg > 0 then
-		local checkidx = assert(event_check_offsets[name])
-		for i=1, #const do
-			if const[i] ~= event[checkidx + i] then
-				return false
+		
+		local function is_record_match_event(e, r, t)
+			local offset = assert(event_check_offsets[t])
+			for i=1, #r do
+				if r[i] ~= e[offset + i] then
+					return false
+				end
+			end
+			return true
+		end
+
+		if is_record_match_event(event, record, name) then
+			if record.mouse == nil then
+				return true
+			end
+
+			if event.mouse then
+				return is_record_match_event(event.mouse, record.mouse, "mouse")
 			end
 		end
 	end
-	return true
+	return false
 end
 
 local function add_event(event)
@@ -242,12 +202,7 @@ end
 -- end
 
 function objcontroller.update()
-	--local queue = check_queue(msgqueue)
-
 	for _, event in ipairs(msgqueue) do
-		if event[1] == "RIGHT" and event[2] == "MOVE" then
-			print(1)
-		end
 		update_tigger_event(event, tiggers)
 		update_constant_event(event, constants)
 	end

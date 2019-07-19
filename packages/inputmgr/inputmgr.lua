@@ -64,4 +64,10 @@ function im.translate_key_state(state)
 	}
 end
 
+local keymap = require "keymap"
+
+function im.translate_key(key)
+	return keymap[key & 0x0FFFFFFF]
+end
+
 return im

@@ -143,7 +143,7 @@ function GuiCanvas:on_dispatch_msg()
     
     if focus and #key_down > 0 then
         for _,record in ipairs(key_down) do
-            msgqueue:push("keyboard", record[1], record[2], in_key)
+            msgqueue:push("keyboard", inputmgr.translate_key(record[1]), record[2], in_key)
         end
     end
     local mouse_pressed =  gui_input.is_mouse_pressed(gui_input.MouseLeft)

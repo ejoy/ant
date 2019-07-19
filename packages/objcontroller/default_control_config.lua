@@ -3,7 +3,7 @@
 	keyboard order must: key, press, keystate
 ]]
 
-local keyvalid_mousestate = {"RIGHT", "DOWN"}
+local keyvalid_mousestate = {"RIGHT",}
 
 return {
 	tigger = {
