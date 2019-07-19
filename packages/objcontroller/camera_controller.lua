@@ -24,7 +24,7 @@ function camera_controller_system:init()
 
 	local hit = {}
 	objctrller.bind_tigger("hitstart", function (event)
-		hit[1], hit[2] = event.x, event.y		
+		hit[1], hit[2] = event[1], event[2]
 		hit.enable = true
 	end)
 	objctrller.bind_tigger("hitend", function()
@@ -61,10 +61,10 @@ function camera_controller_system:init()
 	end)	
 
 	objctrller.bind_tigger("rotate", function (event)
-		if not hit[1] then
-			return 0
+		if not hit.enable then
+			return 
 		end
-		local dx, dy = event.x - hit[1], event.y - hit[2]
+		local dx, dy = event[1] - hit[1], event[2] - hit[2]
 		local function pixel2radian(pixel)
 			return pixel * 0.004
 		end
@@ -82,6 +82,6 @@ function camera_controller_system:init()
 		if q then
 			ms(cameracomp.viewdir, q, cameracomp.viewdir, "*n=")
 		end
-		hit[1], hit[2] = event.x, event.y
+		hit[1], hit[2] = event[1], event[2]
 	end)	
 end

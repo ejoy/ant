@@ -8,6 +8,8 @@ local enum      = imgui.enum
 local IO      = imgui.IO
 local hub       = import_package "ant.editor".hub
 
+local inputmgr = import_package "ant.inputmgr"
+
 local GuiBase = require "gui_base"
 local gui_input = require "gui_input"
 local GuiCanvas = GuiBase.derive("GuiCanvas")
@@ -102,26 +104,6 @@ function GuiCanvas:_update_world(delta)
 
 end
 
-local mouse_btn_names = {
-	'LEFT', 'RIGHT', 'MIDDLE'
-}
-
-local mouse_state_names = {
-	'DOWN', 'MOVE', 'UP'
-}
-
-local function which_mouse_state(call, pressed)
-    if call.mouse_move then
-        return "MOVE"
-    end
-
-    if call.mouse_click then
-        return pressed and "DOWN" or "UP"
-    end
-
-    return "UNKNOWN"
-end
-
 function GuiCanvas:on_dispatch_msg()
     --todo:split mouse and keyboard``
     if self.world == nil then
@@ -144,12 +126,13 @@ function GuiCanvas:on_dispatch_msg()
     local msgqueue = self.world.args.mq
 
     if focus then
-        for what=1, #mouse_btn_names do
+        local num_mouse_btn = 3
+        for what=1, num_mouse_btn do
             if called[what] then
                 local state = in_mouse[what]
-                msgqueue:push("mouse", 
-                mouse_btn_names[what],
-                mouse_state_names[state] or "UNKNOWN", rx, ry)
+                msgqueue:push("mouse", rx, ry,
+                inputmgr.translate_mouse_button(what),
+                inputmgr.translate_mouse_state(state))
             end
         end
     end

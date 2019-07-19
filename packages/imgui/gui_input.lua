@@ -1,9 +1,10 @@
+local inputmgr = import_package "ant.inputmgr"
+
 local gui_input = {}
 gui_input.key_state = {}
 
-local mouse_last = {x=0,y=0} --gui_input.mouse.last
-local mouse_delta = {x=0, y=0} --gui_input.mouse.delta
-
+local mouse_last = {x=0,y=0}
+local mouse_delta = {x=0, y=0}
 local mouse_state = {x=0,y=0, delta=mouse_delta, last=nil}
 gui_input.mouse_state = mouse_state
 
@@ -40,38 +41,14 @@ function gui_input.mouse(x, y, what, state)
     called[what] = true
 end
 
--- function gui_input.mouse_move(x,y)
---     local gm = gui_input.mouse
---     gm.x = x
---     gm.y = y
---     -- log(x,mouse_last.x)
---     mouse_delta.x = x-mouse_last.x
---     mouse_delta.y = y-mouse_last.y
---     called.mouse_move = true
--- end
-
-
 function gui_input.mouse_wheel(x,y,delta)
     mouse_state.scroll = delta
     update_mouse_pos(x, y)
     called.mouse_wheel = true
 end
 
--- function gui_input.mouse_click(x, y, what, pressed)
---     local gm = gui_input.mouse
---     gm.x = x
---     gm.y = y
---     gm[what] = pressed
---     called[what] = true
---     called.mouse_click = true
--- end
-
 function gui_input.keyboard( key, press, state )
-    local gk = gui_input.key_state
-    gk.CTRL = (state & 0x1) ~= 0
-    gk.ALT = (state & 0x2) ~= 0
-    gk.SHIFT = (state & 0x4) ~= 0
-    gk.SYS = (state & 0x8) ~= 0
+    gui_input.key_state = inputmgr.translate_key_state(state)
     table.insert(gui_input.key_down,{key,press})
 end
 
@@ -83,10 +60,6 @@ function gui_input.clean()
 
     key_down = {}
     gui_input.key_down = key_down
-    -- mouse_last.x = gui_input.mouse.x
-    -- mouse_last.y = gui_input.mouse.y
-    -- mouse_delta.x = 0
-    -- mouse_delta.y = 0
 end
 
 function gui_input.size(w,h,t)

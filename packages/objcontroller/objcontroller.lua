@@ -111,15 +111,24 @@ end
 -- 	error "not implement"
 -- end
 
+local event_check_offsets = {
+	mouse = 2,
+	keyboard = 0,
+}
+
 local function match_event(event, const)
 	local name = event.name
 	if const.name ~= name then
 		return false
 	end
 
-	for i=1, #const do
-		if const[i] ~= event[i] then
-			return false
+	local num_arg = #const
+	if num_arg > 0 then
+		local checkidx = assert(event_check_offsets[name])
+		for i=1, #const do
+			if const[i] ~= event[checkidx + i] then
+				return false
+			end
 		end
 	end
 	return true
@@ -138,7 +147,7 @@ function objcontroller.init(msg)
 	msg.observers:add  {
 		mouse = function (_, ...)
 			mousestate = {...}
-			print(select(1, ...), select(2, ...))
+			--print(select(1, ...), select(2, ...))
 			add_event {name = "mouse", ...}
 		end,
 		mouse_wheel = function (_, ...)
@@ -236,6 +245,9 @@ function objcontroller.update()
 	--local queue = check_queue(msgqueue)
 
 	for _, event in ipairs(msgqueue) do
+		if event[1] == "RIGHT" and event[2] == "MOVE" then
+			print(1)
+		end
 		update_tigger_event(event, tiggers)
 		update_constant_event(event, constants)
 	end
