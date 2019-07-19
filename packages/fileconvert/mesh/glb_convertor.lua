@@ -2,7 +2,7 @@ local glTF = import_package "ant.glTF"
 local glbloader = glTF.glb
 
 local gltf_converter = require "meshconverter.gltf"
-local filtermesh = require "filter_mesh"
+local filtermesh = require "mesh.filter"
 
 local accessor_types = {
 	SCALAR = 0,

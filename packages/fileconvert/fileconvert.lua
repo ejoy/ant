@@ -1,9 +1,9 @@
 local lfs = require "filesystem.local"
 
 local converter_names = {
-	shader = "compileshadersource",
-	mesh = "convertmesh",
-	texture = "",
+	shader = "shader.compile",
+	mesh = "mesh.convert",
+	texture = "texture.convert",
 }
 
 local function rawtable(filepath)
