@@ -1,9 +1,14 @@
 local gui_input = {}
 gui_input.key_state = {}
-gui_input.mouse = {x=0,y=0,delta = {x=0,y=0},last={x=0,y=0}}
-local last_mouse = gui_input.mouse.last
-local mouse_delta = gui_input.mouse.delta
-gui_input.key_down = {}
+
+local mouse_last = {x=0,y=0} --gui_input.mouse.last
+local mouse_delta = {x=0, y=0} --gui_input.mouse.delta
+
+local mouse_state = {x=0,y=0, delta=mouse_delta, last=nil}
+gui_input.mouse_state = mouse_state
+
+local key_down = {}
+gui_input.key_down = key_down
 gui_input.screen_size = {0,0}
 local called = {}
 gui_input.called = called
@@ -14,41 +19,59 @@ gui_input.MouseMiddle = 3
 gui_input.MouseButton4 = 4
 gui_input.MouseButton5 = 5
 
+local function update_mouse_pos(x, y)
+    if mouse_state.last then
+        mouse_last.x, mouse_last.y = mouse_state.x, mouse_state.y
+        mouse_delta.x = x-mouse_last.x
+        mouse_delta.y = y-mouse_last.y
+    else
+        mouse_last.x, mouse_last.y = x, y
+        mouse_state.last = mouse_last
 
-function gui_input.mouse_move(x,y)
-    local gm = gui_input.mouse
-    gm.x = x
-    gm.y = y
-    -- log(x,last_mouse.x)
-    mouse_delta.x = x-last_mouse.x
-    mouse_delta.y = y-last_mouse.y
-    called.mouse_move = true
+        mouse_delta.x, mouse_delta.y = 0, 0
+    end
+    
+    mouse_state.x, mouse_state.y = x, y
 end
+
+function gui_input.mouse(x, y, what, state)
+    update_mouse_pos(x, y)
+    mouse_state[what] = state
+    called[what] = true
+end
+
+-- function gui_input.mouse_move(x,y)
+--     local gm = gui_input.mouse
+--     gm.x = x
+--     gm.y = y
+--     -- log(x,mouse_last.x)
+--     mouse_delta.x = x-mouse_last.x
+--     mouse_delta.y = y-mouse_last.y
+--     called.mouse_move = true
+-- end
 
 
 function gui_input.mouse_wheel(x,y,delta)
-    local gm = gui_input.mouse
-    gm.scroll = delta
-    gm.x = x
-    gm.y = y
+    mouse_state.scroll = delta
+    update_mouse_pos(x, y)
     called.mouse_wheel = true
 end
 
-function gui_input.mouse_click(x, y, what, pressed)
-    local gm = gui_input.mouse
-    gm.x = x
-    gm.y = y
-    gm[what] = pressed
-    called[what] = true
-    called.mouse_click = true
-end
+-- function gui_input.mouse_click(x, y, what, pressed)
+--     local gm = gui_input.mouse
+--     gm.x = x
+--     gm.y = y
+--     gm[what] = pressed
+--     called[what] = true
+--     called.mouse_click = true
+-- end
 
 function gui_input.keyboard( key, press, state )
     local gk = gui_input.key_state
-    gk.ctrl = (state & 0x1) ~= 0
-    gk.alt = (state & 0x2) ~= 0
-    gk.shift = (state & 0x4) ~= 0
-    gk.sys = (state & 0x8) ~= 0
+    gk.CTRL = (state & 0x1) ~= 0
+    gk.ALT = (state & 0x2) ~= 0
+    gk.SHIFT = (state & 0x4) ~= 0
+    gk.SYS = (state & 0x8) ~= 0
     table.insert(gui_input.key_down,{key,press})
 end
 
@@ -57,12 +80,13 @@ end
 function gui_input.clean()
     called = {}
     gui_input.called = called
-    gui_input.key_down = {}
-    last_mouse.x = gui_input.mouse.x
-    last_mouse.y = gui_input.mouse.y
-    mouse_delta.x = 0
-    mouse_delta.y = 0
 
+    key_down = {}
+    gui_input.key_down = key_down
+    -- mouse_last.x = gui_input.mouse.x
+    -- mouse_last.y = gui_input.mouse.y
+    -- mouse_delta.x = 0
+    -- mouse_delta.y = 0
 end
 
 function gui_input.size(w,h,t)
@@ -78,7 +102,7 @@ end
 -----------------------------------------------------
 --gui_input.MouseXXX
 function gui_input.is_mouse_pressed(what)
-    return gui_input.mouse[what]
+    return gui_input.mouse_state[what]
 end
 -----------------------------------------------------
 

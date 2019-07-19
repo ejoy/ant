@@ -128,9 +128,9 @@ function GuiSysInfo:update_fps(deltatime)
         widget.Text( string.format("frame time:%.3g",self.ft) )
         widget.Text( memory_info() )
             
-        local mouse = gui_input.mouse
-        local delta = gui_input.mouse.delta
-        widget.Text( string.format("mouse pos:%d/%d delta:%d/%d",mouse.x,mouse.y,delta.x,delta.y) )
+        local mouse_state = gui_input.mouse_state
+        local delta = mouse_state.delta
+        widget.Text( string.format("mouse pos:%d/%d delta:%d/%d",mouse_state.x,mouse_state.y,delta.x,delta.y) )
         widget.TreePop()
     else
         self:set_status_open(false)

@@ -47,7 +47,7 @@ function binding:find(e, matchop)
 		local keys = binding.keys
 		for j=1, #keys do
 			local key = keys[j]
-			if matchop(key, e) then
+			if matchop(e, key) then
 				return binding
 			end
 		end
@@ -138,10 +138,11 @@ function objcontroller.init(msg)
 	msg.observers:add  {
 		mouse = function (_, ...)
 			mousestate = {...}
+			print(select(1, ...), select(2, ...))
 			add_event {name = "mouse", ...}
 		end,
 		mouse_wheel = function (_, ...)
-			local delta = select(3, ...)
+			local delta = select(1, ...)
 			add_event {name = "mouse_wheel", press=delta~=0, value=1, ...}
 		end,
 		keyboard = function (_, ...)
@@ -199,7 +200,7 @@ local function update_constant_event(event, constants)
 			end
 		end
 
-		local e, key = find_event(event, c)	
+		local e, key = find_event(event, c)
 		local cb = c.cb
 		if cb then
 			local value = e and e.value * key.scale or 0

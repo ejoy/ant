@@ -102,11 +102,11 @@ function GuiCanvas:_update_world(delta)
 
 end
 
-local mouse_what = {
+local mouse_btn_names = {
 	'LEFT', 'RIGHT', 'MIDDLE'
 }
 
-local mouse_state = {
+local mouse_state_names = {
 	'DOWN', 'MOVE', 'UP'
 }
 
@@ -129,12 +129,12 @@ function GuiCanvas:on_dispatch_msg()
     end
 
     local gui_input = gui_input
-    local in_mouse = gui_input.mouse
-    local in_key = gui_input.key_state
-    local key_down = gui_input.key_down
-    local called = gui_input.called
-    local rect = self.rect
-    local rx,ry = 0,0
+    local in_mouse  = gui_input.mouse_state
+    local in_key    = gui_input.key_state
+    local key_down  = gui_input.key_down
+    local called    = gui_input.called
+    local rect      = self.rect
+    local rx, ry = 0, 0
     if in_mouse.x then
         rx,ry = in_mouse.x - rect.x,in_mouse.y - rect.y
     end
@@ -144,11 +144,12 @@ function GuiCanvas:on_dispatch_msg()
     local msgqueue = self.world.args.mq
 
     if focus then
-        for what = 0,4 do
+        for what=1, #mouse_btn_names do
             if called[what] then
+                local state = in_mouse[what]
                 msgqueue:push("mouse", 
-                    mouse_what[what] or 'UNKNOWN', 
-                    which_mouse_state(called, in_mouse[what]), rx, ry)
+                mouse_btn_names[what],
+                mouse_state_names[state] or "UNKNOWN", rx, ry)
             end
         end
     end
@@ -158,14 +159,8 @@ function GuiCanvas:on_dispatch_msg()
     end
     
     if focus and #key_down > 0 then
-        local status = {
-            CTRL = in_key.ctrl,
-            ALT = in_key.alt,
-            SHIFT = in_key.shift,
-            SYS = in_key.sys,
-        }
         for _,record in ipairs(key_down) do
-            msgqueue:push("keyboard", record[1], record[2], status)
+            msgqueue:push("keyboard", record[1], record[2], in_key)
         end
     end
     local mouse_pressed =  gui_input.is_mouse_pressed(gui_input.MouseLeft)
