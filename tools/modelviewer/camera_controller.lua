@@ -100,24 +100,36 @@ function camera_controller_system:init()
 	end
 
 	local touchState = "NONE"
-	local touchFinger1
-	local touchFinger2
 	local touchf1 = {}
 	local touchf2 = {}
+	local touchAngle
+	local touchDistance
+
+	local function calcAngleAndDistance()
+		local dx = touchf1.x - touchf2.x
+		local dy = touchf1.y - touchf2.y
+		return math.atan(dy, dx), math.sqrt(dx*dx+dy*dy)
+	end
+
 	function message:touch(id, state, x, y)
 		if touchState == "NONE" then
 			if state == "DOWN" then
-				touchFinger1 = id
+				touchf1.id = id
+				touchf1.x = x
+				touchf1.y = y
 				touchState = "PAN"
 				message:mouse("RIGHT", "DOWN", x, y)
 			end
 		elseif touchState == "PAN" then
 			if state == "DOWN" then
-				touchFinger2 = id
+				touchf2.id = id
+				touchf2.x = x
+				touchf2.y = y
+				touchAngle, touchDistance = calcAngleAndDistance()
 				touchState = "PANIC"
 				message:mouse("RIGHT", "UP", x, y)
 			elseif state == "UP" then
-				touchFinger1 = nil
+				touchf1.id = nil
 				touchState = "NONE"
 				message:mouse("RIGHT", "UP", x, y)
 			else
@@ -128,27 +140,32 @@ function camera_controller_system:init()
 		elseif touchState == "PANIC" then
 			if state == "DOWN" then
 			elseif state == "UP" then
-				if touchFinger1 == id then
-					touchFinger1 = touchFinger2
+				if touchf1.id == id then
+					touchf1.id = touchf2.id
 					touchf1.x = touchf2.x
 					touchf1.y = touchf2.y
-					touchFinger2 = nil
+					touchf2.id = nil
 					touchState = "PAN"
 					message:mouse("RIGHT", "DOWN", touchf1.x, touchf1.y)
-				elseif touchFinger2 == id then
-					touchFinger2 = nil
+				elseif touchf2.id == id then
+					touchf2.id = nil
 					touchState = "PAN"
 					message:mouse("RIGHT", "DOWN", touchf1.x, touchf1.y)
 				end
 			else
-				if touchFinger1 == id then
+				if touchf1.id == id then
 					touchf1.x = x
 					touchf1.y = y
-				elseif touchFinger2 == id then
+				elseif touchf2.id == id then
 					touchf2.x = x
 					touchf2.y = y
 				end
-				-- TODO
+				local angle, distance = calcAngleAndDistance()
+				local scale = distance / touchDistance
+				local rotation = angle - touchAngle
+				touchAngle, touchDistance = angle, distance
+
+				message:mouse_wheel(nil, nil, (scale-1)*20)
 			end
 		end
 	end
