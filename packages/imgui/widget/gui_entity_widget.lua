@@ -272,7 +272,7 @@ function GuiEntityWidget:_refresh_sorted_entity(entity)
     local sort_cfg = self.com_setting:get_sort_cfg()
     local sorted_entity = {}
     for i,com_name in ipairs(sort_cfg) do
-        if entity[com_name] then
+        if entity[com_name] ~= nil then
             table.insert(sorted_entity,{com_name=com_name,data = entity[com_name]})
         end
     end

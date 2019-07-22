@@ -99,7 +99,7 @@ function m.set(w, id, path, key, value)
     if name == 'entity' then
         if key then
             local c = typeinfo[key]
-            w:add_component_child(component,key,key, value)
+            w:add_component(path,key, value)
         else
             assert(id == nil)
             local eid = tonumber(path)
