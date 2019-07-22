@@ -15,7 +15,7 @@ local scene         = import_package "ant.scene".util
 local ru = import_package "ant.render".util
 local map_imgui   = import_package "ant.editor".map_imgui
 
-local dbgutil = require "common.debugutil"
+local dbgutil = import_package "ant.editor".debugutil
 
 local DEFAULT_FPS = 30
 
