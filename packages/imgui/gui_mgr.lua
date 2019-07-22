@@ -266,10 +266,19 @@ function gui_mgr.check_and_save_setting()
     end
     if need_save then
         -- log.trace("Setting changed,save to path:",UserImguiSetting)
-        local file = gui_util.open_current_pkg_path(UserImguiSetting,"wb")
-        local data = thread.pack(setting_tbl)
-        file:write(data)
-        file:close()
+        local file,file_path = gui_util.open_current_pkg_path(UserImguiSetting,"wb")
+        if file then
+            local data = thread.pack(setting_tbl)
+            file:write(data)
+            file:close()
+            if gui_mgr.last_time_save_failed then
+                log.trace("Save successfully!")
+                gui_mgr.last_time_save_failed = false
+            end
+        else
+            log.error("Can't Open file:",file_path)
+            gui_mgr.last_time_save_failed = true
+        end
     end
 end
 
