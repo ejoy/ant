@@ -31,6 +31,7 @@ function scene_control.test_new_world(raw_path)
         "build_hierarchy_system",
         "editor_watcher_system",
         "editor_tool_system",
+        "visible_system"
         -- "editor_system"
     }
 

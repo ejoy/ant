@@ -5,6 +5,7 @@ local widget    = imgui.widget
 local flags     = imgui.flags
 local windows   = imgui.windows
 local util      = imgui.util
+local dbgutil = import_package "ant.editor".debugutil
 
 
 GuiBase.GuiName = "GuiBase"
@@ -52,6 +53,11 @@ function GuiBase:on_close_click()
     self._is_opened = false
 end
 
+--return ret,status
+function GuiBase:try(fun,...)
+    return dbgutil.try(fun,...)
+end
+
 --call by gui_mgr each frame
 function GuiBase:on_gui(delta)
     if self._is_opened then
@@ -68,9 +74,8 @@ function GuiBase:on_gui(delta)
         if self.before_update then self:before_update() end
         local fold, opening = windows.Begin(self.title_id, self.win_flags or nil)
         if self._err_count < 60 and  fold then
-            local ok , err = xpcall(self.on_update, debug.traceback,self,delta)
+            local _ , ok = self:try(self.on_update,self,delta)
             if not ok then
-                log.error(err)
                 self._err_count = self._err_count + 1
             else
                 self._err_count = 0

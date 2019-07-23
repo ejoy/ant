@@ -1,4 +1,5 @@
 #include <lua.hpp>
+#include "lua_compat.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -129,7 +130,7 @@ lclient_getstackv(rlua_State *L) {
 static int
 lclient_copytable(rlua_State *L) {
 	lua_State *hL = get_host(L);
-	lua_Integer maxn = rluaL_optinteger(L, 2, 0xffff);
+	rlua_Integer maxn = rluaL_optinteger(L, 2, 0xffff);
 	rlua_settop(L, 1);
 	if (lua_checkstack(hL, 4) == 0) {
 		return rluaL_error(L, "stack overflow");
@@ -225,11 +226,15 @@ lclient_type(rlua_State *L) {
 		}
 		break;
 	case LUA_TNUMBER:
+#if LUA_VERSION_NUM >= 503
 		if (lua_isinteger(hL, -1)) {
 			rlua_pushstring(L, "integer");
 		} else {
 			rlua_pushstring(L, "float");
 		}
+#else
+		rlua_pushstring(L, "float");
+#endif
 		break;
 	case LUA_TUSERDATA:
 		rlua_pushstring(L, "full");
@@ -425,7 +430,7 @@ lclient_reffunc(rlua_State *L) {
 	size_t len = 0;
 	const char* func = rluaL_checklstring(L, 1, &len);
 	lua_State* hL = get_host(L);
-	if (lua_rawgetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH_FUNC) == LUA_TNIL) {
+	if (lua::rawgetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH_FUNC) == LUA_TNIL) {
 		lua_pop(hL, 1);
 		lua_newtable(hL);
 		lua_pushvalue(hL, -1);
@@ -444,11 +449,15 @@ lclient_reffunc(rlua_State *L) {
 
 static int
 getreffunc(lua_State *hL, lua_Integer func) {
-	if (lua_rawgetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH_FUNC) != LUA_TTABLE) {
+	if (lua::rawgetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH_FUNC) != LUA_TTABLE) {
 		lua_pop(hL, 1);
 		return 0;
 	}
-	if (lua_rawgeti(hL, -1, func) != LUA_TFUNCTION) {
+#if LUA_VERSION_NUM >= 503
+	if (lua::rawgeti(hL, -1, func) != LUA_TFUNCTION) {
+#else
+	if (lua::rawgeti(hL, -1, (int)func) != LUA_TFUNCTION) {
+#endif
 		lua_pop(hL, 2);
 		return 0;
 	}
@@ -458,17 +467,17 @@ getreffunc(lua_State *hL, lua_Integer func) {
 
 static int
 lclient_eval(rlua_State *L) {
-	lua_Integer func = rluaL_checkinteger(L, 1);
+	rlua_Integer func = rluaL_checkinteger(L, 1);
 	const char* source = rluaL_checkstring(L, 2);
-	lua_Integer level = rluaL_checkinteger(L, 3);
+	rlua_Integer level = rluaL_checkinteger(L, 3);
 	lua_State* hL = get_host(L);
-	if (!getreffunc(hL, func)) {
+	if (!getreffunc(hL, (lua_Integer)func)) {
 		rlua_pushboolean(L, 0);
 		rlua_pushstring(L, "invalid func");
 		return 2;
 	}
 	lua_pushstring(hL, source);
-	lua_pushinteger(hL, level);
+	lua_pushinteger(hL, (lua_Integer)level);
 	if (lua_pcall(hL, 2, 1, 0)) {
 		rlua_pushboolean(L, 0);
 		rlua_pushstring(L, lua_tostring(hL, -1));
@@ -520,7 +529,7 @@ lclient_evalref(rlua_State *L) {
 static int
 addwatch(lua_State *hL, int idx) {
 	lua_pushvalue(hL, idx);
-	if (lua_rawgetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH) == LUA_TNIL) {
+	if (lua::rawgetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH) == LUA_TNIL) {
 		lua_pop(hL, 1);
 		lua_newtable(hL);
 		lua_pushvalue(hL, -1);
@@ -550,17 +559,17 @@ storewatch(rlua_State *L, lua_State *hL, int idx) {
 
 static int
 lclient_evalwatch(rlua_State *L) {
-	lua_Integer func = rluaL_checkinteger(L, 1);
+	rlua_Integer func = rluaL_checkinteger(L, 1);
 	const char* source = rluaL_checkstring(L, 2);
-	lua_Integer level = rluaL_checkinteger(L, 3);
+	rlua_Integer level = rluaL_checkinteger(L, 3);
 	lua_State* hL = get_host(L);
-	if (!getreffunc(hL, func)) {
+	if (!getreffunc(hL, (lua_Integer)func)) {
 		rlua_pushboolean(L, 0);
 		rlua_pushstring(L, "invalid func");
 		return 2;
 	}
 	lua_pushstring(hL, source);
-	lua_pushinteger(hL, level);
+	lua_pushinteger(hL, (lua_Integer)level);
 	int n = lua_gettop(hL) - 3;
 	if (lua_pcall(hL, 2, LUA_MULTRET, 0)) {
 		rlua_pushboolean(L, 0);
@@ -583,9 +592,9 @@ lclient_evalwatch(rlua_State *L) {
 
 static int
 lclient_unwatch(rlua_State *L) {
-	lua_Integer ref = rluaL_checkinteger(L, 1);
+	rlua_Integer ref = rluaL_checkinteger(L, 1);
 	lua_State* hL = get_host(L);
-	if (lua_rawgetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH) == LUA_TNIL) {
+	if (lua::rawgetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH) == LUA_TNIL) {
 		return 0;
 	}
 	luaL_unref(hL, -1, (int)ref);
@@ -647,27 +656,6 @@ RLUA_FUNC
 int luaopen_remotedebug_visitor(rlua_State *L) {
 	get_host(L);
 	return init_visitor(L);
-}
-
-lua_State *
-getthread(rlua_State *L) {
-	rluaL_checktype(L, 1, LUA_TUSERDATA);
-	lua_State *hL = get_host(L);
-	rlua_pushvalue(L, 1);
-	int ct = eval_value(L, hL);
-	rlua_pop(L, 1);
-	if (ct == LUA_TNONE) {
-		rluaL_error(L, "Invalid thread");
-		return NULL;
-	}
-	if (ct != LUA_TTHREAD) {
-		lua_pop(hL, 1);
-		rluaL_error(L, "Need coroutine, Is %s", lua_typename(hL, ct));
-		return NULL;
-	}
-	lua_State *co = lua_tothread(hL, -1);
-	lua_pop(hL, 1);
-	return co;
 }
 
 int

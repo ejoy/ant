@@ -35,3 +35,4 @@
 /assets/shaders/ogles
 editor.user.setting
 editor.user.ini
+script_runner.user.lua

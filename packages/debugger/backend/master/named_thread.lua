@@ -5,32 +5,19 @@ local exitGuard = {}
 local threadMgr = [[
     package.path = %q
     package.cpath = %q
+    debug.setCstacklimit(1000)
     local thread = require "remotedebug.thread"
     local MgrChanReq = thread.channel "NamedThread-Req:%s"
-    local MgrClients = {}
-    local MgrThreadHandle
-    local function MgrResponse(tid, ...)
-        local res = thread.channel("NamedThread-Res:"..tid)
-        res:push(...)
-    end
     local function MgrUpdate()
         while true do
-            local ok, msg, id, data = MgrChanReq:pop()
+            local ok, msg, id = MgrChanReq:pop()
             if not ok then
                 return
             end
-            if msg == "INIT" then
-                MgrClients[id] = true
-                MgrThreadHandle = data
-            elseif msg == "EXIT" then
-                MgrClients[id] = nil
-                if next(MgrClients) == nil then
-                    MgrResponse(id, "OK", MgrThreadHandle)
-                    return true
-                end
-                MgrResponse(id, "BYE")
+            if msg == "EXIT" then
+                local res = thread.channel("NamedThread-Res:"..id)
+                res:push "BYE"
             end
-            ::continue::
         end
     end
 ]]
@@ -57,12 +44,8 @@ local function createThread(name, path, cpath, script)
     if createChannel(reqChannelName(name)) then
         return
     end
-    local thd = thread.thread(threadMgr:format(path, cpath, name) .. script)
-    local reqChan = thread.channel(reqChannelName(name))
-    reqChan:push("INIT", thread.id, thd)
-
+    thread.thread(threadMgr:format(path, cpath, name) .. script)
     exitGuard[#exitGuard+1] = name
-
     local errlog = thread.channel "errlog"
     local ok, msg = errlog:pop()
     if ok then
@@ -78,10 +61,7 @@ local function destoryThread(name)
     local reqChan = thread.channel(reqChannelName(name))
     local resChan = thread.channel(resChannelName())
     reqChan:push("EXIT", thread.id)
-    local msg, handle = resChan:bpop()
-    if msg == "OK" then
-        thread.wait(handle)
-    end
+    resChan:bpop()
 end
 
 setmetatable(exitGuard, {__gc=function(self)

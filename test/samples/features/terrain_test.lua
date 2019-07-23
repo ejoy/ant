@@ -77,7 +77,9 @@ function terrain_test:init()
         rendermesh = {},
         name = "pvp",
         can_render = true,
+        can_select = true,
 		main_view = true,
 		serialize = serialize.create(),
+		hierarchy_visible = true,
 	}
 end

@@ -453,12 +453,20 @@ local ScrollList = import_package "ant.imgui".controls.scroll_list
 local line = 10
 local scroll_list = nil
 local cache = {}
+local hidecache = {}
 local scroll_func = function(index)
     if not cache[index] then
         cache[index] = 1
     end
+    if hidecache[index] then
+        return
+    end
     if widget.Button("ExpandBtn###"..index) then
         cache[index] = cache[index] + 1
+    end
+    if widget.Button("Hide"..index) then
+        hidecache[index] = true
+        print(index,hidecache[index])
     end
     for i =1,cache[index] do
         widget.Text("Line"..index)

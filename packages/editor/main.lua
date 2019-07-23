@@ -4,4 +4,5 @@ return {
 	--map_imgui = require "map_imgui",
     hub = require "hub",
     connect = require "connect",
+    debugutil = require "debugutil",
 }

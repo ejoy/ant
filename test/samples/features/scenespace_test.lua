@@ -43,6 +43,7 @@ local function create_scene_node_test()
 
     local hie_root =
         world:create_entity {
+        hierarchy_visible = true,
         hierarchy_transform = {
             s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
@@ -56,6 +57,7 @@ local function create_scene_node_test()
 
     local hie_level1_1 =
         world:create_entity {
+        hierarchy_visible = true,
         hierarchy_transform = {
             parent = hie_root,
             s = {1, 1, 1, 0},
@@ -70,6 +72,7 @@ local function create_scene_node_test()
 
     local hie_level1_2 =
         world:create_entity {
+        hierarchy_visible = true,
         hierarchy_transform = {
             parent = hie_root,
             s = {1, 1, 1, 0},
@@ -84,6 +87,7 @@ local function create_scene_node_test()
     
     local hie_level2_1 =
         world:create_entity {
+        hierarchy_visible = true,
         hierarchy_transform = {
             parent = hie_level1_2,
             s = {1, 1, 1, 0},
@@ -128,6 +132,7 @@ local function create_scene_node_test()
         },
         material = computil.assign_material(materialpath),
         can_render = true,
+        hierarchy_visible = true,
         can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
@@ -149,6 +154,7 @@ local function create_scene_node_test()
         },
         material = computil.assign_material(materialpath),
         can_render = true,
+        hierarchy_visible = true,
         can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
@@ -170,6 +176,7 @@ local function create_scene_node_test()
         },
         material = computil.assign_material(materialpath),
         can_render = true,
+        hierarchy_visible = true,
         can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
@@ -199,6 +206,7 @@ local function create_scene_node_test()
         hierarchy_tag = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
+        hierarchy_visible = true,
     }
 
     local hie2_level1_1 =
@@ -213,6 +221,7 @@ local function create_scene_node_test()
         hierarchy_tag = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
+        hierarchy_visible = true,
     }
 
     local function color_material(colorvalue)
@@ -239,6 +248,7 @@ local function create_scene_node_test()
         },
         material = computil.assign_material(materialpath),
         can_render = true,
+        hierarchy_visible = true,
         can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
@@ -259,6 +269,7 @@ local function create_scene_node_test()
         },
         material = computil.assign_material(materialpath),
         can_render = true,
+        hierarchy_visible = true,
         can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),

@@ -9,7 +9,7 @@ int  event(rlua_State* cL, lua_State* hL, const char* name);
 
 static int redirect_read(rlua_State* L) {
     remotedebug::redirect& self = *(remotedebug::redirect*)rluaL_checkudata(L, 1, "redirect");
-    lua_Integer len = rluaL_optinteger(L, 2, LUAL_BUFFERSIZE);
+    rlua_Integer len = rluaL_optinteger(L, 2, LUAL_BUFFERSIZE);
     if (len > (std::numeric_limits<int>::max)()) {
         return rluaL_error(L, "bad argument #1 to 'read' (invalid number)");
     }
@@ -106,7 +106,7 @@ static int redirect_print(lua_State* L) {
 static int redirect_f_write(lua_State* L) {
 	rlua_State *cL = get_client(L);
     if (cL) {
-        if (LUA_TUSERDATA == lua_getfield(L, LUA_REGISTRYINDEX, "_IO_output") && lua_rawequal(L, -1, 1)) {
+        if (LUA_TUSERDATA == lua::getfield(L, LUA_REGISTRYINDEX, "_IO_output") && lua_rawequal(L, -1, 1)) {
             lua_pop(L, 1);
             int ok = event(cL, L, "iowrite");
             if (ok > 0) {
@@ -151,7 +151,7 @@ static int open_print(rlua_State* L) {
 static int open_iowrite(rlua_State* L) {
     bool enable = rlua_toboolean(L, 1);
     lua_State* hL = get_host(L);
-    if (LUA_TUSERDATA == lua_getfield(hL, LUA_REGISTRYINDEX, "_IO_output")) {
+    if (LUA_TUSERDATA == lua::getfield(hL, LUA_REGISTRYINDEX, "_IO_output")) {
         if (lua_getmetatable(hL, -1)) {
             lua_pushstring(hL, "write");
             lua_pushvalue(hL, -1);
@@ -165,7 +165,7 @@ static int open_iowrite(rlua_State* L) {
         }
     }
     lua_pop(hL, 1);
-    if (LUA_TTABLE == lua_getglobal(hL, "io")) {
+    if (LUA_TTABLE == lua::getglobal(hL, "io")) {
         lua_pushstring(hL, "write");
         lua_pushvalue(hL, -1);
         lua_rawget(hL, -3);

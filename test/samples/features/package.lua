@@ -5,6 +5,7 @@ return {
       "init_loader",
 	  "scenespace_test",
 	  "terrain_test",
+      "visible_system",
     },
     entry = "main"
 }

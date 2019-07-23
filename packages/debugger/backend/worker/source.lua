@@ -11,7 +11,7 @@ local workspaceFolder = nil
 local sourceUtf8 = true
 
 local function makeSkipFile(pattern)
-    skipFiles[#skipFiles + 1] = ('^%s$'):format(fs.narive_normalize_serverpath(pattern):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*'))
+    skipFiles[#skipFiles + 1] = ('^%s$'):format(fs.source_native(fs.source_normalize(pattern)):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'):gsub('%*', '.*'))
 end
 
 ev.on('initializing', function(config)
@@ -27,14 +27,14 @@ ev.on('initializing', function(config)
     if config.sourceMaps then
         for _, pattern in ipairs(config.sourceMaps) do
             local sm = {}
-            sm[1] = ('^%s$'):format(fs.narive_normalize_serverpath(pattern[1]):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'))
+            sm[1] = ('^%s$'):format(fs.source_native(fs.source_normalize(pattern[1])):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0'))
             if sm[1]:find '%*' then
                 sm[1] = sm[1]:gsub('%*', '(.*)')
                 local r = {}
-                fs.normalize_clientpath(pattern[2]):gsub('[^%*]+', function (w) r[#r+1] = w end)
+                fs.path_normalize(pattern[2]):gsub('[^%*]+', function (w) r[#r+1] = w end)
                 sm[2] = r
             else
-                sm[2] = fs.normalize_clientpath(pattern[2])
+                sm[2] = fs.path_normalize(pattern[2])
             end
             sourceMaps[#sourceMaps + 1] = sm
         end
@@ -74,7 +74,7 @@ local function serverPathToClientPath(p)
         p = fs.unicode.a2u(p)
     end
     local skip = false
-    local nativePath = fs.narive_normalize_serverpath(p)
+    local nativePath = fs.source_native(fs.source_normalize(p))
     for _, pattern in ipairs(skipFiles) do
         if glob_match(pattern, nativePath) then
             skip = true
@@ -84,11 +84,11 @@ local function serverPathToClientPath(p)
     for _, pattern in ipairs(sourceMaps) do
         local res = glob_replace(pattern, nativePath)
         if res then
-            return skip, res
+            return skip, fs.fromwsl(res)
         end
     end
     -- TODO: 忽略没有映射的source？
-    return skip, fs.normalize_serverpath(p)
+    return skip, fs.fromwsl(fs.source_normalize(p))
 end
 
 local function codeReference(s)
@@ -155,9 +155,9 @@ function m.c2s(clientsrc)
             end
         end
     else
-        local nativepath = fs.narive_normalize_clientpath(clientsrc.path)
+        local nativepath = fs.path_native(fs.path_normalize(clientsrc.path))
         for _, source in pairs(sourcePool) do
-            if source.path and not source.sourceReference and fs.narive_normalize_clientpath(source.path) == nativepath then
+            if source.path and not source.sourceReference and fs.path_native(fs.path_normalize(source.path)) == nativepath then
                 return source
             end
         end
@@ -176,8 +176,8 @@ function m.output(s)
         }
     elseif s.path ~= nil then
         return {
-            name = fs.filename(s.path),
-            path = fs.normalize_clientpath(s.path),
+            name = fs.path_filename(s.path),
+            path = fs.path_normalize(s.path),
         }
     end
 end
@@ -193,7 +193,7 @@ function m.removeCode(ref)
 end
 
 function m.clientPath(p)
-    return fs.relative(p, workspaceFolder, '/')
+    return fs.path_relative(p, workspaceFolder)
 end
 
 function m.all_loaded()
