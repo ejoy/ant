@@ -255,7 +255,8 @@ function gui_mgr.check_and_save_setting()
     for ui_name,ui_ins in pairs(gui_mgr.gui_tbl) do
         if ui_ins:is_setting_dirty() then
             need_save = true
-            setting_tbl[ui_name] =  dbgutil.try( ui_ins.save_setting_to_memory,ui_ins,true)
+            local status
+            status,setting_tbl[ui_name] =  dbgutil.try_r( ui_ins.save_setting_to_memory,ui_ins,true)
         end
     end
     setting_tbl[SettingGuiOpen] =  setting_tbl[SettingGuiOpen] or {}
