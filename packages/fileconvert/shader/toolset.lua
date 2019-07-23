@@ -3,34 +3,12 @@ local lfs = require "filesystem.local"
 local platform = require "platform"
 local OS = platform.OS
 local CWD = lfs.current_path()
+local util = require "util"
 
 local function init_config()
-	local suffix = OS == "OSX" and "" or ".exe"
-
-	local function to_execute_path(pathname)
-		return CWD / (pathname .. suffix)
-	end
-
-	local function valid_shaderc_path()
-		for _, name in ipairs {
-			"clibs/shadercDebug",
-			"clibs/shadercRelease",
-			"bin/shadercDebug",
-			"bin/shadercRelease",
-			"bin/shaderc",
-		} do
-			local exepath = to_execute_path(name)
-			if lfs.exists(exepath) then
-				return exepath
-			end
-		end
-
-		error(string.format("not found any valid shaderc path. update bin folder or compile from 3rd/bgfx"))
-	end
-
 	return {
-		lua = to_execute_path "bin/lua",
-		shaderc = valid_shaderc_path(),
+		lua 	= util.to_execute_path "bin/lua",
+		shaderc = util.valid_tool_exe_path "shaderc",
 		shaderinc = CWD / "3rd" / "bgfx" / "src",
 	}
 end
@@ -137,69 +115,21 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 
 	add_optimizelevel(config.optimizelevel, default_level(shadertype, stagetype))
 
-	local prog = subprocess.spawn(commands)
-
-	local function to_cmdline()
-		local s = ""
-		for _, v in ipairs(commands) do
-			if type(v) == "table" then
-				for _, vv in ipairs(v) do
-					s = s .. vv .. " "
-				end
-			else
-				s = s .. v .. " "
-			end
-		end
-
-		return s
-	end
-	print(to_cmdline())
-
-	if not prog then
-		return false, "Create shaderc process failed."
-	else
-		local function check_msg(info)
-			local success, msg = true, ""
-			if info ~= "" then
-				local INFO = info:upper()				
-				for _, term in ipairs {
-					"ERROR:",
-					"FAILED TO BUILD SHADER"
-				} do
-					success = INFO:find(term, 1, true) == nil
-				end
-				msg = to_cmdline() .. "\n" .. info .. "\n"
-			end
-
-			return success, msg
-		end
-
-		local stds = {
-			{fd=prog.stdout, info="[stdout info]:"},
-			{fd=prog.stderr, info="[stderr info]:"}
-		}
-
+	return util.spaw_process(commands, function (info)
 		local success, msg = true, ""
-		while #stds > 0 do
-			for idx, std in ipairs(stds) do
-				local fd = std.fd
-				local num = subprocess.peek(fd)
-				if num == nil then
-					local s, m = check_msg(std.info)
-					success = success and s
-					msg = msg .. "\n\n" .. m
-					table.remove(stds, idx)
-					break
-				end
-
-				if num ~= 0 then
-					std.info = std.info .. fd:read(num)
-				end
+		if info ~= "" then
+			local INFO = info:upper()
+			for _, term in ipairs {
+				"ERROR:",
+				"FAILED TO BUILD SHADER"
+			} do
+				success = INFO:find(term, 1, true) == nil
 			end
+			msg = util.to_cmdline(commands) .. "\n" .. info .. "\n"
 		end
 
 		return success, msg
-	end
+	end)
 end
 
 return toolset

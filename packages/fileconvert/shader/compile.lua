@@ -1,5 +1,6 @@
 local toolset = require "shader.toolset"
 local lfs = require "filesystem.local"
+local util = require "util"
 
 local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders/src"
 
@@ -17,7 +18,7 @@ local function check_compile_shader(plat, srcfilepath, outfilepath, shadertype)
 end
 
 return function (identity, srcfilepath, param, outfilepath)	
-	local plat, shadertype = identity:match("([^-]+)-(.+)$")
+	local plat, shadertype = util.identity_info(identity)
 	assert(plat)
 	assert(shadertype)
 	return check_compile_shader(plat, srcfilepath, outfilepath, shadertype)
