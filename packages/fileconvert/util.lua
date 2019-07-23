@@ -8,6 +8,13 @@ local toolsuffix = OS == "OSX" and "" or ".exe"
 
 local util = {}; util.__index = util
 
+function util.rawtable(filepath)
+	local env = {}
+	local r = assert(lfs.loadfile(filepath, "t", env))
+	r()
+	return env
+end
+
 function util.identify_info(identity)
     return identity:match("([^-]+)-(.+)$")
 end
@@ -25,17 +32,18 @@ local function tool_paths(toolbasename)
 
     if hasmsvc then
         return {
-            vspath .. "/x64/Debug/" .. toolnameDebug,
             vspath .. "/x64/Release/" .. toolnameRelease,
-            vspath .. "/x64/Debug/" .. toolbasename,
+            vspath .. "/x64/Debug/" .. toolnameDebug,
             vspath .. "/x64/Release/" .. toolbasename,
+            vspath .. "/x64/Debug/" .. toolbasename,
+            "bin/" .. toolbasename,
         }
     end
     return {
-        "clibs/" .. toolnameDebug,
         "clibs/" .. toolnameRelease,
-        "bin/"  .. toolnameDebug,
+        "clibs/" .. toolnameDebug,
         "bin/" .. toolnameRelease,
+        "bin/"  .. toolnameDebug,
         "bin/" .. toolbasename,
     }
 end
