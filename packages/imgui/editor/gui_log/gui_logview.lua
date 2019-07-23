@@ -200,8 +200,6 @@ function GuiLogView:_update_collapse_item(index,start_x,start_y)
             widget.Text(msg_item.time_str)
         end
         cursor.SameLine()
-        widget.Text(msg_item.id)
-        cursor.SameLine()
         cursor.SetNextItemWidth(-30)
         widget.LabelText("##msg",msg_item.msg)
         local size_x,size_y = windows.GetContentRegionAvail()
