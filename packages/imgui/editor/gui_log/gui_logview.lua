@@ -271,11 +271,11 @@ function GuiLogView:on_update()
 
     windows.BeginChild("up_content",0,up_h,false)
     -- windows.SetWindowFontScale(0.9)
-    local has_scroll_by_user,is_last = self.cur_scroll_list:update()
+    local has_scroll_by_user,scroll_max,scroll_change = self.cur_scroll_list:update()
     if has_scroll_by_user and self.follow_tail then
         self.follow_tail = false
     end
-    if is_last and not self.follow_tail then
+    if scroll_max and scroll_change and not self.follow_tail then
         self.follow_tail = true
     end
     windows.EndChild()
