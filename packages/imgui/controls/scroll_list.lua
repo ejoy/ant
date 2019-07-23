@@ -270,7 +270,7 @@ function ScrollList:update()
         --else do nothing
         end
     end
-    return has_scroll_by_user
+    return has_scroll_by_user,scrollY >= windows.GetScrollMaxY()
 end
 function ScrollList:_update_item(item_index)
     local curX,curY1 = cursor.GetCursorPos()
