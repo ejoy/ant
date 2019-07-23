@@ -1,4 +1,5 @@
 ﻿#include "rlua.h"
+#include "lua_compat.h"
 
 static int DEBUG_HOST = 0;	// host L in client VM
 static int DEBUG_CLIENT = 0;	// client L in host VM for hook
