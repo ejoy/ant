@@ -8,7 +8,7 @@ int  event(rlua_State* cL, lua_State* hL, const char* name);
 
 rlua_State *
 get_client(lua_State *L) {
-	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_CLIENT) != LUA_TLIGHTUSERDATA) {
+	if (lua::rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_CLIENT) != LUA_TLIGHTUSERDATA) {
 		lua_pop(L, 1);
 		return 0;
 	}

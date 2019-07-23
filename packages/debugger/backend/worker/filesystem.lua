@@ -10,7 +10,6 @@ local function prequire(name)
 end
 local unicode = prequire 'remotedebug.unicode'
 
-local default_sep = package.config:sub(1, 1)
 local sourceFormat = "path"
 local pathFormat = "path"
 local useWSL = false
@@ -63,72 +62,71 @@ ev.on('initializing', function(config)
     init_searchpath(config, 'cpath')
 end)
 
-local function split(str)
-    local r = {}
-    str:gsub('[^/\\]*', function (w) r[#r+1] = w end)
-    return r
+local function absolute(p)
+    return fs.absolute(fs.path(p)):string()
 end
 
-local function fromwsl(s)
+local function normalize_posix(p)
+    local stack = {}
+    p:gsub('[^/]*', function (w)
+        if #w == 0 and #stack ~= 0 then
+        elseif w == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
+            stack[#stack] = nil
+        elseif w ~= '.' then
+            stack[#stack + 1] = w
+        end
+    end)
+    return stack
+end
+
+local function normalize_win32(p)
+    local stack = {}
+    p:gsub('[^/\\]*', function (w)
+        if #w == 0 and #stack ~= 0 then
+        elseif w == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
+            stack[#stack] = nil
+        elseif w ~= '.' then
+            stack[#stack + 1] = w
+        end
+    end)
+    return stack
+end
+
+local m = {}
+
+function m.fromwsl(s)
+    if sourceFormat == "string" then
+        return s
+    end
     if not useWSL or not s:match "^/mnt/%a" then
         return s
     end
     return s:gsub("^/mnt/(%a)", "%1:")
 end
 
-local function absolute(p)
-    return fs.absolute(fs.path(p)):string()
+function m.source_native(s)
+    return sourceFormat == "path" and s:lower() or s
 end
 
-local function normalize(p)
-    local stack = {}
-    for _, elem in ipairs(split(p)) do
-        if #elem == 0 and #stack ~= 0 then
-        elseif elem == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
-            stack[#stack] = nil
-        elseif elem ~= '.' then
-            stack[#stack + 1] = elem
-        end
-    end
-    return stack
+function m.path_native(s)
+    return pathFormat == "path" and s:lower() or s
 end
 
-local m = {}
-
-local function m_normalize(path, sep)
-    return table.concat(normalize(path), sep or default_sep)
-end
-
-function m.normalize_serverpath(path)
+function m.source_normalize(path)
     if sourceFormat == "string" then
         return path
     end
-    return fromwsl(m_normalize(absolute(path)))
+    local normalize = sourceFormat == "path" and normalize_win32 or normalize_posix
+    return table.concat(normalize(absolute(path)), '/')
 end
 
-function m.narive_normalize_serverpath(path)
-    if sourceFormat == "string" then
-        return path
-    end
-    if sourceFormat == "linuxpath" then
-        return m_normalize(absolute(path), '/')
-    end
-    return m_normalize(absolute(path), '/'):lower()
+function m.path_normalize(path)
+    local normalize = pathFormat == "path" and normalize_win32 or normalize_posix
+    return table.concat(normalize(path), '/')
 end
 
-function m.normalize_clientpath(path)
-    return m_normalize(path)
-end
-
-function m.narive_normalize_clientpath(path)
-    if pathFormat == "linuxpath" then
-        return m_normalize(path)
-    end
-    return m_normalize(path):lower()
-end
-
-function m.relative(path, base, sep)
-    sep = sep or default_sep
+function m.path_relative(path, base)
+    local normalize = pathFormat == "path" and normalize_win32 or normalize_posix
     local rpath = normalize(path)
     local rbase = normalize(base)
     while #rpath > 0 and #rbase > 0 and rpath[1] == rbase[1] do
@@ -136,7 +134,7 @@ function m.relative(path, base, sep)
         table.remove(rbase, 1)
     end
     if #rpath == 0 and #rbase== 0 then
-        return "." .. sep
+        return "./"
     end
     local s = {}
     for _ in ipairs(rbase) do
@@ -145,10 +143,11 @@ function m.relative(path, base, sep)
     for _, e in ipairs(rpath) do
         s[#s+1] = e
     end
-    return table.concat(s, sep)
+    return table.concat(s, '/')
 end
 
-function m.filename(path)
+function m.path_filename(path)
+    local normalize = pathFormat == "path" and normalize_win32 or normalize_posix
     local paths = normalize(path)
     return paths[#paths]
 end

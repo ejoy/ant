@@ -133,6 +133,7 @@ void  (rluaL_pushresultsize) (rluaL_Buffer *B, size_t sz);
 
 #if !defined(RLUA_INTERNAL)
 #include <lua.hpp>
+#include "lua_compat.h"
 #endif
 
 #if defined(RLUA_REPLACE) || defined(RLUA_INTERNAL)

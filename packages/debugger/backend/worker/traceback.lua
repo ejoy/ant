@@ -112,7 +112,7 @@ return function(msg, level)
     end
     s[#s + 1] = 'stack traceback:'
     local last = hookmgr.stacklevel()
-    local n1 = last - level > 21 and 10 or -1
+    local n1 = last - ((level > 21) and 10 or -1)
     while rdebug.getinfo(level, "Slnt", info) do
         local f = rdebug.getfunc(level)
         level = level + 1
