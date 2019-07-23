@@ -9,9 +9,12 @@ local IO = imgui.IO
 local class     = require "common.class"
 local gui_input = require "gui_input"
 local GuiBase = require "gui_base"
+local dbgutil = import_package "ant.editor".debugutil
+
 local GuiLogView = GuiBase.derive("GuiLogView")
 
 local ScrollList = require "controls.scroll_list"
+local LogLinkList = require "editor.gui_log.log_link_list"
 
 GuiLogView.GuiName = "GuiLogView"
 
@@ -63,6 +66,20 @@ local Colors = {
 
 local Levels = {"trace","info","warn","error","fatal","other"}
 
+local msg_item_hash_func = function(msg_item)
+    if msg_item.color_t then
+        local ct = msg_item.color_t
+        return string.format("t=%scolor=%.2f%.2f%.2f%.2fmsg=%s",
+            msg_item.type,
+            ct[1],ct[2],ct[3],ct[4],
+            msg_item.msg)
+    else
+        return string.format("t=%smsg=%s",
+            msg_item.type,
+            msg_item.msg)
+    end
+end
+
 function GuiLogView:_init()
     GuiBase._init(self)
     self.title_id = "GuiLogView"
@@ -72,10 +89,14 @@ function GuiLogView:_init()
     self.filter_indexs = {}
     self.up_precent = 0.7
     self.type_count = {}
+    self.collapse_type_count = {}
     self.follow_tail = true
     self.show_time = false
+    self.link_list = LogLinkList.new(msg_item_hash_func)
+    self.is_collapse = true
     for i,v in ipairs(Levels) do
         self.type_count[v] = 0
+        self.collapse_type_count[v] = 0
     end
     self.type_filter = {}
     for i,v in ipairs(Levels) do
@@ -84,6 +105,17 @@ function GuiLogView:_init()
     -----
     self:_init_scroll_list()
     self:hook_log()
+end
+
+function GuiLogView:try(fun,...)
+    if debug.getregistry()["lua-debug"] then
+        return fun(...)
+    end
+    local status,err,ret = xpcall( fun,debug.traceback,... )
+    if not status then
+        io.stderr:write("Error:%s\n%s", status or "nil", err)
+    end
+    return ret,status
 end
 
 function GuiLogView:match_filter(msg_item)
@@ -95,34 +127,109 @@ function GuiLogView:get_msg_item(filter_index)
 end
 
 function GuiLogView:_init_scroll_list()
-    self.scroll_list = ScrollList.new()
+    self.normal_scroll_list = ScrollList.new()
     local data_func = function(index,sx,sy)
         self:_update_item(index,sx,sy)
     end
-    self.scroll_list:set_data_func(data_func)
-    -- self.scroll_list:scroll_to_last(self.follow_tail)
+    self.normal_scroll_list:set_data_func(data_func)
+    self.collapse_scroll_list = ScrollList.new()
+    local collapse_data_func = function(index,sx,sy)
+        self:_update_collapse_item(index,sx,sy)
+    end
+    self.collapse_scroll_list:set_data_func(collapse_data_func)
+    if self.is_collapse then
+        self.cur_scroll_list = self.collapse_scroll_list
+    else
+        self.cur_scroll_list = self.normal_scroll_list
+    end
 end
 
-function GuiLogView:_init_select_cache()
+function GuiLogView:_init_select_cache(init_normal,init_collapse)
     local height = cursor.GetFrameHeight()
-    print("FrameHeight",height)
-    self.selected_cache = {"###0",height=height,item_flags = 0}
+    if init_normal then 
+        self.selected_cache = {"###0",height=height,item_flags = 0}
+    end
+    if init_collapse then
+        self.collapse_selected_cache = {"###0",height=height,item_flags = 0}
+    end
 end
 
 function GuiLogView:add_item(log_item)
-
     log_item.time_str = time2str(log_item.time)
     log_item.color_t,log_item.color_err = color2tbl(log_item.color)
+    log_item.id = #self.all_items
+    --add to normal_scroll_list
     table.insert(self.all_items,log_item)
     if self:match_filter(log_item) then
         table.insert(self.filter_indexs,#self.all_items)
-        self.scroll_list:add_item_num(1)
+        self.normal_scroll_list:add_item_num(1)
         if self.follow_tail then
-            self.scroll_list:scroll_to_last()
+            self.normal_scroll_list:scroll_to_last()
+        end
+    end
+    --add to collapse_scroll_list
+    local item_is_new = self.link_list:add_data(log_item)
+    if item_is_new then
+        self.collapse_scroll_list:add_item_num(1)
+        if self.follow_tail then
+            self.collapse_scroll_list:scroll_to_last()
         end
     end
     local typ = log_item.type or "other"
     self.type_count[typ] = self.type_count[typ] + 1
+    if item_is_new then
+        self.collapse_type_count[typ] = self.collapse_type_count[typ] + 1
+    end
+end
+
+function GuiLogView:_update_collapse_item(index,start_x,start_y)
+    local link_item = self.link_list:get_item_by_index(index)
+    local hash = link_item.hash
+    local msg_item =  self.link_list:get_last_data_from_item(link_item)
+    if self:match_filter(msg_item) then
+        util.PushID(hash)
+        local color = msg_item.color_t or Colors[msg_item.type or "other"]
+        local c1,c2,c3,c4 = table.unpack(color)
+        windows.PushStyleColor(enum.StyleCol.Button,c1,c2,c3,c4)
+        windows.PushStyleColor(enum.StyleCol.ButtonActive,c1,c2,c3,c4)
+        windows.PushStyleColor(enum.StyleCol.ButtonHovered,c1,c2,c3,c4)
+        widget.Button(string.upper(msg_item.type or "other"),60)
+        windows.PopStyleColor(3)
+        if self.show_time then
+            cursor.SameLine()
+            widget.Text(msg_item.time_str)
+        end
+        cursor.SameLine()
+        widget.Text(msg_item.id)
+        cursor.SameLine()
+        cursor.SetNextItemWidth(-30)
+        widget.LabelText("##msg",msg_item.msg)
+        local size_x,size_y = windows.GetContentRegionAvail()
+        local collapse_size = #(link_item.datas)
+        if collapse_size>1 then
+            cursor.SetCursorPos(size_x-30,start_y)
+            widget.Button(string.format("x%d",collapse_size))
+        end
+        cursor.SetCursorPos(start_x,start_y)
+        local title_id = string.format("###%s",hash)
+        if widget.Selectable(title_id,self.collapse_selected_cache) then
+            self.collapse_selected_cache[1] = title_id
+            self.collapse_selected_cache[2] = hash
+            self.collapse_selected_cache[3] = nil
+            -- util.SetItemDefaultFocus()
+        end
+        util.PopID()
+    end
+    
+end
+
+function GuiLogView:set_is_collapse(value)
+    if value == self.is_collapse then
+        return
+    end
+    self.is_collapse = value
+    self:update_collapse_status()
+    self._dirty_flag = true
 end
 
 function GuiLogView:_update_item(index,start_x,start_y)
@@ -157,7 +264,7 @@ end
 local cbval = false
 function GuiLogView:on_update()
     if not self.selected_cache then
-        self:_init_select_cache()
+        self:_init_select_cache(true,true)
     end
     local winw,h = windows.GetContentRegionAvail()
     local menu_height = self:_update_menu_bar()
@@ -166,7 +273,7 @@ function GuiLogView:on_update()
 
     windows.BeginChild("up_content",0,up_h,false)
     -- windows.SetWindowFontScale(0.9)
-    local has_scroll_by_user = self.scroll_list:update()
+    local has_scroll_by_user = self.cur_scroll_list:update()
     if has_scroll_by_user and self.follow_tail then
         self.follow_tail = false
     end
@@ -187,37 +294,50 @@ function GuiLogView:on_update()
     end
     -------------------------------
     if windows.BeginChild("down_content",winw,0,false,0) then
-        local selected_cache = self.selected_cache
-        local selected_index = selected_cache[2]
-        if selected_index then
-            local msg_item = self:get_msg_item(selected_index)
-            local ui_cache = selected_cache[3]
-            if not ui_cache then
-                local str_t = {}
-                if msg_item.color_err then
-                    table.insert(str_t,msg_item.color_err)
-                    table.insert(str_t,string.format("The given value is:%s",dump_a({msg_item.color})))
-                    table.insert(str_t,ColorFormatTips)
-                    table.insert(str_t,"--------------------------------------")
-                end
-                table.insert(str_t,msg_item.time_str)
-                table.insert(str_t,msg_item.msg_expand or msg_item.msg)
-                local display_str = table.concat(str_t,"\n")
-                ui_cache = {
-                    text = display_str,
-                    flags = flags.InputText{ "Multiline","ReadOnly"},
-                    width = -1,
-                    height = -1,
-                }
-                selected_cache[3] = ui_cache
+        if self.is_collapse then
+            local selected_cache = self.collapse_selected_cache
+            local selected_hash = selected_cache[2]
+            if selected_hash then
+                local link_item = self.link_list:get_item_by_hash(selected_hash)
+                assert(link_item)
+                local msg_item = self.link_list:get_last_data_from_item(link_item)
+                self:render_msg_item_detail(msg_item,selected_cache)
             end
-            -- widget.PushTextWrapPos(200.0)
-            widget.InputText("##detail",ui_cache)
-            -- widget.PopTextWrapPos()
-
+        else
+            local selected_cache = self.selected_cache
+            local selected_index = selected_cache[2]
+            if selected_index then
+                local msg_item = self:get_msg_item(selected_index)
+                self:render_msg_item_detail(msg_item,selected_cache)
+            end
         end
     end
     windows.EndChild()
+end
+
+function GuiLogView:render_msg_item_detail(msg_item,cache)
+    local ui_cache = cache[3]
+    if not ui_cache then
+        local str_t = {}
+        if msg_item.color_err then
+            table.insert(str_t,msg_item.color_err)
+            table.insert(str_t,string.format("The given value is:%s",dump_a({msg_item.color})))
+            table.insert(str_t,ColorFormatTips)
+            table.insert(str_t,"--------------------------------------")
+        end
+        table.insert(str_t,msg_item.time_str)
+        table.insert(str_t,msg_item.msg_expand or msg_item.msg)
+        local display_str = table.concat(str_t,"\n")
+        ui_cache = {
+            text = display_str,
+            flags = flags.InputText{ "Multiline","ReadOnly"},
+            width = -1,
+            height = -1,
+        }
+        cache[3] = ui_cache
+    end
+    -- widget.PushTextWrapPos(200.0)
+    widget.InputText("##detail",ui_cache)
 end
 
 function GuiLogView:_show_filter_popup()
@@ -249,12 +369,20 @@ function GuiLogView:_update_menu_bar()
     if widget.BeginMenuBar() then
         widget.Button("Filter")
         self:_show_filter_popup()
-        local change
+        local change,collapse_v
+        change,collapse_v = widget.Checkbox("Collapse",self.is_collapse)
+
+        if change then
+            self:set_is_collapse(collapse_v)
+        end
         change,self.follow_tail = widget.Checkbox("FollowTail",self.follow_tail)
         if change and self.follow_tail then
-            self.scroll_list:scroll_to_last()
+            self.cur_scroll_list:scroll_to_last()
         end
         change,self.show_time = widget.Checkbox("Time",self.show_time)
+        if change then
+            self._dirty_flag = true
+        end
         if widget.Button("AddItem") then
             for i = 1,100 do
                 local msg_item = {type="trace", msg = "asdasdasdas\ndasd\nasdasdasdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}
@@ -276,28 +404,46 @@ function GuiLogView:_update_menu_bar()
     return y2-y1
 end
 
+function GuiLogView:update_collapse_status()
+    local is_collapse = self.is_collapse
+    if is_collapse then
+        self.cur_scroll_list = self.collapse_scroll_list
+    else
+        self.cur_scroll_list = self.normal_scroll_list
+    end
+    if self.follow_tail and self.cur_scroll_list then
+        self.cur_scroll_list:scroll_to_last()
+    end
+end
+
 function GuiLogView:on_clear_click()
-    self.scroll_list:remove_all()
-    self:_init_select_cache()
+    self.normal_scroll_list:remove_all()
+    self.collapse_scroll_list:remove_all()
+    self.link_list:clear()
+    self:_init_select_cache(true,true)
     self.all_items = {}
     for i,v in ipairs(Levels) do
         self.type_count[v] = 0
+        self.collapse_type_count[v] = 0
     end
     self.filter_indexs = {}
 end
 
 function GuiLogView:on_filter_change(need_refresh)
     if need_refresh then
-        self.scroll_list:remove_all()
+        --reset normal_scroll_list
+        self.normal_scroll_list:remove_all()
         local new_filter_indexs = {}
         for i,v in ipairs(self.all_items) do
             if self:match_filter(v) then
-                table.insert(new_filter_indexs,i)
+                table.insert(new_filter_indexs,i) 
             end
         end
         self.filter_indexs = new_filter_indexs
-        self.scroll_list:add_item_num(#new_filter_indexs)
-        self:_init_select_cache()
+        self.normal_scroll_list:add_item_num(#new_filter_indexs)
+        --reset collapse_scroll_list
+        --do nothing
+        self:_init_select_cache(true,false)
     end
 end
 
@@ -307,5 +453,29 @@ function GuiLogView:hook_log()
         self:add_item(msg_item)
     end)
 end
+
+--override if needed
+--return tbl
+function GuiLogView:save_setting_to_memory(clear_dirty_flag)
+    if clear_dirty_flag then
+        self._dirty_flag = false
+    end
+    return {
+        is_collapse = self.is_collapse,
+        show_time = self.show_time,
+    }
+end
+
+--override if needed
+function GuiLogView:load_setting_from_memory(seting_tbl)
+    self.show_time = seting_tbl.show_time
+    self:set_is_collapse(seting_tbl.is_collapse)
+end
+
+--override if needed
+function GuiLogView:is_setting_dirty()
+    return self._dirty_flag
+end
+
 
 return GuiLogView

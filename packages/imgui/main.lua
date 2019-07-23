@@ -15,7 +15,7 @@ local t = {
     },
     editor = {
         gui_canvas = require "editor.gui_canvas",
-        gui_logview = require "editor.gui_logview",
+        gui_logview = require "editor.gui_log.gui_logview",
         gui_sysinfo = require "editor.gui_sysinfo",
         gui_scene_hierarchy_view = require "editor.gui_scene_hierarchy_view",
         gui_property_view = require "editor.gui_property_view",
