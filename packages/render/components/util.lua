@@ -443,7 +443,7 @@ function util.entity_bounding(entity)
 			end
 		end
 		
-		return entitybounding
+		return entitybounding:isvalid() and entitybounding or nil
 	end
 end
 
