@@ -254,30 +254,42 @@ end
 
 local function dummy_iter() end
 
+--component_type ~= nil, return pairs<eid,component_data>
+--component_type == nil, return pairs<eid,entity_data>
 function world:each_removed(component_type)
 	local removed_set
-
 	local set = self._removed
-	for i = 1, #set do
-		local item = set[i]
-		local eid = item[1]
-		local c = item[3]	-- { eid, component_type, c }
-		if c ~= nil then
-			local ctype = item[2]
-			if ctype == component_type then
+	if not component_type then
+		for i = 1, #set do
+			local item = set[i]
+			if not item[3] then
+				local eid = item[1]
+				local e = item[2]
 				removed_set = removed_set or {}
-				removed_set[eid] = c -- true
+				removed_set[eid] = e
 			end
-		else
-			local e = item[2]
-			c = e[component_type]
+		end
+	else
+		for i = 1, #set do
+			local item = set[i]
+			local eid = item[1]
+			local c = item[3]	-- { eid, component_type, c }
 			if c ~= nil then
-				removed_set = removed_set or {}
-				removed_set[eid] = c --true
+				local ctype = item[2]
+				if ctype == component_type then
+					removed_set = removed_set or {}
+					removed_set[eid] = c -- true
+				end
+			else
+				local e = item[2]
+				c = e[component_type]
+				if c ~= nil then
+					removed_set = removed_set or {}
+					removed_set[eid] = c --true
+				end
 			end
 		end
 	end
-
 	if removed_set then
 		return pairs(removed_set)
 	else

@@ -57,9 +57,13 @@ local function start_watch_entitiy(eid,is_pick)
     end
     if eid and ( not is_pick ) then
         local camerautil = import_package "ant.render".camera
-        -- camerautil.focus_selected_obj(world, eid)
-        local transform = world[eid].transform or world[eid].hierarchy_transform
-        camerautil.focus_point(world, transform.t)
+        if not camerautil.focus_obj(world, eid) then
+            --fallback when focus_obj failed
+            local transform = world[eid].transform or world[eid].hierarchy_transform
+            if transform then
+                camerautil.focus_point(world, transform.t)
+            end
+        end
     end
     local hub = world.args.hub
     local old_eids = {}
@@ -69,11 +73,11 @@ local function start_watch_entitiy(eid,is_pick)
     
     for _,id in ipairs(old_eids) do
         world:remove_component(id,"editor_watching")
-        log.trace(">>remove_component editor_watching:",id)
+        log.trace(">>remove_component [editor_watching] from:",id)
     end
     if world[eid] then
         world:add_component(eid,"editor_watching",true)
-        log(">>add_component editor_watching:",eid)
+        log.trace(">>add_component [editor_watching] to:",eid)
         send_entity(eid,( is_pick and "pick" or "editor"))
     end
 end
@@ -139,6 +143,7 @@ end
 function editor_watcher_system:after_update()
     local hierarchy_dirty = false
     if world._last_entity_id  ~= world._entity_id then
+        --todo:temporary implement
         for i = (world._last_entity_id or 0) + 1,world._entity_id do
             if world[i] and (not world[i].pickup) then
                 hierarchy_dirty = true
@@ -147,14 +152,21 @@ function editor_watcher_system:after_update()
         end
         world._last_entity_id = world._entity_id
     end
-    if world._removed and #world._removed >0 then
-        for _,e in ipairs(world._removed) do
-            if e[2] and (e[2].pickup == nil) then
-                hierarchy_dirty = true
-                break
-            end
+    for eid,e in world:each_removed() do
+        --todo:temporary implement
+        if e.pickup == nil then
+            hierarchy_dirty = true
         end
     end
+    -- if world._removed and #world._removed >0 then
+    --     --todo:temporary implement
+    --     for _,e in ipairs(world._removed) do
+    --         if e[2] and (not e[3]) and (e[2].pickup == nil) then
+    --             hierarchy_dirty = true
+    --             break
+    --         end
+    --     end
+    -- end
     if hierarchy_dirty then
         world._last_entity_id = world._entity_id
         send_hierarchy()
