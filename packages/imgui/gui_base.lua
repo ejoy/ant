@@ -74,7 +74,7 @@ function GuiBase:on_gui(delta)
         if self.before_update then self:before_update() end
         local fold, opening = windows.Begin(self.title_id, self.win_flags or nil)
         if self._err_count < 60 and  fold then
-            local _ , ok = self:try(self.on_update,self,delta)
+            local ok = self:try(self.on_update,self,delta)
             if not ok then
                 self._err_count = self._err_count + 1
             else

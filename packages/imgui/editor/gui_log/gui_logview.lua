@@ -9,7 +9,6 @@ local IO = imgui.IO
 local class     = require "common.class"
 local gui_input = require "gui_input"
 local GuiBase = require "gui_base"
-local dbgutil = import_package "ant.editor".debugutil
 
 local GuiLogView = GuiBase.derive("GuiLogView")
 
@@ -105,17 +104,6 @@ function GuiLogView:_init()
     -----
     self:_init_scroll_list()
     self:hook_log()
-end
-
-function GuiLogView:try(fun,...)
-    if debug.getregistry()["lua-debug"] then
-        return fun(...)
-    end
-    local status,err,ret = xpcall( fun,debug.traceback,... )
-    if not status then
-        io.stderr:write("Error:%s\n%s", status or "nil", err)
-    end
-    return ret,status
 end
 
 function GuiLogView:match_filter(msg_item)
