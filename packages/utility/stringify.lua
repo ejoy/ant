@@ -125,7 +125,7 @@ function stringify_value(v, isroot)
     elseif t == "string" then
         return ("%q"):format(v)
     elseif t == "boolean" then
-        return t and "true" or "false"
+        return v and "true" or "false"
     elseif t == "table" then
         if isarray(v) then
             return stringify_array(v, isroot)
