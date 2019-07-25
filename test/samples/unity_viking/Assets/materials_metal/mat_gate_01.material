@@ -1,0 +1,29 @@
+shader = {
+   vs = "/pkg/unity_viking/assets/shader/pbr/vs_mesh_pbr",
+   fs = "/pkg/unity_viking/assets/shader/pbr/fs_mesh_pbr",
+}
+state = {
+   CULL = "CW",
+   WRITE_MASK = "RGBAZ",
+   DEPTH_TEST = "LESS"
+}
+properties = {
+  textures = {
+    s_basecolor = { type="texture",name="s_basecolor",stage = 0,ref_path="/pkg/unity_viking/assets/texture_desc/build_gate_01_a.texture"},
+    s_normal = { type="texture",name="s_normal",stage = 1,ref_path="/pkg/unity_viking/assets/texture_desc/build_gate_01_n.texture"},
+    s_metallic = { type="texture",name="s_metallic",stage = 2,ref_path="/pkg/unity_viking/assets/texture_desc/DefaultM.texture"},
+    s_texCube = { type="texture",name="s_texCube",stage = 3,ref_path="/pkg/unity_viking/assets/textures/bolonga.texture"},
+
+    s_detailcolor = { type="texture",name="s_detailcolor",stage = 4,ref_path="/pkg/unity_viking/assets/texture_desc/wood_tiled_01_a.texture"},
+    s_detailnormal = { type="texture",name="s_detailnormal",stage = 5,ref_path="/pkg/unity_viking/assets/texture_desc/wood_tiled_01_n.texture"},
+
+    --s_brdfMap = { type="texture",name="s_brdfMap",stage = 6,ref_path="/pkg/unity_viking/assets/textures/brdfMap3.texture"},
+  },
+  uniforms = {
+    u_params = { type="v4",name="u_params",default={1,0,0,1-0.032}},
+    u_diffuseColor = { type="v4",name="u_diffuseColor",default={1,1,1,1}},
+    u_specularColor = { type="v4",name="u_specularColor",default={0.2,0.2,0.2,1}},
+    u_tiling = { type="v4",name="u_tiling",default={1,1,6,6}},
+    u_misc = {type="v4",name="u_misc",default={0,1,0,0}},
+  },
+}

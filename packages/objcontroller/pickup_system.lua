@@ -113,8 +113,8 @@ ecs.component "blit_buffer" {depend = "blit_viewid"}
 	.render_buffer "render_buffer"
 
 ecs.component "pickup_material"
-	.opaticy 		"material_content"
-	.translucent 	"material_content"
+	.opaticy 		"material"
+	.translucent 	"material"
 
 ecs.component_alias("pickup_viewtag", "boolean")
 

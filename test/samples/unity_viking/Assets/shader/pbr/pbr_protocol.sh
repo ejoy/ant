@@ -32,7 +32,7 @@ vec3 getNormalFromMap( sampler2D normalMap, vec2 texCoords, vec3 worldPos, vec3 
     // return normal; 
 
     vec3 tangentNormal = texture2D(normalMap, texCoords).xyz* 2.0 - 1.0;
-    tangentNormal = tangentNormal*1.1;
+    tangentNormal = tangentNormal*1.2;
     tangentNormal = cpn_inverse_proj(tangentNormal);
     
 
@@ -52,7 +52,52 @@ vec3 getNormalFromMap( sampler2D normalMap, vec2 texCoords, vec3 worldPos, vec3 
 
     // D3D Mode ,OpenGL Must do transpose 
     tangentNormal = mul(tangentNormal,TBN  ) ;
+
     return normalize(tangentNormal);
+}
+
+half3 BlendNormals(half3 n1, half3 n2)
+{
+    return normalize(half3(n1.xy + n2.xy, n1.z*n2.z));
+}
+
+
+vec3 PixelNormalMap( vec3 normal, sampler2D detailNormalMap,vec2 texCoords)
+{
+    vec3 normalTangent = normal;
+#ifdef _DETAIL 
+    if( textureSize(detailNormalMap,0).x > 1 )
+    {
+        float mask =  1;   
+        vec3 detailNormal = texture2D(detailNormalMap, texCoords).xyz* 2.0 - 1.0;
+        detailNormal = detailNormal*_DetailNormalMapScale;
+
+        normalTangent;
+        #ifdef _DETAIL_LERP
+            normalTangent = lerp(
+                    normalTangent,
+                    detailNormal,
+                    mask);
+        #else
+            normalTangent = lerp(
+                    normalTangent,
+                    BlendNormals(normalTangent, detailNormal),
+                    mask);
+        #endif
+    }
+#endif 
+
+    return normalTangent;    
+}
+
+vec3 getPixelNormalFromMap( sampler2D normalMap, vec2 texCoords, vec3 worldPos, vec3 normal)
+{
+    vec3 normalTangent = getNormalFromMap(normalMap,texCoords,worldPos,normal);
+#ifdef _DETAIL
+    return PixelNormalMap(normalTangent,_DetailNormalMap,texCoords*_DetailTiling);
+#else
+    return normalTangent;
+#endif 
 }
 
 // ----------------------------------------------------------------------------

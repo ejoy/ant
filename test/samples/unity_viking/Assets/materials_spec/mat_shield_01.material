@@ -1,0 +1,23 @@
+shader = {
+   vs = "/pkg/unity_viking/assets/shader/pbr/vs_mesh_pbr",
+   fs = "/pkg/unity_viking/assets/shader/pbr/fs_mesh_pbr",
+}
+state = {
+   CULL = "CW",
+   WRITE_MASK = "RGBAZ",
+   DEPTH_TEST = "LESS"
+}
+properties = {
+  textures = {
+    s_basecolor = { type="texture",name="s_basecolor",stage = 0,ref_path="/pkg/unity_viking/assets/texture_desc/prop_shield_01_d.texture"},
+    s_normal = { type="texture",name="s_normal",stage = 1,ref_path="/pkg/unity_viking/assets/texture_desc/prop_shield_01_n.texture"},
+    s_metallic = { type="texture",name="s_metallic",stage = 2,ref_path="/pkg/unity_viking/assets/texture_desc/prop_shield_01_sg.texture"},
+    s_texCube = { type="texture",name="s_texCube",stage = 3,ref_path="/pkg/unity_viking/assets/textures/bolonga.texture"},
+  },
+  uniforms = {
+    u_params = { type="v4",name="u_params",default={1,0,0,0.65}},
+    u_diffuseColor = { type="v4",name="u_diffuseColor",default={1,1,1,1}},
+    u_specularColor = { type="v4",name="u_specularColor",default={1,1,1,1}},
+    u_tiling = { type="v4",name="u_tiling",default={1,1,0,0}},
+  },
+}

@@ -113,6 +113,7 @@ end
 
 function init_loader:init()
     renderutil.create_main_queue(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
+    renderutil.create_blit_queue(world, {x=0, y=0, w=world.args.fb_size.w, h=world.args.fb_size.h})
 	-- renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
     do
         lu.create_directional_light_entity(world, 'directional_light')

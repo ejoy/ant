@@ -1,4 +1,4 @@
-path = "//pbr/assets/textures/pbr/gold/albedo.dds"
+path = "/pkg/pbr/assets/textures/pbr/gold/albedo.dds"
 
 sampler = {
 	U = "MIRROR",

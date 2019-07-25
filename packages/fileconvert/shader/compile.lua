@@ -18,7 +18,7 @@ local function check_compile_shader(plat, srcfilepath, outfilepath, shadertype)
 end
 
 return function (identity, srcfilepath, param, outfilepath)	
-	local plat, shadertype = util.identity_info(identity)
+	local plat, shadertype = util.identify_info(identity)
 	assert(plat)
 	assert(shadertype)
 	return check_compile_shader(plat, srcfilepath, outfilepath, shadertype)

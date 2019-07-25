@@ -12,6 +12,14 @@ local world = {} ; world.__index = world
 
 function world:create_component(c, args)
 	local ti = assert(self._components[c], c)
+	if not ti.type and args[1] then
+		local res = component_init(self, ti, args[1])
+		res[1] = res
+		for i = 2, #args do
+			res[i] = component_init(self, ti, args[i])
+		end
+		return res
+	end
 	return component_init(self, ti, args)
 end
 
@@ -47,9 +55,18 @@ end
 
 function world:add_component(eid, component_type, args)
 	local e = self[eid]
-	e[component_type] = self:create_component(component_type, args)
-	self:register_component(eid, component_type)
-	self:init_component(e, component_type)
+	local c = e[component_type]
+	if not c then
+		e[component_type] = self:create_component(component_type, args)
+		local ti = assert(self._components[component_type], component_type)
+		if not ti.type then
+			e[component_type][1] = e[component_type]
+		end
+		self:register_component(eid, component_type)
+		self:init_component(e, component_type)
+	else
+		c[#c+1] = self:create_component(component_type, args)
+	end
 end
 
 function world:add_component_child(parent_com,child_name,child_type,child_value)

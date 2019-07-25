@@ -1,4 +1,4 @@
-path = "//pbr/assets/textures/pbr/Cerberus_R.dds"
+path = "/pkg/pbr/assets/textures/pbr/Cerberus_R.dds"
 
 sampler = {
 	U = "MIRROR",

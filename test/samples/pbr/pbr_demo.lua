@@ -62,7 +62,8 @@ local function to_angle(rad)
 end 
 
 function pbr_demo:init()
-    renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
+	renderutil.create_main_queue(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 25, 5})
+    --renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
     do
         local rotation = to_radian({45,-90,0,0})
         lu.create_directional_light_entity(world, 'directional_light',{1,1,1,0}, 1, rotation )
@@ -77,13 +78,13 @@ end
 
 function pbr_demo:update()
 
-    local deltaTime =  timer.deltatime
-    print("deltaTime",deltaTime)
+    -- local deltaTime =  timer.deltatime
+    -- print("deltaTime",deltaTime)
 
-	local camera_entity = world:first_entity("main_queue")
-	local camera = camera_entity.camera
+	-- local camera_entity = world:first_entity("main_queue")
+	-- local camera = camera_entity.camera
 
-    local pos = ms(camera.eyepos,"T")
-    print("camera :",string.format("%08.4f",pos[1]), string.format("%08.4f",pos[2]),string.format("%08.4f",pos[3]) )
+    -- local pos = ms(camera.eyepos,"T")
+    -- print("camera :",string.format("%08.4f",pos[1]), string.format("%08.4f",pos[2]),string.format("%08.4f",pos[3]) )
 
 end 
