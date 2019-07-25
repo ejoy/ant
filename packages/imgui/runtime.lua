@@ -119,7 +119,7 @@ function callback.touch(x, y, id, state)
 		end
 	end
 	if not imguiIO.WantCaptureMouse then
-		iq:push("touch", id, inputmgr.translate_mouse_state(state), x, y)
+		iq:push("touch", x, y, id, inputmgr.translate_mouse_state(state))
 	end
 end
 
