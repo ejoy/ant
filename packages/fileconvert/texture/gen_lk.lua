@@ -39,6 +39,13 @@ end
 
 local stringify = require "stringify"
 
+local function is_normal_map(filepath)
+    local filename = filepath:filename():string():lower()
+    if filename:match "_n%.dds$" then
+        return true
+    end
+end
+
 for i=1, #files do
     local f = files[i]
     local lk = util.rawtable(fs.path "packages/fileconvert/texture/default.texture.lk")
@@ -46,6 +53,7 @@ for i=1, #files do
     local info = file_format_info(f)
     
     lk.colorspace = info.colorspace
+    lk.normalmap = is_normal_map(f)
     if info.compressed then
 
         local astcfmt = info.format == "BC1" and "ASTC6x6" or "ASTC4x4"
