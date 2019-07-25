@@ -76,7 +76,7 @@ function camera_controller_system:init()
 	
 	local message = {}
 
-	function message:mouse(what, state, x, y)
+	function message:mouse(x, y, what, state)
 		if state == "MOVE" then
 			local xy = point2d(x, y)
 			if last_xy then
