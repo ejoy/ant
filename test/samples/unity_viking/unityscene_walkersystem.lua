@@ -42,7 +42,8 @@ function scene_walker:init()
 	renderutil.create_main_queue(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 50, 5})
     do
         -- 255,209,172
-        lu.create_directional_light_entity(world, 'directional_light',{1,0.81*0.70,0.67*0.6,0}, 5.5, mu.to_radian {-220,-235,0,0} )     --{1,0.81,0.67,0}
+        lu.create_directional_light_entity(world, 'directional_light',{1,0.81,0.67,0}, 1.5, mu.to_radian {-220,-235,0,0} )     --{1,0.81,0.67,0}
+        --lu.create_directional_light_entity(world, 'directional_light',{1,0.81*0.70,0.67*0.6,0}, 5.5, mu.to_radian {-220,-235,0,0} )     --{1,0.81,0.67,0}
         lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     end
    
