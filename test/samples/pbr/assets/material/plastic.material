@@ -1,6 +1,6 @@
 shader = {
-	 vs = "//pbr/assets/shader/pbr/vs_mesh_pbr",
-	 fs = "//pbr/assets/shader/pbr/fs_mesh_pbr",
+	 vs = "/pkg/pbr/assets/shader/pbr/vs_mesh_pbr",
+	 fs = "/pkg/pbr/assets/shader/pbr/fs_mesh_pbr",
 }
 
 -- state = "default.state"
@@ -12,18 +12,17 @@ state = {
 
 properties = {
 	textures = {
-		s_basecolor = {type="texture", name="base color", stage=0, ref_path="//pbr/assets/textures/plastic_d.texture"},
-		s_normal = {type="texture", name="normal", stage=1, ref_path="//pbr/assets/textures/plastic_n.texture"},
-		s_metallic = {type="texture", name="s_metallic", stage=2, ref_path="//pbr/assets/textures/plastic_m.texture"},
-		s_texCube = { type="texture", name="s_texCube",  stage=3, ref_path="//pbr/assets/textures/bolonga.texture"}, 	
-		s_texCubeIrr = { type="texture", name="s_texCubeIrr",  stage=9, ref_path="//pbr/assets/textures/bolonga_irr.texture"}, 
+		s_basecolor = {type="texture", name="base color", stage=0, ref_path="/pkg/pbr/assets/textures/plastic_d.texture"},
+		s_normal = {type="texture", name="normal", stage=1, ref_path="/pkg/pbr/assets/textures/plastic_n.texture"},
+		s_metallic = {type="texture", name="s_metallic", stage=2, ref_path="/pkg/pbr/assets/textures/plastic_m.texture"},
+		s_texCube = { type="texture", name="s_texCube",  stage=3, ref_path="/pkg/pbr/assets/textures/bolonga.texture"}, 	
+		s_texCubeIrr = { type="texture", name="s_texCubeIrr",  stage=9, ref_path="/pkg/pbr/assets/textures/bolonga_irr.texture"}, 
 	},
 	uniforms = {
 		u_params = { type="v4", name="u_params ", default= { 0, 0, 0, 0.05} },
-		u_diffuseColor = { type="v4", name="diffuse color", default= {255/255, 255/255, 255/255, 1.0} },
-
-		u_specularColor = {type="v4", name="specular color", default= {200/255, 200/255, 200/255, 0.08}},
-		u_specularLight = {type="v4", name="specular light factor", default={2, 0, 0,0}},
+    	u_tiling = { type="v4",name="u_tiling", default={1,1,0,0}},		
+		u_diffuseColor = { type="v4", name="diffuse color", default= {1, 1, 1, 1.0} },
+		u_specularColor = {type="v4", name="specular color", default= {0.78, 0.78, 0.78, 0.08}},
 	}
 }
 
