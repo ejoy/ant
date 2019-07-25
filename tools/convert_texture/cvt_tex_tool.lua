@@ -20,6 +20,7 @@ else
     assetpath = fs.path "test/samples/unity_viking/Assets"
 end
 
+local cvt_starttime = os.clock();                           --> os.clock()用法
 local texfiles = fs_util.list_files(assetpath, ".dds", {})
 for _, f in ipairs(texfiles)do
     local lkfile = fs.path(f:string() .. ".lk")
@@ -28,10 +29,11 @@ for _, f in ipairs(texfiles)do
 
     local outfilepath = fs.path(f:string() .. ".bin")
     if not fs.exists(outfilepath) then
+        local starttime = os.clock()
         local surcess, msg = cvttex("iOS-Metal", f, lkcontent, outfilepath)
         
         if surcess then
-            print("convert success", f:string())
+            print("convert success", f:string(), "time consumed:", os.clock() - starttime)
         else
             print("converte failed", f:string(), msg)
         end
@@ -40,12 +42,13 @@ for _, f in ipairs(texfiles)do
     end
 end
 
+print("convert finish: ", os.clock() - cvt_starttime)
+
 local binfiles = fs_util.list_files(assetpath, ".bin", {})
 local totalfilesize = 0
 for _, fp in ipairs(binfiles)do
     local f = fs.open(fp, "rb")
-    f:seek("end")
-    totalfilesize = totalfilesize + f:tell()
+    totalfilesize = totalfilesize + f:seek("end")
     f:close()
 end
 
