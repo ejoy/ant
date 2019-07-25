@@ -32,7 +32,7 @@ function terrain_test:init()
 		}
 	end
 
-	local function create_material_content()
+	local function create_material()
 	return {
 		{
 			ref_path = terrainfolder / 'terrain.material',
@@ -54,7 +54,7 @@ function terrain_test:init()
 	end
 
 	world:create_entity {
-        material = create_material_content(),
+        material = create_material(),
         transform = {
             s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},

@@ -165,19 +165,17 @@ ecs.component "properties"
 	["opt"].textures "texture{}"
 	["opt"].uniforms "uniform{}"
 
-local material_content = ecs.component "material_content"
+local material = ecs.component "material"
 	.ref_path "respath"
 	["opt"].properties "properties"
 	["opt"].asyn_load "boolean" (false)
 
-function material_content:init()
+function material:init()
 	if not self.asyn_load then
 		component_util.create_material(self)
 	end
 	return self
 end
-
-ecs.component_alias("material", "material_content[]")
 
 ecs.component_alias("can_render", "boolean", true) {depend={"transform", "rendermesh", "material"}}
 ecs.component_alias("can_cast", "boolean", false)
