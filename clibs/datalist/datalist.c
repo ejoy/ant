@@ -492,6 +492,9 @@ new_table(lua_State *L, int layer, objectid ref) {
 	luaL_checkstack(L, 8, NULL);
 	if (ref == 0) {
 		lua_newtable(L);
+		// index 0 refer self
+		lua_pushvalue(L, -1);
+		lua_rawseti(L, -2, 0);
 	} else {
 		lua_rawgeti(L, REF_CACHE, ref);
 	}
@@ -577,6 +580,29 @@ closed_bracket(lua_State *L, struct lex_state *LS, int bracket) {
 	}
 }
 
+// table key value
+static void
+set_keyvalue(lua_State *L) {
+	lua_pushvalue(L, -2);
+	// table key value key
+	int oldv = lua_gettable(L, -4);
+	// table key value oldv
+	if (oldv == LUA_TNIL) {
+		lua_pop(L, 1);
+		lua_settable(L, -3);
+	} else if (oldv == LUA_TTABLE) {
+		lua_len(L, -1);
+		int n = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+		lua_replace(L, -3);
+		// table oldv value
+		lua_seti(L, -2, n+1);
+		lua_pop(L, 1);
+	} else {
+		luaL_error(L, "Multi-key (%s) should be a table", lua_tostring(L, -3));
+	}
+}
+
 static void
 parse_bracket_map(lua_State *L, struct lex_state *LS, int layer, int bracket) {
 	int i = 1;
@@ -618,7 +644,7 @@ parse_bracket_map(lua_State *L, struct lex_state *LS, int layer, int bracket) {
 			lua_seti(L, -3, i++);
 			lua_seti(L, -2, i++);
 		} else {
-			lua_settable(L, -3);
+			set_keyvalue(L);
 		}
 	} while (!closed_bracket(L, LS, bracket));
 }
@@ -762,7 +788,7 @@ parse_section_map(lua_State *L, struct lex_state *LS, int ident, int layer) {
 			lua_seti(L, -3, i++);
 			lua_seti(L, -2, i++);
 		} else {
-			lua_settable(L, -3);
+			set_keyvalue(L);
 		}
 	} while (next_item(L, LS, ident));
 }
