@@ -1,4 +1,4 @@
-//simple pbr 
+// simple pbr implement sample
 $input v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_texcoord4,v_texcoord5,v_texcoord6,v_texcoord7,v_worldPos,v_camPos
  
 #include <common.sh>
@@ -6,6 +6,7 @@ $input v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_texc
 #include "common/lighting.sh"
  
 #include "pbr_protocol.sh"    
+
         
 // for shadow 
 #define SM_PCF 1     
@@ -22,7 +23,6 @@ $input v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_texc
 SAMPLER2D(s_basecolor, 0);
 SAMPLER2D(s_normal, 1); 
 SAMPLER2D(s_metallic, 2);
-//SAMPLER2D(s_roughness, 10);
  
 SAMPLERCUBE(s_texCube,3);
 // irr could be removed to improve performance  
@@ -115,8 +115,6 @@ vec3 ambient_term(vec3 N,vec3 V,vec3 R,vec3 F0,float metallic,float roughness,ve
  
 void main()
 { 
- 
-
     vec4 lightColor    = directional_color[0] * directional_intensity[0].x;
     vec4 lightPos      = vec4(v_lightdir,0);    // default directional
     vec4 specularColor = u_specularColor;
@@ -151,7 +149,8 @@ void main()
     }
 
     // direct     
-    vec3 direct  = direct_term(N,V,F0,metallic,roughness,albedo,v_worldPos.xyz,lightPos,lightColor);  
+    vec3 direct = direct_term(N,V,F0,metallic,roughness,albedo,v_worldPos.xyz,lightPos,lightColor);
+   
     // ambient 
     vec3 ambient  = ambient_term(N,V,R,F0,metallic,roughness,albedo,s_texCubeIrr,s_texCube);
 
