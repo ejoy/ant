@@ -11,6 +11,9 @@ local mathpkg 	= import_package "ant.math"
 local mu = mathpkg.util
 local ms = mathpkg.stack
 
+local geopkg 	= import_package "ant.geometry"
+local geodrawer	= geopkg.drawer
+
 local function deep_copy(t)
 	if type(t) == "table" then
 		local tmp = {}
@@ -29,17 +32,11 @@ function util.load_texture(name, stage, filename)
 end
 
 function util.add_material(material, filename)
-	local content = material.content
-	if content == nil then
-        content = {}
-        material.content = content
-    end
-
 	local item = {
 		ref_path = filename,
 	}
 	util.create_material(item)
-    content[#content + 1] = item
+    material[#material + 1] = item
 end
 
 local function update_properties(dst_properties, src_properties)
@@ -88,11 +85,9 @@ function util.create_material(material)
 	material.materialinfo = materialinfo	
 end
 
-function util.assign_material(filepath, properties)
+function util.assign_material(filepath, properties, asyn_load)
 	return {
-		content = {
-			{ref_path = filepath, properties = properties}
-		}
+		{ref_path = filepath, properties = properties, asyn_load=asyn_load}
 	}
 end
 
@@ -124,16 +119,20 @@ end
 
 function util.is_entity_visible(entity)
     local can_render = entity.can_render
-    if can_render then
-        local mesh = entity.mesh
-        return mesh and mesh.assetinfo
+	if can_render then
+		local al = entity.asyn_load
+		local rm = entity.rendermesh
+		if al then
+			return al == "loaded" and rm.handle ~= nil
+		end
+        return rm.handle ~= nil
     end
 
     return false
 end
 
 function util.assign_group_as_mesh(group)
-	return {handle = {
+	return {
 		sceneidx = 1,
 		scenes = {
 			-- scene 1
@@ -144,7 +143,7 @@ function util.assign_group_as_mesh(group)
 				}
 			}
 		}
-	}}
+	}
 end
 
 function util.create_simple_mesh(vertex_desc, vb, num_vertices, ib, num_indices)
@@ -186,7 +185,7 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
 
 	local gridid = world:create_entity {
 		transform = mu.identity_transform(),
-        mesh = {},
+        rendermesh = {},
         material = util.assign_material(fs.path "/pkg/ant.resources" / "materials" / "line.material"),
 		name = name,
 		can_render = true,
@@ -208,7 +207,7 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
 	local num_vertices = #vb
 	local num_indices = #ib
 
-	grid.mesh.assetinfo = util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)
+	grid.rendermesh.handle = util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)
     return gridid
 end
 
@@ -219,21 +218,11 @@ function util.create_plane_entity(world, color, size, pos, name)
 			r = {0, 0, 0, 0},
 			t = pos or {0, 0, 0, 1}
 		},
-		mesh = {
-			ref_path = fs.path "/pkg/ant.resources/depiction/cube.mesh"
-		},
-		material = {
-			content = {
-				{
-					ref_path = fs.path "/pkg/ant.resources/depiction/shadow/mesh_receive_shadow.material",
-					properties = {
-						uniforms = {
-							u_color = {type="color", name="color", value=color}
-						},
-					}
-				}
-			}
-		},
+		rendermesh = {},
+		mesh = {ref_path = fs.path "/pkg/ant.resources/depiction/cube.mesh"},
+		material = computil.assign_material(
+				fs.path "/pkg/ant.resources/depiction/shadow/mesh_receive_shadow.material",
+				{uniforms = {u_color = {type="color", name="color", value=color}},}),
 		can_render = true,
 		--can_cast = true,
 		main_view = true,
@@ -261,7 +250,7 @@ function util.create_quad_entity(world, rect, materialpath, properties, name, vi
 	view_tag = view_tag or "main_view"
 	local eid = world:create_entity {
 		transform = mu.identity_transform(),
-		mesh = {},
+		rendermesh = {},
 		material = util.assign_material(materialpath, properties),
 		can_render = true,
 		[view_tag] = true,
@@ -269,7 +258,7 @@ function util.create_quad_entity(world, rect, materialpath, properties, name, vi
 	}
 
 	local e = world[eid]
-	e.mesh.assetinfo = util.quad_mesh(rect)
+	e.rendermesh.handle = util.quad_mesh(rect)
 	return eid
 end
 
@@ -282,7 +271,7 @@ function util.create_texture_quad_entity(world, texture_tbl, view_tag, name)
     local quadid = world:create_entity{
         transform = mu.identity_transform(),
         can_render = true,
-        mesh = {},
+        rendermesh = {},
         material = util.assign_material(
 			fs.path "/pkg/ant.resources/materials/texture.material", 
 			{textures = texture_tbl,}),
@@ -298,7 +287,7 @@ function util.create_texture_quad_entity(world, texture_tbl, view_tag, name)
 		 3, -3, 0, 1, 1,
 	}
     
-    quad.mesh.assetinfo = quad_mesh(vb)
+    quad.rendermesh.handle = quad_mesh(vb)
     return quadid
 end
 
@@ -307,8 +296,8 @@ function util.calc_transform_boundings(world, transformed_boundings)
 		local e = world[eid]
 
 		if e.mesh_bounding_drawer_tag == nil and e.main_view then
-			local m = e.mesh
-			local meshscene = m.assetinfo.handle
+			local rm = e.rendermesh
+			local meshscene = rm.handle
 
 			local worldmat = ms:srtmat(e.transform)
 
@@ -323,8 +312,7 @@ function util.calc_transform_boundings(world, transformed_boundings)
 						local b = g.bounding
 						if b then
 							local tb = mathbaselib.new_bounding(ms)
-							tb:merge(b)
-							tb:transform(trans)
+							tb:reset(b, trans)
 							transformed_boundings[#transformed_boundings+1] = tb
 						end
 					end
@@ -333,5 +321,131 @@ function util.calc_transform_boundings(world, transformed_boundings)
 		end
 	end
 end
+
+function util.create_frustum_entity(world, frustum, name, transform, color)
+	local points = frustum:points()
+	local eid = world:create_entity {
+		transform = transform or mu.srt(),
+		rendermesh = {},
+		material = util.assign_material(fs.path "/pkg/ant.resources/depiction/materials/line.material"),
+		can_render = true,
+		main_view = true,
+		name = name or "frustum"
+	}
+
+	local e = world[eid]
+	local m = e.rendermesh
+	local vb = {"fffd",}
+	local cornernames = {
+		"ltn", "lbn", "rtn", "rbn",
+		"ltf", "lbf", "rtf", "rbf",
+	}
+
+	color = color or 0xff00000f
+	for _, n in ipairs(cornernames) do
+		local p = points[n]
+		table.move(p, 1, 3, #vb+1, vb)
+		vb[#vb+1] = color
+	end
+
+	local ib = {
+		-- front
+		0, 1, 2, 3,
+		0, 2, 1, 3,
+
+		-- back
+		4, 5, 6, 7,
+		4, 6, 5, 7,
+
+		-- left
+		0, 4, 1, 5,
+		-- right
+		2, 6, 3, 7,
+	}
+	
+	
+	m.handle = util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib)
+	return eid
+end
+
+function util.create_skybox(world, material)
+    local eid = world:create_entity {
+        transform = mu.srt(),
+        rendermesh = {},
+        material = material or util.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skybox.material"),
+        can_render = true,
+        main_view = true,
+        name = "sky_box",
+    }
+    local e = world[eid]
+    local rm = e.rendermesh
+
+    local desc = {vb={}, ib={}}
+    geodrawer.draw_box({1, 1, 1}, nil, nil, desc)
+    local gvb = {"fff",}
+    for _, v in ipairs(desc.vb)do
+        table.move(v, 1, 3, #gvb+1, gvb)
+    end
+    rm.handle = util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib)
+    return eid
+end
+
+local function check_rendermesh_lod(rm)
+	local scene = rm.handle
+	if scene.scenelods then
+		assert(1 <= scene.sceneidx and scene.sceneidx <= #scene.scenelods)
+		if rm.lodidx < 1 or rm.lodidx > #scene.scenelods then
+			print("invalid lod:", rm.lodidx, "max lod:", scene.scenelods)
+			rm.lodidx = 1
+		end
+	else
+		if scene.sceneidx ~= rm.lodidx then
+			print("default lod scene is not equal to lodidx")
+		end
+	end
+end
+
+function util.transmit_mesh(mesh, rendermesh)
+	rendermesh.handle 	= mesh.assetinfo.handle
+	mesh.assetinfo 		= nil	-- transmit to rendermesh
+	check_rendermesh_lod(rendermesh)
+end
+
+function util.scene_index(rendermesh)
+	local meshscene = rendermesh.handle
+	local lodlevel = rendermesh.lodidx or meshscene.sceneidx
+	return meshscene.scenelods and (meshscene.scenelods[lodlevel]) or meshscene.sceneidx
+end
+
+function util.entity_bounding(entity)
+	if util.is_entity_visible(entity) then
+		local rm = entity.rendermesh
+		local meshscene = rm.handle
+		local sceneidx = util.scene_index(rm)
+
+		local worldmat = ms:srtmat(entity.transform)
+
+		local scene = meshscene.scenes[sceneidx]
+		local entitybounding = mathbaselib.new_bounding(ms)
+		for _, mn in ipairs(scene)	do
+			local trans = worldmat
+			if mn.transform then
+				trans = ms(trans, mn.transform, "*P")
+			end
+
+			for _, g in ipairs(mn) do
+				local b = g.bounding
+				if b then
+					local tb = mathbaselib.new_bounding(ms)
+					tb:reset(b, trans)
+					entitybounding:merge(tb)
+				end
+			end
+		end
+		
+		return entitybounding:isvalid() and entitybounding or nil
+	end
+end
+
 
 return util

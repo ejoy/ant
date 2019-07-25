@@ -13,21 +13,12 @@
 [submodule "3rd/ozz-animation"]
 	path = 3rd/ozz-animation
 	url = https://github.com/guillaumeblanc/ozz-animation.git
-[submodule "3rd/libusbmuxd"]
-	path = 3rd/libusbmuxd
-	url = https://github.com/libimobiledevice/libusbmuxd.git
-[submodule "3rd/libplist"]
-	path = 3rd/libplist
-	url = https://github.com/libimobiledevice/libplist.git
 [submodule "3rd/glm"]
 	path = 3rd/glm
 	url = https://github.com/g-truc/glm.git
 [submodule "3rd/bullet3"]
 	path = 3rd/bullet3
 	url = https://github.com/bulletphysics/bullet3.git
-[submodule "3rd/libimobiledevice"]
-	path = 3rd/libimobiledevice
-	url = https://github.com/libimobiledevice/libimobiledevice.git
 [submodule "3rd/ios-cmake"]
 	path = 3rd/ios-cmake
 	url = https://github.com/leetal/ios-cmake.git

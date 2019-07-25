@@ -32,7 +32,7 @@ function terrain_test:init()
 		}
 	end
 
-	local function create_material_content()
+	local function create_material()
 	return {
 		{
 			ref_path = terrainfolder / 'terrain.material',
@@ -54,9 +54,7 @@ function terrain_test:init()
 	end
 
 	world:create_entity {
-        material = {
-            content = create_material_content()
-        },
+        material = create_material(),
         transform = {
             s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
@@ -76,28 +74,12 @@ function terrain_test:init()
 				obj_idx = -1,
 			},
 		},
-        mesh = {},
+        rendermesh = {},
         name = "pvp",
         can_render = true,
+        can_select = true,
 		main_view = true,
 		serialize = serialize.create(),
+		hierarchy_visible = true,
 	}
-		
-	-- world:create_entity {
-    --     material = {
-	-- 		content = create_material_content(),
-	-- 	},
-    --     transform = {
-    --         s = {1, 1, 1, 0},
-    --         r = {0, 0, 0, 0},
-    --         t = {60, 130, 60, 1},
-    --     },
-    --     terrain = {
-    --         ref_path = terrainfolder / 'cibi.terrain'
-    --     },
-    --     mesh = {},
-    --     name = "pvp",
-    --     can_render = true,
-    --     main_view = true
-    -- }
 end

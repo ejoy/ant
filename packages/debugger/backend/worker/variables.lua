@@ -71,7 +71,7 @@ local function init_luaver()
     local version = rdebug.indexv(rdebug._G, "_VERSION")
     local ver = 0
     for n in version:gmatch "%d" do
-        ver = ver * 10 + math.tointeger(n) or 0
+        ver = ver * 10 + (math.tointeger(n) or 0)
     end
     LUAVERSION = ver
 end
@@ -313,11 +313,8 @@ end
 
 local function varGetValue(type, subtype, value)
     if type == 'string' then
-        local str = rdebug.value(value)
-        if #str < 256 then
-            return ("'%s'"):format(str)
-        end
-        return ("'%s...'"):format(str:sub(1, 256))
+        -- TODO: Cut string by type of eval
+        return ("'%s'"):format(rdebug.value(value))
     elseif type == 'boolean' then
         if rdebug.value(value) then
             return 'true'

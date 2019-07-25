@@ -3,11 +3,23 @@
   <Type Name="lua_State">
     <DisplayString>[thread top=]{top-(ci->func+1)}</DisplayString>
     <Expand>
-      <Item Name="[stack size]">top-(ci->func+1)</Item>
+      <!--Item Name="[stack top]">top-(ci->func+1)</Item>
       <IndexListItems>
-        <Size>top-(ci->func+1)</Size>
+        <Size>top-(ci->func+1)+1</Size>
         <ValueNode>ci->func[$i]</ValueNode>
-      </IndexListItems>
+      </IndexListItems-->
+      <Item Name="[stack top]">top-(ci->func+1)</Item>
+      <CustomListItems MaxItemsPerView="100" ExcludeView="Test">
+        <Variable Name="i" InitialValue="(top-(ci->func+1))+1" />
+        <Variable Name="siz_1" InitialValue="(top-(ci->func+1))+1" />
+        <Loop>
+          <If Condition="i &gt; 1">
+            <Exec>i--</Exec>
+            <Item Name="[{i}]   [{i-siz_1}]">ci->func[i]</Item>
+          </If>
+          <Break Condition="i == 1" />
+        </Loop>
+      </CustomListItems>
       <Item Name="[registry]">l_G->l_registry</Item>
       <!-- <Item Name="[globals]">l_gt</Item> -->
       <Item Name="[call]" Condition="ci->func->tt_!=0">ci->func</Item>
@@ -32,25 +44,25 @@
     <DisplayString Condition="(tt_)==2">[lightuserdata] {(void *)(value_).p}</DisplayString>
     <DisplayString Condition="(tt_)==3">[number] {(lua_Number)((value_).n)}</DisplayString>
     <DisplayString Condition="(tt_)==19">[int] {(lua_Integer)(value_).i}</DisplayString>
-    <DisplayString Condition="(tt_&amp;0x0f)==4">[string] {((union GCUnion *)(value_.gc))->ts}</DisplayString>
-    <DisplayString Condition="(tt_)==69">[table] {((union GCUnion *)(value_).gc)->h}</DisplayString>
-    <DisplayString Condition="(tt_)==102">[cclosuse] {((union GCUnion *)(value_).gc)->cl.c}</DisplayString>
-    <DisplayString Condition="(tt_)==70">[lclosuse] {((union GCUnion *)(value_).gc)->cl.l}</DisplayString>
-    <DisplayString Condition="(tt_&amp;0x1f)==6">[closure] {((union GCUnion *)(value_).gc)->cl}</DisplayString>
+    <DisplayString Condition="(tt_&amp;0x0f)==4">[string] {((struct TString *)(value_.gc))}</DisplayString>
+    <DisplayString Condition="(tt_)==69">[table] {((struct Table *)(value_).gc)}</DisplayString>
+    <DisplayString Condition="(tt_)==102">[cclosuse] {(((union Closure *)(value_).gc))->c}</DisplayString>
+    <DisplayString Condition="(tt_)==70">[lclosuse] {(((union Closure *)(value_).gc))->l}</DisplayString>
+    <DisplayString Condition="(tt_&amp;0x1f)==6">[closure] {((union Closure *)(value_).gc)}</DisplayString>
     <DisplayString Condition="(tt_&amp;0xf)==6">[function] {value_.p}</DisplayString>
 
-    <DisplayString Condition="(tt_)==71">[userdata] {((union GCUnion *)(value_).gc)->u}</DisplayString>
-    <DisplayString Condition="(tt_)==72">[thread] {((union GCUnion *)(value_).gc)->th}</DisplayString>
+    <DisplayString Condition="(tt_)==71">[userdata] {((struct Udata *)(value_).gc)}</DisplayString>
+    <DisplayString Condition="(tt_)==72">[thread] {((struct lua_State *)(value_).gc)}</DisplayString>
     <DisplayString>[unknown]</DisplayString>
     <Expand>
       <Item Name="[lua_TValue type]">tt_&amp;0xf</Item>
       <Item Name="[lua_TValue tag]">tt_</Item>
-      <Item Name="[GCUnion]">(union GCUnion *)(value_.gc)</Item>
+      <Item Name="[GCUnion]">(value_.gc)</Item>
       <Item Name="[lightuserdata]" Condition="(tt_)==2">(const char *)value_.p</Item>
-      <Item Name="[table]" Condition="(tt_)==69">((union GCUnion *)(value_).gc)->h</Item>
-      <Item Name="[function]" Condition="(tt_&amp;0x1f)==6">((union GCUnion *)(value_).gc)->cl</Item>
-      <Item Name="[userdata]" Condition="(tt_)==71">((union GCUnion *)(value_).gc)->u</Item>
-      <Item Name="[thread]" Condition="(tt_)==72">((union GCUnion *)(value_).gc)->th</Item>
+      <Item Name="[table]" Condition="(tt_)==69">((struct Table *)(value_).gc)</Item>
+      <Item Name="[function]" Condition="(tt_&amp;0x1f)==6">((union Closure *)(value_).gc)</Item>
+      <Item Name="[userdata]" Condition="(tt_)==71">((struct Udata *)(value_).gc)</Item>
+      <Item Name="[thread]" Condition="(tt_)==72">((struct lua_State *)(value_).gc)</Item>
     </Expand>
   </Type>
 
@@ -61,7 +73,15 @@
     <DisplayString>{f}</DisplayString>
   </Type>
   <Type Name="LClosure">
-    <DisplayString>{(p->source)} : {*(p->lineinfo)} )</DisplayString>
+    <DisplayString Condition="p->source">{(p->source) } : {*(p->lineinfo)} )</DisplayString>
+    <DisplayString>=?</DisplayString>
+    <Expand>
+      <Item Name="source" Condition="p->source">(p->source)</Item>
+      <Item Name="linedefined">(p->linedefined)</Item>
+      <Item Name="lastlinedefined">(p->lastlinedefined)</Item>
+      <Item Name="what" Condition="p->linedefined == 0">"main"</Item>
+      <Item Name="what" Condition="p->linedefined != 0">"Lua"</Item>
+    </Expand>
   </Type>
   <Type Name="Closure">
     <DisplayString Condition="c.tt==6" >{c}{l}</DisplayString>
@@ -91,7 +111,7 @@
            <DisplayString>{(char *)(&amp;tsv+sizeof(*this)/sizeof(tsv)),s}</DisplayString>  
       </Type-->
   <Type Name="TString">
-    <DisplayString>{(char *)(this)+24}</DisplayString>
+    <DisplayString>{(char *)(this)+8+sizeof(double)*2}</DisplayString>
   </Type>
   <Type Name="UTString">
     <DisplayString>{(char *)(&amp;tsv+sizeof(*this)/sizeof(tsv)),s}</DisplayString>
@@ -99,13 +119,13 @@
   <Type Name="TKey">
     <DisplayString>{tvk}</DisplayString>
   </Type>
-  <Type Name="CallInfo">
-    <DisplayString Condition="(func->tt_&amp;0x1f)==6">{((union GCUnion *)(func->value_).gc)->cl},{u}</DisplayString>
-    <DisplayString>{func},{u}</DisplayString>
-    <Expand>
-      <Item Name="[func]">func</Item>
-      <Item Name="[LClosure]">((union GCUnion *)(func->value_).gc)->cl</Item>
-    </Expand>
-
+      <Type Name="CallInfo">
+        <DisplayString Condition="(func->tt_&amp;0x1f)==6">{((union Closure *)(func->value_).gc)}</DisplayString>
+        <DisplayString>{func},{u}</DisplayString>
+          <Expand>
+          <Item Name="[func]">func</Item>
+          <Item Name="[LClosure]">((union Closure *)(func->value_).gc)</Item>
+           <Item Name ="[union u]">u</Item>
+        </Expand>
   </Type>
 </AutoVisualizer>

@@ -43,4 +43,13 @@ ru.createThread('debug', [[
     end
 ]])
 
-return dbg.start_worker(arg[1] == '-stopOnEntry')
+local function stopOnEntry()
+    for _, v in ipairs(arg) do
+        if v == '-stopOnEntry' then
+            return true
+        end
+    end
+    return false
+end
+
+return dbg.start_worker(stopOnEntry())

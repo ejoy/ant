@@ -1,4 +1,4 @@
-path = "/pkg/unity_viking/assets/textures/pbr/gold/metallic.dds"
+path = "/pkg/unity_viking/Assets/textures/pbr/gold/metallic.dds"
 
 sampler = {
 	U = "MIRROR",

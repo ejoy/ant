@@ -168,6 +168,12 @@ function draw.draw_aabb_box(aabb, color, transform, desc)
 	end)
 end
 
+function draw.draw_box(size, color, transform, desc)
+	draw_primitve(color, transform, desc, function ()
+		return geo.box(size, true, true)
+	end)
+end
+
 function draw.draw_frustum(frustum, color, transform, desc)
 
 end

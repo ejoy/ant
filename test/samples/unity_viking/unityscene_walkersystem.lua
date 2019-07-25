@@ -20,12 +20,13 @@ ecs.import 'ant.event'
 ecs.import 'ant.objcontroller'
 ecs.import 'ant.math.adapter'
 ecs.import 'ant.sky'
+ecs.import 'ant.asset'
 
 local renderpkg = import_package 'ant.render'
 local renderutil=renderpkg.util
 local lu = renderpkg.light
  
-local unitySceneMaker = require "unitySceneMaker"
+local unitySceneMaker = require "unityscenemaker"
 
 local scene_walker = ecs.system 'scene_walker'
 
@@ -33,7 +34,9 @@ scene_walker.depend 	'timesystem'
 scene_walker.depend 	"viewport_detect_system"
 scene_walker.depend 	'render_system'
 scene_walker.depend 	'primitive_filter_system'
-scene_walker.depend     'sky_system'
+scene_walker.depend     'procedural_sky_system'
+scene_walker.depend     'cull_system'
+scene_walker.depend     'asyn_asset_loader'
 
 scene_walker.dependby 	'camera_controller'
 
@@ -53,7 +56,7 @@ function scene_walker:init()
     -- fpsscene.lua 280000
     -- buildingc_scene.lua
     -- sample.lua
-    unitySceneMaker.create(world,"/pkg/unity_viking/assets/scene/viking_glb.lua") 
+    unitySceneMaker.create(world,"/pkg/unity_viking/Assets/scene/viking_glb.lua") 
 
     --computil.create_grid_entity(world, 'grid', 64, 64, 1)
 

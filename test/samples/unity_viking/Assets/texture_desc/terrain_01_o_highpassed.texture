@@ -1,4 +1,4 @@
- path = "/pkg/unity_viking/Assets/Textures/Terrain/terrain_01_o_highpassed.dds"
+ path = "/pkg/unity_viking/Assets/textures/Terrain/terrain_01_o_highpassed.dds"
  sampler = {
    U = "MIRROR",
    V = "MIRROR",

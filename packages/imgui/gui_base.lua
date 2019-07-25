@@ -5,6 +5,7 @@ local widget    = imgui.widget
 local flags     = imgui.flags
 local windows   = imgui.windows
 local util      = imgui.util
+local dbgutil = import_package "ant.editor".debugutil
 
 
 GuiBase.GuiName = "GuiBase"
@@ -16,6 +17,7 @@ function GuiBase:_init()
     self._is_opened = true
     -- self.default_size = {200,100}
     self._last_frame_opened = false
+    self._err_count = 0
 end
 
 function GuiBase:on_open_click()
@@ -51,6 +53,11 @@ function GuiBase:on_close_click()
     self._is_opened = false
 end
 
+--return ret,status
+function GuiBase:try(fun,...)
+    return dbgutil.try(fun,...)
+end
+
 --call by gui_mgr each frame
 function GuiBase:on_gui(delta)
     if self._is_opened then
@@ -66,8 +73,13 @@ function GuiBase:on_gui(delta)
         end
         if self.before_update then self:before_update() end
         local fold, opening = windows.Begin(self.title_id, self.win_flags or nil)
-        if fold then
-            self:on_update(delta)
+        if self._err_count < 60 and  fold then
+            local ok = self:try(self.on_update,self,delta)
+            if not ok then
+                self._err_count = self._err_count + 1
+            else
+                self._err_count = 0
+            end
             if not opening then
                 self:on_close_click()
             end
@@ -93,5 +105,26 @@ end
 function GuiBase:get_mainmenu()
     self.get_mainmenu = false
 end
+
+
+----------------custom_setting----------------
+
+--override if needed
+--return tbl
+function GuiBase:save_setting_to_memory(clear_dirty_flag)
+    
+end
+
+--override if needed
+function GuiBase:load_setting_from_memory(seting_tbl)
+    self.load_setting_from_memory = false
+end
+
+--override if needed
+function GuiBase:is_setting_dirty()
+    return false
+end
+
+----------------custom_setting----------------
 
 return GuiBase

@@ -19,6 +19,8 @@ function loader.load(filepath)
 	local meshfile = assert(fs.open(filepath, "rb"))
 
 	assert(is_glb(meshfile), "only support glb file")
-	return glbloader(meshfile)
+	local handle = glbloader(meshfile)
+	meshfile:close()
+	return handle
 end
 return loader

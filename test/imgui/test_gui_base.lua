@@ -47,8 +47,8 @@ function TestGuiBase:on_update()
         if widget.MenuItem("Print IO") then
             -- local scene_control = require "scene_control"
             -- scene_control.test_new_world()
-            print("hello")
-            print_a(imgui.IO)
+            log("hello")
+            log.info_a(imgui.IO)
         end
         
         widget.MenuItem("M2")
@@ -60,8 +60,9 @@ function TestGuiBase:on_update()
             windows.EndTabItem()
         end
         if windows.BeginTabItem ("Tab2",tab_noclosed) then
+            self:tab2_update() 
             if widget.Button "Save Ini" then
-                print(util.SaveIniSettings())
+                log(util.SaveIniSettings())
             end
             if windows.BeginPopupModal "Popup window" then
                 widget.Text "Pop up"
@@ -70,10 +71,19 @@ function TestGuiBase:on_update()
             if widget.Button "Popup" then
                 windows.OpenPopup "Popup window"
             end
+            
             windows.EndTabItem()
         end
         if windows.BeginTabItem ("Tab3",tab_noclosed) then
             self:tab3_update()
+            windows.EndTabItem()
+        end
+        if windows.BeginTabItem ("Tab_NormalScroll",tab_noclosed) then
+            self:tab4_update()
+            windows.EndTabItem()
+        end
+        if windows.BeginTabItem ("Tab_ScrollList",tab_noclosed) then
+            self:tab_scroll_litem()
             windows.EndTabItem()
         end
         windows.EndTabBar()
@@ -91,6 +101,7 @@ local combobox = { "B" }
 local lines = { 1000,2,3,2,1 }
 local lists = { "Alice", "Bob" }
 local editbox = {
+    text = "asd",
     flags = flags.InputText { "CallbackCharFilter", "CallbackHistory", "CallbackCompletion" },
 }
 function editbox:filter(c)
@@ -123,7 +134,37 @@ local editfloat = {
     step_fast = 10,
 }
 
+function TestGuiBase:create_textbox()
+    local editbox = {
+        text = "nil",
+        flags = flags.InputText { "CallbackCharFilter", "CallbackHistory", "CallbackCompletion" },
+        count = 0,
+    }
+    function editbox:filter(c)
+        if c == 65 then
+            -- filter 'A'
+            return
+        end
+        return c
+    end
+    local t = 0
+    function editbox:up()
+        t = t - 1
+        return tostring(t)
+    end
 
+    function editbox:down()
+        t = t + 1
+        return tostring(t)
+    end
+
+    function editbox:tab(pos)
+        t = t + 1
+        return tostring(t)
+    end
+    return editbox
+end
+local editbox_dynamic = nil
 function TestGuiBase:tab1_update()
     -- windows.PushStyleVar(enum.StyleVar.FrameBorderSize,2.0)
     -- windows.PushStyleVar(enum.StyleVar.WindowBorderSize,2.0)
@@ -136,25 +177,38 @@ function TestGuiBase:tab1_update()
             uv1={1,1},
             bg_col={0.5,0.5,0.5,0.5},
             frame_padding=10}) then
-        print("clicked")
+        log("clicked")
     end
     -- windows.PopStyleVar(2)
     windows.PushStyleColor(enum.StyleCol.Button,1,1,1,1)
     if widget.Button "Test" then
-        print("test1")
+        log("test1")
     end
     windows.PopStyleColor()
 
     if widget.Button "Test" then
-        print("test2")
+        log("test2")
     end
     widget.SmallButton "Small"
     if widget.Checkbox("Checkbox", checkbox) then
-        print("Click Checkbox", checkbox[1])
+        log("Click Checkbox", checkbox[1])
     end
     if widget.InputText("Edit", editbox) then
-        print(editbox.text)
+        log(editbox.text)
     end
+    if (not editbox_dynamic) or (editbox_dynamic.count > 2000) then
+        editbox_dynamic = self:create_textbox()
+    end
+    editbox_dynamic.count = editbox_dynamic.count + 1
+    if widget.InputText("EditDynamic", editbox_dynamic) then
+        log(editbox_dynamic.text)
+    end
+
+
+    cursor.SetNextItemWidth(-1)
+    widget.LabelText("##asd","asdad\nasdasds")
+    widget.BulletText("asdad\nasdasds")
+
     widget.InputFloat("InputFloat", editfloat)
     widget.Text("Hello World", 1,0,0)
     if widget.BeginCombo( "Combo", combobox ) then
@@ -180,7 +234,7 @@ function TestGuiBase:tab1_update()
     widget.PlotHistogram("histogram", lines)
 
     if widget.ListBox("##list",lists) then
-        print(lists.current)
+        log(lists.current)
     end
 end
 
@@ -197,11 +251,11 @@ end
 
 function TestGuiBase:_main_menu_test1()
     if widget.MenuItem("t1","CTRL+C") then
-        print("menu t1 click")
+        log("menu t1 click")
     end
     cursor.Separator()
     if widget.MenuItem("wantcapturemouse","graytext") then
-        print("menu t2 click")
+        log("menu t2 click")
     end
     -- cursor.Separator()
 
@@ -209,21 +263,44 @@ end
 function TestGuiBase:_main_menu_test2()
     if widget.BeginMenu("t2-1") then
         if widget.MenuItem("t2-11") then
-            print("menu t2-1 click")
+            log("menu t2-1 click")
         end
         widget.EndMenu()
     end
 end
 function TestGuiBase:_main_menu_test3()
     if widget.MenuItem("t2-2") then
-        print("menu 2-2 click")
+        log("menu 2-2 click")
     end
 end
 --main menu
+local tab2_selected = false
+local tab2_vector = {1.0,1.0,1.0,1.0}
+function TestGuiBase:tab2_update()
+    --display a TreeNode with arrow on righthand
+    local change = widget.Selectable("TreeNode",tab2_selected,nil,nil,flags.Selectable.SpanAllColumns)
+    if change then tab2_selected = not tab2_selected end
+    cursor.SameLine()
+    if change then
+        widget.SetNextItemOpen(tab2_selected)
+    end
+    if widget.TreeNode("##Treenode") then
+        widget.Text("child")
+        widget.TreePop()
+    end
+    local change = widget.DragFloat("Test",tab2_vector)
+    if change then
+        log.info_a(tab2_vector)
+    end
+    --
+
+end
 
 local Tree = import_package "ant.imgui".controls.tree
 local List = import_package "ant.imgui".controls.list
 local ComboBox = import_package "ant.imgui".controls.combobox
+local offset_2 = nil
+local g_change = false
 function TestGuiBase:tab3_update()
     if not self.tree then
         local root = Tree.Node.new( "Root",nil,{"this is root's data"},true)
@@ -237,7 +314,7 @@ function TestGuiBase:tab3_update()
         local tree = Tree.new()
         tree:set_root(root)
         local function cb(node,change)
-            print("Tree cb",node.title,node.data,change)
+            log("Tree cb",node.title,node.data,change)
         end
         tree:set_node_change_cb(cb)
         self.tree = tree
@@ -256,7 +333,7 @@ function TestGuiBase:tab3_update()
             height = 4,
         }
         local function cb(index)
-            print("List:selected_change_cb",index)
+            log("List:selected_change_cb",index)
         end 
         list:set_selected_change_cb(cb)
         list:set_data(datalist,nil)
@@ -288,14 +365,132 @@ function TestGuiBase:tab3_update()
         }
         combo:set_data(datalist,2)
         local function cb(index)
-            print("Combo:selected_change_cb",index)
+            log("Combo:selected_change_cb",index)
         end 
         combo:set_selected_change_cb(cb)
         self.combo = combo
     end
     self.combo:update()
 
+    --make columns with *different id* has the same offset
+    --test columns
+    widget.Text("Test Columns With Border")
+    local print_index = widget.Button("Print Column Index")
+    local change = false
+    local new_offset = nil
+    cursor.Columns(3,"test_columns_with_border1",true)
+    if g_change then
+        cursor.SetColumnOffset(2,offset_2)
+    end
+    cursor.Separator()
+    for i = 1,12 do
+        if print_index then
+            log("ColumnsIndex:",cursor.GetColumnIndex())
+        end
+        widget.Text("Item"..i)
+        cursor.NextColumn()
+    end
+    if not change then
+        new_offset = cursor.GetColumnOffset(2)
+        change = offset_2 and (new_offset ~= offset_2)
+        offset_2 = new_offset
+    end
+    cursor.Columns(1)
+    
+    widget.Text("Test Columns With Border2")
+    cursor.Columns(3,"test_columns_with_border",true)
+    if g_change then
+        cursor.SetColumnOffset(2,offset_2)
+    end
+    cursor.Separator()
+    for i = 1,12 do
+        widget.Text("Item"..i)
+        cursor.NextColumn()
+    end
+    if not change then
+        new_offset = cursor.GetColumnOffset(2)
+        change = (new_offset ~= offset_2)
+        offset_2 = new_offset
+    end
+    g_change = change
+    cursor.Columns(1)
+    cursor.Separator()
+    cursor.Columns(3,"test_columns_without_border",false)
+    cursor.Separator()
+    for i = 1,12 do
+        widget.Text("Item"..i)
+        cursor.NextColumn()
+    end
+    cursor.Columns(1)
+end
 
+local scroll_line = {
+    100,
+    min = 10,
+    max = 10000,
+}
+function TestGuiBase:tab4_update()
+    local flag = flags.Window.HorizontalScrollbar
+    widget.DragInt("Line",scroll_line)
+    local click = false
+    click = widget.Button("Test")
+    windows.BeginChild("Child",0,0,false,flag)
+    if click then
+        log.info_a("windows.GetContentRegionAvail()",windows.GetContentRegionAvail())
+        log.info_a("GetScrollY",windows.GetScrollY())
+        log.info_a("GetCursorPos",cursor.GetCursorPos())
+    end
+    for i = 1,scroll_line[1] do
+        widget.Text("Line"..i)
+    end
+    cursor.SetCursorPos(nil,20*300)
+    windows.EndChild()
+end
+
+
+local ScrollList = import_package "ant.imgui".controls.scroll_list
+
+local line = 10
+local scroll_list = nil
+local cache = {}
+local hidecache = {}
+local scroll_func = function(index)
+    if not cache[index] then
+        cache[index] = 1
+    end
+    if hidecache[index] then
+        return
+    end
+    if widget.Button("ExpandBtn###"..index) then
+        cache[index] = cache[index] + 1
+    end
+    if widget.Button("Hide"..index) then
+        hidecache[index] = true
+        print(index,hidecache[index])
+    end
+    for i =1,cache[index] do
+        widget.Text("Line"..index)
+    end
+    cursor.Separator()
+end
+function TestGuiBase:tab_scroll_litem()
+    if not scroll_list then
+        scroll_list = ScrollList:new()
+        scroll_list:set_data_func(scroll_func)
+        scroll_list:add_item_num(line)
+    end
+    if widget.Button("Twice of "..line) then
+        line = line * 2 
+        scroll_list:add_item_num(line - scroll_list:get_size())
+    end
+    cursor.SameLine()
+    if widget.Button("Remove All") then
+        scroll_list:remove_all()
+    end
+    local flag = flags.Window.HorizontalScrollbar
+    windows.BeginChild("Child",0,0,false,flag)
+    scroll_list:update()
+    windows.EndChild()
 end
 
 return TestGuiBase

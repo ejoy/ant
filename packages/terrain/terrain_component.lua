@@ -9,11 +9,6 @@ local computil = renderpkg.components
 local ms = import_package "ant.math".stack
 local colliderutil = import_package "ant.bullet".util
 
-local terraincomp =
-    ecs.component_alias('terrain', 'resource') {
-    depend = {'mesh', 'material'}
-}
-
 local Physics = assert(world.args.Physics)
 local terrainshape = ecs.component "terrain_shape"
 	.up_axis 	"int" (0)
@@ -59,29 +54,28 @@ function terrain_collider:delete()
 	self.shape.handle = nil -- collider own this handle, will delete in collider:delete function
 end
 
+local terraincomp =
+    ecs.component_alias('terrain', 'resource') {
+    depend = {'rendermesh', 'material'}
+}
+
 function terraincomp:postinit(e)
-    local mesh = e.mesh
-    local terraininfo = e.terrain.assetinfo
+	local rm = e.rendermesh
+	
+    local terraininfo = self.assetinfo
     local terrainhandle = terraininfo.handle
 
     local numlayers = terraininfo.num_layers
-    if numlayers ~= #e.material.content then
+    if numlayers ~= #e.material then
         error('terrain layer number is not equal material defined numbers')
 	end
-	
-	local primitive = {
-		attributes = {}
-	}
 
-	local accessors, bufferviews = {}, {}
 	local vb, ib = terrainhandle:buffer()
 	local vbsize, ibsize = terrainhandle:buffer_size()
 	local num_vertices, num_indices = terrainhandle:buffer_count()
 	local decl = declmgr.get(terraininfo.declname)
 
 	local dynamic = terraininfo.dynamic
-
-	local stride = vbsize // num_vertices
 	
 	local create_vb = dynamic and bgfx.create_dynamic_vertex_buffer or bgfx.create_vertex_buffer
 	local vbhandle = create_vb({"!", vb, vbsize}, decl.handle, dynamic and "wa" or "")
@@ -104,14 +98,12 @@ function terraincomp:postinit(e)
 		}
 	}
 
-	local meshscene = computil.assign_group_as_mesh()
-
+	rm.handle = computil.assign_group_as_mesh()
+	-- using indirect draw can optimize this
 	local groups = {}
 	for _=1, numlayers do
 		groups[#groups+1] = group
 	end
 
-	meshscene.handle.scenes[1][1] = groups
-
-	mesh.assetinfo = meshscene
+	rm.handle.scenes[1][1] = groups
 end

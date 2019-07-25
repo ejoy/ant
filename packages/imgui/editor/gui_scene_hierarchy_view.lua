@@ -23,6 +23,8 @@ function GuiHierarchyView:_init()
     self.sorted_map = {}
     self.default_size = {250,600}
     self.title_id = string.format("SceneHierarchy###%s",self.GuiName)
+    self.selected_map = {}
+    self._scroll_flag = false
     ---
     self:_init_subcribe()
 end
@@ -30,6 +32,7 @@ end
 -------hub begin
 function GuiHierarchyView:_init_subcribe()
     hub.subscribe(Event.HierarchyChange,self._on_refresh_hierarchy,self)
+    hub.subscribe(Event.EntityPick, self._on_scene_pick,self)
 end
 
 function GuiHierarchyView:publish_selected_entity(eid)
@@ -37,8 +40,16 @@ function GuiHierarchyView:publish_selected_entity(eid)
 end
 -------hub end
 
+function GuiHierarchyView:_on_scene_pick(eid_list)
+    self.selected_map = {}
+    for _,eid in ipairs(eid_list) do
+        self.selected_map[eid] = true
+        self._scroll_flag = true
+    end
+end
+
 function GuiHierarchyView:_on_refresh_hierarchy(tbl)
-    print_a("_on_refresh_hierarchy",tbl)
+    log.trace_a("_on_refresh_hierarchy",tbl)
     self.hierarchy_data = tbl
     self.sorted_map = {}
 end
@@ -65,13 +76,24 @@ end
 
 function GuiHierarchyView:_render_entity(id,entity)
     local children = entity.children
-    local flags = ParentFlag
+    local flag = ParentFlag
     if not children then
-        flags = LeafFlag
+        flag = LeafFlag
     end
-    local name = string.format("[%s]%s",tostring(id),entity.name)
-    local cur_open = widget.TreeNode(name,flags)
+    local name = string.format("[%d]%s",id,entity.name)
+    if self.selected_map[id] then
+        flag = flag | flags.TreeNode.Selected
+    end
+    if entity.childnum >= 1 and entity.childnum <= 9 then
+        widget.SetNextItemOpen(true,"f")
+    end
+    local cur_open = widget.TreeNode(name,flag)
+    if self._scroll_flag and self.selected_map[id] then
+        windows.SetScrollHereY()
+        self._scroll_flag = false
+    end
     if util.IsItemClicked() then
+        self.selected_map = {[id]=true}
         self:publish_selected_entity(id)
     end
     if util.IsItemHovered() then

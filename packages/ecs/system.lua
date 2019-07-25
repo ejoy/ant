@@ -1,5 +1,5 @@
 --luacheck: globals log
-local log = log and log.info(...) or print
+local log = log and log.info or print
 
 -- load systems
 local solve_depend = require "solve_depend"

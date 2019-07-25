@@ -1,11 +1,11 @@
 local keymap = (import_package "ant.inputmgr").keymap
 
 local str_map = { 
-    [0] = "LEFT",
-    [1] = "RIGHT",
-    [2] = "MIDDLE",
-    [3] = "BUTTON4",
-    [4] = "BUTTON5",
+    [1] = "LEFT",
+    [2] = "RIGHT",
+    [3] = "MIDDLE",
+    [4] = "BUTTON4",
+    [5] = "BUTTON5",
     alt = "ALT",
     ctrl = "CTRL",
     sys = "SYS",
@@ -26,7 +26,7 @@ local function translate_status(key_state,mouse_state)
             t[str] = true
         end
     end
-    for k,_ in pairs(key_state) do
+    for k,v in pairs(key_state) do
         if v then
             local str = str_map[k]
             t[str] = true
@@ -43,7 +43,7 @@ return function (msgqueue, ctrl)
     end
 
     ctrl.motion_cb = function(_, x, y, key_state, mouse_state)
-        msgqueue:push("mouse_move", x, y, translate_status(key_state,mouse_state))
+        msgqueue:push("mouse_move", translate_status(key_state,mouse_state), x, y )
     end
 
     ctrl.wheel_cb = function(_, delta, x, y)

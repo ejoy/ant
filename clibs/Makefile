@@ -1,7 +1,7 @@
 BIN = .
 LIBS := math3d lsocket bgfx filesystem remotedebug \
  crypt meshconverter hierarchy thread protocol bullet \
- window filewatch platform subprocess datalist imgui
+ window filewatch platform subprocess datalist imgui terrain
 
 ALL_LIBS := $(LIBS) lua bgfx_core
 

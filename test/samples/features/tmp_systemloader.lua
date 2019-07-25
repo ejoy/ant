@@ -5,6 +5,8 @@ local fs = require 'filesystem'
 
 
 ecs.import 'ant.basic_components'
+ecs.import 'ant.math.adapter'
+ecs.import 'ant.asset'
 ecs.import 'ant.render'
 ecs.import 'ant.editor'
 ecs.import 'ant.inputmgr'
@@ -15,7 +17,7 @@ ecs.import 'ant.bullet'
 ecs.import 'ant.animation'
 ecs.import 'ant.event'
 ecs.import 'ant.objcontroller'
-ecs.import 'ant.math.adapter'
+
 
 local serialize = import_package 'ant.serialize'
 
@@ -36,6 +38,7 @@ init_loader.depend 'timesystem'
 init_loader.depend "serialize_index_system"
 
 init_loader.dependby 'render_system'
+init_loader.dependby 'cull_system'
 init_loader.dependby 'primitive_filter_system'
 init_loader.dependby 'camera_controller'
 init_loader.dependby 'skinning_system'
@@ -64,14 +67,8 @@ local function create_animation_test()
             t = {0, 2, 0, 1}
         },
         can_render = true,
-        mesh = {},
-        material = {
-            content = {
-                {
-                    ref_path = fs.path "/pkg/ant.resources/materials/skin_model_sample.material"
-                }
-            }
-        },
+        rendermesh = {},
+        material = computil.assign_material(fs.path "/pkg/ant.resources/materials/skin_model_sample.material"),
         animation = {
             pose_state = {
                 pose = {
@@ -116,6 +113,7 @@ end
 
 function init_loader:init()
     renderutil.create_main_queue(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
+    renderutil.create_blit_queue(world, {x=0, y=0, w=world.args.fb_size.w, h=world.args.fb_size.h})
 	-- renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
     do
         lu.create_directional_light_entity(world, 'directional_light')

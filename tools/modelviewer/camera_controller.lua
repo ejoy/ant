@@ -5,12 +5,15 @@ local imgui = require "imgui"
 
 ecs.import "ant.inputmgr"
 
+local math3d = require "math3d"
+
 local mathpkg = import_package "ant.math"
 local point2d = mathpkg.point2d
 local ms = mathpkg.stack
 local mu = mathpkg.util
 
-local math3d = require "math3d"
+local memmgr = import_package "ant.memory_stat"
+
 local rhwi = import_package "ant.render".hardware_interface
 
 local camera_controller_system = ecs.system "camera_controller"
@@ -21,10 +24,8 @@ camera_controller_system.singleton "control_state"
 camera_controller_system.depend "message_system"
 
 local function camera_move(forward_axis, position, dx, dy, dz)
-	--ms(position, rotation, "b", position, "S", {dx}, "*+S", {dy}, "*+S", {dz}, "*+=")	
 	local right_axis, up_axis = ms:base_axes(forward_axis)
-	ms(position, 
-		position, 
+	ms(position, position, 
 			right_axis, {dx}, "*+", 
 			up_axis, {dy}, "*+", 
 			forward_axis, {dz}, "*+=")
@@ -74,36 +75,125 @@ function camera_controller_system:init()
 	end
 	
 	local message = {}
-	function message:mouse_click(_, press, x, y)
-		last_xy = point2d(x, y)
-		if press then
+
+	function message:mouse(what, state, x, y)
+		if state == "MOVE" then
+			local xy = point2d(x, y)
+			if last_xy then
+				if what == "RIGHT" then
+					local delta = convertxy(xy - last_xy) * move_speed
+					local dx, dy = -delta.x, delta.y
+					local right_axis, up_axis = ms:base_axes(camera.viewdir)
+					local t = ms(target, 'T');t[1] = 0;t[3] = 0
+					ms(camera.eyepos, camera.eyepos, right_axis, {dx}, "*+", up_axis, {dy}, "*+", t, "-=")
+					ms(target, camera.eyepos, camera.viewdir, {distance}, '*+=')
+				elseif what == "LEFT" then
+					local delta = convertxy(xy - last_xy) * rotation_speed
+					rotate_round_point(camera, target, distance, delta.x, delta.y)
+				end
+			end
+			last_xy = xy
+		elseif state == "DOWN" then
+			last_xy = point2d(x, y)
 			distance = math.sqrt(ms(target, camera.eyepos, "-1.T")[1])
 		end
 	end
 
-	function message:mouse_move(x, y, status)
-		local xy = point2d(x, y)
-		if last_xy then
-			if status.RIGHT then
-				local delta = convertxy(xy - last_xy) * move_speed
-				camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
-				ms(target, camera.eyepos, camera.viewdir, {distance}, '*+=')
-			elseif status.LEFT then
-				local delta = convertxy(xy - last_xy) * rotation_speed
-				rotate_round_point(camera, target, distance, delta.x, delta.y)
-			end
-		end
-		last_xy = xy
+	local touchState = "NONE"
+	local touchf1 = {}
+	local touchf2 = {}
+	local touchAngle
+	local touchDistance
+
+	local function calcAngleAndDistance()
+		local dx = touchf1.x - touchf2.x
+		local dy = touchf1.y - touchf2.y
+		return math.atan(dy, dx), math.sqrt(dx*dx+dy*dy)
 	end
 
-	function message:mouse_wheel(_, _, delta)		
-		camera_move(camera.viewdir, camera.eyepos, 0, 0, delta * wheel_speed)
+	function message:touch(id, state, x, y)
+		if touchState == "NONE" then
+			if state == "DOWN" then
+				touchf1.id = id
+				touchf1.x = x
+				touchf1.y = y
+				touchState = "PAN"
+				message:mouse("RIGHT", "DOWN", x, y)
+			end
+		elseif touchState == "PAN" then
+			if state == "DOWN" then
+				touchf2.id = id
+				touchf2.x = x
+				touchf2.y = y
+				touchAngle, touchDistance = calcAngleAndDistance()
+				touchState = "PANIC"
+				message:mouse("RIGHT", "UP", x, y)
+			elseif state == "UP" then
+				touchf1.id = nil
+				touchState = "NONE"
+				message:mouse("RIGHT", "UP", x, y)
+			else
+				touchf1.x = x
+				touchf1.y = y
+				message:mouse("RIGHT", "MOVE", x, y)
+			end
+		elseif touchState == "PANIC" then
+			if state == "DOWN" then
+			elseif state == "UP" then
+				if touchf1.id == id then
+					touchf1.id = touchf2.id
+					touchf1.x = touchf2.x
+					touchf1.y = touchf2.y
+					touchf2.id = nil
+					touchState = "PAN"
+					message:mouse("RIGHT", "DOWN", touchf1.x, touchf1.y)
+				elseif touchf2.id == id then
+					touchf2.id = nil
+					touchState = "PAN"
+					message:mouse("RIGHT", "DOWN", touchf1.x, touchf1.y)
+				end
+			else
+				if touchf1.id == id then
+					touchf1.x = x
+					touchf1.y = y
+				elseif touchf2.id == id then
+					touchf2.x = x
+					touchf2.y = y
+				end
+				local angle, distance = calcAngleAndDistance()
+				local scale = distance / touchDistance
+				local rotation = angle - touchAngle
+				touchAngle, touchDistance = angle, distance
+
+				message:mouse_wheel(nil, nil, (scale-1)*20)
+			end
+		end
+	end
+
+	function message:mouse_wheel(_, _, delta)
+		local dz = delta * wheel_speed
+		ms(camera.eyepos, camera.eyepos, camera.viewdir, {dz}, "*+=")
 	end
 
 	function message:keyboard(code, press)
 		if press and code == "R" then
 			camera_reset(camera, target)
 			return 
+		end
+
+		if press and code == "SPACE" then
+			for _, eid in world:each "can_render" do
+				local e = world[eid]
+				if e.name == "frustum" then
+					world:remove_entity(eid)
+				end
+			end
+
+			local computil = import_package "ant.render".components
+			local _, _, vp = ms:view_proj(camera, camera.frustum, true)
+			local mathbaselib = require "math3d.baselib"
+			local frustum = mathbaselib.new_frustum(ms, vp)
+			computil.create_frustum_entity(world, frustum)
 		end
 	end
 
@@ -114,12 +204,32 @@ function camera_controller_system:init()
 	self.message.observers:add(message)
 end
 
+
+local function memory_info()
+    local memstat = memmgr.bgfx_stat("m")
+    local s = {"memory:"}
+    local keys = {}
+    for k in pairs(memstat) do
+        keys[#keys+1] = k
+    end
+    table.sort(keys, function(lhs, rhs) return lhs < rhs end)
+    for _, k in ipairs(keys) do
+        local v = memstat[k]
+        s[#s+1] = "\t" .. k .. ":" .. v
+    end
+
+    return table.concat(s, "\n")
+end
+
+
 function camera_controller_system:update()
 	local windows = imgui.windows
+	local widget = imgui.widget
 	local flags = imgui.flags
 	imgui.begin_frame(1/60)
 	windows.SetNextWindowSizeConstraints(300, 300, 500, 500)
 	windows.Begin("Test", flags.Window { "MenuBar" })
+	widget.Text(memory_info())
 	windows.End()
 	imgui.end_frame()
 end

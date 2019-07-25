@@ -1,11 +1,13 @@
 local ecs = ...
 local world = ecs.world
 
+
 local ms = import_package "ant.math".stack
 local fs = require "filesystem"
 
 local seriazlizeutil = import_package "ant.serialize"
-
+local renderpkg = import_package "ant.render"
+local computil = renderpkg.components
 
 local scenespace_test = ecs.system "scenespace_test"
 scenespace_test.singleton 'event'
@@ -37,16 +39,11 @@ local function add_hierarchy_file(hiepath)
 end
 
 local function create_scene_node_test()
-    local material = {
-        content = {
-            {
-                ref_path = fs.path '/pkg/ant.resources/materials/bunny.material'
-            }
-        }
-    }
+    local materialpath = fs.path '/pkg/ant.resources/materials/bunny.material'
 
     local hie_root =
         world:create_entity {
+        hierarchy_visible = true,
         hierarchy_transform = {
             s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
@@ -60,6 +57,7 @@ local function create_scene_node_test()
 
     local hie_level1_1 =
         world:create_entity {
+        hierarchy_visible = true,
         hierarchy_transform = {
             parent = hie_root,
             s = {1, 1, 1, 0},
@@ -74,6 +72,7 @@ local function create_scene_node_test()
 
     local hie_level1_2 =
         world:create_entity {
+        hierarchy_visible = true,
         hierarchy_transform = {
             parent = hie_root,
             s = {1, 1, 1, 0},
@@ -88,6 +87,7 @@ local function create_scene_node_test()
     
     local hie_level2_1 =
         world:create_entity {
+        hierarchy_visible = true,
         hierarchy_transform = {
             parent = hie_level1_2,
             s = {1, 1, 1, 0},
@@ -126,11 +126,14 @@ local function create_scene_node_test()
             t = {0, 0, 0, 1},
         },
         name = 'render_child1_1',
+        rendermesh = {},
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/sphere.mesh'
         },
-        material = material,
+        material = computil.assign_material(materialpath),
         can_render = true,
+        hierarchy_visible = true,
+        can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -145,11 +148,14 @@ local function create_scene_node_test()
             t = {0, 0, 0, 1},
         },
         name = 'render_child1_2',
+        rendermesh = {},
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/sphere.mesh'
         },
-        material = material,
+        material = computil.assign_material(materialpath),
         can_render = true,
+        hierarchy_visible = true,
+        can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -164,11 +170,14 @@ local function create_scene_node_test()
             --slotname = "h1_h1",
         },
         name = 'render_child2_1',
+        rendermesh = {},
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/cube.mesh'
         },
-        material = material,
+        material = computil.assign_material(materialpath),
         can_render = true,
+        hierarchy_visible = true,
+        can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -197,6 +206,7 @@ local function create_scene_node_test()
         hierarchy_tag = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
+        hierarchy_visible = true,
     }
 
     local hie2_level1_1 =
@@ -211,21 +221,16 @@ local function create_scene_node_test()
         hierarchy_tag = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
+        hierarchy_visible = true,
     }
 
     local function color_material(colorvalue)
-        return {
-            content = {
+        return computil.assign_material(fs.path "/pkg/ant.resources/materials/simple_mesh.material",
                 {
-                    ref_path = fs.path "/pkg/ant.resources/materials/simple_mesh.material",
-                }
-            },
-            properties = {
-                uniforms = {
-                    u_color = {type="color", name = "color", value=colorvalue},
-                }
-            }
-        }
+                    uniforms = {
+                        u_color = {type="color", name = "color", value=colorvalue},
+                    }
+                })
     end
 
     local render2_rootchild =
@@ -237,11 +242,14 @@ local function create_scene_node_test()
             t = {0, 0, -3, 1},
         },
         name = 'render2_rootchild',
+        rendermesh = {},
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/cube.mesh'
         },
-        material = material,
+        material = computil.assign_material(materialpath),
         can_render = true,
+        hierarchy_visible = true,
+        can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -255,11 +263,14 @@ local function create_scene_node_test()
             t = {0, 0, 0, 1},
         },
         name = 'render2_child1',
+        rendermesh = {},
         mesh = {
             ref_path = fs.path '/pkg/ant.resources/meshes/sphere.mesh'
         },
-        material = material,
+        material = computil.assign_material(materialpath),
         can_render = true,
+        hierarchy_visible = true,
+        can_select = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
     }

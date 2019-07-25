@@ -80,11 +80,15 @@ copy_toX(lua_State *from, rlua_State *to) {
 		rlua_pushboolean(to, lua_toboolean(from,-1));
 		break;
 	case LUA_TNUMBER:
+#if LUA_VERSION_NUM >= 503
 		if (lua_isinteger(from, -1)) {
 			rlua_pushinteger(to, lua_tointeger(from, -1));
 		} else {
 			rlua_pushnumber(to, lua_tonumber(from, -1));
 		}
+#else
+		rlua_pushnumber(to, lua_tonumber(from, -1));
+#endif
 		break;
 	case LUA_TSTRING: {
 		size_t sz;
@@ -113,7 +117,7 @@ copy_fromX(rlua_State *from, lua_State *to) {
 		break;
 	case LUA_TNUMBER:
 		if (rlua_isinteger(from, -1)) {
-			lua_pushinteger(to, rlua_tointeger(from, -1));
+			lua_pushinteger(to, (lua_Integer)rlua_tointeger(from, -1));
 		} else {
 			lua_pushnumber(to, rlua_tonumber(from, -1));
 		}
@@ -220,12 +224,12 @@ eval_value_(rlua_State *L, lua_State *cL, struct value *v) {
 		}
 	}
 	case VAR_GLOBAL:
-		return lua_rawgeti(cL, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS);
+		return lua::rawgeti(cL, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS);
 	case VAR_REGISTRY:
 		lua_pushvalue(cL, LUA_REGISTRYINDEX);
 		return LUA_TTABLE;
 	case VAR_MAINTHREAD:
-		return lua_rawgeti(cL, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+		return lua::rawgeti(cL, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
 	case VAR_METATABLE:
 		if (v->frame == 1) {
 			switch(v->index) {
@@ -275,7 +279,7 @@ eval_value_(rlua_State *L, lua_State *cL, struct value *v) {
 			lua_pop(cL, 1);
 			break;
 		}
-		t = lua_getuservalue(cL, -1);
+		t = lua::getuservalue(cL, -1);
 		lua_replace(cL, -2);
 		return t;
 	}

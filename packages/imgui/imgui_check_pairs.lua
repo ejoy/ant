@@ -1,5 +1,5 @@
 
-local log = print
+local log = log
 
 --================simple stack start=================
 local stack_top = 0

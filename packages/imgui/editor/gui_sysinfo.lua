@@ -1,11 +1,12 @@
-local imgui   = require "imgui_wrap"
-local widget = imgui.widget
-local flags = imgui.flags
-local windows = imgui.windows
-local util = imgui.util
-local cursor = imgui.cursor
-local enum = imgui.enum
+local imgui     = require "imgui_wrap"
+local widget    = imgui.widget
+local flags     = imgui.flags
+local windows   = imgui.windows
+local util      = imgui.util
+local cursor    = imgui.cursor
+local enum      = imgui.enum
 local gui_input = require "gui_input"
+local bgfx      = require "bgfx"
 
 local GuiBase = require "gui_base"
 local GuiSysInfo = GuiBase.derive("GuiSysInfo")
@@ -27,6 +28,9 @@ function GuiSysInfo:_init()
     self.corner = 2
     self.winpos = {0,0}
     self.povit = {0,0}
+    self.status_open = true
+    self._setting_dirty = false
+    self._dirty_flag = false
 end
 
 function GuiSysInfo:before_open()
@@ -60,7 +64,11 @@ function GuiSysInfo:before_update()
     else
         self.win_flags = self.win_flags2 --can move
     end
-    windows.SetNextWindowBgAlpha(0.35)
+    if self.status_open then
+        windows.SetNextWindowBgAlpha(0.75)
+    else
+        windows.SetNextWindowBgAlpha(0.35)
+    end
     windows.SetNextWindowPos( winpos[1],winpos[2],nil,povit[1],povit[2] )
 end
 
@@ -69,9 +77,6 @@ local btns = {"Custom","Top-left","Top-right","Bottom-left","Bottom-right"}
 function GuiSysInfo:on_update(deltatime)
     self:update_fps(deltatime)
     local corner = self.corner
-    local mouse = gui_input.mouse
-    local delta = gui_input.mouse.delta
-    widget.Text( string.format("mouse pos:%d/%d delta:%d/%d",mouse.x,mouse.y,delta.x,delta.y) )
     if windows.BeginPopupContextWindow() then
         for i = -1,3 do
             local btn_str = btns[i+2]
@@ -79,12 +84,32 @@ function GuiSysInfo:on_update(deltatime)
                 corner = i
             end
         end
-        self.corner = corner
+        if corner ~= self.corner then
+            self.corner = corner
+            self._dirty_flag = true
+        end
+
         if widget.MenuItem("close") then
             self:on_close_click()
         end
         windows.EndPopup()
     end
+end
+
+local function memory_info()
+    local memstat = bgfx.get_stats("m")
+    local s = {"memory:"}
+    local keys = {}
+    for k in pairs(memstat) do
+        keys[#keys+1] = k
+    end
+    table.sort(keys, function(lhs, rhs) return lhs < rhs end)
+    for _, k in ipairs(keys) do
+        local v = memstat[k]
+        s[#s+1] = "\t" .. k .. ":" .. v
+    end
+
+    return table.concat(s, "\n")
 end
 
 function GuiSysInfo:update_fps(deltatime)
@@ -96,9 +121,51 @@ function GuiSysInfo:update_fps(deltatime)
         self.frame_count = 0
         self.frame_time_count = 0
     end
-
-    widget.Text( string.format("fps:%g",self.fps) )
-    widget.Text( string.format("frame time:%.3g",self.ft) )
+    local fps_str = string.format("fps:%g###TreeHeader",self.fps)
+    widget.SetNextItemOpen(self.status_open)
+    if widget.TreeNode(fps_str) then
+        self:set_status_open(true)
+        widget.Text( string.format("frame time:%.3g",self.ft) )
+        widget.Text( memory_info() )
+            
+        local mouse_state = gui_input.mouse_state
+        local delta = mouse_state.delta
+        widget.Text( string.format("mouse pos:%d/%d delta:%d/%d",mouse_state.x,mouse_state.y,delta.x,delta.y) )
+        widget.TreePop()
+    else
+        self:set_status_open(false)
+    end
 end
+
+function GuiSysInfo:set_status_open(value)
+    if self.status_open~= value then
+        self.status_open= value
+        self._setting_dirty = true
+    end
+end
+
+function GuiSysInfo:is_setting_dirty()
+    return self._setting_dirty
+end
+
+function GuiSysInfo:load_setting_from_memory(setting)
+    if setting.status_open ~= nil then
+        self.status_open = setting.status_open
+    end
+    if setting.corner ~= nil then
+        self.corner = setting.corner
+    end
+end
+
+function GuiSysInfo:save_setting_to_memory(clear_dirty_flag)
+    if clear_dirty_flag then
+        self._setting_dirty = false
+    end
+    return {
+        status_open = self.status_open,
+        corner = self.corner,
+    }
+end
+
 
 return GuiSysInfo

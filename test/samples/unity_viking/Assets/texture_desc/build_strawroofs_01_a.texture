@@ -1,4 +1,4 @@
- path = "/pkg/unity_viking/Assets/Textures/Buildings/build_strawroofs_01_a.dds"
+ path = "/pkg/unity_viking/Assets/textures/Buildings/build_strawroofs_01_a.dds"
  sampler = {
    U = "MIRROR",
    V = "MIRROR",

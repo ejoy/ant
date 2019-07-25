@@ -11,7 +11,7 @@ local node2_2_1 = Tree.Node.new( "node2_2_1",node2_2,nil,false,true)
 local tree = Tree.new()
 tree:set_root(root)
 local function cb(node,change)
-    print("cb",node.title,node.data,change)
+    log("cb",node.title,node.data,change)
 end
 tree:set_node_change_cb(cb)
 --------------update--------------------

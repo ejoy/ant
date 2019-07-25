@@ -111,7 +111,7 @@ function mgr.threads()
 end
 
 function mgr.hasThread(w)
-    return rawget(workers, w) ~= nil
+    return workers[w] ~= nil
 end
 
 local function updateOnce()

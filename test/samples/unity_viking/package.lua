@@ -1,8 +1,7 @@
 return {
     name = "unity_viking",	
- 	  --map
+    entry = "entry",
     systems = {
-      "scene_walker",
+        "scene_walker",
     },
-    entry = "main"
 }

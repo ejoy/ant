@@ -1,14 +1,9 @@
-local packages = {
-	"ant.test.features"
-}
-local systems = {
-	"init_loader",
-	"scenespace_test",
-	"terrain_test",	
-}
+package.path = table.concat({
+	"engine/?.lua",
+	"engine/?/?.lua",
+	"?.lua",
+}, ";")
 
-if __ANT_RUNTIME__ then
-	local rt = require "runtime"
-	rt.start(packages, systems)
-	return
-end
+require "runtime"
+local pm = require "antpm"
+pm.import "ant.test.features"

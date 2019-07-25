@@ -1,45 +1,33 @@
-local math3d = import_package "ant.math"
-local ms = math3d.stack
+local mathpkg = import_package "ant.math"
+local mu = mathpkg.util
+
+local renderpkg = import_package "ant.render"
+local computil = renderpkg.components
+
 local fs = require "filesystem"
 
 local pbr_scene = {}
 
-
 local function create_pbr_entity(world,name,pos,rot,scl,mesh_desc,material_desc,metal,rough)
-    local eid = world:create_entity {
+    return world:create_entity {
         name = name,
         transform = { s = scl, r = rot, t = pos,},
         can_render = true,
         can_select = true,
-        material = { 
-            content = {  {
-                    ref_path =  fs.path ( material_desc ),
+        material = computil.assign_material(
+            fs.path (material_desc),
+            {
+                uniforms = {
+                    u_params = {type="v4", name="parameters", value={0,0,metal,rough}},
                 }
             }
-        },
+        ),
+        rendermesh = {},
         mesh = {
              ref_path = fs.path ( mesh_desc ),
         },
         main_view = true
     }
-
-    local entity = world[eid]    
-
-    if metal and rough then
-        entity.material.content[1].properties.uniforms["u_params"].value = {0,0,metal,rough}
-    end 
-end 
-
-local function to_radian(angles)
-    local function radian(angle)
-        return (math.pi / 180) * angle
-    end
-
-    local radians = {}
-    for i=1, #angles do
-        radians[i] = radian(angles[i])
-    end
-    return radians
 end
 
 function pbr_scene.create_scene(world)
@@ -60,7 +48,7 @@ function pbr_scene.create_scene(world)
     --              )
 
     local space = 8
-    for item = 1, 30 do 
+    for item = 1, 1 do 
     for i = 0, 4 do 
         for j = 0, 4 do                                 
                 local metal = 1

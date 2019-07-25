@@ -1,5 +1,8 @@
-local math3d = import_package "ant.math"
-local ms = math3d.stack
+local mathpkg = import_package "ant.math"
+local ms = mathpkg.stack
+local mu = mathpkg.util
+local renderpkg = import_package "ant.render"
+local computil = renderpkg.components
 local fs = require "filesystem"
 
 local PVPScene = {}
@@ -71,7 +74,7 @@ function PVPScene.create_entitices(world)
 						{t={124.35, 0.7867187, -14.03104}},
 					}
 				}
-			}
+			},
 		},		
 		CampsiteWall={
 			srt = {{1, 1, 1}, {0, 90, 0,}, {-12.45, 0.7867187, -42.53104}},	
@@ -89,6 +92,7 @@ function PVPScene.create_entitices(world)
 					}
 				}
 			}
+
 		},		
 
 		campsite_jianta = {
@@ -259,27 +263,21 @@ function PVPScene.create_entitices(world)
 					t = ms(t, rsrt[3], "+T")
 				end
 
-
 				local eid = world:create_entity  {
-					transform = {						
-						s = s,
-						r = r,
-						t = t,
-					},
-					can_render = true, 
+					transform = mu.srt(s, r, t),
+					can_render = true,
+					hierarchy_visible = true,
+					can_select = true,
+					rendermesh = {},
 					mesh = {
-						ref_path = fs.path "/pkg/ant.resources" / scenedata.mesh,						
+						ref_path = fs.path "/pkg/ant.resources" / scenedata.mesh,
+						asyn_load = true,
 					},
-					material = {
-						content = {
-							{
-								ref_path = fs.path "/pkg/ant.resources" / scenedata.material
-							}
-						}
-					}, 
+					material = computil.assign_material(fs.path "/pkg/ant.resources" / scenedata.material, nil, true),
 					serialize = import_package 'ant.serialize'.create(), 
 					name = name,
 					main_view = true,
+					asyn_load = "",
 				}
 
 				if collision_array then

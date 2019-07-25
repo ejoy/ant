@@ -1,10 +1,14 @@
 
 local Evt ={
-    HierarchyChange = "Imgui_HierarchyChange",
-    EntityChange = "Imgui_EntityChange",
-    WatchEntity ="Imgui_WatchEntity",
-    ModifyComponent ="Imgui_ModifyComponent",
-    ResponseWorldInfo ="Imgui_ResponseWorldInfo",
-    RequestWorldInfo ="Imgui_RequestWorldInfo",
+    --Scene&Entity
+    HierarchyChange = "Editor_HierarchyChange",
+    EntityInfo = "Editor_EntityInfo", --type="pick" or "editor","auto"
+    EntityPick = "Editor_EntityPick",
+    WatchEntity ="Editor_WatchEntity",
+    ModifyComponent ="Editor_ModifyComponent",
+    ResponseWorldInfo ="Editor_ResponseWorldInfo",
+    RequestWorldInfo ="Editor_RequestWorldInfo",
+    --tool
+    RunScript = "Editor_RunScript",
 }
 return Evt

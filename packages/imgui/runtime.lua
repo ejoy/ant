@@ -21,27 +21,6 @@ local debug_update = __ANT_RUNTIME__ and require 'runtime.debug'
 
 local iq = inputmgr.queue()
 
-local mouse_status = {
-	{},
-	{ LEFT = true },
-	{ RIGHT = true },
-	{ LEFT = true, RIGHT = true },
-	{ MIDDLE = true },
-	{ LEFT = true, MIDDLE = true },
-	{ RIGHT = true, MIDDLE = true },
-	{ LEFT = true, RIGHT = true, MIDDLE = true },
-}
-
-local mouse_click_what = {
-	'LEFT', 'RIGHT', 'MIDDLE'
-}
-
-local function what_state(state, bit)
-	if state & bit ~= 0 then
-		return true
-	end
-end
-
 local callback = {}
 
 local width, height
@@ -107,36 +86,47 @@ function callback.error(err)
 	LOGERROR(err)
 end
 
-function callback.mouse_move(x, y, state)
-	imgui.mouse_move(x, y, state)
-	if not imguiIO.WantCaptureMouse then
-		iq:push("mouse_move", x, y, mouse_status[(state & 7) + 1])
-	end
-end
-
 function callback.mouse_wheel(x, y, delta)
-	imgui.mouse_move(x, y, delta)
+	imgui.mouse_wheel(x, y, delta)
 	if not imguiIO.WantCaptureMouse then
 		iq:push("mouse_wheel", x, y, delta)
 	end
 end
 
-function callback.mouse_click(x, y, what, press)
-	imgui.mouse_click(x, y, what, press)
+function callback.mouse(x, y, what, state)
+	imgui.mouse(x, y, what, state)
 	if not imguiIO.WantCaptureMouse then
-		iq:push("mouse_click", mouse_click_what[what + 1] or 'UNKNOWN', press, x, y)
+		iq:push("mouse", x, y, inputmgr.translate_mouse_button(what), inputmgr.translate_mouse_state(state))
+	end
+end
+
+local touchid
+
+function callback.touch(x, y, id, state)
+	if state == 1 then
+		if not touchid then
+			touchid = id
+			imgui.mouse(x, y, 1, state)
+		end
+	elseif state == 2 then
+		if touchid == id then
+			imgui.mouse(x, y, 1, state)
+		end
+	elseif state == 3 then
+		if touchid == id then
+			imgui.mouse(x, y, 1, state)
+			touchid = nil
+		end
+	end
+	if not imguiIO.WantCaptureMouse then
+		iq:push("touch", id, inputmgr.translate_mouse_state(state), x, y)
 	end
 end
 
 function callback.keyboard(key, press, state)
 	imgui.key_state(key, press, state)
 	if not imguiIO.WantCaptureKeyboard then
-		local status = {}
-		status['CTRL'] = what_state(state, 0x01)
-		status['ALT'] = what_state(state, 0x02)
-		status['SHIFT'] = what_state(state, 0x04)
-		status['SYS'] = what_state(state, 0x08)
-		iq:push("keyboard", keymap[key], press, status)
+		iq:push("keyboard", keymap[key], press, inputmgr.translate_key_state(state))
 	end 
 end
 

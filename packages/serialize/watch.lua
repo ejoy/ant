@@ -97,21 +97,28 @@ end
 function m.set(w, id, path, key, value)
     local component, name = getobject(w, id, path)
     if name == 'entity' then
-        assert(id == nil)
-        local eid = tonumber(path)
-        w[eid] = {}
-        w:set_entity(eid, value)
-        return
-    end
-    local c = typeinfo[name]
-    assert(not c.type)
-    for _, v in ipairs(c) do
-        if v.name == key then
-            w:add_component_child(component,key,v.type, value)
-            return
+        if key then
+            local c = typeinfo[key]
+            w:add_component(path,key, value)
+        else
+            assert(id == nil)
+            local eid = tonumber(path)
+            w[eid] = {}
+            w:set_entity(eid, value)
         end
+        return
+    else
+        local c = typeinfo[name]
+        assert(not c.type)
+        for _, v in ipairs(c) do
+            if v.name == key then
+                w:add_component_child(component,key,v.type, value)
+                return
+            end
+        end
+        error('invalid key')
     end
-    error('invalid key')
+    
 end
 
 return m

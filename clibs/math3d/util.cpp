@@ -13,6 +13,14 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+template<>
+void
+get_table_value(lua_State* L, int tblidx, int num, glm::mat4x4& v) {
+	for (int ii = 0; ii < num; ++ii) {
+		get_table_value(L, tblidx, 4, v[ii]);
+	}
+}
+
 float get_table_item(lua_State* L, int tblidx, int idx) {
 	lua_geti(L, tblidx, idx);
 	float s = lua_tonumber(L, -1);

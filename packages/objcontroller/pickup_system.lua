@@ -77,9 +77,10 @@ local function replace_material(result, material)
 	if result then
 		for _, item in ipairs(result) do
 			item.material = material.materialinfo
-			item.properties.uniforms = {
-				u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
-			}
+			if item.properties.uniforms == nil then
+				item.properties.uniforms = {}
+			end
+			item.properties.uniforms.u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
 		end
 	end
 end
@@ -91,7 +92,7 @@ function pickup_material_sys:update()
 
 		local materials = e.pickup.materials
 		local result = filter.result
-		replace_material(result.opaque, materials.opaque)
+		replace_material(result.opaticy, materials.opaticy)
 		replace_material(filter.translucent, result.translucent)
 	end
 end
@@ -112,15 +113,22 @@ ecs.component "blit_buffer" {depend = "blit_viewid"}
 	.render_buffer "render_buffer"
 
 ecs.component "pickup_material"
-	.opaque 		"material_content"
-	.translucent 	"material_content"
+	.opaticy 		"material"
+	.translucent 	"material"
 
 ecs.component_alias("pickup_viewtag", "boolean")
+
+--pick_ids:array of pick_eid
+--last_pick:last pick id when mult pick supported
+ecs.component "pickup_cache"
+	.last_pick "int" (-1)
+	.pick_ids "int[]"
 
 local pickupcomp = ecs.component "pickup"
 	.materials "pickup_material"
 	.blit_buffer "blit_buffer"
 	.blit_viewid "blit_viewid"
+	.pickup_cache "pickup_cache"
 
 function pickupcomp:init()
 	local materials = self.materials
@@ -160,7 +168,7 @@ local function add_pick_entity()
 	return world:create_entity {
 		pickup = {
 			materials = {
-				opaque = {
+				opaticy = {
 					ref_path = fs.path '/pkg/ant.resources/materials/pickup_opacity.material'
 				},
 				translucent = {
@@ -188,7 +196,12 @@ local function add_pick_entity()
 					}
 				},
 			},
-			blit_viewid = viewidmgr.get("pickup_blit")
+			blit_viewid = viewidmgr.get("pickup_blit"),
+			pickup_cache = {
+				last_pick = -1,
+				pick_ids = {},
+			},
+
 		},
 		camera = {
 			type = "pickup",
@@ -251,8 +264,8 @@ function pickup_sys:init()
 	--local pickup_eid = add_pick_entity()
 
 	self.message.observers:add({
-		mouse_click = function (_, b, p, x, y)
-			if b == "LEFT" and p then
+		mouse = function (_, x, y, what, state)
+			if what == "LEFT" and state == "DOWN" then
 				local eid = enable_pickup(true)
 				local entity = world[eid]
 				update_viewinfo(entity, point2d(x, y))
@@ -282,12 +295,14 @@ local function print_raw_buffer(rawbuffer)
 	end
 end
 
-local function select_obj(blit_buffer, viewrect)
+local function select_obj(pickup_com,blit_buffer, viewrect)
 	local selecteid = which_entity_hitted(blit_buffer.raw_buffer.handle, viewrect)
 	if selecteid then
+		pickup_com.pickup_cache.last_pick = selecteid
+		pickup_com.pickup_cache.pick_ids = {selecteid}
 		local name = assert(world[selecteid]).name
 		print("pick entity id : ", selecteid, ", name : ", name)
-		world:update_func("pickup")(selecteid)
+		world:update_func("pickup")()
 	else
 		print("not found any eid")
 	end
@@ -310,7 +325,7 @@ function pickup_sys:update()
 		if nextstep == "blit" then
 			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, pickupentity.render_target.frame_buffer.render_buffers[1])
 		elseif nextstep	== "select_obj" then
-			select_obj(pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
+			select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
 			enable_pickup(false)
 		end
 

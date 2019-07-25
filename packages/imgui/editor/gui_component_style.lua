@@ -67,15 +67,8 @@ function GuiComponentStyle:on_update()
     windows.EndChild()
     
     if widget.Button("Save Setting") then
-        local data = self.com_setting:get_save_data()
-        local thread = require "thread"
-        local packed_data = thread.pack(data)
-        -- local after = thread.unpack(packed_data)
-        -- print_a("after:",data)
-        local f = gui_util.open_current_pkg_path(DefaultPath,"wb")
-        f:write(packed_data)
-        f:close()
-        local msg = string.format("Save Successfully!\nPath:%s",DefaultPath)
+        local path = gui_util.save_component_setting(self.com_setting)
+        local msg = string.format("Save Successfully!\nPath:%s",path)
         gui_util.notice({msg=msg})
     end
     cursor.SameLine()
@@ -87,7 +80,7 @@ function GuiComponentStyle:on_update()
     -- cursor.SameLine()
 
     -- if widget.Button("Reset Setting") then
-    --     print(dump_a({self.com_setting},"   "))
+    --     log(dump_a({self.com_setting},"   "))
     -- end
 
 end
@@ -96,8 +89,8 @@ function GuiComponentStyle:_update_menu_bar()
     local _,y1 = cursor.GetCursorPos()
     if widget.BeginMenuBar() then
         if widget.MenuItem("test") then
-            print("get_schema_map")
-            print_a(self:get_schema_map())
+            log("get_schema_map")
+            log.info_a(self:get_schema_map())
         end
         widget.EndMenuBar()
     end
@@ -133,7 +126,7 @@ function GuiComponentStyle:_render_style_setting()
     elseif selected.type == ComSchemaType.Map then
         field_list = ComponentSetting.CfgList["Map"]
     end
-    -- print_a(field_list)
+    -- log.info_a(field_list)
     local path_tbl = selected.path_tbl
     local result = {}
     for i,field in ipairs(field_list) do
@@ -141,6 +134,8 @@ function GuiComponentStyle:_render_style_setting()
         result[field] = {value,source_path_tbl,(source_path_tbl==path_tbl)}
         -- self:_render_single_setting(selected.path_tbl,field)
     end
+    widget.Text("Selected:"..selected.show_name)
+    cursor.Separator()
     --custom
     widget.SetNextItemOpen(true,"FirstUseEver")
     if widget.CollapsingHeader("ComponentSettings") then
@@ -171,10 +166,12 @@ function GuiComponentStyle:_render_a_custom_setting(path_tbl,field,value)
             self.com_setting:setv(path_tbl,field,nv)
         end
     elseif setting_define.type == "string" then
-        local vt = {text = value}
+        self.selected._custom_cache = self.selected._custom_cache or {}
+        self.selected._custom_cache[field] = self.selected._custom_cache[field] or {text=value}
+        local vt = self.selected._custom_cache[field]
         local change = widget.InputText(field,vt)
         if change then
-            self.com_setting:setv(path_tbl,field,vt.text)
+            self.com_setting:setv(path_tbl,field,tostring(vt.text))
         end
     elseif setting_define.type == "enum" then
         local enumValue =  setting_define.enumValue
@@ -192,10 +189,12 @@ function GuiComponentStyle:_render_a_custom_setting(path_tbl,field,value)
     end
     cursor.SameLine()
     cursor.SetNextItemWidth(-1)
-    if widget.Button("x") then
+    if widget.Button("x###"..field) then
         self.com_setting:setv(path_tbl,field,nil)
     end
-    widget.SetTooltip("Click to remove custom setting & use inherited value")
+    if util.IsItemHovered() then
+        widget.SetTooltip("Click to remove custom setting & use inherited value")
+    end
 end
 
 function GuiComponentStyle:_render_a_inherited_setting(from_path_tbl,target_path_tbl,field,value)
@@ -204,8 +203,10 @@ function GuiComponentStyle:_render_a_inherited_setting(from_path_tbl,target_path
     if setting_define.type == "boolean" then
         widget.Checkbox(field,value)
     elseif setting_define.type == "string" then
-        local vt = {text = value}
-        widget.InputText(field,vt)
+        self.selected._cache = self.selected._cache or {}
+        self.selected._cache[field] = self.selected._cache[field] or 
+            {text=value,flags=flags.InputText.ReadOnly}
+        widget.InputText(field,self.selected._cache[field])
     elseif setting_define.type == "enum" then
         local enumValue =  setting_define.enumValue
         if widget.BeginCombo(field,enumValue[value]) then
@@ -219,7 +220,7 @@ function GuiComponentStyle:_render_a_inherited_setting(from_path_tbl,target_path
     end
     cursor.SameLine()
     cursor.SetNextItemWidth(-1)
-    if widget.Button("customize") then
+    if widget.Button("customize###"..field) then
         self.com_setting:setv(target_path_tbl,field,setting_define.defaultValue)
     end
     if util.IsItemHovered() then
@@ -233,14 +234,7 @@ end
 -------------------render tree------------------------------
 function GuiComponentStyle:_init_schema_cfg()
     if not self.com_setting then
-        --todo
-        local thread = require "thread"
-        local f = gui_util.open_current_pkg_path(DefaultPath,"rb")
-        local packed_data = f:read("*all")
-        f:close()
-        local com_setting_data = thread.unpack(packed_data)
-        self.com_setting = ComponentSetting.new("")
-        self.com_setting:load_setting(self.schema_map,com_setting_data)
+        self.com_setting = gui_util.read_component_setting(self.schema_map)
         self.sort_cfg = self.com_setting:get_sort_cfg()
         local sort_map = {}
         for i,v in ipairs(self.sort_cfg) do
@@ -277,6 +271,7 @@ function GuiComponentStyle:_render_component_tree()
 
     for com_type,schema in sort_pairs_schema(schema_map,self.sort_cfg) do
         local path_tbl = self:_query_path_tbl(nil,schema)
+        
         self:_render_component(com_type,com_type,schema,path_tbl,0)
     end
 end
@@ -378,12 +373,17 @@ end
 
 
 function GuiComponentStyle:TreeNode(show_name,com_type,schema_type,schema,path_tbl,indent,is_leaf)
-    -- local flag = flags.TreeNode.OpenOnDoubleClick
-    local flag = 0
+    -- local flag = flags.TreeNode.OpenOnDoubleClick --this will cause treenode undragable
+    local flag = flags.TreeNode.OpenOnArrow
+    -- local flag = 0
     if is_leaf then
-        flag = flags.TreeNode {"Bullet"}
+        flag = flag | flags.TreeNode.Bullet
     end
-    
+    local is_selected = false
+    if self.selected and ComponentSetting.ComparePath(self.selected.path_tbl,path_tbl) then
+        is_selected = true
+        flag = flag | flags.TreeNode.Selected
+    end
     local com_name = nil
     if schema._sortid then
         com_name = schema.name
@@ -392,14 +392,22 @@ function GuiComponentStyle:TreeNode(show_name,com_type,schema_type,schema,path_t
     --     com_name = schema.type
     -- end
     local open = widget.TreeNode(show_name,flag)
-    if util.IsItemClicked() and  util.IsItemActive() then
-        self.selected = self.selected or {}
+    if indent == 0 and self._scroll_to_com ==  com_type then
+        windows.SetScrollHereY()
+        self._scroll_to_com = nil
+    end
+    if (not is_selected) and util.IsItemClicked() then
+        self.selected = {}
         self.selected.schema = schema
         self.selected.path_tbl = path_tbl
         self.selected.type = com_type
+        self.selected.show_name = show_name
     end
     local on_dragdrop = false
     if com_name and indent == 0 then
+
+        self:_show_com_menu(com_name)
+
         -- local drag_type = string.format("ComponentItem_%d",indent)
         local drag_type = "ComponentItem"
         if widget.BeginDragDropSource() then
@@ -416,16 +424,16 @@ function GuiComponentStyle:TreeNode(show_name,com_type,schema_type,schema,path_t
             local data = widget.AcceptDragDropPayload(drag_type,flags.DragDrop.AcceptBeforeDelivery)
             if data then
                 on_dragdrop = true
-                -- print(data)
+                -- log(data)
                 local source_com = data
                 local source_index = self.sort_map[source_com]
                 if source_com ~= com_name and my_index ~= source_index then
                     
-                    -- print(source_index,source_com,my_index,com_name)
+                    -- log(source_index,source_com,my_index,com_name)
                     self.sort_map[source_com] = my_index
                     self.sort_map[com_name] = source_index
                     self.com_setting:swap_sort(source_index,my_index)
-                    -- print_a("after swap",self.sort_cfg[source_index],self.sort_cfg[my_index])
+                    -- log.info_a("after swap",self.sort_cfg[source_index],self.sort_cfg[my_index])
                 end
             end
             widget.EndDragDropTarget()
@@ -441,6 +449,46 @@ function GuiComponentStyle:TreeNode(show_name,com_type,schema_type,schema,path_t
             tips_str = "Component Type:%s\nComponent Name:%s"
         end
         widget.SetTooltip(string.format(tips_str,com_type,com_name or "Not A Component"))
+    end
+    return open
+end
+
+function GuiComponentStyle:_move_component_to(com_name,to_index)
+    local from_index = self.sort_map[com_name]
+    --todo:use another way
+    log( "from_index:",from_index )
+    local step = (to_index > from_index) and 1 or -1 
+    for i = from_index,to_index-step,step do
+        log.trace("swap:",i,i+step)
+        self.com_setting:swap_sort(i,i+step)
+    end
+    log.info_a("sort_map",self.sort_map)
+    log.info_a("sort_cfg",self.sort_cfg)
+    for i = from_index,to_index,step do
+        log.info_a(">>>")
+        log.info_a(i,self.sort_cfg[i])
+        log.info_a(self.sort_map[self.sort_cfg[i]])
+        self.sort_map[self.sort_cfg[i]] = i
+    end
+end
+
+function GuiComponentStyle:scroll_to_com(com_name)
+    self._scroll_to_com = com_name
+end
+
+function GuiComponentStyle:_show_com_menu(com_name)
+    local open = windows.BeginPopupContextItem("Component_Menu###"..com_name,1)
+    if open then
+        if widget.Button("Move to top") then
+            self:_move_component_to(com_name,1)
+            self:scroll_to_com(com_name)
+        end
+        if widget.Button("Move to buttom") then
+            local last_index = self.com_setting:get_com_num()
+            self:_move_component_to(com_name,last_index)
+            self:scroll_to_com(com_name)
+        end
+        windows.EndPopup()
     end
     return open
 end

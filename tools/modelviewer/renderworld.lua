@@ -9,10 +9,12 @@ ecs.import "ant.serialize"
 ecs.import "ant.event"
 ecs.import "ant.math.adapter"
 ecs.import "ant.sky"
+ecs.import "ant.asset"
 
-local math3d = import_package "ant.math"
-local ms = math3d.stack
-local mu = math3d.util
+local mathpkg = import_package "ant.math"
+local ms = mathpkg.stack
+local mu = mathpkg.util
+
 local model_review_system = ecs.system "model_review_system"
 
 local renderpkg = import_package "ant.render"
@@ -26,14 +28,13 @@ model_review_system.singleton "constant"
 model_review_system.depend "primitive_filter_system"
 model_review_system.depend "render_system"
 model_review_system.depend "viewport_detect_system"
-model_review_system.depend "sky_system"
---model_review_system.depend "cull_system"
-model_review_system.depend "render_mesh_bounding"
+model_review_system.depend "procedural_sky_system"
+model_review_system.depend "cull_system"
+--model_review_system.depend "render_mesh_bounding"
 model_review_system.dependby "camera_controller"
 
 local lu = renderpkg.light
 local cu = renderpkg.components
-local viedidmgr = renderpkg.viewidmgr
 local fs = require "filesystem"
 
 local function create_light()
@@ -54,20 +55,25 @@ function model_review_system:init()
 	
 	cu.create_grid_entity(world, "grid")
 	world:create_entity {
-		transform = mu.scale_mat(0.2),
-		can_render = true,
-		mesh = {
-			ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh"
-		},
-		material = {
-			content = {
-				{
-					ref_path = fs.path "/pkg/ant.resources/PVPScene/scene-mat.material",
-				}
-			}
-		},
-		main_view = true,
-		name = "door",
+		transform 	= mu.scale_mat(0.2),
+		rendermesh 	= {},
+		mesh 		= {ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh", asyn_load=true},
+		material 	= {{ref_path = fs.path "/pkg/ant.resources/PVPScene/scene-mat.material", asyn_load=true}},
+		can_render 	= true,
+		main_view 	= true,
+		asyn_load	= "",
+		name 		= "door",
+	}
+
+	world:create_entity {
+		transform 	= mu.scale_mat(0.2),
+		rendermesh 	= {},
+		mesh 		= {ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh", asyn_load=true},
+		material 	= {{ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material", asyn_load=true}},
+		can_render 	= true,
+		main_view 	= true,
+		asyn_load	= "",
+		name 		= "door",
 	}
 
 	local singlecolor_material = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material"
@@ -78,15 +84,15 @@ function model_review_system:init()
 				uniforms = {
 					u_color = {type = "color", name = "Color", value = color},
 				}
-			}
+			},
+			asyn_load = true,
 		}
 	end
 
 	world:create_entity {
 		transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),
 		can_render = true,
-		mesh = {
-			ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test_glb.mesh",
+		rendermesh = {
 			-- submesh_refs = {
 			-- 	["build_big_storage_01_fence_02"] 		= cu.create_submesh_item {1}, 
 			-- 	["build_big_storage_01_pillars_01"] 	= cu.create_submesh_item {2, 3},
@@ -95,18 +101,21 @@ function model_review_system:init()
 			-- 	["build_big_storage_01_walls_up"] 		= cu.create_submesh_item {2},
 			-- },
 		},
+		mesh = {
+			ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test_glb.mesh",
+			asyn_load = true,
+		},
 		material = {
-			content = {
-				create_material_item(singlecolor_material, {1, 0, 0, 0}),
-				create_material_item(singlecolor_material, {0, 1, 0, 0}),
-				create_material_item(singlecolor_material, {0, 0, 1, 0}),
-				create_material_item(singlecolor_material, {1, 1, 0, 0}),
-				create_material_item(singlecolor_material, {1, 0, 1, 0}),
-				create_material_item(singlecolor_material, {0, 1, 1, 0}),
-				create_material_item(singlecolor_material, {1, 1, 1, 0}),
-			}
+			create_material_item(singlecolor_material, {1, 0, 0, 0}),
+			create_material_item(singlecolor_material, {0, 1, 0, 0}),
+			create_material_item(singlecolor_material, {0, 0, 1, 0}),
+			create_material_item(singlecolor_material, {1, 1, 0, 0}),
+			create_material_item(singlecolor_material, {1, 0, 1, 0}),
+			create_material_item(singlecolor_material, {0, 1, 1, 0}),
+			create_material_item(singlecolor_material, {1, 1, 1, 0}),
 		},
 		main_view = true,
+		asyn_load = "",
 		name = "test_glb",
 	}
 end

@@ -40,14 +40,14 @@ local function fill_procedural_sky_mesh(skyentity)
 		end
 	end
 
-	local meshcomp = skyentity.mesh
-	meshcomp.assetinfo = computil.create_simple_mesh("p2", vb, w * h, ib, #ib)
+	local meshcomp = skyentity.rendermesh
+	meshcomp.handle = computil.create_simple_mesh("p2", vb, w * h, ib, #ib)
 end
 
 function util.create_procedural_sky(world, whichhour, whichmonth, whichlatitude, turbidity, follow_by_directional_light)
     local skyeid = world:create_entity {
 		transform = mu.identity_transform(),
-		mesh = {},
+		rendermesh = {},
 		material = computil.assign_material(
 			fs.path "/pkg/ant.resources/depiction/materials/sky/procedural/procedural_sky.material",
 			{

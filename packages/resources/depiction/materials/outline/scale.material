@@ -1,0 +1,20 @@
+shader = {
+    vs = "/pkg/ant.resources/shaders/src/outline/vs_scaleoutline",
+    fs = "/pkg/ant.resources/shaders/src/outline/fs_scaleoutline",
+}
+
+state = {
+	WRITE_MASK = "RGBA",
+	ALPHA_REF = 0,
+	CULL = "CW",	-- only render back face
+	MSAA = true,
+
+	DEPTH_TEST = "LESS",
+}
+
+properties = {
+	uniforms = {
+		u_outlinescale	= {name="outline scale", type="v4", default={0.005, 0.0, 0.0, 0.0}},
+		u_outlinecolor = {name="outline color", type="v4", default={0.8, 0.8, 0, 1}},
+	}
+}

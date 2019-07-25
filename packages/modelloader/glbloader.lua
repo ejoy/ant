@@ -1,4 +1,4 @@
-local gltf = require "vfs.fileconvert.glTF"
+local gltf = import_package "ant.glTF"
 local gltfutil = gltf.util
 local glbloader = gltf.glb
 
@@ -117,6 +117,8 @@ end
 local function create_prim_bounding(meshscene, prim)	
 	local posacc = meshscene.accessors[assert(prim.attributes.POSITION)+1]
 	if posacc.min then
+		assert(#posacc.min == 3)
+		assert(#posacc.max == 3)
 		local bounding = mathbaselib.new_bounding(ms, assert(posacc.min), assert(posacc.max))
 		prim.bounding = bounding
 		return bounding

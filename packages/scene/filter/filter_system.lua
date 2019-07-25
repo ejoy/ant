@@ -4,8 +4,8 @@ local world = ecs.world
 ecs.import "ant.event"
 
 local render = import_package "ant.render"
-local mathbaselib = require "math3d.baselib"
 local ru = render.util
+local computil = render.components
 
 local filterutil = require "filter.util"
 
@@ -29,6 +29,7 @@ end
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
 primitive_filter_sys.dependby "filter_properties"
+primitive_filter_sys.depend "asyn_asset_loader"
 primitive_filter_sys.singleton "hierarchy_transform_result"
 primitive_filter_sys.singleton "event"
 
@@ -68,7 +69,7 @@ local function get_material(prim, primidx, materialcontent, material_refs)
 		return materialcontent[idx]
 	end
 
-	local materialidx = prim.material or 0
+	local materialidx = prim.material or primidx
 	return materialcontent[materialidx+1] or materialcontent[1]
 end
 
@@ -100,10 +101,8 @@ local function get_scale_mat(worldmat, scenescale)
 end
 
 local function filter_mesh(eid, meshcomp, worldmat, materialcontent, filter)
-	local meshscene = meshcomp.assetinfo.handle
-
-	local lodlevel = meshcomp.lod or 1
-	local sceneidx = meshscene.scenelods and (meshscene.scenelods[lodlevel]) or meshscene.sceneidx
+	local meshscene = meshcomp.handle
+	local sceneidx = computil.scene_index(meshcomp)
 
 	local scenes = meshscene.scenes[sceneidx]
 	local submesh_refs = meshcomp.submesh_refs
@@ -139,7 +138,11 @@ function primitive_filter_sys:update()
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
 			if vt and ft then
-				filter_mesh(eid, ce.mesh, ce.transform.world, ce.material.content, filter)
+				local rm = ce.rendermesh
+				if rm.handle then
+					assert(ce.asyn_load == nil or ce.asyn_load == "loaded")
+					filter_mesh(eid, ce.rendermesh, ce.transform.world, ce.material, filter)
+				end
 			end
 		end
 	end

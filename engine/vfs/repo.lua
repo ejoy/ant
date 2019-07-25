@@ -55,8 +55,8 @@ local function init(rootpath, repopath)
 	end
 end
 
-function repo.new(rootpath, reponame)
-	local repopath = rootpath / (reponame or ".repo")
+function repo.new(rootpath, LOC)
+	local repopath = rootpath / (LOC and ".repo-loc" or ".repo")
 	init(rootpath, repopath)
 	local mountpoint = access.readmount(rootpath / ".mount")
 	rootpath = mountpoint[''] or rootpath
@@ -69,9 +69,6 @@ function repo.new(rootpath, reponame)
 		_namecache = {},
 		_lock = filelock(repopath),	-- lock repo
 	}, repo)
-	if not lfs.is_regular_file(repopath / "root") then
-		r:rebuild()
-	end
 	return r
 end
 

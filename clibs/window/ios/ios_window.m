@@ -71,55 +71,49 @@ static void push_message(struct ant_window_message* msg) {
     push_message(&msg);
 }
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    UITouch *touch = [[event allTouches] anyObject];
-    CGPoint pt = [touch locationInView:self];
-    pt.x *= self.contentScaleFactor;
-    pt.y *= self.contentScaleFactor;
-    struct ant_window_message msg;
-    msg.type = ANT_WINDOW_MOUSE_CLICK;
-    msg.u.mouse_click.type = 0;
-    msg.u.mouse_click.press = 1;
-    msg.u.mouse_click.x = pt.x;
-    msg.u.mouse_click.y = pt.y;
-    push_message(&msg);
+    for (UITouch *touch in touches) {
+        CGPoint pt = [touch locationInView:self];
+        pt.x *= self.contentScaleFactor;
+        pt.y *= self.contentScaleFactor;
+        struct ant_window_message msg;
+        msg.type = ANT_WINDOW_TOUCH;
+        msg.u.touch.id = (uintptr_t)touch;
+        msg.u.touch.state = 1;
+        msg.u.touch.x = pt.x;
+        msg.u.touch.y = pt.y;
+        push_message(&msg);
+    }
 }
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    UITouch *touch = [[event allTouches] anyObject];
-    CGPoint pt = [touch locationInView:self];
-    pt.x *= self.contentScaleFactor;
-    pt.y *= self.contentScaleFactor;
-    struct ant_window_message msg;
-    msg.type = ANT_WINDOW_MOUSE_CLICK;
-    msg.u.mouse_click.type = 0;
-    msg.u.mouse_click.press = 0;
-    msg.u.mouse_click.x = pt.x;
-    msg.u.mouse_click.y = pt.y;
-    push_message(&msg);
+    for (UITouch *touch in touches) {
+        CGPoint pt = [touch locationInView:self];
+        pt.x *= self.contentScaleFactor;
+        pt.y *= self.contentScaleFactor;
+        struct ant_window_message msg;
+        msg.type = ANT_WINDOW_TOUCH;
+        msg.u.touch.id = (uintptr_t)touch;
+        msg.u.touch.state = 3;
+        msg.u.touch.x = pt.x;
+        msg.u.touch.y = pt.y;
+        push_message(&msg);
+    }
 }
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    UITouch *touch = [[event allTouches] anyObject];
-    CGPoint pt = [touch locationInView:self];
-    pt.x *= self.contentScaleFactor;
-    pt.y *= self.contentScaleFactor;
-    struct ant_window_message msg;
-    msg.type = ANT_WINDOW_MOUSE_CLICK;
-    msg.u.mouse_click.type = 0;
-    msg.u.mouse_click.press = 0;
-    msg.u.mouse_click.x = pt.x;
-    msg.u.mouse_click.y = pt.y;
-    push_message(&msg);
+    [self touchesEnded:touches withEvent:event];
 }
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    UITouch *touch = [[event allTouches] anyObject];
-    CGPoint pt = [touch locationInView:self];
-    pt.x *= self.contentScaleFactor;
-    pt.y *= self.contentScaleFactor;
-    struct ant_window_message msg;
-    msg.type = ANT_WINDOW_MOUSE_MOVE;
-    msg.u.mouse_move.state = 1;
-    msg.u.mouse_move.x = pt.x;
-    msg.u.mouse_move.y = pt.y;
-    push_message(&msg);
+    for (UITouch *touch in touches) {
+        CGPoint pt = [touch locationInView:self];
+        pt.x *= self.contentScaleFactor;
+        pt.y *= self.contentScaleFactor;
+        struct ant_window_message msg;
+        msg.type = ANT_WINDOW_TOUCH;
+        msg.u.touch.id = (uintptr_t)touch;
+        msg.u.touch.state = 2;
+        msg.u.touch.x = pt.x;
+        msg.u.touch.y = pt.y;
+        push_message(&msg);
+    }
 }
 @end
 
@@ -129,6 +123,7 @@ static void push_message(struct ant_window_message* msg) {
     float scale = [[UIScreen mainScreen] scale];
     self.m_window = [[UIWindow alloc] initWithFrame: rect];
     self.m_view = [[View alloc] initWithRect: rect WithScale: scale];
+    self.m_view.multipleTouchEnabled = true;
     [self.m_window addSubview: self.m_view];
 
     ViewController* mvc = [[ViewController alloc] init];

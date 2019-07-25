@@ -16,7 +16,7 @@ function gui_util.get_all_schema()
             break
         end
     end
-    -- print_a("all_package:",packages)
+    -- log.info_a("all_package:",packages)
     local systems = {"timesystem", "message_system"}
     local inputmgr      = import_package "ant.inputmgr"
     local scene         = import_package "ant.scene".util
@@ -26,22 +26,24 @@ function gui_util.get_all_schema()
             update = {"timesystem", "message_system"}
         })
     -- world_update()
-    -- print_a(world._schema.map)
-    -- print(world._schema.map)
+    -- log.info_a(world._schema.map)
+    -- log(world._schema.map)
     return world._schema.map
 end
 
 -----------------------------------------------------------------------------
 -- example
 -- gui_util.notice({msg="123"})
--- gui_util.message({msg="1234",close_cb=function(result) print(result) end})
+-- gui_util.message({msg="1234",close_cb=function(result) log(result) end})
 -----------------------------------------------------------------------------
 
 --arg.msg = * 
 --arg.title = "notice"
 --arg.show_btn1 = true
 --arg.btn1 = "confirm"
+--arg.id = arg.id or arg.msg
 function gui_util.notice(arg)
+    arg.id = arg.id or arg.msg
     if arg.show_btn1 == nil then  arg.show_btn1 = true end
     if arg.btn1 == nil then  arg.btn1 = "Confirm" end
     if arg.title == nil then  arg.title = "Notice" end
@@ -69,11 +71,13 @@ end
 --arg.close_cb = nil, function close_cb(1 or 2 or 0)
 --arg.btn1 = "Confirm"
 --arg.btn2 = "Cancel"
+--arg.id = arg.id or arg.msg
 function gui_util.message(arg)
+    arg.id = arg.id or arg.msg
     if arg.show_btn1 == nil then  arg.show_btn1 = true end
     if arg.show_btn2 == nil then  arg.show_btn2 = true end
-    if arg.btn1 == nil then  arg.btn1 = "Confirm" end
-    if arg.btn2 == nil then  arg.btn2 = "Cancel" end
+    if arg.btn1 == nil then  arg.btn1 = "Yes" end
+    if arg.btn2 == nil then  arg.btn2 = "No" end
     if arg.title == nil then  arg.title = "Message" end
     assert(arg.msg)
     arg.loop_func = function()
@@ -102,6 +106,7 @@ end
 
 
 gui_util.popup_idx = 0
+gui_util.popup_list = {}
 gui_util.popup_tbl = {}
 
 --arg.flags
@@ -112,19 +117,29 @@ function gui_util.popup(arg)
     local title = arg.title or "Popup"
     gui_util.popup_idx = gui_util.popup_idx + 1
     local titleid = string.format( "%s###Popup%d", title, gui_util.popup_idx)
+    local popup_list = gui_util.popup_list
     local popup_tbl = gui_util.popup_tbl
+    if popup_tbl[arg.id] then
+        log.trace("repeat message,ignoded")
+        return
+    end
     local pf = nil
     local first_time = true
     pf = function()
+        if first_time then
+            windows.OpenPopup(titleid)
+            first_time = false
+        end
         windows.PushStyleVar(enum.StyleVar.WindowPadding,16,16)
         if windows.BeginPopupModal(titleid,flags) then
             arg.loop_func()
             windows.EndPopup()
         elseif not first_time then
             --closed
-            for i,f in ipairs(popup_tbl) do
+            for i,f in ipairs(popup_list) do
                 if f == pf then
-                    table.remove(popup_tbl,i)
+                    table.remove(popup_list,i)
+                    popup_tbl[arg.id] = nil
                     break
                 end
             end
@@ -133,23 +148,20 @@ function gui_util.popup(arg)
             end
 
         end
-        if first_time then
-            windows.OpenPopup(titleid)
-        end
-        first_time = false
+        
         windows.PopStyleVar()
     end
-    table.insert(popup_tbl,pf)
-    
+    table.insert(popup_list,pf)
+    popup_tbl[arg.id] = true
 end
 
 function gui_util.loop_popup()
-    local popup_tbl = gui_util.popup_tbl
-    local f = popup_tbl[#popup_tbl]
+    local popup_list = gui_util.popup_list
+    local f = popup_list[#popup_list]
     if f then
         f()
     end
-    -- for i,f in ipairs(popup_tbl) do
+    -- for i,f in ipairs(popup_list) do
     --     f()
     -- end
 end
@@ -161,7 +173,61 @@ function gui_util.open_current_pkg_path(path,...)
     local pkg_path = fs.path(pm.get_entry_pkg().."/"..path)
     local local_path = pkg_path:localpath()
     local f = localfs.open(local_path,...)
-    return f
+    return f,local_path:string()
+end
+
+local DefaultComponentSettingPath = "editor.com_sytle.default.cfg"
+--schema_map to update component list
+function gui_util.read_component_setting(schema_map)
+    local ComponentSetting = require "editor.component_setting"
+    local thread = require "thread"
+    local f = gui_util.open_current_pkg_path(DefaultComponentSettingPath,"rb")
+    local packed_data = f:read("*all")
+    f:close()
+    local com_setting_data = thread.unpack(packed_data)
+    local com_setting = ComponentSetting.new("")
+    com_setting:load_setting(schema_map,com_setting_data)
+    return com_setting
+end
+
+function gui_util.save_component_setting(com_setting)
+    local data = com_setting:get_save_data()
+    log.info_a("after:",data)
+    local thread = require "thread"
+    local packed_data = thread.pack(data)
+    -- local after = thread.unpack(packed_data)
+    local path = DefaultComponentSettingPath
+    local f = gui_util.open_current_pkg_path(path,"wb")
+    f:write(packed_data)
+    f:close()
+    return path
+end
+
+---cb(type,path)
+--return update_func
+function gui_util.watch_current_package_file(file_path,cb)
+    local fs = require "filesystem"
+    local localfs = require "filesystem.local"
+    local current_path = localfs.current_path()
+    local pm = require "antpm"
+    local pkg_path = fs.path(pm.get_entry_pkg().."/"..file_path)
+    local local_path = pkg_path:localpath()
+    local dir_path = local_path:parent_path():string()
+    local local_path_str = local_path:string()
+    local full_target_path = (current_path.."/"..local_path_str):string()
+    local fw = require 'filewatch'
+    local watch = assert(fw.add("./"..dir_path))
+    local update = function()
+        local typ, path = fw.select()
+        if typ then
+            local path_sep = string.gsub(path,"\\","/")
+            -- log.trace_a(typ,full_target_path,path_sep,path_sep == full_target_path)
+            if path_sep == full_target_path then
+                cb(typ)
+            end
+        end
+    end
+    return update
 end
 
 return gui_util

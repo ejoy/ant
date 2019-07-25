@@ -15,7 +15,10 @@ local render_util 	= renderpkg.util
 local component_util= renderpkg.components
 local view_id_mgr 	= renderpkg.viewidmgr
 local fbmgr 		= renderpkg.fbmgr
-local ms = import_package"ant.math".stack
+local mathpkg       = import_package"ant.math"
+local ms            = mathpkg.stack
+local mu            = mathpkg.util
+
 local math3d = require "math3d"
 
 local fs = require "filesystem"
@@ -335,29 +338,14 @@ function asset_view:get_active(value)
 end
 
 function asset_view:create_foucs_entity(mesh, material)
-    if material == nil then
-        material = {
-            content = {
-                {
-                    ref_path = fs.path "/pkg/ant.resources/materials/singlecolor.material"
-                }
-            }
-        }
-    end
-    local math = require "math"
-
-    local id = self.world:create_entity{
-        transform = {           
-            s = {1, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {0, 0, 0, 1},
-        },
-        can_render = true,
+    return self.world:create_entity{
+        transform = mu.srt(),
+        rendermesh = {},
         mesh = {ref_path = mesh},
-        material = material,
+        material = material or component_util.assign_material(fs.path "/pkg/ant.resources/materials/singlecolor.material"),
+        can_render = true,
         asset_viewtag_3d = true,
     }
-    return id
 end
 
 -- value = "2d"/"3d" or nil
@@ -404,7 +392,7 @@ function asset_view:set_texture(texture_res)
                 type = "texture",
             }
         }
-        component_util.change_textures(entity["material"].content[1], texture_tbl)
+        component_util.change_textures(entity.material[1], texture_tbl)
         self:show_camera("2d")
     else
         print("not model to set")

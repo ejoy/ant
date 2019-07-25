@@ -45,7 +45,7 @@ else ifeq "$(PLAT)" "ios"
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
 
-  CMAKE_BUILD += -DCMAKE_TOOLCHAIN_FILE=../ios-cmake/ios.toolchain.cmake -DIOS_PLATFORM=OS64 -DENABLE_BITCODE=TRUE
+  CMAKE_BUILD += -DCMAKE_TOOLCHAIN_FILE=../ios-cmake/ios.toolchain.cmake -DPLATFORM=OS64 -DENABLE_BITCODE=TRUE
 else ifeq "$(PLAT)" "msvc"
   ifeq "$(MSVC_VERSION)" "vs2019"
     CMAKE_PROJ_TYPE = Visual Studio 16 2019
@@ -90,6 +90,7 @@ else ifeq "$(PLAT)" "msvc"
   WITH_OZZ_SAMPLES := ON
 else ifeq "$(PLAT)" "ios"
   OZZ_ENABLE_EMSCRIPTEN := TRUE
+  CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../lib
 else
   CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../lib
 endif

@@ -1,5 +1,5 @@
 -- luacheck: globals log
-local log = log and log.info(...) or print
+local log = log or print
 
 local bgfx 		= require "bgfx"
 local viewidmgr = require "viewid_mgr"
@@ -76,23 +76,21 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 
 	local start_v, num_v = vb.start, vb.num
 	for idx, handle in ipairs(vb.handles) do
-		bgfx.set_vertex_buffer(idx, handle, start_v, num_v)
+		bgfx.set_vertex_buffer(idx-1, handle, start_v, num_v)
 	end
 	bgfx.submit(vid, prog, 0, false)
 end
 
 local function add_tranformed_bounding(r, worldmat, bounding)
 	if bounding then
-		local tb = r.transformed_bounding
+		local tb = r.tb	-- transformed bounding
 		if tb == nil then
 			tb = mathbaselib.new_bounding(ms)
-			r.transformed_bounding = tb
-		else
-			tb:reset()
+			r.tb = tb
 		end
-		
-		tb:merge(bounding)
-		tb:transform(worldmat)
+		tb:reset(bounding, worldmat)
+	else
+		r.tb = nil
 	end
 end
 
@@ -100,21 +98,24 @@ local function add_result(eid, group, materialinfo, properties, worldmat, result
 	local idx = result.cacheidx
 	local r = result[idx]
 	if r == nil then
-		r = {}
+		r = {
+			mgroup 	= group,
+			material 	= materialinfo,
+			properties = properties,
+			worldmat 	= worldmat,
+			eid = eid,
+		}
 		result[idx] = r
+	else
+		r.mgroup 	= group
+		r.material 	= materialinfo
+		r.properties = properties
+		r.worldmat 	= worldmat
+		r.eid 		= eid
 	end
 
-	r.eid 		= eid
-	r.mgroup 	= group
-
-	r.material 	= materialinfo
-	r.properties = properties
-	r.worldmat 	= worldmat
-
 	add_tranformed_bounding(r, worldmat, group.bounding)
-
 	result.cacheidx = idx + 1
-
 	return r
 end
 

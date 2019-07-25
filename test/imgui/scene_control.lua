@@ -10,11 +10,11 @@ local scene_control = {}
 local fs = require "filesystem"
 
 function scene_control.test_new_world(raw_path)
-    print("raw_path",raw_path,type(raw_path))
+    log("raw_path",raw_path,type(raw_path))
     local path = localfs.path(tostring(raw_path))
-    print_a(path)
+    log.info_a(path)
     local mapcfg = localfs.dofile(path) 
-    print_a(mapcfg)
+    log.info_a(mapcfg)
     local pkgname = mapcfg.name
     local pkgsystems = mapcfg.systems
     local packages = {
@@ -26,11 +26,12 @@ function scene_control.test_new_world(raw_path)
     }
     local systems = {
         --"pickup_material_system",
-        --"pickup_system",
+        "pickup_system",
         -- "obj_transform_system",
         "build_hierarchy_system",
-        "editor_camera_controller",
         "editor_watcher_system",
+        "editor_tool_system",
+        "visible_system"
         -- "editor_system"
     }
 

@@ -427,7 +427,7 @@ local function insert_shadow_primitive(eid, result)
 
 	local mesh = assert(entity.mesh.assetinfo)
 	
-	local materialcontent = entity.material.content
+	local materialcontent = entity.material
 	assert(#materialcontent >= 1)
 
 	local srt = ms(ms:srtmat(entity.transform), "m")
