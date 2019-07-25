@@ -1,0 +1,3 @@
+return {
+    stringify = require "stringify",
+}
