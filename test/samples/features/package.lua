@@ -7,5 +7,5 @@ return {
 	  "terrain_test",
       "visible_system",
     },
-    entry = "main"
+    entry = "entry"
 }
