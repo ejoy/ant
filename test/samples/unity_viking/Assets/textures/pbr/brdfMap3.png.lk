@@ -1,0 +1,11 @@
+
+colorspace = "sRGB"
+compress = {
+  android = "ASTC4x4",
+  ios = "ASTC4x4",
+  window = "BC5"
+}
+format = "RGBA"
+maxsize = "1024x1024"
+mipmap = 0
+type = "texture"
