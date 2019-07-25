@@ -13,8 +13,8 @@ properties = {
     s_normal = { type="texture",name="s_normal",stage = 1,ref_path="/pkg/unity_viking/assets/texture_desc/prop_bucket_01_n.texture"},
     s_metallic = { type="texture",name="s_metallic",stage = 2,ref_path="/pkg/unity_viking/assets/texture_desc/prop_bucket_01_sg.texture"},
     s_texCube = { type="texture",name="s_texCube",stage = 3,ref_path="/pkg/unity_viking/assets/textures/bolonga.texture"},
-    s_texCubeIrr = { type="texture",name="s_texCubeIrr",stage = 9,ref_path="/pkg/unity_viking/assets/textures/bolonga_irr.texture"},
-    s_brdfMap = { type="texture",name="s_brdfMap",stage = 10,ref_path="/pkg/unity_viking/assets/textures/brdfMap3.texture"},
+    --s_texCubeIrr = { type="texture",name="s_texCubeIrr",stage = 9,ref_path="/pkg/unity_viking/assets/textures/bolonga_irr.texture"},
+    --s_brdfMap = { type="texture",name="s_brdfMap",stage = 6,ref_path="/pkg/unity_viking/assets/textures/brdfMap3.texture"},
   },
   uniforms = {
     u_params = { type="v4",name="u_params",default={1,0,0,0.65}},

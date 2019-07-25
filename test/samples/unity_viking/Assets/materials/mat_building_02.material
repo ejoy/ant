@@ -13,13 +13,22 @@ properties = {
     s_normal = { type="texture",name="s_normal",stage = 1,ref_path="/pkg/unity_viking/assets/texture_desc/build_building_02_n.texture"},
     s_metallic = { type="texture",name="s_metallic",stage = 2,ref_path="/pkg/unity_viking/assets/texture_desc/build_building_02_sg.texture"},
     s_texCube = { type="texture",name="s_texCube",stage = 3,ref_path="/pkg/unity_viking/assets/textures/bolonga.texture"},
-    s_texCubeIrr = { type="texture",name="s_texCubeIrr",stage = 9,ref_path="/pkg/unity_viking/assets/textures/bolonga_irr.texture"},
-    s_brdfMap = { type="texture",name="s_brdfMap",stage = 10,ref_path="/pkg/unity_viking/assets/textures/brdfMap3.texture"},
+    
+    s_detailcolor = { type="texture",name="s_detailcolor",stage = 4,ref_path="/pkg/unity_viking/assets/texture_desc/wood_tiled_03_a.texture"},
+    s_detailnormal = { type="texture",name="s_detailnormal",stage = 5,ref_path="/pkg/unity_viking/assets/texture_desc/wood_tiled_03_n.texture"},
+
+    --s_brdfMap = { type="texture",name="s_brdfMap",stage = 6,ref_path="/pkg/unity_viking/assets/textures/brdfMap3.texture"},
   },
   uniforms = {
-    u_params = { type="v4",name="u_params",default={0,1,0,0.308}},
-    u_diffuseColor = { type="v4",name="u_diffuseColor",default={0.9716981,0.9671146,0.9671146,1}},
-    u_specularColor = { type="v4",name="u_specularColor",default={1,0,0,1}},
-    u_tiling = { type="v4",name="u_tiling",default={1,1,0,0}},
+    u_params = { type="v4",name="u_params",default={0,1,0,1-0.028}},
+    u_diffuseColor = { type="v4",name="u_diffuseColor",default={0.9305658,0.9528301,0.9303578,1}},
+    u_specularColor = { type="v4",name="u_specularColor",default={1,1,1,1}},
+    u_tiling = { type="v4",name="u_tiling",default={1,1,7,7}},
+    u_misc = { type="v4",name="u_misc",default={0,2,0,0}},
+
+    --u_params = { type="v4",name="u_params",default={0,1,0,0.308}},
+    --u_diffuseColor = { type="v4",name="u_diffuseColor",default={0.9716981,0.9671146,0.9671146,1}},
+    --u_specularColor = { type="v4",name="u_specularColor",default={1,0,0,1}},
+    --u_tiling = { type="v4",name="u_tiling",default={1,1,0,0}},
   },
 }
