@@ -1,5 +1,5 @@
 
-local log = log
+-- local log = print
 
 --================simple stack start=================
 local stack_top = 0
@@ -27,12 +27,15 @@ local function find_topest(item)
 end
 --================simple stack end===================
 
+local style_dict = {}
+
 
 --wait for init
 local PureEndFunTbl = {}
 local EndFunNameTbl = {}
 
 local ReturnType = {
+    Dummy = 3,
     NoReturn = 0,       --Has no return,always need an EndXXX
     WhenReturnTrue = 1,    --Need an EndXXX if BeginXXX return true
     IgnoreReturn = 2,   --Has return,but always need an EndXXX
@@ -72,12 +75,18 @@ local pairs_map_widget = {
     {ReturnType.WhenReturnTrue,"BeginDragDropTarget","EndDragDropTarget"}, --type1
 }
 
+--id from 401
+local pairs_map_style = {
+    {ReturnType.Dummy,"PushStyleColor","PopStyleColor"},
+    {ReturnType.Dummy,"PushStyleVar","PopStyleVar"},
+}
+
 local function pop_until_idx(idx)
     local top = pop()
     while top ~= idx do
         --todo call top and alter
         local fname = EndFunNameTbl[top]
-        log(string.format("[ERROR]:Forget to call %s,call it automaticly",fname))
+        log.error(string.format("Forget to call %s,call it automaticly",fname))
         local temp_ef =  PureEndFunTbl[top]
         temp_ef()
         if stack_top <= 0 then
@@ -87,12 +96,25 @@ local function pop_until_idx(idx)
     end
 end
 
+local check_and_pop_style = function()
+    for style_id,num in pairs(style_dict) do
+        if num > 0 then
+            local ef_name = EndFunNameTbl[style_id]
+            local temp_ef =  PureEndFunTbl[style_id]
+            log.error(string.format("Forget to %s,call it automaticly,stack size:%d",ef_name,num))
+            temp_ef(num)
+            style_dict[style_id] = 0
+        end
+    end
+end
+
 
 --special
 local function wrap_begin_frame(bf,idx)
     return function(...)
         if stack_top ~= 0 then
-            log("[Fatal Error]:call begin_frame twice before end_frame! stack_top:"..stack_top)
+            log.error("call begin_frame twice before end_frame! stack_top:"..stack_top)
+            check_and_pop_style()
             pop_until_idx(-1) -- pop to empty
         end
         -- assert( stack_top == 0, "[Fatal Error]:call begin_frame twice before end_frame! stack_top:"..stack_top)
@@ -103,6 +125,7 @@ end
 
 local function wrap_end_frame(ef,idx)
     return function(...)
+        check_and_pop_style()
         if is_top(idx) then
             pop(idx)
             return ef(...)
@@ -112,9 +135,30 @@ local function wrap_end_frame(ef,idx)
                 return ef(...)
             else
                 --ef will be ignore
-                log("[Error]:call end_frame without begin_frame,end_frame ignored")
+                log.error("call end_frame without begin_frame,end_frame ignored")
             end
         end
+    end
+end
+
+local function wrap_push_style(bf,idx)
+    return function(...)
+        style_dict[idx] = style_dict[idx] + 1
+        -- log("push",401,style_dict[401],402,style_dict[402])
+        return bf(...)
+    end
+end
+
+local function wrap_pop_style(ef,idx)
+    return function(num)
+        num = num or 1
+        style_dict[idx] = style_dict[idx] - num
+        -- log("pop",401,style_dict[401],402,style_dict[402])
+        if style_dict[idx] < 0 then
+            local name = EndFunNameTbl[idx]
+            log.error("call style function mismatch stack size<0:",name)
+        end
+        return ef(num)
     end
 end
 
@@ -153,7 +197,7 @@ local wrap_end = function(ef,idx)
             else
                 local fname = EndFunNameTbl[idx]
                 --ef will be ignore
-                log(string.format("[Error]:call %s without begin_xxx pairs,%s ignored",fname,fname))
+                log.error(string.format("call %s without begin_xxx pairs,%s ignored",fname,fname))
             end
         end
     end
@@ -166,6 +210,7 @@ local function init(imgui)
         [100] = {imgui,pairs_map_imgui,},
         [200] = {imgui.windows,pairs_map_windows,},
         [300] = {imgui.widget,pairs_map_widget,},
+        [400] = {imgui.windows,pairs_map_style,},
     }
     for start_idx,cfg in pairs(cfgs) do
         local fun_head =  cfg[1]
@@ -177,17 +222,18 @@ local function init(imgui)
             PureEndFunTbl[idx] = fun_head[ef_name]
         end
     end
+
 end
 
 local function wrap_pairs(imgui)
     --cache EndFunNameTbl and PureEndFunTbl
     init(imgui)
-
+    -----------begin/end frame
     local cur_idx = 101
     local cur_item = pairs_map_imgui[1]
     imgui[cur_item[2]] = wrap_begin_frame(imgui[cur_item[2]],cur_idx)
     imgui[cur_item[3]] = wrap_end_frame(imgui[cur_item[3]],cur_idx)
-
+    -------------normal beginxxx/endxxx
     local cfgs ={
         [200] = {imgui.windows,pairs_map_windows,},
         [300] = {imgui.widget,pairs_map_widget,}
@@ -210,6 +256,20 @@ local function wrap_pairs(imgui)
                 fun_head[pair[i]] = begin_fun_wrap(fun_head[pair[i]],idx)
             end
             fun_head[pair[pair_size]] = wrap_end(fun_head[pair[pair_size]],idx)
+        end
+    end
+    --------push/pop style
+    local style_cfg = {
+        [400] =  {imgui.windows,pairs_map_style},
+    }
+    for start_idx,cfg in pairs(style_cfg) do
+        local fun_head =  cfg[1]
+        local pairs_map =  cfg[2]
+        for i,ps in ipairs(pairs_map) do
+            local idx = i + start_idx
+            style_dict[idx] = 0
+            fun_head[ps[2]] = wrap_push_style(fun_head[ps[2]],idx)
+            fun_head[ps[3]] = wrap_pop_style(fun_head[ps[3]],idx)
         end
     end
 end

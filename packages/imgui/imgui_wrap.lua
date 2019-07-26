@@ -5,6 +5,8 @@ local EnableLuaTrace = false
 local EnableCheckPair = true
 local EnabelFlagsWrap = true
 
+local log = print
+
 --log error when tryint to index a unexist key
 local function asset_index(tbl,path)
     return function( _,key )
