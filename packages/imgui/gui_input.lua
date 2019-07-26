@@ -37,7 +37,9 @@ end
 
 function gui_input.mouse(x, y, what, state)
     update_mouse_pos(x, y)
-    mouse_state[what] = state
+    if what ~= 0 then
+        mouse_state[what] = state
+    end
     called[what] = true
 end
 
@@ -75,7 +77,8 @@ end
 -----------------------------------------------------
 --gui_input.MouseXXX
 function gui_input.is_mouse_pressed(what)
-    return gui_input.mouse_state[what]
+    local s = gui_input.mouse_state[what]
+    return ( s == 1 ) or ( s == 2 )
 end
 -----------------------------------------------------
 
