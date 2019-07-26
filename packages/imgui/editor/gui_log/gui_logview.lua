@@ -106,6 +106,19 @@ function GuiLogView:_init()
     self:hook_log()
 end
 
+
+function GuiLogView:try(fun,...)
+    if debug.getregistry()["lua-debug"] then
+        return true, fun(...)
+    end
+    local status,err = xpcall( fun,debug.traceback,... )
+    if not status then
+        io.stderr:write("Error:%s\n%s", status or "nil", err)
+    end
+    return status,err
+end
+
+
 function GuiLogView:match_filter(msg_item)
     return self.type_filter[msg_item.type or "other"]
 end
@@ -372,7 +385,7 @@ function GuiLogView:_update_menu_bar()
         if change then
             self._dirty_flag = true
         end
-        if widget.Button("AddItem") then
+        if widget.Button("Test") then
             for i = 1,100 do
                 local msg_item = {type="trace", msg = "asdasdasdas\ndasd\nasdasdasdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}
                 local t = {"trace","warn","fatal","error","info"}

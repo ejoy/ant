@@ -25,15 +25,6 @@ local function packeid_as_rgba(eid)
             ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
 end
 
-local function unpackrgba_to_eid(rgba)
-    local r =  rgba & 0x000000ff
-    local g = (rgba & 0x0000ff00) >> 8
-    local b = (rgba & 0x00ff0000) >> 16
-    local a = (rgba & 0xff000000) >> 24
-    
-    return r + g + b + a
-end
-
 local function which_entity_hitted(blitdata, viewrect)    
 	local w, h = viewrect.w, viewrect.h
 	
@@ -46,7 +37,7 @@ local function which_entity_hitted(blitdata, viewrect)
 			local cidx = startidx + (ix - 1) + (iy - 1) * w
 			local rgba = blitdata[cidx]
 			if rgba ~= 0 then
-				found_eid = unpackrgba_to_eid(rgba)
+				found_eid = rgba
 				break
 			end
 		end
