@@ -3,8 +3,12 @@ local world = ecs.world
 local WatcherEvent = require "hub_event"
 local serialize = import_package 'ant.serialize'
 local fs = require "filesystem"
+local mathpkg = import_package "ant.math"
+local mu = mathpkg.util
+local ms = mathpkg.stack
 
 ecs.tag "editor_watching"
+ecs.tag "outline_entity"
 
 local editor_watcher_system = ecs.system "editor_watcher_system"
 
@@ -51,11 +55,41 @@ local function send_entity(eid,typ)
     -- end
 end
 
+local function remove_all_outline()
+    local old_eids = {}
+    for _, id in world:each("outline_entity") do
+        table.insert(old_eids,id)
+    end
+
+    for _,id in ipairs(old_eids) do
+        world:remove_entity(id)
+    end
+end
+
+local function create_outline(seleid)
+    local se = world[seleid]
+    local trans = se.transform
+    local s, r, t = ms(trans.t, trans.r, trans.s, "TTT")
+    local outlineeid = world:create_entity {
+        transform = mu.srt(s, r, t),
+        rendermesh = {},
+        material = {{ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material"}},
+        can_render = true,
+        main_view = true,
+        outline_entity = true,
+        name = "outline_object"
+    }
+    local oe = world[outlineeid]
+    oe.rendermesh = se.rendermesh
+end
+
 local function start_watch_entitiy(eid,is_pick)
     if (not eid) or (not world[eid]) then
         return
     end
     if eid and ( not is_pick ) then
+        -- local s = serialize.save_entity(world,eid)
+        -- serialize.load_entity(world,s)
         local camerautil = import_package "ant.render".camera
         if not camerautil.focus_obj(world, eid) then
             --fallback when focus_obj failed
@@ -75,7 +109,9 @@ local function start_watch_entitiy(eid,is_pick)
         world:remove_component(id,"editor_watching")
         log.trace(">>remove_component [editor_watching] from:",id)
     end
+    remove_all_outline()
     if world[eid] then
+        create_outline(eid)
         world:add_component(eid,"editor_watching",true)
         log.trace(">>add_component [editor_watching] to:",eid)
         send_entity(eid,( is_pick and "pick" or "editor"))
@@ -145,7 +181,7 @@ function editor_watcher_system:after_update()
     if world._last_entity_id  ~= world._entity_id then
         --todo:temporary implement
         for i = (world._last_entity_id or 0) + 1,world._entity_id do
-            if world[i] and (not world[i].pickup) then
+            if world[i] and (not world[i].pickup) and (not world[i].outline_entity) then
                 hierarchy_dirty = true
                 break
             end
@@ -154,7 +190,7 @@ function editor_watcher_system:after_update()
     end
     for eid,e in world:each_removed() do
         --todo:temporary implement
-        if e.pickup == nil then
+        if e.pickup == nil and e.outline_entity == nil then
             hierarchy_dirty = true
         end
     end

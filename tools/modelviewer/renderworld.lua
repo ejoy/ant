@@ -56,7 +56,7 @@ function model_review_system:init()
 	skyutil.create_procedural_sky(world)
 	
 	cu.create_grid_entity(world, "grid")
-	world:create_entity {
+	local origineid = world:create_entity {
 		transform 	= mu.scale_mat(0.2),
 		rendermesh 	= {},
 		mesh 		= {ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh", asyn_load=true},
@@ -68,16 +68,15 @@ function model_review_system:init()
 		serialize   = serialize.create(),
 	}
 
+	local originentity = world[origineid]
+	local s, r, t = ms(originentity.transform.t, originentity.transform.r, originentity.transform.s, "TTT")
 	world:create_entity {
-		transform 	= mu.scale_mat(0.2),
+		transform 	= mu.srt(s, r, t),
 		rendermesh 	= {},
-		mesh 		= {ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh", asyn_load=true},
-		material 	= {{ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material", asyn_load=true}},
+		material 	= {{ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material",}},
 		can_render 	= true,
 		main_view 	= true,
-		asyn_load	= "",
-		name 		= "door",
-		serialize   = serialize.create(),
+		name 		= "door_outline",
 	}
 
 	local singlecolor_material = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material"
@@ -139,5 +138,19 @@ function model_review_system:init()
     local s = serialize.save_entity(world, eid)
     save_file('serialize_entity.txt', s)
     world:remove_entity(eid)
-    serialize.load_entity(world, s)
+	serialize.load_entity(world, s)
+	
+
+	local function find_entity_by_name(name)
+		for _, eid in world:each "can_render" do
+			local e = world[eid]
+			if e.name == name then
+				return eid
+			end
+		end
+	end
+
+	local dooreid = find_entity_by_name("door")
+	local door_outlineeid = find_entity_by_name("door_outline")
+	world[dooreid].rendermesh = world[door_outlineeid].rendermesh
 end
