@@ -367,9 +367,12 @@ ldel_collision_obj(lua_State *L) {
 
 	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
 	auto obj = (btCollisionObject*)lua_touserdata(L, 2);
-	check_delete(obj);
-	
 
+	if (obj->getWorldArrayIndex() != -1) {
+		worldnode->world->removeCollisionObject(obj);
+	}
+
+	check_delete(obj);
 	return 0;
 }
 
