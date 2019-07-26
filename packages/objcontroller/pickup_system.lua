@@ -80,9 +80,24 @@ local function replace_material(result, material)
 			if item.properties.uniforms == nil then
 				item.properties.uniforms = {}
 			end
-			item.properties.uniforms.u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
+			item.properties.uniforms.u_id = {type="color", name = "select eid", value=packeid_as_rgba(assert(item.eid))}
 		end
 	end
+end
+
+local function recover_material(result)
+	if result then
+		for _, item in ipairs(result) do
+			local uniforms = assert(item.properties.uniforms)
+			uniforms.u_id = nil
+		end
+	end
+end
+
+local function recover_filter(filter)
+	local result = filter.result
+	recover_material(result.opaticy)
+	recover_material(filter.translucent)
 end
 
 function pickup_material_sys:update()
@@ -300,6 +315,7 @@ function pickup_sys:update()
 		local pickupcomp = pickupentity.pickup
 		local nextstep = pickupcomp.nextstep
 		if nextstep == "blit" then
+			recover_filter(pickupentity.primitive_filter)
 			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, pickupentity.render_target.frame_buffer.render_buffers[1])
 		elseif nextstep	== "select_obj" then
 			select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
