@@ -134,4 +134,10 @@ function model_review_system:init()
         world:remove_entity(eid)
     end
 	serialize.load_world(world, s)
+
+    local eid = world:first_entity_id 'serialize'
+    local s = serialize.save_entity(world, eid)
+    save_file('serialize_entity.txt', s)
+    world:remove_entity(eid)
+    serialize.load_entity(world, s)
 end
