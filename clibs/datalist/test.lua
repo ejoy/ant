@@ -3,7 +3,9 @@ local datalist = require "datalist"
 local function keys(a)
 	local key = {}
 	for k in pairs(a) do
-		key[#key + 1] = k
+		if k ~= 0 then
+			key[#key + 1] = k
+		end
 	end
 	return key
 end
@@ -16,8 +18,10 @@ local function compare_table(a,b)
 		local k = keys(a)
 		assert(#k == #keys(b))
 		for k,v in pairs(a) do
-			local v2 = b[k]
-			compare_table(v, v2)
+			if k ~= 0 then
+				local v2 = b[k]
+				compare_table(v, v2)
+			end
 		end
 	end
 end
@@ -162,6 +166,17 @@ local mt = { __newindex = function (t,k,v)
 	rawset(t,k,v)
 	print("SET", k, v)
 end }
+
+C [[
+multi : { x = 1 }
+multi : { x = 2 }
+multi : { x = 3 }
+]] {
+	multi = {
+		[1] = { x = 2 },
+		[2] = { x = 3 },
+	}
+}
 
 datalist.parse("x=1,y=2", setmetatable({}, mt))
 

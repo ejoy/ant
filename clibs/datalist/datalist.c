@@ -486,12 +486,20 @@ push_key(lua_State *L, struct lex_state *LS) {
 }
 
 static void
+new_table_0(lua_State *L) {
+	lua_newtable(L);
+	// index 0 refer self
+	lua_pushvalue(L, -1);
+	lua_rawseti(L, -2, 0);
+}
+
+static void
 new_table(lua_State *L, int layer, objectid ref) {
 	if (layer >= MAX_DEPTH)
 		luaL_error(L, "too many layers");
 	luaL_checkstack(L, 8, NULL);
 	if (ref == 0) {
-		lua_newtable(L);
+		new_table_0(L);
 	} else {
 		lua_rawgeti(L, REF_CACHE, ref);
 	}
@@ -534,7 +542,7 @@ parse_tag(lua_State *L, struct lex_state *LS) {
 		lua_rawseti(L, REF_UNSOLVED, tag);
 	} else {
 		lua_pop(L, 1);
-		lua_newtable(L);
+		new_table_0(L);
 		lua_rawseti(L, REF_CACHE, tag);
 	}
 	return tag;
@@ -548,7 +556,7 @@ parse_ref(lua_State *L, struct lex_state *LS) {
 		return;
 	}
 	lua_pop(L, 1);
-	lua_newtable(L);	// Create a table for future
+	new_table_0(L);		// Create a table for future
 	lua_pushvalue(L, -1);
 	lua_rawseti(L, REF_CACHE, tag);
 	// set unsolved flag
@@ -574,6 +582,29 @@ closed_bracket(lua_State *L, struct lex_state *LS, int bracket) {
 		default:
 			return 0;
 		}
+	}
+}
+
+// table key value
+static void
+set_keyvalue(lua_State *L) {
+	lua_pushvalue(L, -2);
+	// table key value key
+	int oldv = lua_gettable(L, -4);
+	// table key value oldv
+	if (oldv == LUA_TNIL) {
+		lua_pop(L, 1);
+		lua_settable(L, -3);
+	} else if (oldv == LUA_TTABLE) {
+		lua_len(L, -1);
+		int n = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+		lua_replace(L, -3);
+		// table oldv value
+		lua_seti(L, -2, n+1);
+		lua_pop(L, 1);
+	} else {
+		luaL_error(L, "Multi-key (%s) should be a table", lua_tostring(L, -3));
 	}
 }
 
@@ -618,7 +649,7 @@ parse_bracket_map(lua_State *L, struct lex_state *LS, int layer, int bracket) {
 			lua_seti(L, -3, i++);
 			lua_seti(L, -2, i++);
 		} else {
-			lua_settable(L, -3);
+			set_keyvalue(L);
 		}
 	} while (!closed_bracket(L, LS, bracket));
 }
@@ -762,7 +793,7 @@ parse_section_map(lua_State *L, struct lex_state *LS, int ident, int layer) {
 			lua_seti(L, -3, i++);
 			lua_seti(L, -2, i++);
 		} else {
-			lua_settable(L, -3);
+			set_keyvalue(L);
 		}
 	} while (next_item(L, LS, ident));
 }

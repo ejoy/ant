@@ -164,6 +164,9 @@ local function LoadUpvalues(f)
         f.upvalues[i] = {}
         f.upvalues[i].instack = LoadByte()
         f.upvalues[i].idx = LoadByte()
+        if Version >= 504 then
+            f.upvalues[i].kind = LoadByte()
+        end
     end
 end
 

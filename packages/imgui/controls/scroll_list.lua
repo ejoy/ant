@@ -197,6 +197,7 @@ function ScrollList:update()
     
     local scrollY = windows.GetScrollY()
     local has_scroll_by_user = scrollY<self.last_scroll_y 
+    local scroll_change = scrollY~=self.last_scroll_y 
     self.last_scroll_y = scrollY
     local sizeX,sizeY = windows.GetContentRegionAvail()
     local scrollEndY = scrollY + sizeY
@@ -270,7 +271,7 @@ function ScrollList:update()
         --else do nothing
         end
     end
-    return has_scroll_by_user
+    return has_scroll_by_user,scrollY >= windows.GetScrollMaxY(),scroll_change
 end
 function ScrollList:_update_item(item_index)
     local curX,curY1 = cursor.GetCursorPos()

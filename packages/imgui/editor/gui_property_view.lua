@@ -39,8 +39,7 @@ end
 
 -------hub begin
 function GuiPropertyView:_init_subcribe()
-    hub.subscribe(Event.EntityChange,self._on_refresh_entity,self)
-    hub.subscribe(Event.ScenePick,self._on_refresh_entity,self)
+    hub.subscribe(Event.EntityInfo,self._on_refresh_entity,self)
     -- hub.subscribe(Event.ResponseWorldInfo,
     --             self.on_response_world_info,
     --             self)
@@ -57,8 +56,10 @@ function GuiPropertyView:on_response_world_info(tbl)
 end
 
 function GuiPropertyView:_on_refresh_entity(tbl)
-    log.info_a(tbl)
-    self.entity_tbl = tbl
+    if tbl.type ~= "auto" then 
+        log.info_a(tbl)
+    end
+    self.entity_tbl = tbl.entities
 end
 
 function GuiPropertyView:reset_com_setting()

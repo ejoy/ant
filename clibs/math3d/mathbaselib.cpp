@@ -469,10 +469,7 @@ lbounding_transform(lua_State* L) {
 	int type;
 	const glm::mat4x4* trans = (const glm::mat4x4*)lastack_value(LS, get_stack_id(L, LS, 2), &type);
 
-	transform_aabb(*trans, b->aabb);
-	b->sphere.Init(b->aabb);
-	b->obb.Init(b->aabb);
-	
+	b->Transform(*trans);
 	return 0;
 }
 
@@ -521,17 +518,14 @@ lbounding_merge_list(lua_State *L){
 			lua_pop(L, 1);
 
 			AABB aabb = b->aabb;
-			transform_aabb(*trans, aabb);
+			aabb.Transform(*trans);			
 			sceneaabb.Merge(aabb);
 		} else {
 			sceneaabb.Merge(b->aabb);
 		}
 	}
 
-	scenebounding->aabb.Merge(sceneaabb);
-	scenebounding->sphere.Init(scenebounding->aabb);
-	scenebounding->obb.Init(scenebounding->aabb);
-
+	scenebounding->Merge(sceneaabb);
 	return 0;
 }
 
@@ -542,10 +536,7 @@ lbounding_append_point(lua_State* L) {
 
 	auto pt = get_vec_value(L, LS, 2);
 
-	b->aabb.Append(*tov3(pt));
-	b->sphere.Init(b->aabb);
-	b->obb.Init(b->aabb);
-
+	b->AppendPoint(*tov3(pt));
 	return 0;
 }
 
@@ -609,6 +600,7 @@ lbounding_reset(lua_State *L){
 	auto bounding = fetch_bounding(L, 1);
 	auto LS = fetch_LS(L, 1);
 
+	bounding->Reset();
 	if (numarg > 1){
 		if (lua_type(L, 2) != LUA_TUSERDATA){
 			luaL_error(L, "argument 2 must a bounding box");
@@ -617,12 +609,9 @@ lbounding_reset(lua_State *L){
 		bounding->Merge(*b);
 		if (!lua_isnoneornil(L, 3)) {
 			auto trans = get_mat_value(L, LS, 3);
-			transform_aabb(trans, bounding->aabb);
+			bounding->Transform(trans);
 		}
 	}
-
-	bounding->Reset();
-
 	return 0;
 }
 

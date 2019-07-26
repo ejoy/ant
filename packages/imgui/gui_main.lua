@@ -91,12 +91,14 @@ function gui_main.error(err)
 end
 
 function gui_main.mouse(x,y,what,state)
-    imgui.mouse(x,y,what,state)
-    if state == 2 then
-        gui_input.mouse_move(x,y)
-    else
-        gui_input.mouse_click(x,y,what,state==1)
-    end
+    imgui.mouse(x, y, what, state)
+    gui_input.mouse(x, y, what, state)
+    -- if state == 2 then
+    --     print("guimain, move")
+    --     gui_input.mouse_move(x,y)
+    -- else
+    --     gui_input.mouse_click(x,y,what,state==1)
+    -- end
 end
 
 function gui_main.mouse_wheel(x,y,delta)

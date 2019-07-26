@@ -41,10 +41,13 @@ function binding:iter()
 end
 
 function binding:find(e, matchop)
-	for _, name in ipairs(self) do
+	for i=1, #self do
+		local name = self[i]
 		local binding = self.v[name]
-		for _, key in ipairs(binding.keys) do
-			if matchop(key, e) then
+		local keys = binding.keys
+		for j=1, #keys do
+			local key = keys[j]
+			if matchop(e, key) then
 				return binding
 			end
 		end
@@ -54,82 +57,41 @@ end
 local tiggers = binding.new()
 local constants = binding.new()
 
-local function is_state_match(state1, state2)
-	local function key_names(state)
-		local t = {}
-		for k, v in pairs(state) do
-			if v then
-				t[#t+1] = k
+local event_check_offsets = {
+	mouse = 2,
+	keyboard = 0
+}
+
+local function match_event(event, record)
+	local name = event.name
+	if record.name ~= name then
+		return false
+	end
+
+	local num_arg = #record
+	if num_arg > 0 then
+		
+		local function is_record_match_event(e, r, t)
+			local offset = assert(event_check_offsets[t])
+			for i=1, #r do
+				if r[i] ~= e[offset + i] then
+					return false
+				end
+			end
+			return true
+		end
+
+		if is_record_match_event(event, record, name) then
+			if record.mouse == nil then
+				return true
+			end
+
+			if event.mouse then
+				return is_record_match_event(event.mouse, record.mouse, "mouse")
 			end
 		end
-		return t
 	end
-
-	local keys1 = key_names(state1)
-	local keys2 = key_names(state2)
-	if #keys1 ~= #keys2 then
-		return false
-	end
-
-	for idx, k1 in ipairs(keys1) do
-		local k2 = keys2[idx]
-		if k1 ~= k2 then
-			return false
-		end
-
-		local v1 = state1[k1]
-		local v2 = state2[k2]
-		if v1 ~= v2 then
-			return false
-		end
-	end
-
-	return true
-end
-
-local function is_event_match(e1, e2)
-	return e1.name == e2.name and is_state_match(e1.state, e2.state)
-end
-
-local function match_tigger_event(tigger, event)	
-	local name = event.name
-	if event.name ~= tigger.name then
-		return false
-	end
-	log.info_a(event,tigger)
-	if name == "mouse_click" then
-		return 	event.what == tigger.what and 
-				event.press == tigger.press
-	elseif name == "mouse_move" then
-		return is_state_match(event.state, tigger.state)
-	elseif name == "mouse_wheel" then
-		return true
-	elseif name == "keyboard" then		
-		return event.key == tigger.key and 
-				event.press == tigger.press and
-				is_state_match(event.state, tigger.state)
-	end
-	error "not implement"
-end
-
-local function match_const_event(event, const)
-	local name = event.name
-	if const.name ~= name then
-		return false
-	end
-
-	if name == "mouse_click" then
-		return event.what == const.what and event.press == const.press
-	elseif name == "mouse_move" then
-		return is_state_match(const.state, event.state)	
-	elseif name == "mouse_wheel" then
-		return true
-	elseif name == "keyboard" then
-		return const.key == event.key and
-			is_state_match(const.state, event.state)
-	end
-
-	error "not implement"
+	return false
 end
 
 local function add_event(event)
@@ -137,66 +99,23 @@ local function add_event(event)
 	assert(event.name)
 	
 	msgqueue[#msgqueue+1] = event
-	-- local function find_new_slot(constants, event)
-	-- 	for idx, e in ipairs(constants) do
-	-- 		if match_const_event(e, event) then
-	-- 			return idx
-	-- 		end
-	-- 	end
-	-- 	return #constants+1
-	-- end
-
-	-- local function simulate_const_input(event)
-	-- 	local name = event.name
-	-- 	if name == "keyboard" or name == "mouse" then
-	-- 		if event.press then
-	-- 			event.value = 1
-	-- 			return event
-	-- 		else
-	-- 			return nil
-	-- 		end
-	-- 	end
-
-	-- 	return event
-	-- end
-
-	-- local function remove_const_event_by_name(eventlist, name)
-	-- 	local idx = 1
-	-- 	while idx <= #eventlist do
-	-- 		local c = eventlist[idx]
-	-- 		if c.name == event.name then
-	-- 			table.remove(eventlist, idx)
-	-- 		else
-	-- 			idx = idx + 1
-	-- 		end
-	-- 	end		
-	-- end
-
-	-- local slot = find_new_slot(msgqueue.constants, event)
-	-- local newevent = simulate_const_input(event)
-	-- if newevent then
-	-- 	msgqueue.constants[slot] = newevent
-	-- else
-	-- 	remove_const_event_by_name(msgqueue.constants, newevent)
-	-- end
-	
 end
 
+local mousestate = {}
 function objcontroller.init(msg)
-	-- assert(msgqueue == nil)
 	msgqueue = {}
 	msg.observers:add  {
-		mouse_click = function (_, what, press, x, y)
-			add_event {name = "mouse_click", what=what, value=1, press=press, x=x, y=y}
+		mouse = function (_, ...)
+			mousestate = {...}
+			--print(select(1, ...), select(2, ...))
+			add_event {name = "mouse", ...}
 		end,
-		mouse_move = function (_, what, x, y)
-			add_event {name = "mouse_move", value=1, x=x, y=y, what=what}
+		mouse_wheel = function (_, ...)
+			local delta = select(1, ...)
+			add_event {name = "mouse_wheel", press=delta~=0, value=1, ...}
 		end,
-		mouse_wheel = function (_, x, y, delta)
-			add_event {name = "mouse_wheel", value=1, x=x, y=y, delta=delta, press=delta ~= 0}
-		end,
-		keyboard = function (_, key, press, state)
-			add_event {name = "keyboard", key=key, value=1, press=press, state=state}
+		keyboard = function (_, ...)
+			add_event {name = "keyboard", mouse=mousestate, value=1, ...}
 		end,
 		touch = function (...)
 			error "not implement"
@@ -229,7 +148,7 @@ function objcontroller.bind_constant(name, cb)
 end
 
 local function update_tigger_event(event, tiggers)	
-	local binding = tiggers:find(event, match_tigger_event)
+	local binding = tiggers:find(event, match_event)
 	if binding then
 		local cb = binding.cb
 		if cb then
@@ -240,15 +159,17 @@ end
 
 local function update_constant_event(event, constants)
 	for _, c in constants:iter() do
-		local function find_event(event, const)
-			for _, key in ipairs(const.keys) do
-				if match_const_event(event, key) then
-					return event, key
+		local function find_event(e, const)
+			local keys = const.keys
+			for i=1, #keys do
+				local key = keys[i]
+				if match_event(e, key) then
+					return e, key
 				end
 			end
 		end
 
-		local e, key = find_event(event, c)	
+		local e, key = find_event(event, c)
 		local cb = c.cb
 		if cb then
 			local value = e and e.value * key.scale or 0
@@ -281,8 +202,6 @@ end
 -- end
 
 function objcontroller.update()
-	--local queue = check_queue(msgqueue)
-
 	for _, event in ipairs(msgqueue) do
 		update_tigger_event(event, tiggers)
 		update_constant_event(event, constants)

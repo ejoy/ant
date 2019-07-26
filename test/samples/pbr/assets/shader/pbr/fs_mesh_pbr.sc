@@ -1,3 +1,4 @@
+//simple pbr 
 $input v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_texcoord4,v_texcoord5,v_texcoord6,v_texcoord7,v_worldPos,v_camPos
  
 #include <common.sh>
@@ -34,8 +35,6 @@ uniform vec4 u_specularColor;
 uniform vec4 camPos;
 
 //utils
- 
-
 //app
  
 vec3 directlight_radiance(vec3 lightColor) 
@@ -100,7 +99,7 @@ vec3 ambient_term(vec3 N,vec3 V,vec3 R,vec3 F0,float metallic,float roughness,ve
 
     // trick, approximate effect,not correct but enough good 
     // or optimize by SH, decrase consumption on mobie
-    // vec3 irradiance  = toLinear(textureCube(s_texCubeIrr, N).xyz);
+    //vec3 irradiance  = toLinear(textureCube(s_texCubeIrr, N).xyz);
     vec3 irradiance  = toLinear(textureCubeLod(s_texCube,N, 12).xyz);
     vec3 diffuse    =  ekD* irradiance * albedo;
 
@@ -116,6 +115,8 @@ vec3 ambient_term(vec3 N,vec3 V,vec3 R,vec3 F0,float metallic,float roughness,ve
  
 void main()
 { 
+ 
+
     vec4 lightColor    = directional_color[0] * directional_intensity[0].x;
     vec4 lightPos      = vec4(v_lightdir,0);    // default directional
     vec4 specularColor = u_specularColor;
@@ -150,14 +151,9 @@ void main()
     }
 
     // direct     
-    vec3 direct = vec3_c(0.0);
-    //vec3 direct_term( vec3 N, vec3 V, vec3 F0, float metallic, float roughness, vec3 albedo, vec3 worldPos, vec4 lightPos,vec3 lightColor ) 
-    direct = direct_term(N,V,F0,metallic,roughness,albedo,v_worldPos.xyz,lightPos,lightColor);
-   
+    vec3 direct  = direct_term(N,V,F0,metallic,roughness,albedo,v_worldPos.xyz,lightPos,lightColor);  
     // ambient 
-    vec3 ambient = vec3_c(0);  
-    //vec3 ambient_term(vec3 N,vec3 V,vec3 R,vec3 F0,float metallic,float roughness,vec3 albedo,samplerCube s_texCubeIrr,samplerCube s_texCube)
-    ambient = ambient_term(N,V,R,F0,metallic,roughness,albedo,s_texCubeIrr,s_texCube);
+    vec3 ambient  = ambient_term(N,V,R,F0,metallic,roughness,albedo,s_texCubeIrr,s_texCube);
 
     vec3 color = ambient + direct;
 

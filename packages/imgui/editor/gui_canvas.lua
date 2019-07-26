@@ -8,14 +8,16 @@ local enum      = imgui.enum
 local IO      = imgui.IO
 local hub       = import_package "ant.editor".hub
 
+local inputmgr = import_package "ant.inputmgr"
+
 local GuiBase = require "gui_base"
 local gui_input = require "gui_input"
 local GuiCanvas = GuiBase.derive("GuiCanvas")
 local scene         = import_package "ant.scene".util
 local ru = import_package "ant.render".util
-local map_imgui   = import_package "ant.editor".map_imgui
+--local map_imgui   = import_package "ant.editor".map_imgui
 
-local dbgutil = require "common.debugutil"
+local dbgutil = import_package "ant.editor".debugutil
 
 local DEFAULT_FPS = 30
 
@@ -42,16 +44,13 @@ function GuiCanvas:set_fps(fps)
     self.frame_time = 1/fps
 end
 
-function GuiCanvas:bind_world( world,world_update,msgqueue )
+function GuiCanvas:bind_world( world, world_update)
     self.world = world
     self.world_update = world_update
-    local rect = {x=0,y=0,w=self.rect.w,h=self.rect.h}
-    map_imgui(msgqueue,self)
 
     self.next_frame_time = 0
     self.time_count = 0
     self.last_update = nil
-
 end
 
 function GuiCanvas:on_close_click()
@@ -105,46 +104,52 @@ function GuiCanvas:_update_world(delta)
 
 end
 
-
-
 function GuiCanvas:on_dispatch_msg()
     --todo:split mouse and keyboard``
+    if self.world == nil then
+        return
+    end
+
     local gui_input = gui_input
-    local in_mouse = gui_input.mouse
-    local in_key = gui_input.key_state
-    local key_down = gui_input.key_down
-    local called = gui_input.called
-    local rect = self.rect
-    local rx,ry = 0,0
+    local in_mouse  = gui_input.mouse_state
+    local in_key    = gui_input.key_state
+    local key_down  = gui_input.key_down
+    local called    = gui_input.called
+    local rect      = self.rect
+    local rx, ry = 0, 0
     if in_mouse.x then
         rx,ry = in_mouse.x - rect.x,in_mouse.y - rect.y
     end
     local focus = windows.IsWindowFocused(focus_flag)
     local hovered = windows.IsWindowHovered(focus_flag)
 
-    if focus and self.button_cb then
-        for i = 0,4 do
-            if called[i] then
-                self.button_cb(self,i,in_mouse[i],rx,ry,in_key,in_mouse)
+    local msgqueue = self.world.args.mq
+
+    if focus then
+        local num_mouse_btn = 3
+        for what=1, num_mouse_btn do
+            if called[what] then
+                local state = in_mouse[what]
+                msgqueue:push("mouse", rx, ry,
+                inputmgr.translate_mouse_button(what),
+                inputmgr.translate_mouse_state(state))
             end
         end
     end
-    if focus and self.motion_cb and called.mouse_move then
-        self.motion_cb(self,rx,ry,in_key,in_mouse)
+    
+    if hovered and called.mouse_wheel then
+        msgqueue:push("mouse_wheel", rx, ry, in_mouse.scroll)
     end
-    if hovered and self.wheel_cb and called.mouse_wheel then
-        self.wheel_cb(self,in_mouse.scroll,rx,ry)
-    end
-    local keypress_cb = self.keypress_cb
-    if focus and keypress_cb and #key_down > 0 then
+    
+    if focus and #key_down > 0 then
         for _,record in ipairs(key_down) do
-            keypress_cb(self,record[1],record[2],in_key,in_mouse)
+            msgqueue:push("keyboard", inputmgr.translate_key(record[1]), record[2], in_key)
         end
     end
     local mouse_pressed =  gui_input.is_mouse_pressed(gui_input.MouseLeft)
-    if not mouse_pressed and self.resize_cb and self.vp_dirty then
+    if not mouse_pressed and self.vp_dirty then
         self.vp_dirty = false
-        self.resize_cb(self,rect.w,rect.h)
+        msgqueue:push("resize", rect.w, rect.h)
     end
 end
 function GuiCanvas:after_update()

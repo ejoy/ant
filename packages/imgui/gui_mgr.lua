@@ -6,6 +6,8 @@ local util      = imgui.util
 local gui_util  = require "editor.gui_util"
 local thread    = require "thread"
 
+local dbgutil = import_package "ant.editor".debugutil
+
 
 local gui_mgr = {}
 local test = false
@@ -158,7 +160,7 @@ function gui_mgr.register(name,gui_ins)
     if gui_ins.load_setting_from_memory then
         local setting = gui_mgr.setting_tbl[name]
         if setting then
-            gui_ins:load_setting_from_memory(setting)
+            dbgutil.try( gui_ins.load_setting_from_memory,gui_ins,setting)
         end
         local setting_open = gui_mgr.setting_tbl[SettingGuiOpen][name]
         if setting_open~= nil then
@@ -210,7 +212,7 @@ function gui_mgr._load_setting_to_gui(tbl)
     for ui_name,ui_ins in pairs(gui_mgr.gui_tbl) do
         local gui_cfg = tbl[ui_name]
         if gui_cfg and ui_ins.load_setting_from_memory then
-            ui_ins:load_setting_from_memory(gui_cfg)
+            dbgutil.try( ui_ins.load_setting_from_memory,ui_ins,gui_cfg)
         end
         local setting_open = tbl[SettingGuiOpen][ui_name]
         if setting_open ~= nil then
@@ -253,7 +255,8 @@ function gui_mgr.check_and_save_setting()
     for ui_name,ui_ins in pairs(gui_mgr.gui_tbl) do
         if ui_ins:is_setting_dirty() then
             need_save = true
-            setting_tbl[ui_name] = ui_ins:save_setting_to_memory(true)
+            local ok
+            ok,setting_tbl[ui_name] =  dbgutil.try( ui_ins.save_setting_to_memory,ui_ins,true)
         end
     end
     setting_tbl[SettingGuiOpen] =  setting_tbl[SettingGuiOpen] or {}
@@ -266,10 +269,19 @@ function gui_mgr.check_and_save_setting()
     end
     if need_save then
         -- log.trace("Setting changed,save to path:",UserImguiSetting)
-        local file = gui_util.open_current_pkg_path(UserImguiSetting,"wb")
-        local data = thread.pack(setting_tbl)
-        file:write(data)
-        file:close()
+        local file,file_path = gui_util.open_current_pkg_path(UserImguiSetting,"wb")
+        if file then
+            local data = thread.pack(setting_tbl)
+            file:write(data)
+            file:close()
+            if gui_mgr.last_time_save_failed then
+                log.trace("Save successfully!")
+                gui_mgr.last_time_save_failed = false
+            end
+        else
+            log.error("Can't Open file:",file_path)
+            gui_mgr.last_time_save_failed = true
+        end
     end
 end
 

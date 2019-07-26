@@ -1,5 +1,5 @@
 local imguipkg      = import_package "ant.imgui"
-local dbgutil       = imguipkg.dbgutil
+local dbgutil       = import_package "ant.editor".debugutil
 local imgui         = imguipkg.imgui
 local widget        = imgui.widget
 local flags         = imgui.flags

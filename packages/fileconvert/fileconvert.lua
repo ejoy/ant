@@ -1,18 +1,10 @@
 local lfs = require "filesystem.local"
-
+local util = require "util"
 local converter_names = {
-	shader = "compileshadersource",
-	mesh = "convertmesh",
-	texture = "",
+	shader = "shader.compile",
+	mesh = "mesh.convert",
+	texture = "texture.convert",
 }
-
-local function rawtable(filepath)
-	local env = {}
-	local r = assert(lfs.loadfile(filepath, "t", env))
-	r()
-	return env
-end
-
 
 local logfolder = lfs.current_path() / "log"
 lfs.create_directories(logfolder)
@@ -48,7 +40,7 @@ local function log_info(info)
 end
 
 return function (plat, sourcefile, lkfile, dstfile)
-	local lkcontent = rawtable(lkfile)
+	local lkcontent = util.rawtable(lkfile)
 	local ctype = assert(lkcontent.type)
 	local converter_name = assert(converter_names[ctype])
 

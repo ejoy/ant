@@ -16,6 +16,9 @@ $(ODIR)/datalist.dll : $(ODIR)/datalist.o
 $(ODIR)/libdatalist.a : $(ODIR)/datalist.o
 	ar rsv $@ $^
 
+datalist.dll : $(ODIR)/datalist.dll
+	cp $^ $@
+
 $(ODIR) :
 	mkdir -p $@
 

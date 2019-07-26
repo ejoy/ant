@@ -1,5 +1,8 @@
 local relate_path = "packages/glTF"
-package.path = package.path .. ";" .. relate_path .. "/?.lua"
+package.path = table.concat(
+	"./?.lua",
+	relate_path .. "/.?.lua",
+	"packages/utility/?.lua", ";")
 
 local glb = require "glb"
 local json = require "json"

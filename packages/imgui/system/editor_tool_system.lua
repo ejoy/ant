@@ -8,15 +8,23 @@ local editor_tool_system = ecs.system "editor_tool_system"
 
 local function run_script(str,env)
     local fun_str = str
-    local fun = load(str,str,"bt",env)
-    return fun()
+    local fun,err = load(str,str,"bt",env)
+    if fun then
+        return fun()
+    else
+        error(err)
+    end
 end
 
 local function on_receive_script(str)
     log.trace(str)
     local env = setmetatable( {ecs=ecs,world=world},{__index = _ENV} )
     local status,ret_val = xpcall(run_script, debug.traceback, str, env)
-    log.trace("Run script result:",status,ret_val)
+    if status then
+        log.trace("Run script successed.\tReturn:",ret_val)
+    else
+        log.error("Run script failed:",ret_val)
+    end
 end
 
 function editor_tool_system:init()

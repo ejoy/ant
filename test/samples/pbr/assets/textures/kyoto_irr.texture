@@ -1,4 +1,4 @@
-path = "//pbr/assets/textures/pbr/kyoto_irr.dds"
+path = "/pkg/pbr/assets/textures/pbr/kyoto_irr.dds"
 
 sampler = {
 	U = "MIRROR",

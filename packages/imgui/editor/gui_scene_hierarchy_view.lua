@@ -32,7 +32,7 @@ end
 -------hub begin
 function GuiHierarchyView:_init_subcribe()
     hub.subscribe(Event.HierarchyChange,self._on_refresh_hierarchy,self)
-    hub.subscribe(Event.ScenePick, self._on_scene_pick,self)
+    hub.subscribe(Event.EntityPick, self._on_scene_pick,self)
 end
 
 function GuiHierarchyView:publish_selected_entity(eid)
@@ -40,9 +40,9 @@ function GuiHierarchyView:publish_selected_entity(eid)
 end
 -------hub end
 
-function GuiHierarchyView:_on_scene_pick(entity_tbl)
+function GuiHierarchyView:_on_scene_pick(eid_list)
     self.selected_map = {}
-    for eid,_ in pairs(entity_tbl) do
+    for _,eid in ipairs(eid_list) do
         self.selected_map[eid] = true
         self._scroll_flag = true
     end

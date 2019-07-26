@@ -1,0 +1,15 @@
+
+colorspace = "linear"
+compress = {
+  android = "ASTC4x4",
+  ios = "ASTC4x4",
+  window = {
+    android = "ASTC4x4",
+    ios = "ASTC4x4",
+    window = "BC3"
+  }
+}
+maxsize = "1024x1024"
+mipmap = 0
+normalmap = true
+type = "texture"

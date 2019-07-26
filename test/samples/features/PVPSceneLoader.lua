@@ -74,7 +74,7 @@ function PVPScene.create_entitices(world)
 						{t={124.35, 0.7867187, -14.03104}},
 					}
 				}
-			}
+			},
 		},		
 		CampsiteWall={
 			srt = {{1, 1, 1}, {0, 90, 0,}, {-12.45, 0.7867187, -42.53104}},	
@@ -92,6 +92,7 @@ function PVPScene.create_entitices(world)
 					}
 				}
 			}
+
 		},		
 
 		campsite_jianta = {
@@ -264,7 +265,8 @@ function PVPScene.create_entitices(world)
 
 				local eid = world:create_entity  {
 					transform = mu.srt(s, r, t),
-					can_render = true, 
+					can_render = true,
+					hierarchy_visible = true,
 					can_select = true,
 					rendermesh = {},
 					mesh = {

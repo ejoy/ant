@@ -282,8 +282,6 @@ sync_io(lua_State *L) {
 }
 
 static int lshowDockSpace(lua_State * L) {
-	static bool opt_fullscreen_persistant = true;
-	bool opt_fullscreen = opt_fullscreen_persistant;
 	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
 	// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
@@ -1687,8 +1685,8 @@ wMenuItem(lua_State *L) {
 static int
 wBeginListBox(lua_State *L) {
 	const char *label = luaL_checkstring(L, INDEX_ID);
-	int width = luaL_optinteger(L, 2, 0);
-	int height = luaL_optinteger(L, 3, 0);
+	float width = luaL_optnumber(L, 2, 0);
+	float height = luaL_optnumber(L, 3, 0);
 	bool change = ImGui::ListBoxHeader(label, ImVec2(width, height));
 	lua_pushboolean(L, change);
 	return 1;
@@ -1772,9 +1770,9 @@ bgfx_to_imgui_texture_id(lua_State*L, int lua_handle) {
 static int wImage(lua_State *L) {
 	int lua_handle = luaL_checkinteger(L, 1);
 	ImTextureID tex_id = bgfx_to_imgui_texture_id(L, lua_handle);
-	int size_x = luaL_checkinteger(L, 2);
-	int size_y = luaL_checkinteger(L, 3);
-	ImVec2 size = { (float)size_x,(float)size_y };
+	float size_x = luaL_checknumber(L, 2);
+	float size_y = luaL_checknumber(L, 3);
+	ImVec2 size = { size_x, size_y };
 
 	ImVec2 uv0 = { 0.0f,0.0f };
 	ImVec2 uv1 = { 1.0f,1.0f };
@@ -1807,9 +1805,9 @@ static int
 wImageButton(lua_State *L) {
 	int lua_handle = luaL_checkinteger(L, 1);
 	ImTextureID tex_id = bgfx_to_imgui_texture_id(L, lua_handle);
-	int size_x = luaL_checkinteger(L, 2);
-	int size_y = luaL_checkinteger(L, 3);
-	ImVec2 size = { (float)size_x,(float)size_y };
+	float size_x = luaL_checknumber(L, 2);
+	float size_y = luaL_checknumber(L, 3);
+	ImVec2 size = { size_x, size_y };
 
 	ImVec2 uv0 = { 0.0f,0.0f };
 	ImVec2 uv1 = { 1.0f,1.0f };
@@ -1971,8 +1969,8 @@ winEnd(lua_State *L) {
 static int
 winBeginChild(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
-	float width = luaL_optinteger(L, 2, 0);
-	float height = luaL_optinteger(L, 3, 0);
+	float width = luaL_optnumber(L, 2, 0);
+	float height = luaL_optnumber(L, 3, 0);
 	bool border = lua_toboolean(L, 4);
 	ImGuiWindowFlags flags = luaL_optinteger(L, 5, 0);
 	bool change = ImGui::BeginChild(id, ImVec2(width, height), border, flags);
@@ -2233,19 +2231,19 @@ winSetScrollFromPosY(lua_State *L) {
 
 static int
 winSetNextWindowPos(lua_State *L) {
-	float x = luaL_checkinteger(L, 1);
-	float y = luaL_checkinteger(L, 2);
+	float x = luaL_checknumber(L, 1);
+	float y = luaL_checknumber(L, 2);
 	ImGuiCond cond = get_cond(L, 3);
-	float px = luaL_optinteger(L, 4, 0);
-	float py = luaL_optinteger(L, 5, 0);
+	float px = luaL_optnumber(L, 4, 0);
+	float py = luaL_optnumber(L, 5, 0);
 	ImGui::SetNextWindowPos(ImVec2(x, y), cond, ImVec2(px, py));
 	return 0;
 }
 
 static int
 winSetNextWindowSize(lua_State *L) {
-	float x = luaL_checkinteger(L, 1);
-	float y = luaL_checkinteger(L, 2);
+	float x = luaL_checknumber(L, 1);
+	float y = luaL_checknumber(L, 2);
 	ImGuiCond cond = get_cond(L, 3);
 	ImGui::SetNextWindowSize(ImVec2(x, y), cond);
 	return 0;
@@ -2253,18 +2251,18 @@ winSetNextWindowSize(lua_State *L) {
 
 static int
 winSetNextWindowSizeConstraints(lua_State *L) {
-	float min_w = luaL_checkinteger(L, 1);
-	float min_h = luaL_checkinteger(L, 2);
-	float max_w = luaL_checkinteger(L, 3);
-	float max_h = luaL_checkinteger(L, 4);
+	float min_w = luaL_checknumber(L, 1);
+	float min_h = luaL_checknumber(L, 2);
+	float max_w = luaL_checknumber(L, 3);
+	float max_h = luaL_checknumber(L, 4);
 	ImGui::SetNextWindowSizeConstraints(ImVec2(min_w, min_h), ImVec2(max_w, max_h));
 	return 0;
 }
 
 static int
 winSetNextWindowContentSize(lua_State *L) {
-	float x = luaL_checkinteger(L, 1);
-	float y = luaL_checkinteger(L, 2);
+	float x = luaL_checknumber(L, 1);
+	float y = luaL_checknumber(L, 2);
 	ImGui::SetNextWindowContentSize(ImVec2(x, y));
 	return 0;
 }
@@ -2418,8 +2416,8 @@ cSpacing(lua_State *L) {
 
 static int
 cDummy(lua_State *L) {
-	float x = luaL_checkinteger(L, 1);
-	float y = luaL_checkinteger(L, 2);
+	float x = luaL_checknumber(L, 1);
+	float y = luaL_checknumber(L, 2);
 	ImGui::Dummy(ImVec2(x, y));
 	return 0;
 }
@@ -2578,10 +2576,8 @@ cGetColumnOffset(lua_State* L) {
 
 static int
 cSetColumnOffset(lua_State* L) {
-	luaL_checkinteger(L, 1);
-	luaL_checknumber(L, 2);
-	int index = lua_tointeger(L, 1) - 1;
-	float offset = lua_tonumber(L, 2);
+	int index = luaL_checkinteger(L, 1) - 1;
+	float offset = luaL_checknumber(L, 2);
 	ImGui::SetColumnOffset(index,offset);
 	return 0;
 }
@@ -2618,10 +2614,10 @@ uSetColorEditOptions(lua_State *L) {
 
 static int
 uPushClipRect(lua_State *L) {
-	float left = luaL_checkinteger(L, 1);
-	float top = luaL_checkinteger(L, 2);
-	float right = luaL_checkinteger(L, 3);
-	float bottom = luaL_checkinteger(L, 4);
+	float left = luaL_checknumber(L, 1);
+	float top = luaL_checknumber(L, 2);
+	float right = luaL_checknumber(L, 3);
+	float bottom = luaL_checknumber(L, 4);
 	bool intersect_with_current_clip_rect = lua_toboolean(L, 5);
 	ImGui::PushClipRect(ImVec2(left, top), ImVec2(right, bottom), intersect_with_current_clip_rect);
 	return 0;

@@ -173,7 +173,7 @@ function gui_util.open_current_pkg_path(path,...)
     local pkg_path = fs.path(pm.get_entry_pkg().."/"..path)
     local local_path = pkg_path:localpath()
     local f = localfs.open(local_path,...)
-    return f
+    return f,local_path:string()
 end
 
 local DefaultComponentSettingPath = "editor.com_sytle.default.cfg"
@@ -201,6 +201,33 @@ function gui_util.save_component_setting(com_setting)
     f:write(packed_data)
     f:close()
     return path
+end
+
+---cb(type,path)
+--return update_func
+function gui_util.watch_current_package_file(file_path,cb)
+    local fs = require "filesystem"
+    local localfs = require "filesystem.local"
+    local current_path = localfs.current_path()
+    local pm = require "antpm"
+    local pkg_path = fs.path(pm.get_entry_pkg().."/"..file_path)
+    local local_path = pkg_path:localpath()
+    local dir_path = local_path:parent_path():string()
+    local local_path_str = local_path:string()
+    local full_target_path = (current_path.."/"..local_path_str):string()
+    local fw = require 'filewatch'
+    local watch = assert(fw.add("./"..dir_path))
+    local update = function()
+        local typ, path = fw.select()
+        if typ then
+            local path_sep = string.gsub(path,"\\","/")
+            -- log.trace_a(typ,full_target_path,path_sep,path_sep == full_target_path)
+            if path_sep == full_target_path then
+                cb(typ)
+            end
+        end
+    end
+    return update
 end
 
 return gui_util

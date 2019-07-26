@@ -21,20 +21,6 @@ local debug_update = __ANT_RUNTIME__ and require 'runtime.debug'
 
 local iq = inputmgr.queue()
 
-local mouse_what = {
-	'LEFT', 'RIGHT', 'MIDDLE'
-}
-
-local mouse_state = {
-	'DOWN', 'MOVE', 'UP'
-}
-
-local function what_state(state, bit)
-	if state & bit ~= 0 then
-		return true
-	end
-end
-
 local callback = {}
 
 local width, height
@@ -110,7 +96,7 @@ end
 function callback.mouse(x, y, what, state)
 	imgui.mouse(x, y, what, state)
 	if not imguiIO.WantCaptureMouse then
-		iq:push("mouse", mouse_what[what] or 'UNKNOWN', mouse_state[state] or 'UNKNOWN', x, y)
+		iq:push("mouse", x, y, inputmgr.translate_mouse_button(what), inputmgr.translate_mouse_state(state))
 	end
 end
 
@@ -133,19 +119,14 @@ function callback.touch(x, y, id, state)
 		end
 	end
 	if not imguiIO.WantCaptureMouse then
-		iq:push("touch", id, mouse_state[state] or 'UNKNOWN', x, y)
+		iq:push("touch", x, y, id, inputmgr.translate_mouse_state(state))
 	end
 end
 
 function callback.keyboard(key, press, state)
 	imgui.key_state(key, press, state)
 	if not imguiIO.WantCaptureKeyboard then
-		local status = {}
-		status['CTRL'] = what_state(state, 0x01)
-		status['ALT'] = what_state(state, 0x02)
-		status['SHIFT'] = what_state(state, 0x04)
-		status['SYS'] = what_state(state, 0x08)
-		iq:push("keyboard", keymap[key], press, status)
+		iq:push("keyboard", keymap[key], press, inputmgr.translate_key_state(state))
 	end 
 end
 

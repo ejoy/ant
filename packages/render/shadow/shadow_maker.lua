@@ -17,7 +17,7 @@ local geodrawer = import_package "ant.geometry".drawer
 local bgfx = require "bgfx"
 
 ecs.component "shadow"
-	.material "material_content"
+	.material "material"
 	.shadowmap_with "int" (1024)
 	.shadowmap_height "int" (1024)
 

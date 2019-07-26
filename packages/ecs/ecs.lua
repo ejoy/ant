@@ -12,6 +12,14 @@ local world = {} ; world.__index = world
 
 function world:create_component(c, args)
 	local ti = assert(self._components[c], c)
+	if not ti.type and args[1] then
+		local res = component_init(self, ti, args[1])
+		res[1] = res
+		for i = 2, #args do
+			res[i] = component_init(self, ti, args[i])
+		end
+		return res
+	end
 	return component_init(self, ti, args)
 end
 
@@ -47,9 +55,18 @@ end
 
 function world:add_component(eid, component_type, args)
 	local e = self[eid]
-	e[component_type] = self:create_component(component_type, args)
-	self:register_component(eid, component_type)
-	self:init_component(e, component_type)
+	local c = e[component_type]
+	if not c then
+		e[component_type] = self:create_component(component_type, args)
+		local ti = assert(self._components[component_type], component_type)
+		if not ti.type then
+			e[component_type][1] = e[component_type]
+		end
+		self:register_component(eid, component_type)
+		self:init_component(e, component_type)
+	else
+		c[#c+1] = self:create_component(component_type, args)
+	end
 end
 
 function world:add_component_child(parent_com,child_name,child_type,child_value)
@@ -254,30 +271,42 @@ end
 
 local function dummy_iter() end
 
+--component_type ~= nil, return pairs<eid,component_data>
+--component_type == nil, return pairs<eid,entity_data>
 function world:each_removed(component_type)
 	local removed_set
-
 	local set = self._removed
-	for i = 1, #set do
-		local item = set[i]
-		local eid = item[1]
-		local c = item[3]	-- { eid, component_type, c }
-		if c ~= nil then
-			local ctype = item[2]
-			if ctype == component_type then
+	if not component_type then
+		for i = 1, #set do
+			local item = set[i]
+			if not item[3] then
+				local eid = item[1]
+				local e = item[2]
 				removed_set = removed_set or {}
-				removed_set[eid] = c -- true
+				removed_set[eid] = e
 			end
-		else
-			local e = item[2]
-			c = e[component_type]
+		end
+	else
+		for i = 1, #set do
+			local item = set[i]
+			local eid = item[1]
+			local c = item[3]	-- { eid, component_type, c }
 			if c ~= nil then
-				removed_set = removed_set or {}
-				removed_set[eid] = c --true
+				local ctype = item[2]
+				if ctype == component_type then
+					removed_set = removed_set or {}
+					removed_set[eid] = c -- true
+				end
+			else
+				local e = item[2]
+				c = e[component_type]
+				if c ~= nil then
+					removed_set = removed_set or {}
+					removed_set[eid] = c --true
+				end
 			end
 		end
 	end
-
 	if removed_set then
 		return pairs(removed_set)
 	else

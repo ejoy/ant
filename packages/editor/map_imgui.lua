@@ -26,7 +26,7 @@ local function translate_status(key_state,mouse_state)
             t[str] = true
         end
     end
-    for k,_ in pairs(key_state) do
+    for k,v in pairs(key_state) do
         if v then
             local str = str_map[k]
             t[str] = true

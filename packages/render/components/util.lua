@@ -119,9 +119,13 @@ end
 
 function util.is_entity_visible(entity)
     local can_render = entity.can_render
-    if can_render then
-        local mesh = entity.mesh
-        return mesh and mesh.assetinfo
+	if can_render then
+		local al = entity.asyn_load
+		local rm = entity.rendermesh
+		if al then
+			return al == "loaded" and rm.handle ~= nil
+		end
+        return rm.handle ~= nil
     end
 
     return false
@@ -292,8 +296,8 @@ function util.calc_transform_boundings(world, transformed_boundings)
 		local e = world[eid]
 
 		if e.mesh_bounding_drawer_tag == nil and e.main_view then
-			local m = e.mesh
-			local meshscene = m.assetinfo.handle
+			local rm = e.rendermesh
+			local meshscene = rm.handle
 
 			local worldmat = ms:srtmat(e.transform)
 
@@ -308,8 +312,7 @@ function util.calc_transform_boundings(world, transformed_boundings)
 						local b = g.bounding
 						if b then
 							local tb = mathbaselib.new_bounding(ms)
-							tb:merge(b)
-							tb:transform(trans)
+							tb:reset(b, trans)
 							transformed_boundings[#transformed_boundings+1] = tb
 						end
 					end
@@ -407,5 +410,42 @@ function util.transmit_mesh(mesh, rendermesh)
 	mesh.assetinfo 		= nil	-- transmit to rendermesh
 	check_rendermesh_lod(rendermesh)
 end
+
+function util.scene_index(rendermesh)
+	local meshscene = rendermesh.handle
+	local lodlevel = rendermesh.lodidx or meshscene.sceneidx
+	return meshscene.scenelods and (meshscene.scenelods[lodlevel]) or meshscene.sceneidx
+end
+
+function util.entity_bounding(entity)
+	if util.is_entity_visible(entity) then
+		local rm = entity.rendermesh
+		local meshscene = rm.handle
+		local sceneidx = util.scene_index(rm)
+
+		local worldmat = ms:srtmat(entity.transform)
+
+		local scene = meshscene.scenes[sceneidx]
+		local entitybounding = mathbaselib.new_bounding(ms)
+		for _, mn in ipairs(scene)	do
+			local trans = worldmat
+			if mn.transform then
+				trans = ms(trans, mn.transform, "*P")
+			end
+
+			for _, g in ipairs(mn) do
+				local b = g.bounding
+				if b then
+					local tb = mathbaselib.new_bounding(ms)
+					tb:reset(b, trans)
+					entitybounding:merge(tb)
+				end
+			end
+		end
+		
+		return entitybounding:isvalid() and entitybounding or nil
+	end
+end
+
 
 return util

@@ -1,4 +1,13 @@
-package.path = "./tools/convert_unity_scene/?.lua;./tools/fbx2gltf/?.lua;./tools/?.lua;./packages/glTF/?.lua;./?.lua;engine/?.lua;engine/?/?.lua"
+package.path = table.concat({
+		"./tools/convert_unity_scene/?.lua",
+		"./tools/fbx2gltf/?.lua",
+		"./tools/?.lua",
+		"./packages/utility/?.lua",
+		"./?.lua",
+		"./engine/?.lua",
+		"./engine/?/?.lua",
+	}, ";")
+
 package.cpath = "projects/msvc/vs_bin/x64/Debug/?.dll"
 
 local fs = require "filesystem.local"

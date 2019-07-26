@@ -77,9 +77,10 @@ local function replace_material(result, material)
 	if result then
 		for _, item in ipairs(result) do
 			item.material = material.materialinfo
-			item.properties.uniforms = {
-				u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
-			}
+			if item.properties.uniforms == nil then
+				item.properties.uniforms = {}
+			end
+			item.properties.uniforms.u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
 		end
 	end
 end
@@ -112,8 +113,8 @@ ecs.component "blit_buffer" {depend = "blit_viewid"}
 	.render_buffer "render_buffer"
 
 ecs.component "pickup_material"
-	.opaticy 		"material_content"
-	.translucent 	"material_content"
+	.opaticy 		"material"
+	.translucent 	"material"
 
 ecs.component_alias("pickup_viewtag", "boolean")
 
@@ -263,8 +264,8 @@ function pickup_sys:init()
 	--local pickup_eid = add_pick_entity()
 
 	self.message.observers:add({
-		mouse_click = function (_, b, p, x, y)
-			if b == "LEFT" and p then
+		mouse = function (_, x, y, what, state)
+			if what == "LEFT" and state == "DOWN" then
 				local eid = enable_pickup(true)
 				local entity = world[eid]
 				update_viewinfo(entity, point2d(x, y))

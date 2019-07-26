@@ -75,7 +75,7 @@ local function bpKey(src)
     if src.sourceReference then
         return src.sourceReference
     end
-    return fs.narive_normalize_clientpath(src.path)
+    return fs.path_native(fs.path_normalize(src.path))
 end
 
 local function verifyBreakpoint(src, clientsrc, bps)
