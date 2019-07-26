@@ -33,7 +33,7 @@ local function load_asset(e)
 
     local materials = e.material
     do
-        for _, material in ipairs(materials) do
+        for _, material in world:each_component(materials) do
             assert(material.asyn_load)
             computil.create_material(material)
         end

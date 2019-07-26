@@ -65,6 +65,15 @@ local function foreach_save_2(component, c)
     return foreach_save_1(component, c.type)
 end
 
+local function each_component(t)
+    return function(_, n)
+        if not t[n] then
+            return
+        end
+        return n + 1, t[n]
+    end, t, 0
+end
+
 function foreach_save_1(component, name)
     if name == 'primtype' then
         return component
@@ -82,23 +91,48 @@ function foreach_save_1(component, name)
     end
     local ret 
     if not c.type then
-        if not ids[component] then
-            ids[component] = crypt.uuid64()
-        end
-        ret = {
-            __id = ids[component],
-        }
-        component.__type = name
-        for _, v in ipairs(c) do
-            if component[v.name] == nil and v.attrib and v.attrib.opt then
-                goto continue
+        if c.multiple then
+            ret = {}
+            for i, com in each_component(component) do
+                if not ids[com] then
+                    ids[com] = crypt.uuid64()
+                end
+                local r = {
+                    __id = ids[com]
+                }
+                ret[i] = r
+                com.__type = name
+                for _, v in ipairs(c) do
+                    if com[v.name] == nil and v.attrib and v.attrib.opt then
+                        goto continue
+                    end
+                    r[v.name] = foreach_save_2(com[v.name], v)
+                    ::continue::
+                end
+                if c.method and c.method.init then
+                    load[c.name] = load[c.name] or {}
+                    table.insert(load[c.name], r)
+                end
             end
-            ret[v.name] = foreach_save_2(component[v.name], v)
-            ::continue::
-        end
-        if c.method and c.method.init then
-            load[c.name] = load[c.name] or {}
-            table.insert(load[c.name], ret)
+        else
+            if not ids[component] then
+                ids[component] = crypt.uuid64()
+            end
+            ret = {
+                __id = ids[component]
+            }
+            component.__type = name
+            for _, v in ipairs(c) do
+                if component[v.name] == nil and v.attrib and v.attrib.opt then
+                    goto continue
+                end
+                ret[v.name] = foreach_save_2(component[v.name], v)
+                ::continue::
+            end
+            if c.method and c.method.init then
+                load[c.name] = load[c.name] or {}
+                table.insert(load[c.name], ret)
+            end
         end
     else
         ret = foreach_save_2(component, c)

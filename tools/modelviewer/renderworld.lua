@@ -37,6 +37,8 @@ local lu = renderpkg.light
 local cu = renderpkg.components
 local fs = require "filesystem"
 
+local serialize = import_package 'ant.serialize'
+
 local function create_light()
 	local leid = lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2)
 	local lentity = world[leid]
@@ -63,6 +65,7 @@ function model_review_system:init()
 		main_view 	= true,
 		asyn_load	= "",
 		name 		= "door",
+		serialize   = serialize.create(),
 	}
 
 	world:create_entity {
@@ -74,6 +77,7 @@ function model_review_system:init()
 		main_view 	= true,
 		asyn_load	= "",
 		name 		= "door",
+		serialize   = serialize.create(),
 	}
 
 	local singlecolor_material = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material"
@@ -117,5 +121,17 @@ function model_review_system:init()
 		main_view = true,
 		asyn_load = "",
 		name = "test_glb",
+		serialize   = serialize.create(),
 	}
+	
+    local function save_file(file, data)
+        assert(assert(io.open(file, 'w')):write(data)):close()
+    end
+    -- test serialize world
+    local s = serialize.save_world(world)
+    save_file('serialize_world.txt', s)
+    for _, eid in world:each 'serialize' do
+        world:remove_entity(eid)
+    end
+	serialize.load_world(world, s)
 end

@@ -79,6 +79,7 @@ local function _load_entity(w, tree)
         eid = w:register_entity()
     end
     w[eid] = tree
+    tree[0] = nil
     for name in sortpairs(tree) do
         w:register_component(eid, name)
     end

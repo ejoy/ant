@@ -140,8 +140,7 @@ local function stringify_component_children(c, v)
         end
         return
     end
-	local ssss = stringify_component_value(c.type, v)
-	return ssss
+	return stringify_component_value(c.type, v)
 end
 
 function stringify_component_ref(c, v, lv)
@@ -160,13 +159,27 @@ function stringify_component_ref(c, v, lv)
         end
         ::continue::
     end
+    for i, vv in ipairs(v) do
+        if not pool[vv] then
+            pool[vv] = vv.__id
+            stack[#stack+1] = {c, vv}
+        end
+        out[#out+1] = ('  '):rep(lv) .. ('%d:*%x'):format(i, vv.__id)
+    end
 end
 
 local function _stringify_entity(e)
     out[#out+1] = ('--- &%x'):format(e.__id)
     for _, c in ipairs(e) do
         local k, v = c[1], c[2]
-        out[#out+1] = ('%s:%s'):format(k, stringify_component_value(k, v))
+        local ti = typeinfo[k]
+        if ti.multiple then
+            for _, vv in ipairs(v) do
+                out[#out+1] = ('%s:%s'):format(k, stringify_component_value(k, vv))
+            end
+        else
+            out[#out+1] = ('%s:%s'):format(k, stringify_component_value(k, v))
+        end
     end
 
     while #stack ~= 0 do

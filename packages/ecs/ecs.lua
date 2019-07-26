@@ -12,11 +12,11 @@ local world = {} ; world.__index = world
 
 function world:create_component(c, args)
 	local ti = assert(self._components[c], c)
-	if not ti.type and args[1] then
+	if not ti.type and ti.multiple then
 		local res = component_init(self, ti, args[1])
-		res[1] = res
+		res[0] = res
 		for i = 2, #args do
-			res[i] = component_init(self, ti, args[i])
+			res[i-1] = component_init(self, ti, args[i])
 		end
 		return res
 	end
@@ -56,17 +56,21 @@ end
 function world:add_component(eid, component_type, args)
 	local e = self[eid]
 	local c = e[component_type]
-	if not c then
-		e[component_type] = self:create_component(component_type, args)
-		local ti = assert(self._components[component_type], component_type)
-		if not ti.type then
-			e[component_type][1] = e[component_type]
+	local ti = assert(self._components[component_type], component_type)
+	if not ti.type and ti.multiple then
+		if not c then
+			e[component_type] = self:create_component(component_type, args)
+			e[component_type][0] = e[component_type]
+			self:register_component(eid, component_type)
+			self:init_component(e, component_type)
+		else
+			c[#c+1] = self:create_component(component_type, args)
 		end
-		self:register_component(eid, component_type)
-		self:init_component(e, component_type)
-	else
-		c[#c+1] = self:create_component(component_type, args)
+		return
 	end
+	e[component_type] = self:create_component(component_type, args)
+	self:register_component(eid, component_type)
+	self:init_component(e, component_type)
 end
 
 function world:add_component_child(parent_com,child_name,child_type,child_value)
@@ -185,6 +189,15 @@ function world:each(component_type)
 		self._set[component_type] = s
 	end
 	return component_next, s, 0
+end
+
+function world:each_component(t)
+    return function(_, n)
+        if not t[n] then
+            return
+        end
+        return n + 1, t[n]
+    end, t, 0
 end
 
 function world:first_entity_id(c_type)

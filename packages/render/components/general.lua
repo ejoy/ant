@@ -165,7 +165,7 @@ ecs.component "properties"
 	["opt"].textures "texture{}"
 	["opt"].uniforms "uniform{}"
 
-local material = ecs.component "material"
+local material = ecs.component "material" { multiple=true }
 	.ref_path "respath"
 	["opt"].properties "properties"
 	["opt"].asyn_load "boolean" (false)

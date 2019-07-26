@@ -89,6 +89,7 @@ function fields_mt:__call(typename)
 		else
 			obj.depend = typename.depend
 		end
+		obj.multiple = typename.multiple
 		return setmetatable(self, defaults_mt)
 	end
 	local attrib = self._current_field
