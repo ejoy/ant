@@ -58,7 +58,9 @@ local function foreach_save_2(component, c)
     if c.map then
 		local ret = {}
         for k, v in pairs(component) do
-			ret[k] = foreach_save_1(v, c.type)
+            if type(k) == "string" then
+                ret[k] = foreach_save_1(v, c.type)
+            end
 		end
         return ret
     end

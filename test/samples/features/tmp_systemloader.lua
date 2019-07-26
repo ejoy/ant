@@ -135,21 +135,21 @@ function init_loader:init()
 	--watch.set(world, res1.__id, "", "type", "test")
 	--local res3 = watch.query(world, res1.__id, "")
     
-    --local function save_file(file, data)
-    --    assert(assert(io.open(file, 'w')):write(data)):close()
-    --end
-    ---- test serialize world
-    --local s = serialize.save_world(world)
-    --save_file('serialize_world.txt', s)
-    --for _, eid in world:each 'serialize' do
-    --    world:remove_entity(eid)
-    --end
-    --serialize.load_world(world, s)
+    local function save_file(file, data)
+        assert(assert(io.open(file, 'w')):write(data)):close()
+    end
+    -- test serialize world
+    local s = serialize.save_world(world)
+    save_file('serialize_world.txt', s)
+    for _, eid in world:each 'serialize' do
+        world:remove_entity(eid)
+    end
+    serialize.load_world(world, s)
 
-    ----test serialize entity
-    --local eid = world:first_entity_id 'serialize'
-    --local s = serialize.save_entity(world, eid)
-    --save_file('serialize_entity.txt', s)
-    --world:remove_entity(eid)
-    --serialize.load_entity(world, s)
+    --test serialize entity
+    local eid = world:first_entity_id 'serialize'
+    local s = serialize.save_entity(world, eid)
+    save_file('serialize_entity.txt', s)
+    world:remove_entity(eid)
+    serialize.load_entity(world, s)
 end

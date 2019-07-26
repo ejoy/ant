@@ -9,7 +9,9 @@ local out1, out2, out3
 local function sortpairs(t)
     local sort = {}
     for k in pairs(t) do
-        sort[#sort+1] = k
+        if type(k) == "string" then
+            sort[#sort+1] = k
+        end
     end
     table.sort(sort)
     local n = 1
@@ -253,23 +255,12 @@ local function stringify_entity(w, t)
     stringify_package(t)
 
     local e = t[2]
-
     out = out1
     out[#out+1] = '---'
-    for _, c in ipairs(e) do
-        local k, v = c[1], c[2]
-        out[#out+1] = ('%s:%s'):format(k, stringify_component_value(k, v))
-    end
+    out[#out+1] = ('  --- *%x'):format(e.__id)
 
     out = out3
-    while #stack ~= 0 do
-        local c, v = stack[1][1], stack[1][2]
-        table.remove(stack, 1)
-
-        out[#out+1] = ('--- &%x'):format(pool[v])
-        stringify_component_ref(c, v, 0)
-    end
-
+    _stringify_entity(e)
     return stringify_end(t)
 end
 
