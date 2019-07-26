@@ -18,6 +18,9 @@ $(ODIR)/thread.dll : $(ODIR)/lthread.o $(ODIR)/lseri.o
 $(ODIR)/libthread.a : $(ODIR)/lthread.o $(ODIR)/lseri.o
 	ar rsv $@ $^
 
+thread.dll : $(ODIR)/thread.dll
+	cp $^ $@
+
 $(ODIR) :
 	mkdir -p $@
 

@@ -27,6 +27,9 @@
 #define TYPE_LONG_STRING 5
 #define TYPE_TABLE 6
 
+// hibits 0~31 : ref parent
+#define TYPE_REF 7
+
 #define MAX_COOKIE 32
 #define COMBINE_TYPE(t,v) ((t) | (v) << 3)
 
@@ -38,17 +41,24 @@ struct block {
 	char buffer[BLOCK_SIZE];
 };
 
+struct stack {
+	int depth;
+	int ancestor[MAX_DEPTH];
+};
+
 struct write_block {
 	struct block * head;
 	struct block * current;
 	int len;
 	int ptr;
+	struct stack s;
 };
 
 struct read_block {
 	char * buffer;
 	int len;
 	int ptr;
+	struct stack s;
 };
 
 inline static struct block *
@@ -87,6 +97,7 @@ wb_init(struct write_block *wb , struct block *b) {
 	wb->len = 0;
 	wb->current = wb->head;
 	wb->ptr = 0;
+	wb->s.depth = 0;
 }
 
 static void
@@ -109,6 +120,7 @@ rball_init(struct read_block * rb, char * buffer, int size) {
 	rb->buffer = buffer;
 	rb->len = size;
 	rb->ptr = 0;
+	rb->s.depth = 0;
 }
 
 static void *
@@ -208,10 +220,10 @@ wb_string(struct write_block *wb, const char *str, int len) {
 	}
 }
 
-static void pack_one(lua_State *L, struct write_block *b, int index, int depth);
+static void pack_one(lua_State *L, struct write_block *b, int index);
 
 static int
-wb_table_array(lua_State *L, struct write_block * wb, int index, int depth) {
+wb_table_array(lua_State *L, struct write_block * wb, int index) {
 	int array_size = lua_rawlen(L,index);
 	if (array_size >= MAX_COOKIE-1) {
 		uint8_t n = COMBINE_TYPE(TYPE_TABLE, MAX_COOKIE-1);
@@ -225,7 +237,7 @@ wb_table_array(lua_State *L, struct write_block * wb, int index, int depth) {
 	int i;
 	for (i=1;i<=array_size;i++) {
 		lua_rawgeti(L,index,i);
-		pack_one(L, wb, -1, depth);
+		pack_one(L, wb, -1);
 		lua_pop(L,1);
 	}
 
@@ -233,7 +245,7 @@ wb_table_array(lua_State *L, struct write_block * wb, int index, int depth) {
 }
 
 static void
-wb_table_hash(lua_State *L, struct write_block * wb, int index, int depth, int array_size) {
+wb_table_hash(lua_State *L, struct write_block * wb, int index, int array_size) {
 	lua_pushnil(L);
 	while (lua_next(L, index) != 0) {
 		if (lua_type(L,-2) == LUA_TNUMBER) {
@@ -245,15 +257,15 @@ wb_table_hash(lua_State *L, struct write_block * wb, int index, int depth, int a
 				}
 			}
 		}
-		pack_one(L,wb,-2,depth);
-		pack_one(L,wb,-1,depth);
+		pack_one(L,wb,-2);
+		pack_one(L,wb,-1);
 		lua_pop(L, 1);
 	}
 	wb_nil(wb);
 }
 
 static void
-wb_table_metapairs(lua_State *L, struct write_block *wb, int index, int depth) {
+wb_table_metapairs(lua_State *L, struct write_block *wb, int index) {
 	uint8_t n = COMBINE_TYPE(TYPE_TABLE, 0);
 	wb_push(wb, &n, 1);
 	lua_pushvalue(L, index);
@@ -268,30 +280,50 @@ wb_table_metapairs(lua_State *L, struct write_block *wb, int index, int depth) {
 			lua_pop(L, 4);
 			break;
 		}
-		pack_one(L, wb, -2, depth);
-		pack_one(L, wb, -1, depth);
+		pack_one(L, wb, -2);
+		pack_one(L, wb, -1);
 		lua_pop(L, 1);
 	}
 	wb_nil(wb);
 }
 
 static void
-wb_table(lua_State *L, struct write_block *wb, int index, int depth) {
+wb_table(lua_State *L, struct write_block *wb, int index) {
 	luaL_checkstack(L, LUA_MINSTACK, NULL);
 	if (index < 0) {
 		index = lua_gettop(L) + index + 1;
 	}
 	if (luaL_getmetafield(L, index, "__pairs") != LUA_TNIL) {
-		wb_table_metapairs(L, wb, index, depth);
+		wb_table_metapairs(L, wb, index);
 	} else {
-		int array_size = wb_table_array(L, wb, index, depth);
-		wb_table_hash(L, wb, index, depth, array_size);
+		int array_size = wb_table_array(L, wb, index);
+		wb_table_hash(L, wb, index, array_size);
 	}
 }
 
+static int
+ref_ancestor(lua_State *L, struct write_block *b, int index) {
+	struct stack *s = &b->s;
+	int n = s->depth;
+	if (n == 0)
+		return 0;
+	int i;
+	const void * obj = lua_topointer(L, index);
+	for (i=0;i<n;i++) {
+		const void * ancestor = lua_topointer(L, s->ancestor[i]);
+		if (ancestor == obj) {
+			uint8_t n = COMBINE_TYPE(TYPE_REF, i);
+			wb_push(b, &n, 1);
+			return 1;
+		}
+	}
+	return 0;
+}
+
 static void
-pack_one(lua_State *L, struct write_block *b, int index, int depth) {
-	if (depth > MAX_DEPTH) {
+pack_one(lua_State *L, struct write_block *b, int index) {
+	struct stack *s = &b->s;
+	if (s->depth >= MAX_DEPTH) {
 		wb_free(b);
 		luaL_error(L, "serialize can't pack too depth table");
 	}
@@ -326,7 +358,12 @@ pack_one(lua_State *L, struct write_block *b, int index, int depth) {
 		if (index < 0) {
 			index = lua_gettop(L) + index + 1;
 		}
-		wb_table(L, b, index, depth+1);
+		if (ref_ancestor(L, b, index))
+			break;
+		s->ancestor[s->depth] = index;
+		++s->depth;
+		wb_table(L, b, index);
+		--s->depth;
 		break;
 	}
 	default:
@@ -340,7 +377,7 @@ pack_from(lua_State *L, struct write_block *b, int from) {
 	int n = lua_gettop(L) - from;
 	int i;
 	for (i=1;i<=n;i++) {
-		pack_one(L, b , from + i, 0);
+		pack_one(L, b , from + i);
 	}
 }
 
@@ -442,8 +479,13 @@ unpack_table(lua_State *L, struct read_block *rb, int array_size) {
 		}
 		array_size = get_integer(L,rb,cookie);
 	}
+	struct stack *s = &rb->s;
 	luaL_checkstack(L,LUA_MINSTACK,NULL);
 	lua_createtable(L,array_size,0);
+	if (s->depth >= MAX_DEPTH)
+		luaL_error(L, "Invalid layer %d", s->depth);
+	s->ancestor[s->depth] = lua_gettop(L);
+	++s->depth;
 	int i;
 	for (i=1;i<=array_size;i++) {
 		unpack_one(L,rb);
@@ -458,6 +500,15 @@ unpack_table(lua_State *L, struct read_block *rb, int array_size) {
 		unpack_one(L,rb);
 		lua_rawset(L,-3);
 	}
+	--s->depth;
+}
+
+static void
+unpack_ref(lua_State *L, struct read_block *rb, int ref) {
+	struct stack *s = &rb->s;
+	if (ref >= s->depth)
+		luaL_error(L, "Invalid ref object %d/%d", ref, s->depth);
+	lua_pushvalue(L, s->ancestor[ref]);
 }
 
 static void
@@ -505,14 +556,15 @@ push_value(lua_State *L, struct read_block *rb, int type, int cookie) {
 		}
 		break;
 	}
-	case TYPE_TABLE: {
+	case TYPE_TABLE:
 		unpack_table(L,rb,cookie);
 		break;
-	}
-	default: {
+	case TYPE_REF:
+		unpack_ref(L,rb,cookie);
+		break;
+	default:
 		invalid_stream(L,rb);
 		break;
-	}
 	}
 }
 
