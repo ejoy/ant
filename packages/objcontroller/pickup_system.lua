@@ -90,10 +90,10 @@ function pickup_material_sys:update()
 	if e then
 		local filter = e.primitive_filter
 
-		local materials = e.pickup.materials
+		local material = e.pickup.material
 		local result = filter.result
-		replace_material(result.opaticy, materials.opaticy)
-		replace_material(filter.translucent, result.translucent)
+		replace_material(result.opaticy, material[0])
+		replace_material(filter.translucent, material[1])
 	end
 end
 
@@ -112,10 +112,6 @@ ecs.component "blit_buffer" {depend = "blit_viewid"}
 	.raw_buffer "raw_buffer"
 	.render_buffer "render_buffer"
 
-ecs.component "pickup_material"
-	.opaticy 		"material"
-	.translucent 	"material"
-
 ecs.component_alias("pickup_viewtag", "boolean")
 
 --pick_ids:array of pick_eid
@@ -124,26 +120,11 @@ ecs.component "pickup_cache"
 	.last_pick "int" (-1)
 	.pick_ids "int[]"
 
-local pickupcomp = ecs.component "pickup"
-	.materials "pickup_material"
+ecs.component "pickup"
+	.material "material"
 	.blit_buffer "blit_buffer"
 	.blit_viewid "blit_viewid"
 	.pickup_cache "pickup_cache"
-
-function pickupcomp:init()
-	local materials = self.materials
-	local opacity = materials.opacity
-	if opacity then
-		computil.create_material(opacity)		
-	end
-
-	local transparent = materials.transparent
-	if transparent then
-		computil.create_material(transparent)
-	end
-
-	return self
-end
 
 local pickup_sys = ecs.system "pickup_system"
 
@@ -167,13 +148,9 @@ local function add_pick_entity()
 
 	return world:create_entity {
 		pickup = {
-			materials = {
-				opaticy = {
-					ref_path = fs.path '/pkg/ant.resources/materials/pickup_opacity.material'
-				},
-				translucent = {
-					ref_path = fs.path '/pkg/ant.resources/materials/pickup_transparent.material'
-				}
+			material = {
+				{ref_path = fs.path '/pkg/ant.resources/materials/pickup_opacity.material'},
+				{ref_path = fs.path '/pkg/ant.resources/materials/pickup_transparent.material'},
 			},
 			blit_buffer = {
 				raw_buffer = {
