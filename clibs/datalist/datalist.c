@@ -486,15 +486,20 @@ push_key(lua_State *L, struct lex_state *LS) {
 }
 
 static void
+new_table_0(lua_State *L) {
+	lua_newtable(L);
+	// index 0 refer self
+	lua_pushvalue(L, -1);
+	lua_rawseti(L, -2, 0);
+}
+
+static void
 new_table(lua_State *L, int layer, objectid ref) {
 	if (layer >= MAX_DEPTH)
 		luaL_error(L, "too many layers");
 	luaL_checkstack(L, 8, NULL);
 	if (ref == 0) {
-		lua_newtable(L);
-		// index 0 refer self
-		lua_pushvalue(L, -1);
-		lua_rawseti(L, -2, 0);
+		new_table_0(L);
 	} else {
 		lua_rawgeti(L, REF_CACHE, ref);
 	}
@@ -537,7 +542,7 @@ parse_tag(lua_State *L, struct lex_state *LS) {
 		lua_rawseti(L, REF_UNSOLVED, tag);
 	} else {
 		lua_pop(L, 1);
-		lua_newtable(L);
+		new_table_0(L);
 		lua_rawseti(L, REF_CACHE, tag);
 	}
 	return tag;
@@ -551,7 +556,7 @@ parse_ref(lua_State *L, struct lex_state *LS) {
 		return;
 	}
 	lua_pop(L, 1);
-	lua_newtable(L);	// Create a table for future
+	new_table_0(L);		// Create a table for future
 	lua_pushvalue(L, -1);
 	lua_rawseti(L, REF_CACHE, tag);
 	// set unsolved flag
