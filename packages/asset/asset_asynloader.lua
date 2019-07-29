@@ -111,11 +111,11 @@ function asyn_asset_loader:post_init()
             else
                 assert(loadstate == "loaded")
             end
-            --print("loaded entity:", eid, e.name or "")
-            if max_entity < #loaded_assets then
-                --print("---------------------------")
-                break
-            end
+        end
+        --print("loaded entity:", eid, e.name or "")
+        if max_entity < i then
+            --print("---------------------------")
+            break
         end
     end
 
