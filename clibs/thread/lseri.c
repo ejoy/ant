@@ -491,16 +491,18 @@ unpack_table(lua_State *L, struct read_block *rb, int array_size) {
 		unpack_one(L,rb);
 		lua_rawseti(L,-2,i);
 	}
+	--s->depth;
 	for (;;) {
 		unpack_one(L,rb);
 		if (lua_isnil(L,-1)) {
 			lua_pop(L,1);
 			return;
 		}
+		++s->depth;
 		unpack_one(L,rb);
+		--s->depth;
 		lua_rawset(L,-3);
 	}
-	--s->depth;
 }
 
 static void
