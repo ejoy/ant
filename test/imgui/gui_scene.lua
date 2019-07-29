@@ -70,7 +70,9 @@ function  GuiScene:_scene_menu()
         dbgutil.try(function () scene_control.test_new_world(box.text) end)
     end
 	cursor.SameLine()
-	widget.InputText("", box)
+    if widget.InputText("", box) then
+        self._dirty_flag = true
+    end
     cursor.Separator()
     local fps = self:_get_editfps()
     if widget.InputInt("FPS",fps) then
@@ -80,6 +82,27 @@ function  GuiScene:_scene_menu()
     end
     widget.Text(string.format("real frame time:%f/(%.2f)",self.cur_frame_time,1/self.cur_frame_time))
 end
+
+function GuiScene:save_setting_to_memory(clear_dirty_flag)
+    if clear_dirty_flag then
+        self._dirty_flag = false
+    end
+    return {
+        editpath = tostring(self.editpath.text)
+    }
+end
+
+--override if needed
+function GuiScene:load_setting_from_memory(setting_tbl)
+    local box = self:_get_editpath()
+    box.text = setting_tbl.editpath
+end
+
+--override if needed
+function GuiScene:is_setting_dirty()
+    return self._dirty_flag
+end
+
 
 
 return GuiScene
