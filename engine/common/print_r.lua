@@ -62,7 +62,7 @@ local function dump_a(args,indent_str)
                 end
                 local next_indent = indent..indent_str
                 for k, v in pairs( value ) do
-                    if not string.find(k,"raw") then
+                    if not (type(k) == "string" and string.find(k,"raw")) then
                         if type( k ) == "table" then
                             _dump( k, path..".&"..tostring( k ),true,next_indent)
                             output( "(", tostring( k ), ")" )
