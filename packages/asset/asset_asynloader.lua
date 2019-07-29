@@ -23,23 +23,68 @@ end
 local asyn_asset_loader = ecs.system "asyn_asset_loader"
 asyn_asset_loader.singleton "asyn_load_list"
 
-local function load_asset(e)
+local function start_load_asset(e)
     local mesh = e.mesh
     do
-        assert(mesh.asyn_load)
-        mesh.assetinfo = assetmgr.load(assert(mesh.ref_path))
+        mesh.assetinfo = assetmgr.load(assert(mesh.ref_path), {asyn_load=true})
         computil.transmit_mesh(mesh, e.rendermesh)
     end
 
     local materials = e.material
     do
-        for _, material in world:each_component(materials) do
-            assert(material.asyn_load)
-            computil.create_material(material)
+        for i=0, #materials do
+            computil.create_material(materials[i])
         end
     end
 
-    e.asyn_load = "loaded"
+    e.asyn_load = "loading"
+end
+
+local function is_mesh_loaded(mesh)
+    return mesh.handle ~= nil
+end
+
+local function is_textures_loaded(tp)
+    if tp then
+        for _, tex in pairs(tp) do
+            if tex.handle == nil then
+                return false
+            end
+        end
+    end
+    return true
+end
+
+local function is_material_loaded(material)
+    --material index start from 0
+    for i=0, #material do
+        local m = material[i]
+        local mi = m.materialinfo
+        if mi == nil then
+            return false
+        end
+
+        if mi.shader.prog == nil then
+            return false
+        end
+
+        if mi.propertiecs and not is_textures_loaded(mi.propertiecs.textures) then
+            return false
+        end
+        if m.propertiecs and not is_textures_loaded(m.propertiecs.textures) then
+            return false
+        end
+    end
+
+    return true
+end
+
+local function is_asset_loaded(e)
+    if not is_mesh_loaded(e.rendermesh) then
+        return false
+    end
+
+    return is_material_loaded(e.material)
 end
 
 function asyn_asset_loader:post_init()
@@ -55,9 +100,17 @@ function asyn_asset_loader:post_init()
         local eid = loadlist[i]
         local e = world[eid]
         if e then   -- need check eid is valid
-            load_asset(e)
-            loaded_assets[#loaded_assets+1] = eid
-
+            local loadstate = e.asyn_load
+            if loadstate == "" then
+                start_load_asset(e)
+            elseif loadstate == "loading" then
+                if is_asset_loaded(e) then
+                    e.asyn_load = "loaded"
+                    loaded_assets[#loaded_assets+1] = eid
+                end
+            else
+                assert(loadstate == "loaded")
+            end
             --print("loaded entity:", eid, e.name or "")
             if max_entity < #loaded_assets then
                 --print("---------------------------")
