@@ -34,7 +34,9 @@ local function foreach_init_2(w, c, args)
         local ret = {}
         if args then
             for k, v in sortpairs(args) do
-                ret[k] = w:create_component(c.type, v)
+                if type(k) == "string" then
+                    ret[k] = w:create_component(c.type, v)
+                end
             end
         end
         return ret
@@ -95,8 +97,10 @@ function foreach_delete_1(w, c, component, e)
         return
     end
     if c.map then
-        for _, v in pairs(component) do
-            foreach_delete_2(w, c, v)
+        for k, v in pairs(component) do
+            if type(k) == "string" then
+                foreach_delete_2(w, c, v)
+            end
         end
         return
     end

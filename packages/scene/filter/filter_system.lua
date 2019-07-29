@@ -66,11 +66,11 @@ end
 local function get_material(prim, primidx, materialcontent, material_refs)
 	if material_refs then
 		local idx = material_refs[primidx] or 1
-		return materialcontent[idx]
+		return materialcontent[idx-1]
 	end
 
 	local materialidx = prim.material or primidx
-	return materialcontent[materialidx+1] or materialcontent[1]
+	return materialcontent[materialidx] or materialcontent[0]
 end
 
 local function is_visible(meshname, submesh_refs)

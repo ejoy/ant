@@ -37,6 +37,8 @@ local lu = renderpkg.light
 local cu = renderpkg.components
 local fs = require "filesystem"
 
+local serialize = import_package 'ant.serialize'
+
 local function create_light()
 	local leid = lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2)
 	local lentity = world[leid]
@@ -54,7 +56,7 @@ function model_review_system:init()
 	skyutil.create_procedural_sky(world)
 	
 	cu.create_grid_entity(world, "grid")
-	world:create_entity {
+	local origineid = world:create_entity {
 		transform 	= mu.scale_mat(0.2),
 		rendermesh 	= {},
 		mesh 		= {ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh", asyn_load=true},
@@ -63,17 +65,18 @@ function model_review_system:init()
 		main_view 	= true,
 		asyn_load	= "",
 		name 		= "door",
+		serialize   = serialize.create(),
 	}
 
+	local originentity = world[origineid]
+	local s, r, t = ms(originentity.transform.t, originentity.transform.r, originentity.transform.s, "TTT")
 	world:create_entity {
-		transform 	= mu.scale_mat(0.2),
+		transform 	= mu.srt(s, r, t),
 		rendermesh 	= {},
-		mesh 		= {ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh", asyn_load=true},
-		material 	= {{ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material", asyn_load=true}},
+		material 	= {{ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material",}},
 		can_render 	= true,
 		main_view 	= true,
-		asyn_load	= "",
-		name 		= "door",
+		name 		= "door_outline",
 	}
 
 	local singlecolor_material = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material"
@@ -117,5 +120,37 @@ function model_review_system:init()
 		main_view = true,
 		asyn_load = "",
 		name = "test_glb",
+		serialize   = serialize.create(),
 	}
+	
+    local function save_file(file, data)
+        assert(assert(io.open(file, 'w')):write(data)):close()
+    end
+    -- test serialize world
+    local s = serialize.save_world(world)
+    save_file('serialize_world.txt', s)
+    for _, eid in world:each 'serialize' do
+        world:remove_entity(eid)
+    end
+	serialize.load_world(world, s)
+
+    local eid = world:first_entity_id 'serialize'
+    local s = serialize.save_entity(world, eid)
+    save_file('serialize_entity.txt', s)
+    world:remove_entity(eid)
+	serialize.load_entity(world, s)
+	
+
+	local function find_entity_by_name(name)
+		for _, eid in world:each "can_render" do
+			local e = world[eid]
+			if e.name == name then
+				return eid
+			end
+		end
+	end
+
+	local dooreid = find_entity_by_name("door")
+	local door_outlineeid = find_entity_by_name("door_outline")
+	world[dooreid].rendermesh = world[door_outlineeid].rendermesh
 end

@@ -25,15 +25,6 @@ local function packeid_as_rgba(eid)
             ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
 end
 
-local function unpackrgba_to_eid(rgba)
-    local r =  rgba & 0x000000ff
-    local g = (rgba & 0x0000ff00) >> 8
-    local b = (rgba & 0x00ff0000) >> 16
-    local a = (rgba & 0xff000000) >> 24
-    
-    return r + g + b + a
-end
-
 local function which_entity_hitted(blitdata, viewrect)    
 	local w, h = viewrect.w, viewrect.h
 	
@@ -46,7 +37,7 @@ local function which_entity_hitted(blitdata, viewrect)
 			local cidx = startidx + (ix - 1) + (iy - 1) * w
 			local rgba = blitdata[cidx]
 			if rgba ~= 0 then
-				found_eid = unpackrgba_to_eid(rgba)
+				found_eid = rgba
 				break
 			end
 		end
@@ -80,9 +71,24 @@ local function replace_material(result, material)
 			if item.properties.uniforms == nil then
 				item.properties.uniforms = {}
 			end
-			item.properties.uniforms.u_id = {type="color", value=packeid_as_rgba(assert(item.eid))}
+			item.properties.uniforms.u_id = {type="color", name = "select eid", value=packeid_as_rgba(assert(item.eid))}
 		end
 	end
+end
+
+local function recover_material(result)
+	if result then
+		for _, item in ipairs(result) do
+			local uniforms = assert(item.properties.uniforms)
+			uniforms.u_id = nil
+		end
+	end
+end
+
+local function recover_filter(filter)
+	local result = filter.result
+	recover_material(result.opaticy)
+	recover_material(filter.translucent)
 end
 
 function pickup_material_sys:update()
@@ -90,10 +96,10 @@ function pickup_material_sys:update()
 	if e then
 		local filter = e.primitive_filter
 
-		local materials = e.pickup.materials
+		local material = e.pickup.material
 		local result = filter.result
-		replace_material(result.opaticy, materials.opaticy)
-		replace_material(filter.translucent, result.translucent)
+		replace_material(result.opaticy, material[0])
+		replace_material(filter.translucent, material[1])
 	end
 end
 
@@ -112,10 +118,6 @@ ecs.component "blit_buffer" {depend = "blit_viewid"}
 	.raw_buffer "raw_buffer"
 	.render_buffer "render_buffer"
 
-ecs.component "pickup_material"
-	.opaticy 		"material"
-	.translucent 	"material"
-
 ecs.component_alias("pickup_viewtag", "boolean")
 
 --pick_ids:array of pick_eid
@@ -124,26 +126,11 @@ ecs.component "pickup_cache"
 	.last_pick "int" (-1)
 	.pick_ids "int[]"
 
-local pickupcomp = ecs.component "pickup"
-	.materials "pickup_material"
+ecs.component "pickup"
+	.material "material"
 	.blit_buffer "blit_buffer"
 	.blit_viewid "blit_viewid"
 	.pickup_cache "pickup_cache"
-
-function pickupcomp:init()
-	local materials = self.materials
-	local opacity = materials.opacity
-	if opacity then
-		computil.create_material(opacity)		
-	end
-
-	local transparent = materials.transparent
-	if transparent then
-		computil.create_material(transparent)
-	end
-
-	return self
-end
 
 local pickup_sys = ecs.system "pickup_system"
 
@@ -167,13 +154,9 @@ local function add_pick_entity()
 
 	return world:create_entity {
 		pickup = {
-			materials = {
-				opaticy = {
-					ref_path = fs.path '/pkg/ant.resources/materials/pickup_opacity.material'
-				},
-				translucent = {
-					ref_path = fs.path '/pkg/ant.resources/materials/pickup_transparent.material'
-				}
+			material = {
+				{ref_path = fs.path '/pkg/ant.resources/materials/pickup_opacity.material'},
+				{ref_path = fs.path '/pkg/ant.resources/materials/pickup_transparent.material'},
 			},
 			blit_buffer = {
 				raw_buffer = {
@@ -323,6 +306,7 @@ function pickup_sys:update()
 		local pickupcomp = pickupentity.pickup
 		local nextstep = pickupcomp.nextstep
 		if nextstep == "blit" then
+			recover_filter(pickupentity.primitive_filter)
 			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, pickupentity.render_target.frame_buffer.render_buffers[1])
 		elseif nextstep	== "select_obj" then
 			select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)

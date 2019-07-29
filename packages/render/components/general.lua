@@ -84,32 +84,33 @@ function rendermesh:init()
 	return self
 end
 
-function rendermesh:delete()
-	local meshscene = self.handle
-	if meshscene then
-		local handles = {}
-		for _, scene in ipairs(meshscene.scenes) do
-			for _, node in ipairs(scene) do
-				for _, group in ipairs(node) do
-					for _, vh in ipairs(group.vb.handles) do
-						handles[vh] = true
-					end
+-- TODO: need a new resource manager
+-- function rendermesh:delete()
+-- 	local meshscene = self.handle
+-- 	if meshscene then
+-- 		local handles = {}
+-- 		for _, scene in ipairs(meshscene.scenes) do
+-- 			for _, node in ipairs(scene) do
+-- 				for _, group in ipairs(node) do
+-- 					for _, vh in ipairs(group.vb.handles) do
+-- 						handles[vh] = true
+-- 					end
 
-					if group.ib then
-						handles[group.ib.handle] = true
-					end
-				end
-			end
-		end
+-- 					if group.ib then
+-- 						handles[group.ib.handle] = true
+-- 					end
+-- 				end
+-- 			end
+-- 		end
 
-		for handle in pairs(handles) do
-			if handle then
-				bgfx.destroy(handle)
-			end
-		end
-		self.handle = nil
-	end
-end
+-- 		for handle in pairs(handles) do
+-- 			if handle then
+-- 				bgfx.destroy(handle)
+-- 			end
+-- 		end
+-- 		self.handle = nil
+-- 	end
+-- end
 
 local mesh = ecs.component_alias("mesh", "resource") {depend="rendermesh"}
 
@@ -126,12 +127,13 @@ local tex = ecs.component "texture"
 	.stage "int"
 	.ref_path "respath"
 
-function tex:delete()
-	if tex.handle then
-		bgfx.destroy(tex.handle)
-		tex.handle = nil
-	end
-end
+-- TODO: need a new resource manager
+-- function tex:delete()
+-- 	if tex.handle then
+-- 		bgfx.destroy(tex.handle)
+-- 		tex.handle = nil
+-- 	end
+-- end
 
 local uniformdata = ecs.component_alias("uniformdata", "real[]")
 
@@ -165,7 +167,7 @@ ecs.component "properties"
 	["opt"].textures "texture{}"
 	["opt"].uniforms "uniform{}"
 
-local material = ecs.component "material"
+local material = ecs.component "material" { multiple=true }
 	.ref_path "respath"
 	["opt"].properties "properties"
 	["opt"].asyn_load "boolean" (false)

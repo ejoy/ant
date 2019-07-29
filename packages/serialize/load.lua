@@ -79,13 +79,14 @@ local function _load_entity(w, tree)
         eid = w:register_entity()
     end
     w[eid] = tree
+    tree[0] = nil
     for name in sortpairs(tree) do
         w:register_component(eid, name)
     end
     return tree, eid
 end
 
-local function load_start(w, s)  
+local function load_start(w, s)
     local post = getPost(w)
     function doPost(type, value)
         if type == 'entity' then
@@ -151,7 +152,7 @@ end
 
 local function load_entity(w, s)
     local entity = load_start(w, s)
-    local e, eid = _load_entity(w, entity)
+    local e, eid = _load_entity(w, entity[1])
     load_end()
     init_entity(w, e)
     return eid
