@@ -124,6 +124,14 @@ local function filter_mesh(eid, meshcomp, worldmat, materialcontent, filter)
 	end
 end
 
+local function is_entity_prepared(e)
+	if e.asyn_load == nil then
+		return true
+	end
+
+	return e.asyn_load == "loaded"
+end
+
 function primitive_filter_sys:update()	
 
 	for _, prim_eid in world:each("primitive_filter") do
@@ -138,9 +146,7 @@ function primitive_filter_sys:update()
 			local vt = ce[viewtag]
 			local ft = ce[filtertag]
 			if vt and ft then
-				local rm = ce.rendermesh
-				if rm.handle then
-					assert(ce.asyn_load == nil or ce.asyn_load == "loaded")
+				if is_entity_prepared(ce) then
 					filter_mesh(eid, ce.rendermesh, ce.transform.world, ce.material, filter)
 				end
 			end

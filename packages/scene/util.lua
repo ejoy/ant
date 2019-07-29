@@ -81,6 +81,7 @@ function util.loop(world, arg)
 	local queue = {}
 	for _, updatetype in ipairs {
 		"post_init", 
+		"asset_loaded",
 		"event_changed", 
 		"before_update", 
 		"update", 
