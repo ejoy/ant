@@ -9,17 +9,17 @@ Ant 游戏引擎
 工程分为三部分：
 - 3rd为引用的第三方库的目录所在；
 - clibs为引擎使用到的c模块所在的位置，会使用3rd中的第三方库；
-- libs为纯lua的库，会使用clibs编译的c模块；
+- engine为纯lua的库，会使用clibs编译的c模块；
 
 编译3rd
 
 > $cd 3rd  
-> $make init MP=-j8	#PLAT=msvc，表示初始化msvc的工程，默认不填会初始化makefile，其中：MP=-j8，表示使用多进程进行make，-j8表示用8个线程
-> $make all		#PLAT=msvc，不可用，编译msvc的工程可以直接双击3rd/build_msvc_all.bat文件
+> $make init MODE=debug #PLAT=mingw/msvc/osx/ios, MODE默认是release
+> $make all MODE=debug -j8	#PLAT=xxx, msvc目前无法直接通过命令行编译
 
 此外，如果要重新生成指定3rd中的库可以：
 > $cd 3rd
-> $make *$(project)*_init 	#初始化指定的project，如：make bgfx_init，此外， PLAT宏依然可用
+> $make *$(project)*_init PLAT=ios MODE=debug	#初始化指定的project，如：make bgfx_init，此外， PLAT宏依然可用
 > $make *$(project)*_make	#生成指定的project，如：make bgfx_make
 
 生成的工程文件会在：
@@ -32,15 +32,50 @@ Ant 游戏引擎
 
 如果需要编译msvc，那么直接打开：
 > $(antfolder)/projects/msvc/ant.sln
+
 文件直接编译即可
+
+OSX/iOS编译
+
+*OSX平台下面的文件名称与window下面的文件名称一致，即动态库的后缀仍然是dll，可执行文件的后缀仍然是ant.exe*
+
+> cd 3rd
+> make init PLAT=osx MODE=debug
+> make all PLAT=osx MODE=debug -j8
+> cd ../clibs/ant
+> make ant.exe PLAT=osx MODE=debug
+> cd ../clibs/filewatch
+> make PLAT=osx MODE=debug && cp filewatch.dll ..
+
+osx运行的环境就算编译成功了。而osx主要用于运行fileserver。
+
+iOS:
+> cd 3rd
+> make init PLAT=ios MODE=debug
+> make all PLAT=ios MODE=debug -j8
+> cd ../clibs/ant
+> make PLAT=ios MODE=debug -j8
+
+编译成功后，使用xcode打开runtime/ios/ant.xcodeproj工程后，编译运行即可
 
 ### 运行
 目前基于包管理，每个包是可以理解为一个工程，而引擎中默认的包存放在$(antfolder)/packages，默认是都会载入的。
 > 需要注意的是，如果$(antfolder)/packages/*packagename*，*packagename*目前下如果没有package.lua文件，会报错。所以不用的包文件夹要及时清理
 
-#### 运行的例子
-> bin/lua.exe test/samples/editorlauncher/main.lua	#会打开一个场景观察器的UI框架
-> projects/msvc/vs_bin/x64/Debug/lua.exe tools/modelviewer/main.lua with-msvc #会使用msvc编译的程序进行启动
+#### 编辑器模式
+> bin/lua.exe test/imgui/main.lua	#会打开一个场景观察器的UI框架
+> projects/msvc/vs_bin/x64/Debug/lua.exe tools/modelviewer/main.lua --bin=msvc #会使用msvc编译的程序进行启动
+
+#### 使用fileserver运行runtime程序到iOS设备
+1. 启动fileserver，OSX和window环境下都能够运行 
+   > clibs/ant/ant.exe tools/fileserver/main.lua tools/modelviewer
+    > 
+    这里的*tools/modelviewer*表示要运行的例子程序
+
+2. 启动proxy连接程序
+   > clibs/ant/ant.exe tools/fileserver/mobiledevice/proxy.lua
+
+3. 使用xcode，安装ant app到iOS设备上
 
 ### 关于ant目录结构
 - **bin**：用于存放mingw下的dll

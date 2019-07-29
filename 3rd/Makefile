@@ -72,7 +72,7 @@ endif
 ifneq "$(PLAT)" "msvc"
 BGFX_TARGET = bgfx bimg bx
 ifneq "$(BGFX_CPRC_CMD)" ""
-BGFX_TARGET += shaderc
+BGFX_TARGET += shaderc texturec
 endif
 BGFX_INIT_CMD = make $(BGFX_MAKEFILE)
 BGFX_MAKE_CMD = make -R -C $(BGFX_MAKEFILE) config=$(BGFX_BUILD_MODE)64 -j8 $(BGFX_TARGET)

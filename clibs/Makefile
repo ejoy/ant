@@ -11,10 +11,17 @@ include common.mk
 
 all: $(ALL_LIBS)
 
+LUA_TARGETS = $(ODIR)/lua53.dll
+ifeq "$(PLAT)" "msvc"
+LUA_TARGETS += $(ODIR)/lua.exe
+else ifeq "$(PLAT)" "mingw"
+LUA_TARGETS += $(ODIR)/lua.exe
+endif
+
 copy_lua: build_lua
-	cp lua/$(ODIR)/lua53.dll lua/$(ODIR)/lua.exe $(BIN)
+	cp $(addprefix lua/,$(LUA_TARGETS)) $(BIN)
 build_lua:
-	$(MAKE) -C lua $(ODIR)/lua53.dll $(ODIR)/lua.exe
+	$(MAKE) -C lua $(LUA_TARGETS)
 clean_lua:
 	$(MAKE) -C lua clean
 

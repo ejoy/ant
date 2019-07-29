@@ -27,8 +27,8 @@ local function tool_paths(toolbasename)
     local vspath = "projects/msvc/vs_bin"
     local hasmsvc = package.cpath and package.cpath:match(vspath)
 
-    local toolnameDebug = toolbasename .. "Debug"
-    local toolnameRelease = toolbasename .. "Release"
+    local toolnameDebug = toolbasename .. "debug"
+    local toolnameRelease = toolbasename .. "release"
 
     if hasmsvc then
         return {
