@@ -54,6 +54,15 @@ function model_review_system:init()
 	renderutil.create_blit_queue(world, {x=0, y=0, w=fbsize.w, h=fbsize.h})
 	create_light()
 	skyutil.create_procedural_sky(world)
+
+	-- world:create_entity {
+	-- 	transform = mu.srt(),
+	-- 	rendermesh = {},
+	-- 	material = {{ref_path = fs.path "/pkg/ant.modelviewer/res/test.material"}},
+	-- 	name = "test",
+	-- 	can_render = true,
+	-- 	main_view = true,
+	-- }
 	
 	cu.create_grid_entity(world, "grid")
 	local origineid = world:create_entity {
