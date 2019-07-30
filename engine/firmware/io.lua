@@ -331,7 +331,7 @@ local function request_link(id, path, hash, source_hash, lk_hash)
 		hash_req[id] = path
 	else
 		connection.request_link[hash] = { [id] = path }
-		connection_send("LINK", hash, repo.identity, source_hash, lk_hash)
+		connection_send("LINK", hash, repo.identity, path)
 	end
 end
 
