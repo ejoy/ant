@@ -34,7 +34,7 @@ CMAKE_OPT =
 ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles
   BGFX_MAKEFILE = .build/projects/gmake-osx
-  BGFX_CPRC_CMD = cp bgfx/.build/osx64_clang/bin/shaderc$(BGFX_BUILD_MODE) ../clibs/
+  BGFX_CPRC_CMD = cd bgfx/.build/osx64_clang/bin/ && cp shaderc$(BGFX_BUILD_MODE) ../../../../../clibs/ && cp texturec$(BGFX_BUILD_MODE) ../../../../../clibs/
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
@@ -63,7 +63,7 @@ else ifeq "$(PLAT)" "msvc"
 else
   CMAKE_PROJ_TYPE = MSYS Makefiles
   BGFX_MAKEFILE = .build/projects/gmake-mingw-gcc
-  BGFX_CPRC_CMD = cp bgfx/.build/win64_mingw-gcc/bin/shaderc$(BGFX_BUILD_MODE).exe ../clibs/
+  BGFX_CPRC_CMD = cd bgfx/.build/win64_mingw-gcc/bin/ && cp shaderc$(BGFX_BUILD_MODE) ../../../../../clibs/ && cp texturec$(BGFX_BUILD_MODE) ../../../../../clibs/
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean

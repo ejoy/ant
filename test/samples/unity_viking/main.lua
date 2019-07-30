@@ -7,7 +7,7 @@ package.path = table.concat({
 print = function (...)
     for i=1, select('#', ...) do
         local c = select(i, ...)
-        io.stdout:write(c)
+        io.stdout:write(tostring(c))
         io.stdout:write('\t')
     end
 
