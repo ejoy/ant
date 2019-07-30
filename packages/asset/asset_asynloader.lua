@@ -96,6 +96,7 @@ function asyn_asset_loader:post_init()
         loadlist.n = loadlist.n+1
     end
 
+    local loadcount = 0
     for i=loadlist.i, loadlist.n do
         local eid = loadlist[i]
         local e = world[eid]
@@ -112,9 +113,9 @@ function asyn_asset_loader:post_init()
                 assert(loadstate == "loaded")
             end
         end
-        --print("loaded entity:", eid, e.name or "")
-        if max_entity < i then
-            --print("---------------------------")
+
+        loadcount = loadcount + 1
+        if max_entity < loadcount then
             break
         end
     end
