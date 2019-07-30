@@ -42,7 +42,7 @@ local function start_worker(wait)
     local probe = rdebug.probe
     rdebug.start(bootstrap(), package.searchers[3])
     if wait then
-        probe 'wait_client'
+        probe 'wait'
     end
     return function()
         probe 'update'
