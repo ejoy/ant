@@ -7,6 +7,7 @@ local evaluate = require 'backend.worker.evaluate'
 local traceback = require 'backend.worker.traceback'
 local stdout = require 'backend.worker.stdout'
 local emulator = require 'backend.worker.emulator'
+local luaver = require 'backend.worker.luaver'
 local ev = require 'common.event'
 local hookmgr = require 'remotedebug.hookmgr'
 local stdio = require 'remotedebug.stdio'
@@ -95,6 +96,7 @@ end)
 --print = log.info
 
 function CMD.initializing(pkg)
+    luaver.init()
     ev.emit('initializing', pkg.config)
 end
 
@@ -276,7 +278,7 @@ function CMD.setBreakpoints(pkg)
     if noDebug or not source.valid(pkg.source) then
         return
     end
-    breakpoint.update(pkg.source, pkg.breakpoints)
+    breakpoint.update(pkg.source, pkg.breakpoints, pkg.content)
 end
 
 function CMD.setExceptionBreakpoints(pkg)

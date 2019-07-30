@@ -1,6 +1,16 @@
 local source, level = ...
 level = level + 2
 
+if _VERSION == "Lua 5.1" then
+	load = loadstring
+	function table.pack(...)
+		local t = {...}
+		t.n = select("#", ...)
+		return t
+	end
+	table.unpack = unpack
+end
+
 local f = assert(debug.getinfo(level,"f").func, "can't find function")
 local uv = {}
 local locals = {}

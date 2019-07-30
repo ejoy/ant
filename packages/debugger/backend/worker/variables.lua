@@ -1,5 +1,6 @@
 local rdebug = require 'remotedebug.visitor'
 local source = require 'backend.worker.source'
+local luaver = require 'backend.worker.luaver'
 local ev = require 'common.event'
 
 local varPool = {}
@@ -42,7 +43,6 @@ local function init_standard()
         "print",
         "rawequal",
         "rawget",
-        "rawlen",
         "rawset",
         "require",
         "select",
@@ -52,13 +52,28 @@ local function init_standard()
         "tonumber",
         "tostring",
         "type",
-        "utf8",
         "xpcall",
     }
 
-    if LUAVERSION == 53 then
+    if LUAVERSION == 51 then
+        table.insert(lstandard, "gcinfo")
+        table.insert(lstandard, "getfenv")
+        table.insert(lstandard, "loadstring")
+        table.insert(lstandard, "module")
+        table.insert(lstandard, "newproxy")
+        table.insert(lstandard, "setfenv")
+        table.insert(lstandard, "unpack")
+    end
+    if LUAVERSION >= 52 then
+        table.insert(lstandard, "rawlen")
+    end
+    if LUAVERSION == 52 or LUAVERSION == 53 then
         table.insert(lstandard, "bit32")
-    elseif LUAVERSION == 54 then
+    end
+    if LUAVERSION >= 53 then
+        table.insert(lstandard, "utf8")
+    end
+    if LUAVERSION >= 54 then
         table.insert(lstandard, "warn")
     end
     standard = {}
@@ -67,17 +82,8 @@ local function init_standard()
     end
 end
 
-local function init_luaver()
-    local version = rdebug.indexv(rdebug._G, "_VERSION")
-    local ver = 0
-    for n in version:gmatch "%d" do
-        ver = ver * 10 + (math.tointeger(n) or 0)
-    end
-    LUAVERSION = ver
-end
-
 ev.on('initializing', function()
-    init_luaver()
+    LUAVERSION = luaver.LUAVERSION
     init_standard()
     TEMPORARY = LUAVERSION >= 54 and "(temporary)" or "(*temporary)"
 end)
@@ -311,10 +317,23 @@ local function getFunctionCode(str, startLn, endLn)
     return str:sub(startPos, endPos)
 end
 
-local function varGetValue(type, subtype, value)
+-- context: getvalue,setvalue,scopes,hover,watch,repl,copyvalue
+local function varGetValue(context, type, subtype, value)
     if type == 'string' then
-        -- TODO: Cut string by type of eval
-        return ("'%s'"):format(rdebug.value(value))
+        local str = rdebug.value(value)
+        if context == "repl" or context == "copyvalue" then
+            return ("'%s'"):format(str)
+        end
+        if context == "hover" then
+            if #str < 2048 then
+                return ("'%s'"):format(str)
+            end
+            return ("'%s...'"):format(str:sub(1, 2048))
+        end
+        if #str < 1024 then
+            return ("'%s'"):format(str)
+        end
+        return ("'%s...'"):format(str:sub(1, 1024))
     elseif type == 'boolean' then
         if rdebug.value(value) then
             return 'true'
@@ -398,10 +417,10 @@ local function varGetType(type, subtype)
     return type
 end
 
-local function varCreateReference(frameId, value, evaluateName)
+local function varCreateReference(frameId, value, evaluateName, context)
     local type, subtype = rdebug.type(value)
     local textType = varGetType(type, subtype)
-    local textValue = varGetValue(type, subtype, value)
+    local textValue = varGetValue(context, type, subtype, value)
     if varCanExtand(type, subtype, value) then
         local pool = varPool[frameId]
         pool[#pool + 1] = { value, evaluateName }
@@ -411,7 +430,7 @@ local function varCreateReference(frameId, value, evaluateName)
 end
 
 local function varCreateObject(frameId, name, value, evaluateName)
-    local text, type, ref = varCreateReference(frameId, value, evaluateName)
+    local text, type, ref = varCreateReference(frameId, value, evaluateName, "getvalue")
     local var = {
         name = name,
         type = type,
@@ -601,7 +620,7 @@ local function setValue(frameId, varRef, name, value)
     if not rdebug.assign(rvalue, newvalue) then
         return nil, 'Failed set variable'
     end
-    local text, type = varCreateReference(frameId, rvalue, maps[name][2])
+    local text, type = varCreateReference(frameId, rvalue, maps[name][2], "setvalue")
     return {
         value = text,
         type = type,
@@ -834,16 +853,16 @@ function m.clean()
     varPool = {}
 end
 
-function m.createText(value)
+function m.createText(value, context)
     local type, subtype = rdebug.type(value)
-    return varGetValue(type, subtype, value)
+    return varGetValue(context, type, subtype, value)
 end
 
-function m.createRef(frameId, value, evaluateName)
+function m.createRef(frameId, value, evaluateName, context)
     if not varPool[frameId] then
         varPool[frameId] = {}
     end
-    local text, _, ref =  varCreateReference(frameId, value, evaluateName)
+    local text, _, ref = varCreateReference(frameId, value, evaluateName, context)
     return text, ref
 end
 

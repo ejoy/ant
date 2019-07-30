@@ -1,5 +1,4 @@
 ﻿#include "rlua.h"
-#include "lua_compat.h"
 
 static int DEBUG_HOST = 0;	// host L in client VM
 static int DEBUG_CLIENT = 0;	// client L in host VM for hook
@@ -21,12 +20,12 @@ get_client(lua_State *L) {
 void
 set_host(rlua_State* L, lua_State* hL) {
     rlua_pushlightuserdata(L, hL);
-    rlua_rawsetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST);
+    rlua_rawsetp(L, RLUA_REGISTRYINDEX, &DEBUG_HOST);
 }
 
 lua_State *
 get_host(rlua_State *L) {
-	if (rlua_rawgetp(L, LUA_REGISTRYINDEX, &DEBUG_HOST) != LUA_TLIGHTUSERDATA) {
+	if (rlua_rawgetp(L, RLUA_REGISTRYINDEX, &DEBUG_HOST) != LUA_TLIGHTUSERDATA) {
 		rlua_pushstring(L, "Must call in debug client");
 		rlua_error(L);
 		return 0;
@@ -61,7 +60,7 @@ client_main(rlua_State *L) {
 	lua_State *hL = (lua_State *)rlua_touserdata(L, 2);
 	set_host(L, hL);
 	rlua_pushboolean(L, 1);
-	rlua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
+	rlua_setfield(L, RLUA_REGISTRYINDEX, "LUA_NOENV");
 	rluaL_openlibs(L);
 #if !defined(RLUA_DISABLE) || LUA_VERSION_NUM >= 504
 #	if !defined(LUA_GCGEN)
@@ -165,8 +164,12 @@ int luaopen_remotedebug(lua_State *L) {
 		{ "event", lhost_event },
 		{ NULL, NULL },
 	};
+#if LUA_VERSION_NUM == 501
+    luaL_register(L, "remotedebug", l);
+#else
 	luaL_newlibtable(L,l);
 	luaL_setfuncs(L,l,0);
+#endif
 
 	lua_createtable(L,0,1);
 	lua_pushcfunction(L, lhost_clear);

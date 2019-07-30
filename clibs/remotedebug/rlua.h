@@ -18,6 +18,8 @@ typedef long long rlua_Integer;
 typedef unsigned long long rlua_Unsigned;
 typedef double rlua_Number;
 
+#define RLUA_REGISTRYINDEX	(-1000000/* LUAI_MAXSTACK */ - 1000)
+
 struct rluaL_Reg {
   const char *name;
   rlua_CFunction func;
@@ -113,19 +115,21 @@ void  (rluaL_pushresultsize) (rluaL_Buffer *B, size_t sz);
 
 #define rlua_pop(L,n) rlua_settop(L, -(n)-1)
 #define rlua_pushcfunction(L,f) rlua_pushcclosure(L, (f), 0)
-#define rlua_call(L,n,r) rlua_callk(L, (n), (r), 0, NULL)
-#define rlua_pcall(L,n,r,f) rlua_pcallk(L, (n), (r), (f), 0, NULL)
 #define rlua_newuserdata(L,s) rlua_newuserdatauv(L,s,1)
 #define rlua_newtable(L) rlua_createtable(L, 0, 0)
-#define rlua_upvalueindex(i) (LUA_REGISTRYINDEX - (i))
+#define rlua_upvalueindex(i) (RLUA_REGISTRYINDEX - (i))
 #define rlua_insert(L,idx) rlua_rotate(L, (idx), 1)
 #define rluaL_checkstring(L,n) (rluaL_checklstring(L, (n), NULL))
 #define rlua_setuservalue(L,idx) rlua_setiuservalue(L,idx,1)
 #define rlua_getuservalue(L,idx) rlua_getiuservalue(L,idx,1)
 #define rlua_replace(L,idx) (rlua_copy(L, -1, (idx)), rlua_pop(L, 1))
 #define rlua_remove(L,idx) (rlua_rotate(L, (idx), -1), rlua_pop(L, 1))
+
 #define rlua_tonumber(L,i) rlua_tonumberx(L,(i),NULL)
 #define rlua_tointeger(L,i) rlua_tointegerx(L,(i),NULL)
+#define rlua_call(L,n,r) rlua_callk(L, (n), (r), 0, NULL)
+#define rlua_pcall(L,n,r,f) rlua_pcallk(L, (n), (r), (f), 0, NULL)
+#define rluaL_loadbuffer(L,s,sz,n) rluaL_loadbufferx(L,s,sz,n,NULL)
 
 }
 
@@ -306,6 +310,16 @@ void  (rluaL_pushresultsize) (rluaL_Buffer *B, size_t sz);
 #define luaopen_string rluaopen_string
 #define luaopen_table rluaopen_table
 #define luaopen_utf8 rluaopen_utf8
+
+#if DBG_LUA_VERSION == 501
+#if defined(RLUA_REPLACE)
+#define lua_tonumber(L,i) rlua_tonumberx(L,(i),NULL)
+#define lua_tointeger(L,i) rlua_tointegerx(L,(i),NULL)
+#define lua_call(L,n,r) rlua_callk(L, (n), (r), 0, NULL)
+#define lua_pcall(L,n,r,f) rlua_pcallk(L, (n), (r), (f), 0, NULL)
+#define luaL_loadbuffer(L,s,sz,n) rluaL_loadbufferx(L,s,sz,n,NULL)
+#endif
+#endif
 
 #endif
 
@@ -543,6 +557,10 @@ void  (rluaL_pushresultsize) (rluaL_Buffer *B, size_t sz);
 #define rluaopen_table luaopen_table
 #define rluaopen_utf8 luaopen_utf8
 
+#define RLUA_REGISTRYINDEX LUA_REGISTRYINDEX
+
+#include "lua_compat.h"
+
 #endif
 
 
@@ -550,4 +568,9 @@ void  (rluaL_pushresultsize) (rluaL_Buffer *B, size_t sz);
 #define RLUA_FUNC extern "C" __declspec(dllexport)
 #else
 #define RLUA_FUNC extern "C" __attribute__((visibility("default"))) 
+#endif
+
+#if defined(RLUA_REPLACE)
+#undef  LUA_REGISTRYINDEX
+#define LUA_REGISTRYINDEX	(-1000000/* LUAI_MAXSTACK */ - 1000)
 #endif

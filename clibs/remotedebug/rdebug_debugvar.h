@@ -224,12 +224,22 @@ eval_value_(rlua_State *L, lua_State *cL, struct value *v) {
 		}
 	}
 	case VAR_GLOBAL:
+#if LUA_VERSION_NUM == 501
+		lua_pushvalue(cL, LUA_GLOBALSINDEX);
+		return LUA_TTABLE;
+#else
 		return lua::rawgeti(cL, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS);
+#endif
 	case VAR_REGISTRY:
 		lua_pushvalue(cL, LUA_REGISTRYINDEX);
 		return LUA_TTABLE;
-	case VAR_MAINTHREAD:
+#if LUA_VERSION_NUM == 501
+		// TODO
+		return LUA_TNIL;
+#else
 		return lua::rawgeti(cL, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+#endif
+	case VAR_MAINTHREAD:
 	case VAR_METATABLE:
 		if (v->frame == 1) {
 			switch(v->index) {
@@ -249,7 +259,12 @@ eval_value_(rlua_State *L, lua_State *cL, struct value *v) {
 				lua_pushlightuserdata(cL, NULL);
 				break;
 			case LUA_TTHREAD:
+#if LUA_VERSION_NUM == 501
+				// TODO
+				lua_pushnil(cL);
+#else
 				lua_rawgeti(cL, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+#endif
 				break;
 			default:
 				return LUA_TNONE;
@@ -403,7 +418,12 @@ assign_value(rlua_State *L, struct value * v, lua_State *cL) {
 				lua_pushlightuserdata(cL, NULL);
 				break;
 			case LUA_TTHREAD:
+#if LUA_VERSION_NUM == 501
+				// TODO
+				lua_pushnil(cL);
+#else
 				lua_rawgeti(cL, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+#endif
 				break;
 			default:
 				// Invalid

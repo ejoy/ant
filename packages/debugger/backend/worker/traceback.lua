@@ -1,6 +1,7 @@
 local rdebug = require 'remotedebug.visitor'
-local source = require 'backend.worker.source'
 local hookmgr = require 'remotedebug.hookmgr'
+local source = require 'backend.worker.source'
+local luaver = require 'backend.worker.luaver'
 
 local info = {}
 
@@ -112,8 +113,9 @@ return function(msg, level)
     end
     s[#s + 1] = 'stack traceback:'
     local last = hookmgr.stacklevel()
-    local n1 = last - ((level > 21) and 10 or -1)
-    while rdebug.getinfo(level, "Slnt", info) do
+    local n1 = ((last - level) > 21) and 10 or -1
+    local opt = luaver.LUAVERSION >= 52 and "Slnt" or "Sln"
+    while rdebug.getinfo(level, opt, info) do
         local f = rdebug.getfunc(level)
         level = level + 1
         n1 = n1 - 1

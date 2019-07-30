@@ -132,8 +132,8 @@ function m.find(src, currentline)
     return currentBP[currentline]
 end
 
-function m.update(clientsrc, bps)
-    local src = source.c2s(clientsrc)
+function m.update(clientsrc, bps, content)
+    local src = source.c2s(clientsrc, content)
     if src then
         clientsrc.si = clientsrc.si or src.si
         verifyBreakpoint(src, clientsrc, bps)

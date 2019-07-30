@@ -11,6 +11,8 @@
 #define LUA_DLL_NAME "lua53.dll"
 #elif LUA_VERSION_NUM == 502
 #define LUA_DLL_NAME "lua52.dll"
+#elif LUA_VERSION_NUM == 501
+#define LUA_DLL_NAME "lua51.dll"
 #else
 #error "Unknown Lua Version: " #LUA_VERSION_NUM
 #endif

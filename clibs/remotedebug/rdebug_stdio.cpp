@@ -2,11 +2,18 @@
 #include <new>
 #include <limits>
 #include "rdebug_redirect.h"
-#include "lua_compat.h"
 
 lua_State* get_host(rlua_State *L);
 rlua_State* get_client(lua_State *L);
 int  event(rlua_State* cL, lua_State* hL, const char* name);
+
+static int getIoOutput(lua_State* L) {
+#if LUA_VERSION_NUM >= 502
+    return lua::getfield(L, LUA_REGISTRYINDEX, "_IO_output");
+#else
+    return lua::rawgeti(L, LUA_ENVIRONINDEX, 2);
+#endif
+}
 
 static int redirect_read(rlua_State* L) {
     remotedebug::redirect& self = *(remotedebug::redirect*)rluaL_checkudata(L, 1, "redirect");
@@ -107,7 +114,7 @@ static int redirect_print(lua_State* L) {
 static int redirect_f_write(lua_State* L) {
 	rlua_State *cL = get_client(L);
     if (cL) {
-        if (LUA_TUSERDATA == lua::getfield(L, LUA_REGISTRYINDEX, "_IO_output") && lua_rawequal(L, -1, 1)) {
+        if (LUA_TUSERDATA == getIoOutput(L) && lua_rawequal(L, -1, 1)) {
             lua_pop(L, 1);
             int ok = event(cL, L, "iowrite");
             if (ok > 0) {
@@ -129,7 +136,7 @@ static int redirect_io_write(lua_State* L) {
         lua_insert(L, 1);
 	    int ok = event(cL, L, "iowrite");
         if (ok > 0) {
-            lua_getfield(L, LUA_REGISTRYINDEX, "_IO_output");
+            getIoOutput(L);
             return 1;
         }
         lua_remove(L, 1);
@@ -152,7 +159,7 @@ static int open_print(rlua_State* L) {
 static int open_iowrite(rlua_State* L) {
     bool enable = rlua_toboolean(L, 1);
     lua_State* hL = get_host(L);
-    if (LUA_TUSERDATA == lua::getfield(hL, LUA_REGISTRYINDEX, "_IO_output")) {
+    if (LUA_TUSERDATA == getIoOutput(hL)) {
         if (lua_getmetatable(hL, -1)) {
             lua_pushstring(hL, "write");
             lua_pushvalue(hL, -1);

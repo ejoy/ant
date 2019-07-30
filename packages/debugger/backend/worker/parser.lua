@@ -2,8 +2,13 @@ local undump = require 'backend.worker.undump'
 
 local version
 
-local function getproto(f)
-    local cl, v = undump(string.dump(f))
+local function getproto(content)
+    local evaluate = require 'backend.worker.evaluate'
+    local ok, bin = evaluate.dump(content)
+    if not ok then
+        return
+    end
+    local cl, v = undump(bin)
     version = v
     return cl.f
 end
@@ -77,21 +82,22 @@ local function normalize(src, maxline)
     end
 end
 
-local function parser_lines(src, f)
+local function parser_lines(content)
+    local proto = getproto(content)
+    if not proto then
+        return
+    end
+    local src = {}
     local tmp = { n = 0, maxline = 0 }
     src.maxline = 0
     src.activelines = { }
     src.definelines = { }
-    calc_lines(getproto(f), src, tmp)
+    calc_lines(proto, src, tmp)
     normalize(src, tmp.maxline)
     return src
 end
 
 return function (src, content)
-    local f = load(content)
-    if f then
-        src.si = {}
-        parser_lines(src.si, f)
-    end
+    src.si = parser_lines(content)
     return src
 end

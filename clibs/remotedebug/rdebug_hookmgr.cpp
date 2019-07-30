@@ -37,10 +37,17 @@ static T* checklightudata(rlua_State* L, int idx) {
 
 static Proto* ci2proto(CallInfo* ci) {
     StkId func = ci->func;
+#if LUA_VERSION_NUM >= 502
     if (!ttisLclosure(s2v(func))) {
         return 0;
     }
     return clLvalue(s2v(func))->p;
+#else
+    if (clvalue(func)->c.isC) {
+        return 0;
+    }
+    return clvalue(func)->l.p;
+#endif
 }
 
 struct hookmgr {
@@ -101,7 +108,7 @@ struct hookmgr {
         switch (break_map[key]) {
         case BP::None: {
 			rlua_checkstack(cL, 4);
-            if (rlua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+            if (rlua_rawgetp(cL, RLUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
                 rlua_pop(cL, 1);
                 return false;
             }
@@ -136,10 +143,18 @@ struct hookmgr {
         }
     }
     void break_hook_call(lua_State* hL, lua_Debug* ar) {
+#if LUA_VERSION_NUM >= 502
         break_update(hL, ar->i_ci, ar->event);
+#else
+        break_update(hL, hL->base_ci + ar->i_ci, ar->event);
+#endif
     }
     void break_hook_return(lua_State* hL, lua_Debug* ar) {
+#if LUA_VERSION_NUM >= 502
         break_update(hL, ar->i_ci->previous, ar->event);
+#else
+        break_update(hL, (hL->base_ci + ar->i_ci) - 1, ar->event);
+#endif
     }
     void break_hookmask(lua_State* hL, int mask) {
         if (break_mask != mask) {
@@ -263,7 +278,7 @@ struct hookmgr {
         exception_hookmask(hL, enable? LUA_MASKEXCEPTION: 0);
     }
     void exception_hook(lua_State* hL, lua_Debug* ar) {
-        if (rlua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+        if (rlua_rawgetp(cL, RLUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
             rlua_pop(cL, 1);
             return;
         }
@@ -292,7 +307,7 @@ struct hookmgr {
         thread_hookmask(hL, enable? LUA_MASKTHREAD: 0);
     }
     void thread_hook(lua_State* hL, lua_Debug* ar) {
-        if (rlua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+        if (rlua_rawgetp(cL, RLUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
             rlua_pop(cL, 1);
             return;
         }
@@ -319,7 +334,7 @@ struct hookmgr {
     }
 
     void probe(lua_State* hL, const char* name) {
-        if (rlua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+        if (rlua_rawgetp(cL, RLUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
             rlua_pop(cL, 1);
             return;
         }
@@ -332,7 +347,7 @@ struct hookmgr {
     }
 
     int event(lua_State* hL, const char* name) {
-        if (rlua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+        if (rlua_rawgetp(cL, RLUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
             rlua_pop(cL, 1);
             return -1;
         }
@@ -352,7 +367,7 @@ struct hookmgr {
     }
 
     void panic(lua_State* hL) {
-        if (rlua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+        if (rlua_rawgetp(cL, RLUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
             rlua_pop(cL, 1);
             return;
         }
@@ -370,7 +385,11 @@ struct hookmgr {
         case LUA_HOOKLINE:
             break;
         case LUA_HOOKCALL:
+#if LUA_VERSION_NUM >= 502
         case LUA_HOOKTAILCALL:
+#else
+        case LUA_HOOKTAILRET:
+#endif
             if (break_mask & LUA_MASKCALL) {
                 break_hook_call(hL, ar);
             }
@@ -411,7 +430,7 @@ struct hookmgr {
         default:
             return;
         }
-        if (rlua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+        if (rlua_rawgetp(cL, RLUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
             rlua_pop(cL, 1);
             return;
         }
@@ -455,7 +474,7 @@ struct hookmgr {
         if (!t.update(200)) {
             return;
         }
-        if (rlua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+        if (rlua_rawgetp(cL, RLUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
             rlua_pop(cL, 1);
             return;
         }
@@ -510,8 +529,9 @@ struct hookmgr {
 static int init(rlua_State* L) {
     rluaL_checktype(L, 1, LUA_TFUNCTION);
     rlua_settop(L, 1);
-    hookmgr::get_self(L)->init(get_host(L));
-    rlua_rawsetp(L, LUA_REGISTRYINDEX, &HOOK_CALLBACK);
+    lua_State* hL = get_host(L);
+    hookmgr::get_self(L)->init(hL);
+    rlua_rawsetp(L, RLUA_REGISTRYINDEX, &HOOK_CALLBACK);
     return 0;
 }
 
@@ -618,7 +638,7 @@ int luaopen_remotedebug_hookmgr(rlua_State* L) {
     get_host(L);
 
     rlua_newtable(L);
-    if (LUA_TUSERDATA != rlua_rawgetp(L, LUA_REGISTRYINDEX, &HOOK_MGR)) {
+    if (LUA_TUSERDATA != rlua_rawgetp(L, RLUA_REGISTRYINDEX, &HOOK_MGR)) {
         rlua_pop(L, 1);
         hookmgr* thd = (hookmgr*)rlua_newuserdata(L, sizeof(hookmgr));
         new (thd) hookmgr(L);
@@ -629,7 +649,7 @@ int luaopen_remotedebug_hookmgr(rlua_State* L) {
         rlua_setmetatable(L, -2);
 
         rlua_pushvalue(L, -1);
-        rlua_rawsetp(L, LUA_REGISTRYINDEX, &HOOK_MGR);
+        rlua_rawsetp(L, RLUA_REGISTRYINDEX, &HOOK_MGR);
     }
 
     static rluaL_Reg lib[] = {
@@ -660,7 +680,7 @@ int luaopen_remotedebug_hookmgr(rlua_State* L) {
 }
 
 void probe(rlua_State* cL, lua_State* hL, const char* name) {
-    if (LUA_TUSERDATA != rlua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_MGR)) {
+    if (LUA_TUSERDATA != rlua_rawgetp(cL, RLUA_REGISTRYINDEX, &HOOK_MGR)) {
         rlua_pop(cL, 1);
         return;
     }
@@ -672,7 +692,7 @@ void probe(rlua_State* cL, lua_State* hL, const char* name) {
 }
 
 int event(rlua_State* cL, lua_State* hL, const char* name) {
-    if (LUA_TUSERDATA != rlua_rawgetp(cL, LUA_REGISTRYINDEX, &HOOK_MGR)) {
+    if (LUA_TUSERDATA != rlua_rawgetp(cL, RLUA_REGISTRYINDEX, &HOOK_MGR)) {
         rlua_pop(cL, 1);
         return -1;
     }

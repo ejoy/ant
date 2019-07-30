@@ -79,17 +79,17 @@ local function InitCompat()
         return
     end
     if version == 0x03 then
-        LoadLength = LoadLength54
-        LoadInt = LoadLength54
-        LoadLineInfo = function () return unpack 'b' end
-        LUA_TNUMFLT = 3 | (1 << 4)
-        LUA_TNUMINT = 3 | (2 << 4)
-        LUA_TSHRSTR = 4 | (1 << 4)
-        LUA_TLNGSTR = 4 | (2 << 4)
         undo()
-        version = LoadLength()
+        version = LoadLength54()
         if version == 504 then
             Version = 504
+            LoadLength = LoadLength54
+            LoadInt = LoadLength54
+            LoadLineInfo = function () return unpack 'b' end
+            LUA_TNUMFLT = 3 | (1 << 4)
+            LUA_TNUMINT = 3 | (2 << 4)
+            LUA_TSHRSTR = 4 | (1 << 4)
+            LUA_TLNGSTR = 4 | (2 << 4)
             return
         end
     end

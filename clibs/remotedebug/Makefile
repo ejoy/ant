@@ -35,6 +35,9 @@ $(ODIR)/remotedebug.dll : $(OBJS)
 $(ODIR)/libremotedebug.a : $(OBJS)
 	ar rsv $@ $^
 
+remotedebug.dll : $(ODIR)/remotedebug.dll | $(ODIR)
+	cp $^ $@
+
 $(ODIR) :
 	mkdir -p $@
 

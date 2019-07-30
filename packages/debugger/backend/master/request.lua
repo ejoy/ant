@@ -2,7 +2,6 @@ local mgr = require 'backend.master.mgr'
 local response = require 'backend.master.response'
 local event = require 'backend.master.event'
 local ev = require 'common.event'
-local parser = require 'backend.worker.parser'
 
 local request = {}
 
@@ -73,6 +72,7 @@ local function initializeWorker(w)
             cmd = 'setBreakpoints',
             source = bp[1],
             breakpoints = bp[2],
+            content = bp[3],
         })
     end
     local stopOnEntry = true
@@ -115,6 +115,9 @@ local function genBreakpointID()
 end
 
 local function skipBOM(s)
+    if not s then
+        return
+    end
     if s:sub(1,3) == "\xEF\xBB\xBF" then
         s = s:sub(4)
     end
@@ -127,9 +130,7 @@ end
 
 function request.setBreakpoints(req)
     local args = req.arguments
-    if args.sourceContent then
-        parser(args.source, skipBOM(args.sourceContent))
-    end
+    local content = skipBOM(args.sourceContent)
     for _, bp in ipairs(args.breakpoints) do
         bp.id = genBreakpointID()
         bp.verified = false
@@ -144,12 +145,14 @@ function request.setBreakpoints(req)
     config.breakpoints[args.source.sourceReference or args.source.path] = {
         args.source,
         args.breakpoints,
+        content,
     }
     if not initializing then
         mgr.broadcastToWorker {
             cmd = 'setBreakpoints',
             source = args.source,
             breakpoints = args.breakpoints,
+            content = content,
         }
     end
 end

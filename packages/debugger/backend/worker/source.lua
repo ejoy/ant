@@ -145,7 +145,11 @@ function m.create(source, hide)
     return newSource
 end
 
-function m.c2s(clientsrc)
+function m.c2s(clientsrc, content)
+    if content then
+        parser(clientsrc, content)
+    end
+
     -- TODO: 不遍历？
     if clientsrc.sourceReference then
         local ref = clientsrc.sourceReference

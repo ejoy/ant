@@ -332,7 +332,9 @@ lclient_getinfo(rlua_State *L) {
 		case 'S': size += 5; break;
 		case 'l': size += 1; break;
 		case 'n': size += 2; break;
+#if LUA_VERSION_NUM >= 502
 		case 't': size += 1; break;
+#endif
 #if LUA_VERSION_NUM >= 504
 		case 'r': size += 2; break;
 #endif
@@ -407,10 +409,12 @@ lclient_getinfo(rlua_State *L) {
 			}
 			rlua_setfield(L, 3, "namewhat");
 			break;
+#if LUA_VERSION_NUM >= 502
 		case 't':
 			rlua_pushboolean(L, ar.istailcall? 1 : 0);
 			rlua_setfield(L, 3, "istailcall");
 			break;
+#endif
 #if LUA_VERSION_NUM >= 504
 		case 'r':
 			rlua_pushinteger(L, ar.ftransfer);
