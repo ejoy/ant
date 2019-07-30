@@ -15,9 +15,12 @@ local scene_control = require "scene_control"
 local GuiScene = GuiCanvas.derive("GuiScene")
 GuiScene.GuiName = "GuiScene"
 
+local MAX_RECENT_PATH = 32
+
 function GuiScene:_init()
     GuiCanvas._init(self)
     self.message_shown = false
+    self.recent_scenes = {}
 end
 
 function GuiScene:_get_editpath()
@@ -50,7 +53,7 @@ function GuiScene:on_gui(delta)
         local box = self:_get_editpath()
         local message_cb = function(result)
             if result == 1 then
-                scene_control.test_new_world(box.text)
+                self:_open_scene(tostring(box.text))
             end
         end
         local arg = {
@@ -63,16 +66,23 @@ function GuiScene:on_gui(delta)
     GuiCanvas.on_gui(self,delta)
 end
 
+function GuiScene:_open_scene(path)
+    local status = dbgutil.try(function () scene_control.test_new_world(path) end)
+    if status then
+        self:save_path_to_recent(path)
+    end
+end
+
 function  GuiScene:_scene_menu()
     local box = self:_get_editpath()
     if  widget.Button("OpenScene") then
         log.info_a(box)
-        dbgutil.try(function () scene_control.test_new_world(box.text) end)
+        local path = tostring(box.text)
+        self:_open_scene(path)
     end
 	cursor.SameLine()
-    if widget.InputText("", box) then
-        self._dirty_flag = true
-    end
+	widget.InputText("", box)
+    self:_recent_scene_menu()
     cursor.Separator()
     local fps = self:_get_editfps()
     if widget.InputInt("FPS",fps) then
@@ -83,26 +93,79 @@ function  GuiScene:_scene_menu()
     widget.Text(string.format("real frame time:%f/(%.2f)",self.cur_frame_time,1/self.cur_frame_time))
 end
 
+function GuiScene:_recent_scene_menu()
+    if widget.BeginMenu("Recent Scenes") then
+        local recent_scenes = self.recent_scenes
+        if #recent_scenes == 0 then
+            widget.Text("[Empty]")
+        else
+            local size = #recent_scenes
+            for i = size,1,-1 do
+                cursor.SetNextItemWidth(40)
+                widget.Text(tostring(size-i+1))
+                cursor.SameLine()
+                local p = recent_scenes[i]
+                if widget.Selectable(p,false) then
+                    self:_open_scene(p)
+                end
+            end
+        end
+        widget.EndMenu()
+    end
+end
+
+function GuiScene:save_path_to_recent(path)
+    local recent_scenes = self.recent_scenes
+    --check can find
+    local found = false
+    for i,p in ipairs(recent_scenes) do
+        if  p == path then
+            found = i
+            break
+        end
+    end
+    if found then
+        if found ~= #recent_scenes then
+            table.remove(recent_scenes,found)
+            table.insert(recent_scenes,path)
+            self:mark_setting_dirty()
+        end
+    else
+        if #self.recent_scenes >= MAX_RECENT_PATH then
+            table.remove(self.recent_scenes,1)
+        end
+        table.insert(recent_scenes,path)
+        self:mark_setting_dirty()
+    end
+end
+
+function GuiScene:mark_setting_dirty()
+    self._dirty_flag = true
+end
+
+--override if needed
+--return tbl
 function GuiScene:save_setting_to_memory(clear_dirty_flag)
     if clear_dirty_flag then
         self._dirty_flag = false
     end
     return {
-        editpath = tostring(self.editpath.text)
+        recent_scenes = self.recent_scenes
     }
 end
 
 --override if needed
 function GuiScene:load_setting_from_memory(setting_tbl)
-    local box = self:_get_editpath()
-    box.text = setting_tbl.editpath
+    self.recent_scenes = setting_tbl.recent_scenes
+    local recent_size = #self.recent_scenes
+    if recent_size > 0 then
+        local box = self:_get_editpath()
+        box.text = self.recent_scenes[recent_size]
+    end
 end
 
 --override if needed
 function GuiScene:is_setting_dirty()
     return self._dirty_flag
 end
-
-
-
 return GuiScene
