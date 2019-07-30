@@ -58,31 +58,51 @@ function GuiEntityWidget:CustomTreeNode(name,path_tbl,typ)
     if cfg.DisplayName and cfg.DisplayName ~= "" then
         name = cfg.DisplayName
     end
+    if cfg.NameFormat and cfg.NameFormat ~= "" then
+        name = string.format(cfg.NameFormat,name)
+    end
     local flag = 0
     if cfg.DefaultOpen then
         flag = DefaultOpen
     end
     if cfg.HideHeader then
-        return true,donothing
-    else
-        local ui_cache = path_tbl.__ui_cache or {}
-        path_tbl.__ui_cache = ui_cache
-        if ui_cache.opened == nil then
-            ui_cache.opened = true
+        local schema = path_tbl[1].type and self.schema[path_tbl[1].type]
+        if schema then
+            --XOR(schema.multiple,typ == ComponentSetting.ComType.Multiple)
+            if (not schema.multiple) ~= ( typ == ComponentSetting.ComType.Multiple) then
+                return true,donothing
+            end
+            if schema.multiple then
+                --name is index
+                if cfg.IndexFormat and cfg.IndexFormat ~= "" then
+                    name = string.format(cfg.IndexFormat,name)
+                end
+            end
+        else
+            return true,donothing
         end
-        windows.PushStyleVar(enum.StyleVar.ItemInnerSpacing,0,0)
-        windows.PushStyleVar(enum.StyleVar.ItemSpacing,0,0)
-        local change = widget.Selectable(name,false,nil,nil,flags.Selectable.SpanAllColumns)
-        if change then
-            ui_cache.opened = not ui_cache.opened
-        end
-        cursor.SameLine()
-        if change then
-            widget.SetNextItemOpen(ui_cache.opened)
-        end 
-        windows.PopStyleVar(2)
-        return widget.TreeNode("##"..name,flag),widget.TreePop
     end
+    path_tbl.__ui_cache = path_tbl.__ui_cache or {}
+    local ui_cache = path_tbl.__ui_cache[name] or {}
+    path_tbl.__ui_cache[name] = ui_cache
+    if ui_cache.opened == nil then
+        ui_cache.opened = true
+    end
+    windows.PushStyleVar(enum.StyleVar.ItemInnerSpacing,0,0)
+    windows.PushStyleVar(enum.StyleVar.ItemSpacing,0,0)
+    local change = widget.Selectable(name,false,nil,nil,flags.Selectable.SpanAllColumns)
+    if change then
+        ui_cache.opened = not ui_cache.opened
+    end
+    cursor.SameLine()
+    if change then
+        widget.SetNextItemOpen(ui_cache.opened)
+    end 
+    windows.PopStyleVar(2)
+    local end_func = function()
+        widget.TreePop()
+    end
+    return widget.TreeNode("##"..name,flag),end_func
 end
 
 function GuiEntityWidget:create_child_path( parent_path,schema)
@@ -244,7 +264,29 @@ function GuiEntityWidget:render_com_component( parent_tbl,com_name,component_dat
     return true
 end
 
-function GuiEntityWidget:render_component(parent_tbl,com_name,component_data,alias_name,path_tbl)
+function GuiEntityWidget:render_multiple_component(parent_tbl,com_name,component_data,alias_name,path_tbl)
+    local schema = self.schema
+    local com_schema = schema[com_name]
+    local map_com_type = com_schema.type
+    local typ = map_com_type
+    if typ == nil or typ == "primtype" then
+        typ = com_name
+    end
+    local show_main,popfunc_main = self:CustomTreeNode(alias_name,path_tbl,ComponentSetting.ComType.Multiple)
+    if show_main then
+        local len = #component_data
+        for index,data in ipairs(component_data) do
+            self:render_component(component_data,typ,data,index,path_tbl,true)
+            if index ~= #component_data then
+                cursor.Separator()
+            end
+        end
+        popfunc_main()
+    end
+    return true
+end
+
+function GuiEntityWidget:render_component(parent_tbl,com_name,component_data,alias_name,path_tbl,ignore_multiple)
     local schema = self.schema
     local com_schema = schema[com_name]
     if is_direct_type(com_name) then
@@ -252,6 +294,8 @@ function GuiEntityWidget:render_component(parent_tbl,com_name,component_data,ali
     elseif not com_schema then
         widget.Text("not found component schema:"..com_name)
         return false
+    elseif com_schema.multiple and ( not ignore_multiple) then
+        return self:render_multiple_component(parent_tbl,com_name,component_data,alias_name,path_tbl)
     elseif not com_schema.type then
         return self:render_com_component(parent_tbl,com_name,component_data,alias_name,path_tbl)
     elseif com_schema.array then

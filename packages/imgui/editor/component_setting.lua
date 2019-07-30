@@ -8,7 +8,11 @@ local function TAppend(a,b)
 end
 
 local NormalCfgList = {
-    "DefaultOpen","DisplayName","HideHeader","ArrayAsVector"
+    "DefaultOpen",
+    "DisplayName",
+    "HideHeader",
+    "ArrayAsVector",
+    "IndexFormat"
 }
 
 local ArrayCfgList = {
@@ -24,11 +28,18 @@ local ComCfgList = {
 }
 TAppend(ComCfgList,NormalCfgList)
 
+local MultCfgList = {
+    
+}
+TAppend(MultCfgList,NormalCfgList)
+TAppend(MultCfgList,ArrayCfgList)
+
 local ComType = {
     Normal = "Normal",
     Array = "Array",
     Map = "Map",
     Com = "Com",
+    Multiple = "Multiple",
 }
 
 local CfgList = {}
@@ -36,6 +47,7 @@ CfgList[ComType.Normal] = NormalCfgList
 CfgList[ComType.Array] = ArrayCfgList
 CfgList[ComType.Map] = MapCfgList
 CfgList[ComType.Com] = ComCfgList
+CfgList[ComType.Multiple] = MultCfgList
 
 
 
@@ -72,6 +84,7 @@ function ComponentSetting:load_setting(schema_map,data)
     -- setmetatable(self.global_setting,{__index=DefaultComponentSetting})
     --use schema_map
     self:_update_sort_cfg(schema_map)
+    log.info_a(self:get_save_data())
 end
 
 function ComponentSetting:_update_sort_cfg(schema_map)

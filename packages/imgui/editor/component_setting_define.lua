@@ -26,4 +26,9 @@ define.ArrayAsVector = {
     type = "boolean",
 }
 
+define.IndexFormat = {
+    defaultValue = "",
+    type = "string",
+}
+
 return define
