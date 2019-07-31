@@ -186,7 +186,7 @@ function access.build_from_file(repo, hash, identity, source_path)
 	end
 	local cache = table.concat(s, "\n")
 	local lf = lfs.open(linkfile, "wb")
-	lf:write()
+	lf:write(cache)
 	lf:close()
 	return binhash, cache
 end
