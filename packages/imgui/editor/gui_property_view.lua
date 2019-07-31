@@ -103,9 +103,6 @@ function GuiPropertyView:on_update()
         local eid,entity = next(self.entity_tbl)
         if eid then
             self.widget_entity:update(eid,entity,self.base_component_cfg)
-            if self.base_component_cfg.dirty then
-                self._dirty_flag = true
-            end
         end
     else
         widget.Text("Not Entity")

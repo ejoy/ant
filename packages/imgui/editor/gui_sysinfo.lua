@@ -7,6 +7,7 @@ local cursor    = imgui.cursor
 local enum      = imgui.enum
 local gui_input = require "gui_input"
 local bgfx      = require "bgfx"
+local gui_mgr      = require "gui_mgr"
 
 local GuiBase = require "gui_base"
 local GuiSysInfo = GuiBase.derive("GuiSysInfo")
@@ -31,6 +32,7 @@ function GuiSysInfo:_init()
     self.status_open = true
     self._setting_dirty = false
     self._dirty_flag = false
+    self.statistics = {}
 end
 
 function GuiSysInfo:before_open()
@@ -120,6 +122,19 @@ function GuiSysInfo:update_fps(deltatime)
         self.ft = 1/self.fps
         self.frame_count = 0
         self.frame_time_count = 0
+        --
+        local time_counts = gui_mgr.time_stack:get_time_list("k")
+        local total_time = 0
+        for _,data in ipairs(time_counts) do
+            total_time = total_time + data[2]
+        end
+        self.statistics = {}
+        for _,data in ipairs(time_counts) do
+            local precent = data[2]/total_time
+            local s = string.format("%s:%.2f%%",data[1],100*precent)
+            table.insert(self.statistics,{precent,s})
+        end
+        gui_mgr.reset_time_count()
     end
     local fps_str = string.format("fps:%g###TreeHeader",self.fps)
     widget.SetNextItemOpen(self.status_open)
@@ -131,6 +146,9 @@ function GuiSysInfo:update_fps(deltatime)
         local mouse_state = gui_input.mouse_state
         local delta = mouse_state.delta
         widget.Text( string.format("mouse pos:%d/%d delta:%d/%d",mouse_state.x,mouse_state.y,delta.x,delta.y) )
+        for _,v in ipairs(self.statistics) do
+            widget.ProgressBar(v[1],v[2])
+        end
         widget.TreePop()
     else
         self:set_status_open(false)

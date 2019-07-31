@@ -5,6 +5,7 @@ local windows   = imgui.windows
 local util      = imgui.util
 local gui_util  = require "editor.gui_util"
 local thread    = require "thread"
+local TimeStack = require "common.time_stack"
 
 local dbgutil = import_package "ant.editor".debugutil
 
@@ -31,6 +32,7 @@ function gui_mgr.init()
         can_save = nil, -- setting loaded successfully OR user confirm
         max_try_count = 1,
     }
+    gui_mgr.time_stack = TimeStack.new()
     -- local menu_list = {
     --     {{"Views"},gui_mgr._update_mainmenu_view},
     -- }
@@ -45,25 +47,38 @@ end
 function gui_mgr.update(delta)
     --update main_menu_bar
     --update gui
+    local time_stack = gui_mgr.time_stack
+    time_stack:Push("editor")
     gui_mgr.check_can_save()
     local setting_can_save = gui_mgr.setting_status.can_save
     imgui.begin_frame(delta)
     gui_mgr._update_mainmenu()
     imgui.showDockSpace()
+    time_stack:Pop("editor")
+
     if setting_can_save ~= nil then 
         gui_mgr._update_window(delta)
     end
+    time_stack:Push("editor")
     gui_util.loop_popup()
     imgui.end_frame()
     if setting_can_save then
         gui_mgr.check_and_save_setting()
     end
+    time_stack:Pop("editor")
+end
+
+function gui_mgr.reset_time_count()
+    gui_mgr.time_stack:clear()
 end
 
 function gui_mgr._update_window(delta)
+    local time_stack = gui_mgr.time_stack
     for ui_name,ui_ins in pairs(gui_mgr.gui_tbl) do
         if ui_ins.on_gui then
+            time_stack:Push(ui_name)
             ui_ins:on_gui(delta)
+            time_stack:Pop(ui_name)
         end
     end
 end
@@ -256,6 +271,7 @@ function gui_mgr.check_and_save_setting()
         if ui_ins:is_setting_dirty() then
             need_save = true
             local ok
+            log.trace_a("Save setting:",ui_name)
             ok,setting_tbl[ui_name] =  dbgutil.try( ui_ins.save_setting_to_memory,ui_ins,true)
         end
     end
