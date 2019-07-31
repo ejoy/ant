@@ -32,6 +32,9 @@ $(ODIR)/window.dll : $(ODIR)/window.o $(ODIR)/window_native.o $(ODIR)/$(PLAT)_wi
 $(ODIR)/libwindow.a : $(ODIR)/window.o $(ODIR)/window_native.o $(ODIR)/$(PLAT)_window.o
 	ar rsv $@ $^
 
+window.dll: $(ODIR)/window.dll | $(ODIR)
+	cp $^ $@
+
 $(ODIR) :
 	mkdir -p $@
 

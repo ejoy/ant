@@ -111,7 +111,7 @@ function camera_controller_system:init()
 		return math.atan(dy, dx), math.sqrt(dx*dx+dy*dy)
 	end
 
-	function message:touch(id, state, x, y)
+	function message:touch(x, y, id, state)
 		if touchState == "NONE" then
 			if state == "DOWN" then
 				touchf1.id = id
