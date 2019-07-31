@@ -156,7 +156,7 @@ end
 
 --override if needed
 function GuiScene:load_setting_from_memory(setting_tbl)
-    self.recent_scenes = setting_tbl.recent_scenes
+    self.recent_scenes = setting_tbl.recent_scenes or {}
     local recent_size = #self.recent_scenes
     if recent_size > 0 then
         local box = self:_get_editpath()
