@@ -71,6 +71,23 @@ function access.realpath(repo, pathname)
 	return repo._root / pathname
 end
 
+function access.virtualpath(repo, pathname)
+	pathname = pathname:string()
+	local mountpoints = repo._mountpoint
+	-- TODO: ipairs
+	for name, mpath in pairs(mountpoints) do
+		mpath = mpath:string()
+		if pathname == mpath then
+			return repo._mountname[mpath]
+		end
+		local n = #mpath + 1
+		if pathname:sub(1,n) == mpath .. '/' then
+			return name .. '/' .. pathname:sub(n+1)
+		end
+	end
+	return pathname
+end
+
 function access.list_files(repo, filepath)
 	local rpath = access.realpath(repo, filepath)
 	local files = {}
@@ -140,20 +157,37 @@ end
 
 function access.build_from_file(repo, hash, identity, source_path)
 	local linkfile = access.repopath(repo, hash, ".link")
+	local f = lfs.open(linkfile, "rb")
+	if f then
+		local cache = f:read "a"
+		f:close()
+		local binhash = cache:match "([^\n]*)\n"
+		return binhash, cache
+	end
 	local dstfile = linkfile .. ".bin"
 	local build = import_package "ant.fileconvert"
-	local cache, binhash = build(identity, source_path, access.realpath(repo, source_path), linkfile, dstfile)
-	if binhash then
-		local binhash_path = access.repopath(repo, binhash)
-		if not pcall(lfs.remove, binhash_path) then
-			return
-		end
-		if not pcall(lfs.rename, dstfile, binhash_path) then
-			return
-		end
-	else
-		binhash = cache:match "([^\n]*)\n"
+	local deps = build(identity, access.realpath(repo, source_path), dstfile)
+	if not deps then
+		return
 	end
+	local binhash = access.sha1_from_file(dstfile)
+	local binhash_path = access.repopath(repo, binhash)
+	if not pcall(lfs.remove, binhash_path) then
+		return
+	end
+	if not pcall(lfs.rename, dstfile, binhash_path) then
+		return
+	end
+	local s = {}
+	s[#s+1] = binhash
+	for _, depfile in ipairs(deps) do
+		local vpath = access.virtualpath(repo, depfile)
+		s[#s+1] = ("%s %s"):format(access.sha1_from_file(depfile), vpath)
+	end
+	local cache = table.concat(s, "\n")
+	local lf = lfs.open(linkfile, "wb")
+	lf:write()
+	lf:close()
 	return binhash, cache
 end
 
