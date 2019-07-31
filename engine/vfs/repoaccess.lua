@@ -1,6 +1,7 @@
 local access = {}
 
 local lfs = require "filesystem.local"
+local vfsinternal = require "firmware.vfs"
 local crypt = require "crypt"
 
 function access.repopath(repo, hash, ext)
@@ -88,6 +89,14 @@ function access.virtualpath(repo, pathname)
 	return pathname
 end
 
+function access.hash(repo, path)
+	if not repo._internal then
+		repo._internal = vfsinternal.new(repo._repo:string())
+	end
+	local _, hash = repo._internal:realpath(path)
+	return hash
+end
+
 function access.list_files(repo, filepath)
 	local rpath = access.realpath(repo, filepath)
 	local files = {}
@@ -155,13 +164,29 @@ function access.sha1_from_file(filename)
 	return sha1_encoder:final():gsub(".", byte2hex)
 end
 
-function access.build_from_file(repo, hash, identity, source_path)
-	local linkfile = access.repopath(repo, hash, ".link")
+local function checkcache(repo, linkfile)
 	local f = lfs.open(linkfile, "rb")
 	if f then
+		local binhash = f:read "l"
+		for line in f:lines() do
+			local hash, name = line:match "([%da-f]+) (.*)"
+			local _, realhash = access.hash(repo, name)
+			if realhash ~= hash then
+				f:close()
+				return
+			end
+		end
+		f:seek('set', 0)
 		local cache = f:read "a"
 		f:close()
-		local binhash = cache:match "([^\n]*)\n"
+		return binhash, cache
+	end
+end
+
+function access.build_from_file(repo, hash, identity, source_path)
+	local linkfile = access.repopath(repo, hash, ".link")
+	local binhash, cache = checkcache(repo, linkfile)
+	if binhash then
 		return binhash, cache
 	end
 	local dstfile = linkfile .. ".bin"
