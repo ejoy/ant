@@ -44,19 +44,19 @@ uniform vec4 u_emissionColor;
 uniform vec4 u_FogColor;
 uniform vec4 u_FogParams;
 
-vec4  _Color;                       // u_diffuseColor;
-vec4  _SpecColor;                   // u_specularColor;
-float _Cutoff;
-float _DetailNormalMapScale;
-vec4  _EmissionColor;
-vec2  _DetailTiling;
+const vec4  _Color                = u_diffuseColor;                       // u_diffuseColor;
+const vec4  _SpecColor            = u_specularColor;                   // u_specularColor;
+const vec4  _EmissionColor        = vec4(0, 0, 0, 0);
 
-float _Metallic;
-float _Roughness;
+const float _Cutoff               = u_misc.x;
+const float _DetailNormalMapScale = u_misc.y;
+const vec2  _DetailTiling         = u_tiling.wz;
+
+const float _Metallic             = u_params.z;
+const float _Roughness            = u_params.w;
  
-vec4 _FogColor;
-vec4 _FogParams;                    // .xy reserve, .z = start, .w = end, for Linear mode
-
+const vec4 _FogColor              = vec4(0.5,0.5,0.5,0);
+const vec4 _FogParams             = vec4(1,1,20,1000);                    // .xy reserve, .z = start, .w = end, for Linear mode
 
 #define _MainTex            s_basecolor 
 #define _NormalMap          s_normal 
@@ -259,27 +259,27 @@ inline AntLight AddtiveLight(vec3 worldPos)
     return l;
 }
 
-void ParamsSetup()
-{
-    _Cutoff                 = u_misc.x;
-    _DetailNormalMapScale   = u_misc.y;
-    _DetailTiling           = u_tiling.wz;
-    _Color                  = u_diffuseColor;
-    _SpecColor              = u_specularColor;
-    _EmissionColor          = vec4(0,0,0,0);
+// void ParamsSetup()
+// {
+//     _Cutoff                 = u_misc.x;
+//     _DetailNormalMapScale   = u_misc.y;
+//     _DetailTiling           = u_tiling.wz;
+//     _Color                  = u_diffuseColor;
+//     _SpecColor              = u_specularColor;
+//     _EmissionColor          = vec4(0,0,0,0);
 
-    _Metallic               = u_params.z;
-    _Roughness              = u_params.w;
+//     _Metallic               = u_params.z;
+//     _Roughness              = u_params.w;
 
-    //_Glossiness           = 1- u_params.w;  
-    //_GlossMapScale        = 1.0f;
+//     //_Glossiness           = 1- u_params.w;  
+//     //_GlossMapScale        = 1.0f;
 
-    // get from application later 
-    //_FogColor  = u_FogColor;
-    //_FogParams = u_FogParams;
-    _FogColor = vec4(0.5,0.5,0.5,0);
-    _FogParams = vec4(1,1,20,1000);
-}  
+//     // get from application later 
+//     //_FogColor  = u_FogColor;
+//     //_FogParams = u_FogParams;
+//     _FogColor = vec4(0.5,0.5,0.5,0);
+//     _FogParams = vec4(1,1,20,1000);
+// }  
 
 vec3 Albedo(vec2 i_tex)
 {
@@ -585,7 +585,7 @@ inline FragmentCommonData FragmentSetup (vec2 i_tex, vec3 i_eyeVec,  vec3 i_norm
 //-------------------------------------   
 void main() 
 {   
-    ParamsSetup(); 
+    //ParamsSetup(); 
 
     AntEnv env;
     env = MainEnv( v_texcoord0.xy,v_camPos,v_worldPos,v_normal);
