@@ -1,6 +1,6 @@
 shader = {
-   vs = "/pkg/unity_viking/assets/shader/pbr/vs_mesh_pbr",
-   fs = "/pkg/unity_viking/assets/shader/pbr/fs_mesh_pbr",
+   vs = "/pkg/unity_viking/Assets/shader/pbr/vs_mesh_pbr",
+   fs = "/pkg/unity_viking/Assets/shader/pbr/fs_mesh_pbr",
 }
 state = {
    CULL = "CW",
@@ -9,12 +9,12 @@ state = {
 }
 properties = {
   textures = {
-    s_basecolor = { type="texture",name="s_basecolor",stage = 0,ref_path="/pkg/unity_viking/assets/texture_desc/prop_rune_01_d.texture"},
-    s_normal = { type="texture",name="s_normal",stage = 1,ref_path="/pkg/unity_viking/assets/texture_desc/prop_rune_01_n.texture"},
-    s_metallic = { type="texture",name="s_metallic",stage = 2,ref_path="/pkg/unity_viking/assets/texture_desc/prop_rune_01_sg.texture"},
-    s_texCube = { type="texture",name="s_texCube",stage = 3,ref_path="/pkg/unity_viking/assets/textures/bolonga.texture"},
+    s_basecolor = { type="texture",name="s_basecolor",stage = 0,ref_path="/pkg/unity_viking/Assets/texture_desc/prop_rune_01_d.texture"},
+    s_normal = { type="texture",name="s_normal",stage = 1,ref_path="/pkg/unity_viking/Assets/texture_desc/prop_rune_01_n.texture"},
+    s_metallic = { type="texture",name="s_metallic",stage = 2,ref_path="/pkg/unity_viking/Assets/texture_desc/prop_rune_01_sg.texture"},
+    s_texCube = { type="texture",name="s_texCube",stage = 3,ref_path="/pkg/unity_viking/Assets/textures/bolonga.texture"},
 
-    --s_brdfMap = { type="texture",name="s_brdfMap",stage = 6,ref_path="/pkg/unity_viking/assets/textures/brdfMap3.texture"},
+    --s_brdfMap = { type="texture",name="s_brdfMap",stage = 6,ref_path="/pkg/unity_viking/Assets/textures/brdfMap3.texture"},
   },
   uniforms = {
     u_params = { type="v4",name="u_params",default={0,1,0,0}},
