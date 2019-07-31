@@ -202,7 +202,15 @@ function offline.GET(id, fullpath)
 			local hash_path = repo.repo:hashpath(hash) .. ".link"
 			local f = io.open(hash_path,"rb")
 			if f then
-				local hash = f:read "a"
+				local hash = f:read "l"
+				for line in f:lines() do
+					local hash, name = line:match "([%da-f]+) (.*)"
+					local _, realhash = repo:realpath(name)
+					if realhash ~= hash then
+						f:close()
+						return
+					end
+				end
 				f:close()
 				response_id(id, repo.repo:hashpath(hash), hash)
 				return
@@ -325,7 +333,7 @@ local function request_file(id, hash, path, req)
 	path_req[id] = req
 end
 
-local function request_link(id, path, hash, source_hash, lk_hash)
+local function request_link(id, path, hash)
 	local hash_req = connection.request_link[hash]
 	if hash_req then
 		hash_req[id] = path
@@ -399,7 +407,7 @@ function response.BLOB(hash, data)
 	hash_complete(hash, true)
 end
 
-function response.LINK(hash, data)
+function response.LINK(hash, binhash, data)
 	local hashlink = repo.repo:hashpath(hash) .. ".link"
 	if not writefile(hashlink, data) then
 		print("Can't write to ", hashlink)
@@ -407,19 +415,19 @@ function response.LINK(hash, data)
 	local resp = connection.request_link[hash]
 	print("REQUEST LINK", hash, resp)
 	if resp then
-		local realpath = repo.repo:hashpath(data)
+		local realpath = repo.repo:hashpath(binhash)
 		local f = io.open(realpath, "rb")
 		if f then
 			f:close()
 			for id, path in pairs(resp) do
-				response_id(id, realpath, data)
+				response_id(id, realpath, binhash)
 			end
 			return
 		end
 		print("LINK request")
 		for id, path in pairs(resp) do
-			print("LINK", id, data, path)
-			request_file(id, data, path, "GET")
+			print("LINK", id, binhash, path)
+			request_file(id, binhash, path, "GET")
 		end
 	end
 end
@@ -611,14 +619,22 @@ function online.GET(id, fullpath)
 
 			-- name and name.lk are files
 			-- NOTICE: see repoaccess.lua for the same hash algorithm
-			local hash = sha1(repo.identity .. v.hash .. lk.hash)
+			local hash = sha1(repo.identity .. fullpath)
 			local hash_path = repo.repo:hashpath(hash) .. ".link"
 			local f = io.open(hash_path,"rb")
 			if not f then
-				request_link(id, fullpath, hash, v.hash, lk.hash)
+				request_link(id, fullpath, hash)
 				return
 			end
-			local hash = f:read "a"
+			local hash = f:read "l"
+			for line in f:lines() do
+				local hash, name = line:match "([%da-f]+) (.*)"
+				local _, realhash = repo.repo:realpath(name)
+				if realhash ~= hash then
+					request_link(id, fullpath, hash)
+					return
+				end
+			end
 			f:close()
 			local realpath = repo.repo:hashpath(hash)
 			local f = io.open(realpath, "rb")
@@ -684,6 +700,10 @@ local function online_dispatch(ok, cmd, ...)
 		print("Unsupported online command : ", cmd)
 	else
 		f(...)
+		--local ok, err = xpcall(f, debug.traceback, ...)
+		--if not ok then
+		--	print(err)
+		--end
 	end
 	return true
 end

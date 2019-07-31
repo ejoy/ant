@@ -138,90 +138,23 @@ function access.sha1_from_file(filename)
 	return sha1_encoder:final():gsub(".", byte2hex)
 end
 
-local function build(identity, source, lk, tmp)
-	local fileconvert = import_package "ant.fileconvert"
-	return fileconvert(identity, source, lk, tmp)
-end
-
-local function genhash(repo, tmp)
-	local binhash = access.sha1_from_file(tmp)
-	local binhash_path = access.repopath(repo, binhash)
-	if not pcall(lfs.remove, binhash_path) then
-		return
-	end
-	if not pcall(lfs.rename, tmp, binhash_path) then
-		return
-	end
-	return binhash
-end
-
-local function ishash(hash)
-	return #hash == 40 and not hash:find "[^%da-f]"
-end
-
-function access.build_from_file(repo, hash, identity, source_path, lk_path)
-	local link = access.repopath(repo, hash, ".link")
-	local f = lfs.open(link, "rb")
-	if f then
-		local binhash = f:read "a"
-		f:close()
-		if ishash(binhash) then
-			return binhash
+function access.build_from_file(repo, hash, identity, source_path)
+	local linkfile = access.repopath(repo, hash, ".link")
+	local dstfile = linkfile .. ".bin"
+	local build = import_package "ant.fileconvert"
+	local cache, binhash = build(identity, source_path, access.realpath(repo, source_path), linkfile, dstfile)
+	if binhash then
+		local binhash_path = access.repopath(repo, binhash)
+		if not pcall(lfs.remove, binhash_path) then
+			return
 		end
-	end
-	local tmp = lfs.path(link:string() .. ".bin")
-	if not build(identity, source_path, lk_path, tmp) then
-		return
-	end
-	-- todo: if this source is platform independent, we can generate all the platforms' .link file for the same bin file.
-	local binhash = genhash(repo, tmp)
-	local lf = lfs.open(link, "wb")
-	lf:write(binhash)
-	lf:close()
-	return binhash
-end
-
-local function checkfilehash(repo, plat, source, lk)
-	local source_hash = access.sha1_from_file(source)
-	local lk_hash = access.sha1_from_file(lk)
-	-- NOTICE: see io.lua for the same hash algorithm
-	local hash = access.sha1(plat .. source_hash .. lk_hash)
-	return access.build_from_file(repo, hash, plat, source, lk)
-end
-
-function access.build_from_path(repo, identity, pathname)
-	local hash = access.sha1(pathname .. "." .. identity)
-	local cache = access.repopath(repo, hash, ".path")
-	local lk = access.realpath(repo, pathname .. ".lk")
-	local source = access.realpath(repo, pathname)
-	local source_time = lfs.last_write_time(source)
-	local lk_time = lfs.last_write_time(lk)
-	if not source_time or not lk_time then
-		return
-	end
-	local timestamp = string.format("%s %d %d", pathname, source_time, lk_time)
-
-	local f = lfs.open(cache, "rb")
-	local binhash
-	if f then
-		local readline = f:lines()
-		local oidentity = readline()
-		local otimestamp = readline()
-		local hash = readline()
-		f:close()
-		if oidentity == identity and otimestamp == timestamp and ishash(hash) then
-			binhash = hash
+		if not pcall(lfs.rename, dstfile, binhash_path) then
+			return
 		end
+	else
+		binhash = cache:match "([^\n]*)\n"
 	end
-	if not binhash then
-		binhash = checkfilehash(repo, identity, source, lk)
-		if binhash then
-			local f = assert(lfs.open(cache, "wb"))
-			f:write(string.format("%s\n%s\n%s", identity, timestamp, binhash))
-			f:close()
-		end
-	end
-	return binhash
+	return binhash, cache
 end
 
 return access

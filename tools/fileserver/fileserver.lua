@@ -182,12 +182,12 @@ function message:GET(hash)
 	f:close()
 end
 
-function message:LINK(hash, identity, source_hash, lk_hash)
+function message:LINK(hash, identity, path)
 	local repo = self._repo
-	local binhash = repo:link(hash, identity, source_hash, lk_hash)
-	LOG("LINK", hash, binhash, identity, source_hash, lk_hash)
-	if binhash then
-		response(self, "LINK", hash, binhash)
+	local binhash, cache = repo:link(hash, identity, path)
+	LOG("LINK", hash, identity, path, binhash, cache)
+	if cache then
+		response(self, "LINK", hash, binhash, cache)
 	else
 		response(self, "LINK", hash)
 	end

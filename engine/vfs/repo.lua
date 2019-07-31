@@ -377,14 +377,12 @@ function repo:dir(hash)
 end
 
 function repo:link(hash, identity, path)
-	local source_path = access.realpath(self, path)
-	local lk_path = source_path .. ".lk"
-	local binhash = access.build_from_file(self, hash, identity, source_path, lk_path)
-	if not binhash then
-		if _DEBUG then print ("BUILDFAIL", identity, source_path) end
+	local binhash, cache = access.build_from_file(self, hash, identity, path)
+	if not cache then
+		if _DEBUG then print ("BUILDFAIL", identity, path) end
 		return
 	end
-	return binhash
+	return binhash, cache
 end
 
 return repo

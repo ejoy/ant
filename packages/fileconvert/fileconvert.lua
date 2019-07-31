@@ -1,5 +1,8 @@
 local lfs = require "filesystem.local"
 local util = require "util"
+local crypt = require "crypt"
+local sha1_encoder = crypt.sha1_encoder()
+
 local converter_names = {
 	shader = "shader.compile",
 	mesh = "mesh.convert",
@@ -39,7 +42,34 @@ local function log_info(info)
 	log:flush()
 end
 
-return function (plat, sourcefile, lkfile, dstfile)
+local function byte2hex(c)
+	return ("%02x"):format(c:byte())
+end
+
+local function sha1_from_file(filename)
+	sha1_encoder:init()
+	local ff = assert(lfs.open(filename, "rb"))
+	while true do
+		local content = ff:read(1024)
+		if content then
+			sha1_encoder:update(content)
+		else
+			break
+		end
+	end
+	ff:close()
+	return sha1_encoder:final():gsub(".", byte2hex)
+end
+
+return function (plat, reposource, sourcefile, linkfile, dstfile)
+	local f = lfs.open(linkfile, "rb")
+	if f then
+		local cache = f:read "a"
+		f:close()
+		return cache
+	end
+
+	local lkfile = sourcefile .. ".lk"
 	local lkcontent = util.rawtable(lkfile)
 	local ctype = assert(lkcontent.type)
 	local converter_name = assert(converter_names[ctype])
@@ -51,5 +81,14 @@ return function (plat, sourcefile, lkfile, dstfile)
 		log_err(sourcefile, lkfile, err)
 	end
 
-	return success
+	local binhash = sha1_from_file(dstfile)
+	local s = {}
+	s[#s+1] = binhash
+	s[#s+1] = ("%s %s"):format(sha1_from_file(sourcefile), reposource)
+	s[#s+1] = ("%s %s"):format(sha1_from_file(lkfile), reposource .. ".lk")
+	local cache = table.concat(s, "\n")
+	local lf = lfs.open(linkfile, "wb")
+	lf:write(cache)
+	lf:close()
+	return cache, binhash
 end
