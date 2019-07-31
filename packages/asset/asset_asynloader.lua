@@ -126,7 +126,7 @@ function asyn_asset_loader:post_init()
         world:update_func "asset_loaded"()
     end
 
-    if loadlist.i == loadlist.n then
+    if loadlist.i > loadlist.n then
         reset_loadlist(loadlist)
     end
     
