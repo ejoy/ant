@@ -23,7 +23,7 @@ local files = fs_util.list_files(assetpath, table.concat(vaild_textures_extensio
 local function file_format_info(filepath)
     local ext = filepath:extension():string():lower()
     if ext == ".png" or ext == ".bmp" then
-        return {format = "RGBA", colorspace = "sRGB", compressed = false}
+        return {format = "RGBA", colorspace = "linear", compressed = false}
     end
 
     if ext == ".exr" then
@@ -55,9 +55,8 @@ for i=1, #files do
     lk.colorspace = info.colorspace
     lk.normalmap = is_normal_map(f)
     if info.compressed then
-
         local astcfmt = info.format == "BC1" and "ASTC6x6" or "ASTC4x4"
-        lk.compress.window = {
+        lk.compress = {
             window  = info.format,
             ios     = astcfmt,
             android = astcfmt,
