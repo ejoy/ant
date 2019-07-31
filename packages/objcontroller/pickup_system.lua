@@ -78,7 +78,8 @@ end
 
 local function recover_material(result)
 	if result then
-		for _, item in ipairs(result) do
+		for i=1, result.cacheidx-1 do
+			local item = result[i]
 			local uniforms = assert(item.properties.uniforms)
 			uniforms.u_id = nil
 		end
@@ -306,9 +307,9 @@ function pickup_sys:update()
 		local pickupcomp = pickupentity.pickup
 		local nextstep = pickupcomp.nextstep
 		if nextstep == "blit" then
-			recover_filter(pickupentity.primitive_filter)
 			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, pickupentity.render_target.frame_buffer.render_buffers[1])
 		elseif nextstep	== "select_obj" then
+			recover_filter(pickupentity.primitive_filter)
 			select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
 			enable_pickup(false)
 		end
