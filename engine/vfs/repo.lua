@@ -62,6 +62,7 @@ function repo.new(rootpath, LOC)
 	rootpath = mountpoint[''] or rootpath
 	local mountname = access.mountname(mountpoint)
 	local r = setmetatable({
+		_loc = LOC,
 		_mountname = mountname,
 		_mountpoint = mountpoint,
 		_root = rootpath,

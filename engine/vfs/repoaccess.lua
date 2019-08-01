@@ -89,13 +89,16 @@ function access.virtualpath(repo, pathname)
 end
 
 function access.hash(repo, path)
-	local rpath = access.realpath(repo, path)
-	return access.sha1_from_file(rpath)
-	--if not repo._internal then
-	--	repo._internal = vfsinternal.new(repo._repo:string())
-	--end
-	--local _, hash = repo._internal:realpath(path)
-	--return hash
+	if repo._loc then
+		local rpath = access.realpath(repo, path)
+		return access.sha1_from_file(rpath)
+	else
+		if not repo._internal then
+			repo._internal = vfsinternal.new(repo._root:string())
+		end
+		local _, hash = repo._internal:realpath(path)
+		return hash
+	end
 end
 
 function access.list_files(repo, filepath)
