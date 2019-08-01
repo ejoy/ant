@@ -40,11 +40,64 @@ local function send_hierarchy()
     return
 end
 
+local function compare_values(val1, val2)
+    local type1 = type(val1)
+    local type2 = type(val2)
+    if type1 ~= type2 then
+        return false
+    end
+
+    -- Check for NaN
+    if type1 == "number" and val1 ~= val1 and val2 ~= val2 then
+        return true
+    end
+
+    if type1 ~= "table" then
+        return val1 == val2
+    end
+
+    -- check_keys stores all the keys that must be checked in val2
+    local check_keys = {}
+    for k, _ in pairs(val1) do
+        if k ~= 0 then
+            check_keys[k] = true
+        end
+    end
+
+    for k, v in pairs(val2) do
+        if k ~= 0 then
+            if not check_keys[k] then
+                return false
+            end
+
+            if not compare_values(val1[k], val2[k]) then
+                return false
+            end
+
+            check_keys[k] = nil
+        end
+    end
+    for k, _ in pairs(check_keys) do
+        -- Not the same if any keys from val1 were not found in val2
+        return false
+    end
+    return true
+end
+local last_eid = nil
+local last_tbl = nil
+
 local function send_entity(eid,typ)
     local hub = world.args.hub
     local entity_info = {type = typ}
     local setialize_result = {}
     setialize_result[eid] = serialize.entity2tbl(world,eid)
+    if last_eid == eid then
+        if compare_values(last_tbl,setialize_result[eid]) then
+            return 
+        end
+    end
+    last_eid = eid
+    last_tbl = setialize_result[eid]
     entity_info.entities = setialize_result 
     -- log.info_a(setialize_result)
     hub.publish(WatcherEvent.EntityInfo,entity_info)
@@ -83,16 +136,14 @@ local function create_outline(seleid)
     oe.rendermesh = se.rendermesh
 end
 
-local function start_watch_entitiy(eid,is_pick)
+
+local function start_watch_entitiy(eid,focus,is_pick)
     if (not eid) or (not world[eid]) then
         return
     end
-    if eid and ( not is_pick ) then
-        -- local s = serialize.save_entity(world,eid)
-        -- serialize.load_entity(world,s)
+    if eid and focus then
         local camerautil = import_package "ant.render".camera
         if not camerautil.focus_obj(world, eid) then
-            --fallback when focus_obj failed
             local transform = world[eid].transform or world[eid].hierarchy_transform
             if transform then
                 camerautil.focus_point(world, transform.t)
@@ -111,12 +162,23 @@ local function start_watch_entitiy(eid,is_pick)
     end
     remove_all_outline()
     if world[eid] then
-        create_outline(eid)
+        if is_pick or world[eid].can_select then
+            create_outline(eid)
+        end
         world:add_component(eid,"editor_watching",true)
         log.trace(">>add_component [editor_watching] to:",eid)
         send_entity(eid,( is_pick and "pick" or "editor"))
     end
 end
+
+local function on_editor_select_entity(eid,focus)
+    start_watch_entitiy(eid,focus,false)
+end
+
+local function on_pick_entity(eid)
+    start_watch_entitiy(eid,false,true)
+end
+
 
 local function on_component_modified(eid,com_id,key,value)
     log.trace_a("on_component_modified",com_id,key,value)
@@ -156,7 +218,7 @@ end
 
 function editor_watcher_system:init()
     local hub = world.args.hub
-    hub.subscribe(WatcherEvent.WatchEntity,start_watch_entitiy)
+    hub.subscribe(WatcherEvent.WatchEntity,on_editor_select_entity)
     hub.subscribe(WatcherEvent.ModifyComponent,on_component_modified)
     -- hub.subscribe(WatcherEvent.RequestWorldInfo,publish_world_info)
     -- publish_world_info()
@@ -170,10 +232,9 @@ function editor_watcher_system:pickup()
         if world[eid] then
             local hub = world.args.hub
             hub.publish(WatcherEvent.EntityPick,{eid})
-            start_watch_entitiy(eid,true)
+            on_pick_entity(eid)
         end
     end
-
 end
 
 function editor_watcher_system:after_update()
