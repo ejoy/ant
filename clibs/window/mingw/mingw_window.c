@@ -151,7 +151,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_CHAR:
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		msg.type = ANT_WINDOW_CHAR_UTF16;
-		msg.u.unichar.code = wParam;
+		msg.u.unichar.code = (int)wParam;
 		cb->message(cb->ud, &msg);
 		break;
 	}

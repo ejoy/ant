@@ -351,7 +351,7 @@ delete_channel(struct channel *c) {
 static int
 lreset(lua_State *L) {
 	lua_getfield(L, LUA_REGISTRYINDEX, "THREADID");
-	int threadid = lua_tointeger(L, -1);
+	int threadid = (int)lua_tointeger(L, -1);
 	lua_pop(L, 1);
 	if (threadid != 0) {
 		return luaL_error(L, "reset must call from main thread");

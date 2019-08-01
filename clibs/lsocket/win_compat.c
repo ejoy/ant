@@ -256,12 +256,12 @@ win_select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struc
 
 	// copy fd_set
 	int i;
-	for (i=0;i<writefds->fd_count;i++) {
+	for (i=0;i<(int)writefds->fd_count;i++) {
 		FD_SET(writefds->fd_array[i], &exfd);
 	}
 	int r = select(nfds, readfds, writefds, &exfd, timeout);
 	if (r > 0) {
-		for (i=0;i<exfd.fd_count;i++) {
+		for (i=0;i<(int)exfd.fd_count;i++) {
 			FD_SET(exfd.fd_array[i], writefds);
 		}
 	}

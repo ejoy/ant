@@ -354,15 +354,15 @@ static uint16_t _portnumber(struct sockaddr *sa)
  */
 static int _needsnolookup(const char *addr)
 {
-	int len = strlen(addr);
-	int pfx = strspn(addr, "0123456789.");
+	int len = (int)strlen(addr);
+	int pfx = (int)strspn(addr, "0123456789.");
 	if (pfx != len) {
-		pfx = strspn(addr, "0123456789abcdefABCDEF:");
+		pfx = (int)strspn(addr, "0123456789abcdefABCDEF:");
 		/* last 2 words may be in dot notation */
 		if (addr[pfx] == '.') {
-			int lpfx = strrchr(addr, ':') - addr;
+			int lpfx = (int)(strrchr(addr, ':') - addr);
 			if (lpfx <= 0 || lpfx > pfx) return 0;
-			pfx = lpfx + 1 + strspn(addr + lpfx + 1, "0123456789.");
+			pfx = lpfx + 1 + (int)strspn(addr + lpfx + 1, "0123456789.");
 		}
 	}
 	return pfx == len;
@@ -395,7 +395,7 @@ static int _gethostaddr(lua_State *L, const char *addr, int type, int port, int 
 		if (strlen(addr) > UNIX_PATH_MAX)
 			return lsocket_error(L, "unix domain path too long");
 		*family = AF_UNIX;
-		*slen = sizeof(sa_family_t) + strlen(addr) + 1;
+		*slen = (socklen_t)(sizeof(sa_family_t) + strlen(addr) + 1);
 		*protocol = 0;
 		struct sockaddr_un* su = (struct sockaddr_un*) sa;
 		sa->sa_family = AF_UNIX;
@@ -419,14 +419,14 @@ static int _gethostaddr(lua_State *L, const char *addr, int type, int port, int 
 	int err = getaddrinfo(addr, svc, &hint, &info);
     if (err != 0) {
 		if (info) freeaddrinfo(info);
-		return lsocket_error(L, gai_strerror(err));
+		return lsocket_error(L, (const char*)gai_strerror(err));
 	} else if (info->ai_family != AF_INET && info->ai_family != AF_INET6) {
 		if (info) freeaddrinfo(info);
 		return lsocket_error(L, "unknown address family");
 	}
 
 	*family = info->ai_family;
-    *slen = info->ai_addrlen;
+    *slen = (socklen_t)info->ai_addrlen;
     *protocol = info->ai_protocol;
     memcpy(sa, info->ai_addr, *slen);
 
@@ -484,9 +484,9 @@ static int lsocket_bind(lua_State *L)
 		addr = lua_tostring(L, top++);
 	}
 	/* port to bind to */
-	int port = luaL_optnumber(L, top++, -1);
+	int port = (int)luaL_optnumber(L, top++, -1);
 	/* backlog len */
-	int backlog = luaL_optnumber(L, top, DFL_BACKLOG);
+	int backlog = (int)luaL_optnumber(L, top, DFL_BACKLOG);
 
 	if (addr) {
 		int err = _gethostaddr(L, addr, type, port, &family, &protocol, sa, &slen);
@@ -507,7 +507,7 @@ static int lsocket_bind(lua_State *L)
 		luaL_argerror(L, top - 1, "number expected, got no value X");
 
 	lSocket *sock = lsocket_pushlSocket(L);
-	sock->sockfd = socket(family, type, protocol);
+	sock->sockfd = (int)socket(family, type, protocol);
 	_initsocket(sock, family, type, mcast, protocol, 1);
 
 	/* setup socket for broad/multicast if necessary */
@@ -583,9 +583,9 @@ static int lsocket_connect(lua_State *L)
 	/* ip address to connect to */
 	const char *addr = luaL_checkstring(L, top);
 	/* port to connect to */
-	int port = luaL_optnumber(L, top + 1, -1);
+	int port = (int)luaL_optnumber(L, top + 1, -1);
 	/* ttl in the case of multicast */
-	int ttl = luaL_optnumber(L, top + 2, LSOCKET_DFLTTL);
+	int ttl = (int)luaL_optnumber(L, top + 2, LSOCKET_DFLTTL);
 
 	int err = _gethostaddr(L, addr, type, port, &family, &protocol, sa, &slen);
 	if (err) return err;
@@ -594,7 +594,7 @@ static int lsocket_connect(lua_State *L)
 		luaL_argerror(L, 2, "number expected, got no value.");
 
 	lSocket *sock = lsocket_pushlSocket(L);
-	sock->sockfd = socket(family, type, protocol);
+	sock->sockfd = (int)socket(family, type, protocol);
 	_initsocket(sock, family, type, mcast, protocol, 0);
 	if (mcast) {
 		if (family == AF_UNIX)
@@ -805,7 +805,7 @@ static int lsocket_sock_getfd(lua_State *L)
 static int lsocket_sock_setfd(lua_State *L)
 {
 	lSocket *sock = lsocket_checklSocket(L, 1);
-	int fd = luaL_checkinteger(L, 2);
+	int fd = (int)luaL_checkinteger(L, 2);
 	if (fd != -1)
 		return lsocket_error(L, "bad argument #1 to 'setfd' (invalid fd)");
 	sock->sockfd = fd;
@@ -872,7 +872,7 @@ static int lsocket_sock_accept(lua_State *L)
 	char sabuf[SOCKADDR_BUFSIZ];
 	struct sockaddr *sa = (struct sockaddr*) sabuf;
 	socklen_t slen = sizeof(sabuf);
-	int newfd = accept(sock->sockfd, sa, &slen);
+	int newfd = (int)accept(sock->sockfd, sa, &slen);
 
 	if (newfd < 0)
 		return lsocket_error(L, strerror(errno));
@@ -914,7 +914,7 @@ static int lsocket_sock_recv(lua_State *L)
 {
 	lSocket *sock = lsocket_checklSocket(L, 1);
 
-	uint32_t howmuch = luaL_optnumber(L, 2, LUAL_BUFFERSIZE);
+	uint32_t howmuch = (uint32_t)luaL_optnumber(L, 2, LUAL_BUFFERSIZE);
 	if (lua_tointeger(L, 2) > UINT_MAX)
 		return luaL_error(L, "bad argument #1 to 'recv' (invalid number)");
 	
@@ -977,7 +977,7 @@ static int lsocket_sock_recv(lua_State *L)
 static int lsocket_sock_recvfrom(lua_State *L)
 {
 	lSocket *sock = lsocket_checklSocket(L, 1);
-	uint32_t howmuch = luaL_optnumber(L, 2, LUAL_BUFFERSIZE);
+	uint32_t howmuch = (uint32_t)luaL_optnumber(L, 2, LUAL_BUFFERSIZE);
 	if (lua_tointeger(L, 2) > UINT_MAX)
 		return luaL_error(L, "bad argument #1 to 'recvfrom' (invalid number)");
 	
@@ -1063,7 +1063,7 @@ static int lsocket_sock_send(lua_State *L)
 	sigaction(SIGPIPE, &sa_new, &sa_old);
 	#endif
 
-	int nwr = send(sock->sockfd, data, len, flags);
+	int nwr = send(sock->sockfd, data, (int)len, flags);
 
 	#if !defined(MSG_NOSIGNAL) && !defined(SO_NOSIGPIPE)
 	sigaction(SIGPIPE, &sa_old, NULL);
@@ -1104,7 +1104,7 @@ static int lsocket_sock_sendto(lua_State *L)
 	size_t len;
 	const char *data = luaL_checklstring(L, 2, &len);
 	const char *addr = luaL_checkstring(L, 3);
-	int port = luaL_checknumber(L, 4);
+	int port = (int)luaL_checknumber(L, 4);
 	char sabuf[SOCKADDR_BUFSIZ];
 	struct sockaddr *sa = (struct sockaddr*) sabuf;
 	socklen_t slen = sizeof(sabuf);
@@ -1124,7 +1124,7 @@ static int lsocket_sock_sendto(lua_State *L)
 	sigaction(SIGPIPE, &sa_new, &sa_old);
 	#endif
 
-	int nwr = sendto(sock->sockfd, data, len, flags, sa, slen);
+	int nwr = sendto(sock->sockfd, data, (int)len, flags, sa, slen);
 
 	#if !defined(MSG_NOSIGNAL) && !defined(SO_NOSIGPIPE)
 	sigaction(SIGPIPE, &sa_old, NULL);
@@ -1317,7 +1317,7 @@ static int lsocket_select(lua_State *L)
 		timeop = NULL;
 	} else {
 		timeout.tv_sec = (long) timeo;
-		timeout.tv_usec = (timeo - timeout.tv_sec) * 1000000;
+		timeout.tv_usec = (long)((timeo - timeout.tv_sec) * 1000000);
 	}
 	
 	int ok = select(maxfd+1, hasrd ? &readfd : NULL, haswr ? &writefd : NULL, NULL, timeop);
@@ -1377,7 +1377,7 @@ static int lsocket_resolve(lua_State *L)
 	int err = getaddrinfo(name, 0, &hint, &info);
     if (err != 0) {
 		if (info) freeaddrinfo(info);
-		return lsocket_error(L, gai_strerror(err));
+		return lsocket_error(L, (const char*)gai_strerror(err));
 	}
 
 	int i = 1;
@@ -1389,7 +1389,7 @@ static int lsocket_resolve(lua_State *L)
 			lua_pushstring(L, info->ai_family == AF_INET ? LSOCKET_INET : LSOCKET_INET6);
 			lua_rawset(L, -3);
 			lua_pushliteral(L, "addr");
-			lua_pushstring(L, _addr2string(info->ai_addr, info->ai_addrlen, buf, SOCKADDR_BUFSIZ));
+			lua_pushstring(L, _addr2string(info->ai_addr, (socklen_t)info->ai_addrlen, buf, SOCKADDR_BUFSIZ));
 			lua_rawset(L, -3);
 			lua_rawseti(L, -2, i++);
 			info = info->ai_next;
