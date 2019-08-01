@@ -61,34 +61,20 @@ local function sha1_from_file(filename)
 	return sha1_encoder:final():gsub(".", byte2hex)
 end
 
-return function (plat, reposource, sourcefile, linkfile, dstfile)
-	local f = lfs.open(linkfile, "rb")
-	if f then
-		local cache = f:read "a"
-		f:close()
-		return cache
-	end
-
+return function (plat, sourcefile, dstfile)
 	local lkfile = sourcefile .. ".lk"
 	local lkcontent = util.rawtable(lkfile)
 	local ctype = assert(lkcontent.type)
 	local converter_name = assert(converter_names[ctype])
-
 	local c = require(converter_name)
 	log_info(string.format("plat:%s, src:%s, lk:%s, dst:%s, cvt type:%s", plat, sourcefile, lkfile, dstfile, ctype))
 	local success, err = c(plat, sourcefile, lkcontent, dstfile)
 	if not success and err then
 		log_err(sourcefile, lkfile, err)
+		return
 	end
-
-	local binhash = sha1_from_file(dstfile)
-	local s = {}
-	s[#s+1] = binhash
-	s[#s+1] = ("%s %s"):format(sha1_from_file(sourcefile), reposource)
-	s[#s+1] = ("%s %s"):format(sha1_from_file(lkfile), reposource .. ".lk")
-	local cache = table.concat(s, "\n")
-	local lf = lfs.open(linkfile, "wb")
-	lf:write(cache)
-	lf:close()
-	return cache, binhash
+	return {
+		sourcefile,
+		sourcefile..".lk",
+	}
 end
