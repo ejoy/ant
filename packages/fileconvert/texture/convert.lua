@@ -1,7 +1,8 @@
 local lfs = require "filesystem.local"
 local util      = require "util"
-local toolname = util.valid_tool_exe_path "texturec"
 
+local toolname = "texturec"
+local toolpath = util.valid_tool_exe_path(toolname)
 
 local function which_format(plat, param)
 	local compress = param.compress
@@ -23,26 +24,17 @@ local function outfile_extension(renderer)
 	return extensions[renderer:lower()]
 end
 
-return function (identity, sourcefile, param, outfile)
-	local plat, renderer = util.identify_info(identity)
-	local ext = assert(outfile_extension(renderer))
-	local tmpoutfile = lfs.path(outfile):replace_extension(ext)
-	local commands = {
-		toolname:string(),
-		"-f", sourcefile:string(),
-		"-o", tmpoutfile:string(),
-		"-t", which_format(plat, param),
-		stdout      = true,
-		stderr      = true,
-		hideWindow  = true,
-	}
-
-	local function add_option(name, value)
-		commands[#commands+1] = name
-		if value then
-			commands[#commands+1] = value
-		end
+local function add_option(commands, name, value)
+	commands[#commands+1] = name
+	if value then
+		commands[#commands+1] = value
 	end
+end
+
+local function gen_arm_astc_commands(plat, param, sourcefile, outfile, commands)
+	add_option(commands, "-f", sourcefile:string())
+	add_option(commands, "-o", outfile:string())
+	add_option(commands, "-t", which_format(plat, param))
 
 	if param.maxsize then
 		add_option("--max", param.maxsize)
@@ -66,6 +58,21 @@ return function (identity, sourcefile, param, outfile)
 			add_option("--mipskip", mipmap)
 		end
 	end
+end
+
+return function (identity, sourcefile, param, outfile)
+	local plat, renderer = util.identify_info(identity)
+	local ext = assert(outfile_extension(renderer))
+	local tmpoutfile = lfs.path(outfile):replace_extension(ext)
+	
+	local commands = {
+		toolpath:string(),
+		stdout      = true,
+		stderr      = true,
+		hideWindow  = true,
+	}
+
+	gen_arm_astc_commands(plat, param, sourcefile, tmpoutfile, commands)
 
 	local success, msg = util.spaw_process(commands, function (info)
 		local success, msg = true, ""
