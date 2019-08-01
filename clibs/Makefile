@@ -7,7 +7,7 @@ ALL_LIBS := $(LIBS) lua bgfx_core
 
 include common.mk
 
-.PHONY: $(ALL_LIBS) $(foreach v,$(ALL_LIBS),build_$(v) clean_$(v) copy_$(v))
+.PHONY: $(ALL_LIBS) $(foreach v,$(ALL_LIBS),build_$(v) clean_$(v) copy_$(v)) copy_tools
 
 all: $(ALL_LIBS)
 
@@ -55,7 +55,25 @@ $(foreach v, $(LIBS), $(eval $(call MAKE_temp,$(v))))
 $(foreach v, $(LIBS), $(eval $(call COPY_DLL_func,$(v))))
 $(foreach v, $(ALL_LIBS), $(eval $(call TARG_func,$(v))))
 
-copy: $(addprefix copy_,$(ALL_LIBS))
+ifeq "$(PLAT)" "osx"
+BGFX_BUILD_PLAT_NAME = osx64_clang/bin
+
+else ifeq "$(PLAT)" "mingw"
+BGFX_BUILD_PLAT_NAME = win64_mingw-gcc/bin
+TOOL_EXT_NAME=.exe
+else ifeq "$(PLAT)" "msvc"
+BGFX_BUILD_PLAT_NAME = win64_vs2019/bin
+TOOL_EXT_NAME=.exe
+else
+$(error "$(PLAT) not support copy tool")
+endif
+BGFX_BUILD_PATH = ../3rd/bgfx/.build
+
+copy_tools:
+	cp $(BGFX_BUILD_PATH)/$(BGFX_BUILD_PLAT_NAME)/shadercRelease$(TOOL_EXT_NAME) $(BIN)/shaderc$(TOOL_EXT_NAME) &&\
+	cp $(BGFX_BUILD_PATH)/$(BGFX_BUILD_PLAT_NAME)/texturecRelease$(TOOL_EXT_NAME) $(BIN)/texturec$(TOOL_EXT_NAME)
+
+copy: $(addprefix copy_,$(ALL_LIBS)) copy_tools
 	
 clean : $(addprefix clean_,$(ALL_LIBS))
 	rm -f *.dll && rm -f *.exe
