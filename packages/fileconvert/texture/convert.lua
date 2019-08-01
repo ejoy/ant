@@ -7,7 +7,7 @@ local toolpath = util.valid_tool_exe_path(toolname)
 local function which_format(plat, param)
 	local compress = param.compress
 	if compress then
-		return compress[plat:lower()]
+		return compress[plat]
 	end
 
 	return param.format
@@ -21,11 +21,14 @@ local extensions = {
 }
 
 local function outfile_extension(renderer)
-	return extensions[renderer:lower()]
+	return extensions[renderer]
 end
 
 local function add_option(commands, name, value)
-	commands[#commands+1] = name
+	if name then
+		commands[#commands+1] = name
+	end
+	
 	if value then
 		commands[#commands+1] = value
 	end
@@ -35,6 +38,7 @@ local function gen_arm_astc_commands(plat, param, sourcefile, outfile, commands)
 	add_option(commands, "-f", sourcefile:string())
 	add_option(commands, "-o", outfile:string())
 	add_option(commands, "-t", which_format(plat, param))
+	add_option(commands, "-q", "fastest")
 
 	if param.maxsize then
 		add_option("--max", param.maxsize)
@@ -60,8 +64,35 @@ local function gen_arm_astc_commands(plat, param, sourcefile, outfile, commands)
 	end
 end
 
+-- local function gen_compressor_commands(plat, param, sourcefile, outfile, commands)
+-- 	local function add_format_option()
+-- 		local format = which_format(plat, param)
+-- 		if plat == "window" then
+-- 			add_option(commands, "-fd", format)
+-- 		else
+-- 			local astc, block = format:match "ASTC[%d.%w]+"
+-- 			add_option(commands, "-fd", astc)
+-- 			add_option(commands, "-BlockRate", block)
+-- 		end
+-- 	end
+
+-- 	local mipmap = param.mipmap
+-- 	if mipmap then
+-- 		if mipmap == 0 then
+-- 			add_option(commands, "-mipsize", 1)	--mean generate all mipmap
+-- 		else
+-- 			add_option(commands, "-miplevels", mipmap)
+-- 		end
+-- 	end
+
+-- 	add_format_option()
+-- 	add_option(commands, nil, sourcefile:string())
+-- 	add_option(commands, nil, outfile:string())
+-- end
+
 return function (identity, sourcefile, param, outfile)
 	local plat, renderer = util.identify_info(identity)
+	plat, renderer = plat:lower(), renderer:lower()
 	local ext = assert(outfile_extension(renderer))
 	local tmpoutfile = lfs.path(outfile):replace_extension(ext)
 	
