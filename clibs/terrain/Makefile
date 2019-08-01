@@ -15,7 +15,7 @@ $(ODIR)/terrain.o : terrain.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC) $(CLIBS) $(GLM_DIR)
 
 $(ODIR)/terrain.dll : $(ODIR)/terrain.o 
-	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) $(BGFXUTILLIB) $(BGFXLIB)
+	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) $(BGFXLIB)
 
 $(ODIR)/libterrain.a : $(ODIR)/terrain.o 
 	ar rsv $@ $^
