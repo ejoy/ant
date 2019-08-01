@@ -68,13 +68,13 @@ return function (plat, sourcefile, dstfile)
 	local converter_name = assert(converter_names[ctype])
 	local c = require(converter_name)
 	log_info(string.format("plat:%s, src:%s, lk:%s, dst:%s, cvt type:%s", plat, sourcefile, lkfile, dstfile, ctype))
-	local success, err = c(plat, sourcefile, lkcontent, dstfile)
+	local success, err, depends = c(plat, sourcefile, lkcontent, dstfile)
 	if not success and err then
 		log_err(sourcefile, lkfile, err)
 		return
 	end
-	return {
-		sourcefile,
-		sourcefile..".lk",
-	}
+	depends = depends or {}
+	table.insert(depends, 1, sourcefile)
+	table.insert(depends, 2, sourcefile..".lk")
+	return depends
 end

@@ -86,7 +86,6 @@ function access.virtualpath(repo, pathname)
 			return name .. '/' .. pathname:sub(n+1)
 		end
 	end
-	return pathname
 end
 
 function access.hash(repo, path)
@@ -207,7 +206,9 @@ function access.build_from_file(repo, hash, identity, source_path)
 	s[#s+1] = binhash
 	for _, depfile in ipairs(deps) do
 		local vpath = access.virtualpath(repo, depfile)
-		s[#s+1] = ("%s %s"):format(access.sha1_from_file(depfile), vpath)
+		if vpath then
+			s[#s+1] = ("%s %s"):format(access.sha1_from_file(depfile), vpath)
+		end
 	end
 	local cache = table.concat(s, "\n")
 	local lf = lfs.open(linkfile, "wb")

@@ -99,6 +99,7 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 		"-p", shader_opt,
 		"-f", srcfilename,
 		"-o", outfilename,
+		"--depends",
 		includes,
 		stdout = true,
 		stderr = true,
@@ -115,7 +116,7 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 
 	add_optimizelevel(config.optimizelevel, default_level(shadertype, stagetype))
 
-	return util.spaw_process(commands, function (info)
+	local ok, msg = util.spaw_process(commands, function (info)
 		local success, msg = true, ""
 		if info ~= "" then
 			local INFO = info:upper()
@@ -133,6 +134,24 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 
 		return success, msg
 	end)
+	if not ok then
+		return false, msg
+	end
+	local depends = {}
+	local dependpath = outfilepath .. ".d"
+	local f = lfs.open(dependpath)
+	if f then
+		f:read "l"
+		for line in f:lines() do
+			local path = line:match "^%s*(.-)%s*\\?$"
+			if path then
+				depends[#depends+1] = lfs.path(path)
+			end
+		end
+		f:close()
+		os.remove(dependpath:string())
+	end
+	return true, msg, depends
 end
 
 return toolset
