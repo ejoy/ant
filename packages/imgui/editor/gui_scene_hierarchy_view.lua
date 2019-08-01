@@ -35,8 +35,8 @@ function GuiHierarchyView:_init_subcribe()
     hub.subscribe(Event.EntityPick, self._on_scene_pick,self)
 end
 
-function GuiHierarchyView:publish_selected_entity(eid)
-    hub.publish(Event.WatchEntity, eid)
+function GuiHierarchyView:publish_selected_entity(eid,focus)
+    hub.publish(Event.WatchEntity, eid, focus)
 end
 -------hub end
 
@@ -94,7 +94,7 @@ function GuiHierarchyView:_render_entity(id,entity)
     end
     if util.IsItemClicked() then
         self.selected_map = {[id]=true}
-        self:publish_selected_entity(id)
+        self:publish_selected_entity(id,util.IsMouseDoubleClicked(0))
     end
     if util.IsItemHovered() then
         widget.BeginTooltip()
