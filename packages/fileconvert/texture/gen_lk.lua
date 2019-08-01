@@ -1,4 +1,4 @@
-package.cpath = "projects/msvc/vs_bin/x64/Debug/?.dll"
+package.cpath = "projects/msvc/vs_bin/Debug/?.dll"
 
 package.path = table.concat(
     {

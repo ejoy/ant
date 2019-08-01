@@ -1,5 +1,5 @@
 -- test on $ant_dir
-package.cpath = "projects/msvc/vs_bin/x64/Debug/?.dll"
+package.cpath = "projects/msvc/vs_bin/Debug/?.dll"
 
 local mathbaselib = require "math3d.baselib"
 local math3d = require "math3d"

@@ -13,7 +13,7 @@ if #arg > 0 then
 		end
 	end
 	if has_arg("--bin=msvc") then
-		table.insert(cpaths, 1, "projects/msvc/vs_bin/x64/Debug/?.dll")
+		table.insert(cpaths, 1, "projects/msvc/vs_bin/Debug/?.dll")
 	end
 end
 

@@ -597,7 +597,7 @@ set_keyvalue(lua_State *L) {
 		lua_settable(L, -3);
 	} else if (oldv == LUA_TTABLE) {
 		lua_len(L, -1);
-		int n = lua_tointeger(L, -1);
+		int n = (int)lua_tointeger(L, -1);
 		lua_pop(L, 1);
 		lua_replace(L, -3);
 		// table oldv value

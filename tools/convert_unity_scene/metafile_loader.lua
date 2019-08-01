@@ -1,6 +1,6 @@
 
 -- package.path = "libs/?.lua;libs/?/?.lua"
--- package.cpath = "projects/msvc/vs_bin/x64/Debug/?.dll"
+-- package.cpath = "projects/msvc/vs_bin/Debug/?.dll"
 local fs = require "filesystem.local"
 
 local function loader(filepath)

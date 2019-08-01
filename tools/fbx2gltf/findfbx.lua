@@ -1,5 +1,5 @@
 package.path = "./?.lua;libs/?.lua;libs/?/?.lua;packages/glTF/?.lua"
-package.cpath = "projects/msvc/vs_bin/x64/Debug/?.dll"
+package.cpath = "projects/msvc/vs_bin/Debug/?.dll"
 
 local fs = require "filesystem.local"
 

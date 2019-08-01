@@ -8,7 +8,7 @@ package.path = table.concat({
 		"./engine/?/?.lua",
 	}, ";")
 
-package.cpath = "projects/msvc/vs_bin/x64/Debug/?.dll"
+package.cpath = "projects/msvc/vs_bin/Debug/?.dll"
 
 local fs = require "filesystem.local"
 

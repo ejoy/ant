@@ -1,4 +1,4 @@
-package.cpath = "d:/Work/ant/projects/msvc/vs_bin/x64/Debug/?.dll"
+package.cpath = "d:/Work/ant/projects/msvc/vs_bin/Debug/?.dll"
 package.path = table.concat({
     "./?.lua",
     "./packages/fileconvert/?.lua",
