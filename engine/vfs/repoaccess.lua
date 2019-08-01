@@ -89,11 +89,13 @@ function access.virtualpath(repo, pathname)
 end
 
 function access.hash(repo, path)
-	if not repo._internal then
-		repo._internal = vfsinternal.new(repo._repo:string())
-	end
-	local _, hash = repo._internal:realpath(path)
-	return hash
+	local rpath = access.realpath(repo, path)
+	return access.sha1_from_file(rpath)
+	--if not repo._internal then
+	--	repo._internal = vfsinternal.new(repo._repo:string())
+	--end
+	--local _, hash = repo._internal:realpath(path)
+	--return hash
 end
 
 function access.list_files(repo, filepath)
@@ -169,7 +171,7 @@ local function checkcache(repo, linkfile)
 		local binhash = f:read "l"
 		for line in f:lines() do
 			local hash, name = line:match "([%da-f]+) (.*)"
-			local _, realhash = access.hash(repo, name)
+			local realhash = access.hash(repo, name)
 			if realhash ~= hash then
 				f:close()
 				return
