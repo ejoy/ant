@@ -44,19 +44,32 @@ uniform vec4 u_emissionColor;
 uniform vec4 u_FogColor;
 uniform vec4 u_FogParams;
 
-const vec4  _Color                = u_diffuseColor;                       // u_diffuseColor;
-const vec4  _SpecColor            = u_specularColor;                   // u_specularColor;
-const vec4  _EmissionColor        = vec4(0, 0, 0, 0);
+#define     _Cutoff                u_misc.x
+#define     _DetailNormalMapScale  u_misc.y
+#define     _DetailTiling          u_tiling.wz
+#define     _Color                 u_diffuseColor
+#define     _SpecColor             u_specularColor
+//#define     _EmissionColor          = vec4(0,0,0,0);
 
-const float _Cutoff               = u_misc.x;
-const float _DetailNormalMapScale = u_misc.y;
-const vec2  _DetailTiling         = u_tiling.wz;
+#define     _Metallic              u_params.z
+#define     _Roughness             u_params.w
 
-const float _Metallic             = u_params.z;
-const float _Roughness            = u_params.w;
+#define     _FogColor    u_FogColor
+#define     _FogParams   u_FogParams
+
+// const vec4  _Color                = u_diffuseColor;                       // u_diffuseColor;
+// const vec4  _SpecColor            = u_specularColor;                   // u_specularColor;
+// const vec4  _EmissionColor        = vec4(0, 0, 0, 0);
+
+// const float _Cutoff               = u_misc.x;
+// const float _DetailNormalMapScale = u_misc.y;
+// const vec2  _DetailTiling         = u_tiling.wz;
+
+// const float _Metallic             = u_params.z;
+// const float _Roughness            = u_params.w;
  
-const vec4 _FogColor              = vec4(0.5,0.5,0.5,0);
-const vec4 _FogParams             = vec4(1,1,20,1000);                    // .xy reserve, .z = start, .w = end, for Linear mode
+// const vec4 _FogColor              = vec4(0.5,0.5,0.5,0);
+// const vec4 _FogParams             = vec4(1,1,20,1000);                    // .xy reserve, .z = start, .w = end, for Linear mode
 
 #define _MainTex            s_basecolor 
 #define _NormalMap          s_normal 

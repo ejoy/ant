@@ -26,7 +26,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\ant\main.c">
+    <ClCompile Include="..\..\runtime\windows\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\clibs\ant\ant_searcher.c">
