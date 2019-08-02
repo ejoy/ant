@@ -48,6 +48,19 @@ local function create_light()
 	lu.create_ambient_light_entity(world, "ambient light", 'color', {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end
 
+local singlecolor_material = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material"
+local function create_material_item(filepath, color)
+	return {
+		ref_path = filepath,
+		properties = {
+			uniforms = {
+				u_color = {type = "color", name = "Color", value = color},
+			}
+		},
+		asyn_load = true,
+	}
+end
+
 function model_review_system:init()
 	local fbsize = world.args.fb_size	
 	renderutil.create_main_queue(world, fbsize, ms({1, 1, -1}, "inT"), {5, 5, -5})
@@ -63,7 +76,29 @@ function model_review_system:init()
 	-- 	can_render = true,
 	-- 	main_view = true,
 	-- }
-	
+
+	-- world:create_entity {
+	-- 	name = "terrain far",
+	-- 	transform = mu.srt({-0.1, 0.1, 0.1},{0.000,0.000,0.000},{0, -5, 0, 1}),
+	-- 	rendermesh = {},
+	-- 	mesh = {
+	-- 		ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test.mesh",
+	-- 		submesh_refs = {
+	-- 			terrain_far_01 = cu.create_submesh_item {0},
+	-- 			terrain_near_01 = cu.create_submesh_item {1, 2},
+	-- 		},
+	-- 		asyn_load = true,
+	-- 	},
+	-- 	material = {
+	-- 		create_material_item(singlecolor_material, {1, 0, 0, 0}),
+	-- 		create_material_item(singlecolor_material, {1, 1, 0, 0}),
+	-- 		create_material_item(singlecolor_material, {1, 0, 1, 0}),
+	-- 	},
+	-- 	asyn_load = "",
+	-- 	main_view = true,
+	-- 	can_render = true,
+	-- }
+
 	cu.create_grid_entity(world, "grid")
 	local origineid = world:create_entity {
 		transform 	= mu.scale_mat(0.2),
@@ -87,19 +122,6 @@ function model_review_system:init()
 		main_view 	= true,
 		name 		= "door_outline",
 	}
-
-	local singlecolor_material = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material"
-	local function create_material_item(filepath, color)
-		return {
-			ref_path = filepath,
-			properties = {
-				uniforms = {
-					u_color = {type = "color", name = "Color", value = color},
-				}
-			},
-			asyn_load = true,
-		}
-	end
 
 	world:create_entity {
 		transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),
