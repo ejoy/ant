@@ -27,8 +27,8 @@ local function tool_paths(plat, toolbasename)
     local vspath = "projects/msvc/vs_bin"
     local hasmsvc = package.cpath and package.cpath:match(vspath)
 
-    local toolnameDebug = toolbasename .. "debug"
-    local toolnameRelease = toolbasename .. "release"
+    local toolnameDebug = toolbasename .. "Debug"
+    local toolnameRelease = toolbasename .. "Release"
 
     if hasmsvc then
         return {
