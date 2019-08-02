@@ -52,8 +52,8 @@ local function tool_paths(plat, toolbasename)
     }
 end
 
-function util.valid_tool_exe_path(toolname)
-    local toolpaths = tool_paths(toolname)
+function util.valid_tool_exe_path(plat, toolname)
+    local toolpaths = tool_paths(plat, toolname)
 
     for _, name in ipairs(toolpaths) do
         local exepath = util.to_execute_path(name)

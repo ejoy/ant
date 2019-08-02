@@ -8,7 +8,7 @@ local util = require "util"
 local function init_config()
 	return {
 		lua 	= util.to_execute_path "bin/lua",
-		shaderc = util.valid_tool_exe_path "shaderc",
+		shaderc = util.valid_tool_exe_path(OS, "shaderc"),
 		shaderinc = CWD / "3rd" / "bgfx" / "src",
 	}
 end

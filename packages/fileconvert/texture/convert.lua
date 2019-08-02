@@ -1,8 +1,9 @@
 local lfs = require "filesystem.local"
 local util      = require "util"
+local platform = require "platform"
+local OS = platform.OS
 
-local toolname = "texturec"
-local toolpath = util.valid_tool_exe_path(toolname)
+local toolpath = util.valid_tool_exe_path(OS, "texturec")
 
 local function which_format(plat, param)
 	local compress = param.compress
@@ -95,7 +96,7 @@ return function (identity, sourcefile, param, outfile)
 	plat, renderer = plat:lower(), renderer:lower()
 	local ext = assert(outfile_extension(renderer))
 	local tmpoutfile = lfs.path(outfile):replace_extension(ext)
-	
+
 	local commands = {
 		toolpath:string(),
 		stdout      = true,
