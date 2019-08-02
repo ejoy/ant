@@ -29,6 +29,9 @@ local function tool_paths(plat, toolbasename)
 
     local toolnameDebug = toolbasename .. "Debug"
     local toolnameRelease = toolbasename .. "Release"
+    local function to_binpath(name)
+        return "bin/" .. plat .. "/" .. name
+    end
 
     if hasmsvc then
         return {
@@ -36,12 +39,10 @@ local function tool_paths(plat, toolbasename)
             vspath .. "/x64/Debug/" .. toolnameDebug,
             vspath .. "/x64/Release/" .. toolbasename,
             vspath .. "/x64/Debug/" .. toolbasename,
-            "bin/" .. toolbasename,
+            to_binpath(toolbasename),
         }
     end
-    local function to_binpath(name)
-        return "bin/" .. plat .. "/" .. name
-    end
+
     return {
         "clibs/" .. toolnameRelease,
         "clibs/" .. toolnameDebug,
