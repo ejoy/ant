@@ -33,6 +33,7 @@ function gui_mgr.init()
         max_try_count = 1,
     }
     gui_mgr.time_stack = TimeStack.new()
+    gui_mgr.update_list = {}
     -- local menu_list = {
     --     {{"Views"},gui_mgr._update_mainmenu_view},
     -- }
@@ -59,6 +60,10 @@ function gui_mgr.update(delta)
     if setting_can_save ~= nil then 
         gui_mgr._update_window(delta)
     end
+    time_stack:Push("update_list")
+    gui_mgr._update_list(delta)
+    time_stack:Pop("update_list")
+
     time_stack:Push("editor")
     gui_util.loop_popup()
     imgui.end_frame()
@@ -80,6 +85,13 @@ function gui_mgr._update_window(delta)
             ui_ins:on_gui(delta)
             time_stack:Pop(ui_name)
         end
+    end
+end
+
+function gui_mgr._update_list(delta)
+    local update_list = gui_mgr.update_list
+    for _,func in ipairs(update_list) do
+        dbgutil.try(func,delta)
     end
 end
 
@@ -193,6 +205,18 @@ end
 function gui_mgr.get(name)
     assert(type(name)=="string","ui name must be string!")
     return gui_mgr.gui_tbl[name]
+end
+
+function gui_mgr.register_update(func,target)
+    assert(func)
+    if target then
+        local f = function(...)
+            return func(target,...)
+        end
+        table.insert(gui_mgr.update_list,f)
+    else
+        table.insert(gui_mgr.update_list,func)
+    end
 end
 
 ---------------gui_setting-------------------------------

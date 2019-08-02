@@ -216,10 +216,12 @@ function gui_util.watch_current_package_file(file_path,cb)
     local local_path_str = local_path:string()
     local full_target_path = (current_path.."/"..local_path_str):string()
     local fw = require 'filewatch'
+    log.info(dir_path)
     local watch = assert(fw.add("./"..dir_path))
     local update = function()
         local typ, path = fw.select()
         if typ then
+            log.info("watch_current_package_file",typ,path)
             local path_sep = string.gsub(path,"\\","/")
             -- log.trace_a(typ,full_target_path,path_sep,path_sep == full_target_path)
             if path_sep == full_target_path then
@@ -229,5 +231,42 @@ function gui_util.watch_current_package_file(file_path,cb)
     end
     return update
 end
+
+function gui_util.watch_shader_src(folder_path,cb)
+    folder_path = folder_path or "/pkg/ant.resources/shaders/src"
+    local fs = require "filesystem"
+    local localfs = require "filesystem.local"
+    local current_path = localfs.current_path()
+    local pkg_path = fs.path(folder_path)
+    local local_path = pkg_path:localpath()
+    local local_path_str = local_path:string()
+    local full_target_path = (current_path.."/"..local_path_str):string()
+    local fw = require 'filewatch'
+    log.info(local_path_str)
+    local watch = assert(fw.add("./"..local_path_str))
+    local update = function()
+        local typ, path = fw.select()
+
+        if typ then
+            log.info("watch_shader_src",typ,path)
+        end
+    end
+    return update
+end
+
+function gui_util.pkg_path_to_local(pkg_path,is_full)
+    local fs = require "filesystem"
+    local localfs = require "filesystem.local"
+    if type(pkg_path) == "string" then pkg_path = fs.path(pkg_path) end
+    local local_path = pkg_path:localpath()
+    local local_path_str = local_path:string()
+    if is_full then
+        local current_path = localfs.current_path()
+        local_path_str = (current_path.."/"..local_path_str):string()
+    end
+    return local_path_str
+end
+
+
 
 return gui_util

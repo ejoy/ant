@@ -11,6 +11,7 @@ local bgfx      = require "bgfx"
 local hub = import_package("ant.editor").hub
 local Event = require "hub_event"
 local gui_util = require "editor.gui_util"
+local file_watch_mgr = require "tools.file_watch_mgr"
 
 local GuiBase = require "gui_base"
 local GuiScriptRunner = GuiBase.derive("GuiScriptRunner")
@@ -55,7 +56,12 @@ function GuiScriptRunner:create_file_watch()
         end
         self.file_modified_outside = true
     end
-    self.file_watch = gui_util.watch_current_package_file(self.current_file_path,cb)
+    local fs = require "filesystem"
+    local pm = require "antpm"
+    local pkg_path = fs.path(pm.get_entry_pkg().."/"..self.current_file_path)
+    self.file_watch = file_watch_mgr:add_pkg_path_watch(pkg_path,cb)
+
+
 end
 
 function GuiScriptRunner:refresh_file()
@@ -89,7 +95,6 @@ function GuiScriptRunner:on_update(delta)
     if self.file_watch == nil and self.current_file_path then
         self:create_file_watch()
     end
-    self.file_watch()
     self:refresh_file()
     if widget.Button("Run In Ecs") then
         self.input_cache.tab()
