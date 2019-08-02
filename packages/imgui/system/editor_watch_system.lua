@@ -99,13 +99,7 @@ local function send_entity(eid,typ)
     last_eid = eid
     last_tbl = setialize_result[eid]
     entity_info.entities = setialize_result 
-    -- log.info_a(setialize_result)
     hub.publish(WatcherEvent.EntityInfo,entity_info)
-    -- if is_pick then
-    --     hub.publish(WatcherEvent.EntityInfo,setialize_result)
-    -- else
-    --     hub.publish(WatcherEvent.EntityChange,setialize_result)
-    -- end
 end
 
 local function remove_all_outline()
@@ -255,14 +249,7 @@ function editor_watcher_system:after_update()
             hierarchy_dirty = true
         end
     end
-    -- if world._removed and #world._removed >0 then
-    --     --todo:temporary implement
-    --     for _,e in ipairs(world._removed) do
-    --         if e[2] and (not e[3]) and (e[2].pickup == nil) then
-    --             hierarchy_dirty = true
-    --             break
-    --         end
-    --     end
+
     -- end
     if hierarchy_dirty then
         world._last_entity_id = world._entity_id

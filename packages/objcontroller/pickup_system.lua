@@ -193,7 +193,7 @@ local function add_pick_entity()
 			updir = {0, 1, 0, 0},
 			eyepos = {0, 0, 0, 1},
 			frustum = {
-				type="mat", n=0.1, f=100, fov=3, aspect=pickup_buffer_w / pickup_buffer_h
+				type="mat", n=0.1, f=1000, fov=3, aspect=pickup_buffer_w / pickup_buffer_h
 			},
 		},
 		render_target = {

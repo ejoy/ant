@@ -236,6 +236,7 @@ function TestGuiBase:tab1_update()
     if widget.ListBox("##list",lists) then
         log(lists.current)
     end
+    widget.ProgressBar(0.3,"asd")
 end
 
 
