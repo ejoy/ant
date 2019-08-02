@@ -1,17 +1,17 @@
 local fs = require "filesystem"
 
-local support_list = {
-	"shader",
-	"mesh",
-	"state",			
-	"material",
-	"module",
-	"texture",
-	"hierarchy",
-	"lk",
-	"ozz",
-	"sm",
-	"terrain",	
+local resources = {
+	shader = {},
+	mesh = {},
+	state = {},
+	material = {},
+	module = {},
+	texture = {},
+	hierarchy = {},
+	lk = {},
+	ozz = {},
+	sm = {},
+	terrain = {},
 }
 
 local loaders = {}
@@ -21,16 +21,7 @@ assetmgr.__index = assetmgr
 function assetmgr.get_loader(name)	
 	local loader = loaders[assert(name)]
 	if loader == nil then
-		local function is_support(name)
-			for _, v in ipairs(support_list) do
-				if v == name then
-					return true
-				end
-			end
-			return false
-		end
-
-		if is_support(name) then
+		if resources[name] then
 			loader = require ("ext_" .. name)
 			loaders[name] = loader
 		else
@@ -39,8 +30,6 @@ function assetmgr.get_loader(name)
 	end
 	return loader
 end
-
-local resources = setmetatable({}, {__mode="kv"})
 
 local function rawtable(filepath)
 	local env = {}
@@ -82,18 +71,24 @@ function assetmgr.load(filename, param)
 	assert(type(filename) ~= "string")
 
 	local reskey = res_key(filename)
-	local res = resources[reskey]
+	local modulename = module_name(filename)
+	local subres = resources[modulename]
+	if subres == nil then
+		error(string.format("not found ext from file:%s", filename:string()))
+	end
+
+	local res = subres[reskey]
 	if res == nil then
-		local modulename = module_name(filename)
-		if modulename == nil then
-			error(string.format("not found ext from file:%s", filename:string()))
-		end
-		local loader = assetmgr.get_loader(modulename)
+		local loader = assetmgr.get_loader(assert(modulename))
 		res = loader(filename, param)
-		resources[reskey] = res
+		subres[reskey] = res
 	end
 
 	return res
+end
+
+function assetmgr.get_resources(name)
+	return resources[name]
 end
 
 function assetmgr.save(tree, filename)	
