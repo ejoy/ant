@@ -41,25 +41,25 @@ local function gen_arm_astc_commands(plat, param, sourcefile, outfile, commands)
 	add_option(commands, "-q", "fastest")
 
 	if param.maxsize then
-		add_option("--max", param.maxsize)
+		add_option(commands, "--max", param.maxsize)
 	end
 
 	if param.normalmap then
-		add_option("-n")
+		add_option(commands, "-n")
 	end
 
 	local colorspace = param.colorspace or "sRGB"
 	if colorspace == "linear" then
-		add_option("--linear")
+		add_option(commands, "--linear")
 	elseif colorspace == "HDR" then
 		print("not support HDR format right now")
 	end
 
 	local mipmap = param.mipmap
 	if mipmap then
-		add_option("-m")
+		add_option(commands, "-m")
 		if mipmap ~= 0 then
-			add_option("--mipskip", mipmap)
+			add_option(commands, "--mipskip", mipmap)
 		end
 	end
 end
