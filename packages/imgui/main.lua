@@ -22,6 +22,7 @@ local t = {
         gui_component_style = require "editor.gui_component_style",
         gui_util = require "editor.gui_util",
         gui_script_runner = require "editor.gui_script_runner",
+        gui_shader_watch = require "editor.gui_shader_watch",
     },
 
 }

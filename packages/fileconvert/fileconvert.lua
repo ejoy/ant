@@ -2,7 +2,7 @@ local lfs = require "filesystem.local"
 local util = require "util"
 local crypt = require "crypt"
 local sha1_encoder = crypt.sha1_encoder()
-
+local g_log = log
 local converter_names = {
 	shader = "shader.compile",
 	mesh = "mesh.convert",
@@ -34,6 +34,7 @@ local function log_err(src, lk, err)
 	log:write(errinfo)
 	log:flush()
 	print(errinfo)
+	if g_log then g_log.error(errinfo) end
 end
 
 local function log_info(info)
