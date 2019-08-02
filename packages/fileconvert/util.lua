@@ -23,7 +23,7 @@ function util.to_execute_path(pathname)
     return CWD / (pathname .. toolsuffix)
 end
 
-local function tool_paths(toolbasename)
+local function tool_paths(plat, toolbasename)
     local vspath = "projects/msvc/vs_bin"
     local hasmsvc = package.cpath and package.cpath:match(vspath)
 
@@ -39,12 +39,15 @@ local function tool_paths(toolbasename)
             "bin/" .. toolbasename,
         }
     end
+    local function to_binpath(name)
+        return "bin/" .. plat .. "/" .. name
+    end
     return {
         "clibs/" .. toolnameRelease,
         "clibs/" .. toolnameDebug,
-        "bin/" .. toolnameRelease,
-        "bin/"  .. toolnameDebug,
-        "bin/" .. toolbasename,
+        to_binpath(toolnameRelease),
+        to_binpath(toolnameDebug),
+        to_binpath(toolbasename),
     }
 end
 
