@@ -5,7 +5,6 @@ local resources = {
 	mesh = {},
 	state = {},
 	material = {},
-	module = {},
 	texture = {},
 	hierarchy = {},
 	lk = {},
@@ -64,7 +63,7 @@ local function res_key(filename)
 end
 
 local function module_name(filepath)
-	return filepath:extension():string():match("%.(.+)$")
+	return filepath:extension():string():match "%.(.+)$"
 end
 
 function assetmgr.load(filename, param)	
@@ -80,15 +79,53 @@ function assetmgr.load(filename, param)
 	local res = subres[reskey]
 	if res == nil then
 		local loader = assetmgr.get_loader(assert(modulename))
-		res = loader(filename, param)
+		local handle = loader(filename, param)
+		res = {
+			handle 		= handle,
+			lastframe 	= -1,
+			ref_count	= 1,
+		}
 		subres[reskey] = res
+	else
+		res.ref_count = res.ref_count + 1
 	end
 
-	return res
+	return res.handle
 end
 
-function assetmgr.get_resources(name)
+function assetmgr.unload(filename)
+	assert(type(filename) ~= "string")
+	local reskey = res_key(filename)
+	
+	local modulename = module_name(filename)
+	local subres = resources[modulename]
+
+	if subres == nil then
+		error(string.format("not found sub resource from file:%s", filename:string()))
+	end
+
+	local res = subres[reskey]
+
+	if res == nil then
+		error(string.format("unload a not reference resource:%s", filename:string()))
+	end
+
+	if res.ref_count <= 0 then
+		print("unload a resource which ref count low or equal to 0", filename:string())
+	end
+
+	res.ref_count = res.ref_count - 1
+end
+
+function assetmgr.get_resource(name)
 	return resources[name]
+end
+
+for _, subname in ipairs {"texture", "mesh", "material"} do
+	local subres = resources[subname]
+	assetmgr["get" .. subname] = function (key)
+		return subres[key].handle
+	end
 end
 
 function assetmgr.save(tree, filename)	

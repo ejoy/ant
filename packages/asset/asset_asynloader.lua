@@ -12,31 +12,33 @@ local function reset_loadlist(ll)
     ll.i = 1
     ll.n = 0
     ll.loaded_assets = nil
+    return ll
 end
 
 function loadlist.init()
-    local t = {}
-    reset_loadlist(t)
-    return t
+    return reset_loadlist {}
 end
 
 local asyn_asset_loader = ecs.system "asyn_asset_loader"
 asyn_asset_loader.singleton "asyn_load_list"
 
-local function start_load_asset(e)
-    local mesh = e.mesh
-    do
-        mesh.assetinfo = assetmgr.load(assert(mesh.ref_path), {asyn_load=true})
-        computil.transmit_mesh(mesh, e.rendermesh)
+local function load_asset(e)
+    local rm = e.rendermesh
+    if rm.handle == nil then
+        computil.create_mesh(rm, e.mesh)
     end
 
-    local materials = e.material
-    do
-        for i=0, #materials do
-            computil.create_material(materials[i])
+    local material = e.material
+    for i=0, #material do
+        local m = material[i]
+        if m.materialinfo == nil then
+            computil.create_material(m)
         end
     end
+end
 
+local function start_load_asset(e)
+    load_asset(e)
     e.asyn_load = "loading"
 end
 

@@ -113,11 +113,13 @@ end
 -- end
 
 local mesh = ecs.component_alias("mesh", "resource") {depend="rendermesh"}
-
+function mesh:init()
+	return self
+end
 function mesh:postinit(e)
 	if not self.asyn_load then
-		assert(self.asyn_load == nil)
-		component_util.transmit_mesh(self, e.rendermesh)
+		assert(e.asyn_load == nil)
+		component_util.create_mesh(e.rendermesh, e.mesh)
 	end
 end
 

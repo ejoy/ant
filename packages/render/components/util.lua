@@ -95,7 +95,6 @@ function util.create_submesh_item(material_refs)
 	return {material_refs=material_refs, visible=true}
 end
 
-
 -- content:material_content
 -- texture_tbl:{
 --  s_basecolor = {type="texture", name="base color", stage=0, ref_path={"ant.resources", "PVPScene/siegeweapon_d.texture"}},
@@ -405,9 +404,9 @@ local function check_rendermesh_lod(rm)
 	end
 end
 
-function util.transmit_mesh(mesh, rendermesh)
-	rendermesh.handle 	= mesh.assetinfo.handle
-	mesh.assetinfo 		= nil	-- transmit to rendermesh
+function util.create_mesh(rendermesh, mesh)
+	rendermesh.handle = asset.load(mesh.ref_path).handle
+	mesh.rendermesh = rendermesh
 	check_rendermesh_lod(rendermesh)
 end
 
