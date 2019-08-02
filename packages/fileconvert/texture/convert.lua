@@ -3,7 +3,7 @@ local util      = require "util"
 local platform = require "platform"
 local OS = platform.OS
 
-local toolpath = util.valid_tool_exe_path(OS, "texturec")
+local toolpath = util.valid_tool_exe_path "texturec"
 
 local function which_format(plat, param)
 	local compress = param.compress

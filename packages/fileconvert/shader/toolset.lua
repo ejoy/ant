@@ -1,4 +1,3 @@
-local subprocess = require "subprocess"
 local lfs = require "filesystem.local"
 local platform = require "platform"
 local OS = platform.OS
@@ -8,7 +7,7 @@ local util = require "util"
 local function init_config()
 	return {
 		lua 	= util.to_execute_path "bin/lua",
-		shaderc = util.valid_tool_exe_path(OS, "shaderc"),
+		shaderc = util.valid_tool_exe_path "shaderc",
 		shaderinc = CWD / "3rd" / "bgfx" / "src",
 	}
 end

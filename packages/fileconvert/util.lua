@@ -3,6 +3,20 @@ local platform  = require "platform"
 local OS        = platform.OS
 local CWD       = lfs.current_path()
 local subprocess=require "subprocess"
+local vspath    = "projects/msvc/vs_bin"
+
+local function is_msvc()
+    return package.cpath and package.cpath:match(vspath)
+end
+
+local function which_platfrom_type()
+    if OS == "Windows" then
+        return is_msvc() and "msvc" or "mingw"
+    else
+        return "osx"
+    end
+end
+local plattype = which_platfrom_type()
 
 local toolsuffix = OS == "OSX" and "" or ".exe"
 
@@ -23,17 +37,14 @@ function util.to_execute_path(pathname)
     return CWD / (pathname .. toolsuffix)
 end
 
-local function tool_paths(plat, toolbasename)
-    local vspath = "projects/msvc/vs_bin"
-    local hasmsvc = package.cpath and package.cpath:match(vspath)
-
+local function tool_paths(toolbasename)
     local toolnameDebug = toolbasename .. "Debug"
     local toolnameRelease = toolbasename .. "Release"
     local function to_binpath(name)
-        return "bin/" .. plat .. "/" .. name
+        return "bin/" .. plattype .. "/" .. name
     end
 
-    if hasmsvc then
+    if plattype == "msvc" then
         return {
             vspath .. "/x64/Release/" .. toolnameRelease,
             vspath .. "/x64/Debug/" .. toolnameDebug,
