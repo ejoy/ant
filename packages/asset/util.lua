@@ -1,8 +1,8 @@
 local util = {}; util.__index = util
 
+local shader_mgr = require "shader_mgr"
+
 function util.shader_loader(shader)
-	local shader_mgr = import_package "ant.render" .shader_mgr
-    
     local uniforms = {}
     shader.prog = shader_mgr.programLoad(assert(shader.vs), assert(shader.fs), uniforms)
     assert(shader.prog ~= nil)
