@@ -4,11 +4,10 @@ shader = {
 }
 
 state = {
-	WRITE_MASK = "RGBA",
+	WRITE_MASK = "RGBAZ",
 	ALPHA_REF = 0,
-	CULL = "CCW",	-- only render back face
+	CULL = "CCW",
 	MSAA = true,
-
 	DEPTH_TEST = "LESS",
 }
 
