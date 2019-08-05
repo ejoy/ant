@@ -15,8 +15,8 @@ local function try_load_shader( pkg_path)
     local data = f:read("a")
     f:close()
     assert(data)
-    local h = dbgutil.try(bgfx.create_shader(data))
-    if h then
+    local s, h = dbgutil.try(bgfx.create_shader,data)
+    if s and h then
         bgfx.destroy(h)
         log(string.format("Shader compiled successfully:%s",pkg_path:string()))
     else
