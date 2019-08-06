@@ -11,7 +11,7 @@ properties = {
 		s_normal = {type="texture", name="normal", stage=1, ref_path="/pkg/ant.resources/pochuan_n.texture"},
 	},
 	uniforms = {
-		u_specularColor = {type="v4", name="specular color", default= {6/255, 5/255, 5/255, 0.03}},
-		u_specularLight = {type="v4", name="specular light factor", default={5.5, 0, 0,0}},
+		u_specularColor = {type="v4", name="specular color", value= {6/255, 5/255, 5/255, 0.03}},
+		u_specularLight = {type="v4", name="specular light factor", value={5.5, 0, 0,0}},
 	}
 }

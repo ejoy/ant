@@ -14,7 +14,7 @@ state = {
 
 properties = {
 	uniforms = {
-		u_outlinescale	= {name="outline scale", type="v4", default={0.005, 0.0, 0.0, 0.0}},
-		u_outlinecolor = {name="outline color", type="v4", default={0.8, 0.8, 0, 1}},
+		u_outlinescale	= {name="outline scale", type="v4", value={0.005, 0.0, 0.0, 0.0}},
+		u_outlinecolor = {name="outline color", type="v4", value={0.8, 0.8, 0, 1}},
 	}
 }

@@ -21,5 +21,5 @@ surface_type = {
 
 properties = {
 	s_texCube = { type="texture", name="s_texCube",  stage=0, default="textures/skybox/cloud_skycube.texture"},
-    u_lightScale = { type="v4", name = "u_lightScale", default={ 1.2, 0, 0, 0 } },
+    u_lightScale = { type="v4", name = "u_lightScale", value={ 1.2, 0, 0, 0 } },
 }

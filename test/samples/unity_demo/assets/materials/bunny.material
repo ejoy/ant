@@ -11,5 +11,5 @@ state = {
 	--PT = "POINTS"
 }
 properties = {
-	u_time = {name="u_time", type="v4", default={1, 1, 1, 1}},
+	u_time = {name="u_time", type="v4", value={1, 1, 1, 1}},
 }

@@ -7,6 +7,6 @@ state = "materials/states/default.state"
 
 properties = {
 	uniforms = {
-		u_color = {name="u_color", type="v4", default={1, 1, 1, 1}},
+		u_color = {name="u_color", type="v4", value={1, 1, 1, 1}},
 	}	
 }

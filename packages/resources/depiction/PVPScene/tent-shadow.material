@@ -7,8 +7,8 @@ state = "materials/states/default.state"
 
 properties = {
 	uniforms = {
-		u_specularColor = {type="v4", name="specular color", default= {6/255, 5/255, 5/255, 0.03}},
-		u_specularLight = {type="v4", name="specular light factor", default={5.5, 0, 0,0}},
+		u_specularColor = {type="v4", name="specular color", value= {6/255, 5/255, 5/255, 0.03}},
+		u_specularLight = {type="v4", name="specular light factor", value={5.5, 0, 0,0}},
 	},
 	textures = {
 		s_basecolor = {type="texture", name="base color", stage=0, ref_path="/pkg/ant.resources/PVPScene/tent_d.texture"},

@@ -19,11 +19,11 @@ properties = {
 		s_texCubeIrr = { type="texture", name="s_texCubeIrr",  stage=9, ref_path="//unity_demo/assets/textures/bolonga_irr.texture"}, 
 	},
 	uniforms = {
-		u_params 	    = { type="v4", name="u_params ", default= { 0, 0, 0, 0.05} },
-		u_diffuseColor  = { type="v4", name="diffuse color", default= {255/255, 255/255, 255/255, 1.0} },
+		u_params 	    = { type="v4", name="u_params ", value= { 0, 0, 0, 0.05} },
+		u_diffuseColor  = { type="v4", name="diffuse color", value= {255/255, 255/255, 255/255, 1.0} },
 
-		u_specularColor = { type="v4", name="specular color", default= {200/255, 200/255, 200/255, 0.08}},
-		u_specularLight = { type="v4", name="specular light factor", default={2, 0, 0,0} } ,
+		u_specularColor = { type="v4", name="specular color", value= {200/255, 200/255, 200/255, 0.08}},
+		u_specularLight = { type="v4", name="specular light factor", value={2, 0, 0,0} } ,
 	}
 }
 

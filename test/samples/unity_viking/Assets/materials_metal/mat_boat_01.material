@@ -20,11 +20,11 @@ properties = {
     --s_brdfMap = { type="texture",name="s_brdfMap",stage = 6,ref_path="/pkg/unity_viking/Assets/textures/brdfMap3.texture"},
   },
   uniforms = {
-    u_params = { type="v4",name="u_params",default={0,1,0,0.104}},
-    u_diffuseColor = { type="v4",name="u_diffuseColor",default={0.6305734,0.6953977,0.8014734,1}},
-    u_specularColor = { type="v4",name="u_specularColor",default={1,1,1,1}},
+    u_params = { type="v4",name="u_params",value={0,1,0,0.104}},
+    u_diffuseColor = { type="v4",name="u_diffuseColor",value={0.6305734,0.6953977,0.8014734,1}},
+    u_specularColor = { type="v4",name="u_specularColor",value={1,1,1,1}},
 
-    u_tiling = { type="v4",name="u_tiling",default={1,1,12,12}},
-    u_misc = {type="v4",name="u_misc",default={0,0.58,0,0}},
+    u_tiling = { type="v4",name="u_tiling",value={1,1,12,12}},
+    u_misc = {type="v4",name="u_misc",value={0,0.58,0,0}},
   },
 }

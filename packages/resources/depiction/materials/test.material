@@ -5,6 +5,6 @@ shader = {
 state = "materials/states/default.state"
 
 property = {
-	u_color = {type="v4", name="color", default={1, 0, 0, 1}},
+	u_color = {type="v4", name="color", value={1, 0, 0, 1}},
 	roughness = {type="texture", default="/pkg/ant.resources/"},
 }

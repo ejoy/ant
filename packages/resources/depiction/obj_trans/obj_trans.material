@@ -7,7 +7,7 @@ state = "transparent.state"
 
 properties = {
 	uniforms = {
-		u_color = {type="v4", name="color", default={1, 1, 1, 1}},
+		u_color = {type="v4", name="color", value={1, 1, 1, 1}},
 	}	
 }
 

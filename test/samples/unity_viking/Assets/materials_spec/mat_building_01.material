@@ -17,11 +17,11 @@ properties = {
     s_detailnormal = { type="texture",name="s_detailnormal",stage = 5,ref_path="/pkg/unity_viking/Assets/texture_desc/wood_tiled_03_n.texture"},
   },
   uniforms = {
-    u_params = { type="v4",name="u_params",default={0,1,0,0.028}},
-    u_diffuseColor = { type="v4",name="u_diffuseColor",default={0.9305658,0.9528301,0.9303578,1}},
-    u_specularColor = { type="v4",name="u_specularColor",default={1,1,1,1}},
-    u_tiling = { type="v4",name="u_tiling",default={1,1,7,7}},
-    u_misc = { type="v4",name="u_misc",default={0,2,0,0}},
+    u_params = { type="v4",name="u_params",value={0,1,0,0.028}},
+    u_diffuseColor = { type="v4",name="u_diffuseColor",value={0.9305658,0.9528301,0.9303578,1}},
+    u_specularColor = { type="v4",name="u_specularColor",value={1,1,1,1}},
+    u_tiling = { type="v4",name="u_tiling",value={1,1,7,7}},
+    u_misc = { type="v4",name="u_misc",value={0,2,0,0}},
 
   },
 }

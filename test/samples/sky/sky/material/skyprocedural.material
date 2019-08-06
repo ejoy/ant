@@ -22,8 +22,8 @@ surface_type = {
 
 properties = {
     -- x - sun size, y - sun bloom, z - exposition, w - time
-    u_parameters = { type = "v4",name = "u_parameters", default={0.04,3,0.1,12} },
-    --u_sunDirection = { type = "v4",name = "u_sunDirection", default={1,1,1,1} },
-    --u_sunLuminance = { type = "v4",name = "u_sunLuminance", default={1,1,0,1} },
-    u_skyLuminanceXYZ = { type = "v4",name = "u_skyLuminanceXYZ", default={0,1,1,1} },    
+    u_parameters = { type = "v4",name = "u_parameters", value={0.04,3,0.1,12} },
+    --u_sunDirection = { type = "v4",name = "u_sunDirection", value={1,1,1,1} },
+    --u_sunLuminance = { type = "v4",name = "u_sunLuminance", value={1,1,0,1} },
+    u_skyLuminanceXYZ = { type = "v4",name = "u_skyLuminanceXYZ", value={0,1,1,1} },    
 }

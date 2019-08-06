@@ -35,10 +35,10 @@ properties = {
 	-- metalness( value, when texture metal not use)
 	-- groughness(smooth)
 	uniforms = {
-		u_params 	    = { type="v4", name="params ",        default= { 0, 1, 0.90, 0.30} },
-		u_tiling 		= { type="v4", name="u_tiling",		  default= {1,1,0,0}},		
-		u_diffuseColor  = { type="v4", name="diffuse color",  default= {0.78, 0.78, 0.78, 1.0} },
-		u_specularColor = { type="v4", name="specular color", default= {0.78, 0.78, 0.78, 0.08} },
+		u_params 	    = { type="v4", name="params ",        value= { 0, 1, 0.90, 0.30} },
+		u_tiling 		= { type="v4", name="u_tiling",		  value= {1,1,0,0}},		
+		u_diffuseColor  = { type="v4", name="diffuse color",  value= {0.78, 0.78, 0.78, 1.0} },
+		u_specularColor = { type="v4", name="specular color", value= {0.78, 0.78, 0.78, 0.08} },
 	}
 }
 

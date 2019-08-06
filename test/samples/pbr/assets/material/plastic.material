@@ -19,10 +19,10 @@ properties = {
 		s_texCubeIrr = { type="texture", name="s_texCubeIrr",  stage=9, ref_path="/pkg/pbr/assets/textures/bolonga_irr.texture"}, 
 	},
 	uniforms = {
-		u_params = { type="v4", name="u_params ", default= { 0, 0, 0, 0.05} },
-    	u_tiling = { type="v4",name="u_tiling", default={1,1,0,0}},		
-		u_diffuseColor = { type="v4", name="diffuse color", default= {1, 1, 1, 1.0} },
-		u_specularColor = {type="v4", name="specular color", default= {0.78, 0.78, 0.78, 0.08}},
+		u_params = { type="v4", name="u_params ", value= { 0, 0, 0, 0.05} },
+    	u_tiling = { type="v4",name="u_tiling", value={1,1,0,0}},		
+		u_diffuseColor = { type="v4", name="diffuse color", value= {1, 1, 1, 1.0} },
+		u_specularColor = {type="v4", name="specular color", value= {0.78, 0.78, 0.78, 0.08}},
 	}
 }
 

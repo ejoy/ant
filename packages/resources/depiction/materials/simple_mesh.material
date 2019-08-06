@@ -5,7 +5,7 @@ shader = {
 state = "materials/states/default.state"
 properties = {
 	uniforms = {
-		u_color = {type="color", name = "color", default={1, 1, 1, 1}}
+		u_color = {type="color", name = "color", value={1, 1, 1, 1}}
 	}	
 }
 surface_type = {
