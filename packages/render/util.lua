@@ -125,7 +125,7 @@ local function add_result(eid, group, materialinfo, properties, worldmat, result
 	if r == nil then
 		r = {
 			mgroup 		= group,
-			material 	= materialinfo,
+			material 	= assert(materialinfo),
 			properties 	= properties,
 			worldmat 	= worldmat,
 			eid 		= eid,
@@ -133,7 +133,7 @@ local function add_result(eid, group, materialinfo, properties, worldmat, result
 		result[idx] = r
 	else
 		r.mgroup 	= group
-		r.material 	= materialinfo
+		r.material 	= assert(materialinfo)
 		r.properties= properties
 		r.worldmat 	= worldmat
 		r.eid 		= eid
@@ -146,7 +146,7 @@ end
 
 function util.insert_primitive(eid, group, material, worldmat, filter)
 	local refkey = material.ref_path
-	local mi = assetmgr.get_material(refkey)
+	local mi = assert(assetmgr.get_material(refkey))
 	local resulttarget = assert(filter.result[mi.surface_type.transparency])
 	add_result(eid, group, mi, material.properties, worldmat, resulttarget)
 end

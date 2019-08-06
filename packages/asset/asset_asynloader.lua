@@ -31,7 +31,9 @@ local function load_asset(e)
     local material = e.material
     for i=0, #material do
         local m = material[i]
-        if m.materialinfo == nil then
+        local key = m.ref_path
+        local mi = assetmgr.get_material(key)
+        if mi == nil then
             computil.create_material(m)
         end
     end

@@ -5,7 +5,9 @@ local assetmgr = require "asset"
 local fs = require "filesystem"
 
 local function check_add_shader_file_extension(filepath)
-    return fs.path(filepath):replace_extension ".sc"
+    if filepath then
+        return fs.path(filepath):replace_extension ".sc"
+    end
 end
 
 function util.load_shader_program(shader)
@@ -30,7 +32,7 @@ function util.unload_shader_program(shader)
             assert(type(shaderpath) ~= "string")
             
 			local res = assetmgr.get_resource(shaderpath)
-			assetmgr.unload(shaderpath)
+            assetmgr.unload(shaderpath)
 			shader[name] = nil
 		end
 	end

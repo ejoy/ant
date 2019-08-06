@@ -96,10 +96,11 @@ return {
 		assetutil.unload_shader_program(assert(handle.shader))
 		handle.shader = nil
 
-		if handle.state.ref_path then
-			assetmgr.unload(handle.state, handle.state.ref_path)
-			handle.state = nil
+		local statekey = assert(handle.state).ref_path
+		if statekey then
+			assetmgr.unload(statekey)
 		end
+		handle.state = nil
 
 		assetutil.unload_material_properties(handle.properties)
 		handle.properties = nil

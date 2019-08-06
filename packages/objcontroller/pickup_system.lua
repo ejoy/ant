@@ -5,11 +5,9 @@ local world = ecs.world
 ecs.import "ant.inputmgr"
 ecs.import "ant.scene"
 
-local math = import_package "ant.math"
-local point2d = math.point2d
-local bgfx = require "bgfx"
-local ms = math.stack
-local fs = require "filesystem"
+local mathpkg 	= import_package "ant.math"
+local point2d 	= mathpkg.point2d
+local ms 		= mathpkg.stack
 
 local filterutil = import_package "ant.scene".filterutil
 
@@ -17,6 +15,11 @@ local renderpkg = import_package "ant.render"
 local computil = renderpkg.components
 local renderutil = renderpkg.util
 local viewidmgr = renderpkg.viewidmgr
+
+local assetmgr = import_package "ant.asset".mgr
+
+local bgfx 		= require "bgfx"
+local fs 		= require "filesystem"
 
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,
@@ -67,7 +70,8 @@ pickup_material_sys.dependby "render_system"
 local function replace_material(result, material)
 	if result then
 		for _, item in ipairs(result) do
-			item.material = material.materialinfo
+			local mi = assetmgr.get_material(material.ref_path)
+			item.material = mi
 			if item.properties == nil then
 				item.properties = {}
 			end
