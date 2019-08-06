@@ -19,7 +19,9 @@ local ru = import_package "ant.render".util
 
 local dbgutil = import_package "ant.editor".debugutil
 
-local DEFAULT_FPS = 30
+local DefaultFPS = 30
+
+local EditorProtectFrame = 60
 
 GuiCanvas.GuiName = "GuiCanvas"
 
@@ -35,13 +37,14 @@ function GuiCanvas:_init()
     self.vp_dirty = false
     self.time_count = 0
     self.cur_frame_time = 0.0
-    self:set_fps(DEFAULT_FPS)
+    self:set_fps(DefaultFPS)
 end
 
 function GuiCanvas:set_fps(fps)
     assert(fps>0)
     self.fps = fps
     self.frame_time = 1/fps
+    self.editor_frame = 0
 end
 
 function GuiCanvas:bind_world( world, world_update)
@@ -64,6 +67,7 @@ end
 
 local focus_flag = flags.Focused {"ChildWindows"}
 function GuiCanvas:on_update(delta)
+    self.editor_frame = self.editor_frame + 1
     local w,h = windows.GetContentRegionAvail()
     local x,y = cursor.GetCursorScreenPos()
     local r = self.rect
@@ -93,13 +97,32 @@ function GuiCanvas:_update_world(delta)
     local now = self.time_count + delta
     self.time_count = now
     if now >= self.next_frame_time then
-        if self.last_update then
-            self.cur_frame_time = now - self.last_update
+        local can_update = true
+        if self.last_world_update_limit then
+            can_update = false
+            if now > self.last_world_update_limit then
+                can_update = true
+            else
+                local cur_editor_fps = self.editor_frame/(now - self.last_update)
+                if cur_editor_fps >= EditorProtectFrame then
+                    can_update = true
+                end
+            end
         end
-        self.next_frame_time = now + self.frame_time
-        self.last_update = now
-        --update world
-        dbgutil.try(self.world_update)
+        if can_update then
+            if self.last_update then
+                self.cur_frame_time = now - self.last_update
+            end
+            self.next_frame_time = now + self.frame_time
+            self.last_update = now
+            --update world
+            local now_clock = os.clock()
+            dbgutil.try(self.world_update)
+            self.scene_cost = os.clock() - now_clock
+            self.editor_frame = 0
+            self.last_world_update_limit = 1.2 * self.scene_cost + self.last_update
+        end
+
     end
 
 end
