@@ -16,7 +16,7 @@ local function uniform_info(uniforms, handles)
 end
 
 function shader_mgr.create_render_program(vs, fs)
-    local prog = bgfx.create_program(assert(vs.handle), assert(fs.handle), true)
+    local prog = bgfx.create_program(assert(vs.handle), assert(fs.handle), false)
     if prog then
         local proguniforms = {}
         uniform_info(proguniforms, vs.uniforms)
@@ -29,7 +29,7 @@ function shader_mgr.create_render_program(vs, fs)
 end
 
 function shader_mgr.create_compute_program(cs)
-    return bgfx.create_program(cs.handle, true)
+    return bgfx.create_program(cs.handle, false)
 end
 
 function shader_mgr.destroy_program(shader)
