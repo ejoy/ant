@@ -866,7 +866,7 @@ slider_angle(lua_State *L, const char *label) {
 	float min = (float)read_field_float(L, "min", -360.0f);
 	float max = (float)read_field_float(L, "max", +360.0f);
 	const char * format = read_field_string(L, "format", "%.0f deg");
-	float change = ImGui::SliderAngle(label, &r, min, max, format);
+	bool change = ImGui::SliderAngle(label, &r, min, max, format);
 	if (change) {
 		lua_pushnumber(L, r);
 		lua_seti(L, INDEX_ARGS, 1);
@@ -888,7 +888,7 @@ vslider_float(lua_State *L, const char *label) {
 	float max = (float)read_field_checkfloat(L, "max");
 	const char * format = read_field_string(L, "format", "%.3f");
 	float power = (float)read_field_float(L, "power", 1.0f);
-	float change = ImGui::VSliderFloat(label, ImVec2(width, height), &r, min, max, format, power);
+	bool change = ImGui::VSliderFloat(label, ImVec2(width, height), &r, min, max, format, power);
 	if (change) {
 		lua_pushnumber(L, r);
 		lua_seti(L, INDEX_ARGS, 1);
@@ -909,7 +909,7 @@ vslider_int(lua_State *L, const char *label) {
 	int min = read_field_checkint(L, "min");
 	int max = read_field_checkint(L, "max");
 	const char * format = read_field_string(L, "format", "%d");
-	float change = ImGui::VSliderInt(label, ImVec2(width, height), &r, min, max, format);
+	bool change = ImGui::VSliderInt(label, ImVec2(width, height), &r, min, max, format);
 	if (change) {
 		lua_pushinteger(L, r);
 		lua_seti(L, INDEX_ARGS, 1);
@@ -2373,8 +2373,7 @@ winPopStyleVar(lua_State *L) {
 
 static int
 winSetWindowFontScale(lua_State* L) {
-	luaL_checknumber(L, 1);
-	float scale = (float)lua_tonumber(L, 1);
+	float scale = (float)luaL_checknumber(L, 1);
 	ImGui::SetWindowFontScale(scale);
 	return 0;
 }
@@ -2731,24 +2730,24 @@ uIsAnyItemFocused(lua_State *L) {
 static int
 uGetItemRectMin(lua_State *L) {
 	ImVec2 v = ImGui::GetItemRectMin();
-	lua_pushinteger(L, (lua_Integer)v.x);
-	lua_pushinteger(L, (lua_Integer)v.y);
+	lua_pushnumber(L, v.x);
+	lua_pushnumber(L, v.y);
 	return 2;
 }
 
 static int
 uGetItemRectMax(lua_State *L) {
 	ImVec2 v = ImGui::GetItemRectMax();
-	lua_pushinteger(L, (lua_Integer)v.x);
-	lua_pushinteger(L, (lua_Integer)v.y);
+	lua_pushnumber(L, (lua_Integer)v.x);
+	lua_pushnumber(L, (lua_Integer)v.y);
 	return 2;
 }
 
 static int
 uGetItemRectSize(lua_State *L) {
 	ImVec2 v = ImGui::GetItemRectSize();
-	lua_pushinteger(L, (lua_Integer)v.x);
-	lua_pushinteger(L, (lua_Integer)v.y);
+	lua_pushnumber(L, (lua_Integer)v.x);
+	lua_pushnumber(L, (lua_Integer)v.y);
 	return 2;
 }
 
